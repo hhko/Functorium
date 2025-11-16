@@ -1,1 +1,1 @@
-# Functiorium
+# Functorium
