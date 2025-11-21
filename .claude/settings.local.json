@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\ndocs: README에 프로젝트 이름 설명 추가\n\n- Functorium 이름의 유래 설명 추가 (functor + dominium)\nEOF\n)\")",
+      "Bash(git commit -m \"$(cat <<''EOF''\nchore: Claude Code 명령어 설정 추가\n\n- /commit 명령어 추가 (커밋 규율 적용)\n- /go 명령어 추가 (TDD 워크플로우)\nEOF\n)\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
