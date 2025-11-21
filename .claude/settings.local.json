@@ -6,7 +6,11 @@
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nchore: git 명령어 권한 설정 개선\n\n- 특정 커밋 메시지만 허용하던 설정을 모든 git commit으로 확장\n- git commit, status, diff, log 명령어 모두 허용\n- 패턴 매칭 형식 (:*) 적용\nEOF\n)\")"
+      "Bash(dotnet new:*)",
+      "Bash(dir:*)",
+      "Bash(fi)",
+      "Bash(dotnet --version:*)"
+      "Bash(echo:*)"
     ],
     "deny": [],
     "ask": []
