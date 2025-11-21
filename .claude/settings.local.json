@@ -7,9 +7,8 @@
       "Bash(git diff:*)",
       "Bash(git log:*)",
       "Bash(dotnet new:*)",
+      "Bash(dotnet --version:*)",
       "Bash(dir:*)",
-      "Bash(fi)",
-      "Bash(dotnet --version:*)"
       "Bash(echo:*)"
     ],
     "deny": [],
