@@ -6,8 +6,7 @@
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
-      "Bash(dotnet new:*)",
-      "Bash(dotnet --version:*)",
+      "Bash(dotnet:*)",
       "Bash(dir:*)",
       "Bash(echo:*)"
     ],
