@@ -9,7 +9,8 @@
       "Bash(dotnet:*)",
       "Bash(dir:*)",
       "Bash(echo:*)",
-      "Bash(pwsh:*)"
+      "Bash(pwsh:*)",
+      "Bash(git remote:*)"
     ],
     "deny": [],
     "ask": []
