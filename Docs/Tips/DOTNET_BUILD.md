@@ -39,7 +39,7 @@ dotnet build <solution-file> --no-restore -c Release
 dotnet test <solution-file> --no-build -c Release \
     --results-directory .TestResults \
     --collect:"XPlat Code Coverage" \
-    --logger "trx;LogFileName=test-results.trx" \
+    --logger "trx;LogFilePrefix=testresults" \
     -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
 ```
 
@@ -49,8 +49,18 @@ dotnet test <solution-file> --no-build -c Release \
 | `-c Release` | Release 구성으로 테스트 |
 | `--results-directory` | 테스트 결과 출력 디렉토리 |
 | `--collect:"XPlat Code Coverage"` | 코드 커버리지 수집 활성화 |
-| `--logger "trx;LogFileName=..."` | TRX 형식으로 테스트 결과 저장 |
+| `--logger "trx;LogFilePrefix=..."` | TRX 형식으로 테스트 결과 저장 (프로젝트별 고유 파일명) |
 | `-- DataCollectionRunSettings...` | 커버리지 출력 형식을 Cobertura로 지정 |
+
+### TRX 로거 옵션
+
+| 옵션 | 설명 | 파일명 예시 |
+|------|------|-------------|
+| `--logger "trx"` | 기본 (사용자명_컴퓨터명_타임스탬프) | `User_Machine_2025-11-30_14_13_45.trx` |
+| `--logger "trx;LogFileName=results.trx"` | 고정 파일명 (여러 프로젝트 시 덮어쓰기 주의) | `results.trx` |
+| `--logger "trx;LogFilePrefix=testresults"` | 접두사 + 프레임워크 + 타임스탬프 (권장) | `testresults_net9.0_20251130141716.trx` |
+
+> **권장:** `LogFilePrefix`를 사용하면 여러 테스트 프로젝트가 병렬 실행되어도 파일명 충돌을 방지할 수 있습니다.
 
 ## 도구 설치
 
@@ -69,7 +79,7 @@ dotnet tool install -g dotnet-reportgenerator-globaltool --version 5.5.0
 reportgenerator \
     -reports:.TestResults/**/coverage.cobertura.xml \
     -targetdir:.TestResults/coverage/report \
-    -reporttypes:"Html;Cobertura;TextSummary" \
+    -reporttypes:"Html;Cobertura;TextSummary;MarkdownSummaryGithub" \
     -assemblyfilters:"-*.Tests*"
 ```
 
@@ -77,22 +87,54 @@ reportgenerator \
 |------|------|
 | `-reports` | 커버리지 파일 경로 (glob 패턴 지원) |
 | `-targetdir` | 리포트 출력 디렉토리 |
-| `-reporttypes` | 출력 형식 (Html, Cobertura, TextSummary 등) |
+| `-reporttypes` | 출력 형식 (Html, Cobertura, TextSummary, MarkdownSummaryGithub 등) |
 | `-assemblyfilters` | 어셈블리 필터 (`-`는 제외, `+`는 포함) |
 
+### 주요 리포트 타입
+
+| 타입 | 출력 파일 | 설명 |
+|------|-----------|------|
+| `Html` | `index.html` | 브라우저에서 볼 수 있는 상세 리포트 |
+| `Cobertura` | `Cobertura.xml` | 병합된 커버리지 XML (CI 도구 연동) |
+| `TextSummary` | `Summary.txt` | 텍스트 요약 (콘솔 출력용) |
+| `MarkdownSummaryGithub` | `SummaryGithub.md` | GitHub Actions Job Summary용 마크다운 |
+
 ## 출력 구조
+
+### 단일 테스트 프로젝트
 
 ```
 .TestResults/
 ├── {GUID}/
-│   └── coverage.cobertura.xml    # 원본 커버리지 데이터
-├── test-results.trx              # 테스트 결과 (TRX 형식)
+│   └── coverage.cobertura.xml              # 원본 커버리지 데이터
+├── testresults_net9.0_20251130141716.trx   # 테스트 결과 (TRX 형식)
 └── coverage/
     └── report/
-        ├── index.html            # HTML 리포트
-        ├── Cobertura.xml         # 병합된 커버리지
-        └── Summary.txt           # 텍스트 요약
+        ├── index.html                      # HTML 리포트
+        ├── Cobertura.xml                   # 병합된 커버리지
+        ├── Summary.txt                     # 텍스트 요약
+        └── SummaryGithub.md                # GitHub Actions 요약
 ```
+
+### 여러 테스트 프로젝트
+
+```
+.TestResults/
+├── {GUID-1}/
+│   └── coverage.cobertura.xml              # 프로젝트 1 커버리지
+├── {GUID-2}/
+│   └── coverage.cobertura.xml              # 프로젝트 2 커버리지
+├── testresults_net9.0_20251130141716.trx   # 프로젝트 1 테스트 결과
+├── testresults_net9.0_20251130141717.trx   # 프로젝트 2 테스트 결과
+└── coverage/
+    └── report/
+        ├── index.html                      # HTML 리포트 (병합)
+        ├── Cobertura.xml                   # 병합된 커버리지
+        ├── Summary.txt                     # 텍스트 요약
+        └── SummaryGithub.md                # GitHub Actions 요약
+```
+
+> **참고:** 각 테스트 프로젝트마다 고유한 GUID 디렉토리가 생성되어 커버리지 파일이 충돌하지 않습니다. ReportGenerator가 `**/coverage.cobertura.xml` 패턴으로 모든 파일을 찾아 병합합니다.
 
 ## 참고
 
