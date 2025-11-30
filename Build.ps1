@@ -37,6 +37,9 @@ param(
     [ValidateSet("dev", "alpha", "beta", "rc")]
     [string]$SuffixPrefix = "dev",
 
+    [Alias("p")]
+    [string]$ProjectPrefix = "Functorium",
+
     [Alias("h", "?")]
     [switch]$Help
 )
@@ -93,13 +96,15 @@ USAGE
     ./Build.ps1 [options]
 
 OPTIONS
-    -Solution, -s    Path to solution file (.sln)
-                     If not specified, auto-detects from parent directory
-    -Stable          Build as stable release (no version suffix)
-                     Default: false (adds version suffix)
-    -SuffixPrefix    Version suffix prefix (dev, alpha, beta, rc)
-    -suffix          Default: dev
-    -Help, -h, -?    Show this help message
+    -Solution, -s      Path to solution file (.sln)
+                       If not specified, auto-detects from current directory
+    -Stable            Build as stable release (no version suffix)
+                       Default: false (adds version suffix)
+    -SuffixPrefix      Version suffix prefix (dev, alpha, beta, rc)
+    -suffix            Default: dev
+    -ProjectPrefix, -p Project prefix for coverage filtering
+                       Default: Functorium
+    -Help, -h, -?      Show this help message
 
 FEATURES
     1. Auto-detect solution file (requires exactly 1 .sln file)
@@ -107,6 +112,7 @@ FEATURES
     3. Run tests with code coverage collection
     4. Generate HTML coverage report (ReportGenerator)
     5. Display coverage summary in console
+       - Project: Projects matching prefix (e.g., Functorium.*)
        - Core Layer: Domains + Applications projects
        - Full: All projects (excluding tests)
 
@@ -138,6 +144,10 @@ EXAMPLES
     # Specify solution file
     ./Build.ps1 -Solution ./MyApp.sln
     ./Build.ps1 -s ../Other.sln
+
+    # Filter coverage by project prefix
+    ./Build.ps1 -ProjectPrefix MyApp
+    ./Build.ps1 -p Functorium
 
     # Show help
     ./Build.ps1 -Help
@@ -245,6 +255,26 @@ function Find-SolutionFile {
     }
 
     return $slnFiles[0]
+}
+
+function Test-VulnerablePackages {
+    <#
+    .SYNOPSIS
+        패키지의 보안 취약점을 검사합니다.
+    #>
+    param([string]$SolutionPath)
+
+    Write-StepHeader "Check Vulnerable Packages"
+
+    $output = dotnet list $SolutionPath package --vulnerable --include-transitive 2>&1
+    $outputText = $output | Out-String
+
+    if ($outputText -match "has the following vulnerable packages") {
+        Write-Host $outputText -ForegroundColor Yellow
+        Write-Host "WARNING: Vulnerable packages detected!" -ForegroundColor Red
+    } else {
+        Write-Success "No vulnerable packages found"
+    }
 }
 
 function Invoke-Build {
@@ -426,7 +456,10 @@ function Show-CoverageReport {
     .SYNOPSIS
         콘솔에 커버리지 결과를 출력합니다.
     #>
-    param([string]$CoverageFiles)
+    param(
+        [string]$CoverageFiles,
+        [string]$Prefix
+    )
 
     Write-StepHeader "Code Coverage Results"
 
@@ -453,6 +486,58 @@ function Show-CoverageReport {
     if ($packages.Count -eq 0) {
         Write-Host "No coverage data available." -ForegroundColor Yellow
         return
+    }
+
+    # Project prefix coverage (e.g., Functorium.*)
+    if ($Prefix) {
+        Write-SubHeader "[Project Coverage] ($Prefix.*)"
+        Write-Host ("{0,-40} {1,15} {2,15}" -f "Assembly", "Line Coverage", "Branch Coverage") -ForegroundColor White
+        Write-Host ("-" * 72) -ForegroundColor DarkGray
+
+        $prefixPackages = @()
+        $prefixTotalLines = 0
+        $prefixCoveredLines = 0
+        $prefixTotalBranches = 0
+        $prefixCoveredBranches = 0
+
+        foreach ($pkg in $packages) {
+            $name = $pkg.GetAttribute("name")
+
+            # Match prefix pattern (e.g., Functorium.* but exclude tests)
+            if ($name -like "$Prefix*" -and $name -notlike "*.Tests*") {
+                $lineRate = [double]$pkg.GetAttribute("line-rate") * 100
+                $branchRateAttr = $pkg.GetAttribute("branch-rate")
+                $branchRate = if ($branchRateAttr) { [double]$branchRateAttr * 100 } else { 0 }
+
+                Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f $name, $lineRate, $branchRate)
+
+                $prefixPackages += $pkg
+
+                # Accumulate for total calculation
+                $lines = $pkg.SelectNodes(".//line")
+                foreach ($line in $lines) {
+                    $prefixTotalLines++
+                    if ([int]$line.GetAttribute("hits") -gt 0) { $prefixCoveredLines++ }
+                }
+
+                # Accumulate branch coverage
+                $conditions = $pkg.SelectNodes(".//condition")
+                foreach ($condition in $conditions) {
+                    $prefixTotalBranches++
+                    $cov = $condition.GetAttribute("coverage")
+                    if ($cov -and [double]$cov -gt 0) { $prefixCoveredBranches++ }
+                }
+            }
+        }
+
+        if ($prefixPackages.Count -gt 0 -and $prefixTotalLines -gt 0) {
+            $prefixLineRate = ($prefixCoveredLines / $prefixTotalLines) * 100
+            $prefixBranchRate = if ($prefixTotalBranches -gt 0) { ($prefixCoveredBranches / $prefixTotalBranches) * 100 } else { 0 }
+            Write-Host ("-" * 72) -ForegroundColor DarkGray
+            Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f "Total", $prefixLineRate, $prefixBranchRate) -ForegroundColor Green
+        } elseif ($prefixPackages.Count -eq 0) {
+            Write-Host "No matching projects found." -ForegroundColor Yellow
+        }
     }
 
     # Core layer coverage
@@ -577,24 +662,27 @@ function Main {
             Write-Info "Version mode: Stable (production)"
         }
 
-        # 2. Build
+        # 2. Check vulnerable packages
+        Test-VulnerablePackages -SolutionPath $solutionPath
+
+        # 3. Build
         Invoke-Build -SolutionPath $solutionPath -VersionSuffix $versionSuffix
 
-        # 3. Run tests with coverage
+        # 4. Run tests with coverage
         Invoke-TestWithCoverage -SolutionPath $solutionPath
 
-        # 4. Merge coverage reports
+        # 5. Merge coverage reports
         $coverageFiles = Merge-CoverageReports
         if (-not $coverageFiles) {
             Write-Host "No coverage files found. Cannot generate report." -ForegroundColor Yellow
             exit 0
         }
 
-        # 5. Generate HTML report
+        # 6. Generate HTML report
         New-HtmlReport -CoverageFiles $coverageFiles
 
-        # 6. Display coverage results in console
-        Show-CoverageReport -CoverageFiles $coverageFiles
+        # 7. Display coverage results in console
+        Show-CoverageReport -CoverageFiles $coverageFiles -Prefix $ProjectPrefix
 
         # Complete
         $endTime = Get-Date
