@@ -417,5 +417,4 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
-
-.TestResults/
+.CoverageReport/

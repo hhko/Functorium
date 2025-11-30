@@ -28,13 +28,14 @@ permissions:
 
 env:
   CONFIGURATION: Release
-  SOLUTION_FILE: Functorium.sln
-  TEST_RESULTS_DIR: .TestResults
-  REPORTGENERATOR_VERSION: 5.5.0
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+
+    env:
+      SOLUTION_FILE: ${{ github.workspace }}/Functorium.sln
+      COVERAGE_REPORT_DIR: ${{ github.workspace }}/.CoverageReport
 
     strategy:
       matrix:
@@ -63,54 +64,51 @@ jobs:
 
       - name: Check for vulnerable packages
         run: |
-          dotnet list ${{ env.SOLUTION_FILE }} package --vulnerable --include-transitive 2>&1 | tee vulnerability-report.txt
-          if grep -q "has the following vulnerable packages" vulnerability-report.txt; then
+          dotnet list ${{ env.SOLUTION_FILE }} package --vulnerable --include-transitive 2>&1 | tee ${{ github.workspace }}/vulnerability-report.txt
+          if grep -q "has the following vulnerable packages" ${{ github.workspace }}/vulnerability-report.txt; then
             echo "::warning::Vulnerable packages detected. Review vulnerability-report.txt for details."
           fi
 
       - name: Build
-        run: dotnet build ${{ env.SOLUTION_FILE }} --no-restore -c ${{ env.CONFIGURATION }}
+        run: |
+          dotnet build ${{ env.SOLUTION_FILE }} \
+            --configuration ${{ env.CONFIGURATION }} \
+            --no-restore
 
       - name: Test with coverage
         run: |
-          dotnet test ${{ env.SOLUTION_FILE }} --no-build -c ${{ env.CONFIGURATION }} \
-            --results-directory ${{ env.TEST_RESULTS_DIR }} \
+          dotnet test ${{ env.SOLUTION_FILE }} \
+            --configuration ${{ env.CONFIGURATION }} \
+            --no-build \
             --collect:"XPlat Code Coverage" \
-            --logger "trx;LogFilePrefix=testresults" \
+            --logger "trx" \
+            --logger "console;verbosity=minimal" \
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
-
-      - name: List test results directory
-        if: always()
-        run: |
-          echo "=== Test Results Directory Structure ==="
-          find ${{ env.TEST_RESULTS_DIR }} -type f 2>/dev/null || echo "Directory not found or empty"
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results-${{ matrix.os }}-dotnet${{ matrix.dotnet }}
-          path: ${{ env.TEST_RESULTS_DIR }}/*.trx
+          path: ${{ github.workspace }}/**/TestResults/**/*.trx
           retention-days: 30
 
-      - name: Install ReportGenerator
-        run: dotnet tool install -g dotnet-reportgenerator-globaltool --version ${{ env.REPORTGENERATOR_VERSION }}
-
       - name: Generate coverage report
-        run: |
-          reportgenerator \
-            -reports:${{ env.TEST_RESULTS_DIR }}/**/coverage.cobertura.xml \
-            -targetdir:${{ env.TEST_RESULTS_DIR }}/coverage/report \
-            -reporttypes:"Html;Cobertura;TextSummary;MarkdownSummaryGithub" \
-            -assemblyfilters:"-*.Tests*"
+        uses: danielpalme/ReportGenerator-GitHub-Action@v5.4.4
+        with:
+          reports: '${{ github.workspace }}/**/TestResults/**/coverage.cobertura.xml'
+          targetdir: '${{ env.COVERAGE_REPORT_DIR }}'
+          reporttypes: 'Html;Cobertura;TextSummary;MarkdownSummaryGithub'
+          assemblyfilters: '-*.Tests.*'
+          verbosity: 'Info'
 
       - name: Display coverage summary
         run: |
-          cat ${{ env.TEST_RESULTS_DIR }}/coverage/report/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+          cat ${{ env.COVERAGE_REPORT_DIR }}/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report-${{ matrix.os }}-dotnet${{ matrix.dotnet }}
-          path: ${{ env.TEST_RESULTS_DIR }}/coverage/report/
+          path: ${{ env.COVERAGE_REPORT_DIR }}/
           retention-days: 30
