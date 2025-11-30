@@ -1,0 +1,109 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'Docs/**'
+      - '.editorconfig'
+      - '.gitignore'
+      - '.claude/**'
+      - 'Build.ps1'
+      - 'LICENSE'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'Docs/**'
+      - '.editorconfig'
+      - '.gitignore'
+      - '.claude/**'
+      - 'Build.ps1'
+      - 'LICENSE'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CONFIGURATION: Release
+  SOLUTION_FILE: Functorium.sln
+  TEST_RESULTS_DIR: .TestResults
+  REPORTGENERATOR_VERSION: 5.5.0
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-24.04]
+        dotnet: ['9.0.x']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.dotnet }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore ${{ env.SOLUTION_FILE }}
+
+      - name: Check for vulnerable packages
+        run: |
+          dotnet list ${{ env.SOLUTION_FILE }} package --vulnerable --include-transitive 2>&1 | tee vulnerability-report.txt
+          if grep -q "has the following vulnerable packages" vulnerability-report.txt; then
+            echo "::warning::Vulnerable packages detected. Review vulnerability-report.txt for details."
+          fi
+
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION_FILE }} --no-restore -c ${{ env.CONFIGURATION }}
+
+      - name: Test with coverage
+        run: |
+          dotnet test ${{ env.SOLUTION_FILE }} --no-build -c ${{ env.CONFIGURATION }} \
+            --results-directory ${{ env.TEST_RESULTS_DIR }} \
+            --collect:"XPlat Code Coverage" \
+            --logger "trx;LogFileName=test-results.trx" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.os }}-dotnet${{ matrix.dotnet }}
+          path: ${{ env.TEST_RESULTS_DIR }}/**/*.trx
+          retention-days: 30
+
+      - name: Install ReportGenerator
+        run: dotnet tool install -g dotnet-reportgenerator-globaltool --version ${{ env.REPORTGENERATOR_VERSION }}
+
+      - name: Generate coverage report
+        run: |
+          reportgenerator \
+            -reports:${{ env.TEST_RESULTS_DIR }}/**/coverage.cobertura.xml \
+            -targetdir:${{ env.TEST_RESULTS_DIR }}/coverage/report \
+            -reporttypes:"Html;Cobertura;TextSummary" \
+            -assemblyfilters:"-*.Tests*"
+
+      - name: Display coverage summary
+        run: cat ${{ env.TEST_RESULTS_DIR }}/coverage/report/Summary.txt
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ matrix.os }}-dotnet${{ matrix.dotnet }}
+          path: ${{ env.TEST_RESULTS_DIR }}/coverage/report/
+          retention-days: 30
