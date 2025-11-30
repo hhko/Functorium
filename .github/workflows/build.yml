@@ -76,7 +76,7 @@ jobs:
           dotnet test ${{ env.SOLUTION_FILE }} --no-build -c ${{ env.CONFIGURATION }} \
             --results-directory ${{ env.TEST_RESULTS_DIR }} \
             --collect:"XPlat Code Coverage" \
-            --logger "trx;LogFileName=test-results.trx" \
+            --logger "trx;LogFilePrefix=testresults" \
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
 
       - name: Upload test results
@@ -84,7 +84,7 @@ jobs:
         if: always()
         with:
           name: test-results-${{ matrix.os }}-dotnet${{ matrix.dotnet }}
-          path: ${{ env.TEST_RESULTS_DIR }}/**/*.trx
+          path: ${{ env.TEST_RESULTS_DIR }}/*.trx
           retention-days: 30
 
       - name: Install ReportGenerator
@@ -95,11 +95,12 @@ jobs:
           reportgenerator \
             -reports:${{ env.TEST_RESULTS_DIR }}/**/coverage.cobertura.xml \
             -targetdir:${{ env.TEST_RESULTS_DIR }}/coverage/report \
-            -reporttypes:"Html;Cobertura;TextSummary" \
+            -reporttypes:"Html;Cobertura;TextSummary;MarkdownSummaryGithub" \
             -assemblyfilters:"-*.Tests*"
 
       - name: Display coverage summary
-        run: cat ${{ env.TEST_RESULTS_DIR }}/coverage/report/Summary.txt
+        run: |
+          cat ${{ env.TEST_RESULTS_DIR }}/coverage/report/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4

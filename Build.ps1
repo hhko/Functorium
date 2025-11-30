@@ -330,12 +330,14 @@ function Invoke-TestWithCoverage {
     }
 
     # Run tests with coverage collection
+    # LogFilePrefix ensures unique filenames per test project: {prefix}_{project}.trx
     dotnet test $SolutionPath `
         -c $script:Configuration `
         --no-build `
         --nologo `
         --results-directory $script:TestResultsDir `
         --collect:"XPlat Code Coverage" `
+        --logger "trx;LogFilePrefix=testresults" `
         -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
 
     if ($LASTEXITCODE -ne 0) {
