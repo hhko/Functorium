@@ -3,12 +3,34 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Src", "Src", "{3B9A038F-4302-441C-B1EB-C28401CB1387}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Functorium", "Src\Functorium\Functorium.csproj", "{8074755B-480D-4C1A-968C-99EDF471BCF8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Functorium.Tests.Unit", "Tests\Functorium.Tests.Unit\Functorium.Tests.Unit.csproj", "{BEBDCE83-FBCB-4C90-B49F-E446DE5795BD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{CBB6949A-1980-43DE-A63E-1E79FBD170AE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8074755B-480D-4C1A-968C-99EDF471BCF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8074755B-480D-4C1A-968C-99EDF471BCF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8074755B-480D-4C1A-968C-99EDF471BCF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8074755B-480D-4C1A-968C-99EDF471BCF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEBDCE83-FBCB-4C90-B49F-E446DE5795BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEBDCE83-FBCB-4C90-B49F-E446DE5795BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEBDCE83-FBCB-4C90-B49F-E446DE5795BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEBDCE83-FBCB-4C90-B49F-E446DE5795BD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8074755B-480D-4C1A-968C-99EDF471BCF8} = {3B9A038F-4302-441C-B1EB-C28401CB1387}
+		{BEBDCE83-FBCB-4C90-B49F-E446DE5795BD} = {CBB6949A-1980-43DE-A63E-1E79FBD170AE}
 	EndGlobalSection
 EndGlobal
