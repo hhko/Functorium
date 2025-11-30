@@ -1,4 +1,6 @@
+# 솔루션 만들기
 
+## 명령
 ```
 dotnet new editorconfig
 dotnet new nuget.config
@@ -8,6 +10,7 @@ dotnet new buildprops
 dotnet new packagesprops
 ```
 
+## 파일
 - [x] .editorconfig
 - [x] nuget.config
 - [x] .gitignore
