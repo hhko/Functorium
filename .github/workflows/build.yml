@@ -94,6 +94,7 @@ jobs:
           retention-days: 30
 
       - name: Generate coverage report
+        if: success()
         uses: danielpalme/ReportGenerator-GitHub-Action@v5.4.4
         with:
           reports: '${{ github.workspace }}/**/TestResults/**/coverage.cobertura.xml'
@@ -102,11 +103,22 @@ jobs:
           assemblyfilters: '-*.Tests.*'
           verbosity: 'Info'
 
+      - name: List coverage report directory
+        if: always()
+        run: |
+          echo "=== Coverage Report Directory (recursive) ==="
+          find ${{ env.COVERAGE_REPORT_DIR }} -type f 2>/dev/null || echo "Directory not found or empty"
+          echo ""
+          echo "=== All coverage.cobertura.xml files ==="
+          find ${{ github.workspace }} -name "coverage.cobertura.xml" -type f 2>/dev/null || echo "No coverage files found"
+
       - name: Display coverage summary
+        if: success()
         run: |
           cat ${{ env.COVERAGE_REPORT_DIR }}/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
 
       - name: Upload coverage report
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report-${{ matrix.os }}-dotnet${{ matrix.dotnet }}
