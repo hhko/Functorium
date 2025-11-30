@@ -120,6 +120,9 @@ insert_final_newline = false
 # csharp_style_prefer_primary_constructors = true:suggestion
 # csharp_style_prefer_top_level_statements = true:silent
 
+# Namespace declarations - file scoped namespace
+csharp_style_namespace_declarations = file_scoped:warning
+
 # # Expression-level preferences
 # csharp_prefer_simple_default_expression = true:suggestion
 # csharp_style_deconstructed_variable_declaration = true:suggestion
