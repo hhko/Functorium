@@ -1,1 +1,12 @@
-- [ ] claude commit 명령어
+- [x] claude commit 명령어
+- [x] 아키텍처 문서
+- [x] git 명령어 guide 문서화
+- [ ] 솔루션 구성
+- [ ] 솔루션 구성 문서화
+- [ ] 로컬 빌드
+- [ ] 로컬 빌드 문서화(dotnet 명령어)
+- [ ] GitHub actions build
+- [ ] GitHub actions build 문서화
+- [ ] GitHub actions publish
+- [ ] GitHub actions publish 문서화
+- [ ] 버전 체계 문서화
