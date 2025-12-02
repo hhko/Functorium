@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(dotnet:*)",
+      "Bash(dir:*)",
+      "Bash(echo:*)",
+      "Bash(pwsh:*)",
+      "Bash(git remote:*)",
+      "Bash(where:*)",
+      "Bash(docker info:*)",
+      "Bash(docker version:*)",
+      "Bash(docker ps:*)",
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
