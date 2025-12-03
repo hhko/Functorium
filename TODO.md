@@ -31,15 +31,19 @@
 - [x] DOTNET SDK 빌드 명시 문서: `Build-SdkVersion-GlobalJson.md
 - [x] 솔루션 구성: global.json SDK 버전 허용 범위 지정
 - [X] 솔루션 구성: nuget.config 파일 생성
-- [ ] 솔루션 구성: .editorconfig 폴더 단위 개별 지정
-- [ ] 솔루션 구성: Directory.Build.props 버전 체계
-- [ ] 솔루션 구성: Directory.Build.props 형상관리와 버전 연동
-- [ ] 솔루션 구성: Directory.Packages.props 하위 폴더 새로 시작, 버전 재정의
+- [x] 커밋 이력 ps1
+- [ ] powershell 학습 문서
+- [ ] powershell 가이드 문서
+- [ ] powershell 가이드 문서 기준 개선
 - [ ] 로컬 빌드
 - [ ] 로컬 빌드 문서(dotnet 명령어)
+- [ ] 버전 체계 문서
+- [ ] 솔루션 구성: Directory.Build.props 버전 체계
+- [ ] 솔루션 구성: Directory.Build.props 형상관리와 버전 연동
+- [ ] 솔루션 구성: .editorconfig 폴더 단위 개별 지정
+- [ ] 솔루션 구성: Directory.Packages.props 하위 폴더 새로 시작, 버전 재정의
 - [ ] GitHub actions build
 - [ ] GitHub actions build 문서
 - [ ] GitHub actions publish
 - [ ] GitHub actions publish 문서
-- [ ] 버전 체계 문서
 

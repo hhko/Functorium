@@ -1,3 +1,184 @@
+## Powershell 스크립트 비교
+```
+● 스크립트 비교 리뷰
+
+  1. 전체 구조
+
+  | 항목        | Build-CommitSummary.ps1 | Build-Local.ps1        |
+  |-----------|-------------------------|------------------------|
+  | 라인 수      | 757                     | 720                    |
+  | Shebang   | 없음                      | #!/usr/bin/env pwsh    |
+  | #Requires | 없음                      | #Requires -Version 7.0 |
+  | 스코프 변수    | 전역 변수 ($OUTPUT_DIR)     | $script: 접두사 사용        |
+  | Main 위치   | 가장 아래 (호출 순서대로)         | 가장 아래                  |
+  | region 구성 | Step 단위로 분리             | 기능 단위로 분리              |
+
+  2. 파라미터 정의
+
+  Build-CommitSummary.ps1:
+  [CmdletBinding()]
+  param(
+      [Parameter(Mandatory = $false, Position = 0, HelpMessage = "...")]
+      [string]$Range,
+
+      [Alias("h", "?")]
+      [switch]$Help
+  )
+
+  Build-Local.ps1:
+  param(
+      [Alias("s")]
+      [string]$Solution,
+
+      [switch]$Stable,
+
+      [Alias("suffix")]
+      [ValidateSet("dev", "alpha", "beta", "rc")]
+      [string]$SuffixPrefix = "dev",
+
+      [Alias("p")]
+      [string]$ProjectPrefix = "Functorium",
+
+      [Alias("h", "?")]
+      [switch]$Help
+  )
+
+  차이점:
+  - CommitSummary: [CmdletBinding()] 사용
+  - Local: ValidateSet 검증 사용
+  - Local: 더 많은 Alias 활용
+
+  3. 상수/설정 관리
+
+  Build-CommitSummary.ps1:
+  $COMMIT_TYPES = @{ ... }
+  $OUTPUT_DIR = ".commit-summaries"
+
+  Build-Local.ps1:
+  $script:ScriptDir = $PSScriptRoot
+  $script:WorkingDir = $PWD.Path
+  $script:Configuration = "Release"
+  $script:CoreLayerPatterns = @(...)
+  $script:ReportGeneratorVersion = "5.5.0"
+  $script:SectionLine = "═" * 80
+
+  차이점:
+  - CommitSummary: 단순 전역 변수
+  - Local: $script: 스코프 명시, 더 많은 설정 변수
+
+  4. 도움말 구현
+
+  Build-CommitSummary.ps1: Write-Host로 구조화된 출력
+  function Show-Help {
+      Write-Host "사용법:" -ForegroundColor Yellow
+      Write-Host "  .\$scriptName [[-Range] <string>] [-Help]"
+      ...
+  }
+
+  Build-Local.ps1: Here-String 사용
+  function Show-Help {
+      $help = @"
+  ================================================================================
+   .NET Solution Build and Test Script
+  ================================================================================
+  ...
+  "@
+      Write-Host $help
+  }
+
+  평가: Local의 Here-String이 유지보수 용이
+
+  5. 출력 함수
+
+  Build-CommitSummary.ps1:
+  Write-Host "[1/7] Git 저장소 확인 중..." -ForegroundColor Gray
+  Write-Host "   Git 저장소 확인 완료" -ForegroundColor DarkGray
+
+  Build-Local.ps1:
+  function Write-StepHeader { ... }
+  function Write-SubHeader { ... }
+  function Write-Success { ... }
+  function Write-Info { ... }
+
+  평가: Local이 출력 함수를 추상화하여 재사용성 높음
+
+  6. 에러 처리
+
+  Build-CommitSummary.ps1:
+  try {
+      Main -CommitRange $Range
+      exit 0
+  }
+  catch {
+      Write-Host "[오류] 예상치 못한 오류가 발생했습니다:" -ForegroundColor Red
+      Write-Host "   $($_.Exception.Message)" -ForegroundColor Red
+      Write-Host $_.ScriptStackTrace -ForegroundColor DarkGray
+      exit 1
+  }
+
+  Build-Local.ps1:
+  try {
+      ...
+  } catch {
+      Write-Host "Error: $_" -ForegroundColor Red
+      Write-Host $_.ScriptStackTrace -ForegroundColor DarkRed
+      exit 1
+  }
+
+  평가: CommitSummary가 더 사용자 친화적 에러 메시지
+
+  7. Main 함수 구조
+
+  Build-CommitSummary.ps1: 명확한 단계별 주석
+  function Main {
+      # 1. Git 저장소 검증
+      Assert-GitRepository
+
+      # 2. 커밋 범위 결정
+      $resolvedRange = Resolve-CommitRange -Range $CommitRange
+      ...
+  }
+
+  Build-Local.ps1: 시작/종료 배너, 시간 측정
+  function Main {
+      $startTime = Get-Date
+
+      Write-Host "═══...═══" -ForegroundColor Green
+      Write-Host " .NET Solution Build and Test Script"
+      ...
+
+      $duration = $endTime - $startTime
+      Write-Host " Duration: $($duration.ToString('mm\\:ss'))"
+  }
+
+  8. 권장 개선사항
+
+  | 항목                     | CommitSummary 적용      | Local 적용  |
+  |------------------------|-----------------------|-----------|
+  | #Requires -Version 7.0 | 추가 권장                 | 이미 있음     |
+  | $script: 스코프           | 추가 권장                 | 이미 있음     |
+  | 출력 헬퍼 함수               | Write-StepHeader 등 도입 | 이미 있음     |
+  | Here-String 도움말        | 변환 권장                 | 이미 있음     |
+  | 실행 시간 측정               | 추가 권장                 | 이미 있음     |
+  | [CmdletBinding()]      | 이미 있음                 | 추가 권장     |
+  | ValidateSet            | 해당 없음                 | 이미 있음     |
+  | Step 진행률 표시            | 이미 있음 ([1/7])         | 섹션 헤더로 대체 |
+
+  9. 결론
+
+  | 관점       | 우수 스크립트                      |
+  |----------|------------------------------|
+  | 코드 구조화   | CommitSummary (Step별 region) |
+  | Main 가독성 | CommitSummary (번호 주석)        |
+  | 출력 추상화   | Local (헬퍼 함수)                |
+  | 설정 관리    | Local ($script: 스코프)         |
+  | 파라미터 검증  | Local (ValidateSet)          |
+  | 도움말 유지보수 | Local (Here-String)          |
+  | 에러 메시지   | CommitSummary (사용자 친화적)      |
+
+  권장: 두 스크립트의 장점을 조합하여 공통 패턴 확립
+```
+
 ## Traverse
 - Language-Ext의 Traverse 동작:
   - Traverse는 기본적으로 순차적으로 동작
