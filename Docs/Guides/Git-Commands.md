@@ -7,6 +7,7 @@
 - [변경사항 확인](#변경사항-확인)
 - [스테이징](#스테이징)
 - [커밋](#커밋)
+- [태그](#태그)
 - [브랜치](#브랜치)
 - [원격 저장소](#원격-저장소)
 - [실행 취소](#실행-취소)
@@ -45,6 +46,13 @@ git branch -d <브랜치>
 git pull
 git push
 git fetch
+```
+
+**태그:**
+```bash
+git tag --list                        # 태그 목록
+git tag v1.0.0                        # 태그 생성
+git tag --sort=-v:refname             # 버전 역순 정렬
 ```
 
 **긴급 상황:**
@@ -126,6 +134,17 @@ git branch -d feature/login
 | `git log --oneline` | 커밋 이력 한 줄로 확인 |
 | `git log --oneline -5` | 최근 5개 커밋 이력 확인 |
 | `git log --graph` | 브랜치 그래프와 함께 이력 확인 |
+| `git log --no-merges` | 머지 커밋 제외하고 확인 |
+| `git log --format="%ai"` | 커밋 날짜만 출력 |
+
+### 범위 지정
+
+| 명령어 | 설명 |
+|--------|------|
+| `git log v1.0.0..HEAD` | 태그 이후 커밋 확인 |
+| `git log v1.0.0..v1.1.0` | 두 태그 사이 커밋 확인 |
+| `git log HEAD~10..HEAD` | 최근 10개 커밋 확인 |
+| `git log main..feature` | main 이후 feature 브랜치 커밋 확인 |
 
 ### 사용 예시
 
@@ -141,6 +160,12 @@ git diff --staged
 
 # 최근 커밋 5개 확인
 git log --oneline -5
+
+# 태그 이후 커밋 확인 (머지 제외)
+git log v1.0.0..HEAD --oneline --no-merges
+
+# 최근 10개 커밋 날짜 확인
+git log HEAD~10..HEAD --format="%ai"
 ```
 
 <br/>
@@ -195,6 +220,58 @@ git commit
 
 # 마지막 커밋 메시지 수정
 git commit --amend -m "fix: 로그인 버그 수정"
+```
+
+<br/>
+
+## 태그
+
+### 기본 명령어
+
+| 명령어 | 설명 |
+|--------|------|
+| `git tag` | 태그 목록 확인 |
+| `git tag --list` | 태그 목록 확인 (동일) |
+| `git tag <이름>` | 경량 태그 생성 |
+| `git tag -a <이름> -m "메시지"` | 주석 태그 생성 |
+| `git tag -d <이름>` | 태그 삭제 |
+| `git push origin <태그>` | 태그 원격에 푸시 |
+| `git push origin --tags` | 모든 태그 푸시 |
+
+### 태그 정렬
+
+| 명령어 | 설명 |
+|--------|------|
+| `git tag --sort=-v:refname` | 버전 역순 정렬 (최신 먼저) |
+| `git tag --sort=v:refname` | 버전 순 정렬 (오래된 것 먼저) |
+| `git tag --sort=-creatordate` | 생성일 역순 정렬 |
+
+### 사용 예시
+
+```bash
+# 태그 목록 확인
+git tag --list
+
+# 최신 태그 확인 (버전 역순 정렬 후 첫 번째)
+git tag --sort=-v:refname | head -1
+
+# 주석 태그 생성
+git tag -a v1.0.0 -m "버전 1.0.0 릴리스"
+
+# 경량 태그 생성
+git tag v1.0.1
+
+# 태그 원격에 푸시
+git push origin v1.0.0
+
+# 모든 태그 푸시
+git push origin --tags
+
+# 태그 삭제
+git tag -d v1.0.0
+
+# 원격 태그 삭제
+git push origin --delete v1.0.0
 ```
 
 <br/>
