@@ -1,6 +1,9 @@
 # Git 명령어 가이드
 
+이 문서는 Git의 주요 명령어와 사용법을 설명합니다.
+
 ## 목차
+- [요약](#요약)
 - [변경사항 확인](#변경사항-확인)
 - [스테이징](#스테이징)
 - [커밋](#커밋)
@@ -9,6 +12,104 @@
 - [실행 취소](#실행-취소)
 - [트러블슈팅](#트러블슈팅)
 - [FAQ](#faq)
+
+<br/>
+
+## 요약
+
+### 주요 명령
+
+**상태 확인:**
+```bash
+git status
+git diff
+git log --oneline -5
+```
+
+**스테이징 및 커밋:**
+```bash
+git add <파일>
+git add .
+git commit -m "feat: 새 기능 추가"
+```
+
+**브랜치:**
+```bash
+git switch -c <브랜치>
+git merge <브랜치>
+git branch -d <브랜치>
+```
+
+**원격 동기화:**
+```bash
+git pull
+git push
+git fetch
+```
+
+**긴급 상황:**
+```bash
+git restore <파일>                    # 변경 취소
+git restore --staged <파일>           # 스테이징 취소
+git commit --amend -m "새 메시지"     # 커밋 메시지 수정
+git reset --soft HEAD~1               # 커밋 취소
+git merge --abort                     # 병합 취소
+```
+
+### 주요 절차
+
+**1. 기본 워크플로우:**
+```bash
+# 1. 변경사항 확인
+git status
+git diff
+
+# 2. 파일 스테이징
+git add <파일>
+
+# 3. 커밋
+git commit -m "feat: 새 기능 추가"
+
+# 4. 원격에 푸시
+git push
+```
+
+**2. 브랜치 작업:**
+```bash
+# 1. 새 브랜치 생성 및 전환
+git switch -c feature/login
+
+# 2. 작업 및 커밋
+git add .
+git commit -m "feat: 로그인 기능 추가"
+
+# 3. main으로 전환
+git switch main
+
+# 4. 브랜치 병합
+git merge feature/login
+
+# 5. 브랜치 삭제
+git branch -d feature/login
+```
+
+### 주요 개념
+
+**1. Git 워크플로우 이해**
+- 작업 디렉토리 → 스테이징 영역 → 로컬 저장소 → 원격 저장소
+- `git add`로 스테이징, `git commit`으로 저장, `git push`로 공유
+
+**2. 브랜치 전략**
+- `main`: 안정 버전
+- `feature/*`: 새 기능 개발
+- 작업 완료 후 `main`에 병합
+
+**3. 안전 수칙**
+- ✓ 변경 전 `git status`로 현재 상태 확인
+- ✓ 커밋 전 `git diff`로 변경 내용 검토
+- ✓ 작고 자주 커밋 (논리적 단위)
+- ✗ `--force` 금지 (개인 브랜치만 허용)
+- ✗ `main` 직접 커밋 금지
 
 <br/>
 
@@ -438,7 +539,7 @@ git push --force-with-lease
 
 **권장 사용법:**
 - `merge`: 공유 브랜치(main)에 기능 브랜치 병합 시
-- `rebase`: 개인 브랜치를 최신 main에 맞출 때
+- `rebase`: 개인 브랜치를 최신 main에 맞춰 때
 
 ```bash
 # merge 사용
@@ -449,3 +550,7 @@ git merge feature/login
 git checkout feature/login
 git rebase main
 ```
+
+## 참고 문서
+
+- [Git 커밋 가이드](./Git-Commit.md) - Git 커밋 메시지 작성 규칙
