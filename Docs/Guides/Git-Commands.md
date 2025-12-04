@@ -51,6 +51,7 @@ git fetch
 **태그:**
 ```bash
 git tag --list                        # 태그 목록
+git tag -l -n1                        # 태그 목록과 메시지 첫 줄
 git tag v1.0.0                        # 태그 생성
 git tag --sort=-v:refname             # 버전 역순 정렬
 ```
@@ -135,7 +136,27 @@ git branch -d feature/login
 | `git log --oneline -5` | 최근 5개 커밋 이력 확인 |
 | `git log --graph` | 브랜치 그래프와 함께 이력 확인 |
 | `git log --no-merges` | 머지 커밋 제외하고 확인 |
+
+### 커스텀 포맷
+
+| 명령어 | 설명 |
+|--------|------|
+| `git log --format="%h"` | 짧은 커밋 해시만 출력 |
+| `git log --format="%an"` | 작성자 이름만 출력 |
+| `git log --format="%s"` | 커밋 제목만 출력 |
 | `git log --format="%ai"` | 커밋 날짜만 출력 |
+| `git log --format="%h\|%an\|%s"` | 해시, 작성자, 제목 출력 (구분자: \|) |
+
+**주요 포맷 지정자:**
+- `%h` - 짧은 해시
+- `%H` - 전체 해시
+- `%an` - 작성자 이름
+- `%ae` - 작성자 이메일
+- `%ad` - 작성 날짜
+- `%ai` - 작성 날짜 (ISO 8601 형식)
+- `%s` - 커밋 제목
+- `%b` - 커밋 본문
+- `%D` - ref 이름 (브랜치, 태그)
 
 ### 범위 지정
 
@@ -160,6 +181,12 @@ git diff --staged
 
 # 최근 커밋 5개 확인
 git log --oneline -5
+
+# 커밋 해시, 작성자, 제목 출력 (구분자: |)
+git log --format="%h|%an|%s"
+
+# 최근 10개 커밋의 해시, 작성자, 제목 확인
+git log -10 --format="%h|%an|%s"
 
 # 태그 이후 커밋 확인 (머지 제외)
 git log v1.0.0..HEAD --oneline --no-merges
@@ -232,11 +259,14 @@ git commit --amend -m "fix: 로그인 버그 수정"
 |--------|------|
 | `git tag` | 태그 목록 확인 |
 | `git tag --list` | 태그 목록 확인 (동일) |
+| `git tag -l -n1` | 태그 목록과 메시지 첫 줄 확인 |
+| `git tag -l -n` | 태그 목록과 전체 메시지 확인 |
 | `git tag <이름>` | 경량 태그 생성 |
 | `git tag -a <이름> -m "메시지"` | 주석 태그 생성 |
 | `git tag -d <이름>` | 태그 삭제 |
 | `git push origin <태그>` | 태그 원격에 푸시 |
 | `git push origin --tags` | 모든 태그 푸시 |
+| `git push origin :refs/tags/<태그>` | 원격 태그 삭제 |
 
 ### 태그 정렬
 
@@ -251,6 +281,12 @@ git commit --amend -m "fix: 로그인 버그 수정"
 ```bash
 # 태그 목록 확인
 git tag --list
+
+# 태그 목록과 메시지 첫 줄 확인
+git tag -l -n1
+
+# 태그 목록과 전체 메시지 확인
+git tag -l -n
 
 # 최신 태그 확인 (버전 역순 정렬 후 첫 번째)
 git tag --sort=-v:refname | head -1
@@ -267,11 +303,14 @@ git push origin v1.0.0
 # 모든 태그 푸시
 git push origin --tags
 
-# 태그 삭제
+# 로컬 태그 삭제
 git tag -d v1.0.0
 
-# 원격 태그 삭제
+# 원격 태그 삭제 (방법 1)
 git push origin --delete v1.0.0
+
+# 원격 태그 삭제 (방법 2)
+git push origin :refs/tags/v1.0.0
 ```
 
 <br/>
