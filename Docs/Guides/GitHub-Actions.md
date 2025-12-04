@@ -33,7 +33,7 @@ Git 태그 기반 자동 버전 관리와 CI/CD 파이프라인을 통해 안정
 프로젝트루트/
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml           # CI 워크플로우
+│       ├── build.yml        # Build 워크플로우 (CI)
 │       └── release.yml      # Release 워크플로우
 └── Docs/
     └── Guides/
@@ -44,22 +44,26 @@ Git 태그 기반 자동 버전 관리와 CI/CD 파이프라인을 통해 안정
 
 ## 워크플로우 구성
 
-### CI 워크플로우 (ci.yml)
+### Build 워크플로우 (build.yml)
 
 **트리거:**
 - Pull Request to main
 - Push to main 브랜치
-- 문서 파일은 제외 (*.md, Docs/**)
+- 문서/스크립트 파일은 제외 (*.md, Docs/**, .claude/**, *.ps1)
+- 수동 실행 (workflow_dispatch)
 
 **작업:**
 1. 코드 체크아웃 (전체 Git 히스토리)
 2. .NET 10 설정
-3. 의존성 복원
-4. Release 모드 빌드
-5. MinVer 버전 확인
-6. 테스트 실행
-7. 코드 커버리지 수집
-8. Codecov 업로드
+3. NuGet 패키지 캐시
+4. 의존성 복원
+5. 취약점 패키지 검사
+6. Release 모드 빌드 (MinVer 버전 출력 포함)
+7. 테스트 실행 및 커버리지 수집
+8. 테스트 결과 업로드
+9. ReportGenerator로 커버리지 리포트 생성
+10. 커버리지 요약 표시 (GITHUB_STEP_SUMMARY)
+11. 커버리지 리포트 업로드
 
 ### Release 워크플로우 (release.yml)
 
@@ -86,12 +90,14 @@ Git 태그 기반 자동 버전 관리와 CI/CD 파이프라인을 통해 안정
 
 **필수 Secrets:**
 
-| Secret | 용도 | 획득 방법 |
-|--------|------|----------|
-| `NUGET_API_KEY` | NuGet.org 배포 | [NuGet.org API Keys](https://www.nuget.org/account/apikeys) |
-| `CODECOV_TOKEN` | Codecov 업로드 | [Codecov](https://codecov.io/) |
+| Secret | 용도 | 필수 여부 | 획득 방법 |
+|--------|------|----------|----------|
+| `NUGET_API_KEY` | NuGet.org 배포 | Release 시 필수 | [NuGet.org API Keys](https://www.nuget.org/account/apikeys) |
+| `CODECOV_TOKEN` | Codecov 업로드 | 선택 (현재 비활성화) | [Codecov](https://codecov.io/) |
 
 **GITHUB_TOKEN은 자동 제공됨** (GitHub Packages, Release 생성)
+
+> **참고:** 현재 build.yml에서 Codecov 업로드는 주석 처리되어 있습니다. 대신 ReportGenerator로 커버리지 리포트를 생성하고 Artifacts로 업로드합니다.
 
 ### 2. GitHub Secrets 추가 방법
 
@@ -125,14 +131,14 @@ Git 태그 기반 자동 버전 관리와 CI/CD 파이프라인을 통해 안정
 
 <br/>
 
-## CI 워크플로우
+## Build 워크플로우
 
 ### 워크플로우 파일
 
-`.github/workflows/ci.yml`:
+`.github/workflows/build.yml`:
 
 ```yaml
-name: CI
+name: Build
 
 on:
   push:
@@ -140,21 +146,35 @@ on:
     paths-ignore:
       - '**.md'
       - 'Docs/**'
+      - '.claude/**'
+      - '**.ps1'
   pull_request:
     branches: [ main ]
     paths-ignore:
       - '**.md'
       - 'Docs/**'
+      - '.claude/**'
+      - '**.ps1'
+  workflow_dispatch:
 
 env:
-  DOTNET_VERSION: '10.0.x'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
+  CONFIGURATION: Release
 
 jobs:
   build:
     name: Build and Test
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+
+    env:
+      SOLUTION_FILE: ${{ github.workspace }}/Functorium.slnx
+      COVERAGE_REPORT_DIR: ${{ github.workspace }}/coverage
+
+    strategy:
+      matrix:
+        os: [ubuntu-24.04]
+        dotnet: ['10.0.x']
 
     steps:
     - name: Checkout
@@ -165,36 +185,73 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
+        dotnet-version: ${{ matrix.dotnet }}
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
 
     - name: Restore dependencies
-      run: dotnet restore Functorium.slnx
+      run: dotnet restore ${{ env.SOLUTION_FILE }}
+
+    - name: Check for vulnerable packages
+      run: |
+        dotnet list ${{ env.SOLUTION_FILE }} package --vulnerable --include-transitive 2>&1 | tee vulnerability-report.txt
+        if grep -q "has the following vulnerable packages" vulnerability-report.txt; then
+          echo "::warning::Vulnerable packages detected. Review vulnerability-report.txt for details."
+        fi
 
     - name: Build
-      run: dotnet build Functorium.slnx -c Release --no-restore
-
-    - name: Display version
-      run: dotnet build Functorium.slnx -c Release --no-restore -p:MinVerVerbosity=normal
-
-    - name: Run tests
-      run: dotnet test Functorium.slnx -c Release --no-build --verbosity normal
-
-    - name: Run tests with coverage
       run: |
-        dotnet test Functorium.slnx \
-          -c Release \
+        dotnet build ${{ env.SOLUTION_FILE }} \
+          --configuration ${{ env.CONFIGURATION }} \
+          --no-restore \
+          -p:MinVerVerbosity=normal
+
+    - name: Test with coverage
+      run: |
+        dotnet test ${{ env.SOLUTION_FILE }} \
+          --configuration ${{ env.CONFIGURATION }} \
           --no-build \
           --collect:"XPlat Code Coverage" \
-          --results-directory ./coverage
+          --logger "trx" \
+          --logger "console;verbosity=minimal" \
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
 
-    - name: Upload coverage reports
-      uses: codecov/codecov-action@v4
-      if: success()
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
       with:
-        directory: ./coverage
-        fail_ci_if_error: false
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        name: test-results-${{ matrix.os }}-dotnet${{ matrix.dotnet }}
+        path: ${{ github.workspace }}/**/TestResults/**/*.trx
+        retention-days: 30
+
+    - name: Generate coverage report
+      if: success()
+      uses: danielpalme/ReportGenerator-GitHub-Action@v5.4.4
+      with:
+        reports: '${{ github.workspace }}/**/TestResults/**/coverage.cobertura.xml'
+        targetdir: '${{ env.COVERAGE_REPORT_DIR }}'
+        reporttypes: 'Html;Cobertura;TextSummary;MarkdownSummaryGithub'
+        assemblyfilters: '-*.Tests.*'
+        verbosity: 'Info'
+
+    - name: Display coverage summary
+      if: success()
+      run: |
+        cat ${{ env.COVERAGE_REPORT_DIR }}/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+
+    - name: Upload coverage report
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report-${{ matrix.os }}-dotnet${{ matrix.dotnet }}
+        path: '${{ env.COVERAGE_REPORT_DIR }}'
+        retention-days: 30
 ```
 
 ### 실행 시점
@@ -202,13 +259,18 @@ jobs:
 **Push to main:**
 ```bash
 git push origin main
-# CI 워크플로우 자동 실행
+# Build 워크플로우 자동 실행
 ```
 
 **Pull Request:**
 ```bash
 gh pr create --base main --head feature/new-feature
-# CI 워크플로우 자동 실행
+# Build 워크플로우 자동 실행
+```
+
+**수동 실행:**
+```bash
+# GitHub Actions 탭 → Build → Run workflow
 ```
 
 ### 로그 확인
@@ -471,7 +533,7 @@ Settings → Actions → General:
 
 **해결:**
 
-`ci.yml`, `release.yml`의 버전 수정:
+`build.yml`, `release.yml`의 버전 수정:
 ```yaml
 env:
   DOTNET_VERSION: '9.0.x'  # 또는 현재 설치 가능한 버전
@@ -570,19 +632,19 @@ dotnet add package Functorium --version 1.0.0 --source github
 
 ### Q6. 워크플로우 실행 시간을 줄이려면?
 
-**A:** 캐시를 활용하세요:
+**A:** 캐시를 활용하세요 (build.yml에 이미 적용됨):
 
 ```yaml
 - name: Cache NuGet packages
   uses: actions/cache@v4
   with:
     path: ~/.nuget/packages
-    key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+    key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
     restore-keys: |
       ${{ runner.os }}-nuget-
 
 - name: Restore dependencies
-  run: dotnet restore Functorium.slnx
+  run: dotnet restore ${{ env.SOLUTION_FILE }}
 ```
 
 ### Q7. 여러 .NET 버전에서 테스트하려면?
@@ -622,17 +684,28 @@ jobs:
 
 ### Q9. Codecov 없이 커버리지를 보려면?
 
-**A:** Artifact로 업로드:
+**A:** build.yml에 이미 ReportGenerator와 Artifact 업로드가 설정되어 있습니다:
 
 ```yaml
+- name: Generate coverage report
+  uses: danielpalme/ReportGenerator-GitHub-Action@v5.4.4
+  with:
+    reports: '${{ github.workspace }}/**/TestResults/**/coverage.cobertura.xml'
+    targetdir: '${{ env.COVERAGE_REPORT_DIR }}'
+    reporttypes: 'Html;Cobertura;TextSummary;MarkdownSummaryGithub'
+
+- name: Display coverage summary
+  run: cat ${{ env.COVERAGE_REPORT_DIR }}/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+
 - name: Upload coverage report
   uses: actions/upload-artifact@v4
   with:
-    name: coverage-report
-    path: ./coverage
+    name: coverage-report-${{ matrix.os }}-dotnet${{ matrix.dotnet }}
+    path: '${{ env.COVERAGE_REPORT_DIR }}'
 ```
 
-Actions 탭 → Workflow 실행 → Artifacts에서 다운로드
+- Actions 탭 → Workflow 실행 → **Summary**에서 커버리지 요약 확인
+- **Artifacts**에서 상세 HTML 리포트 다운로드
 
 ### Q10. 워크플로우를 로컬 브랜치에서만 테스트하려면?
 
@@ -640,17 +713,19 @@ Actions 탭 → Workflow 실행 → Artifacts에서 다운로드
 
 ```bash
 # 비활성화
-mv .github/workflows/ci.yml .github/workflows/ci.yml.disabled
+mv .github/workflows/build.yml .github/workflows/build.yml.disabled
 
 # 다시 활성화
-mv .github/workflows/ci.yml.disabled .github/workflows/ci.yml
+mv .github/workflows/build.yml.disabled .github/workflows/build.yml
 ```
 
-또는 트리거 조건 수정:
+또는 수동 실행 사용 (build.yml에 이미 workflow_dispatch 설정됨):
 ```yaml
 on:
-  workflow_dispatch:  # 수동 실행만 허용
+  workflow_dispatch:  # 수동 실행 허용
 ```
+
+GitHub Actions 탭에서 **Run workflow** 버튼으로 수동 실행 가능
 
 ## 참고 문서
 
