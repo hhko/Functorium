@@ -12,12 +12,19 @@
 .PARAMETER Range
     git 범위 표현식 (선택사항)
     예: v1.0.0..HEAD, v1.0.0..v1.1.0, HEAD~10..HEAD
-    기본값: 마지막 태그 이후 커밋
+    기본값: 마지막 태그 이후 커밋 (태그 없으면 전체 커밋)
 
 .PARAMETER TargetBranch
     대상 브랜치 (선택사항)
     기본값: main
-    태그가 없을 때 이 브랜치부터 HEAD까지 커밋 조회
+    범위 결정 우선순위:
+    1. 태그가 있으면: [마지막태그]..HEAD
+    2. 태그가 없고 다른 브랜치면: [TargetBranch]..HEAD
+    3. 태그가 없고 같은 브랜치면: HEAD (전체 커밋)
+
+.PARAMETER OutputDir
+    출력 디렉토리 경로 (선택사항)
+    기본값: .commit-summaries
 
 .EXAMPLE
     .\Build-CommitSummary.ps1
@@ -35,6 +42,10 @@
     .\Build-CommitSummary.ps1 -TargetBranch develop
     develop 브랜치 기준으로 커밋 요약
 
+.EXAMPLE
+    .\Build-CommitSummary.ps1 -OutputDir "./releases"
+    출력 디렉토리를 ./releases로 지정
+
 .NOTES
     버전: 1.0.0
     요구사항: PowerShell 7+, git
@@ -51,6 +62,10 @@ param(
     [Parameter(Mandatory = $false, HelpMessage = "대상 브랜치 (기본값: main)")]
     [Alias("t")]
     [string]$TargetBranch = "main",
+
+    [Parameter(Mandatory = $false, HelpMessage = "출력 디렉토리 경로 (기본값: .commit-summaries)")]
+    [Alias("o")]
+    [string]$OutputDir = ".commit-summaries",
 
     [Parameter(Mandatory = $false, HelpMessage = "도움말을 표시합니다")]
     [Alias("h", "?")]
@@ -77,7 +92,7 @@ $script:COMMIT_TYPES = @{
     other    = @{ Description = "Non-conventional commits" }
 }
 
-$script:OUTPUT_DIR = ".commit-summaries"
+$script:OUTPUT_DIR = $null  # Entry Point에서 설정
 $script:MAX_AUTHOR_LENGTH = 15
 
 #endregion
@@ -142,8 +157,19 @@ function Resolve-CommitRange {
             Write-Host "   범위: $resolved (마지막 태그 이후)" -ForegroundColor DarkGray
         }
         else {
-            $resolved = "$TargetBranch..HEAD"
-            Write-Host "   범위: $resolved (대상 브랜치 기준)" -ForegroundColor DarkGray
+            # 태그가 없을 때: TargetBranch..HEAD 시도
+            $candidateRange = "$TargetBranch..HEAD"
+            $commitCount = @(git log $candidateRange --oneline --no-merges 2>$null).Count
+
+            if ($commitCount -gt 0) {
+                $resolved = $candidateRange
+                Write-Host "   범위: $resolved (대상 브랜치 기준)" -ForegroundColor DarkGray
+            }
+            else {
+                # 현재 브랜치가 TargetBranch와 동일한 경우 HEAD 사용
+                $resolved = "HEAD"
+                Write-Host "   범위: $resolved (전체 커밋, 태그 없음)" -ForegroundColor DarkGray
+            }
         }
     }
     else {
@@ -712,11 +738,17 @@ USAGE
 
 OPTIONS
     -Range, -r <string>     git 범위 표현식 (선택사항)
-                            기본값: 마지막 태그 이후 커밋
+                            기본값: 자동 결정 (아래 RANGE RESOLUTION 참조)
     -TargetBranch, -t       대상 브랜치 (선택사항)
                             기본값: main
-                            태그가 없을 때 이 브랜치부터 HEAD까지 커밋 조회
+    -OutputDir, -o          출력 디렉토리 경로 (선택사항)
+                            기본값: .commit-summaries
     -Help, -h, -?           도움말을 표시합니다
+
+RANGE RESOLUTION (범위가 지정되지 않았을 때)
+    1. 태그가 있으면         -> [마지막태그]..HEAD
+    2. 태그 없음 + 다른 브랜치 -> [TargetBranch]..HEAD
+    3. 태그 없음 + 같은 브랜치 -> HEAD (전체 커밋)
 
 COMMIT TYPES
     feat       New features (새로운 기능)
@@ -731,7 +763,7 @@ COMMIT TYPES
     chore      Other changes (기타 변경)
 
 OUTPUT
-    .commit-summaries/
+    <OutputDir>/
     └── summary-<range>-<timestamp>.md
 
 EXAMPLES
@@ -749,6 +781,10 @@ EXAMPLES
     # develop 브랜치 기준으로 커밋 요약
     ./Build-CommitSummary.ps1 -TargetBranch develop
     ./Build-CommitSummary.ps1 -t develop
+
+    # 출력 디렉토리 지정
+    ./Build-CommitSummary.ps1 -OutputDir "./releases"
+    ./Build-CommitSummary.ps1 -o "./releases"
 
     # 전체 커밋 요약 (태그 없는 경우와 동일)
     ./Build-CommitSummary.ps1 -Range "HEAD"
@@ -786,8 +822,14 @@ function Main {
         [string]$CommitRange,
 
         [Parameter(Mandatory = $false)]
-        [string]$TargetBranch = "main"
+        [string]$TargetBranch = "main",
+
+        [Parameter(Mandatory = $false)]
+        [string]$OutputDirectory = ".commit-summaries"
     )
+
+    # 출력 디렉토리 설정
+    $script:OUTPUT_DIR = $OutputDirectory
 
     Write-Host ""
     Write-Host "[시작] 커밋 요약 시작..." -ForegroundColor Blue
@@ -830,7 +872,7 @@ if ($Help) {
 }
 
 try {
-    Main -CommitRange $Range -TargetBranch $TargetBranch
+    Main -CommitRange $Range -TargetBranch $TargetBranch -OutputDirectory $OutputDir
     exit 0
 }
 catch {
