@@ -32,6 +32,13 @@
 - [x] 솔루션 구성: global.json SDK 버전 허용 범위 지정
 - [X] 솔루션 구성: nuget.config 파일 생성
 - [x] 커밋 이력 ps1
+- [x] Build-CommitSummary: 대상 브랜치 지정
+- [x] Build-CommitSummary: 커밋 작성자 추가
+- [x] Build-CommitSummary: 커밋 소스 브랜치 추가
+- [ ] commit 주제 전달일 때는 주체만 commit하기
+- [ ] ci.yml -> build.yml
+- [ ] build.yml 실패 처리
+- [ ] MinVer 이해
 - [ ] powershell 학습 문서
 - [ ] powershell 가이드 문서
 - [ ] powershell 가이드 문서 기준 개선
