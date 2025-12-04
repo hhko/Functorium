@@ -11,4 +11,25 @@
     <!-- Code Quality -->
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
+
+  <!-- Versioning with MinVer -->
+  <ItemGroup>
+    <PackageReference Include="MinVer">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- MinVer Configuration -->
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerVerbosity>minimal</MinVerVerbosity>
+    <MinVerDefaultPreReleaseIdentifiers>preview.0</MinVerDefaultPreReleaseIdentifiers>
+    <!-- Workaround for Unicode path issues: Use repository root instead of project directory -->
+    <MinVerWorkingDirectory>$(MSBuildThisFileDirectory)</MinVerWorkingDirectory>
+
+    <!-- Assembly Version Strategy -->
+    <AssemblyVersion>$(MinVerMajor).$(MinVerMinor).0.0</AssemblyVersion>
+    <FileVersion>$(MinVerMajor).$(MinVerMinor).$(MinVerPatch).0</FileVersion>
+  </PropertyGroup>
 </Project>
