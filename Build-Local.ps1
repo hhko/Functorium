@@ -31,12 +31,6 @@ param(
     [Alias("s")]
     [string]$Solution,
 
-    [switch]$Stable,
-
-    [Alias("suffix")]
-    [ValidateSet("dev", "alpha", "beta", "rc")]
-    [string]$SuffixPrefix = "dev",
-
     [Alias("p")]
     [string]$ProjectPrefix = "Functorium",
 
@@ -71,7 +65,7 @@ function Set-OutputPaths {
     param([string]$SolutionPath)
 
     $script:SolutionDir = Split-Path -Parent $SolutionPath
-    $script:CoverageReportDir = Join-Path $script:SolutionDir ".CoverageReport"
+    $script:CoverageReportDir = Join-Path $script:SolutionDir ".coverage"
     $script:ReportDir = $script:CoverageReportDir
 }
 
@@ -94,18 +88,14 @@ USAGE
     ./Build-Local.ps1 [options]
 
 OPTIONS
-    -Solution, -s      Path to solution file (.sln)
+    -Solution, -s      Path to solution file (.slnx)
                        If not specified, auto-detects from current directory
-    -Stable            Build as stable release (no version suffix)
-                       Default: false (adds version suffix)
-    -SuffixPrefix      Version suffix prefix (dev, alpha, beta, rc)
-    -suffix            Default: dev
     -ProjectPrefix, -p Project prefix for coverage filtering
                        Default: Functorium
     -Help, -h, -?      Show this help message
 
 FEATURES
-    1. Auto-detect solution file (requires exactly 1 .sln file)
+    1. Auto-detect solution file (requires exactly 1 .slnx file)
     2. Build in Release mode
     3. Run tests with code coverage collection
     4. Generate HTML coverage report (ReportGenerator)
@@ -115,7 +105,7 @@ FEATURES
        - Full: All projects (excluding tests)
 
 OUTPUT
-    {SolutionDir}/.CoverageReport/
+    {SolutionDir}/.coverage/
     ├── index.html            <- HTML Report
     └── Cobertura.xml         <- Merged coverage
 
@@ -129,17 +119,8 @@ PREREQUISITES
     - ReportGenerator v5.5.0 (auto-installed/updated if needed)
 
 EXAMPLES
-    # Run build and tests (auto-detect solution, dev suffix)
+    # Run build and tests (auto-detect solution)
     ./Build-Local.ps1
-    # Result: 1.0.1-dev-20251125-143052
-
-    # Build with alpha pre-release suffix
-    ./Build-Local.ps1 -SuffixPrefix alpha
-    # Result: 1.0.1-alpha-20251125-143052
-
-    # Build as stable release (no version suffix)
-    ./Build-Local.ps1 -Stable
-    # Result: 1.0.1
 
     # Specify solution file
     ./Build-Local.ps1 -Solution ./MyApp.sln
@@ -184,26 +165,6 @@ function Write-Info {
     Write-Host $Message -ForegroundColor White
 }
 
-function Get-VersionSuffix {
-    <#
-    .SYNOPSIS
-        Stable이 false일 때 VersionSuffix를 생성합니다.
-    .DESCRIPTION
-        형식: {prefix}-yyyyMMdd-HHmmss (예: dev-20251125-143052)
-    #>
-    param(
-        [bool]$IsStable,
-        [string]$Prefix = "dev"
-    )
-
-    if ($IsStable) {
-        return $null
-    }
-
-    $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-    return "$Prefix-$timestamp"
-}
-
 #endregion
 
 #region Core Functions
@@ -227,7 +188,7 @@ function Find-SolutionFile {
         }
 
         $file = Get-Item $SolutionPath
-        if ($file.Extension -ne ".sln") {
+        if ($file.Extension -ne ".slnx") {
             Write-Host "Invalid solution file: $SolutionPath" -ForegroundColor Red
             return $null
         }
@@ -239,7 +200,7 @@ function Find-SolutionFile {
     $searchPath = $script:WorkingDir
     Write-Info "Searching for solution in: $searchPath"
 
-    $slnFiles = @(Get-ChildItem -Path $searchPath -Filter "*.sln" -File)
+    $slnFiles = @(Get-ChildItem -Path $searchPath -Filter "*.slnx" -File)
 
     if ($slnFiles.Count -eq 0) {
         Write-Host "No solution file found in: $searchPath" -ForegroundColor Red
@@ -282,16 +243,10 @@ function Invoke-Build {
     .SYNOPSIS
         솔루션을 Release 모드로 빌드합니다.
     #>
-    param(
-        [string]$SolutionPath,
-        [string]$VersionSuffix
-    )
+    param([string]$SolutionPath)
 
     Write-StepHeader "Build Solution ($script:Configuration)"
     Write-Info "Solution: $SolutionPath"
-    if ($VersionSuffix) {
-        Write-Info "VersionSuffix: $VersionSuffix"
-    }
 
     dotnet restore $SolutionPath
 
@@ -301,10 +256,6 @@ function Invoke-Build {
         "--nologo"
         "-v:q"
     )
-
-    if ($VersionSuffix) {
-        $buildArgs += "-p:VersionSuffix=$VersionSuffix"
-    }
 
     dotnet build @buildArgs
 
@@ -659,19 +610,11 @@ function Main {
         Set-OutputPaths -SolutionPath $solutionPath
         Write-Info "Coverage report: $script:CoverageReportDir"
 
-        # VersionSuffix 생성
-        $versionSuffix = Get-VersionSuffix -IsStable $Stable.IsPresent -Prefix $SuffixPrefix
-        if ($versionSuffix) {
-            Write-Info "Version mode: Pre-release ($versionSuffix)"
-        } else {
-            Write-Info "Version mode: Stable (production)"
-        }
-
         # 2. Check vulnerable packages
         Test-VulnerablePackages -SolutionPath $solutionPath
 
         # 3. Build
-        Invoke-Build -SolutionPath $solutionPath -VersionSuffix $versionSuffix
+        Invoke-Build -SolutionPath $solutionPath
 
         # 4. Run tests with coverage
         Invoke-TestWithCoverage -SolutionPath $solutionPath

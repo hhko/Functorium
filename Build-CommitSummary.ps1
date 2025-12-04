@@ -14,22 +14,26 @@
     예: v1.0.0..HEAD, v1.0.0..v1.1.0, HEAD~10..HEAD
     기본값: 마지막 태그 이후 커밋
 
-.PARAMETER Format
-    출력 형식을 지정합니다.
-    - Markdown: 마크다운 파일 생성 (기본값)
-    - Console: 콘솔 출력만 (파일 생성 없음)
+.PARAMETER TargetBranch
+    대상 브랜치 (선택사항)
+    기본값: main
+    태그가 없을 때 이 브랜치부터 HEAD까지 커밋 조회
 
 .EXAMPLE
-    .\New-CommitSummary.ps1
+    .\Build-CommitSummary.ps1
     마지막 태그 이후 커밋 요약
 
 .EXAMPLE
-    .\New-CommitSummary.ps1 -Range "v1.0.0..HEAD"
+    .\Build-CommitSummary.ps1 -Range "v1.0.0..HEAD"
     특정 범위 커밋 요약
 
 .EXAMPLE
-    .\New-CommitSummary.ps1 -Range "HEAD~10..HEAD"
+    .\Build-CommitSummary.ps1 -Range "HEAD~10..HEAD"
     최근 10개 커밋 요약
+
+.EXAMPLE
+    .\Build-CommitSummary.ps1 -TargetBranch develop
+    develop 브랜치 기준으로 커밋 요약
 
 .NOTES
     버전: 1.0.0
@@ -41,12 +45,12 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $false, Position = 0, HelpMessage = "git 범위 표현식 (예: v1.0.0..HEAD)")]
+    [Alias("r")]
     [string]$Range,
 
-    [Parameter(Mandatory = $false, HelpMessage = "출력 형식 (Markdown, Console)")]
-    [Alias("f")]
-    [ValidateSet("Markdown", "Console")]
-    [string]$Format = "Markdown",
+    [Parameter(Mandatory = $false, HelpMessage = "대상 브랜치 (기본값: main)")]
+    [Alias("t")]
+    [string]$TargetBranch = "main",
 
     [Parameter(Mandatory = $false, HelpMessage = "도움말을 표시합니다")]
     [Alias("h", "?")]
@@ -74,6 +78,7 @@ $script:COMMIT_TYPES = @{
 }
 
 $script:OUTPUT_DIR = ".commit-summaries"
+$script:MAX_AUTHOR_LENGTH = 15
 
 #endregion
 
@@ -121,7 +126,10 @@ function Get-LastTag {
 function Resolve-CommitRange {
     param(
         [Parameter(Mandatory = $false)]
-        [string]$Range
+        [string]$Range,
+
+        [Parameter(Mandatory = $false)]
+        [string]$TargetBranch = "main"
     )
 
     Write-Host "[2/7] 범위 결정 중..." -ForegroundColor Gray
@@ -134,8 +142,8 @@ function Resolve-CommitRange {
             Write-Host "   범위: $resolved (마지막 태그 이후)" -ForegroundColor DarkGray
         }
         else {
-            $resolved = "HEAD"
-            Write-Host "   범위: HEAD (전체 커밋, 태그 없음)" -ForegroundColor DarkGray
+            $resolved = "$TargetBranch..HEAD"
+            Write-Host "   범위: $resolved (대상 브랜치 기준)" -ForegroundColor DarkGray
         }
     }
     else {
@@ -161,10 +169,9 @@ function Get-CommitsInRange {
     )
 
     try {
-        $commits = git log $Range --oneline --no-merges 2>$null
-        if ($null -eq $commits) {
-            return @()
-        }
+        # @()로 감싸서 항상 배열로 반환
+        # 포맷: hash|author|subject
+        $commits = @(git log $Range --format="%h|%an|%s" --no-merges 2>$null)
         return $commits
     }
     catch {
@@ -211,12 +218,12 @@ function Get-ValidatedCommits {
 
     Write-Host "[3/7] 커밋 조회 중..." -ForegroundColor Gray
 
-    $commits = Get-CommitsInRange -Range $Range
-    Write-Host "   수집된 커밋: $($commits.Count)개" -ForegroundColor DarkGray
+    $commits = @(Get-CommitsInRange -Range $Range)
+    $count = if ($commits) { $commits.Count } else { 0 }
+    Write-Host "   수집된 커밋: ${count}개" -ForegroundColor DarkGray
 
-    if ($commits.Count -eq 0) {
-        Write-ErrorOutput -Message "지정된 범위에 커밋이 없습니다." -Hint "- 범위를 확인하세요: $Range`n  - 태그가 올바른지 확인하세요: git tag --list"
-        exit 1
+    if ($count -eq 0) {
+        Write-Host "   경고: 지정된 범위에 커밋이 없습니다." -ForegroundColor Yellow
     }
 
     return $commits
@@ -236,33 +243,54 @@ function Parse-ConventionalCommit {
         [string]$CommitLine
     )
 
-    # 커밋 형식: abc1234 type(scope): description
-    # 또는: abc1234 type: description
-    if ($CommitLine -match '^(\w+)\s+(\w+)(\(.*?\))?(!)?:\s*(.+)$') {
+    # 커밋 형식: hash|author|subject
+    # subject 형식: type(scope): description 또는 type: description
+    $parts = $CommitLine -split '\|', 3
+    if ($parts.Count -lt 3) {
+        return $null
+    }
+
+    $hash = $parts[0]
+    $author = $parts[1]
+    $subject = $parts[2]
+
+    # 머지 커밋에서 브랜치 이름 추출
+    # 추적 불가능한 경우들:
+    #   - Squash merge: 여러 커밋이 하나로 합쳐져 원본 브랜치 정보 손실
+    #   - Rebase: 커밋이 새로 생성되어 원본 브랜치 정보 없음
+    #   - Fast-forward merge: 머지 커밋이 없어 추적 불가
+    #   - 삭제된 브랜치: 브랜치가 삭제되면 이름을 알 수 없음
+    $sourceBranch = ""
+    if ($subject -match "Merge branch ['\`"](.+?)['\`"]") {
+        $sourceBranch = $Matches[1]
+    }
+
+    # Conventional Commits 형식 파싱
+    if ($subject -match '^(\w+)(\(.*?\))?(!)?:\s*(.+)$') {
         return @{
-            Hash        = $Matches[1]
-            Type        = $Matches[2].ToLower()
-            Scope       = if ($Matches[3]) { $Matches[3] } else { "" }
-            Breaking    = if ($Matches[4]) { $true } else { $false }
-            Description = $Matches[5]
-            FullMessage = $CommitLine
+            Hash         = $hash
+            Author       = $author
+            Type         = $Matches[1].ToLower()
+            Scope        = if ($Matches[2]) { $Matches[2] } else { "" }
+            Breaking     = if ($Matches[3]) { $true } else { $false }
+            Description  = $Matches[4]
+            SourceBranch = $sourceBranch
+            FullMessage  = $CommitLine
         }
     }
     else {
         # Conventional Commits 규격을 따르지 않는 커밋
-        if ($CommitLine -match '^(\w+)\s+(.+)$') {
-            return @{
-                Hash        = $Matches[1]
-                Type        = "other"
-                Scope       = ""
-                Breaking    = $false
-                Description = $Matches[2]
-                FullMessage = $CommitLine
-            }
+        return @{
+            Hash         = $hash
+            Author       = $author
+            Type         = "other"
+            Scope        = ""
+            Breaking     = $false
+            Description  = $subject
+            SourceBranch = $sourceBranch
+            FullMessage  = $CommitLine
         }
     }
-
-    return $null
 }
 
 <#
@@ -272,6 +300,7 @@ function Parse-ConventionalCommit {
 function Group-CommitsByType {
     param(
         [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
         [array]$Commits
     )
 
@@ -307,6 +336,7 @@ function Group-CommitsByType {
 function Invoke-CommitAnalysis {
     param(
         [Parameter(Mandatory = $true)]
+        [AllowEmptyCollection()]
         [array]$Commits
     )
 
@@ -472,15 +502,26 @@ function Generate-MarkdownDocument {
 
             foreach ($commit in $commits) {
                 $hash = $commit.Hash
+                $author = $commit.Author
                 $scope = $commit.Scope
                 $description = $commit.Description
                 $breaking = if ($commit.Breaking) { "!" } else { "" }
+                $sourceBranch = $commit.SourceBranch
+
+                # 작성자 이름 길이 제한 및 패딩
+                if ($author.Length -gt $script:MAX_AUTHOR_LENGTH) {
+                    $author = $author.Substring(0, $script:MAX_AUTHOR_LENGTH - 3) + "..."
+                }
+                $authorPadded = $author.PadRight($script:MAX_AUTHOR_LENGTH)
+
+                # 브랜치 정보 추가
+                $branchInfo = if ($sourceBranch) { " ``[from: $sourceBranch]``" } else { "" }
 
                 if ($scope) {
-                    [void]$sb.AppendLine("- ``$hash`` $type$scope$breaking`: $description")
+                    [void]$sb.AppendLine("- ``$hash`` **$authorPadded** $type$scope$breaking`: $description$branchInfo")
                 }
                 else {
-                    [void]$sb.AppendLine("- ``$hash`` $type$breaking`: $description")
+                    [void]$sb.AppendLine("- ``$hash`` **$authorPadded** $type$breaking`: $description$branchInfo")
                 }
             }
 
@@ -670,12 +711,12 @@ USAGE
     ./Build-CommitSummary.ps1 [options]
 
 OPTIONS
-    -Range <string>    git 범위 표현식 (선택사항)
-                       기본값: 마지막 태그 이후 커밋
-    -Format, -f        출력 형식 (Markdown, Console)
-                       Markdown: 마크다운 파일 생성 (기본값)
-                       Console: 콘솔 출력만 (파일 생성 없음)
-    -Help, -h, -?      도움말을 표시합니다
+    -Range, -r <string>     git 범위 표현식 (선택사항)
+                            기본값: 마지막 태그 이후 커밋
+    -TargetBranch, -t       대상 브랜치 (선택사항)
+                            기본값: main
+                            태그가 없을 때 이 브랜치부터 HEAD까지 커밋 조회
+    -Help, -h, -?           도움말을 표시합니다
 
 COMMIT TYPES
     feat       New features (새로운 기능)
@@ -699,13 +740,15 @@ EXAMPLES
 
     # 특정 범위 커밋 요약
     ./Build-CommitSummary.ps1 -Range "v1.0.0..HEAD"
+    ./Build-CommitSummary.ps1 -r "v1.0.0..HEAD"
 
     # 최근 10개 커밋 요약
     ./Build-CommitSummary.ps1 -Range "HEAD~10..HEAD"
+    ./Build-CommitSummary.ps1 -r "HEAD~10..HEAD"
 
-    # 콘솔 출력만 (파일 생성 없음)
-    ./Build-CommitSummary.ps1 -Format Console
-    ./Build-CommitSummary.ps1 -f Console
+    # develop 브랜치 기준으로 커밋 요약
+    ./Build-CommitSummary.ps1 -TargetBranch develop
+    ./Build-CommitSummary.ps1 -t develop
 
     # 전체 커밋 요약 (태그 없는 경우와 동일)
     ./Build-CommitSummary.ps1 -Range "HEAD"
@@ -733,8 +776,8 @@ EXAMPLES
     3. 커밋 조회
     4. 커밋 분석 및 그룹화
     5. 통계 집계
-    6. 출력 디렉토리 준비 (Markdown 모드)
-    7. 마크다운 문서 생성 (Markdown 모드)
+    6. 출력 디렉토리 준비
+    7. 마크다운 문서 생성
     8. 파일 저장 및 결과 출력
 #>
 function Main {
@@ -743,8 +786,7 @@ function Main {
         [string]$CommitRange,
 
         [Parameter(Mandatory = $false)]
-        [ValidateSet("Markdown", "Console")]
-        [string]$OutputFormat = "Markdown"
+        [string]$TargetBranch = "main"
     )
 
     Write-Host ""
@@ -755,10 +797,10 @@ function Main {
     Assert-GitRepository
 
     # 2. 커밋 범위 결정
-    $resolvedRange = Resolve-CommitRange -Range $CommitRange
+    $resolvedRange = Resolve-CommitRange -Range $CommitRange -TargetBranch $TargetBranch
 
     # 3. 커밋 조회
-    $commits = Get-ValidatedCommits -Range $resolvedRange
+    $commits = @(Get-ValidatedCommits -Range $resolvedRange)
 
     # 4. 커밋 분석 및 그룹화
     $groupedCommits = Invoke-CommitAnalysis -Commits $commits
@@ -766,22 +808,16 @@ function Main {
     # 5. 통계 집계
     $statistics = Invoke-StatisticsCalculation -GroupedCommits $groupedCommits
 
-    if ($OutputFormat -eq "Markdown") {
-        # 6. 출력 디렉토리 준비
-        Initialize-OutputDirectory
+    # 6. 출력 디렉토리 준비
+    Initialize-OutputDirectory
 
-        # 7. 마크다운 문서 생성
-        $outputFileName = New-OutputFileName -Range $resolvedRange
-        $markdown = Invoke-DocumentGeneration -Range $resolvedRange -GroupedCommits $groupedCommits -Statistics $statistics -OutputFileName $outputFileName
+    # 7. 마크다운 문서 생성
+    $outputFileName = New-OutputFileName -Range $resolvedRange
+    $markdown = Invoke-DocumentGeneration -Range $resolvedRange -GroupedCommits $groupedCommits -Statistics $statistics -OutputFileName $outputFileName
 
-        # 8. 파일 저장 및 결과 출력
-        $outputPath = Save-Document -Markdown $markdown -FileName $outputFileName
-        Show-Result -Range $resolvedRange -Statistics $statistics -OutputPath $outputPath
-    }
-    else {
-        # Console 모드: 통계만 출력
-        Show-Result -Range $resolvedRange -Statistics $statistics -OutputPath $null
-    }
+    # 8. 파일 저장 및 결과 출력
+    $outputPath = Save-Document -Markdown $markdown -FileName $outputFileName
+    Show-Result -Range $resolvedRange -Statistics $statistics -OutputPath $outputPath
 }
 
 #endregion
@@ -794,7 +830,7 @@ if ($Help) {
 }
 
 try {
-    Main -CommitRange $Range -OutputFormat $Format
+    Main -CommitRange $Range -TargetBranch $TargetBranch
     exit 0
 }
 catch {
