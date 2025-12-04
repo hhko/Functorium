@@ -35,9 +35,13 @@
 - [x] Build-CommitSummary: 대상 브랜치 지정
 - [x] Build-CommitSummary: 커밋 작성자 추가
 - [x] Build-CommitSummary: 커밋 소스 브랜치 추가
+- [x] Build-CommitSummary: 태그 없을 때 버그 수정
+- [x] Build-CommitSummary: 출력 경로 매개변수화
+- [ ] Build-CommitSummary: --no-merges
 - [ ] commit 주제 전달일 때는 주체만 commit하기
-- [ ] ci.yml -> build.yml
-- [ ] build.yml 실패 처리
+- [x] ci.yml -> build.yml
+- [x] build.yml 실패 처리
+- [ ] DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true, DOTNET_CLI_TELEMETRY_OPTOUT: true 이해
 - [ ] MinVer 이해
 - [ ] powershell 학습 문서
 - [ ] powershell 가이드 문서
