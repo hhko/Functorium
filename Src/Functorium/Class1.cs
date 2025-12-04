@@ -1,9 +1,6 @@
-﻿namespace Functorium
-{
-
+﻿namespace Functorium;
 
 public class Class1
 {
 
-}
 }

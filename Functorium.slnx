@@ -1,5 +1,9 @@
 <Solution>
   <Folder Name="/Src/">
+    <Project Path="Src/Functorium.Testing/Functorium.Testing.csproj" Id="38736c0d-ff4f-4c6f-bc1d-f43b860a570a" />
     <Project Path="Src/Functorium/Functorium.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/Functorium.Tests.Unit/Functorium.Tests.Unit.csproj" Id="20685fd7-39c5-40e4-89d1-6ac8db7c174a" />
   </Folder>
 </Solution>
