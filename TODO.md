@@ -1,52 +1,36 @@
-- [x] claude commit 명령어
-- [x] 아키텍처 문서
-- [x] git command guide 문서: `Git-Commands.md`
-- [x] git commit guide 문서: `Git-Commit.md`
-- [x] guide 문서 작성을 위한 guide 문서: `Guide-Writing.md`
-- [x] 솔루션 구성
-  ```
-  dotnet new sln -n Fuctorium
-  dotnet sln migrate
-
-  dotnet new editorconfig
-  dotnet new nuget.config
-  dotnet new globaljson --sdk-version 10.0.100 --roll-forward latestFeature
-  dotnet new buildprops
-  dotnet new packagesprops
-  dotnet new gitignore
-
-  dotnet new classlib -o .\Src\Functorium
-  dotnet sln add (ls -r **\*.csproj)
-  ```
-  - slnx
-  - global.json
-  - nuget.config
-  - Directory.Build.props
-  - Directory.Packages.props
-  - .editorconfig
-- [x] 코드 품질((코드 스타일, 코드 분석 규칙)) 빌드 통합: .editorconfig을 이용한 "코드 품질" 컴파일 과정 통합
-  - .editorconfig: csharp_style_namespace_declarations, dotnet_diagnostic.IDE0161.severity
-  - Directory.Build.props: EnforceCodeStyleInBuild
-- [x] 코드 품질((코드 스타일, 코드 분석 규칙)) 빌드 통합 문서: `Code-Quality.md`
-- [x] DOTNET SDK 빌드 명시 문서: `Build-SdkVersion-GlobalJson.md
-- [x] 솔루션 구성: global.json SDK 버전 허용 범위 지정
-- [X] 솔루션 구성: nuget.config 파일 생성
-- [x] 커밋 이력 ps1
-- [x] Build-CommitSummary: 대상 브랜치 지정
-- [x] Build-CommitSummary: 커밋 작성자 추가
-- [x] Build-CommitSummary: 커밋 소스 브랜치 추가
-- [x] Build-CommitSummary: 태그 없을 때 버그 수정
-- [x] Build-CommitSummary: 출력 경로 매개변수화
-- [x] Build-CommitSummary: 타겟 브랜치 이름 출력
-- [ ] Build-CommitSummary: --no-merges
-- [x] commit 주제 전달일 때는 주체만 commit하기
-- [x] ci.yml -> build.yml
-- [x] build.yml 실패 처리
-- [x] MinVer 이해
-- [x] 로컬 빌드
-- [x] GitHub actions build
-- [x] GitHub actions publish
-- [x] GitHub actions 문서
+- [x] claude: claude commit 명령어
+- [x] doc: 아키텍처 문서
+- [x] doc: git command guide 문서: `Git-Commands.md`
+- [x] doc: git commit guide 문서: `Git-Commit.md`
+- [x] doc: guide 문서 작성을 위한 guide 문서: `Guide-Writing.md`
+- [x] dev: 솔루션 구성
+- [x] dev: 코드 품질((코드 스타일, 코드 분석 규칙)) 빌드 통합: .editorconfig을 이용한 "코드 품질" 컴파일 과정 통합
+- [x] doc: 코드 품질((코드 스타일, 코드 분석 규칙)) 빌드 통합 문서: `Code-Quality.md`
+- [x] doc: DOTNET SDK 빌드 명시 문서: `Build-SdkVersion-GlobalJson.md
+- [x] dev: 솔루션 구성: global.json SDK 버전 허용 범위 지정
+- [X] dev: 솔루션 구성: nuget.config 파일 생성
+- [x] dev: 커밋 이력 ps1
+- [x] dev: Build-CommitSummary 대상 브랜치 지정
+- [x] dev: Build-CommitSummary 커밋 작성자 추가
+- [x] dev: Build-CommitSummary 커밋 소스 브랜치 추가
+- [x] dev: Build-CommitSummary 태그 없을 때 버그 수정
+- [x] dev: Build-CommitSummary 출력 경로 매개변수화
+- [x] dev: Build-CommitSummary 타겟 브랜치 이름 출력
+- [ ] dev: Build-CommitSummary --no-merges
+- [x] claude: commit 주제 전달일 때는 주체만 commit하기
+- [x] dev: ci.yml -> build.yml
+- [x] dev: build.yml 실패 처리
+- [x] std: MinVer 이해
+- [x] dev: 로컬 빌드
+- [x] dev: GitHub actions build
+- [x] dev: GitHub actions publish
+- [x] doc: GitHub actions 문서
+- [x] dev: Functorium.Testing 프로젝트 소스 추가
+- [x] dev: Functorium.Testing xunit.v3 기반으로 패키지 참조 및 소스 개선
+- [ ] std: Functorium.Testing 애해: 아키텍처 단위 테스트
+- [ ] std: Functorium.Testing 애해:  구조적 로그 단위 테스팅
+- [ ] std: Functorium.Testing 애해:  WebApi 통합 테스트
+- [ ] std: Functorium.Testing 애해:  ScheduledJob 통합 테스트
 - [ ] DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true, DOTNET_CLI_TELEMETRY_OPTOUT: true 이해
 - [ ] powershell 학습 문서
 - [ ] powershell 가이드 문서
@@ -56,4 +40,4 @@
 - [ ] 솔루션 구성: Directory.Build.props 형상관리와 버전 연동
 - [ ] 솔루션 구성: .editorconfig 폴더 단위 개별 지정
 - [ ] 솔루션 구성: Directory.Packages.props 하위 폴더 새로 시작, 버전 재정의
-
+- [ ] 코드 품질: 경로별 개별 설정 방법
