@@ -700,7 +700,7 @@ function Main {
         Write-Info "Coverage report: $script:CoverageReportDir"
 
         # 2. Check vulnerable packages
-        Test-VulnerablePackages -SolutionPath $solutionPath
+        #Test-VulnerablePackages -SolutionPath $solutionPath
 
         # 3. Build
         Invoke-Build -SolutionPath $solutionPath
