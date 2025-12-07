@@ -715,4 +715,4 @@ cat global.json
 
 - [Microsoft 공식 문서 - global.json 개요](https://docs.microsoft.com/dotnet/core/tools/global-json)
 - [.NET SDK 다운로드](https://dotnet.microsoft.com/download/dotnet)
-- [Git 커밋 가이드](./Git-Commit.md)
+- [Git 커밋 가이드](./Guide-Commit-Conventions.md)

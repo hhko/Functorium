@@ -9,6 +9,7 @@
 - [기본 설정](#기본-설정)
 - [주요 설정 옵션](#주요-설정-옵션)
 - [버전 계산 방식](#버전-계산-방식)
+- [버전 진행 시나리오](#버전-진행-시나리오)
 - [고급 사용법](#고급-사용법)
 - [트러블슈팅](#트러블슈팅)
 - [FAQ](#faq)
@@ -39,6 +40,32 @@ MinVer는 Git 태그를 기반으로 .NET 프로젝트의 버전을 자동으로
 <br/>
 
 ## 요약
+
+### 버전 구조
+
+```
+{Major}.{Minor}.{Patch}-{Identifier}.{Phase}.{Height}+{Commit}
+    ↑      ↑      ↑         ↑         ↑        ↑        ↑
+    │      │      │         │         │        │        └─ 커밋 해시 (short)
+    │      │      │         │         │        └────────── Height (자동 증가)
+    │      │      │         │         └─────────────────── Phase (수동 변경)
+    │      │      │         └───────────────────────────── Identifier (수동 변경)
+    │      │      └─────────────────────────────────────── Patch (자동 표시*)
+    │      └────────────────────────────────────────────── Minor
+    └───────────────────────────────────────────────────── Major
+```
+
+\* RTM 태그 후 MinVerAutoIncrement 설정에 따라 자동 +1 표시 (실제 변경은 태그로만 가능)
+
+### 태그 형식
+
+```shell
+vX.X.0-alpha.0   # 처음 pre-release
+vX.X.0           # 처음 stable release
+vX.X.1           # 다음 patch release
+vX.Y.0           # 다음 minor release
+vY.0.0           # 다음 major release
+```
 
 ### 주요 명령
 
@@ -212,23 +239,33 @@ dotnet build -p:MinVerVerbosity=normal
 
 ### 권장 설정
 
-프로덕션 사용 시 권장하는 전체 설정:
+프로덕션 사용 시 권장하는 전체 설정 (현재 프로젝트 설정):
 
 ```xml
 <PropertyGroup>
   <!-- MinVer 기본 설정 -->
   <MinVerTagPrefix>v</MinVerTagPrefix>
   <MinVerVerbosity>minimal</MinVerVerbosity>
-  <MinVerDefaultPreReleaseIdentifiers>preview.0</MinVerDefaultPreReleaseIdentifiers>
+  <MinVerMinimumMajorMinor>1.0</MinVerMinimumMajorMinor>
+  <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
+  <MinVerAutoIncrement>patch</MinVerAutoIncrement>
 
   <!-- Git 저장소 경로 -->
   <MinVerWorkingDirectory>$(MSBuildThisFileDirectory)</MinVerWorkingDirectory>
-
-  <!-- 어셈블리 버전 전략 -->
-  <AssemblyVersion>$(MinVerMajor).$(MinVerMinor).0.0</AssemblyVersion>
-  <FileVersion>$(MinVerMajor).$(MinVerMinor).$(MinVerPatch).0</FileVersion>
 </PropertyGroup>
+
+<!-- AssemblyVersion은 MSBuild Target에서 설정 (MinVer 계산 후 실행) -->
+<Target Name="SetAssemblyVersion" AfterTargets="MinVer">
+  <PropertyGroup>
+    <AssemblyVersion>$(MinVerMajor).$(MinVerMinor).0.0</AssemblyVersion>
+  </PropertyGroup>
+</Target>
 ```
+
+**설정 설명:**
+- **MinVerMinimumMajorMinor**: 태그 없을 때 최소 버전 (0.0.0 방지)
+- **MinVerAutoIncrement**: RTM 태그 후 자동 증가 단위 (patch/minor/major)
+- **SetAssemblyVersion Target**: MinVer 계산 후 AssemblyVersion 설정 (바이너리 호환성 관리)
 
 ### 설정 위치
 
@@ -284,6 +321,88 @@ dotnet build -p:MinVerVerbosity=normal
 <MinVerDefaultPreReleaseIdentifiers>preview.0</MinVerDefaultPreReleaseIdentifiers>
 ```
 
+#### Pre-release 단계 구조
+
+형식: `{identifier}.{phase}`
+
+**1. Identifier (식별자)**
+
+Pre-release 단계의 이름입니다.
+
+| 단계 | 의미 | 사용 시점 |
+|------|------|-----------|
+| `alpha` | 알파 버전 | 초기 개발, 기능 불완전, 불안정 |
+| `beta` | 베타 버전 | 기능 완성, 테스트 중, 버그 수정 중 |
+| `rc` | Release Candidate | 릴리스 후보, 최종 테스트 |
+| `preview` | 프리뷰 | 미리보기 버전 (현재 설정) |
+
+**버전 비교 순서:**
+```
+alpha < beta < preview < rc < (stable)
+```
+
+Semantic Versioning 규칙에 따라 알파벳 순서로 비교됩니다.
+
+**2. Phase (단계 번호)**
+
+동일한 identifier 내에서의 단계 번호입니다 (0부터 시작).
+
+**중요: Phase는 자동 증가하지 않습니다.**
+- Git 태그를 통해서만 변경 가능 (수동)
+- 커밋해도 Phase는 그대로 유지
+- Height만 자동으로 증가
+
+예시:
+```bash
+# alpha.0 태그 생성
+v0.1.0-alpha.0 → 0.1.0-alpha.0
+
+# 커밋 추가 (Phase는 그대로, Height만 증가)
+커밋 5개       → 0.1.0-alpha.0.5
+
+# alpha.1 태그 생성 (Phase 수동 변경)
+v0.1.0-alpha.1 → 0.1.0-alpha.1
+
+# 커밋 추가 (Phase는 1 유지)
+커밋 3개       → 0.1.0-alpha.1.3
+```
+
+#### 자동 vs 수동 증가
+
+| 요소 | 증가 방식 | 트리거 | 비고 |
+|------|----------|--------|------|
+| **Height** | 자동 증가 | 커밋할 때마다 | 항상 자동 |
+| **Phase** | 수동 변경 | Git 태그 생성 시에만 | 커밋으로 변경 불가 |
+| **Identifier** | 수동 변경 | Git 태그 생성 시에만 | 커밋으로 변경 불가 |
+| **Patch** | 자동 표시 | RTM 태그 후 자동 +1 표시 | MinVerAutoIncrement=patch |
+| **Minor** | 자동 표시 | RTM 태그 후 자동 +1 표시 | MinVerAutoIncrement=minor |
+| **Major** | 자동 표시 | RTM 태그 후 자동 +1 표시 | MinVerAutoIncrement=major |
+
+**참고:** Patch/Minor/Major는 실제로 증가하는 것이 아니라 "표시만" 증가된 것처럼 보입니다. 실제 버전은 Git 태그를 만들어야만 변경됩니다.
+
+**예시 (MinVerAutoIncrement=patch, 기본값):**
+```bash
+v0.1.0 태그    → 0.1.0                    # RTM 버전
+다음 커밋      → 0.1.1-preview.0.1        # Patch 자동 +1 표시
+                 ↑   ↑
+                 │   └─ 실제로는 0.1.0의 다음 개발 버전
+                 └───── 표시상으로만 0.1.1
+```
+
+#### 버전 문자열 구조
+
+**Git 태그가 없을 때:**
+```
+버전: 0.0.0-preview.0.{height}+{commit}
+      ↑     ↑       ↑  ↑
+      │     │       │  └─ Height (자동 증가)
+      │     │       └──── Phase (수동 변경)
+      │     └──────────── Identifier (수동 변경)
+      └────────────────── Major.Minor.Patch (수동 증가)
+```
+
+#### 사용 예시
+
 **결과:**
 - 태그 없음: `0.0.0-preview.0.18`
 - 태그 있음: `1.0.0`
@@ -298,6 +417,10 @@ dotnet build -p:MinVerVerbosity=normal
 <!-- Beta 버전 -->
 <MinVerDefaultPreReleaseIdentifiers>beta.0</MinVerDefaultPreReleaseIdentifiers>
 <!-- 결과: 0.0.0-beta.0.18 -->
+
+<!-- Release Candidate -->
+<MinVerDefaultPreReleaseIdentifiers>rc.0</MinVerDefaultPreReleaseIdentifiers>
+<!-- 결과: 0.0.0-rc.0.18 -->
 ```
 
 ### MinVerWorkingDirectory
@@ -343,6 +466,51 @@ dotnet build -p:MinVerVerbosity=normal
 dotnet build -p:MinVerBuildMetadata=ci.$(git rev-parse --short HEAD)
 # 1.0.0+ci.abc1234
 ```
+
+### MinVerAutoIncrement
+
+**RTM 태그 후 자동 증가 단위 설정:**
+
+```xml
+<MinVerAutoIncrement>patch</MinVerAutoIncrement>
+```
+
+| 값 | 동작 | 예시 |
+|----|------|------|
+| `patch` | Patch 버전 +1 표시 (기본값) | v1.0.0 → 1.0.1-alpha.0.1 |
+| `minor` | Minor 버전 +1 표시 | v1.0.0 → 1.1.0-alpha.0.1 |
+| `major` | Major 버전 +1 표시 | v1.0.0 → 2.0.0-alpha.0.1 |
+
+**중요:** 이것은 "표시만" 증가시킵니다. 실제 버전은 Git 태그로만 변경됩니다.
+
+**동작 방식:**
+
+```bash
+# patch (기본값)
+git tag v1.0.0
+# → 1.0.0 (stable)
+
+git commit
+# → 1.0.1-alpha.0.1  (Patch +1 표시)
+
+git tag v1.0.1
+# → 1.0.1 (실제 버전 변경)
+
+# minor
+git tag v1.0.0
+git commit
+# → 1.1.0-alpha.0.1  (Minor +1 표시)
+
+# major
+git tag v1.0.0
+git commit
+# → 2.0.0-alpha.0.1  (Major +1 표시)
+```
+
+**사용 시나리오:**
+- **patch**: 버그 수정 중심 (대부분의 프로젝트)
+- **minor**: 기능 추가 중심
+- **major**: 주요 변경 중심
 
 <br/>
 
@@ -444,6 +612,89 @@ dotnet build -p:MinVerBuildMetadata=ci.$(git rev-parse --short HEAD)
 
 <br/>
 
+## 버전 진행 시나리오
+
+이 섹션에서는 실제 프로젝트에서 pre-release부터 stable 릴리스까지의 전체 버전 진행 과정을 보여줍니다.
+
+### 25.13.0 릴리스 (첫 번째 버전)
+
+```shell
+# Alpha 단계
+git tag v25.13.0-alpha.0
+# → 25.13.0-alpha.0
+
+# Alpha 개발 (3개 커밋)
+# → 25.13.0-alpha.0.1
+# → 25.13.0-alpha.0.2
+# → 25.13.0-alpha.0.3
+
+# Beta 단계
+git tag v25.13.0-beta.0
+# → 25.13.0-beta.0
+
+# Beta 개발 (2개 커밋)
+# → 25.13.0-beta.0.1
+# → 25.13.0-beta.0.2
+
+# Release Candidate
+git tag v25.13.0-rc.0
+# → 25.13.0-rc.0
+
+# RC 개발 (1개 커밋)
+# → 25.13.0-rc.0.1
+
+# 정식 릴리스
+git tag v25.13.0
+# → 25.13.0 (stable)
+```
+
+### 25.13.1 릴리스 (다음 Patch 버전)
+
+v25.13.0 릴리스 후 추가 버그 수정을 위한 patch 버전 진행 과정입니다.
+
+```shell
+# v25.13.0 릴리스 후 개발 계속
+# (MinVerAutoIncrement=patch → Patch가 +1로 표시됨)
+# → 25.13.1-alpha.0.1
+# → 25.13.1-alpha.0.2
+
+# Alpha 단계 (선택)
+git tag v25.13.1-alpha.0
+# → 25.13.1-alpha.0
+
+# Alpha 개발
+# → 25.13.1-alpha.0.1
+# → 25.13.1-alpha.0.2
+
+# Beta 단계 (선택)
+git tag v25.13.1-beta.0
+# → 25.13.1-beta.0
+
+# Beta 개발
+# → 25.13.1-beta.0.1
+
+# Release Candidate (선택)
+git tag v25.13.1-rc.0
+# → 25.13.1-rc.0
+
+# RC 개발
+# → 25.13.1-rc.0.1
+
+# 다음 Patch 릴리스
+git tag v25.13.1
+# → 25.13.1 (stable)
+```
+
+### 주요 포인트
+
+1. **Height 자동 증가**: 커밋할 때마다 자동으로 증가
+2. **Phase 수동 변경**: Git 태그로만 변경 가능
+3. **Identifier 변경**: alpha → beta → rc 진행
+4. **MinVerAutoIncrement**: RTM 태그 후 Patch +1 자동 표시
+5. **Pre-release 선택적**: 필요에 따라 alpha, beta, rc 단계 생략 가능
+
+<br/>
+
 ## 고급 사용법
 
 ### 프로젝트별 다른 버전
@@ -512,30 +763,98 @@ dotnet build -p:MinVerVerbosity=quiet
 
 ### 어셈블리 버전 전략
 
-**바이너리 호환성 관리:**
+**.NET 어셈블리는 3가지 버전 속성을 가집니다:**
+
+| 속성 | 목적 | 형식 | 값 예시 |
+|------|------|------|---------|
+| **AssemblyVersion** | 바이너리 호환성 | Major.Minor.0.0 | 1.0.0.0 |
+| **FileVersion** | 파일 속성 표시 | Major.Minor.Patch.0 | 1.0.1.0 |
+| **InformationalVersion** | 제품 버전 (사용자용) | 전체 SemVer | 1.0.1-alpha.0.5+abc123 |
+
+#### AssemblyVersion: 왜 Patch를 포함하지 않나요?
+
+**AssemblyVersion은 바이너리 호환성을 결정합니다.**
 
 ```xml
-<PropertyGroup>
-  <!-- Major.Minor만 변경 시 재컴파일 필요 -->
-  <AssemblyVersion>$(MinVerMajor).$(MinVerMinor).0.0</AssemblyVersion>
-
-  <!-- 정확한 빌드 버전 -->
-  <FileVersion>$(MinVerMajor).$(MinVerMinor).$(MinVerPatch).0</FileVersion>
-
-  <!-- 표시용 버전 (전체 SemVer) -->
-  <InformationalVersion>$(MinVerVersion)</InformationalVersion>
-</PropertyGroup>
+<!-- ❌ 나쁜 예: Patch 포함 -->
+<Target Name="SetAssemblyVersion" AfterTargets="MinVer">
+  <PropertyGroup>
+    <AssemblyVersion>$(MinVerMajor).$(MinVerMinor).$(MinVerPatch).0</AssemblyVersion>
+  </PropertyGroup>
+</Target>
 ```
 
-**MSBuild 속성:**
+**문제점:**
+- v1.0.1 → v1.0.2 버그 수정만 했는데도 AssemblyVersion 변경
+- 참조하는 모든 어셈블리 **재컴파일 필수**
+- 작은 패치마다 바이너리 호환성 깨짐
+- 불필요한 재배포 강제
 
-| 속성 | 값 | 설명 |
-|------|----|----- |
+```xml
+<!-- ✅ 좋은 예: Major.Minor만 사용 (현재 프로젝트 설정) -->
+<Target Name="SetAssemblyVersion" AfterTargets="MinVer">
+  <PropertyGroup>
+    <AssemblyVersion>$(MinVerMajor).$(MinVerMinor).0.0</AssemblyVersion>
+  </PropertyGroup>
+</Target>
+```
+
+**장점:**
+- v1.0.1, v1.0.2, v1.0.3 모두 `1.0.0.0` 유지
+- 패치 업데이트 시 **재컴파일 불필요**
+- 바이너리 호환성 유지
+- 배포 간소화
+
+**실제 예시:**
+
+```bash
+# v1.0.0 릴리스
+AssemblyVersion:        1.0.0.0
+FileVersion:            1.0.0.0
+InformationalVersion:   1.0.0
+
+# v1.0.1 버그 수정 (참조 어셈블리 재컴파일 불필요)
+AssemblyVersion:        1.0.0.0  ← 변경 없음!
+FileVersion:            1.0.1.0  ← 정확한 버전
+InformationalVersion:   1.0.1    ← 사용자에게 표시
+
+# v1.0.2 버그 수정
+AssemblyVersion:        1.0.0.0  ← 여전히 변경 없음
+FileVersion:            1.0.2.0
+InformationalVersion:   1.0.2
+
+# v1.1.0 기능 추가 (Minor 변경 - 재컴파일 필요)
+AssemblyVersion:        1.1.0.0  ← 이제 변경됨
+FileVersion:            1.1.0.0
+InformationalVersion:   1.1.0
+```
+
+#### 설정 방법
+
+**MSBuild Target 사용 (권장 - 현재 프로젝트 방식):**
+
+```xml
+<!-- MinVer 계산 후 AssemblyVersion 설정 -->
+<Target Name="SetAssemblyVersion" AfterTargets="MinVer">
+  <PropertyGroup>
+    <AssemblyVersion>$(MinVerMajor).$(MinVerMinor).0.0</AssemblyVersion>
+  </PropertyGroup>
+</Target>
+```
+
+MinVer는 자동으로 설정:
+- **FileVersion**: `$(MinVerMajor).$(MinVerMinor).$(MinVerPatch).0`
+- **InformationalVersion**: `$(MinVerVersion)` (전체 SemVer)
+
+#### MSBuild 속성
+
+| 속성 | 값 예시 | 설명 |
+|------|---------|------|
 | `$(MinVerVersion)` | 1.0.0 | 전체 SemVer 버전 |
 | `$(MinVerMajor)` | 1 | Major 버전 |
 | `$(MinVerMinor)` | 0 | Minor 버전 |
 | `$(MinVerPatch)` | 0 | Patch 버전 |
-| `$(MinVerPreRelease)` | preview.0.5 | Prerelease 부분 |
+| `$(MinVerPreRelease)` | alpha.0.5 | Prerelease 부분 |
 | `$(MinVerBuildMetadata)` | abc123 | 빌드 메타데이터 |
 
 ### 조건부 설정
@@ -880,5 +1199,5 @@ else
 
 - [MinVer GitHub](https://github.com/adamralph/minver)
 - [Semantic Versioning 2.0.0](https://semver.org/)
-- [Git 기반 버전 관리](./Build-Versioning.md)
-- [GitHub Actions CI/CD](./GitHub-Actions.md)
+- [Git 기반 버전 관리](./Guide-Versioning-Workflow.md)
+- [GitHub Actions CI/CD](./Guide-CICD-Workflow.md)

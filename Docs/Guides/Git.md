@@ -669,4 +669,4 @@ git rebase main
 
 ## 참고 문서
 
-- [Git 커밋 가이드](./Git-Commit.md) - Git 커밋 메시지 작성 규칙
+- [Git 커밋 가이드](./Guide-Commit-Conventions.md) - Git 커밋 메시지 작성 규칙

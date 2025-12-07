@@ -33,9 +33,9 @@
 
 ```
 Docs/Guides/
-├── Guide-Writing-Guide.md      # 이 문서 (메타 가이드)
-├── Git-Commands.md             # Git 명령어 가이드
-├── Git-Commit.md               # Git 커밋 가이드
+├── Guide-Documentation.md      # 이 문서 (메타 가이드)
+├── Manual-Git.md               # Git 명령어 매뉴얼
+├── Guide-Commit-Conventions.md # Git 커밋 가이드
 └── ...
 ```
 
@@ -57,9 +57,10 @@ Docs/Guides/
 
 **파일명:**
 ```
-{주제}-{세부주제}.md
+Guide-{주제}.md  (개념/워크플로우 문서)
+Manual-{주제}.md (명령어/설정 레퍼런스)
 
-예시: Git-Commands.md, Build-Globaljson.md
+예시: Guide-Versioning-Workflow.md, Manual-Git.md
 ```
 
 **섹션 구분:**
@@ -156,20 +157,23 @@ git commit -m "docs: {주제} 가이드 업데이트"
 
 | 항목 | 규칙 | 예시 |
 |------|------|------|
-| 주제 | 대문자로 시작 | `Git`, `Docker`, `API` |
-| 세부주제 | 대문자로 시작 | `Commands`, `Commit`, `Setup` |
-| 구분자 | 하이픈 (`-`) 사용 | `Git-Commands.md` |
-| 확장자 | `.md` (Markdown) | `Git-Commit.md` |
+| 타입 | Guide- 또는 Manual- 접두사 | `Guide-`, `Manual-` |
+| 주제 | 대문자로 시작, 하이픈으로 연결 | `Versioning-Workflow`, `Git` |
+| 구분자 | 하이픈 (`-`) 사용 | `Guide-CICD-Workflow.md` |
+| 확장자 | `.md` (Markdown) | `Manual-Git.md` |
 
 ### 예시
 
 ```
-Git-Commands.md           # Git 명령어 가이드
-Git-Commit.md             # Git 커밋 가이드
-Docker-Setup.md           # Docker 설정 가이드
-API-Reference.md          # API 참조 가이드
-Testing-Guidelines.md     # 테스트 가이드라인
-Code-Review.md            # 코드 리뷰 가이드
+# 가이드 (개념/워크플로우)
+Guide-Versioning-Workflow.md     # 버전 관리 워크플로우 가이드
+Guide-Commit-Conventions.md      # Git 커밋 규칙 가이드
+Guide-CICD-Workflow.md            # CI/CD 워크플로우 가이드
+
+# 매뉴얼 (명령어/설정 레퍼런스)
+Manual-Git.md                     # Git 명령어 매뉴얼
+Manual-Code-Quality.md            # 코드 품질 설정 매뉴얼
+Manual-SDK-Configuration.md       # SDK 설정 매뉴얼
 ```
 
 <br/>
@@ -792,11 +796,11 @@ git status
 
 ### Q2. 파일명은 어떻게 정하나요?
 
-**A:** `{주제}-{세부주제}.md` 형식을 사용합니다:
-- ✓ `Git-Commands.md`
-- ✓ `Docker-Setup.md`
+**A:** `Guide-{주제}.md` 또는 `Manual-{주제}.md` 형식을 사용합니다:
+- ✓ `Guide-Commit-Conventions.md` (가이드)
+- ✓ `Manual-Git.md` (매뉴얼)
 - ✗ `git_commands.md` (언더스코어 사용 금지)
-- ✗ `gitcommands.md` (구분 없음)
+- ✗ `gitcommands.md` (타입 접두사 없음)
 
 ### Q3. 섹션 구분은 `---`와 `<br/>` 중 무엇을 사용하나요?
 
@@ -879,12 +883,12 @@ git add <파일>  # 구체적이지 않음
 **A:** 상대 경로로 링크하세요:
 
 ```markdown
-[Git 명령어 가이드](./Git-Commands.md)를 참조하세요.
+[Git 명령어 가이드](./Manual-Git.md)를 참조하세요.
 
-자세한 내용은 [Git 커밋 가이드](./Git-Commit.md#커밋-타입)의 커밋 타입 섹션을 확인하세요.
+자세한 내용은 [Git 커밋 가이드](./Guide-Commit-Conventions.md#커밋-타입)의 커밋 타입 섹션을 확인하세요.
 ```
 
 ## 참고 문서
 
-- [Git 명령어 가이드](./Git-Commands.md) - 명령어 가이드 예시
-- [Git 커밋 가이드](./Git-Commit.md) - 규칙 가이드 예시
+- [Git 명령어 가이드](./Manual-Git.md) - 명령어 가이드 예시
+- [Git 커밋 가이드](./Guide-Commit-Conventions.md) - 규칙 가이드 예시
