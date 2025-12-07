@@ -247,6 +247,35 @@ dotnet_diagnostic.IDE0161.severity = warning
 dotnet_analyzer_diagnostic.category-Style.severity = warning
 ```
 
+### 코드 스타일 규칙 vs 진단 규칙
+
+`csharp_style_namespace_declarations`와 `dotnet_diagnostic.IDE0161.severity`는 모두 네임스페이스 스타일을 제어하지만 역할이 다릅니다.
+
+| 항목 | `csharp_style_namespace_declarations` | `dotnet_diagnostic.IDE0161.severity` |
+|------|--------------------------------------|--------------------------------------|
+| **유형** | 코드 스타일 규칙 | 진단 규칙 |
+| **역할** | 선호하는 스타일 + 심각도 정의 | 심각도만 정의 |
+| **형식** | `값:심각도` (예: `file_scoped:warning`) | `심각도` (예: `warning`) |
+| **스타일 지정** | ✓ 가능 (`file_scoped` / `block_scoped`) | ✗ 불가 |
+| **우선순위** | 낮음 | 높음 (재정의 가능) |
+
+**권장: 둘 다 함께 사용**
+
+```ini
+[*.{cs,vb}]
+# 스타일 정의: file-scoped 네임스페이스 사용
+csharp_style_namespace_declarations = file_scoped:warning
+
+# 심각도 명시적 설정 (선택적이지만 명확함)
+dotnet_diagnostic.IDE0161.severity = warning
+```
+
+**함께 사용하는 이유:**
+- `csharp_style_namespace_declarations`: 어떤 스타일을 선호하는지 정의
+- `dotnet_diagnostic.IDE0161.severity`: 빌드 시 심각도를 명시적으로 강제
+
+일부 환경에서는 코드 스타일 규칙의 심각도가 무시될 수 있어, 진단 규칙으로 심각도를 명시적으로 설정하면 더 확실하게 적용됩니다.
+
 <br/>
 
 ## 빌드 시 코드 분석
