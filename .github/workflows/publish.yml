@@ -1,0 +1,141 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  CONFIGURATION: Release
+
+jobs:
+  release:
+    name: Build and Publish Release
+    runs-on: ${{ matrix.os }}
+
+    env:
+      SOLUTION_FILE: ${{ github.workspace }}/Functorium.slnx
+      COVERAGE_REPORT_DIR: ${{ github.workspace }}/coverage
+
+    strategy:
+      matrix:
+        os: [ubuntu-24.04]
+        dotnet: ['10.0.x']
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # MinVer requires full Git history
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ matrix.dotnet }}
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.SOLUTION_FILE }}
+
+    - name: Check for vulnerable packages
+      run: |
+        dotnet list ${{ env.SOLUTION_FILE }} package --vulnerable --include-transitive 2>&1 | tee ${{ github.workspace }}/vulnerability-report.txt
+        if grep -q "has the following vulnerable packages" ${{ github.workspace }}/vulnerability-report.txt; then
+          echo "::warning::Vulnerable packages detected. Review vulnerability-report.txt for details."
+        fi
+
+    - name: Build and display version
+      run: |
+        dotnet build ${{ env.SOLUTION_FILE }} \
+          --configuration ${{ env.CONFIGURATION }} \
+          --no-restore \
+          -p:MinVerVerbosity=normal
+
+    - name: Test with coverage
+      run: |
+        dotnet test ${{ env.SOLUTION_FILE }} \
+          --configuration ${{ env.CONFIGURATION }} \
+          --no-build \
+          --collect:"XPlat Code Coverage" \
+          --logger "trx" \
+          --logger "console;verbosity=minimal" \
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.os }}-dotnet${{ matrix.dotnet }}
+        path: ${{ github.workspace }}/**/TestResults/**/*.trx
+        retention-days: 30
+
+    - name: Generate coverage report
+      if: success()
+      uses: danielpalme/ReportGenerator-GitHub-Action@v5.4.4
+      with:
+        reports: '${{ github.workspace }}/**/TestResults/**/coverage.cobertura.xml'
+        targetdir: '${{ env.COVERAGE_REPORT_DIR }}'
+        reporttypes: 'Html;Cobertura;TextSummary;MarkdownSummaryGithub'
+        assemblyfilters: '-*.Tests.*'
+        verbosity: 'Info'
+
+    - name: Display coverage summary
+      if: success()
+      run: |
+        cat ${{ env.COVERAGE_REPORT_DIR }}/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+
+    - name: Upload coverage report
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report-${{ matrix.os }}-dotnet${{ matrix.dotnet }}
+        path: '${{ env.COVERAGE_REPORT_DIR }}'
+        retention-days: 30
+
+    - name: Pack NuGet packages
+      run: |
+        dotnet pack ${{ env.SOLUTION_FILE }} \
+          --configuration ${{ env.CONFIGURATION }} \
+          --no-build \
+          --output ./packages
+
+    - name: List packages
+      run: ls -la ./packages
+
+    - name: Publish to NuGet.org
+      if: startsWith(github.ref, 'refs/tags/v')
+      run: |
+        dotnet nuget push ./packages/*.nupkg \
+          --api-key ${{ secrets.NUGET_API_KEY }} \
+          --source https://api.nuget.org/v3/index.json \
+          --skip-duplicate
+      continue-on-error: true
+
+    # - name: Publish to GitHub Packages
+    #   if: startsWith(github.ref, 'refs/tags/v')
+    #   run: |
+    #     dotnet nuget push ./packages/*.nupkg \
+    #       --api-key ${{ secrets.GITHUB_TOKEN }} \
+    #       --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json \
+    #       --skip-duplicate
+    #   continue-on-error: true
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/v')
+      with:
+        files: ./packages/*.nupkg
+        generate_release_notes: true
+        draft: false
+        prerelease: ${{ contains(github.ref, '-') }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

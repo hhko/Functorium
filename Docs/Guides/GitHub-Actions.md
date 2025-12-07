@@ -6,8 +6,8 @@
 - [개요](#개요)
 - [워크플로우 구성](#워크플로우-구성)
 - [초기 설정](#초기-설정)
-- [CI 워크플로우](#ci-워크플로우)
-- [Release 워크플로우](#release-워크플로우)
+- [Build 워크플로우](#build-워크플로우)
+- [Publish 워크플로우](#publish-워크플로우)
 - [배포 설정](#배포-설정)
 - [트러블슈팅](#트러블슈팅)
 - [FAQ](#faq)
@@ -34,10 +34,10 @@ Git 태그 기반 자동 버전 관리와 CI/CD 파이프라인을 통해 안정
 ├── .github/
 │   └── workflows/
 │       ├── build.yml        # Build 워크플로우 (CI)
-│       └── release.yml      # Release 워크플로우
+│       └── publish.yml      # Publish 워크플로우 (Release)
 └── Docs/
     └── Guides/
-        └── GitHub-Actions.md  # 이 문서
+        └── Guide-CICD-Workflow.md  # 이 문서
 ```
 
 <br/>
@@ -65,7 +65,7 @@ Git 태그 기반 자동 버전 관리와 CI/CD 파이프라인을 통해 안정
 10. 커버리지 요약 표시 (GITHUB_STEP_SUMMARY)
 11. 커버리지 리포트 업로드
 
-### Release 워크플로우 (release.yml)
+### Publish 워크플로우 (publish.yml)
 
 **트리거:**
 - 태그 푸시: v*.*.* (예: v1.0.0, v1.2.3)
@@ -73,14 +73,18 @@ Git 태그 기반 자동 버전 관리와 CI/CD 파이프라인을 통해 안정
 **작업:**
 1. 코드 체크아웃 (전체 Git 히스토리)
 2. .NET 10 설정
-3. 의존성 복원
-4. Release 모드 빌드
-5. MinVer 버전 확인
-6. 테스트 실행
-7. NuGet 패키지 생성
-8. NuGet.org에 배포 (선택)
-9. GitHub Packages에 배포 (선택)
-10. GitHub Release 생성
+3. NuGet 패키지 캐시
+4. 의존성 복원
+5. 취약점 패키지 검사
+6. Release 모드 빌드 (MinVer 버전 출력 포함)
+7. 테스트 실행 및 커버리지 수집
+8. 테스트 결과 업로드
+9. ReportGenerator로 커버리지 리포트 생성
+10. 커버리지 요약 표시 (GITHUB_STEP_SUMMARY)
+11. 커버리지 리포트 업로드
+12. NuGet 패키지 생성
+13. NuGet.org에 배포
+14. GitHub Release 생성
 
 <br/>
 
@@ -281,14 +285,14 @@ gh pr create --base main --head feature/new-feature
 
 <br/>
 
-## Release 워크플로우
+## Publish 워크플로우
 
 ### 워크플로우 파일
 
-`.github/workflows/release.yml`:
+`.github/workflows/publish.yml`:
 
 ```yaml
-name: Release
+name: Publish
 
 on:
   push:
@@ -296,40 +300,110 @@ on:
       - 'v*.*.*'
 
 env:
-  DOTNET_VERSION: '10.0.x'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
+  CONFIGURATION: Release
 
 jobs:
   release:
     name: Build and Publish Release
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+
+    env:
+      SOLUTION_FILE: ${{ github.workspace }}/Functorium.slnx
+      COVERAGE_REPORT_DIR: ${{ github.workspace }}/coverage
+
+    strategy:
+      matrix:
+        os: [ubuntu-24.04]
+        dotnet: ['10.0.x']
 
     steps:
     - name: Checkout
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0
+        fetch-depth: 0  # MinVer requires full Git history
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
+        dotnet-version: ${{ matrix.dotnet }}
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
 
     - name: Restore dependencies
-      run: dotnet restore Functorium.slnx
+      run: dotnet restore ${{ env.SOLUTION_FILE }}
 
-    - name: Build
-      run: dotnet build Functorium.slnx -c Release --no-restore
+    - name: Check for vulnerable packages
+      run: |
+        dotnet list ${{ env.SOLUTION_FILE }} package --vulnerable --include-transitive 2>&1 | tee ${{ github.workspace }}/vulnerability-report.txt
+        if grep -q "has the following vulnerable packages" ${{ github.workspace }}/vulnerability-report.txt; then
+          echo "::warning::Vulnerable packages detected. Review vulnerability-report.txt for details."
+        fi
 
-    - name: Display version
-      run: dotnet build Functorium.slnx -c Release --no-restore -p:MinVerVerbosity=normal
+    - name: Build and display version
+      run: |
+        dotnet build ${{ env.SOLUTION_FILE }} \
+          --configuration ${{ env.CONFIGURATION }} \
+          --no-restore \
+          -p:MinVerVerbosity=normal
 
-    - name: Run tests
-      run: dotnet test Functorium.slnx -c Release --no-build --verbosity normal
+    - name: Test with coverage
+      run: |
+        dotnet test ${{ env.SOLUTION_FILE }} \
+          --configuration ${{ env.CONFIGURATION }} \
+          --no-build \
+          --collect:"XPlat Code Coverage" \
+          --logger "trx" \
+          --logger "console;verbosity=minimal" \
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.os }}-dotnet${{ matrix.dotnet }}
+        path: ${{ github.workspace }}/**/TestResults/**/*.trx
+        retention-days: 30
+
+    - name: Generate coverage report
+      if: success()
+      uses: danielpalme/ReportGenerator-GitHub-Action@v5.4.4
+      with:
+        reports: '${{ github.workspace }}/**/TestResults/**/coverage.cobertura.xml'
+        targetdir: '${{ env.COVERAGE_REPORT_DIR }}'
+        reporttypes: 'Html;Cobertura;TextSummary;MarkdownSummaryGithub'
+        assemblyfilters: '-*.Tests.*'
+        verbosity: 'Info'
+
+    - name: Display coverage summary
+      if: success()
+      run: |
+        cat ${{ env.COVERAGE_REPORT_DIR }}/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+
+    - name: Upload coverage report
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report-${{ matrix.os }}-dotnet${{ matrix.dotnet }}
+        path: '${{ env.COVERAGE_REPORT_DIR }}'
+        retention-days: 30
 
     - name: Pack NuGet packages
-      run: dotnet pack Functorium.slnx -c Release --no-build --output ./packages
+      run: |
+        dotnet pack ${{ env.SOLUTION_FILE }} \
+          --configuration ${{ env.CONFIGURATION }} \
+          --no-build \
+          --output ./packages
+
+    - name: List packages
+      run: ls -la ./packages
 
     - name: Publish to NuGet.org
       if: startsWith(github.ref, 'refs/tags/v')
@@ -340,14 +414,14 @@ jobs:
           --skip-duplicate
       continue-on-error: true
 
-    - name: Publish to GitHub Packages
-      if: startsWith(github.ref, 'refs/tags/v')
-      run: |
-        dotnet nuget push ./packages/*.nupkg \
-          --api-key ${{ secrets.GITHUB_TOKEN }} \
-          --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json \
-          --skip-duplicate
-      continue-on-error: true
+    # - name: Publish to GitHub Packages
+    #   if: startsWith(github.ref, 'refs/tags/v')
+    #   run: |
+    #     dotnet nuget push ./packages/*.nupkg \
+    #       --api-key ${{ secrets.GITHUB_TOKEN }} \
+    #       --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json \
+    #       --skip-duplicate
+    #   continue-on-error: true
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
@@ -431,10 +505,10 @@ dotnet add package Functorium --version 1.0.0 --source github
 ### 배포 대상 선택
 
 **NuGet.org만:**
-- `release.yml`에서 GitHub Packages 단계 제거
+- `publish.yml`에서 GitHub Packages 단계 제거 (이미 주석 처리됨)
 
 **GitHub Packages만:**
-- `release.yml`에서 NuGet.org 단계 제거
+- `publish.yml`에서 NuGet.org 단계 제거
 - `NUGET_API_KEY` Secret 불필요
 
 **둘 다:**
@@ -533,10 +607,12 @@ Settings → Actions → General:
 
 **해결:**
 
-`build.yml`, `release.yml`의 버전 수정:
+`build.yml`, `publish.yml`의 strategy matrix에서 버전 수정:
 ```yaml
-env:
-  DOTNET_VERSION: '9.0.x'  # 또는 현재 설치 가능한 버전
+strategy:
+  matrix:
+    os: [ubuntu-24.04]
+    dotnet: ['9.0.x']  # 또는 현재 설치 가능한 버전
 ```
 
 <br/>
@@ -588,7 +664,7 @@ prerelease: ${{ contains(github.ref, '-') }}
     dotnet pack Src/Functorium.Testing/Functorium.Testing.csproj -c Release --no-build --output ./packages
 ```
 
-### Q4. 로컬에서 Release 워크플로우를 테스트하려면?
+### Q4. 로컬에서 Publish 워크플로우를 테스트하려면?
 
 **A:** [act](https://github.com/nektos/act) 도구 사용:
 
@@ -598,13 +674,13 @@ prerelease: ${{ contains(github.ref, '-') }}
 # Windows: choco install act-cli
 
 # 워크플로우 테스트
-act push -e .github/workflows/release.yml
+act push -e .github/workflows/publish.yml
 ```
 
 또는 수동으로:
 ```bash
 dotnet build -c Release
-dotnet test -c Release --no-build
+dotnet test -c Release --no-build --collect:"XPlat Code Coverage"
 dotnet pack -c Release --no-build --output ./packages
 ```
 
@@ -674,12 +750,17 @@ jobs:
 2. Environment name: `production`
 3. **Required reviewers** 추가
 
-`release.yml` 수정:
+`publish.yml` 수정:
 ```yaml
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     environment: production  # 수동 승인 필요
+
+    strategy:
+      matrix:
+        os: [ubuntu-24.04]
+        dotnet: ['10.0.x']
 ```
 
 ### Q9. Codecov 없이 커버리지를 보려면?
