@@ -52,6 +52,30 @@ Conventional Commits 타입에 따른 Semantic Versioning 적용:
 
 다음 절차에 따라 버전을 분석하고 제안합니다:
 
+### 0. 파라미터 유효성 검사
+
+`$ARGUMENTS`가 지정된 경우, 다음 값만 허용합니다:
+- `alpha`
+- `beta`
+- `rc`
+
+**유효하지 않은 값이 입력된 경우:**
+- 즉시 오류 메시지를 출력하고 실행을 중단합니다
+- 버전 분석을 진행하지 않습니다
+
+```
+오류: 유효하지 않은 프리릴리스 타입입니다.
+
+입력값: {입력된 값}
+허용값: alpha, beta, rc
+
+사용 예시:
+  /suggest-next-version          # 정식 버전 제안
+  /suggest-next-version alpha    # 알파 버전 제안
+  /suggest-next-version beta     # 베타 버전 제안
+  /suggest-next-version rc       # RC 버전 제안
+```
+
 ### 1. 현재 버전 확인
 
 ```bash
