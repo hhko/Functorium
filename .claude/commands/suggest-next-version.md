@@ -41,12 +41,18 @@ Conventional Commits 타입에 따른 Semantic Versioning 적용:
 
 | 커밋 타입 | 버전 증가 | 설명 |
 |-----------|-----------|------|
-| `feat!`, `fix!`, `BREAKING CHANGE` | **Major** (x.0.0) | 호환성을 깨는 변경 |
+| `feat!`, `fix!`, `BREAKING CHANGE` | **Minor** (1.x.0) | 호환성을 깨는 변경 (Minor로 처리) |
 | `feat` | **Minor** (1.x.0) | 새로운 기능 추가 |
 | `fix`, `perf` | **Patch** (1.0.x) | 버그 수정, 성능 개선 |
 | `docs`, `style`, `refactor`, `test`, `build`, `ci`, `chore` | 버전 증가 없음 | 릴리스 불필요 변경 |
 
-**우선순위:** Major > Minor > Patch (가장 높은 수준의 변경을 기준으로 버전 결정)
+**우선순위:** Minor > Patch (가장 높은 수준의 변경을 기준으로 버전 결정)
+
+### Major 버전 증가
+
+**Major 버전은 이 명령어로 변경되지 않습니다.**
+
+Breaking Change가 감지되더라도 자동으로 Major 버전을 증가시키지 않고 Minor 버전으로 처리합니다. Major 버전 증가가 필요한 경우 사용자가 직접 태그를 생성해야 합니다.
 
 ## 실행 절차
 
@@ -103,17 +109,18 @@ git log --oneline
 
 각 커밋 메시지를 분석하여 분류:
 
-1. **Breaking Changes 확인**: "!" 접미사 또는 "BREAKING CHANGE" 푸터
+1. **Breaking Changes 확인**: "!" 접미사 또는 "BREAKING CHANGE" 푸터 (Minor로 처리)
 2. **feat 커밋 수**: Minor 버전 증가 대상
 3. **fix/perf 커밋 수**: Patch 버전 증가 대상
 4. **기타 커밋**: 버전 증가 대상 아님
 
 ### 4. 버전 증가 결정
 
-- Breaking Change가 있으면 → Major 증가
-- feat 커밋이 있으면 → Minor 증가
+- Breaking Change 또는 feat 커밋이 있으면 → Minor 증가
 - fix/perf 커밋만 있으면 → Patch 증가
 - 그 외에는 → 버전 증가 불필요 알림
+
+**참고:** Major 버전은 자동으로 증가하지 않습니다.
 
 ### 5. 프리릴리스 처리
 
