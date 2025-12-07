@@ -14,6 +14,22 @@ Conventional Commits 규격을 따르며, 변경사항을 명확하고 일관된
 
 Topic 파라미터를 사용하면 특정 topic과 관련된 변경사항만 선별하여 커밋할 수 있습니다.
 
+### Topic 지정 시 동작
+
+**중요:** Topic이 지정되면 해당 topic과 관련된 파일만 커밋해야 합니다.
+
+1. `git status`로 모든 변경사항 확인
+2. 지정된 topic과 관련된 파일만 선별
+3. 선별된 파일만 스테이징 (`git add`)
+4. 단일 커밋 생성
+5. **Topic과 무관한 파일은 절대 커밋하지 않음**
+
+**파일 선별 기준:**
+- 파일명에 topic 키워드 포함
+- 파일 내용이 topic과 직접 관련
+- 디렉토리 경로에 topic 키워드 포함
+- 변경 내용이 topic 주제와 연관
+
 **Topic이 지정되지 않은 경우:**
 
 모든 변경사항을 대상으로 커밋을 진행합니다. 변경사항이 여러 논리적 단위로 구성된 경우, 각 단위별로 분리하여 커밋합니다.
@@ -21,9 +37,10 @@ Topic 파라미터를 사용하면 특정 topic과 관련된 변경사항만 선
 **사용 예시:**
 ```
 /commit                   # 모든 변경사항을 논리적 단위로 분리하여 커밋
-/commit Calculator        # Calculator 관련 변경만 커밋
-/commit 테스트 리팩터링    # 테스트 리팩터링 관련 변경만 커밋
-/commit API 엔드포인트     # API 엔드포인트 관련 변경만 커밋
+/commit Calculator        # Calculator 관련 파일만 선별하여 커밋
+/commit 테스트 리팩터링    # 테스트 리팩터링 관련 파일만 커밋
+/commit API 엔드포인트     # API 엔드포인트 관련 파일만 커밋
+/commit MinVer           # MinVer 관련 파일만 커밋
 ```
 
 ## 적용 범위
@@ -172,14 +189,69 @@ build: LanguageExt.Core 4.4.9 패키지 추가
 
 ## 커밋 절차
 
+### 기본 절차 (Topic 미지정)
+
 1. `git status`로 변경사항 확인
 2. `git diff`로 변경 내용 검토
 3. `git log --oneline -5`로 최근 커밋 스타일 확인
 4. 논리적 단위로 분리하여 스테이징 및 커밋
 
-**Topic 파라미터 사용 시:**
-- 지정된 topic(`$ARGUMENTS`)과 관련된 파일만 선별하여 스테이징
-- Topic과 무관한 파일은 이번 커밋에서 제외
+### Topic 파라미터 사용 시 (`$ARGUMENTS` 지정)
+
+**필수 절차:**
+
+1. **변경사항 확인**
+   ```bash
+   git status
+   git diff
+   ```
+
+2. **Topic 관련 파일 선별**
+   - 지정된 topic(`$ARGUMENTS`)과 관련된 파일만 식별
+   - 파일명, 경로, 내용을 기준으로 판단
+   - 불확실한 경우 `git diff <파일>`로 변경 내용 검토
+
+3. **선별된 파일만 스테이징**
+   ```bash
+   # Topic 관련 파일만 추가
+   git add <topic-관련-파일1> <topic-관련-파일2> ...
+   ```
+
+4. **단일 커밋 생성**
+   - 선별된 파일들로 하나의 커밋 생성
+   - 커밋 메시지에 topic 반영
+   - Conventional Commits 형식 준수
+
+5. **검증**
+   - `git status`로 topic과 무관한 파일이 unstaged 상태인지 확인
+   - Topic과 무관한 파일이 커밋에 포함되지 않았는지 확인
+
+**예시:**
+```bash
+# 변경된 파일: Build-Local.ps1, Directory.Build.props, README.md
+# Topic: MinVer
+
+# 1. 변경사항 확인
+git status
+# Build-Local.ps1 (MinVer 관련)
+# Directory.Build.props (MinVer 설정)
+# README.md (MinVer와 무관)
+
+# 2. MinVer 관련 파일만 스테이징
+git add Build-Local.ps1 Directory.Build.props
+
+# 3. 커밋 (README.md는 제외)
+git commit -m "feat(minver): MinVer 버전 정보 표시 추가"
+
+# 4. 확인 (README.md는 여전히 unstaged)
+git status
+# modified: README.md
+```
+
+**중요:**
+- Topic과 무관한 파일은 절대 커밋하지 않음
+- 하나의 topic = 하나의 커밋
+- Topic 관련 파일만 선별하여 스테이징
 
 ## 완료 메시지
 
