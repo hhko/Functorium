@@ -141,7 +141,7 @@ git log --oneline
 버전 증가 이유:
   - feat 커밋 N개 발견 (Minor 증가)
   - fix 커밋 N개 발견
-  - Breaking Change 없음
+  - Breaking Change N개 발견 (Minor로 처리)
 
 주요 변경사항:
   - feat: 변경사항 설명
