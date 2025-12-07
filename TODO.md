@@ -37,24 +37,23 @@
 - [x] Build-CommitSummary: 커밋 소스 브랜치 추가
 - [x] Build-CommitSummary: 태그 없을 때 버그 수정
 - [x] Build-CommitSummary: 출력 경로 매개변수화
+- [x] Build-CommitSummary: 타겟 브랜치 이름 출력
 - [ ] Build-CommitSummary: --no-merges
-- [ ] commit 주제 전달일 때는 주체만 commit하기
+- [x] commit 주제 전달일 때는 주체만 commit하기
 - [x] ci.yml -> build.yml
 - [x] build.yml 실패 처리
+- [x] MinVer 이해
+- [x] 로컬 빌드
+- [x] GitHub actions build
+- [x] GitHub actions publish
+- [x] GitHub actions 문서
 - [ ] DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true, DOTNET_CLI_TELEMETRY_OPTOUT: true 이해
-- [ ] MinVer 이해
 - [ ] powershell 학습 문서
 - [ ] powershell 가이드 문서
 - [ ] powershell 가이드 문서 기준 개선
-- [ ] 로컬 빌드
 - [ ] 로컬 빌드 문서(dotnet 명령어)
-- [ ] 버전 체계 문서
 - [ ] 솔루션 구성: Directory.Build.props 버전 체계
 - [ ] 솔루션 구성: Directory.Build.props 형상관리와 버전 연동
 - [ ] 솔루션 구성: .editorconfig 폴더 단위 개별 지정
 - [ ] 솔루션 구성: Directory.Packages.props 하위 폴더 새로 시작, 버전 재정의
-- [ ] GitHub actions build
-- [ ] GitHub actions build 문서
-- [ ] GitHub actions publish
-- [ ] GitHub actions publish 문서
 
