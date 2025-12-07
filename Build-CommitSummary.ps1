@@ -3,76 +3,76 @@
 
 <#
 .SYNOPSIS
-    커밋 타입별로 그룹화하여 요약 문서를 생성합니다.
+    Generates a summary document grouped by commit types.
 
 .DESCRIPTION
-    Conventional Commits 규격에 따라 커밋을 타입별로 그룹화하고,
-    통계 및 상세 목록을 포함한 마크다운 문서를 생성합니다.
+    Groups commits by type according to Conventional Commits specification
+    and generates a markdown document with statistics and detailed lists.
 
 .PARAMETER Range
-    git 범위 표현식 (선택사항)
-    예: v1.0.0..HEAD, v1.0.0..v1.1.0, HEAD~10..HEAD
-    기본값: 마지막 태그 이후 커밋 (태그 없으면 전체 커밋)
+    Git range expression (optional)
+    Examples: v1.0.0..HEAD, v1.0.0..v1.1.0, HEAD~10..HEAD
+    Default: Commits since last tag (all commits if no tags)
 
 .PARAMETER TargetBranch
-    대상 브랜치 (선택사항)
-    기본값: main
-    범위 결정 우선순위:
-    1. 태그가 있으면: [마지막태그]..HEAD
-    2. 태그가 없고 다른 브랜치면: [TargetBranch]..HEAD
-    3. 태그가 없고 같은 브랜치면: HEAD (전체 커밋)
+    Target branch (optional)
+    Default: main
+    Range resolution priority:
+    1. If tag exists: [last-tag]..HEAD
+    2. No tag + different branch: [TargetBranch]..HEAD
+    3. No tag + same branch: HEAD (all commits)
 
 .PARAMETER OutputDir
-    출력 디렉토리 경로 (선택사항)
-    기본값: .commit-summaries
+    Output directory path (optional)
+    Default: .commit-summaries
 
 .EXAMPLE
     .\Build-CommitSummary.ps1
-    마지막 태그 이후 커밋 요약
+    Summarize commits since last tag
 
 .EXAMPLE
     .\Build-CommitSummary.ps1 -Range "v1.0.0..HEAD"
-    특정 범위 커밋 요약
+    Summarize commits in specific range
 
 .EXAMPLE
     .\Build-CommitSummary.ps1 -Range "HEAD~10..HEAD"
-    최근 10개 커밋 요약
+    Summarize last 10 commits
 
 .EXAMPLE
     .\Build-CommitSummary.ps1 -TargetBranch develop
-    develop 브랜치 기준으로 커밋 요약
+    Summarize commits based on develop branch
 
 .EXAMPLE
     .\Build-CommitSummary.ps1 -OutputDir "./releases"
-    출력 디렉토리를 ./releases로 지정
+    Specify output directory as ./releases
 
 .NOTES
-    버전: 1.0.0
-    요구사항: PowerShell 7+, git
-    출력 디렉토리: .commit-summaries/
-    라이선스: MIT
+    Version: 1.0.0
+    Requirements: PowerShell 7+, git
+    Output directory: .commit-summaries/
+    License: MIT
 #>
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $false, Position = 0, HelpMessage = "git 범위 표현식 (예: v1.0.0..HEAD)")]
+    [Parameter(Mandatory = $false, Position = 0, HelpMessage = "Git range expression (e.g., v1.0.0..HEAD)")]
     [Alias("r")]
     [string]$Range,
 
-    [Parameter(Mandatory = $false, HelpMessage = "대상 브랜치 (기본값: main)")]
+    [Parameter(Mandatory = $false, HelpMessage = "Target branch (default: main)")]
     [Alias("t")]
     [string]$TargetBranch = "main",
 
-    [Parameter(Mandatory = $false, HelpMessage = "출력 디렉토리 경로 (기본값: .commit-summaries)")]
+    [Parameter(Mandatory = $false, HelpMessage = "Output directory path (default: .commit-summaries)")]
     [Alias("o")]
     [string]$OutputDir = ".commit-summaries",
 
-    [Parameter(Mandatory = $false, HelpMessage = "도움말을 표시합니다")]
+    [Parameter(Mandatory = $false, HelpMessage = "Show help")]
     [Alias("h", "?")]
     [switch]$Help
 )
 
-# 엄격 모드 설정
+# Strict mode settings
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
@@ -92,7 +92,7 @@ $script:COMMIT_TYPES = @{
     other    = @{ Description = "Non-conventional commits" }
 }
 
-$script:OUTPUT_DIR = $null  # Entry Point에서 설정
+$script:OUTPUT_DIR = $null  # Set at Entry Point
 $script:MAX_AUTHOR_LENGTH = 15
 
 #endregion
@@ -101,16 +101,16 @@ $script:MAX_AUTHOR_LENGTH = 15
 
 <#
 .SYNOPSIS
-    Git 저장소인지 검증합니다.
+    Validates that the current directory is a Git repository.
 #>
 function Assert-GitRepository {
-    Write-Host "[1/7] Git 저장소 확인 중..." -ForegroundColor Gray
+    Write-Host "[1/7] Checking Git repository..." -ForegroundColor Gray
 
     if (-not (Test-Path .git)) {
-        throw "현재 디렉토리는 git 저장소가 아닙니다."
+        throw "Current directory is not a git repository."
     }
 
-    Write-Host "   Git 저장소 확인 완료" -ForegroundColor DarkGray
+    Write-Host "      Git repository verified" -ForegroundColor DarkGray
 }
 
 #endregion
@@ -119,7 +119,7 @@ function Assert-GitRepository {
 
 <#
 .SYNOPSIS
-    마지막 git tag를 조회합니다.
+    Retrieves the last git tag.
 #>
 function Get-LastTag {
     try {
@@ -136,7 +136,7 @@ function Get-LastTag {
 
 <#
 .SYNOPSIS
-    커밋 범위를 결정합니다.
+    Determines the commit range.
 #>
 function Resolve-CommitRange {
     param(
@@ -147,34 +147,34 @@ function Resolve-CommitRange {
         [string]$TargetBranch = "main"
     )
 
-    Write-Host "[2/7] 범위 결정 중..." -ForegroundColor Gray
+    Write-Host "[2/7] Determining range..." -ForegroundColor Gray
 
     if ([string]::IsNullOrWhiteSpace($Range)) {
         $lastTag = Get-LastTag
 
         if ($lastTag) {
             $resolved = "$lastTag..HEAD"
-            Write-Host "   범위: $resolved (마지막 태그 이후)" -ForegroundColor DarkGray
+            Write-Host "      Range: $resolved (since last tag)" -ForegroundColor DarkGray
         }
         else {
-            # 태그가 없을 때: TargetBranch..HEAD 시도
+            # No tag: try TargetBranch..HEAD
             $candidateRange = "$TargetBranch..HEAD"
             $commitCount = @(git log $candidateRange --oneline --no-merges 2>$null).Count
 
             if ($commitCount -gt 0) {
                 $resolved = $candidateRange
-                Write-Host "   범위: $resolved (대상 브랜치 기준)" -ForegroundColor DarkGray
+                Write-Host "      Range: $resolved (based on target branch)" -ForegroundColor DarkGray
             }
             else {
-                # 현재 브랜치가 TargetBranch와 동일한 경우 HEAD 사용
+                # Current branch is same as TargetBranch, use HEAD
                 $resolved = "HEAD"
-                Write-Host "   범위: $resolved (전체 커밋, 태그 없음)" -ForegroundColor DarkGray
+                Write-Host "      Range: $resolved (all commits, no tags)" -ForegroundColor DarkGray
             }
         }
     }
     else {
         $resolved = $Range
-        Write-Host "   범위: $resolved (사용자 지정)" -ForegroundColor DarkGray
+        Write-Host "      Range: $resolved (user specified)" -ForegroundColor DarkGray
     }
 
     return $resolved
@@ -186,7 +186,7 @@ function Resolve-CommitRange {
 
 <#
 .SYNOPSIS
-    지정된 범위의 커밋을 조회합니다.
+    Retrieves commits in the specified range.
 #>
 function Get-CommitsInRange {
     param(
@@ -195,8 +195,8 @@ function Get-CommitsInRange {
     )
 
     try {
-        # @()로 감싸서 항상 배열로 반환
-        # 포맷: hash|author|subject
+        # Wrap with @() to always return array
+        # Format: hash|author|subject
         $commits = @(git log $Range --format="%h|%an|%s" --no-merges 2>$null)
         return $commits
     }
@@ -207,7 +207,7 @@ function Get-CommitsInRange {
 
 <#
 .SYNOPSIS
-    에러 메시지를 출력합니다.
+    Outputs error messages.
 #>
 function Write-ErrorOutput {
     param(
@@ -219,14 +219,14 @@ function Write-ErrorOutput {
     )
 
     Write-Host ""
-    Write-Host "[실패] 커밋 요약 생성 실패" -ForegroundColor Red
+    Write-Host "[FAILED] Commit summary generation failed" -ForegroundColor Red
     Write-Host ""
-    Write-Host "에러:" -ForegroundColor Red
+    Write-Host "Error:" -ForegroundColor Red
     Write-Host "  $Message"
     Write-Host ""
 
     if ($Hint) {
-        Write-Host "힌트:" -ForegroundColor Yellow
+        Write-Host "Hint:" -ForegroundColor Yellow
         Write-Host "  $Hint"
         Write-Host ""
     }
@@ -234,7 +234,7 @@ function Write-ErrorOutput {
 
 <#
 .SYNOPSIS
-    커밋을 조회하고 유효성을 검증합니다.
+    Retrieves commits and validates them.
 #>
 function Get-ValidatedCommits {
     param(
@@ -242,14 +242,14 @@ function Get-ValidatedCommits {
         [string]$Range
     )
 
-    Write-Host "[3/7] 커밋 조회 중..." -ForegroundColor Gray
+    Write-Host "[3/7] Retrieving commits..." -ForegroundColor Gray
 
     $commits = @(Get-CommitsInRange -Range $Range)
     $count = if ($commits) { $commits.Count } else { 0 }
-    Write-Host "   수집된 커밋: ${count}개" -ForegroundColor DarkGray
+    Write-Host "      Collected commits: $count" -ForegroundColor DarkGray
 
     if ($count -eq 0) {
-        Write-Host "   경고: 지정된 범위에 커밋이 없습니다." -ForegroundColor Yellow
+        Write-Host "      Warning: No commits found in specified range." -ForegroundColor Yellow
     }
 
     return $commits
@@ -261,7 +261,7 @@ function Get-ValidatedCommits {
 
 <#
 .SYNOPSIS
-    Conventional Commit을 파싱합니다.
+    Parses a Conventional Commit.
 #>
 function Parse-ConventionalCommit {
     param(
@@ -269,8 +269,8 @@ function Parse-ConventionalCommit {
         [string]$CommitLine
     )
 
-    # 커밋 형식: hash|author|subject
-    # subject 형식: type(scope): description 또는 type: description
+    # Commit format: hash|author|subject
+    # Subject format: type(scope): description or type: description
     $parts = $CommitLine -split '\|', 3
     if ($parts.Count -lt 3) {
         return $null
@@ -280,18 +280,18 @@ function Parse-ConventionalCommit {
     $author = $parts[1]
     $subject = $parts[2]
 
-    # 머지 커밋에서 브랜치 이름 추출
-    # 추적 불가능한 경우들:
-    #   - Squash merge: 여러 커밋이 하나로 합쳐져 원본 브랜치 정보 손실
-    #   - Rebase: 커밋이 새로 생성되어 원본 브랜치 정보 없음
-    #   - Fast-forward merge: 머지 커밋이 없어 추적 불가
-    #   - 삭제된 브랜치: 브랜치가 삭제되면 이름을 알 수 없음
+    # Extract branch name from merge commits
+    # Untraceable cases:
+    #   - Squash merge: Multiple commits merged into one, original branch info lost
+    #   - Rebase: Commits are recreated, no original branch info
+    #   - Fast-forward merge: No merge commit, untraceable
+    #   - Deleted branch: Branch name unknown after deletion
     $sourceBranch = ""
     if ($subject -match "Merge branch ['\`"](.+?)['\`"]") {
         $sourceBranch = $Matches[1]
     }
 
-    # Conventional Commits 형식 파싱
+    # Parse Conventional Commits format
     if ($subject -match '^(\w+)(\(.*?\))?(!)?:\s*(.+)$') {
         return @{
             Hash         = $hash
@@ -305,7 +305,7 @@ function Parse-ConventionalCommit {
         }
     }
     else {
-        # Conventional Commits 규격을 따르지 않는 커밋
+        # Commits not following Conventional Commits specification
         return @{
             Hash         = $hash
             Author       = $author
@@ -321,7 +321,7 @@ function Parse-ConventionalCommit {
 
 <#
 .SYNOPSIS
-    커밋을 타입별로 그룹화합니다.
+    Groups commits by type.
 #>
 function Group-CommitsByType {
     param(
@@ -332,18 +332,18 @@ function Group-CommitsByType {
 
     $grouped = @{}
 
-    # 모든 타입 초기화
+    # Initialize all types
     foreach ($type in $script:COMMIT_TYPES.Keys) {
         $grouped[$type] = @()
     }
 
-    # 커밋 분류
+    # Classify commits
     foreach ($commitLine in $Commits) {
         $parsed = Parse-ConventionalCommit -CommitLine $commitLine
         if ($null -ne $parsed) {
             $type = $parsed.Type
 
-            # 알려진 타입이 아니면 other로 분류
+            # Classify as 'other' if not a known type
             if (-not $script:COMMIT_TYPES.ContainsKey($type)) {
                 $type = "other"
             }
@@ -357,7 +357,7 @@ function Group-CommitsByType {
 
 <#
 .SYNOPSIS
-    커밋을 분석하고 타입별로 그룹화합니다.
+    Analyzes commits and groups them by type.
 #>
 function Invoke-CommitAnalysis {
     param(
@@ -366,10 +366,10 @@ function Invoke-CommitAnalysis {
         [array]$Commits
     )
 
-    Write-Host "[4/7] 커밋 분석 중..." -ForegroundColor Gray
+    Write-Host "[4/7] Analyzing commits..." -ForegroundColor Gray
 
     $grouped = Group-CommitsByType -Commits $Commits
-    Write-Host "   타입별 분류 완료" -ForegroundColor DarkGray
+    Write-Host "      Classified by type" -ForegroundColor DarkGray
 
     return $grouped
 }
@@ -380,7 +380,7 @@ function Invoke-CommitAnalysis {
 
 <#
 .SYNOPSIS
-    통계를 계산합니다.
+    Calculates statistics.
 #>
 function Calculate-Statistics {
     param(
@@ -404,7 +404,7 @@ function Calculate-Statistics {
 
 <#
 .SYNOPSIS
-    통계를 집계합니다.
+    Aggregates statistics.
 #>
 function Invoke-StatisticsCalculation {
     param(
@@ -412,10 +412,10 @@ function Invoke-StatisticsCalculation {
         [hashtable]$GroupedCommits
     )
 
-    Write-Host "[5/7] 통계 집계 중..." -ForegroundColor Gray
+    Write-Host "[5/7] Aggregating statistics..." -ForegroundColor Gray
 
     $stats = Calculate-Statistics -GroupedCommits $GroupedCommits
-    Write-Host "   총 $($stats["total"])개 커밋 분석 완료" -ForegroundColor DarkGray
+    Write-Host "      Total $($stats["total"]) commits analyzed" -ForegroundColor DarkGray
 
     return $stats
 }
@@ -426,17 +426,17 @@ function Invoke-StatisticsCalculation {
 
 <#
 .SYNOPSIS
-    출력 디렉토리를 준비합니다.
+    Prepares the output directory.
 #>
 function Initialize-OutputDirectory {
-    Write-Host "[6/7] 출력 디렉토리 확인 중..." -ForegroundColor Gray
+    Write-Host "[6/7] Checking output directory..." -ForegroundColor Gray
 
     if (-not (Test-Path $script:OUTPUT_DIR)) {
         New-Item -ItemType Directory -Path $script:OUTPUT_DIR -Force | Out-Null
-        Write-Host "   디렉토리 생성: $script:OUTPUT_DIR" -ForegroundColor DarkGray
+        Write-Host "      Directory created: $script:OUTPUT_DIR" -ForegroundColor DarkGray
     }
     else {
-        Write-Host "   디렉토리 존재: $script:OUTPUT_DIR" -ForegroundColor DarkGray
+        Write-Host "      Directory exists: $script:OUTPUT_DIR" -ForegroundColor DarkGray
     }
 }
 
@@ -446,7 +446,7 @@ function Initialize-OutputDirectory {
 
 <#
 .SYNOPSIS
-    파일명을 생성합니다.
+    Generates the output filename.
 #>
 function New-OutputFileName {
     param(
@@ -454,10 +454,10 @@ function New-OutputFileName {
         [string]$Range
     )
 
-    # 범위에서 특수문자 제거하고 파일명으로 변환
+    # Remove special characters from range and convert to filename
     $sanitized = $Range -replace '[^\w\.\-]', '-'
 
-    # 날짜/시간 정보 생성 (yyyyMMdd-HHmmss)
+    # Generate date/time information (yyyyMMdd-HHmmss)
     $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
 
     return "summary-$sanitized-$timestamp.md"
@@ -465,7 +465,7 @@ function New-OutputFileName {
 
 <#
 .SYNOPSIS
-    마크다운 문서를 생성합니다.
+    Generates a markdown document.
 #>
 function Generate-MarkdownDocument {
     param(
@@ -484,14 +484,14 @@ function Generate-MarkdownDocument {
 
     $sb = [System.Text.StringBuilder]::new()
 
-    # 헤더
-    [void]$sb.AppendLine("# 커밋 요약")
+    # Header
+    [void]$sb.AppendLine("# Commit Summary")
     [void]$sb.AppendLine("")
-    [void]$sb.AppendLine("**기간**: $Range")
-    [void]$sb.AppendLine("**생성일**: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')")
+    [void]$sb.AppendLine("**Range**: $Range")
+    [void]$sb.AppendLine("**Generated**: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')")
     [void]$sb.AppendLine("")
 
-    # 통계 테이블
+    # Statistics table
     [void]$sb.AppendLine("## Commit Statistics by Type")
     [void]$sb.AppendLine("")
     [void]$sb.AppendLine("| Type        | Description               | Count  | Ratio   |")
@@ -509,21 +509,21 @@ function Generate-MarkdownDocument {
         [void]$sb.AppendLine("| $($typeDisplay.PadRight(11)) | $($desc.PadRight(25)) | $($count.ToString().PadRight(6)) | $(("{0:0.0}%" -f $ratio).PadRight(7)) |")
     }
 
-    # 총계
+    # Total
     [void]$sb.AppendLine("| **Total**   | -                         | **$total** | **100%** |")
     [void]$sb.AppendLine("")
     [void]$sb.AppendLine("---")
     [void]$sb.AppendLine("")
 
-    # 타입별 상세 목록
+    # Detailed list by type
     foreach ($type in @("feat", "fix", "docs", "style", "refactor", "perf", "test", "build", "ci", "chore", "other")) {
         $commits = $GroupedCommits[$type]
 
         if ($commits.Count -gt 0) {
             $desc = $script:COMMIT_TYPES[$type].Description
-            $typeDisplay = if ($type -eq "other") { "기타" } else { $type }
+            $typeDisplay = if ($type -eq "other") { "Other" } else { $type }
 
-            [void]$sb.AppendLine("## $typeDisplay ($desc) - $($commits.Count)건")
+            [void]$sb.AppendLine("## $typeDisplay ($desc) - $($commits.Count) commits")
             [void]$sb.AppendLine("")
 
             foreach ($commit in $commits) {
@@ -534,13 +534,13 @@ function Generate-MarkdownDocument {
                 $breaking = if ($commit.Breaking) { "!" } else { "" }
                 $sourceBranch = $commit.SourceBranch
 
-                # 작성자 이름 길이 제한 및 패딩
+                # Limit author name length and pad
                 if ($author.Length -gt $script:MAX_AUTHOR_LENGTH) {
                     $author = $author.Substring(0, $script:MAX_AUTHOR_LENGTH - 3) + "..."
                 }
                 $authorPadded = $author.PadRight($script:MAX_AUTHOR_LENGTH)
 
-                # 브랜치 정보 추가
+                # Add branch info
                 $branchInfo = if ($sourceBranch) { " ``[from: $sourceBranch]``" } else { "" }
 
                 if ($scope) {
@@ -555,17 +555,17 @@ function Generate-MarkdownDocument {
         }
     }
 
-    # 푸터
+    # Footer
     [void]$sb.AppendLine("---")
     [void]$sb.AppendLine("")
-    [void]$sb.AppendLine("**생성 경로**: ``$script:OUTPUT_DIR/$OutputFileName``")
+    [void]$sb.AppendLine("**Output path**: ``$script:OUTPUT_DIR/$OutputFileName``")
 
     return $sb.ToString()
 }
 
 <#
 .SYNOPSIS
-    마크다운 문서를 생성합니다.
+    Generates a markdown document.
 #>
 function Invoke-DocumentGeneration {
     param(
@@ -582,10 +582,10 @@ function Invoke-DocumentGeneration {
         [string]$OutputFileName
     )
 
-    Write-Host "[7/7] 마크다운 문서 생성 중..." -ForegroundColor Gray
+    Write-Host "[7/7] Generating markdown document..." -ForegroundColor Gray
 
     $markdown = Generate-MarkdownDocument -Range $Range -GroupedCommits $GroupedCommits -Statistics $Statistics -OutputFileName $OutputFileName
-    Write-Host "   문서 생성 완료" -ForegroundColor DarkGray
+    Write-Host "      Document generated" -ForegroundColor DarkGray
 
     return $markdown
 }
@@ -596,7 +596,7 @@ function Invoke-DocumentGeneration {
 
 <#
 .SYNOPSIS
-    문서를 파일로 저장합니다.
+    Saves the document to a file.
 #>
 function Save-Document {
     param(
@@ -615,7 +615,7 @@ function Save-Document {
 
 <#
 .SYNOPSIS
-    커밋 기간을 가져옵니다.
+    Gets the commit period.
 #>
 function Get-CommitPeriod {
     param(
@@ -624,7 +624,7 @@ function Get-CommitPeriod {
     )
 
     try {
-        # 범위의 첫 번째와 마지막 커밋 날짜 가져오기
+        # Get the first and last commit dates in the range
         $dates = git log $Range --format="%ai" --no-merges 2>$null
 
         if ($dates) {
@@ -636,15 +636,15 @@ function Get-CommitPeriod {
         }
     }
     catch {
-        return "알 수 없음"
+        return "Unknown"
     }
 
-    return "알 수 없음"
+    return "Unknown"
 }
 
 <#
 .SYNOPSIS
-    성공 메시지를 출력합니다.
+    Outputs success message.
 #>
 function Write-SuccessOutput {
     param(
@@ -653,15 +653,16 @@ function Write-SuccessOutput {
     )
 
     $hasOutputPath = -not [string]::IsNullOrEmpty($Params.OutputPath)
-    $completionMessage = if ($hasOutputPath) { "[완료] 커밋 요약 문서 생성 완료" } else { "[완료] 커밋 요약 완료" }
+    $completionMessage = if ($hasOutputPath) { "[DONE] Commit summary document generated" } else { "[DONE] Commit summary completed" }
 
     Write-Host ""
     Write-Host $completionMessage -ForegroundColor Green
     Write-Host ""
-    Write-Host "범위: $($Params.Range)" -ForegroundColor Cyan
-    Write-Host "기간: $($Params.Period)" -ForegroundColor Cyan
+    Write-Host "Target branch: $($Params.TargetBranch)" -ForegroundColor Cyan
+    Write-Host "Range: $($Params.Range)" -ForegroundColor Cyan
+    Write-Host "Period: $($Params.Period)" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "커밋 통계:" -ForegroundColor Cyan
+    Write-Host "Commit statistics:" -ForegroundColor Cyan
 
     foreach ($type in @("feat", "fix", "docs", "style", "refactor", "perf", "test", "build", "ci", "chore", "other")) {
         $count = $Params.Statistics[$type]
@@ -669,18 +670,18 @@ function Write-SuccessOutput {
         $ratio = if ($total -gt 0) { [math]::Round(($count / $total) * 100, 1) } else { 0.0 }
 
         $typeDisplay = if ($type -eq "other") { "other" } else { $type }
-        $line = "  {0,-10} {1,4}건 ({2,5:0.0}%)" -f "${typeDisplay}:", $count, $ratio
+        $line = "  {0,-10} {1,4} ({2,5:0.0}%)" -f "${typeDisplay}:", $count, $ratio
         Write-Host $line
     }
 
     $total = $Params.Statistics["total"]
     Write-Host "  ─────────────────────────"
-    $line = "  {0,-10} {1,4}건 ({2,5}%)" -f "total:", $total, "100.0"
+    $line = "  {0,-10} {1,4} ({2,5}%)" -f "total:", $total, "100.0"
     Write-Host $line -ForegroundColor White
     Write-Host ""
 
     if ($hasOutputPath) {
-        Write-Host "생성된 파일:" -ForegroundColor Cyan
+        Write-Host "Generated file:" -ForegroundColor Cyan
         Write-Host "  $($Params.OutputPath)" -ForegroundColor White
         Write-Host ""
     }
@@ -688,7 +689,7 @@ function Write-SuccessOutput {
 
 <#
 .SYNOPSIS
-    결과를 출력합니다.
+    Outputs the results.
 #>
 function Show-Result {
     param(
@@ -697,6 +698,9 @@ function Show-Result {
 
         [Parameter(Mandatory = $true)]
         [hashtable]$Statistics,
+
+        [Parameter(Mandatory = $true)]
+        [string]$TargetBranch,
 
         [Parameter(Mandatory = $false)]
         [AllowNull()]
@@ -707,10 +711,11 @@ function Show-Result {
     $period = Get-CommitPeriod -Range $Range
 
     Write-SuccessOutput -Params @{
-        Range      = $Range
-        Period     = $period
-        Statistics = $Statistics
-        OutputPath = $OutputPath
+        TargetBranch = $TargetBranch
+        Range        = $Range
+        Period       = $period
+        Statistics   = $Statistics
+        OutputPath   = $OutputPath
     }
 }
 
@@ -720,7 +725,7 @@ function Show-Result {
 
 <#
 .SYNOPSIS
-    도움말을 출력합니다.
+    Outputs help information.
 #>
 function Show-Help {
     $help = @"
@@ -730,66 +735,66 @@ function Show-Help {
 ================================================================================
 
 DESCRIPTION
-    Conventional Commits 규격에 따라 커밋을 타입별로 그룹화하고,
-    통계 및 상세 목록을 포함한 마크다운 문서를 생성합니다.
+    Groups commits by type according to Conventional Commits specification
+    and generates a markdown document with statistics and detailed lists.
 
 USAGE
     ./Build-CommitSummary.ps1 [options]
 
 OPTIONS
-    -Range, -r <string>     git 범위 표현식 (선택사항)
-                            기본값: 자동 결정 (아래 RANGE RESOLUTION 참조)
-    -TargetBranch, -t       대상 브랜치 (선택사항)
-                            기본값: main
-    -OutputDir, -o          출력 디렉토리 경로 (선택사항)
-                            기본값: .commit-summaries
-    -Help, -h, -?           도움말을 표시합니다
+    -Range, -r <string>     Git range expression (optional)
+                            Default: Auto-determined (see RANGE RESOLUTION below)
+    -TargetBranch, -t       Target branch (optional)
+                            Default: main
+    -OutputDir, -o          Output directory path (optional)
+                            Default: .commit-summaries
+    -Help, -h, -?           Show help
 
-RANGE RESOLUTION (범위가 지정되지 않았을 때)
-    1. 태그가 있으면         -> [마지막태그]..HEAD
-    2. 태그 없음 + 다른 브랜치 -> [TargetBranch]..HEAD
-    3. 태그 없음 + 같은 브랜치 -> HEAD (전체 커밋)
+RANGE RESOLUTION (when range is not specified)
+    1. If tag exists         -> [last-tag]..HEAD
+    2. No tag + other branch -> [TargetBranch]..HEAD
+    3. No tag + same branch  -> HEAD (all commits)
 
 COMMIT TYPES
-    feat       New features (새로운 기능)
-    fix        Bug fixes (버그 수정)
-    docs       Documentation (문서 변경)
-    style      Code formatting (코드 포맷팅)
-    refactor   Refactoring (리팩터링)
-    perf       Performance improvements (성능 개선)
-    test       Tests (테스트)
-    build      Build system/dependencies (빌드/의존성)
-    ci         CI configuration (CI 설정)
-    chore      Other changes (기타 변경)
+    feat       New features
+    fix        Bug fixes
+    docs       Documentation
+    style      Code formatting
+    refactor   Refactoring
+    perf       Performance improvements
+    test       Tests
+    build      Build system/dependencies
+    ci         CI configuration
+    chore      Other changes
 
 OUTPUT
     <OutputDir>/
     └── summary-<range>-<timestamp>.md
 
 EXAMPLES
-    # 마지막 태그 이후 커밋 요약 (마크다운 파일 생성)
+    # Summarize commits since last tag (generates markdown file)
     ./Build-CommitSummary.ps1
 
-    # 특정 범위 커밋 요약
+    # Summarize commits in specific range
     ./Build-CommitSummary.ps1 -Range "v1.0.0..HEAD"
     ./Build-CommitSummary.ps1 -r "v1.0.0..HEAD"
 
-    # 최근 10개 커밋 요약
+    # Summarize last 10 commits
     ./Build-CommitSummary.ps1 -Range "HEAD~10..HEAD"
     ./Build-CommitSummary.ps1 -r "HEAD~10..HEAD"
 
-    # develop 브랜치 기준으로 커밋 요약
+    # Summarize commits based on develop branch
     ./Build-CommitSummary.ps1 -TargetBranch develop
     ./Build-CommitSummary.ps1 -t develop
 
-    # 출력 디렉토리 지정
+    # Specify output directory
     ./Build-CommitSummary.ps1 -OutputDir "./releases"
     ./Build-CommitSummary.ps1 -o "./releases"
 
-    # 전체 커밋 요약 (태그 없는 경우와 동일)
+    # Summarize all commits (same as when no tags exist)
     ./Build-CommitSummary.ps1 -Range "HEAD"
 
-    # 도움말 표시
+    # Show help
     ./Build-CommitSummary.ps1 -Help
 
 ================================================================================
@@ -803,18 +808,18 @@ EXAMPLES
 
 <#
 .SYNOPSIS
-    메인 실행 함수입니다.
+    Main execution function.
 
 .DESCRIPTION
-    커밋 요약 문서 생성의 주요 흐름:
-    1. Git 저장소 검증
-    2. 커밋 범위 결정
-    3. 커밋 조회
-    4. 커밋 분석 및 그룹화
-    5. 통계 집계
-    6. 출력 디렉토리 준비
-    7. 마크다운 문서 생성
-    8. 파일 저장 및 결과 출력
+    Main flow for commit summary document generation:
+    1. Validate Git repository
+    2. Determine commit range
+    3. Retrieve commits
+    4. Analyze and group commits
+    5. Aggregate statistics
+    6. Prepare output directory
+    7. Generate markdown document
+    8. Save file and output results
 #>
 function Main {
     param(
@@ -828,38 +833,38 @@ function Main {
         [string]$OutputDirectory = ".commit-summaries"
     )
 
-    # 출력 디렉토리 설정
+    # Set output directory
     $script:OUTPUT_DIR = $OutputDirectory
 
     Write-Host ""
-    Write-Host "[시작] 커밋 요약 시작..." -ForegroundColor Blue
+    Write-Host "[START] Starting commit summary..." -ForegroundColor Blue
     Write-Host ""
 
-    # 1. Git 저장소 검증
+    # 1. Validate Git repository
     Assert-GitRepository
 
-    # 2. 커밋 범위 결정
+    # 2. Determine commit range
     $resolvedRange = Resolve-CommitRange -Range $CommitRange -TargetBranch $TargetBranch
 
-    # 3. 커밋 조회
+    # 3. Retrieve commits
     $commits = @(Get-ValidatedCommits -Range $resolvedRange)
 
-    # 4. 커밋 분석 및 그룹화
+    # 4. Analyze and group commits
     $groupedCommits = Invoke-CommitAnalysis -Commits $commits
 
-    # 5. 통계 집계
+    # 5. Aggregate statistics
     $statistics = Invoke-StatisticsCalculation -GroupedCommits $groupedCommits
 
-    # 6. 출력 디렉토리 준비
+    # 6. Prepare output directory
     Initialize-OutputDirectory
 
-    # 7. 마크다운 문서 생성
+    # 7. Generate markdown document
     $outputFileName = New-OutputFileName -Range $resolvedRange
     $markdown = Invoke-DocumentGeneration -Range $resolvedRange -GroupedCommits $groupedCommits -Statistics $statistics -OutputFileName $outputFileName
 
-    # 8. 파일 저장 및 결과 출력
+    # 8. Save file and output results
     $outputPath = Save-Document -Markdown $markdown -FileName $outputFileName
-    Show-Result -Range $resolvedRange -Statistics $statistics -OutputPath $outputPath
+    Show-Result -Range $resolvedRange -Statistics $statistics -TargetBranch $TargetBranch -OutputPath $outputPath
 }
 
 #endregion
@@ -877,10 +882,10 @@ try {
 }
 catch {
     Write-Host ""
-    Write-Host "[오류] 예상치 못한 오류가 발생했습니다:" -ForegroundColor Red
+    Write-Host "[ERROR] An unexpected error occurred:" -ForegroundColor Red
     Write-Host "   $($_.Exception.Message)" -ForegroundColor Red
     Write-Host ""
-    Write-Host "스택 트레이스:" -ForegroundColor DarkGray
+    Write-Host "Stack trace:" -ForegroundColor DarkGray
     Write-Host $_.ScriptStackTrace -ForegroundColor DarkGray
     Write-Host ""
     exit 1

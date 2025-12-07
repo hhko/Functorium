@@ -7,6 +7,7 @@
 
 .DESCRIPTION
     - Release 모드로 솔루션 빌드
+    - MinVer 버전 정보 표시 (MinVer 설정된 경우)
     - 테스트 실행 및 코드 커버리지 수집
     - 핵심 레이어(Domains, Applications) 및 전체 커버리지 출력
     - HTML 리포트 생성
@@ -88,18 +89,19 @@ USAGE
     ./Build-Local.ps1 [options]
 
 OPTIONS
-    -Solution, -s      Path to solution file (.slnx)
+    -Solution, -s      Path to solution file (.sln or .slnx)
                        If not specified, auto-detects from current directory
     -ProjectPrefix, -p Project prefix for coverage filtering
                        Default: Functorium
     -Help, -h, -?      Show this help message
 
 FEATURES
-    1. Auto-detect solution file (requires exactly 1 .slnx file)
+    1. Auto-detect solution file (requires exactly 1 .sln or .slnx file)
     2. Build in Release mode
-    3. Run tests with code coverage collection
-    4. Generate HTML coverage report (ReportGenerator)
-    5. Display coverage summary in console
+    3. Display MinVer version information (if MinVer is configured)
+    4. Run tests with code coverage collection
+    5. Generate HTML coverage report (ReportGenerator)
+    6. Display coverage summary in console
        - Project: Projects matching prefix (e.g., Functorium.*)
        - Core Layer: Domains + Applications projects
        - Full: All projects (excluding tests)
@@ -188,8 +190,8 @@ function Find-SolutionFile {
         }
 
         $file = Get-Item $SolutionPath
-        if ($file.Extension -ne ".slnx") {
-            Write-Host "Invalid solution file: $SolutionPath" -ForegroundColor Red
+        if ($file.Extension -ne ".sln" -and $file.Extension -ne ".slnx") {
+            Write-Host "Invalid solution file: $SolutionPath (expected .sln or .slnx)" -ForegroundColor Red
             return $null
         }
 
@@ -200,10 +202,10 @@ function Find-SolutionFile {
     $searchPath = $script:WorkingDir
     Write-Info "Searching for solution in: $searchPath"
 
-    $slnFiles = @(Get-ChildItem -Path $searchPath -Filter "*.slnx" -File)
+    $slnFiles = @(Get-ChildItem -Path $searchPath -File | Where-Object { $_.Extension -eq ".sln" -or $_.Extension -eq ".slnx" })
 
     if ($slnFiles.Count -eq 0) {
-        Write-Host "No solution file found in: $searchPath" -ForegroundColor Red
+        Write-Host "No solution file (.sln or .slnx) found in: $searchPath" -ForegroundColor Red
         Write-Host "Use -Solution parameter to specify the path." -ForegroundColor Yellow
         return $null
     }
@@ -250,14 +252,11 @@ function Invoke-Build {
 
     dotnet restore $SolutionPath
 
-    $buildArgs = @(
-        $SolutionPath
-        "-c", $script:Configuration
-        "--nologo"
-        "-v:q"
-    )
-
-    dotnet build @buildArgs
+    # -v:q
+    dotnet build $SolutionPath `
+        -c $script:Configuration `
+        --nologo `
+        -p:MinVerVerbosity=normal           # MinVer 패키지
 
     if ($LASTEXITCODE -ne 0) {
         throw "Build failed"
@@ -287,11 +286,12 @@ function Invoke-TestWithCoverage {
     # Run tests with coverage collection
     # LogFilePrefix ensures unique filenames per test project: {prefix}_{project}.trx
     dotnet test $SolutionPath `
-        -c $script:Configuration `
+        --configuration $script:Configuration `
         --no-build `
         --nologo `
         --collect:"XPlat Code Coverage" `
-        --logger "trx;LogFilePrefix=testresults" `
+        --logger "trx" `
+        --logger "console;verbosity=minimal" `
         -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
 
     if ($LASTEXITCODE -ne 0) {
@@ -405,6 +405,86 @@ function New-HtmlReport {
     $reportPath = Join-Path $script:ReportDir "index.html"
     Write-Success "HTML report generated"
     Write-Info "Report path: $reportPath"
+}
+
+function Show-VersionInfo {
+    <#
+    .SYNOPSIS
+        빌드된 어셈블리에서 버전 정보를 읽어 출력합니다.
+    #>
+    param([string]$SolutionPath)
+
+    Write-StepHeader "Version Information (from built assemblies)"
+
+    # Get solution directory
+    $solutionDir = Split-Path -Parent $SolutionPath
+
+    # Find all .csproj files
+    $projectFiles = @(Get-ChildItem -Path $solutionDir -Filter "*.csproj" -Recurse -ErrorAction SilentlyContinue)
+
+    if ($projectFiles.Count -eq 0) {
+        Write-Host "No project files found" -ForegroundColor Yellow
+        return
+    }
+
+    # Filter main projects (exclude Tests)
+    $mainProjects = @($projectFiles | Where-Object { $_.Name -notlike "*Tests*" })
+
+    if ($mainProjects.Count -eq 0) {
+        Write-Host "No main projects found" -ForegroundColor Yellow
+        return
+    }
+
+    Write-Host ("{0,-40} {1,-35} {2,-15} {3,-15}" -f "Project", "ProductVer", "FileVer", "Assembly") -ForegroundColor White
+    Write-Host ("-" * 107) -ForegroundColor DarkGray
+
+    foreach ($proj in $mainProjects) {
+        try {
+            $projectName = $proj.BaseName
+            if ($projectName.Length -gt 38) {
+                $projectName = $projectName.Substring(0, 35) + "..."
+            }
+
+            # Find built DLL in Release configuration
+            $projDir = Split-Path -Parent $proj.FullName
+            $dllPath = Get-ChildItem -Path $projDir -Filter "$($proj.BaseName).dll" -Recurse -ErrorAction SilentlyContinue |
+                Where-Object { $_.FullName -match "\\bin\\$script:Configuration\\" } |
+                Select-Object -First 1
+
+            if (-not $dllPath) {
+                Write-Host ("{0,-40} {1,-35} {2,-15} {3,-15}" -f $projectName, "-", "-", "Not built") -ForegroundColor DarkGray
+                continue
+            }
+
+            # Read version info from DLL
+            try {
+                $assemblyName = [System.Reflection.AssemblyName]::GetAssemblyName($dllPath.FullName)
+                $fileVersionInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($dllPath.FullName)
+
+                $assemblyVersion = $assemblyName.Version.ToString()
+                $fileVersion = $fileVersionInfo.FileVersion
+                $productVersion = $fileVersionInfo.ProductVersion
+
+                # Truncate long product version for display
+                if ($productVersion.Length -gt 33) {
+                    $productVersion = $productVersion.Substring(0, 30) + "..."
+                }
+
+                Write-Host ("{0,-40} {1,-35} {2,-15} {3,-15}" -f $projectName, $productVersion, $fileVersion, $assemblyVersion)
+            }
+            catch {
+                Write-Host ("{0,-40} {1,-35} {2,-15} {3,-15}" -f $projectName, "-", "-", "Read error") -ForegroundColor Yellow
+            }
+        }
+        catch {
+            Write-Host ("{0,-40} {1,-35} {2,-15} {3,-15}" -f $proj.BaseName, "-", "-", "Error") -ForegroundColor Yellow
+        }
+    }
+
+    Write-Host ""
+    Write-Info "ProductVer: InformationalVersion (full version with Git info, set by MinVer)"
+    Write-Info "FileVer: FileVersion (file properties, display only)"
+    Write-Info "Assembly: AssemblyVersion (strong naming, binary compatibility)"
 }
 
 function Show-CoverageReport {
@@ -586,6 +666,15 @@ function Main {
     <#
     .SYNOPSIS
         메인 진입점 - 전체 빌드/테스트/커버리지 흐름을 제어합니다.
+    .DESCRIPTION
+        1. 솔루션 파일 검색
+        2. 취약한 패키지 확인
+        3. 솔루션 빌드
+        4. MinVer 버전 정보 표시
+        5. 테스트 실행 및 커버리지 수집
+        6. 커버리지 리포트 병합
+        7. HTML 리포트 생성
+        8. 콘솔에 커버리지 결과 표시
     #>
 
     $startTime = Get-Date
@@ -616,20 +705,23 @@ function Main {
         # 3. Build
         Invoke-Build -SolutionPath $solutionPath
 
-        # 4. Run tests with coverage
+        # 4. Show version information
+        Show-VersionInfo -SolutionPath $solutionPath
+
+        # 5. Run tests with coverage
         Invoke-TestWithCoverage -SolutionPath $solutionPath
 
-        # 5. Merge coverage reports
+        # 6. Merge coverage reports
         $coverageFiles = Merge-CoverageReports
         if (-not $coverageFiles) {
             Write-Host "No coverage files found. Cannot generate report." -ForegroundColor Yellow
             exit 0
         }
 
-        # 6. Generate HTML report
+        # 7. Generate HTML report
         New-HtmlReport -CoverageFiles $coverageFiles
 
-        # 7. Display coverage results in console
+        # 8. Display coverage results in console
         Show-CoverageReport -CoverageFiles $coverageFiles -Prefix $ProjectPrefix
 
         # Complete
