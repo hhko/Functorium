@@ -3,752 +3,946 @@
 
 <#
 .SYNOPSIS
-    .NET 솔루션 빌드, 테스트 및 코드 커버리지 리포트 생성 스크립트
+  .NET 솔루션 빌드, 테스트 및 코드 커버리지 리포트 생성 스크립트
 
 .DESCRIPTION
-    - Release 모드로 솔루션 빌드
-    - MinVer 버전 정보 표시 (MinVer 설정된 경우)
-    - 테스트 실행 및 코드 커버리지 수집
-    - 핵심 레이어(Domains, Applications) 및 전체 커버리지 출력
-    - HTML 리포트 생성
+  - Release 모드로 솔루션 빌드
+  - MinVer 버전 정보 표시 (MinVer 설정된 경우)
+  - 테스트 실행 및 코드 커버리지 수집
+  - 핵심 레이어(Domains, Applications) 및 전체 커버리지 출력
+  - HTML 리포트 생성
 
 .PARAMETER Solution
-    솔루션 파일 경로를 지정합니다. 지정하지 않으면 자동으로 검색합니다.
+  솔루션 파일 경로를 지정합니다. 지정하지 않으면 자동으로 검색합니다.
+
+.PARAMETER ProjectPrefix
+  커버리지 필터링용 프로젝트 접두사를 지정합니다.
+  기본값: Functorium
 
 .PARAMETER Help
-    도움말을 표시합니다.
+  도움말을 표시합니다.
 
 .EXAMPLE
-    ./Build-Local.ps1
+  ./Build-Local.ps1
+  현재 디렉토리에서 솔루션을 자동 검색하여 빌드 및 테스트 실행
 
 .EXAMPLE
-    ./Build-Local.ps1 -Solution ./MyApp.sln
+  ./Build-Local.ps1 -Solution ./MyApp.sln
+  지정된 솔루션 파일로 빌드 및 테스트 실행
 
 .EXAMPLE
-    ./Build-Local.ps1 -Help
+  ./Build-Local.ps1 -ProjectPrefix MyApp
+  MyApp.* 프로젝트만 커버리지 필터링
+
+.EXAMPLE
+  ./Build-Local.ps1 -Help
+  도움말 표시
+
+.NOTES
+  Version: 1.0.0
+  Requirements: PowerShell 7+, .NET SDK, ReportGenerator
+  Output directory: .coverage/
+  License: MIT
 #>
 
+[CmdletBinding()]
 param(
-    [Alias("s")]
-    [string]$Solution,
+  [Parameter(Mandatory = $false, Position = 0, HelpMessage = "솔루션 파일 경로 (.sln 또는 .slnx)")]
+  [Alias("s")]
+  [string]$Solution,
 
-    [Alias("p")]
-    [string]$ProjectPrefix = "Functorium",
+  [Parameter(Mandatory = $false, HelpMessage = "커버리지 필터링용 프로젝트 접두사")]
+  [Alias("p")]
+  [string]$ProjectPrefix = "Functorium",
 
-    [Alias("h", "?")]
-    [switch]$Help
+  [Parameter(Mandatory = $false, HelpMessage = "도움말 표시")]
+  [Alias("h", "?")]
+  [switch]$Help
 )
 
+# Strict mode settings
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-#region Configuration
-$script:ScriptDir = $PSScriptRoot
-$script:WorkingDir = $PWD.Path
+#region Constants
+
+$script:TOTAL_STEPS = 7
 $script:Configuration = "Release"
 $script:CoreLayerPatterns = @("*.Domain", "*.Domains", "*.Application", "*.Applications")
 $script:ReportGeneratorVersion = "5.5.0"
-$script:SectionLine = "═" * 80
 
 # These will be set after solution file is found
 $script:SolutionDir = $null
 $script:CoverageReportDir = $null
-$script:ReportDir = $null
+
 #endregion
 
 #region Helper Functions
 
+<#
+.SYNOPSIS
+  솔루션 파일 경로를 기준으로 출력 경로를 설정합니다.
+#>
 function Set-OutputPaths {
-    <#
-    .SYNOPSIS
-        솔루션 파일 경로를 기준으로 출력 경로를 설정합니다.
-    #>
-    param([string]$SolutionPath)
+  param([string]$SolutionPath)
 
-    $script:SolutionDir = Split-Path -Parent $SolutionPath
-    $script:CoverageReportDir = Join-Path $script:SolutionDir ".coverage"
-    $script:ReportDir = $script:CoverageReportDir
+  $script:SolutionDir = Split-Path -Parent $SolutionPath
+  $script:CoverageReportDir = Join-Path $script:SolutionDir ".coverage"
 }
 
+<#
+.SYNOPSIS
+  도움말을 표시합니다.
+#>
 function Show-Help {
-    <#
-    .SYNOPSIS
-        도움말을 표시합니다.
-    #>
-
-    $help = @"
+  $help = @"
 
 ================================================================================
  .NET Solution Build and Test Script
 ================================================================================
 
 DESCRIPTION
-    Build, test, and generate code coverage reports for .NET solutions.
+  Build, test, and generate code coverage reports for .NET solutions.
 
 USAGE
-    ./Build-Local.ps1 [options]
+  ./Build-Local.ps1 [options]
 
 OPTIONS
-    -Solution, -s      Path to solution file (.sln or .slnx)
-                       If not specified, auto-detects from current directory
-    -ProjectPrefix, -p Project prefix for coverage filtering
-                       Default: Functorium
-    -Help, -h, -?      Show this help message
+  -Solution, -s      Path to solution file (.sln or .slnx)
+                     If not specified, auto-detects from current directory
+  -ProjectPrefix, -p Project prefix for coverage filtering
+                     Default: Functorium
+  -Help, -h, -?      Show this help message
 
 FEATURES
-    1. Auto-detect solution file (requires exactly 1 .sln or .slnx file)
-    2. Build in Release mode
-    3. Display MinVer version information (if MinVer is configured)
-    4. Run tests with code coverage collection
-    5. Generate HTML coverage report (ReportGenerator)
-    6. Display coverage summary in console
-       - Project: Projects matching prefix (e.g., Functorium.*)
-       - Core Layer: Domains + Applications projects
-       - Full: All projects (excluding tests)
+  1. Auto-detect solution file (requires exactly 1 .sln or .slnx file)
+  2. Build in Release mode
+  3. Display MinVer version information (if MinVer is configured)
+  4. Run tests with code coverage collection
+  5. Generate HTML coverage report (ReportGenerator)
+  6. Display coverage summary in console
+     - Project: Projects matching prefix (e.g., Functorium.*)
+     - Core Layer: Domains + Applications projects
+     - Full: All projects (excluding tests)
 
 OUTPUT
-    {SolutionDir}/.coverage/
-    ├── index.html            <- HTML Report
-    └── Cobertura.xml         <- Merged coverage
+  {SolutionDir}/.coverage/
+  ├── index.html            <- HTML Report
+  └── Cobertura.xml         <- Merged coverage
 
-    {SolutionDir}/Tests/{TestProject}/TestResults/
-    ├── {GUID}/
-    │   └── coverage.cobertura.xml  <- Raw coverage
-    └── *.trx                       <- Test results
+  {SolutionDir}/Tests/{TestProject}/TestResults/
+  ├── {GUID}/
+  │   └── coverage.cobertura.xml  <- Raw coverage
+  └── *.trx                       <- Test results
 
 PREREQUISITES
-    - .NET SDK
-    - ReportGenerator v5.5.0 (auto-installed/updated if needed)
+  - .NET SDK
+  - ReportGenerator v5.5.0 (auto-installed/updated if needed)
 
 EXAMPLES
-    # Run build and tests (auto-detect solution)
-    ./Build-Local.ps1
+  # Run build and tests (auto-detect solution)
+  ./Build-Local.ps1
 
-    # Specify solution file
-    ./Build-Local.ps1 -Solution ./MyApp.sln
-    ./Build-Local.ps1 -s ../Other.sln
+  # Specify solution file
+  ./Build-Local.ps1 -Solution ./MyApp.sln
+  ./Build-Local.ps1 -s ../Other.sln
 
-    # Filter coverage by project prefix
-    ./Build-Local.ps1 -ProjectPrefix MyApp
-    ./Build-Local.ps1 -p Functorium
+  # Filter coverage by project prefix
+  ./Build-Local.ps1 -ProjectPrefix MyApp
+  ./Build-Local.ps1 -p Functorium
 
-    # Show help
-    ./Build-Local.ps1 -Help
-    ./Build-Local.ps1 -h
+  # Show help
+  ./Build-Local.ps1 -Help
+  ./Build-Local.ps1 -h
 
 ================================================================================
 "@
-    Write-Host $help
+  Write-Host $help
 }
 
-function Write-StepHeader {
-    param([string]$Title)
+<#
+.SYNOPSIS
+  단계별 진행 상황을 출력합니다.
+#>
+function Write-StepProgress {
+  param(
+    [Parameter(Mandatory = $true)]
+    [int]$Step,
 
-    Write-Host ""
-    Write-Host $script:SectionLine -ForegroundColor Cyan
-    Write-Host " $Title" -ForegroundColor Cyan
-    Write-Host $script:SectionLine -ForegroundColor Cyan
+    [Parameter(Mandatory = $true)]
+    [string]$Message
+  )
+
+  Write-Host "[$Step/$script:TOTAL_STEPS] $Message" -ForegroundColor Gray
 }
 
-function Write-SubHeader {
-    param([string]$Title)
+<#
+.SYNOPSIS
+  상세 정보를 출력합니다.
+#>
+function Write-Detail {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Message
+  )
 
-    Write-Host ""
-    Write-Host $Title -ForegroundColor Yellow
+  Write-Host "      $Message" -ForegroundColor DarkGray
 }
 
+<#
+.SYNOPSIS
+  성공 메시지를 출력합니다.
+#>
 function Write-Success {
-    param([string]$Message)
-    Write-Host $Message -ForegroundColor Green
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Message
+  )
+
+  Write-Host "      $Message" -ForegroundColor Green
 }
 
-function Write-Info {
-    param([string]$Message)
-    Write-Host $Message -ForegroundColor White
+<#
+.SYNOPSIS
+  경고 메시지를 출력합니다.
+#>
+function Write-Warning {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Message
+  )
+
+  Write-Host "      $Message" -ForegroundColor Yellow
 }
 
 #endregion
 
-#region Core Functions
+#region Step 1: Find-SolutionFile
 
+<#
+.SYNOPSIS
+  솔루션 파일을 찾습니다.
+.DESCRIPTION
+  지정된 경로가 없으면 현재 작업 디렉토리에서 검색합니다.
+.PARAMETER SolutionPath
+  사용자가 지정한 솔루션 파일 경로 (옵션)
+.OUTPUTS
+  솔루션 파일이 1개면 해당 FileInfo 반환, 아니면 $null
+#>
 function Find-SolutionFile {
-    <#
-    .SYNOPSIS
-        솔루션 파일을 찾습니다. 지정된 경로가 없으면 스크립트 상위 디렉토리에서 검색합니다.
-    .PARAMETER SolutionPath
-        사용자가 지정한 솔루션 파일 경로 (옵션)
-    .OUTPUTS
-        솔루션 파일이 1개면 해당 FileInfo 반환, 아니면 $null
-    #>
-    param([string]$SolutionPath)
+  param(
+    [Parameter(Mandatory = $false)]
+    [string]$SolutionPath
+  )
 
-    # If solution path is specified, validate and return
-    if ($SolutionPath) {
-        if (-not (Test-Path $SolutionPath)) {
-            Write-Host "Solution file not found: $SolutionPath" -ForegroundColor Red
-            return $null
-        }
+  Write-StepProgress -Step 1 -Message "Finding solution file..."
 
-        $file = Get-Item $SolutionPath
-        if ($file.Extension -ne ".sln" -and $file.Extension -ne ".slnx") {
-            Write-Host "Invalid solution file: $SolutionPath (expected .sln or .slnx)" -ForegroundColor Red
-            return $null
-        }
-
-        return $file
+  # If solution path is specified, validate and return
+  if ($SolutionPath) {
+    if (-not (Test-Path $SolutionPath)) {
+      Write-Host "      Solution file not found: $SolutionPath" -ForegroundColor Red
+      return $null
     }
 
-    # Auto-detect: search in current working directory
-    $searchPath = $script:WorkingDir
-    Write-Info "Searching for solution in: $searchPath"
-
-    $slnFiles = @(Get-ChildItem -Path $searchPath -File | Where-Object { $_.Extension -eq ".sln" -or $_.Extension -eq ".slnx" })
-
-    if ($slnFiles.Count -eq 0) {
-        Write-Host "No solution file (.sln or .slnx) found in: $searchPath" -ForegroundColor Red
-        Write-Host "Use -Solution parameter to specify the path." -ForegroundColor Yellow
-        return $null
+    $file = Get-Item $SolutionPath
+    if ($file.Extension -ne ".sln" -and $file.Extension -ne ".slnx") {
+      Write-Host "      Invalid solution file: $SolutionPath (expected .sln or .slnx)" -ForegroundColor Red
+      return $null
     }
 
-    if ($slnFiles.Count -gt 1) {
-        Write-Host "Found $($slnFiles.Count) solution files:" -ForegroundColor Red
-        $slnFiles | ForEach-Object { Write-Host "  - $($_.Name)" -ForegroundColor Yellow }
-        Write-Host "Use -Solution parameter to specify which one to use." -ForegroundColor Yellow
-        return $null
-    }
+    Write-Detail "Found: $($file.Name)"
+    return $file
+  }
 
-    return $slnFiles[0]
+  # Auto-detect: search in current working directory
+  $searchPath = $PWD.Path
+  Write-Detail "Searching in: $searchPath"
+
+  $slnFiles = @(Get-ChildItem -Path $searchPath -File | Where-Object { $_.Extension -eq ".sln" -or $_.Extension -eq ".slnx" })
+
+  if ($slnFiles.Count -eq 0) {
+    Write-Host "      No solution file (.sln or .slnx) found" -ForegroundColor Red
+    Write-Warning "Use -Solution parameter to specify the path"
+    return $null
+  }
+
+  if ($slnFiles.Count -gt 1) {
+    Write-Host "      Found $($slnFiles.Count) solution files:" -ForegroundColor Red
+    $slnFiles | ForEach-Object { Write-Warning "- $($_.Name)" }
+    Write-Warning "Use -Solution parameter to specify which one to use"
+    return $null
+  }
+
+  Write-Detail "Found: $($slnFiles[0].Name)"
+  return $slnFiles[0]
 }
 
-function Test-VulnerablePackages {
-    <#
-    .SYNOPSIS
-        패키지의 보안 취약점을 검사합니다.
-    #>
-    param([string]$SolutionPath)
+#endregion
 
-    Write-StepHeader "Check Vulnerable Packages"
+#region Step 2: Invoke-Build
 
-    $output = dotnet list $SolutionPath package --vulnerable --include-transitive 2>&1
-    $outputText = $output | Out-String
-
-    if ($outputText -match "has the following vulnerable packages") {
-        Write-Host $outputText -ForegroundColor Yellow
-        Write-Host "WARNING: Vulnerable packages detected!" -ForegroundColor Red
-    } else {
-        Write-Success "No vulnerable packages found"
-    }
-}
-
+<#
+.SYNOPSIS
+  솔루션을 Release 모드로 빌드합니다.
+#>
 function Invoke-Build {
-    <#
-    .SYNOPSIS
-        솔루션을 Release 모드로 빌드합니다.
-    #>
-    param([string]$SolutionPath)
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$SolutionPath
+  )
 
-    Write-StepHeader "Build Solution ($script:Configuration)"
-    Write-Info "Solution: $SolutionPath"
+  Write-StepProgress -Step 2 -Message "Building solution ($script:Configuration)..."
+  Write-Detail "Solution: $SolutionPath"
 
-    dotnet restore $SolutionPath
-
-    # -v:q
-    dotnet build $SolutionPath `
-        -c $script:Configuration `
-        --nologo `
-        -p:MinVerVerbosity=normal           # MinVer 패키지
-
-    if ($LASTEXITCODE -ne 0) {
-        throw "Build failed"
-    }
-
-    Write-Success "Build succeeded"
-}
-
-function Invoke-TestWithCoverage {
-    <#
-    .SYNOPSIS
-        테스트를 실행하고 코드 커버리지를 수집합니다.
-    #>
-    param([string]$SolutionPath)
-
-    Write-StepHeader "Run Tests with Coverage"
-
-    # Remove existing coverage report
-    if (Test-Path $script:CoverageReportDir) {
-        Remove-Item -Path $script:CoverageReportDir -Recurse -Force
-    }
-
-    # Remove existing TestResults from each test project
-    Get-ChildItem -Path $script:SolutionDir -Directory -Recurse -Filter "TestResults" -ErrorAction SilentlyContinue |
-        ForEach-Object { Remove-Item -Path $_.FullName -Recurse -Force }
-
-    # Run tests with coverage collection
-    # LogFilePrefix ensures unique filenames per test project: {prefix}_{project}.trx
-    dotnet test $SolutionPath `
-        --configuration $script:Configuration `
-        --no-build `
-        --nologo `
-        --collect:"XPlat Code Coverage" `
-        --logger "trx" `
-        --logger "console;verbosity=minimal" `
-        -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
-
-    if ($LASTEXITCODE -ne 0) {
-        throw "Tests failed"
-    }
-
-    Write-Success "Tests passed"
-}
-
-function Merge-CoverageReports {
-    <#
-    .SYNOPSIS
-        여러 커버리지 파일을 병합합니다.
-    #>
-
-    Write-StepHeader "Merge Coverage Reports"
-
-    # Find coverage files from each test project's TestResults directory
-    $coverageFiles = @(Get-ChildItem -Path $script:SolutionDir -Filter "coverage.cobertura.xml" -Recurse -ErrorAction SilentlyContinue)
-
-    if ($coverageFiles.Count -eq 0) {
-        Write-Host "No coverage files found." -ForegroundColor Red
-        return $null
-    }
-
-    Write-Info "Found coverage files: $($coverageFiles.Count)"
-
-    # Create directory
-    if (-not (Test-Path $script:CoverageReportDir)) {
-        New-Item -ItemType Directory -Path $script:CoverageReportDir -Force | Out-Null
-    }
-
-    # Build file path list
-    $coverageFilePaths = ($coverageFiles | ForEach-Object { $_.FullName }) -join ";"
-
-    return $coverageFilePaths
-}
-
-function Install-ReportGenerator {
-    <#
-    .SYNOPSIS
-        ReportGenerator 도구를 설치하거나 업데이트합니다.
-    #>
-
-    $requiredVersion = [version]$script:ReportGeneratorVersion
-
-    # Check if ReportGenerator is installed
-    $toolList = dotnet tool list -g 2>$null | Where-Object { $_ -match "dotnet-reportgenerator-globaltool" }
-
-    if ($toolList) {
-        # Extract installed version
-        $installedVersionStr = ($toolList -split '\s+')[1]
-        $installedVersion = [version]$installedVersionStr
-
-        Write-Info "ReportGenerator installed: v$installedVersionStr"
-
-        if ($installedVersion -lt $requiredVersion) {
-            Write-Info "Updating ReportGenerator to v$script:ReportGeneratorVersion..."
-            dotnet tool update -g dotnet-reportgenerator-globaltool --version $script:ReportGeneratorVersion 2>$null
-
-            if ($LASTEXITCODE -eq 0) {
-                Write-Success "ReportGenerator updated to v$script:ReportGeneratorVersion"
-            } else {
-                Write-Host "Failed to update ReportGenerator" -ForegroundColor Yellow
-            }
-        } elseif ($installedVersion -gt $requiredVersion) {
-            Write-Info "Installed version (v$installedVersionStr) is newer than required (v$script:ReportGeneratorVersion)"
-        } else {
-            Write-Info "ReportGenerator is up to date (v$script:ReportGeneratorVersion)"
-        }
-    } else {
-        # Install ReportGenerator
-        Write-Info "Installing ReportGenerator v$script:ReportGeneratorVersion..."
-        dotnet tool install -g dotnet-reportgenerator-globaltool --version $script:ReportGeneratorVersion 2>$null
-
-        if ($LASTEXITCODE -eq 0) {
-            Write-Success "ReportGenerator v$script:ReportGeneratorVersion installed"
-
-            # Refresh PATH
-            $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "User") + ";" + $env:PATH
-        } else {
-            throw "Failed to install ReportGenerator"
-        }
-    }
-}
-
-function New-HtmlReport {
-    <#
-    .SYNOPSIS
-        ReportGenerator를 사용하여 HTML 리포트를 생성합니다.
-    #>
-    param([string]$CoverageFiles)
-
-    Write-StepHeader "Generate HTML Report"
-
-    # Install or update ReportGenerator
-    Install-ReportGenerator
-
-    # Generate HTML report
-    reportgenerator `
-        -reports:$CoverageFiles `
-        -targetdir:$script:ReportDir `
-        -reporttypes:"Html;Cobertura" `
-        -assemblyfilters:"-*.Tests*"
-
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "Failed to generate HTML report" -ForegroundColor Red
-        return
-    }
-
-    $reportPath = Join-Path $script:ReportDir "index.html"
-    Write-Success "HTML report generated"
-    Write-Info "Report path: $reportPath"
-}
-
-function Show-VersionInfo {
-    <#
-    .SYNOPSIS
-        빌드된 어셈블리에서 버전 정보를 읽어 출력합니다.
-    #>
-    param([string]$SolutionPath)
-
-    Write-StepHeader "Version Information (from built assemblies)"
-
-    # Get solution directory
-    $solutionDir = Split-Path -Parent $SolutionPath
-
-    # Find all .csproj files
-    $projectFiles = @(Get-ChildItem -Path $solutionDir -Filter "*.csproj" -Recurse -ErrorAction SilentlyContinue)
-
-    if ($projectFiles.Count -eq 0) {
-        Write-Host "No project files found" -ForegroundColor Yellow
-        return
-    }
-
-    # Filter main projects (exclude Tests)
-    $mainProjects = @($projectFiles | Where-Object { $_.Name -notlike "*Tests*" })
-
-    if ($mainProjects.Count -eq 0) {
-        Write-Host "No main projects found" -ForegroundColor Yellow
-        return
-    }
-
-    Write-Host ("{0,-40} {1,-35} {2,-15} {3,-15}" -f "Project", "ProductVer", "FileVer", "Assembly") -ForegroundColor White
-    Write-Host ("-" * 107) -ForegroundColor DarkGray
-
-    foreach ($proj in $mainProjects) {
-        try {
-            $projectName = $proj.BaseName
-            if ($projectName.Length -gt 38) {
-                $projectName = $projectName.Substring(0, 35) + "..."
-            }
-
-            # Find built DLL in Release configuration
-            $projDir = Split-Path -Parent $proj.FullName
-            $dllPath = Get-ChildItem -Path $projDir -Filter "$($proj.BaseName).dll" -Recurse -ErrorAction SilentlyContinue |
-                Where-Object { $_.FullName -match "\\bin\\$script:Configuration\\" } |
-                Select-Object -First 1
-
-            if (-not $dllPath) {
-                Write-Host ("{0,-40} {1,-35} {2,-15} {3,-15}" -f $projectName, "-", "-", "Not built") -ForegroundColor DarkGray
-                continue
-            }
-
-            # Read version info from DLL
-            try {
-                $assemblyName = [System.Reflection.AssemblyName]::GetAssemblyName($dllPath.FullName)
-                $fileVersionInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($dllPath.FullName)
-
-                $assemblyVersion = $assemblyName.Version.ToString()
-                $fileVersion = $fileVersionInfo.FileVersion
-                $productVersion = $fileVersionInfo.ProductVersion
-
-                # Truncate long product version for display
-                if ($productVersion.Length -gt 33) {
-                    $productVersion = $productVersion.Substring(0, 30) + "..."
-                }
-
-                Write-Host ("{0,-40} {1,-35} {2,-15} {3,-15}" -f $projectName, $productVersion, $fileVersion, $assemblyVersion)
-            }
-            catch {
-                Write-Host ("{0,-40} {1,-35} {2,-15} {3,-15}" -f $projectName, "-", "-", "Read error") -ForegroundColor Yellow
-            }
-        }
-        catch {
-            Write-Host ("{0,-40} {1,-35} {2,-15} {3,-15}" -f $proj.BaseName, "-", "-", "Error") -ForegroundColor Yellow
-        }
-    }
-
+  # Restore
+  Write-Detail "Restoring packages..."
+  $restoreOutput = dotnet restore $SolutionPath 2>&1
+  if ($LASTEXITCODE -ne 0) {
     Write-Host ""
-    Write-Info "ProductVer: InformationalVersion (full version with Git info, set by MinVer)"
-    Write-Info "FileVer: FileVersion (file properties, display only)"
-    Write-Info "Assembly: AssemblyVersion (strong naming, binary compatibility)"
+    Write-Host "      [Restore Failed]" -ForegroundColor Red
+    Write-Host ""
+    $restoreOutput | ForEach-Object { Write-Host "      $_" -ForegroundColor Red }
+    throw "Package restore failed"
+  }
+
+  # Build with detailed error output
+  Write-Detail "Compiling..."
+  $buildOutput = dotnet build $SolutionPath `
+    -c $script:Configuration `
+    --nologo `
+    -p:MinVerVerbosity=normal 2>&1
+
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host ""
+    Write-Host "      [Build Failed]" -ForegroundColor Red
+    Write-Host ""
+
+    # Parse and display errors
+    $errors = @()
+    $warnings = @()
+
+    foreach ($line in $buildOutput) {
+      $lineStr = $line.ToString()
+      if ($lineStr -match ": error ") {
+        $errors += $lineStr
+      }
+      elseif ($lineStr -match ": warning ") {
+        $warnings += $lineStr
+      }
+    }
+
+    # Display errors
+    if ($errors.Count -gt 0) {
+      Write-Host "      Errors ($($errors.Count)):" -ForegroundColor Red
+      Write-Host ""
+      foreach ($err in $errors) {
+        # Extract file path and error message
+        if ($err -match "(.+?)\((\d+),(\d+)\): error (\w+): (.+)") {
+          $file = $Matches[1]
+          $line = $Matches[2]
+          $col = $Matches[3]
+          $code = $Matches[4]
+          $msg = $Matches[5]
+
+          # Shorten file path for display
+          $shortFile = $file
+          if ($file.Length -gt 60) {
+            $shortFile = "..." + $file.Substring($file.Length - 57)
+          }
+
+          Write-Host "      $code | $shortFile`:$line" -ForegroundColor Red
+          Write-Host "             $msg" -ForegroundColor Yellow
+          Write-Host ""
+        }
+        else {
+          Write-Host "      $err" -ForegroundColor Red
+        }
+      }
+    }
+
+    # Display warning count
+    if ($warnings.Count -gt 0) {
+      Write-Host "      Warnings: $($warnings.Count)" -ForegroundColor Yellow
+    }
+
+    throw "Build failed with $($errors.Count) error(s)"
+  }
+
+  # Check for warnings in successful build
+  $warningLines = @($buildOutput | Where-Object { $_.ToString() -match ": warning " })
+  if ($warningLines.Count -gt 0) {
+    Write-Host "      Build succeeded with $($warningLines.Count) warning(s)" -ForegroundColor Yellow
+  }
+  else {
+    Write-Success "Build succeeded"
+  }
 }
 
+#endregion
+
+#region Step 3: Show-VersionInfo
+
+<#
+.SYNOPSIS
+  빌드된 어셈블리에서 버전 정보를 읽어 출력합니다.
+#>
+function Show-VersionInfo {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$SolutionPath
+  )
+
+  Write-StepProgress -Step 3 -Message "Reading version information..."
+
+  # Get solution directory
+  $solutionDir = Split-Path -Parent $SolutionPath
+
+  # Search in Src folder only (exclude GitHub, Docs, etc.)
+  $srcDir = Join-Path $solutionDir "Src"
+
+  if (-not (Test-Path $srcDir)) {
+    Write-Detail "Src folder not found, using solution directory"
+    $srcDir = $solutionDir
+  }
+
+  # Build exclusion patterns relative to solution directory
+  $excludePatterns = @(
+    (Join-Path $solutionDir "GitHub"),
+    (Join-Path $solutionDir "node_modules")
+  )
+
+  # Find all .csproj files (exclude external folders within solution)
+  $projectFiles = @(Get-ChildItem -Path $srcDir -Filter "*.csproj" -Recurse -ErrorAction SilentlyContinue |
+    Where-Object {
+      $path = $_.FullName
+      $exclude = $false
+      foreach ($pattern in $excludePatterns) {
+        if ($path.StartsWith($pattern, [System.StringComparison]::OrdinalIgnoreCase)) {
+          $exclude = $true
+          break
+        }
+      }
+      -not $exclude
+    })
+
+  if ($projectFiles.Count -eq 0) {
+    Write-Warning "No project files found in $srcDir"
+    return
+  }
+
+  # Filter main projects (exclude Tests)
+  $mainProjects = @($projectFiles | Where-Object { $_.Name -notlike "*Tests*" })
+
+  if ($mainProjects.Count -eq 0) {
+    Write-Warning "No main projects found"
+    return
+  }
+
+  Write-Host ""
+  Write-Host ("{0,-40} {1,-35} {2,-15} {3,-15}" -f "Project", "ProductVer", "FileVer", "Assembly") -ForegroundColor White
+  Write-Host ("-" * 107) -ForegroundColor DarkGray
+
+  foreach ($proj in $mainProjects) {
+    try {
+      $projectName = $proj.BaseName
+      if ($projectName.Length -gt 38) {
+        $projectName = $projectName.Substring(0, 35) + "..."
+      }
+
+      # Find built DLL in Release configuration
+      $projDir = Split-Path -Parent $proj.FullName
+      $dllPath = Get-ChildItem -Path $projDir -Filter "$($proj.BaseName).dll" -Recurse -ErrorAction SilentlyContinue |
+        Where-Object { $_.FullName -match "\\bin\\$script:Configuration\\" } |
+        Select-Object -First 1
+
+      if (-not $dllPath) {
+        Write-Host ("{0,-40} {1,-35} {2,-15} {3,-15}" -f $projectName, "-", "-", "Not built") -ForegroundColor DarkGray
+        continue
+      }
+
+      # Read version info from DLL
+      try {
+        $assemblyName = [System.Reflection.AssemblyName]::GetAssemblyName($dllPath.FullName)
+        $fileVersionInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($dllPath.FullName)
+
+        $assemblyVersion = $assemblyName.Version.ToString()
+        $fileVersion = $fileVersionInfo.FileVersion
+        $productVersion = $fileVersionInfo.ProductVersion
+
+        # Truncate long product version for display
+        if ($productVersion.Length -gt 33) {
+          $productVersion = $productVersion.Substring(0, 30) + "..."
+        }
+
+        Write-Host ("{0,-40} {1,-35} {2,-15} {3,-15}" -f $projectName, $productVersion, $fileVersion, $assemblyVersion)
+      }
+      catch {
+        Write-Host ("{0,-40} {1,-35} {2,-15} {3,-15}" -f $projectName, "-", "-", "Read error") -ForegroundColor Yellow
+      }
+    }
+    catch {
+      Write-Host ("{0,-40} {1,-35} {2,-15} {3,-15}" -f $proj.BaseName, "-", "-", "Error") -ForegroundColor Yellow
+    }
+  }
+
+  Write-Host ""
+  Write-Detail "ProductVer: InformationalVersion (MinVer)"
+  Write-Detail "FileVer: FileVersion (file properties)"
+  Write-Detail "Assembly: AssemblyVersion (binary compatibility)"
+}
+
+#endregion
+
+#region Step 4: Invoke-TestWithCoverage
+
+<#
+.SYNOPSIS
+  테스트를 실행하고 코드 커버리지를 수집합니다.
+#>
+function Invoke-TestWithCoverage {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$SolutionPath
+  )
+
+  Write-StepProgress -Step 4 -Message "Running tests with coverage..."
+
+  # Remove existing coverage report
+  if (Test-Path $script:CoverageReportDir) {
+    Remove-Item -Path $script:CoverageReportDir -Recurse -Force
+  }
+
+  # Remove existing TestResults from each test project
+  Get-ChildItem -Path $script:SolutionDir -Directory -Recurse -Filter "TestResults" -ErrorAction SilentlyContinue |
+    ForEach-Object { Remove-Item -Path $_.FullName -Recurse -Force }
+
+  # Run tests with coverage collection
+  dotnet test $SolutionPath `
+    --configuration $script:Configuration `
+    --no-build `
+    --nologo `
+    --collect:"XPlat Code Coverage" `
+    --logger "trx" `
+    --logger "console;verbosity=minimal" `
+    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+
+  if ($LASTEXITCODE -ne 0) {
+    throw "Tests failed"
+  }
+
+  Write-Success "Tests passed"
+}
+
+#endregion
+
+#region Step 5: Merge-CoverageReports
+
+<#
+.SYNOPSIS
+  여러 커버리지 파일을 병합합니다.
+#>
+function Merge-CoverageReports {
+  Write-StepProgress -Step 5 -Message "Merging coverage reports..."
+
+  # Find coverage files from each test project's TestResults directory
+  $coverageFiles = @(Get-ChildItem -Path $script:SolutionDir -Filter "coverage.cobertura.xml" -Recurse -ErrorAction SilentlyContinue)
+
+  if ($coverageFiles.Count -eq 0) {
+    Write-Host "      No coverage files found" -ForegroundColor Red
+    return $null
+  }
+
+  Write-Detail "Found $($coverageFiles.Count) coverage file(s)"
+
+  # Create directory
+  if (-not (Test-Path $script:CoverageReportDir)) {
+    New-Item -ItemType Directory -Path $script:CoverageReportDir -Force | Out-Null
+  }
+
+  # Build file path list
+  $coverageFilePaths = ($coverageFiles | ForEach-Object { $_.FullName }) -join ";"
+
+  return $coverageFilePaths
+}
+
+#endregion
+
+#region Step 6: New-HtmlReport
+
+<#
+.SYNOPSIS
+  ReportGenerator 도구를 설치하거나 업데이트합니다.
+#>
+function Install-ReportGenerator {
+  $requiredVersion = [version]$script:ReportGeneratorVersion
+
+  # Check if ReportGenerator is installed
+  $toolList = dotnet tool list -g 2>$null | Where-Object { $_ -match "dotnet-reportgenerator-globaltool" }
+
+  if ($toolList) {
+    # Extract installed version
+    $installedVersionStr = ($toolList -split '\s+')[1]
+    $installedVersion = [version]$installedVersionStr
+
+    Write-Detail "ReportGenerator installed: v$installedVersionStr"
+
+    if ($installedVersion -lt $requiredVersion) {
+      Write-Detail "Updating to v$script:ReportGeneratorVersion..."
+      dotnet tool update -g dotnet-reportgenerator-globaltool --version $script:ReportGeneratorVersion 2>$null
+
+      if ($LASTEXITCODE -eq 0) {
+        Write-Success "Updated to v$script:ReportGeneratorVersion"
+      }
+      else {
+        Write-Warning "Failed to update ReportGenerator"
+      }
+    }
+  }
+  else {
+    # Install ReportGenerator
+    Write-Detail "Installing ReportGenerator v$script:ReportGeneratorVersion..."
+    dotnet tool install -g dotnet-reportgenerator-globaltool --version $script:ReportGeneratorVersion 2>$null
+
+    if ($LASTEXITCODE -eq 0) {
+      Write-Success "Installed v$script:ReportGeneratorVersion"
+
+      # Refresh PATH
+      $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "User") + ";" + $env:PATH
+    }
+    else {
+      throw "Failed to install ReportGenerator"
+    }
+  }
+}
+
+<#
+.SYNOPSIS
+  ReportGenerator를 사용하여 HTML 리포트를 생성합니다.
+#>
+function New-HtmlReport {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$CoverageFiles
+  )
+
+  Write-StepProgress -Step 6 -Message "Generating HTML report..."
+
+  # Install or update ReportGenerator
+  Install-ReportGenerator
+
+  # Generate HTML report
+  reportgenerator `
+    -reports:$CoverageFiles `
+    -targetdir:$script:CoverageReportDir `
+    -reporttypes:"Html;Cobertura" `
+    -assemblyfilters:"-*.Tests*"
+
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host "      Failed to generate HTML report" -ForegroundColor Red
+    return
+  }
+
+  $reportPath = Join-Path $script:CoverageReportDir "index.html"
+  Write-Success "Report generated: $reportPath"
+}
+
+#endregion
+
+#region Step 7: Show-CoverageReport
+
+<#
+.SYNOPSIS
+  콘솔에 커버리지 결과를 출력합니다.
+#>
 function Show-CoverageReport {
-    <#
-    .SYNOPSIS
-        콘솔에 커버리지 결과를 출력합니다.
-    #>
-    param(
-        [string]$CoverageFiles,
-        [string]$Prefix
-    )
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$CoverageFiles,
 
-    Write-StepHeader "Code Coverage Results"
+    [Parameter(Mandatory = $false)]
+    [string]$Prefix
+  )
 
-    # Merged cobertura file path
-    $mergedCoverageFile = Join-Path $script:ReportDir "Cobertura.xml"
+  Write-StepProgress -Step 7 -Message "Displaying coverage results..."
 
-    if (-not (Test-Path $mergedCoverageFile)) {
-        # Use first coverage file
-        $firstFile = $CoverageFiles.Split(";")[0]
-        if (Test-Path $firstFile) {
-            $mergedCoverageFile = $firstFile
-        } else {
-            Write-Host "Coverage file not found." -ForegroundColor Red
-            return
-        }
+  # Merged cobertura file path
+  $mergedCoverageFile = Join-Path $script:CoverageReportDir "Cobertura.xml"
+
+  if (-not (Test-Path $mergedCoverageFile)) {
+    # Use first coverage file
+    $firstFile = $CoverageFiles.Split(";")[0]
+    if (Test-Path $firstFile) {
+      $mergedCoverageFile = $firstFile
     }
-
-    # Parse XML
-    [xml]$coverage = Get-Content $mergedCoverageFile
-
-    # Extract coverage by assembly
-    $packages = @($coverage.SelectNodes("//packages/package"))
-
-    if ($packages.Count -eq 0) {
-        Write-Host "No coverage data available." -ForegroundColor Yellow
-        return
+    else {
+      Write-Host "      Coverage file not found" -ForegroundColor Red
+      return
     }
+  }
 
-    # Project prefix coverage (e.g., Functorium.*)
-    if ($Prefix) {
-        Write-SubHeader "[Project Coverage] ($Prefix.*)"
-        Write-Host ("{0,-40} {1,15} {2,15}" -f "Assembly", "Line Coverage", "Branch Coverage") -ForegroundColor White
-        Write-Host ("-" * 72) -ForegroundColor DarkGray
+  # Parse XML
+  [xml]$coverage = Get-Content $mergedCoverageFile
 
-        $prefixPackages = @()
-        $prefixTotalLines = 0
-        $prefixCoveredLines = 0
-        $prefixTotalBranches = 0
-        $prefixCoveredBranches = 0
+  # Extract coverage by assembly
+  $packages = @($coverage.SelectNodes("//packages/package"))
 
-        foreach ($pkg in $packages) {
-            $name = $pkg.GetAttribute("name")
+  if ($packages.Count -eq 0) {
+    Write-Warning "No coverage data available"
+    return
+  }
 
-            # Match prefix pattern (e.g., Functorium.* but exclude tests)
-            if ($name -like "$Prefix*" -and $name -notlike "*.Tests*") {
-                $lineRate = [double]$pkg.GetAttribute("line-rate") * 100
-                $branchRateAttr = $pkg.GetAttribute("branch-rate")
-                $branchRate = if ($branchRateAttr) { [double]$branchRateAttr * 100 } else { 0 }
-
-                Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f $name, $lineRate, $branchRate)
-
-                $prefixPackages += $pkg
-
-                # Accumulate for total calculation
-                $lines = $pkg.SelectNodes(".//line")
-                foreach ($line in $lines) {
-                    $prefixTotalLines++
-                    if ([int]$line.GetAttribute("hits") -gt 0) { $prefixCoveredLines++ }
-                }
-
-                # Accumulate branch coverage
-                $conditions = $pkg.SelectNodes(".//condition")
-                foreach ($condition in $conditions) {
-                    $prefixTotalBranches++
-                    $cov = $condition.GetAttribute("coverage")
-                    if ($cov -and [double]$cov -gt 0) { $prefixCoveredBranches++ }
-                }
-            }
-        }
-
-        if ($prefixPackages.Count -gt 0 -and $prefixTotalLines -gt 0) {
-            $prefixLineRate = ($prefixCoveredLines / $prefixTotalLines) * 100
-            $prefixBranchRate = if ($prefixTotalBranches -gt 0) { ($prefixCoveredBranches / $prefixTotalBranches) * 100 } else { 0 }
-            Write-Host ("-" * 72) -ForegroundColor DarkGray
-            Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f "Total", $prefixLineRate, $prefixBranchRate) -ForegroundColor Green
-        } elseif ($prefixPackages.Count -eq 0) {
-            Write-Host "No matching projects found." -ForegroundColor Yellow
-        }
-    }
-
-    # Core layer coverage
-    Write-SubHeader "[Core Layer Coverage] (Domains + Applications)"
+  # Project prefix coverage (e.g., Functorium.*)
+  if ($Prefix) {
+    Write-Host ""
+    Write-Host "[Project Coverage] ($Prefix.*)" -ForegroundColor Yellow
     Write-Host ("{0,-40} {1,15} {2,15}" -f "Assembly", "Line Coverage", "Branch Coverage") -ForegroundColor White
     Write-Host ("-" * 72) -ForegroundColor DarkGray
 
-    $corePackages = @()
-    $coreTotalLines = 0
-    $coreCoveredLines = 0
-    $coreTotalBranches = 0
-    $coreCoveredBranches = 0
+    $prefixPackages = @()
+    $prefixTotalLines = 0
+    $prefixCoveredLines = 0
+    $prefixTotalBranches = 0
+    $prefixCoveredBranches = 0
 
     foreach ($pkg in $packages) {
-        $name = $pkg.GetAttribute("name")
-        $isCoreLayer = $false
+      $name = $pkg.GetAttribute("name")
 
-        foreach ($pattern in $script:CoreLayerPatterns) {
-            if ($name -like $pattern) {
-                $isCoreLayer = $true
-                break
-            }
-        }
-
-        if ($isCoreLayer) {
-            $lineRate = [double]$pkg.GetAttribute("line-rate") * 100
-            $branchRateAttr = $pkg.GetAttribute("branch-rate")
-            $branchRate = if ($branchRateAttr) { [double]$branchRateAttr * 100 } else { 0 }
-
-            Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f $name, $lineRate, $branchRate)
-
-            $corePackages += $pkg
-
-            # Accumulate for total calculation
-            $lines = $pkg.SelectNodes(".//line")
-            foreach ($line in $lines) {
-                $coreTotalLines++
-                if ([int]$line.GetAttribute("hits") -gt 0) { $coreCoveredLines++ }
-            }
-
-            # Accumulate branch coverage
-            $conditions = $pkg.SelectNodes(".//condition")
-            foreach ($condition in $conditions) {
-                $coreTotalBranches++
-                $coverage = $condition.GetAttribute("coverage")
-                if ($coverage -and [double]$coverage -gt 0) { $coreCoveredBranches++ }
-            }
-        }
-    }
-
-    if ($corePackages.Count -gt 0 -and $coreTotalLines -gt 0) {
-        $coreLineRate = ($coreCoveredLines / $coreTotalLines) * 100
-        $coreBranchRate = if ($coreTotalBranches -gt 0) { ($coreCoveredBranches / $coreTotalBranches) * 100 } else { 0 }
-        Write-Host ("-" * 72) -ForegroundColor DarkGray
-        Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f "Total", $coreLineRate, $coreBranchRate) -ForegroundColor Green
-    }
-
-    # Full coverage
-    Write-SubHeader "[Full Coverage]"
-    Write-Host ("{0,-40} {1,15} {2,15}" -f "Assembly", "Line Coverage", "Branch Coverage") -ForegroundColor White
-    Write-Host ("-" * 72) -ForegroundColor DarkGray
-
-    foreach ($pkg in $packages) {
-        $name = $pkg.GetAttribute("name")
-
-        # Exclude test projects
-        if ($name -like "*.Tests*") { continue }
-
+      # Match prefix pattern (e.g., Functorium.* but exclude tests)
+      if ($name -like "$Prefix*" -and $name -notlike "*.Tests*") {
         $lineRate = [double]$pkg.GetAttribute("line-rate") * 100
         $branchRateAttr = $pkg.GetAttribute("branch-rate")
         $branchRate = if ($branchRateAttr) { [double]$branchRateAttr * 100 } else { 0 }
 
         Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f $name, $lineRate, $branchRate)
+
+        $prefixPackages += $pkg
+
+        # Accumulate for total calculation
+        $lines = $pkg.SelectNodes(".//line")
+        foreach ($line in $lines) {
+          $prefixTotalLines++
+          if ([int]$line.GetAttribute("hits") -gt 0) { $prefixCoveredLines++ }
+        }
+
+        # Accumulate branch coverage
+        $conditions = $pkg.SelectNodes(".//condition")
+        foreach ($condition in $conditions) {
+          $prefixTotalBranches++
+          $cov = $condition.GetAttribute("coverage")
+          if ($cov -and [double]$cov -gt 0) { $prefixCoveredBranches++ }
+        }
+      }
     }
 
-    # Overall total
-    $coverageNode = $coverage.SelectSingleNode("//coverage")
-    $totalLineRate = [double]$coverageNode.GetAttribute("line-rate") * 100
-    $totalBranchRate = if ($coverageNode.GetAttribute("branch-rate")) { [double]$coverageNode.GetAttribute("branch-rate") * 100 } else { 0 }
+    if ($prefixPackages.Count -gt 0 -and $prefixTotalLines -gt 0) {
+      $prefixLineRate = ($prefixCoveredLines / $prefixTotalLines) * 100
+      $prefixBranchRate = if ($prefixTotalBranches -gt 0) { ($prefixCoveredBranches / $prefixTotalBranches) * 100 } else { 0 }
+      Write-Host ("-" * 72) -ForegroundColor DarkGray
+      Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f "Total", $prefixLineRate, $prefixBranchRate) -ForegroundColor Green
+    }
+    elseif ($prefixPackages.Count -eq 0) {
+      Write-Warning "No matching projects found"
+    }
+  }
 
+  # Core layer coverage
+  Write-Host ""
+  Write-Host "[Core Layer Coverage] (Domains + Applications)" -ForegroundColor Yellow
+  Write-Host ("{0,-40} {1,15} {2,15}" -f "Assembly", "Line Coverage", "Branch Coverage") -ForegroundColor White
+  Write-Host ("-" * 72) -ForegroundColor DarkGray
+
+  $corePackages = @()
+  $coreTotalLines = 0
+  $coreCoveredLines = 0
+  $coreTotalBranches = 0
+  $coreCoveredBranches = 0
+
+  foreach ($pkg in $packages) {
+    $name = $pkg.GetAttribute("name")
+    $isCoreLayer = $false
+
+    foreach ($pattern in $script:CoreLayerPatterns) {
+      if ($name -like $pattern) {
+        $isCoreLayer = $true
+        break
+      }
+    }
+
+    if ($isCoreLayer) {
+      $lineRate = [double]$pkg.GetAttribute("line-rate") * 100
+      $branchRateAttr = $pkg.GetAttribute("branch-rate")
+      $branchRate = if ($branchRateAttr) { [double]$branchRateAttr * 100 } else { 0 }
+
+      Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f $name, $lineRate, $branchRate)
+
+      $corePackages += $pkg
+
+      # Accumulate for total calculation
+      $lines = $pkg.SelectNodes(".//line")
+      foreach ($line in $lines) {
+        $coreTotalLines++
+        if ([int]$line.GetAttribute("hits") -gt 0) { $coreCoveredLines++ }
+      }
+
+      # Accumulate branch coverage
+      $conditions = $pkg.SelectNodes(".//condition")
+      foreach ($condition in $conditions) {
+        $coreTotalBranches++
+        $coverageAttr = $condition.GetAttribute("coverage")
+        if ($coverageAttr -and [double]$coverageAttr -gt 0) { $coreCoveredBranches++ }
+      }
+    }
+  }
+
+  if ($corePackages.Count -gt 0 -and $coreTotalLines -gt 0) {
+    $coreLineRate = ($coreCoveredLines / $coreTotalLines) * 100
+    $coreBranchRate = if ($coreTotalBranches -gt 0) { ($coreCoveredBranches / $coreTotalBranches) * 100 } else { 0 }
     Write-Host ("-" * 72) -ForegroundColor DarkGray
-    Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f "Total", $totalLineRate, $totalBranchRate) -ForegroundColor Green
+    Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f "Total", $coreLineRate, $coreBranchRate) -ForegroundColor Green
+  }
+
+  # Full coverage
+  Write-Host ""
+  Write-Host "[Full Coverage]" -ForegroundColor Yellow
+  Write-Host ("{0,-40} {1,15} {2,15}" -f "Assembly", "Line Coverage", "Branch Coverage") -ForegroundColor White
+  Write-Host ("-" * 72) -ForegroundColor DarkGray
+
+  foreach ($pkg in $packages) {
+    $name = $pkg.GetAttribute("name")
+
+    # Exclude test projects
+    if ($name -like "*.Tests*") { continue }
+
+    $lineRate = [double]$pkg.GetAttribute("line-rate") * 100
+    $branchRateAttr = $pkg.GetAttribute("branch-rate")
+    $branchRate = if ($branchRateAttr) { [double]$branchRateAttr * 100 } else { 0 }
+
+    Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f $name, $lineRate, $branchRate)
+  }
+
+  # Overall total
+  $coverageNode = $coverage.SelectSingleNode("//coverage")
+  $totalLineRate = [double]$coverageNode.GetAttribute("line-rate") * 100
+  $totalBranchRate = if ($coverageNode.GetAttribute("branch-rate")) { [double]$coverageNode.GetAttribute("branch-rate") * 100 } else { 0 }
+
+  Write-Host ("-" * 72) -ForegroundColor DarkGray
+  Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f "Total", $totalLineRate, $totalBranchRate) -ForegroundColor Green
 }
+
+#endregion
+
+#region Show-Help
+
+# Show-Help function is defined in Helper Functions region
 
 #endregion
 
 #region Main
 
+<#
+.SYNOPSIS
+  메인 실행 함수
+
+.DESCRIPTION
+  전체 빌드/테스트/커버리지 흐름을 제어합니다:
+  1. 솔루션 파일 검색
+  2. 솔루션 빌드
+  3. 버전 정보 표시
+  4. 테스트 실행 및 커버리지 수집
+  5. 커버리지 리포트 병합
+  6. HTML 리포트 생성
+  7. 콘솔에 커버리지 결과 표시
+#>
 function Main {
-    <#
-    .SYNOPSIS
-        메인 진입점 - 전체 빌드/테스트/커버리지 흐름을 제어합니다.
-    .DESCRIPTION
-        1. 솔루션 파일 검색
-        2. 취약한 패키지 확인
-        3. 솔루션 빌드
-        4. MinVer 버전 정보 표시
-        5. 테스트 실행 및 커버리지 수집
-        6. 커버리지 리포트 병합
-        7. HTML 리포트 생성
-        8. 콘솔에 커버리지 결과 표시
-    #>
+  param(
+    [Parameter(Mandatory = $false)]
+    [string]$SolutionPath,
 
-    $startTime = Get-Date
+    [Parameter(Mandatory = $false)]
+    [string]$Prefix = "Functorium"
+  )
 
-    Write-Host ""
-    Write-Host "═════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host " .NET Solution Build and Test Script" -ForegroundColor Green
-    Write-Host " Started: $($startTime.ToString('yyyy-MM-dd HH:mm:ss'))" -ForegroundColor Green
-    Write-Host "═════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
+  $startTime = Get-Date
 
-    try {
-        # 1. Find solution file
-        $solution = Find-SolutionFile -SolutionPath $Solution
-        if (-not $solution) {
-            exit 1
-        }
+  Write-Host ""
+  Write-Host "[START] .NET Solution Build and Test" -ForegroundColor Blue
+  Write-Host "       Started: $($startTime.ToString('yyyy-MM-dd HH:mm:ss'))" -ForegroundColor DarkGray
+  Write-Host ""
 
-        $solutionPath = $solution.FullName
-        Write-Info "Selected solution: $($solution.Name)"
+  # 1. Find solution file
+  $solution = Find-SolutionFile -SolutionPath $SolutionPath
+  if (-not $solution) {
+    return $false
+  }
 
-        # Set output paths based on solution location
-        Set-OutputPaths -SolutionPath $solutionPath
-        Write-Info "Coverage report: $script:CoverageReportDir"
+  $solutionFullPath = $solution.FullName
 
-        # 2. Check vulnerable packages
-        #Test-VulnerablePackages -SolutionPath $solutionPath
+  # Set output paths based on solution location
+  Set-OutputPaths -SolutionPath $solutionFullPath
+  Write-Detail "Coverage output: $script:CoverageReportDir"
 
-        # 3. Build
-        Invoke-Build -SolutionPath $solutionPath
+  # 2. Build
+  Invoke-Build -SolutionPath $solutionFullPath
 
-        # 4. Show version information
-        Show-VersionInfo -SolutionPath $solutionPath
+  # 3. Show version information
+  Show-VersionInfo -SolutionPath $solutionFullPath
 
-        # 5. Run tests with coverage
-        Invoke-TestWithCoverage -SolutionPath $solutionPath
+  # 4. Run tests with coverage
+  Invoke-TestWithCoverage -SolutionPath $solutionFullPath
 
-        # 6. Merge coverage reports
-        $coverageFiles = Merge-CoverageReports
-        if (-not $coverageFiles) {
-            Write-Host "No coverage files found. Cannot generate report." -ForegroundColor Yellow
-            exit 0
-        }
+  # 5. Merge coverage reports
+  $coverageFiles = Merge-CoverageReports
+  if (-not $coverageFiles) {
+    Write-Warning "No coverage files found. Cannot generate report."
+    return $true
+  }
 
-        # 7. Generate HTML report
-        New-HtmlReport -CoverageFiles $coverageFiles
+  # 6. Generate HTML report
+  New-HtmlReport -CoverageFiles $coverageFiles
 
-        # 8. Display coverage results in console
-        Show-CoverageReport -CoverageFiles $coverageFiles -Prefix $ProjectPrefix
+  # 7. Display coverage results in console
+  Show-CoverageReport -CoverageFiles $coverageFiles -Prefix $Prefix
 
-        # Complete
-        $endTime = Get-Date
-        $duration = $endTime - $startTime
+  # Complete
+  $endTime = Get-Date
+  $duration = $endTime - $startTime
 
-        Write-Host ""
-        Write-Host "═════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-        Write-Host " Completed!" -ForegroundColor Green
-        Write-Host " Duration: $($duration.ToString('mm\:ss'))" -ForegroundColor Green
-        Write-Host " HTML Report: $script:ReportDir/index.html" -ForegroundColor Green
-        Write-Host "═════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
+  Write-Host ""
+  Write-Host "[DONE] Build and test completed" -ForegroundColor Green
+  Write-Host "       Duration: $($duration.ToString('mm\:ss'))" -ForegroundColor DarkGray
+  Write-Host "       Report: $script:CoverageReportDir/index.html" -ForegroundColor DarkGray
+  Write-Host ""
 
-    } catch {
-        Write-Host ""
-        Write-Host "Error: $_" -ForegroundColor Red
-        Write-Host $_.ScriptStackTrace -ForegroundColor DarkRed
-        exit 1
-    }
+  return $true
 }
 
-# Run script
+#endregion
+
+#region Entry Point
+
 if ($Help) {
-    Show-Help
-    exit 0
+  Show-Help
+  exit 0
 }
 
-Main
+try {
+  $result = Main -SolutionPath $Solution -Prefix $ProjectPrefix
+  if ($result) {
+    exit 0
+  }
+  else {
+    exit 1
+  }
+}
+catch {
+  Write-Host ""
+  Write-Host "[ERROR] An unexpected error occurred:" -ForegroundColor Red
+  Write-Host "        $($_.Exception.Message)" -ForegroundColor Red
+  Write-Host ""
+  Write-Host "Stack trace:" -ForegroundColor DarkGray
+  Write-Host $_.ScriptStackTrace -ForegroundColor DarkGray
+  Write-Host ""
+  exit 1
+}
 
 #endregion
