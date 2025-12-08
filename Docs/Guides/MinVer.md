@@ -143,25 +143,25 @@ git push origin v1.0.0
 # 1. 기능 개발
 git commit -m "feat: new feature"
 
-# 2. 빌드 (preview 버전)
+# 2. 빌드 (alpha 버전)
 dotnet build -p:MinVerVerbosity=normal
-# MinVer: Calculated version 1.0.1-preview.0.1
+# MinVer: Calculated version 1.0.1-alpha.0.1
 ```
 
 ### 주요 개념
 
 **1. 태그 기반 버전**
 - Git 태그(`v1.0.0`)가 버전의 유일한 출처
-- 태그 없으면 `0.0.0-preview.0.N` 사용
+- 태그 없으면 `0.0.0-alpha.0.N` 사용
 - 수동 버전 관리 불필요
 
 **2. 버전 계산 규칙**
 
 | Git 상태 | 계산된 버전 | 설명 |
 |---------|----------|------|
-| 태그 없음 | 0.0.0-preview.0.18 | 기본 버전 + 커밋 수 |
+| 태그 없음 | 0.0.0-alpha.0.18 | 기본 버전 + 커밋 수 |
 | v1.0.0 태그 | 1.0.0 | Stable 버전 |
-| v1.0.0 + 5 커밋 | 1.0.1-preview.0.5 | 다음 patch + 커밋 수 |
+| v1.0.0 + 5 커밋 | 1.0.1-alpha.0.5 | 다음 patch + 커밋 수 |
 
 **3. MSBuild 통합**
 - 빌드 시 자동 실행
@@ -318,7 +318,7 @@ dotnet build -p:MinVerVerbosity=normal
 **태그 없을 때 사용할 prerelease suffix:**
 
 ```xml
-<MinVerDefaultPreReleaseIdentifiers>preview.0</MinVerDefaultPreReleaseIdentifiers>
+<MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
 ```
 
 #### Pre-release 단계 구조
@@ -331,14 +331,13 @@ Pre-release 단계의 이름입니다.
 
 | 단계 | 의미 | 사용 시점 |
 |------|------|-----------|
-| `alpha` | 알파 버전 | 초기 개발, 기능 불완전, 불안정 |
+| `alpha` | 알파 버전 | 초기 개발, 기능 불완전, 불안정 (기본값) |
 | `beta` | 베타 버전 | 기능 완성, 테스트 중, 버그 수정 중 |
 | `rc` | Release Candidate | 릴리스 후보, 최종 테스트 |
-| `preview` | 프리뷰 | 미리보기 버전 (현재 설정) |
 
 **버전 비교 순서:**
 ```
-alpha < beta < preview < rc < (stable)
+alpha < beta < rc < (stable)
 ```
 
 Semantic Versioning 규칙에 따라 알파벳 순서로 비교됩니다.
@@ -383,7 +382,7 @@ v0.1.0-alpha.1 → 0.1.0-alpha.1
 **예시 (MinVerAutoIncrement=patch, 기본값):**
 ```bash
 v0.1.0 태그    → 0.1.0                    # RTM 버전
-다음 커밋      → 0.1.1-preview.0.1        # Patch 자동 +1 표시
+다음 커밋      → 0.1.1-alpha.0.1          # Patch 자동 +1 표시
                  ↑   ↑
                  │   └─ 실제로는 0.1.0의 다음 개발 버전
                  └───── 표시상으로만 0.1.1
@@ -393,24 +392,24 @@ v0.1.0 태그    → 0.1.0                    # RTM 버전
 
 **Git 태그가 없을 때:**
 ```
-버전: 0.0.0-preview.0.{height}+{commit}
-      ↑     ↑       ↑  ↑
-      │     │       │  └─ Height (자동 증가)
-      │     │       └──── Phase (수동 변경)
-      │     └──────────── Identifier (수동 변경)
-      └────────────────── Major.Minor.Patch (수동 증가)
+버전: 0.0.0-alpha.0.{height}+{commit}
+      ↑     ↑     ↑  ↑
+      │     │     │  └─ Height (자동 증가)
+      │     │     └──── Phase (수동 변경)
+      │     └────────── Identifier (수동 변경)
+      └──────────────── Major.Minor.Patch (수동 증가)
 ```
 
 #### 사용 예시
 
 **결과:**
-- 태그 없음: `0.0.0-preview.0.18`
+- 태그 없음: `0.0.0-alpha.0.18`
 - 태그 있음: `1.0.0`
-- 태그 후 커밋: `1.0.1-preview.0.5`
+- 태그 후 커밋: `1.0.1-alpha.0.5`
 
-**다른 옵션:**
+**Pre-release 단계별 설정:**
 ```xml
-<!-- Alpha 버전 -->
+<!-- Alpha 버전 (기본값) -->
 <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
 <!-- 결과: 0.0.0-alpha.0.18 -->
 
@@ -445,7 +444,7 @@ v0.1.0 태그    → 0.1.0                    # RTM 버전
 ```
 
 **효과:**
-- 태그 없어도 `1.0.0-preview.0.N` 사용
+- 태그 없어도 `1.0.0-alpha.0.N` 사용
 - `0.0.0` 버전 방지
 
 ### MinVerBuildMetadata
@@ -534,12 +533,12 @@ git commit
 * 123abc commit 1
 
 # 계산 결과
-0.0.0-preview.0.18
+0.0.0-alpha.0.18
 ```
 
 **구성:**
 - `0.0.0`: 기본 버전
-- `preview.0`: MinVerDefaultPreReleaseIdentifiers
+- `alpha.0`: MinVerDefaultPreReleaseIdentifiers
 - `18`: 전체 커밋 수
 
 ### 태그가 있을 때 (Height = 0)
@@ -566,12 +565,12 @@ git commit
 * abc123 (tag: v1.0.0) Release 1.0.0
 
 # 계산 결과
-1.0.1-preview.0.5
+1.0.1-alpha.0.5
 ```
 
 **구성:**
 - `1.0.1`: 태그의 patch 버전 +1
-- `preview.0`: MinVerDefaultPreReleaseIdentifiers
+- `alpha.0`: MinVerDefaultPreReleaseIdentifiers
 - `5`: 태그 이후 커밋 수
 
 ### Prerelease 태그
@@ -603,7 +602,7 @@ git commit
 * abc123 (tag: v1.0.0) Release 1.0.0
 
 # 계산 결과
-1.1.1-preview.0.3
+1.1.1-alpha.0.3
 ```
 
 **규칙:**
@@ -875,7 +874,7 @@ MinVer는 자동으로 설정:
 
 ## 트러블슈팅
 
-### 버전이 0.0.0-preview.0.N으로 표시될 때
+### 버전이 0.0.0-alpha.0.N으로 표시될 때
 
 **원인**: Git 태그가 없거나 MinVer가 태그를 찾지 못함
 
@@ -899,7 +898,7 @@ git tag -l
 **해결 3**: 최소 버전 설정
 ```xml
 <MinVerMinimumMajorMinor>1.0</MinVerMinimumMajorMinor>
-<!-- 결과: 1.0.0-preview.0.N -->
+<!-- 결과: 1.0.0-alpha.0.N -->
 ```
 
 ### 태그를 생성했는데도 버전이 안 바뀔 때
@@ -1041,17 +1040,17 @@ git push origin :refs/tags/v1.0.0-wrong
 
 **결과:**
 ```
-태그 없음: 1.0.0-preview.0.18
+태그 없음: 1.0.0-alpha.0.18
 v1.0.0: 1.0.0
-v1.0.0 + 커밋: 1.0.1-preview.0.5
+v1.0.0 + 커밋: 1.0.1-alpha.0.5
 ```
 
-### Q3. Preview 대신 다른 prerelease 이름을 사용하려면?
+### Q3. Pre-release 단계를 변경하려면?
 
 **A:** `MinVerDefaultPreReleaseIdentifiers`를 변경하세요:
 
 ```xml
-<!-- Alpha -->
+<!-- Alpha (기본값) -->
 <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
 <!-- 결과: 1.0.1-alpha.0.5 -->
 
@@ -1059,9 +1058,9 @@ v1.0.0 + 커밋: 1.0.1-preview.0.5
 <MinVerDefaultPreReleaseIdentifiers>beta.0</MinVerDefaultPreReleaseIdentifiers>
 <!-- 결과: 1.0.1-beta.0.5 -->
 
-<!-- Dev -->
-<MinVerDefaultPreReleaseIdentifiers>dev</MinVerDefaultPreReleaseIdentifiers>
-<!-- 결과: 1.0.1-dev.5 -->
+<!-- Release Candidate -->
+<MinVerDefaultPreReleaseIdentifiers>rc.0</MinVerDefaultPreReleaseIdentifiers>
+<!-- 결과: 1.0.1-rc.0.5 -->
 ```
 
 ### Q4. 특정 프로젝트에서만 MinVer를 사용하려면?
@@ -1168,7 +1167,7 @@ minver
 # 1.0.0
 ```
 
-### Q10. Stable 버전과 Preview 버전을 어떻게 구분하나요?
+### Q10. Stable 버전과 Pre-release 버전을 어떻게 구분하나요?
 
 **A:** Prerelease identifier 유무로 구분:
 
@@ -1177,10 +1176,10 @@ minver
 1.0.0          # Prerelease 없음
 2.5.3          # Prerelease 없음
 
-# Preview
-1.0.1-preview.0.5     # Prerelease 있음
-1.0.0-alpha.0.3       # Prerelease 있음
-2.0.0-rc.1            # Prerelease 있음
+# Pre-release
+1.0.1-alpha.0.5       # Alpha 버전
+1.0.0-beta.0.3        # Beta 버전
+2.0.0-rc.1            # Release Candidate 버전
 ```
 
 **코드에서 확인:**
@@ -1190,7 +1189,7 @@ var version = Assembly.GetExecutingAssembly()
     ?.InformationalVersion;
 
 if (version.Contains("-"))
-    Console.WriteLine("Preview version");
+    Console.WriteLine("Pre-release version");
 else
     Console.WriteLine("Stable version");
 ```
