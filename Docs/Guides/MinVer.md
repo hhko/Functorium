@@ -1158,7 +1158,28 @@ dotnet pack -p:MinVerVersion=1.2.3
 
 **주의**: MinVer의 자동 계산을 무시하므로 신중히 사용
 
-### Q9. 여러 프로젝트에서 각각 다른 버전을 사용하려면?
+### Q9. Hotfix 릴리스를 어떻게 관리하나요?
+
+**A:** 이전 릴리스 태그에서 브랜치를 생성하고 새 태그를 만듭니다:
+
+```bash
+# 1. 이전 릴리스에서 브랜치 생성
+git checkout v1.0.0
+git checkout -b hotfix/1.0.1
+
+# 2. 수정 작업
+git commit -m "fix: critical bug"
+
+# 3. Hotfix 태그 생성
+git tag -a v1.0.1 -m "Hotfix 1.0.1"
+git push origin v1.0.1
+
+# 4. main에 머지
+git checkout main
+git merge hotfix/1.0.1
+```
+
+### Q10. 여러 프로젝트에서 각각 다른 버전을 사용하려면?
 
 **A:** 태그 접두사를 프로젝트별로 다르게:
 
@@ -1176,7 +1197,7 @@ git tag functorium-v1.0.0
 git tag testing-v2.0.0
 ```
 
-### Q10. MinVer가 계산한 버전을 빌드 스크립트에서 사용하려면?
+### Q11. MinVer가 계산한 버전을 빌드 스크립트에서 사용하려면?
 
 **A:** MSBuild 속성을 활용:
 
@@ -1195,7 +1216,7 @@ minver
 # 1.0.0
 ```
 
-### Q11. Stable 버전과 Pre-release 버전을 어떻게 구분하나요?
+### Q12. Stable 버전과 Pre-release 버전을 어떻게 구분하나요?
 
 **A:** Prerelease identifier 유무로 구분:
 
