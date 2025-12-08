@@ -417,6 +417,11 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
+
+# Verify
+*.received.*
+
+
 nul
 .coverage/
 .commit-summaries/

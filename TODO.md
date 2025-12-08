@@ -27,6 +27,11 @@
 - [x] doc: GitHub actions 문서
 - [x] dev: Functorium.Testing 프로젝트 소스 추가
 - [x] dev: Functorium.Testing xunit.v3 기반으로 패키지 참조 및 소스 개선
+- [x] dev: 패키지 .NET 10 기준으로 최신 버전 업그레이드
+- [x] doc: 단위 테스트 가이드 문서
+- [x] dev: Build-Local.ps1 dotnet cli 외부 명령 출력이 버퍼링되어 함수 반환 시까지 표시되지 않는 븍구 수정(| Out-Host)
+- [x] dev: ErrorCode 개발 이해
+- [x] dev: ErrorCode 테스트 자동화 이해
 - [ ] std: Functorium.Testing 애해: 아키텍처 단위 테스트
 - [ ] std: Functorium.Testing 애해:  구조적 로그 단위 테스팅
 - [ ] std: Functorium.Testing 애해:  WebApi 통합 테스트
@@ -57,7 +62,9 @@ nuget.config                              |         |                           
 .github/workflows/build.yml               |         | GitHub Actions.md             |
 .github/workflows/publish.md              |         | GitHub Actions.md             |
                                           |         | Git.md                        |
-                                          |         | MinVer.sm                     |
+                                          |         | MinVer.md                     |
+                                          |         | UnitTesting.md                |
+                                          |         | xUnitV3.md                    |
 
 - [x] Language-Ext 업그레이드
   - `FinT<M, A>.Lift(fin)` → `FinT.lift<M, A>(fin)`
