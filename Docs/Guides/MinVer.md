@@ -1073,7 +1073,25 @@ v1.0.0 + 커밋: 1.0.1-alpha.0.5
 <!-- 결과: 1.0.1-rc.0.5 -->
 ```
 
-### Q4. 특정 프로젝트에서만 MinVer를 사용하려면?
+### Q4. AssemblyVersion과 FileVersion의 차이는?
+
+**A:** .NET 어셈블리는 여러 버전 속성을 가집니다:
+
+| 속성 | 용도 | 형식 | 예시 |
+|------|------|------|------|
+| `AssemblyVersion` | 바이너리 호환성 | Major.Minor.0.0 | 1.2.0.0 |
+| `FileVersion` | 파일 정보 | Major.Minor.Patch.0 | 1.2.3.0 |
+| `InformationalVersion` | 표시 버전 | SemVer 전체 | 1.2.3-alpha.0.5 |
+
+**권장 설정:**
+```xml
+<AssemblyVersion>$(MinVerMajor).$(MinVerMinor).0.0</AssemblyVersion>
+<FileVersion>$(MinVerMajor).$(MinVerMinor).$(MinVerPatch).0</FileVersion>
+```
+
+자세한 내용은 [어셈블리 버전 전략](#어셈블리-버전-전략) 섹션을 참조하세요.
+
+### Q5. 특정 프로젝트에서만 MinVer를 사용하려면?
 
 **A:** 해당 프로젝트 파일(.csproj)에만 패키지 추가:
 
@@ -1098,7 +1116,7 @@ v1.0.0 + 커밋: 1.0.1-alpha.0.5
 </PropertyGroup>
 ```
 
-### Q5. NuGet 패키지 버전은 어떻게 설정되나요?
+### Q6. NuGet 패키지 버전은 어떻게 설정되나요?
 
 **A:** MinVer가 자동으로 `<Version>` 속성을 설정합니다:
 
@@ -1113,7 +1131,7 @@ dotnet pack -p:PackageVersion=1.2.3
 # Functorium.1.2.3.nupkg
 ```
 
-### Q6. 로컬 빌드와 CI 빌드의 버전을 구분하려면?
+### Q7. 로컬 빌드와 CI 빌드의 버전을 구분하려면?
 
 **A:** 빌드 메타데이터를 사용하세요:
 
@@ -1129,7 +1147,7 @@ dotnet build
   # 1.0.0+ci.123
 ```
 
-### Q7. Tag 없이 특정 버전으로 빌드하려면?
+### Q8. Tag 없이 특정 버전으로 빌드하려면?
 
 **A:** `MinVerVersion`으로 재정의:
 
@@ -1140,7 +1158,7 @@ dotnet pack -p:MinVerVersion=1.2.3
 
 **주의**: MinVer의 자동 계산을 무시하므로 신중히 사용
 
-### Q8. 여러 프로젝트에서 각각 다른 버전을 사용하려면?
+### Q9. 여러 프로젝트에서 각각 다른 버전을 사용하려면?
 
 **A:** 태그 접두사를 프로젝트별로 다르게:
 
@@ -1158,7 +1176,7 @@ git tag functorium-v1.0.0
 git tag testing-v2.0.0
 ```
 
-### Q9. MinVer가 계산한 버전을 빌드 스크립트에서 사용하려면?
+### Q10. MinVer가 계산한 버전을 빌드 스크립트에서 사용하려면?
 
 **A:** MSBuild 속성을 활용:
 
@@ -1177,7 +1195,7 @@ minver
 # 1.0.0
 ```
 
-### Q10. Stable 버전과 Pre-release 버전을 어떻게 구분하나요?
+### Q11. Stable 버전과 Pre-release 버전을 어떻게 구분하나요?
 
 **A:** Prerelease identifier 유무로 구분:
 
