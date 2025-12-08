@@ -13,6 +13,6 @@ internal static class ErrorCodeFieldNames
     public const string InnerError = nameof(InnerError);
     public const string ExceptionDetails = nameof(ExceptionDetails);
 
-    public const string UnkownErrorCode = "UNKNOWN.ERROR-CODE";
-    public const string UnkownErrorMessage = "UNKNOWN.ERROR-MESSAGE";
+    public const string UnknownErrorCode = "UNKNOWN.ERROR-CODE";
+    public const string UnknownErrorMessage = "UNKNOWN.ERROR-MESSAGE";
 }

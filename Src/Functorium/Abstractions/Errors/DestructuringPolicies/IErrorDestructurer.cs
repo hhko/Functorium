@@ -14,9 +14,6 @@ namespace Functorium.Abstractions.Errors.DestructuringPolicies;
 // Errors               | x                 | x                     | X                     | O (개별 타입)
 // ExceptionDetails     | X                 | X                     | O(Serilog.Exceptions) | X
 
-
-
-
 // -----------------------------------
 // ErrorCodeExpected
 // -----------------------------------

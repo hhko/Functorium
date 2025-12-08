@@ -12,8 +12,9 @@ public class ManyErrorsDestructurer : IErrorDestructurer
     {
         ManyErrors e = (ManyErrors)error;
 
-        LogEventPropertyValue[] nested = e.Errors.Map(inner => ErrorsDestructuringPolicy.DestructureError(inner, factory))
-                             .ToArray();
+        LogEventPropertyValue[] nested = e.Errors
+            .Map(inner => ErrorsDestructuringPolicy.DestructureError(inner, factory))
+            .ToArray();
 
         return new StructureValue(
         [

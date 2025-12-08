@@ -23,10 +23,10 @@ public class ErrorCodeExpectedTDestructurer : IErrorDestructurer
         ];
 
         string errorCode = type.GetProperty(ErrorCodeFieldNames.ErrorCode)?.GetValue(error)?.ToString()
-                           ?? ErrorCodeFieldNames.UnkownErrorCode;
+                           ?? ErrorCodeFieldNames.UnknownErrorCode;
 
         string message = type.GetProperty(ErrorCodeFieldNames.Message)?.GetValue(error)?.ToString()
-                         ?? ErrorCodeFieldNames.UnkownErrorMessage;
+                         ?? ErrorCodeFieldNames.UnknownErrorMessage;
 
         props.Add(new(ErrorCodeFieldNames.ErrorCode, new ScalarValue(errorCode)));
         props.Add(new(ErrorCodeFieldNames.Message, new ScalarValue(message)));
