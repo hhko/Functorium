@@ -20,7 +20,7 @@
 - [x] claude: commit 주제 전달일 때는 주체만 commit하기
 - [x] dev: ci.yml -> build.yml
 - [x] dev: build.yml 실패 처리
-- [x] std: MinVer 이해
+- [x] std: MinVer 이해(형상관리 tag 연동)
 - [x] dev: 로컬 빌드
 - [x] dev: GitHub actions build
 - [x] dev: GitHub actions publish
@@ -36,8 +36,31 @@
 - [ ] powershell 가이드 문서
 - [ ] powershell 가이드 문서 기준 개선
 - [ ] 로컬 빌드 문서(dotnet 명령어)
-- [ ] 솔루션 구성: Directory.Build.props 버전 체계
-- [ ] 솔루션 구성: Directory.Build.props 형상관리와 버전 연동
 - [ ] 솔루션 구성: .editorconfig 폴더 단위 개별 지정
 - [ ] 솔루션 구성: Directory.Packages.props 하위 폴더 새로 시작, 버전 재정의
-- [ ] 코드 품질: 경로별 개별 설정 방법
+- [ ] **dev: nuget 배포을 위한 프로젝트 설정**
+- [ ] **dev: publish.yml 파일로 NuGet 배포**
+- [ ] **dev: publish.yml 파일로 Release 배포**
+
+Item                                      | Type    | File                          | todo
+---                                       | ---     | ---                           | ---
+Build-CommitSummary.ps1                   | Manual  | Build-CommitSummary.md        | done
+Build-Local.ps1                           | Manual  | Build-Local.md                | done
+.claude/commands/commit.md                | Manual  | Command-Commit.md             | done
+.claude/commands/suggest-next-version.md  | Manual  | Command-SuggestNextVersion.md | x
+.editorconfig                             |         | Code-Quality.md               |
+CLAUDE.md                                 |         |                               |
+Directory.Build.props                     |         |                               |
+Directory.Packages.props                  |         |                               |
+global.json                               |         | SdkVersion.md                 |
+nuget.config                              |         |                               |
+.github/workflows/build.yml               |         | GitHub Actions.md             |
+.github/workflows/publish.md              |         | GitHub Actions.md             |
+                                          |         | Git.md                        |
+                                          |         | MinVer.sm                     |
+
+- [x] Language-Ext 업그레이드
+  - `FinT<M, A>.Lift(fin)` → `FinT.lift<M, A>(fin)`
+  - `Fin<A>.Succ` (메서드 참조) → `Fin.Succ` (람다 사용)
+  - `Fin<A>.Fail(error)` → `Fin.Fail<A>(error)`
+  - `FinT<M, A>.Fail(error)` → `FinT.Fail<M, A>(error)`
