@@ -1,0 +1,7 @@
+{
+  ErrorCode: DomainErrors.User.NotFound,
+  ErrorCodeId: -1000,
+  ErrorCurrentValue: user123,
+  ErrorType: ErrorCodeExpected,
+  Message: 사용자를 찾을 수 없습니다
+}

@@ -1,0 +1,10 @@
+{
+  ErrorCode: DomainErrors.Geometry.InvalidPoint,
+  ErrorCodeId: -1000,
+  ErrorCurrentValue: {
+    X: 100,
+    Y: 200
+  },
+  ErrorType: ErrorCodeExpected`1,
+  Message: 좌표가 유효하지 않습니다
+}

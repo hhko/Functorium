@@ -1,0 +1,8 @@
+{
+  ErrorCode: DomainErrors.Range.InvalidBounds,
+  ErrorCodeId: -1000,
+  ErrorCurrentValue1: 100,
+  ErrorCurrentValue2: 50,
+  ErrorType: ErrorCodeExpected`2,
+  Message: 최소값이 최대값보다 큽니다
+}

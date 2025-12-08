@@ -1,0 +1,7 @@
+﻿{
+  ErrorCode: DomainErrors.Sensor.TemperatureOutOfRange,
+  ErrorCodeId: -1000,
+  ErrorCurrentValue: 150,
+  ErrorType: ErrorCodeExpected`1,
+  Message: 온도 범위 초과
+}

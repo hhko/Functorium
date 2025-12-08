@@ -1,0 +1,21 @@
+﻿{
+  Count: 2,
+  ErrorCodeId: -2000000006,
+  Errors: [
+    {
+      ErrorCode: ApplicationErrors.User.NameRequired,
+      ErrorCodeId: -1000,
+      ErrorCurrentValue: name,
+      ErrorType: ErrorCodeExpected,
+      Message: 이름은 필수입니다
+    },
+    {
+      ErrorCode: ApplicationErrors.User.DescriptionTooLong,
+      ErrorCodeId: -1000,
+      ErrorCurrentValue: description,
+      ErrorType: ErrorCodeExpected,
+      Message: 설명이 너무 깁니다
+    }
+  ],
+  ErrorType: ManyErrors
+}
