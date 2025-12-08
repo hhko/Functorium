@@ -449,14 +449,6 @@ dotnet test -c Debug --collect:"XPlat Code Coverage"
 
 **A:** 현재 스크립트는 `.coverage` 디렉토리를 사용합니다. 변경하려면 스크립트의 `$script:CoverageReportDir` 값을 수정하세요.
 
-### Q6. 취약 패키지 검사가 비활성화된 이유는?
-
-**A:** 프리릴리스 패키지 사용으로 인한 오류를 회피하기 위해 임시 비활성화되어 있습니다. 활성화하려면 스크립트에서 `Test-VulnerablePackages` 호출의 주석을 해제하세요.
-
-```powershell
-# Main 함수에서 주석 해제
-Test-VulnerablePackages -SolutionPath $solutionPath
-```
 
 ## 참고 자료
 

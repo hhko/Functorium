@@ -99,8 +99,7 @@ v1.2.3-alpha.0+5        → 1.2.3-alpha.0 + 5 커밋 후
 
 | 커밋 타입 | 버전 증가 | 설명 |
 |-----------|-----------|------|
-| `feat!`, `fix!`, `BREAKING CHANGE` | **Major** (X.0.0) | 호환성을 깨는 변경 |
-| `feat` | **Minor** (1.X.0) | 새로운 기능 추가 |
+| `feat!`, `fix!`, `BREAKING CHANGE`, `feat` | **Minor** (1.X.0) | 호환성을 깨는 변경, 새로운 기능 추가 |
 | `fix`, `perf` | **Patch** (1.0.X) | 버그 수정, 성능 개선 |
 | `docs`, `style`, `refactor`, `test`, `build`, `ci`, `chore` | 없음 | 버전 증가 불필요 |
 
