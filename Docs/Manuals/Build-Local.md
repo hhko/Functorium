@@ -172,11 +172,11 @@ cd C:\Workspace\Github\Functorium
 ### 2. 솔루션 빌드
 
 ```powershell
-dotnet restore $SolutionPath
 dotnet build $SolutionPath -c Release --nologo -p:MinVerVerbosity=normal
 ```
 
 - Release 구성으로 빌드
+- `dotnet build`가 자동으로 패키지 복원 수행
 - MinVer 버전 정보 출력 (MinVer 패키지 설정된 경우)
 
 ### 3. 버전 정보 표시
@@ -202,12 +202,14 @@ Functorium.Testing                       1.0.0-alpha.0.15+abc123             1.0
 dotnet test $SolutionPath `
     --configuration Release `
     --no-build `
+    --nologo `
     --collect:"XPlat Code Coverage" `
     --logger "trx" `
-    --logger "console;verbosity=minimal"
+    --logger "console;verbosity=minimal" `
+    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
 ```
 
-- 기존 TestResults 디렉토리 삭제 후 실행
+- 기존 `.coverage/` 및 `TestResults/` 디렉토리 삭제 후 실행
 - Cobertura 형식으로 커버리지 수집
 
 ### 5. 커버리지 병합
@@ -275,35 +277,60 @@ xdg-open .coverage/index.html
 ### 콘솔 출력 예시
 
 ```
-════════════════════════════════════════════════════════════════════════════════
- Code Coverage Results
-════════════════════════════════════════════════════════════════════════════════
+[START] .NET Solution Build and Test
+       Started: 2025-01-15 14:30:00
+
+[1/7] Finding solution file...
+      Found: Functorium.slnx
+      Coverage output: C:\Workspace\Github\Functorium\.coverage
+[2/7] Building solution (Release)...
+
+  복원할 프로젝트를 확인하는 중...
+  Functorium -> C:\...\Functorium.dll
+  빌드했습니다.
+    경고 0개
+    오류 0개
+
+[3/7] Reading version information...
+
+Project                                  ProductVer                          FileVer         Assembly
+-----------------------------------------------------------------------------------------------------------
+Functorium                               1.0.0-alpha.0.54+abc123...          1.0.0.0         1.0.0.0
+Functorium.Testing                       1.0.0-alpha.0.54+abc123...          1.0.0.0         1.0.0.0
+
+[4/7] Running tests with coverage...
+      Tests passed
+[5/7] Merging coverage reports...
+      Found 2 coverage file(s)
+[6/7] Generating HTML report...
+      ReportGenerator installed: v5.5.0
+      Report generated: C:\...\index.html
+[7/7] Displaying coverage results...
 
 [Project Coverage] (Functorium.*)
-Assembly                                  Line Coverage  Branch Coverage
+Assembly                                   Line Coverage Branch Coverage
 ------------------------------------------------------------------------
-Functorium                                        85.3%           72.1%
-Functorium.Testing                                91.2%           80.5%
+Functorium                                          85.3%           72.1%
+Functorium.Testing                                  91.2%           80.5%
 ------------------------------------------------------------------------
-Total                                             88.2%           76.3%
+Total                                               88.2%           76.3%
 
 [Core Layer Coverage] (Domains + Applications)
-Assembly                                  Line Coverage  Branch Coverage
+Assembly                                   Line Coverage Branch Coverage
 ------------------------------------------------------------------------
-Functorium.Domain                                 92.1%           85.3%
-Functorium.Application                            88.7%           79.2%
-------------------------------------------------------------------------
-Total                                             90.4%           82.3%
+(해당 프로젝트가 있는 경우 표시)
 
 [Full Coverage]
-Assembly                                  Line Coverage  Branch Coverage
+Assembly                                   Line Coverage Branch Coverage
 ------------------------------------------------------------------------
-Functorium                                        85.3%           72.1%
-Functorium.Testing                                91.2%           80.5%
-Functorium.Domain                                 92.1%           85.3%
-Functorium.Application                            88.7%           79.2%
+Functorium                                          85.3%           72.1%
+Functorium.Testing                                  91.2%           80.5%
 ------------------------------------------------------------------------
-Total                                             89.3%           79.3%
+Total                                               89.3%           79.3%
+
+[DONE] Build and test completed
+       Duration: 01:23
+       Report: .coverage/index.html
 ```
 
 ### 커버리지 분류
@@ -346,12 +373,12 @@ Use -Solution parameter to specify which one to use.
 
 ### 빌드 실패
 
-```
-Error: Build failed
-```
+빌드 실패 시 `dotnet build` 출력이 콘솔에 직접 표시됩니다.
 
 **해결:**
 ```powershell
+# 에러 메시지 확인 후 코드 수정
+
 # 상세 빌드 로그 확인
 dotnet build -v detailed
 

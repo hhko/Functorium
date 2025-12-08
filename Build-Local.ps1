@@ -64,6 +64,9 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# Set console encoding to UTF-8 for proper Korean character display
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
 #region Constants
 
 $script:TOTAL_STEPS = 7
@@ -292,89 +295,15 @@ function Invoke-Build {
   )
 
   Write-StepProgress -Step 2 -Message "Building solution ($script:Configuration)..."
-  Write-Detail "Solution: $SolutionPath"
 
-  # Restore
-  Write-Detail "Restoring packages..."
-  $restoreOutput = dotnet restore $SolutionPath 2>&1
-  if ($LASTEXITCODE -ne 0) {
-    Write-Host ""
-    Write-Host "      [Restore Failed]" -ForegroundColor Red
-    Write-Host ""
-    $restoreOutput | ForEach-Object { Write-Host "      $_" -ForegroundColor Red }
-    throw "Package restore failed"
-  }
-
-  # Build with detailed error output
-  Write-Detail "Compiling..."
-  $buildOutput = dotnet build $SolutionPath `
+  Write-Host ""
+  dotnet build $SolutionPath `
     -c $script:Configuration `
     --nologo `
-    -p:MinVerVerbosity=normal 2>&1
+    -p:MinVerVerbosity=normal | Out-Default
 
   if ($LASTEXITCODE -ne 0) {
-    Write-Host ""
-    Write-Host "      [Build Failed]" -ForegroundColor Red
-    Write-Host ""
-
-    # Parse and display errors
-    $errors = @()
-    $warnings = @()
-
-    foreach ($line in $buildOutput) {
-      $lineStr = $line.ToString()
-      if ($lineStr -match ": error ") {
-        $errors += $lineStr
-      }
-      elseif ($lineStr -match ": warning ") {
-        $warnings += $lineStr
-      }
-    }
-
-    # Display errors
-    if ($errors.Count -gt 0) {
-      Write-Host "      Errors ($($errors.Count)):" -ForegroundColor Red
-      Write-Host ""
-      foreach ($err in $errors) {
-        # Extract file path and error message
-        if ($err -match "(.+?)\((\d+),(\d+)\): error (\w+): (.+)") {
-          $file = $Matches[1]
-          $line = $Matches[2]
-          $col = $Matches[3]
-          $code = $Matches[4]
-          $msg = $Matches[5]
-
-          # Shorten file path for display
-          $shortFile = $file
-          if ($file.Length -gt 60) {
-            $shortFile = "..." + $file.Substring($file.Length - 57)
-          }
-
-          Write-Host "      $code | $shortFile`:$line" -ForegroundColor Red
-          Write-Host "             $msg" -ForegroundColor Yellow
-          Write-Host ""
-        }
-        else {
-          Write-Host "      $err" -ForegroundColor Red
-        }
-      }
-    }
-
-    # Display warning count
-    if ($warnings.Count -gt 0) {
-      Write-Host "      Warnings: $($warnings.Count)" -ForegroundColor Yellow
-    }
-
-    throw "Build failed with $($errors.Count) error(s)"
-  }
-
-  # Check for warnings in successful build
-  $warningLines = @($buildOutput | Where-Object { $_.ToString() -match ": warning " })
-  if ($warningLines.Count -gt 0) {
-    Write-Host "      Build succeeded with $($warningLines.Count) warning(s)" -ForegroundColor Yellow
-  }
-  else {
-    Write-Success "Build succeeded"
+    throw "Build failed"
   }
 }
 
@@ -524,7 +453,7 @@ function Invoke-TestWithCoverage {
     --collect:"XPlat Code Coverage" `
     --logger "trx" `
     --logger "console;verbosity=minimal" `
-    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura | Out-Default
 
   if ($LASTEXITCODE -ne 0) {
     throw "Tests failed"
