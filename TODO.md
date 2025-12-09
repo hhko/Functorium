@@ -32,6 +32,13 @@
 - [x] dev: Build-Local.ps1 dotnet cli 외부 명령 출력이 버퍼링되어 함수 반환 시까지 표시되지 않는 븍구 수정(| Out-Host)
 - [x] dev: ErrorCode 개발 이해
 - [x] dev: ErrorCode 테스트 자동화 이해
+- [x] dev: Build-VerifyAccept.ps1 파일
+- [x] dev: ps1 공통 모듈 분리
+- [ ] doc: ps1 파일 작성 가이드
+- [ ] dev: ps1 출력을 실시간 처리하기 위해 명령을 함수 밖으로 이동 배치
+- [x] dev: 관찰 가능성 의존성 등록 코드: Logger, Trrace, Metric
+- [ ] dev: 관찰 가능성 의존성 등록 리뷰
+- [ ] doc: 옵션, 로그 출력 중심으로 문서화
 - [ ] std: Functorium.Testing 애해: 아키텍처 단위 테스트
 - [ ] std: Functorium.Testing 애해:  구조적 로그 단위 테스팅
 - [ ] std: Functorium.Testing 애해:  WebApi 통합 테스트
