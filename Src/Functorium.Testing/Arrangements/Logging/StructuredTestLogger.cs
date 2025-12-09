@@ -2,7 +2,7 @@
 
 using Serilog.Events;
 
-namespace Functorium.Testing.Arrangements.Loggers;
+namespace Functorium.Testing.Arrangements.Logging;
 
 /// <summary>
 /// Serilog의 구조화된 로깅을 제대로 활용하는 TestLogger
