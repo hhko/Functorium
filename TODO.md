@@ -34,7 +34,7 @@
 - [x] dev: ErrorCode 테스트 자동화 이해
 - [x] dev: Build-VerifyAccept.ps1 파일
 - [x] dev: ps1 공통 모듈 분리
-- [ ] doc: ps1 파일 작성 가이드
+- [x] doc: ps1 파일 작성 가이드
 - [ ] dev: ps1 출력을 실시간 처리하기 위해 명령을 함수 밖으로 이동 배치
 - [x] dev: 관찰 가능성 의존성 등록 코드: Logger, Trrace, Metric
 - [ ] dev: 관찰 가능성 의존성 등록 리뷰
