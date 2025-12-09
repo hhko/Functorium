@@ -638,8 +638,9 @@ function Show-CoverageReport {
 
       # Match prefix pattern (e.g., Functorium.* but exclude tests)
       if ($name -like "$Prefix*" -and $name -notlike "*.Tests*") {
-        $lineRate = [double]$pkg.GetAttribute("line-rate") * 100
+        $lineRateAttr = $pkg.GetAttribute("line-rate")
         $branchRateAttr = $pkg.GetAttribute("branch-rate")
+        $lineRate = if ($lineRateAttr) { [double]$lineRateAttr * 100 } else { 0 }
         $branchRate = if ($branchRateAttr) { [double]$branchRateAttr * 100 } else { 0 }
 
         Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f $name, $lineRate, $branchRate)
@@ -653,12 +654,14 @@ function Show-CoverageReport {
           if ([int]$line.GetAttribute("hits") -gt 0) { $prefixCoveredLines++ }
         }
 
-        # Accumulate branch coverage
-        $conditions = $pkg.SelectNodes(".//condition")
-        foreach ($condition in $conditions) {
-          $prefixTotalBranches++
-          $cov = $condition.GetAttribute("coverage")
-          if ($cov -and [double]$cov -gt 0) { $prefixCoveredBranches++ }
+        # Accumulate branch coverage from lines with branch="true"
+        $branchLines = $pkg.SelectNodes(".//line[@branch='true']")
+        foreach ($branchLine in $branchLines) {
+          $condCoverage = $branchLine.GetAttribute("condition-coverage")
+          if ($condCoverage -match '\((\d+)/(\d+)\)') {
+            $prefixCoveredBranches += [int]$Matches[1]
+            $prefixTotalBranches += [int]$Matches[2]
+          }
         }
       }
     }
@@ -698,8 +701,9 @@ function Show-CoverageReport {
     }
 
     if ($isCoreLayer) {
-      $lineRate = [double]$pkg.GetAttribute("line-rate") * 100
+      $lineRateAttr = $pkg.GetAttribute("line-rate")
       $branchRateAttr = $pkg.GetAttribute("branch-rate")
+      $lineRate = if ($lineRateAttr) { [double]$lineRateAttr * 100 } else { 0 }
       $branchRate = if ($branchRateAttr) { [double]$branchRateAttr * 100 } else { 0 }
 
       Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f $name, $lineRate, $branchRate)
@@ -713,12 +717,14 @@ function Show-CoverageReport {
         if ([int]$line.GetAttribute("hits") -gt 0) { $coreCoveredLines++ }
       }
 
-      # Accumulate branch coverage
-      $conditions = $pkg.SelectNodes(".//condition")
-      foreach ($condition in $conditions) {
-        $coreTotalBranches++
-        $coverageAttr = $condition.GetAttribute("coverage")
-        if ($coverageAttr -and [double]$coverageAttr -gt 0) { $coreCoveredBranches++ }
+      # Accumulate branch coverage from lines with branch="true"
+      $branchLines = $pkg.SelectNodes(".//line[@branch='true']")
+      foreach ($branchLine in $branchLines) {
+        $condCoverage = $branchLine.GetAttribute("condition-coverage")
+        if ($condCoverage -match '\((\d+)/(\d+)\)') {
+          $coreCoveredBranches += [int]$Matches[1]
+          $coreTotalBranches += [int]$Matches[2]
+        }
       }
     }
   }
@@ -742,8 +748,9 @@ function Show-CoverageReport {
     # Exclude test projects
     if ($name -like "*.Tests*") { continue }
 
-    $lineRate = [double]$pkg.GetAttribute("line-rate") * 100
+    $lineRateAttr = $pkg.GetAttribute("line-rate")
     $branchRateAttr = $pkg.GetAttribute("branch-rate")
+    $lineRate = if ($lineRateAttr) { [double]$lineRateAttr * 100 } else { 0 }
     $branchRate = if ($branchRateAttr) { [double]$branchRateAttr * 100 } else { 0 }
 
     Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f $name, $lineRate, $branchRate)
@@ -751,8 +758,10 @@ function Show-CoverageReport {
 
   # Overall total
   $coverageNode = $coverage.SelectSingleNode("//coverage")
-  $totalLineRate = [double]$coverageNode.GetAttribute("line-rate") * 100
-  $totalBranchRate = if ($coverageNode.GetAttribute("branch-rate")) { [double]$coverageNode.GetAttribute("branch-rate") * 100 } else { 0 }
+  $totalLineRateAttr = $coverageNode.GetAttribute("line-rate")
+  $totalBranchRateAttr = $coverageNode.GetAttribute("branch-rate")
+  $totalLineRate = if ($totalLineRateAttr) { [double]$totalLineRateAttr * 100 } else { 0 }
+  $totalBranchRate = if ($totalBranchRateAttr) { [double]$totalBranchRateAttr * 100 } else { 0 }
 
   Write-Host ("-" * 72) -ForegroundColor DarkGray
   Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f "Total", $totalLineRate, $totalBranchRate) -ForegroundColor Green
