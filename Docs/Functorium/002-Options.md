@@ -31,10 +31,10 @@
 
 | 파일 | 경로 | 역할 |
 |------|------|------|
-| `OptionsUtilities.cs` | `Adapters/Options/` | Options 등록 확장 메서드 |
-| `IStartupOptionsLoggable.cs` | `Adapters/Observabilities/` | 로깅 인터페이스 |
+| `OptionsConfigurator.cs` | `Adapters/Options/` | Options 등록 확장 메서드 |
+| `IStartupOptionsLogger.cs` | `Adapters/Observabilities/Logging/` | 로깅 인터페이스 |
 | `OpenTelemetryOptions.cs` | `Adapters/Observabilities/` | 참조 구현체 |
-| `StartupLogger.cs` | `Adapters/Observabilities/Loggers/` | 시작 시 자동 로깅 |
+| `StartupLogger.cs` | `Adapters/Observabilities/Logging/` | 시작 시 자동 로깅 |
 
 <br/>
 
@@ -44,7 +44,7 @@
 
 ```csharp
 // 1. Options 클래스 정의
-public sealed class MyOptions : IStartupOptionsLoggable
+public sealed class MyOptions : IStartupOptionsLogger
 {
     public const string SectionName = "MySection";
 
@@ -63,7 +63,7 @@ services.RegisterConfigureOptions<MyOptions, MyOptions.Validator>(
 ### 주요 절차
 
 1. **Options 클래스 정의**: 속성 + `SectionName` 상수
-2. **IStartupOptionsLoggable 구현**: `LogConfiguration` 메서드
+2. **IStartupOptionsLogger 구현**: `LogConfiguration` 메서드
 3. **중첩 Validator 클래스 정의**: FluentValidation 규칙
 4. **RegisterConfigureOptions로 DI 등록**: 서비스 등록
 5. **appsettings.json에 설정 섹션 추가**: 설정 값 정의
@@ -74,7 +74,7 @@ services.RegisterConfigureOptions<MyOptions, MyOptions.Validator>(
 |------|------|
 | Options 패턴 | `IOptions<T>` 기반 강타입 설정 |
 | Validator 패턴 | FluentValidation 기반 시작 시 검증 |
-| 자동 로깅 패턴 | `IStartupOptionsLoggable` 인터페이스 구현 시 자동 로깅 |
+| 자동 로깅 패턴 | `IStartupOptionsLogger` 인터페이스 구현 시 자동 로깅 |
 
 <br/>
 
@@ -86,12 +86,12 @@ Options 클래스는 다음 요소를 포함합니다:
 
 ```csharp
 using FluentValidation;
-using Functorium.Adapters.Observabilities;
+using Functorium.Adapters.Observabilities.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace MyProject.Options;
 
-public sealed class DatabaseOptions : IStartupOptionsLoggable
+public sealed class DatabaseOptions : IStartupOptionsLogger
 {
     /// <summary>
     /// appsettings.json의 섹션 이름
@@ -122,7 +122,7 @@ public sealed class DatabaseOptions : IStartupOptionsLoggable
 - `SectionName` 상수로 appsettings.json 섹션명 정의
 - 모든 속성에 기본값 지정
 
-### IStartupOptionsLoggable 구현
+### IStartupOptionsLogger 구현
 
 애플리케이션 시작 시 설정 값을 자동으로 로깅합니다:
 
@@ -231,7 +231,7 @@ builder.Services.RegisterConfigureOptions<DatabaseOptions, DatabaseOptions.Valid
 3. appsettings.json의 지정된 섹션과 바인딩
 4. FluentValidation 연결
 5. 애플리케이션 시작 시 검증 실행 (`ValidateOnStart`)
-6. `IStartupOptionsLoggable` 구현 시 자동 등록
+6. `IStartupOptionsLogger` 구현 시 자동 등록
 
 ### 검증 흐름
 
@@ -300,27 +300,53 @@ public void LogConfiguration(ILogger logger)
 
 ### StartupLogger 통합
 
-`IStartupOptionsLoggable`을 구현하면 `StartupLogger`가 자동으로 수집하여 로깅합니다:
+`IStartupOptionsLogger`를 구현하면 `StartupLogger`가 자동으로 수집하여 로깅합니다:
 
 ```
-[INF] ══════════════════════════════════════════════════════════════════════════════
-[INF] Database Configuration
-[INF]
-[INF]   Connection
-[INF]     Host                : localhost
-[INF]     Port                : 5432
-[INF]
-[INF]   Retry
-[INF]     Count               : 3
-[INF]
-[INF] ══════════════════════════════════════════════════════════════════════════════
+================================================================================
+  Application Configuration Report
+================================================================================
+
+Environment & Runtime Information
+  Environment           : Development
+  .NET Version          : .NET 10.0.0
+  Process ID            : 12345
+  Start Time            : 2024-12-09 10:30:00
+  Working Directory     : C:\Projects\MyApp
+
+Host & System Information
+  Host Name             : DESKTOP-ABC123
+  Machine Name          : DESKTOP-ABC123
+  OS                    : Microsoft Windows 10.0.22631
+  OS Architecture       : X64
+  Process Architecture  : X64
+  Processor Cores       : 8
+
+--------------------------------------------------------------------------------
+Options Configuration Summary
+  Total Options         : 2
+
+  - OpenTelemetryOptions
+  - DatabaseOptions
+
+--------------------------------------------------------------------------------
+Database Configuration
+
+  Connection
+    Host                : localhost
+    Port                : 5432
+
+  Retry
+    Count               : 3
+
+================================================================================
 ```
 
 **동작 원리:**
 
-1. `RegisterConfigureOptions`에서 `IStartupOptionsLoggable` 구현 여부 확인
-2. 구현 시 `IStartupOptionsLoggable`로 DI 컨테이너에 등록
-3. `StartupLogger`가 `IEnumerable<IStartupOptionsLoggable>` 주입받음
+1. `RegisterConfigureOptions`에서 `IStartupOptionsLogger` 구현 여부 확인
+2. 구현 시 `IStartupOptionsLogger`로 DI 컨테이너에 등록
+3. `StartupLogger`가 `IEnumerable<IStartupOptionsLogger>` 주입받음
 4. 애플리케이션 시작 시 각 Options의 `LogConfiguration()` 자동 호출
 
 <br/>
@@ -333,12 +359,12 @@ public void LogConfiguration(ILogger logger)
 
 ```csharp
 using FluentValidation;
-using Functorium.Adapters.Observabilities;
+using Functorium.Adapters.Observabilities.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace MyProject.Options;
 
-public sealed class DatabaseOptions : IStartupOptionsLoggable
+public sealed class DatabaseOptions : IStartupOptionsLogger
 {
     public const string SectionName = "Database";
 
@@ -495,10 +521,10 @@ Microsoft.Extensions.Options.OptionsValidationException:
 
 **원인 및 해결:**
 
-1. **IStartupOptionsLoggable 미구현**
+1. **IStartupOptionsLogger 미구현**
    ```csharp
-   // IStartupOptionsLoggable 인터페이스 구현 확인
-   public sealed class MyOptions : IStartupOptionsLoggable
+   // IStartupOptionsLogger 인터페이스 구현 확인
+   public sealed class MyOptions : IStartupOptionsLogger
    {
        public void LogConfiguration(ILogger logger)
        {
@@ -682,4 +708,4 @@ if (myOptions.EnableFeatureX)
 ## 참고 문서
 
 - [OpenTelemetryOptions.cs](../../Src/Functorium/Adapters/Observabilities/OpenTelemetryOptions.cs) - 참조 구현체
-- [OptionsUtilities.cs](../../Src/Functorium/Adapters/Options/OptionsUtilities.cs) - 등록 유틸리티
+- [OptionsConfigurator.cs](../../Src/Functorium/Adapters/Options/OptionsConfigurator.cs) - 등록 유틸리티
