@@ -9,14 +9,15 @@
 - [x] Option
   - GetOptions
   - RegisterConfigureOptions
-  - IStartupOptionsLoggable
-    - StartupLogger : IHostedService
 - [x] Observability 의존성 등록
   - OpenTelemetryOptions
   - OpenTelemetryBuilder
     - LoggerOpenTelemetryBuilder
     - TraceOpenTelemetryBuilder
     - MetricOpenTelemetryBuilder
+  - Logging
+    - IStartupOptionsLogger
+    - StartupLogger : IHostedService
 - [ ] Mediator 패턴 Pipeline
 - [ ] ValueObject
 
@@ -73,9 +74,21 @@
 - [ ] 로컬 빌드 문서(dotnet 명령어)
 - [ ] 솔루션 구성: .editorconfig 폴더 단위 개별 지정
 - [ ] 솔루션 구성: Directory.Packages.props 하위 폴더 새로 시작, 버전 재정의
-- [ ] **dev: nuget 배포을 위한 프로젝트 설정**
-- [ ] **dev: publish.yml 파일로 NuGet 배포**
-- [ ] **dev: publish.yml 파일로 Release 배포**
+- OpenTelemetryOptions
+  - [x] OpenTelemetryOptions 문서
+  - [x] OpenTelemetryOptions 의존성 등록
+  - [x] 용어 정리
+    - logging 접두사
+    - logger 접미사
+  - [ ] Observability 의존성 등록과 Builder 관련 테스트
+  - [ ] Serilog Destructure 깊이, 배열, ... 제약 조건 테스트
+- NuGet 패키지
+  - [ ] NuGet 배포를 위한 프로젝트 설정
+  - [ ] 로컬 NuGet 패키지 배포 스크립트
+  - [ ] NuGet 계정
+  - [ ] publish.yml 개선
+  - [ ] Release 배포
+  - [ ] Release 노트 생성기?
 
 Item                                      | Type    | File                          | todo
 ---                                       | ---     | ---                           | ---
