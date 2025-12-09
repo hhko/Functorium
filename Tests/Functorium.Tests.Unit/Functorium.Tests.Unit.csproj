@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Src\Functorium\Functorium.csproj" />
+    <ProjectReference Include="..\..\Src\Functorium.Testing\Functorium.Testing.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,16 @@
+﻿{
+  ErrorCode: ApplicationErrors.Database.ConnectionFailedWithInner,
+  ErrorCodeId: -2146233079,
+  ErrorType: ErrorCodeExceptional,
+  ExceptionDetails: {
+    HResult: {Scrubbed},
+    InnerException: {
+      HResult: {Scrubbed},
+      Message: Connection string cannot be null (Parameter 'connectionString'),
+      Type: ArgumentNullException
+    },
+    Message: Database connection failed,
+    Type: InvalidOperationException
+  },
+  Message: Database connection failed
+}

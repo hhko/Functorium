@@ -2,6 +2,8 @@ using Functorium.Abstractions.Errors.DestructuringPolicies;
 using Serilog.Core;
 using Serilog.Events;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
+using static Functorium.Testing.Assertions.Logging.LogEventPropertyValueConverter;
+using Functorium.Testing.Assertions.Logging;
 
 namespace Functorium.Tests.Unit.AbstractionsTests.Errors;
 
@@ -9,7 +11,7 @@ namespace Functorium.Tests.Unit.AbstractionsTests.Errors;
 public class ErrorDestructuringTests
 {
     private readonly ErrorsDestructuringPolicy _sut = new();
-    private readonly TestPropertyValueFactory _factory = new();
+    private readonly SerilogTestPropertyValueFactory _factory = new();
 
     [Fact]
     public Task Destructure_ReturnsExpectedJson_WhenErrorCodeExpected()
@@ -24,7 +26,7 @@ public class ErrorDestructuringTests
         _sut.TryDestructure(error, _factory, out var actual);
 
         // Assert
-        return Verify(ToAnonymous(actual!));
+        return Verify(ToAnonymousObject(actual!));
     }
 
     [Fact]
@@ -40,7 +42,7 @@ public class ErrorDestructuringTests
         _sut.TryDestructure(error, _factory, out var actual);
 
         // Assert
-        return Verify(ToAnonymous(actual!));
+        return Verify(ToAnonymousObject(actual!));
     }
 
     [Fact]
@@ -57,7 +59,7 @@ public class ErrorDestructuringTests
         _sut.TryDestructure(error, _factory, out var actual);
 
         // Assert
-        return Verify(ToAnonymous(actual!));
+        return Verify(ToAnonymousObject(actual!));
     }
 
     [Fact]
@@ -75,7 +77,7 @@ public class ErrorDestructuringTests
         _sut.TryDestructure(error, _factory, out var actual);
 
         // Assert
-        return Verify(ToAnonymous(actual!));
+        return Verify(ToAnonymousObject(actual!));
     }
 
     [Fact]
@@ -91,7 +93,50 @@ public class ErrorDestructuringTests
         _sut.TryDestructure(error, _factory, out var actual);
 
         // Assert
-        return Verify(ToAnonymous(actual!))
+        return Verify(ToAnonymousObject(actual!))
+            .ScrubMember("HResult")
+            .ScrubMember("TargetSite")
+            .ScrubMember("StackTrace")
+            .ScrubMember("Source");
+    }
+
+    [Fact]
+    public Task Destructure_ReturnsExpectedJson_WhenErrorCodeExceptionalWithInnerException()
+    {
+        // Arrange
+        var innerException = new ArgumentNullException("connectionString", "Connection string cannot be null");
+        var exception = new InvalidOperationException("Database connection failed", innerException);
+        Error error = ErrorCodeFactory.CreateFromException(
+            errorCode: "ApplicationErrors.Database.ConnectionFailedWithInner",
+            exception: exception);
+
+        // Act
+        _sut.TryDestructure(error, _factory, out var actual);
+
+        // Assert
+        return Verify(ToAnonymousObject(actual!))
+            .ScrubMember("HResult")
+            .ScrubMember("TargetSite")
+            .ScrubMember("StackTrace")
+            .ScrubMember("Source");
+    }
+
+    [Fact]
+    public Task Destructure_ReturnsExpectedJson_WhenErrorCodeExceptionalWithNestedInnerExceptions()
+    {
+        // Arrange
+        var rootCause = new TimeoutException("Network timeout after 30 seconds");
+        var middleException = new IOException("Failed to read from socket", rootCause);
+        var outerException = new InvalidOperationException("Database query execution failed", middleException);
+        Error error = ErrorCodeFactory.CreateFromException(
+            errorCode: "ApplicationErrors.Database.QueryExecutionFailed",
+            exception: outerException);
+
+        // Act
+        _sut.TryDestructure(error, _factory, out var actual);
+
+        // Assert
+        return Verify(ToAnonymousObject(actual!))
             .ScrubMember("HResult")
             .ScrubMember("TargetSite")
             .ScrubMember("StackTrace")
@@ -113,7 +158,7 @@ public class ErrorDestructuringTests
         _sut.TryDestructure(error, _factory, out var actual);
 
         // Assert
-        return Verify(ToAnonymous(actual!));
+        return Verify(ToAnonymousObject(actual!));
     }
 
     [Fact]
@@ -130,7 +175,7 @@ public class ErrorDestructuringTests
         _sut.TryDestructure(error, _factory, out var actual);
 
         // Assert
-        return Verify(ToAnonymous(actual!));
+        return Verify(ToAnonymousObject(actual!));
     }
 
     [Fact]
@@ -147,7 +192,7 @@ public class ErrorDestructuringTests
         _sut.TryDestructure(error, _factory, out var actual);
 
         // Assert
-        return Verify(ToAnonymous(actual!));
+        return Verify(ToAnonymousObject(actual!));
     }
 
     [Fact]
@@ -166,7 +211,7 @@ public class ErrorDestructuringTests
         _sut.TryDestructure(error, _factory, out var actual);
 
         // Assert
-        return Verify(ToAnonymous(actual!));
+        return Verify(ToAnonymousObject(actual!));
     }
 
     [Fact]
@@ -194,97 +239,6 @@ public class ErrorDestructuringTests
         // Assert
         actual.ShouldBeFalse();
         result.ShouldBeNull();
-    }
-
-    private static object ToAnonymous(LogEventPropertyValue value)
-    {
-        return value switch
-        {
-            StructureValue sv => sv.Properties.ToDictionary(
-                p => p.Name,
-                p => ToAnonymous(p.Value)),
-            SequenceValue seq => seq.Elements.Select(ToAnonymous).ToArray(),
-            ScalarValue scalar => scalar.Value!,
-            _ => value.ToString()
-        };
-    }
-
-    private class TestPropertyValueFactory : ILogEventPropertyValueFactory
-    {
-        public LogEventPropertyValue CreatePropertyValue(object? value, bool destructureObjects = false)
-        {
-            return value switch
-            {
-                null => new ScalarValue(null),
-                string s => new ScalarValue(s),
-                int i => new ScalarValue(i),
-                long l => new ScalarValue(l),
-                double d => new ScalarValue(d),
-                bool b => new ScalarValue(b),
-                Exception ex => CreateExceptionValue(ex),
-                _ when IsTupleType(value.GetType()) => CreateTupleValue(value),
-                _ when destructureObjects => CreateObjectValue(value),
-                _ => new ScalarValue(value.ToString())
-            };
-        }
-
-        private static bool IsTupleType(Type type)
-        {
-            return type.IsGenericType &&
-                   type.FullName?.StartsWith("System.ValueTuple") == true;
-        }
-
-        private LogEventPropertyValue CreateTupleValue(object tuple)
-        {
-            var type = tuple.GetType();
-            var fields = type.GetFields();
-            var props = new List<LogEventProperty>();
-
-            foreach (var field in fields)
-            {
-                var fieldValue = field.GetValue(tuple);
-                props.Add(new LogEventProperty(
-                    field.Name,
-                    CreatePropertyValue(fieldValue, true)));
-            }
-
-            return new StructureValue(props, type.Name);
-        }
-
-        private LogEventPropertyValue CreateObjectValue(object obj)
-        {
-            var type = obj.GetType();
-            var properties = type.GetProperties();
-            var props = new List<LogEventProperty>();
-
-            foreach (var prop in properties)
-            {
-                var propValue = prop.GetValue(obj);
-                props.Add(new LogEventProperty(
-                    prop.Name,
-                    CreatePropertyValue(propValue, true)));
-            }
-
-            return new StructureValue(props, type.Name);
-        }
-
-        private static StructureValue CreateExceptionValue(Exception ex)
-        {
-            var props = new List<LogEventProperty>
-            {
-                new("Type", new ScalarValue(ex.GetType().Name)),
-                new("Message", new ScalarValue(ex.Message)),
-                new("HResult", new ScalarValue(ex.HResult))
-            };
-
-            if (ex.StackTrace != null)
-                props.Add(new("StackTrace", new ScalarValue(ex.StackTrace)));
-
-            if (ex.InnerException != null)
-                props.Add(new("InnerException", CreateExceptionValue(ex.InnerException)));
-
-            return new StructureValue(props, ex.GetType().Name);
-        }
     }
 }
 

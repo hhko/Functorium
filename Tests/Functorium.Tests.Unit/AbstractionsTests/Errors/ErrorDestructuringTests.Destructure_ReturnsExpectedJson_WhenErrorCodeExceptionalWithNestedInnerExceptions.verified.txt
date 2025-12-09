@@ -1,0 +1,21 @@
+﻿{
+  ErrorCode: ApplicationErrors.Database.QueryExecutionFailed,
+  ErrorCodeId: -2146233079,
+  ErrorType: ErrorCodeExceptional,
+  ExceptionDetails: {
+    HResult: {Scrubbed},
+    InnerException: {
+      HResult: {Scrubbed},
+      InnerException: {
+        HResult: {Scrubbed},
+        Message: Network timeout after 30 seconds,
+        Type: TimeoutException
+      },
+      Message: Failed to read from socket,
+      Type: IOException
+    },
+    Message: Database query execution failed,
+    Type: InvalidOperationException
+  },
+  Message: Database query execution failed
+}
