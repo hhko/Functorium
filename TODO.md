@@ -1,3 +1,26 @@
+## Feature
+- [x] Error
+  - ErrorCodeFactory
+    - ErrorCodeExpected
+    - ErrorCodeExceptional
+  - Serilog
+    - Serilog.Core.IDestructuringPolicy
+    - IErrorDestructurer
+- [x] Option
+  - GetOptions
+  - RegisterConfigureOptions
+  - IStartupOptionsLoggable
+    - StartupLogger : IHostedService
+- [x] Observability 의존성 등록
+  - OpenTelemetryOptions
+  - OpenTelemetryBuilder
+    - LoggerOpenTelemetryBuilder
+    - TraceOpenTelemetryBuilder
+    - MetricOpenTelemetryBuilder
+- [ ] Mediator 패턴 Pipeline
+- [ ] ValueObject
+
+## TODO
 - [x] claude: claude commit 명령어
 - [x] doc: 아키텍처 문서
 - [x] doc: git command guide 문서: `Git-Commands.md`
