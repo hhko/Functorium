@@ -1,22 +1,21 @@
 using System.Diagnostics;
-
 using OpenTelemetry;
 using OpenTelemetry.Trace;
 
-namespace Functorium.Adapters.Observabilities.Builders;
+namespace Functorium.Adapters.Observabilities.Builders.Configurators;
 
 /// <summary>
 /// OpenTelemetry Traces 확장 설정을 위한 Builder 클래스
 /// ActivitySource, Processor 등 프로젝트별 Traces 확장 포인트 제공
 /// </summary>
-public class TracesConfigurationBuilder
+public class TracingConfigurator
 {
     private readonly List<string> _sourceNames = new();
     private readonly List<BaseProcessor<Activity>> _processors = new();
     private readonly List<Action<TracerProviderBuilder>> _additionalConfigurations = new();
     private readonly OpenTelemetryOptions _options;
 
-    internal TracesConfigurationBuilder(OpenTelemetryOptions options)
+    internal TracingConfigurator(OpenTelemetryOptions options)
     {
         _options = options;
     }
@@ -30,7 +29,7 @@ public class TracesConfigurationBuilder
     /// 추가 ActivitySource를 이름으로 등록
     /// </summary>
     /// <param name="sourceName">등록할 ActivitySource 이름 (와일드카드 지원: "MyApp.*")</param>
-    public TracesConfigurationBuilder AddSource(string sourceName)
+    public TracingConfigurator AddSource(string sourceName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceName);
         _sourceNames.Add(sourceName);
@@ -41,7 +40,7 @@ public class TracesConfigurationBuilder
     /// 추가 Processor 등록
     /// </summary>
     /// <param name="processor">등록할 Processor 인스턴스</param>
-    public TracesConfigurationBuilder AddProcessor(BaseProcessor<Activity> processor)
+    public TracingConfigurator AddProcessor(BaseProcessor<Activity> processor)
     {
         ArgumentNullException.ThrowIfNull(processor);
         _processors.Add(processor);
@@ -52,7 +51,7 @@ public class TracesConfigurationBuilder
     /// TracerProviderBuilder에 직접 접근하여 추가 설정 수행
     /// </summary>
     /// <param name="configure">TracerProviderBuilder를 수정하는 액션</param>
-    public TracesConfigurationBuilder Configure(Action<TracerProviderBuilder> configure)
+    public TracingConfigurator Configure(Action<TracerProviderBuilder> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
         _additionalConfigurations.Add(configure);

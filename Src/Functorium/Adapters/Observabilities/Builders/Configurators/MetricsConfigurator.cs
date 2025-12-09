@@ -1,20 +1,19 @@
-using Functorium.Adapters.Observabilities;
 using OpenTelemetry.Metrics;
 
-namespace Functorium.Adapters.Observabilities.Builders;
+namespace Functorium.Adapters.Observabilities.Builders.Configurators;
 
 /// <summary>
 /// OpenTelemetry Metrics 확장 설정을 위한 Builder 클래스
 /// Meter, Instrumentation 등 프로젝트별 Metrics 확장 포인트 제공
 /// </summary>
-public class MetricsConfigurationBuilder
+public class MetricsConfigurator
 {
     private readonly List<string> _meterNames = new();
     private readonly List<Action<MeterProviderBuilder>> _instrumentations = new();
     private readonly List<Action<MeterProviderBuilder>> _additionalConfigurations = new();
     private readonly OpenTelemetryOptions _options;
 
-    internal MetricsConfigurationBuilder(OpenTelemetryOptions options)
+    internal MetricsConfigurator(OpenTelemetryOptions options)
     {
         _options = options;
     }
@@ -28,7 +27,7 @@ public class MetricsConfigurationBuilder
     /// 추가 Meter를 이름으로 등록
     /// </summary>
     /// <param name="meterName">등록할 Meter 이름 (와일드카드 지원: "MyApp.*")</param>
-    public MetricsConfigurationBuilder AddMeter(string meterName)
+    public MetricsConfigurator AddMeter(string meterName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(meterName);
         _meterNames.Add(meterName);
@@ -39,7 +38,7 @@ public class MetricsConfigurationBuilder
     /// 추가 Instrumentation 등록
     /// </summary>
     /// <param name="configure">MeterProviderBuilder에 Instrumentation을 추가하는 액션</param>
-    public MetricsConfigurationBuilder AddInstrumentation(Action<MeterProviderBuilder> configure)
+    public MetricsConfigurator AddInstrumentation(Action<MeterProviderBuilder> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
         _instrumentations.Add(configure);
@@ -50,7 +49,7 @@ public class MetricsConfigurationBuilder
     /// MeterProviderBuilder에 직접 접근하여 추가 설정 수행
     /// </summary>
     /// <param name="configure">MeterProviderBuilder를 수정하는 액션</param>
-    public MetricsConfigurationBuilder Configure(Action<MeterProviderBuilder> configure)
+    public MetricsConfigurator Configure(Action<MeterProviderBuilder> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
         _additionalConfigurations.Add(configure);

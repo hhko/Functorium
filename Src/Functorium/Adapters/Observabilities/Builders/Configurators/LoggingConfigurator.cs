@@ -1,21 +1,20 @@
-using Functorium.Adapters.Observabilities;
 using Serilog;
 using Serilog.Core;
 
-namespace Functorium.Adapters.Observabilities.Builders;
+namespace Functorium.Adapters.Observabilities.Builders.Configurators;
 
 /// <summary>
 /// Serilog 확장 설정을 위한 Builder 클래스
 /// Enricher, DestructuringPolicy 등 프로젝트별 Serilog 확장 포인트 제공
 /// </summary>
-public class LoggerConfigurationBuilder
+public class LoggingConfigurator
 {
     private readonly List<ILogEventEnricher> _enrichers = new();
     private readonly List<IDestructuringPolicy> _destructuringPolicies = new();
     private readonly List<Action<LoggerConfiguration>> _additionalConfigurations = new();
     private readonly OpenTelemetryOptions _options;
 
-    internal LoggerConfigurationBuilder(OpenTelemetryOptions options)
+    internal LoggingConfigurator(OpenTelemetryOptions options)
     {
         _options = options;
     }
@@ -29,7 +28,7 @@ public class LoggerConfigurationBuilder
     /// DestructuringPolicy를 타입으로 등록
     /// </summary>
     /// <typeparam name="TPolicy">IDestructuringPolicy 구현 타입</typeparam>
-    public LoggerConfigurationBuilder AddDestructuringPolicy<TPolicy>()
+    public LoggingConfigurator AddDestructuringPolicy<TPolicy>()
         where TPolicy : IDestructuringPolicy, new()
     {
         _destructuringPolicies.Add(new TPolicy());
@@ -40,7 +39,7 @@ public class LoggerConfigurationBuilder
     /// Enricher 인스턴스를 직접 등록
     /// </summary>
     /// <param name="enricher">등록할 Enricher 인스턴스</param>
-    public LoggerConfigurationBuilder AddEnricher(ILogEventEnricher enricher)
+    public LoggingConfigurator AddEnricher(ILogEventEnricher enricher)
     {
         ArgumentNullException.ThrowIfNull(enricher);
         _enrichers.Add(enricher);
@@ -51,7 +50,7 @@ public class LoggerConfigurationBuilder
     /// Enricher를 타입으로 등록
     /// </summary>
     /// <typeparam name="TEnricher">ILogEventEnricher 구현 타입</typeparam>
-    public LoggerConfigurationBuilder AddEnricher<TEnricher>()
+    public LoggingConfigurator AddEnricher<TEnricher>()
         where TEnricher : ILogEventEnricher, new()
     {
         _enrichers.Add(new TEnricher());
@@ -62,7 +61,7 @@ public class LoggerConfigurationBuilder
     /// LoggerConfiguration에 직접 접근하여 추가 설정 수행
     /// </summary>
     /// <param name="configure">LoggerConfiguration을 수정하는 액션</param>
-    public LoggerConfigurationBuilder Configure(Action<LoggerConfiguration> configure)
+    public LoggingConfigurator Configure(Action<LoggerConfiguration> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
         _additionalConfigurations.Add(configure);

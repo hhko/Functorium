@@ -1,12 +1,10 @@
 using System.Diagnostics;
 using System.Net;
 using System.Runtime.InteropServices;
-using Functorium.Adapters.Observabilities;
-using Functorium.Adapters.Options;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Functorium.Adapters.Observabilities.Loggers;
+namespace Functorium.Adapters.Observabilities.Logging;
 
 /// <summary>
 /// 애플리케이션 시작 시 설정 정보를 로그로 출력하는 IHostedService
@@ -14,7 +12,7 @@ namespace Functorium.Adapters.Observabilities.Loggers;
 /// </summary>
 public class StartupLogger : IHostedService
 {
-    private const int LineWidth = 80;
+    //private const int LineWidth = 80;
     private const int LabelWidth = 22;
     private const string Separator = "================================================================================";
     private const string SectionSeparator = "--------------------------------------------------------------------------------";
@@ -22,17 +20,21 @@ public class StartupLogger : IHostedService
     private readonly ILogger<StartupLogger> _logger;
     private readonly IHostEnvironment _environment;
     private readonly Action<ILogger>? _additionalLogger;
-    private readonly IEnumerable<IStartupOptionsLoggable> _loggableOptions;
+    private readonly IEnumerable<IStartupOptionsLogger> _optionsLoggers;
 
     public StartupLogger(
         ILogger<StartupLogger> logger,
         IHostEnvironment environment,
-        IEnumerable<IStartupOptionsLoggable> loggableOptions,
+        IEnumerable<IStartupOptionsLogger> optionsLoggers,
         Action<ILogger>? additionalLogger = null)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _environment = environment ?? throw new ArgumentNullException(nameof(environment));
-        _loggableOptions = loggableOptions ?? throw new ArgumentNullException(nameof(loggableOptions));
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(environment);
+        ArgumentNullException.ThrowIfNull(optionsLoggers);
+
+        _logger = logger;
+        _environment = environment;
+        _optionsLoggers = optionsLoggers;
         _additionalLogger = additionalLogger;
     }
 
@@ -60,8 +62,8 @@ public class StartupLogger : IHostedService
             _logger.LogInformation("");
         }
 
-        // DI에 등록된 모든 IStartupLoggable Options 자동 출력
-        LogStartupLoggableOptions();
+        // DI에 등록된 모든 IStartupOptionsLogger Options 자동 출력
+        LogStartupOptions();
 
         LogSeparator();
 
@@ -100,12 +102,12 @@ public class StartupLogger : IHostedService
     }
 
     /// <summary>
-    /// DI에 등록된 모든 IStartupLoggable을 자동으로 출력합니다.
-    /// OptionsUtilities.AddConfigureOptions를 통해 등록된 Options는 자동으로 IStartupLoggable로 등록됩니다.
+    /// DI에 등록된 모든 IStartupOptionsLogger를 자동으로 출력합니다.
+    /// OptionsConfigurator.RegisterConfigureOptions를 통해 등록된 Options는 자동으로 IStartupOptionsLogger로 등록됩니다.
     /// </summary>
-    private void LogStartupLoggableOptions()
+    private void LogStartupOptions()
     {
-        var options = _loggableOptions.ToList();
+        var options = _optionsLoggers.ToList();
 
         if (options.Count == 0)
             return;
