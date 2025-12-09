@@ -67,6 +67,11 @@ $ErrorActionPreference = "Stop"
 # Set console encoding to UTF-8 for proper Korean character display
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
+# Load common modules
+$scriptRoot = $PSScriptRoot
+. "$scriptRoot/.scripts/Write-Console.ps1"
+. "$scriptRoot/.scripts/Install-DotNetTool.ps1"
+
 #region Constants
 
 $script:TOTAL_STEPS = 7
@@ -163,61 +168,6 @@ EXAMPLES
   Write-Host $help
 }
 
-<#
-.SYNOPSIS
-  단계별 진행 상황을 출력합니다.
-#>
-function Write-StepProgress {
-  param(
-    [Parameter(Mandatory = $true)]
-    [int]$Step,
-
-    [Parameter(Mandatory = $true)]
-    [string]$Message
-  )
-
-  Write-Host "[$Step/$script:TOTAL_STEPS] $Message" -ForegroundColor Gray
-}
-
-<#
-.SYNOPSIS
-  상세 정보를 출력합니다.
-#>
-function Write-Detail {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$Message
-  )
-
-  Write-Host "      $Message" -ForegroundColor DarkGray
-}
-
-<#
-.SYNOPSIS
-  성공 메시지를 출력합니다.
-#>
-function Write-Success {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$Message
-  )
-
-  Write-Host "      $Message" -ForegroundColor Green
-}
-
-<#
-.SYNOPSIS
-  경고 메시지를 출력합니다.
-#>
-function Write-Warning {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$Message
-  )
-
-  Write-Host "      $Message" -ForegroundColor Yellow
-}
-
 #endregion
 
 #region Step 1: Find-SolutionFile
@@ -238,7 +188,7 @@ function Find-SolutionFile {
     [string]$SolutionPath
   )
 
-  Write-StepProgress -Step 1 -Message "Finding solution file..."
+  Write-StepProgress -Step 1 -TotalSteps $script:TOTAL_STEPS -Message "Finding solution file..."
 
   # If solution path is specified, validate and return
   if ($SolutionPath) {
@@ -265,14 +215,14 @@ function Find-SolutionFile {
 
   if ($slnFiles.Count -eq 0) {
     Write-Host "      No solution file (.sln or .slnx) found" -ForegroundColor Red
-    Write-Warning "Use -Solution parameter to specify the path"
+    Write-WarningMessage "Use -Solution parameter to specify the path"
     return $null
   }
 
   if ($slnFiles.Count -gt 1) {
     Write-Host "      Found $($slnFiles.Count) solution files:" -ForegroundColor Red
-    $slnFiles | ForEach-Object { Write-Warning "- $($_.Name)" }
-    Write-Warning "Use -Solution parameter to specify which one to use"
+    $slnFiles | ForEach-Object { Write-WarningMessage "- $($_.Name)" }
+    Write-WarningMessage "Use -Solution parameter to specify which one to use"
     return $null
   }
 
@@ -294,7 +244,7 @@ function Invoke-Build {
     [string]$SolutionPath
   )
 
-  Write-StepProgress -Step 2 -Message "Building solution ($script:Configuration)..."
+  Write-StepProgress -Step 2 -TotalSteps $script:TOTAL_STEPS -Message "Building solution ($script:Configuration)..."
 
   Write-Host ""
   dotnet build $SolutionPath `
@@ -321,7 +271,7 @@ function Show-VersionInfo {
     [string]$SolutionPath
   )
 
-  Write-StepProgress -Step 3 -Message "Reading version information..."
+  Write-StepProgress -Step 3 -TotalSteps $script:TOTAL_STEPS -Message "Reading version information..."
 
   # Get solution directory
   $solutionDir = Split-Path -Parent $SolutionPath
@@ -355,7 +305,7 @@ function Show-VersionInfo {
     })
 
   if ($projectFiles.Count -eq 0) {
-    Write-Warning "No project files found in $srcDir"
+    Write-WarningMessage "No project files found in $srcDir"
     return
   }
 
@@ -363,7 +313,7 @@ function Show-VersionInfo {
   $mainProjects = @($projectFiles | Where-Object { $_.Name -notlike "*Tests*" })
 
   if ($mainProjects.Count -eq 0) {
-    Write-Warning "No main projects found"
+    Write-WarningMessage "No main projects found"
     return
   }
 
@@ -434,7 +384,7 @@ function Invoke-TestWithCoverage {
     [string]$SolutionPath
   )
 
-  Write-StepProgress -Step 4 -Message "Running tests with coverage..."
+  Write-StepProgress -Step 4 -TotalSteps $script:TOTAL_STEPS -Message "Running tests with coverage..."
 
   # Remove existing coverage report
   if (Test-Path $script:CoverageReportDir) {
@@ -471,7 +421,7 @@ function Invoke-TestWithCoverage {
   여러 커버리지 파일을 병합합니다.
 #>
 function Merge-CoverageReports {
-  Write-StepProgress -Step 5 -Message "Merging coverage reports..."
+  Write-StepProgress -Step 5 -TotalSteps $script:TOTAL_STEPS -Message "Merging coverage reports..."
 
   # Find coverage files from each test project's TestResults directory
   $coverageFiles = @(Get-ChildItem -Path $script:SolutionDir -Filter "coverage.cobertura.xml" -Recurse -ErrorAction SilentlyContinue)
@@ -500,52 +450,6 @@ function Merge-CoverageReports {
 
 <#
 .SYNOPSIS
-  ReportGenerator 도구를 설치하거나 업데이트합니다.
-#>
-function Install-ReportGenerator {
-  $requiredVersion = [version]$script:ReportGeneratorVersion
-
-  # Check if ReportGenerator is installed
-  $toolList = dotnet tool list -g 2>$null | Where-Object { $_ -match "dotnet-reportgenerator-globaltool" }
-
-  if ($toolList) {
-    # Extract installed version
-    $installedVersionStr = ($toolList -split '\s+')[1]
-    $installedVersion = [version]$installedVersionStr
-
-    Write-Detail "ReportGenerator installed: v$installedVersionStr"
-
-    if ($installedVersion -lt $requiredVersion) {
-      Write-Detail "Updating to v$script:ReportGeneratorVersion..."
-      dotnet tool update -g dotnet-reportgenerator-globaltool --version $script:ReportGeneratorVersion 2>$null
-
-      if ($LASTEXITCODE -eq 0) {
-        Write-Success "Updated to v$script:ReportGeneratorVersion"
-      }
-      else {
-        Write-Warning "Failed to update ReportGenerator"
-      }
-    }
-  }
-  else {
-    # Install ReportGenerator
-    Write-Detail "Installing ReportGenerator v$script:ReportGeneratorVersion..."
-    dotnet tool install -g dotnet-reportgenerator-globaltool --version $script:ReportGeneratorVersion 2>$null
-
-    if ($LASTEXITCODE -eq 0) {
-      Write-Success "Installed v$script:ReportGeneratorVersion"
-
-      # Refresh PATH
-      $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "User") + ";" + $env:PATH
-    }
-    else {
-      throw "Failed to install ReportGenerator"
-    }
-  }
-}
-
-<#
-.SYNOPSIS
   ReportGenerator를 사용하여 HTML 리포트를 생성합니다.
 #>
 function New-HtmlReport {
@@ -554,10 +458,10 @@ function New-HtmlReport {
     [string]$CoverageFiles
   )
 
-  Write-StepProgress -Step 6 -Message "Generating HTML report..."
+  Write-StepProgress -Step 6 -TotalSteps $script:TOTAL_STEPS -Message "Generating HTML report..."
 
-  # Install or update ReportGenerator
-  Install-ReportGenerator
+  # Install or update ReportGenerator (from Install-DotNetTool.ps1 module)
+  Install-ReportGenerator -RequiredVersion $script:ReportGeneratorVersion
 
   # Generate HTML report
   reportgenerator `
@@ -592,7 +496,7 @@ function Show-CoverageReport {
     [string]$Prefix
   )
 
-  Write-StepProgress -Step 7 -Message "Displaying coverage results..."
+  Write-StepProgress -Step 7 -TotalSteps $script:TOTAL_STEPS -Message "Displaying coverage results..."
 
   # Merged cobertura file path
   $mergedCoverageFile = Join-Path $script:CoverageReportDir "Cobertura.xml"
@@ -616,7 +520,7 @@ function Show-CoverageReport {
   $packages = @($coverage.SelectNodes("//packages/package"))
 
   if ($packages.Count -eq 0) {
-    Write-Warning "No coverage data available"
+    Write-WarningMessage "No coverage data available"
     return
   }
 
@@ -673,7 +577,7 @@ function Show-CoverageReport {
       Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f "Total", $prefixLineRate, $prefixBranchRate) -ForegroundColor Green
     }
     elseif ($prefixPackages.Count -eq 0) {
-      Write-Warning "No matching projects found"
+      Write-WarningMessage "No matching projects found"
     }
   }
 
@@ -831,7 +735,7 @@ function Main {
   # 5. Merge coverage reports
   $coverageFiles = Merge-CoverageReports
   if (-not $coverageFiles) {
-    Write-Warning "No coverage files found. Cannot generate report."
+    Write-WarningMessage "No coverage files found. Cannot generate report."
     return $true
   }
 

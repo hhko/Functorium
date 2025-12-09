@@ -76,6 +76,13 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# Set console encoding to UTF-8 for proper Korean character display
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+# Load common modules
+$scriptRoot = $PSScriptRoot
+. "$scriptRoot/.scripts/Write-Console.ps1"
+
 #region Constants
 
 $script:COMMIT_TYPES = @{

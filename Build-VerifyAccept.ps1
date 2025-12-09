@@ -1,51 +1,171 @@
+#!/usr/bin/env pwsh
+#Requires -Version 7.0
+
+<#
+.SYNOPSIS
+  Verify.Xunit 스냅샷 테스트 결과를 승인합니다.
+
+.DESCRIPTION
+  - VerifyTool을 설치 또는 업데이트합니다.
+  - 모든 pending 스냅샷을 자동으로 승인합니다.
+
+.PARAMETER Help
+  도움말을 표시합니다.
+
+.EXAMPLE
+  ./Build-VerifyAccept.ps1
+  모든 pending 스냅샷을 승인합니다.
+
+.EXAMPLE
+  ./Build-VerifyAccept.ps1 -Help
+  도움말을 표시합니다.
+
+.NOTES
+  Version: 1.0.0
+  Requirements: PowerShell 7+, .NET SDK
+  License: MIT
+#>
+
+[CmdletBinding()]
+param(
+  [Parameter(Mandatory = $false, HelpMessage = "도움말 표시")]
+  [Alias("h", "?")]
+  [switch]$Help
+)
+
+# Strict mode settings
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+# Set console encoding to UTF-8 for proper Korean character display
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+# Load common modules
+$scriptRoot = $PSScriptRoot
+. "$scriptRoot/.scripts/Write-Console.ps1"
+. "$scriptRoot/.scripts/Install-DotNetTool.ps1"
+
+#region Constants
+
+$script:TOTAL_STEPS = 2
 $script:VerifyToolVersion = "0.7.0"
+
+#endregion
+
+#region Helper Functions
+
+<#
+.SYNOPSIS
+  도움말을 표시합니다.
+#>
+function Show-Help {
+  $help = @"
+
+================================================================================
+ Verify.Xunit Snapshot Accept Script
+================================================================================
+
+DESCRIPTION
+  Accept all pending Verify.Xunit snapshots.
+
+USAGE
+  ./Build-VerifyAccept.ps1 [options]
+
+OPTIONS
+  -Help, -h, -?      Show this help message
+
+FEATURES
+  1. Install or update VerifyTool (dotnet global tool)
+  2. Accept all pending snapshots with 'dotnet verify accept -y'
+
+PREREQUISITES
+  - .NET SDK
+  - VerifyTool v$script:VerifyToolVersion (auto-installed/updated if needed)
+
+EXAMPLES
+  # Accept all pending snapshots
+  ./Build-VerifyAccept.ps1
+
+  # Show help
+  ./Build-VerifyAccept.ps1 -Help
+
+================================================================================
+"@
+  Write-Host $help
+}
+
+#endregion
+
+#region Step 1: Install-VerifyToolStep
 
 <#
 .SYNOPSIS
   VerifyTool 도구를 설치하거나 업데이트합니다.
 #>
-function Install-VerifyTool {
-  $requiredVersion = [version]$script:VerifyToolVersion
+function Install-VerifyToolStep {
+  Write-StepProgress -Step 1 -TotalSteps $script:TOTAL_STEPS -Message "Checking VerifyTool..."
 
-  # Check if VerifyTool is installed
-  $toolList = dotnet tool list -g 2>$null | Where-Object { $_ -match "verify.tool" }
+  # Use common module function
+  Install-VerifyTool -RequiredVersion $script:VerifyToolVersion | Out-Null
+}
 
-  if ($toolList) {
-    # Extract installed version
-    $installedVersionStr = ($toolList -split '\s+')[1]
-    $installedVersion = [version]$installedVersionStr
+#endregion
 
-    Write-Detail "VerifyTool installed: v$installedVersionStr"
+#region Step 2: Invoke-VerifyAccept
 
-    if ($installedVersion -lt $requiredVersion) {
-      Write-Detail "Updating to v$script:VerifyToolVersion..."
-      dotnet tool update -g verify.tool --version $script:VerifyToolVersion 2>$null
+<#
+.SYNOPSIS
+  모든 pending 스냅샷을 승인합니다.
+#>
+function Invoke-VerifyAccept {
+  Write-StepProgress -Step 2 -TotalSteps $script:TOTAL_STEPS -Message "Accepting pending snapshots..."
 
-      if ($LASTEXITCODE -eq 0) {
-        Write-Success "Updated to v$script:VerifyToolVersion"
-      }
-      else {
-        Write-Warning "Failed to update VerifyTool"
-      }
-    }
+  dotnet verify accept -y
+
+  if ($LASTEXITCODE -eq 0) {
+    Write-Success "Snapshots accepted"
   }
   else {
-    # Install VerifyTool
-    Write-Detail "Installing VerifyTool v$script:VerifyToolVersion..."
-    dotnet tool install -g verify.tool --version $script:VerifyToolVersion 2>$null
-
-    if ($LASTEXITCODE -eq 0) {
-      Write-Success "Installed v$script:VerifyToolVersion"
-
-      # Refresh PATH
-      $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "User") + ";" + $env:PATH
-    }
-    else {
-      throw "Failed to install VerifyTool"
-    }
+    Write-Detail "No pending snapshots or accept failed"
   }
 }
 
-Install-VerifyTool
+#endregion
 
-dotnet verify accept -y
+#region Main
+
+<#
+.SYNOPSIS
+  메인 실행 함수입니다.
+#>
+function Main {
+  Write-StartMessage -Title "Verify Accept..."
+
+  # Step 1: Install or update VerifyTool
+  Install-VerifyToolStep
+
+  # Step 2: Accept pending snapshots
+  Invoke-VerifyAccept
+
+  Write-DoneMessage -Title "Verify accept completed"
+}
+
+#endregion
+
+#region Entry Point
+
+if ($Help) {
+  Show-Help
+  exit 0
+}
+
+try {
+  Main
+  exit 0
+}
+catch {
+  Write-ErrorMessage -ErrorRecord $_
+  exit 1
+}
+
+#endregion
