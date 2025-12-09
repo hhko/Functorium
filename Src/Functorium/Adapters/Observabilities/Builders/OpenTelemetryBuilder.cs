@@ -22,15 +22,18 @@ namespace Functorium.Adapters.Observabilities.Builders;
 /// </summary>
 public partial class OpenTelemetryBuilder
 {
+    // Aspire Dashboard OTLP 포트 (HTTP 트레이스 필터링용)
+    private const int AspireDashboardOtlpPort = 18889;
+    private const int AspireDashboardOtlpSecondaryPort = 18890;
+
     private readonly IServiceCollection _services;
     private readonly IConfiguration _configuration;
     private readonly OpenTelemetryOptions _options;
-    //private readonly (int maxDepth, int maxStringLength, int maxCollectionCount) _destructureSettings;
     private readonly string _frameworkNamespaceRoot;
 
-    private Action<ConfigurationBuilderLogger>? _serilogConfigurator;
-    private Action<ConfigurationBuilderMetric>? _metricsConfigurator;
-    private Action<ConfigurationBuilderTrace>? _tracesConfigurator;
+    private Action<LoggerConfigurationBuilder>? _serilogConfigurator;
+    private Action<MetricsConfigurationBuilder>? _metricsConfigurator;
+    private Action<TracesConfigurationBuilder>? _tracesConfigurator;
     private Action<Microsoft.Extensions.Logging.ILogger>? _startupLoggerConfigurator;
 
     internal OpenTelemetryBuilder(
@@ -38,30 +41,18 @@ public partial class OpenTelemetryBuilder
             IConfiguration configuration,
             OpenTelemetryOptions options)
     {
-        _services = services ?? throw new ArgumentNullException(nameof(services));
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-        //_destructureSettings = destructureSettings;
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentNullException.ThrowIfNull(options);
+
+        _services = services;
+        _configuration = configuration;
+        _options = options;
 
         // 네임스페이스 루트 이름 동적 추출
         // 예: "Framework.Adapters.Observabilities.Abstractions.Registrations" → "Framework"
         _frameworkNamespaceRoot = ExtractNamespaceRoot(typeof(OpenTelemetryBuilder).Namespace);
     }
-    //internal OpenTelemetryBuilder(
-    //    IServiceCollection services,
-    //    IConfiguration configuration,
-    //    OpenTelemetryOptions options,
-    //    (int maxDepth, int maxStringLength, int maxCollectionCount) destructureSettings)
-    //{
-    //    _services = services ?? throw new ArgumentNullException(nameof(services));
-    //    _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-    //    _options = options ?? throw new ArgumentNullException(nameof(options));
-    //    _destructureSettings = destructureSettings;
-
-    //    // 네임스페이스 루트 이름 동적 추출
-    //    // 예: "Framework.Adapters.Observabilities.Abstractions.Registrations" → "Framework"
-    //    _frameworkNamespaceRoot = ExtractNamespaceRoot(typeof(OpenTelemetryBuilder).Namespace);
-    //}
 
     /// <summary>
     /// 네임스페이스에서 루트 이름을 추출합니다.
@@ -82,10 +73,11 @@ public partial class OpenTelemetryBuilder
     /// <summary>
     /// Serilog 확장 설정
     /// </summary>
-    /// <param name="configure">ConfigurationBuilderLogger를 사용한 설정 액션</param>
-    public OpenTelemetryBuilder ConfigureSerilog(Action<ConfigurationBuilderLogger> configure)
+    /// <param name="configure">LoggerConfigurationBuilder를 사용한 설정 액션</param>
+    public OpenTelemetryBuilder ConfigureSerilog(Action<LoggerConfigurationBuilder> configure)
     {
-        _serilogConfigurator = configure ?? throw new ArgumentNullException(nameof(configure));
+        ArgumentNullException.ThrowIfNull(configure);
+        _serilogConfigurator = configure;
         return this;
     }
 
@@ -93,9 +85,10 @@ public partial class OpenTelemetryBuilder
     /// OpenTelemetry Metrics 확장 설정
     /// </summary>
     /// <param name="configure">MetricsConfigurationBuilder를 사용한 설정 액션</param>
-    public OpenTelemetryBuilder ConfigureMetrics(Action<ConfigurationBuilderMetric> configure)
+    public OpenTelemetryBuilder ConfigureMetrics(Action<MetricsConfigurationBuilder> configure)
     {
-        _metricsConfigurator = configure ?? throw new ArgumentNullException(nameof(configure));
+        ArgumentNullException.ThrowIfNull(configure);
+        _metricsConfigurator = configure;
         return this;
     }
 
@@ -103,9 +96,10 @@ public partial class OpenTelemetryBuilder
     /// OpenTelemetry Traces 확장 설정
     /// </summary>
     /// <param name="configure">TracesConfigurationBuilder를 사용한 설정 액션</param>
-    public OpenTelemetryBuilder ConfigureTraces(Action<ConfigurationBuilderTrace> configure)
+    public OpenTelemetryBuilder ConfigureTraces(Action<TracesConfigurationBuilder> configure)
     {
-        _tracesConfigurator = configure ?? throw new ArgumentNullException(nameof(configure));
+        ArgumentNullException.ThrowIfNull(configure);
+        _tracesConfigurator = configure;
         return this;
     }
 
@@ -131,14 +125,10 @@ public partial class OpenTelemetryBuilder
     /// </example>
     public OpenTelemetryBuilder ConfigureStartupLogger(Action<Microsoft.Extensions.Logging.ILogger> configure)
     {
-        _startupLoggerConfigurator = configure ?? throw new ArgumentNullException(nameof(configure));
+        ArgumentNullException.ThrowIfNull(configure);
+        _startupLoggerConfigurator = configure;
         return this;
     }
-
-    ///// <summary>
-    ///// Destructure 설정값 접근
-    ///// </summary>
-    //public (int maxDepth, int maxStringLength, int maxCollectionCount) DestructureSettings => _destructureSettings;
 
     /// <summary>
     /// OpenTelemetryOptions 접근
@@ -152,13 +142,12 @@ public partial class OpenTelemetryBuilder
     {
         // Resource Attributes 공통 정의
         Dictionary<string, object> resourceAttributes = CreateResourceAttributes(_options);
-        Dictionary<string, object> commonResourceAttributes = CreateCommonResourceAttributes(_options);
 
         // Serilog 설정 적용
         ConfigureSerilogInternal(resourceAttributes);
 
         // OpenTelemetry 설정 적용
-        ConfigureOpenTelemetryInternal(commonResourceAttributes);
+        ConfigureOpenTelemetryInternal(resourceAttributes);
 
         // OpenTelemetry 설정 정보 로거 등록 (IHostedService)
         // 애플리케이션 시작 시 자동으로 설정 정보를 로그로 출력
@@ -214,25 +203,17 @@ public partial class OpenTelemetryBuilder
                 // - ErrorsDestructuringPolicy: Error 로그 구조화
                 configure.Destructure.With<ErrorsDestructuringPolicy>();
 
-                //// - FlattenResponseEnricher: Response/Request 객체 평탄화 (OpenTelemetry flat key-value 구조)
-                //(int maxDepth, int maxStringLength, int maxCollectionCount) = _destructureSettings;
-                //configure.Enrich.With(new FlattenResponseEnricher(maxDepth, maxStringLength, maxCollectionCount));
-
                 // 프로젝트별 추가 확장 설정 적용
                 if (_serilogConfigurator != null)
                 {
-                    //ConfigurationBuilderLogger serilogBuilder = new(_destructureSettings, _options);
-                    //_serilogConfigurator(serilogBuilder);
-                    //serilogBuilder.Apply(configure);
-
-                    ConfigurationBuilderLogger serilogBuilder = new(_options);
+                    LoggerConfigurationBuilder serilogBuilder = new(_options);
                     _serilogConfigurator(serilogBuilder);
                     serilogBuilder.Apply(configure);
                 }
             });
     }
 
-    private void ConfigureOpenTelemetryInternal(Dictionary<string, object> commonResourceAttributes)
+    private void ConfigureOpenTelemetryInternal(Dictionary<string, object> resourceAttributes)
     {
         _services
             .AddOpenTelemetry()
@@ -241,7 +222,7 @@ public partial class OpenTelemetryBuilder
                 resource.AddService(
                     serviceName: _options.ServiceName,
                     serviceVersion: _options.ServiceVersion);
-                resource.AddAttributes(commonResourceAttributes);
+                resource.AddAttributes(resourceAttributes);
             })
             .WithMetrics(metrics =>
             {
@@ -275,7 +256,7 @@ public partial class OpenTelemetryBuilder
                 // 프로젝트별 확장 설정 적용
                 if (_metricsConfigurator != null)
                 {
-                    ConfigurationBuilderMetric metricsBuilder = new(_options);
+                    MetricsConfigurationBuilder metricsBuilder = new(_options);
                     _metricsConfigurator(metricsBuilder);
                     metricsBuilder.Apply(metrics);
                 }
@@ -294,7 +275,7 @@ public partial class OpenTelemetryBuilder
                             return true;
 
                         bool isOtlpEndpoint = (uri.Host == "127.0.0.1" || uri.Host == "localhost") &&
-                                             (uri.Port == 18889 || uri.Port == 18890);
+                                             (uri.Port == AspireDashboardOtlpPort || uri.Port == AspireDashboardOtlpSecondaryPort);
 
                         return !isOtlpEndpoint;
                     };
@@ -324,7 +305,7 @@ public partial class OpenTelemetryBuilder
                 // 프로젝트별 확장 설정 적용
                 if (_tracesConfigurator != null)
                 {
-                    ConfigurationBuilderTrace tracesBuilder = new(_options);
+                    TracesConfigurationBuilder tracesBuilder = new(_options);
                     _tracesConfigurator(tracesBuilder);
                     tracesBuilder.Apply(trace);
                 }
