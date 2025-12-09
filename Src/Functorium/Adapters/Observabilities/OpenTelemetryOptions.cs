@@ -1,12 +1,13 @@
 using System.Reflection;
 using Ardalis.SmartEnum;
 using FluentValidation;
+using Functorium.Adapters.Observabilities.Logging;
 using Microsoft.Extensions.Logging;
 
 namespace Functorium.Adapters.Observabilities;
 
 public sealed class OpenTelemetryOptions
-    : IStartupOptionsLoggable
+    : IStartupOptionsLogger
     , IOpenTelemetryOptions
 {
     public const string SectionName = "OpenTelemetry";
@@ -38,11 +39,11 @@ public sealed class OpenTelemetryOptions
     public string CollectorProtocol { get; set; } = OtlpCollectorProtocol.Grpc.Name;
 
     /// <summary>
-    /// Trace 전용 OTLP 엔드포인트 (선택적)
+    /// Tracing 전용 OTLP 엔드포인트 (선택적)
     /// 설정 시 OtlpCollectorHost 대신 이 엔드포인트 사용
-    /// 예: Data Prepper OTel Trace Source (http://localhost:21890)
+    /// 예: Data Prepper OTel Tracing Source (http://localhost:21890)
     /// </summary>
-    public string? TraceCollectorEndpoint { get; set; }
+    public string? TracingCollectorEndpoint { get; set; }
 
     /// <summary>
     /// Metrics 전용 OTLP 엔드포인트 (선택적)
@@ -52,20 +53,20 @@ public sealed class OpenTelemetryOptions
     public string? MetricsCollectorEndpoint { get; set; }
 
     /// <summary>
-    /// Logs 전용 OTLP 엔드포인트 (선택적)
+    /// Logging 전용 OTLP 엔드포인트 (선택적)
     /// 설정 시 OtlpCollectorHost 대신 이 엔드포인트 사용
-    /// 예: Data Prepper OTel Logs Source (http://localhost:21892)
+    /// 예: Data Prepper OTel Logging Source (http://localhost:21892)
     /// </summary>
-    public string? LogsCollectorEndpoint { get; set; }
+    public string? LoggingCollectorEndpoint { get; set; }
 
     public double SamplingRate { get; set; } = 1.0; // 0.0 ~ 1.0 (0% ~ 100%)
     public bool EnablePrometheusExporter { get; set; } = false;
 
     /// <summary>
-    /// Trace 전용 OTLP Protocol 설정 (선택적)
+    /// Tracing 전용 OTLP Protocol 설정 (선택적)
     /// 설정 시 CollectorProtocol 대신 이 Protocol 사용
     /// </summary>
-    public string? TraceCollectorProtocol { get; set; }
+    public string? TracingCollectorProtocol { get; set; }
 
     /// <summary>
     /// Metrics 전용 OTLP Protocol 설정 (선택적)
@@ -74,10 +75,10 @@ public sealed class OpenTelemetryOptions
     public string? MetricsCollectorProtocol { get; set; }
 
     /// <summary>
-    /// Logs 전용 OTLP Protocol 설정 (선택적)
+    /// Logging 전용 OTLP Protocol 설정 (선택적)
     /// 설정 시 CollectorProtocol 대신 이 Protocol 사용
     /// </summary>
-    public string? LogsCollectorProtocol { get; set; }
+    public string? LoggingCollectorProtocol { get; set; }
 
     /// <summary>
     /// OTLP Protocol SmartEnum
@@ -101,12 +102,12 @@ public sealed class OpenTelemetryOptions
     }
 
     /// <summary>
-    /// Trace Protocol 반환 (개별 설정 우선, 없으면 통합 Protocol)
+    /// Tracing Protocol 반환 (개별 설정 우선, 없으면 통합 Protocol)
     /// </summary>
-    public OtlpCollectorProtocol GetTraceProtocol()
+    public OtlpCollectorProtocol GetTracingProtocol()
     {
-        string protocolName = !string.IsNullOrWhiteSpace(TraceCollectorProtocol)
-            ? TraceCollectorProtocol
+        string protocolName = !string.IsNullOrWhiteSpace(TracingCollectorProtocol)
+            ? TracingCollectorProtocol
             : CollectorProtocol;
 
         return SmartEnum<OtlpCollectorProtocol>.TryFromName(protocolName, out OtlpCollectorProtocol? protocol)
@@ -129,12 +130,12 @@ public sealed class OpenTelemetryOptions
     }
 
     /// <summary>
-    /// Logs Protocol 반환 (개별 설정 우선, 없으면 통합 Protocol)
+    /// Logging Protocol 반환 (개별 설정 우선, 없으면 통합 Protocol)
     /// </summary>
     public OtlpCollectorProtocol GetLogsProtocol()
     {
-        string protocolName = !string.IsNullOrWhiteSpace(LogsCollectorProtocol)
-            ? LogsCollectorProtocol
+        string protocolName = !string.IsNullOrWhiteSpace(LoggingCollectorProtocol)
+            ? LoggingCollectorProtocol
             : CollectorProtocol;
 
         return SmartEnum<OtlpCollectorProtocol>.TryFromName(protocolName, out OtlpCollectorProtocol? protocol)
@@ -143,23 +144,23 @@ public sealed class OpenTelemetryOptions
     }
 
     /// <summary>
-    /// Trace 엔드포인트 반환
+    /// Tracing 엔드포인트 반환
     /// - null: CollectorEndpoint 사용 (기본값)
     /// - "": 비활성화 (빈 문자열 반환)
     /// - "http://...": 해당 엔드포인트 사용
     /// </summary>
-    public string GetTraceEndpoint()
+    public string GetTracingEndpoint()
     {
         // null인 경우: CollectorEndpoint 사용
-        if (TraceCollectorEndpoint == null)
+        if (TracingCollectorEndpoint == null)
             return CollectorEndpoint;
 
         // 빈 문자열이거나 whitespace: 비활성화 (빈 문자열 반환)
-        if (string.IsNullOrWhiteSpace(TraceCollectorEndpoint))
+        if (string.IsNullOrWhiteSpace(TracingCollectorEndpoint))
             return string.Empty;
 
         // 값이 있는 경우: 해당 값 사용
-        return TraceCollectorEndpoint;
+        return TracingCollectorEndpoint;
     }
 
     /// <summary>
@@ -183,23 +184,23 @@ public sealed class OpenTelemetryOptions
     }
 
     /// <summary>
-    /// Logs 엔드포인트 반환
+    /// Logging 엔드포인트 반환
     /// - null: CollectorEndpoint 사용 (기본값)
     /// - "": 비활성화 (빈 문자열 반환)
     /// - "http://...": 해당 엔드포인트 사용
     /// </summary>
-    public string GetLogsEndpoint()
+    public string GetLoggingEndpoint()
     {
         // null인 경우: CollectorEndpoint 사용
-        if (LogsCollectorEndpoint == null)
+        if (LoggingCollectorEndpoint == null)
             return CollectorEndpoint;
 
         // 빈 문자열이거나 whitespace: 비활성화 (빈 문자열 반환)
-        if (string.IsNullOrWhiteSpace(LogsCollectorEndpoint))
+        if (string.IsNullOrWhiteSpace(LoggingCollectorEndpoint))
             return string.Empty;
 
         // 값이 있는 경우: 해당 값 사용
-        return LogsCollectorEndpoint;
+        return LoggingCollectorEndpoint;
     }
 
     /// <summary>
@@ -208,9 +209,9 @@ public sealed class OpenTelemetryOptions
     public void LogConfiguration(ILogger logger)
     {
         const int labelWidth = 20;
-        string traceEndpoint = GetTraceEndpoint();
+        string tracingEndpoint = GetTracingEndpoint();
         string metricsEndpoint = GetMetricsEndpoint();
-        string logsEndpoint = GetLogsEndpoint();
+        string loggingEndpoint = GetLoggingEndpoint();
 
         // 대주제: OpenTelemetry Configuration
         logger.LogInformation("OpenTelemetry Configuration");
@@ -224,19 +225,19 @@ public sealed class OpenTelemetryOptions
         logger.LogInformation("");
 
         // 세부주제: Logger Configuration
-        logger.LogInformation("  Logger Configuration");
-        logger.LogInformation("    {Label}: {Value}", "Endpoint".PadRight(labelWidth), string.IsNullOrWhiteSpace(logsEndpoint) ? "(disabled)" : logsEndpoint);
+        logger.LogInformation("  Logging Configuration");
+        logger.LogInformation("    {Label}: {Value}", "Endpoint".PadRight(labelWidth), string.IsNullOrWhiteSpace(loggingEndpoint) ? "(disabled)" : loggingEndpoint);
         logger.LogInformation("    {Label}: {Value}", "Protocol".PadRight(labelWidth), GetLogsProtocol().Name);
         logger.LogInformation("");
 
-        // 세부주제: Trace Configuration
-        logger.LogInformation("  Trace Configuration");
-        logger.LogInformation("    {Label}: {Value}", "Endpoint".PadRight(labelWidth), string.IsNullOrWhiteSpace(traceEndpoint) ? "(disabled)" : traceEndpoint);
-        logger.LogInformation("    {Label}: {Value}", "Protocol".PadRight(labelWidth), GetTraceProtocol().Name);
+        // 세부주제: Tracing Configuration
+        logger.LogInformation("  Tracing Configuration");
+        logger.LogInformation("    {Label}: {Value}", "Endpoint".PadRight(labelWidth), string.IsNullOrWhiteSpace(tracingEndpoint) ? "(disabled)" : tracingEndpoint);
+        logger.LogInformation("    {Label}: {Value}", "Protocol".PadRight(labelWidth), GetTracingProtocol().Name);
         logger.LogInformation("");
 
         // 세부주제: Metric Configuration
-        logger.LogInformation("  Metric Configuration");
+        logger.LogInformation("  Metrics Configuration");
         logger.LogInformation("    {Label}: {Value}", "Endpoint".PadRight(labelWidth), string.IsNullOrWhiteSpace(metricsEndpoint) ? "(disabled)" : metricsEndpoint);
         logger.LogInformation("    {Label}: {Value}", "Protocol".PadRight(labelWidth), GetMetricsProtocol().Name);
         logger.LogInformation("");
@@ -259,9 +260,9 @@ public sealed class OpenTelemetryOptions
             RuleFor(x => x)
                 .Must(options =>
                     !string.IsNullOrWhiteSpace(options.CollectorEndpoint) ||
-                    !string.IsNullOrWhiteSpace(options.TraceCollectorEndpoint) ||
+                    !string.IsNullOrWhiteSpace(options.TracingCollectorEndpoint) ||
                     !string.IsNullOrWhiteSpace(options.MetricsCollectorEndpoint) ||
-                    !string.IsNullOrWhiteSpace(options.LogsCollectorEndpoint))
+                    !string.IsNullOrWhiteSpace(options.LoggingCollectorEndpoint))
                 .WithMessage($"At least one OTLP endpoint must be configured: {nameof(CollectorEndpoint)} or individual endpoints.");
 
             RuleFor(x => x.SamplingRate)
@@ -277,20 +278,20 @@ public sealed class OpenTelemetryOptions
                 .WithMessage($"{nameof(CollectorProtocol)} must be one of: {validProtocols}");
 
             // 개별 Protocol 검증 (설정된 경우에만)
-            RuleFor(x => x.TraceCollectorProtocol)
+            RuleFor(x => x.TracingCollectorProtocol)
                 .Must(protocol => SmartEnum<OtlpCollectorProtocol>.TryFromName(protocol!, out _))
-                .When(x => !string.IsNullOrWhiteSpace(x.TraceCollectorProtocol))
-                .WithMessage($"{nameof(TraceCollectorProtocol)} must be one of: {validProtocols}");
+                .When(x => !string.IsNullOrWhiteSpace(x.TracingCollectorProtocol))
+                .WithMessage($"{nameof(TracingCollectorProtocol)} must be one of: {validProtocols}");
 
             RuleFor(x => x.MetricsCollectorProtocol)
                 .Must(protocol => SmartEnum<OtlpCollectorProtocol>.TryFromName(protocol!, out _))
                 .When(x => !string.IsNullOrWhiteSpace(x.MetricsCollectorProtocol))
                 .WithMessage($"{nameof(MetricsCollectorProtocol)} must be one of: {validProtocols}");
 
-            RuleFor(x => x.LogsCollectorProtocol)
+            RuleFor(x => x.LoggingCollectorProtocol)
                 .Must(protocol => SmartEnum<OtlpCollectorProtocol>.TryFromName(protocol!, out _))
-                .When(x => !string.IsNullOrWhiteSpace(x.LogsCollectorProtocol))
-                .WithMessage($"{nameof(LogsCollectorProtocol)} must be one of: {validProtocols}");
+                .When(x => !string.IsNullOrWhiteSpace(x.LoggingCollectorProtocol))
+                .WithMessage($"{nameof(LoggingCollectorProtocol)} must be one of: {validProtocols}");
         }
     }
 }

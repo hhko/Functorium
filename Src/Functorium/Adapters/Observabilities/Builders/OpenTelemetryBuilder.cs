@@ -1,6 +1,6 @@
 using Functorium.Abstractions.Errors.DestructuringPolicies;
-using Functorium.Adapters.Observabilities.Loggers;
-
+using Functorium.Adapters.Observabilities.Builders.Configurators;
+using Functorium.Adapters.Observabilities.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -31,15 +31,15 @@ public partial class OpenTelemetryBuilder
     private readonly OpenTelemetryOptions _options;
     private readonly string _frameworkNamespaceRoot;
 
-    private Action<LoggerConfigurationBuilder>? _serilogConfigurator;
-    private Action<MetricsConfigurationBuilder>? _metricsConfigurator;
-    private Action<TracesConfigurationBuilder>? _tracesConfigurator;
+    private Action<LoggingConfigurator>? _loggingConfigurator;
+    private Action<MetricsConfigurator>? _metricsConfigurator;
+    private Action<TracingConfigurator>? _tracingConfigurator;
     private Action<Microsoft.Extensions.Logging.ILogger>? _startupLoggerConfigurator;
 
     internal OpenTelemetryBuilder(
-            IServiceCollection services,
-            IConfiguration configuration,
-            OpenTelemetryOptions options)
+        IServiceCollection services,
+        IConfiguration configuration,
+        OpenTelemetryOptions options)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
@@ -74,10 +74,10 @@ public partial class OpenTelemetryBuilder
     /// Serilog 확장 설정
     /// </summary>
     /// <param name="configure">LoggerConfigurationBuilder를 사용한 설정 액션</param>
-    public OpenTelemetryBuilder ConfigureSerilog(Action<LoggerConfigurationBuilder> configure)
+    public OpenTelemetryBuilder ConfigureSerilog(Action<LoggingConfigurator> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
-        _serilogConfigurator = configure;
+        _loggingConfigurator = configure;
         return this;
     }
 
@@ -85,7 +85,7 @@ public partial class OpenTelemetryBuilder
     /// OpenTelemetry Metrics 확장 설정
     /// </summary>
     /// <param name="configure">MetricsConfigurationBuilder를 사용한 설정 액션</param>
-    public OpenTelemetryBuilder ConfigureMetrics(Action<MetricsConfigurationBuilder> configure)
+    public OpenTelemetryBuilder ConfigureMetrics(Action<MetricsConfigurator> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
         _metricsConfigurator = configure;
@@ -96,10 +96,10 @@ public partial class OpenTelemetryBuilder
     /// OpenTelemetry Traces 확장 설정
     /// </summary>
     /// <param name="configure">TracesConfigurationBuilder를 사용한 설정 액션</param>
-    public OpenTelemetryBuilder ConfigureTraces(Action<TracesConfigurationBuilder> configure)
+    public OpenTelemetryBuilder ConfigureTraces(Action<TracingConfigurator> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
-        _tracesConfigurator = configure;
+        _tracingConfigurator = configure;
         return this;
     }
 
@@ -158,7 +158,7 @@ public partial class OpenTelemetryBuilder
                 new StartupLogger(
                     sp.GetRequiredService<ILogger<StartupLogger>>(),
                     sp.GetRequiredService<IHostEnvironment>(),
-                    sp.GetServices<IStartupOptionsLoggable>(),
+                    sp.GetServices<IStartupOptionsLogger>(),
                     _startupLoggerConfigurator));
         }
         else
@@ -167,7 +167,7 @@ public partial class OpenTelemetryBuilder
                 new StartupLogger(
                     sp.GetRequiredService<ILogger<StartupLogger>>(),
                     sp.GetRequiredService<IHostEnvironment>(),
-                    sp.GetServices<IStartupOptionsLoggable>()));
+                    sp.GetServices<IStartupOptionsLogger>()));
         }
 
         return _services;
@@ -176,18 +176,18 @@ public partial class OpenTelemetryBuilder
     private void ConfigureSerilogInternal(Dictionary<string, object> resourceAttributes)
     {
         _services
-            .AddSerilog(configure =>
+            .AddSerilog(logging =>
             {
                 // 기본 설정: ReadFrom.Configuration으로 appsettings.json 읽기
-                configure.ReadFrom.Configuration(_configuration);
+                logging.ReadFrom.Configuration(_configuration);
 
-                // WriteTo.OpenTelemetry 설정 (LogsCollectorEndpoint가 설정된 경우에만)
-                string logsEndpoint = _options.GetLogsEndpoint();
-                if (!string.IsNullOrWhiteSpace(logsEndpoint))
+                // WriteTo.OpenTelemetry 설정 (LoggingCollectorEndpoint가 설정된 경우에만)
+                string loggingEndpoint = _options.GetLoggingEndpoint();
+                if (!string.IsNullOrWhiteSpace(loggingEndpoint))
                 {
-                    configure.WriteTo.OpenTelemetry(options =>
+                    logging.WriteTo.OpenTelemetry(options =>
                     {
-                        options.Endpoint = logsEndpoint;
+                        options.Endpoint = loggingEndpoint;
                         options.Protocol = ToOtlpProtocolForSerilog(_options.GetLogsProtocol());
                         options.ResourceAttributes = resourceAttributes;
 
@@ -201,14 +201,14 @@ public partial class OpenTelemetryBuilder
 
                 // Framework 기본 확장 설정
                 // - ErrorsDestructuringPolicy: Error 로그 구조화
-                configure.Destructure.With<ErrorsDestructuringPolicy>();
+                logging.Destructure.With<ErrorsDestructuringPolicy>();
 
                 // 프로젝트별 추가 확장 설정 적용
-                if (_serilogConfigurator != null)
+                if (_loggingConfigurator != null)
                 {
-                    LoggerConfigurationBuilder serilogBuilder = new(_options);
-                    _serilogConfigurator(serilogBuilder);
-                    serilogBuilder.Apply(configure);
+                    LoggingConfigurator configurator = new(_options);
+                    _loggingConfigurator(configurator);
+                    configurator.Apply(logging);
                 }
             });
     }
@@ -256,15 +256,15 @@ public partial class OpenTelemetryBuilder
                 // 프로젝트별 확장 설정 적용
                 if (_metricsConfigurator != null)
                 {
-                    MetricsConfigurationBuilder metricsBuilder = new(_options);
-                    _metricsConfigurator(metricsBuilder);
-                    metricsBuilder.Apply(metrics);
+                    MetricsConfigurator configurator = new(_options);
+                    _metricsConfigurator(configurator);
+                    configurator.Apply(metrics);
                 }
             })
-            .WithTracing(trace =>
+            .WithTracing(tracing =>
             {
                 // 기본 Instrumentation
-                trace.AddHttpClientInstrumentation(options =>
+                tracing.AddHttpClientInstrumentation(options =>
                 {
                     options.RecordException = true;
                     // OTLP exporter의 내부 호출 제외
@@ -284,30 +284,30 @@ public partial class OpenTelemetryBuilder
                 // 기본 ActivitySource 등록
                 // - Functorium: Functorium 프로젝트의 ActivitySource (네임스페이스 루트 이름 자동 추출)
                 // - ServiceName: 프로젝트별 ActivitySource
-                trace
+                tracing
                     .AddSource($"{_frameworkNamespaceRoot}.*")
                     .AddSource($"{_options.ServiceName}*");
 
                 // Sampler 설정
-                trace.SetSampler(new TraceIdRatioBasedSampler(_options.SamplingRate));
+                tracing.SetSampler(new TraceIdRatioBasedSampler(_options.SamplingRate));
 
-                // OTLP Exporter 설정 (TraceCollectorEndpoint가 설정된 경우에만)
-                string traceEndpoint = _options.GetTraceEndpoint();
-                if (!string.IsNullOrWhiteSpace(traceEndpoint))
+                // OTLP Exporter 설정 (TracingCollectorEndpoint가 설정된 경우에만)
+                string tracingEndpoint = _options.GetTracingEndpoint();
+                if (!string.IsNullOrWhiteSpace(tracingEndpoint))
                 {
-                    trace.AddOtlpExporter(options =>
+                    tracing.AddOtlpExporter(options =>
                     {
-                        options.Endpoint = new Uri(traceEndpoint);
-                        options.Protocol = ToOtlpProtocolForExporter(_options.GetTraceProtocol());
+                        options.Endpoint = new Uri(tracingEndpoint);
+                        options.Protocol = ToOtlpProtocolForExporter(_options.GetTracingProtocol());
                     });
                 }
 
                 // 프로젝트별 확장 설정 적용
-                if (_tracesConfigurator != null)
+                if (_tracingConfigurator != null)
                 {
-                    TracesConfigurationBuilder tracesBuilder = new(_options);
-                    _tracesConfigurator(tracesBuilder);
-                    tracesBuilder.Apply(trace);
+                    TracingConfigurator configurator = new(_options);
+                    _tracingConfigurator(configurator);
+                    configurator.Apply(tracing);
                 }
             });
     }
