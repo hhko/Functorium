@@ -250,7 +250,7 @@ function Invoke-Build {
   dotnet build $SolutionPath `
     -c $script:Configuration `
     --nologo `
-    -p:MinVerVerbosity=normal | Out-Default
+    -p:MinVerVerbosity=normal | Out-Host
 
   if ($LASTEXITCODE -ne 0) {
     throw "Build failed"
@@ -403,7 +403,7 @@ function Invoke-TestWithCoverage {
     --collect:"XPlat Code Coverage" `
     --logger "trx" `
     --logger "console;verbosity=minimal" `
-    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura | Out-Default
+    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura | Out-Host
 
   if ($LASTEXITCODE -ne 0) {
     throw "Tests failed"
