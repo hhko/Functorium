@@ -1,11 +1,11 @@
 ﻿using FluentValidation;
-using Functorium.Adapters.Observabilities;
+using Functorium.Adapters.Observabilities.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace Functorium.Adapters.Options;
 
-public static class OptionsUtilities
+public static class OptionsConfigurator
 {
     public static TOptions GetOptions<TOptions>(this IServiceCollection services)
         where TOptions : class, new()
@@ -43,11 +43,11 @@ public static class OptionsUtilities
                               .AddValidateFluentValidation()                  //  - 옵션 유효성 연결: TOptions -> IValidateOptions<TOptions>으로 연결
                               .ValidateOnStart();                             //  - 옵션 유효성 검사: 프로그램 시작 시 유효성 감사
 
-        // TOptions가 IStartupLoggable을 구현하면 자동으로 IStartupLoggable로 등록
-        // StartupLogger가 IEnumerable<IStartupLoggable>을 통해 자동으로 수집할 수 있도록 함
-        if (typeof(IStartupOptionsLoggable).IsAssignableFrom(typeof(TOptions)))
+        // TOptions가 IStartupOptionsLogger를 구현하면 자동으로 IStartupOptionsLogger로 등록
+        // StartupLogger가 IEnumerable<IStartupOptionsLogger>을 통해 자동으로 수집할 수 있도록 함
+        if (typeof(IStartupOptionsLogger).IsAssignableFrom(typeof(TOptions)))
         {
-            services.AddSingleton<IStartupOptionsLoggable>(sp => (IStartupOptionsLoggable)sp.GetRequiredService<IOptions<TOptions>>().Value);
+            services.AddSingleton<IStartupOptionsLogger>(sp => (IStartupOptionsLogger)sp.GetRequiredService<IOptions<TOptions>>().Value);
         }
 
         return builder;
