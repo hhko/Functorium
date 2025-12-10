@@ -3,6 +3,6 @@
 >
 > **A well-designed system** makes it easy to do the right things and annoying (but not impossible) to do the wrong things.
 >
-> There are plenty of AI that boost development speed, but very few that accelerate your growth — especially in code design thinking. I enjoy using AI as a mentor in that regard.
+> I enjoy using AI not just to speed up development, but as a mentor that accelerates my growth — especially in **code design thinking**.
 
 - [Architecture](./Docs/ArchitectureIs/README.md)
