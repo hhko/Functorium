@@ -1,0 +1,55 @@
+services:
+  aspire-dashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:9.5
+    container_name: aspire-dashboard
+    ports:
+      # 프론트엔드 UI 포트 (브라우저 접속)
+      - "18888:18888"
+      # OTLP/gRPC 엔드포인트 (원격 분석 수신)
+      - "18889:18889"
+      # OTLP/HTTP 엔드포인트 (원격 분석 수신)
+      - "18890:18890"
+    environment:
+      # 인증 없이 익명 액세스 허용 (개발 환경용)
+      - ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS=true
+
+      # 대시보드 프론트엔드 URL
+      - ASPNETCORE_URLS=http://+:18888
+
+      # OTLP 엔드포인트 URL
+      - ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL=http://+:18889
+      - ASPIRE_DASHBOARD_OTLP_HTTP_ENDPOINT_URL=http://+:18890
+
+      # 원격 분석 제한 설정
+      - DASHBOARD__TELEMETRYLIMITS__MAXLOGCOUNT=10000
+      - DASHBOARD__TELEMETRYLIMITS__MAXTRACECOUNT=10000
+      - DASHBOARD__TELEMETRYLIMITS__MAXMETRICSCOUNT=50000
+
+      # 리소스 표시 활성화 (Runtime 메트릭 표시를 위해 필수)
+      - DASHBOARD__RESOURCE__ENABLED=true
+
+      # 리소스 메트릭 표시 활성화 (CPU, 메모리, GC 메트릭)
+      - DASHBOARD__RESOURCE__METRICS__ENABLED=true
+
+      # 메트릭 표시 활성화
+      - DASHBOARD__METRICS__ENABLED=true
+
+      # 메트릭 집계 활성화 (차트 표시 개선)
+      - DASHBOARD__METRICS__AGGREGATION__ENABLED=true
+
+      # 애플리케이션 이름
+      - DASHBOARD__APPLICATIONNAME=관찰 가능성 Local First
+
+      # 언어 설정 (한국어)
+      - ASPIRE_DASHBOARD_LOCALE=ko
+
+      # 시간대 설정 (한국 표준시 KST)
+      - TZ=Asia/Seoul
+    restart: unless-stopped
+    networks:
+      - observability
+
+networks:
+  observability:
+    driver: bridge
+
