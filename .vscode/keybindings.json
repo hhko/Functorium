@@ -1,0 +1,61 @@
+// VSCode 키바인딩 설정 (참고용)
+//
+// 이 파일은 프로젝트에서 직접 적용되지 않습니다.
+// 아래 내용을 사용자 키바인딩에 추가하세요:
+//   - Windows: Ctrl+Shift+P → "Preferences: Open Keyboard Shortcuts (JSON)"
+//   - Mac: Cmd+Shift+P → "Preferences: Open Keyboard Shortcuts (JSON)"
+//
+// 또는 파일 위치:
+//   - Windows: %APPDATA%\Code\User\keybindings.json
+//   - Mac: ~/Library/Application Support/Code/User/keybindings.json
+//   - Linux: ~/.config/Code/User/keybindings.json
+//
+[
+    // ============================================
+    // Task 실행 단축키
+    // ============================================
+
+    // Ctrl+Shift+B: Build (기본 빌드)
+    {
+        "key": "ctrl+shift+b",
+        "command": "workbench.action.tasks.runTask",
+        "args": "build"
+    },
+
+    // Ctrl+Shift+P 후 publish 입력 대신 직접 실행
+    // Ctrl+Alt+P: Publish
+    {
+        "key": "ctrl+alt+p",
+        "command": "workbench.action.tasks.runTask",
+        "args": "publish"
+    },
+
+    // Ctrl+Alt+W: Watch (Hot Reload)
+    {
+        "key": "ctrl+alt+w",
+        "command": "workbench.action.tasks.runTask",
+        "args": "watch"
+    },
+
+    // ============================================
+    // Task 관리 단축키
+    // ============================================
+
+    // Ctrl+Shift+T: Task 목록 표시
+    {
+        "key": "ctrl+shift+t",
+        "command": "workbench.action.tasks.runTask"
+    },
+
+    // Ctrl+Shift+K: 실행 중인 Task 종료
+    {
+        "key": "ctrl+shift+k",
+        "command": "workbench.action.tasks.terminate"
+    },
+
+    // Ctrl+Shift+R: 마지막 Task 다시 실행
+    {
+        "key": "ctrl+shift+r",
+        "command": "workbench.action.tasks.reRunTask"
+    }
+]
