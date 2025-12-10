@@ -5,11 +5,11 @@ namespace Observability.Tests.Integration.AdaptersInfrastructureTests;
 /// WebApplicationFactory를 사용하여 실제 호스트 환경에서 테스트합니다.
 /// </summary>
 [Trait(nameof(IntegrationTest), IntegrationTest.AdaptersInfrastructure)]
-public class OpenTelemetryIntegrationTests : IClassFixture<OpenTelemetryIntegrationTests.ObservabilityTestFixture>
+public class OpenTelemetryIntegrationTests : IClassFixture<OpenTelemetryIntegrationTests.OpenTelemetryTestFixture>
 {
-    private readonly ObservabilityTestFixture _fixture;
+    private readonly OpenTelemetryTestFixture _fixture;
 
-    public OpenTelemetryIntegrationTests(ObservabilityTestFixture fixture)
+    public OpenTelemetryIntegrationTests(OpenTelemetryTestFixture fixture)
     {
         _fixture = fixture;
     }
@@ -85,13 +85,13 @@ public class OpenTelemetryIntegrationTests : IClassFixture<OpenTelemetryIntegrat
     }
 
     [Fact]
-    public void OpenTelemetryOptions_SamplingRate_ShouldBeOneHundredPercent()
+    public void OpenTelemetryOptions_SamplingRate_ShouldBeOverriddenByEnvironment()
     {
         // Arrange & Act
         var options = _fixture.Services.GetRequiredService<IOptionsMonitor<OpenTelemetryOptions>>().CurrentValue;
 
-        // Assert
-        options.SamplingRate.ShouldBe(1.0);
+        // Assert - appsettings.OpenTelemetryTest.json에서 0.5로 오버라이드됨
+        options.SamplingRate.ShouldBe(0.5);
     }
 
     [Fact]
@@ -115,7 +115,7 @@ public class OpenTelemetryIntegrationTests : IClassFixture<OpenTelemetryIntegrat
     }
 
     [Fact]
-    public void OpenTelemetryOptions_GetTracingEndpoint_ShouldReturnCollectorEndpoint()
+    public void OpenTelemetryOptions_GetTracingEndpoint_ShouldReturnEmptyWhenDisabled()
     {
         // Arrange
         var options = _fixture.Services.GetRequiredService<IOptionsMonitor<OpenTelemetryOptions>>().CurrentValue;
@@ -123,12 +123,12 @@ public class OpenTelemetryIntegrationTests : IClassFixture<OpenTelemetryIntegrat
         // Act
         var tracingEndpoint = options.GetTracingEndpoint();
 
-        // Assert - TracingCollectorEndpoint가 설정되지 않았으므로 CollectorEndpoint 사용
-        tracingEndpoint.ShouldBe("http://127.0.0.1:18889");
+        // Assert - TracingCollectorEndpoint가 빈 문자열로 설정되어 비활성화됨
+        tracingEndpoint.ShouldBeEmpty();
     }
 
     [Fact]
-    public void OpenTelemetryOptions_GetMetricsEndpoint_ShouldReturnCollectorEndpoint()
+    public void OpenTelemetryOptions_GetMetricsEndpoint_ShouldReturnEmptyWhenDisabled()
     {
         // Arrange
         var options = _fixture.Services.GetRequiredService<IOptionsMonitor<OpenTelemetryOptions>>().CurrentValue;
@@ -136,12 +136,12 @@ public class OpenTelemetryIntegrationTests : IClassFixture<OpenTelemetryIntegrat
         // Act
         var metricsEndpoint = options.GetMetricsEndpoint();
 
-        // Assert - MetricsCollectorEndpoint가 설정되지 않았으므로 CollectorEndpoint 사용
-        metricsEndpoint.ShouldBe("http://127.0.0.1:18889");
+        // Assert - MetricsCollectorEndpoint가 빈 문자열로 설정되어 비활성화됨
+        metricsEndpoint.ShouldBeEmpty();
     }
 
     [Fact]
-    public void OpenTelemetryOptions_GetLoggingEndpoint_ShouldReturnCollectorEndpoint()
+    public void OpenTelemetryOptions_GetLoggingEndpoint_ShouldReturnEmptyWhenDisabled()
     {
         // Arrange
         var options = _fixture.Services.GetRequiredService<IOptionsMonitor<OpenTelemetryOptions>>().CurrentValue;
@@ -149,8 +149,8 @@ public class OpenTelemetryIntegrationTests : IClassFixture<OpenTelemetryIntegrat
         // Act
         var loggingEndpoint = options.GetLoggingEndpoint();
 
-        // Assert - LoggingCollectorEndpoint가 설정되지 않았으므로 CollectorEndpoint 사용
-        loggingEndpoint.ShouldBe("http://127.0.0.1:18889");
+        // Assert - LoggingCollectorEndpoint가 빈 문자열로 설정되어 비활성화됨
+        loggingEndpoint.ShouldBeEmpty();
     }
 
     [Fact]
@@ -193,10 +193,12 @@ public class OpenTelemetryIntegrationTests : IClassFixture<OpenTelemetryIntegrat
     }
 
     /// <summary>
-    /// Observability 호스트 테스트용 Fixture
-    /// ControllerTestFixture를 상속하여 WebApplicationFactory 기능을 재사용합니다.
+    /// OpenTelemetry 옵션 테스트용 Fixture
+    /// HostTestFixture를 상속하여 WebApplicationFactory 기능을 재사용합니다.
+    /// EnvironmentName을 "OpenTelemetryTest"로 설정하여 appsettings.OpenTelemetryTest.json을 로드합니다.
     /// </summary>
-    public class ObservabilityTestFixture : ControllerTestFixture<Program>
+    public class OpenTelemetryTestFixture : HostTestFixture<Program>
     {
+        protected override string EnvironmentName => "OpenTelemetryTest";
     }
 }

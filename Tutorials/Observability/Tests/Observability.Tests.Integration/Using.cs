@@ -6,6 +6,6 @@ global using LanguageExt.Common;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Options;
 global using Functorium.Adapters.Observabilities;
-global using Functorium.Testing.Arrangements.Controllers;
+global using Functorium.Testing.Arrangements.Hosting;
 
 global using static Observability.Tests.Integration.Abstractions.Constants.Constants;
