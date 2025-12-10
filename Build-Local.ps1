@@ -3,7 +3,7 @@
 
 <#
 .SYNOPSIS
-  .NET 솔루션 빌드, 테스트 및 코드 커버리지 리포트 생성 스크립트
+  .NET 솔루션 빌드, 테스트, 코드 커버리지 및 NuGet 패키지 생성 스크립트
 
 .DESCRIPTION
   - Release 모드로 솔루션 빌드
@@ -11,6 +11,7 @@
   - 테스트 실행 및 코드 커버리지 수집
   - 핵심 레이어(Domains, Applications) 및 전체 커버리지 출력
   - HTML 리포트 생성
+  - NuGet 패키지 생성 (.nupkg, .snupkg)
 
 .PARAMETER Solution
   솔루션 파일 경로를 지정합니다. 지정하지 않으면 자동으로 검색합니다.
@@ -19,16 +20,23 @@
   커버리지 필터링용 프로젝트 접두사를 지정합니다.
   기본값: Functorium
 
+.PARAMETER SkipPack
+  NuGet 패키지 생성을 건너뜁니다.
+
 .PARAMETER Help
   도움말을 표시합니다.
 
 .EXAMPLE
   ./Build-Local.ps1
-  현재 디렉토리에서 솔루션을 자동 검색하여 빌드 및 테스트 실행
+  현재 디렉토리에서 솔루션을 자동 검색하여 빌드, 테스트, 패키지 생성
 
 .EXAMPLE
   ./Build-Local.ps1 -Solution ./MyApp.sln
   지정된 솔루션 파일로 빌드 및 테스트 실행
+
+.EXAMPLE
+  ./Build-Local.ps1 -SkipPack
+  NuGet 패키지 생성 없이 빌드 및 테스트만 실행
 
 .EXAMPLE
   ./Build-Local.ps1 -ProjectPrefix MyApp
@@ -39,9 +47,9 @@
   도움말 표시
 
 .NOTES
-  Version: 1.0.0
+  Version: 1.1.0
   Requirements: PowerShell 7+, .NET SDK, ReportGenerator
-  Output directory: .coverage/
+  Output directories: .coverage/, .nupkg/
   License: MIT
 #>
 
@@ -54,6 +62,9 @@ param(
   [Parameter(Mandatory = $false, HelpMessage = "커버리지 필터링용 프로젝트 접두사")]
   [Alias("p")]
   [string]$ProjectPrefix = "Functorium",
+
+  [Parameter(Mandatory = $false, HelpMessage = "NuGet 패키지 생성 건너뛰기")]
+  [switch]$SkipPack,
 
   [Parameter(Mandatory = $false, HelpMessage = "도움말 표시")]
   [Alias("h", "?")]
@@ -74,7 +85,7 @@ $scriptRoot = $PSScriptRoot
 
 #region Constants
 
-$script:TOTAL_STEPS = 7
+$script:TOTAL_STEPS = 8
 $script:Configuration = "Release"
 $script:CoreLayerPatterns = @("*.Domain", "*.Domains", "*.Application", "*.Applications")
 $script:ReportGeneratorVersion = "5.5.0"
@@ -82,6 +93,7 @@ $script:ReportGeneratorVersion = "5.5.0"
 # These will be set after solution file is found
 $script:SolutionDir = $null
 $script:CoverageReportDir = $null
+$script:NuGetOutputDir = $null
 
 #endregion
 
@@ -96,6 +108,7 @@ function Set-OutputPaths {
 
   $script:SolutionDir = Split-Path -Parent $SolutionPath
   $script:CoverageReportDir = Join-Path $script:SolutionDir ".coverage"
+  $script:NuGetOutputDir = Join-Path $script:SolutionDir ".nupkg"
 }
 
 <#
@@ -106,11 +119,12 @@ function Show-Help {
   $help = @"
 
 ================================================================================
- .NET Solution Build and Test Script
+ .NET Solution Build, Test, and Pack Script
 ================================================================================
 
 DESCRIPTION
-  Build, test, and generate code coverage reports for .NET solutions.
+  Build, test, generate code coverage reports, and create NuGet packages
+  for .NET solutions.
 
 USAGE
   ./Build-Local.ps1 [options]
@@ -120,6 +134,7 @@ OPTIONS
                      If not specified, auto-detects from current directory
   -ProjectPrefix, -p Project prefix for coverage filtering
                      Default: Functorium
+  -SkipPack          Skip NuGet package generation
   -Help, -h, -?      Show this help message
 
 FEATURES
@@ -132,11 +147,16 @@ FEATURES
      - Project: Projects matching prefix (e.g., Functorium.*)
      - Core Layer: Domains + Applications projects
      - Full: All projects (excluding tests)
+  7. Generate NuGet packages (.nupkg and .snupkg)
 
 OUTPUT
   {SolutionDir}/.coverage/
   ├── index.html            <- HTML Report
   └── Cobertura.xml         <- Merged coverage
+
+  {SolutionDir}/.nupkg/
+  ├── *.nupkg               <- NuGet packages
+  └── *.snupkg              <- Symbol packages
 
   {SolutionDir}/Tests/{TestProject}/TestResults/
   ├── {GUID}/
@@ -148,12 +168,15 @@ PREREQUISITES
   - ReportGenerator v5.5.0 (auto-installed/updated if needed)
 
 EXAMPLES
-  # Run build and tests (auto-detect solution)
+  # Run build, tests, and pack (auto-detect solution)
   ./Build-Local.ps1
 
   # Specify solution file
   ./Build-Local.ps1 -Solution ./MyApp.sln
   ./Build-Local.ps1 -s ../Other.sln
+
+  # Skip NuGet package generation
+  ./Build-Local.ps1 -SkipPack
 
   # Filter coverage by project prefix
   ./Build-Local.ps1 -ProjectPrefix MyApp
@@ -673,6 +696,116 @@ function Show-CoverageReport {
 
 #endregion
 
+#region Step 8: New-NuGetPackages
+
+<#
+.SYNOPSIS
+  NuGet 패키지를 생성합니다.
+#>
+function New-NuGetPackages {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$SolutionPath
+  )
+
+  Write-StepProgress -Step 8 -TotalSteps $script:TOTAL_STEPS -Message "Creating NuGet packages..."
+
+  # Get solution directory
+  $solutionDir = Split-Path -Parent $SolutionPath
+
+  # Search in Src folder only
+  $srcDir = Join-Path $solutionDir "Src"
+
+  if (-not (Test-Path $srcDir)) {
+    Write-Detail "Src folder not found, using solution directory"
+    $srcDir = $solutionDir
+  }
+
+  # Find packable projects (exclude Tests and Testing projects that are not meant to be published)
+  $projectFiles = @(Get-ChildItem -Path $srcDir -Filter "*.csproj" -Recurse -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -notlike "*Tests*" })
+
+  if ($projectFiles.Count -eq 0) {
+    Write-WarningMessage "No packable projects found in $srcDir"
+    return
+  }
+
+  # Remove existing packages
+  if (Test-Path $script:NuGetOutputDir) {
+    Remove-Item -Path $script:NuGetOutputDir -Recurse -Force
+  }
+  New-Item -ItemType Directory -Path $script:NuGetOutputDir -Force | Out-Null
+
+  Write-Host ""
+  Write-Host ("{0,-40} {1,-15} {2}" -f "Project", "Status", "Package") -ForegroundColor White
+  Write-Host ("-" * 90) -ForegroundColor DarkGray
+
+  $packCount = 0
+  $skipCount = 0
+
+  foreach ($proj in $projectFiles) {
+    $projectName = $proj.BaseName
+    if ($projectName.Length -gt 38) {
+      $projectName = $projectName.Substring(0, 35) + "..."
+    }
+
+    # Check if project is packable (not explicitly set to false)
+    $csprojContent = Get-Content $proj.FullName -Raw
+    if ($csprojContent -match '<IsPackable>false</IsPackable>') {
+      Write-Host ("{0,-40} {1,-15} {2}" -f $projectName, "Skipped", "(IsPackable=false)") -ForegroundColor DarkGray
+      $skipCount++
+      continue
+    }
+
+    # Pack the project
+    $packOutput = dotnet pack $proj.FullName `
+      --configuration $script:Configuration `
+      --no-build `
+      --nologo `
+      --output $script:NuGetOutputDir 2>&1
+
+    if ($LASTEXITCODE -eq 0) {
+      # Find generated package name from output
+      $packageFile = $packOutput | Where-Object { $_ -match "Successfully created package" } |
+        ForEach-Object { if ($_ -match "'([^']+\.nupkg)'") { $Matches[1] } }
+
+      if ($packageFile) {
+        $packageFileName = Split-Path -Leaf $packageFile
+      }
+      else {
+        # Fallback: find the package in output directory
+        $latestPackage = Get-ChildItem -Path $script:NuGetOutputDir -Filter "$($proj.BaseName)*.nupkg" -ErrorAction SilentlyContinue |
+          Sort-Object LastWriteTime -Descending |
+          Select-Object -First 1
+        $packageFileName = if ($latestPackage) { $latestPackage.Name } else { "*.nupkg" }
+      }
+
+      Write-Host ("{0,-40} {1,-15} {2}" -f $projectName, "Packed", $packageFileName) -ForegroundColor Green
+      $packCount++
+    }
+    else {
+      Write-Host ("{0,-40} {1,-15} {2}" -f $projectName, "Failed", "(pack error)") -ForegroundColor Red
+    }
+  }
+
+  Write-Host ""
+
+  # List generated packages
+  $packages = @(Get-ChildItem -Path $script:NuGetOutputDir -Filter "*.nupkg" -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -notlike "*.snupkg" })
+  $symbolPackages = @(Get-ChildItem -Path $script:NuGetOutputDir -Filter "*.snupkg" -ErrorAction SilentlyContinue)
+
+  if ($packages.Count -gt 0) {
+    Write-Success "Created $($packages.Count) package(s), $($symbolPackages.Count) symbol package(s)"
+    Write-Detail "Output: $script:NuGetOutputDir"
+  }
+  else {
+    Write-WarningMessage "No packages were created"
+  }
+}
+
+#endregion
+
 #region Show-Help
 
 # Show-Help function is defined in Helper Functions region
@@ -686,7 +819,7 @@ function Show-CoverageReport {
   메인 실행 함수
 
 .DESCRIPTION
-  전체 빌드/테스트/커버리지 흐름을 제어합니다:
+  전체 빌드/테스트/커버리지/패키지 흐름을 제어합니다:
   1. 솔루션 파일 검색
   2. 솔루션 빌드
   3. 버전 정보 표시
@@ -694,6 +827,7 @@ function Show-CoverageReport {
   5. 커버리지 리포트 병합
   6. HTML 리포트 생성
   7. 콘솔에 커버리지 결과 표시
+  8. NuGet 패키지 생성
 #>
 function Main {
   param(
@@ -701,7 +835,10 @@ function Main {
     [string]$SolutionPath,
 
     [Parameter(Mandatory = $false)]
-    [string]$Prefix = "Functorium"
+    [string]$Prefix = "Functorium",
+
+    [Parameter(Mandatory = $false)]
+    [switch]$SkipPackaging
   )
 
   $startTime = Get-Date
@@ -745,14 +882,26 @@ function Main {
   # 7. Display coverage results in console
   Show-CoverageReport -CoverageFiles $coverageFiles -Prefix $Prefix
 
+  # 8. Create NuGet packages (if not skipped)
+  if (-not $SkipPackaging) {
+    New-NuGetPackages -SolutionPath $solutionFullPath
+  }
+  else {
+    Write-StepProgress -Step 8 -TotalSteps $script:TOTAL_STEPS -Message "Skipping NuGet package creation..."
+    Write-Detail "Use -SkipPack to skip packaging"
+  }
+
   # Complete
   $endTime = Get-Date
   $duration = $endTime - $startTime
 
   Write-Host ""
-  Write-Host "[DONE] Build and test completed" -ForegroundColor Green
+  Write-Host "[DONE] Build, test, and pack completed" -ForegroundColor Green
   Write-Host "       Duration: $($duration.ToString('mm\:ss'))" -ForegroundColor DarkGray
-  Write-Host "       Report: $script:CoverageReportDir/index.html" -ForegroundColor DarkGray
+  Write-Host "       Coverage: $script:CoverageReportDir/index.html" -ForegroundColor DarkGray
+  if (-not $SkipPackaging) {
+    Write-Host "       Packages: $script:NuGetOutputDir" -ForegroundColor DarkGray
+  }
   Write-Host ""
 
   return $true
@@ -768,7 +917,7 @@ if ($Help) {
 }
 
 try {
-  $result = Main -SolutionPath $Solution -Prefix $ProjectPrefix
+  $result = Main -SolutionPath $Solution -Prefix $ProjectPrefix -SkipPackaging:$SkipPack
   if ($result) {
     exit 0
   }
