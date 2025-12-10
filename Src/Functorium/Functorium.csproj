@@ -1,5 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- NuGet Package Settings -->
+  <PropertyGroup>
+    <PackageId>Functorium</PackageId>
+    <Description>Functorium - A functional domain framework for .NET</Description>
+    <PackageTags>$(PackageTags);functional-programming;domain-driven-design;ddd</PackageTags>
+  </PropertyGroup>
+
+  <!-- Package Files -->
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\Assets\icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
   <ItemGroup>
     <InternalsVisibleTo Include="Functorium.Tests.Unit" />
   </ItemGroup>

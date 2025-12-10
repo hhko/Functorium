@@ -421,6 +421,8 @@ FodyWeavers.xsd
 # Verify
 *.received.*
 
+# Local NuGet output directory
+.nupkg/
 
 nul
 .coverage/

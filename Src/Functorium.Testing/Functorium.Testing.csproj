@@ -1,5 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- NuGet Package Settings -->
+  <PropertyGroup>
+    <PackageId>Functorium.Testing</PackageId>
+    <Description>Functorium.Testing - Testing utilities for a functional domain framework for .NET</Description>
+    <PackageTags>$(PackageTags);testing;functional-programming;domain-driven-design;ddd</PackageTags>
+  </PropertyGroup>
+
+  <!-- Package Files -->
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\Assets\icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
   <PropertyGroup>
     <IsTestProject>false</IsTestProject>
   </PropertyGroup>

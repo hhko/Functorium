@@ -5,6 +5,7 @@
 
   <ItemGroup Label="Versioning">
     <PackageVersion Include="MinVer" Version="6.0.0" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup Label="Basic">
