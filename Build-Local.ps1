@@ -307,17 +307,6 @@ function Show-VersionInfo {
     $searchDirs += $srcDir
   }
 
-  $examplesDir = Join-Path $solutionDir "Examples"
-  if (Test-Path $examplesDir) {
-    $searchDirs += $examplesDir
-  }
-
-  # Fallback to solution directory if no standard folders found
-  if ($searchDirs.Count -eq 0) {
-    Write-Detail "Src/Examples folders not found, using solution directory"
-    $searchDirs += $solutionDir
-  }
-
   # Build exclusion patterns relative to solution directory
   $excludePatterns = @(
     (Join-Path $solutionDir "GitHub"),

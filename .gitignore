@@ -424,7 +424,10 @@ FodyWeavers.xsd
 # Local NuGet output directory
 .nupkg/
 
-nul
 .coverage/
 .commit-summaries/
 GitHub/
+
+# Claude Code
+nul
+bash.exe.stackdump
