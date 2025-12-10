@@ -103,17 +103,28 @@ jobs:
 
     - name: Pack NuGet packages
       run: |
-        dotnet pack ${{ env.SOLUTION_FILE }} \
-          --configuration ${{ env.CONFIGURATION }} \
-          --no-build \
-          --output ./packages
+        # Pack only Src projects (exclude Tests)
+        for project in $(find ./Src -name "*.csproj" ! -name "*Tests*"); do
+          echo "Packing: $project"
+          dotnet pack "$project" \
+            --configuration ${{ env.CONFIGURATION }} \
+            --no-build \
+            --output ./packages
+        done
 
     - name: List packages
-      run: ls -la ./packages
+      run: |
+        echo "=== NuGet Packages ==="
+        ls -la ./packages/*.nupkg 2>/dev/null || echo "No .nupkg files"
+        echo ""
+        echo "=== Symbol Packages ==="
+        ls -la ./packages/*.snupkg 2>/dev/null || echo "No .snupkg files"
 
     - name: Publish to NuGet.org
       if: startsWith(github.ref, 'refs/tags/v')
       run: |
+        # Push NuGet packages (.nupkg)
+        # Symbol packages (.snupkg) are automatically pushed when pushing to NuGet.org
         dotnet nuget push ./packages/*.nupkg \
           --api-key ${{ secrets.NUGET_API_KEY }} \
           --source https://api.nuget.org/v3/index.json \
@@ -133,7 +144,9 @@ jobs:
       uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/v')
       with:
-        files: ./packages/*.nupkg
+        files: |
+          ./packages/*.nupkg
+          ./packages/*.snupkg
         generate_release_notes: true
         draft: false
         prerelease: ${{ contains(github.ref, '-') }}
