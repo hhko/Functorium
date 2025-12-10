@@ -7,8 +7,9 @@
     - Serilog.Core.IDestructuringPolicy
     - IErrorDestructurer
 - [x] Option
-  - GetOptions
-  - RegisterConfigureOptions
+  - OptionsConfigurator
+    - GetOptions
+    - RegisterConfigureOptions
 - [x] Observability 의존성 등록
   - OpenTelemetryOptions
   - OpenTelemetryBuilder
@@ -20,6 +21,37 @@
     - StartupLogger : IHostedService
 - [ ] Mediator 패턴 Pipeline
 - [ ] ValueObject
+- [x] Example: Observability 로그 출력
+- [ ] VSCode 개발 환경
+  - 확장 도구
+    - .NET Install Tool
+	    - C#
+	    - C# Dev Kit
+    - Coverage Gutters
+    - Test Explorer UI
+      - .Net Core Test Explorer
+    - Remote Development
+	    - Remote - SSH
+	    - Remote - Tunnels
+	    - Dev Containers
+	    - WSL
+    - GitHub Actions
+    - Markdown??
+    - REST Client Api
+    - Peek Hidden Files
+    - Paste Image
+    - Trailing Spaces
+    - Code Spell Checker
+      ```
+    	"cSpell.ignoreWords": [
+        "Functorium",
+        "Observabilities"
+      ]
+      ```
+  - .vscode
+    - launch.json: VSCode 디버깅 환경 설정
+    - settings.json
+    - tasks.json
 
 ## TODO
 - [x] claude: claude commit 명령어
@@ -87,13 +119,23 @@
   - [x] 로컬 NuGet 패키지 배포 스크립트
   - [x] publish.yml 개선
   - [x] NuGet 문서
-  - [ ] NuGet 계정
+  - [x] NuGet 계정
+  - [x] png 아이콘
   - [ ] Release 노트 생성기?
   - [ ] Release 배포
+  - [ ] NuGet 배포
 - Example 관찰 가능성
-  - [ ] 예제 프로젝트 구성
-  - [ ] 소스 정리
-  - [ ] 로그
+  - [x] 예제 프로젝트 구성
+  - [x] 소스 정리
+  - [x] 로그
+  - [x] FtpOptions Startup 로그
+  - [x] FtpOptions 통합 테스트
+  - [x] OpenTelemetryOptions 통합 테스트
+  - [x] 통합 테스트 문서
+  - [x] .vscode 구성 문서
+- Dashboard
+  - [x] Aspire 대시보드 구성
+  - [x] OpenSearch 대시보드 구성
 
 Item                                      | Type    | File                          | todo
 ---                                       | ---     | ---                           | ---
