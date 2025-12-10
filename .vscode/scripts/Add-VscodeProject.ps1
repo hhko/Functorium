@@ -3,11 +3,11 @@
 
 <#
 .SYNOPSIS
-    VSCode launch.json과 tasks.json에 프로젝트 설정을 자동으로 추가합니다.
+    VSCode launch.json, tasks.json, keybindings.json에 프로젝트 설정을 자동으로 추가합니다.
 
 .DESCRIPTION
     프로젝트 이름을 입력받아 해당 .csproj 파일을 찾고,
-    VSCode의 launch.json과 tasks.json에 실행/빌드 설정을 추가합니다.
+    VSCode의 launch.json, tasks.json, keybindings.json에 실행/빌드 설정을 추가합니다.
 
 .PARAMETER ProjectName
     추가할 프로젝트의 이름 (.csproj 파일명에서 확장자 제외)
@@ -39,6 +39,7 @@ $workspaceRoot = (Get-Item $scriptPath).Parent.Parent.FullName
 # VSCode 설정 파일 경로
 $launchJsonPath = Join-Path $workspaceRoot ".vscode/launch.json"
 $tasksJsonPath = Join-Path $workspaceRoot ".vscode/tasks.json"
+$keybindingsJsonPath = Join-Path $workspaceRoot ".vscode/keybindings.json"
 
 Write-Host ""
 Write-Info "=== VSCode 프로젝트 설정 추가 ==="
@@ -221,6 +222,61 @@ $tasksJsonOutput = $tasksJson | ConvertTo-Json @jsonOptions
 $tasksJsonOutput = $tasksJsonOutput -replace '(\[\s*\])', '[]'
 $tasksJsonOutput | Set-Content $tasksJsonPath -Encoding UTF8
 
+# 7. keybindings.json 업데이트
+$keybindingsUpdated = $false
+if (Test-Path $keybindingsJsonPath) {
+    Write-Info "keybindings.json 업데이트 중..."
+
+    $keybindingsContent = Get-Content $keybindingsJsonPath -Raw
+
+    # 이미 해당 프로젝트의 키바인딩이 있는지 확인
+    if ($keybindingsContent -match "build-$ProjectName") {
+        Write-Warning "keybindings.json에 '$ProjectName' 관련 키바인딩이 이미 있습니다."
+    } else {
+        # 새 키바인딩 항목 생성
+        $newKeybindings = @"
+
+    // ============================================
+    // $ProjectName 프로젝트
+    // ============================================
+
+    // build-$ProjectName
+    {
+        "key": "ctrl+alt+b",
+        "command": "workbench.action.tasks.runTask",
+        "args": "build-$ProjectName"
+    },
+
+    // watch-$ProjectName
+    {
+        "key": "ctrl+alt+w",
+        "command": "workbench.action.tasks.runTask",
+        "args": "watch-$ProjectName"
+    }
+"@
+
+        # 마지막 ] 앞에 새 키바인딩 삽입
+        # 마지막 ] 찾기 (배열의 끝)
+        $lastBracketIndex = $keybindingsContent.LastIndexOf(']')
+        if ($lastBracketIndex -gt 0) {
+            # 마지막 항목 뒤에 콤마가 있는지 확인
+            $beforeBracket = $keybindingsContent.Substring(0, $lastBracketIndex).TrimEnd()
+
+            # 마지막 유효 문자가 } 또는 콤마인지 확인
+            if ($beforeBracket[-1] -eq '}') {
+                # 콤마 추가 필요
+                $keybindingsContent = $keybindingsContent.Substring(0, $lastBracketIndex) + ",$newKeybindings`n]`n"
+            } else {
+                # 이미 콤마가 있음
+                $keybindingsContent = $keybindingsContent.Substring(0, $lastBracketIndex) + "$newKeybindings`n]`n"
+            }
+
+            $keybindingsContent | Set-Content $keybindingsJsonPath -Encoding UTF8 -NoNewline
+            $keybindingsUpdated = $true
+        }
+    }
+}
+
 Write-Host ""
 Write-Success "=== 설정 추가 완료 ==="
 Write-Host ""
@@ -233,4 +289,10 @@ Write-Host "    - task: $buildTaskLabel"
 Write-Host "    - task: publish-$ProjectName"
 Write-Host "    - task: watch-$ProjectName"
 Write-Host ""
+if ($keybindingsUpdated) {
+    Write-Host "  keybindings.json:"
+    Write-Host "    - Ctrl+Alt+B: build-$ProjectName"
+    Write-Host "    - Ctrl+Alt+W: watch-$ProjectName"
+    Write-Host ""
+}
 Write-Info "VSCode를 다시 로드하거나 F5를 눌러 실행하세요."
