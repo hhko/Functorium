@@ -83,12 +83,17 @@
   - [ ] Observability 의존성 등록과 Builder 관련 테스트
   - [ ] Serilog Destructure 깊이, 배열, ... 제약 조건 테스트
 - NuGet 패키지
-  - [ ] NuGet 배포를 위한 프로젝트 설정
-  - [ ] 로컬 NuGet 패키지 배포 스크립트
+  - [x] NuGet 배포를 위한 프로젝트 설정
+  - [x] 로컬 NuGet 패키지 배포 스크립트
+  - [x] publish.yml 개선
+  - [x] NuGet 문서
   - [ ] NuGet 계정
-  - [ ] publish.yml 개선
-  - [ ] Release 배포
   - [ ] Release 노트 생성기?
+  - [ ] Release 배포
+- Example 관찰 가능성
+  - [ ] 예제 프로젝트 구성
+  - [ ] 소스 정리
+  - [ ] 로그
 
 Item                                      | Type    | File                          | todo
 ---                                       | ---     | ---                           | ---
