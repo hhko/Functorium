@@ -22,7 +22,7 @@
     <RepositoryUrl>https://github.com/hhko/Functorium.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageIcon>icon.png</PackageIcon>
+    <PackageIcon>Functorium.png</PackageIcon>
     <PackageTags>functorium;functional;dotnet;csharp</PackageTags>
 
     <!-- Symbol Package for Debugging -->

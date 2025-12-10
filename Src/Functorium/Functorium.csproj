@@ -10,7 +10,7 @@
   <!-- Package Files -->
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
-    <None Include="..\..\Assets\icon.png" Pack="true" PackagePath="\" />
+    <None Include="..\..\Functorium.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
