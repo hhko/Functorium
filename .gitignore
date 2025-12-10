@@ -403,6 +403,7 @@ FodyWeavers.xsd
 !.vscode/launch.json
 !.vscode/extensions.json
 !.vscode/keybindings.json
+!.vscode/scripts/
 !.vscode/*.code-snippets
 
 # Local History for Visual Studio Code
