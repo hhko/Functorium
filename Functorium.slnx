@@ -1,4 +1,18 @@
 <Solution>
+  <Folder Name="/Examples/" />
+  <Folder Name="/Examples/Observability/" />
+  <Folder Name="/Examples/Observability/Src/">
+    <Project Path="Examples/Observability/Src/Observability.Adapters.Infrastructure/Observability.Adapters.Infrastructure.csproj" />
+    <Project Path="Examples/Observability/Src/Observability.Adapters.Persistence/Observability.Adapters.Persistence.csproj" />
+    <Project Path="Examples/Observability/Src/Observability.Adapters.Presentation/Observability.Adapters.Presentation.csproj" />
+    <Project Path="Examples/Observability/Src/Observability.Applications/Observability.Applications.csproj" />
+    <Project Path="Examples/Observability/Src/Observability.Domains/Observability.Domains.csproj" />
+    <Project Path="Examples/Observability/Src/Observability/Observability.csproj" />
+  </Folder>
+  <Folder Name="/Examples/Observability/Tests/">
+    <Project Path="Examples/Observability/Tests/Observability.Tests.Integration/Observability.Tests.Integration.csproj" />
+    <Project Path="Examples/Observability/Tests/Observability.Tests.Unit/Observability.Tests.Unit.csproj" />
+  </Folder>
   <Folder Name="/Src/">
     <Project Path="Src/Functorium.Testing/Functorium.Testing.csproj" Id="38736c0d-ff4f-4c6f-bc1d-f43b860a570a" />
     <Project Path="Src/Functorium/Functorium.csproj" />
