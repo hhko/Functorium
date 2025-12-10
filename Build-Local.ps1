@@ -299,12 +299,23 @@ function Show-VersionInfo {
   # Get solution directory
   $solutionDir = Split-Path -Parent $SolutionPath
 
-  # Search in Src folder only (exclude GitHub, Docs, etc.)
-  $srcDir = Join-Path $solutionDir "Src"
+  # Search directories: Src and Examples (exclude GitHub, Docs, etc.)
+  $searchDirs = @()
 
-  if (-not (Test-Path $srcDir)) {
-    Write-Detail "Src folder not found, using solution directory"
-    $srcDir = $solutionDir
+  $srcDir = Join-Path $solutionDir "Src"
+  if (Test-Path $srcDir) {
+    $searchDirs += $srcDir
+  }
+
+  $examplesDir = Join-Path $solutionDir "Examples"
+  if (Test-Path $examplesDir) {
+    $searchDirs += $examplesDir
+  }
+
+  # Fallback to solution directory if no standard folders found
+  if ($searchDirs.Count -eq 0) {
+    Write-Detail "Src/Examples folders not found, using solution directory"
+    $searchDirs += $solutionDir
   }
 
   # Build exclusion patterns relative to solution directory
@@ -313,22 +324,23 @@ function Show-VersionInfo {
     (Join-Path $solutionDir "node_modules")
   )
 
-  # Find all .csproj files (exclude external folders within solution)
-  $projectFiles = @(Get-ChildItem -Path $srcDir -Filter "*.csproj" -Recurse -ErrorAction SilentlyContinue |
-    Where-Object {
-      $path = $_.FullName
-      $exclude = $false
-      foreach ($pattern in $excludePatterns) {
-        if ($path.StartsWith($pattern, [System.StringComparison]::OrdinalIgnoreCase)) {
-          $exclude = $true
-          break
-        }
+  # Find all .csproj files from search directories (exclude external folders)
+  $projectFiles = @($searchDirs | ForEach-Object {
+    Get-ChildItem -Path $_ -Filter "*.csproj" -Recurse -ErrorAction SilentlyContinue
+  } | Where-Object {
+    $path = $_.FullName
+    $exclude = $false
+    foreach ($pattern in $excludePatterns) {
+      if ($path.StartsWith($pattern, [System.StringComparison]::OrdinalIgnoreCase)) {
+        $exclude = $true
+        break
       }
-      -not $exclude
-    })
+    }
+    -not $exclude
+  })
 
   if ($projectFiles.Count -eq 0) {
-    Write-WarningMessage "No project files found in $srcDir"
+    Write-WarningMessage "No project files found in search directories"
     return
   }
 
