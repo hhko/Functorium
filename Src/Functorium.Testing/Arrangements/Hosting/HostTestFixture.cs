@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 
-namespace Functorium.Testing.Arrangements.Controllers;
+namespace Functorium.Testing.Arrangements.Hosting;
 
 /// <summary>
-/// HTTP Controller 통합 테스트를 위한 제네릭 Fixture
+/// 호스트 통합 테스트를 위한 제네릭 Fixture
 /// WebApplicationFactory를 사용하여 전체 DI 설정을 재사용합니다.
 ///
 /// 설정 파일 로드 순서:
@@ -12,7 +12,7 @@ namespace Functorium.Testing.Arrangements.Controllers;
 /// 2. 테스트 프로젝트의 appsettings.json (출력 디렉토리에 복사됨, 기존 설정 덮어씀)
 /// </summary>
 /// <typeparam name="TProgram">테스트할 애플리케이션의 Program 클래스</typeparam>
-public class ControllerTestFixture<TProgram> : IAsyncLifetime where TProgram : class
+public class HostTestFixture<TProgram> : IAsyncLifetime where TProgram : class
 {
     private WebApplicationFactory<TProgram>? _factory;
 
@@ -40,7 +40,7 @@ public class ControllerTestFixture<TProgram> : IAsyncLifetime where TProgram : c
                 builder.UseContentRoot(GetTestProjectPath());
 
                 // 추가 설정 적용
-                ConfigureWebHost(builder);
+                ConfigureHost(builder);
             });
 
         // 앱 시작
@@ -61,10 +61,10 @@ public class ControllerTestFixture<TProgram> : IAsyncLifetime where TProgram : c
     }
 
     /// <summary>
-    /// WebHost 추가 설정을 위한 확장 포인트
+    /// Host 추가 설정을 위한 확장 포인트
     /// 파생 클래스에서 오버라이드하여 추가 설정을 적용할 수 있습니다.
     /// </summary>
-    protected virtual void ConfigureWebHost(IWebHostBuilder builder)
+    protected virtual void ConfigureHost(IWebHostBuilder builder)
     {
         // 기본 구현은 비어있음 - 파생 클래스에서 오버라이드
     }
