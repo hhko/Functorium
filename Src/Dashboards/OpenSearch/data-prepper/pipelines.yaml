@@ -1,0 +1,106 @@
+# ====================
+# LOGS PIPELINE
+# ====================
+# Logs Pipeline - Fluent Bit에서 전송받음
+logs-pipeline:
+  workers: 4
+  delay: 3000
+  source:
+    http:
+      port: 2021
+      path: "/log/ingest"
+      health_check_service: true
+      unauthenticated_health_check: true
+  processor:
+    - date:
+        from_time_received: true
+        destination: "@timestamp"
+    - add_entries:
+        entries:
+          - key: "observability_type"
+            value: "logs"
+  sink:
+    - opensearch:
+        hosts: ["http://opensearch:9200"]
+        index: "ss4o_logs-app-prod"
+        bulk_size: 4
+
+# ====================
+# METRICS PIPELINE
+# ====================
+# Metrics Pipeline - OTLP gRPC로 직접 전송받음
+metrics-pipeline:
+  workers: 4
+  delay: 3000
+  source:
+    otel_metrics_source:
+      port: 2023
+      ssl: false
+      health_check_service: true
+      proto_reflection_service: true
+      thread_count: 4
+      request_timeout: 10000
+  processor:
+    - otel_metrics:
+        calculate_histogram_buckets: true
+        calculate_exponential_histogram_buckets: true
+        exponential_histogram_max_allowed_scale: 10
+        flatten_attributes: false
+  sink:
+    - opensearch:
+        hosts: ["http://opensearch:9200"]
+        index: "ss4o_metrics-app-prod"
+        bulk_size: 4
+
+# ====================
+# TRACES PIPELINE
+# ====================
+# OpenTelemetry Traces Pipeline - Entry Point
+trace-pipeline:
+  workers: 8
+  delay: 3000
+  source:
+    otel_trace_source:
+      ssl: false
+      port: 21890
+      health_check_service: true
+      proto_reflection_service: true
+      thread_count: 4
+      request_timeout: 10000
+  processor:
+    - trace_peer_forwarder:
+  sink:
+    - pipeline:
+        name: "raw-trace-pipeline"
+    - pipeline:
+        name: "service-map-pipeline"
+
+# Raw Trace Pipeline - 실제 Trace 데이터 저장
+raw-trace-pipeline:
+  workers: 8
+  delay: 3000
+  source:
+    pipeline:
+      name: "trace-pipeline"
+  processor:
+    - otel_trace_raw:
+  sink:
+    - opensearch:
+        hosts: ["http://opensearch:9200"]
+        index_type: trace-analytics-raw
+        bulk_size: 4
+
+# Service Map Pipeline - 서비스 맵 생성
+service-map-pipeline:
+  workers: 4
+  delay: 3000
+  source:
+    pipeline:
+      name: "trace-pipeline"
+  processor:
+    - service_map_stateful:
+  sink:
+    - opensearch:
+        hosts: ["http://opensearch:9200"]
+        index_type: trace-analytics-service-map
+        bulk_size: 4
