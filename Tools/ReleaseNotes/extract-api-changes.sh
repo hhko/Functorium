@@ -58,31 +58,6 @@ main() {
     fi
     echo "    ApiGenerator built successfully"
 
-    # Use the existing APIDiff.proj file
-    local api_diff_proj="$TOOLS_DIR/APIDiff.proj"
-
-    if [ ! -f "$api_diff_proj" ]; then
-        echo "Error: APIDiff.proj not found at $api_diff_proj"
-        exit 1
-    fi
-
-    echo "    Building all projects..."
-
-    local build_start_time=$(date +%s)
-
-    # Build all projects using the dedicated project file with binary logging
-    echo "    Binary log will be saved to: $API_CHANGES_DIR/build.binlog"
-    if dotnet build "$api_diff_proj" -t:BuildAndGenerateAPI /bl:"$API_CHANGES_DIR/build.binlog" -c Release; then
-        local build_end_time=$(date +%s)
-        local build_time=$((build_end_time - build_start_time))
-        echo "    All projects built successfully in ${build_time}s"
-    else
-        local build_end_time=$(date +%s)
-        local build_time=$((build_end_time - build_start_time))
-        echo "    Some projects failed to build (${build_time}s)"
-        echo "    Check binary log: $API_CHANGES_DIR/build.binlog"
-    fi
-
     # Find all projects to generate API for
     echo "Publishing and generating Public API files..."
 
@@ -216,7 +191,6 @@ EOF
     echo "   Summary: $API_CHANGES_DIR/api-changes-summary.md"
     echo "   Uber API File: $API_CHANGES_DIR/all-api-changes.txt"
     echo "   API Files: $API_CHANGES_DIR/api-files/"
-    echo "   Build Log: $API_CHANGES_DIR/build.binlog"
     echo ""
 }
 

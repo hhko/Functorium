@@ -228,7 +228,6 @@ This document contains all Public API definitions from the Functorium repository
     Write-Host "   Summary: $ApiChangesDir/api-changes-summary.md"
     Write-Host "   Uber API File: $ApiChangesDir/all-api-changes.txt"
     Write-Host "   API Files: $ApiChangesDir/api-files/"
-    Write-Host "   Build Log: $ApiChangesDir/build.binlog"
     Write-Host ""
 }
 
