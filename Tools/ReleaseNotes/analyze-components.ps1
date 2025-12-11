@@ -10,9 +10,10 @@ param(
 $ErrorActionPreference = "Stop"
 
 $ScriptsDir = $PSScriptRoot
-$ReleaseNotesDir = Split-Path $ScriptsDir -Parent
+$GitRoot = git rev-parse --show-toplevel 2>$null
+if (-not $GitRoot) { $GitRoot = Split-Path (Split-Path $ScriptsDir -Parent) -Parent }
 $ConfigFile = Join-Path $ScriptsDir "config\component-priority.json"
-$AnalysisDir = Join-Path $ReleaseNotesDir "analysis-output"
+$AnalysisDir = Join-Path $GitRoot ".release-notes\analysis-output"
 
 Write-Host "🔍 Starting automated component analysis" -ForegroundColor Cyan
 Write-Host "📋 Using config: $ConfigFile"
