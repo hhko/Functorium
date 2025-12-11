@@ -30,15 +30,23 @@ Git log 정보를 수집하고 Conventional Commits를 분류하여 고객 친�
 
 ### 버전 자동 결정 (버전 미지정 시)
 
-- 마지막 태그를 기반으로 다음 버전을 자동 결정합니다
-- feat 커밋이 있으면 Minor 버전 증가
-- fix/perf 커밋만 있으면 Patch 버전 증가
+MinVer를 통해 Git 기반 버전을 자동 계산합니다:
+
+- **MinVer 계산 버전 사용**: `dotnet build -p:MinVerVerbosity=normal`로 버전 확인
+- **Height 포함**: 커밋 카운트가 포함된 실제 개발 버전 (예: `1.2.1-alpha.0.5`)
+- **태그 위치**: 태그가 있는 커밋은 stable 버전 (예: `1.2.0`)
+- **태그 없음**: 기본 버전 사용 (예: `1.0.0-alpha.0.18`)
+
+**버전 계산 예시:**
+- 마지막 태그: `v1.2.0`
+- 현재 위치: 5 커밋 후
+- **계산 결과**: `v1.2.1-alpha.0.5` (MinVerAutoIncrement=patch 기준)
 
 **사용 예시:**
 ```
-/release-note                          # 자동 버전, 일반 Overview
+/release-note                          # MinVer 계산 버전, 일반 Overview
 /release-note v1.3.0                   # v1.3.0 버전, 일반 Overview
-/release-note VSCode 개발 환경          # 자동 버전, VSCode 중심 Overview
+/release-note VSCode 개발 환경          # MinVer 계산 버전, VSCode 중심 Overview
 /release-note v1.3.0 Observability     # v1.3.0 버전, Observability 중심 Overview
 ```
 
@@ -50,16 +58,31 @@ Git 저장소인지 확인합니다.
 
 ### 2. 현재 버전 및 범위 확인
 
+**버전 미지정 시 MinVer로 자동 계산:**
+
 ```bash
-# 최신 태그 확인
+# MinVer 계산 버전 확인
+dotnet build -p:MinVerVerbosity=normal 2>&1 | grep "MinVer: Calculated version"
+# 예: MinVer: Calculated version 1.2.1-alpha.0.5
+
+# 버전 추출 후 v 접두사 추가
+# → v1.2.1-alpha.0.5
+```
+
+**범위 확인:**
+
+```bash
+# 최신 태그 확인 (범위 결정용)
 git describe --tags --abbrev=0 2>/dev/null
 
 # 모든 태그 목록
 git tag --list --sort=-v:refname | head -5
 ```
 
-- 태그가 없으면 v1.0.0을 기준으로 사용
-- 범위: `{마지막태그}..HEAD`
+**범위 결정:**
+- 태그가 있으면: `{마지막태그}..HEAD`
+- 태그가 없으면: 전체 커밋 (처음부터 HEAD)
+- MinVer 버전과 범위는 별개 (범위는 태그 기준)
 
 ### 3. 커밋 수집
 
@@ -92,11 +115,32 @@ git log {last-tag}..HEAD --format="%h|%s" --no-merges
 
 ### 5. 버전 결정 (파라미터 미지정 시)
 
-`$ARGUMENTS`가 비어있으면:
-1. 마지막 태그에서 버전 추출
-2. Breaking Change 또는 feat이 있으면 → Minor 증가
-3. fix/perf만 있으면 → Patch 증가
-4. 태그 형식: `v{major}.{minor}.{patch}`
+`$ARGUMENTS`에 버전이 없으면 MinVer를 사용하여 자동 계산합니다:
+
+#### MinVer 버전 계산
+
+```bash
+# 1. MinVer로 현재 버전 계산
+dotnet build -p:MinVerVerbosity=normal 2>&1 | grep "MinVer: Calculated version"
+
+# 출력 예시:
+# MinVer: Calculated version 1.2.1-alpha.0.5
+```
+
+**버전 추출 방법:**
+1. `dotnet build -p:MinVerVerbosity=normal` 실행
+2. 출력에서 `MinVer: Calculated version X.Y.Z` 패턴 검색
+3. 추출된 버전에 `v` 접두사 추가: `v1.2.1-alpha.0.5`
+
+**버전 계산 규칙 (MinVer):**
+- **태그 위치**: `v1.2.0` → stable 버전 `1.2.0`
+- **태그 후 커밋**: `v1.2.0` + 5 커밋 → `1.2.1-alpha.0.5`
+- **태그 없음**: 초기 개발 → `1.0.0-alpha.0.18`
+- **MinVerAutoIncrement**: Patch 자동 증가 (현재 프로젝트 설정)
+
+**주의사항:**
+- 빌드가 실패하면 마지막 태그 기반으로 폴백
+- MinVer가 없으면 v1.0.0을 기본값으로 사용
 
 ### 6. 릴리스 노트 작성
 
@@ -211,8 +255,15 @@ git log {last-tag}..HEAD --format="%h|%s" --no-merges
 ```
 출력 폴더: .release-notes/
 파일명: RELEASE-{version}.md
-예: .release-notes/RELEASE-v1.3.0.md
+예:
+  - .release-notes/RELEASE-v1.3.0.md (stable 버전)
+  - .release-notes/RELEASE-v1.2.1-alpha.0.5.md (개발 버전)
 ```
+
+**파일명 규칙:**
+- 버전에 `v` 접두사 포함
+- Prerelease suffix 포함 (있는 경우)
+- Height/Build metadata 포함 (MinVer 계산 버전)
 
 - `.release-notes` 폴더가 없으면 생성
 - 동일 버전 파일이 있으면 덮어쓰기
@@ -260,7 +311,9 @@ feat, fix, perf 타입의 커밋이 있을 때 다시 실행하세요.
 
 ## 주의사항
 
-1. **버전 형식**: `v` 접두사 포함 (예: v1.2.0)
-2. **Conventional Commits 필수**: 커밋이 형식을 따르지 않으면 분류에서 제외
-3. **머지 커밋 제외**: `--no-merges` 옵션으로 머지 커밋은 제외
-4. **동일 버전 덮어쓰기**: 같은 버전의 릴리스 노트가 있으면 덮어씀
+1. **버전 형식**: `v` 접두사 포함 (예: v1.2.0, v1.2.1-alpha.0.5)
+2. **MinVer 의존성**: 버전 자동 계산 시 MinVer 패키지 필요
+3. **Conventional Commits 필수**: 커밋이 형식을 따르지 않으면 분류에서 제외
+4. **머지 커밋 제외**: `--no-merges` 옵션으로 머지 커밋은 제외
+5. **동일 버전 덮어쓰기**: 같은 버전의 릴리스 노트가 있으면 덮어씀
+6. **개발 버전 릴리스 노트**: Height 포함 버전도 릴리스 노트 생성 가능 (내부 개발 문서화용)
