@@ -9,9 +9,8 @@ BASE_BRANCH=${1:-origin/release/1.0}
 TARGET_BRANCH=${2:-origin/main}
 
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-GIT_ROOT="$(git rev-parse --show-toplevel)"
 CONFIG_FILE="$SCRIPTS_DIR/config/component-priority.json"
-ANALYSIS_DIR="$GIT_ROOT/.release-notes/analysis-output"
+ANALYSIS_DIR="$SCRIPTS_DIR/analysis-output"
 
 echo "🔍 Starting automated component analysis"
 echo "📋 Using config: $CONFIG_FILE"
