@@ -13,7 +13,11 @@
       "Bash(tail:*)",
       "Bash(head:*)",
       "Bash(mkdir:*)",
-      "Bash(if:*)"
+      "Bash(if:*)",
+      "Bash(then mkdir .release-notes)",
+      "Bash(fi)",
+      "Bash(mv:*)",
+      "Bash(rmdir:*)"
     ],
     "deny": [],
     "ask": []
