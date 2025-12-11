@@ -56,6 +56,12 @@ git tag v1.0.0                        # 태그 생성
 git tag --sort=-v:refname             # 버전 역순 정렬
 ```
 
+**커밋 합치기:**
+```bash
+git rebase -i HEAD~3                  # 최근 3개 커밋 편집
+git reset --soft HEAD~3               # 최근 3개 커밋 취소 (변경사항 유지)
+```
+
 **긴급 상황:**
 ```bash
 git restore <파일>                    # 변경 취소
@@ -247,6 +253,59 @@ git commit
 
 # 마지막 커밋 메시지 수정
 git commit --amend -m "fix: 로그인 버그 수정"
+```
+
+### 커밋 합치기 (Squash)
+
+여러 개의 커밋을 하나로 합쳐서 깔끔한 히스토리를 만들 수 있습니다.
+
+| 명령어 | 설명 |
+|--------|------|
+| `git rebase -i HEAD~N` | 최근 N개 커밋을 대화형으로 편집 |
+| `git rebase -i <커밋해시>` | 특정 커밋 이후의 커밋들을 편집 |
+| `git reset --soft HEAD~N` | 최근 N개 커밋을 취소하고 변경사항 스테이징 유지 |
+
+**방법 1: Interactive Rebase 사용**
+
+```bash
+# 최근 3개 커밋을 하나로 합치기
+git rebase -i HEAD~3
+```
+
+에디터가 열리면 다음과 같이 표시됩니다:
+```
+pick abc1234 첫 번째 커밋
+pick def5678 두 번째 커밋
+pick ghi9012 세 번째 커밋
+```
+
+첫 번째를 제외한 나머지를 `squash` 또는 `s`로 변경:
+```
+pick abc1234 첫 번째 커밋
+squash def5678 두 번째 커밋
+squash ghi9012 세 번째 커밋
+```
+
+저장 후 새 커밋 메시지를 작성합니다.
+
+**방법 2: Soft Reset 사용 (더 간단)**
+
+```bash
+# 최근 3개 커밋을 취소하고 변경사항은 스테이징 유지
+git reset --soft HEAD~3
+
+# 하나의 새 커밋으로 다시 커밋
+git commit -m "feat: 기능 구현 완료"
+```
+
+**주의사항:**
+- 이미 push한 커밋을 squash하면 force push가 필요합니다
+- 공유 브랜치(main/master)에서는 사용하지 마세요
+- 개인 feature 브랜치에서 PR 전에 정리할 때 유용합니다
+
+```bash
+# squash 후 force push (개인 브랜치에서만)
+git push --force-with-lease
 ```
 
 <br/>
@@ -645,7 +704,26 @@ git switch -c <로컬브랜치> --track origin/<원격브랜치>
 git push --force-with-lease
 ```
 
-### Q10. 병합(merge)과 리베이스(rebase)의 차이점은 무엇인가요?
+### Q10. 여러 커밋을 하나로 합치려면 어떻게 하나요?
+
+**방법 1: Interactive Rebase**
+```bash
+# 최근 3개 커밋을 편집
+git rebase -i HEAD~3
+
+# 에디터에서 합칠 커밋을 pick → squash(또는 s)로 변경
+# 저장 후 새 커밋 메시지 작성
+```
+
+**방법 2: Soft Reset (더 간단)**
+```bash
+git reset --soft HEAD~3
+git commit -m "feat: 기능 구현 완료"
+```
+
+> **주의**: 이미 push한 커밋을 squash하면 `git push --force-with-lease`가 필요합니다. 공유 브랜치에서는 사용하지 마세요.
+
+### Q11. 병합(merge)과 리베이스(rebase)의 차이점은 무엇인가요?
 
 | 구분 | merge | rebase |
 |------|-------|--------|
