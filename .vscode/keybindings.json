@@ -10,31 +10,39 @@
 //   - Mac: ~/Library/Application Support/Code/User/keybindings.json
 //   - Linux: ~/.config/Code/User/keybindings.json
 //
+
+// Shortcut     | Task                    | 설명
+// -------------|-------------------------|----
+// Ctrl+Shift+B | build-{ProjectName}     | 프로젝트 빌드
+// Ctrl+Alt+P   | publish-{ProjectName}   | 프로젝트 배포
+// Ctrl+Alt+W   | watch-{ProjectName}     | Hot Reload 실행
+// Ctrl+Shift+T | -                       | Task 목록 표시
+// Ctrl+Shift+K | -                       | 실행 중인 Task 종료
+// Ctrl+Shift+R | -                       | 마지막 Task 재실행
 [
     // ============================================
     // Task 실행 단축키
     // ============================================
 
-    // Ctrl+Shift+B: Build (기본 빌드)
+    // Ctrl+Shift+B: Build
     {
         "key": "ctrl+shift+b",
         "command": "workbench.action.tasks.runTask",
-        "args": "build"
+        "args": "build-Observability"
     },
 
-    // Ctrl+Shift+P 후 publish 입력 대신 직접 실행
     // Ctrl+Alt+P: Publish
     {
         "key": "ctrl+alt+p",
         "command": "workbench.action.tasks.runTask",
-        "args": "publish"
+        "args": "publish-Observability"
     },
 
     // Ctrl+Alt+W: Watch (Hot Reload)
     {
         "key": "ctrl+alt+w",
         "command": "workbench.action.tasks.runTask",
-        "args": "watch"
+        "args": "watch-Observability"
     },
 
     // ============================================

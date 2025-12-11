@@ -222,7 +222,7 @@ $tasksJsonOutput = $tasksJson | ConvertTo-Json @jsonOptions
 $tasksJsonOutput = $tasksJsonOutput -replace '(\[\s*\])', '[]'
 $tasksJsonOutput | Set-Content $tasksJsonPath -Encoding UTF8
 
-# 7. keybindings.json 업데이트
+# 7. keybindings.json 업데이트 (기존 단축키의 args만 변경)
 $keybindingsUpdated = $false
 if (Test-Path $keybindingsJsonPath) {
     Write-Info "keybindings.json 업데이트 중..."
@@ -233,51 +233,42 @@ if (Test-Path $keybindingsJsonPath) {
     if ($keybindingsContent -match "build-$ProjectName") {
         Write-Warning "keybindings.json에 '$ProjectName' 관련 키바인딩이 이미 있습니다."
     } else {
-        # 새 키바인딩 항목 생성
-        $newKeybindings = @"
+        # 기존 단축키의 args를 새 프로젝트로 업데이트
+        # "args": "build" → "args": "build-ProjectName"
+        # "args": "publish" → "args": "publish-ProjectName"
+        # "args": "watch" → "args": "watch-ProjectName"
 
-    // ============================================
-    // $ProjectName 프로젝트
-    // ============================================
+        $updated = $false
 
-    // build-$ProjectName
-    {
-        "key": "ctrl+alt+b",
-        "command": "workbench.action.tasks.runTask",
-        "args": "build-$ProjectName"
-    },
+        # build 단축키 업데이트
+        if ($keybindingsContent -match '"args":\s*"build[^-]') {
+            $keybindingsContent = $keybindingsContent -replace '("args":\s*")build(")', "`$1build-$ProjectName`$2"
+            $updated = $true
+        } elseif ($keybindingsContent -match '"args":\s*"build-[^"]+') {
+            # 이미 다른 프로젝트로 설정된 경우 업데이트
+            $keybindingsContent = $keybindingsContent -replace '("args":\s*")build-[^"]+(")', "`$1build-$ProjectName`$2"
+            $updated = $true
+        }
 
-    // publish-$ProjectName
-    {
-        "key": "ctrl+alt+p",
-        "command": "workbench.action.tasks.runTask",
-        "args": "publish-$ProjectName"
-    },
+        # publish 단축키 업데이트
+        if ($keybindingsContent -match '"args":\s*"publish[^-]') {
+            $keybindingsContent = $keybindingsContent -replace '("args":\s*")publish(")', "`$1publish-$ProjectName`$2"
+            $updated = $true
+        } elseif ($keybindingsContent -match '"args":\s*"publish-[^"]+') {
+            $keybindingsContent = $keybindingsContent -replace '("args":\s*")publish-[^"]+(")', "`$1publish-$ProjectName`$2"
+            $updated = $true
+        }
 
-    // watch-$ProjectName
-    {
-        "key": "ctrl+alt+w",
-        "command": "workbench.action.tasks.runTask",
-        "args": "watch-$ProjectName"
-    }
-"@
+        # watch 단축키 업데이트
+        if ($keybindingsContent -match '"args":\s*"watch[^-]') {
+            $keybindingsContent = $keybindingsContent -replace '("args":\s*")watch(")', "`$1watch-$ProjectName`$2"
+            $updated = $true
+        } elseif ($keybindingsContent -match '"args":\s*"watch-[^"]+') {
+            $keybindingsContent = $keybindingsContent -replace '("args":\s*")watch-[^"]+(")', "`$1watch-$ProjectName`$2"
+            $updated = $true
+        }
 
-        # 마지막 ] 앞에 새 키바인딩 삽입
-        # 마지막 ] 찾기 (배열의 끝)
-        $lastBracketIndex = $keybindingsContent.LastIndexOf(']')
-        if ($lastBracketIndex -gt 0) {
-            # 마지막 항목 뒤에 콤마가 있는지 확인
-            $beforeBracket = $keybindingsContent.Substring(0, $lastBracketIndex).TrimEnd()
-
-            # 마지막 유효 문자가 } 또는 콤마인지 확인
-            if ($beforeBracket[-1] -eq '}') {
-                # 콤마 추가 필요
-                $keybindingsContent = $keybindingsContent.Substring(0, $lastBracketIndex) + ",$newKeybindings`n]`n"
-            } else {
-                # 이미 콤마가 있음
-                $keybindingsContent = $keybindingsContent.Substring(0, $lastBracketIndex) + "$newKeybindings`n]`n"
-            }
-
+        if ($updated) {
             $keybindingsContent | Set-Content $keybindingsJsonPath -Encoding UTF8 -NoNewline
             $keybindingsUpdated = $true
         }
@@ -297,10 +288,10 @@ Write-Host "    - task: publish-$ProjectName"
 Write-Host "    - task: watch-$ProjectName"
 Write-Host ""
 if ($keybindingsUpdated) {
-    Write-Host "  keybindings.json:"
-    Write-Host "    - Ctrl+Alt+B: build-$ProjectName"
-    Write-Host "    - Ctrl+Alt+P: publish-$ProjectName"
-    Write-Host "    - Ctrl+Alt+W: watch-$ProjectName"
+    Write-Host "  keybindings.json (args 업데이트):"
+    Write-Host "    - Ctrl+Shift+B → build-$ProjectName"
+    Write-Host "    - Ctrl+Alt+P   → publish-$ProjectName"
+    Write-Host "    - Ctrl+Alt+W   → watch-$ProjectName"
     Write-Host ""
 }
 Write-Info "VSCode를 다시 로드하거나 F5를 눌러 실행하세요."

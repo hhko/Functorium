@@ -120,48 +120,26 @@ if (Test-Path $tasksJsonPath) {
     Write-Warning "  tasks.json 파일이 없습니다."
 }
 
-# 3. keybindings.json에서 키바인딩 제거
+# 3. keybindings.json에서 키바인딩 복원 (args를 기본값으로)
 Write-Info "keybindings.json 확인 중..."
 
 if (Test-Path $keybindingsJsonPath) {
     $keybindingsContent = Get-Content $keybindingsJsonPath -Raw
 
-    # 해당 프로젝트 섹션이 있는지 확인
-    if ($keybindingsContent -match "// $ProjectName 프로젝트") {
-        # 프로젝트 섹션 제거 (섹션 헤더부터 다음 섹션 또는 배열 끝까지)
-        # 패턴: // ===... // ProjectName 프로젝트 ... 다음 // ===까지 또는 ]까지
+    # 해당 프로젝트의 키바인딩이 있는지 확인
+    if ($keybindingsContent -match "build-$ProjectName") {
+        # args를 기본값으로 복원
+        # "args": "build-ProjectName" → "args": "build"
+        # "args": "publish-ProjectName" → "args": "publish"
+        # "args": "watch-ProjectName" → "args": "watch"
 
-        # 더 안전한 방식: 각 키바인딩 항목을 개별적으로 제거
-        $patterns = @(
-            "build-$ProjectName",
-            "publish-$ProjectName",
-            "watch-$ProjectName"
-        )
+        $keybindingsContent = $keybindingsContent -replace "build-$([regex]::Escape($ProjectName))", "build"
+        $keybindingsContent = $keybindingsContent -replace "publish-$([regex]::Escape($ProjectName))", "publish"
+        $keybindingsContent = $keybindingsContent -replace "watch-$([regex]::Escape($ProjectName))", "watch"
 
-        $modified = $false
-        foreach ($pattern in $patterns) {
-            if ($keybindingsContent -match [regex]::Escape($pattern)) {
-                $modified = $true
-            }
-        }
-
-        if ($modified) {
-            # 프로젝트 섹션 전체 제거 (주석 포함)
-            # 패턴: ,?\s*// ={10,}\s*// ProjectName 프로젝트\s*// ={10,}.*?watch-ProjectName.*?\}
-            $sectionPattern = ",?\s*// ={10,}\s*// $([regex]::Escape($ProjectName)) 프로젝트\s*// ={10,}[\s\S]*?watch-$([regex]::Escape($ProjectName))[\s\S]*?\}"
-
-            $keybindingsContent = $keybindingsContent -replace $sectionPattern, ""
-
-            # 연속된 빈 줄 정리
-            $keybindingsContent = $keybindingsContent -replace "`n{3,}", "`n`n"
-
-            # 배열 끝 정리 (마지막 항목 뒤 콤마 처리)
-            $keybindingsContent = $keybindingsContent -replace ",(\s*)\]", "`$1]"
-
-            $keybindingsContent | Set-Content $keybindingsJsonPath -Encoding UTF8 -NoNewline
-            $removedItems.keybindings = $true
-            Write-Success "  제거됨: '$ProjectName' 관련 키바인딩"
-        }
+        $keybindingsContent | Set-Content $keybindingsJsonPath -Encoding UTF8 -NoNewline
+        $removedItems.keybindings = $true
+        Write-Success "  복원됨: 단축키 args를 기본값으로 복원"
     } else {
         Write-Warning "  없음: '$ProjectName' 관련 키바인딩"
     }
@@ -189,10 +167,10 @@ if ($removedItems.launch -or $removedItems.tasks.Count -gt 0 -or $removedItems.k
     }
 
     if ($removedItems.keybindings) {
-        Write-Host "  keybindings.json:"
-        Write-Host "    - Ctrl+Alt+B: build-$ProjectName"
-        Write-Host "    - Ctrl+Alt+P: publish-$ProjectName"
-        Write-Host "    - Ctrl+Alt+W: watch-$ProjectName"
+        Write-Host "  keybindings.json (args 복원):"
+        Write-Host "    - Ctrl+Shift+B → build"
+        Write-Host "    - Ctrl+Alt+P   → publish"
+        Write-Host "    - Ctrl+Alt+W   → watch"
     }
 
     Write-Host ""
