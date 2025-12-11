@@ -10,6 +10,7 @@
 - [주요 설정 옵션](#주요-설정-옵션)
 - [버전 계산 방식](#버전-계산-방식)
 - [버전 진행 시나리오](#버전-진행-시나리오)
+- [Height의 실질적 활용](#height의-실질적-활용)
 - [고급 사용법](#고급-사용법)
 - [트러블슈팅](#트러블슈팅)
 - [FAQ](#faq)
@@ -701,6 +702,183 @@ git tag v25.13.1
 3. **Identifier 변경**: alpha → beta → rc 진행
 4. **MinVerAutoIncrement**: RTM 태그 후 Patch +1 자동 표시
 5. **Pre-release 선택적**: 필요에 따라 alpha, beta, rc 단계 생략 가능
+
+<br/>
+
+## Height의 실질적 활용
+
+Height(커밋 카운트)는 단순히 커밋 건수를 보여주는 것 이상의 의미를 갖습니다.
+
+### 1. 각 빌드의 고유성 보장
+
+개발 중 모든 빌드가 고유한 버전 번호를 가집니다:
+
+```shell
+v1.0.0-alpha.0.3  # 3번째 커밋
+v1.0.0-alpha.0.4  # 4번째 커밋
+v1.0.0-alpha.0.5  # 5번째 커밋
+```
+
+**장점:**
+- NuGet/npm 패키지 관리자에서 각 버전을 명확히 구분
+- 버전 충돌 없이 CI/CD에서 자동 배포 가능
+- 동일 버전 재배포 문제 방지
+
+### 2. 추적 가능성 (Traceability)
+
+프로덕션 문제 발생 시 정확한 소스 코드 추적이 가능합니다:
+
+```shell
+# 버전에서 커밋 위치 파악
+1.0.0-alpha.0.47
+# → "alpha.0 태그로부터 47 커밋 후" 즉시 확인
+
+# Git에서 역추적
+git describe --tags
+# v1.0.0-alpha.0-47-gabc1234
+```
+
+**활용:**
+- 특정 빌드가 어떤 커밋에서 생성되었는지 역추적
+- 버그 재현을 위한 정확한 소스 코드 상태 파악
+- Git SHA와 매핑하여 코드 변경 이력 확인
+
+### 3. 태그 없이 개발 진행
+
+매 커밋마다 태그를 생성할 필요 없이 자연스럽게 개발할 수 있습니다:
+
+```shell
+# 개발 흐름
+alpha.0.5 ──> alpha.0.6 ──> alpha.0.7 ──> "이 버전 괜찮네!" ──> v1.0.0-alpha.1 태그
+                                                                       │
+                                                                       └──> alpha.1.1 ──> alpha.1.2
+```
+
+**워크플로우:**
+1. 일반 개발: 커밋만 하면 자동으로 버전 증가
+2. 테스트 중: Height로 진행 상황 파악
+3. 안정화 완료: 의미 있는 시점에만 태그 생성
+4. 이전 `.xxx` 버전들: 중간 개발 버전으로 의미 유지
+
+### 4. SemVer 2.0 정렬 규칙
+
+버전 정렬이 자연스럽게 동작합니다:
+
+```shell
+1.0.0-alpha.0.5   <
+1.0.0-alpha.0.6   <
+1.0.0-alpha.1     <  (태그 생성 시 자동 "승격")
+1.0.0-alpha.1.1   <
+1.0.0-alpha.2
+```
+
+- NuGet은 숫자 부분을 자연스럽게 정렬
+- `alpha.1`이 `alpha.0.999`보다 높음
+- 패키지 관리자가 최신 버전 자동 인식
+
+### 5. 실용적 시나리오
+
+#### 시나리오 A: 내부 테스팅 워크플로우
+
+```bash
+# 1. 개발자 A가 기능 개발 (5 커밋)
+git commit -m "feat: add user validation"
+# ... 4 more commits
+dotnet pack
+# → MyPackage.1.0.0-alpha.0.5.nupkg
+
+# 2. QA 팀에 내부 배포
+dotnet nuget push MyPackage.1.0.0-alpha.0.5.nupkg --source internal-feed
+
+# 3. QA 팀이 버그 발견
+# 개발자 B가 수정 (2 커밋 추가)
+git commit -m "fix: validation error"
+git commit -m "fix: edge case handling"
+dotnet pack
+# → MyPackage.1.0.0-alpha.0.7.nupkg
+
+# 4. 수정된 버전 재배포
+dotnet nuget push MyPackage.1.0.0-alpha.0.7.nupkg --source internal-feed
+
+# 5. QA 팀이 최신 버전(alpha.0.7) 자동 인식하여 테스트
+dotnet restore
+# → 자동으로 1.0.0-alpha.0.7 사용
+```
+
+**핵심:**
+- 태그 없이도 각 빌드가 고유한 버전
+- QA 팀은 항상 최신 버전 식별 가능
+- 버전 충돌 없이 반복 테스트
+
+#### 시나리오 B: 공식 릴리스 결정
+
+```bash
+# 1. 충분한 내부 테스트 완료
+# (alpha.0.1 ~ alpha.0.23까지 테스트 진행)
+
+# 2. "이 버전이 안정적이다" 판단 시점
+git tag v1.0.0-alpha.1 -m "First stable alpha release"
+dotnet pack
+# → MyPackage.1.0.0-alpha.1.nupkg
+
+# 3. 공식 피드에 배포
+dotnet nuget push MyPackage.1.0.0-alpha.1.nupkg --source nuget.org
+
+# 4. 이후 추가 개발
+git commit -m "feat: next feature"
+dotnet pack
+# → MyPackage.1.0.0-alpha.1.1.nupkg (alpha.1 기준으로 카운트 재시작)
+```
+
+**핵심:**
+- 내부 테스트는 `.0.N` 버전으로 진행
+- 안정화 시점에만 공식 태그 생성
+- 태그 없는 버전은 임시 개발 버전
+- 태그 버전은 공식 릴리스 버전
+
+### 6. 개발자 피드백
+
+Height는 개발 진행 상황을 실시간으로 알려줍니다:
+
+```bash
+$ dotnet pack
+  MyPackage -> bin\Debug\MyPackage.1.0.0-alpha.0.23.nupkg
+```
+
+**피드백 해석:**
+- ✅ "마지막 태그로부터 23 커밋 지났네, 슬슬 다음 태그 고려해야겠다"
+- ✅ "이 빌드는 정확히 23번째 변경사항이구나"
+- ✅ "CI에서 자동으로 고유 버전 생성되니 충돌 걱정 없음"
+- ✅ "나중에 이 버전으로 돌아가야 하면 Git에서 찾을 수 있음"
+
+### 7. Height vs 수동 Phase 관리
+
+| 요소 | 변경 방식 | 목적 | 예시 |
+|------|----------|------|------|
+| **Height** | 자동 (커밋마다) | 빌드 고유성 보장 | alpha.0.23 |
+| **Phase** | 수동 (태그만) | 릴리스 마일스톤 | alpha.0 → alpha.1 |
+
+```bash
+# Height: 자동 증가 (개발 진행도)
+커밋 → alpha.0.1
+커밋 → alpha.0.2
+커밋 → alpha.0.3
+...
+
+# Phase: 수동 변경 (릴리스 결정)
+git tag v1.0.0-alpha.1  # ← 의도적 마일스톤
+```
+
+### 결론
+
+Height는 "단순 커밋 건수"가 아닙니다:
+
+1. **자동화**: 수동 버전 관리 불필요
+2. **추적성**: 문제 발생 시 소스 코드 역추적
+3. **호환성**: NuGet/npm 등 패키지 관리 도구와 완벽 통합
+4. **피드백**: 개발 리듬과 태그 시점 판단 근거
+
+MinVer의 철학은 **"태그는 의미 있는 마일스톤에만, 나머지는 자동"**입니다.
 
 <br/>
 
