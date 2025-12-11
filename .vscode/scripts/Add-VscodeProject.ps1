@@ -247,6 +247,13 @@ if (Test-Path $keybindingsJsonPath) {
         "args": "build-$ProjectName"
     },
 
+    // publish-$ProjectName
+    {
+        "key": "ctrl+alt+p",
+        "command": "workbench.action.tasks.runTask",
+        "args": "publish-$ProjectName"
+    },
+
     // watch-$ProjectName
     {
         "key": "ctrl+alt+w",
@@ -292,6 +299,7 @@ Write-Host ""
 if ($keybindingsUpdated) {
     Write-Host "  keybindings.json:"
     Write-Host "    - Ctrl+Alt+B: build-$ProjectName"
+    Write-Host "    - Ctrl+Alt+P: publish-$ProjectName"
     Write-Host "    - Ctrl+Alt+W: watch-$ProjectName"
     Write-Host ""
 }
