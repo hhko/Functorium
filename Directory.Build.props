@@ -42,6 +42,12 @@
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
 
+  <!-- GenAPI for Public API Surface generation (requires dotnet internal feeds)
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.GenAPI.Task" PrivateAssets="All" />
+  </ItemGroup>
+  -->
+
   <!-- Versioning with MinVer -->
   <ItemGroup>
     <PackageReference Include="MinVer">

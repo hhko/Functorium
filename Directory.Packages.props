@@ -8,6 +8,11 @@
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
   </ItemGroup>
 
+  <ItemGroup Label="API Generation">
+    <PackageVersion Include="PublicApiGenerator" Version="11.5.0" />
+    <PackageVersion Include="System.Reflection.MetadataLoadContext" Version="9.0.1" />
+  </ItemGroup>
+
   <ItemGroup Label="Basic">
     <PackageVersion Include="LanguageExt.Core" Version="5.0.0-beta-58" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
