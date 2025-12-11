@@ -210,7 +210,7 @@ This document contains all Public API definitions from the Functorium repository
 
         # Write projects list
         $ProjectsList = Join-Path $ApiChangesDir "projects.txt"
-        $DllFiles | ForEach-Object { $_.Name } | Out-File -FilePath $ProjectsList -Encoding UTF8
+        $ProjectFiles | ForEach-Object { $_.Name } | Out-File -FilePath $ProjectsList -Encoding UTF8
 
     } finally {
         Pop-Location

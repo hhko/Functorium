@@ -177,7 +177,7 @@ EOF
     done
 
     # Write projects list
-    find "$src_dir" -path "*/bin/Release/*" -name "Functorium*.dll" ! -name "*.Tests.*" ! -name "*.resources.dll" 2>/dev/null | xargs -I{} basename {} | sort -u > "$API_CHANGES_DIR/projects.txt"
+    find "$src_dir" -name "Functorium*.csproj" ! -name "*.Tests.*" 2>/dev/null | xargs -I{} basename {} | sort -u > "$API_CHANGES_DIR/projects.txt"
 
     end_time=$(date +%s)
     total_time=$((end_time - start_time))
