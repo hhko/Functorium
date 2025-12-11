@@ -2,11 +2,6 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": ".NET Core Attach",
-      "type": "coreclr",
-      "request": "attach"
-    },
-    {
       "name": "Observability",
       "type": "coreclr",
       "request": "launch",
@@ -19,7 +14,12 @@
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
-    }
+    },
+    {
+      "name": ".NET Core Attach",
+      "type": "coreclr",
+      "request": "attach"
+    },
   ],
   "compounds": []
 }
