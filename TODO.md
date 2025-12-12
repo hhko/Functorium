@@ -186,6 +186,17 @@
     - 파일명: RELEASE-v1.0.0-alpha.0.132.md
     - 문서: v1.0.0-alpha.0 <--- x
   - [ ] markdownlint-cli@0.45.0 사전 설치
+  - [ ] ExtractApiChanges 이모지 제거
+  - [ ] ExtractApiChanges 콘솔 출력 색상
+  - [ ] ExtractApiChanges.cs 정렬
+  - [ ] ExtractApiChanges.cs API 비교???
+  - [ ] analyze-all-components.ps1, analyze-folder 포팅
+  - [ ] .release-notes 폴더 이동
+  - [ ] 버전?
+  - [ ] 브랜치 전략?
+  - [ ] GitHub Release 배포
+  - [ ] NuGet 배포
+  - [ ] git 명령어 시나리오
 - [ ] .config 폴더를 이용해서 ReportGenerator 설치(ps1 파일 개선)
 
 Item                                      | Type    | File                          | todo
