@@ -1,9 +1,9 @@
 #!/usr/bin/env dotnet
 
 // .NET 10 File-based Program - Extract API Changes
-// Usage: dotnet run ExtractApiChanges.cs
+// Usage: dotnet ExtractApiChanges.cs
 
-#:package System.CommandLine@2.0.0-beta4.22272.1
+#:package System.CommandLine@2.0.1
 
 using System;
 using System.Collections.Generic;
@@ -16,12 +16,13 @@ using System.Threading.Tasks;
 
 var rootCommand = new RootCommand("Extract API changes by building current branch");
 
-rootCommand.SetHandler(async () =>
+rootCommand.SetAction(async (parseResult, cancellationToken) =>
 {
     await ExtractApiChangesAsync();
+    return 0;
 });
 
-return await rootCommand.InvokeAsync(args);
+return await rootCommand.Parse(args).InvokeAsync();
 
 // Main logic
 static async Task ExtractApiChangesAsync()
@@ -36,14 +37,14 @@ static async Task ExtractApiChangesAsync()
 
     Console.WriteLine();
     Console.WriteLine("============================================================");
-    Console.WriteLine("🔍 Extracting API Changes");
+    Console.WriteLine("Extracting API Changes");
     Console.WriteLine("============================================================");
     Console.WriteLine();
 
     var currentBranch = await GetCurrentBranchAsync();
-    Console.WriteLine($"📍 Current branch: {currentBranch}");
-    Console.WriteLine($"📂 Output directory: {apiChangesDir}");
-    Console.WriteLine($"🕒 Timestamp: {DateTime.Now}");
+    Console.WriteLine($"Current branch: {currentBranch}");
+    Console.WriteLine($"Output directory: {apiChangesDir}");
+    Console.WriteLine($"Timestamp: {DateTime.Now}");
     Console.WriteLine();
 
     // Create output directory
@@ -56,42 +57,43 @@ static async Task ExtractApiChangesAsync()
     try
     {
         // Step 1: Find ApiGenerator
-        Console.WriteLine("📦 Step 1: Locating ApiGenerator...");
+        Console.WriteLine("[Step 1] Locating ApiGenerator...");
         var apiGeneratorPath = Path.Combine(toolsDir, "ApiGenerator.cs");
 
         if (!File.Exists(apiGeneratorPath))
         {
-            Console.Error.WriteLine($"❌ Error: ApiGenerator.cs not found at {apiGeneratorPath}");
+            Console.Error.WriteLine($"Error: ApiGenerator.cs not found at {apiGeneratorPath}");
             Environment.Exit(1);
         }
-        Console.WriteLine($"   ✓ Found: {apiGeneratorPath}");
+        Console.WriteLine($"   Found: {apiGeneratorPath}");
         Console.WriteLine();
 
         // Step 2: Find projects
-        Console.WriteLine("🔍 Step 2: Finding Functorium projects...");
+        Console.WriteLine("[Step 2] Finding Functorium projects...");
         var srcDir = Path.Combine(gitRoot, "Src");
         var projectFiles = Directory.GetFiles(srcDir, "*.csproj", SearchOption.AllDirectories)
             .Where(p => !p.Contains(".Tests.") && Path.GetFileName(p).StartsWith("Functorium"))
-            .OrderBy(p => p)
+            .OrderByDescending(p => p)
             .ToList();
 
-        Console.WriteLine($"   ✓ Found {projectFiles.Count} projects");
+        Console.WriteLine($"   Found {projectFiles.Count} projects");
         Console.WriteLine();
 
         // Step 3: Generate API files
-        Console.WriteLine("🏗️  Step 3: Publishing projects and generating API files...");
-        var apiOutputDir = Path.Combine(apiChangesDir, "api-files");
-        Directory.CreateDirectory(apiOutputDir);
+        Console.WriteLine("[Step 3] Publishing projects and generating API files...");
 
         var generatedApiFiles = new List<string>();
 
         foreach (var projectFile in projectFiles)
         {
             var assemblyName = Path.GetFileNameWithoutExtension(projectFile);
-            var outputFile = Path.Combine(apiOutputDir, $"{assemblyName}.cs");
-            var publishDir = Path.Combine(Path.GetDirectoryName(projectFile)!, "bin", "publish");
+            var projectDir = Path.GetDirectoryName(projectFile)!;
+            var projectFolderName = Path.GetFileName(projectDir);
+            var apiDir = Path.Combine(srcDir, projectFolderName, "api");
+            var outputFile = Path.Combine(apiDir, $"{assemblyName}.cs");
+            var publishDir = Path.Combine(projectDir, "bin", "publish");
 
-            Console.WriteLine($"   📦 Publishing: {assemblyName}");
+            Console.WriteLine($"   Publishing: {assemblyName}");
 
             try
             {
@@ -100,24 +102,27 @@ static async Task ExtractApiChangesAsync()
 
                 if (publishResult.ExitCode != 0)
                 {
-                    Console.WriteLine($"      ⚠️  Publish failed, skipping");
+                    Console.WriteLine($"      [WARN] Publish failed, skipping");
                     continue;
                 }
 
                 var dllPath = Path.Combine(publishDir, $"{assemblyName}.dll");
                 if (!File.Exists(dllPath))
                 {
-                    Console.WriteLine($"      ⚠️  DLL not found: {dllPath}");
+                    Console.WriteLine($"      [WARN] DLL not found: {dllPath}");
                     continue;
                 }
 
-                Console.WriteLine($"   🔧 Generating API: {assemblyName}");
+                Console.WriteLine($"   Generating API: {assemblyName}");
 
                 // Generate API using ApiGenerator.cs
                 var apiResult = await RunProcessAsync("dotnet", $"\"{apiGeneratorPath}\" \"{dllPath}\" -", quiet: true);
 
                 if (apiResult.ExitCode == 0 && !string.IsNullOrWhiteSpace(apiResult.Output))
                 {
+                    // Create api directory if not exists
+                    Directory.CreateDirectory(apiDir);
+
                     // Create file with header
                     var content = new StringBuilder();
                     content.AppendLine("//------------------------------------------------------------------------------");
@@ -132,24 +137,24 @@ static async Task ExtractApiChangesAsync()
 
                     await File.WriteAllTextAsync(outputFile, content.ToString());
                     generatedApiFiles.Add(outputFile);
-                    Console.WriteLine($"      ✓ Created: {Path.GetFileName(outputFile)}");
+                    Console.WriteLine($"      Created: {Path.GetFileName(outputFile)}");
                 }
                 else
                 {
-                    Console.WriteLine($"      ⚠️  Skipped (no public API or error)");
+                    Console.WriteLine($"      [WARN] Skipped (no public API or error)");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"      ❌ Error: {ex.Message}");
+                Console.WriteLine($"      [ERROR] {ex.Message}");
             }
         }
 
-        Console.WriteLine($"   ✓ Generated {generatedApiFiles.Count} API files");
+        Console.WriteLine($"   Generated {generatedApiFiles.Count} API files");
         Console.WriteLine();
 
         // Step 4: Create uber file
-        Console.WriteLine("📄 Step 4: Creating uber API file...");
+        Console.WriteLine("[Step 4] Creating uber API file...");
         var uberFile = Path.Combine(apiChangesDir, "all-api-changes.txt");
 
         var uberContent = new StringBuilder();
@@ -185,11 +190,11 @@ static async Task ExtractApiChangesAsync()
         }
 
         await File.WriteAllTextAsync(uberFile, uberContent.ToString());
-        Console.WriteLine($"   ✓ Uber file: {Path.GetFileName(uberFile)}");
+        Console.WriteLine($"   Uber file: {Path.GetFileName(uberFile)}");
         Console.WriteLine();
 
         // Step 5: Generate git diff
-        Console.WriteLine("📊 Step 5: Generating git diff...");
+        Console.WriteLine("[Step 5] Generating git diff...");
         var apiDiffPath = Path.Combine(apiChangesDir, "api-changes-diff.txt");
 
         var diffResult = await RunProcessAsync("git", "diff HEAD -- 'Src/*/api/*.cs'", quiet: true);
@@ -198,11 +203,11 @@ static async Task ExtractApiChangesAsync()
             : "# No tracked API file changes (API files are newly generated)";
 
         await File.WriteAllTextAsync(apiDiffPath, diffContent);
-        Console.WriteLine($"   ✓ Diff file: {Path.GetFileName(apiDiffPath)}");
+        Console.WriteLine($"   Diff file: {Path.GetFileName(apiDiffPath)}");
         Console.WriteLine();
 
         // Step 6: Create summary
-        Console.WriteLine("📝 Step 6: Creating summary report...");
+        Console.WriteLine("[Step 6] Creating summary report...");
 
         var summary = new StringBuilder();
         summary.AppendLine("# API Files Summary");
@@ -235,28 +240,28 @@ static async Task ExtractApiChangesAsync()
             Path.Combine(apiChangesDir, "projects.txt"),
             projectFiles.Select(Path.GetFileName)!);
 
-        Console.WriteLine($"   ✓ Summary: api-changes-summary.md");
+        Console.WriteLine($"   Summary: api-changes-summary.md");
         Console.WriteLine();
 
         // Final summary
         var totalTime = (DateTime.Now - startTime).TotalSeconds;
 
         Console.WriteLine("============================================================");
-        Console.WriteLine("✅ API Files Collection completed successfully!");
+        Console.WriteLine("API Files Collection completed successfully!");
         Console.WriteLine("============================================================");
-        Console.WriteLine($"📍 Current Branch: {currentBranch}");
-        Console.WriteLine($"📂 Output: {apiChangesDir}/");
-        Console.WriteLine($"📄 Total API Files: {generatedApiFiles.Count}");
-        Console.WriteLine($"⏱️ Total Time: {Math.Round(totalTime, 1)}s");
-        Console.WriteLine($"📝 Summary: {Path.Combine(apiChangesDir, "api-changes-summary.md")}");
-        Console.WriteLine($"📦 Uber API File: {uberFile}");
-        Console.WriteLine($"📁 API Files: {apiOutputDir}/");
+        Console.WriteLine($"Current Branch: {currentBranch}");
+        Console.WriteLine($"Output: {apiChangesDir}/");
+        Console.WriteLine($"Total API Files: {generatedApiFiles.Count}");
+        Console.WriteLine($"Total Time: {Math.Round(totalTime, 1)}s");
+        Console.WriteLine($"Summary: {Path.Combine(apiChangesDir, "api-changes-summary.md")}");
+        Console.WriteLine($"Uber API File: {uberFile}");
+        Console.WriteLine($"API Files: Src/*/api/");
         Console.WriteLine();
     }
     catch (Exception ex)
     {
         Console.Error.WriteLine();
-        Console.Error.WriteLine($"❌ Error: {ex.Message}");
+        Console.Error.WriteLine($"Error: {ex.Message}");
         Console.Error.WriteLine(ex.StackTrace);
         Environment.Exit(1);
     }
