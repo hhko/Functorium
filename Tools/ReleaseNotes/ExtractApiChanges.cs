@@ -89,7 +89,7 @@ static async Task ExtractApiChangesAsync()
             var assemblyName = Path.GetFileNameWithoutExtension(projectFile);
             var projectDir = Path.GetDirectoryName(projectFile)!;
             var projectFolderName = Path.GetFileName(projectDir);
-            var apiDir = Path.Combine(srcDir, projectFolderName, "api");
+            var apiDir = Path.Combine(srcDir, projectFolderName, ".api");
             var outputFile = Path.Combine(apiDir, $"{assemblyName}.cs");
             var publishDir = Path.Combine(projectDir, "bin", "publish");
 
@@ -197,7 +197,7 @@ static async Task ExtractApiChangesAsync()
         Console.WriteLine("[Step 5] Generating git diff...");
         var apiDiffPath = Path.Combine(apiChangesDir, "api-changes-diff.txt");
 
-        var diffResult = await RunProcessAsync("git", "diff HEAD -- 'Src/*/api/*.cs'", quiet: true);
+        var diffResult = await RunProcessAsync("git", "diff HEAD -- 'Src/*/.api/*.cs'", quiet: true);
         var diffContent = !string.IsNullOrWhiteSpace(diffResult.Output)
             ? diffResult.Output
             : "# No tracked API file changes (API files are newly generated)";
@@ -255,7 +255,7 @@ static async Task ExtractApiChangesAsync()
         Console.WriteLine($"Total Time: {Math.Round(totalTime, 1)}s");
         Console.WriteLine($"Summary: {Path.Combine(apiChangesDir, "api-changes-summary.md")}");
         Console.WriteLine($"Uber API File: {uberFile}");
-        Console.WriteLine($"API Files: Src/*/api/");
+        Console.WriteLine($"API Files: Src/*/.api/");
         Console.WriteLine();
     }
     catch (Exception ex)
