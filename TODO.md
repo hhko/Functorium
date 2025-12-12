@@ -136,6 +136,57 @@
 - Dashboard
   - [x] Aspire 대시보드 구성
   - [x] OpenSearch 대시보드 구성
+- Release Notes 자동화
+  - [x] Aspire Release Notes 자동화 이해
+  - [x] analyze-all-components.sh/ps1 포팅
+  - [x] analyze-folder.sh/ps1 포팅
+  - [x] extract-api-changes.sh/ps1 포팅
+  - [x] GenApi -> PublicApiGenerator 패키지 교체
+  - [x] Docs 폴더 .md 문서 한글화
+  - [x] Docs 폴더 포팅 출력 기준 업데이트
+  - [ ] PublicApiGenerator 단일 파일 코드 .NET 10
+  - [ ] analyze-all-components.sh/ps1 이전 결과 삭제
+  - [x] 릴리스 노트 자동 생성을 위한 AI 프럼프트
+    ```
+    1단계: 데이터 수집 (사람이 먼저 실행)
+
+      # 컴포넌트 분석
+      ./analyze-all-components.sh origin/release/9.4 origin/main
+
+      $FIRST_COMMIT = git rev-list --max-parents=0 HEAD
+      .\analyze-all-components.ps1 -BaseBranch $FIRST_COMMIT -TargetBranch origin/main
+
+      # API 변경사항 추출
+      ./extract-api-changes.sh
+
+    2단계: AI에게 요청
+
+      @Tools\ReleaseNotes\Docs\  폴더의 모든 문서를 참고하여
+      analysis-output/ 폴더에 있는 분석 결과를 기반으로
+      Functorium {version} 릴리스 노트를 작성해줘.
+
+      핵심 원칙:
+      1. 모든 API는 all-api-changes.txt (Uber 파일)에서 검증할 것
+      2. API를 임의로 만들어내지 말 것
+      3. 모든 기능은 커밋/PR로 추적 가능해야 함
+      4. writing-guidelines.md의 템플릿 구조를 따를 것
+      5. validation-checklist.md로 최종 검증할 것
+
+      문서 구조의 의도
+
+      | 문서                      | AI에게 주는 역할           |
+      |-------------------------|----------------------|
+      | data-collection.md      | 입력 데이터 위치와 구조 설명     |
+      | commit-analysis.md      | 커밋 → 기능 변환 방법        |
+      | api-documentation.md    | API 검증 및 코드 샘플 작성 규칙 |
+      | writing-guidelines.md   | 출력 문서 템플릿과 스타일       |
+      | validation-checklist.md | 품질 검증 체크리스트          |
+    ```
+  - [ ] 세부 버전까지 표시
+    - 파일명: RELEASE-v1.0.0-alpha.0.132.md
+    - 문서: v1.0.0-alpha.0 <--- x
+  - [ ] markdownlint-cli@0.45.0 사전 설치
+- [ ] .config 폴더를 이용해서 ReportGenerator 설치(ps1 파일 개선)
 
 Item                                      | Type    | File                          | todo
 ---                                       | ---     | ---                           | ---
