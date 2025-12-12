@@ -47,35 +47,4 @@
     <PackageReference Include="Microsoft.DotNet.GenAPI.Task" PrivateAssets="All" />
   </ItemGroup>
   -->
-
-  <!-- Versioning with MinVer -->
-  <ItemGroup>
-    <PackageReference Include="MinVer">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
-  <PropertyGroup>
-    <!-- MinVer Configuration -->
-    <MinVerTagPrefix>v</MinVerTagPrefix>
-    <MinVerVerbosity>minimal</MinVerVerbosity>
-    <MinVerMinimumMajorMinor>1.0</MinVerMinimumMajorMinor>
-    <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
-    <MinVerAutoIncrement>patch</MinVerAutoIncrement>
-    <!-- Workaround for Unicode path issues: Use repository root instead of project directory -->
-    <MinVerWorkingDirectory>$(MSBuildThisFileDirectory)</MinVerWorkingDirectory>
-  </PropertyGroup>
-
-  <!-- Set AssemblyVersion after MinVer calculates version
-       MinVer automatically sets:
-       - FileVersion: {MinVerMajor}.{MinVerMinor}.{MinVerPatch}.0
-       - InformationalVersion: {MinVerVersion}
-       See: https://github.com/adamralph/minver
-  -->
-  <Target Name="SetAssemblyVersion" AfterTargets="MinVer">
-    <PropertyGroup>
-      <AssemblyVersion>$(MinVerMajor).$(MinVerMinor).0.0</AssemblyVersion>
-    </PropertyGroup>
-  </Target>
 </Project>

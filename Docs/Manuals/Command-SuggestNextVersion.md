@@ -1,11 +1,11 @@
 # Claude Suggest Next Version 명령 매뉴얼
 
-이 문서는 MinVer 패키지 기반의 버전 관리를 위한 다음 태그 버전 제안 명령을 설명합니다.
+이 문서는 Git 태그 기반의 버전 관리를 위한 다음 태그 버전 제안 명령을 설명합니다.
 
 ## 목차
 - [개요](#개요)
 - [요약](#요약)
-- [프로젝트 MinVer 설정](#프로젝트-minver-설정)
+- [프로젝트 버전 설정](#프로젝트-버전-설정)
 - [버전 증가 규칙](#버전-증가-규칙)
 - [프리릴리스 파라미터](#프리릴리스-파라미터)
 - [실행 절차](#실행-절차)
@@ -70,25 +70,24 @@
 
 <br/>
 
-## 프로젝트 MinVer 설정
+## 프로젝트 버전 설정
 
-이 프로젝트의 `Directory.Build.props`에 정의된 MinVer 설정:
+이 프로젝트의 버전 관리 설정:
 
 | 설정 | 값 | 설명 |
 |------|-----|------|
-| `MinVerTagPrefix` | `v` | 태그 접두사 (예: v1.0.0) |
-| `MinVerMinimumMajorMinor` | `1.0` | 최소 버전 |
-| `MinVerDefaultPreReleaseIdentifiers` | `alpha.0` | 기본 프리릴리스 식별자 |
-| `MinVerAutoIncrement` | `patch` | 자동 증가 대상 |
+| 태그 접두사 | `v` | 태그 접두사 (예: v1.0.0) |
+| 최소 버전 | `1.0.0` | 최소 버전 |
+| 기본 프리릴리스 | `alpha.0` | 기본 프리릴리스 식별자 |
 
-### MinVer 버전 할당
+### Git 태그 기반 버전 할당
 
-MinVer는 git 태그를 기반으로 자동으로 버전을 할당합니다:
+Git 태그를 기반으로 버전을 관리합니다:
 
 ```
 v1.2.3                  → 1.2.3 (정식 버전)
 v1.2.3-alpha.0          → 1.2.3-alpha.0 (프리릴리스)
-v1.2.3-alpha.0+5        → 1.2.3-alpha.0 + 5 커밋 후
+v1.2.3-beta.0           → 1.2.3-beta.0 (베타 버전)
 ```
 
 <br/>
@@ -261,7 +260,7 @@ git log --oneline
 
 버전 증가 이유:
   - 첫 번째 릴리스
-  - MinVer 최소 버전 (1.0) 적용
+  - 최소 버전 (1.0.0) 적용
 
 주요 변경사항:
   - feat: 초기 프로젝트 설정
@@ -308,14 +307,13 @@ git log --oneline
 
 ## FAQ
 
-### Q1. MinVer는 무엇인가요?
+### Q1. 버전 관리는 어떻게 하나요?
 
-MinVer는 Git 태그를 기반으로 .NET 프로젝트의 버전을 자동으로 관리하는 NuGet 패키지입니다.
+Git 태그를 기반으로 버전을 관리합니다.
 
 | 특징 | 설명 |
 |------|------|
 | 태그 기반 | git 태그에서 버전 정보를 읽음 |
-| 자동 증가 | 태그 후 커밋 수를 자동 추가 |
 | SemVer 호환 | Semantic Versioning 2.0.0 준수 |
 
 ### Q2. 태그를 직접 생성하나요?
@@ -360,11 +358,11 @@ BREAKING CHANGE: 응답이 배열에서 객체로 변경됨
 
 ### Q6. 태그 접두사 'v'는 필수인가요?
 
-이 프로젝트에서는 `MinVerTagPrefix=v`로 설정되어 있으므로 필수입니다.
+이 프로젝트에서는 태그 접두사로 `v`를 사용합니다.
 
 ```
 v1.0.0   ← 올바름
-1.0.0    ← MinVer가 인식하지 못함
+1.0.0    ← 권장하지 않음
 ```
 
 ### Q7. 여러 사람이 동시에 작업할 때 충돌은 어떻게 하나요?
@@ -403,7 +401,6 @@ git push origin v1.3.0
 
 ## 참고 문서
 
-- [MinVer GitHub](https://github.com/adamralph/minver) - MinVer 공식 저장소
 - [Semantic Versioning 2.0.0](https://semver.org/) - SemVer 공식 문서
 - [Conventional Commits 1.0.0](https://www.conventionalcommits.org/) - Conventional Commits 공식 문서
 - [Claude Commit 명령 매뉴얼](./Claude-Commit-Command.md) - 커밋 명령 사용법

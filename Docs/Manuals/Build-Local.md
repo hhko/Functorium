@@ -26,7 +26,7 @@
 | 기능 | 설명 |
 |------|------|
 | 솔루션 빌드 | Release 모드로 전체 솔루션 빌드 |
-| 버전 정보 표시 | MinVer 기반 버전 정보 출력 |
+| 버전 정보 표시 | 빌드된 어셈블리 버전 정보 출력 |
 | 테스트 실행 | 모든 테스트 프로젝트 실행 |
 | 커버리지 수집 | XPlat Code Coverage로 커버리지 수집 |
 | HTML 리포트 | ReportGenerator로 HTML 리포트 생성 |
@@ -172,12 +172,11 @@ cd C:\Workspace\Github\Functorium
 ### 2. 솔루션 빌드
 
 ```powershell
-dotnet build $SolutionPath -c Release --nologo -p:MinVerVerbosity=normal
+dotnet build $SolutionPath -c Release --nologo
 ```
 
 - Release 구성으로 빌드
 - `dotnet build`가 자동으로 패키지 복원 수행
-- MinVer 버전 정보 출력 (MinVer 패키지 설정된 경우)
 
 ### 3. 버전 정보 표시
 
@@ -192,7 +191,7 @@ Functorium.Testing                       1.0.0-alpha.0.15+abc123             1.0
 
 | 버전 속성 | 설명 |
 |-----------|------|
-| ProductVer | InformationalVersion (MinVer 전체 버전) |
+| ProductVer | InformationalVersion (제품 버전) |
 | FileVer | FileVersion (파일 속성) |
 | Assembly | AssemblyVersion (바이너리 호환성) |
 
@@ -481,5 +480,4 @@ dotnet test -c Debug --collect:"XPlat Code Coverage"
 
 - [ReportGenerator](https://github.com/danielpalme/ReportGenerator)
 - [Coverlet](https://github.com/coverlet-coverage/coverlet)
-- [MinVer](https://github.com/adamralph/minver)
 - [dotnet test](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-test)

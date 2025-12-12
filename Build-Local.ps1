@@ -7,7 +7,7 @@
 
 .DESCRIPTION
   - Release 모드로 솔루션 빌드
-  - MinVer 버전 정보 표시 (MinVer 설정된 경우)
+  - 버전 정보 표시
   - 테스트 실행 및 코드 커버리지 수집
   - 핵심 레이어(Domains, Applications) 및 전체 커버리지 출력
   - HTML 리포트 생성
@@ -140,7 +140,7 @@ OPTIONS
 FEATURES
   1. Auto-detect solution file (requires exactly 1 .sln or .slnx file)
   2. Build in Release mode
-  3. Display MinVer version information (if MinVer is configured)
+  3. Display version information from built assemblies
   4. Run tests with code coverage collection
   5. Generate HTML coverage report (ReportGenerator)
   6. Display coverage summary in console
@@ -272,8 +272,7 @@ function Invoke-Build {
   Write-Host ""
   dotnet build $SolutionPath `
     -c $script:Configuration `
-    --nologo `
-    -p:MinVerVerbosity=normal | Out-Host
+    --nologo | Out-Host
 
   if ($LASTEXITCODE -ne 0) {
     throw "Build failed"
@@ -389,7 +388,7 @@ function Show-VersionInfo {
   }
 
   Write-Host ""
-  Write-Detail "ProductVer: InformationalVersion (MinVer)"
+  Write-Detail "ProductVer: InformationalVersion"
   Write-Detail "FileVer: FileVersion (file properties)"
   Write-Detail "Assembly: AssemblyVersion (binary compatibility)"
 }

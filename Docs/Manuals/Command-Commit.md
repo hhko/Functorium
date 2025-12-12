@@ -343,19 +343,19 @@ git status
 **예시:**
 ```bash
 # 변경된 파일: Build-Local.ps1, Directory.Build.props, README.md
-# Topic: MinVer
+# Topic: 빌드
 
 # 1. 변경사항 확인
 git status
-# Build-Local.ps1 (MinVer 관련)
-# Directory.Build.props (MinVer 설정)
-# README.md (MinVer와 무관)
+# Build-Local.ps1 (빌드 관련)
+# Directory.Build.props (빌드 설정)
+# README.md (빌드와 무관)
 
-# 2. MinVer 관련 파일만 스테이징
+# 2. 빌드 관련 파일만 스테이징
 git add Build-Local.ps1 Directory.Build.props
 
 # 3. 커밋 (README.md는 제외)
-git commit -m "feat(minver): MinVer 버전 정보 표시 추가"
+git commit -m "feat(build): 버전 정보 표시 추가"
 
 # 4. 확인 (README.md는 여전히 unstaged)
 git status
@@ -379,7 +379,6 @@ Claude Code를 사용하는 경우 `/commit` 커맨드를 활용할 수 있습�
 /commit Calculator
 /commit 테스트 리팩터링
 /commit API 엔드포인트
-/commit MinVer
 ```
 
 ### 완료 메시지
@@ -641,8 +640,8 @@ git commit -m "feat: add login feature"  # X
 # Calculator 관련 파일만 커밋
 /commit Calculator
 
-# MinVer 관련 파일만 커밋
-/commit MinVer
+# 빌드 관련 파일만 커밋
+/commit 빌드
 
 # 테스트 리팩터링 관련 파일만 커밋
 /commit 테스트 리팩터링

@@ -1,6 +1,6 @@
 # GitHub Actions CI/CD 가이드
 
-이 문서는 MinVer 기반 버전 관리와 자동 빌드/배포를 위한 GitHub Actions 워크플로우 설정을 설명합니다.
+이 문서는 Git 태그 기반 버전 관리와 자동 빌드/배포를 위한 GitHub Actions 워크플로우 설정을 설명합니다.
 
 ## 목차
 - [개요](#개요)
@@ -53,12 +53,12 @@ Git 태그 기반 자동 버전 관리와 CI/CD 파이프라인을 통해 안정
 - 수동 실행 (workflow_dispatch)
 
 **작업:**
-1. 코드 체크아웃 (전체 Git 히스토리)
+1. 코드 체크아웃
 2. .NET 10 설정
 3. NuGet 패키지 캐시
 4. 의존성 복원
 5. 취약점 패키지 검사
-6. Release 모드 빌드 (MinVer 버전 출력 포함)
+6. Release 모드 빌드
 7. 테스트 실행 및 커버리지 수집
 8. 테스트 결과 업로드
 9. ReportGenerator로 커버리지 리포트 생성
@@ -71,12 +71,12 @@ Git 태그 기반 자동 버전 관리와 CI/CD 파이프라인을 통해 안정
 - 태그 푸시: v*.*.* (예: v1.0.0, v1.2.3)
 
 **작업:**
-1. 코드 체크아웃 (전체 Git 히스토리)
+1. 코드 체크아웃
 2. .NET 10 설정
 3. NuGet 패키지 캐시
 4. 의존성 복원
 5. 취약점 패키지 검사
-6. Release 모드 빌드 (MinVer 버전 출력 포함)
+6. Release 모드 빌드
 7. 테스트 실행 및 커버리지 수집
 8. 테스트 결과 업로드
 9. ReportGenerator로 커버리지 리포트 생성
@@ -183,8 +183,6 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0  # MinVer requires full Git history
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -213,8 +211,7 @@ jobs:
       run: |
         dotnet build ${{ env.SOLUTION_FILE }} \
           --configuration ${{ env.CONFIGURATION }} \
-          --no-restore \
-          -p:MinVerVerbosity=normal
+          --no-restore
 
     - name: Test with coverage
       run: |
@@ -321,8 +318,6 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0  # MinVer requires full Git history
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -347,12 +342,11 @@ jobs:
           echo "::warning::Vulnerable packages detected. Review vulnerability-report.txt for details."
         fi
 
-    - name: Build and display version
+    - name: Build
       run: |
         dotnet build ${{ env.SOLUTION_FILE }} \
           --configuration ${{ env.CONFIGURATION }} \
-          --no-restore \
-          -p:MinVerVerbosity=normal
+          --no-restore
 
     - name: Test with coverage
       run: |
@@ -537,18 +531,15 @@ dotnet add package Functorium --version 1.0.0 --source github
 2. Workflow permissions: **Read and write permissions** 선택
 3. **Allow GitHub Actions to create and approve pull requests** 체크
 
-### MinVer 버전이 0.0.0으로 표시될 때
+### 버전이 0.0.0으로 표시될 때
 
-**원인**: Shallow clone으로 태그 정보 누락
+**원인**: 버전 설정 오류
 
 **해결:**
 
-`fetch-depth: 0` 설정 확인:
-```yaml
-- name: Checkout
-  uses: actions/checkout@v4
-  with:
-    fetch-depth: 0  # 필수!
+프로젝트의 Version 속성 확인:
+```bash
+dotnet build -v detailed | grep Version
 ```
 
 ### NuGet 배포 실패
@@ -812,6 +803,5 @@ GitHub Actions 탭에서 **Run workflow** 버튼으로 수동 실행 가능
 
 - [GitHub Actions 문서](https://docs.github.com/actions)
 - [.NET GitHub Actions](https://github.com/actions/setup-dotnet)
-- [MinVer](https://github.com/adamralph/minver)
 - [NuGet 배포 가이드](https://learn.microsoft.com/nuget/nuget-org/publish-a-package)
 - [GitHub Packages](https://docs.github.com/packages)

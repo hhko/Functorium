@@ -40,7 +40,6 @@ Topic 파라미터를 사용하면 특정 topic과 관련된 변경사항만 선
 /commit Calculator        # Calculator 관련 파일만 선별하여 커밋
 /commit 테스트 리팩터링    # 테스트 리팩터링 관련 파일만 커밋
 /commit API 엔드포인트     # API 엔드포인트 관련 파일만 커밋
-/commit MinVer           # MinVer 관련 파일만 커밋
 ```
 
 ## 적용 범위
@@ -229,19 +228,19 @@ build: LanguageExt.Core 4.4.9 패키지 추가
 **예시:**
 ```bash
 # 변경된 파일: Build-Local.ps1, Directory.Build.props, README.md
-# Topic: MinVer
+# Topic: 빌드
 
 # 1. 변경사항 확인
 git status
-# Build-Local.ps1 (MinVer 관련)
-# Directory.Build.props (MinVer 설정)
-# README.md (MinVer와 무관)
+# Build-Local.ps1 (빌드 관련)
+# Directory.Build.props (빌드 설정)
+# README.md (빌드와 무관)
 
-# 2. MinVer 관련 파일만 스테이징
+# 2. 빌드 관련 파일만 스테이징
 git add Build-Local.ps1 Directory.Build.props
 
 # 3. 커밋 (README.md는 제외)
-git commit -m "feat(minver): MinVer 버전 정보 표시 추가"
+git commit -m "feat(build): 버전 정보 표시 추가"
 
 # 4. 확인 (README.md는 여전히 unstaged)
 git status

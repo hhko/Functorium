@@ -23,7 +23,7 @@ NuGet은 .NET의 공식 패키지 관리자입니다. 프로젝트를 NuGet 패�
 
 ### 주요 특징
 
-- **자동 버전 관리**: MinVer를 통한 Git 태그 기반 버전 관리
+- **Git 태그 기반 버전 관리**: Git 태그를 사용한 버전 관리
 - **SourceLink 지원**: 디버깅 시 원본 소스 코드 접근 가능
 - **심볼 패키지**: .snupkg를 통한 디버깅 지원
 - **중앙 집중 설정**: Directory.Build.props로 공통 설정 관리
@@ -124,9 +124,9 @@ dotnet nuget push .nupkg/*.nupkg --api-key <API_KEY> --source https://api.nuget.
 
 **3. 버전 관리**
 
-MinVer를 통한 자동 버전 관리:
+Git 태그를 통한 버전 관리:
 - Git 태그 기반 (`v1.0.0`)
-- Pre-release 자동 지원 (`1.0.1-alpha.0.5`)
+- Pre-release 지원 (`1.0.0-alpha.0`)
 
 <br/>
 
@@ -388,17 +388,17 @@ dotnet pack -c Release -o .nupkg
 dotnet pack Src/Functorium/Functorium.csproj -c Release -o .nupkg
 
 # 버전 지정
-dotnet pack -c Release -o .nupkg -p:MinVerVersion=1.0.0
+dotnet pack -c Release -o .nupkg -p:Version=1.0.0
 ```
 
 ### 버전별 패키지
 
-MinVer 버전에 따라 다양한 형태의 패키지가 생성됩니다.
+Git 태그에 따라 다양한 형태의 패키지가 생성됩니다.
 
 **Pre-release (개발 중):**
 ```
-Functorium.1.0.0-alpha.0.82.nupkg
-Functorium.1.0.0-alpha.0.82.snupkg
+Functorium.1.0.0-alpha.0.nupkg
+Functorium.1.0.0-alpha.0.snupkg
 ```
 
 **Stable (릴리스):**
@@ -472,7 +472,7 @@ dotnet build -c Release
 
 **원인 2**: 버전 형식 오류
 ```bash
-# 해결: MinVer 캐시 정리
+# 해결: 캐시 정리
 dotnet clean
 dotnet build
 ```
@@ -526,15 +526,13 @@ git remote add origin https://github.com/hhko/Functorium.git
 
 ### 패키지 버전이 0.0.0으로 표시됨
 
-**원인**: MinVer 설정 오류
+**원인**: 버전 설정 오류
 
 **해결:**
 ```bash
-# MinVer 상세 출력으로 확인
-dotnet build -p:MinVerVerbosity=diagnostic
+# 프로젝트의 Version 속성 확인
+dotnet build -v detailed | grep Version
 ```
-
-[MinVer 가이드](./MinVer.md)의 트러블슈팅 섹션을 참조하세요.
 
 <br/>
 
@@ -750,7 +748,6 @@ dotnet nuget push .nupkg/Functorium.1.0.0.nupkg \
 
 ## 참고 문서
 
-- [MinVer 가이드](./MinVer.md) - 버전 관리
 - [Build-Local.ps1 도움말](../../Build-Local.ps1) - `./Build-Local.ps1 -Help`
 - [NuGet 공식 문서](https://docs.microsoft.com/nuget/)
 - [SourceLink 문서](https://github.com/dotnet/sourcelink)
