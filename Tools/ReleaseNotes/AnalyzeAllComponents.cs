@@ -54,6 +54,10 @@ static async Task AnalyzeAllComponentsAsync(string baseBranch, string targetBran
     var gitRoot = await GetGitRootAsync() ?? Path.GetFullPath(Path.Combine(toolsDir, "..", ".."));
     gitRoot = gitRoot.Replace('\\', '/');
 
+    // Calculate relative paths for display
+    var relativeConfigFile = Path.GetRelativePath(toolsDir, configFile);
+    var relativeAnalysisDir = Path.GetRelativePath(toolsDir, analysisDir);
+
     // Header
     AnsiConsole.WriteLine();
     AnsiConsole.Write(new Rule("[bold blue]Analyzing All Components[/]").RuleStyle("blue"));
@@ -63,8 +67,8 @@ static async Task AnalyzeAllComponentsAsync(string baseBranch, string targetBran
     var infoTable = new Table().Border(TableBorder.Rounded).BorderColor(Color.Grey);
     infoTable.AddColumn(new TableColumn("[grey]Property[/]").NoWrap());
     infoTable.AddColumn(new TableColumn("[grey]Value[/]"));
-    infoTable.AddRow("[white]Config[/]", $"[dim]{configFile}[/]");
-    infoTable.AddRow("[white]Output[/]", $"[dim]{analysisDir}[/]");
+    infoTable.AddRow("[white]Config[/]", $"[dim]{relativeConfigFile}[/]");
+    infoTable.AddRow("[white]Output[/]", $"[dim]{relativeAnalysisDir}[/]");
     infoTable.AddRow("[white]Base Branch[/]", $"[cyan]{baseBranch}[/]");
     infoTable.AddRow("[white]Target Branch[/]", $"[cyan]{targetBranch}[/]");
     AnsiConsole.Write(infoTable);
@@ -77,19 +81,25 @@ static async Task AnalyzeAllComponentsAsync(string baseBranch, string targetBran
     }
     Directory.CreateDirectory(analysisDir);
 
-    // Load components from config
+    // Step 1: Load components from config
+    AnsiConsole.MarkupLine("[bold]Step 1[/] [dim]Loading components from config...[/]");
+
     var components = await LoadComponentsAsync(configFile, gitRoot);
 
     if (components.Count == 0)
     {
-        AnsiConsole.MarkupLine("[yellow]No components found, using fallback[/]");
+        AnsiConsole.MarkupLine("   [yellow]No components found, using fallback[/]");
         components = new List<string> { "Src/Functorium", "Src/Functorium.Testing", "Docs" };
     }
 
-    AnsiConsole.MarkupLine($"[bold]Step 1[/] [dim]Found {components.Count} components to analyze[/]");
+    foreach (var component in components)
+    {
+        AnsiConsole.MarkupLine($"   [green]Found[/] {component}");
+    }
+    AnsiConsole.MarkupLine($"   [dim]Total: {components.Count} components[/]");
     AnsiConsole.WriteLine();
 
-    // Analyze components
+    // Step 2: Analyze components
     AnsiConsole.MarkupLine("[bold]Step 2[/] [dim]Analyzing components...[/]");
     AnsiConsole.WriteLine();
 
@@ -101,31 +111,38 @@ static async Task AnalyzeAllComponentsAsync(string baseBranch, string targetBran
         var componentName = GetSafeFilename(component);
         var outputFile = Path.Combine(analysisDir, $"{componentName}.md");
 
+        var prefix = $"[[{index + 1}/{components.Count}]] [cyan]{component}[/]";
+
+        ComponentAnalysisResult result = null!;
+
+        // Show spinner while analyzing
         await AnsiConsole.Status()
+            .AutoRefresh(true)
             .Spinner(Spinner.Known.Dots)
             .SpinnerStyle(Style.Parse("cyan"))
-            .StartAsync($"[[{index + 1}/{components.Count}]] Analyzing [cyan]{component}[/]...", async ctx =>
+            .StartAsync($"   {prefix} [dim]Analyzing...[/]", async ctx =>
             {
-                var result = await AnalyzeComponentAsync(component, baseBranch, targetBranch, gitRoot, outputFile);
-                analysisResults.Add(result);
-
-                if (result.HasChanges)
-                {
-                    AnsiConsole.MarkupLine($"  [green]OK[/]   [white]{component}[/] [dim]({result.FileChanges} files, {result.CommitCount} commits)[/]");
-                }
-                else
-                {
-                    AnsiConsole.MarkupLine($"  [yellow]SKIP[/] [dim]{component}[/] [dim](no changes)[/]");
-                }
+                result = await AnalyzeComponentAsync(component, baseBranch, targetBranch, gitRoot, outputFile);
             });
+
+        analysisResults.Add(result);
+
+        if (result.HasChanges)
+        {
+            AnsiConsole.MarkupLine($"   {prefix} [green]OK[/] {result.FileChanges} files, {result.CommitCount} commits");
+        }
+        else
+        {
+            AnsiConsole.MarkupLine($"   {prefix} [yellow]SKIP[/] no changes");
+        }
     }
 
     var analysisTime = (DateTime.Now - analysisStart).TotalSeconds;
     AnsiConsole.WriteLine();
-    AnsiConsole.MarkupLine($"   Component analysis completed in [white]{Math.Round(analysisTime, 2)}s[/]");
+    AnsiConsole.MarkupLine($"   [dim]Completed in {Math.Round(analysisTime, 2)}s[/]");
     AnsiConsole.WriteLine();
 
-    // Generate summary
+    // Step 3: Generate summary
     AnsiConsole.MarkupLine("[bold]Step 3[/] [dim]Generating summary report...[/]");
 
     var summaryStart = DateTime.Now;
@@ -160,7 +177,7 @@ static async Task AnalyzeAllComponentsAsync(string baseBranch, string targetBran
     await File.WriteAllTextAsync(summaryFile, summaryContent.ToString());
 
     var summaryTime = (DateTime.Now - summaryStart).TotalSeconds;
-    AnsiConsole.MarkupLine($"   [green]Created[/] [dim]analysis-summary.md[/]");
+    AnsiConsole.MarkupLine($"   [green]Created[/] analysis-summary.md");
     AnsiConsole.WriteLine();
 
     // Final summary
@@ -178,7 +195,7 @@ static async Task AnalyzeAllComponentsAsync(string baseBranch, string targetBran
     resultTable.AddRow("Analysis Time", $"[white]{Math.Round(analysisTime, 2)}s[/]");
     resultTable.AddRow("Summary Time", $"[white]{Math.Round(summaryTime, 2)}s[/]");
     resultTable.AddRow("Total Time", $"[white]{Math.Round(totalTime, 2)}s[/]");
-    resultTable.AddRow("Output", $"[dim]{analysisDir}[/]");
+    resultTable.AddRow("Output", $"[dim]{relativeAnalysisDir}/[/]");
     AnsiConsole.Write(resultTable);
     AnsiConsole.WriteLine();
 
@@ -191,14 +208,13 @@ static async Task AnalyzeAllComponentsAsync(string baseBranch, string targetBran
     AnsiConsole.WriteLine();
 }
 
-// Load components from config file
+// Load components from config file (no console output)
 static async Task<List<string>> LoadComponentsAsync(string configFile, string gitRoot)
 {
     var components = new List<string>();
 
     if (!File.Exists(configFile))
     {
-        AnsiConsole.MarkupLine("[yellow]Config file not found[/]");
         return components;
     }
 
@@ -218,7 +234,6 @@ static async Task<List<string>> LoadComponentsAsync(string configFile, string gi
                 if (pattern.Contains('*') || pattern.Contains('?'))
                 {
                     // Expand glob pattern
-                    AnsiConsole.MarkupLine($"   [yellow]Expanding:[/] {pattern}");
                     var fullPattern = Path.Combine(gitRoot, pattern.Replace('/', Path.DirectorySeparatorChar));
                     var parentDir = Path.GetDirectoryName(fullPattern) ?? gitRoot;
                     var searchPattern = Path.GetFileName(fullPattern);
@@ -229,7 +244,6 @@ static async Task<List<string>> LoadComponentsAsync(string configFile, string gi
                         {
                             var relativePath = Path.GetRelativePath(gitRoot, dir).Replace('\\', '/');
                             components.Add(relativePath);
-                            AnsiConsole.MarkupLine($"      [green]Found:[/] {relativePath}");
                         }
                     }
                 }
@@ -240,19 +254,14 @@ static async Task<List<string>> LoadComponentsAsync(string configFile, string gi
                     if (Directory.Exists(fullPath))
                     {
                         components.Add(pattern.Replace('\\', '/'));
-                        AnsiConsole.MarkupLine($"   [green]Found:[/] {pattern}");
-                    }
-                    else
-                    {
-                        AnsiConsole.MarkupLine($"   [yellow]Not found:[/] {pattern}");
                     }
                 }
             }
         }
     }
-    catch (Exception ex)
+    catch
     {
-        AnsiConsole.MarkupLine($"[red]Error reading config:[/] {ex.Message}");
+        // Silently fail, will use fallback
     }
 
     return components;
