@@ -1,6 +1,6 @@
 # 릴리스 노트를 위한 데이터 수집
 
-이 가이드는 릴리스 노트 생성 전 필요한 전체 데이터 수집 프로세스를 다룹니다. 모든 스크립트는 `tools/ReleaseNotes` 디렉터리에서 실행해야 합니다.
+이 가이드는 릴리스 노트 생성 전 필요한 전체 데이터 수집 프로세스를 다룹니다. 모든 스크립트는 `Tools/ReleaseNotes` 디렉터리에서 실행해야 합니다.
 
 ## 목표: 포괄적인 데이터 기반 구축
 
@@ -10,41 +10,66 @@
 
 ### 1단계: 컴포넌트 변경사항 분석
 
-```bash
-./analyze-components.sh <base_branch> <target_branch>
+**PowerShell (Windows):**
+```powershell
+.\analyze-all-components.ps1 -BaseBranch <base_branch> -TargetBranch <target_branch>
 ```
 
-**예시:**
+**Bash (Linux/macOS/Git Bash):**
 ```bash
-./analyze-components.sh release/1.0 main
+./analyze-all-components.sh <base_branch> <target_branch>
+```
+
+**예시 - 첫 배포 (태그 없는 경우):**
+```powershell
+# PowerShell
+$FIRST_COMMIT = git rev-list --max-parents=0 HEAD
+.\analyze-all-components.ps1 -BaseBranch $FIRST_COMMIT -TargetBranch origin/main
+```
+
+```bash
+# Bash
+FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
+./analyze-all-components.sh "$FIRST_COMMIT" origin/main
+```
+
+**예시 - 릴리스 간 비교:**
+```powershell
+.\analyze-all-components.ps1 -BaseBranch origin/release/1.0 -TargetBranch origin/main
 ```
 
 #### 생성되는 결과물:
 
 **개별 컴포넌트 분석 파일** (`analysis-output/*.md`)
-- 각 Functorium 컴포넌트별 파일 생성 (예: `Functorium.md`, `Functorium.Testing.md`)
+- 각 Functorium 컴포넌트별 파일 생성
 - 각 파일 포함 내용:
-  - **전체 변경 통계**: 추가/수정/삭제된 파일
+  - **전체 변경 통계**: 추가/수정/삭제된 파일 수
   - **완전한 커밋 히스토리**: 해당 컴포넌트의 릴리스 간 모든 커밋
   - **주요 기여자**: 가장 많은 변경을 한 사람
   - **분류된 커밋**: 기능, 버그 수정, 브레이킹 체인지
 
 **분석 요약** (`analysis-output/analysis-summary.md`)
 - 모든 컴포넌트 변경사항의 고수준 개요
-- 전체 컴포넌트의 총 커밋 수
-- 주요 패턴 및 테마 요약
+- 각 컴포넌트의 변경 파일 수
+- 생성된 분석 파일 목록
 
-#### 예상 출력 구조:
+#### 실제 출력 예시:
 ```
 analysis-output/
-├── Functorium.md                    # 핵심 기능
-├── Functorium.Testing.md            # 테스트 유틸리티
-├── ... (컴포넌트별 파일)
-└── analysis-summary.md              # 전체 요약
+├── analysis-summary.md          # 전체 요약
+├── Functorium.md                # Src/Functorium 분석 (30 files)
+├── Functorium.Testing.md        # Src/Functorium.Testing 분석 (17 files)
+└── Docs.md                      # Docs 분석 (38 files)
 ```
 
 ### 2단계: API 변경사항 추출
 
+**PowerShell (Windows):**
+```powershell
+.\extract-api-changes.ps1
+```
+
+**Bash (Linux/macOS/Git Bash):**
 ```bash
 ./extract-api-changes.sh
 ```
@@ -58,26 +83,27 @@ analysis-output/
 - **코드 샘플 검증에 중요** - 이 파일에 없으면 문서화하지 않습니다
 
 **API 변경 요약** (`analysis-output/api-changes-build-current/api-changes-summary.md`)
-- 모든 컴포넌트에서 추가된 새 API
-- 브레이킹 체인지 및 폐기 예정
-- 메서드 시그니처 변경
-- 새 확장 메서드 및 빌더 패턴
+- 생성된 API 파일 목록
+- 사용된 도구 버전 정보
+- 각 어셈블리별 API 파일 경로
 
-**상세 API Diff** (`analysis-output/api-changes-build-current/api-changes-diff.txt`)
-- 줄 단위 API 차이점
-- 버전 간 정확한 변경 내용 표시
-- 브레이킹 체인지 식별에 유용
+**개별 API 파일** (`analysis-output/api-changes-build-current/api-files/*.cs`)
+- 각 어셈블리의 Public API 정의
+- C# 소스 코드 형식
 
-#### 예상 출력 구조:
+**프로젝트 목록** (`analysis-output/api-changes-build-current/projects.txt`)
+- 처리된 프로젝트 파일 목록
+
+#### 실제 출력 예시:
 ```
 analysis-output/api-changes-build-current/
-├── all-api-changes.txt              # UBER 파일 - 주요 API 소스
-├── api-changes-summary.md           # 사람이 읽을 수 있는 API 요약
-├── api-changes-diff.txt             # 원시 API 차이점
-├── api-files/                       # 개별 어셈블리 API 파일
-│   ├── Functorium.cs
-│   └── Functorium.Testing.cs
-└── projects.txt                     # 처리된 프로젝트 목록
+├── all-api-changes.txt          # UBER 파일 - 전체 API (25,455 bytes)
+├── api-changes-summary.md       # API 요약
+├── api-changes-diff.txt         # API 차이점
+├── projects.txt                 # 프로젝트 목록
+└── api-files/                   # 개별 어셈블리 API 파일
+    ├── Functorium.cs
+    └── Functorium.Testing.cs
 ```
 
 ### 3단계: 데이터 수집 결과 검증
@@ -93,19 +119,19 @@ ls -1 analysis-output/*.md | wc -l
 ls analysis-output/Functorium*.md
 
 # 분석 요약 확인
-head -20 analysis-output/analysis-summary.md
+cat analysis-output/analysis-summary.md
 ```
 
 #### API 변경사항 검증:
 ```bash
-# Uber 파일 존재 및 내용 확인
+# Uber 파일 존재 및 크기 확인
 wc -l analysis-output/api-changes-build-current/all-api-changes.txt
 
 # 주요 API 확인 (예시)
 grep -c "ErrorCodeFactory" analysis-output/api-changes-build-current/all-api-changes.txt
 
-# API 요약 검토
-head -50 analysis-output/api-changes-build-current/api-changes-summary.md
+# 프로젝트 목록 확인
+cat analysis-output/api-changes-build-current/projects.txt
 ```
 
 ## 출력 이해하기
@@ -115,28 +141,38 @@ head -50 analysis-output/api-changes-build-current/api-changes-summary.md
 각 컴포넌트 파일 (`*.md`)은 다음 구조를 따릅니다:
 
 ```markdown
-# 컴포넌트 이름 분석
+========================================
+ANALYZING: Src/Functorium
+Comparing: <base_branch> -> <target_branch>
+Working from: <repository_path>
+========================================
 
-## 변경 요약
-- X개 파일 변경
-- 릴리스 간 Y개 커밋
-- 주요 기여자: [목록]
+Change Summary:
+[git diff --stat 출력]
 
-## 모든 커밋 (시간순)
-[SHA와 메시지가 포함된 전체 커밋 목록]
+All Commits (new in <target_branch>):
+[커밋 SHA와 메시지 목록]
 
-## 분류된 변경사항
-### 기능
-### 버그 수정
-### 브레이킹 체인지
+Top Contributors:
+[기여자별 커밋 수]
+
+Sample Commit Messages (categorized):
+Feature commits:
+[feat, feature, add 패턴 커밋]
+
+Bug fixes:
+[fix, bug 패턴 커밋]
+
+Breaking changes:
+[breaking, BREAKING 패턴 커밋]
 ```
 
 ### 주요 커밋 패턴:
 
-- **"Add"** 커밋 → 새 기능 또는 API
-- **"Rename"** 커밋 → 브레이킹 체인지 또는 API 업데이트
-- **"Improve/Enhance"** 커밋 → 기존 기능 개선
-- **"Support for"** 커밋 → 새 플랫폼/기술 통합
+- **"feat"/"add"** 커밋 → 새 기능 또는 API
+- **"fix"/"bug"** 커밋 → 버그 수정
+- **"refactor"** 커밋 → 코드 리팩토링
+- **"breaking"/"BREAKING"** 커밋 → 브레이킹 체인지
 - **GitHub 참조** (`#12345`) → 추가 컨텍스트 확인
 
 ## 다음 단계
@@ -158,10 +194,11 @@ head -50 analysis-output/api-changes-build-current/api-changes-summary.md
 
 ## 데이터 수집 체크리스트
 
-- [ ] 컴포넌트 분석 완료 (`./analyze-components.sh`)
-- [ ] API 변경사항 추출 완료 (`./extract-api-changes.sh`)
-- [ ] 컴포넌트 파일 생성됨 (`analysis-output/`)
+- [ ] 컴포넌트 분석 완료 (`.\analyze-all-components.ps1` 또는 `./analyze-all-components.sh`)
+- [ ] API 변경사항 추출 완료 (`.\extract-api-changes.ps1` 또는 `./extract-api-changes.sh`)
+- [ ] 컴포넌트 파일 생성됨 (`analysis-output/*.md`)
+- [ ] 분석 요약 생성됨 (`analysis-output/analysis-summary.md`)
 - [ ] Uber API 파일 생성됨 (`all-api-changes.txt`)
 - [ ] API 요약 생성됨 (`api-changes-summary.md`)
-- [ ] 주요 컴포넌트 파일 확인됨
+- [ ] 개별 API 파일 생성됨 (`api-files/*.cs`)
 - [ ] 기능 분석 및 문서화 진행 준비 완료

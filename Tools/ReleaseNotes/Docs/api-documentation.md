@@ -2,19 +2,7 @@
 
 ## API 소스
 
-### **API 변경 Diff** - 새로운 내용의 진실 소스:
-
-```text
-analysis-output/api-changes-build-current/api-changes-diff.txt
-```
-
-**여기서 시작** - 이 파일은 릴리스 간 **새로 추가/변경된 API만** 포함합니다:
-- 이번 릴리스에 **추가된 새 API**
-- **수정된 API 시그니처**
-- **브레이킹 체인지** 및 제거
-- 개발자가 알아야 할 **실제 API diff**
-
-### **UBER 파일** - 사용 예시를 위한 완전한 API 참조:
+### **UBER 파일** - 완전한 API 참조 (단일 진실 소스):
 
 ```text
 analysis-output/api-changes-build-current/all-api-changes.txt
@@ -24,21 +12,38 @@ analysis-output/api-changes-build-current/all-api-changes.txt
 - 모든 통합을 위한 메서드 시그니처가 포함된 **완전한 API 파일**
 - **모든 기능**: 오류 처리, 로깅, 유틸리티
 - 매개변수 이름과 타입을 포함한 **정확한 메서드 시그니처**
+- **코드 샘플 검증에 중요** - 이 파일에 없으면 문서화하지 않습니다
+
+### **개별 API 파일** - 어셈블리별 API 정의:
+
+```text
+analysis-output/api-changes-build-current/api-files/
+├── Functorium.cs              # 핵심 라이브러리 API
+└── Functorium.Testing.cs      # 테스트 유틸리티 API
+```
+
+### **API 변경 요약**:
+
+```text
+analysis-output/api-changes-build-current/api-changes-summary.md
+```
+
+생성된 API 파일 목록 및 도구 정보를 포함합니다.
 
 ## 정확한 문서 작성
 
 ### API 변경 문서화 워크플로우
 
-#### 1단계: API 변경 Diff로 새로운 내용 식별
-
-```bash
-grep -A 5 -B 2 "ErrorCodeFactory" analysis-output/api-changes-build-current/api-changes-diff.txt
-```
-
-#### 2단계: 정확한 사용 예시를 위해 Uber 파일만 사용
+#### 1단계: Uber 파일에서 API 검색
 
 ```bash
 grep -A 10 -B 2 "ErrorCodeFactory" analysis-output/api-changes-build-current/all-api-changes.txt
+```
+
+#### 2단계: 개별 API 파일에서 상세 확인
+
+```bash
+cat analysis-output/api-changes-build-current/api-files/Functorium.cs | grep -A 5 "ErrorCodeFactory"
 ```
 
 #### 3단계: 코드 샘플을 위한 완전한 API 시그니처 추출
@@ -108,34 +113,37 @@ builder.Services.AddErrorCodeFactory();  // 존재하지 않는 메서드
 
 API 샘플 작성 전:
 
-1. **API 변경 diff를 먼저 확인**하여 실제로 새로운 것이 무엇인지 식별:
-
-   ```bash
-   grep -n "MethodName" analysis-output/api-changes-build-current/api-changes-diff.txt
-   ```
-
-2. **Uber 파일에서 완전한 API 세부정보** 가져오기:
+1. **Uber 파일에서 API 존재 확인**:
 
    ```bash
    grep -n "MethodName" analysis-output/api-changes-build-current/all-api-changes.txt
    ```
 
-3. **커밋 분석과 교차 참조**하여 변경의 컨텍스트 이해
+2. **개별 API 파일에서 상세 시그니처 확인**:
+
+   ```bash
+   grep -A 5 "MethodName" analysis-output/api-changes-build-current/api-files/Functorium.cs
+   ```
+
+3. **커밋 분석과 교차 참조**하여 변경의 컨텍스트 이해:
+
+   ```bash
+   cat analysis-output/Functorium.md | grep -A 2 "MethodName"
+   ```
 
 ## API 문서화 규칙
 
 ### 핵심 규칙
 
-1. **항상 API 변경 diff로 시작**하여 이번 릴리스의 새로운 내용 식별
-2. **Uber 파일은 사용 예시 작성에만 사용** - 올바른 API 시그니처로
-3. **매개변수 이름과 타입을 정확히 일치** - Uber 파일에 표시된 대로
-4. **diff에서 찾은 브레이킹 체인지에 대한 마이그레이션 단계 표시**
-5. **API가 존재한다고 발명하거나 가정하지 않음** - 모든 것이 diff에서 시작되는지 확인
+1. **Uber 파일에서 API 존재 확인** - `all-api-changes.txt`가 단일 진실 소스
+2. **매개변수 이름과 타입을 정확히 일치** - Uber 파일에 표시된 대로
+3. **브레이킹 체인지에 대한 마이그레이션 단계 표시**
+4. **API가 존재한다고 발명하거나 가정하지 않음** - Uber 파일에 없으면 문서화하지 않음
 
 ### 정확성 표준
 
-- **DIFF로 시작**: api-changes-diff.txt를 먼저 확인하여 실제로 새로운 것 식별
-- **샘플에 UBER 파일 사용**: all-api-changes.txt에서 완전한 API 시그니처 가져오기
+- **UBER 파일 사용**: `all-api-changes.txt`에서 완전한 API 시그니처 가져오기
+- **개별 API 파일 참조**: `api-files/*.cs`에서 상세 정의 확인
 - **API 변경에 샘플 제공**: 모든 새 API에 코드 샘플 포함
 - **API를 발명하지 않음**: 만들어낸 메서드, 매개변수, 플루언트 체인 금지
 

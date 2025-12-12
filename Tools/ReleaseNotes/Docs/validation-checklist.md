@@ -37,11 +37,12 @@
 grep -n "MethodName" analysis-output/api-changes-build-current/all-api-changes.txt
 ```
 
-### 2. **브레이킹 체인지를 실제 API diff와 확인**
+### 2. **브레이킹 체인지 확인**
 
 브레이킹 체인지 확인 위치:
-- `analysis-output/api-changes-build-current/api-changes-diff.txt`
-- 개별 컴포넌트 분석 파일
+- `analysis-output/api-changes-build-current/all-api-changes.txt` - 현재 API 정의
+- `analysis-output/api-changes-build-current/api-files/*.cs` - 개별 어셈블리 API
+- `analysis-output/*.md` - 컴포넌트별 커밋 분석 (Breaking changes 섹션)
 
 ### 3. **생성된 문서에 markdownlint 실행**
 
