@@ -186,9 +186,10 @@
     - 파일명: RELEASE-v1.0.0-alpha.0.132.md
     - 문서: v1.0.0-alpha.0 <--- x
   - [ ] markdownlint-cli@0.45.0 사전 설치
-  - [ ] ExtractApiChanges 이모지 제거
+  - [x] ExtractApiChanges 이모지 제거
+  - [x] ExtractApiChanges CommandLine 패키지 버전 업그레이드
   - [ ] ExtractApiChanges 콘솔 출력 색상
-  - [ ] ExtractApiChanges.cs 정렬
+  - [x] ExtractApiChanges.cs 정렬
   - [ ] ExtractApiChanges.cs API 비교???
   - [ ] analyze-all-components.ps1, analyze-folder 포팅
   - [ ] .release-notes 폴더 이동
