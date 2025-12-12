@@ -4,6 +4,7 @@
 // Usage: dotnet ExtractApiChanges.cs
 
 #:package System.CommandLine@2.0.1
+#:package Spectre.Console@0.54.0
 
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Spectre.Console;
 
 var rootCommand = new RootCommand("Extract API changes by building current branch");
 
@@ -35,17 +37,22 @@ static async Task ExtractApiChangesAsync()
     var apiChangesDir = Path.Combine(analysisDir, "api-changes-build-current");
     var gitRoot = await GetGitRootAsync() ?? Path.GetFullPath(Path.Combine(toolsDir, "..", ".."));
 
-    Console.WriteLine();
-    Console.WriteLine("============================================================");
-    Console.WriteLine("Extracting API Changes");
-    Console.WriteLine("============================================================");
-    Console.WriteLine();
+    // Header
+    AnsiConsole.WriteLine();
+    AnsiConsole.Write(new Rule("[bold blue]Extracting API Changes[/]").RuleStyle("blue"));
+    AnsiConsole.WriteLine();
 
     var currentBranch = await GetCurrentBranchAsync();
-    Console.WriteLine($"Current branch: {currentBranch}");
-    Console.WriteLine($"Output directory: {apiChangesDir}");
-    Console.WriteLine($"Timestamp: {DateTime.Now}");
-    Console.WriteLine();
+
+    // Info panel
+    var infoTable = new Table().Border(TableBorder.Rounded).BorderColor(Color.Grey);
+    infoTable.AddColumn(new TableColumn("[grey]Property[/]").NoWrap());
+    infoTable.AddColumn(new TableColumn("[grey]Value[/]"));
+    infoTable.AddRow("[white]Branch[/]", $"[cyan]{currentBranch}[/]");
+    infoTable.AddRow("[white]Output[/]", $"[dim]{apiChangesDir}[/]");
+    infoTable.AddRow("[white]Timestamp[/]", $"[dim]{DateTime.Now:yyyy-MM-dd HH:mm:ss}[/]");
+    AnsiConsole.Write(infoTable);
+    AnsiConsole.WriteLine();
 
     // Create output directory
     if (Directory.Exists(apiChangesDir))
@@ -57,30 +64,31 @@ static async Task ExtractApiChangesAsync()
     try
     {
         // Step 1: Find ApiGenerator
-        Console.WriteLine("[Step 1] Locating ApiGenerator...");
+        AnsiConsole.MarkupLine("[bold]Step 1[/] [dim]Locating ApiGenerator...[/]");
         var apiGeneratorPath = Path.Combine(toolsDir, "ApiGenerator.cs");
 
         if (!File.Exists(apiGeneratorPath))
         {
-            Console.Error.WriteLine($"Error: ApiGenerator.cs not found at {apiGeneratorPath}");
+            AnsiConsole.MarkupLine("[red]Error:[/] ApiGenerator.cs not found");
             Environment.Exit(1);
         }
-        Console.WriteLine($"   Found: {apiGeneratorPath}");
-        Console.WriteLine();
+        AnsiConsole.MarkupLine($"   [green]Found[/] [dim]{apiGeneratorPath}[/]");
+        AnsiConsole.WriteLine();
 
         // Step 2: Find projects
-        Console.WriteLine("[Step 2] Finding Functorium projects...");
+        AnsiConsole.MarkupLine("[bold]Step 2[/] [dim]Finding Functorium projects...[/]");
         var srcDir = Path.Combine(gitRoot, "Src");
         var projectFiles = Directory.GetFiles(srcDir, "*.csproj", SearchOption.AllDirectories)
             .Where(p => !p.Contains(".Tests.") && Path.GetFileName(p).StartsWith("Functorium"))
             .OrderByDescending(p => p)
             .ToList();
 
-        Console.WriteLine($"   Found {projectFiles.Count} projects");
-        Console.WriteLine();
+        AnsiConsole.MarkupLine($"   [green]Found[/] [white]{projectFiles.Count}[/] projects");
+        AnsiConsole.WriteLine();
 
         // Step 3: Generate API files
-        Console.WriteLine("[Step 3] Publishing projects and generating API files...");
+        AnsiConsole.MarkupLine("[bold]Step 3[/] [dim]Publishing projects and generating API files...[/]");
+        AnsiConsole.WriteLine();
 
         var generatedApiFiles = new List<string>();
 
@@ -93,68 +101,73 @@ static async Task ExtractApiChangesAsync()
             var outputFile = Path.Combine(apiDir, $"{assemblyName}.cs");
             var publishDir = Path.Combine(projectDir, "bin", "publish");
 
-            Console.WriteLine($"   Publishing: {assemblyName}");
-
-            try
-            {
-                // Publish the project
-                var publishResult = await RunProcessAsync("dotnet", $"publish \"{projectFile}\" -c Release -o \"{publishDir}\"", quiet: true);
-
-                if (publishResult.ExitCode != 0)
+            await AnsiConsole.Status()
+                .Spinner(Spinner.Known.Dots)
+                .SpinnerStyle(Style.Parse("cyan"))
+                .StartAsync($"Publishing [cyan]{assemblyName}[/]...", async ctx =>
                 {
-                    Console.WriteLine($"      [WARN] Publish failed, skipping");
-                    continue;
-                }
+                    try
+                    {
+                        // Publish the project
+                        var publishResult = await RunProcessAsync("dotnet", $"publish \"{projectFile}\" -c Release -o \"{publishDir}\"", quiet: true);
 
-                var dllPath = Path.Combine(publishDir, $"{assemblyName}.dll");
-                if (!File.Exists(dllPath))
-                {
-                    Console.WriteLine($"      [WARN] DLL not found: {dllPath}");
-                    continue;
-                }
+                        if (publishResult.ExitCode != 0)
+                        {
+                            AnsiConsole.MarkupLine($"   [yellow]WARN[/] [dim]{assemblyName}[/] - Publish failed, skipping");
+                            return;
+                        }
 
-                Console.WriteLine($"   Generating API: {assemblyName}");
+                        var dllPath = Path.Combine(publishDir, $"{assemblyName}.dll");
+                        if (!File.Exists(dllPath))
+                        {
+                            AnsiConsole.MarkupLine($"   [yellow]WARN[/] [dim]{assemblyName}[/] - DLL not found");
+                            return;
+                        }
 
-                // Generate API using ApiGenerator.cs
-                var apiResult = await RunProcessAsync("dotnet", $"\"{apiGeneratorPath}\" \"{dllPath}\" -", quiet: true);
+                        ctx.Status($"Generating API for [cyan]{assemblyName}[/]...");
 
-                if (apiResult.ExitCode == 0 && !string.IsNullOrWhiteSpace(apiResult.Output))
-                {
-                    // Create api directory if not exists
-                    Directory.CreateDirectory(apiDir);
+                        // Generate API using ApiGenerator.cs
+                        var apiResult = await RunProcessAsync("dotnet", $"\"{apiGeneratorPath}\" \"{dllPath}\" -", quiet: true);
 
-                    // Create file with header
-                    var content = new StringBuilder();
-                    content.AppendLine("//------------------------------------------------------------------------------");
-                    content.AppendLine("// <auto-generated>");
-                    content.AppendLine("//     This code was generated by PublicApiGenerator.");
-                    content.AppendLine($"//     Assembly: {assemblyName}");
-                    content.AppendLine($"//     Generated at: {DateTime.Now}");
-                    content.AppendLine("// </auto-generated>");
-                    content.AppendLine("//------------------------------------------------------------------------------");
-                    content.AppendLine();
-                    content.Append(apiResult.Output);
+                        if (apiResult.ExitCode == 0 && !string.IsNullOrWhiteSpace(apiResult.Output))
+                        {
+                            // Create api directory if not exists
+                            Directory.CreateDirectory(apiDir);
 
-                    await File.WriteAllTextAsync(outputFile, content.ToString());
-                    generatedApiFiles.Add(outputFile);
-                    Console.WriteLine($"      Created: {Path.GetFileName(outputFile)}");
-                }
-                else
-                {
-                    Console.WriteLine($"      [WARN] Skipped (no public API or error)");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"      [ERROR] {ex.Message}");
-            }
+                            // Create file with header
+                            var content = new StringBuilder();
+                            content.AppendLine("//------------------------------------------------------------------------------");
+                            content.AppendLine("// <auto-generated>");
+                            content.AppendLine("//     This code was generated by PublicApiGenerator.");
+                            content.AppendLine($"//     Assembly: {assemblyName}");
+                            content.AppendLine($"//     Generated at: {DateTime.Now}");
+                            content.AppendLine("// </auto-generated>");
+                            content.AppendLine("//------------------------------------------------------------------------------");
+                            content.AppendLine();
+                            content.Append(apiResult.Output);
+
+                            await File.WriteAllTextAsync(outputFile, content.ToString());
+                            generatedApiFiles.Add(outputFile);
+                            AnsiConsole.MarkupLine($"   [green]OK[/]   [white]{assemblyName}[/] [dim]→ {Path.GetFileName(outputFile)}[/]");
+                        }
+                        else
+                        {
+                            AnsiConsole.MarkupLine($"   [yellow]SKIP[/] [dim]{assemblyName}[/] - No public API");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AnsiConsole.MarkupLine($"   [red]ERROR[/] [dim]{assemblyName}[/] - {ex.Message}");
+                    }
+                });
         }
 
-        Console.WriteLine($"   Generated {generatedApiFiles.Count} API files");
-        Console.WriteLine();
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine($"   Generated [green]{generatedApiFiles.Count}[/] API files");
+        AnsiConsole.WriteLine();
 
         // Step 4: Create uber file
-        Console.WriteLine("[Step 4] Creating uber API file...");
+        AnsiConsole.MarkupLine("[bold]Step 4[/] [dim]Creating uber API file...[/]");
         var uberFile = Path.Combine(apiChangesDir, "all-api-changes.txt");
 
         var uberContent = new StringBuilder();
@@ -190,11 +203,11 @@ static async Task ExtractApiChangesAsync()
         }
 
         await File.WriteAllTextAsync(uberFile, uberContent.ToString());
-        Console.WriteLine($"   Uber file: {Path.GetFileName(uberFile)}");
-        Console.WriteLine();
+        AnsiConsole.MarkupLine($"   [green]Created[/] [dim]{Path.GetFileName(uberFile)}[/]");
+        AnsiConsole.WriteLine();
 
         // Step 5: Generate git diff
-        Console.WriteLine("[Step 5] Generating git diff...");
+        AnsiConsole.MarkupLine("[bold]Step 5[/] [dim]Generating git diff...[/]");
         var apiDiffPath = Path.Combine(apiChangesDir, "api-changes-diff.txt");
 
         var diffResult = await RunProcessAsync("git", "diff HEAD -- 'Src/*/.api/*.cs'", quiet: true);
@@ -203,11 +216,11 @@ static async Task ExtractApiChangesAsync()
             : "# No tracked API file changes (API files are newly generated)";
 
         await File.WriteAllTextAsync(apiDiffPath, diffContent);
-        Console.WriteLine($"   Diff file: {Path.GetFileName(apiDiffPath)}");
-        Console.WriteLine();
+        AnsiConsole.MarkupLine($"   [green]Created[/] [dim]{Path.GetFileName(apiDiffPath)}[/]");
+        AnsiConsole.WriteLine();
 
         // Step 6: Create summary
-        Console.WriteLine("[Step 6] Creating summary report...");
+        AnsiConsole.MarkupLine("[bold]Step 6[/] [dim]Creating summary report...[/]");
 
         var summary = new StringBuilder();
         summary.AppendLine("# API Files Summary");
@@ -240,29 +253,33 @@ static async Task ExtractApiChangesAsync()
             Path.Combine(apiChangesDir, "projects.txt"),
             projectFiles.Select(Path.GetFileName)!);
 
-        Console.WriteLine($"   Summary: api-changes-summary.md");
-        Console.WriteLine();
+        AnsiConsole.MarkupLine($"   [green]Created[/] [dim]api-changes-summary.md[/]");
+        AnsiConsole.WriteLine();
 
         // Final summary
         var totalTime = (DateTime.Now - startTime).TotalSeconds;
 
-        Console.WriteLine("============================================================");
-        Console.WriteLine("API Files Collection completed successfully!");
-        Console.WriteLine("============================================================");
-        Console.WriteLine($"Current Branch: {currentBranch}");
-        Console.WriteLine($"Output: {apiChangesDir}/");
-        Console.WriteLine($"Total API Files: {generatedApiFiles.Count}");
-        Console.WriteLine($"Total Time: {Math.Round(totalTime, 1)}s");
-        Console.WriteLine($"Summary: {Path.Combine(apiChangesDir, "api-changes-summary.md")}");
-        Console.WriteLine($"Uber API File: {uberFile}");
-        Console.WriteLine($"API Files: Src/*/.api/");
-        Console.WriteLine();
+        AnsiConsole.Write(new Rule("[bold green]Completed[/]").RuleStyle("green"));
+        AnsiConsole.WriteLine();
+
+        var resultTable = new Table().Border(TableBorder.Rounded).BorderColor(Color.Green);
+        resultTable.AddColumn(new TableColumn("[green]Item[/]").NoWrap());
+        resultTable.AddColumn(new TableColumn("[green]Value[/]"));
+        resultTable.AddRow("Branch", $"[cyan]{currentBranch}[/]");
+        resultTable.AddRow("API Files", $"[white]{generatedApiFiles.Count}[/]");
+        resultTable.AddRow("Time", $"[white]{Math.Round(totalTime, 1)}s[/]");
+        resultTable.AddRow("Output", $"[dim]{apiChangesDir}[/]");
+        resultTable.AddRow("Summary", $"[dim]api-changes-summary.md[/]");
+        resultTable.AddRow("Uber File", $"[dim]all-api-changes.txt[/]");
+        resultTable.AddRow("API Location", $"[cyan]Src/*/.api/[/]");
+        AnsiConsole.Write(resultTable);
+        AnsiConsole.WriteLine();
     }
     catch (Exception ex)
     {
-        Console.Error.WriteLine();
-        Console.Error.WriteLine($"Error: {ex.Message}");
-        Console.Error.WriteLine(ex.StackTrace);
+        AnsiConsole.WriteLine();
+        AnsiConsole.Write(new Rule("[bold red]Error[/]").RuleStyle("red"));
+        AnsiConsole.WriteException(ex);
         Environment.Exit(1);
     }
 }
@@ -327,7 +344,7 @@ static async Task<(int ExitCode, string Output)> RunProcessAsync(string fileName
     var output = outputBuilder.ToString();
     if (!quiet && errorBuilder.Length > 0)
     {
-        Console.Error.Write(errorBuilder.ToString());
+        AnsiConsole.MarkupLine($"[red]{errorBuilder}[/]");
     }
 
     return (process.ExitCode, output);
