@@ -188,10 +188,11 @@
   - [ ] markdownlint-cli@0.45.0 사전 설치
   - [x] ExtractApiChanges 이모지 제거
   - [x] ExtractApiChanges CommandLine 패키지 버전 업그레이드
-  - [ ] ExtractApiChanges 콘솔 출력 색상
   - [x] ExtractApiChanges.cs 정렬
-  - [ ] ExtractApiChanges.cs API 비교???
-  - [ ] analyze-all-components.ps1, analyze-folder 포팅
+  - [x] ExtractApiChanges.cs .api 비교
+  - [x] ExtractApiChanges 콘솔 출력 색상
+  - [x] analyze-all-components.ps1, analyze-folder 포팅
+  - [ ] 릴리즈 노트 생성
   - [ ] .release-notes 폴더 이동
   - [ ] 버전?
   - [ ] 브랜치 전략?
