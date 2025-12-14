@@ -10,32 +10,19 @@
 
 ### 1단계: 컴포넌트 변경사항 분석
 
-**PowerShell (Windows):**
-```powershell
-.\analyze-all-components.ps1 -BaseBranch <base_branch> -TargetBranch <target_branch>
-```
-
-**Bash (Linux/macOS/Git Bash):**
 ```bash
-./analyze-all-components.sh <base_branch> <target_branch>
+dotnet AnalyzeAllComponents.cs --base <base_branch> --target <target_branch>
 ```
 
 **예시 - 첫 배포 (태그 없는 경우):**
-```powershell
-# PowerShell
-$FIRST_COMMIT = git rev-list --max-parents=0 HEAD
-.\analyze-all-components.ps1 -BaseBranch $FIRST_COMMIT -TargetBranch origin/main
-```
-
 ```bash
-# Bash
 FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
-./analyze-all-components.sh "$FIRST_COMMIT" origin/main
+dotnet AnalyzeAllComponents.cs --base $FIRST_COMMIT --target origin/main
 ```
 
 **예시 - 릴리스 간 비교:**
-```powershell
-.\analyze-all-components.ps1 -BaseBranch origin/release/1.0 -TargetBranch origin/main
+```bash
+dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target origin/main
 ```
 
 #### 생성되는 결과물:
@@ -64,14 +51,8 @@ analysis-output/
 
 ### 2단계: API 변경사항 추출
 
-**PowerShell (Windows):**
-```powershell
-.\extract-api-changes.ps1
-```
-
-**Bash (Linux/macOS/Git Bash):**
 ```bash
-./extract-api-changes.sh
+dotnet ExtractApiChanges.cs
 ```
 
 #### 생성되는 결과물:
@@ -87,23 +68,23 @@ analysis-output/
 - 사용된 도구 버전 정보
 - 각 어셈블리별 API 파일 경로
 
-**개별 API 파일** (`analysis-output/api-changes-build-current/api-files/*.cs`)
+**개별 API 파일** (`Src/*/.api/*.cs`)
 - 각 어셈블리의 Public API 정의
 - C# 소스 코드 형식
-
-**프로젝트 목록** (`analysis-output/api-changes-build-current/projects.txt`)
-- 처리된 프로젝트 파일 목록
+- Git으로 추적되어 API 변경 이력 관리 가능
 
 #### 실제 출력 예시:
 ```
 analysis-output/api-changes-build-current/
-├── all-api-changes.txt          # UBER 파일 - 전체 API (25,455 bytes)
+├── all-api-changes.txt          # UBER 파일 - 전체 API
 ├── api-changes-summary.md       # API 요약
-├── api-changes-diff.txt         # API 차이점
-├── projects.txt                 # 프로젝트 목록
-└── api-files/                   # 개별 어셈블리 API 파일
-    ├── Functorium.cs
-    └── Functorium.Testing.cs
+└── api-changes-diff.txt         # API 차이점
+
+Src/
+├── Functorium/.api/
+│   └── Functorium.cs            # Functorium Public API
+└── Functorium.Testing/.api/
+    └── Functorium.Testing.cs    # Functorium.Testing Public API
 ```
 
 ### 3단계: 데이터 수집 결과 검증
@@ -130,8 +111,8 @@ wc -l analysis-output/api-changes-build-current/all-api-changes.txt
 # 주요 API 확인 (예시)
 grep -c "ErrorCodeFactory" analysis-output/api-changes-build-current/all-api-changes.txt
 
-# 프로젝트 목록 확인
-cat analysis-output/api-changes-build-current/projects.txt
+# API 파일 확인
+ls Src/*/.api/*.cs
 ```
 
 ## 출력 이해하기
@@ -141,38 +122,46 @@ cat analysis-output/api-changes-build-current/projects.txt
 각 컴포넌트 파일 (`*.md`)은 다음 구조를 따릅니다:
 
 ```markdown
-========================================
-ANALYZING: Src/Functorium
-Comparing: <base_branch> -> <target_branch>
-Working from: <repository_path>
-========================================
+# Analysis for Src/Functorium
 
-Change Summary:
+Generated: <timestamp>
+Comparing: <base_branch> -> <target_branch>
+
+## Change Summary
 [git diff --stat 출력]
 
-All Commits (new in <target_branch>):
+## All Commits
 [커밋 SHA와 메시지 목록]
 
-Top Contributors:
+## Top Contributors
 [기여자별 커밋 수]
 
-Sample Commit Messages (categorized):
-Feature commits:
+## Categorized Commits
+
+### Feature Commits
 [feat, feature, add 패턴 커밋]
 
-Bug fixes:
+### Bug Fixes
 [fix, bug 패턴 커밋]
 
-Breaking changes:
+### Breaking Changes
 [breaking, BREAKING 패턴 커밋]
 ```
 
-### 주요 커밋 패턴:
+### 주요 커밋 패턴 (Conventional Commits):
 
-- **"feat"/"add"** 커밋 → 새 기능 또는 API
-- **"fix"/"bug"** 커밋 → 버그 수정
-- **"refactor"** 커밋 → 코드 리팩토링
-- **"breaking"/"BREAKING"** 커밋 → 브레이킹 체인지
+| 타입 | 설명 |
+|------|------|
+| `feat` | 새로운 기능 추가 |
+| `fix` | 버그 수정 |
+| `docs` | 문서 변경 |
+| `refactor` | 리팩터링 (기능/버그 수정 아님) |
+| `perf` | 성능 개선 |
+| `test` | 테스트 추가/수정 |
+| `build` | 빌드 시스템/의존성 변경 |
+| `chore` | 기타 변경 |
+| `!` 또는 `BREAKING CHANGE:` | 브레이킹 체인지 |
+
 - **GitHub 참조** (`#12345`) → 추가 컨텍스트 확인
 
 ## 다음 단계
@@ -194,11 +183,11 @@ Breaking changes:
 
 ## 데이터 수집 체크리스트
 
-- [ ] 컴포넌트 분석 완료 (`.\analyze-all-components.ps1` 또는 `./analyze-all-components.sh`)
-- [ ] API 변경사항 추출 완료 (`.\extract-api-changes.ps1` 또는 `./extract-api-changes.sh`)
+- [ ] 컴포넌트 분석 완료 (`dotnet AnalyzeAllComponents.cs`)
+- [ ] API 변경사항 추출 완료 (`dotnet ExtractApiChanges.cs`)
 - [ ] 컴포넌트 파일 생성됨 (`analysis-output/*.md`)
 - [ ] 분석 요약 생성됨 (`analysis-output/analysis-summary.md`)
 - [ ] Uber API 파일 생성됨 (`all-api-changes.txt`)
 - [ ] API 요약 생성됨 (`api-changes-summary.md`)
-- [ ] 개별 API 파일 생성됨 (`api-files/*.cs`)
+- [ ] 개별 API 파일 생성됨 (`Src/*/.api/*.cs`)
 - [ ] 기능 분석 및 문서화 진행 준비 완료

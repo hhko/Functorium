@@ -150,9 +150,18 @@ static async Task ExtractApiChangesAsync()
                             generatedApiFiles.Add(outputFile);
                             AnsiConsole.MarkupLine($"   [green]OK[/]   [white]{assemblyName}[/] [dim]→ {Path.GetFileName(outputFile)}[/]");
                         }
+                        else if (apiResult.ExitCode != 0)
+                        {
+                            // ApiGenerator execution failed
+                            var errorMsg = !string.IsNullOrWhiteSpace(apiResult.Error)
+                                ? ExtractErrorSummary(apiResult.Error)
+                                : $"Exit code {apiResult.ExitCode}";
+                            AnsiConsole.MarkupLine($"   [red]FAIL[/] [dim]{assemblyName}[/] - {errorMsg}");
+                        }
                         else
                         {
-                            AnsiConsole.MarkupLine($"   [yellow]SKIP[/] [dim]{assemblyName}[/] - No public API");
+                            // No public types in assembly
+                            AnsiConsole.MarkupLine($"   [yellow]SKIP[/] [dim]{assemblyName}[/] - No public types found");
                         }
                     }
                     catch (Exception ex)
@@ -285,6 +294,39 @@ static async Task ExtractApiChangesAsync()
 }
 
 // Helper methods
+static string ExtractErrorSummary(string error)
+{
+    // Extract key error information from stderr
+    var lines = error.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+    // Look for common error patterns
+    foreach (var line in lines)
+    {
+        var trimmed = line.Trim();
+
+        // FileNotFoundException - extract assembly name
+        if (trimmed.Contains("FileNotFoundException") || trimmed.Contains("Could not load file or assembly"))
+        {
+            var match = System.Text.RegularExpressions.Regex.Match(trimmed, @"'([^']+)'");
+            if (match.Success)
+            {
+                return $"Assembly not found: {match.Groups[1].Value.Split(',')[0]}";
+            }
+            return "Assembly load failed";
+        }
+
+        // Generic exception
+        if (trimmed.Contains("Exception:") || trimmed.Contains("Error:"))
+        {
+            return trimmed.Length > 60 ? trimmed[..60] + "..." : trimmed;
+        }
+    }
+
+    // Return first non-empty line (truncated)
+    var firstLine = lines.FirstOrDefault(l => !string.IsNullOrWhiteSpace(l))?.Trim() ?? "Unknown error";
+    return firstLine.Length > 60 ? firstLine[..60] + "..." : firstLine;
+}
+
 static async Task<string?> GetGitRootAsync()
 {
     var result = await RunProcessAsync("git", "rev-parse --show-toplevel", quiet: true);
@@ -303,7 +345,7 @@ static async Task<string> GetCurrentBranchAsync()
     return result.ExitCode == 0 ? result.Output.Trim() : "unknown";
 }
 
-static async Task<(int ExitCode, string Output)> RunProcessAsync(string fileName, string arguments, bool quiet = false)
+static async Task<(int ExitCode, string Output, string Error)> RunProcessAsync(string fileName, string arguments, bool quiet = false)
 {
     var startInfo = new ProcessStartInfo
     {
@@ -330,7 +372,7 @@ static async Task<(int ExitCode, string Output)> RunProcessAsync(string fileName
 
     process.ErrorDataReceived += (sender, e) =>
     {
-        if (e.Data != null && !quiet)
+        if (e.Data != null)
         {
             errorBuilder.AppendLine(e.Data);
         }
@@ -341,11 +383,5 @@ static async Task<(int ExitCode, string Output)> RunProcessAsync(string fileName
     process.BeginErrorReadLine();
     await process.WaitForExitAsync();
 
-    var output = outputBuilder.ToString();
-    if (!quiet && errorBuilder.Length > 0)
-    {
-        AnsiConsole.MarkupLine($"[red]{errorBuilder}[/]");
-    }
-
-    return (process.ExitCode, output);
+    return (process.ExitCode, outputBuilder.ToString(), errorBuilder.ToString());
 }

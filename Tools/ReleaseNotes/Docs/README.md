@@ -16,23 +16,26 @@
 
 | 스크립트 | 설명 |
 |----------|------|
-| `analyze-all-components.ps1` / `.sh` | 컴포넌트 변경사항 분석 |
-| `analyze-folder.ps1` / `.sh` | 개별 폴더 상세 분석 |
-| `extract-api-changes.ps1` / `.sh` | API 변경사항 추출 |
+| `AnalyzeAllComponents.cs` | 컴포넌트 변경사항 분석 |
+| `AnalyzeFolder.cs` | 개별 폴더 상세 분석 |
+| `ExtractApiChanges.cs` | API 변경사항 추출 |
+| `ApiGenerator.cs` | Public API 생성 |
+
+> **Note**: 모든 스크립트는 .NET 10 file-based program으로 구현되어 있습니다.
 
 ## 빠른 시작
 
 ### 1. 데이터 수집
 
-```powershell
-# PowerShell - 첫 배포 시
-$FIRST_COMMIT = git rev-list --max-parents=0 HEAD
-.\analyze-all-components.ps1 -BaseBranch $FIRST_COMMIT -TargetBranch origin/main
-.\extract-api-changes.ps1
+```bash
+# 첫 배포 시
+FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
+dotnet AnalyzeAllComponents.cs --base $FIRST_COMMIT --target origin/main
+dotnet ExtractApiChanges.cs
 
-# PowerShell - 릴리스 간 비교
-.\analyze-all-components.ps1 -BaseBranch origin/release/1.0 -TargetBranch origin/main
-.\extract-api-changes.ps1
+# 릴리스 간 비교
+dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target origin/main
+dotnet ExtractApiChanges.cs
 ```
 
 ### 2. 출력 확인
@@ -46,10 +49,13 @@ analysis-output/
 └── api-changes-build-current/
     ├── all-api-changes.txt          # Uber API 파일 (단일 진실 소스)
     ├── api-changes-summary.md       # API 요약
-    ├── projects.txt                 # 처리된 프로젝트 목록
-    └── api-files/                   # 개별 API 파일
-        ├── Functorium.cs
-        └── Functorium.Testing.cs
+    └── api-changes-diff.txt         # API 차이점
+
+Src/
+├── Functorium/.api/
+│   └── Functorium.cs                # Functorium Public API
+└── Functorium.Testing/.api/
+    └── Functorium.Testing.cs        # Functorium.Testing Public API
 ```
 
 ### 3. 릴리스 노트 작성

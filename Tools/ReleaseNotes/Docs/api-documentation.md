@@ -17,10 +17,14 @@ analysis-output/api-changes-build-current/all-api-changes.txt
 ### **개별 API 파일** - 어셈블리별 API 정의:
 
 ```text
-analysis-output/api-changes-build-current/api-files/
-├── Functorium.cs              # 핵심 라이브러리 API
-└── Functorium.Testing.cs      # 테스트 유틸리티 API
+Src/
+├── Functorium/.api/
+│   └── Functorium.cs              # 핵심 라이브러리 API
+└── Functorium.Testing/.api/
+    └── Functorium.Testing.cs      # 테스트 유틸리티 API
 ```
+
+> **Note**: API 파일은 `Src/*/.api/` 경로에 생성되어 Git으로 추적됩니다.
 
 ### **API 변경 요약**:
 
@@ -43,7 +47,7 @@ grep -A 10 -B 2 "ErrorCodeFactory" analysis-output/api-changes-build-current/all
 #### 2단계: 개별 API 파일에서 상세 확인
 
 ```bash
-cat analysis-output/api-changes-build-current/api-files/Functorium.cs | grep -A 5 "ErrorCodeFactory"
+cat Src/Functorium/.api/Functorium.cs | grep -A 5 "ErrorCodeFactory"
 ```
 
 #### 3단계: 코드 샘플을 위한 완전한 API 시그니처 추출
@@ -57,7 +61,7 @@ public static LanguageExt.Common.Error CreateFromException(string errorCode, Sys
 #### 4단계: 올바른 API 시그니처로 사용 예시 작성
 
 ```csharp
-// ✅ 올바름: Uber 파일의 실제 API 시그니처 기반 사용 예시
+// 올바름: Uber 파일의 실제 API 시그니처 기반 사용 예시
 var error = ErrorCodeFactory.Create("VALIDATION_001", invalidValue, "값이 유효하지 않습니다");
 var errorFromEx = ErrorCodeFactory.CreateFromException("SYSTEM_001", exception);
 ```
@@ -65,7 +69,7 @@ var errorFromEx = ErrorCodeFactory.CreateFromException("SYSTEM_001", exception);
 ## API를 발명하지 마세요
 
 ```csharp
-// ❌ 잘못됨: 이 메서드들은 API diff나 Uber 파일에서 찾을 수 없음
+// 잘못됨: 이 메서드들은 API diff나 Uber 파일에서 찾을 수 없음
 ErrorCodeFactory.Create("error")
     .WithDetails(details: "추가 정보")      // 발명됨 - Uber 파일에 없음
     .WithInnerError(inner: innerError)     // 발명됨 - Uber 파일에 없음
@@ -80,20 +84,20 @@ ErrorCodeFactory.Create("error")
 
 ```csharp
 var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddSerilog();  // ✅ IServiceCollection의 확장 메서드
+builder.Services.AddSerilog();  // IServiceCollection의 확장 메서드
 ```
 
 ### **직접 사용** - 비즈니스 로직에서 직접 호출
 
 ```csharp
-// ✅ 비즈니스 로직에서 직접 사용
+// 비즈니스 로직에서 직접 사용
 var error = ErrorCodeFactory.Create("ERR001", value, "오류 메시지");
 ```
 
-### **❌ 일반적인 실수**: 존재하지 않는 확장 메서드 사용:
+### **일반적인 실수**: 존재하지 않는 확장 메서드 사용:
 
 ```csharp
-// ❌ 잘못됨: AddErrorCodeFactory는 존재하지 않음
+// 잘못됨: AddErrorCodeFactory는 존재하지 않음
 builder.Services.AddErrorCodeFactory();  // 존재하지 않는 메서드
 ```
 
@@ -122,7 +126,7 @@ API 샘플 작성 전:
 2. **개별 API 파일에서 상세 시그니처 확인**:
 
    ```bash
-   grep -A 5 "MethodName" analysis-output/api-changes-build-current/api-files/Functorium.cs
+   grep -A 5 "MethodName" Src/Functorium/.api/Functorium.cs
    ```
 
 3. **커밋 분석과 교차 참조**하여 변경의 컨텍스트 이해:
@@ -143,7 +147,7 @@ API 샘플 작성 전:
 ### 정확성 표준
 
 - **UBER 파일 사용**: `all-api-changes.txt`에서 완전한 API 시그니처 가져오기
-- **개별 API 파일 참조**: `api-files/*.cs`에서 상세 정의 확인
+- **개별 API 파일 참조**: `Src/*/.api/*.cs`에서 상세 정의 확인
 - **API 변경에 샘플 제공**: 모든 새 API에 코드 샘플 포함
 - **API를 발명하지 않음**: 만들어낸 메서드, 매개변수, 플루언트 체인 금지
 
