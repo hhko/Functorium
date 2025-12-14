@@ -192,6 +192,10 @@
   - [x] ExtractApiChanges.cs .api 비교
   - [x] ExtractApiChanges 콘솔 출력 색상
   - [x] analyze-all-components.ps1, analyze-folder 포팅
+  - [x] ~~Docs -> Reference 폴더 이름 변경~~
+  - [x] .NET 10 File-based 실행 오류 개선
+  - [x] ReleaseNotes 문서 내용 업데이트
+  - [ ] Tools/ReleaseNotes -> .release-notes/script로 이동
   - [ ] 릴리즈 노트 생성
   - [ ] .release-notes 폴더 이동
   - [ ] 버전?
@@ -225,3 +229,67 @@ nuget.config                              |         |                           
   - `Fin<A>.Succ` (메서드 참조) → `Fin.Succ` (람다 사용)
   - `Fin<A>.Fail(error)` → `Fin.Fail<A>(error)`
   - `FinT<M, A>.Fail(error)` → `FinT.Fail<M, A>(error)`
+
+```shell
+rm -rf ~/AppData/Local/Temp/dotnet/runfile/ExtractApiChanges*
+%LOCALAPPDATA%\Temp\dotnet\runfile\<스크립트명>*
+dotnet ExtractApiChanges.cs
+
+# 실행 전 캐시 정리 스크립트
+  Remove-Item -Recurse -Force "$env:LOCALAPPDATA\Temp\dotnet\runfile\*" -ErrorAction SilentlyContinue
+
+
+● 파일 잠금 해결 방법
+
+  1. 프로세스 확인 및 종료
+
+  # 잠금 프로세스 확인
+  tasklist | findstr "ExtractApiChanges"
+  tasklist | findstr "ApiGenerator"
+  tasklist | findstr "AnalyzeAllComponents"
+
+  # 프로세스 강제 종료
+  taskkill /F /IM ExtractApiChanges.exe
+  taskkill /F /IM ApiGenerator.exe
+
+  2. 캐시 폴더 삭제
+
+  # 특정 스크립트 캐시만 삭제
+  Remove-Item -Recurse -Force "$env:LOCALAPPDATA\Temp\dotnet\runfile\ExtractApiChanges*"
+
+  # 모든 file-based program 캐시 삭제
+  Remove-Item -Recurse -Force "$env:LOCALAPPDATA\Temp\dotnet\runfile\*"
+
+  3. 그래도 안 되면
+
+  # 파일 잠금 프로세스 찾기 (Handle 도구 필요)
+  handle.exe "ExtractApiChanges"
+
+  # 또는 Resource Monitor 사용
+  resmon.exe
+  # CPU → Associated Handles → 검색
+
+  4. 최후의 수단
+
+  # 재부팅 없이 Explorer 재시작
+  taskkill /F /IM explorer.exe
+  start explorer.exe
+
+  # 또는 PC 재시작
+
+  권장: 실행 스크립트에 정리 로직 추가
+
+  # run-extract-api.ps1
+  $scriptName = "ExtractApiChanges"
+  $cachePattern = "$env:LOCALAPPDATA\Temp\dotnet\runfile\$scriptName*"
+
+  # 기존 프로세스 종료
+  Get-Process -Name $scriptName -ErrorAction SilentlyContinue | Stop-Process -Force
+
+  # 캐시 정리
+  Remove-Item -Recurse -Force $cachePattern -ErrorAction SilentlyContinue
+
+  # 실행
+  dotnet ExtractApiChanges.cs
+
+```

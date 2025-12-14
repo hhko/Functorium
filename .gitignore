@@ -433,3 +433,6 @@ GitHub/
 # Claude Code
 nul
 bash.exe.stackdump
+
+# Release-Notes
+Tools/ReleaseNotes/analysis-output/
