@@ -43,12 +43,10 @@ $ErrorActionPreference = "Stop"
 # Load common modules
 $scriptRoot = $PSScriptRoot
 . "$scriptRoot/.scripts/Write-Console.ps1"
-. "$scriptRoot/.scripts/Install-DotNetTool.ps1"
 
 #region Constants
 
 $script:TOTAL_STEPS = 2
-$script:VerifyToolVersion = "0.7.0"
 
 #endregion
 
@@ -75,12 +73,12 @@ OPTIONS
   -Help, -h, -?      Show this help message
 
 FEATURES
-  1. Install or update VerifyTool (dotnet global tool)
+  1. Restore .NET tools from .config/dotnet-tools.json
   2. Accept all pending snapshots with 'dotnet verify accept -y'
 
 PREREQUISITES
   - .NET SDK
-  - VerifyTool v$script:VerifyToolVersion (auto-installed/updated if needed)
+  - Tools defined in .config/dotnet-tools.json (auto-restored)
 
 EXAMPLES
   # Accept all pending snapshots
@@ -96,17 +94,23 @@ EXAMPLES
 
 #endregion
 
-#region Step 1: Install-VerifyToolStep
+#region Step 1: Restore-DotNetTools
 
 <#
 .SYNOPSIS
-  VerifyTool 도구를 설치하거나 업데이트합니다.
+  .NET 로컬 도구를 복원합니다.
 #>
-function Install-VerifyToolStep {
-  Write-StepProgress -Step 1 -TotalSteps $script:TOTAL_STEPS -Message "Checking VerifyTool..."
+function Restore-DotNetTools {
+  Write-StepProgress -Step 1 -TotalSteps $script:TOTAL_STEPS -Message "Restoring .NET tools..."
 
-  # Use common module function
-  Install-VerifyTool -RequiredVersion $script:VerifyToolVersion | Out-Null
+  dotnet tool restore 2>&1 | Out-Null
+
+  if ($LASTEXITCODE -eq 0) {
+    Write-Success "Tools restored"
+  }
+  else {
+    Write-WarningMessage "Tool restore failed or no tools to restore"
+  }
 }
 
 #endregion
@@ -141,8 +145,8 @@ function Invoke-VerifyAccept {
 function Main {
   Write-StartMessage -Title "Verify Accept..."
 
-  # Step 1: Install or update VerifyTool
-  Install-VerifyToolStep
+  # Step 1: Restore .NET tools
+  Restore-DotNetTools
 
   # Step 2: Accept pending snapshots
   Invoke-VerifyAccept

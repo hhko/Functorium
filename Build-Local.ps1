@@ -81,14 +81,12 @@ $ErrorActionPreference = "Stop"
 # Load common modules
 $scriptRoot = $PSScriptRoot
 . "$scriptRoot/.scripts/Write-Console.ps1"
-. "$scriptRoot/.scripts/Install-DotNetTool.ps1"
 
 #region Constants
 
-$script:TOTAL_STEPS = 8
+$script:TOTAL_STEPS = 9
 $script:Configuration = "Release"
 $script:CoreLayerPatterns = @("*.Domain", "*.Domains", "*.Application", "*.Applications")
-$script:ReportGeneratorVersion = "5.5.0"
 
 # These will be set after solution file is found
 $script:SolutionDir = $null
@@ -165,7 +163,7 @@ OUTPUT
 
 PREREQUISITES
   - .NET SDK
-  - ReportGenerator v5.5.0 (auto-installed/updated if needed)
+  - Tools defined in .config/dotnet-tools.json (auto-restored)
 
 EXAMPLES
   # Run build, tests, and pack (auto-detect solution)
@@ -193,7 +191,30 @@ EXAMPLES
 
 #endregion
 
-#region Step 1: Find-SolutionFile
+#region Step 1: Restore-DotNetTools
+
+<#
+.SYNOPSIS
+  .NET 로컬 도구를 복원합니다.
+.DESCRIPTION
+  .config/dotnet-tools.json에 정의된 도구들을 설치합니다.
+#>
+function Restore-DotNetTools {
+  Write-StepProgress -Step 1 -TotalSteps $script:TOTAL_STEPS -Message "Restoring .NET tools..."
+
+  dotnet tool restore 2>&1 | Out-Null
+
+  if ($LASTEXITCODE -eq 0) {
+    Write-Success "Tools restored"
+  }
+  else {
+    Write-WarningMessage "Tool restore failed or no tools to restore"
+  }
+}
+
+#endregion
+
+#region Step 2: Find-SolutionFile
 
 <#
 .SYNOPSIS
@@ -211,7 +232,7 @@ function Find-SolutionFile {
     [string]$SolutionPath
   )
 
-  Write-StepProgress -Step 1 -TotalSteps $script:TOTAL_STEPS -Message "Finding solution file..."
+  Write-StepProgress -Step 2 -TotalSteps $script:TOTAL_STEPS -Message "Finding solution file..."
 
   # If solution path is specified, validate and return
   if ($SolutionPath) {
@@ -255,7 +276,7 @@ function Find-SolutionFile {
 
 #endregion
 
-#region Step 2: Invoke-Build
+#region Step 3: Invoke-Build
 
 <#
 .SYNOPSIS
@@ -267,7 +288,7 @@ function Invoke-Build {
     [string]$SolutionPath
   )
 
-  Write-StepProgress -Step 2 -TotalSteps $script:TOTAL_STEPS -Message "Building solution ($script:Configuration)..."
+  Write-StepProgress -Step 3 -TotalSteps $script:TOTAL_STEPS -Message "Building solution ($script:Configuration)..."
 
   Write-Host ""
   dotnet build $SolutionPath `
@@ -281,7 +302,7 @@ function Invoke-Build {
 
 #endregion
 
-#region Step 3: Show-VersionInfo
+#region Step 4: Show-VersionInfo
 
 <#
 .SYNOPSIS
@@ -293,7 +314,7 @@ function Show-VersionInfo {
     [string]$SolutionPath
   )
 
-  Write-StepProgress -Step 3 -TotalSteps $script:TOTAL_STEPS -Message "Reading version information..."
+  Write-StepProgress -Step 4 -TotalSteps $script:TOTAL_STEPS -Message "Reading version information..."
 
   # Get solution directory
   $solutionDir = Split-Path -Parent $SolutionPath
@@ -395,7 +416,7 @@ function Show-VersionInfo {
 
 #endregion
 
-#region Step 4: Invoke-TestWithCoverage
+#region Step 5: Invoke-TestWithCoverage
 
 <#
 .SYNOPSIS
@@ -407,7 +428,7 @@ function Invoke-TestWithCoverage {
     [string]$SolutionPath
   )
 
-  Write-StepProgress -Step 4 -TotalSteps $script:TOTAL_STEPS -Message "Running tests with coverage..."
+  Write-StepProgress -Step 5 -TotalSteps $script:TOTAL_STEPS -Message "Running tests with coverage..."
 
   # Remove existing coverage report
   if (Test-Path $script:CoverageReportDir) {
@@ -437,14 +458,14 @@ function Invoke-TestWithCoverage {
 
 #endregion
 
-#region Step 5: Merge-CoverageReports
+#region Step 6: Merge-CoverageReports
 
 <#
 .SYNOPSIS
   여러 커버리지 파일을 병합합니다.
 #>
 function Merge-CoverageReports {
-  Write-StepProgress -Step 5 -TotalSteps $script:TOTAL_STEPS -Message "Merging coverage reports..."
+  Write-StepProgress -Step 6 -TotalSteps $script:TOTAL_STEPS -Message "Merging coverage reports..."
 
   # Find coverage files from each test project's TestResults directory
   $coverageFiles = @(Get-ChildItem -Path $script:SolutionDir -Filter "coverage.cobertura.xml" -Recurse -ErrorAction SilentlyContinue)
@@ -469,7 +490,7 @@ function Merge-CoverageReports {
 
 #endregion
 
-#region Step 6: New-HtmlReport
+#region Step 7: New-HtmlReport
 
 <#
 .SYNOPSIS
@@ -481,13 +502,10 @@ function New-HtmlReport {
     [string]$CoverageFiles
   )
 
-  Write-StepProgress -Step 6 -TotalSteps $script:TOTAL_STEPS -Message "Generating HTML report..."
+  Write-StepProgress -Step 7 -TotalSteps $script:TOTAL_STEPS -Message "Generating HTML report..."
 
-  # Install or update ReportGenerator (from Install-DotNetTool.ps1 module)
-  Install-ReportGenerator -RequiredVersion $script:ReportGeneratorVersion
-
-  # Generate HTML report
-  reportgenerator `
+  # Generate HTML report using local tool
+  dotnet reportgenerator `
     -reports:$CoverageFiles `
     -targetdir:$script:CoverageReportDir `
     -reporttypes:"Html;Cobertura" `
@@ -504,7 +522,7 @@ function New-HtmlReport {
 
 #endregion
 
-#region Step 7: Show-CoverageReport
+#region Step 8: Show-CoverageReport
 
 <#
 .SYNOPSIS
@@ -519,7 +537,7 @@ function Show-CoverageReport {
     [string]$Prefix
   )
 
-  Write-StepProgress -Step 7 -TotalSteps $script:TOTAL_STEPS -Message "Displaying coverage results..."
+  Write-StepProgress -Step 8 -TotalSteps $script:TOTAL_STEPS -Message "Displaying coverage results..."
 
   # Merged cobertura file path
   $mergedCoverageFile = Join-Path $script:CoverageReportDir "Cobertura.xml"
@@ -696,7 +714,7 @@ function Show-CoverageReport {
 
 #endregion
 
-#region Step 8: New-NuGetPackages
+#region Step 9: New-NuGetPackages
 
 <#
 .SYNOPSIS
@@ -708,7 +726,7 @@ function New-NuGetPackages {
     [string]$SolutionPath
   )
 
-  Write-StepProgress -Step 8 -TotalSteps $script:TOTAL_STEPS -Message "Creating NuGet packages..."
+  Write-StepProgress -Step 9 -TotalSteps $script:TOTAL_STEPS -Message "Creating NuGet packages..."
 
   # Get solution directory
   $solutionDir = Split-Path -Parent $SolutionPath
@@ -820,14 +838,15 @@ function New-NuGetPackages {
 
 .DESCRIPTION
   전체 빌드/테스트/커버리지/패키지 흐름을 제어합니다:
-  1. 솔루션 파일 검색
-  2. 솔루션 빌드
-  3. 버전 정보 표시
-  4. 테스트 실행 및 커버리지 수집
-  5. 커버리지 리포트 병합
-  6. HTML 리포트 생성
-  7. 콘솔에 커버리지 결과 표시
-  8. NuGet 패키지 생성
+  1. .NET 도구 복원
+  2. 솔루션 파일 검색
+  3. 솔루션 빌드
+  4. 버전 정보 표시
+  5. 테스트 실행 및 커버리지 수집
+  6. 커버리지 리포트 병합
+  7. HTML 리포트 생성
+  8. 콘솔에 커버리지 결과 표시
+  9. NuGet 패키지 생성
 #>
 function Main {
   param(
@@ -848,7 +867,10 @@ function Main {
   Write-Host "       Started: $($startTime.ToString('yyyy-MM-dd HH:mm:ss'))" -ForegroundColor DarkGray
   Write-Host ""
 
-  # 1. Find solution file
+  # 1. Restore .NET tools
+  Restore-DotNetTools
+
+  # 2. Find solution file
   $solution = Find-SolutionFile -SolutionPath $SolutionPath
   if (-not $solution) {
     return $false
@@ -860,34 +882,34 @@ function Main {
   Set-OutputPaths -SolutionPath $solutionFullPath
   Write-Detail "Coverage output: $script:CoverageReportDir"
 
-  # 2. Build
+  # 3. Build
   Invoke-Build -SolutionPath $solutionFullPath
 
-  # 3. Show version information
+  # 4. Show version information
   Show-VersionInfo -SolutionPath $solutionFullPath
 
-  # 4. Run tests with coverage
+  # 5. Run tests with coverage
   Invoke-TestWithCoverage -SolutionPath $solutionFullPath
 
-  # 5. Merge coverage reports
+  # 6. Merge coverage reports
   $coverageFiles = Merge-CoverageReports
   if (-not $coverageFiles) {
     Write-WarningMessage "No coverage files found. Cannot generate report."
     return $true
   }
 
-  # 6. Generate HTML report
+  # 7. Generate HTML report
   New-HtmlReport -CoverageFiles $coverageFiles
 
-  # 7. Display coverage results in console
+  # 8. Display coverage results in console
   Show-CoverageReport -CoverageFiles $coverageFiles -Prefix $Prefix
 
-  # 8. Create NuGet packages (if not skipped)
+  # 9. Create NuGet packages (if not skipped)
   if (-not $SkipPackaging) {
     New-NuGetPackages -SolutionPath $solutionFullPath
   }
   else {
-    Write-StepProgress -Step 8 -TotalSteps $script:TOTAL_STEPS -Message "Skipping NuGet package creation..."
+    Write-StepProgress -Step 9 -TotalSteps $script:TOTAL_STEPS -Message "Skipping NuGet package creation..."
     Write-Detail "Use -SkipPack to skip packaging"
   }
 
