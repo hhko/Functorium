@@ -2,10 +2,17 @@
   "version": 1,
   "isRoot": true,
   "tools": {
-    "publicapigenerator.tool": {
-      "version": "11.4.6",
+    "dotnet-reportgenerator-globaltool": {
+      "version": "5.5.0",
       "commands": [
-        "generate-public-api"
+        "reportgenerator"
+      ],
+      "rollForward": false
+    },
+    "verify.tool": {
+      "version": "0.7.0",
+      "commands": [
+        "verify"
       ],
       "rollForward": false
     }
