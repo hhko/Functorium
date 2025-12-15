@@ -2,7 +2,7 @@
 
 ## 성공 기준
 
-성공적인 `whats-new-{version}.md` 문서는 다음 조건을 만족할 때 달성됩니다:
+성공적인 `RELEASE-{version}.md` 문서는 다음 조건을 만족할 때 달성됩니다:
 
 ### ✅ **포괄적인 분석**
 - [ ] 모든 컴포넌트 분석 파일이 커밋 기반 기능을 위해 검토됨
@@ -34,20 +34,20 @@
 ### 1. **모든 코드 샘플을 Uber 파일과 교차 참조**
 
 ```bash
-grep -n "MethodName" analysis-output/api-changes-build-current/all-api-changes.txt
+grep -n "MethodName" .analysis-output/api-changes-build-current/all-api-changes.txt
 ```
 
 ### 2. **브레이킹 체인지 확인**
 
 브레이킹 체인지 확인 위치:
-- `analysis-output/api-changes-build-current/all-api-changes.txt` - 현재 API 정의
+- `.analysis-output/api-changes-build-current/all-api-changes.txt` - 현재 API 정의
 - `Src/*/.api/*.cs` - 개별 어셈블리 API
-- `analysis-output/*.md` - 컴포넌트별 커밋 분석 (Breaking changes 섹션)
+- `.analysis-output/*.md` - 컴포넌트별 커밋 분석 (Breaking changes 섹션)
 
 ### 3. **생성된 문서에 markdownlint 실행**
 
 ```bash
-npx markdownlint-cli@0.45.0 docs/whats-new-{version}.md --disable MD013
+npx markdownlint-cli@0.45.0 .release-notes/RELEASE-{version}.md --disable MD013
 ```
 
 ### 4. **추적성 참조 검증**

@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Spectre.Console;
 
@@ -47,8 +48,8 @@ static async Task AnalyzeAllComponentsAsync(string baseBranch, string targetBran
 
     // Get paths
     var toolsDir = Directory.GetCurrentDirectory();
-    var configFile = Path.Combine(toolsDir, "config", "component-priority.json");
-    var analysisDir = Path.Combine(toolsDir, "analysis-output");
+    var configFile = Path.Combine(toolsDir, "Config", "component-priority.json");
+    var analysisDir = Path.Combine(toolsDir, ".analysis-output");
 
     // Get git root
     var gitRoot = await GetGitRootAsync() ?? Path.GetFullPath(Path.Combine(toolsDir, "..", ".."));
@@ -73,6 +74,37 @@ static async Task AnalyzeAllComponentsAsync(string baseBranch, string targetBran
     infoTable.AddRow("[white]Target Branch[/]", $"[cyan]{targetBranch}[/]");
     AnsiConsole.Write(infoTable);
     AnsiConsole.WriteLine();
+
+    // Validate base branch exists
+    var baseBranchExists = await BranchExistsAsync(baseBranch, gitRoot);
+    if (!baseBranchExists)
+    {
+        AnsiConsole.Write(new Rule("[bold yellow]Base Branch Not Found[/]").RuleStyle("yellow"));
+        AnsiConsole.WriteLine();
+
+        var warningPanel = new Panel(
+            $"[yellow]Base branch[/] [cyan]{baseBranch}[/] [yellow]does not exist.[/]\n\n" +
+            $"This is likely your [bold]first deployment[/] or the release branch hasn't been created yet.\n\n" +
+            $"[bold white]For first deployment:[/]\n" +
+            $"1. Create the release branch:\n" +
+            $"   [dim]git checkout -b release/1.0[/]\n" +
+            $"   [dim]git push -u origin release/1.0[/]\n\n" +
+            $"2. Then run analysis comparing initial commit to current:\n" +
+            $"   [dim]dotnet AnalyzeAllComponents.cs --base $(git rev-list --max-parents=0 HEAD) --target HEAD[/]\n\n" +
+            $"[bold white]Or specify a different base branch:[/]\n" +
+            $"   [dim]dotnet AnalyzeAllComponents.cs --base origin/main --target HEAD[/]\n" +
+            $"   [dim]dotnet AnalyzeAllComponents.cs --base <commit-hash> --target HEAD[/]")
+        {
+            Border = BoxBorder.Rounded,
+            BorderStyle = new Style(Color.Yellow),
+            Padding = new Padding(2, 1)
+        };
+
+        AnsiConsole.Write(warningPanel);
+        AnsiConsole.WriteLine();
+
+        return;
+    }
 
     // Ensure analysis directory exists
     if (Directory.Exists(analysisDir))
@@ -268,8 +300,7 @@ static async Task<List<string>> LoadComponentsAsync(string configFile, string gi
 }
 
 // Analyze a single component
-static async Task<ComponentAnalysisResult> AnalyzeComponentAsync(
-    string componentPath, string baseBranch, string targetBranch, string gitRoot, string outputFile)
+static async Task<ComponentAnalysisResult> AnalyzeComponentAsync(string componentPath, string baseBranch, string targetBranch, string gitRoot, string outputFile)
 {
     var result = new ComponentAnalysisResult { ComponentPath = componentPath };
 
@@ -372,8 +403,23 @@ static async Task<ComponentAnalysisResult> AnalyzeComponentAsync(
     // Breaking changes
     content.AppendLine("### Breaking Changes");
     content.AppendLine();
-    var breakingResult = await RunGitAsync($"log --grep=\"breaking\" --grep=\"BREAKING\" --oneline --no-merges \"{baseBranch}..{targetBranch}\" -- \"{componentPath}/\"", gitRoot);
-    var breakingCommits = breakingResult.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Take(10).ToList();
+
+    // Get all commits for the component to filter for breaking changes
+    var allCommitsResult = await RunGitAsync($"log --oneline --no-merges \"{baseBranch}..{targetBranch}\" -- \"{componentPath}/\"", gitRoot);
+
+    // Filter for breaking changes:
+    // 1. Contains "breaking" or "BREAKING" keyword
+    // 2. Type followed by ! (e.g., feat!:, fix!:)
+    var breakingPattern = new Regex(@"\b\w+!:", RegexOptions.Compiled);
+    var breakingCommits = allCommitsResult.Output
+        .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+        .Where(commit =>
+            commit.Contains("breaking", StringComparison.OrdinalIgnoreCase) ||
+            commit.Contains("BREAKING") ||
+            breakingPattern.IsMatch(commit))
+        .Take(10)
+        .ToList();
+
     if (breakingCommits.Count > 0)
     {
         foreach (var commit in breakingCommits)
@@ -409,6 +455,12 @@ static async Task<string?> GetGitRootAsync()
 {
     var result = await RunGitAsync("rev-parse --show-toplevel", Directory.GetCurrentDirectory());
     return result.ExitCode == 0 ? result.Output.Trim() : null;
+}
+
+static async Task<bool> BranchExistsAsync(string branchName, string workingDirectory)
+{
+    var result = await RunGitAsync($"rev-parse --verify {branchName}", workingDirectory);
+    return result.ExitCode == 0;
 }
 
 static async Task<(int ExitCode, string Output)> RunGitAsync(string arguments, string workingDirectory)

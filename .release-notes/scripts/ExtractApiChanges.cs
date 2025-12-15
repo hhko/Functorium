@@ -33,7 +33,7 @@ static async Task ExtractApiChangesAsync()
 
     // Get paths
     var toolsDir = Directory.GetCurrentDirectory();
-    var analysisDir = Path.Combine(toolsDir, "analysis-output");
+    var analysisDir = Path.Combine(toolsDir, ".analysis-output");
     var apiChangesDir = Path.Combine(analysisDir, "api-changes-build-current");
     var gitRoot = await GetGitRootAsync() ?? Path.GetFullPath(Path.Combine(toolsDir, "..", ".."));
 

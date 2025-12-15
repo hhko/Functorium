@@ -1,6 +1,6 @@
 # 릴리스 노트를 위한 데이터 수집
 
-이 가이드는 릴리스 노트 생성 전 필요한 전체 데이터 수집 프로세스를 다룹니다. 모든 스크립트는 `Tools/ReleaseNotes` 디렉터리에서 실행해야 합니다.
+이 가이드는 릴리스 노트 생성 전 필요한 전체 데이터 수집 프로세스를 다룹니다. 모든 스크립트는 `.release-notes/scripts` 디렉터리에서 실행해야 합니다.
 
 ## 목표: 포괄적인 데이터 기반 구축
 
@@ -27,7 +27,7 @@ dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target origin/main
 
 #### 생성되는 결과물:
 
-**개별 컴포넌트 분석 파일** (`analysis-output/*.md`)
+**개별 컴포넌트 분석 파일** (`.analysis-output/*.md`)
 - 각 Functorium 컴포넌트별 파일 생성
 - 각 파일 포함 내용:
   - **전체 변경 통계**: 추가/수정/삭제된 파일 수
@@ -35,14 +35,14 @@ dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target origin/main
   - **주요 기여자**: 가장 많은 변경을 한 사람
   - **분류된 커밋**: 기능, 버그 수정, 브레이킹 체인지
 
-**분석 요약** (`analysis-output/analysis-summary.md`)
+**분석 요약** (`.analysis-output/analysis-summary.md`)
 - 모든 컴포넌트 변경사항의 고수준 개요
 - 각 컴포넌트의 변경 파일 수
 - 생성된 분석 파일 목록
 
 #### 실제 출력 예시:
 ```
-analysis-output/
+.analysis-output/
 ├── analysis-summary.md          # 전체 요약
 ├── Functorium.md                # Src/Functorium 분석 (30 files)
 ├── Functorium.Testing.md        # Src/Functorium.Testing 분석 (17 files)
@@ -57,13 +57,13 @@ dotnet ExtractApiChanges.cs
 
 #### 생성되는 결과물:
 
-**Uber API 파일** (`analysis-output/api-changes-build-current/all-api-changes.txt`)
+**Uber API 파일** (`.analysis-output/api-changes-build-current/all-api-changes.txt`)
 - 모든 API 참조의 **단일 진실 소스**
 - 현재 빌드의 완전한 API 정의
 - 정확한 매개변수 이름과 타입을 포함한 메서드 시그니처
 - **코드 샘플 검증에 중요** - 이 파일에 없으면 문서화하지 않습니다
 
-**API 변경 요약** (`analysis-output/api-changes-build-current/api-changes-summary.md`)
+**API 변경 요약** (`.analysis-output/api-changes-build-current/api-changes-summary.md`)
 - 생성된 API 파일 목록
 - 사용된 도구 버전 정보
 - 각 어셈블리별 API 파일 경로
@@ -75,7 +75,7 @@ dotnet ExtractApiChanges.cs
 
 #### 실제 출력 예시:
 ```
-analysis-output/api-changes-build-current/
+.analysis-output/api-changes-build-current/
 ├── all-api-changes.txt          # UBER 파일 - 전체 API
 ├── api-changes-summary.md       # API 요약
 └── api-changes-diff.txt         # API 차이점
@@ -94,22 +94,22 @@ Src/
 #### 컴포넌트 분석 검증:
 ```bash
 # 컴포넌트 파일 수 확인
-ls -1 analysis-output/*.md | wc -l
+ls -1 .analysis-output/*.md | wc -l
 
 # 주요 컴포넌트 존재 확인
-ls analysis-output/Functorium*.md
+ls .analysis-output/Functorium*.md
 
 # 분석 요약 확인
-cat analysis-output/analysis-summary.md
+cat .analysis-output/analysis-summary.md
 ```
 
 #### API 변경사항 검증:
 ```bash
 # Uber 파일 존재 및 크기 확인
-wc -l analysis-output/api-changes-build-current/all-api-changes.txt
+wc -l .analysis-output/api-changes-build-current/all-api-changes.txt
 
 # 주요 API 확인 (예시)
-grep -c "ErrorCodeFactory" analysis-output/api-changes-build-current/all-api-changes.txt
+grep -c "ErrorCodeFactory" .analysis-output/api-changes-build-current/all-api-changes.txt
 
 # API 파일 확인
 ls Src/*/.api/*.cs
@@ -150,19 +150,54 @@ Comparing: <base_branch> -> <target_branch>
 
 ### 주요 커밋 패턴 (Conventional Commits):
 
+AnalyzeAllComponents.cs는 다음 패턴으로 커밋을 분류합니다:
+
+#### Feature Commits
+검색 키워드: `feat`, `feature`, `add`
+- 새로운 기능 추가
+- 예시: `feat: 사용자 인증 추가`, `add: 로깅 기능`
+
+#### Bug Fixes
+검색 키워드: `fix`, `bug`
+- 버그 수정
+- 예시: `fix: null 참조 예외 처리`, `bug: 메모리 누수 수정`
+
+#### Breaking Changes
+검색 조건 (OR 조건):
+1. `breaking` 또는 `BREAKING` 문자열 포함
+2. 타입 뒤 `!` 패턴 (예: `feat!:`, `fix!:`)
+
+호환성을 깨는 변경사항을 찾습니다:
+- ✅ `feat!: API 응답 형식 변경` - 잡힘 (`!` 패턴)
+- ✅ `feat!: BREAKING CHANGE: API 형식 변경` - 잡힘 (`!` + BREAKING)
+- ✅ `fix: breaking: 호환성 변경` - 잡힘 (breaking 키워드)
+- ✅ 푸터에 `BREAKING CHANGE:` 명시 - 잡힘 (BREAKING 키워드)
+
+**검색 로직:**
+Regex 패턴 `\b\w+!:` 으로 타입!: 형식을 감지하고, "breaking" 또는 "BREAKING" 키워드도 검색합니다.
+
+**권장 커밋 형식:**
+- `feat!: API 응답 형식 변경` (타입 뒤 느낌표)
+- `feat!: BREAKING CHANGE: 상세 설명` (느낌표 + 푸터)
+- `refactor: breaking: 레거시 메서드 제거` (키워드 사용)
+
+#### 기타 Conventional Commits 타입
+분석 도구가 직접 분류하지는 않지만 릴리스 노트 작성 시 참고:
+
 | 타입 | 설명 |
 |------|------|
-| `feat` | 새로운 기능 추가 |
-| `fix` | 버그 수정 |
 | `docs` | 문서 변경 |
 | `refactor` | 리팩터링 (기능/버그 수정 아님) |
 | `perf` | 성능 개선 |
 | `test` | 테스트 추가/수정 |
 | `build` | 빌드 시스템/의존성 변경 |
 | `chore` | 기타 변경 |
-| `!` 또는 `BREAKING CHANGE:` | 브레이킹 체인지 |
+| `style` | 코드 포맷팅 (동작 변경 없음) |
+| `ci` | CI 설정 변경 |
 
-- **GitHub 참조** (`#12345`) → 추가 컨텍스트 확인
+#### GitHub 참조
+- **이슈/PR 번호** (`#12345`) → 추가 컨텍스트 확인
+- 커밋 메시지에 포함된 GitHub 참조를 조회하여 상세 정보 파악
 
 ## 다음 단계
 
@@ -185,8 +220,8 @@ Comparing: <base_branch> -> <target_branch>
 
 - [ ] 컴포넌트 분석 완료 (`dotnet AnalyzeAllComponents.cs`)
 - [ ] API 변경사항 추출 완료 (`dotnet ExtractApiChanges.cs`)
-- [ ] 컴포넌트 파일 생성됨 (`analysis-output/*.md`)
-- [ ] 분석 요약 생성됨 (`analysis-output/analysis-summary.md`)
+- [ ] 컴포넌트 파일 생성됨 (`.analysis-output/*.md`)
+- [ ] 분석 요약 생성됨 (`.analysis-output/analysis-summary.md`)
 - [ ] Uber API 파일 생성됨 (`all-api-changes.txt`)
 - [ ] API 요약 생성됨 (`api-changes-summary.md`)
 - [ ] 개별 API 파일 생성됨 (`Src/*/.api/*.cs`)

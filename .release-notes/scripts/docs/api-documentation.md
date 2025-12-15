@@ -5,7 +5,7 @@
 ### **UBER 파일** - 완전한 API 참조 (단일 진실 소스):
 
 ```text
-analysis-output/api-changes-build-current/all-api-changes.txt
+.analysis-output/api-changes-build-current/all-api-changes.txt
 ```
 
 **정확한 코드 샘플 작성에 사용** - 이 파일은 현재 빌드의 **모든 API**를 포함합니다:
@@ -29,7 +29,7 @@ Src/
 ### **API 변경 요약**:
 
 ```text
-analysis-output/api-changes-build-current/api-changes-summary.md
+.analysis-output/api-changes-build-current/api-changes-summary.md
 ```
 
 생성된 API 파일 목록 및 도구 정보를 포함합니다.
@@ -41,7 +41,7 @@ analysis-output/api-changes-build-current/api-changes-summary.md
 #### 1단계: Uber 파일에서 API 검색
 
 ```bash
-grep -A 10 -B 2 "ErrorCodeFactory" analysis-output/api-changes-build-current/all-api-changes.txt
+grep -A 10 -B 2 "ErrorCodeFactory" .analysis-output/api-changes-build-current/all-api-changes.txt
 ```
 
 #### 2단계: 개별 API 파일에서 상세 확인
@@ -120,7 +120,7 @@ API 샘플 작성 전:
 1. **Uber 파일에서 API 존재 확인**:
 
    ```bash
-   grep -n "MethodName" analysis-output/api-changes-build-current/all-api-changes.txt
+   grep -n "MethodName" .analysis-output/api-changes-build-current/all-api-changes.txt
    ```
 
 2. **개별 API 파일에서 상세 시그니처 확인**:
@@ -132,7 +132,7 @@ API 샘플 작성 전:
 3. **커밋 분석과 교차 참조**하여 변경의 컨텍스트 이해:
 
    ```bash
-   cat analysis-output/Functorium.md | grep -A 2 "MethodName"
+   cat .analysis-output/Functorium.md | grep -A 2 "MethodName"
    ```
 
 ## API 문서화 규칙

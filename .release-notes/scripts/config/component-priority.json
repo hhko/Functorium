@@ -2,6 +2,7 @@
   "analysis_priorities": [
     "Src/Functorium",
     "Src/Functorium.Testing",
-    "Docs"
+    "Docs",
+    ".release-notes/scripts"
   ]
 }

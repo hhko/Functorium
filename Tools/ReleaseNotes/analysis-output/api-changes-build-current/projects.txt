@@ -1,0 +1,2 @@
+Functorium.csproj
+Functorium.Testing.csproj

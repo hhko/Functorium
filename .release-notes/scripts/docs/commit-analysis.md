@@ -4,7 +4,7 @@
 
 ## 컴포넌트 분석 파일 이해하기
 
-각 컴포넌트 분석 파일 (`analysis-output/*.md`)에는 다음이 포함됩니다:
+각 컴포넌트 분석 파일 (`.analysis-output/*.md`)에는 다음이 포함됩니다:
 
 - **변경 요약**: 파일 수 및 통계
 - **전체 커밋 목록**: 릴리스 간 해당 컴포넌트의 모든 커밋
@@ -258,7 +258,7 @@ Log.Error("Operation failed: {@Error}", error);
    - 낮음: 버그 수정 (중요하지 않으면), 리팩토링, 문서, 테스트, 정리
 
 2. **API 검증:**
-   - `analysis-output/api-changes-build-current/all-api-changes.txt` (Uber 파일)를 사용하여 모든 API 참조 및 코드 샘플 확인
+   - `.analysis-output/api-changes-build-current/all-api-changes.txt` (Uber 파일)를 사용하여 모든 API 참조 및 코드 샘플 확인
 
 3. **정확하게 문서화:**
    - API를 발명하지 않습니다; 분석과 Uber 파일에서 확인된 것만 문서화

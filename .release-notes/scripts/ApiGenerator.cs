@@ -4,7 +4,7 @@
 // Usage: dotnet run ApiGenerator.cs -- <dll-path> <output-path>
 // Example: dotnet run ApiGenerator.cs -- bin/Release/net10.0/Functorium.dll api.txt
 
-#:package PublicApiGenerator@11.2.1
+#:package PublicApiGenerator@11.5.4
 
 using System.Reflection;
 using PublicApiGenerator;
@@ -113,7 +113,9 @@ try
         }
 
         // Load assembly
+        #pragma warning disable IL2026 // Suppress trimming warning - this tool uses reflection by design
         var assembly = Assembly.LoadFrom(targetDll);
+        #pragma warning restore IL2026
 
         var options = new ApiGeneratorOptions
         {
