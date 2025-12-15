@@ -48,7 +48,7 @@ static async Task AnalyzeAllComponentsAsync(string baseBranch, string targetBran
 
     // Get paths
     var toolsDir = Directory.GetCurrentDirectory();
-    var configFile = Path.Combine(toolsDir, "Config", "component-priority.json");
+    var configFile = Path.Combine(toolsDir, "config", "component-priority.json");
     var analysisDir = Path.Combine(toolsDir, ".analysis-output");
 
     // Get git root

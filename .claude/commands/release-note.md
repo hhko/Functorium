@@ -63,7 +63,7 @@ Functorium 프로젝트의 전문적이고 정확한 릴리스 노트를 자동�
 
 2. **스크립트 디렉터리 확인**
    - `.release-notes/scripts` 디렉터리 존재 확인
-   - `Config/component-priority.json` 파일 존재 확인
+   - `config/component-priority.json` 파일 존재 확인
 
 3. **.NET SDK 확인**
    ```bash
@@ -257,7 +257,7 @@ Phase 2: 데이터 수집 완료 ✓
      taskkill /F /IM dotnet.exe
 
   4. 상세 가이드
-     .release-notes/scripts/Docs/README.md#트러블슈팅
+     .release-notes/scripts/docs/README.md#트러블슈팅
 ```
 
 **ExtractApiChanges.cs 실패:**
@@ -278,7 +278,7 @@ API 추출 실패: ExtractApiChanges.cs
   2. 빌드 오류 수정 후 재시도
 
   3. 상세 가이드
-     .release-notes/scripts/Docs/README.md#api-추출-문제
+     .release-notes/scripts/docs/README.md#api-추출-문제
 ```
 
 ### Phase 3: 커밋 분석 및 기능 추출
@@ -852,7 +852,7 @@ npx markdownlint-cli@0.45.0 .release-notes/RELEASE-$ARGUMENTS.md --disable MD013
 
 **4. 체크리스트 검증**
 
-`.release-notes/scripts/Docs/validation-checklist.md` 기준을 적용합니다.
+`.release-notes/scripts/docs/validation-checklist.md` 기준을 적용합니다.
 
 **포괄적인 분석:**
 - [ ] 모든 중요한 커밋이 분석됨
@@ -1051,12 +1051,12 @@ Markdown 포맷 (경고):
 
 릴리스 노트 생성 프로세스에 대한 상세 가이드:
 
-- [data-collection.md](.release-notes/scripts/Docs/data-collection.md) - 데이터 수집 프로세스
-- [commit-analysis.md](.release-notes/scripts/Docs/commit-analysis.md) - 커밋 분석 방법론
-- [api-documentation.md](.release-notes/scripts/Docs/api-documentation.md) - API 검증 프로세스
-- [writing-guidelines.md](.release-notes/scripts/Docs/writing-guidelines.md) - 문서 작성 스타일
-- [validation-checklist.md](.release-notes/scripts/Docs/validation-checklist.md) - 검증 기준
-- [README.md](.release-notes/scripts/Docs/README.md) - 전체 프로세스 개요
+- [data-collection.md](.release-notes/scripts/docs/data-collection.md) - 데이터 수집 프로세스
+- [commit-analysis.md](.release-notes/scripts/docs/commit-analysis.md) - 커밋 분석 방법론
+- [api-documentation.md](.release-notes/scripts/docs/api-documentation.md) - API 검증 프로세스
+- [writing-guidelines.md](.release-notes/scripts/docs/writing-guidelines.md) - 문서 작성 스타일
+- [validation-checklist.md](.release-notes/scripts/docs/validation-checklist.md) - 검증 기준
+- [README.md](.release-notes/scripts/docs/README.md) - 전체 프로세스 개요
 
 ## 트러블슈팅
 
@@ -1174,8 +1174,8 @@ dotnet nuget locals all --clear
 
 더 많은 트러블슈팅 정보는 다음 문서를 참조하십시오:
 
-- `.release-notes/scripts/Docs/README.md` - 10가지 일반적인 문제 및 해결 방법
-- `.release-notes/scripts/Docs/data-collection.md` - 데이터 수집 문제 해결
+- `.release-notes/scripts/docs/README.md` - 10가지 일반적인 문제 및 해결 방법
+- `.release-notes/scripts/docs/data-collection.md` - 데이터 수집 문제 해결
 
 ## 핵심 원칙
 
