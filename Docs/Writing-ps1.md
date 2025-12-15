@@ -43,9 +43,10 @@
 
 ```
 프로젝트 루트/
+├── .config/
+│   └── dotnet-tools.json        # .NET 로컬 도구 정의
 ├── .scripts/                    # 공통 모듈
-│   ├── Write-Console.ps1        # 콘솔 출력 함수
-│   └── Install-DotNetTool.ps1   # dotnet 도구 설치 함수
+│   └── Write-Console.ps1        # 콘솔 출력 함수
 ├── Build-Local.ps1              # 빌드 및 테스트 스크립트
 ├── Build-VerifyAccept.ps1       # Verify 스냅샷 승인 스크립트
 └── Build-CommitSummary.ps1      # 커밋 요약 생성 스크립트
@@ -122,54 +123,67 @@ Write-ErrorMessage -ErrorRecord $_
 #          {스택 트레이스}
 ```
 
-### Install-DotNetTool.ps1
+### .NET 도구 관리
 
-dotnet global tool 설치/업데이트 함수를 제공합니다.
+프로젝트는 `.config/dotnet-tools.json`을 통해 .NET 로컬 도구를 관리합니다.
 
-#### 사용 방법
+#### dotnet-tools.json 구조
 
-```powershell
-# 모듈 로드
-$scriptRoot = $PSScriptRoot
-. "$scriptRoot/.scripts/Install-DotNetTool.ps1"
+```json
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "dotnet-reportgenerator-globaltool": {
+      "version": "5.5.0",
+      "commands": ["reportgenerator"],
+      "rollForward": false
+    },
+    "verify.tool": {
+      "version": "0.7.0",
+      "commands": ["verify"],
+      "rollForward": false
+    }
+  }
+}
 ```
 
-#### 함수 목록
+#### 도구 복원
 
-| 함수 | 설명 | 기본 버전 |
-|------|------|----------|
-| `Install-DotNetTool` | 범용 도구 설치 | - |
-| `Install-ReportGenerator` | ReportGenerator 설치 | 5.5.0 |
-| `Install-VerifyTool` | VerifyTool 설치 | 0.7.0 |
-
-#### 함수 사용 예시
+스크립트에서 도구를 사용하기 전에 복원합니다:
 
 ```powershell
-# ReportGenerator 설치 (기본 버전)
-Install-ReportGenerator | Out-Null
+function Restore-DotNetTools {
+  Write-StepProgress -Step 1 -TotalSteps $script:TOTAL_STEPS -Message "Restoring .NET tools..."
 
-# ReportGenerator 설치 (특정 버전)
-Install-ReportGenerator -RequiredVersion "5.5.0" | Out-Null
+  dotnet tool restore 2>&1 | Out-Null
 
-# VerifyTool 설치
-Install-VerifyTool -RequiredVersion "0.7.0" | Out-Null
-
-# 범용 도구 설치
-Install-DotNetTool `
-  -ToolId "dotnet-ef" `
-  -ToolName "Entity Framework Core CLI" `
-  -RequiredVersion "9.0.0" `
-  -RefreshPath
+  if ($LASTEXITCODE -eq 0) {
+    Write-Success "Tools restored"
+  }
+  else {
+    Write-WarningMessage "Tool restore failed or no tools to restore"
+  }
+}
 ```
 
-#### 파라미터 설명
+#### 로컬 도구 실행
 
-| 파라미터 | 설명 | 필수 |
-|----------|------|------|
-| `ToolId` | dotnet tool ID | Yes |
-| `ToolName` | 표시용 도구 이름 | Yes |
-| `RequiredVersion` | 필요한 최소 버전 | Yes |
-| `RefreshPath` | 설치 후 PATH 갱신 | No |
+복원된 도구는 `dotnet` 명령어로 실행합니다:
+
+```powershell
+# ReportGenerator 실행
+dotnet reportgenerator -reports:coverage.xml -targetdir:report/
+
+# Verify 실행
+dotnet verify accept -y
+```
+
+#### 새 도구 추가
+
+1. `.config/dotnet-tools.json`에 도구 추가
+2. `dotnet tool restore` 실행하여 설치
+3. 스크립트에서 `dotnet {command}` 형식으로 실행
 
 <br/>
 
@@ -226,7 +240,6 @@ $ErrorActionPreference = "Stop"
 # Load common modules
 $scriptRoot = $PSScriptRoot
 . "$scriptRoot/.scripts/Write-Console.ps1"
-. "$scriptRoot/.scripts/Install-DotNetTool.ps1"
 
 #region Constants
 
@@ -629,17 +642,20 @@ $ErrorActionPreference = "Stop"
 
 $scriptRoot = $PSScriptRoot
 . "$scriptRoot/.scripts/Write-Console.ps1"
-. "$scriptRoot/.scripts/Install-DotNetTool.ps1"
 
 $script:TOTAL_STEPS = 3
 
-function Install-EfTool {
-  Write-StepProgress -Step 1 -TotalSteps $script:TOTAL_STEPS -Message "Checking EF Core CLI..."
+function Restore-DotNetTools {
+  Write-StepProgress -Step 1 -TotalSteps $script:TOTAL_STEPS -Message "Restoring .NET tools..."
 
-  Install-DotNetTool `
-    -ToolId "dotnet-ef" `
-    -ToolName "EF Core CLI" `
-    -RequiredVersion "9.0.0" | Out-Null
+  dotnet tool restore 2>&1 | Out-Null
+
+  if ($LASTEXITCODE -eq 0) {
+    Write-Success "Tools restored"
+  }
+  else {
+    Write-WarningMessage "Tool restore failed"
+  }
 }
 
 function Invoke-Migration {
@@ -665,7 +681,7 @@ function Show-Status {
 function Main {
   Write-StartMessage -Title "Database Migration"
 
-  Install-EfTool
+  Restore-DotNetTools
   Invoke-Migration
   Show-Status
 

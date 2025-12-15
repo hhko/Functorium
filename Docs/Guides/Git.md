@@ -10,6 +10,7 @@
 - [태그](#태그)
 - [브랜치](#브랜치)
 - [원격 저장소](#원격-저장소)
+- [릴리스 노트 및 분석](#릴리스-노트-및-분석)
 - [실행 취소](#실행-취소)
 - [트러블슈팅](#트러블슈팅)
 - [FAQ](#faq)
@@ -469,6 +470,156 @@ git push
 # 새 브랜치 첫 푸시 (업스트림 설정)
 git push -u origin feature/login
 ```
+
+<br/>
+
+## 릴리스 노트 및 분석
+
+릴리스 노트 생성과 코드베이스 분석에 유용한 고급 Git 명령어들입니다.
+
+### 저장소 정보
+
+| 명령어 | 설명 |
+|--------|------|
+| `git rev-parse --show-toplevel` | Git 저장소의 루트 디렉토리 경로 출력 |
+| `git rev-parse --verify <브랜치>` | 브랜치/커밋 존재 확인 (종료 코드로 판단) |
+| `git rev-list --max-parents=0 HEAD` | 저장소의 초기 커밋 해시 출력 |
+
+### 특정 경로 분석
+
+| 명령어 | 설명 |
+|--------|------|
+| `git diff --name-status <base>..<target> -- <경로>/` | 특정 경로의 파일 변경 상태 확인 |
+| `git diff --stat <base>..<target> -- <경로>/` | 특정 경로의 변경 통계 (추가/삭제 라인) |
+| `git log --oneline <base>..<target> -- <경로>/` | 특정 경로의 커밋 이력 |
+| `git log --no-merges <base>..<target> -- <경로>/` | 특정 경로의 커밋 이력 (머지 커밋 제외) |
+
+### 커밋 검색 및 필터링
+
+| 명령어 | 설명 |
+|--------|------|
+| `git log --grep="pattern"` | 커밋 메시지에서 패턴 검색 |
+| `git log --grep="feat" --grep="feature"` | 여러 패턴 OR 검색 |
+| `git log --all-match --grep="feat" --grep="test"` | 여러 패턴 AND 검색 |
+| `git log --author="이름"` | 특정 작성자의 커밋만 표시 |
+| `git log --since="2024-01-01"` | 특정 날짜 이후 커밋 |
+| `git log --until="2024-12-31"` | 특정 날짜 이전 커밋 |
+
+### 기여자 분석
+
+| 명령어 | 설명 |
+|--------|------|
+| `git log --format="%an"` | 모든 커밋의 작성자 이름 출력 |
+| `git log --format="%ae"` | 모든 커밋의 작성자 이메일 출력 |
+| `git shortlog -sn` | 작성자별 커밋 수 (내림차순) |
+| `git shortlog -sn --no-merges` | 작성자별 커밋 수 (머지 제외) |
+
+### 사용 예시
+
+#### 릴리스 노트 생성용 데이터 수집
+
+```bash
+# 저장소 루트 경로 찾기
+GIT_ROOT=$(git rev-parse --show-toplevel)
+echo "Git Root: $GIT_ROOT"
+
+# 초기 커밋 해시 찾기
+FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
+echo "Initial Commit: $FIRST_COMMIT"
+
+# 브랜치 존재 확인
+if git rev-parse --verify origin/release/1.0 >/dev/null 2>&1; then
+    echo "Branch exists"
+else
+    echo "Branch not found"
+fi
+
+# 특정 경로의 변경된 파일 목록 (상태 포함)
+git diff --name-status origin/release/1.0..origin/main -- "Src/Functorium/"
+
+# 특정 경로의 변경 통계
+git diff --stat origin/release/1.0..origin/main -- "Src/Functorium/"
+
+# 특정 경로의 커밋 이력 (머지 제외)
+git log --oneline --no-merges origin/release/1.0..origin/main -- "Src/Functorium/"
+```
+
+#### 기능 커밋 분류
+
+```bash
+# 기능 추가 커밋 찾기
+git log --grep="feat" --grep="feature" --grep="add" \
+    --oneline --no-merges origin/release/1.0..origin/main
+
+# 버그 수정 커밋 찾기
+git log --grep="fix" --grep="bug" \
+    --oneline --no-merges origin/release/1.0..origin/main
+
+# 브레이킹 체인지 커밋 찾기
+git log --grep="breaking" --grep="BREAKING" \
+    --oneline --no-merges origin/release/1.0..origin/main
+```
+
+#### 기여자 분석
+
+```bash
+# 특정 경로의 작성자 목록
+git log --format="%an" origin/release/1.0..origin/main -- "Src/Functorium/" | \
+    sort | uniq -c | sort -rn
+
+# 상위 5명의 기여자
+git shortlog -sn --no-merges origin/release/1.0..origin/main | head -5
+
+# 특정 기간의 기여자
+git log --since="2024-01-01" --format="%an (%ae)" | sort | uniq
+```
+
+#### 실전 예시: 릴리스 간 변경사항 분석
+
+```bash
+# 변경된 파일 수 확인
+echo "Changed files:"
+git diff --name-status v1.0.0..v1.1.0 | wc -l
+
+# 커밋 수 확인
+echo "Total commits:"
+git log --oneline --no-merges v1.0.0..v1.1.0 | wc -l
+
+# 기능별 커밋 수
+echo "Feature commits:"
+git log --grep="feat" --oneline --no-merges v1.0.0..v1.1.0 | wc -l
+
+echo "Bug fix commits:"
+git log --grep="fix" --oneline --no-merges v1.0.0..v1.1.0 | wc -l
+
+# 상위 기여자
+echo "Top contributors:"
+git shortlog -sn --no-merges v1.0.0..v1.1.0 | head -3
+
+# 컴포넌트별 변경사항
+for component in "Src/Functorium" "Src/Functorium.Testing" "Docs"; do
+    echo "=== $component ==="
+    echo "Files changed: $(git diff --name-status v1.0.0..v1.1.0 -- "$component/" | wc -l)"
+    echo "Commits: $(git log --oneline --no-merges v1.0.0..v1.1.0 -- "$component/" | wc -l)"
+    echo ""
+done
+```
+
+### 고급 팁
+
+**브랜치 범위 지정:**
+- `A..B` - A 이후 B까지의 커밋 (A 제외, B 포함)
+- `A...B` - A와 B의 대칭 차집합 (공통 조상 이후 둘 중 하나에만 있는 커밋)
+
+**경로 필터링:**
+- `-- <경로>/` - 특정 경로의 변경사항만 표시
+- 경로는 Git 루트 기준 상대 경로
+- 경로 끝에 `/` 추가 시 디렉토리와 그 하위 모두 포함
+
+**출력 제한:**
+- `| head -N` - 상위 N개만 표시
+- `| tail -N` - 하위 N개만 표시
+- `-<N>` - 최근 N개만 표시 (예: `git log -10`)
 
 <br/>
 
