@@ -435,4 +435,5 @@ nul
 bash.exe.stackdump
 
 # Release-Notes
-Tools/ReleaseNotes/analysis-output/
+.release-notes/scripts/.analysis-output/
+.release-notes/.work/
