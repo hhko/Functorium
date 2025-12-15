@@ -441,13 +441,13 @@ namespace Functorium.Abstractions.Errors
 - **문제 해결**: 예외 처리를 Functorium 오류 시스템과 통합
 - **브레이킹**: 아니오
 
-#### 중간 결과 저장 (.release-notes/.work 폴더)
+#### 중간 결과 저장 (.analysis-output/work 폴더)
 
-Phase 3의 분석 결과를 `.release-notes/.work/` 폴더에 저장하여 추적 가능하게 만듭니다:
+Phase 3의 분석 결과를 `.release-notes/scripts/.analysis-output/work/` 폴더에 저장하여 추적 가능하게 만듭니다:
 
 **저장할 파일:**
 ```bash
-.release-notes/.work/
+.release-notes/scripts/.analysis-output/work/
   ├── phase3-commit-analysis.md     # 커밋 분류 및 우선순위
   ├── phase3-feature-groups.md      # 기능 그룹화 결과
   └── phase3-api-mapping.md         # API와 커밋 매핑
@@ -517,9 +517,9 @@ Phase 3: 커밋 분석 및 기능 추출 완료 ✓
   8. 유틸리티 확장 메서드
 
 중간 결과 저장:
-  ✓ .release-notes/.work/phase3-commit-analysis.md
-  ✓ .release-notes/.work/phase3-feature-groups.md
-  ✓ .release-notes/.work/phase3-api-mapping.md
+  ✓ .release-notes/scripts/.analysis-output/work/phase3-commit-analysis.md
+  ✓ .release-notes/scripts/.analysis-output/work/phase3-feature-groups.md
+  ✓ .release-notes/scripts/.analysis-output/work/phase3-api-mapping.md
 ```
 
 ### Phase 4: 릴리스 노트 작성
@@ -734,13 +734,13 @@ API 검증 실패
 조치: 코드 샘플을 수정하거나 제거하십시오.
 ```
 
-#### 중간 결과 저장 (.release-notes/.work 폴더)
+#### 중간 결과 저장 (.analysis-output/work 폴더)
 
-Phase 4의 초안을 `.release-notes/.work/` 폴더에 저장합니다:
+Phase 4의 초안을 `.release-notes/scripts/.analysis-output/work/` 폴더에 저장합니다:
 
 **저장할 파일:**
 ```bash
-.release-notes/.work/
+.release-notes/scripts/.analysis-output/work/
   ├── phase4-draft.md              # 릴리스 노트 초안
   ├── phase4-api-references.md     # 사용된 API 목록
   └── phase4-code-samples.md       # 모든 코드 샘플
@@ -795,9 +795,9 @@ Phase 4: 릴리스 노트 작성 완료 ✓
   ✓ .release-notes/RELEASE-v1.0.0-alpha.1.md
 
 중간 결과 저장:
-  ✓ .release-notes/.work/phase4-draft.md
-  ✓ .release-notes/.work/phase4-api-references.md
-  ✓ .release-notes/.work/phase4-code-samples.md
+  ✓ .release-notes/scripts/.analysis-output/work/phase4-draft.md
+  ✓ .release-notes/scripts/.analysis-output/work/phase4-api-references.md
+  ✓ .release-notes/scripts/.analysis-output/work/phase4-code-samples.md
 ```
 
 ### Phase 5: 검증
@@ -907,8 +907,8 @@ Phase 5: 검증 완료 ✓
     - 구조 및 품질 ✓
 
 검증 결과 저장:
-  ✓ .release-notes/.work/phase5-validation-report.md
-  ✓ .release-notes/.work/phase5-api-validation.md
+  ✓ .release-notes/scripts/.analysis-output/work/phase5-validation-report.md
+  ✓ .release-notes/scripts/.analysis-output/work/phase5-api-validation.md
 
 상태: 게시 가능 ✓
 ```
@@ -944,8 +944,8 @@ Markdown 포맷 (경고):
     - Line 567: ```
 
 검증 결과 저장:
-  ✓ .release-notes/.work/phase5-validation-report.md
-  ✓ .release-notes/.work/phase5-errors.md
+  ✓ .release-notes/scripts/.analysis-output/work/phase5-validation-report.md
+  ✓ .release-notes/scripts/.analysis-output/work/phase5-errors.md
 
 조치 필요:
   1. 문서 수정
@@ -1011,15 +1011,15 @@ Markdown 포맷 (경고):
   ✓ .release-notes/scripts/.analysis-output/Docs.md
   ✓ .release-notes/scripts/.analysis-output/api-changes-build-current/all-api-changes.txt
 
-중간 결과 (.release-notes/.work 폴더):
-  ✓ .release-notes/.work/phase3-commit-analysis.md
-  ✓ .release-notes/.work/phase3-feature-groups.md
-  ✓ .release-notes/.work/phase3-api-mapping.md
-  ✓ .release-notes/.work/phase4-draft.md
-  ✓ .release-notes/.work/phase4-api-references.md
-  ✓ .release-notes/.work/phase4-code-samples.md
-  ✓ .release-notes/.work/phase5-validation-report.md
-  ✓ .release-notes/.work/phase5-api-validation.md
+중간 결과 (.analysis-output/work 폴더):
+  ✓ .release-notes/scripts/.analysis-output/work/phase3-commit-analysis.md
+  ✓ .release-notes/scripts/.analysis-output/work/phase3-feature-groups.md
+  ✓ .release-notes/scripts/.analysis-output/work/phase3-api-mapping.md
+  ✓ .release-notes/scripts/.analysis-output/work/phase4-draft.md
+  ✓ .release-notes/scripts/.analysis-output/work/phase4-api-references.md
+  ✓ .release-notes/scripts/.analysis-output/work/phase4-code-samples.md
+  ✓ .release-notes/scripts/.analysis-output/work/phase5-validation-report.md
+  ✓ .release-notes/scripts/.analysis-output/work/phase5-api-validation.md
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -1029,7 +1029,7 @@ Markdown 포맷 (경고):
    cat .release-notes/RELEASE-v1.0.0-alpha.1.md
 
 2. 중간 결과 확인 (선택적)
-   ls -la .release-notes/.work/
+   ls -la .release-notes/scripts/.analysis-output/work/
 
 3. 필요시 수동 수정
    • 복잡한 마이그레이션 가이드 보완
