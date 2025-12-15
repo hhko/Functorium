@@ -23,7 +23,9 @@
       "Bash(ls:*)",
       "Bash(tree:*)",
       "Bash(find:*)",
-      "Bash(tasklist:*)"
+      "Bash(tasklist:*)",
+      "Bash(grep:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []

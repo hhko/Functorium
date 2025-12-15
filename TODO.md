@@ -195,9 +195,25 @@
   - [x] ~~Docs -> Reference 폴더 이름 변경~~
   - [x] .NET 10 File-based 실행 오류 개선
   - [x] ReleaseNotes 문서 내용 업데이트
-  - [ ] Tools/ReleaseNotes -> .release-notes/script로 이동
+  - [x] Tools/ReleaseNotes -> .release-notes/script로 이동
+  - [x] aspire 릴리스 노트 한글화
+  - [x] AnalyzeAllComponents.cs base branch 유효성 검사 추가
+  - [x] config -> Config
+  - [x] 첫 배포일 때 cli 명령어를 한줄로(스크립트 변수 제거)
+  - [x] analysis_output -> .analysis_output
+  - [x] C# 10 File-based 트러블슈팅 추가
+  - [x] 스크립트에서 사용한 Git 명령어 문서 추가 반영(Git.md)
+  - [x] PublicApiGenerator 패키지 버전 최신화
+  - [x] commit 타입 통일 시킴
+    - commit.md
+    - data-collection.md
+    - AnalyzeAllComponents.cs
+  - [x] dotnet tool 설치 방법 변경
+    - 변경 전: ps1 파일을 이용해서 명시적 도구 설치
+    - 변경 후: .config/dotnet-tools.json
+  - [x] .config/dotnet-tools.json 에서 사용하지 않는 도구 제거 publicapigenerator.tool
+  - [x] .gitignore 자동 생성 폴더 추가 .release-notes/scripts/.analysis-output/
   - [ ] 릴리즈 노트 생성
-  - [ ] .release-notes 폴더 이동
   - [ ] 버전?
   - [ ] 브랜치 전략?
   - [ ] GitHub Release 배포
