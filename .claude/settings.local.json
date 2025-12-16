@@ -25,7 +25,8 @@
       "Bash(find:*)",
       "Bash(tasklist:*)",
       "Bash(grep:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []
