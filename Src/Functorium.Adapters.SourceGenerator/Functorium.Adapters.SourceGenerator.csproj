@@ -17,7 +17,22 @@
     <!-- Analyzer 패키징 필수 설정 -->
     <!-- Source Generator는 기호 패키지(.snupkg)가 필요하지 않음 -->
     <IncludeSymbols>false</IncludeSymbols>
+    <!-- NU5128: Source Generator는 lib/ref 폴더가 아닌 analyzers/dotnet/cs에만 배치되므로 무시 -->
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
+
+  <!-- NuGet Package Settings -->
+  <PropertyGroup>
+    <PackageId>Functorium.Adapters.SourceGenerator</PackageId>
+    <Description>Functorium Source Generator for Adapter Pipeline generation</Description>
+    <PackageTags>$(PackageTags);source-generator;roslyn;analyzer</PackageTags>
+  </PropertyGroup>
+
+  <!-- Package Files -->
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\Functorium.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
