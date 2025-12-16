@@ -276,3 +276,110 @@ private FinT<IO, Seq<Fin<string>>> ProcessLinesSequentially(
 
 
 
+```
+● ReportDiagnostic은 소스 생성기가 컴파일러 경고/오류 메시지를 생성하는 방법입니다.
+
+  작동 방식
+
+  // 1. DiagnosticDescriptor 정의 (보통 static readonly로)
+  private static readonly DiagnosticDescriptor InvalidCollectionTypeDescriptor = new(
+      id: "FUNC001",                           // 고유 ID (예: CS0001처럼)
+      title: "Invalid Collection Type",         // 제목
+      messageFormat: "Type '{0}' is not a supported collection type",  // 메시지
+      category: "Functorium.SourceGenerator",   // 카테고리
+      defaultSeverity: DiagnosticSeverity.Warning,  // Warning, Error, Info, Hidden
+      isEnabledByDefault: true);
+
+  // 2. 문제 발생 시 보고
+  context.ReportDiagnostic(Diagnostic.Create(
+      descriptor: InvalidCollectionTypeDescriptor,
+      location: syntax.GetLocation(),  // 문제가 있는 코드 위치
+      messageArgs: typeFullName));     // 메시지 포맷 인수
+
+  결과
+
+  사용자가 빌드하면 IDE와 빌드 출력에 표시됩니다:
+
+  MyService.cs(15,8): warning FUNC001: Type 'MyCustomType' is not a supported collection type
+
+  장점
+
+  | 예외 던지기            | ReportDiagnostic    |
+  |-------------------|---------------------|
+  | 빌드 실패 (원인 파악 어려움) | 정확한 위치와 메시지 표시      |
+  | IDE 불안정           | IDE 정상 작동           |
+  | 스택 트레이스만 제공       | 문제 코드 라인으로 바로 이동 가능 |
+
+  현재 코드에 적용한다면
+
+  현재 CollectionTypeHelper는 단순히 null을 반환하고 호출부에서 무시합니다. 만약 "컬렉션으로 표시했는데 지원 안 되는 타입"을 사용자에게 알려주고
+  싶다면:
+
+  if (param.IsCollection)
+  {
+      if (CollectionTypeHelper.GetCountExpression(param.Name, param.Type) is { } countExpression)
+      {
+          sb.Append($", {countExpression}");
+      }
+      else
+      {
+          // 사용자에게 경고 표시
+          context.ReportDiagnostic(Diagnostic.Create(
+              UnsupportedCollectionTypeDescriptor,
+              parameterSyntax.GetLocation(),
+              param.Type));
+      }
+  }
+
+  현재 구현에서는 이런 상황이 발생할 가능성이 낮아서(IsCollection이 true면 GetCountExpression도 성공) 적용하지 않았지만, 더 복잡한 검증이 필요한 경우
+  이 패턴을 사용하면 좋습니다.
+```
+```
+● Functorium 라이브러리에 없어서 Mock으로 추가한 타입들입니다:
+
+  Mock으로 추가한 타입 리스트
+
+  | Mock 파일                   | 네임스페이스                                                     | 타입                     |
+  |---------------------------|------------------------------------------------------------|------------------------|
+  | IAdapterTrace.cs          | Functorium.Adapters.Observabilities                        | IAdapterTrace          |
+  | IAdapterMetric.cs         | Functorium.Adapters.Observabilities                        | IAdapterMetric         |
+  | MockAdapterTrace.cs       | Functorium.Adapters.Observabilities                        | MockAdapterTrace       |
+  | MockAdapterMetric.cs      | Functorium.Adapters.Observabilities                        | MockAdapterMetric      |
+  | ObservabilityFields.cs    | Functorium.Adapters.Observabilities.Abstractions.Fields    | ObservabilityFields    |
+  | ElapsedTimeCalculator.cs  | Functorium.Adapters.Observabilities.Abstractions.Utilities | ElapsedTimeCalculator  |
+  | UsecaseActivityContext.cs | Functorium.Applications.Observabilities                    | UsecaseActivityContext |
+
+  참고:
+  - ElapsedTimeCalculator는 Functorium.Applications에 이미 존재하지만, Source Generator가 Functorium.Adapters.Observabilities.Abstractions.Utilities
+  네임스페이스를 사용
+  - UsecaseActivityContext도 Functorium.Applications에 이미 존재하지만, Source Generator가 Functorium.Applications.Observabilities 네임스페이스를 사용
+
+  Source Generator 코드가 참조하는 네임스페이스가 실제 라이브러리와 다르기 때문에 Mock이 필요합니다.
+
+  또한 빌드 에러를 확인해보니 Source Generator 자체에도 문제가 있습니다. GetAllUsers 메서드의 반환 타입 IReadOnlyList<User>를 처리할 때 문법 에러가
+  발생합니다. 이는 Source Generator의 버그로 보입니다.
+
+  튜토리얼이 빌드되지 않는 이유는:
+  1. LanguageExt 5.x API 변경: FinT.Succ, IO.Fail, FinT.LiftIO 메서드가 다름
+  2. Source Generator 버그: 제네릭 타입 파라미터 처리 문제 (line 271, 279 등)
+
+● Functorium에 없어서 Mock으로 추가한 타입들
+
+  | Mock 파일                   | 네임스페이스                                                     | 타입                      |
+  |---------------------------|------------------------------------------------------------|-------------------------|
+  | IAdapterTrace.cs          | Functorium.Adapters.Observabilities                        | IAdapterTrace           |
+  | IAdapterMetric.cs         | Functorium.Adapters.Observabilities                        | IAdapterMetric          |
+  | MockAdapterTrace.cs       | Functorium.Adapters.Observabilities                        | MockAdapterTrace        |
+  | MockAdapterMetric.cs      | Functorium.Adapters.Observabilities                        | MockAdapterMetric       |
+  | ObservabilityFields.cs    | Functorium.Adapters.Observabilities.Abstractions.Fields    | ObservabilityFields     |
+  | ElapsedTimeCalculator.cs  | Functorium.Adapters.Observabilities.Abstractions.Utilities | ElapsedTimeCalculator*  |
+  | UsecaseActivityContext.cs | Functorium.Applications.Observabilities                    | UsecaseActivityContext* |
+
+  참고 (*표시 항목):
+  - ElapsedTimeCalculator - Functorium.Applications에 존재하지만, Source Generator는 Functorium.Adapters.Observabilities.Abstractions.Utilities
+  네임스페이스를 사용
+  - UsecaseActivityContext - Functorium.Applications에 존재하지만, Source Generator는 Functorium.Applications.Observabilities 네임스페이스를 사용
+
+  결론: Source Generator가 생성하는 코드가 참조하는 네임스페이스가 실제 Functorium 라이브러리의 네임스페이스와 불일치합니다. Source Generator 코드
+  수정이 필요합니다.
+```
