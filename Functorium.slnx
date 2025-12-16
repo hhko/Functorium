@@ -1,5 +1,9 @@
 <Solution>
   <Folder Name="/Tutorials/" />
+  <Folder Name="/Tutorials/SourceGenerator/" />
+  <Folder Name="/Tutorials/SourceGenerator/Src/">
+    <Project Path="Tutorials/SourceGenerator/Src/SourceGenerator.Demo/SourceGenerator.Demo.csproj" />
+  </Folder>
   <Folder Name="/Tutorials/Observability/" />
   <Folder Name="/Tutorials/Observability/Src/">
     <Project Path="Tutorials/Observability/Src/Observability.Adapters.Infrastructure/Observability.Adapters.Infrastructure.csproj" />
