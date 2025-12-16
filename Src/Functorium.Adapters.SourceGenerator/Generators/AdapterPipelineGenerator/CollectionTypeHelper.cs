@@ -52,20 +52,14 @@ public static class CollectionTypeHelper
     /// 컬렉션 타입에 대한 Count 접근 표현식을 생성합니다.
     /// 배열은 Length, 나머지는 Count를 사용합니다.
     /// </summary>
-    /// <remarks>
-    /// 이 메서드는 <see cref="IsCollectionType"/>가 true를 반환하는 타입에 대해서만 호출되어야 합니다.
-    /// </remarks>
-    /// <exception cref="ArgumentException">variableName 또는 typeFullName이 비어있거나, 컬렉션 타입이 아닌 경우</exception>
-    public static string GetCountExpression(string variableName, string typeFullName)
+    /// <returns>Count 표현식. 컬렉션 타입이 아니거나 입력이 유효하지 않으면 null</returns>
+    public static string? GetCountExpression(string variableName, string typeFullName)
     {
-        if (string.IsNullOrEmpty(variableName))
-            throw new ArgumentException("variableName cannot be null or empty", nameof(variableName));
-
-        if (string.IsNullOrEmpty(typeFullName))
-            throw new ArgumentException("typeFullName cannot be null or empty", nameof(typeFullName));
+        if (string.IsNullOrEmpty(variableName) || string.IsNullOrEmpty(typeFullName))
+            return null;
 
         if (!IsCollectionType(typeFullName))
-            throw new ArgumentException($"Type '{typeFullName}' is not a collection type", nameof(typeFullName));
+            return null;
 
         // 배열은 Length 사용
         if (typeFullName.Contains("[]"))
@@ -93,11 +87,11 @@ public static class CollectionTypeHelper
     /// Request 파라미터에 대한 Count 필드 이름을 생성합니다.
     /// 예: "orders" -> "Request_OrdersCount"
     /// </summary>
-    /// <exception cref="ArgumentException">parameterName이 비어있는 경우</exception>
-    public static string GetRequestCountFieldName(string parameterName)
+    /// <returns>Count 필드 이름. parameterName이 비어있으면 null</returns>
+    public static string? GetRequestCountFieldName(string parameterName)
     {
         if (string.IsNullOrEmpty(parameterName))
-            throw new ArgumentException("parameterName cannot be null or empty", nameof(parameterName));
+            return null;
 
         // 첫 글자를 대문자로 변환
         string capitalizedName = char.ToUpper(parameterName[0]) + parameterName.Substring(1);

@@ -580,8 +580,10 @@ public sealed class AdapterPipelineGenerator()
                 sb.Append($", {param.Name}");
                 if (param.IsCollection)
                 {
-                    string countExpression = CollectionTypeHelper.GetCountExpression(param.Name, param.Type);
-                    sb.Append($", {countExpression}");
+                    if (CollectionTypeHelper.GetCountExpression(param.Name, param.Type) is { } countExpression)
+                    {
+                        sb.Append($", {countExpression}");
+                    }
                 }
             }
 
@@ -612,8 +614,10 @@ public sealed class AdapterPipelineGenerator()
 
                 if (param.IsCollection)
                 {
-                    string countFieldName = CollectionTypeHelper.GetRequestCountFieldName(param.Name);
-                    messageTemplateFields.Add($"{{{countFieldName}}}");
+                    if (CollectionTypeHelper.GetRequestCountFieldName(param.Name) is { } countFieldName)
+                    {
+                        messageTemplateFields.Add($"{{{countFieldName}}}");
+                    }
                 }
             }
 
@@ -634,8 +638,10 @@ public sealed class AdapterPipelineGenerator()
 
                 if (param.IsCollection)
                 {
-                    string countExpression = CollectionTypeHelper.GetCountExpression(param.Name, param.Type);
-                    logParameters.Add(countExpression);
+                    if (CollectionTypeHelper.GetCountExpression(param.Name, param.Type) is { } countExpression)
+                    {
+                        logParameters.Add(countExpression);
+                    }
                 }
             }
 
@@ -693,8 +699,14 @@ public sealed class AdapterPipelineGenerator()
 
             if (CollectionTypeHelper.IsCollectionType(actualReturnType))
             {
-                string countExpression = CollectionTypeHelper.GetCountExpression("result", actualReturnType);
-                sb.AppendLine($", result, {countExpression}, elapsed, null);");
+                if (CollectionTypeHelper.GetCountExpression("result", actualReturnType) is { } countExpression)
+                {
+                    sb.AppendLine($", result, {countExpression}, elapsed, null);");
+                }
+                else
+                {
+                    sb.AppendLine(", result, elapsed, null);");
+                }
             }
             else
             {
@@ -736,8 +748,10 @@ public sealed class AdapterPipelineGenerator()
             // Count 값 추가
             if (CollectionTypeHelper.IsCollectionType(actualReturnType))
             {
-                string countExpression = CollectionTypeHelper.GetCountExpression("result", actualReturnType);
-                sb.Append($", {countExpression}");
+                if (CollectionTypeHelper.GetCountExpression("result", actualReturnType) is { } countExpression)
+                {
+                    sb.Append($", {countExpression}");
+                }
             }
 
             sb.AppendLine(", status, elapsed);");
@@ -881,8 +895,10 @@ public sealed class AdapterPipelineGenerator()
 
             if (param.IsCollection)
             {
-                string countFieldName = CollectionTypeHelper.GetRequestCountFieldName(param.Name);
-                messageFields.Add($"{{{countFieldName}}}");
+                if (CollectionTypeHelper.GetRequestCountFieldName(param.Name) is { } countFieldName)
+                {
+                    messageFields.Add($"{{{countFieldName}}}");
+                }
             }
         }
         messageFields.Add("requesting");
