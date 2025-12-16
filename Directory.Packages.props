@@ -12,8 +12,13 @@
     <PackageVersion Include="System.Reflection.MetadataLoadContext" Version="9.0.1" />
   </ItemGroup>
 
+  <ItemGroup Label="Source Generator">
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" />
+  </ItemGroup>
+
   <ItemGroup Label="Basic">
-    <PackageVersion Include="LanguageExt.Core" Version="5.0.0-beta-58" />
+    <PackageVersion Include="LanguageExt.Core" Version="5.0.0-beta-59" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
