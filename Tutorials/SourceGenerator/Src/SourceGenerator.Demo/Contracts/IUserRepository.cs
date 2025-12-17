@@ -1,3 +1,5 @@
+using Functorium.Applications.Observabilities;
+
 using LanguageExt;
 
 using SourceGenerator.Demo.Adapters;

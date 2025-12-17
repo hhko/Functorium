@@ -1,6 +1,14 @@
 using System.Diagnostics;
 
-namespace Functorium.Applications;
+namespace Functorium.Applications.Observabilities;
+
+
+// - Activity: "실행 중인 작업"을 나타내는 살아있는 객체 → 시작/종료/메타데이터
+// - ActivityContext: "추적 식별 정보"만 담는 경량 값 → 전파/직렬화/영속성
+//
+// 비유:
+//   - Activity = 자동차 (실제 작동하는 복잡한 기계)
+//   - ActivityContext = 자동차 번호판 (식별 정보만)
 
 /// <summary>
 /// Traverse Activity의 AsyncLocal 컨텍스트를 관리합니다.
@@ -17,7 +25,7 @@ namespace Functorium.Applications;
 ///       await ProcessItemAsync();
 ///   }
 /// </summary>
-public static class TraverseActivityContext
+public static class TraceParentActivityHolder
 {
     private static readonly AsyncLocal<Activity?> CurrentActivity = new();
 

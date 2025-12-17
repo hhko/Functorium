@@ -19,18 +19,11 @@
 
 using System.Diagnostics;
 
-using Functorium.Adapters.Observabilities;
-
 using LanguageExt;
-
 using Microsoft.Extensions.Logging;
 
 using SourceGenerator.Demo.Adapters;
-
-Console.WriteLine("========================================");
-Console.WriteLine(" Source Generator Observability Demo");
-Console.WriteLine("========================================");
-Console.WriteLine();
+using SourceGenerator.Demo.Mocks;
 
 // ============================================================================
 // 1. 원본 Repository vs Pipeline
@@ -87,9 +80,10 @@ var getUserResult = pipeline.GetUserById(1)
     .Run()  // FinT<IO, User> -> IO<Fin<User>>
     .Run(); // IO<Fin<User>> -> Fin<User>
 
+Console.WriteLine();
 getUserResult.Match(
-    Succ: user => Console.WriteLine($"   Result: User(Id={user.Id}, Name={user.Name}, Email={user.Email})"),
-    Fail: error => Console.WriteLine($"   Error: {error}")
+    Succ: user => Console.WriteLine($"Result: User(Id={user.Id}, Name={user.Name}, Email={user.Email})"),
+    Fail: error => Console.WriteLine($"Error: {error}")
 );
 Console.WriteLine();
 
@@ -103,40 +97,16 @@ var getAllUsersResult = pipeline.GetAllUsers()
     .Run()  // FinT<IO, IReadOnlyList<User>> -> IO<Fin<IReadOnlyList<User>>>
     .Run(); // IO<Fin<IReadOnlyList<User>>> -> Fin<IReadOnlyList<User>>
 
+Console.WriteLine();
 getAllUsersResult.Match(
     Succ: users =>
     {
-        Console.WriteLine($"   Result: {users.Count} users");
+        Console.WriteLine($"Result: {users.Count} users");
         foreach (var user in users)
         {
-            Console.WriteLine($"     - User(Id={user.Id}, Name={user.Name})");
+            Console.WriteLine($"  - User(Id={user.Id}, Name={user.Name})");
         }
     },
     Fail: error => Console.WriteLine($"   Error: {error}")
 );
-Console.WriteLine();
-
-// ============================================================================
-// 5. Observability 요약
-// ============================================================================
-Console.WriteLine("========================================");
-Console.WriteLine(" Observability Summary");
-Console.WriteLine("========================================");
-Console.WriteLine();
-Console.WriteLine("Source Generator가 자동으로 추가하는 관찰 가능성:");
-Console.WriteLine();
-Console.WriteLine("  [TRACE]  - OpenTelemetry 분산 트레이싱");
-Console.WriteLine("           - Activity 시작/종료");
-Console.WriteLine("           - 부모 Context 전파");
-Console.WriteLine();
-Console.WriteLine("  [METRIC] - 요청/응답 메트릭");
-Console.WriteLine("           - 성공/실패 카운터");
-Console.WriteLine("           - 응답 시간 히스토그램");
-Console.WriteLine();
-Console.WriteLine("  [LOG]    - 구조화된 로깅 (ILogger)");
-Console.WriteLine("           - LoggerMessage.Define 사용 (고성능)");
-Console.WriteLine("           - Debug/Info/Warning/Error 레벨");
-Console.WriteLine();
-Console.WriteLine("생성된 코드 위치:");
-Console.WriteLine("  obj/Generated/Functorium.Adapters.SourceGenerator/");
 Console.WriteLine();

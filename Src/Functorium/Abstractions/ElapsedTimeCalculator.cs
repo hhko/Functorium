@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace Functorium.Applications;
+namespace Functorium.Abstractions;
 
 public static class ElapsedTimeCalculator
 {

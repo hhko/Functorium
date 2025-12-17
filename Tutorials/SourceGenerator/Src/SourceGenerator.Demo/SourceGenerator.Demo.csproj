@@ -5,6 +5,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    
     <!-- Source Generator 생성 파일을 Generated 폴더에 저장 -->
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\Generated</CompilerGeneratedFilesOutputPath>
@@ -15,6 +16,11 @@
     <PackageReference Include="Microsoft.Extensions.Logging" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" />
+  </ItemGroup>
+
+  <!-- Functorium 라이브러리 참조 -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Src\Functorium\Functorium.csproj" />
   </ItemGroup>
 
   <!-- Source Generator 참조 -->

@@ -1,6 +1,8 @@
 using System.Diagnostics;
 
-namespace Functorium.Adapters.Observabilities;
+using Functorium.Applications.Observabilities;
+
+namespace SourceGenerator.Demo.Mocks;
 
 /// <summary>
 /// IAdapterTrace Mock 구현체.
@@ -15,17 +17,17 @@ public class MockAdapterTrace : IAdapterTrace
         string requestHandlerMethod,
         DateTimeOffset startTime)
     {
-        Console.WriteLine($"[TRACE] Request: {requestCategory}/{requestHandler}.{requestHandlerMethod}");
+        Console.WriteLine($"[TRACING] Request: {requestCategory}/{requestHandler}.{requestHandlerMethod}");
         return null;
     }
 
     public void ResponseSuccess(Activity? activity, double elapsedMs)
     {
-        Console.WriteLine($"[TRACE] Response Success: {elapsedMs:F2}ms");
+        Console.WriteLine($"[TRACING] Response Success: {elapsedMs:F2}ms");
     }
 
     public void ResponseFailure(Activity? activity, double elapsedMs, LanguageExt.Common.Error error)
     {
-        Console.WriteLine($"[TRACE] Response Failure: {elapsedMs:F2}ms - {error}");
+        Console.WriteLine($"[TRACING] Response Failure: {elapsedMs:F2}ms - {error}");
     }
 }

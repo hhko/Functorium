@@ -1,6 +1,8 @@
 using System.Diagnostics;
 
-namespace Functorium.Adapters.Observabilities;
+using Functorium.Applications.Observabilities;
+
+namespace SourceGenerator.Demo.Mocks;
 
 /// <summary>
 /// IAdapterMetric Mock 구현체.
@@ -15,16 +17,16 @@ public class MockAdapterMetric : IAdapterMetric
         string requestHandlerMethod,
         DateTimeOffset startTime)
     {
-        Console.WriteLine($"[METRIC] Request: {requestCategory}/{requestHandler}.{requestHandlerMethod}");
+        Console.WriteLine($"[METRICS] Request: {requestCategory}/{requestHandler}.{requestHandlerMethod}");
     }
 
     public void ResponseSuccess(Activity? activity, string requestCategory, double elapsedMs)
     {
-        Console.WriteLine($"[METRIC] Response Success: {requestCategory} - {elapsedMs:F2}ms");
+        Console.WriteLine($"[METRICS] Response Success: {requestCategory} - {elapsedMs:F2}ms");
     }
 
     public void ResponseFailure(Activity? activity, string requestCategory, double elapsedMs, LanguageExt.Common.Error error)
     {
-        Console.WriteLine($"[METRIC] Response Failure: {requestCategory} - {elapsedMs:F2}ms - {error}");
+        Console.WriteLine($"[METRICS] Response Failure: {requestCategory} - {elapsedMs:F2}ms - {error}");
     }
 }

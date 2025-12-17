@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using Functorium.Abstractions;
+using Functorium.Applications.Observabilities;
 using LanguageExt.Traits;
 
 namespace Functorium.Applications.Linq;
@@ -300,7 +302,7 @@ public static class FinTUtilites
                 // 2순위: Activity.Current (일반적인 경우)
                 ActivityContext? parentContext = null;
 
-                var usecaseContext = Functorium.Applications.UsecaseActivityContext.GetCurrent();
+                var usecaseContext = TraceParentContextHolder.GetCurrent();
                 if (usecaseContext.HasValue)
                 {
                     parentContext = usecaseContext.Value;
@@ -329,7 +331,7 @@ public static class FinTUtilites
                 // TraverseActivityContext.Enter()는 null Activity를 안전하게 처리합니다.
 
                 // TraverseActivityContext를 사용하여 현재 Traverse Activity 관리
-                using (TraverseActivityContext.Enter(activity))
+                using (TraceParentActivityHolder.Enter(activity))
                 {
 
                     long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();

@@ -22,13 +22,23 @@ public class UserRepository : IUserRepository
 {
     public string RequestCategory => "repository";
 
+    // public virtual FinT<IO, User> GetUserById(int id) =>
+    //     FinT.lift<IO, User>(IO.pure(Fin.Succ(new User(id, $"User{id}", $"user{id}@example.com"))));
+
+    // public virtual FinT<IO, IReadOnlyList<User>> GetAllUsers() =>
+    //     FinT.lift<IO, IReadOnlyList<User>>(IO.pure(Fin.Succ<IReadOnlyList<User>>(new List<User>
+    //     {
+    //         new(1, "Alice", "alice@example.com"),
+    //         new(2, "Bob", "bob@example.com")
+    //     })));
+
     public virtual FinT<IO, User> GetUserById(int id) =>
-        FinT.lift<IO, User>(IO.pure(Fin.Succ(new User(id, $"User{id}", $"user{id}@example.com"))));
+        IO.lift<User>(new User(id, $"User{id}", $"user{id}@example.com"));
 
     public virtual FinT<IO, IReadOnlyList<User>> GetAllUsers() =>
-        FinT.lift<IO, IReadOnlyList<User>>(IO.pure(Fin.Succ<IReadOnlyList<User>>(new List<User>
+        IO.lift<IReadOnlyList<User>>(new List<User>
         {
             new(1, "Alice", "alice@example.com"),
             new(2, "Bob", "bob@example.com")
-        })));
+        });
 }

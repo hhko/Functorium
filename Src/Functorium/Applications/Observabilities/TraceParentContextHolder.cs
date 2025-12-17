@@ -23,7 +23,7 @@ namespace Functorium.Applications;
 ///       await repository.GetDataAsync();
 ///   }
 /// </summary>
-public static class UsecaseActivityContext
+public static class TraceParentContextHolder
 {
     private static readonly AsyncLocal<ActivityContext?> CurrentContext = new();
 
