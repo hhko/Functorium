@@ -322,9 +322,32 @@ API 추출 실패: ExtractApiChanges.cs
 #### 커밋 분류 및 우선순위 결정
 
 **Breaking Changes 식별:**
+
+Breaking Changes는 **두 가지 방법**으로 식별합니다:
+
+**방법 1: 커밋 메시지 패턴 (개발자 의도 표시)**
 - 패턴: `breaking`, `BREAKING`, `!:` (예: `feat!:`)
+- 예시:
+  ```
+  feat!: Change IErrorHandler to IErrorDestructurer
+  fix!: Remove deprecated Create method
+  BREAKING: Update authentication flow
+  ```
+
+**방법 2: Git Diff 분석 (자동 감지, 권장)** ⭐
+- `.api` 폴더의 Git diff 분석: `api-changes-diff.txt`
+- 실제 API 변경사항을 객관적으로 감지
+- 자동 감지 패턴:
+  - 삭제된 public 타입/메서드 (`-`)
+  - 변경된 메서드 시그니처 (`-/+`)
+  - 매개변수 타입/개수 변경 (`-/+`)
+  - 타입 이름 변경 (`-/+`)
+- **장점**: 개발자가 실수로 표시하지 않아도 자동으로 감지
+
+**중요:**
 - 모든 Breaking Changes는 최우선 문서화 필요
 - 마이그레이션 가이드 필수
+- Git Diff 방법이 더 정확하고 신뢰할 수 있음
 
 **Feature 커밋 추출:**
 - 키워드: `feat`, `feature`, `add`
@@ -388,7 +411,7 @@ Functorium.Testing.md:
 
 #### API 변경사항 확인
 
-**Uber 파일 읽기:**
+**1. Uber 파일 읽기 (현재 API 상태):**
 ```
 .analysis-output/api-changes-build-current/all-api-changes.txt
 ```
@@ -414,11 +437,67 @@ namespace Functorium.Abstractions.Errors
 }
 ```
 
+**2. Git Diff 분석 (API 변경 감지):**
+```
+.analysis-output/api-changes-build-current/api-changes-diff.txt
+```
+
+이 파일은 `.api` 폴더의 Git diff 결과를 포함하며, API 변경사항을 자동으로 감지합니다:
+
+```bash
+# ExtractApiChanges.cs에서 실행되는 명령
+git diff HEAD -- 'Src/*/.api/*.cs'
+```
+
+**Breaking Changes 자동 감지 패턴:**
+
+이 Git diff를 분석하여 Breaking Changes를 자동으로 식별합니다:
+
+| Git Diff 패턴 | 의미 | Breaking? | 우선순위 |
+|--------------|------|-----------|---------|
+| `- public class Foo` | 클래스 삭제 | ✓ Yes | 필수 |
+| `- public interface IFoo` | 인터페이스 삭제 | ✓ Yes | 필수 |
+| `- public void Method()` | 메서드 삭제 | ✓ Yes | 필수 |
+| `- Method(int x)`<br>`+ Method(string x)` | 매개변수 타입 변경 | ✓ Yes | 필수 |
+| `- Method(int x, int y)`<br>`+ Method(int x)` | 매개변수 개수 변경 | ✓ Yes | 필수 |
+| `- interface IErrorHandler`<br>`+ interface IErrorDestructurer` | 타입 이름 변경 | ✓ Yes | 필수 |
+| `+ public class Bar` | 새 클래스 추가 | ✗ No | 높음 |
+| `+ public void NewMethod()` | 새 메서드 추가 | ✗ No | 높음 |
+| 매개변수 이름만 변경 | 이름 변경 (바이너리 호환) | ✗ No | 낮음 |
+
+**Git Diff 예시:**
+```diff
+diff --git a/Src/Functorium/.api/Functorium.cs b/Src/Functorium/.api/Functorium.cs
+@@ -34,11 +34,11 @@ namespace Functorium.Abstractions.Errors.DestructuringPolicies
+ {
+-    public class ErrorCodeExceptionalDestructurer : IErrorDestructurer
++    public class ErrorCodeExceptionalDestructurer : IErrorProcessor
+     {
+         public ErrorCodeExceptionalDestructurer() { }
+-        public bool CanHandle(Error error) { }
++        public bool CanProcess(Error error) { }
+-        public LogEventPropertyValue Destructure(Error error, ILogEventPropertyValueFactory factory) { }
++        public LogEventPropertyValue Process(Error error, ILogEventPropertyValueFactory factory) { }
+     }
+ }
+```
+
+위 예시에서 감지되는 Breaking Changes:
+- 인터페이스 이름 변경: `IErrorDestructurer` → `IErrorProcessor`
+- 메서드 이름 변경: `CanHandle` → `CanProcess`
+- 메서드 이름 변경: `Destructure` → `Process`
+
+**중요:**
+- Git diff 분석은 커밋 메시지 패턴(`!:`, `breaking`)보다 더 정확하고 객관적입니다
+- 개발자가 실수로 Breaking Change를 표시하지 않아도 자동으로 감지됩니다
+- 첫 배포의 경우 diff가 비어있을 수 있습니다 (모든 API가 새로 생성됨)
+
 **API 추출 작업:**
 1. 새로운 Public 타입 식별
 2. 메서드 시그니처 추출 (매개변수 이름 및 타입 포함)
 3. 네임스페이스 정보 추출
 4. 제네릭 제약 조건 확인
+5. **Git Diff에서 Breaking Changes 식별** (추가)
 
 **중요:** Uber 파일에 없는 API는 절대 문서화하지 않습니다.
 
@@ -826,13 +905,29 @@ Breaking Changes 섹션의 완전성을 확인합니다.
 
 **검증 절차:**
 - [ ] Breaking Changes 섹션 존재 확인
+- [ ] **Git Diff 분석 결과와 대조** (api-changes-diff.txt)
+- [ ] Git Diff에서 감지된 모든 Breaking Changes가 문서화됨
+- [ ] 커밋 메시지 패턴(`!:`, `breaking`)으로 표시된 커밋 포함
 - [ ] 각 Breaking Change에 마이그레이션 가이드 존재
-- [ ] 이전/이후 코드 비교 포함
+- [ ] 이전/이후 코드 비교 포함 (Git Diff에서 추출)
 - [ ] 영향 범위 명시
 
 **통과 기준:**
-- 모든 Breaking Change 커밋이 문서화됨
+- Git Diff에서 감지된 모든 API 변경(삭제, 시그니처 변경)이 문서화됨
+- 커밋 메시지로 표시된 모든 Breaking Change가 문서화됨
 - 각 Breaking Change에 완전한 마이그레이션 가이드 포함
+
+**검증 방법:**
+```bash
+# api-changes-diff.txt 확인
+cat .release-notes/scripts/.analysis-output/api-changes-build-current/api-changes-diff.txt
+
+# 삭제된 API (-) 검색
+grep "^-.*public" api-changes-diff.txt
+
+# 변경된 메서드 시그니처 검색
+grep -A 1 "^-.*public.*(" api-changes-diff.txt
+```
 
 **3. Markdown 포맷 검증**
 
@@ -1188,6 +1283,13 @@ dotnet nuget locals all --clear
 - 모든 API를 Uber 파일에서 검증
 - 매개변수 이름 및 타입 정확히 일치
 - 추측 금지, 검증된 정보만 사용
+
+> **Breaking Changes는 Git Diff로 자동 감지합니다.**
+
+- `.api` 폴더의 Git diff 분석 우선 (객관적)
+- 커밋 메시지 패턴은 보조 수단 (주관적)
+- 삭제/변경된 API는 모두 Breaking Change로 처리
+- 개발자 실수 방지 (자동 감지)
 
 ### 2. 완전 자동화
 
