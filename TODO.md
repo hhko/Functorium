@@ -48,6 +48,7 @@
         "Observabilities"
       ]
       ```
+  - Hide Folders and Files: https://marketplace.visualstudio.com/items?itemName=tylim88.folder-hide
   - .vscode
     - launch.json: VSCode 디버깅 환경 설정
     - settings.json
@@ -213,7 +214,8 @@
     - 변경 후: .config/dotnet-tools.json
   - [x] .config/dotnet-tools.json 에서 사용하지 않는 도구 제거 publicapigenerator.tool
   - [x] .gitignore 자동 생성 폴더 추가 .release-notes/scripts/.analysis-output/
-  - [ ] 릴리즈 노트 생성
+  - [x] 릴리즈 노트 생성
+  - [x] Breaking Changes 감지에 git diff 추가(권장)
   - [ ] 버전?
   - [ ] 브랜치 전략?
   - [ ] GitHub Release 배포
