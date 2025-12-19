@@ -1,16 +1,19 @@
 # Functorium 릴리스 노트 생성 문서
 
+> **마지막 업데이트**: 2025-12-19
+
 이 디렉터리는 전문적인 Functorium 릴리스 노트를 생성하기 위한 모듈화된 문서를 포함합니다.
 
-## 문서 구조
+## 문서 구조 (5-Phase 워크플로우)
 
-| 문서 | 설명 |
-|------|------|
-| [data-collection.md](data-collection.md) | 데이터 수집 단계 및 출력 검증 |
-| [commit-analysis.md](commit-analysis.md) | 커밋 분석 및 기능 추출 가이드 |
-| [api-documentation.md](api-documentation.md) | API 검증, 코드 샘플, 정확성 가이드라인 |
-| [writing-guidelines.md](writing-guidelines.md) | 문서 스타일, 구조, 템플릿 요구사항 |
-| [validation-checklist.md](validation-checklist.md) | 성공 기준 및 검증 프로세스 |
+| Phase | 문서 | 설명 |
+|-------|------|------|
+| - | [TEMPLATE.md](../../TEMPLATE.md) | 릴리스 노트 템플릿 (복사용) |
+| 1 | [phase1-setup.md](phase1-setup.md) | 환경 검증 및 준비 |
+| 2 | [phase2-collection.md](phase2-collection.md) | 데이터 수집 (컴포넌트/API 분석) |
+| 3 | [phase3-analysis.md](phase3-analysis.md) | 커밋 분석 및 기능 추출 |
+| 4 | [phase4-writing.md](phase4-writing.md) | 릴리스 노트 작성 규칙 |
+| 5 | [phase5-validation.md](phase5-validation.md) | 검증 및 품질 확인 |
 
 ## 스크립트 구조
 
@@ -20,6 +23,7 @@
 | `AnalyzeFolder.cs` | 개별 폴더 상세 분석 |
 | `ExtractApiChanges.cs` | API 변경사항 추출 |
 | `ApiGenerator.cs` | Public API 생성 |
+| `SummarizeSlowestTests.cs` | TRX 테스트 결과 요약<br/>• 느린 테스트 식별 (기본 30초 이상)<br/>• 실패 테스트 목록<br/>• 테스트 통계 및 분포 |
 
 > **Note**: 모든 스크립트는 .NET 10 file-based program으로 구현되어 있습니다.
 >
@@ -77,6 +81,22 @@ dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target origin/main
 dotnet ExtractApiChanges.cs
 ```
 
+#### 테스트 결과 요약
+
+```bash
+# 기본 실행 (TestResults/**/*.trx 파일 검색, 30초 이상 테스트 식별)
+dotnet SummarizeSlowestTests.cs
+
+# 느린 테스트 기준 변경 (예: 60초 이상)
+dotnet SummarizeSlowestTests.cs --threshold 60
+
+# 특정 glob 패턴으로 TRX 파일 검색
+dotnet SummarizeSlowestTests.cs "**/MyTests/**/*.trx"
+
+# 옵션 조합
+dotnet SummarizeSlowestTests.cs "**/TestResults/**/*.trx" -t 45
+```
+
 ### 2. 출력 확인
 
 ```
@@ -85,10 +105,20 @@ dotnet ExtractApiChanges.cs
 ├── Functorium.md                    # Src/Functorium 분석
 ├── Functorium.Testing.md            # Src/Functorium.Testing 분석
 ├── Docs.md                          # Docs 분석
-└── api-changes-build-current/
-    ├── all-api-changes.txt          # Uber API 파일 (단일 진실 소스)
-    ├── api-changes-summary.md       # API 요약
-    └── api-changes-diff.txt         # API 차이점
+├── test-summary.md                  # 테스트 결과 요약 (SummarizeSlowestTests.cs)
+├── api-changes-build-current/
+│   ├── all-api-changes.txt          # Uber API 파일 (단일 진실 소스)
+│   ├── api-changes-summary.md       # API 요약
+│   └── api-changes-diff.txt         # API 차이점 (Breaking Changes 감지)
+└── work/                            # 중간 결과 저장 (Phase별)
+    ├── phase3-commit-analysis.md    # 커밋 분류 및 우선순위
+    ├── phase3-feature-groups.md     # 기능 그룹화 결과
+    ├── phase3-api-mapping.md        # API와 커밋 매핑
+    ├── phase4-draft.md              # 릴리스 노트 초안
+    ├── phase4-api-references.md     # 사용된 API 목록
+    ├── phase4-code-samples.md       # 모든 코드 샘플
+    ├── phase5-validation-report.md  # 검증 결과 보고서
+    └── phase5-api-validation.md     # API 검증 상세
 
 Src/
 ├── Functorium/.api/
@@ -99,11 +129,14 @@ Src/
 
 ### 3. 릴리스 노트 작성
 
-1. [data-collection.md](data-collection.md)에서 데이터 수집 프로세스 확인
-2. [commit-analysis.md](commit-analysis.md)에서 변경사항 분석 방법 확인
-3. [api-documentation.md](api-documentation.md)에서 정확한 코드 샘플 작성법 확인
-4. [writing-guidelines.md](writing-guidelines.md)에서 적절한 포맷팅 적용
-5. [validation-checklist.md](validation-checklist.md)로 검증
+5-Phase 워크플로우를 따라 진행합니다:
+
+1. [phase1-setup.md](phase1-setup.md) - 환경 검증 및 비교 범위 결정
+2. [phase2-collection.md](phase2-collection.md) - 데이터 수집 (컴포넌트/API 분석)
+3. [phase3-analysis.md](phase3-analysis.md) - 커밋 분석 및 기능 추출
+4. [phase4-writing.md](phase4-writing.md) - 릴리스 노트 작성
+   - **템플릿**: `.release-notes/TEMPLATE.md`를 복사하여 시작
+5. [phase5-validation.md](phase5-validation.md) - 검증
 
 ## 핵심 원칙
 
@@ -111,6 +144,12 @@ Src/
 > - API를 임의로 만들어내지 않습니다
 > - 모든 기능은 커밋/PR로 추적 가능해야 합니다
 > - 코드 샘플은 `all-api-changes.txt`에서 검증합니다
+
+> **Breaking Changes는 Git Diff로 자동 감지합니다.**
+> - `.api` 폴더의 Git diff 분석 우선 (`api-changes-diff.txt`)
+> - 커밋 메시지 패턴은 보조 수단 (`!:`, `breaking`)
+> - 삭제/변경된 API는 모두 Breaking Change로 처리
+> - 상세 내용: [phase3-analysis.md#breaking-changes-감지](phase3-analysis.md#breaking-changes-감지)
 
 ## 설정
 

@@ -47,17 +47,17 @@ static async Task AnalyzeAllComponentsAsync(string baseBranch, string targetBran
     var startTime = DateTime.Now;
 
     // Get paths
-    var toolsDir = Directory.GetCurrentDirectory();
-    var configFile = Path.Combine(toolsDir, "config", "component-priority.json");
-    var analysisDir = Path.Combine(toolsDir, ".analysis-output");
+    var scriptsDir = Directory.GetCurrentDirectory();
+    var configFile = Path.Combine(scriptsDir, "config", "component-priority.json");
+    var analysisDir = Path.Combine(scriptsDir, ".analysis-output");
 
     // Get git root
-    var gitRoot = await GetGitRootAsync() ?? Path.GetFullPath(Path.Combine(toolsDir, "..", ".."));
+    var gitRoot = await GetGitRootAsync() ?? Path.GetFullPath(Path.Combine(scriptsDir, "..", ".."));
     gitRoot = gitRoot.Replace('\\', '/');
 
     // Calculate relative paths for display
-    var relativeConfigFile = Path.GetRelativePath(toolsDir, configFile);
-    var relativeAnalysisDir = Path.GetRelativePath(toolsDir, analysisDir);
+    var relativeConfigFile = Path.GetRelativePath(scriptsDir, configFile);
+    var relativeAnalysisDir = Path.GetRelativePath(scriptsDir, analysisDir);
 
     // Header
     AnsiConsole.WriteLine();
