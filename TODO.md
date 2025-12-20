@@ -216,6 +216,7 @@
   - [x] .gitignore 자동 생성 폴더 추가 .release-notes/scripts/.analysis-output/
   - [x] 릴리즈 노트 생성
   - [x] Breaking Changes 감지에 git diff 추가(권장)
+  - [x] release note phase 기반으로 재구성
   - [ ] 버전?
   - [ ] 브랜치 전략?
   - [ ] GitHub Release 배포
