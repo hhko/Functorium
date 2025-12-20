@@ -258,7 +258,7 @@ Command의 결과물 형식을 명확히 정의하면 일관된 출력을 얻을
 
 ### 파일 출력
 
-```markdown
+````markdown
 ## 출력 파일
 
 **파일명:** `.release-notes/RELEASE-$ARGUMENTS.md`
@@ -275,7 +275,7 @@ date: {오늘 날짜}
 ## 개요
 ...
 ```
-```
+````
 
 ### 콘솔 출력
 
