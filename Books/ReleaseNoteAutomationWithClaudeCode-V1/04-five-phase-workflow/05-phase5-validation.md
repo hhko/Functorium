@@ -198,7 +198,7 @@ Phase 5의 검증 결과를 저장합니다:
 
 ### phase5-validation-report.md 형식
 
-```markdown
+````markdown
 # Phase 5: 검증 결과 보고서
 
 ## 검증 일시
@@ -215,7 +215,7 @@ Phase 5의 검증 결과를 저장합니다:
 
 ## 상세 결과
 [각 검증 항목별 상세 결과]
-```
+````
 
 ---
 

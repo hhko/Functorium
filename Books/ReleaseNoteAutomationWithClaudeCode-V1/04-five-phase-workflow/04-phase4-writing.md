@@ -210,7 +210,7 @@ ErrorCodeFactory.Create("error")
 
 ### 예시 1: 기본 기능
 
-```markdown
+````markdown
 ### 예외에서 구조화된 오류 생성
 
 LanguageExt Error 타입을 기반으로 예외를 구조화된 오류 코드로 변환합니다.
@@ -251,11 +251,11 @@ namespace Functorium.Abstractions.Errors
     }
 }
 ```
-```
+````
 
 ### 예시 2: Breaking Change
 
-```markdown
+````markdown
 ### 오류 핸들러 인터페이스 이름 변경
 
 오류 처리 API가 더 나은 일관성을 위해 통합되었습니다.
@@ -280,7 +280,7 @@ public class MyDestructurer : IErrorDestructurer
 1. 모든 `IErrorHandler` 참조를 `IErrorDestructurer`로 업데이트
 2. `Handle` 메서드를 `Destructure` 메서드로 교체
 3. 반환 타입을 `LogEventPropertyValue`로 변경
-```
+````
 
 ---
 

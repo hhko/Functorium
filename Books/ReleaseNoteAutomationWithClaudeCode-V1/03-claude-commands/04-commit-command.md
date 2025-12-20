@@ -308,16 +308,16 @@ git status
 ## release-note.md와의 관계
 
 ```txt
-commit.md                          release-note.md
-    │                                    │
-    │  Conventional Commits 형식         │
-    │  ─────────────────────────▶        │
-    │                                    │
-    │  커밋 히스토리                      │
-    │  ─────────────────────────▶        │
-    │                                    │
-    ▼                                    ▼
-일관된 커밋 메시지        ────▶    자동 분류 및 릴리스 노트 생성
+commit.md                            release-note.md
+    │                                      │
+    │  Conventional Commits 형식           │
+    │  ─────────────────────────▶          │
+    │                                      │
+    │  커밋 히스토리                       │
+    │  ─────────────────────────▶          │
+    │                                      │
+    ▼                                      ▼
+일관된 커밋 메시지          ────▶   자동 분류 및 릴리스 노트 생성
 ```
 
 commit.md로 생성된 일관된 커밋 히스토리가 release-note.md의 자동 분류 기반이 됩니다.

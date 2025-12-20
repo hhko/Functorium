@@ -236,7 +236,7 @@ Phase 3의 분석 결과를 저장합니다:
 
 ### phase3-commit-analysis.md 형식
 
-```markdown
+````markdown
 # Phase 3: 커밋 분석 결과
 
 ## Breaking Changes
@@ -251,11 +251,11 @@ Phase 3의 분석 결과를 저장합니다:
 
 ## Bug Fixes
 - [a8ec763] fix(build): NuGet 패키지 아이콘 경로 수정
-```
+````
 
 ### phase3-feature-groups.md 형식
 
-```markdown
+````markdown
 # Phase 3: 기능 그룹화 결과
 
 ## 그룹 1: 함수형 오류 처리
@@ -274,7 +274,7 @@ Phase 3의 분석 결과를 저장합니다:
 
 **사용자 가치:**
 분산 추적, 메트릭, 로깅 통합 지원
-```
+````
 
 ---
 

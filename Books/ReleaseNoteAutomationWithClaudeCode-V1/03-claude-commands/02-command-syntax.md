@@ -90,7 +90,7 @@ argument-hint: "<source> <target> 소스와 타겟 경로"
 
 ### 예시: 완전한 Command 파일
 
-```markdown
+````markdown
 ---
 title: API-DOC
 description: API 문서를 생성합니다
@@ -141,7 +141,7 @@ $ARGUMENTS 클래스에 대한 API 문서를 생성합니다.
 {코드}
 ```
 ```
-```
+````
 
 ---
 

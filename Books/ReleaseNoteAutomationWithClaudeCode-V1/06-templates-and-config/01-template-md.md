@@ -107,7 +107,7 @@ Functorium v1.0.0은 .NET 애플리케이션을 위한 함수형 프로그래밍
 
 ## Breaking Changes 섹션
 
-```markdown
+````markdown
 ## Breaking Changes
 
 {Breaking Changes가 없는 경우}
@@ -132,11 +132,11 @@ Functorium v1.0.0은 .NET 애플리케이션을 위한 함수형 프로그래밍
 1. {단계 1}
 2. {단계 2}
 3. {단계 3}
-```
+````
 
 ### 작성 예시 (Breaking Change 있는 경우)
 
-```markdown
+````markdown
 ## Breaking Changes
 
 ### IErrorHandler 인터페이스 이름 변경
@@ -163,13 +163,13 @@ public class MyDestructurer : IErrorDestructurer
 1. 모든 `IErrorHandler` 참조를 `IErrorDestructurer`로 변경
 2. `Handle` 메서드를 `Destructure`로 이름 변경
 3. 반환 타입을 `LogEventPropertyValue`로 수정
-```
+````
 
 ---
 
 ## 새로운 기능 섹션
 
-```markdown
+````markdown
 ## 새로운 기능
 
 ### {컴포넌트명} 라이브러리
@@ -189,7 +189,7 @@ public class MyDestructurer : IErrorDestructurer
 - {정량적 이점}
 
 <!-- 관련 커밋: {SHA} {커밋 메시지} -->
-```
+````
 
 ### 필수 요소
 
@@ -204,7 +204,7 @@ public class MyDestructurer : IErrorDestructurer
 
 ### 작성 예시
 
-```markdown
+````markdown
 ### Functorium 라이브러리
 
 #### 1. 예외에서 구조화된 오류 생성
@@ -233,7 +233,7 @@ catch (HttpRequestException ex)
 - 일관된 오류 코드 체계로 디버깅 시간 단축
 
 <!-- 관련 커밋: abc1234 feat(errors): Add ErrorCodeFactory.CreateFromException -->
-```
+````
 
 ---
 
@@ -261,7 +261,7 @@ catch (HttpRequestException ex)
 
 ## API 변경사항 섹션
 
-```markdown
+````markdown
 ## API 변경사항
 
 ### {컴포넌트명} 네임스페이스 구조
@@ -274,11 +274,11 @@ catch (HttpRequestException ex)
 └── {SubNamespace2}/
     └── {Class3}
 ```
-```
+````
 
 ### 작성 예시
 
-```markdown
+````markdown
 ## API 변경사항
 
 ### Functorium 네임스페이스 구조
@@ -299,13 +299,13 @@ Functorium
     └── Linq/
         └── FinTUtilities
 ```
-```
+````
 
 ---
 
 ## 설치 섹션
 
-```markdown
+````markdown
 ## 설치
 
 ### NuGet 패키지 설치
@@ -323,11 +323,11 @@ dotnet add package {PackageName}.Testing --version {VERSION}
 - .NET {버전} 이상
 - {의존성 1}
 - {의존성 2}
-```
+````
 
 ### 작성 예시
 
-```markdown
+````markdown
 ## 설치
 
 ### NuGet 패키지 설치
@@ -345,7 +345,7 @@ dotnet add package Functorium.Testing --version 1.0.0
 - .NET 10.0 이상
 - LanguageExt.Core 5.0.0 이상
 - Serilog 4.0.0 이상 (로깅 기능 사용 시)
-```
+````
 
 ---
 

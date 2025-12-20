@@ -211,7 +211,7 @@ await File.WriteAllTextAsync(summaryPath, summaryContent.ToString());
 
 `Functorium.md` 예시:
 
-```markdown
+````markdown
 # Analysis for Src/Functorium
 
 Generated: 2025-12-19 10:30:00
@@ -249,13 +249,13 @@ c5e604f fix(build): Fix NuGet package icon path
 ### Breaking Changes
 
 (none)
-```
+````
 
 ### 분석 요약 파일
 
 `analysis-summary.md`:
 
-```markdown
+````markdown
 # Analysis Summary
 
 Generated: 2025-12-19 10:30:00
@@ -275,7 +275,7 @@ Comparing: origin/release/1.0 -> HEAD
 - Components: 2
 - Total Files: 55
 - Total Commits: 32
-```
+````
 
 ---
 

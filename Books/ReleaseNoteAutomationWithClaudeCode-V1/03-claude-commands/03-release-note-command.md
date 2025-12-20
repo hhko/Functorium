@@ -55,7 +55,7 @@ release-note.md
 
 ## 버전 파라미터 처리
 
-```markdown
+````markdown
 ## 버전 파라미터 (`$ARGUMENTS`)
 
 **버전이 지정된 경우:** $ARGUMENTS
@@ -70,7 +70,7 @@ release-note.md
 ```
 
 **버전이 지정되지 않은 경우:** 오류 메시지를 출력하고 중단합니다.
-```
+````
 
 ### 분석
 
@@ -102,7 +102,7 @@ release-note.md
 
 ## Phase 1: 환경 검증 분석
 
-```markdown
+````markdown
 ## Phase 1: 환경 검증 및 준비
 
 **목표**: 릴리스 노트 생성 전 필수 환경 검증
@@ -122,7 +122,7 @@ ls .release-notes/scripts  # 스크립트 디렉터리 확인
 - [ ] Git 저장소 확인됨
 - [ ] .NET SDK 버전 확인됨
 - [ ] Base/Target 결정됨
-```
+````
 
 ### 주요 포인트
 
@@ -134,7 +134,7 @@ ls .release-notes/scripts  # 스크립트 디렉터리 확인
 
 ## Phase 2: 데이터 수집 분석
 
-```markdown
+````markdown
 ## Phase 2: 데이터 수집
 
 **목표**: C# 스크립트로 컴포넌트/API 변경사항 분석
@@ -160,7 +160,7 @@ dotnet SummarizeSlowestTests.cs
 - [ ] `.analysis-output/*.md` 파일 생성됨
 - [ ] `all-api-changes.txt` Uber 파일 생성됨
 - [ ] `api-changes-diff.txt` Git Diff 파일 생성됨
-```
+````
 
 ### 주요 포인트
 
@@ -172,7 +172,7 @@ dotnet SummarizeSlowestTests.cs
 
 ## Phase 3: 커밋 분석 분석
 
-```markdown
+````markdown
 ## Phase 3: 커밋 분석 및 기능 추출
 
 **목표**: 수집된 데이터를 분석하여 릴리스 노트용 기능 추출
@@ -189,7 +189,7 @@ dotnet SummarizeSlowestTests.cs
 **중간 결과 저장** (필수):
 - `.analysis-output/work/phase3-commit-analysis.md`
 - `.analysis-output/work/phase3-feature-groups.md`
-```
+````
 
 ### 주요 포인트
 
@@ -201,7 +201,7 @@ dotnet SummarizeSlowestTests.cs
 
 ## Phase 4: 문서 작성 분석
 
-```markdown
+````markdown
 ## Phase 4: 릴리스 노트 작성
 
 **목표**: 분석 결과를 바탕으로 전문적인 릴리스 노트 작성
@@ -217,7 +217,7 @@ dotnet SummarizeSlowestTests.cs
 4. **가치 전달 필수**: 모든 주요 기능에 **"장점:"** 섹션 포함
 
 > **중요**: "장점:" 섹션이 없는 기능 문서화는 불완전한 것으로 간주됩니다.
-```
+````
 
 ### 주요 포인트
 
@@ -229,7 +229,7 @@ dotnet SummarizeSlowestTests.cs
 
 ## Phase 5: 검증 분석
 
-```markdown
+````markdown
 ## Phase 5: 검증
 
 **검증 항목**:
@@ -250,7 +250,7 @@ grep -c "**장점:**" .release-notes/RELEASE-$ARGUMENTS.md
 # Breaking Changes Git Diff 확인
 cat .analysis-output/api-changes-build-current/api-changes-diff.txt
 ```
-```
+````
 
 ### 주요 포인트
 

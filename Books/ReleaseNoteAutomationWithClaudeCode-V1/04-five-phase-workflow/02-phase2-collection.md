@@ -149,7 +149,7 @@ TRX 파일이 있는 경우 테스트 결과를 요약합니다.
 
 각 컴포넌트 파일 (`*.md`)의 구조:
 
-```markdown
+````markdown
 # Analysis for Src/Functorium
 
 Generated: 2025-12-19 10:30:00
@@ -174,7 +174,7 @@ Comparing: origin/release/1.0 -> HEAD
 
 ### Breaking Changes
 [breaking, BREAKING, !: 패턴 커밋]
-```
+````
 
 ---
 
