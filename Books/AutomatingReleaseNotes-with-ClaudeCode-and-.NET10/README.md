@@ -92,6 +92,12 @@ Claude Code에서 사용자 정의 Command를 만들고 활용하는 방법을 �
 - [7.2 나만의 스크립트 작성](07-hands-on-tutorial/02-custom-script.md)
 - [7.3 문제 해결 가이드](07-hands-on-tutorial/03-troubleshooting.md)
 
+### [8장: Quick Reference](08-quick-reference/)
+
+릴리스 노트 자동화 명령어와 워크플로우를 빠르게 참조합니다.
+
+- [8.1 Quick Reference](08-quick-reference/01-quick-reference.md)
+
 ### [부록](appendix/)
 
 - [A. 용어 사전](appendix/A-glossary.md)
