@@ -408,14 +408,13 @@ static async Task<ComponentAnalysisResult> AnalyzeComponentAsync(string componen
     var allCommitsResult = await RunGitAsync($"log --oneline --no-merges \"{baseBranch}..{targetBranch}\" -- \"{componentPath}/\"", gitRoot);
 
     // Filter for breaking changes:
-    // 1. Contains "breaking" or "BREAKING" keyword
-    // 2. Type followed by ! (e.g., feat!:, fix!:)
+    // 1. Type followed by ! (e.g., feat!:, fix!:)
+    // 2. Contains "BREAKING CHANGE" keyword
     var breakingPattern = new Regex(@"\b\w+!:", RegexOptions.Compiled);
     var breakingCommits = allCommitsResult.Output
         .Split('\n', StringSplitOptions.RemoveEmptyEntries)
         .Where(commit =>
-            commit.Contains("breaking", StringComparison.OrdinalIgnoreCase) ||
-            commit.Contains("BREAKING") ||
+            commit.Contains("BREAKING CHANGE", StringComparison.OrdinalIgnoreCase) ||
             breakingPattern.IsMatch(commit))
         .Take(10)
         .ToList();
