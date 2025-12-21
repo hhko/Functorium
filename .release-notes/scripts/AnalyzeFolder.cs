@@ -14,6 +14,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Spectre.Console;
 
@@ -157,7 +158,7 @@ static async Task AnalyzeFolderAsync(string folderPath, string baseBranch, strin
 
     // Feature commits
     AnsiConsole.MarkupLine("  [green]Feature commits:[/]");
-    var featResult = await RunGitAsync($"log --grep=\"feat\" --grep=\"feature\" --grep=\"add\" --oneline --no-merges \"{baseBranch}..{targetBranch}\" -- \"{relativePath}/\"", gitRoot);
+    var featResult = await RunGitAsync($"log --grep=\"^feat\" --oneline --no-merges \"{baseBranch}..{targetBranch}\" -- \"{relativePath}/\"", gitRoot);
     var featCommits = featResult.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Take(5).ToList();
     if (featCommits.Count > 0)
     {
@@ -174,7 +175,7 @@ static async Task AnalyzeFolderAsync(string folderPath, string baseBranch, strin
 
     // Bug fixes
     AnsiConsole.MarkupLine("  [yellow]Bug fixes:[/]");
-    var fixResult = await RunGitAsync($"log --grep=\"fix\" --grep=\"bug\" --oneline --no-merges \"{baseBranch}..{targetBranch}\" -- \"{relativePath}/\"", gitRoot);
+    var fixResult = await RunGitAsync($"log --grep=\"^fix\" --oneline --no-merges \"{baseBranch}..{targetBranch}\" -- \"{relativePath}/\"", gitRoot);
     var fixCommits = fixResult.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Take(5).ToList();
     if (fixCommits.Count > 0)
     {
@@ -189,10 +190,17 @@ static async Task AnalyzeFolderAsync(string folderPath, string baseBranch, strin
     }
     AnsiConsole.WriteLine();
 
-    // Breaking changes
+    // Breaking changes (타입!: 패턴 또는 BREAKING CHANGE 키워드)
     AnsiConsole.MarkupLine("  [red]Breaking changes:[/]");
-    var breakingResult = await RunGitAsync($"log --grep=\"breaking\" --grep=\"BREAKING\" --oneline --no-merges \"{baseBranch}..{targetBranch}\" -- \"{relativePath}/\"", gitRoot);
-    var breakingCommits = breakingResult.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Take(5).ToList();
+    var allCommitsForBreaking = await RunGitAsync($"log --oneline --no-merges \"{baseBranch}..{targetBranch}\" -- \"{relativePath}/\"", gitRoot);
+    var breakingPattern = new Regex(@"\b\w+!:", RegexOptions.Compiled);
+    var breakingCommits = allCommitsForBreaking.Output
+        .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+        .Where(commit =>
+            commit.Contains("BREAKING CHANGE", StringComparison.OrdinalIgnoreCase) ||
+            breakingPattern.IsMatch(commit))
+        .Take(5)
+        .ToList();
     if (breakingCommits.Count > 0)
     {
         foreach (var commit in breakingCommits)

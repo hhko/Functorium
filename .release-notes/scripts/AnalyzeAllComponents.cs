@@ -367,7 +367,7 @@ static async Task<ComponentAnalysisResult> AnalyzeComponentAsync(string componen
     // Feature commits
     content.AppendLine("### Feature Commits");
     content.AppendLine();
-    var featResult = await RunGitAsync($"log --grep=\"feat\" --grep=\"feature\" --grep=\"add\" --oneline --no-merges \"{baseBranch}..{targetBranch}\" -- \"{componentPath}/\"", gitRoot);
+    var featResult = await RunGitAsync($"log --grep=\"^feat\" --oneline --no-merges \"{baseBranch}..{targetBranch}\" -- \"{componentPath}/\"", gitRoot);
     var featCommits = featResult.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Take(10).ToList();
     if (featCommits.Count > 0)
     {
@@ -385,7 +385,7 @@ static async Task<ComponentAnalysisResult> AnalyzeComponentAsync(string componen
     // Bug fixes
     content.AppendLine("### Bug Fixes");
     content.AppendLine();
-    var fixResult = await RunGitAsync($"log --grep=\"fix\" --grep=\"bug\" --oneline --no-merges \"{baseBranch}..{targetBranch}\" -- \"{componentPath}/\"", gitRoot);
+    var fixResult = await RunGitAsync($"log --grep=\"^fix\" --oneline --no-merges \"{baseBranch}..{targetBranch}\" -- \"{componentPath}/\"", gitRoot);
     var fixCommits = fixResult.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Take(10).ToList();
     if (fixCommits.Count > 0)
     {
