@@ -91,7 +91,7 @@ grep "MethodName" .analysis-output/api-changes-build-current/all-api-changes.txt
 
 ### 4. 가치 전달 필수
 
-**"장점:" 섹션이 없는 기능 문서화는 불완전**한 것으로 간주됩니다.
+**"Why this matters (왜 중요한가):" 섹션이 없는 기능 문서화는 불완전**한 것으로 간주됩니다.
 
 ---
 
@@ -104,7 +104,7 @@ grep "MethodName" .analysis-output/api-changes-build-current/all-api-changes.txt
 ```txt
 1. 기능 설명 (What) - 무엇을 하는가?
 2. 코드 샘플 (How) - 어떻게 사용하는가?
-3. 장점 (Why) - 왜 중요한가?
+3. Why this matters (Why) - 왜 중요한가?
 4. API 참조 (Reference) - 정확한 API 시그니처
 ```
 
@@ -129,7 +129,7 @@ ErrorCodeFactory를 통한 구조화된 오류 생성 기능을 제공합니다.
 
 [코드 샘플]
 
-**장점:**
+**Why this matters (왜 중요한가):**
 - 예외를 함수형 오류로 변환하여 타입 안전성 향상
 - Serilog와 자동 통합으로 구조화된 로깅 지원
 - 보일러플레이트 코드 제거 (try-catch 반복 감소)
@@ -137,7 +137,7 @@ ErrorCodeFactory를 통한 구조화된 오류 생성 기능을 제공합니다.
 - 비즈니스 로직과 오류 처리 분리로 코드 가독성 개선
 ```
 
-### 장점 작성 체크리스트
+### Why this matters 작성 체크리스트
 
 - [ ] 개발자가 직면하는 **구체적인 문제** 명시
 - [ ] 이 기능이 그 문제를 **어떻게 해결**하는지 설명
@@ -235,7 +235,7 @@ catch (HttpRequestException ex)
 }
 ```
 
-**장점:**
+**Why this matters (왜 중요한가):**
 - 예외를 함수형 오류로 변환하여 타입 안전성 향상
 - Serilog와 자동 통합으로 구조화된 로깅 지원
 - try-catch 보일러플레이트 코드 제거
@@ -361,7 +361,7 @@ Phase 4: 릴리스 노트 작성 완료
 
 ### 가치 전달 검증
 
-- [ ] 모든 주요 기능에 "장점" 섹션 포함됨
+- [ ] 모든 주요 기능에 "Why this matters" 섹션 포함됨
 - [ ] 구체적인 문제 해결 명시
 - [ ] 개발자 생산성 이점 설명
 - [ ] 실제 유스케이스 제시

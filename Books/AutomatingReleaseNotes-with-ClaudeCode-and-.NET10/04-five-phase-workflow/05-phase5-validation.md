@@ -137,14 +137,14 @@ grep "^##" .release-notes/RELEASE-v1.2.0.md
 - [ ] API 변경사항
 - [ ] 설치
 
-### "장점:" 섹션 확인
+### "Why this matters" 섹션 확인
 
 ```bash
-# "장점:" 섹션 개수 확인
-grep -c "**장점:**" .release-notes/RELEASE-v1.2.0.md
+# "Why this matters" 섹션 개수 확인
+grep -c "**Why this matters" .release-notes/RELEASE-v1.2.0.md
 ```
 
-- [ ] 모든 주요 기능에 "장점:" 섹션 존재
+- [ ] 모든 주요 기능에 "Why this matters" 섹션 존재
 
 ### 코드 블록 언어 지정
 

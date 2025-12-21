@@ -182,7 +182,7 @@ public class MyDestructurer : IErrorDestructurer
 {코드 샘플 - How: 어떻게 사용하는가?}
 ```
 
-**장점:**
+**Why this matters (왜 중요한가):**
 - {해결하는 문제}
 - {개발자 생산성}
 - {코드 품질 향상}
@@ -199,7 +199,7 @@ public class MyDestructurer : IErrorDestructurer
 |------|------|:----:|
 | 기능 설명 | 무엇을 하는가? | O |
 | 코드 샘플 | 어떻게 사용하는가? | O |
-| **장점:** 섹션 | 왜 중요한가? | O |
+| **Why this matters** 섹션 | 왜 중요한가? | O |
 | 커밋 주석 | 추적성 | O |
 
 ### 작성 예시
@@ -226,7 +226,7 @@ catch (HttpRequestException ex)
 }
 ```
 
-**장점:**
+**Why this matters (왜 중요한가):**
 - 예외를 함수형 오류로 변환하여 타입 안전성 향상
 - Serilog와 자동 통합으로 구조화된 로깅 지원
 - try-catch 보일러플레이트 코드 제거
@@ -371,7 +371,7 @@ dotnet add package Functorium.Testing --version 1.0.0
 - [ ] Breaking Changes 확인 (api-changes-diff.txt)
 - [ ] 모든 feat 커밋에 대한 기능 문서화
 - [ ] 모든 fix 커밋에 대한 버그 수정 문서화
-- [ ] 모든 기능에 "장점:" 섹션 포함
+- [ ] 모든 기능에 "Why this matters" 섹션 포함
 - [ ] 모든 코드 샘플이 Uber 파일에서 검증됨
 - [ ] 커밋 SHA 주석 추가
 

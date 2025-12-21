@@ -88,7 +88,7 @@
 ```csharp
 var service = new UserService();
 ```
-**장점:**
+**Why this matters (왜 중요한가):**
 - 사용자 관리 로직 중앙화
 - 테스트 용이성 향상
 ````
@@ -130,7 +130,7 @@ var service = new UserService();
 모든 릴리스 노트가 동일한 구조를 따름:
 ├── 개요 (Overview)
 ├── Breaking Changes
-├── 새로운 기능 (각 기능에 "장점:" 섹션 필수)
+├── 새로운 기능 (각 기능에 "Why this matters" 섹션 필수)
 ├── 버그 수정
 ├── API 변경사항
 └── 설치 방법

@@ -188,7 +188,7 @@ Phase 5: 검증
   API 정확성 - 통과
   Breaking Changes - 통과
   Markdown 포맷 - 통과
-  장점 섹션 - 통과
+  Why this matters 섹션 - 통과
 
 상태: 게시 가능
 ```
@@ -243,7 +243,7 @@ code .release-notes/RELEASE-v1.0.0.md
 - [ ] 개요가 이 버전의 목표를 잘 설명하는가?
 - [ ] Breaking Changes가 정확한가?
 - [ ] 모든 주요 기능이 포함되었는가?
-- [ ] "장점:" 섹션이 모든 기능에 있는가?
+- [ ] "Why this matters" 섹션이 모든 기능에 있는가?
 - [ ] 코드 샘플이 올바른가?
 
 ### 수정 예시

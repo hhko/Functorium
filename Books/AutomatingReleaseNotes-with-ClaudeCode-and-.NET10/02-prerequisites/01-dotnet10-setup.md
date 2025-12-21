@@ -22,7 +22,7 @@ dotnet run
 dotnet MyScript.cs
 ```
 
-**장점:**
+**Why this matters (왜 중요한가):**
 - 빠른 프로토타이핑
 - 스크립트 형태의 도구 개발
 - 설정 파일 최소화

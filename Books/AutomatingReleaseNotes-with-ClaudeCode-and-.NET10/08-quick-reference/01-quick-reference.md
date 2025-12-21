@@ -32,7 +32,7 @@
 | **2** | 데이터 수집 | `dotnet AnalyzeAllComponents.cs` | `.analysis-output/*.md` |
 | **3** | 커밋 분석 | Breaking Changes, Feature 분류 | `work/phase3-*.md` |
 | **4** | 문서 작성 | TEMPLATE.md → RELEASE-*.md | `RELEASE-{VERSION}.md` |
-| **5** | 검증 | API 정확성, "장점:" 섹션 확인 | `work/phase5-*.md` |
+| **5** | 검증 | API 정확성, "Why this matters" 섹션 확인 | `work/phase5-*.md` |
 
 ### Phase 1: 환경 검증
 
@@ -85,8 +85,8 @@ cp .release-notes/TEMPLATE.md .release-notes/RELEASE-v1.2.0.md
 # 프론트매터 확인
 head -5 .release-notes/RELEASE-v1.2.0.md
 
-# "장점:" 섹션 확인
-grep -c "**장점:**" .release-notes/RELEASE-v1.2.0.md
+# "Why this matters" 섹션 확인
+grep -c "**Why this matters (왜 중요한가):**" .release-notes/RELEASE-v1.2.0.md
 
 # Markdown 검증 (선택)
 npx markdownlint-cli@0.45.0 .release-notes/RELEASE-v1.2.0.md --disable MD013
@@ -107,14 +107,14 @@ grep -n "MethodName" .analysis-output/api-changes-build-current/all-api-changes.
 
 ### 2. 가치 전달 필수
 
-> **모든 주요 기능에 "장점:" 섹션을 포함합니다.**
+> **모든 주요 기능에 "Why this matters (왜 중요한가):" 섹션을 포함합니다.**
 
 ```markdown
 ### 새로운 기능: TraverseSerial
 
 컬렉션을 순차적으로 처리하는 메서드입니다.
 
-**장점:**
+**Why this matters (왜 중요한가):**
 - 순서 보장이 필요한 작업에 적합
 - 메모리 효율적인 처리
 ```
@@ -212,7 +212,7 @@ dotnet nuget locals all --clear
 
 - [ ] 프론트매터 포함됨
 - [ ] 모든 필수 섹션 포함됨
-- [ ] 모든 주요 기능에 "장점:" 섹션 포함됨
+- [ ] 모든 주요 기능에 "Why this matters" 섹션 포함됨
 - [ ] 모든 코드 샘플이 Uber 파일에서 검증됨
 - [ ] Breaking Changes 문서화됨 (있는 경우)
 - [ ] 마이그레이션 가이드 포함됨 (Breaking Changes 있는 경우)

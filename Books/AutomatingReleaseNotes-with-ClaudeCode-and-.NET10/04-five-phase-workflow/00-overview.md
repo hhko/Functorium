@@ -108,7 +108,7 @@
 │ ├── 템플릿 복사 및 Placeholder 교체                             │
 │ ├── 각 섹션 채우기 (개요, Breaking Changes, 새로운 기능 등)     │
 │ ├── 코드 샘플 작성 및 API 검증                                  │
-│ └── "장점:" 섹션 작성                                           │
+│ └── "Why this matters" 섹션 작성                                 │
 │                                                                 │
 │ 출력:                                                           │
 │ ├── .release-notes/RELEASE-v1.2.0.md                            │
@@ -127,7 +127,7 @@
 │ 검증 항목:                                                      │
 │ ├── 프론트매터 존재 확인                                        │
 │ ├── 필수 섹션 포함 확인                                         │
-│ ├── "장점:" 섹션 존재 확인                                      │
+│ ├── "Why this matters" 섹션 존재 확인                            │
 │ ├── API 정확성 검증 (Uber 파일 대조)                            │
 │ └── Breaking Changes 완전성 검증                                │
 │                                                                 │

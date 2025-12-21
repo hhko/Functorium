@@ -347,13 +347,13 @@ Conventional Commits에서 변경 유형을 나타내는 접두사입니다.
 
 ## 한글 용어
 
-### 장점 섹션
-**Benefits Section**
+### Why this matters 섹션
+**Why this matters Section**
 
 릴리스 노트에서 각 기능의 사용자 가치를 설명하는 섹션입니다. Phase 4 필수 규칙입니다.
 
 ```markdown
-**장점:** 구조화된 오류 정보로 디버깅 시간을 단축합니다.
+**Why this matters (왜 중요한가):** 구조화된 오류 정보로 디버깅 시간을 단축합니다.
 ```
 
 ### 첫 배포

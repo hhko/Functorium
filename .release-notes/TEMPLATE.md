@@ -55,7 +55,7 @@ date: {DATE}
 {코드 샘플 - How: 어떻게 사용하는가?}
 ```
 
-**장점:**
+**Why this matters (왜 중요한가):**
 - {해결하는 문제 - 이 기능이 없으면 개발자가 직면하는 문제}
 - {개발자 생산성 - 시간 절약, 보일러플레이트 감소}
 - {코드 품질 향상 - 타입 안전성, 유지보수성, 가독성}
@@ -73,7 +73,7 @@ date: {DATE}
 {코드 샘플}
 ```
 
-**장점:**
+**Why this matters (왜 중요한가):**
 - {이점 1}
 - {이점 2}
 - {이점 3}
@@ -92,7 +92,7 @@ date: {DATE}
 {코드 샘플}
 ```
 
-**장점:**
+**Why this matters (왜 중요한가):**
 - {이점 1}
 - {이점 2}
 
@@ -153,7 +153,7 @@ dotnet add package {PackageName}.Testing --version {VERSION}
 - [ ] Breaking Changes 확인 (api-changes-diff.txt)
 - [ ] 모든 feat 커밋에 대한 기능 문서화
 - [ ] 모든 fix 커밋에 대한 버그 수정 문서화
-- [ ] 모든 기능에 "장점:" 섹션 포함
+- [ ] 모든 기능에 "Why this matters" 섹션 포함
 - [ ] 모든 코드 샘플이 Uber 파일에서 검증됨
 - [ ] 커밋 SHA 주석 추가
 

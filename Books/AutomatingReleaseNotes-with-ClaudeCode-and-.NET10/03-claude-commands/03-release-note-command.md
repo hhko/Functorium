@@ -214,9 +214,9 @@ dotnet SummarizeSlowestTests.cs
 1. **정확성 우선**: Uber 파일에 없는 API는 절대 문서화하지 않음
 2. **코드 샘플 필수**: 모든 주요 기능에 실행 가능한 코드 샘플 포함
 3. **추적성**: 커밋 SHA를 주석으로 포함 (`<!-- 관련 커밋: SHA -->`)
-4. **가치 전달 필수**: 모든 주요 기능에 **"장점:"** 섹션 포함
+4. **가치 전달 필수**: 모든 주요 기능에 **"Why this matters (왜 중요한가):"** 섹션 포함
 
-> **중요**: "장점:" 섹션이 없는 기능 문서화는 불완전한 것으로 간주됩니다.
+> **중요**: "Why this matters" 섹션이 없는 기능 문서화는 불완전한 것으로 간주됩니다.
 ````
 
 ### 주요 포인트
@@ -235,7 +235,7 @@ dotnet SummarizeSlowestTests.cs
 **검증 항목**:
 1. **프론트매터 존재**: YAML 프론트매터 포함 여부
 2. **필수 섹션 존재**: 개요, Breaking Changes, 새로운 기능, 설치
-3. **"장점:" 섹션 존재**: 모든 주요 기능에 가치 설명 포함
+3. **"Why this matters" 섹션 존재**: 모든 주요 기능에 가치 설명 포함
 4. **API 정확성**: 모든 코드 샘플이 Uber 파일에서 검증됨
 5. **Breaking Changes 완전성**: Git Diff 결과와 대조
 
@@ -244,8 +244,8 @@ dotnet SummarizeSlowestTests.cs
 # 프론트매터 확인
 head -5 .release-notes/RELEASE-$ARGUMENTS.md
 
-# "장점:" 섹션 존재 확인
-grep -c "**장점:**" .release-notes/RELEASE-$ARGUMENTS.md
+# "Why this matters" 섹션 존재 확인
+grep -c "**Why this matters" .release-notes/RELEASE-$ARGUMENTS.md
 
 # Breaking Changes Git Diff 확인
 cat .analysis-output/api-changes-build-current/api-changes-diff.txt
@@ -309,7 +309,7 @@ cat .analysis-output/api-changes-build-current/api-changes-diff.txt
 
 ### 2. 가치 전달 필수
 
-> **모든 주요 기능에 "장점:" 섹션을 포함합니다.**
+> **모든 주요 기능에 "Why this matters" 섹션을 포함합니다.**
 
 ### 3. Breaking Changes는 Git Diff로 자동 감지
 

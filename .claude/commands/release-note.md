@@ -138,9 +138,9 @@ dotnet SummarizeSlowestTests.cs
 1. **정확성 우선**: Uber 파일에 없는 API는 절대 문서화하지 않음
 2. **코드 샘플 필수**: 모든 주요 기능에 실행 가능한 코드 샘플 포함
 3. **추적성**: 커밋 SHA를 주석으로 포함 (`<!-- 관련 커밋: SHA -->`)
-4. **가치 전달 필수**: 모든 주요 기능에 **"장점:"** 섹션 포함
+4. **가치 전달 필수**: 모든 주요 기능에 **"Why this matters (왜 중요한가):"** 섹션 포함
 
-> **중요**: "장점:" 섹션이 없는 기능 문서화는 불완전한 것으로 간주됩니다.
+> **중요**: "Why this matters" 섹션이 없는 기능 문서화는 불완전한 것으로 간주됩니다.
 
 ### API 검증
 
@@ -154,7 +154,7 @@ grep -n "MethodName" .analysis-output/api-changes-build-current/all-api-changes.
 
 - [ ] 프론트매터 포함됨
 - [ ] 모든 필수 섹션 포함됨
-- [ ] 모든 주요 기능에 "장점:" 섹션 포함됨
+- [ ] 모든 주요 기능에 "Why this matters" 섹션 포함됨
 - [ ] 모든 코드 샘플이 Uber 파일에서 검증됨
 - [ ] 중간 결과 저장됨
 
@@ -174,7 +174,7 @@ grep -n "MethodName" .analysis-output/api-changes-build-current/all-api-changes.
 **검증 항목**:
 1. **프론트매터 존재**: YAML 프론트매터 포함 여부
 2. **필수 섹션 존재**: 개요, Breaking Changes, 새로운 기능, 설치
-3. **"장점:" 섹션 존재**: 모든 주요 기능에 가치 설명 포함
+3. **"Why this matters" 섹션 존재**: 모든 주요 기능에 가치 설명 포함
 4. **API 정확성**: 모든 코드 샘플이 Uber 파일에서 검증됨
 5. **Breaking Changes 완전성**: Git Diff 결과와 대조
 
@@ -183,8 +183,8 @@ grep -n "MethodName" .analysis-output/api-changes-build-current/all-api-changes.
 # 프론트매터 확인
 head -5 .release-notes/RELEASE-$ARGUMENTS.md
 
-# "장점:" 섹션 존재 확인
-grep -c "**장점:**" .release-notes/RELEASE-$ARGUMENTS.md
+# "Why this matters" 섹션 존재 확인
+grep -c "**Why this matters (왜 중요한가):**" .release-notes/RELEASE-$ARGUMENTS.md
 
 # Breaking Changes Git Diff 확인
 cat .analysis-output/api-changes-build-current/api-changes-diff.txt
@@ -197,7 +197,7 @@ npx markdownlint-cli@0.45.0 .release-notes/RELEASE-$ARGUMENTS.md --disable MD013
 **통과 기준**:
 - [ ] 프론트매터 포함됨
 - [ ] 모든 필수 섹션 포함됨
-- [ ] 모든 주요 기능에 "장점:" 섹션 포함됨
+- [ ] 모든 주요 기능에 "Why this matters" 섹션 포함됨
 - [ ] Uber 파일에 없는 API 사용: 0개
 - [ ] Git Diff에서 감지된 모든 Breaking Changes 문서화됨
 - [ ] 각 Breaking Change에 마이그레이션 가이드 포함
@@ -266,12 +266,12 @@ npx markdownlint-cli@0.45.0 .release-notes/RELEASE-$ARGUMENTS.md --disable MD013
 
 ### 2. 가치 전달 필수
 
-> **모든 주요 기능에 "장점:" 섹션을 포함합니다.**
+> **모든 주요 기능에 "Why this matters" 섹션을 포함합니다.**
 
 - 단순 사실 나열("~를 제공합니다")을 넘어 가치 명시
 - 해결하는 문제, 개발자 생산성, 코드 품질 향상 설명
 - 가능한 경우 정량적 이점 포함 (50줄 → 5줄)
-- "장점:" 섹션이 없는 기능 문서화는 불완전
+- "Why this matters" 섹션이 없는 기능 문서화는 불완전
 
 ### 3. Breaking Changes는 Git Diff로 자동 감지
 
