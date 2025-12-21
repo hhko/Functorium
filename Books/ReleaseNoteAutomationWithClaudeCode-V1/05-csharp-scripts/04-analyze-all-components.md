@@ -137,8 +137,9 @@ foreach (var component in components)
     var commits = await RunGitAsync($"log --oneline {baseBranch}..{targetBranch} -- {component}");
 
     // 분류된 커밋 (Feature, Bug Fix, Breaking Change)
-    var featureCommits = FilterCommits(commits, "feat|feature|add");
-    var bugFixCommits = FilterCommits(commits, "fix|bug");
+    // Conventional Commits 규격에 따라 정확한 타입만 검색
+    var featureCommits = await RunGitAsync($"log --grep=\"^feat\" --oneline ...");
+    var bugFixCommits = await RunGitAsync($"log --grep=\"^fix\" --oneline ...");
     var breakingCommits = FilterBreakingChanges(commits);
 
     // Markdown 파일 생성
@@ -148,37 +149,36 @@ foreach (var component in components)
 
 ### Step 3: 커밋 분류
 
-Conventional Commits 패턴으로 커밋을 분류합니다:
+Conventional Commits 규격에 맞게 커밋을 분류합니다:
 
 ```csharp
-// Feature 커밋
-static List<string> FilterFeatureCommits(List<string> commits)
-{
-    var pattern = new Regex(@"\b(feat|feature|add)\b", RegexOptions.IgnoreCase);
-    return commits.Where(c => pattern.IsMatch(c)).ToList();
-}
+// Feature 커밋 - "^feat" 패턴으로 검색
+// git log --grep="^feat" 사용
+var featResult = await RunGitAsync(
+    $"log --grep=\"^feat\" --oneline --no-merges \"{baseBranch}..{targetBranch}\" -- \"{componentPath}/\"",
+    gitRoot);
 
-// Bug Fix 커밋
-static List<string> FilterBugFixCommits(List<string> commits)
-{
-    var pattern = new Regex(@"\b(fix|bug)\b", RegexOptions.IgnoreCase);
-    return commits.Where(c => pattern.IsMatch(c)).ToList();
-}
+// Bug Fix 커밋 - "^fix" 패턴으로 검색
+// git log --grep="^fix" 사용
+var fixResult = await RunGitAsync(
+    $"log --grep=\"^fix\" --oneline --no-merges \"{baseBranch}..{targetBranch}\" -- \"{componentPath}/\"",
+    gitRoot);
 
 // Breaking Change 커밋
-static List<string> FilterBreakingChanges(List<string> commits)
-{
-    // 방법 1: 타입 뒤 !
-    var bangPattern = new Regex(@"\b\w+!:", RegexOptions.IgnoreCase);
-
-    // 방법 2: breaking/BREAKING 키워드
-    var keywordPattern = new Regex(@"\b(breaking|BREAKING)\b");
-
-    return commits.Where(c =>
-        bangPattern.IsMatch(c) || keywordPattern.IsMatch(c)
-    ).ToList();
-}
+// 방법 1: 타입 뒤 ! (예: feat!:, fix!:)
+// 방법 2: BREAKING CHANGE 키워드
+var breakingPattern = new Regex(@"\b\w+!:", RegexOptions.Compiled);
+var breakingCommits = allCommitsResult.Output
+    .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+    .Where(commit =>
+        commit.Contains("BREAKING CHANGE", StringComparison.OrdinalIgnoreCase) ||
+        breakingPattern.IsMatch(commit))
+    .ToList();
 ```
+
+> **참고**: Conventional Commits 규격에 따라 `feat`, `fix` 등 정확한 커밋 타입만 검색합니다.
+> 이전 버전에서는 `feat|feature|add`, `fix|bug` 등 유사 키워드도 포함했으나,
+> 규격 준수를 위해 정확한 타입 접두사만 검색하도록 개선되었습니다.
 
 ### Step 4: 분석 요약 생성
 
