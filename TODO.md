@@ -1,3 +1,33 @@
+- Abstraction
+  - [x] Error
+    - Type: ErrorCodeExpected, ErrorCodeExceptional, ErrorCodeFactory
+    - Structured Logging
+- Adapter Layer
+  - [x] Option
+    - Validation
+    - Startup Logging
+  - [ ] Observability
+- Adapters.SourceGenerator
+  - [x] IAdatper Observability
+- Application Layer
+  - [ ] CQRS
+  - [ ] Pipeline
+  - [ ] Observability Pipeline
+  - [ ] Observability Port
+  - [ ] LINQ
+- Domain Layer
+  - Value Object
+  - [ ] Entity
+  - [ ] Aggregate Root
+  - [ ] Domain Event
+- Testing
+  - [x] Architecture
+  - [x] Source Generator
+  - [ ] Quartz
+  - [ ] HostTestFixture
+  - [ ] Structured Logging
+
+
 ## Feature
 - [x] Error
   - ErrorCodeFactory
@@ -222,7 +252,17 @@
   - [ ] GitHub Release 배포
   - [ ] NuGet 배포
   - [ ] git 명령어 시나리오
-- [ ] .config 폴더를 이용해서 ReportGenerator 설치(ps1 파일 개선)
+- [x] .config 폴더를 이용해서 ReportGenerator 설치(ps1 파일 개선)
+- [x] commit.md와 .release-notes/scripts/docs 문서와 커밋 태그 통일
+- [x] commit.md와 .release-notes/scripts/docs 문서와 커밋 내용 통일(영문, 한글)
+- Functorium.Adapters.SourceGenerator
+  - [x] 파일 기반 네임스페이스
+  - [x] 입출력 튜플 타입 제외
+  - [x] 디버깅 방법 학습
+  - [x] 테스트 케이스 재구성
+  - [x] 타입 출력 전체 이름 일관성 버그 해결
+
+
 
 Item                                      | Type    | File                          | todo
 ---                                       | ---     | ---                           | ---
