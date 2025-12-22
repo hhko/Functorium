@@ -28,7 +28,9 @@
 
 ## 목차
 
-### [1장: 소개](01-introduction/)
+### Part 1: 시작하기
+
+#### [1장: 소개](01-introduction/)
 
 릴리스 노트의 중요성과 자동화 시스템의 개요를 살펴봅니다.
 
@@ -36,7 +38,7 @@
 - [1.2 자동화 시스템 개요](01-introduction/02-automation-overview.md)
 - [1.3 프로젝트 구조 소개](01-introduction/03-project-structure.md)
 
-### [2장: 사전 준비](02-prerequisites/)
+#### [2장: 사전 준비](02-prerequisites/)
 
 개발 환경을 설정하고 필요한 도구를 설치합니다.
 
@@ -44,7 +46,9 @@
 - [2.2 Claude Code 소개](02-prerequisites/02-claude-code-intro.md)
 - [2.3 Git 기초](02-prerequisites/03-git-basics.md)
 
-### [3장: Claude 사용자 정의 Command](03-claude-commands/)
+### Part 2: Claude Commands
+
+#### [3장: Claude 사용자 정의 Command](03-claude-commands/)
 
 Claude Code에서 사용자 정의 Command를 만들고 활용하는 방법을 배웁니다.
 
@@ -53,7 +57,9 @@ Claude Code에서 사용자 정의 Command를 만들고 활용하는 방법을 �
 - [3.3 release-note.md 상세 분석](03-claude-commands/03-release-note-command.md)
 - [3.4 commit.md 소개](03-claude-commands/04-commit-command.md)
 
-### [4장: 5-Phase 워크플로우](04-five-phase-workflow/)
+### Part 3: 워크플로우
+
+#### [4장: 5-Phase 워크플로우](04-five-phase-workflow/)
 
 릴리스 노트 생성의 5단계 워크플로우를 상세히 분석합니다.
 
@@ -64,7 +70,9 @@ Claude Code에서 사용자 정의 Command를 만들고 활용하는 방법을 �
 - [4.4 Phase 4: 문서 작성](04-five-phase-workflow/04-phase4-writing.md)
 - [4.5 Phase 5: 검증](04-five-phase-workflow/05-phase5-validation.md)
 
-### [5장: C# 스크립트](05-csharp-scripts/)
+### Part 4: C# 스크립트
+
+#### [5장: C# 스크립트](05-csharp-scripts/)
 
 .NET 10 file-based app으로 작성된 C# 스크립트를 분석합니다.
 
@@ -76,7 +84,9 @@ Claude Code에서 사용자 정의 Command를 만들고 활용하는 방법을 �
 - [5.6 ApiGenerator.cs 분석](05-csharp-scripts/06-api-generator.md)
 - [5.7 SummarizeSlowestTests.cs 분석](05-csharp-scripts/07-summarize-tests.md)
 
-### [6장: 템플릿 및 설정](06-templates-and-config/)
+### Part 5: 설정 및 실습
+
+#### [6장: 템플릿 및 설정](06-templates-and-config/)
 
 릴리스 노트 템플릿과 설정 파일을 분석합니다.
 
@@ -84,7 +94,7 @@ Claude Code에서 사용자 정의 Command를 만들고 활용하는 방법을 �
 - [6.2 component-priority.json 설정](06-templates-and-config/02-component-config.md)
 - [6.3 출력 파일 형식](06-templates-and-config/03-output-formats.md)
 
-### [7장: 실습 튜토리얼](07-hands-on-tutorial/)
+#### [7장: 실습 튜토리얼](07-hands-on-tutorial/)
 
 실제로 릴리스 노트를 생성하고 나만의 스크립트를 작성합니다.
 
@@ -92,13 +102,15 @@ Claude Code에서 사용자 정의 Command를 만들고 활용하는 방법을 �
 - [7.2 나만의 스크립트 작성](07-hands-on-tutorial/02-custom-script.md)
 - [7.3 문제 해결 가이드](07-hands-on-tutorial/03-troubleshooting.md)
 
-### [8장: Quick Reference](08-quick-reference/)
+### Part 6: 참고
+
+#### [8장: Quick Reference](08-quick-reference/)
 
 릴리스 노트 자동화 명령어와 워크플로우를 빠르게 참조합니다.
 
 - [8.1 Quick Reference](08-quick-reference/01-quick-reference.md)
 
-### [부록](appendix/)
+#### [부록](appendix/)
 
 - [A. 용어 사전](appendix/A-glossary.md)
 - [B. API 레퍼런스](appendix/B-api-reference.md)

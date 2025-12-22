@@ -1,1 +1,2 @@
 - [Automating Release Notes with Claude Code and .NET 10](./AutomatingReleaseNotes-with-ClaudeCode-and-.NET10/README.md)
+- [Automating Observability Code with SourceGenerator](./AutomatingObservabilityCode-with-SourceGenerator/README.md)
