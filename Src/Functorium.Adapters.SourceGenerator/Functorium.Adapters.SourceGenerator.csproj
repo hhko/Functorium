@@ -7,6 +7,7 @@
     <LangVersion>latest</LangVersion>
 
     <!-- Source Generator 필수 설정 -->
+    <IsRoslynComponent>true</IsRoslynComponent>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <IsPackable>true</IsPackable>

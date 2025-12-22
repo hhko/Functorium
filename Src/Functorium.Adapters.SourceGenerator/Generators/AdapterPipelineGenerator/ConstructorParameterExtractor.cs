@@ -141,7 +141,7 @@ internal static class ConstructorParameterExtractor
         return parameters
             .Select(p => new ParameterInfo(
                 p.Name,
-                p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                p.Type.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat),
                 p.RefKind))
             .ToList();
     }

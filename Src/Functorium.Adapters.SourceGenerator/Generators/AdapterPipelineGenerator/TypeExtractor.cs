@@ -47,11 +47,27 @@ internal static class TypeExtractor
         //    Input:  "FinT<IO, (string Name, int Age)>"
         //    Output: "(string Name, int Age)"
         //
-        // 9. FinT가 없는 경우 (원본 반환):
-        //    Input:  "string"
-        //    Output: "string"
+        // 9. 중첩 튜플 타입:
+        //    Input:  "FinT<IO, ((int A, int B), string C)>"
+        //    Output: "((int A, int B), string C)"
         //
-        // 10. 공백 포함:
+        // 10. 중첩 튜플 + 배열 조합:
+        //     Input:  "FinT<IO, (string Name, (int Age, int[] Scores))>"
+        //     Output: "(string Name, (int Age, int[] Scores))"
+        //
+        // 11. 튜플 내부에 제네릭 포함:
+        //     Input:  "FinT<IO, (List<int> Numbers, string Name)>"
+        //     Output: "(List<int> Numbers, string Name)"
+        //
+        // 12. 튜플 내부에 배열 포함:
+        //     Input:  "FinT<IO, (string Name, int[] Scores)>"
+        //     Output: "(string Name, int[] Scores)"
+        //
+        // 13. FinT가 없는 경우 (원본 반환):
+        //     Input:  "string"
+        //     Output: "string"
+        //
+        // 14. 공백 포함:
         //     Input:  "FinT<IO,  string  >"
         //     Output: "string"
 

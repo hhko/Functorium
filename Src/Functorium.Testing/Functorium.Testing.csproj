@@ -24,6 +24,9 @@
     <PackageReference Include="Serilog" />
     <PackageReference Include="Quartz" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="LanguageExt.Core" />
+    <PackageReference Include="Shouldly" />
   </ItemGroup>
 
 </Project>

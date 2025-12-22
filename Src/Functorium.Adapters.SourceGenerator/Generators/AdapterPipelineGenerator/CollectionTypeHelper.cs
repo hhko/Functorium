@@ -34,10 +34,16 @@ public static class CollectionTypeHelper
 
     /// <summary>
     /// 타입이 Count 속성을 가진 컬렉션인지 확인합니다.
+    /// 튜플 타입은 내부에 컬렉션이 있더라도 컬렉션으로 취급하지 않습니다.
     /// </summary>
     public static bool IsCollectionType(string typeFullName)
     {
         if (string.IsNullOrEmpty(typeFullName))
+            return false;
+
+        // 튜플 타입은 컬렉션으로 취급하지 않음
+        // ValueTuple 또는 괄호로 시작하는 튜플 구문 (int Id, string Name)
+        if (IsTupleType(typeFullName))
             return false;
 
         // 배열 타입 확인 (예: int[], string[])
@@ -46,6 +52,25 @@ public static class CollectionTypeHelper
 
         // 컬렉션 타입 패턴 확인
         return CollectionTypePatterns.Any(pattern => typeFullName.Contains(pattern));
+    }
+
+    /// <summary>
+    /// 타입이 튜플인지 확인합니다.
+    /// </summary>
+    public static bool IsTupleType(string typeFullName)
+    {
+        if (string.IsNullOrEmpty(typeFullName))
+            return false;
+
+        // C# 튜플 구문: (int Id, string Name)
+        if (typeFullName.StartsWith("(") && typeFullName.EndsWith(")"))
+            return true;
+
+        // ValueTuple 타입
+        if (typeFullName.Contains("System.ValueTuple") || typeFullName.Contains("global::System.ValueTuple"))
+            return true;
+
+        return false;
     }
 
     /// <summary>

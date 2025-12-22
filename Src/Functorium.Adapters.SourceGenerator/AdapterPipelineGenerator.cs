@@ -91,9 +91,9 @@ public sealed class AdapterPipelineGenerator()
                 m.Name,
                 m.Parameters.Select(p => new ParameterInfo(
                     p.Name,
-                    p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                    p.Type.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat),
                     p.RefKind)).ToList(),
-                m.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)))
+                m.ReturnType.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat)))
             .ToList();
 
         // IAdapter를 구현하지 않은 경우 (메서드가 없음) - 파이프라인 생성하지 않음
@@ -162,31 +162,31 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("using Microsoft.Extensions.Logging;")
             .AppendLine("using System.Diagnostics;")
             .AppendLine()
-            .AppendLine("using ObservabilityFields = Functorium.Adapters.Observabilities.Abstractions.Fields.ObservabilityFields;")
+            .AppendLine("using ObservabilityFields = Functorium.Adapters.Observabilities.ObservabilityFields;")
             .AppendLine()
-            .AppendLine($"namespace {classInfo.Namespace}")
+            .AppendLine($"namespace {classInfo.Namespace};")
+            .AppendLine()
+            .AppendLine($"public class {classInfo.ClassName}Pipeline : {classInfo.ClassName}")
             .AppendLine("{")
-            .AppendLine($"    public class {classInfo.ClassName}Pipeline : {classInfo.ClassName}")
-            .AppendLine("    {")
-            .AppendLine("        private readonly ActivityContext _parentContext;")
+            .AppendLine("    private readonly ActivityContext _parentContext;")
             .AppendLine()
-            .AppendLine($"        private readonly ILogger<{classInfo.ClassName}Pipeline> _logger;")
-            .AppendLine("        private readonly IAdapterTrace _adapterTrace;")
-            .AppendLine("        private readonly IAdapterMetric _adapterMetric;")
+            .AppendLine($"    private readonly ILogger<{classInfo.ClassName}Pipeline> _logger;")
+            .AppendLine("    private readonly IAdapterTrace _adapterTrace;")
+            .AppendLine("    private readonly IAdapterMetric _adapterMetric;")
             .AppendLine()
-            .AppendLine($"        private const string RequestHandler = nameof({classInfo.ClassName});")
+            .AppendLine($"    private const string RequestHandler = nameof({classInfo.ClassName});")
             .AppendLine()
-            .AppendLine("        private readonly bool _isDebugEnabled;")
-            .AppendLine("        private readonly bool _isInformationEnabled;")
-            .AppendLine("        private readonly bool _isWarningEnabled;")
-            .AppendLine("        private readonly bool _isErrorEnabled;")
+            .AppendLine("    private readonly bool _isDebugEnabled;")
+            .AppendLine("    private readonly bool _isInformationEnabled;")
+            .AppendLine("    private readonly bool _isWarningEnabled;")
+            .AppendLine("    private readonly bool _isErrorEnabled;")
             .AppendLine()
-            .Append($"        public {classInfo.ClassName}Pipeline(")
+            .Append($"    public {classInfo.ClassName}Pipeline(")
             .AppendLine()
-            .AppendLine("            ActivityContext parentContext,")
-            .AppendLine($"            ILogger<{classInfo.ClassName}Pipeline> logger,")
-            .AppendLine("            IAdapterTrace adapterTrace,")
-            .Append("            IAdapterMetric adapterMetric");
+            .AppendLine("        ActivityContext parentContext,")
+            .AppendLine($"        ILogger<{classInfo.ClassName}Pipeline> logger,")
+            .AppendLine("        IAdapterTrace adapterTrace,")
+            .Append("        IAdapterMetric adapterMetric");
 
         string baseParams = GenerateBaseConstructorParameters(classInfo.BaseConstructorParameters);
         if (!string.IsNullOrEmpty(baseParams))
@@ -208,17 +208,20 @@ public sealed class AdapterPipelineGenerator()
         }
 
         sb.AppendLine()
-            .AppendLine("        {")
-            .AppendLine("            _parentContext = parentContext;")
-            .AppendLine("            _logger = logger;")
-            .AppendLine("            _adapterTrace = adapterTrace ?? throw new ArgumentNullException(nameof(adapterTrace));")
-            .AppendLine("            _adapterMetric = adapterMetric ?? throw new ArgumentNullException(nameof(adapterMetric));")
+            .AppendLine("    {")
+            .AppendLine("        global::System.ArgumentNullException.ThrowIfNull(adapterTrace);")
+            .AppendLine("        global::System.ArgumentNullException.ThrowIfNull(adapterMetric);")
             .AppendLine()
-            .AppendLine("            _isDebugEnabled = logger.IsEnabled(LogLevel.Debug);")
-            .AppendLine("            _isInformationEnabled = logger.IsEnabled(LogLevel.Information);")
-            .AppendLine("            _isWarningEnabled = logger.IsEnabled(LogLevel.Warning);")
-            .AppendLine("            _isErrorEnabled = logger.IsEnabled(LogLevel.Error);")
-            .AppendLine("        }")
+            .AppendLine("        _parentContext = parentContext;")
+            .AppendLine("        _logger = logger;")
+            .AppendLine("        _adapterTrace = adapterTrace;")
+            .AppendLine("        _adapterMetric = adapterMetric;")
+            .AppendLine()
+            .AppendLine("        _isDebugEnabled = logger.IsEnabled(LogLevel.Debug);")
+            .AppendLine("        _isInformationEnabled = logger.IsEnabled(LogLevel.Information);")
+            .AppendLine("        _isWarningEnabled = logger.IsEnabled(LogLevel.Warning);")
+            .AppendLine("        _isErrorEnabled = logger.IsEnabled(LogLevel.Error);")
+            .AppendLine("    }")
             .AppendLine();
 
         // 헬퍼 메서드들 추가
@@ -230,10 +233,10 @@ public sealed class AdapterPipelineGenerator()
             GenerateMethod(sb, classInfo, method);
         }
 
-        sb.AppendLine("    }")
+        sb.AppendLine("}")
             .AppendLine()
-            .AppendLine($"    internal static class {classInfo.ClassName}PipelineLoggers")
-            .AppendLine("    {");
+            .AppendLine($"internal static class {classInfo.ClassName}PipelineLoggers")
+            .AppendLine("{");
 
         // 로깅 확장 메서드들 생성
         foreach (var method in classInfo.Methods)
@@ -241,8 +244,7 @@ public sealed class AdapterPipelineGenerator()
             GenerateLoggingMethods(sb, classInfo, method);
         }
 
-        sb.AppendLine("    }")
-            .AppendLine("}")
+        sb.AppendLine("}")
             .AppendLine();
 
         return sb.ToString();
@@ -261,7 +263,7 @@ public sealed class AdapterPipelineGenerator()
         var resolvedParams = ParameterNameResolver.ResolveNames(baseConstructorParameters);
 
         var parameters = resolvedParams
-            .Select(p => $",\n            {p.Original.Type} {p.ResolvedName}")
+            .Select(p => $",\n        {p.Original.Type} {p.ResolvedName}")
             .ToList();
 
         return string.Join("", parameters);
@@ -280,7 +282,7 @@ public sealed class AdapterPipelineGenerator()
         var resolvedParams = ParameterNameResolver.ResolveNames(baseConstructorParameters);
         var parameterNames = resolvedParams.Select(p => p.ResolvedName);
 
-        return $"            : base({string.Join(", ", parameterNames)})";
+        return $"        : base({string.Join(", ", parameterNames)})";
     }
 
     /// <summary>
@@ -293,115 +295,115 @@ public sealed class AdapterPipelineGenerator()
 
     private static void GenerateHelperMethods(StringBuilder sb, PipelineClassInfo classInfo)
     {
-        sb.AppendLine("        private static global::LanguageExt.IO<A> FinTToIO<A>(global::LanguageExt.FinT<global::LanguageExt.IO, A> finT) =>")
-            .AppendLine("            ((global::LanguageExt.IO<global::LanguageExt.IO<A>>)finT.Match(")
-            .AppendLine("                Succ: value => global::LanguageExt.IO.pure(value),")
-            .AppendLine("                Fail: error => global::LanguageExt.IO.lift<A>(() => throw error.ToException())")
-            .AppendLine("            )).Flatten();")
+        sb.AppendLine("    private static global::LanguageExt.IO<A> FinTToIO<A>(global::LanguageExt.FinT<global::LanguageExt.IO, A> finT) =>")
+            .AppendLine("        ((global::LanguageExt.IO<global::LanguageExt.IO<A>>)finT.Match(")
+            .AppendLine("            Succ: value => global::LanguageExt.IO.pure(value),")
+            .AppendLine("            Fail: global::LanguageExt.IO.fail<A>")
+            .AppendLine("        )).Flatten();")
             .AppendLine()
-            .AppendLine("        private global::LanguageExt.IO<A> ExecuteWithActivity<A>(")
-            .AppendLine("                string requestHandler,")
-            .AppendLine("                string requestHandlerMethod,")
-            .AppendLine("                global::LanguageExt.IO<A> operation,")
-            .AppendLine("                global::System.Func<global::LanguageExt.IO<global::LanguageExt.Unit>> requestLog,")
-            .AppendLine("                global::System.Action<string, string, A, double> responseLogSuccess,")
-            .AppendLine("                global::System.Action<string, string, global::LanguageExt.Common.Error, double> responseLogFailure,")
-            .AppendLine("                long startTimestamp) =>")
-            .AppendLine("            AcquireActivity(requestHandler, requestHandlerMethod, startTimestamp)")
-            .AppendLine("                .Bracket(")
-            .AppendLine("                    Use: activity =>")
-            .AppendLine("                        from _setContext in global::LanguageExt.IO.pure(global::Functorium.Applications.TraceParentContextHolder.SetCurrentUnit(_parentContext))")
-            .AppendLine("                        from _logged in requestLog()")
-            .AppendLine("                        from result in ExecuteOperationWithErrorHandling(")
-            .AppendLine("                            requestHandler,")
-            .AppendLine("                            requestHandlerMethod,")
-            .AppendLine("                            operation,")
-            .AppendLine("                            activity,")
-            .AppendLine("                            responseLogSuccess,")
-            .AppendLine("                            responseLogFailure,")
-            .AppendLine("                            startTimestamp)")
-            .AppendLine("                        select result,")
-            .AppendLine("                    Fin: activity => global::LanguageExt.IO.lift(() =>")
-            .AppendLine("                    {")
-            .AppendLine("                        global::Functorium.Applications.TraceParentContextHolder.SetCurrent(null);")
-            .AppendLine("                        activity?.Stop();")
-            .AppendLine("                        activity?.Dispose();")
-            .AppendLine("                        Activity.Current = null;")
-            .AppendLine("                        return global::LanguageExt.Unit.Default;")
-            .AppendLine("                    }));")
-            .AppendLine()
-            .AppendLine("        private global::LanguageExt.IO<A> ExecuteOperationWithErrorHandling<A>(")
+            .AppendLine("    private global::LanguageExt.IO<A> ExecuteWithActivity<A>(")
             .AppendLine("            string requestHandler,")
             .AppendLine("            string requestHandlerMethod,")
             .AppendLine("            global::LanguageExt.IO<A> operation,")
-            .AppendLine("            Activity? activity,")
+            .AppendLine("            global::System.Func<global::LanguageExt.IO<global::LanguageExt.Unit>> requestLog,")
             .AppendLine("            global::System.Action<string, string, A, double> responseLogSuccess,")
             .AppendLine("            global::System.Action<string, string, global::LanguageExt.Common.Error, double> responseLogFailure,")
             .AppendLine("            long startTimestamp) =>")
-            .AppendLine("            operation")
-            .AppendLine("                .Bind(result =>")
-            .AppendLine("                    from _ in global::LanguageExt.IO.lift(() =>")
-            .AppendLine("                    {")
-            .AppendLine("                        double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);")
-            .AppendLine("                        responseLogSuccess(requestHandler, requestHandlerMethod, result, elapsed);")
-            .AppendLine("                        ResponseActivitySuccess(activity, elapsed);")
-            .AppendLine("                        return global::LanguageExt.Unit.Default;")
-            .AppendLine("                    })")
-            .AppendLine("                    select result)")
-            .AppendLine("                .IfFail(error =>")
-            .AppendLine("                    HandleOperationFailure<A>(requestHandler, requestHandlerMethod, error, activity, startTimestamp, responseLogFailure));")
+            .AppendLine("        AcquireActivity(requestHandler, requestHandlerMethod, startTimestamp)")
+            .AppendLine("            .Bracket(")
+            .AppendLine("                Use: activity =>")
+            .AppendLine("                    from _setContext in global::LanguageExt.IO.pure(global::Functorium.Applications.TraceParentContextHolder.SetCurrentUnit(_parentContext))")
+            .AppendLine("                    from _logged in requestLog()")
+            .AppendLine("                    from result in ExecuteOperationWithErrorHandling(")
+            .AppendLine("                        requestHandler,")
+            .AppendLine("                        requestHandlerMethod,")
+            .AppendLine("                        operation,")
+            .AppendLine("                        activity,")
+            .AppendLine("                        responseLogSuccess,")
+            .AppendLine("                        responseLogFailure,")
+            .AppendLine("                        startTimestamp)")
+            .AppendLine("                    select result,")
+            .AppendLine("                Fin: activity => global::LanguageExt.IO.lift(() =>")
+            .AppendLine("                {")
+            .AppendLine("                    global::Functorium.Applications.TraceParentContextHolder.SetCurrent(null);")
+            .AppendLine("                    activity?.Stop();")
+            .AppendLine("                    activity?.Dispose();")
+            .AppendLine("                    Activity.Current = null;")
+            .AppendLine("                    return global::LanguageExt.Unit.Default;")
+            .AppendLine("                }));")
             .AppendLine()
-            .AppendLine("        private global::LanguageExt.IO<A> HandleOperationFailure<A>(")
-            .AppendLine("            string requestHandler,")
-            .AppendLine("            string requestHandlerMethod,")
-            .AppendLine("            global::LanguageExt.Common.Error error,")
-            .AppendLine("            Activity? activity,")
-            .AppendLine("            long startTimestamp,")
-            .AppendLine("            global::System.Action<string, string, global::LanguageExt.Common.Error, double> responseLogFailure)")
+            .AppendLine("    private global::LanguageExt.IO<A> ExecuteOperationWithErrorHandling<A>(")
+            .AppendLine("        string requestHandler,")
+            .AppendLine("        string requestHandlerMethod,")
+            .AppendLine("        global::LanguageExt.IO<A> operation,")
+            .AppendLine("        Activity? activity,")
+            .AppendLine("        global::System.Action<string, string, A, double> responseLogSuccess,")
+            .AppendLine("        global::System.Action<string, string, global::LanguageExt.Common.Error, double> responseLogFailure,")
+            .AppendLine("        long startTimestamp) =>")
+            .AppendLine("        operation")
+            .AppendLine("            .Bind(result =>")
+            .AppendLine("                from _ in global::LanguageExt.IO.lift(() =>")
+            .AppendLine("                {")
+            .AppendLine("                    double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);")
+            .AppendLine("                    responseLogSuccess(requestHandler, requestHandlerMethod, result, elapsed);")
+            .AppendLine("                    ResponseActivitySuccess(activity, elapsed);")
+            .AppendLine("                    return global::LanguageExt.Unit.Default;")
+            .AppendLine("                })")
+            .AppendLine("                select result)")
+            .AppendLine("            .IfFail(error =>")
+            .AppendLine("                HandleOperationFailure<A>(requestHandler, requestHandlerMethod, error, activity, startTimestamp, responseLogFailure));")
+            .AppendLine()
+            .AppendLine("    private global::LanguageExt.IO<A> HandleOperationFailure<A>(")
+            .AppendLine("        string requestHandler,")
+            .AppendLine("        string requestHandlerMethod,")
+            .AppendLine("        global::LanguageExt.Common.Error error,")
+            .AppendLine("        Activity? activity,")
+            .AppendLine("        long startTimestamp,")
+            .AppendLine("        global::System.Action<string, string, global::LanguageExt.Common.Error, double> responseLogFailure)")
+            .AppendLine("    {")
+            .AppendLine("        double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);")
+            .AppendLine("        responseLogFailure(requestHandler, requestHandlerMethod, error, elapsed);")
+            .AppendLine("        ResponseActivityFailure(activity, error, elapsed);")
+            .AppendLine("        return global::LanguageExt.IO.fail<A>(error);")
+            .AppendLine("    }")
+            .AppendLine()
+            .AppendLine("    private global::LanguageExt.IO<Activity?> AcquireActivity(string requestHandler, string requestHandlerMethod, long startTimestamp) =>")
+            .AppendLine("        global::LanguageExt.IO.lift(() =>")
             .AppendLine("        {")
-            .AppendLine("            double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);")
-            .AppendLine("            responseLogFailure(requestHandler, requestHandlerMethod, error, elapsed);")
-            .AppendLine("            ResponseActivityFailure(activity, error, elapsed);")
-            .AppendLine("            return global::LanguageExt.IO.lift<A>(() => throw error.ToException());")
-            .AppendLine("        }")
+            .AppendLine("            DateTimeOffset startTime = DateTimeOffset.UtcNow;")
+            .AppendLine("            Activity? activity = _adapterTrace.Request(")
+            .AppendLine("                _parentContext,")
+            .AppendLine($"                this.GetRequestCategoryPascalCase(),")
+            .AppendLine("                requestHandler,")
+            .AppendLine("                requestHandlerMethod,")
+            .AppendLine("                startTime);")
             .AppendLine()
-            .AppendLine("        private global::LanguageExt.IO<Activity?> AcquireActivity(string requestHandler, string requestHandlerMethod, long startTimestamp) =>")
-            .AppendLine("            global::LanguageExt.IO.lift(() =>")
-            .AppendLine("            {")
-            .AppendLine("                DateTimeOffset startTime = DateTimeOffset.UtcNow;")
-            .AppendLine("                Activity? activity = _adapterTrace.Request(")
-            .AppendLine("                    _parentContext,")
-            .AppendLine($"                    this.GetRequestCategoryPascalCase(),")
-            .AppendLine("                    requestHandler,")
-            .AppendLine("                    requestHandlerMethod,")
-            .AppendLine("                    startTime);")
+            .AppendLine("            _adapterMetric.Request(")
+            .AppendLine("                activity,")
+            .AppendLine($"                this.GetRequestCategoryPascalCase(),")
+            .AppendLine("                requestHandler,")
+            .AppendLine("                requestHandlerMethod,")
+            .AppendLine("                startTime);")
             .AppendLine()
-            .AppendLine("                _adapterMetric.Request(")
-            .AppendLine("                    activity,")
-            .AppendLine($"                    this.GetRequestCategoryPascalCase(),")
-            .AppendLine("                    requestHandler,")
-            .AppendLine("                    requestHandlerMethod,")
-            .AppendLine("                    startTime);")
+            .AppendLine("            return activity;")
+            .AppendLine("        });")
             .AppendLine()
-            .AppendLine("                return activity;")
-            .AppendLine("            });")
+            .AppendLine("    private void ResponseActivitySuccess(Activity? activity, double elapsed)")
+            .AppendLine("    {")
+            .AppendLine($"        _adapterMetric.ResponseSuccess(activity, this.GetRequestCategoryPascalCase(), elapsed);")
+            .AppendLine("        _adapterTrace.ResponseSuccess(activity, elapsed);")
+            .AppendLine("    }")
             .AppendLine()
-            .AppendLine("        private void ResponseActivitySuccess(Activity? activity, double elapsed)")
-            .AppendLine("        {")
-            .AppendLine($"            _adapterMetric.ResponseSuccess(activity, this.GetRequestCategoryPascalCase(), elapsed);")
-            .AppendLine("            _adapterTrace.ResponseSuccess(activity, elapsed);")
-            .AppendLine("        }")
+            .AppendLine("    private void ResponseActivityFailure(Activity? activity, global::LanguageExt.Common.Error error, double elapsed)")
+            .AppendLine("    {")
+            .AppendLine($"        _adapterMetric.ResponseFailure(activity, this.GetRequestCategoryPascalCase(), elapsed, error);")
+            .AppendLine("        _adapterTrace.ResponseFailure(activity, elapsed, error);")
+            .AppendLine("    }")
             .AppendLine()
-            .AppendLine("        private void ResponseActivityFailure(Activity? activity, global::LanguageExt.Common.Error error, double elapsed)")
-            .AppendLine("        {")
-            .AppendLine($"            _adapterMetric.ResponseFailure(activity, this.GetRequestCategoryPascalCase(), elapsed, error);")
-            .AppendLine("            _adapterTrace.ResponseFailure(activity, elapsed, error);")
-            .AppendLine("        }")
-            .AppendLine()
-            .AppendLine("        private string GetRequestCategoryPascalCase() =>")
-            .AppendLine("            string.IsNullOrEmpty(this.RequestCategory)")
-            .AppendLine("                ? string.Empty")
-            .AppendLine("                : char.ToUpper(this.RequestCategory[0]) + this.RequestCategory.Substring(1).ToLower();")
+            .AppendLine("    private string GetRequestCategoryPascalCase() =>")
+            .AppendLine("        string.IsNullOrEmpty(this.RequestCategory)")
+            .AppendLine("            ? string.Empty")
+            .AppendLine("            : char.ToUpper(this.RequestCategory[0]) + this.RequestCategory.Substring(1).ToLower();")
             .AppendLine();
     }
 
@@ -414,121 +416,121 @@ public sealed class AdapterPipelineGenerator()
         // 글로벌 네임스페이스 접두사는 유지 (global::Namespace.Type 형태 유지)
 
         // 메서드 시그니처
-        sb.AppendLine($"        public override {method.ReturnType} {method.Name}(");
+        sb.AppendLine($"    public override {method.ReturnType} {method.Name}(");
         for (int i = 0; i < method.Parameters.Count; i++)
         {
             var param = method.Parameters[i];
             var comma = i < method.Parameters.Count - 1 ? "," : "";
-            sb.AppendLine($"            {param.Type} {param.Name}{comma}");
+            sb.AppendLine($"        {param.Type} {param.Name}{comma}");
         }
         // method.ReturnType은 global::LanguageExt.FinT<global::LanguageExt.IO, ActualType> 형태
         // actualReturnType은 ActualType 부분만 추출한 것
         var actualReturnTypeForMethod = ExtractActualReturnType(method.ReturnType);
-        sb.AppendLine("        ) =>")
-            .AppendLine($"            global::LanguageExt.FinT.lift<global::LanguageExt.IO, {actualReturnTypeForMethod}>(")
-            .AppendLine("                (from result in ExecuteWithActivity(")
-            .AppendLine($"                    requestHandler: RequestHandler,")
-            .AppendLine($"                    requestHandlerMethod: nameof({method.Name}),")
-            .AppendLine($"                    operation: FinTToIO(base.{method.Name}({string.Join(", ", method.Parameters.Select(p => p.Name))})),")
-            .AppendLine($"                    requestLog: () => RequestLog_{classInfo.ClassName}_{method.Name}(RequestHandler, nameof({method.Name}){(method.Parameters.Count > 0 ? ", " + string.Join(", ", method.Parameters.Select(p => p.Name)) : "")}),")
-            .AppendLine($"                    responseLogSuccess: ResponseLogSuccess_{classInfo.ClassName}_{method.Name},")
-            .AppendLine($"                    responseLogFailure: ResponseLogFailure_{classInfo.ClassName}_{method.Name},")
-            .AppendLine("                    startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())")
-            .AppendLine($"                select result).Map(r => global::LanguageExt.Fin.Succ(r)));")
+        sb.AppendLine("    ) =>")
+            .AppendLine($"        global::LanguageExt.FinT.lift<global::LanguageExt.IO, {actualReturnTypeForMethod}>(")
+            .AppendLine("            (from result in ExecuteWithActivity(")
+            .AppendLine($"                requestHandler: RequestHandler,")
+            .AppendLine($"                requestHandlerMethod: nameof({method.Name}),")
+            .AppendLine($"                operation: FinTToIO(base.{method.Name}({string.Join(", ", method.Parameters.Select(p => p.Name))})),")
+            .AppendLine($"                requestLog: () => RequestLog_{classInfo.ClassName}_{method.Name}(RequestHandler, nameof({method.Name}){(method.Parameters.Count > 0 ? ", " + string.Join(", ", method.Parameters.Select(p => p.Name)) : "")}),")
+            .AppendLine($"                responseLogSuccess: ResponseLogSuccess_{classInfo.ClassName}_{method.Name},")
+            .AppendLine($"                responseLogFailure: ResponseLogFailure_{classInfo.ClassName}_{method.Name},")
+            .AppendLine("                startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())")
+            .AppendLine($"            select result).Map(r => global::LanguageExt.Fin.Succ(r)));")
             .AppendLine();
 
         // Request logging helper
         var parameterDeclarations = method.Parameters.Count > 0
-            ? ",\n            " + string.Join(",\n            ", method.Parameters.Select(p => $"{p.Type} {p.Name}"))
+            ? ",\n        " + string.Join(",\n        ", method.Parameters.Select(p => $"{p.Type} {p.Name}"))
             : "";
-        sb.AppendLine($"        private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("            string requestHandler,")
-            .Append("            string requestHandlerMethod")
+        sb.AppendLine($"    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine("        string requestHandler,")
+            .Append("        string requestHandlerMethod")
             .AppendLine($"{parameterDeclarations}) =>")
-            .AppendLine("            global::LanguageExt.IO.lift(() =>")
-            .AppendLine("            {")
-            .AppendLine("                if (_isDebugEnabled)")
-            .AppendLine("                {")
-            .AppendLine($"                    _logger.LogRequestDebug_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("                        ObservabilityFields.Request.Layer.Adapter,")
-            .AppendLine($"                        this.GetRequestCategoryPascalCase(),")
-            .AppendLine("                        requestHandler,")
-            .Append("                        requestHandlerMethod")
-            .AppendLine($"{(method.Parameters.Count > 0 ? ",\n                        " + string.Join(", ", method.Parameters.Select(p => p.Name)) : "")});")
-            .AppendLine("                }")
-            .AppendLine("                else if (_isInformationEnabled)")
-            .AppendLine("                {")
-            .AppendLine($"                    _logger.LogRequest_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("                        ObservabilityFields.Request.Layer.Adapter,")
-            .AppendLine($"                        this.GetRequestCategoryPascalCase(),")
-            .AppendLine("                        requestHandler,")
-            .AppendLine("                        requestHandlerMethod);")
-            .AppendLine("                }")
-            .AppendLine("                return global::LanguageExt.Unit.Default;")
-            .AppendLine("            });")
-            .AppendLine();
-
-        // Response success logging helper
-        sb.AppendLine($"        private void ResponseLogSuccess_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("            string requestHandler,")
-            .AppendLine("            string requestHandlerMethod,")
-            .AppendLine($"            {actualReturnType} result,")
-            .AppendLine("            double elapsed)")
+            .AppendLine("        global::LanguageExt.IO.lift(() =>")
             .AppendLine("        {")
             .AppendLine("            if (_isDebugEnabled)")
             .AppendLine("            {")
-            .AppendLine($"                _logger.LogResponseDebug_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine($"                _logger.LogRequestDebug_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("                    ObservabilityFields.Request.Layer.Adapter,")
             .AppendLine($"                    this.GetRequestCategoryPascalCase(),")
             .AppendLine("                    requestHandler,")
-            .AppendLine("                    requestHandlerMethod,")
-            .AppendLine("                    ObservabilityFields.Response.Status.Success,")
-            .AppendLine("                    result,")
-            .AppendLine("                    elapsed);")
+            .Append("                    requestHandlerMethod")
+            .AppendLine($"{(method.Parameters.Count > 0 ? ",\n                    " + string.Join(", ", method.Parameters.Select(p => p.Name)) : "")});")
             .AppendLine("            }")
             .AppendLine("            else if (_isInformationEnabled)")
             .AppendLine("            {")
-            .AppendLine($"                _logger.LogResponse_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine($"                _logger.LogRequest_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("                    ObservabilityFields.Request.Layer.Adapter,")
             .AppendLine($"                    this.GetRequestCategoryPascalCase(),")
             .AppendLine("                    requestHandler,")
-            .AppendLine("                    requestHandlerMethod,")
-            .AppendLine("                    ObservabilityFields.Response.Status.Success,")
-            .AppendLine("                    elapsed);")
+            .AppendLine("                    requestHandlerMethod);")
             .AppendLine("            }")
+            .AppendLine("            return global::LanguageExt.Unit.Default;")
+            .AppendLine("        });")
+            .AppendLine();
+
+        // Response success logging helper
+        sb.AppendLine($"    private void ResponseLogSuccess_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine("        string requestHandler,")
+            .AppendLine("        string requestHandlerMethod,")
+            .AppendLine($"        {actualReturnType} result,")
+            .AppendLine("        double elapsed)")
+            .AppendLine("    {")
+            .AppendLine("        if (_isDebugEnabled)")
+            .AppendLine("        {")
+            .AppendLine($"            _logger.LogResponseDebug_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine("                ObservabilityFields.Request.Layer.Adapter,")
+            .AppendLine($"                this.GetRequestCategoryPascalCase(),")
+            .AppendLine("                requestHandler,")
+            .AppendLine("                requestHandlerMethod,")
+            .AppendLine("                ObservabilityFields.Response.Status.Success,")
+            .AppendLine("                result,")
+            .AppendLine("                elapsed);")
             .AppendLine("        }")
+            .AppendLine("        else if (_isInformationEnabled)")
+            .AppendLine("        {")
+            .AppendLine($"            _logger.LogResponse_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine("                ObservabilityFields.Request.Layer.Adapter,")
+            .AppendLine($"                this.GetRequestCategoryPascalCase(),")
+            .AppendLine("                requestHandler,")
+            .AppendLine("                requestHandlerMethod,")
+            .AppendLine("                ObservabilityFields.Response.Status.Success,")
+            .AppendLine("                elapsed);")
+            .AppendLine("        }")
+            .AppendLine("    }")
             .AppendLine();
 
         // Response failure logging helper
-        sb.AppendLine($"        private void ResponseLogFailure_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("            string requestHandler,")
-            .AppendLine("            string requestHandlerMethod,")
-            .AppendLine("            global::LanguageExt.Common.Error error,")
-            .AppendLine("            double elapsed)")
+        sb.AppendLine($"    private void ResponseLogFailure_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine("        string requestHandler,")
+            .AppendLine("        string requestHandlerMethod,")
+            .AppendLine("        global::LanguageExt.Common.Error error,")
+            .AppendLine("        double elapsed)")
+            .AppendLine("    {")
+            .AppendLine("        if (error.IsExceptional && _isErrorEnabled)")
             .AppendLine("        {")
-            .AppendLine("            if (error.IsExceptional && _isErrorEnabled)")
-            .AppendLine("            {")
-            .AppendLine($"                _logger.LogResponseError_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("                    ObservabilityFields.Request.Layer.Adapter,")
-            .AppendLine($"                    this.GetRequestCategoryPascalCase(),")
-            .AppendLine("                    requestHandler,")
-            .AppendLine("                    requestHandlerMethod,")
-            .AppendLine("                    ObservabilityFields.Response.Status.Failure,")
-            .AppendLine("                    elapsed,")
-            .AppendLine("                    error);")
-            .AppendLine("            }")
-            .AppendLine("            else if (_isWarningEnabled)")
-            .AppendLine("            {")
-            .AppendLine($"                _logger.LogResponseWarning_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("                    ObservabilityFields.Request.Layer.Adapter,")
-            .AppendLine($"                    this.GetRequestCategoryPascalCase(),")
-            .AppendLine("                    requestHandler,")
-            .AppendLine("                    requestHandlerMethod,")
-            .AppendLine("                    ObservabilityFields.Response.Status.Failure,")
-            .AppendLine("                    elapsed,")
-            .AppendLine("                    error);")
-            .AppendLine("            }")
-            .AppendLine("        }");
+            .AppendLine($"            _logger.LogResponseError_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine("                ObservabilityFields.Request.Layer.Adapter,")
+            .AppendLine($"                this.GetRequestCategoryPascalCase(),")
+            .AppendLine("                requestHandler,")
+            .AppendLine("                requestHandlerMethod,")
+            .AppendLine("                ObservabilityFields.Response.Status.Failure,")
+            .AppendLine("                elapsed,")
+            .AppendLine("                error);")
+            .AppendLine("        }")
+            .AppendLine("        else if (_isWarningEnabled)")
+            .AppendLine("        {")
+            .AppendLine($"            _logger.LogResponseWarning_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine("                ObservabilityFields.Request.Layer.Adapter,")
+            .AppendLine($"                this.GetRequestCategoryPascalCase(),")
+            .AppendLine("                requestHandler,")
+            .AppendLine("                requestHandlerMethod,")
+            .AppendLine("                ObservabilityFields.Response.Status.Failure,")
+            .AppendLine("                elapsed,")
+            .AppendLine("                error);")
+            .AppendLine("        }")
+            .AppendLine("    }");
     }
 
     private static void GenerateLoggingMethods(StringBuilder sb, PipelineClassInfo classInfo, MethodInfo method)
@@ -544,18 +546,18 @@ public sealed class AdapterPipelineGenerator()
 
         // ===== LogRequestDebug (파라미터 포함) =====
         var logRequestDebugParams = method.Parameters.Count > 0
-            ? ",\n            " + string.Join(",\n            ", method.Parameters.Select(p => $"{p.Type} {p.Name}"))
+            ? ",\n        " + string.Join(",\n        ", method.Parameters.Select(p => $"{p.Type} {p.Name}"))
             : "";
-        sb.AppendLine($"        public static void LogRequestDebug_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("            this ILogger logger,")
-            .AppendLine("            string requestLayer,")
-            .AppendLine("            string requestCategory,")
-            .AppendLine("            string requestHandler,")
-            .Append("            string requestHandlerMethod")
+        sb.AppendLine($"    public static void LogRequestDebug_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine("        this ILogger logger,")
+            .AppendLine("        string requestLayer,")
+            .AppendLine("        string requestCategory,")
+            .AppendLine("        string requestHandler,")
+            .Append("        string requestHandlerMethod")
             .AppendLine($"{logRequestDebugParams})")
-            .AppendLine("        {")
-            .AppendLine("            if (!logger.IsEnabled(LogLevel.Debug))")
-            .AppendLine("                return;")
+            .AppendLine("    {")
+            .AppendLine("        if (!logger.IsEnabled(LogLevel.Debug))")
+            .AppendLine("            return;")
             .AppendLine();
 
         // ===== LoggerMessage.Define vs logger.LogDebug() 선택 로직 =====
@@ -581,7 +583,7 @@ public sealed class AdapterPipelineGenerator()
         if (totalDebugRequestParams <= 6)
         {
             // ✅ 고성능 경로: LoggerMessage.Define 사용 (파라미터 ≤ 6개)
-            sb.Append($"            _logRequestDebug_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod");
+            sb.Append($"        _logRequestDebug_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod");
 
             foreach (var param in method.Parameters)
             {
@@ -605,14 +607,14 @@ public sealed class AdapterPipelineGenerator()
             // 이 경우 약간의 성능 오버헤드가 발생하지만, 기능상 문제는 없습니다.
             //
             // 메시지 템플릿 구성: 첫 번째 줄
-            sb.Append("            logger.LogDebug(")
+            sb.Append("        logger.LogDebug(")
                 .AppendLine()
-                .AppendLine("                eventId: ObservabilityFields.EventIds.Adapter.AdapterRequest,")
-                .Append("                message: \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} \" +");
+                .AppendLine("            eventId: ObservabilityFields.EventIds.Adapter.AdapterRequest,")
+                .Append("            message: \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} \" +");
 
             // 두 번째 줄: 동적 파라미터 필드들
             sb.AppendLine();
-            sb.Append("                         \"");
+            sb.Append("                     \"");
 
             var messageTemplateFields = new List<string>();
             foreach (var param in method.Parameters)
@@ -633,10 +635,10 @@ public sealed class AdapterPipelineGenerator()
             sb.AppendLine(" \" +");
 
             // 세 번째 줄: 종료
-            sb.AppendLine("                         \"requesting\",");
+            sb.AppendLine("                     \"requesting\",");
 
             // 파라미터 전달
-            sb.AppendLine("                requestLayer, requestCategory, requestHandler, requestHandlerMethod,");
+            sb.AppendLine("            requestLayer, requestCategory, requestHandler, requestHandlerMethod,");
 
             // 모든 파라미터와 Count 값 전달
             var logParameters = new List<string>();
@@ -653,40 +655,40 @@ public sealed class AdapterPipelineGenerator()
                 }
             }
 
-            sb.AppendLine($"                {string.Join(", ", logParameters)});");
+            sb.AppendLine($"            {string.Join(", ", logParameters)});");
         }
 
-        sb.AppendLine("        }")
+        sb.AppendLine("    }")
             .AppendLine();
 
         // ===== LogRequest (파라미터 제외) =====
-        sb.AppendLine($"        public static void LogRequest_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("            this ILogger logger,")
-            .AppendLine("            string requestLayer,")
-            .AppendLine("            string requestCategory,")
-            .AppendLine("            string requestHandler,")
-            .AppendLine("            string requestHandlerMethod)")
-            .AppendLine("        {")
-            .AppendLine("            if (!logger.IsEnabled(LogLevel.Information))")
-            .AppendLine("                return;")
+        sb.AppendLine($"    public static void LogRequest_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine("        this ILogger logger,")
+            .AppendLine("        string requestLayer,")
+            .AppendLine("        string requestCategory,")
+            .AppendLine("        string requestHandler,")
+            .AppendLine("        string requestHandlerMethod)")
+            .AppendLine("    {")
+            .AppendLine("        if (!logger.IsEnabled(LogLevel.Information))")
+            .AppendLine("            return;")
             .AppendLine()
-            .AppendLine($"            _logRequest_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);")
-            .AppendLine("        }")
+            .AppendLine($"        _logRequest_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);")
+            .AppendLine("    }")
             .AppendLine();
 
         // ===== LogResponseDebug (result 포함) =====
-        sb.AppendLine($"        public static void LogResponseDebug_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("            this ILogger logger,")
-            .AppendLine("            string requestLayer,")
-            .AppendLine("            string requestCategory,")
-            .AppendLine("            string requestHandler,")
-            .AppendLine("            string requestHandlerMethod,")
-            .AppendLine("            string status,")
-            .AppendLine($"            {actualReturnType} result,")
-            .AppendLine("            double elapsed)")
-            .AppendLine("        {")
-            .AppendLine("            if (!logger.IsEnabled(LogLevel.Debug))")
-            .AppendLine("                return;")
+        sb.AppendLine($"    public static void LogResponseDebug_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine("        this ILogger logger,")
+            .AppendLine("        string requestLayer,")
+            .AppendLine("        string requestCategory,")
+            .AppendLine("        string requestHandler,")
+            .AppendLine("        string requestHandlerMethod,")
+            .AppendLine("        string status,")
+            .AppendLine($"        {actualReturnType} result,")
+            .AppendLine("        double elapsed)")
+            .AppendLine("    {")
+            .AppendLine("        if (!logger.IsEnabled(LogLevel.Debug))")
+            .AppendLine("            return;")
             .AppendLine();
 
         // 파라미터 개수 계산
@@ -703,7 +705,7 @@ public sealed class AdapterPipelineGenerator()
         if (debugResponseParams <= 6)
         {
             // LoggerMessage.Define 사용
-            sb.Append($"            _logResponseDebug_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status");
+            sb.Append($"        _logResponseDebug_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status");
 
             if (CollectionTypeHelper.IsCollectionType(actualReturnType))
             {
@@ -725,14 +727,14 @@ public sealed class AdapterPipelineGenerator()
         {
             // 기존 방식 유지 (6개 초과 - 컬렉션 + result인 경우)
             // 메시지 템플릿 구성: 첫 번째 줄
-            sb.Append("            logger.LogDebug(")
+            sb.Append("        logger.LogDebug(")
                 .AppendLine()
-                .AppendLine("                eventId: ObservabilityFields.EventIds.Adapter.AdapterResponse,")
-                .Append("                message: \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} \" +");
+                .AppendLine("            eventId: ObservabilityFields.EventIds.Adapter.AdapterResponse,")
+                .Append("            message: \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} \" +");
 
             // 두 번째 줄: Response 필드들
             sb.AppendLine();
-            sb.Append("                         \"");
+            sb.Append("                     \"");
 
             string responseFieldName = CollectionTypeHelper.GetResponseFieldName();
             sb.Append($"{{{responseFieldName}}}");
@@ -747,10 +749,10 @@ public sealed class AdapterPipelineGenerator()
             sb.AppendLine(" \" +");
 
             // 세 번째 줄: 종료
-            sb.AppendLine("                         \"responded {Status} in {Elapsed:0.0000} ms\",");
+            sb.AppendLine("                     \"responded {Status} in {Elapsed:0.0000} ms\",");
 
             // 파라미터 전달
-            sb.Append("                requestLayer, requestCategory, requestHandler, requestHandlerMethod, ");
+            sb.Append("            requestLayer, requestCategory, requestHandler, requestHandlerMethod, ");
             sb.Append("result");
 
             // Count 값 추가
@@ -765,60 +767,60 @@ public sealed class AdapterPipelineGenerator()
             sb.AppendLine(", status, elapsed);");
         }
 
-        sb.AppendLine("        }")
+        sb.AppendLine("    }")
             .AppendLine();
 
         // ===== LogResponse (result 제외) =====
-        sb.AppendLine($"        public static void LogResponse_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("            this ILogger logger,")
-            .AppendLine("            string requestLayer,")
-            .AppendLine("            string requestCategory,")
-            .AppendLine("            string requestHandler,")
-            .AppendLine("            string requestHandlerMethod,")
-            .AppendLine("            string status,")
-            .AppendLine("            double elapsed)")
-            .AppendLine("        {")
-            .AppendLine("            if (!logger.IsEnabled(LogLevel.Information))")
-            .AppendLine("                return;")
+        sb.AppendLine($"    public static void LogResponse_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine("        this ILogger logger,")
+            .AppendLine("        string requestLayer,")
+            .AppendLine("        string requestCategory,")
+            .AppendLine("        string requestHandler,")
+            .AppendLine("        string requestHandlerMethod,")
+            .AppendLine("        string status,")
+            .AppendLine("        double elapsed)")
+            .AppendLine("    {")
+            .AppendLine("        if (!logger.IsEnabled(LogLevel.Information))")
+            .AppendLine("            return;")
             .AppendLine()
-            .AppendLine($"            _logResponse_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);")
-            .AppendLine("        }")
+            .AppendLine($"        _logResponse_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);")
+            .AppendLine("    }")
             .AppendLine();
 
         // ===== LogResponseWarning =====
-        sb.AppendLine($"        public static void LogResponseWarning_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("            this ILogger logger,")
-            .AppendLine("            string requestLayer,")
-            .AppendLine("            string requestCategory,")
-            .AppendLine("            string requestHandler,")
-            .AppendLine("            string requestHandlerMethod,")
-            .AppendLine("            string status,")
-            .AppendLine("            double elapsed,")
-            .AppendLine("            global::LanguageExt.Common.Error error)")
-            .AppendLine("        {")
-            .AppendLine("            if (!logger.IsEnabled(LogLevel.Warning))")
-            .AppendLine("                return;")
+        sb.AppendLine($"    public static void LogResponseWarning_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine("        this ILogger logger,")
+            .AppendLine("        string requestLayer,")
+            .AppendLine("        string requestCategory,")
+            .AppendLine("        string requestHandler,")
+            .AppendLine("        string requestHandlerMethod,")
+            .AppendLine("        string status,")
+            .AppendLine("        double elapsed,")
+            .AppendLine("        global::LanguageExt.Common.Error error)")
+            .AppendLine("    {")
+            .AppendLine("        if (!logger.IsEnabled(LogLevel.Warning))")
+            .AppendLine("            return;")
             .AppendLine()
-            .AppendLine($"            _logResponseWarning_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, elapsed, error, null);")
-            .AppendLine("        }")
+            .AppendLine($"        _logResponseWarning_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, elapsed, error, null);")
+            .AppendLine("    }")
             .AppendLine();
 
         // ===== LogResponseError =====
-        sb.AppendLine($"        public static void LogResponseError_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("            this ILogger logger,")
-            .AppendLine("            string requestLayer,")
-            .AppendLine("            string requestCategory,")
-            .AppendLine("            string requestHandler,")
-            .AppendLine("            string requestHandlerMethod,")
-            .AppendLine("            string status,")
-            .AppendLine("            double elapsed,")
-            .AppendLine("            global::LanguageExt.Common.Error error)")
-            .AppendLine("        {")
-            .AppendLine("            if (!logger.IsEnabled(LogLevel.Error))")
-            .AppendLine("                return;")
+        sb.AppendLine($"    public static void LogResponseError_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine("        this ILogger logger,")
+            .AppendLine("        string requestLayer,")
+            .AppendLine("        string requestCategory,")
+            .AppendLine("        string requestHandler,")
+            .AppendLine("        string requestHandlerMethod,")
+            .AppendLine("        string status,")
+            .AppendLine("        double elapsed,")
+            .AppendLine("        global::LanguageExt.Common.Error error)")
+            .AppendLine("    {")
+            .AppendLine("        if (!logger.IsEnabled(LogLevel.Error))")
+            .AppendLine("            return;")
             .AppendLine()
-            .AppendLine($"            _logResponseError_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, elapsed, error, null);")
-            .AppendLine("        }");
+            .AppendLine($"        _logResponseError_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, elapsed, error, null);")
+            .AppendLine("    }");
     }
 
     /// <summary>
@@ -827,7 +829,7 @@ public sealed class AdapterPipelineGenerator()
     private static void GenerateLoggerMessageDefineFields(StringBuilder sb, PipelineClassInfo classInfo, MethodInfo method, string actualReturnType)
     {
         sb.AppendLine();
-        sb.AppendLine($"        // ===== LoggerMessage.Define delegates for {method.Name} =====");
+        sb.AppendLine($"    // ===== LoggerMessage.Define delegates for {method.Name} =====");
 
         // 1. LogRequest (4 params)
         GenerateLogRequestDelegate(sb, classInfo, method);
@@ -852,11 +854,11 @@ public sealed class AdapterPipelineGenerator()
 
     private static void GenerateLogRequestDelegate(StringBuilder sb, PipelineClassInfo classInfo, MethodInfo method)
     {
-        sb.AppendLine($"        private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_{classInfo.ClassName}_{method.Name} =");
-        sb.AppendLine("            LoggerMessage.Define<string, string, string, string>(");
-        sb.AppendLine("                LogLevel.Information,");
-        sb.AppendLine("                ObservabilityFields.EventIds.Adapter.AdapterRequest,");
-        sb.AppendLine("                \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} requesting\");");
+        sb.AppendLine($"    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_{classInfo.ClassName}_{method.Name} =");
+        sb.AppendLine("        LoggerMessage.Define<string, string, string, string>(");
+        sb.AppendLine("            LogLevel.Information,");
+        sb.AppendLine("            ObservabilityFields.EventIds.Adapter.AdapterRequest,");
+        sb.AppendLine("            \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} requesting\");");
         sb.AppendLine();
     }
 
@@ -913,21 +915,21 @@ public sealed class AdapterPipelineGenerator()
 
         string messageTemplate = string.Join(" ", messageFields);
 
-        sb.AppendLine($"        private static readonly global::System.Action<ILogger, {string.Join(", ", typeParams)}, global::System.Exception?> _logRequestDebug_{classInfo.ClassName}_{method.Name} =");
-        sb.AppendLine($"            LoggerMessage.Define<{string.Join(", ", typeParams)}>(");
-        sb.AppendLine("                LogLevel.Debug,");
-        sb.AppendLine("                ObservabilityFields.EventIds.Adapter.AdapterRequest,");
-        sb.AppendLine($"                \"{messageTemplate}\");");
+        sb.AppendLine($"    private static readonly global::System.Action<ILogger, {string.Join(", ", typeParams)}, global::System.Exception?> _logRequestDebug_{classInfo.ClassName}_{method.Name} =");
+        sb.AppendLine($"        LoggerMessage.Define<{string.Join(", ", typeParams)}>(");
+        sb.AppendLine("            LogLevel.Debug,");
+        sb.AppendLine("            ObservabilityFields.EventIds.Adapter.AdapterRequest,");
+        sb.AppendLine($"            \"{messageTemplate}\");");
         sb.AppendLine();
     }
 
     private static void GenerateLogResponseDelegate(StringBuilder sb, PipelineClassInfo classInfo, MethodInfo method)
     {
-        sb.AppendLine($"        private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_{classInfo.ClassName}_{method.Name} =");
-        sb.AppendLine("            LoggerMessage.Define<string, string, string, string, string, double>(");
-        sb.AppendLine("                LogLevel.Information,");
-        sb.AppendLine("                ObservabilityFields.EventIds.Adapter.AdapterResponse,");
-        sb.AppendLine("                \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded {Status} in {Elapsed:0.0000} ms\");");
+        sb.AppendLine($"    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_{classInfo.ClassName}_{method.Name} =");
+        sb.AppendLine("        LoggerMessage.Define<string, string, string, string, string, double>(");
+        sb.AppendLine("            LogLevel.Information,");
+        sb.AppendLine("            ObservabilityFields.EventIds.Adapter.AdapterResponse,");
+        sb.AppendLine("            \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded {Status} in {Elapsed:0.0000} ms\");");
         sb.AppendLine();
     }
 
@@ -979,33 +981,33 @@ public sealed class AdapterPipelineGenerator()
             messageTemplate = $"{{RequestLayer}} {{RequestCategory}} {{RequestHandler}}.{{RequestHandlerMethod}} {{{responseFieldName}}} responded {{Status}} in {{Elapsed:0.0000}} ms";
         }
 
-        sb.AppendLine($"        private static readonly global::System.Action<ILogger, {string.Join(", ", typeParams)}, global::System.Exception?> _logResponseDebug_{classInfo.ClassName}_{method.Name} =");
-        sb.AppendLine($"            LoggerMessage.Define<{string.Join(", ", typeParams)}>(");
-        sb.AppendLine("                LogLevel.Debug,");
-        sb.AppendLine("                ObservabilityFields.EventIds.Adapter.AdapterResponse,");
-        sb.AppendLine($"                \"{messageTemplate}\");");
+        sb.AppendLine($"    private static readonly global::System.Action<ILogger, {string.Join(", ", typeParams)}, global::System.Exception?> _logResponseDebug_{classInfo.ClassName}_{method.Name} =");
+        sb.AppendLine($"        LoggerMessage.Define<{string.Join(", ", typeParams)}>(");
+        sb.AppendLine("            LogLevel.Debug,");
+        sb.AppendLine("            ObservabilityFields.EventIds.Adapter.AdapterResponse,");
+        sb.AppendLine($"            \"{messageTemplate}\");");
         sb.AppendLine();
     }
 
     private static void GenerateLogResponseWarningDelegate(StringBuilder sb, PipelineClassInfo classInfo, MethodInfo method)
     {
         // Status를 하드코딩하여 6개로 줄임: layer, category, handler, method, elapsed, error
-        sb.AppendLine($"        private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_{classInfo.ClassName}_{method.Name} =");
-        sb.AppendLine("            LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(");
-        sb.AppendLine("                LogLevel.Warning,");
-        sb.AppendLine("                ObservabilityFields.EventIds.Adapter.AdapterResponseWarning,");
-        sb.AppendLine("                \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {Error}\");");
+        sb.AppendLine($"    private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_{classInfo.ClassName}_{method.Name} =");
+        sb.AppendLine("        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(");
+        sb.AppendLine("            LogLevel.Warning,");
+        sb.AppendLine("            ObservabilityFields.EventIds.Adapter.AdapterResponseWarning,");
+        sb.AppendLine("            \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}\");");
         sb.AppendLine();
     }
 
     private static void GenerateLogResponseErrorDelegate(StringBuilder sb, PipelineClassInfo classInfo, MethodInfo method)
     {
         // Status를 하드코딩하여 6개로 줄임: layer, category, handler, method, elapsed, error
-        sb.AppendLine($"        private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_{classInfo.ClassName}_{method.Name} =");
-        sb.AppendLine("            LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(");
-        sb.AppendLine("                LogLevel.Error,");
-        sb.AppendLine("                ObservabilityFields.EventIds.Adapter.AdapterResponseError,");
-        sb.AppendLine("                \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {Error}\");");
+        sb.AppendLine($"    private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_{classInfo.ClassName}_{method.Name} =");
+        sb.AppendLine("        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(");
+        sb.AppendLine("            LogLevel.Error,");
+        sb.AppendLine("            ObservabilityFields.EventIds.Adapter.AdapterResponseError,");
+        sb.AppendLine("            \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}\");");
         sb.AppendLine();
     }
 }
