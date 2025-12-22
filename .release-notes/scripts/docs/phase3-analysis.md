@@ -94,11 +94,13 @@ c5e604f Add OpenTelemetry integration support (#125)
 
 ### 3단계: 커밋 메시지 패턴으로 기능 유형 식별
 
-- **"Add"** 커밋 → 새 기능 또는 API
-- **"Rename"** 커밋 → 브레이킹 체인지 또는 API 업데이트
-- **"Improve/Enhance"** 커밋 → 기존 기능 개선
-- **"Fix"** 커밋 → 버그 수정 (중요하지 않으면 보통 포함하지 않음)
-- **"Support for"** 커밋 → 새 플랫폼/기술 통합
+- **"Add" / "추가"** 커밋 → 새 기능 또는 API
+- **"Implement" / "구현"** 커밋 → 새 기능 또는 API
+- **"Rename" / "이름 변경"** 커밋 → 브레이킹 체인지 또는 API 업데이트
+- **"Improve/Enhance" / "개선" / "향상"** 커밋 → 기존 기능 개선
+- **"Fix" / "수정"** 커밋 → 버그 수정 (중요하지 않으면 보통 포함하지 않음)
+- **"Support for" / "지원"** 커밋 → 새 플랫폼/기술 통합
+- **"Remove" / "제거"** 커밋 → 기능 제거 (브레이킹 체인지 가능)
 
 ### 4단계: 사용자 대면 영향 추출
 
@@ -152,18 +154,18 @@ c5e604f Add ErrorCodeFactory.CreateFromException method (#97)
 
 ### 높은 우선순위 커밋 (반드시 포함)
 
-- 새 타입 (`Add.*Type`, `Add.*Factory`)
-- 새 통합 지원 (`Add.*support`, `Support for.*`)
-- 브레이킹 API 변경 (`Rename.*`, `Remove.*`, `Change.*`)
-- 주요 기능 (`Add.*method`, `Implement.*`)
-- 보안 개선 (`security`, `validation`)
+- 새 타입 (`Add.*Type`, `Add.*Factory`, `.*타입 추가`, `.*팩토리 추가`)
+- 새 통합 지원 (`Add.*support`, `Support for.*`, `.*지원 추가`, `.*지원`)
+- 브레이킹 API 변경 (`Rename.*`, `Remove.*`, `Change.*`, `.*이름 변경`, `.*제거`, `.*변경`)
+- 주요 기능 (`Add.*method`, `Implement.*`, `.*메서드 추가`, `.*구현`, `.*추가`)
+- 보안 개선 (`security`, `validation`, `보안`, `검증`)
 
 ### 중간 우선순위 커밋 (포함 고려)
 
-- 성능 개선 (`Improve.*performance`, `Optimize.*`)
-- 향상된 구성 (`Add.*configuration`, `Support.*options`)
-- 더 나은 오류 처리 (`Improve.*error`, `Add.*validation`)
-- 개발자 경험 (`Enhance.*`, `Better.*`)
+- 성능 개선 (`Improve.*performance`, `Optimize.*`, `성능.*개선`, `.*최적화`)
+- 향상된 구성 (`Add.*configuration`, `Support.*options`, `.*설정 추가`, `.*옵션 지원`)
+- 더 나은 오류 처리 (`Improve.*error`, `Add.*validation`, `오류.*개선`, `.*검증 추가`)
+- 개발자 경험 (`Enhance.*`, `Better.*`, `.*향상`, `.*개선`)
 
 ### 낮은 우선순위 커밋 (보통 건너뜀)
 
