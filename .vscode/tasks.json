@@ -2,38 +2,38 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build-Observability",
+      "label": "build-SourceGenerator.Demo",
       "command": "dotnet",
       "type": "process",
       "args": [
         "build",
-        "${workspaceFolder}/Tutorials/Observability/Src/Observability/Observability.csproj",
+        "${workspaceFolder}/Tutorials/SourceGenerator/Src/SourceGenerator.Demo/SourceGenerator.Demo.csproj",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary;ForceNoAlign"
       ],
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "publish-Observability",
+      "label": "publish-SourceGenerator.Demo",
       "command": "dotnet",
       "type": "process",
       "args": [
         "publish",
-        "${workspaceFolder}/Tutorials/Observability/Src/Observability/Observability.csproj",
+        "${workspaceFolder}/Tutorials/SourceGenerator/Src/SourceGenerator.Demo/SourceGenerator.Demo.csproj",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary;ForceNoAlign"
       ],
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "watch-Observability",
+      "label": "watch-SourceGenerator.Demo",
       "command": "dotnet",
       "type": "process",
       "args": [
         "watch",
         "run",
         "--project",
-        "${workspaceFolder}/Tutorials/Observability/Src/Observability/Observability.csproj"
+        "${workspaceFolder}/Tutorials/SourceGenerator/Src/SourceGenerator.Demo/SourceGenerator.Demo.csproj"
       ],
       "problemMatcher": "$msCompile"
     }

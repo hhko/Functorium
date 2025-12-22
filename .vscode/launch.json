@@ -20,6 +20,20 @@
       "type": "coreclr",
       "request": "attach"
     },
+    {
+      "name": "SourceGenerator.Demo",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-SourceGenerator.Demo",
+      "program": "${workspaceFolder}/Tutorials/SourceGenerator/Src/SourceGenerator.Demo/bin/Debug/net10.0/SourceGenerator.Demo.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Tutorials/SourceGenerator/Src/SourceGenerator.Demo",
+      "stopAtEntry": false,
+      "console": "integratedTerminal",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
   ],
   "compounds": []
 }

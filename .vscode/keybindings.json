@@ -28,21 +28,21 @@
     {
         "key": "ctrl+shift+b",
         "command": "workbench.action.tasks.runTask",
-        "args": "build-Observability"
+        "args": "build-SourceGenerator.Demo"
     },
 
     // Ctrl+Alt+P: Publish
     {
         "key": "ctrl+alt+p",
         "command": "workbench.action.tasks.runTask",
-        "args": "publish-Observability"
+        "args": "publish-SourceGenerator.Demo"
     },
 
     // Ctrl+Alt+W: Watch (Hot Reload)
     {
         "key": "ctrl+alt+w",
         "command": "workbench.action.tasks.runTask",
-        "args": "watch-Observability"
+        "args": "watch-SourceGenerator.Demo"
     },
 
     // ============================================

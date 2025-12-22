@@ -44,7 +44,15 @@
       "Bash(\"Tutorials/SourceGenerator/Src/SourceGenerator.Demo/Mocks/MockAdapterTrace.cs\" )",
       "Bash(\"Tutorials/SourceGenerator/Src/SourceGenerator.Demo/Mocks/UsecaseActivityContext.cs\" )",
       "Bash(\"Tutorials/SourceGenerator/Src/SourceGenerator.Demo/Program.cs\" )",
-      "Bash(\"Tutorials/SourceGenerator/Src/SourceGenerator.Demo/SourceGenerator.Demo.csproj\")"
+      "Bash(\"Tutorials/SourceGenerator/Src/SourceGenerator.Demo/SourceGenerator.Demo.csproj\")",
+      "Bash(for f in *.received.txt)",
+      "Bash(do mv \"$f\" \"$f%.received.txt.verified.txt\")",
+      "Bash(done)",
+      "Bash(ren:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet test:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
