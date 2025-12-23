@@ -142,3 +142,9 @@ cd Functorium
 - `.claude/commands/` - Claude 사용자 정의 Command
 - `.release-notes/scripts/` - C# 스크립트
 - `.release-notes/scripts/docs/` - Phase별 상세 문서
+
+---
+
+## 저자 정보
+
+이 책은 Functorium 프로젝트의 실제 릴리스 노트 자동화 시스템 개발 경험을 바탕으로 작성되었습니다.
