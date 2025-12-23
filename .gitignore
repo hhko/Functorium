@@ -163,8 +163,8 @@ coverage*.xml
 coverage*.info
 
 # Visual Studio code coverage results
-*.coverage
-*.coveragexml
+#*.coverage
+#*.coveragexml
 
 # NCrunch
 _NCrunch_*
@@ -426,10 +426,6 @@ FodyWeavers.xsd
 # Local NuGet output directory
 .nupkg/
 
-.coverage/
-.commit-summaries/
-GitHub/
-
 # Claude Code
 nul
 bash.exe.stackdump
@@ -437,3 +433,9 @@ bash.exe.stackdump
 # Release-Notes
 .release-notes/scripts/.analysis-output/
 .release-notes/.work/
+
+# Coverage
+.coverage/reports/
+
+# Others
+GitHub/

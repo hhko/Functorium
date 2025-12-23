@@ -2,38 +2,38 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build-SourceGenerator.Demo",
+      "label": "build-Cqrs.Demo",
       "command": "dotnet",
       "type": "process",
       "args": [
         "build",
-        "${workspaceFolder}/Tutorials/SourceGenerator/Src/SourceGenerator.Demo/SourceGenerator.Demo.csproj",
+        "${workspaceFolder}/Tutorials/Cqrs/Src/Cqrs.Demo/Cqrs.Demo.csproj",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary;ForceNoAlign"
       ],
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "publish-SourceGenerator.Demo",
+      "label": "publish-Cqrs.Demo",
       "command": "dotnet",
       "type": "process",
       "args": [
         "publish",
-        "${workspaceFolder}/Tutorials/SourceGenerator/Src/SourceGenerator.Demo/SourceGenerator.Demo.csproj",
+        "${workspaceFolder}/Tutorials/Cqrs/Src/Cqrs.Demo/Cqrs.Demo.csproj",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary;ForceNoAlign"
       ],
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "watch-SourceGenerator.Demo",
+      "label": "watch-Cqrs.Demo",
       "command": "dotnet",
       "type": "process",
       "args": [
         "watch",
         "run",
         "--project",
-        "${workspaceFolder}/Tutorials/SourceGenerator/Src/SourceGenerator.Demo/SourceGenerator.Demo.csproj"
+        "${workspaceFolder}/Tutorials/Cqrs/Src/Cqrs.Demo/Cqrs.Demo.csproj"
       ],
       "problemMatcher": "$msCompile"
     }

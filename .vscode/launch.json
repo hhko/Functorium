@@ -2,32 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Observability",
+      "name": "Cqrs.Demo",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build-Observability",
-      "program": "${workspaceFolder}/Tutorials/Observability/Src/Observability/bin/Debug/net10.0/Observability.dll",
+      "preLaunchTask": "build-Cqrs.Demo",
+      "program": "${workspaceFolder}/Tutorials/Cqrs/Src/Cqrs.Demo/bin/Debug/net10.0/Cqrs.Demo.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/Tutorials/Observability/Src/Observability",
-      "stopAtEntry": false,
-      "console": "integratedTerminal",
-      "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
-    {
-      "name": ".NET Core Attach",
-      "type": "coreclr",
-      "request": "attach"
-    },
-    {
-      "name": "SourceGenerator.Demo",
-      "type": "coreclr",
-      "request": "launch",
-      "preLaunchTask": "build-SourceGenerator.Demo",
-      "program": "${workspaceFolder}/Tutorials/SourceGenerator/Src/SourceGenerator.Demo/bin/Debug/net10.0/SourceGenerator.Demo.dll",
-      "args": [],
-      "cwd": "${workspaceFolder}/Tutorials/SourceGenerator/Src/SourceGenerator.Demo",
+      "cwd": "${workspaceFolder}/Tutorials/Cqrs/Src/Cqrs.Demo",
       "stopAtEntry": false,
       "console": "integratedTerminal",
       "env": {
