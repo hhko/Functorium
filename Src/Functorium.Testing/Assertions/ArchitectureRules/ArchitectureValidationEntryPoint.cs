@@ -1,6 +1,6 @@
 using ArchUnitNET.Domain;
 
-namespace Functorium.Testing.ArchitectureRules;
+namespace Functorium.Testing.Assertions.ArchitectureRules;
 
 /// <summary>
 /// 아키텍처 검증을 위한 확장 메서드들을 제공합니다.

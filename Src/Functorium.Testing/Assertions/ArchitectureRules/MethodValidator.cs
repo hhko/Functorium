@@ -1,6 +1,6 @@
 ﻿using ArchUnitNET.Domain;
 
-namespace Functorium.Testing.ArchitectureRules;
+namespace Functorium.Testing.Assertions.ArchitectureRules;
 
 /// <summary>
 /// 메서드에 대한 아키텍처 규칙 검증을 수행하는 클래스입니다.

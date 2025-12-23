@@ -1,4 +1,4 @@
-﻿namespace Functorium.Testing.ArchitectureRules;
+﻿namespace Functorium.Testing.Assertions.ArchitectureRules;
 
 /// <summary>
 /// 단일 클래스에 대한 검증 결과를 나타냅니다.

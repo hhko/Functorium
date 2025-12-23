@@ -1,6 +1,6 @@
 ﻿using ArchUnitNET.Domain;
 
-namespace Functorium.Testing.ArchitectureRules;
+namespace Functorium.Testing.Assertions.ArchitectureRules;
 
 /// <summary>
 /// 여러 클래스에 대한 검증 결과를 집계하고 관리합니다.

@@ -2,7 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Shouldly;
 
-namespace Functorium.Testing.SourceGenerators;
+namespace Functorium.Testing.Actions.SourceGenerators;
 
 /// <summary>
 /// 소스 생성기 테스트를 위한 유틸리티 클래스.
