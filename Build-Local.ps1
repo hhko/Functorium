@@ -8,7 +8,7 @@
 .DESCRIPTION
   - Release 모드로 솔루션 빌드
   - 버전 정보 표시
-  - 테스트 실행 및 코드 커버리지 수집
+  - 테스트 실행 및 코드 커버리지 수집 (Microsoft Testing Platform)
   - 핵심 레이어(Domains, Applications) 및 전체 커버리지 출력
   - HTML 리포트 생성
   - NuGet 패키지 생성 (.nupkg, .snupkg)
@@ -22,6 +22,10 @@
 
 .PARAMETER SkipPack
   NuGet 패키지 생성을 건너뜁니다.
+
+.PARAMETER SlowTestThreshold
+  느린 테스트로 판단하는 기준 시간(초)입니다.
+  기본값: 30
 
 .PARAMETER Help
   도움말을 표시합니다.
@@ -43,11 +47,15 @@
   MyApp.* 프로젝트만 커버리지 필터링
 
 .EXAMPLE
+  ./Build-Local.ps1 -SlowTestThreshold 60
+  60초 이상 걸리는 테스트만 느린 테스트로 분류
+
+.EXAMPLE
   ./Build-Local.ps1 -Help
   도움말 표시
 
 .NOTES
-  Version: 1.1.0
+  Version: 2.0.0
   Requirements: PowerShell 7+, .NET SDK, ReportGenerator
   Output directories: .coverage/, .nupkg/
   License: MIT
@@ -65,6 +73,10 @@ param(
 
   [Parameter(Mandatory = $false, HelpMessage = "NuGet 패키지 생성 건너뛰기")]
   [switch]$SkipPack,
+
+  [Parameter(Mandatory = $false, HelpMessage = "느린 테스트 판단 기준 (초)")]
+  [Alias("t")]
+  [int]$SlowTestThreshold = 30,
 
   [Parameter(Mandatory = $false, HelpMessage = "도움말 표시")]
   [Alias("h", "?")]
@@ -84,7 +96,7 @@ $scriptRoot = $PSScriptRoot
 
 #region Constants
 
-$script:TOTAL_STEPS = 9
+$script:TOTAL_STEPS = 10
 $script:Configuration = "Release"
 $script:CoreLayerPatterns = @("*.Domain", "*.Domains", "*.Application", "*.Applications")
 
@@ -105,7 +117,7 @@ function Set-OutputPaths {
   param([string]$SolutionPath)
 
   $script:SolutionDir = Split-Path -Parent $SolutionPath
-  $script:CoverageReportDir = Join-Path $script:SolutionDir ".coverage"
+  $script:CoverageReportDir = Join-Path $script:SolutionDir ".coverage/reports"
   $script:NuGetOutputDir = Join-Path $script:SolutionDir ".nupkg"
 }
 
@@ -128,18 +140,20 @@ USAGE
   ./Build-Local.ps1 [options]
 
 OPTIONS
-  -Solution, -s      Path to solution file (.sln or .slnx)
-                     If not specified, auto-detects from current directory
-  -ProjectPrefix, -p Project prefix for coverage filtering
-                     Default: Functorium
-  -SkipPack          Skip NuGet package generation
-  -Help, -h, -?      Show this help message
+  -Solution, -s           Path to solution file (.sln or .slnx)
+                          If not specified, auto-detects from current directory
+  -ProjectPrefix, -p      Project prefix for coverage filtering
+                          Default: Functorium
+  -SkipPack               Skip NuGet package generation
+  -SlowTestThreshold, -t  Threshold in seconds to classify slow tests
+                          Default: 30
+  -Help, -h, -?           Show this help message
 
 FEATURES
   1. Auto-detect solution file (requires exactly 1 .sln or .slnx file)
   2. Build in Release mode
   3. Display version information from built assemblies
-  4. Run tests with code coverage collection
+  4. Run tests with code coverage collection (Microsoft Testing Platform)
   5. Generate HTML coverage report (ReportGenerator)
   6. Display coverage summary in console
      - Project: Projects matching prefix (e.g., Functorium.*)
@@ -156,10 +170,8 @@ OUTPUT
   ├── *.nupkg               <- NuGet packages
   └── *.snupkg              <- Symbol packages
 
-  {SolutionDir}/Tests/{TestProject}/TestResults/
-  ├── {GUID}/
-  │   └── coverage.cobertura.xml  <- Raw coverage
-  └── *.trx                       <- Test results
+  {SolutionDir}/Tests/{TestProject}/bin/{Configuration}/{TFM}/TestResults/
+  └── coverage.cobertura.xml  <- Raw coverage (MTP format)
 
 PREREQUISITES
   - .NET SDK
@@ -180,6 +192,10 @@ EXAMPLES
   ./Build-Local.ps1 -ProjectPrefix MyApp
   ./Build-Local.ps1 -p Functorium
 
+  # Set slow test threshold (default: 30s)
+  ./Build-Local.ps1 -SlowTestThreshold 60
+  ./Build-Local.ps1 -t 10
+
   # Show help
   ./Build-Local.ps1 -Help
   ./Build-Local.ps1 -h
@@ -188,33 +204,6 @@ EXAMPLES
 "@
   Write-Host $help
 }
-
-#endregion
-
-#region Step 1: Restore-DotNetTools
-
-<#
-.SYNOPSIS
-  .NET 로컬 도구를 복원합니다.
-.DESCRIPTION
-  .config/dotnet-tools.json에 정의된 도구들을 설치합니다.
-#>
-function Restore-DotNetTools {
-  Write-StepProgress -Step 1 -TotalSteps $script:TOTAL_STEPS -Message "Restoring .NET tools..."
-
-  dotnet tool restore 2>&1 | Out-Null
-
-  if ($LASTEXITCODE -eq 0) {
-    Write-Success "Tools restored"
-  }
-  else {
-    Write-WarningMessage "Tool restore failed or no tools to restore"
-  }
-}
-
-#endregion
-
-#region Step 2: Find-SolutionFile
 
 <#
 .SYNOPSIS
@@ -231,8 +220,6 @@ function Find-SolutionFile {
     [Parameter(Mandatory = $false)]
     [string]$SolutionPath
   )
-
-  Write-StepProgress -Step 2 -TotalSteps $script:TOTAL_STEPS -Message "Finding solution file..."
 
   # If solution path is specified, validate and return
   if ($SolutionPath) {
@@ -274,36 +261,6 @@ function Find-SolutionFile {
   return $slnFiles[0]
 }
 
-#endregion
-
-#region Step 3: Invoke-Build
-
-<#
-.SYNOPSIS
-  솔루션을 Release 모드로 빌드합니다.
-#>
-function Invoke-Build {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$SolutionPath
-  )
-
-  Write-StepProgress -Step 3 -TotalSteps $script:TOTAL_STEPS -Message "Building solution ($script:Configuration)..."
-
-  Write-Host ""
-  dotnet build $SolutionPath `
-    -c $script:Configuration `
-    --nologo | Out-Host
-
-  if ($LASTEXITCODE -ne 0) {
-    throw "Build failed"
-  }
-}
-
-#endregion
-
-#region Step 4: Show-VersionInfo
-
 <#
 .SYNOPSIS
   빌드된 어셈블리에서 버전 정보를 읽어 출력합니다.
@@ -313,8 +270,6 @@ function Show-VersionInfo {
     [Parameter(Mandatory = $true)]
     [string]$SolutionPath
   )
-
-  Write-StepProgress -Step 4 -TotalSteps $script:TOTAL_STEPS -Message "Reading version information..."
 
   # Get solution directory
   $solutionDir = Split-Path -Parent $SolutionPath
@@ -414,59 +369,11 @@ function Show-VersionInfo {
   Write-Detail "Assembly: AssemblyVersion (binary compatibility)"
 }
 
-#endregion
-
-#region Step 5: Invoke-TestWithCoverage
-
-<#
-.SYNOPSIS
-  테스트를 실행하고 코드 커버리지를 수집합니다.
-#>
-function Invoke-TestWithCoverage {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$SolutionPath
-  )
-
-  Write-StepProgress -Step 5 -TotalSteps $script:TOTAL_STEPS -Message "Running tests with coverage..."
-
-  # Remove existing coverage report
-  if (Test-Path $script:CoverageReportDir) {
-    Remove-Item -Path $script:CoverageReportDir -Recurse -Force
-  }
-
-  # Remove existing TestResults from each test project
-  Get-ChildItem -Path $script:SolutionDir -Directory -Recurse -Filter "TestResults" -ErrorAction SilentlyContinue |
-    ForEach-Object { Remove-Item -Path $_.FullName -Recurse -Force }
-
-  # Run tests with coverage collection
-  dotnet test $SolutionPath `
-    --configuration $script:Configuration `
-    --no-build `
-    --nologo `
-    --collect:"XPlat Code Coverage" `
-    --logger "trx" `
-    --logger "console;verbosity=minimal" `
-    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura | Out-Host
-
-  if ($LASTEXITCODE -ne 0) {
-    throw "Tests failed"
-  }
-
-  Write-Success "Tests passed"
-}
-
-#endregion
-
-#region Step 6: Merge-CoverageReports
-
 <#
 .SYNOPSIS
   여러 커버리지 파일을 병합합니다.
 #>
-function Merge-CoverageReports {
-  Write-StepProgress -Step 6 -TotalSteps $script:TOTAL_STEPS -Message "Merging coverage reports..."
-
+function Get-CoverageFiles {
   # Find coverage files from each test project's TestResults directory
   $coverageFiles = @(Get-ChildItem -Path $script:SolutionDir -Filter "coverage.cobertura.xml" -Recurse -ErrorAction SilentlyContinue)
 
@@ -488,42 +395,6 @@ function Merge-CoverageReports {
   return $coverageFilePaths
 }
 
-#endregion
-
-#region Step 7: New-HtmlReport
-
-<#
-.SYNOPSIS
-  ReportGenerator를 사용하여 HTML 리포트를 생성합니다.
-#>
-function New-HtmlReport {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$CoverageFiles
-  )
-
-  Write-StepProgress -Step 7 -TotalSteps $script:TOTAL_STEPS -Message "Generating HTML report..."
-
-  # Generate HTML report using local tool
-  dotnet reportgenerator `
-    -reports:$CoverageFiles `
-    -targetdir:$script:CoverageReportDir `
-    -reporttypes:"Html;Cobertura" `
-    -assemblyfilters:"-*.Tests*"
-
-  if ($LASTEXITCODE -ne 0) {
-    Write-Host "      Failed to generate HTML report" -ForegroundColor Red
-    return
-  }
-
-  $reportPath = Join-Path $script:CoverageReportDir "index.html"
-  Write-Success "Report generated: $reportPath"
-}
-
-#endregion
-
-#region Step 8: Show-CoverageReport
-
 <#
 .SYNOPSIS
   콘솔에 커버리지 결과를 출력합니다.
@@ -536,8 +407,6 @@ function Show-CoverageReport {
     [Parameter(Mandatory = $false)]
     [string]$Prefix
   )
-
-  Write-StepProgress -Step 8 -TotalSteps $script:TOTAL_STEPS -Message "Displaying coverage results..."
 
   # Merged cobertura file path
   $mergedCoverageFile = Join-Path $script:CoverageReportDir "Cobertura.xml"
@@ -714,206 +583,280 @@ function Show-CoverageReport {
 
 #endregion
 
-#region Step 9: New-NuGetPackages
+#region Show-Help
 
-<#
-.SYNOPSIS
-  NuGet 패키지를 생성합니다.
-#>
-function New-NuGetPackages {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$SolutionPath
-  )
-
-  Write-StepProgress -Step 9 -TotalSteps $script:TOTAL_STEPS -Message "Creating NuGet packages..."
-
-  # Get solution directory
-  $solutionDir = Split-Path -Parent $SolutionPath
-
-  # Search in Src folder only
-  $srcDir = Join-Path $solutionDir "Src"
-
-  if (-not (Test-Path $srcDir)) {
-    Write-Detail "Src folder not found, using solution directory"
-    $srcDir = $solutionDir
-  }
-
-  # Find packable projects (exclude Tests and Testing projects that are not meant to be published)
-  $projectFiles = @(Get-ChildItem -Path $srcDir -Filter "*.csproj" -Recurse -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -notlike "*Tests*" })
-
-  if ($projectFiles.Count -eq 0) {
-    Write-WarningMessage "No packable projects found in $srcDir"
-    return
-  }
-
-  # Remove existing packages
-  if (Test-Path $script:NuGetOutputDir) {
-    Remove-Item -Path $script:NuGetOutputDir -Recurse -Force
-  }
-  New-Item -ItemType Directory -Path $script:NuGetOutputDir -Force | Out-Null
-
-  Write-Host ""
-  Write-Host ("{0,-40} {1,-15} {2}" -f "Project", "Status", "Package") -ForegroundColor White
-  Write-Host ("-" * 90) -ForegroundColor DarkGray
-
-  $packCount = 0
-  $skipCount = 0
-
-  foreach ($proj in $projectFiles) {
-    $projectName = $proj.BaseName
-    if ($projectName.Length -gt 38) {
-      $projectName = $projectName.Substring(0, 35) + "..."
-    }
-
-    # Check if project is packable (not explicitly set to false)
-    $csprojContent = Get-Content $proj.FullName -Raw
-    if ($csprojContent -match '<IsPackable>false</IsPackable>') {
-      Write-Host ("{0,-40} {1,-15} {2}" -f $projectName, "Skipped", "(IsPackable=false)") -ForegroundColor DarkGray
-      $skipCount++
-      continue
-    }
-
-    # Pack the project
-    $packOutput = dotnet pack $proj.FullName `
-      --configuration $script:Configuration `
-      --no-build `
-      --nologo `
-      --output $script:NuGetOutputDir 2>&1
-
-    if ($LASTEXITCODE -eq 0) {
-      # Find generated package name from output
-      $packageFile = $packOutput | Where-Object { $_ -match "Successfully created package" } |
-        ForEach-Object { if ($_ -match "'([^']+\.nupkg)'") { $Matches[1] } }
-
-      if ($packageFile) {
-        $packageFileName = Split-Path -Leaf $packageFile
-      }
-      else {
-        # Fallback: find the package in output directory
-        $latestPackage = Get-ChildItem -Path $script:NuGetOutputDir -Filter "$($proj.BaseName)*.nupkg" -ErrorAction SilentlyContinue |
-          Sort-Object LastWriteTime -Descending |
-          Select-Object -First 1
-        $packageFileName = if ($latestPackage) { $latestPackage.Name } else { "*.nupkg" }
-      }
-
-      Write-Host ("{0,-40} {1,-15} {2}" -f $projectName, "Packed", $packageFileName) -ForegroundColor Green
-      $packCount++
-    }
-    else {
-      Write-Host ("{0,-40} {1,-15} {2}" -f $projectName, "Failed", "(pack error)") -ForegroundColor Red
-    }
-  }
-
-  Write-Host ""
-
-  # List generated packages
-  $packages = @(Get-ChildItem -Path $script:NuGetOutputDir -Filter "*.nupkg" -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -notlike "*.snupkg" })
-  $symbolPackages = @(Get-ChildItem -Path $script:NuGetOutputDir -Filter "*.snupkg" -ErrorAction SilentlyContinue)
-
-  if ($packages.Count -gt 0) {
-    Write-Success "Created $($packages.Count) package(s), $($symbolPackages.Count) symbol package(s)"
-    Write-Detail "Output: $script:NuGetOutputDir"
-  }
-  else {
-    Write-WarningMessage "No packages were created"
-  }
+if ($Help) {
+  Show-Help
+  exit 0
 }
 
 #endregion
 
-#region Show-Help
+#region Main Execution
 
-# Show-Help function is defined in Helper Functions region
+$startTime = Get-Date
 
-#endregion
+Write-Host ""
+Write-Host "[START] .NET Solution Build and Test" -ForegroundColor Blue
+Write-Host "       Started: $($startTime.ToString('yyyy-MM-dd HH:mm:ss'))" -ForegroundColor DarkGray
+Write-Host ""
 
-#region Main
+try {
+  # ============================================================================
+  # Step 1: Restore .NET tools
+  # ============================================================================
+  Write-StepProgress -Step 1 -TotalSteps $script:TOTAL_STEPS -Message "Restoring .NET tools..."
 
-<#
-.SYNOPSIS
-  메인 실행 함수
+  dotnet tool restore 2>&1 | Out-Null
 
-.DESCRIPTION
-  전체 빌드/테스트/커버리지/패키지 흐름을 제어합니다:
-  1. .NET 도구 복원
-  2. 솔루션 파일 검색
-  3. 솔루션 빌드
-  4. 버전 정보 표시
-  5. 테스트 실행 및 커버리지 수집
-  6. 커버리지 리포트 병합
-  7. HTML 리포트 생성
-  8. 콘솔에 커버리지 결과 표시
-  9. NuGet 패키지 생성
-#>
-function Main {
-  param(
-    [Parameter(Mandatory = $false)]
-    [string]$SolutionPath,
-
-    [Parameter(Mandatory = $false)]
-    [string]$Prefix = "Functorium",
-
-    [Parameter(Mandatory = $false)]
-    [switch]$SkipPackaging
-  )
-
-  $startTime = Get-Date
-
-  Write-Host ""
-  Write-Host "[START] .NET Solution Build and Test" -ForegroundColor Blue
-  Write-Host "       Started: $($startTime.ToString('yyyy-MM-dd HH:mm:ss'))" -ForegroundColor DarkGray
-  Write-Host ""
-
-  # 1. Restore .NET tools
-  Restore-DotNetTools
-
-  # 2. Find solution file
-  $solution = Find-SolutionFile -SolutionPath $SolutionPath
-  if (-not $solution) {
-    return $false
+  if ($LASTEXITCODE -eq 0) {
+    Write-Success "Tools restored"
+  }
+  else {
+    Write-WarningMessage "Tool restore failed or no tools to restore"
   }
 
-  $solutionFullPath = $solution.FullName
+  # ============================================================================
+  # Step 2: Find solution file
+  # ============================================================================
+  Write-StepProgress -Step 2 -TotalSteps $script:TOTAL_STEPS -Message "Finding solution file..."
+
+  $solutionFile = Find-SolutionFile -SolutionPath $Solution
+  if (-not $solutionFile) {
+    exit 1
+  }
+
+  $solutionFullPath = $solutionFile.FullName
 
   # Set output paths based on solution location
   Set-OutputPaths -SolutionPath $solutionFullPath
   Write-Detail "Coverage output: $script:CoverageReportDir"
 
-  # 3. Build
-  Invoke-Build -SolutionPath $solutionFullPath
+  # ============================================================================
+  # Step 3: Build solution
+  # ============================================================================
+  Write-StepProgress -Step 3 -TotalSteps $script:TOTAL_STEPS -Message "Building solution ($script:Configuration)..."
 
-  # 4. Show version information
+  Write-Host ""
+  dotnet build $solutionFullPath -c $script:Configuration --nologo
+  Write-Host ""
+
+  if ($LASTEXITCODE -ne 0) {
+    throw "Build failed"
+  }
+
+  # ============================================================================
+  # Step 4: Show version information
+  # ============================================================================
+  Write-StepProgress -Step 4 -TotalSteps $script:TOTAL_STEPS -Message "Reading version information..."
+
   Show-VersionInfo -SolutionPath $solutionFullPath
 
-  # 5. Run tests with coverage
-  Invoke-TestWithCoverage -SolutionPath $solutionFullPath
+  # ============================================================================
+  # Step 5: Run tests with coverage (Microsoft Testing Platform)
+  # ============================================================================
+  Write-StepProgress -Step 5 -TotalSteps $script:TOTAL_STEPS -Message "Running tests with coverage (MTP)..."
 
-  # 6. Merge coverage reports
-  $coverageFiles = Merge-CoverageReports
+  # Remove existing coverage report
+  if (Test-Path $script:CoverageReportDir) {
+    Remove-Item -Path $script:CoverageReportDir -Recurse -Force
+  }
+
+  # Remove existing TestResults from each test project
+  Get-ChildItem -Path $script:SolutionDir -Directory -Recurse -Filter "TestResults" -ErrorAction SilentlyContinue |
+    ForEach-Object { Remove-Item -Path $_.FullName -Recurse -Force }
+
+  # Run tests with MTP coverage collection and TRX report
+  Write-Host ""
+  dotnet test `
+    --solution $solutionFullPath `
+    --configuration $script:Configuration `
+    --no-build `
+    -- --coverage --coverage-output-format cobertura --coverage-output coverage.cobertura.xml --report-trx
+  Write-Host ""
+
+  if ($LASTEXITCODE -ne 0) {
+    throw "Tests failed"
+  }
+
+  Write-Success "Tests passed"
+
+  # ============================================================================
+  # Step 6: Merge coverage reports
+  # ============================================================================
+  Write-StepProgress -Step 6 -TotalSteps $script:TOTAL_STEPS -Message "Collecting coverage reports..."
+
+  $coverageFiles = Get-CoverageFiles
   if (-not $coverageFiles) {
     Write-WarningMessage "No coverage files found. Cannot generate report."
-    return $true
+    exit 0
   }
 
-  # 7. Generate HTML report
-  New-HtmlReport -CoverageFiles $coverageFiles
+  # ============================================================================
+  # Step 7: Generate HTML report
+  # ============================================================================
+  Write-StepProgress -Step 7 -TotalSteps $script:TOTAL_STEPS -Message "Generating HTML report..."
 
-  # 8. Display coverage results in console
-  Show-CoverageReport -CoverageFiles $coverageFiles -Prefix $Prefix
+  # Generate HTML report using local tool
+  Write-Host ""
+  dotnet reportgenerator `
+    -reports:$coverageFiles `
+    -targetdir:$script:CoverageReportDir `
+    -reporttypes:"Html;Cobertura;MarkdownSummaryGithub" `
+    -assemblyfilters:"-*.Tests*"
+  Write-Host ""
 
-  # 9. Create NuGet packages (if not skipped)
-  if (-not $SkipPackaging) {
-    New-NuGetPackages -SolutionPath $solutionFullPath
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host "      Failed to generate HTML report" -ForegroundColor Red
   }
   else {
-    Write-StepProgress -Step 9 -TotalSteps $script:TOTAL_STEPS -Message "Skipping NuGet package creation..."
+    $reportPath = Join-Path $script:CoverageReportDir "index.html"
+    Write-Success "Report generated: $reportPath"
+  }
+
+  # ============================================================================
+  # Step 8: Display coverage results
+  # ============================================================================
+  Write-StepProgress -Step 8 -TotalSteps $script:TOTAL_STEPS -Message "Displaying coverage results..."
+
+  Show-CoverageReport -CoverageFiles $coverageFiles -Prefix $ProjectPrefix
+
+  # ============================================================================
+  # Step 9: Analyze slow tests
+  # ============================================================================
+  Write-StepProgress -Step 9 -TotalSteps $script:TOTAL_STEPS -Message "Analyzing slow tests (threshold: ${SlowTestThreshold}s)..."
+
+  $slowTestScript = Join-Path $script:SolutionDir ".coverage/scripts/SummarizeSlowestTests.cs"
+  $slowTestOutputDir = Join-Path $script:SolutionDir ".coverage/reports"
+  if (Test-Path $slowTestScript) {
+    Push-Location (Split-Path -Parent $slowTestScript)
+    try {
+      dotnet $slowTestScript --output-dir $slowTestOutputDir --threshold $SlowTestThreshold 2>&1 | Out-Null
+      if ($LASTEXITCODE -eq 0) {
+        $slowTestReport = Join-Path $slowTestOutputDir "SummarySlowestTests.md"
+        if (Test-Path $slowTestReport) {
+          Write-Success "Slow test report: $slowTestReport (threshold: ${SlowTestThreshold}s)"
+        }
+      }
+      else {
+        Write-WarningMessage "Failed to generate slow test report"
+      }
+    }
+    finally {
+      Pop-Location
+    }
+  }
+  else {
+    Write-Detail "Slow test script not found, skipping"
+  }
+
+  # ============================================================================
+  # Step 10: Create NuGet packages
+  # ============================================================================
+  if (-not $SkipPack) {
+    Write-StepProgress -Step 10 -TotalSteps $script:TOTAL_STEPS -Message "Creating NuGet packages..."
+
+    # Get solution directory
+    $solutionDir = Split-Path -Parent $solutionFullPath
+
+    # Search in Src folder only
+    $srcDir = Join-Path $solutionDir "Src"
+
+    if (-not (Test-Path $srcDir)) {
+      Write-Detail "Src folder not found, using solution directory"
+      $srcDir = $solutionDir
+    }
+
+    # Find packable projects (exclude Tests and Testing projects that are not meant to be published)
+    $projectFiles = @(Get-ChildItem -Path $srcDir -Filter "*.csproj" -Recurse -ErrorAction SilentlyContinue |
+      Where-Object { $_.Name -notlike "*Tests*" })
+
+    if ($projectFiles.Count -eq 0) {
+      Write-WarningMessage "No packable projects found in $srcDir"
+    }
+    else {
+      # Remove existing packages
+      if (Test-Path $script:NuGetOutputDir) {
+        Remove-Item -Path $script:NuGetOutputDir -Recurse -Force
+      }
+      New-Item -ItemType Directory -Path $script:NuGetOutputDir -Force | Out-Null
+
+      Write-Host ""
+      Write-Host ("{0,-40} {1,-15} {2}" -f "Project", "Status", "Package") -ForegroundColor White
+      Write-Host ("-" * 90) -ForegroundColor DarkGray
+
+      $packCount = 0
+      $skipCount = 0
+
+      foreach ($proj in $projectFiles) {
+        $projectName = $proj.BaseName
+        if ($projectName.Length -gt 38) {
+          $projectName = $projectName.Substring(0, 35) + "..."
+        }
+
+        # Check if project is packable (not explicitly set to false)
+        $csprojContent = Get-Content $proj.FullName -Raw
+        if ($csprojContent -match '<IsPackable>false</IsPackable>') {
+          Write-Host ("{0,-40} {1,-15} {2}" -f $projectName, "Skipped", "(IsPackable=false)") -ForegroundColor DarkGray
+          $skipCount++
+          continue
+        }
+
+        # Pack the project
+        $packOutput = dotnet pack $proj.FullName `
+          --configuration $script:Configuration `
+          --no-build `
+          --nologo `
+          --output $script:NuGetOutputDir 2>&1
+
+        if ($LASTEXITCODE -eq 0) {
+          # Find generated package name from output
+          $packageFile = $packOutput | Where-Object { $_ -match "Successfully created package" } |
+            ForEach-Object { if ($_ -match "'([^']+\.nupkg)'") { $Matches[1] } }
+
+          if ($packageFile) {
+            $packageFileName = Split-Path -Leaf $packageFile
+          }
+          else {
+            # Fallback: find the package in output directory
+            $latestPackage = Get-ChildItem -Path $script:NuGetOutputDir -Filter "$($proj.BaseName)*.nupkg" -ErrorAction SilentlyContinue |
+              Sort-Object LastWriteTime -Descending |
+              Select-Object -First 1
+            $packageFileName = if ($latestPackage) { $latestPackage.Name } else { "*.nupkg" }
+          }
+
+          Write-Host ("{0,-40} {1,-15} {2}" -f $projectName, "Packed", $packageFileName) -ForegroundColor Green
+          $packCount++
+        }
+        else {
+          Write-Host ("{0,-40} {1,-15} {2}" -f $projectName, "Failed", "(pack error)") -ForegroundColor Red
+        }
+      }
+
+      Write-Host ""
+
+      # List generated packages
+      $packages = @(Get-ChildItem -Path $script:NuGetOutputDir -Filter "*.nupkg" -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -notlike "*.snupkg" })
+      $symbolPackages = @(Get-ChildItem -Path $script:NuGetOutputDir -Filter "*.snupkg" -ErrorAction SilentlyContinue)
+
+      if ($packages.Count -gt 0) {
+        Write-Success "Created $($packages.Count) package(s), $($symbolPackages.Count) symbol package(s)"
+        Write-Detail "Output: $script:NuGetOutputDir"
+      }
+      else {
+        Write-WarningMessage "No packages were created"
+      }
+    }
+  }
+  else {
+    Write-StepProgress -Step 10 -TotalSteps $script:TOTAL_STEPS -Message "Skipping NuGet package creation..."
     Write-Detail "Use -SkipPack to skip packaging"
   }
 
+  # ============================================================================
   # Complete
+  # ============================================================================
   $endTime = Get-Date
   $duration = $endTime - $startTime
 
@@ -921,31 +864,13 @@ function Main {
   Write-Host "[DONE] Build, test, and pack completed" -ForegroundColor Green
   Write-Host "       Duration: $($duration.ToString('mm\:ss'))" -ForegroundColor DarkGray
   Write-Host "       Coverage: $script:CoverageReportDir/index.html" -ForegroundColor DarkGray
-  if (-not $SkipPackaging) {
+  Write-Host "       Slow Tests: $script:CoverageReportDir/SummarySlowestTests.md (threshold: ${SlowTestThreshold}s)" -ForegroundColor DarkGray
+  if (-not $SkipPack) {
     Write-Host "       Packages: $script:NuGetOutputDir" -ForegroundColor DarkGray
   }
   Write-Host ""
 
-  return $true
-}
-
-#endregion
-
-#region Entry Point
-
-if ($Help) {
-  Show-Help
   exit 0
-}
-
-try {
-  $result = Main -SolutionPath $Solution -Prefix $ProjectPrefix -SkipPackaging:$SkipPack
-  if ($result) {
-    exit 0
-  }
-  else {
-    exit 1
-  }
 }
 catch {
   Write-Host ""

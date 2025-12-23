@@ -1,5 +1,12 @@
 <Solution>
   <Folder Name="/Tutorials/" />
+  <Folder Name="/Tutorials/Cqrs/" />
+  <Folder Name="/Tutorials/Cqrs/Src/">
+    <Project Path="Tutorials/Cqrs/Src/Cqrs.Demo/Cqrs.Demo.csproj" />
+  </Folder>
+  <Folder Name="/Tutorials/Cqrs/Tests/">
+    <Project Path="Tutorials/Cqrs/Tests/Cqrs.Demo.Tests.Unit/Cqrs.Demo.Tests.Unit.csproj" />
+  </Folder>
   <Folder Name="/Tutorials/SourceGenerator/" />
   <Folder Name="/Tutorials/SourceGenerator/Src/">
     <Project Path="Tutorials/SourceGenerator/Src/SourceGenerator.Demo/SourceGenerator.Demo.csproj" />

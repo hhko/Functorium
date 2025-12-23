@@ -1,5 +1,5 @@
 using Functorium.Adapters.SourceGenerator;
-using Functorium.Testing.SourceGenerators;
+using Functorium.Testing.Actions.SourceGenerators;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 
 namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
