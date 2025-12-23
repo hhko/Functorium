@@ -153,8 +153,7 @@ Functorium 프로젝트의 File-based App들:
 .release-notes/scripts/
 ├── AnalyzeAllComponents.cs    # 컴포넌트 분석
 ├── ExtractApiChanges.cs       # API 변경사항 추출
-├── ApiGenerator.cs            # Public API 생성
-└── SummarizeSlowestTests.cs   # 테스트 결과 요약
+└── ApiGenerator.cs            # Public API 생성
 ```
 
 ### 공통 패키지

@@ -82,7 +82,6 @@ Claude Code에서 사용자 정의 Command를 만들고 활용하는 방법을 �
 - [5.4 AnalyzeAllComponents.cs 분석](05-csharp-scripts/04-analyze-all-components.md)
 - [5.5 ExtractApiChanges.cs 분석](05-csharp-scripts/05-extract-api-changes.md)
 - [5.6 ApiGenerator.cs 분석](05-csharp-scripts/06-api-generator.md)
-- [5.7 SummarizeSlowestTests.cs 분석](05-csharp-scripts/07-summarize-tests.md)
 
 ### Part 5: 설정 및 실습
 

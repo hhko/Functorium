@@ -141,7 +141,7 @@ public sealed class OtlpCollectorProtocol : SmartEnum<OtlpCollectorProtocol>
 // 개별 설정 우선, 없으면 통합 Protocol 반환
 public OtlpCollectorProtocol GetTracingProtocol()
 public OtlpCollectorProtocol GetMetricsProtocol()
-public OtlpCollectorProtocol GetLogsProtocol()
+public OtlpCollectorProtocol GetLoggingProtocol()
 ```
 
 **폴백 순서:**

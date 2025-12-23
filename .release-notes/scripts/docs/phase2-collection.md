@@ -106,15 +106,7 @@ Src/
     └── Functorium.Testing.cs    # Functorium.Testing Public API
 ```
 
-### 3단계: 테스트 결과 요약 (선택적)
-
-```bash
-dotnet SummarizeSlowestTests.cs
-```
-
-TRX 파일이 있는 경우 테스트 결과를 요약합니다.
-
-### 4단계: 데이터 수집 결과 검증
+### 3단계: 데이터 수집 결과 검증
 
 두 스크립트 실행 후 다음을 확인합니다:
 
@@ -259,9 +251,6 @@ Phase 2: 데이터 수집 완료 ✓
   ✓ api-changes-diff.txt
   ✓ Src/Functorium/.api/Functorium.cs
   ✓ Src/Functorium.Testing/.api/Functorium.Testing.cs
-
-테스트 요약 (선택적):
-  ✓ test-summary.md (TRX 파일이 있는 경우)
 
 위치: .release-notes/scripts/.analysis-output/
 ```

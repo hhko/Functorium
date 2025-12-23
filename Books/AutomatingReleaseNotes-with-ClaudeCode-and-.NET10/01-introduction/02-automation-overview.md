@@ -32,8 +32,7 @@
 │  │  C# 스크립트 (.release-notes/scripts/)              │  │
 │  │  ├── AnalyzeAllComponents.cs (컴포넌트 분석)        │  │
 │  │  ├── ExtractApiChanges.cs (API 추출)                │  │
-│  │  ├── ApiGenerator.cs (Public API 생성)              │  │
-│  │  └── SummarizeSlowestTests.cs (테스트 요약)         │  │
+│  │  └── ApiGenerator.cs (Public API 생성)              │  │
 │  └─────────────────────────────────────────────────────┘  │
 └───────────────────────────────────────────────────────────┘
 ```
@@ -122,8 +121,7 @@ IF origin/release/1.0 존재
 ```
 실행되는 스크립트:
 ├── AnalyzeAllComponents.cs → 컴포넌트별 변경사항
-├── ExtractApiChanges.cs   → Public API 추출
-└── SummarizeSlowestTests.cs → 테스트 결과 요약 (선택)
+└── ExtractApiChanges.cs   → Public API 추출
 ```
 
 **출력 파일:**
@@ -240,14 +238,6 @@ namespace Functorium.Abstractions.Errors
         public static Error CreateFromException(string errorCode, Exception exception) { }
     }
 }
-```
-
-### SummarizeSlowestTests.cs
-
-**역할**: TRX 테스트 결과 파일에서 성능 병목 식별
-
-```bash
-dotnet SummarizeSlowestTests.cs --threshold 30
 ```
 
 ---

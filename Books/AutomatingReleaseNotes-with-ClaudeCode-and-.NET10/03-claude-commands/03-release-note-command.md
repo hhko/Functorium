@@ -151,9 +151,6 @@ dotnet AnalyzeAllComponents.cs --base <base-branch> --target HEAD
 
 # 2. API 변경사항 추출
 dotnet ExtractApiChanges.cs
-
-# 3. 테스트 결과 요약 (선택적)
-dotnet SummarizeSlowestTests.cs
 ```
 
 **성공 기준**:

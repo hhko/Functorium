@@ -167,7 +167,6 @@ Functorium/
 │       ├── AnalyzeAllComponents.cs
 │       ├── ExtractApiChanges.cs
 │       ├── ApiGenerator.cs
-│       ├── SummarizeSlowestTests.cs
 │       ├── config/
 │       │   └── component-priority.json
 │       └── docs/

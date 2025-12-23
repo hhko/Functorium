@@ -171,8 +171,7 @@ var service = new UserService();
 ┌───────────────────────────────────────┐
 │  C# 스크립트 (.NET 10 file-based)    │
 │  ├── AnalyzeAllComponents.cs          │
-│  ├── ExtractApiChanges.cs             │
-│  └── SummarizeSlowestTests.cs         │
+│  └── ExtractApiChanges.cs             │
 └───────────────────────────────────────┘
 ```
 

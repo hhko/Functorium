@@ -23,7 +23,6 @@ Functorium/
 │       ├── ExtractApiChanges.cs     # API 추출 스크립트
 │       ├── ApiGenerator.cs          # Public API 생성기
 │       ├── AnalyzeFolder.cs         # 폴더 분석 (보조)
-│       ├── SummarizeSlowestTests.cs # 테스트 요약
 │       │
 │       ├── config/
 │       │   └── component-priority.json  # 분석 대상 설정
@@ -158,7 +157,6 @@ C# 스크립트와 설정 파일이 저장되는 폴더입니다.
 | ExtractApiChanges.cs | Public API 추출 및 Uber 파일 생성 | Phase 2 |
 | ApiGenerator.cs | DLL에서 Public API 추출 | Phase 2 (보조) |
 | AnalyzeFolder.cs | 단일 폴더 분석 | 독립 실행 |
-| SummarizeSlowestTests.cs | TRX 테스트 결과 요약 | Phase 2 (선택) |
 
 ### config/ 폴더
 

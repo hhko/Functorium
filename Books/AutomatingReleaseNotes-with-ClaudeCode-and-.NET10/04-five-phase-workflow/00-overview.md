@@ -63,8 +63,7 @@
 │                                                                 │
 │ 실행 스크립트:                                                  │
 │ ├── AnalyzeAllComponents.cs → 컴포넌트별 분석                   │
-│ ├── ExtractApiChanges.cs   → API 추출 및 Uber 파일              │
-│ └── SummarizeSlowestTests.cs → 테스트 요약 (선택)               │
+│ └── ExtractApiChanges.cs   → API 추출 및 Uber 파일              │
 │                                                                 │
 │ 출력:                                                           │
 │ ├── .analysis-output/Functorium.md                              │

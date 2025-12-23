@@ -349,6 +349,18 @@ cat Src/Functorium/.api/Functorium.cs
 
 ---
 
+## 5장 완료
+
+5장에서 다룬 C# 스크립트들의 요약:
+
+| 스크립트 | 역할 | Phase |
+|----------|------|-------|
+| AnalyzeAllComponents.cs | 컴포넌트별 Git 변경 분석 | Phase 2 |
+| ExtractApiChanges.cs | Public API 추출 | Phase 2 |
+| ApiGenerator.cs | DLL에서 API 생성 | Phase 2 |
+
+---
+
 ## 다음 단계
 
-- [5.7 SummarizeSlowestTests.cs 분석](07-summarize-tests.md)
+- [6.1 TEMPLATE.md 구조](../06-templates-and-config/01-template-md.md)

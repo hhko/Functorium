@@ -23,7 +23,6 @@
 | `AnalyzeFolder.cs` | 개별 폴더 상세 분석 |
 | `ExtractApiChanges.cs` | API 변경사항 추출 |
 | `ApiGenerator.cs` | Public API 생성 |
-| `SummarizeSlowestTests.cs` | TRX 테스트 결과 요약<br/>• 느린 테스트 식별 (기본 30초 이상)<br/>• 실패 테스트 목록<br/>• 테스트 통계 및 분포 |
 
 > **Note**: 모든 스크립트는 .NET 10 file-based program으로 구현되어 있습니다.
 >
@@ -81,22 +80,6 @@ dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target origin/main
 dotnet ExtractApiChanges.cs
 ```
 
-#### 테스트 결과 요약
-
-```bash
-# 기본 실행 (TestResults/**/*.trx 파일 검색, 30초 이상 테스트 식별)
-dotnet SummarizeSlowestTests.cs
-
-# 느린 테스트 기준 변경 (예: 60초 이상)
-dotnet SummarizeSlowestTests.cs --threshold 60
-
-# 특정 glob 패턴으로 TRX 파일 검색
-dotnet SummarizeSlowestTests.cs "**/MyTests/**/*.trx"
-
-# 옵션 조합
-dotnet SummarizeSlowestTests.cs "**/TestResults/**/*.trx" -t 45
-```
-
 ### 2. 출력 확인
 
 ```
@@ -105,7 +88,6 @@ dotnet SummarizeSlowestTests.cs "**/TestResults/**/*.trx" -t 45
 ├── Functorium.md                    # Src/Functorium 분석
 ├── Functorium.Testing.md            # Src/Functorium.Testing 분석
 ├── Docs.md                          # Docs 분석
-├── test-summary.md                  # 테스트 결과 요약 (SummarizeSlowestTests.cs)
 ├── api-changes-build-current/
 │   ├── all-api-changes.txt          # Uber API 파일 (단일 진실 소스)
 │   ├── api-changes-summary.md       # API 요약

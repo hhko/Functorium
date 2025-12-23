@@ -57,9 +57,6 @@ dotnet AnalyzeAllComponents.cs --base <base-branch> --target HEAD
 
 # API 변경사항 추출
 dotnet ExtractApiChanges.cs
-
-# 테스트 결과 요약 (선택)
-dotnet SummarizeSlowestTests.cs
 ```
 
 ### Phase 3: 커밋 분석

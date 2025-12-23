@@ -26,7 +26,70 @@
   - [ ] Quartz
   - [ ] HostTestFixture
   - [ ] Structured Logging
-
+- Book
+  - [x] Release Note: Claude Code + .NET 10 File-based App
+  - [x] Observability Code: Source Generator
+  - [ ] 단위 테스트
+    - xunt v3
+    - mtp
+      - https://learn.microsoft.com/en-us/dotnet/core/testing/migrating-vstest-microsoft-testing-platform
+      - overview: https://xunit.net/docs/getting-started/v3/microsoft-testing-platform
+      - coverage: https://xunit.net/docs/getting-started/v3/code-coverage-with-mtp
+      ```json
+      {
+        "sdk": {
+          "rollForward": "latestFeature",
+          "version": "10.0.100"
+        },
+        "test": {
+          "runner": "Microsoft.Testing.Platform"
+        }
+      }
+      ```
+      ```xml
+      <!-- Microsoft Testing Platform -->
+      <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+        <OutputType>Exe</OutputType>
+        <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+      </PropertyGroup>
+      ```
+      ```
+      coverlet.collector  -> Microsoft.Testing.Extensions.CodeCoverage
+      .                   -> Microsoft.Testing.Extensions.TrxReport
+      ```
+      ```shell
+      dotnet test --project Tests/Functorium.Tests.Unit -- --coverage --coverage-output-format cobertura --coverage-output coverage.cobertura.xml --report-trx
+      ```
+    - architecture
+    - snapshot
+    - logging?
+    - container?
+    - performance???
+    - Build-Local.ps1
+    - GitHub Action
+  - [ ] GitHub CI/CD
+    - ChatOps
+  - [ ] 성공주도 유스케이스 개발 with 함수형(LINQ + LanaguageExt)
+  - [ ] LanaguageExt
+    - Fin
+    - FinT
+    - IO
+    - Validation
+    - Guard
+    - Traverse
+    - Error
+    - Option
+- ?
+  - [x] Layer
+  - [x] Success-Driven Usecase Implementation by Functional
+  - [ ] FastEndpoint
+  - [ ] RabbitMQ
+  - [ ] DTO
+  - [ ] EF Core
+  - [ ] Dapper
+  - [ ] Aspire
+  - [ ] gRPC
+  - [ ] Featrue Flag
 
 ## Feature
 - [x] Error
