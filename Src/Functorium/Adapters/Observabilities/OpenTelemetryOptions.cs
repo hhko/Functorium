@@ -21,22 +21,16 @@ public sealed class OpenTelemetryOptions
     public string ServiceVersion { get; } =
         Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "unknown";
 
-    // /// <summary>
-    // /// 서비스 네임스페이스 (선택적)
-    // /// </summary>
-    // public string ServiceNamespace { get; set; } = string.Empty;
+    /// <summary>
+    /// 서비스 네임스페이스 (선택적)
+    /// </summary>
+    public string ServiceNamespace { get; set; } = string.Empty;
 
     /// <summary>
     /// 통합 OTLP Collector 엔드포인트 (모든 신호를 동일 엔드포인트로 전송)
     /// 예: Aspire Dashboard (http://127.0.0.1:18889)
     /// </summary>
     public string CollectorEndpoint { get; set; } = string.Empty;
-
-    /// <summary>
-    /// 통합 OTLP Protocol 설정 (모든 신호를 동일 Protocol로 전송)
-    /// 개별 Protocol이 설정되지 않은 경우 사용
-    /// </summary>
-    public string CollectorProtocol { get; set; } = OtlpCollectorProtocol.Grpc.Name;
 
     /// <summary>
     /// Tracing 전용 OTLP 엔드포인트 (선택적)
@@ -59,8 +53,11 @@ public sealed class OpenTelemetryOptions
     /// </summary>
     public string? LoggingCollectorEndpoint { get; set; }
 
-    public double SamplingRate { get; set; } = 1.0; // 0.0 ~ 1.0 (0% ~ 100%)
-    public bool EnablePrometheusExporter { get; set; } = false;
+    /// <summary>
+    /// 통합 OTLP Protocol 설정 (모든 신호를 동일 Protocol로 전송)
+    /// 개별 Protocol이 설정되지 않은 경우 사용
+    /// </summary>
+    public string CollectorProtocol { get; set; } = OtlpCollectorProtocol.Grpc.Name;
 
     /// <summary>
     /// Tracing 전용 OTLP Protocol 설정 (선택적)
@@ -79,6 +76,9 @@ public sealed class OpenTelemetryOptions
     /// 설정 시 CollectorProtocol 대신 이 Protocol 사용
     /// </summary>
     public string? LoggingCollectorProtocol { get; set; }
+
+    public double SamplingRate { get; set; } = 1.0; // 0.0 ~ 1.0 (0% ~ 100%)
+    public bool EnablePrometheusExporter { get; set; } = false;
 
     /// <summary>
     /// OTLP Protocol SmartEnum
@@ -132,7 +132,7 @@ public sealed class OpenTelemetryOptions
     /// <summary>
     /// Logging Protocol 반환 (개별 설정 우선, 없으면 통합 Protocol)
     /// </summary>
-    public OtlpCollectorProtocol GetLogsProtocol()
+    public OtlpCollectorProtocol GetLoggingProtocol()
     {
         string protocolName = !string.IsNullOrWhiteSpace(LoggingCollectorProtocol)
             ? LoggingCollectorProtocol
@@ -227,7 +227,7 @@ public sealed class OpenTelemetryOptions
         // 세부주제: Logger Configuration
         logger.LogInformation("  Logging Configuration");
         logger.LogInformation("    {Label}: {Value}", "Endpoint".PadRight(labelWidth), string.IsNullOrWhiteSpace(loggingEndpoint) ? "(disabled)" : loggingEndpoint);
-        logger.LogInformation("    {Label}: {Value}", "Protocol".PadRight(labelWidth), GetLogsProtocol().Name);
+        logger.LogInformation("    {Label}: {Value}", "Protocol".PadRight(labelWidth), GetLoggingProtocol().Name);
         logger.LogInformation("");
 
         // 세부주제: Tracing Configuration

@@ -1,3 +1,4 @@
+using System.Reflection;
 using Functorium.Abstractions.Errors.DestructuringPolicies;
 using Functorium.Adapters.Observabilities.Builders.Configurators;
 using Functorium.Adapters.Observabilities.Logging;
@@ -29,7 +30,8 @@ public partial class OpenTelemetryBuilder
     private readonly IServiceCollection _services;
     private readonly IConfiguration _configuration;
     private readonly OpenTelemetryOptions _options;
-    private readonly string _frameworkNamespaceRoot;
+    private readonly string _functoriumNamespaceRoot;
+    private readonly string _projectNamespaceRoot;
 
     private Action<LoggingConfigurator>? _loggingConfigurator;
     private Action<MetricsConfigurator>? _metricsConfigurator;
@@ -39,26 +41,32 @@ public partial class OpenTelemetryBuilder
     internal OpenTelemetryBuilder(
         IServiceCollection services,
         IConfiguration configuration,
-        OpenTelemetryOptions options)
+        OpenTelemetryOptions options,
+        Assembly projectAssembly)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
         ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(projectAssembly);
 
         _services = services;
         _configuration = configuration;
         _options = options;
 
-        // 네임스페이스 루트 이름 동적 추출
-        // 예: "Framework.Adapters.Observabilities.Abstractions.Registrations" → "Framework"
-        _frameworkNamespaceRoot = ExtractNamespaceRoot(typeof(OpenTelemetryBuilder).Namespace);
+        // Functorium 네임스페이스 루트 이름 동적 추출
+        // 예: "Functorium.Adapters.Observabilities" → "Functorium"
+        _functoriumNamespaceRoot = ExtractNamespaceRoot(typeof(OpenTelemetryBuilder).Namespace);
+
+        // 프로젝트 어셈블리의 네임스페이스 루트 추출
+        // 예: "Observability.Adapters.Infrastructure" → "Observability"
+        _projectNamespaceRoot = ExtractNamespaceRoot(projectAssembly.GetName().Name);
     }
 
     /// <summary>
     /// 네임스페이스에서 루트 이름을 추출합니다.
     /// </summary>
-    /// <param name="fullNamespace">전체 네임스페이스 (예: "Framework.Adapters.Observabilities")</param>
-    /// <returns>루트 네임스페이스 (예: "Framework")</returns>
+    /// <param name="fullNamespace">전체 네임스페이스 (예: "Functorium.Adapters.Observabilities")</param>
+    /// <returns>루트 네임스페이스 (예: "Functorium")</returns>
     private static string ExtractNamespaceRoot(string? fullNamespace)
     {
         if (string.IsNullOrEmpty(fullNamespace))
@@ -112,7 +120,7 @@ public partial class OpenTelemetryBuilder
     /// <example>
     /// <code>
     /// services
-    ///     .RegisterObservability(configuration)
+    ///     .RegisterOpenTelemetry(configuration)
     ///     .ConfigureStartupLogger(logger =>
     ///     {
     ///         logger.LogInformation("┌─ Application Configuration");
@@ -188,7 +196,7 @@ public partial class OpenTelemetryBuilder
                     logging.WriteTo.OpenTelemetry(options =>
                     {
                         options.Endpoint = loggingEndpoint;
-                        options.Protocol = ToOtlpProtocolForSerilog(_options.GetLogsProtocol());
+                        options.Protocol = ToOtlpProtocolForSerilog(_options.GetLoggingProtocol());
                         options.ResourceAttributes = resourceAttributes;
 
                         options.IncludedData = IncludedData.MessageTemplateTextAttribute    // 기본
@@ -199,7 +207,7 @@ public partial class OpenTelemetryBuilder
                     });
                 }
 
-                // Framework 기본 확장 설정
+                // Functorium 기본 확장 설정
                 // - ErrorsDestructuringPolicy: Error 로그 구조화
                 logging.Destructure.With<ErrorsDestructuringPolicy>();
 
@@ -231,10 +239,17 @@ public partial class OpenTelemetryBuilder
 
                 // 기본 Meter 등록
                 // - ServiceName*: 프로젝트별 Meter (와일드카드로 모든 하위 네임스페이스 포함)
-                // - Functorium.*: Functorium 프로젝트의 Meter (네임스페이스 루트 이름 자동 추출)
+                // - Functorium.*: Functorium 프레임워크의 Meter
                 metrics
                     .AddMeter($"{_options.ServiceName}*")
-                    .AddMeter($"{_frameworkNamespaceRoot}.*");
+                    .AddMeter($"{_functoriumNamespaceRoot}.*");
+
+                // 프로젝트 어셈블리가 전달된 경우 해당 네임스페이스 루트 자동 등록
+                // 예: "Observability.*"
+                if (_projectNamespaceRoot != null)
+                {
+                    metrics.AddMeter($"{_projectNamespaceRoot}.*");
+                }
 
                 // OTLP Exporter 설정 (MetricsCollectorEndpoint가 설정된 경우에만)
                 string metricsEndpoint = _options.GetMetricsEndpoint();
@@ -282,11 +297,18 @@ public partial class OpenTelemetryBuilder
                 });
 
                 // 기본 ActivitySource 등록
-                // - Functorium: Functorium 프로젝트의 ActivitySource (네임스페이스 루트 이름 자동 추출)
-                // - ServiceName: 프로젝트별 ActivitySource
+                // - Functorium.*: Functorium 프레임워크의 ActivitySource
+                // - ServiceName*: 프로젝트별 ActivitySource
                 tracing
-                    .AddSource($"{_frameworkNamespaceRoot}.*")
+                    .AddSource($"{_functoriumNamespaceRoot}.*")
                     .AddSource($"{_options.ServiceName}*");
+
+                // 프로젝트 어셈블리가 전달된 경우 해당 네임스페이스 루트 자동 등록
+                // 예: "Observability.*"
+                if (_projectNamespaceRoot != null)
+                {
+                    tracing.AddSource($"{_projectNamespaceRoot}.*");
+                }
 
                 // Sampler 설정
                 tracing.SetSampler(new TraceIdRatioBasedSampler(_options.SamplingRate));

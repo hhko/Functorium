@@ -10,7 +10,7 @@ public static class AdapterInfrastructureRegistration
 {
     public static IServiceCollection RegisterAdapterInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.RegisterOpenTelemetry(configuration);
+        services.RegisterObservability(configuration);
 
         // FTP Options 등록
         services.RegisterConfigureOptions<FtpOptions, FtpOptions.Validator>(

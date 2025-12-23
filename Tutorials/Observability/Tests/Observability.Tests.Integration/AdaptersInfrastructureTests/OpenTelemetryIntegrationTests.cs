@@ -180,13 +180,13 @@ public class OpenTelemetryIntegrationTests : IClassFixture<OpenTelemetryIntegrat
     }
 
     [Fact]
-    public void OpenTelemetryOptions_GetLogsProtocol_ShouldReturnGrpc()
+    public void OpenTelemetryOptions_GetLoggingProtocol_ShouldReturnGrpc()
     {
         // Arrange
         var options = _fixture.Services.GetRequiredService<IOptionsMonitor<OpenTelemetryOptions>>().CurrentValue;
 
         // Act
-        var protocol = options.GetLogsProtocol();
+        var protocol = options.GetLoggingProtocol();
 
         // Assert
         protocol.Name.ShouldBe("Grpc");

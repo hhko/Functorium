@@ -134,10 +134,10 @@ public class OpenTelemetryOptionsTests
 
     #endregion
 
-    #region GetLogsProtocol Tests
+    #region GetLoggingProtocol Tests
 
     [Fact]
-    public void GetLogsProtocol_ReturnsLoggingProtocol_WhenLoggingCollectorProtocolIsSet()
+    public void GetLoggingProtocol_ReturnsLoggingProtocol_WhenLoggingCollectorProtocolIsSet()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
@@ -147,14 +147,14 @@ public class OpenTelemetryOptionsTests
         };
 
         // Act
-        var actual = sut.GetLogsProtocol();
+        var actual = sut.GetLoggingProtocol();
 
         // Assert
         actual.ShouldBe(OtlpCollectorProtocol.HttpProtobuf);
     }
 
     [Fact]
-    public void GetLogsProtocol_ReturnsCollectorProtocol_WhenLoggingCollectorProtocolIsNull()
+    public void GetLoggingProtocol_ReturnsCollectorProtocol_WhenLoggingCollectorProtocolIsNull()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
@@ -164,14 +164,14 @@ public class OpenTelemetryOptionsTests
         };
 
         // Act
-        var actual = sut.GetLogsProtocol();
+        var actual = sut.GetLoggingProtocol();
 
         // Assert
         actual.ShouldBe(OtlpCollectorProtocol.HttpProtobuf);
     }
 
     [Fact]
-    public void GetLogsProtocol_ReturnsGrpc_WhenInvalidProtocolName()
+    public void GetLoggingProtocol_ReturnsGrpc_WhenInvalidProtocolName()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
@@ -181,7 +181,7 @@ public class OpenTelemetryOptionsTests
         };
 
         // Act
-        var actual = sut.GetLogsProtocol();
+        var actual = sut.GetLoggingProtocol();
 
         // Assert
         actual.ShouldBe(OtlpCollectorProtocol.Grpc);

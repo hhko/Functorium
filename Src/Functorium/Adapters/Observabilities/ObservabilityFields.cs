@@ -12,9 +12,31 @@ public static class ObservabilityFields
     {
         public static class Layer
         {
-            public const string Adapter = "Adapter";
-            public const string Application = "Application";
-            public const string Domain = "Domain";
+            public const string Adapter = nameof(Adapter);
+            public const string Application = nameof(Application);
+        }
+
+        public static class Category
+        {
+            public const string Usecase = nameof(Usecase);
+            public const string Adapter = nameof(Adapter);
+        }
+
+        public static class HandlerCqrs
+        {
+            public const string Command = nameof(Command);
+            public const string Query = nameof(Query);
+
+            public const string Unknown = nameof(Unknown);
+        }
+
+        public static class TelemetryKeys
+        {
+            public const string Layer = "request.layer";
+            public const string Category = "request.category";
+            public const string HandlerCqrs = "request.handler.cqrs";
+            public const string Handler = "request.handler";
+            public const string HandlerMethod = "request.handler.method";
         }
     }
 
@@ -22,8 +44,25 @@ public static class ObservabilityFields
     {
         public static class Status
         {
-            public const string Success = "Success";
-            public const string Failure = "Failure";
+            public const string Success = nameof(Success);
+            public const string Failure = nameof(Failure);
+        }
+
+        public static class TelemetryKeys
+        {
+            public const string Status = "response.status";
+            public const string Elapsed = "response.elapsed";
+        }
+    }
+
+    public static class Errors
+    {
+        public static class TelemetryKeys
+        {
+            public const string Type = "error.type";
+            public const string Code = "error.code";
+            public const string Message = "error.message";
+            public const string Count = "error.count";
         }
     }
 
@@ -31,10 +70,10 @@ public static class ObservabilityFields
     {
         public static class Adapter
         {
-            public static readonly EventId AdapterRequest = new(1001, "AdapterRequest");
-            public static readonly EventId AdapterResponse = new(1002, "AdapterResponse");
-            public static readonly EventId AdapterResponseWarning = new(1003, "AdapterResponseWarning");
-            public static readonly EventId AdapterResponseError = new(1004, "AdapterResponseError");
+            public static readonly EventId AdapterRequest = new(1001, nameof(AdapterRequest));
+            public static readonly EventId AdapterResponse = new(1002, nameof(AdapterResponse));
+            public static readonly EventId AdapterResponseWarning = new(1003, nameof(AdapterResponseWarning));
+            public static readonly EventId AdapterResponseError = new(1004, nameof(AdapterResponseError));
         }
     }
 }

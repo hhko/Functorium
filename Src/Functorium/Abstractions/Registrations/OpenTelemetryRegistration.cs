@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection;
 using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Builders;
 using Functorium.Adapters.Options;
@@ -11,7 +12,7 @@ namespace Functorium.Abstractions.Registrations;
 
 /// <summary>
 /// OpenTelemetry 등록을 위한 확장 메서드
-/// 기본 Serilog, OpenTelemetry 설정을 Framework에서 제공하고,
+/// 기본 Serilog, OpenTelemetry 설정을 Functorium에서 제공하고,
 /// 프로젝트는 Builder 패턴으로 확장 포인트만 집중
 /// </summary>
 public static class OpenTelemetryRegistration
@@ -21,10 +22,24 @@ public static class OpenTelemetryRegistration
     /// </summary>
     /// <param name="services">IServiceCollection</param>
     /// <param name="configuration">IConfiguration</param>
+    /// <param name="projectAssembly">
+    /// 프로젝트의 AssemblyReference.Assembly를 전달합니다. 해당 어셈블리의 네임스페이스 루트가
+    /// 자동으로 Meter와 ActivitySource에 등록됩니다.
+    /// </param>
     /// <returns>OpenTelemetryBuilder - 프로젝트별 확장 설정을 위한 Builder</returns>
-    public static OpenTelemetryBuilder RegisterObservability(
+    /// <example>
+    /// <code>
+    /// // AssemblyReference를 전달하여 프로젝트 네임스페이스 자동 등록
+    /// services
+    ///     .RegisterOpenTelemetry(configuration, AssemblyReference.Assembly)
+    ///     .ConfigureSerilog(serilog => { })
+    ///     .Build();
+    /// </code>
+    /// </example>
+    public static OpenTelemetryBuilder RegisterOpenTelemetry(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        Assembly projectAssembly)
     {
         // OpenTelemetryOptions 읽기
         services.RegisterConfigureOptions<OpenTelemetryOptions, OpenTelemetryOptions.Validator>(OpenTelemetryOptions.SectionName);
@@ -43,20 +58,12 @@ public static class OpenTelemetryRegistration
         services.AddLogging(loggingBuilder =>
             loggingBuilder.AddSerilog(dispose: true));
 
+        // OpenTelemetry Logging, Tracing, Metrics 확장 설정을 위한 Builder 클래스 반환
         return new OpenTelemetryBuilder(
             services,
             configuration,
-            openTelemetryOptions);
-
-        //// Destructure 설정값 추출
-        //(int maxDepth, int maxStringLength, int maxCollectionCount) destructureSettings = SerilogDestructureHelper.ExtractDestructureSettings(configuration);
-
-        // OpenTelemetryBuilder 반환 (프로젝트는 이 Builder로 확장 설정)
-        //return new OpenTelemetryBuilder(
-        //    services,
-        //    configuration,
-        //    openTelemetryOptions,
-        //    destructureSettings);
+            openTelemetryOptions,
+            projectAssembly);
     }
 }
 

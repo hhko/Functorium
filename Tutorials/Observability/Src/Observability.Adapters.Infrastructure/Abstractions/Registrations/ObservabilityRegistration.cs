@@ -10,26 +10,27 @@ namespace Observability.Adapters.Infrastructure.Abstractions.Registrations;
 /// 프로젝트별 OpenTelemetry 확장 등록
 /// Functorium에서 제공하는 Builder 패턴으로 Enricher, Processor 등 프로젝트 특화 확장 포인트만 집중
 /// </summary>
-internal static class OpenTelemetryRegistration
+internal static class ObservabilityRegistration
 {
-    internal static IServiceCollection RegisterOpenTelemetry(this IServiceCollection services, IConfiguration configuration)
+    internal static IServiceCollection RegisterObservability(this IServiceCollection services, IConfiguration configuration)
     {
         // OpenTelemetry 인프라 설정 (Serilog, Metrics, Traces)
+        // AssemblyReference.Assembly를 전달하면 "Observability.*" Meter/ActivitySource가 자동 등록됨
         services
-            .RegisterObservability(configuration)
+            .RegisterOpenTelemetry(configuration, AssemblyReference.Assembly)
             .ConfigureSerilog(serilog =>
             {
                 // 프로젝트별 Serilog 확장 설정
             })
             .ConfigureMetrics(metrics =>
             {
-                // 프로젝트별 Meter 추가
-                metrics.AddMeter("Observability.*");
+                // 프로젝트별 추가 Meter가 필요한 경우 여기에 등록
+                // (기본적으로 "Observability.*"는 AssemblyReference.Assembly 전달로 자동 등록됨)
             })
             .ConfigureTraces(traces =>
             {
-                // 프로젝트별 ActivitySource 추가
-                traces.AddSource("Observability.*");
+                // 프로젝트별 추가 ActivitySource가 필요한 경우 여기에 등록
+                // (기본적으로 "Observability.*"는 AssemblyReference.Assembly 전달로 자동 등록됨)
             })
             .ConfigureStartupLogger(logger =>
             {

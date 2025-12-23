@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection;
 using Functorium.Abstractions.Registrations;
 using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Builders;
@@ -11,6 +12,9 @@ namespace Functorium.Tests.Unit.AbstractionsTests.Registrations;
 [Trait(nameof(UnitTest), UnitTest.Functorium_Abstractions)]
 public class OpenTelemetryRegistrationTests
 {
+    // 테스트용 어셈블리 (현재 테스트 어셈블리 사용)
+    private static readonly Assembly TestAssembly = typeof(OpenTelemetryRegistrationTests).Assembly;
+
     private static IConfiguration CreateConfiguration(Dictionary<string, string?> settings)
     {
         return new ConfigurationBuilder()
@@ -40,16 +44,16 @@ public class OpenTelemetryRegistrationTests
         };
     }
 
-    #region RegisterObservability Basic Tests
+    #region RegisterOpenTelemetry Basic Tests
 
     [Fact]
-    public void RegisterObservability_ReturnsOpenTelemetryBuilder_WhenConfigurationIsValid()
+    public void RegisterOpenTelemetry_ReturnsOpenTelemetryBuilder_WhenConfigurationIsValid()
     {
         // Arrange
         var (services, configuration) = CreateServicesWithConfiguration(CreateValidOpenTelemetrySettings());
 
         // Act
-        var actual = services.RegisterObservability(configuration);
+        var actual = services.RegisterOpenTelemetry(configuration, TestAssembly);
 
         // Assert
         actual.ShouldNotBeNull();
@@ -57,13 +61,13 @@ public class OpenTelemetryRegistrationTests
     }
 
     [Fact]
-    public void RegisterObservability_RegistersIOpenTelemetryOptions_WhenCalled()
+    public void RegisterOpenTelemetry_RegistersIOpenTelemetryOptions_WhenCalled()
     {
         // Arrange
         var (services, configuration) = CreateServicesWithConfiguration(CreateValidOpenTelemetrySettings("MyService"));
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
         var actual = provider.GetService<IOpenTelemetryOptions>();
 
@@ -74,13 +78,13 @@ public class OpenTelemetryRegistrationTests
     }
 
     [Fact]
-    public void RegisterObservability_RegistersActivitySource_WhenCalled()
+    public void RegisterOpenTelemetry_RegistersActivitySource_WhenCalled()
     {
         // Arrange
         var (services, configuration) = CreateServicesWithConfiguration(CreateValidOpenTelemetrySettings("TestService"));
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
         var actual = provider.GetService<ActivitySource>();
 
@@ -94,14 +98,14 @@ public class OpenTelemetryRegistrationTests
     #region OpenTelemetryOptions Configuration Tests
 
     [Fact]
-    public void RegisterObservability_ConfiguresServiceName_WhenSetInConfiguration()
+    public void RegisterOpenTelemetry_ConfiguresServiceName_WhenSetInConfiguration()
     {
         // Arrange
         var settings = CreateValidOpenTelemetrySettings(serviceName: "CustomServiceName");
         var (services, configuration) = CreateServicesWithConfiguration(settings);
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
         var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
 
@@ -110,14 +114,14 @@ public class OpenTelemetryRegistrationTests
     }
 
     [Fact]
-    public void RegisterObservability_ConfiguresCollectorEndpoint_WhenSetInConfiguration()
+    public void RegisterOpenTelemetry_ConfiguresCollectorEndpoint_WhenSetInConfiguration()
     {
         // Arrange
         var settings = CreateValidOpenTelemetrySettings(collectorEndpoint: "http://custom-collector:4317");
         var (services, configuration) = CreateServicesWithConfiguration(settings);
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
         var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
 
@@ -128,7 +132,7 @@ public class OpenTelemetryRegistrationTests
     [Theory]
     [InlineData("Grpc")]
     [InlineData("HttpProtobuf")]
-    public void RegisterObservability_ConfiguresCollectorProtocol_WhenSetInConfiguration(string protocol)
+    public void RegisterOpenTelemetry_ConfiguresCollectorProtocol_WhenSetInConfiguration(string protocol)
     {
         // Arrange
         var settings = CreateValidOpenTelemetrySettings();
@@ -136,7 +140,7 @@ public class OpenTelemetryRegistrationTests
         var (services, configuration) = CreateServicesWithConfiguration(settings);
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
         var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
 
@@ -148,7 +152,7 @@ public class OpenTelemetryRegistrationTests
     [InlineData(0.0)]
     [InlineData(0.5)]
     [InlineData(1.0)]
-    public void RegisterObservability_ConfiguresSamplingRate_WhenSetInConfiguration(double samplingRate)
+    public void RegisterOpenTelemetry_ConfiguresSamplingRate_WhenSetInConfiguration(double samplingRate)
     {
         // Arrange
         var settings = CreateValidOpenTelemetrySettings();
@@ -156,7 +160,7 @@ public class OpenTelemetryRegistrationTests
         var (services, configuration) = CreateServicesWithConfiguration(settings);
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
         var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
 
@@ -167,7 +171,7 @@ public class OpenTelemetryRegistrationTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void RegisterObservability_ConfiguresEnablePrometheusExporter_WhenSetInConfiguration(bool enablePrometheus)
+    public void RegisterOpenTelemetry_ConfiguresEnablePrometheusExporter_WhenSetInConfiguration(bool enablePrometheus)
     {
         // Arrange
         var settings = CreateValidOpenTelemetrySettings();
@@ -175,7 +179,7 @@ public class OpenTelemetryRegistrationTests
         var (services, configuration) = CreateServicesWithConfiguration(settings);
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
         var actual = provider.GetRequiredService<IOpenTelemetryOptions>();
 
@@ -188,7 +192,7 @@ public class OpenTelemetryRegistrationTests
     #region Individual Endpoint Configuration Tests
 
     [Fact]
-    public void RegisterObservability_ConfiguresTracingCollectorEndpoint_WhenSetInConfiguration()
+    public void RegisterOpenTelemetry_ConfiguresTracingCollectorEndpoint_WhenSetInConfiguration()
     {
         // Arrange
         var settings = CreateValidOpenTelemetrySettings();
@@ -196,7 +200,7 @@ public class OpenTelemetryRegistrationTests
         var (services, configuration) = CreateServicesWithConfiguration(settings);
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
         var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
 
@@ -205,7 +209,7 @@ public class OpenTelemetryRegistrationTests
     }
 
     [Fact]
-    public void RegisterObservability_ConfiguresMetricsCollectorEndpoint_WhenSetInConfiguration()
+    public void RegisterOpenTelemetry_ConfiguresMetricsCollectorEndpoint_WhenSetInConfiguration()
     {
         // Arrange
         var settings = CreateValidOpenTelemetrySettings();
@@ -213,7 +217,7 @@ public class OpenTelemetryRegistrationTests
         var (services, configuration) = CreateServicesWithConfiguration(settings);
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
         var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
 
@@ -222,7 +226,7 @@ public class OpenTelemetryRegistrationTests
     }
 
     [Fact]
-    public void RegisterObservability_ConfiguresLoggingCollectorEndpoint_WhenSetInConfiguration()
+    public void RegisterOpenTelemetry_ConfiguresLoggingCollectorEndpoint_WhenSetInConfiguration()
     {
         // Arrange
         var settings = CreateValidOpenTelemetrySettings();
@@ -230,7 +234,7 @@ public class OpenTelemetryRegistrationTests
         var (services, configuration) = CreateServicesWithConfiguration(settings);
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
         var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
 
@@ -243,7 +247,7 @@ public class OpenTelemetryRegistrationTests
     #region Individual Protocol Configuration Tests
 
     [Fact]
-    public void RegisterObservability_ConfiguresTracingCollectorProtocol_WhenSetInConfiguration()
+    public void RegisterOpenTelemetry_ConfiguresTracingCollectorProtocol_WhenSetInConfiguration()
     {
         // Arrange
         var settings = CreateValidOpenTelemetrySettings();
@@ -251,7 +255,7 @@ public class OpenTelemetryRegistrationTests
         var (services, configuration) = CreateServicesWithConfiguration(settings);
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
         var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
 
@@ -260,7 +264,7 @@ public class OpenTelemetryRegistrationTests
     }
 
     [Fact]
-    public void RegisterObservability_ConfiguresMetricsCollectorProtocol_WhenSetInConfiguration()
+    public void RegisterOpenTelemetry_ConfiguresMetricsCollectorProtocol_WhenSetInConfiguration()
     {
         // Arrange
         var settings = CreateValidOpenTelemetrySettings();
@@ -268,7 +272,7 @@ public class OpenTelemetryRegistrationTests
         var (services, configuration) = CreateServicesWithConfiguration(settings);
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
         var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
 
@@ -277,7 +281,7 @@ public class OpenTelemetryRegistrationTests
     }
 
     [Fact]
-    public void RegisterObservability_ConfiguresLoggingCollectorProtocol_WhenSetInConfiguration()
+    public void RegisterOpenTelemetry_ConfiguresLoggingCollectorProtocol_WhenSetInConfiguration()
     {
         // Arrange
         var settings = CreateValidOpenTelemetrySettings();
@@ -285,7 +289,7 @@ public class OpenTelemetryRegistrationTests
         var (services, configuration) = CreateServicesWithConfiguration(settings);
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
         var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
 
@@ -298,13 +302,13 @@ public class OpenTelemetryRegistrationTests
     #region OpenTelemetryBuilder Options Access Tests
 
     [Fact]
-    public void RegisterObservability_ReturnsBuilderWithCorrectOptions_WhenCalled()
+    public void RegisterOpenTelemetry_ReturnsBuilderWithCorrectOptions_WhenCalled()
     {
         // Arrange
         var (services, configuration) = CreateServicesWithConfiguration(CreateValidOpenTelemetrySettings("BuilderTestService"));
 
         // Act
-        var actual = services.RegisterObservability(configuration);
+        var actual = services.RegisterOpenTelemetry(configuration, TestAssembly);
 
         // Assert
         actual.Options.ShouldNotBeNull();
@@ -316,13 +320,13 @@ public class OpenTelemetryRegistrationTests
     #region Service Registration Verification Tests
 
     [Fact]
-    public void RegisterObservability_RegistersSerilogLogging_WhenCalled()
+    public void RegisterOpenTelemetry_RegistersSerilogLogging_WhenCalled()
     {
         // Arrange
         var (services, configuration) = CreateServicesWithConfiguration(CreateValidOpenTelemetrySettings());
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
 
         // Assert
         services.ShouldContain(sd => sd.ServiceType.Name.Contains("ILoggerFactory") ||
@@ -330,13 +334,13 @@ public class OpenTelemetryRegistrationTests
     }
 
     [Fact]
-    public void RegisterObservability_RegistersActivitySourceAsSingleton_WhenCalled()
+    public void RegisterOpenTelemetry_RegistersActivitySourceAsSingleton_WhenCalled()
     {
         // Arrange
         var (services, configuration) = CreateServicesWithConfiguration(CreateValidOpenTelemetrySettings());
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
 
         // Assert
         var activitySourceDescriptor = services.FirstOrDefault(sd => sd.ServiceType == typeof(ActivitySource));
@@ -345,13 +349,13 @@ public class OpenTelemetryRegistrationTests
     }
 
     [Fact]
-    public void RegisterObservability_RegistersIOpenTelemetryOptionsAsSingleton_WhenCalled()
+    public void RegisterOpenTelemetry_RegistersIOpenTelemetryOptionsAsSingleton_WhenCalled()
     {
         // Arrange
         var (services, configuration) = CreateServicesWithConfiguration(CreateValidOpenTelemetrySettings());
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
 
         // Assert
         var optionsDescriptor = services.FirstOrDefault(sd => sd.ServiceType == typeof(IOpenTelemetryOptions));
@@ -364,13 +368,13 @@ public class OpenTelemetryRegistrationTests
     #region ActivitySource Configuration Tests
 
     [Fact]
-    public void RegisterObservability_ConfiguresActivitySourceWithServiceName_WhenCalled()
+    public void RegisterOpenTelemetry_ConfiguresActivitySourceWithServiceName_WhenCalled()
     {
         // Arrange
         var (services, configuration) = CreateServicesWithConfiguration(CreateValidOpenTelemetrySettings("ActivitySourceService"));
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
         var actual = provider.GetRequiredService<ActivitySource>();
 
@@ -379,13 +383,13 @@ public class OpenTelemetryRegistrationTests
     }
 
     [Fact]
-    public void RegisterObservability_ConfiguresActivitySourceWithServiceVersion_WhenCalled()
+    public void RegisterOpenTelemetry_ConfiguresActivitySourceWithServiceVersion_WhenCalled()
     {
         // Arrange
         var (services, configuration) = CreateServicesWithConfiguration(CreateValidOpenTelemetrySettings());
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
         var actual = provider.GetRequiredService<ActivitySource>();
 
@@ -398,13 +402,13 @@ public class OpenTelemetryRegistrationTests
     #region Multiple Calls Tests
 
     [Fact]
-    public void RegisterObservability_ReturnsSameOptionsInstance_WhenCalledMultipleTimes()
+    public void RegisterOpenTelemetry_ReturnsSameOptionsInstance_WhenCalledMultipleTimes()
     {
         // Arrange
         var (services, configuration) = CreateServicesWithConfiguration(CreateValidOpenTelemetrySettings());
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
         var first = provider.GetRequiredService<IOpenTelemetryOptions>();
         var second = provider.GetRequiredService<IOpenTelemetryOptions>();
@@ -414,13 +418,13 @@ public class OpenTelemetryRegistrationTests
     }
 
     [Fact]
-    public void RegisterObservability_ReturnsSameActivitySourceInstance_WhenCalledMultipleTimes()
+    public void RegisterOpenTelemetry_ReturnsSameActivitySourceInstance_WhenCalledMultipleTimes()
     {
         // Arrange
         var (services, configuration) = CreateServicesWithConfiguration(CreateValidOpenTelemetrySettings());
 
         // Act
-        services.RegisterObservability(configuration);
+        services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
         var first = provider.GetRequiredService<ActivitySource>();
         var second = provider.GetRequiredService<ActivitySource>();
