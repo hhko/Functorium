@@ -281,7 +281,7 @@ internal static class ComplexGenericAdapterPipelineLoggers
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_ComplexGenericAdapter_GetComplexData =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
-            ObservabilityFields.EventIds.Adapter.AdapterResponse,
+            ObservabilityFields.EventIds.Adapter.AdapterResponseSuccess,
             "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded {Status} in {Elapsed:0.0000} ms");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_ComplexGenericAdapter_GetComplexData =
@@ -337,7 +337,7 @@ internal static class ComplexGenericAdapterPipelineLoggers
             return;
 
         logger.LogDebug(
-            eventId: ObservabilityFields.EventIds.Adapter.AdapterResponse,
+            eventId: ObservabilityFields.EventIds.Adapter.AdapterResponseSuccess,
             message: "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} " +
                      "{Response_Result} {Response_ResultCount} " +
                      "responded {Status} in {Elapsed:0.0000} ms",

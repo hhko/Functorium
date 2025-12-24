@@ -283,7 +283,7 @@ internal static class PrimaryCtorAdapterPipelineLoggers
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_PrimaryCtorAdapter_GetConnectionString =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
-            ObservabilityFields.EventIds.Adapter.AdapterResponse,
+            ObservabilityFields.EventIds.Adapter.AdapterResponseSuccess,
             "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded {Status} in {Elapsed:0.0000} ms");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_PrimaryCtorAdapter_GetConnectionString =
@@ -339,7 +339,7 @@ internal static class PrimaryCtorAdapterPipelineLoggers
             return;
 
         logger.LogDebug(
-            eventId: ObservabilityFields.EventIds.Adapter.AdapterResponse,
+            eventId: ObservabilityFields.EventIds.Adapter.AdapterResponseSuccess,
             message: "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} " +
                      "{Response_Result} " +
                      "responded {Status} in {Elapsed:0.0000} ms",
