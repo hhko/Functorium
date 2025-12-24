@@ -71,7 +71,8 @@ jobs:
 
     - name: Test with coverage (MTP)
       run: |
-        dotnet test ${{ env.SOLUTION_FILE }} \
+        dotnet test \
+          --solution ${{ env.SOLUTION_FILE }} \
           --configuration ${{ env.CONFIGURATION }} \
           --no-build \
           -- --coverage --coverage-output-format cobertura --coverage-output coverage.cobertura.xml --report-trx
