@@ -28,21 +28,21 @@
     {
         "key": "ctrl+shift+b",
         "command": "workbench.action.tasks.runTask",
-        "args": "build-Cqrs.Demo"
+        "args": "build-CqrsPipeline.Demo"
     },
 
     // Ctrl+Alt+P: Publish
     {
         "key": "ctrl+alt+p",
         "command": "workbench.action.tasks.runTask",
-        "args": "publish-Cqrs.Demo"
+        "args": "publish-CqrsPipeline.Demo"
     },
 
     // Ctrl+Alt+W: Watch (Hot Reload)
     {
         "key": "ctrl+alt+w",
         "command": "workbench.action.tasks.runTask",
-        "args": "watch-Cqrs.Demo"
+        "args": "watch-CqrsPipeline.Demo"
     },
 
     // ============================================

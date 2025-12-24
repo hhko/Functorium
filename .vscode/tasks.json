@@ -2,38 +2,54 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build-Cqrs.Demo",
+      "label": "build",
       "command": "dotnet",
       "type": "process",
       "args": [
         "build",
-        "${workspaceFolder}/Tutorials/Cqrs/Src/Cqrs.Demo/Cqrs.Demo.csproj",
+        "${workspaceFolder}/Functorium.slnx",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary;ForceNoAlign"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "build-CqrsPipeline.Demo",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/Tutorials/CqrsPipeline/Src/CqrsPipeline.Demo/CqrsPipeline.Demo.csproj",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary;ForceNoAlign"
       ],
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "publish-Cqrs.Demo",
+      "label": "publish-CqrsPipeline.Demo",
       "command": "dotnet",
       "type": "process",
       "args": [
         "publish",
-        "${workspaceFolder}/Tutorials/Cqrs/Src/Cqrs.Demo/Cqrs.Demo.csproj",
+        "${workspaceFolder}/Tutorials/CqrsPipeline/Src/CqrsPipeline.Demo/CqrsPipeline.Demo.csproj",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary;ForceNoAlign"
       ],
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "watch-Cqrs.Demo",
+      "label": "watch-CqrsPipeline.Demo",
       "command": "dotnet",
       "type": "process",
       "args": [
         "watch",
         "run",
         "--project",
-        "${workspaceFolder}/Tutorials/Cqrs/Src/Cqrs.Demo/Cqrs.Demo.csproj"
+        "${workspaceFolder}/Tutorials/CqrsPipeline/Src/CqrsPipeline.Demo/CqrsPipeline.Demo.csproj"
       ],
       "problemMatcher": "$msCompile"
     }

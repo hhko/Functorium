@@ -3,33 +3,40 @@
 
 <#
 .SYNOPSIS
-    VSCode launch.json, tasks.json, keybindings.json에 프로젝트 설정을 자동으로 추가합니다.
+    VSCode launch.json, tasks.json에 프로젝트 설정을 자동으로 추가합니다.
 
 .DESCRIPTION
     프로젝트 이름을 입력받아 해당 .csproj 파일을 찾고,
-    VSCode의 launch.json, tasks.json, keybindings.json에 실행/빌드 설정을 추가합니다.
+    VSCode의 launch.json, tasks.json에 실행/빌드 설정을 추가합니다.
     여러 프로젝트를 지정하면 compounds를 생성하여 동시 실행이 가능합니다.
 
 .PARAMETER ProjectName
     추가할 프로젝트의 이름 (.csproj 파일명에서 확장자 제외)
     여러 프로젝트를 쉼표로 구분하여 지정할 수 있습니다.
 
+.PARAMETER Force
+    이미 존재하는 설정을 제거하고 다시 추가합니다.
+
 .EXAMPLE
     ./Add-VscodeProject.ps1 -ProjectName Observability
     ./Add-VscodeProject.ps1 Observability
     ./Add-VscodeProject.ps1 Project1, Project2, Project3
-    ./Add-VscodeProject.ps1 -ProjectName Project1, Project2
+    ./Add-VscodeProject.ps1 -ProjectName Project1, Project2 -Force
 
 .NOTES
-    - 이미 동일한 이름의 설정이 있으면 해당 프로젝트는 건너뜁니다.
+    - -Force 옵션 없이 실행 시 동일한 이름의 설정이 있으면 건너뜁니다.
+    - -Force 옵션 사용 시 기존 설정을 제거하고 다시 추가합니다.
     - 여러 개의 .csproj 파일이 발견되면 선택할 수 있습니다.
     - 여러 프로젝트 지정 시 compounds가 생성되어 동시 실행 가능합니다.
-    - keybindings.json은 마지막 프로젝트로 설정됩니다.
+    - keybindings.json은 참고용으로만 제공됩니다 (수동 복사 필요).
 #>
 
 param(
     [Parameter(Mandatory = $true, Position = 0)]
-    [string[]]$ProjectName
+    [string[]]$ProjectName,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$Force
 )
 
 # 색상 출력 함수
@@ -37,6 +44,52 @@ function Write-Success { param($Message) Write-Host $Message -ForegroundColor Gr
 function Write-Error { param($Message) Write-Host $Message -ForegroundColor Red }
 function Write-Warning { param($Message) Write-Host $Message -ForegroundColor Yellow }
 function Write-Info { param($Message) Write-Host $Message -ForegroundColor Cyan }
+
+# 기존 configuration 제거 함수
+function Remove-ExistingConfiguration {
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$LaunchJson,
+        [Parameter(Mandatory = $true)]
+        [string]$Name
+    )
+
+    $launchJson.configurations = @($launchJson.configurations | Where-Object { $_.name -ne $Name })
+}
+
+# 기존 tasks 제거 함수
+function Remove-ExistingTasks {
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$TasksJson,
+        [Parameter(Mandatory = $true)]
+        [string]$ProjectName
+    )
+
+    $labelsToRemove = @(
+        "build-$ProjectName",
+        "publish-$ProjectName",
+        "watch-$ProjectName"
+    )
+
+    $tasksJson.tasks = @($tasksJson.tasks | Where-Object { $_.label -notin $labelsToRemove })
+}
+
+# 기존 compound 제거 함수 (프로젝트 포함된 compound 제거)
+function Remove-ExistingCompound {
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$LaunchJson,
+        [Parameter(Mandatory = $true)]
+        [string]$ProjectName
+    )
+
+    if ($launchJson.PSObject.Properties['compounds'] -and $launchJson.compounds) {
+        $launchJson.compounds = @($launchJson.compounds | Where-Object {
+            $_.configurations -notcontains $ProjectName
+        })
+    }
+}
 
 # 스크립트 루트에서 워크스페이스 루트 찾기
 $scriptPath = $PSScriptRoot
@@ -52,6 +105,9 @@ Write-Info "=== VSCode 프로젝트 설정 추가 ==="
 Write-Host ""
 Write-Host "프로젝트: $($ProjectName -join ', ')"
 Write-Host "워크스페이스: $workspaceRoot"
+if ($Force) {
+    Write-Warning "Force 모드: 기존 설정을 제거하고 다시 추가합니다."
+}
 Write-Host ""
 
 # JSON 파일 존재 확인
@@ -82,6 +138,7 @@ if (-not $launchJson.PSObject.Properties['compounds']) {
 $addedProjects = @()
 $skippedProjects = @()
 $failedProjects = @()
+$removedProjects = @()
 $lastAddedProject = $null
 
 # 각 프로젝트 처리
@@ -131,20 +188,25 @@ foreach ($project in $ProjectName) {
 
     Write-Success "  발견: $relativeCsprojPath"
 
-    # 2. 중복 확인
+    # 2. 중복 확인 및 처리
     $existingConfig = $launchJson.configurations | Where-Object { $_.name -eq $project }
-    if ($existingConfig) {
-        Write-Warning "  이미 존재하는 설정: '$project' - 건너뜀"
-        $skippedProjects += $project
-        continue
-    }
-
     $buildTaskLabel = "build-$project"
     $existingTask = $tasksJson.tasks | Where-Object { $_.label -eq $buildTaskLabel }
-    if ($existingTask) {
-        Write-Warning "  이미 존재하는 task: '$buildTaskLabel' - 건너뜀"
-        $skippedProjects += $project
-        continue
+
+    if ($existingConfig -or $existingTask) {
+        if ($Force) {
+            # 기존 설정 제거
+            Write-Info "  기존 설정 제거 중..."
+            Remove-ExistingConfiguration -LaunchJson $launchJson -Name $project
+            Remove-ExistingTasks -TasksJson $tasksJson -ProjectName $project
+            Remove-ExistingCompound -LaunchJson $launchJson -ProjectName $project
+            $removedProjects += $project
+            Write-Success "  기존 설정 제거됨: '$project'"
+        } else {
+            Write-Warning "  이미 존재하는 설정: '$project' - 건너뜀 (-Force로 덮어쓰기 가능)"
+            $skippedProjects += $project
+            continue
+        }
     }
 
     # 3. Target Framework 감지
@@ -264,53 +326,6 @@ if ($addedProjects.Count -gt 0) {
     $tasksJsonOutput = $tasksJson | ConvertTo-Json @jsonOptions
     $tasksJsonOutput = $tasksJsonOutput -replace '(\[\s*\])', '[]'
     $tasksJsonOutput | Set-Content $tasksJsonPath -Encoding UTF8
-
-    # 8. keybindings.json 업데이트 (마지막 추가된 프로젝트로)
-    $keybindingsUpdated = $false
-    if ((Test-Path $keybindingsJsonPath) -and $lastAddedProject) {
-        Write-Host ""
-        Write-Info "keybindings.json 업데이트 중..."
-
-        $keybindingsContent = Get-Content $keybindingsJsonPath -Raw
-
-        if ($keybindingsContent -match "build-$lastAddedProject") {
-            Write-Warning "  keybindings.json에 '$lastAddedProject' 관련 키바인딩이 이미 있습니다."
-        } else {
-            $updated = $false
-
-            # build 단축키 업데이트
-            if ($keybindingsContent -match '"args":\s*"build[^-]') {
-                $keybindingsContent = $keybindingsContent -replace '("args":\s*")build(")', "`$1build-$lastAddedProject`$2"
-                $updated = $true
-            } elseif ($keybindingsContent -match '"args":\s*"build-[^"]+') {
-                $keybindingsContent = $keybindingsContent -replace '("args":\s*")build-[^"]+(")', "`$1build-$lastAddedProject`$2"
-                $updated = $true
-            }
-
-            # publish 단축키 업데이트
-            if ($keybindingsContent -match '"args":\s*"publish[^-]') {
-                $keybindingsContent = $keybindingsContent -replace '("args":\s*")publish(")', "`$1publish-$lastAddedProject`$2"
-                $updated = $true
-            } elseif ($keybindingsContent -match '"args":\s*"publish-[^"]+') {
-                $keybindingsContent = $keybindingsContent -replace '("args":\s*")publish-[^"]+(")', "`$1publish-$lastAddedProject`$2"
-                $updated = $true
-            }
-
-            # watch 단축키 업데이트
-            if ($keybindingsContent -match '"args":\s*"watch[^-]') {
-                $keybindingsContent = $keybindingsContent -replace '("args":\s*")watch(")', "`$1watch-$lastAddedProject`$2"
-                $updated = $true
-            } elseif ($keybindingsContent -match '"args":\s*"watch-[^"]+') {
-                $keybindingsContent = $keybindingsContent -replace '("args":\s*")watch-[^"]+(")', "`$1watch-$lastAddedProject`$2"
-                $updated = $true
-            }
-
-            if ($updated) {
-                $keybindingsContent | Set-Content $keybindingsJsonPath -Encoding UTF8 -NoNewline
-                $keybindingsUpdated = $true
-            }
-        }
-    }
 }
 
 # 결과 요약
@@ -319,6 +334,14 @@ Write-Host "============================================"
 Write-Success "=== 처리 완료 ==="
 Write-Host "============================================"
 Write-Host ""
+
+if ($removedProjects.Count -gt 0) {
+    Write-Host "제거 후 다시 추가된 프로젝트 ($($removedProjects.Count)개):"
+    foreach ($p in $removedProjects) {
+        Write-Warning "  - $p (기존 설정 제거됨)"
+    }
+    Write-Host ""
+}
 
 if ($addedProjects.Count -gt 0) {
     Write-Host "추가된 프로젝트 ($($addedProjects.Count)개):"
@@ -340,7 +363,7 @@ if ($compoundCreated) {
 if ($skippedProjects.Count -gt 0) {
     Write-Host "건너뛴 프로젝트 (이미 존재, $($skippedProjects.Count)개):"
     foreach ($p in $skippedProjects) {
-        Write-Warning "  - $p"
+        Write-Warning "  - $p (-Force 옵션으로 덮어쓰기 가능)"
     }
     Write-Host ""
 }
@@ -353,11 +376,19 @@ if ($failedProjects.Count -gt 0) {
     Write-Host ""
 }
 
-if ($keybindingsUpdated) {
-    Write-Host "keybindings.json (args 업데이트 → $lastAddedProject):"
-    Write-Host "  - Ctrl+Shift+B → build-$lastAddedProject"
-    Write-Host "  - Ctrl+Alt+P   → publish-$lastAddedProject"
-    Write-Host "  - Ctrl+Alt+W   → watch-$lastAddedProject"
+# keybindings.json 안내
+if ($addedProjects.Count -gt 0 -and (Test-Path $keybindingsJsonPath)) {
+    Write-Host ""
+    Write-Info "=== keybindings.json 안내 ==="
+    Write-Host ""
+    Write-Warning "  .vscode/keybindings.json은 VSCode에서 자동 적용되지 않습니다."
+    Write-Host "  단축키를 사용하려면 아래 방법 중 하나를 선택하세요:"
+    Write-Host ""
+    Write-Host "  1. VSCode에서 Ctrl+Shift+P → 'Preferences: Open Keyboard Shortcuts (JSON)'"
+    Write-Host "     열린 파일에 .vscode/keybindings.json 내용을 복사"
+    Write-Host ""
+    Write-Host "  2. 또는 tasks.json의 'build' 태스크가 기본 빌드로 설정되어 있으므로"
+    Write-Host "     Ctrl+Shift+B로 솔루션 전체 빌드 가능"
     Write-Host ""
 }
 

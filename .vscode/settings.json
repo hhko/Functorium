@@ -1,5 +1,5 @@
 {
-  "dotnet.defaultSolution": "Functorium.sln",
+  "dotnet.defaultSolution": "Functorium.slnx",
   "omnisharp.enableRoslynAnalyzers": true,
   "omnisharp.enableEditorConfigSupport": true,
   "csharp.semanticHighlighting.enabled": true,
