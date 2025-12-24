@@ -41,7 +41,7 @@ public sealed class GetAllProductsQuery
 
         public async ValueTask<IFinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Getting all products");
+            //_logger.LogInformation("Getting all products");
 
             Fin<Seq<Product>> getAllResult = await _productRepository.GetAllAsync(cancellationToken);
 
@@ -52,12 +52,12 @@ public sealed class GetAllProductsQuery
                         .Select(p => new ProductDto(p.Id, p.Name, p.Price, p.StockQuantity))
                         .ToSeq();
 
-                    _logger.LogInformation("Found {Count} products", productDtos.Count);
+                    //_logger.LogInformation("Found {Count} products", productDtos.Count);
                     return FinResponseUtilites.ToResponse(new Response(productDtos));
                 },
                 Fail: error =>
                 {
-                    _logger.LogError("Failed to get all products: {Error}", error.Message);
+                    //_logger.LogError("Failed to get all products: {Error}", error.Message);
                     return FinResponseUtilites.ToResponseFail<Response>(error);
                 });
         }

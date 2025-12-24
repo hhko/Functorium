@@ -1,14 +1,13 @@
-using System.Diagnostics;
-using System.Diagnostics.Metrics;
+using System.Reflection;
 using CqrsPipeline.Demo;
 using CqrsPipeline.Demo.Domain;
 using CqrsPipeline.Demo.Infrastructure;
 using CqrsPipeline.Demo.Usecases;
 using FluentValidation;
-using Functorium.Adapters.Observabilities;
+using Functorium.Abstractions.Registrations;
 using Mediator;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
@@ -17,9 +16,9 @@ Console.WriteLine();
 Console.WriteLine("이 데모는 Functorium의 파이프라인 기능을 보여줍니다:");
 Console.WriteLine("  1. UsecaseExceptionPipeline - 예외를 Error로 변환");
 Console.WriteLine("  2. UsecaseValidationPipeline - FluentValidation 검증");
-Console.WriteLine("  3. UsecaseLoggerPipeline - 요청/응답 로깅");
-Console.WriteLine("  4. UsecaseTracePipeline - OpenTelemetry 분산 추적");
-Console.WriteLine("  5. UsecaseMetricPipeline - OpenTelemetry 메트릭");
+Console.WriteLine("  3. UsecaseLoggerPipeline - OpenTelemetry 로그");
+Console.WriteLine("  4. UsecaseTracePipeline - OpenTelemetry 추적");
+Console.WriteLine("  5. UsecaseMetricPipeline - OpenTelemetry 지표");
 Console.WriteLine();
 
 // =================================================================
@@ -27,12 +26,16 @@ Console.WriteLine();
 // =================================================================
 ServiceCollection services = new();
 
-// Logging 설정
-services.AddLogging(builder =>
-{
-    builder.AddConsole();
-    builder.SetMinimumLevel(LogLevel.Debug);
-});
+// Configuration 설정
+IConfiguration configuration = new ConfigurationBuilder()
+    .SetBasePath(AppContext.BaseDirectory)
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .Build();
+
+services.AddSingleton(configuration);
+
+// MeterFactory 등록 (UsecaseMetricPipeline에 필요)
+services.AddMetrics();
 
 // Mediator 등록
 services.AddMediator();
@@ -40,24 +43,12 @@ services.AddMediator();
 // FluentValidation 등록 - 어셈블리에서 모든 Validator 자동 등록
 services.AddValidatorsFromAssemblyContaining<Program>();
 
-// OpenTelemetry 옵션 등록
-services.AddSingleton<IOpenTelemetryOptions>(new DemoOpenTelemetryOptions());
-
-// ActivitySource 등록 (Tracing용)
-ActivitySource activitySource = new("CqrsPipeline.Demo");
-services.AddSingleton(activitySource);
-
-// MeterFactory 등록 (Metrics용)
-services.AddMetrics();
-
-// OpenTelemetry 설정
-services.AddOpenTelemetry()
-    .WithTracing(builder => builder
-        .AddSource("CqrsPipeline.Demo")
-        .AddConsoleExporter())
-    .WithMetrics(builder => builder
-        .AddMeter("CqrsPipeline.Demo.Application")
-        .AddConsoleExporter());
+// OpenTelemetry 설정 (RegisterOpenTelemetry 사용)
+services
+    .RegisterOpenTelemetry(configuration, Assembly.GetExecutingAssembly())
+    .ConfigureTraces(tracing => tracing.Configure(builder => builder.AddConsoleExporter()))
+    .ConfigureMetrics(metrics => metrics.Configure(builder => builder.AddConsoleExporter()))
+    .Build();
 
 // =================================================================
 // 파이프라인 등록 (순서 중요!)
@@ -66,19 +57,19 @@ services.AddOpenTelemetry()
 // Request -> Exception -> Validation -> Logger -> Trace -> Metric -> Handler
 // Response <- Exception <- Validation <- Logger <- Trace <- Metric <- Handler
 
-// 1. Exception Pipeline (가장 바깥쪽 - 모든 예외를 캐치)
+// 1. Exception Pipeline (예외)
 services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseExceptionPipeline<,>));
 
-// 2. Validation Pipeline (검증 후 핸들러 실행)
+// 2. Validation Pipeline (유효성 검사)
 services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseValidationPipeline<,>));
 
-// 3. Logger Pipeline (요청/응답 로깅)
+// 3. Logger Pipeline (로그)
 services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseLoggerPipeline<,>));
 
-// 4. Trace Pipeline (분산 추적)
+// 4. Trace Pipeline (추적)
 services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseTracePipeline<,>));
 
-// 5. Metric Pipeline (메트릭 수집)
+// 5. Metric Pipeline (지표)
 services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseMetricPipeline<,>));
 
 // Repository 등록
@@ -210,11 +201,3 @@ static void PrintResult<T>(string operation, IFinResponse<T> result) where T : I
     Console.WriteLine();
 }
 
-// =================================================================
-// Demo OpenTelemetry Options
-// =================================================================
-public sealed class DemoOpenTelemetryOptions : IOpenTelemetryOptions
-{
-    public string ServiceNamespace => "CqrsPipeline.Demo";
-    public bool EnablePrometheusExporter => false;
-}

@@ -68,12 +68,12 @@ public sealed class UpdateProductCommand
 
         public async ValueTask<IFinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Updating product: {ProductId}", request.ProductId);
+            //_logger.LogInformation("Updating product: {ProductId}", request.ProductId);
 
             // 예외 시뮬레이션 - UsecaseExceptionPipeline 데모용
             if (request.SimulateException)
             {
-                _logger.LogWarning("Simulating exception for demo purposes");
+                //_logger.LogWarning("Simulating exception for demo purposes");
                 throw new InvalidOperationException("시뮬레이션된 예외: 데모 목적으로 발생된 예외입니다");
             }
 
@@ -83,14 +83,14 @@ public sealed class UpdateProductCommand
             if (getResult.IsFail)
             {
                 Error error = (Error)getResult;
-                _logger.LogError("Failed to get product: {Error}", error.Message);
+                //_logger.LogError("Failed to get product: {Error}", error.Message);
                 return FinResponseUtilites.ToResponseFail<Response>(error);
             }
 
             Product? existingProduct = (Product?)getResult;
             if (existingProduct is null)
             {
-                _logger.LogWarning("Product not found: {ProductId}", request.ProductId);
+                //_logger.LogWarning("Product not found: {ProductId}", request.ProductId);
                 return FinResponseUtilites.ToResponseFail<Response>(
                     Error.New($"상품 ID '{request.ProductId}'을(를) 찾을 수 없습니다"));
             }
@@ -110,7 +110,7 @@ public sealed class UpdateProductCommand
             return updateResult.Match<IFinResponse<Response>>(
                 Succ: product =>
                 {
-                    _logger.LogInformation("Product updated successfully: {ProductId}", product.Id);
+                    //_logger.LogInformation("Product updated successfully: {ProductId}", product.Id);
                     return FinResponseUtilites.ToResponse(
                         new Response(
                             product.Id,
@@ -122,7 +122,7 @@ public sealed class UpdateProductCommand
                 },
                 Fail: error =>
                 {
-                    _logger.LogError("Failed to update product: {Error}", error.Message);
+                    //_logger.LogError("Failed to update product: {Error}", error.Message);
                     return FinResponseUtilites.ToResponseFail<Response>(error);
                 });
         }

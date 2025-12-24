@@ -35,7 +35,7 @@ public sealed class GetUserByIdQuery
 
         public async ValueTask<IFinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Getting user by ID: {UserId}", request.UserId);
+            //_logger.LogInformation("Getting user by ID: {UserId}", request.UserId);
 
             Fin<User?> result = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
 
@@ -44,18 +44,18 @@ public sealed class GetUserByIdQuery
                 {
                     if (user is null)
                     {
-                        _logger.LogWarning("User not found: {UserId}", request.UserId);
+                        //_logger.LogWarning("User not found: {UserId}", request.UserId);
                         return FinResponseUtilites.ToResponseFail<Response>(
                             Error.New($"User with ID '{request.UserId}' not found"));
                     }
 
-                    _logger.LogInformation("User found: {UserId}, {Name}", user.Id, user.Name);
+                    //_logger.LogInformation("User found: {UserId}, {Name}", user.Id, user.Name);
                     return FinResponseUtilites.ToResponse(
                         new Response(user.Id, user.Name, user.Email, user.CreatedAt));
                 },
                 Fail: error =>
                 {
-                    _logger.LogError("Failed to get user: {Error}", error.Message);
+                    //_logger.LogError("Failed to get user: {Error}", error.Message);
                     return FinResponseUtilites.ToResponseFail<Response>(error);
                 });
         }

@@ -39,26 +39,26 @@ public sealed class GetProductByIdQuery
 
         public async ValueTask<IFinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Getting product by ID: {ProductId}", request.ProductId);
+            //_logger.LogInformation("Getting product by ID: {ProductId}", request.ProductId);
 
             Fin<Product?> getResult = await _productRepository.GetByIdAsync(request.ProductId, cancellationToken);
 
             if (getResult.IsFail)
             {
                 Error error = (Error)getResult;
-                _logger.LogError("Failed to get product: {Error}", error.Message);
+                //_logger.LogError("Failed to get product: {Error}", error.Message);
                 return FinResponseUtilites.ToResponseFail<Response>(error);
             }
 
             Product? product = (Product?)getResult;
             if (product is null)
             {
-                _logger.LogWarning("Product not found: {ProductId}", request.ProductId);
+                //_logger.LogWarning("Product not found: {ProductId}", request.ProductId);
                 return FinResponseUtilites.ToResponseFail<Response>(
                     Error.New($"상품 ID '{request.ProductId}'을(를) 찾을 수 없습니다"));
             }
 
-            _logger.LogInformation("Product found: {ProductId}, {Name}", product.Id, product.Name);
+            //_logger.LogInformation("Product found: {ProductId}, {Name}", product.Id, product.Name);
             return FinResponseUtilites.ToResponse(
                 new Response(
                     product.Id,

@@ -37,7 +37,7 @@ public sealed class CreateUserCommand
 
         public async ValueTask<IFinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Creating user: {Name}, {Email}", request.Name, request.Email);
+            //_logger.LogInformation("Creating user: {Name}, {Email}", request.Name, request.Email);
 
             // 이메일 중복 검사
             Fin<bool> existsResult = await _userRepository.ExistsByEmailAsync(request.Email, cancellationToken);
@@ -45,14 +45,14 @@ public sealed class CreateUserCommand
             if (existsResult.IsFail)
             {
                 Error error = (Error)existsResult;
-                _logger.LogError("Failed to check email existence: {Error}", error.Message);
+                //_logger.LogError("Failed to check email existence: {Error}", error.Message);
                 return FinResponseUtilites.ToResponseFail<Response>(error);
             }
 
             bool exists = (bool)existsResult;
             if (exists)
             {
-                _logger.LogWarning("Email already exists: {Email}", request.Email);
+                //_logger.LogWarning("Email already exists: {Email}", request.Email);
                 return FinResponseUtilites.ToResponseFail<Response>(
                     Error.New($"Email '{request.Email}' already exists"));
             }
@@ -64,13 +64,13 @@ public sealed class CreateUserCommand
             return createResult.Match<IFinResponse<Response>>(
                 Succ: user =>
                 {
-                    _logger.LogInformation("User created successfully: {UserId}", user.Id);
+                    //_logger.LogInformation("User created successfully: {UserId}", user.Id);
                     return FinResponseUtilites.ToResponse(
                         new Response(user.Id, user.Name, user.Email, user.CreatedAt));
                 },
                 Fail: error =>
                 {
-                    _logger.LogError("Failed to create user: {Error}", error.Message);
+                    //_logger.LogError("Failed to create user: {Error}", error.Message);
                     return FinResponseUtilites.ToResponseFail<Response>(error);
                 });
         }

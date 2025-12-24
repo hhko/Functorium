@@ -38,7 +38,7 @@ public sealed class GetAllUsersQuery
 
         public async ValueTask<IFinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Getting all users");
+            //_logger.LogInformation("Getting all users");
 
             Fin<Seq<User>> result = await _userRepository.GetAllAsync(cancellationToken);
 
@@ -46,12 +46,12 @@ public sealed class GetAllUsersQuery
                 Succ: users =>
                 {
                     Seq<UserDto> userDtos = users.Map(u => new UserDto(u.Id, u.Name, u.Email));
-                    _logger.LogInformation("Found {Count} users", userDtos.Count);
+                    //_logger.LogInformation("Found {Count} users", userDtos.Count);
                     return FinResponseUtilites.ToResponse(new Response(userDtos));
                 },
                 Fail: error =>
                 {
-                    _logger.LogError("Failed to get users: {Error}", error.Message);
+                    //_logger.LogError("Failed to get users: {Error}", error.Message);
                     return FinResponseUtilites.ToResponseFail<Response>(error);
                 });
         }

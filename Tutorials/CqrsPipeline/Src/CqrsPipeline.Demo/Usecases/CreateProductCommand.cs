@@ -65,7 +65,7 @@ public sealed class CreateProductCommand
 
         public async ValueTask<IFinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Creating product: {Name}, Price: {Price}", request.Name, request.Price);
+            //_logger.LogInformation("Creating product: {Name}, Price: {Price}", request.Name, request.Price);
 
             // 상품명 중복 검사
             Fin<bool> existsResult = await _productRepository.ExistsByNameAsync(request.Name, cancellationToken);
@@ -73,14 +73,14 @@ public sealed class CreateProductCommand
             if (existsResult.IsFail)
             {
                 Error error = (Error)existsResult;
-                _logger.LogError("Failed to check product name existence: {Error}", error.Message);
+                //_logger.LogError("Failed to check product name existence: {Error}", error.Message);
                 return FinResponseUtilites.ToResponseFail<Response>(error);
             }
 
             bool exists = (bool)existsResult;
             if (exists)
             {
-                _logger.LogWarning("Product name already exists: {Name}", request.Name);
+                //_logger.LogWarning("Product name already exists: {Name}", request.Name);
                 return FinResponseUtilites.ToResponseFail<Response>(
                     Error.New($"상품명 '{request.Name}'이(가) 이미 존재합니다"));
             }
@@ -99,7 +99,7 @@ public sealed class CreateProductCommand
             return createResult.Match<IFinResponse<Response>>(
                 Succ: product =>
                 {
-                    _logger.LogInformation("Product created successfully: {ProductId}", product.Id);
+                    //_logger.LogInformation("Product created successfully: {ProductId}", product.Id);
                     return FinResponseUtilites.ToResponse(
                         new Response(
                             product.Id,
@@ -111,7 +111,7 @@ public sealed class CreateProductCommand
                 },
                 Fail: error =>
                 {
-                    _logger.LogError("Failed to create product: {Error}", error.Message);
+                    //_logger.LogError("Failed to create product: {Error}", error.Message);
                     return FinResponseUtilites.ToResponseFail<Response>(error);
                 });
         }
