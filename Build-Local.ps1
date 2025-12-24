@@ -662,8 +662,9 @@ try {
     Remove-Item -Path $script:CoverageReportDir -Recurse -Force
   }
 
-  # Remove existing TestResults from each test project
+  # Remove existing TestResults from each test project (including bin folders)
   Get-ChildItem -Path $script:SolutionDir -Directory -Recurse -Filter "TestResults" -ErrorAction SilentlyContinue |
+    Where-Object { $_.FullName -notlike "*\node_modules\*" } |
     ForEach-Object { Remove-Item -Path $_.FullName -Recurse -Force }
 
   # Run tests with MTP coverage collection and TRX report
@@ -698,12 +699,14 @@ try {
   Write-StepProgress -Step 7 -TotalSteps $script:TOTAL_STEPS -Message "Generating HTML report..."
 
   # Generate HTML report using local tool
+  # Note: Source Generator files (*.g.cs) are excluded to avoid "does not exist" warnings
   Write-Host ""
   dotnet reportgenerator `
     -reports:$coverageFiles `
     -targetdir:$script:CoverageReportDir `
     -reporttypes:"Html;Cobertura;MarkdownSummaryGithub" `
-    -assemblyfilters:"-*.Tests*"
+    -assemblyfilters:"-*.Tests*" `
+    -filefilters:"-*.g.cs"
   Write-Host ""
 
   if ($LASTEXITCODE -ne 0) {
