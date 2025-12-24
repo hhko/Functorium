@@ -80,6 +80,7 @@ jobs:
         targetdir: '${{ env.COVERAGE_REPORT_DIR }}'
         reporttypes: 'Html;Cobertura;MarkdownSummaryGithub'
         assemblyfilters: '-*.Tests.*'
+        filefilters: '-*.g.cs'
         verbosity: 'Info'
 
     - name: Display coverage summary
