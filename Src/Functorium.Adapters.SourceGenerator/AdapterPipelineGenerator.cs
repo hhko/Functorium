@@ -729,7 +729,7 @@ public sealed class AdapterPipelineGenerator()
             // 메시지 템플릿 구성: 첫 번째 줄
             sb.Append("        logger.LogDebug(")
                 .AppendLine()
-                .AppendLine("            eventId: ObservabilityFields.EventIds.Adapter.AdapterResponse,")
+                .AppendLine("            eventId: ObservabilityFields.EventIds.Adapter.AdapterResponseSuccess,")
                 .Append("            message: \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} \" +");
 
             // 두 번째 줄: Response 필드들
@@ -928,7 +928,7 @@ public sealed class AdapterPipelineGenerator()
         sb.AppendLine($"    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_{classInfo.ClassName}_{method.Name} =");
         sb.AppendLine("        LoggerMessage.Define<string, string, string, string, string, double>(");
         sb.AppendLine("            LogLevel.Information,");
-        sb.AppendLine("            ObservabilityFields.EventIds.Adapter.AdapterResponse,");
+        sb.AppendLine("            ObservabilityFields.EventIds.Adapter.AdapterResponseSuccess,");
         sb.AppendLine("            \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded {Status} in {Elapsed:0.0000} ms\");");
         sb.AppendLine();
     }
@@ -984,7 +984,7 @@ public sealed class AdapterPipelineGenerator()
         sb.AppendLine($"    private static readonly global::System.Action<ILogger, {string.Join(", ", typeParams)}, global::System.Exception?> _logResponseDebug_{classInfo.ClassName}_{method.Name} =");
         sb.AppendLine($"        LoggerMessage.Define<{string.Join(", ", typeParams)}>(");
         sb.AppendLine("            LogLevel.Debug,");
-        sb.AppendLine("            ObservabilityFields.EventIds.Adapter.AdapterResponse,");
+        sb.AppendLine("            ObservabilityFields.EventIds.Adapter.AdapterResponseSuccess,");
         sb.AppendLine($"            \"{messageTemplate}\");");
         sb.AppendLine();
     }

@@ -34,9 +34,19 @@ public static class ObservabilityFields
         {
             public const string Layer = "request.layer";
             public const string Category = "request.category";
-            public const string HandlerCqrs = "request.handler.cqrs";
             public const string Handler = "request.handler";
+            public const string HandlerCqrs = "request.handler.cqrs";
             public const string HandlerMethod = "request.handler.method";
+        }
+
+        public static class TelemetryLogKeys
+        {
+            public const string Layer = "RequestLayer";
+            public const string Category = "RequestCategory";
+            public const string Handler = "RequestHandler";
+            public const string HandlerCqrs = "RequestHandlerCqrs";
+            public const string HandlerMethod = "RequestHandlerMethod";
+            public const string Data = "Request";
         }
     }
 
@@ -53,6 +63,13 @@ public static class ObservabilityFields
             public const string Status = "response.status";
             public const string Elapsed = "response.elapsed";
         }
+
+        public static class TelemetryLogKeys
+        {
+            public const string Data = "Response";
+            public const string Status = nameof(Status);
+            public const string Elapsed = nameof(Elapsed);
+        }
     }
 
     public static class Errors
@@ -64,14 +81,27 @@ public static class ObservabilityFields
             public const string Message = "error.message";
             public const string Count = "error.count";
         }
+
+        public static class Keys
+{
+            public const string Data = "Error";
+        }
     }
 
     public static class EventIds
     {
+        public static class Application
+        {
+            public static readonly EventId ApplicationRequest = new(1001, nameof(ApplicationRequest));
+            public static readonly EventId ApplicationResponseSuccess = new(1002, nameof(ApplicationResponseSuccess));
+            public static readonly EventId ApplicationResponseWarning = new(1003, nameof(ApplicationResponseWarning));
+            public static readonly EventId ApplicationResponseError = new(1004, nameof(ApplicationResponseError));
+        }
+
         public static class Adapter
         {
             public static readonly EventId AdapterRequest = new(1001, nameof(AdapterRequest));
-            public static readonly EventId AdapterResponse = new(1002, nameof(AdapterResponse));
+            public static readonly EventId AdapterResponseSuccess = new(1002, nameof(AdapterResponseSuccess));
             public static readonly EventId AdapterResponseWarning = new(1003, nameof(AdapterResponseWarning));
             public static readonly EventId AdapterResponseError = new(1004, nameof(AdapterResponseError));
         }

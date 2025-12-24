@@ -53,7 +53,7 @@ public sealed class UsecaseLoggerPipeline<TRequest, TResponse>
     {
         if (response.IsSucc)
         {
-            _logger.LogResponseMessage(
+            _logger.LogResponseMessageSuccess(
                 ObservabilityFields.Request.Layer.Application,
                 ObservabilityFields.Request.Category.Usecase,
                 requestCqrs,
