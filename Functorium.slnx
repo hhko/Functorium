@@ -7,6 +7,13 @@
   <Folder Name="/Tutorials/Cqrs/Tests/">
     <Project Path="Tutorials/Cqrs/Tests/Cqrs.Demo.Tests.Unit/Cqrs.Demo.Tests.Unit.csproj" />
   </Folder>
+  <Folder Name="/Tutorials/CqrsPipeline/" />
+  <Folder Name="/Tutorials/CqrsPipeline/Src/">
+    <Project Path="Tutorials/CqrsPipeline/Src/CqrsPipeline.Demo/CqrsPipeline.Demo.csproj" />
+  </Folder>
+  <Folder Name="/Tutorials/CqrsPipeline/Tests/">
+    <Project Path="Tutorials/CqrsPipeline/Tests/CqrsPipeline.Demo.Tests.Unit/CqrsPipeline.Demo.Tests.Unit.csproj" />
+  </Folder>
   <Folder Name="/Tutorials/SourceGenerator/" />
   <Folder Name="/Tutorials/SourceGenerator/Src/">
     <Project Path="Tutorials/SourceGenerator/Src/SourceGenerator.Demo/SourceGenerator.Demo.csproj" />
