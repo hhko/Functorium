@@ -35,11 +35,11 @@ public sealed class GetAllProductsQueryTests
             .Returns(Task.FromResult(Fin.Succ(products)));
 
         // Act
-        IFinResponse<GetAllProductsQuery.Response> result = await _sut.Handle(request, CancellationToken.None);
+        GetAllProductsQuery.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeTrue();
-        result.Value.Products.Count.ShouldBe(3);
+        result.IsSuccess.ShouldBeTrue();
+        result.Products.Count.ShouldBe(3);
     }
 
     [Fact]
@@ -53,11 +53,11 @@ public sealed class GetAllProductsQueryTests
             .Returns(Task.FromResult(Fin.Succ(LanguageExt.Seq<Product>.Empty)));
 
         // Act
-        IFinResponse<GetAllProductsQuery.Response> result = await _sut.Handle(request, CancellationToken.None);
+        GetAllProductsQuery.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeTrue();
-        result.Value.Products.Count.ShouldBe(0);
+        result.IsSuccess.ShouldBeTrue();
+        result.Products.Count.ShouldBe(0);
     }
 
     [Fact]
@@ -72,11 +72,11 @@ public sealed class GetAllProductsQueryTests
             .Returns(Task.FromResult(Fin.Fail<LanguageExt.Seq<Product>>(expectedError)));
 
         // Act
-        IFinResponse<GetAllProductsQuery.Response> result = await _sut.Handle(request, CancellationToken.None);
+        GetAllProductsQuery.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldBe("Database connection failed");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldBe("Database connection failed");
     }
 
     [Fact]
@@ -95,11 +95,11 @@ public sealed class GetAllProductsQueryTests
             .Returns(Task.FromResult(Fin.Succ(products)));
 
         // Act
-        IFinResponse<GetAllProductsQuery.Response> result = await _sut.Handle(request, CancellationToken.None);
+        GetAllProductsQuery.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeTrue();
-        var dto = result.Value.Products.First();
+        result.IsSuccess.ShouldBeTrue();
+        var dto = result.Products.First();
         dto.ProductId.ShouldBe(productId);
         dto.Name.ShouldBe("Test Product");
         dto.Price.ShouldBe(150m);

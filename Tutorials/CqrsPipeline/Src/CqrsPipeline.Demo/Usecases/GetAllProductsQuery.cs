@@ -17,7 +17,10 @@ public sealed class GetAllProductsQuery
     /// <summary>
     /// Query Response - 상품 목록
     /// </summary>
-    public sealed record class Response(Seq<ProductDto> Products) : IResponse;
+    public sealed record class Response(Seq<ProductDto> Products) : ResponseBase<Response>
+    {
+        public Response() : this(Seq<ProductDto>.Empty) { }
+    }
 
     /// <summary>
     /// 상품 DTO - 클라이언트 응답용
@@ -39,13 +42,13 @@ public sealed class GetAllProductsQuery
         private readonly ILogger<Usecase> _logger = logger;
         private readonly IProductRepository _productRepository = productRepository;
 
-        public async ValueTask<IFinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
+        public async ValueTask<Response> Handle(Request request, CancellationToken cancellationToken)
         {
             //_logger.LogInformation("Getting all products");
 
             Fin<Seq<Product>> getAllResult = await _productRepository.GetAllAsync(cancellationToken);
 
-            return getAllResult.Match<IFinResponse<Response>>(
+            return getAllResult.Match<Response>(
                 Succ: products =>
                 {
                     Seq<ProductDto> productDtos = products
@@ -53,12 +56,12 @@ public sealed class GetAllProductsQuery
                         .ToSeq();
 
                     //_logger.LogInformation("Found {Count} products", productDtos.Count);
-                    return FinResponseUtilites.ToResponse(new Response(productDtos));
+                    return new Response(productDtos);
                 },
                 Fail: error =>
                 {
                     //_logger.LogError("Failed to get all products: {Error}", error.Message);
-                    return FinResponseUtilites.ToResponseFail<Response>(error);
+                    return Response.CreateFail(error);
                 });
         }
     }

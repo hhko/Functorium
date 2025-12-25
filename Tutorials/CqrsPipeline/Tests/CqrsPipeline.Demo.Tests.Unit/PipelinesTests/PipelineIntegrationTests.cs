@@ -79,12 +79,12 @@ public sealed class PipelineIntegrationTests : IDisposable
         var request = new CreateProductCommand.Request("테스트 상품", "설명", 10000m, 5);
 
         // Act
-        IFinResponse<CreateProductCommand.Response> result = await _mediator.Send(request);
+        CreateProductCommand.Response result = await _mediator.Send(request);
 
         // Assert - 모든 파이프라인을 통과하고 성공해야 함
-        result.IsSucc.ShouldBeTrue();
-        result.Value.Name.ShouldBe("테스트 상품");
-        result.Value.Price.ShouldBe(10000m);
+        result.IsSuccess.ShouldBeTrue();
+        result.Name.ShouldBe("테스트 상품");
+        result.Price.ShouldBe(10000m);
     }
 
     [Fact]
@@ -94,12 +94,12 @@ public sealed class PipelineIntegrationTests : IDisposable
         var request = new CreateProductCommand.Request("", "", -100m, -1);
 
         // Act
-        IFinResponse<CreateProductCommand.Response> result = await _mediator.Send(request);
+        CreateProductCommand.Response result = await _mediator.Send(request);
 
         // Assert - Validation Pipeline에서 실패해야 함
-        result.IsSucc.ShouldBeFalse();
+        result.IsSuccess.ShouldBeFalse();
         result.Error.ShouldBeOfType<ManyErrors>();
-        var manyErrors = (ManyErrors)result.Error;
+        var manyErrors = (ManyErrors)result.Error!;
         manyErrors.Errors.Count.ShouldBeGreaterThan(0);
     }
 
@@ -108,12 +108,12 @@ public sealed class PipelineIntegrationTests : IDisposable
     {
         // Arrange - 먼저 상품 생성
         var createRequest = new CreateProductCommand.Request("예외 테스트 상품", "설명", 5000m, 10);
-        IFinResponse<CreateProductCommand.Response> createResult = await _mediator.Send(createRequest);
-        createResult.IsSucc.ShouldBeTrue();
+        CreateProductCommand.Response createResult = await _mediator.Send(createRequest);
+        createResult.IsSuccess.ShouldBeTrue();
 
         // 예외 시뮬레이션 요청
         var updateRequest = new UpdateProductCommand.Request(
-            createResult.Value.ProductId,
+            createResult.ProductId,
             "업데이트됨",
             "업데이트 설명",
             6000m,
@@ -121,11 +121,11 @@ public sealed class PipelineIntegrationTests : IDisposable
             SimulateException: true);
 
         // Act
-        IFinResponse<UpdateProductCommand.Response> result = await _mediator.Send(updateRequest);
+        UpdateProductCommand.Response result = await _mediator.Send(updateRequest);
 
         // Assert - Exception Pipeline에서 예외를 Error로 변환해야 함
-        result.IsSucc.ShouldBeFalse();
-        result.Error.IsExceptional.ShouldBeTrue();
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.IsExceptional.ShouldBeTrue();
     }
 
     [Fact]
@@ -133,23 +133,23 @@ public sealed class PipelineIntegrationTests : IDisposable
     {
         // Arrange - 먼저 상품 생성
         var createRequest = new CreateProductCommand.Request("업데이트 테스트 상품", "원본 설명", 3000m, 15);
-        IFinResponse<CreateProductCommand.Response> createResult = await _mediator.Send(createRequest);
-        createResult.IsSucc.ShouldBeTrue();
+        CreateProductCommand.Response createResult = await _mediator.Send(createRequest);
+        createResult.IsSuccess.ShouldBeTrue();
 
         var updateRequest = new UpdateProductCommand.Request(
-            createResult.Value.ProductId,
+            createResult.ProductId,
             "업데이트된 상품명",
             "업데이트된 설명",
             3500m,
             20);
 
         // Act
-        IFinResponse<UpdateProductCommand.Response> result = await _mediator.Send(updateRequest);
+        UpdateProductCommand.Response result = await _mediator.Send(updateRequest);
 
         // Assert - 모든 파이프라인을 통과하고 성공해야 함
-        result.IsSucc.ShouldBeTrue();
-        result.Value.Name.ShouldBe("업데이트된 상품명");
-        result.Value.Price.ShouldBe(3500m);
+        result.IsSuccess.ShouldBeTrue();
+        result.Name.ShouldBe("업데이트된 상품명");
+        result.Price.ShouldBe(3500m);
     }
 
     [Fact]
@@ -157,17 +157,17 @@ public sealed class PipelineIntegrationTests : IDisposable
     {
         // Arrange - 먼저 상품 생성
         var createRequest = new CreateProductCommand.Request("조회 테스트 상품", "조회용", 7000m, 25);
-        IFinResponse<CreateProductCommand.Response> createResult = await _mediator.Send(createRequest);
-        createResult.IsSucc.ShouldBeTrue();
+        CreateProductCommand.Response createResult = await _mediator.Send(createRequest);
+        createResult.IsSuccess.ShouldBeTrue();
 
-        var getRequest = new GetProductByIdQuery.Request(createResult.Value.ProductId);
+        var getRequest = new GetProductByIdQuery.Request(createResult.ProductId);
 
         // Act
-        IFinResponse<GetProductByIdQuery.Response> result = await _mediator.Send(getRequest);
+        GetProductByIdQuery.Response result = await _mediator.Send(getRequest);
 
         // Assert - 모든 파이프라인을 통과하고 성공해야 함
-        result.IsSucc.ShouldBeTrue();
-        result.Value.Name.ShouldBe("조회 테스트 상품");
+        result.IsSuccess.ShouldBeTrue();
+        result.Name.ShouldBe("조회 테스트 상품");
     }
 
     [Fact]
@@ -177,11 +177,11 @@ public sealed class PipelineIntegrationTests : IDisposable
         var getRequest = new GetProductByIdQuery.Request(Guid.NewGuid());
 
         // Act
-        IFinResponse<GetProductByIdQuery.Response> result = await _mediator.Send(getRequest);
+        GetProductByIdQuery.Response result = await _mediator.Send(getRequest);
 
         // Assert - 모든 파이프라인을 통과했지만 상품이 없어서 실패
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldContain("찾을 수 없습니다");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldContain("찾을 수 없습니다");
     }
 
     [Fact]
@@ -195,11 +195,11 @@ public sealed class PipelineIntegrationTests : IDisposable
         var getAllRequest = new GetAllProductsQuery.Request();
 
         // Act
-        IFinResponse<GetAllProductsQuery.Response> result = await _mediator.Send(getAllRequest);
+        GetAllProductsQuery.Response result = await _mediator.Send(getAllRequest);
 
         // Assert - 모든 파이프라인을 통과하고 성공해야 함
-        result.IsSucc.ShouldBeTrue();
-        result.Value.Products.Count.ShouldBeGreaterThanOrEqualTo(3);
+        result.IsSuccess.ShouldBeTrue();
+        result.Products.Count.ShouldBeGreaterThanOrEqualTo(3);
     }
 
     [Fact]
@@ -211,11 +211,11 @@ public sealed class PipelineIntegrationTests : IDisposable
         var duplicateRequest = new CreateProductCommand.Request("중복 테스트 상품", "두 번째", 2000m, 20);
 
         // Act
-        IFinResponse<CreateProductCommand.Response> result = await _mediator.Send(duplicateRequest);
+        CreateProductCommand.Response result = await _mediator.Send(duplicateRequest);
 
         // Assert - 중복으로 인한 실패
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldContain("이미 존재합니다");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldContain("이미 존재합니다");
     }
 
     [Fact]
@@ -230,11 +230,11 @@ public sealed class PipelineIntegrationTests : IDisposable
             10);
 
         // Act
-        IFinResponse<UpdateProductCommand.Response> result = await _mediator.Send(updateRequest);
+        UpdateProductCommand.Response result = await _mediator.Send(updateRequest);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldContain("찾을 수 없습니다");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldContain("찾을 수 없습니다");
     }
 
     [Fact]
@@ -245,30 +245,30 @@ public sealed class PipelineIntegrationTests : IDisposable
         // 1. 상품 생성
         var createResult = await _mediator.Send(
             new CreateProductCommand.Request("복합 테스트 상품", "원본", 5000m, 50));
-        createResult.IsSucc.ShouldBeTrue();
-        var productId = createResult.Value.ProductId;
+        createResult.IsSuccess.ShouldBeTrue();
+        var productId = createResult.ProductId;
 
         // 2. 조회
         var getResult1 = await _mediator.Send(new GetProductByIdQuery.Request(productId));
-        getResult1.IsSucc.ShouldBeTrue();
-        getResult1.Value.Name.ShouldBe("복합 테스트 상품");
+        getResult1.IsSuccess.ShouldBeTrue();
+        getResult1.Name.ShouldBe("복합 테스트 상품");
 
         // 3. 업데이트
         var updateResult = await _mediator.Send(
             new UpdateProductCommand.Request(productId, "업데이트됨", "업데이트 설명", 6000m, 40));
-        updateResult.IsSucc.ShouldBeTrue();
-        updateResult.Value.Name.ShouldBe("업데이트됨");
+        updateResult.IsSuccess.ShouldBeTrue();
+        updateResult.Name.ShouldBe("업데이트됨");
 
         // 4. 업데이트 후 조회
         var getResult2 = await _mediator.Send(new GetProductByIdQuery.Request(productId));
-        getResult2.IsSucc.ShouldBeTrue();
-        getResult2.Value.Name.ShouldBe("업데이트됨");
-        getResult2.Value.Price.ShouldBe(6000m);
+        getResult2.IsSuccess.ShouldBeTrue();
+        getResult2.Name.ShouldBe("업데이트됨");
+        getResult2.Price.ShouldBe(6000m);
 
         // 5. 전체 목록에서 확인
         var allResult = await _mediator.Send(new GetAllProductsQuery.Request());
-        allResult.IsSucc.ShouldBeTrue();
-        allResult.Value.Products.Any(p => p.ProductId == productId && p.Name == "업데이트됨").ShouldBeTrue();
+        allResult.IsSuccess.ShouldBeTrue();
+        allResult.Products.Any(p => p.ProductId == productId && p.Name == "업데이트됨").ShouldBeTrue();
     }
 
     private sealed class TestOpenTelemetryOptions : IOpenTelemetryOptions

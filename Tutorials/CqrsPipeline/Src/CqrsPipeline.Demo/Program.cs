@@ -5,6 +5,7 @@ using CqrsPipeline.Demo.Infrastructure;
 using CqrsPipeline.Demo.Usecases;
 using FluentValidation;
 using Functorium.Abstractions.Registrations;
+using LanguageExt;
 using Mediator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -88,7 +89,7 @@ Console.WriteLine("=============================================================
 Console.WriteLine("1. Validation Pipeline 데모 - 성공적인 상품 생성");
 Console.WriteLine("=================================================================");
 
-IFinResponse<CreateProductCommand.Response> createResult1 = await mediator.Send(
+Fin<CreateProductCommand.Response> createResult1 = await mediator.Send(
     new CreateProductCommand.Request("노트북", "고성능 개발용 노트북", 1500000m, 10));
 
 PrintResult("상품 생성 (노트북)", createResult1);
@@ -98,7 +99,7 @@ Console.WriteLine("=============================================================
 Console.WriteLine("2. Validation Pipeline 데모 - 검증 실패");
 Console.WriteLine("=================================================================");
 
-IFinResponse<CreateProductCommand.Response> createResult2 = await mediator.Send(
+Fin<CreateProductCommand.Response> createResult2 = await mediator.Send(
     new CreateProductCommand.Request("", "설명만 있음", -1000m, -5)); // 이름 누락, 가격 음수, 재고 음수
 
 PrintResult("상품 생성 (검증 실패)", createResult2);
@@ -109,15 +110,16 @@ Console.WriteLine("3. Exception Pipeline 데모 - 예외 발생 시뮬레이션"
 Console.WriteLine("=================================================================");
 
 // 먼저 상품 생성
-IFinResponse<CreateProductCommand.Response> createResult3 = await mediator.Send(
+Fin<CreateProductCommand.Response> createResult3 = await mediator.Send(
     new CreateProductCommand.Request("마우스", "무선 마우스", 50000m, 100));
 
 if (createResult3.IsSucc)
 {
+    CreateProductCommand.Response value3 = createResult3.Match(Succ: v => v, Fail: _ => null!);
     // SimulateException = true로 예외 발생
-    IFinResponse<UpdateProductCommand.Response> updateResult = await mediator.Send(
+    Fin<UpdateProductCommand.Response> updateResult = await mediator.Send(
         new UpdateProductCommand.Request(
-            createResult3.Value.ProductId,
+            value3.ProductId,
             "마우스 (업데이트)",
             "무선 마우스 - 업데이트됨",
             55000m,
@@ -134,14 +136,15 @@ Console.WriteLine("=============================================================
 
 if (createResult1.IsSucc)
 {
-    IFinResponse<GetProductByIdQuery.Response> getResult = await mediator.Send(
-        new GetProductByIdQuery.Request(createResult1.Value.ProductId));
+    CreateProductCommand.Response value1 = createResult1.Match(Succ: v => v, Fail: _ => null!);
+    Fin<GetProductByIdQuery.Response> getResult = await mediator.Send(
+        new GetProductByIdQuery.Request(value1.ProductId));
 
     PrintResult("상품 조회 (노트북)", getResult);
 }
 
 // 존재하지 않는 상품 조회
-IFinResponse<GetProductByIdQuery.Response> notFoundResult = await mediator.Send(
+Fin<GetProductByIdQuery.Response> notFoundResult = await mediator.Send(
     new GetProductByIdQuery.Request(Guid.NewGuid()));
 
 PrintResult("상품 조회 (존재하지 않음)", notFoundResult);
@@ -151,22 +154,25 @@ Console.WriteLine("=============================================================
 Console.WriteLine("5. Trace/Metric Pipeline 데모 - 전체 상품 조회");
 Console.WriteLine("=================================================================");
 
-IFinResponse<GetAllProductsQuery.Response> allProductsResult = await mediator.Send(
+Fin<GetAllProductsQuery.Response> allProductsResult = await mediator.Send(
     new GetAllProductsQuery.Request());
 
-if (allProductsResult.IsSucc)
-{
-    Console.WriteLine($"[SUCCESS] 전체 상품 조회 ({allProductsResult.Value.Products.Count}개):");
-    foreach (var product in allProductsResult.Value.Products)
+allProductsResult.Match(
+    Succ: response =>
     {
-        Console.WriteLine($"  - {product.Name}: {product.Price:N0}원 (재고: {product.StockQuantity})");
-    }
-}
-else
-{
-    Console.WriteLine($"[FAILURE] 전체 상품 조회");
-    Console.WriteLine($"  Error: {allProductsResult.Error.Message}");
-}
+        Console.WriteLine($"[SUCCESS] 전체 상품 조회 ({response.Products.Count}개):");
+        foreach (var product in response.Products)
+        {
+            Console.WriteLine($"  - {product.Name}: {product.Price:N0}원 (재고: {product.StockQuantity})");
+        }
+        return LanguageExt.Unit.Default;
+    },
+    Fail: error =>
+    {
+        Console.WriteLine($"[FAILURE] 전체 상품 조회");
+        Console.WriteLine($"  Error: {error.Message}");
+        return LanguageExt.Unit.Default;
+    });
 
 Console.WriteLine();
 Console.WriteLine("=================================================================");
@@ -176,28 +182,31 @@ Console.WriteLine("=============================================================
 // =================================================================
 // Helper Methods
 // =================================================================
-static void PrintResult<T>(string operation, IFinResponse<T> result) where T : IResponse
+static void PrintResult<T>(string operation, Fin<T> result) where T : IResponse
 {
-    if (result.IsSucc)
-    {
-        Console.WriteLine($"[SUCCESS] {operation}");
-        Console.WriteLine($"  Result: {result.Value}");
-    }
-    else
-    {
-        Console.WriteLine($"[FAILURE] {operation}");
-        Console.WriteLine($"  Error: {result.Error.Message}");
-
-        // ManyErrors인 경우 개별 에러 출력
-        if (result.Error is ManyErrors manyErrors)
+    result.Match(
+        Succ: value =>
         {
-            Console.WriteLine($"  Errors ({manyErrors.Errors.Count}):");
-            foreach (var error in manyErrors.Errors)
+            Console.WriteLine($"[SUCCESS] {operation}");
+            Console.WriteLine($"  Result: {value}");
+            return LanguageExt.Unit.Default;
+        },
+        Fail: error =>
+        {
+            Console.WriteLine($"[FAILURE] {operation}");
+            Console.WriteLine($"  Error: {error.Message}");
+
+            // ManyErrors인 경우 개별 에러 출력
+            if (error is ManyErrors manyErrors)
             {
-                Console.WriteLine($"    - {error.Message}");
+                Console.WriteLine($"  Errors ({manyErrors.Errors.Count}):");
+                foreach (var e in manyErrors.Errors)
+                {
+                    Console.WriteLine($"    - {e.Message}");
+                }
             }
-        }
-    }
+            return LanguageExt.Unit.Default;
+        });
     Console.WriteLine();
 }
 

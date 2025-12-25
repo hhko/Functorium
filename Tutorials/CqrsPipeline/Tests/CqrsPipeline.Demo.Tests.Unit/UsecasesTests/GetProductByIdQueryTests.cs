@@ -31,13 +31,13 @@ public sealed class GetProductByIdQueryTests
             .Returns(Task.FromResult(Fin.Succ<Product?>(existingProduct)));
 
         // Act
-        IFinResponse<GetProductByIdQuery.Response> result = await _sut.Handle(request, CancellationToken.None);
+        GetProductByIdQuery.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeTrue();
-        result.Value.ProductId.ShouldBe(productId);
-        result.Value.Name.ShouldBe("Test Product");
-        result.Value.Price.ShouldBe(100m);
+        result.IsSuccess.ShouldBeTrue();
+        result.ProductId.ShouldBe(productId);
+        result.Name.ShouldBe("Test Product");
+        result.Price.ShouldBe(100m);
     }
 
     [Fact]
@@ -52,11 +52,11 @@ public sealed class GetProductByIdQueryTests
             .Returns(Task.FromResult(Fin.Succ<Product?>(null)));
 
         // Act
-        IFinResponse<GetProductByIdQuery.Response> result = await _sut.Handle(request, CancellationToken.None);
+        GetProductByIdQuery.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldContain("찾을 수 없습니다");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldContain("찾을 수 없습니다");
     }
 
     [Fact]
@@ -72,11 +72,11 @@ public sealed class GetProductByIdQueryTests
             .Returns(Task.FromResult(Fin.Fail<Product?>(expectedError)));
 
         // Act
-        IFinResponse<GetProductByIdQuery.Response> result = await _sut.Handle(request, CancellationToken.None);
+        GetProductByIdQuery.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldBe("Database connection failed");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldBe("Database connection failed");
     }
 
     [Fact]

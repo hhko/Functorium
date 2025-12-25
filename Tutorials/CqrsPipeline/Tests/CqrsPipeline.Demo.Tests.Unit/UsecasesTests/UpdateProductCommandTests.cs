@@ -39,13 +39,13 @@ public sealed class UpdateProductCommandTests
             });
 
         // Act
-        IFinResponse<UpdateProductCommand.Response> result = await _sut.Handle(request, CancellationToken.None);
+        UpdateProductCommand.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeTrue();
-        result.Value.Name.ShouldBe("New Name");
-        result.Value.Price.ShouldBe(200m);
-        result.Value.StockQuantity.ShouldBe(20);
+        result.IsSuccess.ShouldBeTrue();
+        result.Name.ShouldBe("New Name");
+        result.Price.ShouldBe(200m);
+        result.StockQuantity.ShouldBe(20);
     }
 
     [Fact]
@@ -60,11 +60,11 @@ public sealed class UpdateProductCommandTests
             .Returns(Task.FromResult(Fin.Succ<Product?>(null)));
 
         // Act
-        IFinResponse<UpdateProductCommand.Response> result = await _sut.Handle(request, CancellationToken.None);
+        UpdateProductCommand.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldContain("찾을 수 없습니다");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldContain("찾을 수 없습니다");
     }
 
     [Fact]
@@ -92,11 +92,11 @@ public sealed class UpdateProductCommandTests
             .Returns(Task.FromResult(Fin.Fail<Product?>(expectedError)));
 
         // Act
-        IFinResponse<UpdateProductCommand.Response> result = await _sut.Handle(request, CancellationToken.None);
+        UpdateProductCommand.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldBe("Database error");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldBe("Database error");
     }
 
     [Fact]
@@ -117,10 +117,10 @@ public sealed class UpdateProductCommandTests
             .Returns(Task.FromResult(Fin.Fail<Product>(expectedError)));
 
         // Act
-        IFinResponse<UpdateProductCommand.Response> result = await _sut.Handle(request, CancellationToken.None);
+        UpdateProductCommand.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldBe("Update failed");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldBe("Update failed");
     }
 }

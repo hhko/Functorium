@@ -24,7 +24,10 @@ public sealed class GetProductByIdQuery
         decimal Price,
         int StockQuantity,
         DateTime CreatedAt,
-        DateTime? UpdatedAt) : IResponse;
+        DateTime? UpdatedAt) : ResponseBase<Response>
+    {
+        public Response() : this(Guid.Empty, string.Empty, string.Empty, 0m, 0, default, null) { }
+    }
 
     /// <summary>
     /// Query Usecase - 상품 조회 로직
@@ -37,7 +40,7 @@ public sealed class GetProductByIdQuery
         private readonly ILogger<Usecase> _logger = logger;
         private readonly IProductRepository _productRepository = productRepository;
 
-        public async ValueTask<IFinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
+        public async ValueTask<Response> Handle(Request request, CancellationToken cancellationToken)
         {
             //_logger.LogInformation("Getting product by ID: {ProductId}", request.ProductId);
 
@@ -47,27 +50,26 @@ public sealed class GetProductByIdQuery
             {
                 Error error = (Error)getResult;
                 //_logger.LogError("Failed to get product: {Error}", error.Message);
-                return FinResponseUtilites.ToResponseFail<Response>(error);
+                return Response.CreateFail(error);
             }
 
             Product? product = (Product?)getResult;
             if (product is null)
             {
                 //_logger.LogWarning("Product not found: {ProductId}", request.ProductId);
-                return FinResponseUtilites.ToResponseFail<Response>(
+                return Response.CreateFail(
                     Error.New($"상품 ID '{request.ProductId}'을(를) 찾을 수 없습니다"));
             }
 
             //_logger.LogInformation("Product found: {ProductId}, {Name}", product.Id, product.Name);
-            return FinResponseUtilites.ToResponse(
-                new Response(
-                    product.Id,
-                    product.Name,
-                    product.Description,
-                    product.Price,
-                    product.StockQuantity,
-                    product.CreatedAt,
-                    product.UpdatedAt));
+            return new Response(
+                product.Id,
+                product.Name,
+                product.Description,
+                product.Price,
+                product.StockQuantity,
+                product.CreatedAt,
+                product.UpdatedAt);
         }
     }
 }

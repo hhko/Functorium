@@ -16,9 +16,15 @@ public sealed class ExceptionPipelineTests
     public sealed record class TestRequest(string Name) : ICommandRequest<TestResponse>;
 
     /// <summary>
-    /// 테스트용 Response
+    /// 테스트용 Response (IResponse&lt;T&gt; 구현)
     /// </summary>
-    public sealed record class TestResponse(Guid Id) : IResponse;
+    public sealed record class TestResponse : ResponseBase<TestResponse>
+    {
+        public Guid Id { get; init; }
+
+        public TestResponse() { }
+        public TestResponse(Guid id) => Id = id;
+    }
 
     #endregion
 
@@ -26,86 +32,86 @@ public sealed class ExceptionPipelineTests
     public async Task Handle_NoException_ReturnsResponse()
     {
         // Arrange
-        var pipeline = new UsecaseExceptionPipeline<TestRequest, IFinResponse<TestResponse>>();
+        var pipeline = new UsecaseExceptionPipeline<TestRequest, TestResponse>();
         var request = new TestRequest("Test");
-        var expectedResponse = new FinResponse<TestResponse>(Fin.Succ(new TestResponse(Guid.NewGuid())));
+        var expectedResponse = new TestResponse(Guid.NewGuid());
 
-        MessageHandlerDelegate<TestRequest, IFinResponse<TestResponse>> next =
-            (_, _) => ValueTask.FromResult<IFinResponse<TestResponse>>(expectedResponse);
+        MessageHandlerDelegate<TestRequest, TestResponse> next =
+            (_, _) => ValueTask.FromResult(expectedResponse);
 
         // Act
-        IFinResponse<TestResponse> result = await pipeline.Handle(request, next, CancellationToken.None);
+        TestResponse result = await pipeline.Handle(request, next, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeTrue();
-        result.Value.ShouldBe(expectedResponse.Value);
+        result.IsSuccess.ShouldBeTrue();
+        result.Id.ShouldBe(expectedResponse.Id);
     }
 
     [Fact]
     public async Task Handle_Exception_ReturnsFailure()
     {
         // Arrange
-        var pipeline = new UsecaseExceptionPipeline<TestRequest, IFinResponse<TestResponse>>();
+        var pipeline = new UsecaseExceptionPipeline<TestRequest, TestResponse>();
         var request = new TestRequest("Test");
         var expectedException = new InvalidOperationException("Test exception");
 
-        MessageHandlerDelegate<TestRequest, IFinResponse<TestResponse>> next =
+        MessageHandlerDelegate<TestRequest, TestResponse> next =
             (_, _) => throw expectedException;
 
         // Act
-        IFinResponse<TestResponse> result = await pipeline.Handle(request, next, CancellationToken.None);
+        TestResponse result = await pipeline.Handle(request, next, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.IsExceptional.ShouldBeTrue();
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.IsExceptional.ShouldBeTrue();
     }
 
     [Fact]
     public async Task Handle_Exception_PreservesExceptionMessage()
     {
         // Arrange
-        var pipeline = new UsecaseExceptionPipeline<TestRequest, IFinResponse<TestResponse>>();
+        var pipeline = new UsecaseExceptionPipeline<TestRequest, TestResponse>();
         var request = new TestRequest("Test");
         var expectedMessage = "Custom exception message for testing";
         var expectedException = new ArgumentException(expectedMessage);
 
-        MessageHandlerDelegate<TestRequest, IFinResponse<TestResponse>> next =
+        MessageHandlerDelegate<TestRequest, TestResponse> next =
             (_, _) => throw expectedException;
 
         // Act
-        IFinResponse<TestResponse> result = await pipeline.Handle(request, next, CancellationToken.None);
+        TestResponse result = await pipeline.Handle(request, next, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldContain(expectedMessage);
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldContain(expectedMessage);
     }
 
     [Fact]
     public async Task Handle_NullReferenceException_ReturnsFailure()
     {
         // Arrange
-        var pipeline = new UsecaseExceptionPipeline<TestRequest, IFinResponse<TestResponse>>();
+        var pipeline = new UsecaseExceptionPipeline<TestRequest, TestResponse>();
         var request = new TestRequest("Test");
 
-        MessageHandlerDelegate<TestRequest, IFinResponse<TestResponse>> next =
+        MessageHandlerDelegate<TestRequest, TestResponse> next =
             (_, _) => throw new NullReferenceException("Object reference not set");
 
         // Act
-        IFinResponse<TestResponse> result = await pipeline.Handle(request, next, CancellationToken.None);
+        TestResponse result = await pipeline.Handle(request, next, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.IsExceptional.ShouldBeTrue();
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.IsExceptional.ShouldBeTrue();
     }
 
     [Fact]
     public async Task Handle_AsyncException_ReturnsFailure()
     {
         // Arrange
-        var pipeline = new UsecaseExceptionPipeline<TestRequest, IFinResponse<TestResponse>>();
+        var pipeline = new UsecaseExceptionPipeline<TestRequest, TestResponse>();
         var request = new TestRequest("Test");
 
-        MessageHandlerDelegate<TestRequest, IFinResponse<TestResponse>> next =
+        MessageHandlerDelegate<TestRequest, TestResponse> next =
             async (_, _) =>
             {
                 await Task.Delay(1);
@@ -113,11 +119,11 @@ public sealed class ExceptionPipelineTests
             };
 
         // Act
-        IFinResponse<TestResponse> result = await pipeline.Handle(request, next, CancellationToken.None);
+        TestResponse result = await pipeline.Handle(request, next, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.IsExceptional.ShouldBeTrue();
-        result.Error.Message.ShouldContain("timed out");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.IsExceptional.ShouldBeTrue();
+        result.Error!.Message.ShouldContain("timed out");
     }
 }

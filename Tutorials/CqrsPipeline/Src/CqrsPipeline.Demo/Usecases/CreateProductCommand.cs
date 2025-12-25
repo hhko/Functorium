@@ -28,7 +28,10 @@ public sealed class CreateProductCommand
         string Description,
         decimal Price,
         int StockQuantity,
-        DateTime CreatedAt) : IResponse;
+        DateTime CreatedAt) : ResponseBase<Response>
+    {
+        public Response() : this(Guid.Empty, string.Empty, string.Empty, 0m, 0, default) { }
+    }
 
     /// <summary>
     /// Request Validator - FluentValidation 검증 규칙
@@ -63,7 +66,7 @@ public sealed class CreateProductCommand
         private readonly ILogger<Usecase> _logger = logger;
         private readonly IProductRepository _productRepository = productRepository;
 
-        public async ValueTask<IFinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
+        public async ValueTask<Response> Handle(Request request, CancellationToken cancellationToken)
         {
             //_logger.LogInformation("Creating product: {Name}, Price: {Price}", request.Name, request.Price);
 
@@ -74,14 +77,14 @@ public sealed class CreateProductCommand
             {
                 Error error = (Error)existsResult;
                 //_logger.LogError("Failed to check product name existence: {Error}", error.Message);
-                return FinResponseUtilites.ToResponseFail<Response>(error);
+                return Response.CreateFail(error);
             }
 
             bool exists = (bool)existsResult;
             if (exists)
             {
                 //_logger.LogWarning("Product name already exists: {Name}", request.Name);
-                return FinResponseUtilites.ToResponseFail<Response>(
+                return Response.CreateFail(
                     Error.New($"상품명 '{request.Name}'이(가) 이미 존재합니다"));
             }
 
@@ -96,23 +99,22 @@ public sealed class CreateProductCommand
 
             Fin<Product> createResult = await _productRepository.CreateAsync(newProduct, cancellationToken);
 
-            return createResult.Match<IFinResponse<Response>>(
+            return createResult.Match<Response>(
                 Succ: product =>
                 {
                     //_logger.LogInformation("Product created successfully: {ProductId}", product.Id);
-                    return FinResponseUtilites.ToResponse(
-                        new Response(
-                            product.Id,
-                            product.Name,
-                            product.Description,
-                            product.Price,
-                            product.StockQuantity,
-                            product.CreatedAt));
+                    return new Response(
+                        product.Id,
+                        product.Name,
+                        product.Description,
+                        product.Price,
+                        product.StockQuantity,
+                        product.CreatedAt);
                 },
                 Fail: error =>
                 {
                     //_logger.LogError("Failed to create product: {Error}", error.Message);
-                    return FinResponseUtilites.ToResponseFail<Response>(error);
+                    return Response.CreateFail(error);
                 });
         }
     }

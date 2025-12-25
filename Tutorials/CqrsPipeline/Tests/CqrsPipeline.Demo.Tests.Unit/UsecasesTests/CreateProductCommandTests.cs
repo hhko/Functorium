@@ -37,14 +37,14 @@ public sealed class CreateProductCommandTests
             });
 
         // Act
-        IFinResponse<CreateProductCommand.Response> result = await _sut.Handle(request, CancellationToken.None);
+        CreateProductCommand.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeTrue();
-        result.Value.ShouldNotBeNull();
-        result.Value.Name.ShouldBe("Test Product");
-        result.Value.Price.ShouldBe(100m);
-        result.Value.StockQuantity.ShouldBe(10);
+        result.IsSuccess.ShouldBeTrue();
+        result.ShouldNotBeNull();
+        result.Name.ShouldBe("Test Product");
+        result.Price.ShouldBe(100m);
+        result.StockQuantity.ShouldBe(10);
     }
 
     [Fact]
@@ -58,11 +58,11 @@ public sealed class CreateProductCommandTests
             .Returns(Task.FromResult(Fin.Succ(true)));
 
         // Act
-        IFinResponse<CreateProductCommand.Response> result = await _sut.Handle(request, CancellationToken.None);
+        CreateProductCommand.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldContain("이미 존재합니다");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldContain("이미 존재합니다");
     }
 
     [Fact]
@@ -77,11 +77,11 @@ public sealed class CreateProductCommandTests
             .Returns(Task.FromResult(Fin.Fail<bool>(expectedError)));
 
         // Act
-        IFinResponse<CreateProductCommand.Response> result = await _sut.Handle(request, CancellationToken.None);
+        CreateProductCommand.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldBe("Database connection failed");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldBe("Database connection failed");
     }
 
     [Fact]
@@ -100,11 +100,11 @@ public sealed class CreateProductCommandTests
             .Returns(Task.FromResult(Fin.Fail<Product>(expectedError)));
 
         // Act
-        IFinResponse<CreateProductCommand.Response> result = await _sut.Handle(request, CancellationToken.None);
+        CreateProductCommand.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldBe("Failed to create product");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldBe("Failed to create product");
     }
 
     [Fact]

@@ -30,7 +30,10 @@ public sealed class UpdateProductCommand
         string Description,
         decimal Price,
         int StockQuantity,
-        DateTime UpdatedAt) : IResponse;
+        DateTime UpdatedAt) : ResponseBase<Response>
+    {
+        public Response() : this(Guid.Empty, string.Empty, string.Empty, 0m, 0, default) { }
+    }
 
     /// <summary>
     /// Request Validator
@@ -66,7 +69,7 @@ public sealed class UpdateProductCommand
         private readonly ILogger<Usecase> _logger = logger;
         private readonly IProductRepository _productRepository = productRepository;
 
-        public async ValueTask<IFinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
+        public async ValueTask<Response> Handle(Request request, CancellationToken cancellationToken)
         {
             //_logger.LogInformation("Updating product: {ProductId}", request.ProductId);
 
@@ -84,14 +87,14 @@ public sealed class UpdateProductCommand
             {
                 Error error = (Error)getResult;
                 //_logger.LogError("Failed to get product: {Error}", error.Message);
-                return FinResponseUtilites.ToResponseFail<Response>(error);
+                return Response.CreateFail(error);
             }
 
             Product? existingProduct = (Product?)getResult;
             if (existingProduct is null)
             {
                 //_logger.LogWarning("Product not found: {ProductId}", request.ProductId);
-                return FinResponseUtilites.ToResponseFail<Response>(
+                return Response.CreateFail(
                     Error.New($"상품 ID '{request.ProductId}'을(를) 찾을 수 없습니다"));
             }
 
@@ -107,23 +110,22 @@ public sealed class UpdateProductCommand
 
             Fin<Product> updateResult = await _productRepository.UpdateAsync(updatedProduct, cancellationToken);
 
-            return updateResult.Match<IFinResponse<Response>>(
+            return updateResult.Match<Response>(
                 Succ: product =>
                 {
                     //_logger.LogInformation("Product updated successfully: {ProductId}", product.Id);
-                    return FinResponseUtilites.ToResponse(
-                        new Response(
-                            product.Id,
-                            product.Name,
-                            product.Description,
-                            product.Price,
-                            product.StockQuantity,
-                            product.UpdatedAt ?? DateTime.UtcNow));
+                    return new Response(
+                        product.Id,
+                        product.Name,
+                        product.Description,
+                        product.Price,
+                        product.StockQuantity,
+                        product.UpdatedAt ?? DateTime.UtcNow);
                 },
                 Fail: error =>
                 {
                     //_logger.LogError("Failed to update product: {Error}", error.Message);
-                    return FinResponseUtilites.ToResponseFail<Response>(error);
+                    return Response.CreateFail(error);
                 });
         }
     }

@@ -18,9 +18,15 @@ public sealed class ValidationPipelineTests
     public sealed record class TestRequest(string Name, decimal Price) : ICommandRequest<TestResponse>;
 
     /// <summary>
-    /// 테스트용 Response
+    /// 테스트용 Response (IResponse&lt;T&gt; 구현)
     /// </summary>
-    public sealed record class TestResponse(Guid Id) : IResponse;
+    public sealed record class TestResponse : ResponseBase<TestResponse>
+    {
+        public Guid Id { get; init; }
+
+        public TestResponse() { }
+        public TestResponse(Guid id) => Id = id;
+    }
 
     /// <summary>
     /// 테스트용 Validator
@@ -41,19 +47,19 @@ public sealed class ValidationPipelineTests
     {
         // Arrange
         var validators = Enumerable.Empty<IValidator<TestRequest>>();
-        var pipeline = new UsecaseValidationPipeline<TestRequest, IFinResponse<TestResponse>>(validators);
+        var pipeline = new UsecaseValidationPipeline<TestRequest, TestResponse>(validators);
         var request = new TestRequest("Valid Name", 100m);
-        var expectedResponse = new FinResponse<TestResponse>(Fin.Succ(new TestResponse(Guid.NewGuid())));
+        var expectedResponse = new TestResponse(Guid.NewGuid());
 
-        MessageHandlerDelegate<TestRequest, IFinResponse<TestResponse>> next =
-            (_, _) => ValueTask.FromResult<IFinResponse<TestResponse>>(expectedResponse);
+        MessageHandlerDelegate<TestRequest, TestResponse> next =
+            (_, _) => ValueTask.FromResult(expectedResponse);
 
         // Act
-        IFinResponse<TestResponse> result = await pipeline.Handle(request, next, CancellationToken.None);
+        TestResponse result = await pipeline.Handle(request, next, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeTrue();
-        result.Value.ShouldBe(expectedResponse.Value);
+        result.IsSuccess.ShouldBeTrue();
+        result.Id.ShouldBe(expectedResponse.Id);
     }
 
     [Fact]
@@ -61,19 +67,19 @@ public sealed class ValidationPipelineTests
     {
         // Arrange
         var validators = new List<IValidator<TestRequest>> { new TestValidator() };
-        var pipeline = new UsecaseValidationPipeline<TestRequest, IFinResponse<TestResponse>>(validators);
+        var pipeline = new UsecaseValidationPipeline<TestRequest, TestResponse>(validators);
         var request = new TestRequest("Valid Name", 100m);
-        var expectedResponse = new FinResponse<TestResponse>(Fin.Succ(new TestResponse(Guid.NewGuid())));
+        var expectedResponse = new TestResponse(Guid.NewGuid());
 
-        MessageHandlerDelegate<TestRequest, IFinResponse<TestResponse>> next =
-            (_, _) => ValueTask.FromResult<IFinResponse<TestResponse>>(expectedResponse);
+        MessageHandlerDelegate<TestRequest, TestResponse> next =
+            (_, _) => ValueTask.FromResult(expectedResponse);
 
         // Act
-        IFinResponse<TestResponse> result = await pipeline.Handle(request, next, CancellationToken.None);
+        TestResponse result = await pipeline.Handle(request, next, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeTrue();
-        result.Value.ShouldBe(expectedResponse.Value);
+        result.IsSuccess.ShouldBeTrue();
+        result.Id.ShouldBe(expectedResponse.Id);
     }
 
     [Fact]
@@ -81,18 +87,18 @@ public sealed class ValidationPipelineTests
     {
         // Arrange
         var validators = new List<IValidator<TestRequest>> { new TestValidator() };
-        var pipeline = new UsecaseValidationPipeline<TestRequest, IFinResponse<TestResponse>>(validators);
+        var pipeline = new UsecaseValidationPipeline<TestRequest, TestResponse>(validators);
         var request = new TestRequest("Valid Name", -100m); // Invalid price
 
-        MessageHandlerDelegate<TestRequest, IFinResponse<TestResponse>> next =
+        MessageHandlerDelegate<TestRequest, TestResponse> next =
             (_, _) => throw new InvalidOperationException("Should not reach handler");
 
         // Act
-        IFinResponse<TestResponse> result = await pipeline.Handle(request, next, CancellationToken.None);
+        TestResponse result = await pipeline.Handle(request, next, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldContain("Price");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldContain("Price");
     }
 
     [Fact]
@@ -100,17 +106,17 @@ public sealed class ValidationPipelineTests
     {
         // Arrange
         var validators = new List<IValidator<TestRequest>> { new TestValidator() };
-        var pipeline = new UsecaseValidationPipeline<TestRequest, IFinResponse<TestResponse>>(validators);
+        var pipeline = new UsecaseValidationPipeline<TestRequest, TestResponse>(validators);
         var request = new TestRequest("", -100m); // Both invalid
 
-        MessageHandlerDelegate<TestRequest, IFinResponse<TestResponse>> next =
+        MessageHandlerDelegate<TestRequest, TestResponse> next =
             (_, _) => throw new InvalidOperationException("Should not reach handler");
 
         // Act
-        IFinResponse<TestResponse> result = await pipeline.Handle(request, next, CancellationToken.None);
+        TestResponse result = await pipeline.Handle(request, next, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
+        result.IsSuccess.ShouldBeFalse();
         // ManyErrors는 여러 에러를 포함
         result.Error.ShouldBeOfType<ManyErrors>();
     }
@@ -120,16 +126,15 @@ public sealed class ValidationPipelineTests
     {
         // Arrange
         var validators = new List<IValidator<TestRequest>> { new TestValidator() };
-        var pipeline = new UsecaseValidationPipeline<TestRequest, IFinResponse<TestResponse>>(validators);
+        var pipeline = new UsecaseValidationPipeline<TestRequest, TestResponse>(validators);
         var request = new TestRequest("", -100m); // Both invalid
         var handlerCalled = false;
 
-        MessageHandlerDelegate<TestRequest, IFinResponse<TestResponse>> next =
+        MessageHandlerDelegate<TestRequest, TestResponse> next =
             (_, _) =>
             {
                 handlerCalled = true;
-                return ValueTask.FromResult<IFinResponse<TestResponse>>(
-                    new FinResponse<TestResponse>(Fin.Succ(new TestResponse(Guid.NewGuid()))));
+                return ValueTask.FromResult(new TestResponse(Guid.NewGuid()));
             };
 
         // Act
