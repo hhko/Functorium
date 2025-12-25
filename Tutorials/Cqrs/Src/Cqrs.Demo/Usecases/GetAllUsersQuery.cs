@@ -15,7 +15,16 @@ public sealed class GetAllUsersQuery
     /// <summary>
     /// Query Response - 사용자 목록
     /// </summary>
-    public sealed record class Response(Seq<UserDto> Users) : IResponse;
+    public sealed record class Response : ResponseBase<Response>
+    {
+        public Seq<UserDto> Users { get; init; } = Seq<UserDto>.Empty;
+
+        public Response() { }
+        public Response(Seq<UserDto> users)
+        {
+            Users = users;
+        }
+    }
 
     /// <summary>
     /// 사용자 DTO
@@ -36,23 +45,23 @@ public sealed class GetAllUsersQuery
         private readonly ILogger<Usecase> _logger = logger;
         private readonly IUserRepository _userRepository = userRepository;
 
-        public async ValueTask<IFinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
+        public async ValueTask<Response> Handle(Request request, CancellationToken cancellationToken)
         {
             //_logger.LogInformation("Getting all users");
 
             Fin<Seq<User>> result = await _userRepository.GetAllAsync(cancellationToken);
 
-            return result.Match<IFinResponse<Response>>(
+            return result.Match<Response>(
                 Succ: users =>
                 {
                     Seq<UserDto> userDtos = users.Map(u => new UserDto(u.Id, u.Name, u.Email));
                     //_logger.LogInformation("Found {Count} users", userDtos.Count);
-                    return FinResponseUtilites.ToResponse(new Response(userDtos));
+                    return new Response(userDtos);
                 },
                 Fail: error =>
                 {
                     //_logger.LogError("Failed to get users: {Error}", error.Message);
-                    return FinResponseUtilites.ToResponseFail<Response>(error);
+                    return Response.CreateFail(error);
                 });
         }
     }

@@ -18,11 +18,22 @@ public sealed class CreateUserCommand
     /// <summary>
     /// Command Response - 생성된 사용자 정보
     /// </summary>
-    public sealed record class Response(
-        Guid UserId,
-        string Name,
-        string Email,
-        DateTime CreatedAt) : IResponse;
+    public sealed record class Response : ResponseBase<Response>
+    {
+        public Guid UserId { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public string Email { get; init; } = string.Empty;
+        public DateTime CreatedAt { get; init; }
+
+        public Response() { }
+        public Response(Guid userId, string name, string email, DateTime createdAt)
+        {
+            UserId = userId;
+            Name = name;
+            Email = email;
+            CreatedAt = createdAt;
+        }
+    }
 
     /// <summary>
     /// Command Usecase - 실제 비즈니스 로직 구현
@@ -35,7 +46,7 @@ public sealed class CreateUserCommand
         private readonly ILogger<Usecase> _logger = logger;
         private readonly IUserRepository _userRepository = userRepository;
 
-        public async ValueTask<IFinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
+        public async ValueTask<Response> Handle(Request request, CancellationToken cancellationToken)
         {
             //_logger.LogInformation("Creating user: {Name}, {Email}", request.Name, request.Email);
 
@@ -46,14 +57,14 @@ public sealed class CreateUserCommand
             {
                 Error error = (Error)existsResult;
                 //_logger.LogError("Failed to check email existence: {Error}", error.Message);
-                return FinResponseUtilites.ToResponseFail<Response>(error);
+                return Response.CreateFail(error);
             }
 
             bool exists = (bool)existsResult;
             if (exists)
             {
                 //_logger.LogWarning("Email already exists: {Email}", request.Email);
-                return FinResponseUtilites.ToResponseFail<Response>(
+                return Response.CreateFail(
                     Error.New($"Email '{request.Email}' already exists"));
             }
 
@@ -61,17 +72,16 @@ public sealed class CreateUserCommand
             User newUser = new(Guid.NewGuid(), request.Name, request.Email, DateTime.UtcNow);
             Fin<User> createResult = await _userRepository.CreateAsync(newUser, cancellationToken);
 
-            return createResult.Match<IFinResponse<Response>>(
+            return createResult.Match<Response>(
                 Succ: user =>
                 {
                     //_logger.LogInformation("User created successfully: {UserId}", user.Id);
-                    return FinResponseUtilites.ToResponse(
-                        new Response(user.Id, user.Name, user.Email, user.CreatedAt));
+                    return new Response(user.Id, user.Name, user.Email, user.CreatedAt);
                 },
                 Fail: error =>
                 {
                     //_logger.LogError("Failed to create user: {Error}", error.Message);
-                    return FinResponseUtilites.ToResponseFail<Response>(error);
+                    return Response.CreateFail(error);
                 });
         }
     }

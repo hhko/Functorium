@@ -1,3 +1,4 @@
+using LanguageExt;
 using Microsoft.Extensions.Logging;
 
 namespace Cqrs.Demo.Tests.Unit.UsecasesTests;
@@ -28,14 +29,14 @@ public sealed class GetUserByIdQueryTests
             .Returns(Task.FromResult(Fin.Succ<User?>(expectedUser)));
 
         // Act
-        IFinResponse<GetUserByIdQuery.Response> result = await _sut.Handle(request, CancellationToken.None);
+        GetUserByIdQuery.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeTrue();
-        result.Value.ShouldNotBeNull();
-        result.Value.UserId.ShouldBe(userId);
-        result.Value.Name.ShouldBe("Alice");
-        result.Value.Email.ShouldBe("alice@example.com");
+        result.IsSuccess.ShouldBeTrue();
+        result.ShouldNotBeNull();
+        result.UserId.ShouldBe(userId);
+        result.Name.ShouldBe("Alice");
+        result.Email.ShouldBe("alice@example.com");
     }
 
     [Fact]
@@ -50,11 +51,11 @@ public sealed class GetUserByIdQueryTests
             .Returns(Task.FromResult(Fin.Succ<User?>(null)));
 
         // Act
-        IFinResponse<GetUserByIdQuery.Response> result = await _sut.Handle(request, CancellationToken.None);
+        GetUserByIdQuery.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldContain("not found");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldContain("not found");
     }
 
     [Fact]
@@ -70,11 +71,11 @@ public sealed class GetUserByIdQueryTests
             .Returns(Task.FromResult(Fin.Fail<User?>(expectedError)));
 
         // Act
-        IFinResponse<GetUserByIdQuery.Response> result = await _sut.Handle(request, CancellationToken.None);
+        GetUserByIdQuery.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldBe("Database connection failed");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldBe("Database connection failed");
     }
 
     [Fact]

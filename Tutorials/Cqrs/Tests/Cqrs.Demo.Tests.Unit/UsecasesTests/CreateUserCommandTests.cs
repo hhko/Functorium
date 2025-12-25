@@ -1,3 +1,4 @@
+using LanguageExt;
 using Microsoft.Extensions.Logging;
 
 namespace Cqrs.Demo.Tests.Unit.UsecasesTests;
@@ -35,13 +36,13 @@ public sealed class CreateUserCommandTests
             });
 
         // Act
-        IFinResponse<CreateUserCommand.Response> result = await _sut.Handle(request, CancellationToken.None);
+        CreateUserCommand.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeTrue();
-        result.Value.ShouldNotBeNull();
-        result.Value.Name.ShouldBe("Alice");
-        result.Value.Email.ShouldBe("alice@example.com");
+        result.IsSuccess.ShouldBeTrue();
+        result.ShouldNotBeNull();
+        result.Name.ShouldBe("Alice");
+        result.Email.ShouldBe("alice@example.com");
     }
 
     [Fact]
@@ -55,11 +56,11 @@ public sealed class CreateUserCommandTests
             .Returns(Task.FromResult(Fin.Succ(true)));
 
         // Act
-        IFinResponse<CreateUserCommand.Response> result = await _sut.Handle(request, CancellationToken.None);
+        CreateUserCommand.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldContain("already exists");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldContain("already exists");
     }
 
     [Fact]
@@ -74,11 +75,11 @@ public sealed class CreateUserCommandTests
             .Returns(Task.FromResult(Fin.Fail<bool>(expectedError)));
 
         // Act
-        IFinResponse<CreateUserCommand.Response> result = await _sut.Handle(request, CancellationToken.None);
+        CreateUserCommand.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldBe("Database connection failed");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldBe("Database connection failed");
     }
 
     [Fact]
@@ -97,11 +98,11 @@ public sealed class CreateUserCommandTests
             .Returns(Task.FromResult(Fin.Fail<User>(expectedError)));
 
         // Act
-        IFinResponse<CreateUserCommand.Response> result = await _sut.Handle(request, CancellationToken.None);
+        CreateUserCommand.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldBe("Failed to create user");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldBe("Failed to create user");
     }
 
     [Fact]

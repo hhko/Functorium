@@ -1,3 +1,4 @@
+using LanguageExt;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
 
@@ -31,14 +32,14 @@ public sealed class GetAllUsersQueryTests
             .Returns(Task.FromResult(Fin.Succ(users)));
 
         // Act
-        IFinResponse<GetAllUsersQuery.Response> result = await _sut.Handle(request, CancellationToken.None);
+        GetAllUsersQuery.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeTrue();
-        result.Value.ShouldNotBeNull();
-        result.Value.Users.Count.ShouldBe(2);
-        result.Value.Users.Any(u => u.Name == "Alice").ShouldBeTrue();
-        result.Value.Users.Any(u => u.Name == "Bob").ShouldBeTrue();
+        result.IsSuccess.ShouldBeTrue();
+        result.ShouldNotBeNull();
+        result.Users.Count.ShouldBe(2);
+        result.Users.Any(u => u.Name == "Alice").ShouldBeTrue();
+        result.Users.Any(u => u.Name == "Bob").ShouldBeTrue();
     }
 
     [Fact]
@@ -53,12 +54,12 @@ public sealed class GetAllUsersQueryTests
             .Returns(Task.FromResult(Fin.Succ(emptyUsers)));
 
         // Act
-        IFinResponse<GetAllUsersQuery.Response> result = await _sut.Handle(request, CancellationToken.None);
+        GetAllUsersQuery.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeTrue();
-        result.Value.ShouldNotBeNull();
-        result.Value.Users.Count.ShouldBe(0);
+        result.IsSuccess.ShouldBeTrue();
+        result.ShouldNotBeNull();
+        result.Users.Count.ShouldBe(0);
     }
 
     [Fact]
@@ -73,11 +74,11 @@ public sealed class GetAllUsersQueryTests
             .Returns(Task.FromResult(Fin.Fail<Seq<User>>(expectedError)));
 
         // Act
-        IFinResponse<GetAllUsersQuery.Response> result = await _sut.Handle(request, CancellationToken.None);
+        GetAllUsersQuery.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeFalse();
-        result.Error.Message.ShouldBe("Database connection failed");
+        result.IsSuccess.ShouldBeFalse();
+        result.Error!.Message.ShouldBe("Database connection failed");
     }
 
     [Fact]
@@ -113,12 +114,12 @@ public sealed class GetAllUsersQueryTests
             .Returns(Task.FromResult(Fin.Succ(users)));
 
         // Act
-        IFinResponse<GetAllUsersQuery.Response> result = await _sut.Handle(request, CancellationToken.None);
+        GetAllUsersQuery.Response result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        result.IsSucc.ShouldBeTrue();
-        result.Value.Users.Count.ShouldBe(1);
-        var userDto = result.Value.Users[0];
+        result.IsSuccess.ShouldBeTrue();
+        result.Users.Count.ShouldBe(1);
+        var userDto = result.Users[0];
         userDto.UserId.ShouldBe(userId);
         userDto.Name.ShouldBe("TestUser");
         userDto.Email.ShouldBe("test@example.com");

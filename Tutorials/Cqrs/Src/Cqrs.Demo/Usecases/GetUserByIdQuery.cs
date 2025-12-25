@@ -16,11 +16,22 @@ public sealed class GetUserByIdQuery
     /// <summary>
     /// Query Response - 조회된 사용자 정보
     /// </summary>
-    public sealed record class Response(
-        Guid UserId,
-        string Name,
-        string Email,
-        DateTime CreatedAt) : IResponse;
+    public sealed record class Response : ResponseBase<Response>
+    {
+        public Guid UserId { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public string Email { get; init; } = string.Empty;
+        public DateTime CreatedAt { get; init; }
+
+        public Response() { }
+        public Response(Guid userId, string name, string email, DateTime createdAt)
+        {
+            UserId = userId;
+            Name = name;
+            Email = email;
+            CreatedAt = createdAt;
+        }
+    }
 
     /// <summary>
     /// Query Usecase - 조회 로직 구현
@@ -33,30 +44,29 @@ public sealed class GetUserByIdQuery
         private readonly ILogger<Usecase> _logger = logger;
         private readonly IUserRepository _userRepository = userRepository;
 
-        public async ValueTask<IFinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
+        public async ValueTask<Response> Handle(Request request, CancellationToken cancellationToken)
         {
             //_logger.LogInformation("Getting user by ID: {UserId}", request.UserId);
 
             Fin<User?> result = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
 
-            return result.Match<IFinResponse<Response>>(
+            return result.Match<Response>(
                 Succ: user =>
                 {
                     if (user is null)
                     {
                         //_logger.LogWarning("User not found: {UserId}", request.UserId);
-                        return FinResponseUtilites.ToResponseFail<Response>(
+                        return Response.CreateFail(
                             Error.New($"User with ID '{request.UserId}' not found"));
                     }
 
                     //_logger.LogInformation("User found: {UserId}, {Name}", user.Id, user.Name);
-                    return FinResponseUtilites.ToResponse(
-                        new Response(user.Id, user.Name, user.Email, user.CreatedAt));
+                    return new Response(user.Id, user.Name, user.Email, user.CreatedAt);
                 },
                 Fail: error =>
                 {
                     //_logger.LogError("Failed to get user: {Error}", error.Message);
-                    return FinResponseUtilites.ToResponseFail<Response>(error);
+                    return Response.CreateFail(error);
                 });
         }
     }
