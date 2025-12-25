@@ -99,23 +99,13 @@ public sealed class CreateProductCommand
 
             Fin<Product> createResult = await _productRepository.CreateAsync(newProduct, cancellationToken);
 
-            return createResult.Match<Response>(
-                Succ: product =>
-                {
-                    //_logger.LogInformation("Product created successfully: {ProductId}", product.Id);
-                    return new Response(
-                        product.Id,
-                        product.Name,
-                        product.Description,
-                        product.Price,
-                        product.StockQuantity,
-                        product.CreatedAt);
-                },
-                Fail: error =>
-                {
-                    //_logger.LogError("Failed to create product: {Error}", error.Message);
-                    return Response.CreateFail(error);
-                });
+            return createResult.ToResponse(product => new Response(
+                product.Id,
+                product.Name,
+                product.Description,
+                product.Price,
+                product.StockQuantity,
+                product.CreatedAt));
         }
     }
 }

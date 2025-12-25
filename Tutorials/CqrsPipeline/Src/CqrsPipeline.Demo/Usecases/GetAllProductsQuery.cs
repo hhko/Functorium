@@ -48,21 +48,14 @@ public sealed class GetAllProductsQuery
 
             Fin<Seq<Product>> getAllResult = await _productRepository.GetAllAsync(cancellationToken);
 
-            return getAllResult.Match<Response>(
-                Succ: products =>
-                {
-                    Seq<ProductDto> productDtos = products
-                        .Select(p => new ProductDto(p.Id, p.Name, p.Price, p.StockQuantity))
-                        .ToSeq();
+            return getAllResult.ToResponse(products =>
+            {
+                Seq<ProductDto> productDtos = products
+                    .Select(p => new ProductDto(p.Id, p.Name, p.Price, p.StockQuantity))
+                    .ToSeq();
 
-                    //_logger.LogInformation("Found {Count} products", productDtos.Count);
-                    return new Response(productDtos);
-                },
-                Fail: error =>
-                {
-                    //_logger.LogError("Failed to get all products: {Error}", error.Message);
-                    return Response.CreateFail(error);
-                });
+                return new Response(productDtos);
+            });
         }
     }
 }

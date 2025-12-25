@@ -110,23 +110,13 @@ public sealed class UpdateProductCommand
 
             Fin<Product> updateResult = await _productRepository.UpdateAsync(updatedProduct, cancellationToken);
 
-            return updateResult.Match<Response>(
-                Succ: product =>
-                {
-                    //_logger.LogInformation("Product updated successfully: {ProductId}", product.Id);
-                    return new Response(
-                        product.Id,
-                        product.Name,
-                        product.Description,
-                        product.Price,
-                        product.StockQuantity,
-                        product.UpdatedAt ?? DateTime.UtcNow);
-                },
-                Fail: error =>
-                {
-                    //_logger.LogError("Failed to update product: {Error}", error.Message);
-                    return Response.CreateFail(error);
-                });
+            return updateResult.ToResponse(product => new Response(
+                product.Id,
+                product.Name,
+                product.Description,
+                product.Price,
+                product.StockQuantity,
+                product.UpdatedAt ?? DateTime.UtcNow));
         }
     }
 }

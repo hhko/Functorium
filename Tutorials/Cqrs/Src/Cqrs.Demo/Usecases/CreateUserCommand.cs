@@ -72,17 +72,8 @@ public sealed class CreateUserCommand
             User newUser = new(Guid.NewGuid(), request.Name, request.Email, DateTime.UtcNow);
             Fin<User> createResult = await _userRepository.CreateAsync(newUser, cancellationToken);
 
-            return createResult.Match<Response>(
-                Succ: user =>
-                {
-                    //_logger.LogInformation("User created successfully: {UserId}", user.Id);
-                    return new Response(user.Id, user.Name, user.Email, user.CreatedAt);
-                },
-                Fail: error =>
-                {
-                    //_logger.LogError("Failed to create user: {Error}", error.Message);
-                    return Response.CreateFail(error);
-                });
+            return createResult.ToResponse(user =>
+                new Response(user.Id, user.Name, user.Email, user.CreatedAt));
         }
     }
 }

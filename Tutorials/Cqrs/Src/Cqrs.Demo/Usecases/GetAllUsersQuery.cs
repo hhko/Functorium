@@ -51,18 +51,11 @@ public sealed class GetAllUsersQuery
 
             Fin<Seq<User>> result = await _userRepository.GetAllAsync(cancellationToken);
 
-            return result.Match<Response>(
-                Succ: users =>
-                {
-                    Seq<UserDto> userDtos = users.Map(u => new UserDto(u.Id, u.Name, u.Email));
-                    //_logger.LogInformation("Found {Count} users", userDtos.Count);
-                    return new Response(userDtos);
-                },
-                Fail: error =>
-                {
-                    //_logger.LogError("Failed to get users: {Error}", error.Message);
-                    return Response.CreateFail(error);
-                });
+            return result.ToResponse(users =>
+            {
+                Seq<UserDto> userDtos = users.Map(u => new UserDto(u.Id, u.Name, u.Email));
+                return new Response(userDtos);
+            });
         }
     }
 }
