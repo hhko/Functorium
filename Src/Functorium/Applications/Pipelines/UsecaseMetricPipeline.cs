@@ -24,7 +24,7 @@ public sealed class UsecaseMetricPipeline<TRequest, TResponse>
     : UsecasePipelineBase<TRequest>
     , IPipelineBehavior<TRequest, TResponse>
         where TRequest : IMessage
-        where TResponse : IFinResponse<IResponse>
+        where TResponse : IResponse<TResponse>
 {
     private readonly IMeterFactory _meterFactory;
     private readonly string _meterName;
@@ -38,7 +38,7 @@ public sealed class UsecaseMetricPipeline<TRequest, TResponse>
         //_metricPrefix = ObservabilityFields.MetricPrefix.Application.Usecase;
     }
 
-    
+
 
     public async ValueTask<TResponse> Handle(TRequest request, MessageHandlerDelegate<TRequest, TResponse> next, CancellationToken cancellationToken)
     {
@@ -124,7 +124,7 @@ public sealed class UsecaseMetricPipeline<TRequest, TResponse>
         durationHistogram.Record(elapsed / 1000.0, tags);
 
         // 성공/실패 응답 수 기록
-        if (response.IsSucc)
+        if (response.IsSuccess)
         {
             responseSuccessCounter.Add(1,
                 new KeyValuePair<string, object?>(

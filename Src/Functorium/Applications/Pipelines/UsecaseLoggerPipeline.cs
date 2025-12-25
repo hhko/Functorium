@@ -3,6 +3,8 @@ using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Loggers;
 using Functorium.Applications.Cqrs;
 
+using LanguageExt.Common;
+
 using Mediator;
 
 using Microsoft.Extensions.Logging;
@@ -15,7 +17,7 @@ public sealed class UsecaseLoggerPipeline<TRequest, TResponse>
     : UsecasePipelineBase<TRequest>
     , IPipelineBehavior<TRequest, TResponse>
         where TRequest : IMessage
-        where TResponse : IFinResponse<IResponse>
+        where TResponse : IResponse<TResponse>
 {
     private readonly ILogger<UsecaseLoggerPipeline<TRequest, TResponse>> _logger;
 
@@ -51,7 +53,7 @@ public sealed class UsecaseLoggerPipeline<TRequest, TResponse>
 
     private void LogResponse(TResponse response, string requestCqrs, string requestHandler, string requestHandlerMethod, double elapsed)
     {
-        if (response.IsSucc)
+        if (response.IsSuccess)
         {
             _logger.LogResponseMessageSuccess(
                 ObservabilityFields.Request.Layer.Application,
@@ -70,7 +72,9 @@ public sealed class UsecaseLoggerPipeline<TRequest, TResponse>
             // Error    | ErrorCodeExceptional | Exceptional    | IsExceptional
             // Warnning | ErrorCodeExpected    | Expected       | IsExpected
 
-            if (response.Error.IsExceptional)
+            Error error = response.Error!;
+
+            if (error.IsExceptional)
             {
                 _logger.LogResponseMessageError(
                     ObservabilityFields.Request.Layer.Application,
@@ -80,7 +84,7 @@ public sealed class UsecaseLoggerPipeline<TRequest, TResponse>
                     requestHandlerMethod,
                     ObservabilityFields.Response.Status.Failure,
                     elapsed,
-                    response.Error);
+                    error);
             }
             else
             {
@@ -92,7 +96,7 @@ public sealed class UsecaseLoggerPipeline<TRequest, TResponse>
                     requestHandlerMethod,
                     ObservabilityFields.Response.Status.Failure,
                     elapsed,
-                    response.Error);
+                    error);
             }
         }
     }

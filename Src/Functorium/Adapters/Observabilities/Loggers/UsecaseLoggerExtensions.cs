@@ -1,6 +1,8 @@
 using Functorium.Abstractions.Errors;
 using Functorium.Applications.Cqrs;
 
+using LanguageExt.Common;
+
 using Microsoft.Extensions.Logging;
 
 namespace Functorium.Adapters.Observabilities.Loggers;
@@ -53,15 +55,15 @@ public static class UsecaseLoggerExtensions
         string requestCqrs,
         string requestHandler,
         string requestHandlerMethod,
-        IFinResponse<T>? response,
+        T? response,
         string status,
-        double elapsed) where T : IResponse
+        double elapsed)
     {
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        if (!response!.IsSucc)
-            return;
+        // response를 그대로 사용 (Fin<T>에서 값 추출은 호출자에서 처리)
+        T? value = response;
 
         using IDisposable? scope = logger.BeginScope(new Dictionary<string, object?>
         {
@@ -71,7 +73,7 @@ public static class UsecaseLoggerExtensions
             [ObservabilityFields.Request.TelemetryLogKeys.HandlerCqrs] = requestCqrs,
             [ObservabilityFields.Request.TelemetryLogKeys.HandlerMethod] = requestHandlerMethod,
 
-            [ObservabilityFields.Response.TelemetryLogKeys.Data] = response.Value,
+            [ObservabilityFields.Response.TelemetryLogKeys.Data] = value,
             [ObservabilityFields.Response.TelemetryLogKeys.Status] = status,
             [ObservabilityFields.Response.TelemetryLogKeys.Elapsed] = elapsed,
         });
@@ -84,7 +86,7 @@ public static class UsecaseLoggerExtensions
                 requestCqrs,
                 requestHandler,
                 requestHandlerMethod,
-                response.Value,
+                value,
                 status,
                 elapsed);
     }

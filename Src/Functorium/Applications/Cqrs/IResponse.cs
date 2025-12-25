@@ -1,3 +1,9 @@
-﻿namespace Functorium.Applications.Cqrs;
+﻿using LanguageExt.Common;
 
-public interface IResponse;
+namespace Functorium.Applications.Cqrs;
+
+public interface IResponse
+{
+    bool IsSuccess { get; }
+    Error? Error { get; }
+}

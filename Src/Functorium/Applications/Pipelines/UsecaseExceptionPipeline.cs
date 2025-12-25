@@ -9,19 +9,18 @@ public sealed class UsecaseExceptionPipeline<TRequest, TResponse>
     : UsecasePipelineBase<TRequest>
     , IPipelineBehavior<TRequest, TResponse>
     where TRequest : IMessage
-    where TResponse : IFinResponse<IResponse>
+    where TResponse : IResponse<TResponse>
 {
     public async ValueTask<TResponse> Handle(TRequest request, MessageHandlerDelegate<TRequest, TResponse> next,
         CancellationToken cancellationToken)
     {
         try
         {
-            TResponse response = await next(request, cancellationToken);
-            return response;
+            return await next(request, cancellationToken);
         }
         catch (Exception exp)
         {
-            return FinResponse<IResponse>.CreateFail<TResponse>(ApplicationErrors.Exception(exp));
+            return TResponse.CreateFail(ApplicationErrors.Exception(exp));
         }
     }
 

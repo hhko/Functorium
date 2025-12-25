@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+
 using Functorium.Abstractions.Errors;
 using Functorium.Abstractions.Utilities;
 using Functorium.Applications.Cqrs;
@@ -11,7 +12,7 @@ public sealed class UsecaseValidationPipeline<TRequest, TResponse>
     : UsecasePipelineBase<TRequest>
     , IPipelineBehavior<TRequest, TResponse>
         where TRequest : IMessage
-        where TResponse : IFinResponse<IResponse>
+        where TResponse : IResponse<TResponse>
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
 
@@ -52,7 +53,7 @@ public sealed class UsecaseValidationPipeline<TRequest, TResponse>
 
         if (errors.Length is not 0)
         {
-            return FinResponse<IResponse>.CreateFail<TResponse>(Error.Many(errors));
+            return TResponse.CreateFail(Error.Many(errors));
         }
 
         return await next(request, cancellationToken);

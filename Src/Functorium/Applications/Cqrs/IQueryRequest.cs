@@ -1,12 +1,12 @@
-﻿using Mediator;
+using Mediator;
 
 namespace Functorium.Applications.Cqrs;
 
 public interface IQueryRequest<TResponse>
-    : IQuery<IFinResponse<TResponse>>
-      where TResponse : IResponse;
+    : IQuery<TResponse>
+      where TResponse : IResponse<TResponse>;
 
 public interface IQueryUsecase<in TQuery, TResponse>
-    : IQueryHandler<TQuery, IFinResponse<TResponse>>
+    : IQueryHandler<TQuery, TResponse>
       where TQuery : IQueryRequest<TResponse>
-      where TResponse : IResponse;
+      where TResponse : IResponse<TResponse>;

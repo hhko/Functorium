@@ -5,6 +5,8 @@ using Functorium.Abstractions.Errors;
 using Functorium.Adapters.Observabilities;
 using Functorium.Applications.Cqrs;
 
+using LanguageExt.Common;
+
 using Mediator;
 
 using ObservabilityFields = Functorium.Adapters.Observabilities.ObservabilityFields;
@@ -15,7 +17,7 @@ public sealed class UsecaseTracePipeline<TRequest, TResponse>
     : UsecasePipelineBase<TRequest>
     , IPipelineBehavior<TRequest, TResponse>
         where TRequest : IMessage
-        where TResponse : IFinResponse<IResponse>
+        where TResponse : IResponse<TResponse>
 {
     private readonly ActivitySource _activitySource;
     //private static readonly ActivitySource _activitySource = new(typeof(UsecaseTracePipeline<,>).Namespace!);
@@ -79,7 +81,7 @@ public sealed class UsecaseTracePipeline<TRequest, TResponse>
 
     private static void SetStatusTags(Activity activity, TResponse response)
     {
-        if (response.IsSucc)
+        if (response.IsSuccess)
         {
             SetSuccessStatus(activity);
         }
