@@ -9,6 +9,7 @@
 - [3단계: IResponse&lt;T&gt; + ResponseBase&lt;T&gt;](#3단계-responset--responsebaset)
 - [발견된 버그와 해결](#발견된-버그와-해결)
 - [4단계: Positional Record 문법 적용](#4단계-positional-record-문법-적용)
+- [5단계: ToResponse 확장 메서드](#5단계-toresponse-확장-메서드)
 - [결론](#결론)
 
 <br/>
@@ -27,6 +28,7 @@ Mediator 패턴의 Pipeline에서 성공/실패 상태를 확인하고 실패 �
 | 2단계 | `Fin<T>` 직접 사용 | 3곳 | **악화** - 더 많은 리플렉션 |
 | 3단계 | `IResponse<T>` + `ResponseBase<T>` | 0곳 | **해결** - 리플렉션 완전 제거 |
 | 4단계 | Positional Record 문법 적용 | 0곳 | **개선** - 코드량 60% 감소 |
+| 5단계 | `ToResponse` 확장 메서드 | 0곳 | **개선** - Handler 코드 단순화 |
 
 <br/>
 
@@ -545,6 +547,137 @@ public async ValueTask<Response> Handle(Request request, CancellationToken cance
 
 <br/>
 
+## 5단계: ToResponse 확장 메서드
+
+### 문제 인식
+
+Handler에서 `Fin<T>`를 `IResponse<TResponse>`로 변환할 때 반복적인 `Match` 패턴이 발생합니다:
+
+```csharp
+// 반복되는 패턴 - 매번 Fail 케이스를 동일하게 처리
+return createResult.Match<Response>(
+    Succ: product => new Response(
+        product.Id,
+        product.Name,
+        product.Description,
+        product.Price,
+        product.StockQuantity,
+        product.CreatedAt),
+    Fail: error => Response.CreateFail(error));  // 항상 동일한 패턴
+```
+
+### 개선: ToResponse 확장 메서드
+
+`Fin<T>`에 대한 확장 메서드를 추가하여 Handler 코드를 단순화했습니다:
+
+```csharp
+// FinExtensions.cs
+public static class FinExtensions
+{
+    public static TResponse ToResponse<TSource, TResponse>(
+        this Fin<TSource> fin,
+        Func<TSource, TResponse> mapper)
+        where TResponse : IResponse<TResponse>
+    {
+        return fin.Match(
+            Succ: mapper,
+            Fail: error => TResponse.CreateFail(error));
+    }
+}
+```
+
+### Handler 코드 비교
+
+**Before (Match 패턴)**:
+```csharp
+return createResult.Match<Response>(
+    Succ: product => new Response(
+        product.Id,
+        product.Name,
+        product.Description,
+        product.Price,
+        product.StockQuantity,
+        product.CreatedAt),
+    Fail: error => Response.CreateFail(error));
+```
+
+**After (ToResponse)**:
+```csharp
+return createResult.ToResponse(product => new Response(
+    product.Id,
+    product.Name,
+    product.Description,
+    product.Price,
+    product.StockQuantity,
+    product.CreatedAt));
+```
+
+### 효과
+
+1. **Fail 케이스 자동 처리**: `TResponse.CreateFail(error)` 호출이 확장 메서드에 캡슐화
+2. **코드량 감소**: 약 30% 감소 (Fail 람다 제거)
+3. **일관성 보장**: 모든 Handler에서 동일한 실패 처리 보장
+4. **타입 안전성 유지**: `static abstract` 인터페이스 멤버 활용으로 리플렉션 없음
+
+### 추가 확장 메서드
+
+다양한 사용 시나리오를 지원하기 위해 여러 오버로드를 제공합니다:
+
+#### 1. ToResponse (기본)
+```csharp
+// 성공 시 mapper 호출, 실패 시 자동으로 CreateFail 호출
+return result.ToResponse(product => new Response(product.Id, product.Name));
+```
+
+#### 2. ToResponse (성공/실패 모두 커스텀)
+```csharp
+// 성공/실패 모두 커스텀 처리 필요한 경우
+return result.ToResponse(
+    onSuccess: product => new Response(product.Id, product.Name),
+    onFail: error => Response.CreateFail(Error.New($"Custom: {error.Message}")));
+```
+
+#### 3. ToResponseOrNull (성공만 처리)
+```csharp
+// 성공 케이스만 처리하고 실패는 상위에서 별도 처리
+TResponse? response = result.ToResponseOrNull(product => new Response(product.Id));
+if (response is null)
+{
+    // 실패 처리 로직
+}
+```
+
+#### 4. ToFailResponseOrNull (실패만 처리)
+```csharp
+// 실패 케이스를 먼저 처리하고 빠른 반환
+if (result.ToFailResponseOrNull<Product, Response>() is { } failResponse)
+    return failResponse;
+
+// 이후 성공 로직 처리
+Product product = (Product)result;
+```
+
+### 적용 범위
+
+`ToResponse`는 성공 시 단순 매핑만 필요한 경우에 적합합니다:
+
+```csharp
+// 적합한 케이스: 단순 매핑
+return result.ToResponse(product => new Response(product.Id, product.Name));
+
+// 적합하지 않은 케이스: 성공 값에 대한 추가 로직 필요
+return result.Match<Response>(
+    Succ: user =>
+    {
+        if (user is null)  // 추가 검증 필요
+            return Response.CreateFail(Error.New("Not found"));
+        return new Response(user.Id, user.Name);
+    },
+    Fail: error => Response.CreateFail(error));
+```
+
+<br/>
+
 ## 결론
 
 ### 최종 구조 비교
@@ -583,10 +716,11 @@ After (IResponse<T> + ResponseBase<T>):
 
 ### 수정된 파일 목록
 
-**핵심 타입 (3개)**
+**핵심 타입 (4개)**
 - `Src/Functorium/Applications/Cqrs/IResponse.cs`
 - `Src/Functorium/Applications/Cqrs/IResponseT.cs` (신규)
 - `Src/Functorium/Applications/Cqrs/ResponseBase.cs` (신규)
+- `Src/Functorium/Applications/Cqrs/FinExtensions.cs` (신규)
 
 **Request 인터페이스 (2개)**
 - `Src/Functorium/Applications/Cqrs/ICommandRequest.cs`
