@@ -33,7 +33,9 @@ public abstract class AbstractValueObject
         if (obj is not AbstractValueObject valueObject)
             return false;
 
-        return GetEqualityComponents().SequenceEqual(valueObject.GetEqualityComponents());
+        return GetEqualityComponents().SequenceEqual(
+            valueObject.GetEqualityComponents(),
+            ValueObjectEqualityComparer.Instance);
     }
 
     /// <summary>
@@ -50,7 +52,9 @@ public abstract class AbstractValueObject
         if (GetUnproxiedType(this) != GetUnproxiedType(other))
             return false;
 
-        return GetEqualityComponents().SequenceEqual(other.GetEqualityComponents());
+        return GetEqualityComponents().SequenceEqual(
+            other.GetEqualityComponents(),
+            ValueObjectEqualityComparer.Instance);
     }
 
     /// <summary>
@@ -66,7 +70,7 @@ public abstract class AbstractValueObject
                 {
                     unchecked
                     {
-                        return current * 23 + (obj?.GetHashCode() ?? 0);
+                        return current * 23 + ValueObjectEqualityComparer.Instance.GetHashCode(obj!);
                     }
                 });
         }
@@ -139,5 +143,66 @@ public abstract class AbstractValueObject
         return ns.StartsWith("Castle.Proxies", StringComparison.Ordinal)
             || ns.StartsWith("NHibernate.Proxy", StringComparison.Ordinal)
             || ns.StartsWith("Microsoft.EntityFrameworkCore.Proxies", StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// 값 객체 동등성 비교를 위한 커스텀 EqualityComparer
+    /// 배열 타입에 대해 요소별 내용 비교를 수행
+    /// </summary>
+    /// <remarks>
+    /// 성능 고려사항:
+    /// - 배열 비교는 O(n) 시간 복잡도를 가짐
+    /// - 대용량 배열(100KB 이상)에는 적합하지 않음
+    ///   예: byte[] 102,400건, int[] 25,600건, Guid[] 6,400건
+    /// - 해시코드는 캐시되므로 첫 계산 이후 O(1)
+    /// - 작은 배열(해시값, 서명 등)에 최적화된 구현
+    /// </remarks>
+    private sealed class ValueObjectEqualityComparer : IEqualityComparer<object>
+    {
+        public static readonly ValueObjectEqualityComparer Instance = new();
+
+        private ValueObjectEqualityComparer() { }
+
+        public new bool Equals(object? x, object? y)
+        {
+            if (ReferenceEquals(x, y))
+                return true;
+
+            if (x is null || y is null)
+                return false;
+
+            // 배열 타입에 대해 요소별 비교
+            if (x is Array xArray && y is Array yArray)
+            {
+                if (xArray.Length != yArray.Length)
+                    return false;
+
+                for (int i = 0; i < xArray.Length; i++)
+                {
+                    if (!Equals(xArray.GetValue(i), yArray.GetValue(i)))
+                        return false;
+                }
+                return true;
+            }
+
+            return x.Equals(y);
+        }
+
+        public int GetHashCode(object obj)
+        {
+            if (obj is Array array)
+            {
+                unchecked
+                {
+                    int hash = 17;
+                    foreach (var item in array)
+                    {
+                        hash = hash * 23 + (item?.GetHashCode() ?? 0);
+                    }
+                    return hash;
+                }
+            }
+            return obj?.GetHashCode() ?? 0;
+        }
     }
 }
