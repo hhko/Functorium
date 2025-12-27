@@ -1,4 +1,16 @@
-- [ ] Unit Testing 가이드 문서 업데이트
+- [x] Unit Testing 가이드 문서 업데이트
+- [x] ValueObject Book 프로젝트 통합
+  - 프로젝트 참조 변경
+  - ,NET 10 변경
+  - Directory.Build.props 적용
+  - Directory.Package.props 적용
+  - MediatR 제거 -> Mediator 적용
+  - MTP 기반 프로젝트 구성
+  - README 문서 보강(가이드 기반)
+  - `.NET 9.0 -> .NET 10`
+  - `.Apply -> + fun<>` 스파일 Apply 검증
+  - `2장 테스트 프로젝트`
+  - `README 문서 가이드 통합`
 - [ ] Serilog 단위 테스트 이해
 - [ ] Application 레이어 테스트
 - [ ] Observability 코드 리뷰
@@ -7,6 +19,7 @@
 - [ ] Observability 형식 테스트 자동화
 - [ ] Error Message 생성/규칙?
 
+---
 
 - Abstraction
   - [x] Error

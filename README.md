@@ -37,17 +37,17 @@
 - [ ] Sprint Plan
 
 ### Testing
-- [x] MTP
+- [x] MTP(Microsoft Testing Platform)
 - [x] Code Coverage
-- [x] Architecture Test
-- [x] Snapshot Test
-- [ ] Container Test
-- [ ] Performance Test
+- [x] Architecture Testing
+- [x] Snapshot Testing
+- [ ] Container Testing
+- [ ] Performance Testing
 
 ### CI/CD
 - [x] Local Build
 - [x] Remote Build
-- [ ] Deployment
+- [ ] Remote Deployment
 
-### Observablity System
-- [ ] OpenSearch
+### System
+- [ ] Observability

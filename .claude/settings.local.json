@@ -52,7 +52,15 @@
       "Bash(dotnet build:*)",
       "Bash(dotnet test:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(cmd.exe /c \"cd /d C:\\\\Workspace\\\\Github\\\\Functorium\\\\Books\\\\Functional-ValueObject && ren 01-Concept Part1-ValueObject-Concepts\")",
+      "Bash(cmd.exe /c \"cd /d C:\\\\Workspace\\\\Github\\\\Functorium\\\\Books\\\\Functional-ValueObject && ren 02-Validation Part2-Validation-Patterns\")",
+      "Bash(cmd.exe /c \"cd /d C:\\\\Workspace\\\\Github\\\\Functorium\\\\Books\\\\Functional-ValueObject && ren 03-Patterns Part3-ValueObject-Patterns\")",
+      "Bash(cmd.exe /c \"cd /d C:\\\\Workspace\\\\Github\\\\Functorium\\\\Books\\\\Functional-ValueObject && ren 04-practical-guide Part4-Practical-Guide\")",
+      "Bash(cmd.exe /c \"cd /d C:\\\\Workspace\\\\Github\\\\Functorium\\\\Books\\\\Functional-ValueObject && ren 05-domain-examples Part5-Domain-Examples\")",
+      "Bash(cmd.exe /c \"xcopy /E /I /Q \"\"C:\\\\Workspace\\\\Github\\\\Functorium\\\\Books\\\\Functional-ValueObject\\\\01-Concept\"\" \"\"C:\\\\Workspace\\\\Github\\\\Functorium\\\\Books\\\\Functional-ValueObject\\\\Part1-ValueObject-Concepts\"\"\")",
+      "Bash(cmd.exe /c \"xcopy /E /I /Q /Y \"\"C:\\\\Workspace\\\\Github\\\\Functorium\\\\Books\\\\Functional-ValueObject\\\\01-Concept\"\" \"\"C:\\\\Workspace\\\\Github\\\\Functorium\\\\Books\\\\Functional-ValueObject\\\\Part1-ValueObject-Concepts\"\"\")",
+      "Bash(cmd.exe /c \"rmdir /S /Q \"\"C:\\\\Workspace\\\\Github\\\\Functorium\\\\Books\\\\Functional-ValueObject\\\\Part1-ValueObject-Concepts\"\"\")"
     ],
     "deny": [],
     "ask": []
