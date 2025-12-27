@@ -25,7 +25,7 @@
 - [x] CQRS
 - [x] Pipeline
 - [ ] IAdapter(Observability)
-- [ ] LINQ
+- [ ] LINQ(FinT, IO, Guard, Validation)
 
 ### Domain Layer
 - [x] Value Object
@@ -46,6 +46,7 @@
 - [ ] Performance Testing
 
 ### CI/CD
+- [ ] Versioning
 - [x] Local Build
 - [x] Remote Build
 - [ ] Remote Deployment
