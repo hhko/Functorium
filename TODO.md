@@ -1,3 +1,13 @@
+- [ ] Unit Testing 가이드 문서 업데이트
+- [ ] Serilog 단위 테스트 이해
+- [ ] Application 레이어 테스트
+- [ ] Observability 코드 리뷰
+- [ ] IAdatperMetric/IAdapterTrace 인터페이스 의존성 등록 코드 정리
+- [ ] Observability 형식 문서화
+- [ ] Observability 형식 테스트 자동화
+- [ ] Error Message 생성/규칙?
+
+
 - Abstraction
   - [x] Error
     - Type: ErrorCodeExpected, ErrorCodeExceptional, ErrorCodeFactory
