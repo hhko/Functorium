@@ -23,14 +23,9 @@ brew install --cask dotnet-sdk
 sudo apt-get update && sudo apt-get install -y dotnet-sdk-10.0
 ```
 
-### 2. IDE 선택
+### 2. IDE 설정
 
-#### Visual Studio 2022 (권장)
-
-- 버전: 17.12 이상
-- 워크로드: ".NET 데스크톱 개발" 또는 "ASP.NET 및 웹 개발"
-
-#### VS Code + C# 확장
+#### VS Code + C# Dev Kit
 
 - [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit) 확장 설치
 

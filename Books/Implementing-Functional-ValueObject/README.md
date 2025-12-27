@@ -168,8 +168,8 @@ IValueObject (인터페이스 - 명명 규칙)
 
 ## 필수 준비물
 
-- .NET 9.0 SDK 이상
-- Visual Studio 2022 또는 VS Code + C# 확장
+- .NET 10.0 SDK 이상
+- VS Code + C# Dev Kit 확장
 - C# 기초 문법 지식
 
 ---
