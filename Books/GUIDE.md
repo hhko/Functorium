@@ -53,6 +53,69 @@ Part5-Domain-Examples/
 | 번호 접두사 | `01-`, `02-`, ... | `02-Healthcare-Domain/` |
 | 장 내용 | `README.md`에 작성 | - |
 
+**C# 프로젝트 폴더 구조:**
+
+C# 프로젝트가 포함된 장은 반드시 다음 구조를 따릅니다:
+
+```txt
+01-Topic-Name/                          # 장 폴더 (번호-PascalCase)
+├── README.md                           # 장 설명 문서
+├── ProjectName/                        # 메인 프로젝트 폴더
+│   ├── ProjectName.csproj              # 프로젝트 파일
+│   ├── Program.cs                      # 진입점
+│   ├── AssemblyReference.cs            # (선택) 어셈블리 참조
+│   └── ValueObjects/                   # 소스 파일들
+│       └── ...
+└── ProjectName.Tests.Unit/             # 테스트 프로젝트 폴더
+    ├── ProjectName.Tests.Unit.csproj   # 테스트 프로젝트 파일
+    ├── xunit.runner.json               # xUnit 설정
+    └── ...Tests.cs                     # 테스트 파일들
+```
+
+**핵심 규칙:**
+
+| 항목 | 올바른 예시 | 잘못된 예시 |
+|------|-------------|-------------|
+| 메인 프로젝트 | `01-Topic/ProjectName/ProjectName.csproj` | `01-Topic/ProjectName.csproj` |
+| 테스트 프로젝트 | `01-Topic/ProjectName.Tests.Unit/...` | `01-Topic/Tests/...` |
+| ProjectReference | `..\ProjectName\ProjectName.csproj` | `..\ProjectName.csproj` |
+
+**csproj 파일 템플릿:**
+
+메인 프로젝트:
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="LanguageExt.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\Src\Functorium\Functorium.csproj" />
+  </ItemGroup>
+</Project>
+```
+
+테스트 프로젝트:
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="LanguageExt.Core" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <!-- ... 기타 테스트 패키지 -->
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ProjectName\ProjectName.csproj" />
+  </ItemGroup>
+</Project>
+```
+
 ### 규칙 적용 기준
 
 | 상황 | 적용 규칙 | 결과 |
@@ -192,6 +255,8 @@ var x = 1;
 문서 작성 완료 전 확인:
 
 - [ ] 폴더 구조 규칙 적용 (MD만 → 파일, 2개+ → 폴더/README.md)
+- [ ] C# 프로젝트 구조 확인 (`01-Topic/ProjectName/ProjectName.csproj`)
+- [ ] 테스트 프로젝트 ProjectReference 경로 확인 (`..\ProjectName\ProjectName.csproj`)
 - [ ] 목차 형식 확인 (서론/결론/부록 → 리스트, 본문 → 테이블)
 - [ ] 모든 코드 블록에 언어 지정
 - [ ] 중첩 코드 블록이 있으면 외부에 백틱 4개 사용

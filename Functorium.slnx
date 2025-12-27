@@ -40,96 +40,147 @@
     <Project Path="Tests/Functorium.Tests.Unit/Functorium.Tests.Unit.csproj" Id="20685fd7-39c5-40e4-89d1-6ac8db7c174a" />
   </Folder>
   <Folder Name="/Books/" />
-  <Folder Name="/Books/Functional-ValueObject/" />
-  <Folder Name="/Books/Functional-ValueObject/01-Concept/" />
-  <Folder Name="/Books/Functional-ValueObject/01-Concept/01-Basic-Divide/">
-    <Project Path="Books/Functional-ValueObject/01-Concept/01-Basic-Divide/BasicDivide/BasicDivide.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/01-Basic-Divide/BasicDivide.Tests.Unit/BasicDivide.Tests.Unit.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/01-Basic-Divide/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/01-Basic-Divide/BasicDivide/BasicDivide.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/01-Basic-Divide/BasicDivide.Tests.Unit/BasicDivide.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Books/Functional-ValueObject/01-Concept/02-Defensive-Programming/">
-    <Project Path="Books/Functional-ValueObject/01-Concept/02-Defensive-Programming/DefensiveProgramming/DefensiveProgramming.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/02-Defensive-Programming/DefensiveProgramming.Tests.Unit/DefensiveProgramming.Tests.Unit.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/02-Defensive-Programming/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/02-Defensive-Programming/DefensiveProgramming/DefensiveProgramming.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/02-Defensive-Programming/DefensiveProgramming.Tests.Unit/DefensiveProgramming.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Books/Functional-ValueObject/01-Concept/03-Functional-Result/">
-    <Project Path="Books/Functional-ValueObject/01-Concept/03-Functional-Result/FunctionalResult/FunctionalResult.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/03-Functional-Result/FunctionalResult.Tests.Unit/FunctionalResult.Tests.Unit.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/03-Functional-Result/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/03-Functional-Result/FunctionalResult/FunctionalResult.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/03-Functional-Result/FunctionalResult.Tests.Unit/FunctionalResult.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Books/Functional-ValueObject/01-Concept/04-Always-Valid/">
-    <Project Path="Books/Functional-ValueObject/01-Concept/04-Always-Valid/AlwaysValid/AlwaysValid.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/04-Always-Valid/AlwaysValid.Tests.Unit/AlwaysValid.Tests.Unit.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/04-Always-Valid/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/04-Always-Valid/AlwaysValid/AlwaysValid.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/04-Always-Valid/AlwaysValid.Tests.Unit/AlwaysValid.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Books/Functional-ValueObject/01-Concept/05-Operator-Overloading/">
-    <Project Path="Books/Functional-ValueObject/01-Concept/05-Operator-Overloading/OperatorOverloading/OperatorOverloading.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/05-Operator-Overloading/OperatorOverloading.Tests.Unit/OperatorOverloading.Tests.Unit.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/05-Operator-Overloading/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/05-Operator-Overloading/OperatorOverloading/OperatorOverloading.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/05-Operator-Overloading/OperatorOverloading.Tests.Unit/OperatorOverloading.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Books/Functional-ValueObject/01-Concept/06-Linq-Expression/">
-    <Project Path="Books/Functional-ValueObject/01-Concept/06-Linq-Expression/LinqExpression/LinqExpression.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/06-Linq-Expression/LinqExpression.Tests.Unit/LinqExpression.Tests.Unit.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/06-Linq-Expression/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/06-Linq-Expression/LinqExpression/LinqExpression.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/06-Linq-Expression/LinqExpression.Tests.Unit/LinqExpression.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Books/Functional-ValueObject/01-Concept/07-Value-Equality/">
-    <Project Path="Books/Functional-ValueObject/01-Concept/07-Value-Equality/ValueEquality/ValueEquality.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/07-Value-Equality/ValueEquality.Tests.Unit/ValueEquality.Tests.Unit.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/07-Value-Equality/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/07-Value-Equality/ValueEquality/ValueEquality.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/07-Value-Equality/ValueEquality.Tests.Unit/ValueEquality.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Books/Functional-ValueObject/01-Concept/08-Value-Comparability/">
-    <Project Path="Books/Functional-ValueObject/01-Concept/08-Value-Comparability/ValueComparability/ValueComparability.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/08-Value-Comparability/ValueComparability.Tests.Unit/ValueComparability.Tests.Unit.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/08-Value-Comparability/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/08-Value-Comparability/ValueComparability/ValueComparability.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/08-Value-Comparability/ValueComparability.Tests.Unit/ValueComparability.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Books/Functional-ValueObject/01-Concept/09-Create-Validate-Separation/">
-    <Project Path="Books/Functional-ValueObject/01-Concept/09-Create-Validate-Separation/CreateValidateSeparation/CreateValidateSeparation.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/09-Create-Validate-Separation/CreateValidateSeparation.Tests.Unit/CreateValidateSeparation.Tests.Unit.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/09-Create-Validate-Separation/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/09-Create-Validate-Separation/CreateValidateSeparation/CreateValidateSeparation.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/09-Create-Validate-Separation/CreateValidateSeparation.Tests.Unit/CreateValidateSeparation.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Books/Functional-ValueObject/01-Concept/10-Validated-Value-Creation/">
-    <Project Path="Books/Functional-ValueObject/01-Concept/10-Validated-Value-Creation/ValidatedValueCreation/ValidatedValueCreation.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/10-Validated-Value-Creation/ValidatedValueCreation.Tests.Unit/ValidatedValueCreation.Tests.Unit.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/10-Validated-Value-Creation/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/10-Validated-Value-Creation/ValidatedValueCreation/ValidatedValueCreation.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/10-Validated-Value-Creation/ValidatedValueCreation.Tests.Unit/ValidatedValueCreation.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Books/Functional-ValueObject/01-Concept/11-ValueObject-Framework/">
-    <Project Path="Books/Functional-ValueObject/01-Concept/11-ValueObject-Framework/Framework/Framework.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/11-ValueObject-Framework/ValueObjectFramework/ValueObjectFramework.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/11-ValueObject-Framework/ValueObjectFramework.Tests.Unit/ValueObjectFramework.Tests.Unit.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/11-ValueObject-Framework/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/11-ValueObject-Framework/Framework/Framework.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/11-ValueObject-Framework/ValueObjectFramework/ValueObjectFramework.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/11-ValueObject-Framework/ValueObjectFramework.Tests.Unit/ValueObjectFramework.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Books/Functional-ValueObject/01-Concept/12-Type-Safe-Enums/">
-    <Project Path="Books/Functional-ValueObject/01-Concept/12-Type-Safe-Enums/Framework/Framework.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/12-Type-Safe-Enums/TypeSafeEnums/TypeSafeEnums.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/12-Type-Safe-Enums/TypeSafeEnums.Tests.Unit/TypeSafeEnums.Tests.Unit.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/12-Type-Safe-Enums/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/12-Type-Safe-Enums/Framework/Framework.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/12-Type-Safe-Enums/TypeSafeEnums/TypeSafeEnums.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/12-Type-Safe-Enums/TypeSafeEnums.Tests.Unit/TypeSafeEnums.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Books/Functional-ValueObject/01-Concept/13-Error-Code/">
-    <Project Path="Books/Functional-ValueObject/01-Concept/13-Error-Code/ErrorCode/ErrorCode.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/13-Error-Code/ErrorCode.Tests.Unit/ErrorCode.Tests.Unit.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/13-Error-Code/Framework/Framework.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/13-Error-Code/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/13-Error-Code/ErrorCode/ErrorCode.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/13-Error-Code/ErrorCode.Tests.Unit/ErrorCode.Tests.Unit.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/13-Error-Code/Framework/Framework.csproj" />
   </Folder>
-  <Folder Name="/Books/Functional-ValueObject/01-Concept/14-Architecture-Test/">
-    <Project Path="Books/Functional-ValueObject/01-Concept/14-Architecture-Test/ArchitectureTest/ArchitectureTest.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/14-Architecture-Test/ArchitectureTest.Tests.Unit/ArchitectureTest.Tests.Unit.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/14-Architecture-Test/Framework/Framework.csproj" />
-    <Project Path="Books/Functional-ValueObject/01-Concept/14-Architecture-Test/Framework.Testing/Framework.Testing.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/14-Architecture-Test/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/14-Architecture-Test/ArchitectureTest/ArchitectureTest.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/14-Architecture-Test/ArchitectureTest.Tests.Unit/ArchitectureTest.Tests.Unit.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/14-Architecture-Test/Framework/Framework.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/14-Architecture-Test/Framework.Testing/Framework.Testing.csproj" />
   </Folder>
-  <Folder Name="/Books/Functional-ValueObject/02-Validation/">
-    <Project Path="Books/Functional-ValueObject/02-Validation/01-Bind-Sequential-Validation/BindSequentialValidation.csproj" />
-    <Project Path="Books/Functional-ValueObject/02-Validation/02-Apply-Parallel-Validation/ApplyParallelValidation.csproj" />
-    <Project Path="Books/Functional-ValueObject/02-Validation/03-Apply-Bind-Combined-Validation/ApplyBindCombinedValidation.csproj" />
-    <Project Path="Books/Functional-ValueObject/02-Validation/04-Apply-Internal-Bind-Validation/ApplyInternalBindValidation.csproj" />
-    <Project Path="Books/Functional-ValueObject/02-Validation/05-Bind-Internal-Apply-Validation/BindInternalApplyValidation.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/01-Bind-Sequential-Validation/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/01-Bind-Sequential-Validation/BindSequentialValidation/BindSequentialValidation.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/01-Bind-Sequential-Validation/BindSequentialValidation.Tests.Unit/BindSequentialValidation.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Books/Functional-ValueObject/03-Patterns/">
-    <Project Path="Books/Functional-ValueObject/03-Patterns/01-SimpleValueObject/SimpleValueObject.csproj" />
-    <Project Path="Books/Functional-ValueObject/03-Patterns/02-ComparableSimpleValueObject/ComparableSimpleValueObject.csproj" />
-    <Project Path="Books/Functional-ValueObject/03-Patterns/03-ValueObject-Primitive/ValueObjectPrimitive.csproj" />
-    <Project Path="Books/Functional-ValueObject/03-Patterns/04-ComparableValueObject-Primitive/ComparableValueObjectPrimitive.csproj" />
-    <Project Path="Books/Functional-ValueObject/03-Patterns/05-ValueObject-Composite/ValueObjectComposite.csproj" />
-    <Project Path="Books/Functional-ValueObject/03-Patterns/06-ComparableValueObject-Composite/ComparableValueObjectComposite.csproj" />
-    <Project Path="Books/Functional-ValueObject/03-Patterns/07-TypeSafeEnum/TypeSafeEnum.csproj" />
-    <Project Path="Books/Functional-ValueObject/03-Patterns/08-Architecture-Test/ArchitectureTest.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/02-Apply-Parallel-Validation/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/02-Apply-Parallel-Validation/ApplyParallelValidation/ApplyParallelValidation.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/02-Apply-Parallel-Validation/ApplyParallelValidation.Tests.Unit/ApplyParallelValidation.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Books/Functional-ValueObject/04-practical-guide/">
-    <Project Path="Books/Functional-ValueObject/04-practical-guide/01-Functorium-Framework/FunctoriumFramework/FunctoriumFramework.csproj" />
-    <Project Path="Books/Functional-ValueObject/04-practical-guide/02-ORM-Integration/OrmIntegration/OrmIntegration.csproj" />
-    <Project Path="Books/Functional-ValueObject/04-practical-guide/03-CQRS-Integration/CqrsIntegration/CqrsIntegration.csproj" />
-    <Project Path="Books/Functional-ValueObject/04-practical-guide/04-Testing-Strategies/TestingStrategies/TestingStrategies.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/03-Apply-Bind-Combined-Validation/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/03-Apply-Bind-Combined-Validation/ApplyBindCombinedValidation/ApplyBindCombinedValidation.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/03-Apply-Bind-Combined-Validation/ApplyBindCombinedValidation.Tests.Unit/ApplyBindCombinedValidation.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Books/Functional-ValueObject/05-domain-examples/">
-    <Project Path="Books/Functional-ValueObject/05-domain-examples/01-Ecommerce-Domain/EcommerceDomain/EcommerceDomain.csproj" />
-    <Project Path="Books/Functional-ValueObject/05-domain-examples/02-Finance-Domain/FinanceDomain/FinanceDomain.csproj" />
-    <Project Path="Books/Functional-ValueObject/05-domain-examples/03-User-Management-Domain/UserManagementDomain/UserManagementDomain.csproj" />
-    <Project Path="Books/Functional-ValueObject/05-domain-examples/04-Scheduling-Domain/SchedulingDomain/SchedulingDomain.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/04-Apply-Internal-Bind-Validation/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/04-Apply-Internal-Bind-Validation/ApplyInternalBindValidation/ApplyInternalBindValidation.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/04-Apply-Internal-Bind-Validation/ApplyInternalBindValidation.Tests.Unit/ApplyInternalBindValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/05-Bind-Internal-Apply-Validation/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/05-Bind-Internal-Apply-Validation/BindInternalApplyValidation/BindInternalApplyValidation.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/05-Bind-Internal-Apply-Validation/BindInternalApplyValidation.Tests.Unit/BindInternalApplyValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/01-SimpleValueObject/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/01-SimpleValueObject/SimpleValueObject/SimpleValueObject.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/01-SimpleValueObject/SimpleValueObject.Tests.Unit/SimpleValueObject.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/02-ComparableSimpleValueObject/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/02-ComparableSimpleValueObject/ComparableSimpleValueObject/ComparableSimpleValueObject.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/02-ComparableSimpleValueObject/ComparableSimpleValueObject.Tests.Unit/ComparableSimpleValueObject.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/03-ValueObject-Primitive/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/03-ValueObject-Primitive/ValueObjectPrimitive/ValueObjectPrimitive.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/03-ValueObject-Primitive/ValueObjectPrimitive.Tests.Unit/ValueObjectPrimitive.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/04-ComparableValueObject-Primitive/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/04-ComparableValueObject-Primitive/ComparableValueObjectPrimitive/ComparableValueObjectPrimitive.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/04-ComparableValueObject-Primitive/ComparableValueObjectPrimitive.Tests.Unit/ComparableValueObjectPrimitive.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/05-ValueObject-Composite/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/05-ValueObject-Composite/ValueObjectComposite/ValueObjectComposite.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/05-ValueObject-Composite/ValueObjectComposite.Tests.Unit/ValueObjectComposite.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/06-ComparableValueObject-Composite/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/06-ComparableValueObject-Composite/ComparableValueObjectComposite/ComparableValueObjectComposite.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/06-ComparableValueObject-Composite/ComparableValueObjectComposite.Tests.Unit/ComparableValueObjectComposite.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/07-TypeSafeEnum/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/07-TypeSafeEnum/TypeSafeEnum/TypeSafeEnum.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/07-TypeSafeEnum/TypeSafeEnum.Tests.Unit/TypeSafeEnum.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/08-Architecture-Test/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/08-Architecture-Test/ArchitectureTest/ArchitectureTest.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part4-Practical-Guide/" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part4-Practical-Guide/01-Functorium-Framework/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part4-Practical-Guide/01-Functorium-Framework/FunctoriumFramework/FunctoriumFramework.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part4-Practical-Guide/02-ORM-Integration/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part4-Practical-Guide/02-ORM-Integration/OrmIntegration/OrmIntegration.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part4-Practical-Guide/03-CQRS-Integration/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part4-Practical-Guide/03-CQRS-Integration/CqrsIntegration/CqrsIntegration.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part4-Practical-Guide/04-Testing-Strategies/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part4-Practical-Guide/04-Testing-Strategies/TestingStrategies/TestingStrategies.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part5-Domain-Examples/" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part5-Domain-Examples/01-Ecommerce-Domain/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part5-Domain-Examples/01-Ecommerce-Domain/EcommerceDomain/EcommerceDomain.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part5-Domain-Examples/01-Ecommerce-Domain/EcommerceDomain.Tests.Unit/EcommerceDomain.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part5-Domain-Examples/02-Finance-Domain/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part5-Domain-Examples/02-Finance-Domain/FinanceDomain/FinanceDomain.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part5-Domain-Examples/03-User-Management-Domain/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part5-Domain-Examples/03-User-Management-Domain/UserManagementDomain/UserManagementDomain.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part5-Domain-Examples/04-Scheduling-Domain/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part5-Domain-Examples/04-Scheduling-Domain/SchedulingDomain/SchedulingDomain.csproj" />
   </Folder>
 </Solution>
