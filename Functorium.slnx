@@ -120,4 +120,16 @@
     <Project Path="Books/Functional-ValueObject/03-Patterns/07-TypeSafeEnum/TypeSafeEnum.csproj" />
     <Project Path="Books/Functional-ValueObject/03-Patterns/08-Architecture-Test/ArchitectureTest.csproj" />
   </Folder>
+  <Folder Name="/Books/Functional-ValueObject/04-practical-guide/">
+    <Project Path="Books/Functional-ValueObject/04-practical-guide/01-Functorium-Framework/FunctoriumFramework/FunctoriumFramework.csproj" />
+    <Project Path="Books/Functional-ValueObject/04-practical-guide/02-ORM-Integration/OrmIntegration/OrmIntegration.csproj" />
+    <Project Path="Books/Functional-ValueObject/04-practical-guide/03-CQRS-Integration/CqrsIntegration/CqrsIntegration.csproj" />
+    <Project Path="Books/Functional-ValueObject/04-practical-guide/04-Testing-Strategies/TestingStrategies/TestingStrategies.csproj" />
+  </Folder>
+  <Folder Name="/Books/Functional-ValueObject/05-domain-examples/">
+    <Project Path="Books/Functional-ValueObject/05-domain-examples/01-Ecommerce-Domain/EcommerceDomain/EcommerceDomain.csproj" />
+    <Project Path="Books/Functional-ValueObject/05-domain-examples/02-Finance-Domain/FinanceDomain/FinanceDomain.csproj" />
+    <Project Path="Books/Functional-ValueObject/05-domain-examples/03-User-Management-Domain/UserManagementDomain/UserManagementDomain.csproj" />
+    <Project Path="Books/Functional-ValueObject/05-domain-examples/04-Scheduling-Domain/SchedulingDomain/SchedulingDomain.csproj" />
+  </Folder>
 </Solution>
