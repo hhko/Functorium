@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Src\Functorium\Functorium.csproj" />
+    <ProjectReference Include="..\..\..\..\..\Src\Functorium\Functorium.csproj" />
   </ItemGroup>
 
 </Project>
