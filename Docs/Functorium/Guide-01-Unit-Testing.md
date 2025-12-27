@@ -5,6 +5,7 @@
 ## 목차
 - [요약](#요약)
 - [테스트 패키지](#테스트-패키지)
+- [테스트 프로젝트 설정](#테스트-프로젝트-설정)
 - [테스트 명명 규칙](#테스트-명명-규칙)
 - [변수 명명 규칙](#변수-명명-규칙)
 - [AAA 패턴](#aaa-패턴)
@@ -75,27 +76,39 @@ dotnet test
 | 패키지 | 용도 |
 |--------|------|
 | xunit.v3 | 테스트 프레임워크 |
+| Microsoft.Testing.Extensions.CodeCoverage | 코드 커버리지 |
+| Microsoft.Testing.Extensions.TrxReport | TRX 리포트 |
 | Shouldly | Assertion 라이브러리 |
 | NSubstitute | Mocking 라이브러리 |
-| ArchUnitNET | 아키텍처 테스트 |
+| TngTech.ArchUnitNET.xUnitV3 | 아키텍처 테스트 |
 
 <br/>
 
 ## 테스트 패키지
 
-| 패키지 | 버전 | 용도 |
+| 패키지 | 용도 | 비고 |
 |--------|------|------|
-| xunit.v3 | 3.2.1 | 테스트 프레임워크 |
-| Shouldly | 4.3.0 | Fluent Assertion |
-| Verify.Xunit | 31.8.0 | 스냅샷 테스트 |
-| NSubstitute | 5.3.0 | Mocking |
-| TngTech.ArchUnitNET.xUnitV3 | 0.13.0 | 아키텍처 테스트 |
+| xunit.v3 | 테스트 프레임워크 | xUnit v3 (MTP 기반) |
+| xunit.runner.visualstudio | VS/IDE 테스트 탐색기 지원 | 필수 |
+| Microsoft.NET.Test.Sdk | .NET 테스트 SDK | 필수 |
+| Microsoft.Testing.Extensions.CodeCoverage | 코드 커버리지 수집 | MTP 확장 |
+| Microsoft.Testing.Extensions.TrxReport | TRX 리포트 생성 | MTP 확장 |
+| Shouldly | Fluent Assertion | 권장 |
+| Verify.XunitV3 | 스냅샷 테스트 | xUnit v3용 |
+| NSubstitute | Mocking | 권장 |
+| TngTech.ArchUnitNET.xUnitV3 | 아키텍처 테스트 | xUnit v3용 |
 
 ### 패키지 설치
 
 ```bash
-# xUnit v3 (테스트 프레임워크)
+# xUnit v3 (테스트 프레임워크) - 필수 패키지
 dotnet add package xunit.v3
+dotnet add package xunit.runner.visualstudio
+dotnet add package Microsoft.NET.Test.Sdk
+
+# MTP 확장 (코드 커버리지, TRX 리포트)
+dotnet add package Microsoft.Testing.Extensions.CodeCoverage
+dotnet add package Microsoft.Testing.Extensions.TrxReport
 
 # Shouldly (Assertion)
 dotnet add package Shouldly
@@ -103,6 +116,87 @@ dotnet add package Shouldly
 # NSubstitute (Mocking)
 dotnet add package NSubstitute
 ```
+
+> **주의**: `Microsoft.Testing.Extensions.TrxReport` 패키지가 없으면 `Build-Local.ps1` 실행 시 `--report-trx` 옵션으로 인해 테스트가 실행되지 않습니다.
+
+<br/>
+
+## 테스트 프로젝트 설정
+
+### 기본 csproj 구성
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 필수 패키지 -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+
+    <!-- MTP 확장 (커버리지, TRX 리포트) -->
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
+
+    <!-- Assertion 라이브러리 -->
+    <PackageReference Include="Shouldly" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MyProject\MyProject.csproj" />
+  </ItemGroup>
+
+</Project>
+```
+
+### xunit.runner.json 설정
+
+테스트 프로젝트 루트에 `xunit.runner.json` 파일을 생성합니다:
+
+```json
+{
+  "$schema": "https://xunit.net/schema/current/xunit.runner.schema.json",
+  "parallelizeAssembly": false,
+  "parallelizeTestCollections": true
+}
+```
+
+### xUnit v3 네임스페이스 변경사항
+
+xUnit v2에서 v3로 마이그레이션 시 다음 네임스페이스 변경이 필요합니다:
+
+| v2 | v3 |
+|----|-----|
+| `Xunit.Abstractions` | `Xunit` |
+| `ITestOutputHelper` (Xunit.Abstractions) | `ITestOutputHelper` (Xunit) |
+
+```csharp
+// xUnit v2
+using Xunit.Abstractions;
+
+// xUnit v3
+using Xunit;
+```
+
+### 비테스트 라이브러리에서 xUnit 타입 사용
+
+테스트 유틸리티 라이브러리(예: `Functorium.Testing`)에서 `ITestOutputHelper` 등 xUnit 타입을 사용해야 하는 경우:
+
+```xml
+<!-- xunit.v3 대신 xunit.v3.extensibility.core 사용 -->
+<PackageReference Include="xunit.v3.extensibility.core" />
+```
+
+> **주의**: `xunit.v3` 패키지는 테스트 프로젝트(`<IsTestProject>true</IsTestProject>`)에서만 사용해야 합니다. 비테스트 라이브러리에서 사용하면 "test projects must be executable" 오류가 발생합니다.
 
 <br/>
 
@@ -292,6 +386,51 @@ dotnet add package Microsoft.NET.Test.Sdk
 dotnet add package xunit.runner.visualstudio
 ```
 
+### Build-Local.ps1에서 일부 테스트가 실행되지 않을 때
+
+**원인**: `Microsoft.Testing.Extensions.TrxReport` 패키지 누락
+
+**증상:**
+- `dotnet test`로 직접 실행하면 모든 테스트가 통과
+- `Build-Local.ps1` 실행 시 "오류: N" 메시지와 함께 일부 테스트만 실행됨
+
+**해결:**
+```bash
+# TrxReport 패키지 추가
+dotnet add package Microsoft.Testing.Extensions.TrxReport
+```
+
+또는 csproj 파일에 직접 추가:
+```xml
+<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
+```
+
+### "test projects must be executable" 오류
+
+**원인**: 비테스트 라이브러리에서 `xunit.v3` 패키지 사용
+
+**해결:** `xunit.v3` 대신 `xunit.v3.extensibility.core` 사용:
+```xml
+<!-- 잘못된 설정 (비테스트 라이브러리) -->
+<PackageReference Include="xunit.v3" />
+
+<!-- 올바른 설정 (비테스트 라이브러리) -->
+<PackageReference Include="xunit.v3.extensibility.core" />
+```
+
+### ITestOutputHelper 네임스페이스 오류 (xUnit v3)
+
+**원인**: xUnit v2에서 v3로 마이그레이션 시 네임스페이스 변경
+
+**해결:**
+```csharp
+// 변경 전 (v2)
+using Xunit.Abstractions;
+
+// 변경 후 (v3)
+using Xunit;
+```
+
 ### 비동기 테스트가 실패할 때
 
 **원인**: `async void` 사용 또는 `await` 누락
@@ -453,6 +592,9 @@ reportgenerator -reports:"**/coverage.cobertura.xml" -targetdir:"coverage-report
 
 ## 참고 문서
 
-- [xUnit.net Documentation](https://xunit.net/docs/getting-started/v3/whats-new)
+- [xUnit.net v3 What's New](https://xunit.net/docs/getting-started/v3/whats-new)
+- [xUnit.net v3 Migration Guide](https://xunit.net/docs/getting-started/v3/migration)
+- [Microsoft Testing Platform (MTP)](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-platform-intro)
 - [Shouldly Documentation](https://docs.shouldly.org/)
 - [NSubstitute Documentation](https://nsubstitute.github.io/help/getting-started/)
+- [ArchUnitNET Documentation](https://archunitnet.readthedocs.io/)
