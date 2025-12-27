@@ -7,11 +7,14 @@
   - MediatR 제거 -> Mediator 적용
   - MTP 기반 프로젝트 구성
   - README 문서 보강(가이드 기반)
+  - 기존 Books 폴더 재구성
+  - 가이드 문서 업데이트
+  - README 문서 가이드 통합`
   - `.NET 9.0 -> .NET 10`
   - `.Apply -> + fun<>` 스파일 Apply 검증
-  - `2장 테스트 프로젝트`
-  - `README 문서 가이드 통합`
-- [ ] Serilog 단위 테스트 이해
+  - 2장/3장 테스트 프로젝트
+- [x] 배열을 값 객체 동등성 비교 처리 개선
+   [ ] Serilog 단위 테스트 이해
 - [ ] Application 레이어 테스트
 - [ ] Observability 코드 리뷰
 - [ ] IAdatperMetric/IAdapterTrace 인터페이스 의존성 등록 코드 정리

@@ -1,3 +1,17 @@
+## 값 객체에서 배열 값 비교 범위
+```
+AbstractValueObject.Equals에서 SequenceEqual을 사용하지만, SequenceEqual은 각 요소에 대해 기본 Equals를 사용합니다. byte[]와 같은 배열은 기본 Equals가 참조 비교를 하므로 내용이 같아도 다른 인스턴스면 false를 반환합니다. AbstractValueObject에서 배열 타입에 대해 SequenceEqual을 사용하도록 수정해야 합니다.
+
+Functorium의 구현이 값 객체의 의미론에 더 충실합니다. 값 객체는 값의 동등성으로 비교되어야 하며, 배열의 경우 내용이 같으면 동등해야 합니다.
+
+
+결정	                    | CSharpFunctionalExtensions	    | Functorium
+SimpleValueObject<T> 제약	| T : IComparable	                | T : notnull
+배열 타입 지원	            | 불가 (배열은 IComparable 미구현)	  |  가능
+동등성 비교	              | SequenceEqual (참조 비교)	          | ValueObjectEqualityComparer (내용 비교)
+설계 의도	                | ORM 호환성 우선 (EF Core InMemory)	| 값 객체 의미론 우선
+```
+
 ## Powershell 스크립트 비교
 ```
 ● 스크립트 비교 리뷰
