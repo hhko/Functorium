@@ -16,7 +16,8 @@
 - [x] 배열을 값 객체 동등성 비교 처리 개선
 - [x] errorMessage = "" 개선
 - [x] LanguageExt 패키지 버전 업데이트
-- [ ] 경고 제거
+- [x] 경고 제거
+- [x] reportgenerator 출력 최소화 verbosity: 'Info'
 - [ ] .sprint 양식 개선
 - [ ] .claude/guides 문서 표준 양식
 - [ ] docs | 값 객체 개발 가이드
@@ -38,6 +39,7 @@
 - [ ] FastEndpoint
 - [ ] IO 심화
 - [ ] docs: IO 개발 가이드
+- [ ] WebSite: Astro, Starlight
 ---
 - [ ] Entity ID 소스 생성기
 - [ ] EFCore 통합

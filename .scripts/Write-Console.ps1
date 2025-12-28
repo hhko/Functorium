@@ -60,7 +60,7 @@ function Write-Detail {
     [string]$Message
   )
 
-  Write-Host "      $Message" -ForegroundColor DarkGray
+  Write-Host "  $Message" -ForegroundColor DarkGray
 }
 
 <#
@@ -75,7 +75,7 @@ function Write-Success {
     [string]$Message
   )
 
-  Write-Host "      $Message" -ForegroundColor Green
+  Write-Host "  $Message" -ForegroundColor Green
 }
 
 <#
@@ -92,7 +92,7 @@ function Write-WarningMessage {
     [string]$Message
   )
 
-  Write-Host "      $Message" -ForegroundColor Yellow
+  Write-Host "  $Message" -ForegroundColor Yellow
 }
 
 <#
