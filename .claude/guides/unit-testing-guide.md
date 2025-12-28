@@ -4,6 +4,7 @@
 
 ## 목차
 - [요약](#요약)
+- [MTP 설정](#mtp-설정)
 - [테스트 패키지](#테스트-패키지)
 - [테스트 프로젝트 설정](#테스트-프로젝트-설정)
 - [테스트 명명 규칙](#테스트-명명-규칙)
@@ -16,21 +17,26 @@
 
 ## 요약
 
-### 주요 명령
+### 주요 명령 (MTP 모드)
 
 ```bash
 # 전체 테스트 실행
 dotnet test
 
 # 특정 프로젝트 테스트
-dotnet test Tests/Functorium.Tests.Unit
+dotnet test --project Tests/Functorium.Tests.Unit
 
-# 코드 커버리지 포함 실행
-dotnet test --collect:"XPlat Code Coverage"
+# 코드 커버리지 포함 실행 (MTP 방식)
+dotnet test -- --coverage --coverage-output-format cobertura
 
-# 특정 테스트만 실행
-dotnet test --filter "FullyQualifiedName~Handle_ReturnsSuccess"
+# 특정 테스트만 실행 (MTP 필터)
+dotnet test -- --filter-method "Handle_ReturnsSuccess"
+
+# 클래스 필터링
+dotnet test -- --filter-class "MyNamespace.MyTestClass"
 ```
+
+> **참고**: MTP 모드에서는 테스트 옵션을 `--` 구분자 뒤에 전달합니다.
 
 ### 주요 절차
 
@@ -84,6 +90,156 @@ dotnet test
 
 <br/>
 
+## MTP 설정
+
+### Microsoft Testing Platform이란?
+
+MTP(Microsoft Testing Platform)는 VSTest를 대체하는 새로운 테스트 엔진입니다. xUnit v3는 MTP를 기본 지원합니다.
+
+### MTP 모드 활성화
+
+MTP를 사용하려면 **프로젝트 설정**과 **SDK 버전별 설정**이 모두 필요합니다.
+
+#### 1. 프로젝트 필수 설정 (모든 .NET 버전 공통)
+
+모든 테스트 프로젝트의 `.csproj` 파일에 다음 설정이 **필수**입니다:
+
+```xml
+<PropertyGroup>
+  <OutputType>Exe</OutputType>
+  <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+</PropertyGroup>
+```
+
+| 속성 | 설명 |
+|------|------|
+| `OutputType` | MTP는 standalone executable 방식으로 동작하므로 `Exe` **필수** |
+| `UseMicrosoftTestingPlatformRunner` | xUnit v3에서 MTP 러너 활성화 (xUnit 전용) |
+
+> **참고**: `OutputType`을 `Exe`로 설정해야 하는 이유는 MSBuild/NuGet 복원 시 버그를 방지하기 위한 [Microsoft 공식 권장사항](https://devblogs.microsoft.com/dotnet/mtp-adoption-frameworks/)입니다.
+
+> **팁**: `Directory.Build.props` 파일에 공통 설정을 추가하면 모든 테스트 프로젝트에 자동 적용됩니다:
+> ```xml
+> <Project>
+>   <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+>     <OutputType>Exe</OutputType>
+>     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+>   </PropertyGroup>
+> </Project>
+> ```
+
+#### 2. SDK 버전별 `dotnet test` 설정
+
+**.NET 10 SDK 이상**: `global.json`에서 설정
+
+```json
+{
+  "test": {
+    "runner": "Microsoft.Testing.Platform"
+  }
+}
+```
+
+> **위치**: `global.json`은 솔루션 루트에 위치합니다.
+> ```
+> 솔루션 루트/
+> ├── global.json          ← MTP 설정 위치
+> ├── Directory.Packages.props
+> └── Functorium.slnx
+> ```
+
+> **참고**: .NET 10 SDK 이상에서는 `--` 구분자 없이 MTP 옵션을 직접 사용할 수 있습니다.
+
+**.NET 8-9 SDK**: 프로젝트 파일에서 추가 설정 필요
+
+```xml
+<PropertyGroup>
+  <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+</PropertyGroup>
+```
+
+> **주의**: .NET 8-9에서는 `dotnet test` 명령 시 `--` 구분자가 필요합니다.
+
+### xUnit v3 MTP 패키지 선택
+
+xUnit v3는 MTP 버전을 선택할 수 있습니다:
+
+| 패키지 | 설명 |
+|--------|------|
+| `xunit.v3` | 기본값 (MTP v1 포함) |
+| `xunit.v3.mtp-v1` | MTP v1 명시적 지정 |
+| `xunit.v3.mtp-v2` | MTP v2 사용 |
+| `xunit.v3.mtp-off` | MTP 비활성화 (VSTest만 사용) |
+
+### MTP CLI 옵션 (xUnit v3)
+
+| 기능 | xUnit 네이티브 | MTP 명령줄 |
+|------|---------------|-----------|
+| 클래스 필터링 | `-class "name"` | `--filter-class "name"` |
+| 메서드 필터링 | `-method "name"` | `--filter-method "name"` |
+| 네임스페이스 필터링 | `-namespace "name"` | `--filter-namespace "name"` |
+| 트레이트 필터링 | `-trait "name=value"` | `--filter-trait "name=value"` |
+| 병렬 처리 | `-parallel <option>` | `--parallel <option>` |
+| HTML 리포트 | `-html <file>` | `--report-xunit-html --report-xunit-html-filename <file>` ¹ |
+| JUnit 리포트 | `-junit <file>` | `--report-junit --report-junit-filename <file>` ¹ |
+| 실시간 출력 | `-showLiveOutput` | `--show-live-output on` |
+
+> ¹ HTML/JUnit 리포트는 별도 패키지 설치가 필요합니다: `xunit.v3.reports.html`, `xunit.v3.reports.junit`
+
+### VSTest vs MTP 필터 비교
+
+| 모드 | 필터 옵션 | 예시 |
+|------|----------|------|
+| VSTest | `--filter` | `dotnet test --filter "FullyQualifiedName~MyTest"` |
+| MTP | `-- --filter-method` | `dotnet test -- --filter-method "MyTest"` |
+
+> **참고**: VSTest 모드에서는 `--filter` 옵션을 `--` 구분자 없이 사용합니다.
+
+### 코드 커버리지 옵션 (MTP)
+
+`Microsoft.Testing.Extensions.CodeCoverage` 패키지 설치 후 사용 가능:
+
+| 옵션 | 설명 |
+|------|------|
+| `--coverage` | 코드 커버리지 활성화 (필수) |
+| `--coverage-output <file>` | 출력 파일명 지정 |
+| `--coverage-output-format <format>` | 형식 (coverage, xml, cobertura) |
+| `--coverage-settings <file>` | XML 설정 파일 경로 |
+
+**사용 예:**
+
+```bash
+# dotnet test로 커버리지 수집
+dotnet test -- --coverage --coverage-output-format cobertura --coverage-output coverage.xml
+
+# dotnet run으로 직접 실행
+dotnet run --project Tests -- --coverage --coverage-output-format cobertura
+```
+
+### TRX 리포트 옵션 (MTP)
+
+`Microsoft.Testing.Extensions.TrxReport` 패키지 설치 후 사용 가능:
+
+| 옵션 | 설명 |
+|------|------|
+| `--report-trx` | TRX 리포트 생성 |
+| `--report-trx-filename <file>` | 출력 파일명 지정 |
+
+**사용 예:**
+
+```bash
+# TRX 리포트 생성
+dotnet test -- --report-trx
+
+# 파일명 지정
+dotnet test -- --report-trx --report-trx-filename results.trx
+
+# 커버리지와 TRX 리포트 함께 생성 (Build-Local.ps1 방식)
+dotnet test -- --coverage --coverage-output-format cobertura --coverage-output coverage.xml --report-trx
+```
+
+<br/>
+
 ## 테스트 패키지
 
 | 패키지 | 용도 | 비고 |
@@ -131,6 +287,9 @@ dotnet add package NSubstitute
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- MTP 필수 설정 -->
+    <OutputType>Exe</OutputType>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
 
   <ItemGroup>
@@ -157,6 +316,8 @@ dotnet add package NSubstitute
 
 </Project>
 ```
+
+> **중요**: `OutputType`과 `UseMicrosoftTestingPlatformRunner`는 MTP 동작을 위한 **필수 설정**입니다.
 
 ### xunit.runner.json 설정
 
@@ -578,23 +739,34 @@ public void Test2_IsIndependent()
 
 ### Q7. 코드 커버리지는 어떻게 확인하나요?
 
-**A:** XPlat Code Coverage를 사용하세요:
+**A:** MTP 코드 커버리지 확장을 사용하세요:
 
 ```bash
-# 커버리지 수집
-dotnet test --collect:"XPlat Code Coverage"
+# MTP 방식 커버리지 수집 (권장)
+dotnet test -- --coverage --coverage-output-format cobertura --coverage-output coverage.xml
 
 # 리포트 생성 (ReportGenerator 필요)
-reportgenerator -reports:"**/coverage.cobertura.xml" -targetdir:"coverage-report"
+reportgenerator -reports:"**/coverage.xml" -targetdir:"coverage-report"
 ```
 
 또는 `Build-Local.ps1` 스크립트를 실행하면 자동으로 커버리지 리포트가 생성됩니다.
 
+> **참고**: VSTest 방식(`--collect:"XPlat Code Coverage"`)도 여전히 작동하지만, MTP 방식이 권장됩니다.
+
 ## 참고 문서
 
+### xUnit v3
 - [xUnit.net v3 What's New](https://xunit.net/docs/getting-started/v3/whats-new)
 - [xUnit.net v3 Migration Guide](https://xunit.net/docs/getting-started/v3/migration)
-- [Microsoft Testing Platform (MTP)](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-platform-intro)
+- [xUnit.net v3 Microsoft Testing Platform](https://xunit.net/docs/getting-started/v3/microsoft-testing-platform)
+- [xUnit.net v3 Code Coverage with MTP](https://xunit.net/docs/getting-started/v3/code-coverage-with-mtp)
+
+### Microsoft Testing Platform
+- [Microsoft Testing Platform Overview](https://learn.microsoft.com/en-us/dotnet/core/testing/microsoft-testing-platform-intro)
+- [Testing with dotnet test](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-with-dotnet-test)
+- [dotnet test Command Reference](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-test)
+
+### 기타 라이브러리
 - [Shouldly Documentation](https://docs.shouldly.org/)
 - [NSubstitute Documentation](https://nsubstitute.github.io/help/getting-started/)
 - [ArchUnitNET Documentation](https://archunitnet.readthedocs.io/)
