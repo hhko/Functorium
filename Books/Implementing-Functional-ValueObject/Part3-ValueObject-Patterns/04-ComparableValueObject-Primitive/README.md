@@ -230,7 +230,8 @@ public sealed class DateRange : ComparableValueObject
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(DateRange)}.{nameof(StartAfterEnd)}",
                 errorCurrentValue1: startDate,
-                errorCurrentValue2: endDate);
+                errorCurrentValue2: endDate,
+                errorMessage: $"Start date cannot be after or equal to end date. Start: '{startDate}', End: '{endDate}'");
     }
 }
 ```

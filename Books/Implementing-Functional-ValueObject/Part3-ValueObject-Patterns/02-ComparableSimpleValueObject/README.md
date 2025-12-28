@@ -215,7 +215,8 @@ public sealed class UserId : ComparableSimpleValueObject<int>
         public static Error NotPositive(int value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(UserId)}.{nameof(NotPositive)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"User ID must be a positive number. Current value: '{value}'");
     }
 }
 ```

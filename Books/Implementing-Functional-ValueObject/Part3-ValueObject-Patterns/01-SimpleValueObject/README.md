@@ -191,7 +191,8 @@ public sealed class BinaryData : SimpleValueObject<byte[]>
         public static Error Empty(byte[] value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(BinaryData)}.{nameof(Empty)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"Binary data cannot be empty or null. Current value: '{(value == null ? "null" : value.Length.ToString())}'");
     }
 }
 ```

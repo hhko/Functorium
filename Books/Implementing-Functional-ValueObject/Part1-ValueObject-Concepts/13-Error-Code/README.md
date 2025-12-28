@@ -22,7 +22,7 @@
 3. **LanguageExt 생태계 통합**: 기존 LanguageExt의 `Error` 타입과 완전히 호환되는 에러 처리 프레임워크를 설계할 수 있다
 
 ### **실습을 통해 확인할 내용**
-- **기본 에러 코드 구조**: `Error.New("Invalid value")` → `ErrorCodeFactory.Create($"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Invalid)}", 0)`
+- **기본 에러 코드 구조**: `Error.New("Invalid value")` → `ErrorCodeFactory.Create($"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}", 0, "Denominator cannot be zero. Current value: '0'")`
 - **다양한 타입 지원**: `Create<T>`, `Create<T1, T2>`, `Create<T1, T2, T3>` 메서드를 통한 타입 안전한 에러 생성
 - **ValueObject 통합**: 값 객체 내부의 `DomainErrors` 클래스를 통한 응집도 높은 에러 정의
 
@@ -56,8 +56,9 @@ var error = Error.New("Invalid denominator value: 0");
 
 // 개선된 방식 (구조화된 방식) - 체계적인 에러 관리
 var error = ErrorCodeFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}", 
-    errorCurrentValue: 0);
+    errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
+    errorCurrentValue: 0,
+    errorMessage: $"Denominator cannot be zero. Current value: '0'");
 ```
 
 이 방식의 장점은 에러 발생 시점에서 정확한 도메인 정보와 실패 이유를 즉시 파악할 수 있고, 모니터링 시스템에서 에러를 도메인별로 집계하고 분석할 수 있다는 점입니다.
@@ -71,15 +72,18 @@ var error = ErrorCodeFactory.Create(
 ```csharp
 // 다양한 타입의 에러 정보를 타입 안전하게 관리
 var stringError = ErrorCodeFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Name)}.{nameof(TooShort)}", 
-    errorCurrentValue: "i@name");
+    errorCode: $"{nameof(DomainErrors)}.{nameof(Name)}.{nameof(TooShort)}",
+    errorCurrentValue: "i@name",
+    errorMessage: $"Name is too short. Current value: 'i@name'");
 var intError = ErrorCodeFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Age)}.{nameof(Invalid)}", 
-    errorCurrentValue: 150);
+    errorCode: $"{nameof(DomainErrors)}.{nameof(Age)}.{nameof(Invalid)}",
+    errorCurrentValue: 150,
+    errorMessage: $"Age is out of range. Current value: '150'");
 var multiValueError = ErrorCodeFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(OutOfRange)}", 
-    errorCurrentValue1: 1500, 
-    errorCurrentValue2: 2000);
+    errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(OutOfRange)}",
+    errorCurrentValue1: 1500,
+    errorCurrentValue2: 2000,
+    errorMessage: $"Coordinate is out of range. Current values: '1500', '2000'");
 ```
 
 이 방식의 장점은 실패한 값의 타입 정보가 보존되어 디버깅 시 정확한 값 정보를 확인할 수 있고, 타입별로 다른 처리 로직을 적용할 수 있다는 점입니다.
@@ -100,7 +104,8 @@ public sealed class Denominator : SimpleValueObject<int>
         public static Error Zero(int value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"Denominator cannot be zero. Current value: '{value}'");
     }
 }
 ```
@@ -267,19 +272,19 @@ public static class ErrorCodeFactory
 {
     // 기본 에러 생성
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Error Create(string errorCode, string errorCurrentValue) =>
-        new ErrorCodeExpected(errorCode, errorCurrentValue);
+    public static Error Create(string errorCode, string errorCurrentValue, string errorMessage) =>
+        new ErrorCodeExpected(errorCode, errorCurrentValue, errorMessage);
 
     // 제네릭 단일 값 에러 생성
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Error Create<T>(string errorCode, T errorCurrentValue) where T : notnull =>
-        new ErrorCodeExpected<T>(errorCode, errorCurrentValue);
+    public static Error Create<T>(string errorCode, T errorCurrentValue, string errorMessage) where T : notnull =>
+        new ErrorCodeExpected<T>(errorCode, errorCurrentValue, errorMessage);
 
     // 제네릭 다중 값 에러 생성
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Error Create<T1, T2>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2) 
+    public static Error Create<T1, T2>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, string errorMessage)
         where T1 : notnull where T2 : notnull =>
-        new ErrorCodeExpected<T1, T2>(errorCode, errorCurrentValue1, errorCurrentValue2);
+        new ErrorCodeExpected<T1, T2>(errorCode, errorCurrentValue1, errorCurrentValue2, errorMessage);
 
     // 예외 기반 에러 생성
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -313,7 +318,8 @@ public sealed class Denominator : SimpleValueObject<int>, IComparable<Denominato
         public static Error Zero(int value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"Denominator cannot be zero. Current value: '{value}'");
     }
 }
 ```
@@ -347,17 +353,20 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
         public static Error Empty(string value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Empty)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"Currency code cannot be empty. Current value: '{value}'");
 
         public static Error NotThreeLetters(string value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(NotThreeLetters)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"Currency code must be exactly 3 letters. Current value: '{value}'");
 
         public static Error Unsupported(string value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Unsupported)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"Currency code is not supported. Current value: '{value}'");
     }
 }
 ```
@@ -384,7 +393,8 @@ public sealed class MoneyAmount : ComparableSimpleValueObject<decimal>
         public static Error OutOfRange(decimal value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(MoneyAmount)}.{nameof(OutOfRange)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"Money amount must be between 0 and 999999.99. Current value: '{value}'");
     }
 }
 ```
@@ -453,7 +463,8 @@ public sealed class PriceRange : ComparableValueObject
         public static Error MinExceedsMax(Price minPrice, Price maxPrice) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(PriceRange)}.{nameof(MinExceedsMax)}",
-                errorCurrentValue: $"MinPrice: {minPrice}, MaxPrice: {maxPrice}");
+                errorCurrentValue: $"MinPrice: {minPrice}, MaxPrice: {maxPrice}",
+                errorMessage: $"Minimum price cannot exceed maximum price. Min: '{minPrice}', Max: '{maxPrice}'");
     }
 }
 ```
@@ -546,7 +557,7 @@ class Program
 
 기존의 `Error.New("Invalid denominator value: 0")` 방식은 단순한 문자열 메시지만 제공하여, 어떤 도메인에서 어떤 이유로 실패했는지 체계적으로 파악하기 어렵습니다. 에러 정보를 순수하고 구조화된 형태로 관리해야 합니다.
 
-반면 새로운 `ErrorCodeFactory.Create($"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}", 0)` 방식은 에러의 출처, 성격, 그리고 실패한 값을 체계적으로 분리하여 관리합니다. 이는 마치 네임스페이스 계층 구조처럼 계층적으로 에러를 분류하고 관리하는 시스템으로, 모니터링 시스템에서 에러를 도메인별로 집계하고 분석할 수 있습니다.
+반면 새로운 `ErrorCodeFactory.Create($"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}", 0, "Denominator cannot be zero. Current value: '0'")` 방식은 에러의 출처, 성격, 실패한 값, 그리고 에러 메시지를 체계적으로 분리하여 관리합니다. 이는 마치 네임스페이스 계층 구조처럼 계층적으로 에러를 분류하고 관리하는 시스템으로, 모니터링 시스템에서 에러를 도메인별로 집계하고 분석할 수 있습니다.
 
 **실제 예시:**
 ```csharp
@@ -556,8 +567,9 @@ var oldError = Error.New("Invalid denominator value: 0");
 
 // 새로운 방식 - 구조화된 정보
 var newError = ErrorCodeFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}", 
-    errorCurrentValue: 0);
+    errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
+    errorCurrentValue: 0,
+    errorMessage: $"Denominator cannot be zero. Current value: '0'");
 // 디버깅 시: 즉시 도메인과 이유 파악 가능, 모니터링 시: 표준화된 형식으로 집계 가능
 ```
 
@@ -582,7 +594,8 @@ public sealed class Denominator : SimpleValueObject<int>
         public static Error Zero(int value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"Denominator cannot be zero. Current value: '{value}'");
     }
 }
 
@@ -609,22 +622,26 @@ public static Validation<Error, int> Validate(int value)
 ```csharp
 // 타입 안전한 단일 값 에러
 var stringError = ErrorCodeFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Name)}.{nameof(TooShort)}", 
-    errorCurrentValue: "a");
+    errorCode: $"{nameof(DomainErrors)}.{nameof(Name)}.{nameof(TooShort)}",
+    errorCurrentValue: "a",
+    errorMessage: $"Name is too short. Current value: 'a'");
 var intError = ErrorCodeFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Age)}.{nameof(OutOfRange)}", 
-    errorCurrentValue: 150);
+    errorCode: $"{nameof(DomainErrors)}.{nameof(Age)}.{nameof(OutOfRange)}",
+    errorCurrentValue: 150,
+    errorMessage: $"Age is out of range. Current value: '150'");
 
 // 타입 안전한 다중 값 에러
 var coordinateError = ErrorCodeFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(XOutOfRange)}", 
+    errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(XOutOfRange)}",
     errorCurrentValue1: 1500,
-    errorCurrentValue2: 2000);
+    errorCurrentValue2: 2000,
+    errorMessage: $"Coordinate is out of range. Current values: '1500', '2000'");
 var addressError = ErrorCodeFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Address)}.{nameof(Empty)}", 
-    errorCurrentValue1: "Empty Street", 
-    errorCurrentValue2: "Empty City", 
-    errorCurrentValue3: "12345");
+    errorCode: $"{nameof(DomainErrors)}.{nameof(Address)}.{nameof(Empty)}",
+    errorCurrentValue1: "Empty Street",
+    errorCurrentValue2: "Empty City",
+    errorCurrentValue3: "12345",
+    errorMessage: $"Address is empty. Street: 'Empty Street', City: 'Empty City', PostalCode: '12345'");
 
 // 타입 정보가 보존되어 디버깅 시 정확한 값 확인 가능
 // 런타임에 타입별로 다른 처리 로직 적용 가능
@@ -654,16 +671,16 @@ var processedResult = result
     .Bind(d => SomeOtherOperation(d));
 ```
 
-### Q5: 에러 메시지를 사용하지 않고 에러 코드만 사용하는 이유는 무엇인가요?
-**A**: 에러 메시지 대신 에러 코드를 사용하는 것은 클린 아키텍처와 도메인 주도 설계의 핵심 원칙을 준수하기 위한 설계 결정입니다. 
+### Q5: 에러 코드와 에러 메시지를 모두 사용하는 이유는 무엇인가요?
+**A**: 에러 코드와 에러 메시지를 모두 사용하는 것은 구조화된 정보와 사용자 친화적인 메시지를 동시에 제공하기 위한 설계 결정입니다.
 
-도메인 계층의 순수성을 유지하기 위해 에러 메시지를 제외했습니다. 도메인 계층은 비즈니스 로직에만 집중해야 하며, 사용자 인터페이스나 언어 설정과 같은 외부 관심사에 의존해서는 안 됩니다. 이는 마치 함수형 프로그래밍에서 순수 함수가 부작용을 가지지 않는 것처럼, 도메인 모델도 외부 의존성을 최소화해야 합니다.
+**에러 코드의 역할**은 프로그래밍적 처리와 분류입니다. `DomainErrors.Currency.NotThreeLetters`와 같은 계층적 에러 코드는 모니터링 시스템에서 에러를 도메인별로 집계하고, 코드에서 패턴 매칭을 통해 특정 에러 유형을 처리할 수 있게 합니다.
 
-또한 다국어 지원과 지역화를 고려할 때, 에러 메시지를 도메인 계층에 포함시키면 언어별로 다른 도메인 모델을 만들어야 하는 문제가 발생합니다. 
+**에러 메시지의 역할**은 디버깅과 로깅입니다. `"Currency code must be exactly 3 letters. Current value: 'AB'"`와 같은 상세한 메시지는 개발자가 문제를 즉시 파악하고, 로그에서 에러 원인을 빠르게 추적할 수 있게 합니다.
 
-에러 코드를 사용함으로써 각 계층이 명확한 책임을 가질 수 있습니다. 도메인 계층은 에러 코드 정의에만 집중하고, 애플리케이션 계층은 비즈니스 로직 조합에, 인프라 계층은 지역화와 메시지 변환에 집중할 수 있습니다. 이는 마치 마이크로서비스 아키텍처에서 각 서비스가 독립적인 책임을 가지는 것처럼, 계층별로 명확한 경계를 설정하는 것입니다.
+이 두 가지를 분리함으로써 각각의 목적에 맞게 활용할 수 있습니다. 에러 코드는 시스템 간 통신이나 API 응답에서 일관된 식별자로 사용되고, 에러 메시지는 내부 로깅과 디버깅에 활용됩니다.
 
-이러한 설계를 통해 향후 다국어 지원, 메시지 포맷 변경, 또는 사용자별 맞춤형 메시지 제공 등의 요구사항이 발생해도 도메인 계층의 변경 없이 대응할 수 있습니다. 이는 마치 개방-폐쇄 원칙처럼, 확장에는 열려있고 수정에는 닫혀있는 설계를 에러 처리 영역에 적용한 것입니다.
+향후 다국어 지원이 필요한 경우, 에러 코드를 키로 사용하여 언어별 메시지를 매핑할 수 있습니다. 도메인 계층의 에러 메시지는 개발자용 영어 메시지로 유지하고, 인프라 계층에서 에러 코드를 기반으로 사용자 언어에 맞는 메시지로 변환하는 패턴을 적용할 수 있습니다.
 
 ### Q6: 실제 운영 환경에서 어떤 이점을 얻을 수 있나요?
 **A**: 실제 운영 환경에서는 구조화된 에러 정보를 통한 디버깅 시간 단축과 모니터링 시스템의 효율성 향상이라는 실질적인 이점을 얻을 수 있습니다.
@@ -680,8 +697,9 @@ var processedResult = result
 ```csharp
 // 운영 환경에서의 에러 로깅
 var error = ErrorCodeFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Payment)}.{nameof(Declined)}", 
-    errorCurrentValue: "CardNumber: 1234-5678-9012-3456");
+    errorCode: $"{nameof(DomainErrors)}.{nameof(Payment)}.{nameof(Declined)}",
+    errorCurrentValue: "CardNumber: 1234-5678-9012-3456",
+    errorMessage: $"Payment was declined. Card: '1234-5678-9012-3456'");
 
 // 구조화된 에러 정보로 모니터링 시스템에 전송
 logger.LogError("Payment processing failed", new {
@@ -698,9 +716,10 @@ logger.LogError("Payment processing failed", new {
 
 // 구체적인 에러 명명의 장점
 var currencyError = ErrorCodeFactory.Create(
-    errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(NotThreeDigits)}", 
-    errorCurrentValue: "AB");
-// 에러 코드만 봐도 "통화 코드가 3자리가 아니다"는 것을 즉시 파악 가능
+    errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(NotThreeLetters)}",
+    errorCurrentValue: "AB",
+    errorMessage: $"Currency code must be exactly 3 letters. Current value: 'AB'");
+// 에러 코드만 봐도 "통화 코드가 3자리 영문자가 아니다"는 것을 즉시 파악 가능
 ```
 
 ### Q7: DomainErrors 중첩 클래스에서 "이유" 부분의 메서드 이름을 어떻게 정의해야 하나요?
@@ -738,17 +757,20 @@ internal static class DomainErrors
     public static Error Empty(string value) =>           // 빈 통화 코드
         ErrorCodeFactory.Create(
             errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Empty)}",
-            errorCurrentValue: value);
+            errorCurrentValue: value,
+            errorMessage: $"Currency code cannot be empty. Current value: '{value}'");
 
     public static Error NotThreeLetters(string value) =>  // 3자리 영문자가 아님
         ErrorCodeFactory.Create(
             errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(NotThreeLetters)}",
-            errorCurrentValue: value);
+            errorCurrentValue: value,
+            errorMessage: $"Currency code must be exactly 3 letters. Current value: '{value}'");
 
     public static Error Unsupported(string value) =>     // 지원하지 않는 통화
         ErrorCodeFactory.Create(
             errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Unsupported)}",
-            errorCurrentValue: value);
+            errorCurrentValue: value,
+            errorMessage: $"Currency code is not supported. Current value: '{value}'");
 }
 
 // MoneyAmount.cs - 금액 검증
@@ -757,7 +779,8 @@ internal static class DomainErrors
     public static Error OutOfRange(decimal value) =>     // 금액 범위 초과
         ErrorCodeFactory.Create(
             errorCode: $"{nameof(DomainErrors)}.{nameof(MoneyAmount)}.{nameof(OutOfRange)}",
-            errorCurrentValue: value);
+            errorCurrentValue: value,
+            errorMessage: $"Money amount must be between 0 and 999999.99. Current value: '{value}'");
 }
 
 // PostalCode.cs - 우편번호 검증
@@ -766,12 +789,14 @@ internal static class DomainErrors
     public static Error Empty(string value) =>           // 빈 우편번호
         ErrorCodeFactory.Create(
             errorCode: $"{nameof(DomainErrors)}.{nameof(PostalCode)}.{nameof(Empty)}",
-            errorCurrentValue: value);
+            errorCurrentValue: value,
+            errorMessage: $"Postal code cannot be empty. Current value: '{value}'");
 
     public static Error NotFiveDigits(string value) =>   // 5자리 숫자가 아님
         ErrorCodeFactory.Create(
             errorCode: $"{nameof(DomainErrors)}.{nameof(PostalCode)}.{nameof(NotFiveDigits)}",
-            errorCurrentValue: value);
+            errorCurrentValue: value,
+            errorMessage: $"Postal code must be exactly 5 digits. Current value: '{value}'");
 }
 
 // PriceRange.cs - 가격 범위 검증
@@ -780,7 +805,8 @@ internal static class DomainErrors
     public static Error MinExceedsMax(Price minPrice, Price maxPrice) =>  // 최솟값이 최댓값을 초과
         ErrorCodeFactory.Create(
             errorCode: $"{nameof(DomainErrors)}.{nameof(PriceRange)}.{nameof(MinExceedsMax)}",
-            errorCurrentValue: $"MinPrice: {minPrice}, MaxPrice: {maxPrice}");
+            errorCurrentValue: $"MinPrice: {minPrice}, MaxPrice: {maxPrice}",
+            errorMessage: $"Minimum price cannot exceed maximum price. Min: '{minPrice}', Max: '{maxPrice}'");
 }
 
 // DateRange.cs - 날짜 범위 검증
@@ -789,7 +815,8 @@ internal static class DomainErrors
     public static Error StartAfterEnd(DateTime startDate, DateTime endDate) =>  // 시작일이 종료일 이후
         ErrorCodeFactory.Create(
             errorCode: $"{nameof(DomainErrors)}.{nameof(DateRange)}.{nameof(StartAfterEnd)}",
-            errorCurrentValue: $"StartDate: {startDate}, EndDate: {endDate}");
+            errorCurrentValue: $"StartDate: {startDate}, EndDate: {endDate}",
+            errorMessage: $"Start date cannot be after or equal to end date. Start: '{startDate}', End: '{endDate}'");
 }
 
 // Coordinate.cs - 좌표 검증
@@ -798,12 +825,14 @@ internal static class DomainErrors
     public static Error XOutOfRange(int value) =>        // X 좌표가 범위를 벗어남
         ErrorCodeFactory.Create(
             errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(XOutOfRange)}",
-            errorCurrentValue: value);
+            errorCurrentValue: value,
+            errorMessage: $"X coordinate must be non-negative. Current value: '{value}'");
 
     public static Error YOutOfRange(int value) =>        // Y 좌표가 범위를 벗어남
         ErrorCodeFactory.Create(
             errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(YOutOfRange)}",
-            errorCurrentValue: value);
+            errorCurrentValue: value,
+            errorMessage: $"Y coordinate must be between 0 and 1000. Current value: '{value}'");
 }
 
 // Price.cs - 가격 검증
@@ -812,7 +841,8 @@ internal static class DomainErrors
     public static Error Negative(decimal value) =>       // 음수 가격
         ErrorCodeFactory.Create(
             errorCode: $"{nameof(DomainErrors)}.{nameof(Price)}.{nameof(Negative)}",
-            errorCurrentValue: value);
+            errorCurrentValue: value,
+            errorMessage: $"Price cannot be negative. Current value: '{value}'");
 }
 
 // DateRange.cs - 날짜 범위 검증
@@ -821,12 +851,14 @@ internal static class DomainErrors
     public static Error InvalidStartDate(DateTime value) =>  // 잘못된 시작일
         ErrorCodeFactory.Create(
             errorCode: $"{nameof(DomainErrors)}.{nameof(DateRange)}.{nameof(InvalidStartDate)}",
-            errorCurrentValue: value);
+            errorCurrentValue: value,
+            errorMessage: $"Start date is invalid. Current value: '{value}'");
 
     public static Error InvalidRange(DateTime start, DateTime end) =>  // 잘못된 범위 (시작일 >= 종료일)
         ErrorCodeFactory.Create(
             errorCode: $"{nameof(DomainErrors)}.{nameof(DateRange)}.{nameof(InvalidRange)}",
-            errorCurrentValue: $"StartDate: {start}, EndDate: {end}");
+            errorCurrentValue: $"StartDate: {start}, EndDate: {end}",
+            errorMessage: $"Date range is invalid. Start date must be before end date. Start: '{start}', End: '{end}'");
 }
 ```
 

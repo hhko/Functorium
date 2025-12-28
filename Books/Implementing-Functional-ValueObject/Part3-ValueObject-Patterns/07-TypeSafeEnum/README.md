@@ -168,17 +168,20 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
         public static Error Empty(string value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Empty)}",
-                errorCurrentValue: value);
-        
+                errorCurrentValue: value,
+                errorMessage: $"Currency code cannot be empty. Current value: '{value}'");
+
         public static Error NotThreeLetters(string value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(NotThreeLetters)}",
-                errorCurrentValue: value);
-        
+                errorCurrentValue: value,
+                errorMessage: $"Currency code must be exactly 3 letters. Current value: '{value}'");
+
         public static Error Unsupported(string value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Unsupported)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"Currency code is not supported. Current value: '{value}'");
     }
 }
 ```
@@ -354,7 +357,8 @@ internal static class DomainErrors
     public static Error Empty(string value) =>
         ErrorCodeFactory.Create(
             errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Empty)}",
-            errorCurrentValue: value);
+            errorCurrentValue: value,
+            errorMessage: $"Currency code cannot be empty. Current value: '{value}'");
 }
 ```
 
