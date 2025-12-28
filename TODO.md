@@ -14,16 +14,48 @@
   - .Apply -> + fun<>` 스파일 Apply 검증
   - 2장/3장 테스트 프로젝트
 - [x] 배열을 값 객체 동등성 비교 처리 개선
-   [ ] Serilog 단위 테스트 이해
+- [ ] errorMessage = "" 개선
+- [ ] LanguageExt 패키지 버전 업데이트
+- [ ] 경고 제거
+- [ ] .sprint 양식 개선
+- [ ] .claude/guides 문서 표준 양식
+- [ ] docs | 값 객체 개발 가이드
+- [ ] Serilog 단위 테스트 이해
 - [ ] Application 레이어 테스트
 - [ ] Observability 코드 리뷰
 - [ ] IAdatperMetric/IAdapterTrace 인터페이스 의존성 등록 코드 정리
-- [ ] Observability 형식 문서화
+- [ ] 커스텀 유스케이스 로그
+- [ ] 커스텀 유스케이스 지표
 - [ ] Observability 형식 테스트 자동화
-- [ ] Error Message 생성/규칙?
+- [ ] Observability 형식 문서화
+- [ ] Docs 폴더 정리
+- [ ] docs | 유스케이스 with 함수형 book
+- [ ] docs | 유스케이스 개발 가이드
+- [ ] README 도메인 중심의 함수형 아키텍처 다이어그램
+---
+- [ ] Quartz
+- [ ] FastEndpoint
+- [ ] IO 심화
+- [ ] docs: IO 개발 가이드
+---
+- [ ] Entity ID 소스 생성기
+- [ ] EFCore 통합
+- [ ] SQLite 예제(appsettings.json 선택)
+- [ ] PostgreSQL 예제(appsettings.json 선택)
+- [ ] Dapper CQRS 적용: C EFCore, Q Dapper
+- [ ] ER 다이어그램 자동화
+- [ ] 컨테이너 기반 테스트 자동화
+- [ ] DTO
+---
+- [ ] RabbitMQ
+---
+- [ ] MinVer
+- [ ] ChatOps
+---
+- [ ] 예제 포팅
+- [ ] 코드 품질 CLI
 
 ---
-
 - Abstraction
   - [x] Error
     - Type: ErrorCodeExpected, ErrorCodeExceptional, ErrorCodeFactory
