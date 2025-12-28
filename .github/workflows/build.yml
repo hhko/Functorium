@@ -94,7 +94,7 @@ jobs:
         reporttypes: 'Html;Cobertura;MarkdownSummaryGithub'
         assemblyfilters: '-*.Tests.*'
         filefilters: '-*.g.cs'
-        verbosity: 'Info'
+        verbosity: 'Warning'
 
     - name: Display coverage summary
       if: success()
