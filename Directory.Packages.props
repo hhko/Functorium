@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup Label="Basic">
-    <PackageVersion Include="LanguageExt.Core" Version="5.0.0-beta-59" />
+    <PackageVersion Include="LanguageExt.Core" Version="5.0.0-beta-71" />
     <PackageVersion Include="Mediator.Abstractions" Version="3.0.1" />
     <PackageVersion Include="Mediator.SourceGenerator" Version="3.0.1" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
