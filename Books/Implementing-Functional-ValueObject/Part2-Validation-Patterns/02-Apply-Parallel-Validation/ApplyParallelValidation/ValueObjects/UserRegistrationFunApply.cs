@@ -116,24 +116,24 @@ public sealed class UserRegistrationFunApply : ValueObject
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(UserRegistrationFunApply)}.{nameof(EmailMissingAt)}",
                 errorCurrentValue: email,
-                errorMessage: "");
+                errorMessage: $"Email is missing '@' symbol or '.' character. Current value: '{email}'");
 
         public static Error PasswordTooShort(string password) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(UserRegistrationFunApply)}.{nameof(PasswordTooShort)}",
                 errorCurrentValue: password,
-                errorMessage: "");
+                errorMessage: $"Password is too short. Minimum length is 8 characters. Current value: '{password}'");
 
         public static Error NameTooShort(string name) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(UserRegistrationFunApply)}.{nameof(NameTooShort)}",
                 errorCurrentValue: name,
-                errorMessage: "");
+                errorMessage: $"Name is too short. Minimum length is 2 characters. Current value: '{name}'");
 
         public static Error AgeNotNumeric(string ageInput) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(UserRegistrationFunApply)}.{nameof(AgeNotNumeric)}",
                 errorCurrentValue: ageInput,
-                errorMessage: "");
+                errorMessage: $"Age must be a numeric value. Current value: '{ageInput}'");
     }
 }

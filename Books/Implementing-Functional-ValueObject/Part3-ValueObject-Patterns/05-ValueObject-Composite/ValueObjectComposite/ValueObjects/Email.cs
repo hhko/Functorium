@@ -127,6 +127,6 @@ public sealed class Email : ValueObject
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(InvalidEmailFormat)}",
                 errorCurrentValue: value,
-                errorMessage: "");
+                errorMessage: $"Email format is invalid. Must contain '@' symbol. Current value: '{value}'");
     }
 }

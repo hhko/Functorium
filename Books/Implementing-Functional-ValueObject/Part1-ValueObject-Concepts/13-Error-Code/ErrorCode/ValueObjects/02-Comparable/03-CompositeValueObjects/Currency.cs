@@ -206,7 +206,8 @@ public sealed class Currency
         public static Error Empty(string value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Empty)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"Currency code cannot be empty. Current value: '{value}'");
 
         /// <summary>
         /// 3자리 영문자가 아닌 통화 코드 에러
@@ -216,7 +217,8 @@ public sealed class Currency
         public static Error NotThreeLetters(string value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(NotThreeLetters)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"Currency code must be exactly 3 letters. Current value: '{value}'");
 
         /// <summary>
         /// 지원하지 않는 통화 코드 에러
@@ -226,6 +228,7 @@ public sealed class Currency
         public static Error Unsupported(string value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Unsupported)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"Currency code is not supported. Current value: '{value}'");
     }
 }

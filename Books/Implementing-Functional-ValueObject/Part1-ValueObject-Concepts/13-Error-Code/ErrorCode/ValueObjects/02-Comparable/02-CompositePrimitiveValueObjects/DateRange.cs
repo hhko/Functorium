@@ -103,7 +103,8 @@ public sealed class DateRange : ComparableValueObject
         public static Error InvalidStartDate(DateTime value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(DateRange)}.{nameof(InvalidStartDate)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"Start date is invalid. Current value: '{value}'");
 
         /// <summary>
         /// 유효하지 않은 종료일에 대한 에러
@@ -113,7 +114,8 @@ public sealed class DateRange : ComparableValueObject
         public static Error InvalidEndDate(DateTime value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(DateRange)}.{nameof(InvalidEndDate)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"End date is invalid. Current value: '{value}'");
 
         /// <summary>
         /// 시작일이 종료일 이후인 날짜 범위에 대한 에러
@@ -124,7 +126,8 @@ public sealed class DateRange : ComparableValueObject
         public static Error StartAfterEnd(DateTime startDate, DateTime endDate) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(DateRange)}.{nameof(StartAfterEnd)}",
-                errorCurrentValue: $"StartDate: {startDate}, EndDate: {endDate}");
+                errorCurrentValue: $"StartDate: {startDate}, EndDate: {endDate}",
+                errorMessage: $"Start date cannot be after or equal to end date. Start: '{startDate}', End: '{endDate}'");
     }
 
     /// <summary>

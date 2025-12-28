@@ -90,27 +90,27 @@ public sealed class OrderInfo : ValueObject
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(OrderInfo)}.{nameof(CustomerNameTooShort)}",
                 errorCurrentValue: customerName,
-                errorMessage: "");
+                errorMessage: $"Customer name is too short. Minimum length is 2 characters. Current value: '{customerName}'");
 
         // ValidateCustomerEmail 메서드와 1:1 매핑되는 에러 - 비즈니스 규칙: 고객 이메일은 @ 기호가 포함되어야 함
         public static Error CustomerEmailMissingAt(string customerEmail) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(OrderInfo)}.{nameof(CustomerEmailMissingAt)}",
                 errorCurrentValue: customerEmail,
-                errorMessage: "");
+                errorMessage: $"Customer email is missing '@' symbol. Current value: '{customerEmail}'");
 
         // ValidateOrderAmount 메서드와 1:1 매핑되는 에러 - 비즈니스 규칙: 주문 금액은 양수여야 함
         public static Error OrderAmountNotPositive(string orderAmountInput) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(OrderInfo)}.{nameof(OrderAmountNotPositive)}",
                 errorCurrentValue: orderAmountInput,
-                errorMessage: "");
+                errorMessage: $"Order amount must be a positive number. Current value: '{orderAmountInput}'");
 
         // ValidateFinalAmount 메서드와 1:1 매핑되는 에러 - 비즈니스 규칙: 할인 금액은 주문 금액을 초과할 수 없음
         public static Error DiscountAmountExceedsOrder(string orderAmountInput, string discountInput) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(OrderInfo)}.{nameof(DiscountAmountExceedsOrder)}",
                 errorCurrentValue: $"{orderAmountInput}:{discountInput}",
-                errorMessage: "");
+                errorMessage: $"Discount amount cannot exceed order amount. Order: '{orderAmountInput}', Discount: '{discountInput}'");
     }
 }

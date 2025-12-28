@@ -9,6 +9,7 @@ namespace Framework.Abstractions.Errors;
 internal record ErrorCodeExpected(
     string ErrorCode,
     string ErrorCurrentValue,
+    string ErrorMessage,
     int ErrorCodeId = -1000,
     Option<Error> Inner = default) : Error
 {
@@ -33,8 +34,7 @@ internal record ErrorCodeExpected(
     [Pure]
     [DataMember]
     public override string Message { get; } =
-        //ErrorMessage;
-        string.Empty;
+        ErrorMessage;
 
     [Pure]
     [DataMember]
@@ -76,6 +76,7 @@ internal record ErrorCodeExpected(
 internal record ErrorCodeExpected<T>(
     string ErrorCode,
     T ErrorCurrentValue,
+    string ErrorMessage,
     int ErrorCodeId = -1000,
     Option<Error> Inner = default)
     : Error where T : notnull
@@ -101,8 +102,7 @@ internal record ErrorCodeExpected<T>(
     [Pure]
     [DataMember]
     public override string Message { get; } =
-        //ErrorMessage;
-        string.Empty;
+        ErrorMessage;
 
     [Pure]
     [DataMember]
@@ -145,6 +145,7 @@ internal record ErrorCodeExpected<T1, T2>(
     string ErrorCode,
     T1 ErrorCurrentValue1,
     T2 ErrorCurrentValue2,
+    string ErrorMessage,
     int ErrorCodeId = -1000,
     Option<Error> Inner = default)
     : Error
@@ -177,8 +178,7 @@ internal record ErrorCodeExpected<T1, T2>(
     [Pure]
     [DataMember]
     public override string Message { get; } =
-        //ErrorMessage;
-        string.Empty;
+        ErrorMessage;
 
     [Pure]
     [DataMember]
@@ -222,6 +222,7 @@ internal record ErrorCodeExpected<T1, T2, T3>(
     T1 ErrorCurrentValue1,
     T2 ErrorCurrentValue2,
     T3 ErrorCurrentValue3,
+    string ErrorMessage,
     int ErrorCodeId = -1000,
     Option<Error> Inner = default)
     : Error
@@ -260,8 +261,7 @@ internal record ErrorCodeExpected<T1, T2, T3>(
     [Pure]
     [DataMember]
     public override string Message { get; } =
-        //ErrorMessage;
-        string.Empty;
+        ErrorMessage;
 
     [Pure]
     [DataMember]

@@ -88,28 +88,28 @@ public sealed class UserRegistration : ValueObject
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(UserRegistration)}.{nameof(EmailMissingAt)}",
                 errorCurrentValue: email,
-                errorMessage: "");
+                errorMessage: $"Email is missing '@' symbol or '.' character. Current value: '{email}'");
 
         // ValidatePasswordStrength 메서드와 1:1 매핑되는 에러 - 비밀번호가 너무 짧음
         public static Error PasswordTooShort(string password) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(UserRegistration)}.{nameof(PasswordTooShort)}",
                 errorCurrentValue: password,
-                errorMessage: "");
+                errorMessage: $"Password is too short. Minimum length is 8 characters. Current value: '{password}'");
 
         // ValidateNameFormat 메서드와 1:1 매핑되는 에러 - 이름이 너무 짧음
         public static Error NameTooShort(string name) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(UserRegistration)}.{nameof(NameTooShort)}",
                 errorCurrentValue: name,
-                errorMessage: "");
+                errorMessage: $"Name is too short. Minimum length is 2 characters. Current value: '{name}'");
 
         // ValidateAgeFormat 메서드와 1:1 매핑되는 에러 - 나이가 숫자가 아님
         public static Error AgeNotNumeric(string ageInput) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(UserRegistration)}.{nameof(AgeNotNumeric)}",
                 errorCurrentValue: ageInput,
-                errorMessage: "");
+                errorMessage: $"Age must be a numeric value. Current value: '{ageInput}'");
 
     }
 }

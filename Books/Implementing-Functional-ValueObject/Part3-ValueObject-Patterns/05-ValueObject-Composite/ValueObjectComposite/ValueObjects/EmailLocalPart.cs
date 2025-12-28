@@ -53,6 +53,6 @@ public sealed class EmailLocalPart : SimpleValueObject<string>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(EmailLocalPart)}.{nameof(EmptyOrOutOfRange)}",
                 errorCurrentValue: value,
-                errorMessage: "");
+                errorMessage: $"Email local part is empty or out of range. Must be 1-64 characters. Current value: '{value}'");
     }
 }

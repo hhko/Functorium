@@ -20,14 +20,17 @@ public class ErrorCodeFactoryTests
         string expectedErrorCode = "DomainErrors.Name.TooShort";
         string expectedCurrentValue = "a";
 
+        string errorMessage = "Name is too short. Current value: 'a'";
+
         // Act
-        var actual = ErrorCodeFactory.Create(errorCode, errorCurrentValue);
+        var actual = ErrorCodeFactory.Create(errorCode, errorCurrentValue, errorMessage);
 
         // Assert
         actual.ShouldBeOfType<ErrorCodeExpected>();
         var errorCodeExpected = actual as ErrorCodeExpected;
         errorCodeExpected!.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExpected.ErrorCurrentValue.ShouldBe(expectedCurrentValue);
+        errorCodeExpected.Message.ShouldBe(errorMessage);
     }
 
     // 테스트 시나리오: 문자열 에러 코드와 정수 값을 사용하여 기본 에러를 생성해야 한다
@@ -40,36 +43,39 @@ public class ErrorCodeFactoryTests
 
         string expectedErrorCode = "DomainErrors.Age.OutOfRange";
         string expectedCurrentValue = "150";
+        string errorMessage = "Age is out of range. Current value: '150'";
 
         // Act
-        var actual = ErrorCodeFactory.Create(errorCode, errorCurrentValue);
+        var actual = ErrorCodeFactory.Create(errorCode, errorCurrentValue, errorMessage);
 
         // Assert
         actual.ShouldBeOfType<ErrorCodeExpected>();
         var errorCodeExpected = actual as ErrorCodeExpected;
         errorCodeExpected!.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExpected.ErrorCurrentValue.ShouldBe(expectedCurrentValue);
+        errorCodeExpected.Message.ShouldBe(errorMessage);
     }
 
     // 테스트 시나리오: 제네릭 타입을 사용하여 타입 안전한 에러를 생성해야 한다
     [Theory]
-    [InlineData("DomainErrors.Email.MissingAt", "not-an-email")]
-    [InlineData("DomainErrors.Phone.NotNumeric", "invalid-phone")]
-    [InlineData("DomainErrors.Address.Empty", "empty-address")]
-    public void Create_ShouldReturnErrorCodeExpectedWithGenericType_WhenUsingGenericMethod(string errorCode, string errorCurrentValue)
+    [InlineData("DomainErrors.Email.MissingAt", "not-an-email", "Email is missing '@' symbol. Current value: 'not-an-email'")]
+    [InlineData("DomainErrors.Phone.NotNumeric", "invalid-phone", "Phone number is not numeric. Current value: 'invalid-phone'")]
+    [InlineData("DomainErrors.Address.Empty", "empty-address", "Address is empty. Current value: 'empty-address'")]
+    public void Create_ShouldReturnErrorCodeExpectedWithGenericType_WhenUsingGenericMethod(string errorCode, string errorCurrentValue, string errorMessage)
     {
         // Arrange
         string expectedErrorCode = errorCode;
         string expectedCurrentValue = errorCurrentValue;
 
         // Act
-        var actual = ErrorCodeFactory.Create<string>(errorCode, errorCurrentValue);
+        var actual = ErrorCodeFactory.Create<string>(errorCode, errorCurrentValue, errorMessage);
 
         // Assert
         actual.ShouldBeOfType<ErrorCodeExpected<string>>();
         var errorCodeExpected = actual as ErrorCodeExpected<string>;
         errorCodeExpected!.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExpected.ErrorCurrentValue.ShouldBe(expectedCurrentValue);
+        errorCodeExpected.Message.ShouldBe(errorMessage);
     }
 
     // 테스트 시나리오: 두 개의 제네릭 타입을 사용하여 다중 값 에러를 생성해야 한다
@@ -80,13 +86,14 @@ public class ErrorCodeFactoryTests
         string errorCode = "DomainErrors.Coordinate.XOutOfRange";
         int errorCurrentValue1 = 1500;
         int errorCurrentValue2 = 2000;
+        string errorMessage = "Coordinate X is out of range. Current values: '1500', '2000'";
 
         string expectedErrorCode = "DomainErrors.Coordinate.XOutOfRange";
         int expectedCurrentValue1 = 1500;
         int expectedCurrentValue2 = 2000;
 
         // Act
-        var actual = ErrorCodeFactory.Create(errorCode, errorCurrentValue1, errorCurrentValue2);
+        var actual = ErrorCodeFactory.Create(errorCode, errorCurrentValue1, errorCurrentValue2, errorMessage);
 
         // Assert
         actual.ShouldBeOfType<ErrorCodeExpected<int, int>>();
@@ -94,6 +101,7 @@ public class ErrorCodeFactoryTests
         errorCodeExpected!.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExpected.ErrorCurrentValue1.ShouldBe(expectedCurrentValue1);
         errorCodeExpected.ErrorCurrentValue2.ShouldBe(expectedCurrentValue2);
+        errorCodeExpected.Message.ShouldBe(errorMessage);
     }
 
     // 테스트 시나리오: 세 개의 제네릭 타입을 사용하여 다중 값 에러를 생성해야 한다
@@ -105,6 +113,7 @@ public class ErrorCodeFactoryTests
         string errorCurrentValue1 = "Empty Street";
         string errorCurrentValue2 = "Invalid City";
         string errorCurrentValue3 = "12345";
+        string errorMessage = "Address is empty. Street: 'Empty Street', City: 'Invalid City', PostalCode: '12345'";
 
         string expectedErrorCode = "DomainErrors.Address.Empty";
         string expectedCurrentValue1 = "Empty Street";
@@ -112,7 +121,7 @@ public class ErrorCodeFactoryTests
         string expectedCurrentValue3 = "12345";
 
         // Act
-        var actual = ErrorCodeFactory.Create(errorCode, errorCurrentValue1, errorCurrentValue2, errorCurrentValue3);
+        var actual = ErrorCodeFactory.Create(errorCode, errorCurrentValue1, errorCurrentValue2, errorCurrentValue3, errorMessage);
 
         // Assert
         actual.ShouldBeOfType<ErrorCodeExpected<string, string, string>>();
@@ -121,6 +130,7 @@ public class ErrorCodeFactoryTests
         errorCodeExpected.ErrorCurrentValue1.ShouldBe(expectedCurrentValue1);
         errorCodeExpected.ErrorCurrentValue2.ShouldBe(expectedCurrentValue2);
         errorCodeExpected.ErrorCurrentValue3.ShouldBe(expectedCurrentValue3);
+        errorCodeExpected.Message.ShouldBe(errorMessage);
     }
 
     // 테스트 시나리오: 예외를 사용하여 예외 기반 에러를 생성해야 한다

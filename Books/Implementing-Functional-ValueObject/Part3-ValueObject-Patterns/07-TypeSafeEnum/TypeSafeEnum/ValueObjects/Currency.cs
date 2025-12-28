@@ -209,7 +209,7 @@ public sealed class Currency
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Empty)}",
                 errorCurrentValue: value,
-                errorMessage: "");
+                errorMessage: $"Currency code cannot be empty. Current value: '{value}'");
 
         /// <summary>
         /// 3자리 영문자가 아닌 통화 코드 에러
@@ -220,7 +220,7 @@ public sealed class Currency
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(NotThreeLetters)}",
                 errorCurrentValue: value,
-                errorMessage: "");
+                errorMessage: $"Currency code must be exactly 3 letters. Current value: '{value}'");
 
         /// <summary>
         /// 지원하지 않는 통화 코드 에러
@@ -231,7 +231,7 @@ public sealed class Currency
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Unsupported)}",
                 errorCurrentValue: value,
-                errorMessage: "");
+                errorMessage: $"Currency code is not supported. Current value: '{value}'");
     }
 
     // SmartEnum에서 자동으로 제공되는 기능:

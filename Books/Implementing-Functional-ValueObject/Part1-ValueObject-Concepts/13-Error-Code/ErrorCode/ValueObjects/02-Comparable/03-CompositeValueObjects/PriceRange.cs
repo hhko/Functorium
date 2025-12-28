@@ -118,7 +118,8 @@ public sealed class PriceRange : ComparableValueObject
         public static Error MinExceedsMax(Price minPrice, Price maxPrice) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(PriceRange)}.{nameof(MinExceedsMax)}",
-                errorCurrentValue: $"MinPrice: {minPrice}, MaxPrice: {maxPrice}");
+                errorCurrentValue: $"MinPrice: {minPrice}, MaxPrice: {maxPrice}",
+                errorMessage: $"Minimum price cannot exceed maximum price. Min: '{minPrice}', Max: '{maxPrice}'");
     }
 
     // 비교 기능은 ComparableValueObject에서 자동으로 제공됨:

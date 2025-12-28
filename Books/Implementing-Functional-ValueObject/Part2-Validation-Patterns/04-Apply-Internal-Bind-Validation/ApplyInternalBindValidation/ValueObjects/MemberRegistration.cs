@@ -104,41 +104,41 @@ public sealed class MemberRegistration : ValueObject
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(MemberRegistration)}.{nameof(UsernameTooShort)}",
                 errorCurrentValue: username,
-                errorMessage: "");
+                errorMessage: $"Username is too short. Minimum length is 3 characters. Current value: '{username}'");
 
         // ValidateUsernameAvailability 메서드와 1:1 매핑되는 에러 - 사용자명을 사용할 수 없음
         public static Error UsernameNotAvailable(string username) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(MemberRegistration)}.{nameof(UsernameNotAvailable)}",
                 errorCurrentValue: username,
-                errorMessage: "");
+                errorMessage: $"Username is not available. Reserved usernames cannot start with 'admin'. Current value: '{username}'");
 
         // ValidateEmailFormat 메서드와 1:1 매핑되는 에러 - 이메일에 @ 기호가 누락됨
         public static Error EmailMissingAt(string email) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(MemberRegistration)}.{nameof(EmailMissingAt)}",
                 errorCurrentValue: email,
-                errorMessage: "");
+                errorMessage: $"Email is missing '@' symbol. Current value: '{email}'");
 
         // ValidateEmailDomain 메서드와 1:1 매핑되는 에러 - 이메일 도메인이 지원되지 않음
         public static Error EmailDomainUnsupported(string email) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(MemberRegistration)}.{nameof(EmailDomainUnsupported)}",
                 errorCurrentValue: email,
-                errorMessage: "");
+                errorMessage: $"Email domain is not supported. Only '.com' and '.co.kr' are allowed. Current value: '{email}'");
 
         // ValidatePasswordStrength 메서드와 1:1 매핑되는 에러 - 비밀번호가 너무 약함
         public static Error PasswordTooWeak(string password) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(MemberRegistration)}.{nameof(PasswordTooWeak)}",
                 errorCurrentValue: password,
-                errorMessage: "");
+                errorMessage: $"Password is too weak. Must be at least 6 characters and contain a digit. Current value: '{password}'");
 
         // ValidatePasswordHistory 메서드와 1:1 매핑되는 에러 - 비밀번호가 이전에 사용됨
         public static Error PasswordInHistory(string password) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(MemberRegistration)}.{nameof(PasswordInHistory)}",
                 errorCurrentValue: password,
-                errorMessage: "");
+                errorMessage: $"Password was previously used. Please choose a different password. Current value: '{password}'");
     }
 }

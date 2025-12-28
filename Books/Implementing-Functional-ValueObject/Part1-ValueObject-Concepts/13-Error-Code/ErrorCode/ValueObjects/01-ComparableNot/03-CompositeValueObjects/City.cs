@@ -63,6 +63,7 @@ public sealed class City : SimpleValueObject<string>
         public static Error Empty(string value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(City)}.{nameof(Empty)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"City name cannot be empty. Current value: '{value}'");
     }
 }

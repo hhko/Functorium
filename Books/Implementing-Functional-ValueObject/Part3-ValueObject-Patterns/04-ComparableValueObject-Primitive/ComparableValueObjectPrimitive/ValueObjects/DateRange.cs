@@ -86,6 +86,6 @@ public sealed class DateRange : ComparableValueObject
                 errorCode: $"{nameof(DomainErrors)}.{nameof(DateRange)}.{nameof(StartAfterEnd)}",
                 errorCurrentValue1: startDate,
                 errorCurrentValue2: endDate,
-                errorMessage: "");
+                errorMessage: $"Start date cannot be after end date. Start: '{startDate:yyyy-MM-dd}', End: '{endDate:yyyy-MM-dd}'");
     }
 }

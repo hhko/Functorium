@@ -48,7 +48,7 @@ public sealed class PostalCode : ComparableSimpleValueObject<string>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(PostalCode)}.{nameof(NotFiveDigits)}",
                 errorCurrentValue: value,
-                errorMessage: "");
+                errorMessage: $"Postal code must be exactly 5 digits. Current value: '{value}'");
     }
 }
 

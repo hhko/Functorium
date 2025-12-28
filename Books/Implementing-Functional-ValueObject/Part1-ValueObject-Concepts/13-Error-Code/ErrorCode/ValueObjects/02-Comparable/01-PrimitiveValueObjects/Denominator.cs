@@ -63,7 +63,8 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
         public static Error Zero(int value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"Denominator cannot be zero. Current value: '{value}'");
     }
 
     // 비교 가능성은 ComparableSimpleValueObject<int>에서 자동으로 제공됨

@@ -81,27 +81,27 @@ public sealed class PhoneNumber : ValueObject
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(PhoneNumber)}.{nameof(PhoneNumberTooShort)}",
                 errorCurrentValue: phoneNumber,
-                errorMessage: "");
+                errorMessage: $"Phone number is too short. Minimum length is 10 characters. Current value: '{phoneNumber}'");
 
         // ValidateCountryCode 메서드와 1:1 매핑되는 에러 - 국가 코드가 지원되지 않음
         public static Error CountryCodeUnsupported(string phoneNumber) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(PhoneNumber)}.{nameof(CountryCodeUnsupported)}",
                 errorCurrentValue: phoneNumber,
-                errorMessage: "");
+                errorMessage: $"Country code is not supported. Only '+82' (Korea) and '+1' (USA) are allowed. Current value: '{phoneNumber}'");
 
         // ValidateAreaCode 메서드와 1:1 매핑되는 에러 - 지역 코드가 유효하지 않음
         public static Error AreaCodeInvalid(string phoneNumber) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(PhoneNumber)}.{nameof(AreaCodeInvalid)}",
                 errorCurrentValue: phoneNumber,
-                errorMessage: "");
+                errorMessage: $"Area code is invalid. Must be 3 digits. Current value: '{phoneNumber}'");
 
         // ValidateLocalNumber 메서드와 1:1 매핑되는 에러 - 로컬 번호가 유효하지 않음
         public static Error LocalNumberInvalid(string phoneNumber) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(PhoneNumber)}.{nameof(LocalNumberInvalid)}",
                 errorCurrentValue: phoneNumber,
-                errorMessage: "");
+                errorMessage: $"Local number is invalid. Must be digits only. Current value: '{phoneNumber}'");
     }
 }

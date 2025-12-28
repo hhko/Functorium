@@ -48,7 +48,7 @@ public sealed class Street : ComparableSimpleValueObject<string>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Street)}.{nameof(InvalidLength)}",
                 errorCurrentValue: value,
-                errorMessage: "");
+                errorMessage: $"Street name length is invalid. Must be 2-50 characters. Current value: '{value}'");
     }
 }
 

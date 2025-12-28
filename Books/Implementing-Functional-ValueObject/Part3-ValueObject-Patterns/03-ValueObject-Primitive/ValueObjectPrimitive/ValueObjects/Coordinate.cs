@@ -95,12 +95,12 @@ public sealed class Coordinate : ValueObject
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(XOutOfRange)}",
                 errorCurrentValue: value,
-                errorMessage: "");
+                errorMessage: $"X coordinate must be non-negative. Current value: '{value}'");
 
         public static Error YOutOfRange(int value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(YOutOfRange)}",
                 errorCurrentValue: value,
-                errorMessage: "");
+                errorMessage: $"Y coordinate must be between 0 and 1000. Current value: '{value}'");
     }
 }

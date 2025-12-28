@@ -53,6 +53,6 @@ public sealed class EmailDomain : SimpleValueObject<string>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(EmailDomain)}.{nameof(EmptyOrInvalidFormat)}",
                 errorCurrentValue: value,
-                errorMessage: "");
+                errorMessage: $"Email domain is empty or invalid. Must be at least 3 characters and contain '.'. Current value: '{value}'");
     }
 }

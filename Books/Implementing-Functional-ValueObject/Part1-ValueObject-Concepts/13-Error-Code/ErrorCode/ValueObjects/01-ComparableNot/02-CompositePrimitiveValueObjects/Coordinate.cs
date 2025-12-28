@@ -90,7 +90,8 @@ public sealed class Coordinate : ValueObject
         public static Error XOutOfRange(int value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(XOutOfRange)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"X coordinate must be between 0 and 1000. Current value: '{value}'");
 
         /// <summary>
         /// 범위를 벗어난 Y 좌표에 대한 에러
@@ -100,7 +101,8 @@ public sealed class Coordinate : ValueObject
         public static Error YOutOfRange(int value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(YOutOfRange)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"Y coordinate must be between 0 and 1000. Current value: '{value}'");
     }
 
     protected override IEnumerable<object> GetEqualityComponents()

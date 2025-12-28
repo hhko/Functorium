@@ -82,7 +82,8 @@ public sealed class PostalCode : SimpleValueObject<string>
         public static Error Empty(string value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(PostalCode)}.{nameof(Empty)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"Postal code cannot be empty. Current value: '{value}'");
 
         /// <summary>
         /// 5자리 숫자가 아닌 우편번호에 대한 에러
@@ -92,6 +93,7 @@ public sealed class PostalCode : SimpleValueObject<string>
         public static Error NotFiveDigits(string value) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(PostalCode)}.{nameof(NotFiveDigits)}",
-                errorCurrentValue: value);
+                errorCurrentValue: value,
+                errorMessage: $"Postal code must be exactly 5 digits. Current value: '{value}'");
     }
 }

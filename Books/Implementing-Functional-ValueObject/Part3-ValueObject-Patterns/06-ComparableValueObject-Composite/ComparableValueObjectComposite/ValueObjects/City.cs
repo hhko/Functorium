@@ -48,7 +48,7 @@ public sealed class City : ComparableSimpleValueObject<string>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(DomainErrors)}.{nameof(City)}.{nameof(InvalidLength)}",
                 errorCurrentValue: value,
-                errorMessage: "");
+                errorMessage: $"City name length is invalid. Must be 2-30 characters. Current value: '{value}'");
     }
 }
 
