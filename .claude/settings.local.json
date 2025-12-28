@@ -93,7 +93,13 @@
       "Bash(\"Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/06-ComparableValueObject-Composite/ComparableValueObjectComposite/ValueObjects/City.cs\" )",
       "Bash(\"Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/06-ComparableValueObject-Composite/ComparableValueObjectComposite/ValueObjects/PostalCode.cs\" )",
       "Bash(\"Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/06-ComparableValueObject-Composite/ComparableValueObjectComposite/ValueObjects/Street.cs\" )",
-      "Bash(\"Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/07-TypeSafeEnum/TypeSafeEnum/ValueObjects/Currency.cs\")"
+      "Bash(\"Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/07-TypeSafeEnum/TypeSafeEnum/ValueObjects/Currency.cs\")",
+      "Bash(\"Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/13-Error-Code/README.md\" )",
+      "Bash(\"Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/01-SimpleValueObject/README.md\" )",
+      "Bash(\"Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/02-ComparableSimpleValueObject/README.md\" )",
+      "Bash(\"Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/03-ValueObject-Primitive/README.md\" )",
+      "Bash(\"Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/04-ComparableValueObject-Primitive/README.md\" )",
+      "Bash(\"Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/07-TypeSafeEnum/README.md\")"
     ],
     "deny": [],
     "ask": []
