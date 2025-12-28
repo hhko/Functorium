@@ -25,7 +25,7 @@
 - [x] CQRS
 - [x] Pipeline
 - [ ] IAdapter(Observability)
-- [ ] LINQ(FinT, IO, Guard, Validation)
+- [ ] Usecase(LINQ: FinT, Fin, IO, Guard, Validation)
 
 ### Domain Layer
 - [x] Value Object
