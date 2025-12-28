@@ -59,7 +59,7 @@ public static class EqualityComparerTests
 
                 // 해시 코드 테스트
                 Console.WriteLine("해시 코드 테스트:");
-                Console.WriteLine($"email1.GetHashCode() = {email1.GetHashCode()}");
+                Console.WriteLine($"email1.GetHashCode() = {email1!.GetHashCode()}");
                 Console.WriteLine($"email2.GetHashCode() = {email2.GetHashCode()}");
                 Console.WriteLine($"email3.GetHashCode() = {email3.GetHashCode()}");
                 Console.WriteLine($"같은 값의 해시 코드가 같은가? {email1.GetHashCode() == email2.GetHashCode()}");

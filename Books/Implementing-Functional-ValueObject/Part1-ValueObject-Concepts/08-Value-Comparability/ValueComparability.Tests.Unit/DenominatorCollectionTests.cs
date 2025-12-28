@@ -46,7 +46,7 @@ public class DenominatorCollectionTests
         var actual = denominators.Min();
 
         // Assert
-        ((int)actual).ShouldBe(expected);
+        ((int)actual!).ShouldBe(expected);
     }
 
     // 테스트 시나리오: Max 메서드가 최대값을 올바르게 반환해야 한다
@@ -63,7 +63,7 @@ public class DenominatorCollectionTests
         var actual = denominators.Max();
 
         // Assert
-        ((int)actual).ShouldBe(expected);
+        ((int)actual!).ShouldBe(expected);
     }
 
     // 테스트 시나리오: 정렬된 리스트에서 BinarySearch가 올바른 인덱스를 반환해야 한다
@@ -157,7 +157,7 @@ public class DenominatorCollectionTests
         // Act
         var max = denominators.Max();
         var min = denominators.Min();
-        var actual = max - min;
+        var actual = max! - min!;
 
         // Assert
         actual.ShouldBe(expected);

@@ -93,7 +93,7 @@ class Program
                 Console.WriteLine($"a = {a}");
                 Console.WriteLine($"a == null: {a == null}"); // false
                 Console.WriteLine($"null == a: {null == a}"); // false
-                Console.WriteLine($"a.Equals(null): {a.Equals((object?)null)}"); // false
+                Console.WriteLine($"a.Equals(null): {a!.Equals((object?)null)}"); // false
                 Console.WriteLine($"null == null: {null == null}"); // true
             },
             Fail: error => Console.WriteLine($"a 생성 실패: {error}")

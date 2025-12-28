@@ -193,13 +193,13 @@ public class AddressTests
     [InlineData("123 Main St", "", "12345")]
     [InlineData("123 Main St", "   ", "12345")]
     [InlineData("123 Main St", null, "12345")]
-    public void Create_ShouldReturnFailure_WhenCityIsEmpty(string street, string city, string postalCode)
+    public void Create_ShouldReturnFailure_WhenCityIsEmpty(string street, string? city, string postalCode)
     {
         // Arrange
         string expectedMessage = "도시명은 비어있을 수 없습니다";
 
         // Act
-        var actual = Address.Create(street, city, postalCode);
+        var actual = Address.Create(street, city!, postalCode);
 
         // Assert
         actual.Match(
@@ -214,13 +214,13 @@ public class AddressTests
     [InlineData("123 Main St", "Seoul", "")]
     [InlineData("123 Main St", "Seoul", "   ")]
     [InlineData("123 Main St", "Seoul", null)]
-    public void Create_ShouldReturnFailure_WhenPostalCodeIsEmpty(string street, string city, string postalCode)
+    public void Create_ShouldReturnFailure_WhenPostalCodeIsEmpty(string street, string city, string? postalCode)
     {
         // Arrange
         string expectedMessage = "우편번호는 비어있을 수 없습니다";
 
         // Act
-        var actual = Address.Create(street, city, postalCode);
+        var actual = Address.Create(street, city, postalCode!);
 
         // Assert
         actual.Match(

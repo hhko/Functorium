@@ -89,8 +89,8 @@ public class DenominatorComparabilityTests
         else
         {
             // null 케이스는 직접 테스트
-            Denominator? d1 = value1.HasValue ? Denominator.Create(value1.Value).Match(Succ: x => x, Fail: _ => null) : null;
-            Denominator? d2 = value2.HasValue ? Denominator.Create(value2.Value).Match(Succ: x => x, Fail: _ => null) : null;
+            Denominator? d1 = value1.HasValue ? Denominator.Create(value1.Value).Match(Succ: x => x, Fail: _ => (Denominator?)null) : null;
+            Denominator? d2 = value2.HasValue ? Denominator.Create(value2.Value).Match(Succ: x => x, Fail: _ => (Denominator?)null) : null;
             var result = d1 < d2;
             result.ShouldBe(expected);
         }
@@ -126,8 +126,8 @@ public class DenominatorComparabilityTests
         else
         {
             // null 케이스는 직접 테스트
-            Denominator? d1 = value1.HasValue ? Denominator.Create(value1.Value).Match(Succ: x => x, Fail: _ => null) : null;
-            Denominator? d2 = value2.HasValue ? Denominator.Create(value2.Value).Match(Succ: x => x, Fail: _ => null) : null;
+            Denominator? d1 = value1.HasValue ? Denominator.Create(value1.Value).Match(Succ: x => x, Fail: _ => (Denominator?)null) : null;
+            Denominator? d2 = value2.HasValue ? Denominator.Create(value2.Value).Match(Succ: x => x, Fail: _ => (Denominator?)null) : null;
             var result = d1 > d2;
             result.ShouldBe(expected);
         }
@@ -163,8 +163,8 @@ public class DenominatorComparabilityTests
         else
         {
             // null 케이스는 직접 테스트
-            Denominator? d1 = value1.HasValue ? Denominator.Create(value1.Value).Match(Succ: x => x, Fail: _ => null) : null;
-            Denominator? d2 = value2.HasValue ? Denominator.Create(value2.Value).Match(Succ: x => x, Fail: _ => null) : null;
+            Denominator? d1 = value1.HasValue ? Denominator.Create(value1.Value).Match(Succ: x => x, Fail: _ => (Denominator?)null) : null;
+            Denominator? d2 = value2.HasValue ? Denominator.Create(value2.Value).Match(Succ: x => x, Fail: _ => (Denominator?)null) : null;
             var result = d1 <= d2;
             result.ShouldBe(expected);
         }
@@ -200,8 +200,8 @@ public class DenominatorComparabilityTests
         else
         {
             // null 케이스는 직접 테스트
-            Denominator? d1 = value1.HasValue ? Denominator.Create(value1.Value).Match(Succ: x => x, Fail: _ => null) : null;
-            Denominator? d2 = value2.HasValue ? Denominator.Create(value2.Value).Match(Succ: x => x, Fail: _ => null) : null;
+            Denominator? d1 = value1.HasValue ? Denominator.Create(value1.Value).Match(Succ: x => x, Fail: _ => (Denominator?)null) : null;
+            Denominator? d2 = value2.HasValue ? Denominator.Create(value2.Value).Match(Succ: x => x, Fail: _ => (Denominator?)null) : null;
             var result = d1 >= d2;
             result.ShouldBe(expected);
         }

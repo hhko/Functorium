@@ -85,7 +85,7 @@ class Program
 
         // 실패 케이스
         Console.WriteLine("❌ 실패 케이스:");
-        var invalidData1 = BinaryData.Create(null);
+        var invalidData1 = BinaryData.Create(null!);
         var invalidData2 = BinaryData.Create(new byte[0]);
 
         if (invalidData1.IsFail)

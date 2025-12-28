@@ -84,8 +84,8 @@ public class EmailAddressEqualityComparerTests
         else
         {
             // null 케이스는 직접 테스트
-            EmailAddress? e1 = email1 != null ? EmailAddress.Create(email1).Match(Succ: x => x, Fail: _ => null) : null;
-            EmailAddress? e2 = email2 != null ? EmailAddress.Create(email2).Match(Succ: x => x, Fail: _ => null) : null;
+            EmailAddress? e1 = email1 != null ? EmailAddress.Create(email1).Match(Succ: x => x, Fail: _ => (EmailAddress?)null) : null;
+            EmailAddress? e2 = email2 != null ? EmailAddress.Create(email2).Match(Succ: x => x, Fail: _ => (EmailAddress?)null) : null;
             var result = comparer.Equals(e1, e2);
             result.ShouldBe(expected);
         }

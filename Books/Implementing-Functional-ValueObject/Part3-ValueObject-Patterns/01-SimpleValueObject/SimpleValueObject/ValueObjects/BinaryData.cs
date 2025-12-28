@@ -40,7 +40,7 @@ public sealed class BinaryData : SimpleValueObject<byte[]>
     public static Validation<Error, byte[]> Validate(byte[] value) =>
         value != null && value.Length > 0
             ? value
-            : DomainErrors.Empty(value);
+            : DomainErrors.Empty(value!);
 
     public override string ToString() =>
         $"BinaryData[{Value.Length} bytes: {BitConverter.ToString(Value).Replace("-", " ")}]";
