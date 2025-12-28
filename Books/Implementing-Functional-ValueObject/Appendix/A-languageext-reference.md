@@ -335,6 +335,8 @@ var result = GetUser(id)
 
 ### 병렬 검증 패턴
 
+**방법 1: 튜플 기반 Apply (권장)**
+
 ```csharp
 var result = (
     ValidateField1(input.Field1),
@@ -342,6 +344,34 @@ var result = (
     ValidateField3(input.Field3)
 ).Apply((f1, f2, f3) => new Output(f1, f2, f3));
 ```
+
+**방법 2: fun 기반 개별 Apply**
+
+`fun` 함수는 람다의 타입 추론을 돕는 헬퍼로, Currying을 통해 단계적으로 Apply를 적용합니다.
+
+```csharp
+// fun으로 생성자/팩토리를 감싸고 개별 Apply 호출
+var result = fun((string f1, string f2, string f3) => new Output(f1, f2, f3))
+    .Map(f => Success<Error, Func<string, string, string, Output>>(f))
+    .Apply(ValidateField1(input.Field1))
+    .Apply(ValidateField2(input.Field2))
+    .Apply(ValidateField3(input.Field3));
+```
+
+또는 Pure를 사용하여 더 간결하게:
+
+```csharp
+var result = Pure<Validation<Error>, Output>(
+    fun((string f1, string f2, string f3) => new Output(f1, f2, f3)))
+    .Apply(ValidateField1(input.Field1))
+    .Apply(ValidateField2(input.Field2))
+    .Apply(ValidateField3(input.Field3));
+```
+
+| 방법 | 특징 | 사용 시기 |
+|------|------|----------|
+| 튜플 Apply | 간결하고 직관적 | 대부분의 경우 권장 |
+| fun 개별 Apply | Currying 기반, 단계적 적용 | 동적 파라미터 개수, 고급 합성 |
 
 ### 옵션 체이닝
 
