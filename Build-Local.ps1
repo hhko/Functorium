@@ -224,13 +224,13 @@ function Find-SolutionFile {
   # If solution path is specified, validate and return
   if ($SolutionPath) {
     if (-not (Test-Path $SolutionPath)) {
-      Write-Host "      Solution file not found: $SolutionPath" -ForegroundColor Red
+      Write-Host "  Solution file not found: $SolutionPath" -ForegroundColor Red
       return $null
     }
 
     $file = Get-Item $SolutionPath
     if ($file.Extension -ne ".sln" -and $file.Extension -ne ".slnx") {
-      Write-Host "      Invalid solution file: $SolutionPath (expected .sln or .slnx)" -ForegroundColor Red
+      Write-Host "  Invalid solution file: $SolutionPath (expected .sln or .slnx)" -ForegroundColor Red
       return $null
     }
 
@@ -245,13 +245,13 @@ function Find-SolutionFile {
   $slnFiles = @(Get-ChildItem -Path $searchPath -File | Where-Object { $_.Extension -eq ".sln" -or $_.Extension -eq ".slnx" })
 
   if ($slnFiles.Count -eq 0) {
-    Write-Host "      No solution file (.sln or .slnx) found" -ForegroundColor Red
+    Write-Host "  No solution file (.sln or .slnx) found" -ForegroundColor Red
     Write-WarningMessage "Use -Solution parameter to specify the path"
     return $null
   }
 
   if ($slnFiles.Count -gt 1) {
-    Write-Host "      Found $($slnFiles.Count) solution files:" -ForegroundColor Red
+    Write-Host "  Found $($slnFiles.Count) solution files:" -ForegroundColor Red
     $slnFiles | ForEach-Object { Write-WarningMessage "- $($_.Name)" }
     Write-WarningMessage "Use -Solution parameter to specify which one to use"
     return $null
@@ -378,7 +378,7 @@ function Get-CoverageFiles {
   $coverageFiles = @(Get-ChildItem -Path $script:SolutionDir -Filter "coverage.cobertura.xml" -Recurse -ErrorAction SilentlyContinue)
 
   if ($coverageFiles.Count -eq 0) {
-    Write-Host "      No coverage files found" -ForegroundColor Red
+    Write-Host "  No coverage files found" -ForegroundColor Red
     return $null
   }
 
@@ -418,7 +418,7 @@ function Show-CoverageReport {
       $mergedCoverageFile = $firstFile
     }
     else {
-      Write-Host "      Coverage file not found" -ForegroundColor Red
+      Write-Host "  Coverage file not found" -ForegroundColor Red
       return
     }
   }
@@ -598,7 +598,7 @@ $startTime = Get-Date
 
 Write-Host ""
 Write-Host "[START] .NET Solution Build and Test" -ForegroundColor Blue
-Write-Host "       Started: $($startTime.ToString('yyyy-MM-dd HH:mm:ss'))" -ForegroundColor DarkGray
+Write-Host "   Started: $($startTime.ToString('yyyy-MM-dd HH:mm:ss'))" -ForegroundColor DarkGray
 Write-Host ""
 
 try {
@@ -700,17 +700,19 @@ try {
 
   # Generate HTML report using local tool
   # Note: Source Generator files (*.g.cs) are excluded to avoid "does not exist" warnings
+  # Verbosity set to Warning to minimize output (available: Verbose, Info, Warning, Error, Off)
   Write-Host ""
   dotnet reportgenerator `
     -reports:$coverageFiles `
     -targetdir:$script:CoverageReportDir `
     -reporttypes:"Html;Cobertura;MarkdownSummaryGithub" `
     -assemblyfilters:"-*.Tests*" `
-    -filefilters:"-*.g.cs"
+    -filefilters:"-*.g.cs" `
+    -verbosity:Warning
   Write-Host ""
 
   if ($LASTEXITCODE -ne 0) {
-    Write-Host "      Failed to generate HTML report" -ForegroundColor Red
+    Write-Host "  Failed to generate HTML report" -ForegroundColor Red
   }
   else {
     $reportPath = Join-Path $script:CoverageReportDir "index.html"
@@ -865,11 +867,16 @@ try {
 
   Write-Host ""
   Write-Host "[DONE] Build, test, and pack completed" -ForegroundColor Green
-  Write-Host "       Duration: $($duration.ToString('mm\:ss'))" -ForegroundColor DarkGray
-  Write-Host "       Coverage: $script:CoverageReportDir/index.html" -ForegroundColor DarkGray
-  Write-Host "       Slow Tests: $script:CoverageReportDir/SummarySlowestTests.md (threshold: ${SlowTestThreshold}s)" -ForegroundColor DarkGray
+  Write-Host ""
+  Write-Host "  Duration    : " -NoNewline -ForegroundColor White
+  Write-Host "$($duration.ToString('mm\:ss'))" -ForegroundColor Cyan
+  Write-Host "  Coverage    : " -NoNewline -ForegroundColor White
+  Write-Host "$(Join-Path $script:CoverageReportDir 'index.html')" -ForegroundColor Cyan
+  Write-Host "  Slow Tests  : " -NoNewline -ForegroundColor White
+  Write-Host "$(Join-Path $script:CoverageReportDir 'SummarySlowestTests.md')" -ForegroundColor Cyan
   if (-not $SkipPack) {
-    Write-Host "       Packages: $script:NuGetOutputDir" -ForegroundColor DarkGray
+    Write-Host "  Packages    : " -NoNewline -ForegroundColor White
+    Write-Host "$script:NuGetOutputDir" -ForegroundColor Cyan
   }
   Write-Host ""
 
@@ -878,7 +885,7 @@ try {
 catch {
   Write-Host ""
   Write-Host "[ERROR] An unexpected error occurred:" -ForegroundColor Red
-  Write-Host "        $($_.Exception.Message)" -ForegroundColor Red
+  Write-Host "    $($_.Exception.Message)" -ForegroundColor Red
   Write-Host ""
   Write-Host "Stack trace:" -ForegroundColor DarkGray
   Write-Host $_.ScriptStackTrace -ForegroundColor DarkGray
