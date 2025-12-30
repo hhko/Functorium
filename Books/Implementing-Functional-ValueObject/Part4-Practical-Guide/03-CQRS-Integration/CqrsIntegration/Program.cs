@@ -1,4 +1,6 @@
 using Functorium.Abstractions.Errors;
+using Functorium.Applications.Cqrs;
+using Functorium.Domains.ValueObjects;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using LanguageExt;
@@ -11,12 +13,12 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        Console.WriteLine("=== CQRS와 값 객체 통합 ===\n");
+        Console.WriteLine("=== CQRS와 값 객체 통합 (Functorium 프레임워크 기반) ===\n");
 
         // DI 설정
         var services = new ServiceCollection();
         services.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);
-        services.AddSingleton<UserRepository>();
+        services.AddSingleton<IUserRepository, InMemoryUserRepository>();
 
         var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
@@ -27,8 +29,8 @@ class Program
         // 2. Query에서 값 객체 사용
         await DemonstrateQuery(mediator);
 
-        // 3. Fin<T> → Response 변환
-        DemonstrateFinToResponse();
+        // 3. FinResponse 직접 사용
+        DemonstrateFinResponse();
     }
 
     static async Task DemonstrateCommand(IMediator mediator)
@@ -37,7 +39,7 @@ class Program
         Console.WriteLine("─".PadRight(40, '─'));
 
         // 유효한 요청
-        var validCommand = new CreateUserCommand("홍길동", "hong@example.com", 25);
+        var validCommand = new CreateUserCommand.Request("홍길동", "hong@example.com", 25);
         var result = await mediator.Send(validCommand);
 
         result.Match(
@@ -46,7 +48,7 @@ class Program
         );
 
         // 유효하지 않은 요청
-        var invalidCommand = new CreateUserCommand("", "invalid-email", -5);
+        var invalidCommand = new CreateUserCommand.Request("", "invalid-email", -5);
         var result2 = await mediator.Send(invalidCommand);
 
         result2.Match(
@@ -62,7 +64,7 @@ class Program
         Console.WriteLine("2. Query에서 값 객체 사용");
         Console.WriteLine("─".PadRight(40, '─'));
 
-        var query = new GetUserQuery(Guid.Parse("550e8400-e29b-41d4-a716-446655440000"));
+        var query = new GetUserByIdQuery.Request(Guid.Parse("550e8400-e29b-41d4-a716-446655440000"));
         var result = await mediator.Send(query);
 
         result.Match(
@@ -71,7 +73,7 @@ class Program
         );
 
         // 존재하지 않는 사용자
-        var notFoundQuery = new GetUserQuery(Guid.NewGuid());
+        var notFoundQuery = new GetUserByIdQuery.Request(Guid.NewGuid());
         var notFoundResult = await mediator.Send(notFoundQuery);
 
         notFoundResult.Match(
@@ -82,205 +84,320 @@ class Program
         Console.WriteLine();
     }
 
-    static void DemonstrateFinToResponse()
+    static void DemonstrateFinResponse()
     {
-        Console.WriteLine("3. Fin<T> → Response 변환 (FinExtensions)");
+        Console.WriteLine("3. FinResponse 직접 사용");
         Console.WriteLine("─".PadRight(40, '─'));
 
-        // 성공 케이스
-        Fin<UserDto> success = new UserDto("홍길동", "hong@example.com", 25);
-        var successResponse = success.ToApiResponse();
-        Console.WriteLine($"   성공 응답: Status={successResponse.IsSuccess}, Data={successResponse.Data}");
+        // 성공 케이스 - 암시적 변환
+        FinResponse<string> success = "성공 데이터";
+        Console.WriteLine($"   성공 응답: IsSucc={success.IsSucc}, Value={success.Match(s => s, _ => "")}");
 
-        // 실패 케이스
-        Fin<UserDto> failure = Error.New("사용자를 찾을 수 없습니다.");
-        var failureResponse = failure.ToApiResponse();
-        Console.WriteLine($"   실패 응답: Status={failureResponse.IsSuccess}, Error={failureResponse.ErrorMessage}");
+        // 실패 케이스 - 암시적 변환
+        FinResponse<string> failure = Error.New("사용자를 찾을 수 없습니다.");
+        Console.WriteLine($"   실패 응답: IsFail={failure.IsFail}, Error={failure.Match(_ => "", e => e.Message)}");
+
+        // Map 연산
+        FinResponse<int> mapped = success.Map(s => s.Length);
+        Console.WriteLine($"   Map 연산: Value={mapped.Match(v => v.ToString(), _ => "N/A")}");
 
         Console.WriteLine();
     }
 }
 
 // ========================================
-// 값 객체 정의
+// 값 객체 정의 (Functorium 프레임워크 기반)
 // ========================================
 
-public sealed class Email : IEquatable<Email>
+/// <summary>
+/// Email 값 객체 (SimpleValueObject 기반)
+/// </summary>
+public sealed class Email : SimpleValueObject<string>
 {
-    public string Value { get; }
+    // 2. Private 생성자 - 단순 대입만 처리
+    private Email(string value) : base(value) { }
 
-    private Email(string value) => Value = value;
+    /// <summary>
+    /// 이메일 주소에 대한 public 접근자
+    /// </summary>
+    public string Address => Value;
 
-    public static Fin<Email> Create(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return DomainErrors.Empty(value ?? "null");
-        if (!value.Contains('@'))
-            return DomainErrors.InvalidFormat(value);
-        return new Email(value.ToLowerInvariant());
-    }
+    // 3. Public Create 메서드 - 검증과 생성을 연결
+    public static Fin<Email> Create(string? value) =>
+        CreateFromValidation(
+            Validate(value ?? "null"),
+            validValue => new Email(validValue));
 
-    public static Email CreateFromValidated(string value) => new(value.ToLowerInvariant());
+    // 4. Internal CreateFromValidated 메서드
+    internal static Email CreateFromValidated(string value) => new(value);
 
-    public bool Equals(Email? other) => other is not null && Value == other.Value;
-    public override bool Equals(object? obj) => obj is Email other && Equals(other);
-    public override int GetHashCode() => Value.GetHashCode();
-    public override string ToString() => Value;
+    // 5. Public Validate 메서드 - 독립 검증 규칙들을 병렬로 실행
+    public static Validation<Error, string> Validate(string value) =>
+        (ValidateNotEmpty(value), ValidateFormat(value))
+            .Apply((_, validFormat) => validFormat.ToLowerInvariant())
+            .As();
 
+    // 5.1 빈 값 검증
+    private static Validation<Error, string> ValidateNotEmpty(string value) =>
+        !string.IsNullOrWhiteSpace(value)
+            ? value
+            : DomainErrors.Empty(value);
+
+    // 5.2 형식 검증
+    private static Validation<Error, string> ValidateFormat(string value) =>
+        !string.IsNullOrWhiteSpace(value) && value.Contains('@')
+            ? value
+            : DomainErrors.InvalidFormat(value);
+
+    public static implicit operator string(Email email) => email.Value;
+
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
         public static Error Empty(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Email)}.{nameof(Empty)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(Empty)}",
                 errorCurrentValue: value,
-                errorMessage: "이메일 주소가 비어있습니다.");
+                errorMessage: $"Email address cannot be empty. Current value: '{value}'");
+
         public static Error InvalidFormat(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Email)}.{nameof(InvalidFormat)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(InvalidFormat)}",
                 errorCurrentValue: value,
-                errorMessage: "이메일 형식이 올바르지 않습니다.");
+                errorMessage: $"Invalid email format. Current value: '{value}'");
     }
 }
 
-public sealed class Age : IEquatable<Age>
+/// <summary>
+/// Age 값 객체 (ComparableSimpleValueObject 기반)
+/// </summary>
+public sealed class Age : ComparableSimpleValueObject<int>
 {
-    public int Value { get; }
+    // 2. Private 생성자 - 단순 대입만 처리
+    private Age(int value) : base(value) { }
 
-    private Age(int value) => Value = value;
+    /// <summary>
+    /// 나이 값에 대한 public 접근자
+    /// </summary>
+    public int Years => Value;
 
-    public static Fin<Age> Create(int value)
-    {
-        if (value < 0)
-            return DomainErrors.Negative(value);
-        if (value > 150)
-            return DomainErrors.TooOld(value);
-        return new Age(value);
-    }
+    // 3. Public Create 메서드 - 검증과 생성을 연결
+    public static Fin<Age> Create(int value) =>
+        CreateFromValidation(
+            Validate(value),
+            validValue => new Age(validValue));
 
-    public static Age CreateFromValidated(int value) => new(value);
+    // 4. Internal CreateFromValidated 메서드
+    internal static Age CreateFromValidated(int value) => new(value);
 
-    public bool Equals(Age? other) => other is not null && Value == other.Value;
-    public override bool Equals(object? obj) => obj is Age other && Equals(other);
-    public override int GetHashCode() => Value.GetHashCode();
-    public override string ToString() => Value.ToString();
+    // 5. Public Validate 메서드 - 순차 검증 (범위 검증은 의존성이 있음)
+    public static Validation<Error, int> Validate(int value) =>
+        ValidateNotNegative(value)
+            .Bind(_ => ValidateNotTooOld(value))
+            .Map(_ => value);
 
+    // 5.1 음수 검증
+    private static Validation<Error, int> ValidateNotNegative(int value) =>
+        value >= 0
+            ? value
+            : DomainErrors.Negative(value);
+
+    // 5.2 최대값 검증
+    private static Validation<Error, int> ValidateNotTooOld(int value) =>
+        value <= 150
+            ? value
+            : DomainErrors.TooOld(value);
+
+    public static implicit operator int(Age age) => age.Value;
+
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
         public static Error Negative(int value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Age)}.{nameof(Negative)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Age)}.{nameof(Negative)}",
                 errorCurrentValue: value,
-                errorMessage: "나이는 음수일 수 없습니다.");
+                errorMessage: $"Age cannot be negative. Current value: '{value}'");
+
         public static Error TooOld(int value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Age)}.{nameof(TooOld)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Age)}.{nameof(TooOld)}",
                 errorCurrentValue: value,
-                errorMessage: "나이는 150세를 초과할 수 없습니다.");
+                errorMessage: $"Age cannot exceed 150 years. Current value: '{value}'");
     }
 }
 
-public sealed class UserName : IEquatable<UserName>
+/// <summary>
+/// UserName 값 객체 (SimpleValueObject 기반)
+/// </summary>
+public sealed class UserName : SimpleValueObject<string>
 {
-    public string Value { get; }
+    // 2. Private 생성자 - 단순 대입만 처리
+    private UserName(string value) : base(value) { }
 
-    private UserName(string value) => Value = value;
+    /// <summary>
+    /// 이름 값에 대한 public 접근자
+    /// </summary>
+    public string Name => Value;
 
-    public static Fin<UserName> Create(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return DomainErrors.Empty(value ?? "null");
-        if (value.Length > 100)
-            return DomainErrors.TooLong(value.Length);
-        return new UserName(value.Trim());
-    }
+    // 3. Public Create 메서드 - 검증과 생성을 연결
+    public static Fin<UserName> Create(string? value) =>
+        CreateFromValidation(
+            Validate(value ?? "null"),
+            validValue => new UserName(validValue));
 
-    public static UserName CreateFromValidated(string value) => new(value.Trim());
+    // 4. Internal CreateFromValidated 메서드
+    internal static UserName CreateFromValidated(string value) => new(value);
 
-    public bool Equals(UserName? other) => other is not null && Value == other.Value;
-    public override bool Equals(object? obj) => obj is UserName other && Equals(other);
-    public override int GetHashCode() => Value.GetHashCode();
-    public override string ToString() => Value;
+    // 5. Public Validate 메서드 - 순차 검증 (길이 검증은 빈 값 검증에 의존)
+    public static Validation<Error, string> Validate(string value) =>
+        ValidateNotEmpty(value)
+            .Bind(_ => ValidateLength(value))
+            .Map(valid => valid.Trim());
 
+    // 5.1 빈 값 검증
+    private static Validation<Error, string> ValidateNotEmpty(string value) =>
+        !string.IsNullOrWhiteSpace(value)
+            ? value
+            : DomainErrors.Empty(value);
+
+    // 5.2 길이 검증
+    private static Validation<Error, string> ValidateLength(string value) =>
+        value.Length <= 100
+            ? value
+            : DomainErrors.TooLong(value.Length);
+
+    public static implicit operator string(UserName userName) => userName.Value;
+
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
         public static Error Empty(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(UserName)}.{nameof(Empty)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(UserName)}.{nameof(Empty)}",
                 errorCurrentValue: value,
-                errorMessage: "사용자 이름이 비어있습니다.");
+                errorMessage: $"User name cannot be empty. Current value: '{value}'");
+
         public static Error TooLong(int length) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(UserName)}.{nameof(TooLong)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(UserName)}.{nameof(TooLong)}",
                 errorCurrentValue: length,
-                errorMessage: "사용자 이름은 100자를 초과할 수 없습니다.");
+                errorMessage: $"User name cannot exceed 100 characters. Current length: '{length}'");
     }
 }
 
 // ========================================
-// CQRS Commands & Queries (Mediator)
+// CQRS Command - 중첩 클래스 패턴
 // ========================================
 
-public sealed record CreateUserCommand(string Name, string Email, int Age)
-    : IRequest<Fin<CreateUserResponse>>;
-
-public sealed record CreateUserResponse(Guid UserId);
-
-public sealed record GetUserQuery(Guid UserId) : IRequest<Fin<UserDto>>;
-
-public sealed record UserDto(string Name, string Email, int Age);
-
-// ========================================
-// Handlers (Mediator)
-// ========================================
-
-public sealed class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Fin<CreateUserResponse>>
+/// <summary>
+/// 사용자 생성 Command
+/// </summary>
+public sealed class CreateUserCommand
 {
-    private readonly UserRepository _repository;
+    /// <summary>
+    /// Command Request - 사용자 생성에 필요한 데이터
+    /// </summary>
+    public sealed record Request(string Name, string Email, int Age)
+        : ICommandRequest<Response>;
 
-    public CreateUserCommandHandler(UserRepository repository)
+    /// <summary>
+    /// Command Response - 생성된 사용자 정보
+    /// </summary>
+    public sealed record Response(Guid UserId);
+
+    /// <summary>
+    /// Command Handler - 실제 비즈니스 로직 구현
+    /// </summary>
+    internal sealed class Usecase(IUserRepository repository)
+        : ICommandUsecase<Request, Response>
     {
-        _repository = repository;
-    }
+        private readonly IUserRepository _repository = repository;
 
-    public ValueTask<Fin<CreateUserResponse>> Handle(
-        CreateUserCommand request,
-        CancellationToken cancellationToken)
-    {
-        // Bind 패턴으로 순차적 검증
-        var result = UserName.Create(request.Name)
-            .Bind(name => Email.Create(request.Email)
-                .Bind(email => Age.Create(request.Age)
-                    .Map(age =>
-                    {
-                        var userId = _repository.Save(name, email, age);
-                        return new CreateUserResponse(userId);
-                    })));
+        public ValueTask<FinResponse<Response>> Handle(
+            Request request,
+            CancellationToken cancellationToken)
+        {
+            // Bind 패턴으로 순차적 검증 및 생성
+            var result = UserName.Create(request.Name)
+                .Bind(name => Email.Create(request.Email)
+                    .Bind(email => Age.Create(request.Age)
+                        .Map(age =>
+                        {
+                            var userId = _repository.Save(name, email, age);
+                            return new Response(userId);
+                        })));
 
-        return ValueTask.FromResult(result);
+            // Fin → FinResponse 변환
+            return ValueTask.FromResult(result.ToFinResponse());
+        }
     }
 }
 
-public sealed class GetUserQueryHandler : IRequestHandler<GetUserQuery, Fin<UserDto>>
+// ========================================
+// CQRS Query - 중첩 클래스 패턴
+// ========================================
+
+/// <summary>
+/// ID로 사용자 조회 Query
+/// </summary>
+public sealed class GetUserByIdQuery
 {
-    private readonly UserRepository _repository;
+    /// <summary>
+    /// Query Request - 조회할 사용자 ID
+    /// </summary>
+    public sealed record Request(Guid UserId) : IQueryRequest<Response>;
 
-    public GetUserQueryHandler(UserRepository repository)
-    {
-        _repository = repository;
-    }
+    /// <summary>
+    /// Query Response - 조회된 사용자 정보
+    /// </summary>
+    public sealed record Response(string Name, string Email, int Age);
 
-    public ValueTask<Fin<UserDto>> Handle(GetUserQuery request, CancellationToken cancellationToken)
+    /// <summary>
+    /// Query Handler - 사용자 조회 로직
+    /// </summary>
+    internal sealed class Usecase(IUserRepository repository)
+        : IQueryUsecase<Request, Response>
     {
-        var result = _repository.FindById(request.UserId);
-        return ValueTask.FromResult(result);
+        private readonly IUserRepository _repository = repository;
+
+        public ValueTask<FinResponse<Response>> Handle(
+            Request request,
+            CancellationToken cancellationToken)
+        {
+            // Repository가 없는 경우 Fail을 반환하므로 간단하게 처리
+            Fin<UserEntity> getResult = _repository.FindById(request.UserId);
+
+            return ValueTask.FromResult(getResult.ToFinResponse(user =>
+                new Response(user.Name.Name, user.Email.Address, user.Age.Years)));
+        }
     }
 }
 
 // ========================================
-// Repository (In-Memory)
+// Repository 인터페이스 및 구현
 // ========================================
 
-public class UserRepository
+/// <summary>
+/// 사용자 Repository 인터페이스
+/// </summary>
+public interface IUserRepository
+{
+    /// <summary>
+    /// 사용자 저장
+    /// </summary>
+    Guid Save(UserName name, Email email, Age age);
+
+    /// <summary>
+    /// ID로 사용자 조회. 없으면 Fail 반환
+    /// </summary>
+    Fin<UserEntity> FindById(Guid id);
+}
+
+/// <summary>
+/// In-Memory 사용자 Repository 구현
+/// </summary>
+public class InMemoryUserRepository : IUserRepository
 {
     private readonly Dictionary<Guid, UserEntity> _users = new()
     {
@@ -298,11 +415,11 @@ public class UserRepository
         return id;
     }
 
-    public Fin<UserDto> FindById(Guid id)
+    public Fin<UserEntity> FindById(Guid id)
     {
         if (_users.TryGetValue(id, out var user))
         {
-            return new UserDto(user.Name.Value, user.Email.Value, user.Age.Value);
+            return user; // 암시적 변환으로 Fin.Succ(user)
         }
         return RepositoryErrors.UserNotFound(id);
     }
@@ -311,46 +428,13 @@ public class UserRepository
     {
         public static Error UserNotFound(Guid id) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(UserRepository)}.{nameof(UserNotFound)}",
+                errorCode: $"{nameof(RepositoryErrors)}.{nameof(InMemoryUserRepository)}.{nameof(UserNotFound)}",
                 errorCurrentValue: id,
-                errorMessage: "사용자를 찾을 수 없습니다.");
+                errorMessage: $"User not found. Current value: '{id}'");
     }
 }
 
+/// <summary>
+/// 사용자 엔티티
+/// </summary>
 public sealed record UserEntity(UserName Name, Email Email, Age Age);
-
-// ========================================
-// FinExtensions - Fin<T> → Response 변환
-// ========================================
-
-public static class FinExtensions
-{
-    public static ApiResponse<T> ToApiResponse<T>(this Fin<T> fin)
-    {
-        return fin.Match(
-            Succ: data => ApiResponse<T>.Success(data),
-            Fail: error => ApiResponse<T>.Failure(error.Message)
-        );
-    }
-}
-
-public class ApiResponse<T>
-{
-    public bool IsSuccess { get; private set; }
-    public T? Data { get; private set; }
-    public string? ErrorMessage { get; private set; }
-
-    private ApiResponse() { }
-
-    public static ApiResponse<T> Success(T data) => new()
-    {
-        IsSuccess = true,
-        Data = data
-    };
-
-    public static ApiResponse<T> Failure(string errorMessage) => new()
-    {
-        IsSuccess = false,
-        ErrorMessage = errorMessage
-    };
-}

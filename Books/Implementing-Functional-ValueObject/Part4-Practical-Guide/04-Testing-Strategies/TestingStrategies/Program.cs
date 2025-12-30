@@ -1,4 +1,5 @@
 using Functorium.Abstractions.Errors;
+using Functorium.Domains.ValueObjects;
 using LanguageExt;
 using LanguageExt.Common;
 using static LanguageExt.Prelude;
@@ -9,7 +10,7 @@ class Program
 {
     static void Main(string[] args)
     {
-        Console.WriteLine("=== 값 객체 테스트 전략 ===\n");
+        Console.WriteLine("=== 값 객체 테스트 전략 (Functorium 프레임워크 기반) ===\n");
 
         // 1. 생성 테스트 패턴
         DemonstrateCreationTests();
@@ -22,6 +23,9 @@ class Program
 
         // 4. 테스트 헬퍼 사용
         DemonstrateTestHelpers();
+
+        // 5. 유효성 검사 분리 테스트
+        DemonstrateValidationSeparationTests();
     }
 
     static void DemonstrateCreationTests()
@@ -44,8 +48,8 @@ class Program
             Succ: _ => "",
             Fail: e => e.Message
         );
-        var errorPassed = errorMessage.Contains("Email.InvalidFormat");
-        Console.WriteLine($"   [에러 코드 검증] 'Email.InvalidFormat' 포함 → {(errorPassed ? "PASS" : "FAIL")}");
+        var errorPassed = errorMessage.Contains("Invalid email format");
+        Console.WriteLine($"   [에러 메시지 검증] 'Invalid email format' 포함 → {(errorPassed ? "PASS" : "FAIL")}");
 
         // 경계값 테스트
         var emptyResult = Email.Create("");
@@ -104,7 +108,7 @@ class Program
         // 정렬 테스트
         var ages = new[] { age30, age20, age25 };
         System.Array.Sort(ages);
-        var sortPassed = ages[0].Value == 20 && ages[1].Value == 25 && ages[2].Value == 30;
+        var sortPassed = ages[0].Years == 20 && ages[1].Years == 25 && ages[2].Years == 30;
         Console.WriteLine($"   [정렬 테스트] 정렬 후 순서 → {(sortPassed ? "PASS" : "FAIL")}");
 
         Console.WriteLine();
@@ -141,7 +145,7 @@ class Program
 
         // GetSuccessValue 헬퍼
         var email = successResult.GetSuccessValue();
-        var valuePassed = email.Value == "user@example.com";
+        var valuePassed = email.Address == "user@example.com";
         Console.WriteLine($"   [GetSuccessValue 헬퍼] → {(valuePassed ? "PASS" : "FAIL")}");
 
         // GetFailError 헬퍼
@@ -151,112 +155,174 @@ class Program
 
         Console.WriteLine();
     }
+
+    static void DemonstrateValidationSeparationTests()
+    {
+        Console.WriteLine("5. 유효성 검사 분리 테스트");
+        Console.WriteLine("─".PadRight(40, '─'));
+
+        // Validate 메서드 직접 호출 테스트
+        var emailValidation = Email.Validate("user@example.com");
+        var emailValidationPassed = emailValidation.IsSuccess;
+        Console.WriteLine($"   [Validate 직접 호출] Email.Validate → {(emailValidationPassed ? "PASS" : "FAIL")}");
+
+        // 병렬 검증 - 모든 오류 수집 테스트
+        var invalidEmailValidation = Email.Validate("");
+        var invalidEmailErrorCount = invalidEmailValidation.Match(
+            Succ: _ => 0,
+            Fail: errors => errors.Count
+        );
+        var multiErrorPassed = invalidEmailErrorCount >= 1; // Empty, InvalidFormat 두 개 이상
+        Console.WriteLine($"   [병렬 검증 오류 수집] 빈 이메일 오류 수: {invalidEmailErrorCount} → {(multiErrorPassed ? "PASS" : "FAIL")}");
+
+        // 순차 검증 - 첫 번째 오류만 반환 테스트
+        var ageValidation = Age.Validate(-10);
+        var ageErrorMessage = ageValidation.Match(
+            Succ: _ => "",
+            Fail: errors => errors.Head.Message
+        );
+        var sequentialPassed = ageErrorMessage.Contains("negative");
+        Console.WriteLine($"   [순차 검증 첫 오류] Age.Validate(-10) → {(sequentialPassed ? "PASS" : "FAIL")}");
+
+        Console.WriteLine();
+    }
 }
 
 // ========================================
-// 값 객체 정의
+// 값 객체 정의 (Functorium 프레임워크 기반)
 // ========================================
 
-public sealed class Email : IEquatable<Email>
+/// <summary>
+/// Email 값 객체 (SimpleValueObject 기반)
+/// </summary>
+public sealed class Email : SimpleValueObject<string>
 {
-    public string Value { get; }
+    // 2. Private 생성자 - 단순 대입만 처리
+    private Email(string value) : base(value) { }
 
-    private Email(string value) => Value = value;
+    /// <summary>
+    /// 이메일 주소에 대한 public 접근자
+    /// </summary>
+    public string Address => Value;
 
-    public static Fin<Email> Create(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return DomainErrors.Empty(value ?? "null");
-        if (!value.Contains('@'))
-            return DomainErrors.InvalidFormat(value);
-        return new Email(value.ToLowerInvariant());
-    }
+    // 3. Public Create 메서드 - 검증과 생성을 연결
+    public static Fin<Email> Create(string? value) =>
+        CreateFromValidation(
+            Validate(value ?? "null"),
+            validValue => new Email(validValue));
 
-    public static Email CreateFromValidated(string value) => new(value.ToLowerInvariant());
+    // 4. Internal CreateFromValidated 메서드
+    internal static Email CreateFromValidated(string value) => new(value);
 
-    public bool Equals(Email? other)
-    {
-        if (other is null) return false;
-        return Value == other.Value;
-    }
+    // 5. Public Validate 메서드 - 독립 검증 규칙들을 병렬로 실행
+    public static Validation<Error, string> Validate(string value) =>
+        (ValidateNotEmpty(value), ValidateFormat(value))
+            .Apply((_, validFormat) => validFormat.ToLowerInvariant())
+            .As();
 
-    public override bool Equals(object? obj) => obj is Email other && Equals(other);
+    // 5.1 빈 값 검증
+    private static Validation<Error, string> ValidateNotEmpty(string value) =>
+        !string.IsNullOrWhiteSpace(value)
+            ? value
+            : DomainErrors.Empty(value);
 
-    public override int GetHashCode() => Value.GetHashCode();
+    // 5.2 형식 검증
+    private static Validation<Error, string> ValidateFormat(string value) =>
+        !string.IsNullOrWhiteSpace(value) && value.Contains('@')
+            ? value
+            : DomainErrors.InvalidFormat(value);
 
-    public static bool operator ==(Email? left, Email? right)
-    {
-        if (left is null && right is null) return true;
-        if (left is null || right is null) return false;
-        return left.Equals(right);
-    }
+    public static implicit operator string(Email email) => email.Value;
 
-    public static bool operator !=(Email? left, Email? right) => !(left == right);
-
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
+        // ValidateNotEmpty 메서드와 1:1 매핑되는 에러
         public static Error Empty(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Email)}.{nameof(Empty)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(Empty)}",
                 errorCurrentValue: value,
-                errorMessage: "이메일 주소가 비어있습니다.");
+                errorMessage: $"Email address cannot be empty. Current value: '{value}'");
+
+        // ValidateFormat 메서드와 1:1 매핑되는 에러
         public static Error InvalidFormat(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Email)}.{nameof(InvalidFormat)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(InvalidFormat)}",
                 errorCurrentValue: value,
-                errorMessage: "이메일 형식이 올바르지 않습니다.");
+                errorMessage: $"Invalid email format. Current value: '{value}'");
     }
 }
 
-public sealed class Age : IComparable<Age>
+/// <summary>
+/// Age 값 객체 (ComparableSimpleValueObject 기반)
+/// </summary>
+public sealed class Age : ComparableSimpleValueObject<int>
 {
-    public int Value { get; }
+    // 2. Private 생성자 - 단순 대입만 처리
+    private Age(int value) : base(value) { }
 
-    private Age(int value) => Value = value;
+    /// <summary>
+    /// 나이 값에 대한 public 접근자
+    /// </summary>
+    public int Years => Value;
 
-    public static Fin<Age> Create(int value)
-    {
-        if (value < 0)
-            return DomainErrors.Negative(value);
-        if (value > 150)
-            return DomainErrors.TooOld(value);
-        return new Age(value);
-    }
+    // 3. Public Create 메서드 - 검증과 생성을 연결
+    public static Fin<Age> Create(int value) =>
+        CreateFromValidation(
+            Validate(value),
+            validValue => new Age(validValue));
 
-    public static Age CreateFromValidated(int value) => new(value);
+    // 4. Internal CreateFromValidated 메서드
+    internal static Age CreateFromValidated(int value) => new(value);
 
-    public int CompareTo(Age? other)
-    {
-        if (other is null) return 1;
-        return Value.CompareTo(other.Value);
-    }
+    // 5. Public Validate 메서드 - 순차 검증 (범위 검증은 의존성이 있음)
+    public static Validation<Error, int> Validate(int value) =>
+        ValidateNotNegative(value)
+            .Bind(_ => ValidateNotTooOld(value))
+            .Map(_ => value);
 
-    public static bool operator <(Age left, Age right) => left.CompareTo(right) < 0;
-    public static bool operator >(Age left, Age right) => left.CompareTo(right) > 0;
-    public static bool operator <=(Age left, Age right) => left.CompareTo(right) <= 0;
-    public static bool operator >=(Age left, Age right) => left.CompareTo(right) >= 0;
+    // 5.1 음수 검증
+    private static Validation<Error, int> ValidateNotNegative(int value) =>
+        value >= 0
+            ? value
+            : DomainErrors.Negative(value);
 
+    // 5.2 최대값 검증
+    private static Validation<Error, int> ValidateNotTooOld(int value) =>
+        value <= 150
+            ? value
+            : DomainErrors.TooOld(value);
+
+    public static implicit operator int(Age age) => age.Value;
+
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
+        // ValidateNotNegative 메서드와 1:1 매핑되는 에러
         public static Error Negative(int value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Age)}.{nameof(Negative)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Age)}.{nameof(Negative)}",
                 errorCurrentValue: value,
-                errorMessage: "나이는 음수일 수 없습니다.");
+                errorMessage: $"Age cannot be negative. Current value: '{value}'");
+
+        // ValidateNotTooOld 메서드와 1:1 매핑되는 에러
         public static Error TooOld(int value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Age)}.{nameof(TooOld)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Age)}.{nameof(TooOld)}",
                 errorCurrentValue: value,
-                errorMessage: "나이는 150세를 초과할 수 없습니다.");
+                errorMessage: $"Age cannot exceed 150 years. Current value: '{value}'");
     }
 }
 
 // ========================================
-// 테스트 헬퍼
+// 테스트 헬퍼 확장 메서드
 // ========================================
 
 public static class FinTestExtensions
 {
+    /// <summary>
+    /// Fin이 성공 상태인지 검증합니다. 실패 시 예외를 던집니다.
+    /// </summary>
     public static void ShouldBeSuccess<T>(this Fin<T> fin)
     {
         if (fin.IsFail)
@@ -266,6 +332,9 @@ public static class FinTestExtensions
         }
     }
 
+    /// <summary>
+    /// Fin이 실패 상태인지 검증합니다. 성공 시 예외를 던집니다.
+    /// </summary>
     public static void ShouldBeFail<T>(this Fin<T> fin)
     {
         if (fin.IsSucc)
@@ -274,6 +343,9 @@ public static class FinTestExtensions
         }
     }
 
+    /// <summary>
+    /// Fin에서 성공 값을 추출합니다. 실패 시 예외를 던집니다.
+    /// </summary>
     public static T GetSuccessValue<T>(this Fin<T> fin)
     {
         return fin.Match(
@@ -282,6 +354,9 @@ public static class FinTestExtensions
         );
     }
 
+    /// <summary>
+    /// Fin에서 실패 Error를 추출합니다. 성공 시 예외를 던집니다.
+    /// </summary>
     public static Error GetFailError<T>(this Fin<T> fin)
     {
         return fin.Match(
@@ -289,4 +364,22 @@ public static class FinTestExtensions
             Fail: error => error
         );
     }
+
+    /// <summary>
+    /// Fin이 특정 에러 코드를 포함하는지 검증합니다.
+    /// </summary>
+    public static void ShouldHaveErrorCode<T>(this Fin<T> fin, string expectedCode)
+    {
+        if (fin.IsSucc)
+        {
+            throw new Exception("Expected Fail but got Succ");
+        }
+
+        var error = fin.GetFailError();
+        if (!error.Message.Contains(expectedCode))
+        {
+            throw new Exception($"Expected error code '{expectedCode}' but got '{error.Message}'");
+        }
+    }
 }
+

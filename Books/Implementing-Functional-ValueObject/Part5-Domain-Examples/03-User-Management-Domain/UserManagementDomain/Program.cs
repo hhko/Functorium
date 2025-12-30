@@ -1,4 +1,5 @@
 using Functorium.Abstractions.Errors;
+using Functorium.Domains.ValueObjects;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -12,7 +13,7 @@ class Program
 {
     static void Main(string[] args)
     {
-        Console.WriteLine("=== 사용자 관리 도메인 값 객체 ===\n");
+        Console.WriteLine("=== 사용자 관리 도메인 값 객체 (Functorium 프레임워크 기반) ===\n");
 
         // 1. Email
         DemonstrateEmail();
@@ -29,7 +30,7 @@ class Program
 
     static void DemonstrateEmail()
     {
-        Console.WriteLine("1. Email (이메일)");
+        Console.WriteLine("1. Email (이메일) - SimpleValueObject");
         Console.WriteLine("─".PadRight(40, '─'));
 
         var email = Email.Create("User@Example.COM");
@@ -81,7 +82,7 @@ class Program
 
     static void DemonstratePhoneNumber()
     {
-        Console.WriteLine("3. PhoneNumber (전화번호)");
+        Console.WriteLine("3. PhoneNumber (전화번호) - ValueObject");
         Console.WriteLine("─".PadRight(40, '─'));
 
         var phone = PhoneNumber.Create("010-1234-5678");
@@ -101,7 +102,7 @@ class Program
 
     static void DemonstrateUsername()
     {
-        Console.WriteLine("4. Username (사용자명)");
+        Console.WriteLine("4. Username (사용자명) - SimpleValueObject");
         Console.WriteLine("─".PadRight(40, '─'));
 
         var username = Username.Create("john_doe123");
@@ -127,37 +128,27 @@ class Program
 }
 
 // ========================================
-// 값 객체 구현
+// 값 객체 구현 (Functorium 프레임워크 기반)
 // ========================================
 
-public sealed class Email : IEquatable<Email>
+/// <summary>
+/// Email 값 객체 (SimpleValueObject 기반)
+/// </summary>
+public sealed class Email : SimpleValueObject<string>
 {
     private static readonly Regex Pattern = new(
         @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-    public string Value { get; }
+    // 2. Private 생성자 - 단순 대입만 처리
+    private Email(string value) : base(value) { }
 
-    private Email(string value) => Value = value;
+    /// <summary>
+    /// 이메일 주소에 대한 public 접근자
+    /// </summary>
+    public string Address => Value;
 
-    public static Fin<Email> Create(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return DomainErrors.Empty(value ?? "null");
-
-        var normalized = value.Trim().ToLowerInvariant();
-
-        if (normalized.Length > 254)
-            return DomainErrors.TooLong(normalized.Length);
-
-        if (!Pattern.IsMatch(normalized))
-            return DomainErrors.InvalidFormat(normalized);
-
-        return new Email(normalized);
-    }
-
-    public static Email CreateFromValidated(string value) => new(value.ToLowerInvariant());
-
+    // 파생 속성
     public string LocalPart => Value.Split('@')[0];
     public string Domain => Value.Split('@')[1];
 
@@ -172,33 +163,70 @@ public sealed class Email : IEquatable<Email>
         }
     }
 
-    public bool Equals(Email? other) => other is not null && Value == other.Value;
-    public override bool Equals(object? obj) => obj is Email other && Equals(other);
-    public override int GetHashCode() => Value.GetHashCode();
-    public override string ToString() => Value;
+    // 3. Public Create 메서드 - 검증과 생성을 연결
+    public static Fin<Email> Create(string? value) =>
+        CreateFromValidation(
+            Validate(value ?? "null"),
+            validValue => new Email(validValue));
+
+    // 정규화된 값으로 직접 생성 (ORM용)
+    public static Email CreateFromValidated(string value) => new(value.ToLowerInvariant());
+
+    // 5. Public Validate 메서드 - 순차 검증
+    public static Validation<Error, string> Validate(string value) =>
+        ValidateNotEmpty(value)
+            .Bind(_ => ValidateNotTooLong(value.Trim()))
+            .Bind(normalized => ValidateFormat(normalized));
+
+    // 5.1 빈 값 검증
+    private static Validation<Error, string> ValidateNotEmpty(string value) =>
+        !string.IsNullOrWhiteSpace(value)
+            ? value
+            : DomainErrors.Empty(value);
+
+    // 5.2 길이 검증
+    private static Validation<Error, string> ValidateNotTooLong(string value)
+    {
+        var normalized = value.ToLowerInvariant();
+        return normalized.Length <= 254
+            ? normalized
+            : DomainErrors.TooLong(normalized.Length);
+    }
+
+    // 5.3 형식 검증
+    private static Validation<Error, string> ValidateFormat(string value) =>
+        Pattern.IsMatch(value)
+            ? value
+            : DomainErrors.InvalidFormat(value);
 
     public static implicit operator string(Email email) => email.Value;
 
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
         public static Error Empty(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Email)}.{nameof(Empty)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(Empty)}",
                 errorCurrentValue: value,
-                errorMessage: "이메일 주소가 비어있습니다.");
+                errorMessage: $"Email address cannot be empty. Current value: '{value}'");
+
         public static Error TooLong(int length) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Email)}.{nameof(TooLong)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(TooLong)}",
                 errorCurrentValue: length,
-                errorMessage: "이메일 주소는 254자를 초과할 수 없습니다.");
+                errorMessage: $"Email address cannot exceed 254 characters. Current length: '{length}'");
+
         public static Error InvalidFormat(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Email)}.{nameof(InvalidFormat)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(InvalidFormat)}",
                 errorCurrentValue: value,
-                errorMessage: "이메일 형식이 올바르지 않습니다.");
+                errorMessage: $"Invalid email format. Current value: '{value}'");
     }
 }
 
+/// <summary>
+/// Password 값 객체 (해시 저장이므로 특수 처리)
+/// </summary>
 public sealed class Password : IEquatable<Password>
 {
     public const int MinLength = 8;
@@ -206,27 +234,56 @@ public sealed class Password : IEquatable<Password>
 
     public string Value { get; }
 
+    // 2. Private 생성자 - 해시된 값으로 생성
     private Password(string hashedValue) => Value = hashedValue;
 
+    // 3. Public Create 메서드 - 검증과 해시 생성을 연결
     public static Fin<Password> Create(string? plainText)
     {
-        if (string.IsNullOrWhiteSpace(plainText))
-            return DomainErrors.Empty(plainText ?? "null");
-        if (plainText.Length < MinLength)
-            return DomainErrors.TooShort(plainText.Length);
-        if (plainText.Length > MaxLength)
-            return DomainErrors.TooLong(plainText.Length);
+        var validation = Validate(plainText ?? "null");
+        return validation.Match<Fin<Password>>(
+            Succ: validPlainText => new Password(HashPassword(validPlainText)),
+            Fail: errors => Error.Many(errors));
+    }
 
-        var hasUpperCase = plainText.Any(char.IsUpper);
-        var hasLowerCase = plainText.Any(char.IsLower);
-        var hasDigit = plainText.Any(char.IsDigit);
-        var hasSpecialChar = plainText.Any(c => !char.IsLetterOrDigit(c));
+    // 5. Public Validate 메서드 - 순차 검증 후 강도 검증
+    public static Validation<Error, string> Validate(string value) =>
+        ValidateNotEmpty(value)
+            .Bind(_ => ValidateMinLength(value))
+            .Bind(_ => ValidateMaxLength(value))
+            .Bind(_ => ValidateStrength(value))
+            .Map(_ => value);
+
+    // 5.1 빈 값 검증
+    private static Validation<Error, string> ValidateNotEmpty(string value) =>
+        !string.IsNullOrWhiteSpace(value)
+            ? value
+            : DomainErrors.Empty(value);
+
+    // 5.2 최소 길이 검증
+    private static Validation<Error, string> ValidateMinLength(string value) =>
+        value.Length >= MinLength
+            ? value
+            : DomainErrors.TooShort(value.Length);
+
+    // 5.3 최대 길이 검증
+    private static Validation<Error, string> ValidateMaxLength(string value) =>
+        value.Length <= MaxLength
+            ? value
+            : DomainErrors.TooLong(value.Length);
+
+    // 5.4 강도 검증
+    private static Validation<Error, string> ValidateStrength(string value)
+    {
+        var hasUpperCase = value.Any(char.IsUpper);
+        var hasLowerCase = value.Any(char.IsLower);
+        var hasDigit = value.Any(char.IsDigit);
+        var hasSpecialChar = value.Any(c => !char.IsLetterOrDigit(c));
 
         var score = new[] { hasUpperCase, hasLowerCase, hasDigit, hasSpecialChar }.Count(x => x);
-        if (score < 3)
-            return DomainErrors.WeakPassword(score);
-
-        return new Password(HashPassword(plainText));
+        return score >= 3
+            ? value
+            : DomainErrors.WeakPassword(score);
     }
 
     private static string HashPassword(string plainText)
@@ -248,58 +305,83 @@ public sealed class Password : IEquatable<Password>
     public override int GetHashCode() => Value.GetHashCode();
     public override string ToString() => "********";
 
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
         public static Error Empty(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Password)}.{nameof(Empty)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Password)}.{nameof(Empty)}",
                 errorCurrentValue: value,
-                errorMessage: "비밀번호가 비어있습니다.");
+                errorMessage: $"Password cannot be empty. Current value: '{value}'");
+
         public static Error TooShort(int length) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Password)}.{nameof(TooShort)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Password)}.{nameof(TooShort)}",
                 errorCurrentValue: length,
-                errorMessage: $"비밀번호는 최소 {MinLength}자 이상이어야 합니다.");
+                errorMessage: $"Password must be at least {MinLength} characters. Current length: '{length}'");
+
         public static Error TooLong(int length) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Password)}.{nameof(TooLong)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Password)}.{nameof(TooLong)}",
                 errorCurrentValue: length,
-                errorMessage: $"비밀번호는 {MaxLength}자를 초과할 수 없습니다.");
+                errorMessage: $"Password cannot exceed {MaxLength} characters. Current length: '{length}'");
+
         public static Error WeakPassword(int score) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Password)}.{nameof(WeakPassword)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Password)}.{nameof(WeakPassword)}",
                 errorCurrentValue: score,
-                errorMessage: "비밀번호가 너무 약합니다. 대문자, 소문자, 숫자, 특수문자 중 3가지 이상을 포함해야 합니다.");
+                errorMessage: $"Password is too weak. Must contain at least 3 of: uppercase, lowercase, digits, special characters. Current score: '{score}'");
     }
 }
 
-public sealed class PhoneNumber : IEquatable<PhoneNumber>
+/// <summary>
+/// PhoneNumber 값 객체 (ValueObject 기반)
+/// </summary>
+public sealed class PhoneNumber : ValueObject
 {
-    public string Value { get; }
+    // 1.1 속성 선언
     public string CountryCode { get; }
     public string NationalNumber { get; }
 
+    // 파생 속성
+    public string FullNumber => $"+{CountryCode}{NationalNumber}";
+
+    // 2. Private 생성자 - 단순 대입만 처리
     private PhoneNumber(string countryCode, string nationalNumber)
     {
         CountryCode = countryCode;
         NationalNumber = nationalNumber;
-        Value = $"+{countryCode}{nationalNumber}";
     }
 
-    public static Fin<PhoneNumber> Create(string? value, string defaultCountryCode = "82")
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return DomainErrors.Empty(value ?? "null");
+    // 3. Public Create 메서드 - 검증과 생성을 연결
+    public static Fin<PhoneNumber> Create(string? value, string defaultCountryCode = "82") =>
+        CreateFromValidation(
+            Validate(value ?? "null", defaultCountryCode),
+            validValues => new PhoneNumber(validValues.CountryCode, validValues.NationalNumber));
 
+    // 5. Public Validate 메서드 - 순차 검증
+    public static Validation<Error, (string CountryCode, string NationalNumber)> Validate(string value, string countryCode) =>
+        ValidateNotEmpty(value)
+            .Bind(_ => ValidateDigits(value))
+            .Map(digits => (countryCode, digits));
+
+    // 5.1 빈 값 검증
+    private static Validation<Error, string> ValidateNotEmpty(string value) =>
+        !string.IsNullOrWhiteSpace(value)
+            ? value
+            : DomainErrors.Empty(value);
+
+    // 5.2 숫자 추출 및 형식 검증
+    private static Validation<Error, string> ValidateDigits(string value)
+    {
         var digits = new string(value.Where(char.IsDigit).ToArray());
 
         if (digits.StartsWith("0"))
             digits = digits[1..];
 
-        if (digits.Length < 9 || digits.Length > 11)
-            return DomainErrors.InvalidFormat(value);
-
-        return new PhoneNumber(defaultCountryCode, digits);
+        return digits.Length >= 9 && digits.Length <= 11
+            ? digits
+            : DomainErrors.InvalidFormat(value);
     }
 
     public string Formatted
@@ -318,29 +400,38 @@ public sealed class PhoneNumber : IEquatable<PhoneNumber>
 
     public string Masked => $"+{CountryCode} ***-****-{NationalNumber[^4..]}";
 
-    public bool Equals(PhoneNumber? other) => other is not null && Value == other.Value;
-    public override bool Equals(object? obj) => obj is PhoneNumber other && Equals(other);
-    public override int GetHashCode() => Value.GetHashCode();
-    public override string ToString() => Value;
+    // 6. 동등성 컴포넌트 구현
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return CountryCode;
+        yield return NationalNumber;
+    }
 
-    public static implicit operator string(PhoneNumber phone) => phone.Value;
+    public override string ToString() => FullNumber;
 
+    public static implicit operator string(PhoneNumber phone) => phone.FullNumber;
+
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
         public static Error Empty(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(PhoneNumber)}.{nameof(Empty)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(PhoneNumber)}.{nameof(Empty)}",
                 errorCurrentValue: value,
-                errorMessage: "전화번호가 비어있습니다.");
+                errorMessage: $"Phone number cannot be empty. Current value: '{value}'");
+
         public static Error InvalidFormat(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(PhoneNumber)}.{nameof(InvalidFormat)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(PhoneNumber)}.{nameof(InvalidFormat)}",
                 errorCurrentValue: value,
-                errorMessage: "전화번호 형식이 올바르지 않습니다.");
+                errorMessage: $"Invalid phone number format. Current value: '{value}'");
     }
 }
 
-public sealed class Username : IEquatable<Username>
+/// <summary>
+/// Username 값 객체 (SimpleValueObject 기반)
+/// </summary>
+public sealed class Username : SimpleValueObject<string>
 {
     public const int MinLength = 3;
     public const int MaxLength = 30;
@@ -353,64 +444,91 @@ public sealed class Username : IEquatable<Username>
         "api", "www", "mail", "ftp", "support", "help"
     };
 
-    public string Value { get; }
+    // 2. Private 생성자 - 단순 대입만 처리
+    private Username(string value) : base(value) { }
 
-    private Username(string value) => Value = value;
+    /// <summary>
+    /// 사용자명에 대한 public 접근자
+    /// </summary>
+    public string Name => Value;
 
-    public static Fin<Username> Create(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return DomainErrors.Empty(value ?? "null");
+    // 3. Public Create 메서드 - 검증과 생성을 연결
+    public static Fin<Username> Create(string? value) =>
+        CreateFromValidation(
+            Validate(value ?? "null"),
+            validValue => new Username(validValue));
 
-        var normalized = value.Trim().ToLowerInvariant();
+    // 5. Public Validate 메서드 - 순차 검증
+    public static Validation<Error, string> Validate(string value) =>
+        ValidateNotEmpty(value)
+            .Bind(normalized => ValidateMinLength(normalized))
+            .Bind(normalized => ValidateMaxLength(normalized))
+            .Bind(normalized => ValidateFormat(normalized))
+            .Bind(normalized => ValidateNotReserved(normalized));
 
-        if (normalized.Length < MinLength)
-            return DomainErrors.TooShort(normalized.Length);
-        if (normalized.Length > MaxLength)
-            return DomainErrors.TooLong(normalized.Length);
+    // 5.1 빈 값 검증 및 정규화
+    private static Validation<Error, string> ValidateNotEmpty(string value) =>
+        !string.IsNullOrWhiteSpace(value)
+            ? value.Trim().ToLowerInvariant()
+            : DomainErrors.Empty(value);
 
-        if (!Pattern.IsMatch(normalized))
-            return DomainErrors.InvalidFormat(normalized);
+    // 5.2 최소 길이 검증
+    private static Validation<Error, string> ValidateMinLength(string value) =>
+        value.Length >= MinLength
+            ? value
+            : DomainErrors.TooShort(value.Length);
 
-        if (ReservedNames.Contains(normalized))
-            return DomainErrors.Reserved(normalized);
+    // 5.3 최대 길이 검증
+    private static Validation<Error, string> ValidateMaxLength(string value) =>
+        value.Length <= MaxLength
+            ? value
+            : DomainErrors.TooLong(value.Length);
 
-        return new Username(normalized);
-    }
+    // 5.4 형식 검증
+    private static Validation<Error, string> ValidateFormat(string value) =>
+        Pattern.IsMatch(value)
+            ? value
+            : DomainErrors.InvalidFormat(value);
 
-    public bool Equals(Username? other) => other is not null && Value == other.Value;
-    public override bool Equals(object? obj) => obj is Username other && Equals(other);
-    public override int GetHashCode() => Value.GetHashCode();
-    public override string ToString() => Value;
+    // 5.5 예약어 검증
+    private static Validation<Error, string> ValidateNotReserved(string value) =>
+        !ReservedNames.Contains(value)
+            ? value
+            : DomainErrors.Reserved(value);
 
     public static implicit operator string(Username username) => username.Value;
 
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
         public static Error Empty(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Username)}.{nameof(Empty)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Username)}.{nameof(Empty)}",
                 errorCurrentValue: value,
-                errorMessage: "사용자명이 비어있습니다.");
+                errorMessage: $"Username cannot be empty. Current value: '{value}'");
+
         public static Error TooShort(int length) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Username)}.{nameof(TooShort)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Username)}.{nameof(TooShort)}",
                 errorCurrentValue: length,
-                errorMessage: $"사용자명은 최소 {MinLength}자 이상이어야 합니다.");
+                errorMessage: $"Username must be at least {MinLength} characters. Current length: '{length}'");
+
         public static Error TooLong(int length) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Username)}.{nameof(TooLong)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Username)}.{nameof(TooLong)}",
                 errorCurrentValue: length,
-                errorMessage: $"사용자명은 {MaxLength}자를 초과할 수 없습니다.");
+                errorMessage: $"Username cannot exceed {MaxLength} characters. Current length: '{length}'");
+
         public static Error InvalidFormat(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Username)}.{nameof(InvalidFormat)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Username)}.{nameof(InvalidFormat)}",
                 errorCurrentValue: value,
-                errorMessage: "사용자명은 영문자로 시작해야 하며, 영문자, 숫자, 밑줄(_), 하이픈(-)만 사용할 수 있습니다.");
+                errorMessage: $"Username must start with a letter and contain only letters, numbers, underscores, and hyphens. Current value: '{value}'");
+
         public static Error Reserved(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Username)}.{nameof(Reserved)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Username)}.{nameof(Reserved)}",
                 errorCurrentValue: value,
-                errorMessage: "예약된 사용자명은 사용할 수 없습니다.");
+                errorMessage: $"This username is reserved and cannot be used. Current value: '{value}'");
     }
 }

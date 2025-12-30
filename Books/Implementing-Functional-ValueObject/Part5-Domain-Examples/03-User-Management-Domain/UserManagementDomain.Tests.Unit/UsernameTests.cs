@@ -36,7 +36,7 @@ public class UsernameTests
         // Assert
         actual.IsSucc.ShouldBeTrue();
         actual.Match(
-            Succ: u => u.Value.ShouldBe("johndoe"),
+            Succ: u => u.Name.ShouldBe("johndoe"),
             Fail: _ => throw new Exception("Expected success")
         );
     }
@@ -111,7 +111,7 @@ public class UsernameTests
         actual.IsFail.ShouldBeTrue();
         actual.Match(
             Succ: _ => throw new Exception("Expected failure"),
-            Fail: error => error.Message.ShouldContain("Username.Reserved")
+            Fail: error => error.Message.ShouldContain("reserved")
         );
     }
 

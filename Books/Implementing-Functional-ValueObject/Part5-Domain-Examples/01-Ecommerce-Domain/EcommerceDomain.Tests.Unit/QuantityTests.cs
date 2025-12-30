@@ -59,14 +59,14 @@ public class QuantityTests
     public void Zero_ReturnsQuantityWithZeroValue()
     {
         // Act & Assert
-        Quantity.Zero.Value.ShouldBe(0);
+        Quantity.Zero.Amount.ShouldBe(0);
     }
 
     [Fact]
     public void One_ReturnsQuantityWithOneValue()
     {
         // Act & Assert
-        Quantity.One.Value.ShouldBe(1);
+        Quantity.One.Amount.ShouldBe(1);
     }
 
     #endregion
@@ -84,7 +84,7 @@ public class QuantityTests
         var actual = qty1.Add(qty2);
 
         // Assert
-        actual.Value.ShouldBe(8);
+        actual.Amount.ShouldBe(8);
     }
 
     [Fact]
@@ -98,7 +98,7 @@ public class QuantityTests
         var actual = qty1.Subtract(qty2);
 
         // Assert
-        actual.Value.ShouldBe(2);
+        actual.Amount.ShouldBe(2);
     }
 
     [Fact]
@@ -112,7 +112,7 @@ public class QuantityTests
         var actual = qty1.Subtract(qty2);
 
         // Assert
-        actual.Value.ShouldBe(0);
+        actual.Amount.ShouldBe(0);
     }
 
     [Fact]
@@ -126,7 +126,7 @@ public class QuantityTests
         var actual = qty1 + qty2;
 
         // Assert
-        actual.Value.ShouldBe(8);
+        actual.Amount.ShouldBe(8);
     }
 
     #endregion
@@ -159,9 +159,9 @@ public class QuantityTests
         Array.Sort(quantities);
 
         // Assert
-        quantities[0].Value.ShouldBe(1);
-        quantities[1].Value.ShouldBe(3);
-        quantities[2].Value.ShouldBe(5);
+        quantities[0].Amount.ShouldBe(1);
+        quantities[1].Amount.ShouldBe(3);
+        quantities[2].Amount.ShouldBe(5);
     }
 
     #endregion

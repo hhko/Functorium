@@ -122,9 +122,9 @@ Functorium은 구조화된 에러 코드 생성을 위한 `ErrorCodeFactory`를 
 ```csharp
 public static Error Empty(string value) =>
     ErrorCodeFactory.Create(
-        errorCode: $"{nameof(Email)}.{nameof(Empty)}",
+        errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(Empty)}",
         errorCurrentValue: value,
-        errorMessage: "이메일 주소가 비어있습니다.");
+        errorMessage: $"Email address cannot be empty. Current value: '{value}'");
 ```
 
 **핵심 아이디어는 "에러 정보를 구조화"하는 것입니다.** 에러 코드, 현재 값, 메시지를 명확히 구분하여 로깅, 국제화, API 응답 등에서 일관되게 활용할 수 있습니다.
@@ -195,15 +195,15 @@ public sealed class Email : SimpleValueObject<string>
     {
         public static Error Empty(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Email)}.{nameof(Empty)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(Empty)}",
                 errorCurrentValue: value,
-                errorMessage: "이메일 주소가 비어있습니다.");
+                errorMessage: $"Email address cannot be empty. Current value: '{value}'");
 
         public static Error InvalidFormat(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Email)}.{nameof(InvalidFormat)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(InvalidFormat)}",
                 errorCurrentValue: value,
-                errorMessage: "유효하지 않은 이메일 형식입니다.");
+                errorMessage: $"Invalid email format. Current value: '{value}'");
     }
 }
 ```
@@ -228,11 +228,21 @@ public sealed class Email : SimpleValueObject<string>
 
 ### 핵심 코드
 
+> **참고**: 아래 예시들은 `Functorium.Domains.ValueObjects` 네임스페이스의 기본 클래스를 상속합니다.
+> `Value` 속성은 `protected`로 선언되어 있으므로, 외부에서 접근이 필요한 경우 public 접근자를 별도로 정의합니다.
+
 **Email 값 객체 (SimpleValueObject)**
 ```csharp
+using Functorium.Domains.ValueObjects;
+
 public sealed class Email : SimpleValueObject<string>
 {
     private Email(string value) : base(value) { }
+
+    /// <summary>
+    /// 이메일 주소 값에 대한 public 접근자
+    /// </summary>
+    public string Address => Value;
 
     public static Fin<Email> Create(string value)
     {
@@ -251,9 +261,16 @@ public sealed class Email : SimpleValueObject<string>
 
 **Age 값 객체 (ComparableSimpleValueObject)**
 ```csharp
+using Functorium.Domains.ValueObjects;
+
 public sealed class Age : ComparableSimpleValueObject<int>
 {
     private Age(int value) : base(value) { }
+
+    /// <summary>
+    /// 나이 값에 대한 public 접근자
+    /// </summary>
+    public int Id => Value;
 
     public static Fin<Age> Create(int value)
     {
@@ -270,9 +287,11 @@ public sealed class Age : ComparableSimpleValueObject<int>
 }
 ```
 
-**Address 값 객체 (AbstractValueObject)**
+**Address 값 객체 (ValueObject)**
 ```csharp
-public sealed class Address : AbstractValueObject
+using Functorium.Domains.ValueObjects;
+
+public sealed class Address : ValueObject
 {
     public string City { get; }
     public string Street { get; }
@@ -316,7 +335,7 @@ public sealed class Address : AbstractValueObject
 |------------|------|------|
 | `SimpleValueObject<T>` | 단일 값 래핑 | 값 동등성, 해시코드 자동 제공 |
 | `ComparableSimpleValueObject<T>` | 비교 가능한 단일 값 | 정렬, 범위 검사 지원 |
-| `AbstractValueObject` | 복합 값 객체 | 다중 속성, `GetEqualityComponents()` 구현 필요 |
+| `ValueObject` | 복합 값 객체 | 다중 속성, `GetEqualityComponents()` 구현 필요 |
 | `ComparableValueObject` | 비교 가능한 복합 값 | 다중 속성 + 정렬 지원 |
 
 ### 구현 체크리스트

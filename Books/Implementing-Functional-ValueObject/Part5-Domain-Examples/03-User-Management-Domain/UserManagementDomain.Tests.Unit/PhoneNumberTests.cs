@@ -74,7 +74,7 @@ public class PhoneNumberTests
         var phone = PhoneNumber.Create("010-1234-5678").Match(p => p, _ => null!);
 
         // Act & Assert
-        phone.Value.ShouldBe("+821012345678");
+        phone.FullNumber.ShouldBe("+821012345678");
     }
 
     #endregion
@@ -84,11 +84,11 @@ public class PhoneNumberTests
     [Fact]
     public void Formatted_ReturnsKoreanFormat_For10DigitNumber()
     {
-        // Arrange
+        // Arrange - 9자리 번호 (앞 0 제외 시)
         var phone = PhoneNumber.Create("010-123-5678").Match(p => p, _ => null!);
 
-        // Act & Assert - 10자리
-        phone.Formatted.ShouldBe("010-1235-678");
+        // Act & Assert - 9자리 포맷팅
+        phone.Formatted.ShouldBe("010-123-5678");
     }
 
     #endregion

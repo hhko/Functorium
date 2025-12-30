@@ -1,4 +1,5 @@
 using Functorium.Abstractions.Errors;
+using Functorium.Domains.ValueObjects;
 using LanguageExt;
 using LanguageExt.Common;
 using Ardalis.SmartEnum;
@@ -10,7 +11,7 @@ class Program
 {
     static void Main(string[] args)
     {
-        Console.WriteLine("=== 이커머스 도메인 값 객체 ===\n");
+        Console.WriteLine("=== 이커머스 도메인 값 객체 (Functorium 프레임워크 기반) ===\n");
 
         // 1. Money (금액)
         DemonstrateMoney();
@@ -30,7 +31,7 @@ class Program
 
     static void DemonstrateMoney()
     {
-        Console.WriteLine("1. Money (금액) - ComparableValueObject");
+        Console.WriteLine("1. Money (금액) - ValueObject");
         Console.WriteLine("─".PadRight(40, '─'));
 
         var price = Money.Create(10000, "KRW");
@@ -52,7 +53,7 @@ class Program
         {
             try
             {
-                var _ = usd.Add(krw);  // 예외 발생
+                var _ = usd.Add(krw);
             }
             catch (InvalidOperationException ex)
             {
@@ -104,7 +105,7 @@ class Program
         // 정렬
         var quantities = new[] { qty1, qty2, Quantity.One };
         System.Array.Sort(quantities);
-        Console.WriteLine($"   정렬: [{string.Join(", ", quantities.Select(q => q.Value))}]");
+        Console.WriteLine($"   정렬: [{string.Join(", ", quantities.Select(q => q.Amount))}]");
 
         Console.WriteLine();
     }
@@ -125,7 +126,6 @@ class Program
             {
                 Console.WriteLine($"   전이 후: {s.DisplayName}");
 
-                // 배송 완료로 전이
                 var shipped = s.TransitionTo(OrderStatus.Shipped);
                 shipped.Match(
                     Succ: s2 => Console.WriteLine($"   배송 중: {s2.DisplayName}, 취소 가능: {s2.CanCancel}"),
@@ -174,31 +174,56 @@ class Program
 }
 
 // ========================================
-// 값 객체 구현
+// 값 객체 구현 (Functorium 프레임워크 기반)
 // ========================================
 
-public sealed class Money : IComparable<Money>, IEquatable<Money>
+/// <summary>
+/// Money 값 객체 (ValueObject 기반)
+/// </summary>
+public sealed class Money : ValueObject, IComparable<Money>
 {
+    // 1.1 속성 선언
     public decimal Amount { get; }
     public string Currency { get; }
 
+    // 2. Private 생성자 - 단순 대입만 처리
     private Money(decimal amount, string currency)
     {
         Amount = amount;
         Currency = currency;
     }
 
-    public static Fin<Money> Create(decimal amount, string currency)
-    {
-        if (amount < 0)
-            return DomainErrors.NegativeAmount(amount);
-        if (string.IsNullOrWhiteSpace(currency))
-            return DomainErrors.EmptyCurrency(currency ?? "");
-        if (currency.Length != 3)
-            return DomainErrors.InvalidCurrencyLength(currency);
-        return new Money(amount, currency.ToUpperInvariant());
-    }
+    // 3. Public Create 메서드 - 검증과 생성을 연결
+    public static Fin<Money> Create(decimal amount, string? currency) =>
+        CreateFromValidation(
+            Validate(amount, currency ?? ""),
+            validValues => new Money(validValues.Amount, validValues.Currency.ToUpperInvariant()));
 
+    // 5. Public Validate 메서드 - 독립 검증 규칙들을 병렬로 실행
+    public static Validation<Error, (decimal Amount, string Currency)> Validate(decimal amount, string currency) =>
+        (ValidateAmountNotNegative(amount), ValidateCurrencyNotEmpty(currency), ValidateCurrencyLength(currency))
+            .Apply((validAmount, validCurrency, _) => (validAmount, validCurrency))
+            .As();
+
+    // 5.1 금액 검증
+    private static Validation<Error, decimal> ValidateAmountNotNegative(decimal amount) =>
+        amount >= 0
+            ? amount
+            : DomainErrors.NegativeAmount(amount);
+
+    // 5.2 통화 코드 빈 값 검증
+    private static Validation<Error, string> ValidateCurrencyNotEmpty(string currency) =>
+        !string.IsNullOrWhiteSpace(currency)
+            ? currency
+            : DomainErrors.EmptyCurrency(currency);
+
+    // 5.3 통화 코드 길이 검증
+    private static Validation<Error, string> ValidateCurrencyLength(string currency) =>
+        !string.IsNullOrWhiteSpace(currency) && currency.Length == 3
+            ? currency
+            : DomainErrors.InvalidCurrencyLength(currency);
+
+    // 도메인 메서드
     public Money Add(Money other)
     {
         if (Currency != other.Currency)
@@ -223,137 +248,171 @@ public sealed class Money : IComparable<Money>, IEquatable<Money>
         return Amount.CompareTo(other.Amount);
     }
 
-    public bool Equals(Money? other) =>
-        other is not null && Amount == other.Amount && Currency == other.Currency;
+    // 6. 동등성 컴포넌트 구현
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return Amount;
+        yield return Currency;
+    }
 
-    public override bool Equals(object? obj) => obj is Money other && Equals(other);
-    public override int GetHashCode() => HashCode.Combine(Amount, Currency);
     public override string ToString() => $"{Amount:N0} {Currency}";
 
-    public static bool operator ==(Money? left, Money? right) => left?.Equals(right) ?? right is null;
-    public static bool operator !=(Money? left, Money? right) => !(left == right);
-
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
         public static Error NegativeAmount(decimal value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Money)}.{nameof(NegativeAmount)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Money)}.{nameof(NegativeAmount)}",
                 errorCurrentValue: value,
-                errorMessage: "금액은 음수일 수 없습니다.");
+                errorMessage: $"Amount cannot be negative. Current value: '{value}'");
 
         public static Error EmptyCurrency(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Money)}.{nameof(EmptyCurrency)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Money)}.{nameof(EmptyCurrency)}",
                 errorCurrentValue: value,
-                errorMessage: "통화 코드가 비어있습니다.");
+                errorMessage: $"Currency code cannot be empty. Current value: '{value}'");
 
         public static Error InvalidCurrencyLength(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Money)}.{nameof(InvalidCurrencyLength)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Money)}.{nameof(InvalidCurrencyLength)}",
                 errorCurrentValue: value,
-                errorMessage: "통화 코드는 3자여야 합니다.");
+                errorMessage: $"Currency code must be exactly 3 characters. Current value: '{value}'");
     }
 }
 
-public sealed class ProductCode : IEquatable<ProductCode>
+/// <summary>
+/// ProductCode 값 객체 (SimpleValueObject 기반)
+/// </summary>
+public sealed class ProductCode : SimpleValueObject<string>
 {
-    public string Value { get; }
+    // 2. Private 생성자 - 단순 대입만 처리
+    private ProductCode(string value) : base(value) { }
 
-    private ProductCode(string value) => Value = value;
+    /// <summary>
+    /// 상품 코드에 대한 public 접근자
+    /// </summary>
+    public string Code => Value;
 
-    public static Fin<ProductCode> Create(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return DomainErrors.Empty(value ?? "");
-
-        var normalized = value.ToUpperInvariant().Trim();
-
-        if (!System.Text.RegularExpressions.Regex.IsMatch(normalized, @"^[A-Z]{2}-\d{6}$"))
-            return DomainErrors.InvalidFormat(value);
-
-        return new ProductCode(normalized);
-    }
-
+    // 파생 속성
     public string Category => Value[..2];
     public string Number => Value[3..];
 
-    public bool Equals(ProductCode? other) => other is not null && Value == other.Value;
-    public override bool Equals(object? obj) => obj is ProductCode other && Equals(other);
-    public override int GetHashCode() => Value.GetHashCode();
-    public override string ToString() => Value;
+    // 3. Public Create 메서드 - 검증과 생성을 연결
+    public static Fin<ProductCode> Create(string? value) =>
+        CreateFromValidation(
+            Validate(value ?? ""),
+            validValue => new ProductCode(validValue));
+
+    // 5. Public Validate 메서드 - 순차 검증 (형식 검증은 빈 값 검증에 의존)
+    public static Validation<Error, string> Validate(string value) =>
+        ValidateNotEmpty(value)
+            .Bind(_ => ValidateFormat(value))
+            .Map(normalized => normalized);
+
+    // 5.1 빈 값 검증
+    private static Validation<Error, string> ValidateNotEmpty(string value) =>
+        !string.IsNullOrWhiteSpace(value)
+            ? value
+            : DomainErrors.Empty(value);
+
+    // 5.2 형식 검증
+    private static Validation<Error, string> ValidateFormat(string value)
+    {
+        var normalized = value.ToUpperInvariant().Trim();
+        return System.Text.RegularExpressions.Regex.IsMatch(normalized, @"^[A-Z]{2}-\d{6}$")
+            ? normalized
+            : DomainErrors.InvalidFormat(value);
+    }
 
     public static implicit operator string(ProductCode code) => code.Value;
 
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
         public static Error Empty(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(ProductCode)}.{nameof(Empty)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(ProductCode)}.{nameof(Empty)}",
                 errorCurrentValue: value,
-                errorMessage: "상품 코드가 비어있습니다.");
+                errorMessage: $"Product code cannot be empty. Current value: '{value}'");
 
         public static Error InvalidFormat(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(ProductCode)}.{nameof(InvalidFormat)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(ProductCode)}.{nameof(InvalidFormat)}",
                 errorCurrentValue: value,
-                errorMessage: "상품 코드 형식이 올바르지 않습니다. (예: EL-001234)");
+                errorMessage: $"Invalid product code format. Expected format: 'XX-NNNNNN' (e.g., EL-001234). Current value: '{value}'");
     }
 }
 
-public sealed class Quantity : IComparable<Quantity>, IEquatable<Quantity>
+/// <summary>
+/// Quantity 값 객체 (ComparableSimpleValueObject 기반)
+/// </summary>
+public sealed class Quantity : ComparableSimpleValueObject<int>
 {
-    public int Value { get; }
+    // 2. Private 생성자 - 단순 대입만 처리
+    private Quantity(int value) : base(value) { }
 
-    private Quantity(int value) => Value = value;
+    /// <summary>
+    /// 수량 값에 대한 public 접근자
+    /// </summary>
+    public int Amount => Value;
 
-    public static Fin<Quantity> Create(int value)
-    {
-        if (value < 0)
-            return DomainErrors.Negative(value);
-        if (value > 10000)
-            return DomainErrors.ExceedsLimit(value);
-        return new Quantity(value);
-    }
-
+    // 팩토리 속성
     public static Quantity Zero => new(0);
     public static Quantity One => new(1);
 
+    // 3. Public Create 메서드 - 검증과 생성을 연결
+    public static Fin<Quantity> Create(int value) =>
+        CreateFromValidation(
+            Validate(value),
+            validValue => new Quantity(validValue));
+
+    // 5. Public Validate 메서드 - 순차 검증 (범위 검증은 의존성이 있음)
+    public static Validation<Error, int> Validate(int value) =>
+        ValidateNotNegative(value)
+            .Bind(_ => ValidateNotExceedsLimit(value))
+            .Map(_ => value);
+
+    // 5.1 음수 검증
+    private static Validation<Error, int> ValidateNotNegative(int value) =>
+        value >= 0
+            ? value
+            : DomainErrors.Negative(value);
+
+    // 5.2 최대값 검증
+    private static Validation<Error, int> ValidateNotExceedsLimit(int value) =>
+        value <= 10000
+            ? value
+            : DomainErrors.ExceedsLimit(value);
+
+    // 도메인 메서드
     public Quantity Add(Quantity other) => new(Value + other.Value);
     public Quantity Subtract(Quantity other) => new(Math.Max(0, Value - other.Value));
 
     public static Quantity operator +(Quantity a, Quantity b) => a.Add(b);
     public static Quantity operator -(Quantity a, Quantity b) => a.Subtract(b);
 
-    public int CompareTo(Quantity? other) => other is null ? 1 : Value.CompareTo(other.Value);
-
-    public bool Equals(Quantity? other) => other is not null && Value == other.Value;
-    public override bool Equals(object? obj) => obj is Quantity other && Equals(other);
-    public override int GetHashCode() => Value.GetHashCode();
-    public override string ToString() => Value.ToString();
-
-    public static bool operator <(Quantity left, Quantity right) => left.CompareTo(right) < 0;
-    public static bool operator >(Quantity left, Quantity right) => left.CompareTo(right) > 0;
-    public static bool operator <=(Quantity left, Quantity right) => left.CompareTo(right) <= 0;
-    public static bool operator >=(Quantity left, Quantity right) => left.CompareTo(right) >= 0;
-
     public static implicit operator int(Quantity quantity) => quantity.Value;
 
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
         public static Error Negative(int value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Quantity)}.{nameof(Negative)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Quantity)}.{nameof(Negative)}",
                 errorCurrentValue: value,
-                errorMessage: "수량은 음수일 수 없습니다.");
+                errorMessage: $"Quantity cannot be negative. Current value: '{value}'");
 
         public static Error ExceedsLimit(int value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Quantity)}.{nameof(ExceedsLimit)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Quantity)}.{nameof(ExceedsLimit)}",
                 errorCurrentValue: value,
-                errorMessage: "수량은 10,000을 초과할 수 없습니다.");
+                errorMessage: $"Quantity cannot exceed 10,000. Current value: '{value}'");
     }
 }
 
+/// <summary>
+/// OrderStatus 값 객체 (SmartEnum 기반)
+/// </summary>
 public sealed class OrderStatus : SmartEnum<OrderStatus, string>
 {
     public static readonly OrderStatus Pending = new("PENDING", "대기중", canCancel: true);
@@ -387,32 +446,37 @@ public sealed class OrderStatus : SmartEnum<OrderStatus, string>
     {
         public static Error AlreadyCancelled(string current, string target) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(OrderStatus)}.{nameof(AlreadyCancelled)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(OrderStatus)}.{nameof(AlreadyCancelled)}",
                 current, target,
-                errorMessage: "이미 취소된 주문은 상태를 변경할 수 없습니다.");
+                errorMessage: $"Cannot change status of a cancelled order. Current status: '{current}', Target status: '{target}'");
 
         public static Error AlreadyDelivered(string current, string target) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(OrderStatus)}.{nameof(AlreadyDelivered)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(OrderStatus)}.{nameof(AlreadyDelivered)}",
                 current, target,
-                errorMessage: "이미 배송 완료된 주문은 상태를 변경할 수 없습니다.");
+                errorMessage: $"Cannot change status of a delivered order. Current status: '{current}', Target status: '{target}'");
 
         public static Error CannotRevertToPending(string current, string target) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(OrderStatus)}.{nameof(CannotRevertToPending)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(OrderStatus)}.{nameof(CannotRevertToPending)}",
                 current, target,
-                errorMessage: "대기중 상태로 되돌릴 수 없습니다.");
+                errorMessage: $"Cannot revert to pending status. Current status: '{current}', Target status: '{target}'");
     }
 }
 
-public sealed class ShippingAddress : IEquatable<ShippingAddress>
+/// <summary>
+/// ShippingAddress 값 객체 (ValueObject 기반)
+/// </summary>
+public sealed class ShippingAddress : ValueObject
 {
+    // 1.1 속성 선언
     public string RecipientName { get; }
     public string Street { get; }
     public string City { get; }
     public string PostalCode { get; }
     public string Country { get; }
 
+    // 2. Private 생성자 - 단순 대입만 처리
     private ShippingAddress(string recipientName, string street, string city, string postalCode, string country)
     {
         RecipientName = recipientName;
@@ -422,80 +486,111 @@ public sealed class ShippingAddress : IEquatable<ShippingAddress>
         Country = country;
     }
 
+    // 3. Public Create 메서드 - 검증과 생성을 연결
     public static Fin<ShippingAddress> Create(
-        string recipientName, string street, string city, string postalCode, string country)
+        string? recipientName, string? street, string? city, string? postalCode, string? country) =>
+        CreateFromValidation(
+            Validate(recipientName ?? "", street ?? "", city ?? "", postalCode ?? "", country ?? ""),
+            validValues => new ShippingAddress(
+                validValues.RecipientName.Trim(),
+                validValues.Street.Trim(),
+                validValues.City.Trim(),
+                validValues.PostalCode,
+                validValues.Country.Trim().ToUpperInvariant()));
+
+    // 5. Public Validate 메서드 - 병렬 검증 후 순차 검증
+    public static Validation<Error, (string RecipientName, string Street, string City, string PostalCode, string Country)> Validate(
+        string recipientName, string street, string city, string postalCode, string country) =>
+        (ValidateRecipientName(recipientName), ValidateStreet(street), ValidateCity(city), ValidateCountry(country))
+            .Apply((validRecipient, validStreet, validCity, validCountry) => (validRecipient, validStreet, validCity, validCountry))
+            .As()
+            .Bind(values => ValidatePostalCode(postalCode)
+                .Map(validPostal => (values.validRecipient, values.validStreet, values.validCity, validPostal, values.validCountry)));
+
+    // 5.1 수령인 검증
+    private static Validation<Error, string> ValidateRecipientName(string value) =>
+        !string.IsNullOrWhiteSpace(value)
+            ? value
+            : DomainErrors.EmptyRecipientName(value);
+
+    // 5.2 도로명 검증
+    private static Validation<Error, string> ValidateStreet(string value) =>
+        !string.IsNullOrWhiteSpace(value)
+            ? value
+            : DomainErrors.EmptyStreet(value);
+
+    // 5.3 도시 검증
+    private static Validation<Error, string> ValidateCity(string value) =>
+        !string.IsNullOrWhiteSpace(value)
+            ? value
+            : DomainErrors.EmptyCity(value);
+
+    // 5.4 우편번호 검증
+    private static Validation<Error, string> ValidatePostalCode(string value)
     {
-        if (string.IsNullOrWhiteSpace(recipientName))
-            return DomainErrors.EmptyRecipientName(recipientName ?? "");
-        if (string.IsNullOrWhiteSpace(street))
-            return DomainErrors.EmptyStreet(street ?? "");
-        if (string.IsNullOrWhiteSpace(city))
-            return DomainErrors.EmptyCity(city ?? "");
-        if (string.IsNullOrWhiteSpace(postalCode))
-            return DomainErrors.EmptyPostalCode(postalCode ?? "");
-        if (string.IsNullOrWhiteSpace(country))
-            return DomainErrors.EmptyCountry(country ?? "");
+        if (string.IsNullOrWhiteSpace(value))
+            return DomainErrors.EmptyPostalCode(value);
 
-        var normalizedPostal = postalCode.Replace("-", "").Replace(" ", "");
-        if (normalizedPostal.Length < 5 || normalizedPostal.Length > 10)
-            return DomainErrors.InvalidPostalCodeFormat(postalCode);
+        var normalized = value.Replace("-", "").Replace(" ", "");
+        if (normalized.Length < 5 || normalized.Length > 10)
+            return DomainErrors.InvalidPostalCodeFormat(value);
 
-        return new ShippingAddress(
-            recipientName.Trim(),
-            street.Trim(),
-            city.Trim(),
-            normalizedPostal,
-            country.Trim().ToUpperInvariant()
-        );
+        return normalized;
     }
 
-    public bool Equals(ShippingAddress? other) =>
-        other is not null &&
-        RecipientName == other.RecipientName &&
-        Street == other.Street &&
-        City == other.City &&
-        PostalCode == other.PostalCode &&
-        Country == other.Country;
+    // 5.5 국가 검증
+    private static Validation<Error, string> ValidateCountry(string value) =>
+        !string.IsNullOrWhiteSpace(value)
+            ? value
+            : DomainErrors.EmptyCountry(value);
 
-    public override bool Equals(object? obj) => obj is ShippingAddress other && Equals(other);
-    public override int GetHashCode() => HashCode.Combine(RecipientName, Street, City, PostalCode, Country);
+    // 6. 동등성 컴포넌트 구현
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return RecipientName;
+        yield return Street;
+        yield return City;
+        yield return PostalCode;
+        yield return Country;
+    }
 
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
         public static Error EmptyRecipientName(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(ShippingAddress)}.{nameof(EmptyRecipientName)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(ShippingAddress)}.{nameof(EmptyRecipientName)}",
                 errorCurrentValue: value,
-                errorMessage: "수령인 이름이 비어있습니다.");
+                errorMessage: $"Recipient name cannot be empty. Current value: '{value}'");
 
         public static Error EmptyStreet(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(ShippingAddress)}.{nameof(EmptyStreet)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(ShippingAddress)}.{nameof(EmptyStreet)}",
                 errorCurrentValue: value,
-                errorMessage: "도로명 주소가 비어있습니다.");
+                errorMessage: $"Street address cannot be empty. Current value: '{value}'");
 
         public static Error EmptyCity(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(ShippingAddress)}.{nameof(EmptyCity)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(ShippingAddress)}.{nameof(EmptyCity)}",
                 errorCurrentValue: value,
-                errorMessage: "도시명이 비어있습니다.");
+                errorMessage: $"City cannot be empty. Current value: '{value}'");
 
         public static Error EmptyPostalCode(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(ShippingAddress)}.{nameof(EmptyPostalCode)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(ShippingAddress)}.{nameof(EmptyPostalCode)}",
                 errorCurrentValue: value,
-                errorMessage: "우편번호가 비어있습니다.");
+                errorMessage: $"Postal code cannot be empty. Current value: '{value}'");
 
         public static Error EmptyCountry(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(ShippingAddress)}.{nameof(EmptyCountry)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(ShippingAddress)}.{nameof(EmptyCountry)}",
                 errorCurrentValue: value,
-                errorMessage: "국가 코드가 비어있습니다.");
+                errorMessage: $"Country code cannot be empty. Current value: '{value}'");
 
         public static Error InvalidPostalCodeFormat(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(ShippingAddress)}.{nameof(InvalidPostalCodeFormat)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(ShippingAddress)}.{nameof(InvalidPostalCodeFormat)}",
                 errorCurrentValue: value,
-                errorMessage: "우편번호 형식이 올바르지 않습니다.");
+                errorMessage: $"Invalid postal code format. Current value: '{value}'");
     }
 }

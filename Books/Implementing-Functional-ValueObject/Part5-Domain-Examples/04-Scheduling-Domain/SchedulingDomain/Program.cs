@@ -1,4 +1,5 @@
 using Functorium.Abstractions.Errors;
+using Functorium.Domains.ValueObjects;
 using LanguageExt;
 using LanguageExt.Common;
 using static LanguageExt.Prelude;
@@ -9,7 +10,7 @@ class Program
 {
     static void Main(string[] args)
     {
-        Console.WriteLine("=== 일정/예약 도메인 값 객체 ===\n");
+        Console.WriteLine("=== 일정/예약 도메인 값 객체 (Functorium 프레임워크 기반) ===\n");
 
         // 1. DateRange
         DemonstrateDateRange();
@@ -26,7 +27,7 @@ class Program
 
     static void DemonstrateDateRange()
     {
-        Console.WriteLine("1. DateRange (날짜 범위)");
+        Console.WriteLine("1. DateRange (날짜 범위) - ValueObject");
         Console.WriteLine("─".PadRight(40, '─'));
 
         var startDate = new DateOnly(2025, 1, 1);
@@ -65,7 +66,7 @@ class Program
 
     static void DemonstrateTimeSlot()
     {
-        Console.WriteLine("2. TimeSlot (시간 슬롯)");
+        Console.WriteLine("2. TimeSlot (시간 슬롯) - ValueObject");
         Console.WriteLine("─".PadRight(40, '─'));
 
         var slot = TimeSlot.Create(
@@ -97,7 +98,7 @@ class Program
 
     static void DemonstrateDuration()
     {
-        Console.WriteLine("3. Duration (기간)");
+        Console.WriteLine("3. Duration (기간) - ComparableSimpleValueObject");
         Console.WriteLine("─".PadRight(40, '─'));
 
         var duration1 = Duration.FromMinutes(90);
@@ -138,7 +139,7 @@ class Program
 
     static void DemonstrateRecurrenceRule()
     {
-        Console.WriteLine("4. RecurrenceRule (반복 규칙)");
+        Console.WriteLine("4. RecurrenceRule (반복 규칙) - ValueObject");
         Console.WriteLine("─".PadRight(40, '─'));
 
         // 매주 월, 수, 금
@@ -173,7 +174,7 @@ class Program
             Succ: r =>
             {
                 Console.WriteLine($"   규칙: {r}");
-                var startDate = new DateOnly(2025, 1, 1); // 수요일
+                var startDate = new DateOnly(2025, 1, 1);
                 var occurrences = r.GetOccurrences(startDate, 7);
                 Console.WriteLine($"   다음 7회: {string.Join(", ", occurrences)}");
             },
@@ -185,29 +186,46 @@ class Program
 }
 
 // ========================================
-// 값 객체 구현
+// 값 객체 구현 (Functorium 프레임워크 기반)
 // ========================================
 
-public sealed class DateRange : IEquatable<DateRange>
+/// <summary>
+/// DateRange 값 객체 (ValueObject 기반)
+/// </summary>
+public sealed class DateRange : ValueObject
 {
+    // 1.1 속성 선언
     public DateOnly Start { get; }
     public DateOnly End { get; }
 
+    // 파생 속성
+    public int TotalDays => End.DayNumber - Start.DayNumber + 1;
+
+    // 2. Private 생성자 - 단순 대입만 처리
     private DateRange(DateOnly start, DateOnly end)
     {
         Start = start;
         End = end;
     }
 
-    public static Fin<DateRange> Create(DateOnly start, DateOnly end)
-    {
-        if (end < start)
-            return DomainErrors.EndBeforeStart(start, end);
-        return new DateRange(start, end);
-    }
+    // 3. Public Create 메서드 - 검증과 생성을 연결
+    public static Fin<DateRange> Create(DateOnly start, DateOnly end) =>
+        CreateFromValidation(
+            Validate(start, end),
+            validValues => new DateRange(validValues.Start, validValues.End));
 
-    public int TotalDays => End.DayNumber - Start.DayNumber + 1;
+    // 5. Public Validate 메서드 - 단일 검증
+    public static Validation<Error, (DateOnly Start, DateOnly End)> Validate(DateOnly start, DateOnly end) =>
+        ValidateEndNotBeforeStart(start, end)
+            .Map(_ => (start, end));
 
+    // 5.1 종료일 검증
+    private static Validation<Error, DateOnly> ValidateEndNotBeforeStart(DateOnly start, DateOnly end) =>
+        end >= start
+            ? end
+            : DomainErrors.EndBeforeStart(start, end);
+
+    // 도메인 메서드
     public bool Contains(DateOnly date) => date >= Start && date <= End;
 
     public bool Overlaps(DateRange other) =>
@@ -226,79 +244,113 @@ public sealed class DateRange : IEquatable<DateRange>
     public DateRange Extend(int days) =>
         new(Start, End.AddDays(days));
 
-    public bool Equals(DateRange? other) =>
-        other is not null && Start == other.Start && End == other.End;
+    // 6. 동등성 컴포넌트 구현
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return Start;
+        yield return End;
+    }
 
-    public override bool Equals(object? obj) => obj is DateRange other && Equals(other);
-    public override int GetHashCode() => HashCode.Combine(Start, End);
     public override string ToString() => $"{Start:yyyy-MM-dd} ~ {End:yyyy-MM-dd}";
 
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
         public static Error EndBeforeStart(DateOnly start, DateOnly end) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DateRange)}.{nameof(EndBeforeStart)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(DateRange)}.{nameof(EndBeforeStart)}",
                 start, end,
-                errorMessage: "종료일은 시작일보다 이전일 수 없습니다.");
+                errorMessage: $"End date cannot be before start date. Start: '{start}', End: '{end}'");
     }
 }
 
-public sealed class TimeSlot : IEquatable<TimeSlot>
+/// <summary>
+/// TimeSlot 값 객체 (ValueObject 기반)
+/// </summary>
+public sealed class TimeSlot : ValueObject
 {
+    // 1.1 속성 선언
     public TimeOnly Start { get; }
     public TimeOnly End { get; }
 
+    // 파생 속성
+    public TimeSpan Duration => End - Start;
+
+    // 2. Private 생성자 - 단순 대입만 처리
     private TimeSlot(TimeOnly start, TimeOnly end)
     {
         Start = start;
         End = end;
     }
 
-    public static Fin<TimeSlot> Create(TimeOnly start, TimeOnly end)
-    {
-        if (end <= start)
-            return DomainErrors.EndBeforeOrEqualStart(start, end);
-        return new TimeSlot(start, end);
-    }
+    // 3. Public Create 메서드 - 검증과 생성을 연결
+    public static Fin<TimeSlot> Create(TimeOnly start, TimeOnly end) =>
+        CreateFromValidation(
+            Validate(start, end),
+            validValues => new TimeSlot(validValues.Start, validValues.End));
 
-    public TimeSpan Duration => End - Start;
+    // 5. Public Validate 메서드 - 단일 검증
+    public static Validation<Error, (TimeOnly Start, TimeOnly End)> Validate(TimeOnly start, TimeOnly end) =>
+        ValidateEndAfterStart(start, end)
+            .Map(_ => (start, end));
 
+    // 5.1 종료 시간 검증
+    private static Validation<Error, TimeOnly> ValidateEndAfterStart(TimeOnly start, TimeOnly end) =>
+        end > start
+            ? end
+            : DomainErrors.EndBeforeOrEqualStart(start, end);
+
+    // 도메인 메서드
     public bool Contains(TimeOnly time) => time >= Start && time < End;
 
     public bool Conflicts(TimeSlot other) =>
         Start < other.End && End > other.Start;
 
-    public bool Equals(TimeSlot? other) =>
-        other is not null && Start == other.Start && End == other.End;
+    // 6. 동등성 컴포넌트 구현
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return Start;
+        yield return End;
+    }
 
-    public override bool Equals(object? obj) => obj is TimeSlot other && Equals(other);
-    public override int GetHashCode() => HashCode.Combine(Start, End);
     public override string ToString() => $"{Start:HH:mm} - {End:HH:mm}";
 
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
         public static Error EndBeforeOrEqualStart(TimeOnly start, TimeOnly end) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(TimeSlot)}.{nameof(EndBeforeOrEqualStart)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(TimeSlot)}.{nameof(EndBeforeOrEqualStart)}",
                 start, end,
-                errorMessage: "종료 시간은 시작 시간보다 이후여야 합니다.");
+                errorMessage: $"End time must be after start time. Start: '{start}', End: '{end}'");
     }
 }
 
-public sealed class Duration : IComparable<Duration>, IEquatable<Duration>
+/// <summary>
+/// Duration 값 객체 (ComparableSimpleValueObject 기반)
+/// </summary>
+public sealed class Duration : ComparableSimpleValueObject<int>
 {
-    public int TotalMinutes { get; }
+    // 2. Private 생성자 - 단순 대입만 처리
+    private Duration(int totalMinutes) : base(totalMinutes) { }
 
-    private Duration(int totalMinutes) => TotalMinutes = totalMinutes;
+    /// <summary>
+    /// 총 분에 대한 public 접근자
+    /// </summary>
+    public int TotalMinutes => Value;
 
-    public static Fin<Duration> FromMinutes(int minutes)
-    {
-        if (minutes < 0)
-            return DomainErrors.NegativeDuration(minutes);
-        if (minutes > 525600) // 1년 = 365일 * 24시간 * 60분
-            return DomainErrors.ExceedsMaximum(minutes);
-        return new Duration(minutes);
-    }
+    // 파생 속성
+    public double TotalHours => Value / 60.0;
+    public double TotalDays => Value / (24.0 * 60.0);
+
+    // 팩토리 속성
+    public static Duration Zero => new(0);
+
+    // 3. Public Create 팩토리 메서드들 - 검증과 생성을 연결
+    public static Fin<Duration> FromMinutes(int minutes) =>
+        CreateFromValidation(
+            Validate(minutes),
+            validValue => new Duration(validValue));
 
     public static Fin<Duration> FromHours(int hours) =>
         FromMinutes(hours * 60);
@@ -306,55 +358,67 @@ public sealed class Duration : IComparable<Duration>, IEquatable<Duration>
     public static Fin<Duration> FromDays(int days) =>
         FromMinutes(days * 24 * 60);
 
-    public static Duration Zero => new(0);
+    // 5. Public Validate 메서드 - 순차 검증
+    public static Validation<Error, int> Validate(int minutes) =>
+        ValidateNotNegative(minutes)
+            .Bind(_ => ValidateNotExceedsMaximum(minutes))
+            .Map(_ => minutes);
 
-    public double TotalHours => TotalMinutes / 60.0;
-    public double TotalDays => TotalMinutes / (24.0 * 60.0);
+    // 5.1 음수 검증
+    private static Validation<Error, int> ValidateNotNegative(int minutes) =>
+        minutes >= 0
+            ? minutes
+            : DomainErrors.NegativeDuration(minutes);
 
-    public Duration Add(Duration other) => new(TotalMinutes + other.TotalMinutes);
+    // 5.2 최대값 검증 (1년 = 525,600분)
+    private static Validation<Error, int> ValidateNotExceedsMaximum(int minutes) =>
+        minutes <= 525600
+            ? minutes
+            : DomainErrors.ExceedsMaximum(minutes);
+
+    // 도메인 메서드
+    public Duration Add(Duration other) => new(Value + other.Value);
     public Duration Subtract(Duration other) =>
-        new(Math.Max(0, TotalMinutes - other.TotalMinutes));
-
-    public int CompareTo(Duration? other) =>
-        other is null ? 1 : TotalMinutes.CompareTo(other.TotalMinutes);
-
-    public bool Equals(Duration? other) =>
-        other is not null && TotalMinutes == other.TotalMinutes;
-
-    public override bool Equals(object? obj) => obj is Duration other && Equals(other);
-    public override int GetHashCode() => TotalMinutes.GetHashCode();
+        new(Math.Max(0, Value - other.Value));
 
     public override string ToString()
     {
-        if (TotalMinutes < 60)
-            return $"{TotalMinutes}분";
-        if (TotalMinutes % 60 == 0)
-            return $"{TotalMinutes / 60}시간";
-        return $"{TotalMinutes / 60}시간 {TotalMinutes % 60}분";
+        if (Value < 60)
+            return $"{Value}분";
+        if (Value % 60 == 0)
+            return $"{Value / 60}시간";
+        return $"{Value / 60}시간 {Value % 60}분";
     }
 
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
         public static Error NegativeDuration(int minutes) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Duration)}.{nameof(NegativeDuration)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Duration)}.{nameof(NegativeDuration)}",
                 errorCurrentValue: minutes,
-                errorMessage: "기간은 음수일 수 없습니다.");
+                errorMessage: $"Duration cannot be negative. Current value: '{minutes}'");
+
         public static Error ExceedsMaximum(int minutes) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Duration)}.{nameof(ExceedsMaximum)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Duration)}.{nameof(ExceedsMaximum)}",
                 errorCurrentValue: minutes,
-                errorMessage: "기간은 1년(525,600분)을 초과할 수 없습니다.");
+                errorMessage: $"Duration cannot exceed 1 year (525,600 minutes). Current value: '{minutes}'");
     }
 }
 
-public sealed class RecurrenceRule : IEquatable<RecurrenceRule>
+/// <summary>
+/// RecurrenceRule 값 객체 (ValueObject 기반)
+/// </summary>
+public sealed class RecurrenceRule : ValueObject
 {
+    // 1.1 속성 선언
     public RecurrenceType Type { get; }
     public IReadOnlyList<DayOfWeek> DaysOfWeek { get; }
     public int? DayOfMonth { get; }
     public int Interval { get; }
 
+    // 2. Private 생성자 - 단순 대입만 처리
     private RecurrenceRule(RecurrenceType type, IReadOnlyList<DayOfWeek> daysOfWeek, int? dayOfMonth, int interval)
     {
         Type = type;
@@ -363,30 +427,42 @@ public sealed class RecurrenceRule : IEquatable<RecurrenceRule>
         Interval = interval;
     }
 
-    public static Fin<RecurrenceRule> Daily(int interval = 1)
-    {
-        if (interval < 1)
-            return DomainErrors.InvalidInterval(interval);
-        return new RecurrenceRule(RecurrenceType.Daily, [], null, interval);
-    }
+    // 3. Public Create 팩토리 메서드들
+    public static Fin<RecurrenceRule> Daily(int interval = 1) =>
+        CreateFromValidation(
+            ValidateDailyInterval(interval),
+            validInterval => new RecurrenceRule(RecurrenceType.Daily, [], null, validInterval));
 
-    public static Fin<RecurrenceRule> Weekly(params DayOfWeek[] days)
-    {
-        if (days.Length == 0)
-            return DomainErrors.NoDaysSpecified(0);
-        return new RecurrenceRule(RecurrenceType.Weekly, days.Distinct().OrderBy(d => d).ToArray(), null, 1);
-    }
+    public static Fin<RecurrenceRule> Weekly(params DayOfWeek[] days) =>
+        CreateFromValidation(
+            ValidateWeeklyDays(days),
+            validDays => new RecurrenceRule(RecurrenceType.Weekly, validDays, null, 1));
 
     public static Fin<RecurrenceRule> Weekdays() =>
         Weekly(DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday);
 
-    public static Fin<RecurrenceRule> Monthly(int dayOfMonth)
-    {
-        if (dayOfMonth < 1 || dayOfMonth > 31)
-            return DomainErrors.InvalidDayOfMonth(dayOfMonth);
-        return new RecurrenceRule(RecurrenceType.Monthly, [], dayOfMonth, 1);
-    }
+    public static Fin<RecurrenceRule> Monthly(int dayOfMonth) =>
+        CreateFromValidation(
+            ValidateMonthlyDay(dayOfMonth),
+            validDay => new RecurrenceRule(RecurrenceType.Monthly, [], validDay, 1));
 
+    // 5. Validate 메서드들 - 각 타입별 검증
+    private static Validation<Error, int> ValidateDailyInterval(int interval) =>
+        interval >= 1
+            ? interval
+            : DomainErrors.InvalidInterval(interval);
+
+    private static Validation<Error, DayOfWeek[]> ValidateWeeklyDays(DayOfWeek[] days) =>
+        days.Length > 0
+            ? days.Distinct().OrderBy(d => d).ToArray()
+            : DomainErrors.NoDaysSpecified(0);
+
+    private static Validation<Error, int> ValidateMonthlyDay(int day) =>
+        day >= 1 && day <= 31
+            ? day
+            : DomainErrors.InvalidDayOfMonth(day);
+
+    // 도메인 메서드
     public IEnumerable<DateOnly> GetOccurrences(DateOnly from, int count)
     {
         var results = new List<DateOnly>();
@@ -414,15 +490,16 @@ public sealed class RecurrenceRule : IEquatable<RecurrenceRule>
         _ => false
     };
 
-    public bool Equals(RecurrenceRule? other) =>
-        other is not null &&
-        Type == other.Type &&
-        DaysOfWeek.SequenceEqual(other.DaysOfWeek) &&
-        DayOfMonth == other.DayOfMonth &&
-        Interval == other.Interval;
-
-    public override bool Equals(object? obj) => obj is RecurrenceRule other && Equals(other);
-    public override int GetHashCode() => HashCode.Combine(Type, DaysOfWeek.Count, DayOfMonth, Interval);
+    // 6. 동등성 컴포넌트 구현
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return Type;
+        yield return DaysOfWeek.Count;
+        foreach (var day in DaysOfWeek)
+            yield return day;
+        yield return DayOfMonth ?? 0;
+        yield return Interval;
+    }
 
     public override string ToString() => Type switch
     {
@@ -445,23 +522,26 @@ public sealed class RecurrenceRule : IEquatable<RecurrenceRule>
         _ => "?"
     };
 
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
         public static Error InvalidInterval(int interval) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(RecurrenceRule)}.{nameof(InvalidInterval)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(RecurrenceRule)}.{nameof(InvalidInterval)}",
                 errorCurrentValue: interval,
-                errorMessage: "반복 간격은 1 이상이어야 합니다.");
+                errorMessage: $"Recurrence interval must be at least 1. Current value: '{interval}'");
+
         public static Error NoDaysSpecified(int count) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(RecurrenceRule)}.{nameof(NoDaysSpecified)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(RecurrenceRule)}.{nameof(NoDaysSpecified)}",
                 errorCurrentValue: count,
-                errorMessage: "주간 반복 규칙에는 최소 하나의 요일을 지정해야 합니다.");
+                errorMessage: $"Weekly recurrence rule must specify at least one day of the week. Current count: '{count}'");
+
         public static Error InvalidDayOfMonth(int day) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(RecurrenceRule)}.{nameof(InvalidDayOfMonth)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(RecurrenceRule)}.{nameof(InvalidDayOfMonth)}",
                 errorCurrentValue: day,
-                errorMessage: "월간 반복 일은 1에서 31 사이여야 합니다.");
+                errorMessage: $"Day of month must be between 1 and 31. Current value: '{day}'");
     }
 }
 

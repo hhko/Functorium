@@ -34,7 +34,7 @@ public class ProductCodeTests
         // Assert
         actual.IsSucc.ShouldBeTrue();
         actual.Match(
-            Succ: c => c.Value.ShouldBe("EL-001234"),
+            Succ: c => c.Code.ShouldBe("EL-001234"),
             Fail: _ => throw new Exception("Expected success")
         );
     }

@@ -2,6 +2,7 @@ using LanguageExt;
 using LanguageExt.Common;
 using static LanguageExt.Prelude;
 using Functorium.Abstractions.Errors;
+using Functorium.Domains.ValueObjects;
 
 namespace FunctoriumFramework;
 
@@ -57,10 +58,10 @@ class Program
             Age.Create(35).IfFail(Age.CreateFromValidated(0))
         };
 
-        Console.WriteLine("   정렬 전: " + string.Join(", ", ages.Select(a => a.Value)));
+        Console.WriteLine("   정렬 전: " + string.Join(", ", ages.Select(a => a.Id)));
 
         System.Array.Sort(ages);
-        Console.WriteLine("   정렬 후: " + string.Join(", ", ages.Select(a => a.Value)));
+        Console.WriteLine("   정렬 후: " + string.Join(", ", ages.Select(a => a.Id)));
 
         Console.WriteLine();
     }
@@ -95,10 +96,11 @@ class Program
            │
            ├── ValueObject (복합 값 객체)
            │   │
-           │   ├── SimpleValueObject<T>
-           │   │   └── ComparableSimpleValueObject<T>
+           │   └── SimpleValueObject<T>
+           │
+           ├── ComparableValueObject
            │   │
-           │   └── ComparableValueObject
+           │   └── ComparableSimpleValueObject<T>
            │
            └── SmartEnum + IValueObject (열거형)
 ");
@@ -106,167 +108,142 @@ class Program
 }
 
 // ========================================
-// 값 객체 구현 예시
+// 값 객체 구현 예시 (Functorium 프레임워크 기반)
 // ========================================
 
 /// <summary>
-/// 추상 기본 클래스 (Functorium 프레임워크)
-/// </summary>
-public abstract class AbstractValueObject
-{
-    protected abstract IEnumerable<object> GetEqualityComponents();
-
-    public override bool Equals(object? obj)
-    {
-        if (obj == null || obj.GetType() != GetType())
-            return false;
-
-        var other = (AbstractValueObject)obj;
-        return GetEqualityComponents().SequenceEqual(other.GetEqualityComponents());
-    }
-
-    public override int GetHashCode()
-    {
-        return GetEqualityComponents()
-            .Select(x => x?.GetHashCode() ?? 0)
-            .Aggregate((x, y) => x ^ y);
-    }
-
-    public static bool operator ==(AbstractValueObject? left, AbstractValueObject? right)
-    {
-        if (left is null && right is null) return true;
-        if (left is null || right is null) return false;
-        return left.Equals(right);
-    }
-
-    public static bool operator !=(AbstractValueObject? left, AbstractValueObject? right) => !(left == right);
-}
-
-/// <summary>
-/// 단일 값 래퍼 (SimpleValueObject)
-/// </summary>
-public abstract class SimpleValueObject<T> : AbstractValueObject
-{
-    public T Value { get; }
-
-    protected SimpleValueObject(T value) => Value = value;
-
-    protected override IEnumerable<object> GetEqualityComponents()
-    {
-        yield return Value!;
-    }
-
-    public override string ToString() => Value?.ToString() ?? string.Empty;
-}
-
-/// <summary>
-/// 비교 가능한 단일 값 래퍼
-/// </summary>
-public abstract class ComparableSimpleValueObject<T> : SimpleValueObject<T>, IComparable<ComparableSimpleValueObject<T>>
-    where T : IComparable<T>
-{
-    protected ComparableSimpleValueObject(T value) : base(value) { }
-
-    public int CompareTo(ComparableSimpleValueObject<T>? other)
-    {
-        if (other is null) return 1;
-        return Value.CompareTo(other.Value);
-    }
-
-    public static bool operator <(ComparableSimpleValueObject<T> left, ComparableSimpleValueObject<T> right)
-        => left.CompareTo(right) < 0;
-
-    public static bool operator >(ComparableSimpleValueObject<T> left, ComparableSimpleValueObject<T> right)
-        => left.CompareTo(right) > 0;
-
-    public static bool operator <=(ComparableSimpleValueObject<T> left, ComparableSimpleValueObject<T> right)
-        => left.CompareTo(right) <= 0;
-
-    public static bool operator >=(ComparableSimpleValueObject<T> left, ComparableSimpleValueObject<T> right)
-        => left.CompareTo(right) >= 0;
-}
-
-/// <summary>
 /// Email 값 객체 (SimpleValueObject 기반)
+/// Functorium.Domains.ValueObjects.SimpleValueObject{T}를 상속하여 구현
 /// </summary>
 public sealed class Email : SimpleValueObject<string>
 {
+    // 2. Private 생성자 - 단순 대입만 처리
     private Email(string value) : base(value) { }
 
-    public static Fin<Email> Create(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return DomainErrors.Empty(value ?? "null");
+    /// <summary>
+    /// 이메일 주소 값에 대한 public 접근자
+    /// </summary>
+    public string Address => Value;
 
-        if (!value.Contains('@'))
-            return DomainErrors.InvalidFormat(value);
+    // 3. Public Create 메서드 - 검증과 생성을 연결
+    public static Fin<Email> Create(string value) =>
+        CreateFromValidation(
+            Validate(value),
+            validValue => new Email(validValue));
 
-        return new Email(value.ToLowerInvariant());
-    }
+    // 5. Public Validate 메서드 - 독립 검증 규칙들을 병렬로 실행
+    public static Validation<Error, string> Validate(string value) =>
+        (ValidateNotEmpty(value), ValidateFormat(value))
+            .Apply((_, validFormat) => validFormat.ToLowerInvariant())
+            .As();
+
+    // 5.1 빈 값 검증
+    private static Validation<Error, string> ValidateNotEmpty(string value) =>
+        !string.IsNullOrWhiteSpace(value)
+            ? value
+            : DomainErrors.Empty(value ?? "null");
+
+    // 5.2 형식 검증
+    private static Validation<Error, string> ValidateFormat(string value) =>
+        !string.IsNullOrWhiteSpace(value) && value.Contains('@')
+            ? value
+            : DomainErrors.InvalidFormat(value ?? "null");
 
     public static implicit operator string(Email email) => email.Value;
 
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
+        // ValidateNotEmpty 메서드와 1:1 매핑되는 에러
         public static Error Empty(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Email)}.{nameof(Empty)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(Empty)}",
                 errorCurrentValue: value,
-                errorMessage: "이메일 주소가 비어있습니다.");
+                errorMessage: $"Email address cannot be empty. Current value: '{value}'");
 
+        // ValidateFormat 메서드와 1:1 매핑되는 에러
         public static Error InvalidFormat(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Email)}.{nameof(InvalidFormat)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(InvalidFormat)}",
                 errorCurrentValue: value,
-                errorMessage: "유효하지 않은 이메일 형식입니다.");
+                errorMessage: $"Invalid email format. Current value: '{value}'");
     }
 }
 
 /// <summary>
 /// Age 값 객체 (ComparableSimpleValueObject 기반)
+/// Functorium.Domains.ValueObjects.ComparableSimpleValueObject{T}를 상속하여 구현
 /// </summary>
 public sealed class Age : ComparableSimpleValueObject<int>
 {
+    // 2. Private 생성자 - 단순 대입만 처리
     private Age(int value) : base(value) { }
 
-    public static Fin<Age> Create(int value)
-    {
-        if (value < 0)
-            return DomainErrors.Negative(value);
-        if (value > 150)
-            return DomainErrors.TooOld(value);
-        return new Age(value);
-    }
+    /// <summary>
+    /// 나이 값에 대한 public 접근자
+    /// </summary>
+    public int Id => Value;
 
+    // 3. Public Create 메서드 - 검증과 생성을 연결
+    public static Fin<Age> Create(int value) =>
+        CreateFromValidation(
+            Validate(value),
+            validValue => new Age(validValue));
+
+    // 4. Internal CreateFromValidated 메서드
     public static Age CreateFromValidated(int value) => new(value);
+
+    // 5. Public Validate 메서드 - 순차 검증 (범위 검증은 의존성이 있음)
+    public static Validation<Error, int> Validate(int value) =>
+        ValidateNotNegative(value)
+            .Bind(_ => ValidateNotTooOld(value))
+            .Map(_ => value);
+
+    // 5.1 음수 검증
+    private static Validation<Error, int> ValidateNotNegative(int value) =>
+        value >= 0
+            ? value
+            : DomainErrors.Negative(value);
+
+    // 5.2 최대값 검증
+    private static Validation<Error, int> ValidateNotTooOld(int value) =>
+        value <= 150
+            ? value
+            : DomainErrors.TooOld(value);
 
     public static implicit operator int(Age age) => age.Value;
 
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
+        // ValidateNotNegative 메서드와 1:1 매핑되는 에러
         public static Error Negative(int value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Age)}.{nameof(Negative)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Age)}.{nameof(Negative)}",
                 errorCurrentValue: value,
-                errorMessage: "나이는 음수일 수 없습니다.");
+                errorMessage: $"Age cannot be negative. Current value: '{value}'");
 
+        // ValidateNotTooOld 메서드와 1:1 매핑되는 에러
         public static Error TooOld(int value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Age)}.{nameof(TooOld)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Age)}.{nameof(TooOld)}",
                 errorCurrentValue: value,
-                errorMessage: "나이가 150세를 초과할 수 없습니다.");
+                errorMessage: $"Age cannot exceed 150 years. Current value: '{value}'");
     }
 }
 
 /// <summary>
 /// Address 값 객체 (복합 ValueObject)
+/// Functorium.Domains.ValueObjects.ValueObject를 상속하여 구현
 /// </summary>
-public sealed class Address : AbstractValueObject
+public sealed class Address : ValueObject
 {
+    // 1.1 readonly 속성 선언 - 불변성 보장
     public string City { get; }
     public string Street { get; }
     public string PostalCode { get; }
 
+    // 2. Private 생성자 - 단순 대입만 처리
     private Address(string city, string street, string postalCode)
     {
         City = city;
@@ -274,18 +251,42 @@ public sealed class Address : AbstractValueObject
         PostalCode = postalCode;
     }
 
-    public static Fin<Address> Create(string city, string street, string postalCode)
-    {
-        if (string.IsNullOrWhiteSpace(city))
-            return DomainErrors.CityEmpty(city ?? "null");
-        if (string.IsNullOrWhiteSpace(street))
-            return DomainErrors.StreetEmpty(street ?? "null");
-        if (string.IsNullOrWhiteSpace(postalCode))
-            return DomainErrors.PostalCodeEmpty(postalCode ?? "null");
+    // 3. Public Create 메서드 - 검증과 생성을 연결
+    public static Fin<Address> Create(string city, string street, string postalCode) =>
+        CreateFromValidation(
+            Validate(city, street, postalCode),
+            validValues => new Address(validValues.City, validValues.Street, validValues.PostalCode));
 
-        return new Address(city, street, postalCode);
-    }
+    // 4. Internal CreateFromValidated 메서드
+    internal static Address CreateFromValidated(string city, string street, string postalCode) =>
+        new Address(city, street, postalCode);
 
+    // 5. Public Validate 메서드 - 독립 검증 규칙들을 병렬로 실행
+    public static Validation<Error, (string City, string Street, string PostalCode)> Validate(
+        string city, string street, string postalCode) =>
+        (ValidateCityNotEmpty(city), ValidateStreetNotEmpty(street), ValidatePostalCodeNotEmpty(postalCode))
+            .Apply((validCity, validStreet, validPostalCode) => (validCity, validStreet, validPostalCode))
+            .As();
+
+    // 5.1 도시 검증
+    private static Validation<Error, string> ValidateCityNotEmpty(string city) =>
+        !string.IsNullOrWhiteSpace(city)
+            ? city
+            : DomainErrors.CityEmpty(city ?? "null");
+
+    // 5.2 도로명 검증
+    private static Validation<Error, string> ValidateStreetNotEmpty(string street) =>
+        !string.IsNullOrWhiteSpace(street)
+            ? street
+            : DomainErrors.StreetEmpty(street ?? "null");
+
+    // 5.3 우편번호 검증
+    private static Validation<Error, string> ValidatePostalCodeNotEmpty(string postalCode) =>
+        !string.IsNullOrWhiteSpace(postalCode)
+            ? postalCode
+            : DomainErrors.PostalCodeEmpty(postalCode ?? "null");
+
+    // 6. 동등성 컴포넌트 구현
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return City;
@@ -295,24 +296,28 @@ public sealed class Address : AbstractValueObject
 
     public override string ToString() => $"{City} {Street} ({PostalCode})";
 
+    // 7. DomainErrors 중첩 클래스
     internal static class DomainErrors
     {
+        // ValidateCityNotEmpty 메서드와 1:1 매핑되는 에러
         public static Error CityEmpty(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Address)}.{nameof(CityEmpty)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Address)}.{nameof(CityEmpty)}",
                 errorCurrentValue: value,
-                errorMessage: "도시명이 비어있습니다.");
+                errorMessage: $"City cannot be empty. Current value: '{value}'");
 
+        // ValidateStreetNotEmpty 메서드와 1:1 매핑되는 에러
         public static Error StreetEmpty(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Address)}.{nameof(StreetEmpty)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Address)}.{nameof(StreetEmpty)}",
                 errorCurrentValue: value,
-                errorMessage: "거리명이 비어있습니다.");
+                errorMessage: $"Street cannot be empty. Current value: '{value}'");
 
+        // ValidatePostalCodeNotEmpty 메서드와 1:1 매핑되는 에러
         public static Error PostalCodeEmpty(string value) =>
             ErrorCodeFactory.Create(
-                errorCode: $"{nameof(Address)}.{nameof(PostalCodeEmpty)}",
+                errorCode: $"{nameof(DomainErrors)}.{nameof(Address)}.{nameof(PostalCodeEmpty)}",
                 errorCurrentValue: value,
-                errorMessage: "우편번호가 비어있습니다.");
+                errorMessage: $"Postal code cannot be empty. Current value: '{value}'");
     }
 }

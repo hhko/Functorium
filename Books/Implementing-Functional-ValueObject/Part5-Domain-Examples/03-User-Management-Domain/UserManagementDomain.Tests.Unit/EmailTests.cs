@@ -35,7 +35,7 @@ public class EmailTests
         // Assert
         actual.IsSucc.ShouldBeTrue();
         actual.Match(
-            Succ: e => e.Value.ShouldBe("user@example.com"),
+            Succ: e => e.Address.ShouldBe("user@example.com"),
             Fail: _ => throw new Exception("Expected success")
         );
     }
