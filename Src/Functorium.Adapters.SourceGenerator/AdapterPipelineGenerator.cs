@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Linq;
 using System.Text;
 
 using Functorium.Adapters.SourceGenerator.Generators;
@@ -23,6 +24,15 @@ public sealed class AdapterPipelineGenerator()
     private const string AttributeNamespace = "Functorium.Adapters.SourceGenerator";
     private const string FullyQualifiedAttributeName = $"{AttributeNamespace}.{AttributeName}Attribute";
     private const string GeneratePipelineAttributeFileName = "GeneratePipelineAttribute.g.cs";
+
+    // Diagnostic descriptors
+    private static readonly DiagnosticDescriptor DuplicateParameterTypeDiagnostic = new(
+        id: "FUNCTORIUM001",
+        title: "Duplicate parameter types in pipeline constructor",
+        messageFormat: "Pipeline constructor for '{0}' contains multiple parameters of the same type '{1}'. This may cause issues with dependency injection resolution.",
+        category: "Design",
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 
     public const string GeneratePipelineAttribute = Header + """
 
@@ -131,24 +141,79 @@ public sealed class AdapterPipelineGenerator()
     {
         foreach (var pipelineClass in pipelineClasses)
         {
-            StringBuilder sb = new();
-            string source = GeneratePipelineClassSource(pipelineClass, sb);
+            // 생성자 파라미터 타입 중복 체크
+            var allParameters = new List<ParameterInfo>();
+            allParameters.AddRange(pipelineClass.BaseConstructorParameters);
 
-            // 네임스페이스의 마지막 부분 추출 (예: Observability.Adapters.Infrastructure.Repositories -> Repositories)
-            string namespaceSuffix = string.Empty;
-            if (!string.IsNullOrEmpty(pipelineClass.Namespace))
+            // Pipeline 클래스 생성자 파라미터 (ActivityContext, ILogger, IAdapterTrace, IAdapterMetric)
+            allParameters.Add(new ParameterInfo("parentContext", "global::System.Diagnostics.ActivityContext", RefKind.None));
+            allParameters.Add(new ParameterInfo("logger", $"global::Microsoft.Extensions.Logging.ILogger<{pipelineClass.Namespace}.{pipelineClass.ClassName}Pipeline>", RefKind.None));
+            allParameters.Add(new ParameterInfo("adapterTrace", "global::Functorium.Applications.Observabilities.IAdapterTrace", RefKind.None));
+            allParameters.Add(new ParameterInfo("adapterMetric", "global::Functorium.Applications.Observabilities.IAdapterMetric", RefKind.None));
+
+            // 동일한 타입의 파라미터가 있는지 체크
+            var duplicateTypes = allParameters
+                .GroupBy(p => p.Type)
+                .Where(g => g.Count() > 1)
+                .Select(g => g.Key)
+                .ToList();
+
+            if (duplicateTypes.Any())
             {
-                var lastDotIndex = pipelineClass.Namespace.LastIndexOf('.');
-                if (lastDotIndex >= 0)
-                {
-                    namespaceSuffix = pipelineClass.Namespace.Substring(lastDotIndex + 1) + ".";
-                }
-            }
+                // 중복 타입이 있으면 에러를 발생시키는 코드 생성
+                StringBuilder sb = new();
+                GenerateErrorSource(sb, pipelineClass, duplicateTypes);
+                string source = sb.ToString();
 
-            context.AddSource(
-                $"{namespaceSuffix}{pipelineClass.ClassName}Pipeline.g.cs",
-                SourceText.From(source, Encoding.UTF8));
+                string namespaceSuffix = string.Empty;
+                if (!string.IsNullOrEmpty(pipelineClass.Namespace))
+                {
+                    var lastDotIndex = pipelineClass.Namespace.LastIndexOf('.');
+                    if (lastDotIndex >= 0)
+                    {
+                        namespaceSuffix = pipelineClass.Namespace.Substring(lastDotIndex + 1) + ".";
+                    }
+                }
+
+                context.AddSource(
+                    $"{namespaceSuffix}{pipelineClass.ClassName}Pipeline.g.cs",
+                    SourceText.From(source, Encoding.UTF8));
+            }
+            else
+            {
+                // 정상적인 Pipeline 클래스 생성
+                StringBuilder sb = new();
+                string source = GeneratePipelineClassSource(pipelineClass, sb);
+
+                // 네임스페이스의 마지막 부분 추출 (예: Observability.Adapters.Infrastructure.Repositories -> Repositories)
+                string namespaceSuffix = string.Empty;
+                if (!string.IsNullOrEmpty(pipelineClass.Namespace))
+                {
+                    var lastDotIndex = pipelineClass.Namespace.LastIndexOf('.');
+                    if (lastDotIndex >= 0)
+                    {
+                        namespaceSuffix = pipelineClass.Namespace.Substring(lastDotIndex + 1) + ".";
+                    }
+                }
+
+                context.AddSource(
+                    $"{namespaceSuffix}{pipelineClass.ClassName}Pipeline.g.cs",
+                    SourceText.From(source, Encoding.UTF8));
+            }
         }
+    }
+
+    private static void GenerateErrorSource(StringBuilder sb, PipelineClassInfo classInfo, List<string> duplicateTypes)
+    {
+        sb.Append(Header)
+            .AppendLine()
+            .AppendLine($"namespace {classInfo.Namespace};")
+            .AppendLine()
+            .AppendLine($"#error Pipeline constructor for '{classInfo.ClassName}' contains multiple parameters of the same types: {string.Join(", ", duplicateTypes)}. This will cause issues with dependency injection resolution in RegisterScopedAdapterPipeline. Please ensure all constructor parameters have unique types.")
+            .AppendLine()
+            .AppendLine($"public class {classInfo.ClassName}Pipeline")
+            .AppendLine("{")
+            .AppendLine("}");
     }
 
     private static string GeneratePipelineClassSource(PipelineClassInfo classInfo, StringBuilder sb)

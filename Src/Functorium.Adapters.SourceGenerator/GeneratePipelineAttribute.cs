@@ -5,7 +5,7 @@ namespace Functorium.Adapters.SourceGenerator;
 /// 해당 클래스의 Pipeline 버전이 자동으로 생성됩니다.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-internal sealed class GeneratePipelineAttribute : Attribute
+public sealed class GeneratePipelineAttribute : Attribute
 {
     public GeneratePipelineAttribute()
     {
