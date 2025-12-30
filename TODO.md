@@ -18,28 +18,101 @@
 - [x] LanguageExt 패키지 버전 업데이트
 - [x] 경고 제거
 - [x] reportgenerator 출력 최소화 verbosity: 'Info'
-- [ ] .sprint 양식 개선
-- [ ] .claude/guides 문서 표준 양식
-- [ ] docs | 값 객체 개발 가이드
-- [ ] Serilog 단위 테스트 이해
-- [ ] Application 레이어 테스트
-- [ ] LINQ 확장 Guard, Validation
-- [ ] Observability 코드 리뷰
-- [ ] IAdatperMetric/IAdapterTrace 인터페이스 의존성 등록 코드 정리
+- [x] CQRS 개선 IFinResponse, ...
+- [x] ValueObject 예제 코드 개선
+- [x] docs | 값 객체 개발 가이드
+- [x] docs | 유스케이스 함수형
+- [x] 유스케이스 함수형 예제
+- [x] ~~LINQ 확장 Guard~~(자체 제공), Validation
+---
+## 가이드
+- [ ] 계획
+- [ ] 레이어
+- [ ] 유스케이스: CQRS, Validation, 관찰 가능성, 에러
+- [ ] 도메인: 값 객체, 도메인인, 에러
+- [ ] IAdatper: 인터페이스 소스 생성기, 의존성 등록, 관찰 가능성, 에러, IO
+- [ ] 단위 테스트
+- [ ] 통합 테스트
+- [ ] 스케줄러
+- [ ] RabbitMQ
+- [ ] HTTP Mehtod
+- [ ] ORM(EFCore, Dapper)
+- [ ] LanguageExt
+  - Error
+  - Fin
+  - Validation
+  - **IO**
+    - 병렬 처리
+    - 비동기
+    - 예외 처리
+    - 재시도
+    - 자원 회수
+  - FinT
+  - Guard
+  - Option
+  - Seq
+  - Traverse
+---
+- [ ] Book 문서 값객체 동기화
+- [ ] Book 추가 문서 확인?
+---
+- [ ] "Request/Reply vs Fire and Forget 패턴"
+  - 성공: 데이터 유/무
+  - 실패
+    - 경고: 정의할 수 있는 실패
+    - 에러: 정의할 수 없는 실패(예외)
+- [ ] guard 실패 처리 확인: 예외 발생?
+- [ ] guard 튜토리얼 작성
+---
+- [ ] IO 튜토리얼
+  - 취소: Run().RunAsync(취소)
+  - 예외: Run().RunSafeAsync(취소): Flatten
+- [ ] 파이프라인 생성자 타입 중복 테스트
+---
+- [ ] wolverine IHost?
+- [ ] Mediator 어셈블리 단위로 의존성 등록?
+- [ ] Testcontainers을 이용한 RabbitMQ 통합 테스트
+- [ ] Program 클래스 가시성 -> I인터페이스
+- [ ] Testing 프로젝트 기능 단위로 폴더 재구성
+- [ ] Testing 프로젝트 RabbitMQ 통합 테스트 재사용 코드
+- [ ] Testing 프로젝트 관찰 가능성 단위 테스트 재사용 코드
+---
+- [ ] wolverine 관찰 가능성 의존성 등록 패턴 학습
+- [ ] wolverine 관찰 가능성 데이터 확인: 지표, 추적, 로그?
+- [ ] wolverine 관찰 가능성 의존성 등록 패턴 적용
+---
+- [ ] 용어 통일 Metrics, Traces, Loggers
+- [ ] 용어 통일 Success, Failure
+---
+- [ ] Functorium 접근 제어사 최적화
+  - private
+  - internal
+  - protected
+---
+- [ ] IAdatperMetric, IAdapterTrace 이해
+- [ ] IAdapter 구현 가이드
+- [ ] 의존성 등록 가이드
 - [ ] 커스텀 유스케이스 로그
 - [ ] 커스텀 유스케이스 지표
+- [ ] 커스텀 유스케이스 추적
+- [ ] 유스케이스 진단 대시보드?
+  - 바쁜가?
+  - 빠른가?
+  - 실패율?
+- [ ] Application 레이어 테스트
+- [ ] Observability 코드 리뷰
+- [ ] IAdatperMetric/IAdapterTrace 인터페이스 의존성 등록 코드 정리
 - [ ] Observability 형식 테스트 자동화
 - [ ] Observability 형식 문서화
-- [ ] Docs 폴더 정리
-- [ ] docs | 유스케이스 with 함수형 book
-- [ ] docs | 유스케이스 개발 가이드
-- [ ] README 도메인 중심의 함수형 아키텍처 다이어그램
 ---
-- [ ] Quartz
-- [ ] FastEndpoint
-- [ ] IO 심화
-- [ ] docs: IO 개발 가이드
-- [ ] WebSite: Astro, Starlight
+- [ ] docs | 유스케이스 with 함수형 book
+---
+- [ ] .sprint 양식 개선
+- [ ] .claude/guides 문서 표준 양식
+- [ ] Serilog 단위 테스트 이해
+- [ ] Docs 폴더 정리
+- [ ] README 도메인 중심의 함수형 아키텍처 다이어그램
+- [ ] FinResponse 테스트 확장 메서드?
 ---
 - [ ] Entity ID 소스 생성기
 - [ ] EFCore 통합
@@ -57,6 +130,7 @@
 ---
 - [ ] 예제 포팅
 - [ ] 코드 품질 CLI
+- [ ] WebSite: Astro, Starlight
 
 ---
 - Abstraction
