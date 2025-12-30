@@ -25,6 +25,8 @@
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+    <PackageVersion Include="WolverineFx" Version="5.9.2" />
+    <PackageVersion Include="WolverineFx.RabbitMQ" Version="5.9.2" />
   </ItemGroup>
 
   <ItemGroup Label="Observability">

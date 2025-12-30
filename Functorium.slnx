@@ -1,18 +1,29 @@
 <Solution>
   <Folder Name="/Tutorials/" />
-  <Folder Name="/Tutorials/Cqrs/" />
-  <Folder Name="/Tutorials/Cqrs/Src/">
-    <Project Path="Tutorials/Cqrs/Src/Cqrs.Demo/Cqrs.Demo.csproj" />
+  <Folder Name="/Tutorials/Cqrs01/" />
+  <Folder Name="/Tutorials/Cqrs01/Src/">
+    <Project Path="Tutorials/Cqrs01/Src/Cqrs01.Demo/Cqrs01.Demo.csproj" />
   </Folder>
-  <Folder Name="/Tutorials/Cqrs/Tests/">
-    <Project Path="Tutorials/Cqrs/Tests/Cqrs.Demo.Tests.Unit/Cqrs.Demo.Tests.Unit.csproj" />
+  <Folder Name="/Tutorials/Cqrs01/Tests/">
+    <Project Path="Tutorials/Cqrs01/Tests/Cqrs01.Demo.Tests.Unit/Cqrs01.Demo.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Tutorials/CqrsPipeline/" />
-  <Folder Name="/Tutorials/CqrsPipeline/Src/">
-    <Project Path="Tutorials/CqrsPipeline/Src/CqrsPipeline.Demo/CqrsPipeline.Demo.csproj" />
+  <Folder Name="/Tutorials/Cqrs02Pipeline/" />
+  <Folder Name="/Tutorials/Cqrs02Pipeline/Src/">
+    <Project Path="Tutorials/Cqrs02Pipeline/Src/Cqrs02Pipeline.Demo/Cqrs02Pipeline.Demo.csproj" />
   </Folder>
-  <Folder Name="/Tutorials/CqrsPipeline/Tests/">
-    <Project Path="Tutorials/CqrsPipeline/Tests/CqrsPipeline.Demo.Tests.Unit/CqrsPipeline.Demo.Tests.Unit.csproj" />
+  <Folder Name="/Tutorials/Cqrs02Pipeline/Tests/">
+    <Project Path="Tutorials/Cqrs02Pipeline/Tests/Cqrs02Pipeline.Demo.Tests.Unit/Cqrs02Pipeline.Demo.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Tutorials/Cqrs03Functional/" />
+  <Folder Name="/Tutorials/Cqrs03Functional/Src/">
+    <Project Path="Tutorials/Cqrs03Functional/Src/Cqrs03Functional.Demo/Cqrs03Functional.Demo.csproj" />
+  </Folder>
+  <Folder Name="/Tutorials/Cqrs03Functional/Tests/">
+    <Project Path="Tutorials/Cqrs03Functional/Tests/Cqrs03Functional.Demo.Tests.Unit/Cqrs03Functional.Demo.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Tutorials/ResultPattern/" />
+  <Folder Name="/Tutorials/ResultPattern/Src/">
+    <Project Path="Tutorials/ResultPattern/Src/ResultPattern.Demo/ResultPattern.Demo.csproj" />
   </Folder>
   <Folder Name="/Tutorials/SourceGenerator/" />
   <Folder Name="/Tutorials/SourceGenerator/Src/">
