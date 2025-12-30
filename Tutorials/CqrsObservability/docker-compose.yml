@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: cqrsobservability-rabbitmq
+    hostname: rabbitmq
+    ports:
+      - "5672:5672"     # AMQP 포트
+      - "15672:15672"   # Management UI 포트
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cqrsobservability-network
+
+volumes:
+  rabbitmq_data:
+    driver: local
+
+networks:
+  cqrsobservability-network:
+    driver: bridge
+
