@@ -1,4 +1,4 @@
-# Git Hooks 가이드
+# Git Hooks
 
 이 문서는 Git Hooks의 개념과 프로젝트에서 활용하는 방법을 설명합니다.
 

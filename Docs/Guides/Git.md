@@ -11,6 +11,7 @@
 - [브랜치](#브랜치)
 - [원격 저장소](#원격-저장소)
 - [릴리스 노트 및 분석](#릴리스-노트-및-분석)
+- [임시 저장 (Stash)](#임시-저장-stash)
 - [실행 취소](#실행-취소)
 - [트러블슈팅](#트러블슈팅)
 - [FAQ](#faq)
@@ -61,6 +62,13 @@ git tag --sort=-v:refname             # 버전 역순 정렬
 ```bash
 git rebase -i HEAD~3                  # 최근 3개 커밋 편집
 git reset --soft HEAD~3               # 최근 3개 커밋 취소 (변경사항 유지)
+```
+
+**임시 저장:**
+```bash
+git stash                             # 변경사항 임시 저장
+git stash pop                         # 임시 저장 복원 및 삭제
+git stash list                        # 임시 저장 목록
 ```
 
 **긴급 상황:**
@@ -620,6 +628,133 @@ done
 - `| head -N` - 상위 N개만 표시
 - `| tail -N` - 하위 N개만 표시
 - `-<N>` - 최근 N개만 표시 (예: `git log -10`)
+
+<br/>
+
+## 임시 저장 (Stash)
+
+작업 중인 변경사항을 임시로 저장하고 나중에 복원할 수 있습니다. 급하게 다른 브랜치로 전환하거나 변경 전/후 코드를 비교할 때 유용합니다.
+
+### 기본 명령어
+
+| 명령어 | 설명 |
+|--------|------|
+| `git stash` | 현재 변경사항을 임시 저장 |
+| `git stash pop` | 가장 최근 stash 복원 및 삭제 |
+| `git stash apply` | 가장 최근 stash 복원 (stash 유지) |
+| `git stash list` | stash 목록 확인 |
+| `git stash drop` | 가장 최근 stash 삭제 |
+| `git stash clear` | 모든 stash 삭제 |
+| `git stash show` | 가장 최근 stash 내용 요약 |
+| `git stash show -p` | 가장 최근 stash 내용 상세 (diff) |
+
+### 고급 명령어
+
+| 명령어 | 설명 |
+|--------|------|
+| `git stash push -m "메시지"` | 메시지와 함께 stash |
+| `git stash push <파일>` | 특정 파일만 stash |
+| `git stash -u` | 추적되지 않는 파일도 포함해서 stash |
+| `git stash apply stash@{N}` | 특정 stash 복원 (N번째) |
+| `git stash drop stash@{N}` | 특정 stash 삭제 (N번째) |
+| `git stash branch <브랜치>` | stash를 새 브랜치로 복원 |
+
+### 사용 예시
+
+#### 기본 사용법
+
+```bash
+# 현재 변경사항 임시 저장
+git stash
+
+# 다른 작업 수행...
+
+# 임시 저장한 변경사항 복원
+git stash pop
+```
+
+#### 변경 전/후 코드 비교하기
+
+실제 프로젝트에서 코드 리팩토링 후 기존 동작과 비교할 때 사용한 예시입니다:
+
+```bash
+# 1. 현재 변경사항을 임시 저장
+git stash
+# 출력: Saved working directory and index state WIP on main: 79e1b0e chore: ...
+
+# 2. 변경 전 버전(마지막 커밋 상태) 실행
+dotnet run --project <프로젝트경로>
+
+# 3. 임시 저장한 변경사항 복원
+git stash pop
+# 출력: Dropped refs/stash@{0} (...)
+
+# 4. 변경 후 버전 실행해서 비교
+dotnet run --project <프로젝트경로>
+```
+
+#### 메시지와 함께 저장
+
+```bash
+# 설명과 함께 stash
+git stash push -m "로그인 기능 작업 중"
+
+# stash 목록 확인
+git stash list
+# 출력: stash@{0}: On main: 로그인 기능 작업 중
+```
+
+#### 특정 파일만 저장
+
+```bash
+# 특정 파일만 stash
+git stash push src/login.ts src/auth.ts
+
+# 추적되지 않는 새 파일도 포함
+git stash -u
+```
+
+#### 여러 stash 관리
+
+```bash
+# stash 목록 확인
+git stash list
+# 출력:
+# stash@{0}: On main: 로그인 기능
+# stash@{1}: On main: API 수정
+# stash@{2}: On main: UI 변경
+
+# 특정 stash 내용 확인
+git stash show stash@{1}
+
+# 특정 stash 복원 (삭제하지 않음)
+git stash apply stash@{1}
+
+# 특정 stash 삭제
+git stash drop stash@{1}
+```
+
+### pop vs apply 차이점
+
+| 명령어 | stash 목록 | 사용 시점 |
+|--------|-----------|----------|
+| `git stash pop` | 복원 후 삭제 | 한 번만 사용할 변경사항 |
+| `git stash apply` | 복원 후 유지 | 여러 곳에 적용하거나 보관이 필요할 때 |
+
+### 주의사항
+
+- **충돌 발생 시**: `pop` 또는 `apply` 시 충돌이 발생하면 수동으로 해결해야 합니다.
+- **stash는 로컬 전용**: 원격 저장소에 push되지 않습니다.
+- **브랜치 무관**: stash는 어떤 브랜치에서든 복원할 수 있습니다.
+
+```bash
+# 충돌 발생 시
+git stash pop
+# 에러: CONFLICT (content): Merge conflict in <파일>
+
+# 충돌 해결 후 stash 수동 삭제 필요
+git stash drop
+```
 
 <br/>
 
