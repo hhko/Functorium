@@ -2,11 +2,19 @@ using Mediator;
 
 namespace Functorium.Applications.Cqrs;
 
-public interface IQueryRequest<TResponse>
-    : IQuery<TResponse>
-      where TResponse : IResponse<TResponse>;
+/// <summary>
+/// Result 패턴을 사용하는 Query 인터페이스.
+/// TSuccess는 성공 시 반환할 데이터 타입입니다.
+/// </summary>
+public interface IQueryRequest<TSuccess> : IQuery<FinResponse<TSuccess>>
+{
+}
 
-public interface IQueryUsecase<in TQuery, TResponse>
-    : IQueryHandler<TQuery, TResponse>
-      where TQuery : IQueryRequest<TResponse>
-      where TResponse : IResponse<TResponse>;
+/// <summary>
+/// Result 패턴을 사용하는 Query Handler 인터페이스
+/// </summary>
+public interface IQueryUsecase<in TQuery, TSuccess>
+    : IQueryHandler<TQuery, FinResponse<TSuccess>>
+    where TQuery : IQueryRequest<TSuccess>
+{
+}

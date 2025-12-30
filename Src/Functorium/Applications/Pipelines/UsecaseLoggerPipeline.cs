@@ -1,4 +1,4 @@
-﻿using Functorium.Abstractions;
+using Functorium.Abstractions;
 using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Loggers;
 using Functorium.Applications.Cqrs;
@@ -13,11 +13,15 @@ using ObservabilityFields = Functorium.Adapters.Observabilities.ObservabilityFie
 
 namespace Functorium.Applications.Pipelines;
 
+/// <summary>
+/// Result 패턴을 위한 로깅 Pipeline.
+/// IsSucc/IsFail 패턴을 사용하여 안전하게 응답을 로깅합니다.
+/// </summary>
 public sealed class UsecaseLoggerPipeline<TRequest, TResponse>
     : UsecasePipelineBase<TRequest>
     , IPipelineBehavior<TRequest, TResponse>
         where TRequest : IMessage
-        where TResponse : IResponse<TResponse>
+        where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 {
     private readonly ILogger<UsecaseLoggerPipeline<TRequest, TResponse>> _logger;
 
@@ -53,7 +57,7 @@ public sealed class UsecaseLoggerPipeline<TRequest, TResponse>
 
     private void LogResponse(TResponse response, string requestCqrs, string requestHandler, string requestHandlerMethod, double elapsed)
     {
-        if (response.IsSuccess)
+        if (response.IsSucc)
         {
             _logger.LogResponseMessageSuccess(
                 ObservabilityFields.Request.Layer.Application,
@@ -65,38 +69,42 @@ public sealed class UsecaseLoggerPipeline<TRequest, TResponse>
                 ObservabilityFields.Response.Status.Success,
                 elapsed);
         }
-        else
+        else if (response.IsFail)
         {
             //          | Framework            | Language-Ext   | bool
             // ---------|----------------------|----------------|----------------
             // Error    | ErrorCodeExceptional | Exceptional    | IsExceptional
             // Warnning | ErrorCodeExpected    | Expected       | IsExpected
 
-            Error error = response.Error!;
+            // IFinResponseWithError를 통해 Error 접근
+            if (response is IFinResponseWithError errorResponse)
+            {
+                Error error = errorResponse.Error;
 
-            if (error.IsExceptional)
-            {
-                _logger.LogResponseMessageError(
-                    ObservabilityFields.Request.Layer.Application,
-                    ObservabilityFields.Request.Category.Usecase,
-                    requestCqrs,
-                    requestHandler,
-                    requestHandlerMethod,
-                    ObservabilityFields.Response.Status.Failure,
-                    elapsed,
-                    error);
-            }
-            else
-            {
-                _logger.LogResponseMessageWarning(
-                    ObservabilityFields.Request.Layer.Application,
-                    ObservabilityFields.Request.Category.Usecase,
-                    requestCqrs,
-                    requestHandler,
-                    requestHandlerMethod,
-                    ObservabilityFields.Response.Status.Failure,
-                    elapsed,
-                    error);
+                if (error.IsExceptional)
+                {
+                    _logger.LogResponseMessageError(
+                        ObservabilityFields.Request.Layer.Application,
+                        ObservabilityFields.Request.Category.Usecase,
+                        requestCqrs,
+                        requestHandler,
+                        requestHandlerMethod,
+                        ObservabilityFields.Response.Status.Failure,
+                        elapsed,
+                        error);
+                }
+                else
+                {
+                    _logger.LogResponseMessageWarning(
+                        ObservabilityFields.Request.Layer.Application,
+                        ObservabilityFields.Request.Category.Usecase,
+                        requestCqrs,
+                        requestHandler,
+                        requestHandlerMethod,
+                        ObservabilityFields.Response.Status.Failure,
+                        elapsed,
+                        error);
+                }
             }
         }
     }

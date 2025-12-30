@@ -19,12 +19,14 @@ namespace Functorium.Applications.Pipelines;
 /// ServiceName 결정 우선순위:
 /// 1. appsettings.json의 "Observability:ServiceName" 설정값
 /// 2. 설정이 없으면 요청 타입의 어셈블리 이름 (Fallback)
+///
+/// IsSucc/IsFail 패턴을 사용하여 안전하게 메트릭을 기록합니다.
 /// </summary>
 public sealed class UsecaseMetricPipeline<TRequest, TResponse>
     : UsecasePipelineBase<TRequest>
     , IPipelineBehavior<TRequest, TResponse>
         where TRequest : IMessage
-        where TResponse : IResponse<TResponse>
+        where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 {
     private readonly IMeterFactory _meterFactory;
     private readonly string _meterName;
@@ -123,8 +125,8 @@ public sealed class UsecaseMetricPipeline<TRequest, TResponse>
         // Histogram에 처리 시간 기록 (밀리초를 초로 변환)
         durationHistogram.Record(elapsed / 1000.0, tags);
 
-        // 성공/실패 응답 수 기록
-        if (response.IsSuccess)
+        // 성공/실패 응답 수 기록 (IsSucc/IsFail 패턴 사용)
+        if (response.IsSucc)
         {
             responseSuccessCounter.Add(1,
                 new KeyValuePair<string, object?>(

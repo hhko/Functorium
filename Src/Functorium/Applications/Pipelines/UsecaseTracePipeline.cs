@@ -13,14 +13,17 @@ using ObservabilityFields = Functorium.Adapters.Observabilities.ObservabilityFie
 
 namespace Functorium.Applications.Pipelines;
 
+/// <summary>
+/// Result 패턴을 위한 분산 추적 Pipeline.
+/// IsSucc/IsFail 패턴을 사용하여 안전하게 추적 정보를 기록합니다.
+/// </summary>
 public sealed class UsecaseTracePipeline<TRequest, TResponse>
     : UsecasePipelineBase<TRequest>
     , IPipelineBehavior<TRequest, TResponse>
         where TRequest : IMessage
-        where TResponse : IResponse<TResponse>
+        where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 {
     private readonly ActivitySource _activitySource;
-    //private static readonly ActivitySource _activitySource = new(typeof(UsecaseTracePipeline<,>).Namespace!);
 
     public UsecaseTracePipeline(ActivitySource activitySource)
     {
@@ -65,7 +68,6 @@ public sealed class UsecaseTracePipeline<TRequest, TResponse>
         activity.SetTag(ObservabilityFields.Request.TelemetryKeys.Category, ObservabilityFields.Request.Category.Usecase);
         activity.SetTag(ObservabilityFields.Request.TelemetryKeys.HandlerCqrs, requestCqrs);
         activity.SetTag(ObservabilityFields.Request.TelemetryKeys.Handler, requestHandler);
-        //activity.SetTag("request.handler.path", requestHandlerPath);
     }
 
     private static void SetResponseTags(Activity activity, TResponse response, double elapsed)
@@ -81,13 +83,21 @@ public sealed class UsecaseTracePipeline<TRequest, TResponse>
 
     private static void SetStatusTags(Activity activity, TResponse response)
     {
-        if (response.IsSuccess)
+        if (response.IsSucc)
         {
             SetSuccessStatus(activity);
         }
         else
         {
-            SetFailureStatus(activity, response.Error);
+            // IFinResponseWithError를 통해 Error 접근
+            if (response is IFinResponseWithError errorResponse)
+            {
+                SetFailureStatus(activity, errorResponse.Error);
+            }
+            else
+            {
+                SetFailureStatus(activity, null);
+            }
         }
     }
 

@@ -1,18 +1,26 @@
-﻿using FluentValidation;
+using FluentValidation;
 
 using Functorium.Abstractions.Errors;
 using Functorium.Abstractions.Utilities;
 using Functorium.Applications.Cqrs;
 
+using LanguageExt.Common;
+
 using Mediator;
 
 namespace Functorium.Applications.Pipelines;
 
+/// <summary>
+/// Result 패턴을 위한 검증 Pipeline.
+/// 검증 실패 시 FinResponse.Fail로 변환합니다.
+///
+/// IFinResponseFactory{TSelf}의 static abstract 메서드를 활용하여 리플렉션 없이 타입 안전하게 구현.
+/// </summary>
 public sealed class UsecaseValidationPipeline<TRequest, TResponse>
     : UsecasePipelineBase<TRequest>
     , IPipelineBehavior<TRequest, TResponse>
         where TRequest : IMessage
-        where TResponse : IResponse<TResponse>
+        where TResponse : IFinResponseFactory<TResponse>
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
 
@@ -53,7 +61,8 @@ public sealed class UsecaseValidationPipeline<TRequest, TResponse>
 
         if (errors.Length is not 0)
         {
-            return TResponse.CreateFail(Error.Many(errors));
+            var error = errors.Length == 1 ? errors[0] : Error.Many(errors);
+            return TResponse.CreateFail(error);
         }
 
         return await next(request, cancellationToken);
@@ -63,7 +72,6 @@ public sealed class UsecaseValidationPipeline<TRequest, TResponse>
     {
         public static Error Validator(Dictionary<string, object> errorValue, string errorMessage) =>
             ErrorCodeFactory.Create(
-                //errorCode: $"{nameof(ApplicationErrors)}.UsecaseValidationPipeline.{nameof(Validator)}",
                 errorCode: $"{nameof(ApplicationErrors)}.{nameof(UsecaseValidationPipeline<TRequest, TResponse>)}.{nameof(Validator)}",
                 errorCurrentValue: errorValue,
                 errorMessage: $"{errorMessage}");
