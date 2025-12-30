@@ -2,54 +2,38 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build",
+      "label": "build-CqrsFunctional.Demo",
       "command": "dotnet",
       "type": "process",
       "args": [
         "build",
-        "${workspaceFolder}/Functorium.slnx",
-        "/property:GenerateFullPaths=true",
-        "/consoleloggerparameters:NoSummary;ForceNoAlign"
-      ],
-      "problemMatcher": "$msCompile",
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      }
-    },
-    {
-      "label": "build-CqrsPipeline.Demo",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "build",
-        "${workspaceFolder}/Tutorials/CqrsPipeline/Src/CqrsPipeline.Demo/CqrsPipeline.Demo.csproj",
+        "${workspaceFolder}/Tutorials/CqrsFunctional/Src/CqrsFunctional.Demo/CqrsFunctional.Demo.csproj",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary;ForceNoAlign"
       ],
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "publish-CqrsPipeline.Demo",
+      "label": "publish-CqrsFunctional.Demo",
       "command": "dotnet",
       "type": "process",
       "args": [
         "publish",
-        "${workspaceFolder}/Tutorials/CqrsPipeline/Src/CqrsPipeline.Demo/CqrsPipeline.Demo.csproj",
+        "${workspaceFolder}/Tutorials/CqrsFunctional/Src/CqrsFunctional.Demo/CqrsFunctional.Demo.csproj",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary;ForceNoAlign"
       ],
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "watch-CqrsPipeline.Demo",
+      "label": "watch-CqrsFunctional.Demo",
       "command": "dotnet",
       "type": "process",
       "args": [
         "watch",
         "run",
         "--project",
-        "${workspaceFolder}/Tutorials/CqrsPipeline/Src/CqrsPipeline.Demo/CqrsPipeline.Demo.csproj"
+        "${workspaceFolder}/Tutorials/CqrsFunctional/Src/CqrsFunctional.Demo/CqrsFunctional.Demo.csproj"
       ],
       "problemMatcher": "$msCompile"
     }

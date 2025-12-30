@@ -2,13 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "CqrsPipeline.Demo",
+      "name": "CqrsFunctional.Demo",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build-CqrsPipeline.Demo",
-      "program": "${workspaceFolder}/Tutorials/CqrsPipeline/Src/CqrsPipeline.Demo/bin/Debug/net10.0/CqrsPipeline.Demo.dll",
+      "preLaunchTask": "build-CqrsFunctional.Demo",
+      "program": "${workspaceFolder}/Tutorials/CqrsFunctional/Src/CqrsFunctional.Demo/bin/Debug/net10.0/CqrsFunctional.Demo.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/Tutorials/CqrsPipeline/Src/CqrsPipeline.Demo",
+      "cwd": "${workspaceFolder}/Tutorials/CqrsFunctional/Src/CqrsFunctional.Demo",
       "stopAtEntry": false,
       "console": "integratedTerminal",
       "env": {
