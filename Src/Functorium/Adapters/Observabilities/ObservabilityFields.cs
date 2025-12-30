@@ -83,7 +83,7 @@ public static class ObservabilityFields
         }
 
         public static class Keys
-{
+        {
             public const string Data = "Error";
         }
     }
@@ -105,5 +105,13 @@ public static class ObservabilityFields
             public static readonly EventId AdapterResponseWarning = new(1003, nameof(AdapterResponseWarning));
             public static readonly EventId AdapterResponseError = new(1004, nameof(AdapterResponseError));
         }
+    }
+
+    public static class Metrics
+    {
+        public static string GetRequest(string category) => $"adapter.{category}.op.request";
+        public static string GetResponseSuccess(string category) => $"adapter.{category}.op.response.success";
+        public static string GetResponseFailure(string category) => $"adapter.{category}.op.response.failure";
+        public static string GetDuration(string category) => $"adapter.{category}.op.duration";
     }
 }

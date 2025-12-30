@@ -2,6 +2,9 @@ using System.Reflection;
 using Functorium.Abstractions.Errors.DestructuringPolicies;
 using Functorium.Adapters.Observabilities.Builders.Configurators;
 using Functorium.Adapters.Observabilities.Logging;
+using Functorium.Adapters.Observabilities.Metrics;
+using Functorium.Adapters.Observabilities.Tracing;
+using Functorium.Applications.Observabilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -37,6 +40,11 @@ public partial class OpenTelemetryBuilder
     private Action<MetricsConfigurator>? _metricsConfigurator;
     private Action<TracingConfigurator>? _tracingConfigurator;
     private Action<Microsoft.Extensions.Logging.ILogger>? _startupLoggerConfigurator;
+
+    // AdapterObservability 설정
+    private bool _enableAdapterObservability = true; // 기본값: 자동 활성화
+    private readonly List<Func<IServiceProvider, IAdapterTrace>> _adapterTraceFactories = new();
+    private readonly List<Func<IServiceProvider, IAdapterMetric>> _adapterMetricFactories = new();
 
     internal OpenTelemetryBuilder(
         IServiceCollection services,
@@ -144,6 +152,39 @@ public partial class OpenTelemetryBuilder
     public OpenTelemetryOptions Options => _options;
 
     /// <summary>
+    /// Adapter 관찰 가능성 기능 활성화/비활성화
+    /// IAdapterTrace와 IAdapterMetric을 Singleton으로 등록합니다.
+    /// 기본값: true (자동 활성화)
+    /// </summary>
+    public OpenTelemetryBuilder WithAdapterObservability(bool enable = true)
+    {
+        _enableAdapterObservability = enable;
+        return this;
+    }
+
+    /// <summary>
+    /// 커스텀 IAdapterTrace 구현체 등록
+    /// 여러 번 호출 가능하며, 여러 구현체가 등록되면 AdapterTraceAggregator로 집계됩니다.
+    /// </summary>
+    public OpenTelemetryBuilder WithAdapterTrace<TImplementation>()
+        where TImplementation : class, IAdapterTrace
+    {
+        _adapterTraceFactories.Add(sp => ActivatorUtilities.CreateInstance<TImplementation>(sp));
+        return this;
+    }
+
+    /// <summary>
+    /// 커스텀 IAdapterMetric 구현체 등록
+    /// 여러 번 호출 가능하며, 여러 구현체가 등록되면 AdapterMetricAggregator로 집계됩니다.
+    /// </summary>
+    public OpenTelemetryBuilder WithAdapterMetric<TImplementation>()
+        where TImplementation : class, IAdapterMetric
+    {
+        _adapterMetricFactories.Add(sp => ActivatorUtilities.CreateInstance<TImplementation>(sp));
+        return this;
+    }
+
+    /// <summary>
     /// 모든 설정을 적용하고 IServiceCollection 반환
     /// </summary>
     public IServiceCollection Build()
@@ -156,6 +197,9 @@ public partial class OpenTelemetryBuilder
 
         // OpenTelemetry 설정 적용
         ConfigureOpenTelemetryInternal(resourceAttributes);
+
+        // AdapterObservability 등록 (OpenTelemetry 설정 후)
+        RegisterAdapterObservabilityInternal();
 
         // OpenTelemetry 설정 정보 로거 등록 (IHostedService)
         // 애플리케이션 시작 시 자동으로 설정 정보를 로그로 출력
@@ -332,6 +376,49 @@ public partial class OpenTelemetryBuilder
                     configurator.Apply(tracing);
                 }
             });
+    }
+
+    private void RegisterAdapterObservabilityInternal()
+    {
+        if (!_enableAdapterObservability)
+            return;
+
+        // 기본 구현체가 없으면 자동 추가
+        if (_adapterTraceFactories.Count == 0)
+        {
+            _adapterTraceFactories.Add(sp => ActivatorUtilities.CreateInstance<AdapterTrace>(sp));
+        }
+
+        if (_adapterMetricFactories.Count == 0)
+        {
+            _adapterMetricFactories.Add(sp => ActivatorUtilities.CreateInstance<AdapterMetric>(sp));
+        }
+
+        // IAdapterTrace 등록 (Singleton)
+        _services.AddSingleton<IAdapterTrace>(sp =>
+        {
+            List<IAdapterTrace> traces = _adapterTraceFactories
+                .Select(factory => factory(sp))
+                .ToList();
+
+            // 단일 구현체면 Aggregator 불필요
+            return traces.Count == 1
+                ? traces[0]
+                : new AdapterTraceAggregator(traces);
+        });
+
+        // IAdapterMetric 등록 (Singleton)
+        _services.AddSingleton<IAdapterMetric>(sp =>
+        {
+            List<IAdapterMetric> metrics = _adapterMetricFactories
+                .Select(factory => factory(sp))
+                .ToList();
+
+            // 단일 구현체면 Aggregator 불필요
+            return metrics.Count == 1
+                ? metrics[0]
+                : new AdapterMetricAggregator(metrics);
+        });
     }
 }
 

@@ -9,7 +9,7 @@ public interface IAdapterMetric
         string requestCategory,
         string requestHandler,
         string requestHandlerMethod,
-        DateTimeOffset startTime);
+        DateTimeOffset startTimestamp);
 
     void ResponseSuccess(Activity? activity, string requestCategory, double elapsedMs);
 
