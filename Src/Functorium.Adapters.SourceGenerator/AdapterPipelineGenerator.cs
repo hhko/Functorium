@@ -145,11 +145,11 @@ public sealed class AdapterPipelineGenerator()
             var allParameters = new List<ParameterInfo>();
             allParameters.AddRange(pipelineClass.BaseConstructorParameters);
 
-            // Pipeline 클래스 생성자 파라미터 (ActivityContext, ILogger, IAdapterTrace, IAdapterMetric)
-            allParameters.Add(new ParameterInfo("parentContext", "global::System.Diagnostics.ActivityContext", RefKind.None));
+            // Pipeline 클래스 생성자 파라미터 (IObservabilityContext, ILogger, ISpanFactory, IMetricRecorder)
+            allParameters.Add(new ParameterInfo("parentContext", "global::Functorium.Applications.Observabilities.IObservabilityContext", RefKind.None));
             allParameters.Add(new ParameterInfo("logger", $"global::Microsoft.Extensions.Logging.ILogger<{pipelineClass.Namespace}.{pipelineClass.ClassName}Pipeline>", RefKind.None));
-            allParameters.Add(new ParameterInfo("adapterTrace", "global::Functorium.Applications.Observabilities.IAdapterTrace", RefKind.None));
-            allParameters.Add(new ParameterInfo("adapterMetric", "global::Functorium.Applications.Observabilities.IAdapterMetric", RefKind.None));
+            allParameters.Add(new ParameterInfo("spanFactory", "global::Functorium.Applications.Observabilities.ISpanFactory", RefKind.None));
+            allParameters.Add(new ParameterInfo("metricRecorder", "global::Functorium.Applications.Observabilities.IMetricRecorder", RefKind.None));
 
             // 동일한 타입의 파라미터가 있는지 체크
             var duplicateTypes = allParameters
@@ -225,19 +225,18 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine()
             .AppendLine("using LanguageExt;")
             .AppendLine("using Microsoft.Extensions.Logging;")
-            .AppendLine("using System.Diagnostics;")
             .AppendLine()
-            .AppendLine("using ObservabilityFields = Functorium.Adapters.Observabilities.ObservabilityFields;")
+            .AppendLine("using ObservabilityNaming = Functorium.Applications.Observabilities.ObservabilityNaming;")
             .AppendLine()
             .AppendLine($"namespace {classInfo.Namespace};")
             .AppendLine()
             .AppendLine($"public class {classInfo.ClassName}Pipeline : {classInfo.ClassName}")
             .AppendLine("{")
-            .AppendLine("    private readonly ActivityContext _parentContext;")
+            .AppendLine("    private readonly IObservabilityContext? _parentContext;")
             .AppendLine()
             .AppendLine($"    private readonly ILogger<{classInfo.ClassName}Pipeline> _logger;")
-            .AppendLine("    private readonly IAdapterTrace _adapterTrace;")
-            .AppendLine("    private readonly IAdapterMetric _adapterMetric;")
+            .AppendLine("    private readonly ISpanFactory _spanFactory;")
+            .AppendLine("    private readonly IMetricRecorder _metricRecorder;")
             .AppendLine()
             .AppendLine($"    private const string RequestHandler = nameof({classInfo.ClassName});")
             .AppendLine()
@@ -248,10 +247,10 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine()
             .Append($"    public {classInfo.ClassName}Pipeline(")
             .AppendLine()
-            .AppendLine("        ActivityContext parentContext,")
+            .AppendLine("        IObservabilityContext? parentContext,")
             .AppendLine($"        ILogger<{classInfo.ClassName}Pipeline> logger,")
-            .AppendLine("        IAdapterTrace adapterTrace,")
-            .Append("        IAdapterMetric adapterMetric");
+            .AppendLine("        ISpanFactory spanFactory,")
+            .Append("        IMetricRecorder metricRecorder");
 
         string baseParams = GenerateBaseConstructorParameters(classInfo.BaseConstructorParameters);
         if (!string.IsNullOrEmpty(baseParams))
@@ -274,13 +273,13 @@ public sealed class AdapterPipelineGenerator()
 
         sb.AppendLine()
             .AppendLine("    {")
-            .AppendLine("        global::System.ArgumentNullException.ThrowIfNull(adapterTrace);")
-            .AppendLine("        global::System.ArgumentNullException.ThrowIfNull(adapterMetric);")
+            .AppendLine("        global::System.ArgumentNullException.ThrowIfNull(spanFactory);")
+            .AppendLine("        global::System.ArgumentNullException.ThrowIfNull(metricRecorder);")
             .AppendLine()
             .AppendLine("        _parentContext = parentContext;")
             .AppendLine("        _logger = logger;")
-            .AppendLine("        _adapterTrace = adapterTrace;")
-            .AppendLine("        _adapterMetric = adapterMetric;")
+            .AppendLine("        _spanFactory = spanFactory;")
+            .AppendLine("        _metricRecorder = metricRecorder;")
             .AppendLine()
             .AppendLine("        _isDebugEnabled = logger.IsEnabled(LogLevel.Debug);")
             .AppendLine("        _isInformationEnabled = logger.IsEnabled(LogLevel.Information);")
@@ -366,7 +365,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("            Fail: global::LanguageExt.IO.fail<A>")
             .AppendLine("        )).Flatten();")
             .AppendLine()
-            .AppendLine("    private global::LanguageExt.IO<A> ExecuteWithActivity<A>(")
+            .AppendLine("    private global::LanguageExt.IO<A> ExecuteWithSpan<A>(")
             .AppendLine("            string requestHandler,")
             .AppendLine("            string requestHandlerMethod,")
             .AppendLine("            global::LanguageExt.IO<A> operation,")
@@ -374,26 +373,22 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("            global::System.Action<string, string, A, double> responseLogSuccess,")
             .AppendLine("            global::System.Action<string, string, global::LanguageExt.Common.Error, double> responseLogFailure,")
             .AppendLine("            long startTimestamp) =>")
-            .AppendLine("        AcquireActivity(requestHandler, requestHandlerMethod, startTimestamp)")
+            .AppendLine("        AcquireSpan(requestHandler, requestHandlerMethod)")
             .AppendLine("            .Bracket(")
-            .AppendLine("                Use: activity =>")
-            .AppendLine("                    from _setContext in global::LanguageExt.IO.pure(global::Functorium.Applications.TraceParentContextHolder.SetCurrentUnit(_parentContext))")
+            .AppendLine("                Use: span =>")
             .AppendLine("                    from _logged in requestLog()")
             .AppendLine("                    from result in ExecuteOperationWithErrorHandling(")
             .AppendLine("                        requestHandler,")
             .AppendLine("                        requestHandlerMethod,")
             .AppendLine("                        operation,")
-            .AppendLine("                        activity,")
+            .AppendLine("                        span,")
             .AppendLine("                        responseLogSuccess,")
             .AppendLine("                        responseLogFailure,")
             .AppendLine("                        startTimestamp)")
             .AppendLine("                    select result,")
-            .AppendLine("                Fin: activity => global::LanguageExt.IO.lift(() =>")
+            .AppendLine("                Fin: span => global::LanguageExt.IO.lift(() =>")
             .AppendLine("                {")
-            .AppendLine("                    global::Functorium.Applications.TraceParentContextHolder.SetCurrent(null);")
-            .AppendLine("                    activity?.Stop();")
-            .AppendLine("                    activity?.Dispose();")
-            .AppendLine("                    Activity.Current = null;")
+            .AppendLine("                    span?.Dispose();")
             .AppendLine("                    return global::LanguageExt.Unit.Default;")
             .AppendLine("                }));")
             .AppendLine()
@@ -401,7 +396,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("        string requestHandler,")
             .AppendLine("        string requestHandlerMethod,")
             .AppendLine("        global::LanguageExt.IO<A> operation,")
-            .AppendLine("        Activity? activity,")
+            .AppendLine("        ISpan? span,")
             .AppendLine("        global::System.Action<string, string, A, double> responseLogSuccess,")
             .AppendLine("        global::System.Action<string, string, global::LanguageExt.Common.Error, double> responseLogFailure,")
             .AppendLine("        long startTimestamp) =>")
@@ -411,58 +406,61 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("                {")
             .AppendLine("                    double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);")
             .AppendLine("                    responseLogSuccess(requestHandler, requestHandlerMethod, result, elapsed);")
-            .AppendLine("                    ResponseActivitySuccess(activity, elapsed);")
+            .AppendLine("                    RecordSpanSuccess(span, elapsed);")
             .AppendLine("                    return global::LanguageExt.Unit.Default;")
             .AppendLine("                })")
             .AppendLine("                select result)")
             .AppendLine("            .IfFail(error =>")
-            .AppendLine("                HandleOperationFailure<A>(requestHandler, requestHandlerMethod, error, activity, startTimestamp, responseLogFailure));")
+            .AppendLine("                HandleOperationFailure<A>(requestHandler, requestHandlerMethod, error, span, startTimestamp, responseLogFailure));")
             .AppendLine()
             .AppendLine("    private global::LanguageExt.IO<A> HandleOperationFailure<A>(")
             .AppendLine("        string requestHandler,")
             .AppendLine("        string requestHandlerMethod,")
             .AppendLine("        global::LanguageExt.Common.Error error,")
-            .AppendLine("        Activity? activity,")
+            .AppendLine("        ISpan? span,")
             .AppendLine("        long startTimestamp,")
             .AppendLine("        global::System.Action<string, string, global::LanguageExt.Common.Error, double> responseLogFailure)")
             .AppendLine("    {")
             .AppendLine("        double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);")
             .AppendLine("        responseLogFailure(requestHandler, requestHandlerMethod, error, elapsed);")
-            .AppendLine("        ResponseActivityFailure(activity, error, elapsed);")
+            .AppendLine("        RecordSpanFailure(span, error, elapsed);")
             .AppendLine("        return global::LanguageExt.IO.fail<A>(error);")
             .AppendLine("    }")
             .AppendLine()
-            .AppendLine("    private global::LanguageExt.IO<Activity?> AcquireActivity(string requestHandler, string requestHandlerMethod, long startTimestamp) =>")
+            .AppendLine("    private global::LanguageExt.IO<ISpan?> AcquireSpan(string requestHandler, string requestHandlerMethod) =>")
             .AppendLine("        global::LanguageExt.IO.lift(() =>")
             .AppendLine("        {")
-            .AppendLine("            DateTimeOffset startTime = DateTimeOffset.UtcNow;")
-            .AppendLine("            Activity? activity = _adapterTrace.Request(")
+            .AppendLine("            string operationName = ObservabilityNaming.Spans.OperationName(")
+            .AppendLine("                ObservabilityNaming.Layers.Adapter,")
+            .AppendLine($"                this.GetRequestCategoryPascalCase(),")
+            .AppendLine("                requestHandler,")
+            .AppendLine("                requestHandlerMethod);")
+            .AppendLine()
+            .AppendLine("            ISpan? span = _spanFactory.CreateChildSpan(")
             .AppendLine("                _parentContext,")
+            .AppendLine("                operationName,")
             .AppendLine($"                this.GetRequestCategoryPascalCase(),")
             .AppendLine("                requestHandler,")
-            .AppendLine("                requestHandlerMethod,")
-            .AppendLine("                startTime);")
+            .AppendLine("                requestHandlerMethod);")
             .AppendLine()
-            .AppendLine("            _adapterMetric.Request(")
-            .AppendLine("                activity,")
+            .AppendLine("            _metricRecorder.RecordRequestStart(")
             .AppendLine($"                this.GetRequestCategoryPascalCase(),")
             .AppendLine("                requestHandler,")
-            .AppendLine("                requestHandlerMethod,")
-            .AppendLine("                startTime);")
+            .AppendLine("                requestHandlerMethod);")
             .AppendLine()
-            .AppendLine("            return activity;")
+            .AppendLine("            return span;")
             .AppendLine("        });")
             .AppendLine()
-            .AppendLine("    private void ResponseActivitySuccess(Activity? activity, double elapsed)")
+            .AppendLine("    private void RecordSpanSuccess(ISpan? span, double elapsed)")
             .AppendLine("    {")
-            .AppendLine($"        _adapterMetric.ResponseSuccess(activity, this.GetRequestCategoryPascalCase(), elapsed);")
-            .AppendLine("        _adapterTrace.ResponseSuccess(activity, elapsed);")
+            .AppendLine($"        _metricRecorder.RecordSuccess(this.GetRequestCategoryPascalCase(), RequestHandler, \"Method\", elapsed);")
+            .AppendLine("        span?.SetSuccess(elapsed);")
             .AppendLine("    }")
             .AppendLine()
-            .AppendLine("    private void ResponseActivityFailure(Activity? activity, global::LanguageExt.Common.Error error, double elapsed)")
+            .AppendLine("    private void RecordSpanFailure(ISpan? span, global::LanguageExt.Common.Error error, double elapsed)")
             .AppendLine("    {")
-            .AppendLine($"        _adapterMetric.ResponseFailure(activity, this.GetRequestCategoryPascalCase(), elapsed, error);")
-            .AppendLine("        _adapterTrace.ResponseFailure(activity, elapsed, error);")
+            .AppendLine($"        _metricRecorder.RecordFailure(this.GetRequestCategoryPascalCase(), RequestHandler, \"Method\", elapsed, error);")
+            .AppendLine("        span?.SetFailure(error, elapsed);")
             .AppendLine("    }")
             .AppendLine()
             .AppendLine("    private string GetRequestCategoryPascalCase() =>")
@@ -493,7 +491,7 @@ public sealed class AdapterPipelineGenerator()
         var actualReturnTypeForMethod = ExtractActualReturnType(method.ReturnType);
         sb.AppendLine("    ) =>")
             .AppendLine($"        global::LanguageExt.FinT.lift<global::LanguageExt.IO, {actualReturnTypeForMethod}>(")
-            .AppendLine("            (from result in ExecuteWithActivity(")
+            .AppendLine("            (from result in ExecuteWithSpan(")
             .AppendLine($"                requestHandler: RequestHandler,")
             .AppendLine($"                requestHandlerMethod: nameof({method.Name}),")
             .AppendLine($"                operation: FinTToIO(base.{method.Name}({string.Join(", ", method.Parameters.Select(p => p.Name))})),")
@@ -517,7 +515,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("            if (_isDebugEnabled)")
             .AppendLine("            {")
             .AppendLine($"                _logger.LogRequestDebug_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("                    ObservabilityFields.Request.Layer.Adapter,")
+            .AppendLine("                    ObservabilityNaming.Layers.Adapter,")
             .AppendLine($"                    this.GetRequestCategoryPascalCase(),")
             .AppendLine("                    requestHandler,")
             .Append("                    requestHandlerMethod")
@@ -526,7 +524,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("            else if (_isInformationEnabled)")
             .AppendLine("            {")
             .AppendLine($"                _logger.LogRequest_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("                    ObservabilityFields.Request.Layer.Adapter,")
+            .AppendLine("                    ObservabilityNaming.Layers.Adapter,")
             .AppendLine($"                    this.GetRequestCategoryPascalCase(),")
             .AppendLine("                    requestHandler,")
             .AppendLine("                    requestHandlerMethod);")
@@ -545,22 +543,22 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("        if (_isDebugEnabled)")
             .AppendLine("        {")
             .AppendLine($"            _logger.LogResponseDebug_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("                ObservabilityFields.Request.Layer.Adapter,")
+            .AppendLine("                ObservabilityNaming.Layers.Adapter,")
             .AppendLine($"                this.GetRequestCategoryPascalCase(),")
             .AppendLine("                requestHandler,")
             .AppendLine("                requestHandlerMethod,")
-            .AppendLine("                ObservabilityFields.Response.Status.Success,")
+            .AppendLine("                ObservabilityNaming.Status.Success,")
             .AppendLine("                result,")
             .AppendLine("                elapsed);")
             .AppendLine("        }")
             .AppendLine("        else if (_isInformationEnabled)")
             .AppendLine("        {")
             .AppendLine($"            _logger.LogResponse_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("                ObservabilityFields.Request.Layer.Adapter,")
+            .AppendLine("                ObservabilityNaming.Layers.Adapter,")
             .AppendLine($"                this.GetRequestCategoryPascalCase(),")
             .AppendLine("                requestHandler,")
             .AppendLine("                requestHandlerMethod,")
-            .AppendLine("                ObservabilityFields.Response.Status.Success,")
+            .AppendLine("                ObservabilityNaming.Status.Success,")
             .AppendLine("                elapsed);")
             .AppendLine("        }")
             .AppendLine("    }")
@@ -576,22 +574,22 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("        if (error.IsExceptional && _isErrorEnabled)")
             .AppendLine("        {")
             .AppendLine($"            _logger.LogResponseError_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("                ObservabilityFields.Request.Layer.Adapter,")
+            .AppendLine("                ObservabilityNaming.Layers.Adapter,")
             .AppendLine($"                this.GetRequestCategoryPascalCase(),")
             .AppendLine("                requestHandler,")
             .AppendLine("                requestHandlerMethod,")
-            .AppendLine("                ObservabilityFields.Response.Status.Failure,")
+            .AppendLine("                ObservabilityNaming.Status.Failure,")
             .AppendLine("                elapsed,")
             .AppendLine("                error);")
             .AppendLine("        }")
             .AppendLine("        else if (_isWarningEnabled)")
             .AppendLine("        {")
             .AppendLine($"            _logger.LogResponseWarning_{classInfo.ClassName}_{method.Name}(")
-            .AppendLine("                ObservabilityFields.Request.Layer.Adapter,")
+            .AppendLine("                ObservabilityNaming.Layers.Adapter,")
             .AppendLine($"                this.GetRequestCategoryPascalCase(),")
             .AppendLine("                requestHandler,")
             .AppendLine("                requestHandlerMethod,")
-            .AppendLine("                ObservabilityFields.Response.Status.Failure,")
+            .AppendLine("                ObservabilityNaming.Status.Failure,")
             .AppendLine("                elapsed,")
             .AppendLine("                error);")
             .AppendLine("        }")
@@ -674,7 +672,7 @@ public sealed class AdapterPipelineGenerator()
             // 메시지 템플릿 구성: 첫 번째 줄
             sb.Append("        logger.LogDebug(")
                 .AppendLine()
-                .AppendLine("            eventId: ObservabilityFields.EventIds.Adapter.AdapterRequest,")
+                .AppendLine("            eventId: ObservabilityNaming.EventIds.Adapter.AdapterRequest,")
                 .Append("            message: \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} \" +");
 
             // 두 번째 줄: 동적 파라미터 필드들
@@ -794,7 +792,7 @@ public sealed class AdapterPipelineGenerator()
             // 메시지 템플릿 구성: 첫 번째 줄
             sb.Append("        logger.LogDebug(")
                 .AppendLine()
-                .AppendLine("            eventId: ObservabilityFields.EventIds.Adapter.AdapterResponseSuccess,")
+                .AppendLine("            eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,")
                 .Append("            message: \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} \" +");
 
             // 두 번째 줄: Response 필드들
@@ -922,7 +920,7 @@ public sealed class AdapterPipelineGenerator()
         sb.AppendLine($"    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_{classInfo.ClassName}_{method.Name} =");
         sb.AppendLine("        LoggerMessage.Define<string, string, string, string>(");
         sb.AppendLine("            LogLevel.Information,");
-        sb.AppendLine("            ObservabilityFields.EventIds.Adapter.AdapterRequest,");
+        sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterRequest,");
         sb.AppendLine("            \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} requesting\");");
         sb.AppendLine();
     }
@@ -983,7 +981,7 @@ public sealed class AdapterPipelineGenerator()
         sb.AppendLine($"    private static readonly global::System.Action<ILogger, {string.Join(", ", typeParams)}, global::System.Exception?> _logRequestDebug_{classInfo.ClassName}_{method.Name} =");
         sb.AppendLine($"        LoggerMessage.Define<{string.Join(", ", typeParams)}>(");
         sb.AppendLine("            LogLevel.Debug,");
-        sb.AppendLine("            ObservabilityFields.EventIds.Adapter.AdapterRequest,");
+        sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterRequest,");
         sb.AppendLine($"            \"{messageTemplate}\");");
         sb.AppendLine();
     }
@@ -993,7 +991,7 @@ public sealed class AdapterPipelineGenerator()
         sb.AppendLine($"    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_{classInfo.ClassName}_{method.Name} =");
         sb.AppendLine("        LoggerMessage.Define<string, string, string, string, string, double>(");
         sb.AppendLine("            LogLevel.Information,");
-        sb.AppendLine("            ObservabilityFields.EventIds.Adapter.AdapterResponseSuccess,");
+        sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,");
         sb.AppendLine("            \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded {Status} in {Elapsed:0.0000} ms\");");
         sb.AppendLine();
     }
@@ -1049,7 +1047,7 @@ public sealed class AdapterPipelineGenerator()
         sb.AppendLine($"    private static readonly global::System.Action<ILogger, {string.Join(", ", typeParams)}, global::System.Exception?> _logResponseDebug_{classInfo.ClassName}_{method.Name} =");
         sb.AppendLine($"        LoggerMessage.Define<{string.Join(", ", typeParams)}>(");
         sb.AppendLine("            LogLevel.Debug,");
-        sb.AppendLine("            ObservabilityFields.EventIds.Adapter.AdapterResponseSuccess,");
+        sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,");
         sb.AppendLine($"            \"{messageTemplate}\");");
         sb.AppendLine();
     }
@@ -1060,7 +1058,7 @@ public sealed class AdapterPipelineGenerator()
         sb.AppendLine($"    private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_{classInfo.ClassName}_{method.Name} =");
         sb.AppendLine("        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(");
         sb.AppendLine("            LogLevel.Warning,");
-        sb.AppendLine("            ObservabilityFields.EventIds.Adapter.AdapterResponseWarning,");
+        sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,");
         sb.AppendLine("            \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}\");");
         sb.AppendLine();
     }
@@ -1071,7 +1069,7 @@ public sealed class AdapterPipelineGenerator()
         sb.AppendLine($"    private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_{classInfo.ClassName}_{method.Name} =");
         sb.AppendLine("        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(");
         sb.AppendLine("            LogLevel.Error,");
-        sb.AppendLine("            ObservabilityFields.EventIds.Adapter.AdapterResponseError,");
+        sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,");
         sb.AppendLine("            \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}\");");
         sb.AppendLine();
     }

@@ -1,9 +1,8 @@
 using System.Diagnostics.Metrics;
 
+using Functorium.Adapters.Observabilities;
 using Functorium.Applications.Cqrs;
 using Functorium.Applications.Observabilities;
-
-using ObservabilityFields = Functorium.Adapters.Observabilities.ObservabilityFields;
 
 namespace Functorium.Applications.Pipelines;
 
@@ -23,14 +22,14 @@ public abstract class UsecaseMetricCustomPipelineBase<TRequest>
     protected UsecaseMetricCustomPipelineBase(string serviceNamespace, IMeterFactory meterFactory)
     {
         // Meter 이름: {ServiceName}.Application
-        string meterName = $"{serviceNamespace}.{ObservabilityFields.Request.Layer.Application}";
+        string meterName = $"{serviceNamespace}.{ObservabilityNaming.Layers.Application}";
         _meter = meterFactory.Create(meterName);
 
         // Request 타입으로부터 CQRS 타입 자동 식별
         string cqrsType = GetRequestCqrs();
 
         // Metric 접두사: application.usecase.{cqrs} (query 또는 command)
-        _metricPrefix = UsecaseFields.Metrics.GetCqrs(cqrsType);
+        _metricPrefix = $"{ObservabilityNaming.Layers.Application}.{ObservabilityNaming.Categories.Usecase}.{cqrsType}";
     }
 
     /// <summary>
@@ -42,12 +41,12 @@ public abstract class UsecaseMetricCustomPipelineBase<TRequest>
         Type[] interfaces = typeof(TRequest).GetInterfaces();
 
         if (interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandRequest<>)))
-            return ObservabilityFields.Request.HandlerCqrs.Command;
+            return ObservabilityNaming.Cqrs.Command;
 
         if (interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryRequest<>)))
-            return ObservabilityFields.Request.HandlerCqrs.Query;
+            return ObservabilityNaming.Cqrs.Query;
 
-        return ObservabilityFields.Request.HandlerCqrs.Unknown;
+        return ObservabilityNaming.Cqrs.Unknown;
     }
 
     /// <summary>

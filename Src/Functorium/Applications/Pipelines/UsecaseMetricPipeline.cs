@@ -8,8 +8,6 @@ using Functorium.Applications.Observabilities;
 
 using Mediator;
 
-using ObservabilityFields = Functorium.Adapters.Observabilities.ObservabilityFields;
-
 namespace Functorium.Applications.Pipelines;
 
 /// <summary>
@@ -36,7 +34,7 @@ public sealed class UsecaseMetricPipeline<TRequest, TResponse>
     {
         _meterFactory = meterFactory;
 
-        _meterName = $"{openTelemetryOptions.ServiceNamespace}.{ObservabilityFields.Request.Layer.Application}";
+        _meterName = $"{openTelemetryOptions.ServiceNamespace}.{ObservabilityNaming.Layers.Application}";
         //_metricPrefix = ObservabilityFields.MetricPrefix.Application.Usecase;
     }
 
@@ -78,36 +76,36 @@ public sealed class UsecaseMetricPipeline<TRequest, TResponse>
 
         // Counter: 총 요청 수 (Prometheus가 자동으로 _total 접미사 추가)
         Counter<long> requestCounter = meter.CreateCounter<long>(
-            name: UsecaseFields.Metrics.GetRequest(requestCqrsField), // 이전: $"{_metricPrefix}.{requestCqrsField}.requests"
+            name: ObservabilityNaming.Metrics.UsecaseRequest(requestCqrsField),
             unit: "{request}",
             description: $"Total number of {requestHandler} requests");
 
         // Counter: 성공 응답 수
         Counter<long> responseSuccessCounter = meter.CreateCounter<long>(
-            name: UsecaseFields.Metrics.GetResponseSuccess(requestCqrsField), // 이전: $"{_metricPrefix}.{requestCqrsField}.responses.success"
+            name: ObservabilityNaming.Metrics.UsecaseResponseSuccess(requestCqrsField),
             unit: "{response}",
             description: $"Total number of successful {requestHandler} responses");
 
         // Counter: 실패 응답 수
         Counter<long> responseFailureCounter = meter.CreateCounter<long>(
-            name: UsecaseFields.Metrics.GetResponseFailure(requestCqrsField), // 이전: $"{_metricPrefix}.{requestCqrsField}.responses.failure"
+            name: ObservabilityNaming.Metrics.UsecaseResponseFailure(requestCqrsField),
             unit: "{response}",
             description: $"Total number of failed {requestHandler} responses");
 
         // Histogram: 요청 처리 시간 (초 단위)
         Histogram<double> durationHistogram = meter.CreateHistogram<double>(
-            name: UsecaseFields.Metrics.GetDuration(requestCqrsField), // 이전: $"{_metricPrefix}.{requestCqrsField}.duration"
+            name: ObservabilityNaming.Metrics.UsecaseDuration(requestCqrsField),
             unit: "s",
             description: $"Duration of {requestHandler} request processing in seconds");
 
         // Tags 생성 (공통)
         TagList tags = new TagList
         {
-            { ObservabilityFields.Request.TelemetryKeys.Layer, ObservabilityFields.Request.Layer.Application },
-            { ObservabilityFields.Request.TelemetryKeys.Category, ObservabilityFields.Request.Category.Usecase },
-            { ObservabilityFields.Request.TelemetryKeys.HandlerCqrs, requestCqrs },
-            { ObservabilityFields.Request.TelemetryKeys.Handler, requestHandler },
-            { ObservabilityFields.Request.TelemetryKeys.HandlerMethod, "Handle" }
+            { ObservabilityNaming.Tags.Layer, ObservabilityNaming.Layers.Application },
+            { ObservabilityNaming.Tags.Category, ObservabilityNaming.Categories.Usecase },
+            { ObservabilityNaming.Tags.HandlerCqrs, requestCqrs },
+            { ObservabilityNaming.Tags.Handler, requestHandler },
+            { ObservabilityNaming.Tags.Method, "Handle" }
         };
 
         // 요청 수 증가
@@ -130,39 +128,39 @@ public sealed class UsecaseMetricPipeline<TRequest, TResponse>
         {
             responseSuccessCounter.Add(1,
                 new KeyValuePair<string, object?>(
-                        ObservabilityFields.Request.TelemetryKeys.Layer, 
-                        ObservabilityFields.Request.Layer.Application),
+                        ObservabilityNaming.Tags.Layer,
+                        ObservabilityNaming.Layers.Application),
                 new KeyValuePair<string, object?>(
-                        ObservabilityFields.Request.TelemetryKeys.Category, 
-                        ObservabilityFields.Request.Category.Usecase),
+                        ObservabilityNaming.Tags.Category,
+                        ObservabilityNaming.Categories.Usecase),
                 new KeyValuePair<string, object?>(
-                        ObservabilityFields.Request.TelemetryKeys.HandlerCqrs, 
+                        ObservabilityNaming.Tags.HandlerCqrs,
                         requestCqrs),
                 new KeyValuePair<string, object?>(
-                        ObservabilityFields.Request.TelemetryKeys.Handler, 
+                        ObservabilityNaming.Tags.Handler,
                         requestHandler),
                 new KeyValuePair<string, object?>(
-                        ObservabilityFields.Response.TelemetryKeys.Status, 
-                        ObservabilityFields.Response.Status.Success));
+                        ObservabilityNaming.Tags.Status,
+                        ObservabilityNaming.Status.Success));
         }
         else
         {
             responseFailureCounter.Add(1,
                 new KeyValuePair<string, object?>(
-                        ObservabilityFields.Request.TelemetryKeys.Layer,
-                        ObservabilityFields.Request.Layer.Application),
+                        ObservabilityNaming.Tags.Layer,
+                        ObservabilityNaming.Layers.Application),
                 new KeyValuePair<string, object?>(
-                        ObservabilityFields.Request.TelemetryKeys.Category,
-                        ObservabilityFields.Request.Category.Usecase),
+                        ObservabilityNaming.Tags.Category,
+                        ObservabilityNaming.Categories.Usecase),
                 new KeyValuePair<string, object?>(
-                        ObservabilityFields.Request.TelemetryKeys.HandlerCqrs, 
+                        ObservabilityNaming.Tags.HandlerCqrs,
                         requestCqrs),
                 new KeyValuePair<string, object?>(
-                        ObservabilityFields.Request.TelemetryKeys.Handler, 
+                        ObservabilityNaming.Tags.Handler,
                         requestHandler),
                 new KeyValuePair<string, object?>(
-                        ObservabilityFields.Response.TelemetryKeys.Status, 
-                        ObservabilityFields.Response.Status.Failure));
+                        ObservabilityNaming.Tags.Status,
+                        ObservabilityNaming.Status.Failure));
         }
 
         return response;

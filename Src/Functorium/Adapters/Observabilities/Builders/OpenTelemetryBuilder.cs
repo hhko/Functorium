@@ -1,9 +1,9 @@
+using System.Diagnostics;
 using System.Reflection;
 using Functorium.Abstractions.Errors.DestructuringPolicies;
 using Functorium.Adapters.Observabilities.Builders.Configurators;
 using Functorium.Adapters.Observabilities.Logging;
-using Functorium.Adapters.Observabilities.Metrics;
-using Functorium.Adapters.Observabilities.Tracing;
+using Functorium.Adapters.Observabilities.OpenTelemetry;
 using Functorium.Applications.Observabilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,8 +43,6 @@ public partial class OpenTelemetryBuilder
 
     // AdapterObservability 설정
     private bool _enableAdapterObservability = true; // 기본값: 자동 활성화
-    private readonly List<Func<IServiceProvider, IAdapterTrace>> _adapterTraceFactories = new();
-    private readonly List<Func<IServiceProvider, IAdapterMetric>> _adapterMetricFactories = new();
 
     internal OpenTelemetryBuilder(
         IServiceCollection services,
@@ -153,34 +151,12 @@ public partial class OpenTelemetryBuilder
 
     /// <summary>
     /// Adapter 관찰 가능성 기능 활성화/비활성화
-    /// IAdapterTrace와 IAdapterMetric을 Singleton으로 등록합니다.
+    /// ISpanFactory, IMetricRecorder, IContextPropagator를 Singleton으로 등록합니다.
     /// 기본값: true (자동 활성화)
     /// </summary>
     public OpenTelemetryBuilder WithAdapterObservability(bool enable = true)
     {
         _enableAdapterObservability = enable;
-        return this;
-    }
-
-    /// <summary>
-    /// 커스텀 IAdapterTrace 구현체 등록
-    /// 여러 번 호출 가능하며, 여러 구현체가 등록되면 AdapterTraceAggregator로 집계됩니다.
-    /// </summary>
-    public OpenTelemetryBuilder WithAdapterTrace<TImplementation>()
-        where TImplementation : class, IAdapterTrace
-    {
-        _adapterTraceFactories.Add(sp => ActivatorUtilities.CreateInstance<TImplementation>(sp));
-        return this;
-    }
-
-    /// <summary>
-    /// 커스텀 IAdapterMetric 구현체 등록
-    /// 여러 번 호출 가능하며, 여러 구현체가 등록되면 AdapterMetricAggregator로 집계됩니다.
-    /// </summary>
-    public OpenTelemetryBuilder WithAdapterMetric<TImplementation>()
-        where TImplementation : class, IAdapterMetric
-    {
-        _adapterMetricFactories.Add(sp => ActivatorUtilities.CreateInstance<TImplementation>(sp));
         return this;
     }
 
@@ -383,41 +359,31 @@ public partial class OpenTelemetryBuilder
         if (!_enableAdapterObservability)
             return;
 
-        // 기본 구현체가 없으면 자동 추가
-        if (_adapterTraceFactories.Count == 0)
+        // ActivitySource 등록 (Singleton)
+        // 프로젝트별 ActivitySource를 생성하여 추적에 사용
+        // ServiceNamespace가 비어있으면 ServiceName 사용
+        _services.AddSingleton(sp =>
         {
-            _adapterTraceFactories.Add(sp => ActivatorUtilities.CreateInstance<AdapterTrace>(sp));
-        }
-
-        if (_adapterMetricFactories.Count == 0)
-        {
-            _adapterMetricFactories.Add(sp => ActivatorUtilities.CreateInstance<AdapterMetric>(sp));
-        }
-
-        // IAdapterTrace 등록 (Singleton)
-        _services.AddSingleton<IAdapterTrace>(sp =>
-        {
-            List<IAdapterTrace> traces = _adapterTraceFactories
-                .Select(factory => factory(sp))
-                .ToList();
-
-            // 단일 구현체면 Aggregator 불필요
-            return traces.Count == 1
-                ? traces[0]
-                : new AdapterTraceAggregator(traces);
+            string serviceNamespace = !string.IsNullOrWhiteSpace(_options.ServiceNamespace)
+                ? _options.ServiceNamespace
+                : _options.ServiceName;
+            return new ActivitySource(serviceNamespace);
         });
 
-        // IAdapterMetric 등록 (Singleton)
-        _services.AddSingleton<IAdapterMetric>(sp =>
-        {
-            List<IAdapterMetric> metrics = _adapterMetricFactories
-                .Select(factory => factory(sp))
-                .ToList();
+        // IContextPropagator 등록 (Singleton)
+        _services.AddSingleton<IContextPropagator, ActivityContextPropagator>();
 
-            // 단일 구현체면 Aggregator 불필요
-            return metrics.Count == 1
-                ? metrics[0]
-                : new AdapterMetricAggregator(metrics);
+        // ISpanFactory 등록 (Singleton)
+        _services.AddSingleton<ISpanFactory>(sp =>
+        {
+            ActivitySource activitySource = sp.GetRequiredService<ActivitySource>();
+            return new OpenTelemetrySpanFactory(activitySource);
+        });
+
+        // IMetricRecorder 등록 (Singleton)
+        _services.AddSingleton<IMetricRecorder>(sp =>
+        {
+            return new OpenTelemetryMetricRecorder(_options.ServiceNamespace);
         });
     }
 }

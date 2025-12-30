@@ -13,19 +13,18 @@ using Functorium.Applications.Observabilities;
 
 using LanguageExt;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 
-using ObservabilityFields = Functorium.Adapters.Observabilities.ObservabilityFields;
+using ObservabilityNaming = Functorium.Applications.Observabilities.ObservabilityNaming;
 
 namespace TestNamespace;
 
 public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
 {
-    private readonly ActivityContext _parentContext;
+    private readonly IObservabilityContext? _parentContext;
 
     private readonly ILogger<TupleWithArrayInputAdapterPipeline> _logger;
-    private readonly IAdapterTrace _adapterTrace;
-    private readonly IAdapterMetric _adapterMetric;
+    private readonly ISpanFactory _spanFactory;
+    private readonly IMetricRecorder _metricRecorder;
 
     private const string RequestHandler = nameof(TupleWithArrayInputAdapter);
 
@@ -35,19 +34,19 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
     private readonly bool _isErrorEnabled;
 
     public TupleWithArrayInputAdapterPipeline(
-        ActivityContext parentContext,
+        IObservabilityContext? parentContext,
         ILogger<TupleWithArrayInputAdapterPipeline> logger,
-        IAdapterTrace adapterTrace,
-        IAdapterMetric adapterMetric)
+        ISpanFactory spanFactory,
+        IMetricRecorder metricRecorder)
 
     {
-        global::System.ArgumentNullException.ThrowIfNull(adapterTrace);
-        global::System.ArgumentNullException.ThrowIfNull(adapterMetric);
+        global::System.ArgumentNullException.ThrowIfNull(spanFactory);
+        global::System.ArgumentNullException.ThrowIfNull(metricRecorder);
 
         _parentContext = parentContext;
         _logger = logger;
-        _adapterTrace = adapterTrace;
-        _adapterMetric = adapterMetric;
+        _spanFactory = spanFactory;
+        _metricRecorder = metricRecorder;
 
         _isDebugEnabled = logger.IsEnabled(LogLevel.Debug);
         _isInformationEnabled = logger.IsEnabled(LogLevel.Information);
@@ -61,7 +60,7 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
             Fail: global::LanguageExt.IO.fail<A>
         )).Flatten();
 
-    private global::LanguageExt.IO<A> ExecuteWithActivity<A>(
+    private global::LanguageExt.IO<A> ExecuteWithSpan<A>(
             string requestHandler,
             string requestHandlerMethod,
             global::LanguageExt.IO<A> operation,
@@ -69,26 +68,22 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
             global::System.Action<string, string, A, double> responseLogSuccess,
             global::System.Action<string, string, global::LanguageExt.Common.Error, double> responseLogFailure,
             long startTimestamp) =>
-        AcquireActivity(requestHandler, requestHandlerMethod, startTimestamp)
+        AcquireSpan(requestHandler, requestHandlerMethod)
             .Bracket(
-                Use: activity =>
-                    from _setContext in global::LanguageExt.IO.pure(global::Functorium.Applications.TraceParentContextHolder.SetCurrentUnit(_parentContext))
+                Use: span =>
                     from _logged in requestLog()
                     from result in ExecuteOperationWithErrorHandling(
                         requestHandler,
                         requestHandlerMethod,
                         operation,
-                        activity,
+                        span,
                         responseLogSuccess,
                         responseLogFailure,
                         startTimestamp)
                     select result,
-                Fin: activity => global::LanguageExt.IO.lift(() =>
+                Fin: span => global::LanguageExt.IO.lift(() =>
                 {
-                    global::Functorium.Applications.TraceParentContextHolder.SetCurrent(null);
-                    activity?.Stop();
-                    activity?.Dispose();
-                    Activity.Current = null;
+                    span?.Dispose();
                     return global::LanguageExt.Unit.Default;
                 }));
 
@@ -96,7 +91,7 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.IO<A> operation,
-        Activity? activity,
+        ISpan? span,
         global::System.Action<string, string, A, double> responseLogSuccess,
         global::System.Action<string, string, global::LanguageExt.Common.Error, double> responseLogFailure,
         long startTimestamp) =>
@@ -106,58 +101,61 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
                 {
                     double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);
                     responseLogSuccess(requestHandler, requestHandlerMethod, result, elapsed);
-                    ResponseActivitySuccess(activity, elapsed);
+                    RecordSpanSuccess(span, elapsed);
                     return global::LanguageExt.Unit.Default;
                 })
                 select result)
             .IfFail(error =>
-                HandleOperationFailure<A>(requestHandler, requestHandlerMethod, error, activity, startTimestamp, responseLogFailure));
+                HandleOperationFailure<A>(requestHandler, requestHandlerMethod, error, span, startTimestamp, responseLogFailure));
 
     private global::LanguageExt.IO<A> HandleOperationFailure<A>(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
-        Activity? activity,
+        ISpan? span,
         long startTimestamp,
         global::System.Action<string, string, global::LanguageExt.Common.Error, double> responseLogFailure)
     {
         double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);
         responseLogFailure(requestHandler, requestHandlerMethod, error, elapsed);
-        ResponseActivityFailure(activity, error, elapsed);
+        RecordSpanFailure(span, error, elapsed);
         return global::LanguageExt.IO.fail<A>(error);
     }
 
-    private global::LanguageExt.IO<Activity?> AcquireActivity(string requestHandler, string requestHandlerMethod, long startTimestamp) =>
+    private global::LanguageExt.IO<ISpan?> AcquireSpan(string requestHandler, string requestHandlerMethod) =>
         global::LanguageExt.IO.lift(() =>
         {
-            DateTimeOffset startTime = DateTimeOffset.UtcNow;
-            Activity? activity = _adapterTrace.Request(
+            string operationName = ObservabilityNaming.Spans.OperationName(
+                ObservabilityNaming.Layers.Adapter,
+                this.GetRequestCategoryPascalCase(),
+                requestHandler,
+                requestHandlerMethod);
+
+            ISpan? span = _spanFactory.CreateChildSpan(
                 _parentContext,
+                operationName,
                 this.GetRequestCategoryPascalCase(),
                 requestHandler,
-                requestHandlerMethod,
-                startTime);
+                requestHandlerMethod);
 
-            _adapterMetric.Request(
-                activity,
+            _metricRecorder.RecordRequestStart(
                 this.GetRequestCategoryPascalCase(),
                 requestHandler,
-                requestHandlerMethod,
-                startTime);
+                requestHandlerMethod);
 
-            return activity;
+            return span;
         });
 
-    private void ResponseActivitySuccess(Activity? activity, double elapsed)
+    private void RecordSpanSuccess(ISpan? span, double elapsed)
     {
-        _adapterMetric.ResponseSuccess(activity, this.GetRequestCategoryPascalCase(), elapsed);
-        _adapterTrace.ResponseSuccess(activity, elapsed);
+        _metricRecorder.RecordSuccess(this.GetRequestCategoryPascalCase(), RequestHandler, "Method", elapsed);
+        span?.SetSuccess(elapsed);
     }
 
-    private void ResponseActivityFailure(Activity? activity, global::LanguageExt.Common.Error error, double elapsed)
+    private void RecordSpanFailure(ISpan? span, global::LanguageExt.Common.Error error, double elapsed)
     {
-        _adapterMetric.ResponseFailure(activity, this.GetRequestCategoryPascalCase(), elapsed, error);
-        _adapterTrace.ResponseFailure(activity, elapsed, error);
+        _metricRecorder.RecordFailure(this.GetRequestCategoryPascalCase(), RequestHandler, "Method", elapsed, error);
+        span?.SetFailure(error, elapsed);
     }
 
     private string GetRequestCategoryPascalCase() =>
@@ -169,7 +167,7 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
         (string Name, int[] Scores) student
     ) =>
         global::LanguageExt.FinT.lift<global::LanguageExt.IO, double>(
-            (from result in ExecuteWithActivity(
+            (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
                 requestHandlerMethod: nameof(CalculateAverage),
                 operation: FinTToIO(base.CalculateAverage(student)),
@@ -188,7 +186,7 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
             if (_isDebugEnabled)
             {
                 _logger.LogRequestDebug_TupleWithArrayInputAdapter_CalculateAverage(
-                    ObservabilityFields.Request.Layer.Adapter,
+                    ObservabilityNaming.Layers.Adapter,
                     this.GetRequestCategoryPascalCase(),
                     requestHandler,
                     requestHandlerMethod,
@@ -197,7 +195,7 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
             else if (_isInformationEnabled)
             {
                 _logger.LogRequest_TupleWithArrayInputAdapter_CalculateAverage(
-                    ObservabilityFields.Request.Layer.Adapter,
+                    ObservabilityNaming.Layers.Adapter,
                     this.GetRequestCategoryPascalCase(),
                     requestHandler,
                     requestHandlerMethod);
@@ -214,22 +212,22 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
         if (_isDebugEnabled)
         {
             _logger.LogResponseDebug_TupleWithArrayInputAdapter_CalculateAverage(
-                ObservabilityFields.Request.Layer.Adapter,
+                ObservabilityNaming.Layers.Adapter,
                 this.GetRequestCategoryPascalCase(),
                 requestHandler,
                 requestHandlerMethod,
-                ObservabilityFields.Response.Status.Success,
+                ObservabilityNaming.Status.Success,
                 result,
                 elapsed);
         }
         else if (_isInformationEnabled)
         {
             _logger.LogResponse_TupleWithArrayInputAdapter_CalculateAverage(
-                ObservabilityFields.Request.Layer.Adapter,
+                ObservabilityNaming.Layers.Adapter,
                 this.GetRequestCategoryPascalCase(),
                 requestHandler,
                 requestHandlerMethod,
-                ObservabilityFields.Response.Status.Success,
+                ObservabilityNaming.Status.Success,
                 elapsed);
         }
     }
@@ -243,22 +241,22 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
         if (error.IsExceptional && _isErrorEnabled)
         {
             _logger.LogResponseError_TupleWithArrayInputAdapter_CalculateAverage(
-                ObservabilityFields.Request.Layer.Adapter,
+                ObservabilityNaming.Layers.Adapter,
                 this.GetRequestCategoryPascalCase(),
                 requestHandler,
                 requestHandlerMethod,
-                ObservabilityFields.Response.Status.Failure,
+                ObservabilityNaming.Status.Failure,
                 elapsed,
                 error);
         }
         else if (_isWarningEnabled)
         {
             _logger.LogResponseWarning_TupleWithArrayInputAdapter_CalculateAverage(
-                ObservabilityFields.Request.Layer.Adapter,
+                ObservabilityNaming.Layers.Adapter,
                 this.GetRequestCategoryPascalCase(),
                 requestHandler,
                 requestHandlerMethod,
-                ObservabilityFields.Response.Status.Failure,
+                ObservabilityNaming.Status.Failure,
                 elapsed,
                 error);
         }
@@ -272,31 +270,31 @@ internal static class TupleWithArrayInputAdapterPipelineLoggers
     private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_TupleWithArrayInputAdapter_CalculateAverage =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
-            ObservabilityFields.EventIds.Adapter.AdapterRequest,
+            ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} requesting");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, (string Name, int[] Scores), global::System.Exception?> _logRequestDebug_TupleWithArrayInputAdapter_CalculateAverage =
         LoggerMessage.Define<string, string, string, string, (string Name, int[] Scores)>(
             LogLevel.Debug,
-            ObservabilityFields.EventIds.Adapter.AdapterRequest,
+            ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} {Request_Student} requesting");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_TupleWithArrayInputAdapter_CalculateAverage =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
-            ObservabilityFields.EventIds.Adapter.AdapterResponseSuccess,
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded {Status} in {Elapsed:0.0000} ms");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_TupleWithArrayInputAdapter_CalculateAverage =
         LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
             LogLevel.Warning,
-            ObservabilityFields.EventIds.Adapter.AdapterResponseWarning,
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
             "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_TupleWithArrayInputAdapter_CalculateAverage =
         LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
             LogLevel.Error,
-            ObservabilityFields.EventIds.Adapter.AdapterResponseError,
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
             "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}");
 
 
@@ -341,7 +339,7 @@ internal static class TupleWithArrayInputAdapterPipelineLoggers
             return;
 
         logger.LogDebug(
-            eventId: ObservabilityFields.EventIds.Adapter.AdapterResponseSuccess,
+            eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             message: "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} " +
                      "{Response_Result} " +
                      "responded {Status} in {Elapsed:0.0000} ms",
