@@ -17,8 +17,6 @@
 //
 // ============================================================================
 
-using System.Diagnostics;
-
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 
@@ -55,15 +53,15 @@ using var loggerFactory = LoggerFactory.Create(builder =>
 });
 
 var logger = loggerFactory.CreateLogger<UserRepositoryPipeline>();
-var adapterTrace = new MockAdapterTrace();
-var adapterMetric = new MockAdapterMetric();
+var adapterTrace = new MockSpanFactory();
+var adapterMetric = new MockMetricRecorder();
 
 // Pipeline 인스턴스 생성
 var pipeline = new UserRepositoryPipeline(
-    parentContext: Activity.Current?.Context ?? default,
+    parentContext: null,
     logger: logger,
-    adapterTrace: adapterTrace,
-    adapterMetric: adapterMetric);
+    spanFactory: adapterTrace,
+    metricRecorder: adapterMetric);
 
 Console.WriteLine($"   Type: {pipeline.GetType().Name}");
 Console.WriteLine($"   Base Type: {pipeline.GetType().BaseType?.Name}");
