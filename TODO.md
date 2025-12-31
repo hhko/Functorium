@@ -1,3 +1,7 @@
+- [x] release note 정리
+- [x] 네임스페이스 업데이트
+- [x] GitHub Release 스크립트
+- [x] GitHub Release
 - [ ] 계층 구조 테스트
 - [ ] aspire 대시보드 구축
 - [ ] asprie 대시보드 확인(계층 구조)
@@ -5,9 +9,16 @@
 - [ ] 코드 이해를 위한 예제 코드 작성
 - [ ] 코드 이해를 위한 학습 문서 작성
 ---
+- [ ] 경고 제거
+---
 - [ ] CqrsObservability -> Cqrs04Observability
 - [ ] Cqrs04Observability + Grafana
 - [ ] Cqrs04Observability + OpenSearch
+---
+- [ ] ObservabilityNaming 정리(Logger 통합?)
+- [ ] Release할 때 NuGet 패키지 버전 불일치
+  - Functorium.1.0.0.nupkg
+  - Functorium.1.0.0-alpha.1.nupkg
 ---
 - [x] Unit Testing 가이드 문서 업데이트
 - [x] ValueObject Book 프로젝트 통합
