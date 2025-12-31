@@ -192,11 +192,11 @@ public class OpenTelemetryRegistrationTests
     #region Individual Endpoint Configuration Tests
 
     [Fact]
-    public void RegisterOpenTelemetry_ConfiguresTracingCollectorEndpoint_WhenSetInConfiguration()
+    public void RegisterOpenTelemetry_ConfiguresTracingEndpoint_WhenSetInConfiguration()
     {
         // Arrange
         var settings = CreateValidOpenTelemetrySettings();
-        settings["OpenTelemetry:TracingCollectorEndpoint"] = "http://tracing-collector:21890";
+        settings["OpenTelemetry:TracingEndpoint"] = "http://tracing-collector:21890";
         var (services, configuration) = CreateServicesWithConfiguration(settings);
 
         // Act
@@ -205,15 +205,15 @@ public class OpenTelemetryRegistrationTests
         var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
 
         // Assert
-        actual.TracingCollectorEndpoint.ShouldBe("http://tracing-collector:21890");
+        actual.TracingEndpoint.ShouldBe("http://tracing-collector:21890");
     }
 
     [Fact]
-    public void RegisterOpenTelemetry_ConfiguresMetricsCollectorEndpoint_WhenSetInConfiguration()
+    public void RegisterOpenTelemetry_ConfiguresMetricsEndpoint_WhenSetInConfiguration()
     {
         // Arrange
         var settings = CreateValidOpenTelemetrySettings();
-        settings["OpenTelemetry:MetricsCollectorEndpoint"] = "http://metrics-collector:21891";
+        settings["OpenTelemetry:MetricsEndpoint"] = "http://metrics-collector:21891";
         var (services, configuration) = CreateServicesWithConfiguration(settings);
 
         // Act
@@ -222,15 +222,15 @@ public class OpenTelemetryRegistrationTests
         var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
 
         // Assert
-        actual.MetricsCollectorEndpoint.ShouldBe("http://metrics-collector:21891");
+        actual.MetricsEndpoint.ShouldBe("http://metrics-collector:21891");
     }
 
     [Fact]
-    public void RegisterOpenTelemetry_ConfiguresLoggingCollectorEndpoint_WhenSetInConfiguration()
+    public void RegisterOpenTelemetry_ConfiguresLoggingEndpoint_WhenSetInConfiguration()
     {
         // Arrange
         var settings = CreateValidOpenTelemetrySettings();
-        settings["OpenTelemetry:LoggingCollectorEndpoint"] = "http://logging-collector:21892";
+        settings["OpenTelemetry:LoggingEndpoint"] = "http://logging-collector:21892";
         var (services, configuration) = CreateServicesWithConfiguration(settings);
 
         // Act
@@ -239,7 +239,7 @@ public class OpenTelemetryRegistrationTests
         var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
 
         // Assert
-        actual.LoggingCollectorEndpoint.ShouldBe("http://logging-collector:21892");
+        actual.LoggingEndpoint.ShouldBe("http://logging-collector:21892");
     }
 
     #endregion
@@ -247,11 +247,11 @@ public class OpenTelemetryRegistrationTests
     #region Individual Protocol Configuration Tests
 
     [Fact]
-    public void RegisterOpenTelemetry_ConfiguresTracingCollectorProtocol_WhenSetInConfiguration()
+    public void RegisterOpenTelemetry_ConfiguresTracingProtocol_WhenSetInConfiguration()
     {
         // Arrange
         var settings = CreateValidOpenTelemetrySettings();
-        settings["OpenTelemetry:TracingCollectorProtocol"] = "HttpProtobuf";
+        settings["OpenTelemetry:TracingProtocol"] = "HttpProtobuf";
         var (services, configuration) = CreateServicesWithConfiguration(settings);
 
         // Act
@@ -260,15 +260,15 @@ public class OpenTelemetryRegistrationTests
         var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
 
         // Assert
-        actual.TracingCollectorProtocol.ShouldBe("HttpProtobuf");
+        actual.TracingProtocol.ShouldBe("HttpProtobuf");
     }
 
     [Fact]
-    public void RegisterOpenTelemetry_ConfiguresMetricsCollectorProtocol_WhenSetInConfiguration()
+    public void RegisterOpenTelemetry_ConfiguresMetricsProtocol_WhenSetInConfiguration()
     {
         // Arrange
         var settings = CreateValidOpenTelemetrySettings();
-        settings["OpenTelemetry:MetricsCollectorProtocol"] = "HttpProtobuf";
+        settings["OpenTelemetry:MetricsProtocol"] = "HttpProtobuf";
         var (services, configuration) = CreateServicesWithConfiguration(settings);
 
         // Act
@@ -277,15 +277,15 @@ public class OpenTelemetryRegistrationTests
         var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
 
         // Assert
-        actual.MetricsCollectorProtocol.ShouldBe("HttpProtobuf");
+        actual.MetricsProtocol.ShouldBe("HttpProtobuf");
     }
 
     [Fact]
-    public void RegisterOpenTelemetry_ConfiguresLoggingCollectorProtocol_WhenSetInConfiguration()
+    public void RegisterOpenTelemetry_ConfiguresLoggingProtocol_WhenSetInConfiguration()
     {
         // Arrange
         var settings = CreateValidOpenTelemetrySettings();
-        settings["OpenTelemetry:LoggingCollectorProtocol"] = "HttpProtobuf";
+        settings["OpenTelemetry:LoggingProtocol"] = "HttpProtobuf";
         var (services, configuration) = CreateServicesWithConfiguration(settings);
 
         // Act
@@ -294,7 +294,7 @@ public class OpenTelemetryRegistrationTests
         var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
 
         // Assert
-        actual.LoggingCollectorProtocol.ShouldBe("HttpProtobuf");
+        actual.LoggingProtocol.ShouldBe("HttpProtobuf");
     }
 
     #endregion

@@ -68,9 +68,9 @@ public class OpenTelemetryOptionsValidatorTests
         {
             ServiceName = "MyService",
             CollectorEndpoint = string.Empty,
-            TracingCollectorEndpoint = null,
-            MetricsCollectorEndpoint = null,
-            LoggingCollectorEndpoint = null
+            TracingEndpoint = null,
+            MetricsEndpoint = null,
+            LoggingEndpoint = null
         };
 
         // Act
@@ -102,7 +102,7 @@ public class OpenTelemetryOptionsValidatorTests
         {
             ServiceName = "MyService",
             CollectorEndpoint = string.Empty,
-            TracingCollectorEndpoint = "http://localhost:21890"
+            TracingEndpoint = "http://localhost:21890"
         };
 
         // Act
@@ -120,7 +120,7 @@ public class OpenTelemetryOptionsValidatorTests
         {
             ServiceName = "MyService",
             CollectorEndpoint = string.Empty,
-            MetricsCollectorEndpoint = "http://localhost:21891"
+            MetricsEndpoint = "http://localhost:21891"
         };
 
         // Act
@@ -138,7 +138,7 @@ public class OpenTelemetryOptionsValidatorTests
         {
             ServiceName = "MyService",
             CollectorEndpoint = string.Empty,
-            LoggingCollectorEndpoint = "http://localhost:21892"
+            LoggingEndpoint = "http://localhost:21892"
         };
 
         // Act
@@ -235,26 +235,26 @@ public class OpenTelemetryOptionsValidatorTests
     }
 
     [Fact]
-    public void Validate_ReturnsValidationError_WhenTracingCollectorProtocolIsInvalid()
+    public void Validate_ReturnsValidationError_WhenTracingProtocolIsInvalid()
     {
         // Arrange
         var options = CreateValidOptions();
-        options.TracingCollectorProtocol = "InvalidProtocol";
+        options.TracingProtocol = "InvalidProtocol";
 
         // Act
         ValidationResult actual = _sut.Validate(options);
 
         // Assert
         actual.IsValid.ShouldBeFalse();
-        actual.Errors.ShouldContain(e => e.PropertyName == nameof(OpenTelemetryOptions.TracingCollectorProtocol));
+        actual.Errors.ShouldContain(e => e.PropertyName == nameof(OpenTelemetryOptions.TracingProtocol));
     }
 
     [Fact]
-    public void Validate_ReturnsNoError_WhenTracingCollectorProtocolIsNull()
+    public void Validate_ReturnsNoError_WhenTracingProtocolIsNull()
     {
         // Arrange
         var options = CreateValidOptions();
-        options.TracingCollectorProtocol = null;
+        options.TracingProtocol = null;
 
         // Act
         ValidationResult actual = _sut.Validate(options);
@@ -264,26 +264,26 @@ public class OpenTelemetryOptionsValidatorTests
     }
 
     [Fact]
-    public void Validate_ReturnsValidationError_WhenMetricsCollectorProtocolIsInvalid()
+    public void Validate_ReturnsValidationError_WhenMetricsProtocolIsInvalid()
     {
         // Arrange
         var options = CreateValidOptions();
-        options.MetricsCollectorProtocol = "InvalidProtocol";
+        options.MetricsProtocol = "InvalidProtocol";
 
         // Act
         ValidationResult actual = _sut.Validate(options);
 
         // Assert
         actual.IsValid.ShouldBeFalse();
-        actual.Errors.ShouldContain(e => e.PropertyName == nameof(OpenTelemetryOptions.MetricsCollectorProtocol));
+        actual.Errors.ShouldContain(e => e.PropertyName == nameof(OpenTelemetryOptions.MetricsProtocol));
     }
 
     [Fact]
-    public void Validate_ReturnsNoError_WhenMetricsCollectorProtocolIsNull()
+    public void Validate_ReturnsNoError_WhenMetricsProtocolIsNull()
     {
         // Arrange
         var options = CreateValidOptions();
-        options.MetricsCollectorProtocol = null;
+        options.MetricsProtocol = null;
 
         // Act
         ValidationResult actual = _sut.Validate(options);
@@ -293,26 +293,26 @@ public class OpenTelemetryOptionsValidatorTests
     }
 
     [Fact]
-    public void Validate_ReturnsValidationError_WhenLoggingCollectorProtocolIsInvalid()
+    public void Validate_ReturnsValidationError_WhenLoggingProtocolIsInvalid()
     {
         // Arrange
         var options = CreateValidOptions();
-        options.LoggingCollectorProtocol = "InvalidProtocol";
+        options.LoggingProtocol = "InvalidProtocol";
 
         // Act
         ValidationResult actual = _sut.Validate(options);
 
         // Assert
         actual.IsValid.ShouldBeFalse();
-        actual.Errors.ShouldContain(e => e.PropertyName == nameof(OpenTelemetryOptions.LoggingCollectorProtocol));
+        actual.Errors.ShouldContain(e => e.PropertyName == nameof(OpenTelemetryOptions.LoggingProtocol));
     }
 
     [Fact]
-    public void Validate_ReturnsNoError_WhenLoggingCollectorProtocolIsNull()
+    public void Validate_ReturnsNoError_WhenLoggingProtocolIsNull()
     {
         // Arrange
         var options = CreateValidOptions();
-        options.LoggingCollectorProtocol = null;
+        options.LoggingProtocol = null;
 
         // Act
         ValidationResult actual = _sut.Validate(options);
@@ -336,12 +336,12 @@ public class OpenTelemetryOptionsValidatorTests
             CollectorProtocol = OtlpCollectorProtocol.Grpc.Name,
             SamplingRate = 0.5,
             EnablePrometheusExporter = true,
-            TracingCollectorEndpoint = "http://localhost:21890",
-            MetricsCollectorEndpoint = "http://localhost:21891",
-            LoggingCollectorEndpoint = "http://localhost:21892",
-            TracingCollectorProtocol = OtlpCollectorProtocol.HttpProtobuf.Name,
-            MetricsCollectorProtocol = OtlpCollectorProtocol.HttpProtobuf.Name,
-            LoggingCollectorProtocol = OtlpCollectorProtocol.HttpProtobuf.Name
+            TracingEndpoint = "http://localhost:21890",
+            MetricsEndpoint = "http://localhost:21891",
+            LoggingEndpoint = "http://localhost:21892",
+            TracingProtocol = OtlpCollectorProtocol.HttpProtobuf.Name,
+            MetricsProtocol = OtlpCollectorProtocol.HttpProtobuf.Name,
+            LoggingProtocol = OtlpCollectorProtocol.HttpProtobuf.Name
         };
 
         // Act

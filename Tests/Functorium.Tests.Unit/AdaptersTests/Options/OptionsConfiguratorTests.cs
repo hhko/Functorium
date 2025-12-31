@@ -1,5 +1,5 @@
 using FluentValidation;
-using Functorium.Adapters.Observabilities.Logging;
+using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

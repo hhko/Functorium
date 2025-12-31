@@ -10,6 +10,9 @@
 
 using Functorium.Abstractions;
 using Functorium.Applications.Observabilities;
+using Functorium.Applications.Observabilities.Context;
+using Functorium.Applications.Observabilities.Metrics;
+using Functorium.Applications.Observabilities.Spans;
 
 using LanguageExt;
 using Microsoft.Extensions.Logging;

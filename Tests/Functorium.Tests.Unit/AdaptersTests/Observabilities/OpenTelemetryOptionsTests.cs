@@ -10,13 +10,13 @@ public class OpenTelemetryOptionsTests
     #region GetTracingProtocol Tests
 
     [Fact]
-    public void GetTracingProtocol_ReturnsTracingProtocol_WhenTracingCollectorProtocolIsSet()
+    public void GetTracingProtocol_ReturnsTracingProtocol_WhenTracingProtocolIsSet()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
         {
             CollectorProtocol = OtlpCollectorProtocol.Grpc.Name,
-            TracingCollectorProtocol = OtlpCollectorProtocol.HttpProtobuf.Name
+            TracingProtocol = OtlpCollectorProtocol.HttpProtobuf.Name
         };
 
         // Act
@@ -27,13 +27,13 @@ public class OpenTelemetryOptionsTests
     }
 
     [Fact]
-    public void GetTracingProtocol_ReturnsCollectorProtocol_WhenTracingCollectorProtocolIsNull()
+    public void GetTracingProtocol_ReturnsCollectorProtocol_WhenTracingProtocolIsNull()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
         {
             CollectorProtocol = OtlpCollectorProtocol.HttpProtobuf.Name,
-            TracingCollectorProtocol = null
+            TracingProtocol = null
         };
 
         // Act
@@ -44,13 +44,13 @@ public class OpenTelemetryOptionsTests
     }
 
     [Fact]
-    public void GetTracingProtocol_ReturnsCollectorProtocol_WhenTracingCollectorProtocolIsEmpty()
+    public void GetTracingProtocol_ReturnsCollectorProtocol_WhenTracingProtocolIsEmpty()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
         {
             CollectorProtocol = OtlpCollectorProtocol.HttpProtobuf.Name,
-            TracingCollectorProtocol = ""
+            TracingProtocol = ""
         };
 
         // Act
@@ -67,7 +67,7 @@ public class OpenTelemetryOptionsTests
         var sut = new OpenTelemetryOptions
         {
             CollectorProtocol = "InvalidProtocol",
-            TracingCollectorProtocol = null
+            TracingProtocol = null
         };
 
         // Act
@@ -82,13 +82,13 @@ public class OpenTelemetryOptionsTests
     #region GetMetricsProtocol Tests
 
     [Fact]
-    public void GetMetricsProtocol_ReturnsMetricsProtocol_WhenMetricsCollectorProtocolIsSet()
+    public void GetMetricsProtocol_ReturnsMetricsProtocol_WhenMetricsProtocolIsSet()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
         {
             CollectorProtocol = OtlpCollectorProtocol.Grpc.Name,
-            MetricsCollectorProtocol = OtlpCollectorProtocol.HttpProtobuf.Name
+            MetricsProtocol = OtlpCollectorProtocol.HttpProtobuf.Name
         };
 
         // Act
@@ -99,13 +99,13 @@ public class OpenTelemetryOptionsTests
     }
 
     [Fact]
-    public void GetMetricsProtocol_ReturnsCollectorProtocol_WhenMetricsCollectorProtocolIsNull()
+    public void GetMetricsProtocol_ReturnsCollectorProtocol_WhenMetricsProtocolIsNull()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
         {
             CollectorProtocol = OtlpCollectorProtocol.HttpProtobuf.Name,
-            MetricsCollectorProtocol = null
+            MetricsProtocol = null
         };
 
         // Act
@@ -122,7 +122,7 @@ public class OpenTelemetryOptionsTests
         var sut = new OpenTelemetryOptions
         {
             CollectorProtocol = "InvalidProtocol",
-            MetricsCollectorProtocol = null
+            MetricsProtocol = null
         };
 
         // Act
@@ -137,13 +137,13 @@ public class OpenTelemetryOptionsTests
     #region GetLoggingProtocol Tests
 
     [Fact]
-    public void GetLoggingProtocol_ReturnsLoggingProtocol_WhenLoggingCollectorProtocolIsSet()
+    public void GetLoggingProtocol_ReturnsLoggingProtocol_WhenLoggingProtocolIsSet()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
         {
             CollectorProtocol = OtlpCollectorProtocol.Grpc.Name,
-            LoggingCollectorProtocol = OtlpCollectorProtocol.HttpProtobuf.Name
+            LoggingProtocol = OtlpCollectorProtocol.HttpProtobuf.Name
         };
 
         // Act
@@ -154,13 +154,13 @@ public class OpenTelemetryOptionsTests
     }
 
     [Fact]
-    public void GetLoggingProtocol_ReturnsCollectorProtocol_WhenLoggingCollectorProtocolIsNull()
+    public void GetLoggingProtocol_ReturnsCollectorProtocol_WhenLoggingProtocolIsNull()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
         {
             CollectorProtocol = OtlpCollectorProtocol.HttpProtobuf.Name,
-            LoggingCollectorProtocol = null
+            LoggingProtocol = null
         };
 
         // Act
@@ -177,7 +177,7 @@ public class OpenTelemetryOptionsTests
         var sut = new OpenTelemetryOptions
         {
             CollectorProtocol = "InvalidProtocol",
-            LoggingCollectorProtocol = null
+            LoggingProtocol = null
         };
 
         // Act
@@ -192,13 +192,13 @@ public class OpenTelemetryOptionsTests
     #region GetTracingEndpoint Tests
 
     [Fact]
-    public void GetTracingEndpoint_ReturnsTracingEndpoint_WhenTracingCollectorEndpointIsSet()
+    public void GetTracingEndpoint_ReturnsTracingEndpoint_WhenTracingEndpointIsSet()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
         {
             CollectorEndpoint = "http://localhost:4317",
-            TracingCollectorEndpoint = "http://localhost:21890"
+            TracingEndpoint = "http://localhost:21890"
         };
 
         // Act
@@ -209,13 +209,13 @@ public class OpenTelemetryOptionsTests
     }
 
     [Fact]
-    public void GetTracingEndpoint_ReturnsCollectorEndpoint_WhenTracingCollectorEndpointIsNull()
+    public void GetTracingEndpoint_ReturnsCollectorEndpoint_WhenTracingEndpointIsNull()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
         {
             CollectorEndpoint = "http://localhost:4317",
-            TracingCollectorEndpoint = null
+            TracingEndpoint = null
         };
 
         // Act
@@ -226,13 +226,13 @@ public class OpenTelemetryOptionsTests
     }
 
     [Fact]
-    public void GetTracingEndpoint_ReturnsEmptyString_WhenTracingCollectorEndpointIsEmpty()
+    public void GetTracingEndpoint_ReturnsEmptyString_WhenTracingEndpointIsEmpty()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
         {
             CollectorEndpoint = "http://localhost:4317",
-            TracingCollectorEndpoint = ""
+            TracingEndpoint = ""
         };
 
         // Act
@@ -243,13 +243,13 @@ public class OpenTelemetryOptionsTests
     }
 
     [Fact]
-    public void GetTracingEndpoint_ReturnsEmptyString_WhenTracingCollectorEndpointIsWhitespace()
+    public void GetTracingEndpoint_ReturnsEmptyString_WhenTracingEndpointIsWhitespace()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
         {
             CollectorEndpoint = "http://localhost:4317",
-            TracingCollectorEndpoint = "   "
+            TracingEndpoint = "   "
         };
 
         // Act
@@ -264,13 +264,13 @@ public class OpenTelemetryOptionsTests
     #region GetMetricsEndpoint Tests
 
     [Fact]
-    public void GetMetricsEndpoint_ReturnsMetricsEndpoint_WhenMetricsCollectorEndpointIsSet()
+    public void GetMetricsEndpoint_ReturnsMetricsEndpoint_WhenMetricsEndpointIsSet()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
         {
             CollectorEndpoint = "http://localhost:4317",
-            MetricsCollectorEndpoint = "http://localhost:21891"
+            MetricsEndpoint = "http://localhost:21891"
         };
 
         // Act
@@ -281,13 +281,13 @@ public class OpenTelemetryOptionsTests
     }
 
     [Fact]
-    public void GetMetricsEndpoint_ReturnsCollectorEndpoint_WhenMetricsCollectorEndpointIsNull()
+    public void GetMetricsEndpoint_ReturnsCollectorEndpoint_WhenMetricsEndpointIsNull()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
         {
             CollectorEndpoint = "http://localhost:4317",
-            MetricsCollectorEndpoint = null
+            MetricsEndpoint = null
         };
 
         // Act
@@ -298,13 +298,13 @@ public class OpenTelemetryOptionsTests
     }
 
     [Fact]
-    public void GetMetricsEndpoint_ReturnsEmptyString_WhenMetricsCollectorEndpointIsEmpty()
+    public void GetMetricsEndpoint_ReturnsEmptyString_WhenMetricsEndpointIsEmpty()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
         {
             CollectorEndpoint = "http://localhost:4317",
-            MetricsCollectorEndpoint = ""
+            MetricsEndpoint = ""
         };
 
         // Act
@@ -319,13 +319,13 @@ public class OpenTelemetryOptionsTests
     #region GetLoggingEndpoint Tests
 
     [Fact]
-    public void GetLoggingEndpoint_ReturnsLoggingEndpoint_WhenLoggingCollectorEndpointIsSet()
+    public void GetLoggingEndpoint_ReturnsLoggingEndpoint_WhenLoggingEndpointIsSet()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
         {
             CollectorEndpoint = "http://localhost:4317",
-            LoggingCollectorEndpoint = "http://localhost:21892"
+            LoggingEndpoint = "http://localhost:21892"
         };
 
         // Act
@@ -336,13 +336,13 @@ public class OpenTelemetryOptionsTests
     }
 
     [Fact]
-    public void GetLoggingEndpoint_ReturnsCollectorEndpoint_WhenLoggingCollectorEndpointIsNull()
+    public void GetLoggingEndpoint_ReturnsCollectorEndpoint_WhenLoggingEndpointIsNull()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
         {
             CollectorEndpoint = "http://localhost:4317",
-            LoggingCollectorEndpoint = null
+            LoggingEndpoint = null
         };
 
         // Act
@@ -353,13 +353,13 @@ public class OpenTelemetryOptionsTests
     }
 
     [Fact]
-    public void GetLoggingEndpoint_ReturnsEmptyString_WhenLoggingCollectorEndpointIsEmpty()
+    public void GetLoggingEndpoint_ReturnsEmptyString_WhenLoggingEndpointIsEmpty()
     {
         // Arrange
         var sut = new OpenTelemetryOptions
         {
             CollectorEndpoint = "http://localhost:4317",
-            LoggingCollectorEndpoint = ""
+            LoggingEndpoint = ""
         };
 
         // Act
@@ -385,12 +385,12 @@ public class OpenTelemetryOptionsTests
         sut.CollectorProtocol.ShouldBe(OtlpCollectorProtocol.Grpc.Name);
         sut.SamplingRate.ShouldBe(1.0);
         sut.EnablePrometheusExporter.ShouldBeFalse();
-        sut.TracingCollectorEndpoint.ShouldBeNull();
-        sut.MetricsCollectorEndpoint.ShouldBeNull();
-        sut.LoggingCollectorEndpoint.ShouldBeNull();
-        sut.TracingCollectorProtocol.ShouldBeNull();
-        sut.MetricsCollectorProtocol.ShouldBeNull();
-        sut.LoggingCollectorProtocol.ShouldBeNull();
+        sut.TracingEndpoint.ShouldBeNull();
+        sut.MetricsEndpoint.ShouldBeNull();
+        sut.LoggingEndpoint.ShouldBeNull();
+        sut.TracingProtocol.ShouldBeNull();
+        sut.MetricsProtocol.ShouldBeNull();
+        sut.LoggingProtocol.ShouldBeNull();
     }
 
     [Fact]
