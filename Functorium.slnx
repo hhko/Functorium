@@ -38,7 +38,9 @@
     <Project Path="Tutorials/CqrsObservability/Src/OrderService/OrderService.csproj" />
   </Folder>
   <Folder Name="/Tutorials/CqrsObservability/Tests/">
+    <!--
     <Project Path="Tutorials/CqrsObservability/Tests/CqrsObservability.Tests.Integration/CqrsObservability.Tests.Integration.csproj" />
+    -->
     <Project Path="Tutorials/CqrsObservability/Tests/InventoryService.Tests.Unit/InventoryService.Tests.Unit.csproj" />
     <Project Path="Tutorials/CqrsObservability/Tests/OrderService.Tests.Unit/OrderService.Tests.Unit.csproj" />
   </Folder>

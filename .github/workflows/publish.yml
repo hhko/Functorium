@@ -97,24 +97,24 @@ jobs:
         path: '${{ env.COVERAGE_REPORT_DIR }}'
         retention-days: 30
 
-    - name: Pack NuGet packages
-      run: |
-        # Pack only Src projects (exclude Tests)
-        for project in $(find ./Src -name "*.csproj" ! -name "*Tests*"); do
-          echo "Packing: $project"
-          dotnet pack "$project" \
-            --configuration ${{ env.CONFIGURATION }} \
-            --no-build \
-            --output ./packages
-        done
+    # - name: Pack NuGet packages
+    #   run: |
+    #     # Pack only Src projects (exclude Tests)
+    #     for project in $(find ./Src -name "*.csproj" ! -name "*Tests*"); do
+    #       echo "Packing: $project"
+    #       dotnet pack "$project" \
+    #         --configuration ${{ env.CONFIGURATION }} \
+    #         --no-build \
+    #         --output ./packages
+    #     done
 
-    - name: List packages
-      run: |
-        echo "=== NuGet Packages ==="
-        ls -la ./packages/*.nupkg 2>/dev/null || echo "No .nupkg files"
-        echo ""
-        echo "=== Symbol Packages ==="
-        ls -la ./packages/*.snupkg 2>/dev/null || echo "No .snupkg files"
+    # - name: List packages
+    #   run: |
+    #     echo "=== NuGet Packages ==="
+    #     ls -la ./packages/*.nupkg 2>/dev/null || echo "No .nupkg files"
+    #     echo ""
+    #     echo "=== Symbol Packages ==="
+    #     ls -la ./packages/*.snupkg 2>/dev/null || echo "No .snupkg files"
 
     # - name: Publish to NuGet.org
     #   if: startsWith(github.ref, 'refs/tags/v')
