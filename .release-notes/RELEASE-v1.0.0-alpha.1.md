@@ -482,55 +482,31 @@ public class UserRepositoryPipeline : IUserRepository
 ```
 Functorium
 ├── Abstractions/
-│   ├── ElapsedTimeCalculator
 │   ├── Errors/
-│   │   ├── ErrorCodeFactory
 │   │   └── DestructuringPolicies/
+│   │       └── ErrorTypes/
 │   ├── Registrations/
-│   │   ├── AdapterPipelineRegistration
-│   │   └── OpenTelemetryRegistration
 │   └── Utilities/
 ├── Adapters/
 │   ├── Observabilities/
-│   │   ├── OpenTelemetryOptions
-│   │   ├── OpenTelemetryMetricRecorder
-│   │   ├── OpenTelemetrySpanFactory
-│   │   ├── ActivityContextHolder
-│   │   ├── ActivityContextPropagator
-│   │   ├── StartupLogger
-│   │   └── Builders/
-│   │       ├── OpenTelemetryBuilder
-│   │       └── Configurators/
+│   │   ├── Builders/
+│   │   │   └── Configurators/
+│   │   ├── Context/
+│   │   ├── Loggers/
+│   │   ├── Metrics/
+│   │   └── Spans/
 │   └── Options/
-│       └── OptionsConfigurator
 ├── Applications/
 │   ├── Cqrs/
-│   │   ├── FinResponse<A>
-│   │   ├── ICommandRequest<T>
-│   │   ├── IQueryRequest<T>
-│   │   └── ICacheable
 │   ├── Linq/
-│   │   └── FinTUtilites
 │   ├── Observabilities/
-│   │   ├── IAdapter
-│   │   ├── ObservabilityNaming
 │   │   ├── Context/
 │   │   ├── Loggers/
 │   │   ├── Metrics/
 │   │   └── Spans/
 │   └── Pipelines/
-│       ├── UsecaseExceptionPipeline
-│       ├── UsecaseLoggingPipeline
-│       ├── UsecaseMetricPipeline
-│       ├── UsecaseTracingPipeline
-│       └── UsecaseValidationPipeline
 └── Domains/
     └── ValueObjects/
-        ├── AbstractValueObject
-        ├── SimpleValueObject<T>
-        ├── ComparableSimpleValueObject<T>
-        ├── ValueObject
-        └── ComparableValueObject
 ```
 
 ### Functorium.Testing 네임스페이스 구조
@@ -539,43 +515,13 @@ Functorium
 Functorium.Testing
 ├── Actions/
 │   └── SourceGenerators/
-│       └── SourceGeneratorTestRunner
 ├── Arrangements/
 │   ├── Hosting/
-│   │   └── HostTestFixture<T>
 │   ├── Logging/
-│   │   └── StructuredTestLogger<T>
-│   ├── Loggers/
-│   │   └── TestSink
 │   └── ScheduledJobs/
-│       ├── QuartzTestFixture<T>
-│       ├── JobCompletionListener
-│       └── JobExecutionResult
 └── Assertions/
     ├── ArchitectureRules/
-    │   ├── ArchitectureValidationEntryPoint
-    │   ├── ClassValidator
-    │   ├── MethodValidator
-    │   └── ValidationResultSummary
     └── Logging/
-        ├── LogEventPropertyExtractor
-        ├── LogEventPropertyValueConverter
-        └── SerilogTestPropertyValueFactory
-```
-
-## 설치
-
-### NuGet 패키지 설치
-
-```bash
-# Functorium 핵심 라이브러리
-dotnet add package Functorium --version 1.0.0-alpha.1
-
-# Functorium 테스트 라이브러리 (선택적)
-dotnet add package Functorium.Testing --version 1.0.0-alpha.1
-
-# Functorium Source Generator (선택적)
-dotnet add package Functorium.Adapters.SourceGenerator --version 1.0.0-alpha.1
 ```
 
 ### 필수 의존성
