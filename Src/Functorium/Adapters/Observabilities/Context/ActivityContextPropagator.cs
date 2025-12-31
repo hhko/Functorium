@@ -2,7 +2,7 @@ using System.Diagnostics;
 using Functorium.Applications.Observabilities.Context;
 using Functorium.Applications.Observabilities.Spans;
 
-namespace Functorium.Adapters.Observabilities;
+namespace Functorium.Adapters.Observabilities.Context;
 
 /// <summary>
 /// OpenTelemetry Activity 기반의 IContextPropagator 구현체입니다.

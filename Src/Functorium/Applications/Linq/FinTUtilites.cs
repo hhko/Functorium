@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using Functorium.Abstractions;
-using Functorium.Adapters.Observabilities;
+using Functorium.Adapters.Observabilities.Context;
 using LanguageExt.Traits;
 
 namespace Functorium.Applications.Linq;

@@ -1,9 +1,10 @@
 using System.Diagnostics;
+using Functorium.Adapters.Observabilities.Context;
 using Functorium.Applications.Observabilities;
 using Functorium.Applications.Observabilities.Context;
 using Functorium.Applications.Observabilities.Spans;
 
-namespace Functorium.Adapters.Observabilities;
+namespace Functorium.Adapters.Observabilities.Spans;
 
 /// <summary>
 /// ActivitySource를 사용하여 Span을 생성하는 ISpanFactory 구현체입니다.

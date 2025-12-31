@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace Functorium.Adapters.Observabilities;
+namespace Functorium.Adapters.Observabilities.Loggers;
 
 /// <summary>
 /// StartupLogger에서 자동으로 설정 정보를 출력할 수 있는 Options 인터페이스

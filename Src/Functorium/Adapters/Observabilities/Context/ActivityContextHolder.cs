@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Functorium.Applications.Observabilities.Context;
 
-namespace Functorium.Adapters.Observabilities;
+namespace Functorium.Adapters.Observabilities.Context;
 
 /// <summary>
 /// AsyncLocal을 사용하여 Activity 컨텍스트를 관리합니다.

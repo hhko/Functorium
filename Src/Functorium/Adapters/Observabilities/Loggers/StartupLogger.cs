@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Functorium.Adapters.Observabilities;
+namespace Functorium.Adapters.Observabilities.Loggers;
 
 /// <summary>
 /// 애플리케이션 시작 시 설정 정보를 로그로 출력하는 IHostedService

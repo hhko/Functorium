@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Functorium.Applications.Observabilities.Context;
 
-namespace Functorium.Adapters.Observabilities;
+namespace Functorium.Adapters.Observabilities.Context;
 
 /// <summary>
 /// ActivityContext를 래핑하는 IObservabilityContext 구현체입니다.

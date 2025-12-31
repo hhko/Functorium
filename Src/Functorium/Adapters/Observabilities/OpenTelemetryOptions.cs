@@ -1,6 +1,7 @@
 using System.Reflection;
 using Ardalis.SmartEnum;
 using FluentValidation;
+using Functorium.Adapters.Observabilities.Loggers;
 using Microsoft.Extensions.Logging;
 
 namespace Functorium.Adapters.Observabilities;

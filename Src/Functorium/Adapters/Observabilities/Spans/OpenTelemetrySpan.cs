@@ -1,10 +1,11 @@
 using System.Diagnostics;
+using Functorium.Adapters.Observabilities.Context;
 using Functorium.Applications.Observabilities;
 using Functorium.Applications.Observabilities.Context;
 using Functorium.Applications.Observabilities.Spans;
 using LanguageExt.Common;
 
-namespace Functorium.Adapters.Observabilities;
+namespace Functorium.Adapters.Observabilities.Spans;
 
 /// <summary>
 /// Activity를 래핑하는 ISpan 구현체입니다.

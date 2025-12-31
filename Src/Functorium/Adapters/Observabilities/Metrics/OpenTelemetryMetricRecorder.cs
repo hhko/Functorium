@@ -3,7 +3,7 @@ using Functorium.Applications.Observabilities;
 using Functorium.Applications.Observabilities.Metrics;
 using LanguageExt.Common;
 
-namespace Functorium.Adapters.Observabilities;
+namespace Functorium.Adapters.Observabilities.Metrics;
 
 /// <summary>
 /// System.Diagnostics.Metrics를 사용하는 IMetricRecorder 구현체입니다.
