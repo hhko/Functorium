@@ -620,7 +620,7 @@ public sealed class PriceRange : ComparableValueObject
             Validate(minPriceValue, maxPriceValue, currencyCode),
             validValues => new PriceRange(validValues.MinPrice, validValues.MaxPrice, validValues.Currency));
 
-    public static Fin<PriceRange> CreateFromValidated(Price minPrice, Price maxPrice, Currency currency) =>
+    internal static Fin<PriceRange> CreateFromValidated(Price minPrice, Price maxPrice, Currency currency) =>
         CreateFromValidation(
             ValidatePriceRange(minPrice, maxPrice),
             validValues => new PriceRange(validValues.MinPrice, validValues.MaxPrice, currency));

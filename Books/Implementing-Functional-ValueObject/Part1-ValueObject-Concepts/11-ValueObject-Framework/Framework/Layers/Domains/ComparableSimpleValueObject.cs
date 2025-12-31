@@ -97,7 +97,7 @@ public abstract class ComparableSimpleValueObject<T> : ComparableValueObject
     /// <param name="validation">LanguageExt Validation</param>
     /// <param name="factory">검증된 값으로 값 객체를 생성하는 팩토리 함수</param>
     /// <returns>Fin<TValueObject></returns>
-    public static Fin<TValueObject> CreateFromValidation<TValueObject>(
+    protected static Fin<TValueObject> CreateFromValidation<TValueObject>(
         Validation<Error, T> validation,
         Func<T, TValueObject> factory)
         where TValueObject : ComparableSimpleValueObject<T>
