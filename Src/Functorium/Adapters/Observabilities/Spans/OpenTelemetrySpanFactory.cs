@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using Functorium.Applications.Observabilities;
+using Functorium.Applications.Observabilities.Context;
+using Functorium.Applications.Observabilities.Spans;
 
-namespace Functorium.Adapters.Observabilities.OpenTelemetry;
+namespace Functorium.Adapters.Observabilities;
 
 /// <summary>
 /// ActivitySource를 사용하여 Span을 생성하는 ISpanFactory 구현체입니다.
@@ -34,10 +36,10 @@ public sealed class OpenTelemetrySpanFactory : ISpanFactory
         // 태그 설정
         ActivityTagsCollection tags = new()
         {
-            { ObservabilityNaming.Tags.Layer, ObservabilityNaming.Layers.Adapter },
-            { ObservabilityNaming.Tags.Category, category },
-            { ObservabilityNaming.Tags.Handler, handler },
-            { ObservabilityNaming.Tags.Method, method }
+            { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
+            { ObservabilityNaming.CustomAttributes.RequestCategory, category },
+            { ObservabilityNaming.CustomAttributes.RequestHandler, handler },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, method }
         };
 
         // 부모 컨텍스트 결정

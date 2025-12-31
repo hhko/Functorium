@@ -1,8 +1,9 @@
 using System.Diagnostics.Metrics;
 using Functorium.Applications.Observabilities;
+using Functorium.Applications.Observabilities.Metrics;
 using LanguageExt.Common;
 
-namespace Functorium.Adapters.Observabilities.OpenTelemetry;
+namespace Functorium.Adapters.Observabilities;
 
 /// <summary>
 /// System.Diagnostics.Metrics를 사용하는 IMetricRecorder 구현체입니다.
@@ -35,10 +36,10 @@ public sealed class OpenTelemetryMetricRecorder : IMetricRecorder, IDisposable
 
         KeyValuePair<string, object?>[] tags =
         [
-            new(ObservabilityNaming.Tags.Layer, ObservabilityNaming.Layers.Adapter),
-            new(ObservabilityNaming.Tags.Category, category),
-            new(ObservabilityNaming.Tags.Handler, handler),
-            new(ObservabilityNaming.Tags.Method, method)
+            new(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter),
+            new(ObservabilityNaming.CustomAttributes.RequestCategory, category),
+            new(ObservabilityNaming.CustomAttributes.RequestHandler, handler),
+            new(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, method)
         ];
 
         _metrics[category].RequestCounter.Add(1, tags);
@@ -50,10 +51,10 @@ public sealed class OpenTelemetryMetricRecorder : IMetricRecorder, IDisposable
 
         KeyValuePair<string, object?>[] tags =
         [
-            new(ObservabilityNaming.Tags.Layer, ObservabilityNaming.Layers.Adapter),
-            new(ObservabilityNaming.Tags.Category, category),
-            new(ObservabilityNaming.Tags.Handler, handler),
-            new(ObservabilityNaming.Tags.Method, method)
+            new(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter),
+            new(ObservabilityNaming.CustomAttributes.RequestCategory, category),
+            new(ObservabilityNaming.CustomAttributes.RequestHandler, handler),
+            new(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, method)
         ];
 
         _metrics[category].ResponseSuccessCounter.Add(1, tags);
@@ -68,10 +69,10 @@ public sealed class OpenTelemetryMetricRecorder : IMetricRecorder, IDisposable
 
         KeyValuePair<string, object?>[] tags =
         [
-            new(ObservabilityNaming.Tags.Layer, ObservabilityNaming.Layers.Adapter),
-            new(ObservabilityNaming.Tags.Category, category),
-            new(ObservabilityNaming.Tags.Handler, handler),
-            new(ObservabilityNaming.Tags.Method, method)
+            new(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter),
+            new(ObservabilityNaming.CustomAttributes.RequestCategory, category),
+            new(ObservabilityNaming.CustomAttributes.RequestHandler, handler),
+            new(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, method)
         ];
 
         _metrics[category].ResponseFailureCounter.Add(1, tags);

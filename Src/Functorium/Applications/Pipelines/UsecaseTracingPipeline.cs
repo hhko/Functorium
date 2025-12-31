@@ -2,14 +2,12 @@ using System.Diagnostics;
 
 using Functorium.Abstractions;
 using Functorium.Abstractions.Errors;
-using Functorium.Adapters.Observabilities;
 using Functorium.Applications.Cqrs;
+using Functorium.Applications.Observabilities;
 
 using LanguageExt.Common;
 
 using Mediator;
-
-using ObservabilityFields = Functorium.Adapters.Observabilities.ObservabilityFields;
 
 namespace Functorium.Applications.Pipelines;
 
@@ -17,7 +15,7 @@ namespace Functorium.Applications.Pipelines;
 /// Result 패턴을 위한 분산 추적 Pipeline.
 /// IsSucc/IsFail 패턴을 사용하여 안전하게 추적 정보를 기록합니다.
 /// </summary>
-public sealed class UsecaseTracePipeline<TRequest, TResponse>
+public sealed class UsecaseTracingPipeline<TRequest, TResponse>
     : UsecasePipelineBase<TRequest>
     , IPipelineBehavior<TRequest, TResponse>
         where TRequest : IMessage
@@ -25,7 +23,7 @@ public sealed class UsecaseTracePipeline<TRequest, TResponse>
 {
     private readonly ActivitySource _activitySource;
 
-    public UsecaseTracePipeline(ActivitySource activitySource)
+    public UsecaseTracingPipeline(ActivitySource activitySource)
     {
         _activitySource = activitySource;
     }
@@ -42,8 +40,8 @@ public sealed class UsecaseTracePipeline<TRequest, TResponse>
         //
         string requestHandlerMethod = "Handle";
         using Activity? activity = parentActivity != null
-            ? _activitySource.StartActivity($"{ObservabilityFields.Request.Layer.Application} {ObservabilityFields.Request.Category.Usecase}.{requestCqrs} {requestHandler}.{requestHandlerMethod}", ActivityKind.Internal, parentActivity.Context)
-            : _activitySource.StartActivity($"{ObservabilityFields.Request.Layer.Application} {ObservabilityFields.Request.Category.Usecase}.{requestCqrs} {requestHandler}.{requestHandlerMethod}");
+            ? _activitySource.StartActivity($"{ObservabilityNaming.Layers.Application} {ObservabilityNaming.Categories.Usecase}.{requestCqrs} {requestHandler}.{requestHandlerMethod}", ActivityKind.Internal, parentActivity.Context)
+            : _activitySource.StartActivity($"{ObservabilityNaming.Layers.Application} {ObservabilityNaming.Categories.Usecase}.{requestCqrs} {requestHandler}.{requestHandlerMethod}");
 
         if (activity == null)
         {
@@ -64,10 +62,11 @@ public sealed class UsecaseTracePipeline<TRequest, TResponse>
 
     private static void SetRequestTags(Activity activity, string requestCqrs, string requestHandler, string requestHandlerPath)
     {
-        activity.SetTag(ObservabilityFields.Request.TelemetryKeys.Layer, ObservabilityFields.Request.Layer.Application);
-        activity.SetTag(ObservabilityFields.Request.TelemetryKeys.Category, ObservabilityFields.Request.Category.Usecase);
-        activity.SetTag(ObservabilityFields.Request.TelemetryKeys.HandlerCqrs, requestCqrs);
-        activity.SetTag(ObservabilityFields.Request.TelemetryKeys.Handler, requestHandler);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerCqrs, requestCqrs);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler);
+        activity.SetTag(ObservabilityNaming.OTelAttributes.CodeFunction, requestHandlerPath);
     }
 
     private static void SetResponseTags(Activity activity, TResponse response, double elapsed)
@@ -78,7 +77,7 @@ public sealed class UsecaseTracePipeline<TRequest, TResponse>
 
     private static void SetTimeTags(Activity activity, double elapsed)
     {
-        activity.SetTag(ObservabilityFields.Response.TelemetryKeys.Elapsed, elapsed);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsed);
     }
 
     private static void SetStatusTags(Activity activity, TResponse response)
@@ -103,13 +102,13 @@ public sealed class UsecaseTracePipeline<TRequest, TResponse>
 
     private static void SetSuccessStatus(Activity activity)
     {
-        activity.SetTag(ObservabilityFields.Response.TelemetryKeys.Status, ObservabilityFields.Response.Status.Success);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success);
         activity.SetStatus(ActivityStatusCode.Ok);
     }
 
     private static void SetFailureStatus(Activity activity, Error? error)
     {
-        activity.SetTag(ObservabilityFields.Response.TelemetryKeys.Status, ObservabilityFields.Response.Status.Failure);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);
         activity.SetStatus(ActivityStatusCode.Error, error?.Message ?? "Unknown error");
 
         if (error is not null)
@@ -142,27 +141,27 @@ public sealed class UsecaseTracePipeline<TRequest, TResponse>
 
     private static void SetErrorCodeExpectedTags(Activity activity, ErrorCodeExpected error)
     {
-        activity.SetTag(ObservabilityFields.Errors.TelemetryKeys.Type, nameof(ErrorCodeExpected));
-        activity.SetTag(ObservabilityFields.Errors.TelemetryKeys.Code, error.ErrorCode);
-        activity.SetTag(ObservabilityFields.Errors.TelemetryKeys.Message, error.Message);
+        activity.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, nameof(ErrorCodeExpected));
+        activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, error.ErrorCode);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorMessage, error.Message);
     }
 
     private static void SetErrorCodeExceptionalTags(Activity activity, ErrorCodeExceptional error)
     {
-        activity.SetTag(ObservabilityFields.Errors.TelemetryKeys.Type, nameof(ErrorCodeExceptional));
-        activity.SetTag(ObservabilityFields.Errors.TelemetryKeys.Code, error.ErrorCode);
-        activity.SetTag(ObservabilityFields.Errors.TelemetryKeys.Message, error.Message);
+        activity.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, nameof(ErrorCodeExceptional));
+        activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, error.ErrorCode);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorMessage, error.Message);
     }
 
     private static void SetManyErrorsTags(Activity activity, ManyErrors error)
     {
-        activity.SetTag(ObservabilityFields.Errors.TelemetryKeys.Type, nameof(ManyErrors));
-        activity.SetTag(ObservabilityFields.Errors.TelemetryKeys.Count, error.Errors.Count);
+        activity.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, nameof(ManyErrors));
+        activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorCount, error.Errors.Count);
     }
 
     private static void SetUnknownErrorTags(Activity activity, Error error)
     {
-        activity.SetTag(ObservabilityFields.Errors.TelemetryKeys.Type, error.GetType().Name);
-        activity.SetTag(ObservabilityFields.Errors.TelemetryKeys.Message, error.Message);
+        activity.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, error.GetType().Name);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorMessage, error.Message);
     }
 }

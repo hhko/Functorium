@@ -1,4 +1,6 @@
-namespace Functorium.Applications.Observabilities;
+using Functorium.Applications.Observabilities.Spans;
+
+namespace Functorium.Applications.Observabilities.Context;
 
 /// <summary>
 /// 관찰 가능성 컨텍스트의 전파를 관리하는 인터페이스입니다.

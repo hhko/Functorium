@@ -2,9 +2,10 @@ using System.Diagnostics;
 using System.Reflection;
 using Functorium.Abstractions.Errors.DestructuringPolicies;
 using Functorium.Adapters.Observabilities.Builders.Configurators;
-using Functorium.Adapters.Observabilities.Logging;
-using Functorium.Adapters.Observabilities.OpenTelemetry;
 using Functorium.Applications.Observabilities;
+using Functorium.Applications.Observabilities.Context;
+using Functorium.Applications.Observabilities.Metrics;
+using Functorium.Applications.Observabilities.Spans;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -85,10 +86,10 @@ public partial class OpenTelemetryBuilder
     }
 
     /// <summary>
-    /// Serilog 확장 설정
+    /// Logging 확장 설정 (Serilog 기반)
     /// </summary>
-    /// <param name="configure">LoggerConfigurationBuilder를 사용한 설정 액션</param>
-    public OpenTelemetryBuilder ConfigureSerilog(Action<LoggingConfigurator> configure)
+    /// <param name="configure">LoggingConfigurator를 사용한 설정 액션</param>
+    public OpenTelemetryBuilder ConfigureLogging(Action<LoggingConfigurator> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
         _loggingConfigurator = configure;
@@ -107,10 +108,10 @@ public partial class OpenTelemetryBuilder
     }
 
     /// <summary>
-    /// OpenTelemetry Traces 확장 설정
+    /// OpenTelemetry Tracing 확장 설정
     /// </summary>
-    /// <param name="configure">TracesConfigurationBuilder를 사용한 설정 액션</param>
-    public OpenTelemetryBuilder ConfigureTraces(Action<TracingConfigurator> configure)
+    /// <param name="configure">TracingConfigurator를 사용한 설정 액션</param>
+    public OpenTelemetryBuilder ConfigureTracing(Action<TracingConfigurator> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
         _tracingConfigurator = configure;
@@ -333,7 +334,7 @@ public partial class OpenTelemetryBuilder
                 // Sampler 설정
                 tracing.SetSampler(new TraceIdRatioBasedSampler(_options.SamplingRate));
 
-                // OTLP Exporter 설정 (TracingCollectorEndpoint가 설정된 경우에만)
+                // OTLP Exporter 설정 (TracingEndpoint가 설정된 경우에만)
                 string tracingEndpoint = _options.GetTracingEndpoint();
                 if (!string.IsNullOrWhiteSpace(tracingEndpoint))
                 {

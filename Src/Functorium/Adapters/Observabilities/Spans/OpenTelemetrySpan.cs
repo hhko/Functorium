@@ -1,8 +1,10 @@
 using System.Diagnostics;
 using Functorium.Applications.Observabilities;
+using Functorium.Applications.Observabilities.Context;
+using Functorium.Applications.Observabilities.Spans;
 using LanguageExt.Common;
 
-namespace Functorium.Adapters.Observabilities.OpenTelemetry;
+namespace Functorium.Adapters.Observabilities;
 
 /// <summary>
 /// Activity를 래핑하는 ISpan 구현체입니다.
@@ -41,9 +43,9 @@ internal sealed class OpenTelemetrySpan : ISpan
     {
         if (elapsedMs.HasValue)
         {
-            _activity?.SetTag(ObservabilityNaming.Tags.Elapsed, elapsedMs.Value);
+            _activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsedMs.Value);
         }
-        _activity?.SetTag(ObservabilityNaming.Tags.Status, ObservabilityNaming.Status.Success);
+        _activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success);
         _activity?.SetStatus(ActivityStatusCode.Ok);
     }
 
@@ -51,22 +53,22 @@ internal sealed class OpenTelemetrySpan : ISpan
     {
         if (elapsedMs.HasValue)
         {
-            _activity?.SetTag(ObservabilityNaming.Tags.Elapsed, elapsedMs.Value);
+            _activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsedMs.Value);
         }
-        _activity?.SetTag(ObservabilityNaming.Tags.Status, ObservabilityNaming.Status.Failure);
-        _activity?.SetTag(ObservabilityNaming.Tags.ErrorMessage, message);
+        _activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);
+        _activity?.SetTag(ObservabilityNaming.CustomAttributes.ErrorMessage, message);
         _activity?.SetStatus(ActivityStatusCode.Error, message);
     }
 
     public void SetFailure(Error error, double? elapsedMs = null)
     {
         SetFailure(error.Message, elapsedMs);
-        _activity?.SetTag(ObservabilityNaming.Tags.ErrorType, error.GetType().Name);
+        _activity?.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, error.GetType().Name);
 
         // ErrorCodeExpected나 ErrorCodeExceptional 등에서 Code 추출 시도
         if (error.Code != 0)
         {
-            _activity?.SetTag(ObservabilityNaming.Tags.ErrorCode, error.Code);
+            _activity?.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, error.Code);
         }
     }
 

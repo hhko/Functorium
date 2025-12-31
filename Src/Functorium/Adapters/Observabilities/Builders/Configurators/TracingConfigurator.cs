@@ -5,8 +5,8 @@ using OpenTelemetry.Trace;
 namespace Functorium.Adapters.Observabilities.Builders.Configurators;
 
 /// <summary>
-/// OpenTelemetry Traces 확장 설정을 위한 Builder 클래스
-/// ActivitySource, Processor 등 프로젝트별 Traces 확장 포인트 제공
+/// OpenTelemetry Tracing 확장 설정을 위한 Configurator 클래스
+/// ActivitySource, Processor 등 프로젝트별 Tracing 확장 포인트 제공
 /// </summary>
 public class TracingConfigurator
 {

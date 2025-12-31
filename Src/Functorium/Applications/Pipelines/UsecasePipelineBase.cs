@@ -1,8 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 
 using Functorium.Applications.Cqrs;
-
-using ObservabilityFields = Functorium.Adapters.Observabilities.ObservabilityFields;
+using Functorium.Applications.Observabilities;
 
 namespace Functorium.Applications.Pipelines;
 
@@ -60,12 +59,12 @@ public abstract class UsecasePipelineBase<TRequest>
         Type[] interfaces = request!.GetType().GetInterfaces();
 
         if (interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandRequest<>)))
-            return ObservabilityFields.Request.HandlerCqrs.Command;
+            return ObservabilityNaming.Cqrs.Command;
 
         if (interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryRequest<>)))
-            return ObservabilityFields.Request.HandlerCqrs.Query;
+            return ObservabilityNaming.Cqrs.Query;
 
-        return ObservabilityFields.Request.HandlerCqrs.Unknown;
+        return ObservabilityNaming.Cqrs.Unknown;
     }
 
 

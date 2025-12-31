@@ -1,4 +1,6 @@
-namespace Functorium.Applications.Observabilities;
+using Functorium.Applications.Observabilities.Context;
+
+namespace Functorium.Applications.Observabilities.Spans;
 
 /// <summary>
 /// Span을 생성하는 팩토리 인터페이스입니다.
