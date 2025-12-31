@@ -324,7 +324,7 @@ public sealed class Email : IEquatable<Email>
         return new Email(value.ToLowerInvariant());
     }
 
-    public static Email CreateFromValidated(string value) => new(value.ToLowerInvariant());
+    internal static Email CreateFromValidated(string value) => new(value.ToLowerInvariant());
 
     public bool Equals(Email? other) => other is not null && Value == other.Value;
     public override bool Equals(object? obj) => obj is Email other && Equals(other);

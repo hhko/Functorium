@@ -191,7 +191,7 @@ public sealed class Age : ComparableSimpleValueObject<int>
             validValue => new Age(validValue));
 
     // 4. Internal CreateFromValidated 메서드
-    public static Age CreateFromValidated(int value) => new(value);
+    internal static Age CreateFromValidated(int value) => new(value);
 
     // 5. Public Validate 메서드 - 순차 검증 (범위 검증은 의존성이 있음)
     public static Validation<Error, int> Validate(int value) =>

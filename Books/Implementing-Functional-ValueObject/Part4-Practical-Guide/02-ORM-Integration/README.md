@@ -266,7 +266,7 @@ public sealed class Email
     private Email(string value) => Value = value;
 
     public static Fin<Email> Create(string value) { ... }
-    public static Email CreateFromValidated(string value) => new(value.ToLowerInvariant());
+    internal static Email CreateFromValidated(string value) => new(value.ToLowerInvariant());
 }
 
 // 복합 값 객체

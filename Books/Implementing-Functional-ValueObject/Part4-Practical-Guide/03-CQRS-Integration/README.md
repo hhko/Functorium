@@ -273,7 +273,7 @@ public sealed class Email : IEquatable<Email>
         return new Email(value.ToLowerInvariant());
     }
 
-    public static Email CreateFromValidated(string value) => new(value.ToLowerInvariant());
+    internal static Email CreateFromValidated(string value) => new(value.ToLowerInvariant());
 
     // IEquatable<Email> 구현...
 }

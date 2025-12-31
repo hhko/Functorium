@@ -155,7 +155,7 @@ public sealed class Email : SimpleValueObject<string>
             validValue => new Email(validValue));
 
     /// <summary>
-    /// 이미 검증된 값으로 생성 (DB 로드 시 사용)
+    /// 이미 검증된 값으로 생성 (DB 로드 시 EF Core Value Converter 전용)
     /// </summary>
     internal static Email CreateFromValidated(string value) => new(value);
 
@@ -219,7 +219,7 @@ public sealed class ProductCode : SimpleValueObject<string>
             validValue => new ProductCode(validValue));
 
     /// <summary>
-    /// 이미 검증된 값으로 생성 (DB 로드 시 사용)
+    /// 이미 검증된 값으로 생성 (DB 로드 시 EF Core Value Converter 전용)
     /// </summary>
     internal static ProductCode CreateFromValidated(string value) => new(value);
 
@@ -393,6 +393,12 @@ public sealed class Money : ValueObject
             Validate(amount, currency ?? "null"),
             validValues => new Money(validValues.Amount, validValues.Currency.ToUpperInvariant()));
 
+    /// <summary>
+    /// 이미 검증된 값으로 생성 (테스트 및 내부 용도)
+    /// </summary>
+    internal static Money CreateFromValidated(decimal amount, string currency) =>
+        new(amount, currency.ToUpperInvariant());
+
     // 5. Public Validate 메서드 - 독립 검증 규칙들을 병렬로 실행
     public static Validation<Error, (decimal Amount, string Currency)> Validate(decimal amount, string currency) =>
         (ValidateAmountNotNegative(amount), ValidateCurrencyNotEmpty(currency), ValidateCurrencyLength(currency))
@@ -486,6 +492,12 @@ public sealed class OrderLineItem : ValueObject
         CreateFromValidation(
             Validate(name ?? "null", qty, price),
             validValues => new OrderLineItem(validValues.Name.Trim(), validValues.Qty, validValues.Price));
+
+    /// <summary>
+    /// 이미 검증된 값으로 생성 (테스트 및 내부 용도)
+    /// </summary>
+    internal static OrderLineItem CreateFromValidated(string name, int qty, decimal price) =>
+        new(name, qty, price);
 
     // 5. Public Validate 메서드 - 독립 검증 규칙들을 병렬로 실행
     public static Validation<Error, (string Name, int Qty, decimal Price)> Validate(string name, int qty, decimal price) =>

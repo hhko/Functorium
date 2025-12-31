@@ -281,7 +281,7 @@ public sealed class Age : ComparableSimpleValueObject<int>
         return new Age(value);
     }
 
-    public static Age CreateFromValidated(int value) => new(value);
+    internal static Age CreateFromValidated(int value) => new(value);
 
     public static implicit operator int(Age age) => age.Value;
 }
