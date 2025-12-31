@@ -35,8 +35,7 @@ public class OwnsOnePatternTests
             {
                 Id = userId,
                 Name = "테스트 사용자",
-                Email = email,
-                Address = new Address("서울", "강남구", "06234")
+                Email = email
             };
             context.Users.Add(user);
             await context.SaveChangesAsync();
@@ -46,38 +45,38 @@ public class OwnsOnePatternTests
         await using (var context = new AppDbContext(options))
         {
             var loaded = await context.Users.FirstAsync(u => u.Id == userId);
-            loaded.Email.Value.ShouldBe("user@example.com");
+            ((string)loaded.Email).ShouldBe("user@example.com");
         }
     }
 
     [Fact]
-    public async Task User_SavesAndLoads_WithAddressValueObject()
+    public async Task Customer_SavesAndLoads_WithAddressValueObject()
     {
         // Arrange
-        var options = CreateOptions(nameof(User_SavesAndLoads_WithAddressValueObject));
-        var userId = Guid.NewGuid();
+        var options = CreateOptions(nameof(Customer_SavesAndLoads_WithAddressValueObject));
+        var customerId = Guid.NewGuid();
 
         // Act - Save
         await using (var context = new AppDbContext(options))
         {
-            var user = new User
+            var customer = new Customer
             {
-                Id = userId,
-                Name = "테스트 사용자",
-                Email = Email.CreateFromValidated("test@example.com"),
-                Address = new Address("서울", "테헤란로 123", "06234")
+                Id = customerId,
+                Name = "테스트 고객",
+                ShippingAddress = Address.Create("서울", "테헤란로 123", "06234")
+                    .Match(a => a, _ => throw new Exception("Address creation failed"))
             };
-            context.Users.Add(user);
+            context.Customers.Add(customer);
             await context.SaveChangesAsync();
         }
 
         // Assert - Load
         await using (var context = new AppDbContext(options))
         {
-            var loaded = await context.Users.FirstAsync(u => u.Id == userId);
-            loaded.Address.City.ShouldBe("서울");
-            loaded.Address.Street.ShouldBe("테헤란로 123");
-            loaded.Address.PostalCode.ShouldBe("06234");
+            var loaded = await context.Customers.FirstAsync(c => c.Id == customerId);
+            loaded.ShippingAddress.City.ShouldBe("서울");
+            loaded.ShippingAddress.Street.ShouldBe("테헤란로 123");
+            loaded.ShippingAddress.PostalCode.ShouldBe("06234");
         }
     }
 }

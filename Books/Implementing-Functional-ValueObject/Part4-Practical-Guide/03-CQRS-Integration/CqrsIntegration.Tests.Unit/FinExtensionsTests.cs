@@ -1,77 +1,100 @@
+using Functorium.Applications.Cqrs;
 using LanguageExt;
 using LanguageExt.Common;
 
 namespace CqrsIntegration.Tests.Unit;
 
 /// <summary>
-/// FinExtensions 테스트
+/// FinResponse 테스트
 ///
 /// 테스트 목적:
-/// 1. Fin<T> → ApiResponse<T> 변환 검증
+/// 1. Fin<T> → FinResponse<T> 변환 검증
 /// 2. 성공/실패 케이스 매핑 검증
 /// </summary>
 [Trait("Part4-CQRS-Integration", "FinExtensionsTests")]
 public class FinExtensionsTests
 {
     [Fact]
-    public void ToApiResponse_ReturnsSuccess_WhenFinIsSucc()
+    public void ToFinResponse_ReturnsSuccess_WhenFinIsSucc()
     {
         // Arrange
         Fin<string> fin = "성공 데이터";
 
         // Act
-        var actual = fin.ToApiResponse();
+        var actual = fin.ToFinResponse();
 
         // Assert
-        actual.IsSuccess.ShouldBeTrue();
-        actual.Data.ShouldBe("성공 데이터");
-        actual.ErrorMessage.ShouldBeNull();
+        actual.IsSucc.ShouldBeTrue();
+        actual.Match(
+            Succ: data => data.ShouldBe("성공 데이터"),
+            Fail: _ => throw new Exception("Expected success")
+        );
     }
 
     [Fact]
-    public void ToApiResponse_ReturnsFailure_WhenFinIsFail()
+    public void ToFinResponse_ReturnsFailure_WhenFinIsFail()
     {
         // Arrange
         Fin<string> fin = Error.New("테스트 오류 메시지");
 
         // Act
-        var actual = fin.ToApiResponse();
+        var actual = fin.ToFinResponse();
 
         // Assert
-        actual.IsSuccess.ShouldBeFalse();
-        actual.Data.ShouldBeNull();
-        actual.ErrorMessage.ShouldBe("테스트 오류 메시지");
+        actual.IsFail.ShouldBeTrue();
+        actual.Match(
+            Succ: _ => throw new Exception("Expected failure"),
+            Fail: error => error.Message.ShouldBe("테스트 오류 메시지")
+        );
     }
 
     [Fact]
-    public void ToApiResponse_PreservesComplexType_WhenFinIsSucc()
+    public void ToFinResponse_PreservesComplexType_WhenFinIsSucc()
     {
         // Arrange
-        var dto = new UserDto("홍길동", "hong@example.com", 25);
-        Fin<UserDto> fin = dto;
+        var response = new GetUserByIdQuery.Response("홍길동", "hong@example.com", 25);
+        Fin<GetUserByIdQuery.Response> fin = response;
 
         // Act
-        var actual = fin.ToApiResponse();
+        var actual = fin.ToFinResponse();
 
         // Assert
-        actual.IsSuccess.ShouldBeTrue();
-        actual.Data.ShouldNotBeNull();
-        actual.Data!.Name.ShouldBe("홍길동");
-        actual.Data.Email.ShouldBe("hong@example.com");
-        actual.Data.Age.ShouldBe(25);
+        actual.IsSucc.ShouldBeTrue();
+        actual.Match(
+            Succ: data =>
+            {
+                data.Name.ShouldBe("홍길동");
+                data.Email.ShouldBe("hong@example.com");
+                data.Age.ShouldBe(25);
+            },
+            Fail: _ => throw new Exception("Expected success")
+        );
     }
 
     [Fact]
-    public void ToApiResponse_ReturnsDataAsNull_WhenFinHasNullValue()
+    public void ToFinResponse_WithMapping_TransformsData()
     {
         // Arrange
-        Fin<string?> fin = (string?)null!;
+        var entity = new UserEntity(
+            UserName.CreateFromValidated("홍길동"),
+            Email.CreateFromValidated("hong@example.com"),
+            Age.CreateFromValidated(25));
+        Fin<UserEntity> fin = entity;
 
         // Act
-        var actual = fin.ToApiResponse();
+        var actual = fin.ToFinResponse(e =>
+            new GetUserByIdQuery.Response(e.Name.Name, e.Email.Address, e.Age.Years));
 
         // Assert
-        actual.IsSuccess.ShouldBeTrue();
-        actual.Data.ShouldBeNull();
+        actual.IsSucc.ShouldBeTrue();
+        actual.Match(
+            Succ: data =>
+            {
+                data.Name.ShouldBe("홍길동");
+                data.Email.ShouldBe("hong@example.com");
+                data.Age.ShouldBe(25);
+            },
+            Fail: _ => throw new Exception("Expected success")
+        );
     }
 }

@@ -36,9 +36,9 @@ public class OwnsManyPatternTests
                 CustomerName = "김철수",
                 LineItems = new List<OrderLineItem>
                 {
-                    new("상품 A", 2, 10000),
-                    new("상품 B", 1, 25000),
-                    new("상품 C", 3, 5000)
+                    OrderLineItem.CreateFromValidated("상품 A", 2, 10000),
+                    OrderLineItem.CreateFromValidated("상품 B", 1, 25000),
+                    OrderLineItem.CreateFromValidated("상품 C", 3, 5000)
                 }
             };
             context.Orders.Add(order);
@@ -50,9 +50,9 @@ public class OwnsManyPatternTests
         {
             var loaded = await context.Orders.FirstAsync(o => o.Id == orderId);
             loaded.LineItems.Count.ShouldBe(3);
-            loaded.LineItems.ShouldContain(item => item.ProductName == "상품 A" && item.Quantity == 2);
-            loaded.LineItems.ShouldContain(item => item.ProductName == "상품 B" && item.Quantity == 1);
-            loaded.LineItems.ShouldContain(item => item.ProductName == "상품 C" && item.Quantity == 3);
+            loaded.LineItems.ShouldContain(item => item.Name == "상품 A" && item.Qty == 2);
+            loaded.LineItems.ShouldContain(item => item.Name == "상품 B" && item.Qty == 1);
+            loaded.LineItems.ShouldContain(item => item.Name == "상품 C" && item.Qty == 3);
         }
     }
 
@@ -100,8 +100,8 @@ public class OwnsManyPatternTests
                 CustomerName = "박민수",
                 LineItems = new List<OrderLineItem>
                 {
-                    new("상품 A", 2, 10000),  // 20,000
-                    new("상품 B", 1, 25000),  // 25,000
+                    OrderLineItem.CreateFromValidated("상품 A", 2, 10000),  // 20,000
+                    OrderLineItem.CreateFromValidated("상품 B", 1, 25000),  // 25,000
                 }
             };
             context.Orders.Add(order);
@@ -112,7 +112,7 @@ public class OwnsManyPatternTests
         await using (var context = new AppDbContext(options))
         {
             var loaded = await context.Orders.FirstAsync(o => o.Id == orderId);
-            var total = loaded.LineItems.Sum(item => item.Quantity * item.UnitPrice);
+            var total = loaded.LineItems.Sum(item => item.Qty * item.Price);
             total.ShouldBe(45000);
         }
     }

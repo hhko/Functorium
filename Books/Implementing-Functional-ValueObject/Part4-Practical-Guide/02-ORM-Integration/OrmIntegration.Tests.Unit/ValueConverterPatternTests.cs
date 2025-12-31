@@ -45,7 +45,7 @@ public class ValueConverterPatternTests
         await using (var context = new AppDbContext(options))
         {
             var loaded = await context.Products.FirstAsync(p => p.Id == productId);
-            loaded.Code.Value.ShouldBe("EL-001234");
+            ((string)loaded.Code).ShouldBe("EL-001234");
         }
     }
 

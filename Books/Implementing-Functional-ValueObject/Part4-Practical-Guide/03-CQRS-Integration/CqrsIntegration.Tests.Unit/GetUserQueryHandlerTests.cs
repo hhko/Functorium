@@ -3,7 +3,7 @@ using LanguageExt;
 namespace CqrsIntegration.Tests.Unit;
 
 /// <summary>
-/// GetUserQuery Handler 테스트
+/// GetUserByIdQuery Handler 테스트
 ///
 /// 테스트 목적:
 /// 1. CQRS Query에서 값 객체 조회 확인
@@ -13,13 +13,13 @@ namespace CqrsIntegration.Tests.Unit;
 [Trait("Part4-CQRS-Integration", "GetUserQueryHandlerTests")]
 public class GetUserQueryHandlerTests
 {
-    private readonly GetUserQueryHandler _handler;
-    private readonly UserRepository _repository;
+    private readonly GetUserByIdQuery.Usecase _handler;
+    private readonly InMemoryUserRepository _repository;
 
     public GetUserQueryHandlerTests()
     {
-        _repository = new UserRepository();
-        _handler = new GetUserQueryHandler(_repository);
+        _repository = new InMemoryUserRepository();
+        _handler = new GetUserByIdQuery.Usecase(_repository);
     }
 
     [Fact]
@@ -27,7 +27,7 @@ public class GetUserQueryHandlerTests
     {
         // Arrange - 기존에 등록된 사용자 ID 사용
         var existingUserId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
-        var query = new GetUserQuery(existingUserId);
+        var query = new GetUserByIdQuery.Request(existingUserId);
 
         // Act
         var actual = await _handler.Handle(query, CancellationToken.None);
@@ -50,7 +50,7 @@ public class GetUserQueryHandlerTests
     {
         // Arrange
         var nonExistentId = Guid.NewGuid();
-        var query = new GetUserQuery(nonExistentId);
+        var query = new GetUserByIdQuery.Request(nonExistentId);
 
         // Act
         var actual = await _handler.Handle(query, CancellationToken.None);
@@ -59,7 +59,7 @@ public class GetUserQueryHandlerTests
         actual.IsFail.ShouldBeTrue();
         actual.Match(
             Succ: _ => throw new Exception("Expected failure"),
-            Fail: error => error.Message.ShouldContain("사용자를 찾을 수 없습니다")
+            Fail: error => error.Message.ShouldContain("User not found")
         );
     }
 }

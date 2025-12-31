@@ -136,10 +136,10 @@ public class ComparabilityPatternTests
         Array.Sort(ages);
 
         // Assert
-        ages[0].Value.ShouldBe(10);
-        ages[1].Value.ShouldBe(20);
-        ages[2].Value.ShouldBe(30);
-        ages[3].Value.ShouldBe(40);
+        ((int)ages[0]).ShouldBe(10);
+        ((int)ages[1]).ShouldBe(20);
+        ((int)ages[2]).ShouldBe(30);
+        ((int)ages[3]).ShouldBe(40);
     }
 
     [Fact]
@@ -157,7 +157,7 @@ public class ComparabilityPatternTests
         Array.Sort(ages);
 
         // Assert
-        ages.ShouldAllBe(a => a.Value == 25);
+        ages.ShouldAllBe(a => (int)a == 25);
     }
 
     #endregion
