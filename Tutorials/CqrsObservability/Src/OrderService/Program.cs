@@ -40,7 +40,7 @@ services.AddValidatorsFromAssemblyContaining<Program>();
 // OpenTelemetry 설정 (RegisterOpenTelemetry 사용)
 services
     .RegisterOpenTelemetry(configuration, Assembly.GetExecutingAssembly())
-    .ConfigureTraces(tracing => tracing.Configure(builder => builder.AddConsoleExporter()))
+    .ConfigureTracing(tracing => tracing.Configure(builder => builder.AddConsoleExporter()))
     .ConfigureMetrics(metrics => metrics.Configure(builder => builder.AddConsoleExporter()))
     .Build();
 // AdapterObservability는 자동으로 등록됨
@@ -56,10 +56,10 @@ services
 services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseMetricPipeline<,>));
 
 // 2. Trace Pipeline (추적)
-services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseTracePipeline<,>));
+services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseTracingPipeline<,>));
 
 // 3. Logger Pipeline (로그)
-services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseLoggerPipeline<,>));
+services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseLoggingPipeline<,>));
 
 // 4. Validation Pipeline (유효성 검사)
 services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseValidationPipeline<,>));

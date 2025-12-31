@@ -122,14 +122,14 @@ public class OrderServiceTestFixture : IAsyncLifetime
         // OpenTelemetry 설정
         services
             .RegisterOpenTelemetry(configuration, Assembly.GetExecutingAssembly())
-            .ConfigureTraces(tracing => tracing.Configure(builder => builder.AddConsoleExporter()))
+            .ConfigureTracing(tracing => tracing.Configure(builder => builder.AddConsoleExporter()))
             .ConfigureMetrics(metrics => metrics.Configure(builder => builder.AddConsoleExporter()))
             .Build();
 
         // 파이프라인 등록
         services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseMetricPipeline<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseTracePipeline<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseLoggerPipeline<,>));
+        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseTracingPipeline<,>));
+        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseLoggingPipeline<,>));
         services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseValidationPipeline<,>));
         services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseExceptionPipeline<,>));
 
@@ -225,14 +225,14 @@ public class InventoryServiceTestFixture : IAsyncLifetime
         // OpenTelemetry 설정
         services
             .RegisterOpenTelemetry(configuration, Assembly.GetExecutingAssembly())
-            .ConfigureTraces(tracing => tracing.Configure(builder => builder.AddConsoleExporter()))
+            .ConfigureTracing(tracing => tracing.Configure(builder => builder.AddConsoleExporter()))
             .ConfigureMetrics(metrics => metrics.Configure(builder => builder.AddConsoleExporter()))
             .Build();
 
         // 파이프라인 등록
         services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseMetricPipeline<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseTracePipeline<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseLoggerPipeline<,>));
+        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseTracingPipeline<,>));
+        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseLoggingPipeline<,>));
         services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseValidationPipeline<,>));
         services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseExceptionPipeline<,>));
 

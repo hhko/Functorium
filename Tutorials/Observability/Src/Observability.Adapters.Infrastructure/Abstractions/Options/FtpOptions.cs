@@ -1,5 +1,5 @@
 using FluentValidation;
-using Functorium.Adapters.Observabilities.Logging;
+using Functorium.Adapters.Observabilities;
 using Microsoft.Extensions.Logging;
 
 namespace Observability.Adapters.Infrastructure.Abstractions.Options;

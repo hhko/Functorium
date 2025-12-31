@@ -129,7 +129,7 @@ public class FtpOptionsIntegrationTests : IClassFixture<FtpOptionsIntegrationTes
     public void FtpOptions_ShouldBeRegisteredAsStartupOptionsLogger()
     {
         // Arrange & Act
-        var startupLoggers = _fixture.Services.GetServices<Functorium.Adapters.Observabilities.Logging.IStartupOptionsLogger>();
+        var startupLoggers = _fixture.Services.GetServices<Functorium.Adapters.Observabilities.IStartupOptionsLogger>();
 
         // Assert - FtpOptions가 IStartupOptionsLogger로 등록되어야 함
         var ftpOptionsLogger = startupLoggers.OfType<FtpOptions>().FirstOrDefault();
