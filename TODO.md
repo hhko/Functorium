@@ -1,3 +1,14 @@
+- [ ] 계층 구조 테스트
+- [ ] aspire 대시보드 구축
+- [ ] asprie 대시보드 확인(계층 구조)
+- [ ] 로그/추적/지표 md 문서 기준으로 비교
+- [ ] 코드 이해를 위한 예제 코드 작성
+- [ ] 코드 이해를 위한 학습 문서 작성
+---
+- [ ] CqrsObservability -> Cqrs04Observability
+- [ ] Cqrs04Observability + Grafana
+- [ ] Cqrs04Observability + OpenSearch
+---
 - [x] Unit Testing 가이드 문서 업데이트
 - [x] ValueObject Book 프로젝트 통합
   - 프로젝트 참조 변경
@@ -27,13 +38,18 @@
 ---
 ## 가이드
 - [ ] 계획
+---
 - [ ] 레이어
-- [ ] 유스케이스: CQRS, Validation, 관찰 가능성, 에러
-- [ ] 도메인: 값 객체, 도메인인, 에러
-- [ ] IAdatper: 인터페이스 소스 생성기, 의존성 등록, 관찰 가능성, 에러, IO
 - [ ] 단위 테스트
 - [ ] 통합 테스트
-- [ ] 스케줄러
+---
+- [ ] 에러
+- [ ] 의존성 등록
+- [ ] 애플리케이션 레이어: CQRS, Validation, 관찰 가능성, 애플리케이션 에러
+- [ ] 도메인 레이어: 값 객체, 엔티티, 도메인 에러
+- [ ] 어댑터 레이어: 인터페이스 소스 생성기, 의존성 등록, 관찰 가능성, 어댑터 에러, IO
+---
+- [ ] Scheduling
 - [ ] RabbitMQ
 - [ ] HTTP Mehtod
 - [ ] ORM(EFCore, Dapper)
@@ -127,6 +143,8 @@
 ---
 - [ ] MinVer
 - [ ] ChatOps
+- [ ] BenchmarkDotNet GitHub Actions 통합(회귀 품질)
+- [ ] 코드 품질 GitHub Actions 통합(회귀 품질)
 ---
 - [ ] 예제 포팅
 - [ ] 코드 품질 CLI
