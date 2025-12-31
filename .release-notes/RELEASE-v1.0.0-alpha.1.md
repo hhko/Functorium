@@ -1,9 +1,3 @@
----
-title: Functorium v1.0.0-alpha.1 새로운 기능
-description: Functorium v1.0.0-alpha.1의 새로운 기능을 알아봅니다.
-date: 2026-01-01
----
-
 # Functorium Release v1.0.0-alpha.1
 
 ## 개요
