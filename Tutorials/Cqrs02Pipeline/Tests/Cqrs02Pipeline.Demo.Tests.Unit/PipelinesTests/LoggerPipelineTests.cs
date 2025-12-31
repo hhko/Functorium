@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 namespace Cqrs02Pipeline.Demo.Tests.Unit.PipelinesTests;
 
 /// <summary>
-/// UsecaseLoggerPipeline 테스트
+/// UsecaseLoggingPipeline 테스트
 /// 요청/응답 로깅 파이프라인 테스트
 /// </summary>
 public sealed class LoggerPipelineTests
@@ -50,8 +50,8 @@ public sealed class LoggerPipelineTests
     public async Task Handle_SuccessfulRequest_LogsRequestAndResponse()
     {
         // Arrange
-        var logger = Substitute.For<ILogger<UsecaseLoggerPipeline<TestCommandRequest, TestResponse>>>();
-        var pipeline = new UsecaseLoggerPipeline<TestCommandRequest, TestResponse>(logger);
+        var logger = Substitute.For<ILogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>>();
+        var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger);
         var request = new TestCommandRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -71,8 +71,8 @@ public sealed class LoggerPipelineTests
     public async Task Handle_QueryRequest_ReturnsSuccessfully()
     {
         // Arrange
-        var logger = Substitute.For<ILogger<UsecaseLoggerPipeline<TestQueryRequest, TestResponse>>>();
-        var pipeline = new UsecaseLoggerPipeline<TestQueryRequest, TestResponse>(logger);
+        var logger = Substitute.For<ILogger<UsecaseLoggingPipeline<TestQueryRequest, TestResponse>>>();
+        var pipeline = new UsecaseLoggingPipeline<TestQueryRequest, TestResponse>(logger);
         var request = new TestQueryRequest(Guid.NewGuid());
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -91,8 +91,8 @@ public sealed class LoggerPipelineTests
     public async Task Handle_FailedRequest_LogsError()
     {
         // Arrange
-        var logger = Substitute.For<ILogger<UsecaseLoggerPipeline<TestCommandRequest, TestResponse>>>();
-        var pipeline = new UsecaseLoggerPipeline<TestCommandRequest, TestResponse>(logger);
+        var logger = Substitute.For<ILogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>>();
+        var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger);
         var request = new TestCommandRequest("Test");
         var errorResponse = TestResponse.CreateFail(Error.New("Test error"));
 
@@ -112,8 +112,8 @@ public sealed class LoggerPipelineTests
     public async Task Handle_Request_MeasuresElapsedTime()
     {
         // Arrange
-        var logger = Substitute.For<ILogger<UsecaseLoggerPipeline<TestCommandRequest, TestResponse>>>();
-        var pipeline = new UsecaseLoggerPipeline<TestCommandRequest, TestResponse>(logger);
+        var logger = Substitute.For<ILogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>>();
+        var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger);
         var request = new TestCommandRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -136,8 +136,8 @@ public sealed class LoggerPipelineTests
     public async Task Handle_PreservesResponseFromHandler()
     {
         // Arrange
-        var logger = Substitute.For<ILogger<UsecaseLoggerPipeline<TestCommandRequest, TestResponse>>>();
-        var pipeline = new UsecaseLoggerPipeline<TestCommandRequest, TestResponse>(logger);
+        var logger = Substitute.For<ILogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>>();
+        var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger);
         var request = new TestCommandRequest("Test");
         var expectedId = Guid.NewGuid();
         var expectedResponse = TestResponse.CreateSuccess(expectedId);

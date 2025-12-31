@@ -5,7 +5,7 @@ using Mediator;
 namespace Cqrs03Functional.Demo.Tests.Unit.PipelinesTests;
 
 /// <summary>
-/// UsecaseTracePipeline 테스트
+/// UsecaseTracingPipeline 테스트
 /// 분산 추적 파이프라인 테스트
 /// </summary>
 public sealed class TracePipelineTests : IDisposable
@@ -66,7 +66,7 @@ public sealed class TracePipelineTests : IDisposable
     public async Task Handle_SuccessfulRequest_CreatesActivity()
     {
         // Arrange
-        var pipeline = new UsecaseTracePipeline<TestRequest, TestResponse>(_activitySource);
+        var pipeline = new UsecaseTracingPipeline<TestRequest, TestResponse>(_activitySource);
         var request = new TestRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -86,7 +86,7 @@ public sealed class TracePipelineTests : IDisposable
     public async Task Handle_FailedRequest_CreatesActivityWithErrorStatus()
     {
         // Arrange
-        var pipeline = new UsecaseTracePipeline<TestRequest, TestResponse>(_activitySource);
+        var pipeline = new UsecaseTracingPipeline<TestRequest, TestResponse>(_activitySource);
         var request = new TestRequest("Test");
         var errorResponse = TestResponse.CreateFail(Error.New("Test error"));
 
@@ -105,7 +105,7 @@ public sealed class TracePipelineTests : IDisposable
     public async Task Handle_MeasuresElapsedTime()
     {
         // Arrange
-        var pipeline = new UsecaseTracePipeline<TestRequest, TestResponse>(_activitySource);
+        var pipeline = new UsecaseTracingPipeline<TestRequest, TestResponse>(_activitySource);
         var request = new TestRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -128,7 +128,7 @@ public sealed class TracePipelineTests : IDisposable
     public async Task Handle_PreservesResponseFromHandler()
     {
         // Arrange
-        var pipeline = new UsecaseTracePipeline<TestRequest, TestResponse>(_activitySource);
+        var pipeline = new UsecaseTracingPipeline<TestRequest, TestResponse>(_activitySource);
         var request = new TestRequest("Test");
         var expectedId = Guid.NewGuid();
         var expectedResponse = TestResponse.CreateSuccess(expectedId);
@@ -149,7 +149,7 @@ public sealed class TracePipelineTests : IDisposable
     {
         // Arrange - ActivitySource가 리스닝하지 않는 경우
         using var nonListeningSource = new ActivitySource("NonListening");
-        var pipeline = new UsecaseTracePipeline<TestRequest, TestResponse>(nonListeningSource);
+        var pipeline = new UsecaseTracingPipeline<TestRequest, TestResponse>(nonListeningSource);
         var request = new TestRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -168,7 +168,7 @@ public sealed class TracePipelineTests : IDisposable
     public async Task Handle_QueryRequest_CreatesActivity()
     {
         // Arrange
-        var pipeline = new UsecaseTracePipeline<TestRequest, TestResponse>(_activitySource);
+        var pipeline = new UsecaseTracingPipeline<TestRequest, TestResponse>(_activitySource);
         var request = new TestRequest("Query");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 

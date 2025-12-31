@@ -6,6 +6,7 @@ using Cqrs02Pipeline.Demo.Usecases;
 using FluentValidation;
 using Functorium.Abstractions.Registrations;
 using Functorium.Applications.Cqrs;
+using Functorium.Applications.Pipelines;
 using LanguageExt;
 using LanguageExt.Common;
 using Mediator;
@@ -19,8 +20,8 @@ Console.WriteLine();
 Console.WriteLine("이 데모는 Functorium의 파이프라인 기능을 보여줍니다:");
 Console.WriteLine("  1. UsecaseExceptionPipeline - 예외를 Error로 변환");
 Console.WriteLine("  2. UsecaseValidationPipeline - FluentValidation 검증");
-Console.WriteLine("  3. UsecaseLoggerPipeline - OpenTelemetry 로그");
-Console.WriteLine("  4. UsecaseTracePipeline - OpenTelemetry 추적");
+Console.WriteLine("  3. UsecaseLoggingPipeline - OpenTelemetry 로그");
+Console.WriteLine("  4. UsecaseTracingPipeline - OpenTelemetry 추적");
 Console.WriteLine("  5. UsecaseMetricPipeline - OpenTelemetry 지표");
 Console.WriteLine();
 
@@ -49,7 +50,7 @@ services.AddValidatorsFromAssemblyContaining<Program>();
 // OpenTelemetry 설정 (RegisterOpenTelemetry 사용)
 services
     .RegisterOpenTelemetry(configuration, Assembly.GetExecutingAssembly())
-    .ConfigureTraces(tracing => tracing.Configure(builder => builder.AddConsoleExporter()))
+    .ConfigureTracing(tracing => tracing.Configure(builder => builder.AddConsoleExporter()))
     .ConfigureMetrics(metrics => metrics.Configure(builder => builder.AddConsoleExporter()))
     .Build();
 
@@ -67,10 +68,10 @@ services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseExceptionPipel
 services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseValidationPipeline<,>));
 
 // 3. Logger Pipeline (로그)
-services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseLoggerPipeline<,>));
+services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseLoggingPipeline<,>));
 
 // 4. Trace Pipeline (추적)
-services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseTracePipeline<,>));
+services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseTracingPipeline<,>));
 
 // 5. Metric Pipeline (지표)
 services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseMetricPipeline<,>));
