@@ -30,7 +30,7 @@ public class AgeTests
         // Assert
         actual.IsSucc.ShouldBeTrue();
         actual.Match(
-            Succ: age => age.Value.ShouldBe(ageValue),
+            Succ: age => ((int)age).ShouldBe(ageValue),
             Fail: _ => throw new Exception("Expected success")
         );
     }
@@ -48,7 +48,7 @@ public class AgeTests
         actual.IsFail.ShouldBeTrue();
         actual.Match(
             Succ: _ => throw new Exception("Expected failure"),
-            Fail: error => error.Message.ShouldContain("Age.Negative")
+            Fail: error => error.Message.ShouldContain("Age cannot be negative")
         );
     }
 
@@ -65,7 +65,7 @@ public class AgeTests
         actual.IsFail.ShouldBeTrue();
         actual.Match(
             Succ: _ => throw new Exception("Expected failure"),
-            Fail: error => error.Message.ShouldContain("Age.TooOld")
+            Fail: error => error.Message.ShouldContain("Age cannot exceed 150 years")
         );
     }
 
@@ -79,7 +79,7 @@ public class AgeTests
         var actual = Age.CreateFromValidated(ageValue);
 
         // Assert
-        actual.Value.ShouldBe(ageValue);
+        ((int)actual).ShouldBe(ageValue);
     }
 
     #endregion
@@ -160,9 +160,9 @@ public class AgeTests
         Array.Sort(ages);
 
         // Assert
-        ages[0].Value.ShouldBe(20);
-        ages[1].Value.ShouldBe(25);
-        ages[2].Value.ShouldBe(30);
+        ((int)ages[0]).ShouldBe(20);
+        ((int)ages[1]).ShouldBe(25);
+        ((int)ages[2]).ShouldBe(30);
     }
 
     #endregion

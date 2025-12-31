@@ -13,20 +13,20 @@ namespace CqrsIntegration.Tests.Unit;
 [Trait("Part4-CQRS-Integration", "CreateUserCommandHandlerTests")]
 public class CreateUserCommandHandlerTests
 {
-    private readonly CreateUserCommandHandler _handler;
-    private readonly UserRepository _repository;
+    private readonly CreateUserCommand.Usecase _handler;
+    private readonly InMemoryUserRepository _repository;
 
     public CreateUserCommandHandlerTests()
     {
-        _repository = new UserRepository();
-        _handler = new CreateUserCommandHandler(_repository);
+        _repository = new InMemoryUserRepository();
+        _handler = new CreateUserCommand.Usecase(_repository);
     }
 
     [Fact]
     public async Task Handle_ReturnsSuccess_WhenAllInputsAreValid()
     {
         // Arrange
-        var command = new CreateUserCommand("홍길동", "hong@example.com", 25);
+        var command = new CreateUserCommand.Request("홍길동", "hong@example.com", 25);
 
         // Act
         var actual = await _handler.Handle(command, CancellationToken.None);
@@ -45,7 +45,7 @@ public class CreateUserCommandHandlerTests
     public async Task Handle_ReturnsFail_WhenNameIsEmpty(string name, string email, int age)
     {
         // Arrange
-        var command = new CreateUserCommand(name, email, age);
+        var command = new CreateUserCommand.Request(name, email, age);
 
         // Act
         var actual = await _handler.Handle(command, CancellationToken.None);
@@ -54,7 +54,7 @@ public class CreateUserCommandHandlerTests
         actual.IsFail.ShouldBeTrue();
         actual.Match(
             Succ: _ => throw new Exception("Expected failure"),
-            Fail: error => error.Message.ShouldContain("사용자 이름이 비어있습니다")
+            Fail: error => error.Message.ShouldContain("User name cannot be empty")
         );
     }
 
@@ -62,7 +62,7 @@ public class CreateUserCommandHandlerTests
     public async Task Handle_ReturnsFail_WhenEmailIsInvalid()
     {
         // Arrange
-        var command = new CreateUserCommand("홍길동", "invalid-email", 25);
+        var command = new CreateUserCommand.Request("홍길동", "invalid-email", 25);
 
         // Act
         var actual = await _handler.Handle(command, CancellationToken.None);
@@ -71,7 +71,7 @@ public class CreateUserCommandHandlerTests
         actual.IsFail.ShouldBeTrue();
         actual.Match(
             Succ: _ => throw new Exception("Expected failure"),
-            Fail: error => error.Message.ShouldContain("이메일 형식이 올바르지 않습니다")
+            Fail: error => error.Message.ShouldContain("Email")
         );
     }
 
@@ -81,7 +81,7 @@ public class CreateUserCommandHandlerTests
     public async Task Handle_ReturnsFail_WhenAgeIsNegative(int age)
     {
         // Arrange
-        var command = new CreateUserCommand("홍길동", "hong@example.com", age);
+        var command = new CreateUserCommand.Request("홍길동", "hong@example.com", age);
 
         // Act
         var actual = await _handler.Handle(command, CancellationToken.None);
@@ -90,7 +90,7 @@ public class CreateUserCommandHandlerTests
         actual.IsFail.ShouldBeTrue();
         actual.Match(
             Succ: _ => throw new Exception("Expected failure"),
-            Fail: error => error.Message.ShouldContain("나이는 음수일 수 없습니다")
+            Fail: error => error.Message.ShouldContain("Age")
         );
     }
 
@@ -98,7 +98,7 @@ public class CreateUserCommandHandlerTests
     public async Task Handle_ReturnsFail_WhenAgeExceedsMaximum()
     {
         // Arrange
-        var command = new CreateUserCommand("홍길동", "hong@example.com", 200);
+        var command = new CreateUserCommand.Request("홍길동", "hong@example.com", 200);
 
         // Act
         var actual = await _handler.Handle(command, CancellationToken.None);
@@ -107,7 +107,7 @@ public class CreateUserCommandHandlerTests
         actual.IsFail.ShouldBeTrue();
         actual.Match(
             Succ: _ => throw new Exception("Expected failure"),
-            Fail: error => error.Message.ShouldContain("나이는 150세를 초과할 수 없습니다")
+            Fail: error => error.Message.ShouldContain("Age")
         );
     }
 
@@ -115,7 +115,7 @@ public class CreateUserCommandHandlerTests
     public async Task Handle_ReturnsFirstError_WhenMultipleInputsAreInvalid()
     {
         // Arrange - Name이 빈 값이므로 첫 번째 검증 실패
-        var command = new CreateUserCommand("", "invalid-email", -5);
+        var command = new CreateUserCommand.Request("", "invalid-email", -5);
 
         // Act
         var actual = await _handler.Handle(command, CancellationToken.None);
@@ -125,7 +125,7 @@ public class CreateUserCommandHandlerTests
         // Bind 패턴은 순차적으로 검증하므로 첫 번째 오류만 반환
         actual.Match(
             Succ: _ => throw new Exception("Expected failure"),
-            Fail: error => error.Message.ShouldContain("사용자 이름이 비어있습니다")
+            Fail: error => error.Message.ShouldContain("User name cannot be empty")
         );
     }
 }

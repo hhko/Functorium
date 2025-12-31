@@ -52,7 +52,7 @@ public class AddressTests
         actual.IsFail.ShouldBeTrue();
         actual.Match(
             Succ: _ => throw new Exception("Expected failure"),
-            Fail: error => error.Message.ShouldContain("Address.CityEmpty")
+            Fail: error => error.Message.ShouldContain("City cannot be empty")
         );
     }
 
@@ -69,7 +69,7 @@ public class AddressTests
         actual.IsFail.ShouldBeTrue();
         actual.Match(
             Succ: _ => throw new Exception("Expected failure"),
-            Fail: error => error.Message.ShouldContain("Address.StreetEmpty")
+            Fail: error => error.Message.ShouldContain("Street cannot be empty")
         );
     }
 
@@ -86,7 +86,7 @@ public class AddressTests
         actual.IsFail.ShouldBeTrue();
         actual.Match(
             Succ: _ => throw new Exception("Expected failure"),
-            Fail: error => error.Message.ShouldContain("Address.PostalCodeEmpty")
+            Fail: error => error.Message.ShouldContain("Postal code cannot be empty")
         );
     }
 

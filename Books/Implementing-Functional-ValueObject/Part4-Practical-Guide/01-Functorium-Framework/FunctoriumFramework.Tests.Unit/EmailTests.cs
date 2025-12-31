@@ -27,7 +27,7 @@ public class EmailTests
         // Assert
         actual.IsSucc.ShouldBeTrue();
         actual.Match(
-            Succ: email => email.Value.ShouldBe(emailAddress),
+            Succ: email => ((string)email).ShouldBe(emailAddress),
             Fail: _ => throw new Exception("Expected success")
         );
     }
@@ -44,7 +44,7 @@ public class EmailTests
         // Assert
         actual.IsSucc.ShouldBeTrue();
         actual.Match(
-            Succ: email => email.Value.ShouldBe("user@example.com"),
+            Succ: email => ((string)email).ShouldBe("user@example.com"),
             Fail: _ => throw new Exception("Expected success")
         );
     }
@@ -62,7 +62,7 @@ public class EmailTests
         actual.IsFail.ShouldBeTrue();
         actual.Match(
             Succ: _ => throw new Exception("Expected failure"),
-            Fail: error => error.Message.ShouldContain("Email.Empty")
+            Fail: error => error.Message.ShouldContain("Email address cannot be empty")
         );
     }
 
@@ -79,7 +79,7 @@ public class EmailTests
         actual.IsFail.ShouldBeTrue();
         actual.Match(
             Succ: _ => throw new Exception("Expected failure"),
-            Fail: error => error.Message.ShouldContain("Email.InvalidFormat")
+            Fail: error => error.Message.ShouldContain("Invalid email format")
         );
     }
 

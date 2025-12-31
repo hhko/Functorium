@@ -128,12 +128,12 @@ public class FinTestExtensionsTests
         // Act & Assert - 성공 케이스
         validEmail.ShouldBeSuccess();
         var email = validEmail.GetSuccessValue();
-        email.Value.ShouldBe("user@example.com");
+        ((string)email).ShouldBe("user@example.com");
 
         // Act & Assert - 실패 케이스
         invalidEmail.ShouldBeFail();
         var error = invalidEmail.GetFailError();
-        error.Message.ShouldContain("Email.InvalidFormat");
+        error.Message.ShouldContain("Invalid email format");
     }
 
     #endregion
