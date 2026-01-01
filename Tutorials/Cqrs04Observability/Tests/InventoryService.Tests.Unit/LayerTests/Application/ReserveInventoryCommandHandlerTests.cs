@@ -34,7 +34,7 @@ public sealed class ReserveInventoryCommandHandlerTests
             .Returns(IO.lift(() => reservedItem));
 
         // Act
-        await ReserveInventoryCommandHandler.Handle(command, repository);
+        await ReserveInventoryCommandHandler.Handle(command, repository, TestContext.Current.CancellationToken);
 
         // Assert: 예외가 발생하지 않으면 성공
         _ = repository.Received(1).ReserveQuantity(productId, 5);
@@ -60,7 +60,7 @@ public sealed class ReserveInventoryCommandHandlerTests
 
         // Act & Assert
         await Should.ThrowAsync<Exception>(async () =>
-            await ReserveInventoryCommandHandler.Handle(command, repository));
+            await ReserveInventoryCommandHandler.Handle(command, repository, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public sealed class ReserveInventoryCommandHandlerTests
 
         // Act & Assert
         await Should.ThrowAsync<Exception>(async () =>
-            await ReserveInventoryCommandHandler.Handle(command, repository));
+            await ReserveInventoryCommandHandler.Handle(command, repository, TestContext.Current.CancellationToken));
     }
 
     [Fact]

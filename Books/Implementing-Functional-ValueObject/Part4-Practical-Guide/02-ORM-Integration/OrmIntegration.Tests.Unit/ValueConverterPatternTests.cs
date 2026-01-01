@@ -38,13 +38,13 @@ public class ValueConverterPatternTests
                 Price = Money.CreateFromValidated(50000, "KRW")
             };
             context.Products.Add(product);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         // Assert - Load
         await using (var context = new AppDbContext(options))
         {
-            var loaded = await context.Products.FirstAsync(p => p.Id == productId);
+            var loaded = await context.Products.FirstAsync(p => p.Id == productId, TestContext.Current.CancellationToken);
             ((string)loaded.Code).ShouldBe("EL-001234");
         }
     }
@@ -66,13 +66,13 @@ public class ValueConverterPatternTests
                 Price = Money.CreateFromValidated(25000, "KRW")
             };
             context.Products.Add(product);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         // Assert - Load
         await using (var context = new AppDbContext(options))
         {
-            var loaded = await context.Products.FirstAsync(p => p.Id == productId);
+            var loaded = await context.Products.FirstAsync(p => p.Id == productId, TestContext.Current.CancellationToken);
             loaded.Price.Amount.ShouldBe(25000);
             loaded.Price.Currency.ShouldBe("KRW");
         }

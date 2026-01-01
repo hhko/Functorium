@@ -42,13 +42,13 @@ public class OwnsManyPatternTests
                 }
             };
             context.Orders.Add(order);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         // Assert - Load
         await using (var context = new AppDbContext(options))
         {
-            var loaded = await context.Orders.FirstAsync(o => o.Id == orderId);
+            var loaded = await context.Orders.FirstAsync(o => o.Id == orderId, TestContext.Current.CancellationToken);
             loaded.LineItems.Count.ShouldBe(3);
             loaded.LineItems.ShouldContain(item => item.Name == "상품 A" && item.Qty == 2);
             loaded.LineItems.ShouldContain(item => item.Name == "상품 B" && item.Qty == 1);
@@ -73,13 +73,13 @@ public class OwnsManyPatternTests
                 LineItems = new List<OrderLineItem>()
             };
             context.Orders.Add(order);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         // Assert - Load
         await using (var context = new AppDbContext(options))
         {
-            var loaded = await context.Orders.FirstAsync(o => o.Id == orderId);
+            var loaded = await context.Orders.FirstAsync(o => o.Id == orderId, TestContext.Current.CancellationToken);
             loaded.LineItems.ShouldBeEmpty();
         }
     }
@@ -105,13 +105,13 @@ public class OwnsManyPatternTests
                 }
             };
             context.Orders.Add(order);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         // Assert - Load and calculate
         await using (var context = new AppDbContext(options))
         {
-            var loaded = await context.Orders.FirstAsync(o => o.Id == orderId);
+            var loaded = await context.Orders.FirstAsync(o => o.Id == orderId, TestContext.Current.CancellationToken);
             var total = loaded.LineItems.Sum(item => item.Qty * item.Price);
             total.ShouldBe(45000);
         }

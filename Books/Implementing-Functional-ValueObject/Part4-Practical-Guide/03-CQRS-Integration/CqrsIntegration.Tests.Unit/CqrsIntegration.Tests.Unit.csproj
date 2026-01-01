@@ -5,6 +5,8 @@
     <IsTestProject>true</IsTestProject>
     <!-- Mediator SourceGenerator 비활성화 - CqrsIntegration에서 생성된 Mediator 사용 -->
     <Mediator_DisableGenerator>true</Mediator_DisableGenerator>
+    <!-- CS0436: Mediator.SourceGenerator 타입 충돌 경고 억제 -->
+    <NoWarn>$(NoWarn);CS0436</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

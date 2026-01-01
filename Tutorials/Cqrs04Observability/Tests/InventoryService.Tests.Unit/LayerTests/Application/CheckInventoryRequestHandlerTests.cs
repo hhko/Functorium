@@ -32,7 +32,7 @@ public sealed class CheckInventoryRequestHandlerTests
             .Returns(IO.lift(() => Fin.Succ(inventoryItem)));
 
         // Act
-        var result = await CheckInventoryRequestHandler.Handle(request, repository);
+        var result = await CheckInventoryRequestHandler.Handle(request, repository, TestContext.Current.CancellationToken);
 
         // Assert
         result.ShouldNotBeNull();
@@ -58,7 +58,7 @@ public sealed class CheckInventoryRequestHandlerTests
             .Returns(IO.lift(() => Fin.Succ(inventoryItem)));
 
         // Act
-        var result = await CheckInventoryRequestHandler.Handle(request, repository);
+        var result = await CheckInventoryRequestHandler.Handle(request, repository, TestContext.Current.CancellationToken);
 
         // Assert
         result.ShouldNotBeNull();
@@ -85,7 +85,7 @@ public sealed class CheckInventoryRequestHandlerTests
         CheckInventoryResponse result;
         try
         {
-            result = await CheckInventoryRequestHandler.Handle(request, repository);
+            result = await CheckInventoryRequestHandler.Handle(request, repository, TestContext.Current.CancellationToken);
         }
         catch (Exception)
         {

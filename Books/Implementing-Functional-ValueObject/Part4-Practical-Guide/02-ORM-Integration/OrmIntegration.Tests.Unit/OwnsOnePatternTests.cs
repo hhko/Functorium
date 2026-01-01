@@ -38,13 +38,13 @@ public class OwnsOnePatternTests
                 Email = email
             };
             context.Users.Add(user);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         // Assert - Load
         await using (var context = new AppDbContext(options))
         {
-            var loaded = await context.Users.FirstAsync(u => u.Id == userId);
+            var loaded = await context.Users.FirstAsync(u => u.Id == userId, TestContext.Current.CancellationToken);
             ((string)loaded.Email).ShouldBe("user@example.com");
         }
     }
@@ -67,13 +67,13 @@ public class OwnsOnePatternTests
                     .Match(a => a, _ => throw new Exception("Address creation failed"))
             };
             context.Customers.Add(customer);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         // Assert - Load
         await using (var context = new AppDbContext(options))
         {
-            var loaded = await context.Customers.FirstAsync(c => c.Id == customerId);
+            var loaded = await context.Customers.FirstAsync(c => c.Id == customerId, TestContext.Current.CancellationToken);
             loaded.ShippingAddress.City.ShouldBe("서울");
             loaded.ShippingAddress.Street.ShouldBe("테헤란로 123");
             loaded.ShippingAddress.PostalCode.ShouldBe("06234");

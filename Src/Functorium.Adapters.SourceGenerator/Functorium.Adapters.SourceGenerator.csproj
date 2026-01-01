@@ -19,7 +19,8 @@
     <!-- Source Generator는 기호 패키지(.snupkg)가 필요하지 않음 -->
     <IncludeSymbols>false</IncludeSymbols>
     <!-- NU5128: Source Generator는 lib/ref 폴더가 아닌 analyzers/dotnet/cs에만 배치되므로 무시 -->
-    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <!-- RS2008: 분석기 릴리스 추적 경고 억제 (내부 사용 전용) -->
+    <NoWarn>$(NoWarn);NU5128;RS2008</NoWarn>
   </PropertyGroup>
 
   <!-- NuGet Package Settings -->
