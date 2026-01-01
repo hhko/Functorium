@@ -31,18 +31,18 @@
   <Folder Name="/Tutorials/SourceGenerator/Src/">
     <Project Path="Tutorials/SourceGenerator/Src/SourceGenerator.Demo/SourceGenerator.Demo.csproj" />
   </Folder>
-  <Folder Name="/Tutorials/CqrsObservability/" />
-  <Folder Name="/Tutorials/CqrsObservability/Src/">
-    <Project Path="Tutorials/CqrsObservability/Src/CqrsObservability.Messages/CqrsObservability.Messages.csproj" />
-    <Project Path="Tutorials/CqrsObservability/Src/InventoryService/InventoryService.csproj" />
-    <Project Path="Tutorials/CqrsObservability/Src/OrderService/OrderService.csproj" />
+  <Folder Name="/Tutorials/Cqrs04Observability/" />
+  <Folder Name="/Tutorials/Cqrs04Observability/Src/">
+    <Project Path="Tutorials/Cqrs04Observability/Src/CqrsObservability.Messages/CqrsObservability.Messages.csproj" />
+    <Project Path="Tutorials/Cqrs04Observability/Src/InventoryService/InventoryService.csproj" />
+    <Project Path="Tutorials/Cqrs04Observability/Src/OrderService/OrderService.csproj" />
   </Folder>
-  <Folder Name="/Tutorials/CqrsObservability/Tests/">
+  <Folder Name="/Tutorials/Cqrs04Observability/Tests/">
     <!--
-    <Project Path="Tutorials/CqrsObservability/Tests/CqrsObservability.Tests.Integration/CqrsObservability.Tests.Integration.csproj" />
+    <Project Path="Tutorials/Cqrs04Observability/Tests/CqrsObservability.Tests.Integration/CqrsObservability.Tests.Integration.csproj" />
     -->
-    <Project Path="Tutorials/CqrsObservability/Tests/InventoryService.Tests.Unit/InventoryService.Tests.Unit.csproj" />
-    <Project Path="Tutorials/CqrsObservability/Tests/OrderService.Tests.Unit/OrderService.Tests.Unit.csproj" />
+    <Project Path="Tutorials/Cqrs04Observability/Tests/InventoryService.Tests.Unit/InventoryService.Tests.Unit.csproj" />
+    <Project Path="Tutorials/Cqrs04Observability/Tests/OrderService.Tests.Unit/OrderService.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/Tutorials/Observability/" />
   <Folder Name="/Tutorials/Observability/Src/">
