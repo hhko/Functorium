@@ -106,12 +106,12 @@
 - [5.1 정리](Part5-Conclusion/01-summary.md)
 - [5.2 다음 단계](Part5-Conclusion/02-next-steps.md)
 
-### [부록](Appendix/)
+### [부록](appendix/)
 
-- [A. 개발 환경 준비](Appendix/a-development-environment.md)
-- [B. API 레퍼런스](Appendix/b-api-reference.md)
-- [C. 테스트 시나리오 카탈로그](Appendix/c-test-scenario-catalog.md)
-- [D. 문제 해결](Appendix/d-troubleshooting.md)
+- [A. 개발 환경 준비](appendix/A-development-environment.md)
+- [B. API 레퍼런스](appendix/B-api-reference.md)
+- [C. 테스트 시나리오 카탈로그](appendix/C-test-scenario-catalog.md)
+- [D. 문제 해결](appendix/D-troubleshooting.md)
 
 ---
 
@@ -213,11 +213,11 @@ AutomatingObservabilityCode-with-SourceGenerator/
 ├── Part5-Conclusion/           # Part 5: 결론
 │   ├── 01-summary.md
 │   └── 02-next-steps.md
-├── Appendix/                   # 부록
-│   ├── a-development-environment.md
-│   ├── b-api-reference.md
-│   ├── c-test-scenario-catalog.md
-│   └── d-troubleshooting.md
+├── appendix/                   # 부록
+│   ├── A-development-environment.md
+│   ├── B-api-reference.md
+│   ├── C-test-scenario-catalog.md
+│   └── D-troubleshooting.md
 └── README.md                   # 이 문서
 ```
 

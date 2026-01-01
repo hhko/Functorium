@@ -45,20 +45,20 @@
 
 | 장 | 주제 | 핵심 학습 내용 |
 |:---:|------|----------------|
-| 1 | [기본 나눗셈](Part1-ValueObject-Concepts/01-Basic-Divide/BasicDivide/) | 예외 vs 도메인 타입의 차이점 |
-| 2 | [방어적 프로그래밍](Part1-ValueObject-Concepts/02-Defensive-Programming/DefensiveProgramming/) | 방어적 프로그래밍과 사전 검증 |
-| 3 | [함수형 결과 타입](Part1-ValueObject-Concepts/03-Functional-Result/FunctionalResult/) | 함수형 결과 타입 (Fin, Validation) |
-| 4 | [항상 유효한 값 객체](Part1-ValueObject-Concepts/04-Always-Valid/AlwaysValid/) | 항상 유효한 값 객체 구현 |
-| 5 | [연산자 오버로딩](Part1-ValueObject-Concepts/05-Operator-Overloading/OperatorOverloading/) | 연산자 오버로딩과 타입 변환 |
-| 6 | [LINQ 표현식](Part1-ValueObject-Concepts/06-Linq-Expression/LinqExpression/) | LINQ 표현식과 함수형 조합 |
-| 7 | [값 동등성](Part1-ValueObject-Concepts/07-Value-Equality/ValueEquality/) | 값 동등성과 해시코드 |
-| 8 | [비교 가능성](Part1-ValueObject-Concepts/08-Value-Comparability/ValueComparability/) | 비교 가능성과 정렬 |
-| 9 | [생성과 검증 분리](Part1-ValueObject-Concepts/09-Create-Validate-Separation/CreateValidateSeparation/) | 생성과 검증의 분리 |
-| 10 | [검증된 값 생성](Part1-ValueObject-Concepts/10-Validated-Value-Creation/ValidatedValueCreation/) | 검증된 값 생성 패턴 |
-| 11 | [프레임워크 타입](Part1-ValueObject-Concepts/11-ValueObject-Framework/ValueObjectFramework/) | 프레임워크 타입 |
-| 12 | [타입 안전한 열거형](Part1-ValueObject-Concepts/12-Type-Safe-Enums/TypeSafeEnums/) | 타입 안전한 열거형 |
-| 13 | [에러 코드](Part1-ValueObject-Concepts/13-Error-Code/ErrorCode/) | 구조화된 에러 코드 |
-| 14 | [아키텍처 테스트](Part1-ValueObject-Concepts/14-Architecture-Test/ArchitectureTest/) | 아키텍처 테스트와 규칙 |
+| 1 | [기본 나눗셈](Part1-ValueObject-Concepts/01-Basic-Divide/) | 예외 vs 도메인 타입의 차이점 |
+| 2 | [방어적 프로그래밍](Part1-ValueObject-Concepts/02-Defensive-Programming/) | 방어적 프로그래밍과 사전 검증 |
+| 3 | [함수형 결과 타입](Part1-ValueObject-Concepts/03-Functional-Result/) | 함수형 결과 타입 (Fin, Validation) |
+| 4 | [항상 유효한 값 객체](Part1-ValueObject-Concepts/04-Always-Valid/) | 항상 유효한 값 객체 구현 |
+| 5 | [연산자 오버로딩](Part1-ValueObject-Concepts/05-Operator-Overloading/) | 연산자 오버로딩과 타입 변환 |
+| 6 | [LINQ 표현식](Part1-ValueObject-Concepts/06-Linq-Expression/) | LINQ 표현식과 함수형 조합 |
+| 7 | [값 동등성](Part1-ValueObject-Concepts/07-Value-Equality/) | 값 동등성과 해시코드 |
+| 8 | [비교 가능성](Part1-ValueObject-Concepts/08-Value-Comparability/) | 비교 가능성과 정렬 |
+| 9 | [생성과 검증 분리](Part1-ValueObject-Concepts/09-Create-Validate-Separation/) | 생성과 검증의 분리 |
+| 10 | [검증된 값 생성](Part1-ValueObject-Concepts/10-Validated-Value-Creation/) | 검증된 값 생성 패턴 |
+| 11 | [프레임워크 타입](Part1-ValueObject-Concepts/11-ValueObject-Framework/) | 프레임워크 타입 |
+| 12 | [타입 안전한 열거형](Part1-ValueObject-Concepts/12-Type-Safe-Enums/) | 타입 안전한 열거형 |
+| 13 | [에러 코드](Part1-ValueObject-Concepts/13-Error-Code/) | 구조화된 에러 코드 |
+| 14 | [아키텍처 테스트](Part1-ValueObject-Concepts/14-Architecture-Test/) | 아키텍처 테스트와 규칙 |
 
 ### Part 2: 검증 패턴 마스터
 
@@ -226,13 +226,21 @@ Implementing-Functional-ValueObject/
 
 ## 테스트
 
-Part 1, 4, 5의 예제 프로젝트에는 단위 테스트가 포함되어 있습니다. 테스트는 [Guide-01-Unit-Testing.md](../../Docs/Functorium/Guide-01-Unit-Testing.md) 가이드를 따릅니다.
+모든 Part의 예제 프로젝트에는 단위 테스트가 포함되어 있습니다. 테스트는 [Guide-01-Unit-Testing.md](../../Docs/Functorium/Guide-01-Unit-Testing.md) 가이드를 따릅니다.
 
 ### 테스트 실행 방법
 
 ```bash
 # Part 1 테스트 실행
 cd Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/01-Basic-Divide/BasicDivide.Tests.Unit
+dotnet test
+
+# Part 2 테스트 실행
+cd Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/01-Bind-Sequential-Validation/BindSequentialValidation.Tests.Unit
+dotnet test
+
+# Part 3 테스트 실행
+cd Books/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/01-SimpleValueObject/SimpleValueObject.Tests.Unit
 dotnet test
 
 # Part 4 테스트 실행
@@ -265,7 +273,27 @@ dotnet test
 | 13 | `ErrorCode.Tests.Unit` | 에러 코드 |
 | 14 | `ArchitectureTest.Tests.Unit` | 아키텍처 테스트 |
 
-**Part 2, 3**: 테스트 프로젝트 없음 (예제 코드만 포함)
+**Part 2: 검증 패턴 마스터** (5개)
+
+| 장 | 테스트 프로젝트 | 주요 테스트 내용 |
+|:---:|----------------|-----------------:|
+| 15 | `BindSequentialValidation.Tests.Unit` | Bind 순차 검증 |
+| 16 | `ApplyParallelValidation.Tests.Unit` | Apply 병렬 검증 |
+| 17 | `ApplyBindCombinedValidation.Tests.Unit` | Apply와 Bind 조합 |
+| 18 | `ApplyInternalBindValidation.Tests.Unit` | 내부 Bind 외부 Apply |
+| 19 | `BindInternalApplyValidation.Tests.Unit` | 내부 Apply 외부 Bind |
+
+**Part 3: 값 객체 패턴 완성** (7개)
+
+| 장 | 테스트 프로젝트 | 주요 테스트 내용 |
+|:---:|----------------|-----------------:|
+| 20 | `SimpleValueObject.Tests.Unit` | 단일 값 래퍼 테스트 |
+| 21 | `ComparableSimpleValueObject.Tests.Unit` | 비교 가능 단일 값 테스트 |
+| 22 | `ValueObjectPrimitive.Tests.Unit` | 기본 타입 값 객체 |
+| 23 | `ComparableValueObjectPrimitive.Tests.Unit` | 비교 가능 기본 타입 |
+| 24 | `ValueObjectComposite.Tests.Unit` | 복합 값 객체 |
+| 25 | `ComparableValueObjectComposite.Tests.Unit` | 비교 가능 복합 값 객체 |
+| 26 | `TypeSafeEnum.Tests.Unit` | 타입 안전 열거형 |
 
 **Part 4: 실전 가이드** (4개)
 

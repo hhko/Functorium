@@ -100,11 +100,11 @@ Claude Code에서 사용자 정의 Command를 만들고 활용하는 방법을 �
 | 3 | [문제 해결 가이드](Part5-Hands-On/03-troubleshooting.md) | 트러블슈팅 |
 | 4 | [Quick Reference](Part5-Hands-On/04-quick-reference.md) | 빠른 참조 |
 
-### [부록](Appendix/)
+### [부록](appendix/)
 
-- [A. 용어 사전](Appendix/a-glossary.md)
-- [B. API 레퍼런스](Appendix/b-api-reference.md)
-- [C. 참고 자료 및 링크](Appendix/c-resources.md)
+- [A. 용어 사전](appendix/A-glossary.md)
+- [B. API 레퍼런스](appendix/B-api-reference.md)
+- [C. 참고 자료 및 링크](appendix/C-resources.md)
 
 ---
 
@@ -186,10 +186,10 @@ AutomatingReleaseNotes-with-ClaudeCode-and-.NET10/
 │   ├── 02-custom-script.md
 │   ├── 03-troubleshooting.md
 │   └── 04-quick-reference.md
-├── Appendix/                   # 부록
-│   ├── a-glossary.md
-│   ├── b-api-reference.md
-│   └── c-resources.md
+├── appendix/                   # 부록
+│   ├── A-glossary.md
+│   ├── B-api-reference.md
+│   └── C-resources.md
 └── README.md                   # 이 문서
 ```
 
