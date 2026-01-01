@@ -1,32 +1,43 @@
 # Functorium Release v1.0.0-alpha.1
 
-## 개요
+## Overview
 
-Functorium v1.0.0-alpha.1은 함수형 프로그래밍 원칙과 Clean Architecture를 결합한 .NET 애플리케이션 개발 프레임워크의 첫 번째 알파 릴리스입니다. LanguageExt 5.x를 기반으로 하여 불변성, 타입 안전성, 그리고 관찰 가능성을 핵심 가치로 제공합니다.
+Functorium v1.0.0-alpha.1 is the first alpha release of a C# framework for implementing **Domain-Centric Functional Architecture**.
 
-**주요 기능**:
+It enables expressing domain logic as pure functions and pushing side effects to architectural boundaries, allowing you to write **testable and predictable business logic**. The framework provides a functional type system based on LanguageExt 5.x and integrated observability through OpenTelemetry.
 
-- **Domain Value Objects**: 불변 Value Object 계층 구조로 도메인 모델링
-- **CQRS & FinResponse**: 함수형 응답 타입과 Command/Query 분리 패턴
-- **OpenTelemetry 통합**: 로깅, 메트릭, 추적의 완전한 관찰 가능성
-- **Pipeline Behaviors**: 예외 처리, 로깅, 메트릭, 추적, 유효성 검증 파이프라인
-- **Source Generator**: Adapter 파이프라인 코드 자동 생성
-- **테스트 유틸리티**: 아키텍처 규칙 검증 및 테스트 픽스처
+### Core Principles
+
+| Principle | Description | Functorium Support |
+|-----------|-------------|-------------------|
+| **Domain First** | Domain model is the center of architecture | Value Object hierarchy, immutable domain types |
+| **Pure Core** | Business logic expressed as pure functions | `Fin<T>` return type, exception-free error handling |
+| **Impure Shell** | Side effects handled at boundary layers | Adapter Pipeline, ActivityContext propagation |
+| **Explicit Effects** | All effects explicitly typed | `FinResponse<T>`, `FinT<IO, T>` monad |
+
+### Key Features
+
+- **Domain Value Objects**: Value Object hierarchy ensuring immutability and validity
+- **CQRS & FinResponse**: Explicit success/failure types with Command/Query separation
+- **OpenTelemetry Integration**: Complete observability with logging, metrics, and distributed tracing
+- **Pipeline Behaviors**: Separation of cross-cutting concerns from pure domain logic
+- **Source Generator**: Automatic generation of Adapter pipeline boilerplate
+- **Architecture Testing**: Domain-centric architecture rule validation
 
 ## Breaking Changes
 
-이번 릴리스는 첫 번째 릴리스이므로 Breaking Changes가 없습니다.
+This is the first release, so there are no breaking changes.
 
-## 새로운 기능
+## New Features
 
-### Functorium 라이브러리
+### Functorium Library
 
 #### 1. Domain Value Objects
 
-불변 Value Object를 구현하기 위한 완전한 클래스 계층 구조를 제공합니다. 단일 값, 복합 값, 비교 가능한 값 등 다양한 시나리오를 지원합니다.
+Provides a complete class hierarchy for implementing immutable Value Objects. Supports various scenarios including single values, composite values, and comparable values.
 
 ```csharp
-// 단일 값 Value Object
+// Single Value Object
 public sealed class UserId : ComparableSimpleValueObject<Guid>
 {
     private UserId(Guid value) : base(value) { }
@@ -39,7 +50,7 @@ public sealed class UserId : ComparableSimpleValueObject<Guid>
             v => new UserId(v));
 }
 
-// 복합 Value Object
+// Composite Value Object
 public sealed class Address : ValueObject
 {
     public string Street { get; }
@@ -59,26 +70,26 @@ public sealed class Address : ValueObject
 }
 ```
 
-**Why this matters (왜 중요한가):**
-- 도메인 모델의 불변성을 보장하여 버그 발생 가능성 감소
-- `GetEqualityComponents()` 패턴으로 동등성 비교 로직 일관성 유지
-- `CreateFromValidation` 팩토리 메서드로 유효성 검증과 생성을 함수형으로 처리
-- 보일러플레이트 코드 50% 이상 감소 (직접 구현 대비)
+**Why this matters:**
+- Ensures domain model immutability, reducing bug occurrence
+- Maintains consistency in equality comparison logic with `GetEqualityComponents()` pattern
+- Handles validation and creation functionally with `CreateFromValidation` factory method
+- Reduces boilerplate code by over 50% compared to manual implementation
 
-<!-- 관련 커밋: fae67a9 feat(domain): ValueObject 기본 클래스 계층 구조 추가 -->
+<!-- Related commit: fae67a9 feat(domain): Add ValueObject base class hierarchy -->
 
 ---
 
 #### 2. CQRS & FinResponse
 
-Command와 Query를 분리하고, 성공/실패를 명시적으로 표현하는 `FinResponse<A>` 타입을 제공합니다.
+Separates Commands and Queries, providing `FinResponse<A>` type that explicitly expresses success/failure.
 
 ```csharp
-// Command 정의
+// Command definition
 public record CreateUserCommand(string Name, string Email)
     : ICommandRequest<UserId>;
 
-// Query 정의
+// Query definition
 public record GetUserQuery(UserId Id)
     : IQueryRequest<UserDto>;
 
@@ -96,7 +107,7 @@ public class CreateUserUsecase : ICommandUsecase<CreateUserCommand, UserId>
     }
 }
 
-// FinResponse 사용
+// FinResponse usage
 FinResponse<UserId> result = await mediator.Send(command);
 
 result.Match(
@@ -104,19 +115,19 @@ result.Match(
     Fail: error => Console.WriteLine($"Error: {error.Message}"));
 ```
 
-**Why this matters (왜 중요한가):**
-- 예외 대신 명시적인 실패 타입으로 에러 처리 누락 방지
-- Mediator 패턴과 완벽 통합으로 CQRS 구현 간소화
-- `Fin<T>`에서 `FinResponse<T>`로 자연스러운 변환 지원
-- 함수형 합성 연산자 (`Bind`, `Map`, `Match`) 제공
+**Why this matters:**
+- Prevents missing error handling with explicit failure types instead of exceptions
+- Simplifies CQRS implementation with perfect Mediator pattern integration
+- Supports natural conversion from `Fin<T>` to `FinResponse<T>`
+- Provides functional composition operators (`Bind`, `Map`, `Match`)
 
-<!-- 관련 커밋: 7eddbfc feat(cqrs): Fin<T>를 IResponse로 변환하는 ToResponse 확장 메서드 추가 -->
+<!-- Related commit: 7eddbfc feat(cqrs): Add ToResponse extension method for converting Fin<T> to IResponse -->
 
 ---
 
-#### 3. OpenTelemetry 통합
+#### 3. OpenTelemetry Integration
 
-로깅(Serilog), 메트릭, 추적을 OpenTelemetry 표준으로 통합 구성합니다.
+Integrates logging (Serilog), metrics, and tracing with OpenTelemetry standards.
 
 ```csharp
 // Program.cs
@@ -147,87 +158,137 @@ services.RegisterOpenTelemetry(configuration, Assembly.GetExecutingAssembly())
 }
 ```
 
-**Why this matters (왜 중요한가):**
-- 로깅, 메트릭, 추적 설정을 단일 빌더 API로 통합 (설정 시간 70% 감소)
-- OTLP Exporter 자동 구성으로 Jaeger, Prometheus, Grafana 연동 간소화
-- `ErrorsDestructuringPolicy`로 LanguageExt Error 타입 자동 구조화 로깅
-- FluentValidation 기반 옵션 검증으로 잘못된 설정 조기 감지
+**Why this matters:**
+- Unified logging, metrics, and tracing configuration with single builder API (70% reduction in setup time)
+- Simplified Jaeger, Prometheus, Grafana integration with automatic OTLP Exporter configuration
+- Automatic structured logging of LanguageExt Error types with `ErrorsDestructuringPolicy`
+- Early detection of invalid settings with FluentValidation-based options validation
 
-<!-- 관련 커밋: 1790c73 feat(observability): OpenTelemetry 및 Serilog 통합 구성 추가 -->
+<!-- Related commit: 1790c73 feat(observability): Add OpenTelemetry and Serilog integration configuration -->
 
 ---
 
 #### 4. Pipeline Behaviors
 
-Mediator 파이프라인에 예외 처리, 로깅, 메트릭, 추적, 유효성 검증을 자동 적용합니다.
+Automatically applies exception handling, logging, metrics, tracing, and validation to Mediator pipeline.
 
 ```csharp
-// 파이프라인 자동 적용 순서:
-// 1. UsecaseExceptionPipeline - 예외를 FinResponse.Fail로 변환
-// 2. UsecaseTracingPipeline - OpenTelemetry Span 생성
-// 3. UsecaseMetricPipeline - 요청 수, 성공/실패, 지연시간 기록
-// 4. UsecaseLoggingPipeline - 요청/응답 구조화 로깅
-// 5. UsecaseValidationPipeline - FluentValidation 검증
+// Pipeline application order:
+// 1. UsecaseExceptionPipeline - Converts exceptions to FinResponse.Fail
+// 2. UsecaseTracingPipeline - Creates OpenTelemetry Span
+// 3. UsecaseMetricPipeline - Records request count, success/failure, latency
+// 4. UsecaseLoggingPipeline - Structured logging of request/response
+// 5. UsecaseValidationPipeline - FluentValidation validation
 
-// 자동 생성되는 메트릭 예시:
+// Auto-generated metrics examples:
 // - usecase.command.requests (Counter)
 // - usecase.command.duration (Histogram)
 // - usecase.command.success (Counter)
 // - usecase.command.failure (Counter)
 ```
 
-**Why this matters (왜 중요한가):**
-- 횡단 관심사(Cross-cutting concerns)를 파이프라인으로 분리하여 Usecase 코드 순수성 유지
-- 모든 요청에 대해 일관된 로깅, 메트릭, 추적 자동 적용
-- 예외가 발생해도 `FinResponse.Fail`로 변환되어 안전한 에러 처리
-- EventId 기반 로그 필터링으로 디버깅 효율성 향상
+**Why this matters:**
+- Maintains Usecase code purity by separating cross-cutting concerns into pipeline
+- Consistent logging, metrics, and tracing automatically applied to all requests
+- Safe error handling with exceptions converted to `FinResponse.Fail`
+- Improved debugging efficiency with EventId-based log filtering
 
-<!-- 관련 커밋: f717b2e feat(observability): Metric 및 Trace 구현체 추가 -->
+<!-- Related commit: f717b2e feat(observability): Add Metric and Trace implementations -->
 
 ---
 
 #### 5. Error Handling
 
-구조화된 에러 코드와 Serilog 통합을 제공합니다.
+Provides architectural patterns for layer-specific error definition and structured error code management. Errors are separated and managed by concern through nested classes in each layer (Domain, Application).
 
 ```csharp
-// 에러 코드 생성
-var error = ErrorCodeFactory.Create(
-    "USER_001",           // 에러 코드
-    "invalid@email",      // 현재 값
-    "Invalid email format"); // 메시지
+// =====================================================
+// Domain Layer - DomainErrors nested class inside Value Object
+// =====================================================
+public sealed class City : SimpleValueObject<string>
+{
+    private City(string value) : base(value) { }
 
-// 여러 값을 포함하는 에러
-var rangeError = ErrorCodeFactory.Create(
-    "RANGE_001",
-    minValue, maxValue,
-    "Value must be between min and max");
+    public static Fin<City> Create(string value) =>
+        CreateFromValidation(Validate(value), v => new City(v));
 
-// 예외에서 에러 생성
-var exceptionalError = ErrorCodeFactory.CreateFromException(
-    "SYS_001",
-    exception);
+    public static Validation<Error, string> Validate(string value) =>
+        string.IsNullOrWhiteSpace(value)
+            ? DomainErrors.Empty(value)
+            : value;
 
-// Serilog 자동 구조화 (ErrorsDestructuringPolicy 적용 시)
-// 출력: { "ErrorCode": "USER_001", "CurrentValue": "invalid@email", "Message": "..." }
+    // Domain layer error definitions - encapsulated with Value Object
+    internal static class DomainErrors
+    {
+        public static Error Empty(string value) =>
+            ErrorCodeFactory.Create(
+                errorCode: $"{nameof(DomainErrors)}.{nameof(City)}.{nameof(Empty)}",
+                errorCurrentValue: value);
+        // Error code format: "DomainErrors.City.Empty"
+    }
+}
+
+// =====================================================
+// Application Layer - ApplicationErrors nested class inside Usecase
+// =====================================================
+public sealed class CreateProductCommand
+{
+    public sealed record Request(string Name, decimal Price) : ICommandRequest<Response>;
+    public sealed record Response(Guid ProductId, string Name);
+
+    internal sealed class Usecase(IProductRepository repository)
+        : ICommandUsecase<Request, Response>
+    {
+        public async ValueTask<FinResponse<Response>> Handle(
+            Request request, CancellationToken cancellationToken)
+        {
+            FinT<IO, Response> usecase =
+                from exists in repository.ExistsByName(request.Name)
+                from _ in guard(!exists, ApplicationErrors.ProductNameAlreadyExists(request.Name))
+                from product in repository.Create(/* ... */)
+                select new Response(product.Id, product.Name);
+
+            return (await usecase.Run().RunAsync()).ToFinResponse();
+        }
+    }
+
+    // Application layer error definitions - encapsulated with Usecase
+    internal static class ApplicationErrors
+    {
+        public static Error ProductNameAlreadyExists(string productName) =>
+            ErrorCodeFactory.Create(
+                errorCode: $"{nameof(ApplicationErrors)}.{nameof(CreateProductCommand)}.{nameof(ProductNameAlreadyExists)}",
+                errorCurrentValue: productName,
+                errorMessage: $"Product name already exists: '{productName}'");
+        // Error code format: "ApplicationErrors.CreateProductCommand.ProductNameAlreadyExists"
+    }
+}
 ```
 
-**Why this matters (왜 중요한가):**
-- 에러 코드 표준화로 클라이언트 에러 처리 일관성 확보
-- Serilog Destructuring 정책으로 에러 로그 자동 구조화
-- 예외와 도메인 에러를 통합된 `Error` 타입으로 처리
-- 에러 추적 및 분석을 위한 메타데이터 자동 포함
+**Layer-specific Error Management Architecture:**
 
-<!-- 관련 커밋: b889230 test(abstractions): Errors 타입 단위 테스트 추가 -->
+| Layer | Nested Class | Error Code Pattern | Responsibility |
+|-------|--------------|-------------------|----------------|
+| **Domain** | `DomainErrors` | `DomainErrors.{Type}.{ErrorReason}` | Value Object validation failures |
+| **Application** | `ApplicationErrors` | `ApplicationErrors.{Usecase}.{ErrorReason}` | Business rule violations, duplicate checks, etc. |
+
+**Why this matters:**
+- **Separation of concerns**: Error definitions encapsulated with their layer/class, improving cohesion
+- **Error code naming convention**: `{Layer}.{Type}.{Error}` pattern enables immediate identification of error origin
+- **Searchability**: Quick search for error definition locations across codebase using error codes
+- **Serilog auto-structuring**: Automatic error log structuring when `ErrorsDestructuringPolicy` is applied
+- **Type safety**: Consistent error creation through `ErrorCodeFactory` prevents typos and omissions
+
+<!-- Related commit: b889230 test(abstractions): Add Errors type unit tests -->
 
 ---
 
 #### 6. LINQ Extensions for FinT
 
-`Fin<T>`와 `FinT<M, T>` 모나드를 위한 LINQ 확장 메서드를 제공합니다.
+Provides LINQ extension methods for `Fin<T>` and `FinT<M, T>` monads.
 
 ```csharp
-// TraverseSerial - 순차 순회 (Activity Span 자동 생성)
+// TraverseSerial - Sequential traversal (with automatic Activity Span creation)
 var results = await items.ToSeq()
     .TraverseSerial(
         item => ProcessItem(item),
@@ -236,66 +297,66 @@ var results = await items.ToSeq()
         (item, index) => $"Item_{index}")
     .Run();
 
-// Filter - 조건부 필터링
+// Filter - Conditional filtering
 var filtered = fin.Filter(x => x > 0);
 
-// SelectMany - 모나드 합성 (LINQ 쿼리 구문 지원)
+// SelectMany - Monad composition (LINQ query syntax support)
 var result = from a in GetUserAsync()
              from b in GetOrdersAsync(a.Id)
              select new { User = a, Orders = b };
 ```
 
-**Why this matters (왜 중요한가):**
-- 컬렉션의 순차 처리에 자동 Span 생성으로 추적 가능성 확보
-- `FinT<IO, T>` 모나드로 비동기 함수형 프로그래밍 지원
-- LINQ 쿼리 구문으로 가독성 높은 모나드 합성
-- 실패 시 조기 종료 (fail-fast) 시맨틱 보장
+**Why this matters:**
+- Automatic Span creation for sequential collection processing enables traceability
+- Supports asynchronous functional programming with `FinT<IO, T>` monad
+- Readable monad composition with LINQ query syntax
+- Guarantees fail-fast semantics on failure
 
-<!-- 관련 커밋: 4683281 feat(linq): TraverseSerial 메서드 및 Activity Context 유틸리티 추가 -->
+<!-- Related commit: 4683281 feat(linq): Add TraverseSerial method and Activity Context utilities -->
 
 ---
 
 #### 7. Dependency Injection Extensions
 
-Adapter 파이프라인과 옵션 구성을 위한 DI 확장 메서드를 제공합니다.
+Provides DI extension methods for Adapter pipeline and options configuration.
 
 ```csharp
-// Adapter 파이프라인 등록 (ActivityContext 자동 전파)
+// Adapter pipeline registration (with automatic ActivityContext propagation)
 services.RegisterScopedAdapterPipeline<IUserRepository, UserRepository>();
 
-// 여러 인터페이스를 구현하는 Adapter 등록
+// Register Adapter implementing multiple interfaces
 services.RegisterScopedAdapterPipelineFor<
     IUserRepository,
     IUserQueryRepository,
     UserRepository>();
 
-// Factory 기반 등록
+// Factory-based registration
 services.RegisterScopedAdapterPipeline<IUserRepository>(
     (serviceProvider, activityContext) =>
         new UserRepository(serviceProvider.GetRequiredService<DbContext>(), activityContext));
 
-// 옵션 구성 및 검증
+// Options configuration and validation
 services.RegisterConfigureOptions<MyOptions, MyOptionsValidator>("MySection");
 ```
 
-**Why this matters (왜 중요한가):**
-- `ActivityContext` 자동 전파로 분산 추적 구현 간소화
-- Scoped/Transient/Singleton 라이프타임별 등록 메서드 제공
-- FluentValidation 기반 옵션 검증으로 시작 시 잘못된 설정 감지
-- 보일러플레이트 DI 등록 코드 대폭 감소
+**Why this matters:**
+- Simplified distributed tracing implementation with automatic `ActivityContext` propagation
+- Registration methods provided for Scoped/Transient/Singleton lifetimes
+- Early detection of invalid settings at startup with FluentValidation-based options validation
+- Significant reduction in boilerplate DI registration code
 
-<!-- 관련 커밋: 7d9f182 feat(observability): OpenTelemetry 의존성 등록 확장 메서드 추가 -->
+<!-- Related commit: 7d9f182 feat(observability): Add OpenTelemetry dependency registration extension methods -->
 
 ---
 
-### Functorium.Testing 라이브러리
+### Functorium.Testing Library
 
 #### 1. Architecture Rules Validation
 
-ArchUnitNET을 활용한 아키텍처 규칙 검증 유틸리티를 제공합니다.
+Provides architecture rule validation utilities using ArchUnitNET.
 
 ```csharp
-// Value Object 아키텍처 규칙 검증
+// Value Object architecture rule validation
 var valueObjects = Classes()
     .That().ResideInNamespace("MyApp.Domain.ValueObjects");
 
@@ -311,22 +372,22 @@ valueObjects.ValidateAllClasses(architecture, validator =>
 });
 ```
 
-**Why this matters (왜 중요한가):**
-- 아키텍처 규칙을 테스트로 강제하여 설계 일관성 유지
-- Value Object, Entity, Repository 등 패턴별 규칙 템플릿 제공
-- 위반 사항을 명확한 메시지로 보고하여 빠른 수정 가능
-- CI/CD 파이프라인에서 아키텍처 드리프트 조기 감지
+**Why this matters:**
+- Maintains design consistency by enforcing architecture rules as tests
+- Provides rule templates for patterns like Value Object, Entity, Repository
+- Reports violations with clear messages for quick fixes
+- Early detection of architecture drift in CI/CD pipeline
 
-<!-- 관련 커밋: dd49bd8 refactor(testing): ArchitectureRules 검증 코드 리팩터링 -->
+<!-- Related commit: dd49bd8 refactor(testing): Refactor ArchitectureRules validation code -->
 
 ---
 
 #### 2. Test Fixtures
 
-ASP.NET Core 호스트 및 Quartz 스케줄러 테스트를 위한 픽스처를 제공합니다.
+Provides fixtures for ASP.NET Core host and Quartz scheduler testing.
 
 ```csharp
-// 호스트 테스트 픽스처
+// Host test fixture
 public class MyApiTests : IClassFixture<HostTestFixture<Program>>
 {
     private readonly HostTestFixture<Program> _fixture;
@@ -344,7 +405,7 @@ public class MyApiTests : IClassFixture<HostTestFixture<Program>>
     }
 }
 
-// Quartz Job 테스트 픽스처
+// Quartz Job test fixture
 public class MyJobTests : IClassFixture<QuartzTestFixture<Program>>
 {
     [Fact]
@@ -356,22 +417,22 @@ public class MyJobTests : IClassFixture<QuartzTestFixture<Program>>
 }
 ```
 
-**Why this matters (왜 중요한가):**
-- 통합 테스트 설정 보일러플레이트 90% 감소
-- `IAsyncLifetime` 구현으로 테스트 라이프사이클 자동 관리
-- Quartz Job 테스트를 동기적으로 실행하고 결과 검증 가능
-- 환경별 구성 오버라이드 지원
+**Why this matters:**
+- 90% reduction in integration test setup boilerplate
+- Automatic test lifecycle management with `IAsyncLifetime` implementation
+- Execute Quartz Jobs synchronously and verify results
+- Supports environment-specific configuration overrides
 
-<!-- 관련 커밋: 0282d23 feat(testing): 테스트 헬퍼 라이브러리 소스 구조 추가 -->
+<!-- Related commit: 0282d23 feat(testing): Add test helper library source structure -->
 
 ---
 
 #### 3. Structured Logging Assertions
 
-Serilog 로그 이벤트를 검증하기 위한 유틸리티를 제공합니다.
+Provides utilities for verifying Serilog log events.
 
 ```csharp
-// 테스트용 구조화 로거 설정
+// Test structured logger setup
 var logEvents = new List<LogEvent>();
 var logger = new LoggerConfiguration()
     .WriteTo.Sink(new TestSink(logEvents))
@@ -379,7 +440,7 @@ var logger = new LoggerConfiguration()
 
 var structuredLogger = new StructuredTestLogger<MyService>(logger);
 
-// 로그 이벤트 속성 추출 및 검증
+// Log event property extraction and verification
 var logData = LogEventPropertyExtractor.ExtractLogData(logEvents.First());
 logData.Should().BeEquivalentTo(new
 {
@@ -389,19 +450,19 @@ logData.Should().BeEquivalentTo(new
 });
 ```
 
-**Why this matters (왜 중요한가):**
-- 구조화된 로그의 정확성을 테스트로 검증
-- `LogEventPropertyExtractor`로 복잡한 로그 속성 쉽게 추출
-- Pipeline 로깅 동작을 단위 테스트로 검증 가능
-- 로그 기반 모니터링/알림 규칙의 정확성 보장
+**Why this matters:**
+- Verify structured log accuracy through tests
+- Easy extraction of complex log properties with `LogEventPropertyExtractor`
+- Unit test verification of Pipeline logging behavior
+- Ensures accuracy of log-based monitoring/alerting rules
 
-<!-- 관련 커밋: 922c7b3 refactor(testing): 로깅 테스트 유틸리티 재구성 -->
+<!-- Related commit: 922c7b3 refactor(testing): Reorganize logging test utilities -->
 
 ---
 
 #### 4. Source Generator Testing
 
-Roslyn Source Generator를 테스트하기 위한 러너를 제공합니다.
+Provides runners for testing Roslyn Source Generators.
 
 ```csharp
 [Fact]
@@ -421,24 +482,24 @@ public void Should_Generate_Pipeline_Code()
 }
 ```
 
-**Why this matters (왜 중요한가):**
-- Source Generator 출력을 단위 테스트로 검증
-- 컴파일 없이 생성된 코드 문자열 직접 검사
-- 리팩터링 시 Generator 동작 회귀 방지
-- TDD 방식의 Generator 개발 지원
+**Why this matters:**
+- Verify Source Generator output through unit tests
+- Direct inspection of generated code strings without compilation
+- Prevents Generator behavior regression during refactoring
+- Supports TDD-style Generator development
 
-<!-- 관련 커밋: 1fb6971 refactor(source-generator): 코드 구조 개선 및 테스트 인프라 추가 -->
+<!-- Related commit: 1fb6971 refactor(source-generator): Improve code structure and add test infrastructure -->
 
 ---
 
-### Functorium.Adapters.SourceGenerator 라이브러리
+### Functorium.Adapters.SourceGenerator Library
 
 #### 1. Adapter Pipeline Generator
 
-`[GeneratePipeline]` 어트리뷰트가 적용된 인터페이스에 대해 ActivityContext 전파가 포함된 파이프라인 코드를 자동 생성합니다.
+Automatically generates pipeline code with ActivityContext propagation for interfaces marked with `[GeneratePipeline]` attribute.
 
 ```csharp
-// 인터페이스 정의
+// Interface definition
 [GeneratePipeline]
 public interface IUserRepository : IAdapter
 {
@@ -447,7 +508,7 @@ public interface IUserRepository : IAdapter
     Fin<Unit> Save(User user);
 }
 
-// 자동 생성되는 코드 (개념적 예시)
+// Auto-generated code (conceptual example)
 public class UserRepositoryPipeline : IUserRepository
 {
     private readonly IUserRepository _inner;
@@ -462,22 +523,22 @@ public class UserRepositoryPipeline : IUserRepository
 }
 ```
 
-**Why this matters (왜 중요한가):**
-- Adapter 파이프라인 보일러플레이트 코드 100% 자동 생성
-- ActivityContext 전파로 분산 추적 자동 지원
-- 컴파일 타임 코드 생성으로 런타임 오버헤드 없음
-- LanguageExt 5.x `Fin<T>`, `FinT<M, T>` 반환 타입 완벽 지원
+**Why this matters:**
+- 100% automatic generation of Adapter pipeline boilerplate code
+- Automatic distributed tracing support with ActivityContext propagation
+- No runtime overhead with compile-time code generation
+- Full support for LanguageExt 5.x `Fin<T>`, `FinT<M, T>` return types
 
-<!-- 관련 커밋: 68623bf feat(generator): Adapter Pipeline Source Generator 프로젝트 추가 -->
+<!-- Related commit: 68623bf feat(generator): Add Adapter Pipeline Source Generator project -->
 
-## 버그 수정
+## Bug Fixes
 
-- **ValueObject 배열 동등성 비교 버그 수정**: `GetEqualityComponents()`에서 배열을 반환할 때 올바르게 비교되지 않던 문제 수정 (9c1c2c1)
-- **LanguageExt 5.x API 호환성 버그 수정**: 파라미터 없는 메서드에서 발생하던 Source Generator 버그 수정 (2e91065)
+- **ValueObject array equality comparison bug fix**: Fixed issue where arrays returned from `GetEqualityComponents()` were not compared correctly (9c1c2c1)
+- **LanguageExt 5.x API compatibility bug fix**: Fixed Source Generator bug occurring with parameterless methods (2e91065)
 
-## API 변경사항
+## API Changes
 
-### Functorium 네임스페이스 구조
+### Functorium Namespace Structure
 
 ```
 Functorium
@@ -509,7 +570,7 @@ Functorium
     └── ValueObjects/
 ```
 
-### Functorium.Testing 네임스페이스 구조
+### Functorium.Testing Namespace Structure
 
 ```
 Functorium.Testing
@@ -524,10 +585,10 @@ Functorium.Testing
     └── Logging/
 ```
 
-### 필수 의존성
+### Required Dependencies
 
-- .NET 10.0 이상
-- LanguageExt.Core 5.0.0-beta-58 이상
+- .NET 10.0 or higher
+- LanguageExt.Core 5.0.0-beta-58 or higher
 - OpenTelemetry 1.x
 - Serilog 4.x
 - Mediator.SourceGenerator
