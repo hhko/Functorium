@@ -80,8 +80,8 @@
   - Seq
   - Traverse
 ---
-- [ ] Book 문서 값객체 동기화
-- [ ] Book 추가 문서 확인?
+- [x] Book 문서 값객체 동기화
+- [x] Book 추가 문서 확인?
 ---
 - [ ] "Request/Reply vs Fire and Forget 패턴"
   - 성공: 데이터 유/무
@@ -108,7 +108,7 @@
 - [ ] wolverine 관찰 가능성 데이터 확인: 지표, 추적, 로그?
 - [ ] wolverine 관찰 가능성 의존성 등록 패턴 적용
 ---
-- [ ] 용어 통일 Metrics, Traces, Loggers
+- [x] 용어 통일 Metrics, Traces, Loggers
 - [ ] 용어 통일 Success, Failure
 ---
 - [ ] Functorium 접근 제어사 최적화
