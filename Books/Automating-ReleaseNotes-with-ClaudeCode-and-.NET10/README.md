@@ -150,7 +150,7 @@ Phase 4: 문서 작성    →  Phase 5: 검증
 ## 프로젝트 구조
 
 ```
-AutomatingReleaseNotes-with-ClaudeCode-and-.NET10/
+Automating-ReleaseNotes-with-ClaudeCode-and-.NET10/
 ├── Part0-Introduction/         # Part 0: 서론
 │   ├── 01-why-release-notes.md
 │   ├── 02-automation-overview.md

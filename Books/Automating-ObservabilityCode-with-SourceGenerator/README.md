@@ -185,7 +185,7 @@ public class UserRepositoryPipeline : UserRepository
 ## 프로젝트 구조
 
 ```
-AutomatingObservabilityCode-with-SourceGenerator/
+Automating-ObservabilityCode-with-SourceGenerator/
 ├── Part0-Introduction/         # Part 0: 서론
 │   ├── 01-what-is-source-generator.md
 │   ├── 02-why-source-generator.md

@@ -4,8 +4,8 @@
 - [Architecture](./Docs/ArchitectureIs/README.md)
 
 ## Book
-- [Automating Release Notes with Claude Code and .NET 10](./Books/AutomatingReleaseNotes-with-ClaudeCode-and-.NET10/README.md)
-- [Automating Observability Code with SourceGenerator](./Books/AutomatingObservabilityCode-with-SourceGenerator/README.md)
+- [Automating Release Notes with Claude Code and .NET 10](./Books/Automating-ReleaseNotes-with-ClaudeCode-and-.NET10/README.md)
+- [Automating Observability Code with SourceGenerator](./Books/Automating-ObservabilityCode-with-SourceGenerator/README.md)
 - [Implementing Functional ValueObject](./Books/Implementing-Functional-ValueObject/README.md)
 
 ## Framework
