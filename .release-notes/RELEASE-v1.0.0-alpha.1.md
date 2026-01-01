@@ -274,7 +274,7 @@ public sealed class CreateProductCommand
 
 **Why this matters:**
 - **Separation of concerns**: Error definitions encapsulated with their layer/class, improving cohesion
-- **Error code naming convention**: `{Layer}.{Type}.{Error}` pattern enables immediate identification of error origin
+- **Error code naming convention**: `{Layer}.{Type}.{ErrorReason}` pattern enables immediate identification of error origin
 - **Searchability**: Quick search for error definition locations across codebase using error codes
 - **Serilog auto-structuring**: Automatic error log structuring when `ErrorsDestructuringPolicy` is applied
 - **Type safety**: Consistent error creation through `ErrorCodeFactory` prevents typos and omissions

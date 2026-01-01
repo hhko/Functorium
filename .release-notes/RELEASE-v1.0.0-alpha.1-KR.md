@@ -274,7 +274,7 @@ public sealed class CreateProductCommand
 
 **Why this matters (왜 중요한가):**
 - **관심사 분리**: 에러 정의가 해당 레이어/클래스와 함께 캡슐화되어 응집도 향상
-- **에러 코드 네이밍 컨벤션**: `{Layer}.{Type}.{Error}` 패턴으로 에러 발생 위치 즉시 식별
+- **에러 코드 네이밍 컨벤션**: `{Layer}.{Type}.{ErrorReason}` 패턴으로 에러 발생 위치 즉시 식별
 - **검색 가능성**: 에러 코드로 코드베이스 전체에서 에러 정의 위치 빠르게 검색
 - **Serilog 자동 구조화**: `ErrorsDestructuringPolicy` 적용 시 에러 로그 자동 구조화
 - **타입 안전성**: `ErrorCodeFactory`를 통한 일관된 에러 생성으로 오타 및 누락 방지
