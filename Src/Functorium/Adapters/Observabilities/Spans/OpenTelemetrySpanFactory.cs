@@ -18,14 +18,14 @@ public sealed class OpenTelemetrySpanFactory : ISpanFactory
         _activitySource = activitySource;
     }
 
-    public ISpan? CreateSpan(
-        string operationName,
-        string category,
-        string handler,
-        string method)
-    {
-        return CreateChildSpan(null, operationName, category, handler, method);
-    }
+    // public ISpan? CreateSpan(
+    //     string operationName,
+    //     string category,
+    //     string handler,
+    //     string method)
+    // {
+    //     return CreateChildSpan(null, operationName, category, handler, method);
+    // }
 
     public ISpan? CreateChildSpan(
         IObservabilityContext? parentContext,
@@ -34,7 +34,6 @@ public sealed class OpenTelemetrySpanFactory : ISpanFactory
         string handler,
         string method)
     {
-        // 태그 설정
         ActivityTagsCollection tags = new()
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
@@ -43,10 +42,8 @@ public sealed class OpenTelemetrySpanFactory : ISpanFactory
             { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, method }
         };
 
-        // 부모 컨텍스트 결정
         ActivityContext actualParentContext = DetermineParentContext(parentContext);
 
-        // Activity 생성
         IEnumerable<ActivityLink>? links = null;
         Activity? activity = _activitySource.StartActivity(
             operationName,
@@ -66,32 +63,38 @@ public sealed class OpenTelemetrySpanFactory : ISpanFactory
     /// 부모 컨텍스트를 결정합니다.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// 우선순위:
-    /// 1. AsyncLocal에 저장된 Traverse Activity (FinT의 AsyncLocal 복원 문제 우회)
-    /// 2. 명시적으로 전달된 parentContext
-    /// 3. Activity.Current
+    /// <list type="number">
+    ///   <item>Activity.Current - 가장 가까운 부모 (표준 OpenTelemetry 동작)</item>
+    ///   <item>AsyncLocal에 저장된 Traverse Activity (FinT의 AsyncLocal 복원 문제 우회)</item>
+    ///   <item>명시적으로 전달된 parentContext (HTTP 요청 레벨 폴백)</item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// 기대되는 Trace 계층 구조:
+    /// <code>
+    /// HttpRequestIn (ROOT)
+    /// └── UsecaseActivity (Activity.Current) ← 우선순위 1
+    ///     └── AdapterSpan (이 메서드의 결과)
+    /// </code>
+    /// </para>
     /// </remarks>
-    private static ActivityContext DetermineParentContext(IObservabilityContext? parentContext)
+    internal static ActivityContext DetermineParentContext(IObservabilityContext? parentContext)
     {
-        // 1. AsyncLocal에 저장된 Traverse Activity 우선 사용
-        Activity? traverseActivity = ActivityContextHolder.GetCurrentActivity();
-        if (traverseActivity != null)
-        {
-            return traverseActivity.Context;
-        }
-
-        // 2. 명시적으로 전달된 parentContext 사용
-        if (parentContext is ObservabilityContext otelContext)
-        {
-            return otelContext.ActivityContext;
-        }
-
-        // 3. Activity.Current 폴백
+        // 1. Activity.Current - 가장 가까운 부모 (표준 OpenTelemetry 동작)
         Activity? currentActivity = Activity.Current;
         if (currentActivity != null)
-        {
             return currentActivity.Context;
-        }
+
+        // 2. AsyncLocal에 저장된 Traverse Activity (FinT의 AsyncLocal 복원 문제 우회)
+        Activity? traverseActivity = ActivityContextHolder.GetCurrentActivity();
+        if (traverseActivity != null)
+            return traverseActivity.Context;
+
+        // 3. 명시적으로 전달된 parentContext (HTTP 요청 레벨 폴백)
+        if (parentContext is ObservabilityContext otelContext)
+            return otelContext.ActivityContext;
 
         return default;
     }

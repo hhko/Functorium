@@ -35,9 +35,7 @@ public sealed class UsecaseTracingPipeline<TRequest, TResponse>
         string requestHandlerPath = GetRequestHandlerPath();
         Activity? parentActivity = Activity.Current;
 
-        //
         // AddSource에 사전에 ActivitySource 이름이 등록되어 있어야 정상적으로 객체를 생성할 수 있습니다.
-        //
         string requestHandlerMethod = "Handle";
         using Activity? activity = parentActivity != null
             ? _activitySource.StartActivity($"{ObservabilityNaming.Layers.Application} {ObservabilityNaming.Categories.Usecase}.{requestCqrs} {requestHandler}.{requestHandlerMethod}", ActivityKind.Internal, parentActivity.Context)
