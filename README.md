@@ -1,9 +1,21 @@
 # Functorium
 > A functional domain = **functor** + domin**ium** with **fun**.
 
-- [Architecture](./Docs/ArchitectureIs/README.md)
+Functorium is a C# framework for implementing **Domain-Centric Functional Architecture**.
+
+It enables expressing domain logic as pure functions and pushing side effects to architectural boundaries, allowing you to write **testable and predictable business logic**. The framework provides a functional type system based on LanguageExt 5.x and integrated observability through OpenTelemetry.
+
+### Core Principles
+
+| Principle | Description | Functorium Support |
+|-----------|-------------|-------------------|
+| **Domain First** | Domain model is the center of architecture | Value Object hierarchy, immutable domain types |
+| **Pure Core** | Business logic expressed as pure functions | `Fin<T>` return type, exception-free error handling |
+| **Impure Shell** | Side effects handled at boundary layers | Adapter Pipeline, ActivityContext propagation |
+| **Explicit Effects** | All effects explicitly typed | `FinResponse<T>`, `FinT<IO, T>` monad |
 
 ## Book
+- [Architecture](./Docs/ArchitectureIs/README.md)
 - [Automating Release Notes with Claude Code and .NET 10](./Books/Automating-ReleaseNotes-with-ClaudeCode-and-.NET10/README.md)
 - [Automating Observability Code with SourceGenerator](./Books/Automating-ObservabilityCode-with-SourceGenerator/README.md)
 - [Implementing Functional ValueObject](./Books/Implementing-Functional-ValueObject/README.md)
