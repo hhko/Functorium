@@ -2,13 +2,27 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "CqrsFunctional.Demo",
+      "name": "Cqrs03Functional.Demo",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build-CqrsFunctional.Demo",
-      "program": "${workspaceFolder}/Tutorials/CqrsFunctional/Src/CqrsFunctional.Demo/bin/Debug/net10.0/CqrsFunctional.Demo.dll",
+      "preLaunchTask": "build-Cqrs03Functional.Demo",
+      "program": "${workspaceFolder}/Tutorials/Cqrs03Functional/Src/Cqrs03Functional.Demo/bin/Debug/net10.0/Cqrs03Functional.Demo.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/Tutorials/CqrsFunctional/Src/CqrsFunctional.Demo",
+      "cwd": "${workspaceFolder}/Tutorials/Cqrs03Functional/Src/Cqrs03Functional.Demo",
+      "stopAtEntry": false,
+      "console": "integratedTerminal",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    {
+      "name": "Cqrs04Endpoint.WebApi",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-Cqrs04Endpoint.WebApi",
+      "program": "${workspaceFolder}/Tutorials/Cqrs04Endpoint/Src/Cqrs04Endpoint.WebApi/bin/Debug/net10.0/Cqrs04Endpoint.WebApi.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Tutorials/Cqrs04Endpoint/Src/Cqrs04Endpoint.WebApi",
       "stopAtEntry": false,
       "console": "integratedTerminal",
       "env": {

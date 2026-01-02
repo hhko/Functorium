@@ -2,38 +2,74 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build-CqrsFunctional.Demo",
+      "label": "build-Cqrs03Functional.Demo",
       "command": "dotnet",
       "type": "process",
       "args": [
         "build",
-        "${workspaceFolder}/Tutorials/CqrsFunctional/Src/CqrsFunctional.Demo/CqrsFunctional.Demo.csproj",
+        "${workspaceFolder}/Tutorials/Cqrs03Functional/Src/Cqrs03Functional.Demo/Cqrs03Functional.Demo.csproj",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary;ForceNoAlign"
       ],
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "publish-CqrsFunctional.Demo",
+      "label": "publish-Cqrs03Functional.Demo",
       "command": "dotnet",
       "type": "process",
       "args": [
         "publish",
-        "${workspaceFolder}/Tutorials/CqrsFunctional/Src/CqrsFunctional.Demo/CqrsFunctional.Demo.csproj",
+        "${workspaceFolder}/Tutorials/Cqrs03Functional/Src/Cqrs03Functional.Demo/Cqrs03Functional.Demo.csproj",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary;ForceNoAlign"
       ],
       "problemMatcher": "$msCompile"
     },
     {
-      "label": "watch-CqrsFunctional.Demo",
+      "label": "watch-Cqrs03Functional.Demo",
       "command": "dotnet",
       "type": "process",
       "args": [
         "watch",
         "run",
         "--project",
-        "${workspaceFolder}/Tutorials/CqrsFunctional/Src/CqrsFunctional.Demo/CqrsFunctional.Demo.csproj"
+        "${workspaceFolder}/Tutorials/Cqrs03Functional/Src/Cqrs03Functional.Demo/Cqrs03Functional.Demo.csproj"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build-Cqrs04Endpoint.WebApi",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/Tutorials/Cqrs04Endpoint/Src/Cqrs04Endpoint.WebApi/Cqrs04Endpoint.WebApi.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary;ForceNoAlign"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "publish-Cqrs04Endpoint.WebApi",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "publish",
+        "${workspaceFolder}/Tutorials/Cqrs04Endpoint/Src/Cqrs04Endpoint.WebApi/Cqrs04Endpoint.WebApi.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary;ForceNoAlign"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "watch-Cqrs04Endpoint.WebApi",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "watch",
+        "run",
+        "--project",
+        "${workspaceFolder}/Tutorials/Cqrs04Endpoint/Src/Cqrs04Endpoint.WebApi/Cqrs04Endpoint.WebApi.csproj"
       ],
       "problemMatcher": "$msCompile"
     }
