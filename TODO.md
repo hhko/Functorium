@@ -2,9 +2,15 @@
 - [x] 네임스페이스 업데이트
 - [x] GitHub Release 스크립트
 - [x] GitHub Release
+---
+- [x] Pipeline 의존성 등록 개선
+- [x] Cqrs04Endpoint 프로젝트 생성
+- [ ] Cqrs04Endpoint 기준으로 Trace 코드 검증
+- [ ] Mediator Singleton + Scoped(Factory로 통합)
+- [ ] Cqrs04Observability -> Cqrs05Microservices 변경
 - [ ] 계층 구조 테스트
-- [ ] aspire 대시보드 구축
-- [ ] asprie 대시보드 확인(계층 구조)
+- [x] aspire 대시보드 구축
+- [ ] aspire 대시보드 확인(계층 구조)
 - [ ] 로그/추적/지표 md 문서 기준으로 비교
 - [ ] 코드 이해를 위한 예제 코드 작성
 - [ ] 코드 이해를 위한 학습 문서 작성
