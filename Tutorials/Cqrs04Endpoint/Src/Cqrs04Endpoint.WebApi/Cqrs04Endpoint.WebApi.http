@@ -1,0 +1,71 @@
+@baseUrl = http://localhost:5000
+
+### 전체 상품 조회
+GET {{baseUrl}}/api/products
+Accept: application/json
+
+### 상품 생성
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+    "Name": "테스트 상품",
+    "Description": "테스트 상품 설명입니다",
+    "Price": 10000,
+    "StockQuantity": 100
+}
+
+### 상품 생성 - 유효성 검사 실패 (가격 음수)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+    "Name": "유효하지 않은 상품",
+    "Description": "가격이 음수입니다",
+    "Price": -100,
+    "StockQuantity": 10
+}
+
+### 상품 생성 - 유효성 검사 실패 (상품명 없음)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+    "Name": "",
+    "Description": "상품명이 비어있습니다",
+    "Price": 5000,
+    "StockQuantity": 50
+}
+
+### 상품 ID로 조회 (존재하는 ID로 변경 필요)
+@productId = 00000000-0000-0000-0000-000000000000
+GET {{baseUrl}}/api/products/{{productId}}
+Accept: application/json
+
+### 상품 ID로 조회 - 존재하지 않는 상품
+GET {{baseUrl}}/api/products/99999999-9999-9999-9999-999999999999
+Accept: application/json
+
+### 상품 업데이트 (존재하는 ID로 변경 필요)
+PUT {{baseUrl}}/api/products/{{productId}}
+Content-Type: application/json
+
+{
+    "Id": "{{productId}}",
+    "Name": "업데이트된 상품",
+    "Description": "상품 설명이 업데이트되었습니다",
+    "Price": 15000,
+    "StockQuantity": 200
+}
+
+### 상품 업데이트 - 존재하지 않는 상품
+PUT {{baseUrl}}/api/products/99999999-9999-9999-9999-999999999999
+Content-Type: application/json
+
+{
+    "Id": "99999999-9999-9999-9999-999999999999",
+    "Name": "존재하지 않는 상품",
+    "Description": "이 상품은 존재하지 않습니다",
+    "Price": 5000,
+    "StockQuantity": 10
+}

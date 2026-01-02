@@ -31,6 +31,13 @@
   <Folder Name="/Tutorials/SourceGenerator/Src/">
     <Project Path="Tutorials/SourceGenerator/Src/SourceGenerator.Demo/SourceGenerator.Demo.csproj" />
   </Folder>
+  <Folder Name="/Tutorials/Cqrs04Endpoint/" />
+  <Folder Name="/Tutorials/Cqrs04Endpoint/Src/">
+    <Project Path="Tutorials/Cqrs04Endpoint/Src/Cqrs04Endpoint.WebApi/Cqrs04Endpoint.WebApi.csproj" />
+  </Folder>
+  <Folder Name="/Tutorials/Cqrs04Endpoint/Tests/">
+    <Project Path="Tutorials/Cqrs04Endpoint/Tests/Cqrs04Endpoint.WebApi.Tests.Unit/Cqrs04Endpoint.WebApi.Tests.Unit.csproj" />
+  </Folder>
   <Folder Name="/Tutorials/Cqrs04Observability/" />
   <Folder Name="/Tutorials/Cqrs04Observability/Src/">
     <Project Path="Tutorials/Cqrs04Observability/Src/CqrsObservability.Messages/CqrsObservability.Messages.csproj" />

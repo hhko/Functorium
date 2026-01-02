@@ -53,6 +53,10 @@
     <PackageVersion Include="Ardalis.SmartEnum" Version="8.2.0" />
   </ItemGroup>
 
+  <ItemGroup Label="WebApi">
+    <PackageVersion Include="FastEndpoints" Version="7.1.1" />
+  </ItemGroup>
+
   <ItemGroup Label="ORM">
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.0" />
   </ItemGroup>
