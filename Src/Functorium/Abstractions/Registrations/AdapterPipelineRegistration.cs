@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
+using Functorium.Adapters.Observabilities.Context;
 using Functorium.Applications.Observabilities;
+using Functorium.Applications.Observabilities.Context;
 
 namespace Functorium.Abstractions.Registrations;
 
@@ -39,19 +41,19 @@ public static class AdapterPipelineRegistration
     /// );
     /// </code>
     /// </example>
-    public static IServiceCollection RegisterScopedAdapterPipeline<TService>(
-        this IServiceCollection services,
-        Func<ActivityContext, TService> implementationFactory)
-            where TService : class, IAdapter
-    {
-        return services.AddScoped(sp =>
-        {
-            // DI 컨테이너가 인스턴스를 생성하는 시점 = HTTP 요청 처리 중
-            // 이 시점에 Activity.Current는 HTTP Activity를 가리킴
-            ActivityContext activityContext = Activity.Current?.Context ?? default;
-            return implementationFactory(activityContext);
-        });
-    }
+    // public static IServiceCollection RegisterScopedAdapterPipeline<TService>(
+    //     this IServiceCollection services,
+    //     Func<ActivityContext, TService> implementationFactory)
+    //         where TService : class, IAdapter
+    // {
+    //     return services.AddScoped(sp =>
+    //     {
+    //         // DI 컨테이너가 인스턴스를 생성하는 시점 = HTTP 요청 처리 중
+    //         // 이 시점에 Activity.Current는 HTTP Activity를 가리킴
+    //         ActivityContext activityContext = Activity.Current?.Context ?? default;
+    //         return implementationFactory(activityContext);
+    //     });
+    // }
 
     /// <summary>
     /// Activity.Current의 Context를 캡처하여 Scoped 서비스를 등록합니다.
@@ -68,17 +70,17 @@ public static class AdapterPipelineRegistration
     /// );
     /// </code>
     /// </example>
-    public static IServiceCollection RegisterScopedAdapterPipeline<TService>(
-        this IServiceCollection services,
-        Func<IServiceProvider, ActivityContext, TService> implementationFactory)
-            where TService : class, IAdapter
-    {
-        return services.AddScoped(sp =>
-        {
-            ActivityContext activityContext = Activity.Current?.Context ?? default;
-            return implementationFactory(sp, activityContext);
-        });
-    }
+    // public static IServiceCollection RegisterScopedAdapterPipeline<TService>(
+    //     this IServiceCollection services,
+    //     Func<IServiceProvider, ActivityContext, TService> implementationFactory)
+    //         where TService : class, IAdapter
+    // {
+    //     return services.AddScoped(sp =>
+    //     {
+    //         ActivityContext activityContext = Activity.Current?.Context ?? default;
+    //         return implementationFactory(sp, activityContext);
+    //     });
+    // }
 
     /// <summary>
     /// Activity.Current의 Context를 캡처하여 Scoped 서비스를 등록합니다.
@@ -100,40 +102,41 @@ public static class AdapterPipelineRegistration
     {
         return services.AddScoped<TService>(sp =>
         {
-            ActivityContext activityContext = Activity.Current?.Context ?? default;
+            // Activity.Current에서 ObservabilityContext 생성 (분산 추적 체인 유지)
+            IObservabilityContext? observabilityContext = ObservabilityContext.FromActivity(Activity.Current);
 
-            // ActivityContext를 첫 번째 매개변수로, 나머지는 DI에서 해결
-            return ActivatorUtilities.CreateInstance<TImplementation>(sp, activityContext);
+            var factory = ActivatorUtilities.CreateFactory(typeof(TImplementation), new[] { typeof(IObservabilityContext) });
+            return (TImplementation)factory(sp, new object?[] { observabilityContext });
         });
     }
 
-    /// <summary>
-    /// Activity.Current의 Context를 캡처하여 Singleton 서비스를 등록합니다.
-    /// 애플리케이션 전체에서 하나의 인스턴스만 생성되며, 생성 시점의 Activity Context가 자동으로 전달됩니다.
-    /// </summary>
-    /// <typeparam name="TService">등록할 서비스 인터페이스</typeparam>
-    /// <param name="services">서비스 컬렉션</param>
-    /// <param name="implementationFactory">ActivityContext를 받아 인스턴스를 생성하는 팩토리 함수</param>
-    /// <returns>서비스 컬렉션</returns>
-    /// <example>
-    /// <code>
-    /// services.RegisterSingletonAdapterPipeline&lt;IMessagePublisher&gt;(
-    ///     context => new MessagePublisherInstrument(context)
-    /// );
-    /// </code>
-    /// </example>
-    public static IServiceCollection RegisterSingletonAdapterPipeline<TService>(
-        this IServiceCollection services,
-        Func<ActivityContext, TService> implementationFactory)
-            where TService : class, IAdapter
-    {
-        return services.AddSingleton(sp =>
-        {
-            // DI 컨테이너가 인스턴스를 생성하는 시점의 Activity Context 캡처
-            ActivityContext activityContext = Activity.Current?.Context ?? default;
-            return implementationFactory(activityContext);
-        });
-    }
+    // /// <summary>
+    // /// Activity.Current의 Context를 캡처하여 Singleton 서비스를 등록합니다.
+    // /// 애플리케이션 전체에서 하나의 인스턴스만 생성되며, 생성 시점의 Activity Context가 자동으로 전달됩니다.
+    // /// </summary>
+    // /// <typeparam name="TService">등록할 서비스 인터페이스</typeparam>
+    // /// <param name="services">서비스 컬렉션</param>
+    // /// <param name="implementationFactory">ActivityContext를 받아 인스턴스를 생성하는 팩토리 함수</param>
+    // /// <returns>서비스 컬렉션</returns>
+    // /// <example>
+    // /// <code>
+    // /// services.RegisterSingletonAdapterPipeline&lt;IMessagePublisher&gt;(
+    // ///     context => new MessagePublisherInstrument(context)
+    // /// );
+    // /// </code>
+    // /// </example>
+    // public static IServiceCollection RegisterSingletonAdapterPipeline<TService>(
+    //     this IServiceCollection services,
+    //     Func<ActivityContext, TService> implementationFactory)
+    //         where TService : class, IAdapter
+    // {
+    //     return services.AddSingleton(sp =>
+    //     {
+    //         // DI 컨테이너가 인스턴스를 생성하는 시점의 Activity Context 캡처
+    //         ActivityContext activityContext = Activity.Current?.Context ?? default;
+    //         return implementationFactory(activityContext);
+    //     });
+    // }
 
     /// <summary>
     /// Activity.Current의 Context를 캡처하여 Singleton 서비스를 등록합니다.
@@ -150,17 +153,17 @@ public static class AdapterPipelineRegistration
     /// );
     /// </code>
     /// </example>
-    public static IServiceCollection RegisterSingletonAdapterPipeline<TService>(
-        this IServiceCollection services,
-        Func<IServiceProvider, ActivityContext, TService> implementationFactory)
-            where TService : class, IAdapter
-    {
-        return services.AddSingleton(sp =>
-        {
-            ActivityContext activityContext = Activity.Current?.Context ?? default;
-            return implementationFactory(sp, activityContext);
-        });
-    }
+    // public static IServiceCollection RegisterSingletonAdapterPipeline<TService>(
+    //     this IServiceCollection services,
+    //     Func<IServiceProvider, ActivityContext, TService> implementationFactory)
+    //         where TService : class, IAdapter
+    // {
+    //     return services.AddSingleton(sp =>
+    //     {
+    //         ActivityContext activityContext = Activity.Current?.Context ?? default;
+    //         return implementationFactory(sp, activityContext);
+    //     });
+    // }
 
     /// <summary>
     /// Activity.Current의 Context를 캡처하여 Singleton 서비스를 등록합니다.
@@ -182,10 +185,11 @@ public static class AdapterPipelineRegistration
     {
         return services.AddSingleton<TService>(sp =>
         {
-            ActivityContext activityContext = Activity.Current?.Context ?? default;
+            // Activity.Current에서 ObservabilityContext 생성 (분산 추적 체인 유지)
+            IObservabilityContext? observabilityContext = ObservabilityContext.FromActivity(Activity.Current);
 
-            // ActivityContext를 첫 번째 매개변수로, 나머지는 DI에서 해결
-            return ActivatorUtilities.CreateInstance<TImplementation>(sp, activityContext);
+            var factory = ActivatorUtilities.CreateFactory(typeof(TImplementation), new[] { typeof(IObservabilityContext) });
+            return (TImplementation)factory(sp, new object?[] { observabilityContext });
         });
     }
 
@@ -197,17 +201,17 @@ public static class AdapterPipelineRegistration
     /// <param name="services">서비스 컬렉션</param>
     /// <param name="implementationFactory">ActivityContext를 받아 인스턴스를 생성하는 팩토리 함수</param>
     /// <returns>서비스 컬렉션</returns>
-    public static IServiceCollection RegisterTransientAdapterPipeline<TService>(
-        this IServiceCollection services,
-        Func<ActivityContext, TService> implementationFactory)
-            where TService : class, IAdapter
-    {
-        return services.AddTransient(sp =>
-        {
-            ActivityContext activityContext = Activity.Current?.Context ?? default;
-            return implementationFactory(activityContext);
-        });
-    }
+    // public static IServiceCollection RegisterTransientAdapterPipeline<TService>(
+    //     this IServiceCollection services,
+    //     Func<ActivityContext, TService> implementationFactory)
+    //         where TService : class, IAdapter
+    // {
+    //     return services.AddTransient(sp =>
+    //     {
+    //         ActivityContext activityContext = Activity.Current?.Context ?? default;
+    //         return implementationFactory(activityContext);
+    //     });
+    // }
 
     /// <summary>
     /// Activity.Current의 Context를 캡처하여 Transient 서비스를 등록합니다.
@@ -217,17 +221,17 @@ public static class AdapterPipelineRegistration
     /// <param name="services">서비스 컬렉션</param>
     /// <param name="implementationFactory">IServiceProvider와 ActivityContext를 받아 인스턴스를 생성하는 팩토리 함수</param>
     /// <returns>서비스 컬렉션</returns>
-    public static IServiceCollection RegisterTransientAdapterPipeline<TService>(
-        this IServiceCollection services,
-        Func<IServiceProvider, ActivityContext, TService> implementationFactory)
-            where TService : class, IAdapter
-    {
-        return services.AddTransient(sp =>
-        {
-            ActivityContext activityContext = Activity.Current?.Context ?? default;
-            return implementationFactory(sp, activityContext);
-        });
-    }
+    // public static IServiceCollection RegisterTransientAdapterPipeline<TService>(
+    //     this IServiceCollection services,
+    //     Func<IServiceProvider, ActivityContext, TService> implementationFactory)
+    //         where TService : class, IAdapter
+    // {
+    //     return services.AddTransient(sp =>
+    //     {
+    //         ActivityContext activityContext = Activity.Current?.Context ?? default;
+    //         return implementationFactory(sp, activityContext);
+    //     });
+    // }
 
     /// <summary>
     /// Activity.Current의 Context를 캡처하여 Transient 서비스를 등록합니다.
@@ -249,10 +253,11 @@ public static class AdapterPipelineRegistration
     {
         return services.AddTransient<TService>(sp =>
         {
-            ActivityContext activityContext = Activity.Current?.Context ?? default;
+            // Activity.Current에서 ObservabilityContext 생성 (분산 추적 체인 유지)
+            IObservabilityContext? observabilityContext = ObservabilityContext.FromActivity(Activity.Current);
 
-            // ActivityContext를 첫 번째 매개변수로, 나머지는 DI에서 해결
-            return ActivatorUtilities.CreateInstance<TImplementation>(sp, activityContext);
+            var factory = ActivatorUtilities.CreateFactory(typeof(TImplementation), new[] { typeof(IObservabilityContext) });
+            return (TImplementation)factory(sp, new object?[] { observabilityContext });
         });
     }
 
@@ -277,11 +282,12 @@ public static class AdapterPipelineRegistration
             where TService2 : class, IAdapter
             where TImplementation : class, TService1, TService2
     {
-        // 구현체 등록 (ActivityContext 캡처)
+        // 구현체 등록 (Activity.Current에서 ObservabilityContext 생성)
         services.AddScoped<TImplementation>(sp =>
         {
-            ActivityContext activityContext = Activity.Current?.Context ?? default;
-            return ActivatorUtilities.CreateInstance<TImplementation>(sp, activityContext);
+            IObservabilityContext? observabilityContext = ObservabilityContext.FromActivity(Activity.Current);
+            var factory = ActivatorUtilities.CreateFactory(typeof(TImplementation), new[] { typeof(IObservabilityContext) });
+            return (TImplementation)factory(sp, new object?[] { observabilityContext });
         });
 
         // 각 인터페이스가 동일한 구현체 인스턴스를 참조
@@ -314,11 +320,12 @@ public static class AdapterPipelineRegistration
             where TService3 : class, IAdapter
             where TImplementation : class, TService1, TService2, TService3
     {
-        // 구현체 등록 (ActivityContext 캡처)
+        // 구현체 등록 (Activity.Current에서 ObservabilityContext 생성)
         services.AddScoped<TImplementation>(sp =>
         {
-            ActivityContext activityContext = Activity.Current?.Context ?? default;
-            return ActivatorUtilities.CreateInstance<TImplementation>(sp, activityContext);
+            IObservabilityContext? observabilityContext = ObservabilityContext.FromActivity(Activity.Current);
+            var factory = ActivatorUtilities.CreateFactory(typeof(TImplementation), new[] { typeof(IObservabilityContext) });
+            return (TImplementation)factory(sp, new object?[] { observabilityContext });
         });
 
         // 각 인터페이스가 동일한 구현체 인스턴스를 참조
@@ -369,11 +376,12 @@ public static class AdapterPipelineRegistration
             }
         }
 
-        // 구현체 등록 (ActivityContext 캡처)
+        // 구현체 등록 (Activity.Current에서 ObservabilityContext 생성)
         services.AddScoped<TImplementation>(sp =>
         {
-            ActivityContext activityContext = Activity.Current?.Context ?? default;
-            return ActivatorUtilities.CreateInstance<TImplementation>(sp, activityContext);
+            IObservabilityContext? observabilityContext = ObservabilityContext.FromActivity(Activity.Current);
+            var factory = ActivatorUtilities.CreateFactory(typeof(TImplementation), new[] { typeof(IObservabilityContext) });
+            return (TImplementation)factory(sp, new object?[] { observabilityContext });
         });
 
         // 각 서비스 타입 등록
@@ -406,11 +414,12 @@ public static class AdapterPipelineRegistration
             where TService2 : class, IAdapter
             where TImplementation : class, TService1, TService2
     {
-        // 구현체 등록 (ActivityContext 캡처)
+        // 구현체 등록 (Activity.Current에서 ObservabilityContext 생성)
         services.AddTransient<TImplementation>(sp =>
         {
-            ActivityContext activityContext = Activity.Current?.Context ?? default;
-            return ActivatorUtilities.CreateInstance<TImplementation>(sp, activityContext);
+            IObservabilityContext? observabilityContext = ObservabilityContext.FromActivity(Activity.Current);
+            var factory = ActivatorUtilities.CreateFactory(typeof(TImplementation), new[] { typeof(IObservabilityContext) });
+            return (TImplementation)factory(sp, new object?[] { observabilityContext });
         });
 
         // 각 인터페이스가 동일한 구현체 인스턴스를 참조
@@ -443,11 +452,12 @@ public static class AdapterPipelineRegistration
             where TService3 : class, IAdapter
             where TImplementation : class, TService1, TService2, TService3
     {
-        // 구현체 등록 (ActivityContext 캡처)
+        // 구현체 등록 (Activity.Current에서 ObservabilityContext 생성)
         services.AddTransient<TImplementation>(sp =>
         {
-            ActivityContext activityContext = Activity.Current?.Context ?? default;
-            return ActivatorUtilities.CreateInstance<TImplementation>(sp, activityContext);
+            IObservabilityContext? observabilityContext = ObservabilityContext.FromActivity(Activity.Current);
+            var factory = ActivatorUtilities.CreateFactory(typeof(TImplementation), new[] { typeof(IObservabilityContext) });
+            return (TImplementation)factory(sp, new object?[] { observabilityContext });
         });
 
         // 각 인터페이스가 동일한 구현체 인스턴스를 참조
@@ -498,11 +508,12 @@ public static class AdapterPipelineRegistration
             }
         }
 
-        // 구현체 등록 (ActivityContext 캡처)
+        // 구현체 등록 (Activity.Current에서 ObservabilityContext 생성)
         services.AddTransient<TImplementation>(sp =>
         {
-            ActivityContext activityContext = Activity.Current?.Context ?? default;
-            return ActivatorUtilities.CreateInstance<TImplementation>(sp, activityContext);
+            IObservabilityContext? observabilityContext = ObservabilityContext.FromActivity(Activity.Current);
+            var factory = ActivatorUtilities.CreateFactory(typeof(TImplementation), new[] { typeof(IObservabilityContext) });
+            return (TImplementation)factory(sp, new object?[] { observabilityContext });
         });
 
         // 각 서비스 타입 등록
@@ -514,4 +525,3 @@ public static class AdapterPipelineRegistration
         return services;
     }
 }
-

@@ -8,20 +8,20 @@ namespace Functorium.Applications.Observabilities.Spans;
 /// </summary>
 public interface ISpanFactory
 {
-    /// <summary>
-    /// 새로운 루트 또는 자식 Span을 생성합니다.
-    /// 현재 컨텍스트의 Span이 있으면 자동으로 부모로 연결됩니다.
-    /// </summary>
-    /// <param name="operationName">작업 이름</param>
-    /// <param name="category">카테고리 (예: "Usecase", "Repository")</param>
-    /// <param name="handler">핸들러 이름</param>
-    /// <param name="method">메서드 이름</param>
-    /// <returns>새로운 Span 또는 추적이 비활성화된 경우 null</returns>
-    ISpan? CreateSpan(
-        string operationName,
-        string category,
-        string handler,
-        string method);
+    // /// <summary>
+    // /// 새로운 루트 또는 자식 Span을 생성합니다.
+    // /// 현재 컨텍스트의 Span이 있으면 자동으로 부모로 연결됩니다.
+    // /// </summary>
+    // /// <param name="operationName">작업 이름</param>
+    // /// <param name="category">카테고리 (예: "Usecase", "Repository")</param>
+    // /// <param name="handler">핸들러 이름</param>
+    // /// <param name="method">메서드 이름</param>
+    // /// <returns>새로운 Span 또는 추적이 비활성화된 경우 null</returns>
+    // ISpan? CreateSpan(
+    //     string operationName,
+    //     string category,
+    //     string handler,
+    //     string method);
 
     /// <summary>
     /// 지정된 부모 컨텍스트 아래에 자식 Span을 생성합니다.

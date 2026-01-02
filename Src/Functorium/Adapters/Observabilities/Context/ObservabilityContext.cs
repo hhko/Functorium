@@ -6,7 +6,7 @@ namespace Functorium.Adapters.Observabilities.Context;
 /// <summary>
 /// ActivityContext를 래핑하는 IObservabilityContext 구현체입니다.
 /// </summary>
-internal sealed class ObservabilityContext : IObservabilityContext
+public sealed class ObservabilityContext : IObservabilityContext
 {
     private readonly ActivityContext _activityContext;
 
