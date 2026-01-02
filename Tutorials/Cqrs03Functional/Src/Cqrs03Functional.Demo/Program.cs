@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reflection;
 using Cqrs03Functional.Demo;
 using Cqrs03Functional.Demo.Domain;
@@ -81,16 +82,33 @@ services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseExceptionPipel
 // RegisterScopedAdapterPipeline은 ActivityContext를 첫 번째 매개변수로 받는 생성자를 사용
 // 소스 생성기가 [GeneratePipeline] 애트리뷰트를 감지하여 InMemoryProductRepositoryPipeline 클래스를 자동 생성
 // Pipeline이 자동으로 Activity 생성, 로깅, 추적, 메트릭 수집을 처리
-services.RegisterScopedAdapterPipeline<IProductRepository, Cqrs03Functional.Demo.Infrastructure.InMemoryProductRepositoryPipeline>();
+services.RegisterScopedAdapterPipeline<IProductRepository, InMemoryProductRepositoryPipeline>();
 
 // Service Provider 빌드
 await using ServiceProvider serviceProvider = services.BuildServiceProvider();
 
+// =================================================================
+// OpenTelemetry TracerProvider 초기화 (콘솔 앱에서 필수)
+// =================================================================
+// WebApi에서는 IHost가 자동으로 TracerProvider를 초기화하지만,
+// 콘솔 앱에서는 TracerProvider를 명시적으로 resolve해야 활성화됩니다.
+// TracerProvider가 초기화되어야 ActivitySource.StartActivity()가 Activity를 생성합니다.
+_ = serviceProvider.GetRequiredService<TracerProvider>();
+
 IMediator mediator = serviceProvider.GetRequiredService<IMediator>();
 
 // =================================================================
-// 데모 시나리오 실행
+// ROOT Activity 생성 (콘솔 앱에서 Trace 계층 구조를 위해 필요)
 // =================================================================
+// WebApi에서는 ASP.NET Core가 자동으로 HttpRequestIn Activity를 생성하지만,
+// 콘솔 앱에서는 ROOT Activity가 없으면 하위 Activity들이 생성되지 않습니다.
+// ActivitySource를 가져와서 수동으로 ROOT Activity를 생성합니다.
+ActivitySource activitySource = serviceProvider.GetRequiredService<ActivitySource>();
+
+// =================================================================
+// 데모 시나리오 실행 (ROOT Activity 범위 내에서)
+// =================================================================
+using Activity? rootActivity = activitySource.StartActivity("ConsoleApp.Demo.Main");
 
 Console.WriteLine("=================================================================");
 Console.WriteLine("1. Validation Pipeline 데모 - 성공적인 상품 생성");
