@@ -11,8 +11,8 @@
 ├── validate-release-notes.ps1          # 릴리스 노트 크기 검증 스크립트
 ├── RELEASE-v{VERSION}.md               # 영문 릴리스 노트
 ├── RELEASE-v{VERSION}-KR.md            # 한글 릴리스 노트
-├── RELEASE-v{VERSION}-KR.mp4           # 릴리스 소개 영상
-├── RELEASE-v{VERSION}-KR.m4a           # 릴리스 소개 음성
+├── RELEASE-v{VERSION}-KR.mp4           # 한글 릴리스 소개 영상
+├── RELEASE-v{VERSION}-KR.mp3           # 한글 릴리스 소개 음성
 └── scripts/                            # 릴리스 노트 생성 스크립트
     ├── AnalyzeAllComponents.cs         # 컴포넌트 변경사항 분석
     ├── AnalyzeFolder.cs                # 개별 폴더 상세 분석
@@ -27,7 +27,7 @@
 
 | 버전 | 문서 | 미디어 | 설명 |
 |------|------|--------|------|
-| v1.0.0-alpha.1 | [영문](RELEASE-v1.0.0-alpha.1.md) / [한글](RELEASE-v1.0.0-alpha.1-KR.md) | [MP4](RELEASE-v1.0.0-alpha.1-KR.mp4) / [M4A](RELEASE-v1.0.0-alpha.1-KR.m4a) | 첫 번째 알파 릴리스 |
+| v1.0.0-alpha.1 | [영문](RELEASE-v1.0.0-alpha.1.md) / [한글](RELEASE-v1.0.0-alpha.1-KR.md) | [MP4](RELEASE-v1.0.0-alpha.1-KR.mp4) / [MP3](RELEASE-v1.0.0-alpha.1-KR.mp3) | 첫 번째 알파 릴리스 |
 
 ## 릴리스 노트 작성 가이드
 
@@ -94,7 +94,7 @@ cd ..
 릴리스 노트에 포함되는 미디어 파일:
 
 - **MP4**: 릴리스 소개 영상 (주요 기능 데모)
-- **M4A**: 릴리스 소개 음성 (팟캐스트 형식 설명)
+- **MP3**: 릴리스 소개 음성 (팟캐스트 형식 설명)
 
 ## 참고 자료
 

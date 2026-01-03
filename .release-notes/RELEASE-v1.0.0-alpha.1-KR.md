@@ -7,7 +7,7 @@ Functorium v1.0.0-alpha.1은 **도메인 중심 함수형 아키텍처(Domain-Ce
 > **📺 미디어 자료**
 >
 > - [릴리스 소개 영상 (MP4)](RELEASE-v1.0.0-alpha.1-KR.mp4)
-> - [릴리스 소개 음성 (M4A)](RELEASE-v1.0.0-alpha.1-KR.m4a)
+> - [릴리스 소개 음성 (MP3)](RELEASE-v1.0.0-alpha.1-KR.mp3)
 
 도메인 로직을 순수 함수로 표현하고, 부수 효과(Side Effects)를 아키텍처 경계로 밀어내어 **테스트 가능하고 예측 가능한 비즈니스 로직을** 작성할 수 있도록 지원합니다. LanguageExt 5.x 기반의 함수형 타입 시스템과 OpenTelemetry 통합 관찰 가능성을 핵심으로 제공합니다.
 
