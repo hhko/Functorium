@@ -828,7 +828,7 @@ After (IResponse<T> + ResponseBase<T>):
 - `Src/Functorium/Applications/Pipelines/UsecaseExceptionPipeline.cs`
 - `Src/Functorium/Applications/Pipelines/UsecaseLoggerPipeline.cs`
 - `Src/Functorium/Applications/Pipelines/UsecaseTracePipeline.cs`
-- `Src/Functorium/Applications/Pipelines/UsecaseMetricPipeline.cs`
+- `Src/Functorium/Applications/Pipelines/UsecaseMetricsPipeline.cs`
 
 **삭제된 파일 (1개)**
 - `Src/Functorium/Applications/Cqrs/FinResponseUtilites.cs`

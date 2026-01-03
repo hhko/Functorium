@@ -531,7 +531,7 @@ Usecase: Elapsed = 200.4511 ms (전체 시간만)
 
 - **Usecase Pipeline**: `Src/Functorium/Applications/Pipelines/UsecasePipelineBase.cs`
 - **IAdapter Pipeline 생성기**: `Src/Functorium.Adapters.SourceGenerator/AdapterPipelineGenerator.cs`
-- **Metrics 수집**: `Src/Functorium/Applications/Pipelines/UsecaseMetricPipeline.cs`, `Src/Functorium/Adapters/Observabilities/Metrics/AdapterMetric.cs`
+- **Metrics 수집**: `Src/Functorium/Applications/Pipelines/UsecaseMetricsPipeline.cs`, `Src/Functorium/Adapters/Observabilities/Metrics/AdapterMetric.cs`
 - **Trace 수집**: `Src/Functorium/Applications/Pipelines/UsecaseTracePipeline.cs`, `Src/Functorium/Adapters/Observabilities/Tracing/AdapterTrace.cs`
 - **Log 수집**: `Src/Functorium/Applications/Pipelines/UsecaseLoggerPipeline.cs`
 

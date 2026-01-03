@@ -176,7 +176,7 @@ Mediator 파이프라인에 예외 처리, 로깅, 메트릭, 추적, 유효성 
 // 파이프라인 자동 적용 순서:
 // 1. UsecaseExceptionPipeline - 예외를 FinResponse.Fail로 변환
 // 2. UsecaseTracingPipeline - OpenTelemetry Span 생성
-// 3. UsecaseMetricPipeline - 요청 수, 성공/실패, 지연시간 기록
+// 3. UsecaseMetricsPipeline - 요청 수, 성공/실패, 지연시간 기록
 // 4. UsecaseLoggingPipeline - 요청/응답 구조화 로깅
 // 5. UsecaseValidationPipeline - FluentValidation 검증
 

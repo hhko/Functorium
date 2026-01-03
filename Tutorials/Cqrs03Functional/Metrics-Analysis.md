@@ -16,7 +16,7 @@
 Cqrs03Functional 애플리케이션에서 수집되는 Metrics는 크게 두 가지 범주로 구분됩니다:
 
 ### 1. Usecase Metrics
-- **생성 위치**: `UsecaseMetricPipeline<TRequest, TResponse>`
+- **생성 위치**: `UsecaseMetricsPipeline<TRequest, TResponse>`
 - **대상**: CQRS Command/Query Handler (Usecase)
 - **Meter 이름**: `{ServiceNamespace}.Application`
 - **특징**: CQRS 타입(Command/Query)별로 메트릭을 구분하여 수집
@@ -31,7 +31,7 @@ Cqrs03Functional 애플리케이션에서 수집되는 Metrics는 크게 두 가
 
 ## Usecase Metrics 형식
 
-Usecase Metrics는 `UsecaseMetricPipeline<TRequest, TResponse>`에서 자동으로 수집됩니다. CQRS 타입(Command/Query)별로 메트릭 이름이 달라집니다.
+Usecase Metrics는 `UsecaseMetricsPipeline<TRequest, TResponse>`에서 자동으로 수집됩니다. CQRS 타입(Command/Query)별로 메트릭 이름이 달라집니다.
 
 ### 1. Request Counter (요청 수)
 
@@ -393,7 +393,7 @@ histogram_quantile(0.99, rate(adapter_repository_op_duration_bucket[5m]))
 
 ## 관련 코드 위치
 
-- **Usecase Metrics**: `Src/Functorium/Applications/Pipelines/UsecaseMetricPipeline.cs`
+- **Usecase Metrics**: `Src/Functorium/Applications/Pipelines/UsecaseMetricsPipeline.cs`
 - **Usecase Metrics 필드 정의**: `Src/Functorium/Applications/Observabilities/UsecaseFields.cs`
 - **IAdapter Metrics 구현**: `Src/Functorium/Adapters/Observabilities/Metrics/AdapterMetric.cs`
 - **IAdapter Pipeline 생성기**: `Src/Functorium.Adapters.SourceGenerator/AdapterPipelineGenerator.cs`

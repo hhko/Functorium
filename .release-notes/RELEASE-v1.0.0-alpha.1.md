@@ -176,7 +176,7 @@ Automatically applies exception handling, logging, metrics, tracing, and validat
 // Pipeline application order:
 // 1. UsecaseExceptionPipeline - Converts exceptions to FinResponse.Fail
 // 2. UsecaseTracingPipeline - Creates OpenTelemetry Span
-// 3. UsecaseMetricPipeline - Records request count, success/failure, latency
+// 3. UsecaseMetricsPipeline - Records request count, success/failure, latency
 // 4. UsecaseLoggingPipeline - Structured logging of request/response
 // 5. UsecaseValidationPipeline - FluentValidation validation
 
