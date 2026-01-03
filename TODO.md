@@ -267,6 +267,8 @@ SmartEnum Protocol 선택 기준 문서화
 - [ ] VSCode 테스트
 - [ ] VSCode 코드 커버리지
 - [ ] VSCode 단축키
+- [ ] 시각화 TngTech.ArchUnitNET
+
 ---
 - Abstraction
   - [x] Error
