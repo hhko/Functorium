@@ -9,6 +9,13 @@ namespace Functorium.Adapters.Observabilities.Spans;
 /// <summary>
 /// ActivitySource를 사용하여 Span을 생성하는 ISpanFactory 구현체입니다.
 /// </summary>
+/// <remarks>
+/// <para>
+/// Span 생성 시 태그는 <see cref="TagList"/> 구조체를 사용합니다.
+/// <c>ActivityTagsCollection</c> 클래스 대신 구조체를 사용하여
+/// 힙 할당을 방지하고 GC 부담을 최소화합니다.
+/// </para>
+/// </remarks>
 public sealed class OpenTelemetrySpanFactory : ISpanFactory
 {
     private readonly ActivitySource _activitySource;
@@ -34,7 +41,8 @@ public sealed class OpenTelemetrySpanFactory : ISpanFactory
         string handler,
         string method)
     {
-        ActivityTagsCollection tags = new()
+        // TagList: 구조체로 스택에 할당되어 GC 부담 최소화
+        TagList tags = new()
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
             { ObservabilityNaming.CustomAttributes.RequestCategory, category },
@@ -44,13 +52,12 @@ public sealed class OpenTelemetrySpanFactory : ISpanFactory
 
         ActivityContext actualParentContext = DetermineParentContext(parentContext);
 
-        IEnumerable<ActivityLink>? links = null;
         Activity? activity = _activitySource.StartActivity(
             operationName,
             ActivityKind.Internal,
             actualParentContext,
             tags,
-            links,
+            links: null,
             DateTimeOffset.UtcNow);
 
         if (activity == null)

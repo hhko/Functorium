@@ -143,7 +143,7 @@ public class PrimaryCtorAdapterPipeline : PrimaryCtorAdapter
                 requestHandler,
                 requestHandlerMethod);
 
-            _metricRecorder.RecordRequestStart(
+            _metricRecorder.RecordRequest(
                 this.GetRequestCategoryPascalCase(),
                 requestHandler,
                 requestHandlerMethod);
@@ -153,13 +153,13 @@ public class PrimaryCtorAdapterPipeline : PrimaryCtorAdapter
 
     private void RecordSpanSuccess(ISpan? span, double elapsed)
     {
-        _metricRecorder.RecordSuccess(this.GetRequestCategoryPascalCase(), RequestHandler, "Method", elapsed);
+        _metricRecorder.RecordResponseSuccess(this.GetRequestCategoryPascalCase(), RequestHandler, "Method", elapsed);
         span?.SetSuccess(elapsed);
     }
 
     private void RecordSpanFailure(ISpan? span, global::LanguageExt.Common.Error error, double elapsed)
     {
-        _metricRecorder.RecordFailure(this.GetRequestCategoryPascalCase(), RequestHandler, "Method", elapsed, error);
+        _metricRecorder.RecordResponseFailure(this.GetRequestCategoryPascalCase(), RequestHandler, "Method", elapsed, error);
         span?.SetFailure(error, elapsed);
     }
 

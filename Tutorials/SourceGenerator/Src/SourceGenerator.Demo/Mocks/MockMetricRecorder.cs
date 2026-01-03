@@ -8,30 +8,30 @@ namespace SourceGenerator.Demo.Mocks;
 /// </summary>
 public class MockMetricRecorder : IMetricRecorder
 {
-    public void RecordRequestStart(
+    public void RecordRequest(
         string category,
         string handler,
         string method)
     {
-        Console.WriteLine($"[METRICS] RecordRequestStart: {category}/{handler}.{method}");
+        Console.WriteLine($"[METRICS] RecordRequest: {category}/{handler}.{method}");
     }
 
-    public void RecordSuccess(
+    public void RecordResponseSuccess(
         string category,
         string handler,
         string method,
         double elapsedMs)
     {
-        Console.WriteLine($"[METRICS] RecordSuccess: {category}/{handler}.{method} - {elapsedMs:F2}ms");
+        Console.WriteLine($"[METRICS] RecordResponseSuccess: {category}/{handler}.{method} - {elapsedMs:F2}ms");
     }
 
-    public void RecordFailure(
+    public void RecordResponseFailure(
         string category,
         string handler,
         string method,
         double elapsedMs,
         LanguageExt.Common.Error error)
     {
-        Console.WriteLine($"[METRICS] RecordFailure: {category}/{handler}.{method} - {elapsedMs:F2}ms - {error}");
+        Console.WriteLine($"[METRICS] RecordResponseFailure: {category}/{handler}.{method} - {elapsedMs:F2}ms - {error}");
     }
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Functorium.Applications.Observabilities;
 using Functorium.Applications.Observabilities.Metrics;
@@ -8,6 +9,13 @@ namespace Functorium.Adapters.Observabilities.Metrics;
 /// <summary>
 /// System.Diagnostics.Metrics를 사용하는 IMetricRecorder 구현체입니다.
 /// </summary>
+/// <remarks>
+/// <para>
+/// 메트릭 태그는 <see cref="TagList"/> 구조체를 사용합니다.
+/// <c>KeyValuePair&lt;string, object?&gt;[]</c> 배열 대신 구조체를 사용하여
+/// 힙 할당을 방지하고 GC 부담을 최소화합니다.
+/// </para>
+/// </remarks>
 public sealed class OpenTelemetryMetricRecorder : IMetricRecorder, IDisposable
 {
     private readonly string _serviceNamespace;
@@ -30,32 +38,32 @@ public sealed class OpenTelemetryMetricRecorder : IMetricRecorder, IDisposable
         _serviceNamespace = serviceNamespace;
     }
 
-    public void RecordRequestStart(string category, string handler, string method)
+    public void RecordRequest(string category, string handler, string method)
     {
         EnsureMetricsForCategory(category);
 
-        KeyValuePair<string, object?>[] tags =
-        [
-            new(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter),
-            new(ObservabilityNaming.CustomAttributes.RequestCategory, category),
-            new(ObservabilityNaming.CustomAttributes.RequestHandler, handler),
-            new(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, method)
-        ];
+        TagList tags = new()
+        {
+            { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
+            { ObservabilityNaming.CustomAttributes.RequestCategory, category },
+            { ObservabilityNaming.CustomAttributes.RequestHandler, handler },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, method }
+        };
 
         _metrics[category].RequestCounter.Add(1, tags);
     }
 
-    public void RecordSuccess(string category, string handler, string method, double elapsedMs)
+    public void RecordResponseSuccess(string category, string handler, string method, double elapsedMs)
     {
         EnsureMetricsForCategory(category);
 
-        KeyValuePair<string, object?>[] tags =
-        [
-            new(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter),
-            new(ObservabilityNaming.CustomAttributes.RequestCategory, category),
-            new(ObservabilityNaming.CustomAttributes.RequestHandler, handler),
-            new(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, method)
-        ];
+        TagList tags = new()
+        {
+            { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
+            { ObservabilityNaming.CustomAttributes.RequestCategory, category },
+            { ObservabilityNaming.CustomAttributes.RequestHandler, handler },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, method }
+        };
 
         _metrics[category].ResponseSuccessCounter.Add(1, tags);
 
@@ -63,17 +71,17 @@ public sealed class OpenTelemetryMetricRecorder : IMetricRecorder, IDisposable
         _metrics[category].DurationHistogram.Record(elapsedMs / 1000.0, tags);
     }
 
-    public void RecordFailure(string category, string handler, string method, double elapsedMs, Error error)
+    public void RecordResponseFailure(string category, string handler, string method, double elapsedMs, Error error)
     {
         EnsureMetricsForCategory(category);
 
-        KeyValuePair<string, object?>[] tags =
-        [
-            new(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter),
-            new(ObservabilityNaming.CustomAttributes.RequestCategory, category),
-            new(ObservabilityNaming.CustomAttributes.RequestHandler, handler),
-            new(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, method)
-        ];
+        TagList tags = new()
+        {
+            { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
+            { ObservabilityNaming.CustomAttributes.RequestCategory, category },
+            { ObservabilityNaming.CustomAttributes.RequestHandler, handler },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, method }
+        };
 
         _metrics[category].ResponseFailureCounter.Add(1, tags);
 
@@ -83,12 +91,13 @@ public sealed class OpenTelemetryMetricRecorder : IMetricRecorder, IDisposable
 
     private void EnsureMetricsForCategory(string category)
     {
-        if (_metrics.ContainsKey(category))
+        // TryGetValue: 1회 조회로 존재 여부 확인 (ContainsKey + 인덱서는 2회 조회)
+        if (_metrics.TryGetValue(category, out _))
             return;
 
         lock (_lock)
         {
-            if (_metrics.ContainsKey(category))
+            if (_metrics.TryGetValue(category, out _))
                 return;
 
             InitializeMetricsForCategory(category);

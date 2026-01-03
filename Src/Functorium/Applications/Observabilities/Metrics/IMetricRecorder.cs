@@ -12,12 +12,12 @@ namespace Functorium.Applications.Observabilities.Metrics;
 public interface IMetricRecorder
 {
     /// <summary>
-    /// 요청 시작을 기록합니다.
+    /// 요청을 기록합니다.
     /// </summary>
     /// <param name="category">카테고리 (예: "Usecase", "Repository")</param>
     /// <param name="handler">핸들러 이름</param>
     /// <param name="method">메서드 이름</param>
-    void RecordRequestStart(
+    void RecordRequest(
         string category,
         string handler,
         string method);
@@ -29,7 +29,7 @@ public interface IMetricRecorder
     /// <param name="handler">핸들러 이름</param>
     /// <param name="method">메서드 이름</param>
     /// <param name="elapsedMs">경과 시간(밀리초)</param>
-    void RecordSuccess(
+    void RecordResponseSuccess(
         string category,
         string handler,
         string method,
@@ -43,7 +43,7 @@ public interface IMetricRecorder
     /// <param name="method">메서드 이름</param>
     /// <param name="elapsedMs">경과 시간(밀리초)</param>
     /// <param name="error">오류 정보</param>
-    void RecordFailure(
+    void RecordResponseFailure(
         string category,
         string handler,
         string method,
