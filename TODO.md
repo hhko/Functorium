@@ -8,6 +8,11 @@
 
 ## 할일
 - [ ] Mediator Singleton + Scoped(Factory로 통합)
+- [x] UsecaseMetricsPipeline 클래스 정리
+- [x] UsecaseMetricsPipeline 태그 구조 테스트
+- [ ] UsecaseMetricsPipeline
+- [ ] UsecaseMetricsPipeline
+- [ ] RequestHandlerMethod vs ResponseStatus 불일치 - 메트릭 그룹화 시 문제 가능?
 - [ ] aspire 대시보드 확인(계층 구조)
 - [ ] 로그/추적/지표 md 문서 기준으로 비교
 - [ ] 코드 이해를 위한 예제 코드 작성
