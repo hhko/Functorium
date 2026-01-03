@@ -5,17 +5,98 @@
 ---
 - [x] Pipeline 의존성 등록 개선
 - [x] Cqrs04Endpoint 프로젝트 생성
-- [ ] Cqrs04Endpoint 기준으로 Trace 코드 검증
-- [ ] Mediator Singleton + Scoped(Factory로 통합)
-- [ ] Cqrs04Observability -> Cqrs05Microservices 변경
-- [ ] 계층 구조 테스트
+- [x] Cqrs04Endpoint 기준으로 Trace 코드 검증
+- [x] 계층 구조 테스트
 - [x] aspire 대시보드 구축
+- [ ] Cqrs04Observability -> Cqrs05Services 변경
+- [ ] Mediator Singleton + Scoped(Factory로 통합)
 - [ ] aspire 대시보드 확인(계층 구조)
 - [ ] 로그/추적/지표 md 문서 기준으로 비교
 - [ ] 코드 이해를 위한 예제 코드 작성
 - [ ] 코드 이해를 위한 학습 문서 작성
+- [ ] Mediator 경고 이해 Tip 폴더
+- [ ] 관찰 가능성 코드 리뷰: 최적화
+- [ ] elapsed 단위
+- [ ] usecase 확장
+  - Logging
+  - Tracing
+  - Metrics
+- [ ] IAdapter 확장
+  - Logging
+  - Tracing
+  - Metrics
+- [x] 메서드 이름 개선 MetricRecorder
+  - RecordRequest
+  - RecordResponseSuccess
+  - RecordResponseFailure
+
+```
+높음 (권장)
+미사용 메서드 정리: ISpanFactory.CreateSpan() 주석 제거
+Span 이름 형식 통일: "application usecase" → "application.usecase" (점 구분자)
+
+중간 (선택)
+밀리초→초 변환 주석 명확화 (MetricRecorder)
+ObservabilityNaming 클래스 분리 (288줄 → 기능별 분리)
+
+낮음 (선택)
+SmartEnum Protocol 선택 기준 문서화
+```
+
+### Observability 코드 최적화 (관찰 가능성 코드 리뷰 결과)
+
+#### 높은 우선순위 (권장)
+
+- [x] **OpenTelemetryMetricRecorder - TagList 구조체 사용**
+  - 현재: `KeyValuePair<string, object?>[]` 배열 할당 (힙 메모리)
+  - 개선: `TagList` 구조체 사용 (스택 메모리, GC 부담 감소)
+  - 대상 메서드: `RecordRequestStart`, `RecordSuccess`, `RecordFailure`
+  ```csharp
+  // 변경 전
+  KeyValuePair<string, object?>[] tags = [ ... ];
+
+  // 변경 후
+  TagList tags = new()
+  {
+      { ObservabilityNaming.CustomAttributes.RequestLayer, ... },
+      // ...
+  };
+  ```
+- [x] **OpenTelemetryMetricRecorder - Dictionary TryGetValue 패턴**
+  - 현재: `ContainsKey` + 인덱서 (2회 조회)
+  - 개선: `TryGetValue` 패턴 (1회 조회)
+  - 대상 메서드: `EnsureMetricsForCategory`
+  ```csharp
+  // 변경 전
+  if (_metrics.ContainsKey(category))
+      return;
+
+  // 변경 후
+  if (_metrics.TryGetValue(category, out _))
+      return;
+  ```
+
+#### 중간 우선순위 (선택)
+
+- [ ] **OpenTelemetryMetricRecorder - ConcurrentDictionary 고려**
+  - 현재: `Dictionary` + `lock` (write 동기화)
+  - 개선: `ConcurrentDictionary` (read 락 없음, 읽기 집약적 워크로드에 적합)
+  - 조건: 메트릭 조회가 쓰기보다 훨씬 빈번한 경우
+
+#### 낮은 우선순위 (선택)
+
+- [x] **OpenTelemetrySpanFactory - ActivityTagsCollection 최적화**
+  - 현재: `new ActivityTagsCollection()` 초기화 구문
+  - 개선: 정적 태그 배열 재사용 또는 `TagList` 사용
+  - 영향: Span 생성 시마다 발생하는 작은 할당
+- [ ] ~~**ActivityContextHolder - Scope 구조체 변환**~~
+  - 현재: `ActivityScope`, `ContextScope` 클래스 (힙 할당)
+  - 개선: `ref struct` 변환 (스택 할당)
+  - 제약: `IDisposable` 인터페이스 구현 불가, `using var` 사용 불가
+  - 대안: 수동 `try-finally` 패턴 필요
+
 ---
-- [ ] 경고 제거
+- [x] 경고 제거
 ---
 - [ ] CqrsObservability -> Cqrs04Observability
 - [ ] Cqrs04Observability + Grafana
