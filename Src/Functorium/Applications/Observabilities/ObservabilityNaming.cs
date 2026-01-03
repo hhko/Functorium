@@ -155,42 +155,42 @@ public static class ObservabilityNaming
     {
         // Application Usecase 메트릭 (CQRS 타입별)
         public static string UsecaseRequest(string cqrsType) =>
-            $"functorium.application.usecase.{cqrsType}.requests";
+            $"application.usecase.{cqrsType}.requests";
 
         public static string UsecaseResponseSuccess(string cqrsType) =>
-            $"functorium.application.usecase.{cqrsType}.responses.success";
+            $"application.usecase.{cqrsType}.responses.success";
 
         public static string UsecaseResponseFailure(string cqrsType) =>
-            $"functorium.application.usecase.{cqrsType}.responses.failure";
+            $"application.usecase.{cqrsType}.responses.failure";
 
         public static string UsecaseDuration(string cqrsType) =>
-            $"functorium.application.usecase.{cqrsType}.duration";
+            $"application.usecase.{cqrsType}.duration";
 
         // Adapter 메트릭 (카테고리별)
         public static string AdapterRequest(string category) =>
-            $"functorium.adapter.{category}.requests";
+            $"adapter.{category}.requests";
 
         public static string AdapterResponseSuccess(string category) =>
-            $"functorium.adapter.{category}.responses.success";
+            $"adapter.{category}.responses.success";
 
         public static string AdapterResponseFailure(string category) =>
-            $"functorium.adapter.{category}.responses.failure";
+            $"adapter.{category}.responses.failure";
 
         public static string AdapterDuration(string category) =>
-            $"functorium.adapter.{category}.duration";
+            $"adapter.{category}.duration";
 
         // 범용 메트릭 (레이어별)
         public static string Requests(string layer, string category) =>
-            $"functorium.{layer}.{category}.requests";
+            $"{layer}.{category}.requests";
 
         public static string ResponseSuccess(string layer, string category) =>
-            $"functorium.{layer}.{category}.responses.success";
+            $"{layer}.{category}.responses.success";
 
         public static string ResponseFailure(string layer, string category) =>
-            $"functorium.{layer}.{category}.responses.failure";
+            $"{layer}.{category}.responses.failure";
 
         public static string Duration(string layer, string category) =>
-            $"functorium.{layer}.{category}.duration";
+            $"{layer}.{category}.duration";
     }
 
     /// <summary>
