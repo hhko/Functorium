@@ -25,15 +25,6 @@ public sealed class OpenTelemetrySpanFactory : ISpanFactory
         _activitySource = activitySource;
     }
 
-    // public ISpan? CreateSpan(
-    //     string operationName,
-    //     string category,
-    //     string handler,
-    //     string method)
-    // {
-    //     return CreateChildSpan(null, operationName, category, handler, method);
-    // }
-
     public ISpan? CreateChildSpan(
         IObservabilityContext? parentContext,
         string operationName,
