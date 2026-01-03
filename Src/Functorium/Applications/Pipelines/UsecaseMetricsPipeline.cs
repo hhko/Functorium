@@ -20,7 +20,7 @@ namespace Functorium.Applications.Pipelines;
 ///
 /// IsSucc/IsFail 패턴을 사용하여 안전하게 메트릭을 기록합니다.
 /// </summary>
-public sealed class UsecaseMetricPipeline<TRequest, TResponse>
+public sealed class UsecaseMetricsPipeline<TRequest, TResponse>
     : UsecasePipelineBase<TRequest>
     , IPipelineBehavior<TRequest, TResponse>
         where TRequest : IMessage
@@ -28,17 +28,12 @@ public sealed class UsecaseMetricPipeline<TRequest, TResponse>
 {
     private readonly IMeterFactory _meterFactory;
     private readonly string _meterName;
-    //private readonly string _metricPrefix;
 
-    public UsecaseMetricPipeline(IOpenTelemetryOptions openTelemetryOptions, IMeterFactory meterFactory)
+    public UsecaseMetricsPipeline(IOpenTelemetryOptions openTelemetryOptions, IMeterFactory meterFactory)
     {
         _meterFactory = meterFactory;
-
         _meterName = $"{openTelemetryOptions.ServiceNamespace}.{ObservabilityNaming.Layers.Application}";
-        //_metricPrefix = ObservabilityFields.MetricPrefix.Application.Usecase;
     }
-
-
 
     public async ValueTask<TResponse> Handle(TRequest request, MessageHandlerDelegate<TRequest, TResponse> next, CancellationToken cancellationToken)
     {
@@ -48,31 +43,6 @@ public sealed class UsecaseMetricPipeline<TRequest, TResponse>
 
         // 핸들러별 Meter 및 Metrics 생성
         using Meter meter = _meterFactory.Create(_meterName);
-        //string handlerName = requestHandler.ToLowerInvariant(); //.Replace("query", "_query").Replace("command", "_command");
-
-        //// Counter: 총 요청 수
-        //Counter<long> requestCounter = meter.CreateCounter<long>(
-        //    name: $"{_metricPrefix}.{requestCqrs}.{handlerName}.requests_total",
-        //    unit: CountUnit,
-        //    description: $"Total number of {requestHandler} requests");
-
-        //// Counter: 성공 응답 수
-        //Counter<long> responseSuccessCounter = meter.CreateCounter<long>(
-        //    name: $"{_metricPrefix}.{requestCqrs}.{handlerName}.responses_success_total",
-        //    unit: CountUnit,
-        //    description: $"Total number of successful {requestHandler} responses");
-
-        //// Counter: 실패 응답 수
-        //Counter<long> responseFailureCounter = meter.CreateCounter<long>(
-        //    name: $"{_metricPrefix}.{requestCqrs}.{handlerName}.responses_failure_total",
-        //    unit: CountUnit,
-        //    description: $"Total number of failed {requestHandler} responses");
-
-        //// Histogram: 요청 처리 시간
-        //Histogram<double> durationHistogram = meter.CreateHistogram<double>(
-        //    name: $"{_metricPrefix}.{requestCqrs}.{handlerName}.duration",
-        //    unit: DurationUnit,
-        //    description: $"Duration of {requestHandler} request processing in milliseconds");
 
         // Counter: 총 요청 수 (Prometheus가 자동으로 _total 접미사 추가)
         Counter<long> requestCounter = meter.CreateCounter<long>(
@@ -124,6 +94,7 @@ public sealed class UsecaseMetricPipeline<TRequest, TResponse>
         durationHistogram.Record(elapsed / 1000.0, tags);
 
         // 성공/실패 응답 수 기록 (IsSucc/IsFail 패턴 사용)
+        // Note: 원본 코드에서는 RequestHandlerMethod 태그 없이 ResponseStatus 태그를 포함
         if (response.IsSucc)
         {
             responseSuccessCounter.Add(1,
@@ -166,4 +137,3 @@ public sealed class UsecaseMetricPipeline<TRequest, TResponse>
         return response;
     }
 }
-

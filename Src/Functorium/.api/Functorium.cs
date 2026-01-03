@@ -612,11 +612,11 @@ namespace Functorium.Applications.Pipelines
             public void Dispose() { }
         }
     }
-    public sealed class UsecaseMetricPipeline<TRequest, TResponse> : Functorium.Applications.Pipelines.UsecasePipelineBase<TRequest>, Mediator.IPipelineBehavior<TRequest, TResponse>
+    public sealed class UsecaseMetricsPipeline<TRequest, TResponse> : Functorium.Applications.Pipelines.UsecasePipelineBase<TRequest>, Mediator.IPipelineBehavior<TRequest, TResponse>
         where TRequest : Mediator.IMessage
         where TResponse : Functorium.Applications.Cqrs.IFinResponse, Functorium.Applications.Cqrs.IFinResponseFactory<TResponse>
     {
-        public UsecaseMetricPipeline(Functorium.Adapters.Observabilities.IOpenTelemetryOptions openTelemetryOptions, System.Diagnostics.Metrics.IMeterFactory meterFactory) { }
+        public UsecaseMetricsPipeline(Functorium.Adapters.Observabilities.IOpenTelemetryOptions openTelemetryOptions, System.Diagnostics.Metrics.IMeterFactory meterFactory) { }
         public System.Threading.Tasks.ValueTask<TResponse> Handle(TRequest request, Mediator.MessageHandlerDelegate<TRequest, TResponse> next, System.Threading.CancellationToken cancellationToken) { }
     }
     public abstract class UsecasePipelineBase<TRequest>
