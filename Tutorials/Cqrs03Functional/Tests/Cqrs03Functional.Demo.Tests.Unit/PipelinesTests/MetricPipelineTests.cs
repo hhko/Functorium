@@ -8,7 +8,7 @@ using Microsoft.Extensions.Diagnostics.Metrics;
 namespace Cqrs03Functional.Demo.Tests.Unit.PipelinesTests;
 
 /// <summary>
-/// UsecaseMetricPipeline 테스트
+/// UsecaseMetricsPipeline 테스트
 /// 메트릭 수집 파이프라인 테스트
 /// </summary>
 public sealed class MetricPipelineTests : IDisposable
@@ -76,7 +76,7 @@ public sealed class MetricPipelineTests : IDisposable
     {
         // Arrange
         var options = new TestOpenTelemetryOptions();
-        var pipeline = new UsecaseMetricPipeline<TestRequest, TestResponse>(options, _meterFactory);
+        var pipeline = new UsecaseMetricsPipeline<TestRequest, TestResponse>(options, _meterFactory);
         var request = new TestRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -97,7 +97,7 @@ public sealed class MetricPipelineTests : IDisposable
     {
         // Arrange
         var options = new TestOpenTelemetryOptions();
-        var pipeline = new UsecaseMetricPipeline<TestRequest, TestResponse>(options, _meterFactory);
+        var pipeline = new UsecaseMetricsPipeline<TestRequest, TestResponse>(options, _meterFactory);
         var request = new TestRequest("Test");
         var errorResponse = TestResponse.CreateFail(Error.New("Test error"));
 
@@ -117,7 +117,7 @@ public sealed class MetricPipelineTests : IDisposable
     {
         // Arrange
         var options = new TestOpenTelemetryOptions();
-        var pipeline = new UsecaseMetricPipeline<TestRequest, TestResponse>(options, _meterFactory);
+        var pipeline = new UsecaseMetricsPipeline<TestRequest, TestResponse>(options, _meterFactory);
         var request = new TestRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -141,7 +141,7 @@ public sealed class MetricPipelineTests : IDisposable
     {
         // Arrange
         var options = new TestOpenTelemetryOptions();
-        var pipeline = new UsecaseMetricPipeline<TestRequest, TestResponse>(options, _meterFactory);
+        var pipeline = new UsecaseMetricsPipeline<TestRequest, TestResponse>(options, _meterFactory);
         var request = new TestRequest("Test");
         var expectedId = Guid.NewGuid();
         var expectedResponse = TestResponse.CreateSuccess(expectedId);
@@ -162,7 +162,7 @@ public sealed class MetricPipelineTests : IDisposable
     {
         // Arrange
         var options = new TestOpenTelemetryOptions();
-        var pipeline = new UsecaseMetricPipeline<TestRequest, TestResponse>(options, _meterFactory);
+        var pipeline = new UsecaseMetricsPipeline<TestRequest, TestResponse>(options, _meterFactory);
         var request = new TestRequest("Query");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 

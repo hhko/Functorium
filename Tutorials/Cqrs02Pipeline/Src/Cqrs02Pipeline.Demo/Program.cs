@@ -22,7 +22,7 @@ Console.WriteLine("  1. UsecaseExceptionPipeline - 예외를 Error로 변환");
 Console.WriteLine("  2. UsecaseValidationPipeline - FluentValidation 검증");
 Console.WriteLine("  3. UsecaseLoggingPipeline - OpenTelemetry 로그");
 Console.WriteLine("  4. UsecaseTracingPipeline - OpenTelemetry 추적");
-Console.WriteLine("  5. UsecaseMetricPipeline - OpenTelemetry 지표");
+Console.WriteLine("  5. UsecaseMetricsPipeline - OpenTelemetry 지표");
 Console.WriteLine();
 
 // =================================================================
@@ -38,7 +38,7 @@ IConfiguration configuration = new ConfigurationBuilder()
 
 services.AddSingleton(configuration);
 
-// MeterFactory 등록 (UsecaseMetricPipeline에 필요)
+// MeterFactory 등록 (UsecaseMetricsPipeline에 필요)
 services.AddMetrics();
 
 // Mediator 등록
@@ -74,7 +74,7 @@ services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseLoggingPipelin
 services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseTracingPipeline<,>));
 
 // 5. Metric Pipeline (지표)
-services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseMetricPipeline<,>));
+services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseMetricsPipeline<,>));
 
 // Repository 등록
 services.AddSingleton<IProductRepository, InMemoryProductRepository>();

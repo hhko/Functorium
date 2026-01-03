@@ -23,7 +23,7 @@ builder.Services.AddFastEndpoints();
 IConfiguration configuration = builder.Configuration;
 
 // =================================================================
-// MeterFactory 등록 (UsecaseMetricPipeline에 필요)
+// MeterFactory 등록 (UsecaseMetricsPipeline에 필요)
 // =================================================================
 builder.Services.AddMetrics();
 
@@ -52,7 +52,7 @@ builder.Services
 // Request -> Metric -> Trace -> Logger -> Validation -> Exception -> Handler
 
 // 1. Metric Pipeline (지표)
-builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(UsecaseMetricPipeline<,>));
+builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(UsecaseMetricsPipeline<,>));
 
 // 2. Trace Pipeline (추적)
 builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(UsecaseTracingPipeline<,>));

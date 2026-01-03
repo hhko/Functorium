@@ -58,7 +58,7 @@ public sealed class PipelineIntegrationTests : IDisposable
         // 4. Trace Pipeline
         services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseTracingPipeline<,>));
         // 5. Metric Pipeline
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseMetricPipeline<,>));
+        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseMetricsPipeline<,>));
 
         // Repository 등록
         services.AddSingleton<IProductRepository, InMemoryProductRepository>();
@@ -355,16 +355,16 @@ public sealed class PipelineIntegrationTests : IDisposable
         // 2. UsecaseValidationPipeline
         // 3. UsecaseLoggerPipeline
         // 4. UsecaseTracePipeline
-        // 5. UsecaseMetricPipeline
-        
+        // 5. UsecaseMetricsPipeline
+
         var pipelineTypes = pipelineBehaviors.Select(p => p.GetType()).ToList();
-        
+
         // 모든 파이프라인이 등록되어 있는지 확인
         pipelineTypes.ShouldContain(p => p.Name.Contains("UsecaseExceptionPipeline"));
         pipelineTypes.ShouldContain(p => p.Name.Contains("UsecaseValidationPipeline"));
         pipelineTypes.ShouldContain(p => p.Name.Contains("UsecaseLoggingPipeline"));
         pipelineTypes.ShouldContain(p => p.Name.Contains("UsecaseTracingPipeline"));
-        pipelineTypes.ShouldContain(p => p.Name.Contains("UsecaseMetricPipeline"));
+        pipelineTypes.ShouldContain(p => p.Name.Contains("UsecaseMetricsPipeline"));
     }
 
     [Fact]
