@@ -1,15 +1,10 @@
 using System.Diagnostics;
 using System.Reflection;
-using Cqrs03Functional.Demo;
 using Cqrs03Functional.Demo.Domain;
 using Cqrs03Functional.Demo.Infrastructure;
 using Cqrs03Functional.Demo.Usecases;
 using FluentValidation;
 using Functorium.Abstractions.Registrations;
-using Functorium.Applications.Cqrs;
-using Functorium.Applications.Pipelines;
-using LanguageExt;
-using LanguageExt.Common;
 using Mediator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
