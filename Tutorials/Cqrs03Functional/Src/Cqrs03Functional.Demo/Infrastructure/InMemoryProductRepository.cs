@@ -22,7 +22,7 @@ public class InMemoryProductRepository : IProductRepository
     /// <summary>
     /// 관찰 가능성 로그를 위한 요청 카테고리
     /// </summary>
-    public string RequestCategory => "Repository";
+    public string RequestCategory => "repository";
 
     // /// <summary>
     // /// ActivityContext를 첫 번째 매개변수로 받는 생성자 (AdapterPipelineRegistration에서 사용)
