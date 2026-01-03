@@ -1,14 +1,12 @@
-- [x] release note 정리
-- [x] 네임스페이스 업데이트
-- [x] GitHub Release 스크립트
-- [x] GitHub Release
----
-- [x] Pipeline 의존성 등록 개선
-- [x] Cqrs04Endpoint 프로젝트 생성
-- [x] Cqrs04Endpoint 기준으로 Trace 코드 검증
-- [x] 계층 구조 테스트
-- [x] aspire 대시보드 구축
-- [ ] Cqrs04Observability -> Cqrs05Services 변경
+## 관찰 가능성
+### 목표
+- 코드 리뷰
+- 데이터 형식 문서화
+- 데이터 형식 테스트 자동화
+- 통합 테스트 코드 재사용
+- 통합 테스트 GitHub Actions 통합
+
+## 할일
 - [ ] Mediator Singleton + Scoped(Factory로 통합)
 - [ ] aspire 대시보드 확인(계층 구조)
 - [ ] 로그/추적/지표 md 문서 기준으로 비교
@@ -25,6 +23,53 @@
   - Logging
   - Tracing
   - Metrics
+- [ ] Cqrs05Services + Grafana
+- [ ] Cqrs05Services + OpenSearch
+- [ ] OpenSearch
+- [ ] Grafana
+- [ ] wolverine IHost?
+- [ ] Mediator 어셈블리 단위로 의존성 등록?
+- [ ] Testcontainers을 이용한 RabbitMQ 통합 테스트
+- [ ] Program 클래스 가시성 -> I인터페이스
+- [ ] Testing 프로젝트 기능 단위로 폴더 재구성
+- [ ] Testing 프로젝트 RabbitMQ 통합 테스트 재사용 코드
+- [ ] Testing 프로젝트 관찰 가능성 단위 테스트 재사용 코드
+- [ ] wolverine 관찰 가능성 의존성 등록 패턴 학습
+- [ ] wolverine 관찰 가능성 데이터 확인: 지표, 추적, 로그?
+- [ ] wolverine 관찰 가능성 의존성 등록 패턴 적용
+- [ ] IAdatperMetric, IAdapterTrace 이해
+- [ ] IAdapter 구현 가이드
+- [ ] 의존성 등록 가이드
+- [ ] 커스텀 유스케이스 로그
+- [ ] 커스텀 유스케이스 지표
+- [ ] 커스텀 유스케이스 추적
+- [ ] 유스케이스 진단 대시보드?
+  - 바쁜가?
+  - 빠른가?
+  - 실패율?
+- [ ] Application 레이어 테스트
+- [ ] Observability 코드 리뷰
+- [ ] IAdatperMetric/IAdapterTrace 인터페이스 의존성 등록 코드 정리
+- [ ] Observability 형식 테스트 자동화
+- [ ] Observability 형식 문서화
+
+## Entity
+### 목표
+- Entity Id
+- Entity
+
+---
+- [x] release note 정리
+- [x] 네임스페이스 업데이트
+- [x] GitHub Release 스크립트
+- [x] GitHub Release
+---
+- [x] Pipeline 의존성 등록 개선
+- [x] Cqrs04Endpoint 프로젝트 생성
+- [x] Cqrs04Endpoint 기준으로 Trace 코드 검증
+- [x] 계층 구조 테스트
+- [x] aspire 대시보드 구축
+- [x] Cqrs05Services -> Cqrs05Services 변경
 - [x] 메서드 이름 개선 MetricRecorder
   - RecordRequest
   - RecordResponseSuccess
@@ -98,9 +143,7 @@ SmartEnum Protocol 선택 기준 문서화
 ---
 - [x] 경고 제거
 ---
-- [ ] CqrsObservability -> Cqrs04Observability
-- [ ] Cqrs04Observability + Grafana
-- [ ] Cqrs04Observability + OpenSearch
+- [x] CqrsObservability -> Cqrs05Services
 ---
 - [ ] ObservabilityNaming 정리(Logger 통합?)
 - [ ] Release할 때 NuGet 패키지 버전 불일치
@@ -183,17 +226,6 @@ SmartEnum Protocol 선택 기준 문서화
   - 예외: Run().RunSafeAsync(취소): Flatten
 - [ ] 파이프라인 생성자 타입 중복 테스트
 ---
-- [ ] wolverine IHost?
-- [ ] Mediator 어셈블리 단위로 의존성 등록?
-- [ ] Testcontainers을 이용한 RabbitMQ 통합 테스트
-- [ ] Program 클래스 가시성 -> I인터페이스
-- [ ] Testing 프로젝트 기능 단위로 폴더 재구성
-- [ ] Testing 프로젝트 RabbitMQ 통합 테스트 재사용 코드
-- [ ] Testing 프로젝트 관찰 가능성 단위 테스트 재사용 코드
----
-- [ ] wolverine 관찰 가능성 의존성 등록 패턴 학습
-- [ ] wolverine 관찰 가능성 데이터 확인: 지표, 추적, 로그?
-- [ ] wolverine 관찰 가능성 의존성 등록 패턴 적용
 ---
 - [x] 용어 통일 Metrics, Traces, Loggers
 - [ ] 용어 통일 Success, Failure
@@ -202,22 +234,6 @@ SmartEnum Protocol 선택 기준 문서화
   - private
   - internal
   - protected
----
-- [ ] IAdatperMetric, IAdapterTrace 이해
-- [ ] IAdapter 구현 가이드
-- [ ] 의존성 등록 가이드
-- [ ] 커스텀 유스케이스 로그
-- [ ] 커스텀 유스케이스 지표
-- [ ] 커스텀 유스케이스 추적
-- [ ] 유스케이스 진단 대시보드?
-  - 바쁜가?
-  - 빠른가?
-  - 실패율?
-- [ ] Application 레이어 테스트
-- [ ] Observability 코드 리뷰
-- [ ] IAdatperMetric/IAdapterTrace 인터페이스 의존성 등록 코드 정리
-- [ ] Observability 형식 테스트 자동화
-- [ ] Observability 형식 문서화
 ---
 - [ ] docs | 유스케이스 with 함수형 book
 ---
@@ -247,7 +263,10 @@ SmartEnum Protocol 선택 기준 문서화
 - [ ] 예제 포팅
 - [ ] 코드 품질 CLI
 - [ ] WebSite: Astro, Starlight
-
+- [ ] VSCode 개발 환경 구축
+- [ ] VSCode 테스트
+- [ ] VSCode 코드 커버리지
+- [ ] VSCode 단축키
 ---
 - Abstraction
   - [x] Error
