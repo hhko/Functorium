@@ -1,8 +1,10 @@
 # Usecase Observability Pipeline 리뷰
 
 > **작성일**: 2026-01-04
+> **최종 수정**: 2026-01-04
 > **대상**: Usecase Pipeline (Metrics, Tracing, Logging)
 > **참조**: OpenTelemetry Semantic Conventions
+> **진척률**: 1/7 완료 (14%)
 
 ---
 
@@ -52,7 +54,7 @@
 | `application.usecase.{cqrs}.responses.failure` | Counter | `{response}` | 실패 응답 수 |
 | `application.usecase.{cqrs}.duration` | Histogram | `s` | 처리 시간 (초) |
 
-**태그 구조:**
+**태그 구조 (통일됨 ✅):**
 
 | Tag Key | requests / duration | responses.success / responses.failure |
 |---------|---------------------|---------------------------------------|
@@ -60,8 +62,9 @@
 | `request.category` | `"usecase"` | `"usecase"` |
 | `request.handler.cqrs` | `"command"` / `"query"` | `"command"` / `"query"` |
 | `request.handler` | handler name | handler name |
-| `request.handler.method` | `"Handle"` | (없음) |
+| `request.handler.method` | `"Handle"` | `"Handle"` |
 | `response.status` | (없음) | `"success"` / `"failure"` |
+| **Total Tags** | **5** | **6** |
 
 ### 2.2 Tracing (UsecaseTracingPipeline)
 
@@ -131,12 +134,12 @@ error.count = 3  # ManyErrors인 경우
 
 ### 3.2 개선 필요 항목 ⚠️
 
-| 항목 | 문제점 | 영향 |
-|------|--------|------|
-| **응답 메트릭 중복** | success/failure가 별도 Counter + 태그에도 status 포함 | 카디널리티 증가, 쿼리 복잡 |
-| **태그 구조 불일치** | requests와 responses의 태그 세트가 다름 | JOIN 시 불일치 |
-| **request.handler.method** | 항상 "Handle" 값으로 의미 없음 | 불필요한 카디널리티 |
-| **Meter 매 요청 생성** | 매 요청마다 Meter/Counter 생성 | 성능 오버헤드 |
+| 항목 | 문제점 | 영향 | 상태 |
+|------|--------|------|------|
+| **응답 메트릭 중복** | success/failure가 별도 Counter + 태그에도 status 포함 | 카디널리티 증가, 쿼리 복잡 | 대기 |
+| ~~**태그 구조 불일치**~~ | ~~requests와 responses의 태그 세트가 다름~~ | ~~JOIN 시 불일치~~ | ✅ 완료 |
+| **request.handler.method** | 항상 "Handle" 값으로 의미 없음 | 불필요한 카디널리티 (단, 일관성 확보) | 유지 |
+| **Meter 매 요청 생성** | 매 요청마다 Meter/Counter 생성 | 성능 오버헤드 | 대기 |
 
 ---
 
@@ -416,64 +419,103 @@ sum(rate(responses_failure_total[5m])) / sum(rate(requests_total[5m]))
 
 ## 6. 종합 개선 계획
 
-### 6.1 우선순위별 개선 항목
+### 6.1 진척률 요약
 
-| 우선순위 | 항목 | 문제점 | 개선 방안 | 난이도 |
-|----------|------|--------|----------|--------|
-| **1 (높음)** | 태그 구조 통일 | requests와 responses 태그 불일치 | 기본 태그 세트 통일 | 낮음 |
-| **2 (중)** | 응답 메트릭 통합 | success/failure 별도 Counter | 단일 Counter + status 태그 | 낮음 |
-| **3 (중)** | `error.type` 태그 | 에러 유형 구분 불가 | Expected/Exceptional 태그 추가 | 낮음 |
-| **4 (중)** | `error.code` 태그 | 에러 패턴 분석 불가 | 에러 코드 태그 추가 | 낮음 |
-| **5 (중)** | Meter 캐싱 | 매 요청 생성 오버헤드 | 인스턴스 재사용 | 중간 |
-| **6 (낮음)** | `request.handler.method` 제거 | 항상 "Handle"로 무의미 | 태그 제거 | 낮음 |
-| **7 (낮음)** | 사용자 컨텍스트 | 사용자별 추적 불가 | `user.id`, `tenant.id` 추가 | 중간 |
+```
+진행 상황: ████░░░░░░░░░░░░░░░░ 14% (1/7 완료)
 
-### 6.2 상세 개선 계획
+✅ 완료: 1개
+⏳ 대기: 5개
+➖ 취소: 1개 (방향 변경)
+```
 
-#### 6.2.1 태그 구조 통일 (우선순위 1)
+### 6.2 우선순위별 개선 항목
 
-**현재:**
+| 우선순위 | 항목 | 문제점 | 개선 방안 | 난이도 | 상태 |
+|----------|------|--------|----------|--------|------|
+| **1 (높음)** | 태그 구조 통일 | requests와 responses 태그 불일치 | 기본 태그 세트 통일 | 낮음 | ✅ 완료 |
+| **2 (중)** | 응답 메트릭 통합 | success/failure 별도 Counter | 단일 Counter + status 태그 | 낮음 | ⏳ 대기 |
+| **3 (중)** | `error.type` 태그 | 에러 유형 구분 불가 | Expected/Exceptional 태그 추가 | 낮음 | ⏳ 대기 |
+| **4 (중)** | `error.code` 태그 | 에러 패턴 분석 불가 | 에러 코드 태그 추가 | 낮음 | ⏳ 대기 |
+| **5 (중)** | Meter 캐싱 | 매 요청 생성 오버헤드 | 인스턴스 재사용 | 중간 | ⏳ 대기 |
+| ~~**6 (낮음)**~~ | ~~`request.handler.method` 제거~~ | ~~항상 "Handle"로 무의미~~ | ~~태그 제거~~ | ~~낮음~~ | ➖ 취소 |
+| **7 (낮음)** | 사용자 컨텍스트 | 사용자별 추적 불가 | `user.id`, `tenant.id` 추가 | 중간 | ⏳ 대기 |
+
+> **Note**: 우선순위 6번은 태그 구조 통일 방향으로 변경되어 취소됨. `request.handler.method`를 제거하는 대신, 모든 메트릭에 포함하여 일관성 확보.
+
+### 6.3 상세 개선 계획
+
+#### 6.3.1 태그 구조 통일 (우선순위 1) ✅ 완료
+
+**변경 내용:**
+- 커밋: `e355af2` (2026-01-04)
+- 모든 메트릭에 `request.handler.method = "Handle"` 포함
+- requests, duration: 5개 태그
+- responses: 6개 태그 (5개 + `response.status`)
+
+**이전 (불일치):**
 ```csharp
-// requests, duration
+// requests, duration: 5개 태그 (request.handler.method 포함)
 TagList tags = new TagList {
     { RequestLayer, "application" },
     { RequestCategory, "usecase" },
     { RequestHandlerCqrs, requestCqrs },
     { RequestHandler, requestHandler },
-    { RequestHandlerMethod, "Handle" }  // 불일치
+    { RequestHandlerMethod, "Handle" }
 };
 
-// responses
+// responses: 5개 태그 (request.handler.method 없음!)
 new KeyValuePair<string, object?>(RequestLayer, "application"),
 new KeyValuePair<string, object?>(RequestCategory, "usecase"),
 new KeyValuePair<string, object?>(RequestHandlerCqrs, requestCqrs),
 new KeyValuePair<string, object?>(RequestHandler, requestHandler),
 new KeyValuePair<string, object?>(ResponseStatus, "success/failure")
-// RequestHandlerMethod 없음
 ```
 
-**개선:**
+**현재 (통일됨):**
 ```csharp
-// 기본 태그 (모든 메트릭 공통)
-TagList baseTags = new TagList {
+// 요청 태그 (requests, duration 공통) - 5개
+TagList requestTags = new TagList {
     { RequestLayer, "application" },
     { RequestCategory, "usecase" },
     { RequestHandlerCqrs, requestCqrs },
-    { RequestHandler, requestHandler }
+    { RequestHandler, requestHandler },
+    { RequestHandlerMethod, "Handle" }
 };
 
-// requests, duration: baseTags 사용
-requestCounter.Add(1, baseTags);
-durationHistogram.Record(elapsed, baseTags);
+requestCounter.Add(1, requestTags);
+durationHistogram.Record(elapsed, requestTags);
 
-// responses: baseTags + status
-TagList responseTags = new TagList(baseTags) {
-    { ResponseStatus, response.IsSucc ? "success" : "failure" }
+// 응답 태그 (requestTags + ResponseStatus) - 6개
+TagList successTags = new TagList {
+    { RequestLayer, "application" },
+    { RequestCategory, "usecase" },
+    { RequestHandlerCqrs, requestCqrs },
+    { RequestHandler, requestHandler },
+    { RequestHandlerMethod, "Handle" },
+    { ResponseStatus, "success" }
 };
-responseCounter.Add(1, responseTags);
+responseSuccessCounter.Add(1, successTags);
 ```
 
-#### 6.2.2 응답 메트릭 통합 (우선순위 2)
+**결과:**
+```
+┌──────────────────────────┬─────────────────────────┬─────────────────────────┐
+│ Tag Key                  │ requestCounter          │ responseSuccessCounter  │
+│                          │ durationHistogram       │ responseFailureCounter  │
+├──────────────────────────┼─────────────────────────┼─────────────────────────┤
+│ request.layer            │ "application"           │ "application"           │
+│ request.category         │ "usecase"               │ "usecase"               │
+│ request.handler.cqrs     │ "command"/"query"       │ "command"/"query"       │
+│ request.handler          │ handler name            │ handler name            │
+│ request.handler.method   │ "Handle"                │ "Handle"                │
+│ response.status          │ (none)                  │ "success"/"failure"     │
+├──────────────────────────┼─────────────────────────┼─────────────────────────┤
+│ Total Tags               │ 5                       │ 6                       │
+└──────────────────────────┴─────────────────────────┴─────────────────────────┘
+```
+
+#### 6.3.2 응답 메트릭 통합 (우선순위 2) ⏳ 대기
 
 **현재:**
 ```
@@ -487,7 +529,7 @@ application.usecase.command.responses  (Counter)
   └── Tags: response.status = "success" | "failure"
 ```
 
-#### 6.2.3 에러 태그 추가 (우선순위 3, 4)
+#### 6.3.3 에러 태그 추가 (우선순위 3, 4) ⏳ 대기
 
 **개선:**
 ```csharp
@@ -514,7 +556,7 @@ sum(rate(responses_total{response_status="failure", error_type="exceptional"}[5m
   / sum(rate(requests_total[5m])) < 0.001  # 시스템 에러 0.1% 이하
 ```
 
-#### 6.2.4 Meter 캐싱 (우선순위 5)
+#### 6.3.4 Meter 캐싱 (우선순위 5) ⏳ 대기
 
 **현재:**
 ```csharp
@@ -579,6 +621,15 @@ public sealed class UsecaseMetricsPipeline<TRequest, TResponse>
 | **용량 분석** | ✅ 충분 | TPS, 트래픽 분포 분석 |
 | **SLI/SLO 기본** | ✅ 지원 | 가용성, 지연, 에러율 계산 가능 |
 | **SLI/SLO 고급** | ⚠️ 부족 | 에러 유형별, 고객별 SLO 불가 |
-| **코드 품질** | ⚠️ 개선 필요 | 태그 불일치, Meter 재생성 |
+| **코드 품질** | ⚠️ 개선 중 | ~~태그 불일치~~ ✅, Meter 재생성 ⏳ |
 
-**종합:** 기본적인 운영은 가능하나, 태그 구조 통일 및 에러 유형 태그 추가로 개선 권장
+**종합:** 기본적인 운영은 가능하며, 태그 구조 통일 완료. 에러 유형 태그 및 Meter 캐싱 개선 권장
+
+---
+
+## 부록: 변경 이력
+
+| 날짜 | 변경 내용 | 커밋 |
+|------|----------|------|
+| 2026-01-04 | 문서 초안 작성 | - |
+| 2026-01-04 | 태그 구조 통일 완료 | `e355af2` |
