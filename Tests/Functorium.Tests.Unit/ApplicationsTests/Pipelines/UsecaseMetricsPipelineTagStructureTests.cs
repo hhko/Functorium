@@ -23,7 +23,7 @@ namespace Functorium.Tests.Unit.ApplicationsTests.Pipelines;
 /// 이 테스트는 메트릭 태그 구조가 실수로 변경되는 것을 방지합니다.
 /// </para>
 /// <para>
-/// 메트릭별 태그 구조 비교표:
+/// 메트릭별 태그 구조 비교표 (통일된 구조):
 /// </para>
 /// <code>
 /// ┌──────────────────────────┬─────────────────────────┬─────────────────────────┐
@@ -34,10 +34,10 @@ namespace Functorium.Tests.Unit.ApplicationsTests.Pipelines;
 /// │ request.category         │ "usecase"               │ "usecase"               │
 /// │ request.handler.cqrs     │ "command"/"query"       │ "command"/"query"       │
 /// │ request.handler          │ handler name            │ handler name            │
-/// │ request.handler.method   │ "Handle"                │ (none)                  │
+/// │ request.handler.method   │ "Handle"                │ "Handle"                │
 /// │ response.status          │ (none)                  │ "success"/"failure"     │
 /// ├──────────────────────────┼─────────────────────────┼─────────────────────────┤
-/// │ Total Tags               │ 5                       │ 5                       │
+/// │ Total Tags               │ 5                       │ 6                       │
 /// └──────────────────────────┴─────────────────────────┴─────────────────────────┘
 /// </code>
 /// </remarks>
@@ -101,10 +101,10 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
     #region 요청 카운터 태그 구조 테스트
 
     /// <summary>
-    /// requestCounter는 RequestHandlerMethod 태그를 포함해야 합니다.
+    /// requestCounter는 기본 5개 태그를 포함해야 합니다 (통일된 구조).
     /// </summary>
     [Fact]
-    public async Task Handle_RequestCounterTags_ShouldContainRequestHandlerMethod()
+    public async Task Handle_RequestCounterTags_ShouldContainBaseTags()
     {
         // Arrange
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
@@ -121,10 +121,18 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
 
         requestMeasurement.ShouldNotBeNull();
 
-        // 태그 구조 검증: 5개 태그
+        // 태그 구조 검증: 5개 태그 (통일된 baseTags)
         requestMeasurement.Tags.Length.ShouldBe(5);
 
-        // RequestHandlerMethod 태그가 있어야 함
+        // 기본 태그가 있어야 함
+        requestMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestLayer);
+        requestMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestCategory);
+        requestMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerCqrs);
+        requestMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandler);
         requestMeasurement.Tags
             .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerMethod);
 
@@ -192,8 +200,8 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
 
         successMeasurement.ShouldNotBeNull();
 
-        // 태그 구조 검증: 5개 태그
-        successMeasurement.Tags.Length.ShouldBe(5);
+        // 태그 구조 검증: 6개 태그 (requestTags 5개 + ResponseStatus 1개)
+        successMeasurement.Tags.Length.ShouldBe(6);
 
         // ResponseStatus 태그가 있어야 함
         successMeasurement.Tags
@@ -206,10 +214,10 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
     }
 
     /// <summary>
-    /// responseSuccessCounter는 RequestHandlerMethod 태그를 포함하지 않아야 합니다.
+    /// responseSuccessCounter는 requestTags + ResponseStatus 태그를 포함해야 합니다.
     /// </summary>
     [Fact]
-    public async Task Handle_ResponseSuccessCounterTags_ShouldNotContainRequestHandlerMethod()
+    public async Task Handle_ResponseSuccessCounterTags_ShouldContainRequestTagsPlusResponseStatus()
     {
         // Arrange
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
@@ -226,9 +234,19 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
 
         successMeasurement.ShouldNotBeNull();
 
-        // RequestHandlerMethod 태그가 없어야 함
+        // requestTags (5개) + ResponseStatus (1개) = 6개
         successMeasurement.Tags
-            .ShouldNotContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerMethod);
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestLayer);
+        successMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestCategory);
+        successMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerCqrs);
+        successMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandler);
+        successMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerMethod);
+        successMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.ResponseStatus);
     }
 
     #endregion
@@ -256,8 +274,8 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
 
         failureMeasurement.ShouldNotBeNull();
 
-        // 태그 구조 검증: 5개 태그
-        failureMeasurement.Tags.Length.ShouldBe(5);
+        // 태그 구조 검증: 6개 태그 (requestTags 5개 + ResponseStatus 1개)
+        failureMeasurement.Tags.Length.ShouldBe(6);
 
         // ResponseStatus 태그가 있어야 함
         failureMeasurement.Tags
@@ -270,10 +288,10 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
     }
 
     /// <summary>
-    /// responseFailureCounter는 RequestHandlerMethod 태그를 포함하지 않아야 합니다.
+    /// responseFailureCounter는 requestTags + ResponseStatus 태그를 포함해야 합니다.
     /// </summary>
     [Fact]
-    public async Task Handle_ResponseFailureCounterTags_ShouldNotContainRequestHandlerMethod()
+    public async Task Handle_ResponseFailureCounterTags_ShouldContainRequestTagsPlusResponseStatus()
     {
         // Arrange
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
@@ -290,9 +308,19 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
 
         failureMeasurement.ShouldNotBeNull();
 
-        // RequestHandlerMethod 태그가 없어야 함
+        // requestTags (5개) + ResponseStatus (1개) = 6개
         failureMeasurement.Tags
-            .ShouldNotContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerMethod);
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestLayer);
+        failureMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestCategory);
+        failureMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerCqrs);
+        failureMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandler);
+        failureMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerMethod);
+        failureMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.ResponseStatus);
     }
 
     #endregion
@@ -300,10 +328,10 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
     #region 히스토그램 태그 구조 테스트
 
     /// <summary>
-    /// durationHistogram은 RequestHandlerMethod 태그를 포함해야 합니다.
+    /// durationHistogram은 기본 5개 태그를 포함해야 합니다 (통일된 구조).
     /// </summary>
     [Fact]
-    public async Task Handle_DurationHistogramTags_ShouldContainRequestHandlerMethod()
+    public async Task Handle_DurationHistogramTags_ShouldContainRequestTags()
     {
         // Arrange
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
@@ -320,10 +348,18 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
 
         durationMeasurement.ShouldNotBeNull();
 
-        // 태그 구조 검증: 5개 태그
+        // 태그 구조 검증: 5개 태그 (통일된 requestTags)
         durationMeasurement.Tags.Length.ShouldBe(5);
 
-        // RequestHandlerMethod 태그가 있어야 함
+        // 기본 태그가 있어야 함
+        durationMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestLayer);
+        durationMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestCategory);
+        durationMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerCqrs);
+        durationMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandler);
         durationMeasurement.Tags
             .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerMethod);
 

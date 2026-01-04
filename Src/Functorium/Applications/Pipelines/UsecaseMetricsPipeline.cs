@@ -68,8 +68,8 @@ public sealed class UsecaseMetricsPipeline<TRequest, TResponse>
             unit: "s",
             description: $"Duration of {requestHandler} request processing in seconds");
 
-        // Tags 생성 (공통)
-        TagList tags = new TagList
+        // 요청 태그 (requests, duration 공통)
+        TagList requestTags = new TagList
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application },
             { ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase },
@@ -79,7 +79,7 @@ public sealed class UsecaseMetricsPipeline<TRequest, TResponse>
         };
 
         // 요청 수 증가
-        requestCounter.Add(1, tags);
+        requestCounter.Add(1, requestTags);
 
         // 시간 측정 시작
         long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();
@@ -91,47 +91,34 @@ public sealed class UsecaseMetricsPipeline<TRequest, TResponse>
         double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);
 
         // Histogram에 처리 시간 기록 (밀리초를 초로 변환)
-        durationHistogram.Record(elapsed / 1000.0, tags);
+        durationHistogram.Record(elapsed / 1000.0, requestTags);
 
-        // 성공/실패 응답 수 기록 (IsSucc/IsFail 패턴 사용)
-        // Note: 원본 코드에서는 RequestHandlerMethod 태그 없이 ResponseStatus 태그를 포함
+        // 성공/실패 응답 수 기록 (requestTags + ResponseStatus)
         if (response.IsSucc)
         {
-            responseSuccessCounter.Add(1,
-                new KeyValuePair<string, object?>(
-                        ObservabilityNaming.CustomAttributes.RequestLayer,
-                        ObservabilityNaming.Layers.Application),
-                new KeyValuePair<string, object?>(
-                        ObservabilityNaming.CustomAttributes.RequestCategory,
-                        ObservabilityNaming.Categories.Usecase),
-                new KeyValuePair<string, object?>(
-                        ObservabilityNaming.CustomAttributes.RequestHandlerCqrs,
-                        requestCqrs),
-                new KeyValuePair<string, object?>(
-                        ObservabilityNaming.CustomAttributes.RequestHandler,
-                        requestHandler),
-                new KeyValuePair<string, object?>(
-                        ObservabilityNaming.CustomAttributes.ResponseStatus,
-                        ObservabilityNaming.Status.Success));
+            TagList successTags = new TagList
+            {
+                { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application },
+                { ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase },
+                { ObservabilityNaming.CustomAttributes.RequestHandlerCqrs, requestCqrs },
+                { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },
+                { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, "Handle" },
+                { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success }
+            };
+            responseSuccessCounter.Add(1, successTags);
         }
         else
         {
-            responseFailureCounter.Add(1,
-                new KeyValuePair<string, object?>(
-                        ObservabilityNaming.CustomAttributes.RequestLayer,
-                        ObservabilityNaming.Layers.Application),
-                new KeyValuePair<string, object?>(
-                        ObservabilityNaming.CustomAttributes.RequestCategory,
-                        ObservabilityNaming.Categories.Usecase),
-                new KeyValuePair<string, object?>(
-                        ObservabilityNaming.CustomAttributes.RequestHandlerCqrs,
-                        requestCqrs),
-                new KeyValuePair<string, object?>(
-                        ObservabilityNaming.CustomAttributes.RequestHandler,
-                        requestHandler),
-                new KeyValuePair<string, object?>(
-                        ObservabilityNaming.CustomAttributes.ResponseStatus,
-                        ObservabilityNaming.Status.Failure));
+            TagList failureTags = new TagList
+            {
+                { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application },
+                { ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase },
+                { ObservabilityNaming.CustomAttributes.RequestHandlerCqrs, requestCqrs },
+                { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },
+                { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, "Handle" },
+                { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure }
+            };
+            responseFailureCounter.Add(1, failureTags);
         }
 
         return response;
