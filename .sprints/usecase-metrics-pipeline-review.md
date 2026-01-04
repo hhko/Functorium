@@ -4,7 +4,7 @@
 > **최종 수정**: 2026-01-04
 > **대상**: Usecase Pipeline (Metrics, Tracing, Logging)
 > **참조**: OpenTelemetry Semantic Conventions
-> **진척률**: 1/7 완료 (14%)
+> **진척률**: 2/7 완료 (29%)
 
 ---
 
@@ -50,14 +50,13 @@
 | 메트릭 이름 | 타입 | 단위 | 설명 |
 |------------|------|------|------|
 | `application.usecase.{cqrs}.requests` | Counter | `{request}` | 총 요청 수 |
-| `application.usecase.{cqrs}.responses.success` | Counter | `{response}` | 성공 응답 수 |
-| `application.usecase.{cqrs}.responses.failure` | Counter | `{response}` | 실패 응답 수 |
+| `application.usecase.{cqrs}.responses` | Counter | `{response}` | 응답 수 (status 태그로 구분) |
 | `application.usecase.{cqrs}.duration` | Histogram | `s` | 처리 시간 (초) |
 
 **태그 구조 (통일됨 ✅):**
 
-| Tag Key | requests / duration | responses.success / responses.failure |
-|---------|---------------------|---------------------------------------|
+| Tag Key | requests / duration | responses |
+|---------|---------------------|-----------|
 | `request.layer` | `"application"` | `"application"` |
 | `request.category` | `"usecase"` | `"usecase"` |
 | `request.handler.cqrs` | `"command"` / `"query"` | `"command"` / `"query"` |
@@ -136,7 +135,7 @@ error.count = 3  # ManyErrors인 경우
 
 | 항목 | 문제점 | 영향 | 상태 |
 |------|--------|------|------|
-| **응답 메트릭 중복** | success/failure가 별도 Counter + 태그에도 status 포함 | 카디널리티 증가, 쿼리 복잡 | 대기 |
+| ~~**응답 메트릭 중복**~~ | ~~success/failure가 별도 Counter + 태그에도 status 포함~~ | ~~카디널리티 증가, 쿼리 복잡~~ | ✅ 완료 |
 | ~~**태그 구조 불일치**~~ | ~~requests와 responses의 태그 세트가 다름~~ | ~~JOIN 시 불일치~~ | ✅ 완료 |
 | **request.handler.method** | 항상 "Handle" 값으로 의미 없음 | 불필요한 카디널리티 (단, 일관성 확보) | 유지 |
 | **Meter 매 요청 생성** | 매 요청마다 Meter/Counter 생성 | 성능 오버헤드 | 대기 |
@@ -422,10 +421,10 @@ sum(rate(responses_failure_total[5m])) / sum(rate(requests_total[5m]))
 ### 6.1 진척률 요약
 
 ```
-진행 상황: ████░░░░░░░░░░░░░░░░ 14% (1/7 완료)
+진행 상황: █████░░░░░░░░░░░░░░░ 29% (2/7 완료)
 
-✅ 완료: 1개
-⏳ 대기: 5개
+✅ 완료: 2개
+⏳ 대기: 4개
 ➖ 취소: 1개 (방향 변경)
 ```
 
@@ -434,7 +433,7 @@ sum(rate(responses_failure_total[5m])) / sum(rate(requests_total[5m]))
 | 우선순위 | 항목 | 문제점 | 개선 방안 | 난이도 | 상태 |
 |----------|------|--------|----------|--------|------|
 | **1 (높음)** | 태그 구조 통일 | requests와 responses 태그 불일치 | 기본 태그 세트 통일 | 낮음 | ✅ 완료 |
-| **2 (중)** | 응답 메트릭 통합 | success/failure 별도 Counter | 단일 Counter + status 태그 | 낮음 | ⏳ 대기 |
+| **2 (중)** | 응답 메트릭 통합 | success/failure 별도 Counter | 단일 Counter + status 태그 | 낮음 | ✅ 완료 |
 | **3 (중)** | `error.type` 태그 | 에러 유형 구분 불가 | Expected/Exceptional 태그 추가 | 낮음 | ⏳ 대기 |
 | **4 (중)** | `error.code` 태그 | 에러 패턴 분석 불가 | 에러 코드 태그 추가 | 낮음 | ⏳ 대기 |
 | **5 (중)** | Meter 캐싱 | 매 요청 생성 오버헤드 | 인스턴스 재사용 | 중간 | ⏳ 대기 |
@@ -515,19 +514,61 @@ responseSuccessCounter.Add(1, successTags);
 └──────────────────────────┴─────────────────────────┴─────────────────────────┘
 ```
 
-#### 6.3.2 응답 메트릭 통합 (우선순위 2) ⏳ 대기
+#### 6.3.2 응답 메트릭 통합 (우선순위 2) ✅ 완료
 
-**현재:**
-```
-application.usecase.command.responses.success  (Counter)
-application.usecase.command.responses.failure  (Counter)
+**변경 내용:**
+- 커밋: (2026-01-04)
+- `responses.success`와 `responses.failure` 두 개의 Counter를 `responses` 단일 Counter로 통합
+- `response.status` 태그로 성공/실패 구분
+
+**이전 (분리됨):**
+```csharp
+// 메트릭 정의
+Counter<long> responseSuccessCounter = meter.CreateCounter<long>(
+    name: "application.usecase.{cqrs}.responses.success", ...);
+Counter<long> responseFailureCounter = meter.CreateCounter<long>(
+    name: "application.usecase.{cqrs}.responses.failure", ...);
+
+// 기록
+if (response.IsSucc)
+    responseSuccessCounter.Add(1, successTags);
+else
+    responseFailureCounter.Add(1, failureTags);
 ```
 
-**개선:**
+**현재 (통합됨):**
+```csharp
+// 메트릭 정의 - 단일 Counter
+Counter<long> responseCounter = meter.CreateCounter<long>(
+    name: "application.usecase.{cqrs}.responses", ...);
+
+// 기록 - status 태그로 구분
+string responseStatus = response.IsSucc ? "success" : "failure";
+TagList responseTags = new TagList {
+    { RequestLayer, "application" },
+    { RequestCategory, "usecase" },
+    { RequestHandlerCqrs, requestCqrs },
+    { RequestHandler, requestHandler },
+    { RequestHandlerMethod, "Handle" },
+    { ResponseStatus, responseStatus }
+};
+responseCounter.Add(1, responseTags);
 ```
-application.usecase.command.responses  (Counter)
-  └── Tags: response.status = "success" | "failure"
-```
+
+**효과:**
+- 메트릭 정의 수 감소 (2개 → 1개)
+- Prometheus 쿼리 단순화:
+  ```promql
+  # 이전: 두 메트릭 합산 필요
+  sum(rate(responses_success_total[5m])) + sum(rate(responses_failure_total[5m]))
+
+  # 현재: 단일 메트릭
+  sum(rate(responses_total[5m]))
+
+  # 성공/실패 필터링
+  sum(rate(responses_total{response_status="success"}[5m]))
+  sum(rate(responses_total{response_status="failure"}[5m]))
+  ```
 
 #### 6.3.3 에러 태그 추가 (우선순위 3, 4) ⏳ 대기
 
@@ -633,3 +674,4 @@ public sealed class UsecaseMetricsPipeline<TRequest, TResponse>
 |------|----------|------|
 | 2026-01-04 | 문서 초안 작성 | - |
 | 2026-01-04 | 태그 구조 통일 완료 | `e355af2` |
+| 2026-01-04 | 응답 메트릭 통합 완료 (6.3.2) | - |
