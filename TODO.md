@@ -10,6 +10,8 @@
 - [ ] Mediator Singleton + Scoped(Factory로 통합)
 - [x] UsecaseMetricsPipeline 클래스 정리
 - [x] UsecaseMetricsPipeline 태그 구조 테스트
+- [x] usecase request/response 태그 통일
+- [ ] usecase request/response 값 소문자 -> 파스칼?
 - [ ] UsecaseTracingsPipeline 태그 구조 테스트
 - [ ] UsecaseLoggingPipeline 태그 구조 테스트
 - [ ] 데이터 적합?
