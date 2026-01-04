@@ -2,9 +2,12 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
 using Functorium.Abstractions;
+using Functorium.Abstractions.Errors;
 using Functorium.Adapters.Observabilities;
 using Functorium.Applications.Cqrs;
 using Functorium.Applications.Observabilities;
+
+using LanguageExt.Common;
 
 using Mediator;
 
@@ -87,22 +90,129 @@ public sealed class UsecaseMetricsPipeline<TRequest, TResponse>
         // Histogram에 처리 시간 기록 (밀리초를 초로 변환)
         durationHistogram.Record(elapsed / 1000.0, requestTags);
 
-        // 응답 수 기록 (requestTags + ResponseStatus로 성공/실패 구분)
-        string responseStatus = response.IsSucc
-            ? ObservabilityNaming.Status.Success
-            : ObservabilityNaming.Status.Failure;
-
-        TagList responseTags = new TagList
-        {
-            { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application },
-            { ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase },
-            { ObservabilityNaming.CustomAttributes.RequestHandlerCqrs, requestCqrs },
-            { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },
-            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, "Handle" },
-            { ObservabilityNaming.CustomAttributes.ResponseStatus, responseStatus }
-        };
+        // 응답 태그 생성 (성공/실패 + 에러 정보)
+        TagList responseTags = CreateResponseTags(requestTags, response);
         responseCounter.Add(1, responseTags);
 
         return response;
+    }
+
+    /// <summary>
+    /// 응답 태그를 생성합니다.
+    /// 성공 시: requestTags + response.status
+    /// 실패 시: requestTags + response.status + error.type + error.code
+    /// </summary>
+    private static TagList CreateResponseTags(TagList requestTags, TResponse response)
+    {
+        // requestTags 복사
+        TagList tags = new();
+        foreach (var tag in requestTags)
+        {
+            tags.Add(tag);
+        }
+
+        if (response.IsSucc)
+        {
+            tags.Add(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success);
+            return tags;
+        }
+
+        tags.Add(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);
+
+        // 실패 시 에러 정보 추가
+        if (response is IFinResponseWithError { Error: var error })
+        {
+            var (errorType, errorCode) = GetErrorInfo(error);
+            tags.Add(ObservabilityNaming.OTelAttributes.ErrorType, errorType);
+            tags.Add(ObservabilityNaming.CustomAttributes.ErrorCode, errorCode);
+        }
+
+        return tags;
+    }
+
+    /// <summary>
+    /// 에러에서 타입과 코드 정보를 추출합니다.
+    /// ManyErrors의 경우 대표 에러를 선정합니다 (Exceptional 우선).
+    /// </summary>
+    private static (string ErrorType, string ErrorCode) GetErrorInfo(Error error)
+    {
+        return error switch
+        {
+            ManyErrors many => (
+                ErrorType: ObservabilityNaming.ErrorTypes.Aggregate,
+                ErrorCode: GetPrimaryErrorCode(many)
+            ),
+            ErrorCodeExceptional exceptional => (
+                ErrorType: ObservabilityNaming.ErrorTypes.Exceptional,
+                ErrorCode: exceptional.ErrorCode
+            ),
+            ErrorCodeExpected expected => (
+                ErrorType: ObservabilityNaming.ErrorTypes.Expected,
+                ErrorCode: expected.ErrorCode
+            ),
+            ErrorCodeExpected<string> expectedT => (
+                ErrorType: ObservabilityNaming.ErrorTypes.Expected,
+                ErrorCode: expectedT.ErrorCode
+            ),
+            _ when error.GetType().Name.StartsWith("ErrorCodeExpected") => (
+                ErrorType: ObservabilityNaming.ErrorTypes.Expected,
+                ErrorCode: GetErrorCodeByReflection(error)
+            ),
+            _ => (
+                ErrorType: error.IsExceptional
+                    ? ObservabilityNaming.ErrorTypes.Exceptional
+                    : ObservabilityNaming.ErrorTypes.Expected,
+                ErrorCode: error.GetType().Name
+            )
+        };
+    }
+
+    /// <summary>
+    /// 리플렉션을 사용하여 ErrorCode 속성을 추출합니다.
+    /// ErrorCodeExpected&lt;T&gt;, ErrorCodeExpected&lt;T1, T2&gt;, ErrorCodeExpected&lt;T1, T2, T3&gt; 등
+    /// 제네릭 타입에서 ErrorCode 속성을 가져옵니다.
+    /// </summary>
+    private static string GetErrorCodeByReflection(Error error)
+    {
+        var errorCodeProperty = error.GetType().GetProperty("ErrorCode");
+        if (errorCodeProperty?.GetValue(error) is string code)
+        {
+            return code;
+        }
+        return error.GetType().Name;
+    }
+
+    /// <summary>
+    /// ManyErrors에서 대표 에러 코드를 선정합니다.
+    /// 우선순위: Exceptional > Expected > First
+    /// </summary>
+    private static string GetPrimaryErrorCode(ManyErrors many)
+    {
+        // 1순위: Exceptional 에러 (시스템 에러가 더 심각)
+        foreach (var e in many.Errors)
+        {
+            if (e.IsExceptional)
+                return GetErrorCode(e);
+        }
+
+        // 2순위: 첫 번째 에러
+        return many.Errors.Head.Match(
+            Some: GetErrorCode,
+            None: () => nameof(ManyErrors));
+    }
+
+    /// <summary>
+    /// 단일 에러에서 에러 코드를 추출합니다.
+    /// </summary>
+    private static string GetErrorCode(Error error)
+    {
+        return error switch
+        {
+            ErrorCodeExceptional exceptional => exceptional.ErrorCode,
+            ErrorCodeExpected expected => expected.ErrorCode,
+            ErrorCodeExpected<string> expectedT => expectedT.ErrorCode,
+            _ when error.GetType().Name.StartsWith("ErrorCodeExpected") => GetErrorCodeByReflection(error),
+            _ => error.GetType().Name
+        };
     }
 }

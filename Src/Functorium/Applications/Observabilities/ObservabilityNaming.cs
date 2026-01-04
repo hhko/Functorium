@@ -41,6 +41,21 @@ public static class ObservabilityNaming
     }
 
     /// <summary>
+    /// 에러 타입 상수 (3-Pillar 공통)
+    /// </summary>
+    public static class ErrorTypes
+    {
+        /// <summary>예상된 비즈니스 에러 (IsExpected = true)</summary>
+        public const string Expected = "expected";
+
+        /// <summary>예외적 시스템 에러 (IsExceptional = true)</summary>
+        public const string Exceptional = "exceptional";
+
+        /// <summary>복합 에러 (ManyErrors)</summary>
+        public const string Aggregate = "aggregate";
+    }
+
+    /// <summary>
     /// CQRS 타입 상수 (소문자)
     /// </summary>
     public static class Cqrs

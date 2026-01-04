@@ -23,22 +23,24 @@ namespace Functorium.Tests.Unit.ApplicationsTests.Pipelines;
 /// 이 테스트는 메트릭 태그 구조가 실수로 변경되는 것을 방지합니다.
 /// </para>
 /// <para>
-/// 메트릭별 태그 구조 비교표 (통일된 구조):
+/// 메트릭별 태그 구조 비교표 (옵션 A: 에러 태그 포함):
 /// </para>
 /// <code>
-/// ┌──────────────────────────┬─────────────────────────┬─────────────────────────┐
-/// │ Tag Key                  │ requestCounter          │ responseCounter         │
-/// │                          │ durationHistogram       │                         │
-/// ├──────────────────────────┼─────────────────────────┼─────────────────────────┤
-/// │ request.layer            │ "application"           │ "application"           │
-/// │ request.category         │ "usecase"               │ "usecase"               │
-/// │ request.handler.cqrs     │ "command"/"query"       │ "command"/"query"       │
-/// │ request.handler          │ handler name            │ handler name            │
-/// │ request.handler.method   │ "Handle"                │ "Handle"                │
-/// │ response.status          │ (none)                  │ "success"/"failure"     │
-/// ├──────────────────────────┼─────────────────────────┼─────────────────────────┤
-/// │ Total Tags               │ 5                       │ 6                       │
-/// └──────────────────────────┴─────────────────────────┴─────────────────────────┘
+/// ┌──────────────────────────┬─────────────────────────┬─────────────────────────┬─────────────────────────┐
+/// │ Tag Key                  │ requestCounter          │ responseCounter         │ responseCounter         │
+/// │                          │ durationHistogram       │ (success)               │ (failure)               │
+/// ├──────────────────────────┼─────────────────────────┼─────────────────────────┼─────────────────────────┤
+/// │ request.layer            │ "application"           │ "application"           │ "application"           │
+/// │ request.category         │ "usecase"               │ "usecase"               │ "usecase"               │
+/// │ request.handler.cqrs     │ "command"/"query"       │ "command"/"query"       │ "command"/"query"       │
+/// │ request.handler          │ handler name            │ handler name            │ handler name            │
+/// │ request.handler.method   │ "Handle"                │ "Handle"                │ "Handle"                │
+/// │ response.status          │ (none)                  │ "success"               │ "failure"               │
+/// │ error.type               │ (none)                  │ (none)                  │ "expected"/"exceptional"│
+/// │ error.code               │ (none)                  │ (none)                  │ error code              │
+/// ├──────────────────────────┼─────────────────────────┼─────────────────────────┼─────────────────────────┤
+/// │ Total Tags               │ 5                       │ 6                       │ 8                       │
+/// └──────────────────────────┴─────────────────────────┴─────────────────────────┴─────────────────────────┘
 /// </code>
 /// </remarks>
 [Trait(nameof(UnitTest), UnitTest.Functorium_Adapters)]
@@ -256,13 +258,13 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
     public async Task Handle_ResponseCounterTags_OnFailure_ShouldContainFailureStatus()
     {
         // Arrange
-        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
+        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
             _openTelemetryOptions,
             _meterFactory);
         var request = new TestCommandRequest();
 
         // Act
-        await sut.Handle(request, NextFail, CancellationToken.None);
+        await sut.Handle(request, NextFailWithError, CancellationToken.None);
 
         // Assert
         var responseMeasurement = _capturedMeasurements
@@ -270,8 +272,8 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
 
         responseMeasurement.ShouldNotBeNull();
 
-        // 태그 구조 검증: 6개 태그 (requestTags 5개 + ResponseStatus 1개)
-        responseMeasurement.Tags.Length.ShouldBe(6);
+        // 태그 구조 검증: 8개 태그 (requestTags 5개 + ResponseStatus 1개 + error.type 1개 + error.code 1개)
+        responseMeasurement.Tags.Length.ShouldBe(8);
 
         // ResponseStatus 태그가 있어야 함
         responseMeasurement.Tags
@@ -284,19 +286,19 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
     }
 
     /// <summary>
-    /// responseCounter는 실패 시 requestTags + ResponseStatus 태그를 포함해야 합니다.
+    /// responseCounter는 실패 시 requestTags + ResponseStatus + error.type + error.code 태그를 포함해야 합니다.
     /// </summary>
     [Fact]
-    public async Task Handle_ResponseCounterTags_OnFailure_ShouldContainRequestTagsPlusResponseStatus()
+    public async Task Handle_ResponseCounterTags_OnFailure_ShouldContainErrorTags()
     {
         // Arrange
-        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
+        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
             _openTelemetryOptions,
             _meterFactory);
         var request = new TestCommandRequest();
 
         // Act
-        await sut.Handle(request, NextFail, CancellationToken.None);
+        await sut.Handle(request, NextFailWithError, CancellationToken.None);
 
         // Assert
         var responseMeasurement = _capturedMeasurements
@@ -304,7 +306,7 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
 
         responseMeasurement.ShouldNotBeNull();
 
-        // requestTags (5개) + ResponseStatus (1개) = 6개
+        // requestTags (5개) + ResponseStatus (1개) + error.type (1개) + error.code (1개) = 8개
         responseMeasurement.Tags
             .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestLayer);
         responseMeasurement.Tags
@@ -317,6 +319,41 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
             .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerMethod);
         responseMeasurement.Tags
             .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.ResponseStatus);
+        responseMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.OTelAttributes.ErrorType);
+        responseMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.ErrorCode);
+    }
+
+    /// <summary>
+    /// responseCounter는 Expected 에러 시 error.type이 "expected"여야 합니다.
+    /// </summary>
+    [Fact]
+    public async Task Handle_ResponseCounterTags_OnExpectedError_ShouldHaveExpectedErrorType()
+    {
+        // Arrange
+        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
+            _openTelemetryOptions,
+            _meterFactory);
+        var request = new TestCommandRequest();
+
+        // Act - Expected 에러로 실패
+        await sut.Handle(request, NextFailWithError, CancellationToken.None);
+
+        // Assert
+        var responseMeasurement = _capturedMeasurements
+            .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
+
+        responseMeasurement.ShouldNotBeNull();
+
+        // error.type 값 검증
+        AssertTagValue(responseMeasurement.Tags,
+            ObservabilityNaming.OTelAttributes.ErrorType,
+            ObservabilityNaming.ErrorTypes.Expected);
+
+        // error.code 값 검증 (Expected 에러는 타입명을 사용)
+        responseMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.ErrorCode);
     }
 
     #endregion
@@ -399,29 +436,30 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
     }
 
     /// <summary>
-    /// responseCounter는 성공과 실패 시 동일한 태그 키를 가져야 합니다 (값만 다름).
+    /// responseCounter는 성공 시 6개 태그, 실패 시 8개 태그를 가져야 합니다.
+    /// 실패 시 error.type과 error.code 태그가 추가됩니다.
     /// </summary>
     [Fact]
-    public async Task Handle_SuccessAndFailureResponses_ShouldHaveSameTagKeys()
+    public async Task Handle_SuccessAndFailureResponses_ShouldHaveDifferentTagCounts()
     {
         // Arrange
-        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
+        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
             _openTelemetryOptions,
             _meterFactory);
         var request = new TestCommandRequest();
 
         // Act - 성공 케이스
-        await sut.Handle(request, Next, CancellationToken.None);
+        await sut.Handle(request, NextSuccessWithError, CancellationToken.None);
 
         var successMeasurement = _capturedMeasurements
             .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
 
         // Act - 실패 케이스 (새 인스턴스로)
         _capturedMeasurements.Clear();
-        var sut2 = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
+        var sut2 = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
             _openTelemetryOptions,
             _meterFactory);
-        await sut2.Handle(request, NextFail, CancellationToken.None);
+        await sut2.Handle(request, NextFailWithError, CancellationToken.None);
 
         var failureMeasurement = _capturedMeasurements
             .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
@@ -430,12 +468,13 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
         successMeasurement.ShouldNotBeNull();
         failureMeasurement.ShouldNotBeNull();
 
-        var successTagKeys = successMeasurement.Tags.Select(t => t.Key).OrderBy(k => k).ToArray();
-        var failureTagKeys = failureMeasurement.Tags.Select(t => t.Key).OrderBy(k => k).ToArray();
+        // 성공: 6개 태그 (requestTags 5개 + response.status 1개)
+        successMeasurement.Tags.Length.ShouldBe(6);
 
-        successTagKeys.ShouldBe(failureTagKeys);
+        // 실패: 8개 태그 (requestTags 5개 + response.status 1개 + error.type 1개 + error.code 1개)
+        failureMeasurement.Tags.Length.ShouldBe(8);
 
-        // 메트릭 이름도 동일해야 함 (통합된 단일 카운터)
+        // 메트릭 이름은 동일해야 함 (통합된 단일 카운터)
         successMeasurement.InstrumentName.ShouldBe(failureMeasurement.InstrumentName);
     }
 
@@ -465,6 +504,22 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
         CancellationToken cancellationToken)
     {
         return ValueTask.FromResult(TestResponse.CreateFailure());
+    }
+
+    private static ValueTask<TestResponseWithError> NextSuccessWithError(
+        TestCommandRequest request,
+        CancellationToken cancellationToken)
+    {
+        return ValueTask.FromResult(TestResponseWithError.CreateSuccess());
+    }
+
+    private static ValueTask<TestResponseWithError> NextFailWithError(
+        TestCommandRequest request,
+        CancellationToken cancellationToken)
+    {
+        // Expected 에러로 실패
+        var error = Error.New("Test validation error");
+        return ValueTask.FromResult(TestResponseWithError.CreateFail(error));
     }
 
     #endregion
@@ -512,6 +567,29 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
         public static TestResponse CreateFailure() => new(false);
 
         public static TestResponse CreateFail(Error error) => CreateFailure();
+    }
+
+    /// <summary>
+    /// IFinResponseWithError를 구현하는 테스트용 Response.
+    /// 에러 태그 테스트에 사용됩니다.
+    /// </summary>
+    private sealed record TestResponseWithError : IFinResponse, IFinResponseFactory<TestResponseWithError>, IFinResponseWithError
+    {
+        private readonly bool _isSucc;
+        private readonly Error? _error;
+
+        private TestResponseWithError(bool isSucc, Error? error = null)
+        {
+            _isSucc = isSucc;
+            _error = error;
+        }
+
+        public bool IsSucc => _isSucc;
+        public bool IsFail => !_isSucc;
+        public Error Error => _error ?? Error.New("Unknown error");
+
+        public static TestResponseWithError CreateSuccess() => new(true);
+        public static TestResponseWithError CreateFail(Error error) => new(false, error);
     }
 
     #endregion
