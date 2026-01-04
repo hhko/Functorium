@@ -157,11 +157,8 @@ public static class ObservabilityNaming
         public static string UsecaseRequest(string cqrsType) =>
             $"application.usecase.{cqrsType}.requests";
 
-        public static string UsecaseResponseSuccess(string cqrsType) =>
-            $"application.usecase.{cqrsType}.responses.success";
-
-        public static string UsecaseResponseFailure(string cqrsType) =>
-            $"application.usecase.{cqrsType}.responses.failure";
+        public static string UsecaseResponse(string cqrsType) =>
+            $"application.usecase.{cqrsType}.responses";
 
         public static string UsecaseDuration(string cqrsType) =>
             $"application.usecase.{cqrsType}.duration";

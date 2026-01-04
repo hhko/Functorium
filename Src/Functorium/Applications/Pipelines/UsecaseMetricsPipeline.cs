@@ -50,17 +50,11 @@ public sealed class UsecaseMetricsPipeline<TRequest, TResponse>
             unit: "{request}",
             description: $"Total number of {requestHandler} requests");
 
-        // Counter: 성공 응답 수
-        Counter<long> responseSuccessCounter = meter.CreateCounter<long>(
-            name: ObservabilityNaming.Metrics.UsecaseResponseSuccess(requestCqrsField),
+        // Counter: 응답 수 (성공/실패를 response.status 태그로 구분)
+        Counter<long> responseCounter = meter.CreateCounter<long>(
+            name: ObservabilityNaming.Metrics.UsecaseResponse(requestCqrsField),
             unit: "{response}",
-            description: $"Total number of successful {requestHandler} responses");
-
-        // Counter: 실패 응답 수
-        Counter<long> responseFailureCounter = meter.CreateCounter<long>(
-            name: ObservabilityNaming.Metrics.UsecaseResponseFailure(requestCqrsField),
-            unit: "{response}",
-            description: $"Total number of failed {requestHandler} responses");
+            description: $"Total number of {requestHandler} responses");
 
         // Histogram: 요청 처리 시간 (초 단위)
         Histogram<double> durationHistogram = meter.CreateHistogram<double>(
@@ -93,33 +87,21 @@ public sealed class UsecaseMetricsPipeline<TRequest, TResponse>
         // Histogram에 처리 시간 기록 (밀리초를 초로 변환)
         durationHistogram.Record(elapsed / 1000.0, requestTags);
 
-        // 성공/실패 응답 수 기록 (requestTags + ResponseStatus)
-        if (response.IsSucc)
+        // 응답 수 기록 (requestTags + ResponseStatus로 성공/실패 구분)
+        string responseStatus = response.IsSucc
+            ? ObservabilityNaming.Status.Success
+            : ObservabilityNaming.Status.Failure;
+
+        TagList responseTags = new TagList
         {
-            TagList successTags = new TagList
-            {
-                { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application },
-                { ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase },
-                { ObservabilityNaming.CustomAttributes.RequestHandlerCqrs, requestCqrs },
-                { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },
-                { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, "Handle" },
-                { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success }
-            };
-            responseSuccessCounter.Add(1, successTags);
-        }
-        else
-        {
-            TagList failureTags = new TagList
-            {
-                { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application },
-                { ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase },
-                { ObservabilityNaming.CustomAttributes.RequestHandlerCqrs, requestCqrs },
-                { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },
-                { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, "Handle" },
-                { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure }
-            };
-            responseFailureCounter.Add(1, failureTags);
-        }
+            { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application },
+            { ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerCqrs, requestCqrs },
+            { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, "Handle" },
+            { ObservabilityNaming.CustomAttributes.ResponseStatus, responseStatus }
+        };
+        responseCounter.Add(1, responseTags);
 
         return response;
     }
