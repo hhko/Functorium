@@ -42,8 +42,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 // =================================================================
 builder.Services
     .RegisterOpenTelemetry(configuration, Assembly.GetExecutingAssembly())
-    //.ConfigureTracing(tracing => tracing.Configure(b => b.AddConsoleExporter()))
-    //.ConfigureMetrics(metrics => metrics.Configure(b => b.AddConsoleExporter()))
+    .ConfigureTracing(tracing => tracing.Configure(b => b.AddConsoleExporter()))
+    .ConfigureMetrics(metrics => metrics.Configure(b => b.AddConsoleExporter()))
     .Build();
 
 // =================================================================
