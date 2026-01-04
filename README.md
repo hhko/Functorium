@@ -20,6 +20,42 @@ It enables expressing domain logic as pure functions and pushing side effects to
 - [Automating Observability Code with SourceGenerator](./Books/Automating-ObservabilityCode-with-SourceGenerator/README.md)
 - [Implementing Functional ValueObject](./Books/Implementing-Functional-ValueObject/README.md)
 
+## Observability
+
+### Metrics (UsecaseMetricsPipeline)
+
+**Metric List:**
+
+| Metric Name | Type | Unit | Description |
+|------------|------|------|------|
+| `application.usecase.{cqrs}.requests` | Counter | `{request}` | Total request count |
+| `application.usecase.{cqrs}.responses` | Counter | `{response}` | Response count (distinguished by status tag) |
+| `application.usecase.{cqrs}.duration` | Histogram | `s` | Processing time (seconds) |
+
+**Tag Structure:**
+
+| Tag Key | requestCounter | responseCounter (success) | responseCounter (failure) |
+|---------|----------------|----------------------|----------------------|
+| `request.layer` | `"application"` | `"application"` | `"application"` |
+| `request.category` | `"usecase"` | `"usecase"` | `"usecase"` |
+| `request.handler.cqrs` | `"command"` / `"query"` | `"command"` / `"query"` | `"command"` / `"query"` |
+| `request.handler` | handler name | handler name | handler name |
+| `request.handler.method` | `"Handle"` | `"Handle"` | `"Handle"` |
+| `response.status` | - | `"success"` | `"failure"` |
+| `error.type` | - | - | `"expected"` / `"exceptional"` / `"aggregate"` |
+| `error.code` | - | - | Primary error code |
+| **Total Tags** | **5** | **6** | **8** |
+
+**Error Type Tag Values:**
+
+| Error Case | error.type | error.code |
+|---------|----------------|----------------------|
+| ErrorCodeExpected | "expected" | Error code (e.g., DomainErrors.City.Empty) |
+| ErrorCodeExceptional | "exceptional" | Error code (e.g., InfraErrors.Database.Timeout) |
+| ManyErrors | "aggregate" | Primary error code (Exceptional takes priority) |
+| Other Expected | "expected" | Type name |
+| Other Exceptional | "exceptional" | Type name |
+
 ## Framework
 ### Abstractions
 - [x] Structured Error
