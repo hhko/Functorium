@@ -64,6 +64,20 @@
     <Project Path="Tutorials/Observability/Tests/Observability.Tests.Integration/Observability.Tests.Integration.csproj" />
     <Project Path="Tutorials/Observability/Tests/Observability.Tests.Unit/Observability.Tests.Unit.csproj" />
   </Folder>
+  <Folder Name="/Tutorials/HistogramExploration/" />
+  <Folder Name="/Tutorials/HistogramExploration/Src/">
+    <Project Path="Tutorials/HistogramExploration/Src/HistogramExploration.Demo/HistogramExploration.Demo.csproj" />
+  </Folder>
+  <Folder Name="/Tutorials/HistogramExploration/Tests/">
+    <Project Path="Tutorials/HistogramExploration/Tests/HistogramExploration.Demo.Tests.Unit/HistogramExploration.Demo.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Tutorials/OptionsPattern/" />
+  <Folder Name="/Tutorials/OptionsPattern/Src/">
+    <Project Path="Tutorials/OptionsPattern/Src/OptionsPattern.Demo/OptionsPattern.Demo.csproj" />
+  </Folder>
+  <Folder Name="/Tutorials/OptionsPattern/Tests/">
+    <Project Path="Tutorials/OptionsPattern/Tests/OptionsPattern.Demo.Tests.Unit/OptionsPattern.Demo.Tests.Unit.csproj" />
+  </Folder>
   <Folder Name="/Src/">
     <Project Path="Src/Functorium/Functorium.csproj" />
     <Project Path="Src/Functorium.Adapters.SourceGenerator/Functorium.Adapters.SourceGenerator.csproj" />
