@@ -7,19 +7,6 @@ namespace Functorium.Adapters.Options;
 
 public static class OptionsConfigurator
 {
-    public static TOptions GetOptions<TOptions>(this IServiceCollection services)
-        where TOptions : class, new()
-    {
-        using ServiceProvider serviceProvider = services.BuildServiceProvider();
-        return serviceProvider.GetRequiredService<IOptions<TOptions>>().Value;
-    }
-
-    //public static TOptions GetOptions<TOptions>(this IApplicationBuilder app)
-    //    where TOptions : class, new()
-    //{
-    //    return app.ApplicationServices.GetRequiredService<IOptions<TOptions>>().Value;
-    //}
-
     // IServiceCollection 확장 메서드: RegisterConfigureOptions
     //  - appsettings.json을 configurationSectionName 기준으로 TOptions 연결
     //  - OptionsBuilder<TOptions> 확장 메서드 호출

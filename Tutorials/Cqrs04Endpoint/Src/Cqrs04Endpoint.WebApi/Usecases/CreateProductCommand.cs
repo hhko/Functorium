@@ -75,6 +75,8 @@ public sealed class CreateProductCommand
         /// </summary>
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
+            //return ErrorCodeFactory.Create("xyz.hello.code", 2026, "error message");
+
             // LINQ 쿼리 표현식: Repository의 FinT<IO, bool>를 사용하여 중복 검사 및 상품 생성
             // FinTUtilites.SelectMany가 FinT를 LINQ 쿼리 표현식에서 사용 가능하도록 지원
             // guard를 사용하여 상품명이 존재하지 않을 때만 계속 진행 (exists가 false일 때)

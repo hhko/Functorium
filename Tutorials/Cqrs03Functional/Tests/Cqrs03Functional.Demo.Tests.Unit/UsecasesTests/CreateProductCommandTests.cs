@@ -41,6 +41,9 @@ public sealed class CreateProductCommandTests : IDisposable
         // OpenTelemetry 옵션 등록
         services.AddSingleton<IOpenTelemetryOptions>(new TestOpenTelemetryOptions());
 
+        // SloConfiguration 등록
+        services.AddSingleton(new Functorium.Applications.Observabilities.SloConfiguration());
+
         // ActivitySource 등록 (Tracing용)
         ActivitySource activitySource = new("Cqrs03Functional.Demo.Tests");
         services.AddSingleton(activitySource);

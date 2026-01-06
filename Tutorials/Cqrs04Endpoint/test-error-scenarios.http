@@ -1,0 +1,174 @@
+### 에러 시나리오 테스트 - UsecaseMetricsPipeline 에러 태그 검증
+###
+### 이 파일은 다양한 에러 시나리오를 테스트하여 메트릭의 에러 태그를 확인합니다
+### 각 시나리오별 예상되는 메트릭 태그:
+### - response.status: "success" | "failure"
+### - error.type: "expected" | "exceptional" | "aggregate" (failure 시)
+### - error.code: 에러 코드 문자열 (failure 시)
+
+@baseUrl = http://localhost:5000
+
+### ==========================================================================
+### 1. Success (성공 케이스)
+### ==========================================================================
+### 예상 메트릭 태그:
+### - response.status=success
+### - error.type 없음
+### - error.code 없음
+POST {{baseUrl}}/api/test-error
+Content-Type: application/json
+
+{
+  "Scenario": "Success",
+  "TestMessage": "성공 케이스 테스트"
+}
+
+### ==========================================================================
+### 2. SingleExpected (단일 Expected 에러 - 비즈니스 에러)
+### ==========================================================================
+### 예상 메트릭 태그:
+### - response.status=failure
+### - error.type=expected
+### - error.code=TestErrors.TestErrorCommand.BusinessRuleViolation
+POST {{baseUrl}}/api/test-error
+Content-Type: application/json
+
+{
+  "Scenario": "SingleExpected",
+  "TestMessage": "비즈니스 규칙 위반 테스트"
+}
+
+### ==========================================================================
+### 3. SingleExceptional (단일 Exceptional 에러 - 시스템 에러)
+### ==========================================================================
+### 예상 메트릭 태그:
+### - response.status=failure
+### - error.type=exceptional
+### - error.code=TestErrors.TestErrorCommand.SystemFailure
+POST {{baseUrl}}/api/test-error
+Content-Type: application/json
+
+{
+  "Scenario": "SingleExceptional",
+  "TestMessage": "시스템 에러 테스트"
+}
+
+### ==========================================================================
+### 4. ManyExpected (복합 Expected 에러 - 여러 비즈니스 에러)
+### ==========================================================================
+### 예상 메트릭 태그:
+### - response.status=failure
+### - error.type=aggregate
+### - error.code=TestErrors.TestErrorCommand.BusinessRuleViolation (첫 번째 에러)
+POST {{baseUrl}}/api/test-error
+Content-Type: application/json
+
+{
+  "Scenario": "ManyExpected",
+  "TestMessage": "복합 비즈니스 에러 테스트"
+}
+
+### ==========================================================================
+### 5. ManyMixed (복합 Mixed 에러 - Expected + Exceptional)
+### ==========================================================================
+### 예상 메트릭 태그:
+### - response.status=failure
+### - error.type=aggregate
+### - error.code=TestErrors.TestErrorCommand.SystemFailure (Exceptional 우선)
+POST {{baseUrl}}/api/test-error
+Content-Type: application/json
+
+{
+  "Scenario": "ManyMixed",
+  "TestMessage": "복합 Mixed 에러 테스트"
+}
+
+### ==========================================================================
+### 6. GenericExpected (제네릭 Expected 에러 - ErrorCodeExpected<T>)
+### ==========================================================================
+### 예상 메트릭 태그:
+### - response.status=failure
+### - error.type=expected
+### - error.code=TestErrors.TestErrorCommand.GenericError
+POST {{baseUrl}}/api/test-error
+Content-Type: application/json
+
+{
+  "Scenario": "GenericExpected",
+  "TestMessage": "제네릭 에러 테스트"
+}
+
+### ==========================================================================
+### 7. 전체 시나리오 순차 실행 (스크립트)
+### ==========================================================================
+### 아래 시나리오들을 순서대로 실행하여 메트릭 출력 확인
+### 실행 방법: Visual Studio Code에서 "Send All Requests" 사용
+
+### 1. Success
+POST {{baseUrl}}/api/test-error
+Content-Type: application/json
+
+{"Scenario": "Success", "TestMessage": "Test 1"}
+
+###
+
+### 2. SingleExpected
+POST {{baseUrl}}/api/test-error
+Content-Type: application/json
+
+{"Scenario": "SingleExpected", "TestMessage": "Test 2"}
+
+###
+
+### 3. SingleExceptional
+POST {{baseUrl}}/api/test-error
+Content-Type: application/json
+
+{"Scenario": "SingleExceptional", "TestMessage": "Test 3"}
+
+###
+
+### 4. ManyExpected
+POST {{baseUrl}}/api/test-error
+Content-Type: application/json
+
+{"Scenario": "ManyExpected", "TestMessage": "Test 4"}
+
+###
+
+### 5. ManyMixed
+POST {{baseUrl}}/api/test-error
+Content-Type: application/json
+
+{"Scenario": "ManyMixed", "TestMessage": "Test 5"}
+
+###
+
+### 6. GenericExpected
+POST {{baseUrl}}/api/test-error
+Content-Type: application/json
+
+{"Scenario": "GenericExpected", "TestMessage": "Test 6"}
+
+### ==========================================================================
+### 메트릭 확인 방법
+### ==========================================================================
+###
+### 1. 애플리케이션 실행: dotnet run
+### 2. 위 요청들을 실행
+### 3. 콘솔 출력에서 메트릭 확인:
+###    - Metric: functorium.demo.application.usecase.command.response
+###    - 태그: response.status, error.type, error.code
+###
+### 예시 출력:
+### Export functorium.demo.application.usecase.command.response, Number of datapoints: 1
+### Data point attributes:
+###  - request.layer: application
+###  - request.category: usecase
+###  - request.handler.cqrs: Command
+###  - request.handler: TestErrorCommand
+###  - request.handler.method: Handle
+###  - response.status: failure
+###  - error.type: expected
+###  - error.code: TestErrors.TestErrorCommand.BusinessRuleViolation
+### ==========================================================================

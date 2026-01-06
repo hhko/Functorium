@@ -12,40 +12,6 @@ namespace Functorium.Tests.Unit.AdaptersTests.Options;
 [Trait(nameof(UnitTest), UnitTest.Functorium_Adapters)]
 public class OptionsConfiguratorTests
 {
-    #region GetOptions Tests
-
-    [Fact]
-    public void GetOptions_ReturnsOptions_WhenOptionsAreRegistered()
-    {
-        // Arrange
-        var services = new ServiceCollection();
-        services.Configure<TestOptions>(options =>
-        {
-            options.Name = "Test";
-            options.Value = 42;
-        });
-
-        // Act
-        var actual = services.GetOptions<TestOptions>();
-
-        // Assert
-        actual.ShouldNotBeNull();
-        actual.Name.ShouldBe("Test");
-        actual.Value.ShouldBe(42);
-    }
-
-    [Fact]
-    public void GetOptions_ThrowsException_WhenOptionsNotRegistered()
-    {
-        // Arrange
-        var services = new ServiceCollection();
-
-        // Act & Assert
-        Should.Throw<InvalidOperationException>(() => services.GetOptions<TestOptions>());
-    }
-
-    #endregion
-
     #region RegisterConfigureOptions Tests
 
     [Fact]

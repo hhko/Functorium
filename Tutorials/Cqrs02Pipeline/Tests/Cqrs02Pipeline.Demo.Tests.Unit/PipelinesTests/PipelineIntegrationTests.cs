@@ -41,6 +41,9 @@ public sealed class PipelineIntegrationTests : IDisposable
         // OpenTelemetry 옵션 등록
         services.AddSingleton<IOpenTelemetryOptions>(new TestOpenTelemetryOptions());
 
+        // SloConfiguration 등록
+        services.AddSingleton(new Functorium.Applications.Observabilities.SloConfiguration());
+
         // ActivitySource 등록 (Tracing용)
         ActivitySource activitySource = new("Cqrs02Pipeline.Demo.Tests");
         services.AddSingleton(activitySource);

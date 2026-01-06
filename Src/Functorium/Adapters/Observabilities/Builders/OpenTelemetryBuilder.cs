@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
@@ -37,7 +38,7 @@ public partial class OpenTelemetryBuilder
 
     private readonly IServiceCollection _services;
     private readonly IConfiguration _configuration;
-    private readonly OpenTelemetryOptions _options;
+    private readonly Assembly _projectAssembly;
     private readonly string _functoriumNamespaceRoot;
     private readonly string _projectNamespaceRoot;
 
@@ -52,17 +53,15 @@ public partial class OpenTelemetryBuilder
     internal OpenTelemetryBuilder(
         IServiceCollection services,
         IConfiguration configuration,
-        OpenTelemetryOptions options,
         Assembly projectAssembly)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
-        ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(projectAssembly);
 
         _services = services;
         _configuration = configuration;
-        _options = options;
+        _projectAssembly = projectAssembly;
 
         // Functorium 네임스페이스 루트 이름 동적 추출
         // 예: "Functorium.Adapters.Observabilities" → "Functorium"
@@ -150,9 +149,15 @@ public partial class OpenTelemetryBuilder
     }
 
     /// <summary>
-    /// OpenTelemetryOptions 접근
+    /// OpenTelemetryOptions 접근 (IServiceProvider에서 가져오기)
     /// </summary>
-    public OpenTelemetryOptions Options => _options;
+    /// <param name="serviceProvider">IServiceProvider</param>
+    /// <returns>OpenTelemetryOptions</returns>
+    public OpenTelemetryOptions GetOptions(IServiceProvider serviceProvider)
+    {
+        ArgumentNullException.ThrowIfNull(serviceProvider);
+        return serviceProvider.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
+    }
 
     /// <summary>
     /// Adapter 관찰 가능성 기능 활성화/비활성화
@@ -170,17 +175,22 @@ public partial class OpenTelemetryBuilder
     /// </summary>
     public IServiceCollection Build()
     {
+        // ServiceProvider를 통해 옵션 가져오기 (Builder 패턴에서는 임시 ServiceProvider 사용)
+        using var tempServiceProvider = _services.BuildServiceProvider();
+        var options = tempServiceProvider.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
+        var sloConfiguration = tempServiceProvider.GetRequiredService<IOptions<SloConfiguration>>().Value;
+
         // Resource Attributes 공통 정의
-        Dictionary<string, object> resourceAttributes = CreateResourceAttributes(_options);
+        Dictionary<string, object> resourceAttributes = CreateResourceAttributes(options);
 
         // Serilog 설정 적용
-        ConfigureSerilogInternal(resourceAttributes);
+        ConfigureSerilogInternal(resourceAttributes, options);
 
         // OpenTelemetry 설정 적용
-        ConfigureOpenTelemetryInternal(resourceAttributes);
+        ConfigureOpenTelemetryInternal(resourceAttributes, options, sloConfiguration);
 
         // AdapterObservability 등록 (OpenTelemetry 설정 후)
-        RegisterAdapterObservabilityInternal();
+        RegisterAdapterObservabilityInternal(options);
 
         // OpenTelemetry 설정 정보 로거 등록 (IHostedService)
         // 애플리케이션 시작 시 자동으로 설정 정보를 로그로 출력
@@ -206,7 +216,7 @@ public partial class OpenTelemetryBuilder
         return _services;
     }
 
-    private void ConfigureSerilogInternal(Dictionary<string, object> resourceAttributes)
+    private void ConfigureSerilogInternal(Dictionary<string, object> resourceAttributes, OpenTelemetryOptions options)
     {
         _services
             .AddSerilog(logging =>
@@ -215,16 +225,16 @@ public partial class OpenTelemetryBuilder
                 logging.ReadFrom.Configuration(_configuration);
 
                 // WriteTo.OpenTelemetry 설정 (LoggingCollectorEndpoint가 설정된 경우에만)
-                string loggingEndpoint = _options.GetLoggingEndpoint();
+                string loggingEndpoint = options.GetLoggingEndpoint();
                 if (!string.IsNullOrWhiteSpace(loggingEndpoint))
                 {
-                    logging.WriteTo.OpenTelemetry(options =>
+                    logging.WriteTo.OpenTelemetry(otlpOptions =>
                     {
-                        options.Endpoint = loggingEndpoint;
-                        options.Protocol = ToOtlpProtocolForSerilog(_options.GetLoggingProtocol());
-                        options.ResourceAttributes = resourceAttributes;
+                        otlpOptions.Endpoint = loggingEndpoint;
+                        otlpOptions.Protocol = ToOtlpProtocolForSerilog(options.GetLoggingProtocol());
+                        otlpOptions.ResourceAttributes = resourceAttributes;
 
-                        options.IncludedData = IncludedData.MessageTemplateTextAttribute    // 기본
+                        otlpOptions.IncludedData = IncludedData.MessageTemplateTextAttribute    // 기본
                                              | IncludedData.TraceIdField                    // 기본
                                              | IncludedData.SpanIdField                     // 기본
                                              | IncludedData.SpecRequiredResourceAttributes  // 기본
@@ -239,22 +249,22 @@ public partial class OpenTelemetryBuilder
                 // 프로젝트별 추가 확장 설정 적용
                 if (_loggingConfigurator != null)
                 {
-                    LoggingConfigurator configurator = new(_options);
+                    LoggingConfigurator configurator = new(options);
                     _loggingConfigurator(configurator);
                     configurator.Apply(logging);
                 }
             });
     }
 
-    private void ConfigureOpenTelemetryInternal(Dictionary<string, object> resourceAttributes)
+    private void ConfigureOpenTelemetryInternal(Dictionary<string, object> resourceAttributes, OpenTelemetryOptions options, SloConfiguration sloConfiguration)
     {
         _services
             .AddOpenTelemetry()
             .ConfigureResource(resource =>
             {
                 resource.AddService(
-                    serviceName: _options.ServiceName,
-                    serviceVersion: _options.ServiceVersion);
+                    serviceName: options.ServiceName,
+                    serviceVersion: options.ServiceVersion);
                 resource.AddAttributes(resourceAttributes);
             })
             .WithMetrics(metrics =>
@@ -266,7 +276,7 @@ public partial class OpenTelemetryBuilder
                 // - ServiceName*: 프로젝트별 Meter (와일드카드로 모든 하위 네임스페이스 포함)
                 // - Functorium.*: Functorium 프레임워크의 Meter
                 metrics
-                    .AddMeter($"{_options.ServiceName}*")
+                    .AddMeter($"{options.ServiceName}*")
                     .AddMeter($"{_functoriumNamespaceRoot}.*");
 
                 // 프로젝트 어셈블리가 전달된 경우 해당 네임스페이스 루트 자동 등록
@@ -276,19 +286,36 @@ public partial class OpenTelemetryBuilder
                     metrics.AddMeter($"{_projectNamespaceRoot}.*");
                 }
 
+                // SLO 정렬 Histogram 버킷 설정
+                // application.usecase.*.duration 메트릭에 커스텀 버킷 적용
+                // SloConfiguration.HistogramBuckets 값 사용 (기본값: 1ms ~ 10s)
+                metrics.AddView(
+                    instrumentName: "application.usecase.command.duration",
+                    new ExplicitBucketHistogramConfiguration
+                    {
+                        Boundaries = sloConfiguration.HistogramBuckets
+                    });
+
+                metrics.AddView(
+                    instrumentName: "application.usecase.query.duration",
+                    new ExplicitBucketHistogramConfiguration
+                    {
+                        Boundaries = sloConfiguration.HistogramBuckets
+                    });
+
                 // OTLP Exporter 설정 (MetricsCollectorEndpoint가 설정된 경우에만)
-                string metricsEndpoint = _options.GetMetricsEndpoint();
+                string metricsEndpoint = options.GetMetricsEndpoint();
                 if (!string.IsNullOrWhiteSpace(metricsEndpoint))
                 {
-                    metrics.AddOtlpExporter(options =>
+                    metrics.AddOtlpExporter(exporterOptions =>
                     {
-                        options.Endpoint = new Uri(metricsEndpoint);
-                        options.Protocol = ToOtlpProtocolForExporter(_options.GetMetricsProtocol());
+                        exporterOptions.Endpoint = new Uri(metricsEndpoint);
+                        exporterOptions.Protocol = ToOtlpProtocolForExporter(options.GetMetricsProtocol());
                     });
                 }
 
                 // Prometheus Exporter (선택적)
-                if (_options.EnablePrometheusExporter)
+                if (options.EnablePrometheusExporter)
                 {
                     metrics.AddPrometheusExporter();
                 }
@@ -296,7 +323,7 @@ public partial class OpenTelemetryBuilder
                 // 프로젝트별 확장 설정 적용
                 if (_metricsConfigurator != null)
                 {
-                    MetricsConfigurator configurator = new(_options);
+                    MetricsConfigurator configurator = new(options);
                     _metricsConfigurator(configurator);
                     configurator.Apply(metrics);
                 }
@@ -304,11 +331,11 @@ public partial class OpenTelemetryBuilder
             .WithTracing(tracing =>
             {
                 // 기본 Instrumentation
-                tracing.AddHttpClientInstrumentation(options =>
+                tracing.AddHttpClientInstrumentation(instrumentationOptions =>
                 {
-                    options.RecordException = true;
+                    instrumentationOptions.RecordException = true;
                     // OTLP exporter의 내부 호출 제외
-                    options.FilterHttpRequestMessage = (httpRequestMessage) =>
+                    instrumentationOptions.FilterHttpRequestMessage = (httpRequestMessage) =>
                     {
                         Uri? uri = httpRequestMessage.RequestUri;
                         if (uri == null)
@@ -326,7 +353,7 @@ public partial class OpenTelemetryBuilder
                 // - ServiceName*: 프로젝트별 ActivitySource
                 tracing
                     .AddSource($"{_functoriumNamespaceRoot}.*")
-                    .AddSource($"{_options.ServiceName}*");
+                    .AddSource($"{options.ServiceName}*");
 
                 // 프로젝트 어셈블리가 전달된 경우 해당 네임스페이스 루트 자동 등록
                 // 예: "Observability.*"
@@ -336,30 +363,30 @@ public partial class OpenTelemetryBuilder
                 }
 
                 // Sampler 설정
-                tracing.SetSampler(new TraceIdRatioBasedSampler(_options.SamplingRate));
+                tracing.SetSampler(new TraceIdRatioBasedSampler(options.SamplingRate));
 
                 // OTLP Exporter 설정 (TracingEndpoint가 설정된 경우에만)
-                string tracingEndpoint = _options.GetTracingEndpoint();
+                string tracingEndpoint = options.GetTracingEndpoint();
                 if (!string.IsNullOrWhiteSpace(tracingEndpoint))
                 {
-                    tracing.AddOtlpExporter(options =>
+                    tracing.AddOtlpExporter(exporterOptions =>
                     {
-                        options.Endpoint = new Uri(tracingEndpoint);
-                        options.Protocol = ToOtlpProtocolForExporter(_options.GetTracingProtocol());
+                        exporterOptions.Endpoint = new Uri(tracingEndpoint);
+                        exporterOptions.Protocol = ToOtlpProtocolForExporter(options.GetTracingProtocol());
                     });
                 }
 
                 // 프로젝트별 확장 설정 적용
                 if (_tracingConfigurator != null)
                 {
-                    TracingConfigurator configurator = new(_options);
+                    TracingConfigurator configurator = new(options);
                     _tracingConfigurator(configurator);
                     configurator.Apply(tracing);
                 }
             });
     }
 
-    private void RegisterAdapterObservabilityInternal()
+    private void RegisterAdapterObservabilityInternal(OpenTelemetryOptions options)
     {
         if (!_enableAdapterObservability)
             return;
@@ -369,9 +396,10 @@ public partial class OpenTelemetryBuilder
         // ServiceNamespace가 비어있으면 ServiceName 사용
         _services.AddSingleton(sp =>
         {
-            string serviceNamespace = !string.IsNullOrWhiteSpace(_options.ServiceNamespace)
-                ? _options.ServiceNamespace
-                : _options.ServiceName;
+            var opts = sp.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
+            string serviceNamespace = !string.IsNullOrWhiteSpace(opts.ServiceNamespace)
+                ? opts.ServiceNamespace
+                : opts.ServiceName;
             return new ActivitySource(serviceNamespace);
         });
 
@@ -388,7 +416,8 @@ public partial class OpenTelemetryBuilder
         // IMetricRecorder 등록 (Singleton)
         _services.AddSingleton<IMetricRecorder>(sp =>
         {
-            return new OpenTelemetryMetricRecorder(_options.ServiceNamespace);
+            var opts = sp.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
+            return new OpenTelemetryMetricRecorder(opts.ServiceNamespace);
         });
     }
 }
