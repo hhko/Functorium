@@ -1,9 +1,11 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Functorium.Adapters.Observabilities;
+using Functorium.Applications.Observabilities;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.Metrics;
+using Microsoft.Extensions.Options;
 
 namespace Cqrs03Functional.Demo.Tests.Unit.PipelinesTests;
 
@@ -63,10 +65,9 @@ public sealed class MetricPipelineTests : IDisposable
         static TestResponse IFinResponseFactory<TestResponse>.CreateFail(Error error) => CreateFail(error);
     }
 
-    private sealed class TestOpenTelemetryOptions : IOpenTelemetryOptions
+    private static IOptions<OpenTelemetryOptions> CreateTestOpenTelemetryOptions()
     {
-        public string ServiceNamespace => "Test.Service";
-        public bool EnablePrometheusExporter => false;
+        return Options.Create(new OpenTelemetryOptions { ServiceNamespace = "Test.Service" });
     }
 
     #endregion
@@ -75,8 +76,9 @@ public sealed class MetricPipelineTests : IDisposable
     public async Task Handle_SuccessfulRequest_RecordsMetrics()
     {
         // Arrange
-        var options = new TestOpenTelemetryOptions();
-        var pipeline = new UsecaseMetricsPipeline<TestRequest, TestResponse>(options, _meterFactory);
+        var options = CreateTestOpenTelemetryOptions();
+        var sloConfigurationOptions = Options.Create(new SloConfiguration());
+        var pipeline = new UsecaseMetricsPipeline<TestRequest, TestResponse>(options, _meterFactory, sloConfigurationOptions);
         var request = new TestRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -96,8 +98,9 @@ public sealed class MetricPipelineTests : IDisposable
     public async Task Handle_FailedRequest_RecordsFailureMetrics()
     {
         // Arrange
-        var options = new TestOpenTelemetryOptions();
-        var pipeline = new UsecaseMetricsPipeline<TestRequest, TestResponse>(options, _meterFactory);
+        var options = CreateTestOpenTelemetryOptions();
+        var sloConfigurationOptions = Options.Create(new SloConfiguration());
+        var pipeline = new UsecaseMetricsPipeline<TestRequest, TestResponse>(options, _meterFactory, sloConfigurationOptions);
         var request = new TestRequest("Test");
         var errorResponse = TestResponse.CreateFail(Error.New("Test error"));
 
@@ -116,8 +119,9 @@ public sealed class MetricPipelineTests : IDisposable
     public async Task Handle_MeasuresElapsedTime()
     {
         // Arrange
-        var options = new TestOpenTelemetryOptions();
-        var pipeline = new UsecaseMetricsPipeline<TestRequest, TestResponse>(options, _meterFactory);
+        var options = CreateTestOpenTelemetryOptions();
+        var sloConfigurationOptions = Options.Create(new SloConfiguration());
+        var pipeline = new UsecaseMetricsPipeline<TestRequest, TestResponse>(options, _meterFactory, sloConfigurationOptions);
         var request = new TestRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -140,8 +144,9 @@ public sealed class MetricPipelineTests : IDisposable
     public async Task Handle_PreservesResponseFromHandler()
     {
         // Arrange
-        var options = new TestOpenTelemetryOptions();
-        var pipeline = new UsecaseMetricsPipeline<TestRequest, TestResponse>(options, _meterFactory);
+        var options = CreateTestOpenTelemetryOptions();
+        var sloConfigurationOptions = Options.Create(new SloConfiguration());
+        var pipeline = new UsecaseMetricsPipeline<TestRequest, TestResponse>(options, _meterFactory, sloConfigurationOptions);
         var request = new TestRequest("Test");
         var expectedId = Guid.NewGuid();
         var expectedResponse = TestResponse.CreateSuccess(expectedId);
@@ -161,8 +166,9 @@ public sealed class MetricPipelineTests : IDisposable
     public async Task Handle_QueryRequest_RecordsMetrics()
     {
         // Arrange
-        var options = new TestOpenTelemetryOptions();
-        var pipeline = new UsecaseMetricsPipeline<TestRequest, TestResponse>(options, _meterFactory);
+        var options = CreateTestOpenTelemetryOptions();
+        var sloConfigurationOptions = Options.Create(new SloConfiguration());
+        var pipeline = new UsecaseMetricsPipeline<TestRequest, TestResponse>(options, _meterFactory, sloConfigurationOptions);
         var request = new TestRequest("Query");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 

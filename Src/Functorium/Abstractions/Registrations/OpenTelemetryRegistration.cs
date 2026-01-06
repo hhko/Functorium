@@ -3,8 +3,10 @@ using System.Reflection;
 using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Builders;
 using Functorium.Adapters.Options;
+using Functorium.Applications.Observabilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 using Serilog;
 
@@ -41,28 +43,28 @@ public static class OpenTelemetryRegistration
         IConfiguration configuration,
         Assembly projectAssembly)
     {
-        // OpenTelemetryOptions 읽기
+        // OpenTelemetryOptions 등록 (IOptions<OpenTelemetryOptions> 패턴 사용)
         services.RegisterConfigureOptions<OpenTelemetryOptions, OpenTelemetryOptions.Validator>(OpenTelemetryOptions.SectionName);
-        OpenTelemetryOptions openTelemetryOptions = services.GetOptions<OpenTelemetryOptions>();
 
-        // IOpenTelemetryOptions 등록 (DI)
-        services.AddSingleton<IOpenTelemetryOptions>(openTelemetryOptions);
+        // SloConfiguration 등록 (IOptions<SloConfiguration> 패턴 사용)
+        services.RegisterConfigureOptions<SloConfiguration, SloConfiguration.Validator>(SloConfiguration.SectionName);
 
-        // ActivitySource 등록
-        services.AddSingleton(_ =>
-            new ActivitySource(
-                openTelemetryOptions.ServiceName,
-                openTelemetryOptions.ServiceVersion));
+        // ActivitySource 등록 (IOptions에서 값 가져오기)
+        services.AddSingleton(sp =>
+        {
+            var options = sp.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
+            return new ActivitySource(options.ServiceName, options.ServiceVersion);
+        });
 
         // Serilog Logging 추가
         services.AddLogging(loggingBuilder =>
             loggingBuilder.AddSerilog(dispose: true));
 
         // OpenTelemetry Logging, Tracing, Metrics 확장 설정을 위한 Builder 클래스 반환
+        // Builder는 IServiceProvider를 통해 필요할 때 옵션을 가져옴
         return new OpenTelemetryBuilder(
             services,
             configuration,
-            openTelemetryOptions,
             projectAssembly);
     }
 }

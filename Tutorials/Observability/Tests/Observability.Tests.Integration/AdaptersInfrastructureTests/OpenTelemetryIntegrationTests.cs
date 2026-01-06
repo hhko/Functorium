@@ -23,20 +23,21 @@ public class OpenTelemetryIntegrationTests : IClassFixture<OpenTelemetryIntegrat
     }
 
     [Fact]
-    public void IOpenTelemetryOptions_ShouldBeRegistered()
+    public void IOptionsOpenTelemetryOptions_ShouldBeRegistered()
     {
         // Arrange & Act
-        var options = _fixture.Services.GetService<IOpenTelemetryOptions>();
+        var options = _fixture.Services.GetService<IOptions<OpenTelemetryOptions>>();
 
         // Assert
         options.ShouldNotBeNull();
+        options.Value.ShouldNotBeNull();
     }
 
     [Fact]
-    public void IOpenTelemetryOptions_EnablePrometheusExporter_ShouldMatchConfiguration()
+    public void OpenTelemetryOptions_EnablePrometheusExporter_ShouldMatchConfiguration()
     {
         // Arrange
-        var options = _fixture.Services.GetRequiredService<IOpenTelemetryOptions>();
+        var options = _fixture.Services.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
 
         // Assert - appsettings.json에서 EnablePrometheusExporter: false로 설정됨
         options.EnablePrometheusExporter.ShouldBeFalse();

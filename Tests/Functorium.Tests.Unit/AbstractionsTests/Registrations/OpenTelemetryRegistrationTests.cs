@@ -5,6 +5,7 @@ using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Builders;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 
 namespace Functorium.Tests.Unit.AbstractionsTests.Registrations;
@@ -61,7 +62,7 @@ public class OpenTelemetryRegistrationTests
     }
 
     [Fact]
-    public void RegisterOpenTelemetry_RegistersIOpenTelemetryOptions_WhenCalled()
+    public void RegisterOpenTelemetry_RegistersOpenTelemetryOptions_WhenCalled()
     {
         // Arrange
         var (services, configuration) = CreateServicesWithConfiguration(CreateValidOpenTelemetrySettings("MyService"));
@@ -69,12 +70,11 @@ public class OpenTelemetryRegistrationTests
         // Act
         services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
-        var actual = provider.GetService<IOpenTelemetryOptions>();
+        var actual = provider.GetService<IOptions<OpenTelemetryOptions>>();
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldBeAssignableTo<OpenTelemetryOptions>();
-        ((OpenTelemetryOptions)actual).ServiceName.ShouldBe("MyService");
+        actual.Value.ServiceName.ShouldBe("MyService");
     }
 
     [Fact]
@@ -107,7 +107,7 @@ public class OpenTelemetryRegistrationTests
         // Act
         services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
-        var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
+        var actual = provider.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
 
         // Assert
         actual.ServiceName.ShouldBe("CustomServiceName");
@@ -123,7 +123,7 @@ public class OpenTelemetryRegistrationTests
         // Act
         services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
-        var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
+        var actual = provider.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
 
         // Assert
         actual.CollectorEndpoint.ShouldBe("http://custom-collector:4317");
@@ -142,7 +142,7 @@ public class OpenTelemetryRegistrationTests
         // Act
         services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
-        var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
+        var actual = provider.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
 
         // Assert
         actual.CollectorProtocol.ShouldBe(protocol);
@@ -162,7 +162,7 @@ public class OpenTelemetryRegistrationTests
         // Act
         services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
-        var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
+        var actual = provider.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
 
         // Assert
         actual.SamplingRate.ShouldBe(samplingRate);
@@ -181,7 +181,7 @@ public class OpenTelemetryRegistrationTests
         // Act
         services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
-        var actual = provider.GetRequiredService<IOpenTelemetryOptions>();
+        var actual = provider.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
 
         // Assert
         actual.EnablePrometheusExporter.ShouldBe(enablePrometheus);
@@ -202,7 +202,7 @@ public class OpenTelemetryRegistrationTests
         // Act
         services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
-        var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
+        var actual = provider.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
 
         // Assert
         actual.TracingEndpoint.ShouldBe("http://tracing-collector:21890");
@@ -219,7 +219,7 @@ public class OpenTelemetryRegistrationTests
         // Act
         services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
-        var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
+        var actual = provider.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
 
         // Assert
         actual.MetricsEndpoint.ShouldBe("http://metrics-collector:21891");
@@ -236,7 +236,7 @@ public class OpenTelemetryRegistrationTests
         // Act
         services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
-        var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
+        var actual = provider.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
 
         // Assert
         actual.LoggingEndpoint.ShouldBe("http://logging-collector:21892");
@@ -257,7 +257,7 @@ public class OpenTelemetryRegistrationTests
         // Act
         services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
-        var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
+        var actual = provider.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
 
         // Assert
         actual.TracingProtocol.ShouldBe("HttpProtobuf");
@@ -274,7 +274,7 @@ public class OpenTelemetryRegistrationTests
         // Act
         services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
-        var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
+        var actual = provider.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
 
         // Assert
         actual.MetricsProtocol.ShouldBe("HttpProtobuf");
@@ -291,7 +291,7 @@ public class OpenTelemetryRegistrationTests
         // Act
         services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
-        var actual = (OpenTelemetryOptions)provider.GetRequiredService<IOpenTelemetryOptions>();
+        var actual = provider.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
 
         // Assert
         actual.LoggingProtocol.ShouldBe("HttpProtobuf");
@@ -308,11 +308,13 @@ public class OpenTelemetryRegistrationTests
         var (services, configuration) = CreateServicesWithConfiguration(CreateValidOpenTelemetrySettings("BuilderTestService"));
 
         // Act
-        var actual = services.RegisterOpenTelemetry(configuration, TestAssembly);
+        var builder = services.RegisterOpenTelemetry(configuration, TestAssembly);
 
-        // Assert
-        actual.Options.ShouldNotBeNull();
-        actual.Options.ServiceName.ShouldBe("BuilderTestService");
+        // Assert - IOptions<OpenTelemetryOptions>가 올바르게 등록되었는지 확인
+        using var serviceProvider = services.BuildServiceProvider();
+        var options = builder.GetOptions(serviceProvider);
+        options.ShouldNotBeNull();
+        options.ServiceName.ShouldBe("BuilderTestService");
     }
 
     #endregion
@@ -349,7 +351,7 @@ public class OpenTelemetryRegistrationTests
     }
 
     [Fact]
-    public void RegisterOpenTelemetry_RegistersIOpenTelemetryOptionsAsSingleton_WhenCalled()
+    public void RegisterOpenTelemetry_RegistersOpenTelemetryOptionsViaConfigure_WhenCalled()
     {
         // Arrange
         var (services, configuration) = CreateServicesWithConfiguration(CreateValidOpenTelemetrySettings());
@@ -357,10 +359,10 @@ public class OpenTelemetryRegistrationTests
         // Act
         services.RegisterOpenTelemetry(configuration, TestAssembly);
 
-        // Assert
-        var optionsDescriptor = services.FirstOrDefault(sd => sd.ServiceType == typeof(IOpenTelemetryOptions));
-        optionsDescriptor.ShouldNotBeNull();
-        optionsDescriptor.Lifetime.ShouldBe(ServiceLifetime.Singleton);
+        // Assert - IOptions<T>는 Configure를 통해 등록되므로 IConfigureOptions<T>를 확인
+        var configureOptionsDescriptor = services.FirstOrDefault(sd =>
+            sd.ServiceType == typeof(IConfigureOptions<OpenTelemetryOptions>));
+        configureOptionsDescriptor.ShouldNotBeNull();
     }
 
     #endregion
@@ -410,8 +412,8 @@ public class OpenTelemetryRegistrationTests
         // Act
         services.RegisterOpenTelemetry(configuration, TestAssembly);
         using var provider = services.BuildServiceProvider();
-        var first = provider.GetRequiredService<IOpenTelemetryOptions>();
-        var second = provider.GetRequiredService<IOpenTelemetryOptions>();
+        var first = provider.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
+        var second = provider.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
 
         // Assert
         first.ShouldBeSameAs(second);
