@@ -424,10 +424,10 @@ sum(rate(responses_failure_total[5m])) / sum(rate(requests_total[5m]))
 ### 6.1 진척률 요약
 
 ```
-진행 상황: ███████████░░░░░░░░░ 57% (4/7 완료)
+진행 상황: ████████████████░░░░ 86% (6/7 완료)
 
-✅ 완료: 4개
-⏳ 대기: 2개
+✅ 완료: 6개
+⏳ 대기: 1개
 ➖ 취소: 1개 (방향 변경)
 ```
 
@@ -439,11 +439,14 @@ sum(rate(responses_failure_total[5m])) / sum(rate(requests_total[5m]))
 | **2 (중)** | 응답 메트릭 통합 | success/failure 별도 Counter | 단일 Counter + status 태그 | 낮음 | ✅ 완료 |
 | **3 (중)** | `error.type` 태그 | 에러 유형 구분 불가 | Expected/Exceptional 태그 추가 | 낮음 | ✅ 완료 |
 | **4 (중)** | `error.code` 태그 | 에러 패턴 분석 불가 | 에러 코드 태그 추가 | 낮음 | ✅ 완료 |
-| **5 (중)** | Meter 캐싱 | 매 요청 생성 오버헤드 | 인스턴스 재사용 | 중간 | ⏳ 대기 |
+| **4.5 (중)** | 리플렉션 제거 | 제네릭 타입 ErrorCode 접근 시 리플렉션 사용 | IHasErrorCode 인터페이스 도입 | 낮음 | ✅ 완료 |
+| **5 (중)** | Meter 캐싱 | 매 요청 생성 오버헤드 | 인스턴스 재사용 | 중간 | ✅ 완료 |
 | ~~**6 (낮음)**~~ | ~~`request.handler.method` 제거~~ | ~~항상 "Handle"로 무의미~~ | ~~태그 제거~~ | ~~낮음~~ | ➖ 취소 |
 | **7 (낮음)** | 사용자 컨텍스트 | 사용자별 추적 불가 | `user.id`, `tenant.id` 추가 | 중간 | ⏳ 대기 |
 
 > **Note**: 우선순위 6번은 태그 구조 통일 방향으로 변경되어 취소됨. `request.handler.method`를 제거하는 대신, 모든 메트릭에 포함하여 일관성 확보.
+>
+> **Note**: 우선순위 4.5번은 우선순위 4번 구현 중 발견된 리플렉션 이슈를 해결하기 위해 추가됨 (2026-01-05).
 
 ### 6.3 상세 개선 계획
 
@@ -730,42 +733,386 @@ topk(5, sum by(error_code)(rate(responses_total{response_status="failure"}[1h]))
 | `error.type` | **낮음** (2개) | `expected`, `exceptional` |
 | `error.code` | **중간~높음** | 에러 코드 수에 비례, 상위 카테고리 권장 |
 
-#### 6.3.4 Meter 캐싱 (우선순위 5) ⏳ 대기
+#### 6.3.4 리플렉션 제거 (우선순위 4.5) ✅ 완료
 
-**현재:**
+> **작성일**: 2026-01-05
+> **완료일**: 2026-01-05
+
+**배경:**
+
+우선순위 4번 (에러 태그 추가) 구현 중, `UsecaseMetricsPipeline`에서 제네릭 `ErrorCodeExpected<T>` 타입의 `ErrorCode` 속성 접근 시 리플렉션을 사용하는 것을 발견했습니다.
+
+**문제점:**
+
 ```csharp
+// UsecaseMetricsPipeline.cs (구현 전)
+private static string GetErrorCodeByReflection(Error error)
+{
+    var errorCodeProperty = error.GetType().GetProperty("ErrorCode");
+    if (errorCodeProperty?.GetValue(error) is string code)
+    {
+        return code;
+    }
+    return error.GetType().Name;
+}
+
+// 호출 위치
+_ when error.GetType().Name.StartsWith("ErrorCodeExpected") => (
+    ErrorType: ObservabilityNaming.ErrorTypes.Expected,
+    ErrorCode: GetErrorCodeByReflection(error)  // ❌ 리플렉션 사용
+)
+```
+
+**문제:**
+- 런타임 리플렉션으로 성능 오버헤드 발생
+- 컴파일 타임 타입 안전성 부재
+- 프로퍼티명 문자열 하드코딩 ("ErrorCode")
+- 타입명 문자열 매칭 (`StartsWith("ErrorCodeExpected")`)
+
+**해결 방안: IHasErrorCode 인터페이스 도입**
+
+**1. 인터페이스 정의**
+
+새 파일: [IHasErrorCode.cs](e:\2025\Dev\DDD-Course\2026-01-05_Functorium\Src\Functorium\Abstractions\Errors\IHasErrorCode.cs)
+
+```csharp
+namespace Functorium.Abstractions.Errors;
+
+/// <summary>
+/// Represents an error that exposes an ErrorCode property for observability purposes.
+/// This interface enables type-safe ErrorCode access without reflection.
+/// </summary>
+internal interface IHasErrorCode
+{
+    /// <summary>
+    /// Gets the error code that uniquely identifies this error type.
+    /// </summary>
+    string ErrorCode { get; }
+}
+```
+
+**2. Error 타입에 인터페이스 구현**
+
+5개 타입 수정:
+- `ErrorCodeExpected` (비제네릭)
+- `ErrorCodeExpected<T>` (제네릭 1개)
+- `ErrorCodeExpected<T1, T2>` (제네릭 2개)
+- `ErrorCodeExpected<T1, T2, T3>` (제네릭 3개)
+- `ErrorCodeExceptional`
+
+```csharp
+// ErrorCodeExpected.cs - 모든 변형에 추가
+internal record ErrorCodeExpected(...) : Error, IHasErrorCode
+
+// ErrorCodeExceptional.cs
+internal record ErrorCodeExceptional : Error, IHasErrorCode
+```
+
+**3. UsecaseMetricsPipeline 개선**
+
+[UsecaseMetricsPipeline.cs:133-172](e:\2025\Dev\DDD-Course\2026-01-05_Functorium\Src\Functorium\Applications\Pipelines\UsecaseMetricsPipeline.cs#L133-L172)
+
+```csharp
+/// <summary>
+/// 에러에서 타입과 코드 정보를 추출합니다.
+/// ManyErrors의 경우 대표 에러를 선정합니다 (Exceptional 우선).
+/// </summary>
+/// <remarks>
+/// 패턴 매칭 순서가 중요합니다:
+/// 1. ManyErrors - 특수 처리 필요
+/// 2. ErrorCodeExceptional - Exceptional 명시적 처리
+/// 3. IHasErrorCode - Expected 에러 (ErrorCodeExceptional도 이 인터페이스를 구현하므로 순서 중요!)
+/// 4. Fallback - 알 수 없는 에러 타입
+/// </remarks>
+private static (string ErrorType, string ErrorCode) GetErrorInfo(Error error)
+{
+    return error switch
+    {
+        // 1순위: ManyErrors - 복합 에러는 특수 처리
+        ManyErrors many => (
+            ErrorType: ObservabilityNaming.ErrorTypes.Aggregate,
+            ErrorCode: GetPrimaryErrorCode(many)
+        ),
+        // 2순위: ErrorCodeExceptional - Exceptional을 먼저 매칭
+        // (IHasErrorCode보다 먼저 와야 함!)
+        ErrorCodeExceptional exceptional => (
+            ErrorType: ObservabilityNaming.ErrorTypes.Exceptional,
+            ErrorCode: exceptional.ErrorCode
+        ),
+        // 3순위: IHasErrorCode - Expected 에러 (모든 ErrorCodeExpected<...> 변형 포함)
+        IHasErrorCode hasErrorCode => (
+            ErrorType: ObservabilityNaming.ErrorTypes.Expected,
+            ErrorCode: hasErrorCode.ErrorCode  // ✅ 인터페이스 사용
+        ),
+        // 4순위: Fallback - 알 수 없는 에러 타입
+        _ => (
+            ErrorType: error.IsExceptional
+                ? ObservabilityNaming.ErrorTypes.Exceptional
+                : ObservabilityNaming.ErrorTypes.Expected,
+            ErrorCode: error.GetType().Name
+        )
+    };
+}
+
+// GetErrorCodeByReflection 메서드 완전 제거 ✅
+
+// GetErrorCode 메서드 단순화
+private static string GetErrorCode(Error error)
+{
+    return error switch
+    {
+        IHasErrorCode hasErrorCode => hasErrorCode.ErrorCode,  // ✅ 인터페이스 사용
+        _ => error.GetType().Name
+    };
+}
+```
+
+**4. UsecaseTracingPipeline 일관성 확보**
+
+[UsecaseTracingPipeline.cs:118-148](e:\2025\Dev\DDD-Course\2026-01-05_Functorium\Src\Functorium\Applications\Pipelines\UsecaseTracingPipeline.cs#L118-L148)
+
+```csharp
+/// <summary>
+/// 에러 타입에 따라 적절한 태그를 Activity에 설정합니다.
+/// </summary>
+/// <remarks>
+/// 패턴 매칭 순서가 중요합니다:
+/// - IHasErrorCode를 구현하는 타입이 Expected와 Exceptional 모두 있으므로
+///   when 절로 IsExpected/IsExceptional 구분 필요
+/// </remarks>
+private static void SetErrorTags(Activity activity, Error error)
+{
+    switch (error)
+    {
+        // IHasErrorCode 인터페이스 + IsExpected 조건
+        case IHasErrorCode hasErrorCode when error.IsExpected:
+            SetErrorCodeExpectedTags(activity, hasErrorCode);
+            break;
+        // IHasErrorCode 인터페이스 + IsExceptional 조건
+        case IHasErrorCode hasErrorCode when error.IsExceptional:
+            SetErrorCodeExceptionalTags(activity, hasErrorCode);
+            break;
+        // ManyErrors - 복합 에러
+        case ManyErrors manyErrors:
+            SetManyErrorsTags(activity, manyErrors);
+            break;
+        // Fallback - 알 수 없는 에러 타입
+        default:
+            SetUnknownErrorTags(activity, error);
+            break;
+    }
+}
+
+// 메서드 시그니처를 IHasErrorCode로 변경
+private static void SetErrorCodeExpectedTags(Activity activity, IHasErrorCode error)
+{
+    activity.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, nameof(ErrorCodeExpected));
+    activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, error.ErrorCode);
+    activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorMessage, ((Error)error).Message);
+}
+
+private static void SetErrorCodeExceptionalTags(Activity activity, IHasErrorCode error)
+{
+    activity.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, nameof(ErrorCodeExceptional));
+    activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, error.ErrorCode);
+    activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorMessage, ((Error)error).Message);
+}
+```
+
+**5. 테스트 추가**
+
+- [ErrorCodeExpectedTests.cs](e:\2025\Dev\DDD-Course\2026-01-05_Functorium\Tests\Functorium.Tests.Unit\AbstractionsTests\Errors\ErrorCodeExpectedTests.cs): 4개 인터페이스 검증 테스트
+- [ErrorCodeExceptionalTests.cs](e:\2025\Dev\DDD-Course\2026-01-05_Functorium\Tests\Functorium.Tests.Unit\AbstractionsTests\Errors\ErrorCodeExceptionalTests.cs): 2개 인터페이스 검증 테스트
+- [UsecaseMetricsPipelineTagStructureTests.cs](e:\2025\Dev\DDD-Course\2026-01-05_Functorium\Tests\Functorium.Tests.Unit\ApplicationsTests\Pipelines\UsecaseMetricsPipelineTagStructureTests.cs): 제네릭 에러 처리 테스트
+
+**테스트 결과:**
+
+```
+✅ 전체 258개 테스트 통과 (100%)
+  - 새 인터페이스 테스트: 7개 ✅
+  - 기존 테스트: 251개 ✅ (모두 통과)
+```
+
+**개선 효과:**
+
+| 측면 | 이전 (리플렉션) | 이후 (인터페이스) |
+|------|----------------|------------------|
+| **성능** | 런타임 리플렉션 오버헤드 | 컴파일 타임 최적화 ✅ |
+| **타입 안전성** | 문자열 기반 ("ErrorCode") | 인터페이스 계약 ✅ |
+| **유지보수성** | 타입명 문자열 매칭 | 명시적 인터페이스 ✅ |
+| **확장성** | 제네릭 타입마다 추가 처리 | 인터페이스만 구현하면 자동 지원 ✅ |
+| **일관성** | Metrics만 리플렉션 사용 | 두 파이프라인 동일 패턴 ✅ |
+
+**패턴 매칭 순서 주의사항:**
+
+```csharp
+return error switch
+{
+    ManyErrors many => ...,           // 1순위: 특수 처리
+    ErrorCodeExceptional exc => ...,  // 2순위: Exceptional 명시
+    IHasErrorCode hasCode => ...,     // 3순위: 인터페이스 (Expected 포함)
+    _ => ...                          // 4순위: Fallback
+};
+```
+
+**중요:** `ErrorCodeExceptional`도 `IHasErrorCode`를 구현하므로, 순서가 바뀌면 Exceptional 에러가 Expected로 잘못 분류됩니다!
+
+#### 6.3.5 Meter 캐싱 (우선순위 5) ✅ 완료
+
+> **작성일**: 2026-01-05
+> **완료일**: 2026-01-05
+
+**배경:**
+
+매 요청마다 `Meter`와 메트릭 인스턴스(Counter, Histogram)를 생성하여 불필요한 오버헤드가 발생했습니다.
+
+**문제점:**
+
+```csharp
+// UsecaseMetricsPipeline.cs (개선 전)
 public async ValueTask<TResponse> Handle(...)
 {
-    using Meter meter = _meterFactory.Create(_meterName);  // 매 요청 생성
-    Counter<long> requestCounter = meter.CreateCounter<long>(...);
+    using Meter meter = _meterFactory.Create(_meterName);  // ❌ 매 요청마다 생성
+
+    Counter<long> requestCounter = meter.CreateCounter<long>(...);  // ❌ 매 요청마다 생성
+    Counter<long> responseCounter = meter.CreateCounter<long>(...);  // ❌ 매 요청마다 생성
+    Histogram<double> durationHistogram = meter.CreateHistogram<double>(...);  // ❌ 매 요청마다 생성
+
+    requestCounter.Add(1, tags);
     // ...
 }
 ```
 
-**개선:**
+**문제:**
+- 매 요청마다 `Meter` 인스턴스 생성 및 즉시 Dispose
+- 매 요청마다 3개의 메트릭 인스턴스 생성
+- 불필요한 메모리 할당 및 GC 압력
+- 핸들러 정보(`requestCqrs`, `requestHandler`) 중복 계산
+
+**해결 방안: 생성자에서 한 번만 생성하고 재사용**
+
+[UsecaseMetricsPipeline.cs:26-105](e:\2025\Dev\DDD-Course\2026-01-05_Functorium\Src\Functorium\Applications\Pipelines\UsecaseMetricsPipeline.cs#L26-L105)
+
 ```csharp
 public sealed class UsecaseMetricsPipeline<TRequest, TResponse>
+    : UsecasePipelineBase<TRequest>
+    , IPipelineBehavior<TRequest, TResponse>
+    , IDisposable  // ✅ IDisposable 구현
+        where TRequest : IMessage
+        where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 {
-    private readonly Meter _meter;
+    private readonly Meter _meter;  // ✅ 필드로 캐싱
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
+    private readonly string _requestCqrs;  // ✅ 핸들러 정보도 캐싱
+    private readonly string _requestHandler;
 
-    public UsecaseMetricsPipeline(IMeterFactory meterFactory, ...)
+    public UsecaseMetricsPipeline(IOpenTelemetryOptions openTelemetryOptions, IMeterFactory meterFactory)
     {
-        _meter = meterFactory.Create(_meterName);
-        _requestCounter = _meter.CreateCounter<long>(...);
-        _responseCounter = _meter.CreateCounter<long>(...);
-        _durationHistogram = _meter.CreateHistogram<double>(...);
+        string meterName = $"{openTelemetryOptions.ServiceNamespace}.{ObservabilityNaming.Layers.Application}";
+        _meter = meterFactory.Create(meterName);  // ✅ 생성자에서 한 번만 생성
+
+        // 핸들러 정보 미리 계산 (제네릭 타입 기반)
+        _requestCqrs = GetRequestCqrs(typeof(TRequest));
+        string requestCqrsField = _requestCqrs.ToLower();
+        _requestHandler = GetRequestHandler();
+
+        // 메트릭 인스턴스 생성 (재사용)
+        _requestCounter = _meter.CreateCounter<long>(
+            name: ObservabilityNaming.Metrics.UsecaseRequest(requestCqrsField),
+            unit: "{request}",
+            description: $"Total number of {_requestHandler} requests");
+
+        _responseCounter = _meter.CreateCounter<long>(
+            name: ObservabilityNaming.Metrics.UsecaseResponse(requestCqrsField),
+            unit: "{response}",
+            description: $"Total number of {_requestHandler} responses");
+
+        _durationHistogram = _meter.CreateHistogram<double>(
+            name: ObservabilityNaming.Metrics.UsecaseDuration(requestCqrsField),
+            unit: "s",
+            description: $"Duration of {_requestHandler} request processing in seconds");
     }
 
     public async ValueTask<TResponse> Handle(...)
     {
-        _requestCounter.Add(1, tags);  // 캐시된 인스턴스 사용
-        // ...
+        // 요청 태그 생성 (캐시된 정보 사용)
+        TagList requestTags = new TagList
+        {
+            { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application },
+            { ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerCqrs, _requestCqrs },  // ✅ 캐시된 값
+            { ObservabilityNaming.CustomAttributes.RequestHandler, _requestHandler },  // ✅ 캐시된 값
+            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, "Handle" }
+        };
+
+        _requestCounter.Add(1, requestTags);  // ✅ 캐시된 Counter 사용
+
+        long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();
+        TResponse response = await next(request, cancellationToken);
+        double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);
+
+        _durationHistogram.Record(elapsed / 1000.0, requestTags);  // ✅ 캐시된 Histogram 사용
+
+        TagList responseTags = CreateResponseTags(requestTags, response);
+        _responseCounter.Add(1, responseTags);  // ✅ 캐시된 Counter 사용
+
+        return response;
+    }
+
+    public void Dispose()
+    {
+        _meter?.Dispose();  // ✅ 정리
     }
 }
 ```
+
+**UsecasePipelineBase 개선**
+
+`GetRequestCqrs` 메서드에 타입을 직접 받는 오버로드 추가:
+
+[UsecasePipelineBase.cs:70-81](e:\2025\Dev\DDD-Course\2026-01-05_Functorium\Src\Functorium\Applications\Pipelines\UsecasePipelineBase.cs#L70-L81)
+
+```csharp
+protected static string GetRequestCqrs(Type requestType)
+{
+    Type[] interfaces = requestType.GetInterfaces();
+
+    if (interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandRequest<>)))
+        return ObservabilityNaming.Cqrs.Command;
+
+    if (interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryRequest<>)))
+        return ObservabilityNaming.Cqrs.Query;
+
+    return ObservabilityNaming.Cqrs.Unknown;
+}
+```
+
+**테스트 결과:**
+
+기존 테스트 모두 통과:
+```
+✅ 전체 테스트: 258/258 통과 (100%)
+✅ UsecaseMetricsPipeline 테스트: 11/11 통과
+```
+
+**개선 효과:**
+
+| 항목 | 개선 전 | 개선 후 | 효과 |
+|------|---------|---------|------|
+| **Meter 생성** | 매 요청마다 | 생성자 1회 | ✅ 오버헤드 제거 |
+| **Counter 생성** | 매 요청마다 2개 | 생성자 1회 | ✅ 메모리 할당 감소 |
+| **Histogram 생성** | 매 요청마다 1개 | 생성자 1회 | ✅ 메모리 할당 감소 |
+| **핸들러 정보 계산** | 매 요청마다 | 생성자 1회 | ✅ CPU 사용량 감소 |
+| **정리 (Dispose)** | 매 요청 `using` | Pipeline Dispose 시 | ✅ 리소스 관리 개선 |
+
+**성능 영향:**
+
+- 요청당 4개 객체 생성 → 0개 (100% 감소)
+- 문자열 처리 (requestCqrs, requestHandler) 제거
+- GC 압력 감소
+- 메트릭 수집 오버헤드 최소화
 
 ---
 
@@ -1710,9 +2057,9 @@ sum(rate(responses_total{error_type="expected"}[5m]))
 | **용량 분석** | ✅ 충분 | TPS, 트래픽 분포 분석 |
 | **SLI/SLO 기본** | ✅ 지원 | 가용성, 지연, 에러율 계산 가능 |
 | **SLI/SLO 고급** | ⚠️ 일부 지원 | ~~에러 유형별~~ ✅, 고객별 SLO 불가 |
-| **코드 품질** | ⚠️ 개선 중 | ~~태그 불일치~~ ✅, ~~에러 태그~~ ✅, Meter 재생성 ⏳ |
+| **코드 품질** | ✅ 우수 | ~~태그 불일치~~ ✅, ~~에러 태그~~ ✅, ~~리플렉션~~ ✅, ~~Meter 재생성~~ ✅ |
 
-**종합:** 기본적인 운영은 가능하며, 태그 구조 통일 및 에러 태그 추가 완료. Meter 캐싱 개선 권장
+**종합:** 운영 준비 완료. 태그 구조 통일, 에러 태그 추가, 리플렉션 제거, Meter 캐싱 완료 (86%). 사용자 컨텍스트 추가 권장
 
 ---
 
@@ -1721,6 +2068,10 @@ sum(rate(responses_total{error_type="expected"}[5m]))
 | 날짜 | 변경 내용 | 커밋 |
 |------|----------|------|
 | 2026-01-04 | 문서 초안 작성 | - |
-| 2026-01-04 | 태그 구조 통일 완료 | `e355af2` |
+| 2026-01-04 | 태그 구조 통일 완료 (6.3.1) | `e355af2` |
 | 2026-01-04 | 응답 메트릭 통합 완료 (6.3.2) | - |
 | 2026-01-04 | 에러 태그 추가 완료 (6.3.3) - `error.type`, `error.code` | - |
+| 2026-01-05 | 리플렉션 제거 완료 (6.3.4) - `IHasErrorCode` 인터페이스 도입 | - |
+| 2026-01-05 | 진척률 업데이트: 57% → 71% (5/7 완료) | - |
+| 2026-01-05 | Meter 캐싱 완료 (6.3.5) - 생성자에서 한 번만 생성 및 재사용 | - |
+| 2026-01-05 | 진척률 업데이트: 71% → 86% (6/7 완료) | - |

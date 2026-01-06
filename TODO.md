@@ -1,3 +1,9 @@
+```shell
+Remove-Item -LiteralPath '\\?\C:\ ... \nul'
+
+dir /x
+```
+
 ## 관찰 가능성
 ### 목표
 - 코드 리뷰

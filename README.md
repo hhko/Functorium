@@ -24,9 +24,9 @@ It enables expressing domain logic as pure functions and pushing side effects to
 
 ### Metrics (UsecaseMetricsPipeline)
 
-**Metric List:**
+**Instrument Structure:**
 
-| Metric Name | Type | Unit | Description |
+| Instrument Name | Type | Unit | Description |
 |------------|------|------|------|
 | `application.usecase.{cqrs}.requests` | Counter | `{request}` | Total request count |
 | `application.usecase.{cqrs}.responses` | Counter | `{response}` | Response count (distinguished by status tag) |
@@ -34,27 +34,115 @@ It enables expressing domain logic as pure functions and pushing side effects to
 
 **Tag Structure:**
 
-| Tag Key | requestCounter | responseCounter (success) | responseCounter (failure) |
-|---------|----------------|----------------------|----------------------|
-| `request.layer` | `"application"` | `"application"` | `"application"` |
-| `request.category` | `"usecase"` | `"usecase"` | `"usecase"` |
-| `request.handler.cqrs` | `"command"` / `"query"` | `"command"` / `"query"` | `"command"` / `"query"` |
-| `request.handler` | handler name | handler name | handler name |
-| `request.handler.method` | `"Handle"` | `"Handle"` | `"Handle"` |
-| `response.status` | - | `"success"` | `"failure"` |
-| `error.type` | - | - | `"expected"` / `"exceptional"` / `"aggregate"` |
-| `error.code` | - | - | Primary error code |
-| **Total Tags** | **5** | **6** | **8** |
+| Tag Key | requestCounter | durationHistogram | responseCounter (success) | responseCounter (failure) |
+|---------|----------------|-------------------|---------------------------|---------------------------|
+| `request.layer` | `"application"` | `"application"` | `"application"` | `"application"` |
+| `request.category` | `"usecase"` | `"usecase"` | `"usecase"` | `"usecase"` |
+| `request.handler.cqrs` | `"command"` / `"query"` | `"command"` / `"query"` | `"command"` / `"query"` | `"command"` / `"query"` |
+| `request.handler` | handler name | handler name | handler name | handler name |
+| `request.handler.method` | `"Handle"` | `"Handle"` | `"Handle"` | `"Handle"` |
+| `response.status` | - | - | `"success"` | `"failure"` |
+| `error.type` | - | - | - | `"expected"` / `"exceptional"` / `"aggregate"` |
+| `error.code` | - | - | - | Primary error code |
+| `slo.latency` | - | `"ok"` / `"p95_exceeded"` / `"p99_exceeded"` | `"ok"` / `"p95_exceeded"` / `"p99_exceeded"` | `"ok"` / `"p95_exceeded"` / `"p99_exceeded"` |
+| **Total Tags** | **5** | **6** | **7** | **9** |
 
 **Error Type Tag Values:**
 
 | Error Case | error.type | error.code |
 |---------|----------------|----------------------|
-| ErrorCodeExpected | "expected" | Error code (e.g., DomainErrors.City.Empty) |
-| ErrorCodeExceptional | "exceptional" | Error code (e.g., InfraErrors.Database.Timeout) |
-| ManyErrors | "aggregate" | Primary error code (Exceptional takes priority) |
-| Other Expected | "expected" | Type name |
-| Other Exceptional | "exceptional" | Type name |
+| `ErrorCodeExpected` | "expected" | Error code (e.g., DomainErrors.City.Empty) |
+| `ErrorCodeExceptional` | "exceptional" | Error code (e.g., InfraErrors.Database.Timeout) |
+| `ManyErrors` | "aggregate" | Primary error code (Exceptional takes priority) |
+| Other `Expected` | "expected" | Type name |
+| Other `Exceptional` | "exceptional" | Type name |
+
+- `IHasErrorCode`: ErrorCodeExpected, ErrorCodeExceptional
+
+**SLO Latency Tag Values (3-tier severity):**
+
+| Value | Condition | Description |
+|-------|-----------|-------------|
+| `"ok"` | `elapsed <= P95` | Normal (within target) |
+| `"p95_exceeded"` | `P95 < elapsed <= P99` | Warning (slow) |
+| `"p99_exceeded"` | `elapsed > P99` | Critical (SLO violation) |
+
+### SLO Configuration
+
+**Purpose:** Service Level Objective (SLO) configuration for monitoring and alerting.
+
+**Configuration Structure:**
+
+```csharp
+public class SloConfiguration
+{
+    public SloTargets GlobalDefaults { get; set; }          // Global default SLO targets
+    public CqrsSloDefaults CqrsDefaults { get; set; }       // CQRS type-specific defaults
+    public Dictionary<string, SloTargets> HandlerOverrides; // Handler-specific overrides
+    public double[] HistogramBuckets { get; set; }          // Custom histogram bucket boundaries
+}
+
+public class SloTargets
+{
+    public double? AvailabilityPercent { get; set; } = 99.9;      // Availability SLO (%)
+    public double? LatencyP95Milliseconds { get; set; } = 500;    // P95 latency target (ms)
+    public double? LatencyP99Milliseconds { get; set; } = 1000;   // P99 latency target (ms)
+    public int? ErrorBudgetWindowDays { get; set; } = 30;         // Error budget window (days)
+}
+```
+
+**Default Values:**
+
+| CQRS Type | Availability | Latency P95 | Latency P99 | Error Budget Window |
+|-----------|--------------|-------------|-------------|---------------------|
+| **Command** | 99.9% | 500ms | 1000ms | 30 days |
+| **Query** | 99.5% | 200ms | 500ms | 30 days |
+
+**appsettings.json Configuration:**
+
+```json
+{
+  "Observability": {
+    "Slo": {
+      "GlobalDefaults": {
+        "AvailabilityPercent": 99.9,
+        "LatencyP95Milliseconds": 500,
+        "LatencyP99Milliseconds": 1000
+      },
+      "HandlerOverrides": {
+        "CreateOrderCommand": {
+          "LatencyP95Milliseconds": 600
+        }
+      },
+      "HistogramBuckets": [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
+    }
+  }
+}
+```
+
+**Priority Order:**
+1. HandlerOverrides (highest)
+2. CqrsDefaults (Command/Query)
+3. GlobalDefaults (fallback)
+
+**Default Histogram Buckets (seconds):**
+```
+[0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
+```
+- Covers 1ms to 10s range
+- Aligned with SLO thresholds (500ms, 1s)
+- Higher density in critical range (1ms-1s)
+
+**Histogram Bucket Configuration:**
+
+The `HistogramBuckets` setting configures bucket boundaries for existing duration histograms via `OpenTelemetryBuilder.AddView()`:
+
+| Target Instrument | Effect |
+|-------------------|--------|
+| `application.usecase.command.duration` | Custom bucket boundaries applied |
+| `application.usecase.query.duration` | Custom bucket boundaries applied |
+
+> **Note:** SLO configuration does not add new instruments or tags. It only configures histogram bucket boundaries for accurate P95/P99 percentile calculations. SLO target values (AvailabilityPercent, LatencyP95Milliseconds, etc.) are used as query thresholds in Prometheus/Grafana, not emitted as metrics.
 
 ## Framework
 ### Abstractions
