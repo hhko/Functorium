@@ -236,3 +236,62 @@ public class ErrorCodeExpectedGenericTests
         sut3.IsExceptional.ShouldBeFalse();
     }
 }
+
+[Trait(nameof(UnitTest), UnitTest.Functorium_Abstractions)]
+public class ErrorCodeExpectedInterfaceTests
+{
+    [Fact]
+    public void ErrorCodeExpected_ImplementsIHasErrorCode()
+    {
+        // Arrange
+        var sut = new ErrorCodeExpected("code", "value", "message");
+
+        // Assert
+        sut.ShouldBeAssignableTo<IHasErrorCode>();
+    }
+
+    [Fact]
+    public void ErrorCodeExpected_IHasErrorCode_ReturnsCorrectErrorCode()
+    {
+        // Arrange
+        var errorCode = "User.NotFound";
+        var sut = new ErrorCodeExpected(errorCode, "value", "message");
+        IHasErrorCode hasErrorCode = sut;
+
+        // Act & Assert
+        hasErrorCode.ErrorCode.ShouldBe(errorCode);
+    }
+
+    [Fact]
+    public void ErrorCodeExpectedGeneric_AllVariants_ImplementIHasErrorCode()
+    {
+        // Arrange
+        var sut1 = new ErrorCodeExpected<int>("code", 1, "message");
+        var sut2 = new ErrorCodeExpected<int, string>("code", 1, "a", "message");
+        var sut3 = new ErrorCodeExpected<int, string, double>("code", 1, "a", 1.0, "message");
+
+        // Assert
+        sut1.ShouldBeAssignableTo<IHasErrorCode>();
+        sut2.ShouldBeAssignableTo<IHasErrorCode>();
+        sut3.ShouldBeAssignableTo<IHasErrorCode>();
+    }
+
+    [Fact]
+    public void ErrorCodeExpectedGeneric_AllVariants_IHasErrorCode_ReturnCorrectErrorCode()
+    {
+        // Arrange
+        var errorCode = "Domain.ValidationError";
+        var sut1 = new ErrorCodeExpected<int>(errorCode, 1, "message");
+        var sut2 = new ErrorCodeExpected<int, string>(errorCode, 1, "a", "message");
+        var sut3 = new ErrorCodeExpected<int, string, double>(errorCode, 1, "a", 1.0, "message");
+
+        IHasErrorCode hasErrorCode1 = sut1;
+        IHasErrorCode hasErrorCode2 = sut2;
+        IHasErrorCode hasErrorCode3 = sut3;
+
+        // Act & Assert
+        hasErrorCode1.ErrorCode.ShouldBe(errorCode);
+        hasErrorCode2.ErrorCode.ShouldBe(errorCode);
+        hasErrorCode3.ErrorCode.ShouldBe(errorCode);
+    }
+}

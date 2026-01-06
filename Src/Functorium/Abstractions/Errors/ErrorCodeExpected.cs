@@ -9,7 +9,7 @@ internal record ErrorCodeExpected(
     string ErrorCurrentValue,
     string ErrorMessage,
     int ErrorCodeId = -1000,
-    Option<Error> Inner = default) : Error
+    Option<Error> Inner = default) : Error, IHasErrorCode
 {
     //
     // 새 Error 코드
@@ -77,7 +77,7 @@ internal record ErrorCodeExpected<T>(
     string ErrorMessage,
     int ErrorCodeId = -1000,
     Option<Error> Inner = default)
-    : Error where T : notnull
+    : Error, IHasErrorCode where T : notnull
 {
     //
     // 새 Error 코드
@@ -146,7 +146,7 @@ internal record ErrorCodeExpected<T1, T2>(
     string ErrorMessage,
     int ErrorCodeId = -1000,
     Option<Error> Inner = default)
-    : Error
+    : Error, IHasErrorCode
         where T1 : notnull
         where T2 : notnull
 {
@@ -223,7 +223,7 @@ internal record ErrorCodeExpected<T1, T2, T3>(
     string ErrorMessage,
     int ErrorCodeId = -1000,
     Option<Error> Inner = default)
-    : Error
+    : Error, IHasErrorCode
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull

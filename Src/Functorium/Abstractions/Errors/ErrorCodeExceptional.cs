@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Functorium.Abstractions.Errors;
 
 [DataContract]
-internal record ErrorCodeExceptional : Error
+internal record ErrorCodeExceptional : Error, IHasErrorCode
 {
     [Pure]
     [DataMember]

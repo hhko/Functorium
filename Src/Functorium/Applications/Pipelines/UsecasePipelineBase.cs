@@ -67,6 +67,19 @@ public abstract class UsecasePipelineBase<TRequest>
         return ObservabilityNaming.Cqrs.Unknown;
     }
 
+    protected static string GetRequestCqrs(Type requestType)
+    {
+        Type[] interfaces = requestType.GetInterfaces();
+
+        if (interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandRequest<>)))
+            return ObservabilityNaming.Cqrs.Command;
+
+        if (interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryRequest<>)))
+            return ObservabilityNaming.Cqrs.Query;
+
+        return ObservabilityNaming.Cqrs.Unknown;
+    }
+
 
     ///// <summary>
     ///// Trace 전용: Stopwatch 타임스탬프를 DateTimeOffset으로 변환합니다.

@@ -7,5 +7,6 @@ public static partial class Constants
         public const string Functorium_Abstractions = "Functorium.Abstractions";
         public const string Functorium_Adapters = "Functorium.Adapters";
         public const string Functorium_Adapters_SourceGenerator = "Functorium.Adapters.SourceGenerator";
+        public const string Functorium_Applications = "Functorium.Applications";
     }
 }

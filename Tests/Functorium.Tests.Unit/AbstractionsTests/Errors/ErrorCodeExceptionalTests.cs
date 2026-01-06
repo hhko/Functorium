@@ -215,3 +215,31 @@ public class ErrorCodeExceptionalTests
         actual.ShouldBeOfType<ExceptionalException>();
     }
 }
+
+[Trait(nameof(UnitTest), UnitTest.Functorium_Abstractions)]
+public class ErrorCodeExceptionalInterfaceTests
+{
+    [Fact]
+    public void ErrorCodeExceptional_ImplementsIHasErrorCode()
+    {
+        // Arrange
+        var exception = new InvalidOperationException("Test");
+        var sut = new ErrorCodeExceptional("error.code", exception);
+
+        // Assert
+        sut.ShouldBeAssignableTo<IHasErrorCode>();
+    }
+
+    [Fact]
+    public void ErrorCodeExceptional_IHasErrorCode_ReturnsCorrectErrorCode()
+    {
+        // Arrange
+        var errorCode = "Database.ConnectionTimeout";
+        var exception = new InvalidOperationException("Connection timed out");
+        var sut = new ErrorCodeExceptional(errorCode, exception);
+        IHasErrorCode hasErrorCode = sut;
+
+        // Act & Assert
+        hasErrorCode.ErrorCode.ShouldBe(errorCode);
+    }
+}

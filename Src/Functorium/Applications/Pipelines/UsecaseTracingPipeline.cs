@@ -115,45 +115,55 @@ public sealed class UsecaseTracingPipeline<TRequest, TResponse>
         }
     }
 
+    /// <summary>
+    /// 에러 타입에 따라 적절한 태그를 Activity에 설정합니다.
+    /// </summary>
+    /// <remarks>
+    /// 패턴 매칭 순서가 중요합니다:
+    /// - IHasErrorCode를 구현하는 타입이 Expected와 Exceptional 모두 있으므로
+    ///   when 절로 IsExpected/IsExceptional 구분 필요
+    /// </remarks>
     private static void SetErrorTags(Activity activity, Error error)
     {
         switch (error)
         {
-            case ErrorCodeExpected errorCodeExpected:
-                SetErrorCodeExpectedTags(activity, errorCodeExpected);
+            // IHasErrorCode 인터페이스 + IsExpected 조건
+            case IHasErrorCode hasErrorCode when error.IsExpected:
+                SetErrorCodeExpectedTags(activity, hasErrorCode);
                 break;
-            case ErrorCodeExceptional errorCodeExceptional:
-                SetErrorCodeExceptionalTags(activity, errorCodeExceptional);
+            // IHasErrorCode 인터페이스 + IsExceptional 조건
+            case IHasErrorCode hasErrorCode when error.IsExceptional:
+                SetErrorCodeExceptionalTags(activity, hasErrorCode);
                 break;
+            // ManyErrors - 복합 에러
             case ManyErrors manyErrors:
                 SetManyErrorsTags(activity, manyErrors);
                 break;
 
-            // Expected
-            // Exceptional
+            // Fallback - 알 수 없는 에러 타입
             default:
                 SetUnknownErrorTags(activity, error);
                 break;
         }
     }
 
-    private static void SetErrorCodeExpectedTags(Activity activity, ErrorCodeExpected error)
+    private static void SetErrorCodeExpectedTags(Activity activity, IHasErrorCode error)
     {
-        activity.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, nameof(ErrorCodeExpected));
+        activity.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, ObservabilityNaming.ErrorTypes.Expected);
         activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, error.ErrorCode);
-        activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorMessage, error.Message);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorMessage, ((Error)error).Message);
     }
 
-    private static void SetErrorCodeExceptionalTags(Activity activity, ErrorCodeExceptional error)
+    private static void SetErrorCodeExceptionalTags(Activity activity, IHasErrorCode error)
     {
-        activity.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, nameof(ErrorCodeExceptional));
+        activity.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, ObservabilityNaming.ErrorTypes.Exceptional);
         activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, error.ErrorCode);
-        activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorMessage, error.Message);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorMessage, ((Error)error).Message);
     }
 
     private static void SetManyErrorsTags(Activity activity, ManyErrors error)
     {
-        activity.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, nameof(ManyErrors));
+        activity.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, ObservabilityNaming.ErrorTypes.Aggregate);
         activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorCount, error.Errors.Count);
     }
 
