@@ -31,27 +31,27 @@
   도움말을 표시합니다.
 
 .EXAMPLE
-  ./Build-Local.ps1
+  ./Build.ps1
   현재 디렉토리에서 솔루션을 자동 검색하여 빌드, 테스트, 패키지 생성
 
 .EXAMPLE
-  ./Build-Local.ps1 -Solution ./MyApp.sln
+  ./Build.ps1 -Solution ./MyApp.sln
   지정된 솔루션 파일로 빌드 및 테스트 실행
 
 .EXAMPLE
-  ./Build-Local.ps1 -SkipPack
+  ./Build.ps1 -SkipPack
   NuGet 패키지 생성 없이 빌드 및 테스트만 실행
 
 .EXAMPLE
-  ./Build-Local.ps1 -ProjectPrefix MyApp
+  ./Build.ps1 -ProjectPrefix MyApp
   MyApp.* 프로젝트만 커버리지 필터링
 
 .EXAMPLE
-  ./Build-Local.ps1 -SlowTestThreshold 60
+  ./Build.ps1 -SlowTestThreshold 60
   60초 이상 걸리는 테스트만 느린 테스트로 분류
 
 .EXAMPLE
-  ./Build-Local.ps1 -Help
+  ./Build.ps1 -Help
   도움말 표시
 
 .NOTES
@@ -137,7 +137,7 @@ DESCRIPTION
   for .NET solutions.
 
 USAGE
-  ./Build-Local.ps1 [options]
+  ./Build.ps1 [options]
 
 OPTIONS
   -Solution, -s           Path to solution file (.sln or .slnx)
@@ -179,26 +179,26 @@ PREREQUISITES
 
 EXAMPLES
   # Run build, tests, and pack (auto-detect solution)
-  ./Build-Local.ps1
+  ./Build.ps1
 
   # Specify solution file
-  ./Build-Local.ps1 -Solution ./MyApp.sln
-  ./Build-Local.ps1 -s ../Other.sln
+  ./Build.ps1 -Solution ./MyApp.sln
+  ./Build.ps1 -s ../Other.sln
 
   # Skip NuGet package generation
-  ./Build-Local.ps1 -SkipPack
+  ./Build.ps1 -SkipPack
 
   # Filter coverage by project prefix
-  ./Build-Local.ps1 -ProjectPrefix MyApp
-  ./Build-Local.ps1 -p Functorium
+  ./Build.ps1 -ProjectPrefix MyApp
+  ./Build.ps1 -p Functorium
 
   # Set slow test threshold (default: 30s)
-  ./Build-Local.ps1 -SlowTestThreshold 60
-  ./Build-Local.ps1 -t 10
+  ./Build.ps1 -SlowTestThreshold 60
+  ./Build.ps1 -t 10
 
   # Show help
-  ./Build-Local.ps1 -Help
-  ./Build-Local.ps1 -h
+  ./Build.ps1 -Help
+  ./Build.ps1 -h
 
 ================================================================================
 "@
@@ -389,10 +389,11 @@ function Get-CoverageFiles {
     New-Item -ItemType Directory -Path $script:CoverageReportDir -Force | Out-Null
   }
 
-  # Build file path list
-  $coverageFilePaths = ($coverageFiles | ForEach-Object { $_.FullName }) -join ";"
+  # Use wildcard pattern instead of joining all file paths to avoid command line length limitations
+  # This pattern works across different environments (local, CI/CD)
+  $coveragePattern = Join-Path $script:SolutionDir "**/TestResults/coverage.cobertura.xml"
 
-  return $coverageFilePaths
+  return $coveragePattern
 }
 
 <#
@@ -707,8 +708,8 @@ try {
     -targetdir:$script:CoverageReportDir `
     -reporttypes:"Html;Cobertura;MarkdownSummaryGithub" `
     -assemblyfilters:"-*.Tests*" `
-    -filefilters:"-*.g.cs" `
-    -verbosity:Warning
+    -filefilters:"-*.g.cs"
+    #-verbosity:Warning
   Write-Host ""
 
   if ($LASTEXITCODE -ne 0) {
