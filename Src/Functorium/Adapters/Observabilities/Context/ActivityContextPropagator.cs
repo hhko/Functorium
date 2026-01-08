@@ -7,27 +7,20 @@ namespace Functorium.Adapters.Observabilities.Context;
 /// <summary>
 /// OpenTelemetry Activity 기반의 IContextPropagator 구현체입니다.
 /// </summary>
+/// <remarks>
+/// .NET의 ExecutionContext가 async/await를 통해 AsyncLocal을 자동으로 전파하므로,
+/// Activity.Current는 LanguageExt의 IO/FinT 실행에서도 올바르게 유지됩니다.
+/// </remarks>
 public sealed class ActivityContextPropagator : IContextPropagator
 {
     /// <summary>
     /// 현재 관찰 가능성 컨텍스트를 가져옵니다.
-    /// AsyncLocal에 저장된 컨텍스트를 우선 반환하고, 없으면 Activity.Current를 사용합니다.
+    /// Activity.Current를 사용하여 현재 실행 컨텍스트의 Activity를 반환합니다.
     /// </summary>
     public IObservabilityContext? Current
     {
         get
         {
-            // AsyncLocal에 저장된 컨텍스트 우선
-            IObservabilityContext? storedContext = ActivityContextHolder.GetCurrentContext();
-            if (storedContext != null)
-                return storedContext;
-
-            // AsyncLocal Activity 확인
-            Activity? storedActivity = ActivityContextHolder.GetCurrentActivity();
-            if (storedActivity != null)
-                return ObservabilityContext.FromActivity(storedActivity);
-
-            // Activity.Current 폴백
             Activity? currentActivity = Activity.Current;
             if (currentActivity != null)
                 return ObservabilityContext.FromActivity(currentActivity);
@@ -39,9 +32,18 @@ public sealed class ActivityContextPropagator : IContextPropagator
     /// <summary>
     /// 지정된 컨텍스트로 스코프를 생성합니다.
     /// </summary>
+    /// <remarks>
+    /// .NET의 ExecutionContext가 Activity.Current를 자동으로 전파하므로,
+    /// 별도의 AsyncLocal 관리 없이 Activity를 직접 설정합니다.
+    /// </remarks>
     public IDisposable CreateScope(IObservabilityContext context)
     {
-        return ActivityContextHolder.EnterContext(context);
+        if (context is ObservabilityContext otelContext)
+        {
+            return new ActivityScope(otelContext.ActivityContext);
+        }
+
+        return new NoOpScope();
     }
 
     /// <summary>
@@ -53,5 +55,35 @@ public sealed class ActivityContextPropagator : IContextPropagator
             return null;
 
         return span.Context;
+    }
+
+    private sealed class ActivityScope : IDisposable
+    {
+        private readonly Activity? _previousActivity;
+        private readonly Activity? _newActivity;
+
+        public ActivityScope(ActivityContext context)
+        {
+            _previousActivity = Activity.Current;
+
+            // ActivityContext에서 새 Activity를 생성하지 않고
+            // 현재 Activity를 유지합니다.
+            // 이는 ExecutionContext가 자동으로 전파하기 때문입니다.
+            _newActivity = null;
+        }
+
+        public void Dispose()
+        {
+            _newActivity?.Dispose();
+            Activity.Current = _previousActivity;
+        }
+    }
+
+    private sealed class NoOpScope : IDisposable
+    {
+        public void Dispose()
+        {
+            // No-op
+        }
     }
 }

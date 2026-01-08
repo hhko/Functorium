@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using Functorium.Abstractions;
-using Functorium.Adapters.Observabilities.Context;
 using LanguageExt.Traits;
 
 namespace Functorium.Applications.Linq;
@@ -254,7 +253,7 @@ public static class FinTUtilites
     ///   • ActivitySource는 DI 컨테이너에서 주입받은 인스턴스 사용
     ///   • Activity 생성 실패 시에도 처리는 정상 진행
     ///   • 순차 처리 보장: 각 항목이 완전히 처리된 후 다음 항목 시작
-    ///   • TraverseActivityContext를 통한 AsyncLocal 관리로 Activity 계층 유지
+    ///   • .NET의 ExecutionContext가 Activity.Current를 자동으로 전파하여 Activity 계층 유지
     /// </summary>
     /// <typeparam name="M">모나드 타입 (예: IO)</typeparam>
     /// <typeparam name="A">입력 요소 타입</typeparam>
@@ -298,27 +297,15 @@ public static class FinTUtilites
 
                 // 2. Activity 생성 (태그를 StartActivity에 전달)
                 // 부모 ActivityContext 결정:
-                // 1순위: UsecaseActivityContext (Adapter에서 설정된 Usecase의 Context)
-                // 2순위: Activity.Current (일반적인 경우)
-                ActivityContext? parentContext = null;
-
-                Activity? traverseActivity = ActivityContextHolder.GetCurrentActivity();
-                if (traverseActivity != null)
-                {
-                    parentContext = traverseActivity.Context;
-                }
-                else if (Activity.Current != null)
-                {
-                    parentContext = Activity.Current.Context;
-                }
-
+                // .NET의 ExecutionContext가 Activity.Current를 자동으로 전파하므로
+                // Activity.Current를 직접 사용합니다.
                 string activityName = string.Format(TraverseActivityNameFormat, operationName, itemIdentifier);
 
-                Activity? activity = parentContext.HasValue
+                Activity? activity = Activity.Current != null
                     ? activitySource.StartActivity(
                         activityName,
                         ActivityKind.Internal,
-                        parentContext.Value,
+                        Activity.Current.Context,
                         tags)
                     : activitySource.StartActivity(
                         activityName,
@@ -328,46 +315,42 @@ public static class FinTUtilites
 
                 // 참고: StartActivity는 sampling 정책이나 리소스 제약으로 인해 null을 반환할 수 있습니다.
                 // null인 경우에도 비즈니스 로직은 계속 실행되며, Activity는 관찰성(observability) 목적으로만 사용됩니다.
-                // TraverseActivityContext.Enter()는 null Activity를 안전하게 처리합니다.
 
-                // TraverseActivityContext를 사용하여 현재 Traverse Activity 관리
-                using (ActivityContextHolder.EnterActivity(activity))
+                long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();
+
+                try
                 {
+                    // 3. 실제 작업 실행
+                    // .NET의 ExecutionContext가 Activity.Current를 자동으로 전파하므로
+                    // 추가적인 AsyncLocal 관리가 필요하지 않습니다.
+                    Fin<B> finResult = await f(item).Run().RunAsync();
 
-                    long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();
-
-                    try
+                    // 4. 실패 시 즉시 반환
+                    if (finResult.IsFail)
                     {
-                        // 3. 실제 작업 실행 (Activity.Current가 설정된 상태)
-                        Fin<B> finResult = await f(item).Run().RunAsync();
-
-                        // 4. 실패 시 즉시 반환
-                        if (finResult.IsFail)
-                        {
-                            return finResult.Match(
-                                Succ: _ => throw new InvalidOperationException("Unreachable"),
-                                Fail: error => Fin.Fail<Seq<B>>(error)
-                            );
-                        }
-
-                        // 5. 성공 시 결과 누적 (List.Add는 O(1) amortized)
-                        results.Add(finResult.ThrowIfFail());
-
-                        // 6. 성능 메트릭 설정
-                        if (activity != null)
-                        {
-                            double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);
-                            activity.SetTag("elapsed", elapsed);
-                            activity.SetStatus(ActivityStatusCode.Ok);
-                        }
+                        return finResult.Match(
+                            Succ: _ => throw new InvalidOperationException("Unreachable"),
+                            Fail: error => Fin.Fail<Seq<B>>(error)
+                        );
                     }
-                    finally
+
+                    // 5. 성공 시 결과 누적 (List.Add는 O(1) amortized)
+                    results.Add(finResult.ThrowIfFail());
+
+                    // 6. 성능 메트릭 설정
+                    if (activity != null)
                     {
-                        // 7. Activity 정리 (성공/실패 관계없이)
-                        activity?.Stop();
-                        activity?.Dispose();
+                        double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);
+                        activity.SetTag("elapsed", elapsed);
+                        activity.SetStatus(ActivityStatusCode.Ok);
                     }
-                } // using이 끝나면 자동으로 이전 TraverseActivity로 복원
+                }
+                finally
+                {
+                    // 7. Activity 정리 (성공/실패 관계없이)
+                    activity?.Stop();
+                    activity?.Dispose();
+                }
             }
 
             // List<B>를 Seq<B>로 변환 (마지막에 한 번만)

@@ -65,7 +65,6 @@ public sealed class OpenTelemetrySpanFactory : ISpanFactory
     /// 우선순위:
     /// <list type="number">
     ///   <item>Activity.Current - 가장 가까운 부모 (표준 OpenTelemetry 동작)</item>
-    ///   <item>AsyncLocal에 저장된 Traverse Activity (FinT의 AsyncLocal 복원 문제 우회)</item>
     ///   <item>명시적으로 전달된 parentContext (HTTP 요청 레벨 폴백)</item>
     /// </list>
     /// </para>
@@ -77,20 +76,21 @@ public sealed class OpenTelemetrySpanFactory : ISpanFactory
     ///     └── AdapterSpan (이 메서드의 결과)
     /// </code>
     /// </para>
+    /// <para>
+    /// 참고: .NET의 ExecutionContext가 async/await를 통해 AsyncLocal을 자동으로 전파하므로
+    /// Activity.Current는 LanguageExt의 IO/FinT 실행에서도 올바르게 유지됩니다.
+    /// </para>
     /// </remarks>
     internal static ActivityContext DetermineParentContext(IObservabilityContext? parentContext)
     {
         // 1. Activity.Current - 가장 가까운 부모 (표준 OpenTelemetry 동작)
+        // .NET의 ExecutionContext가 AsyncLocal을 자동으로 전파하므로
+        // LanguageExt의 IO/FinT 실행에서도 Activity.Current가 올바르게 유지됩니다.
         Activity? currentActivity = Activity.Current;
         if (currentActivity != null)
             return currentActivity.Context;
 
-        // 2. AsyncLocal에 저장된 Traverse Activity (FinT의 AsyncLocal 복원 문제 우회)
-        Activity? traverseActivity = ActivityContextHolder.GetCurrentActivity();
-        if (traverseActivity != null)
-            return traverseActivity.Context;
-
-        // 3. 명시적으로 전달된 parentContext (HTTP 요청 레벨 폴백)
+        // 2. 명시적으로 전달된 parentContext (HTTP 요청 레벨 폴백)
         if (parentContext is ObservabilityContext otelContext)
             return otelContext.ActivityContext;
 
