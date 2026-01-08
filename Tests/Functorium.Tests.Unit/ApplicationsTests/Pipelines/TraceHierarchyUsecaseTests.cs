@@ -13,6 +13,10 @@ namespace Functorium.Tests.Unit.ApplicationsTests.Pipelines;
 /// </summary>
 /// <remarks>
 /// <para>
+/// .NET의 ExecutionContext가 async/await를 통해 AsyncLocal을 자동으로 전파하므로,
+/// Activity.Current는 LanguageExt의 IO/FinT 실행에서도 올바르게 유지됩니다.
+/// </para>
+/// <para>
 /// 기대되는 Trace 계층 구조:
 /// </para>
 /// <code>
@@ -67,7 +71,6 @@ public class TraceHierarchyUsecaseTests : IDisposable
         _listener.Dispose();
         _activitySource.Dispose();
         Activity.Current = null;
-        ActivityContextHolder.SetCurrentActivity(null);
     }
 
     #region 유스케이스 시나리오 테스트
@@ -134,66 +137,14 @@ public class TraceHierarchyUsecaseTests : IDisposable
     }
 
     /// <summary>
-    /// FinT/IO 모나드 실행 후 Activity.Current가 null이 되어도
-    /// ActivityContextHolder를 통해 올바른 부모를 찾아야 합니다.
+    /// Activity.Current가 null일 때 parentContext(HTTP 레벨)를 폴백으로 사용해야 합니다.
     /// </summary>
     /// <remarks>
-    /// <code>
-    /// FinT 모나드 실행 시 AsyncLocal 컨텍스트 문제:
-    ///
-    /// 1. UsecaseTracingPipeline에서 Usecase Activity 생성
-    ///    └── Activity.Current = UsecaseActivity
-    ///
-    /// 2. FinT&lt;IO, T&gt;.Run().RunAsync() 실행
-    ///    └── 내부적으로 새로운 Task 생성
-    ///        └── ExecutionContext 복사 시 Activity.Current가 null로 복원될 수 있음
-    ///
-    /// 3. Repository 메서드 호출 (IO 모나드 내부)
-    ///    └── Activity.Current = null (문제!)
-    ///    └── ActivityContextHolder.GetCurrentActivity() = UsecaseActivity (해결책!)
-    /// </code>
-    /// </remarks>
-    [Fact]
-    public void TraceHierarchy_AdapterIsChildOfUsecase_WhenActivityCurrentIsNullButContextHolderHasActivity()
-    {
-        // Arrange
-        var spanFactory = new OpenTelemetrySpanFactory(_activitySource);
-
-        using Activity? httpActivity = _activitySource.StartActivity("HttpRequestIn");
-        using Activity? usecaseActivity = _activitySource.StartActivity(
-            "application usecase.query GetAllProductsQuery.Handle",
-            ActivityKind.Internal,
-            httpActivity!.Context);
-
-        // FinT 실행 후 Activity.Current가 null이 된 상황 시뮬레이션
-        Activity.Current = null;
-
-        // ActivityContextHolder에 Usecase Activity가 저장되어 있음
-        // (실제로는 TraverseSerial이나 Pipeline에서 설정)
-        ActivityContextHolder.SetCurrentActivity(usecaseActivity);
-
-        ObservabilityContext httpContext = ObservabilityContext.FromActivityContext(httpActivity!.Context);
-
-        // Act
-        using ISpan? adapterSpan = spanFactory.CreateChildSpan(
-            httpContext,
-            "adapter Repository InMemoryProductRepository.GetAll",
-            "Repository",
-            "InMemoryProductRepository",
-            "GetAll");
-
-        // Assert
-        adapterSpan.ShouldNotBeNull();
-
-        // ActivityContextHolder를 통해 UsecaseActivity를 부모로 사용해야 함
-        adapterSpan.TraceId.ShouldBe(usecaseActivity!.TraceId.ToString());
-    }
-
-    /// <summary>
-    /// Activity.Current와 ActivityContextHolder 모두 없을 때
-    /// parentContext(HTTP 레벨)를 폴백으로 사용해야 합니다.
-    /// </summary>
-    /// <remarks>
+    /// <para>
+    /// 참고: .NET의 ExecutionContext가 Activity.Current를 자동으로 전파하므로,
+    /// 정상적인 시나리오에서 Activity.Current가 null이 되는 경우는 드뭅니다.
+    /// 이 테스트는 비정상적인 상황에서의 폴백 동작을 검증합니다.
+    /// </para>
     /// <code>
     /// 폴백 시나리오 (정상적이지 않은 상황):
     ///
@@ -201,14 +152,13 @@ public class TraceHierarchyUsecaseTests : IDisposable
     /// └── AdapterSpan (형제 관계 - 비정상)
     ///
     /// * Activity.Current = null
-    /// * ActivityContextHolder = null
     /// * parentContext = HttpRequestContext (폴백)
     ///
     /// 이 시나리오는 Usecase Pipeline이 누락된 경우에 발생할 수 있음
     /// </code>
     /// </remarks>
     [Fact]
-    public void TraceHierarchy_AdapterUsesHttpContext_WhenNoUsecaseContextAvailable()
+    public void TraceHierarchy_AdapterUsesHttpContext_WhenActivityCurrentIsNull()
     {
         // Arrange
         var spanFactory = new OpenTelemetrySpanFactory(_activitySource);
@@ -216,7 +166,6 @@ public class TraceHierarchyUsecaseTests : IDisposable
         using Activity? httpActivity = _activitySource.StartActivity("HttpRequestIn");
 
         Activity.Current = null;
-        ActivityContextHolder.SetCurrentActivity(null);
 
         ObservabilityContext httpContext = ObservabilityContext.FromActivityContext(httpActivity!.Context);
 
