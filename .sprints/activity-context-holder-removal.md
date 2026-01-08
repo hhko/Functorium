@@ -1,11 +1,15 @@
-# ActivityContextHolder 제거 및 Activity.Current 검증
+# Observability 컨텍스트 전파 단순화
 
 **작성일**: 2026-01-09
 **상태**: ✅ 완료
 
 ## 개요
 
-LanguageExt 5.0.0-beta-77 환경에서 `Activity.Current`(AsyncLocal 기반)가 IO/FinT 모나드 실행 중에도 올바르게 유지되는지 검증하고, 불필요한 `ActivityContextHolder` 코드를 제거한 기술 노트입니다.
+LanguageExt 5.0.0-beta-77 환경에서 `Activity.Current`(AsyncLocal 기반)가 IO/FinT 모나드 실행 중에도 올바르게 유지되는지 검증하고, 불필요한 코드를 제거한 기술 노트입니다.
+
+### 제거된 항목
+1. **ActivityContextHolder** - 불필요한 AsyncLocal 수동 관리
+2. **IContextPropagator / ActivityContextPropagator** - 사용되지 않는 인터페이스 및 구현체
 
 ---
 
@@ -114,6 +118,8 @@ Microsoft.AspNetCore.Hosting.HttpRequestIn (ROOT)
 | 파일 | 이유 |
 |------|------|
 | `Src/Functorium/Adapters/Observabilities/Context/ActivityContextHolder.cs` | .NET ExecutionContext가 자동으로 AsyncLocal 전파 |
+| `Src/Functorium/Applications/Observabilities/Context/IContextPropagator.cs` | DI에 등록되었으나 실제 사용되지 않음 |
+| `Src/Functorium/Adapters/Observabilities/Context/ActivityContextPropagator.cs` | DI에 등록되었으나 실제 사용되지 않음 |
 
 ### 수정된 파일
 
@@ -175,22 +181,13 @@ internal static ActivityContext DetermineParentContext(IObservabilityContext? pa
 + Fin<B> finResult = await f(item).Run().RunAsync();
 ```
 
-#### ActivityContextPropagator.cs
+#### OpenTelemetryBuilder.cs (DI 등록 제거)
 ```diff
-- // AsyncLocal에 저장된 컨텍스트 우선
-- IObservabilityContext? storedContext = ActivityContextHolder.GetCurrentContext();
-- if (storedContext != null)
--     return storedContext;
--
-- Activity? storedActivity = ActivityContextHolder.GetCurrentActivity();
-- if (storedActivity != null)
--     return ObservabilityContext.FromActivity(storedActivity);
-
-+ // Activity.Current를 직접 사용
-+ Activity? currentActivity = Activity.Current;
-+ if (currentActivity != null)
-+     return ObservabilityContext.FromActivity(currentActivity);
+- // IContextPropagator 등록 (Singleton)
+- _services.AddSingleton<IContextPropagator, ActivityContextPropagator>();
 ```
+
+IContextPropagator는 DI에 등록되었으나 어디에서도 주입받거나 사용되지 않아 제거되었습니다.
 
 #### 테스트 파일
 - `OpenTelemetrySpanFactoryTests.cs` - ActivityContextHolder 관련 테스트 제거
@@ -274,7 +271,7 @@ Before:                              After:
 | [ActivityCurrentIntegrationTests.cs](../Tutorials/Cqrs04Endpoint/Tests/Cqrs04Endpoint.WebApi.Tests.Unit/ActivityCurrentIntegrationTests.cs) | ASP.NET Core 통합 테스트 |
 | [OpenTelemetrySpanFactory.cs](../Src/Functorium/Adapters/Observabilities/Spans/OpenTelemetrySpanFactory.cs) | 단순화된 부모 컨텍스트 결정 로직 |
 | [FinTUtilites.cs](../Src/Functorium/Applications/Linq/FinTUtilites.cs) | 단순화된 TraverseSerial |
-| [ActivityContextPropagator.cs](../Src/Functorium/Adapters/Observabilities/Context/ActivityContextPropagator.cs) | 단순화된 컨텍스트 전파 |
+| [OpenTelemetryBuilder.cs](../Src/Functorium/Adapters/Observabilities/Builders/OpenTelemetryBuilder.cs) | DI 등록 단순화 |
 
 ---
 
