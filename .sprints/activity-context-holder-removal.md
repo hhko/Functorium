@@ -65,7 +65,7 @@ LanguageExt 5.0.0-beta-77에서 AsyncLocal 동작을 검증하기 위한 독립 
 | Test 7 | ThreadPool.QueueUserWorkItem | ✅ PASS |
 | Test 8 | TraverseSerial-like pattern | ✅ PASS |
 | Test 9 | Deep nesting with real async | ✅ PASS |
-| Test 10 | ExecutionContext.SuppressFlow() | ❌ FAIL (예상됨) |
+| Test 10 | ExecutionContext.SuppressFlow() | ✅ PASS (예상과 다름) |
 | Test 11 | ThreadPool.UnsafeQueueUserWorkItem() | ❌ FAIL (예상됨) |
 
 ### 핵심 발견
@@ -74,10 +74,9 @@ LanguageExt 5.0.0-beta-77에서 AsyncLocal 동작을 검증하기 위한 독립 
 === 검증 결과 ===
 - Activity.Current는 LanguageExt IO/FinT 실행에서 손실되지 않음
 - Fork()를 포함한 모든 시나리오에서 PASS
-- ExecutionContext를 명시적으로 억제하는 API만 실패:
-  - ExecutionContext.SuppressFlow()
-  - ThreadPool.UnsafeQueueUserWorkItem()
-- LanguageExt는 이러한 API를 사용하지 않음
+- ExecutionContext.SuppressFlow()도 예상과 달리 PASS (Task.Run 내부에서 유지됨)
+- ThreadPool.UnsafeQueueUserWorkItem()만 유일하게 실패
+- LanguageExt는 UnsafeQueueUserWorkItem을 사용하지 않음
 ```
 
 ---
