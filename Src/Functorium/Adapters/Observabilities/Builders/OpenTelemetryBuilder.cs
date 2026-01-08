@@ -2,12 +2,10 @@ using System.Diagnostics;
 using System.Reflection;
 using Functorium.Abstractions.Errors.DestructuringPolicies;
 using Functorium.Adapters.Observabilities.Builders.Configurators;
-using Functorium.Adapters.Observabilities.Context;
 using Functorium.Adapters.Observabilities.Loggers;
 using Functorium.Adapters.Observabilities.Metrics;
 using Functorium.Adapters.Observabilities.Spans;
 using Functorium.Applications.Observabilities;
-using Functorium.Applications.Observabilities.Context;
 using Functorium.Applications.Observabilities.Metrics;
 using Functorium.Applications.Observabilities.Spans;
 using Microsoft.Extensions.Configuration;
@@ -161,7 +159,7 @@ public partial class OpenTelemetryBuilder
 
     /// <summary>
     /// Adapter 관찰 가능성 기능 활성화/비활성화
-    /// ISpanFactory, IMetricRecorder, IContextPropagator를 Singleton으로 등록합니다.
+    /// ISpanFactory, IMetricRecorder를 Singleton으로 등록합니다.
     /// 기본값: true (자동 활성화)
     /// </summary>
     public OpenTelemetryBuilder WithAdapterObservability(bool enable = true)
@@ -402,9 +400,6 @@ public partial class OpenTelemetryBuilder
                 : opts.ServiceName;
             return new ActivitySource(serviceNamespace);
         });
-
-        // IContextPropagator 등록 (Singleton)
-        _services.AddSingleton<IContextPropagator, ActivityContextPropagator>();
 
         // ISpanFactory 등록 (Singleton)
         _services.AddSingleton<ISpanFactory>(sp =>
