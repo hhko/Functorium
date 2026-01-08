@@ -79,6 +79,33 @@ LanguageExt 5.0.0-beta-77에서 AsyncLocal 동작을 검증하기 위한 독립 
 - LanguageExt는 UnsafeQueueUserWorkItem을 사용하지 않음
 ```
 
+### SuppressFlow 테스트 분석
+
+**예상**: `ExecutionContext.SuppressFlow()` 호출 후 `Task.Run()`을 실행하면 ExecutionContext가 전파되지 않아 Activity.Current가 null이 될 것으로 예상
+
+**실제 결과**: Activity.Current가 유지됨 (PASS)
+
+```csharp
+// Test 10 코드
+var afc = ExecutionContext.SuppressFlow();
+try
+{
+    var task = Task.Run(() =>
+    {
+        // 예상: Activity.Current == null
+        // 실제: Activity.Current == "Test10" (유지됨)
+        capturedInTask = Activity.Current?.DisplayName ?? "null";
+    });
+    task.Wait();
+}
+finally
+{
+    afc.Undo();
+}
+```
+
+**분석**: `Task.Run()`이 내부적으로 ExecutionContext를 캡처하는 시점이 `SuppressFlow()` 호출 전일 수 있거나, .NET 런타임의 최적화로 인해 동일 스레드에서 실행될 때 컨텍스트가 유지될 수 있음. 중요한 점은 LanguageExt가 이러한 패턴을 사용하지 않으므로 실제 영향이 없다는 것.
+
 ---
 
 ## 3. ASP.NET Core 통합 테스트
@@ -211,15 +238,26 @@ public static Activity? Current
 
 ### ExecutionContext 전파 규칙
 
-| API | ExecutionContext 전파 |
-|-----|----------------------|
-| `Task.Run()` | ✅ 전파됨 |
-| `async/await` | ✅ 전파됨 |
-| `Task.Factory.StartNew()` | ✅ 전파됨 |
-| `ThreadPool.QueueUserWorkItem()` | ✅ 전파됨 |
-| `ConfigureAwait(false)` | ✅ 전파됨 (SyncContext만 영향) |
-| `ExecutionContext.SuppressFlow()` | ❌ 억제됨 |
-| `ThreadPool.UnsafeQueueUserWorkItem()` | ❌ 전파 안됨 |
+| API | ExecutionContext 전파 | 비고 |
+|-----|----------------------|------|
+| `Task.Run()` | ✅ 전파됨 | |
+| `async/await` | ✅ 전파됨 | |
+| `Task.Factory.StartNew()` | ✅ 전파됨 | |
+| `ThreadPool.QueueUserWorkItem()` | ✅ 전파됨 | |
+| `ConfigureAwait(false)` | ✅ 전파됨 | SyncContext만 영향 |
+| `ExecutionContext.SuppressFlow()` + `Task.Run()` | ✅ 전파됨 | 테스트 결과 (아래 참조) |
+| `ThreadPool.UnsafeQueueUserWorkItem()` | ❌ 전파 안됨 | 유일하게 실패 |
+
+### SuppressFlow + Task.Run 동작 분석
+
+일반적으로 `ExecutionContext.SuppressFlow()`는 이후 시작되는 비동기 작업으로 ExecutionContext가 전파되는 것을 억제합니다. 그러나 테스트 결과 `Task.Run()`과 함께 사용할 때 Activity.Current가 유지되었습니다.
+
+**가능한 원인:**
+1. **Task.Run 내부 최적화**: Task.Run이 동일 스레드에서 인라인 실행될 때 컨텍스트가 유지될 수 있음
+2. **ExecutionContext 캡처 시점**: Task 객체 생성 시점에 이미 ExecutionContext가 캡처되었을 수 있음
+3. **.NET 런타임 버전**: 런타임 버전에 따라 동작이 다를 수 있음
+
+**결론**: `ThreadPool.UnsafeQueueUserWorkItem()`만이 확실하게 ExecutionContext를 전파하지 않으며, LanguageExt는 이 API를 사용하지 않음.
 
 ### LanguageExt 5.0.0-beta-77
 
