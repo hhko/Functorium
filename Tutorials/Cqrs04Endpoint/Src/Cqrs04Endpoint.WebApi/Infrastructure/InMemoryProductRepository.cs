@@ -16,7 +16,7 @@ namespace Cqrs04Endpoint.WebApi.Infrastructure;
 public class InMemoryProductRepository : IProductRepository
 {
     private readonly ILogger<InMemoryProductRepository> _logger;
-    private readonly ConcurrentDictionary<Guid, Product> _products = new();
+    private static readonly ConcurrentDictionary<Guid, Product> _products = new();
 
     /// <summary>
     /// 관찰 가능성 로그를 위한 요청 카테고리
