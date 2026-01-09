@@ -7,7 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // =================================================================
 // Mediator 등록 (Scoped - WebApi에서 요청당 Scope 생성)
-// Source Generator가 Entry Point에서 실행되어야 internal Usecase에 접근 가능
+// Note: Mediator.SourceGenerator가 Entry Point에서 실행되어야
+//       internal Usecase에 접근 가능하므로 AddMediator()는 여기에 위치
 // =================================================================
 builder.Services.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);
 
