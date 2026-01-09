@@ -1,0 +1,64 @@
+using FluentValidation;
+using Functorium.Abstractions.Registrations;
+using Functorium.Applications.Pipelines;
+using Mediator;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
+
+namespace Cqrs06EndpointLayered.Adapters.Infrastructure.Abstractions.Registrations;
+
+public static class AdapterInfrastructureRegistration
+{
+    public static IServiceCollection RegisterAdapterInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    {
+        // =================================================================
+        // MeterFactory 등록 (UsecaseMetricsPipeline에 필요)
+        // =================================================================
+        services.AddMetrics();
+
+        // =================================================================
+        // FluentValidation 등록 - 어셈블리에서 모든 Validator 자동 등록
+        // =================================================================
+        services.AddValidatorsFromAssembly(AssemblyReference.Assembly);
+        services.AddValidatorsFromAssembly(Cqrs06EndpointLayered.Applications.AssemblyReference.Assembly);
+
+        // =================================================================
+        // OpenTelemetry 설정
+        // =================================================================
+        services
+            .RegisterOpenTelemetry(configuration, AssemblyReference.Assembly)
+            .ConfigureTracing(tracing => tracing.Configure(b => b.AddConsoleExporter()))
+            .ConfigureMetrics(metrics => metrics.Configure(b => b.AddConsoleExporter()))
+            .Build();
+
+        // =================================================================
+        // 파이프라인 등록 (순서 중요! - Scoped로 등록)
+        // =================================================================
+        // Request -> Metric -> Trace -> Logger -> Validation -> Exception -> Handler
+
+        // 1. Metric Pipeline (지표)
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(UsecaseMetricsPipeline<,>));
+
+        // 2. Trace Pipeline (추적)
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(UsecaseTracingPipeline<,>));
+
+        // 3. Logger Pipeline (로그)
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(UsecaseLoggingPipeline<,>));
+
+        // 4. Validation Pipeline (유효성 검사)
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(UsecaseValidationPipeline<,>));
+
+        // 5. Exception Pipeline (예외)
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(UsecaseExceptionPipeline<,>));
+
+        return services;
+    }
+
+    public static IApplicationBuilder UseAdapterInfrastructure(this IApplicationBuilder app)
+    {
+        return app;
+    }
+}

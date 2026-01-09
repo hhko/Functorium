@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- 소스 생성기가 생성한 파일을 명시적으로 생성하도록 설정 -->
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LanguageExt.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cqrs06EndpointLayered.Applications\Cqrs06EndpointLayered.Applications.csproj" />
+  </ItemGroup>
+
+  <!-- Source Generator 참조 (Analyzer로 참조) -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Src\Functorium.Adapters.SourceGenerator\Functorium.Adapters.SourceGenerator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Cqrs06EndpointLayered.Tests.Integration" />
+    <InternalsVisibleTo Include="Cqrs06EndpointLayered.Tests.Unit" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+  </ItemGroup>
+
+</Project>

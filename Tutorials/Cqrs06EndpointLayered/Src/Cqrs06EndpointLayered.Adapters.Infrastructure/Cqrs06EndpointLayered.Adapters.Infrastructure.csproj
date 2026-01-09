@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LanguageExt.Core" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="Mediator.Abstractions" />
+    <PackageReference Include="OpenTelemetry.Exporter.Console" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Src\Functorium\Functorium.csproj" />
+    <ProjectReference Include="..\Cqrs06EndpointLayered.Adapters.Presentation\Cqrs06EndpointLayered.Adapters.Presentation.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Cqrs06EndpointLayered.Tests.Integration" />
+    <InternalsVisibleTo Include="Cqrs06EndpointLayered.Tests.Unit" />
+  </ItemGroup>
+
+</Project>

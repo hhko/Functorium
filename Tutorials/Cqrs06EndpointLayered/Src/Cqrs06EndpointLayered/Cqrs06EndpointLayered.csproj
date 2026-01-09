@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mediator.SourceGenerator" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cqrs06EndpointLayered.Adapters.Infrastructure\Cqrs06EndpointLayered.Adapters.Infrastructure.csproj" />
+    <ProjectReference Include="..\Cqrs06EndpointLayered.Adapters.Persistence\Cqrs06EndpointLayered.Adapters.Persistence.csproj" />
+    <ProjectReference Include="..\Cqrs06EndpointLayered.Adapters.Presentation\Cqrs06EndpointLayered.Adapters.Presentation.csproj" />
+    <ProjectReference Include="..\Cqrs06EndpointLayered.Applications\Cqrs06EndpointLayered.Applications.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Cqrs06EndpointLayered.Tests.Integration" />
+  </ItemGroup>
+
+</Project>

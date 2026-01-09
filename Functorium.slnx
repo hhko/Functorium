@@ -64,6 +64,19 @@
     <Project Path="Tutorials/Observability/Tests/Observability.Tests.Integration/Observability.Tests.Integration.csproj" />
     <Project Path="Tutorials/Observability/Tests/Observability.Tests.Unit/Observability.Tests.Unit.csproj" />
   </Folder>
+  <Folder Name="/Tutorials/Cqrs06EndpointLayered/" />
+  <Folder Name="/Tutorials/Cqrs06EndpointLayered/Src/">
+    <Project Path="Tutorials/Cqrs06EndpointLayered/Src/Cqrs06EndpointLayered.Adapters.Infrastructure/Cqrs06EndpointLayered.Adapters.Infrastructure.csproj" />
+    <Project Path="Tutorials/Cqrs06EndpointLayered/Src/Cqrs06EndpointLayered.Adapters.Persistence/Cqrs06EndpointLayered.Adapters.Persistence.csproj" />
+    <Project Path="Tutorials/Cqrs06EndpointLayered/Src/Cqrs06EndpointLayered.Adapters.Presentation/Cqrs06EndpointLayered.Adapters.Presentation.csproj" />
+    <Project Path="Tutorials/Cqrs06EndpointLayered/Src/Cqrs06EndpointLayered.Applications/Cqrs06EndpointLayered.Applications.csproj" />
+    <Project Path="Tutorials/Cqrs06EndpointLayered/Src/Cqrs06EndpointLayered.Domains/Cqrs06EndpointLayered.Domains.csproj" />
+    <Project Path="Tutorials/Cqrs06EndpointLayered/Src/Cqrs06EndpointLayered/Cqrs06EndpointLayered.csproj" />
+  </Folder>
+  <Folder Name="/Tutorials/Cqrs06EndpointLayered/Tests/">
+    <Project Path="Tutorials/Cqrs06EndpointLayered/Tests/Cqrs06EndpointLayered.Tests.Integration/Cqrs06EndpointLayered.Tests.Integration.csproj" />
+    <Project Path="Tutorials/Cqrs06EndpointLayered/Tests/Cqrs06EndpointLayered.Tests.Unit/Cqrs06EndpointLayered.Tests.Unit.csproj" />
+  </Folder>
   <Folder Name="/Tutorials/HistogramExploration/" />
   <Folder Name="/Tutorials/HistogramExploration/Src/">
     <Project Path="Tutorials/HistogramExploration/Src/HistogramExploration.Demo/HistogramExploration.Demo.csproj" />
