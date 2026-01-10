@@ -1,9 +1,9 @@
-using System.Diagnostics;
-using System.Diagnostics.Metrics;
+using System.Reflection;
 using Cqrs03Functional.Demo.Infrastructure;
 using FluentValidation;
-using Functorium.Adapters.Observabilities;
+using Functorium.Abstractions.Registrations;
 using Mediator;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -22,6 +22,11 @@ public sealed class CreateProductCommandTests : IDisposable
     {
         ServiceCollection services = new();
 
+        // Configuration 설정
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>())
+            .Build();
+
         // Logging 설정
         services.AddLogging(builder =>
         {
@@ -35,21 +40,16 @@ public sealed class CreateProductCommandTests : IDisposable
         // FluentValidation 등록
         services.AddValidatorsFromAssemblyContaining<CreateProductCommand.Validator>();
 
-        // Validation Pipeline 등록
-        services.AddSingleton(typeof(Mediator.IPipelineBehavior<,>), typeof(UsecaseValidationPipeline<,>));
-
-        // OpenTelemetry 옵션 등록
-        services.AddSingleton<IOpenTelemetryOptions>(new TestOpenTelemetryOptions());
-
-        // SloConfiguration 등록
-        services.AddSingleton(new Functorium.Applications.Observabilities.SloConfiguration());
-
-        // ActivitySource 등록 (Tracing용)
-        ActivitySource activitySource = new("Cqrs03Functional.Demo.Tests");
-        services.AddSingleton(activitySource);
-
         // MeterFactory 등록 (Metrics용)
         services.AddMetrics();
+
+        // OpenTelemetry 및 Validation Pipeline 등록 (ConfigurePipelines API 사용)
+        services
+            .RegisterOpenTelemetry(configuration, Assembly.GetExecutingAssembly())
+            .ConfigurePipelines(pipelines => pipelines
+                .UseValidation()
+                .WithLifetime(ServiceLifetime.Singleton))
+            .Build();
 
         // InMemoryProductRepository 등록 (테스트용 생성자 사용)
         services.AddScoped<IProductRepository, InMemoryProductRepository>();
@@ -62,12 +62,6 @@ public sealed class CreateProductCommandTests : IDisposable
     public void Dispose()
     {
         _serviceProvider.Dispose();
-    }
-
-    private sealed class TestOpenTelemetryOptions : IOpenTelemetryOptions
-    {
-        public string ServiceNamespace => "Cqrs03Functional.Demo.Tests";
-        public bool EnablePrometheusExporter => false;
     }
 
 

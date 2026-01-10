@@ -1,19 +1,21 @@
 using System.Diagnostics;
+using Functorium.Adapters.Observabilities.Pipelines;
 using LanguageExt.Common;
 using Mediator;
+using static Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines.TestFixtures;
 
-namespace Cqrs02Pipeline.Demo.Tests.Unit.PipelinesTests;
+namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines;
 
 /// <summary>
 /// UsecaseTracingPipeline 테스트
 /// 분산 추적 파이프라인 테스트
 /// </summary>
-public sealed class TracePipelineTests : IDisposable
+public sealed class UsecaseTracingPipelineTests : IDisposable
 {
     private readonly ActivitySource _activitySource;
     private readonly ActivityListener _activityListener;
 
-    public TracePipelineTests()
+    public UsecaseTracingPipelineTests()
     {
         _activitySource = new ActivitySource("Test.TracePipeline");
         _activityListener = new ActivityListener
@@ -30,47 +32,15 @@ public sealed class TracePipelineTests : IDisposable
         _activitySource?.Dispose();
     }
 
-    #region Test Fixtures
-
-    /// <summary>
-    /// 테스트용 Request
-    /// </summary>
-    public sealed record class TestRequest(string Name) : IMessage;
-
-    /// <summary>
-    /// CRTP 패턴을 따르는 테스트용 Response.
-    /// IFinResponse{TSelf}와 IFinResponseFactory{TSelf}를 직접 구현합니다.
-    /// </summary>
-    public sealed record class TestResponse : IFinResponse, IFinResponseFactory<TestResponse>, IFinResponseWithError
-    {
-        public bool IsSucc { get; init; }
-        public bool IsFail => !IsSucc;
-        public Guid Id { get; init; }
-        public Error? ErrorValue { get; init; }
-
-        // IFinResponseWithError 구현 (Fail 케이스에서 Error 접근용)
-        Error IFinResponseWithError.Error => ErrorValue!;
-
-        private TestResponse() { }
-
-        public static TestResponse CreateSuccess(Guid id) => new() { IsSucc = true, Id = id };
-        public static TestResponse CreateFail(Error error) => new() { IsSucc = false, ErrorValue = error };
-
-        // IFinResponseFactory<TestResponse> 구현
-        static TestResponse IFinResponseFactory<TestResponse>.CreateFail(Error error) => CreateFail(error);
-    }
-
-    #endregion
-
     [Fact]
     public async Task Handle_SuccessfulRequest_CreatesActivity()
     {
         // Arrange
-        var pipeline = new UsecaseTracingPipeline<TestRequest, TestResponse>(_activitySource);
-        var request = new TestRequest("Test");
+        var pipeline = new UsecaseTracingPipeline<SimpleTestRequest, TestResponse>(_activitySource);
+        var request = new SimpleTestRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
-        MessageHandlerDelegate<TestRequest, TestResponse> next =
+        MessageHandlerDelegate<SimpleTestRequest, TestResponse> next =
             (_, _) => ValueTask.FromResult(expectedResponse);
 
         // Act
@@ -79,18 +49,17 @@ public sealed class TracePipelineTests : IDisposable
         // Assert
         result.IsSucc.ShouldBeTrue();
         result.Id.ShouldBe(expectedResponse.Id);
-        // Activity가 생성되었는지 확인 (Activity.Current가 null이 아니어야 함)
     }
 
     [Fact]
     public async Task Handle_FailedRequest_CreatesActivityWithErrorStatus()
     {
         // Arrange
-        var pipeline = new UsecaseTracingPipeline<TestRequest, TestResponse>(_activitySource);
-        var request = new TestRequest("Test");
+        var pipeline = new UsecaseTracingPipeline<SimpleTestRequest, TestResponse>(_activitySource);
+        var request = new SimpleTestRequest("Test");
         var errorResponse = TestResponse.CreateFail(Error.New("Test error"));
 
-        MessageHandlerDelegate<TestRequest, TestResponse> next =
+        MessageHandlerDelegate<SimpleTestRequest, TestResponse> next =
             (_, _) => ValueTask.FromResult(errorResponse);
 
         // Act
@@ -98,18 +67,17 @@ public sealed class TracePipelineTests : IDisposable
 
         // Assert
         result.IsFail.ShouldBeTrue();
-        // Activity가 생성되고 에러 상태로 설정되었는지 확인
     }
 
     [Fact]
     public async Task Handle_MeasuresElapsedTime()
     {
         // Arrange
-        var pipeline = new UsecaseTracingPipeline<TestRequest, TestResponse>(_activitySource);
-        var request = new TestRequest("Test");
+        var pipeline = new UsecaseTracingPipeline<SimpleTestRequest, TestResponse>(_activitySource);
+        var request = new SimpleTestRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
-        MessageHandlerDelegate<TestRequest, TestResponse> next =
+        MessageHandlerDelegate<SimpleTestRequest, TestResponse> next =
             async (_, _) =>
             {
                 await Task.Delay(10); // Small delay to measure
@@ -121,19 +89,18 @@ public sealed class TracePipelineTests : IDisposable
 
         // Assert
         result.IsSucc.ShouldBeTrue();
-        // 처리 시간이 측정되었는지 확인
     }
 
     [Fact]
     public async Task Handle_PreservesResponseFromHandler()
     {
         // Arrange
-        var pipeline = new UsecaseTracingPipeline<TestRequest, TestResponse>(_activitySource);
-        var request = new TestRequest("Test");
+        var pipeline = new UsecaseTracingPipeline<SimpleTestRequest, TestResponse>(_activitySource);
+        var request = new SimpleTestRequest("Test");
         var expectedId = Guid.NewGuid();
         var expectedResponse = TestResponse.CreateSuccess(expectedId);
 
-        MessageHandlerDelegate<TestRequest, TestResponse> next =
+        MessageHandlerDelegate<SimpleTestRequest, TestResponse> next =
             (_, _) => ValueTask.FromResult(expectedResponse);
 
         // Act
@@ -149,11 +116,11 @@ public sealed class TracePipelineTests : IDisposable
     {
         // Arrange - ActivitySource가 리스닝하지 않는 경우
         using var nonListeningSource = new ActivitySource("NonListening");
-        var pipeline = new UsecaseTracingPipeline<TestRequest, TestResponse>(nonListeningSource);
-        var request = new TestRequest("Test");
+        var pipeline = new UsecaseTracingPipeline<SimpleTestRequest, TestResponse>(nonListeningSource);
+        var request = new SimpleTestRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
-        MessageHandlerDelegate<TestRequest, TestResponse> next =
+        MessageHandlerDelegate<SimpleTestRequest, TestResponse> next =
             (_, _) => ValueTask.FromResult(expectedResponse);
 
         // Act
@@ -165,14 +132,32 @@ public sealed class TracePipelineTests : IDisposable
     }
 
     [Fact]
+    public async Task Handle_CommandRequest_CreatesActivity()
+    {
+        // Arrange
+        var pipeline = new UsecaseTracingPipeline<TestCommandRequest, TestResponse>(_activitySource);
+        var request = new TestCommandRequest("Command");
+        var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
+
+        MessageHandlerDelegate<TestCommandRequest, TestResponse> next =
+            (_, _) => ValueTask.FromResult(expectedResponse);
+
+        // Act
+        TestResponse result = await pipeline.Handle(request, next, CancellationToken.None);
+
+        // Assert
+        result.IsSucc.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task Handle_QueryRequest_CreatesActivity()
     {
         // Arrange
-        var pipeline = new UsecaseTracingPipeline<TestRequest, TestResponse>(_activitySource);
-        var request = new TestRequest("Query");
+        var pipeline = new UsecaseTracingPipeline<TestQueryRequest, TestResponse>(_activitySource);
+        var request = new TestQueryRequest(Guid.NewGuid());
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
-        MessageHandlerDelegate<TestRequest, TestResponse> next =
+        MessageHandlerDelegate<TestQueryRequest, TestResponse> next =
             (_, _) => ValueTask.FromResult(expectedResponse);
 
         // Act
@@ -182,4 +167,3 @@ public sealed class TracePipelineTests : IDisposable
         result.IsSucc.ShouldBeTrue();
     }
 }
-
