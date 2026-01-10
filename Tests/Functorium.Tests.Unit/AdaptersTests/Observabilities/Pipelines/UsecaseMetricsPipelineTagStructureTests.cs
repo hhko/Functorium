@@ -12,9 +12,11 @@ using Mediator;
 
 using Microsoft.Extensions.Options;
 
+using MsOptions = Microsoft.Extensions.Options.Options;
+
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 
-namespace Functorium.Tests.Unit.ApplicationsTests.Pipelines;
+namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines;
 
 /// <summary>
 /// UsecaseMetricsPipeline의 태그 구조를 검증하는 테스트입니다.
@@ -56,8 +58,8 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
     public UsecaseMetricsPipelineTagStructureTests()
     {
         _meterFactory = new TestMeterFactory();
-        _openTelemetryOptions = Options.Create(new OpenTelemetryOptions { ServiceNamespace = "TestService" });
-        _sloConfigurationOptions = Options.Create(new SloConfiguration());
+        _openTelemetryOptions = MsOptions.Create(new OpenTelemetryOptions { ServiceNamespace = "TestService" });
+        _sloConfigurationOptions = MsOptions.Create(new SloConfiguration());
 
         _capturedMeasurements = new List<CapturedMeasurement>();
         _listener = new MeterListener();

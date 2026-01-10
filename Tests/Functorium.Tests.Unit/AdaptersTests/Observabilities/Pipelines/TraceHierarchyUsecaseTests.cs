@@ -5,7 +5,7 @@ using Functorium.Adapters.Observabilities.Spans;
 using Functorium.Tests.Unit.Abstractions.Constants;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 
-namespace Functorium.Tests.Unit.ApplicationsTests.Pipelines;
+namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines;
 
 /// <summary>
 /// 유스케이스 관점에서 Trace 계층 구조를 테스트합니다.
