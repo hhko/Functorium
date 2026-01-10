@@ -60,7 +60,7 @@ public sealed class UpdateProductCommand
     /// Command Handler - 상품 업데이트 로직
     /// SimulateException이 true인 경우 의도적으로 예외 발생
     /// </summary>
-    internal sealed class Usecase(
+    public sealed class Usecase(
         ILogger<Usecase> logger,
         IProductRepository productRepository)
         : ICommandUsecase<Request, Response>

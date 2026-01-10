@@ -59,7 +59,7 @@ public sealed class CreateProductCommand
     /// <summary>
     /// Command Handler - 실제 비즈니스 로직 구현
     /// </summary>
-    internal sealed class Usecase(
+    public sealed class Usecase(
         ILogger<Usecase> logger,
         IProductRepository productRepository)
         : ICommandUsecase<Request, Response>

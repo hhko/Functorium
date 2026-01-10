@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Cqrs06EndpointLayered" />
+    <InternalsVisibleTo Include="Cqrs06EndpointLayered.Adapters.Infrastructure" />
     <InternalsVisibleTo Include="Cqrs06EndpointLayered.Tests.Integration" />
     <InternalsVisibleTo Include="Cqrs06EndpointLayered.Tests.Unit" />
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />

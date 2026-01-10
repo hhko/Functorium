@@ -32,7 +32,7 @@ public sealed class GetAllProductsQuery
     /// <summary>
     /// Query Handler - 전체 상품 조회 로직
     /// </summary>
-    internal sealed class Usecase(
+    public sealed class Usecase(
         ILogger<Usecase> logger,
         IProductRepository productRepository)
         : IQueryUsecase<Request, Response>

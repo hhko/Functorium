@@ -15,6 +15,12 @@ public static class AdapterInfrastructureRegistration
     public static IServiceCollection RegisterAdapterInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         // =================================================================
+        // Mediator 등록 (Scoped - WebApi에서 요청당 Scope 생성)
+        // Mediator.SourceGenerator가 이 어셈블리에서 AddMediator() 생성
+        // =================================================================
+        services.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);
+
+        // =================================================================
         // MeterFactory 등록 (UsecaseMetricsPipeline에 필요)
         // =================================================================
         services.AddMetrics();

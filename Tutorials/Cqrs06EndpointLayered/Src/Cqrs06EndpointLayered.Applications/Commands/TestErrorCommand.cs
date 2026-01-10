@@ -69,7 +69,7 @@ public sealed class TestErrorCommand
     /// <summary>
     /// Command Handler - 각 에러 시나리오별 처리
     /// </summary>
-    internal sealed class Usecase(ILogger<Usecase> logger) : ICommandUsecase<Request, Response>
+    public sealed class Usecase(ILogger<Usecase> logger) : ICommandUsecase<Request, Response>
     {
         private readonly ILogger<Usecase> _logger = logger;
 
