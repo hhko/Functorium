@@ -65,7 +65,7 @@
 param(
   [Parameter(Mandatory = $false, Position = 0, HelpMessage = "솔루션 파일 경로 (.sln 또는 .slnx)")]
   [Alias("s")]
-  [string]$Solution,
+  [string]$Solution = "Functorium.slnx",
 
   [Parameter(Mandatory = $false, HelpMessage = "커버리지 필터링용 프로젝트 접두사")]
   [Alias("p")]
