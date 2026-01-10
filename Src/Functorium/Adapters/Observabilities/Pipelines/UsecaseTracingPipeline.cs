@@ -15,7 +15,7 @@ namespace Functorium.Adapters.Observabilities.Pipelines;
 /// Result 패턴을 위한 분산 추적 Pipeline.
 /// IsSucc/IsFail 패턴을 사용하여 안전하게 추적 정보를 기록합니다.
 /// </summary>
-public sealed class UsecaseTracingPipeline<TRequest, TResponse>
+internal sealed class UsecaseTracingPipeline<TRequest, TResponse>
     : UsecasePipelineBase<TRequest>
     , IPipelineBehavior<TRequest, TResponse>
         where TRequest : IMessage

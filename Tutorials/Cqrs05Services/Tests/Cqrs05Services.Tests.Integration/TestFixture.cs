@@ -2,7 +2,6 @@ using System.Reflection;
 using FluentValidation;
 using Functorium.Abstractions.Registrations;
 using Functorium.Applications.Cqrs;
-using Functorium.Adapters.Observabilities.Pipelines;
 using Mediator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -119,19 +118,15 @@ public class OrderServiceTestFixture : IAsyncLifetime
         addMediatorMethod?.Invoke(null, new object[] { services });
         services.AddValidatorsFromAssemblyContaining<OrderService.Program>();
 
-        // OpenTelemetry 설정
+        // OpenTelemetry 및 파이프라인 설정
         services
             .RegisterOpenTelemetry(configuration, Assembly.GetExecutingAssembly())
             .ConfigureTracing(tracing => tracing.Configure(builder => builder.AddConsoleExporter()))
             .ConfigureMetrics(metrics => metrics.Configure(builder => builder.AddConsoleExporter()))
+            .ConfigurePipelines(pipelines => pipelines
+                .UseAll()
+                .WithLifetime(ServiceLifetime.Singleton))
             .Build();
-
-        // 파이프라인 등록
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseMetricsPipeline<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseTracingPipeline<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseLoggingPipeline<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseValidationPipeline<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseExceptionPipeline<,>));
 
         // Repository 및 Messaging Adapter 등록
         services.RegisterScopedAdapterPipeline<IOrderRepository, InMemoryOrderRepositoryPipeline>();
@@ -222,19 +217,15 @@ public class InventoryServiceTestFixture : IAsyncLifetime
         addMediatorMethod?.Invoke(null, new object[] { services });
         services.AddValidatorsFromAssemblyContaining<InventoryService.Program>();
 
-        // OpenTelemetry 설정
+        // OpenTelemetry 및 파이프라인 설정
         services
             .RegisterOpenTelemetry(configuration, Assembly.GetExecutingAssembly())
             .ConfigureTracing(tracing => tracing.Configure(builder => builder.AddConsoleExporter()))
             .ConfigureMetrics(metrics => metrics.Configure(builder => builder.AddConsoleExporter()))
+            .ConfigurePipelines(pipelines => pipelines
+                .UseAll()
+                .WithLifetime(ServiceLifetime.Singleton))
             .Build();
-
-        // 파이프라인 등록
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseMetricsPipeline<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseTracingPipeline<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseLoggingPipeline<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseValidationPipeline<,>));
-        services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseExceptionPipeline<,>));
 
         // Repository 및 Messaging Adapter 등록
         services.RegisterScopedAdapterPipeline<IInventoryRepository, InMemoryInventoryRepositoryPipeline>();

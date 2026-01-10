@@ -15,7 +15,7 @@ namespace Functorium.Adapters.Observabilities.Pipelines;
 /// Result 패턴을 위한 로깅 Pipeline.
 /// IsSucc/IsFail 패턴을 사용하여 안전하게 응답을 로깅합니다.
 /// </summary>
-public sealed class UsecaseLoggingPipeline<TRequest, TResponse>
+internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
     : UsecasePipelineBase<TRequest>
     , IPipelineBehavior<TRequest, TResponse>
         where TRequest : IMessage

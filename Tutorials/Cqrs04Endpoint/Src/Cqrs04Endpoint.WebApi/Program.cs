@@ -4,7 +4,6 @@ using Cqrs04Endpoint.WebApi.Infrastructure;
 using FastEndpoints;
 using FluentValidation;
 using Functorium.Abstractions.Registrations;
-using Functorium.Adapters.Observabilities.Pipelines;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry.Metrics;
@@ -38,33 +37,14 @@ builder.Services.AddMediator(options => options.ServiceLifetime = ServiceLifetim
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // =================================================================
-// OpenTelemetry 설정
+// OpenTelemetry 및 파이프라인 설정
 // =================================================================
 builder.Services
     .RegisterOpenTelemetry(configuration, Assembly.GetExecutingAssembly())
     .ConfigureTracing(tracing => tracing.Configure(b => b.AddConsoleExporter()))
     .ConfigureMetrics(metrics => metrics.Configure(b => b.AddConsoleExporter()))
+    .ConfigurePipelines()
     .Build();
-
-// =================================================================
-// 파이프라인 등록 (순서 중요! - Scoped로 등록)
-// =================================================================
-// Request -> Metric -> Trace -> Logger -> Validation -> Exception -> Handler
-
-// 1. Metric Pipeline (지표)
-builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(UsecaseMetricsPipeline<,>));
-
-// 2. Trace Pipeline (추적)
-builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(UsecaseTracingPipeline<,>));
-
-// 3. Logger Pipeline (로그)
-builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(UsecaseLoggingPipeline<,>));
-
-// 4. Validation Pipeline (유효성 검사)
-builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(UsecaseValidationPipeline<,>));
-
-// 5. Exception Pipeline (예외)
-builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(UsecaseExceptionPipeline<,>));
 
 // =================================================================
 // Repository 등록

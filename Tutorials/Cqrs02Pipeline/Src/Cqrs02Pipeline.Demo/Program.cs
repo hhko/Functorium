@@ -6,7 +6,6 @@ using Cqrs02Pipeline.Demo.Usecases;
 using FluentValidation;
 using Functorium.Abstractions.Registrations;
 using Functorium.Applications.Cqrs;
-using Functorium.Adapters.Observabilities.Pipelines;
 using LanguageExt;
 using LanguageExt.Common;
 using Mediator;
@@ -18,11 +17,11 @@ using OpenTelemetry.Trace;
 Console.WriteLine("=== CQRS Pipeline Pattern Demo ===");
 Console.WriteLine();
 Console.WriteLine("이 데모는 Functorium의 파이프라인 기능을 보여줍니다:");
-Console.WriteLine("  1. UsecaseExceptionPipeline - 예외를 Error로 변환");
-Console.WriteLine("  2. UsecaseValidationPipeline - FluentValidation 검증");
+Console.WriteLine("  1. UsecaseMetricsPipeline - OpenTelemetry 지표");
+Console.WriteLine("  2. UsecaseTracingPipeline - OpenTelemetry 추적");
 Console.WriteLine("  3. UsecaseLoggingPipeline - OpenTelemetry 로그");
-Console.WriteLine("  4. UsecaseTracingPipeline - OpenTelemetry 추적");
-Console.WriteLine("  5. UsecaseMetricsPipeline - OpenTelemetry 지표");
+Console.WriteLine("  4. UsecaseValidationPipeline - FluentValidation 검증");
+Console.WriteLine("  5. UsecaseExceptionPipeline - 예외를 Error로 변환");
 Console.WriteLine();
 
 // =================================================================
@@ -47,34 +46,15 @@ services.AddMediator();
 // FluentValidation 등록 - 어셈블리에서 모든 Validator 자동 등록
 services.AddValidatorsFromAssemblyContaining<Program>();
 
-// OpenTelemetry 설정 (RegisterOpenTelemetry 사용)
+// OpenTelemetry 및 파이프라인 설정
 services
     .RegisterOpenTelemetry(configuration, Assembly.GetExecutingAssembly())
     .ConfigureTracing(tracing => tracing.Configure(builder => builder.AddConsoleExporter()))
     .ConfigureMetrics(metrics => metrics.Configure(builder => builder.AddConsoleExporter()))
+    .ConfigurePipelines(pipelines => pipelines
+        .UseAll()
+        .WithLifetime(ServiceLifetime.Singleton))
     .Build();
-
-// =================================================================
-// 파이프라인 등록 (순서 중요!)
-// =================================================================
-// 파이프라인은 외부에서 내부로 실행됩니다:
-// Request -> Exception -> Validation -> Logger -> Trace -> Metric -> Handler
-// Response <- Exception <- Validation <- Logger <- Trace <- Metric <- Handler
-
-// 1. Exception Pipeline (예외)
-services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseExceptionPipeline<,>));
-
-// 2. Validation Pipeline (유효성 검사)
-services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseValidationPipeline<,>));
-
-// 3. Logger Pipeline (로그)
-services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseLoggingPipeline<,>));
-
-// 4. Trace Pipeline (추적)
-services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseTracingPipeline<,>));
-
-// 5. Metric Pipeline (지표)
-services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseMetricsPipeline<,>));
 
 // Repository 등록
 services.AddSingleton<IProductRepository, InMemoryProductRepository>();

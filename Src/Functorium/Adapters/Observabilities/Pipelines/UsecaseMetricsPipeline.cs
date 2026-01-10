@@ -23,7 +23,7 @@ namespace Functorium.Adapters.Observabilities.Pipelines;
 ///
 /// IsSucc/IsFail 패턴을 사용하여 안전하게 메트릭을 기록합니다.
 /// </summary>
-public sealed class UsecaseMetricsPipeline<TRequest, TResponse>
+internal sealed class UsecaseMetricsPipeline<TRequest, TResponse>
     : UsecasePipelineBase<TRequest>
     , IPipelineBehavior<TRequest, TResponse>
     , IDisposable

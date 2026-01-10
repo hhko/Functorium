@@ -16,7 +16,7 @@ namespace Functorium.Adapters.Observabilities.Pipelines;
 ///
 /// IFinResponseFactory{TSelf}의 static abstract 메서드를 활용하여 리플렉션 없이 타입 안전하게 구현.
 /// </summary>
-public sealed class UsecaseValidationPipeline<TRequest, TResponse>
+internal sealed class UsecaseValidationPipeline<TRequest, TResponse>
     : UsecasePipelineBase<TRequest>
     , IPipelineBehavior<TRequest, TResponse>
         where TRequest : IMessage

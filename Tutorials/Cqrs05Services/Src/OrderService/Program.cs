@@ -2,7 +2,6 @@ using System.Reflection;
 using FluentValidation;
 using Functorium.Abstractions.Registrations;
 using Functorium.Applications.Cqrs;
-using Functorium.Adapters.Observabilities.Pipelines;
 using Mediator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,35 +36,15 @@ services.AddMediator();
 // FluentValidation 등록 - 어셈블리에서 모든 Validator 자동 등록
 services.AddValidatorsFromAssemblyContaining<Program>();
 
-// OpenTelemetry 설정 (RegisterOpenTelemetry 사용)
+// OpenTelemetry 및 파이프라인 설정
 services
     .RegisterOpenTelemetry(configuration, Assembly.GetExecutingAssembly())
     .ConfigureTracing(tracing => tracing.Configure(builder => builder.AddConsoleExporter()))
     .ConfigureMetrics(metrics => metrics.Configure(builder => builder.AddConsoleExporter()))
+    .ConfigurePipelines(pipelines => pipelines
+        .UseAll()
+        .WithLifetime(ServiceLifetime.Singleton))
     .Build();
-// AdapterObservability는 자동으로 등록됨
-
-// =================================================================
-// 파이프라인 등록 (순서 중요!)
-// =================================================================
-// 파이프라인은 외부에서 내부로 실행됩니다:
-// Request -> Metric -> Trace -> Logger -> Validation -> Exception -> Handler
-// Response <- Metric <- Trace <- Logger <- Validation <- Exception <- Handler
-
-// 1. Metric Pipeline (지표)
-services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseMetricsPipeline<,>));
-
-// 2. Trace Pipeline (추적)
-services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseTracingPipeline<,>));
-
-// 3. Logger Pipeline (로그)
-services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseLoggingPipeline<,>));
-
-// 4. Validation Pipeline (유효성 검사)
-services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseValidationPipeline<,>));
-
-// 5. Exception Pipeline (예외)
-services.AddSingleton(typeof(IPipelineBehavior<,>), typeof(UsecaseExceptionPipeline<,>));
 
 // Repository 등록 (관찰 가능성 로그 지원)
 // RegisterScopedAdapterPipeline은 ActivityContext를 첫 번째 매개변수로 받는 생성자를 사용
