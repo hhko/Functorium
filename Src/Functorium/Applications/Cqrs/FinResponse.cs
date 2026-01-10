@@ -299,6 +299,20 @@ public static class FinResponse
 /// <summary>
 /// FinToFinResponse{B}에서 Fin{A}로 변환하는 확장 메서드.
 /// Repository(Fin) → Usecase(FinResponse) 계층 간 변환에 사용됩니다.
+///
+///  1. **UsecaseValidationPipeline (65줄)**과 **UsecaseExceptionPipeline (31줄)**에서 TResponse.CreateFail(error)를 호출합니다.
+///  2. 이것은 IFinResponseFactory<TSelf>의 static abstract 메서드입니다:
+///     public interface IFinResponseFactory<TSelf>
+///     {
+///         static abstract TSelf CreateFail(Error error);
+///     }
+///  3. static abstract 메서드는 인터페이스 타입에서 호출할 수 없습니다. 구체 타입이어야만 호출 가능합니다.
+///
+///  만약 전체를 IFinResponse<A>로 변경하면:
+///    - ICommandRequest<TSuccess>가 ICommand<IFinResponse<TSuccess>>를 상속
+///    - Pipeline의 TResponse가 IFinResponse<TSuccess>가 됨
+///    - IFinResponse는 인터페이스이므로 IFinResponseFactory를 구현하지 않음
+///    - TResponse.CreateFail() 호출 불가 → 컴파일 에러
 /// </summary>
 public static class FinToFinResponse
 {
