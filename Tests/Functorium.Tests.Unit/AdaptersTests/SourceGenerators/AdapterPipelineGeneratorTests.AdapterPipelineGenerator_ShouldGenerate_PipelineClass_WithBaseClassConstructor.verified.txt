@@ -8,8 +8,9 @@
 
 #nullable enable
 
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using Functorium.Abstractions;
-using Functorium.Adapters.Observabilities.Abstractions;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Applications.Observabilities;
 
@@ -20,11 +21,14 @@ namespace TestNamespace;
 
 public class DerivedAdapterPipeline : DerivedAdapter
 {
-    private readonly IObservabilityContext? _parentContext;
-
+    private readonly ActivitySource _activitySource;
     private readonly ILogger<DerivedAdapterPipeline> _logger;
-    private readonly ISpanFactory _spanFactory;
-    private readonly IMetricRecorder _metricRecorder;
+
+    // Metrics
+    private readonly Counter<long> _requestCounter;
+    private readonly Counter<long> _successCounter;
+    private readonly Counter<long> _failureCounter;
+    private readonly Histogram<double> _durationHistogram;
 
     private const string RequestHandler = nameof(DerivedAdapter);
 
@@ -34,20 +38,25 @@ public class DerivedAdapterPipeline : DerivedAdapter
     private readonly bool _isErrorEnabled;
 
     public DerivedAdapterPipeline(
-        IObservabilityContext? parentContext,
+        ActivitySource activitySource,
         ILogger<DerivedAdapterPipeline> logger,
-        ISpanFactory spanFactory,
-        IMetricRecorder metricRecorder,
+        IMeterFactory meterFactory,
         string connectionString)
         : base(connectionString)
     {
-        global::System.ArgumentNullException.ThrowIfNull(spanFactory);
-        global::System.ArgumentNullException.ThrowIfNull(metricRecorder);
+        global::System.ArgumentNullException.ThrowIfNull(activitySource);
+        global::System.ArgumentNullException.ThrowIfNull(meterFactory);
 
-        _parentContext = parentContext;
+        _activitySource = activitySource;
         _logger = logger;
-        _spanFactory = spanFactory;
-        _metricRecorder = metricRecorder;
+
+        // Meter 및 Metrics 초기화
+        string categoryLower = this.RequestCategory?.ToLowerInvariant() ?? "adapter";
+        var meter = meterFactory.Create($"adapter.{categoryLower}");
+        _requestCounter = meter.CreateCounter<long>($"adapter.{categoryLower}.requests", "{request}", "Total number of adapter requests");
+        _successCounter = meter.CreateCounter<long>($"adapter.{categoryLower}.responses.success", "{response}", "Total number of successful responses");
+        _failureCounter = meter.CreateCounter<long>($"adapter.{categoryLower}.responses.failure", "{response}", "Total number of failed responses");
+        _durationHistogram = meter.CreateHistogram<double>($"adapter.{categoryLower}.duration", "s", "Duration of adapter execution in seconds");
 
         _isDebugEnabled = logger.IsEnabled(LogLevel.Debug);
         _isInformationEnabled = logger.IsEnabled(LogLevel.Information);
@@ -69,22 +78,22 @@ public class DerivedAdapterPipeline : DerivedAdapter
             global::System.Action<string, string, A, double> responseLogSuccess,
             global::System.Action<string, string, global::LanguageExt.Common.Error, double> responseLogFailure,
             long startTimestamp) =>
-        AcquireSpan(requestHandler, requestHandlerMethod)
+        AcquireActivity(requestHandler, requestHandlerMethod)
             .Bracket(
-                Use: span =>
+                Use: activity =>
                     from _logged in requestLog()
                     from result in ExecuteOperationWithErrorHandling(
                         requestHandler,
                         requestHandlerMethod,
                         operation,
-                        span,
+                        activity,
                         responseLogSuccess,
                         responseLogFailure,
                         startTimestamp)
                     select result,
-                Fin: span => global::LanguageExt.IO.lift(() =>
+                Fin: activity => global::LanguageExt.IO.lift(() =>
                 {
-                    span?.Dispose();
+                    activity?.Dispose();
                     return global::LanguageExt.Unit.Default;
                 }));
 
@@ -92,7 +101,7 @@ public class DerivedAdapterPipeline : DerivedAdapter
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.IO<A> operation,
-        ISpan? span,
+        Activity? activity,
         global::System.Action<string, string, A, double> responseLogSuccess,
         global::System.Action<string, string, global::LanguageExt.Common.Error, double> responseLogFailure,
         long startTimestamp) =>
@@ -102,28 +111,28 @@ public class DerivedAdapterPipeline : DerivedAdapter
                 {
                     double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);
                     responseLogSuccess(requestHandler, requestHandlerMethod, result, elapsed);
-                    RecordSpanSuccess(span, elapsed);
+                    RecordActivitySuccess(activity, elapsed);
                     return global::LanguageExt.Unit.Default;
                 })
                 select result)
             .IfFail(error =>
-                HandleOperationFailure<A>(requestHandler, requestHandlerMethod, error, span, startTimestamp, responseLogFailure));
+                HandleOperationFailure<A>(requestHandler, requestHandlerMethod, error, activity, startTimestamp, responseLogFailure));
 
     private global::LanguageExt.IO<A> HandleOperationFailure<A>(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
-        ISpan? span,
+        Activity? activity,
         long startTimestamp,
         global::System.Action<string, string, global::LanguageExt.Common.Error, double> responseLogFailure)
     {
         double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);
         responseLogFailure(requestHandler, requestHandlerMethod, error, elapsed);
-        RecordSpanFailure(span, error, elapsed);
+        RecordActivityFailure(activity, error, elapsed);
         return global::LanguageExt.IO.fail<A>(error);
     }
 
-    private global::LanguageExt.IO<ISpan?> AcquireSpan(string requestHandler, string requestHandlerMethod) =>
+    private global::LanguageExt.IO<Activity?> AcquireActivity(string requestHandler, string requestHandlerMethod) =>
         global::LanguageExt.IO.lift(() =>
         {
             string operationName = ObservabilityNaming.Spans.OperationName(
@@ -132,31 +141,69 @@ public class DerivedAdapterPipeline : DerivedAdapter
                 requestHandler,
                 requestHandlerMethod);
 
-            ISpan? span = _spanFactory.CreateChildSpan(
-                _parentContext,
+            // TagList: 구조체로 스택에 할당되어 GC 부담 최소화
+            TagList tags = new()
+            {
+                { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
+                { ObservabilityNaming.CustomAttributes.RequestCategory, this.GetRequestCategoryPascalCase() },
+                { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },
+                { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod }
+            };
+
+            // Activity.Current를 부모로 사용 (표준 OpenTelemetry 동작)
+            var parentContext = Activity.Current?.Context ?? default;
+            var activity = _activitySource.StartActivity(
                 operationName,
-                this.GetRequestCategoryPascalCase(),
-                requestHandler,
-                requestHandlerMethod);
+                ActivityKind.Internal,
+                parentContext,
+                tags);
 
-            _metricRecorder.RecordRequest(
-                this.GetRequestCategoryPascalCase(),
-                requestHandler,
-                requestHandlerMethod);
+            // Metrics 기록
+            TagList metricTags = new()
+            {
+                { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
+                { ObservabilityNaming.CustomAttributes.RequestCategory, this.GetRequestCategoryPascalCase() },
+                { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },
+                { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod }
+            };
+            _requestCounter.Add(1, metricTags);
 
-            return span;
+            return activity;
         });
 
-    private void RecordSpanSuccess(ISpan? span, double elapsed)
+    private void RecordActivitySuccess(Activity? activity, double elapsed)
     {
-        _metricRecorder.RecordResponseSuccess(this.GetRequestCategoryPascalCase(), RequestHandler, "Method", elapsed);
-        span?.SetSuccess(elapsed);
+        TagList metricTags = new()
+        {
+            { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
+            { ObservabilityNaming.CustomAttributes.RequestCategory, this.GetRequestCategoryPascalCase() },
+            { ObservabilityNaming.CustomAttributes.RequestHandler, RequestHandler },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, "Method" }
+        };
+        _successCounter.Add(1, metricTags);
+        _durationHistogram.Record(elapsed / 1000.0, metricTags); // ms to seconds
+
+        activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsed);
+        activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success);
+        activity?.SetStatus(ActivityStatusCode.Ok);
     }
 
-    private void RecordSpanFailure(ISpan? span, global::LanguageExt.Common.Error error, double elapsed)
+    private void RecordActivityFailure(Activity? activity, global::LanguageExt.Common.Error error, double elapsed)
     {
-        _metricRecorder.RecordResponseFailure(this.GetRequestCategoryPascalCase(), RequestHandler, "Method", elapsed, error);
-        span?.SetFailure(error, elapsed);
+        TagList metricTags = new()
+        {
+            { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
+            { ObservabilityNaming.CustomAttributes.RequestCategory, this.GetRequestCategoryPascalCase() },
+            { ObservabilityNaming.CustomAttributes.RequestHandler, RequestHandler },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, "Method" }
+        };
+        _failureCounter.Add(1, metricTags);
+        _durationHistogram.Record(elapsed / 1000.0, metricTags); // ms to seconds
+
+        activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsed);
+        activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);
+        activity?.SetTag(ObservabilityNaming.CustomAttributes.ErrorMessage, error.Message);
+        activity?.SetStatus(ActivityStatusCode.Error, error.Message);
     }
 
     private string GetRequestCategoryPascalCase() =>

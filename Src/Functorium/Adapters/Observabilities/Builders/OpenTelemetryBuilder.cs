@@ -1,12 +1,10 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Reflection;
 using Functorium.Abstractions.Errors.DestructuringPolicies;
-using Functorium.Adapters.Observabilities.Abstractions;
 using Functorium.Adapters.Observabilities.Builders.Configurators;
 using Functorium.Adapters.Observabilities.Configurations;
 using Functorium.Adapters.Observabilities.Loggers;
-using Functorium.Adapters.Observabilities.Metrics;
-using Functorium.Adapters.Observabilities.Spans;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -459,19 +457,45 @@ public partial class OpenTelemetryBuilder
             return new ActivitySource(serviceNamespace);
         });
 
-        // ISpanFactory 등록 (Singleton)
-        _services.AddSingleton<ISpanFactory>(sp =>
-        {
-            ActivitySource activitySource = sp.GetRequiredService<ActivitySource>();
-            return new OpenTelemetrySpanFactory(activitySource);
-        });
+        // IMeterFactory 등록 (Singleton) - Source Generator로 생성된 Pipeline에서 사용
+        // Microsoft.Extensions.Diagnostics에서 기본 구현 제공
+        _services.AddSingleton<IMeterFactory>(sp => new DefaultMeterFactory());
+    }
 
-        // IMetricRecorder 등록 (Singleton)
-        _services.AddSingleton<IMetricRecorder>(sp =>
+    /// <summary>
+    /// 기본 IMeterFactory 구현체
+    /// </summary>
+    private sealed class DefaultMeterFactory : IMeterFactory
+    {
+        private readonly Dictionary<string, Meter> _meters = new();
+        private readonly object _lock = new();
+
+        public Meter Create(MeterOptions options)
         {
-            var opts = sp.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
-            return new OpenTelemetryMetricRecorder(opts.ServiceNamespace);
-        });
+            ArgumentNullException.ThrowIfNull(options);
+
+            lock (_lock)
+            {
+                if (_meters.TryGetValue(options.Name, out var existingMeter))
+                    return existingMeter;
+
+                var meter = new Meter(options.Name, options.Version);
+                _meters[options.Name] = meter;
+                return meter;
+            }
+        }
+
+        public void Dispose()
+        {
+            lock (_lock)
+            {
+                foreach (var meter in _meters.Values)
+                {
+                    meter.Dispose();
+                }
+                _meters.Clear();
+            }
+        }
     }
 
     private void RegisterPipelinesInternal()

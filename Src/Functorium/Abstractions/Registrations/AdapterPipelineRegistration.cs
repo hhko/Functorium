@@ -1,7 +1,6 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using Microsoft.Extensions.DependencyInjection;
-using Functorium.Adapters.Observabilities.Abstractions;
-using Functorium.Adapters.Observabilities.Context;
 using Functorium.Applications.Observabilities;
 
 namespace Functorium.Abstractions.Registrations;
@@ -83,16 +82,16 @@ public static class AdapterPipelineRegistration
     // }
 
     /// <summary>
-    /// Activity.Current의 Context를 캡처하여 Scoped 서비스를 등록합니다.
-    /// 구현 타입이 ActivityContext를 첫 번째 매개변수로 받는 생성자를 가져야 합니다.
+    /// Scoped 서비스를 등록합니다.
+    /// 구현 타입의 생성자에 ActivitySource, ILogger, IMeterFactory를 주입합니다.
     /// </summary>
     /// <typeparam name="TService">등록할 서비스 인터페이스</typeparam>
-    /// <typeparam name="TImplementation">구현 클래스 타입 (ActivityContext를 첫 번째 매개변수로 받는 생성자 필요)</typeparam>
+    /// <typeparam name="TImplementation">구현 클래스 타입</typeparam>
     /// <param name="services">서비스 컬렉션</param>
     /// <returns>서비스 컬렉션</returns>
     /// <example>
     /// <code>
-    /// services.RegisterScopedAdapterPipeline&lt;IRepositoryIO, RepositoryIoInstrument&gt;();
+    /// services.RegisterScopedAdapterPipeline&lt;IRepositoryIO, RepositoryIoPipeline&gt;();
     /// </code>
     /// </example>
     public static IServiceCollection RegisterScopedAdapterPipeline<TService, TImplementation>(
@@ -101,13 +100,7 @@ public static class AdapterPipelineRegistration
             where TImplementation : class, TService
     {
         return services.AddScoped<TService>(sp =>
-        {
-            // Activity.Current에서 ObservabilityContext 생성 (분산 추적 체인 유지)
-            IObservabilityContext? observabilityContext = ObservabilityContext.FromActivity(Activity.Current);
-
-            var factory = ActivatorUtilities.CreateFactory(typeof(TImplementation), new[] { typeof(IObservabilityContext) });
-            return (TImplementation)factory(sp, new object?[] { observabilityContext });
-        });
+            ActivatorUtilities.CreateInstance<TImplementation>(sp));
     }
 
     // /// <summary>
@@ -166,16 +159,16 @@ public static class AdapterPipelineRegistration
     // }
 
     /// <summary>
-    /// Activity.Current의 Context를 캡처하여 Singleton 서비스를 등록합니다.
-    /// 구현 타입이 ActivityContext를 첫 번째 매개변수로 받는 생성자를 가져야 합니다.
+    /// Singleton 서비스를 등록합니다.
+    /// 구현 타입의 생성자에 ActivitySource, ILogger, IMeterFactory를 주입합니다.
     /// </summary>
     /// <typeparam name="TService">등록할 서비스 인터페이스</typeparam>
-    /// <typeparam name="TImplementation">구현 클래스 타입 (ActivityContext를 첫 번째 매개변수로 받는 생성자 필요)</typeparam>
+    /// <typeparam name="TImplementation">구현 클래스 타입</typeparam>
     /// <param name="services">서비스 컬렉션</param>
     /// <returns>서비스 컬렉션</returns>
     /// <example>
     /// <code>
-    /// services.RegisterSingletonAdapterPipeline&lt;IMessagePublisher, MessagePublisherInstrument&gt;();
+    /// services.RegisterSingletonAdapterPipeline&lt;IMessagePublisher, MessagePublisherPipeline&gt;();
     /// </code>
     /// </example>
     public static IServiceCollection RegisterSingletonAdapterPipeline<TService, TImplementation>(
@@ -184,13 +177,7 @@ public static class AdapterPipelineRegistration
             where TImplementation : class, TService
     {
         return services.AddSingleton<TService>(sp =>
-        {
-            // Activity.Current에서 ObservabilityContext 생성 (분산 추적 체인 유지)
-            IObservabilityContext? observabilityContext = ObservabilityContext.FromActivity(Activity.Current);
-
-            var factory = ActivatorUtilities.CreateFactory(typeof(TImplementation), new[] { typeof(IObservabilityContext) });
-            return (TImplementation)factory(sp, new object?[] { observabilityContext });
-        });
+            ActivatorUtilities.CreateInstance<TImplementation>(sp));
     }
 
     /// <summary>
@@ -234,16 +221,16 @@ public static class AdapterPipelineRegistration
     // }
 
     /// <summary>
-    /// Activity.Current의 Context를 캡처하여 Transient 서비스를 등록합니다.
-    /// 구현 타입이 ActivityContext를 첫 번째 매개변수로 받는 생성자를 가져야 합니다.
+    /// Transient 서비스를 등록합니다.
+    /// 구현 타입의 생성자에 ActivitySource, ILogger, IMeterFactory를 주입합니다.
     /// </summary>
     /// <typeparam name="TService">등록할 서비스 인터페이스</typeparam>
-    /// <typeparam name="TImplementation">구현 클래스 타입 (ActivityContext를 첫 번째 매개변수로 받는 생성자 필요)</typeparam>
+    /// <typeparam name="TImplementation">구현 클래스 타입</typeparam>
     /// <param name="services">서비스 컬렉션</param>
     /// <returns>서비스 컬렉션</returns>
     /// <example>
     /// <code>
-    /// services.RegisterTransientAdapterPipeline&lt;IRepositoryIO, RepositoryIoInstrument&gt;();
+    /// services.RegisterTransientAdapterPipeline&lt;IRepositoryIO, RepositoryIoPipeline&gt;();
     /// </code>
     /// </example>
     public static IServiceCollection RegisterTransientAdapterPipeline<TService, TImplementation>(
@@ -252,28 +239,21 @@ public static class AdapterPipelineRegistration
             where TImplementation : class, TService
     {
         return services.AddTransient<TService>(sp =>
-        {
-            // Activity.Current에서 ObservabilityContext 생성 (분산 추적 체인 유지)
-            IObservabilityContext? observabilityContext = ObservabilityContext.FromActivity(Activity.Current);
-
-            var factory = ActivatorUtilities.CreateFactory(typeof(TImplementation), new[] { typeof(IObservabilityContext) });
-            return (TImplementation)factory(sp, new object?[] { observabilityContext });
-        });
+            ActivatorUtilities.CreateInstance<TImplementation>(sp));
     }
 
     /// <summary>
-    /// Activity.Current의 Context를 캡처하여 Scoped 서비스를 등록하고,
-    /// 동일한 구현체를 두 개의 서비스 인터페이스로 등록합니다.
+    /// Scoped 서비스를 등록하고, 동일한 구현체를 두 개의 서비스 인터페이스로 등록합니다.
     /// HTTP 요청당 1개의 인스턴스가 생성되며, 모든 인터페이스가 동일한 인스턴스를 공유합니다.
     /// </summary>
     /// <typeparam name="TService1">등록할 첫 번째 서비스 인터페이스</typeparam>
     /// <typeparam name="TService2">등록할 두 번째 서비스 인터페이스</typeparam>
-    /// <typeparam name="TImplementation">구현 클래스 (ActivityContext를 첫 번째 매개변수로 받는 생성자 필요)</typeparam>
+    /// <typeparam name="TImplementation">구현 클래스</typeparam>
     /// <param name="services">서비스 컬렉션</param>
     /// <returns>서비스 컬렉션</returns>
     /// <example>
     /// <code>
-    /// services.RegisterScopedAdapterPipelineFor&lt;IWatchLimitSampleByFtpRepository, IWatchLimitSampleByMetadataRepository, WatchLimitSampleRepositoryPipeline&gt;();
+    /// services.RegisterScopedAdapterPipelineFor&lt;IService1, IService2, MyPipeline&gt;();
     /// </code>
     /// </example>
     public static IServiceCollection RegisterScopedAdapterPipelineFor<TService1, TService2, TImplementation>(
@@ -282,13 +262,9 @@ public static class AdapterPipelineRegistration
             where TService2 : class, IAdapter
             where TImplementation : class, TService1, TService2
     {
-        // 구현체 등록 (Activity.Current에서 ObservabilityContext 생성)
+        // 구현체 등록
         services.AddScoped<TImplementation>(sp =>
-        {
-            IObservabilityContext? observabilityContext = ObservabilityContext.FromActivity(Activity.Current);
-            var factory = ActivatorUtilities.CreateFactory(typeof(TImplementation), new[] { typeof(IObservabilityContext) });
-            return (TImplementation)factory(sp, new object?[] { observabilityContext });
-        });
+            ActivatorUtilities.CreateInstance<TImplementation>(sp));
 
         // 각 인터페이스가 동일한 구현체 인스턴스를 참조
         services.AddScoped<TService1>(sp => sp.GetRequiredService<TImplementation>());
@@ -298,14 +274,13 @@ public static class AdapterPipelineRegistration
     }
 
     /// <summary>
-    /// Activity.Current의 Context를 캡처하여 Scoped 서비스를 등록하고,
-    /// 동일한 구현체를 세 개의 서비스 인터페이스로 등록합니다.
+    /// Scoped 서비스를 등록하고, 동일한 구현체를 세 개의 서비스 인터페이스로 등록합니다.
     /// HTTP 요청당 1개의 인스턴스가 생성되며, 모든 인터페이스가 동일한 인스턴스를 공유합니다.
     /// </summary>
     /// <typeparam name="TService1">등록할 첫 번째 서비스 인터페이스</typeparam>
     /// <typeparam name="TService2">등록할 두 번째 서비스 인터페이스</typeparam>
     /// <typeparam name="TService3">등록할 세 번째 서비스 인터페이스</typeparam>
-    /// <typeparam name="TImplementation">구현 클래스 (ActivityContext를 첫 번째 매개변수로 받는 생성자 필요)</typeparam>
+    /// <typeparam name="TImplementation">구현 클래스</typeparam>
     /// <param name="services">서비스 컬렉션</param>
     /// <returns>서비스 컬렉션</returns>
     /// <example>
@@ -320,13 +295,9 @@ public static class AdapterPipelineRegistration
             where TService3 : class, IAdapter
             where TImplementation : class, TService1, TService2, TService3
     {
-        // 구현체 등록 (Activity.Current에서 ObservabilityContext 생성)
+        // 구현체 등록
         services.AddScoped<TImplementation>(sp =>
-        {
-            IObservabilityContext? observabilityContext = ObservabilityContext.FromActivity(Activity.Current);
-            var factory = ActivatorUtilities.CreateFactory(typeof(TImplementation), new[] { typeof(IObservabilityContext) });
-            return (TImplementation)factory(sp, new object?[] { observabilityContext });
-        });
+            ActivatorUtilities.CreateInstance<TImplementation>(sp));
 
         // 각 인터페이스가 동일한 구현체 인스턴스를 참조
         services.AddScoped<TService1>(sp => sp.GetRequiredService<TImplementation>());
@@ -337,11 +308,10 @@ public static class AdapterPipelineRegistration
     }
 
     /// <summary>
-    /// Activity.Current의 Context를 캡처하여 Scoped 서비스를 등록하고,
-    /// 동일한 구현체를 여러 개의 서비스 인터페이스로 등록합니다 (4개 이상 지원).
+    /// Scoped 서비스를 등록하고, 동일한 구현체를 여러 개의 서비스 인터페이스로 등록합니다 (4개 이상 지원).
     /// HTTP 요청당 1개의 인스턴스가 생성되며, 모든 인터페이스가 동일한 인스턴스를 공유합니다.
     /// </summary>
-    /// <typeparam name="TImplementation">구현 클래스 (ActivityContext를 첫 번째 매개변수로 받는 생성자 필요)</typeparam>
+    /// <typeparam name="TImplementation">구현 클래스</typeparam>
     /// <param name="services">서비스 컬렉션</param>
     /// <param name="serviceTypes">등록할 서비스 인터페이스 타입 배열</param>
     /// <returns>서비스 컬렉션</returns>
@@ -376,13 +346,9 @@ public static class AdapterPipelineRegistration
             }
         }
 
-        // 구현체 등록 (Activity.Current에서 ObservabilityContext 생성)
+        // 구현체 등록
         services.AddScoped<TImplementation>(sp =>
-        {
-            IObservabilityContext? observabilityContext = ObservabilityContext.FromActivity(Activity.Current);
-            var factory = ActivatorUtilities.CreateFactory(typeof(TImplementation), new[] { typeof(IObservabilityContext) });
-            return (TImplementation)factory(sp, new object?[] { observabilityContext });
-        });
+            ActivatorUtilities.CreateInstance<TImplementation>(sp));
 
         // 각 서비스 타입 등록
         foreach (Type serviceType in serviceTypes)
@@ -394,18 +360,17 @@ public static class AdapterPipelineRegistration
     }
 
     /// <summary>
-    /// Activity.Current의 Context를 캡처하여 Transient 서비스를 등록하고,
-    /// 동일한 구현체를 두 개의 서비스 인터페이스로 등록합니다.
+    /// Transient 서비스를 등록하고, 동일한 구현체를 두 개의 서비스 인터페이스로 등록합니다.
     /// 요청될 때마다 새로운 인스턴스가 생성됩니다.
     /// </summary>
     /// <typeparam name="TService1">등록할 첫 번째 서비스 인터페이스</typeparam>
     /// <typeparam name="TService2">등록할 두 번째 서비스 인터페이스</typeparam>
-    /// <typeparam name="TImplementation">구현 클래스 (ActivityContext를 첫 번째 매개변수로 받는 생성자 필요)</typeparam>
+    /// <typeparam name="TImplementation">구현 클래스</typeparam>
     /// <param name="services">서비스 컬렉션</param>
     /// <returns>서비스 컬렉션</returns>
     /// <example>
     /// <code>
-    /// services.RegisterTransientAdapterPipelineFor&lt;IService1, IService2, MyAdapter&gt;();
+    /// services.RegisterTransientAdapterPipelineFor&lt;IService1, IService2, MyPipeline&gt;();
     /// </code>
     /// </example>
     public static IServiceCollection RegisterTransientAdapterPipelineFor<TService1, TService2, TImplementation>(
@@ -414,13 +379,9 @@ public static class AdapterPipelineRegistration
             where TService2 : class, IAdapter
             where TImplementation : class, TService1, TService2
     {
-        // 구현체 등록 (Activity.Current에서 ObservabilityContext 생성)
+        // 구현체 등록
         services.AddTransient<TImplementation>(sp =>
-        {
-            IObservabilityContext? observabilityContext = ObservabilityContext.FromActivity(Activity.Current);
-            var factory = ActivatorUtilities.CreateFactory(typeof(TImplementation), new[] { typeof(IObservabilityContext) });
-            return (TImplementation)factory(sp, new object?[] { observabilityContext });
-        });
+            ActivatorUtilities.CreateInstance<TImplementation>(sp));
 
         // 각 인터페이스가 동일한 구현체 인스턴스를 참조
         services.AddTransient<TService1>(sp => sp.GetRequiredService<TImplementation>());
@@ -430,19 +391,18 @@ public static class AdapterPipelineRegistration
     }
 
     /// <summary>
-    /// Activity.Current의 Context를 캡처하여 Transient 서비스를 등록하고,
-    /// 동일한 구현체를 세 개의 서비스 인터페이스로 등록합니다.
+    /// Transient 서비스를 등록하고, 동일한 구현체를 세 개의 서비스 인터페이스로 등록합니다.
     /// 요청될 때마다 새로운 인스턴스가 생성됩니다.
     /// </summary>
     /// <typeparam name="TService1">등록할 첫 번째 서비스 인터페이스</typeparam>
     /// <typeparam name="TService2">등록할 두 번째 서비스 인터페이스</typeparam>
     /// <typeparam name="TService3">등록할 세 번째 서비스 인터페이스</typeparam>
-    /// <typeparam name="TImplementation">구현 클래스 (ActivityContext를 첫 번째 매개변수로 받는 생성자 필요)</typeparam>
+    /// <typeparam name="TImplementation">구현 클래스</typeparam>
     /// <param name="services">서비스 컬렉션</param>
     /// <returns>서비스 컬렉션</returns>
     /// <example>
     /// <code>
-    /// services.RegisterTransientAdapterPipelineFor&lt;IService1, IService2, IService3, MyAdapter&gt;();
+    /// services.RegisterTransientAdapterPipelineFor&lt;IService1, IService2, IService3, MyPipeline&gt;();
     /// </code>
     /// </example>
     public static IServiceCollection RegisterTransientAdapterPipelineFor<TService1, TService2, TService3, TImplementation>(
@@ -452,13 +412,9 @@ public static class AdapterPipelineRegistration
             where TService3 : class, IAdapter
             where TImplementation : class, TService1, TService2, TService3
     {
-        // 구현체 등록 (Activity.Current에서 ObservabilityContext 생성)
+        // 구현체 등록
         services.AddTransient<TImplementation>(sp =>
-        {
-            IObservabilityContext? observabilityContext = ObservabilityContext.FromActivity(Activity.Current);
-            var factory = ActivatorUtilities.CreateFactory(typeof(TImplementation), new[] { typeof(IObservabilityContext) });
-            return (TImplementation)factory(sp, new object?[] { observabilityContext });
-        });
+            ActivatorUtilities.CreateInstance<TImplementation>(sp));
 
         // 각 인터페이스가 동일한 구현체 인스턴스를 참조
         services.AddTransient<TService1>(sp => sp.GetRequiredService<TImplementation>());
@@ -469,18 +425,17 @@ public static class AdapterPipelineRegistration
     }
 
     /// <summary>
-    /// Activity.Current의 Context를 캡처하여 Transient 서비스를 등록하고,
-    /// 동일한 구현체를 여러 개의 서비스 인터페이스로 등록합니다 (4개 이상 지원).
+    /// Transient 서비스를 등록하고, 동일한 구현체를 여러 개의 서비스 인터페이스로 등록합니다 (4개 이상 지원).
     /// 요청될 때마다 새로운 인스턴스가 생성됩니다.
     /// </summary>
-    /// <typeparam name="TImplementation">구현 클래스 (ActivityContext를 첫 번째 매개변수로 받는 생성자 필요)</typeparam>
+    /// <typeparam name="TImplementation">구현 클래스</typeparam>
     /// <param name="services">서비스 컬렉션</param>
     /// <param name="serviceTypes">등록할 서비스 인터페이스 타입 배열</param>
     /// <returns>서비스 컬렉션</returns>
     /// <exception cref="ArgumentException">서비스 타입이 IAdapter를 구현하지 않거나, 구현 클래스가 서비스 타입을 구현하지 않을 때</exception>
     /// <example>
     /// <code>
-    /// services.RegisterTransientAdapterPipelineFor&lt;MyAdapter&gt;(
+    /// services.RegisterTransientAdapterPipelineFor&lt;MyPipeline&gt;(
     ///     typeof(IService1), typeof(IService2), typeof(IService3), typeof(IService4));
     /// </code>
     /// </example>
@@ -508,13 +463,9 @@ public static class AdapterPipelineRegistration
             }
         }
 
-        // 구현체 등록 (Activity.Current에서 ObservabilityContext 생성)
+        // 구현체 등록
         services.AddTransient<TImplementation>(sp =>
-        {
-            IObservabilityContext? observabilityContext = ObservabilityContext.FromActivity(Activity.Current);
-            var factory = ActivatorUtilities.CreateFactory(typeof(TImplementation), new[] { typeof(IObservabilityContext) });
-            return (TImplementation)factory(sp, new object?[] { observabilityContext });
-        });
+            ActivatorUtilities.CreateInstance<TImplementation>(sp));
 
         // 각 서비스 타입 등록
         foreach (Type serviceType in serviceTypes)
