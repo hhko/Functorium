@@ -1,6 +1,6 @@
 using LanguageExt.Common;
 
-namespace Functorium.Applications.Observabilities.Metrics;
+namespace Functorium.Adapters.Observabilities.Abstractions;
 
 /// <summary>
 /// 메트릭을 기록하는 인터페이스입니다.

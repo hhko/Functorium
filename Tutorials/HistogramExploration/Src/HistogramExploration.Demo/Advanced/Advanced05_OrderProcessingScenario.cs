@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
-using Functorium.Applications.Observabilities;
+using Functorium.Adapters.Observabilities.Configurations;
 using HistogramExploration.Demo.Shared;
 
 namespace HistogramExploration.Demo.Advanced;

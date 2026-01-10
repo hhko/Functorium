@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 
+using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Applications.Cqrs;
-using Functorium.Applications.Observabilities;
 
 namespace Functorium.Adapters.Observabilities.Pipelines;
 

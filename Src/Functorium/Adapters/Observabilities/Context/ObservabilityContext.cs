@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using Functorium.Applications.Observabilities.Context;
+using Functorium.Adapters.Observabilities.Abstractions;
 
 namespace Functorium.Adapters.Observabilities.Context;
 

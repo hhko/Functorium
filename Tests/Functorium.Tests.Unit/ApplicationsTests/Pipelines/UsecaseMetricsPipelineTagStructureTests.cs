@@ -1,9 +1,10 @@
 using System.Diagnostics.Metrics;
 
 using Functorium.Adapters.Observabilities;
-using Functorium.Applications.Cqrs;
-using Functorium.Applications.Observabilities;
+using Functorium.Adapters.Observabilities.Configurations;
+using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Applications.Cqrs;
 
 using LanguageExt.Common;
 

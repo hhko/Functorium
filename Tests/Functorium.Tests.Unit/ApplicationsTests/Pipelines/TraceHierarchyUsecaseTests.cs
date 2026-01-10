@@ -1,7 +1,7 @@
 using System.Diagnostics;
+using Functorium.Adapters.Observabilities.Abstractions;
 using Functorium.Adapters.Observabilities.Context;
 using Functorium.Adapters.Observabilities.Spans;
-using Functorium.Applications.Observabilities.Spans;
 using Functorium.Tests.Unit.Abstractions.Constants;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 

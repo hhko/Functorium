@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
+using Functorium.Adapters.Observabilities.Abstractions;
 using Functorium.Adapters.Observabilities.Context;
 using Functorium.Applications.Observabilities;
-using Functorium.Applications.Observabilities.Context;
 
 namespace Functorium.Abstractions.Registrations;
 

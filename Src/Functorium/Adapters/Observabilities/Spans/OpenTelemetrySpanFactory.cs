@@ -1,8 +1,7 @@
 using System.Diagnostics;
+using Functorium.Adapters.Observabilities.Abstractions;
 using Functorium.Adapters.Observabilities.Context;
-using Functorium.Applications.Observabilities;
-using Functorium.Applications.Observabilities.Context;
-using Functorium.Applications.Observabilities.Spans;
+using Functorium.Adapters.Observabilities.Naming;
 
 namespace Functorium.Adapters.Observabilities.Spans;
 

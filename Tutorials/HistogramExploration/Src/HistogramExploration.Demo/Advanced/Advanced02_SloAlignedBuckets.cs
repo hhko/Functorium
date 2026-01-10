@@ -1,5 +1,5 @@
 using System.Diagnostics.Metrics;
-using Functorium.Applications.Observabilities;
+using Functorium.Adapters.Observabilities.Configurations;
 
 namespace HistogramExploration.Demo.Advanced;
 

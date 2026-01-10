@@ -1,8 +1,6 @@
 using LanguageExt.Common;
 
-using Functorium.Applications.Observabilities.Context;
-
-namespace Functorium.Applications.Observabilities.Spans;
+namespace Functorium.Adapters.Observabilities.Abstractions;
 
 /// <summary>
 /// 기술 독립적인 추적 Span을 나타냅니다.

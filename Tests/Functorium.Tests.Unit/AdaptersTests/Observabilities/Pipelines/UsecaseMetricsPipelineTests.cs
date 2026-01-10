@@ -1,7 +1,7 @@
 using System.Diagnostics.Metrics;
 using Functorium.Adapters.Observabilities;
+using Functorium.Adapters.Observabilities.Configurations;
 using Functorium.Adapters.Observabilities.Pipelines;
-using Functorium.Applications.Observabilities;
 using LanguageExt.Common;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;

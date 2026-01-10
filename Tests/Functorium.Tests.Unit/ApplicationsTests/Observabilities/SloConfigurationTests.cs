@@ -1,6 +1,6 @@
 using FluentValidation;
+using Functorium.Adapters.Observabilities.Configurations;
 using Functorium.Adapters.Options;
-using Functorium.Applications.Observabilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;

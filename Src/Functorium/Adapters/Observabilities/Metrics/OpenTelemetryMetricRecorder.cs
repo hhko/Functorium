@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
-using Functorium.Applications.Observabilities;
-using Functorium.Applications.Observabilities.Metrics;
+using Functorium.Adapters.Observabilities.Abstractions;
+using Functorium.Adapters.Observabilities.Naming;
 using LanguageExt.Common;
 
 namespace Functorium.Adapters.Observabilities.Metrics;

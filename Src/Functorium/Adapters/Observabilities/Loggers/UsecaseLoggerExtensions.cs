@@ -1,11 +1,10 @@
-using Functorium.Abstractions.Errors;
-using Functorium.Applications.Cqrs;
+using Functorium.Adapters.Observabilities.Naming;
 
 using LanguageExt.Common;
 
 using Microsoft.Extensions.Logging;
 
-namespace Functorium.Applications.Observabilities.Loggers;
+namespace Functorium.Adapters.Observabilities.Loggers;
 
 /// <summary>
 /// Usecase Pipeline에서 사용하는 로거 확장 메서드

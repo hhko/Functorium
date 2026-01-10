@@ -24,8 +24,16 @@ public sealed class CreateProductCommandTests : IDisposable
 
         // Configuration 설정
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>())
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["OpenTelemetry:ServiceName"] = "TestService",
+                ["OpenTelemetry:ServiceVersion"] = "1.0.0",
+                ["OpenTelemetry:CollectorEndpoint"] = "http://localhost:4317"
+            })
             .Build();
+
+        // IConfiguration 등록
+        services.AddSingleton<IConfiguration>(configuration);
 
         // Logging 설정
         services.AddLogging(builder =>

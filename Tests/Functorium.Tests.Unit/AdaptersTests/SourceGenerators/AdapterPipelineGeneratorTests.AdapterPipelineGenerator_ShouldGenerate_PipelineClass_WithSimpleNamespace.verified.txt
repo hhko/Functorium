@@ -9,15 +9,12 @@
 #nullable enable
 
 using Functorium.Abstractions;
+using Functorium.Adapters.Observabilities.Abstractions;
+using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Applications.Observabilities;
-using Functorium.Applications.Observabilities.Context;
-using Functorium.Applications.Observabilities.Metrics;
-using Functorium.Applications.Observabilities.Spans;
 
 using LanguageExt;
 using Microsoft.Extensions.Logging;
-
-using ObservabilityNaming = Functorium.Applications.Observabilities.ObservabilityNaming;
 
 namespace MyApp;
 

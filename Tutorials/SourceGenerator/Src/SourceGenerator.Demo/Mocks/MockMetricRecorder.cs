@@ -1,4 +1,4 @@
-using Functorium.Applications.Observabilities.Metrics;
+using Functorium.Adapters.Observabilities.Abstractions;
 
 namespace SourceGenerator.Demo.Mocks;
 

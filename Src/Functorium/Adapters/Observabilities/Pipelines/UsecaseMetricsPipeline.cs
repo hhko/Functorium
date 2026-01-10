@@ -3,8 +3,9 @@ using System.Diagnostics.Metrics;
 
 using Functorium.Abstractions;
 using Functorium.Abstractions.Errors;
+using Functorium.Adapters.Observabilities.Configurations;
+using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Applications.Cqrs;
-using Functorium.Applications.Observabilities;
 
 using LanguageExt.Common;
 
