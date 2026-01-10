@@ -401,7 +401,7 @@ Functorium.Adapters.Observabilities/
     ├── OpenTelemetrySpan.cs               // Span 구현
     └── OpenTelemetrySpanFactory.cs        // SpanFactory 구현
 
-Functorium.Applications.Pipelines/
+Functorium.Adapters.Observabilities.Pipelines/
 ├── UsecaseLoggingPipeline.cs              // Logging Pipeline
 ├── UsecaseTracingPipeline.cs              // Tracing Pipeline
 └── UsecaseMetricsPipeline.cs              // Metrics Pipeline

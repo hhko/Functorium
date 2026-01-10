@@ -4,7 +4,7 @@ using Cqrs04Endpoint.WebApi.Infrastructure;
 using FastEndpoints;
 using FluentValidation;
 using Functorium.Abstractions.Registrations;
-using Functorium.Applications.Pipelines;
+using Functorium.Adapters.Observabilities.Pipelines;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry.Metrics;

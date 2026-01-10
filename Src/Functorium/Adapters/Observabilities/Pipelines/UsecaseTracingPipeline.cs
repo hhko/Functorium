@@ -9,7 +9,7 @@ using LanguageExt.Common;
 
 using Mediator;
 
-namespace Functorium.Applications.Pipelines;
+namespace Functorium.Adapters.Observabilities.Pipelines;
 
 /// <summary>
 /// Result 패턴을 위한 분산 추적 Pipeline.

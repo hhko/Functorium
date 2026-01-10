@@ -5,7 +5,7 @@ using LanguageExt.Common;
 
 using Mediator;
 
-namespace Functorium.Applications.Pipelines;
+namespace Functorium.Adapters.Observabilities.Pipelines;
 
 /// <summary>
 /// Result 패턴을 위한 예외 처리 Pipeline.

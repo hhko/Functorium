@@ -1,6 +1,6 @@
 using FluentValidation;
 using Functorium.Abstractions.Registrations;
-using Functorium.Applications.Pipelines;
+using Functorium.Adapters.Observabilities.Pipelines;
 using Mediator;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;

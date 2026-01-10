@@ -1,10 +1,9 @@
 using System.Diagnostics.Metrics;
 
-using Functorium.Adapters.Observabilities;
 using Functorium.Applications.Cqrs;
 using Functorium.Applications.Observabilities;
 
-namespace Functorium.Applications.Pipelines;
+namespace Functorium.Adapters.Observabilities.Pipelines;
 
 /// <summary>
 /// Usecase별 개별 Metric을 생성하기 위한 베이스 클래스

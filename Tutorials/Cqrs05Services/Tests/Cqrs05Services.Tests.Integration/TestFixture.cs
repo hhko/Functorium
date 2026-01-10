@@ -2,7 +2,7 @@ using System.Reflection;
 using FluentValidation;
 using Functorium.Abstractions.Registrations;
 using Functorium.Applications.Cqrs;
-using Functorium.Applications.Pipelines;
+using Functorium.Adapters.Observabilities.Pipelines;
 using Mediator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

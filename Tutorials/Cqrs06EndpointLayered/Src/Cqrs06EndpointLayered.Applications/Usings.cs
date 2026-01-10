@@ -1,4 +1,4 @@
 global using LanguageExt;
 global using LanguageExt.Common;
 global using Functorium.Applications.Cqrs;
-global using Functorium.Applications.Pipelines;
+global using Functorium.Adapters.Observabilities.Pipelines;

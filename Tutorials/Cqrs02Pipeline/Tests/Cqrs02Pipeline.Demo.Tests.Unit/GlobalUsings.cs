@@ -5,7 +5,7 @@ global using Xunit;
 global using Shouldly;
 global using NSubstitute;
 global using Functorium.Applications.Cqrs;
-global using Functorium.Applications.Pipelines;
+global using Functorium.Adapters.Observabilities.Pipelines;
 global using Cqrs02Pipeline.Demo;
 global using Cqrs02Pipeline.Demo.Domain;
 global using Cqrs02Pipeline.Demo.Usecases;
