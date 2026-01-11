@@ -1,4 +1,6 @@
 # Functorium
+[![Build](https://github.com/hhko/Functorium/actions/workflows/build.yml/badge.svg)](https://github.com/hhko/Functorium/actions/workflows/build.yml) [![Publish](https://github.com/hhko/Functorium/actions/workflows/publish.yml/badge.svg)](https://github.com/hhko/Functorium/actions/workflows/publish.yml)
+
 > A functional domain = **functor** + domin**ium** with **fun**.
 
 Functorium is a C# framework for implementing **Domain-Centric Functional Architecture**.
@@ -22,7 +24,104 @@ It enables expressing domain logic as pure functions and pushing side effects to
 
 ## Observability
 
-### Metrics (UsecaseMetricsPipeline)
+> All observability fields use `snake_case + dot` notation for consistency with OpenTelemetry semantic conventions.
+
+### Logging (UsecaseLoggingPipeline) - Application Layer
+
+**Field Structure:**
+
+| Category | Field Name | Description |
+|----------|------------|-------------|
+| **Static Fields** | | |
+| Request Layer | `request.layer` | `"application"` |
+| Request Category | `request.category` | `"usecase"` |
+| Request CQRS | `request.handler.cqrs` | `"command"` / `"query"` |
+| Request Handler | `request.handler` | Handler name |
+| Request Method | `request.handler.method` | `"Handle"` |
+| Response Status | `status` | `"success"` / `"failure"` |
+| Elapsed Time | `elapsed` | Processing time (ms) |
+| Error Data | `@error` | Error object (structured) |
+| **Dynamic Fields** | | |
+| Request Message | `@request.message` | Full Command/Query object |
+| Response Message | `@response.message` | Full response object |
+
+**Log Level by Event:**
+
+| Event | Log Level | EventId | Description |
+|-------|-----------|---------|-------------|
+| Request | Information | `ApplicationRequest` | Request received |
+| Response Success | Information | `ApplicationResponseSuccess` | Successful response |
+| Response Warning | Warning | `ApplicationResponseWarning` | Expected error (business logic) |
+| Response Error | Error | `ApplicationResponseError` | Exceptional error (system failure) |
+
+**Message Templates:**
+
+```
+# Request
+{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@request.message} requesting
+
+# Response - Success
+{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@response.message} responded {status} in {elapsed:0.0000} ms
+
+# Response - Warning/Error
+{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {status} in {elapsed:0.0000} ms with {@error}
+```
+
+**Implementation:** Direct `ILogger.LogXxx()` calls (7+ parameters exceed `LoggerMessage.Define` limit of 6)
+
+### Logging (AdapterPipelineGenerator) - Adapter Layer
+
+**Field Structure:**
+
+| Category | Field Name | Description |
+|----------|------------|-------------|
+| **Static Fields** | | |
+| Request Layer | `request.layer` | `"adapter"` |
+| Request Category | `request.category` | Adapter category name |
+| Request Handler | `request.handler` | Handler name |
+| Request Method | `request.handler.method` | Method name |
+| Response Status | `status` | `"success"` / `"failure"` |
+| Elapsed Time | `elapsed` | Processing time (ms) |
+| Error Data | `@error` | Error object (structured) |
+| **Dynamic Fields** | | |
+| Request Params | `request.params.{name}` | Individual method parameter |
+| Request Params Count | `request.params.{name}.count` | Collection size (when parameter is collection) |
+| Response Result | `response.result` | Method return value |
+| Response Result Count | `response.result.count` | Collection size (when return is collection) |
+
+**Log Level by Event:**
+
+| Event | Log Level | EventId | Description |
+|-------|-----------|---------|-------------|
+| Request | Information | `AdapterRequest` | Request received |
+| Request (Debug) | Debug | `AdapterRequest` | Request with parameter values |
+| Response Success | Information | `AdapterResponseSuccess` | Successful response |
+| Response Success (Debug) | Debug | `AdapterResponseSuccess` | Response with result value |
+| Response Warning | Warning | `AdapterResponseWarning` | Expected error |
+| Response Error | Error | `AdapterResponseError` | Exceptional error |
+
+**Message Templates:**
+
+```
+# Request (Information)
+{request.layer} {request.category} {request.handler}.{request.handler.method} requesting
+
+# Request (Debug) - with parameters
+{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.items} {request.params.items.count} requesting
+
+# Response (Information)
+{request.layer} {request.category} {request.handler}.{request.handler.method} responded {status} in {elapsed:0.0000} ms
+
+# Response (Debug) - with result
+{request.layer} {request.category} {request.handler}.{request.handler.method} {response.result} responded {status} in {elapsed:0.0000} ms
+
+# Response Warning/Error
+{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {elapsed:0.0000} ms with {@error}
+```
+
+**Implementation:** `LoggerMessage.Define` delegates (zero allocation, high performance)
+
+### Metrics (UsecaseMetricsPipeline) - Application Layer
 
 **Instrument Structure:**
 
@@ -143,6 +242,29 @@ The `HistogramBuckets` setting configures bucket boundaries for existing duratio
 | `application.usecase.query.duration` | Custom bucket boundaries applied |
 
 > **Note:** SLO configuration does not add new instruments or tags. It only configures histogram bucket boundaries for accurate P95/P99 percentile calculations. SLO target values (AvailabilityPercent, LatencyP95Milliseconds, etc.) are used as query thresholds in Prometheus/Grafana, not emitted as metrics.
+
+### Metrics (AdapterPipelineGenerator) - Adapter Layer
+
+**Instrument Structure:**
+
+| Instrument Name | Type | Unit | Description |
+|------------|------|------|------|
+| `adapter.{category}.requests` | Counter | `{request}` | Total request count |
+| `adapter.{category}.responses.success` | Counter | `{response}` | Successful response count |
+| `adapter.{category}.responses.failure` | Counter | `{response}` | Failed response count |
+| `adapter.{category}.duration` | Histogram | `s` | Processing time (seconds) |
+
+**Tag Structure:**
+
+| Tag Key | requestCounter | durationHistogram | successCounter | failureCounter |
+|---------|----------------|-------------------|----------------|----------------|
+| `request.layer` | `"adapter"` | `"adapter"` | `"adapter"` | `"adapter"` |
+| `request.category` | category name | category name | category name | category name |
+| `request.handler` | handler name | handler name | handler name | handler name |
+| `request.handler.method` | method name | method name | method name | method name |
+| **Total Tags** | **4** | **4** | **4** | **4** |
+
+**Implementation:** Source Generator creates metrics instruments and records values automatically.
 
 ## Framework
 ### Abstractions

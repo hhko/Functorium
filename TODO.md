@@ -13,6 +13,30 @@ dir /x
 - 통합 테스트 GitHub Actions 통합
 
 ## 할일
+- [x] Pipeline을 Application 레이어에서 Adapter 레이어도 이동 시킴
+- [x] Pipeline 의존성 등록을 OpenTelemetry 등록과 통합 시킴
+- [x] Observability 구현에서 기존 인터페이스들을 모두 OpenTelemetry 구체 기술로 변경(Adapter 레이어여 변경되었기 때문)
+- [x] Pipeline 테스트 정리
+- [x] 솔루션 파일 분리 2개(핵심, 전체)
+- [x] Usecase 접근 제어자 public으로 변경(Mediator 패키지 제약 조건)
+- [x] LanguageExt Tracing 일 때 Activity 손신 관련 코드 제거(불필요)
+- [ ] Logging 필드 이름 형식을 Metrics와 Tracing과 통일 시킴(PascalCase -> snake_case + dot)
+- [ ] 입출력 데이터 형식
+- [ ] 필드 정의 문서화
+  Item    | Application | Adapter
+  ---     | ---         | ---
+  Logging |             |
+  Tracing |             |
+  Metrics |             |
+- [ ] 필드 정의 테스트
+  Item    | Application | Adapter
+  ---     | ---         | ---
+  Logging |             |
+  Tracing |             |
+  Metrics |             |
+- [ ] @error? 테스트
+= [ ] 시간 단위 통일? elapsed -> elapsed_ms
+---
 - [ ] Mediator Singleton + Scoped(Factory로 통합)
 - [x] UsecaseMetricsPipeline 클래스 정리
 - [x] UsecaseMetricsPipeline 태그 구조 테스트
