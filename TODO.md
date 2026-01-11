@@ -26,6 +26,7 @@ dir /x
   - adapter 레이어: params/result
 - [x] Metrics Application과 Adapter 필드 통일
 - [x] Metrics Adapter에 @error?
+- [ ] Tracing 필드 개선
 - [ ] ObservabilityNaming.Logging.cs 클래스 정리
 - [ ] 필드 정의 문서화
   Item    | Application | Adapter

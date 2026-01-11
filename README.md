@@ -268,6 +268,71 @@ The `HistogramBuckets` setting configures bucket boundaries for existing duratio
 
 **Implementation:** Source Generator creates metrics instruments and records values automatically.
 
+### Tracing (UsecaseTracingPipeline) - Application Layer
+
+**Span Structure:**
+
+| Property | Value |
+|----------|-------|
+| Span Name | `{layer} {category}.{cqrs} {handler}.{method}` |
+| Example | `application usecase.command CreateOrderCommandHandler.Handle` |
+| Kind | `Internal` |
+
+**Tag Structure:**
+
+| Tag Key | Request | Response (success) | Response (failure) |
+|---------|---------|--------------------|--------------------|
+| `request.layer` | `"application"` | - | - |
+| `request.category` | `"usecase"` | - | - |
+| `request.handler.cqrs` | `"command"` / `"query"` | - | - |
+| `request.handler` | Handler name | - | - |
+| `code.function` | Handler full path | - | - |
+| `response.status` | - | `"success"` | `"failure"` |
+| `response.elapsed` | - | Processing time (ms) | Processing time (ms) |
+| `error.type` | - | - | `"expected"` / `"exceptional"` / `"aggregate"` |
+| `error.code` | - | - | Error code |
+| `error.message` | - | - | Error message |
+| `error.count` | - | - | Error count (ManyErrors only) |
+| **ActivityStatus** | - | `Ok` | `Error` |
+
+**Error Type Tag Values:**
+
+| Error Case | error.type | Additional Tags |
+|------------|------------|-----------------|
+| `IHasErrorCode` + `IsExpected` | `"expected"` | `error.code`, `error.message` |
+| `IHasErrorCode` + `IsExceptional` | `"exceptional"` | `error.code`, `error.message` |
+| `ManyErrors` | `"aggregate"` | `error.count` |
+| Other | Type name | `error.message` |
+
+**Implementation:** `IPipelineBehavior<TRequest, TResponse>` with `ActivitySource.StartActivity()`
+
+### Tracing (AdapterPipelineGenerator) - Adapter Layer
+
+**Span Structure:**
+
+| Property | Value |
+|----------|-------|
+| Span Name | `{layer} {category} {handler}.{method}` |
+| Example | `adapter Repository OrderRepository.GetById` |
+| Kind | `Internal` |
+
+**Tag Structure:**
+
+| Tag Key | Request | Response (success) | Response (failure) |
+|---------|---------|--------------------|--------------------|
+| `request.layer` | `"adapter"` | - | - |
+| `request.category` | Category name | - | - |
+| `request.handler` | Handler name | - | - |
+| `request.handler.method` | Method name | - | - |
+| `response.status` | - | `"success"` | `"failure"` |
+| `response.elapsed` | - | Processing time (ms) | Processing time (ms) |
+| `error.type` | - | - | `"expected"` / `"exceptional"` / `"aggregate"` |
+| `error.code` | - | - | Error code |
+| `error.message` | - | - | Error message |
+| **ActivityStatus** | - | `Ok` | `Error` |
+
+**Implementation:** Source Generator creates Activity spans and records tags automatically.
+
 ## Framework
 ### Abstractions
 - [x] Structured Error
