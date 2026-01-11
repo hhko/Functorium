@@ -31,27 +31,27 @@
   도움말을 표시합니다.
 
 .EXAMPLE
-  ./Build.ps1
+  ./Build-Local.ps1
   현재 디렉토리에서 솔루션을 자동 검색하여 빌드, 테스트, 패키지 생성
 
 .EXAMPLE
-  ./Build.ps1 -Solution ./MyApp.sln
+  ./Build-Local.ps1 -Solution ./MyApp.sln
   지정된 솔루션 파일로 빌드 및 테스트 실행
 
 .EXAMPLE
-  ./Build.ps1 -SkipPack
+  ./Build-Local.ps1 -SkipPack
   NuGet 패키지 생성 없이 빌드 및 테스트만 실행
 
 .EXAMPLE
-  ./Build.ps1 -ProjectPrefix MyApp
+  ./Build-Local.ps1 -ProjectPrefix MyApp
   MyApp.* 프로젝트만 커버리지 필터링
 
 .EXAMPLE
-  ./Build.ps1 -SlowTestThreshold 60
+  ./Build-Local.ps1 -SlowTestThreshold 60
   60초 이상 걸리는 테스트만 느린 테스트로 분류
 
 .EXAMPLE
-  ./Build.ps1 -Help
+  ./Build-Local.ps1 -Help
   도움말 표시
 
 .NOTES
@@ -137,7 +137,7 @@ DESCRIPTION
   for .NET solutions.
 
 USAGE
-  ./Build.ps1 [options]
+  ./Build-Local.ps1 [options]
 
 OPTIONS
   -Solution, -s           Path to solution file (.sln or .slnx)
@@ -179,26 +179,26 @@ PREREQUISITES
 
 EXAMPLES
   # Run build, tests, and pack (auto-detect solution)
-  ./Build.ps1
+  ./Build-Local.ps1
 
   # Specify solution file
-  ./Build.ps1 -Solution ./MyApp.sln
-  ./Build.ps1 -s ../Other.sln
+  ./Build-Local.ps1 -Solution ./MyApp.sln
+  ./Build-Local.ps1 -s ../Other.sln
 
   # Skip NuGet package generation
-  ./Build.ps1 -SkipPack
+  ./Build-Local.ps1 -SkipPack
 
   # Filter coverage by project prefix
-  ./Build.ps1 -ProjectPrefix MyApp
-  ./Build.ps1 -p Functorium
+  ./Build-Local.ps1 -ProjectPrefix MyApp
+  ./Build-Local.ps1 -p Functorium
 
   # Set slow test threshold (default: 30s)
-  ./Build.ps1 -SlowTestThreshold 60
-  ./Build.ps1 -t 10
+  ./Build-Local.ps1 -SlowTestThreshold 60
+  ./Build-Local.ps1 -t 10
 
   # Show help
-  ./Build.ps1 -Help
-  ./Build.ps1 -h
+  ./Build-Local.ps1 -Help
+  ./Build-Local.ps1 -h
 
 ================================================================================
 "@
