@@ -24,8 +24,8 @@ public static partial class ObservabilityNaming
 
         // Response 관련
         public const string ResponseData = "response";
-        public const string ResponseStatus = "status";
-        public const string ResponseElapsed = "elapsed";
+        public const string ResponseStatus = "response.status";
+        public const string ResponseElapsed = "response.elapsed";
 
         // Error 관련
         public const string ErrorData = "error";
@@ -58,7 +58,7 @@ public static partial class ObservabilityNaming
             // public static readonly EventId AdapterResponseWarning = new(2003, nameof(AdapterResponseWarning));
             // public static readonly EventId AdapterResponseError = new(2004, nameof(AdapterResponseError));
 
-            public static readonly EventId AdapterRequest = new(2001, "adapter.Request");
+            public static readonly EventId AdapterRequest = new(2001, "adapter.request");
             public static readonly EventId AdapterResponseSuccess = new(2002, "adapter.response.success");
             public static readonly EventId AdapterResponseWarning = new(2003, "adapter.response.warning");
             public static readonly EventId AdapterResponseError = new(2004, "adapter.response.error");

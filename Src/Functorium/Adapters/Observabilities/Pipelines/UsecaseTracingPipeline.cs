@@ -32,7 +32,6 @@ internal sealed class UsecaseTracingPipeline<TRequest, TResponse>
     {
         string requestCqrs = GetRequestCqrs(request);
         string requestHandler = GetRequestHandler();
-        string requestHandlerPath = GetRequestHandlerPath();
         Activity? parentActivity = Activity.Current;
 
         // AddSource에 사전에 ActivitySource 이름이 등록되어 있어야 정상적으로 객체를 생성할 수 있습니다.
@@ -47,7 +46,7 @@ internal sealed class UsecaseTracingPipeline<TRequest, TResponse>
             return await next(request, cancellationToken);
         }
 
-        SetRequestTags(activity, requestCqrs, requestHandler, requestHandlerPath);
+        SetRequestTags(activity, requestCqrs, requestHandler);
         long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();
 
         TResponse response = await next(request, cancellationToken);
@@ -58,13 +57,13 @@ internal sealed class UsecaseTracingPipeline<TRequest, TResponse>
         return response;
     }
 
-    private static void SetRequestTags(Activity activity, string requestCqrs, string requestHandler, string requestHandlerPath)
+    private static void SetRequestTags(Activity activity, string requestCqrs, string requestHandler)
     {
         activity.SetTag(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application);
         activity.SetTag(ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase);
         activity.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerCqrs, requestCqrs);
         activity.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler);
-        activity.SetTag(ObservabilityNaming.OTelAttributes.CodeFunction, requestHandlerPath);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, "Handle");
     }
 
     private static void SetResponseTags(Activity activity, TResponse response, double elapsed)

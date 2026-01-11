@@ -392,19 +392,19 @@ internal static class TupleWithCollectionInputAdapterPipelineLoggers
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {status} in {elapsed:0.0000} ms");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} ms");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_TupleWithCollectionInputAdapter_ProcessUserWithTags =
         LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
             LogLevel.Warning,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {elapsed:0.0000} ms with {@error}");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} ms with {@error}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_TupleWithCollectionInputAdapter_ProcessUserWithTags =
         LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
             LogLevel.Error,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {elapsed:0.0000} ms with {@error}");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} ms with {@error}");
 
 
     public static void LogRequestDebug_TupleWithCollectionInputAdapter_ProcessUserWithTags(
@@ -451,7 +451,7 @@ internal static class TupleWithCollectionInputAdapterPipelineLoggers
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
                      "{response.result} " +
-                     "responded {status} in {elapsed:0.0000} ms",
+                     "responded {response.status} in {response.elapsed:0.0000} ms",
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
