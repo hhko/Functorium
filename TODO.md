@@ -43,6 +43,7 @@ dir /x
 - [ ] 로그 @error? 테스트
 - [ ] 시간 단위 통일? elapsed -> elapsed_ms
 - [ ] Metrics SLO 정의 및 설정?
+- [ ] internal record ErrorCodeExpected -> public ???, IHasErrorCode
 ---
 - [ ] Mediator Singleton + Scoped(Factory로 통합)
 - [x] UsecaseMetricsPipeline 클래스 정리
