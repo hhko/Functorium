@@ -17,11 +17,11 @@
 //
 // ============================================================================
 
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
-
 using SourceGenerator.Demo.Adapters;
-using SourceGenerator.Demo.Mocks;
 
 // ============================================================================
 // 1. 원본 Repository vs Pipeline
@@ -53,15 +53,16 @@ using var loggerFactory = LoggerFactory.Create(builder =>
 });
 
 var logger = loggerFactory.CreateLogger<UserRepositoryPipeline>();
-var adapterTrace = new MockSpanFactory();
-var adapterMetric = new MockMetricRecorder();
 
-// Pipeline 인스턴스 생성
+// OpenTelemetry 직접 사용
+var activitySource = new ActivitySource("SourceGenerator.Demo");
+var meterFactory = new SimpleMeterFactory();
+
+// Pipeline 인스턴스 생성 (새로운 생성자 시그니처)
 var pipeline = new UserRepositoryPipeline(
-    parentContext: null,
+    activitySource: activitySource,
     logger: logger,
-    spanFactory: adapterTrace,
-    metricRecorder: adapterMetric);
+    meterFactory: meterFactory);
 
 Console.WriteLine($"   Type: {pipeline.GetType().Name}");
 Console.WriteLine($"   Base Type: {pipeline.GetType().BaseType?.Name}");
@@ -268,3 +269,38 @@ Console.WriteLine();
 Console.WriteLine("  권장: 파이프라인 내부에서 예외를 처리하고 외부로 Fin<A>를 노출하는");
 Console.WriteLine("        현재 방식이 실용적. FinT 자체가 이미 Fin을 감싸고 있음.");
 Console.WriteLine();
+
+// ============================================================================
+// SimpleMeterFactory - 튜토리얼용 간단한 IMeterFactory 구현
+// ============================================================================
+internal sealed class SimpleMeterFactory : IMeterFactory
+{
+    private readonly Dictionary<string, Meter> _meters = new();
+    private readonly object _lock = new();
+
+    public Meter Create(MeterOptions options)
+    {
+        lock (_lock)
+        {
+            string key = $"{options.Name}:{options.Version}";
+            if (!_meters.TryGetValue(key, out var meter))
+            {
+                meter = new Meter(options);
+                _meters[key] = meter;
+            }
+            return meter;
+        }
+    }
+
+    public void Dispose()
+    {
+        lock (_lock)
+        {
+            foreach (var meter in _meters.Values)
+            {
+                meter.Dispose();
+            }
+            _meters.Clear();
+        }
+    }
+}
