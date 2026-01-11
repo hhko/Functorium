@@ -26,8 +26,7 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
 
     // Metrics
     private readonly Counter<long> _requestCounter;
-    private readonly Counter<long> _successCounter;
-    private readonly Counter<long> _failureCounter;
+    private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
     private const string RequestHandler = nameof(TwoParamAdapter);
@@ -53,8 +52,7 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
         string categoryLower = this.RequestCategory?.ToLowerInvariant() ?? "adapter";
         var meter = meterFactory.Create($"adapter.{categoryLower}");
         _requestCounter = meter.CreateCounter<long>($"adapter.{categoryLower}.requests", "{request}", "Total number of adapter requests");
-        _successCounter = meter.CreateCounter<long>($"adapter.{categoryLower}.responses.success", "{response}", "Total number of successful responses");
-        _failureCounter = meter.CreateCounter<long>($"adapter.{categoryLower}.responses.failure", "{response}", "Total number of failed responses");
+        _responseCounter = meter.CreateCounter<long>($"adapter.{categoryLower}.responses", "{response}", "Total number of adapter responses");
         _durationHistogram = meter.CreateHistogram<double>($"adapter.{categoryLower}.duration", "s", "Duration of adapter execution in seconds");
 
         _isDebugEnabled = logger.IsEnabled(LogLevel.Debug);
@@ -177,9 +175,10 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
             { ObservabilityNaming.CustomAttributes.RequestCategory, this.GetRequestCategoryPascalCase() },
             { ObservabilityNaming.CustomAttributes.RequestHandler, RequestHandler },
-            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, "Method" }
+            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, "Method" },
+            { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success }
         };
-        _successCounter.Add(1, metricTags);
+        _responseCounter.Add(1, metricTags);
         _durationHistogram.Record(elapsed / 1000.0, metricTags); // ms to seconds
 
         activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsed);
@@ -189,18 +188,25 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
 
     private void RecordActivityFailure(Activity? activity, global::LanguageExt.Common.Error error, double elapsed)
     {
+        var (errorType, errorCode) = GetErrorInfo(error);
+
         TagList metricTags = new()
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
             { ObservabilityNaming.CustomAttributes.RequestCategory, this.GetRequestCategoryPascalCase() },
             { ObservabilityNaming.CustomAttributes.RequestHandler, RequestHandler },
-            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, "Method" }
+            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, "Method" },
+            { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure },
+            { ObservabilityNaming.OTelAttributes.ErrorType, errorType },
+            { ObservabilityNaming.CustomAttributes.ErrorCode, errorCode }
         };
-        _failureCounter.Add(1, metricTags);
+        _responseCounter.Add(1, metricTags);
         _durationHistogram.Record(elapsed / 1000.0, metricTags); // ms to seconds
 
         activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsed);
         activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);
+        activity?.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, errorType);
+        activity?.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, errorCode);
         activity?.SetTag(ObservabilityNaming.CustomAttributes.ErrorMessage, error.Message);
         activity?.SetStatus(ActivityStatusCode.Error, error.Message);
     }
@@ -209,6 +215,62 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
         string.IsNullOrEmpty(this.RequestCategory)
             ? string.Empty
             : char.ToUpper(this.RequestCategory[0]) + this.RequestCategory.Substring(1).ToLower();
+
+    /// <summary>
+    /// 에러 정보(타입, 코드)를 추출합니다.
+    /// </summary>
+    private static (string ErrorType, string ErrorCode) GetErrorInfo(global::LanguageExt.Common.Error error)
+    {
+        return error switch
+        {
+            // ManyErrors - 복합 에러
+            global::LanguageExt.Common.ManyErrors many => (
+                ErrorType: ObservabilityNaming.ErrorTypes.Aggregate,
+                ErrorCode: GetPrimaryErrorCode(many)
+            ),
+            // ErrorCodeExceptional - Exceptional 에러 (IHasErrorCode보다 먼저 매칭)
+            global::Functorium.Abstractions.ErrorCodeExceptional exceptional => (
+                ErrorType: ObservabilityNaming.ErrorTypes.Exceptional,
+                ErrorCode: exceptional.ErrorCode
+            ),
+            // IHasErrorCode - Expected 에러
+            global::Functorium.Abstractions.IHasErrorCode hasErrorCode => (
+                ErrorType: ObservabilityNaming.ErrorTypes.Expected,
+                ErrorCode: hasErrorCode.ErrorCode
+            ),
+            // Fallback - 알 수 없는 에러 타입
+            _ => (
+                ErrorType: error.IsExceptional
+                    ? ObservabilityNaming.ErrorTypes.Exceptional
+                    : ObservabilityNaming.ErrorTypes.Expected,
+                ErrorCode: error.GetType().Name
+            )
+        };
+    }
+
+    /// <summary>
+    /// ManyErrors에서 우선순위가 높은 에러 코드를 추출합니다.
+    /// Exceptional 에러가 Expected보다 우선합니다.
+    /// </summary>
+    private static string GetPrimaryErrorCode(global::LanguageExt.Common.ManyErrors many)
+    {
+        string? exceptionalCode = null;
+        string? expectedCode = null;
+
+        foreach (var err in many.Errors)
+        {
+            if (err is global::Functorium.Abstractions.ErrorCodeExceptional exceptional)
+            {
+                exceptionalCode ??= exceptional.ErrorCode;
+            }
+            else if (err is global::Functorium.Abstractions.IHasErrorCode hasCode)
+            {
+                expectedCode ??= hasCode.ErrorCode;
+            }
+        }
+
+        return exceptionalCode ?? expectedCode ?? many.GetType().Name;
+    }
 
     public override global::LanguageExt.FinT<global::LanguageExt.IO, string> GetData(
         int id,

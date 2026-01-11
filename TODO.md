@@ -20,22 +20,28 @@ dir /x
 - [x] 솔루션 파일 분리 2개(핵심, 전체)
 - [x] Usecase 접근 제어자 public으로 변경(Mediator 패키지 제약 조건)
 - [x] LanguageExt Tracing 일 때 Activity 손신 관련 코드 제거(불필요)
-- [ ] Logging 필드 이름 형식을 Metrics와 Tracing과 통일 시킴(PascalCase -> snake_case + dot)
-- [ ] 입출력 데이터 형식
+- [x] Logging 필드 이름 형식을 Metrics와 Tracing과 통일 시킴(PascalCase -> snake_case + dot)
+- [x] 입출력 데이터 형식
+  - application 레이어: message
+  - adapter 레이어: params/result
+- [x] Metrics Application과 Adapter 필드 통일
+- [x] Metrics Adapter에 @error?
+- [ ] ObservabilityNaming.Logging.cs 클래스 정리
 - [ ] 필드 정의 문서화
   Item    | Application | Adapter
   ---     | ---         | ---
-  Logging |             |
+  Logging | O           | O
   Tracing |             |
-  Metrics |             |
+  Metrics | O           | O
 - [ ] 필드 정의 테스트
   Item    | Application | Adapter
   ---     | ---         | ---
   Logging |             |
   Tracing |             |
   Metrics |             |
-- [ ] @error? 테스트
-= [ ] 시간 단위 통일? elapsed -> elapsed_ms
+- [ ] 로그 @error? 테스트
+- [ ] 시간 단위 통일? elapsed -> elapsed_ms
+- [ ] Metrics SLO 정의 및 설정?
 ---
 - [ ] Mediator Singleton + Scoped(Factory로 통합)
 - [x] UsecaseMetricsPipeline 클래스 정리
