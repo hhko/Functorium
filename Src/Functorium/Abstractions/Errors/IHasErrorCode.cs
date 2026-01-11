@@ -4,7 +4,7 @@ namespace Functorium.Abstractions.Errors;
 /// Represents an error that exposes an ErrorCode property for observability purposes.
 /// This interface enables type-safe ErrorCode access without reflection.
 /// </summary>
-internal interface IHasErrorCode
+public interface IHasErrorCode
 {
     /// <summary>
     /// Gets the error code that uniquely identifies this error type.

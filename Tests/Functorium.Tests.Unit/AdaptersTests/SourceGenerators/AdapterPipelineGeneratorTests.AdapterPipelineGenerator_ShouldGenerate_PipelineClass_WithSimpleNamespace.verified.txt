@@ -229,12 +229,12 @@ public class SimpleNamespaceAdapterPipeline : SimpleNamespaceAdapter
                 ErrorCode: GetPrimaryErrorCode(many)
             ),
             // ErrorCodeExceptional - Exceptional 에러 (IHasErrorCode보다 먼저 매칭)
-            global::Functorium.Abstractions.ErrorCodeExceptional exceptional => (
+            global::Functorium.Abstractions.Errors.ErrorCodeExceptional exceptional => (
                 ErrorType: ObservabilityNaming.ErrorTypes.Exceptional,
                 ErrorCode: exceptional.ErrorCode
             ),
             // IHasErrorCode - Expected 에러
-            global::Functorium.Abstractions.IHasErrorCode hasErrorCode => (
+            global::Functorium.Abstractions.Errors.IHasErrorCode hasErrorCode => (
                 ErrorType: ObservabilityNaming.ErrorTypes.Expected,
                 ErrorCode: hasErrorCode.ErrorCode
             ),
@@ -259,11 +259,11 @@ public class SimpleNamespaceAdapterPipeline : SimpleNamespaceAdapter
 
         foreach (var err in many.Errors)
         {
-            if (err is global::Functorium.Abstractions.ErrorCodeExceptional exceptional)
+            if (err is global::Functorium.Abstractions.Errors.ErrorCodeExceptional exceptional)
             {
                 exceptionalCode ??= exceptional.ErrorCode;
             }
-            else if (err is global::Functorium.Abstractions.IHasErrorCode hasCode)
+            else if (err is global::Functorium.Abstractions.Errors.IHasErrorCode hasCode)
             {
                 expectedCode ??= hasCode.ErrorCode;
             }

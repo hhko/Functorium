@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Functorium.Abstractions.Errors;
 
 [DataContract]
-internal record ErrorCodeExpected(
+public record ErrorCodeExpected(
     string ErrorCode,
     string ErrorCurrentValue,
     string ErrorMessage,
