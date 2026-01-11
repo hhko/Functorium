@@ -719,7 +719,7 @@ public sealed class AdapterPipelineGenerator()
             sb.Append("        logger.LogDebug(")
                 .AppendLine()
                 .AppendLine("            eventId: ObservabilityNaming.EventIds.Adapter.AdapterRequest,")
-                .Append("            message: \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} \" +");
+                .Append("            message: \"{request.layer} {request.category} {request.handler}.{request.handler.method} \" +");
 
             // 두 번째 줄: 동적 파라미터 필드들
             sb.AppendLine();
@@ -839,7 +839,7 @@ public sealed class AdapterPipelineGenerator()
             sb.Append("        logger.LogDebug(")
                 .AppendLine()
                 .AppendLine("            eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,")
-                .Append("            message: \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} \" +");
+                .Append("            message: \"{request.layer} {request.category} {request.handler}.{request.handler.method} \" +");
 
             // 두 번째 줄: Response 필드들
             sb.AppendLine();
@@ -858,7 +858,7 @@ public sealed class AdapterPipelineGenerator()
             sb.AppendLine(" \" +");
 
             // 세 번째 줄: 종료
-            sb.AppendLine("                     \"responded {Status} in {Elapsed:0.0000} ms\",");
+            sb.AppendLine("                     \"responded {status} in {elapsed:0.0000} ms\",");
 
             // 파라미터 전달
             sb.Append("            requestLayer, requestCategory, requestHandler, requestHandlerMethod, ");
@@ -967,7 +967,7 @@ public sealed class AdapterPipelineGenerator()
         sb.AppendLine("        LoggerMessage.Define<string, string, string, string>(");
         sb.AppendLine("            LogLevel.Information,");
         sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterRequest,");
-        sb.AppendLine("            \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} requesting\");");
+        sb.AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler.method} requesting\");");
         sb.AppendLine();
     }
 
@@ -1006,7 +1006,7 @@ public sealed class AdapterPipelineGenerator()
         }
 
         // 메시지 템플릿 생성
-        var messageFields = new List<string> { "{RequestLayer}", "{RequestCategory}", "{RequestHandler}.{RequestHandlerMethod}" };
+        var messageFields = new List<string> { "{request.layer}", "{request.category}", "{request.handler}.{request.handler.method}" };
         foreach (var param in method.Parameters)
         {
             string requestFieldName = CollectionTypeHelper.GetRequestFieldName(param.Name);
@@ -1038,7 +1038,7 @@ public sealed class AdapterPipelineGenerator()
         sb.AppendLine("        LoggerMessage.Define<string, string, string, string, string, double>(");
         sb.AppendLine("            LogLevel.Information,");
         sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,");
-        sb.AppendLine("            \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded {Status} in {Elapsed:0.0000} ms\");");
+        sb.AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler.method} responded {status} in {elapsed:0.0000} ms\");");
         sb.AppendLine();
     }
 
@@ -1081,13 +1081,13 @@ public sealed class AdapterPipelineGenerator()
             typeParams.Add("double"); // elapsed
             string responseFieldName = CollectionTypeHelper.GetResponseFieldName();
             string countFieldName = CollectionTypeHelper.GetResponseCountFieldName();
-            messageTemplate = $"{{RequestLayer}} {{RequestCategory}} {{RequestHandler}}.{{RequestHandlerMethod}} {{{responseFieldName}}} {{{countFieldName}}} responded {{Status}} in {{Elapsed:0.0000}} ms";
+            messageTemplate = $"{{request.layer}} {{request.category}} {{request.handler}}.{{request.handler.method}} {{{responseFieldName}}} {{{countFieldName}}} responded {{status}} in {{elapsed:0.0000}} ms";
         }
         else
         {
             typeParams.Add("double"); // elapsed
             string responseFieldName = CollectionTypeHelper.GetResponseFieldName();
-            messageTemplate = $"{{RequestLayer}} {{RequestCategory}} {{RequestHandler}}.{{RequestHandlerMethod}} {{{responseFieldName}}} responded {{Status}} in {{Elapsed:0.0000}} ms";
+            messageTemplate = $"{{request.layer}} {{request.category}} {{request.handler}}.{{request.handler.method}} {{{responseFieldName}}} responded {{status}} in {{elapsed:0.0000}} ms";
         }
 
         sb.AppendLine($"    private static readonly global::System.Action<ILogger, {string.Join(", ", typeParams)}, global::System.Exception?> _logResponseDebug_{classInfo.ClassName}_{method.Name} =");
@@ -1105,7 +1105,7 @@ public sealed class AdapterPipelineGenerator()
         sb.AppendLine("        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(");
         sb.AppendLine("            LogLevel.Warning,");
         sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,");
-        sb.AppendLine("            \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}\");");
+        sb.AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {elapsed:0.0000} ms with {@error}\");");
         sb.AppendLine();
     }
 
@@ -1116,7 +1116,7 @@ public sealed class AdapterPipelineGenerator()
         sb.AppendLine("        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(");
         sb.AppendLine("            LogLevel.Error,");
         sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,");
-        sb.AppendLine("            \"{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}\");");
+        sb.AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {elapsed:0.0000} ms with {@error}\");");
         sb.AppendLine();
     }
 }

@@ -410,31 +410,31 @@ internal static class CollectionReturnAdapterPipelineLoggers
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequestDebug_CollectionReturnAdapter_GetUsers =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_CollectionReturnAdapter_GetUsers =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded {Status} in {Elapsed:0.0000} ms");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {status} in {elapsed:0.0000} ms");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_CollectionReturnAdapter_GetUsers =
         LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
             LogLevel.Warning,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {elapsed:0.0000} ms with {@error}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_CollectionReturnAdapter_GetUsers =
         LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
             LogLevel.Error,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {elapsed:0.0000} ms with {@error}");
 
 
     public static void LogRequestDebug_CollectionReturnAdapter_GetUsers(
@@ -478,9 +478,9 @@ internal static class CollectionReturnAdapterPipelineLoggers
 
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            message: "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} " +
-                     "{Response_Result} {Response_ResultCount} " +
-                     "responded {Status} in {Elapsed:0.0000} ms",
+            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
+                     "{response.result} {response.result.count} " +
+                     "responded {status} in {elapsed:0.0000} ms",
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, result?.Count ?? 0, status, elapsed);
     }
 
@@ -536,31 +536,31 @@ internal static class CollectionReturnAdapterPipelineLoggers
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequestDebug_CollectionReturnAdapter_GetNames =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_CollectionReturnAdapter_GetNames =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded {Status} in {Elapsed:0.0000} ms");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {status} in {elapsed:0.0000} ms");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_CollectionReturnAdapter_GetNames =
         LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
             LogLevel.Warning,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {elapsed:0.0000} ms with {@error}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_CollectionReturnAdapter_GetNames =
         LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
             LogLevel.Error,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {elapsed:0.0000} ms with {@error}");
 
 
     public static void LogRequestDebug_CollectionReturnAdapter_GetNames(
@@ -604,9 +604,9 @@ internal static class CollectionReturnAdapterPipelineLoggers
 
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            message: "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} " +
-                     "{Response_Result} {Response_ResultCount} " +
-                     "responded {Status} in {Elapsed:0.0000} ms",
+            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
+                     "{response.result} {response.result.count} " +
+                     "responded {status} in {elapsed:0.0000} ms",
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, result?.Length ?? 0, status, elapsed);
     }
 

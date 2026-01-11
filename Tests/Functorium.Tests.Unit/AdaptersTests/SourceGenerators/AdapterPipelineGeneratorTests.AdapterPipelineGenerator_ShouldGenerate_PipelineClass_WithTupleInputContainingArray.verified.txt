@@ -318,31 +318,31 @@ internal static class TupleWithArrayInputAdapterPipelineLoggers
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, (string Name, int[] Scores), global::System.Exception?> _logRequestDebug_TupleWithArrayInputAdapter_CalculateAverage =
         LoggerMessage.Define<string, string, string, string, (string Name, int[] Scores)>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} {Request_Student} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.student} requesting");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_TupleWithArrayInputAdapter_CalculateAverage =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded {Status} in {Elapsed:0.0000} ms");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {status} in {elapsed:0.0000} ms");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_TupleWithArrayInputAdapter_CalculateAverage =
         LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
             LogLevel.Warning,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {elapsed:0.0000} ms with {@error}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_TupleWithArrayInputAdapter_CalculateAverage =
         LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
             LogLevel.Error,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {elapsed:0.0000} ms with {@error}");
 
 
     public static void LogRequestDebug_TupleWithArrayInputAdapter_CalculateAverage(
@@ -387,9 +387,9 @@ internal static class TupleWithArrayInputAdapterPipelineLoggers
 
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            message: "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} " +
-                     "{Response_Result} " +
-                     "responded {Status} in {Elapsed:0.0000} ms",
+            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
+                     "{response.result} " +
+                     "responded {status} in {elapsed:0.0000} ms",
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 

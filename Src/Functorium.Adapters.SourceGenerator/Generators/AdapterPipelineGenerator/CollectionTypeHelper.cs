@@ -96,21 +96,21 @@ public static class CollectionTypeHelper
 
     /// <summary>
     /// Request 파라미터에 대한 필드 이름을 생성합니다.
-    /// 예: "ms" -> "Request_Ms", "name" -> "Request_Name"
+    /// 예: "ms" -> "request.params.ms", "name" -> "request.params.name"
+    /// 동적 필드는 request.params.{name} 형식으로 정적 필드와 구분됩니다.
     /// </summary>
     public static string GetRequestFieldName(string parameterName)
     {
         if (string.IsNullOrEmpty(parameterName))
             return parameterName;
 
-        // 첫 글자를 대문자로 변환
-        string capitalizedName = char.ToUpper(parameterName[0]) + parameterName.Substring(1);
-        return $"Request_{capitalizedName}";
+        // 소문자로 변환하여 snake_case + dot 형식 사용
+        return $"request.params.{parameterName.ToLowerInvariant()}";
     }
 
     /// <summary>
     /// Request 파라미터에 대한 Count 필드 이름을 생성합니다.
-    /// 예: "orders" -> "Request_OrdersCount"
+    /// 예: "orders" -> "request.params.orders.count"
     /// </summary>
     /// <returns>Count 필드 이름. parameterName이 비어있으면 null</returns>
     public static string? GetRequestCountFieldName(string parameterName)
@@ -118,26 +118,26 @@ public static class CollectionTypeHelper
         if (string.IsNullOrEmpty(parameterName))
             return null;
 
-        // 첫 글자를 대문자로 변환
-        string capitalizedName = char.ToUpper(parameterName[0]) + parameterName.Substring(1);
-        return $"Request_{capitalizedName}Count";
+        // 소문자로 변환하여 snake_case + dot 형식 사용
+        return $"request.params.{parameterName.ToLowerInvariant()}.count";
     }
 
     /// <summary>
     /// Response 결과에 대한 필드 이름을 생성합니다.
-    /// 반환값: "Response_Result"
+    /// 반환값: "response.result"
+    /// Usecase Pipeline의 @response.message와 구분되는 개별 반환값 필드입니다.
     /// </summary>
     public static string GetResponseFieldName()
     {
-        return "Response_Result";
+        return "response.result";
     }
 
     /// <summary>
     /// Response 결과에 대한 Count 필드 이름을 생성합니다.
-    /// 반환값: "Response_ResultCount"
+    /// 반환값: "response.result.count"
     /// </summary>
     public static string GetResponseCountFieldName()
     {
-        return "Response_ResultCount";
+        return "response.result.count";
     }
 }

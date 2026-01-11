@@ -505,31 +505,31 @@ internal static class SimpleReturnAdapterPipelineLoggers
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequestDebug_SimpleReturnAdapter_GetNumber =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_SimpleReturnAdapter_GetNumber =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded {Status} in {Elapsed:0.0000} ms");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {status} in {elapsed:0.0000} ms");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_SimpleReturnAdapter_GetNumber =
         LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
             LogLevel.Warning,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {elapsed:0.0000} ms with {@error}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_SimpleReturnAdapter_GetNumber =
         LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
             LogLevel.Error,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {elapsed:0.0000} ms with {@error}");
 
 
     public static void LogRequestDebug_SimpleReturnAdapter_GetNumber(
@@ -573,9 +573,9 @@ internal static class SimpleReturnAdapterPipelineLoggers
 
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            message: "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} " +
-                     "{Response_Result} " +
-                     "responded {Status} in {Elapsed:0.0000} ms",
+            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
+                     "{response.result} " +
+                     "responded {status} in {elapsed:0.0000} ms",
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
@@ -631,31 +631,31 @@ internal static class SimpleReturnAdapterPipelineLoggers
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequestDebug_SimpleReturnAdapter_GetText =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_SimpleReturnAdapter_GetText =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded {Status} in {Elapsed:0.0000} ms");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {status} in {elapsed:0.0000} ms");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_SimpleReturnAdapter_GetText =
         LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
             LogLevel.Warning,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {elapsed:0.0000} ms with {@error}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_SimpleReturnAdapter_GetText =
         LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
             LogLevel.Error,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {elapsed:0.0000} ms with {@error}");
 
 
     public static void LogRequestDebug_SimpleReturnAdapter_GetText(
@@ -699,9 +699,9 @@ internal static class SimpleReturnAdapterPipelineLoggers
 
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            message: "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} " +
-                     "{Response_Result} " +
-                     "responded {Status} in {Elapsed:0.0000} ms",
+            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
+                     "{response.result} " +
+                     "responded {status} in {elapsed:0.0000} ms",
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
@@ -757,31 +757,31 @@ internal static class SimpleReturnAdapterPipelineLoggers
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequestDebug_SimpleReturnAdapter_GetFlag =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_SimpleReturnAdapter_GetFlag =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded {Status} in {Elapsed:0.0000} ms");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {status} in {elapsed:0.0000} ms");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_SimpleReturnAdapter_GetFlag =
         LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
             LogLevel.Warning,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {elapsed:0.0000} ms with {@error}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_SimpleReturnAdapter_GetFlag =
         LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
             LogLevel.Error,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} responded failure in {Elapsed:0.0000} ms with {@Error}");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {elapsed:0.0000} ms with {@error}");
 
 
     public static void LogRequestDebug_SimpleReturnAdapter_GetFlag(
@@ -825,9 +825,9 @@ internal static class SimpleReturnAdapterPipelineLoggers
 
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            message: "{RequestLayer} {RequestCategory} {RequestHandler}.{RequestHandlerMethod} " +
-                     "{Response_Result} " +
-                     "responded {Status} in {Elapsed:0.0000} ms",
+            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
+                     "{response.result} " +
+                     "responded {status} in {elapsed:0.0000} ms",
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 

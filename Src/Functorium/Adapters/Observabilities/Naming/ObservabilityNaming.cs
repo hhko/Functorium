@@ -26,7 +26,17 @@ public static partial class ObservabilityNaming
     {
         public const string Usecase = "usecase";
         public const string Repository = "repository";
-        public const string Adapter = "adapter";
+        //public const string Adapter = "Adapter";
+    }
+
+    /// <summary>
+    /// CQRS 타입 상수 (소문자)
+    /// </summary>
+    public static class Cqrs
+    {
+        public const string Command = "command";
+        public const string Query = "query";
+        public const string Unknown = "unknown";
     }
 
     /// <summary>
@@ -51,15 +61,5 @@ public static partial class ObservabilityNaming
 
         /// <summary>복합 에러 (ManyErrors)</summary>
         public const string Aggregate = "aggregate";
-    }
-
-    /// <summary>
-    /// CQRS 타입 상수 (소문자)
-    /// </summary>
-    public static class Cqrs
-    {
-        public const string Command = "command";
-        public const string Query = "query";
-        public const string Unknown = "unknown";
     }
 }

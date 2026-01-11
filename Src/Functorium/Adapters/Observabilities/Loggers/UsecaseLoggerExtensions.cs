@@ -7,12 +7,24 @@ using Microsoft.Extensions.Logging;
 namespace Functorium.Adapters.Observabilities.Loggers;
 
 /// <summary>
-/// Usecase Pipeline에서 사용하는 로거 확장 메서드
+/// Usecase Pipeline에서 사용하는 로거 확장 메서드.
+/// BeginScope를 제거하여 필드 중복과 Dictionary 할당을 방지합니다.
 /// </summary>
+/// <remarks>
+/// Application 레이어의 로그는 파라미터 수가 6개를 초과하여
+/// LoggerMessage.Define을 사용할 수 없습니다.
+/// (LoggerMessage.Define은 최대 6개 타입 파라미터만 지원)
+/// </remarks>
 public static class UsecaseLoggerExtensions
 {
-    // Request
+    // ===== Request =====
 
+    /// <summary>
+    /// Request 로그를 출력합니다.
+    /// </summary>
+    /// <remarks>
+    /// 제네릭 타입 T로 인해 LoggerMessage.Define을 사용할 수 없어 직접 호출합니다.
+    /// </remarks>
     public static void LogRequestMessage<T>(
         this ILogger logger,
         string requestLayer,
@@ -25,28 +37,25 @@ public static class UsecaseLoggerExtensions
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        using IDisposable? scope = logger.BeginScope(new Dictionary<string, object?>
-        {
-            [ObservabilityNaming.LogKeys.RequestLayer] = requestLayer,
-            [ObservabilityNaming.LogKeys.RequestCategory] = requestCategory,
-            [ObservabilityNaming.LogKeys.RequestHandler] = requestHandler,
-            [ObservabilityNaming.LogKeys.RequestHandlerCqrs] = requestCqrs,
-            [ObservabilityNaming.LogKeys.RequestHandlerMethod] = requestHandlerMethod,
-            [ObservabilityNaming.LogKeys.RequestData] = request
-        });
-
         logger.LogInformation(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationRequest,
-            message: "{RequestLayer} {RequestCategory}.{RequestHandlerCqrs} {RequestHandler}.{RequestHandlerMethod} {@Request:Request} requesting",
-                requestLayer,
-                requestCategory,
-                requestCqrs,
-                requestHandler,
-                requestHandlerMethod,
-                request);
+            message: "{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@request.message} requesting",
+            requestLayer,
+            requestCategory,
+            requestCqrs,
+            requestHandler,
+            requestHandlerMethod,
+            request);
     }
 
-    // Response - 성공
+    // ===== Response - 성공 =====
+
+    /// <summary>
+    /// Response 성공 로그를 출력합니다.
+    /// </summary>
+    /// <remarks>
+    /// 제네릭 타입 T로 인해 LoggerMessage.Define을 사용할 수 없어 직접 호출합니다.
+    /// </remarks>
     public static void LogResponseMessageSuccess<T>(
         this ILogger logger,
         string requestLayer,
@@ -61,36 +70,28 @@ public static class UsecaseLoggerExtensions
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        // response를 그대로 사용 (Fin<T>에서 값 추출은 호출자에서 처리)
-        T? value = response;
-
-        using IDisposable? scope = logger.BeginScope(new Dictionary<string, object?>
-        {
-            [ObservabilityNaming.LogKeys.RequestLayer] = requestLayer,
-            [ObservabilityNaming.LogKeys.RequestCategory] = requestCategory,
-            [ObservabilityNaming.LogKeys.RequestHandler] = requestHandler,
-            [ObservabilityNaming.LogKeys.RequestHandlerCqrs] = requestCqrs,
-            [ObservabilityNaming.LogKeys.RequestHandlerMethod] = requestHandlerMethod,
-
-            [ObservabilityNaming.LogKeys.ResponseData] = value,
-            [ObservabilityNaming.LogKeys.ResponseStatus] = status,
-            [ObservabilityNaming.LogKeys.ResponseElapsed] = elapsed,
-        });
-
         logger.LogInformation(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseSuccess,
-            message: "{RequestLayer} {RequestCategory}.{RequestHandlerCqrs} {RequestHandler}.{RequestHandlerMethod} {@Response:Response} responded {Status} in {Elapsed:0.0000} ms",
-                requestLayer,
-                requestCategory,
-                requestCqrs,
-                requestHandler,
-                requestHandlerMethod,
-                value,
-                status,
-                elapsed);
+            message: "{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@response.message} responded {status} in {elapsed:0.0000} ms",
+            requestLayer,
+            requestCategory,
+            requestCqrs,
+            requestHandler,
+            requestHandlerMethod,
+            response,
+            status,
+            elapsed);
     }
 
-    // Response - 실패, 경고 ErrorCodeExpected
+    // ===== Response - 실패, 경고 ErrorCodeExpected =====
+
+    /// <summary>
+    /// Response 경고 로그를 출력합니다 (예상된 에러).
+    /// </summary>
+    /// <remarks>
+    /// Error 필드 로깅이 필요한 경우 직접 호출을 사용합니다.
+    /// LoggerMessage.Define은 7개 파라미터까지만 지원합니다.
+    /// </remarks>
     public static void LogResponseMessageWarning(
         this ILogger logger,
         string requestLayer,
@@ -105,33 +106,29 @@ public static class UsecaseLoggerExtensions
         if (!logger.IsEnabled(LogLevel.Warning))
             return;
 
-        using IDisposable? scope = logger.BeginScope(new Dictionary<string, object?>
-        {
-            [ObservabilityNaming.LogKeys.RequestLayer] = requestLayer,
-            [ObservabilityNaming.LogKeys.RequestCategory] = requestCategory,
-            [ObservabilityNaming.LogKeys.RequestHandler] = requestHandler,
-            [ObservabilityNaming.LogKeys.RequestHandlerCqrs] = requestCqrs,
-            [ObservabilityNaming.LogKeys.RequestHandlerMethod] = requestHandlerMethod,
-
-            [ObservabilityNaming.LogKeys.ResponseStatus] = status,
-            [ObservabilityNaming.LogKeys.ResponseElapsed] = elapsed,
-            [ObservabilityNaming.LogKeys.ErrorData] = error
-        });
-
+        // Error 객체를 포함하여 로깅 (LoggerMessage.Define 파라미터 제한으로 직접 호출)
         logger.LogWarning(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseWarning,
-            message: "{RequestLayer} {RequestCategory}.{RequestHandlerCqrs} {RequestHandler}.{RequestHandlerMethod} responded {Status} in {Elapsed:0.0000} ms with {@Error:Error}",
-                requestLayer,
-                requestCategory,
-                requestCqrs,
-                requestHandler,
-                requestHandlerMethod,
-                status,
-                elapsed,
-                error);
+            message: "{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {status} in {elapsed:0.0000} ms with {@error}",
+            requestLayer,
+            requestCategory,
+            requestCqrs,
+            requestHandler,
+            requestHandlerMethod,
+            status,
+            elapsed,
+            error);
     }
 
-    // Response - 실패, 에러 ErrorCodeExceptional
+    // ===== Response - 실패, 에러 ErrorCodeExceptional =====
+
+    /// <summary>
+    /// Response 에러 로그를 출력합니다 (예외적 에러).
+    /// </summary>
+    /// <remarks>
+    /// Error 필드 로깅이 필요한 경우 직접 호출을 사용합니다.
+    /// LoggerMessage.Define은 7개 파라미터까지만 지원합니다.
+    /// </remarks>
     public static void LogResponseMessageError(
         this ILogger logger,
         string requestLayer,
@@ -146,29 +143,17 @@ public static class UsecaseLoggerExtensions
         if (!logger.IsEnabled(LogLevel.Error))
             return;
 
-        using IDisposable? scope = logger.BeginScope(new Dictionary<string, object?>
-        {
-            [ObservabilityNaming.LogKeys.RequestLayer] = requestLayer,
-            [ObservabilityNaming.LogKeys.RequestCategory] = requestCategory,
-            [ObservabilityNaming.LogKeys.RequestHandler] = requestHandler,
-            [ObservabilityNaming.LogKeys.RequestHandlerCqrs] = requestCqrs,
-            [ObservabilityNaming.LogKeys.RequestHandlerMethod] = requestHandlerMethod,
-
-            [ObservabilityNaming.LogKeys.ResponseStatus] = status,
-            [ObservabilityNaming.LogKeys.ResponseElapsed] = elapsed,
-            [ObservabilityNaming.LogKeys.ErrorData] = error
-        });
-
+        // Error 객체를 포함하여 로깅 (LoggerMessage.Define 파라미터 제한으로 직접 호출)
         logger.LogError(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseError,
-            message: "{RequestLayer} {RequestCategory}.{RequestHandlerCqrs} {RequestHandler}.{RequestHandlerMethod} responded {Status} in {Elapsed:0.0000} ms with {@Error:Error}",
-                requestLayer,
-                requestCategory,
-                requestCqrs,
-                requestHandler,
-                requestHandlerMethod,
-                status,
-                elapsed,
-                error);
+            message: "{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {status} in {elapsed:0.0000} ms with {@error}",
+            requestLayer,
+            requestCategory,
+            requestCqrs,
+            requestHandler,
+            requestHandlerMethod,
+            status,
+            elapsed,
+            error);
     }
 }
