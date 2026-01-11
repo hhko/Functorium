@@ -250,19 +250,21 @@ The `HistogramBuckets` setting configures bucket boundaries for existing duratio
 | Instrument Name | Type | Unit | Description |
 |------------|------|------|------|
 | `adapter.{category}.requests` | Counter | `{request}` | Total request count |
-| `adapter.{category}.responses.success` | Counter | `{response}` | Successful response count |
-| `adapter.{category}.responses.failure` | Counter | `{response}` | Failed response count |
+| `adapter.{category}.responses` | Counter | `{response}` | Response count (distinguished by status tag) |
 | `adapter.{category}.duration` | Histogram | `s` | Processing time (seconds) |
 
 **Tag Structure:**
 
-| Tag Key | requestCounter | durationHistogram | successCounter | failureCounter |
-|---------|----------------|-------------------|----------------|----------------|
+| Tag Key | requestCounter | durationHistogram | responseCounter (success) | responseCounter (failure) |
+|---------|----------------|-------------------|---------------------------|---------------------------|
 | `request.layer` | `"adapter"` | `"adapter"` | `"adapter"` | `"adapter"` |
 | `request.category` | category name | category name | category name | category name |
 | `request.handler` | handler name | handler name | handler name | handler name |
 | `request.handler.method` | method name | method name | method name | method name |
-| **Total Tags** | **4** | **4** | **4** | **4** |
+| `response.status` | - | - | `"success"` | `"failure"` |
+| `error.type` | - | - | - | `"expected"` / `"exceptional"` / `"aggregate"` |
+| `error.code` | - | - | - | Error code |
+| **Total Tags** | **4** | **4** | **5** | **7** |
 
 **Implementation:** Source Generator creates metrics instruments and records values automatically.
 
