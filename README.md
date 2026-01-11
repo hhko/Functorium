@@ -26,81 +26,84 @@ It enables expressing domain logic as pure functions and pushing side effects to
 
 > All observability fields use `snake_case + dot` notation for consistency with OpenTelemetry semantic conventions.
 
-### Logging (UsecaseLoggingPipeline) - Application Layer
+### Field/Tag Consistency
+
+**Application Layer:**
+
+| Field/Tag | Logging | Metrics | Tracing | Note |
+|-----------|---------|---------|---------|------|
+| `request.layer` | ✅ | ✅ | ✅ | Consistent |
+| `request.category` | ✅ | ✅ | ✅ | Consistent |
+| `request.handler.cqrs` | ✅ | ✅ | ✅ | Consistent |
+| `request.handler` | ✅ | ✅ | ✅ | Consistent |
+| `request.handler.method` | ✅ `"Handle"` | ✅ `"Handle"` | ✅ `"Handle"` | Consistent |
+| `response.status` | ✅ | ✅ | ✅ | Consistent |
+| `response.elapsed` | ✅ | - | ✅ | Consistent |
+| `error.type` | ❌ (`@error`) | ✅ | ✅ | Logging uses `@error` object |
+| `error.code` | ❌ (`@error`) | ✅ | ✅ | Logging uses `@error` object |
+| `error.message` | ❌ (`@error`) | ❌ | ✅ | Tracing only |
+| `error.count` | ❌ | ❌ | ✅ | Tracing only |
+| `slo.latency` | ❌ | ✅ | ❌ | Metrics only |
+
+**Adapter Layer:**
+
+| Field/Tag | Logging | Metrics | Tracing | Note |
+|-----------|---------|---------|---------|------|
+| `request.layer` | ✅ | ✅ | ✅ | Consistent |
+| `request.category` | ✅ | ✅ | ✅ | Consistent |
+| `request.handler` | ✅ | ✅ | ✅ | Consistent |
+| `request.handler.method` | ✅ | ✅ | ✅ | Consistent |
+| `response.status` | ✅ | ✅ | ✅ | Consistent |
+| `response.elapsed` | ✅ | - | ✅ | Consistent |
+
+### Logging
 
 **Field Structure:**
 
-| Category | Field Name | Description |
-|----------|------------|-------------|
-| **Static Fields** | | |
-| Request Layer | `request.layer` | `"application"` |
-| Request Category | `request.category` | `"usecase"` |
-| Request CQRS | `request.handler.cqrs` | `"command"` / `"query"` |
-| Request Handler | `request.handler` | Handler name |
-| Request Method | `request.handler.method` | `"Handle"` |
-| Response Status | `status` | `"success"` / `"failure"` |
-| Elapsed Time | `elapsed` | Processing time (ms) |
-| Error Data | `@error` | Error object (structured) |
-| **Dynamic Fields** | | |
-| Request Message | `@request.message` | Full Command/Query object |
-| Response Message | `@response.message` | Full response object |
+| Field Name | Application Layer | Adapter Layer | Description |
+|------------|-------------------|---------------|-------------|
+| **Static Fields** | | | |
+| `request.layer` | `"application"` | `"adapter"` | Request layer identifier |
+| `request.category` | `"usecase"` | Adapter category name | Request category identifier |
+| `request.handler.cqrs` | `"command"` / `"query"` | - | CQRS type |
+| `request.handler` | Handler name | Handler name | Handler class name |
+| `request.handler.method` | `"Handle"` | Method name | Handler method name |
+| `response.status` | `"success"` / `"failure"` | `"success"` / `"failure"` | Response status |
+| `response.elapsed` | Processing time (ms) | Processing time (ms) | Elapsed time |
+| `@error` | Error object (structured) | Error object (structured) | Error data |
+| **Dynamic Fields** | | | |
+| `@request.message` | Full Command/Query object | - | Request message |
+| `@response.message` | Full response object | - | Response message |
+| `request.params.{name}` | - | Individual method parameter | Request params |
+| `request.params.{name}.count` | - | Collection size (when parameter is collection) | Request params count |
+| `response.result` | - | Method return value | Response result |
+| `response.result.count` | - | Collection size (when return is collection) | Response result count |
 
 **Log Level by Event:**
 
-| Event | Log Level | EventId | Description |
-|-------|-----------|---------|-------------|
-| Request | Information | `ApplicationRequest` | Request received |
-| Response Success | Information | `ApplicationResponseSuccess` | Successful response |
-| Response Warning | Warning | `ApplicationResponseWarning` | Expected error (business logic) |
-| Response Error | Error | `ApplicationResponseError` | Exceptional error (system failure) |
+| Event | Log Level | Application Layer | Adapter Layer | Description |
+|-------|-----------|-------------------|---------------|-------------|
+| Request | Information | 1001 `application.request` | 2001 `adapter.request` | Request received |
+| Request (Debug) | Debug | - | 2001 `adapter.request` | Request with parameter values |
+| Response Success | Information | 1002 `application.response.success` | 2002 `adapter.response.success` | Successful response |
+| Response Success (Debug) | Debug | - | 2002 `adapter.response.success` | Response with result value |
+| Response Warning | Warning | 1003 `application.response.warning` | 2003 `adapter.response.warning` | Expected error (business logic) |
+| Response Error | Error | 1004 `application.response.error` | 2004 `adapter.response.error` | Exceptional error (system failure) |
 
-**Message Templates:**
+**Message Templates (Application Layer):**
 
 ```
 # Request
 {request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@request.message} requesting
 
 # Response - Success
-{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@response.message} responded {status} in {elapsed:0.0000} ms
+{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@response.message} responded {response.status} in {response.elapsed:0.0000} ms
 
 # Response - Warning/Error
-{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {status} in {elapsed:0.0000} ms with {@error}
+{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} ms with {@error}
 ```
 
-**Implementation:** Direct `ILogger.LogXxx()` calls (7+ parameters exceed `LoggerMessage.Define` limit of 6)
-
-### Logging (AdapterPipelineGenerator) - Adapter Layer
-
-**Field Structure:**
-
-| Category | Field Name | Description |
-|----------|------------|-------------|
-| **Static Fields** | | |
-| Request Layer | `request.layer` | `"adapter"` |
-| Request Category | `request.category` | Adapter category name |
-| Request Handler | `request.handler` | Handler name |
-| Request Method | `request.handler.method` | Method name |
-| Response Status | `status` | `"success"` / `"failure"` |
-| Elapsed Time | `elapsed` | Processing time (ms) |
-| Error Data | `@error` | Error object (structured) |
-| **Dynamic Fields** | | |
-| Request Params | `request.params.{name}` | Individual method parameter |
-| Request Params Count | `request.params.{name}.count` | Collection size (when parameter is collection) |
-| Response Result | `response.result` | Method return value |
-| Response Result Count | `response.result.count` | Collection size (when return is collection) |
-
-**Log Level by Event:**
-
-| Event | Log Level | EventId | Description |
-|-------|-----------|---------|-------------|
-| Request | Information | `AdapterRequest` | Request received |
-| Request (Debug) | Debug | `AdapterRequest` | Request with parameter values |
-| Response Success | Information | `AdapterResponseSuccess` | Successful response |
-| Response Success (Debug) | Debug | `AdapterResponseSuccess` | Response with result value |
-| Response Warning | Warning | `AdapterResponseWarning` | Expected error |
-| Response Error | Error | `AdapterResponseError` | Exceptional error |
-
-**Message Templates:**
+**Message Templates (Adapter Layer):**
 
 ```
 # Request (Information)
@@ -110,28 +113,33 @@ It enables expressing domain logic as pure functions and pushing side effects to
 {request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.items} {request.params.items.count} requesting
 
 # Response (Information)
-{request.layer} {request.category} {request.handler}.{request.handler.method} responded {status} in {elapsed:0.0000} ms
+{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} ms
 
 # Response (Debug) - with result
-{request.layer} {request.category} {request.handler}.{request.handler.method} {response.result} responded {status} in {elapsed:0.0000} ms
+{request.layer} {request.category} {request.handler}.{request.handler.method} {response.result} responded {response.status} in {response.elapsed:0.0000} ms
 
 # Response Warning/Error
-{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {elapsed:0.0000} ms with {@error}
+{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} ms with {@error}
 ```
 
-**Implementation:** `LoggerMessage.Define` delegates (zero allocation, high performance)
+**Implementation:**
 
-### Metrics (UsecaseMetricsPipeline) - Application Layer
+| Layer | Method | Note |
+|-------|--------|------|
+| Application | Direct `ILogger.LogXxx()` calls | 7+ parameters exceed `LoggerMessage.Define` limit of 6 |
+| Adapter | `LoggerMessage.Define` delegates | Zero allocation, high performance |
+
+### Metrics
 
 **Instrument Structure:**
 
-| Instrument Name | Type | Unit | Description |
-|------------|------|------|------|
-| `application.usecase.{cqrs}.requests` | Counter | `{request}` | Total request count |
-| `application.usecase.{cqrs}.responses` | Counter | `{response}` | Response count (distinguished by status tag) |
-| `application.usecase.{cqrs}.duration` | Histogram | `s` | Processing time (seconds) |
+| Instrument | Application Layer | Adapter Layer | Type | Unit | Description |
+|------------|-------------------|---------------|------|------|-------------|
+| requests | `application.usecase.{cqrs}.requests` | `adapter.{category}.requests` | Counter | `{request}` | Total request count |
+| responses | `application.usecase.{cqrs}.responses` | `adapter.{category}.responses` | Counter | `{response}` | Response count |
+| duration | `application.usecase.{cqrs}.duration` | `adapter.{category}.duration` | Histogram | `s` | Processing time (seconds) |
 
-**Tag Structure:**
+**Tag Structure (Application Layer):**
 
 | Tag Key | requestCounter | durationHistogram | responseCounter (success) | responseCounter (failure) |
 |---------|----------------|-------------------|---------------------------|---------------------------|
@@ -146,6 +154,19 @@ It enables expressing domain logic as pure functions and pushing side effects to
 | `slo.latency` | - | `"ok"` / `"p95_exceeded"` / `"p99_exceeded"` | `"ok"` / `"p95_exceeded"` / `"p99_exceeded"` | `"ok"` / `"p95_exceeded"` / `"p99_exceeded"` |
 | **Total Tags** | **5** | **6** | **7** | **9** |
 
+**Tag Structure (Adapter Layer):**
+
+| Tag Key | requestCounter | durationHistogram | responseCounter (success) | responseCounter (failure) |
+|---------|----------------|-------------------|---------------------------|---------------------------|
+| `request.layer` | `"adapter"` | `"adapter"` | `"adapter"` | `"adapter"` |
+| `request.category` | category name | category name | category name | category name |
+| `request.handler` | handler name | handler name | handler name | handler name |
+| `request.handler.method` | method name | method name | method name | method name |
+| `response.status` | - | - | `"success"` | `"failure"` |
+| `error.type` | - | - | - | `"expected"` / `"exceptional"` / `"aggregate"` |
+| `error.code` | - | - | - | Error code |
+| **Total Tags** | **4** | **4** | **5** | **7** |
+
 **Error Type Tag Values:**
 
 | Error Case | error.type | error.code |
@@ -158,7 +179,7 @@ It enables expressing domain logic as pure functions and pushing side effects to
 
 - `IHasErrorCode`: ErrorCodeExpected, ErrorCodeExceptional
 
-**SLO Latency Tag Values (3-tier severity):**
+**SLO Latency Tag Values (Application Layer only, 3-tier severity):**
 
 | Value | Condition | Description |
 |-------|-----------|-------------|
@@ -166,7 +187,14 @@ It enables expressing domain logic as pure functions and pushing side effects to
 | `"p95_exceeded"` | `P95 < elapsed <= P99` | Warning (slow) |
 | `"p99_exceeded"` | `elapsed > P99` | Critical (SLO violation) |
 
-### SLO Configuration
+**Implementation:**
+
+| Layer | Method | Note |
+|-------|--------|------|
+| Application | `IPipelineBehavior` + `IMeterFactory` | MediatR pipeline |
+| Adapter | Source Generator | Auto-generated metrics instruments |
+
+### SLO Configuration (Application Layer)
 
 **Purpose:** Service Level Objective (SLO) configuration for monitoring and alerting.
 
@@ -243,95 +271,51 @@ The `HistogramBuckets` setting configures bucket boundaries for existing duratio
 
 > **Note:** SLO configuration does not add new instruments or tags. It only configures histogram bucket boundaries for accurate P95/P99 percentile calculations. SLO target values (AvailabilityPercent, LatencyP95Milliseconds, etc.) are used as query thresholds in Prometheus/Grafana, not emitted as metrics.
 
-### Metrics (AdapterPipelineGenerator) - Adapter Layer
-
-**Instrument Structure:**
-
-| Instrument Name | Type | Unit | Description |
-|------------|------|------|------|
-| `adapter.{category}.requests` | Counter | `{request}` | Total request count |
-| `adapter.{category}.responses` | Counter | `{response}` | Response count (distinguished by status tag) |
-| `adapter.{category}.duration` | Histogram | `s` | Processing time (seconds) |
-
-**Tag Structure:**
-
-| Tag Key | requestCounter | durationHistogram | responseCounter (success) | responseCounter (failure) |
-|---------|----------------|-------------------|---------------------------|---------------------------|
-| `request.layer` | `"adapter"` | `"adapter"` | `"adapter"` | `"adapter"` |
-| `request.category` | category name | category name | category name | category name |
-| `request.handler` | handler name | handler name | handler name | handler name |
-| `request.handler.method` | method name | method name | method name | method name |
-| `response.status` | - | - | `"success"` | `"failure"` |
-| `error.type` | - | - | - | `"expected"` / `"exceptional"` / `"aggregate"` |
-| `error.code` | - | - | - | Error code |
-| **Total Tags** | **4** | **4** | **5** | **7** |
-
-**Implementation:** Source Generator creates metrics instruments and records values automatically.
-
-### Tracing (UsecaseTracingPipeline) - Application Layer
+### Tracing
 
 **Span Structure:**
 
-| Property | Value |
-|----------|-------|
-| Span Name | `{layer} {category}.{cqrs} {handler}.{method}` |
-| Example | `application usecase.command CreateOrderCommandHandler.Handle` |
-| Kind | `Internal` |
+| Property | Application Layer | Adapter Layer |
+|----------|-------------------|---------------|
+| Span Name | `{layer} {category}.{cqrs} {handler}.{method}` | `{layer} {category} {handler}.{method}` |
+| Example | `application usecase.command CreateOrderCommandHandler.Handle` | `adapter Repository OrderRepository.GetById` |
+| Kind | `Internal` | `Internal` |
 
 **Tag Structure:**
 
-| Tag Key | Request | Response (success) | Response (failure) |
-|---------|---------|--------------------|--------------------|
-| `request.layer` | `"application"` | - | - |
-| `request.category` | `"usecase"` | - | - |
-| `request.handler.cqrs` | `"command"` / `"query"` | - | - |
-| `request.handler` | Handler name | - | - |
-| `code.function` | Handler full path | - | - |
-| `response.status` | - | `"success"` | `"failure"` |
-| `response.elapsed` | - | Processing time (ms) | Processing time (ms) |
-| `error.type` | - | - | `"expected"` / `"exceptional"` / `"aggregate"` |
-| `error.code` | - | - | Error code |
-| `error.message` | - | - | Error message |
-| `error.count` | - | - | Error count (ManyErrors only) |
-| **ActivityStatus** | - | `Ok` | `Error` |
+| Tag Key | Application Layer | Adapter Layer | Description |
+|---------|-------------------|---------------|-------------|
+| **Request Tags** | | | |
+| `request.layer` | `"application"` | `"adapter"` | Layer identifier |
+| `request.category` | `"usecase"` | Category name | Category identifier |
+| `request.handler.cqrs` | `"command"` / `"query"` | - | CQRS type |
+| `request.handler` | Handler name | Handler name | Handler class name |
+| `request.handler.method` | `"Handle"` | Method name | Method name |
+| **Response Tags** | | | |
+| `response.status` | `"success"` / `"failure"` | `"success"` / `"failure"` | Response status |
+| `response.elapsed` | Processing time (ms) | Processing time (ms) | Elapsed time |
+| **Error Tags** | | | |
+| `error.type` | `"expected"` / `"exceptional"` / `"aggregate"` | `"expected"` / `"exceptional"` / `"aggregate"` | Error classification |
+| `error.code` | Error code | Error code | Error code |
+| `error.message` | Error message | Error message | Error message |
+| `error.count` | Error count (ManyErrors) | - | Aggregate error count |
+| **ActivityStatus** | `Ok` / `Error` | `Ok` / `Error` | OpenTelemetry status |
 
 **Error Type Tag Values:**
 
-| Error Case | error.type | Additional Tags |
-|------------|------------|-----------------|
-| `IHasErrorCode` + `IsExpected` | `"expected"` | `error.code`, `error.message` |
-| `IHasErrorCode` + `IsExceptional` | `"exceptional"` | `error.code`, `error.message` |
-| `ManyErrors` | `"aggregate"` | `error.count` |
-| Other | Type name | `error.message` |
+| Error Case | error.type | Additional Tags | Description |
+|------------|------------|-----------------|-------------|
+| `IHasErrorCode` + `IsExpected` | `"expected"` | `error.code`, `error.message` | Expected business logic error with error code |
+| `IHasErrorCode` + `IsExceptional` | `"exceptional"` | `error.code`, `error.message` | Exceptional system error with error code |
+| `ManyErrors` | `"aggregate"` | `error.count` (Application only) | Multiple errors aggregated |
+| Other | Type name | `error.message` | Unknown error type fallback |
 
-**Implementation:** `IPipelineBehavior<TRequest, TResponse>` with `ActivitySource.StartActivity()`
+**Implementation:**
 
-### Tracing (AdapterPipelineGenerator) - Adapter Layer
-
-**Span Structure:**
-
-| Property | Value |
-|----------|-------|
-| Span Name | `{layer} {category} {handler}.{method}` |
-| Example | `adapter Repository OrderRepository.GetById` |
-| Kind | `Internal` |
-
-**Tag Structure:**
-
-| Tag Key | Request | Response (success) | Response (failure) |
-|---------|---------|--------------------|--------------------|
-| `request.layer` | `"adapter"` | - | - |
-| `request.category` | Category name | - | - |
-| `request.handler` | Handler name | - | - |
-| `request.handler.method` | Method name | - | - |
-| `response.status` | - | `"success"` | `"failure"` |
-| `response.elapsed` | - | Processing time (ms) | Processing time (ms) |
-| `error.type` | - | - | `"expected"` / `"exceptional"` / `"aggregate"` |
-| `error.code` | - | - | Error code |
-| `error.message` | - | - | Error message |
-| **ActivityStatus** | - | `Ok` | `Error` |
-
-**Implementation:** Source Generator creates Activity spans and records tags automatically.
+| Layer | Method | Note |
+|-------|--------|------|
+| Application | `IPipelineBehavior` + `ActivitySource.StartActivity()` | Mediator pipeline |
+| Adapter | Source Generator | Auto-generated Activity spans |
 
 ## Framework
 ### Abstractions
@@ -340,7 +324,7 @@ The `HistogramBuckets` setting configures bucket boundaries for existing duratio
 
 ### Adapter Layer
 - [x] Configuration Option
-- [ ] Observability(Logging, Tracing, Metrics)
+- [x] Observability(Logging, Tracing, Metrics)
 - [ ] Scheduling
 - [ ] HTTP Method
 - [ ] MQ
@@ -349,7 +333,7 @@ The `HistogramBuckets` setting configures bucket boundaries for existing duratio
 ### Application Layer
 - [x] CQRS
 - [x] Pipeline
-- [ ] IAdapter(Observability)
+- [x] IAdapter(Observability)
 - [ ] Usecase(LINQ: FinT, Fin, IO, Guard, Validation)
 
 ### Domain Layer
