@@ -677,7 +677,7 @@ static class TrxReader
     public static IList<TestResult> GetTestResultsFromTrx(string filepath, Func<string, string, bool>? testFilter = null)
     {
         XmlSerializer serializer = new(typeof(TestRun));
-        using FileStream fileStream = new(filepath, FileMode.Open);
+        using FileStream fileStream = new(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 
         if (serializer.Deserialize(fileStream) is not TestRun testRun || testRun.Results?.UnitTestResults is null)
         {
@@ -723,7 +723,7 @@ static class TrxReader
 
         XmlSerializer serializer = new(typeof(TestRun));
 
-        using FileStream fileStream = new(filePath, FileMode.Open, FileAccess.Read);
+        using FileStream fileStream = new(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         return serializer.Deserialize(fileStream) as TestRun;
     }
 
