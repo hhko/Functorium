@@ -459,7 +459,6 @@ namespace Functorium.Applications.Observabilities
         public static class CustomAttributes
         {
             public const string ErrorCode = "error.code";
-            public const string ErrorCount = "error.count";
             public const string ErrorMessage = "error.message";
             public const string RequestCategory = "request.category";
             public const string RequestHandler = "request.handler";
@@ -521,15 +520,8 @@ namespace Functorium.Applications.Observabilities
         }
         public static class OTelAttributes
         {
-            public const string CodeFilepath = "code.filepath";
-            public const string CodeFunction = "code.function";
-            public const string CodeLineno = "code.lineno";
-            public const string CodeNamespace = "code.namespace";
             public const string DeploymentEnvironment = "deployment.environment";
             public const string ErrorType = "error.type";
-            public const string ExceptionMessage = "exception.message";
-            public const string ExceptionStacktrace = "exception.stacktrace";
-            public const string ExceptionType = "exception.type";
             public const string ServiceName = "service.name";
             public const string ServiceNamespace = "service.namespace";
             public const string ServiceVersion = "service.version";

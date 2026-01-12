@@ -41,8 +41,6 @@ It enables expressing domain logic as pure functions and pushing side effects to
 | `response.elapsed` | ✅ | - | ✅ | Consistent |
 | `error.type` | ❌ (`@error`) | ✅ | ✅ | Logging uses `@error` object |
 | `error.code` | ❌ (`@error`) | ✅ | ✅ | Logging uses `@error` object |
-| `error.message` | ❌ (`@error`) | ❌ | ✅ | Tracing only |
-| `error.count` | ❌ | ❌ | ✅ | Tracing only |
 | `slo.latency` | ❌ | ✅ | ❌ | Metrics only |
 
 **Adapter Layer:**
@@ -171,11 +169,11 @@ It enables expressing domain logic as pure functions and pushing side effects to
 
 | Error Case | error.type | error.code |
 |---------|----------------|----------------------|
-| `ErrorCodeExpected` | "expected" | Error code (e.g., DomainErrors.City.Empty) |
-| `ErrorCodeExceptional` | "exceptional" | Error code (e.g., InfraErrors.Database.Timeout) |
-| `ManyErrors` | "aggregate" | Primary error code (Exceptional takes priority) |
-| Other `Expected` | "expected" | Type name |
-| Other `Exceptional` | "exceptional" | Type name |
+| `ErrorCodeExpected` | `"expected"` | Error code (e.g., DomainErrors.City.Empty) |
+| `ErrorCodeExceptional` | `"exceptional"` | Error code (e.g., InfraErrors.Database.Timeout) |
+| `ManyErrors` | `"aggregate"` | Primary error code (Exceptional takes priority) |
+| Other `Expected` | `"expected"` | Type name |
+| Other `Exceptional` | `"exceptional"` | Type name |
 
 - `IHasErrorCode`: ErrorCodeExpected, ErrorCodeExceptional
 
@@ -297,18 +295,16 @@ The `HistogramBuckets` setting configures bucket boundaries for existing duratio
 | **Error Tags** | | | |
 | `error.type` | `"expected"` / `"exceptional"` / `"aggregate"` | `"expected"` / `"exceptional"` / `"aggregate"` | Error classification |
 | `error.code` | Error code | Error code | Error code |
-| `error.message` | Error message | Error message | Error message |
-| `error.count` | Error count (ManyErrors) | - | Aggregate error count |
 | **ActivityStatus** | `Ok` / `Error` | `Ok` / `Error` | OpenTelemetry status |
 
 **Error Type Tag Values:**
 
 | Error Case | error.type | Additional Tags | Description |
 |------------|------------|-----------------|-------------|
-| `IHasErrorCode` + `IsExpected` | `"expected"` | `error.code`, `error.message` | Expected business logic error with error code |
-| `IHasErrorCode` + `IsExceptional` | `"exceptional"` | `error.code`, `error.message` | Exceptional system error with error code |
-| `ManyErrors` | `"aggregate"` | `error.count` (Application only) | Multiple errors aggregated |
-| Other | Type name | `error.message` | Unknown error type fallback |
+| `IHasErrorCode` + `IsExpected` | `"expected"` | `error.code` | Expected business logic error with error code |
+| `IHasErrorCode` + `IsExceptional` | `"exceptional"` | `error.code` | Exceptional system error with error code |
+| `ManyErrors` | `"aggregate"` | `error.code` | Multiple errors aggregated (primary error code) |
+| Other | Type name | - | Unknown error type fallback |
 
 **Implementation:**
 

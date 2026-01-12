@@ -35,7 +35,7 @@ internal sealed class UsecaseTracingPipeline<TRequest, TResponse>
         Activity? parentActivity = Activity.Current;
 
         // AddSource에 사전에 ActivitySource 이름이 등록되어 있어야 정상적으로 객체를 생성할 수 있습니다.
-        string requestHandlerMethod = "Handle";
+        string requestHandlerMethod = ObservabilityNaming.Methods.Handle;
         using Activity? activity = parentActivity != null
             ? _activitySource.StartActivity($"{ObservabilityNaming.Layers.Application} {ObservabilityNaming.Categories.Usecase}.{requestCqrs} {requestHandler}.{requestHandlerMethod}", ActivityKind.Internal, parentActivity.Context)
             : _activitySource.StartActivity($"{ObservabilityNaming.Layers.Application} {ObservabilityNaming.Categories.Usecase}.{requestCqrs} {requestHandler}.{requestHandlerMethod}");
@@ -63,7 +63,7 @@ internal sealed class UsecaseTracingPipeline<TRequest, TResponse>
         activity.SetTag(ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase);
         activity.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerCqrs, requestCqrs);
         activity.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler);
-        activity.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, "Handle");
+        activity.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.Handle);
     }
 
     private static void SetResponseTags(Activity activity, TResponse response, double elapsed)
@@ -106,69 +106,26 @@ internal sealed class UsecaseTracingPipeline<TRequest, TResponse>
     private static void SetFailureStatus(Activity activity, Error? error)
     {
         activity.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);
-        activity.SetStatus(ActivityStatusCode.Error, error?.Message ?? "Unknown error");
 
-        if (error is not null)
+        if (error is null)
         {
-            SetErrorTags(activity, error);
+            activity.SetStatus(ActivityStatusCode.Error);
+            return;
         }
+
+        var (errorType, errorCode) = GetErrorInfo(error);
+        SetActivityStatus(activity, errorType, errorCode);
+        SetErrorTags(activity, errorType, errorCode);
     }
 
-    /// <summary>
-    /// 에러 타입에 따라 적절한 태그를 Activity에 설정합니다.
-    /// </summary>
-    /// <remarks>
-    /// 패턴 매칭 순서가 중요합니다:
-    /// - IHasErrorCode를 구현하는 타입이 Expected와 Exceptional 모두 있으므로
-    ///   when 절로 IsExpected/IsExceptional 구분 필요
-    /// </remarks>
-    private static void SetErrorTags(Activity activity, Error error)
+    private static void SetActivityStatus(Activity activity, string errorType, string errorCode)
     {
-        switch (error)
-        {
-            // IHasErrorCode 인터페이스 + IsExpected 조건
-            case IHasErrorCode hasErrorCode when error.IsExpected:
-                SetErrorCodeExpectedTags(activity, hasErrorCode);
-                break;
-            // IHasErrorCode 인터페이스 + IsExceptional 조건
-            case IHasErrorCode hasErrorCode when error.IsExceptional:
-                SetErrorCodeExceptionalTags(activity, hasErrorCode);
-                break;
-            // ManyErrors - 복합 에러
-            case ManyErrors manyErrors:
-                SetManyErrorsTags(activity, manyErrors);
-                break;
-
-            // Fallback - 알 수 없는 에러 타입
-            default:
-                SetUnknownErrorTags(activity, error);
-                break;
-        }
+        activity.SetStatus(ActivityStatusCode.Error, $"{errorType}: {errorCode}");
     }
 
-    private static void SetErrorCodeExpectedTags(Activity activity, IHasErrorCode error)
+    private static void SetErrorTags(Activity activity, string errorType, string errorCode)
     {
-        activity.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, ObservabilityNaming.ErrorTypes.Expected);
-        activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, error.ErrorCode);
-        activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorMessage, ((Error)error).Message);
-    }
-
-    private static void SetErrorCodeExceptionalTags(Activity activity, IHasErrorCode error)
-    {
-        activity.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, ObservabilityNaming.ErrorTypes.Exceptional);
-        activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, error.ErrorCode);
-        activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorMessage, ((Error)error).Message);
-    }
-
-    private static void SetManyErrorsTags(Activity activity, ManyErrors error)
-    {
-        activity.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, ObservabilityNaming.ErrorTypes.Aggregate);
-        activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorCount, error.Errors.Count);
-    }
-
-    private static void SetUnknownErrorTags(Activity activity, Error error)
-    {
-        activity.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, error.GetType().Name);
-        activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorMessage, error.Message);
+        activity.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, errorType);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, errorCode);
     }
 }

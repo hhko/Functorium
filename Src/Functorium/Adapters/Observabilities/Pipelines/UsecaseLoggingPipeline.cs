@@ -32,7 +32,7 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
     {
         string requestCqrs = GetRequestCqrs(request);
         string requestHandler = GetRequestHandler();
-        string requestHandlerMethod = "Handle";
+        string requestHandlerMethod = ObservabilityNaming.Methods.Handle;
 
         // 요청 로그
         _logger.LogRequestMessage(

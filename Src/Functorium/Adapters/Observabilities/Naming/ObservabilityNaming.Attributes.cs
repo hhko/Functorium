@@ -8,17 +8,6 @@ public static partial class ObservabilityNaming
     /// </summary>
     public static class OTelAttributes
     {
-        // Code attributes
-        public const string CodeFunction = "code.function";
-        public const string CodeNamespace = "code.namespace";
-        public const string CodeFilepath = "code.filepath";
-        public const string CodeLineno = "code.lineno";
-
-        // Exception attributes
-        public const string ExceptionType = "exception.type";
-        public const string ExceptionMessage = "exception.message";
-        public const string ExceptionStacktrace = "exception.stacktrace";
-
         // Error attributes
         public const string ErrorType = "error.type";
 
@@ -49,8 +38,6 @@ public static partial class ObservabilityNaming
 
         // Error attributes
         public const string ErrorCode = "error.code";
-        public const string ErrorMessage = "error.message";
-        public const string ErrorCount = "error.count";
 
         // SLO attributes
         public const string SloLatency = "slo.latency";
@@ -69,5 +56,13 @@ public static partial class ObservabilityNaming
 
         /// <summary>심각: elapsed &gt; P99</summary>
         public const string P99Exceeded = "p99_exceeded";
+    }
+
+    /// <summary>
+    /// Request Handler 메서드 이름
+    /// </summary>
+    public static class Methods
+    {
+        public const string Handle = "Handle";
     }
 }
