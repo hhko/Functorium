@@ -108,7 +108,7 @@ public class NullableParamAdapterPipeline : NullableParamAdapter
                 {
                     double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);
                     responseLogSuccess(requestHandler, requestHandlerMethod, result, elapsed);
-                    RecordActivitySuccess(activity, elapsed);
+                    RecordActivitySuccess(activity, requestHandlerMethod, elapsed);
                     return global::LanguageExt.Unit.Default;
                 })
                 select result)
@@ -125,7 +125,7 @@ public class NullableParamAdapterPipeline : NullableParamAdapter
     {
         double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);
         responseLogFailure(requestHandler, requestHandlerMethod, error, elapsed);
-        RecordActivityFailure(activity, error, elapsed);
+        RecordActivityFailure(activity, requestHandlerMethod, error, elapsed);
         return global::LanguageExt.IO.fail<A>(error);
     }
 
@@ -168,14 +168,14 @@ public class NullableParamAdapterPipeline : NullableParamAdapter
             return activity;
         });
 
-    private void RecordActivitySuccess(Activity? activity, double elapsed)
+    private void RecordActivitySuccess(Activity? activity, string requestHandlerMethod, double elapsed)
     {
         TagList metricTags = new()
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
             { ObservabilityNaming.CustomAttributes.RequestCategory, this.GetRequestCategoryPascalCase() },
             { ObservabilityNaming.CustomAttributes.RequestHandler, RequestHandler },
-            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, "Method" },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod },
             { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success }
         };
         _responseCounter.Add(1, metricTags);
@@ -186,7 +186,7 @@ public class NullableParamAdapterPipeline : NullableParamAdapter
         activity?.SetStatus(ActivityStatusCode.Ok);
     }
 
-    private void RecordActivityFailure(Activity? activity, global::LanguageExt.Common.Error error, double elapsed)
+    private void RecordActivityFailure(Activity? activity, string requestHandlerMethod, global::LanguageExt.Common.Error error, double elapsed)
     {
         var (errorType, errorCode) = GetErrorInfo(error);
 
@@ -195,7 +195,7 @@ public class NullableParamAdapterPipeline : NullableParamAdapter
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
             { ObservabilityNaming.CustomAttributes.RequestCategory, this.GetRequestCategoryPascalCase() },
             { ObservabilityNaming.CustomAttributes.RequestHandler, RequestHandler },
-            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, "Method" },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod },
             { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure },
             { ObservabilityNaming.OTelAttributes.ErrorType, errorType },
             { ObservabilityNaming.CustomAttributes.ErrorCode, errorCode }
@@ -207,8 +207,7 @@ public class NullableParamAdapterPipeline : NullableParamAdapter
         activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);
         activity?.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, errorType);
         activity?.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, errorCode);
-        activity?.SetTag(ObservabilityNaming.CustomAttributes.ErrorMessage, error.Message);
-        activity?.SetStatus(ActivityStatusCode.Error, error.Message);
+        activity?.SetStatus(ActivityStatusCode.Error, $"{errorType}: {errorCode}");
     }
 
     private string GetRequestCategoryPascalCase() =>
@@ -249,27 +248,34 @@ public class NullableParamAdapterPipeline : NullableParamAdapter
     }
 
     /// <summary>
-    /// ManyErrors에서 우선순위가 높은 에러 코드를 추출합니다.
-    /// Exceptional 에러가 Expected보다 우선합니다.
+    /// ManyErrors에서 대표 에러 코드를 선정합니다.
+    /// 우선순위: Exceptional > First > "ManyErrors"
     /// </summary>
     private static string GetPrimaryErrorCode(global::LanguageExt.Common.ManyErrors many)
     {
-        string? exceptionalCode = null;
-        string? expectedCode = null;
-
-        foreach (var err in many.Errors)
+        // 1순위: Exceptional 에러 (시스템 에러가 더 심각)
+        foreach (var e in many.Errors)
         {
-            if (err is global::Functorium.Abstractions.Errors.ErrorCodeExceptional exceptional)
-            {
-                exceptionalCode ??= exceptional.ErrorCode;
-            }
-            else if (err is global::Functorium.Abstractions.Errors.IHasErrorCode hasCode)
-            {
-                expectedCode ??= hasCode.ErrorCode;
-            }
+            if (e.IsExceptional)
+                return GetErrorCode(e);
         }
 
-        return exceptionalCode ?? expectedCode ?? many.GetType().Name;
+        // 2순위: 첫 번째 에러
+        return many.Errors.Head.Match(
+            Some: GetErrorCode,
+            None: () => nameof(global::LanguageExt.Common.ManyErrors));
+    }
+
+    /// <summary>
+    /// 단일 에러에서 에러 코드를 추출합니다.
+    /// </summary>
+    private static string GetErrorCode(global::LanguageExt.Common.Error error)
+    {
+        return error switch
+        {
+            global::Functorium.Abstractions.Errors.IHasErrorCode hasErrorCode => hasErrorCode.ErrorCode,
+            _ => error.GetType().Name
+        };
     }
 
     public override global::LanguageExt.FinT<global::LanguageExt.IO, string> GetData(
