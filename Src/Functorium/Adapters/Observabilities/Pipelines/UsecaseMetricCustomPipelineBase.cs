@@ -1,4 +1,5 @@
 using System.Diagnostics.Metrics;
+using System.Text.RegularExpressions;
 
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Applications.Cqrs;
@@ -11,8 +12,18 @@ namespace Functorium.Adapters.Observabilities.Pipelines;
 /// TRequest 타입으로부터 CQRS 타입(Query/Command)을 자동으로 식별합니다.
 /// </summary>
 /// <typeparam name="TRequest">Request 타입 (IQueryRequest 또는 ICommandRequest 구현)</typeparam>
-public abstract class UsecaseMetricCustomPipelineBase<TRequest>
+public abstract partial class UsecaseMetricCustomPipelineBase<TRequest>
 {
+    // GeneratedRegex for AOT-compiled regex patterns (same as UsecasePipelineBase)
+    [GeneratedRegex(@"\.([^.+]+)\+", RegexOptions.Compiled)]
+    private static partial Regex PlusPattern();
+
+    [GeneratedRegex(@"^([^+]+)\+", RegexOptions.Compiled)]
+    private static partial Regex BeforePlusPattern();
+
+    [GeneratedRegex(@"\.([^.+]+)$", RegexOptions.Compiled)]
+    private static partial Regex AfterLastDotPattern();
+
     protected const string DurationUnit = "ms";
     protected const string CountUnit = "requests";
     protected readonly Meter _meter;
@@ -60,21 +71,21 @@ public abstract class UsecaseMetricCustomPipelineBase<TRequest>
             return string.Empty;
 
         // "+"가 있는 경우: ".xxx+"
-        var plusMatch = System.Text.RegularExpressions.Regex.Match(input, @"\.([^.+]+)\+");
+        var plusMatch = PlusPattern().Match(input);
         if (plusMatch.Success)
         {
             return plusMatch.Groups[1].Value.ToLower();
         }
 
         // "+"가 있으나 "."이 없는 경우: "^([^+]+)\+"
-        var beforePlusMatch = System.Text.RegularExpressions.Regex.Match(input, @"^([^+]+)\+");
+        var beforePlusMatch = BeforePlusPattern().Match(input);
         if (beforePlusMatch.Success)
         {
             return beforePlusMatch.Groups[1].Value.ToLower();
         }
 
         // "+"가 없는 경우: ".xxx$"
-        var afterLastDotMatch = System.Text.RegularExpressions.Regex.Match(input, @"\.([^.+]+)$");
+        var afterLastDotMatch = AfterLastDotPattern().Match(input);
         if (afterLastDotMatch.Success)
         {
             return afterLastDotMatch.Groups[1].Value.ToLower();

@@ -53,8 +53,18 @@ namespace Functorium.Adapters.Observabilities.Pipelines;
 //  - ErrorType     | O                 | O                    | O          | O
 //  - ErrorCode     | O                 | O                    | O          | X
 
-public abstract class UsecasePipelineBase<TRequest>
+public abstract partial class UsecasePipelineBase<TRequest>
 {
+    // GeneratedRegex for AOT-compiled regex patterns to eliminate runtime compilation overhead
+    [GeneratedRegex(@"\.([^.+]+)\+", RegexOptions.Compiled)]
+    private static partial Regex PlusPattern();
+
+    [GeneratedRegex(@"^([^+]+)\+", RegexOptions.Compiled)]
+    private static partial Regex BeforePlusPattern();
+
+    [GeneratedRegex(@"\.([^.+]+)$", RegexOptions.Compiled)]
+    private static partial Regex AfterLastDotPattern();
+
     protected static string GetRequestCqrs<T>(T request)
     {
         Type[] interfaces = request!.GetType().GetInterfaces();
@@ -112,21 +122,21 @@ public abstract class UsecasePipelineBase<TRequest>
             return string.Empty;
 
         // "+"가 있는 경우: ".xxx+"
-        Match plusMatch = Regex.Match(input, @"\.([^.+]+)\+");
+        Match plusMatch = PlusPattern().Match(input);
         if (plusMatch.Success)
         {
             return plusMatch.Groups[1].Value;
         }
 
         // "+"가 있으나 "."이 없는 경우: "^([^+]+)\+"
-        Match beforePlusMatch = Regex.Match(input, @"^([^+]+)\+");
+        Match beforePlusMatch = BeforePlusPattern().Match(input);
         if (beforePlusMatch.Success)
         {
             return beforePlusMatch.Groups[1].Value;
         }
 
         // "+"가 없는 경우: ".xxx$"
-        Match afterLastDotMatch = Regex.Match(input, @"\.([^.+]+)$");
+        Match afterLastDotMatch = AfterLastDotPattern().Match(input);
         if (afterLastDotMatch.Success)
         {
             return afterLastDotMatch.Groups[1].Value;

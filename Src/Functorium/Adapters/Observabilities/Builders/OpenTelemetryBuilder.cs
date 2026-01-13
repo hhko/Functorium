@@ -454,7 +454,7 @@ public partial class OpenTelemetryBuilder
             string serviceNamespace = !string.IsNullOrWhiteSpace(opts.ServiceNamespace)
                 ? opts.ServiceNamespace
                 : opts.ServiceName;
-            return new ActivitySource(serviceNamespace);
+            return new ActivitySource(serviceNamespace, opts.ServiceVersion);
         });
 
         // IMeterFactory 등록 (Singleton) - Source Generator로 생성된 Pipeline에서 사용
