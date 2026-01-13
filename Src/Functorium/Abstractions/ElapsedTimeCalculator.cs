@@ -11,6 +11,13 @@ public static class ElapsedTimeCalculator
         return (double)elapsedTicks / Stopwatch.Frequency * 1000.0;
     }
 
+    public static double CalculateElapsedSeconds(long startTimestamp)
+    {
+        long endTimestamp = Stopwatch.GetTimestamp();
+        long elapsedTicks = endTimestamp - startTimestamp;
+        return (double)elapsedTicks / Stopwatch.Frequency;
+    }
+
     public static long GetCurrentTimestamp()
     {
         return Stopwatch.GetTimestamp();
@@ -21,6 +28,8 @@ public static class ElapsedTimeCalculator
         private readonly long _startTimestamp = Stopwatch.GetTimestamp();
 
         public double ElapsedMilliseconds => CalculateElapsedMilliseconds(_startTimestamp);
+
+        public double ElapsedSeconds => CalculateElapsedSeconds(_startTimestamp);
 
         public void Dispose()
         {

@@ -24,7 +24,7 @@ public abstract partial class UsecaseMetricCustomPipelineBase<TRequest>
     [GeneratedRegex(@"\.([^.+]+)$", RegexOptions.Compiled)]
     private static partial Regex AfterLastDotPattern();
 
-    protected const string DurationUnit = "ms";
+    protected const string DurationUnit = "s";
     protected const string CountUnit = "requests";
     protected readonly Meter _meter;
     private readonly string _metricPrefix;
@@ -144,7 +144,7 @@ public abstract partial class UsecaseMetricCustomPipelineBase<TRequest>
         public void Dispose()
         {
             TimeSpan elapsed = TimeProvider.System.GetElapsedTime(_requestStartTime);
-            _histogram.Record(elapsed.TotalMilliseconds);
+            _histogram.Record(elapsed.TotalSeconds);
             GC.SuppressFinalize(this);
         }
     }
