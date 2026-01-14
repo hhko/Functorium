@@ -107,18 +107,18 @@ class Program
                 case 8:
                     Advanced01_InstrumentAdvice.Run();
                     break;
-                case 9:
-                    Advanced02_SloAlignedBuckets.Run();
-                    break;
+                // case 9:
+                //     Advanced02_SloAlignedBuckets.Run();
+                //     break;
                 case 10:
                     Advanced03_RequestLatencyScenario.Run();
                     break;
                 case 11:
                     Advanced04_DatabaseQueryScenario.Run();
                     break;
-                case 12:
-                    Advanced05_OrderProcessingScenario.Run();
-                    break;
+                // case 12:
+                //     Advanced05_OrderProcessingScenario.Run();
+                //     break;
                 case 13:
                     Advanced06_BucketAlignmentImpact.Run();
                     break;
