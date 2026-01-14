@@ -69,19 +69,4 @@ public static partial class ObservabilityNaming
     {
         public const string Handle = "Handle";
     }
-
-    /// <summary>
-    /// SLO 상태 값 (3단계 심각도)
-    /// </summary>
-    public static class SloStatus
-    {
-        /// <summary>정상: elapsed &lt;= P95</summary>
-        public const string Ok = "ok";
-
-        /// <summary>경고: P95 &lt; elapsed &lt;= P99</summary>
-        public const string P95Exceeded = "p95_exceeded";
-
-        /// <summary>심각: elapsed &gt; P99</summary>
-        public const string P99Exceeded = "p99_exceeded";
-    }
 }

@@ -1,7 +1,6 @@
 using System.Diagnostics.Metrics;
 
 using Functorium.Adapters.Observabilities;
-using Functorium.Adapters.Observabilities.Configurations;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Adapters.Observabilities.Pipelines;
 using Functorium.Applications.Cqrs;
@@ -51,7 +50,6 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
 {
     private readonly IMeterFactory _meterFactory;
     private readonly IOptions<OpenTelemetryOptions> _openTelemetryOptions;
-    private readonly IOptions<SloConfiguration> _sloConfigurationOptions;
     private readonly MeterListener _listener;
     private readonly List<CapturedMeasurement> _capturedMeasurements;
 
@@ -59,7 +57,6 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
     {
         _meterFactory = new TestMeterFactory();
         _openTelemetryOptions = MsOptions.Create(new OpenTelemetryOptions { ServiceNamespace = "TestService" });
-        _sloConfigurationOptions = MsOptions.Create(new SloConfiguration());
 
         _capturedMeasurements = new List<CapturedMeasurement>();
         _listener = new MeterListener();
@@ -115,8 +112,7 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
         // Arrange
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
             _openTelemetryOptions,
-            _meterFactory,
-            _sloConfigurationOptions);
+            _meterFactory);
         var request = new TestCommandRequest();
 
         // Act
@@ -157,8 +153,7 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
         // Arrange
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
             _openTelemetryOptions,
-            _meterFactory,
-            _sloConfigurationOptions);
+            _meterFactory);
         var request = new TestCommandRequest();
 
         // Act
@@ -196,8 +191,7 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
         // Arrange
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
             _openTelemetryOptions,
-            _meterFactory,
-            _sloConfigurationOptions);
+            _meterFactory);
         var request = new TestCommandRequest();
 
         // Act
@@ -209,8 +203,8 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
 
         responseMeasurement.ShouldNotBeNull();
 
-        // 태그 구조 검증: 7개 태그 (requestTags 5개 + slo.latency 1개 + response.status 1개)
-        responseMeasurement.Tags.Length.ShouldBe(7);
+        // 태그 구조 검증: 6개 태그 (requestTags 5개 + response.status 1개)
+        responseMeasurement.Tags.Length.ShouldBe(6);
 
         // ResponseStatus 태그가 있어야 함
         responseMeasurement.Tags
@@ -231,8 +225,7 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
         // Arrange
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
             _openTelemetryOptions,
-            _meterFactory,
-            _sloConfigurationOptions);
+            _meterFactory);
         var request = new TestCommandRequest();
 
         // Act
@@ -268,8 +261,7 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
         // Arrange
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
             _openTelemetryOptions,
-            _meterFactory,
-            _sloConfigurationOptions);
+            _meterFactory);
         var request = new TestCommandRequest();
 
         // Act
@@ -281,8 +273,8 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
 
         responseMeasurement.ShouldNotBeNull();
 
-        // 태그 구조 검증: 9개 태그 (requestTags 5개 + slo.latency 1개 + response.status 1개 + error.type 1개 + error.code 1개)
-        responseMeasurement.Tags.Length.ShouldBe(9);
+        // 태그 구조 검증: 8개 태그 (requestTags 5개 + response.status 1개 + error.type 1개 + error.code 1개)
+        responseMeasurement.Tags.Length.ShouldBe(8);
 
         // ResponseStatus 태그가 있어야 함
         responseMeasurement.Tags
@@ -303,8 +295,7 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
         // Arrange
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
             _openTelemetryOptions,
-            _meterFactory,
-            _sloConfigurationOptions);
+            _meterFactory);
         var request = new TestCommandRequest();
 
         // Act
@@ -344,8 +335,7 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
         // Arrange
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
             _openTelemetryOptions,
-            _meterFactory,
-            _sloConfigurationOptions);
+            _meterFactory);
         var request = new TestCommandRequest();
 
         // Act - Expected 에러로 실패
@@ -380,8 +370,7 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
         // Arrange
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
             _openTelemetryOptions,
-            _meterFactory,
-            _sloConfigurationOptions);
+            _meterFactory);
         var request = new TestCommandRequest();
 
         // Act
@@ -393,8 +382,8 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
 
         durationMeasurement.ShouldNotBeNull();
 
-        // 태그 구조 검증: 6개 태그 (requestTags 5개 + slo.latency 1개)
-        durationMeasurement.Tags.Length.ShouldBe(6);
+        // 태그 구조 검증: 5개 태그 (requestTags 5개)
+        durationMeasurement.Tags.Length.ShouldBe(5);
 
         // 기본 태그가 있어야 함
         durationMeasurement.Tags
@@ -407,8 +396,6 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
             .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandler);
         durationMeasurement.Tags
             .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerMethod);
-        durationMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.SloLatency);
 
         // ResponseStatus 태그가 없어야 함
         durationMeasurement.Tags
@@ -420,16 +407,15 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
     #region 태그 일관성 테스트
 
     /// <summary>
-    /// durationHistogram은 requestCounter의 모든 태그 + slo.latency 태그를 포함해야 합니다.
+    /// durationHistogram은 requestCounter와 동일한 태그를 포함해야 합니다.
     /// </summary>
     [Fact]
-    public async Task Handle_DurationTags_ShouldContainRequestTagsPlusSloTag()
+    public async Task Handle_DurationTags_ShouldContainSameTagsAsRequestCounter()
     {
         // Arrange
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
             _openTelemetryOptions,
-            _meterFactory,
-            _sloConfigurationOptions);
+            _meterFactory);
         var request = new TestCommandRequest();
 
         // Act
@@ -447,19 +433,12 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
         var requestTagKeys = requestMeasurement.Tags.Select(t => t.Key).OrderBy(k => k).ToArray();
         var durationTagKeys = durationMeasurement.Tags.Select(t => t.Key).OrderBy(k => k).ToArray();
 
-        // durationTags는 requestTags의 모든 키를 포함해야 함
-        foreach (var key in requestTagKeys)
-        {
-            durationTagKeys.ShouldContain(key);
-        }
-
-        // durationTags에만 slo.latency 태그가 추가됨
-        durationTagKeys.ShouldContain(ObservabilityNaming.CustomAttributes.SloLatency);
-        requestTagKeys.ShouldNotContain(ObservabilityNaming.CustomAttributes.SloLatency);
+        // durationTags는 requestTags와 동일한 키를 가져야 함
+        requestTagKeys.ShouldBe(durationTagKeys);
     }
 
     /// <summary>
-    /// responseCounter는 성공 시 7개 태그, 실패 시 9개 태그를 가져야 합니다.
+    /// responseCounter는 성공 시 6개 태그, 실패 시 8개 태그를 가져야 합니다.
     /// 실패 시 error.type과 error.code 태그가 추가됩니다.
     /// </summary>
     [Fact]
@@ -468,8 +447,7 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
         // Arrange
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
             _openTelemetryOptions,
-            _meterFactory,
-            _sloConfigurationOptions);
+            _meterFactory);
         var request = new TestCommandRequest();
 
         // Act - 성공 케이스
@@ -482,8 +460,7 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
         _capturedMeasurements.Clear();
         var sut2 = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
             _openTelemetryOptions,
-            _meterFactory,
-            _sloConfigurationOptions);
+            _meterFactory);
         await sut2.Handle(request, NextFailWithError, CancellationToken.None);
 
         var failureMeasurement = _capturedMeasurements
@@ -493,11 +470,11 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
         successMeasurement.ShouldNotBeNull();
         failureMeasurement.ShouldNotBeNull();
 
-        // 성공: 7개 태그 (requestTags 5개 + slo.latency.exceeded 1개 + response.status 1개)
-        successMeasurement.Tags.Length.ShouldBe(7);
+        // 성공: 6개 태그 (requestTags 5개 + response.status 1개)
+        successMeasurement.Tags.Length.ShouldBe(6);
 
-        // 실패: 9개 태그 (requestTags 5개 + slo.latency.exceeded 1개 + response.status 1개 + error.type 1개 + error.code 1개)
-        failureMeasurement.Tags.Length.ShouldBe(9);
+        // 실패: 8개 태그 (requestTags 5개 + response.status 1개 + error.type 1개 + error.code 1개)
+        failureMeasurement.Tags.Length.ShouldBe(8);
 
         // 메트릭 이름은 동일해야 함 (통합된 단일 카운터)
         successMeasurement.InstrumentName.ShouldBe(failureMeasurement.InstrumentName);
@@ -513,8 +490,7 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
         // Arrange
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
             _openTelemetryOptions,
-            _meterFactory,
-            _sloConfigurationOptions);
+            _meterFactory);
         var request = new TestCommandRequest();
 
         // Act
@@ -541,8 +517,8 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
             ObservabilityNaming.CustomAttributes.ResponseStatus,
             ObservabilityNaming.Status.Failure);
 
-        // 실패: 9개 태그 (requestTags 5개 + slo.latency.exceeded 1개 + response.status 1개 + error.type 1개 + error.code 1개)
-        responseMeasurement.Tags.Length.ShouldBe(9);
+        // 실패: 8개 태그 (requestTags 5개 + response.status 1개 + error.type 1개 + error.code 1개)
+        responseMeasurement.Tags.Length.ShouldBe(8);
     }
 
     #endregion

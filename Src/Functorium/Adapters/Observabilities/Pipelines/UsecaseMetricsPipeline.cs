@@ -3,7 +3,6 @@ using System.Diagnostics.Metrics;
 
 using Functorium.Abstractions;
 using Functorium.Abstractions.Errors;
-using Functorium.Adapters.Observabilities.Configurations;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Applications.Cqrs;
 
@@ -37,12 +36,10 @@ internal sealed class UsecaseMetricsPipeline<TRequest, TResponse>
     private readonly Histogram<double> _durationHistogram;
     private readonly string _requestCqrs;
     private readonly string _requestHandler;
-    private readonly SloTargets _sloTargets;
 
     public UsecaseMetricsPipeline(
         IOptions<OpenTelemetryOptions> openTelemetryOptions,
-        IMeterFactory meterFactory,
-        IOptions<SloConfiguration> sloConfigurationOptions)
+        IMeterFactory meterFactory)
     {
         OpenTelemetryOptions otelOptions = openTelemetryOptions.Value;
         string meterName = $"{otelOptions.ServiceNamespace}.{ObservabilityNaming.Layers.Application}";
@@ -52,10 +49,6 @@ internal sealed class UsecaseMetricsPipeline<TRequest, TResponse>
         _requestCqrs = GetRequestCqrs(typeof(TRequest));
         string requestCqrsField = _requestCqrs.ToLower();
         _requestHandler = GetRequestHandler();
-
-        // Handler별 SLO 타겟 조회 (캐시)
-        SloConfiguration sloConfiguration = sloConfigurationOptions.Value;
-        _sloTargets = sloConfiguration.GetTargetsForHandler(_requestHandler, requestCqrsField);
 
         // 메트릭 인스턴스 생성 (재사용)
         _requestCounter = _meter.CreateCounter<long>(
@@ -96,57 +89,16 @@ internal sealed class UsecaseMetricsPipeline<TRequest, TResponse>
         TResponse response = await next(request, cancellationToken);
 
         // 시간 측정 종료
-        double elapsedMs = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);
+        double elapsedSeconds = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);
 
-        // SLO 상태 판단 (3단계: ok, p95_exceeded, p99_exceeded)
-        string sloLatencyStatus = GetSloLatencyStatus(elapsedMs, _sloTargets);
+        // Histogram에 처리 시간 기록 (초 단위, 캐시된 Histogram 사용)
+        _durationHistogram.Record(elapsedSeconds, requestTags);
 
-        // Duration 태그 생성 (requestTags + slo.latency 태그)
-        TagList durationTags = CreateDurationTags(requestTags, sloLatencyStatus);
-
-        // Histogram에 처리 시간 기록 (밀리초를 초로 변환, 캐시된 Histogram 사용)
-        _durationHistogram.Record(elapsedMs / 1000.0, durationTags);
-
-        // 응답 태그 생성 (성공/실패 + 에러 정보 + slo.latency)
-        TagList responseTags = CreateResponseTags(requestTags, response, sloLatencyStatus);
+        // 응답 태그 생성 (성공/실패 + 에러 정보)
+        TagList responseTags = CreateResponseTags(requestTags, response);
         _responseCounter.Add(1, responseTags);
 
         return response;
-    }
-
-    /// <summary>
-    /// Duration histogram 태그를 생성합니다.
-    /// requestTags + slo.latency
-    /// </summary>
-    private static TagList CreateDurationTags(TagList requestTags, string sloLatencyStatus)
-    {
-        TagList tags = new();
-        foreach (var tag in requestTags)
-        {
-            tags.Add(tag);
-        }
-        tags.Add(ObservabilityNaming.CustomAttributes.SloLatency, sloLatencyStatus);
-        return tags;
-    }
-
-    /// <summary>
-    /// SLO 지연시간 상태를 판단합니다.
-    /// ok: elapsed &lt;= P95
-    /// p95_exceeded: P95 &lt; elapsed &lt;= P99
-    /// p99_exceeded: elapsed &gt; P99
-    /// </summary>
-    private static string GetSloLatencyStatus(double elapsedMs, SloTargets targets)
-    {
-        double p95 = targets.LatencyP95Milliseconds ?? 500;
-        double p99 = targets.LatencyP99Milliseconds ?? 1000;
-
-        if (elapsedMs > p99)
-            return ObservabilityNaming.SloStatus.P99Exceeded;
-
-        if (elapsedMs > p95)
-            return ObservabilityNaming.SloStatus.P95Exceeded;
-
-        return ObservabilityNaming.SloStatus.Ok;
     }
 
     public void Dispose()
@@ -156,10 +108,10 @@ internal sealed class UsecaseMetricsPipeline<TRequest, TResponse>
 
     /// <summary>
     /// 응답 태그를 생성합니다.
-    /// 성공 시: requestTags + slo.latency + response.status
-    /// 실패 시: requestTags + slo.latency + response.status + error.type + error.code
+    /// 성공 시: requestTags + response.status
+    /// 실패 시: requestTags + response.status + error.type + error.code
     /// </summary>
-    private static TagList CreateResponseTags(TagList requestTags, TResponse response, string sloLatencyStatus)
+    private static TagList CreateResponseTags(TagList requestTags, TResponse response)
     {
         // requestTags 복사
         TagList tags = new();
@@ -167,9 +119,6 @@ internal sealed class UsecaseMetricsPipeline<TRequest, TResponse>
         {
             tags.Add(tag);
         }
-
-        // SLO 상태 태그 추가
-        tags.Add(ObservabilityNaming.CustomAttributes.SloLatency, sloLatencyStatus);
 
         if (response.IsSucc)
         {

@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Reflection;
 using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Builders;
-using Functorium.Adapters.Observabilities.Configurations;
 using Functorium.Adapters.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,9 +44,6 @@ public static class OpenTelemetryRegistration
     {
         // OpenTelemetryOptions 등록 (IOptions<OpenTelemetryOptions> 패턴 사용)
         services.RegisterConfigureOptions<OpenTelemetryOptions, OpenTelemetryOptions.Validator>(OpenTelemetryOptions.SectionName);
-
-        // SloConfiguration 등록 (IOptions<SloConfiguration> 패턴 사용)
-        services.RegisterConfigureOptions<SloConfiguration, SloConfiguration.Validator>(SloConfiguration.SectionName);
 
         // ActivitySource 등록 (IOptions에서 값 가져오기)
         services.AddSingleton(sp =>

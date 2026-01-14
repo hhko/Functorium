@@ -40,9 +40,6 @@ public static partial class ObservabilityNaming
 
         // Error 속성
         public const string ErrorCode = "error.code";
-
-        // SLO 속성
-        public const string SloLatency = "slo.latency";
     }
 
     /// <summary>

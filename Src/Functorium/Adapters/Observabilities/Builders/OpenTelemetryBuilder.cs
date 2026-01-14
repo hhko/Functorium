@@ -3,7 +3,6 @@ using System.Diagnostics.Metrics;
 using System.Reflection;
 using Functorium.Abstractions.Errors.DestructuringPolicies;
 using Functorium.Adapters.Observabilities.Builders.Configurators;
-using Functorium.Adapters.Observabilities.Configurations;
 using Functorium.Adapters.Observabilities.Loggers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -229,7 +228,6 @@ public partial class OpenTelemetryBuilder
         // ServiceProvider를 통해 옵션 가져오기 (Builder 패턴에서는 임시 ServiceProvider 사용)
         using var tempServiceProvider = _services.BuildServiceProvider();
         var options = tempServiceProvider.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
-        var sloConfiguration = tempServiceProvider.GetRequiredService<IOptions<SloConfiguration>>().Value;
 
         // Resource Attributes 공통 정의
         Dictionary<string, object> resourceAttributes = CreateResourceAttributes(options);
@@ -238,7 +236,7 @@ public partial class OpenTelemetryBuilder
         ConfigureSerilogInternal(resourceAttributes, options);
 
         // OpenTelemetry 설정 적용
-        ConfigureOpenTelemetryInternal(resourceAttributes, options, sloConfiguration);
+        ConfigureOpenTelemetryInternal(resourceAttributes, options);
 
         // AdapterObservability 등록 (OpenTelemetry 설정 후)
         RegisterAdapterObservabilityInternal(options);
@@ -310,7 +308,7 @@ public partial class OpenTelemetryBuilder
             });
     }
 
-    private void ConfigureOpenTelemetryInternal(Dictionary<string, object> resourceAttributes, OpenTelemetryOptions options, SloConfiguration sloConfiguration)
+    private void ConfigureOpenTelemetryInternal(Dictionary<string, object> resourceAttributes, OpenTelemetryOptions options)
     {
         _services
             .AddOpenTelemetry()
@@ -340,23 +338,6 @@ public partial class OpenTelemetryBuilder
                     metrics.AddMeter($"{_projectNamespaceRoot}.*");
                 }
 
-                // SLO 정렬 Histogram 버킷 설정
-                // application.usecase.*.duration 메트릭에 커스텀 버킷 적용
-                // SloConfiguration.HistogramBuckets 값 사용 (기본값: 1ms ~ 10s)
-                metrics.AddView(
-                    instrumentName: "application.usecase.command.duration",
-                    new ExplicitBucketHistogramConfiguration
-                    {
-                        Boundaries = sloConfiguration.HistogramBuckets
-                    });
-
-                metrics.AddView(
-                    instrumentName: "application.usecase.query.duration",
-                    new ExplicitBucketHistogramConfiguration
-                    {
-                        Boundaries = sloConfiguration.HistogramBuckets
-                    });
-
                 // OTLP Exporter 설정 (MetricsCollectorEndpoint가 설정된 경우에만)
                 string metricsEndpoint = options.GetMetricsEndpoint();
                 if (!string.IsNullOrWhiteSpace(metricsEndpoint))
@@ -385,6 +366,9 @@ public partial class OpenTelemetryBuilder
             .WithTracing(tracing =>
             {
                 // 기본 Instrumentation
+                // 올바른 W3C 형식
+                //  - {version}-{trace-id}-{parent-id}-{trace-flags}
+                //  - 예: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
                 tracing.AddHttpClientInstrumentation(instrumentationOptions =>
                 {
                     instrumentationOptions.RecordException = true;

@@ -1,6 +1,5 @@
 using System.Diagnostics.Metrics;
 using Functorium.Adapters.Observabilities;
-using Functorium.Adapters.Observabilities.Configurations;
 using Functorium.Adapters.Observabilities.Pipelines;
 using LanguageExt.Common;
 using Mediator;
@@ -40,18 +39,12 @@ public sealed class UsecaseMetricsPipelineTests : IDisposable
         return Microsoft.Extensions.Options.Options.Create(new OpenTelemetryOptions { ServiceNamespace = "Test.Service" });
     }
 
-    private static Microsoft.Extensions.Options.IOptions<SloConfiguration> CreateTestSloOptions()
-    {
-        return Microsoft.Extensions.Options.Options.Create(new SloConfiguration());
-    }
-
     [Fact]
     public async Task Handle_SuccessfulRequest_RecordsMetrics()
     {
         // Arrange
         var options = CreateTestOpenTelemetryOptions();
-        var sloOptions = CreateTestSloOptions();
-        var pipeline = new UsecaseMetricsPipeline<SimpleTestRequest, TestResponse>(options, _meterFactory, sloOptions);
+        var pipeline = new UsecaseMetricsPipeline<SimpleTestRequest, TestResponse>(options, _meterFactory);
         var request = new SimpleTestRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -71,8 +64,7 @@ public sealed class UsecaseMetricsPipelineTests : IDisposable
     {
         // Arrange
         var options = CreateTestOpenTelemetryOptions();
-        var sloOptions = CreateTestSloOptions();
-        var pipeline = new UsecaseMetricsPipeline<SimpleTestRequest, TestResponse>(options, _meterFactory, sloOptions);
+        var pipeline = new UsecaseMetricsPipeline<SimpleTestRequest, TestResponse>(options, _meterFactory);
         var request = new SimpleTestRequest("Test");
         var errorResponse = TestResponse.CreateFail(Error.New("Test error"));
 
@@ -91,8 +83,7 @@ public sealed class UsecaseMetricsPipelineTests : IDisposable
     {
         // Arrange
         var options = CreateTestOpenTelemetryOptions();
-        var sloOptions = CreateTestSloOptions();
-        var pipeline = new UsecaseMetricsPipeline<SimpleTestRequest, TestResponse>(options, _meterFactory, sloOptions);
+        var pipeline = new UsecaseMetricsPipeline<SimpleTestRequest, TestResponse>(options, _meterFactory);
         var request = new SimpleTestRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -115,8 +106,7 @@ public sealed class UsecaseMetricsPipelineTests : IDisposable
     {
         // Arrange
         var options = CreateTestOpenTelemetryOptions();
-        var sloOptions = CreateTestSloOptions();
-        var pipeline = new UsecaseMetricsPipeline<SimpleTestRequest, TestResponse>(options, _meterFactory, sloOptions);
+        var pipeline = new UsecaseMetricsPipeline<SimpleTestRequest, TestResponse>(options, _meterFactory);
         var request = new SimpleTestRequest("Test");
         var expectedId = Guid.NewGuid();
         var expectedResponse = TestResponse.CreateSuccess(expectedId);
@@ -137,8 +127,7 @@ public sealed class UsecaseMetricsPipelineTests : IDisposable
     {
         // Arrange
         var options = CreateTestOpenTelemetryOptions();
-        var sloOptions = CreateTestSloOptions();
-        var pipeline = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(options, _meterFactory, sloOptions);
+        var pipeline = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(options, _meterFactory);
         var request = new TestCommandRequest("Command");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -157,8 +146,7 @@ public sealed class UsecaseMetricsPipelineTests : IDisposable
     {
         // Arrange
         var options = CreateTestOpenTelemetryOptions();
-        var sloOptions = CreateTestSloOptions();
-        var pipeline = new UsecaseMetricsPipeline<TestQueryRequest, TestResponse>(options, _meterFactory, sloOptions);
+        var pipeline = new UsecaseMetricsPipeline<TestQueryRequest, TestResponse>(options, _meterFactory);
         var request = new TestQueryRequest(Guid.NewGuid());
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
