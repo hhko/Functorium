@@ -30,13 +30,15 @@ public static class TestFixtures
     /// CRTP 패턴을 따르는 테스트용 Response.
     /// IFinResponse와 IFinResponseFactory를 직접 구현합니다.
     /// </summary>
-    public sealed record class TestResponse : IFinResponse<TestResponse>, IFinResponseFactory<TestResponse>
+    public sealed record class TestResponse : IFinResponse<TestResponse>, IFinResponseFactory<TestResponse>, IFinResponseWithError
     {
         public bool IsSucc { get; init; }
         public bool IsFail => !IsSucc;
         public Guid Id { get; init; }
         public string? Name { get; init; }
-        public Error? Error { get; init; }
+
+        // IFinResponseWithError 구현 (non-nullable)
+        public Error Error { get; init; } = Error.New("No error");
 
         private TestResponse() { }
 

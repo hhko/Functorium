@@ -1,0 +1,22 @@
+﻿{
+  Information: ,
+  Properties: {
+    @response.message: {
+      IsSucc: true,
+      IsFail: false,
+      Id: Guid_1,
+      Name: QueryResult,
+      Error: {
+        Message: No error
+      }
+    },
+    OriginalFormat: {request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@response.message} responded {response.status} in {response.elapsed:0.0000} s,
+    request.category: usecase,
+    request.handler: TestFixtures,
+    request.handler.cqrs: query,
+    request.handler.method: Handle,
+    request.layer: application,
+    response.elapsed: {Scrubbed},
+    response.status: success
+  }
+}

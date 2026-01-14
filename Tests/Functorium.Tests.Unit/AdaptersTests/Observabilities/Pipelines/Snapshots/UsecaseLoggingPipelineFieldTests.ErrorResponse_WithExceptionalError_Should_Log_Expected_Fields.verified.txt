@@ -1,0 +1,20 @@
+﻿{
+  Information: ,
+  Properties: {
+    @error: {
+      ErrorCode: Database.ConnectionFailed,
+      Message: 데이터베이스 연결 실패,
+      Code: -2146233079
+    },
+    error.code: Database.ConnectionFailed,
+    error.type: exceptional,
+    OriginalFormat: {request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error},
+    request.category: usecase,
+    request.handler: TestFixtures,
+    request.handler.cqrs: command,
+    request.handler.method: Handle,
+    request.layer: application,
+    response.elapsed: {Scrubbed},
+    response.status: failure
+  }
+}

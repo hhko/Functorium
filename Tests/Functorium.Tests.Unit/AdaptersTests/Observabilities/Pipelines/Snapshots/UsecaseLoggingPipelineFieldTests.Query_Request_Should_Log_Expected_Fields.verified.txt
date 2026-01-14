@@ -1,0 +1,14 @@
+﻿{
+  Information: ,
+  Properties: {
+    @request.message: {
+      Id: Guid_1
+    },
+    OriginalFormat: {request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@request.message} requesting,
+    request.category: usecase,
+    request.handler: TestFixtures,
+    request.handler.cqrs: query,
+    request.handler.method: Handle,
+    request.layer: application
+  }
+}

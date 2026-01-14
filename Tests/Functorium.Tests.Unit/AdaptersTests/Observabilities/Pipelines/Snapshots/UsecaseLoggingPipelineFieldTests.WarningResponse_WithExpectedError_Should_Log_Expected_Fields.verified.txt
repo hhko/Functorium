@@ -1,0 +1,21 @@
+﻿{
+  Information: ,
+  Properties: {
+    @error: {
+      ErrorCode: User.NotFound,
+      ErrorCurrentValue: user123,
+      Message: 사용자를 찾을 수 없습니다,
+      Code: -1000
+    },
+    error.code: User.NotFound,
+    error.type: expected,
+    OriginalFormat: {request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error},
+    request.category: usecase,
+    request.handler: TestFixtures,
+    request.handler.cqrs: command,
+    request.handler.method: Handle,
+    request.layer: application,
+    response.elapsed: {Scrubbed},
+    response.status: failure
+  }
+}
