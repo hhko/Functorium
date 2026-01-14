@@ -13,6 +13,32 @@ dir /x
 - 통합 테스트 GitHub Actions 통합
 
 ## 할일
+- [ ] ElapsedTimeCalculator 클래스 네임스페이스 변경 -> namespace Functorium.Adapters.Observabilities;
+- [ ] internal record ErrorCodeExpected -> public ???, IHasErrorCode
+- [ ] 로그 @error? 테스트 -> error.type, error.code, @error로 개선
+- [ ] service.name, service.namespace ??? 서비스 묶음?
+- [ ] 필드 정의 테스트
+  Item    | Application | Adapter
+  ---     | ---         | ---
+  Logging |             |
+  Tracing |             |
+  Metrics |             |
+- [ ] 관찰 가능성 usecase 확장
+  - Logging
+  - Tracing
+  - Metrics
+- [ ] 관찰 가능성 adapter 확장
+  - Logging
+  - Tracing
+  - Metrics
+- [ ] opensearch 관찰 가능성 시스템 구축
+- [ ] opensearch + kafka 관찰 가능성 시스템 구축
+- [ ] opensearch + kafka + flink sql 관찰 가능성 시스템 구축
+- [ ] prometheus + ... + grafana 관찰 가능성 시스템 구축
+- [ ] 관찰 가능성 중에서 ValidatorPipeline만 Application 레이어 배치
+- [ ] 값 객체와 ValidatorPipeline 통합
+- [ ] IOption<T> 학습
+- [ ] 히스토그램 학습
 - [x] Pipeline을 Application 레이어에서 Adapter 레이어도 이동 시킴
 - [x] Pipeline 의존성 등록을 OpenTelemetry 등록과 통합 시킴
 - [x] Observability 구현에서 기존 인터페이스들을 모두 OpenTelemetry 구체 기술로 변경(Adapter 레이어여 변경되었기 때문)
@@ -26,55 +52,33 @@ dir /x
   - adapter 레이어: params/result
 - [x] Metrics Application과 Adapter 필드 통일
 - [x] Metrics Adapter에 @error?
-- [ ] Tracing 필드 개선
-- [ ] ObservabilityNaming.Logging.cs 클래스 정리
-- [ ] 필드 정의 문서화
+- [x] 관찰 가능성 이름 정의 클래스 정리
+- [x] 관찰 가능성 시간을 모두 "초" 단위로 통일
+- [x] 정규식 소스 생성기 기반으로 개선
+- [x] 필드 정의 문서화
   Item    | Application | Adapter
   ---     | ---         | ---
   Logging | O           | O
-  Tracing |             |
+  Tracing | O           | O
   Metrics | O           | O
-- [ ] 필드 정의 테스트
-  Item    | Application | Adapter
-  ---     | ---         | ---
-  Logging |             |
-  Tracing |             |
-  Metrics |             |
-- [ ] 로그 @error? 테스트
-- [ ] 시간 단위 통일? elapsed -> elapsed_ms
-- [ ] Metrics SLO 정의 및 설정?
-- [ ] internal record ErrorCodeExpected -> public ???, IHasErrorCode
+- [x] Metrics SLO 정의 및 설정?
 ---
 - [ ] Mediator Singleton + Scoped(Factory로 통합)
 - [x] UsecaseMetricsPipeline 클래스 정리
 - [x] UsecaseMetricsPipeline 태그 구조 테스트
 - [x] usecase request/response 태그 통일
 - [ ] 에러 코드 일반화?
-- [ ] usecase request/response 값 소문자 -> 파스칼?
-- [ ] UsecaseTracingsPipeline 태그 구조 테스트
-- [ ] UsecaseLoggingPipeline 태그 구조 테스트
+- [x] usecase request/response 값 소문자 -> 파스칼?
 - [ ] 데이터 적합?
-- [ ] 로그 태그 통일?
+- [x] 로그 태그 통일?
 - [ ] RequestHandlerMethod vs ResponseStatus 불일치 - 메트릭 그룹화 시 문제 가능?
-- [ ] aspire 대시보드 확인(계층 구조)
-- [ ] 로그/추적/지표 md 문서 기준으로 비교
+- [x] aspire 대시보드 확인(계층 구조)
+- [x] 로그/추적/지표 md 문서 기준으로 비교
 - [ ] 코드 이해를 위한 예제 코드 작성
 - [ ] 코드 이해를 위한 학습 문서 작성
 - [ ] Mediator 경고 이해 Tip 폴더
 - [ ] 관찰 가능성 코드 리뷰: 최적화
-- [ ] elapsed 단위
-- [ ] usecase 확장
-  - Logging
-  - Tracing
-  - Metrics
-- [ ] IAdapter 확장
-  - Logging
-  - Tracing
-  - Metrics
-- [ ] Cqrs05Services + Grafana
-- [ ] Cqrs05Services + OpenSearch
-- [ ] OpenSearch
-- [ ] Grafana
+- [x] elapsed 단위
 - [ ] wolverine IHost?
 - [ ] Mediator 어셈블리 단위로 의존성 등록?
 - [ ] Testcontainers을 이용한 RabbitMQ 통합 테스트
@@ -98,8 +102,6 @@ dir /x
 - [ ] Application 레이어 테스트
 - [ ] Observability 코드 리뷰
 - [ ] IAdatperMetric/IAdapterTrace 인터페이스 의존성 등록 코드 정리
-- [ ] Observability 형식 테스트 자동화
-- [ ] Observability 형식 문서화
 
 ## Entity
 ### 목표
