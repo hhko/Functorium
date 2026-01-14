@@ -39,8 +39,9 @@ It enables expressing domain logic as pure functions and pushing side effects to
 | `request.handler.method` | ✅ `"Handle"` | ✅ `"Handle"` | ✅ `"Handle"` | Handler method name |
 | `response.status` | ✅ | ✅ | ✅ | Response status (`"success"`, `"failure"`) |
 | `response.elapsed` | ✅ | - | ✅ | Processing time in seconds |
-| `error.type` | ❌ (`@error`) | ✅ | ✅ | Error classification (`"expected"`, `"exceptional"`, `"aggregate"`) |
-| `error.code` | ❌ (`@error`) | ✅ | ✅ | Domain-specific error code |
+| `error.type` | ✅ | ✅ | ✅ | Error classification (`"expected"`, `"exceptional"`, `"aggregate"`) |
+| `error.code` | ✅ | ✅ | ✅ | Domain-specific error code |
+| `@error` | ✅ | - | - | Structured error object (detailed) |
 
 **Adapter Layer:**
 
@@ -52,8 +53,9 @@ It enables expressing domain logic as pure functions and pushing side effects to
 | `request.handler.method` | ✅ | ✅ | ✅ | Handler method name |
 | `response.status` | ✅ | ✅ | ✅ | Response status (`"success"`, `"failure"`) |
 | `response.elapsed` | ✅ | - | ✅ | Processing time in seconds |
-| `error.type` | ❌ (`@error`) | ✅ | ✅ | Error classification (`"expected"`, `"exceptional"`, `"aggregate"`) |
-| `error.code` | ❌ (`@error`) | ✅ | ✅ | Domain-specific error code |
+| `error.type` | ✅ | ✅ | ✅ | Error classification (`"expected"`, `"exceptional"`, `"aggregate"`) |
+| `error.code` | ✅ | ✅ | ✅ | Domain-specific error code |
+| `@error` | ✅ | - | - | Structured error object (detailed) |
 
 ### Logging
 
@@ -69,7 +71,9 @@ It enables expressing domain logic as pure functions and pushing side effects to
 | `request.handler.method` | `"Handle"` | Method name | Handler method name |
 | `response.status` | `"success"` / `"failure"` | `"success"` / `"failure"` | Response status |
 | `response.elapsed` | Processing time (s) | Processing time (s) | Elapsed time in seconds |
-| `@error` | Error object (structured) | Error object (structured) | Error data |
+| `error.type` | `"expected"` / `"exceptional"` / `"aggregate"` | `"expected"` / `"exceptional"` / `"aggregate"` | Error classification |
+| `error.code` | Error code | Error code | Domain-specific error code |
+| `@error` | Error object (structured) | Error object (structured) | Error data (detailed) |
 | **Dynamic Fields** | | | |
 | `@request.message` | Full Command/Query object | - | Request message |
 | `@response.message` | Full response object | - | Response message |
@@ -99,7 +103,7 @@ It enables expressing domain logic as pure functions and pushing side effects to
 {request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@response.message} responded {response.status} in {response.elapsed:0.0000} s
 
 # Response - Warning/Error
-{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {@error}
+{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
 
 **Message Templates (Adapter Layer):**
@@ -118,8 +122,23 @@ It enables expressing domain logic as pure functions and pushing side effects to
 {request.layer} {request.category} {request.handler}.{request.handler.method} {response.result} responded {response.status} in {response.elapsed:0.0000} s
 
 # Response Warning/Error
-{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}
+{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
+
+**Error Field Values (`error.type` vs `@error.ErrorType`):**
+
+> `error.type` and `@error.ErrorType` use different value formats for different purposes.
+
+| Error Type | `error.type` (Filtering) | `@error.ErrorType` (Detail) |
+|------------|--------------------------|----------------------------|
+| Expected Error | `"expected"` | `"ErrorCodeExpected"` |
+| Exceptional Error | `"exceptional"` | `"ErrorCodeExceptional"` |
+| Aggregate Error | `"aggregate"` | `"ManyErrors"` |
+| LanguageExt Expected | `"expected"` | `"Expected"` |
+| LanguageExt Exceptional | `"exceptional"` | `"Exceptional"` |
+
+- **`error.type`**: Standardized values for log filtering/querying (consistent with Metrics/Tracing)
+- **`@error.ErrorType`**: Actual class name for detailed error type identification
 
 **Implementation:**
 
