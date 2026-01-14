@@ -227,14 +227,11 @@ public class TestAdapterPipeline : TestAdapter
                 ErrorType: ObservabilityNaming.ErrorTypes.Aggregate,
                 ErrorCode: GetPrimaryErrorCode(many)
             ),
-            // ErrorCodeExceptional - Exceptional 에러 (IHasErrorCode보다 먼저 매칭)
-            global::Functorium.Abstractions.Errors.ErrorCodeExceptional exceptional => (
-                ErrorType: ObservabilityNaming.ErrorTypes.Exceptional,
-                ErrorCode: exceptional.ErrorCode
-            ),
-            // IHasErrorCode - Expected 에러
+            // IHasErrorCode - ErrorCode가 있는 에러 (IsExceptional로 타입 구분)
             global::Functorium.Abstractions.Errors.IHasErrorCode hasErrorCode => (
-                ErrorType: ObservabilityNaming.ErrorTypes.Expected,
+                ErrorType: error.IsExceptional
+                    ? ObservabilityNaming.ErrorTypes.Exceptional
+                    : ObservabilityNaming.ErrorTypes.Expected,
                 ErrorCode: hasErrorCode.ErrorCode
             ),
             // Fallback - 알 수 없는 에러 타입
