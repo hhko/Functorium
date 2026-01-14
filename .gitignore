@@ -429,6 +429,7 @@ FodyWeavers.xsd
 # Claude Code
 nul
 bash.exe.stackdump
+tmpclaude-*-cwd
 
 # Release-Notes
 .release-notes/scripts/.analysis-output/
