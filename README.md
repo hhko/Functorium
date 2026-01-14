@@ -179,7 +179,7 @@ It enables expressing domain logic as pure functions and pushing side effects to
 
 | Layer | Method | Note |
 |-------|--------|------|
-| Application | `IPipelineBehavior` + `IMeterFactory` | MediatR pipeline |
+| Application | `IPipelineBehavior` + `IMeterFactory` | Mediator pipeline |
 | Adapter | Source Generator | Auto-generated metrics instruments |
 
 ### Tracing
