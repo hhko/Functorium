@@ -13,22 +13,20 @@ dir /x
 - 통합 테스트 GitHub Actions 통합
 
 ## 할일
-- [x] ElapsedTimeCalculator 클래스 네임스페이스 변경 -> namespace Functorium.Adapters.Observabilities;
-- [x] internal record ErrorCodeExpected -> public ???, IHasErrorCode
-- [x] 컴파일러 경고 제거
 - [ ] Mediator 경고 이해 Tip 폴더
 ---
-- [ ] IOption<T> 학습
-- [ ] 히스토그램 학습
----
-- [x] 로그 @error? 테스트 -> error.type, error.code, @error로 개선
-- [ ] LoggerMessage.Define 6개 제한 -> 직접 개발
+- [ ] 로그 테스트 학습
 - [ ] 필드 정의 테스트
   Item    | Application | Adapter
   ---     | ---         | ---
   Logging |             |
   Tracing |             |
   Metrics |             |
+---
+- [ ] IOption<T> 학습
+- [ ] 히스토그램 학습
+---
+- [ ] service.name, service.namespace ??? 서비스 묶음?
 - [ ] 관찰 가능성 usecase 확장
   - Logging
   - Tracing
@@ -37,7 +35,14 @@ dir /x
   - Logging
   - Tracing
   - Metrics
-- [ ] service.name, service.namespace ??? 서비스 묶음?
+---
+- [x] ElapsedTimeCalculator 클래스 네임스페이스 변경 -> namespace Functorium.Adapters.Observabilities;
+- [x] internal record ErrorCodeExpected -> public ???, IHasErrorCode
+- [x] 컴파일러 경고 제거
+---
+- [x] 로그 @error? 테스트 -> error.type, error.code, @error로 개선
+- [ ] LoggerMessage.Define 6개 제한 -> 직접 개발
+---
 - [ ] opensearch 관찰 가능성 시스템 구축
 - [ ] opensearch + kafka 관찰 가능성 시스템 구축
 - [ ] opensearch + kafka + flink sql 관찰 가능성 시스템 구축
@@ -108,6 +113,52 @@ dir /x
 - [ ] Application 레이어 테스트
 - [ ] Observability 코드 리뷰
 - [ ] IAdatperMetric/IAdapterTrace 인터페이스 의존성 등록 코드 정리
+
+## Framework
+### Abstractions
+- [x] Structured Error
+- [ ] Dependency Registration
+
+### Adapter Layer
+- [x] Configuration Option
+- [x] Observability(Logging, Tracing, Metrics)
+- [ ] Scheduling
+- [ ] HTTP Method
+- [ ] MQ
+- [ ] ORM
+
+### Application Layer
+- [x] CQRS
+- [x] Pipeline
+- [x] IAdapter(Observability)
+- [ ] Usecase(LINQ: FinT, Fin, IO, Guard, Validation)
+
+### Domain Layer
+- [x] Value Object
+- [ ] Entity
+
+## Infrastructure
+### AI
+- [x] Commit
+- [x] Release Note
+- [ ] Sprint Plan
+
+### Testing
+- [x] MTP(Microsoft Testing Platform)
+- [x] Code Coverage
+- [x] Architecture Testing
+- [x] Snapshot Testing
+- [ ] Container Testing
+- [ ] Performance Testing
+
+### CI/CD
+- [ ] Versioning
+- [x] Local Build
+- [x] Remote Build
+- [ ] Remote Deployment
+
+### System
+- [ ] Observability
 
 ## Entity
 ### 목표
