@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Shouldly;
@@ -28,6 +29,37 @@ public static class SourceGeneratorTestRunner
     /// <param name="sourceCode">입력 소스 코드</param>
     /// <returns>생성된 코드 문자열 (생성되지 않은 경우 null)</returns>
     public static string? Generate<TGenerator>(this TGenerator generator, string sourceCode)
+        where TGenerator : IIncrementalGenerator, new()
+    {
+        var (generatedCode, diagnostics) = RunGenerator(generator, sourceCode);
+
+        // 소스 생성기 진단(컴파일러 에러)
+        diagnostics
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .ShouldBeEmpty();
+
+        return generatedCode;
+    }
+
+    /// <summary>
+    /// 소스 생성기를 실행하고 진단 결과를 반환합니다.
+    /// DiagnosticDescriptor 테스트용으로 사용됩니다.
+    /// </summary>
+    /// <typeparam name="TGenerator">실행할 소스 생성기 타입</typeparam>
+    /// <param name="generator">소스 생성기 인스턴스</param>
+    /// <param name="sourceCode">입력 소스 코드</param>
+    /// <returns>생성된 코드와 진단 결과</returns>
+    public static (string? GeneratedCode, ImmutableArray<Diagnostic> Diagnostics) GenerateWithDiagnostics<TGenerator>(
+        this TGenerator generator,
+        string sourceCode)
+        where TGenerator : IIncrementalGenerator, new()
+    {
+        return RunGenerator(generator, sourceCode);
+    }
+
+    private static (string? GeneratedCode, ImmutableArray<Diagnostic> Diagnostics) RunGenerator<TGenerator>(
+        TGenerator generator,
+        string sourceCode)
         where TGenerator : IIncrementalGenerator, new()
     {
         // 소스 코드에서 Syntax Tree 생성
@@ -66,16 +98,13 @@ public static class SourceGeneratorTestRunner
                 out var outputCompilation,          // 소스 생성기 결과: 소스
                 out var diagnostics);               // 소스 생성기 진단: 경고, 에러
 
-        // 소스 생성기 진단(컴파일러 에러)
-        diagnostics
-            .Where(d => d.Severity == DiagnosticSeverity.Error)
-            .ShouldBeEmpty();
-
         // 소스 생성기 결과(컴파일러 결과)
-        return outputCompilation
+        var generatedCode = outputCompilation
             .SyntaxTrees
             .Skip(1)                // [0] 원본 소스 SyntaxTree 제외
             .LastOrDefault()?
             .ToString();
+
+        return (generatedCode, diagnostics);
     }
 }

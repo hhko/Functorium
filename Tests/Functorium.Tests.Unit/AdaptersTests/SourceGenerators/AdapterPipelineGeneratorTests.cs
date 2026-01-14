@@ -1,5 +1,6 @@
 using Functorium.Adapters.SourceGenerator;
 using Functorium.Testing.Actions.SourceGenerators;
+using Microsoft.CodeAnalysis;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 
 namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
@@ -1074,6 +1075,204 @@ public sealed class AdapterPipelineGeneratorTests
 
         // Assert
         return Verify(actual);
+    }
+
+    #endregion
+
+    #region 8 진단(Diagnostic) 시나리오
+
+    /// <summary>
+    /// 시나리오: 중복 파라미터 타입 진단
+    /// 생성자에 동일한 타입의 파라미터가 있을 때 FUNCTORIUM001 진단이 발생하는지 확인합니다.
+    /// Pipeline은 ActivitySource, ILogger, IMeterFactory를 추가하므로 이들과 중복되면 진단이 발생합니다.
+    /// </summary>
+    [Fact]
+    public void AdapterPipelineGenerator_ShouldReportDiagnostic_WhenDuplicateParameterTypes()
+    {
+        // Arrange
+        // ActivitySource 타입이 중복되는 케이스
+        string input = """
+            using System.Diagnostics;
+            using Functorium.Adapters.SourceGenerator;
+            using Functorium.Applications.Observabilities;
+            using LanguageExt;
+
+            namespace TestNamespace;
+
+            public interface IDuplicateParamAdapter : IAdapter
+            {
+                FinT<IO, int> GetValue();
+            }
+
+            [GeneratePipeline]
+            public class DuplicateParamAdapter : IDuplicateParamAdapter
+            {
+                private readonly ActivitySource _customActivitySource;
+
+                public DuplicateParamAdapter(ActivitySource customActivitySource)
+                {
+                    _customActivitySource = customActivitySource;
+                }
+
+                public string RequestCategory => "Test";
+                public virtual FinT<IO, int> GetValue() => FinT<IO, int>.Succ(42);
+            }
+            """;
+
+        // Act
+        var (generatedCode, diagnostics) = _sut.GenerateWithDiagnostics(input);
+
+        // Assert
+        // FUNCTORIUM001 진단이 발생해야 함
+        var diagnostic = diagnostics.FirstOrDefault(d => d.Id == "FUNCTORIUM001");
+        diagnostic.ShouldNotBeNull();
+        diagnostic.Severity.ShouldBe(DiagnosticSeverity.Error);
+        diagnostic.GetMessage().ShouldContain("DuplicateParamAdapter");
+        diagnostic.GetMessage().ShouldContain("ActivitySource");
+
+        // 코드가 생성되지 않아야 함 (GeneratePipelineAttribute만 생성)
+        generatedCode?.ShouldNotContain("DuplicateParamAdapterPipeline");
+    }
+
+    /// <summary>
+    /// 시나리오: 중복 파라미터 타입 진단 - IMeterFactory 중복
+    /// IMeterFactory 타입이 중복될 때 FUNCTORIUM001 진단이 발생하는지 확인합니다.
+    /// (Pipeline이 ILogger&lt;T&gt; 제네릭 타입을 추가하므로, 비제네릭 IMeterFactory로 테스트)
+    /// </summary>
+    [Fact]
+    public void AdapterPipelineGenerator_ShouldReportDiagnostic_WhenDuplicateMeterFactoryParameter()
+    {
+        // Arrange
+        string input = """
+            using System.Diagnostics.Metrics;
+            using Functorium.Adapters.SourceGenerator;
+            using Functorium.Applications.Observabilities;
+            using LanguageExt;
+
+            namespace TestNamespace;
+
+            public interface IDuplicateMeterAdapter : IAdapter
+            {
+                FinT<IO, string> GetData();
+            }
+
+            [GeneratePipeline]
+            public class DuplicateMeterAdapter : IDuplicateMeterAdapter
+            {
+                private readonly IMeterFactory _customMeterFactory;
+
+                public DuplicateMeterAdapter(IMeterFactory customMeterFactory)
+                {
+                    _customMeterFactory = customMeterFactory;
+                }
+
+                public string RequestCategory => "Test";
+                public virtual FinT<IO, string> GetData() => FinT<IO, string>.Succ("data");
+            }
+            """;
+
+        // Act
+        var (generatedCode, diagnostics) = _sut.GenerateWithDiagnostics(input);
+
+        // Assert
+        var diagnostic = diagnostics.FirstOrDefault(d => d.Id == "FUNCTORIUM001");
+        diagnostic.ShouldNotBeNull();
+        diagnostic.Severity.ShouldBe(DiagnosticSeverity.Error);
+        diagnostic.GetMessage().ShouldContain("DuplicateMeterAdapter");
+        diagnostic.GetMessage().ShouldContain("IMeterFactory");
+    }
+
+    /// <summary>
+    /// 시나리오: 진단 위치 확인
+    /// 진단이 원본 소스 파일의 클래스 선언 위치를 가리키는지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void AdapterPipelineGenerator_ShouldReportDiagnostic_WithCorrectLocation()
+    {
+        // Arrange
+        string input = """
+            using System.Diagnostics;
+            using Functorium.Adapters.SourceGenerator;
+            using Functorium.Applications.Observabilities;
+            using LanguageExt;
+
+            namespace TestNamespace;
+
+            public interface ILocationTestAdapter : IAdapter
+            {
+                FinT<IO, int> GetValue();
+            }
+
+            [GeneratePipeline]
+            public class LocationTestAdapter : ILocationTestAdapter
+            {
+                public LocationTestAdapter(ActivitySource activitySource) { }
+                public string RequestCategory => "Test";
+                public virtual FinT<IO, int> GetValue() => FinT<IO, int>.Succ(42);
+            }
+            """;
+
+        // Act
+        var (_, diagnostics) = _sut.GenerateWithDiagnostics(input);
+
+        // Assert
+        var diagnostic = diagnostics.FirstOrDefault(d => d.Id == "FUNCTORIUM001");
+        diagnostic.ShouldNotBeNull();
+
+        // Location이 null이 아니어야 함 (원본 소스 위치)
+        diagnostic.Location.ShouldNotBe(Location.None);
+        diagnostic.Location.IsInSource.ShouldBeTrue();
+
+        // 클래스 선언 위치를 가리켜야 함
+        var lineSpan = diagnostic.Location.GetLineSpan();
+        lineSpan.IsValid.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// 시나리오: 중복 없을 때 진단 없음
+    /// 중복 파라미터 타입이 없는 경우 FUNCTORIUM001 진단이 발생하지 않아야 합니다.
+    /// </summary>
+    [Fact]
+    public void AdapterPipelineGenerator_ShouldNotReportDiagnostic_WhenNoParameterDuplication()
+    {
+        // Arrange
+        string input = """
+            using Functorium.Adapters.SourceGenerator;
+            using Functorium.Applications.Observabilities;
+            using LanguageExt;
+
+            namespace TestNamespace;
+
+            public interface INoDuplicateAdapter : IAdapter
+            {
+                FinT<IO, int> GetValue();
+            }
+
+            [GeneratePipeline]
+            public class NoDuplicateAdapter : INoDuplicateAdapter
+            {
+                private readonly string _connectionString;
+
+                public NoDuplicateAdapter(string connectionString)
+                {
+                    _connectionString = connectionString;
+                }
+
+                public string RequestCategory => "Test";
+                public virtual FinT<IO, int> GetValue() => FinT<IO, int>.Succ(42);
+            }
+            """;
+
+        // Act
+        var (generatedCode, diagnostics) = _sut.GenerateWithDiagnostics(input);
+
+        // Assert
+        var diagnostic = diagnostics.FirstOrDefault(d => d.Id == "FUNCTORIUM001");
+        diagnostic.ShouldBeNull();
+
+        // Pipeline 코드가 정상적으로 생성되어야 함
+        generatedCode.ShouldNotBeNull();
+        generatedCode.ShouldContain("NoDuplicateAdapterPipeline");
     }
 
     #endregion

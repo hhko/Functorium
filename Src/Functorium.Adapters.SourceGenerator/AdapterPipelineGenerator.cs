@@ -116,7 +116,10 @@ public sealed class AdapterPipelineGenerator()
         // 우선순위: 1. 타겟 클래스 자체의 생성자, 2. 부모 클래스의 생성자
         var baseConstructorParameters = ConstructorParameterExtractor.ExtractParameters(classSymbol);
 
-        return new PipelineClassInfo(@namespace, className, methods, baseConstructorParameters);
+        // 원본 소스 위치 (IDE 진단용)
+        Location? location = context.TargetNode.GetLocation();
+
+        return new PipelineClassInfo(@namespace, className, methods, baseConstructorParameters, location);
     }
 
     /// <summary>
@@ -159,24 +162,14 @@ public sealed class AdapterPipelineGenerator()
 
             if (duplicateTypes.Any())
             {
-                // 중복 타입이 있으면 에러를 발생시키는 코드 생성
-                StringBuilder sb = new();
-                GenerateErrorSource(sb, pipelineClass, duplicateTypes);
-                string source = sb.ToString();
+                // IDE 친화적 진단 리포트 (원본 소스 파일 위치 표시)
+                context.ReportDiagnostic(Diagnostic.Create(
+                    DuplicateParameterTypeDiagnostic,
+                    pipelineClass.Location,
+                    pipelineClass.ClassName,
+                    string.Join(", ", duplicateTypes)));
 
-                string namespaceSuffix = string.Empty;
-                if (!string.IsNullOrEmpty(pipelineClass.Namespace))
-                {
-                    var lastDotIndex = pipelineClass.Namespace.LastIndexOf('.');
-                    if (lastDotIndex >= 0)
-                    {
-                        namespaceSuffix = pipelineClass.Namespace.Substring(lastDotIndex + 1) + ".";
-                    }
-                }
-
-                context.AddSource(
-                    $"{namespaceSuffix}{pipelineClass.ClassName}Pipeline.g.cs",
-                    SourceText.From(source, Encoding.UTF8));
+                continue;  // 에러 시 코드 생성 건너뛰기
             }
             else
             {
@@ -200,19 +193,6 @@ public sealed class AdapterPipelineGenerator()
                     SourceText.From(source, Encoding.UTF8));
             }
         }
-    }
-
-    private static void GenerateErrorSource(StringBuilder sb, PipelineClassInfo classInfo, List<string> duplicateTypes)
-    {
-        sb.Append(Header)
-            .AppendLine()
-            .AppendLine($"namespace {classInfo.Namespace};")
-            .AppendLine()
-            .AppendLine($"#error Pipeline constructor for '{classInfo.ClassName}' contains multiple parameters of the same types: {string.Join(", ", duplicateTypes)}. This will cause issues with dependency injection resolution in RegisterScopedAdapterPipeline. Please ensure all constructor parameters have unique types.")
-            .AppendLine()
-            .AppendLine($"public class {classInfo.ClassName}Pipeline")
-            .AppendLine("{")
-            .AppendLine("}");
     }
 
     private static string GeneratePipelineClassSource(PipelineClassInfo classInfo, StringBuilder sb)
@@ -410,7 +390,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("            .Bind(result =>")
             .AppendLine("                from _ in global::LanguageExt.IO.lift(() =>")
             .AppendLine("                {")
-            .AppendLine("                    double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);")
+            .AppendLine("                    double elapsed = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);")
             .AppendLine("                    responseLogSuccess(requestHandler, requestHandlerMethod, result, elapsed);")
             .AppendLine("                    RecordActivitySuccess(activity, requestHandlerMethod, elapsed);")
             .AppendLine("                    return global::LanguageExt.Unit.Default;")
@@ -427,7 +407,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("        long startTimestamp,")
             .AppendLine("        global::System.Action<string, string, global::LanguageExt.Common.Error, double> responseLogFailure)")
             .AppendLine("    {")
-            .AppendLine("        double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);")
+            .AppendLine("        double elapsed = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);")
             .AppendLine("        responseLogFailure(requestHandler, requestHandlerMethod, error, elapsed);")
             .AppendLine("        RecordActivityFailure(activity, requestHandlerMethod, error, elapsed);")
             .AppendLine("        return global::LanguageExt.IO.fail<A>(error);")
@@ -483,7 +463,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("            { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success }")
             .AppendLine("        };")
             .AppendLine("        _responseCounter.Add(1, metricTags);")
-            .AppendLine("        _durationHistogram.Record(elapsed / 1000.0, metricTags); // ms to seconds")
+            .AppendLine("        _durationHistogram.Record(elapsed, metricTags);")
             .AppendLine()
             .AppendLine("        activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsed);")
             .AppendLine("        activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success);")
@@ -505,7 +485,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("            { ObservabilityNaming.CustomAttributes.ErrorCode, errorCode }")
             .AppendLine("        };")
             .AppendLine("        _responseCounter.Add(1, metricTags);")
-            .AppendLine("        _durationHistogram.Record(elapsed / 1000.0, metricTags); // ms to seconds")
+            .AppendLine("        _durationHistogram.Record(elapsed, metricTags);")
             .AppendLine()
             .AppendLine("        activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsed);")
             .AppendLine("        activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);")
@@ -926,7 +906,7 @@ public sealed class AdapterPipelineGenerator()
             sb.AppendLine(" \" +");
 
             // 세 번째 줄: 종료
-            sb.AppendLine("                     \"responded {response.status} in {response.elapsed:0.0000} ms\",");
+            sb.AppendLine("                     \"responded {response.status} in {response.elapsed:0.0000} s\",");
 
             // 파라미터 전달
             sb.Append("            requestLayer, requestCategory, requestHandler, requestHandlerMethod, ");
@@ -1106,7 +1086,7 @@ public sealed class AdapterPipelineGenerator()
         sb.AppendLine("        LoggerMessage.Define<string, string, string, string, string, double>(");
         sb.AppendLine("            LogLevel.Information,");
         sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,");
-        sb.AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} ms\");");
+        sb.AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s\");");
         sb.AppendLine();
     }
 
@@ -1149,13 +1129,13 @@ public sealed class AdapterPipelineGenerator()
             typeParams.Add("double"); // elapsed
             string responseFieldName = CollectionTypeHelper.GetResponseFieldName();
             string countFieldName = CollectionTypeHelper.GetResponseCountFieldName();
-            messageTemplate = $"{{request.layer}} {{request.category}} {{request.handler}}.{{request.handler.method}} {{{responseFieldName}}} {{{countFieldName}}} responded {{response.status}} in {{response.elapsed:0.0000}} ms";
+            messageTemplate = $"{{request.layer}} {{request.category}} {{request.handler}}.{{request.handler.method}} {{{responseFieldName}}} {{{countFieldName}}} responded {{response.status}} in {{response.elapsed:0.0000}} s";
         }
         else
         {
             typeParams.Add("double"); // elapsed
             string responseFieldName = CollectionTypeHelper.GetResponseFieldName();
-            messageTemplate = $"{{request.layer}} {{request.category}} {{request.handler}}.{{request.handler.method}} {{{responseFieldName}}} responded {{response.status}} in {{response.elapsed:0.0000}} ms";
+            messageTemplate = $"{{request.layer}} {{request.category}} {{request.handler}}.{{request.handler.method}} {{{responseFieldName}}} responded {{response.status}} in {{response.elapsed:0.0000}} s";
         }
 
         sb.AppendLine($"    private static readonly global::System.Action<ILogger, {string.Join(", ", typeParams)}, global::System.Exception?> _logResponseDebug_{classInfo.ClassName}_{method.Name} =");
@@ -1173,7 +1153,7 @@ public sealed class AdapterPipelineGenerator()
         sb.AppendLine("        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(");
         sb.AppendLine("            LogLevel.Warning,");
         sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,");
-        sb.AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} ms with {@error}\");");
+        sb.AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}\");");
         sb.AppendLine();
     }
 
@@ -1184,7 +1164,7 @@ public sealed class AdapterPipelineGenerator()
         sb.AppendLine("        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(");
         sb.AppendLine("            LogLevel.Error,");
         sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,");
-        sb.AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} ms with {@error}\");");
+        sb.AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}\");");
         sb.AppendLine();
     }
 }

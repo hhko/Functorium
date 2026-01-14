@@ -109,7 +109,7 @@ public class MultiCtorAdapterPipeline : MultiCtorAdapter
             .Bind(result =>
                 from _ in global::LanguageExt.IO.lift(() =>
                 {
-                    double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);
+                    double elapsed = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);
                     responseLogSuccess(requestHandler, requestHandlerMethod, result, elapsed);
                     RecordActivitySuccess(activity, requestHandlerMethod, elapsed);
                     return global::LanguageExt.Unit.Default;
@@ -126,7 +126,7 @@ public class MultiCtorAdapterPipeline : MultiCtorAdapter
         long startTimestamp,
         global::System.Action<string, string, global::LanguageExt.Common.Error, double> responseLogFailure)
     {
-        double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);
+        double elapsed = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);
         responseLogFailure(requestHandler, requestHandlerMethod, error, elapsed);
         RecordActivityFailure(activity, requestHandlerMethod, error, elapsed);
         return global::LanguageExt.IO.fail<A>(error);
@@ -182,7 +182,7 @@ public class MultiCtorAdapterPipeline : MultiCtorAdapter
             { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success }
         };
         _responseCounter.Add(1, metricTags);
-        _durationHistogram.Record(elapsed / 1000.0, metricTags); // ms to seconds
+        _durationHistogram.Record(elapsed, metricTags);
 
         activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsed);
         activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success);
@@ -204,7 +204,7 @@ public class MultiCtorAdapterPipeline : MultiCtorAdapter
             { ObservabilityNaming.CustomAttributes.ErrorCode, errorCode }
         };
         _responseCounter.Add(1, metricTags);
-        _durationHistogram.Record(elapsed / 1000.0, metricTags); // ms to seconds
+        _durationHistogram.Record(elapsed, metricTags);
 
         activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsed);
         activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);
@@ -398,19 +398,19 @@ internal static class MultiCtorAdapterPipelineLoggers
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} ms");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_MultiCtorAdapter_GetInfo =
         LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
             LogLevel.Warning,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} ms with {@error}");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_MultiCtorAdapter_GetInfo =
         LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
             LogLevel.Error,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} ms with {@error}");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}");
 
 
     public static void LogRequestDebug_MultiCtorAdapter_GetInfo(
@@ -456,7 +456,7 @@ internal static class MultiCtorAdapterPipelineLoggers
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
                      "{response.result} " +
-                     "responded {response.status} in {response.elapsed:0.0000} ms",
+                     "responded {response.status} in {response.elapsed:0.0000} s",
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
