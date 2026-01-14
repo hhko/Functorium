@@ -13,10 +13,15 @@ dir /x
 - 통합 테스트 GitHub Actions 통합
 
 ## 할일
-- [ ] ElapsedTimeCalculator 클래스 네임스페이스 변경 -> namespace Functorium.Adapters.Observabilities;
-- [ ] internal record ErrorCodeExpected -> public ???, IHasErrorCode
+- [x] ElapsedTimeCalculator 클래스 네임스페이스 변경 -> namespace Functorium.Adapters.Observabilities;
+- [x] internal record ErrorCodeExpected -> public ???, IHasErrorCode
+- [ ] 컴파일러 경고 제거
+- [ ] Mediator 경고 이해 Tip 폴더
+---
+- [ ] IOption<T> 학습
+- [ ] 히스토그램 학습
+---
 - [ ] 로그 @error? 테스트 -> error.type, error.code, @error로 개선
-- [ ] service.name, service.namespace ??? 서비스 묶음?
 - [ ] 필드 정의 테스트
   Item    | Application | Adapter
   ---     | ---         | ---
@@ -31,14 +36,15 @@ dir /x
   - Logging
   - Tracing
   - Metrics
+- [ ] service.name, service.namespace ??? 서비스 묶음?
 - [ ] opensearch 관찰 가능성 시스템 구축
 - [ ] opensearch + kafka 관찰 가능성 시스템 구축
 - [ ] opensearch + kafka + flink sql 관찰 가능성 시스템 구축
 - [ ] prometheus + ... + grafana 관찰 가능성 시스템 구축
+---
 - [ ] 관찰 가능성 중에서 ValidatorPipeline만 Application 레이어 배치
 - [ ] 값 객체와 ValidatorPipeline 통합
-- [ ] IOption<T> 학습
-- [ ] 히스토그램 학습
+---
 - [x] Pipeline을 Application 레이어에서 Adapter 레이어도 이동 시킴
 - [x] Pipeline 의존성 등록을 OpenTelemetry 등록과 통합 시킴
 - [x] Observability 구현에서 기존 인터페이스들을 모두 OpenTelemetry 구체 기술로 변경(Adapter 레이어여 변경되었기 때문)
@@ -76,7 +82,6 @@ dir /x
 - [x] 로그/추적/지표 md 문서 기준으로 비교
 - [ ] 코드 이해를 위한 예제 코드 작성
 - [ ] 코드 이해를 위한 학습 문서 작성
-- [ ] Mediator 경고 이해 Tip 폴더
 - [ ] 관찰 가능성 코드 리뷰: 최적화
 - [x] elapsed 단위
 - [ ] wolverine IHost?
