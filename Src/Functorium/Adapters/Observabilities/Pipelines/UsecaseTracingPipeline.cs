@@ -1,6 +1,5 @@
 using System.Diagnostics;
 
-using Functorium.Abstractions;
 using Functorium.Abstractions.Errors;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Applications.Cqrs;

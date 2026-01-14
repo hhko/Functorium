@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using Functorium.Abstractions;
+using Functorium.Adapters.Observabilities;
 using LanguageExt.Traits;
 
 namespace Functorium.Applications.Linq;
