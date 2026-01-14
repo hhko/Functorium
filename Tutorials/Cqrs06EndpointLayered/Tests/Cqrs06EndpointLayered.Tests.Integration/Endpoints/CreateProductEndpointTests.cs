@@ -23,12 +23,12 @@ public class CreateProductEndpointTests : WebApplicationFixture
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/products", request);
+        var response = await Client.PostAsJsonAsync("/api/products", request, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var result = await response.Content.ReadFromJsonAsync<CreateProductCommand.Response>();
+        var result = await response.Content.ReadFromJsonAsync<CreateProductCommand.Response>(TestContext.Current.CancellationToken);
         result.ShouldNotBeNull();
         result.Name.ShouldBe(request.Name);
         result.Description.ShouldBe(request.Description);
@@ -49,7 +49,7 @@ public class CreateProductEndpointTests : WebApplicationFixture
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/products", request);
+        var response = await Client.PostAsJsonAsync("/api/products", request, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -68,7 +68,7 @@ public class CreateProductEndpointTests : WebApplicationFixture
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/products", request);
+        var response = await Client.PostAsJsonAsync("/api/products", request, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);

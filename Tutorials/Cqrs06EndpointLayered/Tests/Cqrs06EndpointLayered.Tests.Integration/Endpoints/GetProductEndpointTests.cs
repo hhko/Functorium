@@ -21,12 +21,12 @@ public class GetProductEndpointTests : WebApplicationFixture
     public async Task GetAllProducts_ShouldReturn200Ok()
     {
         // Act
-        var response = await Client.GetAsync("/api/products");
+        var response = await Client.GetAsync("/api/products", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<GetAllProductsResponse>();
+        var result = await response.Content.ReadFromJsonAsync<GetAllProductsResponse>(TestContext.Current.CancellationToken);
         result.ShouldNotBeNull();
     }
 
@@ -37,7 +37,7 @@ public class GetProductEndpointTests : WebApplicationFixture
         var nonExistentId = Guid.NewGuid();
 
         // Act
-        var response = await Client.GetAsync($"/api/products/{nonExistentId}");
+        var response = await Client.GetAsync($"/api/products/{nonExistentId}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -55,19 +55,19 @@ public class GetProductEndpointTests : WebApplicationFixture
             StockQuantity = 10
         };
 
-        var createResponse = await Client.PostAsJsonAsync("/api/products", createRequest);
+        var createResponse = await Client.PostAsJsonAsync("/api/products", createRequest, TestContext.Current.CancellationToken);
         createResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var createdProduct = await createResponse.Content.ReadFromJsonAsync<CreateProductCommand.Response>();
+        var createdProduct = await createResponse.Content.ReadFromJsonAsync<CreateProductCommand.Response>(TestContext.Current.CancellationToken);
         createdProduct.ShouldNotBeNull();
 
         // Act
-        var response = await Client.GetAsync($"/api/products/{createdProduct.ProductId}");
+        var response = await Client.GetAsync($"/api/products/{createdProduct.ProductId}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<GetProductByIdQuery.Response>();
+        var result = await response.Content.ReadFromJsonAsync<GetProductByIdQuery.Response>(TestContext.Current.CancellationToken);
         result.ShouldNotBeNull();
         result.ProductId.ShouldBe(createdProduct.ProductId);
         result.Name.ShouldBe(createRequest.Name);

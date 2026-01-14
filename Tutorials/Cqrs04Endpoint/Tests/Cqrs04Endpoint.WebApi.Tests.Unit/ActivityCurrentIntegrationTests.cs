@@ -76,13 +76,13 @@ public sealed class ActivityCurrentIntegrationTests : IClassFixture<WebApplicati
         };
 
         // Act - 실제 HTTP 요청 (시뮬레이션 아님!)
-        var response = await _client.PostAsJsonAsync("/api/products", request);
+        var response = await _client.PostAsJsonAsync("/api/products", request, TestContext.Current.CancellationToken);
 
         // Assert - HTTP 응답 확인
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
 
         // 잠시 대기하여 모든 Activity가 완료되도록 함
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
 
         // Assert - Activity 계층 구조 검증
         lock (_capturedActivities)
