@@ -1,4 +1,4 @@
-{
+﻿{
   ErrorCode: DomainErrors.Geometry.InvalidPoint,
   ErrorCodeId: -1000,
   ErrorCurrentValue: {

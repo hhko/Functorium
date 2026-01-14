@@ -77,6 +77,7 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
             if (response is IFinResponseWithError errorResponse)
             {
                 Error error = errorResponse.Error;
+                var (errorType, errorCode) = GetErrorInfo(error);
 
                 if (error.IsExceptional)
                 {
@@ -88,6 +89,8 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
                         requestHandlerMethod,
                         ObservabilityNaming.Status.Failure,
                         elapsed,
+                        errorType,
+                        errorCode,
                         error);
                 }
                 else
@@ -100,6 +103,8 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
                         requestHandlerMethod,
                         ObservabilityNaming.Status.Failure,
                         elapsed,
+                        errorType,
+                        errorCode,
                         error);
                 }
             }

@@ -662,6 +662,8 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("        global::LanguageExt.Common.Error error,")
             .AppendLine("        double elapsed)")
             .AppendLine("    {")
+            .AppendLine("        var (errorType, errorCode) = GetErrorInfo(error);")
+            .AppendLine()
             .AppendLine("        if (error.IsExceptional && _isErrorEnabled)")
             .AppendLine("        {")
             .AppendLine($"            _logger.LogResponseError_{classInfo.ClassName}_{method.Name}(")
@@ -671,6 +673,8 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("                requestHandlerMethod,")
             .AppendLine("                ObservabilityNaming.Status.Failure,")
             .AppendLine("                elapsed,")
+            .AppendLine("                errorType,")
+            .AppendLine("                errorCode,")
             .AppendLine("                error);")
             .AppendLine("        }")
             .AppendLine("        else if (_isWarningEnabled)")
@@ -682,6 +686,8 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("                requestHandlerMethod,")
             .AppendLine("                ObservabilityNaming.Status.Failure,")
             .AppendLine("                elapsed,")
+            .AppendLine("                errorType,")
+            .AppendLine("                errorCode,")
             .AppendLine("                error);")
             .AppendLine("        }")
             .AppendLine("    }");
@@ -950,12 +956,24 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("        string requestHandlerMethod,")
             .AppendLine("        string status,")
             .AppendLine("        double elapsed,")
+            .AppendLine("        string errorType,")
+            .AppendLine("        string errorCode,")
             .AppendLine("        global::LanguageExt.Common.Error error)")
             .AppendLine("    {")
             .AppendLine("        if (!logger.IsEnabled(LogLevel.Warning))")
             .AppendLine("            return;")
             .AppendLine()
-            .AppendLine($"        _logResponseWarning_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, elapsed, error, null);")
+            .AppendLine("        logger.LogWarning(")
+            .AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,")
+            .AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}\",")
+            .AppendLine("            requestLayer,")
+            .AppendLine("            requestCategory,")
+            .AppendLine("            requestHandler,")
+            .AppendLine("            requestHandlerMethod,")
+            .AppendLine("            elapsed,")
+            .AppendLine("            errorType,")
+            .AppendLine("            errorCode,")
+            .AppendLine("            error);")
             .AppendLine("    }")
             .AppendLine();
 
@@ -968,12 +986,24 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("        string requestHandlerMethod,")
             .AppendLine("        string status,")
             .AppendLine("        double elapsed,")
+            .AppendLine("        string errorType,")
+            .AppendLine("        string errorCode,")
             .AppendLine("        global::LanguageExt.Common.Error error)")
             .AppendLine("    {")
             .AppendLine("        if (!logger.IsEnabled(LogLevel.Error))")
             .AppendLine("            return;")
             .AppendLine()
-            .AppendLine($"        _logResponseError_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, elapsed, error, null);")
+            .AppendLine("        logger.LogError(")
+            .AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,")
+            .AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}\",")
+            .AppendLine("            requestLayer,")
+            .AppendLine("            requestCategory,")
+            .AppendLine("            requestHandler,")
+            .AppendLine("            requestHandlerMethod,")
+            .AppendLine("            elapsed,")
+            .AppendLine("            errorType,")
+            .AppendLine("            errorCode,")
+            .AppendLine("            error);")
             .AppendLine("    }");
     }
 
@@ -997,11 +1027,7 @@ public sealed class AdapterPipelineGenerator()
         // 4. LogResponseDebug (depends on collection type)
         GenerateLogResponseDebugDelegate(sb, classInfo, method, actualReturnType);
 
-        // 5. LogResponseWarning (6 params without status)
-        GenerateLogResponseWarningDelegate(sb, classInfo, method);
-
-        // 6. LogResponseError (6 params without status)
-        GenerateLogResponseErrorDelegate(sb, classInfo, method);
+        // Note: LogResponseWarning/Error는 직접 호출 방식으로 변경되어 delegate가 필요 없음
 
         sb.AppendLine();
     }
@@ -1143,25 +1169,4 @@ public sealed class AdapterPipelineGenerator()
         sb.AppendLine();
     }
 
-    private static void GenerateLogResponseWarningDelegate(StringBuilder sb, PipelineClassInfo classInfo, MethodInfo method)
-    {
-        // Status를 하드코딩하여 6개로 줄임: layer, category, handler, method, elapsed, error
-        sb.AppendLine($"    private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_{classInfo.ClassName}_{method.Name} =");
-        sb.AppendLine("        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(");
-        sb.AppendLine("            LogLevel.Warning,");
-        sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,");
-        sb.AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}\");");
-        sb.AppendLine();
-    }
-
-    private static void GenerateLogResponseErrorDelegate(StringBuilder sb, PipelineClassInfo classInfo, MethodInfo method)
-    {
-        // Status를 하드코딩하여 6개로 줄임: layer, category, handler, method, elapsed, error
-        sb.AppendLine($"    private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_{classInfo.ClassName}_{method.Name} =");
-        sb.AppendLine("        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(");
-        sb.AppendLine("            LogLevel.Error,");
-        sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,");
-        sb.AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}\");");
-        sb.AppendLine();
-    }
 }

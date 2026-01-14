@@ -347,6 +347,8 @@ public class SimpleReturnAdapterPipeline : SimpleReturnAdapter
         global::LanguageExt.Common.Error error,
         double elapsed)
     {
+        var (errorType, errorCode) = GetErrorInfo(error);
+
         if (error.IsExceptional && _isErrorEnabled)
         {
             _logger.LogResponseError_SimpleReturnAdapter_GetNumber(
@@ -356,6 +358,8 @@ public class SimpleReturnAdapterPipeline : SimpleReturnAdapter
                 requestHandlerMethod,
                 ObservabilityNaming.Status.Failure,
                 elapsed,
+                errorType,
+                errorCode,
                 error);
         }
         else if (_isWarningEnabled)
@@ -367,6 +371,8 @@ public class SimpleReturnAdapterPipeline : SimpleReturnAdapter
                 requestHandlerMethod,
                 ObservabilityNaming.Status.Failure,
                 elapsed,
+                errorType,
+                errorCode,
                 error);
         }
     }
@@ -442,6 +448,8 @@ public class SimpleReturnAdapterPipeline : SimpleReturnAdapter
         global::LanguageExt.Common.Error error,
         double elapsed)
     {
+        var (errorType, errorCode) = GetErrorInfo(error);
+
         if (error.IsExceptional && _isErrorEnabled)
         {
             _logger.LogResponseError_SimpleReturnAdapter_GetText(
@@ -451,6 +459,8 @@ public class SimpleReturnAdapterPipeline : SimpleReturnAdapter
                 requestHandlerMethod,
                 ObservabilityNaming.Status.Failure,
                 elapsed,
+                errorType,
+                errorCode,
                 error);
         }
         else if (_isWarningEnabled)
@@ -462,6 +472,8 @@ public class SimpleReturnAdapterPipeline : SimpleReturnAdapter
                 requestHandlerMethod,
                 ObservabilityNaming.Status.Failure,
                 elapsed,
+                errorType,
+                errorCode,
                 error);
         }
     }
@@ -537,6 +549,8 @@ public class SimpleReturnAdapterPipeline : SimpleReturnAdapter
         global::LanguageExt.Common.Error error,
         double elapsed)
     {
+        var (errorType, errorCode) = GetErrorInfo(error);
+
         if (error.IsExceptional && _isErrorEnabled)
         {
             _logger.LogResponseError_SimpleReturnAdapter_GetFlag(
@@ -546,6 +560,8 @@ public class SimpleReturnAdapterPipeline : SimpleReturnAdapter
                 requestHandlerMethod,
                 ObservabilityNaming.Status.Failure,
                 elapsed,
+                errorType,
+                errorCode,
                 error);
         }
         else if (_isWarningEnabled)
@@ -557,6 +573,8 @@ public class SimpleReturnAdapterPipeline : SimpleReturnAdapter
                 requestHandlerMethod,
                 ObservabilityNaming.Status.Failure,
                 elapsed,
+                errorType,
+                errorCode,
                 error);
         }
     }
@@ -583,18 +601,6 @@ internal static class SimpleReturnAdapterPipelineLoggers
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
-
-    private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_SimpleReturnAdapter_GetNumber =
-        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
-            LogLevel.Warning,
-            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}");
-
-    private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_SimpleReturnAdapter_GetNumber =
-        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
-            LogLevel.Error,
-            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}");
 
 
     public static void LogRequestDebug_SimpleReturnAdapter_GetNumber(
@@ -667,12 +673,24 @@ internal static class SimpleReturnAdapterPipelineLoggers
         string requestHandlerMethod,
         string status,
         double elapsed,
+        string errorType,
+        string errorCode,
         global::LanguageExt.Common.Error error)
     {
         if (!logger.IsEnabled(LogLevel.Warning))
             return;
 
-        _logResponseWarning_SimpleReturnAdapter_GetNumber(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, elapsed, error, null);
+        logger.LogWarning(
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            elapsed,
+            errorType,
+            errorCode,
+            error);
     }
 
     public static void LogResponseError_SimpleReturnAdapter_GetNumber(
@@ -683,12 +701,24 @@ internal static class SimpleReturnAdapterPipelineLoggers
         string requestHandlerMethod,
         string status,
         double elapsed,
+        string errorType,
+        string errorCode,
         global::LanguageExt.Common.Error error)
     {
         if (!logger.IsEnabled(LogLevel.Error))
             return;
 
-        _logResponseError_SimpleReturnAdapter_GetNumber(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, elapsed, error, null);
+        logger.LogError(
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            elapsed,
+            errorType,
+            errorCode,
+            error);
     }
 
     // ===== LoggerMessage.Define delegates for GetText =====
@@ -709,18 +739,6 @@ internal static class SimpleReturnAdapterPipelineLoggers
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
-
-    private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_SimpleReturnAdapter_GetText =
-        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
-            LogLevel.Warning,
-            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}");
-
-    private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_SimpleReturnAdapter_GetText =
-        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
-            LogLevel.Error,
-            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}");
 
 
     public static void LogRequestDebug_SimpleReturnAdapter_GetText(
@@ -793,12 +811,24 @@ internal static class SimpleReturnAdapterPipelineLoggers
         string requestHandlerMethod,
         string status,
         double elapsed,
+        string errorType,
+        string errorCode,
         global::LanguageExt.Common.Error error)
     {
         if (!logger.IsEnabled(LogLevel.Warning))
             return;
 
-        _logResponseWarning_SimpleReturnAdapter_GetText(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, elapsed, error, null);
+        logger.LogWarning(
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            elapsed,
+            errorType,
+            errorCode,
+            error);
     }
 
     public static void LogResponseError_SimpleReturnAdapter_GetText(
@@ -809,12 +839,24 @@ internal static class SimpleReturnAdapterPipelineLoggers
         string requestHandlerMethod,
         string status,
         double elapsed,
+        string errorType,
+        string errorCode,
         global::LanguageExt.Common.Error error)
     {
         if (!logger.IsEnabled(LogLevel.Error))
             return;
 
-        _logResponseError_SimpleReturnAdapter_GetText(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, elapsed, error, null);
+        logger.LogError(
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            elapsed,
+            errorType,
+            errorCode,
+            error);
     }
 
     // ===== LoggerMessage.Define delegates for GetFlag =====
@@ -835,18 +877,6 @@ internal static class SimpleReturnAdapterPipelineLoggers
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
-
-    private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_SimpleReturnAdapter_GetFlag =
-        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
-            LogLevel.Warning,
-            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}");
-
-    private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_SimpleReturnAdapter_GetFlag =
-        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
-            LogLevel.Error,
-            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}");
 
 
     public static void LogRequestDebug_SimpleReturnAdapter_GetFlag(
@@ -919,12 +949,24 @@ internal static class SimpleReturnAdapterPipelineLoggers
         string requestHandlerMethod,
         string status,
         double elapsed,
+        string errorType,
+        string errorCode,
         global::LanguageExt.Common.Error error)
     {
         if (!logger.IsEnabled(LogLevel.Warning))
             return;
 
-        _logResponseWarning_SimpleReturnAdapter_GetFlag(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, elapsed, error, null);
+        logger.LogWarning(
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            elapsed,
+            errorType,
+            errorCode,
+            error);
     }
 
     public static void LogResponseError_SimpleReturnAdapter_GetFlag(
@@ -935,12 +977,24 @@ internal static class SimpleReturnAdapterPipelineLoggers
         string requestHandlerMethod,
         string status,
         double elapsed,
+        string errorType,
+        string errorCode,
         global::LanguageExt.Common.Error error)
     {
         if (!logger.IsEnabled(LogLevel.Error))
             return;
 
-        _logResponseError_SimpleReturnAdapter_GetFlag(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, elapsed, error, null);
+        logger.LogError(
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            elapsed,
+            errorType,
+            errorCode,
+            error);
     }
 }
 

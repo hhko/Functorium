@@ -1,4 +1,4 @@
-{
+﻿{
   ErrorCode: DomainErrors.User.NotFound,
   ErrorCodeId: -1000,
   ErrorCurrentValue: user123,

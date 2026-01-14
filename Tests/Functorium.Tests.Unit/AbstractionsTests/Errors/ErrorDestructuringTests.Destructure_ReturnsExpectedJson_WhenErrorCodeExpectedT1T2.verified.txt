@@ -1,4 +1,4 @@
-{
+﻿{
   ErrorCode: DomainErrors.Range.InvalidBounds,
   ErrorCodeId: -1000,
   ErrorCurrentValue1: 100,

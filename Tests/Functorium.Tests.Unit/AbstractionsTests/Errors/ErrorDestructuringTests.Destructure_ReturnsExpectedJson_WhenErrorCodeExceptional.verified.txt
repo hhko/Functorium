@@ -1,4 +1,4 @@
-{
+﻿{
   ErrorCode: ApplicationErrors.Database.ConnectionFailed,
   ErrorCodeId: -2146233079,
   ErrorType: ErrorCodeExceptional,

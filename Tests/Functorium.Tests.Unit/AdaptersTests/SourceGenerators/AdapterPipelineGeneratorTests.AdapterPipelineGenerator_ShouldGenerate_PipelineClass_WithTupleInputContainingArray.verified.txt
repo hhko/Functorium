@@ -350,6 +350,8 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
         global::LanguageExt.Common.Error error,
         double elapsed)
     {
+        var (errorType, errorCode) = GetErrorInfo(error);
+
         if (error.IsExceptional && _isErrorEnabled)
         {
             _logger.LogResponseError_TupleWithArrayInputAdapter_CalculateAverage(
@@ -359,6 +361,8 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
                 requestHandlerMethod,
                 ObservabilityNaming.Status.Failure,
                 elapsed,
+                errorType,
+                errorCode,
                 error);
         }
         else if (_isWarningEnabled)
@@ -370,6 +374,8 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
                 requestHandlerMethod,
                 ObservabilityNaming.Status.Failure,
                 elapsed,
+                errorType,
+                errorCode,
                 error);
         }
     }
@@ -396,18 +402,6 @@ internal static class TupleWithArrayInputAdapterPipelineLoggers
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
-
-    private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_TupleWithArrayInputAdapter_CalculateAverage =
-        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
-            LogLevel.Warning,
-            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}");
-
-    private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_TupleWithArrayInputAdapter_CalculateAverage =
-        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
-            LogLevel.Error,
-            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}");
 
 
     public static void LogRequestDebug_TupleWithArrayInputAdapter_CalculateAverage(
@@ -481,12 +475,24 @@ internal static class TupleWithArrayInputAdapterPipelineLoggers
         string requestHandlerMethod,
         string status,
         double elapsed,
+        string errorType,
+        string errorCode,
         global::LanguageExt.Common.Error error)
     {
         if (!logger.IsEnabled(LogLevel.Warning))
             return;
 
-        _logResponseWarning_TupleWithArrayInputAdapter_CalculateAverage(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, elapsed, error, null);
+        logger.LogWarning(
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            elapsed,
+            errorType,
+            errorCode,
+            error);
     }
 
     public static void LogResponseError_TupleWithArrayInputAdapter_CalculateAverage(
@@ -497,12 +503,24 @@ internal static class TupleWithArrayInputAdapterPipelineLoggers
         string requestHandlerMethod,
         string status,
         double elapsed,
+        string errorType,
+        string errorCode,
         global::LanguageExt.Common.Error error)
     {
         if (!logger.IsEnabled(LogLevel.Error))
             return;
 
-        _logResponseError_TupleWithArrayInputAdapter_CalculateAverage(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, elapsed, error, null);
+        logger.LogError(
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            elapsed,
+            errorType,
+            errorCode,
+            error);
     }
 }
 

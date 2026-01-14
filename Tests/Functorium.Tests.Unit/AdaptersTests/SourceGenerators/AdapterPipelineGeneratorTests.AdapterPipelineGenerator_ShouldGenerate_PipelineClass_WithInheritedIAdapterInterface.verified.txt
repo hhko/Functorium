@@ -350,6 +350,8 @@ public class UserRepositoryPipeline : UserRepository
         global::LanguageExt.Common.Error error,
         double elapsed)
     {
+        var (errorType, errorCode) = GetErrorInfo(error);
+
         if (error.IsExceptional && _isErrorEnabled)
         {
             _logger.LogResponseError_UserRepository_GetUserById(
@@ -359,6 +361,8 @@ public class UserRepositoryPipeline : UserRepository
                 requestHandlerMethod,
                 ObservabilityNaming.Status.Failure,
                 elapsed,
+                errorType,
+                errorCode,
                 error);
         }
         else if (_isWarningEnabled)
@@ -370,6 +374,8 @@ public class UserRepositoryPipeline : UserRepository
                 requestHandlerMethod,
                 ObservabilityNaming.Status.Failure,
                 elapsed,
+                errorType,
+                errorCode,
                 error);
         }
     }
@@ -450,6 +456,8 @@ public class UserRepositoryPipeline : UserRepository
         global::LanguageExt.Common.Error error,
         double elapsed)
     {
+        var (errorType, errorCode) = GetErrorInfo(error);
+
         if (error.IsExceptional && _isErrorEnabled)
         {
             _logger.LogResponseError_UserRepository_UpdateUser(
@@ -459,6 +467,8 @@ public class UserRepositoryPipeline : UserRepository
                 requestHandlerMethod,
                 ObservabilityNaming.Status.Failure,
                 elapsed,
+                errorType,
+                errorCode,
                 error);
         }
         else if (_isWarningEnabled)
@@ -470,6 +480,8 @@ public class UserRepositoryPipeline : UserRepository
                 requestHandlerMethod,
                 ObservabilityNaming.Status.Failure,
                 elapsed,
+                errorType,
+                errorCode,
                 error);
         }
     }
@@ -496,18 +508,6 @@ internal static class UserRepositoryPipelineLoggers
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
-
-    private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_UserRepository_GetUserById =
-        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
-            LogLevel.Warning,
-            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}");
-
-    private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_UserRepository_GetUserById =
-        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
-            LogLevel.Error,
-            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}");
 
 
     public static void LogRequestDebug_UserRepository_GetUserById(
@@ -581,12 +581,24 @@ internal static class UserRepositoryPipelineLoggers
         string requestHandlerMethod,
         string status,
         double elapsed,
+        string errorType,
+        string errorCode,
         global::LanguageExt.Common.Error error)
     {
         if (!logger.IsEnabled(LogLevel.Warning))
             return;
 
-        _logResponseWarning_UserRepository_GetUserById(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, elapsed, error, null);
+        logger.LogWarning(
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            elapsed,
+            errorType,
+            errorCode,
+            error);
     }
 
     public static void LogResponseError_UserRepository_GetUserById(
@@ -597,12 +609,24 @@ internal static class UserRepositoryPipelineLoggers
         string requestHandlerMethod,
         string status,
         double elapsed,
+        string errorType,
+        string errorCode,
         global::LanguageExt.Common.Error error)
     {
         if (!logger.IsEnabled(LogLevel.Error))
             return;
 
-        _logResponseError_UserRepository_GetUserById(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, elapsed, error, null);
+        logger.LogError(
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            elapsed,
+            errorType,
+            errorCode,
+            error);
     }
 
     // ===== LoggerMessage.Define delegates for UpdateUser =====
@@ -623,18 +647,6 @@ internal static class UserRepositoryPipelineLoggers
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
-
-    private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseWarning_UserRepository_UpdateUser =
-        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
-            LogLevel.Warning,
-            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}");
-
-    private static readonly global::System.Action<ILogger, string, string, string, string, double, global::LanguageExt.Common.Error, global::System.Exception?> _logResponseError_UserRepository_UpdateUser =
-        LoggerMessage.Define<string, string, string, string, double, global::LanguageExt.Common.Error>(
-            LogLevel.Error,
-            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {@error}");
 
 
     public static void LogRequestDebug_UserRepository_UpdateUser(
@@ -709,12 +721,24 @@ internal static class UserRepositoryPipelineLoggers
         string requestHandlerMethod,
         string status,
         double elapsed,
+        string errorType,
+        string errorCode,
         global::LanguageExt.Common.Error error)
     {
         if (!logger.IsEnabled(LogLevel.Warning))
             return;
 
-        _logResponseWarning_UserRepository_UpdateUser(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, elapsed, error, null);
+        logger.LogWarning(
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            elapsed,
+            errorType,
+            errorCode,
+            error);
     }
 
     public static void LogResponseError_UserRepository_UpdateUser(
@@ -725,12 +749,24 @@ internal static class UserRepositoryPipelineLoggers
         string requestHandlerMethod,
         string status,
         double elapsed,
+        string errorType,
+        string errorCode,
         global::LanguageExt.Common.Error error)
     {
         if (!logger.IsEnabled(LogLevel.Error))
             return;
 
-        _logResponseError_UserRepository_UpdateUser(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, elapsed, error, null);
+        logger.LogError(
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            elapsed,
+            errorType,
+            errorCode,
+            error);
     }
 }
 
