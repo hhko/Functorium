@@ -72,7 +72,7 @@ public static class UsecaseLoggerExtensions
 
         logger.LogInformation(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseSuccess,
-            message: "{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@response.message} responded {response.status} in {response.elapsed:0.0000} ms",
+            message: "{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@response.message} responded {response.status} in {response.elapsed:0.0000} s",
             requestLayer,
             requestCategory,
             requestCqrs,
@@ -109,7 +109,7 @@ public static class UsecaseLoggerExtensions
         // Error 객체를 포함하여 로깅 (LoggerMessage.Define 파라미터 제한으로 직접 호출)
         logger.LogWarning(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseWarning,
-            message: "{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} ms with {@error}",
+            message: "{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {@error}",
             requestLayer,
             requestCategory,
             requestCqrs,
@@ -146,7 +146,7 @@ public static class UsecaseLoggerExtensions
         // Error 객체를 포함하여 로깅 (LoggerMessage.Define 파라미터 제한으로 직접 호출)
         logger.LogError(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseError,
-            message: "{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} ms with {@error}",
+            message: "{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {@error}",
             requestLayer,
             requestCategory,
             requestCqrs,

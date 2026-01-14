@@ -47,7 +47,7 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
 
         TResponse response = await next(request, cancellationToken);
 
-        double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);
+        double elapsed = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);
         LogResponse(response, requestCqrs, requestHandler, requestHandlerMethod, elapsed);
 
         return response;

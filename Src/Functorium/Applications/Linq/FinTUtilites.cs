@@ -340,7 +340,7 @@ public static class FinTUtilites
                     // 6. 성능 메트릭 설정
                     if (activity != null)
                     {
-                        double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);
+                        double elapsed = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);
                         activity.SetTag("elapsed", elapsed);
                         activity.SetStatus(ActivityStatusCode.Ok);
                     }

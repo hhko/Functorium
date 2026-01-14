@@ -4,13 +4,6 @@ namespace Functorium.Abstractions;
 
 public static class ElapsedTimeCalculator
 {
-    public static double CalculateElapsedMilliseconds(long startTimestamp)
-    {
-        long endTimestamp = Stopwatch.GetTimestamp();
-        long elapsedTicks = endTimestamp - startTimestamp;
-        return (double)elapsedTicks / Stopwatch.Frequency * 1000.0;
-    }
-
     public static double CalculateElapsedSeconds(long startTimestamp)
     {
         long endTimestamp = Stopwatch.GetTimestamp();
@@ -26,8 +19,6 @@ public static class ElapsedTimeCalculator
     public sealed class Timer : IDisposable
     {
         private readonly long _startTimestamp = Stopwatch.GetTimestamp();
-
-        public double ElapsedMilliseconds => CalculateElapsedMilliseconds(_startTimestamp);
 
         public double ElapsedSeconds => CalculateElapsedSeconds(_startTimestamp);
 

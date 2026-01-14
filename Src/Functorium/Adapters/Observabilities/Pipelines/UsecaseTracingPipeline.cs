@@ -51,7 +51,7 @@ internal sealed class UsecaseTracingPipeline<TRequest, TResponse>
 
         TResponse response = await next(request, cancellationToken);
 
-        double elapsed = ElapsedTimeCalculator.CalculateElapsedMilliseconds(startTimestamp);
+        double elapsed = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);
         SetResponseTags(activity, response, elapsed);
 
         return response;
