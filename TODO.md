@@ -15,13 +15,14 @@ dir /x
 ## 할일
 - [x] ElapsedTimeCalculator 클래스 네임스페이스 변경 -> namespace Functorium.Adapters.Observabilities;
 - [x] internal record ErrorCodeExpected -> public ???, IHasErrorCode
-- [ ] 컴파일러 경고 제거
+- [x] 컴파일러 경고 제거
 - [ ] Mediator 경고 이해 Tip 폴더
 ---
 - [ ] IOption<T> 학습
 - [ ] 히스토그램 학습
 ---
-- [ ] 로그 @error? 테스트 -> error.type, error.code, @error로 개선
+- [x] 로그 @error? 테스트 -> error.type, error.code, @error로 개선
+- [ ] LoggerMessage.Define 6개 제한 -> 직접 개발
 - [ ] 필드 정의 테스트
   Item    | Application | Adapter
   ---     | ---         | ---
