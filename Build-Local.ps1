@@ -399,6 +399,10 @@ function Get-CoverageFiles {
 <#
 .SYNOPSIS
   콘솔에 커버리지 결과를 출력합니다.
+.DESCRIPTION
+  병합된 Cobertura XML에서 패키지별 커버리지를 읽어 출력합니다.
+  메모리 효율을 위해 package 노드의 속성만 사용하고,
+  line 노드를 직접 순회하지 않습니다.
 #>
 function Show-CoverageReport {
   param(
@@ -424,15 +428,57 @@ function Show-CoverageReport {
     }
   }
 
-  # Parse XML
-  [xml]$coverage = Get-Content $mergedCoverageFile
+  # Parse XML using XmlReader for memory efficiency
+  $xmlSettings = [System.Xml.XmlReaderSettings]::new()
+  $xmlSettings.DtdProcessing = [System.Xml.DtdProcessing]::Ignore
 
-  # Extract coverage by assembly
-  $packages = @($coverage.SelectNodes("//packages/package"))
+  # Read package data into lightweight objects
+  $packageData = [System.Collections.Generic.List[PSObject]]::new()
 
-  if ($packages.Count -eq 0) {
+  try {
+    $reader = [System.Xml.XmlReader]::Create($mergedCoverageFile, $xmlSettings)
+
+    while ($reader.Read()) {
+      if ($reader.NodeType -eq [System.Xml.XmlNodeType]::Element -and $reader.Name -eq "package") {
+        $name = $reader.GetAttribute("name")
+        $lineRate = [double]($reader.GetAttribute("line-rate") ?? "0")
+        $branchRate = [double]($reader.GetAttribute("branch-rate") ?? "0")
+
+        $packageData.Add([PSCustomObject]@{
+          Name = $name
+          LineRate = $lineRate
+          BranchRate = $branchRate
+        })
+      }
+    }
+  }
+  finally {
+    if ($reader) { $reader.Dispose() }
+  }
+
+  if ($packageData.Count -eq 0) {
     Write-WarningMessage "No coverage data available"
     return
+  }
+
+  # Helper function to calculate average coverage
+  function Get-AverageCoverage {
+    param([System.Collections.Generic.List[PSObject]]$Packages)
+
+    if ($Packages.Count -eq 0) { return @{ LineRate = 0; BranchRate = 0 } }
+
+    $totalLineRate = 0.0
+    $totalBranchRate = 0.0
+
+    foreach ($pkg in $Packages) {
+      $totalLineRate += $pkg.LineRate
+      $totalBranchRate += $pkg.BranchRate
+    }
+
+    return @{
+      LineRate = ($totalLineRate / $Packages.Count) * 100
+      BranchRate = ($totalBranchRate / $Packages.Count) * 100
+    }
   }
 
   # Project prefix coverage (e.g., Functorium.*)
@@ -442,52 +488,25 @@ function Show-CoverageReport {
     Write-Host ("{0,-40} {1,15} {2,15}" -f "Assembly", "Line Coverage", "Branch Coverage") -ForegroundColor White
     Write-Host ("-" * 72) -ForegroundColor DarkGray
 
-    $prefixPackages = @()
-    $prefixTotalLines = 0
-    $prefixCoveredLines = 0
-    $prefixTotalBranches = 0
-    $prefixCoveredBranches = 0
+    $prefixPackages = [System.Collections.Generic.List[PSObject]]::new()
 
-    foreach ($pkg in $packages) {
-      $name = $pkg.GetAttribute("name")
-
+    foreach ($pkg in $packageData) {
       # Match prefix pattern (e.g., Functorium.* but exclude tests)
-      if ($name -like "$Prefix*" -and $name -notlike "*.Tests*") {
-        $lineRateAttr = $pkg.GetAttribute("line-rate")
-        $branchRateAttr = $pkg.GetAttribute("branch-rate")
-        $lineRate = if ($lineRateAttr) { [double]$lineRateAttr * 100 } else { 0 }
-        $branchRate = if ($branchRateAttr) { [double]$branchRateAttr * 100 } else { 0 }
+      if ($pkg.Name -like "$Prefix*" -and $pkg.Name -notlike "*.Tests*") {
+        $lineRate = $pkg.LineRate * 100
+        $branchRate = $pkg.BranchRate * 100
 
-        Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f $name, $lineRate, $branchRate)
-
-        $prefixPackages += $pkg
-
-        # Accumulate for total calculation
-        $lines = $pkg.SelectNodes(".//line")
-        foreach ($line in $lines) {
-          $prefixTotalLines++
-          if ([int]$line.GetAttribute("hits") -gt 0) { $prefixCoveredLines++ }
-        }
-
-        # Accumulate branch coverage from lines with branch="true"
-        $branchLines = $pkg.SelectNodes(".//line[@branch='true']")
-        foreach ($branchLine in $branchLines) {
-          $condCoverage = $branchLine.GetAttribute("condition-coverage")
-          if ($condCoverage -match '\((\d+)/(\d+)\)') {
-            $prefixCoveredBranches += [int]$Matches[1]
-            $prefixTotalBranches += [int]$Matches[2]
-          }
-        }
+        Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f $pkg.Name, $lineRate, $branchRate)
+        $prefixPackages.Add($pkg)
       }
     }
 
-    if ($prefixPackages.Count -gt 0 -and $prefixTotalLines -gt 0) {
-      $prefixLineRate = ($prefixCoveredLines / $prefixTotalLines) * 100
-      $prefixBranchRate = if ($prefixTotalBranches -gt 0) { ($prefixCoveredBranches / $prefixTotalBranches) * 100 } else { 0 }
+    if ($prefixPackages.Count -gt 0) {
+      $avg = Get-AverageCoverage -Packages $prefixPackages
       Write-Host ("-" * 72) -ForegroundColor DarkGray
-      Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f "Total", $prefixLineRate, $prefixBranchRate) -ForegroundColor Green
+      Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f "Total (avg)", $avg.LineRate, $avg.BranchRate) -ForegroundColor Green
     }
-    elseif ($prefixPackages.Count -eq 0) {
+    else {
       Write-WarningMessage "No matching projects found"
     }
   }
@@ -498,57 +517,31 @@ function Show-CoverageReport {
   Write-Host ("{0,-40} {1,15} {2,15}" -f "Assembly", "Line Coverage", "Branch Coverage") -ForegroundColor White
   Write-Host ("-" * 72) -ForegroundColor DarkGray
 
-  $corePackages = @()
-  $coreTotalLines = 0
-  $coreCoveredLines = 0
-  $coreTotalBranches = 0
-  $coreCoveredBranches = 0
+  $corePackages = [System.Collections.Generic.List[PSObject]]::new()
 
-  foreach ($pkg in $packages) {
-    $name = $pkg.GetAttribute("name")
+  foreach ($pkg in $packageData) {
     $isCoreLayer = $false
 
     foreach ($pattern in $script:CoreLayerPatterns) {
-      if ($name -like $pattern) {
+      if ($pkg.Name -like $pattern) {
         $isCoreLayer = $true
         break
       }
     }
 
     if ($isCoreLayer) {
-      $lineRateAttr = $pkg.GetAttribute("line-rate")
-      $branchRateAttr = $pkg.GetAttribute("branch-rate")
-      $lineRate = if ($lineRateAttr) { [double]$lineRateAttr * 100 } else { 0 }
-      $branchRate = if ($branchRateAttr) { [double]$branchRateAttr * 100 } else { 0 }
+      $lineRate = $pkg.LineRate * 100
+      $branchRate = $pkg.BranchRate * 100
 
-      Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f $name, $lineRate, $branchRate)
-
-      $corePackages += $pkg
-
-      # Accumulate for total calculation
-      $lines = $pkg.SelectNodes(".//line")
-      foreach ($line in $lines) {
-        $coreTotalLines++
-        if ([int]$line.GetAttribute("hits") -gt 0) { $coreCoveredLines++ }
-      }
-
-      # Accumulate branch coverage from lines with branch="true"
-      $branchLines = $pkg.SelectNodes(".//line[@branch='true']")
-      foreach ($branchLine in $branchLines) {
-        $condCoverage = $branchLine.GetAttribute("condition-coverage")
-        if ($condCoverage -match '\((\d+)/(\d+)\)') {
-          $coreCoveredBranches += [int]$Matches[1]
-          $coreTotalBranches += [int]$Matches[2]
-        }
-      }
+      Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f $pkg.Name, $lineRate, $branchRate)
+      $corePackages.Add($pkg)
     }
   }
 
-  if ($corePackages.Count -gt 0 -and $coreTotalLines -gt 0) {
-    $coreLineRate = ($coreCoveredLines / $coreTotalLines) * 100
-    $coreBranchRate = if ($coreTotalBranches -gt 0) { ($coreCoveredBranches / $coreTotalBranches) * 100 } else { 0 }
+  if ($corePackages.Count -gt 0) {
+    $avg = Get-AverageCoverage -Packages $corePackages
     Write-Host ("-" * 72) -ForegroundColor DarkGray
-    Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f "Total", $coreLineRate, $coreBranchRate) -ForegroundColor Green
+    Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f "Total (avg)", $avg.LineRate, $avg.BranchRate) -ForegroundColor Green
   }
 
   # Full coverage
@@ -557,29 +550,25 @@ function Show-CoverageReport {
   Write-Host ("{0,-40} {1,15} {2,15}" -f "Assembly", "Line Coverage", "Branch Coverage") -ForegroundColor White
   Write-Host ("-" * 72) -ForegroundColor DarkGray
 
-  foreach ($pkg in $packages) {
-    $name = $pkg.GetAttribute("name")
+  $fullPackages = [System.Collections.Generic.List[PSObject]]::new()
 
+  foreach ($pkg in $packageData) {
     # Exclude test projects
-    if ($name -like "*.Tests*") { continue }
+    if ($pkg.Name -like "*.Tests*") { continue }
 
-    $lineRateAttr = $pkg.GetAttribute("line-rate")
-    $branchRateAttr = $pkg.GetAttribute("branch-rate")
-    $lineRate = if ($lineRateAttr) { [double]$lineRateAttr * 100 } else { 0 }
-    $branchRate = if ($branchRateAttr) { [double]$branchRateAttr * 100 } else { 0 }
+    $lineRate = $pkg.LineRate * 100
+    $branchRate = $pkg.BranchRate * 100
 
-    Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f $name, $lineRate, $branchRate)
+    Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f $pkg.Name, $lineRate, $branchRate)
+    $fullPackages.Add($pkg)
   }
 
-  # Overall total
-  $coverageNode = $coverage.SelectSingleNode("//coverage")
-  $totalLineRateAttr = $coverageNode.GetAttribute("line-rate")
-  $totalBranchRateAttr = $coverageNode.GetAttribute("branch-rate")
-  $totalLineRate = if ($totalLineRateAttr) { [double]$totalLineRateAttr * 100 } else { 0 }
-  $totalBranchRate = if ($totalBranchRateAttr) { [double]$totalBranchRateAttr * 100 } else { 0 }
-
-  Write-Host ("-" * 72) -ForegroundColor DarkGray
-  Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f "Total", $totalLineRate, $totalBranchRate) -ForegroundColor Green
+  # Overall total (use average of non-test packages)
+  if ($fullPackages.Count -gt 0) {
+    $avg = Get-AverageCoverage -Packages $fullPackages
+    Write-Host ("-" * 72) -ForegroundColor DarkGray
+    Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f "Total (avg)", $avg.LineRate, $avg.BranchRate) -ForegroundColor Green
+  }
 }
 
 #endregion
