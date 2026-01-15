@@ -13,15 +13,16 @@ dir /x
 - 통합 테스트 GitHub Actions 통합
 
 ## 할일
-- [ ] Mediator 경고 이해 Tip 폴더
----
 - [ ] 로그 테스트 학습
+- [ ] snapshot 테스트 코드 정리
 - [ ] 필드 정의 테스트
   Item    | Application | Adapter
   ---     | ---         | ---
   Logging |             |
   Tracing |             |
   Metrics |             |
+---
+- [ ] Mediator 경고 이해 Tip 폴더
 ---
 - [ ] IOption<T> 학습
 - [ ] 히스토그램 학습
