@@ -34,7 +34,7 @@ It enables expressing domain logic as pure functions and pushing side effects to
 | `request.category` | ✅ | ✅ | ✅ | Request category (`"usecase"`) |
 | `request.handler.cqrs` | ✅ | ✅ | ✅ | CQRS type (`"command"`, `"query"`) |
 | `request.handler` | ✅ | ✅ | ✅ | Handler class name |
-| `request.handler.method` | ✅ `"Handle"` | ✅ `"Handle"` | ✅ `"Handle"` | Handler method name |
+| `request.handler.method` | ✅ | ✅ | ✅ | Handler method name (`"Handle"`) |
 | `response.status` | ✅ | ✅ | ✅ | Response status (`"success"`, `"failure"`) |
 | `response.elapsed` | ✅ | - | ✅ | Processing time in seconds |
 | `error.type` | ✅ | ✅ | ✅ | Error classification (`"expected"`, `"exceptional"`, `"aggregate"`) |
