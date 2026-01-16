@@ -23,6 +23,8 @@ It enables expressing domain logic as pure functions and pushing side effects to
 ## Observability
 
 > All observability fields use `snake_case + dot` notation for consistency with OpenTelemetry semantic conventions.
+>
+> **Recommended**: Use lowercase values for `service.name` and `service.namespace` (e.g., `mycompany.production`, `orderservice`).
 
 ### Field/Tag Consistency
 
