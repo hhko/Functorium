@@ -13,8 +13,15 @@ dir /x
 - 통합 테스트 GitHub Actions 통합
 
 ## 할일
-- [ ] 로그 테스트 학습
+- [x] service.name, service.namespace ??? 서비스 묶음?
 - [x] snapshot 테스트 코드 정리
+- [x] Meter 이름 형식 개선
+- [ ] Category??? 대문자
+---
+- [ ] EntityId
+- [ ] Entity
+---
+- [ ] 로그 테스트 학습
 - [ ] 필드 정의 테스트
   Item    | Application | Adapter
   ---     | ---         | ---
@@ -27,7 +34,6 @@ dir /x
 - [ ] IOption<T> 학습
 - [ ] 히스토그램 학습
 ---
-- [ ] service.name, service.namespace ??? 서비스 묶음?
 - [ ] 관찰 가능성 usecase 확장
   - Logging
   - Tracing
