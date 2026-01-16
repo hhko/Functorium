@@ -44,6 +44,7 @@ $ErrorActionPreference = "Stop"
 # Load common modules
 $scriptRoot = $PSScriptRoot
 . "$scriptRoot/.scripts/Write-Console.ps1"
+. "$scriptRoot/.scripts/Remove-DirectorySafely.ps1"
 
 #region Constants
 
@@ -122,33 +123,40 @@ function Find-CsprojFiles {
 function Remove-BuildArtifacts {
   Write-StepProgress -Step 2 -TotalSteps $script:TOTAL_STEPS -Message "Cleaning bin and obj folders..."
 
+  # Phase 1: Collect targets (for progress display)
+  $targets = [System.Collections.Generic.List[PSObject]]::new()
   foreach ($csproj in $script:CsprojFiles) {
     $projectDir = $csproj.Directory.FullName
+    $projectName = $csproj.Directory.Name
 
-    # bin 폴더 삭제
     $binPath = Join-Path $projectDir "bin"
     if (Test-Path $binPath) {
-      try {
-        Remove-Item -Path $binPath -Recurse -Force
-        $script:DeletedBinCount++
-        Write-Detail "Deleted: $($csproj.Directory.Name)\bin"
-      }
-      catch {
-        Write-WarningMessage "Failed to delete: $binPath"
-      }
+      $targets.Add([PSCustomObject]@{ Path = $binPath; Name = "$projectName\bin"; Type = "bin" })
     }
 
-    # obj 폴더 삭제
     $objPath = Join-Path $projectDir "obj"
     if (Test-Path $objPath) {
-      try {
-        Remove-Item -Path $objPath -Recurse -Force
-        $script:DeletedObjCount++
-        Write-Detail "Deleted: $($csproj.Directory.Name)\obj"
-      }
-      catch {
-        Write-WarningMessage "Failed to delete: $objPath"
-      }
+      $targets.Add([PSCustomObject]@{ Path = $objPath; Name = "$projectName\obj"; Type = "obj" })
+    }
+  }
+
+  $total = $targets.Count
+  if ($total -eq 0) {
+    Write-Detail "No bin/obj folders to delete"
+    return
+  }
+
+  # Phase 2: Delete with progress (using .NET Directory.Delete to avoid heap corruption)
+  $current = 0
+  foreach ($target in $targets) {
+    $current++
+    if (Remove-DirectorySafely -Path $target.Path) {
+      if ($target.Type -eq "bin") { $script:DeletedBinCount++ }
+      else { $script:DeletedObjCount++ }
+      Write-Detail "$current/$total Deleted: $($target.Name)"
+    }
+    else {
+      Write-WarningMessage "$current/$total Failed: $($target.Path)"
     }
   }
 }

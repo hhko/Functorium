@@ -93,6 +93,7 @@ $ErrorActionPreference = "Stop"
 # Load common modules
 $scriptRoot = $PSScriptRoot
 . "$scriptRoot/.scripts/Write-Console.ps1"
+. "$scriptRoot/.scripts/Remove-DirectorySafely.ps1"
 
 #region Constants
 
@@ -371,29 +372,47 @@ function Show-VersionInfo {
 
 <#
 .SYNOPSIS
-  여러 커버리지 파일을 병합합니다.
+  Src 및 Tests 폴더에서 커버리지 파일을 수집합니다.
+.DESCRIPTION
+  검색 범위를 Src와 Tests 폴더로 제한하여 메모리 사용량을 줄입니다.
 #>
 function Get-CoverageFiles {
-  # Find coverage files from each test project's TestResults directory
-  $coverageFiles = @(Get-ChildItem -Path $script:SolutionDir -Filter "coverage.cobertura.xml" -Recurse -ErrorAction SilentlyContinue)
+  # Search only in Src and Tests folders to avoid heap corruption with large solutions
+  $searchPaths = @(
+    (Join-Path $script:SolutionDir "Src"),
+    (Join-Path $script:SolutionDir "Tests")
+  ) | Where-Object { Test-Path $_ }
 
-  if ($coverageFiles.Count -eq 0) {
-    Write-Host "  No coverage files found" -ForegroundColor Red
+  if ($searchPaths.Count -eq 0) {
+    Write-Host "  No Src or Tests folder found" -ForegroundColor Red
     return $null
   }
 
-  Write-Detail "Found $($coverageFiles.Count) coverage file(s)"
+  # Find coverage files from Src and Tests folders only
+  $coverageFiles = @($searchPaths | ForEach-Object {
+    Get-ChildItem -Path $_ -Filter "coverage.cobertura.xml" -Recurse -ErrorAction SilentlyContinue
+  })
+
+  if ($coverageFiles.Count -eq 0) {
+    Write-Host "  No coverage files found in Src/Tests folders" -ForegroundColor Red
+    return $null
+  }
+
+  Write-Detail "Found $($coverageFiles.Count) coverage file(s) in Src/Tests"
 
   # Create directory
   if (-not (Test-Path $script:CoverageReportDir)) {
     New-Item -ItemType Directory -Path $script:CoverageReportDir -Force | Out-Null
   }
 
-  # Use wildcard pattern instead of joining all file paths to avoid command line length limitations
-  # This pattern works across different environments (local, CI/CD)
-  $coveragePattern = Join-Path $script:SolutionDir "**/TestResults/coverage.cobertura.xml"
+  # Build coverage pattern for Src and Tests folders
+  # Use semicolon-separated patterns for ReportGenerator
+  $patterns = @()
+  foreach ($searchPath in $searchPaths) {
+    $patterns += Join-Path $searchPath "**/TestResults/coverage.cobertura.xml"
+  }
 
-  return $coveragePattern
+  return ($patterns -join ";")
 }
 
 <#
@@ -647,15 +666,21 @@ try {
   # ============================================================================
   Write-StepProgress -Step 5 -TotalSteps $script:TOTAL_STEPS -Message "Running tests with coverage (MTP)..."
 
-  # Remove existing coverage report
+  # Remove existing coverage report (using .NET Directory.Delete to avoid heap corruption)
   if (Test-Path $script:CoverageReportDir) {
-    Remove-Item -Path $script:CoverageReportDir -Recurse -Force
+    Remove-DirectorySafely -Path $script:CoverageReportDir | Out-Null
   }
 
-  # Remove existing TestResults from each test project (including bin folders)
-  Get-ChildItem -Path $script:SolutionDir -Directory -Recurse -Filter "TestResults" -ErrorAction SilentlyContinue |
-    Where-Object { $_.FullName -notlike "*\node_modules\*" } |
-    ForEach-Object { Remove-Item -Path $_.FullName -Recurse -Force }
+  # Remove existing TestResults folders (search and delete in separate phases to avoid heap corruption)
+  $searchPaths = @(
+    (Join-Path $script:SolutionDir "Src"),
+    (Join-Path $script:SolutionDir "Tests")
+  ) | Where-Object { Test-Path $_ }
+
+  $deletedCount = Remove-DirectoriesByName -SearchPaths $searchPaths -DirectoryName "TestResults"
+  if ($deletedCount -gt 0) {
+    Write-Detail "Removed $deletedCount TestResults folder(s)"
+  }
 
   # Run tests with MTP coverage collection and TRX report
   Write-Host ""
@@ -770,9 +795,9 @@ try {
       Write-WarningMessage "No packable projects found in $srcDir"
     }
     else {
-      # Remove existing packages
+      # Remove existing packages (using .NET Directory.Delete to avoid heap corruption)
       if (Test-Path $script:NuGetOutputDir) {
-        Remove-Item -Path $script:NuGetOutputDir -Recurse -Force
+        Remove-DirectorySafely -Path $script:NuGetOutputDir | Out-Null
       }
       New-Item -ItemType Directory -Path $script:NuGetOutputDir -Force | Out-Null
 

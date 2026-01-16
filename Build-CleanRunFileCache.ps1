@@ -47,6 +47,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# Load common modules
+$scriptRoot = $PSScriptRoot
+. "$scriptRoot/.scripts/Remove-DirectorySafely.ps1"
+
 # 캐시 디렉토리 경로
 $runFileCacheDir = Join-Path $env:TEMP "dotnet\runfile"
 
@@ -89,8 +93,9 @@ foreach ($dir in $targetDirs) {
 
   if ($PSCmdlet.ShouldProcess($dir.Name, "Delete")) {
     Write-Host "  Deleting: $($dir.Name) ($sizeKB KB)" -ForegroundColor Yellow
-    Remove-Item -Path $dir.FullName -Recurse -Force
-    $deleted++
+    if (Remove-DirectorySafely -Path $dir.FullName) {
+      $deleted++
+    }
   }
 }
 
