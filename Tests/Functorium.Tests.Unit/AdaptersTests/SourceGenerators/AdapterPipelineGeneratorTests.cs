@@ -79,7 +79,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     #endregion
@@ -118,7 +118,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -157,7 +157,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -185,7 +185,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     #endregion
@@ -225,7 +225,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -260,7 +260,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -295,7 +295,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -331,7 +331,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -366,7 +366,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -403,7 +403,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -441,7 +441,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -478,7 +478,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     #endregion
@@ -521,7 +521,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -561,7 +561,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -598,7 +598,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -635,7 +635,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -673,7 +673,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -710,7 +710,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     #endregion
@@ -749,7 +749,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -797,7 +797,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -840,7 +840,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -887,7 +887,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     #endregion
@@ -926,7 +926,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -963,7 +963,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -1000,7 +1000,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     #endregion
@@ -1039,7 +1039,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     /// <summary>
@@ -1074,7 +1074,7 @@ public sealed class AdapterPipelineGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual);
+        return Verify(actual).UseDirectory("Snapshots");
     }
 
     #endregion
