@@ -1,3 +1,5 @@
+using static Functorium.Adapters.Observabilities.Naming.ObservabilityNaming;
+
 namespace Functorium.Adapters.Observabilities.Builders;
 
 public partial class OpenTelemetryBuilder
@@ -8,10 +10,18 @@ public partial class OpenTelemetryBuilder
     /// </summary>
     public static Dictionary<string, object> CreateResourceAttributes(OpenTelemetryOptions options)
     {
-        return new Dictionary<string, object>
+        var attributes = new Dictionary<string, object>
         {
-            ["service.name"] = options.ServiceName,
-            ["service.version"] = options.ServiceVersion
+            [OTelAttributes.ServiceName] = options.ServiceName,
+            [OTelAttributes.ServiceVersion] = options.ServiceVersion
         };
+
+        // service.namespace: OpenTelemetry 표준 - 빈 문자열은 미지정과 동일
+        if (!string.IsNullOrWhiteSpace(options.ServiceNamespace))
+        {
+            attributes[OTelAttributes.ServiceNamespace] = options.ServiceNamespace;
+        }
+
+        return attributes;
     }
 }

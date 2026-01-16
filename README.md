@@ -1,9 +1,7 @@
 # Functorium
 [![Build](https://github.com/hhko/Functorium/actions/workflows/build.yml/badge.svg)](https://github.com/hhko/Functorium/actions/workflows/build.yml) [![Publish](https://github.com/hhko/Functorium/actions/workflows/publish.yml/badge.svg)](https://github.com/hhko/Functorium/actions/workflows/publish.yml)
 
-> A functional domain = **functor** + domin**ium** with **fun**.
-
-Functorium is a C# framework for implementing **Domain-Centric Functional Architecture**.
+> A functional domain is functor + dominium, seasoned with fun, designed to bridge the age of deterministic rules and the age of probabilistic intuition.
 
 It enables expressing domain logic as pure functions and pushing side effects to architectural boundaries, allowing you to write **testable and predictable business logic**. The framework provides a functional type system based on LanguageExt 5.x and integrated observability through OpenTelemetry.
 
@@ -25,6 +23,42 @@ It enables expressing domain logic as pure functions and pushing side effects to
 ## Observability
 
 > All observability fields use `snake_case + dot` notation for consistency with OpenTelemetry semantic conventions.
+
+### Resource Attributes
+
+OpenTelemetry Resource Attributes identify the service that produces telemetry data. These attributes are applied to all telemetry signals (Logging, Tracing, Metrics).
+
+| Attribute | Required | Description | Example |
+|-----------|----------|-------------|---------|
+| `service.name` | Yes | Service identifier | `"OrderService"` |
+| `service.version` | Yes | Service version (auto-populated from assembly) | `"1.0.0"` |
+| `service.namespace` | No | Service group identifier for grouping related services | `"MyCompany.Production"` |
+
+**Service Grouping with `service.namespace`:**
+
+```
+MyCompany.Production          (service.namespace)
+├── OrderService              (service.name)
+├── InventoryService          (service.name)
+└── PaymentService            (service.name)
+
+MyCompany.Staging             (service.namespace)
+├── OrderService              (same service.name, different namespace)
+└── InventoryService
+```
+
+**Configuration (`appsettings.json`):**
+
+```json
+{
+  "OpenTelemetry": {
+    "ServiceName": "OrderService",
+    "ServiceNamespace": "MyCompany.Production"
+  }
+}
+```
+
+> Reference: [OpenTelemetry Semantic Conventions - Service](https://opentelemetry.io/docs/specs/semconv/registry/attributes/service/)
 
 ### Field/Tag Consistency
 
