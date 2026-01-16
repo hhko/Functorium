@@ -431,14 +431,10 @@ public partial class OpenTelemetryBuilder
 
         // ActivitySource 등록 (Singleton)
         // 프로젝트별 ActivitySource를 생성하여 추적에 사용
-        // ServiceNamespace가 비어있으면 ServiceName 사용
         _services.AddSingleton(sp =>
         {
             var opts = sp.GetRequiredService<IOptions<OpenTelemetryOptions>>().Value;
-            string serviceNamespace = !string.IsNullOrWhiteSpace(opts.ServiceNamespace)
-                ? opts.ServiceNamespace
-                : opts.ServiceName;
-            return new ActivitySource(serviceNamespace, opts.ServiceVersion);
+            return new ActivitySource(opts.ServiceName, opts.ServiceVersion);
         });
 
         // IMeterFactory 등록 (Singleton) - Source Generator로 생성된 Pipeline에서 사용
