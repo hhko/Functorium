@@ -14,7 +14,7 @@ dir /x
 
 ## 할일
 - [ ] 로그 테스트 학습
-- [ ] snapshot 테스트 코드 정리
+- [x] snapshot 테스트 코드 정리
 - [ ] 필드 정의 테스트
   Item    | Application | Adapter
   ---     | ---         | ---
