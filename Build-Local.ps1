@@ -405,14 +405,10 @@ function Get-CoverageFiles {
     New-Item -ItemType Directory -Path $script:CoverageReportDir -Force | Out-Null
   }
 
-  # Build coverage pattern for Src and Tests folders
-  # Use semicolon-separated patterns for ReportGenerator
-  $patterns = @()
-  foreach ($searchPath in $searchPaths) {
-    $patterns += Join-Path $searchPath "**/TestResults/coverage.cobertura.xml"
-  }
-
-  return ($patterns -join ";")
+  # Use glob pattern for Tests folder only (Src folder has no TestResults)
+  # ReportGenerator accepts glob patterns with semicolon separator
+  $testsDir = Join-Path $script:SolutionDir "Tests"
+  return Join-Path $testsDir "**\TestResults\coverage.cobertura.xml"
 }
 
 <#
