@@ -147,6 +147,13 @@ It enables expressing domain logic as pure functions and pushing side effects to
 
 ### Metrics
 
+**Meter Name:**
+
+| Layer | Meter Name Pattern | Example (`ServiceNamespace = "mycompany.production"`) |
+|-------|-------------------|-------------------------------------------------------|
+| Application | `{service.namespace}.application` | `mycompany.production.application` |
+| Adapter | `{service.namespace}.adapter.{category}` | `mycompany.production.adapter.repository` |
+
 **Instrument Structure:**
 
 | Instrument | Application Layer | Adapter Layer | Type | Unit | Description |
