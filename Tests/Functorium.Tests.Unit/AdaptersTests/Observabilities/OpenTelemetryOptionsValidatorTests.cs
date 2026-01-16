@@ -58,6 +58,54 @@ public class OpenTelemetryOptionsValidatorTests
 
     #endregion
 
+    #region ServiceNamespace Validation Tests
+
+    [Fact]
+    public void Validate_ReturnsValidationError_WhenServiceNamespaceIsEmpty()
+    {
+        // Arrange
+        var options = CreateValidOptions();
+        options.ServiceNamespace = string.Empty;
+
+        // Act
+        ValidationResult actual = _sut.Validate(options);
+
+        // Assert
+        actual.IsValid.ShouldBeFalse();
+        actual.Errors.ShouldContain(e => e.PropertyName == nameof(OpenTelemetryOptions.ServiceNamespace));
+    }
+
+    [Fact]
+    public void Validate_ReturnsValidationError_WhenServiceNamespaceIsWhitespace()
+    {
+        // Arrange
+        var options = CreateValidOptions();
+        options.ServiceNamespace = "   ";
+
+        // Act
+        ValidationResult actual = _sut.Validate(options);
+
+        // Assert
+        actual.IsValid.ShouldBeFalse();
+        actual.Errors.ShouldContain(e => e.PropertyName == nameof(OpenTelemetryOptions.ServiceNamespace));
+    }
+
+    [Fact]
+    public void Validate_ReturnsNoError_WhenServiceNamespaceIsValid()
+    {
+        // Arrange
+        var options = CreateValidOptions();
+        options.ServiceNamespace = "MyCompany.Production";
+
+        // Act
+        ValidationResult actual = _sut.Validate(options);
+
+        // Assert
+        actual.Errors.ShouldNotContain(e => e.PropertyName == nameof(OpenTelemetryOptions.ServiceNamespace));
+    }
+
+    #endregion
+
     #region Endpoint Validation Tests
 
     [Fact]
@@ -67,6 +115,7 @@ public class OpenTelemetryOptionsValidatorTests
         var options = new OpenTelemetryOptions
         {
             ServiceName = "MyService",
+            ServiceNamespace = "Test.Namespace",
             CollectorEndpoint = string.Empty,
             TracingEndpoint = null,
             MetricsEndpoint = null,
@@ -101,6 +150,7 @@ public class OpenTelemetryOptionsValidatorTests
         var options = new OpenTelemetryOptions
         {
             ServiceName = "MyService",
+            ServiceNamespace = "Test.Namespace",
             CollectorEndpoint = string.Empty,
             TracingEndpoint = "http://localhost:21890"
         };
@@ -119,6 +169,7 @@ public class OpenTelemetryOptionsValidatorTests
         var options = new OpenTelemetryOptions
         {
             ServiceName = "MyService",
+            ServiceNamespace = "Test.Namespace",
             CollectorEndpoint = string.Empty,
             MetricsEndpoint = "http://localhost:21891"
         };
@@ -137,6 +188,7 @@ public class OpenTelemetryOptionsValidatorTests
         var options = new OpenTelemetryOptions
         {
             ServiceName = "MyService",
+            ServiceNamespace = "Test.Namespace",
             CollectorEndpoint = string.Empty,
             LoggingEndpoint = "http://localhost:21892"
         };
@@ -332,6 +384,7 @@ public class OpenTelemetryOptionsValidatorTests
         var options = new OpenTelemetryOptions
         {
             ServiceName = "MyService",
+            ServiceNamespace = "MyCompany.Production",
             CollectorEndpoint = "http://localhost:4317",
             CollectorProtocol = OtlpCollectorProtocol.Grpc.Name,
             SamplingRate = 0.5,
@@ -358,6 +411,7 @@ public class OpenTelemetryOptionsValidatorTests
     private static OpenTelemetryOptions CreateValidOptions() => new()
     {
         ServiceName = "TestService",
+        ServiceNamespace = "Test.Namespace",
         CollectorEndpoint = "http://localhost:4317",
         CollectorProtocol = OtlpCollectorProtocol.Grpc.Name,
         SamplingRate = 1.0

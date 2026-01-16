@@ -9,25 +9,7 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Builders;
 public class OpenTelemetryBuilderResourcesTests
 {
     [Fact]
-    public void CreateResourceAttributes_Always_ContainsServiceNameAndVersion()
-    {
-        // Arrange
-        var options = new OpenTelemetryOptions
-        {
-            ServiceName = "OrderService"
-        };
-
-        // Act
-        var attributes = OpenTelemetryBuilder.CreateResourceAttributes(options);
-
-        // Assert
-        attributes.ShouldContainKey("service.name");
-        attributes["service.name"].ShouldBe("OrderService");
-        attributes.ShouldContainKey("service.version");
-    }
-
-    [Fact]
-    public void CreateResourceAttributes_WithServiceNamespace_IncludesServiceNamespace()
+    public void CreateResourceAttributes_Always_ContainsAllRequiredAttributes()
     {
         // Arrange
         var options = new OpenTelemetryOptions
@@ -40,26 +22,29 @@ public class OpenTelemetryBuilderResourcesTests
         var attributes = OpenTelemetryBuilder.CreateResourceAttributes(options);
 
         // Assert
+        attributes.ShouldContainKey("service.name");
+        attributes["service.name"].ShouldBe("OrderService");
+
+        attributes.ShouldContainKey("service.version");
+
         attributes.ShouldContainKey("service.namespace");
         attributes["service.namespace"].ShouldBe("MyCompany.Production");
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void CreateResourceAttributes_WithEmptyServiceNamespace_ExcludesServiceNamespace(string serviceNamespace)
+    [Fact]
+    public void CreateResourceAttributes_ShouldReturn_ExactlyThreeAttributes()
     {
         // Arrange
         var options = new OpenTelemetryOptions
         {
             ServiceName = "OrderService",
-            ServiceNamespace = serviceNamespace
+            ServiceNamespace = "MyCompany.Production"
         };
 
         // Act
         var attributes = OpenTelemetryBuilder.CreateResourceAttributes(options);
 
         // Assert
-        attributes.ShouldNotContainKey("service.namespace");
+        attributes.Count.ShouldBe(3);
     }
 }

@@ -34,11 +34,13 @@ public class OpenTelemetryRegistrationTests
 
     private static Dictionary<string, string?> CreateValidOpenTelemetrySettings(
         string serviceName = "TestService",
+        string serviceNamespace = "Test.Namespace",
         string collectorEndpoint = "http://localhost:4317")
     {
         return new Dictionary<string, string?>
         {
             ["OpenTelemetry:ServiceName"] = serviceName,
+            ["OpenTelemetry:ServiceNamespace"] = serviceNamespace,
             ["OpenTelemetry:CollectorEndpoint"] = collectorEndpoint,
             ["OpenTelemetry:CollectorProtocol"] = "Grpc",
             ["OpenTelemetry:SamplingRate"] = "1.0"

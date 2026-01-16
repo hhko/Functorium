@@ -22,7 +22,7 @@ public sealed class OpenTelemetryOptions
         Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "unknown";
 
     /// <summary>
-    /// 서비스 네임스페이스 (선택적)
+    /// 서비스 네임스페이스
     /// </summary>
     public string ServiceNamespace { get; set; } = string.Empty;
 
@@ -221,7 +221,7 @@ public sealed class OpenTelemetryOptions
         logger.LogInformation("  Service Information");
         logger.LogInformation("    {Label}: {Value}", "Name".PadRight(labelWidth), ServiceName);
         logger.LogInformation("    {Label}: {Value}", "Version".PadRight(labelWidth), ServiceVersion);
-        //logger.LogInformation("    {Label}: {Value}", "Namespace".PadRight(labelWidth), ServiceNamespace);
+        logger.LogInformation("    {Label}: {Value}", "Namespace".PadRight(labelWidth), ServiceNamespace);
         logger.LogInformation("");
 
         // 세부주제: Logging Configuration
@@ -255,6 +255,10 @@ public sealed class OpenTelemetryOptions
             RuleFor(x => x.ServiceName)
                 .NotEmpty()
                 .WithMessage($"{nameof(ServiceName)} is required.");
+
+            RuleFor(x => x.ServiceNamespace)
+                .NotEmpty()
+                .WithMessage($"{nameof(ServiceNamespace)} is required.");
 
             // OtlpCollectorHost 또는 개별 엔드포인트 중 하나는 설정되어야 함
             RuleFor(x => x)
