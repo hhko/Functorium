@@ -148,10 +148,11 @@ public sealed class AdapterPipelineGenerator()
             var allParameters = new List<ParameterInfo>();
             allParameters.AddRange(pipelineClass.BaseConstructorParameters);
 
-            // Pipeline 클래스 생성자 파라미터 (ActivitySource, ILogger, IMeterFactory)
+            // Pipeline 클래스 생성자 파라미터 (ActivitySource, ILogger, IMeterFactory, IOptions<OpenTelemetryOptions>)
             allParameters.Add(new ParameterInfo("activitySource", "global::System.Diagnostics.ActivitySource", RefKind.None));
             allParameters.Add(new ParameterInfo("logger", $"global::Microsoft.Extensions.Logging.ILogger<{pipelineClass.Namespace}.{pipelineClass.ClassName}Pipeline>", RefKind.None));
             allParameters.Add(new ParameterInfo("meterFactory", "global::System.Diagnostics.Metrics.IMeterFactory", RefKind.None));
+            allParameters.Add(new ParameterInfo("openTelemetryOptions", "global::Microsoft.Extensions.Options.IOptions<global::Functorium.Adapters.Observabilities.OpenTelemetryOptions>", RefKind.None));
 
             // 동일한 타입의 파라미터가 있는지 체크
             var duplicateTypes = allParameters
@@ -207,6 +208,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine()
             .AppendLine("using LanguageExt;")
             .AppendLine("using Microsoft.Extensions.Logging;")
+            .AppendLine("using Microsoft.Extensions.Options;")
             .AppendLine()
             .AppendLine($"namespace {classInfo.Namespace};")
             .AppendLine()
@@ -231,7 +233,8 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine()
             .AppendLine("        ActivitySource activitySource,")
             .AppendLine($"        ILogger<{classInfo.ClassName}Pipeline> logger,")
-            .Append("        IMeterFactory meterFactory");
+            .AppendLine("        IMeterFactory meterFactory,")
+            .Append("        IOptions<OpenTelemetryOptions> openTelemetryOptions");
 
         string baseParams = GenerateBaseConstructorParameters(classInfo.BaseConstructorParameters);
         if (!string.IsNullOrEmpty(baseParams))
@@ -256,13 +259,17 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("    {")
             .AppendLine("        global::System.ArgumentNullException.ThrowIfNull(activitySource);")
             .AppendLine("        global::System.ArgumentNullException.ThrowIfNull(meterFactory);")
+            .AppendLine("        global::System.ArgumentNullException.ThrowIfNull(openTelemetryOptions);")
             .AppendLine()
             .AppendLine("        _activitySource = activitySource;")
             .AppendLine("        _logger = logger;")
             .AppendLine()
             .AppendLine("        // Meter 및 Metrics 초기화")
+            .AppendLine("        // Meter 이름: {service.namespace}.adapter.{category}")
+            .AppendLine("        string serviceNamespace = openTelemetryOptions.Value.ServiceNamespace;")
             .AppendLine("        string categoryLower = this.RequestCategory?.ToLowerInvariant() ?? \"adapter\";")
-            .AppendLine("        var meter = meterFactory.Create($\"adapter.{categoryLower}\");")
+            .AppendLine("        string meterName = $\"{serviceNamespace}.adapter.{categoryLower}\";")
+            .AppendLine("        var meter = meterFactory.Create(meterName);")
             .AppendLine("        _requestCounter = meter.CreateCounter<long>($\"adapter.{categoryLower}.requests\", \"{request}\", \"Total number of adapter requests\");")
             .AppendLine("        _responseCounter = meter.CreateCounter<long>($\"adapter.{categoryLower}.responses\", \"{response}\", \"Total number of adapter responses\");")
             .AppendLine("        _durationHistogram = meter.CreateHistogram<double>($\"adapter.{categoryLower}.duration\", \"s\", \"Duration of adapter execution in seconds\");")

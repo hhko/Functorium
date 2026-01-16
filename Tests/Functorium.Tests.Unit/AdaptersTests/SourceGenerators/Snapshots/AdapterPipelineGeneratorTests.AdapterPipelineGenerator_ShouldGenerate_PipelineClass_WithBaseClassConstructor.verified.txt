@@ -16,6 +16,7 @@ using Functorium.Applications.Observabilities;
 
 using LanguageExt;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace TestNamespace;
 
@@ -40,18 +41,23 @@ public class DerivedAdapterPipeline : DerivedAdapter
         ActivitySource activitySource,
         ILogger<DerivedAdapterPipeline> logger,
         IMeterFactory meterFactory,
+        IOptions<OpenTelemetryOptions> openTelemetryOptions,
         string connectionString)
         : base(connectionString)
     {
         global::System.ArgumentNullException.ThrowIfNull(activitySource);
         global::System.ArgumentNullException.ThrowIfNull(meterFactory);
+        global::System.ArgumentNullException.ThrowIfNull(openTelemetryOptions);
 
         _activitySource = activitySource;
         _logger = logger;
 
         // Meter 및 Metrics 초기화
+        // Meter 이름: {service.namespace}.adapter.{category}
+        string serviceNamespace = openTelemetryOptions.Value.ServiceNamespace;
         string categoryLower = this.RequestCategory?.ToLowerInvariant() ?? "adapter";
-        var meter = meterFactory.Create($"adapter.{categoryLower}");
+        string meterName = $"{serviceNamespace}.adapter.{categoryLower}";
+        var meter = meterFactory.Create(meterName);
         _requestCounter = meter.CreateCounter<long>($"adapter.{categoryLower}.requests", "{request}", "Total number of adapter requests");
         _responseCounter = meter.CreateCounter<long>($"adapter.{categoryLower}.responses", "{response}", "Total number of adapter responses");
         _durationHistogram = meter.CreateHistogram<double>($"adapter.{categoryLower}.duration", "s", "Duration of adapter execution in seconds");
