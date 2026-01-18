@@ -17,7 +17,6 @@ namespace LayeredArch.Adapters.Persistence.Repositories;
 [GeneratePipeline]
 public class InMemoryProductRepository : IProductRepository
 {
-    private readonly ILogger<InMemoryProductRepository> _logger;
     private static readonly ConcurrentDictionary<Guid, Product> _products = new();
 
     /// <summary>
@@ -28,9 +27,8 @@ public class InMemoryProductRepository : IProductRepository
     /// <summary>
     /// 테스트용 생성자 (ActivityContext 없이)
     /// </summary>
-    public InMemoryProductRepository(ILogger<InMemoryProductRepository> logger)
+    public InMemoryProductRepository()
     {
-        _logger = logger;
     }
 
     public virtual FinT<IO, Product> Create(Product product)
