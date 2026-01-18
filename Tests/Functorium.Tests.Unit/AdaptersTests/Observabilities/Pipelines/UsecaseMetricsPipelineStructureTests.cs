@@ -1,5 +1,6 @@
 using System.Diagnostics.Metrics;
 
+using Functorium.Abstractions.Errors;
 using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Adapters.Observabilities.Pipelines;
@@ -46,14 +47,14 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines;
 /// </code>
 /// </remarks>
 [Trait(nameof(UnitTest), UnitTest.Functorium_Adapters)]
-public class UsecaseMetricsPipelineTagStructureTests : IDisposable
+public class UsecaseMetricsPipelineStructureTests : IDisposable
 {
     private readonly IMeterFactory _meterFactory;
     private readonly IOptions<OpenTelemetryOptions> _openTelemetryOptions;
     private readonly MeterListener _listener;
     private readonly List<CapturedMeasurement> _capturedMeasurements;
 
-    public UsecaseMetricsPipelineTagStructureTests()
+    public UsecaseMetricsPipelineStructureTests()
     {
         _meterFactory = new TestMeterFactory();
         _openTelemetryOptions = MsOptions.Create(new OpenTelemetryOptions { ServiceNamespace = "TestService" });
@@ -176,6 +177,33 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
         AssertTagValue(requestMeasurement.Tags,
             ObservabilityNaming.CustomAttributes.RequestHandlerMethod,
             "Handle");
+    }
+
+    /// <summary>
+    /// Query 요청 시 request.handler.cqrs 태그가 "query" 값을 가져야 합니다.
+    /// </summary>
+    [Fact]
+    public async Task Handle_Query_RequestCounterTags_ShouldHaveQueryCqrs()
+    {
+        // Arrange
+        var sut = new UsecaseMetricsPipeline<TestQueryRequest, TestResponse>(
+            _openTelemetryOptions,
+            _meterFactory);
+        var request = new TestQueryRequest();
+
+        // Act
+        await sut.Handle(request, NextQuery, CancellationToken.None);
+
+        // Assert
+        var requestMeasurement = _capturedMeasurements
+            .FirstOrDefault(m => m.InstrumentName.Contains("requests"));
+
+        requestMeasurement.ShouldNotBeNull();
+
+        // request.handler.cqrs 값이 "query"여야 함
+        AssertTagValue(requestMeasurement.Tags,
+            ObservabilityNaming.CustomAttributes.RequestHandlerCqrs,
+            ObservabilityNaming.Cqrs.Query);
     }
 
     #endregion
@@ -353,6 +381,68 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
             ObservabilityNaming.ErrorTypes.Expected);
 
         // error.code 값 검증 (Expected 에러는 타입명을 사용)
+        responseMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.ErrorCode);
+    }
+
+    /// <summary>
+    /// responseCounter는 Exceptional 에러 시 error.type이 "exceptional"이어야 합니다.
+    /// </summary>
+    [Fact]
+    public async Task Handle_ExceptionalError_ShouldHaveExceptionalErrorType()
+    {
+        // Arrange
+        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
+            _openTelemetryOptions,
+            _meterFactory);
+        var request = new TestCommandRequest();
+
+        // Act - Exceptional 에러로 실패
+        await sut.Handle(request, NextFailWithExceptionalError, CancellationToken.None);
+
+        // Assert
+        var responseMeasurement = _capturedMeasurements
+            .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
+
+        responseMeasurement.ShouldNotBeNull();
+
+        // error.type 값이 "exceptional"이어야 함
+        AssertTagValue(responseMeasurement.Tags,
+            ObservabilityNaming.OTelAttributes.ErrorType,
+            ObservabilityNaming.ErrorTypes.Exceptional);
+
+        // error.code가 설정되어야 함
+        responseMeasurement.Tags
+            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.ErrorCode);
+    }
+
+    /// <summary>
+    /// responseCounter는 Aggregate 에러 시 error.type이 "aggregate"여야 합니다.
+    /// </summary>
+    [Fact]
+    public async Task Handle_AggregateError_ShouldHaveAggregateErrorType()
+    {
+        // Arrange
+        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
+            _openTelemetryOptions,
+            _meterFactory);
+        var request = new TestCommandRequest();
+
+        // Act - Aggregate 에러로 실패
+        await sut.Handle(request, NextFailWithAggregateError, CancellationToken.None);
+
+        // Assert
+        var responseMeasurement = _capturedMeasurements
+            .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
+
+        responseMeasurement.ShouldNotBeNull();
+
+        // error.type 값이 "aggregate"여야 함
+        AssertTagValue(responseMeasurement.Tags,
+            ObservabilityNaming.OTelAttributes.ErrorType,
+            ObservabilityNaming.ErrorTypes.Aggregate);
+
+        // error.code가 설정되어야 함
         responseMeasurement.Tags
             .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.ErrorCode);
     }
@@ -574,6 +664,37 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
         return ValueTask.FromResult(TestResponseWithError.CreateFail(error));
     }
 
+    private static ValueTask<TestResponse> NextQuery(
+        TestQueryRequest request,
+        CancellationToken cancellationToken)
+    {
+        return ValueTask.FromResult(TestResponse.CreateSuccess());
+    }
+
+    private static ValueTask<TestResponseWithError> NextFailWithExceptionalError(
+        TestCommandRequest request,
+        CancellationToken cancellationToken)
+    {
+        // Exceptional 에러로 실패
+        var exception = new InvalidOperationException("Exceptional error occurred");
+        var error = new ErrorCodeExceptional("Test.ExceptionalError", exception);
+        return ValueTask.FromResult(TestResponseWithError.CreateFail(error));
+    }
+
+    private static ValueTask<TestResponseWithError> NextFailWithAggregateError(
+        TestCommandRequest request,
+        CancellationToken cancellationToken)
+    {
+        // Aggregate 에러로 실패
+        var errors = new Error[]
+        {
+            new ErrorCodeExpected("Test.Error1", "value1", "First error"),
+            new ErrorCodeExpected("Test.Error2", "value2", "Second error")
+        };
+        var error = Error.Many(errors);
+        return ValueTask.FromResult(TestResponseWithError.CreateFail(error));
+    }
+
     #endregion
 
     #region Test Types
@@ -605,6 +726,10 @@ public class UsecaseMetricsPipelineTagStructureTests : IDisposable
     }
 
     private sealed record TestCommandRequest : IMessage, ICommand<TestResponse>;
+
+    private sealed record TestQueryRequest : IQueryRequest<TestSuccessData>;
+
+    private sealed record TestSuccessData(Guid Id, string Name);
 
     private sealed record TestResponse : IFinResponse, IFinResponseFactory<TestResponse>
     {

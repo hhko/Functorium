@@ -245,6 +245,34 @@ public sealed class AdapterPipelineObservabilityTests
 
     #endregion
 
+    #region Logging 태그 구조 검증
+
+    /// <summary>
+    /// 생성된 코드가 Logging에 필요한 Request 정보를 포함하는지 검증합니다.
+    /// Logging은 Metrics/Tracing과 동일한 Request 정보를 사용합니다.
+    /// </summary>
+    [Fact]
+    public void GeneratedCode_LoggingTags_ShouldContainCorrectKeys()
+    {
+        // Arrange
+        string input = CreateSimpleAdapterInput();
+
+        // Act
+        string? generatedCode = _sut.Generate(input);
+
+        // Assert
+        generatedCode.ShouldNotBeNull();
+
+        // Logging에서 사용하는 Request 정보 확인
+        // Metrics/Tracing과 동일한 ObservabilityNaming을 사용
+        generatedCode.ShouldContain($"{nameof(ObservabilityNaming)}.Layers.Adapter");
+        generatedCode.ShouldContain("GetRequestCategoryPascalCase()");
+        generatedCode.ShouldContain("requestHandler");
+        generatedCode.ShouldContain("requestHandlerMethod");
+    }
+
+    #endregion
+
     #region Error 처리 검증
 
     /// <summary>

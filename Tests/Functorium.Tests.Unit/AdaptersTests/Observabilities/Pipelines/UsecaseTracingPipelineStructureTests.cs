@@ -42,13 +42,13 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines;
 /// </code>
 /// </remarks>
 [Trait(nameof(UnitTest), UnitTest.Functorium_Adapters)]
-public sealed class UsecaseTracingPipelineTagStructureTests : IDisposable
+public sealed class UsecaseTracingPipelineStructureTests : IDisposable
 {
     private readonly ActivitySource _activitySource;
     private readonly ActivityListener _activityListener;
     private Activity? _capturedActivity;
 
-    public UsecaseTracingPipelineTagStructureTests()
+    public UsecaseTracingPipelineStructureTests()
     {
         _activitySource = new ActivitySource("Test.TracingPipelineTagStructure");
         _activityListener = new ActivityListener

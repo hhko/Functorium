@@ -10,7 +10,7 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines;
 /// UsecaseLoggingPipeline 로그 필드 검증 테스트
 /// README.md Observability 섹션에 정의된 필드가 정확히 출력되는지 검증합니다.
 /// </summary>
-public sealed class UsecaseLoggingPipelineFieldTests
+public sealed class UsecaseLoggingPipelineStructureTests
 {
     // ===== Request 로그 필드 검증 =====
 
