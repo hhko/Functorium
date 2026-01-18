@@ -17,6 +17,9 @@ dir /x
 - [x] snapshot 테스트 코드 정리
 - [x] Meter 이름 형식 개선
 - [ ] Category??? 대문자
+- [ ] Pipeline 로그 생성자?
+- [ ] https://medium.com/@aman.toumaj/mastering-domain-driven-design-a-tactical-ddd-implementation-5255d71d609f
+- [ ] CleanArch 프로젝트 정리
 ---
 - [ ] EntityId
 - [ ] Entity
