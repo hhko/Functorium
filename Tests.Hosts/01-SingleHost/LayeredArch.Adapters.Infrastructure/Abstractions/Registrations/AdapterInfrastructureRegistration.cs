@@ -1,6 +1,4 @@
-using FluentValidation;
 using Functorium.Abstractions.Registrations;
-using Mediator;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

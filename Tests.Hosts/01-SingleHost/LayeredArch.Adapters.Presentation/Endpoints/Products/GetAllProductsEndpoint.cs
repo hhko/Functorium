@@ -1,7 +1,5 @@
 using LayeredArch.Adapters.Presentation.Extensions;
 using LayeredArch.Application.Usecases.Products;
-using FastEndpoints;
-using Mediator;
 
 namespace LayeredArch.Adapters.Presentation.Endpoints.Products;
 
