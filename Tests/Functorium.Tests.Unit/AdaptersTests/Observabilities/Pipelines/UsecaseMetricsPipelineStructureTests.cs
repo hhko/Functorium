@@ -102,398 +102,6 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
             tags.ToArray()));
     }
 
-    #region 요청 카운터 태그 구조 테스트
-
-    /// <summary>
-    /// requestCounter는 기본 5개 태그를 포함해야 합니다 (통일된 구조).
-    /// </summary>
-    [Fact]
-    public async Task Handle_RequestCounterTags_ShouldContainBaseTags()
-    {
-        // Arrange
-        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
-            _openTelemetryOptions,
-            _meterFactory);
-        var request = new TestCommandRequest();
-
-        // Act
-        await sut.Handle(request, Next, CancellationToken.None);
-
-        // Assert
-        var requestMeasurement = _capturedMeasurements
-            .FirstOrDefault(m => m.InstrumentName.Contains("requests"));
-
-        requestMeasurement.ShouldNotBeNull();
-
-        // 태그 구조 검증: 5개 태그 (통일된 baseTags)
-        requestMeasurement.Tags.Length.ShouldBe(5);
-
-        // 기본 태그가 있어야 함
-        requestMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestLayer);
-        requestMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestCategory);
-        requestMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerCqrs);
-        requestMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandler);
-        requestMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerMethod);
-
-        // ResponseStatus 태그가 없어야 함
-        requestMeasurement.Tags
-            .ShouldNotContain(t => t.Key == ObservabilityNaming.CustomAttributes.ResponseStatus);
-    }
-
-    /// <summary>
-    /// requestCounter는 올바른 태그 값을 가져야 합니다.
-    /// </summary>
-    [Fact]
-    public async Task Handle_RequestCounterTags_ShouldHaveCorrectValues()
-    {
-        // Arrange
-        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
-            _openTelemetryOptions,
-            _meterFactory);
-        var request = new TestCommandRequest();
-
-        // Act
-        await sut.Handle(request, Next, CancellationToken.None);
-
-        // Assert
-        var requestMeasurement = _capturedMeasurements
-            .FirstOrDefault(m => m.InstrumentName.Contains("requests"));
-
-        requestMeasurement.ShouldNotBeNull();
-
-        AssertTagValue(requestMeasurement.Tags,
-            ObservabilityNaming.CustomAttributes.RequestLayer,
-            ObservabilityNaming.Layers.Application);
-
-        AssertTagValue(requestMeasurement.Tags,
-            ObservabilityNaming.CustomAttributes.RequestCategory,
-            ObservabilityNaming.Categories.Usecase);
-
-        AssertTagValue(requestMeasurement.Tags,
-            ObservabilityNaming.CustomAttributes.RequestHandlerMethod,
-            "Handle");
-    }
-
-    /// <summary>
-    /// Query 요청 시 request.handler.cqrs 태그가 "query" 값을 가져야 합니다.
-    /// </summary>
-    [Fact]
-    public async Task Handle_Query_RequestCounterTags_ShouldHaveQueryCqrs()
-    {
-        // Arrange
-        var sut = new UsecaseMetricsPipeline<TestQueryRequest, TestResponse>(
-            _openTelemetryOptions,
-            _meterFactory);
-        var request = new TestQueryRequest();
-
-        // Act
-        await sut.Handle(request, NextQuery, CancellationToken.None);
-
-        // Assert
-        var requestMeasurement = _capturedMeasurements
-            .FirstOrDefault(m => m.InstrumentName.Contains("requests"));
-
-        requestMeasurement.ShouldNotBeNull();
-
-        // request.handler.cqrs 값이 "query"여야 함
-        AssertTagValue(requestMeasurement.Tags,
-            ObservabilityNaming.CustomAttributes.RequestHandlerCqrs,
-            ObservabilityNaming.Cqrs.Query);
-    }
-
-    #endregion
-
-    #region 응답 카운터 태그 구조 테스트
-
-    /// <summary>
-    /// responseCounter는 성공 시 ResponseStatus 태그에 "success" 값을 가져야 합니다.
-    /// </summary>
-    [Fact]
-    public async Task Handle_ResponseCounterTags_OnSuccess_ShouldContainSuccessStatus()
-    {
-        // Arrange
-        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
-            _openTelemetryOptions,
-            _meterFactory);
-        var request = new TestCommandRequest();
-
-        // Act
-        await sut.Handle(request, Next, CancellationToken.None);
-
-        // Assert
-        var responseMeasurement = _capturedMeasurements
-            .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
-
-        responseMeasurement.ShouldNotBeNull();
-
-        // 태그 구조 검증: 6개 태그 (requestTags 5개 + response.status 1개)
-        responseMeasurement.Tags.Length.ShouldBe(6);
-
-        // ResponseStatus 태그가 있어야 함
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.ResponseStatus);
-
-        // ResponseStatus 값이 "success"여야 함
-        AssertTagValue(responseMeasurement.Tags,
-            ObservabilityNaming.CustomAttributes.ResponseStatus,
-            ObservabilityNaming.Status.Success);
-    }
-
-    /// <summary>
-    /// responseCounter는 성공 시 requestTags + ResponseStatus 태그를 포함해야 합니다.
-    /// </summary>
-    [Fact]
-    public async Task Handle_ResponseCounterTags_OnSuccess_ShouldContainRequestTagsPlusResponseStatus()
-    {
-        // Arrange
-        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
-            _openTelemetryOptions,
-            _meterFactory);
-        var request = new TestCommandRequest();
-
-        // Act
-        await sut.Handle(request, Next, CancellationToken.None);
-
-        // Assert
-        var responseMeasurement = _capturedMeasurements
-            .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
-
-        responseMeasurement.ShouldNotBeNull();
-
-        // requestTags (5개) + ResponseStatus (1개) = 6개
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestLayer);
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestCategory);
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerCqrs);
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandler);
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerMethod);
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.ResponseStatus);
-    }
-
-    /// <summary>
-    /// responseCounter는 실패 시 ResponseStatus 태그에 "failure" 값을 가져야 합니다.
-    /// </summary>
-    [Fact]
-    public async Task Handle_ResponseCounterTags_OnFailure_ShouldContainFailureStatus()
-    {
-        // Arrange
-        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
-            _openTelemetryOptions,
-            _meterFactory);
-        var request = new TestCommandRequest();
-
-        // Act
-        await sut.Handle(request, NextFailWithError, CancellationToken.None);
-
-        // Assert
-        var responseMeasurement = _capturedMeasurements
-            .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
-
-        responseMeasurement.ShouldNotBeNull();
-
-        // 태그 구조 검증: 8개 태그 (requestTags 5개 + response.status 1개 + error.type 1개 + error.code 1개)
-        responseMeasurement.Tags.Length.ShouldBe(8);
-
-        // ResponseStatus 태그가 있어야 함
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.ResponseStatus);
-
-        // ResponseStatus 값이 "failure"여야 함
-        AssertTagValue(responseMeasurement.Tags,
-            ObservabilityNaming.CustomAttributes.ResponseStatus,
-            ObservabilityNaming.Status.Failure);
-    }
-
-    /// <summary>
-    /// responseCounter는 실패 시 requestTags + ResponseStatus + error.type + error.code 태그를 포함해야 합니다.
-    /// </summary>
-    [Fact]
-    public async Task Handle_ResponseCounterTags_OnFailure_ShouldContainErrorTags()
-    {
-        // Arrange
-        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
-            _openTelemetryOptions,
-            _meterFactory);
-        var request = new TestCommandRequest();
-
-        // Act
-        await sut.Handle(request, NextFailWithError, CancellationToken.None);
-
-        // Assert
-        var responseMeasurement = _capturedMeasurements
-            .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
-
-        responseMeasurement.ShouldNotBeNull();
-
-        // requestTags (5개) + ResponseStatus (1개) + error.type (1개) + error.code (1개) = 8개
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestLayer);
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestCategory);
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerCqrs);
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandler);
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerMethod);
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.ResponseStatus);
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.OTelAttributes.ErrorType);
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.ErrorCode);
-    }
-
-    /// <summary>
-    /// responseCounter는 Expected 에러 시 error.type이 "expected"여야 합니다.
-    /// </summary>
-    [Fact]
-    public async Task Handle_ResponseCounterTags_OnExpectedError_ShouldHaveExpectedErrorType()
-    {
-        // Arrange
-        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
-            _openTelemetryOptions,
-            _meterFactory);
-        var request = new TestCommandRequest();
-
-        // Act - Expected 에러로 실패
-        await sut.Handle(request, NextFailWithError, CancellationToken.None);
-
-        // Assert
-        var responseMeasurement = _capturedMeasurements
-            .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
-
-        responseMeasurement.ShouldNotBeNull();
-
-        // error.type 값 검증
-        AssertTagValue(responseMeasurement.Tags,
-            ObservabilityNaming.OTelAttributes.ErrorType,
-            ObservabilityNaming.ErrorTypes.Expected);
-
-        // error.code 값 검증 (Expected 에러는 타입명을 사용)
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.ErrorCode);
-    }
-
-    /// <summary>
-    /// responseCounter는 Exceptional 에러 시 error.type이 "exceptional"이어야 합니다.
-    /// </summary>
-    [Fact]
-    public async Task Handle_ExceptionalError_ShouldHaveExceptionalErrorType()
-    {
-        // Arrange
-        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
-            _openTelemetryOptions,
-            _meterFactory);
-        var request = new TestCommandRequest();
-
-        // Act - Exceptional 에러로 실패
-        await sut.Handle(request, NextFailWithExceptionalError, CancellationToken.None);
-
-        // Assert
-        var responseMeasurement = _capturedMeasurements
-            .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
-
-        responseMeasurement.ShouldNotBeNull();
-
-        // error.type 값이 "exceptional"이어야 함
-        AssertTagValue(responseMeasurement.Tags,
-            ObservabilityNaming.OTelAttributes.ErrorType,
-            ObservabilityNaming.ErrorTypes.Exceptional);
-
-        // error.code가 설정되어야 함
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.ErrorCode);
-    }
-
-    /// <summary>
-    /// responseCounter는 Aggregate 에러 시 error.type이 "aggregate"여야 합니다.
-    /// </summary>
-    [Fact]
-    public async Task Handle_AggregateError_ShouldHaveAggregateErrorType()
-    {
-        // Arrange
-        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
-            _openTelemetryOptions,
-            _meterFactory);
-        var request = new TestCommandRequest();
-
-        // Act - Aggregate 에러로 실패
-        await sut.Handle(request, NextFailWithAggregateError, CancellationToken.None);
-
-        // Assert
-        var responseMeasurement = _capturedMeasurements
-            .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
-
-        responseMeasurement.ShouldNotBeNull();
-
-        // error.type 값이 "aggregate"여야 함
-        AssertTagValue(responseMeasurement.Tags,
-            ObservabilityNaming.OTelAttributes.ErrorType,
-            ObservabilityNaming.ErrorTypes.Aggregate);
-
-        // error.code가 설정되어야 함
-        responseMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.ErrorCode);
-    }
-
-    #endregion
-
-    #region 히스토그램 태그 구조 테스트
-
-    /// <summary>
-    /// durationHistogram은 기본 5개 태그를 포함해야 합니다 (통일된 구조).
-    /// </summary>
-    [Fact]
-    public async Task Handle_DurationHistogramTags_ShouldContainRequestTags()
-    {
-        // Arrange
-        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
-            _openTelemetryOptions,
-            _meterFactory);
-        var request = new TestCommandRequest();
-
-        // Act
-        await sut.Handle(request, Next, CancellationToken.None);
-
-        // Assert
-        var durationMeasurement = _capturedMeasurements
-            .FirstOrDefault(m => m.InstrumentName.Contains("duration"));
-
-        durationMeasurement.ShouldNotBeNull();
-
-        // 태그 구조 검증: 5개 태그 (requestTags 5개)
-        durationMeasurement.Tags.Length.ShouldBe(5);
-
-        // 기본 태그가 있어야 함
-        durationMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestLayer);
-        durationMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestCategory);
-        durationMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerCqrs);
-        durationMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandler);
-        durationMeasurement.Tags
-            .ShouldContain(t => t.Key == ObservabilityNaming.CustomAttributes.RequestHandlerMethod);
-
-        // ResponseStatus 태그가 없어야 함
-        durationMeasurement.Tags
-            .ShouldNotContain(t => t.Key == ObservabilityNaming.CustomAttributes.ResponseStatus);
-    }
-
-    #endregion
-
     #region 태그 일관성 테스트
 
     /// <summary>
@@ -570,12 +178,96 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
         successMeasurement.InstrumentName.ShouldBe(failureMeasurement.InstrumentName);
     }
 
+    #endregion
+
+    #region Snapshot 태그 구조 테스트
+
     /// <summary>
-    /// 제네릭 ErrorCodeExpected&lt;T&gt; 타입도 IHasErrorCode 인터페이스를 통해
-    /// 올바른 error.type과 error.code 태그를 생성해야 합니다.
+    /// Command Request 태그 구조를 스냅샷으로 검증합니다.
     /// </summary>
     [Fact]
-    public async Task Handle_ResponseCounterTags_WithGenericErrorCodeExpected_ShouldHaveCorrectErrorCode()
+    public async Task Snapshot_Command_RequestTags()
+    {
+        // Arrange
+        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
+            _openTelemetryOptions,
+            _meterFactory);
+        var request = new TestCommandRequest();
+
+        // Act
+        await sut.Handle(request, Next, CancellationToken.None);
+
+        // Assert
+        var measurement = _capturedMeasurements
+            .FirstOrDefault(m => m.InstrumentName.Contains("requests"));
+        measurement.ShouldNotBeNull();
+
+        var tags = measurement.Tags
+            .OrderBy(t => t.Key)
+            .ToDictionary(t => t.Key, t => t.Value?.ToString());
+
+        await Verify(tags).UseDirectory("Snapshots");
+    }
+
+    /// <summary>
+    /// Query Request 태그 구조를 스냅샷으로 검증합니다.
+    /// </summary>
+    [Fact]
+    public async Task Snapshot_Query_RequestTags()
+    {
+        // Arrange
+        var sut = new UsecaseMetricsPipeline<TestQueryRequest, TestResponse>(
+            _openTelemetryOptions,
+            _meterFactory);
+        var request = new TestQueryRequest();
+
+        // Act
+        await sut.Handle(request, NextQuery, CancellationToken.None);
+
+        // Assert
+        var measurement = _capturedMeasurements
+            .FirstOrDefault(m => m.InstrumentName.Contains("requests"));
+        measurement.ShouldNotBeNull();
+
+        var tags = measurement.Tags
+            .OrderBy(t => t.Key)
+            .ToDictionary(t => t.Key, t => t.Value?.ToString());
+
+        await Verify(tags).UseDirectory("Snapshots");
+    }
+
+    /// <summary>
+    /// Success Response 태그 구조를 스냅샷으로 검증합니다.
+    /// </summary>
+    [Fact]
+    public async Task Snapshot_SuccessResponse_Tags()
+    {
+        // Arrange
+        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
+            _openTelemetryOptions,
+            _meterFactory);
+        var request = new TestCommandRequest();
+
+        // Act
+        await sut.Handle(request, Next, CancellationToken.None);
+
+        // Assert
+        var measurement = _capturedMeasurements
+            .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
+        measurement.ShouldNotBeNull();
+
+        var tags = measurement.Tags
+            .OrderBy(t => t.Key)
+            .ToDictionary(t => t.Key, t => t.Value?.ToString());
+
+        await Verify(tags).UseDirectory("Snapshots");
+    }
+
+    /// <summary>
+    /// Failure Response (Expected Error) 태그 구조를 스냅샷으로 검증합니다.
+    /// </summary>
+    [Fact]
+    public async Task Snapshot_FailureResponse_ExpectedError_Tags()
     {
         // Arrange
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
@@ -587,28 +279,96 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
         await sut.Handle(request, NextFailWithGenericError, CancellationToken.None);
 
         // Assert
-        var responseMeasurement = _capturedMeasurements
+        var measurement = _capturedMeasurements
             .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
+        measurement.ShouldNotBeNull();
 
-        responseMeasurement.ShouldNotBeNull();
+        var tags = measurement.Tags
+            .OrderBy(t => t.Key)
+            .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
-        // error.type이 "expected"여야 함
-        AssertTagValue(responseMeasurement.Tags,
-            ObservabilityNaming.OTelAttributes.ErrorType,
-            ObservabilityNaming.ErrorTypes.Expected);
+        await Verify(tags).UseDirectory("Snapshots");
+    }
 
-        // error.code가 "Test.GenericError"여야 함
-        AssertTagValue(responseMeasurement.Tags,
-            ObservabilityNaming.CustomAttributes.ErrorCode,
-            "Test.GenericError");
+    /// <summary>
+    /// Failure Response (Exceptional Error) 태그 구조를 스냅샷으로 검증합니다.
+    /// </summary>
+    [Fact]
+    public async Task Snapshot_FailureResponse_ExceptionalError_Tags()
+    {
+        // Arrange
+        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
+            _openTelemetryOptions,
+            _meterFactory);
+        var request = new TestCommandRequest();
 
-        // response.status가 "failure"여야 함
-        AssertTagValue(responseMeasurement.Tags,
-            ObservabilityNaming.CustomAttributes.ResponseStatus,
-            ObservabilityNaming.Status.Failure);
+        // Act
+        await sut.Handle(request, NextFailWithExceptionalError, CancellationToken.None);
 
-        // 실패: 8개 태그 (requestTags 5개 + response.status 1개 + error.type 1개 + error.code 1개)
-        responseMeasurement.Tags.Length.ShouldBe(8);
+        // Assert
+        var measurement = _capturedMeasurements
+            .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
+        measurement.ShouldNotBeNull();
+
+        var tags = measurement.Tags
+            .OrderBy(t => t.Key)
+            .ToDictionary(t => t.Key, t => t.Value?.ToString());
+
+        await Verify(tags).UseDirectory("Snapshots");
+    }
+
+    /// <summary>
+    /// Failure Response (Aggregate Error) 태그 구조를 스냅샷으로 검증합니다.
+    /// </summary>
+    [Fact]
+    public async Task Snapshot_FailureResponse_AggregateError_Tags()
+    {
+        // Arrange
+        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
+            _openTelemetryOptions,
+            _meterFactory);
+        var request = new TestCommandRequest();
+
+        // Act
+        await sut.Handle(request, NextFailWithAggregateError, CancellationToken.None);
+
+        // Assert
+        var measurement = _capturedMeasurements
+            .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
+        measurement.ShouldNotBeNull();
+
+        var tags = measurement.Tags
+            .OrderBy(t => t.Key)
+            .ToDictionary(t => t.Key, t => t.Value?.ToString());
+
+        await Verify(tags).UseDirectory("Snapshots");
+    }
+
+    /// <summary>
+    /// Duration Histogram 태그 구조를 스냅샷으로 검증합니다.
+    /// </summary>
+    [Fact]
+    public async Task Snapshot_DurationHistogram_Tags()
+    {
+        // Arrange
+        var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
+            _openTelemetryOptions,
+            _meterFactory);
+        var request = new TestCommandRequest();
+
+        // Act
+        await sut.Handle(request, Next, CancellationToken.None);
+
+        // Assert
+        var measurement = _capturedMeasurements
+            .FirstOrDefault(m => m.InstrumentName.Contains("duration"));
+        measurement.ShouldNotBeNull();
+
+        var tags = measurement.Tags
+            .OrderBy(t => t.Key)
+            .ToDictionary(t => t.Key, t => t.Value?.ToString());
+
+        await Verify(tags).UseDirectory("Snapshots");
     }
 
     #endregion

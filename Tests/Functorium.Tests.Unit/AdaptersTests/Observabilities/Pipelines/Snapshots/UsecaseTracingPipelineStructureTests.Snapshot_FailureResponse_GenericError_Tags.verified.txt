@@ -1,0 +1,11 @@
+﻿{
+  error.code: Test.GenericError,
+  error.type: expected,
+  request.category: usecase,
+  request.handler: UsecaseTracingPipelineStructureTests,
+  request.handler.cqrs: command,
+  request.handler.method: Handle,
+  request.layer: application,
+  response.elapsed: {Scrubbed},
+  response.status: failure
+}

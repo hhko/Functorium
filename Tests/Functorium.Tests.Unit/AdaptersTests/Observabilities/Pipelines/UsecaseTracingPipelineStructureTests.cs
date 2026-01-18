@@ -110,100 +110,7 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
 
     #endregion
 
-    #region Request 태그 검증
-
-    /// <summary>
-    /// Activity는 기본 Request 태그 5개를 포함해야 합니다.
-    /// </summary>
-    [Fact]
-    public async Task Handle_RequestTags_ShouldContainBaseTags()
-    {
-        // Arrange
-        var sut = new UsecaseTracingPipeline<TestCommandRequest, TestResponse>(_activitySource);
-        var request = new TestCommandRequest();
-
-        // Act
-        await sut.Handle(request, NextSuccess, CancellationToken.None);
-
-        // Assert
-        _capturedActivity.ShouldNotBeNull();
-        var tags = _capturedActivity.TagObjects.ToDictionary(t => t.Key, t => t.Value);
-
-        tags.ShouldContainKey(ObservabilityNaming.CustomAttributes.RequestLayer);
-        tags.ShouldContainKey(ObservabilityNaming.CustomAttributes.RequestCategory);
-        tags.ShouldContainKey(ObservabilityNaming.CustomAttributes.RequestHandlerCqrs);
-        tags.ShouldContainKey(ObservabilityNaming.CustomAttributes.RequestHandler);
-        tags.ShouldContainKey(ObservabilityNaming.CustomAttributes.RequestHandlerMethod);
-    }
-
-    /// <summary>
-    /// Request 태그는 올바른 값을 가져야 합니다.
-    /// </summary>
-    [Fact]
-    public async Task Handle_RequestTags_ShouldHaveCorrectValues()
-    {
-        // Arrange
-        var sut = new UsecaseTracingPipeline<TestCommandRequest, TestResponse>(_activitySource);
-        var request = new TestCommandRequest();
-
-        // Act
-        await sut.Handle(request, NextSuccess, CancellationToken.None);
-
-        // Assert
-        _capturedActivity.ShouldNotBeNull();
-        var tags = _capturedActivity.TagObjects.ToDictionary(t => t.Key, t => t.Value);
-
-        tags[ObservabilityNaming.CustomAttributes.RequestLayer].ShouldBe(ObservabilityNaming.Layers.Application);
-        tags[ObservabilityNaming.CustomAttributes.RequestCategory].ShouldBe(ObservabilityNaming.Categories.Usecase);
-        tags[ObservabilityNaming.CustomAttributes.RequestHandlerCqrs].ShouldBe(ObservabilityNaming.Cqrs.Command);
-        tags[ObservabilityNaming.CustomAttributes.RequestHandlerMethod].ShouldBe(ObservabilityNaming.Methods.Handle);
-    }
-
-    #endregion
-
     #region Response 태그 검증 - Success
-
-    /// <summary>
-    /// 성공 시 response.status 태그가 "success"여야 합니다.
-    /// </summary>
-    [Fact]
-    public async Task Handle_Success_ShouldSetSuccessStatusTag()
-    {
-        // Arrange
-        var sut = new UsecaseTracingPipeline<TestCommandRequest, TestResponse>(_activitySource);
-        var request = new TestCommandRequest();
-
-        // Act
-        await sut.Handle(request, NextSuccess, CancellationToken.None);
-
-        // Assert
-        _capturedActivity.ShouldNotBeNull();
-        var tags = _capturedActivity.TagObjects.ToDictionary(t => t.Key, t => t.Value);
-
-        tags[ObservabilityNaming.CustomAttributes.ResponseStatus].ShouldBe(ObservabilityNaming.Status.Success);
-    }
-
-    /// <summary>
-    /// 성공 시 response.elapsed 태그가 설정되어야 합니다.
-    /// </summary>
-    [Fact]
-    public async Task Handle_Success_ShouldSetElapsedTag()
-    {
-        // Arrange
-        var sut = new UsecaseTracingPipeline<TestCommandRequest, TestResponse>(_activitySource);
-        var request = new TestCommandRequest();
-
-        // Act
-        await sut.Handle(request, NextSuccess, CancellationToken.None);
-
-        // Assert
-        _capturedActivity.ShouldNotBeNull();
-        var tags = _capturedActivity.TagObjects.ToDictionary(t => t.Key, t => t.Value);
-
-        tags.ShouldContainKey(ObservabilityNaming.CustomAttributes.ResponseElapsed);
-        var elapsed = (double)tags[ObservabilityNaming.CustomAttributes.ResponseElapsed]!;
-        elapsed.ShouldBeGreaterThanOrEqualTo(0);
-    }
 
     /// <summary>
     /// 성공 시 7개 태그를 가져야 합니다.
@@ -247,47 +154,6 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
     #region Response 태그 검증 - Failure
 
     /// <summary>
-    /// 실패 시 response.status 태그가 "failure"여야 합니다.
-    /// </summary>
-    [Fact]
-    public async Task Handle_Failure_ShouldSetFailureStatusTag()
-    {
-        // Arrange
-        var sut = new UsecaseTracingPipeline<TestCommandRequest, TestResponse>(_activitySource);
-        var request = new TestCommandRequest();
-
-        // Act
-        await sut.Handle(request, NextFailWithExpectedError, CancellationToken.None);
-
-        // Assert
-        _capturedActivity.ShouldNotBeNull();
-        var tags = _capturedActivity.TagObjects.ToDictionary(t => t.Key, t => t.Value);
-
-        tags[ObservabilityNaming.CustomAttributes.ResponseStatus].ShouldBe(ObservabilityNaming.Status.Failure);
-    }
-
-    /// <summary>
-    /// 실패 시 error.type과 error.code 태그가 설정되어야 합니다.
-    /// </summary>
-    [Fact]
-    public async Task Handle_Failure_ShouldSetErrorTags()
-    {
-        // Arrange
-        var sut = new UsecaseTracingPipeline<TestCommandRequest, TestResponse>(_activitySource);
-        var request = new TestCommandRequest();
-
-        // Act
-        await sut.Handle(request, NextFailWithExpectedError, CancellationToken.None);
-
-        // Assert
-        _capturedActivity.ShouldNotBeNull();
-        var tags = _capturedActivity.TagObjects.ToDictionary(t => t.Key, t => t.Value);
-
-        tags.ShouldContainKey(ObservabilityNaming.OTelAttributes.ErrorType);
-        tags.ShouldContainKey(ObservabilityNaming.CustomAttributes.ErrorCode);
-    }
-
-    /// <summary>
     /// 실패 시 9개 태그를 가져야 합니다.
     /// (request 5개 + response.elapsed 1개 + response.status 1개 + error.type 1개 + error.code 1개)
     /// </summary>
@@ -326,13 +192,61 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
 
     #endregion
 
-    #region Error 타입별 검증
+    #region Snapshot 태그 구조 테스트
 
     /// <summary>
-    /// Expected 에러 시 error.type이 "expected"여야 합니다.
+    /// Command Success 태그 구조를 스냅샷으로 검증합니다.
     /// </summary>
     [Fact]
-    public async Task Handle_ExpectedError_ShouldSetExpectedErrorType()
+    public async Task Snapshot_Command_SuccessTags()
+    {
+        // Arrange
+        var sut = new UsecaseTracingPipeline<TestCommandRequest, TestResponse>(_activitySource);
+        var request = new TestCommandRequest();
+
+        // Act
+        await sut.Handle(request, NextSuccess, CancellationToken.None);
+
+        // Assert
+        _capturedActivity.ShouldNotBeNull();
+        var tags = _capturedActivity.TagObjects
+            .OrderBy(t => t.Key)
+            .ToDictionary(t => t.Key, t => t.Value?.ToString());
+
+        await Verify(tags)
+            .UseDirectory("Snapshots")
+            .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
+    }
+
+    /// <summary>
+    /// Query Success 태그 구조를 스냅샷으로 검증합니다.
+    /// </summary>
+    [Fact]
+    public async Task Snapshot_Query_SuccessTags()
+    {
+        // Arrange
+        var sut = new UsecaseTracingPipeline<TestQueryRequest, TestResponse>(_activitySource);
+        var request = new TestQueryRequest();
+
+        // Act
+        await sut.Handle(request, NextSuccessQuery, CancellationToken.None);
+
+        // Assert
+        _capturedActivity.ShouldNotBeNull();
+        var tags = _capturedActivity.TagObjects
+            .OrderBy(t => t.Key)
+            .ToDictionary(t => t.Key, t => t.Value?.ToString());
+
+        await Verify(tags)
+            .UseDirectory("Snapshots")
+            .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
+    }
+
+    /// <summary>
+    /// Failure (Expected Error) 태그 구조를 스냅샷으로 검증합니다.
+    /// </summary>
+    [Fact]
+    public async Task Snapshot_FailureResponse_ExpectedError_Tags()
     {
         // Arrange
         var sut = new UsecaseTracingPipeline<TestCommandRequest, TestResponse>(_activitySource);
@@ -343,16 +257,20 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
 
         // Assert
         _capturedActivity.ShouldNotBeNull();
-        var tags = _capturedActivity.TagObjects.ToDictionary(t => t.Key, t => t.Value);
+        var tags = _capturedActivity.TagObjects
+            .OrderBy(t => t.Key)
+            .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
-        tags[ObservabilityNaming.OTelAttributes.ErrorType].ShouldBe(ObservabilityNaming.ErrorTypes.Expected);
+        await Verify(tags)
+            .UseDirectory("Snapshots")
+            .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
     /// <summary>
-    /// Exceptional 에러 시 error.type이 "exceptional"이어야 합니다.
+    /// Failure (Exceptional Error) 태그 구조를 스냅샷으로 검증합니다.
     /// </summary>
     [Fact]
-    public async Task Handle_ExceptionalError_ShouldSetExceptionalErrorType()
+    public async Task Snapshot_FailureResponse_ExceptionalError_Tags()
     {
         // Arrange
         var sut = new UsecaseTracingPipeline<TestCommandRequest, TestResponse>(_activitySource);
@@ -363,16 +281,20 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
 
         // Assert
         _capturedActivity.ShouldNotBeNull();
-        var tags = _capturedActivity.TagObjects.ToDictionary(t => t.Key, t => t.Value);
+        var tags = _capturedActivity.TagObjects
+            .OrderBy(t => t.Key)
+            .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
-        tags[ObservabilityNaming.OTelAttributes.ErrorType].ShouldBe(ObservabilityNaming.ErrorTypes.Exceptional);
+        await Verify(tags)
+            .UseDirectory("Snapshots")
+            .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
     /// <summary>
-    /// Aggregate 에러 시 error.type이 "aggregate"여야 합니다.
+    /// Failure (Aggregate Error) 태그 구조를 스냅샷으로 검증합니다.
     /// </summary>
     [Fact]
-    public async Task Handle_AggregateError_ShouldSetAggregateErrorType()
+    public async Task Snapshot_FailureResponse_AggregateError_Tags()
     {
         // Arrange
         var sut = new UsecaseTracingPipeline<TestCommandRequest, TestResponse>(_activitySource);
@@ -383,16 +305,20 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
 
         // Assert
         _capturedActivity.ShouldNotBeNull();
-        var tags = _capturedActivity.TagObjects.ToDictionary(t => t.Key, t => t.Value);
+        var tags = _capturedActivity.TagObjects
+            .OrderBy(t => t.Key)
+            .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
-        tags[ObservabilityNaming.OTelAttributes.ErrorType].ShouldBe(ObservabilityNaming.ErrorTypes.Aggregate);
+        await Verify(tags)
+            .UseDirectory("Snapshots")
+            .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
     /// <summary>
-    /// Generic ErrorCodeExpected&lt;T&gt; 타입도 올바른 error.code를 가져야 합니다.
+    /// Failure (Generic Error) 태그 구조를 스냅샷으로 검증합니다.
     /// </summary>
     [Fact]
-    public async Task Handle_GenericErrorCodeExpected_ShouldHaveCorrectErrorCode()
+    public async Task Snapshot_FailureResponse_GenericError_Tags()
     {
         // Arrange
         var sut = new UsecaseTracingPipeline<TestCommandRequest, TestResponse>(_activitySource);
@@ -403,10 +329,13 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
 
         // Assert
         _capturedActivity.ShouldNotBeNull();
-        var tags = _capturedActivity.TagObjects.ToDictionary(t => t.Key, t => t.Value);
+        var tags = _capturedActivity.TagObjects
+            .OrderBy(t => t.Key)
+            .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
-        tags[ObservabilityNaming.OTelAttributes.ErrorType].ShouldBe(ObservabilityNaming.ErrorTypes.Expected);
-        tags[ObservabilityNaming.CustomAttributes.ErrorCode].ShouldBe("Test.GenericError");
+        await Verify(tags)
+            .UseDirectory("Snapshots")
+            .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
     #endregion

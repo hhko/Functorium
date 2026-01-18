@@ -1,0 +1,9 @@
+﻿{
+  request.category: usecase,
+  request.handler: UsecaseTracingPipelineStructureTests,
+  request.handler.cqrs: command,
+  request.handler.method: Handle,
+  request.layer: application,
+  response.elapsed: {Scrubbed},
+  response.status: success
+}

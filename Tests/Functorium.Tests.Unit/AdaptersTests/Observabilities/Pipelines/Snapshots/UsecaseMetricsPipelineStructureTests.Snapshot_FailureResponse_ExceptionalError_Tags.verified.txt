@@ -1,0 +1,10 @@
+﻿{
+  error.code: Test.ExceptionalError,
+  error.type: exceptional,
+  request.category: usecase,
+  request.handler: UsecaseMetricsPipelineStructureTests,
+  request.handler.cqrs: unknown,
+  request.handler.method: Handle,
+  request.layer: application,
+  response.status: failure
+}
