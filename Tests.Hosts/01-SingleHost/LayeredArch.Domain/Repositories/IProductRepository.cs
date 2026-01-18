@@ -1,6 +1,5 @@
 using LayeredArch.Domain.Entities;
 using Functorium.Applications.Observabilities;
-using LanguageExt;
 
 namespace LayeredArch.Domain.Repositories;
 

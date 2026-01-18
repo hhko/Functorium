@@ -1,1 +1,1 @@
-using LanguageExt;
+global using LanguageExt;
