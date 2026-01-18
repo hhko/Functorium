@@ -23,8 +23,20 @@ It enables expressing domain logic as pure functions and pushing side effects to
 ## Observability
 
 > All observability fields use `snake_case + dot` notation for consistency with OpenTelemetry semantic conventions.
->
+
+### Service Attributes
+
+Functorium uses [OpenTelemetry Service Attributes](https://opentelemetry.io/docs/specs/semconv/registry/attributes/service/) for service identification.
+
+| Attribute | Stability | Type | Description | Example |
+|-----------|-----------|------|-------------|---------|
+| `service.name` | Stable | String | Logical name of the service. Must be identical across all horizontally scaled instances. | `orderservice` |
+| `service.namespace` | Development | String | A namespace for `service.name`. Helps distinguish service groups (e.g., by team or environment). | `mycompany.production` |
+| `service.instance.id` | Development | String | Unique ID of the service instance. Must be globally unique per `service.namespace,service.name` pair. | `627cc493-f310-47de-96bd-71410b7dec09` |
+| `service.version` | Stable | String | The version string of the service API or implementation. | `2.0.0` |
+
 > **Recommended**: Use lowercase values for `service.name` and `service.namespace` (e.g., `mycompany.production`, `orderservice`).
+> This ensures consistency with OpenTelemetry conventions and avoids case-sensitivity issues in downstream systems (dashboards, queries, alerts).
 
 ### Field/Tag Consistency
 
@@ -38,7 +50,7 @@ It enables expressing domain logic as pure functions and pushing side effects to
 | `request.handler` | ✅ | ✅ | ✅ | Handler class name |
 | `request.handler.method` | ✅ | ✅ | ✅ | Handler method name (`"Handle"`) |
 | `response.status` | ✅ | ✅ | ✅ | Response status (`"success"`, `"failure"`) |
-| `response.elapsed` | ✅ | - | ✅ | Processing time in seconds |
+| `response.elapsed` | ✅ | -* | ✅ | Processing time in seconds |
 | `error.type` | ✅ | ✅ | ✅ | Error classification (`"expected"`, `"exceptional"`, `"aggregate"`) |
 | `error.code` | ✅ | ✅ | ✅ | Domain-specific error code |
 | `@error` | ✅ | - | - | Structured error object (detailed) |
@@ -52,10 +64,15 @@ It enables expressing domain logic as pure functions and pushing side effects to
 | `request.handler` | ✅ | ✅ | ✅ | Handler class name |
 | `request.handler.method` | ✅ | ✅ | ✅ | Handler method name |
 | `response.status` | ✅ | ✅ | ✅ | Response status (`"success"`, `"failure"`) |
-| `response.elapsed` | ✅ | - | ✅ | Processing time in seconds |
+| `response.elapsed` | ✅ | -* | ✅ | Processing time in seconds |
 | `error.type` | ✅ | ✅ | ✅ | Error classification (`"expected"`, `"exceptional"`, `"aggregate"`) |
 | `error.code` | ✅ | ✅ | ✅ | Domain-specific error code |
 | `@error` | ✅ | - | - | Structured error object (detailed) |
+
+> **\* Why `response.elapsed` is not a Metrics tag:**
+> - Metrics uses a dedicated `duration` **Histogram instrument** to capture processing time, which is the OpenTelemetry-recommended approach for latency measurement.
+> - Using elapsed time as a tag would cause **high cardinality explosion** (each unique duration value creates a new time series), degrading metrics storage and query performance.
+> - Histogram provides **statistical aggregations** (percentiles, averages, counts) that are more useful for monitoring than individual elapsed values.
 
 ### Logging
 
