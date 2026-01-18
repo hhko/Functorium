@@ -12,6 +12,11 @@ public sealed class OpenTelemetryOptions
 {
     public const string SectionName = "OpenTelemetry";
 
+    /// <summary>
+    /// 서비스 네임스페이스(그룹)
+    /// </summary>
+    public string ServiceNamespace { get; set; } = string.Empty;
+
     public string ServiceName { get; set; } = string.Empty;
 
     /// <summary>
@@ -22,9 +27,13 @@ public sealed class OpenTelemetryOptions
         Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "unknown";
 
     /// <summary>
-    /// 서비스 네임스페이스
+    /// 서비스 인스턴스 ID는 호스트네임으로 자동 설정됩니다.
+    /// - Kubernetes: Pod 이름 (예: myapp-7b9d8c6f5d-abc12)
+    /// - Docker: 컨테이너 ID 또는 설정된 hostname
+    /// - Windows/Linux: 머신 이름
     /// </summary>
-    public string ServiceNamespace { get; set; } = string.Empty;
+    public string ServiceInstanceId { get; } =
+        Environment.GetEnvironmentVariable("HOSTNAME") ?? Environment.MachineName;
 
     /// <summary>
     /// 통합 OTLP Collector 엔드포인트 (모든 신호를 동일 엔드포인트로 전송)
@@ -219,9 +228,10 @@ public sealed class OpenTelemetryOptions
 
         // 세부주제: Service Information
         logger.LogInformation("  Service Information");
+        logger.LogInformation("    {Label}: {Value}", "Namespace".PadRight(labelWidth), ServiceNamespace);
         logger.LogInformation("    {Label}: {Value}", "Name".PadRight(labelWidth), ServiceName);
         logger.LogInformation("    {Label}: {Value}", "Version".PadRight(labelWidth), ServiceVersion);
-        logger.LogInformation("    {Label}: {Value}", "Namespace".PadRight(labelWidth), ServiceNamespace);
+        logger.LogInformation("    {Label}: {Value}", "Instance ID".PadRight(labelWidth), ServiceInstanceId);
         logger.LogInformation("");
 
         // 세부주제: Logging Configuration
@@ -252,13 +262,13 @@ public sealed class OpenTelemetryOptions
     {
         public Validator()
         {
-            RuleFor(x => x.ServiceName)
-                .NotEmpty()
-                .WithMessage($"{nameof(ServiceName)} is required.");
-
             RuleFor(x => x.ServiceNamespace)
                 .NotEmpty()
                 .WithMessage($"{nameof(ServiceNamespace)} is required.");
+
+            RuleFor(x => x.ServiceName)
+                .NotEmpty()
+                .WithMessage($"{nameof(ServiceName)} is required.");
 
             // OtlpCollectorHost 또는 개별 엔드포인트 중 하나는 설정되어야 함
             RuleFor(x => x)

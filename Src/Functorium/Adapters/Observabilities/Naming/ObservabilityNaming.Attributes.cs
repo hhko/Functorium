@@ -12,9 +12,10 @@ public static partial class ObservabilityNaming
         public const string ErrorType = "error.type";
 
         // Service attributes (Resource)
+        public const string ServiceNamespace = "service.namespace";
         public const string ServiceName = "service.name";
         public const string ServiceVersion = "service.version";
-        public const string ServiceNamespace = "service.namespace";
+        public const string ServiceInstanceId = "service.instance.id";
 
         // Deployment attributes
         public const string DeploymentEnvironment = "deployment.environment";

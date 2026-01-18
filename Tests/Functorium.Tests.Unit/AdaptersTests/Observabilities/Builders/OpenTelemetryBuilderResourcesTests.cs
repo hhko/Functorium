@@ -25,14 +25,16 @@ public class OpenTelemetryBuilderResourcesTests
         attributes.ShouldContainKey("service.name");
         attributes["service.name"].ShouldBe("OrderService");
 
-        attributes.ShouldContainKey("service.version");
-
         attributes.ShouldContainKey("service.namespace");
         attributes["service.namespace"].ShouldBe("MyCompany.Production");
+
+        attributes.ShouldContainKey("service.instance.id");
+
+        attributes.ShouldContainKey("service.version");
     }
 
     [Fact]
-    public void CreateResourceAttributes_ShouldReturn_ExactlyThreeAttributes()
+    public void CreateResourceAttributes_ShouldReturn_ExactlyFourAttributes()
     {
         // Arrange
         var options = new OpenTelemetryOptions
@@ -45,6 +47,6 @@ public class OpenTelemetryBuilderResourcesTests
         var attributes = OpenTelemetryBuilder.CreateResourceAttributes(options);
 
         // Assert
-        attributes.Count.ShouldBe(3);
+        attributes.Count.ShouldBe(4);
     }
 }

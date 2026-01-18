@@ -12,9 +12,10 @@ public partial class OpenTelemetryBuilder
     {
         return new Dictionary<string, object>
         {
+            [OTelAttributes.ServiceNamespace] = options.ServiceNamespace,
             [OTelAttributes.ServiceName] = options.ServiceName,
             [OTelAttributes.ServiceVersion] = options.ServiceVersion,
-            [OTelAttributes.ServiceNamespace] = options.ServiceNamespace
+            [OTelAttributes.ServiceInstanceId] = options.ServiceInstanceId
         };
     }
 }
