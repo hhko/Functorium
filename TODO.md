@@ -52,6 +52,7 @@ dir /x
 - [ ] Entity
 ---
 - [ ] Mediator 경고 이해 Tip 폴더
+- [ ] MinVer
 ---
 - [ ] IOption<T> 학습
 - [ ] 히스토그램 학습
