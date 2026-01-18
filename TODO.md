@@ -16,27 +16,24 @@ dir /x
 - [x] service.name, service.namespace ??? 서비스 묶음?
 - [x] snapshot 테스트 코드 정리
 - [x] Meter 이름 형식 개선
-- [ ] Category??? 대문자
-- [ ] Pipeline 로그 생성자?
-- [ ] https://medium.com/@aman.toumaj/mastering-domain-driven-design-a-tactical-ddd-implementation-5255d71d609f
-- [ ] CleanArch 프로젝트 정리
+- [x] 테스트 전용 프로젝트 추가: Tests.Hosts
+- [x] 테스트 전용 프로젝트 개선: Using.cs
+- [x] 테스트 전용 프로젝트 개선: Application 레이어에서 로깅 제거
+- [x] 테스트 전용 프로젝트 개선: Application과 Presentation -> Feature 기반 폴더 구성
+- [ ] public partial class Program { } 인터페이스화
+- [ ] Extensions 이름 개선
 ---
-- [ ] EntityId
-- [ ] Entity
----
-- [ ] 로그 테스트 학습
-- [ ] 필드 정의 테스트
+- [ ] 테스트 전용 프로젝트 기반으로 Logging, Tracing, Metrics 필드 통합 테스트
   Item    | Application | Adapter
   ---     | ---         | ---
   Logging |             |
   Tracing |             |
   Metrics |             |
+- [ ] 기존 Logging, Tracing, Metrics 필드 단위 테스트 제거
+- [ ] 로그 테스트 학습
 ---
-- [ ] Mediator 경고 이해 Tip 폴더
----
-- [ ] IOption<T> 학습
-- [ ] 히스토그램 학습
----
+- [ ] Category??? 대문자
+- [ ] Pipeline 로그 생성자?
 - [ ] 관찰 가능성 usecase 확장
   - Logging
   - Tracing
@@ -45,6 +42,19 @@ dir /x
   - Logging
   - Tracing
   - Metrics
+---
+- [ ] LayeredArch from _ in guard(!exists, ApplicationErrors.ProductNameAlreadyExists(request.Name)) ??? 도메인 로직
+- [ ] LayeredArch DTO?
+- [ ] https://medium.com/@aman.toumaj/mastering-domain-driven-design-a-tactical-ddd-implementation-5255d71d609f
+- [ ] CleanArch 프로젝트 정리
+---
+- [ ] EntityId
+- [ ] Entity
+---
+- [ ] Mediator 경고 이해 Tip 폴더
+---
+- [ ] IOption<T> 학습
+- [ ] 히스토그램 학습
 ---
 - [x] ElapsedTimeCalculator 클래스 네임스페이스 변경 -> namespace Functorium.Adapters.Observabilities;
 - [x] internal record ErrorCodeExpected -> public ???, IHasErrorCode
