@@ -2,6 +2,20 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "LayeredArch",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-LayeredArch",
+      "program": "${workspaceFolder}/Tests.Hosts/01-SingleHost/LayeredArch/bin/Debug/net10.0/LayeredArch.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Tests.Hosts/01-SingleHost/LayeredArch",
+      "stopAtEntry": false,
+      "console": "integratedTerminal",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    {
       "name": "Cqrs03Functional.Demo",
       "type": "coreclr",
       "request": "launch",

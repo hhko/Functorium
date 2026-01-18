@@ -96,6 +96,15 @@
     <Project Path="Src/Functorium.Adapters.SourceGenerator/Functorium.Adapters.SourceGenerator.csproj" />
     <Project Path="Src/Functorium.Testing/Functorium.Testing.csproj" Id="38736c0d-ff4f-4c6f-bc1d-f43b860a570a" />
   </Folder>
+  <Folder Name="/Tests.Hosts/" />
+  <Folder Name="/Tests.Hosts/01-SingleHost/">
+    <Project Path="Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Infrastructure/LayeredArch.Adapters.Infrastructure.csproj" />
+    <Project Path="Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/LayeredArch.Adapters.Persistence.csproj" />
+    <Project Path="Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Presentation/LayeredArch.Adapters.Presentation.csproj" />
+    <Project Path="Tests.Hosts/01-SingleHost/LayeredArch.Application/LayeredArch.Application.csproj" />
+    <Project Path="Tests.Hosts/01-SingleHost/LayeredArch.Domain/LayeredArch.Domain.csproj" />
+    <Project Path="Tests.Hosts/01-SingleHost/LayeredArch/LayeredArch.csproj" />
+  </Folder>
   <Folder Name="/Tests/">
     <Project Path="Tests/Functorium.Tests.Unit/Functorium.Tests.Unit.csproj" Id="20685fd7-39c5-40e4-89d1-6ac8db7c174a" />
   </Folder>

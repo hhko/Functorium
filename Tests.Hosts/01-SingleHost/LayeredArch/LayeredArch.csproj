@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LayeredArch.Adapters.Infrastructure\LayeredArch.Adapters.Infrastructure.csproj" />
+    <ProjectReference Include="..\LayeredArch.Adapters.Persistence\LayeredArch.Adapters.Persistence.csproj" />
+    <ProjectReference Include="..\LayeredArch.Adapters.Presentation\LayeredArch.Adapters.Presentation.csproj" />
+    <ProjectReference Include="..\LayeredArch.Application\LayeredArch.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="LayeredArch.Tests.Integration" />
+  </ItemGroup>
+
+</Project>
