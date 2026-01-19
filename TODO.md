@@ -1,37 +1,54 @@
 ```shell
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
-
-dir /x
 ```
 
-## 관찰 가능성
+- [ ] 관찰 가능성
+---
+- [ ] 관찰 가능성 시스템: OpenSearch, Kafka, Flink SQL
+- [ ] 관찰 가능성 Adpater HTTP FastEndpoint
+- [ ] 관찰 가능성 Adpater DB EFCore
+- [ ] 관찰 가능성 Adpater DB Dapper
+- [ ] 관찰 가능성 Adpater MQ Wolverine
+- [ ] Adapters 프로젝트 분리
+---
+- [ ] MinVer
+- [ ] Entity, EntityId, EFCore 통합
+- [ ] DTO
+- [ ] Event: Internal(Mediator) vs External(RabbitMQ)
+---
+- [ ] Cache: https://medium.com/@skd9000/how-we-fixed-our-cache-stampede-problem-3b2e6ac01b27
+- [ ] 프로젝트 변환
+  - [How We Fixed Our Cache Stampede Problem](https://medium.com/@aman.toumaj/mastering-domain-driven-design-a-tactical-ddd-implementation-5255d71d609f)
+- [ ] 프로젝트 변환
+  - [Clean Architecture in .NET: The Foundation That Changes Everything](https://medium.com/@compileandconquer/clean-architecture-in-net-the-foundation-that-changes-everything-6fb4425fa402)
+  - [Clean Architecture in .NET: Building the Domain & Application Layers](https://medium.com/@compileandconquer/clean-architecture-in-net-building-the-domain-application-layers-d97c6d4928bc)
+  - [https://medium.com/@compileandconquer/clean-architecture-in-net-infrastructure-presentation-layers-69b6fb37ac3f](https://medium.com/@compileandconquer/clean-architecture-in-net-infrastructure-presentation-layers-69b6fb37ac3f)
+  - [Clean Architecture in .NET: Testing, Best Practices & Final Thoughts](https://medium.com/@compileandconquer/clean-architecture-in-net-testing-best-practices-final-thoughts-1ae7316e0004)
+- [ ] 프로젝트 변환
+  - [eShop](https://github.com/dotnet/eShop)
+- [ ] Outbox
+- [ ] Unit of Work
+- [ ] 단일 호스트 예제
+- [ ] 복수 호스트 예제
+- [ ] TngTech.ArchUnitNET 다이어그램
+- [ ] VSCode 개발 환경 구축: 테스트, 코드 커버리지, DevKit
+- [ ] 문서 사이트: Astro, Starlight
+  - 한국어 검색(하이라이트)
+  - 이미지 확대
+- [ ] Claude Code 스킬로 만들기
+- [ ] Aspire 통합
+- [ ] LanaguageExt 101
+
 ### 목표
-- 코드 리뷰
-- 데이터 형식 문서화
-- 데이터 형식 테스트 자동화
-- 통합 테스트 코드 재사용
-- 통합 테스트 GitHub Actions 통합
+- [ ] 관찰 가능성 문서화 및 테스트 자동화
 
 ## 할일
-- [x] service.name, service.namespace ??? 서비스 묶음?
-- [x] snapshot 테스트 코드 정리
-- [x] Meter 이름 형식 개선
-- [x] 테스트 전용 프로젝트 추가: Tests.Hosts
-- [x] 테스트 전용 프로젝트 개선: Using.cs
-- [x] 테스트 전용 프로젝트 개선: Application 레이어에서 로깅 제거
-- [x] 테스트 전용 프로젝트 개선: Application과 Presentation -> Feature 기반 폴더 구성
+- [ ] 로그 테스트 학습
+- [ ] IOption<T> 학습
+- [ ] 히스토그램 학습
+---
 - [ ] public partial class Program { } 인터페이스화
 - [ ] Extensions 이름 개선
----
-- [ ] 테스트 전용 프로젝트 기반으로 Logging, Tracing, Metrics 필드 통합 테스트
-  Item    | Application | Adapter
-  ---     | ---         | ---
-  Logging |             |
-  Tracing |             |
-  Metrics |             |
-- [ ] 기존 Logging, Tracing, Metrics 필드 단위 테스트 제거
-- [ ] 로그 테스트 학습
----
 - [ ] Category??? 대문자
 - [ ] Pipeline 로그 생성자?
 - [ ] 관찰 가능성 usecase 확장
@@ -43,6 +60,22 @@ dir /x
   - Tracing
   - Metrics
 ---
+- [x] service.name, service.namespace ??? 서비스 묶음?
+- [x] snapshot 테스트 코드 정리
+- [x] Meter 이름 형식 개선
+- [x] 테스트 전용 프로젝트 추가: Tests.Hosts
+- [x] 테스트 전용 프로젝트 개선: Using.cs
+- [x] 테스트 전용 프로젝트 개선: Application 레이어에서 로깅 제거
+- [x] 테스트 전용 프로젝트 개선: Application과 Presentation -> Feature 기반 폴더 구성
+---
+- [x] 테스트 전용 프로젝트 기반으로 Logging, Tracing, Metrics 필드 통합 테스트
+  Item    | Application | Adapter
+  ---     | ---         | ---
+  Logging | x           | x
+  Tracing | x           | x
+  Metrics | x           | x
+- [x] 기존 Logging, Tracing, Metrics 필드 단위 테스트 제거
+---
 - [ ] LayeredArch from _ in guard(!exists, ApplicationErrors.ProductNameAlreadyExists(request.Name)) ??? 도메인 로직
 - [ ] LayeredArch DTO?
 - [ ] https://medium.com/@aman.toumaj/mastering-domain-driven-design-a-tactical-ddd-implementation-5255d71d609f
@@ -53,9 +86,6 @@ dir /x
 ---
 - [ ] Mediator 경고 이해 Tip 폴더
 - [ ] MinVer
----
-- [ ] IOption<T> 학습
-- [ ] 히스토그램 학습
 ---
 - [x] ElapsedTimeCalculator 클래스 네임스페이스 변경 -> namespace Functorium.Adapters.Observabilities;
 - [x] internal record ErrorCodeExpected -> public ???, IHasErrorCode
