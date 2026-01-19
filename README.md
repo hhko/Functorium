@@ -26,6 +26,8 @@ It enables expressing domain logic as pure functions and pushing side effects to
 
 > All observability fields use `snake_case + dot` notation for consistency with OpenTelemetry semantic conventions.
 
+![](./Functorium.Observability.png)
+
 ### Service Attributes
 
 Functorium uses [OpenTelemetry Service Attributes](https://opentelemetry.io/docs/specs/semconv/registry/attributes/service/) for service identification.
