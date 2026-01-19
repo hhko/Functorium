@@ -14,42 +14,69 @@ namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 /// 이 테스트는 생성된 코드가 README.md에 문서화된 태그 구조를 준수하는지 검증합니다.
 /// </para>
 /// <para>
+/// Adapter Layer Logging 필드 구조:
+/// </para>
+/// <code>
+/// +--------------------------+---------------+---------------+---------------+
+/// | Field Key                | Request       | Response      | Response      |
+/// |                          | (Info/Debug)  | (success)     | (failure)     |
+/// +--------------------------+---------------+---------------+---------------+
+/// | request.layer            | "adapter"     | "adapter"     | "adapter"     |
+/// | request.category         | category name | category name | category name |
+/// | request.handler          | handler name  | handler name  | handler name  |
+/// | request.handler.method   | method name   | method name   | method name   |
+/// | request.params.{name}    | param value   | (none)        | (none)        |
+/// | response.status          | (none)        | "success"     | "failure"     |
+/// | response.elapsed         | (none)        | elapsed (s)   | elapsed (s)   |
+/// | response.result          | (none)        | result value  | (none)        |
+/// | error.type               | (none)        | (none)        | "expected"/   |
+/// |                          |               |               | "exceptional"/|
+/// |                          |               |               | "aggregate"   |
+/// | error.code               | (none)        | (none)        | error code    |
+/// | @error                   | (none)        | (none)        | error object  |
+/// +--------------------------+---------------+---------------+---------------+
+/// </code>
+/// <para>
 /// Adapter Layer Metrics 태그 구조:
 /// </para>
 /// <code>
-/// ┌──────────────────────────┬─────────────────────────┬─────────────────────────┬─────────────────────────┐
-/// │ Tag Key                  │ requestCounter          │ responseCounter         │ responseCounter         │
-/// │                          │ durationHistogram       │ (success)               │ (failure)               │
-/// ├──────────────────────────┼─────────────────────────┼─────────────────────────┼─────────────────────────┤
-/// │ request.layer            │ "adapter"               │ "adapter"               │ "adapter"               │
-/// │ request.category         │ category name           │ category name           │ category name           │
-/// │ request.handler          │ handler name            │ handler name            │ handler name            │
-/// │ request.handler.method   │ method name             │ method name             │ method name             │
-/// │ response.status          │ (none)                  │ "success"               │ "failure"               │
-/// │ error.type               │ (none)                  │ (none)                  │ "expected"/"exceptional"│
-/// │ error.code               │ (none)                  │ (none)                  │ error code              │
-/// ├──────────────────────────┼─────────────────────────┼─────────────────────────┼─────────────────────────┤
-/// │ Total Tags               │ 4                       │ 5                       │ 7                       │
-/// └──────────────────────────┴─────────────────────────┴─────────────────────────┴─────────────────────────┘
+/// +--------------------------+-------------------+-------------------+-------------------+
+/// | Tag Key                  | requestCounter    | responseCounter   | responseCounter   |
+/// |                          | durationHistogram | (success)         | (failure)         |
+/// +--------------------------+-------------------+-------------------+-------------------+
+/// | request.layer            | "adapter"         | "adapter"         | "adapter"         |
+/// | request.category         | category name     | category name     | category name     |
+/// | request.handler          | handler name      | handler name      | handler name      |
+/// | request.handler.method   | method name       | method name       | method name       |
+/// | response.status          | (none)            | "success"         | "failure"         |
+/// | error.type               | (none)            | (none)            | "expected"/       |
+/// |                          |                   |                   | "exceptional"/    |
+/// |                          |                   |                   | "aggregate"       |
+/// | error.code               | (none)            | (none)            | error code        |
+/// +--------------------------+-------------------+-------------------+-------------------+
+/// | Total Tags               | 4                 | 5                 | 7                 |
+/// +--------------------------+-------------------+-------------------+-------------------+
 /// </code>
 /// <para>
 /// Adapter Layer Tracing 태그 구조:
 /// </para>
 /// <code>
-/// ┌──────────────────────────┬─────────────────────────┬─────────────────────────┐
-/// │ Tag Key                  │ Success                 │ Failure                 │
-/// ├──────────────────────────┼─────────────────────────┼─────────────────────────┤
-/// │ request.layer            │ "adapter"               │ "adapter"               │
-/// │ request.category         │ category name           │ category name           │
-/// │ request.handler          │ handler name            │ handler name            │
-/// │ request.handler.method   │ method name             │ method name             │
-/// │ response.elapsed         │ elapsed seconds         │ elapsed seconds         │
-/// │ response.status          │ "success"               │ "failure"               │
-/// │ error.type               │ (none)                  │ "expected"/"exceptional"│
-/// │ error.code               │ (none)                  │ error code              │
-/// ├──────────────────────────┼─────────────────────────┼─────────────────────────┤
-/// │ Total Tags               │ 6                       │ 8                       │
-/// └──────────────────────────┴─────────────────────────┴─────────────────────────┘
+/// +--------------------------+-------------------+-------------------+
+/// | Tag Key                  | Success           | Failure           |
+/// +--------------------------+-------------------+-------------------+
+/// | request.layer            | "adapter"         | "adapter"         |
+/// | request.category         | category name     | category name     |
+/// | request.handler          | handler name      | handler name      |
+/// | request.handler.method   | method name       | method name       |
+/// | response.elapsed         | elapsed seconds   | elapsed seconds   |
+/// | response.status          | "success"         | "failure"         |
+/// | error.type               | (none)            | "expected"/       |
+/// |                          |                   | "exceptional"/    |
+/// |                          |                   | "aggregate"       |
+/// | error.code               | (none)            | error code        |
+/// +--------------------------+-------------------+-------------------+
+/// | Total Tags               | 6                 | 8                 |
+/// +--------------------------+-------------------+-------------------+
 /// </code>
 /// </remarks>
 [Trait(nameof(UnitTest), UnitTest.Functorium_Adapters_SourceGenerator)]

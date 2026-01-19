@@ -1,0 +1,11 @@
+﻿{
+  Information: ,
+  Properties: {
+    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.id} requesting,
+    request.category: Repository,
+    request.handler: TestObservabilityAdapter,
+    request.handler.method: GetById,
+    request.layer: adapter,
+    request.params.id: Guid_1
+  }
+}

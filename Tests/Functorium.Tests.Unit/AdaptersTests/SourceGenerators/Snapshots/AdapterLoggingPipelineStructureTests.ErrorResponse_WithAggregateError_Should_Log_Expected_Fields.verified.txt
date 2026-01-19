@@ -1,0 +1,29 @@
+﻿{
+  Information: ,
+  Properties: {
+    @error: {
+      Errors: [
+        {
+          ErrorCode: Test.Error1,
+          ErrorCurrentValue: value1,
+          Message: First error,
+          Code: -1000
+        },
+        {
+          ErrorCode: Test.Error2,
+          ErrorCurrentValue: value2,
+          Message: Second error,
+          Code: -1000
+        }
+      ]
+    },
+    error.code: Test.Error1,
+    error.type: aggregate,
+    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error},
+    request.category: Repository,
+    request.handler: TestObservabilityAdapter,
+    request.handler.method: GetById,
+    request.layer: adapter,
+    response.elapsed: {Scrubbed}
+  }
+}

@@ -1,0 +1,10 @@
+﻿{
+  error.code: Test.NotFound,
+  error.type: expected,
+  request.category: Repository,
+  request.handler: TestObservabilityAdapter,
+  request.handler.method: GetById,
+  request.layer: adapter,
+  response.elapsed: {Scrubbed},
+  response.status: failure
+}

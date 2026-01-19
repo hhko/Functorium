@@ -1,0 +1,10 @@
+﻿{
+  error.code: Test.Error1,
+  error.type: aggregate,
+  request.category: Repository,
+  request.handler: TestObservabilityAdapter,
+  request.handler.method: GetById,
+  request.layer: adapter,
+  response.elapsed: {Scrubbed},
+  response.status: failure
+}
