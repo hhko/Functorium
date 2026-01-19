@@ -10,6 +10,36 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines;
 /// UsecaseLoggingPipeline 로그 필드 검증 테스트
 /// README.md Observability 섹션에 정의된 필드가 정확히 출력되는지 검증합니다.
 /// </summary>
+/// <remarks>
+/// <para>
+/// 이 테스트는 로깅 필드 구조가 실수로 변경되는 것을 방지합니다.
+/// </para>
+/// <para>
+/// 로그 필드 구조 비교표:
+/// </para>
+/// <code>
+/// +--------------------------+---------------+---------------+---------------+
+/// | Field Key                | Request       | Response      | Response      |
+/// |                          |               | (success)     | (failure)     |
+/// +--------------------------+---------------+---------------+---------------+
+/// | request.layer            | "application" | "application" | "application" |
+/// | request.category         | "usecase"     | "usecase"     | "usecase"     |
+/// | request.handler.cqrs     | "command"/    | "command"/    | "command"/    |
+/// |                          | "query"       | "query"       | "query"       |
+/// | request.handler          | handler name  | handler name  | handler name  |
+/// | request.handler.method   | "Handle"      | "Handle"      | "Handle"      |
+/// | @request.message         | request obj   | (none)        | (none)        |
+/// | response.status          | (none)        | "success"     | "failure"     |
+/// | response.elapsed         | (none)        | elapsed (s)   | elapsed (s)   |
+/// | @response.message        | (none)        | response obj  | (none)        |
+/// | error.type               | (none)        | (none)        | "expected"/   |
+/// |                          |               |               | "exceptional"/|
+/// |                          |               |               | "aggregate"   |
+/// | error.code               | (none)        | (none)        | error code    |
+/// | @error                   | (none)        | (none)        | error object  |
+/// +--------------------------+---------------+---------------+---------------+
+/// </code>
+/// </remarks>
 public sealed class UsecaseLoggingPipelineStructureTests
 {
     // ===== Request 로그 필드 검증 =====

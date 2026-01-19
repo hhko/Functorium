@@ -1,7 +1,7 @@
 ﻿{
   request.category: usecase,
   request.handler: UsecaseMetricsPipelineStructureTests,
-  request.handler.cqrs: unknown,
+  request.handler.cqrs: command,
   request.handler.method: Handle,
   request.layer: application
 }

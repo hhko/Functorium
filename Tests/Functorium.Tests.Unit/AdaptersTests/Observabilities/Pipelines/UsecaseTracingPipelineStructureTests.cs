@@ -24,21 +24,23 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines;
 /// Activity 태그 구조 비교표:
 /// </para>
 /// <code>
-/// ┌──────────────────────────┬─────────────────────────┬─────────────────────────┐
-/// │ Tag Key                  │ Success                 │ Failure                 │
-/// ├──────────────────────────┼─────────────────────────┼─────────────────────────┤
-/// │ request.layer            │ "application"           │ "application"           │
-/// │ request.category         │ "usecase"               │ "usecase"               │
-/// │ request.handler.cqrs     │ "command"/"query"       │ "command"/"query"       │
-/// │ request.handler          │ handler name            │ handler name            │
-/// │ request.handler.method   │ "Handle"                │ "Handle"                │
-/// │ response.elapsed         │ elapsed seconds         │ elapsed seconds         │
-/// │ response.status          │ "success"               │ "failure"               │
-/// │ error.type               │ (none)                  │ "expected"/"exceptional"│
-/// │ error.code               │ (none)                  │ error code              │
-/// ├──────────────────────────┼─────────────────────────┼─────────────────────────┤
-/// │ Total Tags               │ 7                       │ 9                       │
-/// └──────────────────────────┴─────────────────────────┴─────────────────────────┘
+/// +--------------------------+-------------------+-------------------+
+/// | Tag Key                  | Success           | Failure           |
+/// +--------------------------+-------------------+-------------------+
+/// | request.layer            | "application"     | "application"     |
+/// | request.category         | "usecase"         | "usecase"         |
+/// | request.handler.cqrs     | "command"/"query" | "command"/"query" |
+/// | request.handler          | handler name      | handler name      |
+/// | request.handler.method   | "Handle"          | "Handle"          |
+/// | response.elapsed         | elapsed seconds   | elapsed seconds   |
+/// | response.status          | "success"         | "failure"         |
+/// | error.type               | (none)            | "expected"/       |
+/// |                          |                   | "exceptional"/    |
+/// |                          |                   | "aggregate"       |
+/// | error.code               | (none)            | error code        |
+/// +--------------------------+-------------------+-------------------+
+/// | Total Tags               | 7                 | 9                 |
+/// +--------------------------+-------------------+-------------------+
 /// </code>
 /// </remarks>
 [Trait(nameof(UnitTest), UnitTest.Functorium_Adapters)]
@@ -208,11 +210,7 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
         await sut.Handle(request, NextSuccess, CancellationToken.None);
 
         // Assert
-        _capturedActivity.ShouldNotBeNull();
-        var tags = _capturedActivity.TagObjects
-            .OrderBy(t => t.Key)
-            .ToDictionary(t => t.Key, t => t.Value?.ToString());
-
+        var tags = ExtractActivityTags();
         await Verify(tags)
             .UseDirectory("Snapshots")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
@@ -232,11 +230,7 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
         await sut.Handle(request, NextSuccessQuery, CancellationToken.None);
 
         // Assert
-        _capturedActivity.ShouldNotBeNull();
-        var tags = _capturedActivity.TagObjects
-            .OrderBy(t => t.Key)
-            .ToDictionary(t => t.Key, t => t.Value?.ToString());
-
+        var tags = ExtractActivityTags();
         await Verify(tags)
             .UseDirectory("Snapshots")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
@@ -256,11 +250,7 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
         await sut.Handle(request, NextFailWithExpectedError, CancellationToken.None);
 
         // Assert
-        _capturedActivity.ShouldNotBeNull();
-        var tags = _capturedActivity.TagObjects
-            .OrderBy(t => t.Key)
-            .ToDictionary(t => t.Key, t => t.Value?.ToString());
-
+        var tags = ExtractActivityTags();
         await Verify(tags)
             .UseDirectory("Snapshots")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
@@ -280,11 +270,7 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
         await sut.Handle(request, NextFailWithExceptionalError, CancellationToken.None);
 
         // Assert
-        _capturedActivity.ShouldNotBeNull();
-        var tags = _capturedActivity.TagObjects
-            .OrderBy(t => t.Key)
-            .ToDictionary(t => t.Key, t => t.Value?.ToString());
-
+        var tags = ExtractActivityTags();
         await Verify(tags)
             .UseDirectory("Snapshots")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
@@ -304,11 +290,7 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
         await sut.Handle(request, NextFailWithAggregateError, CancellationToken.None);
 
         // Assert
-        _capturedActivity.ShouldNotBeNull();
-        var tags = _capturedActivity.TagObjects
-            .OrderBy(t => t.Key)
-            .ToDictionary(t => t.Key, t => t.Value?.ToString());
-
+        var tags = ExtractActivityTags();
         await Verify(tags)
             .UseDirectory("Snapshots")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
@@ -328,11 +310,7 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
         await sut.Handle(request, NextFailWithGenericError, CancellationToken.None);
 
         // Assert
-        _capturedActivity.ShouldNotBeNull();
-        var tags = _capturedActivity.TagObjects
-            .OrderBy(t => t.Key)
-            .ToDictionary(t => t.Key, t => t.Value?.ToString());
-
+        var tags = ExtractActivityTags();
         await Verify(tags)
             .UseDirectory("Snapshots")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
@@ -341,6 +319,17 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
     #endregion
 
     #region Helper Methods
+
+    /// <summary>
+    /// 캡처된 Activity에서 태그를 추출하고 정렬된 Dictionary로 반환합니다.
+    /// </summary>
+    private Dictionary<string, string?> ExtractActivityTags()
+    {
+        _capturedActivity.ShouldNotBeNull();
+        return _capturedActivity.TagObjects
+            .OrderBy(t => t.Key)
+            .ToDictionary(t => t.Key, t => t.Value?.ToString());
+    }
 
     private static ValueTask<TestResponse> NextSuccess(
         TestCommandRequest request,

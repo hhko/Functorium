@@ -29,21 +29,23 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines;
 /// 메트릭별 태그 구조 비교표 (옵션 A: 에러 태그 포함):
 /// </para>
 /// <code>
-/// ┌──────────────────────────┬─────────────────────────┬─────────────────────────┬─────────────────────────┐
-/// │ Tag Key                  │ requestCounter          │ responseCounter         │ responseCounter         │
-/// │                          │ durationHistogram       │ (success)               │ (failure)               │
-/// ├──────────────────────────┼─────────────────────────┼─────────────────────────┼─────────────────────────┤
-/// │ request.layer            │ "application"           │ "application"           │ "application"           │
-/// │ request.category         │ "usecase"               │ "usecase"               │ "usecase"               │
-/// │ request.handler.cqrs     │ "command"/"query"       │ "command"/"query"       │ "command"/"query"       │
-/// │ request.handler          │ handler name            │ handler name            │ handler name            │
-/// │ request.handler.method   │ "Handle"                │ "Handle"                │ "Handle"                │
-/// │ response.status          │ (none)                  │ "success"               │ "failure"               │
-/// │ error.type               │ (none)                  │ (none)                  │ "expected"/"exceptional"│
-/// │ error.code               │ (none)                  │ (none)                  │ error code              │
-/// ├──────────────────────────┼─────────────────────────┼─────────────────────────┼─────────────────────────┤
-/// │ Total Tags               │ 5                       │ 6                       │ 8                       │
-/// └──────────────────────────┴─────────────────────────┴─────────────────────────┴─────────────────────────┘
+/// +--------------------------+-------------------+-------------------+-------------------+
+/// | Tag Key                  | requestCounter    | responseCounter   | responseCounter   |
+/// |                          | durationHistogram | (success)         | (failure)         |
+/// +--------------------------+-------------------+-------------------+-------------------+
+/// | request.layer            | "application"     | "application"     | "application"     |
+/// | request.category         | "usecase"         | "usecase"         | "usecase"         |
+/// | request.handler.cqrs     | "command"/"query" | "command"/"query" | "command"/"query" |
+/// | request.handler          | handler name      | handler name      | handler name      |
+/// | request.handler.method   | "Handle"          | "Handle"          | "Handle"          |
+/// | response.status          | (none)            | "success"         | "failure"         |
+/// | error.type               | (none)            | (none)            | "expected"/       |
+/// |                          |                   |                   | "exceptional"/    |
+/// |                          |                   |                   | "aggregate"       |
+/// | error.code               | (none)            | (none)            | error code        |
+/// +--------------------------+-------------------+-------------------+-------------------+
+/// | Total Tags               | 5                 | 6                 | 8                 |
+/// +--------------------------+-------------------+-------------------+-------------------+
 /// </code>
 /// </remarks>
 [Trait(nameof(UnitTest), UnitTest.Functorium_Adapters)]
@@ -57,13 +59,13 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
     public UsecaseMetricsPipelineStructureTests()
     {
         _meterFactory = new TestMeterFactory();
-        _openTelemetryOptions = MsOptions.Create(new OpenTelemetryOptions { ServiceNamespace = "TestService" });
+        _openTelemetryOptions = MsOptions.Create(new OpenTelemetryOptions { ServiceNamespace = "TestUsecaseService" });
 
         _capturedMeasurements = new List<CapturedMeasurement>();
         _listener = new MeterListener();
         _listener.InstrumentPublished = (instrument, listener) =>
         {
-            if (instrument.Meter.Name.StartsWith("TestService"))
+            if (instrument.Meter.Name.StartsWith("TestUsecaseService"))
             {
                 listener.EnableMeasurementEvents(instrument);
             }
@@ -111,6 +113,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
     public async Task Handle_DurationTags_ShouldContainSameTagsAsRequestCounter()
     {
         // Arrange
+        _capturedMeasurements.Clear();
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
             _openTelemetryOptions,
             _meterFactory);
@@ -143,6 +146,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
     public async Task Handle_SuccessAndFailureResponses_ShouldHaveDifferentTagCounts()
     {
         // Arrange
+        _capturedMeasurements.Clear();
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
             _openTelemetryOptions,
             _meterFactory);
@@ -189,6 +193,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
     public async Task Snapshot_Command_RequestTags()
     {
         // Arrange
+        _capturedMeasurements.Clear();
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
             _openTelemetryOptions,
             _meterFactory);
@@ -198,14 +203,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
         await sut.Handle(request, Next, CancellationToken.None);
 
         // Assert
-        var measurement = _capturedMeasurements
-            .FirstOrDefault(m => m.InstrumentName.Contains("requests"));
-        measurement.ShouldNotBeNull();
-
-        var tags = measurement.Tags
-            .OrderBy(t => t.Key)
-            .ToDictionary(t => t.Key, t => t.Value?.ToString());
-
+        var tags = ExtractAndOrderTags("requests");
         await Verify(tags).UseDirectory("Snapshots");
     }
 
@@ -216,6 +214,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
     public async Task Snapshot_Query_RequestTags()
     {
         // Arrange
+        _capturedMeasurements.Clear();
         var sut = new UsecaseMetricsPipeline<TestQueryRequest, TestResponse>(
             _openTelemetryOptions,
             _meterFactory);
@@ -225,14 +224,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
         await sut.Handle(request, NextQuery, CancellationToken.None);
 
         // Assert
-        var measurement = _capturedMeasurements
-            .FirstOrDefault(m => m.InstrumentName.Contains("requests"));
-        measurement.ShouldNotBeNull();
-
-        var tags = measurement.Tags
-            .OrderBy(t => t.Key)
-            .ToDictionary(t => t.Key, t => t.Value?.ToString());
-
+        var tags = ExtractAndOrderTags("requests");
         await Verify(tags).UseDirectory("Snapshots");
     }
 
@@ -243,6 +235,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
     public async Task Snapshot_SuccessResponse_Tags()
     {
         // Arrange
+        _capturedMeasurements.Clear();
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
             _openTelemetryOptions,
             _meterFactory);
@@ -252,14 +245,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
         await sut.Handle(request, Next, CancellationToken.None);
 
         // Assert
-        var measurement = _capturedMeasurements
-            .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
-        measurement.ShouldNotBeNull();
-
-        var tags = measurement.Tags
-            .OrderBy(t => t.Key)
-            .ToDictionary(t => t.Key, t => t.Value?.ToString());
-
+        var tags = ExtractAndOrderTags("responses", "requests");
         await Verify(tags).UseDirectory("Snapshots");
     }
 
@@ -270,6 +256,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
     public async Task Snapshot_FailureResponse_ExpectedError_Tags()
     {
         // Arrange
+        _capturedMeasurements.Clear();
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
             _openTelemetryOptions,
             _meterFactory);
@@ -279,14 +266,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
         await sut.Handle(request, NextFailWithGenericError, CancellationToken.None);
 
         // Assert
-        var measurement = _capturedMeasurements
-            .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
-        measurement.ShouldNotBeNull();
-
-        var tags = measurement.Tags
-            .OrderBy(t => t.Key)
-            .ToDictionary(t => t.Key, t => t.Value?.ToString());
-
+        var tags = ExtractAndOrderTags("responses", "requests");
         await Verify(tags).UseDirectory("Snapshots");
     }
 
@@ -297,6 +277,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
     public async Task Snapshot_FailureResponse_ExceptionalError_Tags()
     {
         // Arrange
+        _capturedMeasurements.Clear();
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
             _openTelemetryOptions,
             _meterFactory);
@@ -306,14 +287,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
         await sut.Handle(request, NextFailWithExceptionalError, CancellationToken.None);
 
         // Assert
-        var measurement = _capturedMeasurements
-            .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
-        measurement.ShouldNotBeNull();
-
-        var tags = measurement.Tags
-            .OrderBy(t => t.Key)
-            .ToDictionary(t => t.Key, t => t.Value?.ToString());
-
+        var tags = ExtractAndOrderTags("responses", "requests");
         await Verify(tags).UseDirectory("Snapshots");
     }
 
@@ -324,6 +298,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
     public async Task Snapshot_FailureResponse_AggregateError_Tags()
     {
         // Arrange
+        _capturedMeasurements.Clear();
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponseWithError>(
             _openTelemetryOptions,
             _meterFactory);
@@ -333,14 +308,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
         await sut.Handle(request, NextFailWithAggregateError, CancellationToken.None);
 
         // Assert
-        var measurement = _capturedMeasurements
-            .FirstOrDefault(m => m.InstrumentName.Contains("responses") && !m.InstrumentName.Contains("requests"));
-        measurement.ShouldNotBeNull();
-
-        var tags = measurement.Tags
-            .OrderBy(t => t.Key)
-            .ToDictionary(t => t.Key, t => t.Value?.ToString());
-
+        var tags = ExtractAndOrderTags("responses", "requests");
         await Verify(tags).UseDirectory("Snapshots");
     }
 
@@ -351,6 +319,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
     public async Task Snapshot_DurationHistogram_Tags()
     {
         // Arrange
+        _capturedMeasurements.Clear();
         var sut = new UsecaseMetricsPipeline<TestCommandRequest, TestResponse>(
             _openTelemetryOptions,
             _meterFactory);
@@ -360,20 +329,40 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
         await sut.Handle(request, Next, CancellationToken.None);
 
         // Assert
-        var measurement = _capturedMeasurements
-            .FirstOrDefault(m => m.InstrumentName.Contains("duration"));
-        measurement.ShouldNotBeNull();
-
-        var tags = measurement.Tags
-            .OrderBy(t => t.Key)
-            .ToDictionary(t => t.Key, t => t.Value?.ToString());
-
+        var tags = ExtractAndOrderTags("duration");
         await Verify(tags).UseDirectory("Snapshots");
     }
 
     #endregion
 
     #region Helper Methods
+
+    /// <summary>
+    /// 캡처된 측정값에서 패턴에 맞는 태그를 추출하고 정렬된 Dictionary로 반환합니다.
+    /// </summary>
+    /// <param name="instrumentPattern">측정값 이름에 포함되어야 할 패턴</param>
+    /// <param name="excludePattern">측정값 이름에서 제외할 패턴 (선택사항)</param>
+    private Dictionary<string, string?> ExtractAndOrderTags(string instrumentPattern, string? excludePattern = null)
+    {
+        CapturedMeasurement? measurement;
+
+        if (excludePattern != null)
+        {
+            measurement = _capturedMeasurements
+                .FirstOrDefault(m => m.InstrumentName.Contains(instrumentPattern) && !m.InstrumentName.Contains(excludePattern));
+        }
+        else
+        {
+            measurement = _capturedMeasurements
+                .FirstOrDefault(m => m.InstrumentName.Contains(instrumentPattern));
+        }
+
+        measurement.ShouldNotBeNull($"Measurement containing '{instrumentPattern}' should exist");
+
+        return measurement.Tags
+            .OrderBy(t => t.Key)
+            .ToDictionary(t => t.Key, t => t.Value?.ToString());
+    }
 
     private static void AssertTagValue(
         KeyValuePair<string, object?>[] tags,
@@ -485,7 +474,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
         }
     }
 
-    private sealed record TestCommandRequest : IMessage, ICommand<TestResponse>;
+    private sealed record TestCommandRequest : ICommandRequest<TestSuccessData>;
 
     private sealed record TestQueryRequest : IQueryRequest<TestSuccessData>;
 
