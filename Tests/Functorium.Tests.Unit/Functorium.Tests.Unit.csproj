@@ -24,8 +24,16 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Src\Functorium\Functorium.csproj" />
-    <ProjectReference Include="..\..\Src\Functorium.Adapters.SourceGenerator\Functorium.Adapters.SourceGenerator.csproj" ReferenceOutputAssembly="true" />
     <ProjectReference Include="..\..\Src\Functorium.Testing\Functorium.Testing.csproj" />
+    <!-- 기존 테스트에서 AdapterPipelineGenerator 타입 사용을 위한 참조 -->
+    <ProjectReference Include="..\..\Src\Functorium.Adapters.SourceGenerator\Functorium.Adapters.SourceGenerator.csproj" />
+  </ItemGroup>
+
+  <!-- Source Generator 참조 (Analyzer로 참조하여 코드 생성 활성화) -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Src\Functorium.Adapters.SourceGenerator\Functorium.Adapters.SourceGenerator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>
