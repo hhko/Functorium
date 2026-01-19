@@ -3,6 +3,8 @@
 
 > A functional domain is functor + dominium, seasoned with fun, designed to bridge **the age of deterministic rules** and **the age of probabilistic intuition**.
 
+![](./Functorium.Architecture.png)
+
 It enables expressing domain logic as pure functions and pushing side effects to architectural boundaries, allowing you to write **testable and predictable business logic**. The framework provides a functional type system based on LanguageExt 5.x and integrated observability through OpenTelemetry.
 
 ### Core Principles
@@ -28,19 +30,19 @@ It enables expressing domain logic as pure functions and pushing side effects to
 
 Functorium uses [OpenTelemetry Service Attributes](https://opentelemetry.io/docs/specs/semconv/registry/attributes/service/) for service identification.
 
-| Attribute | Stability | Type | Description | Example |
-|-----------|-----------|------|-------------|---------|
-| `service.name` | Stable | String | Logical name of the service. Must be identical across all horizontally scaled instances. | `orderservice` |
-| `service.namespace` | Development | String | A namespace for `service.name`. Helps distinguish service groups (e.g., by team or environment). | `mycompany.production` |
-| `service.instance.id` | Development | String | Unique ID of the service instance. Must be globally unique per `service.namespace,service.name` pair. | `627cc493-f310-47de-96bd-71410b7dec09` |
-| `service.version` | Stable | String | The version string of the service API or implementation. | `2.0.0` |
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `service.namespace` | A namespace for `service.name`. Helps distinguish service groups (e.g., by team or environment). | `mycompany.production` |
+| `service.name` | Logical name of the service. Must be identical across all horizontally scaled instances. | `orderservice` |
+| `service.version` | The version string of the service API or implementation. | `2.0.0` |
+| `service.instance.id` | Unique ID of the service instance. Must be globally unique per `service.namespace,service.name` pair. Uses `HOSTNAME` environment variable if available, otherwise falls back to `Environment.MachineName`. | `my-pod-abc123` (Kubernetes), `DESKTOP-ABC123` (Windows) |
 
 > **Recommended**: Use lowercase values for `service.name` and `service.namespace` (e.g., `mycompany.production`, `orderservice`).
 > This ensures consistency with OpenTelemetry conventions and avoids case-sensitivity issues in downstream systems (dashboards, queries, alerts).
 
 ### Field/Tag Consistency
 
-**Application Layer:**
+**Application Layer:** (Unit Tests: [Logging](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseLoggingPipelineStructureTests.cs), [Metrics](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseMetricsPipelineStructureTests.cs), [Tracing](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseTracingPipelineStructureTests.cs))
 
 | Field/Tag | Logging | Metrics | Tracing | Description |
 |-----------|---------|---------|---------|-------------|
@@ -55,7 +57,7 @@ Functorium uses [OpenTelemetry Service Attributes](https://opentelemetry.io/docs
 | `error.code` | ✅ | ✅ | ✅ | Domain-specific error code |
 | `@error` | ✅ | - | - | Structured error object (detailed) |
 
-**Adapter Layer:**
+**Adapter Layer:** (Unit Tests: [Logging](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterLoggingPipelineStructureTests.cs), [Metrics](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterMetricsPipelineStructureTests.cs), [Tracing](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterTracingPipelineStructureTests.cs))
 
 | Field/Tag | Logging | Metrics | Tracing | Description |
 |-----------|---------|---------|---------|-------------|
@@ -159,10 +161,10 @@ Functorium uses [OpenTelemetry Service Attributes](https://opentelemetry.io/docs
 
 **Implementation:**
 
-| Layer | Method | Note |
-|-------|--------|------|
-| Application | Direct `ILogger.LogXxx()` calls | 7+ parameters exceed `LoggerMessage.Define` limit of 6 |
-| Adapter | `LoggerMessage.Define` delegates | Zero allocation, high performance |
+| Layer | Method | Tests | Note |
+|-------|--------|-------|------|
+| Application | Direct `ILogger.LogXxx()` calls | [UsecaseLoggingPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseLoggingPipelineStructureTests.cs) | 7+ parameters exceed `LoggerMessage.Define` limit of 6 |
+| Adapter | `LoggerMessage.Define` delegates | [AdapterLoggingPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterLoggingPipelineStructureTests.cs) | Zero allocation, high performance |
 
 ### Metrics
 
@@ -220,10 +222,10 @@ Functorium uses [OpenTelemetry Service Attributes](https://opentelemetry.io/docs
 
 **Implementation:**
 
-| Layer | Method | Note |
-|-------|--------|------|
-| Application | `IPipelineBehavior` + `IMeterFactory` | Mediator pipeline |
-| Adapter | Source Generator | Auto-generated metrics instruments |
+| Layer | Method | Tests | Note |
+|-------|--------|-------|------|
+| Application | `IPipelineBehavior` + `IMeterFactory` | [UsecaseMetricsPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseMetricsPipelineStructureTests.cs) | Mediator pipeline |
+| Adapter | Source Generator | [AdapterMetricsPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterMetricsPipelineStructureTests.cs) | Auto-generated metrics instruments |
 
 ### Tracing
 
@@ -265,7 +267,7 @@ Functorium uses [OpenTelemetry Service Attributes](https://opentelemetry.io/docs
 
 **Implementation:**
 
-| Layer | Method | Note |
-|-------|--------|------|
-| Application | `IPipelineBehavior` + `ActivitySource.StartActivity()` | Mediator pipeline |
-| Adapter | Source Generator | Auto-generated Activity spans |
+| Layer | Method | Tests | Note |
+|-------|--------|-------|------|
+| Application | `IPipelineBehavior` + `ActivitySource.StartActivity()` | [UsecaseTracingPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseTracingPipelineStructureTests.cs) | Mediator pipeline |
+| Adapter | Source Generator | [AdapterTracingPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterTracingPipelineStructureTests.cs) | Auto-generated Activity spans |
