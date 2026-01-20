@@ -2,21 +2,34 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
+## 로드맵
+### 1.0-alpha.2
 - [ ] 관찰 가능성
----
+
+### 1.0-alpha.3
 - [ ] 관찰 가능성 시스템: OpenSearch, Kafka, Flink SQL
+- [ ] 컨테이너 기반 테스트 .Testing
 - [ ] 관찰 가능성 Adpater HTTP FastEndpoint
 - [ ] 관찰 가능성 Adpater DB EFCore
 - [ ] 관찰 가능성 Adpater DB Dapper
 - [ ] 관찰 가능성 Adpater MQ Wolverine
 - [ ] Adapters 프로젝트 분리
----
+
+### 1.0-alpah.4
 - [ ] MinVer
 - [ ] Entity, EntityId, EFCore 통합
 - [ ] DTO
 - [ ] Event: Internal(Mediator) vs External(RabbitMQ)
----
+
+### 1.0-alpha.5
 - [ ] Cache: https://medium.com/@skd9000/how-we-fixed-our-cache-stampede-problem-3b2e6ac01b27
+- [ ] 값 객체 Validation 통합
+- [ ] Validation Pipeline만 Applications 레이어에 배치
+- [ ] 문서 사이트: Astro, Starlight
+  - 한국어 검색(하이라이트)
+  - 이미지 확대
+
+### 1.0-alpha.6
 - [ ] 프로젝트 변환
   - [How We Fixed Our Cache Stampede Problem](https://medium.com/@aman.toumaj/mastering-domain-driven-design-a-tactical-ddd-implementation-5255d71d609f)
 - [ ] 프로젝트 변환
@@ -24,22 +37,39 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
   - [Clean Architecture in .NET: Building the Domain & Application Layers](https://medium.com/@compileandconquer/clean-architecture-in-net-building-the-domain-application-layers-d97c6d4928bc)
   - [https://medium.com/@compileandconquer/clean-architecture-in-net-infrastructure-presentation-layers-69b6fb37ac3f](https://medium.com/@compileandconquer/clean-architecture-in-net-infrastructure-presentation-layers-69b6fb37ac3f)
   - [Clean Architecture in .NET: Testing, Best Practices & Final Thoughts](https://medium.com/@compileandconquer/clean-architecture-in-net-testing-best-practices-final-thoughts-1ae7316e0004)
-- [ ] 프로젝트 변환
-  - [eShop](https://github.com/dotnet/eShop)
-- [ ] Outbox
-- [ ] Unit of Work
-- [ ] 단일 호스트 예제
-- [ ] 복수 호스트 예제
 - [ ] TngTech.ArchUnitNET 다이어그램
 - [ ] VSCode 개발 환경 구축: 테스트, 코드 커버리지, DevKit
-- [ ] 문서 사이트: Astro, Starlight
-  - 한국어 검색(하이라이트)
-  - 이미지 확대
-- [ ] Claude Code 스킬로 만들기
-- [ ] Aspire 통합
-- [ ] LanaguageExt 101
+- [ ] 단일 호스트 예제
+- [ ] Unit of Work
 
-### 목표
+### 1.0-alpha.7
+- [ ] Aspire 통합
+- [ ] 복수 호스트 예제
+- [ ] Outbox
+- [ ] Wolvernine
+
+### 1.0-alpha.8
+- [ ] GitHub을 이용한 성능 회귀 테스트
+
+### 그 외
+- [ ] 프로젝트 변환
+  - [eShop](https://github.com/dotnet/eShop)
+- [ ] LanaguageExt 101
+  - [ ] Unit
+  - [ ] Error
+  - [ ] Validation
+  - [ ] Fin
+  - [ ] IO
+  - [ ] FinT
+  - [ ] Seq
+  - [ ] **Traverse**
+  - [ ] Option
+- [ ] Feature Flag
+- [ ] Claude Code 스킬로 만들기
+- [ ] https://github.com/cjo4m06/mcp-shrimp-task-manager
+- [ ] https://github.com/glittercowboy/get-shit-done
+
+## 목표
 - [ ] 관찰 가능성 문서화 및 테스트 자동화
 
 ## 할일
@@ -47,9 +77,12 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [ ] IOption<T> 학습
 - [ ] 히스토그램 학습
 ---
+- [x] Category??? 대문자
+- [ ] Http 의존성 등록 + Pipeline
+- [ ] Validation LINQ 확장
+---
 - [ ] public partial class Program { } 인터페이스화
 - [ ] Extensions 이름 개선
-- [ ] Category??? 대문자
 - [ ] Pipeline 로그 생성자?
 - [ ] 관찰 가능성 usecase 확장
   - Logging
