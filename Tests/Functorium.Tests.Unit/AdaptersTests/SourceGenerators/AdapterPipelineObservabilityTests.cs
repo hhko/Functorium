@@ -109,7 +109,7 @@ public sealed class AdapterPipelineObservabilityTests
 
         // Request Counter 태그 구조 검증 (AcquireActivity 메서드 내)
         generatedCode.ShouldContain($"{{ {nameof(ObservabilityNaming)}.CustomAttributes.RequestLayer, {nameof(ObservabilityNaming)}.Layers.Adapter }}");
-        generatedCode.ShouldContain($"{{ {nameof(ObservabilityNaming)}.CustomAttributes.RequestCategory, this.GetRequestCategoryPascalCase() }}");
+        generatedCode.ShouldContain($"{{ {nameof(ObservabilityNaming)}.CustomAttributes.RequestCategory, _requestCategoryLowerCase }}");
         generatedCode.ShouldContain($"{{ {nameof(ObservabilityNaming)}.CustomAttributes.RequestHandler, requestHandler }}");
         generatedCode.ShouldContain($"{{ {nameof(ObservabilityNaming)}.CustomAttributes.RequestHandlerMethod, requestHandlerMethod }}");
     }
@@ -173,9 +173,9 @@ public sealed class AdapterPipelineObservabilityTests
         generatedCode.ShouldNotBeNull();
 
         // Metrics 이름 패턴 검증
-        generatedCode.ShouldContain("$\"adapter.{categoryLower}.requests\"");
-        generatedCode.ShouldContain("$\"adapter.{categoryLower}.responses\"");
-        generatedCode.ShouldContain("$\"adapter.{categoryLower}.duration\"");
+        generatedCode.ShouldContain("$\"adapter.{_requestCategoryLowerCase}.requests\"");
+        generatedCode.ShouldContain("$\"adapter.{_requestCategoryLowerCase}.responses\"");
+        generatedCode.ShouldContain("$\"adapter.{_requestCategoryLowerCase}.duration\"");
     }
 
     #endregion
@@ -293,7 +293,7 @@ public sealed class AdapterPipelineObservabilityTests
         // Logging에서 사용하는 Request 정보 확인
         // Metrics/Tracing과 동일한 ObservabilityNaming을 사용
         generatedCode.ShouldContain($"{nameof(ObservabilityNaming)}.Layers.Adapter");
-        generatedCode.ShouldContain("GetRequestCategoryPascalCase()");
+        generatedCode.ShouldContain("_requestCategoryLowerCase");
         generatedCode.ShouldContain("requestHandler");
         generatedCode.ShouldContain("requestHandlerMethod");
     }

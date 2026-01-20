@@ -26,6 +26,7 @@ public static partial class ObservabilityNaming
     {
         public const string Usecase = "usecase";
         public const string Repository = "repository";
+        public const string Unknown = "unknown";
     }
 
     /// <summary>

@@ -1,7 +1,7 @@
 ﻿{
   error.code: Exceptional,
   error.type: exceptional,
-  request.category: Repository,
+  request.category: repository,
   request.handler: TestObservabilityAdapter,
   request.handler.method: GetById,
   request.layer: adapter,

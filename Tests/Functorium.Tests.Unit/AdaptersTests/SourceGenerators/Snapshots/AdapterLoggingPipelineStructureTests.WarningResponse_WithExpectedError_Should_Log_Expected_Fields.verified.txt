@@ -10,7 +10,7 @@
     error.code: Test.NotFound,
     error.type: expected,
     OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error},
-    request.category: Repository,
+    request.category: repository,
     request.handler: TestObservabilityAdapter,
     request.handler.method: GetById,
     request.layer: adapter,

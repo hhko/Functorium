@@ -2,7 +2,7 @@
   Information: ,
   Properties: {
     OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} {response.result} responded {response.status} in {response.elapsed:0.0000} s,
-    request.category: Repository,
+    request.category: repository,
     request.handler: TestObservabilityAdapter,
     request.handler.method: GetById,
     request.layer: adapter,

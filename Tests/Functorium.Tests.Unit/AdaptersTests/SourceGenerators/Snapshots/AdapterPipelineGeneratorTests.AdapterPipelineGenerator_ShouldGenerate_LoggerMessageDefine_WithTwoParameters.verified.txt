@@ -32,6 +32,8 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
 
     private const string RequestHandler = nameof(TwoParamAdapter);
 
+    private readonly string _requestCategoryLowerCase;
+
     private readonly bool _isDebugEnabled;
     private readonly bool _isInformationEnabled;
     private readonly bool _isWarningEnabled;
@@ -51,15 +53,17 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
         _activitySource = activitySource;
         _logger = logger;
 
+        // RequestCategory 캐싱 (성능 최적화: 한 번만 ToLowerInvariant 호출)
+        _requestCategoryLowerCase = this.RequestCategory?.ToLowerInvariant() ?? ObservabilityNaming.Categories.Unknown;
+
         // Meter 및 Metrics 초기화
         // Meter 이름: {service.namespace}.adapter.{category}
         string serviceNamespace = openTelemetryOptions.Value.ServiceNamespace;
-        string categoryLower = this.RequestCategory?.ToLowerInvariant() ?? "adapter";
-        string meterName = $"{serviceNamespace}.adapter.{categoryLower}";
+        string meterName = $"{serviceNamespace}.adapter.{_requestCategoryLowerCase}";
         var meter = meterFactory.Create(meterName);
-        _requestCounter = meter.CreateCounter<long>($"adapter.{categoryLower}.requests", "{request}", "Total number of adapter requests");
-        _responseCounter = meter.CreateCounter<long>($"adapter.{categoryLower}.responses", "{response}", "Total number of adapter responses");
-        _durationHistogram = meter.CreateHistogram<double>($"adapter.{categoryLower}.duration", "s", "Duration of adapter execution in seconds");
+        _requestCounter = meter.CreateCounter<long>($"adapter.{_requestCategoryLowerCase}.requests", "{request}", "Total number of adapter requests");
+        _responseCounter = meter.CreateCounter<long>($"adapter.{_requestCategoryLowerCase}.responses", "{response}", "Total number of adapter responses");
+        _durationHistogram = meter.CreateHistogram<double>($"adapter.{_requestCategoryLowerCase}.duration", "s", "Duration of adapter execution in seconds");
 
         _isDebugEnabled = logger.IsEnabled(LogLevel.Debug);
         _isInformationEnabled = logger.IsEnabled(LogLevel.Information);
@@ -140,7 +144,7 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
         {
             string operationName = ObservabilityNaming.Spans.OperationName(
                 ObservabilityNaming.Layers.Adapter,
-                this.GetRequestCategoryPascalCase(),
+                _requestCategoryLowerCase,
                 requestHandler,
                 requestHandlerMethod);
 
@@ -148,7 +152,7 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
             TagList tags = new()
             {
                 { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-                { ObservabilityNaming.CustomAttributes.RequestCategory, this.GetRequestCategoryPascalCase() },
+                { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
                 { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },
                 { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod }
             };
@@ -165,7 +169,7 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
             TagList metricTags = new()
             {
                 { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-                { ObservabilityNaming.CustomAttributes.RequestCategory, this.GetRequestCategoryPascalCase() },
+                { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
                 { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },
                 { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod }
             };
@@ -179,7 +183,7 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
         TagList metricTags = new()
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-            { ObservabilityNaming.CustomAttributes.RequestCategory, this.GetRequestCategoryPascalCase() },
+            { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
             { ObservabilityNaming.CustomAttributes.RequestHandler, RequestHandler },
             { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod },
             { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success }
@@ -199,7 +203,7 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
         TagList metricTags = new()
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-            { ObservabilityNaming.CustomAttributes.RequestCategory, this.GetRequestCategoryPascalCase() },
+            { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
             { ObservabilityNaming.CustomAttributes.RequestHandler, RequestHandler },
             { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod },
             { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure },
@@ -215,11 +219,6 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
         activity?.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, errorCode);
         activity?.SetStatus(ActivityStatusCode.Error, $"{errorType}: {errorCode}");
     }
-
-    private string GetRequestCategoryPascalCase() =>
-        string.IsNullOrEmpty(this.RequestCategory)
-            ? string.Empty
-            : char.ToUpper(this.RequestCategory[0]) + this.RequestCategory.Substring(1).ToLower();
 
     /// <summary>
     /// 에러 정보(타입, 코드)를 추출합니다.
@@ -307,7 +306,7 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
             {
                 _logger.LogRequestDebug_TwoParamAdapter_GetData(
                     ObservabilityNaming.Layers.Adapter,
-                    this.GetRequestCategoryPascalCase(),
+                    _requestCategoryLowerCase,
                     requestHandler,
                     requestHandlerMethod,
                     id, name);
@@ -316,7 +315,7 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
             {
                 _logger.LogRequest_TwoParamAdapter_GetData(
                     ObservabilityNaming.Layers.Adapter,
-                    this.GetRequestCategoryPascalCase(),
+                    _requestCategoryLowerCase,
                     requestHandler,
                     requestHandlerMethod);
             }
@@ -333,7 +332,7 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
         {
             _logger.LogResponseDebug_TwoParamAdapter_GetData(
                 ObservabilityNaming.Layers.Adapter,
-                this.GetRequestCategoryPascalCase(),
+                _requestCategoryLowerCase,
                 requestHandler,
                 requestHandlerMethod,
                 ObservabilityNaming.Status.Success,
@@ -344,7 +343,7 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
         {
             _logger.LogResponse_TwoParamAdapter_GetData(
                 ObservabilityNaming.Layers.Adapter,
-                this.GetRequestCategoryPascalCase(),
+                _requestCategoryLowerCase,
                 requestHandler,
                 requestHandlerMethod,
                 ObservabilityNaming.Status.Success,
@@ -364,7 +363,7 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
         {
             _logger.LogResponseError_TwoParamAdapter_GetData(
                 ObservabilityNaming.Layers.Adapter,
-                this.GetRequestCategoryPascalCase(),
+                _requestCategoryLowerCase,
                 requestHandler,
                 requestHandlerMethod,
                 ObservabilityNaming.Status.Failure,
@@ -377,7 +376,7 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
         {
             _logger.LogResponseWarning_TwoParamAdapter_GetData(
                 ObservabilityNaming.Layers.Adapter,
-                this.GetRequestCategoryPascalCase(),
+                _requestCategoryLowerCase,
                 requestHandler,
                 requestHandlerMethod,
                 ObservabilityNaming.Status.Failure,
