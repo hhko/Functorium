@@ -101,6 +101,112 @@ public static class FinTUtilites
   }
 
   // =========================================================================
+  // Validation → FinT<IO, A>
+  // =========================================================================
+
+
+  /// <summary>
+  /// Validation → FinT 변환: Validation을 FinT로 승격하고 체이닝하는 SelectMany
+  ///
+  /// LanguageExt 패턴 적용:
+  ///   Validation<Error, A> → FinT<M, A> → FinT<M, B> → FinT<M, C>
+  ///
+  /// LINQ 쿼리:
+  ///   from validVal in validation          // Validation<Error, A>
+  ///   from finTVal in finTSelector(val)    // FinT<M, B>
+  ///   select result                        // C
+  ///
+  /// 사용 예:
+  ///   FinT<IO, Unit> result =
+  ///       from identifier in LimitSampleIdentifier.Validate(...)  // Validation<Error, LimitSampleIdentifier>
+  ///       from saved in SaveToDatabase(identifier)                 // FinT<IO, Unit>
+  ///       select saved;
+  ///
+  /// 장점:
+  ///   • LINQ 쿼리 표현식에서 직접 사용 가능
+  ///   • 별도의 ToFinT() 호출 불필요
+  ///   • Fin<A> SelectMany와 동일한 패턴
+  ///
+  /// 주의:
+  ///   • 검증 실패 시 첫 번째 에러만 사용 (errors.Head)
+  ///   • 모든 에러를 처리해야 하는 경우 별도 구현 필요
+  /// </summary>
+  public static FinT<M, C> SelectMany<M, A, B, C>(
+      this Validation<Error, A> validation,
+      Func<A, FinT<M, B>> finTSelector,
+      Func<A, B, C> projector)
+      where M : Monad<M>
+  {
+      // Validation을 Fin으로 변환 (첫 번째 에러만 사용)
+      Fin<A> fin = validation.Match(
+          Succ: value => Fin.Succ(value),
+          Fail: errors => Fin.Fail<A>(errors.Head));
+
+      // Fin → FinT Lift 후 체이닝
+      return FinT.lift<M, A>(fin).SelectMany(finTSelector, projector);
+  }
+
+  /// <summary>
+  /// Validation → FinT 변환 (단순 Map): Validation을 FinT로 승격하고 변환
+  ///
+  /// LINQ 쿼리:
+  ///   from val in validation  // Validation<Error, A>
+  ///   select result          // B
+  ///
+  /// 사용 예:
+  ///   FinT<IO, LimitSampleIdentifier> result =
+  ///       from identifier in LimitSampleIdentifier.Validate(lineId, processId, partId, version)
+  ///       select identifier;
+  /// </summary>
+  public static FinT<M, B> SelectMany<M, A, B>(
+      this Validation<Error, A> validation,
+      Func<A, B> selector)
+      where M : Monad<M>
+  {
+      Fin<A> fin = validation.Match(
+          Succ: value => Fin.Succ(value),
+          Fail: errors => Fin.Fail<A>(errors.Head));
+
+      return FinT.lift<M, A>(fin).Map(selector);
+  }
+
+  // =========================================================================
+  // Validation → FinT<IO, A> 특화 확장 메서드 (IO 모나드)
+  // =========================================================================
+
+  /// <summary>
+  /// Validation → FinT<IO, B> 변환: IO 모나드에 특화된 SelectMany
+  ///
+  /// LINQ 쿼리 표현식에서 Validation을 직접 사용 가능하게 함:
+  ///   from validated in LimitSampleIdentifier.Validate(...)  // Validation<Error, A> → FinT<IO, A>
+  ///   from result in DoSomething(validated)                  // FinT<IO, B>
+  ///   select result
+  ///
+  /// 사용 예:
+  ///   FinT<IO, Unit> usecase =
+  ///       from identifier in LimitSampleIdentifier.Validate(lineId, processId, partId, version)
+  ///       from saved in SaveToDatabase(identifier)
+  ///       select saved;
+  ///
+  /// 장점:
+  ///   • AsFinT() 호출 불필요
+  ///   • 타입 추론 자동
+  ///   • LINQ 쿼리 표현식에서 자연스럽게 사용
+  /// </summary>
+  public static FinT<IO, C> SelectMany<A, B, C>(
+      this Validation<Error, A> validation,
+      Func<A, FinT<IO, B>> finTSelector,
+      Func<A, B, C> projector)
+  {
+      Fin<A> fin = validation.Match(
+          Succ: value => Fin.Succ(value),
+          Fail: errors => Fin.Fail<A>(errors.Head));
+
+      return FinT.lift<IO, A>(fin).SelectMany(finTSelector, projector);
+  }
+
+
+  // =========================================================================
   // Filter 메서드 - 조건부 필터링 지원
   // =========================================================================
 
