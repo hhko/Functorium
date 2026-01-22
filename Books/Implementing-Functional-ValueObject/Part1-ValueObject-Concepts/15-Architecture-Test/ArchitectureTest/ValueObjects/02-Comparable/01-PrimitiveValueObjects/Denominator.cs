@@ -1,7 +1,8 @@
-using Framework.Abstractions.Errors;
 using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
+using DomainError = Functorium.Domains.ValueObjects.DomainError;
+using DomainErrorType = Functorium.Domains.ValueObjects.DomainErrorType;
 
 namespace ArchitectureTest.ValueObjects.Comparable.PrimitiveValueObjects;
 
@@ -50,21 +51,9 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
     /// <returns>검증 결과</returns>
     public static Validation<Error, int> Validate(int value) =>
         value == 0
-            ? DomainErrors.Zero(value)
+            ? DomainError.For<Denominator, int>(new DomainErrorType.Custom("Zero"), value,
+                $"Denominator cannot be zero. Current value: '{value}'")
             : value;
-
-    internal static class DomainErrors
-    {
-        /// <summary>
-        /// 0 값에 대한 에러
-        /// </summary>
-        /// <param name="value">실패한 값</param>
-        /// <returns>구조화된 에러 정보</returns>
-        public static Error Zero(int value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
-                errorCurrentValue: value);
-    }
 
     // 비교 가능성은 ComparableSimpleValueObject<int>에서 자동으로 제공됨
     // - IComparable<Denominator> 구현

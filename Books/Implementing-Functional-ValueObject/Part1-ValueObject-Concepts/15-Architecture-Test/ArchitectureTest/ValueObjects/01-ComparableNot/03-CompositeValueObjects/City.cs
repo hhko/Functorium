@@ -1,7 +1,8 @@
-using Framework.Abstractions.Errors;
 using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
+using DomainError = Functorium.Domains.ValueObjects.DomainError;
+using DomainErrorType = Functorium.Domains.ValueObjects.DomainErrorType;
 
 namespace ArchitectureTest.ValueObjects.ComparableNot.CompositeValueObjects;
 
@@ -50,19 +51,7 @@ public sealed class City : SimpleValueObject<string>
     /// <returns>검증 결과</returns>
     public static Validation<Error, string> Validate(string value) =>
         string.IsNullOrWhiteSpace(value)
-            ? DomainErrors.Empty(value)
+            ? DomainError.For<City>(new DomainErrorType.Empty(), value ?? "",
+                $"City name cannot be empty. Current value: '{value}'")
             : value;
-
-    internal static class DomainErrors
-    {
-        /// <summary>
-        /// 빈 도시명에 대한 에러
-        /// </summary>
-        /// <param name="value">실패한 도시명 값</param>
-        /// <returns>구조화된 에러 정보</returns>
-        public static Error Empty(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(City)}.{nameof(Empty)}",
-                errorCurrentValue: value);
-    }
 }

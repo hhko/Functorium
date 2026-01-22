@@ -1,8 +1,9 @@
 using Ardalis.SmartEnum;
-using Framework.Abstractions.Errors;
 using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
+using DomainError = Functorium.Domains.ValueObjects.DomainError;
+using DomainErrorType = Functorium.Domains.ValueObjects.DomainErrorType;
 
 namespace ArchitectureTest.ValueObjects.Comparable.CompositeValueObjects;
 
@@ -11,7 +12,7 @@ namespace ArchitectureTest.ValueObjects.Comparable.CompositeValueObjects;
 /// SmartEnum을 사용하여 타입 안전하고 강력한 통화 열거형 구현
 /// ValueObject 규칙을 준수하여 구현
 /// </summary>
-public sealed class Currency 
+public sealed class Currency
     : SmartEnum<Currency, string>
     , IValueObject
 {
@@ -82,7 +83,7 @@ public sealed class Currency
     /// <param name="value">통화 코드 (ISO 4217)</param>
     /// <param name="koreanName">한글 이름</param>
     /// <param name="symbol">통화 기호</param>
-    private Currency(string name, string value, string koreanName, string symbol) 
+    private Currency(string name, string value, string koreanName, string symbol)
         : base(name, value)
     {
         KoreanName = koreanName;
@@ -125,7 +126,8 @@ public sealed class Currency
     /// <returns>검증 결과</returns>
     private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =>
         string.IsNullOrWhiteSpace(currencyCode)
-            ? DomainErrors.Empty(currencyCode)
+            ? DomainError.For<Currency>(new DomainErrorType.Empty(), currencyCode ?? "",
+                $"Currency code cannot be empty. Current value: '{currencyCode}'")
             : currencyCode;
 
     /// <summary>
@@ -135,7 +137,8 @@ public sealed class Currency
     /// <returns>검증 결과</returns>
     private static Validation<Error, string> ValidateFormat(string currencyCode) =>
         currencyCode.Length != 3 || !currencyCode.All(char.IsLetter)
-            ? DomainErrors.NotThreeLetters(currencyCode)
+            ? DomainError.For<Currency>(new DomainErrorType.WrongLength(3), currencyCode,
+                $"Currency code must be exactly 3 letters. Current value: '{currencyCode}'")
             : currencyCode.ToUpperInvariant();
 
     /// <summary>
@@ -152,7 +155,8 @@ public sealed class Currency
         }
         catch (SmartEnumNotFoundException)
         {
-            return DomainErrors.Unsupported(currencyCode);
+            return DomainError.For<Currency>(new DomainErrorType.Custom("Unsupported"), currencyCode,
+                $"Currency code is not supported. Current value: '{currencyCode}'");
         }
     }
 
@@ -160,21 +164,21 @@ public sealed class Currency
     /// 지원되는 모든 통화 목록을 반환
     /// </summary>
     /// <returns>지원되는 통화 목록</returns>
-    public static IEnumerable<Currency> GetAllSupportedCurrencies() => 
+    public static IEnumerable<Currency> GetAllSupportedCurrencies() =>
         List;
 
     /// <summary>
     /// 통화의 상세 정보를 문자열로 반환
     /// </summary>
     /// <returns>통화 상세 정보</returns>
-    public override string ToString() => 
+    public override string ToString() =>
         $"{Value} ({KoreanName}) {Symbol}";
 
     /// <summary>
     /// 통화 코드만 반환
     /// </summary>
     /// <returns>통화 코드</returns>
-    public string GetCode() => 
+    public string GetCode() =>
         Value;
 
     /// <summary>
@@ -182,7 +186,7 @@ public sealed class Currency
     /// </summary>
     /// <param name="amount">금액</param>
     /// <returns>포맷팅된 금액 문자열</returns>
-    public string FormatAmount(decimal amount) => 
+    public string FormatAmount(decimal amount) =>
         $"{Symbol}{amount:N2}";
 
     /// <summary>
@@ -190,43 +194,6 @@ public sealed class Currency
     /// </summary>
     /// <param name="amount">금액</param>
     /// <returns>포맷팅된 금액 문자열</returns>
-    public string FormatAmountWithoutDecimals(decimal amount) => 
+    public string FormatAmountWithoutDecimals(decimal amount) =>
         $"{Symbol}{amount:N0}";
-
-    /// <summary>
-    /// DomainErrors 중첩 클래스
-    /// ValueObject 규칙에 따른 구조화된 에러 처리
-    /// </summary>
-    internal static class DomainErrors
-    {
-        /// <summary>
-        /// 빈 통화 코드 에러
-        /// </summary>
-        /// <param name="value">빈 통화 코드</param>
-        /// <returns>에러</returns>
-        public static Error Empty(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Empty)}",
-                errorCurrentValue: value);
-
-        /// <summary>
-        /// 3자리 영문자가 아닌 통화 코드 에러
-        /// </summary>
-        /// <param name="value">잘못된 형식의 통화 코드</param>
-        /// <returns>에러</returns>
-        public static Error NotThreeLetters(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(NotThreeLetters)}",
-                errorCurrentValue: value);
-
-        /// <summary>
-        /// 지원하지 않는 통화 코드 에러
-        /// </summary>
-        /// <param name="value">지원하지 않는 통화 코드</param>
-        /// <returns>에러</returns>
-        public static Error Unsupported(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Unsupported)}",
-                errorCurrentValue: value);
-    }
 }

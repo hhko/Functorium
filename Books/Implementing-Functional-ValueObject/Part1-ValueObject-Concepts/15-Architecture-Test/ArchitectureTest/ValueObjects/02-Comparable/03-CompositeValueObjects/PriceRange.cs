@@ -1,7 +1,8 @@
-using Framework.Abstractions.Errors;
 using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
+using DomainError = Functorium.Domains.ValueObjects.DomainError;
+using DomainErrorType = Functorium.Domains.ValueObjects.DomainErrorType;
 
 namespace ArchitectureTest.ValueObjects.Comparable.CompositeValueObjects;
 
@@ -64,8 +65,8 @@ public sealed class PriceRange : ComparableValueObject
     /// <param name="currencyCode">통화 코드</param>
     /// <returns>검증 결과</returns>
     public static Validation<Error, (Price MinPrice, Price MaxPrice)> Validate(
-        decimal minPriceValue, 
-        decimal maxPriceValue, 
+        decimal minPriceValue,
+        decimal maxPriceValue,
         string currencyCode) =>
         from validMinPriceTuple in Price.Validate(minPriceValue, currencyCode)
         from validMaxPriceTuple in Price.Validate(maxPriceValue, currencyCode)
@@ -82,7 +83,9 @@ public sealed class PriceRange : ComparableValueObject
     /// <returns>검증 결과</returns>
     private static Validation<Error, (Price MinPrice, Price MaxPrice)> ValidatePriceRange(Price minPrice, Price maxPrice) =>
         (decimal)minPrice.Amount > (decimal)maxPrice.Amount
-            ? DomainErrors.MinExceedsMax(minPrice, maxPrice)
+            ? DomainError.For<PriceRange>(new DomainErrorType.Custom("MinExceedsMax"),
+                $"MinPrice: {minPrice}, MaxPrice: {maxPrice}",
+                $"Minimum price cannot exceed maximum price. Min: '{minPrice}', Max: '{maxPrice}'")
             : (MinPrice: minPrice, MaxPrice: maxPrice);
 
     /// <summary>
@@ -102,24 +105,6 @@ public sealed class PriceRange : ComparableValueObject
     /// <returns>가격 범위의 문자열 표현</returns>
     public override string ToString() =>
         $"{MinPrice} ~ {MaxPrice}";
-
-    /// <summary>
-    /// DomainErrors 중첩 클래스
-    /// ValueObject 규칙에 따른 구조화된 에러 처리
-    /// </summary>
-    internal static class DomainErrors
-    {
-        /// <summary>
-        /// 최솟값이 최댓값을 초과하는 에러
-        /// </summary>
-        /// <param name="minPrice">최소 가격</param>
-        /// <param name="maxPrice">최대 가격</param>
-        /// <returns>에러</returns>
-        public static Error MinExceedsMax(Price minPrice, Price maxPrice) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(PriceRange)}.{nameof(MinExceedsMax)}",
-                errorCurrentValue: $"MinPrice: {minPrice}, MaxPrice: {maxPrice}");
-    }
 
     // 비교 기능은 ComparableValueObject에서 자동으로 제공됨:
     // - IComparable<PriceRange> 구현

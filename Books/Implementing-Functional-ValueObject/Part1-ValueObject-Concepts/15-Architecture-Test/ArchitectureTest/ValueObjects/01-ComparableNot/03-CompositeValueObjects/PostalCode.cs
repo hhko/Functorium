@@ -1,7 +1,8 @@
-using Framework.Abstractions.Errors;
 using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
+using DomainError = Functorium.Domains.ValueObjects.DomainError;
+using DomainErrorType = Functorium.Domains.ValueObjects.DomainErrorType;
 
 namespace ArchitectureTest.ValueObjects.ComparableNot.CompositeValueObjects;
 
@@ -59,7 +60,8 @@ public sealed class PostalCode : SimpleValueObject<string>
     /// <returns>검증 결과</returns>
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         string.IsNullOrWhiteSpace(value)
-            ? DomainErrors.Empty(value)
+            ? DomainError.For<PostalCode>(new DomainErrorType.Empty(), value ?? "",
+                $"Postal code cannot be empty. Current value: '{value}'")
             : value;
 
     /// <summary>
@@ -69,29 +71,7 @@ public sealed class PostalCode : SimpleValueObject<string>
     /// <returns>검증 결과</returns>
     private static Validation<Error, string> ValidateFormat(string value) =>
         value.Length != 5 || !value.All(char.IsDigit)
-            ? DomainErrors.InvalidFormat(value)
+            ? DomainError.For<PostalCode>(new DomainErrorType.WrongLength(5), value,
+                $"Postal code must be exactly 5 digits. Current value: '{value}'")
             : value;
-
-    internal static class DomainErrors
-    {
-        /// <summary>
-        /// 빈 우편번호에 대한 에러
-        /// </summary>
-        /// <param name="value">실패한 우편번호 값</param>
-        /// <returns>구조화된 에러 정보</returns>
-        public static Error Empty(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(PostalCode)}.{nameof(Empty)}",
-                errorCurrentValue: value);
-
-        /// <summary>
-        /// 잘못된 형식의 우편번호에 대한 에러
-        /// </summary>
-        /// <param name="value">실패한 우편번호 값</param>
-        /// <returns>구조화된 에러 정보</returns>
-        public static Error InvalidFormat(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(PostalCode)}.{nameof(InvalidFormat)}",
-                errorCurrentValue: value);
-    }
 }

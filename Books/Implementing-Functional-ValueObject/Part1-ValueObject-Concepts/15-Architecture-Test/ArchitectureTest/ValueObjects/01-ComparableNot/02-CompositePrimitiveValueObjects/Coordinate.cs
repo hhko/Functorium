@@ -1,7 +1,8 @@
-using Framework.Abstractions.Errors;
 using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
+using DomainError = Functorium.Domains.ValueObjects.DomainError;
+using DomainErrorType = Functorium.Domains.ValueObjects.DomainErrorType;
 
 namespace ArchitectureTest.ValueObjects.ComparableNot.CompositePrimitiveValueObjects;
 
@@ -67,7 +68,8 @@ public sealed class Coordinate : ValueObject
     /// <returns>검증 결과</returns>
     private static Validation<Error, int> ValidateX(int x) =>
         x < 0 || x > 1000
-            ? DomainErrors.InvalidX(x)
+            ? DomainError.For<Coordinate, int>(new DomainErrorType.OutOfRange("0", "1000"), x,
+                $"X coordinate must be between 0 and 1000. Current value: '{x}'")
             : x;
 
     /// <summary>
@@ -77,31 +79,9 @@ public sealed class Coordinate : ValueObject
     /// <returns>검증 결과</returns>
     private static Validation<Error, int> ValidateY(int y) =>
         y < 0 || y > 1000
-            ? DomainErrors.InvalidY(y)
+            ? DomainError.For<Coordinate, int>(new DomainErrorType.OutOfRange("0", "1000"), y,
+                $"Y coordinate must be between 0 and 1000. Current value: '{y}'")
             : y;
-
-    internal static class DomainErrors
-    {
-        /// <summary>
-        /// 유효하지 않은 X 좌표에 대한 에러
-        /// </summary>
-        /// <param name="value">실패한 X 좌표 값</param>
-        /// <returns>구조화된 에러 정보</returns>
-        public static Error InvalidX(int value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(InvalidX)}",
-                errorCurrentValue: value);
-
-        /// <summary>
-        /// 유효하지 않은 Y 좌표에 대한 에러
-        /// </summary>
-        /// <param name="value">실패한 Y 좌표 값</param>
-        /// <returns>구조화된 에러 정보</returns>
-        public static Error InvalidY(int value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(InvalidY)}",
-                errorCurrentValue: value);
-    }
 
     protected override IEnumerable<object> GetEqualityComponents()
     {

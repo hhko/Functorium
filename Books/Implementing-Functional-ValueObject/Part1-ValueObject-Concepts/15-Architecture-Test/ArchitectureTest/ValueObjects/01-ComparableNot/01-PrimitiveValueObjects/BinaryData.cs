@@ -1,7 +1,8 @@
-using Framework.Abstractions.Errors;
 using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
+using DomainError = Functorium.Domains.ValueObjects.DomainError;
+using DomainErrorType = Functorium.Domains.ValueObjects.DomainErrorType;
 
 namespace ArchitectureTest.ValueObjects.ComparableNot.PrimitiveValueObjects;
 
@@ -50,21 +51,9 @@ public sealed class BinaryData : SimpleValueObject<byte[]>
     /// <returns>검증 결과</returns>
     public static Validation<Error, byte[]> Validate(byte[]? value) =>
         value == null || value.Length == 0
-            ? DomainErrors.Empty(value)
+            ? DomainError.For<BinaryData>(new DomainErrorType.Empty(), value?.Length.ToString() ?? "null",
+                $"Binary data cannot be empty or null. Current value: '{value?.Length.ToString() ?? "null"}'")
             : value;
-
-    internal static class DomainErrors
-    {
-        /// <summary>
-        /// 빈 바이너리 데이터에 대한 에러
-        /// </summary>
-        /// <param name="value">실패한 바이너리 데이터 값</param>
-        /// <returns>구조화된 에러 정보</returns>
-        public static Error Empty(byte[]? value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(BinaryData)}.{nameof(Empty)}",
-                errorCurrentValue: value?.Length.ToString() ?? "null");
-    }
 
     /// <summary>
     /// 동등성 비교 구성 요소 반환

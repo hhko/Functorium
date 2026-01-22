@@ -1,7 +1,8 @@
-using Framework.Abstractions.Errors;
 using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
+using DomainError = Functorium.Domains.ValueObjects.DomainError;
+using DomainErrorType = Functorium.Domains.ValueObjects.DomainErrorType;
 
 namespace ArchitectureTest.ValueObjects.Comparable.CompositePrimitiveValueObjects;
 
@@ -69,7 +70,8 @@ public sealed class DateRange : ComparableValueObject
     /// <returns>검증 결과</returns>
     private static Validation<Error, DateTime> ValidateStartDate(DateTime startDate) =>
         startDate < DateTime.MinValue || startDate > DateTime.MaxValue
-            ? DomainErrors.InvalidStartDate(startDate)
+            ? DomainError.For<DateRange, DateTime>(new DomainErrorType.Custom("InvalidStartDate"), startDate,
+                $"Start date is invalid. Current value: '{startDate}'")
             : startDate;
 
     /// <summary>
@@ -79,7 +81,8 @@ public sealed class DateRange : ComparableValueObject
     /// <returns>검증 결과</returns>
     private static Validation<Error, DateTime> ValidateEndDate(DateTime endDate) =>
         endDate < DateTime.MinValue || endDate > DateTime.MaxValue
-            ? DomainErrors.InvalidEndDate(endDate)
+            ? DomainError.For<DateRange, DateTime>(new DomainErrorType.Custom("InvalidEndDate"), endDate,
+                $"End date is invalid. Current value: '{endDate}'")
             : endDate;
 
     /// <summary>
@@ -90,42 +93,9 @@ public sealed class DateRange : ComparableValueObject
     /// <returns>검증 결과</returns>
     private static Validation<Error, (DateTime StartDate, DateTime EndDate)> ValidateDateRange(DateTime startDate, DateTime endDate) =>
         startDate >= endDate
-            ? DomainErrors.InvalidRange(startDate, endDate)
+            ? DomainError.For<DateRange, DateTime, DateTime>(new DomainErrorType.Custom("StartAfterEnd"), startDate, endDate,
+                $"Start date cannot be after or equal to end date. Start: '{startDate}', End: '{endDate}'")
             : (StartDate: startDate, EndDate: endDate);
-
-    internal static class DomainErrors
-    {
-        /// <summary>
-        /// 유효하지 않은 시작일에 대한 에러
-        /// </summary>
-        /// <param name="value">실패한 시작일 값</param>
-        /// <returns>구조화된 에러 정보</returns>
-        public static Error InvalidStartDate(DateTime value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(DateRange)}.{nameof(InvalidStartDate)}",
-                errorCurrentValue: value);
-
-        /// <summary>
-        /// 유효하지 않은 종료일에 대한 에러
-        /// </summary>
-        /// <param name="value">실패한 종료일 값</param>
-        /// <returns>구조화된 에러 정보</returns>
-        public static Error InvalidEndDate(DateTime value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(DateRange)}.{nameof(InvalidEndDate)}",
-                errorCurrentValue: value);
-
-        /// <summary>
-        /// 잘못된 날짜 범위에 대한 에러
-        /// </summary>
-        /// <param name="startDate">시작일</param>
-        /// <param name="endDate">종료일</param>
-        /// <returns>구조화된 에러 정보</returns>
-        public static Error InvalidRange(DateTime startDate, DateTime endDate) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(DateRange)}.{nameof(InvalidRange)}",
-                errorCurrentValue: $"StartDate: {startDate}, EndDate: {endDate}");
-    }
 
     /// <summary>
     /// 비교 가능한 구성 요소 반환
