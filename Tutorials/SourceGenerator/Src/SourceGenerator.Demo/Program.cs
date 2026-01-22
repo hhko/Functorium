@@ -19,8 +19,10 @@
 
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using Functorium.Adapters.Observabilities;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SourceGenerator.Demo.Adapters;
 
 // ============================================================================
@@ -57,12 +59,14 @@ var logger = loggerFactory.CreateLogger<UserRepositoryPipeline>();
 // OpenTelemetry 직접 사용
 var activitySource = new ActivitySource("SourceGenerator.Demo");
 var meterFactory = new SimpleMeterFactory();
+var openTelemetryOptions = Options.Create(new OpenTelemetryOptions());
 
 // Pipeline 인스턴스 생성 (새로운 생성자 시그니처)
 var pipeline = new UserRepositoryPipeline(
     activitySource: activitySource,
     logger: logger,
-    meterFactory: meterFactory);
+    meterFactory: meterFactory,
+    openTelemetryOptions: openTelemetryOptions);
 
 Console.WriteLine($"   Type: {pipeline.GetType().Name}");
 Console.WriteLine($"   Base Type: {pipeline.GetType().BaseType?.Name}");

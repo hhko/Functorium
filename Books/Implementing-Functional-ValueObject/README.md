@@ -6,7 +6,7 @@
 
 ## 이 책에 대하여
 
-이 책은 **함수형 프로그래밍 원칙을 적용한 값 객체(Value Object) 구현**을 단계별로 학습할 수 있도록 구성된 종합적인 교육 과정입니다. 기본적인 나눗셈 함수에서 시작하여 완성된 패턴까지, **27개의 실습 프로젝트**를 통해 함수형 값 객체의 모든 측면을 체계적으로 학습할 수 있습니다.
+이 책은 **함수형 프로그래밍 원칙을 적용한 값 객체(Value Object) 구현**을 단계별로 학습할 수 있도록 구성된 종합적인 교육 과정입니다. 기본적인 나눗셈 함수에서 시작하여 완성된 패턴까지, **28개의 실습 프로젝트**를 통해 함수형 값 객체의 모든 측면을 체계적으로 학습할 수 있습니다.
 
 > **단순한 예외 기반 함수에서 시작하여 타입 안전한 함수형 값 객체로 진화하는 과정을 함께 경험해보세요.**
 
@@ -58,7 +58,8 @@
 | 11 | [프레임워크 타입](Part1-ValueObject-Concepts/11-ValueObject-Framework/) | 프레임워크 타입 |
 | 12 | [타입 안전한 열거형](Part1-ValueObject-Concepts/12-Type-Safe-Enums/) | 타입 안전한 열거형 |
 | 13 | [에러 코드](Part1-ValueObject-Concepts/13-Error-Code/) | 구조화된 에러 코드 |
-| 14 | [아키텍처 테스트](Part1-ValueObject-Concepts/14-Architecture-Test/) | 아키텍처 테스트와 규칙 |
+| 14 | [에러 코드 Fluent](Part1-ValueObject-Concepts/14-Error-Code-Fluent/) | DomainError 헬퍼 |
+| 15 | [아키텍처 테스트](Part1-ValueObject-Concepts/15-Architecture-Test/) | 아키텍처 테스트와 규칙 |
 
 ### Part 2: 검증 패턴 마스터
 
@@ -130,7 +131,7 @@
      ↓
 10장: 검증된 값 생성   →  11장: 프레임워크 타입  →  12장: 타입 안전 열거형
      ↓
-13장: 에러 코드        →  14장: 아키텍처 테스트
+13장: 에러 코드        →  14장: 에러 코드 Fluent  →  15장: 아키텍처 테스트
 ```
 
 ---
@@ -179,11 +180,12 @@ IValueObject (인터페이스 - 명명 규칙)
 ```
 Implementing-Functional-ValueObject/
 ├── Part0-Introduction/        # Part 0: 서론
-├── Part1-ValueObject-Concepts/  # Part 1: 값 객체 개념 이해 (14개)
+├── Part1-ValueObject-Concepts/  # Part 1: 값 객체 개념 이해 (15개)
 │   ├── 01-Basic-Divide/
 │   ├── 02-Defensive-Programming/
 │   ├── ...
-│   └── 14-Architecture-Test/
+│   ├── 14-Error-Code-Fluent/
+│   └── 15-Architecture-Test/
 ├── Part2-Validation-Patterns/   # Part 2: 검증 패턴 마스터 (5개)
 │   ├── 01-Bind-Sequential-Validation/
 │   ├── ...
@@ -254,7 +256,7 @@ dotnet test
 
 ### 테스트 프로젝트 구조
 
-**Part 1: 값 객체 개념 이해** (14개)
+**Part 1: 값 객체 개념 이해** (15개)
 
 | 장 | 테스트 프로젝트 | 주요 테스트 내용 |
 |:---:|----------------|-----------------|
@@ -271,7 +273,8 @@ dotnet test
 | 11 | `ValueObjectFramework.Tests.Unit` | 프레임워크 타입 |
 | 12 | `TypeSafeEnums.Tests.Unit` | 타입 안전 열거형 |
 | 13 | `ErrorCode.Tests.Unit` | 에러 코드 |
-| 14 | `ArchitectureTest.Tests.Unit` | 아키텍처 테스트 |
+| 14 | `ErrorCodeFluent.Tests.Unit` | DomainError 헬퍼 |
+| 15 | `ArchitectureTest.Tests.Unit` | 아키텍처 테스트 |
 
 **Part 2: 검증 패턴 마스터** (5개)
 

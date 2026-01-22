@@ -3,7 +3,14 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
 ## 로드맵
+### AI 도구
+- [ ] 개발 관리:
+- [ ] 웹앱 개발: https://github.com/opactorai/Claudable
+- [ ] 서버 개발: 자체
+- [ ] 로컬 검색: https://github.com/marcoaapfortes/Mantic.sh
+
 ### 1.0-alpha.2
+- [ ] 값 객체 DomainError Fluent 적용
 - [ ] 관찰 가능성
 
 ### 1.0-alpha.3
@@ -73,18 +80,30 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [ ] 관찰 가능성 문서화 및 테스트 자동화
 
 ## 할일
+- [x] 관찰 가능성 매뉴얼
+- [x] 도메인 에러 개선 DoaminErrorTtype
+- [ ] DoaminErrorTtype Should 전체 타입 대상으로 확대
+- [ ] 도메인 에러 타입 개발 가이드 문서
+---
+- [ ] ApplicationError
+- [ ] AdapterError
+---
+- [ ] ValidationPipeline에 Domain Validate 통합
+- [ ] 값 객체 구현 개발 가이드 문서
+---
 - [ ] 로그 테스트 학습
+- [ ] 예외 Error 타입으로 표현?? 구조화 검증
 - [ ] IOption<T> 학습
 - [ ] 히스토그램 학습
 ---
 - [x] Category??? 대문자
 - [ ] Http 의존성 등록 + Pipeline
-- [ ] Validation LINQ 확장
+- [x] Validation LINQ 확장
 ---
 - [ ] public partial class Program { } 인터페이스화
 - [ ] Extensions 이름 개선
 - [ ] Pipeline 로그 생성자?
-- [ ] 관찰 가능성 usecase 확장
+- [ ] 관찰 가능성 usecase 확장 1개, response._ <- 커스텀 타입
   - Logging
   - Tracing
   - Metrics

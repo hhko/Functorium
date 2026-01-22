@@ -166,11 +166,15 @@
     <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/13-Error-Code/ErrorCode.Tests.Unit/ErrorCode.Tests.Unit.csproj" />
     <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/13-Error-Code/Framework/Framework.csproj" />
   </Folder>
-  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/14-Architecture-Test/">
-    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/14-Architecture-Test/ArchitectureTest/ArchitectureTest.csproj" />
-    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/14-Architecture-Test/ArchitectureTest.Tests.Unit/ArchitectureTest.Tests.Unit.csproj" />
-    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/14-Architecture-Test/Framework/Framework.csproj" />
-    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/14-Architecture-Test/Framework.Testing/Framework.Testing.csproj" />
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/14-Error-Code-Fluent/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/14-Error-Code-Fluent/ErrorCodeFluent/ErrorCodeFluent.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/14-Error-Code-Fluent/ErrorCodeFluent.Tests.Unit/ErrorCodeFluent.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/15-Architecture-Test/">
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/15-Architecture-Test/ArchitectureTest/ArchitectureTest.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/15-Architecture-Test/ArchitectureTest.Tests.Unit/ArchitectureTest.Tests.Unit.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/15-Architecture-Test/Framework/Framework.csproj" />
+    <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/15-Architecture-Test/Framework.Testing/Framework.Testing.csproj" />
   </Folder>
   <Folder Name="/Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/" />
   <Folder Name="/Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/01-Bind-Sequential-Validation/">
