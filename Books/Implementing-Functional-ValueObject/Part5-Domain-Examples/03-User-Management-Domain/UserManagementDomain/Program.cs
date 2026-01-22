@@ -182,7 +182,8 @@ public sealed class Email : SimpleValueObject<string>
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainErrors.Empty(value);
+            : DomainError.For<Email>(new DomainErrorType.Empty(), value,
+                $"Email address cannot be empty. Current value: '{value}'");
 
     // 5.2 길이 검증
     private static Validation<Error, string> ValidateNotTooLong(string value)
@@ -190,38 +191,18 @@ public sealed class Email : SimpleValueObject<string>
         var normalized = value.ToLowerInvariant();
         return normalized.Length <= 254
             ? normalized
-            : DomainErrors.TooLong(normalized.Length);
+            : DomainError.For<Email, int>(new DomainErrorType.TooLong(), normalized.Length,
+                $"Email address cannot exceed 254 characters. Current length: '{normalized.Length}'");
     }
 
     // 5.3 형식 검증
     private static Validation<Error, string> ValidateFormat(string value) =>
         Pattern.IsMatch(value)
             ? value
-            : DomainErrors.InvalidFormat(value);
+            : DomainError.For<Email>(new DomainErrorType.InvalidFormat(), value,
+                $"Email must match 'local@domain' pattern. Current value: '{value}'");
 
     public static implicit operator string(Email email) => email.Value;
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        public static Error Empty(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(Empty)}",
-                errorCurrentValue: value,
-                errorMessage: $"Email address cannot be empty. Current value: '{value}'");
-
-        public static Error TooLong(int length) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(TooLong)}",
-                errorCurrentValue: length,
-                errorMessage: $"Email address cannot exceed 254 characters. Current length: '{length}'");
-
-        public static Error InvalidFormat(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(InvalidFormat)}",
-                errorCurrentValue: value,
-                errorMessage: $"Invalid email format. Current value: '{value}'");
-    }
 }
 
 /// <summary>
@@ -258,19 +239,22 @@ public sealed class Password : IEquatable<Password>
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainErrors.Empty(value);
+            : DomainError.For<Password>(new DomainErrorType.Empty(), value,
+                $"Password cannot be empty. Current value: '{value}'");
 
     // 5.2 최소 길이 검증
     private static Validation<Error, string> ValidateMinLength(string value) =>
         value.Length >= MinLength
             ? value
-            : DomainErrors.TooShort(value.Length);
+            : DomainError.For<Password, int>(new DomainErrorType.TooShort(), value.Length,
+                $"Password must be at least {MinLength} characters. Current length: '{value.Length}'");
 
     // 5.3 최대 길이 검증
     private static Validation<Error, string> ValidateMaxLength(string value) =>
         value.Length <= MaxLength
             ? value
-            : DomainErrors.TooLong(value.Length);
+            : DomainError.For<Password, int>(new DomainErrorType.TooLong(), value.Length,
+                $"Password cannot exceed {MaxLength} characters. Current length: '{value.Length}'");
 
     // 5.4 강도 검증
     private static Validation<Error, string> ValidateStrength(string value)
@@ -283,7 +267,8 @@ public sealed class Password : IEquatable<Password>
         var score = new[] { hasUpperCase, hasLowerCase, hasDigit, hasSpecialChar }.Count(x => x);
         return score >= 3
             ? value
-            : DomainErrors.WeakPassword(score);
+            : DomainError.For<Password, int>(new DomainErrorType.Custom("InsufficientComplexity"), score,
+                $"Password must contain at least 3 of: uppercase, lowercase, digits, special characters. Current complexity score: '{score}'");
     }
 
     private static string HashPassword(string plainText)
@@ -304,34 +289,6 @@ public sealed class Password : IEquatable<Password>
     public override bool Equals(object? obj) => obj is Password other && Equals(other);
     public override int GetHashCode() => Value.GetHashCode();
     public override string ToString() => "********";
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        public static Error Empty(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Password)}.{nameof(Empty)}",
-                errorCurrentValue: value,
-                errorMessage: $"Password cannot be empty. Current value: '{value}'");
-
-        public static Error TooShort(int length) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Password)}.{nameof(TooShort)}",
-                errorCurrentValue: length,
-                errorMessage: $"Password must be at least {MinLength} characters. Current length: '{length}'");
-
-        public static Error TooLong(int length) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Password)}.{nameof(TooLong)}",
-                errorCurrentValue: length,
-                errorMessage: $"Password cannot exceed {MaxLength} characters. Current length: '{length}'");
-
-        public static Error WeakPassword(int score) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Password)}.{nameof(WeakPassword)}",
-                errorCurrentValue: score,
-                errorMessage: $"Password is too weak. Must contain at least 3 of: uppercase, lowercase, digits, special characters. Current score: '{score}'");
-    }
 }
 
 /// <summary>
@@ -369,7 +326,8 @@ public sealed class PhoneNumber : ValueObject
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainErrors.Empty(value);
+            : DomainError.For<PhoneNumber>(new DomainErrorType.Empty(), value,
+                $"Phone number cannot be empty. Current value: '{value}'");
 
     // 5.2 숫자 추출 및 형식 검증
     private static Validation<Error, string> ValidateDigits(string value)
@@ -381,7 +339,8 @@ public sealed class PhoneNumber : ValueObject
 
         return digits.Length >= 9 && digits.Length <= 11
             ? digits
-            : DomainErrors.InvalidFormat(value);
+            : DomainError.For<PhoneNumber>(new DomainErrorType.WrongLength(), value,
+                $"Phone number must have 9-11 digits. Current value: '{value}'");
     }
 
     public string Formatted
@@ -410,22 +369,6 @@ public sealed class PhoneNumber : ValueObject
     public override string ToString() => FullNumber;
 
     public static implicit operator string(PhoneNumber phone) => phone.FullNumber;
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        public static Error Empty(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(PhoneNumber)}.{nameof(Empty)}",
-                errorCurrentValue: value,
-                errorMessage: $"Phone number cannot be empty. Current value: '{value}'");
-
-        public static Error InvalidFormat(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(PhoneNumber)}.{nameof(InvalidFormat)}",
-                errorCurrentValue: value,
-                errorMessage: $"Invalid phone number format. Current value: '{value}'");
-    }
 }
 
 /// <summary>
@@ -470,65 +413,36 @@ public sealed class Username : SimpleValueObject<string>
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value.Trim().ToLowerInvariant()
-            : DomainErrors.Empty(value);
+            : DomainError.For<Username>(new DomainErrorType.Empty(), value,
+                $"Username cannot be empty. Current value: '{value}'");
 
     // 5.2 최소 길이 검증
     private static Validation<Error, string> ValidateMinLength(string value) =>
         value.Length >= MinLength
             ? value
-            : DomainErrors.TooShort(value.Length);
+            : DomainError.For<Username, int>(new DomainErrorType.TooShort(), value.Length,
+                $"Username must be at least {MinLength} characters. Current length: '{value.Length}'");
 
     // 5.3 최대 길이 검증
     private static Validation<Error, string> ValidateMaxLength(string value) =>
         value.Length <= MaxLength
             ? value
-            : DomainErrors.TooLong(value.Length);
+            : DomainError.For<Username, int>(new DomainErrorType.TooLong(), value.Length,
+                $"Username cannot exceed {MaxLength} characters. Current length: '{value.Length}'");
 
     // 5.4 형식 검증
     private static Validation<Error, string> ValidateFormat(string value) =>
         Pattern.IsMatch(value)
             ? value
-            : DomainErrors.InvalidFormat(value);
+            : DomainError.For<Username>(new DomainErrorType.InvalidFormat(), value,
+                $"Username must start with a letter and contain only letters, numbers, underscores, and hyphens. Current value: '{value}'");
 
     // 5.5 예약어 검증
     private static Validation<Error, string> ValidateNotReserved(string value) =>
         !ReservedNames.Contains(value)
             ? value
-            : DomainErrors.Reserved(value);
+            : DomainError.For<Username>(new DomainErrorType.Custom("Reserved"), value,
+                $"This username is reserved and cannot be used. Current value: '{value}'");
 
     public static implicit operator string(Username username) => username.Value;
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        public static Error Empty(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Username)}.{nameof(Empty)}",
-                errorCurrentValue: value,
-                errorMessage: $"Username cannot be empty. Current value: '{value}'");
-
-        public static Error TooShort(int length) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Username)}.{nameof(TooShort)}",
-                errorCurrentValue: length,
-                errorMessage: $"Username must be at least {MinLength} characters. Current length: '{length}'");
-
-        public static Error TooLong(int length) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Username)}.{nameof(TooLong)}",
-                errorCurrentValue: length,
-                errorMessage: $"Username cannot exceed {MaxLength} characters. Current length: '{length}'");
-
-        public static Error InvalidFormat(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Username)}.{nameof(InvalidFormat)}",
-                errorCurrentValue: value,
-                errorMessage: $"Username must start with a letter and contain only letters, numbers, underscores, and hyphens. Current value: '{value}'");
-
-        public static Error Reserved(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Username)}.{nameof(Reserved)}",
-                errorCurrentValue: value,
-                errorMessage: $"This username is reserved and cannot be used. Current value: '{value}'");
-    }
 }

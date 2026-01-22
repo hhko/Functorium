@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Functorium.Abstractions.Errors;
 using Functorium.Domains.ValueObjects;
 using LanguageExt;
@@ -111,108 +112,49 @@ class Program
 
 /// <summary>
 /// AccountNumber 값 객체 (SimpleValueObject 기반)
+/// ValidationRules 라이브러리를 사용한 간결한 구현
 /// </summary>
 public sealed class AccountNumber : SimpleValueObject<string>
 {
-    // 2. Private 생성자 - 단순 대입만 처리
+    private static readonly Regex Format = new(@"^\d{3}-\d{10,14}$", RegexOptions.Compiled);
+
     private AccountNumber(string value) : base(value) { }
 
-    /// <summary>
-    /// 계좌번호에 대한 public 접근자 (전체 값)
-    /// </summary>
     public string FullNumber => Value;
-
-    // 파생 속성
     public string BankCode => Value[..3];
     public string Number => Value[4..];
     public string Masked => $"{BankCode}-****{Number[^4..]}";
 
-    // 3. Public Create 메서드 - 검증과 생성을 연결
     public static Fin<AccountNumber> Create(string? value) =>
-        CreateFromValidation(
-            Validate(value ?? "null"),
-            validValue => new AccountNumber(validValue));
+        CreateFromValidation(Validate(value ?? "null"), v => new AccountNumber(v));
 
-    // 5. Public Validate 메서드 - 순차 검증
     public static Validation<Error, string> Validate(string value) =>
-        ValidateNotEmpty(value)
-            .Bind(_ => ValidateFormat(value));
-
-    // 5.1 빈 값 검증
-    private static Validation<Error, string> ValidateNotEmpty(string value) =>
-        !string.IsNullOrWhiteSpace(value)
-            ? value
-            : DomainErrors.Empty(value);
-
-    // 5.2 형식 검증
-    private static Validation<Error, string> ValidateFormat(string value)
-    {
-        var normalized = value.Replace(" ", "").Replace("−", "-");
-        return System.Text.RegularExpressions.Regex.IsMatch(normalized, @"^\d{3}-\d{10,14}$")
-            ? normalized
-            : DomainErrors.InvalidFormat(normalized);
-    }
+        ValidationRules.NotEmpty<AccountNumber>(value)
+            .ThenNormalize(v => v.Replace(" ", "").Replace("−", "-"))
+            .ThenMatches<AccountNumber>(Format,
+                $"Invalid account number format. Expected: 'NNN-NNNNNNNNNN'. Current value: '{value}'");
 
     public static implicit operator string(AccountNumber account) => account.Value;
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        public static Error Empty(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(AccountNumber)}.{nameof(Empty)}",
-                errorCurrentValue: value,
-                errorMessage: $"Account number cannot be empty. Current value: '{value}'");
-
-        public static Error InvalidFormat(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(AccountNumber)}.{nameof(InvalidFormat)}",
-                errorCurrentValue: value,
-                errorMessage: $"Invalid account number format. Expected format: 'NNN-NNNNNNNNNN' (e.g., 110-1234567890). Current value: '{value}'");
-    }
 }
 
 /// <summary>
 /// InterestRate 값 객체 (ComparableSimpleValueObject 기반)
+/// ValidationRules 라이브러리를 사용한 간결한 구현
 /// </summary>
 public sealed class InterestRate : ComparableSimpleValueObject<decimal>
 {
-    // 2. Private 생성자 - 단순 대입만 처리
     private InterestRate(decimal value) : base(value) { }
 
-    /// <summary>
-    /// 이자율 값에 대한 public 접근자 (퍼센트)
-    /// </summary>
     public decimal Percentage => Value;
-
-    // 파생 속성
     public decimal Decimal => Value / 100m;
 
-    // 3. Public Create 메서드 - 검증과 생성을 연결
     public static Fin<InterestRate> Create(decimal percentValue) =>
-        CreateFromValidation(
-            Validate(percentValue),
-            validValue => new InterestRate(validValue));
+        CreateFromValidation(Validate(percentValue), v => new InterestRate(v));
 
-    // 5. Public Validate 메서드 - 순차 검증
     public static Validation<Error, decimal> Validate(decimal value) =>
-        ValidateNotNegative(value)
-            .Bind(_ => ValidateNotExceedsMaximum(value))
-            .Map(_ => value);
+        ValidationRules.NonNegative<InterestRate, decimal>(value)
+            .ThenAtMost<InterestRate, decimal>(100m);
 
-    // 5.1 음수 검증
-    private static Validation<Error, decimal> ValidateNotNegative(decimal value) =>
-        value >= 0
-            ? value
-            : DomainErrors.Negative(value);
-
-    // 5.2 최대값 검증
-    private static Validation<Error, decimal> ValidateNotExceedsMaximum(decimal value) =>
-        value <= 100
-            ? value
-            : DomainErrors.ExceedsMaximum(value);
-
-    // 도메인 메서드
     public decimal CalculateSimpleInterest(decimal principal, int years) =>
         principal * Decimal * years;
 
@@ -222,35 +164,18 @@ public sealed class InterestRate : ComparableSimpleValueObject<decimal>
     public static implicit operator decimal(InterestRate rate) => rate.Decimal;
 
     public override string ToString() => $"{Value:F2}%";
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        public static Error Negative(decimal value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(InterestRate)}.{nameof(Negative)}",
-                errorCurrentValue: value,
-                errorMessage: $"Interest rate cannot be negative. Current value: '{value}'");
-
-        public static Error ExceedsMaximum(decimal value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(InterestRate)}.{nameof(ExceedsMaximum)}",
-                errorCurrentValue: value,
-                errorMessage: $"Interest rate cannot exceed 100%. Current value: '{value}'");
-    }
 }
 
 /// <summary>
 /// ExchangeRate 값 객체 (ValueObject 기반)
+/// ValidationRules 라이브러리를 사용한 간결한 구현
 /// </summary>
 public sealed class ExchangeRate : ValueObject
 {
-    // 1.1 속성 선언
     public string BaseCurrency { get; }
     public string QuoteCurrency { get; }
     public decimal Rate { get; }
 
-    // 2. Private 생성자 - 단순 대입만 처리
     private ExchangeRate(string baseCurrency, string quoteCurrency, decimal rate)
     {
         BaseCurrency = baseCurrency;
@@ -258,56 +183,41 @@ public sealed class ExchangeRate : ValueObject
         Rate = rate;
     }
 
-    // 3. Public Create 메서드 - 검증과 생성을 연결
     public static Fin<ExchangeRate> Create(string? baseCurrency, string? quoteCurrency, decimal rate) =>
         CreateFromValidation(
             Validate(baseCurrency ?? "null", quoteCurrency ?? "null", rate),
-            validValues => new ExchangeRate(
-                validValues.BaseCurrency.ToUpperInvariant(),
-                validValues.QuoteCurrency.ToUpperInvariant(),
-                validValues.Rate));
+            v => new ExchangeRate(v.BaseCurrency.ToUpperInvariant(), v.QuoteCurrency.ToUpperInvariant(), v.Rate));
 
-    // 5. Public Validate 메서드 - 병렬 검증 후 순차 검증
     public static Validation<Error, (string BaseCurrency, string QuoteCurrency, decimal Rate)> Validate(
         string baseCurrency, string quoteCurrency, decimal rate) =>
-        (ValidateBaseCurrency(baseCurrency), ValidateQuoteCurrency(quoteCurrency), ValidateRate(rate))
-            .Apply((validBase, validQuote, validRate) => (validBase, validQuote, validRate))
+        (ValidateCurrency(baseCurrency, "BaseCurrency"),
+         ValidateCurrency(quoteCurrency, "QuoteCurrency"),
+         ValidationRules.Positive<ExchangeRate, decimal>(rate))
+            .Apply((b, q, r) => (b, q, r))
             .As()
-            .Bind(values => ValidateDifferentCurrencies(values.validBase, values.validQuote)
-                .Map(_ => (values.validBase, values.validQuote, values.validRate)));
+            .Bind(v => ValidateDifferentCurrencies(v.b, v.q).Map(_ => (v.b, v.q, v.r)));
 
-    // 5.1 기준 통화 검증
-    private static Validation<Error, string> ValidateBaseCurrency(string value) =>
+    private static Validation<Error, string> ValidateCurrency(string value, string fieldName) =>
         !string.IsNullOrWhiteSpace(value) && value.Length == 3
             ? value
-            : DomainErrors.InvalidBaseCurrency(value);
+            : DomainError.For<ExchangeRate>(
+                new DomainErrorType.Custom($"Invalid{fieldName}"),
+                value,
+                $"Invalid {fieldName.ToLowerInvariant()} code. Must be 3 characters. Current value: '{value}'");
 
-    // 5.2 견적 통화 검증
-    private static Validation<Error, string> ValidateQuoteCurrency(string value) =>
-        !string.IsNullOrWhiteSpace(value) && value.Length == 3
-            ? value
-            : DomainErrors.InvalidQuoteCurrency(value);
-
-    // 5.3 환율 검증
-    private static Validation<Error, decimal> ValidateRate(decimal value) =>
-        value > 0
-            ? value
-            : DomainErrors.InvalidRate(value);
-
-    // 5.4 통화 다름 검증
     private static Validation<Error, Unit> ValidateDifferentCurrencies(string baseCurrency, string quoteCurrency) =>
         !baseCurrency.Equals(quoteCurrency, StringComparison.OrdinalIgnoreCase)
             ? unit
-            : DomainErrors.SameCurrency(baseCurrency, quoteCurrency);
+            : DomainError.For<ExchangeRate, string, string>(
+                new DomainErrorType.Custom("SameCurrency"),
+                baseCurrency, quoteCurrency,
+                $"Base and quote currency cannot be the same. Base: '{baseCurrency}', Quote: '{quoteCurrency}'");
 
-    // 도메인 메서드
     public decimal Convert(decimal amount) => amount * Rate;
     public decimal ConvertBack(decimal amount) => amount / Rate;
     public ExchangeRate Invert() => new(QuoteCurrency, BaseCurrency, 1m / Rate);
-
     public string Pair => $"{BaseCurrency}/{QuoteCurrency}";
 
-    // 6. 동등성 컴포넌트 구현
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return BaseCurrency;
@@ -316,34 +226,6 @@ public sealed class ExchangeRate : ValueObject
     }
 
     public override string ToString() => $"{Pair} = {Rate:F4}";
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        public static Error InvalidBaseCurrency(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(ExchangeRate)}.{nameof(InvalidBaseCurrency)}",
-                errorCurrentValue: value,
-                errorMessage: $"Invalid base currency code. Must be 3 characters. Current value: '{value}'");
-
-        public static Error InvalidQuoteCurrency(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(ExchangeRate)}.{nameof(InvalidQuoteCurrency)}",
-                errorCurrentValue: value,
-                errorMessage: $"Invalid quote currency code. Must be 3 characters. Current value: '{value}'");
-
-        public static Error InvalidRate(decimal value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(ExchangeRate)}.{nameof(InvalidRate)}",
-                errorCurrentValue: value,
-                errorMessage: $"Exchange rate must be greater than zero. Current value: '{value}'");
-
-        public static Error SameCurrency(string baseCurrency, string quoteCurrency) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(ExchangeRate)}.{nameof(SameCurrency)}",
-                baseCurrency, quoteCurrency,
-                errorMessage: $"Base currency and quote currency cannot be the same. Base: '{baseCurrency}', Quote: '{quoteCurrency}'");
-    }
 }
 
 /// <summary>

@@ -122,7 +122,7 @@ public class CurrencyTests
 
         // Assert
         actual.IsFail.ShouldBeTrue();
-        actual.IfFail(error => error.Message.ShouldContain($"지원하지 않는 통화 코드입니다: {currencyCode}"));
+        actual.IfFail(error => error.Message.ShouldContain($"지원하지 않는 통화 코드입니다. Current value: '{currencyCode.ToUpperInvariant()}'"));
     }
 
     // 테스트 시나리오: 소문자 통화 코드도 대문자로 변환되어 처리되어야 한다

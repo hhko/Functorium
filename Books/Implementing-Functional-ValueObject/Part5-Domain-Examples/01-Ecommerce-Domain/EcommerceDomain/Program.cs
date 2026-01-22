@@ -209,19 +209,22 @@ public sealed class Money : ValueObject, IComparable<Money>
     private static Validation<Error, decimal> ValidateAmountNotNegative(decimal amount) =>
         amount >= 0
             ? amount
-            : DomainErrors.NegativeAmount(amount);
+            : DomainError.For<Money, decimal>(new DomainErrorType.Negative(), amount,
+                $"Amount cannot be negative. Current value: '{amount}'");
 
     // 5.2 통화 코드 빈 값 검증
     private static Validation<Error, string> ValidateCurrencyNotEmpty(string currency) =>
         !string.IsNullOrWhiteSpace(currency)
             ? currency
-            : DomainErrors.EmptyCurrency(currency);
+            : DomainError.For<Money>(new DomainErrorType.Custom("CurrencyEmpty"), currency,
+                $"Currency code cannot be empty. Current value: '{currency}'");
 
     // 5.3 통화 코드 길이 검증
     private static Validation<Error, string> ValidateCurrencyLength(string currency) =>
         !string.IsNullOrWhiteSpace(currency) && currency.Length == 3
             ? currency
-            : DomainErrors.InvalidCurrencyLength(currency);
+            : DomainError.For<Money>(new DomainErrorType.Custom("CurrencyNotThreeCharacters"), currency,
+                $"Currency code must be exactly 3 characters. Current value: '{currency}'");
 
     // 도메인 메서드
     public Money Add(Money other)
@@ -256,28 +259,6 @@ public sealed class Money : ValueObject, IComparable<Money>
     }
 
     public override string ToString() => $"{Amount:N0} {Currency}";
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        public static Error NegativeAmount(decimal value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Money)}.{nameof(NegativeAmount)}",
-                errorCurrentValue: value,
-                errorMessage: $"Amount cannot be negative. Current value: '{value}'");
-
-        public static Error EmptyCurrency(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Money)}.{nameof(EmptyCurrency)}",
-                errorCurrentValue: value,
-                errorMessage: $"Currency code cannot be empty. Current value: '{value}'");
-
-        public static Error InvalidCurrencyLength(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Money)}.{nameof(InvalidCurrencyLength)}",
-                errorCurrentValue: value,
-                errorMessage: $"Currency code must be exactly 3 characters. Current value: '{value}'");
-    }
 }
 
 /// <summary>
@@ -313,7 +294,8 @@ public sealed class ProductCode : SimpleValueObject<string>
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainErrors.Empty(value);
+            : DomainError.For<ProductCode>(new DomainErrorType.Empty(), value,
+                $"Product code cannot be empty. Current value: '{value}'");
 
     // 5.2 형식 검증
     private static Validation<Error, string> ValidateFormat(string value)
@@ -321,26 +303,11 @@ public sealed class ProductCode : SimpleValueObject<string>
         var normalized = value.ToUpperInvariant().Trim();
         return System.Text.RegularExpressions.Regex.IsMatch(normalized, @"^[A-Z]{2}-\d{6}$")
             ? normalized
-            : DomainErrors.InvalidFormat(value);
+            : DomainError.For<ProductCode>(new DomainErrorType.InvalidFormat(), value,
+                $"Product code must match 'XX-NNNNNN' pattern (e.g., EL-001234). Current value: '{value}'");
     }
 
     public static implicit operator string(ProductCode code) => code.Value;
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        public static Error Empty(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(ProductCode)}.{nameof(Empty)}",
-                errorCurrentValue: value,
-                errorMessage: $"Product code cannot be empty. Current value: '{value}'");
-
-        public static Error InvalidFormat(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(ProductCode)}.{nameof(InvalidFormat)}",
-                errorCurrentValue: value,
-                errorMessage: $"Invalid product code format. Expected format: 'XX-NNNNNN' (e.g., EL-001234). Current value: '{value}'");
-    }
 }
 
 /// <summary>
@@ -376,13 +343,15 @@ public sealed class Quantity : ComparableSimpleValueObject<int>
     private static Validation<Error, int> ValidateNotNegative(int value) =>
         value >= 0
             ? value
-            : DomainErrors.Negative(value);
+            : DomainError.For<Quantity, int>(new DomainErrorType.Negative(), value,
+                $"Quantity cannot be negative. Current value: '{value}'");
 
     // 5.2 최대값 검증
     private static Validation<Error, int> ValidateNotExceedsLimit(int value) =>
         value <= 10000
             ? value
-            : DomainErrors.ExceedsLimit(value);
+            : DomainError.For<Quantity, int>(new DomainErrorType.AboveMaximum(), value,
+                $"Quantity cannot exceed 10,000. Current value: '{value}'");
 
     // 도메인 메서드
     public Quantity Add(Quantity other) => new(Value + other.Value);
@@ -392,22 +361,6 @@ public sealed class Quantity : ComparableSimpleValueObject<int>
     public static Quantity operator -(Quantity a, Quantity b) => a.Subtract(b);
 
     public static implicit operator int(Quantity quantity) => quantity.Value;
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        public static Error Negative(int value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Quantity)}.{nameof(Negative)}",
-                errorCurrentValue: value,
-                errorMessage: $"Quantity cannot be negative. Current value: '{value}'");
-
-        public static Error ExceedsLimit(int value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Quantity)}.{nameof(ExceedsLimit)}",
-                errorCurrentValue: value,
-                errorMessage: $"Quantity cannot exceed 10,000. Current value: '{value}'");
-    }
 }
 
 /// <summary>
@@ -435,32 +388,14 @@ public sealed class OrderStatus : SmartEnum<OrderStatus, string>
     {
         return (this, next) switch
         {
-            (var s, _) when s == Cancelled => DomainErrors.AlreadyCancelled(Value, next.Value),
-            (var s, _) when s == Delivered => DomainErrors.AlreadyDelivered(Value, next.Value),
-            (_, var n) when n == Pending => DomainErrors.CannotRevertToPending(Value, next.Value),
+            (var s, _) when s == Cancelled => DomainError.For<OrderStatus>(new DomainErrorType.Custom("AlreadyCancelled"), $"{Value}->{next.Value}",
+                $"Cannot change status of a cancelled order. Current status: '{Value}', Target status: '{next.Value}'"),
+            (var s, _) when s == Delivered => DomainError.For<OrderStatus>(new DomainErrorType.Custom("AlreadyDelivered"), $"{Value}->{next.Value}",
+                $"Cannot change status of a delivered order. Current status: '{Value}', Target status: '{next.Value}'"),
+            (_, var n) when n == Pending => DomainError.For<OrderStatus>(new DomainErrorType.Custom("CannotRevertToPending"), $"{Value}->{next.Value}",
+                $"Cannot revert to pending status. Current status: '{Value}', Target status: '{next.Value}'"),
             _ => next
         };
-    }
-
-    internal static class DomainErrors
-    {
-        public static Error AlreadyCancelled(string current, string target) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(OrderStatus)}.{nameof(AlreadyCancelled)}",
-                current, target,
-                errorMessage: $"Cannot change status of a cancelled order. Current status: '{current}', Target status: '{target}'");
-
-        public static Error AlreadyDelivered(string current, string target) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(OrderStatus)}.{nameof(AlreadyDelivered)}",
-                current, target,
-                errorMessage: $"Cannot change status of a delivered order. Current status: '{current}', Target status: '{target}'");
-
-        public static Error CannotRevertToPending(string current, string target) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(OrderStatus)}.{nameof(CannotRevertToPending)}",
-                current, target,
-                errorMessage: $"Cannot revert to pending status. Current status: '{current}', Target status: '{target}'");
     }
 }
 
@@ -511,29 +446,34 @@ public sealed class ShippingAddress : ValueObject
     private static Validation<Error, string> ValidateRecipientName(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainErrors.EmptyRecipientName(value);
+            : DomainError.For<ShippingAddress>(new DomainErrorType.Custom("RecipientNameEmpty"), value,
+                $"Recipient name cannot be empty. Current value: '{value}'");
 
     // 5.2 도로명 검증
     private static Validation<Error, string> ValidateStreet(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainErrors.EmptyStreet(value);
+            : DomainError.For<ShippingAddress>(new DomainErrorType.Custom("StreetEmpty"), value,
+                $"Street address cannot be empty. Current value: '{value}'");
 
     // 5.3 도시 검증
     private static Validation<Error, string> ValidateCity(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainErrors.EmptyCity(value);
+            : DomainError.For<ShippingAddress>(new DomainErrorType.Custom("CityEmpty"), value,
+                $"City cannot be empty. Current value: '{value}'");
 
     // 5.4 우편번호 검증
     private static Validation<Error, string> ValidatePostalCode(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return DomainErrors.EmptyPostalCode(value);
+            return DomainError.For<ShippingAddress>(new DomainErrorType.Custom("PostalCodeEmpty"), value,
+                $"Postal code cannot be empty. Current value: '{value}'");
 
         var normalized = value.Replace("-", "").Replace(" ", "");
         if (normalized.Length < 5 || normalized.Length > 10)
-            return DomainErrors.InvalidPostalCodeFormat(value);
+            return DomainError.For<ShippingAddress>(new DomainErrorType.Custom("PostalCodeLengthOutOfRange"), value,
+                $"Postal code must be 5-10 characters. Current value: '{value}'");
 
         return normalized;
     }
@@ -542,7 +482,8 @@ public sealed class ShippingAddress : ValueObject
     private static Validation<Error, string> ValidateCountry(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainErrors.EmptyCountry(value);
+            : DomainError.For<ShippingAddress>(new DomainErrorType.Custom("CountryEmpty"), value,
+                $"Country code cannot be empty. Current value: '{value}'");
 
     // 6. 동등성 컴포넌트 구현
     protected override IEnumerable<object> GetEqualityComponents()
@@ -552,45 +493,5 @@ public sealed class ShippingAddress : ValueObject
         yield return City;
         yield return PostalCode;
         yield return Country;
-    }
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        public static Error EmptyRecipientName(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(ShippingAddress)}.{nameof(EmptyRecipientName)}",
-                errorCurrentValue: value,
-                errorMessage: $"Recipient name cannot be empty. Current value: '{value}'");
-
-        public static Error EmptyStreet(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(ShippingAddress)}.{nameof(EmptyStreet)}",
-                errorCurrentValue: value,
-                errorMessage: $"Street address cannot be empty. Current value: '{value}'");
-
-        public static Error EmptyCity(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(ShippingAddress)}.{nameof(EmptyCity)}",
-                errorCurrentValue: value,
-                errorMessage: $"City cannot be empty. Current value: '{value}'");
-
-        public static Error EmptyPostalCode(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(ShippingAddress)}.{nameof(EmptyPostalCode)}",
-                errorCurrentValue: value,
-                errorMessage: $"Postal code cannot be empty. Current value: '{value}'");
-
-        public static Error EmptyCountry(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(ShippingAddress)}.{nameof(EmptyCountry)}",
-                errorCurrentValue: value,
-                errorMessage: $"Country code cannot be empty. Current value: '{value}'");
-
-        public static Error InvalidPostalCodeFormat(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(ShippingAddress)}.{nameof(InvalidPostalCodeFormat)}",
-                errorCurrentValue: value,
-                errorMessage: $"Invalid postal code format. Current value: '{value}'");
     }
 }

@@ -2,6 +2,8 @@ using Ardalis.SmartEnum;
 using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
+using DomainError = Functorium.Domains.ValueObjects.DomainError;
+using DomainErrorType = Functorium.Domains.ValueObjects.DomainErrorType;
 
 namespace TypeSafeEnums.ValueObjects.Comparable.CompositeValueObjects;
 
@@ -124,7 +126,10 @@ public sealed class Currency
     /// <returns>검증 결과</returns>
     private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =>
         string.IsNullOrWhiteSpace(currencyCode)
-            ? DomainErrors.Empty(currencyCode)
+            ? DomainError.For<Currency>(
+                new DomainErrorType.Empty(),
+                currencyCode ?? string.Empty,
+                $"통화 코드는 비어있을 수 없습니다. Current value: '{currencyCode}'")
             : currencyCode;
 
     /// <summary>
@@ -134,7 +139,10 @@ public sealed class Currency
     /// <returns>검증 결과</returns>
     private static Validation<Error, string> ValidateFormat(string currencyCode) =>
         currencyCode.Length != 3 || !currencyCode.All(char.IsLetter)
-            ? DomainErrors.NotThreeLetters(currencyCode)
+            ? DomainError.For<Currency>(
+                new DomainErrorType.WrongLength(3),
+                currencyCode,
+                $"통화 코드는 3자리 영문자여야 합니다. Current value: '{currencyCode}'")
             : currencyCode.ToUpperInvariant();
 
     /// <summary>
@@ -151,7 +159,10 @@ public sealed class Currency
         }
         catch (SmartEnumNotFoundException)
         {
-            return DomainErrors.Unsupported(currencyCode);
+            return DomainError.For<Currency>(
+                new DomainErrorType.Custom("Unsupported"),
+                currencyCode,
+                $"지원하지 않는 통화 코드입니다. Current value: '{currencyCode}'");
         }
     }
 
@@ -192,34 +203,4 @@ public sealed class Currency
     public string FormatAmountWithoutDecimals(decimal amount) => 
         $"{Symbol}{amount:N0}";
 
-    /// <summary>
-    /// DomainErrors 중첩 클래스
-    /// ValueObject 규칙에 따른 구조화된 에러 처리
-    /// </summary>
-    internal static class DomainErrors
-    {
-        /// <summary>
-        /// 빈 통화 코드 에러
-        /// </summary>
-        /// <param name="value">빈 통화 코드</param>
-        /// <returns>에러</returns>
-        public static Error Empty(string value) =>
-            Error.New($"통화 코드는 비어있을 수 없습니다: {value}");
-
-        /// <summary>
-        /// 3자리 영문자가 아닌 통화 코드 에러
-        /// </summary>
-        /// <param name="value">잘못된 형식의 통화 코드</param>
-        /// <returns>에러</returns>
-        public static Error NotThreeLetters(string value) =>
-            Error.New($"통화 코드는 3자리 영문자여야 합니다: {value}");
-
-        /// <summary>
-        /// 지원하지 않는 통화 코드 에러
-        /// </summary>
-        /// <param name="value">지원하지 않는 통화 코드</param>
-        /// <returns>에러</returns>
-        public static Error Unsupported(string value) =>
-            Error.New($"지원하지 않는 통화 코드입니다: {value}");
-    }
 }

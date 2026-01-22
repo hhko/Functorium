@@ -223,7 +223,8 @@ public sealed class DateRange : ValueObject
     private static Validation<Error, DateOnly> ValidateEndNotBeforeStart(DateOnly start, DateOnly end) =>
         end >= start
             ? end
-            : DomainErrors.EndBeforeStart(start, end);
+            : DomainError.For<DateRange>(new DomainErrorType.Custom("EndBeforeStart"), $"{start}~{end}",
+                $"End date cannot be before start date. Start: '{start}', End: '{end}'");
 
     // 도메인 메서드
     public bool Contains(DateOnly date) => date >= Start && date <= End;
@@ -252,16 +253,6 @@ public sealed class DateRange : ValueObject
     }
 
     public override string ToString() => $"{Start:yyyy-MM-dd} ~ {End:yyyy-MM-dd}";
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        public static Error EndBeforeStart(DateOnly start, DateOnly end) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(DateRange)}.{nameof(EndBeforeStart)}",
-                start, end,
-                errorMessage: $"End date cannot be before start date. Start: '{start}', End: '{end}'");
-    }
 }
 
 /// <summary>
@@ -298,7 +289,8 @@ public sealed class TimeSlot : ValueObject
     private static Validation<Error, TimeOnly> ValidateEndAfterStart(TimeOnly start, TimeOnly end) =>
         end > start
             ? end
-            : DomainErrors.EndBeforeOrEqualStart(start, end);
+            : DomainError.For<TimeSlot>(new DomainErrorType.Custom("EndNotAfterStart"), $"{start}~{end}",
+                $"End time must be after start time. Start: '{start}', End: '{end}'");
 
     // 도메인 메서드
     public bool Contains(TimeOnly time) => time >= Start && time < End;
@@ -314,16 +306,6 @@ public sealed class TimeSlot : ValueObject
     }
 
     public override string ToString() => $"{Start:HH:mm} - {End:HH:mm}";
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        public static Error EndBeforeOrEqualStart(TimeOnly start, TimeOnly end) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(TimeSlot)}.{nameof(EndBeforeOrEqualStart)}",
-                start, end,
-                errorMessage: $"End time must be after start time. Start: '{start}', End: '{end}'");
-    }
 }
 
 /// <summary>
@@ -368,13 +350,15 @@ public sealed class Duration : ComparableSimpleValueObject<int>
     private static Validation<Error, int> ValidateNotNegative(int minutes) =>
         minutes >= 0
             ? minutes
-            : DomainErrors.NegativeDuration(minutes);
+            : DomainError.For<Duration, int>(new DomainErrorType.Negative(), minutes,
+                $"Duration cannot be negative. Current value: '{minutes}'");
 
     // 5.2 최대값 검증 (1년 = 525,600분)
     private static Validation<Error, int> ValidateNotExceedsMaximum(int minutes) =>
         minutes <= 525600
             ? minutes
-            : DomainErrors.ExceedsMaximum(minutes);
+            : DomainError.For<Duration, int>(new DomainErrorType.AboveMaximum(), minutes,
+                $"Duration cannot exceed 1 year (525,600 minutes). Current value: '{minutes}'");
 
     // 도메인 메서드
     public Duration Add(Duration other) => new(Value + other.Value);
@@ -388,22 +372,6 @@ public sealed class Duration : ComparableSimpleValueObject<int>
         if (Value % 60 == 0)
             return $"{Value / 60}시간";
         return $"{Value / 60}시간 {Value % 60}분";
-    }
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        public static Error NegativeDuration(int minutes) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Duration)}.{nameof(NegativeDuration)}",
-                errorCurrentValue: minutes,
-                errorMessage: $"Duration cannot be negative. Current value: '{minutes}'");
-
-        public static Error ExceedsMaximum(int minutes) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Duration)}.{nameof(ExceedsMaximum)}",
-                errorCurrentValue: minutes,
-                errorMessage: $"Duration cannot exceed 1 year (525,600 minutes). Current value: '{minutes}'");
     }
 }
 
@@ -450,17 +418,20 @@ public sealed class RecurrenceRule : ValueObject
     private static Validation<Error, int> ValidateDailyInterval(int interval) =>
         interval >= 1
             ? interval
-            : DomainErrors.InvalidInterval(interval);
+            : DomainError.For<RecurrenceRule, int>(new DomainErrorType.BelowMinimum(), interval,
+                $"Recurrence interval must be at least 1. Current value: '{interval}'");
 
     private static Validation<Error, DayOfWeek[]> ValidateWeeklyDays(DayOfWeek[] days) =>
         days.Length > 0
             ? days.Distinct().OrderBy(d => d).ToArray()
-            : DomainErrors.NoDaysSpecified(0);
+            : DomainError.For<RecurrenceRule, int>(new DomainErrorType.Empty(), 0,
+                $"Weekly recurrence rule must specify at least one day of the week. Current count: '0'");
 
     private static Validation<Error, int> ValidateMonthlyDay(int day) =>
         day >= 1 && day <= 31
             ? day
-            : DomainErrors.InvalidDayOfMonth(day);
+            : DomainError.For<RecurrenceRule, int>(new DomainErrorType.OutOfRange(), day,
+                $"Day of month must be between 1 and 31. Current value: '{day}'");
 
     // 도메인 메서드
     public IEnumerable<DateOnly> GetOccurrences(DateOnly from, int count)
@@ -521,28 +492,6 @@ public sealed class RecurrenceRule : ValueObject
         DayOfWeek.Saturday => "토",
         _ => "?"
     };
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        public static Error InvalidInterval(int interval) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(RecurrenceRule)}.{nameof(InvalidInterval)}",
-                errorCurrentValue: interval,
-                errorMessage: $"Recurrence interval must be at least 1. Current value: '{interval}'");
-
-        public static Error NoDaysSpecified(int count) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(RecurrenceRule)}.{nameof(NoDaysSpecified)}",
-                errorCurrentValue: count,
-                errorMessage: $"Weekly recurrence rule must specify at least one day of the week. Current count: '{count}'");
-
-        public static Error InvalidDayOfMonth(int day) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(RecurrenceRule)}.{nameof(InvalidDayOfMonth)}",
-                errorCurrentValue: day,
-                errorMessage: $"Day of month must be between 1 and 31. Current value: '{day}'");
-    }
 }
 
 public enum RecurrenceType

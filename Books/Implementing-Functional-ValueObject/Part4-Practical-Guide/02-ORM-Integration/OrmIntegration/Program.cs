@@ -1,4 +1,3 @@
-using Functorium.Abstractions.Errors;
 using Functorium.Domains.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using LanguageExt;
@@ -137,148 +136,93 @@ class Program
 /// <summary>
 /// Email 값 객체 (SimpleValueObject 기반)
 /// EF Core Value Converter로 매핑
+/// DomainError 헬퍼를 사용한 간결한 에러 처리
 /// </summary>
 public sealed class Email : SimpleValueObject<string>
 {
-    // 2. Private 생성자 - 단순 대입만 처리
     private Email(string value) : base(value) { }
 
-    /// <summary>
-    /// 이메일 주소에 대한 public 접근자
-    /// </summary>
     public string Address => Value;
 
-    // 3. Public Create 메서드 - 검증과 생성을 연결
     public static Fin<Email> Create(string? value) =>
         CreateFromValidation(
             Validate(value ?? "null"),
             validValue => new Email(validValue));
 
-    /// <summary>
-    /// 이미 검증된 값으로 생성 (DB 로드 시 EF Core Value Converter 전용)
-    /// </summary>
     internal static Email CreateFromValidated(string value) => new(value);
 
-    // 5. Public Validate 메서드 - 독립 검증 규칙들을 병렬로 실행
     public static Validation<Error, string> Validate(string value) =>
         (ValidateNotEmpty(value), ValidateFormat(value))
             .Apply((_, validFormat) => validFormat.ToLowerInvariant())
             .As();
 
-    // 5.1 빈 값 검증
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainErrors.Empty(value);
+            : DomainError.For<Email>(new DomainErrorType.Empty(), value ?? "null",
+                $"Email address cannot be empty. Current value: '{value}'");
 
-    // 5.2 형식 검증
     private static Validation<Error, string> ValidateFormat(string value) =>
         !string.IsNullOrWhiteSpace(value) && value.Contains('@')
             ? value
-            : DomainErrors.InvalidFormat(value);
+            : DomainError.For<Email>(new DomainErrorType.InvalidFormat(), value ?? "null",
+                $"Invalid email format. Current value: '{value}'");
 
     public static implicit operator string(Email email) => email.Value;
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        // ValidateNotEmpty 메서드와 1:1 매핑되는 에러
-        public static Error Empty(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(Empty)}",
-                errorCurrentValue: value,
-                errorMessage: $"Email address cannot be empty. Current value: '{value}'");
-
-        // ValidateFormat 메서드와 1:1 매핑되는 에러
-        public static Error InvalidFormat(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(InvalidFormat)}",
-                errorCurrentValue: value,
-                errorMessage: $"Invalid email format. Current value: '{value}'");
-    }
 }
 
 /// <summary>
 /// ProductCode 값 객체 (SimpleValueObject 기반)
 /// EF Core Value Converter로 매핑
+/// DomainError 헬퍼를 사용한 간결한 에러 처리
 /// </summary>
 public sealed class ProductCode : SimpleValueObject<string>
 {
-    // 2. Private 생성자 - 단순 대입만 처리
     private ProductCode(string value) : base(value) { }
 
-    /// <summary>
-    /// 상품 코드에 대한 public 접근자
-    /// </summary>
     public string Code => Value;
 
-    // 3. Public Create 메서드 - 검증과 생성을 연결
     public static Fin<ProductCode> Create(string? value) =>
         CreateFromValidation(
             Validate(value ?? "null"),
             validValue => new ProductCode(validValue));
 
-    /// <summary>
-    /// 이미 검증된 값으로 생성 (DB 로드 시 EF Core Value Converter 전용)
-    /// </summary>
     internal static ProductCode CreateFromValidated(string value) => new(value);
 
-    // 5. Public Validate 메서드 - 순차 검증 (형식 검증은 빈 값 검증에 의존)
     public static Validation<Error, string> Validate(string value) =>
         ValidateNotEmpty(value)
             .Bind(_ => ValidateFormat(value))
             .Map(normalized => normalized);
 
-    // 5.1 빈 값 검증
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainErrors.Empty(value);
+            : DomainError.For<ProductCode>(new DomainErrorType.Empty(), value ?? "null",
+                $"Product code cannot be empty. Current value: '{value}'");
 
-    // 5.2 형식 검증 (정규식 패턴 매칭)
     private static Validation<Error, string> ValidateFormat(string value)
     {
         var normalized = value.ToUpperInvariant().Trim();
         return System.Text.RegularExpressions.Regex.IsMatch(normalized, @"^[A-Z]{2}-\d{6}$")
             ? normalized
-            : DomainErrors.InvalidFormat(value);
+            : DomainError.For<ProductCode>(new DomainErrorType.InvalidFormat(), value,
+                $"Invalid product code format. Expected: 'XX-NNNNNN'. Current value: '{value}'");
     }
 
     public static implicit operator string(ProductCode code) => code.Value;
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        // ValidateNotEmpty 메서드와 1:1 매핑되는 에러
-        public static Error Empty(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(ProductCode)}.{nameof(Empty)}",
-                errorCurrentValue: value,
-                errorMessage: $"Product code cannot be empty. Current value: '{value}'");
-
-        // ValidateFormat 메서드와 1:1 매핑되는 에러
-        public static Error InvalidFormat(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(ProductCode)}.{nameof(InvalidFormat)}",
-                errorCurrentValue: value,
-                errorMessage: $"Invalid product code format. Expected: 'XX-NNNNNN'. Current value: '{value}'");
-    }
 }
 
 /// <summary>
 /// Address 값 객체 (ValueObject 기반)
 /// EF Core OwnsOne 패턴으로 매핑
+/// DomainError 헬퍼를 사용한 간결한 에러 처리
 /// </summary>
 public sealed class Address : ValueObject
 {
-    // 1.1 속성 선언
     public string City { get; private set; }
     public string Street { get; private set; }
     public string PostalCode { get; private set; }
 
-    /// <summary>
-    /// EF Core용 private 생성자
-    /// </summary>
     private Address()
     {
         City = string.Empty;
@@ -286,7 +230,6 @@ public sealed class Address : ValueObject
         PostalCode = string.Empty;
     }
 
-    // 2. Private 생성자 - 단순 대입만 처리
     private Address(string city, string street, string postalCode)
     {
         City = city;
@@ -294,38 +237,35 @@ public sealed class Address : ValueObject
         PostalCode = postalCode;
     }
 
-    // 3. Public Create 메서드 - 검증과 생성을 연결
     public static Fin<Address> Create(string? city, string? street, string? postalCode) =>
         CreateFromValidation(
             Validate(city ?? "null", street ?? "null", postalCode ?? "null"),
             validValues => new Address(validValues.City.Trim(), validValues.Street.Trim(), validValues.PostalCode.Trim()));
 
-    // 5. Public Validate 메서드 - 독립 검증 규칙들을 병렬로 실행
     public static Validation<Error, (string City, string Street, string PostalCode)> Validate(
         string city, string street, string postalCode) =>
         (ValidateCityNotEmpty(city), ValidateStreetNotEmpty(street), ValidatePostalCodeNotEmpty(postalCode))
             .Apply((validCity, validStreet, validPostalCode) => (validCity, validStreet, validPostalCode))
             .As();
 
-    // 5.1 도시 검증
     private static Validation<Error, string> ValidateCityNotEmpty(string city) =>
         !string.IsNullOrWhiteSpace(city)
             ? city
-            : DomainErrors.CityEmpty(city);
+            : DomainError.For<Address>(new DomainErrorType.Custom("CityEmpty"), city ?? "null",
+                $"City cannot be empty. Current value: '{city}'");
 
-    // 5.2 도로명 검증
     private static Validation<Error, string> ValidateStreetNotEmpty(string street) =>
         !string.IsNullOrWhiteSpace(street)
             ? street
-            : DomainErrors.StreetEmpty(street);
+            : DomainError.For<Address>(new DomainErrorType.Custom("StreetEmpty"), street ?? "null",
+                $"Street cannot be empty. Current value: '{street}'");
 
-    // 5.3 우편번호 검증
     private static Validation<Error, string> ValidatePostalCodeNotEmpty(string postalCode) =>
         !string.IsNullOrWhiteSpace(postalCode)
             ? postalCode
-            : DomainErrors.PostalCodeEmpty(postalCode);
+            : DomainError.For<Address>(new DomainErrorType.Custom("PostalCodeEmpty"), postalCode ?? "null",
+                $"Postal code cannot be empty. Current value: '{postalCode}'");
 
-    // 6. 동등성 컴포넌트 구현
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return City;
@@ -334,96 +274,61 @@ public sealed class Address : ValueObject
     }
 
     public override string ToString() => $"{City} {Street} ({PostalCode})";
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        // ValidateCityNotEmpty 메서드와 1:1 매핑되는 에러
-        public static Error CityEmpty(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Address)}.{nameof(CityEmpty)}",
-                errorCurrentValue: value,
-                errorMessage: $"City cannot be empty. Current value: '{value}'");
-
-        // ValidateStreetNotEmpty 메서드와 1:1 매핑되는 에러
-        public static Error StreetEmpty(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Address)}.{nameof(StreetEmpty)}",
-                errorCurrentValue: value,
-                errorMessage: $"Street cannot be empty. Current value: '{value}'");
-
-        // ValidatePostalCodeNotEmpty 메서드와 1:1 매핑되는 에러
-        public static Error PostalCodeEmpty(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Address)}.{nameof(PostalCodeEmpty)}",
-                errorCurrentValue: value,
-                errorMessage: $"Postal code cannot be empty. Current value: '{value}'");
-    }
 }
 
 /// <summary>
 /// Money 값 객체 (ValueObject 기반)
 /// EF Core OwnsOne 패턴으로 매핑
+/// DomainError 헬퍼를 사용한 간결한 에러 처리
 /// </summary>
 public sealed class Money : ValueObject
 {
-    // 1.1 속성 선언
     public decimal Amount { get; private set; }
     public string Currency { get; private set; }
 
-    /// <summary>
-    /// EF Core용 private 생성자
-    /// </summary>
     private Money()
     {
         Amount = 0;
         Currency = "KRW";
     }
 
-    // 2. Private 생성자 - 단순 대입만 처리
     private Money(decimal amount, string currency)
     {
         Amount = amount;
         Currency = currency;
     }
 
-    // 3. Public Create 메서드 - 검증과 생성을 연결
     public static Fin<Money> Create(decimal amount, string? currency) =>
         CreateFromValidation(
             Validate(amount, currency ?? "null"),
             validValues => new Money(validValues.Amount, validValues.Currency.ToUpperInvariant()));
 
-    /// <summary>
-    /// 이미 검증된 값으로 생성 (테스트 및 내부 용도)
-    /// </summary>
     internal static Money CreateFromValidated(decimal amount, string currency) =>
         new(amount, currency.ToUpperInvariant());
 
-    // 5. Public Validate 메서드 - 독립 검증 규칙들을 병렬로 실행
     public static Validation<Error, (decimal Amount, string Currency)> Validate(decimal amount, string currency) =>
         (ValidateAmountNotNegative(amount), ValidateCurrencyNotEmpty(currency), ValidateCurrencyLength(currency))
             .Apply((validAmount, validCurrency, _) => (validAmount, validCurrency))
             .As();
 
-    // 5.1 금액 검증
     private static Validation<Error, decimal> ValidateAmountNotNegative(decimal amount) =>
         amount >= 0
             ? amount
-            : DomainErrors.NegativeAmount(amount);
+            : DomainError.For<Money, decimal>(new DomainErrorType.Negative(), amount,
+                $"Amount cannot be negative. Current value: '{amount}'");
 
-    // 5.2 통화 코드 빈 값 검증
     private static Validation<Error, string> ValidateCurrencyNotEmpty(string currency) =>
         !string.IsNullOrWhiteSpace(currency)
             ? currency
-            : DomainErrors.EmptyCurrency(currency);
+            : DomainError.For<Money>(new DomainErrorType.Custom("EmptyCurrency"), currency ?? "null",
+                $"Currency cannot be empty. Current value: '{currency}'");
 
-    // 5.3 통화 코드 길이 검증
     private static Validation<Error, string> ValidateCurrencyLength(string currency) =>
         !string.IsNullOrWhiteSpace(currency) && currency.Length == 3
             ? currency
-            : DomainErrors.InvalidCurrencyLength(currency);
+            : DomainError.For<Money>(new DomainErrorType.Custom("InvalidCurrencyLength"), currency ?? "null",
+                $"Currency must be 3 characters. Current value: '{currency}'");
 
-    // 6. 동등성 컴포넌트 구현
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return Amount;
@@ -431,47 +336,19 @@ public sealed class Money : ValueObject
     }
 
     public override string ToString() => $"{Amount:N0} {Currency}";
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        // ValidateAmountNotNegative 메서드와 1:1 매핑되는 에러
-        public static Error NegativeAmount(decimal value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Money)}.{nameof(NegativeAmount)}",
-                errorCurrentValue: value,
-                errorMessage: $"Amount cannot be negative. Current value: '{value}'");
-
-        // ValidateCurrencyNotEmpty 메서드와 1:1 매핑되는 에러
-        public static Error EmptyCurrency(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Money)}.{nameof(EmptyCurrency)}",
-                errorCurrentValue: value,
-                errorMessage: $"Currency cannot be empty. Current value: '{value}'");
-
-        // ValidateCurrencyLength 메서드와 1:1 매핑되는 에러
-        public static Error InvalidCurrencyLength(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Money)}.{nameof(InvalidCurrencyLength)}",
-                errorCurrentValue: value,
-                errorMessage: $"Currency must be 3 characters. Current value: '{value}'");
-    }
 }
 
 /// <summary>
 /// OrderLineItem 값 객체 (ValueObject 기반)
 /// EF Core OwnsMany 패턴으로 매핑
+/// DomainError 헬퍼를 사용한 간결한 에러 처리
 /// </summary>
 public sealed class OrderLineItem : ValueObject
 {
-    // 1.1 속성 선언
     public string Name { get; private set; }
     public int Qty { get; private set; }
     public decimal Price { get; private set; }
 
-    /// <summary>
-    /// EF Core용 private 생성자
-    /// </summary>
     private OrderLineItem()
     {
         Name = string.Empty;
@@ -479,7 +356,6 @@ public sealed class OrderLineItem : ValueObject
         Price = 0;
     }
 
-    // 2. Private 생성자 - 단순 대입만 처리
     private OrderLineItem(string name, int qty, decimal price)
     {
         Name = name;
@@ -487,43 +363,37 @@ public sealed class OrderLineItem : ValueObject
         Price = price;
     }
 
-    // 3. Public Create 메서드 - 검증과 생성을 연결
     public static Fin<OrderLineItem> Create(string? name, int qty, decimal price) =>
         CreateFromValidation(
             Validate(name ?? "null", qty, price),
             validValues => new OrderLineItem(validValues.Name.Trim(), validValues.Qty, validValues.Price));
 
-    /// <summary>
-    /// 이미 검증된 값으로 생성 (테스트 및 내부 용도)
-    /// </summary>
     internal static OrderLineItem CreateFromValidated(string name, int qty, decimal price) =>
         new(name, qty, price);
 
-    // 5. Public Validate 메서드 - 독립 검증 규칙들을 병렬로 실행
     public static Validation<Error, (string Name, int Qty, decimal Price)> Validate(string name, int qty, decimal price) =>
         (ValidateNameNotEmpty(name), ValidateQuantityPositive(qty), ValidatePriceNotNegative(price))
             .Apply((validName, validQty, validPrice) => (validName, validQty, validPrice))
             .As();
 
-    // 5.1 상품명 검증
     private static Validation<Error, string> ValidateNameNotEmpty(string name) =>
         !string.IsNullOrWhiteSpace(name)
             ? name
-            : DomainErrors.EmptyName(name);
+            : DomainError.For<OrderLineItem>(new DomainErrorType.Empty(), name ?? "null",
+                $"Product name cannot be empty. Current value: '{name}'");
 
-    // 5.2 수량 검증
     private static Validation<Error, int> ValidateQuantityPositive(int qty) =>
         qty > 0
             ? qty
-            : DomainErrors.InvalidQuantity(qty);
+            : DomainError.For<OrderLineItem, int>(new DomainErrorType.NotPositive(), qty,
+                $"Quantity must be positive. Current value: '{qty}'");
 
-    // 5.3 가격 검증
     private static Validation<Error, decimal> ValidatePriceNotNegative(decimal price) =>
         price >= 0
             ? price
-            : DomainErrors.NegativePrice(price);
+            : DomainError.For<OrderLineItem, decimal>(new DomainErrorType.Negative(), price,
+                $"Price cannot be negative. Current value: '{price}'");
 
-    // 6. 동등성 컴포넌트 구현
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return Name;
@@ -532,31 +402,6 @@ public sealed class OrderLineItem : ValueObject
     }
 
     public override string ToString() => $"{Name} x {Qty} @ {Price:N0}";
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        // ValidateNameNotEmpty 메서드와 1:1 매핑되는 에러
-        public static Error EmptyName(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(OrderLineItem)}.{nameof(EmptyName)}",
-                errorCurrentValue: value,
-                errorMessage: $"Product name cannot be empty. Current value: '{value}'");
-
-        // ValidateQuantityPositive 메서드와 1:1 매핑되는 에러
-        public static Error InvalidQuantity(int value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(OrderLineItem)}.{nameof(InvalidQuantity)}",
-                errorCurrentValue: value,
-                errorMessage: $"Quantity must be positive. Current value: '{value}'");
-
-        // ValidatePriceNotNegative 메서드와 1:1 매핑되는 에러
-        public static Error NegativePrice(decimal value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(OrderLineItem)}.{nameof(NegativePrice)}",
-                errorCurrentValue: value,
-                errorMessage: $"Price cannot be negative. Current value: '{value}'");
-    }
 }
 
 // ========================================

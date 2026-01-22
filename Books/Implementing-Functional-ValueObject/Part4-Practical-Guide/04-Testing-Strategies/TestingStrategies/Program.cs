@@ -1,4 +1,3 @@
-using Functorium.Abstractions.Errors;
 using Functorium.Domains.ValueObjects;
 using LanguageExt;
 using LanguageExt.Common;
@@ -194,124 +193,76 @@ class Program
 
 /// <summary>
 /// Email 값 객체 (SimpleValueObject 기반)
+/// DomainError 헬퍼를 사용한 간결한 에러 처리
 /// </summary>
 public sealed class Email : SimpleValueObject<string>
 {
-    // 2. Private 생성자 - 단순 대입만 처리
     private Email(string value) : base(value) { }
 
-    /// <summary>
-    /// 이메일 주소에 대한 public 접근자
-    /// </summary>
     public string Address => Value;
 
-    // 3. Public Create 메서드 - 검증과 생성을 연결
     public static Fin<Email> Create(string? value) =>
         CreateFromValidation(
             Validate(value ?? "null"),
             validValue => new Email(validValue));
 
-    // 4. Internal CreateFromValidated 메서드
     internal static Email CreateFromValidated(string value) => new(value);
 
-    // 5. Public Validate 메서드 - 독립 검증 규칙들을 병렬로 실행
     public static Validation<Error, string> Validate(string value) =>
         (ValidateNotEmpty(value), ValidateFormat(value))
             .Apply((_, validFormat) => validFormat.ToLowerInvariant())
             .As();
 
-    // 5.1 빈 값 검증
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainErrors.Empty(value);
+            : DomainError.For<Email>(new DomainErrorType.Empty(), value ?? "null",
+                $"Email address cannot be empty. Current value: '{value}'");
 
-    // 5.2 형식 검증
     private static Validation<Error, string> ValidateFormat(string value) =>
         !string.IsNullOrWhiteSpace(value) && value.Contains('@')
             ? value
-            : DomainErrors.InvalidFormat(value);
+            : DomainError.For<Email>(new DomainErrorType.InvalidFormat(), value ?? "null",
+                $"Invalid email format. Current value: '{value}'");
 
     public static implicit operator string(Email email) => email.Value;
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        // ValidateNotEmpty 메서드와 1:1 매핑되는 에러
-        public static Error Empty(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(Empty)}",
-                errorCurrentValue: value,
-                errorMessage: $"Email address cannot be empty. Current value: '{value}'");
-
-        // ValidateFormat 메서드와 1:1 매핑되는 에러
-        public static Error InvalidFormat(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(InvalidFormat)}",
-                errorCurrentValue: value,
-                errorMessage: $"Invalid email format. Current value: '{value}'");
-    }
 }
 
 /// <summary>
 /// Age 값 객체 (ComparableSimpleValueObject 기반)
+/// DomainError 헬퍼를 사용한 간결한 에러 처리
 /// </summary>
 public sealed class Age : ComparableSimpleValueObject<int>
 {
-    // 2. Private 생성자 - 단순 대입만 처리
     private Age(int value) : base(value) { }
 
-    /// <summary>
-    /// 나이 값에 대한 public 접근자
-    /// </summary>
     public int Years => Value;
 
-    // 3. Public Create 메서드 - 검증과 생성을 연결
     public static Fin<Age> Create(int value) =>
         CreateFromValidation(
             Validate(value),
             validValue => new Age(validValue));
 
-    // 4. Internal CreateFromValidated 메서드
     internal static Age CreateFromValidated(int value) => new(value);
 
-    // 5. Public Validate 메서드 - 순차 검증 (범위 검증은 의존성이 있음)
     public static Validation<Error, int> Validate(int value) =>
         ValidateNotNegative(value)
             .Bind(_ => ValidateNotTooOld(value))
             .Map(_ => value);
 
-    // 5.1 음수 검증
     private static Validation<Error, int> ValidateNotNegative(int value) =>
         value >= 0
             ? value
-            : DomainErrors.Negative(value);
+            : DomainError.For<Age, int>(new DomainErrorType.Negative(), value,
+                $"Age cannot be negative. Current value: '{value}'");
 
-    // 5.2 최대값 검증
     private static Validation<Error, int> ValidateNotTooOld(int value) =>
         value <= 150
             ? value
-            : DomainErrors.TooOld(value);
+            : DomainError.For<Age, int>(new DomainErrorType.AboveMaximum(), value,
+                $"Age cannot exceed 150 years. Current value: '{value}'");
 
     public static implicit operator int(Age age) => age.Value;
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
-    {
-        // ValidateNotNegative 메서드와 1:1 매핑되는 에러
-        public static Error Negative(int value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Age)}.{nameof(Negative)}",
-                errorCurrentValue: value,
-                errorMessage: $"Age cannot be negative. Current value: '{value}'");
-
-        // ValidateNotTooOld 메서드와 1:1 매핑되는 에러
-        public static Error TooOld(int value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Age)}.{nameof(TooOld)}",
-                errorCurrentValue: value,
-                errorMessage: $"Age cannot exceed 150 years. Current value: '{value}'");
-    }
 }
 
 // ========================================

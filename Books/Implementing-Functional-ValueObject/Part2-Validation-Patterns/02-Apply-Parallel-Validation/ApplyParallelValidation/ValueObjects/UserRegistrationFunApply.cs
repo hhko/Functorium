@@ -1,5 +1,4 @@
 using Functorium.Domains.ValueObjects;
-using Functorium.Abstractions.Errors;
 using LanguageExt;
 using LanguageExt.Common;
 using static LanguageExt.Prelude;
@@ -85,22 +84,22 @@ public sealed class UserRegistrationFunApply : ValueObject
     private static Validation<Error, string> ValidateEmailFormat(string email) =>
         !string.IsNullOrWhiteSpace(email) && email.Contains("@") && email.Contains(".")
             ? email
-            : DomainErrors.EmailMissingAt(email);
+            : DomainError.For<UserRegistrationFunApply>(new DomainErrorType.InvalidFormat(), email, $"Email is missing '@' symbol or '.' character. Current value: '{email}'");
 
     private static Validation<Error, string> ValidatePasswordStrength(string password) =>
         password.Length >= 8
             ? password
-            : DomainErrors.PasswordTooShort(password);
+            : DomainError.For<UserRegistrationFunApply>(new DomainErrorType.TooShort(8), password, $"Password is too short. Minimum length is 8 characters. Current value: '{password}'");
 
     private static Validation<Error, string> ValidateNameFormat(string name) =>
         !string.IsNullOrWhiteSpace(name) && name.Length >= 2
             ? name
-            : DomainErrors.NameTooShort(name);
+            : DomainError.For<UserRegistrationFunApply>(new DomainErrorType.TooShort(2), name, $"Name is too short. Minimum length is 2 characters. Current value: '{name}'");
 
     private static Validation<Error, int> ValidateAgeFormat(string ageInput) =>
         int.TryParse(ageInput, out var age)
             ? age
-            : DomainErrors.AgeNotNumeric(ageInput);
+            : DomainError.For<UserRegistrationFunApply>(new DomainErrorType.InvalidFormat(), ageInput, $"Age must be a numeric value. Current value: '{ageInput}'");
 
     protected override IEnumerable<object> GetEqualityComponents()
     {
@@ -108,32 +107,5 @@ public sealed class UserRegistrationFunApply : ValueObject
         yield return Password;
         yield return Name;
         yield return Age;
-    }
-
-    internal static class DomainErrors
-    {
-        public static Error EmailMissingAt(string email) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(UserRegistrationFunApply)}.{nameof(EmailMissingAt)}",
-                errorCurrentValue: email,
-                errorMessage: $"Email is missing '@' symbol or '.' character. Current value: '{email}'");
-
-        public static Error PasswordTooShort(string password) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(UserRegistrationFunApply)}.{nameof(PasswordTooShort)}",
-                errorCurrentValue: password,
-                errorMessage: $"Password is too short. Minimum length is 8 characters. Current value: '{password}'");
-
-        public static Error NameTooShort(string name) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(UserRegistrationFunApply)}.{nameof(NameTooShort)}",
-                errorCurrentValue: name,
-                errorMessage: $"Name is too short. Minimum length is 2 characters. Current value: '{name}'");
-
-        public static Error AgeNotNumeric(string ageInput) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(UserRegistrationFunApply)}.{nameof(AgeNotNumeric)}",
-                errorCurrentValue: ageInput,
-                errorMessage: $"Age must be a numeric value. Current value: '{ageInput}'");
     }
 }

@@ -1,6 +1,8 @@
 using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
+using DomainError = Functorium.Domains.ValueObjects.DomainError;
+using DomainErrorType = Functorium.Domains.ValueObjects.DomainErrorType;
 
 namespace TypeSafeEnums.ValueObjects.Comparable.CompositeValueObjects;
 
@@ -46,7 +48,10 @@ public sealed class MoneyAmount : ComparableSimpleValueObject<decimal>
     public static Validation<Error, decimal> Validate(decimal value) =>
         value >= 0 && value <= 999999.99m
             ? value
-            : DomainErrors.OutOfRange(value);
+            : DomainError.For<MoneyAmount, decimal>(
+                new DomainErrorType.OutOfRange("0", "999999.99"),
+                value,
+                $"금액은 0 이상 999,999.99 이하여야 합니다. Current value: '{value}'");
 
     /// <summary>
     /// 금액의 문자열 표현
@@ -54,21 +59,6 @@ public sealed class MoneyAmount : ComparableSimpleValueObject<decimal>
     /// <returns>금액의 문자열 표현</returns>
     public override string ToString() => 
         $"{Value:N2}";
-
-    /// <summary>
-    /// DomainErrors 중첩 클래스
-    /// ValueObject 규칙에 따른 구조화된 에러 처리
-    /// </summary>
-    internal static class DomainErrors
-    {
-        /// <summary>
-        /// 범위를 벗어난 금액 에러
-        /// </summary>
-        /// <param name="value">범위를 벗어난 금액</param>
-        /// <returns>에러</returns>
-        public static Error OutOfRange(decimal value) =>
-            Error.New($"금액은 0 이상 999,999.99 이하여야 합니다: {value}");
-    }
 
     // 비교 기능은 ComparableSimpleValueObject<decimal>에서 자동으로 제공됨:
     // - IComparable<MoneyAmount> 구현

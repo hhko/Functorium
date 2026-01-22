@@ -85,7 +85,7 @@ public class PriceRangeTests
 
         // Assert
         actual.IsFail.ShouldBeTrue();
-        actual.IfFail(error => error.Message.ShouldContain($"지원하지 않는 통화 코드입니다: {currencyCode}"));
+        actual.IfFail(error => error.Message.ShouldContain($"지원하지 않는 통화 코드입니다. Current value: '{currencyCode.ToUpperInvariant()}'"));
     }
 
     // 테스트 시나리오: CreateFromValidated 메서드가 검증된 값 객체들로 PriceRange를 생성해야 한다
