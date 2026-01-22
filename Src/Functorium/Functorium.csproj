@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Functorium.Tests.Unit" />
+    <InternalsVisibleTo Include="Functorium.Testing" />
   </ItemGroup>
 
   <ItemGroup>
