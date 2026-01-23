@@ -1,7 +1,7 @@
 using FluentValidation;
 
-using Functorium.Abstractions.Errors;
 using Functorium.Abstractions.Utilities;
+using Functorium.Adapters.Errors;
 using Functorium.Applications.Cqrs;
 
 using LanguageExt.Common;
@@ -31,7 +31,7 @@ internal sealed class UsecaseValidationPipeline<TRequest, TResponse>
 
     public async ValueTask<TResponse> Handle(TRequest request, MessageHandlerDelegate<TRequest, TResponse> next, CancellationToken cancellationToken)
     {
-        if (_validators.IsEmpty())
+        if (_validators.IsEmpty)
         {
             return await next(request, cancellationToken);
         }
@@ -40,7 +40,7 @@ internal sealed class UsecaseValidationPipeline<TRequest, TResponse>
             .Select(validator => validator.Validate(request))
             .SelectMany(validationResult => validationResult.Errors)
             .Where(validationFailure => validationFailure is not null)
-            .Select(failure => ApplicationErrors.Validator(
+            .Select(failure => AdapterError.For<UsecaseValidationPipeline<TRequest, TResponse>, Dictionary<string, object>>(
 
                 // FormattedMessagePlaceholderValues: Dictionary<string, object>
                 //  - 예: .NotEmpty()
@@ -54,6 +54,7 @@ internal sealed class UsecaseValidationPipeline<TRequest, TResponse>
                 //        - "MinLength": 3,
                 //        - "MaxLength": -1,
                 //        - "TotalLength": 0,
+                new AdapterErrorType.PipelineValidation(failure.PropertyName),
                 failure.FormattedMessagePlaceholderValues,
                 $"{failure.PropertyName}: {failure.ErrorMessage}"))
             .Distinct()
@@ -66,14 +67,5 @@ internal sealed class UsecaseValidationPipeline<TRequest, TResponse>
         }
 
         return await next(request, cancellationToken);
-    }
-
-    internal static partial class ApplicationErrors
-    {
-        public static Error Validator(Dictionary<string, object> errorValue, string errorMessage) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(ApplicationErrors)}.{nameof(UsecaseValidationPipeline<TRequest, TResponse>)}.{nameof(Validator)}",
-                errorCurrentValue: errorValue,
-                errorMessage: $"{errorMessage}");
     }
 }

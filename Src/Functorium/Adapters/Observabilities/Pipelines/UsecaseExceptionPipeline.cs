@@ -1,4 +1,4 @@
-using Functorium.Abstractions.Errors;
+using Functorium.Adapters.Errors;
 using Functorium.Applications.Cqrs;
 
 using LanguageExt.Common;
@@ -28,15 +28,10 @@ internal sealed class UsecaseExceptionPipeline<TRequest, TResponse>
         }
         catch (Exception exp)
         {
-            return TResponse.CreateFail(ApplicationErrors.Exception(exp));
+            return TResponse.CreateFail(
+                AdapterError.FromException<UsecaseExceptionPipeline<TRequest, TResponse>>(
+                    new AdapterErrorType.PipelineException(),
+                    exp));
         }
-    }
-
-    internal static partial class ApplicationErrors
-    {
-        public static Error Exception(Exception exception) =>
-            ErrorCodeFactory.CreateFromException(
-                errorCode: $"{nameof(ApplicationErrors)}.{nameof(UsecaseExceptionPipeline<TRequest, TResponse>)}.{nameof(Exception)}",
-                exception: exception);
     }
 }
