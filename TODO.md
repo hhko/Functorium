@@ -82,11 +82,11 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ## 할일
 - [x] 관찰 가능성 매뉴얼
 - [x] 도메인 에러 개선 DoaminErrorTtype
-- [ ] DoaminErrorTtype Should 전체 타입 대상으로 확대
-- [ ] 도메인 에러 타입 개발 가이드 문서
----
-- [ ] ApplicationError
-- [ ] AdapterError
+- [x] DoaminErrorTtype Should 전체 타입 대상으로 확대
+- [x] ApplicationError 정의 및 테스트 방법 확장
+- [x] AdapterError 정의 및 테스트 방법 확장
+- [x] 에러 `개발 가이드 문서`
+- [ ] IAdapter 인터페이스 `개발 가이드 문서`
 ---
 - [ ] ValidationPipeline에 Domain Validate 통합
 - [ ] 값 객체 구현 개발 가이드 문서

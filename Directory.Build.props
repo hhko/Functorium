@@ -5,6 +5,7 @@
     <TargetFramework>net10.0</TargetFramework>
 
     <!-- Language Features -->
+    <LangVersion>14</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
