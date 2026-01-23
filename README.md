@@ -1,12 +1,16 @@
 # Functorium
+
+배움은 설렘이다. 배움은 겸손이다. 배움은 이타심이다.
+
 [![Build](https://github.com/hhko/Functorium/actions/workflows/build.yml/badge.svg)](https://github.com/hhko/Functorium/actions/workflows/build.yml) [![Publish](https://github.com/hhko/Functorium/actions/workflows/publish.yml/badge.svg)](https://github.com/hhko/Functorium/actions/workflows/publish.yml)
 
 > A functional domain is functor + dominium, seasoned with fun, designed to bridge **the age of deterministic rules** and **the age of probabilistic intuition**.
 >
-> 배움은 설렘이다. 배움은 겸손이다. 배움은 이타심이다.
-> - Domin-Driven Design: **객체 단위로** 비즈니스 관심사를 캡슐화한다.
-> - Functional 아키텍처: **레이어 단위로** 비즈니스를 관심사를 캡슐화한다.
-> - Microservices 아키텍처: **서비스 단위로** 비즈니스를 관심사를 캡슐화한다.
+> - Domin-Driven Design: **객체 단위로** 비즈니스 관심사를 **캡슐화한다.**
+> - Functional 아키텍처: **레이어 단위로** 비즈니스 관심사를 **순수화한다.**
+> - Microservices 아키텍처: **서비스 단위로** 비즈니스 관심사를 **자율화한다.**
+>
+> 그래서 우리는 유스케이스 단위를 최상위 설계 단위로 삼는다!
 
 ![](./Functorium.Architecture.png)
 
