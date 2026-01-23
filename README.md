@@ -3,10 +3,10 @@
 
 > A functional domain is functor + dominium, seasoned with fun, designed to bridge **the age of deterministic rules** and **the age of probabilistic intuition**.
 >
-> - 배움은 설렘이다. 배움은 겸손이다. 배움은 이타심이다.
->   - Domin-Driven Design: **객체 단위로** 비즈니스 관심사를 캡슐화한다.
->   - Functional 아키텍처: **레이어 단위로** 비즈니스를 관심사를 캡슐화한다.
->   - Microservices 아키텍처: **서비스 단위로** 비즈니스를 관심사를 캡슐화한다.
+> 배움은 설렘이다. 배움은 겸손이다. 배움은 이타심이다.
+> - Domin-Driven Design: **객체 단위로** 비즈니스 관심사를 캡슐화한다.
+> - Functional 아키텍처: **레이어 단위로** 비즈니스를 관심사를 캡슐화한다.
+> - Microservices 아키텍처: **서비스 단위로** 비즈니스를 관심사를 캡슐화한다.
 
 ![](./Functorium.Architecture.png)
 
