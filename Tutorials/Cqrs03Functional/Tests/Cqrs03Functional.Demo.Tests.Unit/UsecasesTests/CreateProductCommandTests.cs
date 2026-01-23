@@ -26,6 +26,7 @@ public sealed class CreateProductCommandTests : IDisposable
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
+                ["OpenTelemetry:ServiceNamespace"] = "Cqrs03Functional.Tests",
                 ["OpenTelemetry:ServiceName"] = "TestService",
                 ["OpenTelemetry:ServiceVersion"] = "1.0.0",
                 ["OpenTelemetry:CollectorEndpoint"] = "http://localhost:4317"
