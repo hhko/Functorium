@@ -2,11 +2,11 @@ namespace Functorium.Abstractions.Utilities;
 
 public static class StringUtilities
 {
-    public static bool Empty(this string? str)
-        => string.IsNullOrWhiteSpace(str);
-
-    public static bool NotEmpty(this string? str)
-        => !string.IsNullOrWhiteSpace(str);
+    extension(string? str)
+    {
+        public bool IsEmpty => string.IsNullOrWhiteSpace(str);
+        public bool IsNotEmpty => !string.IsNullOrWhiteSpace(str);
+    }
 
     public static bool NotContains(this string str, string subStr, StringComparison stringComparison = StringComparison.OrdinalIgnoreCase)
         => !str.Contains(subStr, stringComparison);
