@@ -2,6 +2,7 @@ using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
 

@@ -2,9 +2,10 @@ using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
-using static Functorium.Domains.ValueObjects.DomainErrorType;
+using static Functorium.Domains.Errors.DomainErrorType;
 
 namespace Functorium.Domains.ValueObjects;
 
