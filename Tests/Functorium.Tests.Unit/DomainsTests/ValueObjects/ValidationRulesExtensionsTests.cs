@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Functorium.Domains.Errors;
 using Functorium.Domains.ValueObjects;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 

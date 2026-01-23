@@ -1,5 +1,6 @@
+using Functorium.Domains.Errors;
 using Functorium.Domains.ValueObjects;
-using Functorium.Testing.Assertions;
+using Functorium.Testing.Assertions.Errors;
 using LanguageExt;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 
@@ -132,6 +133,55 @@ public class DomainErrorAssertionsTests
                 new DomainErrorType.Custom("StartAfterEnd"),
                 expectedValue1: new DateTime(2024, 1, 1),
                 expectedValue2: endDate));
+    }
+
+    #endregion
+
+    #region Error - ShouldBeDomainError<TValueObject, T1, T2, T3>
+
+    [Fact]
+    public void ShouldBeDomainError_WithThreeValues_ReturnsSuccess_WhenErrorAndValuesMatch()
+    {
+        // Arrange
+        var startDate = new DateTime(2024, 1, 1);
+        var endDate = new DateTime(2024, 12, 31);
+        var duration = 365;
+        var error = DomainError.For<DummyValueObject, DateTime, DateTime, int>(
+            new DomainErrorType.Custom("DateRangeWithDuration"),
+            startDate,
+            endDate,
+            duration,
+            message: "Date range spans 365 days");
+
+        // Act & Assert (should not throw)
+        error.ShouldBeDomainError<DummyValueObject, DateTime, DateTime, int>(
+            new DomainErrorType.Custom("DateRangeWithDuration"),
+            expectedValue1: startDate,
+            expectedValue2: endDate,
+            expectedValue3: duration);
+    }
+
+    [Fact]
+    public void ShouldBeDomainError_WithThreeValues_ThrowsException_WhenValue3DoesNotMatch()
+    {
+        // Arrange
+        var startDate = new DateTime(2024, 1, 1);
+        var endDate = new DateTime(2024, 12, 31);
+        var duration = 365;
+        var error = DomainError.For<DummyValueObject, DateTime, DateTime, int>(
+            new DomainErrorType.Custom("DateRangeWithDuration"),
+            startDate,
+            endDate,
+            duration,
+            message: "Date range spans 365 days");
+
+        // Act & Assert
+        Should.Throw<ShouldAssertException>(() =>
+            error.ShouldBeDomainError<DummyValueObject, DateTime, DateTime, int>(
+                new DomainErrorType.Custom("DateRangeWithDuration"),
+                expectedValue1: startDate,
+                expectedValue2: endDate,
+                expectedValue3: 366)); // Wrong value
     }
 
     #endregion
@@ -360,6 +410,102 @@ public class DomainErrorAssertionsTests
             validation.ShouldHaveDomainError<DummyValueObject, int, int>(
                 new DomainErrorType.Negative(),
                 expectedCurrentValue: -10));
+    }
+
+    #endregion
+
+    #region Validation<Error, T> - ShouldHaveDomainError<TValueObject, T, T1, T2>
+
+    [Fact]
+    public void Validation_ShouldHaveDomainError_WithTwoValues_ReturnsSuccess_WhenErrorAndValuesMatch()
+    {
+        // Arrange
+        var startDate = new DateTime(2024, 12, 31);
+        var endDate = new DateTime(2024, 1, 1);
+        var error = DomainError.For<DummyValueObject, DateTime, DateTime>(
+            new DomainErrorType.Custom("StartAfterEnd"),
+            startDate,
+            endDate,
+            message: "Start date cannot be after end date");
+        Validation<Error, string> validation = error;
+
+        // Act & Assert (should not throw)
+        validation.ShouldHaveDomainError<DummyValueObject, string, DateTime, DateTime>(
+            new DomainErrorType.Custom("StartAfterEnd"),
+            expectedValue1: startDate,
+            expectedValue2: endDate);
+    }
+
+    [Fact]
+    public void Validation_ShouldHaveDomainError_WithTwoValues_ThrowsException_WhenValueDoesNotMatch()
+    {
+        // Arrange
+        var startDate = new DateTime(2024, 12, 31);
+        var endDate = new DateTime(2024, 1, 1);
+        var error = DomainError.For<DummyValueObject, DateTime, DateTime>(
+            new DomainErrorType.Custom("StartAfterEnd"),
+            startDate,
+            endDate,
+            message: "Start date cannot be after end date");
+        Validation<Error, string> validation = error;
+
+        // Act & Assert
+        Should.Throw<ShouldAssertException>(() =>
+            validation.ShouldHaveDomainError<DummyValueObject, string, DateTime, DateTime>(
+                new DomainErrorType.Custom("StartAfterEnd"),
+                expectedValue1: new DateTime(2024, 1, 1),
+                expectedValue2: endDate));
+    }
+
+    #endregion
+
+    #region Validation<Error, T> - ShouldHaveDomainError<TValueObject, T, T1, T2, T3>
+
+    [Fact]
+    public void Validation_ShouldHaveDomainError_WithThreeValues_ReturnsSuccess_WhenErrorAndValuesMatch()
+    {
+        // Arrange
+        var startDate = new DateTime(2024, 1, 1);
+        var endDate = new DateTime(2024, 12, 31);
+        var duration = 365;
+        var error = DomainError.For<DummyValueObject, DateTime, DateTime, int>(
+            new DomainErrorType.Custom("DateRangeWithDuration"),
+            startDate,
+            endDate,
+            duration,
+            message: "Date range spans 365 days");
+        Validation<Error, string> validation = error;
+
+        // Act & Assert (should not throw)
+        validation.ShouldHaveDomainError<DummyValueObject, string, DateTime, DateTime, int>(
+            new DomainErrorType.Custom("DateRangeWithDuration"),
+            expectedValue1: startDate,
+            expectedValue2: endDate,
+            expectedValue3: duration);
+    }
+
+    [Fact]
+    public void Validation_ShouldHaveDomainError_WithThreeValues_ThrowsException_WhenValueDoesNotMatch()
+    {
+        // Arrange
+        var startDate = new DateTime(2024, 1, 1);
+        var endDate = new DateTime(2024, 12, 31);
+        var duration = 365;
+        var error = DomainError.For<DummyValueObject, DateTime, DateTime, int>(
+            new DomainErrorType.Custom("DateRangeWithDuration"),
+            startDate,
+            endDate,
+            duration,
+            message: "Date range spans 365 days");
+        Validation<Error, string> validation = error;
+
+        // Act & Assert
+        Should.Throw<ShouldAssertException>(() =>
+            validation.ShouldHaveDomainError<DummyValueObject, string, DateTime, DateTime, int>(
+                new DomainErrorType.Custom("DateRangeWithDuration"),
+                expectedValue1: startDate,
+                expectedValue2: endDate,
+                expectedValue3: 366)); // Wrong value
     }
 
     #endregion
