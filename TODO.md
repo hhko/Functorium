@@ -4,7 +4,7 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 
 ## 로드맵
 ### AI 도구
-- [ ] 개발 관리:
+- [ ] 개발 관리: https://github.com/glittercowboy/get-shit-done
 - [ ] 웹앱 개발: https://github.com/opactorai/Claudable
 - [ ] 서버 개발: 자체
 - [ ] 로컬 검색: https://github.com/marcoaapfortes/Mantic.sh
@@ -86,6 +86,16 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [x] ApplicationError 정의 및 테스트 방법 확장
 - [x] AdapterError 정의 및 테스트 방법 확장
 - [x] 에러 `개발 가이드 문서`
+- [ ] RegisterSingletonAdapterPipelineFor: Src\Functorium\Abstractions\Registrations\AdapterPipelineRegistration.cs
+- [x] 값 객체 ValidationPipeline
+- [x] Enum 값 객체 ValidationPipeline
+- [x] Validation<Error, Currency> Validate(string? value) -> Validation<Error, string?> Validate(string? value)
+- [ ] Validate<T> Domain, Application, Adapter 통합?
+- [ ] valueobject-implementation-guide.md 문서 업데이트
+  - 유효성 검사
+  - Enum 타입
+- [ ] Validation<Error, T> Validate(T value) 검토을 위한 아키텍처 테스트 구현
+---
 - [ ] IAdapter 인터페이스 `개발 가이드 문서`
 ---
 - [ ] ValidationPipeline에 Domain Validate 통합
