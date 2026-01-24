@@ -125,19 +125,20 @@ var error = DomainError.For<Triangle, double, double, double>(
 ```csharp
 public sealed class Email : SimpleValueObject<string>
 {
-    private Email(string value) : base(value) { }
-
-    public static Fin<Email> Create(string? value) =>
-        Validate(value).ToFin();
-
-    public static Validation<Error, Email> Validate(string? value) =>
-        ValidationRules.NotEmpty<Email>(value)
-            .ThenMatches<Email>(EmailPattern)
-            .ThenMaxLength<Email>(MaxLength)
-            .Map(v => new Email(v));
-
     private static readonly Regex EmailPattern = new(@"^[^@]+@[^@]+\.[^@]+$");
     private const int MaxLength = 256;
+
+    private Email(string value) : base(value) { }
+
+    // Create: CreateFromValidation 헬퍼 사용
+    public static Fin<Email> Create(string? value) =>
+        CreateFromValidation(Validate(value), v => new Email(v));
+
+    // Validate: 타입 파라미터 한 번만 지정, 원시 타입 반환
+    public static Validation<Error, string> Validate(string? value) =>
+        Validate<Email>.NotEmpty(value ?? "")
+            .ThenMatches(EmailPattern)
+            .ThenMaxLength(MaxLength);
 }
 ```
 
@@ -426,4 +427,5 @@ public sealed record RateLimited : AdapterErrorType;
 
 | 날짜 | 변경 사항 | 작성자 |
 |------|----------|--------|
+| 2026-01-25 | Value Object 예시를 `Validate<T>` 문법으로 업데이트 | - |
 | 2026-01-23 | 최초 작성 - 레이어별 에러 정의 가이드 | - |

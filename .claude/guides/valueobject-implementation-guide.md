@@ -171,8 +171,15 @@ public sealed class Email : SimpleValueObject<string>
 {
     private Email(string value) : base(value) { }
 
+    // Create: CreateFromValidation 헬퍼 사용
     public static Fin<Email> Create(string? value) =>
-        Validate(value).ToFin();
+        CreateFromValidation(Validate(value), v => new Email(v));
+
+    // Validate: 원시 타입 반환
+    public static Validation<Error, string> Validate(string? value) =>
+        Validate<Email>.NotEmpty(value ?? "")
+            .ThenMatches(EmailPattern)
+            .ThenMaxLength(254);
 
     // 파생 속성 (의미 있는 정보만 노출)
     public string LocalPart => Value.Split('@')[0];
@@ -180,6 +187,8 @@ public sealed class Email : SimpleValueObject<string>
 
     // 필요 시 암시적 변환
     public static implicit operator string(Email email) => email.Value;
+
+    private static readonly Regex EmailPattern = new(@"^[^@]+@[^@]+\.[^@]+$");
 }
 ```
 
@@ -198,8 +207,14 @@ public sealed class Quantity : ComparableSimpleValueObject<int>
     public static Quantity Zero => new(0);
     public static Quantity One => new(1);
 
+    // Create: CreateFromValidation 헬퍼 사용
     public static Fin<Quantity> Create(int value) =>
-        Validate(value).ToFin();
+        CreateFromValidation(Validate(value), v => new Quantity(v));
+
+    // Validate: 원시 타입 반환
+    public static Validation<Error, int> Validate(int value) =>
+        Validate<Quantity>.NonNegative(value)
+            .ThenAtMost(10000);
 
     // 도메인 연산 (원시 값 노출 대신 의미 있는 메서드 제공)
     public Quantity Add(Quantity other) => new(Value + other.Value);
@@ -225,7 +240,7 @@ public sealed class Quantity : ComparableSimpleValueObject<int>
 |------|----------|------|------|
 | 1 | 속성 선언 | O | 불변 속성 정의 |
 | 2 | Private 생성자 | O | 외부 생성 차단 |
-| 3 | Create 메서드 | O | `Validate().ToFin()` 호출 |
+| 3 | Create 메서드 | O | `CreateFromValidation` 헬퍼 사용 |
 | 4 | Validate 메서드 | O | `Validate<T>` 체이닝 |
 | 5 | 파생 속성/도메인 메서드 | △ | 의미 있는 정보/동작만 노출 |
 | 6 | 동등성 컴포넌트 | △ | ValueObject만 필수 |
