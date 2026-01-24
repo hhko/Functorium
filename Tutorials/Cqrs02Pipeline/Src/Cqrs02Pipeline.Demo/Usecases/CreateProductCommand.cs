@@ -1,5 +1,7 @@
 using Cqrs02Pipeline.Demo.Domain;
+using Cqrs02Pipeline.Demo.Domain.ValueObjects;
 using FluentValidation;
+using Functorium.Applications.Validations;
 using Microsoft.Extensions.Logging;
 
 namespace Cqrs02Pipeline.Demo.Usecases;
@@ -32,21 +34,24 @@ public sealed class CreateProductCommand
 
     /// <summary>
     /// Request Validator - FluentValidation 검증 규칙
+    /// 값 객체의 Validate 메서드와 FluentValidation 통합 예제
     /// </summary>
     public sealed class Validator : AbstractValidator<Request>
     {
         public Validator()
         {
+            // 값 객체 Validate 메서드 통합
             RuleFor(x => x.Name)
-                .NotEmpty().WithMessage("상품명은 필수입니다")
-                .MaximumLength(100).WithMessage("상품명은 100자를 초과할 수 없습니다");
+                .MustSatisfyValueObjectValidation<Request, string, string>(ProductName.Validate);
 
             RuleFor(x => x.Description)
                 .MaximumLength(500).WithMessage("설명은 500자를 초과할 수 없습니다");
 
+            // 값 객체 Validate 메서드 통합
             RuleFor(x => x.Price)
-                .GreaterThan(0).WithMessage("가격은 0보다 커야 합니다");
+                .MustSatisfyValueObjectValidation<Request, decimal, decimal>(Price.Validate);
 
+            // 기존 FluentValidation 규칙 유지
             RuleFor(x => x.StockQuantity)
                 .GreaterThanOrEqualTo(0).WithMessage("재고 수량은 0 이상이어야 합니다");
         }
