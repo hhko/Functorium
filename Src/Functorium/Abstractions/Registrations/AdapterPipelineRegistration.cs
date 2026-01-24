@@ -30,7 +30,7 @@ public static class AdapterPipelineRegistration
     //
     // - RegisterScopedAdapterPipelineFor
     // - RegisterTransientAdapterPipelineFor
-    // - TODO
+    // - RegisterSingletonAdapterPipelineFor
 
     // For 접미사가 없을 때: 단일 인터페이스 등록
 
@@ -328,6 +328,123 @@ public static class AdapterPipelineRegistration
         foreach (Type serviceType in serviceTypes)
         {
             services.AddTransient(serviceType, sp => sp.GetRequiredService<TImplementation>());
+        }
+
+        return services;
+    }
+
+    /// <summary>
+    /// Singleton 서비스를 등록하고, 동일한 구현체를 두 개의 서비스 인터페이스로 등록합니다.
+    /// 애플리케이션 전체에서 1개의 인스턴스가 생성되며, 모든 인터페이스가 동일한 인스턴스를 공유합니다.
+    /// </summary>
+    /// <typeparam name="TService1">등록할 첫 번째 서비스 인터페이스</typeparam>
+    /// <typeparam name="TService2">등록할 두 번째 서비스 인터페이스</typeparam>
+    /// <typeparam name="TImplementation">구현 클래스</typeparam>
+    /// <param name="services">서비스 컬렉션</param>
+    /// <returns>서비스 컬렉션</returns>
+    /// <example>
+    /// <code>
+    /// services.RegisterSingletonAdapterPipelineFor&lt;IService1, IService2, MyPipeline&gt;();
+    /// </code>
+    /// </example>
+    public static IServiceCollection RegisterSingletonAdapterPipelineFor<TService1, TService2, TImplementation>(
+        this IServiceCollection services)
+            where TService1 : class, IAdapter
+            where TService2 : class, IAdapter
+            where TImplementation : class, TService1, TService2
+    {
+        // 구현체 등록
+        services.AddSingleton<TImplementation>(sp =>
+            ActivatorUtilities.CreateInstance<TImplementation>(sp));
+
+        // 각 인터페이스가 동일한 구현체 인스턴스를 참조
+        services.AddSingleton<TService1>(sp => sp.GetRequiredService<TImplementation>());
+        services.AddSingleton<TService2>(sp => sp.GetRequiredService<TImplementation>());
+
+        return services;
+    }
+
+    /// <summary>
+    /// Singleton 서비스를 등록하고, 동일한 구현체를 세 개의 서비스 인터페이스로 등록합니다.
+    /// 애플리케이션 전체에서 1개의 인스턴스가 생성되며, 모든 인터페이스가 동일한 인스턴스를 공유합니다.
+    /// </summary>
+    /// <typeparam name="TService1">등록할 첫 번째 서비스 인터페이스</typeparam>
+    /// <typeparam name="TService2">등록할 두 번째 서비스 인터페이스</typeparam>
+    /// <typeparam name="TService3">등록할 세 번째 서비스 인터페이스</typeparam>
+    /// <typeparam name="TImplementation">구현 클래스</typeparam>
+    /// <param name="services">서비스 컬렉션</param>
+    /// <returns>서비스 컬렉션</returns>
+    /// <example>
+    /// <code>
+    /// services.RegisterSingletonAdapterPipelineFor&lt;IService1, IService2, IService3, MyPipeline&gt;();
+    /// </code>
+    /// </example>
+    public static IServiceCollection RegisterSingletonAdapterPipelineFor<TService1, TService2, TService3, TImplementation>(
+        this IServiceCollection services)
+            where TService1 : class, IAdapter
+            where TService2 : class, IAdapter
+            where TService3 : class, IAdapter
+            where TImplementation : class, TService1, TService2, TService3
+    {
+        // 구현체 등록
+        services.AddSingleton<TImplementation>(sp =>
+            ActivatorUtilities.CreateInstance<TImplementation>(sp));
+
+        // 각 인터페이스가 동일한 구현체 인스턴스를 참조
+        services.AddSingleton<TService1>(sp => sp.GetRequiredService<TImplementation>());
+        services.AddSingleton<TService2>(sp => sp.GetRequiredService<TImplementation>());
+        services.AddSingleton<TService3>(sp => sp.GetRequiredService<TImplementation>());
+
+        return services;
+    }
+
+    /// <summary>
+    /// Singleton 서비스를 등록하고, 동일한 구현체를 여러 개의 서비스 인터페이스로 등록합니다 (4개 이상 지원).
+    /// 애플리케이션 전체에서 1개의 인스턴스가 생성되며, 모든 인터페이스가 동일한 인스턴스를 공유합니다.
+    /// </summary>
+    /// <typeparam name="TImplementation">구현 클래스</typeparam>
+    /// <param name="services">서비스 컬렉션</param>
+    /// <param name="serviceTypes">등록할 서비스 인터페이스 타입 배열</param>
+    /// <returns>서비스 컬렉션</returns>
+    /// <exception cref="ArgumentException">서비스 타입이 IAdapter를 구현하지 않거나, 구현 클래스가 서비스 타입을 구현하지 않을 때</exception>
+    /// <example>
+    /// <code>
+    /// services.RegisterSingletonAdapterPipelineFor&lt;MyPipeline&gt;(
+    ///     typeof(IService1), typeof(IService2), typeof(IService3), typeof(IService4));
+    /// </code>
+    /// </example>
+    public static IServiceCollection RegisterSingletonAdapterPipelineFor<TImplementation>(
+        this IServiceCollection services,
+        params Type[] serviceTypes)
+            where TImplementation : class, IAdapter
+    {
+        // 런타임 검증
+        Type implementationType = typeof(TImplementation);
+        foreach (Type serviceType in serviceTypes)
+        {
+            if (!typeof(IAdapter).IsAssignableFrom(serviceType))
+            {
+                throw new ArgumentException(
+                    $"Service type '{serviceType.Name}' must implement IAdapter interface.",
+                    nameof(serviceTypes));
+            }
+
+            if (!serviceType.IsAssignableFrom(implementationType))
+            {
+                throw new ArgumentException(
+                    $"Implementation type '{implementationType.Name}' must implement service interface '{serviceType.Name}'.",
+                    nameof(serviceTypes));
+            }
+        }
+
+        // 구현체 등록
+        services.AddSingleton<TImplementation>(sp =>
+            ActivatorUtilities.CreateInstance<TImplementation>(sp));
+
+        // 각 서비스 타입 등록
+        foreach (Type serviceType in serviceTypes)
+        {
+            services.AddSingleton(serviceType, sp => sp.GetRequiredService<TImplementation>());
         }
 
         return services;
