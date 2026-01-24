@@ -86,20 +86,21 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [x] ApplicationError 정의 및 테스트 방법 확장
 - [x] AdapterError 정의 및 테스트 방법 확장
 - [x] 에러 `개발 가이드 문서`
-- [ ] RegisterSingletonAdapterPipelineFor: Src\Functorium\Abstractions\Registrations\AdapterPipelineRegistration.cs
+- [x] RegisterSingletonAdapterPipelineFor: Src\Functorium\Abstractions\Registrations\AdapterPipelineRegistration.cs
 - [x] 값 객체 ValidationPipeline
 - [x] Enum 값 객체 ValidationPipeline
 - [x] Validation<Error, Currency> Validate(string? value) -> Validation<Error, string?> Validate(string? value)
-- [ ] Validate<T> Domain, Application, Adapter 통합?
+- [x] ~~Validate<T> Domain, Application, Adapter 통합?~~
 - [ ] valueobject-implementation-guide.md 문서 업데이트
   - 유효성 검사
   - Enum 타입
+- [ ] GitHub\DomainDrivenDesignUniversity-master\src\Shopway.Application\Utilities\FluentValidationUtilities.cs 코드 확인
 - [ ] Validation<Error, T> Validate(T value) 검토을 위한 아키텍처 테스트 구현
 ---
 - [ ] IAdapter 인터페이스 `개발 가이드 문서`
 ---
-- [ ] ValidationPipeline에 Domain Validate 통합
-- [ ] 값 객체 구현 개발 가이드 문서
+- [x] ValidationPipeline에 Domain Validate 통합
+- [x] 값 객체 구현 개발 가이드 문서
 ---
 - [ ] 로그 테스트 학습
 - [ ] 예외 Error 타입으로 표현?? 구조화 검증
