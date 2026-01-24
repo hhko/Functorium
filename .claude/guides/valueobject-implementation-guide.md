@@ -7,7 +7,7 @@
 - [값 객체 개요](#값-객체-개요)
 - [Functorium 기반 클래스](#functorium-기반-클래스)
 - [구현 단계](#구현-단계)
-- [유효성 검사 분리 패턴](#유효성-검사-분리-패턴)
+- [유효성 검사](#유효성-검사)
 - [오류 처리](#오류-처리)
 - [실전 예제](#실전-예제)
 - [트러블슈팅](#트러블슈팅)
@@ -28,62 +28,72 @@
 ### 핵심 패턴
 
 ```csharp
+using Functorium.Domains.Errors;
+using Functorium.Domains.ValueObjects;
+using static Functorium.Domains.Errors.DomainErrorType;
+
 // 1. 기반 클래스 상속
 public sealed class Email : SimpleValueObject<string>
 {
-    // 2. Private 생성자
-    private Email(string value) : base(value) { }
+    private static readonly Regex EmailPattern = new(@"^[^@]+@[^@]+\.[^@]+$");
 
-    // 3. 파생 속성 (의미 있는 정보만 노출)
-    public string LocalPart => Value.Split('@')[0];
-    public string Domain => Value.Split('@')[1];
-
-    // 4. Create 메서드 - 검증과 생성 연결
-    public static Fin<Email> Create(string? value) =>
-        CreateFromValidation(
-            Validate(value ?? "null"),
-            validValue => new Email(validValue));
-
-    // 5. Validate 메서드 - 검증 로직 분리
-    public static Validation<Error, string> Validate(string value) =>
-        (ValidateNotEmpty(value), ValidateFormat(value))
-            .Apply((_, validFormat) => validFormat.ToLowerInvariant())
-            .As();
-
-    // 6. 개별 검증 규칙
-    private static Validation<Error, string> ValidateNotEmpty(string value) =>
-        !string.IsNullOrWhiteSpace(value)
-            ? value
-            : DomainErrors.Empty(value);
-
-    private static Validation<Error, string> ValidateFormat(string value) =>
-        value.Contains('@')
-            ? value
-            : DomainErrors.InvalidFormat(value);
-
-    // 7. DomainErrors 중첩 클래스
-    internal static class DomainErrors
+    // 2. Private 생성자 - 파생 속성도 여기서 계산
+    private Email(string value) : base(value)
     {
-        public static Error Empty(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(Empty)}",
-                errorCurrentValue: value,
-                errorMessage: $"Email cannot be empty. Current value: '{value}'");
-
-        public static Error InvalidFormat(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(InvalidFormat)}",
-                errorCurrentValue: value,
-                errorMessage: $"Invalid email format. Current value: '{value}'");
+        var atIndex = value.IndexOf('@');
+        LocalPart = value[..atIndex];
+        Domain = value[(atIndex + 1)..];
     }
+
+    // 3. 파생 속성 (생성자에서 한 번만 계산)
+    public string LocalPart { get; }
+    public string Domain { get; }
+
+    // 4. Create 메서드 - CreateFromValidation 헬퍼 사용
+    public static Fin<Email> Create(string? value) =>
+        CreateFromValidation(Validate(value), v => new Email(v));
+
+    // 5. Validate 메서드 - nullable 입력 처리 후 원시 타입 반환
+    public static Validation<Error, string> Validate(string? value) =>
+        Validate<Email>.NotEmpty(value ?? "")
+            .ThenMatches(EmailPattern)
+            .ThenMaxLength(254)
+            .ThenNormalize(v => v.ToLowerInvariant());
+
+    // 6. 암시적 변환 (선택적)
+    public static implicit operator string(Email email) => email.Value;
 }
 ```
+
+### Validate 메서드 반환 타입 규칙
+
+`Validation<Error, T>`에서 **T는 값 객체 타입이 아니라 값 객체가 래핑하는 원시 데이터 타입**입니다:
+
+| 값 객체 | 래핑 타입 | Validate 반환 | Create 반환 |
+|---------|----------|--------------|-------------|
+| `Email` | `string` | `Validation<Error, string>` | `Fin<Email>` |
+| `Price` | `decimal` | `Validation<Error, decimal>` | `Fin<Price>` |
+| `Quantity` | `int` | `Validation<Error, int>` | `Fin<Quantity>` |
+| `Money` | `(decimal, string)` | `Validation<Error, (decimal, string)>` | `Fin<Money>` |
+
+**역할 분리:**
+- **Validate**: 검증만 담당, 원시 타입 반환
+- **Create**: 객체 생성 담당, `CreateFromValidation(Validate(), factory)` 호출
+
+**CreateFromValidation 헬퍼**: 부모 클래스에서 제공하는 메서드로 `.Map(factory).ToFin()` 패턴을 캡슐화합니다.
+
+### 오류 정의 비교
+
+| 방식 | 설명 | 사용 시점 |
+|------|------|----------|
+| `Validate<T>` | 공통 검증 규칙 라이브러리 | 일반적인 검증 (권장) |
+| `DomainError.For<T>()` | 타입 안전한 오류 생성 | 커스텀 검증 |
 
 ### 검증 전략 비교
 
 | 전략 | 연산자 | 동작 | 사용 시점 |
 |------|--------|------|----------|
-| 순차 검증 | `Bind` | 첫 오류에서 중단 | 의존 관계가 있는 검증 |
+| 순차 검증 | `Bind` / `Then*` | 첫 오류에서 중단 | 의존 관계가 있는 검증 |
 | 병렬 검증 | `Apply` | 모든 오류 수집 | 독립적인 검증 |
 
 ---
@@ -110,8 +120,8 @@ public sealed class Email : SimpleValueObject<string>
 
 **Functorium 기반 클래스의 장점:**
 - 동등성/해시코드 자동 처리
-- `CreateFromValidation` 헬퍼로 검증-생성 연결
-- 타입 안전한 값 래핑
+- `Validate<T>`로 일관된 검증 패턴
+- `DomainError.For<T>()`로 타입 안전한 오류 생성
 - 보일러플레이트 코드 제거
 
 ---
@@ -144,9 +154,7 @@ public sealed class Money : ValueObject
     }
 
     public static Fin<Money> Create(decimal amount, string currency) =>
-        CreateFromValidation(
-            Validate(amount, currency),
-            values => new Money(values.Amount, values.Currency));
+        Validate(amount, currency).ToFin();
 
     // ...
 }
@@ -164,9 +172,7 @@ public sealed class Email : SimpleValueObject<string>
     private Email(string value) : base(value) { }
 
     public static Fin<Email> Create(string? value) =>
-        CreateFromValidation(
-            Validate(value ?? "null"),
-            validValue => new Email(validValue));
+        Validate(value).ToFin();
 
     // 파생 속성 (의미 있는 정보만 노출)
     public string LocalPart => Value.Split('@')[0];
@@ -193,9 +199,7 @@ public sealed class Quantity : ComparableSimpleValueObject<int>
     public static Quantity One => new(1);
 
     public static Fin<Quantity> Create(int value) =>
-        CreateFromValidation(
-            Validate(value),
-            validValue => new Quantity(validValue));
+        Validate(value).ToFin();
 
     // 도메인 연산 (원시 값 노출 대신 의미 있는 메서드 제공)
     public Quantity Add(Quantity other) => new(Value + other.Value);
@@ -215,17 +219,16 @@ public sealed class Quantity : ComparableSimpleValueObject<int>
 
 ## 구현 단계
 
-### 7단계 구현 절차
+### 6단계 구현 절차
 
 | 단계 | 구성 요소 | 필수 | 설명 |
 |------|----------|------|------|
 | 1 | 속성 선언 | O | 불변 속성 정의 |
 | 2 | Private 생성자 | O | 외부 생성 차단 |
-| 3 | Create 메서드 | O | 검증과 생성 연결 |
-| 4 | 파생 속성/도메인 메서드 | △ | 의미 있는 정보/동작만 노출 |
-| 5 | Validate 메서드 | O | 검증 로직 분리 |
+| 3 | Create 메서드 | O | `Validate().ToFin()` 호출 |
+| 4 | Validate 메서드 | O | `Validate<T>` 체이닝 |
+| 5 | 파생 속성/도메인 메서드 | △ | 의미 있는 정보/동작만 노출 |
 | 6 | 동등성 컴포넌트 | △ | ValueObject만 필수 |
-| 7 | DomainErrors | O | 오류 정의 |
 
 ### 상세 구현
 
@@ -266,27 +269,56 @@ private Email(string value) : base(value) { }
 
 #### 3. Create 메서드
 
+부모 클래스의 `CreateFromValidation` 헬퍼를 사용하여 객체 생성:
+
 ```csharp
+// SimpleValueObject<T>용 - 부모 클래스에 정의된 CreateFromValidation 사용
 public static Fin<Email> Create(string? value) =>
-    CreateFromValidation(
-        Validate(value ?? "null"),
-        validValue => new Email(validValue));
+    CreateFromValidation(Validate(value), v => new Email(v));
+
+// ValueObject용 - 부모 클래스에 정의된 CreateFromValidation 사용
+public static Fin<Money> Create(decimal amount, string? currency) =>
+    CreateFromValidation(Validate(amount, currency), tuple => new Money(tuple.amount, tuple.currency));
 ```
 
-#### 4. 파생 속성/도메인 메서드
+#### 4. Validate 메서드
 
-원시 값을 직접 노출하지 않고, **의미 있는 파생 속성**이나 **도메인 메서드**만 노출합니다:
+nullable 입력을 처리하고 원시 타입을 반환하며 검증만 담당:
 
 ```csharp
-// ✗ 비권장 - 원시 값 직접 노출 (값 객체 의도 훼손)
+// Validate는 nullable 입력을 받아 null을 빈 문자열로 변환 후 검증
+public static Validation<Error, string> Validate(string? value) =>
+    Validate<Email>.NotEmpty(value ?? "")
+        .ThenMatches(EmailPattern)
+        .ThenMaxLength(254)
+        .ThenNormalize(v => v.ToLowerInvariant());
+```
+
+#### 5. 파생 속성/도메인 메서드
+
+원시 값을 직접 노출하지 않고, **의미 있는 파생 속성**이나 **도메인 메서드**만 노출합니다.
+**성능**: 파생 속성은 생성자에서 한 번만 계산하여 캐싱합니다:
+
+```csharp
+// X 비권장 - 원시 값 직접 노출 (값 객체 의도 훼손)
 public string Address => Value;
 
-// ✓ 권장 - 의미 있는 파생 속성만 노출
+// X 비권장 - 매번 계산 (성능 저하)
 public string LocalPart => Value.Split('@')[0];
 public string Domain => Value.Split('@')[1];
-public string Masked => $"{LocalPart[0]}***@{Domain}";
 
-// ✓ 권장 - 도메인 메서드로 동작 제공
+// O 권장 - 생성자에서 한 번만 계산
+private Email(string value) : base(value)
+{
+    var atIndex = value.IndexOf('@');
+    LocalPart = value[..atIndex];
+    Domain = value[(atIndex + 1)..];
+}
+public string LocalPart { get; }
+public string Domain { get; }
+public string Masked => $"{LocalPart[0]}***@{Domain}";  // 이미 캐싱된 값 사용
+
+// O 권장 - 도메인 메서드로 동작 제공
 public bool IsCorporate() => Domain.EndsWith(".com") || Domain.EndsWith(".co.kr");
 public bool BelongsTo(string domain) => Domain.Equals(domain, StringComparison.OrdinalIgnoreCase);
 ```
@@ -302,15 +334,6 @@ Email email = Email.Create("test@example.com").Match(e => e, _ => null!);
 string rawValue = email;  // 암시적 변환
 ```
 
-#### 5. Validate 메서드
-
-```csharp
-public static Validation<Error, string> Validate(string value) =>
-    ValidateNotEmpty(value)
-        .Bind(_ => ValidateFormat(value))
-        .Map(v => v.ToLowerInvariant());
-```
-
 #### 6. 동등성 컴포넌트 (ValueObject만)
 
 ```csharp
@@ -323,220 +346,216 @@ protected override IEnumerable<object> GetEqualityComponents()
 }
 ```
 
-#### 7. DomainErrors 중첩 클래스
-
-```csharp
-internal static class DomainErrors
-{
-    public static Error Empty(string value) =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(Empty)}",
-            errorCurrentValue: value,
-            errorMessage: $"Email cannot be empty. Current value: '{value}'");
-}
-```
-
 ---
 
-## 유효성 검사 분리 패턴
+## 유효성 검사
 
-### 왜 검증을 분리하는가?
+### Validate\<T\> 라이브러리
 
-**기존 방식의 문제점:**
+`Validate<T>`는 값 객체 검증을 위한 공통 규칙 라이브러리입니다. 타입 파라미터를 한 번만 지정하면 체이닝에서 반복하지 않아도 됩니다:
 
 ```csharp
-// ✗ 비권장 - Create 내부에서 검증
-public static Fin<Email> Create(string value)
-{
-    if (string.IsNullOrWhiteSpace(value))
-        return DomainErrors.Empty(value);
-    if (!value.Contains('@'))
-        return DomainErrors.InvalidFormat(value);
-    return new Email(value.ToLowerInvariant());
-}
+using Functorium.Domains.ValueObjects;
+
+// 시작 메서드 - 타입 파라미터 한 번만 지정
+Validate<Email>.NotEmpty(value)           // 문자열 비어있지 않음
+Validate<Email>.MinLength(value, 8)       // 최소 길이
+Validate<Email>.MaxLength(value, 100)     // 최대 길이
+Validate<Email>.ExactLength(value, 10)    // 정확한 길이
+Validate<Email>.Matches(value, regex)     // 정규식 패턴
+Validate<Price>.Positive(value)           // 양수
+Validate<Age>.NonNegative(value)          // 0 이상
+Validate<Age>.Between(value, 0, 150)      // 범위
+Validate<Age>.AtMost(value, 150)          // 최대값 이하
+Validate<Age>.AtLeast(value, 0)           // 최소값 이상
+Validate<T>.Must(value, predicate, errorType, message)  // 커스텀 조건
 ```
 
-**문제점:**
-- 여러 오류 발생 시 첫 번째 오류만 반환
-- 검증 로직 재사용 불가
-- 테스트하기 어려움
+### TypedValidationExtensions (체이닝)
 
-**분리 패턴의 장점:**
+`Then*` 확장 메서드로 검증을 체이닝합니다. **타입 파라미터 반복이 필요 없습니다**:
 
 ```csharp
-// ✓ 권장 - Validate 메서드 분리
+using Functorium.Domains.ValueObjects;
+
+// Validate: nullable 입력을 받아 null 처리 후 검증 (타입 파라미터 한 번만 지정)
+public static Validation<Error, string> Validate(string? value) =>
+    Validate<Email>.NotEmpty(value ?? "")
+        .ThenMatches(EmailPattern)
+        .ThenMaxLength(254)
+        .ThenNormalize(v => v.ToLowerInvariant());
+
+// Create: value를 직접 전달 (null 처리는 Validate 내부에서)
 public static Fin<Email> Create(string? value) =>
-    CreateFromValidation(
-        Validate(value ?? "null"),
-        validValue => new Email(validValue));
-
-public static Validation<Error, string> Validate(string value) =>
-    (ValidateNotEmpty(value), ValidateFormat(value))
-        .Apply((_, validFormat) => validFormat.ToLowerInvariant())
-        .As();
+    CreateFromValidation(Validate(value), v => new Email(v));
 ```
 
-**장점:**
-- 모든 오류를 한 번에 수집 가능 (Apply)
-- 검증 로직만 별도 테스트 가능
-- 다른 곳에서 재사용 가능
+**사용 가능한 체이닝 메서드:**
 
-### 순차 검증 (Bind)
-
-첫 번째 오류에서 중단합니다. **의존 관계가 있는 검증**에 적합합니다:
-
-```csharp
-// 빈 값 검증 → 형식 검증 (의존 관계)
-public static Validation<Error, string> Validate(string value) =>
-    ValidateNotEmpty(value)                           // 먼저 빈 값 검증
-        .Bind(_ => ValidateFormat(value))             // 통과 시 형식 검증
-        .Bind(_ => ValidateLength(value))             // 통과 시 길이 검증
-        .Map(v => v.ToLowerInvariant());              // 정규화
-```
-
-**동작:**
-1. `ValidateNotEmpty` 실패 → 첫 번째 오류 반환, 중단
-2. `ValidateNotEmpty` 성공 → `ValidateFormat` 실행
-3. `ValidateFormat` 실패 → 두 번째 오류 반환, 중단
-4. 모두 성공 → 정규화된 값 반환
+| 메서드 | 설명 |
+|--------|------|
+| `ThenNotEmpty()` | 비어있지 않은지 검증 |
+| `ThenMinLength(n)` | 최소 길이 검증 |
+| `ThenMaxLength(n)` | 최대 길이 검증 |
+| `ThenExactLength(n)` | 정확한 길이 검증 |
+| `ThenMatches(regex)` | 정규식 패턴 검증 |
+| `ThenNormalize(func)` | 값 정규화 (소문자 변환 등) |
+| `ThenPositive()` | 양수 검증 |
+| `ThenNonNegative()` | 0 이상 검증 |
+| `ThenBetween(min, max)` | 범위 검증 |
+| `ThenAtMost(max)` | 최대값 이하 검증 |
+| `ThenAtLeast(min)` | 최소값 이상 검증 |
+| `ThenMust(predicate, errorType, message)` | 커스텀 조건 검증 |
 
 ### 병렬 검증 (Apply)
 
-모든 오류를 수집합니다. **독립적인 검증**에 적합합니다.
-
-#### 방법 1: 튜플 기반 Apply (권장)
-
-여러 Validation을 튜플로 묶어서 한 번에 Apply를 호출합니다:
+모든 오류를 수집합니다. **독립적인 검증**에 적합합니다:
 
 ```csharp
-public static Validation<Error, (string Street, string City, string ZipCode, string Country)>
-    Validate(string street, string city, string zipCode, string country) =>
-    (ValidateStreet(street), ValidateCity(city), ValidateZipCode(zipCode), ValidateCountry(country))
-        .Apply((validStreet, validCity, validZipCode, validCountry) =>
-            (validStreet, validCity, validZipCode, validCountry))
+public static Validation<Error, Money> Validate(decimal amount, string currency) =>
+    (ValidateAmount(amount), ValidateCurrency(currency))
+        .Apply((validAmount, validCurrency) => new Money(validAmount, validCurrency))
         .As();
+
+private static Validation<Error, decimal> ValidateAmount(decimal amount) =>
+    Validate<Money>.NonNegative(amount);
+
+private static Validation<Error, string> ValidateCurrency(string currency) =>
+    Validate<Money>.NotEmpty(currency)
+        .ThenExactLength(3)
+        .ThenNormalize(v => v.ToUpperInvariant());
 ```
-
-**장점:**
-- 간결하고 직관적인 코드
-- 검증 개수가 명확하게 드러남
-- 대부분의 상황에서 권장
-
-#### 방법 2: fun 기반 개별 Apply
-
-`fun` 함수를 사용하여 Currying 방식으로 개별 Apply를 체이닝합니다:
-
-```csharp
-using static LanguageExt.Prelude;
-
-public static Validation<Error, (string Email, string Password, string Name, int Age)>
-    Validate(string email, string password, string name, string ageInput) =>
-    fun((string e, string p, string n, int a) => (Email: e, Password: p, Name: n, Age: a))
-        .Map(f => Success<Error, Func<string, string, string, int, (string, string, string, int)>>(f))
-        .Apply(ValidateEmailFormat(email))
-        .Apply(ValidatePasswordStrength(password))
-        .Apply(ValidateNameFormat(name))
-        .Apply(ValidateAgeFormat(ageInput));
-```
-
-또는 `Pure`를 사용하여 더 간결하게:
-
-```csharp
-public static Validation<Error, (string Email, string Password, string Name, int Age)>
-    Validate(string email, string password, string name, string ageInput) =>
-    Pure<Validation<Error>, Func<string, string, string, int, (string, string, string, int)>>(
-        fun((string e, string p, string n, int a) => (Email: e, Password: p, Name: n, Age: a)))
-        .Apply(ValidateEmailFormat(email))
-        .Apply(ValidatePasswordStrength(password))
-        .Apply(ValidateNameFormat(name))
-        .Apply(ValidateAgeFormat(ageInput));
-```
-
-**장점:**
-- Currying을 통한 단계적 적용으로 유연성 확보
-- 동적으로 검증 개수를 조절할 때 유용
-- 함수형 프로그래밍의 Applicative Functor 패턴에 충실
-
-#### 두 방법 비교
-
-| 구분 | 튜플 기반 Apply | fun 기반 개별 Apply |
-|------|----------------|---------------------|
-| **코드 간결성** | 간결하고 직관적 | 상대적으로 장황함 |
-| **타입 추론** | 자동 추론 | `fun`이 타입 추론 지원 |
-| **유연성** | 고정된 검증 개수 | 동적 검증 개수 가능 |
-| **사용 시기** | 대부분의 경우 | 고급 합성, 동적 파라미터 |
-| **학습 곡선** | 낮음 | Currying 이해 필요 |
-
-> **권장사항**: 일반적인 경우 **튜플 기반 Apply**를 사용하세요. fun 기반 개별 Apply는 동적으로 검증을 조합해야 하거나 함수형 프로그래밍 패턴을 깊이 활용할 때 고려하세요.
 
 **동작:**
 1. 모든 검증을 병렬로 실행
 2. 실패한 모든 오류를 `Seq<Error>`로 수집
-3. 모두 성공 시 튜플로 결과 반환
+3. 모두 성공 시 결과 반환
 
 ### 혼합 패턴 (Apply + Bind)
 
 독립 검증 후 의존 검증을 수행합니다:
 
 ```csharp
-public static Validation<Error, (string Base, string Quote, decimal Rate)>
-    Validate(string baseCurrency, string quoteCurrency, decimal rate) =>
+public static Validation<Error, ExchangeRate> Validate(
+    string baseCurrency, string quoteCurrency, decimal rate) =>
     // 1단계: 독립적인 검증 (병렬)
-    (ValidateBaseCurrency(baseCurrency), ValidateQuoteCurrency(quoteCurrency), ValidateRate(rate))
+    (ValidateCurrency(baseCurrency), ValidateCurrency(quoteCurrency), ValidateRate(rate))
         .Apply((validBase, validQuote, validRate) => (validBase, validQuote, validRate))
         .As()
     // 2단계: 의존 검증 (순차)
         .Bind(values => ValidateDifferentCurrencies(values.validBase, values.validQuote)
-            .Map(_ => (values.validBase, values.validQuote, values.validRate)));
+            .Map(_ => new ExchangeRate(values.validBase, values.validQuote, values.validRate)));
 ```
 
 ---
 
 ## 오류 처리
 
-### ErrorCodeFactory 패턴
+### DomainErrorType 계층
 
-일관된 오류 형식을 사용합니다:
+`DomainErrorType`은 타입 안전한 에러 정의를 제공하는 sealed record 계층입니다:
 
 ```csharp
-internal static class DomainErrors
-{
-    public static Error Empty(string value) =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(Empty)}",
-            errorCurrentValue: value,
-            errorMessage: $"Email cannot be empty. Current value: '{value}'");
+using static Functorium.Domains.Errors.DomainErrorType;
 
-    public static Error InvalidFormat(string value) =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(InvalidFormat)}",
-            errorCurrentValue: value,
-            errorMessage: $"Invalid email format. Current value: '{value}'");
+// 값 존재 검증
+new Empty()                      // 비어있음
+new Null()                       // null
 
-    public static Error TooLong(int length) =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(TooLong)}",
-            errorCurrentValue: length,
-            errorMessage: $"Email cannot exceed 254 characters. Current length: '{length}'");
-}
+// 문자열/컬렉션 길이 검증
+new TooShort(MinLength: 8)       // 최소 길이 미만
+new TooLong(MaxLength: 100)      // 최대 길이 초과
+new WrongLength(Expected: 10)    // 정확한 길이 불일치
+
+// 형식 검증
+new InvalidFormat(Pattern: @"^\d+$")  // 형식 불일치
+
+// 대소문자 검증
+new NotUpperCase()               // 대문자가 아님
+new NotLowerCase()               // 소문자가 아님
+
+// 숫자 범위 검증
+new Negative()                   // 음수
+new NotPositive()                // 양수가 아님 (0 포함)
+new OutOfRange(Min: "1", Max: "100")  // 범위 밖
+new BelowMinimum(Minimum: "0")   // 최소값 미만
+new AboveMaximum(Maximum: "1000") // 최대값 초과
+
+// 존재 여부 검증
+new NotFound()                   // 찾을 수 없음
+new AlreadyExists()              // 이미 존재함
+
+// 비즈니스 규칙 검증
+new Duplicate()                  // 중복됨
+new Mismatch()                   // 값 불일치
+
+// 커스텀 에러
+new Custom("AlreadyShipped")     // 도메인 특화 에러
 ```
 
-### 오류 메시지 표준화
+### DomainError.For<T>() 패턴
 
-| 구성 요소 | 형식 | 예시 |
-|----------|------|------|
-| errorCode | `DomainErrors.{타입}.{오류명}` | `DomainErrors.Email.InvalidFormat` |
-| errorCurrentValue | 현재 값 | `"invalid-email"` |
-| errorMessage | `{설명}. Current value: '{값}'` | `"Invalid email format. Current value: 'invalid-email'"` |
-
-### 여러 값의 오류
+`DomainError.For<T>()`는 에러 코드를 자동으로 `DomainErrors.{TypeName}.{ErrorName}` 형식으로 생성합니다:
 
 ```csharp
-public static Error CurrencyMismatch(string currency1, string currency2) =>
-    ErrorCodeFactory.Create(
-        errorCode: $"{nameof(DomainErrors)}.{nameof(Money)}.{nameof(CurrencyMismatch)}",
-        currency1, currency2,  // 여러 값
-        errorMessage: $"Cannot operate on different currencies. Currency1: '{currency1}', Currency2: '{currency2}'");
+using Functorium.Domains.Errors;
+using static Functorium.Domains.Errors.DomainErrorType;
+
+// 기본 사용법
+DomainError.For<Email>(
+    new Empty(),
+    currentValue: "",
+    message: "Email cannot be empty");
+// -> ErrorCode: "DomainErrors.Email.Empty"
+
+// 제네릭 값 타입
+DomainError.For<Age, int>(
+    new Negative(),
+    currentValue: -5,
+    message: "Age cannot be negative");
+// -> ErrorCode: "DomainErrors.Age.Negative"
+
+// 두 개의 값 포함
+DomainError.For<DateRange, DateTime, DateTime>(
+    new Custom("InvalidRange"),
+    startDate,
+    endDate,
+    message: "Start date must be before end date");
+// -> ErrorCode: "DomainErrors.DateRange.InvalidRange"
+
+// 세 개의 값 포함
+DomainError.For<Triangle, double, double, double>(
+    new Custom("InvalidTriangle"),
+    sideA, sideB, sideC,
+    message: "Invalid triangle sides");
+```
+
+### 커스텀 검증 with DomainError.For<T>()
+
+`Validate<T>`에 없는 커스텀 검증은 `ThenMust` 또는 직접 `DomainError.For<T>()`를 사용합니다:
+
+```csharp
+// 방법 1: ThenMust 사용 (Validate는 nullable 입력 처리 후 원시 타입 반환)
+public static Validation<Error, string> Validate(string? value) =>
+    Validate<Currency>.NotEmpty(value ?? "")
+        .ThenExactLength(3)
+        .ThenMust(
+            v => SupportedCurrencies.Contains(v),
+            new Custom("Unsupported"),
+            v => $"Currency '{v}' is not supported")
+        .ThenNormalize(v => v.ToUpperInvariant());
+
+public static Fin<Currency> Create(string? value) =>
+    CreateFromValidation(Validate(value), v => new Currency(v));
+
+// 방법 2: 직접 DomainError.For<T>() 사용
+private static Validation<Error, string> ValidateSupportedCurrency(string value) =>
+    SupportedCurrencies.Contains(value.ToUpperInvariant())
+        ? value
+        : DomainError.For<Currency>(
+            new Custom("Unsupported"),
+            value,
+            $"Currency '{value}' is not supported");
 ```
 
 ---
@@ -546,23 +565,31 @@ public static Error CurrencyMismatch(string currency1, string currency2) =>
 ### Email (SimpleValueObject)
 
 ```csharp
-using Functorium.Abstractions.Errors;
+using Functorium.Domains.Errors;
 using Functorium.Domains.ValueObjects;
 using LanguageExt;
 using LanguageExt.Common;
 using System.Text.RegularExpressions;
+using static Functorium.Domains.Errors.DomainErrorType;
 
 public sealed class Email : SimpleValueObject<string>
 {
-    private static readonly Regex Pattern = new(
+    private static readonly Regex EmailPattern = new(
         @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private const int MaxLength = 254;
 
-    private Email(string value) : base(value) { }
+    private Email(string value) : base(value)
+    {
+        // 파생 속성은 생성자에서 한 번만 계산
+        var atIndex = value.IndexOf('@');
+        LocalPart = value[..atIndex];
+        Domain = value[(atIndex + 1)..];
+    }
 
-    // 파생 속성 (의미 있는 정보만 노출)
-    public string LocalPart => Value.Split('@')[0];
-    public string Domain => Value.Split('@')[1];
+    // 파생 속성 (생성자에서 캐싱)
+    public string LocalPart { get; }
+    public string Domain { get; }
     public string Masked => LocalPart.Length <= 2
         ? $"**@{Domain}"
         : $"{LocalPart[0]}***{LocalPart[^1]}@{Domain}";
@@ -571,67 +598,29 @@ public sealed class Email : SimpleValueObject<string>
     public bool BelongsTo(string domain) =>
         Domain.Equals(domain, StringComparison.OrdinalIgnoreCase);
 
+    // Create: CreateFromValidation 헬퍼 사용
     public static Fin<Email> Create(string? value) =>
-        CreateFromValidation(
-            Validate(value ?? "null"),
-            validValue => new Email(validValue));
+        CreateFromValidation(Validate(value), v => new Email(v));
 
-    public static Validation<Error, string> Validate(string value) =>
-        ValidateNotEmpty(value)
-            .Bind(_ => ValidateNotTooLong(value.Trim()))
-            .Bind(normalized => ValidateFormat(normalized));
-
-    private static Validation<Error, string> ValidateNotEmpty(string value) =>
-        !string.IsNullOrWhiteSpace(value)
-            ? value
-            : DomainErrors.Empty(value);
-
-    private static Validation<Error, string> ValidateNotTooLong(string value)
-    {
-        var normalized = value.ToLowerInvariant();
-        return normalized.Length <= 254
-            ? normalized
-            : DomainErrors.TooLong(normalized.Length);
-    }
-
-    private static Validation<Error, string> ValidateFormat(string value) =>
-        Pattern.IsMatch(value)
-            ? value
-            : DomainErrors.InvalidFormat(value);
+    // Validate: nullable 입력 처리 후 원시 타입 반환
+    public static Validation<Error, string> Validate(string? value) =>
+        Validate<Email>.NotEmpty(value ?? "")
+            .ThenMatches(EmailPattern)
+            .ThenMaxLength(MaxLength)
+            .ThenNormalize(v => v.ToLowerInvariant());
 
     public static implicit operator string(Email email) => email.Value;
-
-    internal static class DomainErrors
-    {
-        public static Error Empty(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(Empty)}",
-                errorCurrentValue: value,
-                errorMessage: $"Email cannot be empty. Current value: '{value}'");
-
-        public static Error TooLong(int length) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(TooLong)}",
-                errorCurrentValue: length,
-                errorMessage: $"Email cannot exceed 254 characters. Current length: '{length}'");
-
-        public static Error InvalidFormat(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Email)}.{nameof(InvalidFormat)}",
-                errorCurrentValue: value,
-                errorMessage: $"Invalid email format. Current value: '{value}'");
-    }
 }
 ```
 
 ### Money (ValueObject)
 
 ```csharp
-using Functorium.Abstractions.Errors;
+using Functorium.Domains.Errors;
 using Functorium.Domains.ValueObjects;
 using LanguageExt;
 using LanguageExt.Common;
-using static LanguageExt.Prelude;
+using static Functorium.Domains.Errors.DomainErrorType;
 
 public sealed class Money : ValueObject, IComparable<Money>
 {
@@ -645,43 +634,42 @@ public sealed class Money : ValueObject, IComparable<Money>
     }
 
     public static Fin<Money> Create(decimal amount, string? currency) =>
-        CreateFromValidation(
-            Validate(amount, currency ?? ""),
-            values => new Money(values.Amount, values.Currency.ToUpperInvariant()));
+        Validate(amount, currency ?? "").ToFin();
 
-    public static Validation<Error, (decimal Amount, string Currency)>
-        Validate(decimal amount, string currency) =>
-        (ValidateAmountNotNegative(amount), ValidateCurrencyNotEmpty(currency), ValidateCurrencyLength(currency))
-            .Apply((validAmount, validCurrency, _) => (validAmount, validCurrency))
+    public static Validation<Error, Money> Validate(decimal amount, string currency) =>
+        (ValidateAmount(amount), ValidateCurrency(currency))
+            .Apply((validAmount, validCurrency) => new Money(validAmount, validCurrency))
             .As();
 
-    private static Validation<Error, decimal> ValidateAmountNotNegative(decimal amount) =>
-        amount >= 0
-            ? amount
-            : DomainErrors.NegativeAmount(amount);
+    private static Validation<Error, decimal> ValidateAmount(decimal amount) =>
+        Validate<Money>.NonNegative(amount);
 
-    private static Validation<Error, string> ValidateCurrencyNotEmpty(string currency) =>
-        !string.IsNullOrWhiteSpace(currency)
-            ? currency
-            : DomainErrors.EmptyCurrency(currency);
-
-    private static Validation<Error, string> ValidateCurrencyLength(string currency) =>
-        currency.Length == 3
-            ? currency
-            : DomainErrors.InvalidCurrencyLength(currency);
+    private static Validation<Error, string> ValidateCurrency(string currency) =>
+        Validate<Money>.NotEmpty(currency)
+            .ThenExactLength(3)
+            .ThenNormalize(v => v.ToUpperInvariant());
 
     // 도메인 연산
     public Fin<Money> Add(Money other) =>
         Currency == other.Currency
             ? new Money(Amount + other.Amount, Currency)
-            : DomainErrors.CurrencyMismatch(Currency, other.Currency);
+            : DomainError.For<Money, string, string>(
+                new Mismatch(),
+                Currency, other.Currency,
+                $"Cannot operate on different currencies: {Currency} vs {other.Currency}");
 
     public Fin<Money> Subtract(Money other) =>
         Currency == other.Currency
             ? Amount >= other.Amount
                 ? new Money(Amount - other.Amount, Currency)
-                : DomainErrors.InsufficientAmount(Amount, other.Amount)
-            : DomainErrors.CurrencyMismatch(Currency, other.Currency);
+                : DomainError.For<Money, decimal, decimal>(
+                    new Custom("InsufficientAmount"),
+                    Amount, other.Amount,
+                    $"Insufficient amount. Current: {Amount}, Required: {other.Amount}")
+            : DomainError.For<Money, string, string>(
+                new Mismatch(),
+                Currency, other.Currency,
+                $"Cannot operate on different currencies: {Currency} vs {other.Currency}");
 
     // IComparable<Money>
     public int CompareTo(Money? other)
@@ -700,49 +688,17 @@ public sealed class Money : ValueObject, IComparable<Money>
     }
 
     public override string ToString() => $"{Amount:N0} {Currency}";
-
-    internal static class DomainErrors
-    {
-        public static Error NegativeAmount(decimal amount) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Money)}.{nameof(NegativeAmount)}",
-                errorCurrentValue: amount,
-                errorMessage: $"Amount cannot be negative. Current value: '{amount}'");
-
-        public static Error EmptyCurrency(string currency) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Money)}.{nameof(EmptyCurrency)}",
-                errorCurrentValue: currency,
-                errorMessage: $"Currency cannot be empty. Current value: '{currency}'");
-
-        public static Error InvalidCurrencyLength(string currency) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Money)}.{nameof(InvalidCurrencyLength)}",
-                errorCurrentValue: currency,
-                errorMessage: $"Currency must be 3 characters. Current value: '{currency}'");
-
-        public static Error CurrencyMismatch(string currency1, string currency2) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Money)}.{nameof(CurrencyMismatch)}",
-                currency1, currency2,
-                errorMessage: $"Cannot operate on different currencies. Currency1: '{currency1}', Currency2: '{currency2}'");
-
-        public static Error InsufficientAmount(decimal current, decimal required) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Money)}.{nameof(InsufficientAmount)}",
-                current, required,
-                errorMessage: $"Insufficient amount. Current: '{current}', Required: '{required}'");
-    }
 }
 ```
 
 ### Quantity (ComparableSimpleValueObject)
 
 ```csharp
-using Functorium.Abstractions.Errors;
+using Functorium.Domains.Errors;
 using Functorium.Domains.ValueObjects;
 using LanguageExt;
 using LanguageExt.Common;
+using static Functorium.Domains.Errors.DomainErrorType;
 
 public sealed class Quantity : ComparableSimpleValueObject<int>
 {
@@ -758,25 +714,14 @@ public sealed class Quantity : ComparableSimpleValueObject<int>
     public bool IsZero => Value == 0;
     public bool IsPositive => Value > 0;
 
+    // Create: CreateFromValidation 헬퍼 사용
     public static Fin<Quantity> Create(int value) =>
-        CreateFromValidation(
-            Validate(value),
-            validValue => new Quantity(validValue));
+        CreateFromValidation(Validate(value), v => new Quantity(v));
 
+    // Validate: 원시 타입 반환 (검증만 담당)
     public static Validation<Error, int> Validate(int value) =>
-        ValidateNotNegative(value)
-            .Bind(_ => ValidateNotExceedsMax(value))
-            .Map(_ => value);
-
-    private static Validation<Error, int> ValidateNotNegative(int value) =>
-        value >= 0
-            ? value
-            : DomainErrors.Negative(value);
-
-    private static Validation<Error, int> ValidateNotExceedsMax(int value) =>
-        value <= MaxValue
-            ? value
-            : DomainErrors.ExceedsMaximum(value);
+        Validate<Quantity>.NonNegative(value)
+            .ThenAtMost(MaxValue);
 
     // 도메인 연산
     public Quantity Add(Quantity other) => new(Value + other.Value);
@@ -791,21 +736,6 @@ public sealed class Quantity : ComparableSimpleValueObject<int>
     public static bool operator >=(Quantity a, Quantity b) => a.CompareTo(b) >= 0;
 
     public static implicit operator int(Quantity quantity) => quantity.Value;
-
-    internal static class DomainErrors
-    {
-        public static Error Negative(int value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Quantity)}.{nameof(Negative)}",
-                errorCurrentValue: value,
-                errorMessage: $"Quantity cannot be negative. Current value: '{value}'");
-
-        public static Error ExceedsMaximum(int value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Quantity)}.{nameof(ExceedsMaximum)}",
-                errorCurrentValue: value,
-                errorMessage: $"Quantity cannot exceed {MaxValue}. Current value: '{value}'");
-    }
 }
 ```
 
@@ -822,34 +752,38 @@ public sealed class Quantity : ComparableSimpleValueObject<int>
 ```csharp
 public sealed class Email : SimpleValueObject<string>
 {
-    // ✗ 비권장 - 원시 값 직접 노출
+    // X 비권장 - 원시 값 직접 노출
     public string Address => Value;
 
-    // ✓ 권장 - 파생 속성
-    public string LocalPart => Value.Split('@')[0];
-    public string Domain => Value.Split('@')[1];
+    // O 권장 - 생성자에서 계산한 파생 속성
+    private Email(string value) : base(value)
+    {
+        var atIndex = value.IndexOf('@');
+        LocalPart = value[..atIndex];
+        Domain = value[(atIndex + 1)..];
+    }
+    public string LocalPart { get; }
+    public string Domain { get; }
 
-    // ✓ 권장 - 필요 시 암시적 변환
+    // O 권장 - 필요 시 암시적 변환
     public static implicit operator string(Email email) => email.Value;
 }
 ```
 
 ### "Validation<E,A>에서 Fin<A>로 변환 오류"
 
-**원인**: `CreateFromValidation` 없이 직접 반환
+**원인**: `Validation`을 `Fin`으로 변환하지 않음
 
-**해결:** `CreateFromValidation` 헬퍼 사용:
+**해결:** 부모 클래스의 `CreateFromValidation` 헬퍼 사용:
 
 ```csharp
-// ✗ 잘못됨
-public static Fin<Email> Create(string value) =>
+// X 잘못됨
+public static Fin<Email> Create(string? value) =>
     Validate(value);  // Validation<Error, string> 반환
 
-// ✓ 올바름
-public static Fin<Email> Create(string value) =>
-    CreateFromValidation(
-        Validate(value),
-        validValue => new Email(validValue));
+// O 올바름 - CreateFromValidation 헬퍼 사용
+public static Fin<Email> Create(string? value) =>
+    CreateFromValidation(Validate(value), v => new Email(v));
 ```
 
 ### "Apply 결과에서 .As() 호출 필요"
@@ -859,15 +793,15 @@ public static Fin<Email> Create(string value) =>
 **해결:** `.As()` 메서드로 변환:
 
 ```csharp
-// ✗ 잘못됨 - 컴파일 오류
-public static Validation<Error, (string, int)> Validate(string s, int n) =>
-    (ValidateString(s), ValidateNumber(n))
-        .Apply((validS, validN) => (validS, validN));
+// X 잘못됨 - 컴파일 오류
+public static Validation<Error, Money> Validate(decimal amount, string currency) =>
+    (ValidateAmount(amount), ValidateCurrency(currency))
+        .Apply((a, c) => new Money(a, c));
 
-// ✓ 올바름
-public static Validation<Error, (string, int)> Validate(string s, int n) =>
-    (ValidateString(s), ValidateNumber(n))
-        .Apply((validS, validN) => (validS, validN))
+// O 올바름
+public static Validation<Error, Money> Validate(decimal amount, string currency) =>
+    (ValidateAmount(amount), ValidateCurrency(currency))
+        .Apply((a, c) => new Money(a, c))
         .As();
 ```
 
@@ -878,10 +812,10 @@ public static Validation<Error, (string, int)> Validate(string s, int n) =>
 **해결:** 전체 경로 사용:
 
 ```csharp
-// ✗ 모호함
+// X 모호함
 private static readonly HashSet<string> ReservedNames = new();
 
-// ✓ 명시적
+// O 명시적
 private static readonly System.Collections.Generic.HashSet<string> ReservedNames = new();
 ```
 
@@ -894,9 +828,9 @@ private static readonly System.Collections.Generic.HashSet<string> ReservedNames
 ```csharp
 public sealed class Address : ValueObject
 {
-    // ✗ 누락됨 - 컴파일 오류
+    // X 누락됨 - 컴파일 오류
 
-    // ✓ 필수 구현
+    // O 필수 구현
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return Street;
@@ -920,12 +854,15 @@ public sealed class Address : ValueObject
 | 2개 이상 | `ValueObject` | Money(amount, currency), Address |
 | 1개 + 비교 필요 | `ComparableSimpleValueObject<T>` | Quantity, Age |
 
-### Q2. Create와 Validate를 분리해야 하는 이유는?
+### Q2. Validate\<T\>와 DomainError.For<T>() 중 어느 것을 사용해야 하나요?
 
 **A:**
-- **오류 수집**: `Validate`에서 `Apply`로 모든 오류 수집 가능
-- **재사용**: 다른 곳에서 `Validate`만 호출 가능
-- **테스트**: 검증 로직만 별도 테스트 가능
+
+| 상황 | 권장 방법 |
+|------|----------|
+| 일반적인 검증 | `Validate<T>` + 체이닝 |
+| 커스텀 비즈니스 규칙 | `ThenMust` 또는 `DomainError.For<T>()` |
+| 도메인 연산 중 오류 | `DomainError.For<T>()` |
 
 ### Q3. Bind와 Apply를 언제 사용하나요?
 
@@ -933,34 +870,11 @@ public sealed class Address : ValueObject
 
 | 전략 | 사용 시점 | 예시 |
 |------|----------|------|
-| Bind | 검증 간 의존 관계가 있을 때 | 빈 값 → 형식 → 길이 |
+| Bind (Then*) | 검증 간 의존 관계가 있을 때 | 빈 값 -> 형식 -> 길이 |
 | Apply | 독립적인 검증을 병렬로 할 때 | 이름, 이메일, 나이 동시 검증 |
-| Bind + Apply | 먼저 병렬 검증 후 의존 검증 | (기준통화, 견적통화) → 같은 통화 아님 |
+| Bind + Apply | 먼저 병렬 검증 후 의존 검증 | (기준통화, 견적통화) -> 같은 통화 아님 |
 
-### Q4. 튜플 기반 Apply와 fun 기반 Apply 중 어떤 것을 사용하나요?
-
-**A:**
-
-| 상황 | 권장 방법 |
-|------|----------|
-| 일반적인 경우 (대부분) | **튜플 기반 Apply** |
-| 동적 검증 개수 | fun 기반 개별 Apply |
-| Applicative Functor 학습 | fun 기반 개별 Apply |
-
-```csharp
-// ✓ 대부분의 경우 - 튜플 기반
-(ValidateA(a), ValidateB(b), ValidateC(c))
-    .Apply((validA, validB, validC) => (validA, validB, validC))
-    .As();
-
-// 동적 검증이 필요한 경우 - fun 기반
-fun((string a, string b) => (a, b))
-    .Map(f => Success<Error, Func<string, string, (string, string)>>(f))
-    .Apply(ValidateA(a))
-    .Apply(ValidateB(b));
-```
-
-### Q5. 암시적 변환(implicit operator)은 언제 추가하나요?
+### Q4. 암시적 변환(implicit operator)은 언제 추가하나요?
 
 **A:** 자주 사용되는 원시 타입 변환에 추가합니다:
 
@@ -972,7 +886,7 @@ public static implicit operator string(Email email) => email.Value;
 string emailString = email;  // 암시적 변환
 ```
 
-### Q6. 도메인 연산은 어디에 구현하나요?
+### Q5. 도메인 연산은 어디에 구현하나요?
 
 **A:** 값 객체 내부에 메서드로 구현합니다:
 
@@ -983,47 +897,56 @@ public sealed class Money : ValueObject
     public Fin<Money> Add(Money other) =>
         Currency == other.Currency
             ? new Money(Amount + other.Amount, Currency)
-            : DomainErrors.CurrencyMismatch(Currency, other.Currency);
+            : DomainError.For<Money, string, string>(
+                new Mismatch(),
+                Currency, other.Currency,
+                $"Cannot operate on different currencies");
 }
 ```
 
-### Q7. 오류 메시지는 한글과 영어 중 어느 것으로 작성하나요?
+### Q6. 오류 메시지는 한글과 영어 중 어느 것으로 작성하나요?
 
-**A:** 영어로 작성하고 `Current value: '{값}'` 패턴을 사용합니다:
+**A:** 영어로 작성하고 현재 값을 포함합니다:
 
 ```csharp
-// ✓ 권장
-errorMessage: $"Email cannot be empty. Current value: '{value}'"
+// O 권장
+$"Email cannot be empty. Current value: '{value}'"
 
-// ✗ 비권장
-errorMessage: $"이메일이 비어있습니다. 현재 값: '{value}'"
+// X 비권장
+$"이메일이 비어있습니다. 현재 값: '{value}'"
 ```
 
-### Q8. 외부에서 원시 값이 필요할 때는 어떻게 하나요?
+### Q7. 외부에서 원시 값이 필요할 때는 어떻게 하나요?
 
 **A:** 원시 값을 직접 노출하지 않고, **암시적 변환**이나 **파생 속성**을 사용합니다:
 
 ```csharp
-// ✗ 비권장 - 원시 값 직접 노출 (값 객체 의도 훼손)
+// X 비권장 - 원시 값 직접 노출 (값 객체 의도 훼손)
 public string Address => Value;
 
-// ✓ 권장 방법 1 - 암시적 변환
+// O 권장 방법 1 - 암시적 변환
 public static implicit operator string(Email email) => email.Value;
 
 // 사용
 string rawValue = email;  // 필요할 때만 변환
 
-// ✓ 권장 방법 2 - 명시적 ToString()
+// O 권장 방법 2 - 명시적 ToString()
 public override string ToString() => Value;
 
-// ✓ 권장 방법 3 - 의미 있는 파생 속성
-public string LocalPart => Value.Split('@')[0];
-public string Domain => Value.Split('@')[1];
+// O 권장 방법 3 - 생성자에서 계산한 파생 속성 (성능 최적화)
+private Email(string value) : base(value)
+{
+    var atIndex = value.IndexOf('@');
+    LocalPart = value[..atIndex];
+    Domain = value[(atIndex + 1)..];
+}
+public string LocalPart { get; }
+public string Domain { get; }
 ```
 
 **원칙**: 값 객체는 "원시 타입 집착(Primitive Obsession)"을 피하기 위한 것이므로, 가능한 한 값 객체 타입으로 사용하고 원시 타입으로의 변환은 최소화합니다.
 
-### Q9. 동등성 비교는 어떻게 테스트하나요?
+### Q8. 동등성 비교는 어떻게 테스트하나요?
 
 **A:**
 
@@ -1043,6 +966,7 @@ public void SameValues_AreEqual()
 
 ## 참고 문서
 
+- [레이어별 에러 코드 정의 가이드](./layered-error-definition-guide.md) - DomainError, ApplicationError, AdapterError 사용법
 - [유스케이스 구현 가이드](./usecase-implementation-guide.md) - CQRS 패턴에서 값 객체 활용
 - [단위 테스트 가이드](./unit-testing-guide.md) - 값 객체 테스트 작성
 - [LanguageExt](https://github.com/louthy/language-ext) - Fin, Validation 타입 제공

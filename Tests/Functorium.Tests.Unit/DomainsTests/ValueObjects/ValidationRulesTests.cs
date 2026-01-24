@@ -5,7 +5,7 @@ using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 
 namespace Functorium.Tests.Unit.DomainsTests.ValueObjects;
 
-// 테스트용 더미 값 객체 (ValidationRules 테스트용)
+// 테스트용 더미 값 객체 (Validate 테스트용)
 public sealed class SampleValueObject : SimpleValueObject<string>
 {
     private SampleValueObject(string value) : base(value) { }
@@ -28,11 +28,11 @@ public class ValidationRulesTests
         var value = "valid";
 
         // Act
-        var actual = ValidationRules.NotEmpty<SampleValueObject>(value);
+        var actual = Validate<SampleValueObject>.NotEmpty(value);
 
         // Assert
-        actual.IsSuccess.ShouldBeTrue();
-        actual.Match(
+        actual.Value.IsSuccess.ShouldBeTrue();
+        actual.Value.Match(
             Succ: v => v.ShouldBe(value),
             Fail: _ => Assert.Fail("Should succeed"));
     }
@@ -47,11 +47,11 @@ public class ValidationRulesTests
         var testValue = value ?? "";
 
         // Act
-        var actual = ValidationRules.NotEmpty<SampleValueObject>(testValue);
+        var actual = Validate<SampleValueObject>.NotEmpty(testValue);
 
         // Assert
-        actual.IsFail.ShouldBeTrue();
-        actual.Match(
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
@@ -72,10 +72,10 @@ public class ValidationRulesTests
         var value = "12345";
 
         // Act
-        var actual = ValidationRules.MinLength<SampleValueObject>(value, 5);
+        var actual = Validate<SampleValueObject>.MinLength(value, 5);
 
         // Assert
-        actual.IsSuccess.ShouldBeTrue();
+        actual.Value.IsSuccess.ShouldBeTrue();
     }
 
     [Fact]
@@ -85,11 +85,11 @@ public class ValidationRulesTests
         var value = "1234";
 
         // Act
-        var actual = ValidationRules.MinLength<SampleValueObject>(value, 5);
+        var actual = Validate<SampleValueObject>.MinLength(value, 5);
 
         // Assert
-        actual.IsFail.ShouldBeTrue();
-        actual.Match(
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
@@ -109,10 +109,10 @@ public class ValidationRulesTests
         var value = "12345";
 
         // Act
-        var actual = ValidationRules.MaxLength<SampleValueObject>(value, 5);
+        var actual = Validate<SampleValueObject>.MaxLength(value, 5);
 
         // Assert
-        actual.IsSuccess.ShouldBeTrue();
+        actual.Value.IsSuccess.ShouldBeTrue();
     }
 
     [Fact]
@@ -122,11 +122,11 @@ public class ValidationRulesTests
         var value = "123456";
 
         // Act
-        var actual = ValidationRules.MaxLength<SampleValueObject>(value, 5);
+        var actual = Validate<SampleValueObject>.MaxLength(value, 5);
 
         // Assert
-        actual.IsFail.ShouldBeTrue();
-        actual.Match(
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
@@ -146,10 +146,10 @@ public class ValidationRulesTests
         var value = "ABC";
 
         // Act
-        var actual = ValidationRules.ExactLength<SampleValueObject>(value, 3);
+        var actual = Validate<SampleValueObject>.ExactLength(value, 3);
 
         // Assert
-        actual.IsSuccess.ShouldBeTrue();
+        actual.Value.IsSuccess.ShouldBeTrue();
     }
 
     [Theory]
@@ -158,11 +158,11 @@ public class ValidationRulesTests
     public void ExactLength_ReturnsFailure_WhenLengthDoesNotMatch(string value, int expected)
     {
         // Act
-        var actual = ValidationRules.ExactLength<SampleValueObject>(value, expected);
+        var actual = Validate<SampleValueObject>.ExactLength(value, expected);
 
         // Assert
-        actual.IsFail.ShouldBeTrue();
-        actual.Match(
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
@@ -184,10 +184,10 @@ public class ValidationRulesTests
         var value = "test@example.com";
 
         // Act
-        var actual = ValidationRules.Matches<SampleValueObject>(value, EmailPattern);
+        var actual = Validate<SampleValueObject>.Matches(value, EmailPattern);
 
         // Assert
-        actual.IsSuccess.ShouldBeTrue();
+        actual.Value.IsSuccess.ShouldBeTrue();
     }
 
     [Fact]
@@ -197,11 +197,11 @@ public class ValidationRulesTests
         var value = "invalid-email";
 
         // Act
-        var actual = ValidationRules.Matches<SampleValueObject>(value, EmailPattern);
+        var actual = Validate<SampleValueObject>.Matches(value, EmailPattern);
 
         // Assert
-        actual.IsFail.ShouldBeTrue();
-        actual.Match(
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
@@ -218,11 +218,11 @@ public class ValidationRulesTests
         var customMessage = "Custom error message";
 
         // Act
-        var actual = ValidationRules.Matches<SampleValueObject>(value, EmailPattern, customMessage);
+        var actual = Validate<SampleValueObject>.Matches(value, EmailPattern, customMessage);
 
         // Assert
-        actual.IsFail.ShouldBeTrue();
-        actual.Match(
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors => errors.Head.Message.ShouldBe(customMessage));
     }
@@ -238,10 +238,10 @@ public class ValidationRulesTests
     public void NonNegative_ReturnsSuccess_WhenValueIsNonNegative(decimal value)
     {
         // Act
-        var actual = ValidationRules.NonNegative<NumericValueObject, decimal>(value);
+        var actual = Validate<NumericValueObject>.NonNegative(value);
 
         // Assert
-        actual.IsSuccess.ShouldBeTrue();
+        actual.Value.IsSuccess.ShouldBeTrue();
     }
 
     [Theory]
@@ -250,11 +250,11 @@ public class ValidationRulesTests
     public void NonNegative_ReturnsFailure_WhenValueIsNegative(decimal value)
     {
         // Act
-        var actual = ValidationRules.NonNegative<NumericValueObject, decimal>(value);
+        var actual = Validate<NumericValueObject>.NonNegative(value);
 
         // Assert
-        actual.IsFail.ShouldBeTrue();
-        actual.Match(
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
@@ -273,10 +273,10 @@ public class ValidationRulesTests
     public void Positive_ReturnsSuccess_WhenValueIsPositive(decimal value)
     {
         // Act
-        var actual = ValidationRules.Positive<NumericValueObject, decimal>(value);
+        var actual = Validate<NumericValueObject>.Positive(value);
 
         // Assert
-        actual.IsSuccess.ShouldBeTrue();
+        actual.Value.IsSuccess.ShouldBeTrue();
     }
 
     [Theory]
@@ -285,11 +285,11 @@ public class ValidationRulesTests
     public void Positive_ReturnsFailure_WhenValueIsNotPositive(decimal value)
     {
         // Act
-        var actual = ValidationRules.Positive<NumericValueObject, decimal>(value);
+        var actual = Validate<NumericValueObject>.Positive(value);
 
         // Assert
-        actual.IsFail.ShouldBeTrue();
-        actual.Match(
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
@@ -309,10 +309,10 @@ public class ValidationRulesTests
     public void Between_ReturnsSuccess_WhenValueInRange(decimal value, decimal min, decimal max)
     {
         // Act
-        var actual = ValidationRules.Between<NumericValueObject, decimal>(value, min, max);
+        var actual = Validate<NumericValueObject>.Between(value, min, max);
 
         // Assert
-        actual.IsSuccess.ShouldBeTrue();
+        actual.Value.IsSuccess.ShouldBeTrue();
     }
 
     [Theory]
@@ -321,11 +321,11 @@ public class ValidationRulesTests
     public void Between_ReturnsFailure_WhenValueOutOfRange(decimal value, decimal min, decimal max)
     {
         // Act
-        var actual = ValidationRules.Between<NumericValueObject, decimal>(value, min, max);
+        var actual = Validate<NumericValueObject>.Between(value, min, max);
 
         // Assert
-        actual.IsFail.ShouldBeTrue();
-        actual.Match(
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
@@ -344,10 +344,10 @@ public class ValidationRulesTests
     public void AtMost_ReturnsSuccess_WhenValueWithinMaximum(decimal value, decimal max)
     {
         // Act
-        var actual = ValidationRules.AtMost<NumericValueObject, decimal>(value, max);
+        var actual = Validate<NumericValueObject>.AtMost(value, max);
 
         // Assert
-        actual.IsSuccess.ShouldBeTrue();
+        actual.Value.IsSuccess.ShouldBeTrue();
     }
 
     [Fact]
@@ -358,11 +358,11 @@ public class ValidationRulesTests
         var max = 100m;
 
         // Act
-        var actual = ValidationRules.AtMost<NumericValueObject, decimal>(value, max);
+        var actual = Validate<NumericValueObject>.AtMost(value, max);
 
         // Assert
-        actual.IsFail.ShouldBeTrue();
-        actual.Match(
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
@@ -381,10 +381,10 @@ public class ValidationRulesTests
     public void AtLeast_ReturnsSuccess_WhenValueMeetsMinimum(decimal value, decimal min)
     {
         // Act
-        var actual = ValidationRules.AtLeast<NumericValueObject, decimal>(value, min);
+        var actual = Validate<NumericValueObject>.AtLeast(value, min);
 
         // Assert
-        actual.IsSuccess.ShouldBeTrue();
+        actual.Value.IsSuccess.ShouldBeTrue();
     }
 
     [Fact]
@@ -395,11 +395,11 @@ public class ValidationRulesTests
         var min = 10m;
 
         // Act
-        var actual = ValidationRules.AtLeast<NumericValueObject, decimal>(value, min);
+        var actual = Validate<NumericValueObject>.AtLeast(value, min);
 
         // Assert
-        actual.IsFail.ShouldBeTrue();
-        actual.Match(
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
@@ -419,14 +419,14 @@ public class ValidationRulesTests
         var value = "VALID";
 
         // Act
-        var actual = ValidationRules.Must<SampleValueObject, string>(
+        var actual = Validate<SampleValueObject>.Must(
             value,
             v => v == v.ToUpperInvariant(),
             new DomainErrorType.NotUpperCase(),
             "Value must be uppercase");
 
         // Assert
-        actual.IsSuccess.ShouldBeTrue();
+        actual.Value.IsSuccess.ShouldBeTrue();
     }
 
     [Fact]
@@ -436,15 +436,15 @@ public class ValidationRulesTests
         var value = "invalid";
 
         // Act
-        var actual = ValidationRules.Must<SampleValueObject, string>(
+        var actual = Validate<SampleValueObject>.Must(
             value,
             v => v == v.ToUpperInvariant(),
             new DomainErrorType.NotUpperCase(),
             "Value must be uppercase");
 
         // Assert
-        actual.IsFail.ShouldBeTrue();
-        actual.Match(
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
             Succ: _ => Assert.Fail("Should fail"),
             Fail: errors =>
             {
