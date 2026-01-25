@@ -77,6 +77,15 @@
     <Project Path="Tutorials/Cqrs06EndpointLayered/Tests/Cqrs06EndpointLayered.Tests.Integration/Cqrs06EndpointLayered.Tests.Integration.csproj" />
     <Project Path="Tutorials/Cqrs06EndpointLayered/Tests/Cqrs06EndpointLayered.Tests.Unit/Cqrs06EndpointLayered.Tests.Unit.csproj" />
   </Folder>
+  <Folder Name="/Tutorials/TwoWayMappingLayered/" />
+  <Folder Name="/Tutorials/TwoWayMappingLayered/Src/">
+    <Project Path="Tutorials/TwoWayMappingLayered/Src/TwoWayMappingLayered.Adapters.Infrastructure/TwoWayMappingLayered.Adapters.Infrastructure.csproj" />
+    <Project Path="Tutorials/TwoWayMappingLayered/Src/TwoWayMappingLayered.Adapters.Persistence/TwoWayMappingLayered.Adapters.Persistence.csproj" />
+    <Project Path="Tutorials/TwoWayMappingLayered/Src/TwoWayMappingLayered.Adapters.Presentation/TwoWayMappingLayered.Adapters.Presentation.csproj" />
+    <Project Path="Tutorials/TwoWayMappingLayered/Src/TwoWayMappingLayered.Applications/TwoWayMappingLayered.Applications.csproj" />
+    <Project Path="Tutorials/TwoWayMappingLayered/Src/TwoWayMappingLayered.Domains/TwoWayMappingLayered.Domains.csproj" />
+    <Project Path="Tutorials/TwoWayMappingLayered/Src/TwoWayMappingLayered/TwoWayMappingLayered.csproj" />
+  </Folder>
   <Folder Name="/Tutorials/HistogramExploration/" />
   <Folder Name="/Tutorials/HistogramExploration/Src/">
     <Project Path="Tutorials/HistogramExploration/Src/HistogramExploration.Demo/HistogramExploration.Demo.csproj" />
