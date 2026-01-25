@@ -91,9 +91,10 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [x] Enum 값 객체 ValidationPipeline
 - [x] Validation<Error, Currency> Validate(string? value) -> Validation<Error, string?> Validate(string? value)
 - [x] ~~Validate<T> Domain, Application, Adapter 통합?~~
-- [ ] valueobject-implementation-guide.md 문서 업데이트
+- [x] valueobject-implementation-guide.md 문서 업데이트
   - 유효성 검사
   - Enum 타입
+- [x] Validate 성능 비교 예제 추가
 - [ ] GitHub\DomainDrivenDesignUniversity-master\src\Shopway.Application\Utilities\FluentValidationUtilities.cs 코드 확인
 - [ ] Validation<Error, T> Validate(T value) 검토을 위한 아키텍처 테스트 구현
 ---
