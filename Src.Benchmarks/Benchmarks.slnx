@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/Benchmarks/">
+    <Project Path="TypedValidation.Benchmarks/TypedValidation.Benchmarks.csproj" />
+  </Folder>
+</Solution>
