@@ -97,6 +97,7 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [x] Validate 성능 비교 예제 추가
 - [ ] GitHub\DomainDrivenDesignUniversity-master\src\Shopway.Application\Utilities\FluentValidationUtilities.cs 코드 확인
 - [ ] Validation<Error, T> Validate(T value) 검토을 위한 아키텍처 테스트 구현
+- [ ] `MustSatisfyValueObjectValidation<Request, decimal, decimal>` 타입 노출 최소화
 ---
 - [ ] IAdapter 인터페이스 `개발 가이드 문서`
 ---
