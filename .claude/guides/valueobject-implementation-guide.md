@@ -18,6 +18,9 @@
   - [DomainErrorType 계층](#domainerrortype-계층)
   - [DomainError.For\<T\>() 헬퍼](#domainerrorfort-헬퍼)
 - [구현 패턴](#구현-패턴)
+- [FluentValidation 통합](#fluentvalidation-통합)
+  - [MustSatisfyValidation (입력 타입 == 출력 타입)](#mustsatisfyvalidation-입력-타입--출력-타입)
+  - [MustSatisfyValidationOf (입력 타입 != 출력 타입)](#mustsatisfyvalidationof-입력-타입--출력-타입)
 - [실전 예제](#실전-예제)
 - [SmartEnum 열거형](#smartenum-열거형)
 - [FAQ](#faq)
@@ -279,6 +282,20 @@ public sealed class Price : ComparableSimpleValueObject<decimal>
 
 ## 검증 시스템
 
+### 검증 카테고리 요약
+
+| 카테고리 | 메서드 | ErrorType | 설명 |
+|----------|--------|-----------|------|
+| **값 존재** | `NotEmpty`, `NotEmptyArray` | `Empty` | null, 빈 문자열, 빈 배열 검증 |
+| **문자열 길이** | `MinLength`, `MaxLength`, `ExactLength` | `TooShort`, `TooLong`, `WrongLength` | 문자열 길이 검증 |
+| **형식** | `Matches` | `InvalidFormat` | 정규식 패턴 검증 |
+| **숫자 값** | `Positive`, `NonNegative`, `NotZero` | `NotPositive`, `Negative`, `Zero` | 숫자 부호 검증 |
+| **숫자 범위** | `Between`, `AtMost`, `AtLeast` | `OutOfRange`, `AboveMaximum`, `BelowMinimum` | 숫자 범위 검증 |
+| **날짜 값** | `NotDefault`, `InPast`, `InFuture` | `DefaultDate`, `NotInPast`, `NotInFuture` | 날짜 기본 검증 |
+| **날짜 범위** | `Before`, `After`, `DateBetween` | `TooLate`, `TooEarly`, `OutOfRange` | 날짜 범위 검증 |
+| **범위 쌍** | `ValidRange`, `ValidStrictRange` | `RangeInverted`, `RangeEmpty` | min/max 쌍 검증 |
+| **커스텀** | `Must`, `ThenMust` | `Custom(Name)` | 사용자 정의 검증 |
+
 ### Validate\<T\> 시작점
 
 **위치**: `Functorium.Domains.ValueObjects.Validate<TValueObject>`
@@ -311,6 +328,7 @@ Validate<Email>.Matches(value, regex, msg)   // 정규식 + 커스텀 메시지
 ```csharp
 Validate<Price>.Positive(value)              // > 0
 Validate<Age>.NonNegative(value)             // >= 0
+Validate<Denominator>.NotZero(value)         // != 0
 Validate<Age>.Between(value, 0, 150)         // min <= value <= max
 Validate<Age>.AtMost(value, 150)             // <= max
 Validate<Age>.AtLeast(value, 0)              // >= min
@@ -320,9 +338,53 @@ Validate<Age>.AtLeast(value, 0)              // >= min
 |--------|-----------|------------|
 | `Positive` | `NotPositive` | `{Type} must be positive. Current value: '{v}'` |
 | `NonNegative` | `Negative` | `{Type} cannot be negative. Current value: '{v}'` |
+| `NotZero` | `Zero` | `{Type} cannot be zero. Current value: '{v}'` |
 | `Between` | `OutOfRange(min, max)` | `{Type} must be between {min} and {max}. Current value: '{v}'` |
 | `AtMost` | `AboveMaximum(max)` | `{Type} cannot exceed {max}. Current value: '{v}'` |
 | `AtLeast` | `BelowMinimum(min)` | `{Type} must be at least {min}. Current value: '{v}'` |
+
+#### 배열 검증 메서드
+
+```csharp
+Validate<BinaryData>.NotEmptyArray(value)    // 배열이 null이 아니고 길이 > 0
+```
+
+| 메서드 | ErrorType | 오류 메시지 |
+|--------|-----------|------------|
+| `NotEmptyArray` | `Empty` | `{Type} array cannot be empty or null. Current length: '{len}'` |
+
+#### 범위 검증 메서드
+
+```csharp
+Validate<PriceRange>.ValidRange(minValue, maxValue)        // min <= max 검증, (min, max) 튜플 반환
+Validate<DateRange>.ValidStrictRange(minValue, maxValue)   // min < max 검증, (min, max) 튜플 반환
+```
+
+| 메서드 | ErrorType | 오류 메시지 |
+|--------|-----------|------------|
+| `ValidRange` | `RangeInverted(min, max)` | `{Type} range is invalid. Minimum ({min}) cannot exceed maximum ({max}).` |
+| `ValidStrictRange` | `RangeInverted(min, max)` | `{Type} range is invalid. Minimum ({min}) cannot exceed maximum ({max}).` |
+| `ValidStrictRange` | `RangeEmpty(value)` | `{Type} range is empty. Start ({value}) equals end ({value}).` |
+
+#### 날짜 검증 메서드
+
+```csharp
+Validate<Birthday>.NotDefault(value)         // != DateTime.MinValue
+Validate<Birthday>.InPast(value)             // < DateTime.Now
+Validate<ExpiryDate>.InFuture(value)         // > DateTime.Now
+Validate<EndDate>.Before(value, boundary)    // < boundary
+Validate<StartDate>.After(value, boundary)   // > boundary
+Validate<EventDate>.DateBetween(value, min, max)  // min <= value <= max
+```
+
+| 메서드 | ErrorType | 오류 메시지 |
+|--------|-----------|------------|
+| `NotDefault` | `DefaultDate` | `{Type} date cannot be default. Current value: '{v}'` |
+| `InPast` | `NotInPast` | `{Type} must be in the past. Current value: '{v}'` |
+| `InFuture` | `NotInFuture` | `{Type} must be in the future. Current value: '{v}'` |
+| `Before` | `TooLate(boundary)` | `{Type} must be before {boundary}. Current value: '{v}'` |
+| `After` | `TooEarly(boundary)` | `{Type} must be after {boundary}. Current value: '{v}'` |
+| `DateBetween` | `OutOfRange(min, max)` | `{Type} must be between {min} and {max}. Current value: '{v}'` |
 
 #### 커스텀 검증 메서드
 
@@ -358,9 +420,21 @@ Validate<Currency>.Must(
 |--------|------|
 | `ThenPositive()` | 양수 검증 |
 | `ThenNonNegative()` | 0 이상 검증 |
+| `ThenNotZero()` | 0이 아닌지 검증 |
 | `ThenBetween(min, max)` | 범위 검증 |
 | `ThenAtMost(max)` | 최대값 이하 검증 |
 | `ThenAtLeast(min)` | 최소값 이상 검증 |
+
+#### 날짜 체이닝
+
+| 메서드 | 설명 |
+|--------|------|
+| `ThenNotDefault()` | 기본값(DateTime.MinValue)이 아닌지 검증 |
+| `ThenInPast()` | 과거 날짜인지 검증 |
+| `ThenInFuture()` | 미래 날짜인지 검증 |
+| `ThenBefore(boundary)` | 기준 날짜 이전인지 검증 |
+| `ThenAfter(boundary)` | 기준 날짜 이후인지 검증 |
+| `ThenDateBetween(min, max)` | 날짜 범위 내인지 검증 |
 
 #### 커스텀 체이닝
 
@@ -435,10 +509,28 @@ using static Functorium.Domains.Errors.DomainErrorType;
 | `NotUpperCase` | 대문자가 아님 |
 | `NotLowerCase` | 소문자가 아님 |
 
+#### 날짜 검증
+
+| ErrorType | 설명 |
+|-----------|------|
+| `DefaultDate` | 날짜가 기본값(DateTime.MinValue)임 |
+| `NotInPast` | 날짜가 과거여야 하는데 미래임 |
+| `NotInFuture` | 날짜가 미래여야 하는데 과거임 |
+| `TooLate(Boundary?)` | 날짜가 기준보다 늦음 (이전이어야 함) |
+| `TooEarly(Boundary?)` | 날짜가 기준보다 이름 (이후여야 함) |
+
+#### 범위 검증
+
+| ErrorType | 설명 |
+|-----------|------|
+| `RangeInverted(Min?, Max?)` | 범위가 역전됨 (최소값이 최대값보다 큼) |
+| `RangeEmpty(Value?)` | 범위가 비어있음 (최소값과 최대값이 같음, 엄격한 범위에서 유효한 값이 없음) |
+
 #### 숫자 범위 검증
 
 | ErrorType | 설명 |
 |-----------|------|
+| `Zero` | 0임 |
 | `Negative` | 음수임 |
 | `NotPositive` | 양수가 아님 (0 포함) |
 | `OutOfRange(Min?, Max?)` | 범위 밖 |
@@ -522,6 +614,28 @@ public static Validation<Error, Money> Validate(decimal amount, string currency)
         .As();
 ```
 
+#### `.As()` 메서드가 필요한 이유
+
+C#의 타입 추론 한계로 인해 튜플 기반 `Apply`의 결과 타입이 정확히 추론되지 않는 경우가 있습니다.
+
+```csharp
+// Apply 결과의 내부 타입: K<Validation<Error>, Money>
+// 기대하는 타입: Validation<Error, Money>
+
+(ValidateAmount(amount), ValidateCurrency(currency))
+    .Apply((a, c) => new Money(a, c))  // K<Validation<Error>, Money>
+    .As();                              // Validation<Error, Money>로 변환
+```
+
+| 문제 | 설명 |
+|------|------|
+| **타입 추론 한계** | C# 컴파일러가 Higher-Kinded Type을 직접 지원하지 않음 |
+| **중간 타입** | `Apply`가 `K<F, A>` 형태의 중간 타입을 반환 |
+| **명시적 변환 필요** | `.As()`로 `Validation<Error, T>`로 강제 변환 |
+
+> **참고**: [Higher Kinds in C# with language-ext](https://paullouth.com/higher-kinds-in-c-with-language-ext-part-5-validation/)에서
+> LanguageExt의 Higher-Kinded Type 에뮬레이션과 타입 추론 문제에 대해 자세히 설명합니다.
+
 ### 혼합 패턴 (Apply + Bind)
 
 병렬 검증 후 의존 검증:
@@ -535,6 +649,84 @@ public static Validation<Error, ExchangeRate> Validate(
         .Bind(v => ValidateDifferentCurrencies(v.b, v.q)
             .Map(_ => new ExchangeRate(v.b, v.q, v.r)));
 ```
+
+---
+
+## FluentValidation 통합
+
+Value Object의 `Validate` 메서드를 FluentValidation과 통합하여 Application Layer에서 재사용할 수 있습니다.
+
+**위치**: `Functorium.Applications.Validations.FluentValidationExtensions`
+
+### MustSatisfyValidation (입력 타입 == 출력 타입)
+
+검증 메서드의 입력 타입과 출력 타입이 동일한 경우 사용합니다. C# 14 extension members를 활용하여 타입 추론이 작동합니다.
+
+```csharp
+// decimal → Validation<Error, decimal>
+public static Validation<Error, decimal> ValidateAmount(decimal amount) =>
+    Validate<Money>.NonNegative(amount);
+
+// FluentValidation에서 사용 (타입 추론 작동)
+public sealed class Validator : AbstractValidator<Request>
+{
+    public Validator()
+    {
+        RuleFor(x => x.Price)
+            .MustSatisfyValidation(Money.ValidateAmount);
+
+        RuleFor(x => x.Currency)
+            .MustSatisfyValidation(Money.ValidateCurrency);
+
+        RuleFor(x => x.ProductId)
+            .MustSatisfyValidation(ProductId.Validate);
+    }
+}
+```
+
+### MustSatisfyValidationOf (입력 타입 != 출력 타입)
+
+검증 메서드의 입력 타입과 출력 타입이 다른 경우 사용합니다. 모든 타입 파라미터를 명시해야 합니다.
+
+```csharp
+// string → Validation<Error, int> (입력 타입 != 출력 타입)
+public sealed class Age : ComparableSimpleValueObject<int>
+{
+    public static Validation<Error, int> Validate(string value) =>
+        int.TryParse(value, out var parsed)
+            ? Validate<Age>.Between(parsed, 0, 150)
+            : DomainError.For<Age>(new Custom("InvalidFormat"), value,
+                $"'{value}'은(는) 유효한 숫자가 아닙니다");
+}
+
+// FluentValidation에서 사용 (모든 타입 파라미터 명시 필요)
+public sealed class Validator : AbstractValidator<Request>
+{
+    public Validator()
+    {
+        // MustSatisfyValidationOf<TRequest, TProperty, TValueObject>
+        RuleFor(x => x.Age)
+            .MustSatisfyValidationOf<Request, string, int>(Age.Validate);
+    }
+}
+```
+
+### 메서드 선택 가이드
+
+| 검증 메서드 시그니처 | 사용 메서드 | 타입 명시 |
+|---------------------|-------------|----------|
+| `Func<T, Validation<Error, T>>` | `MustSatisfyValidation` | 불필요 (타입 추론) |
+| `Func<TIn, Validation<Error, TOut>>` | `MustSatisfyValidationOf` | 필요 (`<TRequest, TIn, TOut>`) |
+
+### C# 14 Extension Members 제한 사항
+
+`MustSatisfyValidationOf`에서 모든 타입 파라미터를 명시해야 하는 이유:
+
+| 문제 | 설명 |
+|------|------|
+| **C# 14 제한** | Extension members는 추가 제네릭 타입 파라미터가 있을 때 파생 인터페이스에서 타입 추론 불가 |
+| **RuleFor 반환 타입** | `RuleFor()`는 `IRuleBuilderInitial<T, TProperty>` 반환 |
+| **해결책** | `IRuleBuilderInitial`을 직접 대상으로 하는 전통적인 확장 메서드 제공 |
 
 ---
 

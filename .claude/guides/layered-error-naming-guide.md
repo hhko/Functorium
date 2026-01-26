@@ -257,10 +257,28 @@ new CancelledOperation() // OperationCancelled가 표준
 | `NotUpperCase` | 대문자가 아님 | `new NotUpperCase()` |
 | `NotLowerCase` | 소문자가 아님 | `new NotLowerCase()` |
 
+#### 날짜 검증 (R1, R2, R3)
+
+| 에러 | 의미 | 사용 예시 |
+|------|------|----------|
+| `DefaultDate` | 날짜가 기본값(DateTime.MinValue)임 | `new DefaultDate()` |
+| `NotInPast` | 과거여야 하는데 미래임 | `new NotInPast()` |
+| `NotInFuture` | 미래여야 하는데 과거임 | `new NotInFuture()` |
+| `TooLate` | 기준 날짜보다 늦음 | `new TooLate(Boundary: "2024-12-31")` |
+| `TooEarly` | 기준 날짜보다 이름 | `new TooEarly(Boundary: "2024-01-01")` |
+
+#### 범위 검증 (R1)
+
+| 에러 | 의미 | 사용 예시 |
+|------|------|----------|
+| `RangeInverted` | 범위가 역전됨 (min > max) | `new RangeInverted(Min: "100", Max: "50")` |
+| `RangeEmpty` | 범위가 비어있음 (min == max, 엄격한 범위) | `new RangeEmpty(Value: "10")` |
+
 #### 숫자 범위 검증 (R1, R2, R3)
 
 | 에러 | 의미 | 사용 예시 |
 |------|------|----------|
+| `Zero` | 0임 | `new Zero()` |
 | `Negative` | 음수임 | `new Negative()` |
 | `NotPositive` | 양수가 아님 | `new NotPositive()` |
 | `OutOfRange` | 범위 밖 | `new OutOfRange(Min: "1", Max: "100")` |
@@ -522,7 +540,9 @@ new Custom("Invalid")             // 구체적이지 않음
 길이:        TooShort, TooLong, WrongLength
 형식:        InvalidFormat
 대소문자:    NotUpperCase, NotLowerCase
-숫자 범위:   Negative, NotPositive, OutOfRange, BelowMinimum, AboveMaximum
+날짜:        DefaultDate, NotInPast, NotInFuture, TooLate, TooEarly
+범위:        RangeInverted, RangeEmpty
+숫자 범위:   Zero, Negative, NotPositive, OutOfRange, BelowMinimum, AboveMaximum
 존재 여부:   NotFound, AlreadyExists, Duplicate
 비교:        Mismatch
 커스텀:      Custom(Name)
@@ -565,3 +585,6 @@ new Custom("Invalid")             // 구체적이지 않음
 |------|----------|--------|
 | 2026-01-22 | 최초 작성 - Domain 에러 네이밍 규칙 | - |
 | 2026-01-23 | 레이어별 에러 이름 규칙으로 확장 (Application, Adapter 추가) | - |
+| 2026-01-26 | 날짜 검증 에러 추가 (DefaultDate, NotInPast, NotInFuture, TooLate, TooEarly) | - |
+| 2026-01-26 | 숫자 검증 에러 추가 (Zero) | - |
+| 2026-01-26 | 범위 검증 에러 추가 (RangeInverted, RangeEmpty) | - |
