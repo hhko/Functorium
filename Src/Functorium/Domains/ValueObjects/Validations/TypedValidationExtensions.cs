@@ -1,4 +1,4 @@
-namespace Functorium.Domains.ValueObjects;
+namespace Functorium.Domains.ValueObjects.Validations;
 
 /// <summary>
 /// TypedValidation 체이닝을 위한 확장 메서드

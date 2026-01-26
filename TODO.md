@@ -98,6 +98,20 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
       32 +        from validEndDate in (Validation<Error, DateTime>)Validate<DateRange>.NotDefault(endDate)
       33 +        from validRange in (Validation<Error, (DateTime, DateTime)>)Validate<DateRange>.ValidStrictRange(validStartDate, validEndDate)
   ```
+  ```
+    전체 솔루션 (Functorium.All.slnx):
+  - Books 프로젝트에 306개의 기존 에러가 있습니다
+  - 이 에러들은 현재 리팩터링 이전부터 존재하던 것입니다
+  - 문제:
+    a. 잘못된 타입 alias: Functorium.Domains.ValueObjects.DomainError → Functorium.Domains.Errors.DomainError
+    b. 누락된 namespace: using Functorium.Domains.Errors;
+    c. 누락된 namespace: using Functorium.Domains.ValueObjects.Validations;
+
+  PowerShell 스크립트로 자동 수정을 시도했으나 Windows의 인코딩 문제로 파일 손상이 발생했습니다.
+
+  권장 사항:
+  Books 프로젝트의 기존 에러는 수동으로 하나씩 수정하거나, IDE의 일괄 리팩터링 기능을 사용하는 것이 안전합니다.
+  ```
 ---
 - [ ] GitHub\DomainDrivenDesignUniversity-master\src\Shopway.Application\Utilities\FluentValidationUtilities.cs 코드 확인
 ---

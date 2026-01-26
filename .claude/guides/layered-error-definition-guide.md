@@ -60,16 +60,31 @@ var error = DomainError.For<Triangle, double, double, double>(
     message: "Invalid triangle sides");
 ```
 
-### 2.3 DomainErrorType 목록
+### 2.3 DomainErrorType 범주 구조
 
-#### 값 존재 검증
+DomainErrorType은 다음과 같은 범주로 분류됩니다:
+
+| 범주 | 파일 | 설명 |
+|------|------|------|
+| Presence | `DomainErrorType.Presence.cs` | 값 존재 검증 |
+| Length | `DomainErrorType.Length.cs` | 문자열/컬렉션 길이 검증 |
+| Format | `DomainErrorType.Format.cs` | 형식 및 대소문자 검증 |
+| DateTime | `DomainErrorType.DateTime.cs` | 날짜 검증 |
+| Numeric | `DomainErrorType.Numeric.cs` | 숫자 값/범위 검증 |
+| Range | `DomainErrorType.Range.cs` | min/max 쌍 검증 |
+| Existence | `DomainErrorType.Existence.cs` | 존재 여부 검증 |
+| Custom | `DomainErrorType.Custom.cs` | 커스텀 에러 |
+
+### 2.4 DomainErrorType 목록
+
+#### Presence (값 존재 검증)
 
 | 에러 타입 | 설명 | 사용 예시 |
 |-----------|------|----------|
 | `Empty` | 비어있음 (null, empty string, empty collection) | `new Empty()` |
 | `Null` | null임 | `new Null()` |
 
-#### 문자열/컬렉션 길이 검증
+#### Length (문자열/컬렉션 길이 검증)
 
 | 에러 타입 | 설명 | 사용 예시 |
 |-----------|------|----------|
@@ -77,44 +92,52 @@ var error = DomainError.For<Triangle, double, double, double>(
 | `TooLong` | 최대 길이 초과 | `new TooLong(MaxLength: 100)` |
 | `WrongLength` | 정확한 길이 불일치 | `new WrongLength(Expected: 10)` |
 
-#### 형식 검증
+#### Format (형식 검증)
 
 | 에러 타입 | 설명 | 사용 예시 |
 |-----------|------|----------|
 | `InvalidFormat` | 형식 불일치 | `new InvalidFormat(Pattern: @"^\d{3}-\d{4}$")` |
-
-#### 대소문자 검증
-
-| 에러 타입 | 설명 | 사용 예시 |
-|-----------|------|----------|
 | `NotUpperCase` | 대문자가 아님 | `new NotUpperCase()` |
 | `NotLowerCase` | 소문자가 아님 | `new NotLowerCase()` |
 
-#### 숫자 범위 검증
+#### DateTime (날짜 검증)
 
 | 에러 타입 | 설명 | 사용 예시 |
 |-----------|------|----------|
+| `DefaultDate` | 날짜가 기본값(DateTime.MinValue)임 | `new DefaultDate()` |
+| `NotInPast` | 날짜가 과거여야 하는데 미래임 | `new NotInPast()` |
+| `NotInFuture` | 날짜가 미래여야 하는데 과거임 | `new NotInFuture()` |
+| `TooLate` | 날짜가 기준보다 늦음 | `new TooLate(Boundary: "2025-12-31")` |
+| `TooEarly` | 날짜가 기준보다 이름 | `new TooEarly(Boundary: "2020-01-01")` |
+
+#### Numeric (숫자 검증)
+
+| 에러 타입 | 설명 | 사용 예시 |
+|-----------|------|----------|
+| `Zero` | 0임 | `new Zero()` |
 | `Negative` | 음수임 | `new Negative()` |
 | `NotPositive` | 양수가 아님 (0 포함) | `new NotPositive()` |
 | `OutOfRange` | 범위 밖 | `new OutOfRange(Min: "1", Max: "100")` |
 | `BelowMinimum` | 최소값 미만 | `new BelowMinimum(Minimum: "0")` |
 | `AboveMaximum` | 최대값 초과 | `new AboveMaximum(Maximum: "1000")` |
 
-#### 존재 여부 검증
+#### Range (범위 쌍 검증)
+
+| 에러 타입 | 설명 | 사용 예시 |
+|-----------|------|----------|
+| `RangeInverted` | 범위가 역전됨 (최소값이 최대값보다 큼) | `new RangeInverted(Min: "10", Max: "1")` |
+| `RangeEmpty` | 범위가 비어있음 (min == max, 엄격한 범위) | `new RangeEmpty(Value: "5")` |
+
+#### Existence (존재 여부 검증)
 
 | 에러 타입 | 설명 | 사용 예시 |
 |-----------|------|----------|
 | `NotFound` | 찾을 수 없음 | `new NotFound()` |
 | `AlreadyExists` | 이미 존재함 | `new AlreadyExists()` |
 | `Duplicate` | 중복됨 | `new Duplicate()` |
-
-#### 비즈니스 규칙 검증
-
-| 에러 타입 | 설명 | 사용 예시 |
-|-----------|------|----------|
 | `Mismatch` | 값 불일치 | `new Mismatch()` |
 
-#### 커스텀 에러
+#### Custom (커스텀 에러)
 
 | 에러 타입 | 설명 | 사용 예시 |
 |-----------|------|----------|

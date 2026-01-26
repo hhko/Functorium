@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Functorium.Domains.Errors;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 
 namespace Functorium.Tests.Unit.DomainsTests.ValueObjects;
@@ -281,6 +282,169 @@ public class ValidationRulesExtensionsTests
         actual.Match(
             Succ: v => v.ShouldBe("TEST"),
             Fail: _ => Assert.Fail("Should succeed"));
+    }
+
+    #endregion
+
+    #region Format Chaining Tests
+
+    [Fact]
+    public void ThenIsUpperCase_ChainsCorrectly_WhenValueIsUpperCase()
+    {
+        // Arrange & Act
+        var actual = Validate<SampleValueObject>.NotEmpty("UPPERCASE")
+            .ThenIsUpperCase();
+
+        // Assert
+        actual.Value.IsSuccess.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ThenIsUpperCase_ReturnsFailure_WhenValueIsNotUpperCase()
+    {
+        // Arrange & Act
+        var actual = Validate<SampleValueObject>.NotEmpty("MixedCase")
+            .ThenIsUpperCase();
+
+        // Assert
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
+            Succ: _ => Assert.Fail("Should fail"),
+            Fail: errors =>
+            {
+                var error = (ErrorCodeExpected)errors.Head;
+                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.NotUpperCase");
+            });
+    }
+
+    [Fact]
+    public void ThenIsLowerCase_ChainsCorrectly_WhenValueIsLowerCase()
+    {
+        // Arrange & Act
+        var actual = Validate<SampleValueObject>.NotEmpty("lowercase")
+            .ThenIsLowerCase();
+
+        // Assert
+        actual.Value.IsSuccess.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ThenIsLowerCase_ReturnsFailure_WhenValueIsNotLowerCase()
+    {
+        // Arrange & Act
+        var actual = Validate<SampleValueObject>.NotEmpty("MixedCase")
+            .ThenIsLowerCase();
+
+        // Assert
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
+            Succ: _ => Assert.Fail("Should fail"),
+            Fail: errors =>
+            {
+                var error = (ErrorCodeExpected)errors.Head;
+                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.NotLowerCase");
+            });
+    }
+
+    #endregion
+
+    #region Range Chaining Tests
+
+    [Fact]
+    public void ThenValidRange_ChainsCorrectly_WhenRangeIsValid()
+    {
+        // Arrange & Act
+        var actual = Validate<NumericValueObject>.ValidRange(1, 10)
+            .ThenValidRange();
+
+        // Assert
+        actual.Value.IsSuccess.ShouldBeTrue();
+        actual.Value.Match(
+            Succ: v => { v.Min.ShouldBe(1); v.Max.ShouldBe(10); },
+            Fail: _ => Assert.Fail("Should succeed"));
+    }
+
+    [Fact]
+    public void ThenValidRange_ReturnsFailure_WhenRangeIsInverted()
+    {
+        // Arrange & Act
+        var actual = Validate<NumericValueObject>.ValidRange(10, 1)
+            .ThenValidRange();
+
+        // Assert
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
+            Succ: _ => Assert.Fail("Should fail"),
+            Fail: errors =>
+            {
+                var error = (ErrorCodeExpected)errors.Head;
+                error.ErrorCode.ShouldBe("DomainErrors.NumericValueObject.RangeInverted");
+            });
+    }
+
+    [Fact]
+    public void ThenValidStrictRange_ChainsCorrectly_WhenRangeIsStrictlyValid()
+    {
+        // Arrange & Act
+        var actual = Validate<NumericValueObject>.ValidRange(1, 10)
+            .ThenValidStrictRange();
+
+        // Assert
+        actual.Value.IsSuccess.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ThenValidStrictRange_ReturnsFailure_WhenRangeIsEmpty()
+    {
+        // Arrange & Act
+        var actual = Validate<NumericValueObject>.ValidRange(5, 5)
+            .ThenValidStrictRange();
+
+        // Assert
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
+            Succ: _ => Assert.Fail("Should fail"),
+            Fail: errors =>
+            {
+                var error = (ErrorCodeExpected)errors.Head;
+                error.ErrorCode.ShouldBe("DomainErrors.NumericValueObject.RangeEmpty");
+            });
+    }
+
+    #endregion
+
+    #region Collection Chaining Tests
+
+    [Fact]
+    public void ThenNotEmptyArray_ChainsCorrectly_WhenArrayIsNotEmpty()
+    {
+        // Arrange & Act
+        var actual = Validate<SampleValueObject>.NotEmptyArray(new[] { "a", "b" })
+            .ThenNotEmptyArray();
+
+        // Assert
+        actual.Value.IsSuccess.ShouldBeTrue();
+        actual.Value.Match(
+            Succ: v => v.Length.ShouldBe(2),
+            Fail: _ => Assert.Fail("Should succeed"));
+    }
+
+    [Fact]
+    public void ThenNotEmptyArray_ReturnsFailure_WhenArrayIsEmpty()
+    {
+        // Arrange & Act
+        var actual = Validate<SampleValueObject>.NotEmptyArray(new string[0])
+            .ThenNotEmptyArray();
+
+        // Assert
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
+            Succ: _ => Assert.Fail("Should fail"),
+            Fail: errors =>
+            {
+                var error = (ErrorCodeExpected)errors.Head;
+                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.Empty");
+            });
     }
 
     #endregion

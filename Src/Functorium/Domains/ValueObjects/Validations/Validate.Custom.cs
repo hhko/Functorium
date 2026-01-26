@@ -4,7 +4,7 @@ using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
 
-namespace Functorium.Domains.ValueObjects;
+namespace Functorium.Domains.ValueObjects.Validations;
 
 public static partial class Validate<TValueObject>
 {

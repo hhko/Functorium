@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Functorium.Domains.Errors;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 
 namespace Functorium.Tests.Unit.DomainsTests.ValueObjects;
@@ -450,6 +451,160 @@ public class ValidationRulesTests
             {
                 var error = (ErrorCodeExpected<string>)errors.Head;
                 error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.NotUpperCase");
+            });
+    }
+
+    #endregion
+
+    #region NotNull Tests
+
+    [Fact]
+    public void NotNull_ReturnsSuccess_WhenReferenceTypeIsNotNull()
+    {
+        // Arrange
+        string value = "valid";
+
+        // Act
+        var actual = Validate<SampleValueObject>.NotNull(value);
+
+        // Assert
+        actual.Value.IsSuccess.ShouldBeTrue();
+        actual.Value.Match(
+            Succ: v => v.ShouldBe(value),
+            Fail: _ => Assert.Fail("Should succeed"));
+    }
+
+    [Fact]
+    public void NotNull_ReturnsFailure_WhenReferenceTypeIsNull()
+    {
+        // Arrange
+        string? value = null;
+
+        // Act
+        var actual = Validate<SampleValueObject>.NotNull(value);
+
+        // Assert
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
+            Succ: _ => Assert.Fail("Should fail"),
+            Fail: errors =>
+            {
+                var error = (ErrorCodeExpected)errors.Head;
+                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.Null");
+            });
+    }
+
+    [Fact]
+    public void NotNull_ReturnsSuccess_WhenNullableValueTypeHasValue()
+    {
+        // Arrange
+        int? value = 42;
+
+        // Act
+        var actual = Validate<NumericValueObject>.NotNull(value);
+
+        // Assert
+        actual.Value.IsSuccess.ShouldBeTrue();
+        actual.Value.Match(
+            Succ: v => v.ShouldBe(42),
+            Fail: _ => Assert.Fail("Should succeed"));
+    }
+
+    [Fact]
+    public void NotNull_ReturnsFailure_WhenNullableValueTypeIsNull()
+    {
+        // Arrange
+        int? value = null;
+
+        // Act
+        var actual = Validate<NumericValueObject>.NotNull(value);
+
+        // Assert
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
+            Succ: _ => Assert.Fail("Should fail"),
+            Fail: errors =>
+            {
+                var error = (ErrorCodeExpected)errors.Head;
+                error.ErrorCode.ShouldBe("DomainErrors.NumericValueObject.Null");
+            });
+    }
+
+    #endregion
+
+    #region IsUpperCase Tests
+
+    [Fact]
+    public void IsUpperCase_ReturnsSuccess_WhenValueIsUpperCase()
+    {
+        // Arrange
+        var value = "UPPERCASE";
+
+        // Act
+        var actual = Validate<SampleValueObject>.IsUpperCase(value);
+
+        // Assert
+        actual.Value.IsSuccess.ShouldBeTrue();
+        actual.Value.Match(
+            Succ: v => v.ShouldBe(value),
+            Fail: _ => Assert.Fail("Should succeed"));
+    }
+
+    [Theory]
+    [InlineData("lowercase")]
+    [InlineData("MixedCase")]
+    public void IsUpperCase_ReturnsFailure_WhenValueIsNotUpperCase(string value)
+    {
+        // Act
+        var actual = Validate<SampleValueObject>.IsUpperCase(value);
+
+        // Assert
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
+            Succ: _ => Assert.Fail("Should fail"),
+            Fail: errors =>
+            {
+                var error = (ErrorCodeExpected)errors.Head;
+                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.NotUpperCase");
+            });
+    }
+
+    #endregion
+
+    #region IsLowerCase Tests
+
+    [Fact]
+    public void IsLowerCase_ReturnsSuccess_WhenValueIsLowerCase()
+    {
+        // Arrange
+        var value = "lowercase";
+
+        // Act
+        var actual = Validate<SampleValueObject>.IsLowerCase(value);
+
+        // Assert
+        actual.Value.IsSuccess.ShouldBeTrue();
+        actual.Value.Match(
+            Succ: v => v.ShouldBe(value),
+            Fail: _ => Assert.Fail("Should succeed"));
+    }
+
+    [Theory]
+    [InlineData("UPPERCASE")]
+    [InlineData("MixedCase")]
+    public void IsLowerCase_ReturnsFailure_WhenValueIsNotLowerCase(string value)
+    {
+        // Act
+        var actual = Validate<SampleValueObject>.IsLowerCase(value);
+
+        // Assert
+        actual.Value.IsFail.ShouldBeTrue();
+        actual.Value.Match(
+            Succ: _ => Assert.Fail("Should fail"),
+            Fail: errors =>
+            {
+                var error = (ErrorCodeExpected)errors.Head;
+                error.ErrorCode.ShouldBe("DomainErrors.SampleValueObject.NotLowerCase");
             });
     }
 

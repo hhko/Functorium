@@ -1,12 +1,11 @@
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
 using static Functorium.Domains.Errors.DomainErrorType;
 
-namespace Functorium.Domains.ValueObjects;
+namespace Functorium.Domains.ValueObjects.Validations;
 
 public static partial class Validate<TValueObject>
 {
@@ -49,20 +48,6 @@ public static partial class Validate<TValueObject>
     public static TypedValidation<TValueObject, string> ExactLength(string value, int length) =>
         new(ExactLengthInternal(value, length));
 
-    /// <summary>
-    /// 문자열이 정규식 패턴과 일치하는지 검증합니다.
-    /// </summary>
-    /// <param name="value">검증할 값</param>
-    /// <param name="pattern">정규식 패턴</param>
-    /// <param name="message">오류 메시지 (선택적)</param>
-    /// <returns>검증 결과</returns>
-    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TypedValidation<TValueObject, string> Matches(
-        string value,
-        Regex pattern,
-        string? message = null) =>
-        new(MatchesInternal(value, pattern, message));
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Validation<Error, string> NotEmptyInternal(string value) =>
         !string.IsNullOrWhiteSpace(value)
@@ -98,16 +83,4 @@ public static partial class Validate<TValueObject>
                 new WrongLength(length),
                 value,
                 $"{typeof(TValueObject).Name} must be exactly {length} characters. Current length: {value.Length}");
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static Validation<Error, string> MatchesInternal(
-        string value,
-        Regex pattern,
-        string? message = null) =>
-        pattern.IsMatch(value)
-            ? value
-            : DomainError.For<TValueObject>(
-                new InvalidFormat(pattern.ToString()),
-                value,
-                message ?? $"Invalid {typeof(TValueObject).Name} format. Current value: '{value}'");
 }

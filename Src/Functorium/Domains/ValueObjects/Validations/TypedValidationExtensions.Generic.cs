@@ -2,7 +2,7 @@ using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 using Functorium.Domains.Errors;
 
-namespace Functorium.Domains.ValueObjects;
+namespace Functorium.Domains.ValueObjects.Validations;
 
 public static partial class TypedValidationExtensions
 {
