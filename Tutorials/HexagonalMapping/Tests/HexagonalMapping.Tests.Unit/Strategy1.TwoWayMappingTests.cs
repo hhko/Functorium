@@ -1,6 +1,6 @@
-using HexagonalMapping.Domain.Entities;
-using HexagonalMapping.Strategy1.TwoWayMapping.Adapters.Persistence;
-using HexagonalMapping.Strategy1.TwoWayMapping.Adapters.Rest;
+using HexagonalMapping.Domain.Model;
+using HexagonalMapping.Strategy1.TwoWayMapping.Adapter.In.Rest;
+using HexagonalMapping.Strategy1.TwoWayMapping.Adapter.Out.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Xunit;

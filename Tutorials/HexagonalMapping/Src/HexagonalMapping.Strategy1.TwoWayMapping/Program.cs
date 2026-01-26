@@ -1,6 +1,6 @@
-using HexagonalMapping.Strategy1.TwoWayMapping.Adapters.Persistence;
-using HexagonalMapping.Strategy1.TwoWayMapping.Adapters.Rest;
-using HexagonalMapping.Strategy1.TwoWayMapping.Application;
+using HexagonalMapping.Strategy1.TwoWayMapping.Adapter.In.Rest;
+using HexagonalMapping.Strategy1.TwoWayMapping.Adapter.Out.Persistence;
+using HexagonalMapping.Strategy1.TwoWayMapping.Application.Service;
 using Microsoft.EntityFrameworkCore;
 
 Console.WriteLine("=== Strategy 1: Two-Way Mapping (권장) ===");

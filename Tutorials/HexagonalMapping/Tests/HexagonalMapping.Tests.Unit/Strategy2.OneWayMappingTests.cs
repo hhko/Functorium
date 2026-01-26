@@ -1,5 +1,5 @@
-using HexagonalMapping.Strategy2.OneWayMapping.Adapters.Persistence;
-using HexagonalMapping.Strategy2.OneWayMapping.Domain;
+using HexagonalMapping.Strategy2.OneWayMapping.Adapter.Out.Persistence;
+using HexagonalMapping.Strategy2.OneWayMapping.Model;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Xunit;

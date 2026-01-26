@@ -1,4 +1,4 @@
-using HexagonalMapping.Domain.Entities;
+using HexagonalMapping.Domain.Model;
 using Shouldly;
 using Xunit;
 

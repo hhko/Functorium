@@ -1,6 +1,6 @@
-using HexagonalMapping.Strategy4.WeakenedBoundary.Adapters.Persistence;
-using HexagonalMapping.Strategy4.WeakenedBoundary.Application;
-using HexagonalMapping.Strategy4.WeakenedBoundary.Domain;
+using HexagonalMapping.Strategy4.WeakenedBoundary.Adapter.Out.Persistence;
+using HexagonalMapping.Strategy4.WeakenedBoundary.Application.Service;
+using HexagonalMapping.Strategy4.WeakenedBoundary.Model;
 using Microsoft.EntityFrameworkCore;
 
 Console.WriteLine("=== Strategy 4: Weakened Boundaries (약화된 경계) ===");

@@ -1,6 +1,6 @@
-using HexagonalMapping.Strategy2.OneWayMapping.Adapters.Persistence;
-using HexagonalMapping.Strategy2.OneWayMapping.Application;
-using HexagonalMapping.Strategy2.OneWayMapping.Domain;
+using HexagonalMapping.Strategy2.OneWayMapping.Adapter.Out.Persistence;
+using HexagonalMapping.Strategy2.OneWayMapping.Application.Service;
+using HexagonalMapping.Strategy2.OneWayMapping.Model;
 using Microsoft.EntityFrameworkCore;
 
 Console.WriteLine("=== Strategy 2: One-Way Mapping ===");
