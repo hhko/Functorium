@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerator;
 using LanguageExt;
 using LanguageExt.Common;
@@ -8,6 +9,7 @@ using TwoWayMappingLayered.Adapters.Persistence.Mappers;
 using TwoWayMappingLayered.Domains.Entities;
 using TwoWayMappingLayered.Domains.Repositories;
 using TwoWayMappingLayered.Domains.ValueObjects;
+using static Functorium.Adapters.Errors.AdapterErrorType;
 using static LanguageExt.Prelude;
 
 namespace TwoWayMappingLayered.Adapters.Persistence.Repositories;
@@ -77,7 +79,10 @@ public class InMemoryProductRepository : IProductRepository
                 return Fin.Succ(product);
             }
 
-            return Fin.Fail<Product>(Error.New($"상품 ID '{(Guid)id}'을(를) 찾을 수 없습니다"));
+            return Fin.Fail<Product>(AdapterError.For<InMemoryProductRepository>(
+                new NotFound(),
+                ((Guid)id).ToString(),
+                $"상품 ID '{(Guid)id}'을(를) 찾을 수 없습니다"));
         });
     }
 
@@ -107,7 +112,10 @@ public class InMemoryProductRepository : IProductRepository
         {
             if (!_products.TryGetValue((Guid)product.Id, out ProductEntity? entity))
             {
-                return Fin.Fail<Product>(Error.New($"상품 ID '{(Guid)product.Id}'을(를) 찾을 수 없습니다"));
+                return Fin.Fail<Product>(AdapterError.For<InMemoryProductRepository>(
+                    new NotFound(),
+                    ((Guid)product.Id).ToString(),
+                    $"상품 ID '{(Guid)product.Id}'을(를) 찾을 수 없습니다"));
             }
 
             // Domain → Adapter: 기존 엔티티 업데이트

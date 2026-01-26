@@ -1,12 +1,10 @@
 using FluentValidation;
 using Functorium.Applications.Linq;
 using Functorium.Applications.Validations;
-using Functorium.Domains.ValueObjects;
 using Microsoft.Extensions.Logging;
 using TwoWayMappingLayered.Domains.Entities;
 using TwoWayMappingLayered.Domains.Repositories;
 using TwoWayMappingLayered.Domains.ValueObjects;
-using DomainValidate = Functorium.Domains.ValueObjects.Validate<TwoWayMappingLayered.Domains.ValueObjects.Money>;
 
 namespace TwoWayMappingLayered.Applications.Commands;
 
@@ -20,7 +18,7 @@ namespace TwoWayMappingLayered.Applications.Commands;
 ///
 /// Validation 패턴:
 /// - FluentValidation Validator에서 Value Object Validate 메서드 통합
-/// - MustSatisfyValueObjectValidation 확장 메서드 사용
+/// - MustSatisfyValidation 확장 메서드 사용 (C# 14 타입 추론)
 /// </summary>
 public sealed class UpdateProductCommand
 {
@@ -49,8 +47,9 @@ public sealed class UpdateProductCommand
         public Validator()
         {
             // ProductId Value Object 검증
+            // MustSatisfyValidation: C# 14 타입 추론 - 명시적 타입 불필요
             RuleFor(x => x.ProductId)
-                .MustSatisfyValueObjectValidation<Request, Guid, Guid>(ProductId.Validate);
+                .MustSatisfyValidation(ProductId.Validate);
 
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("상품명은 필수입니다")
@@ -60,15 +59,14 @@ public sealed class UpdateProductCommand
                 .MaximumLength(500).WithMessage("설명은 500자를 초과할 수 없습니다");
 
             // Money Value Object 검증: Amount
+            // MustSatisfyValidation: C# 14 타입 추론 - 명시적 타입 불필요
             RuleFor(x => x.Price)
-                .MustSatisfyValueObjectValidation<Request, decimal, decimal>(
-                    price => DomainValidate.NonNegative(price));
+                .MustSatisfyValidation(Money.ValidateAmount);
 
             // Money Value Object 검증: Currency
+            // MustSatisfyValidation: C# 14 타입 추론 - 명시적 타입 불필요
             RuleFor(x => x.Currency)
-                .MustSatisfyValueObjectValidation<Request, string, string>(
-                    currency => DomainValidate.NotEmpty(currency ?? "")
-                        .ThenExactLength(3));
+                .MustSatisfyValidation(Money.ValidateCurrency);
 
             RuleFor(x => x.StockQuantity)
                 .GreaterThanOrEqualTo(0).WithMessage("재고 수량은 0 이상이어야 합니다");

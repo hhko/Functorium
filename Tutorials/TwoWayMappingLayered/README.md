@@ -15,11 +15,13 @@
 3. [핵심 원칙](#핵심-원칙)
 4. [프로젝트 구조](#프로젝트-구조)
 5. [핵심 구현](#핵심-구현)
-6. [데이터 흐름](#데이터-흐름)
-7. [One-Way Mapping과의 비교](#one-way-mapping과의-비교)
-8. [장단점](#장단점)
-9. [실행 방법](#실행-방법)
-10. [Functorium 패턴](#functorium-패턴)
+6. [에러 처리 패턴](#에러-처리-패턴)
+7. [유효성 검사 패턴](#유효성-검사-패턴)
+8. [데이터 흐름](#데이터-흐름)
+9. [One-Way Mapping과의 비교](#one-way-mapping과의-비교)
+10. [장단점](#장단점)
+11. [실행 방법](#실행-방법)
+12. [Functorium 패턴](#functorium-패턴)
 
 ---
 
@@ -472,6 +474,279 @@ FinT<IO, Response> usecase =
 
 ---
 
+## 에러 처리 패턴
+
+Functorium은 계층별로 일관된 에러 처리 패턴을 제공합니다.
+
+### ApplicationError (Use Case 레이어)
+
+Application Layer에서 비즈니스 로직 에러를 표현할 때 사용합니다.
+
+```csharp
+// CreateProductCommand.cs
+using Functorium.Applications.Errors;
+using static Functorium.Applications.Errors.ApplicationErrorType;
+
+// LINQ 쿼리 표현식 내에서 guard와 함께 사용
+FinT<IO, Response> usecase =
+    from exists in _productRepository.ExistsByName(request.Name)
+    from _ in guard(!exists, ApplicationError.For<Usecase>(
+        new AlreadyExists(),
+        request.Name,
+        $"상품명이 이미 존재합니다: '{request.Name}'"))
+    from product in _productRepository.Create(...)
+    select new Response(...);
+```
+
+**생성되는 에러 코드 형식:**
+```
+ApplicationErrors.Usecase.AlreadyExists
+```
+
+**제공되는 에러 타입 (`ApplicationErrorType`):**
+
+| 타입 | 설명 |
+|------|------|
+| `AlreadyExists` | 값이 이미 존재함 |
+| `NotFound` | 값을 찾을 수 없음 |
+| `ValidationFailed(PropertyName?)` | 검증 실패 |
+| `BusinessRuleViolated(RuleName?)` | 비즈니스 규칙 위반 |
+| `Unauthorized` | 인증되지 않음 |
+| `Forbidden` | 접근 금지 |
+| `ConcurrencyConflict` | 동시성 충돌 |
+| `Custom(Name)` | 커스텀 에러 |
+
+### AdapterError (Adapter 레이어)
+
+Adapter Layer에서 인프라 관련 에러를 표현할 때 사용합니다.
+
+```csharp
+// InMemoryProductRepository.cs
+using Functorium.Adapters.Errors;
+using static Functorium.Adapters.Errors.AdapterErrorType;
+
+public virtual FinT<IO, Product> GetById(ProductId id)
+{
+    return IO.lift(() =>
+    {
+        if (_products.TryGetValue((Guid)id, out ProductEntity? entity))
+        {
+            return Fin.Succ(ProductMapper.ToDomain(entity));
+        }
+
+        return Fin.Fail<Product>(AdapterError.For<InMemoryProductRepository>(
+            new NotFound(),
+            ((Guid)id).ToString(),
+            $"상품 ID '{(Guid)id}'을(를) 찾을 수 없습니다"));
+    });
+}
+```
+
+**생성되는 에러 코드 형식:**
+```
+AdapterErrors.InMemoryProductRepository.NotFound
+```
+
+**제공되는 에러 타입 (`AdapterErrorType`):**
+
+| 타입 | 설명 |
+|------|------|
+| `NotFound` | 값을 찾을 수 없음 |
+| `AlreadyExists` | 값이 이미 존재함 |
+| `ConnectionFailed(Target?)` | 연결 실패 |
+| `Timeout(Duration?)` | 타임아웃 |
+| `Serialization(Format?)` | 직렬화 실패 |
+| `Deserialization(Format?)` | 역직렬화 실패 |
+| `ExternalServiceUnavailable(ServiceName?)` | 외부 서비스 사용 불가 |
+| `Custom(Name)` | 커스텀 에러 |
+
+### 에러 계층 구조
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Presentation Layer                       │
+│  FinResponse<T> → HTTP Status Code 매핑                     │
+└─────────────────────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                    Application Layer                        │
+│  ApplicationError.For<TUsecase>(errorType, value, message)  │
+│  → "ApplicationErrors.{Usecase}.{ErrorType}"                │
+└─────────────────────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                      Adapter Layer                          │
+│  AdapterError.For<TAdapter>(errorType, value, message)      │
+│  → "AdapterErrors.{Adapter}.{ErrorType}"                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 유효성 검사 패턴
+
+Functorium은 **Value Object의 검증 로직**과 **FluentValidation**을 통합하는 패턴을 제공합니다.
+
+### 복합 값 객체의 개별 필드 검증
+
+Money처럼 여러 필드를 가진 Value Object는 **개별 검증 메서드**를 public으로 노출합니다.
+
+```csharp
+// Money.cs (Domain Layer)
+public sealed class Money : ValueObject
+{
+    public decimal Amount { get; }
+    public string Currency { get; }
+
+    /// <summary>
+    /// Money 검증 (병렬 검증 - 모든 오류 수집)
+    /// </summary>
+    public static Validation<Error, Money> Validate(decimal amount, string currency) =>
+        (ValidateAmount(amount), ValidateCurrency(currency))
+            .Apply((a, c) => new Money(a, c))
+            .As();
+
+    /// <summary>
+    /// Amount 개별 검증 - FluentValidation 통합용
+    /// </summary>
+    public static Validation<Error, decimal> ValidateAmount(decimal amount) =>
+        Validate<Money>.NonNegative(amount);
+
+    /// <summary>
+    /// Currency 개별 검증 - FluentValidation 통합용
+    /// </summary>
+    public static Validation<Error, string> ValidateCurrency(string currency) =>
+        Validate<Money>.NotEmpty(currency ?? "")
+            .ThenExactLength(3)
+            .ThenNormalize(v => v.ToUpperInvariant());
+}
+```
+
+### FluentValidation과 Value Object 통합
+
+`MustSatisfyValidation` 확장 메서드로 Value Object의 검증 메서드를 직접 참조합니다.
+C# 14의 extension members 문법을 사용하여 타입 추론이 완벽하게 작동합니다.
+
+```csharp
+// CreateProductCommand.cs (Application Layer)
+public sealed class Validator : AbstractValidator<Request>
+{
+    public Validator()
+    {
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("상품명은 필수입니다")
+            .MaximumLength(100).WithMessage("상품명은 100자를 초과할 수 없습니다");
+
+        // Money Value Object 검증: Amount
+        // MustSatisfyValidation: C# 14 타입 추론 - 명시적 타입 불필요
+        RuleFor(x => x.Price)
+            .MustSatisfyValidation(Money.ValidateAmount);
+
+        // Money Value Object 검증: Currency
+        // MustSatisfyValidation: C# 14 타입 추론 - 명시적 타입 불필요
+        RuleFor(x => x.Currency)
+            .MustSatisfyValidation(Money.ValidateCurrency);
+
+        RuleFor(x => x.StockQuantity)
+            .GreaterThanOrEqualTo(0).WithMessage("재고 수량은 0 이상이어야 합니다");
+    }
+}
+```
+
+### C# 14 Extension Members와 타입 추론
+
+Functorium은 C# 14의 extension members 문법을 사용하여 타입 추론을 개선합니다.
+
+#### MustSatisfyValidation (입력 타입 == 출력 타입)
+
+입력 타입과 검증 결과 타입이 **동일**한 경우 사용합니다. 타입 추론이 완벽하게 작동합니다.
+
+```csharp
+// decimal → Validation<Error, decimal> (입력 == 출력)
+RuleFor(x => x.Price)
+    .MustSatisfyValidation(Money.ValidateAmount);
+
+// string → Validation<Error, string> (입력 == 출력)
+RuleFor(x => x.Currency)
+    .MustSatisfyValidation(Money.ValidateCurrency);
+
+// Guid → Validation<Error, Guid> (입력 == 출력)
+RuleFor(x => x.ProductId)
+    .MustSatisfyValidation(ProductId.Validate);
+```
+
+#### MustSatisfyValidationOf<TValueObject> (입력 타입 != 출력 타입)
+
+입력 타입과 검증 결과 타입이 **다른** 경우 사용합니다. TValueObject 타입만 명시합니다.
+
+```csharp
+// string → Validation<Error, ProductName> (입력 != 출력)
+RuleFor(x => x.Name)
+    .MustSatisfyValidationOf<ProductName>(ProductName.Validate);
+
+// string → Validation<Error, Email> (입력 != 출력)
+RuleFor(x => x.Email)
+    .MustSatisfyValidationOf<Email>(Email.Validate);
+```
+
+#### 이전 방식과 비교
+
+```csharp
+// ❌ 이전 방식: 3개의 타입 파라미터를 명시적으로 지정
+RuleFor(x => x.Price)
+    .MustSatisfyValueObjectValidation<Request, decimal, decimal>(Money.ValidateAmount);
+
+// ✅ 새 방식: 타입 추론 작동 - 명시적 타입 불필요
+RuleFor(x => x.Price)
+    .MustSatisfyValidation(Money.ValidateAmount);
+```
+
+### 검증 로직 재사용의 장점
+
+| 기존 방식 | 개선된 방식 |
+|-----------|------------|
+| Validator에서 검증 로직 중복 작성 | Value Object 메서드 직접 참조 |
+| 검증 규칙 변경 시 여러 곳 수정 | 단일 소스 (Single Source of Truth) |
+| Money 내부 구현과 Validator 불일치 위험 | 항상 동일한 검증 보장 |
+| 3개의 타입 파라미터 명시 필요 | C# 14 타입 추론으로 간결한 코드 |
+
+```csharp
+// ❌ 기존 방식: 검증 로직 중복, 타입 명시 필요
+RuleFor(x => x.Price)
+    .MustSatisfyValueObjectValidation<Request, decimal, decimal>(
+        price => DomainValidate.NonNegative(price));  // Money.ValidateAmount와 중복!
+
+// ✅ 개선된 방식: Value Object 메서드 직접 참조 + 타입 추론
+RuleFor(x => x.Price)
+    .MustSatisfyValidation(Money.ValidateAmount);  // 타입 명시 불필요!
+```
+
+### 검증 흐름
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Request 수신                           │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│              FluentValidation Validator                     │
+│  MustSatisfyValueObjectValidation                          │
+│    → Money.ValidateAmount(price)                            │
+│    → Money.ValidateCurrency(currency)                       │
+│    → ProductId.Validate(productId)                          │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼ (검증 통과)
+┌─────────────────────────────────────────────────────────────┐
+│                    Use Case Handler                         │
+│  검증 완료된 데이터로 Value Object 생성                      │
+│  Money.FromValues(price, currency)                          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## 데이터 흐름
 
 ### 생성 (Create) 흐름
@@ -638,7 +913,8 @@ curl -X PUT http://localhost:5000/api/products/{id} \
 | **CQRS** | Command/Query 분리 (`ICommandUsecase`, `IQueryUsecase`) |
 | **FinResponse<T>** | 성공/실패를 표현하는 응답 타입 |
 | **[GeneratePipeline]** | 관찰 가능성 파이프라인 자동 생성 |
-| **MustSatisfyValueObjectValidation** | FluentValidation과 Value Object 검증 통합 |
+| **MustSatisfyValidation** | FluentValidation과 Value Object 검증 통합 (입력 == 출력 타입) |
+| **MustSatisfyValidationOf<T>** | FluentValidation과 Value Object 검증 통합 (입력 != 출력 타입) |
 
 ---
 

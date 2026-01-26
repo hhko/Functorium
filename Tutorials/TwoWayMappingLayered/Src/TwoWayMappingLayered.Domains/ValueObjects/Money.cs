@@ -40,14 +40,24 @@ public sealed class Money : ValueObject
 
     /// <summary>
     /// Amount 검증
+    /// FluentValidation MustSatisfyValueObjectValidation과 통합 사용 가능
     /// </summary>
-    private static Validation<Error, decimal> ValidateAmount(decimal amount) =>
+    /// <example>
+    /// RuleFor(x => x.Price)
+    ///     .MustSatisfyValueObjectValidation&lt;Request, decimal, decimal&gt;(Money.ValidateAmount);
+    /// </example>
+    public static Validation<Error, decimal> ValidateAmount(decimal amount) =>
         Validate<Money>.NonNegative(amount);
 
     /// <summary>
     /// Currency 검증 (ISO 4217 형식)
+    /// FluentValidation MustSatisfyValueObjectValidation과 통합 사용 가능
     /// </summary>
-    private static Validation<Error, string> ValidateCurrency(string currency) =>
+    /// <example>
+    /// RuleFor(x => x.Currency)
+    ///     .MustSatisfyValueObjectValidation&lt;Request, string, string&gt;(Money.ValidateCurrency);
+    /// </example>
+    public static Validation<Error, string> ValidateCurrency(string currency) =>
         Validate<Money>.NotEmpty(currency ?? "")
             .ThenExactLength(3)
             .ThenNormalize(v => v.ToUpperInvariant());
