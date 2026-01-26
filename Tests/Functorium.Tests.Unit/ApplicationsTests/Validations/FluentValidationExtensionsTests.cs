@@ -3,6 +3,7 @@ using FluentValidation;
 using Functorium.Applications.Validations;
 using Functorium.Domains.Errors;
 using Functorium.Domains.ValueObjects;
+using static Functorium.Domains.Errors.DomainErrorType;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 
 namespace Functorium.Tests.Unit.ApplicationsTests.Validations;
@@ -34,6 +35,38 @@ public sealed class TestPrice : ComparableSimpleValueObject<decimal>
 
 // 테스트용 Request
 public sealed record TestRequest(string Name, decimal Price);
+
+// 테스트용 Request (MustSatisfyValidationOf 테스트용 - 입력 != 출력 타입)
+// 실제 시나리오: API에서 age를 string으로 받아 int로 검증/변환
+public sealed record TestAgeRequest(string Age);
+
+// 테스트용 Age Value Object (string → int 변환)
+// MustSatisfyValidationOf<TValueObject> 테스트를 위한 명확한 타입 변환 예제
+// 실제 시나리오: 외부에서 string으로 입력받고 내부에서 int로 관리
+public sealed class TestAge : ComparableSimpleValueObject<int>
+{
+    public const int MinAge = 0;
+    public const int MaxAge = 150;
+
+    private TestAge(int value) : base(value) { }
+
+    public static Fin<TestAge> Create(int value) =>
+        CreateFromValidation(ValidateInt(value), v => new TestAge(v));
+
+    // 내부용: int → Validation<Error, int>
+    private static Validation<Error, int> ValidateInt(int value) =>
+        Validate<TestAge>.Between(value, MinAge, MaxAge);
+
+    // MustSatisfyValidationOf용: string → Validation<Error, int> (입력 타입 != 출력 타입)
+    // FluentValidation에서 string 속성을 int로 검증/변환할 때 사용
+    public static Validation<Error, int> Validate(string value) =>
+        int.TryParse(value, out var parsed)
+            ? ValidateInt(parsed)
+            : DomainError.For<TestAge>(
+                new Custom("InvalidFormat"),
+                value,
+                $"'{value}'은(는) 유효한 숫자가 아닙니다");
+}
 
 // 테스트용 SmartEnum (string 기반)
 public sealed class TestCurrency : SmartEnum<TestCurrency, string>
@@ -74,16 +107,30 @@ public sealed class TestSmartEnumRequestValidator : AbstractValidator<TestSmartE
     }
 }
 
-// 테스트용 Validator
+// 테스트용 Validator (MustSatisfyValidation - 입력 == 출력 타입)
 public sealed class TestRequestValidator : AbstractValidator<TestRequest>
 {
     public TestRequestValidator()
     {
+        // MustSatisfyValidation: 입력 타입 == 출력 타입 (타입 추론 작동)
         RuleFor(x => x.Name)
-            .MustSatisfyValueObjectValidation<TestRequest, string, string>(TestProductName.Validate);
+            .MustSatisfyValidation(TestProductName.Validate);
 
         RuleFor(x => x.Price)
-            .MustSatisfyValueObjectValidation<TestRequest, decimal, decimal>(TestPrice.Validate);
+            .MustSatisfyValidation(TestPrice.Validate);
+    }
+}
+
+// 테스트용 Validator (MustSatisfyValidationOf - 입력 != 출력 타입)
+public sealed class TestAgeRequestValidator : AbstractValidator<TestAgeRequest>
+{
+    public TestAgeRequestValidator()
+    {
+        // MustSatisfyValidationOf<TRequest, TProperty, TValueObject>: 입력 타입(string) != 출력 타입(int)
+        // string으로 입력받은 Age를 int로 검증/변환
+        // C# 14 extension members의 제네릭 타입 추론 제한으로 모든 타입 파라미터 명시 필요
+        RuleFor(x => x.Age)
+            .MustSatisfyValidationOf<TestAgeRequest, string, int>(TestAge.Validate);
     }
 }
 
@@ -466,6 +513,120 @@ public class FluentValidationSmartEnumExtensionsTests
         actual.Errors.ShouldContain(e => e.PropertyName == "CurrencyCode");
         actual.Errors.ShouldContain(e => e.PropertyName == "CurrencyName");
         actual.Errors.ShouldContain(e => e.PropertyName == "StatusValue");
+    }
+
+    #endregion
+}
+
+/// <summary>
+/// MustSatisfyValidationOf&lt;TValueObject&gt; 메서드 테스트
+/// 입력 타입(string)과 출력 타입(int)이 다른 경우 테스트
+/// 실제 시나리오: API에서 age를 string으로 받아 int로 검증/변환
+/// </summary>
+[Trait(nameof(UnitTest), UnitTest.Functorium_Applications)]
+public class MustSatisfyValidationOfTests
+{
+    private readonly TestAgeRequestValidator _validator = new();
+
+    #region Success Cases
+
+    [Theory]
+    [InlineData("0")]
+    [InlineData("25")]
+    [InlineData("100")]
+    [InlineData("150")]
+    public void MustSatisfyValidationOf_ReturnsNoError_WhenAgeIsValid(string age)
+    {
+        // Arrange
+        var request = new TestAgeRequest(age);
+
+        // Act
+        var actual = _validator.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeTrue();
+        actual.Errors.ShouldBeEmpty();
+    }
+
+    #endregion
+
+    #region Failure Cases - Invalid Format
+
+    [Theory]
+    [InlineData("abc")]
+    [InlineData("12.5")]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void MustSatisfyValidationOf_ReturnsError_WhenAgeFormatIsInvalid(string age)
+    {
+        // Arrange
+        var request = new TestAgeRequest(age);
+
+        // Act
+        var actual = _validator.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeFalse();
+        actual.Errors.Count.ShouldBe(1);
+        actual.Errors[0].PropertyName.ShouldBe("Age");
+        actual.Errors[0].ErrorMessage.ShouldContain("DomainErrors.TestAge.InvalidFormat");
+    }
+
+    #endregion
+
+    #region Failure Cases - Out of Range
+
+    [Theory]
+    [InlineData("-1")]
+    [InlineData("-100")]
+    public void MustSatisfyValidationOf_ReturnsError_WhenAgeIsBelowMinimum(string age)
+    {
+        // Arrange
+        var request = new TestAgeRequest(age);
+
+        // Act
+        var actual = _validator.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeFalse();
+        actual.Errors.Count.ShouldBe(1);
+        actual.Errors[0].PropertyName.ShouldBe("Age");
+        actual.Errors[0].ErrorMessage.ShouldContain("DomainErrors.TestAge.OutOfRange");
+    }
+
+    [Theory]
+    [InlineData("151")]
+    [InlineData("200")]
+    public void MustSatisfyValidationOf_ReturnsError_WhenAgeIsAboveMaximum(string age)
+    {
+        // Arrange
+        var request = new TestAgeRequest(age);
+
+        // Act
+        var actual = _validator.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeFalse();
+        actual.Errors.Count.ShouldBe(1);
+        actual.Errors[0].PropertyName.ShouldBe("Age");
+        actual.Errors[0].ErrorMessage.ShouldContain("DomainErrors.TestAge.OutOfRange");
+    }
+
+    #endregion
+
+    #region Null Handling Cases
+
+    [Fact]
+    public void MustSatisfyValidationOf_SkipsValidation_WhenValueIsNull()
+    {
+        // Arrange
+        var request = new TestAgeRequest(null!);
+
+        // Act
+        var actual = _validator.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeTrue();
     }
 
     #endregion

@@ -79,7 +79,60 @@ public abstract record DomainErrorType : ErrorType
 
     #endregion
 
+    #region 날짜 검증
+
+    /// <summary>
+    /// 날짜가 기본값(DateTime.MinValue)임
+    /// </summary>
+    public sealed record DefaultDate : DomainErrorType;
+
+    /// <summary>
+    /// 날짜가 과거여야 하는데 미래임
+    /// </summary>
+    public sealed record NotInPast : DomainErrorType;
+
+    /// <summary>
+    /// 날짜가 미래여야 하는데 과거임
+    /// </summary>
+    public sealed record NotInFuture : DomainErrorType;
+
+    /// <summary>
+    /// 날짜가 특정 기준 날짜보다 이후임 (이전이어야 함)
+    /// </summary>
+    /// <param name="Boundary">기준 날짜</param>
+    public sealed record TooLate(string? Boundary = null) : DomainErrorType;
+
+    /// <summary>
+    /// 날짜가 특정 기준 날짜보다 이전임 (이후여야 함)
+    /// </summary>
+    /// <param name="Boundary">기준 날짜</param>
+    public sealed record TooEarly(string? Boundary = null) : DomainErrorType;
+
+    #endregion
+
+    #region 범위 검증
+
+    /// <summary>
+    /// 범위가 역전됨 (최소값이 최대값보다 큼)
+    /// </summary>
+    /// <param name="Min">최소값 (문자열로 표현)</param>
+    /// <param name="Max">최대값 (문자열로 표현)</param>
+    public sealed record RangeInverted(string? Min = null, string? Max = null) : DomainErrorType;
+
+    /// <summary>
+    /// 범위가 비어있음 (최소값과 최대값이 같음, 엄격한 범위에서 유효한 값이 없음)
+    /// </summary>
+    /// <param name="Value">최소값/최대값 (문자열로 표현)</param>
+    public sealed record RangeEmpty(string? Value = null) : DomainErrorType;
+
+    #endregion
+
     #region 숫자 범위 검증
+
+    /// <summary>
+    /// 값이 0임
+    /// </summary>
+    public sealed record Zero : DomainErrorType;
 
     /// <summary>
     /// 값이 음수임

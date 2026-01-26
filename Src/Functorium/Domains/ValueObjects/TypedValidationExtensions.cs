@@ -98,6 +98,19 @@ public static class TypedValidationExtensions
     #region Numeric Extensions
 
     /// <summary>
+    /// 숫자가 0이 아닌지 체인으로 검증합니다.
+    /// </summary>
+    /// <typeparam name="TValueObject">값 객체 타입</typeparam>
+    /// <typeparam name="T">숫자 타입</typeparam>
+    /// <param name="validation">이전 검증 결과</param>
+    /// <returns>검증 결과</returns>
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TypedValidation<TValueObject, T> ThenNotZero<TValueObject, T>(
+        this TypedValidation<TValueObject, T> validation)
+        where T : notnull, INumber<T> =>
+        new(validation.Value.Bind(v => Validate<TValueObject>.NotZeroInternal<T>(v)));
+
+    /// <summary>
     /// 숫자가 음수가 아닌지 체인으로 검증합니다.
     /// </summary>
     /// <typeparam name="TValueObject">값 객체 타입</typeparam>
@@ -169,6 +182,84 @@ public static class TypedValidationExtensions
         T min)
         where T : notnull, INumber<T> =>
         new(validation.Value.Bind(v => Validate<TValueObject>.AtLeastInternal<T>(v, min)));
+
+    #endregion
+
+    #region DateTime Extensions
+
+    /// <summary>
+    /// 날짜가 기본값(DateTime.MinValue)이 아닌지 체인으로 검증합니다.
+    /// </summary>
+    /// <typeparam name="TValueObject">값 객체 타입</typeparam>
+    /// <param name="validation">이전 검증 결과</param>
+    /// <returns>검증 결과</returns>
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TypedValidation<TValueObject, DateTime> ThenNotDefault<TValueObject>(
+        this TypedValidation<TValueObject, DateTime> validation) =>
+        new(validation.Value.Bind(v => Validate<TValueObject>.NotDefaultInternal(v)));
+
+    /// <summary>
+    /// 날짜가 과거인지 체인으로 검증합니다.
+    /// </summary>
+    /// <typeparam name="TValueObject">값 객체 타입</typeparam>
+    /// <param name="validation">이전 검증 결과</param>
+    /// <returns>검증 결과</returns>
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TypedValidation<TValueObject, DateTime> ThenInPast<TValueObject>(
+        this TypedValidation<TValueObject, DateTime> validation) =>
+        new(validation.Value.Bind(v => Validate<TValueObject>.InPastInternal(v)));
+
+    /// <summary>
+    /// 날짜가 미래인지 체인으로 검증합니다.
+    /// </summary>
+    /// <typeparam name="TValueObject">값 객체 타입</typeparam>
+    /// <param name="validation">이전 검증 결과</param>
+    /// <returns>검증 결과</returns>
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TypedValidation<TValueObject, DateTime> ThenInFuture<TValueObject>(
+        this TypedValidation<TValueObject, DateTime> validation) =>
+        new(validation.Value.Bind(v => Validate<TValueObject>.InFutureInternal(v)));
+
+    /// <summary>
+    /// 날짜가 특정 기준 날짜 이전인지 체인으로 검증합니다.
+    /// </summary>
+    /// <typeparam name="TValueObject">값 객체 타입</typeparam>
+    /// <param name="validation">이전 검증 결과</param>
+    /// <param name="boundary">기준 날짜</param>
+    /// <returns>검증 결과</returns>
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TypedValidation<TValueObject, DateTime> ThenBefore<TValueObject>(
+        this TypedValidation<TValueObject, DateTime> validation,
+        DateTime boundary) =>
+        new(validation.Value.Bind(v => Validate<TValueObject>.BeforeInternal(v, boundary)));
+
+    /// <summary>
+    /// 날짜가 특정 기준 날짜 이후인지 체인으로 검증합니다.
+    /// </summary>
+    /// <typeparam name="TValueObject">값 객체 타입</typeparam>
+    /// <param name="validation">이전 검증 결과</param>
+    /// <param name="boundary">기준 날짜</param>
+    /// <returns>검증 결과</returns>
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TypedValidation<TValueObject, DateTime> ThenAfter<TValueObject>(
+        this TypedValidation<TValueObject, DateTime> validation,
+        DateTime boundary) =>
+        new(validation.Value.Bind(v => Validate<TValueObject>.AfterInternal(v, boundary)));
+
+    /// <summary>
+    /// 날짜가 지정된 범위 내에 있는지 체인으로 검증합니다.
+    /// </summary>
+    /// <typeparam name="TValueObject">값 객체 타입</typeparam>
+    /// <param name="validation">이전 검증 결과</param>
+    /// <param name="min">최소 날짜</param>
+    /// <param name="max">최대 날짜</param>
+    /// <returns>검증 결과</returns>
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TypedValidation<TValueObject, DateTime> ThenDateBetween<TValueObject>(
+        this TypedValidation<TValueObject, DateTime> validation,
+        DateTime min,
+        DateTime max) =>
+        new(validation.Value.Bind(v => Validate<TValueObject>.DateBetweenInternal(v, min, max)));
 
     #endregion
 
