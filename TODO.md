@@ -10,25 +10,38 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [ ] 로컬 검색: https://github.com/marcoaapfortes/Mantic.sh
 
 ### 1.0-alpha.2
-- [ ] 값 객체 DomainError Fluent 적용
-- [ ] 관찰 가능성
+- [x] 관찰 가능성
+- [x] Error Fluent 적용
+- [ ] Entity
+- [ ] DTO
+- [ ] MinVer
 
 ### 1.0-alpha.3
 - [ ] 관찰 가능성 시스템: OpenSearch, Kafka, Flink SQL
 - [ ] 컨테이너 기반 테스트 .Testing
+- [ ] Adapters 프로젝트 분리
+
+### 1.0-alpah.4
+- [ ] 프로젝트 변환
+  - [How We Fixed Our Cache Stampede Problem](https://medium.com/@aman.toumaj/mastering-domain-driven-design-a-tactical-ddd-implementation-5255d71d609f)
+  - [Clean Architecture in .NET: The Foundation That Changes Everything](https://medium.com/@compileandconquer/clean-architecture-in-net-the-foundation-that-changes-everything-6fb4425fa402)
+  - [Clean Architecture in .NET: Building the Domain & Application Layers](https://medium.com/@compileandconquer/clean-architecture-in-net-building-the-domain-application-layers-d97c6d4928bc)
+  - [https://medium.com/@compileandconquer/clean-architecture-in-net-infrastructure-presentation-layers-69b6fb37ac3f](https://medium.com/@compileandconquer/clean-architecture-in-net-infrastructure-presentation-layers-69b6fb37ac3f)
+  - [Clean Architecture in .NET: Testing, Best Practices & Final Thoughts](https://medium.com/@compileandconquer/clean-architecture-in-net-testing-best-practices-final-thoughts-1ae7316e0004)
+- [ ] Entity, EntityId, EFCore 통합
+- [ ] Event: Internal(Mediator) vs External(RabbitMQ)
 - [ ] 관찰 가능성 Adpater HTTP FastEndpoint
 - [ ] 관찰 가능성 Adpater DB EFCore
 - [ ] 관찰 가능성 Adpater DB Dapper
 - [ ] 관찰 가능성 Adpater MQ Wolverine
-- [ ] Adapters 프로젝트 분리
-
-### 1.0-alpah.4
-- [ ] MinVer
-- [ ] Entity, EntityId, EFCore 통합
-- [ ] DTO
-- [ ] Event: Internal(Mediator) vs External(RabbitMQ)
 
 ### 1.0-alpha.5
+- [ ] TngTech.ArchUnitNET 다이어그램
+- [ ] VSCode 개발 환경 구축: 테스트, 코드 커버리지, DevKit
+- [ ] 단일 호스트 예제
+- [ ] Unit of Work
+
+### 1.0-alpha.6
 - [ ] Cache: https://medium.com/@skd9000/how-we-fixed-our-cache-stampede-problem-3b2e6ac01b27
 - [ ] 값 객체 Validation 통합
 - [ ] Validation Pipeline만 Applications 레이어에 배치
@@ -36,18 +49,6 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
   - 한국어 검색(하이라이트)
   - 이미지 확대
 
-### 1.0-alpha.6
-- [ ] 프로젝트 변환
-  - [How We Fixed Our Cache Stampede Problem](https://medium.com/@aman.toumaj/mastering-domain-driven-design-a-tactical-ddd-implementation-5255d71d609f)
-- [ ] 프로젝트 변환
-  - [Clean Architecture in .NET: The Foundation That Changes Everything](https://medium.com/@compileandconquer/clean-architecture-in-net-the-foundation-that-changes-everything-6fb4425fa402)
-  - [Clean Architecture in .NET: Building the Domain & Application Layers](https://medium.com/@compileandconquer/clean-architecture-in-net-building-the-domain-application-layers-d97c6d4928bc)
-  - [https://medium.com/@compileandconquer/clean-architecture-in-net-infrastructure-presentation-layers-69b6fb37ac3f](https://medium.com/@compileandconquer/clean-architecture-in-net-infrastructure-presentation-layers-69b6fb37ac3f)
-  - [Clean Architecture in .NET: Testing, Best Practices & Final Thoughts](https://medium.com/@compileandconquer/clean-architecture-in-net-testing-best-practices-final-thoughts-1ae7316e0004)
-- [ ] TngTech.ArchUnitNET 다이어그램
-- [ ] VSCode 개발 환경 구축: 테스트, 코드 커버리지, DevKit
-- [ ] 단일 호스트 예제
-- [ ] Unit of Work
 
 ### 1.0-alpha.7
 - [ ] Aspire 통합
@@ -80,6 +81,28 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [ ] 관찰 가능성 문서화 및 테스트 자동화
 
 ## 할일
+- [ ] 16-Architecture-Test 을 15번 기반으로 개선
+- [ ] 확장 메서드 C# 14 기반으로 업데이트
+- [ ] Validate.cs -> Validate.{범주}.cs
+- [ ] LINQ 개선
+  ```
+  ● Update(Books\Implementing-Functional-ValueObject\Part1-ValueObject-Concepts\15-Validation-Fluent\ValidationFluent\ValueObjects\02-Comparable\02-CompositePrimitiveValueObjects\DateRange.cs)
+  ⎿  Added 3 lines, removed 3 lines
+      28          new DateRange(startDate, endDate);
+      29
+      30      public static Validation<Error, (DateTime Min, DateTime Max)> Validate(DateTime startDate, DateTime endDate) =>
+      31 -        from validStartDate in Validate<DateRange>.NotDefault(startDate)
+      32 -        from validEndDate in Validate<DateRange>.NotDefault(endDate)
+      33 -        from validRange in Validate<DateRange>.ValidStrictRange(validStartDate, validEndDate)
+      31 +        from validStartDate in (Validation<Error, DateTime>)Validate<DateRange>.NotDefault(startDate)
+      32 +        from validEndDate in (Validation<Error, DateTime>)Validate<DateRange>.NotDefault(endDate)
+      33 +        from validRange in (Validation<Error, (DateTime, DateTime)>)Validate<DateRange>.ValidStrictRange(validStartDate, validEndDate)
+  ```
+---
+- [ ] GitHub\DomainDrivenDesignUniversity-master\src\Shopway.Application\Utilities\FluentValidationUtilities.cs 코드 확인
+---
+- [x] 개선한 Error 표준 타입과 Validate 문서화 업데이트
+- [x] 값 객체 Validate 관련 내용 Book 추가
 - [x] 관찰 가능성 매뉴얼
 - [x] 도메인 에러 개선 DoaminErrorTtype
 - [x] DoaminErrorTtype Should 전체 타입 대상으로 확대
@@ -95,9 +118,8 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
   - 유효성 검사
   - Enum 타입
 - [x] Validate 성능 비교 예제 추가
-- [ ] GitHub\DomainDrivenDesignUniversity-master\src\Shopway.Application\Utilities\FluentValidationUtilities.cs 코드 확인
+- [x] `MustSatisfyValueObjectValidation<Request, decimal, decimal>` 타입 노출 최소화
 - [ ] Validation<Error, T> Validate(T value) 검토을 위한 아키텍처 테스트 구현
-- [ ] `MustSatisfyValueObjectValidation<Request, decimal, decimal>` 타입 노출 최소화
 ---
 - [ ] IAdapter 인터페이스 `개발 가이드 문서`
 ---
