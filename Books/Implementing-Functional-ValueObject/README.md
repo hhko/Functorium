@@ -6,7 +6,7 @@
 
 ## 이 책에 대하여
 
-이 책은 **함수형 프로그래밍 원칙을 적용한 값 객체(Value Object) 구현**을 단계별로 학습할 수 있도록 구성된 종합적인 교육 과정입니다. 기본적인 나눗셈 함수에서 시작하여 완성된 패턴까지, **28개의 실습 프로젝트**를 통해 함수형 값 객체의 모든 측면을 체계적으로 학습할 수 있습니다.
+이 책은 **함수형 프로그래밍 원칙을 적용한 값 객체(Value Object) 구현**을 단계별로 학습할 수 있도록 구성된 종합적인 교육 과정입니다. 기본적인 나눗셈 함수에서 시작하여 완성된 패턴까지, **29개의 실습 프로젝트**를 통해 함수형 값 객체의 모든 측면을 체계적으로 학습할 수 있습니다.
 
 > **단순한 예외 기반 함수에서 시작하여 타입 안전한 함수형 값 객체로 진화하는 과정을 함께 경험해보세요.**
 
@@ -59,7 +59,8 @@
 | 12 | [타입 안전한 열거형](Part1-ValueObject-Concepts/12-Type-Safe-Enums/) | 타입 안전한 열거형 |
 | 13 | [에러 코드](Part1-ValueObject-Concepts/13-Error-Code/) | 구조화된 에러 코드 |
 | 14 | [에러 코드 Fluent](Part1-ValueObject-Concepts/14-Error-Code-Fluent/) | DomainError 헬퍼 |
-| 15 | [아키텍처 테스트](Part1-ValueObject-Concepts/15-Architecture-Test/) | 아키텍처 테스트와 규칙 |
+| 15 | [FluentValidation 검증](Part1-ValueObject-Concepts/15-Validation-Fluent/) | FluentValidation 기반 검증 패턴 |
+| 16 | [아키텍처 테스트](Part1-ValueObject-Concepts/16-Architecture-Test/) | 아키텍처 테스트와 규칙 |
 
 ### Part 2: 검증 패턴 마스터
 
@@ -67,11 +68,11 @@
 
 | 장 | 주제 | 핵심 학습 내용 |
 |:---:|------|----------------|
-| 15 | [순차 검증 (Bind)](Part2-Validation-Patterns/01-Bind-Sequential-Validation/) | Bind를 통한 순차 검증 |
-| 16 | [병렬 검증 (Apply)](Part2-Validation-Patterns/02-Apply-Parallel-Validation/) | Apply를 통한 병렬 검증 |
-| 17 | [Apply와 Bind 조합](Part2-Validation-Patterns/03-Apply-Bind-Combined-Validation/) | Apply와 Bind 조합 |
-| 18 | [내부 Bind 외부 Apply](Part2-Validation-Patterns/04-Apply-Internal-Bind-Validation/) | 내부 Bind와 외부 Apply |
-| 19 | [내부 Apply 외부 Bind](Part2-Validation-Patterns/05-Bind-Internal-Apply-Validation/) | 내부 Apply와 외부 Bind |
+| 17 | [순차 검증 (Bind)](Part2-Validation-Patterns/01-Bind-Sequential-Validation/) | Bind를 통한 순차 검증 |
+| 18 | [병렬 검증 (Apply)](Part2-Validation-Patterns/02-Apply-Parallel-Validation/) | Apply를 통한 병렬 검증 |
+| 19 | [Apply와 Bind 조합](Part2-Validation-Patterns/03-Apply-Bind-Combined-Validation/) | Apply와 Bind 조합 |
+| 20 | [내부 Bind 외부 Apply](Part2-Validation-Patterns/04-Apply-Internal-Bind-Validation/) | 내부 Bind와 외부 Apply |
+| 21 | [내부 Apply 외부 Bind](Part2-Validation-Patterns/05-Bind-Internal-Apply-Validation/) | 내부 Apply와 외부 Bind |
 
 ### Part 3: 값 객체 패턴 완성
 
@@ -79,14 +80,14 @@
 
 | 장 | 주제 | 프레임워크 타입 |
 |:---:|------|----------------|
-| 20 | [SimpleValueObject](Part3-ValueObject-Patterns/01-SimpleValueObject/) | `SimpleValueObject<T>` |
-| 21 | [ComparableSimpleValueObject](Part3-ValueObject-Patterns/02-ComparableSimpleValueObject/) | `ComparableSimpleValueObject<T>` |
-| 22 | [ValueObject (Primitive)](Part3-ValueObject-Patterns/03-ValueObject-Primitive/) | `ValueObject` |
-| 23 | [ComparableValueObject (Primitive)](Part3-ValueObject-Patterns/04-ComparableValueObject-Primitive/) | `ComparableValueObject` |
-| 24 | [ValueObject (Composite)](Part3-ValueObject-Patterns/05-ValueObject-Composite/) | `ValueObject` |
-| 25 | [ComparableValueObject (Composite)](Part3-ValueObject-Patterns/06-ComparableValueObject-Composite/) | `ComparableValueObject` |
-| 26 | [TypeSafeEnum](Part3-ValueObject-Patterns/07-TypeSafeEnum/) | `SmartEnum + IValueObject` |
-| 27 | [아키텍처 테스트](Part3-ValueObject-Patterns/08-Architecture-Test/) | `ArchUnitNET` |
+| 22 | [SimpleValueObject](Part3-ValueObject-Patterns/01-SimpleValueObject/) | `SimpleValueObject<T>` |
+| 23 | [ComparableSimpleValueObject](Part3-ValueObject-Patterns/02-ComparableSimpleValueObject/) | `ComparableSimpleValueObject<T>` |
+| 24 | [ValueObject (Primitive)](Part3-ValueObject-Patterns/03-ValueObject-Primitive/) | `ValueObject` |
+| 25 | [ComparableValueObject (Primitive)](Part3-ValueObject-Patterns/04-ComparableValueObject-Primitive/) | `ComparableValueObject` |
+| 26 | [ValueObject (Composite)](Part3-ValueObject-Patterns/05-ValueObject-Composite/) | `ValueObject` |
+| 27 | [ComparableValueObject (Composite)](Part3-ValueObject-Patterns/06-ComparableValueObject-Composite/) | `ComparableValueObject` |
+| 28 | [TypeSafeEnum](Part3-ValueObject-Patterns/07-TypeSafeEnum/) | `SmartEnum + IValueObject` |
+| 29 | [아키텍처 테스트](Part3-ValueObject-Patterns/08-Architecture-Test/) | `ArchUnitNET` |
 
 ### Part 4: 실전 가이드
 
@@ -94,10 +95,10 @@
 
 | 장 | 주제 | 핵심 학습 내용 |
 |:---:|------|----------------|
-| 28 | [Functorium 프레임워크 통합](Part4-Practical-Guide/01-Functorium-Framework/) | Functorium 프레임워크와 값 객체 통합 |
-| 29 | [ORM 통합 패턴](Part4-Practical-Guide/02-ORM-Integration/) | EF Core와 값 객체 통합 |
-| 30 | [CQRS와 값 객체](Part4-Practical-Guide/03-CQRS-Integration/) | CQRS 패턴에서 값 객체 활용 |
-| 31 | [테스트 전략](Part4-Practical-Guide/04-Testing-Strategies/) | 값 객체 테스트 전략 |
+| 30 | [Functorium 프레임워크 통합](Part4-Practical-Guide/01-Functorium-Framework/) | Functorium 프레임워크와 값 객체 통합 |
+| 31 | [ORM 통합 패턴](Part4-Practical-Guide/02-ORM-Integration/) | EF Core와 값 객체 통합 |
+| 32 | [CQRS와 값 객체](Part4-Practical-Guide/03-CQRS-Integration/) | CQRS 패턴에서 값 객체 활용 |
+| 33 | [테스트 전략](Part4-Practical-Guide/04-Testing-Strategies/) | 값 객체 테스트 전략 |
 
 ### Part 5: 도메인별 실전 예제
 
@@ -105,10 +106,10 @@
 
 | 장 | 주제 | 값 객체 예제 |
 |:---:|------|-------------|
-| 32 | [이커머스 도메인](Part5-Domain-Examples/01-Ecommerce-Domain/) | Money, ProductCode, Quantity, OrderStatus |
-| 33 | [금융 도메인](Part5-Domain-Examples/02-Finance-Domain/) | AccountNumber, InterestRate, ExchangeRate |
-| 34 | [사용자 관리 도메인](Part5-Domain-Examples/03-User-Management-Domain/) | Email, Password, PhoneNumber |
-| 35 | [일정/예약 도메인](Part5-Domain-Examples/04-Scheduling-Domain/) | DateRange, TimeSlot, Duration |
+| 34 | [이커머스 도메인](Part5-Domain-Examples/01-Ecommerce-Domain/) | Money, ProductCode, Quantity, OrderStatus |
+| 35 | [금융 도메인](Part5-Domain-Examples/02-Finance-Domain/) | AccountNumber, InterestRate, ExchangeRate |
+| 36 | [사용자 관리 도메인](Part5-Domain-Examples/03-User-Management-Domain/) | Email, Password, PhoneNumber |
+| 37 | [일정/예약 도메인](Part5-Domain-Examples/04-Scheduling-Domain/) | DateRange, TimeSlot, Duration |
 
 ### [부록](Appendix/)
 
@@ -131,7 +132,9 @@
      ↓
 10장: 검증된 값 생성   →  11장: 프레임워크 타입  →  12장: 타입 안전 열거형
      ↓
-13장: 에러 코드        →  14장: 에러 코드 Fluent  →  15장: 아키텍처 테스트
+13장: 에러 코드        →  14장: 에러 코드 Fluent  →  15장: FluentValidation
+     ↓
+16장: 아키텍처 테스트
 ```
 
 ---
@@ -180,12 +183,13 @@ IValueObject (인터페이스 - 명명 규칙)
 ```
 Implementing-Functional-ValueObject/
 ├── Part0-Introduction/        # Part 0: 서론
-├── Part1-ValueObject-Concepts/  # Part 1: 값 객체 개념 이해 (15개)
+├── Part1-ValueObject-Concepts/  # Part 1: 값 객체 개념 이해 (16개)
 │   ├── 01-Basic-Divide/
 │   ├── 02-Defensive-Programming/
 │   ├── ...
 │   ├── 14-Error-Code-Fluent/
-│   └── 15-Architecture-Test/
+│   ├── 15-Validation-Fluent/
+│   └── 16-Architecture-Test/
 ├── Part2-Validation-Patterns/   # Part 2: 검증 패턴 마스터 (5개)
 │   ├── 01-Bind-Sequential-Validation/
 │   ├── ...
@@ -256,7 +260,7 @@ dotnet test
 
 ### 테스트 프로젝트 구조
 
-**Part 1: 값 객체 개념 이해** (15개)
+**Part 1: 값 객체 개념 이해** (16개)
 
 | 장 | 테스트 프로젝트 | 주요 테스트 내용 |
 |:---:|----------------|-----------------|
@@ -274,47 +278,49 @@ dotnet test
 | 12 | `TypeSafeEnums.Tests.Unit` | 타입 안전 열거형 |
 | 13 | `ErrorCode.Tests.Unit` | 에러 코드 |
 | 14 | `ErrorCodeFluent.Tests.Unit` | DomainError 헬퍼 |
-| 15 | `ArchitectureTest.Tests.Unit` | 아키텍처 테스트 |
+| 15 | `ValidationFluent.Tests.Unit` | FluentValidation 검증 패턴 |
+| 16 | `ArchitectureTest.Tests.Unit` | 아키텍처 테스트 |
 
 **Part 2: 검증 패턴 마스터** (5개)
 
 | 장 | 테스트 프로젝트 | 주요 테스트 내용 |
 |:---:|----------------|-----------------:|
-| 15 | `BindSequentialValidation.Tests.Unit` | Bind 순차 검증 |
-| 16 | `ApplyParallelValidation.Tests.Unit` | Apply 병렬 검증 |
-| 17 | `ApplyBindCombinedValidation.Tests.Unit` | Apply와 Bind 조합 |
-| 18 | `ApplyInternalBindValidation.Tests.Unit` | 내부 Bind 외부 Apply |
-| 19 | `BindInternalApplyValidation.Tests.Unit` | 내부 Apply 외부 Bind |
+| 17 | `BindSequentialValidation.Tests.Unit` | Bind 순차 검증 |
+| 18 | `ApplyParallelValidation.Tests.Unit` | Apply 병렬 검증 |
+| 19 | `ApplyBindCombinedValidation.Tests.Unit` | Apply와 Bind 조합 |
+| 20 | `ApplyInternalBindValidation.Tests.Unit` | 내부 Bind 외부 Apply |
+| 21 | `BindInternalApplyValidation.Tests.Unit` | 내부 Apply 외부 Bind |
 
-**Part 3: 값 객체 패턴 완성** (7개)
+**Part 3: 값 객체 패턴 완성** (8개)
 
 | 장 | 테스트 프로젝트 | 주요 테스트 내용 |
 |:---:|----------------|-----------------:|
-| 20 | `SimpleValueObject.Tests.Unit` | 단일 값 래퍼 테스트 |
-| 21 | `ComparableSimpleValueObject.Tests.Unit` | 비교 가능 단일 값 테스트 |
-| 22 | `ValueObjectPrimitive.Tests.Unit` | 기본 타입 값 객체 |
-| 23 | `ComparableValueObjectPrimitive.Tests.Unit` | 비교 가능 기본 타입 |
-| 24 | `ValueObjectComposite.Tests.Unit` | 복합 값 객체 |
-| 25 | `ComparableValueObjectComposite.Tests.Unit` | 비교 가능 복합 값 객체 |
-| 26 | `TypeSafeEnum.Tests.Unit` | 타입 안전 열거형 |
+| 22 | `SimpleValueObject.Tests.Unit` | 단일 값 래퍼 테스트 |
+| 23 | `ComparableSimpleValueObject.Tests.Unit` | 비교 가능 단일 값 테스트 |
+| 24 | `ValueObjectPrimitive.Tests.Unit` | 기본 타입 값 객체 |
+| 25 | `ComparableValueObjectPrimitive.Tests.Unit` | 비교 가능 기본 타입 |
+| 26 | `ValueObjectComposite.Tests.Unit` | 복합 값 객체 |
+| 27 | `ComparableValueObjectComposite.Tests.Unit` | 비교 가능 복합 값 객체 |
+| 28 | `TypeSafeEnum.Tests.Unit` | 타입 안전 열거형 |
+| 29 | `ArchitectureTest` | 아키텍처 테스트 |
 
 **Part 4: 실전 가이드** (4개)
 
 | 장 | 테스트 프로젝트 | 주요 테스트 내용 |
 |:---:|----------------|-----------------|
-| 28 | `FunctoriumFramework.Tests.Unit` | 프레임워크 타입 통합 테스트 |
-| 29 | `OrmIntegration.Tests.Unit` | EF Core ORM 패턴 테스트 |
-| 30 | `CqrsIntegration.Tests.Unit` | CQRS 핸들러 테스트 |
-| 31 | `TestingStrategies.Tests.Unit` | 테스트 패턴 메타 테스트 |
+| 30 | `FunctoriumFramework.Tests.Unit` | 프레임워크 타입 통합 테스트 |
+| 31 | `OrmIntegration.Tests.Unit` | EF Core ORM 패턴 테스트 |
+| 32 | `CqrsIntegration.Tests.Unit` | CQRS 핸들러 테스트 |
+| 33 | `TestingStrategies.Tests.Unit` | 테스트 패턴 메타 테스트 |
 
 **Part 5: 도메인별 실전 예제** (4개)
 
 | 장 | 테스트 프로젝트 | 주요 테스트 내용 |
 |:---:|----------------|-----------------|
-| 32 | `EcommerceDomain.Tests.Unit` | 이커머스 값 객체 테스트 |
-| 33 | `FinanceDomain.Tests.Unit` | 금융 값 객체 테스트 |
-| 34 | `UserManagementDomain.Tests.Unit` | 사용자 관리 값 객체 테스트 |
-| 35 | `SchedulingDomain.Tests.Unit` | 일정 관리 값 객체 테스트 |
+| 34 | `EcommerceDomain.Tests.Unit` | 이커머스 값 객체 테스트 |
+| 35 | `FinanceDomain.Tests.Unit` | 금융 값 객체 테스트 |
+| 36 | `UserManagementDomain.Tests.Unit` | 사용자 관리 값 객체 테스트 |
+| 37 | `SchedulingDomain.Tests.Unit` | 일정 관리 값 객체 테스트 |
 
 ### 테스트 명명 규칙
 
