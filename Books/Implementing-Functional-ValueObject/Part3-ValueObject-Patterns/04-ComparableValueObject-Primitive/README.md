@@ -207,7 +207,7 @@ public sealed class DateRange : ComparableValueObject
             Validate(startDate, endDate),
             validValues => new DateRange(validValues.startDate, validValues.endDate));
 
-    internal static DateRange CreateFromValidated((DateTime startDate, DateTime endDate) validatedValues) =>
+    public static DateRange CreateFromValidated((DateTime startDate, DateTime endDate) validatedValues) =>
         new DateRange(validatedValues.startDate, validatedValues.endDate);
 
     // 날짜 범위 검증

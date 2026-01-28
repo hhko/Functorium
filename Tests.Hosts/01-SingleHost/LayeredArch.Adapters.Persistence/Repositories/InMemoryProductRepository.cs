@@ -17,7 +17,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories;
 [GeneratePipeline]
 public class InMemoryProductRepository : IProductRepository
 {
-    private static readonly ConcurrentDictionary<Guid, Product> _products = new();
+    private static readonly ConcurrentDictionary<ProductId, Product> _products = new();
 
     /// <summary>
     /// 관찰 가능성 로그를 위한 요청 카테고리
@@ -41,7 +41,7 @@ public class InMemoryProductRepository : IProductRepository
         });
     }
 
-    public virtual FinT<IO, Product> GetById(Guid id)
+    public virtual FinT<IO, Product> GetById(ProductId id)
     {
         // Pipeline이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>

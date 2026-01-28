@@ -7,7 +7,7 @@ using static Functorium.Domains.Errors.DomainErrorType;
 
 namespace Functorium.Domains.ValueObjects.Validations;
 
-public static partial class Validate<TValueObject>
+public static partial class ValidationRules<TValueObject>
 {
     /// <summary>
     /// 문자열이 비어있지 않은지 검증합니다.

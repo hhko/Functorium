@@ -1,8 +1,8 @@
 using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
-using DomainError = Functorium.Domains.ValueObjects.DomainError;
-using DomainErrorType = Functorium.Domains.ValueObjects.DomainErrorType;
+using DomainError = Functorium.Domains.Errors.DomainError;
+using DomainErrorType = Functorium.Domains.Errors.DomainErrorType;
 
 namespace ArchitectureTest.ValueObjects.ComparableNot.CompositePrimitiveValueObjects;
 
@@ -46,7 +46,7 @@ public sealed class Coordinate : ValueObject
     /// <param name="x">이미 검증된 X 좌표</param>
     /// <param name="y">이미 검증된 Y 좌표</param>
     /// <returns>생성된 Coordinate 인스턴스</returns>
-    internal static Coordinate CreateFromValidated(int x, int y) =>
+    public static Coordinate CreateFromValidated(int x, int y) =>
         new Coordinate(x, y);
 
     /// <summary>

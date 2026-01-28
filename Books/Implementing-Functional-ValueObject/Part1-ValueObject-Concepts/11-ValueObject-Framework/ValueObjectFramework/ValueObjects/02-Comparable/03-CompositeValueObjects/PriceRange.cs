@@ -51,7 +51,7 @@ public sealed class PriceRange : ComparableValueObject
     /// <param name="minPrice">최소 가격 값 객체</param>
     /// <param name="maxPrice">최대 가격 값 객체</param>
     /// <returns>생성 결과</returns>
-    internal static PriceRange CreateFromValidated(Price minPrice, Price maxPrice) =>
+    public static PriceRange CreateFromValidated(Price minPrice, Price maxPrice) =>
         new PriceRange(minPrice, maxPrice);
 
     /// <summary>

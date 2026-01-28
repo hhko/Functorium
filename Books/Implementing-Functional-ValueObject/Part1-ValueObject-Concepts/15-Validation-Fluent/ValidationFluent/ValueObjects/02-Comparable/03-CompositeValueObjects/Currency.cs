@@ -43,7 +43,7 @@ public sealed class Currency
             .Map(FromValue)
             .ToFin();
 
-    internal static Currency CreateFromValidated(string currencyCode) =>
+    public static Currency CreateFromValidated(string currencyCode) =>
         FromValue(currencyCode);
 
     public static Validation<Error, string> Validate(string currencyCode) =>

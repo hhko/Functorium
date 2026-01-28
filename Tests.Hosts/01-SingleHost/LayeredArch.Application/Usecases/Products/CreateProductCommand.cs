@@ -25,7 +25,7 @@ public sealed class CreateProductCommand
     /// Command Response - 생성된 상품 정보
     /// </summary>
     public sealed record Response(
-        Guid ProductId,
+        string ProductId,
         string Name,
         string Description,
         decimal Price,
@@ -76,15 +76,13 @@ public sealed class CreateProductCommand
             FinT<IO, Response> usecase =
                 from exists in _productRepository.ExistsByName(request.Name)
                 from _ in guard(!exists, ApplicationErrors.ProductNameAlreadyExists(request.Name))
-                from product in _productRepository.Create(new Product(
-                    Id: Guid.NewGuid(),
-                    Name: request.Name,
-                    Description: request.Description,
-                    Price: request.Price,
-                    StockQuantity: request.StockQuantity,
-                    CreatedAt: DateTime.UtcNow))
+                from product in _productRepository.Create(Product.Create(
+                    name: request.Name,
+                    description: request.Description,
+                    price: request.Price,
+                    stockQuantity: request.StockQuantity))
                 select new Response(
-                    product.Id,
+                    product.Id.ToString(),
                     product.Name,
                     product.Description,
                     product.Price,

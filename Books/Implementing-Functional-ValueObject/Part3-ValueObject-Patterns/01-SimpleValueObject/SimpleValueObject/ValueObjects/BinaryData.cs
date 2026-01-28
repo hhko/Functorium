@@ -1,6 +1,7 @@
 using LanguageExt;
 using LanguageExt.Common;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.Errors;
 
 namespace SimpleValueObject.ValueObjects;
 
@@ -16,7 +17,7 @@ public sealed class BinaryData : SimpleValueObject<byte[]>
     public static Fin<BinaryData> Create(byte[] value) =>
         CreateFromValidation(Validate(value), v => new BinaryData(v));
 
-    internal static BinaryData CreateFromValidated(byte[] validatedValue) =>
+    public static BinaryData CreateFromValidated(byte[] validatedValue) =>
         new(validatedValue);
 
     public static Validation<Error, byte[]> Validate(byte[] value) =>

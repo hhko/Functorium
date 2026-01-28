@@ -43,7 +43,7 @@ public sealed class GetProductByIdQuery
         {
             // ProductId Value Object 검증
             RuleFor(x => x.ProductId)
-                .MustSatisfyValueObjectValidation<Request, Guid, Guid>(ProductId.Validate);
+                .MustSatisfyValidation(ProductId.Validate);
         }
     }
 

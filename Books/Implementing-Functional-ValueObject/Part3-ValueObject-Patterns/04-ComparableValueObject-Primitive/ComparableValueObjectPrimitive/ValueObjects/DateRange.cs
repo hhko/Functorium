@@ -1,6 +1,7 @@
 using LanguageExt;
 using LanguageExt.Common;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.Errors;
 
 namespace ComparableValueObjectPrimitive.ValueObjects;
 
@@ -23,7 +24,7 @@ public sealed class DateRange : ComparableValueObject
     public static Fin<DateRange> Create(DateTime startDate, DateTime endDate) =>
         CreateFromValidation(Validate(startDate, endDate), v => new DateRange(v.startDate, v.endDate));
 
-    internal static DateRange CreateFromValidated((DateTime startDate, DateTime endDate) validatedValues) =>
+    public static DateRange CreateFromValidated((DateTime startDate, DateTime endDate) validatedValues) =>
         new(validatedValues.startDate, validatedValues.endDate);
 
     public static Validation<Error, (DateTime startDate, DateTime endDate)> Validate(DateTime startDate, DateTime endDate) =>

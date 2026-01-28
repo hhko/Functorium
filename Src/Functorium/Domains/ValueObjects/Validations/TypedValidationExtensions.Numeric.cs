@@ -17,7 +17,7 @@ public static partial class TypedValidationExtensions
     public static TypedValidation<TValueObject, T> ThenNotZero<TValueObject, T>(
         this TypedValidation<TValueObject, T> validation)
         where T : notnull, INumber<T> =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.NotZeroInternal<T>(v)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.NotZeroInternal<T>(v)));
 
     /// <summary>
     /// 숫자가 음수가 아닌지 체인으로 검증합니다.
@@ -30,7 +30,7 @@ public static partial class TypedValidationExtensions
     public static TypedValidation<TValueObject, T> ThenNonNegative<TValueObject, T>(
         this TypedValidation<TValueObject, T> validation)
         where T : notnull, INumber<T> =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.NonNegativeInternal<T>(v)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.NonNegativeInternal<T>(v)));
 
     /// <summary>
     /// 숫자가 양수인지 체인으로 검증합니다.
@@ -43,7 +43,7 @@ public static partial class TypedValidationExtensions
     public static TypedValidation<TValueObject, T> ThenPositive<TValueObject, T>(
         this TypedValidation<TValueObject, T> validation)
         where T : notnull, INumber<T> =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.PositiveInternal<T>(v)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.PositiveInternal<T>(v)));
 
     /// <summary>
     /// 숫자가 지정된 범위 내에 있는지 체인으로 검증합니다.
@@ -60,7 +60,7 @@ public static partial class TypedValidationExtensions
         T min,
         T max)
         where T : notnull, INumber<T> =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.BetweenInternal<T>(v, min, max)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.BetweenInternal<T>(v, min, max)));
 
     /// <summary>
     /// 숫자가 최대값을 초과하지 않는지 체인으로 검증합니다.
@@ -75,7 +75,7 @@ public static partial class TypedValidationExtensions
         this TypedValidation<TValueObject, T> validation,
         T max)
         where T : notnull, INumber<T> =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.AtMostInternal<T>(v, max)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.AtMostInternal<T>(v, max)));
 
     /// <summary>
     /// 숫자가 최소값 이상인지 체인으로 검증합니다.
@@ -90,5 +90,5 @@ public static partial class TypedValidationExtensions
         this TypedValidation<TValueObject, T> validation,
         T min)
         where T : notnull, INumber<T> =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.AtLeastInternal<T>(v, min)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.AtLeastInternal<T>(v, min)));
 }

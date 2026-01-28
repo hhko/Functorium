@@ -15,5 +15,5 @@ public static partial class TypedValidationExtensions
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TypedValidation<TValueObject, TElement[]> ThenNotEmptyArray<TValueObject, TElement>(
         this TypedValidation<TValueObject, TElement[]> validation) =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.NotEmptyArrayInternal<TElement>(v)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.NotEmptyArrayInternal<TElement>(v)));
 }

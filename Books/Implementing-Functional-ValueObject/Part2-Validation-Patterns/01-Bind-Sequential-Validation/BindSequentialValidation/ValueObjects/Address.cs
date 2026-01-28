@@ -1,4 +1,5 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -28,7 +29,7 @@ public sealed class Address : ValueObject
             Validate(street, city, postalCode, country),
             v => new Address(v.Street, v.City, v.PostalCode, v.Country));
 
-    internal static Address CreateFromValidated((string Street, string City, string PostalCode, string Country) v) =>
+    public static Address CreateFromValidated((string Street, string City, string PostalCode, string Country) v) =>
         new(v.Street, v.City, v.PostalCode, v.Country);
 
     // 순차 검증 - Bind 패턴 (의존 검증 규칙들을 순차적으로 실행)

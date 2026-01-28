@@ -44,7 +44,7 @@ public sealed class Address : ComparableValueObject
     /// </summary>
     /// <param name="validatedValues">검증된 주소 값들</param>
     /// <returns>Address 값 객체</returns>
-    internal static Address CreateFromValidated((Street Street, City City, PostalCode PostalCode) validatedValues) =>
+    public static Address CreateFromValidated((Street Street, City City, PostalCode PostalCode) validatedValues) =>
         new Address(validatedValues.Street, validatedValues.City, validatedValues.PostalCode);
 
     /// <summary>

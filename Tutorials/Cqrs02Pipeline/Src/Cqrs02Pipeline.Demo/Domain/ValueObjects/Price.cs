@@ -1,4 +1,5 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
 
 namespace Cqrs02Pipeline.Demo.Domain.ValueObjects;
 
@@ -20,5 +21,5 @@ public sealed class Price : ComparableSimpleValueObject<decimal>
     /// - 양수만 허용
     /// </summary>
     public static Validation<Error, decimal> Validate(decimal value) =>
-        Validate<Price>.Positive(value);
+        ValidationRules<Price>.Positive(value);
 }

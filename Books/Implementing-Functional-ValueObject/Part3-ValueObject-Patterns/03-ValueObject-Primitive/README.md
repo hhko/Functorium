@@ -181,7 +181,7 @@ public sealed class Coordinate : ValueObject
             Validate(x, y),
             validValues => new Coordinate(validValues.x, validValues.y));
 
-    internal static Coordinate CreateFromValidated((int x, int y) validatedValues) =>
+    public static Coordinate CreateFromValidated((int x, int y) validatedValues) =>
         new Coordinate(validatedValues.x, validatedValues.y);
 
     // LINQ Expression을 활용한 복합 검증

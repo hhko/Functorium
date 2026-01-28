@@ -52,7 +52,7 @@ public sealed class Address : ValueObject
     /// <param name="city">이미 검증된 도시명</param>
     /// <param name="postalCode">이미 검증된 우편번호</param>
     /// <returns>생성된 Address 인스턴스</returns>
-    internal static Address CreateFromValidated(Street street, City city, PostalCode postalCode) =>
+    public static Address CreateFromValidated(Street street, City city, PostalCode postalCode) =>
         new Address(street, city, postalCode);
 
     /// <summary>

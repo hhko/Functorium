@@ -1,6 +1,7 @@
 using LanguageExt;
 using LanguageExt.Common;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.Errors;
 
 namespace ValueObjectComposite.ValueObjects;
 
@@ -15,7 +16,7 @@ public sealed class EmailDomain : SimpleValueObject<string>
     public static Fin<EmailDomain> Create(string value) =>
         CreateFromValidation(Validate(value), v => new EmailDomain(v));
 
-    internal static EmailDomain CreateFromValidated(string validatedValue) =>
+    public static EmailDomain CreateFromValidated(string validatedValue) =>
         new(validatedValue);
 
     public static Validation<Error, string> Validate(string value) =>

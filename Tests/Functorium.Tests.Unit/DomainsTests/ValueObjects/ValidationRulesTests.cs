@@ -29,7 +29,7 @@ public class ValidationRulesTests
         var value = "valid";
 
         // Act
-        var actual = Validate<SampleValueObject>.NotEmpty(value);
+        var actual = ValidationRules<SampleValueObject>.NotEmpty(value);
 
         // Assert
         actual.Value.IsSuccess.ShouldBeTrue();
@@ -48,7 +48,7 @@ public class ValidationRulesTests
         var testValue = value ?? "";
 
         // Act
-        var actual = Validate<SampleValueObject>.NotEmpty(testValue);
+        var actual = ValidationRules<SampleValueObject>.NotEmpty(testValue);
 
         // Assert
         actual.Value.IsFail.ShouldBeTrue();
@@ -73,7 +73,7 @@ public class ValidationRulesTests
         var value = "12345";
 
         // Act
-        var actual = Validate<SampleValueObject>.MinLength(value, 5);
+        var actual = ValidationRules<SampleValueObject>.MinLength(value, 5);
 
         // Assert
         actual.Value.IsSuccess.ShouldBeTrue();
@@ -86,7 +86,7 @@ public class ValidationRulesTests
         var value = "1234";
 
         // Act
-        var actual = Validate<SampleValueObject>.MinLength(value, 5);
+        var actual = ValidationRules<SampleValueObject>.MinLength(value, 5);
 
         // Assert
         actual.Value.IsFail.ShouldBeTrue();
@@ -110,7 +110,7 @@ public class ValidationRulesTests
         var value = "12345";
 
         // Act
-        var actual = Validate<SampleValueObject>.MaxLength(value, 5);
+        var actual = ValidationRules<SampleValueObject>.MaxLength(value, 5);
 
         // Assert
         actual.Value.IsSuccess.ShouldBeTrue();
@@ -123,7 +123,7 @@ public class ValidationRulesTests
         var value = "123456";
 
         // Act
-        var actual = Validate<SampleValueObject>.MaxLength(value, 5);
+        var actual = ValidationRules<SampleValueObject>.MaxLength(value, 5);
 
         // Assert
         actual.Value.IsFail.ShouldBeTrue();
@@ -147,7 +147,7 @@ public class ValidationRulesTests
         var value = "ABC";
 
         // Act
-        var actual = Validate<SampleValueObject>.ExactLength(value, 3);
+        var actual = ValidationRules<SampleValueObject>.ExactLength(value, 3);
 
         // Assert
         actual.Value.IsSuccess.ShouldBeTrue();
@@ -159,7 +159,7 @@ public class ValidationRulesTests
     public void ExactLength_ReturnsFailure_WhenLengthDoesNotMatch(string value, int expected)
     {
         // Act
-        var actual = Validate<SampleValueObject>.ExactLength(value, expected);
+        var actual = ValidationRules<SampleValueObject>.ExactLength(value, expected);
 
         // Assert
         actual.Value.IsFail.ShouldBeTrue();
@@ -185,7 +185,7 @@ public class ValidationRulesTests
         var value = "test@example.com";
 
         // Act
-        var actual = Validate<SampleValueObject>.Matches(value, EmailPattern);
+        var actual = ValidationRules<SampleValueObject>.Matches(value, EmailPattern);
 
         // Assert
         actual.Value.IsSuccess.ShouldBeTrue();
@@ -198,7 +198,7 @@ public class ValidationRulesTests
         var value = "invalid-email";
 
         // Act
-        var actual = Validate<SampleValueObject>.Matches(value, EmailPattern);
+        var actual = ValidationRules<SampleValueObject>.Matches(value, EmailPattern);
 
         // Assert
         actual.Value.IsFail.ShouldBeTrue();
@@ -219,7 +219,7 @@ public class ValidationRulesTests
         var customMessage = "Custom error message";
 
         // Act
-        var actual = Validate<SampleValueObject>.Matches(value, EmailPattern, customMessage);
+        var actual = ValidationRules<SampleValueObject>.Matches(value, EmailPattern, customMessage);
 
         // Assert
         actual.Value.IsFail.ShouldBeTrue();
@@ -239,7 +239,7 @@ public class ValidationRulesTests
     public void NonNegative_ReturnsSuccess_WhenValueIsNonNegative(decimal value)
     {
         // Act
-        var actual = Validate<NumericValueObject>.NonNegative(value);
+        var actual = ValidationRules<NumericValueObject>.NonNegative(value);
 
         // Assert
         actual.Value.IsSuccess.ShouldBeTrue();
@@ -251,7 +251,7 @@ public class ValidationRulesTests
     public void NonNegative_ReturnsFailure_WhenValueIsNegative(decimal value)
     {
         // Act
-        var actual = Validate<NumericValueObject>.NonNegative(value);
+        var actual = ValidationRules<NumericValueObject>.NonNegative(value);
 
         // Assert
         actual.Value.IsFail.ShouldBeTrue();
@@ -274,7 +274,7 @@ public class ValidationRulesTests
     public void Positive_ReturnsSuccess_WhenValueIsPositive(decimal value)
     {
         // Act
-        var actual = Validate<NumericValueObject>.Positive(value);
+        var actual = ValidationRules<NumericValueObject>.Positive(value);
 
         // Assert
         actual.Value.IsSuccess.ShouldBeTrue();
@@ -286,7 +286,7 @@ public class ValidationRulesTests
     public void Positive_ReturnsFailure_WhenValueIsNotPositive(decimal value)
     {
         // Act
-        var actual = Validate<NumericValueObject>.Positive(value);
+        var actual = ValidationRules<NumericValueObject>.Positive(value);
 
         // Assert
         actual.Value.IsFail.ShouldBeTrue();
@@ -310,7 +310,7 @@ public class ValidationRulesTests
     public void Between_ReturnsSuccess_WhenValueInRange(decimal value, decimal min, decimal max)
     {
         // Act
-        var actual = Validate<NumericValueObject>.Between(value, min, max);
+        var actual = ValidationRules<NumericValueObject>.Between(value, min, max);
 
         // Assert
         actual.Value.IsSuccess.ShouldBeTrue();
@@ -322,7 +322,7 @@ public class ValidationRulesTests
     public void Between_ReturnsFailure_WhenValueOutOfRange(decimal value, decimal min, decimal max)
     {
         // Act
-        var actual = Validate<NumericValueObject>.Between(value, min, max);
+        var actual = ValidationRules<NumericValueObject>.Between(value, min, max);
 
         // Assert
         actual.Value.IsFail.ShouldBeTrue();
@@ -345,7 +345,7 @@ public class ValidationRulesTests
     public void AtMost_ReturnsSuccess_WhenValueWithinMaximum(decimal value, decimal max)
     {
         // Act
-        var actual = Validate<NumericValueObject>.AtMost(value, max);
+        var actual = ValidationRules<NumericValueObject>.AtMost(value, max);
 
         // Assert
         actual.Value.IsSuccess.ShouldBeTrue();
@@ -359,7 +359,7 @@ public class ValidationRulesTests
         var max = 100m;
 
         // Act
-        var actual = Validate<NumericValueObject>.AtMost(value, max);
+        var actual = ValidationRules<NumericValueObject>.AtMost(value, max);
 
         // Assert
         actual.Value.IsFail.ShouldBeTrue();
@@ -382,7 +382,7 @@ public class ValidationRulesTests
     public void AtLeast_ReturnsSuccess_WhenValueMeetsMinimum(decimal value, decimal min)
     {
         // Act
-        var actual = Validate<NumericValueObject>.AtLeast(value, min);
+        var actual = ValidationRules<NumericValueObject>.AtLeast(value, min);
 
         // Assert
         actual.Value.IsSuccess.ShouldBeTrue();
@@ -396,7 +396,7 @@ public class ValidationRulesTests
         var min = 10m;
 
         // Act
-        var actual = Validate<NumericValueObject>.AtLeast(value, min);
+        var actual = ValidationRules<NumericValueObject>.AtLeast(value, min);
 
         // Assert
         actual.Value.IsFail.ShouldBeTrue();
@@ -420,7 +420,7 @@ public class ValidationRulesTests
         var value = "VALID";
 
         // Act
-        var actual = Validate<SampleValueObject>.Must(
+        var actual = ValidationRules<SampleValueObject>.Must(
             value,
             v => v == v.ToUpperInvariant(),
             new DomainErrorType.NotUpperCase(),
@@ -437,7 +437,7 @@ public class ValidationRulesTests
         var value = "invalid";
 
         // Act
-        var actual = Validate<SampleValueObject>.Must(
+        var actual = ValidationRules<SampleValueObject>.Must(
             value,
             v => v == v.ToUpperInvariant(),
             new DomainErrorType.NotUpperCase(),
@@ -465,7 +465,7 @@ public class ValidationRulesTests
         string value = "valid";
 
         // Act
-        var actual = Validate<SampleValueObject>.NotNull(value);
+        var actual = ValidationRules<SampleValueObject>.NotNull(value);
 
         // Assert
         actual.Value.IsSuccess.ShouldBeTrue();
@@ -481,7 +481,7 @@ public class ValidationRulesTests
         string? value = null;
 
         // Act
-        var actual = Validate<SampleValueObject>.NotNull(value);
+        var actual = ValidationRules<SampleValueObject>.NotNull(value);
 
         // Assert
         actual.Value.IsFail.ShouldBeTrue();
@@ -501,7 +501,7 @@ public class ValidationRulesTests
         int? value = 42;
 
         // Act
-        var actual = Validate<NumericValueObject>.NotNull(value);
+        var actual = ValidationRules<NumericValueObject>.NotNull(value);
 
         // Assert
         actual.Value.IsSuccess.ShouldBeTrue();
@@ -517,7 +517,7 @@ public class ValidationRulesTests
         int? value = null;
 
         // Act
-        var actual = Validate<NumericValueObject>.NotNull(value);
+        var actual = ValidationRules<NumericValueObject>.NotNull(value);
 
         // Assert
         actual.Value.IsFail.ShouldBeTrue();
@@ -541,7 +541,7 @@ public class ValidationRulesTests
         var value = "UPPERCASE";
 
         // Act
-        var actual = Validate<SampleValueObject>.IsUpperCase(value);
+        var actual = ValidationRules<SampleValueObject>.IsUpperCase(value);
 
         // Assert
         actual.Value.IsSuccess.ShouldBeTrue();
@@ -556,7 +556,7 @@ public class ValidationRulesTests
     public void IsUpperCase_ReturnsFailure_WhenValueIsNotUpperCase(string value)
     {
         // Act
-        var actual = Validate<SampleValueObject>.IsUpperCase(value);
+        var actual = ValidationRules<SampleValueObject>.IsUpperCase(value);
 
         // Assert
         actual.Value.IsFail.ShouldBeTrue();
@@ -580,7 +580,7 @@ public class ValidationRulesTests
         var value = "lowercase";
 
         // Act
-        var actual = Validate<SampleValueObject>.IsLowerCase(value);
+        var actual = ValidationRules<SampleValueObject>.IsLowerCase(value);
 
         // Assert
         actual.Value.IsSuccess.ShouldBeTrue();
@@ -595,7 +595,7 @@ public class ValidationRulesTests
     public void IsLowerCase_ReturnsFailure_WhenValueIsNotLowerCase(string value)
     {
         // Act
-        var actual = Validate<SampleValueObject>.IsLowerCase(value);
+        var actual = ValidationRules<SampleValueObject>.IsLowerCase(value);
 
         // Assert
         actual.Value.IsFail.ShouldBeTrue();

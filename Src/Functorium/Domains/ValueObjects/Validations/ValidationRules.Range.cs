@@ -7,7 +7,7 @@ using static Functorium.Domains.Errors.DomainErrorType;
 
 namespace Functorium.Domains.ValueObjects.Validations;
 
-public static partial class Validate<TValueObject>
+public static partial class ValidationRules<TValueObject>
 {
     /// <summary>
     /// 범위가 유효한지 검증합니다 (min &lt;= max).

@@ -20,7 +20,7 @@ public sealed class MoneyAmount : ComparableSimpleValueObject<decimal>
             Validate(value),
             validValue => new MoneyAmount(validValue));
 
-    internal static MoneyAmount CreateFromValidated(decimal validatedValue) =>
+    public static MoneyAmount CreateFromValidated(decimal validatedValue) =>
         new MoneyAmount(validatedValue);
 
     public static Validation<Error, decimal> Validate(decimal value) =>

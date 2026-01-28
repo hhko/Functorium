@@ -172,7 +172,7 @@ public sealed class PostalCode : SimpleValueObject<string>
     public static Fin<PostalCode> Create(string value) =>
         CreateFromValidation(Validate(value), validValue => new PostalCode(validValue));
 
-    internal static PostalCode CreateFromValidated(string validatedValue) =>
+    public static PostalCode CreateFromValidated(string validatedValue) =>
         new PostalCode(validatedValue);
 
     public static Validation<Error, string> Validate(string value) =>
@@ -203,7 +203,7 @@ public sealed class PostalCode : SimpleValueObject<string>
     public static Fin<PostalCode> Create(string value) =>
         CreateFromValidation(Validate(value), validValue => new PostalCode(validValue));
 
-    internal static PostalCode CreateFromValidated(string validatedValue) =>
+    public static PostalCode CreateFromValidated(string validatedValue) =>
         new PostalCode(validatedValue);
 
     public static Validation<Error, string> Validate(string value) =>
@@ -397,7 +397,7 @@ public sealed class PostalCode : SimpleValueObject<string>
     public static Fin<PostalCode> Create(string value) =>
         CreateFromValidation(Validate(value), validValue => new PostalCode(validValue));
 
-    internal static PostalCode CreateFromValidated(string validatedValue) =>
+    public static PostalCode CreateFromValidated(string validatedValue) =>
         new PostalCode(validatedValue);
 
     public static Validation<Error, string> Validate(string value) =>
@@ -445,7 +445,7 @@ public sealed class MoneyAmount : ComparableSimpleValueObject<decimal>
     public static Fin<MoneyAmount> Create(decimal value) =>
         CreateFromValidation(Validate(value), validValue => new MoneyAmount(validValue));
 
-    internal static MoneyAmount CreateFromValidated(decimal validatedValue) =>
+    public static MoneyAmount CreateFromValidated(decimal validatedValue) =>
         new MoneyAmount(validatedValue);
 
     public static Validation<Error, decimal> Validate(decimal value) =>

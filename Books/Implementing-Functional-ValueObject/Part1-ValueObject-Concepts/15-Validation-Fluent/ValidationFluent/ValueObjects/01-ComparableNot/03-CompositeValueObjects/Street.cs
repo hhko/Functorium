@@ -15,7 +15,7 @@ public sealed class Street : SimpleValueObject<string>
     public static Fin<Street> Create(string value) =>
         CreateFromValidation(Validate(value), validValue => new Street(validValue));
 
-    internal static Street CreateFromValidated(string validatedValue) =>
+    public static Street CreateFromValidated(string validatedValue) =>
         new Street(validatedValue);
 
     public static Validation<Error, string> Validate(string value) =>

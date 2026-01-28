@@ -15,6 +15,7 @@
   </ItemGroup>
   <ItemGroup Label="Basic">
     <PackageVersion Include="LanguageExt.Core" Version="5.0.0-beta-77" />
+    <PackageVersion Include="Ulid" Version="1.3.4" />
     <PackageVersion Include="Mediator.Abstractions" Version="3.0.1" />
     <PackageVersion Include="Mediator.SourceGenerator" Version="3.0.1" />
     <PackageVersion Include="FluentValidation" Version="12.1.0" />
@@ -57,6 +58,8 @@
     <PackageVersion Include="FastEndpoints" Version="7.1.1" />
   </ItemGroup>
   <ItemGroup Label="ORM">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Abstractions" Version="10.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.0" />
   </ItemGroup>
   <ItemGroup Label="Scheduling">

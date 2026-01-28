@@ -36,7 +36,7 @@ public sealed class Street : IEquatable<Street>
     /// </summary>
     /// <param name="validatedValue">검증된 거리명</param>
     /// <returns>Street 인스턴스</returns>
-    internal static Street CreateFromValidated(string validatedValue) =>
+    public static Street CreateFromValidated(string validatedValue) =>
         new Street(validatedValue);
 
     ///// <summary>

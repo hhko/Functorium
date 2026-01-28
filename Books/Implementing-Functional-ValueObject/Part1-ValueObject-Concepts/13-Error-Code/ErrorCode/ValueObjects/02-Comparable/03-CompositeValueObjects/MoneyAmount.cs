@@ -36,7 +36,7 @@ public sealed class MoneyAmount : ComparableSimpleValueObject<decimal>
     /// </summary>
     /// <param name="validatedValue">검증된 금액</param>
     /// <returns>MoneyAmount 값 객체</returns>
-    internal static MoneyAmount CreateFromValidated(decimal validatedValue) =>
+    public static MoneyAmount CreateFromValidated(decimal validatedValue) =>
         new MoneyAmount(validatedValue);
 
     /// <summary>

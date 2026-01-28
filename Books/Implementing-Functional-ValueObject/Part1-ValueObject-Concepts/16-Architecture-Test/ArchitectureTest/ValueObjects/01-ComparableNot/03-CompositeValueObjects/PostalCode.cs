@@ -1,8 +1,8 @@
 using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
-using DomainError = Functorium.Domains.ValueObjects.DomainError;
-using DomainErrorType = Functorium.Domains.ValueObjects.DomainErrorType;
+using DomainError = Functorium.Domains.Errors.DomainError;
+using DomainErrorType = Functorium.Domains.Errors.DomainErrorType;
 
 namespace ArchitectureTest.ValueObjects.ComparableNot.CompositeValueObjects;
 
@@ -40,7 +40,7 @@ public sealed class PostalCode : SimpleValueObject<string>
     /// </summary>
     /// <param name="validatedValue">이미 검증된 우편번호</param>
     /// <returns>생성된 PostalCode 인스턴스</returns>
-    internal static PostalCode CreateFromValidated(string validatedValue) =>
+    public static PostalCode CreateFromValidated(string validatedValue) =>
         new PostalCode(validatedValue);
 
     /// <summary>

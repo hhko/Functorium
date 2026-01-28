@@ -18,7 +18,7 @@ public sealed class TestProductName : SimpleValueObject<string>
         CreateFromValidation(Validate(value), v => new TestProductName(v));
 
     public static Validation<Error, string> Validate(string value) =>
-        Validate<TestProductName>.NotEmpty(value)
+        ValidationRules<TestProductName>.NotEmpty(value)
             .ThenMaxLength(100);
 }
 
@@ -30,7 +30,7 @@ public sealed class TestPrice : ComparableSimpleValueObject<decimal>
         CreateFromValidation(Validate(value), v => new TestPrice(v));
 
     public static Validation<Error, decimal> Validate(decimal value) =>
-        Validate<TestPrice>.Positive(value)
+        ValidationRules<TestPrice>.Positive(value)
             .ThenAtMost(1_000_000);
 }
 
@@ -56,7 +56,7 @@ public sealed class TestAge : ComparableSimpleValueObject<int>
 
     // 내부용: int → Validation<Error, int>
     private static Validation<Error, int> ValidateInt(int value) =>
-        Validate<TestAge>.Between(value, MinAge, MaxAge);
+        ValidationRules<TestAge>.Between(value, MinAge, MaxAge);
 
     // MustSatisfyValidationOf용: string → Validation<Error, int> (입력 타입 != 출력 타입)
     // FluentValidation에서 string 속성을 int로 검증/변환할 때 사용

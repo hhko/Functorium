@@ -1,4 +1,5 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -24,7 +25,7 @@ public sealed class PriceRange : ComparableValueObject
             Validate(minPriceValue, maxPriceValue, currencyCode),
             validValues => new PriceRange(validValues.MinPrice, validValues.MaxPrice));
 
-    internal static PriceRange CreateFromValidated(Price minPrice, Price maxPrice) =>
+    public static PriceRange CreateFromValidated(Price minPrice, Price maxPrice) =>
         new PriceRange(minPrice, maxPrice);
 
     public static Validation<Error, (Price MinPrice, Price MaxPrice)> Validate(
@@ -39,10 +40,9 @@ public sealed class PriceRange : ComparableValueObject
         select validPriceRange;
 
     private static Validation<Error, (Price MinPrice, Price MaxPrice)> ValidatePriceRange(Price minPrice, Price maxPrice) =>
-        ((Validation<Error, (decimal, decimal)>)Validate<PriceRange>.ValidRange(
-            (decimal)minPrice.Amount,
-            (decimal)maxPrice.Amount))
-        .Map(_ => (MinPrice: minPrice, MaxPrice: maxPrice));
+        Validate<PriceRange>.ValidRange((decimal)minPrice.Amount, (decimal)maxPrice.Amount)
+            .ToValidation()
+            .Map(_ => (MinPrice: minPrice, MaxPrice: maxPrice));
 
     protected override IEnumerable<IComparable> GetComparableEqualityComponents()
     {

@@ -16,7 +16,7 @@ public static partial class TypedValidationExtensions
     public static TypedValidation<TValueObject, T> ThenNotNull<TValueObject, T>(
         this TypedValidation<TValueObject, T?> validation)
         where T : class =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.NotNullInternal<T>(v)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.NotNullInternal<T>(v)));
 
     /// <summary>
     /// nullable 값 타입이 null이 아닌지 체인으로 검증합니다.
@@ -29,5 +29,5 @@ public static partial class TypedValidationExtensions
     public static TypedValidation<TValueObject, T> ThenNotNull<TValueObject, T>(
         this TypedValidation<TValueObject, T?> validation)
         where T : struct =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.NotNullStructInternal<T>(v)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.NotNullStructInternal<T>(v)));
 }

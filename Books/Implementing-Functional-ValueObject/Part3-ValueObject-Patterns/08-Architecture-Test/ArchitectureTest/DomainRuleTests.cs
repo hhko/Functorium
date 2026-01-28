@@ -33,7 +33,7 @@ public class DomainRuleTests : ArchitectureTestBase
                         .RequireStatic()
                         .RequireReturnType(typeof(Fin<>)))
                     .RequireMethod(IValueObject.CreateFromValidatedMethodName, method => method
-                        .RequireVisibility(Visibility.Internal)
+                        .RequireVisibility(Visibility.Public)
                         .RequireStatic()
                         .RequireReturnTypeOfDeclaringClass())
                     .RequireMethod(IValueObject.ValidateMethodName, method => method

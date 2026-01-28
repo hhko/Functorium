@@ -1,8 +1,8 @@
 using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
-using DomainError = Functorium.Domains.ValueObjects.DomainError;
-using DomainErrorType = Functorium.Domains.ValueObjects.DomainErrorType;
+using DomainError = Functorium.Domains.Errors.DomainError;
+using DomainErrorType = Functorium.Domains.Errors.DomainErrorType;
 
 namespace ArchitectureTest.ValueObjects.ComparableNot.PrimitiveValueObjects;
 
@@ -40,7 +40,7 @@ public sealed class BinaryData : SimpleValueObject<byte[]>
     /// </summary>
     /// <param name="validatedValue">이미 검증된 바이너리 데이터</param>
     /// <returns>생성된 BinaryData 인스턴스</returns>
-    internal static BinaryData CreateFromValidated(byte[] validatedValue) =>
+    public static BinaryData CreateFromValidated(byte[] validatedValue) =>
         new BinaryData(validatedValue);
 
     /// <summary>

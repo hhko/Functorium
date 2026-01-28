@@ -2,6 +2,8 @@ using LanguageExt;
 using LanguageExt.Common;
 using static LanguageExt.Prelude;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
+using Functorium.Domains.Errors;
 
 namespace FunctoriumFramework;
 
@@ -128,8 +130,7 @@ public sealed class Email : SimpleValueObject<string>
 
     public static Validation<Error, string> Validate(string value) =>
         (ValidateNotEmpty(value), ValidateFormat(value))
-            .Apply((_, validFormat) => validFormat.ToLowerInvariant())
-            .As();
+            .Apply((_, validFormat) => validFormat.ToLowerInvariant());
 
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
@@ -161,7 +162,7 @@ public sealed class Age : ComparableSimpleValueObject<int>
             Validate(value),
             validValue => new Age(validValue));
 
-    internal static Age CreateFromValidated(int value) => new(value);
+    public static Age CreateFromValidated(int value) => new(value);
 
     public static Validation<Error, int> Validate(int value) =>
         ValidateNotNegative(value)
@@ -205,14 +206,13 @@ public sealed class Address : ValueObject
             Validate(city, street, postalCode),
             validValues => new Address(validValues.City, validValues.Street, validValues.PostalCode));
 
-    internal static Address CreateFromValidated(string city, string street, string postalCode) =>
+    public static Address CreateFromValidated(string city, string street, string postalCode) =>
         new Address(city, street, postalCode);
 
     public static Validation<Error, (string City, string Street, string PostalCode)> Validate(
         string city, string street, string postalCode) =>
         (ValidateCityNotEmpty(city), ValidateStreetNotEmpty(street), ValidatePostalCodeNotEmpty(postalCode))
-            .Apply((validCity, validStreet, validPostalCode) => (validCity, validStreet, validPostalCode))
-            .As();
+            .Apply((validCity, validStreet, validPostalCode) => (validCity, validStreet, validPostalCode));
 
     private static Validation<Error, string> ValidateCityNotEmpty(string city) =>
         !string.IsNullOrWhiteSpace(city)

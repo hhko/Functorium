@@ -2,6 +2,43 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
+- [ ] dotnet new template
+- [ ] Usecase 구현 스킬
+  - [ ] ValueObject
+  - [ ] Entity
+  - [ ] Aggregate Root
+  - [ ] DomainEvent
+- [ ] Error 구조적 로그 예외
+- [ ] DTO 이해
+  - [ ] 유스케이스 DTO
+  - [ ] IAdatper DTO
+- [ ] 아키텍처 다이어그램
+- [ ] VS Code 개발 환경
+- [ ] GitHub NuGet 배포
+- [ ] MinVer
+- [ ] 유스케이스 구현 SKILL
+- [ ] 유스케이스 문서 SKILL
+- [ ] Functorium.Adapters 프로젝트 분리
+- [ ] Tutorials 폴더에 Entity, EntityId, ... 등 적용
+- [ ] Books ValueObject 13 ~ 15 Framework 제거해서 개선
+- [ ] Books ValueObject 재구성
+- [ ] Books 관찰 가능성
+- [ ] Books Entity
+- [ ] SoftDelete 이해?
+- [ ] Cache
+- [ ] ORM
+- [ ] ORM CQRS
+- [ ] Outbox
+- [ ] Scheduling
+- [ ] Http
+- [ ] 문서 사이트
+- [ ] Aspire 통합
+- [ ] 예제 변환 ddd
+- [ ] 예제 변환 eShop
+- [ ] 예제 변환 ...
+- [ ] IAuditable
+
+
 ## 로드맵
 ### AI 도구
 - [ ] 개발 관리: https://github.com/glittercowboy/get-shit-done
@@ -12,6 +49,7 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ### 1.0-alpha.2
 - [x] 관찰 가능성
 - [x] Error Fluent 적용
+- [x] 값 객체 Validation 통합
 - [ ] Entity
 - [ ] DTO
 - [ ] MinVer
@@ -43,7 +81,6 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 
 ### 1.0-alpha.6
 - [ ] Cache: https://medium.com/@skd9000/how-we-fixed-our-cache-stampede-problem-3b2e6ac01b27
-- [ ] 값 객체 Validation 통합
 - [ ] Validation Pipeline만 Applications 레이어에 배치
 - [ ] 문서 사이트: Astro, Starlight
   - 한국어 검색(하이라이트)
@@ -81,23 +118,56 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [ ] 관찰 가능성 문서화 및 테스트 자동화
 
 ## 할일
-- [ ] 16-Architecture-Test 을 15번 기반으로 개선
+- [x] 이름 충돌 개선: `로컬 Validate 메서드와 Functorium.Domains.ValueObjects.Validations.Validate<T> 제네릭 클래스 간의 이름 충돌`
+- [ ] 타입 캐스팅 개선
+  ```
+  문제 1: .As() 필요 - Apply 패턴 후 K<Validation<Error>, T> → Validation<Error, T> 변환
+
+  문제 2: (Validation<Error, T>) 명시적 캐스팅 필요:
+  - LINQ query expression (from...in)에서 implicit 변환 미작동
+  - 튜플에서 TypedValidation과 Validation 혼합 시 타입 추론 실패
+
+
+  문제 1.
+  4. TypedValidation과 Apply: 튜플 내에서 TypedValidation을 Validation으로 명시적 캐스팅 필요
+
+    public static Validation<Error, (string BaseCurrency, string QuoteCurrency, decimal Rate)> Validate(
+        string baseCurrency, string quoteCurrency, decimal rate) =>
+        (ValidateCurrency(baseCurrency, "BaseCurrency"),
+         ValidateCurrency(quoteCurrency, "QuoteCurrency"),
+         (Validation<Error, decimal>)Validations.Validate<ExchangeRate>.Positive(rate))
+            .Apply((b, q, r) => (BaseCurrency: b, QuoteCurrency: q, Rate: r))
+            .As()
+            .Bind(v => ValidateDifferentCurrencies(v.BaseCurrency, v.QuoteCurrency)
+                .Map(_ => (v.BaseCurrency, v.QuoteCurrency, v.Rate)));
+  ```
+- [ ] As() 필요 여부
+  ```
+  사용 패턴 요약
+  ┌────────────────────────────────────────────┬─────────────────┐
+  │                    패턴                  │ .As() 필요 여부 │
+  ├────────────────────────────────────────────┼─────────────────┤
+  │ LINQ query expression with TypedValidation │ 불필요          │
+  ├────────────────────────────────────────────┼─────────────────┤
+  │ Tuple에 TypedValidation 포함               │ 불필요          │
+  ├────────────────────────────────────────────┼─────────────────┤
+  │ Tuple 전체가 Validation<Error, T>          │ 필요            │
+  └────────────────────────────────────────────┴─────────────────┘
+  ```
+- [ ] As() 필요성
 - [ ] 확장 메서드 C# 14 기반으로 업데이트
-- [ ] Validate.cs -> Validate.{범주}.cs
-- [ ] LINQ 개선
+- [ ] GitHub\DomainDrivenDesignUniversity-master\src\Shopway.Application\Utilities\FluentValidationUtilities.cs 코드 확인
+- [ ] 13 ~ 16 프로젝트 개선 Framework 자체 코드
+- [ ] ?? ""
+- [ ] using 구문 개선?
   ```
-  ● Update(Books\Implementing-Functional-ValueObject\Part1-ValueObject-Concepts\15-Validation-Fluent\ValidationFluent\ValueObjects\02-Comparable\02-CompositePrimitiveValueObjects\DateRange.cs)
-  ⎿  Added 3 lines, removed 3 lines
-      28          new DateRange(startDate, endDate);
-      29
-      30      public static Validation<Error, (DateTime Min, DateTime Max)> Validate(DateTime startDate, DateTime endDate) =>
-      31 -        from validStartDate in Validate<DateRange>.NotDefault(startDate)
-      32 -        from validEndDate in Validate<DateRange>.NotDefault(endDate)
-      33 -        from validRange in Validate<DateRange>.ValidStrictRange(validStartDate, validEndDate)
-      31 +        from validStartDate in (Validation<Error, DateTime>)Validate<DateRange>.NotDefault(startDate)
-      32 +        from validEndDate in (Validation<Error, DateTime>)Validate<DateRange>.NotDefault(endDate)
-      33 +        from validRange in (Validation<Error, (DateTime, DateTime)>)Validate<DateRange>.ValidStrictRange(validStartDate, validEndDate)
+  using DomainError = Functorium.Domains.Errors.DomainError;
+  using DomainErrorType = Functorium.Domains.Errors.DomainErrorType;
   ```
+- [ ] DTO IRequest/IResponse
+- [ ] DTO IAdapter
+- [x] 16-Architecture-Test 을 15번 기반으로 개선
+- [x] Validate.cs -> Validate.{범주}.cs
   ```
     전체 솔루션 (Functorium.All.slnx):
   - Books 프로젝트에 306개의 기존 에러가 있습니다
@@ -113,7 +183,7 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
   Books 프로젝트의 기존 에러는 수동으로 하나씩 수정하거나, IDE의 일괄 리팩터링 기능을 사용하는 것이 안전합니다.
   ```
 ---
-- [ ] GitHub\DomainDrivenDesignUniversity-master\src\Shopway.Application\Utilities\FluentValidationUtilities.cs 코드 확인
+
 ---
 - [x] 개선한 Error 표준 타입과 Validate 문서화 업데이트
 - [x] 값 객체 Validate 관련 내용 Book 추가
@@ -945,4 +1015,15 @@ dotnet ExtractApiChanges.cs
   # 실행
   dotnet ExtractApiChanges.cs
 
+```
+
+
+```
+configurator.AddTrigger(t => t
+  .ForJob(jobKey)
+  .WithIdentity($"{jobConfig.TriggerName}-Immediate", jobConfig.TriggerGroup)
+  .StartNow()
+  .WithSimpleSchedule(x => x.WithRepeatCount(0))
+  .WithDescription($"{jobConfig.TriggerDescription} (즉시 실행)")
+);
 ```

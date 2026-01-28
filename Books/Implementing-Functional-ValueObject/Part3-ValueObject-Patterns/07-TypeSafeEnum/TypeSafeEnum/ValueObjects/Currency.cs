@@ -1,5 +1,6 @@
 using Ardalis.SmartEnum;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -37,7 +38,7 @@ public sealed class Currency
     public static Fin<Currency> Create(string currencyCode) =>
         Validate(currencyCode).Map(FromValue).ToFin();
 
-    internal static Currency CreateFromValidated(string currencyCode) =>
+    public static Currency CreateFromValidated(string currencyCode) =>
         FromValue(currencyCode);
 
     public static Validation<Error, string> Validate(string currencyCode) =>

@@ -23,7 +23,7 @@ public static partial class TypedValidationExtensions
         DomainErrorType errorType,
         string message)
         where T : notnull =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.MustInternal(v, predicate, errorType, message)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.MustInternal(v, predicate, errorType, message)));
 
     /// <summary>
     /// 사용자 정의 조건으로 값을 체인으로 검증합니다. (메시지 생성 함수 사용)
@@ -42,5 +42,5 @@ public static partial class TypedValidationExtensions
         DomainErrorType errorType,
         Func<T, string> messageFactory)
         where T : notnull =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.MustInternal(v, predicate, errorType, messageFactory(v))));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.MustInternal(v, predicate, errorType, messageFactory(v))));
 }

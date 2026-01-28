@@ -1,3 +1,4 @@
+using LayeredArch.Domain.Entities;
 using LayeredArch.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 
@@ -13,7 +14,7 @@ public sealed class UpdateProductCommand
     /// Command Request - 업데이트할 상품 정보
     /// </summary>
     public sealed record Request(
-        Guid ProductId,
+        string ProductId,
         string Name,
         string Description,
         decimal Price,
@@ -24,7 +25,7 @@ public sealed class UpdateProductCommand
     /// Command Response - 업데이트된 상품 정보
     /// </summary>
     public sealed record Response(
-        Guid ProductId,
+        string ProductId,
         string Name,
         string Description,
         decimal Price,
@@ -39,7 +40,8 @@ public sealed class UpdateProductCommand
         public Validator()
         {
             RuleFor(x => x.ProductId)
-                .NotEmpty().WithMessage("상품 ID는 필수입니다");
+                .NotEmpty().WithMessage("상품 ID는 필수입니다")
+                .Must(id => ProductId.TryParse(id, null, out _)).WithMessage("유효하지 않은 상품 ID 형식입니다");
 
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("상품명은 필수입니다")
@@ -76,18 +78,17 @@ public sealed class UpdateProductCommand
 
             // LINQ 쿼리 표현식: Repository의 FinT<IO, Product>를 사용하여 조회 및 업데이트
             // FinTUtilites.SelectMany가 FinT를 LINQ 쿼리 표현식에서 사용 가능하도록 지원
+            var productId = ProductId.Create(request.ProductId);
             FinT<IO, Response> usecase =
-                from existingProduct in _productRepository.GetById(request.ProductId)
-                from updatedProduct in _productRepository.Update(existingProduct with
-                {
-                    Name = request.Name,
-                    Description = request.Description,
-                    Price = request.Price,
-                    StockQuantity = request.StockQuantity,
-                    UpdatedAt = DateTime.UtcNow
-                })
+                from existingProduct in _productRepository.GetById(productId)
+                from updatedProduct in _productRepository.Update(
+                    existingProduct.Update(
+                        request.Name,
+                        request.Description,
+                        request.Price,
+                        request.StockQuantity))
                 select new Response(
-                    updatedProduct.Id,
+                    updatedProduct.Id.ToString(),
                     updatedProduct.Name,
                     updatedProduct.Description,
                     updatedProduct.Price,

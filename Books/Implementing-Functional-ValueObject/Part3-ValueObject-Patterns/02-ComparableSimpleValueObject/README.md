@@ -202,7 +202,7 @@ public sealed class UserId : ComparableSimpleValueObject<int>
     public static Fin<UserId> Create(int value) =>
         CreateFromValidation(Validate(value), val => new UserId(val));
 
-    internal static UserId CreateFromValidated(int validatedValue) =>
+    public static UserId CreateFromValidated(int validatedValue) =>
         new UserId(validatedValue);
 
     public static Validation<Error, int> Validate(int value) =>

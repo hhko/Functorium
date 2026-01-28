@@ -1,4 +1,5 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -22,7 +23,7 @@ public sealed class Coordinate : ValueObject
     public static Fin<Coordinate> Create(int x, int y) =>
         CreateFromValidation(Validate(x, y), validValues => new Coordinate(validValues.X, validValues.Y));
 
-    internal static Coordinate CreateFromValidated(int x, int y) =>
+    public static Coordinate CreateFromValidated(int x, int y) =>
         new Coordinate(x, y);
 
     public static Validation<Error, (int X, int Y)> Validate(int x, int y) =>

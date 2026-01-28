@@ -1,5 +1,6 @@
 using Functorium.Abstractions.Errors;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
 using static LanguageExt.Prelude;

@@ -72,7 +72,7 @@ public static Fin<Address> Create(string streetValue, string cityValue, string p
         .ToFin();
 
 // CreateFromValidated: 검증 없이 직접 생성
-internal static Address CreateFromValidated(Street street, City city, PostalCode postalCode) =>
+public static Address CreateFromValidated(Street street, City city, PostalCode postalCode) =>
     new Address(street, city, postalCode);  // 검증 없이 바로 생성
 ```
 
@@ -198,7 +198,7 @@ public static Fin<Address> Create(string streetValue, string cityValue, string p
 /// 이미 검증된 값 객체들로부터 Address 인스턴스를 생성하는 internal 메서드
 /// 외부(부모)에서만 사용하며, 자기 자신의 Create에서는 사용하지 않음
 /// </summary>
-internal static Address CreateFromValidated(Street street, City city, PostalCode postalCode) =>
+public static Address CreateFromValidated(Street street, City city, PostalCode postalCode) =>
     new Address(street, city, postalCode);
 
 /// <summary>
@@ -401,6 +401,6 @@ public abstract class ValueObject<T> where T : ValueObject<T>
     protected abstract Validation<Error, T> Validate();
     public static Fin<T> Create() => /* 표준화된 생성 로직 */;
     public static Validation<Error, T> Validate() => /* 표준화된 검증 로직 */;
-    internal static T CreateFromValidated() => /* 표준화된 직접 생성 로직 */;
+    public static T CreateFromValidated() => /* 표준화된 직접 생성 로직 */;
 }
 ```

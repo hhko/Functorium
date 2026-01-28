@@ -1,6 +1,7 @@
 using LanguageExt;
 using LanguageExt.Common;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.Errors;
 
 namespace ComparableValueObjectComposite.ValueObjects;
 
@@ -15,7 +16,7 @@ public sealed class City : ComparableSimpleValueObject<string>
     public static Fin<City> Create(string value) =>
         CreateFromValidation(Validate(value), v => new City(v));
 
-    internal static City CreateFromValidated(string validatedValue) =>
+    public static City CreateFromValidated(string validatedValue) =>
         new(validatedValue);
 
     public static Validation<Error, string> Validate(string value) =>

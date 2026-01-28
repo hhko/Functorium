@@ -42,14 +42,14 @@ public sealed class CreateProductCommand
         {
             // 값 객체 Validate 메서드 통합
             RuleFor(x => x.Name)
-                .MustSatisfyValueObjectValidation<Request, string, string>(ProductName.Validate);
+                .MustSatisfyValidation(ProductName.Validate);
 
             RuleFor(x => x.Description)
                 .MaximumLength(500).WithMessage("설명은 500자를 초과할 수 없습니다");
 
             // 값 객체 Validate 메서드 통합
             RuleFor(x => x.Price)
-                .MustSatisfyValueObjectValidation<Request, decimal, decimal>(Price.Validate);
+                .MustSatisfyValidation(Price.Validate);
 
             // 기존 FluentValidation 규칙 유지
             RuleFor(x => x.StockQuantity)

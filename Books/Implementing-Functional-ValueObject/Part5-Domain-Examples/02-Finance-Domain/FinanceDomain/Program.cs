@@ -1,6 +1,8 @@
 using System.Text.RegularExpressions;
 using Functorium.Abstractions.Errors;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
+using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
 using Ardalis.SmartEnum;
@@ -129,9 +131,9 @@ public sealed class AccountNumber : SimpleValueObject<string>
         CreateFromValidation(Validate(value ?? "null"), v => new AccountNumber(v));
 
     public static Validation<Error, string> Validate(string value) =>
-        ValidationRules.NotEmpty<AccountNumber>(value)
+        ValidationRules<AccountNumber>.NotEmpty(value)
             .ThenNormalize(v => v.Replace(" ", "").Replace("−", "-"))
-            .ThenMatches<AccountNumber>(Format,
+            .ThenMatches(Format,
                 $"Invalid account number format. Expected: 'NNN-NNNNNNNNNN'. Current value: '{value}'");
 
     public static implicit operator string(AccountNumber account) => account.Value;
@@ -152,8 +154,8 @@ public sealed class InterestRate : ComparableSimpleValueObject<decimal>
         CreateFromValidation(Validate(percentValue), v => new InterestRate(v));
 
     public static Validation<Error, decimal> Validate(decimal value) =>
-        ValidationRules.NonNegative<InterestRate, decimal>(value)
-            .ThenAtMost<InterestRate, decimal>(100m);
+        ValidationRules<InterestRate>.NonNegative(value)
+            .ThenAtMost(100m);
 
     public decimal CalculateSimpleInterest(decimal principal, int years) =>
         principal * Decimal * years;
@@ -192,10 +194,10 @@ public sealed class ExchangeRate : ValueObject
         string baseCurrency, string quoteCurrency, decimal rate) =>
         (ValidateCurrency(baseCurrency, "BaseCurrency"),
          ValidateCurrency(quoteCurrency, "QuoteCurrency"),
-         ValidationRules.Positive<ExchangeRate, decimal>(rate))
-            .Apply((b, q, r) => (b, q, r))
-            .As()
-            .Bind(v => ValidateDifferentCurrencies(v.b, v.q).Map(_ => (v.b, v.q, v.r)));
+         ValidationRules<ExchangeRate>.Positive(rate))
+            .Apply((b, q, r) => (BaseCurrency: b, QuoteCurrency: q, Rate: r))
+            .Bind(v => ValidateDifferentCurrencies(v.BaseCurrency, v.QuoteCurrency)
+                .Map(_ => (v.BaseCurrency, v.QuoteCurrency, v.Rate)));
 
     private static Validation<Error, string> ValidateCurrency(string value, string fieldName) =>
         !string.IsNullOrWhiteSpace(value) && value.Length == 3

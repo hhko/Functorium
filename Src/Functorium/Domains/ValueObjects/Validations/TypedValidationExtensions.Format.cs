@@ -19,7 +19,7 @@ public static partial class TypedValidationExtensions
         this TypedValidation<TValueObject, string> validation,
         Regex pattern,
         string? message = null) =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.MatchesInternal(v, pattern, message)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.MatchesInternal(v, pattern, message)));
 
     /// <summary>
     /// 문자열이 대문자인지 체인으로 검증합니다.
@@ -30,7 +30,7 @@ public static partial class TypedValidationExtensions
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TypedValidation<TValueObject, string> ThenIsUpperCase<TValueObject>(
         this TypedValidation<TValueObject, string> validation) =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.IsUpperCaseInternal(v)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.IsUpperCaseInternal(v)));
 
     /// <summary>
     /// 문자열이 소문자인지 체인으로 검증합니다.
@@ -41,5 +41,5 @@ public static partial class TypedValidationExtensions
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TypedValidation<TValueObject, string> ThenIsLowerCase<TValueObject>(
         this TypedValidation<TValueObject, string> validation) =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.IsLowerCaseInternal(v)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.IsLowerCaseInternal(v)));
 }

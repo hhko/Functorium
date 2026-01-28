@@ -16,7 +16,7 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
     public static Fin<Denominator> Create(int value) =>
         CreateFromValidation(Validate(value), validValue => new Denominator(validValue));
 
-    internal static Denominator CreateFromValidated(int validatedValue) =>
+    public static Denominator CreateFromValidated(int validatedValue) =>
         new Denominator(validatedValue);
 
     public static Validation<Error, int> Validate(int value) =>

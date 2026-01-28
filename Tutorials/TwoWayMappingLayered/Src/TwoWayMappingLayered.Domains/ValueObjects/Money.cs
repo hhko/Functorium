@@ -1,4 +1,5 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -35,8 +36,7 @@ public sealed class Money : ValueObject
     /// </summary>
     public static Validation<Error, Money> Validate(decimal amount, string currency) =>
         (ValidateAmount(amount), ValidateCurrency(currency))
-            .Apply((a, c) => new Money(a, c))
-            .As();
+            .Apply((a, c) => new Money(a, c));
 
     /// <summary>
     /// Amount 검증
@@ -47,7 +47,7 @@ public sealed class Money : ValueObject
     ///     .MustSatisfyValueObjectValidation&lt;Request, decimal, decimal&gt;(Money.ValidateAmount);
     /// </example>
     public static Validation<Error, decimal> ValidateAmount(decimal amount) =>
-        Validate<Money>.NonNegative(amount);
+        ValidationRules<Money>.NonNegative(amount);
 
     /// <summary>
     /// Currency 검증 (ISO 4217 형식)
@@ -58,7 +58,7 @@ public sealed class Money : ValueObject
     ///     .MustSatisfyValueObjectValidation&lt;Request, string, string&gt;(Money.ValidateCurrency);
     /// </example>
     public static Validation<Error, string> ValidateCurrency(string currency) =>
-        Validate<Money>.NotEmpty(currency ?? "")
+        ValidationRules<Money>.NotEmpty(currency ?? "")
             .ThenExactLength(3)
             .ThenNormalize(v => v.ToUpperInvariant());
 

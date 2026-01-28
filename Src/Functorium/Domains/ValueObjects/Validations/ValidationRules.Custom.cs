@@ -6,7 +6,7 @@ using LanguageExt.Common;
 
 namespace Functorium.Domains.ValueObjects.Validations;
 
-public static partial class Validate<TValueObject>
+public static partial class ValidationRules<TValueObject>
 {
     /// <summary>
     /// 사용자 정의 조건으로 값을 검증합니다.

@@ -178,7 +178,7 @@ public sealed class BinaryData : SimpleValueObject<byte[]>
     public static Fin<BinaryData> Create(byte[] value) =>
         CreateFromValidation(Validate(value), val => new BinaryData(val));
 
-    internal static BinaryData CreateFromValidated(byte[] validatedValue) =>
+    public static BinaryData CreateFromValidated(byte[] validatedValue) =>
         new BinaryData(validatedValue);
 
     public static Validation<Error, byte[]> Validate(byte[] value) =>

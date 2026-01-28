@@ -48,7 +48,7 @@ public sealed class Price : ComparableValueObject
     /// </summary>
     /// <param name="validatedValues">검증된 가격 값들</param>
     /// <returns>Price 값 객체</returns>
-    internal static Price CreateFromValidated((MoneyAmount Amount, Currency Currency) validatedValues) =>
+    public static Price CreateFromValidated((MoneyAmount Amount, Currency Currency) validatedValues) =>
         new Price(validatedValues.Amount, validatedValues.Currency);
 
     /// <summary>

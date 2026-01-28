@@ -1,4 +1,5 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
 using static LanguageExt.Prelude;
@@ -33,7 +34,7 @@ public sealed class UserRegistrationFunApply : ValueObject
                 validValues.Name,
                 validValues.Age));
 
-    internal static UserRegistrationFunApply CreateFromValidated((string Email, string Password, string Name, int Age) validatedValues) =>
+    public static UserRegistrationFunApply CreateFromValidated((string Email, string Password, string Name, int Age) validatedValues) =>
         new UserRegistrationFunApply(validatedValues.Email, validatedValues.Password, validatedValues.Name, validatedValues.Age);
 
     // ============================================================

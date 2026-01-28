@@ -45,7 +45,7 @@ public sealed class DateRange : ComparableValueObject
     /// <param name="startDate">이미 검증된 시작일</param>
     /// <param name="endDate">이미 검증된 종료일</param>
     /// <returns>생성된 DateRange 인스턴스</returns>
-    internal static DateRange CreateFromValidated(DateTime startDate, DateTime endDate) =>
+    public static DateRange CreateFromValidated(DateTime startDate, DateTime endDate) =>
         new DateRange(startDate, endDate);
 
     /// <summary>

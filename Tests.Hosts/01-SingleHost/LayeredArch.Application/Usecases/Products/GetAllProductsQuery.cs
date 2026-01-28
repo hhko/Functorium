@@ -22,7 +22,7 @@ public sealed class GetAllProductsQuery
     /// 상품 DTO - 클라이언트 응답용
     /// </summary>
     public sealed record ProductDto(
-        Guid ProductId,
+        string ProductId,
         string Name,
         decimal Price,
         int StockQuantity);
@@ -47,7 +47,7 @@ public sealed class GetAllProductsQuery
                 from products in _productRepository.GetAll()
                 select new Response(
                     products
-                        .Select(p => new ProductDto(p.Id, p.Name, p.Price, p.StockQuantity))
+                        .Select(p => new ProductDto(p.Id.ToString(), p.Name, p.Price, p.StockQuantity))
                         .ToSeq());
 
             // FinT<IO, Response>

@@ -1,6 +1,7 @@
 using LanguageExt;
 using LanguageExt.Common;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
 using static LanguageExt.Prelude;
 
 namespace ValueObjectPrimitive.ValueObjects;
@@ -24,7 +25,7 @@ public sealed class Coordinate : ValueObject
     public static Fin<Coordinate> Create(int x, int y) =>
         CreateFromValidation(Validate(x, y), v => new Coordinate(v.x, v.y));
 
-    internal static Coordinate CreateFromValidated((int x, int y) validatedValues) =>
+    public static Coordinate CreateFromValidated((int x, int y) validatedValues) =>
         new(validatedValues.x, validatedValues.y);
 
     public static Validation<Error, (int x, int y)> Validate(int x, int y) =>
@@ -33,10 +34,10 @@ public sealed class Coordinate : ValueObject
         select (x: validX, y: validY);
 
     private static Validation<Error, int> ValidateX(int x) =>
-        ValidationRules.NonNegative<Coordinate, int>(x);
+        ValidationRules<Coordinate>.NonNegative(x);
 
     private static Validation<Error, int> ValidateY(int y) =>
-        ValidationRules.Between<Coordinate, int>(y, 0, 1000);
+        ValidationRules<Coordinate>.Between(y, 0, 1000);
 
     protected override IEnumerable<object> GetEqualityComponents()
     {

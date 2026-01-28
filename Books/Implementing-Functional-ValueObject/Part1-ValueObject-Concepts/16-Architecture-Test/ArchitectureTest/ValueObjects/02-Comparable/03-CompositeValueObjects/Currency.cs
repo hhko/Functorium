@@ -2,8 +2,8 @@ using Ardalis.SmartEnum;
 using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
-using DomainError = Functorium.Domains.ValueObjects.DomainError;
-using DomainErrorType = Functorium.Domains.ValueObjects.DomainErrorType;
+using DomainError = Functorium.Domains.Errors.DomainError;
+using DomainErrorType = Functorium.Domains.Errors.DomainErrorType;
 
 namespace ArchitectureTest.ValueObjects.Comparable.CompositeValueObjects;
 
@@ -105,7 +105,7 @@ public sealed class Currency
     /// </summary>
     /// <param name="currencyCode">검증된 통화 코드</param>
     /// <returns>생성된 Currency 인스턴스</returns>
-    internal static Currency CreateFromValidated(string currencyCode) =>
+    public static Currency CreateFromValidated(string currencyCode) =>
         FromValue(currencyCode);
 
     /// <summary>

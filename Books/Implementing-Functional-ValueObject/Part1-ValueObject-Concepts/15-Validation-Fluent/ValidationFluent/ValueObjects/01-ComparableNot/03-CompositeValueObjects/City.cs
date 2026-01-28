@@ -15,7 +15,7 @@ public sealed class City : SimpleValueObject<string>
     public static Fin<City> Create(string value) =>
         CreateFromValidation(Validate(value), validValue => new City(validValue));
 
-    internal static City CreateFromValidated(string validatedValue) =>
+    public static City CreateFromValidated(string validatedValue) =>
         new City(validatedValue);
 
     public static Validation<Error, string> Validate(string value) =>

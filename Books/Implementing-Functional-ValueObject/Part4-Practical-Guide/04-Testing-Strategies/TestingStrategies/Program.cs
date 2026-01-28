@@ -1,4 +1,5 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
 using static LanguageExt.Prelude;
@@ -206,7 +207,7 @@ public sealed class Email : SimpleValueObject<string>
             Validate(value ?? "null"),
             validValue => new Email(validValue));
 
-    internal static Email CreateFromValidated(string value) => new(value);
+    public static Email CreateFromValidated(string value) => new(value);
 
     public static Validation<Error, string> Validate(string value) =>
         (ValidateNotEmpty(value), ValidateFormat(value))
@@ -243,7 +244,7 @@ public sealed class Age : ComparableSimpleValueObject<int>
             Validate(value),
             validValue => new Age(validValue));
 
-    internal static Age CreateFromValidated(int value) => new(value);
+    public static Age CreateFromValidated(int value) => new(value);
 
     public static Validation<Error, int> Validate(int value) =>
         ValidateNotNegative(value)

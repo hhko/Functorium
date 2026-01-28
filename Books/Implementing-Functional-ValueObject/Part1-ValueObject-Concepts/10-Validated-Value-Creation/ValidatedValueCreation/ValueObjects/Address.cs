@@ -51,7 +51,7 @@ public sealed class Address : IEquatable<Address>
     /// <param name="city">검증된 도시명</param>
     /// <param name="postalCode">검증된 우편번호</param>
     /// <returns>Address 인스턴스</returns>
-    internal static Address CreateFromValidated(Street street, City city, PostalCode postalCode) =>
+    public static Address CreateFromValidated(Street street, City city, PostalCode postalCode) =>
         new Address(street, city, postalCode);
 
     /// <summary>

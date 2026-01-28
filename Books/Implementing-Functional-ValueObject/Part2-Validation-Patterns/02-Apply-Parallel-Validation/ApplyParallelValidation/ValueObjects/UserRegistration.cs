@@ -1,4 +1,6 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
+using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -28,15 +30,14 @@ public sealed class UserRegistration : ValueObject
             Validate(email, password, name, ageInput),
             v => new UserRegistration(v.Email, v.Password, v.Name, v.Age));
 
-    internal static UserRegistration CreateFromValidated((string Email, string Password, string Name, int Age) v) =>
+    public static UserRegistration CreateFromValidated((string Email, string Password, string Name, int Age) v) =>
         new(v.Email, v.Password, v.Name, v.Age);
 
     // 병렬 검증 - Apply 패턴 (독립적 검증 규칙들을 병렬로 실행)
     public static Validation<Error, (string Email, string Password, string Name, int Age)> Validate(
         string email, string password, string name, string ageInput) =>
         (ValidateEmailFormat(email), ValidatePasswordStrength(password), ValidateNameFormat(name), ValidateAgeFormat(ageInput))
-            .Apply((e, p, n, a) => (Email: e, Password: p, Name: n, Age: a))
-            .As();
+            .Apply((e, p, n, a) => (Email: e, Password: p, Name: n, Age: a));
 
     private static Validation<Error, string> ValidateEmailFormat(string email) =>
         !string.IsNullOrWhiteSpace(email) && email.Contains("@") && email.Contains(".")

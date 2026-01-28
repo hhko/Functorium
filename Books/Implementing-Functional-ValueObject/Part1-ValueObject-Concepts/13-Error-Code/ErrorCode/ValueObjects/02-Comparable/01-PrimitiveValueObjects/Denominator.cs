@@ -39,7 +39,7 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
     /// </summary>
     /// <param name="validatedValue">이미 검증된 0이 아닌 정수 값</param>
     /// <returns>생성된 Denominator 인스턴스</returns>
-    internal static Denominator CreateFromValidated(int validatedValue) =>
+    public static Denominator CreateFromValidated(int validatedValue) =>
         new Denominator(validatedValue);
 
     /// <summary>

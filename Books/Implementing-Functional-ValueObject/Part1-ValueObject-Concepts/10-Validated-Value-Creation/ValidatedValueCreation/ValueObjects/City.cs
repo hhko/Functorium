@@ -36,7 +36,7 @@ public sealed class City : IEquatable<City>
     /// </summary>
     /// <param name="validatedValue">검증된 도시명</param>
     /// <returns>City 인스턴스</returns>
-    internal static City CreateFromValidated(string validatedValue) =>
+    public static City CreateFromValidated(string validatedValue) =>
         new City(validatedValue);
 
     ///// <summary>

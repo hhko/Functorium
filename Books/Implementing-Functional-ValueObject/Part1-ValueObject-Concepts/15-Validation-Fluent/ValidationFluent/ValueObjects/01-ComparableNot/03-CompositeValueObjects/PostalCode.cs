@@ -18,7 +18,7 @@ public sealed partial class PostalCode : SimpleValueObject<string>
     public static Fin<PostalCode> Create(string value) =>
         CreateFromValidation(Validate(value), validValue => new PostalCode(validValue));
 
-    internal static PostalCode CreateFromValidated(string validatedValue) =>
+    public static PostalCode CreateFromValidated(string validatedValue) =>
         new PostalCode(validatedValue);
 
     public static Validation<Error, string> Validate(string value) =>

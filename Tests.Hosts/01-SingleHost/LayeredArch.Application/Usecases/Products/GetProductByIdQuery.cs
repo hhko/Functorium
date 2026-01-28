@@ -1,3 +1,4 @@
+using LayeredArch.Domain.Entities;
 using LayeredArch.Domain.Repositories;
 
 namespace LayeredArch.Application.Usecases.Products;
@@ -11,13 +12,13 @@ public sealed class GetProductByIdQuery
     /// <summary>
     /// Query Request - 조회할 상품 ID
     /// </summary>
-    public sealed record Request(Guid ProductId) : IQueryRequest<Response>;
+    public sealed record Request(string ProductId) : IQueryRequest<Response>;
 
     /// <summary>
     /// Query Response - 조회된 상품 정보
     /// </summary>
     public sealed record Response(
-        Guid ProductId,
+        string ProductId,
         string Name,
         string Description,
         decimal Price,
@@ -41,10 +42,11 @@ public sealed class GetProductByIdQuery
         {
             // LINQ 쿼리 표현식: Repository의 FinT<IO, Product>를 직접 사용하여 Response로 변환
             // FinTUtilites.SelectMany가 FinT를 LINQ 쿼리 표현식에서 사용 가능하도록 지원
+            var productId = ProductId.Create(request.ProductId);
             FinT<IO, Response> usecase =
-                from product in _productRepository.GetById(request.ProductId)
+                from product in _productRepository.GetById(productId)
                 select new Response(
-                    product.Id,
+                    product.Id.ToString(),
                     product.Name,
                     product.Description,
                     product.Price,

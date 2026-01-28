@@ -1,4 +1,6 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
+using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -23,7 +25,7 @@ public sealed class OrderInfo : ValueObject
             Validate(customerName, customerEmail, orderAmountInput, discountInput),
             v => new OrderInfo(v.CustomerName, v.CustomerEmail, v.OrderAmount, v.FinalAmount));
 
-    internal static OrderInfo CreateFromValidated((string CustomerName, string CustomerEmail, decimal OrderAmount, decimal FinalAmount) v) =>
+    public static OrderInfo CreateFromValidated((string CustomerName, string CustomerEmail, decimal OrderAmount, decimal FinalAmount) v) =>
         new(v.CustomerName, v.CustomerEmail, v.OrderAmount, v.FinalAmount);
 
     // 혼합 검증 - Apply(병렬) + Bind(순차) 패턴
@@ -32,7 +34,6 @@ public sealed class OrderInfo : ValueObject
         // 독립 검증 (Apply) - 기본 정보들을 병렬로 검증
         (ValidateCustomerName(customerName), ValidateCustomerEmail(customerEmail))
             .Apply((n, e) => (n, e))
-            .As()
             // 의존 검증 (Bind) - 금액 정보들을 순차적으로 검증
             .Bind(_ => ValidateOrderAmount(orderAmountInput))
             .Bind(_ => ValidateFinalAmount(orderAmountInput, discountInput))

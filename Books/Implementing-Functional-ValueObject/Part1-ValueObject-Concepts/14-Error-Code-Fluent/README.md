@@ -126,7 +126,7 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
     public static Fin<Denominator> Create(int value) =>
         CreateFromValidation(Validate(value), validValue => new Denominator(validValue));
 
-    internal static Denominator CreateFromValidated(int validatedValue) =>
+    public static Denominator CreateFromValidated(int validatedValue) =>
         new Denominator(validatedValue);
 
     public static Validation<Error, int> Validate(int value)
@@ -157,7 +157,7 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
     public static Fin<Denominator> Create(int value) =>
         CreateFromValidation(Validate(value), validValue => new Denominator(validValue));
 
-    internal static Denominator CreateFromValidated(int validatedValue) =>
+    public static Denominator CreateFromValidated(int validatedValue) =>
         new Denominator(validatedValue);
 
     public static Validation<Error, int> Validate(int value) =>
@@ -377,7 +377,7 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
     public static Fin<Denominator> Create(int value) =>
         CreateFromValidation(Validate(value), validValue => new Denominator(validValue));
 
-    internal static Denominator CreateFromValidated(int validatedValue) =>
+    public static Denominator CreateFromValidated(int validatedValue) =>
         new Denominator(validatedValue);
 
     public static Validation<Error, int> Validate(int value) =>
@@ -445,7 +445,7 @@ public sealed class PostalCode : SimpleValueObject<string>
     public static Fin<PostalCode> Create(string value) =>
         CreateFromValidation(Validate(value), validValue => new PostalCode(validValue));
 
-    internal static PostalCode CreateFromValidated(string validatedValue) =>
+    public static PostalCode CreateFromValidated(string validatedValue) =>
         new PostalCode(validatedValue);
 
     public static Validation<Error, string> Validate(string value) =>

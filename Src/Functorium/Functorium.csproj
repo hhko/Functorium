@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <PackageReference Include="LanguageExt.Core" />
+    <PackageReference Include="Ulid" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="Serilog" />
     <PackageReference Include="Serilog.Extensions.Hosting" />

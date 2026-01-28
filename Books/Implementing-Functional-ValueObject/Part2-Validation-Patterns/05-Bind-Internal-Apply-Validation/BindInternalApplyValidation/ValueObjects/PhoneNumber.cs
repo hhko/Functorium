@@ -1,4 +1,6 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
+using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -26,7 +28,7 @@ public sealed class PhoneNumber : ValueObject
             Validate(phoneNumber),
             v => new PhoneNumber(v.CountryCode, v.AreaCode, v.LocalNumber));
 
-    internal static PhoneNumber CreateFromValidated((string CountryCode, string AreaCode, string LocalNumber) v) =>
+    public static PhoneNumber CreateFromValidated((string CountryCode, string AreaCode, string LocalNumber) v) =>
         new(v.CountryCode, v.AreaCode, v.LocalNumber);
 
     // 중첩 검증 - Bind 외부 + Apply 내부 패턴
@@ -36,8 +38,7 @@ public sealed class PhoneNumber : ValueObject
             // 내부 Apply - 형식이 유효하면 구성 요소들을 병렬로 검증
             .Bind(validFormat =>
                 (ValidateCountryCode(validFormat), ValidateAreaCode(validFormat), ValidateLocalNumber(validFormat))
-                    .Apply((c, a, l) => (c, a, l))
-                    .As());
+                    .Apply((c, a, l) => (c, a, l)));
 
     private static Validation<Error, string> ValidatePhoneNumberFormat(string phoneNumber) =>
         !string.IsNullOrWhiteSpace(phoneNumber) && phoneNumber.Length >= 10

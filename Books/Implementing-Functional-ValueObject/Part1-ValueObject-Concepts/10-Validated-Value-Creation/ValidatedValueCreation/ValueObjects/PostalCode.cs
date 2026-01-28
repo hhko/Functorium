@@ -36,7 +36,7 @@ public sealed class PostalCode : IEquatable<PostalCode>
     /// </summary>
     /// <param name="validatedValue">검증된 우편번호</param>
     /// <returns>PostalCode 인스턴스</returns>
-    internal static PostalCode CreateFromValidated(string validatedValue) =>
+    public static PostalCode CreateFromValidated(string validatedValue) =>
         new PostalCode(validatedValue);
 
     ///// <summary>

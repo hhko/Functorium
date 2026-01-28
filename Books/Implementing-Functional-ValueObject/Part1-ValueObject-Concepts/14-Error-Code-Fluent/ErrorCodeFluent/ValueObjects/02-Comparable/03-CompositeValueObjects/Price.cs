@@ -24,7 +24,7 @@ public sealed class Price : ComparableValueObject
             Validate(amount, currency),
             validValues => new Price(validValues.Amount, validValues.Currency));
 
-    internal static Price CreateFromValidated((MoneyAmount Amount, Currency Currency) validatedValues) =>
+    public static Price CreateFromValidated((MoneyAmount Amount, Currency Currency) validatedValues) =>
         new Price(validatedValues.Amount, validatedValues.Currency);
 
     public static Validation<Error, (MoneyAmount Amount, Currency Currency)> Validate(decimal amount, string currency) =>

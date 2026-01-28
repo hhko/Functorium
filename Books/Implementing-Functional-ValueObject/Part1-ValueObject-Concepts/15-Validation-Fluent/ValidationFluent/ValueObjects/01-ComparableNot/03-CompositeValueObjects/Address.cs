@@ -29,7 +29,7 @@ public sealed class Address : ValueObject
                 validValues.City,
                 validValues.PostalCode));
 
-    internal static Address CreateFromValidated(Street street, City city, PostalCode postalCode) =>
+    public static Address CreateFromValidated(Street street, City city, PostalCode postalCode) =>
         new Address(street, city, postalCode);
 
     public static Validation<Error, (Street Street, City City, PostalCode PostalCode)> Validate(

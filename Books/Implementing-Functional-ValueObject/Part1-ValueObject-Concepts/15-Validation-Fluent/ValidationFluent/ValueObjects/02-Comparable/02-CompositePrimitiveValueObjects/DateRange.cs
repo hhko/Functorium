@@ -1,4 +1,6 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
+using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -24,13 +26,13 @@ public sealed class DateRange : ComparableValueObject
             Validate(startDate, endDate),
             validValues => new DateRange(validValues.Min, validValues.Max));
 
-    internal static DateRange CreateFromValidated(DateTime startDate, DateTime endDate) =>
+    public static DateRange CreateFromValidated(DateTime startDate, DateTime endDate) =>
         new DateRange(startDate, endDate);
 
     public static Validation<Error, (DateTime Min, DateTime Max)> Validate(DateTime startDate, DateTime endDate) =>
-        from validStartDate in (Validation<Error, DateTime>)Validate<DateRange>.NotDefault(startDate)
-        from validEndDate in (Validation<Error, DateTime>)Validate<DateRange>.NotDefault(endDate)
-        from validRange in (Validation<Error, (DateTime, DateTime)>)Validate<DateRange>.ValidStrictRange(validStartDate, validEndDate)
+        from validStartDate in Validate<DateRange>.NotDefault(startDate)
+        from validEndDate in Validate<DateRange>.NotDefault(endDate)
+        from validRange in Validate<DateRange>.ValidStrictRange(validStartDate, validEndDate)
         select validRange;
 
     protected override IEnumerable<IComparable> GetComparableEqualityComponents()

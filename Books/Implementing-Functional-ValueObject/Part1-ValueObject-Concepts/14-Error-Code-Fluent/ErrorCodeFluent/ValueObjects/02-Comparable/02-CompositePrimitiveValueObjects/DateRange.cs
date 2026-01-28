@@ -1,4 +1,5 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -24,7 +25,7 @@ public sealed class DateRange : ComparableValueObject
             Validate(startDate, endDate),
             validValues => new DateRange(validValues.StartDate, validValues.EndDate));
 
-    internal static DateRange CreateFromValidated(DateTime startDate, DateTime endDate) =>
+    public static DateRange CreateFromValidated(DateTime startDate, DateTime endDate) =>
         new DateRange(startDate, endDate);
 
     public static Validation<Error, (DateTime StartDate, DateTime EndDate)> Validate(DateTime startDate, DateTime endDate) =>

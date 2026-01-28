@@ -39,7 +39,7 @@ public sealed class City : SimpleValueObject<string>
     /// </summary>
     /// <param name="validatedValue">이미 검증된 도시명</param>
     /// <returns>생성된 City 인스턴스</returns>
-    internal static City CreateFromValidated(string validatedValue) =>
+    public static City CreateFromValidated(string validatedValue) =>
         new City(validatedValue);
 
     /// <summary>

@@ -1,4 +1,5 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
 
 namespace Cqrs02Pipeline.Demo.Domain.ValueObjects;
 
@@ -21,6 +22,6 @@ public sealed class ProductName : SimpleValueObject<string>
     /// - 최대 100자
     /// </summary>
     public static Validation<Error, string> Validate(string value) =>
-        Validate<ProductName>.NotEmpty(value)
+        ValidationRules<ProductName>.NotEmpty(value)
             .ThenMaxLength(100);
 }

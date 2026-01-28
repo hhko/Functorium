@@ -182,7 +182,7 @@ public static Fin<Email> Create(string value)
 }
 
 // ⚠️ 검증된 값에서만 예외 허용 (내부용)
-internal static Email CreateFromValidated(string value) => new(value);
+public static Email CreateFromValidated(string value) => new(value);
 ```
 
 ---

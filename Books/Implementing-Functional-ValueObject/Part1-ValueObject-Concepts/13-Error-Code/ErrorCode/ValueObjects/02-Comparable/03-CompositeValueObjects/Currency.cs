@@ -104,7 +104,7 @@ public sealed class Currency
     /// </summary>
     /// <param name="currencyCode">검증된 통화 코드</param>
     /// <returns>생성된 Currency 인스턴스</returns>
-    internal static Currency CreateFromValidated(string currencyCode) =>
+    public static Currency CreateFromValidated(string currencyCode) =>
         FromValue(currencyCode);
 
     /// <summary>

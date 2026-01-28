@@ -25,7 +25,11 @@ public interface ITestObservabilityAdapter : IAdapter
 /// Observability 테스트용 Adapter.
 /// [GeneratePipeline] 속성으로 파이프라인 클래스가 자동 생성됩니다.
 /// </summary>
+// CS0436: 소스 생성기가 생성한 GeneratePipelineAttribute와 어셈블리의 타입이 충돌합니다.
+// 테스트 프로젝트에서 Generator를 Analyzer와 일반 참조로 모두 사용하므로 의도된 동작입니다.
+#pragma warning disable CS0436
 [GeneratePipeline]
+#pragma warning restore CS0436
 public class TestObservabilityAdapter : ITestObservabilityAdapter
 {
     public string RequestCategory => "Repository";

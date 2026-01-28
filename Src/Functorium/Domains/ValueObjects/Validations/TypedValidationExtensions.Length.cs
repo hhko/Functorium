@@ -14,7 +14,7 @@ public static partial class TypedValidationExtensions
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TypedValidation<TValueObject, string> ThenNotEmpty<TValueObject>(
         this TypedValidation<TValueObject, string> validation) =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.NotEmptyInternal(v)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.NotEmptyInternal(v)));
 
     /// <summary>
     /// 문자열이 최소 길이를 충족하는지 체인으로 검증합니다.
@@ -27,7 +27,7 @@ public static partial class TypedValidationExtensions
     public static TypedValidation<TValueObject, string> ThenMinLength<TValueObject>(
         this TypedValidation<TValueObject, string> validation,
         int minLength) =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.MinLengthInternal(v, minLength)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.MinLengthInternal(v, minLength)));
 
     /// <summary>
     /// 문자열이 최대 길이를 초과하지 않는지 체인으로 검증합니다.
@@ -40,7 +40,7 @@ public static partial class TypedValidationExtensions
     public static TypedValidation<TValueObject, string> ThenMaxLength<TValueObject>(
         this TypedValidation<TValueObject, string> validation,
         int maxLength) =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.MaxLengthInternal(v, maxLength)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.MaxLengthInternal(v, maxLength)));
 
     /// <summary>
     /// 문자열이 정확한 길이인지 체인으로 검증합니다.
@@ -53,7 +53,7 @@ public static partial class TypedValidationExtensions
     public static TypedValidation<TValueObject, string> ThenExactLength<TValueObject>(
         this TypedValidation<TValueObject, string> validation,
         int length) =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.ExactLengthInternal(v, length)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.ExactLengthInternal(v, length)));
 
     /// <summary>
     /// 문자열을 변환(정규화)합니다.

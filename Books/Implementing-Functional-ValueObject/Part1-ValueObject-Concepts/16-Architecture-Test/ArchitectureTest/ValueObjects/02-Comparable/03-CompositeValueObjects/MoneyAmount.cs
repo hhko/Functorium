@@ -1,8 +1,8 @@
 using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
-using DomainError = Functorium.Domains.ValueObjects.DomainError;
-using DomainErrorType = Functorium.Domains.ValueObjects.DomainErrorType;
+using DomainError = Functorium.Domains.Errors.DomainError;
+using DomainErrorType = Functorium.Domains.Errors.DomainErrorType;
 
 namespace ArchitectureTest.ValueObjects.Comparable.CompositeValueObjects;
 
@@ -34,7 +34,7 @@ public sealed class MoneyAmount : ComparableSimpleValueObject<decimal>
     /// </summary>
     /// <param name="validatedValue">검증된 금액</param>
     /// <returns>MoneyAmount 값 객체</returns>
-    internal static MoneyAmount CreateFromValidated(decimal validatedValue) =>
+    public static MoneyAmount CreateFromValidated(decimal validatedValue) =>
         new MoneyAmount(validatedValue);
 
     /// <summary>

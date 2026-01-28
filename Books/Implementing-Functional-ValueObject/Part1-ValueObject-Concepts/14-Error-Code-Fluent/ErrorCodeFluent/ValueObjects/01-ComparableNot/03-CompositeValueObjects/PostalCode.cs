@@ -1,4 +1,5 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -15,7 +16,7 @@ public sealed class PostalCode : SimpleValueObject<string>
     public static Fin<PostalCode> Create(string value) =>
         CreateFromValidation(Validate(value), validValue => new PostalCode(validValue));
 
-    internal static PostalCode CreateFromValidated(string validatedValue) =>
+    public static PostalCode CreateFromValidated(string validatedValue) =>
         new PostalCode(validatedValue);
 
     public static Validation<Error, string> Validate(string value) =>

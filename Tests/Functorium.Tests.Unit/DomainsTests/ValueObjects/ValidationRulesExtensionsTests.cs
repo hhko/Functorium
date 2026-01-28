@@ -17,7 +17,7 @@ public class ValidationRulesExtensionsTests
     public void ThenNotEmpty_ReturnsSuccess_WhenChainedAfterSuccess()
     {
         // Arrange & Act
-        var actual = Validate<SampleValueObject>.NotEmpty("valid")
+        var actual = ValidationRules<SampleValueObject>.NotEmpty("valid")
             .ThenNotEmpty();
 
         // Assert
@@ -28,7 +28,7 @@ public class ValidationRulesExtensionsTests
     public void ThenNotEmpty_ReturnsOriginalFailure_WhenChainedAfterFailure()
     {
         // Arrange & Act
-        var actual = Validate<SampleValueObject>.NotEmpty("")
+        var actual = ValidationRules<SampleValueObject>.NotEmpty("")
             .ThenNotEmpty();
 
         // Assert
@@ -46,7 +46,7 @@ public class ValidationRulesExtensionsTests
     public void ThenMinLength_ChainsCorrectly()
     {
         // Arrange & Act
-        var actual = Validate<SampleValueObject>.NotEmpty("12345")
+        var actual = ValidationRules<SampleValueObject>.NotEmpty("12345")
             .ThenMinLength(5);
 
         // Assert
@@ -57,7 +57,7 @@ public class ValidationRulesExtensionsTests
     public void ThenMaxLength_ChainsCorrectly()
     {
         // Arrange & Act
-        var actual = Validate<SampleValueObject>.NotEmpty("12345")
+        var actual = ValidationRules<SampleValueObject>.NotEmpty("12345")
             .ThenMaxLength(10);
 
         // Assert
@@ -68,7 +68,7 @@ public class ValidationRulesExtensionsTests
     public void ThenExactLength_ChainsCorrectly()
     {
         // Arrange & Act
-        var actual = Validate<SampleValueObject>.NotEmpty("ABC")
+        var actual = ValidationRules<SampleValueObject>.NotEmpty("ABC")
             .ThenExactLength(3);
 
         // Assert
@@ -79,7 +79,7 @@ public class ValidationRulesExtensionsTests
     public void ThenMatches_ChainsCorrectly()
     {
         // Arrange & Act
-        var actual = Validate<SampleValueObject>.NotEmpty("110-1234567890")
+        var actual = ValidationRules<SampleValueObject>.NotEmpty("110-1234567890")
             .ThenMatches(AccountPattern);
 
         // Assert
@@ -90,7 +90,7 @@ public class ValidationRulesExtensionsTests
     public void ThenNormalize_TransformsValue()
     {
         // Arrange & Act
-        var actual = Validate<SampleValueObject>.NotEmpty("  trimmed  ")
+        var actual = ValidationRules<SampleValueObject>.NotEmpty("  trimmed  ")
             .ThenNormalize(v => v.Trim());
 
         // Assert
@@ -108,7 +108,7 @@ public class ValidationRulesExtensionsTests
     public void ThenNonNegative_ChainsCorrectly()
     {
         // Arrange & Act
-        var actual = Validate<NumericValueObject>.NonNegative(0m)
+        var actual = ValidationRules<NumericValueObject>.NonNegative(0m)
             .ThenNonNegative();
 
         // Assert
@@ -119,7 +119,7 @@ public class ValidationRulesExtensionsTests
     public void ThenPositive_ChainsCorrectly()
     {
         // Arrange & Act
-        var actual = Validate<NumericValueObject>.Positive(1m)
+        var actual = ValidationRules<NumericValueObject>.Positive(1m)
             .ThenPositive();
 
         // Assert
@@ -130,7 +130,7 @@ public class ValidationRulesExtensionsTests
     public void ThenBetween_ChainsCorrectly()
     {
         // Arrange & Act
-        var actual = Validate<NumericValueObject>.NonNegative(50m)
+        var actual = ValidationRules<NumericValueObject>.NonNegative(50m)
             .ThenBetween(0m, 100m);
 
         // Assert
@@ -141,7 +141,7 @@ public class ValidationRulesExtensionsTests
     public void ThenAtMost_ChainsCorrectly()
     {
         // Arrange & Act
-        var actual = Validate<NumericValueObject>.NonNegative(50m)
+        var actual = ValidationRules<NumericValueObject>.NonNegative(50m)
             .ThenAtMost(100m);
 
         // Assert
@@ -152,7 +152,7 @@ public class ValidationRulesExtensionsTests
     public void ThenAtLeast_ChainsCorrectly()
     {
         // Arrange & Act
-        var actual = Validate<NumericValueObject>.NonNegative(50m)
+        var actual = ValidationRules<NumericValueObject>.NonNegative(50m)
             .ThenAtLeast(10m);
 
         // Assert
@@ -167,7 +167,7 @@ public class ValidationRulesExtensionsTests
     public void ThenMust_ChainsCorrectlyWithStaticMessage()
     {
         // Arrange & Act
-        var actual = Validate<SampleValueObject>.NotEmpty("UPPERCASE")
+        var actual = ValidationRules<SampleValueObject>.NotEmpty("UPPERCASE")
             .ThenMust(
                 v => v == v.ToUpperInvariant(),
                 new DomainErrorType.NotUpperCase(),
@@ -181,7 +181,7 @@ public class ValidationRulesExtensionsTests
     public void ThenMust_ChainsCorrectlyWithMessageFactory()
     {
         // Arrange & Act
-        var actual = Validate<SampleValueObject>.NotEmpty("lowercase")
+        var actual = ValidationRules<SampleValueObject>.NotEmpty("lowercase")
             .ThenMust(
                 v => v == v.ToUpperInvariant(),
                 new DomainErrorType.NotUpperCase(),
@@ -205,7 +205,7 @@ public class ValidationRulesExtensionsTests
         var value = "  110-1234567890  ";
 
         // Act
-        var actual = Validate<SampleValueObject>.NotEmpty(value)
+        var actual = ValidationRules<SampleValueObject>.NotEmpty(value)
             .ThenNormalize(v => v.Trim())
             .ThenMatches(AccountPattern);
 
@@ -223,7 +223,7 @@ public class ValidationRulesExtensionsTests
         var value = "";
 
         // Act
-        var actual = Validate<SampleValueObject>.NotEmpty(value)
+        var actual = ValidationRules<SampleValueObject>.NotEmpty(value)
             .ThenMatches(AccountPattern);
 
         // Assert
@@ -245,7 +245,7 @@ public class ValidationRulesExtensionsTests
         var value = 50m;
 
         // Act
-        var actual = Validate<NumericValueObject>.NonNegative(value)
+        var actual = ValidationRules<NumericValueObject>.NonNegative(value)
             .ThenAtMost(100m);
 
         // Assert
@@ -260,7 +260,7 @@ public class ValidationRulesExtensionsTests
     public void TypedValidation_CanBeImplicitlyConvertedToValidation()
     {
         // Arrange
-        var typedValidation = Validate<SampleValueObject>.NotEmpty("valid");
+        var typedValidation = ValidationRules<SampleValueObject>.NotEmpty("valid");
 
         // Act - implicit conversion
         Validation<Error, string> validation = typedValidation;
@@ -273,7 +273,7 @@ public class ValidationRulesExtensionsTests
     public void ChainResult_CanBeAssignedToValidation()
     {
         // Arrange & Act
-        Validation<Error, string> actual = Validate<SampleValueObject>.NotEmpty("test")
+        Validation<Error, string> actual = ValidationRules<SampleValueObject>.NotEmpty("test")
             .ThenMaxLength(100)
             .ThenNormalize(v => v.ToUpperInvariant());
 
@@ -292,7 +292,7 @@ public class ValidationRulesExtensionsTests
     public void ThenIsUpperCase_ChainsCorrectly_WhenValueIsUpperCase()
     {
         // Arrange & Act
-        var actual = Validate<SampleValueObject>.NotEmpty("UPPERCASE")
+        var actual = ValidationRules<SampleValueObject>.NotEmpty("UPPERCASE")
             .ThenIsUpperCase();
 
         // Assert
@@ -303,7 +303,7 @@ public class ValidationRulesExtensionsTests
     public void ThenIsUpperCase_ReturnsFailure_WhenValueIsNotUpperCase()
     {
         // Arrange & Act
-        var actual = Validate<SampleValueObject>.NotEmpty("MixedCase")
+        var actual = ValidationRules<SampleValueObject>.NotEmpty("MixedCase")
             .ThenIsUpperCase();
 
         // Assert
@@ -321,7 +321,7 @@ public class ValidationRulesExtensionsTests
     public void ThenIsLowerCase_ChainsCorrectly_WhenValueIsLowerCase()
     {
         // Arrange & Act
-        var actual = Validate<SampleValueObject>.NotEmpty("lowercase")
+        var actual = ValidationRules<SampleValueObject>.NotEmpty("lowercase")
             .ThenIsLowerCase();
 
         // Assert
@@ -332,7 +332,7 @@ public class ValidationRulesExtensionsTests
     public void ThenIsLowerCase_ReturnsFailure_WhenValueIsNotLowerCase()
     {
         // Arrange & Act
-        var actual = Validate<SampleValueObject>.NotEmpty("MixedCase")
+        var actual = ValidationRules<SampleValueObject>.NotEmpty("MixedCase")
             .ThenIsLowerCase();
 
         // Assert
@@ -354,7 +354,7 @@ public class ValidationRulesExtensionsTests
     public void ThenValidRange_ChainsCorrectly_WhenRangeIsValid()
     {
         // Arrange & Act
-        var actual = Validate<NumericValueObject>.ValidRange(1, 10)
+        var actual = ValidationRules<NumericValueObject>.ValidRange(1, 10)
             .ThenValidRange();
 
         // Assert
@@ -368,7 +368,7 @@ public class ValidationRulesExtensionsTests
     public void ThenValidRange_ReturnsFailure_WhenRangeIsInverted()
     {
         // Arrange & Act
-        var actual = Validate<NumericValueObject>.ValidRange(10, 1)
+        var actual = ValidationRules<NumericValueObject>.ValidRange(10, 1)
             .ThenValidRange();
 
         // Assert
@@ -386,7 +386,7 @@ public class ValidationRulesExtensionsTests
     public void ThenValidStrictRange_ChainsCorrectly_WhenRangeIsStrictlyValid()
     {
         // Arrange & Act
-        var actual = Validate<NumericValueObject>.ValidRange(1, 10)
+        var actual = ValidationRules<NumericValueObject>.ValidRange(1, 10)
             .ThenValidStrictRange();
 
         // Assert
@@ -397,7 +397,7 @@ public class ValidationRulesExtensionsTests
     public void ThenValidStrictRange_ReturnsFailure_WhenRangeIsEmpty()
     {
         // Arrange & Act
-        var actual = Validate<NumericValueObject>.ValidRange(5, 5)
+        var actual = ValidationRules<NumericValueObject>.ValidRange(5, 5)
             .ThenValidStrictRange();
 
         // Assert
@@ -419,7 +419,7 @@ public class ValidationRulesExtensionsTests
     public void ThenNotEmptyArray_ChainsCorrectly_WhenArrayIsNotEmpty()
     {
         // Arrange & Act
-        var actual = Validate<SampleValueObject>.NotEmptyArray(new[] { "a", "b" })
+        var actual = ValidationRules<SampleValueObject>.NotEmptyArray(new[] { "a", "b" })
             .ThenNotEmptyArray();
 
         // Assert
@@ -433,7 +433,7 @@ public class ValidationRulesExtensionsTests
     public void ThenNotEmptyArray_ReturnsFailure_WhenArrayIsEmpty()
     {
         // Arrange & Act
-        var actual = Validate<SampleValueObject>.NotEmptyArray(new string[0])
+        var actual = ValidationRules<SampleValueObject>.NotEmptyArray(new string[0])
             .ThenNotEmptyArray();
 
         // Assert

@@ -18,7 +18,7 @@ public interface IProductRepository : IAdapter
     /// ID로 상품 조회.
     /// 상품이 없으면 실패(Error)를 반환합니다.
     /// </summary>
-    FinT<IO, Product> GetById(Guid id);
+    FinT<IO, Product> GetById(ProductId id);
 
     /// <summary>
     /// 모든 상품 조회

@@ -12,7 +12,7 @@
   - [ComparableValueObject](#comparablevalueobject)
   - [ComparableSimpleValueObject\<T\>](#comparablesimplevalueobjectt)
 - [검증 시스템](#검증-시스템)
-  - [Validate\<T\> 시작점](#validatet-시작점)
+  - [ValidationRules\<T\> 시작점](#validationrulest-시작점)
   - [TypedValidation 체이닝](#typedvalidation-체이닝)
 - [오류 시스템](#오류-시스템)
   - [DomainErrorType 계층](#domainerrortype-계층)
@@ -66,7 +66,7 @@ public sealed class Email : SimpleValueObject<string>
 
     // Validate: 원시 타입 반환, 타입 파라미터 한 번만 지정
     public static Validation<Error, string> Validate(string? value) =>
-        Validate<Email>.NotEmpty(value ?? "")
+        ValidationRules<Email>.NotEmpty(value ?? "")
             .ThenMatches(EmailPattern)
             .ThenMaxLength(254)
             .ThenNormalize(v => v.ToLowerInvariant());
@@ -156,13 +156,14 @@ public sealed class Money : ValueObject
         yield return Currency;
     }
 
+    // Create: CreateFromValidation 헬퍼 사용
     public static Fin<Money> Create(decimal amount, string currency) =>
-        Validate(amount, currency).ToFin();
+        CreateFromValidation(Validate(amount, currency), v => new Money(v.Amount, v.Currency));
 
-    public static Validation<Error, Money> Validate(decimal amount, string currency) =>
+    // Validate: 검증된 원시값 튜플 반환 (ValueObject 생성은 Create에서)
+    public static Validation<Error, (decimal Amount, string Currency)> Validate(decimal amount, string currency) =>
         (ValidateAmount(amount), ValidateCurrency(currency))
-            .Apply((a, c) => new Money(a, c))
-            .As();
+            .Apply((a, c) => (Amount: a, Currency: c));
 }
 ```
 
@@ -207,7 +208,7 @@ public sealed class ProductName : SimpleValueObject<string>
         CreateFromValidation(Validate(value), v => new ProductName(v));
 
     public static Validation<Error, string> Validate(string? value) =>
-        Validate<ProductName>.NotEmpty(value ?? "")
+        ValidationRules<ProductName>.NotEmpty(value ?? "")
             .ThenMaxLength(100);
 
     // 암시적 변환 (선택적)
@@ -271,7 +272,7 @@ public sealed class Price : ComparableSimpleValueObject<decimal>
         CreateFromValidation(Validate(value), v => new Price(v));
 
     public static Validation<Error, decimal> Validate(decimal value) =>
-        Validate<Price>.Positive(value)
+        ValidationRules<Price>.Positive(value)
             .ThenAtMost(1_000_000);
 
     public static implicit operator decimal(Price price) => price.Value;
@@ -284,10 +285,10 @@ public sealed class Price : ComparableSimpleValueObject<decimal>
 
 ### 검증 카테고리 요약
 
-검증 클래스(DomainErrorType, Validate, TypedValidationExtensions)는 다음과 같은 일관된 범주 구조를 따릅니다:
+검증 클래스(DomainErrorType, ValidationRules, TypedValidationExtensions)는 다음과 같은 일관된 범주 구조를 따릅니다:
 
-| DomainErrorType | Validate | TypedValidationExtensions |
-|-----------------|----------|---------------------------|
+| DomainErrorType | ValidationRules | TypedValidationExtensions |
+|-----------------|-----------------|---------------------------|
 | Presence | Presence | Presence |
 | Length | Length | Length |
 | Format | Format | Format |
@@ -311,17 +312,17 @@ public sealed class Price : ComparableSimpleValueObject<decimal>
 | **Collection** | `NotEmptyArray` | `Empty` | 배열 검증 |
 | **Custom** | `Must`, `ThenMust` | `Custom(Name)` | 사용자 정의 검증 |
 
-### Validate\<T\> 시작점
+### ValidationRules\<T\> 시작점
 
-**위치**: `Functorium.Domains.ValueObjects.Validate<TValueObject>`
+**위치**: `Functorium.Domains.ValueObjects.Validations.ValidationRules<TValueObject>`
 
 타입 파라미터를 한 번만 지정하면 체이닝에서 반복하지 않아도 됩니다.
 
 #### Presence 검증 메서드
 
 ```csharp
-Validate<User>.NotNull(value)                // null이 아님 (참조 타입)
-Validate<User>.NotNull(nullableValue)        // null이 아님 (nullable 값 타입)
+ValidationRules<User>.NotNull(value)                // null이 아님 (참조 타입)
+ValidationRules<User>.NotNull(nullableValue)        // null이 아님 (nullable 값 타입)
 ```
 
 | 메서드 | ErrorType | 오류 메시지 |
@@ -331,10 +332,10 @@ Validate<User>.NotNull(nullableValue)        // null이 아님 (nullable 값 타
 #### Length 검증 메서드
 
 ```csharp
-Validate<Email>.NotEmpty(value)              // 비어있지 않음
-Validate<Email>.MinLength(value, 8)          // 최소 길이
-Validate<Email>.MaxLength(value, 100)        // 최대 길이
-Validate<Email>.ExactLength(value, 10)       // 정확한 길이
+ValidationRules<Email>.NotEmpty(value)              // 비어있지 않음
+ValidationRules<Email>.MinLength(value, 8)          // 최소 길이
+ValidationRules<Email>.MaxLength(value, 100)        // 최대 길이
+ValidationRules<Email>.ExactLength(value, 10)       // 정확한 길이
 ```
 
 | 메서드 | ErrorType | 오류 메시지 |
@@ -347,10 +348,10 @@ Validate<Email>.ExactLength(value, 10)       // 정확한 길이
 #### Format 검증 메서드
 
 ```csharp
-Validate<Email>.Matches(value, regex)        // 정규식 패턴
-Validate<Email>.Matches(value, regex, msg)   // 정규식 + 커스텀 메시지
-Validate<Code>.IsUpperCase(value)            // 대문자 검증
-Validate<Code>.IsLowerCase(value)            // 소문자 검증
+ValidationRules<Email>.Matches(value, regex)        // 정규식 패턴
+ValidationRules<Email>.Matches(value, regex, msg)   // 정규식 + 커스텀 메시지
+ValidationRules<Code>.IsUpperCase(value)            // 대문자 검증
+ValidationRules<Code>.IsLowerCase(value)            // 소문자 검증
 ```
 
 | 메서드 | ErrorType | 오류 메시지 |
@@ -364,12 +365,12 @@ Validate<Code>.IsLowerCase(value)            // 소문자 검증
 `INumber<T>` 제약으로 모든 숫자 타입(int, decimal, double 등)에서 동작합니다:
 
 ```csharp
-Validate<Price>.Positive(value)              // > 0
-Validate<Age>.NonNegative(value)             // >= 0
-Validate<Denominator>.NotZero(value)         // != 0
-Validate<Age>.Between(value, 0, 150)         // min <= value <= max
-Validate<Age>.AtMost(value, 150)             // <= max
-Validate<Age>.AtLeast(value, 0)              // >= min
+ValidationRules<Price>.Positive(value)              // > 0
+ValidationRules<Age>.NonNegative(value)             // >= 0
+ValidationRules<Denominator>.NotZero(value)         // != 0
+ValidationRules<Age>.Between(value, 0, 150)         // min <= value <= max
+ValidationRules<Age>.AtMost(value, 150)             // <= max
+ValidationRules<Age>.AtLeast(value, 0)              // >= min
 ```
 
 | 메서드 | ErrorType | 오류 메시지 |
@@ -384,7 +385,7 @@ Validate<Age>.AtLeast(value, 0)              // >= min
 #### Collection 검증 메서드
 
 ```csharp
-Validate<BinaryData>.NotEmptyArray(value)    // 배열이 null이 아니고 길이 > 0
+ValidationRules<BinaryData>.NotEmptyArray(value)    // 배열이 null이 아니고 길이 > 0
 ```
 
 | 메서드 | ErrorType | 오류 메시지 |
@@ -394,8 +395,8 @@ Validate<BinaryData>.NotEmptyArray(value)    // 배열이 null이 아니고 길�
 #### Range 검증 메서드
 
 ```csharp
-Validate<PriceRange>.ValidRange(minValue, maxValue)        // min <= max 검증, (min, max) 튜플 반환
-Validate<DateRange>.ValidStrictRange(minValue, maxValue)   // min < max 검증, (min, max) 튜플 반환
+ValidationRules<PriceRange>.ValidRange(minValue, maxValue)        // min <= max 검증, (min, max) 튜플 반환
+ValidationRules<DateRange>.ValidStrictRange(minValue, maxValue)   // min < max 검증, (min, max) 튜플 반환
 ```
 
 | 메서드 | ErrorType | 오류 메시지 |
@@ -407,12 +408,12 @@ Validate<DateRange>.ValidStrictRange(minValue, maxValue)   // min < max 검증, 
 #### DateTime 검증 메서드
 
 ```csharp
-Validate<Birthday>.NotDefault(value)         // != DateTime.MinValue
-Validate<Birthday>.InPast(value)             // < DateTime.Now
-Validate<ExpiryDate>.InFuture(value)         // > DateTime.Now
-Validate<EndDate>.Before(value, boundary)    // < boundary
-Validate<StartDate>.After(value, boundary)   // > boundary
-Validate<EventDate>.DateBetween(value, min, max)  // min <= value <= max
+ValidationRules<Birthday>.NotDefault(value)         // != DateTime.MinValue
+ValidationRules<Birthday>.InPast(value)             // < DateTime.Now
+ValidationRules<ExpiryDate>.InFuture(value)         // > DateTime.Now
+ValidationRules<EndDate>.Before(value, boundary)    // < boundary
+ValidationRules<StartDate>.After(value, boundary)   // > boundary
+ValidationRules<EventDate>.DateBetween(value, min, max)  // min <= value <= max
 ```
 
 | 메서드 | ErrorType | 오류 메시지 |
@@ -427,7 +428,7 @@ Validate<EventDate>.DateBetween(value, min, max)  // min <= value <= max
 #### 커스텀 검증 메서드
 
 ```csharp
-Validate<Currency>.Must(
+ValidationRules<Currency>.Must(
     value,
     v => SupportedCurrencies.Contains(v),
     new Custom("Unsupported"),
@@ -438,7 +439,7 @@ Validate<Currency>.Must(
 
 **위치**: `Functorium.Domains.ValueObjects.TypedValidationExtensions`
 
-`Validate<T>`가 반환하는 `TypedValidation<TValueObject, T>`에 대한 체이닝 메서드입니다.
+`ValidationRules<T>`가 반환하는 `TypedValidation<TValueObject, T>`에 대한 체이닝 메서드입니다.
 
 #### Presence 체이닝
 
@@ -535,6 +536,41 @@ public readonly struct TypedValidation<TValueObject, T>
 - 8바이트 readonly struct (스택 할당)
 - 모든 메서드에 `AggressiveInlining` 적용
 - `TValueObject`는 팬텀 타입 파라미터 (런타임에 사용되지 않음)
+
+#### LINQ 지원 (SelectMany, Select)
+
+TypedValidation은 LINQ query expression을 지원합니다. 명시적 캐스팅 없이 `from...in` 구문을 사용할 수 있습니다.
+
+```csharp
+// 캐스팅 없이 LINQ query expression 사용
+public static Validation<Error, (DateTime Min, DateTime Max)> Validate(DateTime startDate, DateTime endDate) =>
+    from validStartDate in ValidationRules<DateRange>.NotDefault(startDate)
+    from validEndDate in ValidationRules<DateRange>.NotDefault(endDate)
+    from validRange in ValidationRules<DateRange>.ValidStrictRange(validStartDate, validEndDate)
+    select validRange;
+```
+
+| 메서드 | 설명 |
+|--------|------|
+| `SelectMany` | TypedValidation → Validation 또는 TypedValidation → TypedValidation 체이닝 |
+| `Select` | 값 변환 (Map) |
+| `ToValidation()` | TypedValidation을 Validation으로 명시적 변환 |
+
+#### Tuple Apply 지원
+
+`Validation<Error, T>` 또는 `TypedValidation<TValueObject, T>` 튜플에 대한 Apply 오버로드를 제공합니다. `.As()` 없이 사용할 수 있습니다.
+
+```csharp
+// Validation 튜플 - .As() 불필요
+(ValidateAmount(amount), ValidateCurrency(currency))
+    .Apply((a, c) => new Money(a, c));  // Validation<Error, Money> 직접 반환
+
+// TypedValidation 포함 튜플 - .As() 불필요
+(ValidateCurrency(baseCurrency), 
+ ValidateCurrency(quoteCurrency),
+ ValidationRules<ExchangeRate>.Positive(rate))  // TypedValidation
+    .Apply((b, q, r) => (b, q, r));  // Validation<Error, T> 직접 반환
+```
 
 ---
 
@@ -662,7 +698,7 @@ DomainError.For<Triangle, double, double, double>(
 |------------|-------------|---------------|
 | `SimpleValueObject<T>` | `CreateFromValidation(Validate(value), factory)` | `Validation<Error, T>` |
 | `ComparableSimpleValueObject<T>` | `CreateFromValidation(Validate(value), factory)` | `Validation<Error, T>` |
-| `ValueObject` (Apply) | `Validate(...).ToFin()` | `Validation<Error, ValueObject>` |
+| `ValueObject` (Apply) | `CreateFromValidation(Validate(...), factory)` | `Validation<Error, (T1, T2, ...)>` |
 
 ### 순차 검증 (Bind/Then)
 
@@ -670,7 +706,7 @@ DomainError.For<Triangle, double, double, double>(
 
 ```csharp
 public static Validation<Error, string> Validate(string? value) =>
-    Validate<Email>.NotEmpty(value ?? "")  // 1. 빈 값 검증
+    ValidationRules<Email>.NotEmpty(value ?? "")  // 1. 빈 값 검증
         .ThenMatches(EmailPattern)          // 2. 형식 검증 (1 통과 시)
         .ThenMaxLength(254);                // 3. 길이 검증 (2 통과 시)
 ```
@@ -680,53 +716,35 @@ public static Validation<Error, string> Validate(string? value) =>
 모든 오류 수집. 독립적인 검증에 적합:
 
 ```csharp
-public static Validation<Error, Money> Validate(decimal amount, string currency) =>
+public static Validation<Error, (decimal Amount, string Currency)> Validate(decimal amount, string currency) =>
     (ValidateAmount(amount), ValidateCurrency(currency))
-        .Apply((a, c) => new Money(a, c))
-        .As();
+        .Apply((a, c) => (Amount: a, Currency: c));
 ```
 
-#### `.As()` 메서드가 필요한 이유
-
-C#의 타입 추론 한계로 인해 튜플 기반 `Apply`의 결과 타입이 정확히 추론되지 않는 경우가 있습니다.
-
-```csharp
-// Apply 결과의 내부 타입: K<Validation<Error>, Money>
-// 기대하는 타입: Validation<Error, Money>
-
-(ValidateAmount(amount), ValidateCurrency(currency))
-    .Apply((a, c) => new Money(a, c))  // K<Validation<Error>, Money>
-    .As();                              // Validation<Error, Money>로 변환
-```
-
-| 문제 | 설명 |
-|------|------|
-| **타입 추론 한계** | C# 컴파일러가 Higher-Kinded Type을 직접 지원하지 않음 |
-| **중간 타입** | `Apply`가 `K<F, A>` 형태의 중간 타입을 반환 |
-| **명시적 변환 필요** | `.As()`로 `Validation<Error, T>`로 강제 변환 |
-
-> **참고**: [Higher Kinds in C# with language-ext](https://paullouth.com/higher-kinds-in-c-with-language-ext-part-5-validation/)에서
-> LanguageExt의 Higher-Kinded Type 에뮬레이션과 타입 추론 문제에 대해 자세히 설명합니다.
+> **참고**: Functorium은 `Validation<Error, T>` 및 `TypedValidation<TValueObject, T>` 튜플에 대한
+> Apply 오버로드를 제공하여 `.As()` 호출 없이 사용할 수 있습니다.
 
 ### 혼합 패턴 (Apply + Bind)
 
 병렬 검증 후 의존 검증:
 
 ```csharp
-public static Validation<Error, ExchangeRate> Validate(
+// 튜플에 TypedValidation이 포함되면 .As() 불필요
+public static Validation<Error, (string BaseCurrency, string QuoteCurrency, decimal Rate)> Validate(
     string baseCurrency, string quoteCurrency, decimal rate) =>
-    (ValidateCurrency(baseCurrency), ValidateCurrency(quoteCurrency), ValidateRate(rate))
-        .Apply((b, q, r) => (b, q, r))
-        .As()
-        .Bind(v => ValidateDifferentCurrencies(v.b, v.q)
-            .Map(_ => new ExchangeRate(v.b, v.q, v.r)));
+    (ValidateCurrency(baseCurrency),
+     ValidateCurrency(quoteCurrency),
+     ValidationRules<ExchangeRate>.Positive(rate))  // TypedValidation
+        .Apply((b, q, r) => (BaseCurrency: b, QuoteCurrency: q, Rate: r))
+        .Bind(v => ValidateDifferentCurrencies(v.BaseCurrency, v.QuoteCurrency)
+            .Map(_ => (v.BaseCurrency, v.QuoteCurrency, v.Rate)));
 ```
 
 ---
 
 ## FluentValidation 통합
 
-Value Object의 `Validate` 메서드를 FluentValidation과 통합하여 Application Layer에서 재사용할 수 있습니다.
+Value Object의 `Validate` 메서드를 FluentValidation과 통합하여 `Application Layer` `UsecaseValidationPipeline`에서 재사용할 수 있습니다.
 
 **위치**: `Functorium.Applications.Validations.FluentValidationExtensions`
 
@@ -737,8 +755,9 @@ Value Object의 `Validate` 메서드를 FluentValidation과 통합하여 Applica
 ```csharp
 // decimal → Validation<Error, decimal>
 public static Validation<Error, decimal> ValidateAmount(decimal amount) =>
-    Validate<Money>.NonNegative(amount);
+    ValidationRules<Money>.NonNegative(amount);
 
+// Application Layer UsecaseValidationPipeline
 // FluentValidation에서 사용 (타입 추론 작동)
 public sealed class Validator : AbstractValidator<Request>
 {
@@ -766,11 +785,12 @@ public sealed class Age : ComparableSimpleValueObject<int>
 {
     public static Validation<Error, int> Validate(string value) =>
         int.TryParse(value, out var parsed)
-            ? Validate<Age>.Between(parsed, 0, 150)
+            ? ValidationRules<Age>.Between(parsed, 0, 150)
             : DomainError.For<Age>(new Custom("InvalidFormat"), value,
                 $"'{value}'은(는) 유효한 숫자가 아닙니다");
 }
 
+// Application Layer UsecaseValidationPipeline
 // FluentValidation에서 사용 (모든 타입 파라미터 명시 필요)
 public sealed class Validator : AbstractValidator<Request>
 {
@@ -831,7 +851,7 @@ public sealed class Email : SimpleValueObject<string>
         CreateFromValidation(Validate(value), v => new Email(v));
 
     public static Validation<Error, string> Validate(string? value) =>
-        Validate<Email>.NotEmpty(value ?? "")
+        ValidationRules<Email>.NotEmpty(value ?? "")
             .ThenMatches(EmailPattern)
             .ThenMaxLength(MaxLength)
             .ThenNormalize(v => v.ToLowerInvariant());
@@ -861,7 +881,7 @@ public sealed class Quantity : ComparableSimpleValueObject<int>
         CreateFromValidation(Validate(value), v => new Quantity(v));
 
     public static Validation<Error, int> Validate(int value) =>
-        Validate<Quantity>.NonNegative(value)
+        ValidationRules<Quantity>.NonNegative(value)
             .ThenAtMost(MaxValue);
 
     public Quantity Add(Quantity other) => new(Value + other.Value);
@@ -888,19 +908,20 @@ public sealed class Money : ValueObject
         Currency = currency;
     }
 
+    // Create: CreateFromValidation 헬퍼 사용
     public static Fin<Money> Create(decimal amount, string currency) =>
-        Validate(amount, currency).ToFin();
+        CreateFromValidation(Validate(amount, currency), v => new Money(v.Amount, v.Currency));
 
-    public static Validation<Error, Money> Validate(decimal amount, string currency) =>
+    // Validate: 검증된 원시값 튜플 반환 (ValueObject 생성은 Create에서)
+    public static Validation<Error, (decimal Amount, string Currency)> Validate(decimal amount, string currency) =>
         (ValidateAmount(amount), ValidateCurrency(currency))
-            .Apply((a, c) => new Money(a, c))
-            .As();
+            .Apply((a, c) => (Amount: a, Currency: c));
 
     private static Validation<Error, decimal> ValidateAmount(decimal amount) =>
-        Validate<Money>.NonNegative(amount);
+        ValidationRules<Money>.NonNegative(amount);
 
     private static Validation<Error, string> ValidateCurrency(string currency) =>
-        Validate<Money>.NotEmpty(currency)
+        ValidationRules<Money>.NotEmpty(currency)
             .ThenExactLength(3)
             .ThenNormalize(v => v.ToUpperInvariant());
 
@@ -953,7 +974,7 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
             .Map(FromValue)
             .ToFin();
 
-    internal static Currency CreateFromValidated(string currencyCode) =>
+    public static Currency CreateFromValidated(string currencyCode) =>
         FromValue(currencyCode);
 
     public static Validation<Error, string> Validate(string currencyCode) =>
@@ -993,6 +1014,8 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
 | 기반 클래스 | Create 패턴 |
 |------------|-------------|
 | `SimpleValueObject<T>` | `CreateFromValidation(Validate(value), factory)` |
+| `ComparableSimpleValueObject<T>` | `CreateFromValidation(Validate(value), factory)` |
+| `ValueObject` | `CreateFromValidation(Validate(...), factory)` |
 | `SmartEnum<T, TValue>` | `Validate(value).Map(FromValue).ToFin()` |
 
 ---
@@ -1009,11 +1032,11 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
 | 복합 속성 + 비교/정렬 필요 | `ComparableValueObject` |
 | 열거형 + 도메인 로직 | `SmartEnum<T, TValue>` |
 
-### Q2. Validate<T>와 DomainError.For<T>() 사용 기준은?
+### Q2. ValidationRules<T>와 DomainError.For<T>() 사용 기준은?
 
 | 상황 | 권장 |
 |------|------|
-| 일반적인 검증 | `Validate<T>` + 체이닝 |
+| 일반적인 검증 | `ValidationRules<T>` + 체이닝 |
 | 커스텀 비즈니스 규칙 | `ThenMust` 또는 `DomainError.For<T>()` |
 | 도메인 연산 중 오류 | `DomainError.For<T>()` |
 

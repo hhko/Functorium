@@ -226,7 +226,7 @@ public void ValueObject_ShouldSatisfy_Rules()
                     .RequireStatic()
                     .RequireReturnType(typeof(Fin<>)))
                 .RequireMethod(IValueObject.CreateFromValidatedMethodName, method => method
-                    .RequireVisibility(Visibility.Internal)
+                    .RequireVisibility(Visibility.Public)
                     .RequireStatic()
                     .RequireReturnTypeOfDeclaringClass())
                 .RequireMethod(IValueObject.ValidateMethodName, method => method

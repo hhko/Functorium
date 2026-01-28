@@ -1,6 +1,7 @@
 using LanguageExt;
 using LanguageExt.Common;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.Errors;
 
 namespace ValueObjectComposite.ValueObjects;
 
@@ -15,7 +16,7 @@ public sealed class EmailLocalPart : SimpleValueObject<string>
     public static Fin<EmailLocalPart> Create(string value) =>
         CreateFromValidation(Validate(value), v => new EmailLocalPart(v));
 
-    internal static EmailLocalPart CreateFromValidated(string validatedValue) =>
+    public static EmailLocalPart CreateFromValidated(string validatedValue) =>
         new(validatedValue);
 
     public static Validation<Error, string> Validate(string value) =>

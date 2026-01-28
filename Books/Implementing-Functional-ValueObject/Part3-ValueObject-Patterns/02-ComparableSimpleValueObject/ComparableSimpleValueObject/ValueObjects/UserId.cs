@@ -1,6 +1,7 @@
 using LanguageExt;
 using LanguageExt.Common;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
 
 namespace ComparableSimpleValueObject.ValueObjects;
 
@@ -18,11 +19,11 @@ public sealed class UserId : ComparableSimpleValueObject<int>
     public static Fin<UserId> Create(int value) =>
         CreateFromValidation(Validate(value), v => new UserId(v));
 
-    internal static UserId CreateFromValidated(int validatedValue) =>
+    public static UserId CreateFromValidated(int validatedValue) =>
         new(validatedValue);
 
     public static Validation<Error, int> Validate(int value) =>
-        ValidationRules.Positive<UserId, int>(value);
+        ValidationRules<UserId>.Positive(value);
 
     public static implicit operator int(UserId userId) => userId.Value;
 }

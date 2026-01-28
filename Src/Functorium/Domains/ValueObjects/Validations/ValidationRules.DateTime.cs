@@ -7,7 +7,7 @@ using static Functorium.Domains.Errors.DomainErrorType;
 
 namespace Functorium.Domains.ValueObjects.Validations;
 
-public static partial class Validate<TValueObject>
+public static partial class ValidationRules<TValueObject>
 {
     /// <summary>
     /// 날짜가 기본값(DateTime.MinValue)이 아닌지 검증합니다.

@@ -39,7 +39,7 @@ public sealed class Street : SimpleValueObject<string>
     /// </summary>
     /// <param name="validatedValue">이미 검증된 거리명</param>
     /// <returns>생성된 Street 인스턴스</returns>
-    internal static Street CreateFromValidated(string validatedValue) =>
+    public static Street CreateFromValidated(string validatedValue) =>
         new Street(validatedValue);
 
     /// <summary>

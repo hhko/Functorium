@@ -16,7 +16,7 @@ public static partial class TypedValidationExtensions
     public static TypedValidation<TValueObject, (TValue Min, TValue Max)> ThenValidRange<TValueObject, TValue>(
         this TypedValidation<TValueObject, (TValue Min, TValue Max)> validation)
         where TValue : notnull, IComparable<TValue> =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.ValidRangeInternal<TValue>(v.Min, v.Max)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.ValidRangeInternal<TValue>(v.Min, v.Max)));
 
     /// <summary>
     /// 엄격한 범위가 유효한지 체인으로 검증합니다 (min &lt; max).
@@ -30,5 +30,5 @@ public static partial class TypedValidationExtensions
     public static TypedValidation<TValueObject, (TValue Min, TValue Max)> ThenValidStrictRange<TValueObject, TValue>(
         this TypedValidation<TValueObject, (TValue Min, TValue Max)> validation)
         where TValue : notnull, IComparable<TValue> =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.ValidStrictRangeInternal<TValue>(v.Min, v.Max)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.ValidStrictRangeInternal<TValue>(v.Min, v.Max)));
 }

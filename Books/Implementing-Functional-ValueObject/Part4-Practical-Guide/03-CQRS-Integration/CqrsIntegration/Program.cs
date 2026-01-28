@@ -1,5 +1,6 @@
 using Functorium.Applications.Cqrs;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.Errors;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using LanguageExt;
@@ -123,7 +124,7 @@ public sealed class Email : SimpleValueObject<string>
             Validate(value ?? "null"),
             validValue => new Email(validValue));
 
-    internal static Email CreateFromValidated(string value) => new(value);
+    public static Email CreateFromValidated(string value) => new(value);
 
     public static Validation<Error, string> Validate(string value) =>
         (ValidateNotEmpty(value), ValidateFormat(value))
@@ -160,7 +161,7 @@ public sealed class Age : ComparableSimpleValueObject<int>
             Validate(value),
             validValue => new Age(validValue));
 
-    internal static Age CreateFromValidated(int value) => new(value);
+    public static Age CreateFromValidated(int value) => new(value);
 
     public static Validation<Error, int> Validate(int value) =>
         ValidateNotNegative(value)
@@ -197,7 +198,7 @@ public sealed class UserName : SimpleValueObject<string>
             Validate(value ?? "null"),
             validValue => new UserName(validValue));
 
-    internal static UserName CreateFromValidated(string value) => new(value);
+    public static UserName CreateFromValidated(string value) => new(value);
 
     public static Validation<Error, string> Validate(string value) =>
         ValidateNotEmpty(value)

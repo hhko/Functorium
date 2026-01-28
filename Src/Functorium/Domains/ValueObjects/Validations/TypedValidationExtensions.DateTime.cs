@@ -14,7 +14,7 @@ public static partial class TypedValidationExtensions
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TypedValidation<TValueObject, DateTime> ThenNotDefault<TValueObject>(
         this TypedValidation<TValueObject, DateTime> validation) =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.NotDefaultInternal(v)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.NotDefaultInternal(v)));
 
     /// <summary>
     /// 날짜가 과거인지 체인으로 검증합니다.
@@ -25,7 +25,7 @@ public static partial class TypedValidationExtensions
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TypedValidation<TValueObject, DateTime> ThenInPast<TValueObject>(
         this TypedValidation<TValueObject, DateTime> validation) =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.InPastInternal(v)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.InPastInternal(v)));
 
     /// <summary>
     /// 날짜가 미래인지 체인으로 검증합니다.
@@ -36,7 +36,7 @@ public static partial class TypedValidationExtensions
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TypedValidation<TValueObject, DateTime> ThenInFuture<TValueObject>(
         this TypedValidation<TValueObject, DateTime> validation) =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.InFutureInternal(v)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.InFutureInternal(v)));
 
     /// <summary>
     /// 날짜가 특정 기준 날짜 이전인지 체인으로 검증합니다.
@@ -49,7 +49,7 @@ public static partial class TypedValidationExtensions
     public static TypedValidation<TValueObject, DateTime> ThenBefore<TValueObject>(
         this TypedValidation<TValueObject, DateTime> validation,
         DateTime boundary) =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.BeforeInternal(v, boundary)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.BeforeInternal(v, boundary)));
 
     /// <summary>
     /// 날짜가 특정 기준 날짜 이후인지 체인으로 검증합니다.
@@ -62,7 +62,7 @@ public static partial class TypedValidationExtensions
     public static TypedValidation<TValueObject, DateTime> ThenAfter<TValueObject>(
         this TypedValidation<TValueObject, DateTime> validation,
         DateTime boundary) =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.AfterInternal(v, boundary)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.AfterInternal(v, boundary)));
 
     /// <summary>
     /// 날짜가 지정된 범위 내에 있는지 체인으로 검증합니다.
@@ -77,5 +77,5 @@ public static partial class TypedValidationExtensions
         this TypedValidation<TValueObject, DateTime> validation,
         DateTime min,
         DateTime max) =>
-        new(validation.Value.Bind(v => Validate<TValueObject>.DateBetweenInternal(v, min, max)));
+        new(validation.Value.Bind(v => ValidationRules<TValueObject>.DateBetweenInternal(v, min, max)));
 }

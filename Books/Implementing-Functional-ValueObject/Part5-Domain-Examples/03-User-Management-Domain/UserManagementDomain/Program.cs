@@ -1,5 +1,6 @@
 using Functorium.Abstractions.Errors;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.Errors;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -170,7 +171,7 @@ public sealed class Email : SimpleValueObject<string>
             validValue => new Email(validValue));
 
     // 정규화된 값으로 직접 생성 (ORM용)
-    internal static Email CreateFromValidated(string value) => new(value.ToLowerInvariant());
+    public static Email CreateFromValidated(string value) => new(value.ToLowerInvariant());
 
     // 5. Public Validate 메서드 - 순차 검증
     public static Validation<Error, string> Validate(string value) =>

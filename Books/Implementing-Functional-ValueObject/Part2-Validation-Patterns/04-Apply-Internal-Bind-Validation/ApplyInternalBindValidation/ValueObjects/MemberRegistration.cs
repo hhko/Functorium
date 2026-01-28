@@ -1,4 +1,5 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -26,7 +27,7 @@ public sealed class MemberRegistration : ValueObject
             Validate(username, email, password),
             v => new MemberRegistration(v.Username, v.Email, v.Password));
 
-    internal static MemberRegistration CreateFromValidated((string Username, string Email, string Password) v) =>
+    public static MemberRegistration CreateFromValidated((string Username, string Email, string Password) v) =>
         new(v.Username, v.Email, v.Password);
 
     // 중첩 검증 - Apply 외부 + Bind 내부 패턴

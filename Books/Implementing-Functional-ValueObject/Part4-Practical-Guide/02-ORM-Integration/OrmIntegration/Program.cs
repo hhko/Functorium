@@ -1,4 +1,5 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.Errors;
 using Microsoft.EntityFrameworkCore;
 using LanguageExt;
 using LanguageExt.Common;
@@ -149,7 +150,7 @@ public sealed class Email : SimpleValueObject<string>
             Validate(value ?? "null"),
             validValue => new Email(validValue));
 
-    internal static Email CreateFromValidated(string value) => new(value);
+    public static Email CreateFromValidated(string value) => new(value);
 
     public static Validation<Error, string> Validate(string value) =>
         (ValidateNotEmpty(value), ValidateFormat(value))
@@ -187,7 +188,7 @@ public sealed class ProductCode : SimpleValueObject<string>
             Validate(value ?? "null"),
             validValue => new ProductCode(validValue));
 
-    internal static ProductCode CreateFromValidated(string value) => new(value);
+    public static ProductCode CreateFromValidated(string value) => new(value);
 
     public static Validation<Error, string> Validate(string value) =>
         ValidateNotEmpty(value)
@@ -303,7 +304,7 @@ public sealed class Money : ValueObject
             Validate(amount, currency ?? "null"),
             validValues => new Money(validValues.Amount, validValues.Currency.ToUpperInvariant()));
 
-    internal static Money CreateFromValidated(decimal amount, string currency) =>
+    public static Money CreateFromValidated(decimal amount, string currency) =>
         new(amount, currency.ToUpperInvariant());
 
     public static Validation<Error, (decimal Amount, string Currency)> Validate(decimal amount, string currency) =>
@@ -368,7 +369,7 @@ public sealed class OrderLineItem : ValueObject
             Validate(name ?? "null", qty, price),
             validValues => new OrderLineItem(validValues.Name.Trim(), validValues.Qty, validValues.Price));
 
-    internal static OrderLineItem CreateFromValidated(string name, int qty, decimal price) =>
+    public static OrderLineItem CreateFromValidated(string name, int qty, decimal price) =>
         new(name, qty, price);
 
     public static Validation<Error, (string Name, int Qty, decimal Price)> Validate(string name, int qty, decimal price) =>
