@@ -4,9 +4,9 @@
 
 [![Build](https://github.com/hhko/Functorium/actions/workflows/build.yml/badge.svg)](https://github.com/hhko/Functorium/actions/workflows/build.yml) [![Publish](https://github.com/hhko/Functorium/actions/workflows/publish.yml/badge.svg)](https://github.com/hhko/Functorium/actions/workflows/publish.yml)
 
-> A functional domain is functor + dominium, seasoned with fun, designed to bridge **the age of deterministic rules** and **the age of probabilistic intuition**.
+> 함수형 도메인은 functor + dominium의 합성어로, fun(재미)을 곁들여 **결정론적 규칙의 시대**와 **확률론적 직관의 시대**를 연결하도록 설계되었습니다.
 >
-> - Domin-Driven Design: **객체 단위로** 비즈니스 관심사를 **캡슐화한다.**
+> - Domain-Driven Design: **객체 단위로** 비즈니스 관심사를 **캡슐화한다.**
 > - Functional 아키텍처: **레이어 단위로** 비즈니스 관심사를 **순수화한다.**
 > - Microservices 아키텍처: **서비스 단위로** 비즈니스 관심사를 **자율화한다.**
 >
@@ -14,16 +14,16 @@
 
 ![](./Functorium.Architecture.png)
 
-It enables expressing domain logic as pure functions and pushing side effects to architectural boundaries, allowing you to write **testable and predictable business logic**. The framework provides a functional type system based on LanguageExt 5.x and integrated observability through OpenTelemetry.
+도메인 로직을 순수 함수로 표현하고 부수 효과를 아키텍처 경계로 밀어내어 **테스트 가능하고 예측 가능한 비즈니스 로직**을 작성할 수 있습니다. 이 프레임워크는 LanguageExt 5.x 기반의 함수형 타입 시스템과 OpenTelemetry를 통한 통합 관측성을 제공합니다.
 
-### Core Principles
+### 핵심 원칙
 
-| Principle | Description | Functorium Support |
-|-----------|-------------|-------------------|
-| **Domain First** | Domain model is the center of architecture | Value Object hierarchy, immutable domain types |
-| **Pure Core** | Business logic expressed as pure functions | `Fin<T>` return type, exception-free error handling |
-| **Impure Shell** | Side effects handled at boundary layers | Adapter Pipeline, ActivityContext propagation |
-| **Explicit Effects** | All effects explicitly typed | `FinResponse<T>`, `FinT<IO, T>` monad |
+| 원칙 | 설명 | Functorium 지원 |
+|------|------|-----------------|
+| **Domain First** | 도메인 모델이 아키텍처의 중심 | Value Object 계층, 불변 도메인 타입 |
+| **Pure Core** | 비즈니스 로직을 순수 함수로 표현 | `Fin<T>` 반환 타입, 예외 없는 오류 처리 |
+| **Impure Shell** | 부수 효과를 경계 레이어에서 처리 | Adapter Pipeline, ActivityContext 전파 |
+| **Explicit Effects** | 모든 효과를 명시적으로 타입화 | `FinResponse<T>`, `FinT<IO, T>` 모나드 |
 
 ## Book
 - [Architecture](./Docs/ArchitectureIs/README.md)
@@ -33,97 +33,97 @@ It enables expressing domain logic as pure functions and pushing side effects to
 
 ## Observability
 
-> All observability fields use `snake_case + dot` notation for consistency with OpenTelemetry semantic conventions.
+> 모든 관측성 필드는 OpenTelemetry 시맨틱 규칙과의 일관성을 위해 `snake_case + dot` 표기법을 사용합니다.
 
 ![](./Functorium.Observability.png)
 
 ### Service Attributes
 
-Functorium uses [OpenTelemetry Service Attributes](https://opentelemetry.io/docs/specs/semconv/registry/attributes/service/) for service identification.
+Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](https://opentelemetry.io/docs/specs/semconv/registry/attributes/service/)를 사용합니다.
 
-| Attribute | Description | Example |
-|-----------|-------------|---------|
-| `service.namespace` | A namespace for `service.name`. Helps distinguish service groups (e.g., by team or environment). | `mycompany.production` |
-| `service.name` | Logical name of the service. Must be identical across all horizontally scaled instances. | `orderservice` |
-| `service.version` | The version string of the service API or implementation. | `2.0.0` |
-| `service.instance.id` | Unique ID of the service instance. Must be globally unique per `service.namespace,service.name` pair. Uses `HOSTNAME` environment variable if available, otherwise falls back to `Environment.MachineName`. | `my-pod-abc123` (Kubernetes), `DESKTOP-ABC123` (Windows) |
+| Attribute | 설명 | 예시 |
+|-----------|------|------|
+| `service.namespace` | `service.name`의 네임스페이스. 서비스 그룹을 구분하는 데 도움이 됩니다(예: 팀별 또는 환경별). | `mycompany.production` |
+| `service.name` | 서비스의 논리적 이름. 수평 확장된 모든 인스턴스에서 동일해야 합니다. | `orderservice` |
+| `service.version` | 서비스 API 또는 구현의 버전 문자열. | `2.0.0` |
+| `service.instance.id` | 서비스 인스턴스의 고유 ID. `service.namespace,service.name` 쌍당 전역적으로 고유해야 합니다. 가능한 경우 `HOSTNAME` 환경 변수를 사용하고, 그렇지 않으면 `Environment.MachineName`으로 대체됩니다. | `my-pod-abc123` (Kubernetes), `DESKTOP-ABC123` (Windows) |
 
-> **Recommended**: Use lowercase values for `service.name` and `service.namespace` (e.g., `mycompany.production`, `orderservice`).
-> This ensures consistency with OpenTelemetry conventions and avoids case-sensitivity issues in downstream systems (dashboards, queries, alerts).
+> **권장**: `service.name`과 `service.namespace`에는 소문자 값을 사용하세요(예: `mycompany.production`, `orderservice`).
+> 이렇게 하면 OpenTelemetry 규칙과의 일관성을 보장하고 다운스트림 시스템(대시보드, 쿼리, 알림)에서 대소문자 구분 문제를 방지할 수 있습니다.
 
-### Field/Tag Consistency
+### Field/Tag 일관성
 
-**Application Layer:** (Unit Tests: [Logging](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseLoggingPipelineStructureTests.cs), [Metrics](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseMetricsPipelineStructureTests.cs), [Tracing](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseTracingPipelineStructureTests.cs))
+**Application 레이어:** (단위 테스트: [Logging](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseLoggingPipelineStructureTests.cs), [Metrics](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseMetricsPipelineStructureTests.cs), [Tracing](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseTracingPipelineStructureTests.cs))
 
-| Field/Tag | Logging | Metrics | Tracing | Description |
-|-----------|---------|---------|---------|-------------|
-| `request.layer` | ✅ | ✅ | ✅ | Architecture layer (`"application"`) |
-| `request.category` | ✅ | ✅ | ✅ | Request category (`"usecase"`) |
-| `request.handler.cqrs` | ✅ | ✅ | ✅ | CQRS type (`"command"`, `"query"`) |
-| `request.handler` | ✅ | ✅ | ✅ | Handler class name |
-| `request.handler.method` | ✅ | ✅ | ✅ | Handler method name (`"Handle"`) |
-| `response.status` | ✅ | ✅ | ✅ | Response status (`"success"`, `"failure"`) |
-| `response.elapsed` | ✅ | -* | ✅ | Processing time in seconds |
-| `error.type` | ✅ | ✅ | ✅ | Error classification (`"expected"`, `"exceptional"`, `"aggregate"`) |
-| `error.code` | ✅ | ✅ | ✅ | Domain-specific error code |
-| `@error` | ✅ | - | - | Structured error object (detailed) |
+| Field/Tag | Logging | Metrics | Tracing | 설명 |
+|-----------|---------|---------|---------|------|
+| `request.layer` | ✅ | ✅ | ✅ | 아키텍처 레이어 (`"application"`) |
+| `request.category` | ✅ | ✅ | ✅ | 요청 카테고리 (`"usecase"`) |
+| `request.handler.cqrs` | ✅ | ✅ | ✅ | CQRS 타입 (`"command"`, `"query"`) |
+| `request.handler` | ✅ | ✅ | ✅ | Handler 클래스 이름 |
+| `request.handler.method` | ✅ | ✅ | ✅ | Handler 메서드 이름 (`"Handle"`) |
+| `response.status` | ✅ | ✅ | ✅ | 응답 상태 (`"success"`, `"failure"`) |
+| `response.elapsed` | ✅ | -* | ✅ | 처리 시간(초) |
+| `error.type` | ✅ | ✅ | ✅ | 오류 분류 (`"expected"`, `"exceptional"`, `"aggregate"`) |
+| `error.code` | ✅ | ✅ | ✅ | 도메인 특화 오류 코드 |
+| `@error` | ✅ | - | - | 구조화된 오류 객체(상세) |
 
-**Adapter Layer:** (Unit Tests: [Logging](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterLoggingPipelineStructureTests.cs), [Metrics](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterMetricsPipelineStructureTests.cs), [Tracing](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterTracingPipelineStructureTests.cs))
+**Adapter 레이어:** (단위 테스트: [Logging](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterLoggingPipelineStructureTests.cs), [Metrics](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterMetricsPipelineStructureTests.cs), [Tracing](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterTracingPipelineStructureTests.cs))
 
-| Field/Tag | Logging | Metrics | Tracing | Description |
-|-----------|---------|---------|---------|-------------|
-| `request.layer` | ✅ | ✅ | ✅ | Architecture layer (`"adapter"`) |
-| `request.category` | ✅ | ✅ | ✅ | Adapter category (e.g., `"repository"`) |
-| `request.handler` | ✅ | ✅ | ✅ | Handler class name |
-| `request.handler.method` | ✅ | ✅ | ✅ | Handler method name |
-| `response.status` | ✅ | ✅ | ✅ | Response status (`"success"`, `"failure"`) |
-| `response.elapsed` | ✅ | -* | ✅ | Processing time in seconds |
-| `error.type` | ✅ | ✅ | ✅ | Error classification (`"expected"`, `"exceptional"`, `"aggregate"`) |
-| `error.code` | ✅ | ✅ | ✅ | Domain-specific error code |
-| `@error` | ✅ | - | - | Structured error object (detailed) |
+| Field/Tag | Logging | Metrics | Tracing | 설명 |
+|-----------|---------|---------|---------|------|
+| `request.layer` | ✅ | ✅ | ✅ | 아키텍처 레이어 (`"adapter"`) |
+| `request.category` | ✅ | ✅ | ✅ | Adapter 카테고리 (예: `"repository"`) |
+| `request.handler` | ✅ | ✅ | ✅ | Handler 클래스 이름 |
+| `request.handler.method` | ✅ | ✅ | ✅ | Handler 메서드 이름 |
+| `response.status` | ✅ | ✅ | ✅ | 응답 상태 (`"success"`, `"failure"`) |
+| `response.elapsed` | ✅ | -* | ✅ | 처리 시간(초) |
+| `error.type` | ✅ | ✅ | ✅ | 오류 분류 (`"expected"`, `"exceptional"`, `"aggregate"`) |
+| `error.code` | ✅ | ✅ | ✅ | 도메인 특화 오류 코드 |
+| `@error` | ✅ | - | - | 구조화된 오류 객체(상세) |
 
-> **\* Why `response.elapsed` is not a Metrics tag:**
-> - Metrics uses a dedicated `duration` **Histogram instrument** to capture processing time, which is the OpenTelemetry-recommended approach for latency measurement.
-> - Using elapsed time as a tag would cause **high cardinality explosion** (each unique duration value creates a new time series), degrading metrics storage and query performance.
-> - Histogram provides **statistical aggregations** (percentiles, averages, counts) that are more useful for monitoring than individual elapsed values.
+> **\* `response.elapsed`가 Metrics 태그가 아닌 이유:**
+> - Metrics는 처리 시간을 캡처하기 위해 전용 `duration` **Histogram instrument**를 사용하며, 이는 지연 시간 측정에 대한 OpenTelemetry 권장 접근 방식입니다.
+> - 경과 시간을 태그로 사용하면 **높은 카디널리티 폭발**을 유발합니다(각 고유한 duration 값이 새로운 시계열을 생성하여 메트릭 저장소 및 쿼리 성능이 저하됨).
+> - Histogram은 개별 경과 값보다 모니터링에 더 유용한 **통계적 집계**(백분위수, 평균, 카운트)를 제공합니다.
 
 ### Logging
 
-**Field Structure:**
+**Field 구조:**
 
-| Field Name | Application Layer | Adapter Layer | Description |
-|------------|-------------------|---------------|-------------|
+| Field Name | Application 레이어 | Adapter 레이어 | 설명 |
+|------------|-------------------|---------------|------|
 | **Static Fields** | | | |
-| `request.layer` | `"application"` | `"adapter"` | Request layer identifier |
-| `request.category` | `"usecase"` | Adapter category name | Request category identifier |
-| `request.handler.cqrs` | `"command"` / `"query"` | - | CQRS type |
-| `request.handler` | Handler name | Handler name | Handler class name |
-| `request.handler.method` | `"Handle"` | Method name | Handler method name |
-| `response.status` | `"success"` / `"failure"` | `"success"` / `"failure"` | Response status |
-| `response.elapsed` | Processing time (s) | Processing time (s) | Elapsed time in seconds |
-| `error.type` | `"expected"` / `"exceptional"` / `"aggregate"` | `"expected"` / `"exceptional"` / `"aggregate"` | Error classification |
-| `error.code` | Error code | Error code | Domain-specific error code |
-| `@error` | Error object (structured) | Error object (structured) | Error data (detailed) |
+| `request.layer` | `"application"` | `"adapter"` | 요청 레이어 식별자 |
+| `request.category` | `"usecase"` | Adapter 카테고리 이름 | 요청 카테고리 식별자 |
+| `request.handler.cqrs` | `"command"` / `"query"` | - | CQRS 타입 |
+| `request.handler` | Handler 이름 | Handler 이름 | Handler 클래스 이름 |
+| `request.handler.method` | `"Handle"` | 메서드 이름 | Handler 메서드 이름 |
+| `response.status` | `"success"` / `"failure"` | `"success"` / `"failure"` | 응답 상태 |
+| `response.elapsed` | 처리 시간(초) | 처리 시간(초) | 경과 시간(초) |
+| `error.type` | `"expected"` / `"exceptional"` / `"aggregate"` | `"expected"` / `"exceptional"` / `"aggregate"` | 오류 분류 |
+| `error.code` | 오류 코드 | 오류 코드 | 도메인 특화 오류 코드 |
+| `@error` | 오류 객체(구조화) | 오류 객체(구조화) | 오류 데이터(상세) |
 | **Dynamic Fields** | | | |
-| `@request.message` | Full Command/Query object | - | Request message |
-| `@response.message` | Full response object | - | Response message |
-| `request.params.{name}` | - | Individual method parameter | Request params |
-| `request.params.{name}.count` | - | Collection size (when parameter is collection) | Request params count |
-| `response.result` | - | Method return value | Response result |
-| `response.result.count` | - | Collection size (when return is collection) | Response result count |
+| `@request.message` | 전체 Command/Query 객체 | - | 요청 메시지 |
+| `@response.message` | 전체 응답 객체 | - | 응답 메시지 |
+| `request.params.{name}` | - | 개별 메서드 파라미터 | 요청 파라미터 |
+| `request.params.{name}.count` | - | 컬렉션 크기(파라미터가 컬렉션인 경우) | 요청 파라미터 카운트 |
+| `response.result` | - | 메서드 반환 값 | 응답 결과 |
+| `response.result.count` | - | 컬렉션 크기(반환이 컬렉션인 경우) | 응답 결과 카운트 |
 
-**Log Level by Event:**
+**이벤트별 로그 레벨:**
 
-| Event | Log Level | Application Layer | Adapter Layer | Description |
-|-------|-----------|-------------------|---------------|-------------|
-| Request | Information | 1001 `application.request` | 2001 `adapter.request` | Request received |
-| Request (Debug) | Debug | - | 2001 `adapter.request` | Request with parameter values |
-| Response Success | Information | 1002 `application.response.success` | 2002 `adapter.response.success` | Successful response |
-| Response Success (Debug) | Debug | - | 2002 `adapter.response.success` | Response with result value |
-| Response Warning | Warning | 1003 `application.response.warning` | 2003 `adapter.response.warning` | Expected error (business logic) |
-| Response Error | Error | 1004 `application.response.error` | 2004 `adapter.response.error` | Exceptional error (system failure) |
+| Event | Log 수준 | Application 레이어 | Adapter 레이어 | 설명 |
+|-------|-----------|-------------------|---------------|------|
+| Request | Information | 1001 `application.request` | 2001 `adapter.request` | 요청 수신 |
+| Request (Debug) | Debug | - | 2001 `adapter.request` | 파라미터 값이 포함된 요청 |
+| Response Success | Information | 1002 `application.response.success` | 2002 `adapter.response.success` | 성공 응답 |
+| Response Success (Debug) | Debug | - | 2002 `adapter.response.success` | 결과 값이 포함된 응답 |
+| Response Warning | Warning | 1003 `application.response.warning` | 2003 `adapter.response.warning` | 예상 오류(비즈니스 로직) |
+| Response Error | Error | 1004 `application.response.error` | 2004 `adapter.response.error` | 예외 오류(시스템 장애) |
 
-**Message Templates (Application Layer):**
+**Message Templates (Application 레이어):**
 
 ```
 # Request
@@ -136,149 +136,149 @@ Functorium uses [OpenTelemetry Service Attributes](https://opentelemetry.io/docs
 {request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
 
-**Message Templates (Adapter Layer):**
+**Message Templates (Adapter 레이어):**
 
 ```
 # Request (Information)
 {request.layer} {request.category} {request.handler}.{request.handler.method} requesting
 
-# Request (Debug) - with parameters
+# Request (Debug) - 파라미터 포함
 {request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.items} {request.params.items.count} requesting
 
 # Response (Information)
 {request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s
 
-# Response (Debug) - with result
+# Response (Debug) - 결과 포함
 {request.layer} {request.category} {request.handler}.{request.handler.method} {response.result} responded {response.status} in {response.elapsed:0.0000} s
 
 # Response Warning/Error
 {request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
 
-**Error Field Values (`error.type` vs `@error.ErrorType`):**
+**Error Field 값 (`error.type` vs `@error.ErrorType`):**
 
-> `error.type` and `@error.ErrorType` use different value formats for different purposes.
+> `error.type`과 `@error.ErrorType`은 서로 다른 목적을 위해 다른 값 형식을 사용합니다.
 
-| Error Type | `error.type` (Filtering) | `@error.ErrorType` (Detail) |
-|------------|--------------------------|----------------------------|
+| Error Type | `error.type` (필터링용) | `@error.ErrorType` (상세용) |
+|------------|------------------------|----------------------------|
 | Expected Error | `"expected"` | `"ErrorCodeExpected"` |
 | Exceptional Error | `"exceptional"` | `"ErrorCodeExceptional"` |
 | Aggregate Error | `"aggregate"` | `"ManyErrors"` |
 | LanguageExt Expected | `"expected"` | `"Expected"` |
 | LanguageExt Exceptional | `"exceptional"` | `"Exceptional"` |
 
-- **`error.type`**: Standardized values for log filtering/querying (consistent with Metrics/Tracing)
-- **`@error.ErrorType`**: Actual class name for detailed error type identification
+- **`error.type`**: 로그 필터링/쿼리를 위한 표준화된 값(Metrics/Tracing과 일관됨)
+- **`@error.ErrorType`**: 상세한 오류 타입 식별을 위한 실제 클래스 이름
 
-**Implementation:**
+**구현:**
 
-| Layer | Method | Tests | Note |
-|-------|--------|-------|------|
-| Application | Direct `ILogger.LogXxx()` calls | [UsecaseLoggingPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseLoggingPipelineStructureTests.cs) | 7+ parameters exceed `LoggerMessage.Define` limit of 6 |
-| Adapter | `LoggerMessage.Define` delegates | [AdapterLoggingPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterLoggingPipelineStructureTests.cs) | Zero allocation, high performance |
+| 레이어 | 방식 | 테스트 | 참고 |
+|-------|------|--------|------|
+| Application | 직접 `ILogger.LogXxx()` 호출 | [UsecaseLoggingPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseLoggingPipelineStructureTests.cs) | 7개 이상의 파라미터가 `LoggerMessage.Define`의 6개 제한을 초과 |
+| Adapter | `LoggerMessage.Define` 델리게이트 | [AdapterLoggingPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterLoggingPipelineStructureTests.cs) | 제로 할당, 고성능 |
 
 ### Metrics
 
 **Meter Name:**
 
-| Layer | Meter Name Pattern | Example (`ServiceNamespace = "mycompany.production"`) |
-|-------|-------------------|-------------------------------------------------------|
+| 레이어 | Meter Name 패턴 | 예시 (`ServiceNamespace = "mycompany.production"`) |
+|-------|-----------------|---------------------------------------------------|
 | Application | `{service.namespace}.application` | `mycompany.production.application` |
 | Adapter | `{service.namespace}.adapter.{category}` | `mycompany.production.adapter.repository` |
 
-**Instrument Structure:**
+**Instrument 구조:**
 
-| Instrument | Application Layer | Adapter Layer | Type | Unit | Description |
-|------------|-------------------|---------------|------|------|-------------|
-| requests | `application.usecase.{cqrs}.requests` | `adapter.{category}.requests` | Counter | `{request}` | Total request count |
-| responses | `application.usecase.{cqrs}.responses` | `adapter.{category}.responses` | Counter | `{response}` | Response count |
-| duration | `application.usecase.{cqrs}.duration` | `adapter.{category}.duration` | Histogram | `s` | Processing time (seconds) |
+| Instrument | Application 레이어 | Adapter 레이어 | Type | Unit | 설명 |
+|------------|-------------------|---------------|------|------|------|
+| requests | `application.usecase.{cqrs}.requests` | `adapter.{category}.requests` | Counter | `{request}` | 총 요청 수 |
+| responses | `application.usecase.{cqrs}.responses` | `adapter.{category}.responses` | Counter | `{response}` | 응답 수 |
+| duration | `application.usecase.{cqrs}.duration` | `adapter.{category}.duration` | Histogram | `s` | 처리 시간(초) |
 
-**Tag Structure (Application Layer):**
+**Tag 구조 (Application 레이어):**
 
 | Tag Key | requestCounter | durationHistogram | responseCounter (success) | responseCounter (failure) |
 |---------|----------------|-------------------|---------------------------|---------------------------|
 | `request.layer` | `"application"` | `"application"` | `"application"` | `"application"` |
 | `request.category` | `"usecase"` | `"usecase"` | `"usecase"` | `"usecase"` |
 | `request.handler.cqrs` | `"command"` / `"query"` | `"command"` / `"query"` | `"command"` / `"query"` | `"command"` / `"query"` |
-| `request.handler` | handler name | handler name | handler name | handler name |
+| `request.handler` | handler 이름 | handler 이름 | handler 이름 | handler 이름 |
 | `request.handler.method` | `"Handle"` | `"Handle"` | `"Handle"` | `"Handle"` |
 | `response.status` | - | - | `"success"` | `"failure"` |
 | `error.type` | - | - | - | `"expected"` / `"exceptional"` / `"aggregate"` |
-| `error.code` | - | - | - | Primary error code |
+| `error.code` | - | - | - | Primary 오류 코드 |
 | **Total Tags** | **5** | **5** | **6** | **8** |
 
-**Tag Structure (Adapter Layer):**
+**Tag 구조 (Adapter 레이어):**
 
 | Tag Key | requestCounter | durationHistogram | responseCounter (success) | responseCounter (failure) |
 |---------|----------------|-------------------|---------------------------|---------------------------|
 | `request.layer` | `"adapter"` | `"adapter"` | `"adapter"` | `"adapter"` |
-| `request.category` | category name | category name | category name | category name |
-| `request.handler` | handler name | handler name | handler name | handler name |
-| `request.handler.method` | method name | method name | method name | method name |
+| `request.category` | 카테고리 이름 | 카테고리 이름 | 카테고리 이름 | 카테고리 이름 |
+| `request.handler` | handler 이름 | handler 이름 | handler 이름 | handler 이름 |
+| `request.handler.method` | 메서드 이름 | 메서드 이름 | 메서드 이름 | 메서드 이름 |
 | `response.status` | - | - | `"success"` | `"failure"` |
 | `error.type` | - | - | - | `"expected"` / `"exceptional"` / `"aggregate"` |
-| `error.code` | - | - | - | Error code |
+| `error.code` | - | - | - | 오류 코드 |
 | **Total Tags** | **4** | **4** | **5** | **7** |
 
-**Error Type Tag Values:**
+**Error Type Tag 값:**
 
-| Error Case | error.type | error.code | Description |
-|------------|------------|------------|-------------|
-| `IHasErrorCode` + `IsExpected` | `"expected"` | Error code | Expected business logic error with error code |
-| `IHasErrorCode` + `IsExceptional` | `"exceptional"` | Error code | Exceptional system error with error code |
-| `ManyErrors` | `"aggregate"` | Primary error code | Multiple errors aggregated (Exceptional takes priority) |
-| `Expected` (LanguageExt) | `"expected"` | Type name | LanguageExt base expected error without error code |
-| `Exceptional` (LanguageExt) | `"exceptional"` | Type name | LanguageExt base exceptional error without error code |
+| Error Case | error.type | error.code | 설명 |
+|------------|------------|------------|------|
+| `IHasErrorCode` + `IsExpected` | `"expected"` | 오류 코드 | 오류 코드가 있는 예상 비즈니스 로직 오류 |
+| `IHasErrorCode` + `IsExceptional` | `"exceptional"` | 오류 코드 | 오류 코드가 있는 예외 시스템 오류 |
+| `ManyErrors` | `"aggregate"` | Primary 오류 코드 | 여러 오류가 집계됨(Exceptional이 우선) |
+| `Expected` (LanguageExt) | `"expected"` | 타입 이름 | 오류 코드가 없는 LanguageExt 기본 예상 오류 |
+| `Exceptional` (LanguageExt) | `"exceptional"` | 타입 이름 | 오류 코드가 없는 LanguageExt 기본 예외 오류 |
 
-**Implementation:**
+**구현:**
 
-| Layer | Method | Tests | Note |
-|-------|--------|-------|------|
+| 레이어 | 방식 | 테스트 | 참고 |
+|-------|------|--------|------|
 | Application | `IPipelineBehavior` + `IMeterFactory` | [UsecaseMetricsPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseMetricsPipelineStructureTests.cs) | Mediator pipeline |
-| Adapter | Source Generator | [AdapterMetricsPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterMetricsPipelineStructureTests.cs) | Auto-generated metrics instruments |
+| Adapter | Source Generator | [AdapterMetricsPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterMetricsPipelineStructureTests.cs) | 자동 생성된 metrics instruments |
 
 ### Tracing
 
-**Span Structure:**
+**Span 구조:**
 
-| Property | Application Layer | Adapter Layer |
+| Property | Application 레이어 | Adapter 레이어 |
 |----------|-------------------|---------------|
 | Span Name | `{layer} {category}.{cqrs} {handler}.{method}` | `{layer} {category} {handler}.{method}` |
 | Example | `application usecase.command CreateOrderCommandHandler.Handle` | `adapter Repository OrderRepository.GetById` |
 | Kind | `Internal` | `Internal` |
 
-**Tag Structure:**
+**Tag 구조:**
 
-| Tag Key | Application Layer | Adapter Layer | Description |
-|---------|-------------------|---------------|-------------|
+| Tag Key | Application 레이어 | Adapter 레이어 | 설명 |
+|---------|-------------------|---------------|------|
 | **Request Tags** | | | |
-| `request.layer` | `"application"` | `"adapter"` | Layer identifier |
-| `request.category` | `"usecase"` | Category name | Category identifier |
-| `request.handler.cqrs` | `"command"` / `"query"` | - | CQRS type |
-| `request.handler` | Handler name | Handler name | Handler class name |
-| `request.handler.method` | `"Handle"` | Method name | Method name |
+| `request.layer` | `"application"` | `"adapter"` | 레이어 식별자 |
+| `request.category` | `"usecase"` | 카테고리 이름 | 카테고리 식별자 |
+| `request.handler.cqrs` | `"command"` / `"query"` | - | CQRS 타입 |
+| `request.handler` | Handler 이름 | Handler 이름 | Handler 클래스 이름 |
+| `request.handler.method` | `"Handle"` | 메서드 이름 | 메서드 이름 |
 | **Response Tags** | | | |
-| `response.status` | `"success"` / `"failure"` | `"success"` / `"failure"` | Response status |
-| `response.elapsed` | Processing time (s) | Processing time (s) | Elapsed time in seconds |
+| `response.status` | `"success"` / `"failure"` | `"success"` / `"failure"` | 응답 상태 |
+| `response.elapsed` | 처리 시간(초) | 처리 시간(초) | 경과 시간(초) |
 | **Error Tags** | | | |
-| `error.type` | `"expected"` / `"exceptional"` / `"aggregate"` | `"expected"` / `"exceptional"` / `"aggregate"` | Error classification |
-| `error.code` | Error code | Error code | Error code |
-| **ActivityStatus** | `Ok` / `Error` | `Ok` / `Error` | OpenTelemetry status |
+| `error.type` | `"expected"` / `"exceptional"` / `"aggregate"` | `"expected"` / `"exceptional"` / `"aggregate"` | 오류 분류 |
+| `error.code` | 오류 코드 | 오류 코드 | 오류 코드 |
+| **ActivityStatus** | `Ok` / `Error` | `Ok` / `Error` | OpenTelemetry 상태 |
 
-**Error Type Tag Values:**
+**Error Type Tag 값:**
 
-| Error Case | error.type | error.code | Description |
-|------------|------------|------------|-------------|
-| `IHasErrorCode` + `IsExpected` | `"expected"` | Error code | Expected business logic error with error code |
-| `IHasErrorCode` + `IsExceptional` | `"exceptional"` | Error code | Exceptional system error with error code |
-| `ManyErrors` | `"aggregate"` | Primary error code | Multiple errors aggregated (Exceptional takes priority) |
-| `Expected` (LanguageExt) | `"expected"` | Type name | LanguageExt base expected error without error code |
-| `Exceptional` (LanguageExt) | `"exceptional"` | Type name | LanguageExt base exceptional error without error code |
+| Error Case | error.type | error.code | 설명 |
+|------------|------------|------------|------|
+| `IHasErrorCode` + `IsExpected` | `"expected"` | 오류 코드 | 오류 코드가 있는 예상 비즈니스 로직 오류 |
+| `IHasErrorCode` + `IsExceptional` | `"exceptional"` | 오류 코드 | 오류 코드가 있는 예외 시스템 오류 |
+| `ManyErrors` | `"aggregate"` | Primary 오류 코드 | 여러 오류가 집계됨(Exceptional이 우선) |
+| `Expected` (LanguageExt) | `"expected"` | 타입 이름 | 오류 코드가 없는 LanguageExt 기본 예상 오류 |
+| `Exceptional` (LanguageExt) | `"exceptional"` | 타입 이름 | 오류 코드가 없는 LanguageExt 기본 예외 오류 |
 
-**Implementation:**
+**구현:**
 
-| Layer | Method | Tests | Note |
-|-------|--------|-------|------|
+| 레이어 | 방식 | 테스트 | 참고 |
+|-------|------|--------|------|
 | Application | `IPipelineBehavior` + `ActivitySource.StartActivity()` | [UsecaseTracingPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseTracingPipelineStructureTests.cs) | Mediator pipeline |
-| Adapter | Source Generator | [AdapterTracingPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterTracingPipelineStructureTests.cs) | Auto-generated Activity spans |
+| Adapter | Source Generator | [AdapterTracingPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterTracingPipelineStructureTests.cs) | 자동 생성된 Activity spans |
