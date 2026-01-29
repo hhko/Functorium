@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using LanguageExt;
 using LanguageExt.Common;
 
-namespace Functorium.Domains.ValueObjects.Validations;
+namespace Functorium.Domains.ValueObjects.Validations.Typed;
 
 /// <summary>
 /// TypedValidation Tuple Apply 확장 메서드

@@ -1,4 +1,4 @@
-namespace Functorium.Domains.ValueObjects.Validations;
+namespace Functorium.Domains.ValueObjects.Validations.Typed;
 
 /// <summary>
 /// 타입 파라미터를 한 번만 지정하는 검증 시작점

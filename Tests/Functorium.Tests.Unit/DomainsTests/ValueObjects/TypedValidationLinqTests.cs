@@ -1,5 +1,5 @@
 using Functorium.Domains.ValueObjects;
-using Functorium.Domains.ValueObjects.Validations;
+using Functorium.Domains.ValueObjects.Validations.Typed;
 using LanguageExt;
 using LanguageExt.Common;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;

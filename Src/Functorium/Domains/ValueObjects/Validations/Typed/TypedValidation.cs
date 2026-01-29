@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using LanguageExt;
 using LanguageExt.Common;
 
-namespace Functorium.Domains.ValueObjects.Validations;
+namespace Functorium.Domains.ValueObjects.Validations.Typed;
 
 /// <summary>
 /// 값 객체 타입 정보를 체이닝 중 전달하기 위한 wrapper

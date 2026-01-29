@@ -6,7 +6,7 @@ using LanguageExt;
 using LanguageExt.Common;
 using static Functorium.Domains.Errors.DomainErrorType;
 
-namespace Functorium.Domains.ValueObjects.Validations;
+namespace Functorium.Domains.ValueObjects.Validations.Typed;
 
 public static partial class ValidationRules<TValueObject>
 {

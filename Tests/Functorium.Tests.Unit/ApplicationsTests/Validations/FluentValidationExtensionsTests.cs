@@ -3,7 +3,7 @@ using FluentValidation;
 using Functorium.Applications.Validations;
 using Functorium.Domains.Errors;
 using Functorium.Domains.ValueObjects;
-using Functorium.Domains.ValueObjects.Validations;
+using Functorium.Domains.ValueObjects.Validations.Typed;
 using static Functorium.Domains.Errors.DomainErrorType;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 
