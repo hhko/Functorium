@@ -1,4 +1,4 @@
-# 레이어별 에러 코드 테스트 가이드
+# 에러 테스트 가이드
 
 ## 1. 개요
 
@@ -681,8 +681,8 @@ public void Cancel_ShouldFail_WhenOrderAlreadyShipped()
 
 ## 8. 참고 문서
 
-- [layered-error-definition-guide.md](./layered-error-definition-guide.md) - 레이어별 에러 정의 방법
-- [layered-error-naming-guide.md](./layered-error-naming-guide.md) - 레이어별 에러 이름 규칙
+- [error-guide.md](./error-guide.md) - 레이어별 에러 시스템 (정의, 네이밍)
+- [valueobject-guide.md](./valueobject-guide.md) - 값 객체 구현 및 검증 패턴
 - [unit-testing-guide.md](./unit-testing-guide.md) - 단위 테스트 가이드
 
 ---
