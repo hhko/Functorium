@@ -4,17 +4,17 @@
 
 [![Build](https://github.com/hhko/Functorium/actions/workflows/build.yml/badge.svg)](https://github.com/hhko/Functorium/actions/workflows/build.yml) [![Publish](https://github.com/hhko/Functorium/actions/workflows/publish.yml/badge.svg)](https://github.com/hhko/Functorium/actions/workflows/publish.yml)
 
-> 함수형 도메인은 functor + dominium의 합성어로, fun(재미)을 곁들여 **결정론적 규칙의 시대**와 **확률론적 직관의 시대**를 연결하도록 설계되었습니다.
+> A functional domain is functor + dominium, seasoned with fun, designed to bridge **결정론적 규칙의 시대(the age of deterministic rules)**와 **확률론적 직관의 시대(the age of probabilistic intuition)**.
 >
-> - Domain-Driven Design: **객체 단위로** 비즈니스 관심사를 **캡슐화한다.**
-> - Functional 아키텍처: **레이어 단위로** 비즈니스 관심사를 **순수화한다.**
-> - Microservices 아키텍처: **서비스 단위로** 비즈니스 관심사를 **자율화한다.**
+> - `Domain-Driven Design`: **객체 단위로** 비즈니스 관심사를 **캡슐화한다.**
+> - `Functional Architecture`: **레이어 단위로** 비즈니스 관심사를 **순수화한다.**
+> - `Microservices Architecture`: **서비스 단위로** 비즈니스 관심사를 **자율화한다.**
 >
 > 그래서 우리는 유스케이스 단위를 최상위 설계 단위로 삼는다!
 
 ![](./Functorium.Architecture.png)
 
-도메인 로직을 순수 함수로 표현하고 부수 효과를 아키텍처 경계로 밀어내어 **테스트 가능하고 예측 가능한 비즈니스 로직**을 작성할 수 있습니다. 이 프레임워크는 LanguageExt 5.x 기반의 함수형 타입 시스템과 OpenTelemetry를 통한 통합 관측성을 제공합니다.
+도메인 로직을 순수 함수로 표현하고 부수 효과를 아키텍처 경계로 밀어내어 **테스트 가능하고 예측 가능한 비즈니스 로직**을 작성할 수 있습니다. 이 프레임워크는 LanguageExt 5.x 기반의 도메인 중심 함수형 아키텍처와 OpenTelemetry를 통한 통합 관측성을 제공합니다.
 
 ### 핵심 원칙
 

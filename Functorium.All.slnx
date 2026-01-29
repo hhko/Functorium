@@ -170,7 +170,7 @@
     <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/12-Type-Safe-Enums/TypeSafeEnums/TypeSafeEnums.csproj" />
     <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/12-Type-Safe-Enums/TypeSafeEnums.Tests.Unit/TypeSafeEnums.Tests.Unit.csproj" />
   </Folder>
-  <!-- <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/13-Error-Code/">
+  <Folder Name="/Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/13-Error-Code/">
     <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/13-Error-Code/ErrorCode/ErrorCode.csproj" />
     <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/13-Error-Code/ErrorCode.Tests.Unit/ErrorCode.Tests.Unit.csproj" />
     <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/13-Error-Code/Framework/Framework.csproj" />
@@ -188,7 +188,7 @@
     <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/16-Architecture-Test/ArchitectureTest.Tests.Unit/ArchitectureTest.Tests.Unit.csproj" />
     <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/16-Architecture-Test/Framework/Framework.csproj" />
     <Project Path="Books/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/16-Architecture-Test/Framework.Testing/Framework.Testing.csproj" />
-  </Folder> -->
+  </Folder>
   <Folder Name="/Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/" />
   <Folder Name="/Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/01-Bind-Sequential-Validation/">
     <Project Path="Books/Implementing-Functional-ValueObject/Part2-Validation-Patterns/01-Bind-Sequential-Validation/BindSequentialValidation/BindSequentialValidation.csproj" />

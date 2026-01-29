@@ -2,25 +2,57 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
+```
+            return (name, price, stockQuantity, description.Value)
+                .Apply((name, price, stockQuantity, description) =>
+                    Product.Create(
+                        ProductName.Create(name).ThrowIfFail(),
+                        description,
+                        Money.Create(price).ThrowIfFail(),
+                        Quantity.Create(stockQuantity).ThrowIfFail()))
+                .As()
+                .ToFin();
+```
+
+- [x] Books ValueObject 13 ~ 15 Framework 제거해서 개선
+- [x] 값 객체 유효성 검사 폴더 재구성: Typed, Contextual
+- [x] 문서 정리: 에러
+- [x] 문서 정리: 값 객체
+- [x] 문서 생성: 엔티티
+- [ ] Tutorials 폴더에 Entity, EntityId, ... 등 적용
+- [ ] Functorium.Adapters 프로젝트 분리
+- [ ] Functorium.SourceGenerators
+- [ ] Error 구조적 로그 예외
+---
+- [ ] AggregateRoot 사례
+- [ ] DomainEvent 사례
+- [ ] ISoftDeletable 사례
+- [ ] IAuditable 사례
+---
+- [ ] IAdatper.md
+- [ ] IAdatper.DTO.md
+- [ ] Usecase
+- [ ] Usecase.DTO.md
+---
+- [ ] MinVer
+- [ ] 아키텍처 다이어그램
+---
+- [ ] Scheduling
+- [ ] HTTP Method
+---
+- [ ] 1개 Host: Scheduling
+- [ ] 3개 Host: Scheduling + HTTP + RabbitMQ
+---
 - [ ] dotnet new template
 - [ ] Usecase 구현 스킬
   - [ ] ValueObject
   - [ ] Entity
   - [ ] Aggregate Root
   - [ ] DomainEvent
-- [ ] Error 구조적 로그 예외
-- [ ] DTO 이해
-  - [ ] 유스케이스 DTO
-  - [ ] IAdatper DTO
-- [ ] 아키텍처 다이어그램
 - [ ] VS Code 개발 환경
 - [ ] GitHub NuGet 배포
-- [ ] MinVer
 - [ ] 유스케이스 구현 SKILL
 - [ ] 유스케이스 문서 SKILL
-- [ ] Functorium.Adapters 프로젝트 분리
-- [ ] Tutorials 폴더에 Entity, EntityId, ... 등 적용
-- [ ] Books ValueObject 13 ~ 15 Framework 제거해서 개선
 - [ ] Books ValueObject 재구성
 - [ ] Books 관찰 가능성
 - [ ] Books Entity
@@ -32,11 +64,13 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [ ] Scheduling
 - [ ] Http
 - [ ] 문서 사이트
-- [ ] Aspire 통합
 - [ ] 예제 변환 ddd
 - [ ] 예제 변환 eShop
 - [ ] 예제 변환 ...
-- [ ] IAuditable
+---
+- [ ] Aspire 통합
+- [ ] Dapr 통합
+
 
 
 ## 로드맵
