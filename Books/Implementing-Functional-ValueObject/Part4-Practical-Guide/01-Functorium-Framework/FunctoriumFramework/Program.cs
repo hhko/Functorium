@@ -3,6 +3,7 @@ using LanguageExt.Common;
 using static LanguageExt.Prelude;
 using Functorium.Domains.ValueObjects;
 using Functorium.Domains.ValueObjects.Validations;
+using Functorium.Domains.ValueObjects.Validations.Typed;
 using Functorium.Domains.Errors;
 
 namespace FunctoriumFramework;

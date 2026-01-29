@@ -1,5 +1,5 @@
 using Functorium.Domains.ValueObjects;
-using Functorium.Domains.ValueObjects.Validations;
+using Functorium.Domains.ValueObjects.Validations.Typed;
 
 namespace Cqrs02Pipeline.Demo.Domain.ValueObjects;
 

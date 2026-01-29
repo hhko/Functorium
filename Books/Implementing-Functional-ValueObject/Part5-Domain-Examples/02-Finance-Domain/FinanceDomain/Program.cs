@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using Functorium.Abstractions.Errors;
 using Functorium.Domains.ValueObjects;
-using Functorium.Domains.ValueObjects.Validations;
+using Functorium.Domains.ValueObjects.Validations.Typed;
 using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;

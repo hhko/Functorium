@@ -1,7 +1,7 @@
 using LanguageExt;
 using LanguageExt.Common;
 using Functorium.Domains.ValueObjects;
-using Functorium.Domains.ValueObjects.Validations;
+using Functorium.Domains.ValueObjects.Validations.Typed;
 using static LanguageExt.Prelude;
 
 namespace ValueObjectPrimitive.ValueObjects;
