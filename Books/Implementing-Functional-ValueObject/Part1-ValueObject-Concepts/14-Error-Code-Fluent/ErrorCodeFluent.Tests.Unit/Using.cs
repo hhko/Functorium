@@ -2,5 +2,5 @@ global using LanguageExt;
 global using LanguageExt.Common;
 global using Shouldly;
 global using Xunit;
-global using Functorium.Domains.ValueObjects;
-global using Functorium.Testing.Assertions;
+global using Framework.Layers.Domains;
+global using Framework.Testing.Assertions.Errors;

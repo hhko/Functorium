@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="LanguageExt.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ErrorCodeFluent" />
+    <InternalsVisibleTo Include="ErrorCodeFluent.Tests.Unit" />
+  </ItemGroup>
+
+</Project>
