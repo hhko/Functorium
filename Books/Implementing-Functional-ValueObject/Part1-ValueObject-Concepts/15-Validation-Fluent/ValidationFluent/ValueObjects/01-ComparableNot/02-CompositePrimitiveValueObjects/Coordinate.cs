@@ -1,4 +1,5 @@
-using Functorium.Domains.ValueObjects;
+using Framework.Layers.Domains;
+using Framework.Layers.Domains.Validations;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -31,10 +32,10 @@ public sealed class Coordinate : ValueObject
         select (X: validX, Y: validY);
 
     private static Validation<Error, int> ValidateX(int x) =>
-        Validate<Coordinate>.Between(x, 0, 1000);
+        ValidationRules<Coordinate>.Between(x, 0, 1000);
 
     private static Validation<Error, int> ValidateY(int y) =>
-        Validate<Coordinate>.Between(y, 0, 1000);
+        ValidationRules<Coordinate>.Between(y, 0, 1000);
 
     protected override IEnumerable<object> GetEqualityComponents()
     {

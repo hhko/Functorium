@@ -1,5 +1,5 @@
-using Functorium.Domains.ValueObjects;
-using Functorium.Domains.ValueObjects.Validations;
+using Framework.Layers.Domains;
+using Framework.Layers.Domains.Validations;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -40,7 +40,7 @@ public sealed class PriceRange : ComparableValueObject
         select validPriceRange;
 
     private static Validation<Error, (Price MinPrice, Price MaxPrice)> ValidatePriceRange(Price minPrice, Price maxPrice) =>
-        Validate<PriceRange>.ValidRange((decimal)minPrice.Amount, (decimal)maxPrice.Amount)
+        ValidationRules<PriceRange>.ValidRange((decimal)minPrice.Amount, (decimal)maxPrice.Amount)
             .ToValidation()
             .Map(_ => (MinPrice: minPrice, MaxPrice: maxPrice));
 

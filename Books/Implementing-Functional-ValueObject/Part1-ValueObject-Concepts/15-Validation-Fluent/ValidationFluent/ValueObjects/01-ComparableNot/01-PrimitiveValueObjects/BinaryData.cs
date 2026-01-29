@@ -1,4 +1,5 @@
-using Functorium.Domains.ValueObjects;
+using Framework.Layers.Domains;
+using Framework.Layers.Domains.Validations;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -20,7 +21,7 @@ public sealed class BinaryData : SimpleValueObject<byte[]>
         new BinaryData(validatedValue);
 
     public static Validation<Error, byte[]> Validate(byte[]? value) =>
-        Validate<BinaryData>.NotEmptyArray(value);
+        ValidationRules<BinaryData>.NotEmptyArray(value);
 
     protected override IEnumerable<object> GetEqualityComponents()
     {

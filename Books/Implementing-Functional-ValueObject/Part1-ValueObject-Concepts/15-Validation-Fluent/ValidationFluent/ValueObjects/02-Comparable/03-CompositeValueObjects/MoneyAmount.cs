@@ -1,4 +1,5 @@
-using Functorium.Domains.ValueObjects;
+using Framework.Layers.Domains;
+using Framework.Layers.Domains.Validations;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -24,7 +25,7 @@ public sealed class MoneyAmount : ComparableSimpleValueObject<decimal>
         new MoneyAmount(validatedValue);
 
     public static Validation<Error, decimal> Validate(decimal value) =>
-        Validate<MoneyAmount>.NonNegative(value)
+        ValidationRules<MoneyAmount>.NonNegative(value)
             .ThenAtMost(999999.99m);
 
     public override string ToString() =>

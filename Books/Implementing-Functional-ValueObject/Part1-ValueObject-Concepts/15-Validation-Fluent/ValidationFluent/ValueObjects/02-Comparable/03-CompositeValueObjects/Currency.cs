@@ -1,6 +1,6 @@
 using Ardalis.SmartEnum;
-using Functorium.Domains.Errors;
-using Functorium.Domains.ValueObjects;
+using Framework.Layers.Domains;
+using Framework.Layers.Domains.Validations;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -47,7 +47,7 @@ public sealed class Currency
         FromValue(currencyCode);
 
     public static Validation<Error, string> Validate(string currencyCode) =>
-        Validate<Currency>.NotEmpty(currencyCode ?? "")
+        ValidationRules<Currency>.NotEmpty(currencyCode ?? "")
             .ThenExactLength(3)
             .ThenNormalize(v => v.ToUpperInvariant())
             .ThenMust(

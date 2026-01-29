@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ValidationFluent\ValidationFluent.csproj" />
-    <ProjectReference Include="..\..\..\..\..\Src\Functorium.Testing\Functorium.Testing.csproj" />
+    <ProjectReference Include="..\Framework.Testing\Framework.Testing.csproj" />
   </ItemGroup>
 
 </Project>

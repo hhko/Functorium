@@ -1,4 +1,5 @@
-using Functorium.Domains.ValueObjects;
+using Framework.Layers.Domains;
+using Framework.Layers.Domains.Validations;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -19,5 +20,5 @@ public sealed class City : SimpleValueObject<string>
         new City(validatedValue);
 
     public static Validation<Error, string> Validate(string value) =>
-        Validate<City>.NotEmpty(value ?? "");
+        ValidationRules<City>.NotEmpty(value ?? "");
 }

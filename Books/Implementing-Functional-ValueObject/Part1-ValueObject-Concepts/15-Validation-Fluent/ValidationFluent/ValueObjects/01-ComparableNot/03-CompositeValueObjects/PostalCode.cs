@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
-using Functorium.Domains.ValueObjects;
+using Framework.Layers.Domains;
+using Framework.Layers.Domains.Validations;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -22,7 +23,7 @@ public sealed partial class PostalCode : SimpleValueObject<string>
         new PostalCode(validatedValue);
 
     public static Validation<Error, string> Validate(string value) =>
-        Validate<PostalCode>.NotEmpty(value ?? "")
+        ValidationRules<PostalCode>.NotEmpty(value ?? "")
             .ThenExactLength(5)
             .ThenMatches(DigitsPattern, "Postal code must contain only digits");
 

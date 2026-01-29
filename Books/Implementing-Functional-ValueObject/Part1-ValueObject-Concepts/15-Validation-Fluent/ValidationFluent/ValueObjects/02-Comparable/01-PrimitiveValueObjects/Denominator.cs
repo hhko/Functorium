@@ -1,4 +1,5 @@
-using Functorium.Domains.ValueObjects;
+using Framework.Layers.Domains;
+using Framework.Layers.Domains.Validations;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -20,5 +21,5 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
         new Denominator(validatedValue);
 
     public static Validation<Error, int> Validate(int value) =>
-        Validate<Denominator>.NotZero(value);
+        ValidationRules<Denominator>.NotZero(value);
 }
