@@ -1,8 +1,6 @@
 using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
-using DomainError = Functorium.Domains.ValueObjects.DomainError;
-using DomainErrorType = Functorium.Domains.ValueObjects.DomainErrorType;
 
 namespace ArchitectureTest.ValueObjects.Comparable.PrimitiveValueObjects;
 

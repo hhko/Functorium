@@ -2,8 +2,6 @@ using Ardalis.SmartEnum;
 using Framework.Layers.Domains;
 using LanguageExt;
 using LanguageExt.Common;
-using DomainError = Functorium.Domains.Errors.DomainError;
-using DomainErrorType = Functorium.Domains.Errors.DomainErrorType;
 
 namespace ArchitectureTest.ValueObjects.Comparable.CompositeValueObjects;
 
