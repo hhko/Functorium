@@ -1,14 +1,14 @@
 using LayeredArch.Domain.Entities;
+using LayeredArch.Domain.ValueObjects;
 using LayeredArch.Domain.Repositories;
 using Functorium.Abstractions.Errors;
 using Functorium.Applications.Linq;
-using Microsoft.Extensions.Logging;
 
 namespace LayeredArch.Application.Usecases.Products;
 
 /// <summary>
-/// 상품 생성 Command - Validation Pipeline 데모
-/// FluentValidation을 사용한 입력 검증 예제
+/// 상품 생성 Command - Entity Guide의 Apply 패턴 데모
+/// Value Object 생성 + Named Context 검증 + Apply 병합 패턴 적용
 /// </summary>
 public sealed class CreateProductCommand
 {
@@ -33,7 +33,7 @@ public sealed class CreateProductCommand
         DateTime CreatedAt);
 
     /// <summary>
-    /// Request Validator - FluentValidation 검증 규칙
+    /// Request Validator - FluentValidation 검증 규칙 (Presentation Layer 검증)
     /// </summary>
     public sealed class Validator : AbstractValidator<Request>
     {
@@ -41,7 +41,7 @@ public sealed class CreateProductCommand
         {
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("상품명은 필수입니다")
-                .MaximumLength(100).WithMessage("상품명은 100자를 초과할 수 없습니다");
+                .MaximumLength(ProductName.MaxLength).WithMessage($"상품명은 {ProductName.MaxLength}자를 초과할 수 없습니다");
 
             RuleFor(x => x.Description)
                 .MaximumLength(500).WithMessage("설명은 500자를 초과할 수 없습니다");
@@ -55,32 +55,31 @@ public sealed class CreateProductCommand
     }
 
     /// <summary>
-    /// Command Handler - 실제 비즈니스 로직 구현
+    /// Command Handler - Entity Guide의 Apply 패턴 적용
     /// </summary>
     public sealed class Usecase(IProductRepository productRepository)
         : ICommandUsecase<Request, Response>
     {
         private readonly IProductRepository _productRepository = productRepository;
 
-        /// <summary>
-        /// LINQ 쿼리 표현식을 사용한 함수형 체이닝
-        /// FinTUtilites의 SelectMany 확장 메서드를 통해 FinT 모나드 트랜스포머를 LINQ로 처리
-        /// guard를 사용하여 상품명 중복 검사 수행
-        /// </summary>
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            // LINQ 쿼리 표현식: Repository의 FinT<IO, bool>를 사용하여 중복 검사 및 상품 생성
-            // FinTUtilites.SelectMany가 FinT를 LINQ 쿼리 표현식에서 사용 가능하도록 지원
-            // guard를 사용하여 상품명이 존재하지 않을 때만 계속 진행 (exists가 false일 때)
-            // ToFinT<IO>() 호출 없이 자동으로 FinT로 변환됨
+            // 1. Value Object 생성 + VO 없는 필드 검증 (Apply 패턴)
+            var productResult = CreateProduct(request);
+
+            // 2. 검증 실패 시 조기 반환
+            if (productResult.IsFail)
+            {
+                return productResult.Match(
+                    Succ: _ => throw new InvalidOperationException(),
+                    Fail: error => FinResponse.Fail<Response>(error));
+            }
+
+            // 3. 중복 검사 및 저장
             FinT<IO, Response> usecase =
                 from exists in _productRepository.ExistsByName(request.Name)
                 from _ in guard(!exists, ApplicationErrors.ProductNameAlreadyExists(request.Name))
-                from product in _productRepository.Create(Product.Create(
-                    name: request.Name,
-                    description: request.Description,
-                    price: request.Price,
-                    stockQuantity: request.StockQuantity))
+                from product in _productRepository.Create((Product)productResult)
                 select new Response(
                     product.Id.ToString(),
                     product.Name,
@@ -89,24 +88,44 @@ public sealed class CreateProductCommand
                     product.StockQuantity,
                     product.CreatedAt);
 
-            // FinT<IO, Response>
-            //  -Run()→           IO<Fin<Response>>
-            //  -RunAsync()→      Fin<Response>
-            //  -ToFinResponse()→ FinResponse<Response>
             Fin<Response> response = await usecase.Run().RunAsync();
             return response.ToFinResponse();
+        }
+
+        /// <summary>
+        /// Entity Guide 패턴: VO Validate() + Named Context 검증 + Apply 병합
+        /// Validation 타입을 사용하여 병렬 검증 후 Entity 생성
+        /// </summary>
+        private static Fin<Product> CreateProduct(Request request)
+        {
+            // VO가 있는 필드: Validate() 사용 (Validation<Error, T> 반환)
+            var name = ProductName.Validate(request.Name);
+            var price = Money.Validate(request.Price);
+            var stockQuantity = Quantity.Validate(request.StockQuantity);
+
+            // VO가 없는 필드: Named Context 사용
+            var description = ValidationRules.For("Description")
+                .NotNull(request.Description)
+                .ThenMaxLength(500);
+
+            // 모두 튜플로 병합 - Apply로 병렬 검증
+            return (name, price, stockQuantity, description.Value)
+                .Apply((name, price, stockQuantity, description) =>
+                    Product.Create(
+                        ProductName.Create(name).ThrowIfFail(),
+                        description,
+                        Money.Create(price).ThrowIfFail(),
+                        Quantity.Create(stockQuantity).ThrowIfFail()))
+                .As()
+                .ToFin();
         }
     }
 
     /// <summary>
-    /// ApplicationErrors 중첩 클래스 - Application 계층 오류 정의
-    /// DomainErrors 패턴과 동일한 구조로 오류를 정의하여 일관성 유지
+    /// ApplicationErrors - Application 계층 오류 정의
     /// </summary>
     internal static class ApplicationErrors
     {
-        /// <summary>
-        /// 상품명이 이미 존재하는 경우 발생하는 오류
-        /// </summary>
         public static Error ProductNameAlreadyExists(string productName) =>
             ErrorCodeFactory.Create(
                 errorCode: $"{nameof(ApplicationErrors)}.{nameof(CreateProductCommand)}.{nameof(ProductNameAlreadyExists)}",

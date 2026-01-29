@@ -86,7 +86,7 @@ public class InMemoryProductRepository : IProductRepository
         return IO.lift(() =>
         {
             bool exists = _products.Values.Any(p =>
-                p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+                ((string)p.Name).Equals(name, StringComparison.OrdinalIgnoreCase));
             return Fin.Succ(exists);
         });
     }
