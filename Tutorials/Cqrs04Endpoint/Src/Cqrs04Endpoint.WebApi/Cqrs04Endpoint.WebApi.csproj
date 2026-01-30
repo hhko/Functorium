@@ -15,11 +15,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Using Include="Cqrs04Endpoint.WebApi.Domain" />
+    <Using Include="Cqrs04Endpoint.WebApi.Domain.ValueObjects" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FastEndpoints" />
     <PackageReference Include="Mediator.Abstractions" />
     <PackageReference Include="Mediator.SourceGenerator" PrivateAssets="all" />
     <PackageReference Include="LanguageExt.Core" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="OpenTelemetry.Exporter.Console" />
     <PackageReference Include="Serilog.Sinks.Console" />
   </ItemGroup>

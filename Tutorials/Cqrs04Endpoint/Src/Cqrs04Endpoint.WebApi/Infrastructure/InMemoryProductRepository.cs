@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Cqrs04Endpoint.WebApi.Domain;
+using Cqrs04Endpoint.WebApi.Domain.ValueObjects;
 using Functorium.Adapters.SourceGenerator;
 using Functorium.Applications.Observabilities;
 using Microsoft.Extensions.Logging;
@@ -16,7 +17,7 @@ namespace Cqrs04Endpoint.WebApi.Infrastructure;
 public class InMemoryProductRepository : IProductRepository
 {
     private readonly ILogger<InMemoryProductRepository> _logger;
-    private static readonly ConcurrentDictionary<Guid, Product> _products = new();
+    private readonly ConcurrentDictionary<ProductId, Product> _products = new();
 
     /// <summary>
     /// 관찰 가능성 로그를 위한 요청 카테고리
@@ -41,7 +42,7 @@ public class InMemoryProductRepository : IProductRepository
         });
     }
 
-    public virtual FinT<IO, Product> GetById(Guid id)
+    public virtual FinT<IO, Product> GetById(ProductId id)
     {
         // Pipeline이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
@@ -80,13 +81,13 @@ public class InMemoryProductRepository : IProductRepository
         });
     }
 
-    public virtual FinT<IO, bool> ExistsByName(string name)
+    public virtual FinT<IO, bool> ExistsByName(ProductName name)
     {
         // Pipeline이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
             bool exists = _products.Values.Any(p =>
-                p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+                ((string)p.Name).Equals((string)name, StringComparison.OrdinalIgnoreCase));
             return Fin.Succ(exists);
         });
     }

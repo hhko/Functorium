@@ -1,6 +1,8 @@
 using Cqrs04Endpoint.WebApi.Domain;
+using Cqrs04Endpoint.WebApi.Domain.ValueObjects;
 using FluentValidation;
 using Functorium.Abstractions.Errors;
+using Functorium.Applications.Cqrs;
 using Functorium.Applications.Linq;
 using LanguageExt;
 using LanguageExt.Common;
@@ -28,7 +30,7 @@ public sealed class CreateProductCommand
     /// Command Response - 생성된 상품 정보
     /// </summary>
     public sealed record Response(
-        Guid ProductId,
+        string ProductId,
         string Name,
         string Description,
         decimal Price,
@@ -75,29 +77,58 @@ public sealed class CreateProductCommand
         /// </summary>
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            //return ErrorCodeFactory.Create("xyz.hello.code", 2026, "error message");
+            // Value Objects 생성
+            var productNameResult = ProductName.Create(request.Name);
+            if (productNameResult.IsFail)
+            {
+                return productNameResult.Match(
+                    Succ: _ => throw new InvalidOperationException(),
+                    Fail: e => FinResponse.Fail<Response>(e));
+            }
+            var productName = productNameResult.Match(Succ: v => v, Fail: _ => null!);
+
+            var priceResult = Domain.ValueObjects.Price.Create(request.Price);
+            if (priceResult.IsFail)
+            {
+                return priceResult.Match(
+                    Succ: _ => throw new InvalidOperationException(),
+                    Fail: e => FinResponse.Fail<Response>(e));
+            }
+            var price = priceResult.Match(Succ: v => v, Fail: _ => null!);
+
+            var stockQuantityResult = StockQuantity.Create(request.StockQuantity);
+            if (stockQuantityResult.IsFail)
+            {
+                return stockQuantityResult.Match(
+                    Succ: _ => throw new InvalidOperationException(),
+                    Fail: e => FinResponse.Fail<Response>(e));
+            }
+            var stockQuantity = stockQuantityResult.Match(Succ: v => v, Fail: _ => null!);
+
+            // Product 생성
+            var productResult = Domain.Product.Create(productName, request.Description, price, stockQuantity);
+            if (productResult.IsFail)
+            {
+                return productResult.Match(
+                    Succ: _ => throw new InvalidOperationException(),
+                    Fail: e => FinResponse.Fail<Response>(e));
+            }
+            var product = productResult.Match(Succ: v => v, Fail: _ => null!);
 
             // LINQ 쿼리 표현식: Repository의 FinT<IO, bool>를 사용하여 중복 검사 및 상품 생성
             // FinTUtilites.SelectMany가 FinT를 LINQ 쿼리 표현식에서 사용 가능하도록 지원
             // guard를 사용하여 상품명이 존재하지 않을 때만 계속 진행 (exists가 false일 때)
-            // ToFinT<IO>() 호출 없이 자동으로 FinT로 변환됨
             FinT<IO, Response> usecase =
-                from exists in _productRepository.ExistsByName(request.Name)
-                from _ in guard(!exists, ApplicationErrors.ProductNameAlreadyExists(request.Name))
-                from product in _productRepository.Create(new Product(
-                    Id: Guid.NewGuid(),
-                    Name: request.Name,
-                    Description: request.Description,
-                    Price: request.Price,
-                    StockQuantity: request.StockQuantity,
-                    CreatedAt: DateTime.UtcNow))
+                from exists in _productRepository.ExistsByName(productName)
+                from _ in guard(!exists, ApplicationErrors.ProductNameAlreadyExists((string)productName))
+                from createdProduct in _productRepository.Create(product)
                 select new Response(
-                    product.Id,
-                    product.Name,
-                    product.Description,
-                    product.Price,
-                    product.StockQuantity,
-                    product.CreatedAt);
+                    createdProduct.Id.ToString(),
+                    (string)createdProduct.Name,
+                    createdProduct.Description,
+                    (decimal)createdProduct.Price,
+                    (int)createdProduct.StockQuantity,
+                    createdProduct.CreatedAt);
 
             // FinT<IO, Response>
             //  -Run()→           IO<Fin<Response>>

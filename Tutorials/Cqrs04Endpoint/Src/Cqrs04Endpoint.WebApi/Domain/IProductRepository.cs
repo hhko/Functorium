@@ -1,3 +1,4 @@
+using Cqrs04Endpoint.WebApi.Domain.ValueObjects;
 using Functorium.Applications.Observabilities;
 
 namespace Cqrs04Endpoint.WebApi.Domain;
@@ -17,7 +18,7 @@ public interface IProductRepository : IAdapter
     /// ID로 상품 조회.
     /// 상품이 없으면 실패(Error)를 반환합니다.
     /// </summary>
-    FinT<IO, Product> GetById(Guid id);
+    FinT<IO, Product> GetById(ProductId id);
 
     /// <summary>
     /// 모든 상품 조회
@@ -32,5 +33,5 @@ public interface IProductRepository : IAdapter
     /// <summary>
     /// 상품명 중복 확인
     /// </summary>
-    FinT<IO, bool> ExistsByName(string name);
+    FinT<IO, bool> ExistsByName(ProductName name);
 }

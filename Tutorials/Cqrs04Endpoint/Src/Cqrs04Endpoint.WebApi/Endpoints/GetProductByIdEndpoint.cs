@@ -37,5 +37,5 @@ public sealed class GetProductByIdEndpoint
         await this.SendFinResponseWithNotFoundAsync(result, ct);
     }
 
-    public sealed record Request(Guid Id);
+    public sealed record Request(string Id);
 }

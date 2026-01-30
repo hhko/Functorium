@@ -45,7 +45,7 @@ public sealed class UpdateProductEndpoint
     }
 
     public sealed record Request(
-        Guid Id,
+        string Id,
         string Name,
         string Description,
         decimal Price,
