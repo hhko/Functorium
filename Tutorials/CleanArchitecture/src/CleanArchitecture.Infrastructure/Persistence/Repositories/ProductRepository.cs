@@ -1,5 +1,6 @@
 using CleanArchitecture.Domain.Entities;
 using CleanArchitecture.Domain.Interfaces;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace CleanArchitecture.Infrastructure.Persistence.Repositories;
@@ -13,9 +14,9 @@ public class ProductRepository : IProductRepository
         _context = context;
     }
 
-    public async Task<Product?> GetByIdAsync(Guid id, CancellationToken ct = default)
+    public async Task<Product?> GetByIdAsync(ProductId id, CancellationToken ct = default)
     {
-        return await _context.Products.FindAsync(new object[] { id }, ct);
+        return await _context.Products.FirstOrDefaultAsync(p => p.Id == id, ct);
     }
 
     public async Task<Product?> GetBySkuAsync(string sku, CancellationToken ct = default)

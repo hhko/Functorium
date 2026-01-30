@@ -1,19 +1,29 @@
-using CleanArchitecture.Domain.Exceptions;
+using System.Text.RegularExpressions;
+
+using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations.Typed;
+
+using LanguageExt;
+using LanguageExt.Common;
 
 namespace CleanArchitecture.Domain.ValueObjects;
 
-public record Email
+public sealed partial class Email : SimpleValueObject<string>
 {
-    public string Value { get; }
+    private static readonly Regex EmailPattern = GetEmailRegex();
 
-    public Email(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            throw new DomainException("Email is required");
+    private Email(string value) : base(value) { }
 
-        if (!value.Contains('@') || !value.Contains('.'))
-            throw new DomainException("Invalid email format");
+    public static Fin<Email> Create(string? value) =>
+        CreateFromValidation(Validate(value), v => new Email(v));
 
-        Value = value.ToLowerInvariant();
-    }
+    public static Validation<Error, string> Validate(string? value) =>
+        ValidationRules<Email>.NotEmpty(value ?? "")
+            .ThenMatches(EmailPattern)
+            .ThenNormalize(v => v.ToLowerInvariant());
+
+    public static implicit operator string(Email email) => email.Value;
+
+    [GeneratedRegex(@"^[^@]+@[^@]+\.[^@]+$")]
+    private static partial Regex GetEmailRegex();
 }

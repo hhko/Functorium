@@ -1,7 +1,7 @@
 namespace CleanArchitecture.Application.Products;
 
 public record ProductDto(
-    Guid Id,
+    string Id,
     string Name,
     string Sku,
     decimal Price,

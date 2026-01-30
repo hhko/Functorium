@@ -1,4 +1,5 @@
 using CleanArchitecture.Domain.Entities;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -11,6 +12,10 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.ToTable("Products");
 
         builder.HasKey(p => p.Id);
+
+        builder.Property(p => p.Id)
+            .HasConversion(new ProductIdConverter())
+            .HasMaxLength(26);
 
         builder.Property(p => p.Name)
             .IsRequired()

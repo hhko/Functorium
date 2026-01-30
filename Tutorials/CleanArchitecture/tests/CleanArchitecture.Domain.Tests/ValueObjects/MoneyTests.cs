@@ -1,4 +1,3 @@
-using CleanArchitecture.Domain.Exceptions;
 using CleanArchitecture.Domain.ValueObjects;
 
 namespace CleanArchitecture.Domain.Tests.ValueObjects;
@@ -9,71 +8,91 @@ public class MoneyTests
     public void Create_WithValidData_CreatesMoney()
     {
         // Act
-        var money = new Money(100m, "USD");
+        var result = Money.Create(100m, "USD");
 
         // Assert
-        Assert.Equal(100m, money.Amount);
-        Assert.Equal("USD", money.Currency);
+        result.IsSucc.ShouldBeTrue();
+        result.Match(
+            Succ: money =>
+            {
+                money.Amount.ShouldBe(100m);
+                money.Currency.ShouldBe("USD");
+            },
+            Fail: _ => Assert.Fail("Should succeed"));
     }
 
     [Fact]
-    public void Create_WithNegativeAmount_ThrowsDomainException()
+    public void Create_WithNegativeAmount_ReturnsFail()
     {
-        // Act & Assert
-        var exception = Assert.Throws<DomainException>(() => new Money(-10m, "USD"));
-        Assert.Equal("Amount cannot be negative", exception.Message);
+        // Act
+        var result = Money.Create(-10m, "USD");
+
+        // Assert
+        result.IsFail.ShouldBeTrue();
     }
 
     [Fact]
-    public void Create_WithInvalidCurrency_ThrowsDomainException()
+    public void Create_WithInvalidCurrency_ReturnsFail()
     {
-        // Act & Assert
-        var exception = Assert.Throws<DomainException>(() => new Money(100m, "US"));
-        Assert.Equal("Currency must be a 3-letter ISO code", exception.Message);
+        // Act
+        var result = Money.Create(100m, "US");
+
+        // Assert
+        result.IsFail.ShouldBeTrue();
     }
 
     [Fact]
     public void Create_NormalizesCurrencyToUppercase()
     {
         // Act
-        var money = new Money(100m, "usd");
+        var result = Money.Create(100m, "usd");
 
         // Assert
-        Assert.Equal("USD", money.Currency);
+        result.IsSucc.ShouldBeTrue();
+        result.Match(
+            Succ: money => money.Currency.ShouldBe("USD"),
+            Fail: _ => Assert.Fail("Should succeed"));
     }
 
     [Fact]
     public void Equality_SameValues_AreEqual()
     {
         // Arrange
-        var money1 = new Money(100m, "USD");
-        var money2 = new Money(100m, "USD");
+        var money1 = Money.Create(100m, "USD");
+        var money2 = Money.Create(100m, "USD");
 
         // Assert
-        Assert.Equal(money1, money2);
+        money1.Match(
+            Succ: m1 => money2.Match(
+                Succ: m2 => m1.ShouldBe(m2),
+                Fail: _ => Assert.Fail("Should succeed")),
+            Fail: _ => Assert.Fail("Should succeed"));
     }
 
     [Fact]
     public void Equality_DifferentValues_AreNotEqual()
     {
         // Arrange
-        var money1 = new Money(100m, "USD");
-        var money2 = new Money(100m, "EUR");
+        var money1 = Money.Create(100m, "USD");
+        var money2 = Money.Create(100m, "EUR");
 
         // Assert
-        Assert.NotEqual(money1, money2);
+        money1.Match(
+            Succ: m1 => money2.Match(
+                Succ: m2 => m1.ShouldNotBe(m2),
+                Fail: _ => Assert.Fail("Should succeed")),
+            Fail: _ => Assert.Fail("Should succeed"));
     }
 
     [Fact]
     public void ToString_ReturnsFormattedString()
     {
-        // Arrange
-        var money = new Money(1234.56m, "USD");
-
-        // Act
-        var result = money.ToString();
+        // Arrange & Act
+        var result = Money.Create(1234.56m, "USD");
 
         // Assert
-        Assert.Contains("USD", result);
+        result.Match(
+            Succ: money => money.ToString().ShouldContain("USD"),
+            Fail: _ => Assert.Fail("Should succeed"));
     }
 }

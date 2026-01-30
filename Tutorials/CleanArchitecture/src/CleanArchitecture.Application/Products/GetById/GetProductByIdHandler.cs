@@ -20,7 +20,7 @@ public class GetProductByIdHandler : IQueryHandler<GetProductByIdQuery, ProductD
             return null;
 
         return new ProductDto(
-            product.Id,
+            product.Id.ToString(),
             product.Name,
             product.Sku,
             product.Price.Amount,

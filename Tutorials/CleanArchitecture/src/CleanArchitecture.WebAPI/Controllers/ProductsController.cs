@@ -4,7 +4,9 @@ using CleanArchitecture.Application.Products.Create;
 using CleanArchitecture.Application.Products.GetAll;
 using CleanArchitecture.Application.Products.GetById;
 using CleanArchitecture.Application.Products.UpdatePrice;
+using CleanArchitecture.Domain.Entities;
 using CleanArchitecture.WebAPI.Models;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace CleanArchitecture.WebAPI.Controllers;
@@ -13,13 +15,13 @@ namespace CleanArchitecture.WebAPI.Controllers;
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase
 {
-    private readonly ICommandHandler<CreateProductCommand, Guid> _createHandler;
+    private readonly ICommandHandler<CreateProductCommand, ProductId> _createHandler;
     private readonly ICommandHandler<UpdatePriceCommand, bool> _updatePriceHandler;
     private readonly IQueryHandler<GetProductByIdQuery, ProductDto?> _getByIdHandler;
     private readonly IQueryHandler<GetAllProductsQuery, IEnumerable<ProductDto>> _getAllHandler;
 
     public ProductsController(
-        ICommandHandler<CreateProductCommand, Guid> createHandler,
+        ICommandHandler<CreateProductCommand, ProductId> createHandler,
         ICommandHandler<UpdatePriceCommand, bool> updatePriceHandler,
         IQueryHandler<GetProductByIdQuery, ProductDto?> getByIdHandler,
         IQueryHandler<GetAllProductsQuery, IEnumerable<ProductDto>> getAllHandler)
@@ -41,13 +43,14 @@ public class ProductsController : ControllerBase
 
         var productId = await _createHandler.HandleAsync(command);
 
-        return CreatedAtAction(nameof(GetById), new { id = productId }, new { id = productId });
+        return CreatedAtAction(nameof(GetById), new { id = productId.ToString() }, new { id = productId.ToString() });
     }
 
-    [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById(Guid id)
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(string id)
     {
-        var query = new GetProductByIdQuery(id);
+        var productId = ProductId.Create(id);
+        var query = new GetProductByIdQuery(productId);
         var product = await _getByIdHandler.HandleAsync(query);
 
         return product is null ? NotFound() : Ok(product);
@@ -62,10 +65,11 @@ public class ProductsController : ControllerBase
         return Ok(products);
     }
 
-    [HttpPut("{id:guid}/price")]
-    public async Task<IActionResult> UpdatePrice(Guid id, [FromBody] UpdatePriceRequest request)
+    [HttpPut("{id}/price")]
+    public async Task<IActionResult> UpdatePrice(string id, [FromBody] UpdatePriceRequest request)
     {
-        var command = new UpdatePriceCommand(id, request.NewPrice, request.Currency);
+        var productId = ProductId.Create(id);
+        var command = new UpdatePriceCommand(productId, request.NewPrice, request.Currency);
         var success = await _updatePriceHandler.HandleAsync(command);
 
         return success ? NoContent() : NotFound();

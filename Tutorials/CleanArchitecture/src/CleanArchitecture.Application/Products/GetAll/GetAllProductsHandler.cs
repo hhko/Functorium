@@ -19,7 +19,7 @@ public class GetAllProductsHandler : IQueryHandler<GetAllProductsQuery, IEnumera
             : await _productRepository.GetAllAsync(ct);
 
         return products.Select(p => new ProductDto(
-            p.Id,
+            p.Id.ToString(),
             p.Name,
             p.Sku,
             p.Price.Amount,

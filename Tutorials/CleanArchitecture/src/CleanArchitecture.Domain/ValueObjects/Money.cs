@@ -1,23 +1,43 @@
-using CleanArchitecture.Domain.Exceptions;
+using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
+using Functorium.Domains.ValueObjects.Validations.Typed;
+
+using LanguageExt;
+using LanguageExt.Common;
 
 namespace CleanArchitecture.Domain.ValueObjects;
 
-public record Money
+public sealed class Money : ValueObject
 {
     public decimal Amount { get; }
     public string Currency { get; }
 
-    public Money(decimal amount, string currency)
+    private Money(decimal amount, string currency)
     {
-        if (amount < 0)
-            throw new DomainException("Amount cannot be negative");
-
-        if (string.IsNullOrWhiteSpace(currency) || currency.Length != 3)
-            throw new DomainException("Currency must be a 3-letter ISO code");
-
         Amount = amount;
-        Currency = currency.ToUpperInvariant();
+        Currency = currency;
     }
+
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return Amount;
+        yield return Currency;
+    }
+
+    public static Fin<Money> Create(decimal amount, string currency) =>
+        CreateFromValidation(Validate(amount, currency), v => new Money(v.Amount, v.Currency));
+
+    public static Validation<Error, (decimal Amount, string Currency)> Validate(decimal amount, string currency) =>
+        (ValidateAmount(amount), ValidateCurrency(currency))
+            .Apply((a, c) => (Amount: a, Currency: c));
+
+    private static Validation<Error, decimal> ValidateAmount(decimal amount) =>
+        ValidationRules<Money>.NonNegative(amount);
+
+    private static Validation<Error, string> ValidateCurrency(string currency) =>
+        ValidationRules<Money>.NotEmpty(currency)
+            .ThenExactLength(3)
+            .ThenNormalize(v => v.ToUpperInvariant());
 
     public override string ToString() => $"{Amount:N2} {Currency}";
 }

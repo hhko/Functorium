@@ -5,7 +5,7 @@ using CleanArchitecture.Domain.ValueObjects;
 
 namespace CleanArchitecture.Application.Products.Create;
 
-public class CreateProductHandler : ICommandHandler<CreateProductCommand, Guid>
+public class CreateProductHandler : ICommandHandler<CreateProductCommand, ProductId>
 {
     private readonly IProductRepository _productRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -16,13 +16,16 @@ public class CreateProductHandler : ICommandHandler<CreateProductCommand, Guid>
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Guid> HandleAsync(CreateProductCommand command, CancellationToken ct = default)
+    public async Task<ProductId> HandleAsync(CreateProductCommand command, CancellationToken ct = default)
     {
         if (await _productRepository.ExistsAsync(command.Sku, ct))
             throw new ApplicationException($"Product with SKU '{command.Sku}' already exists");
 
-        var price = new Money(command.Price, command.Currency);
-        var product = Product.Create(command.Name, command.Sku, price);
+        var price = Money.Create(command.Price, command.Currency)
+            .IfFail(error => throw new ApplicationException(error.Message));
+
+        var product = Product.Create(command.Name, command.Sku, price)
+            .IfFail(error => throw new ApplicationException(error.Message));
 
         await _productRepository.AddAsync(product, ct);
         await _unitOfWork.SaveChangesAsync(ct);

@@ -1,21 +1,22 @@
 using CleanArchitecture.Application.Products.Create;
 using CleanArchitecture.Domain.Entities;
 using CleanArchitecture.Domain.Interfaces;
-using Moq;
+
+using NSubstitute;
 
 namespace CleanArchitecture.Application.Tests.Products;
 
 public class CreateProductHandlerTests
 {
-    private readonly Mock<IProductRepository> _repositoryMock;
-    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly IProductRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly CreateProductHandler _handler;
 
     public CreateProductHandlerTests()
     {
-        _repositoryMock = new Mock<IProductRepository>();
-        _unitOfWorkMock = new Mock<IUnitOfWork>();
-        _handler = new CreateProductHandler(_repositoryMock.Object, _unitOfWorkMock.Object);
+        _repository = Substitute.For<IProductRepository>();
+        _unitOfWork = Substitute.For<IUnitOfWork>();
+        _handler = new CreateProductHandler(_repository, _unitOfWork);
     }
 
     [Fact]
@@ -23,15 +24,15 @@ public class CreateProductHandlerTests
     {
         // Arrange
         var command = new CreateProductCommand("Laptop", "LAP-001", 999.99m, "USD");
-        _repositoryMock.Setup(r => r.ExistsAsync("LAP-001", default)).ReturnsAsync(false);
+        _repository.ExistsAsync("LAP-001", default).Returns(false);
 
         // Act
         var result = await _handler.HandleAsync(command);
 
         // Assert
-        Assert.NotEqual(Guid.Empty, result);
-        _repositoryMock.Verify(r => r.AddAsync(It.IsAny<Product>(), default), Times.Once);
-        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(default), Times.Once);
+        Assert.NotEqual(ProductId.Empty, result);
+        await _repository.Received(1).AddAsync(Arg.Any<Product>(), default);
+        await _unitOfWork.Received(1).SaveChangesAsync(default);
     }
 
     [Fact]
@@ -39,7 +40,7 @@ public class CreateProductHandlerTests
     {
         // Arrange
         var command = new CreateProductCommand("Laptop", "LAP-001", 999.99m, "USD");
-        _repositoryMock.Setup(r => r.ExistsAsync("LAP-001", default)).ReturnsAsync(true);
+        _repository.ExistsAsync("LAP-001", default).Returns(true);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ApplicationException>(() =>
@@ -53,15 +54,15 @@ public class CreateProductHandlerTests
     {
         // Arrange
         var command = new CreateProductCommand("Laptop", "LAP-001", 999.99m, "USD");
-        _repositoryMock.Setup(r => r.ExistsAsync("LAP-001", default)).ReturnsAsync(false);
+        _repository.ExistsAsync("LAP-001", default).Returns(false);
 
         // Act
         await _handler.HandleAsync(command);
 
         // Assert
-        _repositoryMock.Verify(r => r.AddAsync(
-            It.Is<Product>(p => p.Name == "Laptop" && p.Sku == "LAP-001"),
-            default), Times.Once);
+        await _repository.Received(1).AddAsync(
+            Arg.Is<Product>(p => p.Name == "Laptop" && p.Sku == "LAP-001"),
+            default);
     }
 
     [Fact]
@@ -69,12 +70,12 @@ public class CreateProductHandlerTests
     {
         // Arrange
         var command = new CreateProductCommand("Laptop", "LAP-001", 999.99m, "USD");
-        _repositoryMock.Setup(r => r.ExistsAsync("LAP-001", default)).ReturnsAsync(false);
+        _repository.ExistsAsync("LAP-001", default).Returns(false);
 
         // Act
         await _handler.HandleAsync(command);
 
         // Assert
-        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(default), Times.Once);
+        await _unitOfWork.Received(1).SaveChangesAsync(default);
     }
 }

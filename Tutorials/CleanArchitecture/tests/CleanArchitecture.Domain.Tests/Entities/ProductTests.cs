@@ -1,5 +1,4 @@
 using CleanArchitecture.Domain.Entities;
-using CleanArchitecture.Domain.Exceptions;
 using CleanArchitecture.Domain.ValueObjects;
 
 namespace CleanArchitecture.Domain.Tests.Entities;
@@ -10,140 +9,248 @@ public class ProductTests
     public void Create_WithValidData_ReturnsProduct()
     {
         // Arrange
-        var price = new Money(99.99m, "USD");
-
-        // Act
-        var product = Product.Create("Laptop", "LAP-001", price);
-
-        // Assert
-        Assert.NotEqual(Guid.Empty, product.Id);
-        Assert.Equal("Laptop", product.Name);
-        Assert.Equal("LAP-001", product.Sku);
-        Assert.Equal(99.99m, product.Price.Amount);
-        Assert.True(product.IsActive);
-    }
-
-    [Fact]
-    public void Create_WithEmptyName_ThrowsDomainException()
-    {
-        // Arrange
-        var price = new Money(99.99m, "USD");
+        var priceResult = Money.Create(99.99m, "USD");
+        priceResult.IsSucc.ShouldBeTrue();
 
         // Act & Assert
-        var exception = Assert.Throws<DomainException>(() =>
-            Product.Create("", "LAP-001", price));
-
-        Assert.Equal("Product name is required", exception.Message);
+        priceResult.Match(
+            Succ: price =>
+            {
+                var result = Product.Create("Laptop", "LAP-001", price);
+                result.IsSucc.ShouldBeTrue();
+                result.Match(
+                    Succ: product =>
+                    {
+                        product.Id.ShouldNotBe(ProductId.Empty);
+                        product.Name.ShouldBe("Laptop");
+                        product.Sku.ShouldBe("LAP-001");
+                        product.Price.Amount.ShouldBe(99.99m);
+                        product.IsActive.ShouldBeTrue();
+                    },
+                    Fail: _ => Assert.Fail("Should succeed"));
+            },
+            Fail: _ => Assert.Fail("Should succeed"));
     }
 
     [Fact]
-    public void Create_WithLongName_ThrowsDomainException()
+    public void Create_WithEmptyName_ReturnsFail()
     {
         // Arrange
-        var price = new Money(99.99m, "USD");
+        var priceResult = Money.Create(99.99m, "USD");
+        priceResult.IsSucc.ShouldBeTrue();
+
+        // Act & Assert
+        priceResult.Match(
+            Succ: price =>
+            {
+                var result = Product.Create("", "LAP-001", price);
+                result.IsFail.ShouldBeTrue();
+                result.Match(
+                    Succ: _ => Assert.Fail("Should fail"),
+                    Fail: error => error.Message.ShouldContain("Product name is required"));
+            },
+            Fail: _ => Assert.Fail("Should succeed"));
+    }
+
+    [Fact]
+    public void Create_WithLongName_ReturnsFail()
+    {
+        // Arrange
+        var priceResult = Money.Create(99.99m, "USD");
+        priceResult.IsSucc.ShouldBeTrue();
         var longName = new string('a', 201);
 
         // Act & Assert
-        var exception = Assert.Throws<DomainException>(() =>
-            Product.Create(longName, "LAP-001", price));
-
-        Assert.Equal("Product name cannot exceed 200 characters", exception.Message);
+        priceResult.Match(
+            Succ: price =>
+            {
+                var result = Product.Create(longName, "LAP-001", price);
+                result.IsFail.ShouldBeTrue();
+                result.Match(
+                    Succ: _ => Assert.Fail("Should fail"),
+                    Fail: error => error.Message.ShouldContain("Product name cannot exceed 200 characters"));
+            },
+            Fail: _ => Assert.Fail("Should succeed"));
     }
 
     [Fact]
     public void AddStock_WithPositiveQuantity_IncreasesStock()
     {
-        // Arrange
-        var product = Product.Create("Laptop", "LAP-001", new Money(99.99m, "USD"));
-
-        // Act
-        product.AddStock(10);
-
-        // Assert
-        Assert.Equal(10, product.StockQuantity);
+        // Arrange & Act & Assert
+        var priceResult = Money.Create(99.99m, "USD");
+        priceResult.Match(
+            Succ: price =>
+            {
+                var productResult = Product.Create("Laptop", "LAP-001", price);
+                productResult.Match(
+                    Succ: product =>
+                    {
+                        var result = product.AddStock(10);
+                        result.IsSucc.ShouldBeTrue();
+                        product.StockQuantity.ShouldBe(10);
+                    },
+                    Fail: _ => Assert.Fail("Should succeed"));
+            },
+            Fail: _ => Assert.Fail("Should succeed"));
     }
 
     [Fact]
-    public void AddStock_WithZeroQuantity_ThrowsDomainException()
+    public void AddStock_WithZeroQuantity_ReturnsFail()
     {
-        // Arrange
-        var product = Product.Create("Laptop", "LAP-001", new Money(99.99m, "USD"));
-
-        // Act & Assert
-        Assert.Throws<DomainException>(() => product.AddStock(0));
+        // Arrange & Act & Assert
+        var priceResult = Money.Create(99.99m, "USD");
+        priceResult.Match(
+            Succ: price =>
+            {
+                var productResult = Product.Create("Laptop", "LAP-001", price);
+                productResult.Match(
+                    Succ: product =>
+                    {
+                        var result = product.AddStock(0);
+                        result.IsFail.ShouldBeTrue();
+                    },
+                    Fail: _ => Assert.Fail("Should succeed"));
+            },
+            Fail: _ => Assert.Fail("Should succeed"));
     }
 
     [Fact]
-    public void RemoveStock_WithInsufficientStock_ThrowsDomainException()
+    public void RemoveStock_WithInsufficientStock_ReturnsFail()
     {
-        // Arrange
-        var product = Product.Create("Laptop", "LAP-001", new Money(99.99m, "USD"));
-        product.AddStock(5);
-
-        // Act & Assert
-        Assert.Throws<DomainException>(() => product.RemoveStock(10));
+        // Arrange & Act & Assert
+        var priceResult = Money.Create(99.99m, "USD");
+        priceResult.Match(
+            Succ: price =>
+            {
+                var productResult = Product.Create("Laptop", "LAP-001", price);
+                productResult.Match(
+                    Succ: product =>
+                    {
+                        product.AddStock(5);
+                        var result = product.RemoveStock(10);
+                        result.IsFail.ShouldBeTrue();
+                    },
+                    Fail: _ => Assert.Fail("Should succeed"));
+            },
+            Fail: _ => Assert.Fail("Should succeed"));
     }
 
     [Fact]
     public void RemoveStock_WithSufficientStock_DecreasesStock()
     {
-        // Arrange
-        var product = Product.Create("Laptop", "LAP-001", new Money(99.99m, "USD"));
-        product.AddStock(10);
-
-        // Act
-        product.RemoveStock(3);
-
-        // Assert
-        Assert.Equal(7, product.StockQuantity);
+        // Arrange & Act & Assert
+        var priceResult = Money.Create(99.99m, "USD");
+        priceResult.Match(
+            Succ: price =>
+            {
+                var productResult = Product.Create("Laptop", "LAP-001", price);
+                productResult.Match(
+                    Succ: product =>
+                    {
+                        product.AddStock(10);
+                        var result = product.RemoveStock(3);
+                        result.IsSucc.ShouldBeTrue();
+                        product.StockQuantity.ShouldBe(7);
+                    },
+                    Fail: _ => Assert.Fail("Should succeed"));
+            },
+            Fail: _ => Assert.Fail("Should succeed"));
     }
 
     [Fact]
     public void UpdatePrice_WithValidPrice_UpdatesPrice()
     {
-        // Arrange
-        var product = Product.Create("Laptop", "LAP-001", new Money(99.99m, "USD"));
-        var newPrice = new Money(149.99m, "USD");
+        // Arrange & Act & Assert
+        var priceResult = Money.Create(99.99m, "USD");
+        var newPriceResult = Money.Create(149.99m, "USD");
 
-        // Act
-        product.UpdatePrice(newPrice);
-
-        // Assert
-        Assert.Equal(149.99m, product.Price.Amount);
+        priceResult.Match(
+            Succ: price =>
+            {
+                newPriceResult.Match(
+                    Succ: newPrice =>
+                    {
+                        var productResult = Product.Create("Laptop", "LAP-001", price);
+                        productResult.Match(
+                            Succ: product =>
+                            {
+                                var result = product.UpdatePrice(newPrice);
+                                result.IsSucc.ShouldBeTrue();
+                                product.Price.Amount.ShouldBe(149.99m);
+                            },
+                            Fail: _ => Assert.Fail("Should succeed"));
+                    },
+                    Fail: _ => Assert.Fail("Should succeed"));
+            },
+            Fail: _ => Assert.Fail("Should succeed"));
     }
 
     [Fact]
-    public void UpdatePrice_WithZeroPrice_ThrowsDomainException()
+    public void UpdatePrice_WithZeroPrice_ReturnsFail()
     {
-        // Arrange
-        var product = Product.Create("Laptop", "LAP-001", new Money(99.99m, "USD"));
-        var zeroPrice = new Money(0m, "USD");
+        // Arrange & Act & Assert
+        var priceResult = Money.Create(99.99m, "USD");
+        var zeroPriceResult = Money.Create(0m, "USD");
 
-        // Act & Assert
-        Assert.Throws<DomainException>(() => product.UpdatePrice(zeroPrice));
+        priceResult.Match(
+            Succ: price =>
+            {
+                zeroPriceResult.Match(
+                    Succ: zeroPrice =>
+                    {
+                        var productResult = Product.Create("Laptop", "LAP-001", price);
+                        productResult.Match(
+                            Succ: product =>
+                            {
+                                var result = product.UpdatePrice(zeroPrice);
+                                result.IsFail.ShouldBeTrue();
+                            },
+                            Fail: _ => Assert.Fail("Should succeed"));
+                    },
+                    Fail: _ => Assert.Fail("Should succeed"));
+            },
+            Fail: _ => Assert.Fail("Should succeed"));
     }
 
     [Fact]
     public void Deactivate_WhenActive_SetsIsActiveToFalse()
     {
-        // Arrange
-        var product = Product.Create("Laptop", "LAP-001", new Money(99.99m, "USD"));
-
-        // Act
-        product.Deactivate();
-
-        // Assert
-        Assert.False(product.IsActive);
+        // Arrange & Act & Assert
+        var priceResult = Money.Create(99.99m, "USD");
+        priceResult.Match(
+            Succ: price =>
+            {
+                var productResult = Product.Create("Laptop", "LAP-001", price);
+                productResult.Match(
+                    Succ: product =>
+                    {
+                        var result = product.Deactivate();
+                        result.IsSucc.ShouldBeTrue();
+                        product.IsActive.ShouldBeFalse();
+                    },
+                    Fail: _ => Assert.Fail("Should succeed"));
+            },
+            Fail: _ => Assert.Fail("Should succeed"));
     }
 
     [Fact]
-    public void Deactivate_WhenAlreadyInactive_ThrowsDomainException()
+    public void Deactivate_WhenAlreadyInactive_ReturnsFail()
     {
-        // Arrange
-        var product = Product.Create("Laptop", "LAP-001", new Money(99.99m, "USD"));
-        product.Deactivate();
-
-        // Act & Assert
-        Assert.Throws<DomainException>(() => product.Deactivate());
+        // Arrange & Act & Assert
+        var priceResult = Money.Create(99.99m, "USD");
+        priceResult.Match(
+            Succ: price =>
+            {
+                var productResult = Product.Create("Laptop", "LAP-001", price);
+                productResult.Match(
+                    Succ: product =>
+                    {
+                        product.Deactivate();
+                        var result = product.Deactivate();
+                        result.IsFail.ShouldBeTrue();
+                    },
+                    Fail: _ => Assert.Fail("Should succeed"));
+            },
+            Fail: _ => Assert.Fail("Should succeed"));
     }
 }

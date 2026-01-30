@@ -22,8 +22,11 @@ public class UpdatePriceHandler : ICommandHandler<UpdatePriceCommand, bool>
         if (product is null)
             return false;
 
-        var newPrice = new Money(command.NewPrice, command.Currency);
-        product.UpdatePrice(newPrice);
+        var newPrice = Money.Create(command.NewPrice, command.Currency)
+            .IfFail(error => throw new ApplicationException(error.Message));
+
+        var result = product.UpdatePrice(newPrice);
+        result.IfFail(error => throw new ApplicationException(error.Message));
 
         _productRepository.Update(product);
         await _unitOfWork.SaveChangesAsync(ct);

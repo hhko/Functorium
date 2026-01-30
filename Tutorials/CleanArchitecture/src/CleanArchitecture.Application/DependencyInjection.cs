@@ -4,6 +4,8 @@ using CleanArchitecture.Application.Products.Create;
 using CleanArchitecture.Application.Products.GetAll;
 using CleanArchitecture.Application.Products.GetById;
 using CleanArchitecture.Application.Products.UpdatePrice;
+using CleanArchitecture.Domain.Entities;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CleanArchitecture.Application;
@@ -13,7 +15,7 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         // Commands
-        services.AddScoped<ICommandHandler<CreateProductCommand, Guid>, CreateProductHandler>();
+        services.AddScoped<ICommandHandler<CreateProductCommand, ProductId>, CreateProductHandler>();
         services.AddScoped<ICommandHandler<UpdatePriceCommand, bool>, UpdatePriceHandler>();
 
         // Queries
