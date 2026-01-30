@@ -7,6 +7,10 @@
 - [개요](#개요)
 - [인터페이스 계층 구조](#인터페이스-계층-구조)
 - [IAdapter 인터페이스](#iadapter-인터페이스)
+- [Port 인터페이스 Request/Response 설계](#port-인터페이스-requestresponse-설계)
+  - [Usecase와 Port의 Request/Response 차이점](#usecase와-port의-requestresponse-차이점)
+  - [데이터 변환 흐름 아키텍처](#데이터-변환-흐름-아키텍처)
+  - [Port 인터페이스 Request/Response 정의 원칙](#port-인터페이스-requestresponse-정의-원칙)
 - [GeneratePipeline 소스 생성기](#generatepipeline-소스-생성기)
   - [생성되는 Pipeline 클래스](#생성되는-pipeline-클래스)
   - [자동 제공 기능](#자동-제공-기능)
@@ -14,7 +18,12 @@
   - [Repository 구현](#repository-구현)
   - [Messaging 구현](#messaging-구현)
   - [외부 API 서비스 구현](#외부-api-서비스-구현)
+- [Adapter 구현에서의 데이터 변환](#adapter-구현에서의-데이터-변환)
+  - [Infrastructure Adapter (HTTP API)](#infrastructure-adapter-http-api)
+  - [Persistence Adapter (Repository)](#persistence-adapter-repository)
+- [에러 처리 통합](#에러-처리-통합)
 - [의존성 등록](#의존성-등록)
+- [설계 체크리스트](#설계-체크리스트)
 - [실전 예제](#실전-예제)
 - [FAQ](#faq)
 - [참고 문서](#참고-문서)
@@ -170,6 +179,242 @@ public interface IAdapter
 | `"Http"` | HTTP API 호출 | REST API, GraphQL |
 | `"Cache"` | 캐시 서비스 | Redis, InMemory Cache |
 | `"File"` | 파일 시스템 | 파일 읽기/쓰기 |
+
+---
+
+## Port 인터페이스 Request/Response 설계
+
+Usecase의 Request/Response 패턴과 동일한 이름 패턴을 IAdapter Port 인터페이스에 적용하여 개념을 단순화하고, 레이어 간 데이터 변환 책임을 명확히 정의합니다.
+
+### Usecase와 Port의 Request/Response 차이점
+
+#### 핵심 차이점 비교
+
+| 관점 | Usecase Request/Response | Port Request/Response |
+|------|--------------------------|----------------------|
+| **위치** | Command/Query 클래스 내부 | IAdapter 인터페이스 내부 |
+| **목적** | 외부 API 경계 정의 | 내부 시스템 간 계약 정의 |
+| **타입 선호도** | Primitive (string, Guid, decimal) | 도메인 값 객체 (ProductId, Money) |
+| **검증 책임** | FluentValidation 입력 검증 | 값 객체 불변식으로 보장 |
+| **직렬화** | JSON 직렬화 필요 (외부 노출) | 직렬화 불필요 (내부 사용) |
+
+#### 패턴 비교
+
+```csharp
+// ═══════════════════════════════════════════════════════════════════════════
+// Usecase 패턴 (외부 API 경계)
+// ═══════════════════════════════════════════════════════════════════════════
+public sealed class CreateProductCommand
+{
+    // Primitive 타입 사용 - JSON 직렬화 친화적
+    public sealed record Request(
+        string Name,           // string (not ProductName)
+        string Description,
+        decimal Price,         // decimal (not Money)
+        int StockQuantity) : ICommandRequest<Response>;
+
+    public sealed record Response(
+        Guid ProductId,        // Guid (not ProductId)
+        string Name,
+        string Description,
+        decimal Price,
+        int StockQuantity,
+        DateTime CreatedAt);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Port 패턴 (내부 계약) - 동일한 구조, 다른 타입
+// ═══════════════════════════════════════════════════════════════════════════
+public interface IProductRepository : IAdapter
+{
+    // 도메인 값 객체 사용 - 기술 독립적
+    sealed record GetByIdRequest(ProductId Id);
+    sealed record GetByIdResponse(Product Product);
+
+    sealed record CreateRequest(Product Product);
+    sealed record CreateResponse(Product CreatedProduct);
+
+    FinT<IO, GetByIdResponse> GetById(GetByIdRequest request);
+    FinT<IO, CreateResponse> Create(CreateRequest request);
+}
+```
+
+### 데이터 변환 흐름 아키텍처
+
+#### 전체 흐름 다이어그램
+
+```
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                           PRESENTATION LAYER                                   │
+│  ┌──────────────────────────────────────────────────────────────────────────┐ │
+│  │ CreateProductEndpoint                                                     │ │
+│  │   Request { Name: string, Price: decimal }  ← JSON 직렬화                │ │
+│  │   Response { ProductId: Guid, ... }                                       │ │
+│  └──────────────────────────────────────────────────────────────────────────┘ │
+│                              │ [자동 바인딩]                                   │
+└──────────────────────────────┼─────────────────────────────────────────────────┘
+                               ▼
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                           APPLICATION LAYER                                    │
+│  ┌──────────────────────────────────────────────────────────────────────────┐ │
+│  │ CreateProductCommand.Usecase                                              │ │
+│  │   Request { Name: string, Price: decimal } : ICommandRequest<Response>   │ │
+│  │                                                                           │ │
+│  │   // [변환 책임 1] Usecase 내부에서 값 객체 생성                           │ │
+│  │   var productId = ProductId.Create(Guid.NewGuid());                       │ │
+│  │   var productName = ProductName.Create(request.Name);                     │ │
+│  │   var money = Money.Create(request.Price, "KRW");                         │ │
+│  └──────────────────────────────────────────────────────────────────────────┘ │
+│                              │                                                 │
+│  ┌──────────────────────────────────────────────────────────────────────────┐ │
+│  │ IProductRepository : IAdapter  (Port Interface)                          │ │
+│  │   CreateRequest { Product }       ← 도메인 값 객체/엔티티                 │ │
+│  │   CreateResponse { Product }                                              │ │
+│  └──────────────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────┼─────────────────────────────────────────────────┘
+                               ▼
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                      INFRASTRUCTURE / PERSISTENCE LAYER                        │
+│  ┌──────────────────────────────────────────────────────────────────────────┐ │
+│  │ [GeneratePipeline]                                                        │ │
+│  │ ProductRepository : IProductRepository                                    │ │
+│  │   RequestCategory => "Repository"                                         │ │
+│  │                                                                           │ │
+│  │   // [변환 책임 2] Adapter 내부에서 기술 DTO 변환                          │ │
+│  │   ProductMapper.ToEntity(product)  : Product → ProductEntity              │ │
+│  │   ProductMapper.ToDomain(entity)   : ProductEntity → Product              │ │
+│  │                                                                           │ │
+│  │   ┌────────────────────────────────────────────────────────────────────┐ │ │
+│  │   │ 기술 관심사 DTO (internal)                                          │ │ │
+│  │   │   ProductEntity { Id: Guid, Name: string }    ← EF Core Entity     │ │ │
+│  │   │   ProductApiDto { id: string, name: string }  ← HTTP API DTO       │ │ │
+│  │   └────────────────────────────────────────────────────────────────────┘ │ │
+│  └──────────────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────┼─────────────────────────────────────────────────┘
+                               ▼
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                            EXTERNAL SYSTEMS                                    │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐                │
+│  │ Database        │  │ Message Queue   │  │ External API    │                │
+│  │ (Oracle, MSSQL) │  │ (RabbitMQ)      │  │ (HTTP/REST)     │                │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘                │
+└────────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 각 경계에서의 변환 책임
+
+| 경계 | 변환 주체 | 변환 내용 | 에러 처리 |
+|------|----------|----------|----------|
+| Presentation → Application | 프레임워크 | JSON → Usecase.Request | 400 Bad Request |
+| Application 내부 | **Usecase 클래스** | Primitive → 값 객체 | FinResponse.Fail |
+| Application → Infrastructure | **Adapter Mapper** | 값 객체 → 기술 DTO | FinT<IO, T> |
+| Infrastructure → External | HttpClient / DbContext | DTO → 외부 프로토콜 | Exception → Fin.Fail |
+
+### Port 인터페이스 Request/Response 정의 원칙
+
+#### 원칙 1: 인터페이스 내부에 sealed record 정의
+
+```csharp
+// Application/Ports/IProductRepository.cs
+public interface IProductRepository : IAdapter
+{
+    // ✅ 인터페이스 내부에 Request/Response 정의 (응집도 향상)
+    sealed record GetByIdRequest(ProductId Id);
+    sealed record GetByIdResponse(Product Product);
+
+    sealed record CreateRequest(Product Product);
+    sealed record CreateResponse(Product CreatedProduct);
+
+    FinT<IO, GetByIdResponse> GetById(GetByIdRequest request);
+    FinT<IO, CreateResponse> Create(CreateRequest request);
+}
+```
+
+#### 원칙 2: 도메인 값 객체 직접 사용 (기술 독립성)
+
+```csharp
+// ✅ Good - 도메인 값 객체 사용
+sealed record Request(ProductId Id, ProductName Name);
+
+// ❌ Bad - Primitive 타입 직접 사용
+sealed record Request(Guid Id, string Name);
+
+// ❌ Bad - 기술 관심사 타입 사용
+sealed record Request(ProductEntity Entity);  // EF Core 타입
+```
+
+#### 원칙 3: 메서드 수에 따른 네이밍 전략
+
+**단일 메서드 인터페이스:**
+```csharp
+public interface IWeatherApiService : IAdapter
+{
+    // 접두사 없이 Request/Response
+    sealed record Request(string City, DateTime Date);
+    sealed record Response(decimal Temperature, string Condition);
+
+    FinT<IO, Response> GetWeatherAsync(Request request, CancellationToken ct);
+}
+```
+
+**다중 메서드 인터페이스:**
+```csharp
+public interface IProductRepository : IAdapter
+{
+    // {Action}Request / {Action}Response
+    sealed record GetByIdRequest(ProductId Id);
+    sealed record GetByIdResponse(Product Product);
+
+    sealed record GetAllRequest(int? PageSize = null, int? PageNumber = null);
+    sealed record GetAllResponse(Seq<Product> Products, int TotalCount);
+
+    sealed record CreateRequest(Product Product);
+    sealed record CreateResponse(Product CreatedProduct);
+
+    FinT<IO, GetByIdResponse> GetById(GetByIdRequest request);
+    FinT<IO, GetAllResponse> GetAll(GetAllRequest request);
+    FinT<IO, CreateResponse> Create(CreateRequest request);
+}
+```
+
+#### 원칙 4: 중첩 record 가이드라인
+
+```csharp
+public interface IEquipmentApiService : IAdapter
+{
+    // 복잡한 중첩 구조 예시
+    sealed record GetHistoryRequest(
+        EquipId EquipId,
+        DateRange DateRange,        // 값 객체
+        EquipmentFilter? Filter);   // 선택적 필터 (중첩)
+
+    // 중첩 record도 인터페이스 내부에 정의
+    sealed record EquipmentFilter(
+        Seq<EquipTypeId> EquipTypes,
+        bool IncludeInactive = false);
+
+    sealed record GetHistoryResponse(Seq<EquipmentHistory> Histories);
+
+    sealed record EquipmentHistory(
+        EquipId EquipId,
+        DateTime Timestamp,
+        EquipmentStatus Status,
+        Seq<HistoryDetail> Details);   // 최대 2-3 레벨
+
+    sealed record HistoryDetail(
+        string PropertyName,
+        string OldValue,
+        string NewValue);
+
+    FinT<IO, GetHistoryResponse> GetHistoryAsync(GetHistoryRequest request, CancellationToken ct);
+}
+```
+
+**중첩 record 규칙:**
+- 2-3 레벨까지 허용 (과도한 중첩 지양)
+- 도메인 의미가 있는 경우만 중첩
+- 여러 메서드에서 재사용되면 별도 타입으로 분리
+- 모든 중첩 record는 sealed
 
 ---
 
@@ -684,6 +929,222 @@ public class PaymentApiService : IPaymentApiService
 
 ---
 
+## Adapter 구현에서의 데이터 변환
+
+### Infrastructure Adapter (HTTP API)
+
+```csharp
+// Adapters.Infrastructure/Apis/CriteriaApi/CriteriaApiService.cs
+[GeneratePipeline]
+public class CriteriaApiService : ICriteriaApiService
+{
+    private readonly HttpClient _httpClient;
+
+    public string RequestCategory => "Http";
+
+    public virtual FinT<IO, ICriteriaApiService.Response> GetEquipHistoriesAsync(
+        ICriteriaApiService.Request request,
+        CancellationToken cancellationToken)
+    {
+        return IO.liftAsync(async () =>
+        {
+            // 1. Port Request → Query Parameters 변환
+            var queryParams = CriteriaApiMapper.ToQueryParams(request);
+
+            // 2. HTTP 호출
+            var url = QueryHelpers.AddQueryString("/api/v2/criteria/equips/history", queryParams);
+            var response = await _httpClient.GetAsync(url, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                return Fin.Fail<ICriteriaApiService.Response>(
+                    AdapterError.For<CriteriaApiService>(
+                        new ConnectionFailed("HTTP"),
+                        url,
+                        $"API call failed: {response.StatusCode} - {errorContent}"));
+            }
+
+            // 3. Infrastructure DTO → Port Response 변환
+            var dto = await response.Content.ReadFromJsonAsync<GetEquipHistoryResponseDto>(cancellationToken);
+            return dto?.Histories is not null
+                ? Fin.Succ(CriteriaApiMapper.ToResponse(dto))
+                : Fin.Fail<ICriteriaApiService.Response>(
+                    AdapterError.For<CriteriaApiService>(new Custom("ResponseNull"), url, "Response data is null"));
+        });
+    }
+}
+
+// Mapper 클래스 (Infrastructure 내부 - internal)
+internal static class CriteriaApiMapper
+{
+    public static Dictionary<string, string?> ToQueryParams(ICriteriaApiService.Request request)
+        => new()
+        {
+            ["connType"] = request.ConnType,
+            ["equipTypeId"] = request.EquipTypeId
+        };
+
+    public static ICriteriaApiService.Response ToResponse(GetEquipHistoryResponseDto dto)
+        => new(Equipments: dto.Histories
+            .Select(h => new ICriteriaApiService.Equipment(
+                h.LineId, h.TypeId, h.ModelId, h.EquipId,
+                h.Description, h.UpdateTime, h.ConnectionType,
+                h.ConnIp, h.ConnPort, h.ConnId, h.ConnPw, h.ServiceName))
+            .ToSeq());
+}
+
+// Infrastructure 내부 DTO (internal - 외부 노출 안 함)
+internal record GetEquipHistoryResponseDto(List<EquipDto> Histories);
+internal record EquipDto(string LineId, string TypeId, string ModelId, ...);
+```
+
+### Persistence Adapter (Repository)
+
+```csharp
+// Adapters.Persistence/Repositories/ProductRepository.cs
+[GeneratePipeline]
+public class ProductRepository : IProductRepository
+{
+    private readonly ApplicationDbContext _dbContext;
+
+    public string RequestCategory => "Repository";
+
+    public virtual FinT<IO, IProductRepository.GetByIdResponse> GetById(
+        IProductRepository.GetByIdRequest request)
+    {
+        return IO.liftAsync(async () =>
+        {
+            // 1. 값 객체 → Primitive 변환 (implicit conversion)
+            var entity = await _dbContext.Products
+                .FirstOrDefaultAsync(p => p.Id == (Guid)request.Id);
+
+            if (entity is null)
+            {
+                return Fin.Fail<IProductRepository.GetByIdResponse>(
+                    AdapterError.For<ProductRepository>(
+                        new NotFound(),
+                        request.Id.ToString(),
+                        $"Product with ID '{request.Id}' not found"));
+            }
+
+            // 2. Entity → 도메인 모델 변환
+            var product = ProductMapper.ToDomain(entity);
+            return Fin.Succ(new IProductRepository.GetByIdResponse(product));
+        });
+    }
+
+    public virtual FinT<IO, IProductRepository.CreateResponse> Create(
+        IProductRepository.CreateRequest request)
+    {
+        return IO.liftAsync(async () =>
+        {
+            // 도메인 모델 → Entity 변환
+            var entity = ProductMapper.ToEntity(request.Product);
+
+            _dbContext.Products.Add(entity);
+            await _dbContext.SaveChangesAsync();
+
+            return Fin.Succ(new IProductRepository.CreateResponse(request.Product));
+        });
+    }
+}
+
+// Mapper 클래스 (Persistence 내부 - internal)
+internal static class ProductMapper
+{
+    public static Product ToDomain(ProductEntity entity)
+        => Product.Create(
+            ProductId.Create(entity.Id).IfFail(e => throw new InvalidOperationException(e.Message)),
+            ProductName.Create(entity.Name).IfFail(e => throw new InvalidOperationException(e.Message)),
+            Money.Create(entity.Price, "KRW").IfFail(e => throw new InvalidOperationException(e.Message)));
+
+    public static ProductEntity ToEntity(Product domain)
+        => new()
+        {
+            Id = domain.Id,
+            Name = domain.Name,
+            Price = domain.Price
+        };
+}
+```
+
+---
+
+## 에러 처리 통합
+
+### FinT<IO, T>와 AdapterError 연계
+
+```csharp
+// AdapterErrorType 사용 패턴
+using static Functorium.Adapters.Errors.AdapterErrorType;
+
+// NotFound - 리소스를 찾을 수 없음
+AdapterError.For<ProductRepository>(
+    new NotFound(),
+    productId.ToString(),
+    "Product not found");
+
+// AlreadyExists - 리소스가 이미 존재함
+AdapterError.For<ProductRepository>(
+    new AlreadyExists(),
+    productName,
+    "Product already exists");
+
+// ConnectionFailed - 외부 시스템 연결 실패
+AdapterError.For<CriteriaApiService>(
+    new ConnectionFailed("HTTP"),
+    url,
+    "API connection failed");
+
+// Custom - 사용자 정의 에러 타입
+AdapterError.For<InventoryRepository>(
+    new Custom("ReservationFailed"),
+    orderId.ToString(),
+    "Failed to reserve inventory");
+
+// Exception 래핑
+AdapterError.FromException<ProductRepository>(
+    new PipelineException(),
+    exception);
+```
+
+### Pipeline의 자동 에러 분류
+
+```
+에러 타입                              로그 레벨      메트릭 태그
+────────────────────────────────────────────────────────────────
+IHasErrorCode + IsExpected  ────────► Warning       error.type: "expected"
+IHasErrorCode + IsExceptional ──────► Error         error.type: "exceptional"
+ManyErrors ─────────────────────────► Warning/Error error.type: "aggregate"
+```
+
+### 값 객체 공유 전략
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                      Domain Layer                            │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │ Value Objects (모든 레이어에서 공유)                    │  │
+│  │   - ProductId, ProductName, Money, Quantity            │  │
+│  │   - EquipId, EquipTypeId, RecipeHostId                │  │
+│  │   - EquipmentConnectionInfo                            │  │
+│  └────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────┘
+                              │
+              ┌───────────────┼───────────────┐
+              ▼               ▼               ▼
+┌──────────────────┐  ┌──────────────┐  ┌──────────────────┐
+│ Application      │  │ Infrastructure│  │ Persistence      │
+│ (Usecase)        │  │ (API Adapter) │  │ (Repository)     │
+│                  │  │               │  │                  │
+│ ProductId 사용   │  │ ProductId →   │  │ ProductId →      │
+│                  │  │ string (DTO)  │  │ Guid (Entity)    │
+└──────────────────┘  └──────────────┘  └──────────────────┘
+```
+
+---
+
 ## 의존성 등록
 
 Pipeline 클래스를 DI 컨테이너에 등록하는 방법입니다.
@@ -764,6 +1225,61 @@ services.RegisterTransientAdapterPipeline<IProductRepository, ProductRepositoryP
 // Singleton
 services.RegisterSingletonAdapterPipeline<IProductRepository, ProductRepositoryPipeline>();
 ```
+
+---
+
+## 설계 체크리스트
+
+### Port 인터페이스 설계 체크리스트
+
+**기본 구조:**
+- [ ] IAdapter 인터페이스를 상속하는가?
+- [ ] 메서드 반환 타입이 FinT<IO, T>인가?
+- [ ] Request/Response가 인터페이스 내부에 sealed record로 정의되어 있는가?
+
+**네이밍:**
+- [ ] 단일 메서드: Request/Response (접두사 없음)
+- [ ] 다중 메서드: {Action}Request / {Action}Response
+- [ ] 인터페이스 이름이 역할을 명확히 나타내는가?
+
+**타입 사용:**
+- [ ] Request에 도메인 값 객체를 사용하는가?
+- [ ] Primitive 타입 직접 사용을 최소화했는가?
+- [ ] 기술 관심사 타입(Entity, DTO)을 사용하지 않았는가?
+
+**중첩 타입:**
+- [ ] 중첩 레벨이 2-3을 초과하지 않는가?
+- [ ] 모든 중첩 record가 sealed인가?
+
+### Adapter 구현 체크리스트
+
+**기본 구조:**
+- [ ] [GeneratePipeline] 어트리뷰트가 적용되어 있는가?
+- [ ] RequestCategory 프로퍼티가 올바른 값을 반환하는가?
+- [ ] 모든 인터페이스 메서드가 virtual로 선언되어 있는가?
+
+**FinT<IO, T> 사용:**
+- [ ] 동기: IO.lift(() => Fin.Succ(result))
+- [ ] 비동기: IO.liftAsync(async () => { ... })
+- [ ] Exception → Fin.Fail 변환
+
+**데이터 변환:**
+- [ ] Mapper 클래스가 internal로 선언되어 있는가?
+- [ ] Port Request/Response ↔ Infrastructure DTO 변환이 Mapper에서 처리되는가?
+
+**의존성 등록:**
+- [ ] services.RegisterScopedAdapterPipeline<IInterface, ImplementationPipeline>()
+
+### 설계 원칙 요약
+
+| 원칙 | 설명 |
+|------|------|
+| **일관된 네이밍** | Usecase와 동일하게 `Interface.Request`, `Interface.Response` |
+| **기술 독립성** | Port의 Request/Response는 도메인 값 객체만 사용 |
+| **변환 책임 분리** | Usecase: Primitive→VO, Adapter: VO→DTO |
+| **변환 캡슐화** | Mapper 클래스로 DTO ↔ Response 변환, internal 접근 제한 |
+| **에러 통합** | AdapterError + AdapterErrorType으로 일관된 에러 처리 |
+| **값 객체 공유** | 도메인 값 객체는 모든 레이어에서 공유 |
 
 ---
 
