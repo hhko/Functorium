@@ -2,6 +2,41 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
+# 2.2 각 경계에서의 변환 책임
+
+| 경계 | 변환 주체 | 변환 내용 | 에러 처리 |
+|---|---|---|---|
+| Presentation → Application | 프레임워크 | JSON → Usecase.Request | 400 Bad Request |
+| Application 내부 | Usecase 클래스 | Primitive → 값 객체 | FinResponse.Fail |
+| Application → Infrastructure | Adapter Mapper | 값 객체 → 기술 DTO | FinT<IO, T> |
+| Infrastructure → External | HttpClient / DbContext | DTO → 외부 프로토콜 | Exception → Fin.Fail |
+
+---
+
+# 1.1 핵심 차이점 비교
+
+| 관점 | Usecase Request/Response | Port Request/Response |
+|---|---|---|
+| 위치 | Command/Query 클래스 내부 | IAdapter 인터페이스 내부 |
+| 목적 | 외부 API 경계 정의 | 내부 시스템 간 계약 정의 |
+| 타입 선호도 | Primitive (string, Guid, decimal) | 도메인 값 객체 (ProductId, Money) |
+| 검증 책임 | FluentValidation 입력 검증 | 값 객체 불변식으로 보장 |
+| 직렬화 | JSON 직렬화 필요 (외부 노출) | 직렬화 불필요 (내부 사용) |
+
+---
+
+# 설계 원칙
+
+| 원칙 | 설명 |
+|---|---|
+| 일관된 네이밍 | Usecase와 동일하게 Interface.Request, Interface.Response |
+| 기술 독립성 | Port의 Request/Response는 도메인 값 객체만 사용 |
+| 변환 책임 분리 | Usecase: Primitive → VO / Adapter: VO → DTO |
+| 변환 캡슐화 | Mapper 클래스로 DTO ↔ Response 변환, internal 접근 제한 |
+| 에러 통합 | AdapterError + AdapterErrorType으로 일관된 에러 처리 |
+| 값 객체 공유 | 도메인 값 객체는 모든 레이어에서 공유 |
+
+
 - [x] FinResponse.cs 파일 정리
 ```
             return (name, price, stockQuantity, description.Value)
