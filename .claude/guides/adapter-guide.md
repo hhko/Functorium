@@ -238,64 +238,201 @@ public class InMemoryProductRepositoryPipeline : InMemoryProductRepository
 
 ### 자동 제공 기능
 
-Pipeline은 다음 관찰성 기능을 **자동으로** 제공합니다:
+Pipeline은 다음 관찰성 기능을 **자동으로** 제공합니다. 모든 필드는 OpenTelemetry 시맨틱 규칙과의 일관성을 위해 `snake_case + dot` 표기법을 사용합니다.
 
 #### 1. 분산 트레이싱 (OpenTelemetry)
 
+**Span 이름 패턴:**
 ```
-Span 이름: adapter.repository.InMemoryProductRepository.GetById
+{layer} {category} {handler}.{method}
+```
 
-Tags:
+**실제 출력 예시:**
+```
+Span Name: adapter repository InMemoryProductRepository.GetById
+Kind: Internal
+Status: Ok | Error
+
+Tags (Success - 6개):
 ├── request.layer: "adapter"
 ├── request.category: "repository"
 ├── request.handler: "InMemoryProductRepository"
 ├── request.handler.method: "GetById"
-├── response.status: "success" | "failure"
-├── response.elapsed: "0.0234" (초)
-├── error.type: "expected" | "exceptional" | "aggregate"
-└── error.code: "DomainErrors.Product.NotFound"
+├── response.status: "success"
+└── response.elapsed: 0.0234
+
+Tags (Failure - 8개):
+├── request.layer: "adapter"
+├── request.category: "repository"
+├── request.handler: "InMemoryProductRepository"
+├── request.handler.method: "GetById"
+├── response.status: "failure"
+├── response.elapsed: 0.0051
+├── error.type: "expected"
+└── error.code: "Product.NotFound"
 ```
+
+**ActivityStatus 처리:**
+
+| 결과 | Status | Description |
+|------|--------|-------------|
+| Success | `Ok` | - |
+| Failure | `Error` | `{error.type}: {error.code}` |
 
 #### 2. 구조화된 로깅
 
-**Debug 레벨** - 상세 정보:
+**Message Templates:**
+
 ```
-[DBG] Request  | adapter.repository.InMemoryProductRepository.GetById | id=550e8400-e29b-41d4-a716-446655440000
-[DBG] Response | adapter.repository.InMemoryProductRepository.GetById | elapsed=23ms | product={Id=..., Name=...}
+# Request (Information) - EventId: 2001
+{request.layer} {request.category} {request.handler}.{request.handler.method} requesting
+
+# Request (Debug) - EventId: 2001 - 파라미터 포함
+{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.id} requesting
+
+# Response Success (Information) - EventId: 2002
+{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s
+
+# Response Success (Debug) - EventId: 2002 - 결과 포함
+{request.layer} {request.category} {request.handler}.{request.handler.method} {response.result} responded {response.status} in {response.elapsed:0.0000} s
+
+# Response Warning (Expected Error) - EventId: 2003
+{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
+
+# Response Error (Exceptional Error) - EventId: 2004
+{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
 
-**Information 레벨** - 요약:
+**실제 출력 예시:**
+
 ```
-[INF] Response | adapter.repository.InMemoryProductRepository.GetById | elapsed=23ms | status=success
+# Information 레벨 - Request
+[INF] adapter repository InMemoryProductRepository.GetById requesting
+
+# Debug 레벨 - Request (파라미터 포함)
+[DBG] adapter repository InMemoryProductRepository.GetById 550e8400-e29b-41d4-a716-446655440000 requesting
+
+# Information 레벨 - Success Response
+[INF] adapter repository InMemoryProductRepository.GetById responded success in 0.0234 s
+
+# Debug 레벨 - Success Response (결과 포함)
+[DBG] adapter repository InMemoryProductRepository.GetById Product { Id = ..., Name = "Sample" } responded success in 0.0234 s
+
+# Warning 레벨 - Expected Error (비즈니스 오류)
+[WRN] adapter repository InMemoryProductRepository.GetById responded failure in 0.0051 s with expected:Product.NotFound { ErrorCode = "Product.NotFound", Message = "Entity not found" }
+
+# Error 레벨 - Exceptional Error (시스템 오류)
+[ERR] adapter repository InMemoryProductRepository.GetById responded failure in 0.0012 s with exceptional:Exceptional { Message = "Database connection failed" }
 ```
 
-**Error 레벨** - 실패 정보:
-```
-[ERR] Response | adapter.repository.InMemoryProductRepository.GetById | elapsed=5ms | errorType=expected | errorCode=DomainErrors.Product.NotFound
-```
+**로그 레벨 규칙:**
+
+| 이벤트 | EventId | 로그 레벨 | 조건 |
+|--------|---------|----------|------|
+| Request | 2001 | Information / Debug | Debug는 파라미터 값 포함 |
+| Response Success | 2002 | Information / Debug | Debug는 반환값 포함 |
+| Response Warning | 2003 | Warning | `error.IsExpected == true` |
+| Response Error | 2004 | Error | `error.IsExceptional == true` |
 
 #### 3. 메트릭 수집
 
+**Meter Name 패턴:**
 ```
-Meter: {service.namespace}.adapter.repository
+{service.namespace}.adapter.{category}
+```
 
-Counters:
-├── adapter.repository.requests (요청 수)
-└── adapter.repository.responses (응답 수, status 태그)
+예시: `mycompany.production.adapter.repository`
 
-Histograms:
-└── adapter.repository.duration (실행 시간, 초 단위)
+**Instruments:**
+
+| Instrument | 이름 패턴 | 타입 | Unit | 설명 |
+|------------|----------|------|------|------|
+| requests | `adapter.{category}.requests` | Counter | `{request}` | 총 요청 수 |
+| responses | `adapter.{category}.responses` | Counter | `{response}` | 응답 수 |
+| duration | `adapter.{category}.duration` | Histogram | `s` | 처리 시간(초) |
+
+**Tag 구조:**
+
+| Tag Key | Request Counter | Duration Histogram | Response (Success) | Response (Failure) |
+|---------|-----------------|--------------------|--------------------|-------------------|
+| `request.layer` | "adapter" | "adapter" | "adapter" | "adapter" |
+| `request.category` | 카테고리명 | 카테고리명 | 카테고리명 | 카테고리명 |
+| `request.handler` | 핸들러명 | 핸들러명 | 핸들러명 | 핸들러명 |
+| `request.handler.method` | 메서드명 | 메서드명 | 메서드명 | 메서드명 |
+| `response.status` | - | - | "success" | "failure" |
+| `error.type` | - | - | - | 에러 타입 |
+| `error.code` | - | - | - | 에러 코드 |
+| **Total Tags** | **4** | **4** | **5** | **7** |
+
+**실제 출력 예시:**
+
+```
+# Request Counter Tags
+{
+  request.layer: adapter,
+  request.category: repository,
+  request.handler: InMemoryProductRepository,
+  request.handler.method: GetById
+}
+
+# Success Response Counter Tags
+{
+  request.layer: adapter,
+  request.category: repository,
+  request.handler: InMemoryProductRepository,
+  request.handler.method: GetById,
+  response.status: success
+}
+
+# Failure Response Counter Tags (Expected Error)
+{
+  request.layer: adapter,
+  request.category: repository,
+  request.handler: InMemoryProductRepository,
+  request.handler.method: GetById,
+  response.status: failure,
+  error.type: expected,
+  error.code: Product.NotFound
+}
 ```
 
 #### 4. 에러 분류
 
-Pipeline은 에러를 세 가지로 분류합니다:
+Pipeline은 에러를 다음과 같이 분류합니다:
 
-| 에러 타입 | 설명 | 예시 |
-|----------|------|------|
-| `expected` | 예상된 비즈니스 에러 | "제품을 찾을 수 없음", "재고 부족" |
-| `exceptional` | 예외적 시스템 에러 | `NullReferenceException`, 타임아웃 |
-| `aggregate` | 복합 에러 (여러 개) | Validation 실패 시 여러 에러 |
+| Error Case | `error.type` | `error.code` | 로그 레벨 | 설명 |
+|------------|--------------|--------------|----------|------|
+| `IHasErrorCode` + `IsExpected` | `"expected"` | 에러 코드 | Warning | 예상된 비즈니스 오류 |
+| `IHasErrorCode` + `IsExceptional` | `"exceptional"` | 에러 코드 | Error | 예외적 시스템 오류 |
+| `ManyErrors` | `"aggregate"` | 첫 번째 에러 코드 | Warning/Error | 복합 에러 |
+| `Expected` (LanguageExt) | `"expected"` | 타입 이름 | Warning | 에러 코드 없는 기본 예상 오류 |
+| `Exceptional` (LanguageExt) | `"exceptional"` | 타입 이름 | Error | 에러 코드 없는 기본 예외 오류 |
+
+**에러 객체 (`@error`) 구조:**
+
+```json
+// Expected Error
+{
+  "ErrorCode": "Product.NotFound",
+  "ErrorCurrentValue": "550e8400-e29b-41d4-a716-446655440000",
+  "Message": "Entity not found",
+  "Code": -1000
+}
+
+// Exceptional Error
+{
+  "Message": "Database connection failed",
+  "Code": -2146233079
+}
+
+// Aggregate Error
+{
+  "Errors": [
+    { "ErrorCode": "Validation.Required", "Message": "Name is required" },
+    { "ErrorCode": "Validation.Range", "Message": "Price must be positive" }
+  ]
+}
+```
 
 ---
 
@@ -899,19 +1036,55 @@ public InMemoryProductRepository(
 
 ### Q5. 특정 메서드만 Pipeline에서 제외할 수 있나요?
 
-현재는 클래스 단위로만 `[GeneratePipeline]`을 적용합니다. 특정 메서드를 제외하려면 해당 메서드를 `virtual`이 아닌 일반 메서드로 선언하세요.
+**아니요, 특정 메서드만 제외하는 기능은 지원되지 않습니다.**
+
+`[GeneratePipeline]` 어트리뷰트는 **클래스 단위로만 적용**되며, `IAdapter` 인터페이스의 모든 메서드에 대해 Pipeline 래퍼가 생성됩니다.
+
+#### 중요: virtual 키워드 필수
+
+**`IAdapter` 인터페이스를 구현하는 모든 메서드는 반드시 `virtual`로 선언해야 합니다.** `virtual` 키워드가 없으면 빌드 에러가 발생합니다.
 
 ```csharp
 [GeneratePipeline]
 public class MyRepository : IMyRepository
 {
-    // Pipeline에 포함됨
+    // ✅ 올바른 선언 - virtual 키워드 필수
     public virtual FinT<IO, Product> GetById(Guid id) { ... }
+    public virtual FinT<IO, IReadOnlyList<Product>> GetAll() { ... }
 
-    // Pipeline에서 제외됨 (virtual 아님)
-    public FinT<IO, int> GetCount() { ... }
+    // ❌ 빌드 에러 - virtual 키워드 누락
+    public FinT<IO, int> GetCount() { ... }  // CS0506 에러 발생
 }
 ```
+
+#### 빌드 에러 메시지
+
+`virtual` 키워드 없이 빌드하면 다음과 같은 C# 컴파일러 에러가 발생합니다:
+
+```
+error CS0506: 'MyRepositoryPipeline.GetCount()': cannot override inherited member
+'MyRepository.GetCount()' because it is not marked virtual, abstract, or override
+```
+
+#### 왜 이런 제약이 있나요?
+
+소스 생성기가 생성하는 Pipeline 클래스는 원본 클래스를 상속받아 `override`로 메서드를 재정의합니다:
+
+```csharp
+// 소스 생성기가 자동 생성하는 코드
+public class MyRepositoryPipeline : MyRepository
+{
+    // override를 사용하므로 원본 메서드가 virtual이어야 함
+    public override FinT<IO, Product> GetById(Guid id) =>
+        // Observability 파이프라인 래핑...
+}
+```
+
+#### 대안
+
+특정 메서드에 대해 Observability를 적용하고 싶지 않다면:
+1. 해당 메서드를 별도의 클래스로 분리하세요
+2. 분리된 클래스에는 `[GeneratePipeline]` 어트리뷰트를 적용하지 마세요
 
 ---
 
