@@ -145,7 +145,7 @@ if (createResult1.IsSucc)
 
 // 존재하지 않는 상품 조회
 FinResponse<GetProductByIdQuery.Response> notFoundResult = await mediator.Send(
-    new GetProductByIdQuery.Request(Guid.NewGuid()));
+    new GetProductByIdQuery.Request(Ulid.NewUlid().ToString()));
 
 PrintResult("상품 조회 (존재하지 않음)", notFoundResult);
 

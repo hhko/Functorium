@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using Cqrs03Functional.Demo.Domain;
+using Cqrs03Functional.Demo.Domain.ValueObjects;
 using Functorium.Adapters.SourceGenerator;
 using Functorium.Applications.Observabilities;
 using Microsoft.Extensions.Logging;
@@ -17,21 +17,12 @@ namespace Cqrs03Functional.Demo.Infrastructure;
 public class InMemoryProductRepository : IProductRepository
 {
     private readonly ILogger<InMemoryProductRepository> _logger;
-    private readonly ConcurrentDictionary<Guid, Product> _products = new();
+    private readonly ConcurrentDictionary<ProductId, Product> _products = new();
 
     /// <summary>
     /// 관찰 가능성 로그를 위한 요청 카테고리
     /// </summary>
     public string RequestCategory => "repository";
-
-    // /// <summary>
-    // /// ActivityContext를 첫 번째 매개변수로 받는 생성자 (AdapterPipelineRegistration에서 사용)
-    // /// </summary>
-    // public InMemoryProductRepository(ActivityContext activityContext, ILogger<InMemoryProductRepository> logger)
-    // {
-    //     _logger = logger;
-    //     // ActivityContext는 Pipeline에서 자동으로 처리되므로 여기서는 저장만 함
-    // }
 
     /// <summary>
     /// 테스트용 생성자 (ActivityContext 없이)
@@ -51,7 +42,7 @@ public class InMemoryProductRepository : IProductRepository
         });
     }
 
-    public virtual FinT<IO, Product> GetById(Guid id)
+    public virtual FinT<IO, Product> GetById(ProductId id)
     {
         // Pipeline이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
@@ -90,13 +81,13 @@ public class InMemoryProductRepository : IProductRepository
         });
     }
 
-    public virtual FinT<IO, bool> ExistsByName(string name)
+    public virtual FinT<IO, bool> ExistsByName(ProductName name)
     {
         // Pipeline이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
             bool exists = _products.Values.Any(p =>
-                p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+                ((string)p.Name).Equals((string)name, StringComparison.OrdinalIgnoreCase));
             return Fin.Succ(exists);
         });
     }

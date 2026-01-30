@@ -1,5 +1,7 @@
 using Cqrs03Functional.Demo.Domain;
+using Functorium.Applications.Cqrs;
 using Functorium.Applications.Linq;
+using LanguageExt.Common;
 using Microsoft.Extensions.Logging;
 
 namespace Cqrs03Functional.Demo.Usecases;
@@ -13,13 +15,13 @@ public sealed class GetProductByIdQuery
     /// <summary>
     /// Query Request - 조회할 상품 ID
     /// </summary>
-    public sealed record Request(Guid ProductId) : IQueryRequest<Response>;
+    public sealed record Request(string ProductId) : IQueryRequest<Response>;
 
     /// <summary>
     /// Query Response - 조회된 상품 정보
     /// </summary>
     public sealed record Response(
-        Guid ProductId,
+        string ProductId,
         string Name,
         string Description,
         decimal Price,
@@ -44,22 +46,28 @@ public sealed class GetProductByIdQuery
         /// </summary>
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
+            // ProductId 파싱
+            if (!Domain.ProductId.TryParse(request.ProductId, null, out var productId))
+            {
+                return FinResponse.Fail<Response>(Error.New($"Invalid ProductId format: {request.ProductId}"));
+            }
+
             // LINQ 쿼리 표현식: Repository의 FinT<IO, Product>를 직접 사용하여 Response로 변환
             // FinTUtilites.SelectMany가 FinT를 LINQ 쿼리 표현식에서 사용 가능하도록 지원
             FinT<IO, Response> usecase =
-                from product in _productRepository.GetById(request.ProductId)
+                from product in _productRepository.GetById(productId)
                 select new Response(
-                    product.Id,
-                    product.Name,
+                    product.Id.ToString(),
+                    (string)product.Name,
                     product.Description,
-                    product.Price,
-                    product.StockQuantity,
+                    (decimal)product.Price,
+                    (int)product.StockQuantity,
                     product.CreatedAt,
                     product.UpdatedAt);
 
-            // FinT<IO, Response> 
-            //  -Run()→           IO<Fin<Response>> 
-            //  -RunAsync()→      Fin<Response> 
+            // FinT<IO, Response>
+            //  -Run()→           IO<Fin<Response>>
+            //  -RunAsync()→      Fin<Response>
             //  -ToFinResponse()→ FinResponse<Response>
             Fin<Response> response = await usecase.Run().RunAsync();
             return response.ToFinResponse();

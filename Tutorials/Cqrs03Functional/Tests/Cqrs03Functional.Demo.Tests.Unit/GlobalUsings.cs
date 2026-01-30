@@ -8,4 +8,5 @@ global using Functorium.Applications.Cqrs;
 global using Functorium.Adapters.Observabilities.Pipelines;
 global using Cqrs03Functional.Demo;
 global using Cqrs03Functional.Demo.Domain;
+global using Cqrs03Functional.Demo.Domain.ValueObjects;
 global using Cqrs03Functional.Demo.Usecases;
