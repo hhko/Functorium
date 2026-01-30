@@ -22,6 +22,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Using Include="OrderService.Domain" />
+    <Using Include="OrderService.Domain.ValueObjects" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Src\OrderService\OrderService.csproj">
       <ExcludeAssets>analyzers</ExcludeAssets>
     </ProjectReference>

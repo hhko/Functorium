@@ -3,10 +3,10 @@ using LanguageExt.Common;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using OrderService.Domain;
+using OrderService.Domain.ValueObjects;
 using OrderService.Infrastructure;
 using Shouldly;
 using Xunit;
-using static LanguageExt.Prelude;
 
 namespace OrderService.Tests.Unit.LayerTests.Adapters;
 
@@ -24,11 +24,19 @@ public sealed class InMemoryOrderRepositoryTests
         _repository = new InMemoryOrderRepository(_logger);
     }
 
+    private static Order CreateTestOrder(Guid? productId = null, int quantity = 10)
+    {
+        var quantityResult = Quantity.Create(quantity);
+        var quantityValue = quantityResult.Match(Succ: v => v, Fail: _ => throw new Exception("Invalid quantity"));
+        var orderResult = Order.Create(productId ?? Guid.NewGuid(), quantityValue);
+        return orderResult.Match(Succ: v => v, Fail: _ => throw new Exception("Invalid order"));
+    }
+
     [Fact]
     public async Task Create_ReturnsSuccess_WhenValidOrderIsProvided()
     {
         // Arrange
-        var order = new Order(Guid.NewGuid(), Guid.NewGuid(), 10, DateTime.UtcNow);
+        var order = CreateTestOrder();
 
         // Act
         var result = await _repository.Create(order).Run().RunAsync();
@@ -41,7 +49,7 @@ public sealed class InMemoryOrderRepositoryTests
                 createdOrder.ShouldNotBeNull();
                 createdOrder.Id.ShouldBe(order.Id);
                 createdOrder.ProductId.ShouldBe(order.ProductId);
-                createdOrder.Quantity.ShouldBe(order.Quantity);
+                ((int)createdOrder.Quantity).ShouldBe((int)order.Quantity);
             },
             Fail: _ => throw new Exception("Should be success"));
     }
@@ -50,7 +58,7 @@ public sealed class InMemoryOrderRepositoryTests
     public async Task GetById_ReturnsSuccess_WhenOrderExists()
     {
         // Arrange
-        var order = new Order(Guid.NewGuid(), Guid.NewGuid(), 10, DateTime.UtcNow);
+        var order = CreateTestOrder();
         await _repository.Create(order).Run().RunAsync();
 
         // Act
@@ -71,7 +79,7 @@ public sealed class InMemoryOrderRepositoryTests
     public async Task GetById_ReturnsFailure_WhenOrderDoesNotExist()
     {
         // Arrange
-        var nonExistentId = Guid.NewGuid();
+        var nonExistentId = OrderId.New();
 
         // Act
         Fin<Order> result;

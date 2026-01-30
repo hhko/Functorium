@@ -1,3 +1,4 @@
+using Cqrs05Services.Messages;
 using FluentValidation;
 using Functorium.Abstractions.Errors;
 using Functorium.Applications.Cqrs;
@@ -5,8 +6,8 @@ using Functorium.Applications.Linq;
 using LanguageExt;
 using LanguageExt.Common;
 using OrderService.Adapters.Messaging;
-using Cqrs05Services.Messages;
 using OrderService.Domain;
+using OrderService.Domain.ValueObjects;
 using static LanguageExt.Prelude;
 
 namespace OrderService.Usecases;
@@ -27,7 +28,7 @@ public sealed class CreateOrderCommand
     /// Command Response - 생성된 주문 정보
     /// </summary>
     public sealed record Response(
-        Guid OrderId,
+        string OrderId,
         Guid ProductId,
         int Quantity,
         DateTime CreatedAt);
@@ -65,7 +66,27 @@ public sealed class CreateOrderCommand
         /// </summary>
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            // LINQ 쿼리 표현식: 재고 확인 → 주문 생성 → 재고 예약
+            // Value Object 생성
+            var quantityResult = Quantity.Create(request.Quantity);
+            if (quantityResult.IsFail)
+            {
+                return quantityResult.Match(
+                    Succ: _ => throw new InvalidOperationException(),
+                    Fail: e => FinResponse.Fail<Response>(e));
+            }
+            var quantity = quantityResult.Match(Succ: v => v, Fail: _ => null!);
+
+            // Order 생성 (LINQ 쿼리 표현식 외부에서)
+            var orderResult = Order.Create(request.ProductId, quantity);
+            if (orderResult.IsFail)
+            {
+                return orderResult.Match(
+                    Succ: _ => throw new InvalidOperationException(),
+                    Fail: e => FinResponse.Fail<Response>(e));
+            }
+            var order = orderResult.Match(Succ: v => v, Fail: _ => null!);
+
+            // LINQ 쿼리 표현식: 재고 확인 → 주문 저장 → 재고 예약
             // FinTUtilites.SelectMany가 FinT를 LINQ 쿼리 표현식에서 사용 가능하도록 지원
             // guard를 사용하여 재고가 충분할 때만 계속 진행
             FinT<IO, Response> usecase =
@@ -76,21 +97,16 @@ public sealed class CreateOrderCommand
                     request.ProductId,
                     request.Quantity,
                     checkResponse.AvailableQuantity))
-                let orderId = Guid.NewGuid()
-                from order in _orderRepository.Create(new Order(
-                    id: orderId,
-                    productId: request.ProductId,
-                    quantity: request.Quantity,
-                    createdAt: DateTime.UtcNow))
+                from createdOrder in _orderRepository.Create(order)
                 from __ in _inventoryMessaging.ReserveInventory(new ReserveInventoryCommand(
-                    OrderId: orderId,
+                    OrderId: createdOrder.Id.Value.ToGuid(),
                     ProductId: request.ProductId,
                     Quantity: request.Quantity))
                 select new Response(
-                    order.Id,
-                    order.ProductId,
-                    order.Quantity,
-                    order.CreatedAt);
+                    createdOrder.Id.ToString(),
+                    createdOrder.ProductId,
+                    (int)createdOrder.Quantity,
+                    createdOrder.CreatedAt);
 
             // FinT<IO, Response>
             //  -Run()→           IO<Fin<Response>>

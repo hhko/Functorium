@@ -5,7 +5,6 @@ using LanguageExt;
 using LanguageExt.Common;
 using Microsoft.Extensions.Logging;
 using OrderService.Domain;
-using static LanguageExt.Prelude;
 
 namespace OrderService.Infrastructure;
 
@@ -18,7 +17,7 @@ namespace OrderService.Infrastructure;
 public class InMemoryOrderRepository : IOrderRepository
 {
     private readonly ILogger<InMemoryOrderRepository> _logger;
-    private readonly ConcurrentDictionary<Guid, Order> _orders = new();
+    private readonly ConcurrentDictionary<OrderId, Order> _orders = new();
 
     /// <summary>
     /// 관찰 가능성 로그를 위한 요청 카테고리
@@ -43,7 +42,7 @@ public class InMemoryOrderRepository : IOrderRepository
         });
     }
 
-    public virtual FinT<IO, Order> GetById(Guid id)
+    public virtual FinT<IO, Order> GetById(OrderId id)
     {
         // Pipeline이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>

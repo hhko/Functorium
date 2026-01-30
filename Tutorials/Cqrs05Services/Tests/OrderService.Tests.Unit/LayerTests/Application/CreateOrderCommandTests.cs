@@ -1,13 +1,14 @@
+using Cqrs05Services.Messages;
 using LanguageExt;
 using LanguageExt.Common;
 using NSubstitute;
 using OrderService.Adapters.Messaging;
-using Cqrs05Services.Messages;
 using OrderService.Domain;
+using OrderService.Domain.ValueObjects;
 using OrderService.Usecases;
 using Shouldly;
-using static LanguageExt.Prelude;
 using Xunit;
+using static LanguageExt.Prelude;
 
 namespace OrderService.Tests.Unit.LayerTests.Application;
 
@@ -16,6 +17,14 @@ namespace OrderService.Tests.Unit.LayerTests.Application;
 /// </summary>
 public sealed class CreateOrderCommandTests
 {
+    private static Order CreateTestOrder(Guid productId, int quantity = 5)
+    {
+        var quantityResult = Quantity.Create(quantity);
+        var quantityValue = quantityResult.Match(Succ: v => v, Fail: _ => throw new Exception("Invalid quantity"));
+        var orderResult = Order.Create(productId, quantityValue);
+        return orderResult.Match(Succ: v => v, Fail: _ => throw new Exception("Invalid order"));
+    }
+
     [Fact]
     public async Task Handle_ReturnsSuccess_WhenInventoryIsAvailable()
     {
@@ -32,7 +41,7 @@ public sealed class CreateOrderCommandTests
             .Returns(IO.lift(() => Fin.Succ(checkResponse)));
 
         var orderRepository = Substitute.For<IOrderRepository>();
-        var createdOrder = new Order(Guid.NewGuid(), productId, 5, DateTime.UtcNow);
+        var createdOrder = CreateTestOrder(productId, 5);
         orderRepository.Create(Arg.Any<Order>())
             .Returns(IO.lift(() => Fin.Succ(createdOrder)));
 

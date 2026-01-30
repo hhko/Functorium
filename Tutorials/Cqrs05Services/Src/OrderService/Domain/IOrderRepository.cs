@@ -1,6 +1,5 @@
 using Functorium.Applications.Observabilities;
 using LanguageExt;
-using LanguageExt.Common;
 
 namespace OrderService.Domain;
 
@@ -19,6 +18,6 @@ public interface IOrderRepository : IAdapter
     /// ID로 주문 조회.
     /// 주문이 없으면 실패(Error)를 반환합니다.
     /// </summary>
-    FinT<IO, Order> GetById(Guid id);
+    FinT<IO, Order> GetById(OrderId id);
 }
 
