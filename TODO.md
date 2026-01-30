@@ -2,6 +2,7 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
+- [x] FinResponse.cs 파일 정리
 ```
             return (name, price, stockQuantity, description.Value)
                 .Apply((name, price, stockQuantity, description) =>
@@ -42,6 +43,9 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ---
 - [ ] 1개 Host: Scheduling
 - [ ] 3개 Host: Scheduling + HTTP + RabbitMQ
+---
+- [ ] Observability Usecase 커스텀
+- [ ] Observability IAdapter 커스텀
 ---
 - [ ] dotnet new template
 - [ ] Usecase 구현 스킬
