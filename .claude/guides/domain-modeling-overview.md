@@ -316,6 +316,7 @@ public void Create_ShouldSucceed_WhenEmailIsValid()
 |------|------|----------|
 | [valueobject-guide.md](./valueobject-guide.md) | 값 객체 구현 | 기반 클래스, 검증 시스템, 구현 패턴, 실전 예제 |
 | [entity-guide.md](./entity-guide.md) | Entity 구현 | Entity/AggregateRoot, ID 시스템, 도메인 이벤트 |
+| [adapter-guide.md](./adapter-guide.md) | Adapter 구현 | IAdapter 인터페이스, [GeneratePipeline], Pipeline 자동 생성 |
 | [error-guide.md](./error-guide.md) | 에러 시스템 | 에러 정의, 네이밍 규칙, 레이어별 에러 타입 |
 | [error-testing-guide.md](./error-testing-guide.md) | 에러 테스트 | 어설션 메서드, 테스트 패턴, 모범 사례 |
 | [unit-testing-guide.md](./unit-testing-guide.md) | 단위 테스트 | 테스트 규칙, 네이밍 규칙, 체크리스트 |
