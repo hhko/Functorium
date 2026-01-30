@@ -1,4 +1,4 @@
-using Cqrs01.Demo;
+using Cqrs01.Demo.Domain;
 using Cqrs01.Demo.Infrastructure;
 using Cqrs01.Demo.Usecases;
 using Functorium.Applications.Cqrs;
@@ -92,7 +92,7 @@ if (createResult1.IsSucc)
 
 // 존재하지 않는 사용자 조회
 FinResponse<GetUserByIdQuery.Response> notFoundResult = await mediator.Send(
-    new GetUserByIdQuery.Request(Guid.NewGuid()));
+    new GetUserByIdQuery.Request(Ulid.NewUlid().ToString()));
 
 PrintResult("Get User by ID (Not Found)", notFoundResult);
 

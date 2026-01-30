@@ -1,3 +1,11 @@
+using Cqrs01.Demo.Domain;
+using Cqrs01.Demo.Domain.ValueObjects;
+
+using Functorium.Domains.ValueObjects.Validations;
+
+using LanguageExt;
+using LanguageExt.Common;
+
 using Microsoft.Extensions.Logging;
 
 namespace Cqrs01.Demo.Usecases;
@@ -19,7 +27,7 @@ public sealed class CreateUserCommand
     /// Command Response - 생성된 사용자 정보
     /// </summary>
     public sealed record Response(
-        Guid UserId,
+        string UserId,
         string Name,
         string Email,
         DateTime CreatedAt);
@@ -37,8 +45,31 @@ public sealed class CreateUserCommand
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
+            // Value Objects 생성 및 유효성 검사
+            var validation = (
+                UserName.Validate(request.Name),
+                UserEmail.Validate(request.Email)
+            ).Apply((name, email) => (Name: name, Email: email));
+
+            if (validation.IsFail)
+            {
+                return validation.ToFin().Match<FinResponse<Response>>(
+                    Succ: _ => Error.New("Unexpected"),
+                    Fail: error => error);
+            }
+
+            // Validation 성공 시 Value Objects 생성
+            var validated = validation.Match(
+                Succ: v => v,
+                Fail: _ => throw new InvalidOperationException("Should not reach here"));
+
+            var userName = UserName.Create(validated.Name)
+                .IfFail(error => throw new InvalidOperationException(error.Message));
+            var userEmail = UserEmail.Create(validated.Email)
+                .IfFail(error => throw new InvalidOperationException(error.Message));
+
             // 이메일 중복 검사
-            Fin<bool> existsResult = await _userRepository.ExistsByEmailAsync(request.Email, cancellationToken);
+            Fin<bool> existsResult = await _userRepository.ExistsByEmailAsync(userEmail, cancellationToken);
 
             if (existsResult.IsFail)
             {
@@ -53,11 +84,16 @@ public sealed class CreateUserCommand
             }
 
             // 사용자 생성
-            User newUser = new(Guid.NewGuid(), request.Name, request.Email, DateTime.UtcNow);
-            Fin<User> createResult = await _userRepository.CreateAsync(newUser, cancellationToken);
+            var createResult = User.Create(userName, userEmail, DateTime.UtcNow);
 
-            return createResult.ToFinResponse(user =>
-                new Response(user.Id, user.Name, user.Email, user.CreatedAt));
+            return await createResult.Match<Task<FinResponse<Response>>>(
+                Succ: async user =>
+                {
+                    var saveResult = await _userRepository.CreateAsync(user, cancellationToken);
+                    return saveResult.ToFinResponse(u =>
+                        new Response(u.Id.ToString(), (string)u.Name, (string)u.Email, u.CreatedAt));
+                },
+                Fail: error => Task.FromResult<FinResponse<Response>>(error));
         }
     }
 }

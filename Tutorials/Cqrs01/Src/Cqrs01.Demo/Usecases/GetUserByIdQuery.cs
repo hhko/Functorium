@@ -1,3 +1,8 @@
+using Cqrs01.Demo.Domain;
+
+using LanguageExt;
+using LanguageExt.Common;
+
 using Microsoft.Extensions.Logging;
 
 namespace Cqrs01.Demo.Usecases;
@@ -9,15 +14,15 @@ namespace Cqrs01.Demo.Usecases;
 public sealed class GetUserByIdQuery
 {
     /// <summary>
-    /// Query Request - 조회할 사용자 ID
+    /// Query Request - 조회할 사용자 ID (Ulid 문자열)
     /// </summary>
-    public sealed record Request(Guid UserId) : IQueryRequest<Response>;
+    public sealed record Request(string UserId) : IQueryRequest<Response>;
 
     /// <summary>
     /// Query Response - 조회된 사용자 정보
     /// </summary>
     public sealed record Response(
-        Guid UserId,
+        string UserId,
         string Name,
         string Email,
         DateTime CreatedAt);
@@ -35,7 +40,12 @@ public sealed class GetUserByIdQuery
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            Fin<User?> result = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
+            if (!UserId.TryParse(request.UserId, null, out var userId))
+            {
+                return Error.New($"Invalid UserId format: '{request.UserId}'");
+            }
+
+            Fin<User?> result = await _userRepository.GetByIdAsync(userId, cancellationToken);
 
             return result.Match<FinResponse<Response>>(
                 Succ: user =>
@@ -45,7 +55,7 @@ public sealed class GetUserByIdQuery
                         return Error.New($"User with ID '{request.UserId}' not found");
                     }
 
-                    return new Response(user.Id, user.Name, user.Email, user.CreatedAt);
+                    return new Response(user.Id.ToString(), (string)user.Name, (string)user.Email, user.CreatedAt);
                 },
                 Fail: error => error);
         }

@@ -1,4 +1,11 @@
 using System.Collections.Concurrent;
+
+using Cqrs01.Demo.Domain;
+using Cqrs01.Demo.Domain.ValueObjects;
+
+using LanguageExt;
+using LanguageExt.Common;
+
 using static LanguageExt.Prelude;
 
 namespace Cqrs01.Demo.Infrastructure;
@@ -8,7 +15,7 @@ namespace Cqrs01.Demo.Infrastructure;
 /// </summary>
 public sealed class InMemoryUserRepository : IUserRepository
 {
-    private readonly ConcurrentDictionary<Guid, User> _users = new();
+    private readonly ConcurrentDictionary<UserId, User> _users = new();
 
     public Task<Fin<User>> CreateAsync(User user, CancellationToken cancellationToken = default)
     {
@@ -20,7 +27,7 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.FromResult(Fin.Fail<User>(Error.New("Failed to create user")));
     }
 
-    public Task<Fin<User?>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<Fin<User?>> GetByIdAsync(UserId id, CancellationToken cancellationToken = default)
     {
         _users.TryGetValue(id, out User? user);
         return Task.FromResult(Fin.Succ(user));
@@ -32,9 +39,10 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.FromResult(Fin.Succ(users));
     }
 
-    public Task<Fin<bool>> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
+    public Task<Fin<bool>> ExistsByEmailAsync(UserEmail email, CancellationToken cancellationToken = default)
     {
-        bool exists = _users.Values.Any(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+        string emailValue = email;
+        bool exists = _users.Values.Any(u => ((string)u.Email).Equals(emailValue, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(Fin.Succ(exists));
     }
 }

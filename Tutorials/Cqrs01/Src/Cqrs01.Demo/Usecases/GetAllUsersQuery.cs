@@ -1,3 +1,7 @@
+using Cqrs01.Demo.Domain;
+
+using LanguageExt;
+
 using Microsoft.Extensions.Logging;
 
 namespace Cqrs01.Demo.Usecases;
@@ -21,7 +25,7 @@ public sealed class GetAllUsersQuery
     /// 사용자 DTO
     /// </summary>
     public sealed record UserDto(
-        Guid UserId,
+        string UserId,
         string Name,
         string Email);
 
@@ -42,7 +46,7 @@ public sealed class GetAllUsersQuery
 
             return result.ToFinResponse(users =>
             {
-                Seq<UserDto> userDtos = users.Map(u => new UserDto(u.Id, u.Name, u.Email));
+                Seq<UserDto> userDtos = users.Map(u => new UserDto(u.Id.ToString(), (string)u.Name, (string)u.Email));
                 return new Response(userDtos);
             });
         }

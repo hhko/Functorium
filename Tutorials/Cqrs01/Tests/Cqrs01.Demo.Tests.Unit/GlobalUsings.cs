@@ -4,5 +4,6 @@ global using NSubstitute;
 global using LanguageExt;
 global using LanguageExt.Common;
 global using Functorium.Applications.Cqrs;
-global using Cqrs01.Demo;
+global using Cqrs01.Demo.Domain;
+global using Cqrs01.Demo.Domain.ValueObjects;
 global using Cqrs01.Demo.Usecases;

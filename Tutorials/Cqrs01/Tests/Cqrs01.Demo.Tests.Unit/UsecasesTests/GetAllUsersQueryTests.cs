@@ -17,14 +17,22 @@ public sealed class GetAllUsersQueryTests
         _sut = new GetAllUsersQuery.Usecase(_logger, _userRepository);
     }
 
+    private static User CreateTestUser(string name, string email)
+    {
+        var userName = UserName.Create(name).IfFail(_ => throw new Exception());
+        var userEmail = UserEmail.Create(email).IfFail(_ => throw new Exception());
+        return User.Create(userName, userEmail, DateTime.UtcNow)
+            .IfFail(_ => throw new Exception());
+    }
+
     [Fact]
     public async Task Handle_UsersExist_ReturnsAllUsers()
     {
         // Arrange
         var request = new GetAllUsersQuery.Request();
         var users = Seq(
-            new User(Guid.NewGuid(), "Alice", "alice@example.com", DateTime.UtcNow),
-            new User(Guid.NewGuid(), "Bob", "bob@example.com", DateTime.UtcNow)
+            CreateTestUser("Alice", "alice@example.com"),
+            CreateTestUser("Bob", "bob@example.com")
         );
 
         _userRepository
@@ -116,10 +124,8 @@ public sealed class GetAllUsersQueryTests
     {
         // Arrange
         var request = new GetAllUsersQuery.Request();
-        var userId = Guid.NewGuid();
-        var users = Seq(
-            new User(userId, "TestUser", "test@example.com", DateTime.UtcNow)
-        );
+        var user = CreateTestUser("TestUser", "test@example.com");
+        var users = Seq(user);
 
         _userRepository
             .GetAllAsync(Arg.Any<CancellationToken>())
@@ -135,7 +141,7 @@ public sealed class GetAllUsersQueryTests
             {
                 response.Users.Count.ShouldBe(1);
                 var userDto = response.Users[0];
-                userDto.UserId.ShouldBe(userId);
+                userDto.UserId.ShouldBe(user.Id.ToString());
                 userDto.Name.ShouldBe("TestUser");
                 userDto.Email.ShouldBe("test@example.com");
             },

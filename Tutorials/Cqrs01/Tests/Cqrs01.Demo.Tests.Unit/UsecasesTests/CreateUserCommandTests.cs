@@ -21,10 +21,9 @@ public sealed class CreateUserCommandTests
     {
         // Arrange
         var request = new CreateUserCommand.Request("Alice", "alice@example.com");
-        var expectedUser = new User(Guid.NewGuid(), "Alice", "alice@example.com", DateTime.UtcNow);
 
         _userRepository
-            .ExistsByEmailAsync(request.Email, Arg.Any<CancellationToken>())
+            .ExistsByEmailAsync(Arg.Any<UserEmail>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(Fin.Succ(false)));
 
         _userRepository
@@ -57,7 +56,7 @@ public sealed class CreateUserCommandTests
         var request = new CreateUserCommand.Request("Alice", "existing@example.com");
 
         _userRepository
-            .ExistsByEmailAsync(request.Email, Arg.Any<CancellationToken>())
+            .ExistsByEmailAsync(Arg.Any<UserEmail>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(Fin.Succ(true)));
 
         // Act
@@ -78,7 +77,7 @@ public sealed class CreateUserCommandTests
         var expectedError = Error.New("Database connection failed");
 
         _userRepository
-            .ExistsByEmailAsync(request.Email, Arg.Any<CancellationToken>())
+            .ExistsByEmailAsync(Arg.Any<UserEmail>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(Fin.Fail<bool>(expectedError)));
 
         // Act
@@ -99,7 +98,7 @@ public sealed class CreateUserCommandTests
         var expectedError = Error.New("Failed to create user");
 
         _userRepository
-            .ExistsByEmailAsync(request.Email, Arg.Any<CancellationToken>())
+            .ExistsByEmailAsync(Arg.Any<UserEmail>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(Fin.Succ(false)));
 
         _userRepository
@@ -123,7 +122,7 @@ public sealed class CreateUserCommandTests
         var request = new CreateUserCommand.Request("Bob", "bob@example.com");
 
         _userRepository
-            .ExistsByEmailAsync(request.Email, Arg.Any<CancellationToken>())
+            .ExistsByEmailAsync(Arg.Any<UserEmail>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(Fin.Succ(false)));
 
         _userRepository
@@ -138,9 +137,9 @@ public sealed class CreateUserCommandTests
         await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        await _userRepository.Received(1).ExistsByEmailAsync("bob@example.com", Arg.Any<CancellationToken>());
+        await _userRepository.Received(1).ExistsByEmailAsync(Arg.Any<UserEmail>(), Arg.Any<CancellationToken>());
         await _userRepository.Received(1).CreateAsync(
-            Arg.Is<User>(u => u.Name == "Bob" && u.Email == "bob@example.com"),
+            Arg.Is<User>(u => (string)u.Name == "Bob" && (string)u.Email == "bob@example.com"),
             Arg.Any<CancellationToken>());
     }
 }

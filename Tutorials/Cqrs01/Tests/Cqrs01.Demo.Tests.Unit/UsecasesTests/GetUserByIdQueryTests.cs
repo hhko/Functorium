@@ -16,16 +16,23 @@ public sealed class GetUserByIdQueryTests
         _sut = new GetUserByIdQuery.Usecase(_logger, _userRepository);
     }
 
+    private static User CreateTestUser(string name = "Alice", string email = "alice@example.com")
+    {
+        var userName = UserName.Create(name).IfFail(_ => throw new Exception());
+        var userEmail = UserEmail.Create(email).IfFail(_ => throw new Exception());
+        return User.Create(userName, userEmail, DateTime.UtcNow)
+            .IfFail(_ => throw new Exception());
+    }
+
     [Fact]
     public async Task Handle_ExistingUser_ReturnsSuccessResponse()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        var expectedUser = new User(userId, "Alice", "alice@example.com", DateTime.UtcNow);
-        var request = new GetUserByIdQuery.Request(userId);
+        var expectedUser = CreateTestUser();
+        var request = new GetUserByIdQuery.Request(expectedUser.Id.ToString());
 
         _userRepository
-            .GetByIdAsync(userId, Arg.Any<CancellationToken>())
+            .GetByIdAsync(Arg.Any<UserId>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(Fin.Succ<User?>(expectedUser)));
 
         // Act
@@ -37,7 +44,7 @@ public sealed class GetUserByIdQueryTests
             Succ: response =>
             {
                 response.ShouldNotBeNull();
-                response.UserId.ShouldBe(userId);
+                response.UserId.ShouldBe(expectedUser.Id.ToString());
                 response.Name.ShouldBe("Alice");
                 response.Email.ShouldBe("alice@example.com");
             },
@@ -48,11 +55,11 @@ public sealed class GetUserByIdQueryTests
     public async Task Handle_NonExistingUser_ReturnsFailure()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        var request = new GetUserByIdQuery.Request(userId);
+        var userId = UserId.New();
+        var request = new GetUserByIdQuery.Request(userId.ToString());
 
         _userRepository
-            .GetByIdAsync(userId, Arg.Any<CancellationToken>())
+            .GetByIdAsync(Arg.Any<UserId>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(Fin.Succ<User?>(null)));
 
         // Act
@@ -69,12 +76,12 @@ public sealed class GetUserByIdQueryTests
     public async Task Handle_RepositoryFails_ReturnsFailure()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        var request = new GetUserByIdQuery.Request(userId);
+        var userId = UserId.New();
+        var request = new GetUserByIdQuery.Request(userId.ToString());
         var expectedError = Error.New("Database connection failed");
 
         _userRepository
-            .GetByIdAsync(userId, Arg.Any<CancellationToken>())
+            .GetByIdAsync(Arg.Any<UserId>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(Fin.Fail<User?>(expectedError)));
 
         // Act
@@ -88,21 +95,36 @@ public sealed class GetUserByIdQueryTests
     }
 
     [Fact]
+    public async Task Handle_InvalidUserId_ReturnsFailure()
+    {
+        // Arrange
+        var request = new GetUserByIdQuery.Request("invalid-id");
+
+        // Act
+        FinResponse<GetUserByIdQuery.Response> actual = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        actual.IsFail.ShouldBeTrue();
+        actual.Match(
+            Succ: _ => throw new Exception("Should be failure"),
+            Fail: error => error.Message.ShouldContain("Invalid UserId format"));
+    }
+
+    [Fact]
     public async Task Handle_ValidRequest_CallsRepositoryWithCorrectId()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        var request = new GetUserByIdQuery.Request(userId);
-        var user = new User(userId, "Test", "test@example.com", DateTime.UtcNow);
+        var user = CreateTestUser("Test", "test@example.com");
+        var request = new GetUserByIdQuery.Request(user.Id.ToString());
 
         _userRepository
-            .GetByIdAsync(userId, Arg.Any<CancellationToken>())
+            .GetByIdAsync(Arg.Any<UserId>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(Fin.Succ<User?>(user)));
 
         // Act
         await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        await _userRepository.Received(1).GetByIdAsync(userId, Arg.Any<CancellationToken>());
+        await _userRepository.Received(1).GetByIdAsync(Arg.Any<UserId>(), Arg.Any<CancellationToken>());
     }
 }
