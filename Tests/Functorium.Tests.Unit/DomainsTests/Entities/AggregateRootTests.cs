@@ -7,19 +7,40 @@ namespace Functorium.Tests.Unit.DomainsTests.Entities;
 /// <summary>
 /// 테스트용 도메인 이벤트
 /// </summary>
-public sealed record TestDomainEvent(string Message) : DomainEvent
+public sealed record TestDomainEvent : DomainEvent
 {
-    public TestDomainEvent(string message, DateTimeOffset occurredAt)
-        : this(message)
+    public string Message { get; init; }
+
+    public TestDomainEvent(string message) : base()
     {
-        // record with를 사용하여 OccurredAt 설정
+        Message = message;
+    }
+
+    public TestDomainEvent(string message, string? correlationId)
+        : base(correlationId)
+    {
+        Message = message;
+    }
+
+    public TestDomainEvent(string message, string? correlationId, string? causationId)
+        : base(correlationId, causationId)
+    {
+        Message = message;
     }
 }
 
 /// <summary>
 /// 또 다른 테스트용 도메인 이벤트
 /// </summary>
-public sealed record AnotherTestDomainEvent(int Value) : DomainEvent;
+public sealed record AnotherTestDomainEvent : DomainEvent
+{
+    public int Value { get; init; }
+
+    public AnotherTestDomainEvent(int value) : base()
+    {
+        Value = value;
+    }
+}
 
 /// <summary>
 /// 테스트용 Aggregate Root
@@ -243,15 +264,111 @@ public class AggregateRootTests
     public void DomainEvent_EqualsAnother_WhenSameValues()
     {
         // Arrange
+        var eventId = Guid.NewGuid();
         var occurredAt = DateTimeOffset.UtcNow;
-        var event1 = new TestDomainEvent("Test") with { OccurredAt = occurredAt };
-        var event2 = new TestDomainEvent("Test") with { OccurredAt = occurredAt };
+        var event1 = new TestDomainEvent("Test") with { OccurredAt = occurredAt, EventId = eventId };
+        var event2 = new TestDomainEvent("Test") with { OccurredAt = occurredAt, EventId = eventId };
 
         // Act
         var actual = event1.Equals(event2);
 
         // Assert
         actual.ShouldBeTrue();
+    }
+
+    #endregion
+
+    #region DomainEvent Metadata Tests
+
+    [Fact]
+    public void DomainEvent_HasEventId_WhenCreated()
+    {
+        // Act
+        var domainEvent = new TestDomainEvent("Test");
+
+        // Assert
+        domainEvent.EventId.ShouldNotBe(Guid.Empty);
+    }
+
+    [Fact]
+    public void DomainEvent_HasUniqueEventId_WhenMultipleEventsCreated()
+    {
+        // Act
+        var event1 = new TestDomainEvent("Test1");
+        var event2 = new TestDomainEvent("Test2");
+
+        // Assert
+        event1.EventId.ShouldNotBe(event2.EventId);
+    }
+
+    [Fact]
+    public void DomainEvent_HasNullCorrelationId_WhenCreatedWithDefaultConstructor()
+    {
+        // Act
+        var domainEvent = new TestDomainEvent("Test");
+
+        // Assert
+        domainEvent.CorrelationId.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DomainEvent_HasNullCausationId_WhenCreatedWithDefaultConstructor()
+    {
+        // Act
+        var domainEvent = new TestDomainEvent("Test");
+
+        // Assert
+        domainEvent.CausationId.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DomainEvent_HasCorrelationId_WhenCreatedWithCorrelationId()
+    {
+        // Arrange
+        var correlationId = "test-correlation-id";
+
+        // Act
+        var domainEvent = new TestDomainEvent("Test", correlationId);
+
+        // Assert
+        domainEvent.CorrelationId.ShouldBe(correlationId);
+    }
+
+    [Fact]
+    public void DomainEvent_HasCausationId_WhenCreatedWithBothIds()
+    {
+        // Arrange
+        var correlationId = "test-correlation-id";
+        var causationId = "test-causation-id";
+
+        // Act
+        var domainEvent = new TestDomainEvent("Test", correlationId, causationId);
+
+        // Assert
+        domainEvent.CorrelationId.ShouldBe(correlationId);
+        domainEvent.CausationId.ShouldBe(causationId);
+    }
+
+    [Fact]
+    public void DomainEvent_CanSetMetadataWithWith_WhenUsed()
+    {
+        // Arrange
+        var domainEvent = new TestDomainEvent("Test");
+        var correlationId = "new-correlation-id";
+        var causationId = "new-causation-id";
+
+        // Act
+        var updatedEvent = domainEvent with
+        {
+            CorrelationId = correlationId,
+            CausationId = causationId
+        };
+
+        // Assert
+        updatedEvent.CorrelationId.ShouldBe(correlationId);
+        updatedEvent.CausationId.ShouldBe(causationId);
+        updatedEvent.EventId.ShouldBe(domainEvent.EventId);
+        updatedEvent.Message.ShouldBe(domainEvent.Message);
     }
 
     #endregion

@@ -1,3 +1,4 @@
+using Functorium.Applications.Errors;
 using Functorium.Applications.Events;
 using Functorium.Domains.Entities;
 using Functorium.Domains.Events;
@@ -32,7 +33,25 @@ public sealed class DomainEventPublisher : IDomainEventPublisher
 
             foreach (var domainEvent in events)
             {
-                await _publisher.Publish(domainEvent, cancellationToken);
+                try
+                {
+                    await _publisher.Publish(domainEvent, cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    return Fin.Fail<LanguageExt.Unit>(
+                        EventError.For<DomainEventPublisher>(
+                            new EventErrorType.PublishCancelled(),
+                            domainEvent.GetType().Name,
+                            "Event publishing was cancelled"));
+                }
+                catch (Exception ex)
+                {
+                    return Fin.Fail<LanguageExt.Unit>(
+                        EventError.FromException<DomainEventPublisher>(
+                            new EventErrorType.PublishFailed(),
+                            ex));
+                }
             }
             return Fin.Succ(LanguageExt.Unit.Default);
         });
@@ -46,8 +65,72 @@ public sealed class DomainEventPublisher : IDomainEventPublisher
     {
         return IO.liftAsync(async () =>
         {
-            await _publisher.Publish(domainEvent, cancellationToken);
-            return Fin.Succ(LanguageExt.Unit.Default);
+            try
+            {
+                await _publisher.Publish(domainEvent, cancellationToken);
+                return Fin.Succ(LanguageExt.Unit.Default);
+            }
+            catch (OperationCanceledException)
+            {
+                return Fin.Fail<LanguageExt.Unit>(
+                    EventError.For<DomainEventPublisher>(
+                        new EventErrorType.PublishCancelled(),
+                        typeof(TEvent).Name,
+                        "Event publishing was cancelled"));
+            }
+            catch (Exception ex)
+            {
+                return Fin.Fail<LanguageExt.Unit>(
+                    EventError.FromException<DomainEventPublisher>(
+                        new EventErrorType.PublishFailed(),
+                        ex));
+            }
+        });
+    }
+
+    /// <inheritdoc />
+    public FinT<IO, PublishResult> PublishEventsWithResult<TId>(
+        AggregateRoot<TId> aggregate,
+        CancellationToken cancellationToken = default)
+        where TId : struct, IEntityId<TId>
+    {
+        return IO.liftAsync(async () =>
+        {
+            var events = aggregate.DomainEvents.ToList();
+            aggregate.ClearDomainEvents();
+
+            var successfulEvents = new List<IDomainEvent>();
+            var failedEvents = new List<(IDomainEvent Event, LanguageExt.Common.Error Error)>();
+
+            foreach (var domainEvent in events)
+            {
+                try
+                {
+                    await _publisher.Publish(domainEvent, cancellationToken);
+                    successfulEvents.Add(domainEvent);
+                }
+                catch (OperationCanceledException)
+                {
+                    var error = EventError.For<DomainEventPublisher>(
+                        new EventErrorType.PublishCancelled(),
+                        domainEvent.GetType().Name,
+                        "Event publishing was cancelled");
+                    failedEvents.Add((domainEvent, error));
+                }
+                catch (Exception ex)
+                {
+                    var error = EventError.FromException<DomainEventPublisher>(
+                        new EventErrorType.PublishFailed(),
+                        ex);
+                    failedEvents.Add((domainEvent, error));
+                }
+            }
+
+            var result = new PublishResult(
+                new Seq<IDomainEvent>(successfulEvents),
+                new Seq<(IDomainEvent Event, LanguageExt.Common.Error Error)>(failedEvents));
+
+            return Fin.Succ(result);
         });
     }
 }
