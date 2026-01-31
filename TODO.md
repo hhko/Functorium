@@ -471,7 +471,7 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [x] Cqrs04Endpoint 기준으로 Trace 코드 검증
 - [x] 계층 구조 테스트
 - [x] aspire 대시보드 구축
-- [x] Cqrs05Services -> Cqrs05Services 변경
+- [x] Cqrs06Services -> Cqrs06Services 변경
 - [x] 메서드 이름 개선 MetricRecorder
   - RecordRequest
   - RecordResponseSuccess
@@ -545,7 +545,7 @@ SmartEnum Protocol 선택 기준 문서화
 ---
 - [x] 경고 제거
 ---
-- [x] CqrsObservability -> Cqrs05Services
+- [x] CqrsObservability -> Cqrs06Services
 ---
 - [ ] ObservabilityNaming 정리(Logger 통합?)
 - [ ] Release할 때 NuGet 패키지 버전 불일치
