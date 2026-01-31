@@ -1,4 +1,7 @@
+using Functorium.Domains.Errors;
 using LayeredArch.Domain.ValueObjects;
+using static Functorium.Domains.Errors.DomainErrorType;
+using static LanguageExt.Prelude;
 
 namespace LayeredArch.Domain.Entities;
 
@@ -9,13 +12,30 @@ namespace LayeredArch.Domain.Entities;
 [GenerateEntityId]
 public sealed class Product : AggregateRoot<ProductId>, IAuditable
 {
+    #region Domain Events
+
+    /// <summary>
+    /// 상품 생성 이벤트
+    /// </summary>
+    public sealed record CreatedEvent(ProductId ProductId, ProductName Name, Money Price) : DomainEvent;
+
+    /// <summary>
+    /// 상품 업데이트 이벤트
+    /// </summary>
+    public sealed record UpdatedEvent(ProductId ProductId, ProductName Name, Money OldPrice, Money NewPrice) : DomainEvent;
+
+    /// <summary>
+    /// 재고 차감 이벤트
+    /// </summary>
+    public sealed record StockDeductedEvent(ProductId ProductId, Quantity Quantity) : DomainEvent;
+
+    #endregion
+
     // Value Object 속성
     public ProductName Name { get; private set; }
+    public ProductDescription Description { get; private set; }
     public Money Price { get; private set; }
     public Quantity StockQuantity { get; private set; }
-
-    // VO 없는 필드 (단순 문자열)
-    public string Description { get; private set; }
 
     // Audit 속성
     public DateTime CreatedAt { get; private set; }
@@ -30,7 +50,7 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     private Product(
         ProductId id,
         ProductName name,
-        string description,
+        ProductDescription description,
         Money price,
         Quantity stockQuantity)
         : base(id)
@@ -48,12 +68,12 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     /// </summary>
     public static Product Create(
         ProductName name,
-        string description,
+        ProductDescription description,
         Money price,
         Quantity stockQuantity)
     {
         var product = new Product(ProductId.New(), name, description, price, stockQuantity);
-        product.AddDomainEvent(new ProductCreatedEvent(product.Id, name, price));
+        product.AddDomainEvent(new CreatedEvent(product.Id, name, price));
         return product;
     }
 
@@ -63,7 +83,7 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     public static Product CreateFromValidated(
         ProductId id,
         ProductName name,
-        string description,
+        ProductDescription description,
         Money price,
         Quantity stockQuantity,
         DateTime createdAt,
@@ -81,7 +101,7 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     /// </summary>
     public Product Update(
         ProductName name,
-        string description,
+        ProductDescription description,
         Money price,
         Quantity stockQuantity)
     {
@@ -93,18 +113,29 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
         StockQuantity = stockQuantity;
         UpdatedAt = DateTime.UtcNow;
 
-        AddDomainEvent(new ProductUpdatedEvent(Id, name, oldPrice, price));
+        AddDomainEvent(new UpdatedEvent(Id, name, oldPrice, price));
 
         return this;
     }
+
+    /// <summary>
+    /// 재고가 지정된 임계값 미만인지 확인합니다.
+    /// </summary>
+    public bool HasLowStock(Quantity threshold) => StockQuantity < threshold;
+
+    /// <summary>
+    /// 재고를 차감합니다.
+    /// </summary>
+    public Fin<Unit> DeductStock(Quantity quantity)
+    {
+        if (quantity > StockQuantity)
+            return DomainError.For<Product, int>(
+                new Custom("InsufficientStock"),
+                currentValue: StockQuantity,
+                message: $"Insufficient stock. Current: {StockQuantity}, Requested: {quantity}");
+
+        StockQuantity = StockQuantity.Subtract(quantity);
+        AddDomainEvent(new StockDeductedEvent(Id, quantity));
+        return unit;
+    }
 }
-
-/// <summary>
-/// 상품 생성 이벤트
-/// </summary>
-public sealed record ProductCreatedEvent(ProductId ProductId, ProductName Name, Money Price) : DomainEvent;
-
-/// <summary>
-/// 상품 업데이트 이벤트
-/// </summary>
-public sealed record ProductUpdatedEvent(ProductId ProductId, ProductName Name, Money OldPrice, Money NewPrice) : DomainEvent;

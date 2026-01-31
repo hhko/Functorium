@@ -116,7 +116,9 @@ public class Order : AggregateRoot<OrderId>
     public CustomerId CustomerId { get; private set; }
 
     // ORM용 기본 생성자
+#pragma warning disable CS8618
     private Order() { }
+#pragma warning restore CS8618
 
     // 내부 생성자
     private Order(OrderId id, Money amount, CustomerId customerId) : base(id)
@@ -238,7 +240,7 @@ public abstract class Entity<TId> : IEntity<TId>, IEquatable<Entity<TId>>
 | 항목 | 설명 |
 |------|------|
 | `[GenerateEntityId]` 속성 | EntityId 자동 생성 |
-| Private 생성자 (ORM용) | 파라미터 없는 기본 생성자 |
+| Private 생성자 (ORM용) | 파라미터 없는 기본 생성자 + `#pragma warning disable CS8618` |
 | Private 생성자 (내부용) | ID를 받는 생성자 |
 | `Create()` | Entity 생성 팩토리 메서드 |
 | `CreateFromValidated()` | ORM 복원용 메서드 |
@@ -256,7 +258,11 @@ public class Product : Entity<ProductId>
     public Price Price { get; private set; }
 
     // ORM용 기본 생성자
+    // CS8618: Non-nullable 속성이 생성자에서 초기화되지 않음 경고 억제
+    // ORM이 리플렉션으로 속성을 설정하므로 안전함
+#pragma warning disable CS8618
     private Product() { }
+#pragma warning restore CS8618
 
     // 내부 생성자
     private Product(ProductId id, ProductName name, Price price) : base(id)
@@ -322,7 +328,9 @@ public class Order : AggregateRoot<OrderId>
     public Money TotalAmount { get; private set; }
     public OrderStatus Status { get; private set; }
 
+#pragma warning disable CS8618
     private Order() { }
+#pragma warning restore CS8618
 
     private Order(OrderId id, Money totalAmount) : base(id)
     {
@@ -486,12 +494,39 @@ public abstract record DomainEvent(DateTimeOffset OccurredAt) : IDomainEvent
 }
 ```
 
-**이벤트 정의 예제:**
+### 이벤트 정의 위치
+
+도메인 이벤트는 해당 Entity의 **중첩 클래스**로 정의합니다:
 
 ```csharp
-public record OrderCreatedEvent(OrderId OrderId, Money TotalAmount) : DomainEvent;
-public record OrderConfirmedEvent(OrderId OrderId) : DomainEvent;
-public record OrderShippedEvent(OrderId OrderId, Address ShippingAddress) : DomainEvent;
+[GenerateEntityId]
+public class Order : AggregateRoot<OrderId>
+{
+    #region Domain Events
+
+    // 도메인 이벤트 (중첩 클래스)
+    public sealed record CreatedEvent(OrderId OrderId, CustomerId CustomerId, Money TotalAmount) : DomainEvent;
+    public sealed record ConfirmedEvent(OrderId OrderId) : DomainEvent;
+    public sealed record CancelledEvent(OrderId OrderId, string Reason) : DomainEvent;
+
+    #endregion
+
+    // Entity 구현...
+}
+```
+
+**장점**:
+- 이벤트 소유권이 타입 시스템에서 명확 (`Order.CreatedEvent`)
+- IntelliSense에서 `Order.`만 치면 관련 이벤트 모두 표시
+- Entity 이름 중복 제거 (`OrderCreatedEvent` → `Order.CreatedEvent`)
+
+**사용 예시**:
+```csharp
+// Entity 내부에서 (짧게)
+AddDomainEvent(new CreatedEvent(Id, customerId, totalAmount));
+
+// 외부에서 (명시적)
+public void Handle(Order.CreatedEvent @event) { ... }
 ```
 
 ### 이벤트 발행 패턴
@@ -502,6 +537,13 @@ AggregateRoot 내에서 `AddDomainEvent()`를 사용하여 이벤트를 발행�
 [GenerateEntityId]
 public class Order : AggregateRoot<OrderId>
 {
+    #region Domain Events
+
+    public sealed record CreatedEvent(OrderId OrderId, Money TotalAmount) : DomainEvent;
+    public sealed record ShippedEvent(OrderId OrderId, Address ShippingAddress) : DomainEvent;
+
+    #endregion
+
     public Money TotalAmount { get; private set; }
     public OrderStatus Status { get; private set; }
 
@@ -516,8 +558,8 @@ public class Order : AggregateRoot<OrderId>
     {
         var id = OrderId.New();
         var order = new Order(id, totalAmount);
-        // 생성 이벤트 발행
-        order.AddDomainEvent(new OrderCreatedEvent(id, totalAmount));
+        // 생성 이벤트 발행 (내부에서는 짧게)
+        order.AddDomainEvent(new CreatedEvent(id, totalAmount));
         return order;
     }
 
@@ -531,7 +573,7 @@ public class Order : AggregateRoot<OrderId>
 
         Status = OrderStatus.Shipped;
         // 배송 이벤트 발행
-        AddDomainEvent(new OrderShippedEvent(Id, address));
+        AddDomainEvent(new ShippedEvent(Id, address));
         return unit;
     }
 }
@@ -844,7 +886,9 @@ public class Product : Entity<ProductId>
     public ProductName Name { get; private set; }
     public Price Price { get; private set; }
 
+#pragma warning disable CS8618
     private Product() { }
+#pragma warning restore CS8618
 
     private Product(ProductId id, ProductName name, Price price) : base(id)
     {
@@ -875,7 +919,9 @@ public class Product : Entity<ProductId>
     public Price SellingPrice { get; private set; }
     public Money Cost { get; private set; }
 
+#pragma warning disable CS8618
     private Product() { }
+#pragma warning restore CS8618
 
     private Product(ProductId id, ProductName name, Price sellingPrice, Money cost) : base(id)
     {
@@ -922,7 +968,9 @@ public class OrderItem : Entity<OrderItemId>
     public Quantity Quantity { get; private set; }
     public Price UnitPrice { get; private set; }
 
+#pragma warning disable CS8618
     private OrderItem() { }
+#pragma warning restore CS8618
 
     private OrderItem(
         OrderItemId id,
@@ -1147,6 +1195,88 @@ public async Task<Fin<Order>> CreateOrderAsync(CreateOrderCommand cmd)
 
 ---
 
+## 도메인 로직 메서드
+
+Entity는 단순한 데이터 저장소가 아닌 **도메인 로직의 중심**입니다. 비즈니스 규칙과 상태 변경 로직을 Entity 내부에 캡슐화합니다.
+
+### 쿼리 메서드 (상태 확인)
+
+Entity의 상태를 확인하는 메서드입니다. 부작용이 없고, 상태를 변경하지 않습니다.
+
+```csharp
+// 재고가 임계값 미만인지 확인
+public bool HasLowStock(Quantity threshold) => StockQuantity < threshold;
+
+// 상품이 만료되었는지 확인
+public bool IsExpired() => ExpirationDate < DateTime.UtcNow;
+
+// 총 가치 계산
+public Money CalculateTotalValue() => Price.Multiply((decimal)StockQuantity);
+```
+
+### 커맨드 메서드 (상태 변경)
+
+Entity의 상태를 변경하는 메서드입니다. 비즈니스 규칙을 검증하고, 도메인 이벤트를 발행합니다.
+
+```csharp
+/// <summary>
+/// 재고를 차감합니다.
+/// </summary>
+public Fin<Unit> DeductStock(Quantity quantity)
+{
+    // 1. 비즈니스 규칙 검증
+    if ((int)quantity > (int)StockQuantity)
+        return Fin.Fail<Unit>(DomainError.For<Product, int>(
+            new Custom("InsufficientStock"),
+            currentValue: (int)StockQuantity,
+            message: $"Insufficient stock. Current: {(int)StockQuantity}, Requested: {(int)quantity}"));
+
+    // 2. 상태 변경
+    StockQuantity = Quantity.Create((int)StockQuantity - (int)quantity).ThrowIfFail();
+
+    // 3. 도메인 이벤트 발행
+    AddDomainEvent(new StockDeductedEvent(Id, quantity));
+
+    return unit;  // using static LanguageExt.Prelude; 필요
+}
+```
+
+### 메서드 유형별 반환 타입
+
+| 메서드 유형 | 반환 타입 | 설명 |
+|------------|----------|------|
+| 쿼리 (단순 확인) | `bool`, `int`, etc. | 부작용 없는 상태 확인 |
+| 쿼리 (VO 계산) | `Money`, `Quantity`, etc. | 계산된 값 객체 반환 |
+| 커맨드 (항상 성공) | `void` 또는 `this` | 검증 불필요한 상태 변경 |
+| 커맨드 (실패 가능) | `Fin<Unit>` | 비즈니스 규칙 위반 가능 |
+| 커맨드 (결과 반환) | `Fin<T>` | 실패 가능 + 계산 결과 반환 |
+
+### 도메인 이벤트와 커맨드 메서드
+
+상태 변경 시 도메인 이벤트를 발행하는 것이 권장됩니다:
+
+```csharp
+// 주문 확정 - 상태 변경 + 이벤트 발행
+public Fin<Unit> Confirm(string updatedBy)
+{
+    if (Status != OrderStatus.Pending)
+        return DomainError.For<Order>(
+            new Custom("InvalidStatus"),
+            Status.ToString(),
+            "Order can only be confirmed when pending");
+
+    Status = OrderStatus.Confirmed;
+    UpdatedAt = DateTime.UtcNow;
+    UpdatedBy = updatedBy;
+
+    AddDomainEvent(new OrderConfirmedEvent(Id));
+
+    return unit;
+}
+```
+
+---
+
 ## 실전 예제
 
 ### Order Aggregate (복합 예제)
@@ -1159,15 +1289,18 @@ using Functorium.Domains.Events;
 using Functorium.Domains.SourceGenerator;
 using static Functorium.Domains.Errors.DomainErrorType;
 
-// 도메인 이벤트 정의
-public record OrderCreatedEvent(OrderId OrderId, CustomerId CustomerId, Money TotalAmount) : DomainEvent;
-public record OrderConfirmedEvent(OrderId OrderId) : DomainEvent;
-public record OrderCancelledEvent(OrderId OrderId, string Reason) : DomainEvent;
-
 // Order Aggregate Root
 [GenerateEntityId]
 public class Order : AggregateRoot<OrderId>, IAuditableWithUser
 {
+    #region Domain Events
+
+    public sealed record CreatedEvent(OrderId OrderId, CustomerId CustomerId, Money TotalAmount) : DomainEvent;
+    public sealed record ConfirmedEvent(OrderId OrderId) : DomainEvent;
+    public sealed record CancelledEvent(OrderId OrderId, string Reason) : DomainEvent;
+
+    #endregion
+
     private readonly List<OrderItem> _items = [];
 
     // Value Object 속성
@@ -1190,7 +1323,9 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
     public IReadOnlyList<OrderItem> Items => _items.AsReadOnly();
 
     // ORM용 기본 생성자
+#pragma warning disable CS8618
     private Order() { }
+#pragma warning restore CS8618
 
     // 내부 생성자
     private Order(
@@ -1217,7 +1352,7 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
     {
         var id = OrderId.New();
         var order = new Order(id, customerId, totalAmount, shippingAddress, createdBy);
-        order.AddDomainEvent(new OrderCreatedEvent(id, customerId, totalAmount));
+        order.AddDomainEvent(new CreatedEvent(id, customerId, totalAmount));
         return order;
     }
 
@@ -1259,7 +1394,7 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
         Status = OrderStatus.Confirmed;
         UpdatedAt = DateTime.UtcNow;
         UpdatedBy = updatedBy;
-        AddDomainEvent(new OrderConfirmedEvent(Id));
+        AddDomainEvent(new ConfirmedEvent(Id));
         return unit;
     }
 
@@ -1275,7 +1410,7 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
         Status = OrderStatus.Cancelled;
         UpdatedAt = DateTime.UtcNow;
         UpdatedBy = updatedBy;
-        AddDomainEvent(new OrderCancelledEvent(Id, reason));
+        AddDomainEvent(new CancelledEvent(Id, reason));
         return unit;
     }
 
