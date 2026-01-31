@@ -1,10 +1,13 @@
 using System.Collections.Concurrent;
 using LayeredArch.Domain.Entities;
 using LayeredArch.Domain.Repositories;
+using LayeredArch.Domain.ValueObjects;
+using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerator;
 using LanguageExt;
 using LanguageExt.Common;
 using Microsoft.Extensions.Logging;
+using static Functorium.Adapters.Errors.AdapterErrorType;
 using static LanguageExt.Prelude;
 
 namespace LayeredArch.Adapters.Persistence.Repositories;
@@ -51,7 +54,21 @@ public class InMemoryProductRepository : IProductRepository
                 return Fin.Succ(product);
             }
 
-            return Fin.Fail<Product>(Error.New($"상품 ID '{id}'을(를) 찾을 수 없습니다"));
+            return AdapterError.For<InMemoryProductRepository>(
+                new NotFound(),
+                id.ToString(),
+                $"상품 ID '{id}'을(를) 찾을 수 없습니다");
+        });
+    }
+
+    public virtual FinT<IO, Option<Product>> GetByName(ProductName name)
+    {
+        // Pipeline이 자동으로 Activity 생성 및 로깅 처리
+        return IO.lift(() =>
+        {
+            var product = _products.Values.FirstOrDefault(p =>
+                ((string)p.Name).Equals(name, StringComparison.OrdinalIgnoreCase));
+            return Fin.Succ(Optional(product));
         });
     }
 
@@ -72,7 +89,10 @@ public class InMemoryProductRepository : IProductRepository
         {
             if (!_products.ContainsKey(product.Id))
             {
-                return Fin.Fail<Product>(Error.New($"상품 ID '{product.Id}'을(를) 찾을 수 없습니다"));
+                return AdapterError.For<InMemoryProductRepository>(
+                    new NotFound(),
+                    product.Id.ToString(),
+                    $"상품 ID '{product.Id}'을(를) 찾을 수 없습니다");
             }
 
             _products[product.Id] = product;
@@ -80,13 +100,31 @@ public class InMemoryProductRepository : IProductRepository
         });
     }
 
-    public virtual FinT<IO, bool> ExistsByName(string name)
+    public virtual FinT<IO, Unit> Delete(ProductId id)
+    {
+        // Pipeline이 자동으로 Activity 생성 및 로깅 처리
+        return IO.lift(() =>
+        {
+            if (!_products.TryRemove(id, out _))
+            {
+                return AdapterError.For<InMemoryProductRepository>(
+                    new NotFound(),
+                    id.ToString(),
+                    $"상품 ID '{id}'을(를) 찾을 수 없습니다");
+            }
+
+            return Fin.Succ(unit);
+        });
+    }
+
+    public virtual FinT<IO, bool> ExistsByName(ProductName name, ProductId? excludeId = null)
     {
         // Pipeline이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
             bool exists = _products.Values.Any(p =>
-                ((string)p.Name).Equals(name, StringComparison.OrdinalIgnoreCase));
+                ((string)p.Name).Equals(name, StringComparison.OrdinalIgnoreCase) &&
+                (excludeId is null || p.Id != excludeId.Value));
             return Fin.Succ(exists);
         });
     }

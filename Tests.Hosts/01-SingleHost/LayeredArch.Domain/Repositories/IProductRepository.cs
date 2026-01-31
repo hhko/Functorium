@@ -1,4 +1,5 @@
 using LayeredArch.Domain.Entities;
+using LayeredArch.Domain.ValueObjects;
 using Functorium.Applications.Observabilities;
 
 namespace LayeredArch.Domain.Repositories;
@@ -21,6 +22,12 @@ public interface IProductRepository : IAdapter
     FinT<IO, Product> GetById(ProductId id);
 
     /// <summary>
+    /// 상품명으로 조회 (Optional).
+    /// 상품이 없으면 None을 반환합니다.
+    /// </summary>
+    FinT<IO, Option<Product>> GetByName(ProductName name);
+
+    /// <summary>
     /// 모든 상품 조회
     /// </summary>
     FinT<IO, Seq<Product>> GetAll();
@@ -31,7 +38,13 @@ public interface IProductRepository : IAdapter
     FinT<IO, Product> Update(Product product);
 
     /// <summary>
-    /// 상품명 중복 확인
+    /// 상품 삭제
     /// </summary>
-    FinT<IO, bool> ExistsByName(string name);
+    FinT<IO, Unit> Delete(ProductId id);
+
+    /// <summary>
+    /// 상품명 중복 확인.
+    /// excludeId가 지정되면 해당 상품은 제외하고 검사합니다.
+    /// </summary>
+    FinT<IO, bool> ExistsByName(ProductName name, ProductId? excludeId = null);
 }

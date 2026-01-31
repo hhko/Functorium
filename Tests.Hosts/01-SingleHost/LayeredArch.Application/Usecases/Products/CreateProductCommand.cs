@@ -1,14 +1,15 @@
 using LayeredArch.Domain.Entities;
 using LayeredArch.Domain.ValueObjects;
 using LayeredArch.Domain.Repositories;
-using Functorium.Abstractions.Errors;
+using Functorium.Applications.Errors;
 using Functorium.Applications.Linq;
+using static Functorium.Applications.Errors.ApplicationErrorType;
 
 namespace LayeredArch.Application.Usecases.Products;
 
 /// <summary>
 /// 상품 생성 Command - Entity Guide의 Apply 패턴 데모
-/// Value Object 생성 + Named Context 검증 + Apply 병합 패턴 적용
+/// Value Object 생성 + Apply 병합 패턴 적용
 /// </summary>
 public sealed class CreateProductCommand
 {
@@ -44,7 +45,7 @@ public sealed class CreateProductCommand
                 .MaximumLength(ProductName.MaxLength).WithMessage($"상품명은 {ProductName.MaxLength}자를 초과할 수 없습니다");
 
             RuleFor(x => x.Description)
-                .MaximumLength(500).WithMessage("설명은 500자를 초과할 수 없습니다");
+                .MaximumLength(ProductDescription.MaxLength).WithMessage($"설명은 {ProductDescription.MaxLength}자를 초과할 수 없습니다");
 
             RuleFor(x => x.Price)
                 .GreaterThan(0).WithMessage("가격은 0보다 커야 합니다");
@@ -64,7 +65,7 @@ public sealed class CreateProductCommand
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            // 1. Value Object 생성 + VO 없는 필드 검증 (Apply 패턴)
+            // 1. Value Object 생성 (Apply 패턴)
             var productResult = CreateProduct(request);
 
             // 2. 검증 실패 시 조기 반환
@@ -75,10 +76,16 @@ public sealed class CreateProductCommand
                     Fail: error => FinResponse.Fail<Response>(error));
             }
 
-            // 3. 중복 검사 및 저장
+            // 3. ProductName 생성 (중복 검사용)
+            var productName = ProductName.Create(request.Name).ThrowIfFail();
+
+            // 4. 중복 검사 및 저장
             FinT<IO, Response> usecase =
-                from exists in _productRepository.ExistsByName(request.Name)
-                from _ in guard(!exists, ApplicationErrors.ProductNameAlreadyExists(request.Name))
+                from exists in _productRepository.ExistsByName(productName)
+                from _ in guard(!exists, ApplicationError.For<CreateProductCommand>(
+                    new AlreadyExists(),
+                    request.Name,
+                    $"Product name already exists: '{request.Name}'"))
                 from product in _productRepository.Create((Product)productResult)
                 select new Response(
                     product.Id.ToString(),
@@ -93,43 +100,27 @@ public sealed class CreateProductCommand
         }
 
         /// <summary>
-        /// Entity Guide 패턴: VO Validate() + Named Context 검증 + Apply 병합
+        /// Entity Guide 패턴: VO Validate() + Apply 병합
         /// Validation 타입을 사용하여 병렬 검증 후 Entity 생성
         /// </summary>
         private static Fin<Product> CreateProduct(Request request)
         {
-            // VO가 있는 필드: Validate() 사용 (Validation<Error, T> 반환)
+            // 모든 필드: VO Validate() 사용 (Validation<Error, T> 반환)
             var name = ProductName.Validate(request.Name);
+            var description = ProductDescription.Validate(request.Description);
             var price = Money.Validate(request.Price);
             var stockQuantity = Quantity.Validate(request.StockQuantity);
 
-            // VO가 없는 필드: Named Context 사용
-            var description = ValidationRules.For("Description")
-                .NotNull(request.Description)
-                .ThenMaxLength(500);
-
             // 모두 튜플로 병합 - Apply로 병렬 검증
-            return (name, price, stockQuantity, description.Value)
-                .Apply((name, price, stockQuantity, description) =>
+            return (name, description, price, stockQuantity)
+                .Apply((n, d, p, s) =>
                     Product.Create(
-                        ProductName.Create(name).ThrowIfFail(),
-                        description,
-                        Money.Create(price).ThrowIfFail(),
-                        Quantity.Create(stockQuantity).ThrowIfFail()))
+                        ProductName.Create(n).ThrowIfFail(),
+                        ProductDescription.Create(d).ThrowIfFail(),
+                        Money.Create(p).ThrowIfFail(),
+                        Quantity.Create(s).ThrowIfFail()))
                 .As()
                 .ToFin();
         }
-    }
-
-    /// <summary>
-    /// ApplicationErrors - Application 계층 오류 정의
-    /// </summary>
-    internal static class ApplicationErrors
-    {
-        public static Error ProductNameAlreadyExists(string productName) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(ApplicationErrors)}.{nameof(CreateProductCommand)}.{nameof(ProductNameAlreadyExists)}",
-                errorCurrentValue: productName,
-                errorMessage: $"Product name already exists. Current value: '{productName}'");
     }
 }

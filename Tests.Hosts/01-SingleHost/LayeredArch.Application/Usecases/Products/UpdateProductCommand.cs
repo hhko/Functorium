@@ -1,7 +1,9 @@
 using LayeredArch.Domain.Entities;
 using LayeredArch.Domain.ValueObjects;
 using LayeredArch.Domain.Repositories;
+using Functorium.Applications.Errors;
 using Functorium.Applications.Linq;
+using static Functorium.Applications.Errors.ApplicationErrorType;
 
 namespace LayeredArch.Application.Usecases.Products;
 
@@ -47,6 +49,9 @@ public sealed class UpdateProductCommand
                 .NotEmpty().WithMessage("상품명은 필수입니다")
                 .MaximumLength(ProductName.MaxLength).WithMessage($"상품명은 {ProductName.MaxLength}자를 초과할 수 없습니다");
 
+            RuleFor(x => x.Description)
+                .MaximumLength(ProductDescription.MaxLength).WithMessage($"설명은 {ProductDescription.MaxLength}자를 초과할 수 없습니다");
+
             RuleFor(x => x.Price)
                 .GreaterThan(0).WithMessage("가격은 0보다 커야 합니다");
 
@@ -71,7 +76,7 @@ public sealed class UpdateProductCommand
                 throw new InvalidOperationException("시뮬레이션된 예외: 데모 목적으로 발생된 예외입니다");
             }
 
-            // 1. Value Object 생성 + VO 없는 필드 검증 (Apply 패턴)
+            // 1. Value Object 생성 (Apply 패턴)
             var updateData = CreateUpdateData(request);
             if (updateData.IsFail)
             {
@@ -84,8 +89,14 @@ public sealed class UpdateProductCommand
             var productId = ProductId.Create(request.ProductId);
             var (name, description, price, stockQuantity) = (UpdateData)updateData;
 
+            // 3. 중복 검사 및 업데이트
             FinT<IO, Response> usecase =
                 from existingProduct in _productRepository.GetById(productId)
+                from exists in _productRepository.ExistsByName(name, productId)
+                from _ in guard(!exists, ApplicationError.For<UpdateProductCommand>(
+                    new AlreadyExists(),
+                    request.Name,
+                    $"Product name already exists: '{request.Name}'"))
                 from updatedProduct in _productRepository.Update(
                     existingProduct.Update(name, description, price, stockQuantity))
                 select new Response(
@@ -101,35 +112,31 @@ public sealed class UpdateProductCommand
         }
 
         /// <summary>
-        /// Entity Guide 패턴: VO Validate() + Named Context 검증 + Apply 병합
+        /// Entity Guide 패턴: VO Validate() + Apply 병합
         /// </summary>
         private static Fin<UpdateData> CreateUpdateData(Request request)
         {
-            // VO가 있는 필드: Validate() 사용 (Validation<Error, T> 반환)
+            // 모든 필드: VO Validate() 사용 (Validation<Error, T> 반환)
             var name = ProductName.Validate(request.Name);
+            var description = ProductDescription.Validate(request.Description);
             var price = Money.Validate(request.Price);
             var stockQuantity = Quantity.Validate(request.StockQuantity);
 
-            // VO가 없는 필드: Named Context 사용
-            var description = ValidationRules.For("Description")
-                .NotNull(request.Description)
-                .ThenMaxLength(500);
-
             // 모두 튜플로 병합 - Apply로 병렬 검증
-            return (name, price, stockQuantity, description.Value)
-                .Apply((name, price, stockQuantity, description) =>
+            return (name, description, price, stockQuantity)
+                .Apply((n, d, p, s) =>
                     new UpdateData(
-                        ProductName.Create(name).ThrowIfFail(),
-                        description,
-                        Money.Create(price).ThrowIfFail(),
-                        Quantity.Create(stockQuantity).ThrowIfFail()))
+                        ProductName.Create(n).ThrowIfFail(),
+                        ProductDescription.Create(d).ThrowIfFail(),
+                        Money.Create(p).ThrowIfFail(),
+                        Quantity.Create(s).ThrowIfFail()))
                 .As()
                 .ToFin();
         }
 
         private sealed record UpdateData(
             ProductName Name,
-            string Description,
+            ProductDescription Description,
             Money Price,
             Quantity StockQuantity);
     }
