@@ -9,8 +9,13 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [x] 엔티티 기본 생성자 경고
 - [x] `Fin.Fail<T> -> AdapterError`
 - [x] 도메인 이벤트 중첩 클래스
-- [ ] 도메인 이벤트 Pub
-- [ ] 도메인 이벤트 Sub
+- [x] 도메인 이벤트 Pub
+- [x] 도메인 이벤트 구현 관련 테스트 구현
+- [x] ~~도메인 이벤트 Sub `Handler -> subscriber~~`
+- [X] 도메인 이벤트 Sub `namespace LayeredArch.Application.EventHandlers;` Usecase???
+- [ ] 이벤트도 파이프 라인이 호출되니?
+- [ ] entity-guide.md 재구성
+- [ ] usecase-implementation-guide.md 재구성
 ---
 - [ ] `ValidationRules<ProductName>.NotEmpty(value ?? "")  value ?? "" -> value`
 - [ ] `FinT<IO, bool> ExistsByName(ProductName name, ProductId? excludeId = null); -> Option<ProductId> excludeId`
@@ -42,14 +47,12 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ---
 - [ ] 소스 생성기 프로젝트 이름 변경 또는 통합?
   - Functorium.SourceGenerator
+- [ ] 스케줄러
+- [ ] 2개 호스트
 
-
+<br/>
 
 - [x] FinResponse.cs 파일 정리
-```
-
-```
-
 - [x] Books ValueObject 13 ~ 15 Framework 제거해서 개선
 - [x] 값 객체 유효성 검사 폴더 재구성: Typed, Contextual
 - [x] 문서 정리: 에러
