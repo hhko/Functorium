@@ -38,18 +38,18 @@
   <Folder Name="/Tutorials/Cqrs04Endpoint/Tests/">
     <Project Path="Tutorials/Cqrs04Endpoint/Tests/Cqrs04Endpoint.WebApi.Tests.Unit/Cqrs04Endpoint.WebApi.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Tutorials/Cqrs05Services/" />
-  <Folder Name="/Tutorials/Cqrs05Services/Src/">
-    <Project Path="Tutorials/Cqrs05Services/Src/Cqrs05Services.Messages/Cqrs05Services.Messages.csproj" />
-    <Project Path="Tutorials/Cqrs05Services/Src/InventoryService/InventoryService.csproj" />
-    <Project Path="Tutorials/Cqrs05Services/Src/OrderService/OrderService.csproj" />
+  <Folder Name="/Tutorials/Cqrs06Services/" />
+  <Folder Name="/Tutorials/Cqrs06Services/Src/">
+    <Project Path="Tutorials/Cqrs06Services/Src/Cqrs06Services.Messages/Cqrs06Services.Messages.csproj" />
+    <Project Path="Tutorials/Cqrs06Services/Src/InventoryService/InventoryService.csproj" />
+    <Project Path="Tutorials/Cqrs06Services/Src/OrderService/OrderService.csproj" />
   </Folder>
-  <Folder Name="/Tutorials/Cqrs05Services/Tests/">
+  <Folder Name="/Tutorials/Cqrs06Services/Tests/">
     <!--
-    <Project Path="Tutorials/Cqrs05Services/Tests/Cqrs05Services.Tests.Integration/Cqrs05Services.Tests.Integration.csproj" />
+    <Project Path="Tutorials/Cqrs06Services/Tests/Cqrs06Services.Tests.Integration/Cqrs06Services.Tests.Integration.csproj" />
     -->
-    <Project Path="Tutorials/Cqrs05Services/Tests/InventoryService.Tests.Unit/InventoryService.Tests.Unit.csproj" />
-    <Project Path="Tutorials/Cqrs05Services/Tests/OrderService.Tests.Unit/OrderService.Tests.Unit.csproj" />
+    <Project Path="Tutorials/Cqrs06Services/Tests/InventoryService.Tests.Unit/InventoryService.Tests.Unit.csproj" />
+    <Project Path="Tutorials/Cqrs06Services/Tests/OrderService.Tests.Unit/OrderService.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/Tutorials/Observability/" />
   <Folder Name="/Tutorials/Observability/Src/">
@@ -64,18 +64,18 @@
     <Project Path="Tutorials/Observability/Tests/Observability.Tests.Integration/Observability.Tests.Integration.csproj" />
     <Project Path="Tutorials/Observability/Tests/Observability.Tests.Unit/Observability.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Tutorials/Cqrs06EndpointLayered/" />
-  <Folder Name="/Tutorials/Cqrs06EndpointLayered/Src/">
-    <Project Path="Tutorials/Cqrs06EndpointLayered/Src/Cqrs06EndpointLayered.Adapters.Infrastructure/Cqrs06EndpointLayered.Adapters.Infrastructure.csproj" />
-    <Project Path="Tutorials/Cqrs06EndpointLayered/Src/Cqrs06EndpointLayered.Adapters.Persistence/Cqrs06EndpointLayered.Adapters.Persistence.csproj" />
-    <Project Path="Tutorials/Cqrs06EndpointLayered/Src/Cqrs06EndpointLayered.Adapters.Presentation/Cqrs06EndpointLayered.Adapters.Presentation.csproj" />
-    <Project Path="Tutorials/Cqrs06EndpointLayered/Src/Cqrs06EndpointLayered.Applications/Cqrs06EndpointLayered.Applications.csproj" />
-    <Project Path="Tutorials/Cqrs06EndpointLayered/Src/Cqrs06EndpointLayered.Domains/Cqrs06EndpointLayered.Domains.csproj" />
-    <Project Path="Tutorials/Cqrs06EndpointLayered/Src/Cqrs06EndpointLayered/Cqrs06EndpointLayered.csproj" />
+  <Folder Name="/Tutorials/Cqrs05EndpointLayered/" />
+  <Folder Name="/Tutorials/Cqrs05EndpointLayered/Src/">
+    <Project Path="Tutorials/Cqrs05EndpointLayered/Src/Cqrs05EndpointLayered.Adapters.Infrastructure/Cqrs05EndpointLayered.Adapters.Infrastructure.csproj" />
+    <Project Path="Tutorials/Cqrs05EndpointLayered/Src/Cqrs05EndpointLayered.Adapters.Persistence/Cqrs05EndpointLayered.Adapters.Persistence.csproj" />
+    <Project Path="Tutorials/Cqrs05EndpointLayered/Src/Cqrs05EndpointLayered.Adapters.Presentation/Cqrs05EndpointLayered.Adapters.Presentation.csproj" />
+    <Project Path="Tutorials/Cqrs05EndpointLayered/Src/Cqrs05EndpointLayered.Applications/Cqrs05EndpointLayered.Applications.csproj" />
+    <Project Path="Tutorials/Cqrs05EndpointLayered/Src/Cqrs05EndpointLayered.Domains/Cqrs05EndpointLayered.Domains.csproj" />
+    <Project Path="Tutorials/Cqrs05EndpointLayered/Src/Cqrs05EndpointLayered/Cqrs05EndpointLayered.csproj" />
   </Folder>
-  <Folder Name="/Tutorials/Cqrs06EndpointLayered/Tests/">
-    <Project Path="Tutorials/Cqrs06EndpointLayered/Tests/Cqrs06EndpointLayered.Tests.Integration/Cqrs06EndpointLayered.Tests.Integration.csproj" />
-    <Project Path="Tutorials/Cqrs06EndpointLayered/Tests/Cqrs06EndpointLayered.Tests.Unit/Cqrs06EndpointLayered.Tests.Unit.csproj" />
+  <Folder Name="/Tutorials/Cqrs05EndpointLayered/Tests/">
+    <Project Path="Tutorials/Cqrs05EndpointLayered/Tests/Cqrs05EndpointLayered.Tests.Integration/Cqrs05EndpointLayered.Tests.Integration.csproj" />
+    <Project Path="Tutorials/Cqrs05EndpointLayered/Tests/Cqrs05EndpointLayered.Tests.Unit/Cqrs05EndpointLayered.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/Tutorials/TwoWayMappingLayered/" />
   <Folder Name="/Tutorials/TwoWayMappingLayered/Src/">
