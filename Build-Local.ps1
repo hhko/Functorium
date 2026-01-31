@@ -9,7 +9,7 @@
   - Release 모드로 솔루션 빌드
   - 버전 정보 표시
   - 테스트 실행 및 코드 커버리지 수집 (Microsoft Testing Platform)
-  - 핵심 레이어(Domains, Applications) 및 전체 커버리지 출력
+  - 프로젝트별 및 전체 커버리지 출력
   - HTML 리포트 생성
   - NuGet 패키지 생성 (.nupkg, .snupkg)
 
@@ -99,7 +99,6 @@ $scriptRoot = $PSScriptRoot
 
 $script:TOTAL_STEPS = 10
 $script:Configuration = "Release"
-$script:CoreLayerPatterns = @("*.Domain", "*.Domains", "*.Application", "*.Applications")
 
 # These will be set after solution file is found
 $script:SolutionDir = $null
@@ -158,7 +157,6 @@ FEATURES
   5. Generate HTML coverage report (ReportGenerator)
   6. Display coverage summary in console
      - Project: Projects matching prefix (e.g., Functorium.*)
-     - Core Layer: Domains + Applications projects
      - Full: All projects (excluding tests)
   7. Generate NuGet packages (.nupkg and .snupkg)
 
@@ -524,39 +522,6 @@ function Show-CoverageReport {
     else {
       Write-WarningMessage "No matching projects found"
     }
-  }
-
-  # Core layer coverage
-  Write-Host ""
-  Write-Host "[Core Layer Coverage] (Domains + Applications)" -ForegroundColor Yellow
-  Write-Host ("{0,-40} {1,15} {2,15}" -f "Assembly", "Line Coverage", "Branch Coverage") -ForegroundColor White
-  Write-Host ("-" * 72) -ForegroundColor DarkGray
-
-  $corePackages = [System.Collections.Generic.List[PSObject]]::new()
-
-  foreach ($pkg in $packageData) {
-    $isCoreLayer = $false
-
-    foreach ($pattern in $script:CoreLayerPatterns) {
-      if ($pkg.Name -like $pattern) {
-        $isCoreLayer = $true
-        break
-      }
-    }
-
-    if ($isCoreLayer) {
-      $lineRate = $pkg.LineRate * 100
-      $branchRate = $pkg.BranchRate * 100
-
-      Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f $pkg.Name, $lineRate, $branchRate)
-      $corePackages.Add($pkg)
-    }
-  }
-
-  if ($corePackages.Count -gt 0) {
-    $avg = Get-AverageCoverage -Packages $corePackages
-    Write-Host ("-" * 72) -ForegroundColor DarkGray
-    Write-Host ("{0,-40} {1,14:N1}% {2,14:N1}%" -f "Total (avg)", $avg.LineRate, $avg.BranchRate) -ForegroundColor Green
   }
 
   # Full coverage
