@@ -38,6 +38,8 @@ dotnet test -- --filter-class "MyNamespace.MyTestClass"
 
 > **참고**: MTP 모드에서는 테스트 옵션을 `--` 구분자 뒤에 전달합니다.
 
+> **⚠️ 주의**: xUnit v3(MTP 모드)에서는 VSTest의 `--filter` 옵션이 지원되지 않습니다. `--filter-class`, `--filter-method` 등을 사용하세요.
+
 ### 주요 절차
 
 **1. 테스트 작성:**
@@ -194,6 +196,12 @@ xUnit v3는 MTP 버전을 선택할 수 있습니다:
 | MTP | `-- --filter-method` | `dotnet test -- --filter-method "MyTest"` |
 
 > **참고**: VSTest 모드에서는 `--filter` 옵션을 `--` 구분자 없이 사용합니다.
+
+> **⚠️ 중요**: xUnit v3(MTP 모드)에서 `--filter` 옵션 사용 시 다음 오류가 발생합니다:
+> ```
+> 알 수 없는 옵션 '--filter'
+> ```
+> 이 경우 `--filter-class` 또는 `--filter-method` 옵션을 사용하세요.
 
 ### 코드 커버리지 옵션 (MTP)
 
@@ -591,6 +599,36 @@ using Xunit.Abstractions;
 // 변경 후 (v3)
 using Xunit;
 ```
+
+### "알 수 없는 옵션 '--filter'" 오류
+
+**원인**: xUnit v3(MTP 모드)에서는 VSTest의 `--filter` 옵션이 지원되지 않음
+
+**증상:**
+```
+알 수 없는 옵션 '--filter'
+```
+
+**해결:**
+
+MTP 모드에서는 다음 필터 옵션을 사용하세요:
+
+| VSTest 옵션 | MTP 대체 옵션 | 예시 |
+|-------------|--------------|------|
+| `--filter "FullyQualifiedName~MyTest"` | `--filter-method "*MyTest*"` | 메서드명 필터 |
+| `--filter "ClassName~MyClass"` | `--filter-class "*MyClass*"` | 클래스명 필터 |
+| `--filter "Namespace~MyNamespace"` | `--filter-namespace "*MyNamespace*"` | 네임스페이스 필터 |
+
+```bash
+# 잘못된 사용 (MTP에서 지원 안 됨)
+dotnet test --filter "FullyQualifiedName~DomainEventPublisherTests"
+
+# 올바른 사용 (MTP)
+dotnet test --filter-class "*DomainEventPublisherTests"
+dotnet test --filter-method "*ReturnsSuccess*"
+```
+
+> **참고**: `--` 구분자는 .NET 10 SDK 이상에서는 선택사항입니다. .NET 8-9에서는 `dotnet test -- --filter-class "..."` 형식으로 사용해야 합니다.
 
 ### 비동기 테스트가 실패할 때
 

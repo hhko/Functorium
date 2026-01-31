@@ -225,7 +225,8 @@ Error (LanguageExt)
 | 값 객체 구현 | [valueobject-guide.md](./valueobject-guide.md) §개요, §기반 클래스 | 기반 클래스 선택, Create/Validate 패턴 |
 | Entity 구현 | [entity-guide.md](./entity-guide.md) §기반 클래스 | Entity vs AggregateRoot, ID 시스템 |
 | 검증 로직 작성 | [valueobject-guide.md](./valueobject-guide.md) §검증 시스템 | `ValidationRules<T>`, 순차/병렬 검증 |
-| 도메인 이벤트 | [entity-guide.md](./entity-guide.md) §도메인 이벤트 | 이벤트 정의, 발행 패턴 |
+| 도메인 이벤트 | [entity-guide.md](./entity-guide.md) §도메인 이벤트 | 이벤트 정의, 발행/구독 패턴 |
+| 이벤트 발행 | [usecase-implementation-guide.md](./usecase-implementation-guide.md) §도메인 이벤트 발행 | IDomainEventPublisher, 이벤트 핸들러 |
 | 에러 타입 정의 | [error-guide.md](./error-guide.md) | 레이어별 에러 타입, 네이밍 규칙 |
 | 에러 테스트 작성 | [error-testing-guide.md](./error-testing-guide.md) | 어설션 메서드, 테스트 패턴 |
 | 검증 재사용 | [valueobject-guide.md](./valueobject-guide.md) §FluentValidation | 유스케이스 파이프라인 통합 |
