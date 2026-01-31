@@ -1,53 +1,53 @@
 ```shell
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
-
-# 2.2 각 경계에서의 변환 책임
-
-| 경계 | 변환 주체 | 변환 내용 | 에러 처리 |
-|---|---|---|---|
-| Presentation → Application | 프레임워크 | JSON → Usecase.Request | 400 Bad Request |
-| Application 내부 | Usecase 클래스 | Primitive → 값 객체 | FinResponse.Fail |
-| Application → Infrastructure | Adapter Mapper | 값 객체 → 기술 DTO | FinT<IO, T> |
-| Infrastructure → External | HttpClient / DbContext | DTO → 외부 프로토콜 | Exception → Fin.Fail |
-
+- [x] 소스 생성기에서 Attribute 중복 제거
+- [x] 튜토리얼 번호 정정 05 <-> 06
+- [x] 빌드 스크립트에서 레이어별 코드 커버리지 기능 제거
+- [x] 소스 생성기 Generator 코드 위치 정정
+- [x] Tests.Hosts - SingleHost 대상으로 .md 문서 적용, 문서 개선
+- [x] 엔티티 기본 생성자 경고
+- [x] `Fin.Fail<T> -> AdapterError`
+- [x] 도메인 이벤트 중첩 클래스
+- [ ] 도메인 이벤트 Pub
+- [ ] 도메인 이벤트 Sub
 ---
-
-# 1.1 핵심 차이점 비교
-
-| 관점 | Usecase Request/Response | Port Request/Response |
-|---|---|---|
-| 위치 | Command/Query 클래스 내부 | IAdapter 인터페이스 내부 |
-| 목적 | 외부 API 경계 정의 | 내부 시스템 간 계약 정의 |
-| 타입 선호도 | Primitive (string, Guid, decimal) | 도메인 값 객체 (ProductId, Money) |
-| 검증 책임 | FluentValidation 입력 검증 | 값 객체 불변식으로 보장 |
-| 직렬화 | JSON 직렬화 필요 (외부 노출) | 직렬화 불필요 (내부 사용) |
-
+- [ ] `ValidationRules<ProductName>.NotEmpty(value ?? "")  value ?? "" -> value`
+- [ ] `FinT<IO, bool> ExistsByName(ProductName name, ProductId? excludeId = null); -> Option<ProductId> excludeId`
+- [ ] LINQ 예외?
+- [ ] As().ToFin()
 ---
+- [ ] DTO Usecase
+- [ ] DTO FastEndpoint
+- [ ] DTO IAdapter
+- [ ] DTO EFCore + Entity?
+- [ ] DTO 성능 고려
+---
+- [ ] Usecase
+  ```cs
+  return (name, price, stockQuantity, description.Value)
+    .Apply((name, price, stockQuantity, description) =>
+        Product.Create(
+            ProductName.Create(name).ThrowIfFail(),
+            description,
+            Money.Create(price).ThrowIfFail(),
+            Quantity.Create(stockQuantity).ThrowIfFail()))
+    .As()
+    .ToFin();
+  ```
+- [ ] LINQ 과정에서 발생하는 예외 -> Fin<T> 실패로 처리
+---
+- [ ] 커스텀 관찰 가능성 Usecase
+- [ ] 커스텀 관찰 가능성 IAdapter
+---
+- [ ] 소스 생성기 프로젝트 이름 변경 또는 통합?
+  - Functorium.SourceGenerator
 
-# 설계 원칙
-
-| 원칙 | 설명 |
-|---|---|
-| 일관된 네이밍 | Usecase와 동일하게 Interface.Request, Interface.Response |
-| 기술 독립성 | Port의 Request/Response는 도메인 값 객체만 사용 |
-| 변환 책임 분리 | Usecase: Primitive → VO / Adapter: VO → DTO |
-| 변환 캡슐화 | Mapper 클래스로 DTO ↔ Response 변환, internal 접근 제한 |
-| 에러 통합 | AdapterError + AdapterErrorType으로 일관된 에러 처리 |
-| 값 객체 공유 | 도메인 값 객체는 모든 레이어에서 공유 |
 
 
 - [x] FinResponse.cs 파일 정리
 ```
-            return (name, price, stockQuantity, description.Value)
-                .Apply((name, price, stockQuantity, description) =>
-                    Product.Create(
-                        ProductName.Create(name).ThrowIfFail(),
-                        description,
-                        Money.Create(price).ThrowIfFail(),
-                        Quantity.Create(stockQuantity).ThrowIfFail()))
-                .As()
-                .ToFin();
+
 ```
 
 - [x] Books ValueObject 13 ~ 15 Framework 제거해서 개선
@@ -111,6 +111,20 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [ ] Dapr 통합
 
 
+```
+솔루션 구성
+서비스 구성
+  - 레이어 구성
+  - 레이별 프로젝트 참조
+  - using.cs
+  - AssemblyReference.cs
+  - 레이어별 프로젝트 주/부수 목표 정의
+  - 부수 목표: 의존성 등록
+
+
+- 용어 문서
+- 유스케이스 문서
+```
 
 ## 로드맵
 ### AI 도구
