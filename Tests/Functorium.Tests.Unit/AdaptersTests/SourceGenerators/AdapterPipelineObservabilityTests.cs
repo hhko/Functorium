@@ -1,5 +1,5 @@
 using Functorium.Adapters.Observabilities.Naming;
-using Functorium.Adapters.SourceGenerator;
+using Functorium.Adapters.SourceGenerator.Generators.AdapterPipelineGenerator;
 using Functorium.Testing.Actions.SourceGenerators;
 
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;

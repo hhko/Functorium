@@ -1,4 +1,4 @@
-using Functorium.Adapters.SourceGenerator;
+using Functorium.Adapters.SourceGenerator.Generators.AdapterPipelineGenerator;
 using Functorium.Testing.Actions.SourceGenerators;
 using Microsoft.CodeAnalysis;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
