@@ -519,6 +519,7 @@ public class Order : AggregateRoot<OrderId>
 - 이벤트 소유권이 타입 시스템에서 명확 (`Order.CreatedEvent`)
 - IntelliSense에서 `Order.`만 치면 관련 이벤트 모두 표시
 - Entity 이름 중복 제거 (`OrderCreatedEvent` → `Order.CreatedEvent`)
+- **Event Handler에서 이벤트 발행 주체 명시**: Handler가 `IDomainEventHandler<Product.CreatedEvent>`를 상속받으면, 코드를 읽는 것만으로 "Product Entity가 발행한 이벤트"임을 즉시 파악 가능
 
 **사용 예시**:
 ```csharp
@@ -531,7 +532,7 @@ public void Handle(Order.CreatedEvent @event) { ... }
 
 ### 이벤트 발행 패턴
 
-AggregateRoot 내에서 `AddDomainEvent()`를 사용하여 이벤트를 발행합니다.
+AggregateRoot 내에서 `AddDomainEvent()`를 사용하여 이벤트를 수집합니다.
 
 ```csharp
 [GenerateEntityId]
@@ -579,33 +580,80 @@ public class Order : AggregateRoot<OrderId>
 }
 ```
 
-**이벤트 처리 (Application Layer):**
+### 이벤트 Pub/Sub (발행/구독)
 
-이벤트는 일반적으로 Application Layer에서 처리됩니다:
+`IDomainEvent`는 Mediator의 `INotification`을 확장하여 Pub/Sub 통합을 지원합니다.
+
+**이벤트 발행 (Application Layer에서):**
+
+`IDomainEventPublisher`를 사용하여 Repository 저장 후 이벤트를 발행합니다. `IDomainEventPublisher`는 `FinT<IO, Unit>`을 반환하므로 Repository/Port와 동일한 LINQ 체이닝 패턴으로 사용할 수 있습니다:
 
 ```csharp
-public class OrderCommandHandler
+public sealed class Usecase(
+    IProductRepository productRepository,
+    IDomainEventPublisher eventPublisher)
+    : ICommandUsecase<Request, Response>
 {
-    private readonly IOrderRepository _repository;
-    private readonly IEventDispatcher _eventDispatcher;
-
-    public async Task<Fin<Unit>> ConfirmOrderAsync(OrderId orderId)
+    public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken ct)
     {
-        var order = await _repository.GetByIdAsync(orderId);
-        var result = order.Confirm();
+        // 1. Entity 생성/수정
+        var product = Product.Create(...);
 
-        if (result.IsSucc)
-        {
-            await _repository.SaveAsync(order);
-            // 이벤트 발행
-            await _eventDispatcher.DispatchAsync(order.DomainEvents);
-            order.ClearDomainEvents();
-        }
+        // 2. Repository 저장 + 이벤트 발행 (LINQ 체이닝)
+        FinT<IO, Response> usecase =
+            from savedProduct in _productRepository.Create(product)
+            from _ in _eventPublisher.PublishEvents(savedProduct, ct)  // 저장 성공 후 이벤트 발행
+            select new Response(...);
 
-        return result;
+        Fin<Response> response = await usecase.Run().RunAsync();
+        return response.ToFinResponse();
     }
 }
 ```
+
+**이벤트 핸들러 (구독):**
+
+`IDomainEventHandler<TEvent>`를 구현하여 이벤트를 구독합니다:
+
+```csharp
+using Functorium.Applications.Events;
+
+public sealed class ProductCreatedEventHandler : IDomainEventHandler<Product.CreatedEvent>
+{
+    private readonly ILogger<ProductCreatedEventHandler> _logger;
+
+    public ProductCreatedEventHandler(ILogger<ProductCreatedEventHandler> logger)
+    {
+        _logger = logger;
+    }
+
+    public ValueTask Handle(Product.CreatedEvent notification, CancellationToken ct)
+    {
+        // 사이드 이펙트 처리: 로깅, 알림, 캐시 무효화 등
+        _logger.LogInformation(
+            "[DomainEvent] Product created: {ProductId}, Name: {Name}",
+            notification.ProductId,
+            notification.Name);
+
+        return ValueTask.CompletedTask;
+    }
+}
+```
+
+**핸들러 자동 등록:**
+
+Mediator 소스 생성기가 `IDomainEventHandler<T>` 구현체를 자동으로 검색하여 DI에 등록합니다. `AddMediator()` 호출 후 `RegisterDomainEventPublisher()`를 호출하면 됩니다:
+
+```csharp
+services.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);
+services.RegisterDomainEventPublisher();  // IDomainEventPublisher 등록
+```
+
+**트랜잭션 고려사항:**
+
+- 이벤트 발행은 트랜잭션 외부에서 실행됩니다
+- 발행 실패 시 비즈니스 로직은 이미 커밋됨 (eventual consistency)
+- 강한 일관성이 필요하면 Outbox 패턴을 고려하세요
 
 ---
 
