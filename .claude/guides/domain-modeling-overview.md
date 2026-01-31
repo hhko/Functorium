@@ -320,8 +320,21 @@ public void Create_ShouldSucceed_WhenEmailIsValid()
 | [error-guide.md](./error-guide.md) | 에러 시스템 | 에러 정의, 네이밍 규칙, 레이어별 에러 타입 |
 | [error-testing-guide.md](./error-testing-guide.md) | 에러 테스트 | 어설션 메서드, 테스트 패턴, 모범 사례 |
 | [unit-testing-guide.md](./unit-testing-guide.md) | 단위 테스트 | 테스트 규칙, 네이밍 규칙, 체크리스트 |
+| [usecase-implementation-guide.md](./usecase-implementation-guide.md) | Usecase 구현 | CQRS 패턴, Apply 병합, ApplicationErrors 패턴 |
 
-## 7. 참고 자료
+## 7. 실전 예제 프로젝트
+
+LayeredArch 샘플 프로젝트에서 실제 구현을 확인할 수 있습니다:
+
+| 개념 | 예제 파일 |
+|------|----------|
+| 값 객체 | `Tests.Hosts/01-SingleHost/LayeredArch.Domain/ValueObjects/` |
+| Entity | `Tests.Hosts/01-SingleHost/LayeredArch.Domain/Entities/Product.cs` |
+| Repository | `Tests.Hosts/01-SingleHost/LayeredArch.Domain/Repositories/IProductRepository.cs` |
+| Usecase | `Tests.Hosts/01-SingleHost/LayeredArch.Application/Usecases/Products/` |
+| Adapter | `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Repositories/` |
+
+## 8. 참고 자료
 
 - [LanguageExt](https://github.com/louthy/language-ext) - 함수형 프로그래밍 라이브러리
 - [Ardalis.SmartEnum](https://github.com/ardalis/SmartEnum) - 타입 안전한 열거형

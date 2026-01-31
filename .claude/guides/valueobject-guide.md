@@ -1476,6 +1476,73 @@ public sealed class Money : ValueObject
 
 ---
 
+## Application Layer에서 VO 검증 병합
+
+Usecase에서 여러 ValueObject를 동시에 검증하고 Entity를 생성할 때 Apply 패턴을 사용합니다.
+
+### Apply 병합 패턴 (Usecase 내부)
+
+```csharp
+private static Fin<Product> CreateProduct(Request request)
+{
+    // 1. 모든 필드: VO Validate() 호출 (Validation<Error, T> 반환)
+    var name = ProductName.Validate(request.Name);
+    var description = ProductDescription.Validate(request.Description);
+    var price = Money.Validate(request.Price);
+    var stockQuantity = Quantity.Validate(request.StockQuantity);
+
+    // 2. Apply로 병렬 검증 후 Entity 생성
+    return (name, description, price, stockQuantity)
+        .Apply((n, d, p, s) => Product.Create(
+            ProductName.Create(n).ThrowIfFail(),
+            ProductDescription.Create(d).ThrowIfFail(),
+            Money.Create(p).ThrowIfFail(),
+            Quantity.Create(s).ThrowIfFail()))
+        .As()
+        .ToFin();
+}
+```
+
+### 패턴 설명
+
+| 단계 | 설명 |
+|------|------|
+| Validate() 호출 | 모든 필드의 검증을 Validation<Error, T>로 수집 |
+| Apply 병합 | 모든 검증이 성공해야 Entity 생성 진행 |
+| ThrowIfFail() | 이미 검증된 값이므로 안전하게 VO 변환 |
+
+### VO가 없는 필드의 검증 (Named Context)
+
+모든 필드가 Value Object로 정의되지 않을 경우 Named Context 검증을 사용합니다:
+
+```csharp
+private static Fin<Product> CreateProduct(Request request)
+{
+    // VO가 있는 필드
+    var name = ProductName.Validate(request.Name);
+    var price = Money.Validate(request.Price);
+
+    // VO가 없는 필드: Named Context 사용
+    var note = ValidationRules.For("Note")
+        .NotEmpty(request.Note)
+        .ThenMaxLength(500);
+
+    // 모두 튜플로 병합 - Apply로 병렬 검증
+    return (name, price, note.Value)
+        .Apply((n, p, noteValue) =>
+            Product.Create(
+                ProductName.Create(n).ThrowIfFail(),
+                noteValue,
+                Money.Create(p).ThrowIfFail()))
+        .As()
+        .ToFin();
+}
+```
+
+> **참고**: 자주 사용되는 필드는 Named Context 대신 별도의 ValueObject로 정의하는 것을 권장합니다.
+
+---
+
 ## FAQ
 
 값 객체 구현 시 자주 받는 질문들입니다. 위 내용을 읽고도 헷갈리는 부분이 있다면 이 섹션을 참고하세요.

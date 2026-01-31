@@ -416,6 +416,81 @@ public interface IEquipmentApiService : IAdapter
 - 여러 메서드에서 재사용되면 별도 타입으로 분리
 - 모든 중첩 record는 sealed
 
+### Repository 인터페이스 설계 원칙
+
+#### 파라미터 타입 원칙
+
+| 원칙 | 설명 | 예시 |
+|------|------|------|
+| **VO 우선** | 원시 타입 대신 값 객체 사용 | `ExistsByName(ProductName name)` |
+| **선택적 파라미터** | null 가능한 경우 명시 | `ProductId? excludeId = null` |
+| **Entity ID 타입** | 강타입 ID 사용 | `GetById(ProductId id)` |
+
+#### 메서드 시그니처 패턴
+
+```csharp
+public interface IProductRepository : IAdapter
+{
+    // 생성: Entity 반환
+    FinT<IO, Product> Create(Product product);
+
+    // 조회 (단일): 없으면 Error
+    FinT<IO, Product> GetById(ProductId id);
+
+    // 조회 (단일, Optional): 없으면 None
+    FinT<IO, Option<Product>> GetByName(ProductName name);
+
+    // 조회 (목록): 빈 Seq도 성공
+    FinT<IO, Seq<Product>> GetAll();
+
+    // 존재 확인: bool 반환
+    FinT<IO, bool> ExistsByName(ProductName name, ProductId? excludeId = null);
+
+    // 삭제: Unit 반환
+    FinT<IO, Unit> Delete(ProductId id);
+
+    // 업데이트: 변경된 Entity 반환
+    FinT<IO, Product> Update(Product product);
+}
+```
+
+#### 메서드 반환 타입 가이드
+
+| 작업 | 반환 타입 | 설명 |
+|------|----------|------|
+| **Create** | `FinT<IO, Entity>` | 생성된 Entity 반환 |
+| **GetById** | `FinT<IO, Entity>` | 없으면 Error (필수 조회) |
+| **GetByX (Optional)** | `FinT<IO, Option<Entity>>` | 없으면 None (선택 조회) |
+| **GetAll / GetMany** | `FinT<IO, Seq<Entity>>` | 빈 목록도 성공 |
+| **ExistsBy** | `FinT<IO, bool>` | 존재 여부만 확인 |
+| **Update** | `FinT<IO, Entity>` | 업데이트된 Entity 반환 |
+| **Delete** | `FinT<IO, Unit>` | 성공/실패만 반환 |
+
+#### ExistsByName with excludeId 패턴
+
+업데이트 시 자기 자신을 제외하고 중복 검사가 필요한 경우:
+
+```csharp
+// 인터페이스
+FinT<IO, bool> ExistsByName(ProductName name, ProductId? excludeId = null);
+
+// 구현
+public virtual FinT<IO, bool> ExistsByName(ProductName name, ProductId? excludeId = null)
+{
+    return IO.lift(() =>
+    {
+        bool exists = _products.Values.Any(p =>
+            ((string)p.Name).Equals(name, StringComparison.OrdinalIgnoreCase) &&
+            (excludeId is null || p.Id != excludeId.Value));
+        return Fin.Succ(exists);
+    });
+}
+
+// Usecase에서 사용 (UpdateProductCommand)
+from exists in _productRepository.ExistsByName(name, productId)
+from _ in guard(!exists, ApplicationErrors.ProductNameAlreadyExists(request.Name))
+```
+
 ---
 
 ## GeneratePipeline 소스 생성기
@@ -862,6 +937,9 @@ namespace MyApp.Infrastructure.ExternalApis;
 /// <summary>
 /// 외부 결제 API 서비스 구현
 /// </summary>
+using Functorium.Adapters.Errors;
+using static Functorium.Adapters.Errors.AdapterErrorType;
+
 [GeneratePipeline]
 public class PaymentApiService : IPaymentApiService
 {
@@ -891,7 +969,10 @@ public class PaymentApiService : IPaymentApiService
                 {
                     var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
                     return Fin.Fail<PaymentResponse>(
-                        AdapterErrors.ApiCallFailed(response.StatusCode, errorContent));
+                        AdapterError.For<PaymentApiService>(
+                            new Custom("ApiCallFailed"),
+                            $"Status: {response.StatusCode}",
+                            errorContent));
                 }
 
                 var result = await response.Content
@@ -899,30 +980,20 @@ public class PaymentApiService : IPaymentApiService
 
                 return result is not null
                     ? Fin.Succ(result)
-                    : Fin.Fail<PaymentResponse>(AdapterErrors.ResponseDataNull("/api/payments"));
+                    : Fin.Fail<PaymentResponse>(
+                        AdapterError.For<PaymentApiService>(
+                            new Null(),
+                            "/api/payments",
+                            "Response data is null"));
             }
             catch (Exception ex)
             {
-                return Fin.Fail<PaymentResponse>(Error.New(ex));
+                return Fin.Fail<PaymentResponse>(
+                    AdapterError.FromException<PaymentApiService>(
+                        new Custom("HttpException"),
+                        ex));
             }
         });
-    }
-
-    /// <summary>
-    /// Adapter 계층 에러 정의
-    /// </summary>
-    private static class AdapterErrors
-    {
-        public static Error ApiCallFailed(HttpStatusCode statusCode, string content) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(AdapterErrors)}.{nameof(PaymentApiService)}.{nameof(ApiCallFailed)}",
-                errorCurrentValue: $"Status: {statusCode}",
-                errorMessage: content);
-
-        public static Error ResponseDataNull(string requestUri) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(AdapterErrors)}.{nameof(PaymentApiService)}.{nameof(ResponseDataNull)}",
-                errorCurrentValue: requestUri);
     }
 }
 ```
@@ -1072,6 +1143,39 @@ internal static class ProductMapper
 ---
 
 ## 에러 처리 통합
+
+### Error 반환 단순화
+
+LanguageExt는 `Error → Fin<T>` 암시적 변환을 제공합니다.
+따라서 `Fin.Fail<T>(error)` 대신 `error`를 직접 반환할 수 있습니다:
+
+```csharp
+// 기존 방식 (verbose)
+return Fin.Fail<Money>(AdapterError.For<MyAdapter>(
+    new NotFound(), context, "Not found"));
+
+// 권장 방식 (implicit conversion)
+return AdapterError.For<MyAdapter>(
+    new NotFound(), context, "Not found");
+```
+
+예외 처리에서도 동일하게 적용됩니다:
+
+```csharp
+catch (HttpRequestException ex)
+{
+    // 기존 방식
+    return Fin.Fail<Money>(AdapterError.FromException<MyAdapter>(
+        new ConnectionFailed("ServiceName"), ex));
+
+    // 권장 방식
+    return AdapterError.FromException<MyAdapter>(
+        new ConnectionFailed("ServiceName"), ex);
+}
+```
+
+> **참고**: 메서드 반환 타입이 `Fin<T>` 또는 `FinT<IO, T>`로 명시되어 있어야
+> 암시적 변환이 작동합니다.
 
 ### FinT<IO, T>와 AdapterError 연계
 

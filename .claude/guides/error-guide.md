@@ -1,20 +1,32 @@
 # 레이어별 에러 시스템 가이드
 
-이 문서는 Functorium 프로젝트에서 각 아키텍처 레이어(Domain, Application, Adapter)별로 에러를 정의하고 명명하는 방법을 설명합니다.
+이 문서는 Functorium 프로젝트에서 각 아키텍처 레이어(Domain, Application, Adapter)별로 에러를 정의하고 반환하는 방법을 설명합니다.
 
 ## 목차
 
 - [1. 개요](#1-개요)
-- [2. 에러 네이밍 규칙](#2-에러-네이밍-규칙)
-- [3. Domain 레이어 에러](#3-domain-레이어-에러)
-- [4. Application 레이어 에러](#4-application-레이어-에러)
-- [5. Adapter 레이어 에러](#5-adapter-레이어-에러)
-- [6. Custom 에러 가이드](#6-custom-에러-가이드)
-- [7. 체크리스트](#7-체크리스트)
+- [2. Fin과 에러 반환 패턴](#2-fin과-에러-반환-패턴)
+- [3. 에러 네이밍 규칙](#3-에러-네이밍-규칙)
+- [4. Domain 레이어 에러](#4-domain-레이어-에러)
+- [5. Application 레이어 에러](#5-application-레이어-에러)
+- [6. Adapter 레이어 에러](#6-adapter-레이어-에러)
+- [7. Custom 에러 가이드](#7-custom-에러-가이드)
+- [8. 레이어별 에러 타입 요약](#8-레이어별-에러-타입-요약)
+- [9. 체크리스트](#9-체크리스트)
+- [10. 참고 문서](#10-참고-문서)
+- [11. 변경 이력](#11-변경-이력)
 
 ---
 
 ## 1. 개요
+
+### 핵심 원칙
+
+Functorium의 에러 시스템은 다음 원칙을 따릅니다:
+
+1. **레이어별 에러 팩토리 사용**: 각 레이어에 맞는 `DomainError`, `ApplicationError`, `AdapterError` 팩토리 메서드 사용
+2. **암시적 변환 활용**: `Fin.Fail<T>(error)` 대신 `error` 직접 반환 (LanguageExt 암시적 변환)
+3. **타입 안전 에러 코드**: 문자열 대신 `DomainErrorType`, `ApplicationErrorType`, `AdapterErrorType` 사용
 
 ### 에러 코드 형식
 
@@ -28,7 +40,7 @@
 |--------|--------|------|
 | Domain | `DomainErrors` | `DomainErrors.Email.Empty` |
 | Application | `ApplicationErrors` | `ApplicationErrors.CreateProductCommand.NotFound` |
-| Adapter | `AdapterErrors` | `AdapterErrors.UsecaseValidationPipeline.PipelineValidation` |
+| Adapter | `AdapterErrors` | `AdapterErrors.ProductRepository.NotFound` |
 
 ### 레이어별 사용 시점
 
@@ -40,7 +52,165 @@
 
 ---
 
-## 2. 에러 네이밍 규칙
+## 2. Fin과 에러 반환 패턴
+
+### Fin<T> 개요
+
+`Fin<T>`는 LanguageExt에서 제공하는 성공/실패를 표현하는 타입입니다:
+
+```csharp
+// 성공
+Fin<Product> success = product;           // 암시적 변환
+Fin<Product> success = Fin.Succ(product); // 명시적
+
+// 실패
+Fin<Product> failure = error;             // 암시적 변환 (권장)
+Fin<Product> failure = Fin.Fail<Product>(error); // 명시적 (불필요)
+```
+
+### 암시적 변환 활용 (권장)
+
+LanguageExt는 `Error → Fin<T>` 암시적 변환을 제공합니다. **`Fin.Fail<T>(error)` 래핑은 불필요합니다.**
+
+```csharp
+// ❌ 기존 방식 (verbose)
+return Fin.Fail<Money>(AdapterError.For<MyAdapter>(
+    new NotFound(), context, "리소스를 찾을 수 없습니다"));
+
+// ✅ 권장 방식 (implicit conversion)
+return AdapterError.For<MyAdapter>(
+    new NotFound(), context, "리소스를 찾을 수 없습니다");
+```
+
+### 레이어별 에러 반환 패턴
+
+```csharp
+// Domain Layer - Entity 메서드
+public Fin<Unit> DeductStock(Quantity quantity)
+{
+    if ((int)quantity > (int)StockQuantity)
+        return DomainError.For<Product, int>(
+            new Custom("InsufficientStock"),
+            currentValue: (int)StockQuantity,
+            message: $"재고 부족. 현재: {(int)StockQuantity}, 요청: {(int)quantity}");
+
+    StockQuantity = Quantity.Create((int)StockQuantity - (int)quantity).ThrowIfFail();
+    return unit;
+}
+
+// Application Layer - Usecase
+public async ValueTask<FinResponse<Response>> Handle(Request request, ...)
+{
+    if (await _repository.ExistsAsync(request.ProductCode))
+        return ApplicationError.For<CreateProductCommand>(
+            new AlreadyExists(),
+            request.ProductCode,
+            "이미 존재하는 상품 코드입니다");
+
+    // 성공 처리...
+}
+
+// Adapter Layer - Repository
+public virtual FinT<IO, Product> GetById(ProductId id)
+{
+    return IO.lift(() =>
+    {
+        if (_products.TryGetValue(id, out Product? product))
+            return Fin.Succ(product);
+
+        return AdapterError.For<InMemoryProductRepository>(
+            new NotFound(),
+            id.ToString(),
+            $"상품 ID '{id}'을(를) 찾을 수 없습니다");
+    });
+}
+```
+
+### FinT<IO, T> 패턴
+
+비동기 IO 작업과 함께 사용하는 `FinT<IO, T>` 패턴입니다:
+
+```csharp
+// 동기 작업
+return IO.lift(() =>
+{
+    if (condition)
+        return Fin.Succ(result);
+    return AdapterError.For<MyAdapter>(new NotFound(), context, "메시지");
+});
+
+// 비동기 작업
+return IO.liftAsync(async () =>
+{
+    try
+    {
+        var response = await _httpClient.GetAsync(url, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+            return AdapterError.For<MyAdapter>(
+                new Custom("HttpError"),
+                response.StatusCode.ToString(),
+                "API 호출 실패");
+
+        var result = await response.Content.ReadFromJsonAsync<T>();
+        return Fin.Succ(result!);
+    }
+    catch (HttpRequestException ex)
+    {
+        return AdapterError.FromException<MyAdapter>(
+            new ConnectionFailed("ExternalApi"),
+            ex);
+    }
+});
+```
+
+### 성공 반환 시 주의사항
+
+성공 값을 반환할 때는 여전히 `Fin.Succ(value)`를 사용합니다:
+
+```csharp
+// ✅ 성공 반환
+return Fin.Succ(product);
+return Fin.Succ(unit);  // Unit 타입
+
+// ❌ Unit은 암시적 변환 안됨 (Unit은 Error가 아님)
+return unit;  // 컴파일 에러 또는 타입 추론 실패
+```
+
+### 예외 처리 패턴
+
+예외를 `Error`로 변환할 때는 `FromException` 메서드를 사용합니다:
+
+```csharp
+catch (HttpRequestException ex)
+{
+    return AdapterError.FromException<ExternalPricingApiService>(
+        new ConnectionFailed("ExternalPricingApi"),
+        ex);
+}
+catch (TaskCanceledException ex) when (ex.CancellationToken == cancellationToken)
+{
+    return AdapterError.For<ExternalPricingApiService>(
+        new Custom("OperationCancelled"),
+        productCode,
+        "요청이 취소되었습니다");
+}
+catch (TaskCanceledException ex)
+{
+    return AdapterError.FromException<ExternalPricingApiService>(
+        new Timeout(TimeSpan.FromSeconds(30)),
+        ex);
+}
+catch (Exception ex)
+{
+    return AdapterError.FromException<ExternalPricingApiService>(
+        new Custom("UnexpectedException"),
+        ex);
+}
+```
+
+---
+
+## 3. 에러 네이밍 규칙
 
 ### 빠른 참조: 네이밍 규칙 요약
 
@@ -239,38 +409,81 @@ new CancelledOperation() // OperationCancelled가 표준
 
 ---
 
-## 3. Domain 레이어 에러
+## 4. Domain 레이어 에러
 
-### 에러 생성
+### 에러 생성 및 반환
 
 ```csharp
 using Functorium.Domains.Errors;
 using static Functorium.Domains.Errors.DomainErrorType;
 
-// 기본 사용법
-var error = DomainError.For<Email>(
-    new Empty(),
-    currentValue: "",
-    message: "Email cannot be empty");
+// 기본 사용법 - 암시적 변환으로 직접 반환
+public Fin<Email> Create(string? value)
+{
+    if (string.IsNullOrWhiteSpace(value))
+        return DomainError.For<Email>(
+            new Empty(),
+            currentValue: value ?? "",
+            message: "이메일은 비어있을 수 없습니다");
+
+    return new Email(value);
+}
 
 // 제네릭 값 타입
-var error = DomainError.For<Age, int>(
-    new Negative(),
-    currentValue: -5,
-    message: "Age cannot be negative");
+public Fin<Age> Create(int value)
+{
+    if (value < 0)
+        return DomainError.For<Age, int>(
+            new Negative(),
+            currentValue: value,
+            message: "나이는 음수일 수 없습니다");
+
+    return new Age(value);
+}
 
 // 두 개의 값 포함
-var error = DomainError.For<DateRange, DateTime, DateTime>(
-    new Custom("InvalidRange"),
-    startDate,
-    endDate,
-    message: "Start date must be before end date");
+public Fin<DateRange> Create(DateTime start, DateTime end)
+{
+    if (start >= end)
+        return DomainError.For<DateRange, DateTime, DateTime>(
+            new Custom("InvalidRange"),
+            start, end,
+            message: "시작 날짜는 종료 날짜보다 이전이어야 합니다");
+
+    return new DateRange(start, end);
+}
 
 // 세 개의 값 포함
-var error = DomainError.For<Triangle, double, double, double>(
-    new Custom("InvalidTriangle"),
-    sideA, sideB, sideC,
-    message: "Invalid triangle sides");
+public Fin<Triangle> Create(double a, double b, double c)
+{
+    if (a + b <= c || b + c <= a || c + a <= b)
+        return DomainError.For<Triangle, double, double, double>(
+            new Custom("InvalidTriangle"),
+            a, b, c,
+            message: "유효한 삼각형을 만들 수 없습니다");
+
+    return new Triangle(a, b, c);
+}
+```
+
+### Entity 메서드에서 에러 반환
+
+```csharp
+public sealed class Product : AggregateRoot<ProductId>
+{
+    public Fin<Unit> DeductStock(Quantity quantity)
+    {
+        if ((int)quantity > (int)StockQuantity)
+            return DomainError.For<Product, int>(
+                new Custom("InsufficientStock"),
+                currentValue: (int)StockQuantity,
+                message: $"재고 부족. 현재: {(int)StockQuantity}, 요청: {(int)quantity}");
+
+        StockQuantity = Quantity.Create((int)StockQuantity - (int)quantity).ThrowIfFail();
+        AddDomainEvent(new StockDeductedEvent(Id, quantity));
+        return unit;
+    }
+}
 ```
 
 ### DomainErrorType 범주 구조
@@ -376,32 +589,34 @@ public sealed class Email : SimpleValueObject<string>
 
 ---
 
-## 4. Application 레이어 에러
+## 5. Application 레이어 에러
 
-### 에러 생성
+### 에러 생성 및 반환
 
 ```csharp
 using Functorium.Applications.Errors;
 using static Functorium.Applications.Errors.ApplicationErrorType;
 
-// 기본 사용법
-var error = ApplicationError.For<CreateProductCommand>(
-    new AlreadyExists(),
-    currentValue: productId,
-    message: "Product already exists");
+// 기본 사용법 - 암시적 변환으로 직접 반환
+if (await _repository.ExistsAsync(command.ProductCode))
+{
+    return ApplicationError.For<CreateProductCommand>(
+        new AlreadyExists(),
+        command.ProductCode,
+        "이미 존재하는 상품 코드입니다");
+}
 
 // 제네릭 값 타입
-var error = ApplicationError.For<UpdateOrderCommand, Guid>(
+return ApplicationError.For<UpdateOrderCommand, Guid>(
     new NotFound(),
-    currentValue: orderId,
-    message: "Order not found");
+    orderId,
+    "주문을 찾을 수 없습니다");
 
 // 두 개의 값 포함
-var error = ApplicationError.For<TransferCommand, decimal, decimal>(
+return ApplicationError.For<TransferCommand, decimal, decimal>(
     new BusinessRuleViolated("InsufficientBalance"),
-    balance,
-    amount,
-    message: "Insufficient balance for transfer");
+    balance, amount,
+    "잔액이 부족합니다");
 ```
 
 ### ApplicationErrorType 전체 목록
@@ -441,6 +656,53 @@ var error = ApplicationError.For<TransferCommand, decimal, decimal>(
 |-----------|------|----------|
 | `Custom` | 애플리케이션 특화 에러 | `new Custom("PaymentDeclined")` |
 
+### Usecase 에러 사용 패턴 (권장)
+
+```csharp
+using Functorium.Applications.Errors;
+using static Functorium.Applications.Errors.ApplicationErrorType;
+
+public sealed class CreateProductCommand
+{
+    public sealed record Request(...) : ICommandRequest<Response>;
+    public sealed record Response(...);
+
+    public sealed class Usecase(IProductRepository productRepository)
+        : ICommandUsecase<Request, Response>
+    {
+        public async ValueTask<FinResponse<Response>> Handle(Request request, ...)
+        {
+            // LINQ 쿼리에서 guard와 함께 사용
+            FinT<IO, Response> usecase =
+                from exists in _productRepository.ExistsByName(productName)
+                from _ in guard(!exists, ApplicationError.For<CreateProductCommand>(
+                    new AlreadyExists(),
+                    request.Name,
+                    $"이미 존재하는 상품명: '{request.Name}'"))
+                from product in _productRepository.Create(...)
+                select new Response(...);
+
+            // 직접 반환 (암시적 변환)
+            return ApplicationError.For<CreateProductCommand>(
+                new NotFound(),
+                productId.ToString(),
+                $"상품을 찾을 수 없습니다. ID: {productId}");
+        }
+    }
+}
+```
+
+### 에러 코드 형식
+
+```
+ApplicationErrors.{UsecaseName}.{ErrorTypeName}
+```
+
+예시:
+- `ApplicationErrors.CreateProductCommand.AlreadyExists`
+- `ApplicationErrors.UpdateProductCommand.NotFound`
+- `ApplicationErrors.DeleteOrderCommand.BusinessRuleViolated`
+
 ### 유스케이스 사용 예시
 
 ```csharp
@@ -451,13 +713,13 @@ public sealed class CreateProductCommandHandler
         CreateProductCommand command,
         CancellationToken cancellationToken)
     {
-        // 중복 체크
+        // 중복 체크 - 암시적 변환으로 직접 반환
         if (await _repository.ExistsAsync(command.ProductCode))
         {
             return ApplicationError.For<CreateProductCommand>(
                 new AlreadyExists(),
                 command.ProductCode,
-                "Product with this code already exists");
+                "이미 존재하는 상품 코드입니다");
         }
 
         // 비즈니스 규칙 검증
@@ -466,7 +728,7 @@ public sealed class CreateProductCommandHandler
             return ApplicationError.For<CreateProductCommand, decimal>(
                 new BusinessRuleViolated("PositivePrice"),
                 command.Price,
-                "Price must be positive");
+                "가격은 양수여야 합니다");
         }
 
         // 성공 처리
@@ -479,29 +741,29 @@ public sealed class CreateProductCommandHandler
 
 ---
 
-## 5. Adapter 레이어 에러
+## 6. Adapter 레이어 에러
 
-### 에러 생성
+### 에러 생성 및 반환
 
 ```csharp
 using Functorium.Adapters.Errors;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
-// 기본 사용법
-var error = AdapterError.For<UsecaseValidationPipeline>(
-    new PipelineValidation(PropertyName: "Name"),
-    currentValue: "",
-    message: "Name is required");
+// 기본 사용법 - 암시적 변환으로 직접 반환
+return AdapterError.For<ProductRepository>(
+    new NotFound(),
+    id.ToString(),
+    "상품을 찾을 수 없습니다");
 
 // 제네릭 값 타입
-var error = AdapterError.For<HttpClientAdapter, string>(
+return AdapterError.For<HttpClientAdapter, string>(
     new Timeout(Duration: TimeSpan.FromSeconds(30)),
-    currentValue: url,
-    message: "Request timed out");
+    url,
+    "요청 타임아웃");
 
 // 예외 래핑
-var error = AdapterError.FromException<UsecaseExceptionPipeline>(
-    new PipelineException(),
+return AdapterError.FromException<ExternalApiService>(
+    new ConnectionFailed("ExternalApi"),
     exception);
 ```
 
@@ -549,47 +811,175 @@ var error = AdapterError.FromException<UsecaseExceptionPipeline>(
 |-----------|------|----------|
 | `Custom` | 어댑터 특화 에러 | `new Custom("RateLimited")` |
 
-### 파이프라인 사용 예시
+### Repository 구현 예시
 
 ```csharp
-internal sealed class UsecaseValidationPipeline<TRequest, TResponse>
-    : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IMessage
-    where TResponse : IFinResponseFactory<TResponse>
+[GeneratePipeline]
+public class InMemoryProductRepository : IProductRepository
 {
-    public async ValueTask<TResponse> Handle(
-        TRequest request,
-        MessageHandlerDelegate<TRequest, TResponse> next,
-        CancellationToken cancellationToken)
+    private static readonly ConcurrentDictionary<ProductId, Product> _products = new();
+
+    public string RequestCategory => "Repository";
+
+    public virtual FinT<IO, Product> GetById(ProductId id)
     {
-        if (_validators.IsEmpty)
-            return await next(request, cancellationToken);
-
-        Error[] errors = _validators
-            .Select(v => v.Validate(request))
-            .SelectMany(r => r.Errors)
-            .Where(f => f is not null)
-            .Select(failure => AdapterError.For<UsecaseValidationPipeline<TRequest, TResponse>, Dictionary<string, object>>(
-                new PipelineValidation(failure.PropertyName),
-                failure.FormattedMessagePlaceholderValues,
-                $"{failure.PropertyName}: {failure.ErrorMessage}"))
-            .Distinct()
-            .ToArray();
-
-        if (errors.Length is not 0)
+        return IO.lift(() =>
         {
-            var error = errors.Length == 1 ? errors[0] : Error.Many(errors);
-            return TResponse.CreateFail(error);
-        }
+            if (_products.TryGetValue(id, out Product? product))
+                return Fin.Succ(product);
 
-        return await next(request, cancellationToken);
+            // 암시적 변환으로 직접 반환
+            return AdapterError.For<InMemoryProductRepository>(
+                new NotFound(),
+                id.ToString(),
+                $"상품 ID '{id}'을(를) 찾을 수 없습니다");
+        });
     }
+
+    public virtual FinT<IO, Product> Update(Product product)
+    {
+        return IO.lift(() =>
+        {
+            if (!_products.ContainsKey(product.Id))
+            {
+                return AdapterError.For<InMemoryProductRepository>(
+                    new NotFound(),
+                    product.Id.ToString(),
+                    $"상품 ID '{product.Id}'을(를) 찾을 수 없습니다");
+            }
+
+            _products[product.Id] = product;
+            return Fin.Succ(product);
+        });
+    }
+
+    public virtual FinT<IO, Unit> Delete(ProductId id)
+    {
+        return IO.lift(() =>
+        {
+            if (!_products.TryRemove(id, out _))
+            {
+                return AdapterError.For<InMemoryProductRepository>(
+                    new NotFound(),
+                    id.ToString(),
+                    $"상품 ID '{id}'을(를) 찾을 수 없습니다");
+            }
+
+            return Fin.Succ(unit);
+        });
+    }
+}
+```
+
+### 외부 API 서비스 구현 예시
+
+```csharp
+[GeneratePipeline]
+public class ExternalPricingApiService : IExternalPricingService
+{
+    private readonly HttpClient _httpClient;
+
+    public string RequestCategory => "ExternalApi";
+
+    public virtual FinT<IO, Money> GetPriceAsync(string productCode, CancellationToken cancellationToken)
+    {
+        return IO.liftAsync(async () =>
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync(
+                    $"/api/pricing/{productCode}",
+                    cancellationToken);
+
+                // HTTP 오류 응답 처리 - 암시적 변환 활용
+                if (!response.IsSuccessStatusCode)
+                    return HandleHttpError<Money>(response, productCode);
+
+                var priceResponse = await response.Content
+                    .ReadFromJsonAsync<ExternalPriceResponse>(cancellationToken: cancellationToken);
+
+                // null 응답 처리
+                if (priceResponse is null)
+                {
+                    return AdapterError.For<ExternalPricingApiService>(
+                        new Null(),
+                        productCode,
+                        $"외부 API 응답이 null입니다. ProductCode: {productCode}");
+                }
+
+                return Money.Create(priceResponse.Price);
+            }
+            catch (HttpRequestException ex)
+            {
+                return AdapterError.FromException<ExternalPricingApiService>(
+                    new ConnectionFailed("ExternalPricingApi"),
+                    ex);
+            }
+            catch (TaskCanceledException ex) when (ex.CancellationToken == cancellationToken)
+            {
+                return AdapterError.For<ExternalPricingApiService>(
+                    new Custom("OperationCancelled"),
+                    productCode,
+                    "요청이 취소되었습니다");
+            }
+            catch (TaskCanceledException ex)
+            {
+                return AdapterError.FromException<ExternalPricingApiService>(
+                    new Timeout(TimeSpan.FromSeconds(30)),
+                    ex);
+            }
+            catch (Exception ex)
+            {
+                return AdapterError.FromException<ExternalPricingApiService>(
+                    new Custom("UnexpectedException"),
+                    ex);
+            }
+        });
+    }
+
+    /// <summary>
+    /// HTTP 오류 응답을 AdapterError로 변환합니다.
+    /// switch 표현식에서 암시적 변환이 자동 적용됩니다.
+    /// </summary>
+    private static Fin<T> HandleHttpError<T>(HttpResponseMessage response, string context) =>
+        response.StatusCode switch
+        {
+            HttpStatusCode.NotFound => AdapterError.For<ExternalPricingApiService>(
+                new NotFound(),
+                context,
+                $"외부 API에서 리소스를 찾을 수 없습니다. Context: {context}"),
+
+            HttpStatusCode.Unauthorized => AdapterError.For<ExternalPricingApiService>(
+                new Unauthorized(),
+                context,
+                "외부 API 인증에 실패했습니다"),
+
+            HttpStatusCode.Forbidden => AdapterError.For<ExternalPricingApiService>(
+                new Forbidden(),
+                context,
+                "외부 API 접근이 금지되었습니다"),
+
+            HttpStatusCode.TooManyRequests => AdapterError.For<ExternalPricingApiService>(
+                new Custom("RateLimited"),
+                context,
+                "외부 API 요청 제한에 도달했습니다"),
+
+            HttpStatusCode.ServiceUnavailable => AdapterError.For<ExternalPricingApiService>(
+                new ExternalServiceUnavailable("ExternalPricingApi"),
+                context,
+                "외부 가격 서비스를 사용할 수 없습니다"),
+
+            _ => AdapterError.For<ExternalPricingApiService, HttpStatusCode>(
+                new Custom("HttpError"),
+                response.StatusCode,
+                $"외부 API 호출 실패. Status: {response.StatusCode}")
+        };
 }
 ```
 
 ---
 
-## 6. Custom 에러 가이드
+## 7. Custom 에러 가이드
 
 ### 언제 Custom을 사용하는가?
 
@@ -629,25 +1019,6 @@ public sealed record Expired : DomainErrorType;
 public sealed record Suspended : ApplicationErrorType;
 public sealed record RateLimited : AdapterErrorType;
 ```
-
----
-
-## 7. 체크리스트
-
-### 에러 정의 체크리스트
-
-- [ ] 적절한 레이어(Domain/Application/Adapter)를 선택했는가?
-- [ ] 표준 에러 타입으로 표현 가능한지 먼저 확인했는가?
-- [ ] Custom 에러 이름이 충분히 명확한가?
-- [ ] 컨텍스트 정보(파라미터)가 디버깅에 도움이 되는가?
-- [ ] 에러 메시지가 사용자/개발자에게 유용한가?
-
-### 네이밍 체크리스트
-
-- [ ] 적절한 규칙(R1-R8)을 적용했는가?
-- [ ] 대칭 쌍이 있다면 일관성을 유지했는가? (Below ↔ Above)
-- [ ] 컨텍스트 정보가 필요한가? (MinLength, Pattern, PropertyName 등)
-- [ ] 에러 메시지가 에러 이름과 일관성 있는가?
 
 ---
 
@@ -692,17 +1063,45 @@ public sealed record RateLimited : AdapterErrorType;
 
 ---
 
-## 9. 참고 문서
+## 9. 체크리스트
+
+### 에러 정의 체크리스트
+
+- [ ] 적절한 레이어(Domain/Application/Adapter)를 선택했는가?
+- [ ] 표준 에러 타입으로 표현 가능한지 먼저 확인했는가?
+- [ ] Custom 에러 이름이 충분히 명확한가?
+- [ ] 컨텍스트 정보(파라미터)가 디버깅에 도움이 되는가?
+- [ ] 에러 메시지가 사용자/개발자에게 유용한가?
+
+### 에러 반환 체크리스트
+
+- [ ] `Fin.Fail<T>(error)` 대신 암시적 변환을 사용했는가?
+- [ ] 성공 반환 시 `Fin.Succ(value)`를 사용했는가?
+- [ ] 예외 처리 시 `FromException` 메서드를 사용했는가?
+- [ ] 레이어에 맞는 에러 팩토리(`DomainError`, `ApplicationError`, `AdapterError`)를 사용했는가?
+
+### 네이밍 체크리스트
+
+- [ ] 적절한 규칙(R1-R8)을 적용했는가?
+- [ ] 대칭 쌍이 있다면 일관성을 유지했는가? (Below ↔ Above)
+- [ ] 컨텍스트 정보가 필요한가? (MinLength, Pattern, PropertyName 등)
+- [ ] 에러 메시지가 에러 이름과 일관성 있는가?
+
+---
+
+## 10. 참고 문서
 
 - [valueobject-guide.md](./valueobject-guide.md) - 값 객체 구현 및 검증 패턴
+- [adapter-guide.md](./adapter-guide.md) - Adapter 구현 가이드
 - [error-testing-guide.md](./error-testing-guide.md) - 에러 테스트 패턴
 
 ---
 
-## 10. 변경 이력
+## 11. 변경 이력
 
 | 날짜 | 변경 사항 | 작성자 |
 |------|----------|--------|
+| 2026-01-31 | Fin<T> 반환 패턴 섹션 보강, 암시적 변환 패턴을 모든 예시에 통합 | - |
 | 2026-01-29 | 문서 통합 - layered-error-definition-guide.md, layered-error-naming-guide.md 병합 | - |
 | 2026-01-26 | 날짜 검증 에러 추가 (DefaultDate, NotInPast, NotInFuture, TooLate, TooEarly) | - |
 | 2026-01-26 | 숫자 검증 에러 추가 (Zero), 범위 검증 에러 추가 (RangeInverted, RangeEmpty) | - |
