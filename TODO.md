@@ -13,7 +13,8 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [x] 도메인 이벤트 구현 관련 테스트 구현
 - [x] ~~도메인 이벤트 Sub `Handler -> subscriber~~`
 - [X] 도메인 이벤트 Sub `namespace LayeredArch.Application.EventHandlers;` Usecase???
-- [ ] 이벤트도 파이프 라인이 호출되니?
+- [ ] 이벤트 부분 실패 처리? PublishEventsWithResult?
+- [ ] 이벤트 관찰 가능성 개선
 - [ ] entity-guide.md 재구성
 - [ ] usecase-implementation-guide.md 재구성
 ---
