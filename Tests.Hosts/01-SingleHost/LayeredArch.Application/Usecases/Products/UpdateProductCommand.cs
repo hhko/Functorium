@@ -2,6 +2,7 @@ using LayeredArch.Domain.Entities;
 using LayeredArch.Domain.ValueObjects;
 using LayeredArch.Domain.Repositories;
 using Functorium.Applications.Errors;
+using Functorium.Applications.Events;
 using Functorium.Applications.Linq;
 using static Functorium.Applications.Errors.ApplicationErrorType;
 
@@ -63,10 +64,13 @@ public sealed class UpdateProductCommand
     /// <summary>
     /// Command Handler - Entity Guide의 Apply 패턴 적용
     /// </summary>
-    public sealed class Usecase(IProductRepository productRepository)
+    public sealed class Usecase(
+        IProductRepository productRepository,
+        IDomainEventPublisher eventPublisher)
         : ICommandUsecase<Request, Response>
     {
         private readonly IProductRepository _productRepository = productRepository;
+        private readonly IDomainEventPublisher _eventPublisher = eventPublisher;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
@@ -99,6 +103,7 @@ public sealed class UpdateProductCommand
                     $"Product name already exists: '{request.Name}'"))
                 from updatedProduct in _productRepository.Update(
                     existingProduct.Update(name, description, price, stockQuantity))
+                from __ in _eventPublisher.PublishEvents(updatedProduct, cancellationToken)
                 select new Response(
                     updatedProduct.Id.ToString(),
                     updatedProduct.Name,
