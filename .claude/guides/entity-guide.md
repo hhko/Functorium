@@ -618,11 +618,11 @@ public sealed class Usecase(
 ```csharp
 using Functorium.Applications.Events;
 
-public sealed class ProductCreatedEventHandler : IDomainEventHandler<Product.CreatedEvent>
+public sealed class OnProductCreated : IDomainEventHandler<Product.CreatedEvent>
 {
-    private readonly ILogger<ProductCreatedEventHandler> _logger;
+    private readonly ILogger<OnProductCreated> _logger;
 
-    public ProductCreatedEventHandler(ILogger<ProductCreatedEventHandler> logger)
+    public OnProductCreated(ILogger<OnProductCreated> logger)
     {
         _logger = logger;
     }
@@ -640,14 +640,35 @@ public sealed class ProductCreatedEventHandler : IDomainEventHandler<Product.Cre
 }
 ```
 
-**핸들러 자동 등록:**
+**핸들러 명명 규칙:**
 
-Mediator 소스 생성기가 `IDomainEventHandler<T>` 구현체를 자동으로 검색하여 DI에 등록합니다. `AddMediator()` 호출 후 `RegisterDomainEventPublisher()`를 호출하면 됩니다:
+| 핸들러 유형 | 명명 패턴 | 예시 |
+|------------|----------|------|
+| Command/Query Handler | `{Command/Query}Handler` | `CreateProductHandler`, `GetProductHandler` |
+| Domain Event Handler | `On{EventName}` | `OnProductCreated`, `OnOrderConfirmed` |
+
+Domain Event Handler는 `On` 접두사만 사용합니다:
+- `On` 접두사가 이미 이벤트 핸들러임을 나타내므로 `Handler` 접미사는 중복
+- Command/Query Handler와 자연스럽게 구분됨
+- 간결하고 가독성 향상
+
+**핸들러 등록:**
+
+> **주의**: `Mediator.SourceGenerator`는 해당 패키지가 참조된 프로젝트 내의 핸들러만 자동 등록합니다.
+> 다른 어셈블리(예: Application 레이어)의 핸들러는 명시적으로 등록해야 합니다.
+
+Scrutor를 사용하여 어셈블리에서 핸들러를 스캔하고 등록합니다:
 
 ```csharp
 services.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);
 services.RegisterDomainEventPublisher();  // IDomainEventPublisher 등록
+
+// Application 레이어의 도메인 이벤트 핸들러 등록
+services.RegisterDomainEventHandlersFromAssembly(
+    YourApp.Application.AssemblyReference.Assembly);
 ```
+
+`RegisterDomainEventHandlersFromAssembly`는 Scrutor의 `Scan()` API를 사용하여 지정된 어셈블리에서 `IDomainEventHandler<T>` 구현체를 자동으로 검색하고 `INotificationHandler<T>`로 등록합니다.
 
 **트랜잭션 고려사항:**
 

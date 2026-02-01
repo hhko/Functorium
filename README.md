@@ -155,24 +155,24 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 {request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
 
-**Message Templates (DomainEvent):**
+**Message Templates (DomainEvent Publisher):**
 
-> DomainEvent는 Application 레이어의 일부로 처리되며, `request.layer`는 `"application"`, `request.category`는 `"domain_event"`입니다.
+> DomainEvent Publisher는 Application 레이어의 일부로 처리되며, `request.layer`는 `"application"`, `request.category`는 `"domain_event.publisher"`입니다.
 
-**Application Usecase vs DomainEvent 필드 비교:**
+**Application Usecase vs DomainEvent Publisher 필드 비교:**
 
-| Field | Application Usecase | DomainEvent | 설명 |
-|-------|---------------------|-------------|------|
+| Field | Application Usecase | DomainEvent Publisher | 설명 |
+|-------|---------------------|----------------------|------|
 | `request.layer` | `"application"` | `"application"` | 동일 레이어 |
-| `request.category` | `"usecase"` | `"domain_event"` | 카테고리 구분 |
+| `request.category` | `"usecase"` | `"domain_event.publisher"` | 카테고리 구분 |
 | `request.handler.cqrs` | `"command"` / `"query"` | - | Usecase만 사용 |
 | `request.handler` | Handler 클래스명 | Event 타입명 또는 Aggregate 타입명 | Handler 식별 |
 | `request.handler.method` | `"Handle"` | `"Publish"` / `"PublishEvents"` / `"PublishEventsWithResult"` | 메서드 식별 |
 | `@request.message` | Command/Query 객체 | 단일 이벤트 객체 | 요청 데이터 |
 | `@response.message` | 응답 객체 | - | Usecase만 사용 |
-| `event.count` | - | 발행할 이벤트 수 | DomainEvent Aggregate만 |
-| `success_count` | - | 성공 이벤트 수 | DomainEvent Partial Failure만 |
-| `failure_count` | - | 실패 이벤트 수 | DomainEvent Partial Failure만 |
+| `event.count` | - | 발행할 이벤트 수 | DomainEvent Publisher Aggregate만 |
+| `success_count` | - | 성공 이벤트 수 | DomainEvent Publisher Partial Failure만 |
+| `failure_count` | - | 실패 이벤트 수 | DomainEvent Publisher Partial Failure만 |
 | `response.status` | `"success"` / `"failure"` | `"success"` / `"failure"` | 동일 |
 | `response.elapsed` | 처리 시간(초) | 처리 시간(초) | 동일 |
 | `error.type` | `"expected"` / `"exceptional"` / `"aggregate"` | `"expected"` / `"exceptional"` / `"aggregate"` | 오류 분류 |
@@ -202,14 +202,54 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 {request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events with partial failure: {success_count} succeeded, {failure_count} failed responded {response.status} in {response.elapsed:0.0000} s
 ```
 
-**DomainEvent Event IDs:**
+**DomainEvent Publisher Event IDs:**
 
 | Event | ID | Name |
 |-------|-----|------|
-| Request | 3001 | `domain_event.publish` |
-| Success | 3002 | `domain_event.publish.success` |
-| Warning | 3003 | `domain_event.publish.warning` |
-| Error | 3004 | `domain_event.publish.error` |
+| Request | 3001 | `domain_event.request` |
+| Success | 3002 | `domain_event.response.success` |
+| Warning | 3003 | `domain_event.response.warning` |
+| Error | 3004 | `domain_event.response.error` |
+
+**Message Templates (DomainEventHandler):**
+
+> DomainEventHandler는 Publisher가 발행한 이벤트를 처리하는 Handler 관점의 로깅입니다. `request.layer`는 `"application"`, `request.category`는 `"domain_event.handler"`입니다.
+
+**DomainEvent Publisher vs DomainEventHandler 필드 비교:**
+
+| Field | DomainEvent Publisher | DomainEventHandler | 설명 |
+|-------|----------------------|-------------------|------|
+| `request.layer` | `"application"` | `"application"` | 동일 레이어 |
+| `request.category` | `"domain_event.publisher"` | `"domain_event.handler"` | Publisher vs Handler 구분 |
+| `request.handler` | Event 타입명 / Aggregate 타입명 | Handler 클래스명 | Handler 식별 |
+| `request.handler.method` | `"Publish"` / `"PublishEvents"` | `"Handle"` | 메서드 식별 |
+| `@request.message` | 이벤트 객체 | 이벤트 객체 | 요청 데이터 |
+| `event.count` | O (Aggregate만) | - | Publisher Aggregate만 |
+| `response.status` | `"success"` / `"failure"` | `"success"` / `"failure"` | 동일 |
+| `response.elapsed` | 처리 시간(초) | 처리 시간(초) | 동일 |
+| `error.type` | `"expected"` / `"exceptional"` | `"expected"` / `"exceptional"` | 오류 분류 |
+| `error.code` | 오류 코드 | 오류 코드 | 동일 |
+| `@error` | 오류 객체 | 오류 객체 | 동일 |
+
+```
+# Request
+{request.layer} {request.category} {request.handler}.{request.handler.method} {@request.message} requesting
+
+# Response - Success
+{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s
+
+# Response - Warning/Error
+{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
+```
+
+**DomainEventHandler Event IDs:**
+
+| Event | ID | Name |
+|-------|-----|------|
+| Request | 3101 | `domain_event_handler.request` |
+| Success | 3102 | `domain_event_handler.response.success` |
+| Warning | 3103 | `domain_event_handler.response.warning` |
+| Error | 3104 | `domain_event_handler.response.error` |
 
 **Error Field 값 (`error.type` vs `@error.ErrorType`):**
 
