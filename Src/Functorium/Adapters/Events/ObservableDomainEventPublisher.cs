@@ -48,7 +48,7 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher
             activity?.SetTag("aggregate.type", aggregateType);
             activity?.SetTag("event.count", eventCount);
 
-            _logger.LogDomainEventsPublish(aggregateType, eventCount);
+            _logger.LogDomainEventsPublish(aggregateType, ObservabilityNaming.DomainEvents.PublishEventsMethod, eventCount);
 
             long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();
 
@@ -61,7 +61,7 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher
                 {
                     activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success);
                     activity?.SetStatus(ActivityStatusCode.Ok);
-                    _logger.LogDomainEventsPublishSuccess(aggregateType, eventCount, elapsed);
+                    _logger.LogDomainEventsPublishSuccess(aggregateType, ObservabilityNaming.DomainEvents.PublishEventsMethod, eventCount, elapsed);
                 },
                 Fail: error =>
                 {
@@ -73,11 +73,11 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher
 
                     if (error.IsExceptional)
                     {
-                        _logger.LogDomainEventsPublishError(aggregateType, eventCount, elapsed, errorType, errorCode, error);
+                        _logger.LogDomainEventsPublishError(aggregateType, ObservabilityNaming.DomainEvents.PublishEventsMethod, eventCount, elapsed, errorType, errorCode, error);
                     }
                     else
                     {
-                        _logger.LogDomainEventsPublishWarning(aggregateType, eventCount, elapsed, errorType, errorCode, error);
+                        _logger.LogDomainEventsPublishWarning(aggregateType, ObservabilityNaming.DomainEvents.PublishEventsMethod, eventCount, elapsed, errorType, errorCode, error);
                     }
                 });
 
@@ -202,7 +202,7 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher
             activity?.SetTag("aggregate.type", aggregateType);
             activity?.SetTag("event.count", eventCount);
 
-            _logger.LogDomainEventsPublish(aggregateType, eventCount);
+            _logger.LogDomainEventsPublish(aggregateType, ObservabilityNaming.DomainEvents.PublishEventsWithResultMethod, eventCount);
 
             long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();
 
@@ -217,7 +217,7 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher
                     {
                         activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success);
                         activity?.SetStatus(ActivityStatusCode.Ok);
-                        _logger.LogDomainEventsPublishSuccess(aggregateType, eventCount, elapsed);
+                        _logger.LogDomainEventsPublishSuccess(aggregateType, ObservabilityNaming.DomainEvents.PublishEventsWithResultMethod, eventCount, elapsed);
                     }
                     else
                     {
@@ -226,18 +226,13 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher
                         activity?.SetTag("event.failure_count", publishResult.FailureCount);
                         activity?.SetStatus(ActivityStatusCode.Error, $"Partial failure: {publishResult.FailureCount} of {publishResult.TotalCount} events failed");
 
-                        if (_logger.IsEnabled(LogLevel.Warning))
-                        {
-                            _logger.LogWarning(
-                                ObservabilityNaming.EventIds.DomainEvent.DomainEventPublishWarning,
-                                "{domain_event.category} {aggregate.type} published {event.count} events with partial failure: {success_count} succeeded, {failure_count} failed in {response.elapsed:0.0000} s",
-                                ObservabilityNaming.DomainEvents.Category,
-                                aggregateType,
-                                eventCount,
-                                publishResult.SuccessCount,
-                                publishResult.FailureCount,
-                                elapsed);
-                        }
+                        _logger.LogDomainEventsPublishPartialFailure(
+                            aggregateType,
+                            ObservabilityNaming.DomainEvents.PublishEventsWithResultMethod,
+                            eventCount,
+                            publishResult.SuccessCount,
+                            publishResult.FailureCount,
+                            elapsed);
                     }
                 },
                 Fail: error =>
@@ -250,11 +245,11 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher
 
                     if (error.IsExceptional)
                     {
-                        _logger.LogDomainEventsPublishError(aggregateType, eventCount, elapsed, errorType, errorCode, error);
+                        _logger.LogDomainEventsPublishError(aggregateType, ObservabilityNaming.DomainEvents.PublishEventsWithResultMethod, eventCount, elapsed, errorType, errorCode, error);
                     }
                     else
                     {
-                        _logger.LogDomainEventsPublishWarning(aggregateType, eventCount, elapsed, errorType, errorCode, error);
+                        _logger.LogDomainEventsPublishWarning(aggregateType, ObservabilityNaming.DomainEvents.PublishEventsWithResultMethod, eventCount, elapsed, errorType, errorCode, error);
                     }
                 });
 

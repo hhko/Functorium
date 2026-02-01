@@ -44,5 +44,25 @@ public static partial class ObservabilityNaming
     {
         public const string Category = "domain_event";
         public const string ActivitySourceName = "DomainEvent";
+
+        /// <summary>
+        /// 도메인 이벤트가 처리되는 레이어 (Application 레이어의 일부로 취급).
+        /// </summary>
+        public const string Layer = "application";
+
+        /// <summary>
+        /// 단일 도메인 이벤트 발행 메서드명.
+        /// </summary>
+        public const string PublishMethod = "Publish";
+
+        /// <summary>
+        /// Aggregate의 모든 도메인 이벤트 발행 메서드명.
+        /// </summary>
+        public const string PublishEventsMethod = "PublishEvents";
+
+        /// <summary>
+        /// Aggregate의 모든 도메인 이벤트 발행 (결과 반환) 메서드명.
+        /// </summary>
+        public const string PublishEventsWithResultMethod = "PublishEventsWithResult";
     }
 }
