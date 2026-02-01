@@ -4,11 +4,11 @@
 
 [![Build](https://github.com/hhko/Functorium/actions/workflows/build.yml/badge.svg)](https://github.com/hhko/Functorium/actions/workflows/build.yml) [![Publish](https://github.com/hhko/Functorium/actions/workflows/publish.yml/badge.svg)](https://github.com/hhko/Functorium/actions/workflows/publish.yml)
 
-> A functional domain is `functor` + `dominium`, seasoned with `fun`, designed to bridge **결정론적 규칙의 시대(the age of deterministic rules)와 확률론적 직관의 시대(the age of probabilistic intuition)**.
+> A functional domain is **`functor + dominium`**, seasoned with **`fun`**, designed to bridge **결정론적 규칙의 시대(the age of deterministic rules)와 확률론적 직관의 시대(the age of probabilistic intuition)**.
 >
-> - `Domain-Driven Design`: **객체 단위로** 비즈니스 관심사를 **캡슐화한다.**
-> - `Functional Architecture`: **레이어 단위로** 비즈니스 관심사를 **순수화한다.**
-> - `Microservices Architecture`: **서비스 단위로** 비즈니스 관심사를 **자율화한다.**
+> - `Domain-Driven Design`: 객체 단위로 비즈니스 관심사를 캡슐화한다.
+> - `Functional Architecture`: 레이어 단위로 비즈니스 관심사를 순수화한다.
+> - `Microservices Architecture`: 서비스 단위로 비즈니스 관심사를 자율화한다.
 >
 > 그래서 우리는 유스케이스 단위를 최상위 설계 단위로 삼는다!
 
@@ -154,6 +154,62 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 # Response Warning/Error
 {request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
+
+**Message Templates (DomainEvent):**
+
+> DomainEvent는 Application 레이어의 일부로 처리되며, `request.layer`는 `"application"`, `request.category`는 `"domain_event"`입니다.
+
+**Application Usecase vs DomainEvent 필드 비교:**
+
+| Field | Application Usecase | DomainEvent | 설명 |
+|-------|---------------------|-------------|------|
+| `request.layer` | `"application"` | `"application"` | 동일 레이어 |
+| `request.category` | `"usecase"` | `"domain_event"` | 카테고리 구분 |
+| `request.handler.cqrs` | `"command"` / `"query"` | - | Usecase만 사용 |
+| `request.handler` | Handler 클래스명 | Event 타입명 또는 Aggregate 타입명 | Handler 식별 |
+| `request.handler.method` | `"Handle"` | `"Publish"` / `"PublishEvents"` / `"PublishEventsWithResult"` | 메서드 식별 |
+| `@request.message` | Command/Query 객체 | 단일 이벤트 객체 | 요청 데이터 |
+| `@response.message` | 응답 객체 | - | Usecase만 사용 |
+| `event.count` | - | 발행할 이벤트 수 | DomainEvent Aggregate만 |
+| `success_count` | - | 성공 이벤트 수 | DomainEvent Partial Failure만 |
+| `failure_count` | - | 실패 이벤트 수 | DomainEvent Partial Failure만 |
+| `response.status` | `"success"` / `"failure"` | `"success"` / `"failure"` | 동일 |
+| `response.elapsed` | 처리 시간(초) | 처리 시간(초) | 동일 |
+| `error.type` | `"expected"` / `"exceptional"` / `"aggregate"` | `"expected"` / `"exceptional"` / `"aggregate"` | 오류 분류 |
+| `error.code` | 오류 코드 | 오류 코드 | 동일 |
+| `@error` | 오류 객체 | 오류 객체 | 동일 |
+
+```
+# Request - 단일 이벤트
+{request.layer} {request.category} {request.handler}.{request.handler.method} {@request.message} requesting
+
+# Request - Aggregate 다중 이벤트
+{request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events requesting
+
+# Response - Success
+{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s
+
+# Response - Success (Aggregate)
+{request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events responded {response.status} in {response.elapsed:0.0000} s
+
+# Response - Warning/Error
+{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
+
+# Response - Warning/Error (Aggregate)
+{request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
+
+# Response - Partial Failure (Aggregate)
+{request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events with partial failure: {success_count} succeeded, {failure_count} failed responded {response.status} in {response.elapsed:0.0000} s
+```
+
+**DomainEvent Event IDs:**
+
+| Event | ID | Name |
+|-------|-----|------|
+| Request | 3001 | `domain_event.publish` |
+| Success | 3002 | `domain_event.publish.success` |
+| Warning | 3003 | `domain_event.publish.warning` |
+| Error | 3004 | `domain_event.publish.error` |
 
 **Error Field 값 (`error.type` vs `@error.ErrorType`):**
 
