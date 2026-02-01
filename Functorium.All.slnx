@@ -2,6 +2,10 @@
   <Folder Name="/Tutorials/">
     <Project Path="Tutorials/LanguageExtExplore/LanguageExtExplore.csproj" />
   </Folder>
+  <Folder Name="/Tutorials/MediatorEvents/" />
+  <Folder Name="/Tutorials/MediatorEvents/Src/">
+    <Project Path="Tutorials/MediatorEvents/Src/MediatorEvents.Demo/MediatorEvents.Demo.csproj" />
+  </Folder>
   <Folder Name="/Tutorials/Cqrs01/" />
   <Folder Name="/Tutorials/Cqrs01/Src/">
     <Project Path="Tutorials/Cqrs01/Src/Cqrs01.Demo/Cqrs01.Demo.csproj" />
