@@ -38,6 +38,7 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
     <PackageReference Include="Ardalis.SmartEnum" />
     <PackageReference Include="Mediator.Abstractions" />
+    <PackageReference Include="Scrutor" />
   </ItemGroup>
 
 </Project>

@@ -23,6 +23,14 @@ public static class AdapterInfrastructureRegistration
         services.RegisterDomainEventPublisher();
 
         // =================================================================
+        // Application 레이어의 도메인 이벤트 핸들러 등록
+        // Mediator.SourceGenerator는 해당 패키지가 참조된 프로젝트 내의
+        // 핸들러만 자동 등록하므로, 다른 어셈블리의 핸들러는 명시적 등록 필요
+        // =================================================================
+        services.RegisterDomainEventHandlersFromAssembly(
+            LayeredArch.Application.AssemblyReference.Assembly);
+
+        // =================================================================
         // MeterFactory 등록 (UsecaseMetricsPipeline에 필요)
         // =================================================================
         services.AddMetrics();

@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Functorium.Abstractions.Errors;
 using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Loggers;
 using Functorium.Adapters.Observabilities.Naming;
@@ -65,7 +64,7 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher
                 },
                 Fail: error =>
                 {
-                    var (errorType, errorCode) = GetErrorInfo(error);
+                    var (errorType, errorCode) = ErrorInfoExtractor.GetErrorInfo(error);
                     activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);
                     activity?.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, errorType);
                     activity?.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, errorCode);
@@ -118,7 +117,7 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher
                 },
                 Fail: error =>
                 {
-                    var (errorType, errorCode) = GetErrorInfo(error);
+                    var (errorType, errorCode) = ErrorInfoExtractor.GetErrorInfo(error);
                     activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);
                     activity?.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, errorType);
                     activity?.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, errorCode);
@@ -136,53 +135,6 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher
 
             return result;
         });
-    }
-
-    private static (string ErrorType, string ErrorCode) GetErrorInfo(Error error)
-    {
-        return error switch
-        {
-            ManyErrors many => (
-                ErrorType: ObservabilityNaming.ErrorTypes.Aggregate,
-                ErrorCode: GetPrimaryErrorCode(many)
-            ),
-            ErrorCodeExceptional exceptional => (
-                ErrorType: ObservabilityNaming.ErrorTypes.Exceptional,
-                ErrorCode: exceptional.ErrorCode
-            ),
-            IHasErrorCode hasErrorCode => (
-                ErrorType: ObservabilityNaming.ErrorTypes.Expected,
-                ErrorCode: hasErrorCode.ErrorCode
-            ),
-            _ => (
-                ErrorType: error.IsExceptional
-                    ? ObservabilityNaming.ErrorTypes.Exceptional
-                    : ObservabilityNaming.ErrorTypes.Expected,
-                ErrorCode: error.GetType().Name
-            )
-        };
-    }
-
-    private static string GetPrimaryErrorCode(ManyErrors many)
-    {
-        foreach (Error e in many.Errors)
-        {
-            if (e.IsExceptional)
-                return GetErrorCode(e);
-        }
-
-        return many.Errors.Head.Match(
-            Some: GetErrorCode,
-            None: () => nameof(ManyErrors));
-    }
-
-    private static string GetErrorCode(Error error)
-    {
-        return error switch
-        {
-            IHasErrorCode hasErrorCode => hasErrorCode.ErrorCode,
-            _ => error.GetType().Name
-        };
     }
 
     /// <inheritdoc />
@@ -237,7 +189,7 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher
                 },
                 Fail: error =>
                 {
-                    var (errorType, errorCode) = GetErrorInfo(error);
+                    var (errorType, errorCode) = ErrorInfoExtractor.GetErrorInfo(error);
                     activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);
                     activity?.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, errorType);
                     activity?.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, errorCode);

@@ -7,11 +7,11 @@ namespace LayeredArch.Application.Usecases.Products;
 /// <summary>
 /// Product.UpdatedEvent 핸들러 - 상품 업데이트 로깅.
 /// </summary>
-public sealed class OnProductUpdatedHandler : IDomainEventHandler<Product.UpdatedEvent>
+public sealed class OnProductUpdated : IDomainEventHandler<Product.UpdatedEvent>
 {
-    private readonly ILogger<OnProductUpdatedHandler> _logger;
+    private readonly ILogger<OnProductUpdated> _logger;
 
-    public OnProductUpdatedHandler(ILogger<OnProductUpdatedHandler> logger)
+    public OnProductUpdated(ILogger<OnProductUpdated> logger)
     {
         _logger = logger;
     }

@@ -30,19 +30,27 @@ public static partial class ObservabilityNaming
 
         public static class DomainEvent
         {
-            public static readonly EventId DomainEventPublish = new(3001, "domain_event.publish");
-            public static readonly EventId DomainEventPublishSuccess = new(3002, "domain_event.publish.success");
-            public static readonly EventId DomainEventPublishWarning = new(3003, "domain_event.publish.warning");
-            public static readonly EventId DomainEventPublishError = new(3004, "domain_event.publish.error");
+            public static readonly EventId DomainEventRequest = new(3001, "domain_event.request");
+            public static readonly EventId DomainEventResponseSuccess = new(3002, "domain_event.response.success");
+            public static readonly EventId DomainEventResponseWarning = new(3003, "domain_event.response.warning");
+            public static readonly EventId DomainEventResponseError = new(3004, "domain_event.response.error");
+        }
+
+        public static class DomainEventHandler
+        {
+            public static readonly EventId Request = new(3101, "domain_event_handler.request");
+            public static readonly EventId ResponseSuccess = new(3102, "domain_event_handler.response.success");
+            public static readonly EventId ResponseWarning = new(3103, "domain_event_handler.response.warning");
+            public static readonly EventId ResponseError = new(3104, "domain_event_handler.response.error");
         }
     }
 
     /// <summary>
-    /// 도메인 이벤트 관련 상수.
+    /// 도메인 이벤트 Publisher 관련 상수.
     /// </summary>
     public static class DomainEvents
     {
-        public const string Category = "domain_event";
+        public const string Category = "domain_event.publisher";
         public const string ActivitySourceName = "DomainEvent";
 
         /// <summary>
@@ -64,5 +72,19 @@ public static partial class ObservabilityNaming
         /// Aggregate의 모든 도메인 이벤트 발행 (결과 반환) 메서드명.
         /// </summary>
         public const string PublishEventsWithResultMethod = "PublishEventsWithResult";
+    }
+
+    /// <summary>
+    /// 도메인 이벤트 Handler 관련 상수.
+    /// </summary>
+    public static class DomainEventHandlers
+    {
+        public const string Category = "domain_event.handler";
+        public const string ActivitySourceName = "DomainEventHandler";
+
+        /// <summary>
+        /// 도메인 이벤트 핸들러가 처리되는 레이어 (Application 레이어).
+        /// </summary>
+        public const string Layer = "application";
     }
 }

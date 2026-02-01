@@ -22,7 +22,7 @@ public static class DomainEventLoggerExtensions
             return;
 
         logger.LogInformation(
-            eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventPublish,
+            eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventRequest,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} {@request.message} requesting",
             ObservabilityNaming.DomainEvents.Layer,
             ObservabilityNaming.DomainEvents.Category,
@@ -44,7 +44,7 @@ public static class DomainEventLoggerExtensions
             return;
 
         logger.LogInformation(
-            eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventPublishSuccess,
+            eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventResponseSuccess,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s",
             ObservabilityNaming.DomainEvents.Layer,
             ObservabilityNaming.DomainEvents.Category,
@@ -70,7 +70,7 @@ public static class DomainEventLoggerExtensions
             return;
 
         logger.LogWarning(
-            eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventPublishWarning,
+            eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventResponseWarning,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             ObservabilityNaming.DomainEvents.Layer,
             ObservabilityNaming.DomainEvents.Category,
@@ -99,7 +99,7 @@ public static class DomainEventLoggerExtensions
             return;
 
         logger.LogError(
-            eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventPublishError,
+            eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventResponseError,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             ObservabilityNaming.DomainEvents.Layer,
             ObservabilityNaming.DomainEvents.Category,
@@ -125,7 +125,7 @@ public static class DomainEventLoggerExtensions
             return;
 
         logger.LogInformation(
-            eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventPublish,
+            eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventRequest,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events requesting",
             ObservabilityNaming.DomainEvents.Layer,
             ObservabilityNaming.DomainEvents.Category,
@@ -148,7 +148,7 @@ public static class DomainEventLoggerExtensions
             return;
 
         logger.LogInformation(
-            eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventPublishSuccess,
+            eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventResponseSuccess,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events responded {response.status} in {response.elapsed:0.0000} s",
             ObservabilityNaming.DomainEvents.Layer,
             ObservabilityNaming.DomainEvents.Category,
@@ -176,7 +176,7 @@ public static class DomainEventLoggerExtensions
             return;
 
         logger.LogError(
-            eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventPublishError,
+            eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventResponseError,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             ObservabilityNaming.DomainEvents.Layer,
             ObservabilityNaming.DomainEvents.Category,
@@ -207,7 +207,7 @@ public static class DomainEventLoggerExtensions
             return;
 
         logger.LogWarning(
-            eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventPublishWarning,
+            eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventResponseWarning,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             ObservabilityNaming.DomainEvents.Layer,
             ObservabilityNaming.DomainEvents.Category,
@@ -237,7 +237,7 @@ public static class DomainEventLoggerExtensions
             return;
 
         logger.LogWarning(
-            eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventPublishWarning,
+            eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventResponseWarning,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events with partial failure: {success_count} succeeded, {failure_count} failed responded {response.status} in {response.elapsed:0.0000} s",
             ObservabilityNaming.DomainEvents.Layer,
             ObservabilityNaming.DomainEvents.Category,

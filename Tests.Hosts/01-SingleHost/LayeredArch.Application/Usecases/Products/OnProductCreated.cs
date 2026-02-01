@@ -7,11 +7,11 @@ namespace LayeredArch.Application.Usecases.Products;
 /// <summary>
 /// Product.CreatedEvent 핸들러 - 상품 생성 로깅.
 /// </summary>
-public sealed class OnProductCreatedHandler : IDomainEventHandler<Product.CreatedEvent>
+public sealed class OnProductCreated : IDomainEventHandler<Product.CreatedEvent>
 {
-    private readonly ILogger<OnProductCreatedHandler> _logger;
+    private readonly ILogger<OnProductCreated> _logger;
 
-    public OnProductCreatedHandler(ILogger<OnProductCreatedHandler> logger)
+    public OnProductCreated(ILogger<OnProductCreated> logger)
     {
         _logger = logger;
     }

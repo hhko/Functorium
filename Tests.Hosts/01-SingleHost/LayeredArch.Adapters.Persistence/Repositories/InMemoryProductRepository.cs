@@ -3,7 +3,7 @@ using LayeredArch.Domain.Entities;
 using LayeredArch.Domain.Repositories;
 using LayeredArch.Domain.ValueObjects;
 using Functorium.Adapters.Errors;
-using Functorium.Adapters.SourceGenerator;
+using Functorium.Adapters.SourceGenerators;
 using LanguageExt;
 using LanguageExt.Common;
 using Microsoft.Extensions.Logging;
