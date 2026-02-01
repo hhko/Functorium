@@ -1,6 +1,6 @@
 using Cqrs03Functional.Demo.Domain.ValueObjects;
 using Functorium.Domains.Entities;
-using Functorium.Domains.SourceGenerator;
+using Functorium.Domains.SourceGenerators;
 
 namespace Cqrs03Functional.Demo.Domain;
 

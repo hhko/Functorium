@@ -1,4 +1,4 @@
-namespace Functorium.Adapters.SourceGenerator.Generators.AdapterPipelineGenerator;
+namespace Functorium.Adapters.SourceGenerators.Generators.AdapterPipelineGenerator;
 
 /// <summary>
 /// 파라미터 이름 충돌을 해결하는 유틸리티 클래스

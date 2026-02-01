@@ -4,10 +4,10 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-using static Functorium.Adapters.SourceGenerator.Abstractions.Constants;
-using static Functorium.Adapters.SourceGenerator.Abstractions.Selectors;
+using static Functorium.Adapters.SourceGenerators.Abstractions.Constants;
+using static Functorium.Adapters.SourceGenerators.Abstractions.Selectors;
 
-namespace Functorium.Adapters.SourceGenerator.Generators.EntityIdGenerator;
+namespace Functorium.Adapters.SourceGenerators.Generators.EntityIdGenerator;
 
 /// <summary>
 /// [GenerateEntityId] 속성이 붙은 Entity 클래스에 대해
@@ -21,7 +21,7 @@ public sealed class EntityIdGenerator()
         AttachDebugger: false)
 {
     private const string AttributeName = "GenerateEntityId";
-    private const string AttributeNamespace = "Functorium.Domains.SourceGenerator";
+    private const string AttributeNamespace = "Functorium.Domains.SourceGenerators";
     private const string FullyQualifiedAttributeName = $"{AttributeNamespace}.{AttributeName}Attribute";
 
     private static IncrementalValuesProvider<EntityIdInfo> RegisterSourceProvider(

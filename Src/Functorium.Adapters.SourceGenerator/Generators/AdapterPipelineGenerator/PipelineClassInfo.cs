@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 
-namespace Functorium.Adapters.SourceGenerator.Generators.AdapterPipelineGenerator;
+namespace Functorium.Adapters.SourceGenerators.Generators.AdapterPipelineGenerator;
 
 public readonly record struct PipelineClassInfo
 {

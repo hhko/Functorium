@@ -1,6 +1,6 @@
 using Cqrs01.Demo.Domain.ValueObjects;
 
-using Functorium.Domains.SourceGenerator;
+using Functorium.Domains.SourceGenerators;
 using Functorium.Domains.Entities;
 
 using LanguageExt;

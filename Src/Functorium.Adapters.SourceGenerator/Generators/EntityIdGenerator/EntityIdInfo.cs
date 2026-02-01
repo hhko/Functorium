@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 
-namespace Functorium.Adapters.SourceGenerator.Generators.EntityIdGenerator;
+namespace Functorium.Adapters.SourceGenerators.Generators.EntityIdGenerator;
 
 /// <summary>
 /// Entity ID 생성에 필요한 메타데이터.

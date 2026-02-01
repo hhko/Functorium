@@ -1,6 +1,6 @@
 using Cqrs04Endpoint.WebApi.Domain.ValueObjects;
 using Functorium.Domains.Entities;
-using Functorium.Domains.SourceGenerator;
+using Functorium.Domains.SourceGenerators;
 
 namespace Cqrs04Endpoint.WebApi.Domain;
 

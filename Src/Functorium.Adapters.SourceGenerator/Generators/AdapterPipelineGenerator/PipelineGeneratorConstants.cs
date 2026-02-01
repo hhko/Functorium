@@ -1,4 +1,4 @@
-namespace Functorium.Adapters.SourceGenerator.Generators.AdapterPipelineGenerator;
+namespace Functorium.Adapters.SourceGenerators.Generators.AdapterPipelineGenerator;
 
 /// <summary>
 /// Pipeline 생성기에서 사용하는 상수들

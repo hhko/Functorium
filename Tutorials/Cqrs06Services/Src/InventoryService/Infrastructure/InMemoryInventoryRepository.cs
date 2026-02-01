@@ -1,5 +1,5 @@
 using System.Collections.Concurrent;
-using Functorium.Adapters.SourceGenerator;
+using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Observabilities;
 using LanguageExt;
 using LanguageExt.Common;

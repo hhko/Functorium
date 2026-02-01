@@ -1,4 +1,4 @@
-using Functorium.Adapters.SourceGenerator;
+using Functorium.Adapters.SourceGenerators;
 
 using LanguageExt;
 

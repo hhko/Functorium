@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 using Microsoft.CodeAnalysis;
 
-namespace Functorium.Adapters.SourceGenerator.Generators;
+namespace Functorium.Adapters.SourceGenerators.Generators;
 
 public abstract class IncrementalGeneratorBase<TValue>(
     Func<IncrementalGeneratorInitializationContext, IncrementalValuesProvider<TValue>> registerSourceProvider,

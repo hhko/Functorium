@@ -1,4 +1,4 @@
-namespace Functorium.Adapters.SourceGenerator;
+namespace Functorium.Adapters.SourceGenerators;
 
 /// <summary>
 /// Adapter 클래스에 이 속성을 적용하면 Pipeline wrapper 클래스가 자동으로 생성됩니다.

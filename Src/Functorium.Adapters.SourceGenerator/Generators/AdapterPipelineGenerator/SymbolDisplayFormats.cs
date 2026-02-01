@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 
-namespace Functorium.Adapters.SourceGenerator.Generators.AdapterPipelineGenerator;
+namespace Functorium.Adapters.SourceGenerators.Generators.AdapterPipelineGenerator;
 
 /// <summary>
 /// 타입 표시를 위한 SymbolDisplayFormat 정의

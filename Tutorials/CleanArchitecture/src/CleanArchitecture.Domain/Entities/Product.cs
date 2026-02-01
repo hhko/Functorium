@@ -2,7 +2,7 @@ using CleanArchitecture.Domain.ValueObjects;
 
 using Functorium.Domains.Entities;
 using Functorium.Domains.Errors;
-using Functorium.Domains.SourceGenerator;
+using Functorium.Domains.SourceGenerators;
 using Functorium.Domains.ValueObjects.Validations;
 
 using LanguageExt;
