@@ -428,6 +428,7 @@ FodyWeavers.xsd
 
 # Claude Code
 nul
+nu_
 bash.exe.stackdump
 tmpclaude-*-cwd
 
