@@ -13,6 +13,12 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [x] 도메인 이벤트 구현 관련 테스트 구현
 - [x] ~~도메인 이벤트 Sub `Handler -> subscriber~~`
 - [X] 도메인 이벤트 Sub `namespace LayeredArch.Application.EventHandlers;` Usecase???
+- [ ] 도메인 이벤트 핸들러는 CQRS에서 Query?
+- [ ] 도메인 이벤트 트랜잭션과 관계? 트랜잭션 후
+- [ ] 도메인 이벤트 비동기 wait?
+- [ ] 도메인 이벤트 실패 인식이 유스케이스에 전파 및 처리할 필요가 있는가?
+- [ ] 도메인 이벤트 핸들러 등록 방법은?
+- [ ] 내부/외부 도메인 이벤트 구분?
 - [ ] 이벤트 부분 실패 처리? PublishEventsWithResult?
 - [ ] 이벤트 관찰 가능성 개선
 - [ ] entity-guide.md 재구성
