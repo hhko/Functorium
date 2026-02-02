@@ -54,9 +54,9 @@ public static partial class ObservabilityNaming
         public const string ActivitySourceName = "DomainEvent";
 
         /// <summary>
-        /// 도메인 이벤트가 처리되는 레이어 (Application 레이어의 일부로 취급).
+        /// 도메인 이벤트 발행이 처리되는 레이어 (Adapter 레이어).
         /// </summary>
-        public const string Layer = "application";
+        public const string Layer = "adapter";
 
         /// <summary>
         /// 단일 도메인 이벤트 발행 메서드명.
