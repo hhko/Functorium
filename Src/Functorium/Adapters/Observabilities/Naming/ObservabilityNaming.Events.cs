@@ -50,7 +50,7 @@ public static partial class ObservabilityNaming
     /// </summary>
     public static class DomainEvents
     {
-        public const string Category = "domain_event.publisher";
+        public const string Category = "domain_event";
         public const string ActivitySourceName = "DomainEvent";
 
         /// <summary>
@@ -79,7 +79,7 @@ public static partial class ObservabilityNaming
     /// </summary>
     public static class DomainEventHandlers
     {
-        public const string Category = "domain_event.handler";
+        public const string Category = "domain_event";
         public const string ActivitySourceName = "DomainEventHandler";
 
         /// <summary>

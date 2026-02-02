@@ -18,9 +18,9 @@ public static class AdapterInfrastructureRegistration
         services.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);
 
         // =================================================================
-        // 도메인 이벤트 발행자 등록
+        // 도메인 이벤트 발행자 등록 (Publisher 관점 Observability 활성화)
         // =================================================================
-        services.RegisterDomainEventPublisher();
+        services.RegisterDomainEventPublisher(enableObservability: true);
 
         // =================================================================
         // Application 레이어의 도메인 이벤트 핸들러 등록
@@ -29,6 +29,11 @@ public static class AdapterInfrastructureRegistration
         // =================================================================
         services.RegisterDomainEventHandlersFromAssembly(
             LayeredArch.Application.AssemblyReference.Assembly);
+
+        // =================================================================
+        // Handler 관점 Observability 활성화
+        // =================================================================
+        services.RegisterObservableDomainEventNotificationPublisher();
 
         // =================================================================
         // MeterFactory 등록 (UsecaseMetricsPipeline에 필요)
