@@ -56,6 +56,9 @@ public static class OpenTelemetryRegistration
         services.AddLogging(loggingBuilder =>
             loggingBuilder.AddSerilog(dispose: true));
 
+        // MeterFactory 등록 (UsecaseMetricsPipeline 등 Metrics 기능에 필요)
+        services.AddMetrics();
+
         // OpenTelemetry Logging, Tracing, Metrics 확장 설정을 위한 Builder 클래스 반환
         // Builder는 IServiceProvider를 통해 필요할 때 옵션을 가져옴
         return new OpenTelemetryBuilder(

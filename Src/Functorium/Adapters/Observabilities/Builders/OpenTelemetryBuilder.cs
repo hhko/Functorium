@@ -274,6 +274,18 @@ public partial class OpenTelemetryBuilder
             .AddSerilog(logging =>
             {
                 // 기본 설정: ReadFrom.Configuration으로 appsettings.json 읽기
+                // appsettings.json의 Serilog.WriteTo[].Args.outputTemplate에서 타임스탬프 포맷 설정 가능:
+                //
+                // | Format                                     | Output                            | Desc.                  |
+                // |-----------------------------------         |-----------------------------------|------------------------|
+                // | {Timestamp:HH:mm:ss}                       | 16:03:53                          | 시:분:초                 |
+                // | {Timestamp:HH:mm:ss.fff}                   | 16:03:53.165                      | 밀리초 (3자리)           |
+                // | {Timestamp:HH:mm:ss.ffffff}                | 16:03:53.165887                   | 마이크로초 (6자리)        |
+                // | {Timestamp:HH:mm:ss.fffffff}               | 16:03:53.1658878                  | 100나노초 (7자리)         |
+                // | {Timestamp:yyyy-MM-ddTHH:mm:ss.fffffffZ}   | 2026-02-03T16:03:53.1658878Z      | ISO 8601 + 7자리 정밀도 |
+                // | {Timestamp:o}                              | 2026-02-03T16:03:53.1658878+09:00 | ISO 8601 라운드트립      |
+                //
+                // 정밀 타임스탬프는 연속 로그 간 시간차 분석에 유용합니다.
                 logging.ReadFrom.Configuration(_configuration);
 
                 // WriteTo.OpenTelemetry 설정 (LoggingCollectorEndpoint가 설정된 경우에만)
