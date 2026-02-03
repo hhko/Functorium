@@ -34,7 +34,7 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
         string requestHandlerMethod = ObservabilityNaming.Methods.Handle;
 
         // 요청 로그
-        _logger.LogRequestMessage(
+        _logger.LogUsecaseRequest(
             ObservabilityNaming.Layers.Application,
             ObservabilityNaming.Categories.Usecase,
             requestCqrs,
@@ -56,7 +56,7 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
     {
         if (response.IsSucc)
         {
-            _logger.LogResponseMessageSuccess(
+            _logger.LogUsecaseResponseSuccess(
                 ObservabilityNaming.Layers.Application,
                 ObservabilityNaming.Categories.Usecase,
                 requestCqrs,
@@ -81,7 +81,7 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
 
                 if (error.IsExceptional)
                 {
-                    _logger.LogResponseMessageError(
+                    _logger.LogUsecaseResponseError(
                         ObservabilityNaming.Layers.Application,
                         ObservabilityNaming.Categories.Usecase,
                         requestCqrs,
@@ -95,7 +95,7 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
                 }
                 else
                 {
-                    _logger.LogResponseMessageWarning(
+                    _logger.LogUsecaseResponseWarning(
                         ObservabilityNaming.Layers.Application,
                         ObservabilityNaming.Categories.Usecase,
                         requestCqrs,

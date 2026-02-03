@@ -565,9 +565,9 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine($"                requestHandler: RequestHandler,")
             .AppendLine($"                requestHandlerMethod: nameof({method.Name}),")
             .AppendLine($"                operation: FinTToIO(base.{method.Name}({string.Join(", ", method.Parameters.Select(p => p.Name))})),")
-            .AppendLine($"                requestLog: () => RequestLog_{classInfo.ClassName}_{method.Name}(RequestHandler, nameof({method.Name}){(method.Parameters.Count > 0 ? ", " + string.Join(", ", method.Parameters.Select(p => p.Name)) : "")}),")
-            .AppendLine($"                responseLogSuccess: ResponseLogSuccess_{classInfo.ClassName}_{method.Name},")
-            .AppendLine($"                responseLogFailure: ResponseLogFailure_{classInfo.ClassName}_{method.Name},")
+            .AppendLine($"                requestLog: () => AdapterRequestLog_{classInfo.ClassName}_{method.Name}(RequestHandler, nameof({method.Name}){(method.Parameters.Count > 0 ? ", " + string.Join(", ", method.Parameters.Select(p => p.Name)) : "")}),")
+            .AppendLine($"                responseLogSuccess: AdapterResponseSuccessLog_{classInfo.ClassName}_{method.Name},")
+            .AppendLine($"                responseLogFailure: AdapterResponseFailureLog_{classInfo.ClassName}_{method.Name},")
             .AppendLine("                startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())")
             .AppendLine($"            select result).Map(r => global::LanguageExt.Fin.Succ(r)));")
             .AppendLine();
@@ -576,7 +576,7 @@ public sealed class AdapterPipelineGenerator()
         var parameterDeclarations = method.Parameters.Count > 0
             ? ",\n        " + string.Join(",\n        ", method.Parameters.Select(p => $"{p.Type} {p.Name}"))
             : "";
-        sb.AppendLine($"    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_{classInfo.ClassName}_{method.Name}(")
+        sb.AppendLine($"    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("        string requestHandler,")
             .Append("        string requestHandlerMethod")
             .AppendLine($"{parameterDeclarations}) =>")
@@ -584,7 +584,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("        {")
             .AppendLine("            if (_isDebugEnabled)")
             .AppendLine("            {")
-            .AppendLine($"                _logger.LogRequestDebug_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine($"                _logger.LogAdapterRequestDebug_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("                    ObservabilityNaming.Layers.Adapter,")
             .AppendLine($"                    _requestCategoryLowerCase,")
             .AppendLine("                    requestHandler,")
@@ -593,7 +593,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("            }")
             .AppendLine("            else if (_isInformationEnabled)")
             .AppendLine("            {")
-            .AppendLine($"                _logger.LogRequest_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine($"                _logger.LogAdapterRequest_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("                    ObservabilityNaming.Layers.Adapter,")
             .AppendLine($"                    _requestCategoryLowerCase,")
             .AppendLine("                    requestHandler,")
@@ -604,7 +604,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine();
 
         // Response success logging helper
-        sb.AppendLine($"    private void ResponseLogSuccess_{classInfo.ClassName}_{method.Name}(")
+        sb.AppendLine($"    private void AdapterResponseSuccessLog_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("        string requestHandler,")
             .AppendLine("        string requestHandlerMethod,")
             .AppendLine($"        {actualReturnType} result,")
@@ -612,7 +612,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("    {")
             .AppendLine("        if (_isDebugEnabled)")
             .AppendLine("        {")
-            .AppendLine($"            _logger.LogResponseDebug_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine($"            _logger.LogAdapterResponseSuccessDebug_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("                ObservabilityNaming.Layers.Adapter,")
             .AppendLine($"                _requestCategoryLowerCase,")
             .AppendLine("                requestHandler,")
@@ -623,7 +623,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("        }")
             .AppendLine("        else if (_isInformationEnabled)")
             .AppendLine("        {")
-            .AppendLine($"            _logger.LogResponse_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine($"            _logger.LogAdapterResponseSuccess_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("                ObservabilityNaming.Layers.Adapter,")
             .AppendLine($"                _requestCategoryLowerCase,")
             .AppendLine("                requestHandler,")
@@ -635,7 +635,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine();
 
         // Response failure logging helper
-        sb.AppendLine($"    private void ResponseLogFailure_{classInfo.ClassName}_{method.Name}(")
+        sb.AppendLine($"    private void AdapterResponseFailureLog_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("        string requestHandler,")
             .AppendLine("        string requestHandlerMethod,")
             .AppendLine("        global::LanguageExt.Common.Error error,")
@@ -645,7 +645,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine()
             .AppendLine("        if (error.IsExceptional && _isErrorEnabled)")
             .AppendLine("        {")
-            .AppendLine($"            _logger.LogResponseError_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine($"            _logger.LogAdapterResponseError_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("                ObservabilityNaming.Layers.Adapter,")
             .AppendLine($"                _requestCategoryLowerCase,")
             .AppendLine("                requestHandler,")
@@ -658,7 +658,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("        }")
             .AppendLine("        else if (_isWarningEnabled)")
             .AppendLine("        {")
-            .AppendLine($"            _logger.LogResponseWarning_{classInfo.ClassName}_{method.Name}(")
+            .AppendLine($"            _logger.LogAdapterResponseWarning_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("                ObservabilityNaming.Layers.Adapter,")
             .AppendLine($"                _requestCategoryLowerCase,")
             .AppendLine("                requestHandler,")
@@ -687,7 +687,7 @@ public sealed class AdapterPipelineGenerator()
         var logRequestDebugParams = method.Parameters.Count > 0
             ? ",\n        " + string.Join(",\n        ", method.Parameters.Select(p => $"{p.Type} {p.Name}"))
             : "";
-        sb.AppendLine($"    public static void LogRequestDebug_{classInfo.ClassName}_{method.Name}(")
+        sb.AppendLine($"    public static void LogAdapterRequestDebug_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("        this ILogger logger,")
             .AppendLine("        string requestLayer,")
             .AppendLine("        string requestCategory,")
@@ -722,7 +722,7 @@ public sealed class AdapterPipelineGenerator()
         if (totalDebugRequestParams <= 6)
         {
             // ✅ 고성능 경로: LoggerMessage.Define 사용 (파라미터 ≤ 6개)
-            sb.Append($"        _logRequestDebug_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod");
+            sb.Append($"        _logAdapterRequestDebug_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod");
 
             foreach (var param in method.Parameters)
             {
@@ -801,7 +801,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine();
 
         // ===== LogRequest (파라미터 제외) =====
-        sb.AppendLine($"    public static void LogRequest_{classInfo.ClassName}_{method.Name}(")
+        sb.AppendLine($"    public static void LogAdapterRequest_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("        this ILogger logger,")
             .AppendLine("        string requestLayer,")
             .AppendLine("        string requestCategory,")
@@ -811,12 +811,12 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("        if (!logger.IsEnabled(LogLevel.Information))")
             .AppendLine("            return;")
             .AppendLine()
-            .AppendLine($"        _logRequest_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);")
+            .AppendLine($"        _logAdapterRequest_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);")
             .AppendLine("    }")
             .AppendLine();
 
         // ===== LogResponseDebug (result 포함) =====
-        sb.AppendLine($"    public static void LogResponseDebug_{classInfo.ClassName}_{method.Name}(")
+        sb.AppendLine($"    public static void LogAdapterResponseSuccessDebug_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("        this ILogger logger,")
             .AppendLine("        string requestLayer,")
             .AppendLine("        string requestCategory,")
@@ -844,7 +844,7 @@ public sealed class AdapterPipelineGenerator()
         if (debugResponseParams <= 6)
         {
             // LoggerMessage.Define 사용
-            sb.Append($"        _logResponseDebug_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status");
+            sb.Append($"        _logAdapterResponseSuccessDebug_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status");
 
             if (CollectionTypeHelper.IsCollectionType(actualReturnType))
             {
@@ -910,7 +910,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine();
 
         // ===== LogResponse (result 제외) =====
-        sb.AppendLine($"    public static void LogResponse_{classInfo.ClassName}_{method.Name}(")
+        sb.AppendLine($"    public static void LogAdapterResponseSuccess_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("        this ILogger logger,")
             .AppendLine("        string requestLayer,")
             .AppendLine("        string requestCategory,")
@@ -922,12 +922,12 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("        if (!logger.IsEnabled(LogLevel.Information))")
             .AppendLine("            return;")
             .AppendLine()
-            .AppendLine($"        _logResponse_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);")
+            .AppendLine($"        _logAdapterResponseSuccess_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);")
             .AppendLine("    }")
             .AppendLine();
 
         // ===== LogResponseWarning =====
-        sb.AppendLine($"    public static void LogResponseWarning_{classInfo.ClassName}_{method.Name}(")
+        sb.AppendLine($"    public static void LogAdapterResponseWarning_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("        this ILogger logger,")
             .AppendLine("        string requestLayer,")
             .AppendLine("        string requestCategory,")
@@ -957,7 +957,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine();
 
         // ===== LogResponseError =====
-        sb.AppendLine($"    public static void LogResponseError_{classInfo.ClassName}_{method.Name}(")
+        sb.AppendLine($"    public static void LogAdapterResponseError_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("        this ILogger logger,")
             .AppendLine("        string requestLayer,")
             .AppendLine("        string requestCategory,")
@@ -1013,7 +1013,7 @@ public sealed class AdapterPipelineGenerator()
 
     private static void GenerateLogRequestDelegate(StringBuilder sb, PipelineClassInfo classInfo, MethodInfo method)
     {
-        sb.AppendLine($"    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_{classInfo.ClassName}_{method.Name} =");
+        sb.AppendLine($"    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_{classInfo.ClassName}_{method.Name} =");
         sb.AppendLine("        LoggerMessage.Define<string, string, string, string>(");
         sb.AppendLine("            LogLevel.Information,");
         sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterRequest,");
@@ -1074,7 +1074,7 @@ public sealed class AdapterPipelineGenerator()
 
         string messageTemplate = string.Join(" ", messageFields);
 
-        sb.AppendLine($"    private static readonly global::System.Action<ILogger, {string.Join(", ", typeParams)}, global::System.Exception?> _logRequestDebug_{classInfo.ClassName}_{method.Name} =");
+        sb.AppendLine($"    private static readonly global::System.Action<ILogger, {string.Join(", ", typeParams)}, global::System.Exception?> _logAdapterRequestDebug_{classInfo.ClassName}_{method.Name} =");
         sb.AppendLine($"        LoggerMessage.Define<{string.Join(", ", typeParams)}>(");
         sb.AppendLine("            LogLevel.Debug,");
         sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterRequest,");
@@ -1084,7 +1084,7 @@ public sealed class AdapterPipelineGenerator()
 
     private static void GenerateLogResponseDelegate(StringBuilder sb, PipelineClassInfo classInfo, MethodInfo method)
     {
-        sb.AppendLine($"    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_{classInfo.ClassName}_{method.Name} =");
+        sb.AppendLine($"    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_{classInfo.ClassName}_{method.Name} =");
         sb.AppendLine("        LoggerMessage.Define<string, string, string, string, string, double>(");
         sb.AppendLine("            LogLevel.Information,");
         sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,");
@@ -1140,7 +1140,7 @@ public sealed class AdapterPipelineGenerator()
             messageTemplate = $"{{request.layer}} {{request.category}} {{request.handler}}.{{request.handler.method}} {{{responseFieldName}}} responded {{response.status}} in {{response.elapsed:0.0000}} s";
         }
 
-        sb.AppendLine($"    private static readonly global::System.Action<ILogger, {string.Join(", ", typeParams)}, global::System.Exception?> _logResponseDebug_{classInfo.ClassName}_{method.Name} =");
+        sb.AppendLine($"    private static readonly global::System.Action<ILogger, {string.Join(", ", typeParams)}, global::System.Exception?> _logAdapterResponseSuccessDebug_{classInfo.ClassName}_{method.Name} =");
         sb.AppendLine($"        LoggerMessage.Define<{string.Join(", ", typeParams)}>(");
         sb.AppendLine("            LogLevel.Debug,");
         sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,");

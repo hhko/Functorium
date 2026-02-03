@@ -34,9 +34,9 @@ public static class DomainEventHandlerLoggerExtensions
     }
 
     /// <summary>
-    /// 도메인 이벤트 핸들러 성공 로그를 출력합니다.
+    /// 도메인 이벤트 핸들러 응답 성공 로그를 출력합니다.
     /// </summary>
-    public static void LogDomainEventHandlerSuccess(
+    public static void LogDomainEventHandlerResponseSuccess(
         this ILogger logger,
         string handlerName,
         double elapsed)
@@ -56,9 +56,9 @@ public static class DomainEventHandlerLoggerExtensions
     }
 
     /// <summary>
-    /// 도메인 이벤트 핸들러 경고 로그를 출력합니다 (예상된 에러).
+    /// 도메인 이벤트 핸들러 응답 경고 로그를 출력합니다 (예상된 에러).
     /// </summary>
-    public static void LogDomainEventHandlerWarning(
+    public static void LogDomainEventHandlerResponseWarning(
         this ILogger logger,
         string handlerName,
         double elapsed,
@@ -84,9 +84,9 @@ public static class DomainEventHandlerLoggerExtensions
     }
 
     /// <summary>
-    /// 도메인 이벤트 핸들러 에러 로그를 출력합니다 (예외적 에러).
+    /// 도메인 이벤트 핸들러 응답 에러 로그를 출력합니다 (예외적 에러).
     /// </summary>
-    public static void LogDomainEventHandlerError(
+    public static void LogDomainEventHandlerResponseError(
         this ILogger logger,
         string handlerName,
         double elapsed,
@@ -112,9 +112,9 @@ public static class DomainEventHandlerLoggerExtensions
     }
 
     /// <summary>
-    /// 도메인 이벤트 핸들러 에러 로그를 출력합니다 (예외 포함).
+    /// 도메인 이벤트 핸들러 응답 에러 로그를 출력합니다 (예외 포함).
     /// </summary>
-    public static void LogDomainEventHandlerError(
+    public static void LogDomainEventHandlerResponseError(
         this ILogger logger,
         string handlerName,
         double elapsed,

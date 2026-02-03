@@ -20,12 +20,12 @@ public static class UsecaseLoggerExtensions
     // ===== Request =====
 
     /// <summary>
-    /// Request 로그를 출력합니다.
+    /// Usecase 요청 로그를 출력합니다.
     /// </summary>
     /// <remarks>
     /// 제네릭 타입 T로 인해 LoggerMessage.Define을 사용할 수 없어 직접 호출합니다.
     /// </remarks>
-    public static void LogRequestMessage<T>(
+    public static void LogUsecaseRequest<T>(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -51,12 +51,12 @@ public static class UsecaseLoggerExtensions
     // ===== Response - 성공 =====
 
     /// <summary>
-    /// Response 성공 로그를 출력합니다.
+    /// Usecase 응답 성공 로그를 출력합니다.
     /// </summary>
     /// <remarks>
     /// 제네릭 타입 T로 인해 LoggerMessage.Define을 사용할 수 없어 직접 호출합니다.
     /// </remarks>
-    public static void LogResponseMessageSuccess<T>(
+    public static void LogUsecaseResponseSuccess<T>(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -86,13 +86,13 @@ public static class UsecaseLoggerExtensions
     // ===== Response - 실패, 경고 ErrorCodeExpected =====
 
     /// <summary>
-    /// Response 경고 로그를 출력합니다 (예상된 에러).
+    /// Usecase 응답 경고 로그를 출력합니다 (예상된 에러).
     /// </summary>
     /// <remarks>
     /// Error 필드 로깅이 필요한 경우 직접 호출을 사용합니다.
     /// LoggerMessage.Define은 7개 파라미터까지만 지원합니다.
     /// </remarks>
-    public static void LogResponseMessageWarning(
+    public static void LogUsecaseResponseWarning(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -127,13 +127,13 @@ public static class UsecaseLoggerExtensions
     // ===== Response - 실패, 에러 ErrorCodeExceptional =====
 
     /// <summary>
-    /// Response 에러 로그를 출력합니다 (예외적 에러).
+    /// Usecase 응답 에러 로그를 출력합니다 (예외적 에러).
     /// </summary>
     /// <remarks>
     /// Error 필드 로깅이 필요한 경우 직접 호출을 사용합니다.
     /// LoggerMessage.Define은 7개 파라미터까지만 지원합니다.
     /// </remarks>
-    public static void LogResponseMessageError(
+    public static void LogUsecaseResponseError(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
