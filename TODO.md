@@ -1,6 +1,159 @@
 ```shell
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
+
+- [ ] 도메인 이벤트 publisher adapter
+- [ ] 도메인 이벤트 부분 실패 처리? PublishEventsWithResult?
+- [ ] 로그 문서화
+---
+- [ ] 도메인 이벤트 지표
+- [ ] 도메인 이벤트 추적: 부모/자식 관계
+---
+- [ ] `ValidationRules<ProductName>.NotEmpty(value ?? "")  value ?? "" -> value`
+- [ ] `FinT<IO, bool> ExistsByName(ProductName name, ProductId? excludeId = null); -> Option<ProductId> excludeId`
+- [ ] LINQ 과정에서 발생하는 예외 -> Fin<T> 실패로 처리
+- [ ] As().ToFin()
+  ```cs
+  return (name, price, stockQuantity, description.Value)
+    .Apply((name, price, stockQuantity, description) =>
+        Product.Create(
+            ProductName.Create(name).ThrowIfFail(),
+            description,
+            Money.Create(price).ThrowIfFail(),
+            Quantity.Create(stockQuantity).ThrowIfFail()))
+    .As()
+    .ToFin();
+
+  .Bind()
+  .(...)
+    .Apply()
+  ```
+---
+- [ ] entity-guide.md 재구성
+- [ ] usecase-implementation-guide.md 재구성
+---
+- [ ] DTO Usecase
+- [ ] DTO FastEndpoint
+- [ ] DTO IAdapter
+- [ ] DTO EFCore + Entity?
+- [ ] DTO 성능 고려
+---
+- [ ] 커스텀 관찰 가능성 Usecase
+- [ ] 커스텀 관찰 가능성 IAdapter
+---
+- [ ] 소스 생성기 프로젝트 이름 변경 또는 통합?
+  - Functorium.SourceGenerator
+- [ ] 스케줄러
+- [ ] 2개 호스트
+---
+- [ ] Functorium.Adapters 프로젝트 분리
+- [ ] Functorium.SourceGenerators
+- [ ] Error 구조적 로그 예외
+
+
+<br/>
+<br/>
+<br/>
+
+
+
+- [x] SelectMany 확장 메서드 개선
+  ```
+  │ Source              │     Selector        │ 현재 상태 │
+  -----------------------------------------------------------
+  │ Fin<A>              │ FinT<M, B>           │ ✅ 있음   │
+  │ IO<A>               │ FinT<IO, B>          │ ✅ 있음   │
+  │ Validation<Error, A> │ FinT<M, B>           │ ✅ 있음   │
+  │ FinT<M, A>           │ Fin<B>               │ ❌ 누락   │
+  │ FinT<IO, A>          │ IO<B>                │ ❌ 누락   │
+  │ FinT<M, A>           │ Validation<Error, B> │ ❌ 누락   │
+  ```
+- [x] 도메인 이벤트 트랜잭션과 관계? 트랜잭션 후
+- [ ] Traverse, TraverseM
+- [ ] 내부/외부 도메인 이벤트 구분?
+- [ ] 2.1 Request/Response 데이터가 단일 속성에 중첩
+  ```
+  **현상**:
+  ```json
+  {
+    "Properties": {
+      "Data": {
+        "Value": {
+          "ProductId": "01KGGKDX...",
+          "Name": "TestProduct",
+          "Price": 100000
+        },
+        "IsSucc": true,
+        "IsFail": false,
+        "$type": "Succ"
+      }
+    }
+  }
+
+  **문제**:
+  - 로그 분석 시스템에서 `ProductId` 필드로 직접 필터링 불가
+  - `Data.Value.ProductId`처럼 깊은 경로 탐색 필요
+  - 검색 인덱싱 비효율
+
+  **개선안**:
+  ```json
+  {
+    "Properties": {
+      "Layer": "application",
+      "Category": "usecase.command",
+      "Handler": "CreateProductCommand",
+      "Status": "success",
+      "DurationMs": 248.7,
+      "Request": {
+        "Name": "TestProduct",
+        "Price": 100000
+      },
+      "Response": {
+        "ProductId": "01KGGKDXN48CHR54KF22P4AM9G"
+      },
+      "ProductId": "01KGGKDXN48CHR54KF22P4AM9G",
+      "ProductName": "TestProduct"
+    }
+  }
+  ```
+- [x] 도메인 이벤트 관찰 가능성 클래스 위치 조정
+- [x] 도메인 이벤트 관찰 가능성 테스트 클래스 위치 조정
+- [x] 도메인 이벤트 발생 로그 클래스 이름 개선: PublisherLoggerExtensions.cs
+- [x] 도메인 이벤트 핸들러 로그 의존성 버그 해결
+- [x] 관찰 가능성 로그 메서드 이름 통일화
+- [x] 로그 확장 메서드 이름 규칙 문서
+- [x] 소스 생성기에 로그 확장 메서드 이름 규칙 적용
+- [x] snapshot 테스트 결과 폴더 그룹화
+- [x] ~~RegisterDomainEventPublisher 연속 함수?~~
+- [ ] options.ServiceLifetime = ServiceLifetime.Scoped; 필요성?
+- [ ] options.ServiceLifetime = ServiceLifetime.Scoped; 기본이 singletone인데. 파이프라인할 때도 변경했던것 같은데???
+  ```
+  services.AddMediator(options =>
+          {
+              options.ServiceLifetime = ServiceLifetime.Scoped;
+              options.NotificationPublisherType = typeof(ObservableDomainEventNotificationPublisher);
+          });
+          // =================================================================
+          // 도메인 이벤트 발행자 등록 (Publisher 관점 관찰 가능성 활성화)
+          // =================================================================
+          services.RegisterDomainEventPublisher(enableObservability: true);
+  ```
+
+- [x] 2.5 타임스탬프 정밀도 및 형식
+  ```
+  **현상**:
+  ```json
+  {
+    "@t": "2026-02-03T01:56:16.000Z"
+  }
+  ```
+
+  **개선안**:
+  ```json
+  {
+    "@t": "2026-02-03T01:56:16.1658878Z",
+  ```
+- [x] 지표 등록 기본 코드로 흡수: services.AddMetrics()
 - [x] 소스 생성기에서 Attribute 중복 제거
 - [x] 튜토리얼 번호 정정 05 <-> 06
 - [x] 빌드 스크립트에서 레이어별 코드 커버리지 기능 제거
@@ -13,49 +166,10 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [x] 도메인 이벤트 구현 관련 테스트 구현
 - [x] ~~도메인 이벤트 Sub `Handler -> subscriber~~`
 - [X] 도메인 이벤트 Sub `namespace LayeredArch.Application.EventHandlers;` Usecase???
-- [ ] 도메인 이벤트 핸들러는 CQRS에서 Query?
-- [ ] 도메인 이벤트 트랜잭션과 관계? 트랜잭션 후
-- [ ] 도메인 이벤트 비동기 wait?
+- [x] 도메인 이벤트 핸들러는 CQRS에서 Query?
+- [x] 도메인 이벤트 비동기 wait?
 - [ ] 도메인 이벤트 실패 인식이 유스케이스에 전파 및 처리할 필요가 있는가?
-- [ ] 도메인 이벤트 핸들러 등록 방법은?
-- [ ] 내부/외부 도메인 이벤트 구분?
-- [ ] 이벤트 부분 실패 처리? PublishEventsWithResult?
-- [ ] 이벤트 관찰 가능성 개선
-- [ ] entity-guide.md 재구성
-- [ ] usecase-implementation-guide.md 재구성
----
-- [ ] `ValidationRules<ProductName>.NotEmpty(value ?? "")  value ?? "" -> value`
-- [ ] `FinT<IO, bool> ExistsByName(ProductName name, ProductId? excludeId = null); -> Option<ProductId> excludeId`
-- [ ] LINQ 예외?
-- [ ] As().ToFin()
----
-- [ ] DTO Usecase
-- [ ] DTO FastEndpoint
-- [ ] DTO IAdapter
-- [ ] DTO EFCore + Entity?
-- [ ] DTO 성능 고려
----
-- [ ] Usecase
-  ```cs
-  return (name, price, stockQuantity, description.Value)
-    .Apply((name, price, stockQuantity, description) =>
-        Product.Create(
-            ProductName.Create(name).ThrowIfFail(),
-            description,
-            Money.Create(price).ThrowIfFail(),
-            Quantity.Create(stockQuantity).ThrowIfFail()))
-    .As()
-    .ToFin();
-  ```
-- [ ] LINQ 과정에서 발생하는 예외 -> Fin<T> 실패로 처리
----
-- [ ] 커스텀 관찰 가능성 Usecase
-- [ ] 커스텀 관찰 가능성 IAdapter
----
-- [ ] 소스 생성기 프로젝트 이름 변경 또는 통합?
-  - Functorium.SourceGenerator
-- [ ] 스케줄러
-- [ ] 2개 호스트
+- [x] 도메인 이벤트 핸들러 등록 방법은?
 
 <br/>
 
@@ -66,9 +180,6 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [x] 문서 정리: 값 객체
 - [x] 문서 생성: 엔티티
 - [ ] Tutorials 폴더에 Entity, EntityId, ... 등 적용
-- [ ] Functorium.Adapters 프로젝트 분리
-- [ ] Functorium.SourceGenerators
-- [ ] Error 구조적 로그 예외
 ---
 - [ ] AggregateRoot 사례
 - [ ] DomainEvent 사례
