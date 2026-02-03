@@ -103,4 +103,81 @@ public static partial class FinTLinqExtensions
 
         return FinT.lift<IO, A>(fin).SelectMany(finTSelector, projector);
     }
+
+    // =========================================================================
+    // FinT → Validation SelectMany (제네릭 모나드)
+    // =========================================================================
+
+    /// <summary>
+    /// FinT → Validation 체이닝: FinT 컨텍스트에서 Validation 결과를 체이닝하는 SelectMany
+    ///
+    /// Validation을 Fin으로 변환 후 FinT로 승격:
+    ///   FinT&lt;M, A&gt; → Validation&lt;Error, B&gt; → FinT&lt;M, C&gt;
+    ///
+    /// LINQ 쿼리:
+    ///   from finTVal in finTValue                    // FinT&lt;M, A&gt;
+    ///   from validated in validationSelector(val)   // Validation&lt;Error, B&gt;
+    ///   select result                               // C
+    ///
+    /// 사용 예:
+    ///   FinT&lt;IO, Response&gt; result =
+    ///       from request in GetRequest()                           // FinT&lt;IO, Request&gt;
+    ///       from identifier in Identifier.Validate(request.Id)     // Validation&lt;Error, Identifier&gt;
+    ///       from saved in repository.Save(identifier)              // FinT&lt;IO, Entity&gt;
+    ///       select new Response(saved.Id);
+    ///
+    /// 주요 사용 시나리오:
+    ///   - Value Object 검증을 FinT 체인 중간에 포함
+    ///   - 도메인 규칙 검증 결과를 체인에 포함
+    ///   - 복합 검증 로직을 단계별로 수행
+    ///
+    /// 주의:
+    ///   - 검증 실패 시 첫 번째 에러만 사용 (errors.Head)
+    ///   - 모든 에러를 처리해야 하는 경우 별도 구현 필요
+    /// </summary>
+    public static FinT<M, C> SelectMany<M, A, B, C>(
+        this FinT<M, A> finT,
+        Func<A, Validation<Error, B>> validationSelector,
+        Func<A, B, C> projector)
+        where M : Monad<M>
+    {
+        return finT.Bind(a =>
+        {
+            Fin<B> fin = validationSelector(a).Match(
+                Succ: value => Fin.Succ(value),
+                Fail: errors => Fin.Fail<B>(errors.Head));
+
+            return FinT.lift<M, B>(fin).Map(b => projector(a, b));
+        });
+    }
+
+    /// <summary>
+    /// FinT → Validation 체이닝 (IO 특화): IO 모나드에 특화된 SelectMany
+    ///
+    /// LINQ 쿼리 표현식에서 타입 추론이 더 정확하게 동작:
+    ///   from finTVal in finTValue                    // FinT&lt;IO, A&gt;
+    ///   from validated in validationSelector(val)   // Validation&lt;Error, B&gt;
+    ///   select result                               // C
+    ///
+    /// 사용 예:
+    ///   FinT&lt;IO, Response&gt; usecase =
+    ///       from request in GetRequest()                           // FinT&lt;IO, Request&gt;
+    ///       from identifier in Identifier.Validate(request.Id)     // Validation&lt;Error, Identifier&gt;
+    ///       from saved in repository.Save(identifier)              // FinT&lt;IO, Entity&gt;
+    ///       select new Response(saved.Id);
+    /// </summary>
+    public static FinT<IO, C> SelectMany<A, B, C>(
+        this FinT<IO, A> finT,
+        Func<A, Validation<Error, B>> validationSelector,
+        Func<A, B, C> projector)
+    {
+        return finT.Bind(a =>
+        {
+            Fin<B> fin = validationSelector(a).Match(
+                Succ: value => Fin.Succ(value),
+                Fail: errors => Fin.Fail<B>(errors.Head));
+
+            return FinT.lift<IO, B>(fin).Map(b => projector(a, b));
+        });
+    }
 }

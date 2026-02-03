@@ -52,4 +52,40 @@ public static partial class FinTLinqExtensions
     {
         return FinT.lift<IO, A>(io.Map(a => Fin.Succ(a))).SelectMany(finTSelector, projector);
     }
+
+    // =========================================================================
+    // FinT → IO SelectMany
+    // =========================================================================
+
+    /// <summary>
+    /// FinT → IO 체이닝: FinT 컨텍스트에서 IO 효과를 체이닝하는 SelectMany
+    ///
+    /// IO는 항상 성공하는 것으로 가정하여 FinT로 승격:
+    ///   FinT&lt;IO, A&gt; → IO&lt;B&gt; → FinT&lt;IO, C&gt;
+    ///
+    /// LINQ 쿼리:
+    ///   from finTVal in finTValue           // FinT&lt;IO, A&gt;
+    ///   from ioVal in ioSelector(finTVal)   // IO&lt;B&gt;
+    ///   select result                       // C
+    ///
+    /// 사용 예:
+    ///   FinT&lt;IO, Response&gt; result =
+    ///       from product in repository.GetById(id)              // FinT&lt;IO, Product&gt;
+    ///       from timestamp in IO.lift(() =&gt; DateTime.UtcNow)    // IO&lt;DateTime&gt;
+    ///       select new Response(product.Id, timestamp);
+    ///
+    /// 주요 사용 시나리오:
+    ///   - 타임스탬프, GUID 생성 등 순수 IO 효과를 체인에 포함
+    ///   - 로깅, 메트릭 기록 등 항상 성공하는 부수 효과
+    ///   - 환경 설정 읽기 등 실패하지 않는 IO 작업
+    /// </summary>
+    public static FinT<IO, C> SelectMany<A, B, C>(
+        this FinT<IO, A> finT,
+        Func<A, IO<B>> ioSelector,
+        Func<A, B, C> projector)
+    {
+        return finT.Bind(a =>
+            FinT.lift<IO, B>(ioSelector(a).Map(b => Fin.Succ(b)))
+                .Map(b => projector(a, b)));
+    }
 }

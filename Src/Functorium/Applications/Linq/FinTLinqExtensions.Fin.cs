@@ -38,6 +38,42 @@ public static partial class FinTLinqExtensions
     }
 
     // =========================================================================
+    // FinT → Fin SelectMany
+    // =========================================================================
+
+    /// <summary>
+    /// FinT → Fin 체이닝: FinT 컨텍스트에서 Fin 결과를 체이닝하는 SelectMany
+    ///
+    /// LanguageExt FinT.lift() 패턴 적용:
+    ///   FinT&lt;M, A&gt; → Fin&lt;B&gt; → FinT&lt;M, C&gt;
+    ///
+    /// LINQ 쿼리:
+    ///   from finTVal in finTValue              // FinT&lt;M, A&gt;
+    ///   from finVal in finSelector(finTVal)    // Fin&lt;B&gt;
+    ///   select result                          // C
+    ///
+    /// 사용 예:
+    ///   FinT&lt;IO, Response&gt; result =
+    ///       from product in repository.GetById(id)     // FinT&lt;IO, Product&gt;
+    ///       from _ in product.DeductStock(quantity)    // Fin&lt;Unit&gt;
+    ///       from updated in repository.Update(product) // FinT&lt;IO, Product&gt;
+    ///       select new Response(updated.Id);
+    ///
+    /// 주요 사용 시나리오:
+    ///   - 도메인 로직 (Fin 반환)을 FinT 체인에 포함
+    ///   - Value Object 검증 결과를 FinT 체인에 포함
+    ///   - 동기적 검증/변환 로직을 비동기 체인에 포함
+    /// </summary>
+    public static FinT<M, C> SelectMany<M, A, B, C>(
+        this FinT<M, A> finT,
+        Func<A, Fin<B>> finSelector,
+        Func<A, B, C> projector)
+        where M : Monad<M>
+    {
+        return finT.Bind(a => FinT.lift<M, B>(finSelector(a)).Map(b => projector(a, b)));
+    }
+
+    // =========================================================================
     // Fin Filter
     // =========================================================================
 
