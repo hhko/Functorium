@@ -18,19 +18,19 @@ using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Company.Domain.Adapters.Infrastructure.Repositories;
+namespace TestNamespace;
 
-public class DeepNamespaceAdapterPipeline : DeepNamespaceAdapter
+public class TupleWithArrayAdapterPipeline : TupleWithArrayAdapter
 {
     private readonly ActivitySource _activitySource;
-    private readonly ILogger<DeepNamespaceAdapterPipeline> _logger;
+    private readonly ILogger<TupleWithArrayAdapterPipeline> _logger;
 
     // Metrics
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
-    private const string RequestHandler = nameof(DeepNamespaceAdapter);
+    private const string RequestHandler = nameof(TupleWithArrayAdapter);
 
     private readonly string _requestCategoryLowerCase;
 
@@ -39,9 +39,9 @@ public class DeepNamespaceAdapterPipeline : DeepNamespaceAdapter
     private readonly bool _isWarningEnabled;
     private readonly bool _isErrorEnabled;
 
-    public DeepNamespaceAdapterPipeline(
+    public TupleWithArrayAdapterPipeline(
         ActivitySource activitySource,
-        ILogger<DeepNamespaceAdapterPipeline> logger,
+        ILogger<TupleWithArrayAdapterPipeline> logger,
         IMeterFactory meterFactory,
         IOptions<OpenTelemetryOptions> openTelemetryOptions)
 
@@ -280,27 +280,27 @@ public class DeepNamespaceAdapterPipeline : DeepNamespaceAdapter
         };
     }
 
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, int> GetValue(
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, (string Name, int[] Scores)> GetStudentScores(
     ) =>
-        global::LanguageExt.FinT.lift<global::LanguageExt.IO, int>(
+        global::LanguageExt.FinT.lift<global::LanguageExt.IO, (string Name, int[] Scores)>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(GetValue),
-                operation: FinTToIO(base.GetValue()),
-                requestLog: () => RequestLog_DeepNamespaceAdapter_GetValue(RequestHandler, nameof(GetValue)),
-                responseLogSuccess: ResponseLogSuccess_DeepNamespaceAdapter_GetValue,
-                responseLogFailure: ResponseLogFailure_DeepNamespaceAdapter_GetValue,
+                requestHandlerMethod: nameof(GetStudentScores),
+                operation: FinTToIO(base.GetStudentScores()),
+                requestLog: () => AdapterRequestLog_TupleWithArrayAdapter_GetStudentScores(RequestHandler, nameof(GetStudentScores)),
+                responseLogSuccess: AdapterResponseSuccessLog_TupleWithArrayAdapter_GetStudentScores,
+                responseLogFailure: AdapterResponseFailureLog_TupleWithArrayAdapter_GetStudentScores,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_DeepNamespaceAdapter_GetValue(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_TupleWithArrayAdapter_GetStudentScores(
         string requestHandler,
         string requestHandlerMethod) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_DeepNamespaceAdapter_GetValue(
+                _logger.LogAdapterRequestDebug_TupleWithArrayAdapter_GetStudentScores(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -308,7 +308,7 @@ public class DeepNamespaceAdapterPipeline : DeepNamespaceAdapter
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_DeepNamespaceAdapter_GetValue(
+                _logger.LogAdapterRequest_TupleWithArrayAdapter_GetStudentScores(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -317,15 +317,15 @@ public class DeepNamespaceAdapterPipeline : DeepNamespaceAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_DeepNamespaceAdapter_GetValue(
+    private void AdapterResponseSuccessLog_TupleWithArrayAdapter_GetStudentScores(
         string requestHandler,
         string requestHandlerMethod,
-        int result,
+        (string Name, int[] Scores) result,
         double elapsed)
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_DeepNamespaceAdapter_GetValue(
+            _logger.LogAdapterResponseSuccessDebug_TupleWithArrayAdapter_GetStudentScores(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -336,7 +336,7 @@ public class DeepNamespaceAdapterPipeline : DeepNamespaceAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_DeepNamespaceAdapter_GetValue(
+            _logger.LogAdapterResponseSuccess_TupleWithArrayAdapter_GetStudentScores(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -346,7 +346,7 @@ public class DeepNamespaceAdapterPipeline : DeepNamespaceAdapter
         }
     }
 
-    private void ResponseLogFailure_DeepNamespaceAdapter_GetValue(
+    private void AdapterResponseFailureLog_TupleWithArrayAdapter_GetStudentScores(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -356,7 +356,7 @@ public class DeepNamespaceAdapterPipeline : DeepNamespaceAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_DeepNamespaceAdapter_GetValue(
+            _logger.LogAdapterResponseError_TupleWithArrayAdapter_GetStudentScores(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -369,7 +369,7 @@ public class DeepNamespaceAdapterPipeline : DeepNamespaceAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_DeepNamespaceAdapter_GetValue(
+            _logger.LogAdapterResponseWarning_TupleWithArrayAdapter_GetStudentScores(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -383,30 +383,30 @@ public class DeepNamespaceAdapterPipeline : DeepNamespaceAdapter
     }
 }
 
-internal static class DeepNamespaceAdapterPipelineLoggers
+internal static class TupleWithArrayAdapterPipelineLoggers
 {
 
-    // ===== LoggerMessage.Define delegates for GetValue =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_DeepNamespaceAdapter_GetValue =
+    // ===== LoggerMessage.Define delegates for GetStudentScores =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_TupleWithArrayAdapter_GetStudentScores =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequestDebug_DeepNamespaceAdapter_GetValue =
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_TupleWithArrayAdapter_GetStudentScores =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_DeepNamespaceAdapter_GetValue =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_TupleWithArrayAdapter_GetStudentScores =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_DeepNamespaceAdapter_GetValue(
+    public static void LogAdapterRequestDebug_TupleWithArrayAdapter_GetStudentScores(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -416,10 +416,10 @@ internal static class DeepNamespaceAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_DeepNamespaceAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequestDebug_TupleWithArrayAdapter_GetStudentScores(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogRequest_DeepNamespaceAdapter_GetValue(
+    public static void LogAdapterRequest_TupleWithArrayAdapter_GetStudentScores(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -429,17 +429,17 @@ internal static class DeepNamespaceAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_DeepNamespaceAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_TupleWithArrayAdapter_GetStudentScores(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_DeepNamespaceAdapter_GetValue(
+    public static void LogAdapterResponseSuccessDebug_TupleWithArrayAdapter_GetStudentScores(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
         string requestHandlerMethod,
         string status,
-        int result,
+        (string Name, int[] Scores) result,
         double elapsed)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -453,7 +453,7 @@ internal static class DeepNamespaceAdapterPipelineLoggers
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_DeepNamespaceAdapter_GetValue(
+    public static void LogAdapterResponseSuccess_TupleWithArrayAdapter_GetStudentScores(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -465,10 +465,10 @@ internal static class DeepNamespaceAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_DeepNamespaceAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_TupleWithArrayAdapter_GetStudentScores(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_DeepNamespaceAdapter_GetValue(
+    public static void LogAdapterResponseWarning_TupleWithArrayAdapter_GetStudentScores(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -496,7 +496,7 @@ internal static class DeepNamespaceAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_DeepNamespaceAdapter_GetValue(
+    public static void LogAdapterResponseError_TupleWithArrayAdapter_GetStudentScores(
         this ILogger logger,
         string requestLayer,
         string requestCategory,

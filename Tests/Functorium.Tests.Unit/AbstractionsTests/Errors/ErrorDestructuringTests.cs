@@ -26,7 +26,8 @@ public class ErrorDestructuringTests
         _sut.TryDestructure(error, _factory, out var actual);
 
         // Assert
-        return Verify(ToAnonymousObject(actual!));
+        return Verify(ToAnonymousObject(actual!))
+            .UseDirectory("Snapshots/ErrorDestructuring");
     }
 
     [Fact]
@@ -42,7 +43,8 @@ public class ErrorDestructuringTests
         _sut.TryDestructure(error, _factory, out var actual);
 
         // Assert
-        return Verify(ToAnonymousObject(actual!));
+        return Verify(ToAnonymousObject(actual!))
+            .UseDirectory("Snapshots/ErrorDestructuring");
     }
 
     [Fact]
@@ -59,7 +61,8 @@ public class ErrorDestructuringTests
         _sut.TryDestructure(error, _factory, out var actual);
 
         // Assert
-        return Verify(ToAnonymousObject(actual!));
+        return Verify(ToAnonymousObject(actual!))
+            .UseDirectory("Snapshots/ErrorDestructuring");
     }
 
     [Fact]
@@ -77,7 +80,8 @@ public class ErrorDestructuringTests
         _sut.TryDestructure(error, _factory, out var actual);
 
         // Assert
-        return Verify(ToAnonymousObject(actual!));
+        return Verify(ToAnonymousObject(actual!))
+            .UseDirectory("Snapshots/ErrorDestructuring");
     }
 
     [Fact]
@@ -94,6 +98,7 @@ public class ErrorDestructuringTests
 
         // Assert
         return Verify(ToAnonymousObject(actual!))
+            .UseDirectory("Snapshots/ErrorDestructuring")
             .ScrubMember("HResult")
             .ScrubMember("TargetSite")
             .ScrubMember("StackTrace")
@@ -115,6 +120,7 @@ public class ErrorDestructuringTests
 
         // Assert
         return Verify(ToAnonymousObject(actual!))
+            .UseDirectory("Snapshots/ErrorDestructuring")
             .ScrubMember("HResult")
             .ScrubMember("TargetSite")
             .ScrubMember("StackTrace")
@@ -137,6 +143,7 @@ public class ErrorDestructuringTests
 
         // Assert
         return Verify(ToAnonymousObject(actual!))
+            .UseDirectory("Snapshots/ErrorDestructuring")
             .ScrubMember("HResult")
             .ScrubMember("TargetSite")
             .ScrubMember("StackTrace")
@@ -158,7 +165,8 @@ public class ErrorDestructuringTests
         _sut.TryDestructure(error, _factory, out var actual);
 
         // Assert
-        return Verify(ToAnonymousObject(actual!));
+        return Verify(ToAnonymousObject(actual!))
+            .UseDirectory("Snapshots/ErrorDestructuring");
     }
 
     [Fact]
@@ -175,7 +183,8 @@ public class ErrorDestructuringTests
         _sut.TryDestructure(error, _factory, out var actual);
 
         // Assert
-        return Verify(ToAnonymousObject(actual!));
+        return Verify(ToAnonymousObject(actual!))
+            .UseDirectory("Snapshots/ErrorDestructuring");
     }
 
     [Fact]
@@ -192,7 +201,8 @@ public class ErrorDestructuringTests
         _sut.TryDestructure(error, _factory, out var actual);
 
         // Assert
-        return Verify(ToAnonymousObject(actual!));
+        return Verify(ToAnonymousObject(actual!))
+            .UseDirectory("Snapshots/ErrorDestructuring");
     }
 
     [Fact]
@@ -211,7 +221,8 @@ public class ErrorDestructuringTests
         _sut.TryDestructure(error, _factory, out var actual);
 
         // Assert
-        return Verify(ToAnonymousObject(actual!));
+        return Verify(ToAnonymousObject(actual!))
+            .UseDirectory("Snapshots/ErrorDestructuring");
     }
 
     [Fact]

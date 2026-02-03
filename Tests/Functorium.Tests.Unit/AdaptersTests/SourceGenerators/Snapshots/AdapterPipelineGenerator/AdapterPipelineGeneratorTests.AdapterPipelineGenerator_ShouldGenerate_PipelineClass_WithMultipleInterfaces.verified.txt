@@ -20,17 +20,17 @@ using Microsoft.Extensions.Options;
 
 namespace TestNamespace;
 
-public class ThreeParamAdapterPipeline : ThreeParamAdapter
+public class DisposableAdapterPipeline : DisposableAdapter
 {
     private readonly ActivitySource _activitySource;
-    private readonly ILogger<ThreeParamAdapterPipeline> _logger;
+    private readonly ILogger<DisposableAdapterPipeline> _logger;
 
     // Metrics
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
-    private const string RequestHandler = nameof(ThreeParamAdapter);
+    private const string RequestHandler = nameof(DisposableAdapter);
 
     private readonly string _requestCategoryLowerCase;
 
@@ -39,9 +39,9 @@ public class ThreeParamAdapterPipeline : ThreeParamAdapter
     private readonly bool _isWarningEnabled;
     private readonly bool _isErrorEnabled;
 
-    public ThreeParamAdapterPipeline(
+    public DisposableAdapterPipeline(
         ActivitySource activitySource,
-        ILogger<ThreeParamAdapterPipeline> logger,
+        ILogger<DisposableAdapterPipeline> logger,
         IMeterFactory meterFactory,
         IOptions<OpenTelemetryOptions> openTelemetryOptions)
 
@@ -280,42 +280,35 @@ public class ThreeParamAdapterPipeline : ThreeParamAdapter
         };
     }
 
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, string> GetData(
-        int id,
-        string name,
-        bool isActive
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, int> GetValue(
     ) =>
-        global::LanguageExt.FinT.lift<global::LanguageExt.IO, string>(
+        global::LanguageExt.FinT.lift<global::LanguageExt.IO, int>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(GetData),
-                operation: FinTToIO(base.GetData(id, name, isActive)),
-                requestLog: () => RequestLog_ThreeParamAdapter_GetData(RequestHandler, nameof(GetData), id, name, isActive),
-                responseLogSuccess: ResponseLogSuccess_ThreeParamAdapter_GetData,
-                responseLogFailure: ResponseLogFailure_ThreeParamAdapter_GetData,
+                requestHandlerMethod: nameof(GetValue),
+                operation: FinTToIO(base.GetValue()),
+                requestLog: () => AdapterRequestLog_DisposableAdapter_GetValue(RequestHandler, nameof(GetValue)),
+                responseLogSuccess: AdapterResponseSuccessLog_DisposableAdapter_GetValue,
+                responseLogFailure: AdapterResponseFailureLog_DisposableAdapter_GetValue,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_ThreeParamAdapter_GetData(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_DisposableAdapter_GetValue(
         string requestHandler,
-        string requestHandlerMethod,
-        int id,
-        string name,
-        bool isActive) =>
+        string requestHandlerMethod) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_ThreeParamAdapter_GetData(
+                _logger.LogAdapterRequestDebug_DisposableAdapter_GetValue(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod,
-                    id, name, isActive);
+                    requestHandlerMethod);
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_ThreeParamAdapter_GetData(
+                _logger.LogAdapterRequest_DisposableAdapter_GetValue(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -324,15 +317,15 @@ public class ThreeParamAdapterPipeline : ThreeParamAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_ThreeParamAdapter_GetData(
+    private void AdapterResponseSuccessLog_DisposableAdapter_GetValue(
         string requestHandler,
         string requestHandlerMethod,
-        string result,
+        int result,
         double elapsed)
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_ThreeParamAdapter_GetData(
+            _logger.LogAdapterResponseSuccessDebug_DisposableAdapter_GetValue(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -343,7 +336,7 @@ public class ThreeParamAdapterPipeline : ThreeParamAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_ThreeParamAdapter_GetData(
+            _logger.LogAdapterResponseSuccess_DisposableAdapter_GetValue(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -353,7 +346,7 @@ public class ThreeParamAdapterPipeline : ThreeParamAdapter
         }
     }
 
-    private void ResponseLogFailure_ThreeParamAdapter_GetData(
+    private void AdapterResponseFailureLog_DisposableAdapter_GetValue(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -363,7 +356,7 @@ public class ThreeParamAdapterPipeline : ThreeParamAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_ThreeParamAdapter_GetData(
+            _logger.LogAdapterResponseError_DisposableAdapter_GetValue(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -376,7 +369,7 @@ public class ThreeParamAdapterPipeline : ThreeParamAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_ThreeParamAdapter_GetData(
+            _logger.LogAdapterResponseWarning_DisposableAdapter_GetValue(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -390,46 +383,43 @@ public class ThreeParamAdapterPipeline : ThreeParamAdapter
     }
 }
 
-internal static class ThreeParamAdapterPipelineLoggers
+internal static class DisposableAdapterPipelineLoggers
 {
 
-    // ===== LoggerMessage.Define delegates for GetData =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_ThreeParamAdapter_GetData =
+    // ===== LoggerMessage.Define delegates for GetValue =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_DisposableAdapter_GetValue =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_ThreeParamAdapter_GetData =
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_DisposableAdapter_GetValue =
+        LoggerMessage.Define<string, string, string, string>(
+            LogLevel.Debug,
+            ObservabilityNaming.EventIds.Adapter.AdapterRequest,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
+
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_DisposableAdapter_GetValue =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_ThreeParamAdapter_GetData(
+    public static void LogAdapterRequestDebug_DisposableAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod,
-        int id,
-        string name,
-        bool isActive)
+        string requestHandlerMethod)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        logger.LogDebug(
-            eventId: ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
-                     "{request.params.id} {request.params.name} {request.params.isactive} " +
-                     "requesting",
-            requestLayer, requestCategory, requestHandler, requestHandlerMethod,
-            id, name, isActive);
+        _logAdapterRequestDebug_DisposableAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogRequest_ThreeParamAdapter_GetData(
+    public static void LogAdapterRequest_DisposableAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -439,17 +429,17 @@ internal static class ThreeParamAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_ThreeParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_DisposableAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_ThreeParamAdapter_GetData(
+    public static void LogAdapterResponseSuccessDebug_DisposableAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
         string requestHandlerMethod,
         string status,
-        string result,
+        int result,
         double elapsed)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -463,7 +453,7 @@ internal static class ThreeParamAdapterPipelineLoggers
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_ThreeParamAdapter_GetData(
+    public static void LogAdapterResponseSuccess_DisposableAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -475,10 +465,10 @@ internal static class ThreeParamAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_ThreeParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_DisposableAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_ThreeParamAdapter_GetData(
+    public static void LogAdapterResponseWarning_DisposableAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -506,7 +496,7 @@ internal static class ThreeParamAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_ThreeParamAdapter_GetData(
+    public static void LogAdapterResponseError_DisposableAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,

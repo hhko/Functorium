@@ -20,17 +20,17 @@ using Microsoft.Extensions.Options;
 
 namespace TestNamespace;
 
-public class MultiCtorAdapterPipeline : MultiCtorAdapter
+public class ThreeParamAdapterPipeline : ThreeParamAdapter
 {
     private readonly ActivitySource _activitySource;
-    private readonly ILogger<MultiCtorAdapterPipeline> _logger;
+    private readonly ILogger<ThreeParamAdapterPipeline> _logger;
 
     // Metrics
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
-    private const string RequestHandler = nameof(MultiCtorAdapter);
+    private const string RequestHandler = nameof(ThreeParamAdapter);
 
     private readonly string _requestCategoryLowerCase;
 
@@ -39,15 +39,12 @@ public class MultiCtorAdapterPipeline : MultiCtorAdapter
     private readonly bool _isWarningEnabled;
     private readonly bool _isErrorEnabled;
 
-    public MultiCtorAdapterPipeline(
+    public ThreeParamAdapterPipeline(
         ActivitySource activitySource,
-        ILogger<MultiCtorAdapterPipeline> logger,
+        ILogger<ThreeParamAdapterPipeline> logger,
         IMeterFactory meterFactory,
-        IOptions<OpenTelemetryOptions> openTelemetryOptions,
-        string connectionString,
-        int timeout,
-        bool useCache)
-        : base(connectionString, timeout, useCache)
+        IOptions<OpenTelemetryOptions> openTelemetryOptions)
+
     {
         global::System.ArgumentNullException.ThrowIfNull(activitySource);
         global::System.ArgumentNullException.ThrowIfNull(meterFactory);
@@ -283,35 +280,42 @@ public class MultiCtorAdapterPipeline : MultiCtorAdapter
         };
     }
 
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, string> GetInfo(
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, string> GetData(
+        int id,
+        string name,
+        bool isActive
     ) =>
         global::LanguageExt.FinT.lift<global::LanguageExt.IO, string>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(GetInfo),
-                operation: FinTToIO(base.GetInfo()),
-                requestLog: () => RequestLog_MultiCtorAdapter_GetInfo(RequestHandler, nameof(GetInfo)),
-                responseLogSuccess: ResponseLogSuccess_MultiCtorAdapter_GetInfo,
-                responseLogFailure: ResponseLogFailure_MultiCtorAdapter_GetInfo,
+                requestHandlerMethod: nameof(GetData),
+                operation: FinTToIO(base.GetData(id, name, isActive)),
+                requestLog: () => AdapterRequestLog_ThreeParamAdapter_GetData(RequestHandler, nameof(GetData), id, name, isActive),
+                responseLogSuccess: AdapterResponseSuccessLog_ThreeParamAdapter_GetData,
+                responseLogFailure: AdapterResponseFailureLog_ThreeParamAdapter_GetData,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_MultiCtorAdapter_GetInfo(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_ThreeParamAdapter_GetData(
         string requestHandler,
-        string requestHandlerMethod) =>
+        string requestHandlerMethod,
+        int id,
+        string name,
+        bool isActive) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_MultiCtorAdapter_GetInfo(
+                _logger.LogAdapterRequestDebug_ThreeParamAdapter_GetData(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod);
+                    requestHandlerMethod,
+                    id, name, isActive);
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_MultiCtorAdapter_GetInfo(
+                _logger.LogAdapterRequest_ThreeParamAdapter_GetData(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -320,7 +324,7 @@ public class MultiCtorAdapterPipeline : MultiCtorAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_MultiCtorAdapter_GetInfo(
+    private void AdapterResponseSuccessLog_ThreeParamAdapter_GetData(
         string requestHandler,
         string requestHandlerMethod,
         string result,
@@ -328,7 +332,7 @@ public class MultiCtorAdapterPipeline : MultiCtorAdapter
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_MultiCtorAdapter_GetInfo(
+            _logger.LogAdapterResponseSuccessDebug_ThreeParamAdapter_GetData(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -339,7 +343,7 @@ public class MultiCtorAdapterPipeline : MultiCtorAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_MultiCtorAdapter_GetInfo(
+            _logger.LogAdapterResponseSuccess_ThreeParamAdapter_GetData(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -349,7 +353,7 @@ public class MultiCtorAdapterPipeline : MultiCtorAdapter
         }
     }
 
-    private void ResponseLogFailure_MultiCtorAdapter_GetInfo(
+    private void AdapterResponseFailureLog_ThreeParamAdapter_GetData(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -359,7 +363,7 @@ public class MultiCtorAdapterPipeline : MultiCtorAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_MultiCtorAdapter_GetInfo(
+            _logger.LogAdapterResponseError_ThreeParamAdapter_GetData(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -372,7 +376,7 @@ public class MultiCtorAdapterPipeline : MultiCtorAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_MultiCtorAdapter_GetInfo(
+            _logger.LogAdapterResponseWarning_ThreeParamAdapter_GetData(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -386,43 +390,46 @@ public class MultiCtorAdapterPipeline : MultiCtorAdapter
     }
 }
 
-internal static class MultiCtorAdapterPipelineLoggers
+internal static class ThreeParamAdapterPipelineLoggers
 {
 
-    // ===== LoggerMessage.Define delegates for GetInfo =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_MultiCtorAdapter_GetInfo =
+    // ===== LoggerMessage.Define delegates for GetData =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_ThreeParamAdapter_GetData =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequestDebug_MultiCtorAdapter_GetInfo =
-        LoggerMessage.Define<string, string, string, string>(
-            LogLevel.Debug,
-            ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
-
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_MultiCtorAdapter_GetInfo =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_ThreeParamAdapter_GetData =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_MultiCtorAdapter_GetInfo(
+    public static void LogAdapterRequestDebug_ThreeParamAdapter_GetData(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod)
+        string requestHandlerMethod,
+        int id,
+        string name,
+        bool isActive)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_MultiCtorAdapter_GetInfo(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        logger.LogDebug(
+            eventId: ObservabilityNaming.EventIds.Adapter.AdapterRequest,
+            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
+                     "{request.params.id} {request.params.name} {request.params.isactive} " +
+                     "requesting",
+            requestLayer, requestCategory, requestHandler, requestHandlerMethod,
+            id, name, isActive);
     }
 
-    public static void LogRequest_MultiCtorAdapter_GetInfo(
+    public static void LogAdapterRequest_ThreeParamAdapter_GetData(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -432,10 +439,10 @@ internal static class MultiCtorAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_MultiCtorAdapter_GetInfo(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_ThreeParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_MultiCtorAdapter_GetInfo(
+    public static void LogAdapterResponseSuccessDebug_ThreeParamAdapter_GetData(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -456,7 +463,7 @@ internal static class MultiCtorAdapterPipelineLoggers
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_MultiCtorAdapter_GetInfo(
+    public static void LogAdapterResponseSuccess_ThreeParamAdapter_GetData(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -468,10 +475,10 @@ internal static class MultiCtorAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_MultiCtorAdapter_GetInfo(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_ThreeParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_MultiCtorAdapter_GetInfo(
+    public static void LogAdapterResponseWarning_ThreeParamAdapter_GetData(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -499,7 +506,7 @@ internal static class MultiCtorAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_MultiCtorAdapter_GetInfo(
+    public static void LogAdapterResponseError_ThreeParamAdapter_GetData(
         this ILogger logger,
         string requestLayer,
         string requestCategory,

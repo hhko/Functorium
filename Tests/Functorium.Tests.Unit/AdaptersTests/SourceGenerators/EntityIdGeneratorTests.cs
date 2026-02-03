@@ -53,7 +53,7 @@ public sealed class EntityIdGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots");
+        return Verify(actual).UseDirectory("Snapshots/EntityIdGenerator");
     }
 
     #endregion
@@ -84,7 +84,7 @@ public sealed class EntityIdGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots");
+        return Verify(actual).UseDirectory("Snapshots/EntityIdGenerator");
     }
 
     /// <summary>
@@ -111,7 +111,7 @@ public sealed class EntityIdGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots");
+        return Verify(actual).UseDirectory("Snapshots/EntityIdGenerator");
     }
 
     #endregion

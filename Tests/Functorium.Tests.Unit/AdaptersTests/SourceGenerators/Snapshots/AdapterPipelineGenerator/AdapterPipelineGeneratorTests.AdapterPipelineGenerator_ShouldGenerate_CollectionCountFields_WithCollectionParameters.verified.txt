@@ -20,17 +20,17 @@ using Microsoft.Extensions.Options;
 
 namespace TestNamespace;
 
-public class ConflictParamAdapterPipeline : ConflictParamAdapter
+public class CollectionParamAdapterPipeline : CollectionParamAdapter
 {
     private readonly ActivitySource _activitySource;
-    private readonly ILogger<ConflictParamAdapterPipeline> _logger;
+    private readonly ILogger<CollectionParamAdapterPipeline> _logger;
 
     // Metrics
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
-    private const string RequestHandler = nameof(ConflictParamAdapter);
+    private const string RequestHandler = nameof(CollectionParamAdapter);
 
     private readonly string _requestCategoryLowerCase;
 
@@ -39,13 +39,12 @@ public class ConflictParamAdapterPipeline : ConflictParamAdapter
     private readonly bool _isWarningEnabled;
     private readonly bool _isErrorEnabled;
 
-    public ConflictParamAdapterPipeline(
+    public CollectionParamAdapterPipeline(
         ActivitySource activitySource,
-        ILogger<ConflictParamAdapterPipeline> logger,
+        ILogger<CollectionParamAdapterPipeline> logger,
         IMeterFactory meterFactory,
-        IOptions<OpenTelemetryOptions> openTelemetryOptions,
-        global::Microsoft.Extensions.Logging.ILogger baseLogger)
-        : base(baseLogger)
+        IOptions<OpenTelemetryOptions> openTelemetryOptions)
+
     {
         global::System.ArgumentNullException.ThrowIfNull(activitySource);
         global::System.ArgumentNullException.ThrowIfNull(meterFactory);
@@ -281,35 +280,38 @@ public class ConflictParamAdapterPipeline : ConflictParamAdapter
         };
     }
 
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, string> GetData(
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, int> ProcessItems(
+        global::System.Collections.Generic.List<string> items
     ) =>
-        global::LanguageExt.FinT.lift<global::LanguageExt.IO, string>(
+        global::LanguageExt.FinT.lift<global::LanguageExt.IO, int>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(GetData),
-                operation: FinTToIO(base.GetData()),
-                requestLog: () => RequestLog_ConflictParamAdapter_GetData(RequestHandler, nameof(GetData)),
-                responseLogSuccess: ResponseLogSuccess_ConflictParamAdapter_GetData,
-                responseLogFailure: ResponseLogFailure_ConflictParamAdapter_GetData,
+                requestHandlerMethod: nameof(ProcessItems),
+                operation: FinTToIO(base.ProcessItems(items)),
+                requestLog: () => AdapterRequestLog_CollectionParamAdapter_ProcessItems(RequestHandler, nameof(ProcessItems), items),
+                responseLogSuccess: AdapterResponseSuccessLog_CollectionParamAdapter_ProcessItems,
+                responseLogFailure: AdapterResponseFailureLog_CollectionParamAdapter_ProcessItems,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_ConflictParamAdapter_GetData(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_CollectionParamAdapter_ProcessItems(
         string requestHandler,
-        string requestHandlerMethod) =>
+        string requestHandlerMethod,
+        global::System.Collections.Generic.List<string> items) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_ConflictParamAdapter_GetData(
+                _logger.LogAdapterRequestDebug_CollectionParamAdapter_ProcessItems(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod);
+                    requestHandlerMethod,
+                    items);
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_ConflictParamAdapter_GetData(
+                _logger.LogAdapterRequest_CollectionParamAdapter_ProcessItems(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -318,15 +320,15 @@ public class ConflictParamAdapterPipeline : ConflictParamAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_ConflictParamAdapter_GetData(
+    private void AdapterResponseSuccessLog_CollectionParamAdapter_ProcessItems(
         string requestHandler,
         string requestHandlerMethod,
-        string result,
+        int result,
         double elapsed)
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_ConflictParamAdapter_GetData(
+            _logger.LogAdapterResponseSuccessDebug_CollectionParamAdapter_ProcessItems(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -337,7 +339,7 @@ public class ConflictParamAdapterPipeline : ConflictParamAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_ConflictParamAdapter_GetData(
+            _logger.LogAdapterResponseSuccess_CollectionParamAdapter_ProcessItems(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -347,7 +349,7 @@ public class ConflictParamAdapterPipeline : ConflictParamAdapter
         }
     }
 
-    private void ResponseLogFailure_ConflictParamAdapter_GetData(
+    private void AdapterResponseFailureLog_CollectionParamAdapter_ProcessItems(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -357,7 +359,7 @@ public class ConflictParamAdapterPipeline : ConflictParamAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_ConflictParamAdapter_GetData(
+            _logger.LogAdapterResponseError_CollectionParamAdapter_ProcessItems(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -370,7 +372,7 @@ public class ConflictParamAdapterPipeline : ConflictParamAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_ConflictParamAdapter_GetData(
+            _logger.LogAdapterResponseWarning_CollectionParamAdapter_ProcessItems(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -384,43 +386,44 @@ public class ConflictParamAdapterPipeline : ConflictParamAdapter
     }
 }
 
-internal static class ConflictParamAdapterPipelineLoggers
+internal static class CollectionParamAdapterPipelineLoggers
 {
 
-    // ===== LoggerMessage.Define delegates for GetData =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_ConflictParamAdapter_GetData =
+    // ===== LoggerMessage.Define delegates for ProcessItems =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_CollectionParamAdapter_ProcessItems =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequestDebug_ConflictParamAdapter_GetData =
-        LoggerMessage.Define<string, string, string, string>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Collections.Generic.List<string>, int, global::System.Exception?> _logAdapterRequestDebug_CollectionParamAdapter_ProcessItems =
+        LoggerMessage.Define<string, string, string, string, global::System.Collections.Generic.List<string>, int>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.items} {request.params.items.count} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_ConflictParamAdapter_GetData =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_CollectionParamAdapter_ProcessItems =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_ConflictParamAdapter_GetData(
+    public static void LogAdapterRequestDebug_CollectionParamAdapter_ProcessItems(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod)
+        string requestHandlerMethod,
+        global::System.Collections.Generic.List<string> items)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_ConflictParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequestDebug_CollectionParamAdapter_ProcessItems(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, items, items?.Count ?? 0, null);
     }
 
-    public static void LogRequest_ConflictParamAdapter_GetData(
+    public static void LogAdapterRequest_CollectionParamAdapter_ProcessItems(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -430,17 +433,17 @@ internal static class ConflictParamAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_ConflictParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_CollectionParamAdapter_ProcessItems(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_ConflictParamAdapter_GetData(
+    public static void LogAdapterResponseSuccessDebug_CollectionParamAdapter_ProcessItems(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
         string requestHandlerMethod,
         string status,
-        string result,
+        int result,
         double elapsed)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -454,7 +457,7 @@ internal static class ConflictParamAdapterPipelineLoggers
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_ConflictParamAdapter_GetData(
+    public static void LogAdapterResponseSuccess_CollectionParamAdapter_ProcessItems(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -466,10 +469,10 @@ internal static class ConflictParamAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_ConflictParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_CollectionParamAdapter_ProcessItems(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_ConflictParamAdapter_GetData(
+    public static void LogAdapterResponseWarning_CollectionParamAdapter_ProcessItems(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -497,7 +500,7 @@ internal static class ConflictParamAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_ConflictParamAdapter_GetData(
+    public static void LogAdapterResponseError_CollectionParamAdapter_ProcessItems(
         this ILogger logger,
         string requestLayer,
         string requestCategory,

@@ -20,17 +20,17 @@ using Microsoft.Extensions.Options;
 
 namespace TestNamespace;
 
-public class ZeroParamAdapterPipeline : ZeroParamAdapter
+public class DirectAdapterPipeline : DirectAdapter
 {
     private readonly ActivitySource _activitySource;
-    private readonly ILogger<ZeroParamAdapterPipeline> _logger;
+    private readonly ILogger<DirectAdapterPipeline> _logger;
 
     // Metrics
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
-    private const string RequestHandler = nameof(ZeroParamAdapter);
+    private const string RequestHandler = nameof(DirectAdapter);
 
     private readonly string _requestCategoryLowerCase;
 
@@ -39,9 +39,9 @@ public class ZeroParamAdapterPipeline : ZeroParamAdapter
     private readonly bool _isWarningEnabled;
     private readonly bool _isErrorEnabled;
 
-    public ZeroParamAdapterPipeline(
+    public DirectAdapterPipeline(
         ActivitySource activitySource,
-        ILogger<ZeroParamAdapterPipeline> logger,
+        ILogger<DirectAdapterPipeline> logger,
         IMeterFactory meterFactory,
         IOptions<OpenTelemetryOptions> openTelemetryOptions)
 
@@ -287,20 +287,20 @@ public class ZeroParamAdapterPipeline : ZeroParamAdapter
                 requestHandler: RequestHandler,
                 requestHandlerMethod: nameof(GetValue),
                 operation: FinTToIO(base.GetValue()),
-                requestLog: () => RequestLog_ZeroParamAdapter_GetValue(RequestHandler, nameof(GetValue)),
-                responseLogSuccess: ResponseLogSuccess_ZeroParamAdapter_GetValue,
-                responseLogFailure: ResponseLogFailure_ZeroParamAdapter_GetValue,
+                requestLog: () => AdapterRequestLog_DirectAdapter_GetValue(RequestHandler, nameof(GetValue)),
+                responseLogSuccess: AdapterResponseSuccessLog_DirectAdapter_GetValue,
+                responseLogFailure: AdapterResponseFailureLog_DirectAdapter_GetValue,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_ZeroParamAdapter_GetValue(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_DirectAdapter_GetValue(
         string requestHandler,
         string requestHandlerMethod) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_ZeroParamAdapter_GetValue(
+                _logger.LogAdapterRequestDebug_DirectAdapter_GetValue(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -308,7 +308,7 @@ public class ZeroParamAdapterPipeline : ZeroParamAdapter
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_ZeroParamAdapter_GetValue(
+                _logger.LogAdapterRequest_DirectAdapter_GetValue(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -317,7 +317,7 @@ public class ZeroParamAdapterPipeline : ZeroParamAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_ZeroParamAdapter_GetValue(
+    private void AdapterResponseSuccessLog_DirectAdapter_GetValue(
         string requestHandler,
         string requestHandlerMethod,
         int result,
@@ -325,7 +325,7 @@ public class ZeroParamAdapterPipeline : ZeroParamAdapter
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_ZeroParamAdapter_GetValue(
+            _logger.LogAdapterResponseSuccessDebug_DirectAdapter_GetValue(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -336,7 +336,7 @@ public class ZeroParamAdapterPipeline : ZeroParamAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_ZeroParamAdapter_GetValue(
+            _logger.LogAdapterResponseSuccess_DirectAdapter_GetValue(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -346,7 +346,7 @@ public class ZeroParamAdapterPipeline : ZeroParamAdapter
         }
     }
 
-    private void ResponseLogFailure_ZeroParamAdapter_GetValue(
+    private void AdapterResponseFailureLog_DirectAdapter_GetValue(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -356,7 +356,7 @@ public class ZeroParamAdapterPipeline : ZeroParamAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_ZeroParamAdapter_GetValue(
+            _logger.LogAdapterResponseError_DirectAdapter_GetValue(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -369,7 +369,7 @@ public class ZeroParamAdapterPipeline : ZeroParamAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_ZeroParamAdapter_GetValue(
+            _logger.LogAdapterResponseWarning_DirectAdapter_GetValue(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -383,30 +383,30 @@ public class ZeroParamAdapterPipeline : ZeroParamAdapter
     }
 }
 
-internal static class ZeroParamAdapterPipelineLoggers
+internal static class DirectAdapterPipelineLoggers
 {
 
     // ===== LoggerMessage.Define delegates for GetValue =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_ZeroParamAdapter_GetValue =
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_DirectAdapter_GetValue =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequestDebug_ZeroParamAdapter_GetValue =
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_DirectAdapter_GetValue =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_ZeroParamAdapter_GetValue =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_DirectAdapter_GetValue =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_ZeroParamAdapter_GetValue(
+    public static void LogAdapterRequestDebug_DirectAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -416,10 +416,10 @@ internal static class ZeroParamAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_ZeroParamAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequestDebug_DirectAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogRequest_ZeroParamAdapter_GetValue(
+    public static void LogAdapterRequest_DirectAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -429,10 +429,10 @@ internal static class ZeroParamAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_ZeroParamAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_DirectAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_ZeroParamAdapter_GetValue(
+    public static void LogAdapterResponseSuccessDebug_DirectAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -453,7 +453,7 @@ internal static class ZeroParamAdapterPipelineLoggers
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_ZeroParamAdapter_GetValue(
+    public static void LogAdapterResponseSuccess_DirectAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -465,10 +465,10 @@ internal static class ZeroParamAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_ZeroParamAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_DirectAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_ZeroParamAdapter_GetValue(
+    public static void LogAdapterResponseWarning_DirectAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -496,7 +496,7 @@ internal static class ZeroParamAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_ZeroParamAdapter_GetValue(
+    public static void LogAdapterResponseError_DirectAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,

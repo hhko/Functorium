@@ -20,17 +20,17 @@ using Microsoft.Extensions.Options;
 
 namespace TestNamespace;
 
-public class DerivedAdapterPipeline : DerivedAdapter
+public class CollectionReturnAdapterPipeline : CollectionReturnAdapter
 {
     private readonly ActivitySource _activitySource;
-    private readonly ILogger<DerivedAdapterPipeline> _logger;
+    private readonly ILogger<CollectionReturnAdapterPipeline> _logger;
 
     // Metrics
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
-    private const string RequestHandler = nameof(DerivedAdapter);
+    private const string RequestHandler = nameof(CollectionReturnAdapter);
 
     private readonly string _requestCategoryLowerCase;
 
@@ -39,13 +39,12 @@ public class DerivedAdapterPipeline : DerivedAdapter
     private readonly bool _isWarningEnabled;
     private readonly bool _isErrorEnabled;
 
-    public DerivedAdapterPipeline(
+    public CollectionReturnAdapterPipeline(
         ActivitySource activitySource,
-        ILogger<DerivedAdapterPipeline> logger,
+        ILogger<CollectionReturnAdapterPipeline> logger,
         IMeterFactory meterFactory,
-        IOptions<OpenTelemetryOptions> openTelemetryOptions,
-        string connectionString)
-        : base(connectionString)
+        IOptions<OpenTelemetryOptions> openTelemetryOptions)
+
     {
         global::System.ArgumentNullException.ThrowIfNull(activitySource);
         global::System.ArgumentNullException.ThrowIfNull(meterFactory);
@@ -281,27 +280,27 @@ public class DerivedAdapterPipeline : DerivedAdapter
         };
     }
 
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, string> GetConnection(
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, global::System.Collections.Generic.List<global::TestNamespace.User>> GetUsers(
     ) =>
-        global::LanguageExt.FinT.lift<global::LanguageExt.IO, string>(
+        global::LanguageExt.FinT.lift<global::LanguageExt.IO, global::System.Collections.Generic.List<global::TestNamespace.User>>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(GetConnection),
-                operation: FinTToIO(base.GetConnection()),
-                requestLog: () => RequestLog_DerivedAdapter_GetConnection(RequestHandler, nameof(GetConnection)),
-                responseLogSuccess: ResponseLogSuccess_DerivedAdapter_GetConnection,
-                responseLogFailure: ResponseLogFailure_DerivedAdapter_GetConnection,
+                requestHandlerMethod: nameof(GetUsers),
+                operation: FinTToIO(base.GetUsers()),
+                requestLog: () => AdapterRequestLog_CollectionReturnAdapter_GetUsers(RequestHandler, nameof(GetUsers)),
+                responseLogSuccess: AdapterResponseSuccessLog_CollectionReturnAdapter_GetUsers,
+                responseLogFailure: AdapterResponseFailureLog_CollectionReturnAdapter_GetUsers,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_DerivedAdapter_GetConnection(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_CollectionReturnAdapter_GetUsers(
         string requestHandler,
         string requestHandlerMethod) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_DerivedAdapter_GetConnection(
+                _logger.LogAdapterRequestDebug_CollectionReturnAdapter_GetUsers(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -309,7 +308,7 @@ public class DerivedAdapterPipeline : DerivedAdapter
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_DerivedAdapter_GetConnection(
+                _logger.LogAdapterRequest_CollectionReturnAdapter_GetUsers(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -318,15 +317,15 @@ public class DerivedAdapterPipeline : DerivedAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_DerivedAdapter_GetConnection(
+    private void AdapterResponseSuccessLog_CollectionReturnAdapter_GetUsers(
         string requestHandler,
         string requestHandlerMethod,
-        string result,
+        global::System.Collections.Generic.List<global::TestNamespace.User> result,
         double elapsed)
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_DerivedAdapter_GetConnection(
+            _logger.LogAdapterResponseSuccessDebug_CollectionReturnAdapter_GetUsers(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -337,7 +336,7 @@ public class DerivedAdapterPipeline : DerivedAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_DerivedAdapter_GetConnection(
+            _logger.LogAdapterResponseSuccess_CollectionReturnAdapter_GetUsers(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -347,7 +346,7 @@ public class DerivedAdapterPipeline : DerivedAdapter
         }
     }
 
-    private void ResponseLogFailure_DerivedAdapter_GetConnection(
+    private void AdapterResponseFailureLog_CollectionReturnAdapter_GetUsers(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -357,7 +356,7 @@ public class DerivedAdapterPipeline : DerivedAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_DerivedAdapter_GetConnection(
+            _logger.LogAdapterResponseError_CollectionReturnAdapter_GetUsers(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -370,7 +369,108 @@ public class DerivedAdapterPipeline : DerivedAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_DerivedAdapter_GetConnection(
+            _logger.LogAdapterResponseWarning_CollectionReturnAdapter_GetUsers(
+                ObservabilityNaming.Layers.Adapter,
+                _requestCategoryLowerCase,
+                requestHandler,
+                requestHandlerMethod,
+                ObservabilityNaming.Status.Failure,
+                elapsed,
+                errorType,
+                errorCode,
+                error);
+        }
+    }
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, string[]> GetNames(
+    ) =>
+        global::LanguageExt.FinT.lift<global::LanguageExt.IO, string[]>(
+            (from result in ExecuteWithSpan(
+                requestHandler: RequestHandler,
+                requestHandlerMethod: nameof(GetNames),
+                operation: FinTToIO(base.GetNames()),
+                requestLog: () => AdapterRequestLog_CollectionReturnAdapter_GetNames(RequestHandler, nameof(GetNames)),
+                responseLogSuccess: AdapterResponseSuccessLog_CollectionReturnAdapter_GetNames,
+                responseLogFailure: AdapterResponseFailureLog_CollectionReturnAdapter_GetNames,
+                startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
+            select result).Map(r => global::LanguageExt.Fin.Succ(r)));
+
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_CollectionReturnAdapter_GetNames(
+        string requestHandler,
+        string requestHandlerMethod) =>
+        global::LanguageExt.IO.lift(() =>
+        {
+            if (_isDebugEnabled)
+            {
+                _logger.LogAdapterRequestDebug_CollectionReturnAdapter_GetNames(
+                    ObservabilityNaming.Layers.Adapter,
+                    _requestCategoryLowerCase,
+                    requestHandler,
+                    requestHandlerMethod);
+            }
+            else if (_isInformationEnabled)
+            {
+                _logger.LogAdapterRequest_CollectionReturnAdapter_GetNames(
+                    ObservabilityNaming.Layers.Adapter,
+                    _requestCategoryLowerCase,
+                    requestHandler,
+                    requestHandlerMethod);
+            }
+            return global::LanguageExt.Unit.Default;
+        });
+
+    private void AdapterResponseSuccessLog_CollectionReturnAdapter_GetNames(
+        string requestHandler,
+        string requestHandlerMethod,
+        string[] result,
+        double elapsed)
+    {
+        if (_isDebugEnabled)
+        {
+            _logger.LogAdapterResponseSuccessDebug_CollectionReturnAdapter_GetNames(
+                ObservabilityNaming.Layers.Adapter,
+                _requestCategoryLowerCase,
+                requestHandler,
+                requestHandlerMethod,
+                ObservabilityNaming.Status.Success,
+                result,
+                elapsed);
+        }
+        else if (_isInformationEnabled)
+        {
+            _logger.LogAdapterResponseSuccess_CollectionReturnAdapter_GetNames(
+                ObservabilityNaming.Layers.Adapter,
+                _requestCategoryLowerCase,
+                requestHandler,
+                requestHandlerMethod,
+                ObservabilityNaming.Status.Success,
+                elapsed);
+        }
+    }
+
+    private void AdapterResponseFailureLog_CollectionReturnAdapter_GetNames(
+        string requestHandler,
+        string requestHandlerMethod,
+        global::LanguageExt.Common.Error error,
+        double elapsed)
+    {
+        var (errorType, errorCode) = GetErrorInfo(error);
+
+        if (error.IsExceptional && _isErrorEnabled)
+        {
+            _logger.LogAdapterResponseError_CollectionReturnAdapter_GetNames(
+                ObservabilityNaming.Layers.Adapter,
+                _requestCategoryLowerCase,
+                requestHandler,
+                requestHandlerMethod,
+                ObservabilityNaming.Status.Failure,
+                elapsed,
+                errorType,
+                errorCode,
+                error);
+        }
+        else if (_isWarningEnabled)
+        {
+            _logger.LogAdapterResponseWarning_CollectionReturnAdapter_GetNames(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -384,30 +484,30 @@ public class DerivedAdapterPipeline : DerivedAdapter
     }
 }
 
-internal static class DerivedAdapterPipelineLoggers
+internal static class CollectionReturnAdapterPipelineLoggers
 {
 
-    // ===== LoggerMessage.Define delegates for GetConnection =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_DerivedAdapter_GetConnection =
+    // ===== LoggerMessage.Define delegates for GetUsers =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_CollectionReturnAdapter_GetUsers =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequestDebug_DerivedAdapter_GetConnection =
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_CollectionReturnAdapter_GetUsers =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_DerivedAdapter_GetConnection =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_CollectionReturnAdapter_GetUsers =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_DerivedAdapter_GetConnection(
+    public static void LogAdapterRequestDebug_CollectionReturnAdapter_GetUsers(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -417,10 +517,10 @@ internal static class DerivedAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_DerivedAdapter_GetConnection(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequestDebug_CollectionReturnAdapter_GetUsers(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogRequest_DerivedAdapter_GetConnection(
+    public static void LogAdapterRequest_CollectionReturnAdapter_GetUsers(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -430,17 +530,17 @@ internal static class DerivedAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_DerivedAdapter_GetConnection(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_CollectionReturnAdapter_GetUsers(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_DerivedAdapter_GetConnection(
+    public static void LogAdapterResponseSuccessDebug_CollectionReturnAdapter_GetUsers(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
         string requestHandlerMethod,
         string status,
-        string result,
+        global::System.Collections.Generic.List<global::TestNamespace.User> result,
         double elapsed)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -449,12 +549,12 @@ internal static class DerivedAdapterPipelineLoggers
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
-                     "{response.result} " +
+                     "{response.result} {response.result.count} " +
                      "responded {response.status} in {response.elapsed:0.0000} s",
-            requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
+            requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, result?.Count ?? 0, status, elapsed);
     }
 
-    public static void LogResponse_DerivedAdapter_GetConnection(
+    public static void LogAdapterResponseSuccess_CollectionReturnAdapter_GetUsers(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -466,10 +566,10 @@ internal static class DerivedAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_DerivedAdapter_GetConnection(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_CollectionReturnAdapter_GetUsers(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_DerivedAdapter_GetConnection(
+    public static void LogAdapterResponseWarning_CollectionReturnAdapter_GetUsers(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -497,7 +597,145 @@ internal static class DerivedAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_DerivedAdapter_GetConnection(
+    public static void LogAdapterResponseError_CollectionReturnAdapter_GetUsers(
+        this ILogger logger,
+        string requestLayer,
+        string requestCategory,
+        string requestHandler,
+        string requestHandlerMethod,
+        string status,
+        double elapsed,
+        string errorType,
+        string errorCode,
+        global::LanguageExt.Common.Error error)
+    {
+        if (!logger.IsEnabled(LogLevel.Error))
+            return;
+
+        logger.LogError(
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            elapsed,
+            errorType,
+            errorCode,
+            error);
+    }
+
+    // ===== LoggerMessage.Define delegates for GetNames =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_CollectionReturnAdapter_GetNames =
+        LoggerMessage.Define<string, string, string, string>(
+            LogLevel.Information,
+            ObservabilityNaming.EventIds.Adapter.AdapterRequest,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
+
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_CollectionReturnAdapter_GetNames =
+        LoggerMessage.Define<string, string, string, string>(
+            LogLevel.Debug,
+            ObservabilityNaming.EventIds.Adapter.AdapterRequest,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
+
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_CollectionReturnAdapter_GetNames =
+        LoggerMessage.Define<string, string, string, string, string, double>(
+            LogLevel.Information,
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
+
+
+    public static void LogAdapterRequestDebug_CollectionReturnAdapter_GetNames(
+        this ILogger logger,
+        string requestLayer,
+        string requestCategory,
+        string requestHandler,
+        string requestHandlerMethod)
+    {
+        if (!logger.IsEnabled(LogLevel.Debug))
+            return;
+
+        _logAdapterRequestDebug_CollectionReturnAdapter_GetNames(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+    }
+
+    public static void LogAdapterRequest_CollectionReturnAdapter_GetNames(
+        this ILogger logger,
+        string requestLayer,
+        string requestCategory,
+        string requestHandler,
+        string requestHandlerMethod)
+    {
+        if (!logger.IsEnabled(LogLevel.Information))
+            return;
+
+        _logAdapterRequest_CollectionReturnAdapter_GetNames(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+    }
+
+    public static void LogAdapterResponseSuccessDebug_CollectionReturnAdapter_GetNames(
+        this ILogger logger,
+        string requestLayer,
+        string requestCategory,
+        string requestHandler,
+        string requestHandlerMethod,
+        string status,
+        string[] result,
+        double elapsed)
+    {
+        if (!logger.IsEnabled(LogLevel.Debug))
+            return;
+
+        logger.LogDebug(
+            eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
+            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
+                     "{response.result} {response.result.count} " +
+                     "responded {response.status} in {response.elapsed:0.0000} s",
+            requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, result?.Length ?? 0, status, elapsed);
+    }
+
+    public static void LogAdapterResponseSuccess_CollectionReturnAdapter_GetNames(
+        this ILogger logger,
+        string requestLayer,
+        string requestCategory,
+        string requestHandler,
+        string requestHandlerMethod,
+        string status,
+        double elapsed)
+    {
+        if (!logger.IsEnabled(LogLevel.Information))
+            return;
+
+        _logAdapterResponseSuccess_CollectionReturnAdapter_GetNames(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+    }
+
+    public static void LogAdapterResponseWarning_CollectionReturnAdapter_GetNames(
+        this ILogger logger,
+        string requestLayer,
+        string requestCategory,
+        string requestHandler,
+        string requestHandlerMethod,
+        string status,
+        double elapsed,
+        string errorType,
+        string errorCode,
+        global::LanguageExt.Common.Error error)
+    {
+        if (!logger.IsEnabled(LogLevel.Warning))
+            return;
+
+        logger.LogWarning(
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            elapsed,
+            errorType,
+            errorCode,
+            error);
+    }
+
+    public static void LogAdapterResponseError_CollectionReturnAdapter_GetNames(
         this ILogger logger,
         string requestLayer,
         string requestCategory,

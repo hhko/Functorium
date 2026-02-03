@@ -236,7 +236,7 @@ public sealed class AdapterMetricsPipelineStructureTests : IDisposable
             .OrderBy(t => t.Key)
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
-        await Verify(tags).UseDirectory("Snapshots");
+        await Verify(tags).UseDirectory("Snapshots/AdapterMetricsPipelineStructure");
     }
 
     /// <summary>
@@ -268,7 +268,7 @@ public sealed class AdapterMetricsPipelineStructureTests : IDisposable
             .OrderBy(t => t.Key)
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
-        await Verify(tags).UseDirectory("Snapshots");
+        await Verify(tags).UseDirectory("Snapshots/AdapterMetricsPipelineStructure");
     }
 
     /// <summary>
@@ -310,7 +310,7 @@ public sealed class AdapterMetricsPipelineStructureTests : IDisposable
             .OrderBy(t => t.Key)
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
-        await Verify(tags).UseDirectory("Snapshots");
+        await Verify(tags).UseDirectory("Snapshots/AdapterMetricsPipelineStructure");
     }
 
     /// <summary>
@@ -352,7 +352,7 @@ public sealed class AdapterMetricsPipelineStructureTests : IDisposable
             .OrderBy(t => t.Key)
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
-        await Verify(tags).UseDirectory("Snapshots");
+        await Verify(tags).UseDirectory("Snapshots/AdapterMetricsPipelineStructure");
     }
 
     /// <summary>
@@ -394,7 +394,7 @@ public sealed class AdapterMetricsPipelineStructureTests : IDisposable
             .OrderBy(t => t.Key)
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
-        await Verify(tags).UseDirectory("Snapshots");
+        await Verify(tags).UseDirectory("Snapshots/AdapterMetricsPipelineStructure");
     }
 
     /// <summary>
@@ -426,7 +426,7 @@ public sealed class AdapterMetricsPipelineStructureTests : IDisposable
             .OrderBy(t => t.Key)
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
-        await Verify(tags).UseDirectory("Snapshots");
+        await Verify(tags).UseDirectory("Snapshots/AdapterMetricsPipelineStructure");
     }
 
     #endregion

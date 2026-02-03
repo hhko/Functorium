@@ -20,17 +20,17 @@ using Microsoft.Extensions.Options;
 
 namespace TestNamespace;
 
-public class PrimaryCtorAdapterPipeline : PrimaryCtorAdapter
+public class MultiCtorAdapterPipeline : MultiCtorAdapter
 {
     private readonly ActivitySource _activitySource;
-    private readonly ILogger<PrimaryCtorAdapterPipeline> _logger;
+    private readonly ILogger<MultiCtorAdapterPipeline> _logger;
 
     // Metrics
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
-    private const string RequestHandler = nameof(PrimaryCtorAdapter);
+    private const string RequestHandler = nameof(MultiCtorAdapter);
 
     private readonly string _requestCategoryLowerCase;
 
@@ -39,14 +39,15 @@ public class PrimaryCtorAdapterPipeline : PrimaryCtorAdapter
     private readonly bool _isWarningEnabled;
     private readonly bool _isErrorEnabled;
 
-    public PrimaryCtorAdapterPipeline(
+    public MultiCtorAdapterPipeline(
         ActivitySource activitySource,
-        ILogger<PrimaryCtorAdapterPipeline> logger,
+        ILogger<MultiCtorAdapterPipeline> logger,
         IMeterFactory meterFactory,
         IOptions<OpenTelemetryOptions> openTelemetryOptions,
         string connectionString,
-        int timeout)
-        : base(connectionString, timeout)
+        int timeout,
+        bool useCache)
+        : base(connectionString, timeout, useCache)
     {
         global::System.ArgumentNullException.ThrowIfNull(activitySource);
         global::System.ArgumentNullException.ThrowIfNull(meterFactory);
@@ -282,27 +283,27 @@ public class PrimaryCtorAdapterPipeline : PrimaryCtorAdapter
         };
     }
 
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, string> GetConnectionString(
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, string> GetInfo(
     ) =>
         global::LanguageExt.FinT.lift<global::LanguageExt.IO, string>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(GetConnectionString),
-                operation: FinTToIO(base.GetConnectionString()),
-                requestLog: () => RequestLog_PrimaryCtorAdapter_GetConnectionString(RequestHandler, nameof(GetConnectionString)),
-                responseLogSuccess: ResponseLogSuccess_PrimaryCtorAdapter_GetConnectionString,
-                responseLogFailure: ResponseLogFailure_PrimaryCtorAdapter_GetConnectionString,
+                requestHandlerMethod: nameof(GetInfo),
+                operation: FinTToIO(base.GetInfo()),
+                requestLog: () => AdapterRequestLog_MultiCtorAdapter_GetInfo(RequestHandler, nameof(GetInfo)),
+                responseLogSuccess: AdapterResponseSuccessLog_MultiCtorAdapter_GetInfo,
+                responseLogFailure: AdapterResponseFailureLog_MultiCtorAdapter_GetInfo,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_PrimaryCtorAdapter_GetConnectionString(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_MultiCtorAdapter_GetInfo(
         string requestHandler,
         string requestHandlerMethod) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_PrimaryCtorAdapter_GetConnectionString(
+                _logger.LogAdapterRequestDebug_MultiCtorAdapter_GetInfo(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -310,7 +311,7 @@ public class PrimaryCtorAdapterPipeline : PrimaryCtorAdapter
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_PrimaryCtorAdapter_GetConnectionString(
+                _logger.LogAdapterRequest_MultiCtorAdapter_GetInfo(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -319,7 +320,7 @@ public class PrimaryCtorAdapterPipeline : PrimaryCtorAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_PrimaryCtorAdapter_GetConnectionString(
+    private void AdapterResponseSuccessLog_MultiCtorAdapter_GetInfo(
         string requestHandler,
         string requestHandlerMethod,
         string result,
@@ -327,7 +328,7 @@ public class PrimaryCtorAdapterPipeline : PrimaryCtorAdapter
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_PrimaryCtorAdapter_GetConnectionString(
+            _logger.LogAdapterResponseSuccessDebug_MultiCtorAdapter_GetInfo(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -338,7 +339,7 @@ public class PrimaryCtorAdapterPipeline : PrimaryCtorAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_PrimaryCtorAdapter_GetConnectionString(
+            _logger.LogAdapterResponseSuccess_MultiCtorAdapter_GetInfo(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -348,7 +349,7 @@ public class PrimaryCtorAdapterPipeline : PrimaryCtorAdapter
         }
     }
 
-    private void ResponseLogFailure_PrimaryCtorAdapter_GetConnectionString(
+    private void AdapterResponseFailureLog_MultiCtorAdapter_GetInfo(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -358,7 +359,7 @@ public class PrimaryCtorAdapterPipeline : PrimaryCtorAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_PrimaryCtorAdapter_GetConnectionString(
+            _logger.LogAdapterResponseError_MultiCtorAdapter_GetInfo(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -371,7 +372,7 @@ public class PrimaryCtorAdapterPipeline : PrimaryCtorAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_PrimaryCtorAdapter_GetConnectionString(
+            _logger.LogAdapterResponseWarning_MultiCtorAdapter_GetInfo(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -385,30 +386,30 @@ public class PrimaryCtorAdapterPipeline : PrimaryCtorAdapter
     }
 }
 
-internal static class PrimaryCtorAdapterPipelineLoggers
+internal static class MultiCtorAdapterPipelineLoggers
 {
 
-    // ===== LoggerMessage.Define delegates for GetConnectionString =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_PrimaryCtorAdapter_GetConnectionString =
+    // ===== LoggerMessage.Define delegates for GetInfo =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_MultiCtorAdapter_GetInfo =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequestDebug_PrimaryCtorAdapter_GetConnectionString =
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_MultiCtorAdapter_GetInfo =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_PrimaryCtorAdapter_GetConnectionString =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_MultiCtorAdapter_GetInfo =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_PrimaryCtorAdapter_GetConnectionString(
+    public static void LogAdapterRequestDebug_MultiCtorAdapter_GetInfo(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -418,10 +419,10 @@ internal static class PrimaryCtorAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_PrimaryCtorAdapter_GetConnectionString(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequestDebug_MultiCtorAdapter_GetInfo(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogRequest_PrimaryCtorAdapter_GetConnectionString(
+    public static void LogAdapterRequest_MultiCtorAdapter_GetInfo(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -431,10 +432,10 @@ internal static class PrimaryCtorAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_PrimaryCtorAdapter_GetConnectionString(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_MultiCtorAdapter_GetInfo(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_PrimaryCtorAdapter_GetConnectionString(
+    public static void LogAdapterResponseSuccessDebug_MultiCtorAdapter_GetInfo(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -455,7 +456,7 @@ internal static class PrimaryCtorAdapterPipelineLoggers
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_PrimaryCtorAdapter_GetConnectionString(
+    public static void LogAdapterResponseSuccess_MultiCtorAdapter_GetInfo(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -467,10 +468,10 @@ internal static class PrimaryCtorAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_PrimaryCtorAdapter_GetConnectionString(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_MultiCtorAdapter_GetInfo(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_PrimaryCtorAdapter_GetConnectionString(
+    public static void LogAdapterResponseWarning_MultiCtorAdapter_GetInfo(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -498,7 +499,7 @@ internal static class PrimaryCtorAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_PrimaryCtorAdapter_GetConnectionString(
+    public static void LogAdapterResponseError_MultiCtorAdapter_GetInfo(
         this ILogger logger,
         string requestLayer,
         string requestCategory,

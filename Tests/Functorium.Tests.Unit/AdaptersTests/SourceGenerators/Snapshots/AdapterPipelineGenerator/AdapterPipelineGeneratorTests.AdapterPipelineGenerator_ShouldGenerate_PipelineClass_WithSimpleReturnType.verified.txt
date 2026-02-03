@@ -20,17 +20,17 @@ using Microsoft.Extensions.Options;
 
 namespace TestNamespace;
 
-public class MultiMethodAdapterPipeline : MultiMethodAdapter
+public class SimpleReturnAdapterPipeline : SimpleReturnAdapter
 {
     private readonly ActivitySource _activitySource;
-    private readonly ILogger<MultiMethodAdapterPipeline> _logger;
+    private readonly ILogger<SimpleReturnAdapterPipeline> _logger;
 
     // Metrics
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
-    private const string RequestHandler = nameof(MultiMethodAdapter);
+    private const string RequestHandler = nameof(SimpleReturnAdapter);
 
     private readonly string _requestCategoryLowerCase;
 
@@ -39,9 +39,9 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
     private readonly bool _isWarningEnabled;
     private readonly bool _isErrorEnabled;
 
-    public MultiMethodAdapterPipeline(
+    public SimpleReturnAdapterPipeline(
         ActivitySource activitySource,
-        ILogger<MultiMethodAdapterPipeline> logger,
+        ILogger<SimpleReturnAdapterPipeline> logger,
         IMeterFactory meterFactory,
         IOptions<OpenTelemetryOptions> openTelemetryOptions)
 
@@ -280,27 +280,27 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
         };
     }
 
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, int> GetValue(
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, int> GetNumber(
     ) =>
         global::LanguageExt.FinT.lift<global::LanguageExt.IO, int>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(GetValue),
-                operation: FinTToIO(base.GetValue()),
-                requestLog: () => RequestLog_MultiMethodAdapter_GetValue(RequestHandler, nameof(GetValue)),
-                responseLogSuccess: ResponseLogSuccess_MultiMethodAdapter_GetValue,
-                responseLogFailure: ResponseLogFailure_MultiMethodAdapter_GetValue,
+                requestHandlerMethod: nameof(GetNumber),
+                operation: FinTToIO(base.GetNumber()),
+                requestLog: () => AdapterRequestLog_SimpleReturnAdapter_GetNumber(RequestHandler, nameof(GetNumber)),
+                responseLogSuccess: AdapterResponseSuccessLog_SimpleReturnAdapter_GetNumber,
+                responseLogFailure: AdapterResponseFailureLog_SimpleReturnAdapter_GetNumber,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_MultiMethodAdapter_GetValue(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_SimpleReturnAdapter_GetNumber(
         string requestHandler,
         string requestHandlerMethod) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_MultiMethodAdapter_GetValue(
+                _logger.LogAdapterRequestDebug_SimpleReturnAdapter_GetNumber(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -308,7 +308,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_MultiMethodAdapter_GetValue(
+                _logger.LogAdapterRequest_SimpleReturnAdapter_GetNumber(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -317,7 +317,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_MultiMethodAdapter_GetValue(
+    private void AdapterResponseSuccessLog_SimpleReturnAdapter_GetNumber(
         string requestHandler,
         string requestHandlerMethod,
         int result,
@@ -325,7 +325,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_MultiMethodAdapter_GetValue(
+            _logger.LogAdapterResponseSuccessDebug_SimpleReturnAdapter_GetNumber(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -336,7 +336,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_MultiMethodAdapter_GetValue(
+            _logger.LogAdapterResponseSuccess_SimpleReturnAdapter_GetNumber(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -346,7 +346,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
         }
     }
 
-    private void ResponseLogFailure_MultiMethodAdapter_GetValue(
+    private void AdapterResponseFailureLog_SimpleReturnAdapter_GetNumber(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -356,7 +356,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_MultiMethodAdapter_GetValue(
+            _logger.LogAdapterResponseError_SimpleReturnAdapter_GetNumber(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -369,7 +369,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_MultiMethodAdapter_GetValue(
+            _logger.LogAdapterResponseWarning_SimpleReturnAdapter_GetNumber(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -381,27 +381,27 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
                 error);
         }
     }
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, string> GetName(
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, string> GetText(
     ) =>
         global::LanguageExt.FinT.lift<global::LanguageExt.IO, string>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(GetName),
-                operation: FinTToIO(base.GetName()),
-                requestLog: () => RequestLog_MultiMethodAdapter_GetName(RequestHandler, nameof(GetName)),
-                responseLogSuccess: ResponseLogSuccess_MultiMethodAdapter_GetName,
-                responseLogFailure: ResponseLogFailure_MultiMethodAdapter_GetName,
+                requestHandlerMethod: nameof(GetText),
+                operation: FinTToIO(base.GetText()),
+                requestLog: () => AdapterRequestLog_SimpleReturnAdapter_GetText(RequestHandler, nameof(GetText)),
+                responseLogSuccess: AdapterResponseSuccessLog_SimpleReturnAdapter_GetText,
+                responseLogFailure: AdapterResponseFailureLog_SimpleReturnAdapter_GetText,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_MultiMethodAdapter_GetName(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_SimpleReturnAdapter_GetText(
         string requestHandler,
         string requestHandlerMethod) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_MultiMethodAdapter_GetName(
+                _logger.LogAdapterRequestDebug_SimpleReturnAdapter_GetText(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -409,7 +409,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_MultiMethodAdapter_GetName(
+                _logger.LogAdapterRequest_SimpleReturnAdapter_GetText(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -418,7 +418,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_MultiMethodAdapter_GetName(
+    private void AdapterResponseSuccessLog_SimpleReturnAdapter_GetText(
         string requestHandler,
         string requestHandlerMethod,
         string result,
@@ -426,7 +426,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_MultiMethodAdapter_GetName(
+            _logger.LogAdapterResponseSuccessDebug_SimpleReturnAdapter_GetText(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -437,7 +437,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_MultiMethodAdapter_GetName(
+            _logger.LogAdapterResponseSuccess_SimpleReturnAdapter_GetText(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -447,7 +447,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
         }
     }
 
-    private void ResponseLogFailure_MultiMethodAdapter_GetName(
+    private void AdapterResponseFailureLog_SimpleReturnAdapter_GetText(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -457,7 +457,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_MultiMethodAdapter_GetName(
+            _logger.LogAdapterResponseError_SimpleReturnAdapter_GetText(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -470,7 +470,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_MultiMethodAdapter_GetName(
+            _logger.LogAdapterResponseWarning_SimpleReturnAdapter_GetText(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -482,27 +482,27 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
                 error);
         }
     }
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, bool> IsValid(
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, bool> GetFlag(
     ) =>
         global::LanguageExt.FinT.lift<global::LanguageExt.IO, bool>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(IsValid),
-                operation: FinTToIO(base.IsValid()),
-                requestLog: () => RequestLog_MultiMethodAdapter_IsValid(RequestHandler, nameof(IsValid)),
-                responseLogSuccess: ResponseLogSuccess_MultiMethodAdapter_IsValid,
-                responseLogFailure: ResponseLogFailure_MultiMethodAdapter_IsValid,
+                requestHandlerMethod: nameof(GetFlag),
+                operation: FinTToIO(base.GetFlag()),
+                requestLog: () => AdapterRequestLog_SimpleReturnAdapter_GetFlag(RequestHandler, nameof(GetFlag)),
+                responseLogSuccess: AdapterResponseSuccessLog_SimpleReturnAdapter_GetFlag,
+                responseLogFailure: AdapterResponseFailureLog_SimpleReturnAdapter_GetFlag,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_MultiMethodAdapter_IsValid(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_SimpleReturnAdapter_GetFlag(
         string requestHandler,
         string requestHandlerMethod) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_MultiMethodAdapter_IsValid(
+                _logger.LogAdapterRequestDebug_SimpleReturnAdapter_GetFlag(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -510,7 +510,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_MultiMethodAdapter_IsValid(
+                _logger.LogAdapterRequest_SimpleReturnAdapter_GetFlag(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -519,7 +519,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_MultiMethodAdapter_IsValid(
+    private void AdapterResponseSuccessLog_SimpleReturnAdapter_GetFlag(
         string requestHandler,
         string requestHandlerMethod,
         bool result,
@@ -527,7 +527,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_MultiMethodAdapter_IsValid(
+            _logger.LogAdapterResponseSuccessDebug_SimpleReturnAdapter_GetFlag(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -538,7 +538,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_MultiMethodAdapter_IsValid(
+            _logger.LogAdapterResponseSuccess_SimpleReturnAdapter_GetFlag(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -548,7 +548,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
         }
     }
 
-    private void ResponseLogFailure_MultiMethodAdapter_IsValid(
+    private void AdapterResponseFailureLog_SimpleReturnAdapter_GetFlag(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -558,7 +558,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_MultiMethodAdapter_IsValid(
+            _logger.LogAdapterResponseError_SimpleReturnAdapter_GetFlag(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -571,7 +571,7 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_MultiMethodAdapter_IsValid(
+            _logger.LogAdapterResponseWarning_SimpleReturnAdapter_GetFlag(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -585,30 +585,30 @@ public class MultiMethodAdapterPipeline : MultiMethodAdapter
     }
 }
 
-internal static class MultiMethodAdapterPipelineLoggers
+internal static class SimpleReturnAdapterPipelineLoggers
 {
 
-    // ===== LoggerMessage.Define delegates for GetValue =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_MultiMethodAdapter_GetValue =
+    // ===== LoggerMessage.Define delegates for GetNumber =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_SimpleReturnAdapter_GetNumber =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequestDebug_MultiMethodAdapter_GetValue =
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_SimpleReturnAdapter_GetNumber =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_MultiMethodAdapter_GetValue =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_SimpleReturnAdapter_GetNumber =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_MultiMethodAdapter_GetValue(
+    public static void LogAdapterRequestDebug_SimpleReturnAdapter_GetNumber(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -618,10 +618,10 @@ internal static class MultiMethodAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_MultiMethodAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequestDebug_SimpleReturnAdapter_GetNumber(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogRequest_MultiMethodAdapter_GetValue(
+    public static void LogAdapterRequest_SimpleReturnAdapter_GetNumber(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -631,10 +631,10 @@ internal static class MultiMethodAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_MultiMethodAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_SimpleReturnAdapter_GetNumber(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_MultiMethodAdapter_GetValue(
+    public static void LogAdapterResponseSuccessDebug_SimpleReturnAdapter_GetNumber(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -655,7 +655,7 @@ internal static class MultiMethodAdapterPipelineLoggers
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_MultiMethodAdapter_GetValue(
+    public static void LogAdapterResponseSuccess_SimpleReturnAdapter_GetNumber(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -667,10 +667,10 @@ internal static class MultiMethodAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_MultiMethodAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_SimpleReturnAdapter_GetNumber(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_MultiMethodAdapter_GetValue(
+    public static void LogAdapterResponseWarning_SimpleReturnAdapter_GetNumber(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -698,7 +698,7 @@ internal static class MultiMethodAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_MultiMethodAdapter_GetValue(
+    public static void LogAdapterResponseError_SimpleReturnAdapter_GetNumber(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -726,27 +726,27 @@ internal static class MultiMethodAdapterPipelineLoggers
             error);
     }
 
-    // ===== LoggerMessage.Define delegates for GetName =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_MultiMethodAdapter_GetName =
+    // ===== LoggerMessage.Define delegates for GetText =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_SimpleReturnAdapter_GetText =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequestDebug_MultiMethodAdapter_GetName =
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_SimpleReturnAdapter_GetText =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_MultiMethodAdapter_GetName =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_SimpleReturnAdapter_GetText =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_MultiMethodAdapter_GetName(
+    public static void LogAdapterRequestDebug_SimpleReturnAdapter_GetText(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -756,10 +756,10 @@ internal static class MultiMethodAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_MultiMethodAdapter_GetName(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequestDebug_SimpleReturnAdapter_GetText(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogRequest_MultiMethodAdapter_GetName(
+    public static void LogAdapterRequest_SimpleReturnAdapter_GetText(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -769,10 +769,10 @@ internal static class MultiMethodAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_MultiMethodAdapter_GetName(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_SimpleReturnAdapter_GetText(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_MultiMethodAdapter_GetName(
+    public static void LogAdapterResponseSuccessDebug_SimpleReturnAdapter_GetText(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -793,7 +793,7 @@ internal static class MultiMethodAdapterPipelineLoggers
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_MultiMethodAdapter_GetName(
+    public static void LogAdapterResponseSuccess_SimpleReturnAdapter_GetText(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -805,10 +805,10 @@ internal static class MultiMethodAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_MultiMethodAdapter_GetName(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_SimpleReturnAdapter_GetText(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_MultiMethodAdapter_GetName(
+    public static void LogAdapterResponseWarning_SimpleReturnAdapter_GetText(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -836,7 +836,7 @@ internal static class MultiMethodAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_MultiMethodAdapter_GetName(
+    public static void LogAdapterResponseError_SimpleReturnAdapter_GetText(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -864,27 +864,27 @@ internal static class MultiMethodAdapterPipelineLoggers
             error);
     }
 
-    // ===== LoggerMessage.Define delegates for IsValid =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_MultiMethodAdapter_IsValid =
+    // ===== LoggerMessage.Define delegates for GetFlag =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_SimpleReturnAdapter_GetFlag =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequestDebug_MultiMethodAdapter_IsValid =
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_SimpleReturnAdapter_GetFlag =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_MultiMethodAdapter_IsValid =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_SimpleReturnAdapter_GetFlag =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_MultiMethodAdapter_IsValid(
+    public static void LogAdapterRequestDebug_SimpleReturnAdapter_GetFlag(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -894,10 +894,10 @@ internal static class MultiMethodAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_MultiMethodAdapter_IsValid(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequestDebug_SimpleReturnAdapter_GetFlag(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogRequest_MultiMethodAdapter_IsValid(
+    public static void LogAdapterRequest_SimpleReturnAdapter_GetFlag(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -907,10 +907,10 @@ internal static class MultiMethodAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_MultiMethodAdapter_IsValid(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_SimpleReturnAdapter_GetFlag(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_MultiMethodAdapter_IsValid(
+    public static void LogAdapterResponseSuccessDebug_SimpleReturnAdapter_GetFlag(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -931,7 +931,7 @@ internal static class MultiMethodAdapterPipelineLoggers
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_MultiMethodAdapter_IsValid(
+    public static void LogAdapterResponseSuccess_SimpleReturnAdapter_GetFlag(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -943,10 +943,10 @@ internal static class MultiMethodAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_MultiMethodAdapter_IsValid(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_SimpleReturnAdapter_GetFlag(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_MultiMethodAdapter_IsValid(
+    public static void LogAdapterResponseWarning_SimpleReturnAdapter_GetFlag(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -974,7 +974,7 @@ internal static class MultiMethodAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_MultiMethodAdapter_IsValid(
+    public static void LogAdapterResponseError_SimpleReturnAdapter_GetFlag(
         this ILogger logger,
         string requestLayer,
         string requestCategory,

@@ -87,7 +87,7 @@ public sealed class AdapterLoggingPipelineStructureTests : IDisposable
         await pipeline.GetById(testId).Run().RunAsync();
 
         // Assert
-        await Verify(context.ExtractFirstLogData()).UseDirectory("Snapshots");
+        await Verify(context.ExtractFirstLogData()).UseDirectory("Snapshots/AdapterLoggingPipelineStructure");
     }
 
     // ===== Success Response 로그 필드 검증 =====
@@ -112,7 +112,7 @@ public sealed class AdapterLoggingPipelineStructureTests : IDisposable
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/AdapterLoggingPipelineStructure")
             .ScrubMember("response.elapsed");
     }
 
@@ -148,7 +148,7 @@ public sealed class AdapterLoggingPipelineStructureTests : IDisposable
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/AdapterLoggingPipelineStructure")
             .ScrubMember("response.elapsed");
     }
 
@@ -182,7 +182,7 @@ public sealed class AdapterLoggingPipelineStructureTests : IDisposable
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/AdapterLoggingPipelineStructure")
             .ScrubMember("response.elapsed");
     }
 
@@ -218,7 +218,7 @@ public sealed class AdapterLoggingPipelineStructureTests : IDisposable
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/AdapterLoggingPipelineStructure")
             .ScrubMember("response.elapsed");
     }
 
@@ -254,7 +254,7 @@ public sealed class AdapterLoggingPipelineStructureTests : IDisposable
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/AdapterLoggingPipelineStructure")
             .ScrubMember("response.elapsed");
     }
 

@@ -20,17 +20,17 @@ using Microsoft.Extensions.Options;
 
 namespace TestNamespace;
 
-public class NullableParamAdapterPipeline : NullableParamAdapter
+public class TupleWithCollectionInputAdapterPipeline : TupleWithCollectionInputAdapter
 {
     private readonly ActivitySource _activitySource;
-    private readonly ILogger<NullableParamAdapterPipeline> _logger;
+    private readonly ILogger<TupleWithCollectionInputAdapterPipeline> _logger;
 
     // Metrics
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
-    private const string RequestHandler = nameof(NullableParamAdapter);
+    private const string RequestHandler = nameof(TupleWithCollectionInputAdapter);
 
     private readonly string _requestCategoryLowerCase;
 
@@ -39,9 +39,9 @@ public class NullableParamAdapterPipeline : NullableParamAdapter
     private readonly bool _isWarningEnabled;
     private readonly bool _isErrorEnabled;
 
-    public NullableParamAdapterPipeline(
+    public TupleWithCollectionInputAdapterPipeline(
         ActivitySource activitySource,
-        ILogger<NullableParamAdapterPipeline> logger,
+        ILogger<TupleWithCollectionInputAdapterPipeline> logger,
         IMeterFactory meterFactory,
         IOptions<OpenTelemetryOptions> openTelemetryOptions)
 
@@ -280,40 +280,38 @@ public class NullableParamAdapterPipeline : NullableParamAdapter
         };
     }
 
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, string> GetData(
-        int? id,
-        string? name
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, int> ProcessUserWithTags(
+        (int Id, global::System.Collections.Generic.List<string> Tags) user
     ) =>
-        global::LanguageExt.FinT.lift<global::LanguageExt.IO, string>(
+        global::LanguageExt.FinT.lift<global::LanguageExt.IO, int>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(GetData),
-                operation: FinTToIO(base.GetData(id, name)),
-                requestLog: () => RequestLog_NullableParamAdapter_GetData(RequestHandler, nameof(GetData), id, name),
-                responseLogSuccess: ResponseLogSuccess_NullableParamAdapter_GetData,
-                responseLogFailure: ResponseLogFailure_NullableParamAdapter_GetData,
+                requestHandlerMethod: nameof(ProcessUserWithTags),
+                operation: FinTToIO(base.ProcessUserWithTags(user)),
+                requestLog: () => AdapterRequestLog_TupleWithCollectionInputAdapter_ProcessUserWithTags(RequestHandler, nameof(ProcessUserWithTags), user),
+                responseLogSuccess: AdapterResponseSuccessLog_TupleWithCollectionInputAdapter_ProcessUserWithTags,
+                responseLogFailure: AdapterResponseFailureLog_TupleWithCollectionInputAdapter_ProcessUserWithTags,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_NullableParamAdapter_GetData(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_TupleWithCollectionInputAdapter_ProcessUserWithTags(
         string requestHandler,
         string requestHandlerMethod,
-        int? id,
-        string? name) =>
+        (int Id, global::System.Collections.Generic.List<string> Tags) user) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_NullableParamAdapter_GetData(
+                _logger.LogAdapterRequestDebug_TupleWithCollectionInputAdapter_ProcessUserWithTags(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
                     requestHandlerMethod,
-                    id, name);
+                    user);
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_NullableParamAdapter_GetData(
+                _logger.LogAdapterRequest_TupleWithCollectionInputAdapter_ProcessUserWithTags(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -322,15 +320,15 @@ public class NullableParamAdapterPipeline : NullableParamAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_NullableParamAdapter_GetData(
+    private void AdapterResponseSuccessLog_TupleWithCollectionInputAdapter_ProcessUserWithTags(
         string requestHandler,
         string requestHandlerMethod,
-        string result,
+        int result,
         double elapsed)
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_NullableParamAdapter_GetData(
+            _logger.LogAdapterResponseSuccessDebug_TupleWithCollectionInputAdapter_ProcessUserWithTags(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -341,7 +339,7 @@ public class NullableParamAdapterPipeline : NullableParamAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_NullableParamAdapter_GetData(
+            _logger.LogAdapterResponseSuccess_TupleWithCollectionInputAdapter_ProcessUserWithTags(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -351,7 +349,7 @@ public class NullableParamAdapterPipeline : NullableParamAdapter
         }
     }
 
-    private void ResponseLogFailure_NullableParamAdapter_GetData(
+    private void AdapterResponseFailureLog_TupleWithCollectionInputAdapter_ProcessUserWithTags(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -361,7 +359,7 @@ public class NullableParamAdapterPipeline : NullableParamAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_NullableParamAdapter_GetData(
+            _logger.LogAdapterResponseError_TupleWithCollectionInputAdapter_ProcessUserWithTags(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -374,7 +372,7 @@ public class NullableParamAdapterPipeline : NullableParamAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_NullableParamAdapter_GetData(
+            _logger.LogAdapterResponseWarning_TupleWithCollectionInputAdapter_ProcessUserWithTags(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -388,45 +386,44 @@ public class NullableParamAdapterPipeline : NullableParamAdapter
     }
 }
 
-internal static class NullableParamAdapterPipelineLoggers
+internal static class TupleWithCollectionInputAdapterPipelineLoggers
 {
 
-    // ===== LoggerMessage.Define delegates for GetData =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_NullableParamAdapter_GetData =
+    // ===== LoggerMessage.Define delegates for ProcessUserWithTags =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_TupleWithCollectionInputAdapter_ProcessUserWithTags =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, int?, string?, global::System.Exception?> _logRequestDebug_NullableParamAdapter_GetData =
-        LoggerMessage.Define<string, string, string, string, int?, string?>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, (int Id, global::System.Collections.Generic.List<string> Tags), global::System.Exception?> _logAdapterRequestDebug_TupleWithCollectionInputAdapter_ProcessUserWithTags =
+        LoggerMessage.Define<string, string, string, string, (int Id, global::System.Collections.Generic.List<string> Tags)>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.id} {request.params.name} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.user} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_NullableParamAdapter_GetData =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_TupleWithCollectionInputAdapter_ProcessUserWithTags =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_NullableParamAdapter_GetData(
+    public static void LogAdapterRequestDebug_TupleWithCollectionInputAdapter_ProcessUserWithTags(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
         string requestHandlerMethod,
-        int? id,
-        string? name)
+        (int Id, global::System.Collections.Generic.List<string> Tags) user)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_NullableParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, id, name, null);
+        _logAdapterRequestDebug_TupleWithCollectionInputAdapter_ProcessUserWithTags(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, user, null);
     }
 
-    public static void LogRequest_NullableParamAdapter_GetData(
+    public static void LogAdapterRequest_TupleWithCollectionInputAdapter_ProcessUserWithTags(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -436,17 +433,17 @@ internal static class NullableParamAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_NullableParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_TupleWithCollectionInputAdapter_ProcessUserWithTags(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_NullableParamAdapter_GetData(
+    public static void LogAdapterResponseSuccessDebug_TupleWithCollectionInputAdapter_ProcessUserWithTags(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
         string requestHandlerMethod,
         string status,
-        string result,
+        int result,
         double elapsed)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -460,7 +457,7 @@ internal static class NullableParamAdapterPipelineLoggers
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_NullableParamAdapter_GetData(
+    public static void LogAdapterResponseSuccess_TupleWithCollectionInputAdapter_ProcessUserWithTags(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -472,10 +469,10 @@ internal static class NullableParamAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_NullableParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_TupleWithCollectionInputAdapter_ProcessUserWithTags(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_NullableParamAdapter_GetData(
+    public static void LogAdapterResponseWarning_TupleWithCollectionInputAdapter_ProcessUserWithTags(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -503,7 +500,7 @@ internal static class NullableParamAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_NullableParamAdapter_GetData(
+    public static void LogAdapterResponseError_TupleWithCollectionInputAdapter_ProcessUserWithTags(
         this ILogger logger,
         string requestLayer,
         string requestCategory,

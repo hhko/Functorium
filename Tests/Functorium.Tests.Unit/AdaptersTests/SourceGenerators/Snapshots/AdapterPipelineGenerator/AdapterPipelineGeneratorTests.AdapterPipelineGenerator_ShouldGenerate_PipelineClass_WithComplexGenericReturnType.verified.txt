@@ -20,17 +20,17 @@ using Microsoft.Extensions.Options;
 
 namespace TestNamespace;
 
-public class TupleWithArrayAdapterPipeline : TupleWithArrayAdapter
+public class ComplexGenericAdapterPipeline : ComplexGenericAdapter
 {
     private readonly ActivitySource _activitySource;
-    private readonly ILogger<TupleWithArrayAdapterPipeline> _logger;
+    private readonly ILogger<ComplexGenericAdapterPipeline> _logger;
 
     // Metrics
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
-    private const string RequestHandler = nameof(TupleWithArrayAdapter);
+    private const string RequestHandler = nameof(ComplexGenericAdapter);
 
     private readonly string _requestCategoryLowerCase;
 
@@ -39,9 +39,9 @@ public class TupleWithArrayAdapterPipeline : TupleWithArrayAdapter
     private readonly bool _isWarningEnabled;
     private readonly bool _isErrorEnabled;
 
-    public TupleWithArrayAdapterPipeline(
+    public ComplexGenericAdapterPipeline(
         ActivitySource activitySource,
-        ILogger<TupleWithArrayAdapterPipeline> logger,
+        ILogger<ComplexGenericAdapterPipeline> logger,
         IMeterFactory meterFactory,
         IOptions<OpenTelemetryOptions> openTelemetryOptions)
 
@@ -280,27 +280,27 @@ public class TupleWithArrayAdapterPipeline : TupleWithArrayAdapter
         };
     }
 
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, (string Name, int[] Scores)> GetStudentScores(
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, global::System.Collections.Generic.Dictionary<string, global::System.Collections.Generic.List<int>>> GetComplexData(
     ) =>
-        global::LanguageExt.FinT.lift<global::LanguageExt.IO, (string Name, int[] Scores)>(
+        global::LanguageExt.FinT.lift<global::LanguageExt.IO, global::System.Collections.Generic.Dictionary<string, global::System.Collections.Generic.List<int>>>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(GetStudentScores),
-                operation: FinTToIO(base.GetStudentScores()),
-                requestLog: () => RequestLog_TupleWithArrayAdapter_GetStudentScores(RequestHandler, nameof(GetStudentScores)),
-                responseLogSuccess: ResponseLogSuccess_TupleWithArrayAdapter_GetStudentScores,
-                responseLogFailure: ResponseLogFailure_TupleWithArrayAdapter_GetStudentScores,
+                requestHandlerMethod: nameof(GetComplexData),
+                operation: FinTToIO(base.GetComplexData()),
+                requestLog: () => AdapterRequestLog_ComplexGenericAdapter_GetComplexData(RequestHandler, nameof(GetComplexData)),
+                responseLogSuccess: AdapterResponseSuccessLog_ComplexGenericAdapter_GetComplexData,
+                responseLogFailure: AdapterResponseFailureLog_ComplexGenericAdapter_GetComplexData,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_TupleWithArrayAdapter_GetStudentScores(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_ComplexGenericAdapter_GetComplexData(
         string requestHandler,
         string requestHandlerMethod) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_TupleWithArrayAdapter_GetStudentScores(
+                _logger.LogAdapterRequestDebug_ComplexGenericAdapter_GetComplexData(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -308,7 +308,7 @@ public class TupleWithArrayAdapterPipeline : TupleWithArrayAdapter
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_TupleWithArrayAdapter_GetStudentScores(
+                _logger.LogAdapterRequest_ComplexGenericAdapter_GetComplexData(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -317,15 +317,15 @@ public class TupleWithArrayAdapterPipeline : TupleWithArrayAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_TupleWithArrayAdapter_GetStudentScores(
+    private void AdapterResponseSuccessLog_ComplexGenericAdapter_GetComplexData(
         string requestHandler,
         string requestHandlerMethod,
-        (string Name, int[] Scores) result,
+        global::System.Collections.Generic.Dictionary<string, global::System.Collections.Generic.List<int>> result,
         double elapsed)
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_TupleWithArrayAdapter_GetStudentScores(
+            _logger.LogAdapterResponseSuccessDebug_ComplexGenericAdapter_GetComplexData(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -336,7 +336,7 @@ public class TupleWithArrayAdapterPipeline : TupleWithArrayAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_TupleWithArrayAdapter_GetStudentScores(
+            _logger.LogAdapterResponseSuccess_ComplexGenericAdapter_GetComplexData(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -346,7 +346,7 @@ public class TupleWithArrayAdapterPipeline : TupleWithArrayAdapter
         }
     }
 
-    private void ResponseLogFailure_TupleWithArrayAdapter_GetStudentScores(
+    private void AdapterResponseFailureLog_ComplexGenericAdapter_GetComplexData(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -356,7 +356,7 @@ public class TupleWithArrayAdapterPipeline : TupleWithArrayAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_TupleWithArrayAdapter_GetStudentScores(
+            _logger.LogAdapterResponseError_ComplexGenericAdapter_GetComplexData(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -369,7 +369,7 @@ public class TupleWithArrayAdapterPipeline : TupleWithArrayAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_TupleWithArrayAdapter_GetStudentScores(
+            _logger.LogAdapterResponseWarning_ComplexGenericAdapter_GetComplexData(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -383,30 +383,30 @@ public class TupleWithArrayAdapterPipeline : TupleWithArrayAdapter
     }
 }
 
-internal static class TupleWithArrayAdapterPipelineLoggers
+internal static class ComplexGenericAdapterPipelineLoggers
 {
 
-    // ===== LoggerMessage.Define delegates for GetStudentScores =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_TupleWithArrayAdapter_GetStudentScores =
+    // ===== LoggerMessage.Define delegates for GetComplexData =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_ComplexGenericAdapter_GetComplexData =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequestDebug_TupleWithArrayAdapter_GetStudentScores =
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_ComplexGenericAdapter_GetComplexData =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_TupleWithArrayAdapter_GetStudentScores =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_ComplexGenericAdapter_GetComplexData =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_TupleWithArrayAdapter_GetStudentScores(
+    public static void LogAdapterRequestDebug_ComplexGenericAdapter_GetComplexData(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -416,10 +416,10 @@ internal static class TupleWithArrayAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_TupleWithArrayAdapter_GetStudentScores(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequestDebug_ComplexGenericAdapter_GetComplexData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogRequest_TupleWithArrayAdapter_GetStudentScores(
+    public static void LogAdapterRequest_ComplexGenericAdapter_GetComplexData(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -429,17 +429,17 @@ internal static class TupleWithArrayAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_TupleWithArrayAdapter_GetStudentScores(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_ComplexGenericAdapter_GetComplexData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_TupleWithArrayAdapter_GetStudentScores(
+    public static void LogAdapterResponseSuccessDebug_ComplexGenericAdapter_GetComplexData(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
         string requestHandlerMethod,
         string status,
-        (string Name, int[] Scores) result,
+        global::System.Collections.Generic.Dictionary<string, global::System.Collections.Generic.List<int>> result,
         double elapsed)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -448,12 +448,12 @@ internal static class TupleWithArrayAdapterPipelineLoggers
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
-                     "{response.result} " +
+                     "{response.result} {response.result.count} " +
                      "responded {response.status} in {response.elapsed:0.0000} s",
-            requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
+            requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, result?.Count ?? 0, status, elapsed);
     }
 
-    public static void LogResponse_TupleWithArrayAdapter_GetStudentScores(
+    public static void LogAdapterResponseSuccess_ComplexGenericAdapter_GetComplexData(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -465,10 +465,10 @@ internal static class TupleWithArrayAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_TupleWithArrayAdapter_GetStudentScores(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_ComplexGenericAdapter_GetComplexData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_TupleWithArrayAdapter_GetStudentScores(
+    public static void LogAdapterResponseWarning_ComplexGenericAdapter_GetComplexData(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -496,7 +496,7 @@ internal static class TupleWithArrayAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_TupleWithArrayAdapter_GetStudentScores(
+    public static void LogAdapterResponseError_ComplexGenericAdapter_GetComplexData(
         this ILogger logger,
         string requestLayer,
         string requestCategory,

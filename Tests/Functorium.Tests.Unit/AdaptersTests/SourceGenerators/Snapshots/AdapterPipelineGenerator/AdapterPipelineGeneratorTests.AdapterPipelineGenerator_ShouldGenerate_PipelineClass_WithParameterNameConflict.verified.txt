@@ -20,17 +20,17 @@ using Microsoft.Extensions.Options;
 
 namespace TestNamespace;
 
-public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
+public class ConflictParamAdapterPipeline : ConflictParamAdapter
 {
     private readonly ActivitySource _activitySource;
-    private readonly ILogger<TupleWithArrayInputAdapterPipeline> _logger;
+    private readonly ILogger<ConflictParamAdapterPipeline> _logger;
 
     // Metrics
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
-    private const string RequestHandler = nameof(TupleWithArrayInputAdapter);
+    private const string RequestHandler = nameof(ConflictParamAdapter);
 
     private readonly string _requestCategoryLowerCase;
 
@@ -39,12 +39,13 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
     private readonly bool _isWarningEnabled;
     private readonly bool _isErrorEnabled;
 
-    public TupleWithArrayInputAdapterPipeline(
+    public ConflictParamAdapterPipeline(
         ActivitySource activitySource,
-        ILogger<TupleWithArrayInputAdapterPipeline> logger,
+        ILogger<ConflictParamAdapterPipeline> logger,
         IMeterFactory meterFactory,
-        IOptions<OpenTelemetryOptions> openTelemetryOptions)
-
+        IOptions<OpenTelemetryOptions> openTelemetryOptions,
+        global::Microsoft.Extensions.Logging.ILogger baseLogger)
+        : base(baseLogger)
     {
         global::System.ArgumentNullException.ThrowIfNull(activitySource);
         global::System.ArgumentNullException.ThrowIfNull(meterFactory);
@@ -280,38 +281,35 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
         };
     }
 
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, double> CalculateAverage(
-        (string Name, int[] Scores) student
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, string> GetData(
     ) =>
-        global::LanguageExt.FinT.lift<global::LanguageExt.IO, double>(
+        global::LanguageExt.FinT.lift<global::LanguageExt.IO, string>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(CalculateAverage),
-                operation: FinTToIO(base.CalculateAverage(student)),
-                requestLog: () => RequestLog_TupleWithArrayInputAdapter_CalculateAverage(RequestHandler, nameof(CalculateAverage), student),
-                responseLogSuccess: ResponseLogSuccess_TupleWithArrayInputAdapter_CalculateAverage,
-                responseLogFailure: ResponseLogFailure_TupleWithArrayInputAdapter_CalculateAverage,
+                requestHandlerMethod: nameof(GetData),
+                operation: FinTToIO(base.GetData()),
+                requestLog: () => AdapterRequestLog_ConflictParamAdapter_GetData(RequestHandler, nameof(GetData)),
+                responseLogSuccess: AdapterResponseSuccessLog_ConflictParamAdapter_GetData,
+                responseLogFailure: AdapterResponseFailureLog_ConflictParamAdapter_GetData,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_TupleWithArrayInputAdapter_CalculateAverage(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_ConflictParamAdapter_GetData(
         string requestHandler,
-        string requestHandlerMethod,
-        (string Name, int[] Scores) student) =>
+        string requestHandlerMethod) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_TupleWithArrayInputAdapter_CalculateAverage(
+                _logger.LogAdapterRequestDebug_ConflictParamAdapter_GetData(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod,
-                    student);
+                    requestHandlerMethod);
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_TupleWithArrayInputAdapter_CalculateAverage(
+                _logger.LogAdapterRequest_ConflictParamAdapter_GetData(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -320,15 +318,15 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_TupleWithArrayInputAdapter_CalculateAverage(
+    private void AdapterResponseSuccessLog_ConflictParamAdapter_GetData(
         string requestHandler,
         string requestHandlerMethod,
-        double result,
+        string result,
         double elapsed)
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_TupleWithArrayInputAdapter_CalculateAverage(
+            _logger.LogAdapterResponseSuccessDebug_ConflictParamAdapter_GetData(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -339,7 +337,7 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_TupleWithArrayInputAdapter_CalculateAverage(
+            _logger.LogAdapterResponseSuccess_ConflictParamAdapter_GetData(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -349,7 +347,7 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
         }
     }
 
-    private void ResponseLogFailure_TupleWithArrayInputAdapter_CalculateAverage(
+    private void AdapterResponseFailureLog_ConflictParamAdapter_GetData(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -359,7 +357,7 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_TupleWithArrayInputAdapter_CalculateAverage(
+            _logger.LogAdapterResponseError_ConflictParamAdapter_GetData(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -372,7 +370,7 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_TupleWithArrayInputAdapter_CalculateAverage(
+            _logger.LogAdapterResponseWarning_ConflictParamAdapter_GetData(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -386,44 +384,43 @@ public class TupleWithArrayInputAdapterPipeline : TupleWithArrayInputAdapter
     }
 }
 
-internal static class TupleWithArrayInputAdapterPipelineLoggers
+internal static class ConflictParamAdapterPipelineLoggers
 {
 
-    // ===== LoggerMessage.Define delegates for CalculateAverage =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_TupleWithArrayInputAdapter_CalculateAverage =
+    // ===== LoggerMessage.Define delegates for GetData =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_ConflictParamAdapter_GetData =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, (string Name, int[] Scores), global::System.Exception?> _logRequestDebug_TupleWithArrayInputAdapter_CalculateAverage =
-        LoggerMessage.Define<string, string, string, string, (string Name, int[] Scores)>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_ConflictParamAdapter_GetData =
+        LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.student} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_TupleWithArrayInputAdapter_CalculateAverage =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_ConflictParamAdapter_GetData =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_TupleWithArrayInputAdapter_CalculateAverage(
+    public static void LogAdapterRequestDebug_ConflictParamAdapter_GetData(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod,
-        (string Name, int[] Scores) student)
+        string requestHandlerMethod)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_TupleWithArrayInputAdapter_CalculateAverage(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, student, null);
+        _logAdapterRequestDebug_ConflictParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogRequest_TupleWithArrayInputAdapter_CalculateAverage(
+    public static void LogAdapterRequest_ConflictParamAdapter_GetData(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -433,17 +430,17 @@ internal static class TupleWithArrayInputAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_TupleWithArrayInputAdapter_CalculateAverage(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_ConflictParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_TupleWithArrayInputAdapter_CalculateAverage(
+    public static void LogAdapterResponseSuccessDebug_ConflictParamAdapter_GetData(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
         string requestHandlerMethod,
         string status,
-        double result,
+        string result,
         double elapsed)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -457,7 +454,7 @@ internal static class TupleWithArrayInputAdapterPipelineLoggers
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_TupleWithArrayInputAdapter_CalculateAverage(
+    public static void LogAdapterResponseSuccess_ConflictParamAdapter_GetData(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -469,10 +466,10 @@ internal static class TupleWithArrayInputAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_TupleWithArrayInputAdapter_CalculateAverage(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_ConflictParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_TupleWithArrayInputAdapter_CalculateAverage(
+    public static void LogAdapterResponseWarning_ConflictParamAdapter_GetData(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -500,7 +497,7 @@ internal static class TupleWithArrayInputAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_TupleWithArrayInputAdapter_CalculateAverage(
+    public static void LogAdapterResponseError_ConflictParamAdapter_GetData(
         this ILogger logger,
         string requestLayer,
         string requestCategory,

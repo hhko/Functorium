@@ -263,7 +263,7 @@ public sealed class AdapterTracingPipelineStructureTests : IDisposable
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
         await Verify(tags)
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/AdapterTracingPipelineStructure")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
@@ -303,7 +303,7 @@ public sealed class AdapterTracingPipelineStructureTests : IDisposable
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
         await Verify(tags)
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/AdapterTracingPipelineStructure")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
@@ -343,7 +343,7 @@ public sealed class AdapterTracingPipelineStructureTests : IDisposable
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
         await Verify(tags)
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/AdapterTracingPipelineStructure")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
@@ -383,7 +383,7 @@ public sealed class AdapterTracingPipelineStructureTests : IDisposable
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
         await Verify(tags)
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/AdapterTracingPipelineStructure")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
@@ -423,7 +423,7 @@ public sealed class AdapterTracingPipelineStructureTests : IDisposable
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
         await Verify(tags)
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/AdapterTracingPipelineStructure")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 

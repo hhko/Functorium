@@ -18,19 +18,19 @@ using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace TestNamespace;
+namespace Company.Domain.Adapters.Infrastructure.Repositories;
 
-public class TupleWithCollectionInputAdapterPipeline : TupleWithCollectionInputAdapter
+public class DeepNamespaceAdapterPipeline : DeepNamespaceAdapter
 {
     private readonly ActivitySource _activitySource;
-    private readonly ILogger<TupleWithCollectionInputAdapterPipeline> _logger;
+    private readonly ILogger<DeepNamespaceAdapterPipeline> _logger;
 
     // Metrics
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
-    private const string RequestHandler = nameof(TupleWithCollectionInputAdapter);
+    private const string RequestHandler = nameof(DeepNamespaceAdapter);
 
     private readonly string _requestCategoryLowerCase;
 
@@ -39,9 +39,9 @@ public class TupleWithCollectionInputAdapterPipeline : TupleWithCollectionInputA
     private readonly bool _isWarningEnabled;
     private readonly bool _isErrorEnabled;
 
-    public TupleWithCollectionInputAdapterPipeline(
+    public DeepNamespaceAdapterPipeline(
         ActivitySource activitySource,
-        ILogger<TupleWithCollectionInputAdapterPipeline> logger,
+        ILogger<DeepNamespaceAdapterPipeline> logger,
         IMeterFactory meterFactory,
         IOptions<OpenTelemetryOptions> openTelemetryOptions)
 
@@ -280,38 +280,35 @@ public class TupleWithCollectionInputAdapterPipeline : TupleWithCollectionInputA
         };
     }
 
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, int> ProcessUserWithTags(
-        (int Id, global::System.Collections.Generic.List<string> Tags) user
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, int> GetValue(
     ) =>
         global::LanguageExt.FinT.lift<global::LanguageExt.IO, int>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(ProcessUserWithTags),
-                operation: FinTToIO(base.ProcessUserWithTags(user)),
-                requestLog: () => RequestLog_TupleWithCollectionInputAdapter_ProcessUserWithTags(RequestHandler, nameof(ProcessUserWithTags), user),
-                responseLogSuccess: ResponseLogSuccess_TupleWithCollectionInputAdapter_ProcessUserWithTags,
-                responseLogFailure: ResponseLogFailure_TupleWithCollectionInputAdapter_ProcessUserWithTags,
+                requestHandlerMethod: nameof(GetValue),
+                operation: FinTToIO(base.GetValue()),
+                requestLog: () => AdapterRequestLog_DeepNamespaceAdapter_GetValue(RequestHandler, nameof(GetValue)),
+                responseLogSuccess: AdapterResponseSuccessLog_DeepNamespaceAdapter_GetValue,
+                responseLogFailure: AdapterResponseFailureLog_DeepNamespaceAdapter_GetValue,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_TupleWithCollectionInputAdapter_ProcessUserWithTags(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_DeepNamespaceAdapter_GetValue(
         string requestHandler,
-        string requestHandlerMethod,
-        (int Id, global::System.Collections.Generic.List<string> Tags) user) =>
+        string requestHandlerMethod) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_TupleWithCollectionInputAdapter_ProcessUserWithTags(
+                _logger.LogAdapterRequestDebug_DeepNamespaceAdapter_GetValue(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod,
-                    user);
+                    requestHandlerMethod);
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_TupleWithCollectionInputAdapter_ProcessUserWithTags(
+                _logger.LogAdapterRequest_DeepNamespaceAdapter_GetValue(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -320,7 +317,7 @@ public class TupleWithCollectionInputAdapterPipeline : TupleWithCollectionInputA
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_TupleWithCollectionInputAdapter_ProcessUserWithTags(
+    private void AdapterResponseSuccessLog_DeepNamespaceAdapter_GetValue(
         string requestHandler,
         string requestHandlerMethod,
         int result,
@@ -328,7 +325,7 @@ public class TupleWithCollectionInputAdapterPipeline : TupleWithCollectionInputA
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_TupleWithCollectionInputAdapter_ProcessUserWithTags(
+            _logger.LogAdapterResponseSuccessDebug_DeepNamespaceAdapter_GetValue(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -339,7 +336,7 @@ public class TupleWithCollectionInputAdapterPipeline : TupleWithCollectionInputA
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_TupleWithCollectionInputAdapter_ProcessUserWithTags(
+            _logger.LogAdapterResponseSuccess_DeepNamespaceAdapter_GetValue(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -349,7 +346,7 @@ public class TupleWithCollectionInputAdapterPipeline : TupleWithCollectionInputA
         }
     }
 
-    private void ResponseLogFailure_TupleWithCollectionInputAdapter_ProcessUserWithTags(
+    private void AdapterResponseFailureLog_DeepNamespaceAdapter_GetValue(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -359,7 +356,7 @@ public class TupleWithCollectionInputAdapterPipeline : TupleWithCollectionInputA
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_TupleWithCollectionInputAdapter_ProcessUserWithTags(
+            _logger.LogAdapterResponseError_DeepNamespaceAdapter_GetValue(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -372,7 +369,7 @@ public class TupleWithCollectionInputAdapterPipeline : TupleWithCollectionInputA
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_TupleWithCollectionInputAdapter_ProcessUserWithTags(
+            _logger.LogAdapterResponseWarning_DeepNamespaceAdapter_GetValue(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -386,44 +383,43 @@ public class TupleWithCollectionInputAdapterPipeline : TupleWithCollectionInputA
     }
 }
 
-internal static class TupleWithCollectionInputAdapterPipelineLoggers
+internal static class DeepNamespaceAdapterPipelineLoggers
 {
 
-    // ===== LoggerMessage.Define delegates for ProcessUserWithTags =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_TupleWithCollectionInputAdapter_ProcessUserWithTags =
+    // ===== LoggerMessage.Define delegates for GetValue =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_DeepNamespaceAdapter_GetValue =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, (int Id, global::System.Collections.Generic.List<string> Tags), global::System.Exception?> _logRequestDebug_TupleWithCollectionInputAdapter_ProcessUserWithTags =
-        LoggerMessage.Define<string, string, string, string, (int Id, global::System.Collections.Generic.List<string> Tags)>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_DeepNamespaceAdapter_GetValue =
+        LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.user} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_TupleWithCollectionInputAdapter_ProcessUserWithTags =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_DeepNamespaceAdapter_GetValue =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_TupleWithCollectionInputAdapter_ProcessUserWithTags(
+    public static void LogAdapterRequestDebug_DeepNamespaceAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod,
-        (int Id, global::System.Collections.Generic.List<string> Tags) user)
+        string requestHandlerMethod)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_TupleWithCollectionInputAdapter_ProcessUserWithTags(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, user, null);
+        _logAdapterRequestDebug_DeepNamespaceAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogRequest_TupleWithCollectionInputAdapter_ProcessUserWithTags(
+    public static void LogAdapterRequest_DeepNamespaceAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -433,10 +429,10 @@ internal static class TupleWithCollectionInputAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_TupleWithCollectionInputAdapter_ProcessUserWithTags(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_DeepNamespaceAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_TupleWithCollectionInputAdapter_ProcessUserWithTags(
+    public static void LogAdapterResponseSuccessDebug_DeepNamespaceAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -457,7 +453,7 @@ internal static class TupleWithCollectionInputAdapterPipelineLoggers
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_TupleWithCollectionInputAdapter_ProcessUserWithTags(
+    public static void LogAdapterResponseSuccess_DeepNamespaceAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -469,10 +465,10 @@ internal static class TupleWithCollectionInputAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_TupleWithCollectionInputAdapter_ProcessUserWithTags(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_DeepNamespaceAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_TupleWithCollectionInputAdapter_ProcessUserWithTags(
+    public static void LogAdapterResponseWarning_DeepNamespaceAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -500,7 +496,7 @@ internal static class TupleWithCollectionInputAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_TupleWithCollectionInputAdapter_ProcessUserWithTags(
+    public static void LogAdapterResponseError_DeepNamespaceAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,

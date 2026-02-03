@@ -20,17 +20,17 @@ using Microsoft.Extensions.Options;
 
 namespace TestNamespace;
 
-public class TwoParamAdapterPipeline : TwoParamAdapter
+public class UserRepositoryPipeline : UserRepository
 {
     private readonly ActivitySource _activitySource;
-    private readonly ILogger<TwoParamAdapterPipeline> _logger;
+    private readonly ILogger<UserRepositoryPipeline> _logger;
 
     // Metrics
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
-    private const string RequestHandler = nameof(TwoParamAdapter);
+    private const string RequestHandler = nameof(UserRepository);
 
     private readonly string _requestCategoryLowerCase;
 
@@ -39,9 +39,9 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
     private readonly bool _isWarningEnabled;
     private readonly bool _isErrorEnabled;
 
-    public TwoParamAdapterPipeline(
+    public UserRepositoryPipeline(
         ActivitySource activitySource,
-        ILogger<TwoParamAdapterPipeline> logger,
+        ILogger<UserRepositoryPipeline> logger,
         IMeterFactory meterFactory,
         IOptions<OpenTelemetryOptions> openTelemetryOptions)
 
@@ -280,40 +280,38 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
         };
     }
 
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, string> GetData(
-        int id,
-        string name
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, string> GetUserById(
+        int id
     ) =>
         global::LanguageExt.FinT.lift<global::LanguageExt.IO, string>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(GetData),
-                operation: FinTToIO(base.GetData(id, name)),
-                requestLog: () => RequestLog_TwoParamAdapter_GetData(RequestHandler, nameof(GetData), id, name),
-                responseLogSuccess: ResponseLogSuccess_TwoParamAdapter_GetData,
-                responseLogFailure: ResponseLogFailure_TwoParamAdapter_GetData,
+                requestHandlerMethod: nameof(GetUserById),
+                operation: FinTToIO(base.GetUserById(id)),
+                requestLog: () => AdapterRequestLog_UserRepository_GetUserById(RequestHandler, nameof(GetUserById), id),
+                responseLogSuccess: AdapterResponseSuccessLog_UserRepository_GetUserById,
+                responseLogFailure: AdapterResponseFailureLog_UserRepository_GetUserById,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_TwoParamAdapter_GetData(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_UserRepository_GetUserById(
         string requestHandler,
         string requestHandlerMethod,
-        int id,
-        string name) =>
+        int id) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_TwoParamAdapter_GetData(
+                _logger.LogAdapterRequestDebug_UserRepository_GetUserById(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
                     requestHandlerMethod,
-                    id, name);
+                    id);
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_TwoParamAdapter_GetData(
+                _logger.LogAdapterRequest_UserRepository_GetUserById(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -322,7 +320,7 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_TwoParamAdapter_GetData(
+    private void AdapterResponseSuccessLog_UserRepository_GetUserById(
         string requestHandler,
         string requestHandlerMethod,
         string result,
@@ -330,7 +328,7 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_TwoParamAdapter_GetData(
+            _logger.LogAdapterResponseSuccessDebug_UserRepository_GetUserById(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -341,7 +339,7 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_TwoParamAdapter_GetData(
+            _logger.LogAdapterResponseSuccess_UserRepository_GetUserById(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -351,7 +349,7 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
         }
     }
 
-    private void ResponseLogFailure_TwoParamAdapter_GetData(
+    private void AdapterResponseFailureLog_UserRepository_GetUserById(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -361,7 +359,7 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_TwoParamAdapter_GetData(
+            _logger.LogAdapterResponseError_UserRepository_GetUserById(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -374,7 +372,113 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_TwoParamAdapter_GetData(
+            _logger.LogAdapterResponseWarning_UserRepository_GetUserById(
+                ObservabilityNaming.Layers.Adapter,
+                _requestCategoryLowerCase,
+                requestHandler,
+                requestHandlerMethod,
+                ObservabilityNaming.Status.Failure,
+                elapsed,
+                errorType,
+                errorCode,
+                error);
+        }
+    }
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, bool> UpdateUser(
+        int id,
+        string name
+    ) =>
+        global::LanguageExt.FinT.lift<global::LanguageExt.IO, bool>(
+            (from result in ExecuteWithSpan(
+                requestHandler: RequestHandler,
+                requestHandlerMethod: nameof(UpdateUser),
+                operation: FinTToIO(base.UpdateUser(id, name)),
+                requestLog: () => AdapterRequestLog_UserRepository_UpdateUser(RequestHandler, nameof(UpdateUser), id, name),
+                responseLogSuccess: AdapterResponseSuccessLog_UserRepository_UpdateUser,
+                responseLogFailure: AdapterResponseFailureLog_UserRepository_UpdateUser,
+                startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
+            select result).Map(r => global::LanguageExt.Fin.Succ(r)));
+
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_UserRepository_UpdateUser(
+        string requestHandler,
+        string requestHandlerMethod,
+        int id,
+        string name) =>
+        global::LanguageExt.IO.lift(() =>
+        {
+            if (_isDebugEnabled)
+            {
+                _logger.LogAdapterRequestDebug_UserRepository_UpdateUser(
+                    ObservabilityNaming.Layers.Adapter,
+                    _requestCategoryLowerCase,
+                    requestHandler,
+                    requestHandlerMethod,
+                    id, name);
+            }
+            else if (_isInformationEnabled)
+            {
+                _logger.LogAdapterRequest_UserRepository_UpdateUser(
+                    ObservabilityNaming.Layers.Adapter,
+                    _requestCategoryLowerCase,
+                    requestHandler,
+                    requestHandlerMethod);
+            }
+            return global::LanguageExt.Unit.Default;
+        });
+
+    private void AdapterResponseSuccessLog_UserRepository_UpdateUser(
+        string requestHandler,
+        string requestHandlerMethod,
+        bool result,
+        double elapsed)
+    {
+        if (_isDebugEnabled)
+        {
+            _logger.LogAdapterResponseSuccessDebug_UserRepository_UpdateUser(
+                ObservabilityNaming.Layers.Adapter,
+                _requestCategoryLowerCase,
+                requestHandler,
+                requestHandlerMethod,
+                ObservabilityNaming.Status.Success,
+                result,
+                elapsed);
+        }
+        else if (_isInformationEnabled)
+        {
+            _logger.LogAdapterResponseSuccess_UserRepository_UpdateUser(
+                ObservabilityNaming.Layers.Adapter,
+                _requestCategoryLowerCase,
+                requestHandler,
+                requestHandlerMethod,
+                ObservabilityNaming.Status.Success,
+                elapsed);
+        }
+    }
+
+    private void AdapterResponseFailureLog_UserRepository_UpdateUser(
+        string requestHandler,
+        string requestHandlerMethod,
+        global::LanguageExt.Common.Error error,
+        double elapsed)
+    {
+        var (errorType, errorCode) = GetErrorInfo(error);
+
+        if (error.IsExceptional && _isErrorEnabled)
+        {
+            _logger.LogAdapterResponseError_UserRepository_UpdateUser(
+                ObservabilityNaming.Layers.Adapter,
+                _requestCategoryLowerCase,
+                requestHandler,
+                requestHandlerMethod,
+                ObservabilityNaming.Status.Failure,
+                elapsed,
+                errorType,
+                errorCode,
+                error);
+        }
+        else if (_isWarningEnabled)
+        {
+            _logger.LogAdapterResponseWarning_UserRepository_UpdateUser(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -388,45 +492,44 @@ public class TwoParamAdapterPipeline : TwoParamAdapter
     }
 }
 
-internal static class TwoParamAdapterPipelineLoggers
+internal static class UserRepositoryPipelineLoggers
 {
 
-    // ===== LoggerMessage.Define delegates for GetData =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_TwoParamAdapter_GetData =
+    // ===== LoggerMessage.Define delegates for GetUserById =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_UserRepository_GetUserById =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, int, string, global::System.Exception?> _logRequestDebug_TwoParamAdapter_GetData =
-        LoggerMessage.Define<string, string, string, string, int, string>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, int, global::System.Exception?> _logAdapterRequestDebug_UserRepository_GetUserById =
+        LoggerMessage.Define<string, string, string, string, int>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.id} {request.params.name} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.id} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_TwoParamAdapter_GetData =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_UserRepository_GetUserById =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_TwoParamAdapter_GetData(
+    public static void LogAdapterRequestDebug_UserRepository_GetUserById(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
         string requestHandlerMethod,
-        int id,
-        string name)
+        int id)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_TwoParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, id, name, null);
+        _logAdapterRequestDebug_UserRepository_GetUserById(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, id, null);
     }
 
-    public static void LogRequest_TwoParamAdapter_GetData(
+    public static void LogAdapterRequest_UserRepository_GetUserById(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -436,10 +539,10 @@ internal static class TwoParamAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_TwoParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_UserRepository_GetUserById(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_TwoParamAdapter_GetData(
+    public static void LogAdapterResponseSuccessDebug_UserRepository_GetUserById(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -460,7 +563,7 @@ internal static class TwoParamAdapterPipelineLoggers
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_TwoParamAdapter_GetData(
+    public static void LogAdapterResponseSuccess_UserRepository_GetUserById(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -472,10 +575,10 @@ internal static class TwoParamAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_TwoParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_UserRepository_GetUserById(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_TwoParamAdapter_GetData(
+    public static void LogAdapterResponseWarning_UserRepository_GetUserById(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -503,7 +606,147 @@ internal static class TwoParamAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_TwoParamAdapter_GetData(
+    public static void LogAdapterResponseError_UserRepository_GetUserById(
+        this ILogger logger,
+        string requestLayer,
+        string requestCategory,
+        string requestHandler,
+        string requestHandlerMethod,
+        string status,
+        double elapsed,
+        string errorType,
+        string errorCode,
+        global::LanguageExt.Common.Error error)
+    {
+        if (!logger.IsEnabled(LogLevel.Error))
+            return;
+
+        logger.LogError(
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            elapsed,
+            errorType,
+            errorCode,
+            error);
+    }
+
+    // ===== LoggerMessage.Define delegates for UpdateUser =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_UserRepository_UpdateUser =
+        LoggerMessage.Define<string, string, string, string>(
+            LogLevel.Information,
+            ObservabilityNaming.EventIds.Adapter.AdapterRequest,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
+
+    private static readonly global::System.Action<ILogger, string, string, string, string, int, string, global::System.Exception?> _logAdapterRequestDebug_UserRepository_UpdateUser =
+        LoggerMessage.Define<string, string, string, string, int, string>(
+            LogLevel.Debug,
+            ObservabilityNaming.EventIds.Adapter.AdapterRequest,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.id} {request.params.name} requesting");
+
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_UserRepository_UpdateUser =
+        LoggerMessage.Define<string, string, string, string, string, double>(
+            LogLevel.Information,
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
+
+
+    public static void LogAdapterRequestDebug_UserRepository_UpdateUser(
+        this ILogger logger,
+        string requestLayer,
+        string requestCategory,
+        string requestHandler,
+        string requestHandlerMethod,
+        int id,
+        string name)
+    {
+        if (!logger.IsEnabled(LogLevel.Debug))
+            return;
+
+        _logAdapterRequestDebug_UserRepository_UpdateUser(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, id, name, null);
+    }
+
+    public static void LogAdapterRequest_UserRepository_UpdateUser(
+        this ILogger logger,
+        string requestLayer,
+        string requestCategory,
+        string requestHandler,
+        string requestHandlerMethod)
+    {
+        if (!logger.IsEnabled(LogLevel.Information))
+            return;
+
+        _logAdapterRequest_UserRepository_UpdateUser(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+    }
+
+    public static void LogAdapterResponseSuccessDebug_UserRepository_UpdateUser(
+        this ILogger logger,
+        string requestLayer,
+        string requestCategory,
+        string requestHandler,
+        string requestHandlerMethod,
+        string status,
+        bool result,
+        double elapsed)
+    {
+        if (!logger.IsEnabled(LogLevel.Debug))
+            return;
+
+        logger.LogDebug(
+            eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
+            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
+                     "{response.result} " +
+                     "responded {response.status} in {response.elapsed:0.0000} s",
+            requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
+    }
+
+    public static void LogAdapterResponseSuccess_UserRepository_UpdateUser(
+        this ILogger logger,
+        string requestLayer,
+        string requestCategory,
+        string requestHandler,
+        string requestHandlerMethod,
+        string status,
+        double elapsed)
+    {
+        if (!logger.IsEnabled(LogLevel.Information))
+            return;
+
+        _logAdapterResponseSuccess_UserRepository_UpdateUser(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+    }
+
+    public static void LogAdapterResponseWarning_UserRepository_UpdateUser(
+        this ILogger logger,
+        string requestLayer,
+        string requestCategory,
+        string requestHandler,
+        string requestHandlerMethod,
+        string status,
+        double elapsed,
+        string errorType,
+        string errorCode,
+        global::LanguageExt.Common.Error error)
+    {
+        if (!logger.IsEnabled(LogLevel.Warning))
+            return;
+
+        logger.LogWarning(
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            elapsed,
+            errorType,
+            errorCode,
+            error);
+    }
+
+    public static void LogAdapterResponseError_UserRepository_UpdateUser(
         this ILogger logger,
         string requestLayer,
         string requestCategory,

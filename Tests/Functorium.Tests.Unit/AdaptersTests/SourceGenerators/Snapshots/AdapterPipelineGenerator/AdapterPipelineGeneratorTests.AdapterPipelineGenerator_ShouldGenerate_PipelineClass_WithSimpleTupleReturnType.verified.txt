@@ -287,20 +287,20 @@ public class TupleAdapterPipeline : TupleAdapter
                 requestHandler: RequestHandler,
                 requestHandlerMethod: nameof(GetUserInfo),
                 operation: FinTToIO(base.GetUserInfo()),
-                requestLog: () => RequestLog_TupleAdapter_GetUserInfo(RequestHandler, nameof(GetUserInfo)),
-                responseLogSuccess: ResponseLogSuccess_TupleAdapter_GetUserInfo,
-                responseLogFailure: ResponseLogFailure_TupleAdapter_GetUserInfo,
+                requestLog: () => AdapterRequestLog_TupleAdapter_GetUserInfo(RequestHandler, nameof(GetUserInfo)),
+                responseLogSuccess: AdapterResponseSuccessLog_TupleAdapter_GetUserInfo,
+                responseLogFailure: AdapterResponseFailureLog_TupleAdapter_GetUserInfo,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_TupleAdapter_GetUserInfo(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_TupleAdapter_GetUserInfo(
         string requestHandler,
         string requestHandlerMethod) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_TupleAdapter_GetUserInfo(
+                _logger.LogAdapterRequestDebug_TupleAdapter_GetUserInfo(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -308,7 +308,7 @@ public class TupleAdapterPipeline : TupleAdapter
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_TupleAdapter_GetUserInfo(
+                _logger.LogAdapterRequest_TupleAdapter_GetUserInfo(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -317,7 +317,7 @@ public class TupleAdapterPipeline : TupleAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_TupleAdapter_GetUserInfo(
+    private void AdapterResponseSuccessLog_TupleAdapter_GetUserInfo(
         string requestHandler,
         string requestHandlerMethod,
         (int Id, string Name) result,
@@ -325,7 +325,7 @@ public class TupleAdapterPipeline : TupleAdapter
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_TupleAdapter_GetUserInfo(
+            _logger.LogAdapterResponseSuccessDebug_TupleAdapter_GetUserInfo(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -336,7 +336,7 @@ public class TupleAdapterPipeline : TupleAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_TupleAdapter_GetUserInfo(
+            _logger.LogAdapterResponseSuccess_TupleAdapter_GetUserInfo(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -346,7 +346,7 @@ public class TupleAdapterPipeline : TupleAdapter
         }
     }
 
-    private void ResponseLogFailure_TupleAdapter_GetUserInfo(
+    private void AdapterResponseFailureLog_TupleAdapter_GetUserInfo(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -356,7 +356,7 @@ public class TupleAdapterPipeline : TupleAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_TupleAdapter_GetUserInfo(
+            _logger.LogAdapterResponseError_TupleAdapter_GetUserInfo(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -369,7 +369,7 @@ public class TupleAdapterPipeline : TupleAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_TupleAdapter_GetUserInfo(
+            _logger.LogAdapterResponseWarning_TupleAdapter_GetUserInfo(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -387,26 +387,26 @@ internal static class TupleAdapterPipelineLoggers
 {
 
     // ===== LoggerMessage.Define delegates for GetUserInfo =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_TupleAdapter_GetUserInfo =
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_TupleAdapter_GetUserInfo =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequestDebug_TupleAdapter_GetUserInfo =
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_TupleAdapter_GetUserInfo =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_TupleAdapter_GetUserInfo =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_TupleAdapter_GetUserInfo =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_TupleAdapter_GetUserInfo(
+    public static void LogAdapterRequestDebug_TupleAdapter_GetUserInfo(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -416,10 +416,10 @@ internal static class TupleAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_TupleAdapter_GetUserInfo(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequestDebug_TupleAdapter_GetUserInfo(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogRequest_TupleAdapter_GetUserInfo(
+    public static void LogAdapterRequest_TupleAdapter_GetUserInfo(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -429,10 +429,10 @@ internal static class TupleAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_TupleAdapter_GetUserInfo(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_TupleAdapter_GetUserInfo(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_TupleAdapter_GetUserInfo(
+    public static void LogAdapterResponseSuccessDebug_TupleAdapter_GetUserInfo(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -453,7 +453,7 @@ internal static class TupleAdapterPipelineLoggers
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_TupleAdapter_GetUserInfo(
+    public static void LogAdapterResponseSuccess_TupleAdapter_GetUserInfo(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -465,10 +465,10 @@ internal static class TupleAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_TupleAdapter_GetUserInfo(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_TupleAdapter_GetUserInfo(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_TupleAdapter_GetUserInfo(
+    public static void LogAdapterResponseWarning_TupleAdapter_GetUserInfo(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -496,7 +496,7 @@ internal static class TupleAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_TupleAdapter_GetUserInfo(
+    public static void LogAdapterResponseError_TupleAdapter_GetUserInfo(
         this ILogger logger,
         string requestLayer,
         string requestCategory,

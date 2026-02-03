@@ -20,17 +20,17 @@ using Microsoft.Extensions.Options;
 
 namespace TestNamespace;
 
-public class TupleInputAdapterPipeline : TupleInputAdapter
+public class DerivedAdapterPipeline : DerivedAdapter
 {
     private readonly ActivitySource _activitySource;
-    private readonly ILogger<TupleInputAdapterPipeline> _logger;
+    private readonly ILogger<DerivedAdapterPipeline> _logger;
 
     // Metrics
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
-    private const string RequestHandler = nameof(TupleInputAdapter);
+    private const string RequestHandler = nameof(DerivedAdapter);
 
     private readonly string _requestCategoryLowerCase;
 
@@ -39,12 +39,13 @@ public class TupleInputAdapterPipeline : TupleInputAdapter
     private readonly bool _isWarningEnabled;
     private readonly bool _isErrorEnabled;
 
-    public TupleInputAdapterPipeline(
+    public DerivedAdapterPipeline(
         ActivitySource activitySource,
-        ILogger<TupleInputAdapterPipeline> logger,
+        ILogger<DerivedAdapterPipeline> logger,
         IMeterFactory meterFactory,
-        IOptions<OpenTelemetryOptions> openTelemetryOptions)
-
+        IOptions<OpenTelemetryOptions> openTelemetryOptions,
+        string connectionString)
+        : base(connectionString)
     {
         global::System.ArgumentNullException.ThrowIfNull(activitySource);
         global::System.ArgumentNullException.ThrowIfNull(meterFactory);
@@ -280,38 +281,35 @@ public class TupleInputAdapterPipeline : TupleInputAdapter
         };
     }
 
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, string> ProcessUser(
-        (int Id, string Name) user
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, string> GetConnection(
     ) =>
         global::LanguageExt.FinT.lift<global::LanguageExt.IO, string>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(ProcessUser),
-                operation: FinTToIO(base.ProcessUser(user)),
-                requestLog: () => RequestLog_TupleInputAdapter_ProcessUser(RequestHandler, nameof(ProcessUser), user),
-                responseLogSuccess: ResponseLogSuccess_TupleInputAdapter_ProcessUser,
-                responseLogFailure: ResponseLogFailure_TupleInputAdapter_ProcessUser,
+                requestHandlerMethod: nameof(GetConnection),
+                operation: FinTToIO(base.GetConnection()),
+                requestLog: () => AdapterRequestLog_DerivedAdapter_GetConnection(RequestHandler, nameof(GetConnection)),
+                responseLogSuccess: AdapterResponseSuccessLog_DerivedAdapter_GetConnection,
+                responseLogFailure: AdapterResponseFailureLog_DerivedAdapter_GetConnection,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_TupleInputAdapter_ProcessUser(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_DerivedAdapter_GetConnection(
         string requestHandler,
-        string requestHandlerMethod,
-        (int Id, string Name) user) =>
+        string requestHandlerMethod) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_TupleInputAdapter_ProcessUser(
+                _logger.LogAdapterRequestDebug_DerivedAdapter_GetConnection(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod,
-                    user);
+                    requestHandlerMethod);
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_TupleInputAdapter_ProcessUser(
+                _logger.LogAdapterRequest_DerivedAdapter_GetConnection(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -320,7 +318,7 @@ public class TupleInputAdapterPipeline : TupleInputAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_TupleInputAdapter_ProcessUser(
+    private void AdapterResponseSuccessLog_DerivedAdapter_GetConnection(
         string requestHandler,
         string requestHandlerMethod,
         string result,
@@ -328,7 +326,7 @@ public class TupleInputAdapterPipeline : TupleInputAdapter
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_TupleInputAdapter_ProcessUser(
+            _logger.LogAdapterResponseSuccessDebug_DerivedAdapter_GetConnection(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -339,7 +337,7 @@ public class TupleInputAdapterPipeline : TupleInputAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_TupleInputAdapter_ProcessUser(
+            _logger.LogAdapterResponseSuccess_DerivedAdapter_GetConnection(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -349,7 +347,7 @@ public class TupleInputAdapterPipeline : TupleInputAdapter
         }
     }
 
-    private void ResponseLogFailure_TupleInputAdapter_ProcessUser(
+    private void AdapterResponseFailureLog_DerivedAdapter_GetConnection(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -359,7 +357,7 @@ public class TupleInputAdapterPipeline : TupleInputAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_TupleInputAdapter_ProcessUser(
+            _logger.LogAdapterResponseError_DerivedAdapter_GetConnection(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -372,7 +370,7 @@ public class TupleInputAdapterPipeline : TupleInputAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_TupleInputAdapter_ProcessUser(
+            _logger.LogAdapterResponseWarning_DerivedAdapter_GetConnection(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -386,44 +384,43 @@ public class TupleInputAdapterPipeline : TupleInputAdapter
     }
 }
 
-internal static class TupleInputAdapterPipelineLoggers
+internal static class DerivedAdapterPipelineLoggers
 {
 
-    // ===== LoggerMessage.Define delegates for ProcessUser =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_TupleInputAdapter_ProcessUser =
+    // ===== LoggerMessage.Define delegates for GetConnection =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_DerivedAdapter_GetConnection =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, (int Id, string Name), global::System.Exception?> _logRequestDebug_TupleInputAdapter_ProcessUser =
-        LoggerMessage.Define<string, string, string, string, (int Id, string Name)>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_DerivedAdapter_GetConnection =
+        LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.user} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_TupleInputAdapter_ProcessUser =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_DerivedAdapter_GetConnection =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_TupleInputAdapter_ProcessUser(
+    public static void LogAdapterRequestDebug_DerivedAdapter_GetConnection(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod,
-        (int Id, string Name) user)
+        string requestHandlerMethod)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_TupleInputAdapter_ProcessUser(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, user, null);
+        _logAdapterRequestDebug_DerivedAdapter_GetConnection(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogRequest_TupleInputAdapter_ProcessUser(
+    public static void LogAdapterRequest_DerivedAdapter_GetConnection(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -433,10 +430,10 @@ internal static class TupleInputAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_TupleInputAdapter_ProcessUser(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_DerivedAdapter_GetConnection(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_TupleInputAdapter_ProcessUser(
+    public static void LogAdapterResponseSuccessDebug_DerivedAdapter_GetConnection(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -457,7 +454,7 @@ internal static class TupleInputAdapterPipelineLoggers
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_TupleInputAdapter_ProcessUser(
+    public static void LogAdapterResponseSuccess_DerivedAdapter_GetConnection(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -469,10 +466,10 @@ internal static class TupleInputAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_TupleInputAdapter_ProcessUser(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_DerivedAdapter_GetConnection(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_TupleInputAdapter_ProcessUser(
+    public static void LogAdapterResponseWarning_DerivedAdapter_GetConnection(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -500,7 +497,7 @@ internal static class TupleInputAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_TupleInputAdapter_ProcessUser(
+    public static void LogAdapterResponseError_DerivedAdapter_GetConnection(
         this ILogger logger,
         string requestLayer,
         string requestCategory,

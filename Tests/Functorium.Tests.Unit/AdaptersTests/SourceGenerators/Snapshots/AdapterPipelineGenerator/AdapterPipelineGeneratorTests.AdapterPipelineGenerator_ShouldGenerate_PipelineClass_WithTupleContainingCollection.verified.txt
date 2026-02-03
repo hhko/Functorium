@@ -20,17 +20,17 @@ using Microsoft.Extensions.Options;
 
 namespace TestNamespace;
 
-public class UserRepositoryPipeline : UserRepository
+public class TupleWithCollectionAdapterPipeline : TupleWithCollectionAdapter
 {
     private readonly ActivitySource _activitySource;
-    private readonly ILogger<UserRepositoryPipeline> _logger;
+    private readonly ILogger<TupleWithCollectionAdapterPipeline> _logger;
 
     // Metrics
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
-    private const string RequestHandler = nameof(UserRepository);
+    private const string RequestHandler = nameof(TupleWithCollectionAdapter);
 
     private readonly string _requestCategoryLowerCase;
 
@@ -39,9 +39,9 @@ public class UserRepositoryPipeline : UserRepository
     private readonly bool _isWarningEnabled;
     private readonly bool _isErrorEnabled;
 
-    public UserRepositoryPipeline(
+    public TupleWithCollectionAdapterPipeline(
         ActivitySource activitySource,
-        ILogger<UserRepositoryPipeline> logger,
+        ILogger<TupleWithCollectionAdapterPipeline> logger,
         IMeterFactory meterFactory,
         IOptions<OpenTelemetryOptions> openTelemetryOptions)
 
@@ -280,38 +280,35 @@ public class UserRepositoryPipeline : UserRepository
         };
     }
 
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, string> GetUserById(
-        int id
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, (int Id, global::System.Collections.Generic.List<string> Tags)> GetUserWithTags(
     ) =>
-        global::LanguageExt.FinT.lift<global::LanguageExt.IO, string>(
+        global::LanguageExt.FinT.lift<global::LanguageExt.IO, (int Id, global::System.Collections.Generic.List<string> Tags)>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(GetUserById),
-                operation: FinTToIO(base.GetUserById(id)),
-                requestLog: () => RequestLog_UserRepository_GetUserById(RequestHandler, nameof(GetUserById), id),
-                responseLogSuccess: ResponseLogSuccess_UserRepository_GetUserById,
-                responseLogFailure: ResponseLogFailure_UserRepository_GetUserById,
+                requestHandlerMethod: nameof(GetUserWithTags),
+                operation: FinTToIO(base.GetUserWithTags()),
+                requestLog: () => AdapterRequestLog_TupleWithCollectionAdapter_GetUserWithTags(RequestHandler, nameof(GetUserWithTags)),
+                responseLogSuccess: AdapterResponseSuccessLog_TupleWithCollectionAdapter_GetUserWithTags,
+                responseLogFailure: AdapterResponseFailureLog_TupleWithCollectionAdapter_GetUserWithTags,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_UserRepository_GetUserById(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_TupleWithCollectionAdapter_GetUserWithTags(
         string requestHandler,
-        string requestHandlerMethod,
-        int id) =>
+        string requestHandlerMethod) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_UserRepository_GetUserById(
+                _logger.LogAdapterRequestDebug_TupleWithCollectionAdapter_GetUserWithTags(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod,
-                    id);
+                    requestHandlerMethod);
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_UserRepository_GetUserById(
+                _logger.LogAdapterRequest_TupleWithCollectionAdapter_GetUserWithTags(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -320,15 +317,15 @@ public class UserRepositoryPipeline : UserRepository
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_UserRepository_GetUserById(
+    private void AdapterResponseSuccessLog_TupleWithCollectionAdapter_GetUserWithTags(
         string requestHandler,
         string requestHandlerMethod,
-        string result,
+        (int Id, global::System.Collections.Generic.List<string> Tags) result,
         double elapsed)
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_UserRepository_GetUserById(
+            _logger.LogAdapterResponseSuccessDebug_TupleWithCollectionAdapter_GetUserWithTags(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -339,7 +336,7 @@ public class UserRepositoryPipeline : UserRepository
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_UserRepository_GetUserById(
+            _logger.LogAdapterResponseSuccess_TupleWithCollectionAdapter_GetUserWithTags(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -349,7 +346,7 @@ public class UserRepositoryPipeline : UserRepository
         }
     }
 
-    private void ResponseLogFailure_UserRepository_GetUserById(
+    private void AdapterResponseFailureLog_TupleWithCollectionAdapter_GetUserWithTags(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -359,7 +356,7 @@ public class UserRepositoryPipeline : UserRepository
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_UserRepository_GetUserById(
+            _logger.LogAdapterResponseError_TupleWithCollectionAdapter_GetUserWithTags(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -372,113 +369,7 @@ public class UserRepositoryPipeline : UserRepository
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_UserRepository_GetUserById(
-                ObservabilityNaming.Layers.Adapter,
-                _requestCategoryLowerCase,
-                requestHandler,
-                requestHandlerMethod,
-                ObservabilityNaming.Status.Failure,
-                elapsed,
-                errorType,
-                errorCode,
-                error);
-        }
-    }
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, bool> UpdateUser(
-        int id,
-        string name
-    ) =>
-        global::LanguageExt.FinT.lift<global::LanguageExt.IO, bool>(
-            (from result in ExecuteWithSpan(
-                requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(UpdateUser),
-                operation: FinTToIO(base.UpdateUser(id, name)),
-                requestLog: () => RequestLog_UserRepository_UpdateUser(RequestHandler, nameof(UpdateUser), id, name),
-                responseLogSuccess: ResponseLogSuccess_UserRepository_UpdateUser,
-                responseLogFailure: ResponseLogFailure_UserRepository_UpdateUser,
-                startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
-            select result).Map(r => global::LanguageExt.Fin.Succ(r)));
-
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_UserRepository_UpdateUser(
-        string requestHandler,
-        string requestHandlerMethod,
-        int id,
-        string name) =>
-        global::LanguageExt.IO.lift(() =>
-        {
-            if (_isDebugEnabled)
-            {
-                _logger.LogRequestDebug_UserRepository_UpdateUser(
-                    ObservabilityNaming.Layers.Adapter,
-                    _requestCategoryLowerCase,
-                    requestHandler,
-                    requestHandlerMethod,
-                    id, name);
-            }
-            else if (_isInformationEnabled)
-            {
-                _logger.LogRequest_UserRepository_UpdateUser(
-                    ObservabilityNaming.Layers.Adapter,
-                    _requestCategoryLowerCase,
-                    requestHandler,
-                    requestHandlerMethod);
-            }
-            return global::LanguageExt.Unit.Default;
-        });
-
-    private void ResponseLogSuccess_UserRepository_UpdateUser(
-        string requestHandler,
-        string requestHandlerMethod,
-        bool result,
-        double elapsed)
-    {
-        if (_isDebugEnabled)
-        {
-            _logger.LogResponseDebug_UserRepository_UpdateUser(
-                ObservabilityNaming.Layers.Adapter,
-                _requestCategoryLowerCase,
-                requestHandler,
-                requestHandlerMethod,
-                ObservabilityNaming.Status.Success,
-                result,
-                elapsed);
-        }
-        else if (_isInformationEnabled)
-        {
-            _logger.LogResponse_UserRepository_UpdateUser(
-                ObservabilityNaming.Layers.Adapter,
-                _requestCategoryLowerCase,
-                requestHandler,
-                requestHandlerMethod,
-                ObservabilityNaming.Status.Success,
-                elapsed);
-        }
-    }
-
-    private void ResponseLogFailure_UserRepository_UpdateUser(
-        string requestHandler,
-        string requestHandlerMethod,
-        global::LanguageExt.Common.Error error,
-        double elapsed)
-    {
-        var (errorType, errorCode) = GetErrorInfo(error);
-
-        if (error.IsExceptional && _isErrorEnabled)
-        {
-            _logger.LogResponseError_UserRepository_UpdateUser(
-                ObservabilityNaming.Layers.Adapter,
-                _requestCategoryLowerCase,
-                requestHandler,
-                requestHandlerMethod,
-                ObservabilityNaming.Status.Failure,
-                elapsed,
-                errorType,
-                errorCode,
-                error);
-        }
-        else if (_isWarningEnabled)
-        {
-            _logger.LogResponseWarning_UserRepository_UpdateUser(
+            _logger.LogAdapterResponseWarning_TupleWithCollectionAdapter_GetUserWithTags(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -492,44 +383,43 @@ public class UserRepositoryPipeline : UserRepository
     }
 }
 
-internal static class UserRepositoryPipelineLoggers
+internal static class TupleWithCollectionAdapterPipelineLoggers
 {
 
-    // ===== LoggerMessage.Define delegates for GetUserById =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_UserRepository_GetUserById =
+    // ===== LoggerMessage.Define delegates for GetUserWithTags =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_TupleWithCollectionAdapter_GetUserWithTags =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, int, global::System.Exception?> _logRequestDebug_UserRepository_GetUserById =
-        LoggerMessage.Define<string, string, string, string, int>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_TupleWithCollectionAdapter_GetUserWithTags =
+        LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.id} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_UserRepository_GetUserById =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_TupleWithCollectionAdapter_GetUserWithTags =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_UserRepository_GetUserById(
+    public static void LogAdapterRequestDebug_TupleWithCollectionAdapter_GetUserWithTags(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod,
-        int id)
+        string requestHandlerMethod)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_UserRepository_GetUserById(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, id, null);
+        _logAdapterRequestDebug_TupleWithCollectionAdapter_GetUserWithTags(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogRequest_UserRepository_GetUserById(
+    public static void LogAdapterRequest_TupleWithCollectionAdapter_GetUserWithTags(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -539,17 +429,17 @@ internal static class UserRepositoryPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_UserRepository_GetUserById(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_TupleWithCollectionAdapter_GetUserWithTags(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_UserRepository_GetUserById(
+    public static void LogAdapterResponseSuccessDebug_TupleWithCollectionAdapter_GetUserWithTags(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
         string requestHandlerMethod,
         string status,
-        string result,
+        (int Id, global::System.Collections.Generic.List<string> Tags) result,
         double elapsed)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -563,7 +453,7 @@ internal static class UserRepositoryPipelineLoggers
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_UserRepository_GetUserById(
+    public static void LogAdapterResponseSuccess_TupleWithCollectionAdapter_GetUserWithTags(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -575,10 +465,10 @@ internal static class UserRepositoryPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_UserRepository_GetUserById(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_TupleWithCollectionAdapter_GetUserWithTags(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_UserRepository_GetUserById(
+    public static void LogAdapterResponseWarning_TupleWithCollectionAdapter_GetUserWithTags(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -606,147 +496,7 @@ internal static class UserRepositoryPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_UserRepository_GetUserById(
-        this ILogger logger,
-        string requestLayer,
-        string requestCategory,
-        string requestHandler,
-        string requestHandlerMethod,
-        string status,
-        double elapsed,
-        string errorType,
-        string errorCode,
-        global::LanguageExt.Common.Error error)
-    {
-        if (!logger.IsEnabled(LogLevel.Error))
-            return;
-
-        logger.LogError(
-            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
-            requestLayer,
-            requestCategory,
-            requestHandler,
-            requestHandlerMethod,
-            elapsed,
-            errorType,
-            errorCode,
-            error);
-    }
-
-    // ===== LoggerMessage.Define delegates for UpdateUser =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_UserRepository_UpdateUser =
-        LoggerMessage.Define<string, string, string, string>(
-            LogLevel.Information,
-            ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
-
-    private static readonly global::System.Action<ILogger, string, string, string, string, int, string, global::System.Exception?> _logRequestDebug_UserRepository_UpdateUser =
-        LoggerMessage.Define<string, string, string, string, int, string>(
-            LogLevel.Debug,
-            ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.id} {request.params.name} requesting");
-
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_UserRepository_UpdateUser =
-        LoggerMessage.Define<string, string, string, string, string, double>(
-            LogLevel.Information,
-            ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
-
-
-    public static void LogRequestDebug_UserRepository_UpdateUser(
-        this ILogger logger,
-        string requestLayer,
-        string requestCategory,
-        string requestHandler,
-        string requestHandlerMethod,
-        int id,
-        string name)
-    {
-        if (!logger.IsEnabled(LogLevel.Debug))
-            return;
-
-        _logRequestDebug_UserRepository_UpdateUser(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, id, name, null);
-    }
-
-    public static void LogRequest_UserRepository_UpdateUser(
-        this ILogger logger,
-        string requestLayer,
-        string requestCategory,
-        string requestHandler,
-        string requestHandlerMethod)
-    {
-        if (!logger.IsEnabled(LogLevel.Information))
-            return;
-
-        _logRequest_UserRepository_UpdateUser(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
-    }
-
-    public static void LogResponseDebug_UserRepository_UpdateUser(
-        this ILogger logger,
-        string requestLayer,
-        string requestCategory,
-        string requestHandler,
-        string requestHandlerMethod,
-        string status,
-        bool result,
-        double elapsed)
-    {
-        if (!logger.IsEnabled(LogLevel.Debug))
-            return;
-
-        logger.LogDebug(
-            eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
-                     "{response.result} " +
-                     "responded {response.status} in {response.elapsed:0.0000} s",
-            requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
-    }
-
-    public static void LogResponse_UserRepository_UpdateUser(
-        this ILogger logger,
-        string requestLayer,
-        string requestCategory,
-        string requestHandler,
-        string requestHandlerMethod,
-        string status,
-        double elapsed)
-    {
-        if (!logger.IsEnabled(LogLevel.Information))
-            return;
-
-        _logResponse_UserRepository_UpdateUser(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
-    }
-
-    public static void LogResponseWarning_UserRepository_UpdateUser(
-        this ILogger logger,
-        string requestLayer,
-        string requestCategory,
-        string requestHandler,
-        string requestHandlerMethod,
-        string status,
-        double elapsed,
-        string errorType,
-        string errorCode,
-        global::LanguageExt.Common.Error error)
-    {
-        if (!logger.IsEnabled(LogLevel.Warning))
-            return;
-
-        logger.LogWarning(
-            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
-            requestLayer,
-            requestCategory,
-            requestHandler,
-            requestHandlerMethod,
-            elapsed,
-            errorType,
-            errorCode,
-            error);
-    }
-
-    public static void LogResponseError_UserRepository_UpdateUser(
+    public static void LogAdapterResponseError_TupleWithCollectionAdapter_GetUserWithTags(
         this ILogger logger,
         string requestLayer,
         string requestCategory,

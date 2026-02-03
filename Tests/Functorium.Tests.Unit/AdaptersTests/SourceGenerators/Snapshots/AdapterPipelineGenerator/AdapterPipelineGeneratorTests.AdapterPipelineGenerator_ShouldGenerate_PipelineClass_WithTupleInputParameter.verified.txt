@@ -18,19 +18,19 @@ using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace MyApp;
+namespace TestNamespace;
 
-public class SimpleNamespaceAdapterPipeline : SimpleNamespaceAdapter
+public class TupleInputAdapterPipeline : TupleInputAdapter
 {
     private readonly ActivitySource _activitySource;
-    private readonly ILogger<SimpleNamespaceAdapterPipeline> _logger;
+    private readonly ILogger<TupleInputAdapterPipeline> _logger;
 
     // Metrics
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
-    private const string RequestHandler = nameof(SimpleNamespaceAdapter);
+    private const string RequestHandler = nameof(TupleInputAdapter);
 
     private readonly string _requestCategoryLowerCase;
 
@@ -39,9 +39,9 @@ public class SimpleNamespaceAdapterPipeline : SimpleNamespaceAdapter
     private readonly bool _isWarningEnabled;
     private readonly bool _isErrorEnabled;
 
-    public SimpleNamespaceAdapterPipeline(
+    public TupleInputAdapterPipeline(
         ActivitySource activitySource,
-        ILogger<SimpleNamespaceAdapterPipeline> logger,
+        ILogger<TupleInputAdapterPipeline> logger,
         IMeterFactory meterFactory,
         IOptions<OpenTelemetryOptions> openTelemetryOptions)
 
@@ -280,35 +280,38 @@ public class SimpleNamespaceAdapterPipeline : SimpleNamespaceAdapter
         };
     }
 
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, int> GetValue(
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, string> ProcessUser(
+        (int Id, string Name) user
     ) =>
-        global::LanguageExt.FinT.lift<global::LanguageExt.IO, int>(
+        global::LanguageExt.FinT.lift<global::LanguageExt.IO, string>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(GetValue),
-                operation: FinTToIO(base.GetValue()),
-                requestLog: () => RequestLog_SimpleNamespaceAdapter_GetValue(RequestHandler, nameof(GetValue)),
-                responseLogSuccess: ResponseLogSuccess_SimpleNamespaceAdapter_GetValue,
-                responseLogFailure: ResponseLogFailure_SimpleNamespaceAdapter_GetValue,
+                requestHandlerMethod: nameof(ProcessUser),
+                operation: FinTToIO(base.ProcessUser(user)),
+                requestLog: () => AdapterRequestLog_TupleInputAdapter_ProcessUser(RequestHandler, nameof(ProcessUser), user),
+                responseLogSuccess: AdapterResponseSuccessLog_TupleInputAdapter_ProcessUser,
+                responseLogFailure: AdapterResponseFailureLog_TupleInputAdapter_ProcessUser,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_SimpleNamespaceAdapter_GetValue(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_TupleInputAdapter_ProcessUser(
         string requestHandler,
-        string requestHandlerMethod) =>
+        string requestHandlerMethod,
+        (int Id, string Name) user) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_SimpleNamespaceAdapter_GetValue(
+                _logger.LogAdapterRequestDebug_TupleInputAdapter_ProcessUser(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod);
+                    requestHandlerMethod,
+                    user);
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_SimpleNamespaceAdapter_GetValue(
+                _logger.LogAdapterRequest_TupleInputAdapter_ProcessUser(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -317,15 +320,15 @@ public class SimpleNamespaceAdapterPipeline : SimpleNamespaceAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_SimpleNamespaceAdapter_GetValue(
+    private void AdapterResponseSuccessLog_TupleInputAdapter_ProcessUser(
         string requestHandler,
         string requestHandlerMethod,
-        int result,
+        string result,
         double elapsed)
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_SimpleNamespaceAdapter_GetValue(
+            _logger.LogAdapterResponseSuccessDebug_TupleInputAdapter_ProcessUser(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -336,7 +339,7 @@ public class SimpleNamespaceAdapterPipeline : SimpleNamespaceAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_SimpleNamespaceAdapter_GetValue(
+            _logger.LogAdapterResponseSuccess_TupleInputAdapter_ProcessUser(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -346,7 +349,7 @@ public class SimpleNamespaceAdapterPipeline : SimpleNamespaceAdapter
         }
     }
 
-    private void ResponseLogFailure_SimpleNamespaceAdapter_GetValue(
+    private void AdapterResponseFailureLog_TupleInputAdapter_ProcessUser(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -356,7 +359,7 @@ public class SimpleNamespaceAdapterPipeline : SimpleNamespaceAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_SimpleNamespaceAdapter_GetValue(
+            _logger.LogAdapterResponseError_TupleInputAdapter_ProcessUser(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -369,7 +372,7 @@ public class SimpleNamespaceAdapterPipeline : SimpleNamespaceAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_SimpleNamespaceAdapter_GetValue(
+            _logger.LogAdapterResponseWarning_TupleInputAdapter_ProcessUser(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -383,43 +386,44 @@ public class SimpleNamespaceAdapterPipeline : SimpleNamespaceAdapter
     }
 }
 
-internal static class SimpleNamespaceAdapterPipelineLoggers
+internal static class TupleInputAdapterPipelineLoggers
 {
 
-    // ===== LoggerMessage.Define delegates for GetValue =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_SimpleNamespaceAdapter_GetValue =
+    // ===== LoggerMessage.Define delegates for ProcessUser =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_TupleInputAdapter_ProcessUser =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequestDebug_SimpleNamespaceAdapter_GetValue =
-        LoggerMessage.Define<string, string, string, string>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, (int Id, string Name), global::System.Exception?> _logAdapterRequestDebug_TupleInputAdapter_ProcessUser =
+        LoggerMessage.Define<string, string, string, string, (int Id, string Name)>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.user} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_SimpleNamespaceAdapter_GetValue =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_TupleInputAdapter_ProcessUser =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_SimpleNamespaceAdapter_GetValue(
+    public static void LogAdapterRequestDebug_TupleInputAdapter_ProcessUser(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod)
+        string requestHandlerMethod,
+        (int Id, string Name) user)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_SimpleNamespaceAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequestDebug_TupleInputAdapter_ProcessUser(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, user, null);
     }
 
-    public static void LogRequest_SimpleNamespaceAdapter_GetValue(
+    public static void LogAdapterRequest_TupleInputAdapter_ProcessUser(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -429,17 +433,17 @@ internal static class SimpleNamespaceAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_SimpleNamespaceAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_TupleInputAdapter_ProcessUser(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_SimpleNamespaceAdapter_GetValue(
+    public static void LogAdapterResponseSuccessDebug_TupleInputAdapter_ProcessUser(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
         string requestHandlerMethod,
         string status,
-        int result,
+        string result,
         double elapsed)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -453,7 +457,7 @@ internal static class SimpleNamespaceAdapterPipelineLoggers
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_SimpleNamespaceAdapter_GetValue(
+    public static void LogAdapterResponseSuccess_TupleInputAdapter_ProcessUser(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -465,10 +469,10 @@ internal static class SimpleNamespaceAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_SimpleNamespaceAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_TupleInputAdapter_ProcessUser(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_SimpleNamespaceAdapter_GetValue(
+    public static void LogAdapterResponseWarning_TupleInputAdapter_ProcessUser(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -496,7 +500,7 @@ internal static class SimpleNamespaceAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_SimpleNamespaceAdapter_GetValue(
+    public static void LogAdapterResponseError_TupleInputAdapter_ProcessUser(
         this ILogger logger,
         string requestLayer,
         string requestCategory,

@@ -20,17 +20,17 @@ using Microsoft.Extensions.Options;
 
 namespace TestNamespace;
 
-public class ComplexGenericAdapterPipeline : ComplexGenericAdapter
+public class PrimaryCtorAdapterPipeline : PrimaryCtorAdapter
 {
     private readonly ActivitySource _activitySource;
-    private readonly ILogger<ComplexGenericAdapterPipeline> _logger;
+    private readonly ILogger<PrimaryCtorAdapterPipeline> _logger;
 
     // Metrics
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
-    private const string RequestHandler = nameof(ComplexGenericAdapter);
+    private const string RequestHandler = nameof(PrimaryCtorAdapter);
 
     private readonly string _requestCategoryLowerCase;
 
@@ -39,12 +39,14 @@ public class ComplexGenericAdapterPipeline : ComplexGenericAdapter
     private readonly bool _isWarningEnabled;
     private readonly bool _isErrorEnabled;
 
-    public ComplexGenericAdapterPipeline(
+    public PrimaryCtorAdapterPipeline(
         ActivitySource activitySource,
-        ILogger<ComplexGenericAdapterPipeline> logger,
+        ILogger<PrimaryCtorAdapterPipeline> logger,
         IMeterFactory meterFactory,
-        IOptions<OpenTelemetryOptions> openTelemetryOptions)
-
+        IOptions<OpenTelemetryOptions> openTelemetryOptions,
+        string connectionString,
+        int timeout)
+        : base(connectionString, timeout)
     {
         global::System.ArgumentNullException.ThrowIfNull(activitySource);
         global::System.ArgumentNullException.ThrowIfNull(meterFactory);
@@ -280,27 +282,27 @@ public class ComplexGenericAdapterPipeline : ComplexGenericAdapter
         };
     }
 
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, global::System.Collections.Generic.Dictionary<string, global::System.Collections.Generic.List<int>>> GetComplexData(
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, string> GetConnectionString(
     ) =>
-        global::LanguageExt.FinT.lift<global::LanguageExt.IO, global::System.Collections.Generic.Dictionary<string, global::System.Collections.Generic.List<int>>>(
+        global::LanguageExt.FinT.lift<global::LanguageExt.IO, string>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(GetComplexData),
-                operation: FinTToIO(base.GetComplexData()),
-                requestLog: () => RequestLog_ComplexGenericAdapter_GetComplexData(RequestHandler, nameof(GetComplexData)),
-                responseLogSuccess: ResponseLogSuccess_ComplexGenericAdapter_GetComplexData,
-                responseLogFailure: ResponseLogFailure_ComplexGenericAdapter_GetComplexData,
+                requestHandlerMethod: nameof(GetConnectionString),
+                operation: FinTToIO(base.GetConnectionString()),
+                requestLog: () => AdapterRequestLog_PrimaryCtorAdapter_GetConnectionString(RequestHandler, nameof(GetConnectionString)),
+                responseLogSuccess: AdapterResponseSuccessLog_PrimaryCtorAdapter_GetConnectionString,
+                responseLogFailure: AdapterResponseFailureLog_PrimaryCtorAdapter_GetConnectionString,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_ComplexGenericAdapter_GetComplexData(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_PrimaryCtorAdapter_GetConnectionString(
         string requestHandler,
         string requestHandlerMethod) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_ComplexGenericAdapter_GetComplexData(
+                _logger.LogAdapterRequestDebug_PrimaryCtorAdapter_GetConnectionString(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -308,7 +310,7 @@ public class ComplexGenericAdapterPipeline : ComplexGenericAdapter
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_ComplexGenericAdapter_GetComplexData(
+                _logger.LogAdapterRequest_PrimaryCtorAdapter_GetConnectionString(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -317,15 +319,15 @@ public class ComplexGenericAdapterPipeline : ComplexGenericAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_ComplexGenericAdapter_GetComplexData(
+    private void AdapterResponseSuccessLog_PrimaryCtorAdapter_GetConnectionString(
         string requestHandler,
         string requestHandlerMethod,
-        global::System.Collections.Generic.Dictionary<string, global::System.Collections.Generic.List<int>> result,
+        string result,
         double elapsed)
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_ComplexGenericAdapter_GetComplexData(
+            _logger.LogAdapterResponseSuccessDebug_PrimaryCtorAdapter_GetConnectionString(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -336,7 +338,7 @@ public class ComplexGenericAdapterPipeline : ComplexGenericAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_ComplexGenericAdapter_GetComplexData(
+            _logger.LogAdapterResponseSuccess_PrimaryCtorAdapter_GetConnectionString(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -346,7 +348,7 @@ public class ComplexGenericAdapterPipeline : ComplexGenericAdapter
         }
     }
 
-    private void ResponseLogFailure_ComplexGenericAdapter_GetComplexData(
+    private void AdapterResponseFailureLog_PrimaryCtorAdapter_GetConnectionString(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -356,7 +358,7 @@ public class ComplexGenericAdapterPipeline : ComplexGenericAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_ComplexGenericAdapter_GetComplexData(
+            _logger.LogAdapterResponseError_PrimaryCtorAdapter_GetConnectionString(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -369,7 +371,7 @@ public class ComplexGenericAdapterPipeline : ComplexGenericAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_ComplexGenericAdapter_GetComplexData(
+            _logger.LogAdapterResponseWarning_PrimaryCtorAdapter_GetConnectionString(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -383,30 +385,30 @@ public class ComplexGenericAdapterPipeline : ComplexGenericAdapter
     }
 }
 
-internal static class ComplexGenericAdapterPipelineLoggers
+internal static class PrimaryCtorAdapterPipelineLoggers
 {
 
-    // ===== LoggerMessage.Define delegates for GetComplexData =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_ComplexGenericAdapter_GetComplexData =
+    // ===== LoggerMessage.Define delegates for GetConnectionString =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_PrimaryCtorAdapter_GetConnectionString =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequestDebug_ComplexGenericAdapter_GetComplexData =
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_PrimaryCtorAdapter_GetConnectionString =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_ComplexGenericAdapter_GetComplexData =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_PrimaryCtorAdapter_GetConnectionString =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_ComplexGenericAdapter_GetComplexData(
+    public static void LogAdapterRequestDebug_PrimaryCtorAdapter_GetConnectionString(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -416,10 +418,10 @@ internal static class ComplexGenericAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_ComplexGenericAdapter_GetComplexData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequestDebug_PrimaryCtorAdapter_GetConnectionString(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogRequest_ComplexGenericAdapter_GetComplexData(
+    public static void LogAdapterRequest_PrimaryCtorAdapter_GetConnectionString(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -429,17 +431,17 @@ internal static class ComplexGenericAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_ComplexGenericAdapter_GetComplexData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_PrimaryCtorAdapter_GetConnectionString(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_ComplexGenericAdapter_GetComplexData(
+    public static void LogAdapterResponseSuccessDebug_PrimaryCtorAdapter_GetConnectionString(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
         string requestHandlerMethod,
         string status,
-        global::System.Collections.Generic.Dictionary<string, global::System.Collections.Generic.List<int>> result,
+        string result,
         double elapsed)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -448,12 +450,12 @@ internal static class ComplexGenericAdapterPipelineLoggers
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
-                     "{response.result} {response.result.count} " +
+                     "{response.result} " +
                      "responded {response.status} in {response.elapsed:0.0000} s",
-            requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, result?.Count ?? 0, status, elapsed);
+            requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_ComplexGenericAdapter_GetComplexData(
+    public static void LogAdapterResponseSuccess_PrimaryCtorAdapter_GetConnectionString(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -465,10 +467,10 @@ internal static class ComplexGenericAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_ComplexGenericAdapter_GetComplexData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_PrimaryCtorAdapter_GetConnectionString(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_ComplexGenericAdapter_GetComplexData(
+    public static void LogAdapterResponseWarning_PrimaryCtorAdapter_GetConnectionString(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -496,7 +498,7 @@ internal static class ComplexGenericAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_ComplexGenericAdapter_GetComplexData(
+    public static void LogAdapterResponseError_PrimaryCtorAdapter_GetConnectionString(
         this ILogger logger,
         string requestLayer,
         string requestCategory,

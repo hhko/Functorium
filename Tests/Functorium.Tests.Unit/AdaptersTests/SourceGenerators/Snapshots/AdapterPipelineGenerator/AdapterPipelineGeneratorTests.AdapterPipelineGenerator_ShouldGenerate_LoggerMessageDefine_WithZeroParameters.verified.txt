@@ -20,17 +20,17 @@ using Microsoft.Extensions.Options;
 
 namespace TestNamespace;
 
-public class CollectionParamAdapterPipeline : CollectionParamAdapter
+public class ZeroParamAdapterPipeline : ZeroParamAdapter
 {
     private readonly ActivitySource _activitySource;
-    private readonly ILogger<CollectionParamAdapterPipeline> _logger;
+    private readonly ILogger<ZeroParamAdapterPipeline> _logger;
 
     // Metrics
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
-    private const string RequestHandler = nameof(CollectionParamAdapter);
+    private const string RequestHandler = nameof(ZeroParamAdapter);
 
     private readonly string _requestCategoryLowerCase;
 
@@ -39,9 +39,9 @@ public class CollectionParamAdapterPipeline : CollectionParamAdapter
     private readonly bool _isWarningEnabled;
     private readonly bool _isErrorEnabled;
 
-    public CollectionParamAdapterPipeline(
+    public ZeroParamAdapterPipeline(
         ActivitySource activitySource,
-        ILogger<CollectionParamAdapterPipeline> logger,
+        ILogger<ZeroParamAdapterPipeline> logger,
         IMeterFactory meterFactory,
         IOptions<OpenTelemetryOptions> openTelemetryOptions)
 
@@ -280,38 +280,35 @@ public class CollectionParamAdapterPipeline : CollectionParamAdapter
         };
     }
 
-    public override global::LanguageExt.FinT<global::LanguageExt.IO, int> ProcessItems(
-        global::System.Collections.Generic.List<string> items
+    public override global::LanguageExt.FinT<global::LanguageExt.IO, int> GetValue(
     ) =>
         global::LanguageExt.FinT.lift<global::LanguageExt.IO, int>(
             (from result in ExecuteWithSpan(
                 requestHandler: RequestHandler,
-                requestHandlerMethod: nameof(ProcessItems),
-                operation: FinTToIO(base.ProcessItems(items)),
-                requestLog: () => RequestLog_CollectionParamAdapter_ProcessItems(RequestHandler, nameof(ProcessItems), items),
-                responseLogSuccess: ResponseLogSuccess_CollectionParamAdapter_ProcessItems,
-                responseLogFailure: ResponseLogFailure_CollectionParamAdapter_ProcessItems,
+                requestHandlerMethod: nameof(GetValue),
+                operation: FinTToIO(base.GetValue()),
+                requestLog: () => AdapterRequestLog_ZeroParamAdapter_GetValue(RequestHandler, nameof(GetValue)),
+                responseLogSuccess: AdapterResponseSuccessLog_ZeroParamAdapter_GetValue,
+                responseLogFailure: AdapterResponseFailureLog_ZeroParamAdapter_GetValue,
                 startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
             select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 
-    private global::LanguageExt.IO<global::LanguageExt.Unit> RequestLog_CollectionParamAdapter_ProcessItems(
+    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_ZeroParamAdapter_GetValue(
         string requestHandler,
-        string requestHandlerMethod,
-        global::System.Collections.Generic.List<string> items) =>
+        string requestHandlerMethod) =>
         global::LanguageExt.IO.lift(() =>
         {
             if (_isDebugEnabled)
             {
-                _logger.LogRequestDebug_CollectionParamAdapter_ProcessItems(
+                _logger.LogAdapterRequestDebug_ZeroParamAdapter_GetValue(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod,
-                    items);
+                    requestHandlerMethod);
             }
             else if (_isInformationEnabled)
             {
-                _logger.LogRequest_CollectionParamAdapter_ProcessItems(
+                _logger.LogAdapterRequest_ZeroParamAdapter_GetValue(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
@@ -320,7 +317,7 @@ public class CollectionParamAdapterPipeline : CollectionParamAdapter
             return global::LanguageExt.Unit.Default;
         });
 
-    private void ResponseLogSuccess_CollectionParamAdapter_ProcessItems(
+    private void AdapterResponseSuccessLog_ZeroParamAdapter_GetValue(
         string requestHandler,
         string requestHandlerMethod,
         int result,
@@ -328,7 +325,7 @@ public class CollectionParamAdapterPipeline : CollectionParamAdapter
     {
         if (_isDebugEnabled)
         {
-            _logger.LogResponseDebug_CollectionParamAdapter_ProcessItems(
+            _logger.LogAdapterResponseSuccessDebug_ZeroParamAdapter_GetValue(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -339,7 +336,7 @@ public class CollectionParamAdapterPipeline : CollectionParamAdapter
         }
         else if (_isInformationEnabled)
         {
-            _logger.LogResponse_CollectionParamAdapter_ProcessItems(
+            _logger.LogAdapterResponseSuccess_ZeroParamAdapter_GetValue(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -349,7 +346,7 @@ public class CollectionParamAdapterPipeline : CollectionParamAdapter
         }
     }
 
-    private void ResponseLogFailure_CollectionParamAdapter_ProcessItems(
+    private void AdapterResponseFailureLog_ZeroParamAdapter_GetValue(
         string requestHandler,
         string requestHandlerMethod,
         global::LanguageExt.Common.Error error,
@@ -359,7 +356,7 @@ public class CollectionParamAdapterPipeline : CollectionParamAdapter
 
         if (error.IsExceptional && _isErrorEnabled)
         {
-            _logger.LogResponseError_CollectionParamAdapter_ProcessItems(
+            _logger.LogAdapterResponseError_ZeroParamAdapter_GetValue(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -372,7 +369,7 @@ public class CollectionParamAdapterPipeline : CollectionParamAdapter
         }
         else if (_isWarningEnabled)
         {
-            _logger.LogResponseWarning_CollectionParamAdapter_ProcessItems(
+            _logger.LogAdapterResponseWarning_ZeroParamAdapter_GetValue(
                 ObservabilityNaming.Layers.Adapter,
                 _requestCategoryLowerCase,
                 requestHandler,
@@ -386,44 +383,43 @@ public class CollectionParamAdapterPipeline : CollectionParamAdapter
     }
 }
 
-internal static class CollectionParamAdapterPipelineLoggers
+internal static class ZeroParamAdapterPipelineLoggers
 {
 
-    // ===== LoggerMessage.Define delegates for ProcessItems =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logRequest_CollectionParamAdapter_ProcessItems =
+    // ===== LoggerMessage.Define delegates for GetValue =====
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_ZeroParamAdapter_GetValue =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Collections.Generic.List<string>, int, global::System.Exception?> _logRequestDebug_CollectionParamAdapter_ProcessItems =
-        LoggerMessage.Define<string, string, string, string, global::System.Collections.Generic.List<string>, int>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_ZeroParamAdapter_GetValue =
+        LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.items} {request.params.items.count} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logResponse_CollectionParamAdapter_ProcessItems =
+    private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_ZeroParamAdapter_GetValue =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
-    public static void LogRequestDebug_CollectionParamAdapter_ProcessItems(
+    public static void LogAdapterRequestDebug_ZeroParamAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod,
-        global::System.Collections.Generic.List<string> items)
+        string requestHandlerMethod)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logRequestDebug_CollectionParamAdapter_ProcessItems(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, items, items?.Count ?? 0, null);
+        _logAdapterRequestDebug_ZeroParamAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogRequest_CollectionParamAdapter_ProcessItems(
+    public static void LogAdapterRequest_ZeroParamAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -433,10 +429,10 @@ internal static class CollectionParamAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logRequest_CollectionParamAdapter_ProcessItems(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_ZeroParamAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
     }
 
-    public static void LogResponseDebug_CollectionParamAdapter_ProcessItems(
+    public static void LogAdapterResponseSuccessDebug_ZeroParamAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -457,7 +453,7 @@ internal static class CollectionParamAdapterPipelineLoggers
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
     }
 
-    public static void LogResponse_CollectionParamAdapter_ProcessItems(
+    public static void LogAdapterResponseSuccess_ZeroParamAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -469,10 +465,10 @@ internal static class CollectionParamAdapterPipelineLoggers
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logResponse_CollectionParamAdapter_ProcessItems(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
+        _logAdapterResponseSuccess_ZeroParamAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, null);
     }
 
-    public static void LogResponseWarning_CollectionParamAdapter_ProcessItems(
+    public static void LogAdapterResponseWarning_ZeroParamAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
@@ -500,7 +496,7 @@ internal static class CollectionParamAdapterPipelineLoggers
             error);
     }
 
-    public static void LogResponseError_CollectionParamAdapter_ProcessItems(
+    public static void LogAdapterResponseError_ZeroParamAdapter_GetValue(
         this ILogger logger,
         string requestLayer,
         string requestCategory,
