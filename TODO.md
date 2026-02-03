@@ -2,6 +2,7 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
+- [ ] crash 이해
 - [ ] 도메인 이벤트 publisher adapter
 - [ ] 도메인 이벤트 부분 실패 처리? PublishEventsWithResult?
 - [ ] 로그 문서화
