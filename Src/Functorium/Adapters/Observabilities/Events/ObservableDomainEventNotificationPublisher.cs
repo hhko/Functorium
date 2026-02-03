@@ -132,8 +132,21 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
         CancellationToken cancellationToken)
         where TNotification : INotification
     {
-        var handlerType = handler.GetType();
-        var handlerName = handlerType.Name;
+        // .NET 10 preview에서 일부 프록시 객체의 GetType() 호출 시
+        // AccessViolationException이 발생할 수 있어 방어적으로 처리
+        Type handlerType;
+        string handlerName;
+        try
+        {
+            handlerType = handler.GetType();
+            handlerName = handlerType.Name;
+        }
+        catch
+        {
+            handlerType = typeof(INotificationHandler<TNotification>);
+            handlerName = $"INotificationHandler<{typeof(TNotification).Name}>";
+        }
+
         var logger = _loggerFactory.CreateLogger(handlerType);
 
         using var activity = ActivitySource.StartActivity(
