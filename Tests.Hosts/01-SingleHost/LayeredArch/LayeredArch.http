@@ -81,3 +81,69 @@ Content-Type: application/json
   "Scenario": "GenericExpected",
   "TestMessage": "Generic 에러 테스트"
 }
+
+###############################################################################
+# 크래시 진단 (Crash Diagnostics) - 개발 환경 전용
+###############################################################################
+#
+# 생성되는 덤프 파일:
+# ==================
+#
+# 1. 미니 덤프 파일 (.dmp)
+#    - 파일명: crash_{예외타입}_{날짜시간}.dmp
+#    - 예: crash_AccessViolationException_20240115_143052.dmp
+#    - 내용: 프로세스 메모리, 스레드 정보, 스택 트레이스
+#    - 분석: Visual Studio, WinDbg, dotnet-dump로 분석
+#
+# 2. 예외 정보 파일 (.txt)
+#    - 파일명: crash_info_{날짜시간}.txt
+#    - 예: crash_info_20240115_143052.txt
+#    - 내용: 예외 타입, 메시지, 스택 트레이스, 시스템 정보
+#
+# 저장 위치:
+# ==========
+# - Windows: %LOCALAPPDATA%\LayeredArch\CrashDumps\
+# - Linux:   ~/.local/share/LayeredArch/CrashDumps/
+# - macOS:   ~/Library/Application Support/LayeredArch/CrashDumps/
+#
+# 자세한 내용은 Tests.Hosts/01-SingleHost/README.md 참조
+#
+###############################################################################
+
+### 덤프 저장 디렉터리 확인
+# 크래시 덤프 파일이 저장되는 경로를 반환합니다
+GET {{baseUrl}}/api/diagnostics/crash/dump-directory
+
+### 생성된 덤프 파일 목록 조회
+# 이전에 생성된 크래시 덤프 파일 목록을 반환합니다
+GET {{baseUrl}}/api/diagnostics/crash/dumps
+
+### 일반 예외 테스트 (catch 가능)
+# 일반 예외는 try-catch로 잡을 수 있습니다
+# AccessViolationException과의 차이를 비교할 수 있습니다
+POST {{baseUrl}}/api/diagnostics/crash/normal-exception?shouldCatch=true
+
+### 일반 예외 테스트 (catch 없이 발생)
+# UnhandledException 핸들러가 처리하지만 프로세스는 종료되지 않습니다
+POST {{baseUrl}}/api/diagnostics/crash/normal-exception?shouldCatch=false
+
+### ⚠️ AccessViolationException 발생 (프로세스 크래시)
+# 경고: 이 요청을 실행하면 프로세스가 즉시 종료됩니다!
+#
+# AccessViolationException은 CLR 수준의 CSE(Corrupted State Exception)로:
+# - .NET Core/.NET 5+ 에서 try-catch로 잡을 수 없음
+# - 프로세스가 즉시 종료됨
+# - AppDomain.UnhandledException으로 종료 직전 덤프 생성
+#
+# 실행 순서:
+# 1. 먼저 GET /dump-directory 로 덤프 경로 확인
+# 2. 이 요청 실행 (프로세스 종료됨)
+# 3. 덤프 경로에서 .dmp 파일과 crash_info_*.txt 확인
+POST {{baseUrl}}/api/diagnostics/crash/access-violation
+
+### ⚠️ try-catch 실패 데모 (프로세스 크래시)
+# 경고: 이 요청을 실행하면 프로세스가 즉시 종료됩니다!
+#
+# try-catch로 AccessViolationException을 잡으려는 시도를 보여줍니다
+# catch 블록에 도달하지 못하고 프로세스가 종료됩니다
+POST {{baseUrl}}/api/diagnostics/crash/try-catch-demo
