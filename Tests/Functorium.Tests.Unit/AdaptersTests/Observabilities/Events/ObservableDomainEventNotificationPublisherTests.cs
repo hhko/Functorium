@@ -2,7 +2,6 @@ using Functorium.Adapters.Observabilities.Events;
 using Functorium.Tests.Unit.DomainsTests.Entities;
 using Mediator;
 using Microsoft.Extensions.Logging.Abstractions;
-using NSubstitute;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 
 namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Events;
@@ -24,18 +23,17 @@ public class ObservableDomainEventNotificationPublisherTests
     {
         // Arrange
         var notification = new TestNonDomainEventNotification("Test");
-        var mockHandler = Substitute.For<INotificationHandler<TestNonDomainEventNotification>>();
-        mockHandler.Handle(notification, Arg.Any<CancellationToken>()).Returns(ValueTask.CompletedTask);
+        var trackingHandler = new TrackingNotificationHandler();
 
         var handlers = new NotificationHandlers<TestNonDomainEventNotification>(
-            [mockHandler],
+            [trackingHandler],
             isArray: true);
 
         // Act
         await _sut.Publish(handlers, notification, CancellationToken.None);
 
         // Assert
-        await mockHandler.Received(1).Handle(notification, Arg.Any<CancellationToken>());
+        Assert.Equal(1, trackingHandler.HandleCount);
     }
 
     [Fact]
@@ -43,21 +41,19 @@ public class ObservableDomainEventNotificationPublisherTests
     {
         // Arrange
         var notification = new TestNonDomainEventNotification("Test");
-        var mockHandler1 = Substitute.For<INotificationHandler<TestNonDomainEventNotification>>();
-        var mockHandler2 = Substitute.For<INotificationHandler<TestNonDomainEventNotification>>();
-        mockHandler1.Handle(notification, Arg.Any<CancellationToken>()).Returns(ValueTask.CompletedTask);
-        mockHandler2.Handle(notification, Arg.Any<CancellationToken>()).Returns(ValueTask.CompletedTask);
+        var trackingHandler1 = new TrackingNotificationHandler();
+        var trackingHandler2 = new TrackingNotificationHandler();
 
         var handlers = new NotificationHandlers<TestNonDomainEventNotification>(
-            [mockHandler1, mockHandler2],
+            [trackingHandler1, trackingHandler2],
             isArray: true);
 
         // Act
         await _sut.Publish(handlers, notification, CancellationToken.None);
 
         // Assert
-        await mockHandler1.Received(1).Handle(notification, Arg.Any<CancellationToken>());
-        await mockHandler2.Received(1).Handle(notification, Arg.Any<CancellationToken>());
+        Assert.Equal(1, trackingHandler1.HandleCount);
+        Assert.Equal(1, trackingHandler2.HandleCount);
     }
 
     [Fact]
@@ -65,12 +61,10 @@ public class ObservableDomainEventNotificationPublisherTests
     {
         // Arrange
         var notification = new TestNonDomainEventNotification("Test");
-        var mockHandler = Substitute.For<INotificationHandler<TestNonDomainEventNotification>>();
-        mockHandler.Handle(notification, Arg.Any<CancellationToken>())
-            .Returns(ValueTask.FromException(new InvalidOperationException("Test error")));
+        var throwingHandler = new ThrowingNotificationHandler();
 
         var handlers = new NotificationHandlers<TestNonDomainEventNotification>(
-            [mockHandler],
+            [throwingHandler],
             isArray: true);
 
         // Act & Assert
@@ -89,18 +83,17 @@ public class ObservableDomainEventNotificationPublisherTests
     {
         // Arrange
         var domainEvent = new TestDomainEvent("Test");
-        var mockHandler = Substitute.For<INotificationHandler<TestDomainEvent>>();
-        mockHandler.Handle(domainEvent, Arg.Any<CancellationToken>()).Returns(ValueTask.CompletedTask);
+        var trackingHandler = new TrackingDomainEventHandler();
 
         var handlers = new NotificationHandlers<TestDomainEvent>(
-            [mockHandler],
+            [trackingHandler],
             isArray: true);
 
         // Act
         await _sut.Publish(handlers, domainEvent, CancellationToken.None);
 
         // Assert
-        await mockHandler.Received(1).Handle(domainEvent, Arg.Any<CancellationToken>());
+        Assert.Equal(1, trackingHandler.HandleCount);
     }
 
     [Fact]
@@ -108,12 +101,10 @@ public class ObservableDomainEventNotificationPublisherTests
     {
         // Arrange
         var domainEvent = new TestDomainEvent("Test");
-        var mockHandler = Substitute.For<INotificationHandler<TestDomainEvent>>();
-        mockHandler.Handle(domainEvent, Arg.Any<CancellationToken>())
-            .Returns(ValueTask.FromException(new InvalidOperationException("Test error")));
+        var throwingHandler = new ThrowingDomainEventHandler();
 
         var handlers = new NotificationHandlers<TestDomainEvent>(
-            [mockHandler],
+            [throwingHandler],
             isArray: true);
 
         // Act & Assert
@@ -139,7 +130,66 @@ public class ObservableDomainEventNotificationPublisherTests
     #endregion
 }
 
+#region Test Helpers
+
 /// <summary>
 /// IDomainEvent가 아닌 일반 Notification (테스트용)
 /// </summary>
 public sealed record TestNonDomainEventNotification(string Message) : INotification;
+
+/// <summary>
+/// 호출 횟수를 추적하는 Notification 핸들러 (테스트용)
+/// </summary>
+/// <remarks>
+/// NSubstitute Mock 대신 실제 구현체 사용.
+/// .NET 10 preview에서 NSubstitute 프록시 객체의 GetType() 호출 시
+/// AccessViolationException이 발생하는 문제 회피.
+/// </remarks>
+public sealed class TrackingNotificationHandler : INotificationHandler<TestNonDomainEventNotification>
+{
+    public int HandleCount { get; private set; }
+
+    public ValueTask Handle(TestNonDomainEventNotification notification, CancellationToken cancellationToken)
+    {
+        HandleCount++;
+        return ValueTask.CompletedTask;
+    }
+}
+
+/// <summary>
+/// 예외를 던지는 Notification 핸들러 (테스트용)
+/// </summary>
+public sealed class ThrowingNotificationHandler : INotificationHandler<TestNonDomainEventNotification>
+{
+    public ValueTask Handle(TestNonDomainEventNotification notification, CancellationToken cancellationToken)
+    {
+        throw new InvalidOperationException("Test error");
+    }
+}
+
+/// <summary>
+/// 호출 횟수를 추적하는 DomainEvent 핸들러 (테스트용)
+/// </summary>
+public sealed class TrackingDomainEventHandler : INotificationHandler<TestDomainEvent>
+{
+    public int HandleCount { get; private set; }
+
+    public ValueTask Handle(TestDomainEvent notification, CancellationToken cancellationToken)
+    {
+        HandleCount++;
+        return ValueTask.CompletedTask;
+    }
+}
+
+/// <summary>
+/// 예외를 던지는 DomainEvent 핸들러 (테스트용)
+/// </summary>
+public sealed class ThrowingDomainEventHandler : INotificationHandler<TestDomainEvent>
+{
+    public ValueTask Handle(TestDomainEvent notification, CancellationToken cancellationToken)
+    {
+        throw new InvalidOperationException("Test error");
+    }
+}
+
+#endregion
