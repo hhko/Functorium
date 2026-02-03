@@ -50,13 +50,13 @@ public static partial class ObservabilityNaming
     /// </summary>
     public static class DomainEvents
     {
-        public const string Category = "domain_event";
+        public const string Category = "domain_event.publisher";
         public const string ActivitySourceName = "DomainEvent";
 
         /// <summary>
-        /// 도메인 이벤트 발행이 처리되는 레이어 (Adapter 레이어).
+        /// 도메인 이벤트가 처리되는 레이어 (Application 레이어의 일부로 취급).
         /// </summary>
-        public const string Layer = "adapter";
+        public const string Layer = "application";
 
         /// <summary>
         /// 단일 도메인 이벤트 발행 메서드명.
@@ -79,7 +79,7 @@ public static partial class ObservabilityNaming
     /// </summary>
     public static class DomainEventHandlers
     {
-        public const string Category = "domain_event";
+        public const string Category = "domain_event.handler";
         public const string ActivitySourceName = "DomainEventHandler";
 
         /// <summary>

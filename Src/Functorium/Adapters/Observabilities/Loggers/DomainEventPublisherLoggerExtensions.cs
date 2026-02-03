@@ -6,14 +6,14 @@ using Microsoft.Extensions.Logging;
 namespace Functorium.Adapters.Observabilities.Loggers;
 
 /// <summary>
-/// 도메인 이벤트 발행에서 사용하는 로거 확장 메서드.
+/// 도메인 이벤트 발행자(Publisher)에서 사용하는 로거 확장 메서드.
 /// </summary>
-public static class DomainEventLoggerExtensions
+public static class DomainEventPublisherLoggerExtensions
 {
     /// <summary>
-    /// 도메인 이벤트 발행 시작 로그를 출력합니다.
+    /// 도메인 이벤트 발행 요청 로그를 출력합니다.
     /// </summary>
-    public static void LogDomainEventPublish<TEvent>(
+    public static void LogDomainEventPublisherRequest<TEvent>(
         this ILogger logger,
         TEvent domainEvent)
         where TEvent : IDomainEvent
@@ -32,9 +32,9 @@ public static class DomainEventLoggerExtensions
     }
 
     /// <summary>
-    /// 도메인 이벤트 발행 성공 로그를 출력합니다.
+    /// 도메인 이벤트 발행 응답 성공 로그를 출력합니다.
     /// </summary>
-    public static void LogDomainEventPublishSuccess<TEvent>(
+    public static void LogDomainEventPublisherResponseSuccess<TEvent>(
         this ILogger logger,
         TEvent domainEvent,
         double elapsed)
@@ -55,9 +55,9 @@ public static class DomainEventLoggerExtensions
     }
 
     /// <summary>
-    /// 도메인 이벤트 발행 경고 로그를 출력합니다 (예상된 에러).
+    /// 도메인 이벤트 발행 응답 경고 로그를 출력합니다 (예상된 에러).
     /// </summary>
-    public static void LogDomainEventPublishWarning<TEvent>(
+    public static void LogDomainEventPublisherResponseWarning<TEvent>(
         this ILogger logger,
         TEvent domainEvent,
         double elapsed,
@@ -84,9 +84,9 @@ public static class DomainEventLoggerExtensions
     }
 
     /// <summary>
-    /// 도메인 이벤트 발행 에러 로그를 출력합니다 (예외적 에러).
+    /// 도메인 이벤트 발행 응답 에러 로그를 출력합니다 (예외적 에러).
     /// </summary>
-    public static void LogDomainEventPublishError<TEvent>(
+    public static void LogDomainEventPublisherResponseError<TEvent>(
         this ILogger logger,
         TEvent domainEvent,
         double elapsed,
@@ -113,9 +113,9 @@ public static class DomainEventLoggerExtensions
     }
 
     /// <summary>
-    /// Aggregate의 모든 도메인 이벤트 발행 시작 로그를 출력합니다.
+    /// Aggregate의 모든 도메인 이벤트 발행 요청 로그를 출력합니다.
     /// </summary>
-    public static void LogDomainEventsPublish(
+    public static void LogDomainEventsPublisherRequest(
         this ILogger logger,
         string aggregateType,
         string methodName,
@@ -135,9 +135,9 @@ public static class DomainEventLoggerExtensions
     }
 
     /// <summary>
-    /// Aggregate의 모든 도메인 이벤트 발행 성공 로그를 출력합니다.
+    /// Aggregate의 모든 도메인 이벤트 발행 응답 성공 로그를 출력합니다.
     /// </summary>
-    public static void LogDomainEventsPublishSuccess(
+    public static void LogDomainEventsPublisherResponseSuccess(
         this ILogger logger,
         string aggregateType,
         string methodName,
@@ -160,9 +160,9 @@ public static class DomainEventLoggerExtensions
     }
 
     /// <summary>
-    /// Aggregate의 도메인 이벤트 발행 실패 로그를 출력합니다 (예외적 에러).
+    /// Aggregate의 도메인 이벤트 발행 응답 에러 로그를 출력합니다 (예외적 에러).
     /// </summary>
-    public static void LogDomainEventsPublishError(
+    public static void LogDomainEventsPublisherResponseError(
         this ILogger logger,
         string aggregateType,
         string methodName,
@@ -191,9 +191,9 @@ public static class DomainEventLoggerExtensions
     }
 
     /// <summary>
-    /// Aggregate의 도메인 이벤트 발행 경고 로그를 출력합니다 (예상된 에러).
+    /// Aggregate의 도메인 이벤트 발행 응답 경고 로그를 출력합니다 (예상된 에러).
     /// </summary>
-    public static void LogDomainEventsPublishWarning(
+    public static void LogDomainEventsPublisherResponseWarning(
         this ILogger logger,
         string aggregateType,
         string methodName,
@@ -222,9 +222,9 @@ public static class DomainEventLoggerExtensions
     }
 
     /// <summary>
-    /// Aggregate의 도메인 이벤트 부분 실패 경고 로그를 출력합니다.
+    /// Aggregate의 도메인 이벤트 부분 실패 응답 경고 로그를 출력합니다.
     /// </summary>
-    public static void LogDomainEventsPublishPartialFailure(
+    public static void LogDomainEventsPublisherResponsePartialFailure(
         this ILogger logger,
         string aggregateType,
         string methodName,

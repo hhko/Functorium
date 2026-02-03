@@ -1,4 +1,4 @@
-using Functorium.Adapters.Events;
+using Functorium.Adapters.Observabilities.Events;
 using Functorium.Applications.Events;
 using Functorium.Tests.Unit.DomainsTests.Entities;
 using LanguageExt;
@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 
-namespace Functorium.Tests.Unit.AdaptersTests.Events;
+namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Events;
 
 [Trait(nameof(UnitTest), UnitTest.Functorium_Adapters)]
 public class ObservableDomainEventPublisherTests
