@@ -15,4 +15,8 @@
     <InternalsVisibleTo Include="LayeredArch.Tests.Integration" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Serilog.Sinks.File" />
+  </ItemGroup>
+
 </Project>
