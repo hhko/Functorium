@@ -59,7 +59,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 |-----------|---------|---------|---------|------|
 | `request.layer` | ✅ | ✅ | ✅ | 아키텍처 레이어 (`"application"`) |
 | `request.category` | ✅ | ✅ | ✅ | 요청 카테고리 (`"usecase"`) |
-| `request.handler.cqrs` | ✅ | ✅ | ✅ | CQRS 타입 (`"command"`, `"query"`) |
+| `request.category.type` | ✅ | ✅ | ✅ | CQRS 타입 (`"command"`, `"query"`) |
 | `request.handler` | ✅ | ✅ | ✅ | Handler 클래스 이름 |
 | `request.handler.method` | ✅ | ✅ | ✅ | Handler 메서드 이름 (`"Handle"`) |
 | `response.status` | ✅ | ✅ | ✅ | 응답 상태 (`"success"`, `"failure"`) |
@@ -96,7 +96,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | **Static Fields** | | | |
 | `request.layer` | `"application"` | `"adapter"` | 요청 레이어 식별자 |
 | `request.category` | `"usecase"` | Adapter 카테고리 이름 | 요청 카테고리 식별자 |
-| `request.handler.cqrs` | `"command"` / `"query"` | - | CQRS 타입 |
+| `request.category.type` | `"command"` / `"query"` | - | CQRS 타입 |
 | `request.handler` | Handler 이름 | Handler 이름 | Handler 클래스 이름 |
 | `request.handler.method` | `"Handle"` | 메서드 이름 | Handler 메서드 이름 |
 | `response.status` | `"success"` / `"failure"` | `"success"` / `"failure"` | 응답 상태 |
@@ -127,13 +127,13 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 
 ```
 # Request
-{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@request.message} requesting
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@request.message} requesting
 
 # Response - Success
-{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@response.message} responded {response.status} in {response.elapsed:0.0000} s
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@response.message} responded {response.status} in {response.elapsed:0.0000} s
 
 # Response - Warning/Error
-{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
 
 **Message Templates (Adapter 레이어):**
@@ -165,7 +165,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 |-------|---------------------|----------------------|------|
 | `request.layer` | `"application"` | `"application"` | 동일 레이어 |
 | `request.category` | `"usecase"` | `"domain_event.publisher"` | 카테고리 구분 |
-| `request.handler.cqrs` | `"command"` / `"query"` | - | Usecase만 사용 |
+| `request.category.type` | `"command"` / `"query"` | - | Usecase만 사용 |
 | `request.handler` | Handler 클래스명 | Event 타입명 또는 Aggregate 타입명 | Handler 식별 |
 | `request.handler.method` | `"Handle"` | `"Publish"` / `"PublishEvents"` / `"PublishEventsWithResult"` | 메서드 식별 |
 | `@request.message` | Command/Query 객체 | 단일 이벤트 객체 | 요청 데이터 |
@@ -296,7 +296,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 |---------|----------------|-------------------|---------------------------|---------------------------|
 | `request.layer` | `"application"` | `"application"` | `"application"` | `"application"` |
 | `request.category` | `"usecase"` | `"usecase"` | `"usecase"` | `"usecase"` |
-| `request.handler.cqrs` | `"command"` / `"query"` | `"command"` / `"query"` | `"command"` / `"query"` | `"command"` / `"query"` |
+| `request.category.type` | `"command"` / `"query"` | `"command"` / `"query"` | `"command"` / `"query"` | `"command"` / `"query"` |
 | `request.handler` | handler 이름 | handler 이름 | handler 이름 | handler 이름 |
 | `request.handler.method` | `"Handle"` | `"Handle"` | `"Handle"` | `"Handle"` |
 | `response.status` | - | - | `"success"` | `"failure"` |
@@ -351,7 +351,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | **Request Tags** | | | |
 | `request.layer` | `"application"` | `"adapter"` | 레이어 식별자 |
 | `request.category` | `"usecase"` | 카테고리 이름 | 카테고리 식별자 |
-| `request.handler.cqrs` | `"command"` / `"query"` | - | CQRS 타입 |
+| `request.category.type` | `"command"` / `"query"` | - | CQRS 타입 |
 | `request.handler` | Handler 이름 | Handler 이름 | Handler 클래스 이름 |
 | `request.handler.method` | `"Handle"` | 메서드 이름 | 메서드 이름 |
 | **Response Tags** | | | |

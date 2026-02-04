@@ -33,7 +33,7 @@ IAdapter:  "Adapter Repository InMemoryProductRepository.ExistsByName"
 - OpenTelemetry 표준과 일치하나 일부 도구에서는 언더스코어 선호
 
 **현재 상태**:
-- 태그 키: `request.layer`, `request.category`, `request.handler.cqrs`, `request.handler`, `request.handler.method`
+- 태그 키: `request.layer`, `request.category`, `request.category.type`, `request.handler`, `request.handler.method`
 - 모두 소문자 + 점 구분으로 일관됨 ✅
 
 **개선 방안**:
@@ -125,8 +125,8 @@ IAdapter 에러 태그:
 ### 6. Request 태그의 불일치
 
 **문제점**:
-- Usecase: `request.handler.cqrs` 태그 포함
-- IAdapter: `request.handler.cqrs` 태그 없음
+- Usecase: `request.category.type` 태그 포함
+- IAdapter: `request.category.type` 태그 없음
 - 태그 구조가 다름
 
 **현재 상태**:
@@ -134,14 +134,14 @@ IAdapter 에러 태그:
 Usecase Request 태그:
   - request.layer: "Application"
   - request.category: "Usecase"
-  - request.handler.cqrs: "Command" / "Query" ✅
+  - request.category.type: "Command" / "Query" ✅
   - request.handler: "CreateProductCommand"
 
 IAdapter Request 태그:
   - request.layer: "Adapter"
   - request.category: "Repository"
   - request.handler: "InMemoryProductRepository"
-  - request.handler.cqrs: 없음 ❌
+  - request.category.type: 없음 ❌
 ```
 
 **개선 방안**:

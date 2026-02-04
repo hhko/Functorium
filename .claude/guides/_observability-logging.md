@@ -74,7 +74,7 @@ Functorium은 OpenTelemetry 표준을 따르는 **구조화된 로깅(Structured
   "level": "Information",
   "request.layer": "application",
   "request.category": "usecase",
-  "request.handler.cqrs": "command",
+  "request.category.type": "command",
   "request.handler": "CreateOrderCommandHandler",
   "request.handler.method": "Handle",
   "response.status": "success",
@@ -142,7 +142,7 @@ Functorium은 두 개의 아키텍처 레이어에서 자동으로 로그를 생
 |  |  - Event ID: 1001-1004                              |  |
 |  |  - request.layer: "application"                     |  |
 |  |  - request.category: "usecase"                      |  |
-|  |  - request.handler.cqrs: "command" / "query"        |  |
+|  |  - request.category.type: "command" / "query"        |  |
 |  +-----------------------------------------------------+  |
 +-----------------------------+-----------------------------+
                               |
@@ -268,7 +268,7 @@ request.category = "repository"
 request.category = "gateway"
 ```
 
-#### request.handler.cqrs
+#### request.category.type
 
 ```
 값: "command", "query", 또는 "unknown"
@@ -289,10 +289,10 @@ CQRS(Command Query Responsibility Segregation) 패턴에서 요청이 Command인
 
 ```
 # 모든 Command 처리 로그
-request.handler.cqrs = "command"
+request.category.type = "command"
 
 # 느린 Query 찾기
-request.handler.cqrs = "query" AND response.elapsed > 1.0
+request.category.type = "query" AND response.elapsed > 1.0
 ```
 
 #### request.handler
@@ -500,17 +500,17 @@ Application Layer의 로그 메시지는 다음 템플릿을 따릅니다:
 
 **요청 로그:**
 ```
-{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@request.message} requesting
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@request.message} requesting
 ```
 
 **성공 응답 로그:**
 ```
-{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@response.message} responded {response.status} in {response.elapsed:0.0000} s
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@response.message} responded {response.status} in {response.elapsed:0.0000} s
 ```
 
 **실패 응답 로그:**
 ```
-{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
 
 ### 동적 필드
@@ -528,7 +528,7 @@ Application Layer에서는 요청과 응답 객체 전체가 로그에 포함됩
 {
   "request.layer": "application",
   "request.category": "usecase",
-  "request.handler.cqrs": "command",
+  "request.category.type": "command",
   "request.handler": "CreateOrderCommandHandler",
   "request.handler.method": "Handle",
   "@request.message": {
@@ -547,7 +547,7 @@ Application Layer에서는 요청과 응답 객체 전체가 로그에 포함됩
 {
   "request.layer": "application",
   "request.category": "usecase",
-  "request.handler.cqrs": "command",
+  "request.category.type": "command",
   "request.handler": "CreateOrderCommandHandler",
   "request.handler.method": "Handle",
   "response.status": "success",
@@ -566,7 +566,7 @@ Application Layer에서는 요청과 응답 객체 전체가 로그에 포함됩
 |------|-----------|-----------|-----------|
 | `request.layer` | "application" | "application" | "application" |
 | `request.category` | "usecase" | "usecase" | "usecase" |
-| `request.handler.cqrs` | "command"/"query" | "command"/"query" | "command"/"query" |
+| `request.category.type` | "command"/"query" | "command"/"query" | "command"/"query" |
 | `request.handler` | 핸들러명 | 핸들러명 | 핸들러명 |
 | `request.handler.method` | "Handle" | "Handle" | "Handle" |
 | `@request.message` | 요청 객체 | - | - |
@@ -973,7 +973,7 @@ error.code = "Validation.InvalidEmail"
 
 ### 필드 값이 비어 있는 경우
 
-**증상:** `request.handler.cqrs` 값이 "unknown"으로 기록됩니다.
+**증상:** `request.category.type` 값이 "unknown"으로 기록됩니다.
 
 **원인:** Request 클래스가 `ICommandRequest<T>` 또는 `IQueryRequest<T>` 인터페이스를 구현하지 않았습니다.
 

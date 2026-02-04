@@ -121,7 +121,7 @@ Export functorium.demo.application.usecase.command.response, Number of datapoint
 Data point attributes:
  - request.layer: application
  - request.category: usecase
- - request.handler.cqrs: Command
+ - request.category.type: Command
  - request.handler: TestErrorCommand
  - request.handler.method: Handle
  - response.status: failure

@@ -335,7 +335,7 @@ Child Span Total = 0.3 + 0.8 + 0.1 = 1.2s
 |---------|------|------|------|
 | `request.layer` | "application" | "application" | 레이어 식별자 |
 | `request.category` | "usecase" | "usecase" | 카테고리 식별자 |
-| `request.handler.cqrs` | "command"/"query" | "command"/"query" | CQRS 타입 |
+| `request.category.type` | "command"/"query" | "command"/"query" | CQRS 타입 |
 | `request.handler` | 핸들러명 | 핸들러명 | 핸들러 클래스명 |
 | `request.handler.method` | "Handle" | "Handle" | 메서드명 |
 | `response.elapsed` | 처리 시간 | 처리 시간 | 초 단위 |
@@ -353,7 +353,7 @@ Child Span Total = 0.3 + 0.8 + 0.1 = 1.2s
   "tags": {
     "request.layer": "application",
     "request.category": "usecase",
-    "request.handler.cqrs": "command",
+    "request.category.type": "command",
     "request.handler": "CreateOrderCommandHandler",
     "request.handler.method": "Handle",
     "response.elapsed": 0.1234,
@@ -371,7 +371,7 @@ Child Span Total = 0.3 + 0.8 + 0.1 = 1.2s
   "tags": {
     "request.layer": "application",
     "request.category": "usecase",
-    "request.handler.cqrs": "command",
+    "request.category.type": "command",
     "request.handler": "CreateOrderCommandHandler",
     "request.handler.method": "Handle",
     "response.elapsed": 0.0567,
@@ -384,7 +384,7 @@ Child Span Total = 0.3 + 0.8 + 0.1 = 1.2s
 
 ### Adapter Layer 태그 구조
 
-Adapter Layer에서는 CQRS 구분이 없으므로 `request.handler.cqrs` 태그가 없습니다.
+Adapter Layer에서는 CQRS 구분이 없으므로 `request.category.type` 태그가 없습니다.
 
 **태그 구조표:**
 

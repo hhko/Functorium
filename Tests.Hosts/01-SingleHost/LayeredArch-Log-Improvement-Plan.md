@@ -201,13 +201,13 @@ Serilog `JsonFormatter`로 출력되는 실제 JSON 형식:
 {
   "Timestamp": "2026-02-03T11:55:00.7285957+09:00",
   "Level": "Information",
-  "MessageTemplate": "{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@request.message} requesting",
+  "MessageTemplate": "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@request.message} requesting",
   "TraceId": "1997ee25f08ad7926f7805ef5230431c",
   "SpanId": "2246a9ab3f6aa320",
   "Properties": {
     "request.layer": "application",
     "request.category": "usecase",
-    "request.handler.cqrs": "command",
+    "request.category.type": "command",
     "request.handler": "CreateProductCommand",
     "request.handler.method": "Handle",
     "request.message": { "Name": "TestProduct", ... },

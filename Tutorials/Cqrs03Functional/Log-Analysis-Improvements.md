@@ -84,7 +84,7 @@ public static class TelemetryLogKeys
 - 데이터 중복으로 인한 로그 크기 증가
 
 **현재 상태**:
-- Scope: `RequestLayer`, `RequestCategory`, `RequestHandler`, `RequestHandlerCqrs`, `RequestHandlerMethod`, `Request`
+- Scope: `RequestLayer`, `RequestCategory`, `RequestHandler`, `RequestCategoryType`, `RequestHandlerMethod`, `Request`
 - 메시지: 동일한 필드들이 메시지 템플릿에도 포함
 
 **개선 방안**:

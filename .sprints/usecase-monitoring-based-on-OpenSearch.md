@@ -27,7 +27,7 @@ application.usecase.query.duration       (Histogram)
 ```
 
 ### 주요 태그 구조
-- `request.handler.cqrs`: command/query
+- `request.category.type`: command/query
 - `request.handler`: Handler 이름
 - `response.status`: success/failure
 - `error.type`: expected/exceptional/aggregate
@@ -652,7 +652,7 @@ internal sealed class MetricWindow
             MetricType = "counter",
             Tags = new MetricTags
             {
-                RequestHandlerCqrs = handlerCqrs,
+                RequestCategoryType = handlerCqrs,
                 RequestHandler = handler,
                 RequestLayer = "application",
                 RequestCategory = "usecase"
@@ -696,7 +696,7 @@ internal sealed class MetricWindow
             MetricType = "counter",
             Tags = new ResponseTags
             {
-                RequestHandlerCqrs = handlerCqrs,
+                RequestCategoryType = handlerCqrs,
                 RequestHandler = handler,
                 RequestLayer = "application",
                 RequestCategory = "usecase",
@@ -752,7 +752,7 @@ internal sealed class MetricWindow
             MetricType = "histogram",
             Tags = new MetricTags
             {
-                RequestHandlerCqrs = handlerCqrs,
+                RequestCategoryType = handlerCqrs,
                 RequestHandler = handler,
                 RequestLayer = "application",
                 RequestCategory = "usecase"
@@ -958,7 +958,7 @@ internal sealed class MetricWindow
         {
             Timestamp = timestamp,
             AggregationWindow = $"{_options.PreAggregationWindowSeconds}s",
-            RequestHandlerCqrs = cqrs,
+            RequestCategoryType = cqrs,
             RequestHandler = handler,
             Latency = latency,
             Traffic = traffic,
@@ -1745,7 +1745,7 @@ public async Task UsecaseMetricsPipeline_WhenProcessingCommand_ShouldRecordMetri
     var requestMetric = metricsCollector.GetMetric("application.usecase.requests");
     requestMetric.Should().NotBeNull();
     requestMetric.Tags["request.handler"].Should().Be("CreateOrderCommand");
-    requestMetric.Tags["request.handler.cqrs"].Should().Be("command");
+    requestMetric.Tags["request.category.type"].Should().Be("command");
 }
 ```
 

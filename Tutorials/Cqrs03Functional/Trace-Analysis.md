@@ -40,7 +40,7 @@ Usecase Trace는 `UsecaseTracePipeline<TRequest, TResponse>`에서 자동으로 
 #### Activity 이름 (DisplayName)
 
 ```
-{RequestLayer} {RequestCategory}.{RequestHandlerCqrs} {RequestHandler}.{RequestHandlerMethod}
+{RequestLayer} {RequestCategory}.{RequestCategoryType} {RequestHandler}.{RequestHandlerMethod}
 ```
 
 **예시**:
@@ -70,7 +70,7 @@ Usecase Trace는 `UsecaseTracePipeline<TRequest, TResponse>`에서 자동으로 
 |---------|---------|------|------|
 | `request.layer` | `Application` | 요청 계층 (고정값) | "Application" |
 | `request.category` | `Usecase` | 요청 카테고리 (고정값) | "Usecase" |
-| `request.handler.cqrs` | `Command` / `Query` | CQRS 타입 | "Command", "Query" |
+| `request.category.type` | `Command` / `Query` | CQRS 타입 | "Command", "Query" |
 | `request.handler` | Handler 클래스 이름 | Handler 클래스 이름 | "CreateProductCommand" |
 
 #### 설정 시점
@@ -237,7 +237,7 @@ IAdapter Trace는 소스 생성기(`AdapterPipelineGenerator`)에 의해 자동 
 
 | 태그 타입 | 공통 태그 | 성공 시 추가 | 실패 시 추가 |
 |----------|----------|------------|------------|
-| **Request** | `request.layer`, `request.category`, `request.handler.cqrs`, `request.handler` | - | - |
+| **Request** | `request.layer`, `request.category`, `request.category.type`, `request.handler` | - | - |
 | **Response** | `response.elapsed`, `response.status` | `response.status: Success`, `ActivityStatusCode: Ok` | `response.status: Failure`, `ActivityStatusCode: Error`, `StatusDescription`, 에러 타입별 태그 |
 
 ### IAdapter Trace 태그 매핑
@@ -270,7 +270,7 @@ IAdapter Trace는 소스 생성기(`AdapterPipelineGenerator`)에 의해 자동 
 ### Activity 이름 규칙
 
 #### Usecase Trace
-- **형식**: `{RequestLayer} {RequestCategory}.{RequestHandlerCqrs} {RequestHandler}.{RequestHandlerMethod}`
+- **형식**: `{RequestLayer} {RequestCategory}.{RequestCategoryType} {RequestHandler}.{RequestHandlerMethod}`
 - **예시**: `Application Usecase.Command CreateProductCommand.Handle`
 
 #### IAdapter Trace

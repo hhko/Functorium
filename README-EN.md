@@ -59,7 +59,7 @@ Functorium uses [OpenTelemetry Service Attributes](https://opentelemetry.io/docs
 |-----------|---------|---------|---------|-------------|
 | `request.layer` | ✅ | ✅ | ✅ | Architecture layer (`"application"`) |
 | `request.category` | ✅ | ✅ | ✅ | Request category (`"usecase"`) |
-| `request.handler.cqrs` | ✅ | ✅ | ✅ | CQRS type (`"command"`, `"query"`) |
+| `request.category.type` | ✅ | ✅ | ✅ | CQRS type (`"command"`, `"query"`) |
 | `request.handler` | ✅ | ✅ | ✅ | Handler class name |
 | `request.handler.method` | ✅ | ✅ | ✅ | Handler method name (`"Handle"`) |
 | `response.status` | ✅ | ✅ | ✅ | Response status (`"success"`, `"failure"`) |
@@ -96,7 +96,7 @@ Functorium uses [OpenTelemetry Service Attributes](https://opentelemetry.io/docs
 | **Static Fields** | | | |
 | `request.layer` | `"application"` | `"adapter"` | Request layer identifier |
 | `request.category` | `"usecase"` | Adapter category name | Request category identifier |
-| `request.handler.cqrs` | `"command"` / `"query"` | - | CQRS type |
+| `request.category.type` | `"command"` / `"query"` | - | CQRS type |
 | `request.handler` | Handler name | Handler name | Handler class name |
 | `request.handler.method` | `"Handle"` | Method name | Handler method name |
 | `response.status` | `"success"` / `"failure"` | `"success"` / `"failure"` | Response status |
@@ -127,13 +127,13 @@ Functorium uses [OpenTelemetry Service Attributes](https://opentelemetry.io/docs
 
 ```
 # Request
-{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@request.message} requesting
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@request.message} requesting
 
 # Response - Success
-{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@response.message} responded {response.status} in {response.elapsed:0.0000} s
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@response.message} responded {response.status} in {response.elapsed:0.0000} s
 
 # Response - Warning/Error
-{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
 
 **Message Templates (Adapter Layer):**
@@ -200,7 +200,7 @@ Functorium uses [OpenTelemetry Service Attributes](https://opentelemetry.io/docs
 |---------|----------------|-------------------|---------------------------|---------------------------|
 | `request.layer` | `"application"` | `"application"` | `"application"` | `"application"` |
 | `request.category` | `"usecase"` | `"usecase"` | `"usecase"` | `"usecase"` |
-| `request.handler.cqrs` | `"command"` / `"query"` | `"command"` / `"query"` | `"command"` / `"query"` | `"command"` / `"query"` |
+| `request.category.type` | `"command"` / `"query"` | `"command"` / `"query"` | `"command"` / `"query"` | `"command"` / `"query"` |
 | `request.handler` | handler name | handler name | handler name | handler name |
 | `request.handler.method` | `"Handle"` | `"Handle"` | `"Handle"` | `"Handle"` |
 | `response.status` | - | - | `"success"` | `"failure"` |
@@ -255,7 +255,7 @@ Functorium uses [OpenTelemetry Service Attributes](https://opentelemetry.io/docs
 | **Request Tags** | | | |
 | `request.layer` | `"application"` | `"adapter"` | Layer identifier |
 | `request.category` | `"usecase"` | Category name | Category identifier |
-| `request.handler.cqrs` | `"command"` / `"query"` | - | CQRS type |
+| `request.category.type` | `"command"` / `"query"` | - | CQRS type |
 | `request.handler` | Handler name | Handler name | Handler class name |
 | `request.handler.method` | `"Handle"` | Method name | Method name |
 | **Response Tags** | | | |

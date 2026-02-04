@@ -59,7 +59,7 @@
 |---------|----------------|----------------------|----------------------|
 | `request.layer` | `"application"` | `"application"` | `"application"` |
 | `request.category` | `"usecase"` | `"usecase"` | `"usecase"` |
-| `request.handler.cqrs` | `"command"` / `"query"` | `"command"` / `"query"` | `"command"` / `"query"` |
+| `request.category.type` | `"command"` / `"query"` | `"command"` / `"query"` | `"command"` / `"query"` |
 | `request.handler` | handler name | handler name | handler name |
 | `request.handler.method` | `"Handle"` | `"Handle"` | `"Handle"` |
 | `response.status` | - | `"success"` | `"failure"` |
@@ -75,7 +75,7 @@
 request.layer = "application"
 request.category = "usecase"
 request.handler = "CreateUserCommand"
-request.handler.cqrs = "command"
+request.category.type = "command"
 code.function = "CreateUserCommand.Handle"
 response.status = "success" | "failure"
 response.elapsed = 42.5
@@ -96,7 +96,7 @@ error.count = 3  # ManyErrors인 경우
 | `RequestLayer` | 레이어 | `"application"` |
 | `RequestCategory` | 카테고리 | `"usecase"` |
 | `RequestHandler` | 핸들러 이름 | `"CreateUserCommand"` |
-| `RequestHandlerCqrs` | CQRS 타입 | `"command"` |
+| `RequestCategoryType` | CQRS 타입 | `"command"` |
 | `RequestHandlerMethod` | 메서드 | `"Handle"` |
 | `Request` | 요청 데이터 | `{ Name: "John", ... }` |
 | `Response` | 응답 데이터 | `{ UserId: "...", ... }` |
@@ -214,7 +214,7 @@ error.count = 3  # ManyErrors인 경우
 | "느린 Usecase는?" | ✅ | Metrics: `request.handler` 태그 |
 | "P95/P99 지연 시간?" | ✅ | Metrics: `histogram_quantile()` |
 | "느린 요청 상세 흐름?" | ✅ | Tracing: Span timeline |
-| "Command vs Query 성능?" | ✅ | Metrics: `request.handler.cqrs` 태그 |
+| "Command vs Query 성능?" | ✅ | Metrics: `request.category.type` 태그 |
 
 **활용 사례:**
 
@@ -464,7 +464,7 @@ sum(rate(responses_failure_total[5m])) / sum(rate(requests_total[5m]))
 TagList tags = new TagList {
     { RequestLayer, "application" },
     { RequestCategory, "usecase" },
-    { RequestHandlerCqrs, requestCqrs },
+    { RequestCategoryType, requestCqrs },
     { RequestHandler, requestHandler },
     { RequestHandlerMethod, "Handle" }
 };
@@ -472,7 +472,7 @@ TagList tags = new TagList {
 // responses: 5개 태그 (request.handler.method 없음!)
 new KeyValuePair<string, object?>(RequestLayer, "application"),
 new KeyValuePair<string, object?>(RequestCategory, "usecase"),
-new KeyValuePair<string, object?>(RequestHandlerCqrs, requestCqrs),
+new KeyValuePair<string, object?>(RequestCategoryType, requestCqrs),
 new KeyValuePair<string, object?>(RequestHandler, requestHandler),
 new KeyValuePair<string, object?>(ResponseStatus, "success/failure")
 ```
@@ -483,7 +483,7 @@ new KeyValuePair<string, object?>(ResponseStatus, "success/failure")
 TagList requestTags = new TagList {
     { RequestLayer, "application" },
     { RequestCategory, "usecase" },
-    { RequestHandlerCqrs, requestCqrs },
+    { RequestCategoryType, requestCqrs },
     { RequestHandler, requestHandler },
     { RequestHandlerMethod, "Handle" }
 };
@@ -495,7 +495,7 @@ durationHistogram.Record(elapsed, requestTags);
 TagList successTags = new TagList {
     { RequestLayer, "application" },
     { RequestCategory, "usecase" },
-    { RequestHandlerCqrs, requestCqrs },
+    { RequestCategoryType, requestCqrs },
     { RequestHandler, requestHandler },
     { RequestHandlerMethod, "Handle" },
     { ResponseStatus, "success" }
@@ -511,7 +511,7 @@ responseSuccessCounter.Add(1, successTags);
 ├──────────────────────────┼─────────────────────────┼─────────────────────────┤
 │ request.layer            │ "application"           │ "application"           │
 │ request.category         │ "usecase"               │ "usecase"               │
-│ request.handler.cqrs     │ "command"/"query"       │ "command"/"query"       │
+│ request.category.type     │ "command"/"query"       │ "command"/"query"       │
 │ request.handler          │ handler name            │ handler name            │
 │ request.handler.method   │ "Handle"                │ "Handle"                │
 │ response.status          │ (none)                  │ "success"/"failure"     │
@@ -553,7 +553,7 @@ string responseStatus = response.IsSucc ? "success" : "failure";
 TagList responseTags = new TagList {
     { RequestLayer, "application" },
     { RequestCategory, "usecase" },
-    { RequestHandlerCqrs, requestCqrs },
+    { RequestCategoryType, requestCqrs },
     { RequestHandler, requestHandler },
     { RequestHandlerMethod, "Handle" },
     { ResponseStatus, responseStatus }
@@ -1042,7 +1042,7 @@ public sealed class UsecaseMetricsPipeline<TRequest, TResponse>
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application },
             { ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase },
-            { ObservabilityNaming.CustomAttributes.RequestHandlerCqrs, _requestCqrs },  // ✅ 캐시된 값
+            { ObservabilityNaming.CustomAttributes.RequestCategoryType, _requestCqrs },  // ✅ 캐시된 값
             { ObservabilityNaming.CustomAttributes.RequestHandler, _requestHandler },  // ✅ 캐시된 값
             { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, "Handle" }
         };
@@ -1372,7 +1372,7 @@ private static void SetManyErrorsTags(Activity activity, ManyErrors error)
 # 공통 태그 (6개)
 request.layer: "application"
 request.category: "usecase"
-request.handler.cqrs: "command"
+request.category.type: "command"
 request.handler: "CreateUserCommand"
 request.handler.method: "Handle"
 response.status: "success"
@@ -1385,7 +1385,7 @@ response.status: "success"
 # Metrics (8개 태그)
 request.layer: "application"
 request.category: "usecase"
-request.handler.cqrs: "command"
+request.category.type: "command"
 request.handler: "CreateUserCommand"
 request.handler.method: "Handle"
 response.status: "failure"
@@ -1402,7 +1402,7 @@ response.elapsed: 12.5
 # Metrics (8개 태그)
 request.layer: "application"
 request.category: "usecase"
-request.handler.cqrs: "command"
+request.category.type: "command"
 request.handler: "CreateUserCommand"
 request.handler.method: "Handle"
 response.status: "failure"
@@ -1421,7 +1421,7 @@ exception.stacktrace: "..."
 # Metrics (10개 태그)
 request.layer: "application"
 request.category: "usecase"
-request.handler.cqrs: "command"
+request.category.type: "command"
 request.handler: "CreateUserCommand"
 request.handler.method: "Handle"
 response.status: "failure"

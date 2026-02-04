@@ -31,7 +31,7 @@ IAdapter:  adapter.repository.op.request
 - Prometheus 변환 시 언더스코어로 변환되지만 원본 형식이 일관적
 
 **현재 상태**:
-- 태그 키: `request.layer`, `request.category`, `request.handler.cqrs`, `request.handler`, `request.handler.method`
+- 태그 키: `request.layer`, `request.category`, `request.category.type`, `request.handler`, `request.handler.method`
 - 모두 소문자 + 점 구분으로 일관됨 ✅
 
 **개선 방안**:
@@ -52,7 +52,7 @@ IAdapter:  adapter.repository.op.request
 - `request.layer`: `Application` / `Adapter` (대문자 시작)
 - `request.category`: `Usecase` / `Repository` (대문자 시작)
 - `response.status`: `Success` / `Failure` (대문자 시작)
-- `request.handler.cqrs`: `Command` / `Query` (대문자 시작)
+- `request.category.type`: `Command` / `Query` (대문자 시작)
 
 **개선 방안**:
 - 모든 태그 값을 소문자로 통일 (Prometheus 권장사항)
@@ -129,14 +129,14 @@ requestCategory  // "Repository" (원본)
 Request Counter 태그:
   - request.layer
   - request.category
-  - request.handler.cqrs (Usecase만)
+  - request.category.type (Usecase만)
   - request.handler
   - request.handler.method ✅
 
 Response Success Counter 태그:
   - request.layer
   - request.category
-  - request.handler.cqrs (Usecase만)
+  - request.category.type (Usecase만)
   - request.handler
   - response.status
   - request.handler.method ❌
@@ -144,7 +144,7 @@ Response Success Counter 태그:
 Duration Histogram 태그:
   - request.layer
   - request.category
-  - request.handler.cqrs (Usecase만)
+  - request.category.type (Usecase만)
   - request.handler
   - request.handler.method ✅
 ```
@@ -160,8 +160,8 @@ Duration Histogram 태그:
 ### 7. Usecase와 IAdapter의 태그 차이
 
 **문제점**:
-- Usecase: `request.handler.cqrs` 태그 포함
-- IAdapter: `request.handler.cqrs` 태그 없음
+- Usecase: `request.category.type` 태그 포함
+- IAdapter: `request.category.type` 태그 없음
 - 태그 구조가 완전히 다름
 
 **현재 상태**:
@@ -169,7 +169,7 @@ Duration Histogram 태그:
 Usecase 태그:
   - request.layer: "Application"
   - request.category: "Usecase"
-  - request.handler.cqrs: "Command" / "Query" ✅
+  - request.category.type: "Command" / "Query" ✅
   - request.handler: "CreateProductCommand"
   - request.handler.method: "Handle"
 
@@ -178,7 +178,7 @@ IAdapter 태그:
   - request.category: "Repository"
   - request.handler: "InMemoryProductRepository"
   - request.handler.method: "ExistsByName"
-  - request.handler.cqrs: 없음 ❌
+  - request.category.type: 없음 ❌
 ```
 
 **개선 방안**:

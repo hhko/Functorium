@@ -41,13 +41,13 @@ Serilog `JsonFormatter`로 출력되는 실제 JSON 형식:
 {
   "Timestamp": "2026-02-03T11:55:00.7285957+09:00",
   "Level": "Information",
-  "MessageTemplate": "{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@request.message} requesting",
+  "MessageTemplate": "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@request.message} requesting",
   "TraceId": "1997ee25f08ad7926f7805ef5230431c",
   "SpanId": "2246a9ab3f6aa320",
   "Properties": {
     "request.layer": "application",
     "request.category": "usecase",
-    "request.handler.cqrs": "command",
+    "request.category.type": "command",
     "request.handler": "CreateProductCommand",
     "request.handler.method": "Handle",
     "request.message": { "Name": "TestProduct", ... },
@@ -130,13 +130,13 @@ Serilog `JsonFormatter`로 출력되는 실제 JSON 형식:
 {
   "Timestamp": "2026-02-03T11:55:00.7285957+09:00",
   "Level": "Information",
-  "MessageTemplate": "{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@request.message} requesting",
+  "MessageTemplate": "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@request.message} requesting",
   "TraceId": "1997ee25f08ad7926f7805ef5230431c",
   "SpanId": "2246a9ab3f6aa320",
   "Properties": {
     "request.layer": "application",
     "request.category": "usecase",
-    "request.handler.cqrs": "command",
+    "request.category.type": "command",
     "request.handler": "CreateProductCommand",
     "request.handler.method": "Handle",
     "request.message": {
@@ -160,13 +160,13 @@ Serilog `JsonFormatter`로 출력되는 실제 JSON 형식:
 {
   "Timestamp": "2026-02-03T11:55:01.1070832+09:00",
   "Level": "Information",
-  "MessageTemplate": "{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@response.message} responded {response.status} in {response.elapsed:0.0000} s",
+  "MessageTemplate": "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@response.message} responded {response.status} in {response.elapsed:0.0000} s",
   "TraceId": "1997ee25f08ad7926f7805ef5230431c",
   "SpanId": "2246a9ab3f6aa320",
   "Properties": {
     "request.layer": "application",
     "request.category": "usecase",
-    "request.handler.cqrs": "command",
+    "request.category.type": "command",
     "request.handler": "CreateProductCommand",
     "request.handler.method": "Handle",
     "response.message": {
@@ -290,7 +290,7 @@ Activity.Duration:           00:00:00.1818000
 Activity.Tags:
     request.layer: application
     request.category: usecase
-    request.handler.cqrs: command
+    request.category.type: command
     request.handler: CreateProductCommand
     request.handler.method: Handle
     response.elapsed: 0.1818
@@ -382,7 +382,7 @@ Activity.Kind:               Internal
 Activity.Tags:
     request.layer: application
     request.category: usecase
-    request.handler.cqrs: query
+    request.category.type: query
     request.handler: GetAllProductsQuery
     response.status: success
 ```
@@ -511,7 +511,7 @@ Activity.Duration:           00:00:00.0337000
 Activity.Tags:
     request.layer: application
     request.category: usecase
-    request.handler.cqrs: command
+    request.category.type: command
     request.handler: UpdateProductCommand
     response.status: success
 ```
@@ -705,7 +705,7 @@ Activity.Duration:           00:00:00.0042664
 Activity.Tags:
     request.layer: application
     request.category: usecase
-    request.handler.cqrs: command
+    request.category.type: command
     request.handler: TestErrorCommand
     request.handler.method: Handle
     response.status: failure
@@ -797,7 +797,7 @@ Activity.DisplayName:        application usecase.command TestErrorCommand.Handle
 Activity.Tags:
     request.layer: application
     request.category: usecase
-    request.handler.cqrs: command
+    request.category.type: command
     response.status: failure
     error.code: TestErrors.TestErrorCommand.BusinessRuleViolation
     error.count: 2
@@ -997,7 +997,7 @@ Activity.Tags:
 | `request.layer` | 레이어 | `application`, `adapter` |
 | `request.category` | 카테고리 | `usecase`, `repository` |
 | `request.handler` | 핸들러 이름 | `CreateProductCommand` |
-| `request.handler.cqrs` | CQRS 유형 | `command`, `query` |
+| `request.category.type` | CQRS 유형 | `command`, `query` |
 | `request.handler.method` | 메서드 이름 | `Handle` |
 | `response.elapsed` | 실행 시간 (초) | `0.1818` |
 | `response.status` | 응답 상태 | `success`, `failure` |
