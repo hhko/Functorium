@@ -2,6 +2,13 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
+- [x] `domain_event.handler -> usecase`
+- [x] `request.handler.cqrs -> request.category.type`
+- [x] request.category.type: event
+- [x] requestCqrs -> requestCategoryType 변수명
+- [ ] `application -> adapter`
+- [ ] `request.category: domain_event.publisher -> domain_event`
+---
 - [ ] crash 이해
 - [ ] 도메인 이벤트 publisher adapter
 - [ ] 도메인 이벤트 부분 실패 처리? PublishEventsWithResult?
