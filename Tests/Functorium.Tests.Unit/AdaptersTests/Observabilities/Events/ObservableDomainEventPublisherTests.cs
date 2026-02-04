@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Functorium.Adapters.Observabilities.Events;
 using Functorium.Applications.Events;
 using Functorium.Tests.Unit.DomainsTests.Entities;
@@ -11,15 +12,17 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Events;
 [Trait(nameof(UnitTest), UnitTest.Functorium_Adapters)]
 public class ObservableDomainEventPublisherTests
 {
+    private readonly ActivitySource _activitySource;
     private readonly IDomainEventPublisher _mockInner;
     private readonly ILogger<ObservableDomainEventPublisher> _mockLogger;
     private readonly ObservableDomainEventPublisher _sut;
 
     public ObservableDomainEventPublisherTests()
     {
+        _activitySource = new ActivitySource("TestActivitySource");
         _mockInner = Substitute.For<IDomainEventPublisher>();
         _mockLogger = Substitute.For<ILogger<ObservableDomainEventPublisher>>();
-        _sut = new ObservableDomainEventPublisher(_mockInner, _mockLogger);
+        _sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, _mockLogger);
     }
 
     #region Publish Tests

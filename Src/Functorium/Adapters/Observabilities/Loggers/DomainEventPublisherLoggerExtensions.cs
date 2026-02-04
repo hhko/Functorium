@@ -24,10 +24,10 @@ public static class DomainEventPublisherLoggerExtensions
         logger.LogInformation(
             eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventRequest,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} {@request.message} requesting",
-            ObservabilityNaming.DomainEvents.Layer,
-            ObservabilityNaming.DomainEvents.Category,
+            ObservabilityNaming.Layers.Adapter,
+            ObservabilityNaming.Categories.Event,
             typeof(TEvent).Name,
-            ObservabilityNaming.DomainEvents.PublishMethod,
+            ObservabilityNaming.Methods.Publish,
             domainEvent);
     }
 
@@ -46,10 +46,10 @@ public static class DomainEventPublisherLoggerExtensions
         logger.LogInformation(
             eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventResponseSuccess,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s",
-            ObservabilityNaming.DomainEvents.Layer,
-            ObservabilityNaming.DomainEvents.Category,
+            ObservabilityNaming.Layers.Adapter,
+            ObservabilityNaming.Categories.Event,
             typeof(TEvent).Name,
-            ObservabilityNaming.DomainEvents.PublishMethod,
+            ObservabilityNaming.Methods.Publish,
             ObservabilityNaming.Status.Success,
             elapsed);
     }
@@ -72,10 +72,10 @@ public static class DomainEventPublisherLoggerExtensions
         logger.LogWarning(
             eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventResponseWarning,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
-            ObservabilityNaming.DomainEvents.Layer,
-            ObservabilityNaming.DomainEvents.Category,
+            ObservabilityNaming.Layers.Adapter,
+            ObservabilityNaming.Categories.Event,
             typeof(TEvent).Name,
-            ObservabilityNaming.DomainEvents.PublishMethod,
+            ObservabilityNaming.Methods.Publish,
             ObservabilityNaming.Status.Failure,
             elapsed,
             errorType,
@@ -101,10 +101,10 @@ public static class DomainEventPublisherLoggerExtensions
         logger.LogError(
             eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventResponseError,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
-            ObservabilityNaming.DomainEvents.Layer,
-            ObservabilityNaming.DomainEvents.Category,
+            ObservabilityNaming.Layers.Adapter,
+            ObservabilityNaming.Categories.Event,
             typeof(TEvent).Name,
-            ObservabilityNaming.DomainEvents.PublishMethod,
+            ObservabilityNaming.Methods.Publish,
             ObservabilityNaming.Status.Failure,
             elapsed,
             errorType,
@@ -127,8 +127,8 @@ public static class DomainEventPublisherLoggerExtensions
         logger.LogInformation(
             eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventRequest,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events requesting",
-            ObservabilityNaming.DomainEvents.Layer,
-            ObservabilityNaming.DomainEvents.Category,
+            ObservabilityNaming.Layers.Adapter,
+            ObservabilityNaming.Categories.Event,
             aggregateType,
             methodName,
             eventCount);
@@ -150,8 +150,8 @@ public static class DomainEventPublisherLoggerExtensions
         logger.LogInformation(
             eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventResponseSuccess,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events responded {response.status} in {response.elapsed:0.0000} s",
-            ObservabilityNaming.DomainEvents.Layer,
-            ObservabilityNaming.DomainEvents.Category,
+            ObservabilityNaming.Layers.Adapter,
+            ObservabilityNaming.Categories.Event,
             aggregateType,
             methodName,
             eventCount,
@@ -178,8 +178,8 @@ public static class DomainEventPublisherLoggerExtensions
         logger.LogError(
             eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventResponseError,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
-            ObservabilityNaming.DomainEvents.Layer,
-            ObservabilityNaming.DomainEvents.Category,
+            ObservabilityNaming.Layers.Adapter,
+            ObservabilityNaming.Categories.Event,
             aggregateType,
             methodName,
             eventCount,
@@ -209,8 +209,8 @@ public static class DomainEventPublisherLoggerExtensions
         logger.LogWarning(
             eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventResponseWarning,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
-            ObservabilityNaming.DomainEvents.Layer,
-            ObservabilityNaming.DomainEvents.Category,
+            ObservabilityNaming.Layers.Adapter,
+            ObservabilityNaming.Categories.Event,
             aggregateType,
             methodName,
             eventCount,
@@ -239,8 +239,8 @@ public static class DomainEventPublisherLoggerExtensions
         logger.LogWarning(
             eventId: ObservabilityNaming.EventIds.DomainEvent.DomainEventResponseWarning,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events with partial failure: {success_count} succeeded, {failure_count} failed responded {response.status} in {response.elapsed:0.0000} s",
-            ObservabilityNaming.DomainEvents.Layer,
-            ObservabilityNaming.DomainEvents.Category,
+            ObservabilityNaming.Layers.Adapter,
+            ObservabilityNaming.Categories.Event,
             aggregateType,
             methodName,
             eventCount,

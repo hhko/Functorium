@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reflection;
 using Functorium.Adapters.Events;
 using Functorium.Adapters.Observabilities.Events;
@@ -47,9 +48,10 @@ public static class DomainEventRegistration
 
         services.AddScoped<IDomainEventPublisher>(sp =>
         {
+            var activitySource = sp.GetRequiredService<ActivitySource>();
             var inner = sp.GetRequiredService<DomainEventPublisher>();
             var logger = sp.GetRequiredService<ILogger<ObservableDomainEventPublisher>>();
-            return new ObservableDomainEventPublisher(inner, logger);
+            return new ObservableDomainEventPublisher(activitySource, inner, logger);
         });
 
         return services;

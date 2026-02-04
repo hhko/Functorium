@@ -44,47 +44,4 @@ public static partial class ObservabilityNaming
             public static readonly EventId ResponseError = new(3104, "domain_event_handler.response.error");
         }
     }
-
-    /// <summary>
-    /// 도메인 이벤트 Publisher 관련 상수.
-    /// </summary>
-    public static class DomainEvents
-    {
-        public const string Category = "domain_event.publisher";
-        public const string ActivitySourceName = "DomainEvent";
-
-        /// <summary>
-        /// 도메인 이벤트가 처리되는 레이어 (Application 레이어의 일부로 취급).
-        /// </summary>
-        public const string Layer = "application";
-
-        /// <summary>
-        /// 단일 도메인 이벤트 발행 메서드명.
-        /// </summary>
-        public const string PublishMethod = "Publish";
-
-        /// <summary>
-        /// Aggregate의 모든 도메인 이벤트 발행 메서드명.
-        /// </summary>
-        public const string PublishEventsMethod = "PublishEvents";
-
-        /// <summary>
-        /// Aggregate의 모든 도메인 이벤트 발행 (결과 반환) 메서드명.
-        /// </summary>
-        public const string PublishEventsWithResultMethod = "PublishEventsWithResult";
-    }
-
-    /// <summary>
-    /// 도메인 이벤트 Handler 관련 상수.
-    /// </summary>
-    public static class DomainEventHandlers
-    {
-        public const string Category = "domain_event.handler";
-        public const string ActivitySourceName = "DomainEventHandler";
-
-        /// <summary>
-        /// 도메인 이벤트 핸들러가 처리되는 레이어 (Application 레이어).
-        /// </summary>
-        public const string Layer = "application";
-    }
 }

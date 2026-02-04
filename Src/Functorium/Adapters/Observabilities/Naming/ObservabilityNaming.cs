@@ -26,6 +26,7 @@ public static partial class ObservabilityNaming
     {
         public const string Usecase = "usecase";
         public const string Repository = "repository";
+        public const string Event = "event";
         public const string Unknown = "unknown";
     }
 
@@ -70,5 +71,9 @@ public static partial class ObservabilityNaming
     public static class Methods
     {
         public const string Handle = "Handle";
+        public const string Publish = "Publish";
+        public const string PublishEvents = "PublishEvents";
+        public const string PublishEventsWithResult = "PublishEventsWithResult";
     }
+
 }
