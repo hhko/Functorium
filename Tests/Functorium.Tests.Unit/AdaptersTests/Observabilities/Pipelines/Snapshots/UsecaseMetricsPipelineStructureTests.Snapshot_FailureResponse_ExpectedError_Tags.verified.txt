@@ -2,8 +2,8 @@
   error.code: Test.GenericError,
   error.type: expected,
   request.category: usecase,
+  request.category.type: command,
   request.handler: UsecaseMetricsPipelineStructureTests,
-  request.handler.cqrs: command,
   request.handler.method: Handle,
   request.layer: application,
   response.status: failure

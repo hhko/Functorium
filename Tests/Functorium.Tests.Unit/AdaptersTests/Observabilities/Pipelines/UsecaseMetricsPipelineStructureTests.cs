@@ -35,7 +35,7 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines;
 /// +--------------------------+-------------------+-------------------+-------------------+
 /// | request.layer            | "application"     | "application"     | "application"     |
 /// | request.category         | "usecase"         | "usecase"         | "usecase"         |
-/// | request.handler.cqrs     | "command"/"query" | "command"/"query" | "command"/"query" |
+/// | request.category.type     | "command"/"query" | "command"/"query" | "command"/"query" |
 /// | request.handler          | handler name      | handler name      | handler name      |
 /// | request.handler.method   | "Handle"          | "Handle"          | "Handle"          |
 /// | response.status          | (none)            | "success"         | "failure"         |

@@ -1,7 +1,7 @@
 ﻿{
   request.category: usecase,
+  request.category.type: query,
   request.handler: UsecaseTracingPipelineStructureTests,
-  request.handler.cqrs: query,
   request.handler.method: Handle,
   request.layer: application,
   response.elapsed: {Scrubbed},
