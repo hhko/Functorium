@@ -31,7 +31,7 @@ public static partial class ObservabilityNaming
         public const string RequestLayer = "request.layer";
         public const string RequestCategory = "request.category";
         public const string RequestHandler = "request.handler";
-        public const string RequestHandlerCqrs = "request.handler.cqrs";
+        public const string RequestCategoryType = "request.category.type";
         public const string RequestHandlerMethod = "request.handler.method";
 
         // Response 속성
@@ -60,15 +60,15 @@ public static partial class ObservabilityNaming
             $"{layer}.{category}.duration";
 
 
-        // Application Usecase 메트릭 (CQRS 타입별)
-        public static string UsecaseRequest(string cqrsType) =>
-            $"application.usecase.{cqrsType}.requests";
+        // Application Usecase 메트릭 (카테고리 타입별)
+        public static string UsecaseRequest(string categoryType) =>
+            $"application.usecase.{categoryType}.requests";
 
-        public static string UsecaseResponse(string cqrsType) =>
-            $"application.usecase.{cqrsType}.responses";
+        public static string UsecaseResponse(string categoryType) =>
+            $"application.usecase.{categoryType}.responses";
 
-        public static string UsecaseDuration(string cqrsType) =>
-            $"application.usecase.{cqrsType}.duration";
+        public static string UsecaseDuration(string categoryType) =>
+            $"application.usecase.{categoryType}.duration";
 
 
         // Adapter 메트릭 (카테고리별)

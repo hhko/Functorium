@@ -29,15 +29,15 @@ internal sealed class UsecaseTracingPipeline<TRequest, TResponse>
 
     public async ValueTask<TResponse> Handle(TRequest request, MessageHandlerDelegate<TRequest, TResponse> next, CancellationToken cancellationToken)
     {
-        string requestCqrs = GetRequestCqrs(request);
+        string requestCategoryType = GetRequestCategoryType(request);
         string requestHandler = GetRequestHandler();
         Activity? parentActivity = Activity.Current;
 
         // AddSource에 사전에 ActivitySource 이름이 등록되어 있어야 정상적으로 객체를 생성할 수 있습니다.
         string requestHandlerMethod = ObservabilityNaming.Methods.Handle;
         using Activity? activity = parentActivity != null
-            ? _activitySource.StartActivity($"{ObservabilityNaming.Layers.Application} {ObservabilityNaming.Categories.Usecase}.{requestCqrs} {requestHandler}.{requestHandlerMethod}", ActivityKind.Internal, parentActivity.Context)
-            : _activitySource.StartActivity($"{ObservabilityNaming.Layers.Application} {ObservabilityNaming.Categories.Usecase}.{requestCqrs} {requestHandler}.{requestHandlerMethod}");
+            ? _activitySource.StartActivity($"{ObservabilityNaming.Layers.Application} {ObservabilityNaming.Categories.Usecase}.{requestCategoryType} {requestHandler}.{requestHandlerMethod}", ActivityKind.Internal, parentActivity.Context)
+            : _activitySource.StartActivity($"{ObservabilityNaming.Layers.Application} {ObservabilityNaming.Categories.Usecase}.{requestCategoryType} {requestHandler}.{requestHandlerMethod}");
 
         if (activity == null)
         {
@@ -45,7 +45,7 @@ internal sealed class UsecaseTracingPipeline<TRequest, TResponse>
             return await next(request, cancellationToken);
         }
 
-        SetRequestTags(activity, requestCqrs, requestHandler);
+        SetRequestTags(activity, requestCategoryType, requestHandler);
         long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();
 
         TResponse response = await next(request, cancellationToken);
@@ -56,11 +56,11 @@ internal sealed class UsecaseTracingPipeline<TRequest, TResponse>
         return response;
     }
 
-    private static void SetRequestTags(Activity activity, string requestCqrs, string requestHandler)
+    private static void SetRequestTags(Activity activity, string requestCategoryType, string requestHandler)
     {
         activity.SetTag(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application);
         activity.SetTag(ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase);
-        activity.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerCqrs, requestCqrs);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.RequestCategoryType, requestCategoryType);
         activity.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler);
         activity.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.Handle);
     }

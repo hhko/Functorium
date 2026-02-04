@@ -13,20 +13,20 @@ namespace Functorium.Adapters.Observabilities.Pipelines;
 // ---------------------------------------
 // Request
 //  - Information
-//      {RequestLayer} {RequestCategory} {RequestHandlerCqrs} {RequestHandler} {RequestHandlerPath} requesting
+//      {RequestLayer} {RequestCategory} {RequestCategoryType} {RequestHandler} {RequestHandlerPath} requesting
 //
 // Response
 //  - Information
-//      {RequestLayer} {RequestCategory} {RequestHandlerCqrs} {RequestHandler} {RequestHandlerPath} responded {Status} in {Elapsed:0.0000} ms
+//      {RequestLayer} {RequestCategory} {RequestCategoryType} {RequestHandler} {RequestHandlerPath} responded {Status} in {Elapsed:0.0000} ms
 //  - Warning: ErrorCodeExpected
-//      {RequestLayer} {RequestCategory} {RequestHandlerCqrs} {RequestHandler} {RequestHandlerPath} responded {Status} in {Elapsed:0.0000} ms with {@Error:Error}
+//      {RequestLayer} {RequestCategory} {RequestCategoryType} {RequestHandler} {RequestHandlerPath} responded {Status} in {Elapsed:0.0000} ms with {@Error:Error}
 //  - Error: ErrorCodeExceptional
-//      {RequestLayer} {RequestCategory} {RequestHandlerCqrs} {RequestHandler} {RequestHandlerPath} responded {Status} in {Elapsed:0.0000} ms with {@Error:Error}
+//      {RequestLayer} {RequestCategory} {RequestCategoryType} {RequestHandler} {RequestHandlerPath} responded {Status} in {Elapsed:0.0000} ms with {@Error:Error}
 //
 // Fields
 //  - RequestLayer      : Application, Adapter
 //  - RequestCategory       : Usecase, Worker, ...
-//  - RequestHandlerCqrs  : Command, Query, Unknown                   <- Usecase일 때만
+//  - RequestCategoryType  : Command, Query, Unknown                   <- Usecase일 때만
 //  - RequestHandler       : 클래스 이름
 //  - RequestHandlerPath       : 네임스페이스를 포함한 전체 클래스 이름
 //  - Status            : Succ, Fail
@@ -39,7 +39,7 @@ namespace Functorium.Adapters.Observabilities.Pipelines;
 // Fields
 //  - RequestLayer
 //  - RequestCategory
-//  - RequestHandlerCqrs
+//  - RequestCategoryType
 //  - RequestHandler
 //  - RequestHandlerPath
 //  - RequestHandler
@@ -65,30 +65,30 @@ public abstract partial class UsecasePipelineBase<TRequest>
     [GeneratedRegex(@"\.([^.+]+)$", RegexOptions.Compiled)]
     private static partial Regex AfterLastDotPattern();
 
-    protected static string GetRequestCqrs<T>(T request)
+    protected static string GetRequestCategoryType<T>(T request)
     {
         Type[] interfaces = request!.GetType().GetInterfaces();
 
         if (interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandRequest<>)))
-            return ObservabilityNaming.Cqrs.Command;
+            return ObservabilityNaming.CategoryTypes.Command;
 
         if (interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryRequest<>)))
-            return ObservabilityNaming.Cqrs.Query;
+            return ObservabilityNaming.CategoryTypes.Query;
 
-        return ObservabilityNaming.Cqrs.Unknown;
+        return ObservabilityNaming.CategoryTypes.Unknown;
     }
 
-    protected static string GetRequestCqrs(Type requestType)
+    protected static string GetRequestCategoryType(Type requestType)
     {
         Type[] interfaces = requestType.GetInterfaces();
 
         if (interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandRequest<>)))
-            return ObservabilityNaming.Cqrs.Command;
+            return ObservabilityNaming.CategoryTypes.Command;
 
         if (interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryRequest<>)))
-            return ObservabilityNaming.Cqrs.Query;
+            return ObservabilityNaming.CategoryTypes.Query;
 
-        return ObservabilityNaming.Cqrs.Unknown;
+        return ObservabilityNaming.CategoryTypes.Unknown;
     }
 
     protected static string GetRequestHandlerPath()

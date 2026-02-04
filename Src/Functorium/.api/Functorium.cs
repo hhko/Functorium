@@ -450,9 +450,10 @@ namespace Functorium.Applications.Observabilities
             public const string Repository = "repository";
             public const string Usecase = "usecase";
         }
-        public static class Cqrs
+        public static class CategoryTypes
         {
             public const string Command = "command";
+            public const string Event = "event";
             public const string Query = "query";
             public const string Unknown = "unknown";
         }
@@ -462,7 +463,7 @@ namespace Functorium.Applications.Observabilities
             public const string ErrorMessage = "error.message";
             public const string RequestCategory = "request.category";
             public const string RequestHandler = "request.handler";
-            public const string RequestHandlerCqrs = "request.handler.cqrs";
+            public const string RequestCategoryType = "request.category.type";
             public const string RequestHandlerMethod = "request.handler.method";
             public const string RequestLayer = "request.layer";
             public const string ResponseElapsed = "response.elapsed";
@@ -496,7 +497,7 @@ namespace Functorium.Applications.Observabilities
             public const string RequestCategory = "RequestCategory";
             public const string RequestData = "Request";
             public const string RequestHandler = "RequestHandler";
-            public const string RequestHandlerCqrs = "RequestHandlerCqrs";
+            public const string RequestCategoryType = "RequestCategoryType";
             public const string RequestHandlerMethod = "RequestHandlerMethod";
             public const string RequestLayer = "RequestLayer";
             public const string ResponseData = "Response";
@@ -513,10 +514,10 @@ namespace Functorium.Applications.Observabilities
             public static string Requests(string layer, string category) { }
             public static string ResponseFailure(string layer, string category) { }
             public static string ResponseSuccess(string layer, string category) { }
-            public static string UsecaseDuration(string cqrsType) { }
-            public static string UsecaseRequest(string cqrsType) { }
-            public static string UsecaseResponseFailure(string cqrsType) { }
-            public static string UsecaseResponseSuccess(string cqrsType) { }
+            public static string UsecaseDuration(string categoryType) { }
+            public static string UsecaseRequest(string categoryType) { }
+            public static string UsecaseResponseFailure(string categoryType) { }
+            public static string UsecaseResponseSuccess(string categoryType) { }
         }
         public static class OTelAttributes
         {
@@ -541,10 +542,10 @@ namespace Functorium.Applications.Observabilities.Loggers
 {
     public static class UsecaseLoggerExtensions
     {
-        public static void LogRequestMessage<T>(this Microsoft.Extensions.Logging.ILogger logger, string requestLayer, string requestCategory, string requestCqrs, string requestHandler, string requestHandlerMethod, T? request) { }
-        public static void LogResponseMessageError(this Microsoft.Extensions.Logging.ILogger logger, string requestLayer, string requestCategory, string requestCqrs, string requestHandler, string requestHandlerMethod, string status, double elapsed, LanguageExt.Common.Error error) { }
-        public static void LogResponseMessageSuccess<T>(this Microsoft.Extensions.Logging.ILogger logger, string requestLayer, string requestCategory, string requestCqrs, string requestHandler, string requestHandlerMethod, T? response, string status, double elapsed) { }
-        public static void LogResponseMessageWarning(this Microsoft.Extensions.Logging.ILogger logger, string requestLayer, string requestCategory, string requestCqrs, string requestHandler, string requestHandlerMethod, string status, double elapsed, LanguageExt.Common.Error error) { }
+        public static void LogRequestMessage<T>(this Microsoft.Extensions.Logging.ILogger logger, string requestLayer, string requestCategory, string requestCategoryType, string requestHandler, string requestHandlerMethod, T? request) { }
+        public static void LogResponseMessageError(this Microsoft.Extensions.Logging.ILogger logger, string requestLayer, string requestCategory, string requestCategoryType, string requestHandler, string requestHandlerMethod, string status, double elapsed, LanguageExt.Common.Error error) { }
+        public static void LogResponseMessageSuccess<T>(this Microsoft.Extensions.Logging.ILogger logger, string requestLayer, string requestCategory, string requestCategoryType, string requestHandler, string requestHandlerMethod, T? response, string status, double elapsed) { }
+        public static void LogResponseMessageWarning(this Microsoft.Extensions.Logging.ILogger logger, string requestLayer, string requestCategory, string requestCategoryType, string requestHandler, string requestHandlerMethod, string status, double elapsed, LanguageExt.Common.Error error) { }
     }
 }
 namespace Functorium.Applications.Observabilities.Metrics
@@ -614,7 +615,7 @@ namespace Functorium.Applications.Pipelines
     public abstract class UsecasePipelineBase<TRequest>
     {
         protected UsecasePipelineBase() { }
-        protected static string GetRequestCqrs<T>(T request) { }
+        protected static string GetRequestCategoryType<T>(T request) { }
         protected static string GetRequestHandler() { }
         protected static string GetRequestHandlerPath() { }
     }

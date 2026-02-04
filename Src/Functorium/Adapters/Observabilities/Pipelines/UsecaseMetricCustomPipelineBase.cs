@@ -35,28 +35,28 @@ public abstract partial class UsecaseMetricCustomPipelineBase<TRequest>
         string meterName = $"{serviceNamespace}.{ObservabilityNaming.Layers.Application}";
         _meter = meterFactory.Create(meterName);
 
-        // Request 타입으로부터 CQRS 타입 자동 식별
-        string cqrsType = GetRequestCqrs();
+        // Request 타입으로부터 카테고리 타입 자동 식별
+        string categoryType = GetRequestCategoryType();
 
-        // Metric 접두사: application.usecase.{cqrs} (query 또는 command)
-        _metricPrefix = $"{ObservabilityNaming.Layers.Application}.{ObservabilityNaming.Categories.Usecase}.{cqrsType}";
+        // Metric 접두사: application.usecase.{categoryType} (query 또는 command)
+        _metricPrefix = $"{ObservabilityNaming.Layers.Application}.{ObservabilityNaming.Categories.Usecase}.{categoryType}";
     }
 
     /// <summary>
-    /// Request 타입의 인터페이스를 분석하여 CQRS 타입을 식별합니다.
-    /// UsecasePipelineBase.GetRequestCqrs와 동일한 로직을 사용합니다.
+    /// Request 타입의 인터페이스를 분석하여 카테고리 타입을 식별합니다.
+    /// UsecasePipelineBase.GetRequestCategoryType와 동일한 로직을 사용합니다.
     /// </summary>
-    private static string GetRequestCqrs()
+    private static string GetRequestCategoryType()
     {
         Type[] interfaces = typeof(TRequest).GetInterfaces();
 
         if (interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandRequest<>)))
-            return ObservabilityNaming.Cqrs.Command;
+            return ObservabilityNaming.CategoryTypes.Command;
 
         if (interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryRequest<>)))
-            return ObservabilityNaming.Cqrs.Query;
+            return ObservabilityNaming.CategoryTypes.Query;
 
-        return ObservabilityNaming.Cqrs.Unknown;
+        return ObservabilityNaming.CategoryTypes.Unknown;
     }
 
     /// <summary>

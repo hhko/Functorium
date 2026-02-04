@@ -33,7 +33,7 @@ internal sealed class UsecaseMetricsPipeline<TRequest, TResponse>
     private readonly Counter<long> _requestCounter;
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
-    private readonly string _requestCqrs;
+    private readonly string _requestCategoryType;
     private readonly string _requestHandler;
 
     public UsecaseMetricsPipeline(
@@ -45,23 +45,23 @@ internal sealed class UsecaseMetricsPipeline<TRequest, TResponse>
         _meter = meterFactory.Create(meterName);
 
         // 핸들러 정보 미리 계산 (제네릭 타입 기반)
-        _requestCqrs = GetRequestCqrs(typeof(TRequest));
-        string requestCqrsField = _requestCqrs.ToLower();
+        _requestCategoryType = GetRequestCategoryType(typeof(TRequest));
+        string categoryTypeField = _requestCategoryType.ToLower();
         _requestHandler = GetRequestHandler();
 
         // 메트릭 인스턴스 생성 (재사용)
         _requestCounter = _meter.CreateCounter<long>(
-            name: ObservabilityNaming.Metrics.UsecaseRequest(requestCqrsField),
+            name: ObservabilityNaming.Metrics.UsecaseRequest(categoryTypeField),
             unit: "{request}",
             description: $"Total number of {_requestHandler} requests");
 
         _responseCounter = _meter.CreateCounter<long>(
-            name: ObservabilityNaming.Metrics.UsecaseResponse(requestCqrsField),
+            name: ObservabilityNaming.Metrics.UsecaseResponse(categoryTypeField),
             unit: "{response}",
             description: $"Total number of {_requestHandler} responses");
 
         _durationHistogram = _meter.CreateHistogram<double>(
-            name: ObservabilityNaming.Metrics.UsecaseDuration(requestCqrsField),
+            name: ObservabilityNaming.Metrics.UsecaseDuration(categoryTypeField),
             unit: "s",
             description: $"Duration of {_requestHandler} request processing in seconds");
     }
@@ -73,7 +73,7 @@ internal sealed class UsecaseMetricsPipeline<TRequest, TResponse>
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application },
             { ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase },
-            { ObservabilityNaming.CustomAttributes.RequestHandlerCqrs, _requestCqrs },
+            { ObservabilityNaming.CustomAttributes.RequestCategoryType, _requestCategoryType },
             { ObservabilityNaming.CustomAttributes.RequestHandler, _requestHandler },
             { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.Handle }
         };

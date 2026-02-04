@@ -25,9 +25,10 @@ public static class DomainEventHandlerLoggerExtensions
 
         logger.LogInformation(
             eventId: ObservabilityNaming.EventIds.DomainEventHandler.Request,
-            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} {@request.message} requesting",
-            ObservabilityNaming.DomainEventHandlers.Layer,
-            ObservabilityNaming.DomainEventHandlers.Category,
+            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@request.message} requesting",
+            ObservabilityNaming.Layers.Application,
+            ObservabilityNaming.Categories.Usecase,
+            ObservabilityNaming.CategoryTypes.Event,
             handlerName,
             ObservabilityNaming.Methods.Handle,
             domainEvent);
@@ -46,9 +47,10 @@ public static class DomainEventHandlerLoggerExtensions
 
         logger.LogInformation(
             eventId: ObservabilityNaming.EventIds.DomainEventHandler.ResponseSuccess,
-            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s",
-            ObservabilityNaming.DomainEventHandlers.Layer,
-            ObservabilityNaming.DomainEventHandlers.Category,
+            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s",
+            ObservabilityNaming.Layers.Application,
+            ObservabilityNaming.Categories.Usecase,
+            ObservabilityNaming.CategoryTypes.Event,
             handlerName,
             ObservabilityNaming.Methods.Handle,
             ObservabilityNaming.Status.Success,
@@ -71,9 +73,10 @@ public static class DomainEventHandlerLoggerExtensions
 
         logger.LogWarning(
             eventId: ObservabilityNaming.EventIds.DomainEventHandler.ResponseWarning,
-            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
-            ObservabilityNaming.DomainEventHandlers.Layer,
-            ObservabilityNaming.DomainEventHandlers.Category,
+            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            ObservabilityNaming.Layers.Application,
+            ObservabilityNaming.Categories.Usecase,
+            ObservabilityNaming.CategoryTypes.Event,
             handlerName,
             ObservabilityNaming.Methods.Handle,
             ObservabilityNaming.Status.Failure,
@@ -99,9 +102,10 @@ public static class DomainEventHandlerLoggerExtensions
 
         logger.LogError(
             eventId: ObservabilityNaming.EventIds.DomainEventHandler.ResponseError,
-            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
-            ObservabilityNaming.DomainEventHandlers.Layer,
-            ObservabilityNaming.DomainEventHandlers.Category,
+            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            ObservabilityNaming.Layers.Application,
+            ObservabilityNaming.Categories.Usecase,
+            ObservabilityNaming.CategoryTypes.Event,
             handlerName,
             ObservabilityNaming.Methods.Handle,
             ObservabilityNaming.Status.Failure,
@@ -128,9 +132,10 @@ public static class DomainEventHandlerLoggerExtensions
         logger.LogError(
             ObservabilityNaming.EventIds.DomainEventHandler.ResponseError,
             exception,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code}",
-            ObservabilityNaming.DomainEventHandlers.Layer,
-            ObservabilityNaming.DomainEventHandlers.Category,
+            "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code}",
+            ObservabilityNaming.Layers.Application,
+            ObservabilityNaming.Categories.Usecase,
+            ObservabilityNaming.CategoryTypes.Event,
             handlerName,
             ObservabilityNaming.Methods.Handle,
             ObservabilityNaming.Status.Failure,

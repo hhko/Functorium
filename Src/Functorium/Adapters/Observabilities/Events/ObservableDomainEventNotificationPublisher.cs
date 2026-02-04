@@ -30,17 +30,19 @@ namespace Functorium.Adapters.Observabilities.Events;
 /// </remarks>
 public sealed class ObservableDomainEventNotificationPublisher : INotificationPublisher
 {
-    private static readonly ActivitySource ActivitySource = new(
-        ObservabilityNaming.DomainEventHandlers.ActivitySourceName);
-
+    private readonly ActivitySource _activitySource;
     private readonly ILoggerFactory _loggerFactory;
 
     /// <summary>
     /// ObservableDomainEventNotificationPublisher를 생성합니다.
     /// </summary>
+    /// <param name="activitySource">ActivitySource (DI 주입)</param>
     /// <param name="loggerFactory">로거 팩토리</param>
-    public ObservableDomainEventNotificationPublisher(ILoggerFactory loggerFactory)
+    public ObservableDomainEventNotificationPublisher(
+        ActivitySource activitySource,
+        ILoggerFactory loggerFactory)
     {
+        _activitySource = activitySource;
         _loggerFactory = loggerFactory;
     }
 
@@ -149,10 +151,16 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
 
         var logger = _loggerFactory.CreateLogger(handlerType);
 
-        using var activity = ActivitySource.StartActivity(
-            $"{ObservabilityNaming.DomainEventHandlers.Category} {handlerName}.{ObservabilityNaming.Methods.Handle}");
+        string requestCategoryType = ObservabilityNaming.CategoryTypes.Event;
+        string requestHandlerMethod = ObservabilityNaming.Methods.Handle;
+        using var activity = _activitySource.StartActivity(
+            $"{ObservabilityNaming.Layers.Application} {ObservabilityNaming.Categories.Usecase}.{requestCategoryType} {handlerName}.{requestHandlerMethod}");
 
-        activity?.SetTag("handler.type", handlerName);
+        activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application);
+        activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase);
+        activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestCategoryType, requestCategoryType);
+        activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, handlerName);
+        activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod);
         activity?.SetTag("event.type", domainEvent.GetType().Name);
         activity?.SetTag("event.id", domainEvent.EventId.ToString());
 

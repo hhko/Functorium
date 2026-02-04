@@ -29,7 +29,7 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
 
     public async ValueTask<TResponse> Handle(TRequest request, MessageHandlerDelegate<TRequest, TResponse> next, CancellationToken cancellationToken)
     {
-        string requestCqrs = GetRequestCqrs(request);
+        string requestCategoryType = GetRequestCategoryType(request);
         string requestHandler = GetRequestHandler();
         string requestHandlerMethod = ObservabilityNaming.Methods.Handle;
 
@@ -37,7 +37,7 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
         _logger.LogUsecaseRequest(
             ObservabilityNaming.Layers.Application,
             ObservabilityNaming.Categories.Usecase,
-            requestCqrs,
+            requestCategoryType,
             requestHandler,
             requestHandlerMethod,
             request);
@@ -47,19 +47,19 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
         TResponse response = await next(request, cancellationToken);
 
         double elapsed = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);
-        LogResponse(response, requestCqrs, requestHandler, requestHandlerMethod, elapsed);
+        LogResponse(response, requestCategoryType, requestHandler, requestHandlerMethod, elapsed);
 
         return response;
     }
 
-    private void LogResponse(TResponse response, string requestCqrs, string requestHandler, string requestHandlerMethod, double elapsed)
+    private void LogResponse(TResponse response, string requestCategoryType, string requestHandler, string requestHandlerMethod, double elapsed)
     {
         if (response.IsSucc)
         {
             _logger.LogUsecaseResponseSuccess(
                 ObservabilityNaming.Layers.Application,
                 ObservabilityNaming.Categories.Usecase,
-                requestCqrs,
+                requestCategoryType,
                 requestHandler,
                 requestHandlerMethod,
                 response,
@@ -84,7 +84,7 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
                     _logger.LogUsecaseResponseError(
                         ObservabilityNaming.Layers.Application,
                         ObservabilityNaming.Categories.Usecase,
-                        requestCqrs,
+                        requestCategoryType,
                         requestHandler,
                         requestHandlerMethod,
                         ObservabilityNaming.Status.Failure,
@@ -98,7 +98,7 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
                     _logger.LogUsecaseResponseWarning(
                         ObservabilityNaming.Layers.Application,
                         ObservabilityNaming.Categories.Usecase,
-                        requestCqrs,
+                        requestCategoryType,
                         requestHandler,
                         requestHandlerMethod,
                         ObservabilityNaming.Status.Failure,

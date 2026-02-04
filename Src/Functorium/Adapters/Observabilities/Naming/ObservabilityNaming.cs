@@ -30,12 +30,13 @@ public static partial class ObservabilityNaming
     }
 
     /// <summary>
-    /// CQRS 타입 상수 (소문자)
+    /// 카테고리 타입 상수 (소문자)
     /// </summary>
-    public static class Cqrs
+    public static class CategoryTypes
     {
         public const string Command = "command";
         public const string Query = "query";
+        public const string Event = "event";
         public const string Unknown = "unknown";
     }
 

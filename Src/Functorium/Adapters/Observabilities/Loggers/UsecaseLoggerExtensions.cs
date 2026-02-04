@@ -29,7 +29,7 @@ public static class UsecaseLoggerExtensions
         this ILogger logger,
         string requestLayer,
         string requestCategory,
-        string requestCqrs,
+        string requestCategoryType,
         string requestHandler,
         string requestHandlerMethod,
         T? request)
@@ -39,10 +39,10 @@ public static class UsecaseLoggerExtensions
 
         logger.LogInformation(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationRequest,
-            message: "{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@request.message} requesting",
+            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@request.message} requesting",
             requestLayer,
             requestCategory,
-            requestCqrs,
+            requestCategoryType,
             requestHandler,
             requestHandlerMethod,
             request);
@@ -60,7 +60,7 @@ public static class UsecaseLoggerExtensions
         this ILogger logger,
         string requestLayer,
         string requestCategory,
-        string requestCqrs,
+        string requestCategoryType,
         string requestHandler,
         string requestHandlerMethod,
         T? response,
@@ -72,10 +72,10 @@ public static class UsecaseLoggerExtensions
 
         logger.LogInformation(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseSuccess,
-            message: "{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} {@response.message} responded {response.status} in {response.elapsed:0.0000} s",
+            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@response.message} responded {response.status} in {response.elapsed:0.0000} s",
             requestLayer,
             requestCategory,
-            requestCqrs,
+            requestCategoryType,
             requestHandler,
             requestHandlerMethod,
             response,
@@ -96,7 +96,7 @@ public static class UsecaseLoggerExtensions
         this ILogger logger,
         string requestLayer,
         string requestCategory,
-        string requestCqrs,
+        string requestCategoryType,
         string requestHandler,
         string requestHandlerMethod,
         string responseStatus,
@@ -111,10 +111,10 @@ public static class UsecaseLoggerExtensions
         // Error 객체를 포함하여 로깅 (LoggerMessage.Define 파라미터 제한으로 직접 호출)
         logger.LogWarning(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseWarning,
-            message: "{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
-            requestCqrs,
+            requestCategoryType,
             requestHandler,
             requestHandlerMethod,
             responseStatus,
@@ -137,7 +137,7 @@ public static class UsecaseLoggerExtensions
         this ILogger logger,
         string requestLayer,
         string requestCategory,
-        string requestCqrs,
+        string requestCategoryType,
         string requestHandler,
         string requestHandlerMethod,
         string responseStatus,
@@ -152,10 +152,10 @@ public static class UsecaseLoggerExtensions
         // Error 객체를 포함하여 로깅 (LoggerMessage.Define 파라미터 제한으로 직접 호출)
         logger.LogError(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseError,
-            message: "{request.layer} {request.category}.{request.handler.cqrs} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
-            requestCqrs,
+            requestCategoryType,
             requestHandler,
             requestHandlerMethod,
             responseStatus,
