@@ -157,14 +157,14 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 
 **Message Templates (DomainEvent Publisher):**
 
-> DomainEvent Publisher는 Application 레이어의 일부로 처리되며, `request.layer`는 `"application"`, `request.category`는 `"domain_event.publisher"`입니다.
+> DomainEvent Publisher는 Adapter 레이어로 처리되며, `request.layer`는 `"adapter"`, `request.category`는 `"event"`입니다.
 
 **Application Usecase vs DomainEvent Publisher 필드 비교:**
 
 | Field | Application Usecase | DomainEvent Publisher | 설명 |
 |-------|---------------------|----------------------|------|
-| `request.layer` | `"application"` | `"application"` | 동일 레이어 |
-| `request.category` | `"usecase"` | `"domain_event.publisher"` | 카테고리 구분 |
+| `request.layer` | `"application"` | `"adapter"` | Publisher는 Adapter 레이어 |
+| `request.category` | `"usecase"` | `"event"` | 카테고리 구분 |
 | `request.category.type` | `"command"` / `"query"` | - | Usecase만 사용 |
 | `request.handler` | Handler 클래스명 | Event 타입명 또는 Aggregate 타입명 | Handler 식별 |
 | `request.handler.method` | `"Handle"` | `"Publish"` / `"PublishEvents"` / `"PublishEventsWithResult"` | 메서드 식별 |
@@ -219,8 +219,8 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 
 | Field | DomainEvent Publisher | DomainEventHandler | 설명 |
 |-------|----------------------|-------------------|------|
-| `request.layer` | `"application"` | `"application"` | 동일 레이어 |
-| `request.category` | `"domain_event.publisher"` | `"domain_event.handler"` | Publisher vs Handler 구분 |
+| `request.layer` | `"adapter"` | `"application"` | Publisher는 Adapter, Handler는 Application |
+| `request.category` | `"event"` | `"domain_event.handler"` | Publisher vs Handler 구분 |
 | `request.handler` | Event 타입명 / Aggregate 타입명 | Handler 클래스명 | Handler 식별 |
 | `request.handler.method` | `"Publish"` / `"PublishEvents"` | `"Handle"` | 메서드 식별 |
 | `@request.message` | 이벤트 객체 | 이벤트 객체 | 요청 데이터 |
