@@ -609,7 +609,7 @@ Adapter Layer의 로그 메시지는 다음 템플릿을 따릅니다:
 
 **실패 응답 로그:**
 ```
-{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
+{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
 
 ### Information vs Debug 레벨
