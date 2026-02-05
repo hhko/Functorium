@@ -24,8 +24,8 @@ public static class DomainEventHandlerLoggerExtensions
             return;
 
         logger.LogInformation(
-            eventId: ObservabilityNaming.EventIds.DomainEventHandler.Request,
-            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@request.message} requesting",
+            eventId: ObservabilityNaming.EventIds.Application.ApplicationRequest,
+            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} requesting with {@request.message}",
             ObservabilityNaming.Layers.Application,
             ObservabilityNaming.Categories.Usecase,
             ObservabilityNaming.CategoryTypes.Event,
@@ -46,7 +46,7 @@ public static class DomainEventHandlerLoggerExtensions
             return;
 
         logger.LogInformation(
-            eventId: ObservabilityNaming.EventIds.DomainEventHandler.ResponseSuccess,
+            eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseSuccess,
             message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s",
             ObservabilityNaming.Layers.Application,
             ObservabilityNaming.Categories.Usecase,
@@ -72,7 +72,7 @@ public static class DomainEventHandlerLoggerExtensions
             return;
 
         logger.LogWarning(
-            eventId: ObservabilityNaming.EventIds.DomainEventHandler.ResponseWarning,
+            eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseWarning,
             message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             ObservabilityNaming.Layers.Application,
             ObservabilityNaming.Categories.Usecase,
@@ -101,7 +101,7 @@ public static class DomainEventHandlerLoggerExtensions
             return;
 
         logger.LogError(
-            eventId: ObservabilityNaming.EventIds.DomainEventHandler.ResponseError,
+            eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseError,
             message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             ObservabilityNaming.Layers.Application,
             ObservabilityNaming.Categories.Usecase,
@@ -130,7 +130,7 @@ public static class DomainEventHandlerLoggerExtensions
             return;
 
         logger.LogError(
-            ObservabilityNaming.EventIds.DomainEventHandler.ResponseError,
+            ObservabilityNaming.EventIds.Application.ApplicationResponseError,
             exception,
             "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code}",
             ObservabilityNaming.Layers.Application,

@@ -39,7 +39,7 @@ public static class UsecaseLoggerExtensions
 
         logger.LogInformation(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationRequest,
-            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@request.message} requesting",
+            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} requesting with {@request.message}",
             requestLayer,
             requestCategory,
             requestCategoryType,
@@ -72,15 +72,15 @@ public static class UsecaseLoggerExtensions
 
         logger.LogInformation(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseSuccess,
-            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@response.message} responded {response.status} in {response.elapsed:0.0000} s",
+            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message}",
             requestLayer,
             requestCategory,
             requestCategoryType,
             requestHandler,
             requestHandlerMethod,
-            response,
             responseStatus,
-            responseElapsed);
+            responseElapsed,
+            response);
     }
 
     // ===== Response - 실패, 경고 ErrorCodeExpected =====
