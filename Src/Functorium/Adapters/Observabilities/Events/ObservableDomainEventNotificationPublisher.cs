@@ -161,8 +161,8 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
         activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestCategoryType, requestCategoryType);
         activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, handlerName);
         activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod);
-        activity?.SetTag("event.type", domainEvent.GetType().Name);
-        activity?.SetTag("event.id", domainEvent.EventId.ToString());
+        activity?.SetTag(ObservabilityNaming.CustomAttributes.EventType, domainEvent.GetType().Name);
+        activity?.SetTag(ObservabilityNaming.CustomAttributes.EventId, domainEvent.EventId.ToString());
 
         logger.LogDomainEventHandlerRequest(handlerName, domainEvent);
         long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();

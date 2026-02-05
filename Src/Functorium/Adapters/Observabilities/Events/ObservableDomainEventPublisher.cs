@@ -52,8 +52,8 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Event);
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, aggregateType);
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.PublishEvents);
-            activity?.SetTag("aggregate.type", aggregateType);
-            activity?.SetTag("event.count", eventCount);
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.AggregateType, aggregateType);
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestEventCount, eventCount);
 
             _logger.LogDomainEventsPublisherRequest(aggregateType, ObservabilityNaming.Methods.PublishEvents, eventCount);
 
@@ -115,8 +115,8 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Event);
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, eventType);
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.Publish);
-            activity?.SetTag("event.type", eventType);
-            activity?.SetTag("event.occurred_at", domainEvent.OccurredAt.ToString("O"));
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.EventType, eventType);
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.EventOccurredAt, domainEvent.OccurredAt.ToString("O"));
 
             _logger.LogDomainEventPublisherRequest(domainEvent);
 
@@ -179,8 +179,8 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Event);
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, aggregateType);
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.PublishEventsWithResult);
-            activity?.SetTag("aggregate.type", aggregateType);
-            activity?.SetTag("event.count", eventCount);
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.AggregateType, aggregateType);
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestEventCount, eventCount);
 
             _logger.LogDomainEventsPublisherRequest(aggregateType, ObservabilityNaming.Methods.PublishEventsWithResult, eventCount);
 
@@ -203,8 +203,8 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher
                     else
                     {
                         activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);
-                        activity?.SetTag("event.success_count", publishResult.SuccessCount);
-                        activity?.SetTag("event.failure_count", publishResult.FailureCount);
+                        activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseEventSuccessCount, publishResult.SuccessCount);
+                        activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseEventFailureCount, publishResult.FailureCount);
                         activity?.SetStatus(ActivityStatusCode.Error, $"Partial failure: {publishResult.FailureCount} of {publishResult.TotalCount} events failed");
 
                         _logger.LogDomainEventsPublisherResponsePartialFailure(
