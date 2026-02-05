@@ -51,7 +51,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 > **권장**: `service.name`과 `service.namespace`에는 소문자 값을 사용하세요(예: `mycompany.production`, `orderservice`).
 > 이렇게 하면 OpenTelemetry 규칙과의 일관성을 보장하고 다운스트림 시스템(대시보드, 쿼리, 알림)에서 대소문자 구분 문제를 방지할 수 있습니다.
 
-### Field/Tag 일관성
+### Usecase Field/Tag 일관성
 
 **Application 레이어:** (단위 테스트: [Logging](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseLoggingPipelineStructureTests.cs), [Metrics](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseMetricsPipelineStructureTests.cs), [Tracing](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseTracingPipelineStructureTests.cs))
 
@@ -82,6 +82,13 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `error.code` | ✅ | ✅ | ✅ | 도메인 특화 오류 코드 |
 | `@error` | ✅ | - | - | 구조화된 오류 객체(상세) |
 
+> **\* `response.elapsed`가 Metrics 태그가 아닌 이유:**
+> - Metrics는 처리 시간을 캡처하기 위해 전용 `duration` **Histogram instrument**를 사용하며, 이는 지연 시간 측정에 대한 OpenTelemetry 권장 접근 방식입니다.
+> - 경과 시간을 태그로 사용하면 **높은 카디널리티 폭발**을 유발합니다(각 고유한 duration 값이 새로운 시계열을 생성하여 메트릭 저장소 및 쿼리 성능이 저하됨).
+> - Histogram은 개별 경과 값보다 모니터링에 더 유용한 **통계적 집계**(백분위수, 평균, 카운트)를 제공합니다.
+
+### DomainEvent Field/Tag 일관성
+
 **DomainEvent Publisher:** (단위 테스트: [Logging](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherLoggingStructureTests.cs))
 
 > DomainEvent Publisher는 Adapter 레이어로 분류되며, `request.layer`는 `"adapter"`, `request.category`는 `"event"`입니다.
@@ -101,7 +108,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `error.code` | ✅ | ✅ | 도메인 특화 오류 코드 |
 | `@error` | ✅ | - | 구조화된 오류 객체(상세) |
 
-**DomainEventHandler:** (단위 테스트: [Logging](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerLoggingStructureTests.cs))
+**DomainEvent Handler:** (단위 테스트: [Logging](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerLoggingStructureTests.cs))
 
 > DomainEventHandler는 Application 레이어로 분류되며, `request.layer`는 `"application"`, `request.category`는 `"usecase"`, `request.category.type`은 `"event"`입니다.
 
@@ -120,12 +127,8 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 
 > **Note:** DomainEventHandler의 ErrorResponse는 Exception 객체가 직접 로깅됩니다 (`@error` 대신).
 
-> **\* `response.elapsed`가 Metrics 태그가 아닌 이유:**
-> - Metrics는 처리 시간을 캡처하기 위해 전용 `duration` **Histogram instrument**를 사용하며, 이는 지연 시간 측정에 대한 OpenTelemetry 권장 접근 방식입니다.
-> - 경과 시간을 태그로 사용하면 **높은 카디널리티 폭발**을 유발합니다(각 고유한 duration 값이 새로운 시계열을 생성하여 메트릭 저장소 및 쿼리 성능이 저하됨).
-> - Histogram은 개별 경과 값보다 모니터링에 더 유용한 **통계적 집계**(백분위수, 평균, 카운트)를 제공합니다.
 
-### Logging
+### Usecase Logging
 
 **Field 구조:**
 
@@ -193,9 +196,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 {request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
 
-**Message Templates (DomainEvent Publisher):**
-
-> DomainEvent Publisher는 Adapter 레이어로 처리되며, `request.layer`는 `"adapter"`, `request.category`는 `"event"`입니다.
+### DomainEvent Logging
 
 **Application Usecase vs DomainEvent Publisher vs DomainEventHandler 필드 비교:**
 
@@ -216,6 +217,8 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `error.type` | `"expected"` / `"exceptional"` / `"aggregate"` | `"expected"` / `"exceptional"` | `"expected"` / `"exceptional"` |
 | `error.code` | 오류 코드 | 오류 코드 | 오류 코드 |
 | `@error` | 오류 객체 | 오류 객체 | 오류 객체 (Exception) |
+
+**Message Templates (DomainEvent Publisher):**
 
 ```
 # Request - 단일 이벤트
@@ -251,7 +254,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | Warning | 2003 | `adapter.response.warning` |
 | Error | 2004 | `adapter.response.error` |
 
-**Message Templates (DomainEventHandler):**
+**Message Templates (DomainEvent Handler):**
 
 > DomainEventHandler는 Publisher가 발행한 이벤트를 처리하는 Handler 관점의 로깅입니다. `request.layer`는 `"application"`, `request.category`는 `"usecase"`, `request.category.type`은 `"event"`입니다.
 
