@@ -82,6 +82,44 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `error.code` | ✅ | ✅ | ✅ | 도메인 특화 오류 코드 |
 | `@error` | ✅ | - | - | 구조화된 오류 객체(상세) |
 
+**DomainEvent Publisher:** (단위 테스트: [Logging](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherLoggingStructureTests.cs))
+
+> DomainEvent Publisher는 Adapter 레이어로 분류되며, `request.layer`는 `"adapter"`, `request.category`는 `"event"`입니다.
+
+| Field/Tag | Logging | Tracing | 설명 |
+|-----------|---------|---------|------|
+| `request.layer` | ✅ | ✅ | 아키텍처 레이어 (`"adapter"`) |
+| `request.category` | ✅ | ✅ | 요청 카테고리 (`"event"`) |
+| `request.handler` | ✅ | ✅ | Event 타입명 또는 Aggregate 타입명 |
+| `request.handler.method` | ✅ | ✅ | 메서드 이름 (`"Publish"`, `"PublishEvents"`, `"PublishEventsWithResult"`) |
+| `request.event.count` | ✅ | ✅ | 배치 발행 시 이벤트 개수 (Aggregate 전용) |
+| `response.status` | ✅ | ✅ | 응답 상태 (`"success"`, `"failure"`) |
+| `response.elapsed` | ✅ | ✅ | 처리 시간(초) |
+| `response.event.success_count` | ✅ | ✅ | 부분 실패 시 성공한 이벤트 수 (Partial Failure 전용) |
+| `response.event.failure_count` | ✅ | ✅ | 부분 실패 시 실패한 이벤트 수 (Partial Failure 전용) |
+| `error.type` | ✅ | ✅ | 오류 분류 (`"expected"`, `"exceptional"`) |
+| `error.code` | ✅ | ✅ | 도메인 특화 오류 코드 |
+| `@error` | ✅ | - | 구조화된 오류 객체(상세) |
+
+**DomainEventHandler:** (단위 테스트: [Logging](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerLoggingStructureTests.cs))
+
+> DomainEventHandler는 Application 레이어로 분류되며, `request.layer`는 `"application"`, `request.category`는 `"usecase"`, `request.category.type`은 `"event"`입니다.
+
+| Field/Tag | Logging | Tracing | 설명 |
+|-----------|---------|---------|------|
+| `request.layer` | ✅ | ✅ | 아키텍처 레이어 (`"application"`) |
+| `request.category` | ✅ | ✅ | 요청 카테고리 (`"usecase"`) |
+| `request.category.type` | ✅ | ✅ | CQRS 타입 (`"event"`) |
+| `request.handler` | ✅ | ✅ | Handler 클래스 이름 |
+| `request.handler.method` | ✅ | ✅ | 메서드 이름 (`"Handle"`) |
+| `@request.message` | ✅ | - | 이벤트 객체 (요청 시) |
+| `response.status` | ✅ | ✅ | 응답 상태 (`"success"`, `"failure"`) |
+| `response.elapsed` | ✅ | ✅ | 처리 시간(초) |
+| `error.type` | ✅ | ✅ | 오류 분류 (`"expected"`, `"exceptional"`) |
+| `error.code` | ✅ | ✅ | 도메인 특화 오류 코드 |
+
+> **Note:** DomainEventHandler의 ErrorResponse는 Exception 객체가 직접 로깅됩니다 (`@error` 대신).
+
 > **\* `response.elapsed`가 Metrics 태그가 아닌 이유:**
 > - Metrics는 처리 시간을 캡처하기 위해 전용 `duration` **Histogram instrument**를 사용하며, 이는 지연 시간 측정에 대한 OpenTelemetry 권장 접근 방식입니다.
 > - 경과 시간을 태그로 사용하면 **높은 카디널리티 폭발**을 유발합니다(각 고유한 duration 값이 새로운 시계열을 생성하여 메트릭 저장소 및 쿼리 성능이 저하됨).
@@ -127,10 +165,10 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 
 ```
 # Request
-{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@request.message} requesting
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} requesting with {@request.message}
 
 # Response - Success
-{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@response.message} responded {response.status} in {response.elapsed:0.0000} s
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message}
 
 # Response - Warning/Error
 {request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
@@ -143,113 +181,101 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 {request.layer} {request.category} {request.handler}.{request.handler.method} requesting
 
 # Request (Debug) - 파라미터 포함
-{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.items} {request.params.items.count} requesting
+{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.params.items} {request.params.items.count}
 
 # Response (Information)
 {request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s
 
 # Response (Debug) - 결과 포함
-{request.layer} {request.category} {request.handler}.{request.handler.method} {response.result} responded {response.status} in {response.elapsed:0.0000} s
+{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {response.result}
 
 # Response Warning/Error
-{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
+{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
 
 **Message Templates (DomainEvent Publisher):**
 
 > DomainEvent Publisher는 Adapter 레이어로 처리되며, `request.layer`는 `"adapter"`, `request.category`는 `"event"`입니다.
 
-**Application Usecase vs DomainEvent Publisher 필드 비교:**
+**Application Usecase vs DomainEvent Publisher vs DomainEventHandler 필드 비교:**
 
-| Field | Application Usecase | DomainEvent Publisher | 설명 |
-|-------|---------------------|----------------------|------|
-| `request.layer` | `"application"` | `"adapter"` | Publisher는 Adapter 레이어 |
-| `request.category` | `"usecase"` | `"event"` | 카테고리 구분 |
-| `request.category.type` | `"command"` / `"query"` | - | Usecase만 사용 |
-| `request.handler` | Handler 클래스명 | Event 타입명 또는 Aggregate 타입명 | Handler 식별 |
-| `request.handler.method` | `"Handle"` | `"Publish"` / `"PublishEvents"` / `"PublishEventsWithResult"` | 메서드 식별 |
-| `@request.message` | Command/Query 객체 | 단일 이벤트 객체 | 요청 데이터 |
-| `@response.message` | 응답 객체 | - | Usecase만 사용 |
-| `event.count` | - | 발행할 이벤트 수 | DomainEvent Publisher Aggregate만 |
-| `success_count` | - | 성공 이벤트 수 | DomainEvent Publisher Partial Failure만 |
-| `failure_count` | - | 실패 이벤트 수 | DomainEvent Publisher Partial Failure만 |
-| `response.status` | `"success"` / `"failure"` | `"success"` / `"failure"` | 동일 |
-| `response.elapsed` | 처리 시간(초) | 처리 시간(초) | 동일 |
-| `error.type` | `"expected"` / `"exceptional"` / `"aggregate"` | `"expected"` / `"exceptional"` / `"aggregate"` | 오류 분류 |
-| `error.code` | 오류 코드 | 오류 코드 | 동일 |
-| `@error` | 오류 객체 | 오류 객체 | 동일 |
+| Field | Application Usecase | DomainEvent Publisher | DomainEventHandler |
+|-------|---------------------|----------------------|-------------------|
+| `request.layer` | `"application"` | `"adapter"` | `"application"` |
+| `request.category` | `"usecase"` | `"event"` | `"usecase"` |
+| `request.category.type` | `"command"` / `"query"` | - | `"event"` |
+| `request.handler` | Handler 클래스명 | Event/Aggregate 타입명 | Handler 클래스명 |
+| `request.handler.method` | `"Handle"` | `"Publish"` / `"PublishEvents"` | `"Handle"` |
+| `@request.message` | Command/Query 객체 | 이벤트 객체 | 이벤트 객체 |
+| `@response.message` | 응답 객체 | - | - |
+| `request.event.count` | - | O (Aggregate만) | - |
+| `response.event.success_count` | - | O (Partial Failure만) | - |
+| `response.event.failure_count` | - | O (Partial Failure만) | - |
+| `response.status` | `"success"` / `"failure"` | `"success"` / `"failure"` | `"success"` / `"failure"` |
+| `response.elapsed` | 처리 시간(초) | 처리 시간(초) | 처리 시간(초) |
+| `error.type` | `"expected"` / `"exceptional"` / `"aggregate"` | `"expected"` / `"exceptional"` | `"expected"` / `"exceptional"` |
+| `error.code` | 오류 코드 | 오류 코드 | 오류 코드 |
+| `@error` | 오류 객체 | 오류 객체 | 오류 객체 (Exception) |
 
 ```
 # Request - 단일 이벤트
-{request.layer} {request.category} {request.handler}.{request.handler.method} {@request.message} requesting
+{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {@request.message}
 
 # Request - Aggregate 다중 이벤트
-{request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events requesting
+{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.event.count} events
 
 # Response - Success
 {request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s
 
 # Response - Success (Aggregate)
-{request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events responded {response.status} in {response.elapsed:0.0000} s
+{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {request.event.count} events
 
 # Response - Warning/Error
 {request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 
 # Response - Warning/Error (Aggregate)
-{request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
+{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {request.event.count} events with {error.type}:{error.code} {@error}
 
 # Response - Partial Failure (Aggregate)
-{request.layer} {request.category} {request.handler}.{request.handler.method} {event.count} events with partial failure: {success_count} succeeded, {failure_count} failed responded {response.status} in {response.elapsed:0.0000} s
+{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {request.event.count} events partial failure: {response.event.success_count} succeeded, {response.event.failure_count} failed
 ```
 
 **DomainEvent Publisher Event IDs:**
 
+> DomainEvent Publisher는 Adapter 레이어로 분류되므로, Adapter 레이어와 동일한 Event ID를 사용합니다.
+
 | Event | ID | Name |
 |-------|-----|------|
-| Request | 3001 | `domain_event.request` |
-| Success | 3002 | `domain_event.response.success` |
-| Warning | 3003 | `domain_event.response.warning` |
-| Error | 3004 | `domain_event.response.error` |
+| Request | 2001 | `adapter.request` |
+| Success | 2002 | `adapter.response.success` |
+| Warning | 2003 | `adapter.response.warning` |
+| Error | 2004 | `adapter.response.error` |
 
 **Message Templates (DomainEventHandler):**
 
-> DomainEventHandler는 Publisher가 발행한 이벤트를 처리하는 Handler 관점의 로깅입니다. `request.layer`는 `"application"`, `request.category`는 `"domain_event.handler"`입니다.
-
-**DomainEvent Publisher vs DomainEventHandler 필드 비교:**
-
-| Field | DomainEvent Publisher | DomainEventHandler | 설명 |
-|-------|----------------------|-------------------|------|
-| `request.layer` | `"adapter"` | `"application"` | Publisher는 Adapter, Handler는 Application |
-| `request.category` | `"event"` | `"domain_event.handler"` | Publisher vs Handler 구분 |
-| `request.handler` | Event 타입명 / Aggregate 타입명 | Handler 클래스명 | Handler 식별 |
-| `request.handler.method` | `"Publish"` / `"PublishEvents"` | `"Handle"` | 메서드 식별 |
-| `@request.message` | 이벤트 객체 | 이벤트 객체 | 요청 데이터 |
-| `event.count` | O (Aggregate만) | - | Publisher Aggregate만 |
-| `response.status` | `"success"` / `"failure"` | `"success"` / `"failure"` | 동일 |
-| `response.elapsed` | 처리 시간(초) | 처리 시간(초) | 동일 |
-| `error.type` | `"expected"` / `"exceptional"` | `"expected"` / `"exceptional"` | 오류 분류 |
-| `error.code` | 오류 코드 | 오류 코드 | 동일 |
-| `@error` | 오류 객체 | 오류 객체 | 동일 |
+> DomainEventHandler는 Publisher가 발행한 이벤트를 처리하는 Handler 관점의 로깅입니다. `request.layer`는 `"application"`, `request.category`는 `"usecase"`, `request.category.type`은 `"event"`입니다.
 
 ```
 # Request
-{request.layer} {request.category} {request.handler}.{request.handler.method} {@request.message} requesting
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} requesting with {@request.message}
 
 # Response - Success
-{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s
 
 # Response - Warning/Error
-{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
 
 **DomainEventHandler Event IDs:**
 
+> DomainEventHandler는 Application 레이어의 usecase로 분류되므로, Application 레이어와 동일한 Event ID를 사용합니다.
+
 | Event | ID | Name |
 |-------|-----|------|
-| Request | 3101 | `domain_event_handler.request` |
-| Success | 3102 | `domain_event_handler.response.success` |
-| Warning | 3103 | `domain_event_handler.response.warning` |
-| Error | 3104 | `domain_event_handler.response.error` |
+| Request | 1001 | `application.request` |
+| Success | 1002 | `application.response.success` |
+| Warning | 1003 | `application.response.warning` |
+| Error | 1004 | `application.response.error` |
 
 **Error Field 값 (`error.type` vs `@error.ErrorType`):**
 

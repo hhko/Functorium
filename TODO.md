@@ -2,12 +2,45 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
+- [x] 동적 로그 값 위치를 마지막으로 이동: with
+- [x] Usecase, Domain 이벤트 발생과 수신 관련 로그 형식 테스트 추가
+- [x] {request.layer} {request.category} {request.handler}.{request.handler.method} responded failure
 - [x] `domain_event.handler -> usecase`
 - [x] `request.handler.cqrs -> request.category.type`
 - [x] request.category.type: event
 - [x] requestCqrs -> requestCategoryType 변수명
-- [ ] `application -> adapter`
-- [ ] `request.category: domain_event.publisher -> domain_event`
+- [x] `application -> adapter`
+- [x] `request.category: domain_event.publisher -> domain_event`
+- [x] EvnetIds 조정
+  ```
+  Request	3001	event.request
+  Success	3002	event.response.success
+  Warning	3003	event.response.warning
+  Error	3004	event.response.error
+  ```
+- [ ] 
+  - `aggregate.type`
+  - `event.type`
+  - `event.id`
+  - `event.occurred_at`
+  ```
+  ObservableDomainEventPublisher.cs:
+    │  라인   │         하드코딩된 키          │       용도       │
+    │ 55, 182 │ "aggregate.type"               │ Aggregate 타입명 │
+    │ 118     │ "event.type"                   │ 이벤트 타입명    │
+    │ 119     │ "event.occurred_at"            │ 이벤트 발생 시간 │
+    │ 56, 183 │ "request.event.count"          │ 요청 이벤트 개수 │
+    │ 206     │ "response.event.success_count" │ 성공 이벤트 개수 │
+    │ 207     │ "response.event.failure_count" │ 실패 이벤트 개수 │
+  ObservableDomainEventNotificationPublisher.cs:
+    │ 라인 │ 하드코딩된 키 │      용도      │
+    │ 164  │ "event.type"  │ 이벤트 타입명  │
+    │ 165  │ "event.id"    │ 이벤트 고유 ID │
+  ```
+- [ ] publish 메서드 통합
+- [ ] 동적 입출력 테스트 보강
+- [ ] opensearch 모든 로그 수집
+- [ ] 필드 개선
 ---
 - [ ] crash 이해
 - [ ] 도메인 이벤트 publisher adapter
