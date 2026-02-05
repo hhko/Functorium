@@ -38,6 +38,7 @@ namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 /// | response.status          | (none)        | "success"     | "failure"     |
 /// | response.elapsed         | (none)        | elapsed (s)   | elapsed (s)   |
 /// | response.result          | (none)        | result value  | (none)        |
+/// | response.result.count    | (none)        | count (opt)   | (none)        |
 /// | error.type               | (none)        | (none)        | "expected"/   |
 /// |                          |               |               | "exceptional"/|
 /// |                          |               |               | "aggregate"   |

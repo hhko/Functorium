@@ -422,9 +422,8 @@ internal static class ThreeParamAdapterPipelineLoggers
 
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
-                     "{request.params.id} {request.params.name} {request.params.isactive} " +
-                     "requesting",
+            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with " +
+                     "{request.params.id} {request.params.name} {request.params.isactive}",
             requestLayer, requestCategory, requestHandler, requestHandlerMethod,
             id, name, isActive);
     }
@@ -458,9 +457,8 @@ internal static class ThreeParamAdapterPipelineLoggers
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
-                     "{response.result} " +
-                     "responded {response.status} in {response.elapsed:0.0000} s",
-            requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
+                     "responded {response.status} in {response.elapsed:0.0000} s with {response.result}",
+            requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, result);
     }
 
     public static void LogAdapterResponseSuccess_ThreeParamAdapter_GetData(
@@ -495,11 +493,12 @@ internal static class ThreeParamAdapterPipelineLoggers
 
         logger.LogWarning(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
             requestHandlerMethod,
+            status,
             elapsed,
             errorType,
             errorCode,
@@ -523,11 +522,12 @@ internal static class ThreeParamAdapterPipelineLoggers
 
         logger.LogError(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
             requestHandlerMethod,
+            status,
             elapsed,
             errorType,
             errorCode,

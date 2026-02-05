@@ -4,7 +4,7 @@
     @request.message: {
       Name: TestName
     },
-    OriginalFormat: {request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {@request.message} requesting,
+    OriginalFormat: {request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} requesting with {@request.message},
     request.category: usecase,
     request.category.type: command,
     request.handler: TestFixtures,

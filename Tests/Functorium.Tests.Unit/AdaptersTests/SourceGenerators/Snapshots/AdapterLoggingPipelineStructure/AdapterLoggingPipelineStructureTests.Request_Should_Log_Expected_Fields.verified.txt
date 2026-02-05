@@ -1,7 +1,7 @@
 ﻿{
   Information: ,
   Properties: {
-    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.id} requesting,
+    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.params.id},
     request.category: repository,
     request.handler: TestObservabilityAdapter,
     request.handler.method: GetById,

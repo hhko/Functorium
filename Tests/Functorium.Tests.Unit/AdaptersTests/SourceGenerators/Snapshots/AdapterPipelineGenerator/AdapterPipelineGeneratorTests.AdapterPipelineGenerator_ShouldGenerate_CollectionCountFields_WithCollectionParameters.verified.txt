@@ -400,7 +400,7 @@ internal static class CollectionParamAdapterPipelineLoggers
         LoggerMessage.Define<string, string, string, string, global::System.Collections.Generic.List<string>, int>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.items} {request.params.items.count} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.params.items} {request.params.items.count}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_CollectionParamAdapter_ProcessItems =
         LoggerMessage.Define<string, string, string, string, string, double>(
@@ -452,9 +452,8 @@ internal static class CollectionParamAdapterPipelineLoggers
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
-                     "{response.result} " +
-                     "responded {response.status} in {response.elapsed:0.0000} s",
-            requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
+                     "responded {response.status} in {response.elapsed:0.0000} s with {response.result}",
+            requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, result);
     }
 
     public static void LogAdapterResponseSuccess_CollectionParamAdapter_ProcessItems(
@@ -489,11 +488,12 @@ internal static class CollectionParamAdapterPipelineLoggers
 
         logger.LogWarning(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
             requestHandlerMethod,
+            status,
             elapsed,
             errorType,
             errorCode,
@@ -517,11 +517,12 @@ internal static class CollectionParamAdapterPipelineLoggers
 
         logger.LogError(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
             requestHandlerMethod,
+            status,
             elapsed,
             errorType,
             errorCode,

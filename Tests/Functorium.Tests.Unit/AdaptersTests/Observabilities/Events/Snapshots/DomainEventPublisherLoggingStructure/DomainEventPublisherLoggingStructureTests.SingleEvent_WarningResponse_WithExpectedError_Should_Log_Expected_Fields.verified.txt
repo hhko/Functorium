@@ -2,17 +2,14 @@
   Information: ,
   Properties: {
     @error: {
-      ErrorCode: Test.NotFound,
-      ErrorCurrentValue: testValue,
-      Message: Entity not found,
-      Code: -1000
+      Message: Event.Handler.NotFound
     },
-    error.code: Test.NotFound,
+    error.code: Expected,
     error.type: expected,
     OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error},
-    request.category: repository,
-    request.handler: TestObservabilityAdapter,
-    request.handler.method: GetById,
+    request.category: event,
+    request.handler: TestDomainEvent,
+    request.handler.method: Publish,
     request.layer: adapter,
     response.elapsed: {Scrubbed},
     response.status: failure

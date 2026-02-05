@@ -398,7 +398,7 @@ internal static class ConflictParamAdapterPipelineLoggers
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_ConflictParamAdapter_GetData =
         LoggerMessage.Define<string, string, string, string, string, double>(
@@ -449,9 +449,8 @@ internal static class ConflictParamAdapterPipelineLoggers
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
-                     "{response.result} " +
-                     "responded {response.status} in {response.elapsed:0.0000} s",
-            requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
+                     "responded {response.status} in {response.elapsed:0.0000} s with {response.result}",
+            requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, result);
     }
 
     public static void LogAdapterResponseSuccess_ConflictParamAdapter_GetData(
@@ -486,11 +485,12 @@ internal static class ConflictParamAdapterPipelineLoggers
 
         logger.LogWarning(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
             requestHandlerMethod,
+            status,
             elapsed,
             errorType,
             errorCode,
@@ -514,11 +514,12 @@ internal static class ConflictParamAdapterPipelineLoggers
 
         logger.LogError(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
             requestHandlerMethod,
+            status,
             elapsed,
             errorType,
             errorCode,

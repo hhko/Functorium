@@ -1,7 +1,7 @@
 ﻿{
   Information: ,
   Properties: {
-    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} {response.result} responded {response.status} in {response.elapsed:0.0000} s,
+    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {response.result},
     request.category: repository,
     request.handler: TestObservabilityAdapter,
     request.handler.method: GetById,

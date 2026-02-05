@@ -506,7 +506,7 @@ internal static class UserRepositoryPipelineLoggers
         LoggerMessage.Define<string, string, string, string, int>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.id} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.params.id}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_UserRepository_GetUserById =
         LoggerMessage.Define<string, string, string, string, string, double>(
@@ -558,9 +558,8 @@ internal static class UserRepositoryPipelineLoggers
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
-                     "{response.result} " +
-                     "responded {response.status} in {response.elapsed:0.0000} s",
-            requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
+                     "responded {response.status} in {response.elapsed:0.0000} s with {response.result}",
+            requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, result);
     }
 
     public static void LogAdapterResponseSuccess_UserRepository_GetUserById(
@@ -595,11 +594,12 @@ internal static class UserRepositoryPipelineLoggers
 
         logger.LogWarning(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
             requestHandlerMethod,
+            status,
             elapsed,
             errorType,
             errorCode,
@@ -623,11 +623,12 @@ internal static class UserRepositoryPipelineLoggers
 
         logger.LogError(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
             requestHandlerMethod,
+            status,
             elapsed,
             errorType,
             errorCode,
@@ -645,7 +646,7 @@ internal static class UserRepositoryPipelineLoggers
         LoggerMessage.Define<string, string, string, string, int, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} {request.params.id} {request.params.name} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.params.id} {request.params.name}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_UserRepository_UpdateUser =
         LoggerMessage.Define<string, string, string, string, string, double>(
@@ -698,9 +699,8 @@ internal static class UserRepositoryPipelineLoggers
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
-                     "{response.result} " +
-                     "responded {response.status} in {response.elapsed:0.0000} s",
-            requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
+                     "responded {response.status} in {response.elapsed:0.0000} s with {response.result}",
+            requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, result);
     }
 
     public static void LogAdapterResponseSuccess_UserRepository_UpdateUser(
@@ -735,11 +735,12 @@ internal static class UserRepositoryPipelineLoggers
 
         logger.LogWarning(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
             requestHandlerMethod,
+            status,
             elapsed,
             errorType,
             errorCode,
@@ -763,11 +764,12 @@ internal static class UserRepositoryPipelineLoggers
 
         logger.LogError(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
             requestHandlerMethod,
+            status,
             elapsed,
             errorType,
             errorCode,

@@ -7,11 +7,12 @@
     },
     error.code: Exceptional,
     error.type: exceptional,
-    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error},
+    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error},
     request.category: repository,
     request.handler: TestObservabilityAdapter,
     request.handler.method: GetById,
     request.layer: adapter,
-    response.elapsed: {Scrubbed}
+    response.elapsed: {Scrubbed},
+    response.status: failure
   }
 }

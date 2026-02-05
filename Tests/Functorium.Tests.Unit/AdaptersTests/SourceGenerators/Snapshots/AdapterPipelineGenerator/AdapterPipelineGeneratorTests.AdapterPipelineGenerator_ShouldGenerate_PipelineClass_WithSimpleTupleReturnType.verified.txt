@@ -397,7 +397,7 @@ internal static class TupleAdapterPipelineLoggers
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_TupleAdapter_GetUserInfo =
         LoggerMessage.Define<string, string, string, string, string, double>(
@@ -448,9 +448,8 @@ internal static class TupleAdapterPipelineLoggers
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
-                     "{response.result} " +
-                     "responded {response.status} in {response.elapsed:0.0000} s",
-            requestLayer, requestCategory, requestHandler, requestHandlerMethod, result, status, elapsed);
+                     "responded {response.status} in {response.elapsed:0.0000} s with {response.result}",
+            requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, result);
     }
 
     public static void LogAdapterResponseSuccess_TupleAdapter_GetUserInfo(
@@ -485,11 +484,12 @@ internal static class TupleAdapterPipelineLoggers
 
         logger.LogWarning(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
             requestHandlerMethod,
+            status,
             elapsed,
             errorType,
             errorCode,
@@ -513,11 +513,12 @@ internal static class TupleAdapterPipelineLoggers
 
         logger.LogError(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded failure in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
             requestHandlerMethod,
+            status,
             elapsed,
             errorType,
             errorCode,

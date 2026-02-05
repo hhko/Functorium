@@ -1,0 +1,19 @@
+﻿{
+  Information: ,
+  Properties: {
+    @error: {
+      Message: 메시지 버스 연결 실패,
+      Code: -2146233079
+    },
+    error.code: Exceptional,
+    error.type: exceptional,
+    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {request.event.count} events with {error.type}:{error.code} {@error},
+    request.category: event,
+    request.event.count: 1,
+    request.handler: TestAggregateRootWithoutEvents,
+    request.handler.method: PublishEvents,
+    request.layer: adapter,
+    response.elapsed: {Scrubbed},
+    response.status: failure
+  }
+}

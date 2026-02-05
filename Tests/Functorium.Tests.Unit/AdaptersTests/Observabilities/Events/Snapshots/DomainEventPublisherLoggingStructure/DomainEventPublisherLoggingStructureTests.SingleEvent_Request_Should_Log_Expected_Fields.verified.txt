@@ -1,0 +1,15 @@
+﻿{
+  Information: ,
+  Properties: {
+    @request.message: {
+      Message: TestMessage,
+      OccurredAt: DateTimeOffset_1,
+      EventId: Guid_1
+    },
+    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {@request.message},
+    request.category: event,
+    request.handler: TestDomainEvent,
+    request.handler.method: Publish,
+    request.layer: adapter
+  }
+}
