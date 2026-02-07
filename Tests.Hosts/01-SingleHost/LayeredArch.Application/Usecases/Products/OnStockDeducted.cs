@@ -18,6 +18,13 @@ public sealed class OnStockDeducted : IDomainEventHandler<Product.StockDeductedE
 
     public ValueTask Handle(Product.StockDeductedEvent notification, CancellationToken cancellationToken)
     {
+        int quantity = notification.Quantity;
+        if (quantity == 999)
+        {
+            throw new InvalidOperationException(
+                $"[{nameof(OnStockDeducted)}] 시뮬레이션된 핸들러 예외: 이벤트 핸들러 예외 처리 데모");
+        }
+
         _logger.LogInformation(
             "[DomainEvent] Stock deducted: ProductId={ProductId}, Quantity={Quantity}",
             notification.ProductId,

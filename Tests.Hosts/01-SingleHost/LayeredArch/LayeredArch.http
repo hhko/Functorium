@@ -28,6 +28,63 @@ Content-Type: application/json
   "StockQuantity": 5
 }
 
+### 재고 차감
+POST {{baseUrl}}/api/products/{{productId}}/deduct-stock
+Content-Type: application/json
+
+{
+  "Quantity": 2
+}
+
+###############################################################################
+# 이벤트 핸들러 예외 테스트 (Event Handler Exception Scenarios)
+###############################################################################
+#
+# 도메인 이벤트 핸들러에서 예외가 발생할 때 관측성 파이프라인을 검증합니다.
+# 예외 전파 경로:
+#   Handler throws
+#   → ObservableDomainEventNotificationPublisher (catch → 로깅/트레이싱/메트릭 → re-throw)
+#   → DomainEventPublisher.PublishEvents (catch → Fin.Fail)
+#   → ObservableDomainEventPublisher (Fail 분기 → 로깅/트레이싱/메트릭)
+#   → LINQ 체인 전파 → FinResponse.Fail → HTTP 400 Bad Request
+#
+###############################################################################
+
+### OnProductCreated 예외 - 상품명에 [handler-error] 포함
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "Name": "[handler-error] 노트북",
+  "Description": "핸들러 예외 테스트용 상품",
+  "Price": 1500000,
+  "StockQuantity": 10
+}
+
+### OnProductUpdated 예외 - 상품명에 [handler-error] 포함
+PUT {{baseUrl}}/api/products/{{productId}}
+Content-Type: application/json
+
+{
+  "Name": "[handler-error] 노트북 Pro",
+  "Description": "핸들러 예외 테스트용 상품 업데이트",
+  "Price": 2000000,
+  "StockQuantity": 5
+}
+
+### OnStockDeducted 예외 - 차감 수량 999
+# 주의: StockQuantity >= 999인 상품이 필요합니다
+POST {{baseUrl}}/api/products/{{productId}}/deduct-stock
+Content-Type: application/json
+
+{
+  "Quantity": 999
+}
+
+###############################################################################
+# 에러 테스트 (Error Test Scenarios)
+###############################################################################
+
 ### 에러 테스트 - 성공
 POST {{baseUrl}}/api/test-error
 Content-Type: application/json

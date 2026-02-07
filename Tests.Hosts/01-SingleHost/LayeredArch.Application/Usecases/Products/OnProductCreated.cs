@@ -18,6 +18,13 @@ public sealed class OnProductCreated : IDomainEventHandler<Product.CreatedEvent>
 
     public ValueTask Handle(Product.CreatedEvent notification, CancellationToken cancellationToken)
     {
+        string name = notification.Name;
+        if (name.Contains("[handler-error]", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"[{nameof(OnProductCreated)}] 시뮬레이션된 핸들러 예외: 이벤트 핸들러 예외 처리 데모");
+        }
+
         _logger.LogInformation(
             "[DomainEvent] Product created: {ProductId}, Name: {Name}, Price: {Price}",
             notification.ProductId,
