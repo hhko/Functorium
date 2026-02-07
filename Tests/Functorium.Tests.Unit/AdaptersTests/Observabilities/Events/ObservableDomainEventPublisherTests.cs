@@ -1,11 +1,16 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Events;
 using Functorium.Applications.Events;
 using Functorium.Tests.Unit.DomainsTests.Entities;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
+
+using MsOptions = Microsoft.Extensions.Options.Options;
 
 namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Events;
 
@@ -22,7 +27,16 @@ public class ObservableDomainEventPublisherTests
         _activitySource = new ActivitySource("TestActivitySource");
         _mockInner = Substitute.For<IDomainEventPublisher>();
         _mockLogger = Substitute.For<ILogger<ObservableDomainEventPublisher>>();
-        _sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, _mockLogger);
+        var meterFactory = new TestMeterFactory();
+        var openTelemetryOptions = MsOptions.Create(new OpenTelemetryOptions { ServiceNamespace = "TestPublisher" });
+        _sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, _mockLogger, meterFactory, openTelemetryOptions);
+    }
+
+    private sealed class TestMeterFactory : IMeterFactory
+    {
+        private readonly List<Meter> _meters = [];
+        public Meter Create(MeterOptions options) { var meter = new Meter(options); _meters.Add(meter); return meter; }
+        public void Dispose() { foreach (var meter in _meters) meter.Dispose(); _meters.Clear(); }
     }
 
     #region Publish Tests

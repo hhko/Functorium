@@ -1,0 +1,9 @@
+﻿{
+  error.code: Event.NotFound,
+  error.type: expected,
+  request.category: event,
+  request.handler: TestDomainEvent,
+  request.handler.method: Publish,
+  request.layer: adapter,
+  response.status: failure
+}

@@ -1,0 +1,7 @@
+﻿{
+  request.category: event,
+  request.handler: TestAggregateRootWithoutEvents,
+  request.handler.method: PublishEventsWithResult,
+  request.layer: adapter,
+  response.status: failure
+}

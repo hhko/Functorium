@@ -1,0 +1,12 @@
+﻿{
+  aggregate.type: TestAggregateRootWithoutEvents,
+  error.code: Event.PublishFailed,
+  error.type: expected,
+  request.category: event,
+  request.event.count: 2,
+  request.handler: TestAggregateRootWithoutEvents,
+  request.handler.method: PublishEvents,
+  request.layer: adapter,
+  response.elapsed: {Scrubbed},
+  response.status: failure
+}

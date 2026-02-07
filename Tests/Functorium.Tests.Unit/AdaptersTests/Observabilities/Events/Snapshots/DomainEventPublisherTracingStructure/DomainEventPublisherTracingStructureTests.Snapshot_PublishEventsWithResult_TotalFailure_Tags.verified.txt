@@ -1,0 +1,12 @@
+﻿{
+  aggregate.type: TestAggregateRootWithoutEvents,
+  error.code: Event.ConnectionError,
+  error.type: exceptional,
+  request.category: event,
+  request.event.count: 2,
+  request.handler: TestAggregateRootWithoutEvents,
+  request.handler.method: PublishEventsWithResult,
+  request.layer: adapter,
+  response.elapsed: {Scrubbed},
+  response.status: failure
+}

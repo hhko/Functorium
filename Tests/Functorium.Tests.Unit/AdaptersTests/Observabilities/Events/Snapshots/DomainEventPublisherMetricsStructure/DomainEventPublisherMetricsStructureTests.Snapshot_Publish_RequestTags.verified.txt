@@ -1,0 +1,6 @@
+﻿{
+  request.category: event,
+  request.handler: TestDomainEvent,
+  request.handler.method: Publish,
+  request.layer: adapter
+}

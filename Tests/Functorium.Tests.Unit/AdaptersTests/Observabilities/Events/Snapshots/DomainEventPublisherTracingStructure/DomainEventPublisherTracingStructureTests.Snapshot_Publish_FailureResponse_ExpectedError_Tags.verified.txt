@@ -1,0 +1,12 @@
+﻿{
+  error.code: Event.NotFound,
+  error.type: expected,
+  event.occurred_at: {Scrubbed},
+  event.type: TestDomainEvent,
+  request.category: event,
+  request.handler: TestDomainEvent,
+  request.handler.method: Publish,
+  request.layer: adapter,
+  response.elapsed: {Scrubbed},
+  response.status: failure
+}

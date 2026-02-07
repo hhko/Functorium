@@ -1,12 +1,15 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Reflection;
 using Functorium.Adapters.Events;
+using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Events;
 using Functorium.Applications.Events;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Functorium.Abstractions.Registrations;
 
@@ -51,7 +54,9 @@ public static class DomainEventRegistration
             var activitySource = sp.GetRequiredService<ActivitySource>();
             var inner = sp.GetRequiredService<DomainEventPublisher>();
             var logger = sp.GetRequiredService<ILogger<ObservableDomainEventPublisher>>();
-            return new ObservableDomainEventPublisher(activitySource, inner, logger);
+            var meterFactory = sp.GetRequiredService<IMeterFactory>();
+            var openTelemetryOptions = sp.GetRequiredService<IOptions<OpenTelemetryOptions>>();
+            return new ObservableDomainEventPublisher(activitySource, inner, logger, meterFactory, openTelemetryOptions);
         });
 
         return services;

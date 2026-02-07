@@ -1,12 +1,17 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Events;
 using Functorium.Applications.Events;
 using Functorium.Testing.Arrangements.Logging;
 using Functorium.Tests.Unit.DomainsTests.Entities;
 using LanguageExt;
 using LanguageExt.Common;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
+
+using MsOptions = Microsoft.Extensions.Options.Options;
 
 namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Events;
 
@@ -66,16 +71,27 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
 {
     private readonly ActivitySource _activitySource;
     private readonly IDomainEventPublisher _mockInner;
+    private readonly IMeterFactory _meterFactory;
+    private readonly IOptions<OpenTelemetryOptions> _openTelemetryOptions;
 
     public DomainEventPublisherLoggingStructureTests()
     {
         _activitySource = new ActivitySource("Test.DomainEventPublisherLogging");
         _mockInner = Substitute.For<IDomainEventPublisher>();
+        _meterFactory = new TestMeterFactory();
+        _openTelemetryOptions = MsOptions.Create(new OpenTelemetryOptions { ServiceNamespace = "TestLogging" });
     }
 
     public void Dispose()
     {
         _activitySource.Dispose();
+    }
+
+    private sealed class TestMeterFactory : IMeterFactory
+    {
+        private readonly List<Meter> _meters = [];
+        public Meter Create(MeterOptions options) { var meter = new Meter(options); _meters.Add(meter); return meter; }
+        public void Dispose() { foreach (var meter in _meters) meter.Dispose(); _meters.Clear(); }
     }
 
     // ===== Single Event - Request 로그 필드 검증 =====
@@ -86,7 +102,7 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         var logger = context.CreateLogger<ObservableDomainEventPublisher>();
-        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger);
+        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
@@ -113,7 +129,7 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         var logger = context.CreateLogger<ObservableDomainEventPublisher>();
-        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger);
+        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
@@ -142,7 +158,7 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         var logger = context.CreateLogger<ObservableDomainEventPublisher>();
-        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger);
+        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
@@ -173,7 +189,7 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         var logger = context.CreateLogger<ObservableDomainEventPublisher>();
-        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger);
+        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
@@ -205,7 +221,7 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         var logger = context.CreateLogger<ObservableDomainEventPublisher>();
-        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger);
+        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger, _meterFactory, _openTelemetryOptions);
 
         var aggregate = new TestAggregateRootWithoutEvents(TestEntityId.New(), "TestAggregate");
         aggregate.AddEvent(new TestDomainEvent("Event1"));
@@ -230,7 +246,7 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         var logger = context.CreateLogger<ObservableDomainEventPublisher>();
-        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger);
+        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger, _meterFactory, _openTelemetryOptions);
 
         var aggregate = new TestAggregateRootWithoutEvents(TestEntityId.New(), "TestAggregate");
         aggregate.AddEvent(new TestDomainEvent("Event1"));
@@ -258,7 +274,7 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         var logger = context.CreateLogger<ObservableDomainEventPublisher>();
-        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger);
+        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger, _meterFactory, _openTelemetryOptions);
 
         var aggregate = new TestAggregateRootWithoutEvents(TestEntityId.New(), "TestAggregate");
         aggregate.AddEvent(new TestDomainEvent("Event1"));
@@ -287,7 +303,7 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         var logger = context.CreateLogger<ObservableDomainEventPublisher>();
-        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger);
+        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger, _meterFactory, _openTelemetryOptions);
 
         var aggregate = new TestAggregateRootWithoutEvents(TestEntityId.New(), "TestAggregate");
         aggregate.AddEvent(new TestDomainEvent("Event1"));
@@ -316,7 +332,7 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         var logger = context.CreateLogger<ObservableDomainEventPublisher>();
-        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger);
+        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger, _meterFactory, _openTelemetryOptions);
 
         var aggregate = new TestAggregateRootWithoutEvents(TestEntityId.New(), "TestAggregate");
         var event1 = new TestDomainEvent("Event1");

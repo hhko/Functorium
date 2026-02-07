@@ -1,15 +1,17 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Loggers;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Domains.Events;
 using Mediator;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Functorium.Adapters.Observabilities.Events;
 
 /// <summary>
-/// 도메인 이벤트 핸들러에 대한 관찰성(로깅, 추적)을 제공하는 INotificationPublisher 구현체.
+/// 도메인 이벤트 핸들러에 대한 관찰성(로깅, 추적, 메트릭)을 제공하는 INotificationPublisher 구현체.
 /// Handler 관점의 관찰 가능성을 제공합니다.
 /// </summary>
 /// <remarks>
@@ -28,22 +30,53 @@ namespace Functorium.Adapters.Observabilities.Events;
 /// </code>
 /// </para>
 /// </remarks>
-public sealed class ObservableDomainEventNotificationPublisher : INotificationPublisher
+public sealed class ObservableDomainEventNotificationPublisher : INotificationPublisher, IDisposable
 {
     private readonly ActivitySource _activitySource;
     private readonly ILoggerFactory _loggerFactory;
+    private readonly Meter _meter;
+    private readonly Counter<long> _requestCounter;
+    private readonly Counter<long> _responseCounter;
+    private readonly Histogram<double> _durationHistogram;
 
     /// <summary>
     /// ObservableDomainEventNotificationPublisher를 생성합니다.
     /// </summary>
     /// <param name="activitySource">ActivitySource (DI 주입)</param>
     /// <param name="loggerFactory">로거 팩토리</param>
+    /// <param name="meterFactory">Meter 팩토리</param>
+    /// <param name="openTelemetryOptions">OpenTelemetry 옵션</param>
     public ObservableDomainEventNotificationPublisher(
         ActivitySource activitySource,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        IMeterFactory meterFactory,
+        IOptions<OpenTelemetryOptions> openTelemetryOptions)
     {
         _activitySource = activitySource;
         _loggerFactory = loggerFactory;
+
+        string meterName = $"{openTelemetryOptions.Value.ServiceNamespace}.{ObservabilityNaming.Layers.Application}";
+        _meter = meterFactory.Create(meterName);
+
+        _requestCounter = _meter.CreateCounter<long>(
+            name: ObservabilityNaming.Metrics.UsecaseRequest(ObservabilityNaming.CategoryTypes.Event),
+            unit: "{request}",
+            description: "Total number of domain event handler requests");
+
+        _responseCounter = _meter.CreateCounter<long>(
+            name: ObservabilityNaming.Metrics.UsecaseResponse(ObservabilityNaming.CategoryTypes.Event),
+            unit: "{response}",
+            description: "Total number of domain event handler responses");
+
+        _durationHistogram = _meter.CreateHistogram<double>(
+            name: ObservabilityNaming.Metrics.UsecaseDuration(ObservabilityNaming.CategoryTypes.Event),
+            unit: "s",
+            description: "Duration of domain event handler processing in seconds");
+    }
+
+    public void Dispose()
+    {
+        _meter?.Dispose();
     }
 
     /// <summary>
@@ -165,6 +198,17 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
         activity?.SetTag(ObservabilityNaming.CustomAttributes.EventId, domainEvent.EventId.ToString());
 
         logger.LogDomainEventHandlerRequest(handlerName, domainEvent);
+
+        TagList requestTags = new TagList
+        {
+            { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application },
+            { ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase },
+            { ObservabilityNaming.CustomAttributes.RequestCategoryType, requestCategoryType },
+            { ObservabilityNaming.CustomAttributes.RequestHandler, handlerName },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod }
+        };
+        _requestCounter.Add(1, requestTags);
+
         long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();
 
         try
@@ -175,6 +219,15 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
             logger.LogDomainEventHandlerResponseSuccess(handlerName, elapsed);
             activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success);
             activity?.SetStatus(ActivityStatusCode.Ok);
+
+            TagList successTags = new();
+            foreach (var tag in requestTags)
+            {
+                successTags.Add(tag);
+            }
+            successTags.Add(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success);
+            _durationHistogram.Record(elapsed, requestTags);
+            _responseCounter.Add(1, successTags);
         }
         catch (Exception ex)
         {
@@ -186,6 +239,17 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
             activity?.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, errorType);
             activity?.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, errorCode);
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+
+            TagList failureTags = new();
+            foreach (var tag in requestTags)
+            {
+                failureTags.Add(tag);
+            }
+            failureTags.Add(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);
+            failureTags.Add(ObservabilityNaming.OTelAttributes.ErrorType, errorType);
+            failureTags.Add(ObservabilityNaming.CustomAttributes.ErrorCode, errorCode);
+            _durationHistogram.Record(elapsed, requestTags);
+            _responseCounter.Add(1, failureTags);
 
             throw;
         }

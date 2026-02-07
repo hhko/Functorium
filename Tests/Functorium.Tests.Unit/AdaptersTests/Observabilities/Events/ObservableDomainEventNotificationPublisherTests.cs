@@ -1,9 +1,14 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Events;
 using Functorium.Tests.Unit.DomainsTests.Entities;
 using Mediator;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
+
+using MsOptions = Microsoft.Extensions.Options.Options;
 
 namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Events;
 
@@ -15,7 +20,16 @@ public class ObservableDomainEventNotificationPublisherTests
 
     public ObservableDomainEventNotificationPublisherTests()
     {
-        _sut = new ObservableDomainEventNotificationPublisher(TestActivitySource, NullLoggerFactory.Instance);
+        var meterFactory = new TestMeterFactory();
+        var openTelemetryOptions = MsOptions.Create(new OpenTelemetryOptions { ServiceNamespace = "TestHandler" });
+        _sut = new ObservableDomainEventNotificationPublisher(TestActivitySource, NullLoggerFactory.Instance, meterFactory, openTelemetryOptions);
+    }
+
+    private sealed class TestMeterFactory : IMeterFactory
+    {
+        private readonly List<Meter> _meters = [];
+        public Meter Create(MeterOptions options) { var meter = new Meter(options); _meters.Add(meter); return meter; }
+        public void Dispose() { foreach (var meter in _meters) meter.Dispose(); _meters.Clear(); }
     }
 
     #region Non-IDomainEvent Handling Tests

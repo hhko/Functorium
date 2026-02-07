@@ -1,10 +1,15 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Events;
 using Functorium.Testing.Arrangements.Logging;
 using Functorium.Tests.Unit.DomainsTests.Entities;
 using Mediator;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
+
+using MsOptions = Microsoft.Extensions.Options.Options;
 
 namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Events;
 
@@ -44,15 +49,26 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Events;
 public sealed class DomainEventHandlerLoggingStructureTests : IDisposable
 {
     private readonly ActivitySource _activitySource;
+    private readonly IMeterFactory _meterFactory;
+    private readonly IOptions<OpenTelemetryOptions> _openTelemetryOptions;
 
     public DomainEventHandlerLoggingStructureTests()
     {
         _activitySource = new ActivitySource("Test.DomainEventHandlerLogging");
+        _meterFactory = new TestMeterFactory();
+        _openTelemetryOptions = MsOptions.Create(new OpenTelemetryOptions { ServiceNamespace = "TestHandlerLogging" });
     }
 
     public void Dispose()
     {
         _activitySource.Dispose();
+    }
+
+    private sealed class TestMeterFactory : IMeterFactory
+    {
+        private readonly List<Meter> _meters = [];
+        public Meter Create(MeterOptions options) { var meter = new Meter(options); _meters.Add(meter); return meter; }
+        public void Dispose() { foreach (var meter in _meters) meter.Dispose(); _meters.Clear(); }
     }
 
     // ===== Request 로그 필드 검증 =====
@@ -63,7 +79,7 @@ public sealed class DomainEventHandlerLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         using var loggerFactory = new TestLoggerFactory(context);
-        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory);
+        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
@@ -91,7 +107,7 @@ public sealed class DomainEventHandlerLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         using var loggerFactory = new TestLoggerFactory(context);
-        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory);
+        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
@@ -124,7 +140,7 @@ public sealed class DomainEventHandlerLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         using var loggerFactory = new TestLoggerFactory(context);
-        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory);
+        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
@@ -165,7 +181,7 @@ public sealed class DomainEventHandlerLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         using var loggerFactory = new TestLoggerFactory(context);
-        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory);
+        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
@@ -205,7 +221,7 @@ public sealed class DomainEventHandlerLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         using var loggerFactory = new TestLoggerFactory(context);
-        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory);
+        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
