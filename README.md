@@ -315,9 +315,9 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 
 | Instrument | Application 레이어 | Adapter 레이어 | Type | Unit | 설명 |
 |------------|-------------------|---------------|------|------|------|
-| requests | `application.usecase.{cqrs}.requests` | `adapter.{category}.requests` | Counter | `{request}` | 총 요청 수 |
-| responses | `application.usecase.{cqrs}.responses` | `adapter.{category}.responses` | Counter | `{response}` | 응답 수 |
-| duration | `application.usecase.{cqrs}.duration` | `adapter.{category}.duration` | Histogram | `s` | 처리 시간(초) |
+| requests | `application.usecase.{type}.requests` | `adapter.{category}.requests` | Counter | `{request}` | 총 요청 수 |
+| responses | `application.usecase.{type}.responses` | `adapter.{category}.responses` | Counter | `{response}` | 응답 수 |
+| duration | `application.usecase.{type}.duration` | `adapter.{category}.duration` | Histogram | `s` | 처리 시간(초) |
 
 **Tag 구조 (Application 레이어):**
 
@@ -369,7 +369,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 
 | Property | Application 레이어 | Adapter 레이어 |
 |----------|-------------------|---------------|
-| Span Name | `{layer} {category}.{cqrs} {handler}.{method}` | `{layer} {category} {handler}.{method}` |
+| Span Name | `{layer} {category}.{type} {handler}.{method}` | `{layer} {category} {handler}.{method}` |
 | Example | `application usecase.command CreateOrderCommandHandler.Handle` | `adapter Repository OrderRepository.GetById` |
 | Kind | `Internal` | `Internal` |
 
