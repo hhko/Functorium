@@ -20,6 +20,38 @@ public sealed class DomainEventPublisher : IDomainEventPublisher
         _publisher = publisher;
     }
 
+
+    /// <inheritdoc />
+    public FinT<IO, LanguageExt.Unit> Publish<TEvent>(
+        TEvent domainEvent,
+        CancellationToken cancellationToken = default)
+        where TEvent : IDomainEvent
+    {
+        return IO.liftAsync(async () =>
+        {
+            try
+            {
+                await _publisher.Publish(domainEvent, cancellationToken);
+                return Fin.Succ(LanguageExt.Unit.Default);
+            }
+            catch (OperationCanceledException)
+            {
+                return Fin.Fail<LanguageExt.Unit>(
+                    EventError.For<DomainEventPublisher>(
+                        new EventErrorType.PublishCancelled(),
+                        typeof(TEvent).Name,
+                        "Event publishing was cancelled"));
+            }
+            catch (Exception ex)
+            {
+                return Fin.Fail<LanguageExt.Unit>(
+                    EventError.FromException<DomainEventPublisher>(
+                        new EventErrorType.PublishFailed(),
+                        ex));
+            }
+        });
+    }
+
     /// <inheritdoc />
     public FinT<IO, LanguageExt.Unit> PublishEvents<TId>(
         AggregateRoot<TId> aggregate,
@@ -54,37 +86,6 @@ public sealed class DomainEventPublisher : IDomainEventPublisher
                 }
             }
             return Fin.Succ(LanguageExt.Unit.Default);
-        });
-    }
-
-    /// <inheritdoc />
-    public FinT<IO, LanguageExt.Unit> Publish<TEvent>(
-        TEvent domainEvent,
-        CancellationToken cancellationToken = default)
-        where TEvent : IDomainEvent
-    {
-        return IO.liftAsync(async () =>
-        {
-            try
-            {
-                await _publisher.Publish(domainEvent, cancellationToken);
-                return Fin.Succ(LanguageExt.Unit.Default);
-            }
-            catch (OperationCanceledException)
-            {
-                return Fin.Fail<LanguageExt.Unit>(
-                    EventError.For<DomainEventPublisher>(
-                        new EventErrorType.PublishCancelled(),
-                        typeof(TEvent).Name,
-                        "Event publishing was cancelled"));
-            }
-            catch (Exception ex)
-            {
-                return Fin.Fail<LanguageExt.Unit>(
-                    EventError.FromException<DomainEventPublisher>(
-                        new EventErrorType.PublishFailed(),
-                        ex));
-            }
         });
     }
 

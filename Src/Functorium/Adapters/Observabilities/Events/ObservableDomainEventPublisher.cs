@@ -31,6 +31,70 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher
     }
 
     /// <inheritdoc />
+    public FinT<IO, LanguageExt.Unit> Publish<TEvent>(
+        TEvent domainEvent,
+        CancellationToken cancellationToken = default)
+        where TEvent : IDomainEvent
+    {
+        return IO.liftAsync(async () =>
+        {
+            var eventType = typeof(TEvent).Name;
+
+            using var activity = _activitySource.StartActivity(
+                ObservabilityNaming.Spans.OperationName(
+                    ObservabilityNaming.Layers.Adapter,
+                    ObservabilityNaming.Categories.Event,
+                    eventType,
+                    ObservabilityNaming.Methods.Publish));
+
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter);
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Event);
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, eventType);
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.Publish);
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.EventType, eventType);
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.EventOccurredAt, domainEvent.OccurredAt.ToString("O"));
+
+            _logger.LogDomainEventPublisherRequest(domainEvent);
+
+            long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();
+
+            var result = await _inner.Publish(domainEvent, cancellationToken).Run().RunAsync();
+
+            double elapsed = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);
+
+            result.Match(
+                Succ: _ =>
+                {
+                    activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsed);
+                    activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success);
+                    activity?.SetStatus(ActivityStatusCode.Ok);
+                    _logger.LogDomainEventPublisherResponseSuccess(domainEvent, elapsed);
+                },
+                Fail: error =>
+                {
+                    var (errorType, errorCode) = ErrorInfoExtractor.GetErrorInfo(error);
+                    activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsed);
+                    activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);
+                    activity?.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, errorType);
+                    activity?.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, errorCode);
+                    activity?.SetStatus(ActivityStatusCode.Error, error.Message);
+
+                    if (error.IsExceptional)
+                    {
+                        _logger.LogDomainEventPublisherResponseError(domainEvent, elapsed, errorType, errorCode, error);
+                    }
+                    else
+                    {
+                        _logger.LogDomainEventPublisherResponseWarning(domainEvent, elapsed, errorType, errorCode, error);
+                    }
+                });
+
+            return result;
+        });
+    }
+
+
+    /// <inheritdoc />
     public FinT<IO, LanguageExt.Unit> PublishEvents<TId>(
         AggregateRoot<TId> aggregate,
         CancellationToken cancellationToken = default)
@@ -87,69 +151,6 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher
                     else
                     {
                         _logger.LogDomainEventsPublisherResponseWarning(aggregateType, ObservabilityNaming.Methods.PublishEvents, eventCount, elapsed, errorType, errorCode, error);
-                    }
-                });
-
-            return result;
-        });
-    }
-
-    /// <inheritdoc />
-    public FinT<IO, LanguageExt.Unit> Publish<TEvent>(
-        TEvent domainEvent,
-        CancellationToken cancellationToken = default)
-        where TEvent : IDomainEvent
-    {
-        return IO.liftAsync(async () =>
-        {
-            var eventType = typeof(TEvent).Name;
-
-            using var activity = _activitySource.StartActivity(
-                ObservabilityNaming.Spans.OperationName(
-                    ObservabilityNaming.Layers.Adapter,
-                    ObservabilityNaming.Categories.Event,
-                    eventType,
-                    ObservabilityNaming.Methods.Publish));
-
-            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter);
-            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Event);
-            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, eventType);
-            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.Publish);
-            activity?.SetTag(ObservabilityNaming.CustomAttributes.EventType, eventType);
-            activity?.SetTag(ObservabilityNaming.CustomAttributes.EventOccurredAt, domainEvent.OccurredAt.ToString("O"));
-
-            _logger.LogDomainEventPublisherRequest(domainEvent);
-
-            long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();
-
-            var result = await _inner.Publish(domainEvent, cancellationToken).Run().RunAsync();
-
-            double elapsed = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);
-
-            result.Match(
-                Succ: _ =>
-                {
-                    activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsed);
-                    activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success);
-                    activity?.SetStatus(ActivityStatusCode.Ok);
-                    _logger.LogDomainEventPublisherResponseSuccess(domainEvent, elapsed);
-                },
-                Fail: error =>
-                {
-                    var (errorType, errorCode) = ErrorInfoExtractor.GetErrorInfo(error);
-                    activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsed);
-                    activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);
-                    activity?.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, errorType);
-                    activity?.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, errorCode);
-                    activity?.SetStatus(ActivityStatusCode.Error, error.Message);
-
-                    if (error.IsExceptional)
-                    {
-                        _logger.LogDomainEventPublisherResponseError(domainEvent, elapsed, errorType, errorCode, error);
-                    }
-                    else
-                    {
-                        _logger.LogDomainEventPublisherResponseWarning(domainEvent, elapsed, errorType, errorCode, error);
                     }
                 });
 
