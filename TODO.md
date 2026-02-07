@@ -2,6 +2,42 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
+- [ ] 01-SingleHost 도메인 이벤트 핸들러에서 예외 추가
+- [ ] event 필드?
+  ```
+  1. DomainEvent Field/Tag 테이블에 Tracing 전용 태그 추가
+  대상 파일: observability-reference.md (lines 66-79, 85-97)
+  DomainEvent Publisher 테이블 (line 72 이후에 추가):
+  ┌───────────────────┬─────────┬─────────┬─────────┬───────────────────────────────────────────────────────────────┐
+  │     Field/Tag     │ Logging │ Metrics │ Tracing │                             설명                              │
+  ├───────────────────┼─────────┼─────────┼─────────┼───────────────────────────────────────────────────────────────┤
+  │ event.type        │ -       │ -       │ ✅      │ 이벤트 타입명 (Publish 전용)                                  │
+  ├───────────────────┼─────────┼─────────┼─────────┼───────────────────────────────────────────────────────────────┤
+  │ event.occurred_at │ -       │ -       │ ✅      │ 이벤트 발생 시간 ISO 8601 (Publish 전용)                      │
+  ├───────────────────┼─────────┼─────────┼─────────┼───────────────────────────────────────────────────────────────┤
+  │ aggregate.type    │ -       │ -       │ ✅      │ Aggregate 타입명 (PublishEvents/PublishEventsWithResult 전용) │
+  └───────────────────┴─────────┴─────────┴─────────┴───────────────────────────────────────────────────────────────┘
+  DomainEvent Handler 테이블 (line 91 이후에 추가):
+  ┌────────────┬─────────┬─────────┬─────────┬────────────────┐
+  │ Field/Tag  │ Logging │ Metrics │ Tracing │      설명      │
+  ├────────────┼─────────┼─────────┼─────────┼────────────────┤
+  │ event.type │ -       │ -       │ ✅      │ 이벤트 타입명  │
+  ├────────────┼─────────┼─────────┼─────────┼────────────────┤
+  │ event.id   │ -       │ -       │ ✅      │ 이벤트 고유 ID │
+  └────────────┴─────────┴─────────┴─────────┴────────────────┘
+  ```
+
+- [ ] https://code.claude.com/docs/ko/memory
+- [ ] 관찰 가능성 문서 분리
+- [ ] 기존 관찰 가능성 문서 개선 "_" -> 제거
+
+```
+claude plugin marketplace add anthropics/knowledge-work-plugins
+
+claude plugin install sales@knowledge-work-plugins
+claude plugin install product-management@knowledge-work-plugins
+```
+
 - [x] 동적 로그 값 위치를 마지막으로 이동: with
 - [x] Usecase, Domain 이벤트 발생과 수신 관련 로그 형식 테스트 추가
 - [x] {request.layer} {request.category} {request.handler}.{request.handler.method} responded failure
