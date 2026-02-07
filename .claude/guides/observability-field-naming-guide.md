@@ -158,22 +158,22 @@ response.event.success.count     # 조합 count는 _count 사용
 
 ### DomainEvent 필드
 
-| Field/Tag | Logging | Tracing | 설명 |
-|-----------|---------|---------|------|
-| `request.layer` | ✅ | ✅ | `"adapter"` (Publisher), `"application"` (Handler) |
-| `request.category` | ✅ | ✅ | `"event"` (Publisher), `"usecase"` (Handler) |
-| `request.category.type` | ✅ | ✅ | `"event"` (Handler만) |
-| `request.handler` | ✅ | ✅ | Event/Aggregate 타입명 또는 Handler 클래스명 |
-| `request.handler.method` | ✅ | ✅ | `"Publish"`, `"PublishEvents"`, `"Handle"` |
-| `request.event.count` | ✅ | ✅ | 배치 발행 시 이벤트 개수 |
-| `@request.message` | ✅ | - | 이벤트 객체 |
-| `response.status` | ✅ | ✅ | `"success"`, `"failure"` |
-| `response.elapsed` | ✅ | ✅ | 처리 시간(초) |
-| `response.event.success_count` | ✅ | ✅ | 부분 실패 시 성공한 이벤트 수 |
-| `response.event.failure_count` | ✅ | ✅ | 부분 실패 시 실패한 이벤트 수 |
-| `error.type` | ✅ | ✅ | `"expected"`, `"exceptional"` |
-| `error.code` | ✅ | ✅ | 도메인 특화 오류 코드 |
-| `@error` | ✅ | - | 구조화된 오류 객체 |
+| Field/Tag | Logging | Metrics | Tracing | 설명 |
+|-----------|---------|---------|---------|------|
+| `request.layer` | ✅ | ✅ | ✅ | `"adapter"` (Publisher), `"application"` (Handler) |
+| `request.category` | ✅ | ✅ | ✅ | `"event"` (Publisher), `"usecase"` (Handler) |
+| `request.category.type` | ✅ | ✅ | ✅ | `"event"` (Handler만) |
+| `request.handler` | ✅ | ✅ | ✅ | Event/Aggregate 타입명 또는 Handler 클래스명 |
+| `request.handler.method` | ✅ | ✅ | ✅ | `"Publish"`, `"PublishEvents"`, `"Handle"` |
+| `request.event.count` | ✅ | - | ✅ | 배치 발행 시 이벤트 개수 |
+| `@request.message` | ✅ | - | - | 이벤트 객체 |
+| `response.status` | ✅ | ✅ | ✅ | `"success"`, `"failure"` |
+| `response.elapsed` | ✅ | - | ✅ | 처리 시간(초) |
+| `response.event.success_count` | ✅ | - | ✅ | 부분 실패 시 성공한 이벤트 수 |
+| `response.event.failure_count` | ✅ | - | ✅ | 부분 실패 시 실패한 이벤트 수 |
+| `error.type` | ✅ | ✅ | ✅ | `"expected"`, `"exceptional"` |
+| `error.code` | ✅ | ✅ | ✅ | 도메인 특화 오류 코드 |
+| `@error` | ✅ | - | - | 구조화된 오류 객체 |
 
 ## 예시 및 안티패턴
 

@@ -1059,4 +1059,4 @@ A: 로그 시스템에 따라 다릅니다:
 - [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/)
 - [Serilog Structured Logging](https://serilog.net/)
 - [Grafana Loki LogQL](https://grafana.com/docs/loki/latest/logql/)
-- [Functorium README - Observability 섹션](../../README.md#observability)
+- [Observability Reference](./observability-reference.md)

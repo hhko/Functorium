@@ -925,4 +925,4 @@ Console.WriteLine($"TraceId: {Activity.Current?.TraceId}");
 - [Jaeger Documentation](https://www.jaegertracing.io/docs/)
 - [Grafana Tempo Documentation](https://grafana.com/docs/tempo/latest/)
 - [.NET Activity and DiagnosticSource](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/distributed-tracing)
-- [Functorium README - Observability 섹션](../../README.md#observability)
+- [Observability Reference](./observability-reference.md)
