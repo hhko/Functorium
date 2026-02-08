@@ -39,6 +39,12 @@ public class InMemoryProductRepository : IProductRepository
         // Pipeline이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
+            if (((string)product.Name).Contains("[adapter-error]", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    $"[{nameof(InMemoryProductRepository)}] 시뮬레이션된 어댑터 예외: Repository Create 예외 처리 데모");
+            }
+
             _products[product.Id] = product;
             return Fin.Succ(product);
         });
@@ -93,6 +99,12 @@ public class InMemoryProductRepository : IProductRepository
                     new NotFound(),
                     product.Id.ToString(),
                     $"상품 ID '{product.Id}'을(를) 찾을 수 없습니다");
+            }
+
+            if (((string)product.Name).Contains("[adapter-error]", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    $"[{nameof(InMemoryProductRepository)}] 시뮬레이션된 어댑터 예외: Repository Update 예외 처리 데모");
             }
 
             _products[product.Id] = product;

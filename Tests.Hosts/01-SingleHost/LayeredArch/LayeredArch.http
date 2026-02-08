@@ -82,6 +82,43 @@ Content-Type: application/json
 }
 
 ###############################################################################
+# 어댑터 예외 테스트 (Adapter Exception Scenarios)
+###############################################################################
+#
+# IAdapter 구현체([GeneratePipeline])에서 예외가 발생할 때 관측성 파이프라인을 검증합니다.
+# 예외 전파 경로:
+#   Adapter throws (IO.lift 내부)
+#   → IO 모나드 catch → Error (exceptional)
+#   → 생성된 파이프라인 IfFail() → 로깅/트레이싱/메트릭 (Adapter 레벨)
+#   → IO.fail(error) → LINQ 체인 전파 → FinResponse.Fail
+#   → Usecase 파이프라인 (Logging/Tracing/Metrics)
+#   → HTTP 400 Bad Request
+#
+###############################################################################
+
+### Repository Create 예외 - 상품명에 [adapter-error] 포함
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "Name": "[adapter-error] 노트북",
+  "Description": "어댑터 예외 테스트용 상품",
+  "Price": 1500000,
+  "StockQuantity": 10
+}
+
+### Repository Update 예외 - 상품명에 [adapter-error] 포함
+PUT {{baseUrl}}/api/products/{{productId}}
+Content-Type: application/json
+
+{
+  "Name": "[adapter-error] 노트북 Pro",
+  "Description": "어댑터 예외 테스트용 상품 업데이트",
+  "Price": 2000000,
+  "StockQuantity": 5
+}
+
+###############################################################################
 # 에러 테스트 (Error Test Scenarios)
 ###############################################################################
 
