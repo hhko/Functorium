@@ -2,7 +2,7 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
-- [ ] 01-SingleHost 도메인 이벤트 핸들러에서 예외 추가
+- [x] 01-SingleHost 도메인 이벤트 핸들러에서 예외 추가
 - [ ] event 필드?
   ```
   1. DomainEvent Field/Tag 테이블에 Tracing 전용 태그 추가
@@ -26,10 +26,16 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
   │ event.id   │ -       │ -       │ ✅      │ 이벤트 고유 ID │
   └────────────┴─────────┴─────────┴─────────┴────────────────┘
   ```
-
+- [ ] 로그 필드 개선
+- [ ] 추적 필드 개선
+- [ ] 지표 필드 개선
+---
 - [ ] https://code.claude.com/docs/ko/memory
-- [ ] 관찰 가능성 문서 분리
-- [ ] 기존 관찰 가능성 문서 개선 "_" -> 제거
+- [ ] [Claude 메모리 아키텍처 살펴보기 - CLAUDE.md, Memory Tool까지](https://goddaehee.tistory.com/433)
+- [x] 관찰 가능성 문서 분리
+- [x] 기존 관찰 가능성 문서 개선 "_" -> 제거
+- [ ] crash
+- [ ] io + polly: timeout, retry, 서킷브레이커, ...
 
 ```
 claude plugin marketplace add anthropics/knowledge-work-plugins
