@@ -7,6 +7,8 @@
 
 ![](../../Functorium.Observability.png)
 
+## 공통 사양
+
 ### Service Attributes
 
 Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](https://opentelemetry.io/docs/specs/semconv/registry/attributes/service/)를 사용합니다.
@@ -21,7 +23,36 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 > **권장**: `service.name`과 `service.namespace`에는 소문자 값을 사용하세요(예: `mycompany.production`, `orderservice`).
 > 이렇게 하면 OpenTelemetry 규칙과의 일관성을 보장하고 다운스트림 시스템(대시보드, 쿼리, 알림)에서 대소문자 구분 문제를 방지할 수 있습니다.
 
-### Usecase Field/Tag 일관성
+### Error 분류
+
+#### Error Type Tag 값
+
+| Error Case | error.type | error.code | 설명 |
+|------------|------------|------------|------|
+| `IHasErrorCode` + `IsExpected` | `"expected"` | 오류 코드 | 오류 코드가 있는 예상 비즈니스 로직 오류 |
+| `IHasErrorCode` + `IsExceptional` | `"exceptional"` | 오류 코드 | 오류 코드가 있는 예외 시스템 오류 |
+| `ManyErrors` | `"aggregate"` | Primary 오류 코드 | 여러 오류가 집계됨(Exceptional이 우선) |
+| `Expected` (LanguageExt) | `"expected"` | 타입 이름 | 오류 코드가 없는 LanguageExt 기본 예상 오류 |
+| `Exceptional` (LanguageExt) | `"exceptional"` | 타입 이름 | 오류 코드가 없는 LanguageExt 기본 예외 오류 |
+
+#### Error Field 값 (Logging 전용)
+
+> `error.type`과 `@error.ErrorType`은 서로 다른 목적을 위해 다른 값 형식을 사용합니다.
+
+| Error Type | `error.type` (필터링용) | `@error.ErrorType` (상세용) |
+|------------|------------------------|----------------------------|
+| Expected Error | `"expected"` | `"ErrorCodeExpected"` |
+| Exceptional Error | `"exceptional"` | `"ErrorCodeExceptional"` |
+| Aggregate Error | `"aggregate"` | `"ManyErrors"` |
+| LanguageExt Expected | `"expected"` | `"Expected"` |
+| LanguageExt Exceptional | `"exceptional"` | `"Exceptional"` |
+
+- **`error.type`**: 로그 필터링/쿼리를 위한 표준화된 값(Metrics/Tracing과 일관됨)
+- **`@error.ErrorType`**: 상세한 오류 타입 식별을 위한 실제 클래스 이름
+
+## Field/Tag 일관성
+
+### Usecase (Application/Adapter)
 
 **Application 레이어:** (단위 테스트: [Logging](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseLoggingPipelineStructureTests.cs), [Metrics](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseMetricsPipelineStructureTests.cs), [Tracing](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseTracingPipelineStructureTests.cs))
 
@@ -57,9 +88,9 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 > - 경과 시간을 태그로 사용하면 **높은 카디널리티 폭발**을 유발합니다(각 고유한 duration 값이 새로운 시계열을 생성하여 메트릭 저장소 및 쿼리 성능이 저하됨).
 > - Histogram은 개별 경과 값보다 모니터링에 더 유용한 **통계적 집계**(백분위수, 평균, 카운트)를 제공합니다.
 
-### DomainEvent Field/Tag 일관성
+### DomainEvent Publisher
 
-**DomainEvent Publisher:** (단위 테스트: [Logging](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherLoggingStructureTests.cs), [Metrics](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherMetricsStructureTests.cs), [Tracing](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherTracingStructureTests.cs))
+(단위 테스트: [Logging](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherLoggingStructureTests.cs), [Metrics](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherMetricsStructureTests.cs), [Tracing](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherTracingStructureTests.cs))
 
 > DomainEvent Publisher는 Adapter 레이어로 분류되며, `request.layer`는 `"adapter"`, `request.category`는 `"event"`입니다.
 
@@ -81,7 +112,9 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `error.code` | ✅ | ✅ | ✅ | 도메인 특화 오류 코드 |
 | `@error` | ✅ | - | - | 구조화된 오류 객체(상세) |
 
-**DomainEvent Handler:** (단위 테스트: [Logging](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerLoggingStructureTests.cs), [Metrics](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerMetricsStructureTests.cs), [Tracing](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerTracingStructureTests.cs))
+### DomainEvent Handler
+
+(단위 테스트: [Logging](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerLoggingStructureTests.cs), [Metrics](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerMetricsStructureTests.cs), [Tracing](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerTracingStructureTests.cs))
 
 > DomainEventHandler는 Application 레이어로 분류되며, `request.layer`는 `"application"`, `request.category`는 `"usecase"`, `request.category.type`은 `"event"`입니다.
 
@@ -102,10 +135,11 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 
 > **Note:** DomainEventHandler의 ErrorResponse는 Exception 객체가 직접 로깅됩니다 (`@error` 대신).
 
+## Logging
 
 ### Usecase Logging
 
-**Field 구조:**
+#### Field 구조
 
 | Field Name | Application 레이어 | Adapter 레이어 | 설명 |
 |------------|-------------------|---------------|------|
@@ -128,7 +162,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `response.result` | - | 메서드 반환 값 | 응답 결과 |
 | `response.result.count` | - | 컬렉션 크기(반환이 컬렉션인 경우) | 응답 결과 카운트 |
 
-**이벤트별 로그 레벨:**
+#### 이벤트별 로그 레벨
 
 | Event | Log 수준 | Application 레이어 | Adapter 레이어 | 설명 |
 |-------|-----------|-------------------|---------------|------|
@@ -139,7 +173,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | Response Warning | Warning | 1003 `application.response.warning` | 2003 `adapter.response.warning` | 예상 오류(비즈니스 로직) |
 | Response Error | Error | 1004 `application.response.error` | 2004 `adapter.response.error` | 예외 오류(시스템 장애) |
 
-**Message Templates (Application 레이어):**
+#### Message Templates (Application)
 
 ```
 # Request
@@ -152,7 +186,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 {request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
 
-**Message Templates (Adapter 레이어):**
+#### Message Templates (Adapter)
 
 ```
 # Request (Information)
@@ -171,7 +205,16 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 {request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
 
+#### 구현
+
+| 레이어 | 방식 | 테스트 | 참고 |
+|-------|------|--------|------|
+| Application | 직접 `ILogger.LogXxx()` 호출 | [UsecaseLoggingPipelineStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseLoggingPipelineStructureTests.cs) | 7개 이상의 파라미터가 `LoggerMessage.Define`의 6개 제한을 초과 |
+| Adapter | `LoggerMessage.Define` 델리게이트 | [AdapterLoggingPipelineStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterLoggingPipelineStructureTests.cs) | 제로 할당, 고성능 |
+
 ### DomainEvent Logging
+
+#### Field 비교
 
 **Application Usecase vs DomainEvent Publisher vs DomainEventHandler 필드 비교:**
 
@@ -193,7 +236,9 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `error.code` | 오류 코드 | 오류 코드 | 오류 코드 |
 | `@error` | 오류 객체 | 오류 객체 | 오류 객체 (Exception) |
 
-**Message Templates (DomainEvent Publisher):**
+> Error 분류 상세는 [Error 분류](#error-분류) 섹션 참조.
+
+#### Message Templates (Publisher)
 
 ```
 # Request - 단일 이벤트
@@ -218,7 +263,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 {request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {request.event.count} events partial failure: {response.event.success_count} succeeded, {response.event.failure_count} failed
 ```
 
-**DomainEvent Publisher Event IDs:**
+#### Publisher Event IDs
 
 > DomainEvent Publisher는 Adapter 레이어로 분류되므로, Adapter 레이어와 동일한 Event ID를 사용합니다.
 
@@ -229,7 +274,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | Warning | 2003 | `adapter.response.warning` |
 | Error | 2004 | `adapter.response.error` |
 
-**Message Templates (DomainEvent Handler):**
+#### Message Templates (Handler)
 
 > DomainEventHandler는 Publisher가 발행한 이벤트를 처리하는 Handler 관점의 로깅입니다. `request.layer`는 `"application"`, `request.category`는 `"usecase"`, `request.category.type`은 `"event"`입니다.
 
@@ -244,7 +289,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 {request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
 
-**DomainEventHandler Event IDs:**
+#### Handler Event IDs
 
 > DomainEventHandler는 Application 레이어의 usecase로 분류되므로, Application 레이어와 동일한 Event ID를 사용합니다.
 
@@ -255,31 +300,16 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | Warning | 1003 | `application.response.warning` |
 | Error | 1004 | `application.response.error` |
 
-**Error Field 값 (`error.type` vs `@error.ErrorType`):**
-
-> `error.type`과 `@error.ErrorType`은 서로 다른 목적을 위해 다른 값 형식을 사용합니다.
-
-| Error Type | `error.type` (필터링용) | `@error.ErrorType` (상세용) |
-|------------|------------------------|----------------------------|
-| Expected Error | `"expected"` | `"ErrorCodeExpected"` |
-| Exceptional Error | `"exceptional"` | `"ErrorCodeExceptional"` |
-| Aggregate Error | `"aggregate"` | `"ManyErrors"` |
-| LanguageExt Expected | `"expected"` | `"Expected"` |
-| LanguageExt Exceptional | `"exceptional"` | `"Exceptional"` |
-
-- **`error.type`**: 로그 필터링/쿼리를 위한 표준화된 값(Metrics/Tracing과 일관됨)
-- **`@error.ErrorType`**: 상세한 오류 타입 식별을 위한 실제 클래스 이름
-
-**구현:**
+#### 구현
 
 | 레이어 | 방식 | 테스트 | 참고 |
 |-------|------|--------|------|
-| Application | 직접 `ILogger.LogXxx()` 호출 | [UsecaseLoggingPipelineStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseLoggingPipelineStructureTests.cs) | 7개 이상의 파라미터가 `LoggerMessage.Define`의 6개 제한을 초과 |
-| Adapter | `LoggerMessage.Define` 델리게이트 | [AdapterLoggingPipelineStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterLoggingPipelineStructureTests.cs) | 제로 할당, 고성능 |
+| DomainEvent Publisher | Decorator | [DomainEventPublisherLoggingStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherLoggingStructureTests.cs) | Adapter 레이어 패턴 |
+| DomainEvent Handler | `INotificationPublisher` | [DomainEventHandlerLoggingStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerLoggingStructureTests.cs) | Application 레이어 패턴 |
 
-### Metrics
+## Metrics
 
-**Meter Name:**
+### Meter Name
 
 | 레이어 | Meter Name 패턴 | 예시 (`ServiceNamespace = "mycompany.production"`) |
 |-------|-----------------|---------------------------------------------------|
@@ -288,7 +318,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | DomainEvent Publisher | `{service.namespace}.adapter.event` | `mycompany.production.adapter.event` |
 | DomainEvent Handler | `{service.namespace}.application` | `mycompany.production.application` |
 
-**Instrument 구조:**
+### Instrument 구조
 
 | Instrument | Application 레이어 | Adapter 레이어 | DomainEvent Publisher | DomainEvent Handler | Type | Unit |
 |------------|-------------------|---------------|----------------------|--------------------|------|------|
@@ -296,7 +326,9 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | responses | `application.usecase.{type}.responses` | `adapter.{category}.responses` | `adapter.event.responses` | `application.usecase.event.responses` | Counter | `{response}` |
 | duration | `application.usecase.{type}.duration` | `adapter.{category}.duration` | `adapter.event.duration` | `application.usecase.event.duration` | Histogram | `s` |
 
-**Tag 구조 (Application 레이어):**
+### Usecase Metrics
+
+#### Tag 구조 (Application)
 
 | Tag Key | requestCounter | durationHistogram | responseCounter (success) | responseCounter (failure) |
 |---------|----------------|-------------------|---------------------------|---------------------------|
@@ -310,7 +342,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `error.code` | - | - | - | Primary 오류 코드 |
 | **Total Tags** | **5** | **5** | **6** | **8** |
 
-**Tag 구조 (Adapter 레이어):**
+#### Tag 구조 (Adapter)
 
 | Tag Key | requestCounter | durationHistogram | responseCounter (success) | responseCounter (failure) |
 |---------|----------------|-------------------|---------------------------|---------------------------|
@@ -323,26 +355,11 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `error.code` | - | - | - | 오류 코드 |
 | **Total Tags** | **4** | **4** | **5** | **7** |
 
-**Error Type Tag 값:**
+> Error 분류 상세는 [Error 분류](#error-분류) 섹션 참조.
 
-| Error Case | error.type | error.code | 설명 |
-|------------|------------|------------|------|
-| `IHasErrorCode` + `IsExpected` | `"expected"` | 오류 코드 | 오류 코드가 있는 예상 비즈니스 로직 오류 |
-| `IHasErrorCode` + `IsExceptional` | `"exceptional"` | 오류 코드 | 오류 코드가 있는 예외 시스템 오류 |
-| `ManyErrors` | `"aggregate"` | Primary 오류 코드 | 여러 오류가 집계됨(Exceptional이 우선) |
-| `Expected` (LanguageExt) | `"expected"` | 타입 이름 | 오류 코드가 없는 LanguageExt 기본 예상 오류 |
-| `Exceptional` (LanguageExt) | `"exceptional"` | 타입 이름 | 오류 코드가 없는 LanguageExt 기본 예외 오류 |
+### DomainEvent Metrics
 
-**구현:**
-
-| 레이어 | 방식 | 테스트 | 참고 |
-|-------|------|--------|------|
-| Application | `IPipelineBehavior` + `IMeterFactory` | [UsecaseMetricsPipelineStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseMetricsPipelineStructureTests.cs) | Mediator pipeline |
-| Adapter | Source Generator | [AdapterMetricsPipelineStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterMetricsPipelineStructureTests.cs) | 자동 생성된 metrics instruments |
-| DomainEvent Publisher | Decorator + `IMeterFactory` | [DomainEventPublisherMetricsStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherMetricsStructureTests.cs) | Adapter 레이어 패턴 |
-| DomainEvent Handler | `INotificationPublisher` + `IMeterFactory` | [DomainEventHandlerMetricsStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerMetricsStructureTests.cs) | Application 레이어 패턴 |
-
-**DomainEvent Publisher Tag 구조:**
+#### Tag 구조 (Publisher)
 
 | Tag Key | requestCounter | durationHistogram | responseCounter (success) | responseCounter (failure) |
 |---------|----------------|-------------------|---------------------------|---------------------------|
@@ -360,7 +377,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 > 이 값들은 각각 고유한 수치를 가지므로 태그로 사용하면 **높은 카디널리티 폭발**을 유발합니다.
 > 이는 `response.elapsed`를 Metrics 태그로 사용하지 않는 것과 동일한 원칙입니다.
 
-**DomainEvent Handler Tag 구조:**
+#### Tag 구조 (Handler)
 
 | Tag Key | requestCounter | durationHistogram | responseCounter (success) | responseCounter (failure) |
 |---------|----------------|-------------------|---------------------------|---------------------------|
@@ -374,9 +391,20 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `error.code` | - | - | - | 오류 코드 |
 | **Total Tags** | **5** | **5** | **6** | **8** |
 
-### Tracing
+### 구현
 
-**Span 구조:**
+| 레이어 | 방식 | 테스트 | 참고 |
+|-------|------|--------|------|
+| Application | `IPipelineBehavior` + `IMeterFactory` | [UsecaseMetricsPipelineStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseMetricsPipelineStructureTests.cs) | Mediator pipeline |
+| Adapter | Source Generator | [AdapterMetricsPipelineStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterMetricsPipelineStructureTests.cs) | 자동 생성된 metrics instruments |
+| DomainEvent Publisher | Decorator + `IMeterFactory` | [DomainEventPublisherMetricsStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherMetricsStructureTests.cs) | Adapter 레이어 패턴 |
+| DomainEvent Handler | `INotificationPublisher` + `IMeterFactory` | [DomainEventHandlerMetricsStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerMetricsStructureTests.cs) | Application 레이어 패턴 |
+
+## Tracing
+
+### Usecase Tracing
+
+#### Span 구조
 
 | Property | Application 레이어 | Adapter 레이어 |
 |----------|-------------------|---------------|
@@ -384,7 +412,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | Example | `application usecase.command CreateOrderCommandHandler.Handle` | `adapter Repository OrderRepository.GetById` |
 | Kind | `Internal` | `Internal` |
 
-**Tag 구조:**
+#### Tag 구조
 
 | Tag Key | Application 레이어 | Adapter 레이어 | 설명 |
 |---------|-------------------|---------------|------|
@@ -402,37 +430,18 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `error.code` | 오류 코드 | 오류 코드 | 오류 코드 |
 | **ActivityStatus** | `Ok` / `Error` | `Ok` / `Error` | OpenTelemetry 상태 |
 
-**Error Type Tag 값:**
-
-| Error Case | error.type | error.code | 설명 |
-|------------|------------|------------|------|
-| `IHasErrorCode` + `IsExpected` | `"expected"` | 오류 코드 | 오류 코드가 있는 예상 비즈니스 로직 오류 |
-| `IHasErrorCode` + `IsExceptional` | `"exceptional"` | 오류 코드 | 오류 코드가 있는 예외 시스템 오류 |
-| `ManyErrors` | `"aggregate"` | Primary 오류 코드 | 여러 오류가 집계됨(Exceptional이 우선) |
-| `Expected` (LanguageExt) | `"expected"` | 타입 이름 | 오류 코드가 없는 LanguageExt 기본 예상 오류 |
-| `Exceptional` (LanguageExt) | `"exceptional"` | 타입 이름 | 오류 코드가 없는 LanguageExt 기본 예외 오류 |
-
-**구현:**
-
-| 레이어 | 방식 | 테스트 | 참고 |
-|-------|------|--------|------|
-| Application | `IPipelineBehavior` + `ActivitySource.StartActivity()` | [UsecaseTracingPipelineStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseTracingPipelineStructureTests.cs) | Mediator pipeline |
-| Adapter | Source Generator | [AdapterTracingPipelineStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterTracingPipelineStructureTests.cs) | 자동 생성된 Activity spans |
-| DomainEvent Publisher | Decorator + `ActivitySource.StartActivity()` | [DomainEventPublisherTracingStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherTracingStructureTests.cs) | Adapter 레이어 패턴 |
-| DomainEvent Handler | `INotificationPublisher` + `ActivitySource.StartActivity()` | [DomainEventHandlerTracingStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerTracingStructureTests.cs) | Application 레이어 패턴 |
+> Error 분류 상세는 [Error 분류](#error-분류) 섹션 참조.
 
 ### DomainEvent Tracing
 
-**DomainEvent Publisher Span 구조:**
+#### Publisher Span 구조
 
 | Property | Publish | PublishEvents / PublishEventsWithResult |
 |----------|---------|---------------------------------------|
 | Span Name | `adapter event {EventType}.Publish` | `adapter event {AggregateType}.PublishEvents` / `adapter event {AggregateType}.PublishEventsWithResult` |
 | Kind | `Internal` | `Internal` |
 
-**DomainEvent Publisher Tag 구조:**
-
-*Publish 메서드:*
+#### Publisher Tag 구조 (Publish)
 
 | Tag Key | Request | Success Response | Failure Response |
 |---------|---------|-----------------|-----------------|
@@ -447,6 +456,8 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `error.type` | - | - | `"expected"` / `"exceptional"` |
 | `error.code` | - | - | 오류 코드 |
 | **Total Tags** | **6** | **8** | **10** |
+
+#### Publisher Tag 구조 (PublishEvents)
 
 *PublishEvents / PublishEventsWithResult 메서드:*
 
@@ -466,14 +477,14 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `error.code` | - | - | - | 오류 코드 |
 | **Total Tags** | **6** | **8** | **10** | **10** |
 
-**DomainEvent Handler Span 구조:**
+#### Handler Span 구조
 
 | Property | 설명 |
 |----------|------|
 | Span Name | `application usecase.event {HandlerName}.Handle` |
 | Kind | `Internal` |
 
-**DomainEvent Handler Tag 구조:**
+#### Handler Tag 구조
 
 | Tag Key | Success | Failure |
 |---------|---------|---------|
@@ -491,12 +502,21 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 
 > **Note:** Handler의 `response.elapsed`는 Activity 태그에 설정되지 않습니다 (Logging 전용).
 
+### 구현
+
+| 레이어 | 방식 | 테스트 | 참고 |
+|-------|------|--------|------|
+| Application | `IPipelineBehavior` + `ActivitySource.StartActivity()` | [UsecaseTracingPipelineStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseTracingPipelineStructureTests.cs) | Mediator pipeline |
+| Adapter | Source Generator | [AdapterTracingPipelineStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterTracingPipelineStructureTests.cs) | 자동 생성된 Activity spans |
+| DomainEvent Publisher | Decorator + `ActivitySource.StartActivity()` | [DomainEventPublisherTracingStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherTracingStructureTests.cs) | Adapter 레이어 패턴 |
+| DomainEvent Handler | `INotificationPublisher` + `ActivitySource.StartActivity()` | [DomainEventHandlerTracingStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerTracingStructureTests.cs) | Application 레이어 패턴 |
+
 ## 관련 문서
 
 | 문서 | 설명 |
 |------|------|
-| [Logging 매뉴얼](./_observability-logging.md) | 구조화된 로깅 상세 가이드 |
-| [Metrics 매뉴얼](./_observability-metrics.md) | 메트릭 수집 및 분석 가이드 |
-| [Tracing 매뉴얼](./_observability-tracing.md) | 분산 추적 상세 가이드 |
-| [코드 명명 규칙](./_observability-naming-guide.md) | Observability 코드 명명 규칙 |
+| [Logging 매뉴얼](./observability-logging.md) | 구조화된 로깅 상세 가이드 |
+| [Metrics 매뉴얼](./observability-metrics.md) | 메트릭 수집 및 분석 가이드 |
+| [Tracing 매뉴얼](./observability-tracing.md) | 분산 추적 상세 가이드 |
+| [코드 명명 규칙](./observability-naming-guide.md) | Observability 코드 명명 규칙 |
 | [필드 이름 규칙](./observability-field-naming-guide.md) | Field/Tag 이름 규칙 |
