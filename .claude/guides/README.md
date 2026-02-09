@@ -14,7 +14,7 @@
 | [adapter-guide.md](./adapter-guide.md) | Adapter 구현 (Repository, 외부 API) |
 | [unit-testing-guide.md](./unit-testing-guide.md) | 단위 테스트 규칙 |
 | [error-testing-guide.md](./error-testing-guide.md) | 에러 테스트 패턴 |
-| [observability-reference.md](./observability-reference.md) | Observability 레퍼런스 사양 (Field/Tag, Meter, 메시지 템플릿) |
+| [observability-spec.md](./observability-spec.md) | Observability 사양 (Field/Tag, Meter, 메시지 템플릿) |
 
 ## 문서 구조
 
@@ -33,7 +33,7 @@ domain-modeling-overview.md (개요)
 │   └── adapter-guide.md (Repository/외부 API)
 │
 ├── Observability
-│   ├── observability-reference.md (레퍼런스 사양)
+│   ├── observability-spec.md (사양)
 │   └── observability-field-naming-guide.md (필드 이름 규칙)
 │
 └── Testing
@@ -51,4 +51,4 @@ domain-modeling-overview.md (개요)
 - **검증 메서드**: [valueobject-guide.md#validationrulest-시작점](./valueobject-guide.md#validationrulest-시작점)
 - **에러 타입**: [error-guide.md](./error-guide.md)
 - **에러 테스트**: [error-testing-guide.md](./error-testing-guide.md)
-- **Observability 레퍼런스**: [observability-reference.md](./observability-reference.md)
+- **Observability 사양**: [observability-spec.md](./observability-spec.md)

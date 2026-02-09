@@ -1,6 +1,6 @@
-# Observability Reference
+# Observability Specification
 
-> 이 문서는 Functorium 프레임워크의 관측성(Observability) 레퍼런스 사양입니다.
+> 이 문서는 Functorium 프레임워크의 관측성(Observability) 사양입니다.
 > 각 Pillar별 상세 매뉴얼은 별도 문서를 참조하세요.
 
 > 모든 관측성 필드는 OpenTelemetry 시맨틱 규칙과의 일관성을 위해 `snake_case + dot` 표기법을 사용합니다.
@@ -106,9 +106,6 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `response.event.success_count` | ✅ | - | ✅ | 부분 실패 시 성공한 이벤트 수 (Partial Failure 전용) |
 | `response.event.failure_count` | ✅ | - | ✅ | 부분 실패 시 실패한 이벤트 수 (Partial Failure 전용) |
 | `error.type` | ✅ | ✅ | ✅ | 오류 분류 (`"expected"`, `"exceptional"`) |
-| `event.type` | - | - | ✅ | 이벤트 타입명 (Publish 전용) |
-| `event.occurred_at` | - | - | ✅ | 이벤트 발생 시간 ISO 8601 (Publish 전용) |
-| `aggregate.type` | - | - | ✅ | Aggregate 타입명 (PublishEvents/PublishEventsWithResult 전용) |
 | `error.code` | ✅ | ✅ | ✅ | 도메인 특화 오류 코드 |
 | `@error` | ✅ | - | - | 구조화된 오류 객체(상세) |
 
@@ -449,13 +446,11 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `request.category` | `"event"` | `"event"` | `"event"` |
 | `request.handler` | event type name | event type name | event type name |
 | `request.handler.method` | `"Publish"` | `"Publish"` | `"Publish"` |
-| `event.type` | event type name | event type name | event type name |
-| `event.occurred_at` | ISO 8601 | ISO 8601 | ISO 8601 |
 | `response.elapsed` | - | 처리 시간(초) | 처리 시간(초) |
 | `response.status` | - | `"success"` | `"failure"` |
 | `error.type` | - | - | `"expected"` / `"exceptional"` |
 | `error.code` | - | - | 오류 코드 |
-| **Total Tags** | **6** | **8** | **10** |
+| **Total Tags** | **4** | **6** | **8** |
 
 #### Publisher Tag 구조 (PublishEvents)
 
@@ -467,7 +462,6 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `request.category` | `"event"` | `"event"` | `"event"` | `"event"` |
 | `request.handler` | aggregate type | aggregate type | aggregate type | aggregate type |
 | `request.handler.method` | method name | method name | method name | method name |
-| `aggregate.type` | aggregate type | aggregate type | aggregate type | aggregate type |
 | `request.event.count` | event count | event count | event count | event count |
 | `response.elapsed` | - | 처리 시간(초) | 처리 시간(초) | 처리 시간(초) |
 | `response.status` | - | `"success"` | `"failure"` | `"failure"` |
@@ -475,7 +469,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `response.event.failure_count` | - | - | failure count | - |
 | `error.type` | - | - | - | `"expected"` / `"exceptional"` |
 | `error.code` | - | - | - | 오류 코드 |
-| **Total Tags** | **6** | **8** | **10** | **10** |
+| **Total Tags** | **5** | **7** | **9** | **9** |
 
 #### Handler Span 구조
 

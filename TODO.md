@@ -6,7 +6,7 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [ ] event 필드?
   ```
   1. DomainEvent Field/Tag 테이블에 Tracing 전용 태그 추가
-  대상 파일: observability-reference.md (lines 66-79, 85-97)
+  대상 파일: observability-spec.md (lines 66-79, 85-97)
   DomainEvent Publisher 테이블 (line 72 이후에 추가):
   ┌───────────────────┬─────────┬─────────┬─────────┬───────────────────────────────────────────────────────────────┐
   │     Field/Tag     │ Logging │ Metrics │ Tracing │                             설명                              │
