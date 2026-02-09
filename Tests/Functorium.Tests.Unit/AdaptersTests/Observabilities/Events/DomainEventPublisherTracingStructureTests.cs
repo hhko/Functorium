@@ -40,15 +40,13 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Events;
 /// | request.category         | "event"           | "event"           |
 /// | request.handler          | event type name   | event type name   |
 /// | request.handler.method   | "Publish"         | "Publish"         |
-/// | event.type               | event type name   | event type name   |
-/// | event.occurred_at        | ISO 8601          | ISO 8601          |
 /// | response.elapsed         | elapsed seconds   | elapsed seconds   |
 /// | response.status          | "success"         | "failure"         |
 /// | error.type               | (none)            | "expected"/       |
 /// |                          |                   | "exceptional"     |
 /// | error.code               | (none)            | error code        |
 /// +--------------------------+-------------------+-------------------+
-/// | Total Tags               | 8                 | 10                |
+/// | Total Tags               | 6                 | 8                 |
 /// +--------------------------+-------------------+-------------------+
 /// </code>
 /// <para>
@@ -62,7 +60,6 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Events;
 /// | request.category         | "event"           | "event"           | "event"           |
 /// | request.handler          | aggregate type    | aggregate type    | aggregate type    |
 /// | request.handler.method   | method name       | method name       | method name       |
-/// | aggregate.type           | aggregate type    | aggregate type    | aggregate type    |
 /// | request.event.count      | event count       | event count       | event count       |
 /// | response.elapsed         | elapsed seconds   | elapsed seconds   | elapsed seconds   |
 /// | response.status          | "success"         | "failure"         | "failure"         |
@@ -74,7 +71,7 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Events;
 /// |                          |                   |                   | "exceptional"     |
 /// | error.code               | (none)            | (none)            | error code        |
 /// +--------------------------+-------------------+-------------------+-------------------+
-/// | Total Tags               | 8                 | 10                | 10                |
+/// | Total Tags               | 7                 | 9                 | 9                 |
 /// +--------------------------+-------------------+-------------------+-------------------+
 /// </code>
 /// </remarks>
@@ -188,11 +185,11 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
     #region Tag 개수 검증
 
     /// <summary>
-    /// Publish 성공 시 8개 태그를 가져야 합니다.
-    /// (request 4개 + event.type + event.occurred_at + response.elapsed + response.status)
+    /// Publish 성공 시 6개 태그를 가져야 합니다.
+    /// (request 4개 + response.elapsed + response.status)
     /// </summary>
     [Fact]
-    public async Task Publish_Success_ShouldHaveEightTags()
+    public async Task Publish_Success_ShouldHaveSixTags()
     {
         // Arrange
         var sut = CreateSut();
@@ -206,15 +203,15 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
 
         // Assert
         _capturedActivity.ShouldNotBeNull();
-        _capturedActivity.TagObjects.Count().ShouldBe(8);
+        _capturedActivity.TagObjects.Count().ShouldBe(6);
     }
 
     /// <summary>
-    /// Publish 실패 시 10개 태그를 가져야 합니다.
-    /// (request 4개 + event.type + event.occurred_at + response.elapsed + response.status + error.type + error.code)
+    /// Publish 실패 시 8개 태그를 가져야 합니다.
+    /// (request 4개 + response.elapsed + response.status + error.type + error.code)
     /// </summary>
     [Fact]
-    public async Task Publish_Failure_ShouldHaveTenTags()
+    public async Task Publish_Failure_ShouldHaveEightTags()
     {
         // Arrange
         var sut = CreateSut();
@@ -229,15 +226,15 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
 
         // Assert
         _capturedActivity.ShouldNotBeNull();
-        _capturedActivity.TagObjects.Count().ShouldBe(10);
+        _capturedActivity.TagObjects.Count().ShouldBe(8);
     }
 
     /// <summary>
-    /// PublishEvents 성공 시 8개 태그를 가져야 합니다.
-    /// (request 4개 + aggregate.type + request.event.count + response.elapsed + response.status)
+    /// PublishEvents 성공 시 7개 태그를 가져야 합니다.
+    /// (request 4개 + request.event.count + response.elapsed + response.status)
     /// </summary>
     [Fact]
-    public async Task PublishEvents_Success_ShouldHaveEightTags()
+    public async Task PublishEvents_Success_ShouldHaveSevenTags()
     {
         // Arrange
         var sut = CreateSut();
@@ -251,15 +248,15 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
 
         // Assert
         _capturedActivity.ShouldNotBeNull();
-        _capturedActivity.TagObjects.Count().ShouldBe(8);
+        _capturedActivity.TagObjects.Count().ShouldBe(7);
     }
 
     /// <summary>
-    /// PublishEvents 실패 시 10개 태그를 가져야 합니다.
-    /// (request 4개 + aggregate.type + request.event.count + response.elapsed + response.status + error.type + error.code)
+    /// PublishEvents 실패 시 9개 태그를 가져야 합니다.
+    /// (request 4개 + request.event.count + response.elapsed + response.status + error.type + error.code)
     /// </summary>
     [Fact]
-    public async Task PublishEvents_Failure_ShouldHaveTenTags()
+    public async Task PublishEvents_Failure_ShouldHaveNineTags()
     {
         // Arrange
         var sut = CreateSut();
@@ -274,16 +271,16 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
 
         // Assert
         _capturedActivity.ShouldNotBeNull();
-        _capturedActivity.TagObjects.Count().ShouldBe(10);
+        _capturedActivity.TagObjects.Count().ShouldBe(9);
     }
 
     /// <summary>
-    /// PublishEventsWithResult Partial Failure 시 10개 태그를 가져야 합니다.
-    /// (request 4개 + aggregate.type + request.event.count + response.elapsed + response.status
+    /// PublishEventsWithResult Partial Failure 시 9개 태그를 가져야 합니다.
+    /// (request 4개 + request.event.count + response.elapsed + response.status
     ///  + response.event.success_count + response.event.failure_count)
     /// </summary>
     [Fact]
-    public async Task PublishEventsWithResult_PartialFailure_ShouldHaveTenTags()
+    public async Task PublishEventsWithResult_PartialFailure_ShouldHaveNineTags()
     {
         // Arrange
         var sut = CreateSut();
@@ -304,7 +301,7 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
 
         // Assert
         _capturedActivity.ShouldNotBeNull();
-        _capturedActivity.TagObjects.Count().ShouldBe(10);
+        _capturedActivity.TagObjects.Count().ShouldBe(9);
     }
 
     #endregion
@@ -378,8 +375,7 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
         var tags = ExtractActivityTags();
         await Verify(tags)
             .UseDirectory("Snapshots/DomainEventPublisherTracingStructure")
-            .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed)
-            .ScrubMember(ObservabilityNaming.CustomAttributes.EventOccurredAt);
+            .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
     /// <summary>
@@ -403,8 +399,7 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
         var tags = ExtractActivityTags();
         await Verify(tags)
             .UseDirectory("Snapshots/DomainEventPublisherTracingStructure")
-            .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed)
-            .ScrubMember(ObservabilityNaming.CustomAttributes.EventOccurredAt);
+            .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
     /// <summary>
@@ -429,8 +424,7 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
         var tags = ExtractActivityTags();
         await Verify(tags)
             .UseDirectory("Snapshots/DomainEventPublisherTracingStructure")
-            .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed)
-            .ScrubMember(ObservabilityNaming.CustomAttributes.EventOccurredAt);
+            .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
     /// <summary>

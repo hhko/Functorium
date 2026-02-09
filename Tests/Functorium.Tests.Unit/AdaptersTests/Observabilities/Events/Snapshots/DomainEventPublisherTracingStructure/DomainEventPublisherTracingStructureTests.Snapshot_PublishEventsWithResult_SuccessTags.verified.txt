@@ -1,5 +1,4 @@
 ﻿{
-  aggregate.type: TestAggregateRootWithoutEvents,
   request.category: event,
   request.event.count: 2,
   request.handler: TestAggregateRootWithoutEvents,

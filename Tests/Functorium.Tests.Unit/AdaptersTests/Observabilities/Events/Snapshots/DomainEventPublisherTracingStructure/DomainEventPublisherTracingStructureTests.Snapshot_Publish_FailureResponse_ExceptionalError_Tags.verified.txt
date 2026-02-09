@@ -1,8 +1,6 @@
 ﻿{
   error.code: Event.ConnectionError,
   error.type: exceptional,
-  event.occurred_at: {Scrubbed},
-  event.type: TestDomainEvent,
   request.category: event,
   request.handler: TestDomainEvent,
   request.handler.method: Publish,

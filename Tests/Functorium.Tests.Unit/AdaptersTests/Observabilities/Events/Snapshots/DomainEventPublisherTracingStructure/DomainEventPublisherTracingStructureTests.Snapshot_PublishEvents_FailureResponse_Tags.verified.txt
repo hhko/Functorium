@@ -1,5 +1,4 @@
 ﻿{
-  aggregate.type: TestAggregateRootWithoutEvents,
   error.code: Event.PublishFailed,
   error.type: expected,
   request.category: event,

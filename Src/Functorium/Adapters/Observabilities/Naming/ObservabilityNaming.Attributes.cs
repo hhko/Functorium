@@ -45,10 +45,6 @@ public static partial class ObservabilityNaming
         // Event 속성 (OpenTelemetry Semantic Conventions 준수)
         public const string EventType = "event.type";
         public const string EventId = "event.id";
-        public const string EventOccurredAt = "event.occurred_at";
-
-        // Aggregate 속성 (DDD 도메인 용어)
-        public const string AggregateType = "aggregate.type";
 
         // Request Event 속성
         public const string RequestEventCount = "request.event.count";
