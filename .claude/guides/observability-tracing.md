@@ -12,6 +12,7 @@ Functorium 프레임워크에서 분산 추적을 활용하여
 - [태그 시스템 상세 가이드](#태그-시스템-상세-가이드)
 - [Application Layer 트레이싱](#application-layer-트레이싱)
 - [Adapter Layer 트레이싱](#adapter-layer-트레이싱)
+- [DomainEvent 트레이싱](#domainevent-트레이싱)
 - [에러 트레이싱 이해하기](#에러-트레이싱-이해하기)
 - [Trace 분석하기](#trace-분석하기)
 - [실습: 병목 구간 찾기](#실습-병목-구간-찾기)
@@ -583,6 +584,174 @@ Adapter Layer의 Span 이름은 다음 형식을 따릅니다:
 
 ---
 
+## DomainEvent 트레이싱
+
+DomainEvent 트레이싱은 이벤트 발행과 처리 과정을 Span으로 기록합니다. Usecase Span → Publisher Span → Handler Span(s)의 Parent-Child 관계를 형성합니다.
+
+### Parent-Child 관계
+
+```
+application usecase.command CreateProductCommandHandler.Handle [Parent]
+  ├─ adapter repository InMemoryProductRepository.ExistsByName [Child]
+  ├─ adapter repository InMemoryProductRepository.Create [Child]
+  └─ adapter event Product.PublishEvents [Child - Publisher]
+       └─ application usecase.event OnProductCreated.Handle [Grandchild - Handler]
+```
+
+Publisher Span은 Adapter 레이어에 속하고, Handler Span은 Application 레이어에 속합니다. 하나의 Publisher가 여러 Handler를 호출하면 Handler Span이 여러 개 생성됩니다.
+
+### Publisher Span 구조
+
+**Span Name:**
+
+| 메서드 | Span Name 패턴 | 예시 |
+|--------|---------------|------|
+| Publish | `adapter event {EventType}.Publish` | `adapter event CreatedEvent.Publish` |
+| PublishEvents | `adapter event {AggregateType}.PublishEvents` | `adapter event Product.PublishEvents` |
+| PublishEventsWithResult | `adapter event {AggregateType}.PublishEventsWithResult` | `adapter event Product.PublishEventsWithResult` |
+
+Kind: `Internal`
+
+### Publisher 태그 구조 (Publish)
+
+단일 이벤트 발행 시의 태그 구조:
+
+| 태그 키 | Request | Success | Failure |
+|---------|---------|---------|---------|
+| `request.layer` | "adapter" | "adapter" | "adapter" |
+| `request.category` | "event" | "event" | "event" |
+| `request.handler` | event type name | event type name | event type name |
+| `request.handler.method` | "Publish" | "Publish" | "Publish" |
+| `response.elapsed` | - | 처리 시간(초) | 처리 시간(초) |
+| `response.status` | - | "success" | "failure" |
+| `error.type` | - | - | "expected"/"exceptional" |
+| `error.code` | - | - | 에러 코드 |
+| **총 태그 수** | **4** | **6** | **8** |
+
+### Publisher 태그 구조 (PublishEvents/PublishEventsWithResult)
+
+Aggregate 다중 이벤트 발행 시의 태그 구조:
+
+| 태그 키 | Request | Success | Partial Failure | Total Failure |
+|---------|---------|---------|-----------------|---------------|
+| `request.layer` | "adapter" | "adapter" | "adapter" | "adapter" |
+| `request.category` | "event" | "event" | "event" | "event" |
+| `request.handler` | aggregate type | aggregate type | aggregate type | aggregate type |
+| `request.handler.method` | method name | method name | method name | method name |
+| `request.event.count` | event count | event count | event count | event count |
+| `response.elapsed` | - | 처리 시간(초) | 처리 시간(초) | 처리 시간(초) |
+| `response.status` | - | "success" | "failure" | "failure" |
+| `response.event.success_count` | - | - | success count | - |
+| `response.event.failure_count` | - | - | failure count | - |
+| `error.type` | - | - | - | "expected"/"exceptional" |
+| `error.code` | - | - | - | 에러 코드 |
+| **총 태그 수** | **5** | **7** | **9** | **9** |
+
+### Handler Span 구조
+
+**Span Name:**
+
+```
+application usecase.event {HandlerName}.Handle
+```
+
+예시: `application usecase.event OnProductCreated.Handle`
+
+Kind: `Internal`
+
+### Handler 태그 구조
+
+| 태그 키 | Success | Failure |
+|---------|---------|---------|
+| `request.layer` | "application" | "application" |
+| `request.category` | "usecase" | "usecase" |
+| `request.category.type` | "event" | "event" |
+| `request.handler` | handler name | handler name |
+| `request.handler.method` | "Handle" | "Handle" |
+| `event.type` | event type name | event type name |
+| `event.id` | event id | event id |
+| `response.status` | "success" | "failure" |
+| `error.type` | - | "expected"/"exceptional" |
+| `error.code` | - | 에러 코드 |
+| **총 태그 수** | **8** | **10** |
+
+> **Note:** Handler의 `response.elapsed`는 Activity 태그에 설정되지 않습니다 (Logging 전용).
+
+### event.type과 event.id 필드
+
+Handler Span에는 `event.type`과 `event.id`라는 고유 태그가 있습니다:
+
+- **`event.type`**: 이벤트 타입명. `request.handler`(핸들러명)와 **다른 값**입니다.
+  - 예: `request.handler = "OnProductCreated"`, `event.type = "CreatedEvent"`
+  - 하나의 이벤트 타입에 여러 핸들러가 등록될 수 있으므로 구분이 필요합니다.
+
+- **`event.id`**: 이벤트 인스턴스별 GUID. 동일 이벤트를 처리하는 여러 핸들러 간의 상관관계를 추적합니다.
+  - 예: `event.id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"`
+
+### LayeredArch Trace 시각화
+
+**상품 생성 성공 (`POST /api/products`):**
+
+```
+application usecase.command CreateProductCommand.Handle [Ok]
+  ├─ adapter repository InMemoryProductRepository.ExistsByName [Ok]
+  ├─ adapter repository InMemoryProductRepository.Create [Ok]
+  └─ adapter event Product.PublishEvents [Ok]
+       └─ application usecase.event OnProductCreated.Handle [Ok]
+            ├─ event.type = "CreatedEvent"
+            └─ event.id = "515711cd-..."
+```
+
+**핸들러 예외 (`POST /api/products` with `[handler-error]`):**
+
+```
+application usecase.command CreateProductCommand.Handle [Error]
+  ├─ adapter repository InMemoryProductRepository.ExistsByName [Ok]
+  ├─ adapter repository InMemoryProductRepository.Create [Ok]
+  └─ adapter event Product.PublishEvents [Error]
+       └─ application usecase.event OnProductCreated.Handle [Error]
+            ├─ event.type = "CreatedEvent"
+            ├─ event.id = "f385a945-..."
+            ├─ error.type = "exceptional"
+            └─ error.code = "InvalidOperationException"
+```
+
+> **Note:** Handler의 `error.code`는 예외 타입명(`InvalidOperationException`), Publisher의 `error.code`는 래핑된 에러 코드(`ApplicationErrors.DomainEventPublisher.PublishFailed`)가 기록됩니다.
+
+**어댑터 예외 (`POST /api/products` with `[adapter-error]`):**
+
+어댑터 예외는 Repository에서 발생하므로 이벤트 발행까지 도달하지 않습니다:
+
+```
+application usecase.command CreateProductCommand.Handle [Error]
+  ├─ adapter repository InMemoryProductRepository.ExistsByName [Ok]
+  └─ adapter repository InMemoryProductRepository.Create [Error]
+       ├─ error.type = "exceptional"
+       └─ error.code = "Exceptional"
+```
+
+### Trace 검색 쿼리
+
+**DomainEvent Publisher Span 검색:**
+
+```traceql
+{span.request.category="event" && span.request.layer="adapter"}
+```
+
+**DomainEvent Handler Span 검색:**
+
+```traceql
+{span.request.category.type="event" && span.request.layer="application"}
+```
+
+**에러가 발생한 Handler Span:**
+
+```traceql
+{span.request.category.type="event" && span.error.type="exceptional"}
+```
+
+---
+
 ## 에러 트레이싱 이해하기
 
 ### Status vs error.type
@@ -925,4 +1094,4 @@ Console.WriteLine($"TraceId: {Activity.Current?.TraceId}");
 - [Jaeger Documentation](https://www.jaegertracing.io/docs/)
 - [Grafana Tempo Documentation](https://grafana.com/docs/tempo/latest/)
 - [.NET Activity and DiagnosticSource](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/distributed-tracing)
-- [Observability Reference](./observability-reference.md)
+- [Observability Specification](./observability-spec.md)
