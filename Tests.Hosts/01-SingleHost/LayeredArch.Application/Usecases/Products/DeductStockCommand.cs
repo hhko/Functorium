@@ -1,6 +1,4 @@
-using LayeredArch.Domain.Entities;
-using LayeredArch.Domain.ValueObjects;
-using LayeredArch.Domain.Repositories;
+using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Applications.Events;
 using Functorium.Applications.Linq;
 

@@ -5,3 +5,4 @@ global using Functorium.Applications.Cqrs;
 global using Functorium.Domains.ValueObjects.Validations.Typed;
 global using Functorium.Domains.ValueObjects.Validations.Contextual;
 global using FluentValidation;
+global using LayeredArch.Domain.SharedKernel.ValueObjects;

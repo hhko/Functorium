@@ -1,36 +1,36 @@
 using LayeredArch.Adapters.Presentation.Abstractions.Extensions;
-using LayeredArch.Application.Usecases.Products;
+using LayeredArch.Application.Usecases.Customers;
 
-namespace LayeredArch.Adapters.Presentation.Endpoints.Products;
+namespace LayeredArch.Adapters.Presentation.Endpoints.Customers;
 
 /// <summary>
-/// 상품 ID로 조회 Endpoint
-/// GET /api/products/{id}
+/// 고객 ID로 조회 Endpoint
+/// GET /api/customers/{id}
 /// </summary>
-public sealed class GetProductByIdEndpoint
-    : Endpoint<GetProductByIdEndpoint.Request, GetProductByIdQuery.Response>
+public sealed class GetCustomerByIdEndpoint
+    : Endpoint<GetCustomerByIdEndpoint.Request, GetCustomerByIdQuery.Response>
 {
     private readonly IMediator _mediator;
 
-    public GetProductByIdEndpoint(IMediator mediator)
+    public GetCustomerByIdEndpoint(IMediator mediator)
     {
         _mediator = mediator;
     }
 
     public override void Configure()
     {
-        Get("api/products/{Id}");
+        Get("api/customers/{Id}");
         AllowAnonymous();
         Summary(s =>
         {
-            s.Summary = "상품 조회";
-            s.Description = "ID로 상품을 조회합니다";
+            s.Summary = "고객 조회";
+            s.Description = "ID로 고객을 조회합니다";
         });
     }
 
     public override async Task HandleAsync(Request req, CancellationToken ct)
     {
-        var usecaseRequest = new GetProductByIdQuery.Request(req.Id);
+        var usecaseRequest = new GetCustomerByIdQuery.Request(req.Id);
         var result = await _mediator.Send(usecaseRequest, ct);
         await this.SendFinResponseWithNotFoundAsync(result, ct);
     }

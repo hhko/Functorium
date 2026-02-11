@@ -37,6 +37,40 @@ Content-Type: application/json
 }
 
 ###############################################################################
+# 고객 (Customer)
+###############################################################################
+
+### 고객 생성
+POST {{baseUrl}}/api/customers
+Content-Type: application/json
+
+{
+  "Name": "홍길동",
+  "Email": "hong@example.com",
+  "CreditLimit": 5000000
+}
+
+### ID로 고객 조회
+GET {{baseUrl}}/api/customers/{{customerId}}
+
+###############################################################################
+# 주문 (Order) - 교차 Aggregate 참조 (IProductCatalog)
+###############################################################################
+
+### 주문 생성 (먼저 상품을 생성한 후 productId 사용)
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "ProductId": "{{productId}}",
+  "Quantity": 2,
+  "ShippingAddress": "서울특별시 강남구 테헤란로 123"
+}
+
+### ID로 주문 조회
+GET {{baseUrl}}/api/orders/{{orderId}}
+
+###############################################################################
 # 이벤트 핸들러 예외 테스트 (Event Handler Exception Scenarios)
 ###############################################################################
 #

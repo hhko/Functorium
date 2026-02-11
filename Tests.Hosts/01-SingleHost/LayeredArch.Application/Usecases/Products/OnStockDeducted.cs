@@ -1,5 +1,5 @@
 using Functorium.Applications.Events;
-using LayeredArch.Domain.Entities;
+using LayeredArch.Domain.AggregateRoots.Products;
 using Microsoft.Extensions.Logging;
 
 namespace LayeredArch.Application.Usecases.Products;

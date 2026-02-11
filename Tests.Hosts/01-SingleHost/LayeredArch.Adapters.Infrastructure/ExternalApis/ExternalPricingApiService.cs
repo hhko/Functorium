@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using LayeredArch.Application.Ports;
-using LayeredArch.Domain.ValueObjects;
 using LanguageExt;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 using static LanguageExt.Prelude;

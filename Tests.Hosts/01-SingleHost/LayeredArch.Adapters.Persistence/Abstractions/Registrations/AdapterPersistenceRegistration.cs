@@ -1,5 +1,8 @@
 using LayeredArch.Adapters.Persistence.Repositories;
-using LayeredArch.Domain.Repositories;
+using LayeredArch.Domain.Ports;
+using LayeredArch.Domain.AggregateRoots.Customers;
+using LayeredArch.Domain.AggregateRoots.Orders;
+using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Abstractions.Registrations;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +15,12 @@ public static class AdapterPersistenceRegistration
     {
         // Repository 등록 (Source Generator가 생성한 Pipeline 버전 사용)
         services.RegisterScopedAdapterPipeline<IProductRepository, InMemoryProductRepositoryPipeline>();
+        services.RegisterScopedAdapterPipeline<IOrderRepository, InMemoryOrderRepositoryPipeline>();
+        services.RegisterScopedAdapterPipeline<ICustomerRepository, InMemoryCustomerRepositoryPipeline>();
+
+        // 공유 Port 등록
+        services.AddScoped<InMemoryProductRepository>();
+        services.RegisterScopedAdapterPipeline<IProductCatalog, InMemoryProductCatalogPipeline>();
 
         return services;
     }

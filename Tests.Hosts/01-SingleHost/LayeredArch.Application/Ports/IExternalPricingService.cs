@@ -1,5 +1,4 @@
 using Functorium.Applications.Observabilities;
-using LayeredArch.Domain.ValueObjects;
 
 namespace LayeredArch.Application.Ports;
 

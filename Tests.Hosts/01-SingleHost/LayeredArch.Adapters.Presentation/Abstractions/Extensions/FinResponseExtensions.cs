@@ -1,6 +1,6 @@
 using Functorium.Applications.Cqrs;
 
-namespace LayeredArch.Adapters.Presentation.Extensions;
+namespace LayeredArch.Adapters.Presentation.Abstractions.Extensions;
 
 /// <summary>
 /// FinResponse를 FastEndpoints HTTP Response로 변환하는 확장 메서드

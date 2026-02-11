@@ -1,4 +1,4 @@
-using LayeredArch.Adapters.Presentation.Extensions;
+using LayeredArch.Adapters.Presentation.Abstractions.Extensions;
 using LayeredArch.Application.Usecases.Products;
 
 namespace LayeredArch.Adapters.Presentation.Endpoints.Products;

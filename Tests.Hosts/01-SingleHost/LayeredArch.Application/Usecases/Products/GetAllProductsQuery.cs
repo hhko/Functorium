@@ -1,4 +1,4 @@
-using LayeredArch.Domain.Repositories;
+using LayeredArch.Domain.AggregateRoots.Products;
 
 namespace LayeredArch.Application.Usecases.Products;
 

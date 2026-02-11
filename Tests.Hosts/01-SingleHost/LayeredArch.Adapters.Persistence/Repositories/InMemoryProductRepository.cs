@@ -1,7 +1,5 @@
 using System.Collections.Concurrent;
-using LayeredArch.Domain.Entities;
-using LayeredArch.Domain.Repositories;
-using LayeredArch.Domain.ValueObjects;
+using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using LanguageExt;
