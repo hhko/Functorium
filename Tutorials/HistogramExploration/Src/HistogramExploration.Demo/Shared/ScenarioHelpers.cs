@@ -53,18 +53,20 @@ public static class ScenarioHelpers
         for (int i = 0; i < count; i++)
         {
             // 대부분 빠른 응답, 일부 느린 응답
+            double latency;
             if (Random.NextDouble() < 0.8) // 80%는 빠른 응답
             {
-                latencies.Add(GenerateNormalLatencyMs(100, 30)); // 평균 100ms
+                latency = GenerateNormalLatencyMs(100, 30); // 평균 100ms
             }
             else if (Random.NextDouble() < 0.95) // 15%는 보통 응답
             {
-                latencies.Add(GenerateNormalLatencyMs(300, 50)); // 평균 300ms
+                latency = GenerateNormalLatencyMs(300, 50); // 평균 300ms
             }
             else // 5%는 느린 응답
             {
-                latencies.Add(GenerateNormalLatencyMs(800, 200)); // 평균 800ms
+                latency = GenerateNormalLatencyMs(800, 200); // 평균 800ms
             }
+            latencies.Add(Math.Max(0, latency)); // 음수 방지
         }
         return latencies;
     }
