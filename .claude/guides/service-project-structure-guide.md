@@ -9,6 +9,7 @@
 - [Application 레이어](#application-레이어)
 - [Adapter 레이어](#adapter-레이어)
 - [Host 프로젝트](#host-프로젝트)
+- [테스트 프로젝트](#테스트-프로젝트)
 - [네임스페이스 규칙](#네임스페이스-규칙)
 - [새 서비스 프로젝트 생성 체크리스트](#새-서비스-프로젝트-생성-체크리스트)
 - [FAQ](#faq)
@@ -29,7 +30,21 @@
 
 ### 전체 프로젝트 구성 개요
 
-서비스는 6개 프로젝트로 구성됩니다.
+서비스는 `Src/`(소스)와 `Tests/`(테스트) 폴더로 구분되며, 총 8개 프로젝트로 구성됩니다.
+
+```
+{ServiceRoot}/
+├── Src/                              ← 소스 프로젝트
+│   ├── {ServiceName}/                ← Host (Composition Root)
+│   ├── {ServiceName}.Domain/
+│   ├── {ServiceName}.Application/
+│   ├── {ServiceName}.Adapters.Presentation/
+│   ├── {ServiceName}.Adapters.Persistence/
+│   └── {ServiceName}.Adapters.Infrastructure/
+└── Tests/                            ← 테스트 프로젝트
+    ├── {ServiceName}.Tests.Unit/
+    └── {ServiceName}.Tests.Integration/
+```
 
 | # | 프로젝트 | 이름 패턴 | SDK | 역할 |
 |---|---------|----------|-----|------|
@@ -39,6 +54,8 @@
 | 4 | Adapter: Persistence | `{ServiceName}.Adapters.Persistence` | `Microsoft.NET.Sdk` | Repository 구현 |
 | 5 | Adapter: Infrastructure | `{ServiceName}.Adapters.Infrastructure` | `Microsoft.NET.Sdk` | 외부 API, Mediator, OpenTelemetry, 파이프라인 |
 | 6 | Host | `{ServiceName}` | `Microsoft.NET.Sdk.Web` | Composition Root (Program.cs) |
+| 7 | Tests.Unit | `{ServiceName}.Tests.Unit` | `Microsoft.NET.Sdk` | Domain/Application 단위 테스트 |
+| 8 | Tests.Integration | `{ServiceName}.Tests.Integration` | `Microsoft.NET.Sdk` | HTTP 엔드포인트 통합 테스트 |
 
 ### 프로젝트 이름 규칙
 
@@ -47,6 +64,8 @@
 {ServiceName}.Domain                   ← Domain 레이어
 {ServiceName}.Application              ← Application 레이어
 {ServiceName}.Adapters.{Category}      ← Adapter 레이어 (Presentation | Persistence | Infrastructure)
+{ServiceName}.Tests.Unit               ← 단위 테스트
+{ServiceName}.Tests.Integration        ← 통합 테스트
 ```
 
 ### 프로젝트 의존성 방향
@@ -83,6 +102,18 @@
 ```
 
 > **규칙:** 의존성은 항상 바깥에서 안쪽으로만 향합니다. Domain은 아무것도 참조하지 않고, Application은 Domain만, Adapter는 Application만 참조합니다.
+
+### 테스트 프로젝트 의존성
+
+```
+Tests.Unit ──→ Domain
+           ──→ Application
+           ──→ Functorium.Testing
+
+Tests.Integration ──→ Host (ExcludeAssets=analyzers)
+                  ──→ Application
+                  ──→ Functorium.Testing
+```
 
 ## 프로젝트 공통 파일
 
@@ -480,6 +511,180 @@ app.Run();
 **등록 순서:** Presentation → Persistence → Infrastructure (서비스 등록)
 **미들웨어 순서:** Infrastructure → Persistence → Presentation (미들웨어 설정)
 
+## 테스트 프로젝트
+
+테스트 프로젝트는 `Tests/` 폴더 아래에 배치합니다. 테스트 작성 방법론(명명 규칙, AAA 패턴, MTP 설정 등)은 [unit-testing-guide.md](./unit-testing-guide.md)를 참조하세요.
+
+### Tests.Unit 프로젝트
+
+Domain/Application 레이어의 단위 테스트를 담당합니다.
+
+**csproj 구성:**
+
+```xml
+<ItemGroup>
+  <ProjectReference Include="..\..\Src\{ServiceName}.Domain\{ServiceName}.Domain.csproj" />
+  <ProjectReference Include="..\..\Src\{ServiceName}.Application\{ServiceName}.Application.csproj" />
+  <ProjectReference Include="{path}\Functorium.Testing\Functorium.Testing.csproj" />
+</ItemGroup>
+```
+
+- 추가 패키지: `NSubstitute` (Mocking)
+- 구성 파일: `Usings.cs`, `xunit.runner.json`
+
+**폴더 구조:**
+
+```
+{ServiceName}.Tests.Unit/
+├── Domain/                    ← Domain 레이어 미러링
+│   ├── SharedKernel/          ← ValueObject 테스트
+│   ├── {Aggregate}/           ← Aggregate/Entity/ValueObject 테스트
+│   └── ...
+├── Application/               ← Application 레이어 미러링
+│   ├── {Aggregate}/           ← Usecase 핸들러 테스트
+│   └── ...
+├── TestIO.cs                  ← FinT<IO, T> Mock 헬퍼
+├── Usings.cs
+└── xunit.runner.json
+```
+
+**TestIO 헬퍼:**
+
+Application Usecase 테스트에서 `FinT<IO, T>` 반환값 Mock에 필요한 정적 헬퍼 클래스입니다.
+
+```csharp
+internal static class TestIO
+{
+    public static FinT<IO, T> Succ<T>(T value) => FinT.lift(IO.pure(Fin.Succ(value)));
+    public static FinT<IO, T> Fail<T>(Error error) => FinT.lift(IO.pure(Fin.Fail<T>(error)));
+}
+```
+
+**xunit.runner.json:**
+
+```json
+{
+  "$schema": "https://xunit.net/schema/current/xunit.runner.schema.json",
+  "parallelizeAssembly": false,
+  "parallelizeTestCollections": true,
+  "methodDisplay": "method",
+  "methodDisplayOptions": "replaceUnderscoreWithSpace",
+  "diagnosticMessages": true
+}
+```
+
+> 단위 테스트는 Mock 기반으로 각 테스트가 독립적이므로 `parallelizeTestCollections: true` (병렬 허용)
+
+**Usings.cs:**
+
+```csharp
+global using Xunit;
+global using Shouldly;
+global using NSubstitute;
+global using LanguageExt;
+global using LanguageExt.Common;
+global using static LanguageExt.Prelude;
+```
+
+### Tests.Integration 프로젝트
+
+HTTP 엔드포인트의 통합 테스트를 담당합니다.
+
+**csproj 구성:**
+
+```xml
+<ItemGroup>
+  <ProjectReference Include="..\..\Src\{ServiceName}\{ServiceName}.csproj">
+    <ExcludeAssets>analyzers</ExcludeAssets>
+  </ProjectReference>
+  <ProjectReference Include="..\..\Src\{ServiceName}.Application\{ServiceName}.Application.csproj" />
+  <ProjectReference Include="{path}\Functorium.Testing\Functorium.Testing.csproj" />
+</ItemGroup>
+```
+
+- 추가 패키지: `Microsoft.AspNetCore.Mvc.Testing`
+- 구성 파일: `Usings.cs`, `xunit.runner.json`, `appsettings.json`
+
+> **ExcludeAssets=analyzers:** Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 프로젝트에서도 SourceGenerator가 실행되어 중복 코드가 생성됩니다. `ExcludeAssets=analyzers`로 이를 방지합니다.
+
+**폴더 구조:**
+
+```
+{ServiceName}.Tests.Integration/
+├── Fixtures/
+│   ├── {ServiceName}Fixture.cs       ← HostTestFixture<Program> 상속
+│   └── IntegrationTestBase.cs        ← IClassFixture + HttpClient 제공
+├── Endpoints/                         ← Presentation 레이어 미러링
+│   ├── {Aggregate}/
+│   │   └── {Endpoint}Tests.cs
+│   └── ErrorScenarios/               ← 에러 처리 검증
+├── Usings.cs
+├── xunit.runner.json
+└── appsettings.json                   ← OpenTelemetry 설정 필수
+```
+
+**Fixture 패턴:**
+
+`HostTestFixture<Program>`을 상속하여 `WebApplicationFactory` 기반 테스트 서버를 구성하고, `IntegrationTestBase`를 통해 `HttpClient`를 주입하는 2단계 패턴입니다.
+
+```csharp
+// {ServiceName}Fixture.cs
+public class {ServiceName}Fixture : HostTestFixture<Program> { }
+
+// IntegrationTestBase.cs
+public abstract class IntegrationTestBase : IClassFixture<{ServiceName}Fixture>
+{
+    protected HttpClient Client { get; }
+
+    protected IntegrationTestBase({ServiceName}Fixture fixture) => Client = fixture.Client;
+}
+```
+
+**xunit.runner.json:**
+
+```json
+{
+  "$schema": "https://xunit.net/schema/current/xunit.runner.schema.json",
+  "parallelizeAssembly": false,
+  "parallelizeTestCollections": false,
+  "maxParallelThreads": 1,
+  "methodDisplay": "classAndMethod",
+  "methodDisplayOptions": "all",
+  "diagnosticMessages": true
+}
+```
+
+> 통합 테스트는 In-memory 저장소를 공유하므로 `parallelizeTestCollections: false`, `maxParallelThreads: 1` (순차 실행 필수)
+
+**appsettings.json:**
+
+`HostTestFixture`는 "Test" 환경으로 실행하며 ContentRoot를 테스트 프로젝트 경로로 설정합니다. Host 프로젝트의 `appsettings.json`이 아닌 테스트 프로젝트의 `appsettings.json`을 로드하므로, OpenTelemetry 등 필수 설정을 테스트 프로젝트에도 배치해야 합니다.
+
+```json
+{
+  "OpenTelemetry": {
+    "ServiceName": "{ServiceName}",
+    "ServiceNamespace": "{ServiceName}",
+    "CollectorEndpoint": "http://localhost:18889",
+    "CollectorProtocol": "Grpc",
+    "TracingCollectorEndpoint": "",
+    "MetricsCollectorEndpoint": "",
+    "LoggingCollectorEndpoint": "",
+    "SamplingRate": 1.0,
+    "EnablePrometheusExporter": false
+  }
+}
+```
+
+**Usings.cs:**
+
+```csharp
+global using Xunit;
+global using Shouldly;
+global using System.Net;
+global using System.Net.Http.Json;
+```
+
 ## 네임스페이스 규칙
 
 네임스페이스는 프로젝트 루트 네임스페이스 + 폴더 경로로 결정됩니다.
@@ -502,6 +707,11 @@ app.Run();
 | `Adapters.Persistence/Abstractions/Registrations/` | `{ServiceName}.Adapters.Persistence.Abstractions.Registrations` |
 | `Adapters.Infrastructure/ExternalApis/` | `{ServiceName}.Adapters.Infrastructure.ExternalApis` |
 | `Adapters.Infrastructure/Abstractions/Registrations/` | `{ServiceName}.Adapters.Infrastructure.Abstractions.Registrations` |
+| `Tests.Unit/Domain/SharedKernel/` | `{ServiceName}.Tests.Unit.Domain.SharedKernel` |
+| `Tests.Unit/Domain/{Aggregate}/` | `{ServiceName}.Tests.Unit.Domain.{Aggregate}` |
+| `Tests.Unit/Application/{Aggregate}/` | `{ServiceName}.Tests.Unit.Application.{Aggregate}` |
+| `Tests.Integration/Fixtures/` | `{ServiceName}.Tests.Integration.Fixtures` |
+| `Tests.Integration/Endpoints/{Aggregate}/` | `{ServiceName}.Tests.Integration.Endpoints.{Aggregate}` |
 
 ## 새 서비스 프로젝트 생성 체크리스트
 
@@ -549,6 +759,24 @@ app.Run();
    - [ ] 모든 Adapter + Application 프로젝트 참조 추가
    - [ ] `Program.cs` — 레이어 등록 메서드 호출 추가
 
+7. **Tests.Unit 프로젝트**
+   - [ ] `{ServiceName}.Tests.Unit` 프로젝트 생성
+   - [ ] `Usings.cs` 추가
+   - [ ] `xunit.runner.json` 추가 (parallelizeTestCollections: true)
+   - [ ] `TestIO.cs` 헬퍼 추가
+   - [ ] Domain + Application + Functorium.Testing 참조 추가
+   - [ ] `Domain/` 폴더 구조 생성 (소스 미러링)
+   - [ ] `Application/` 폴더 구조 생성 (소스 미러링)
+
+8. **Tests.Integration 프로젝트**
+   - [ ] `{ServiceName}.Tests.Integration` 프로젝트 생성
+   - [ ] `Usings.cs` 추가
+   - [ ] `xunit.runner.json` 추가 (parallelizeTestCollections: false, maxParallelThreads: 1)
+   - [ ] `appsettings.json` 추가 (OpenTelemetry 설정)
+   - [ ] Host(ExcludeAssets=analyzers) + Application + Functorium.Testing 참조 추가
+   - [ ] `Fixtures/` 폴더 생성 (Fixture + IntegrationTestBase)
+   - [ ] `Endpoints/` 폴더 구조 생성 (Presentation 미러링)
+
 ## FAQ
 
 ### 1. Domain에 Abstractions/ 폴더가 없는 이유
@@ -581,6 +809,18 @@ Adapter의 주 목표 폴더 이름은 구현 기술에 따라 달라집니다. 
 
 Observability(OpenTelemetry, Serilog 등)는 횡단 관심사로, 특정 Adapter 카테고리에 속하지 않습니다. Infrastructure Adapter가 Mediator, Validator, OpenTelemetry, Pipeline 등 횡단 관심사를 종합적으로 관리하는 역할을 담당하기 때문에 이곳에 배치합니다.
 
+### 6. 통합 테스트에서 Host 참조 시 ExcludeAssets=analyzers가 필요한 이유
+
+Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 프로젝트에서도 SourceGenerator가 실행되어 중복 코드가 생성됩니다. `ExcludeAssets=analyzers`로 이를 방지합니다.
+
+### 7. 통합 테스트에 appsettings.json이 필요한 이유
+
+`HostTestFixture`는 ContentRoot를 테스트 프로젝트 경로로 설정합니다. Host 프로젝트의 `appsettings.json`이 아닌 테스트 프로젝트의 `appsettings.json`을 로드하므로, OpenTelemetry 등 필수 설정을 테스트 프로젝트에도 배치해야 합니다.
+
+### 8. 단위 테스트와 통합 테스트의 병렬 실행 설정이 다른 이유
+
+단위 테스트는 Mock 기반으로 각 테스트가 독립적이므로 병렬 실행이 가능합니다. 통합 테스트는 In-memory 저장소를 공유하므로 테스트 간 상태 간섭을 방지하기 위해 순차 실행합니다.
+
 ## 참고 문서
 
 - [entity-guide.md](./entity-guide.md) — Entity/Aggregate Root 구현 패턴
@@ -589,3 +829,4 @@ Observability(OpenTelemetry, Serilog 등)는 횡단 관심사로, 특정 Adapter
 - [adapter-guide.md](./adapter-guide.md) — Adapter 설계 원칙 + 단계별 활동
 - [error-guide.md](./error-guide.md) — 레이어별 에러 시스템
 - [observability-spec.md](./observability-spec.md) — Observability 사양
+- [unit-testing-guide.md](./unit-testing-guide.md) — 테스트 작성 방법론 (명명 규칙, AAA 패턴, MTP 설정)
