@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Src\Functorium\Functorium.csproj" />
+    <ProjectReference Include="..\..\..\..\Src\Functorium\Functorium.csproj" />
     <ProjectReference Include="..\LayeredArch.Adapters.Presentation\LayeredArch.Adapters.Presentation.csproj" />
   </ItemGroup>
 
