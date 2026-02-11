@@ -11,8 +11,8 @@
 | [entity-guide.md](./entity-guide.md) | Entity 및 Aggregate Root 구현 |
 | [usecase-implementation-guide.md](./usecase-implementation-guide.md) | 유스케이스 구현 (CQRS Command/Query) |
 | [error-guide.md](./error-guide.md) | 레이어별 에러 시스템 (정의, 네이밍) |
-| [adapter-guide.md](./adapter-guide.md) | Adapter 구현 (Repository, 외부 API) |
-| [adapter-implementation-activity-guide.md](./adapter-implementation-activity-guide.md) | Adapter 구현 활동 가이드 (단계별 실행) |
+| [adapter-guide.md](./adapter-guide.md) | Adapter 구현 가이드 (설계 원칙 + 단계별 활동) |
+| [service-project-structure-guide.md](./service-project-structure-guide.md) | 서비스 프로젝트 구성 (폴더, 네이밍, 의존성) |
 | [unit-testing-guide.md](./unit-testing-guide.md) | 단위 테스트 규칙 |
 | [error-testing-guide.md](./error-testing-guide.md) | 에러 테스트 패턴 |
 | [observability-spec.md](./observability-spec.md) | Observability 사양 (Field/Tag, Meter, 메시지 템플릿) |
@@ -20,9 +20,10 @@
 ## 문서 구조
 
 ```
-domain-modeling-overview.md (개요)
+service-project-structure-guide.md (프로젝트 구성)
 │
 ├── Domain Layer
+│   ├── domain-modeling-overview.md (개요)
 │   ├── valueobject-guide.md (값 객체)
 │   └── entity-guide.md (Entity/Aggregate)
 │
@@ -31,8 +32,7 @@ domain-modeling-overview.md (개요)
 │   └── error-guide.md (에러 정의)
 │
 ├── Adapter Layer
-│   ├── adapter-guide.md (Repository/외부 API)
-│   └── adapter-implementation-activity-guide.md (구현 활동 가이드)
+│   └── adapter-guide.md (설계 + 구현 활동)
 │
 ├── Observability
 │   ├── observability-spec.md (사양)
@@ -50,8 +50,8 @@ domain-modeling-overview.md (개요)
 - **Usecase 만들기**: [usecase-implementation-guide.md](./usecase-implementation-guide.md)
 - **Event Handler 만들기**: [usecase-implementation-guide.md#event-handler-구현](./usecase-implementation-guide.md#event-handler-구현)
 - **Adapter 만들기**: [adapter-guide.md](./adapter-guide.md)
-- **Adapter 구현 활동**: [adapter-implementation-activity-guide.md](./adapter-implementation-activity-guide.md)
 - **검증 메서드**: [valueobject-guide.md#validationrulest-시작점](./valueobject-guide.md#validationrulest-시작점)
 - **에러 타입**: [error-guide.md](./error-guide.md)
 - **에러 테스트**: [error-testing-guide.md](./error-testing-guide.md)
+- **프로젝트 구성/폴더 구조**: [service-project-structure-guide.md](./service-project-structure-guide.md)
 - **Observability 사양**: [observability-spec.md](./observability-spec.md)
