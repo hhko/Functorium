@@ -1,4 +1,4 @@
-namespace LayeredArch.Domain.ValueObjects;
+namespace LayeredArch.Domain.SharedKernel.ValueObjects;
 
 /// <summary>
 /// 수량 값 객체 (0 이상)

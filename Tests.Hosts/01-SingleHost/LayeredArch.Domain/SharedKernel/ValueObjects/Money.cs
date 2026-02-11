@@ -1,4 +1,4 @@
-namespace LayeredArch.Domain.ValueObjects;
+namespace LayeredArch.Domain.SharedKernel.ValueObjects;
 
 /// <summary>
 /// 금액 값 객체 (양수만 허용)

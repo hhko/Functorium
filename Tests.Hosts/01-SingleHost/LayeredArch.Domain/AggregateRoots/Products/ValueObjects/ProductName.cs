@@ -1,4 +1,4 @@
-namespace LayeredArch.Domain.ValueObjects;
+namespace LayeredArch.Domain.AggregateRoots.Products;
 
 /// <summary>
 /// 상품명 값 객체

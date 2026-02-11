@@ -1,8 +1,6 @@
-using LayeredArch.Domain.Entities;
-using LayeredArch.Domain.ValueObjects;
 using Functorium.Applications.Observabilities;
 
-namespace LayeredArch.Domain.Repositories;
+namespace LayeredArch.Domain.AggregateRoots.Products;
 
 /// <summary>
 /// 상품 리포지토리 인터페이스

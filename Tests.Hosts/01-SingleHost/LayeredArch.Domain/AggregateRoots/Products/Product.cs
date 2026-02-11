@@ -1,9 +1,8 @@
 using Functorium.Domains.Errors;
-using LayeredArch.Domain.ValueObjects;
 using static Functorium.Domains.Errors.DomainErrorType;
 using static LanguageExt.Prelude;
 
-namespace LayeredArch.Domain.Entities;
+namespace LayeredArch.Domain.AggregateRoots.Products;
 
 /// <summary>
 /// 상품 도메인 모델 (Aggregate Root)
@@ -36,6 +35,10 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     public ProductDescription Description { get; private set; }
     public Money Price { get; private set; }
     public Quantity StockQuantity { get; private set; }
+
+    // Tags 컬렉션 (SharedKernel Entity)
+    private readonly List<Tag> _tags = [];
+    public IReadOnlyList<Tag> Tags => _tags.AsReadOnly();
 
     // Audit 속성
     public DateTime CreatedAt { get; private set; }
@@ -137,5 +140,32 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
         StockQuantity = StockQuantity.Subtract(quantity);
         AddDomainEvent(new StockDeductedEvent(Id, quantity));
         return unit;
+    }
+
+    /// <summary>
+    /// 태그를 추가합니다. (SharedKernel 이벤트 발행)
+    /// </summary>
+    public Product AddTag(Tag tag)
+    {
+        if (_tags.Any(t => t.Id == tag.Id))
+            return this;
+
+        _tags.Add(tag);
+        AddDomainEvent(new TagAssignedEvent(tag.Id, tag.Name));
+        return this;
+    }
+
+    /// <summary>
+    /// 태그를 제거합니다. (SharedKernel 이벤트 발행)
+    /// </summary>
+    public Product RemoveTag(TagId tagId)
+    {
+        var tag = _tags.FirstOrDefault(t => t.Id == tagId);
+        if (tag is null)
+            return this;
+
+        _tags.Remove(tag);
+        AddDomainEvent(new TagRemovedEvent(tagId));
+        return this;
     }
 }
