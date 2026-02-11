@@ -2,6 +2,12 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
+- [x] IAdapter 인터페이스 구현 가이드 문서 통합
+- [ ] Tests.Hosts\01-SingleHost 프로젝트의 레이어 폴더 재구성
+- [ ] 서비스 레이어 구성 가이드 문서
+- [ ] Guide 폴더 README 문서 업데이트
+---
+
 - [x] 01-SingleHost 도메인 이벤트 핸들러에서 예외 추가
 - [ ] event 필드?
   ```
