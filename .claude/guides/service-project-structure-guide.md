@@ -830,3 +830,4 @@ Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 
 - [error-guide.md](./error-guide.md) — 레이어별 에러 시스템
 - [observability-spec.md](./observability-spec.md) — Observability 사양
 - [unit-testing-guide.md](./unit-testing-guide.md) — 테스트 작성 방법론 (명명 규칙, AAA 패턴, MTP 설정)
+- [testing-library-guide.md](./testing-library-guide.md) — Functorium.Testing 라이브러리 (LogTestContext, ArchitectureRules, QuartzTestFixture 등)

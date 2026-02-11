@@ -793,6 +793,12 @@ reportgenerator -reports:"**/coverage.xml" -targetdir:"coverage-report"
 
 ## 참고 문서
 
+### Functorium.Testing 라이브러리
+- 구조화된 로그 테스트 (LogTestContext), 아키텍처 규칙 검증, 소스 생성기 테스트, 스케줄 Job 테스트:
+  [testing-library-guide.md](./testing-library-guide.md)
+- 에러 타입 Assertion (ShouldBeDomainError 등):
+  [error-testing-guide.md](./error-testing-guide.md)
+
 ### xUnit v3
 - [xUnit.net v3 What's New](https://xunit.net/docs/getting-started/v3/whats-new)
 - [xUnit.net v3 Migration Guide](https://xunit.net/docs/getting-started/v3/migration)

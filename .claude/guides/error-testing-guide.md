@@ -684,6 +684,7 @@ public void Cancel_ShouldFail_WhenOrderAlreadyShipped()
 - [error-guide.md](./error-guide.md) - 레이어별 에러 시스템 (정의, 네이밍)
 - [valueobject-guide.md](./valueobject-guide.md) - 값 객체 구현 및 검증 패턴
 - [unit-testing-guide.md](./unit-testing-guide.md) - 단위 테스트 가이드
+- [testing-library-guide.md](./testing-library-guide.md) - 에러 외 테스트 유틸리티 (로그/아키텍처/소스생성기/Job 테스트)
 
 ---
 
