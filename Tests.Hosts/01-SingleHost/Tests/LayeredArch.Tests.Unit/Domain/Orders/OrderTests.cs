@@ -1,0 +1,61 @@
+using LayeredArch.Domain.AggregateRoots.Orders;
+using LayeredArch.Domain.AggregateRoots.Orders.ValueObjects;
+using LayeredArch.Domain.AggregateRoots.Products;
+using LayeredArch.Domain.SharedKernel.ValueObjects;
+
+namespace LayeredArch.Tests.Unit.Domain.Orders;
+
+public class OrderTests
+{
+    [Fact]
+    public void Create_ShouldCalculateTotalAmount()
+    {
+        // Arrange
+        var productId = ProductId.New();
+        var quantity = Quantity.Create(3).ThrowIfFail();
+        var unitPrice = Money.Create(100m).ThrowIfFail();
+        var address = ShippingAddress.Create("Seoul, Korea").ThrowIfFail();
+
+        // Act
+        var sut = Order.Create(productId, quantity, unitPrice, address);
+
+        // Assert
+        ((decimal)sut.TotalAmount).ShouldBe(300m);
+    }
+
+    [Fact]
+    public void Create_ShouldPublishCreatedEvent()
+    {
+        // Arrange
+        var productId = ProductId.New();
+        var quantity = Quantity.Create(2).ThrowIfFail();
+        var unitPrice = Money.Create(50m).ThrowIfFail();
+        var address = ShippingAddress.Create("Seoul, Korea").ThrowIfFail();
+
+        // Act
+        var sut = Order.Create(productId, quantity, unitPrice, address);
+
+        // Assert
+        sut.Id.ShouldNotBe(default);
+        sut.DomainEvents.ShouldContain(e => e is Order.CreatedEvent);
+    }
+
+    [Fact]
+    public void Create_ShouldSetProperties()
+    {
+        // Arrange
+        var productId = ProductId.New();
+        var quantity = Quantity.Create(2).ThrowIfFail();
+        var unitPrice = Money.Create(150m).ThrowIfFail();
+        var address = ShippingAddress.Create("Busan, Korea").ThrowIfFail();
+
+        // Act
+        var sut = Order.Create(productId, quantity, unitPrice, address);
+
+        // Assert
+        sut.ProductId.ShouldBe(productId);
+        ((int)sut.Quantity).ShouldBe(2);
+        ((decimal)sut.UnitPrice).ShouldBe(150m);
+        ((string)sut.ShippingAddress).ShouldBe("Busan, Korea");
+    }
+}
