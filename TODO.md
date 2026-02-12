@@ -2,101 +2,22 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
-
+- [x] `event.id, event.type -> request., response.`
+- [x] `event.id -> ` 로그 통합
+- [ ] `response.event.type` 확인 필요?
 - [ ] MinVer 재도입
-- [ ] 코드 품질 분석
+- [ ] 빌드 자동화에 코드 품질 분석 포함
   - 코드 포맷
   - 코드 커버리지
   - 정적 분석
   - 코드 복잡도
+- [ ] GitHub Action에 코드 품질 분석 포함
 - [ ] 소스 생성기 폴더 이름 변경
 - [ ] 소스 생성기 Book 업데이트
-
-
-- [x] IAdapter 인터페이스 구현 가이드 문서 통합
-- [ ] Tests.Hosts\01-SingleHost 프로젝트의 레이어 폴더 재구성
-- [ ] 서비스 레이어 구성 가이드 문서
-- [ ] Guide 폴더 README 문서 업데이트
----
-
-- [x] 01-SingleHost 도메인 이벤트 핸들러에서 예외 추가
-- [ ] event 필드?
-  ```
-  1. DomainEvent Field/Tag 테이블에 Tracing 전용 태그 추가
-  대상 파일: observability-spec.md (lines 66-79, 85-97)
-  DomainEvent Publisher 테이블 (line 72 이후에 추가):
-  ┌───────────────────┬─────────┬─────────┬─────────┬───────────────────────────────────────────────────────────────┐
-  │     Field/Tag     │ Logging │ Metrics │ Tracing │                             설명                              │
-  ├───────────────────┼─────────┼─────────┼─────────┼───────────────────────────────────────────────────────────────┤
-  │ event.type        │ -       │ -       │ ✅      │ 이벤트 타입명 (Publish 전용)                                  │
-  ├───────────────────┼─────────┼─────────┼─────────┼───────────────────────────────────────────────────────────────┤
-  │ event.occurred_at │ -       │ -       │ ✅      │ 이벤트 발생 시간 ISO 8601 (Publish 전용)                      │
-  ├───────────────────┼─────────┼─────────┼─────────┼───────────────────────────────────────────────────────────────┤
-  │ aggregate.type    │ -       │ -       │ ✅      │ Aggregate 타입명 (PublishEvents/PublishEventsWithResult 전용) │
-  └───────────────────┴─────────┴─────────┴─────────┴───────────────────────────────────────────────────────────────┘
-  DomainEvent Handler 테이블 (line 91 이후에 추가):
-  ┌────────────┬─────────┬─────────┬─────────┬────────────────┐
-  │ Field/Tag  │ Logging │ Metrics │ Tracing │      설명      │
-  ├────────────┼─────────┼─────────┼─────────┼────────────────┤
-  │ event.type │ -       │ -       │ ✅      │ 이벤트 타입명  │
-  ├────────────┼─────────┼─────────┼─────────┼────────────────┤
-  │ event.id   │ -       │ -       │ ✅      │ 이벤트 고유 ID │
-  └────────────┴─────────┴─────────┴─────────┴────────────────┘
-  ```
-- [ ] 로그 필드 개선
-- [ ] 추적 필드 개선
-- [ ] 지표 필드 개선
----
 - [ ] https://code.claude.com/docs/ko/memory
 - [ ] [Claude 메모리 아키텍처 살펴보기 - CLAUDE.md, Memory Tool까지](https://goddaehee.tistory.com/433)
-- [x] 관찰 가능성 문서 분리
-- [x] 기존 관찰 가능성 문서 개선 "_" -> 제거
 - [ ] crash
 - [ ] io + polly: timeout, retry, 서킷브레이커, ...
-
-```
-claude plugin marketplace add anthropics/knowledge-work-plugins
-
-claude plugin install sales@knowledge-work-plugins
-claude plugin install product-management@knowledge-work-plugins
-```
-
-- [x] 동적 로그 값 위치를 마지막으로 이동: with
-- [x] Usecase, Domain 이벤트 발생과 수신 관련 로그 형식 테스트 추가
-- [x] {request.layer} {request.category} {request.handler}.{request.handler.method} responded failure
-- [x] `domain_event.handler -> usecase`
-- [x] `request.handler.cqrs -> request.category.type`
-- [x] request.category.type: event
-- [x] requestCqrs -> requestCategoryType 변수명
-- [x] `application -> adapter`
-- [x] `request.category: domain_event.publisher -> domain_event`
-- [x] EvnetIds 조정
-  ```
-  Request	3001	event.request
-  Success	3002	event.response.success
-  Warning	3003	event.response.warning
-  Error	3004	event.response.error
-  ```
-- [ ] 
-  - `aggregate.type`
-  - `event.type`
-  - `event.id`
-  - `event.occurred_at`
-  ```
-  ObservableDomainEventPublisher.cs:
-    │  라인   │         하드코딩된 키          │       용도       │
-    │ 55, 182 │ "aggregate.type"               │ Aggregate 타입명 │
-    │ 118     │ "event.type"                   │ 이벤트 타입명    │
-    │ 119     │ "event.occurred_at"            │ 이벤트 발생 시간 │
-    │ 56, 183 │ "request.event.count"          │ 요청 이벤트 개수 │
-    │ 206     │ "response.event.success_count" │ 성공 이벤트 개수 │
-    │ 207     │ "response.event.failure_count" │ 실패 이벤트 개수 │
-  ObservableDomainEventNotificationPublisher.cs:
-    │ 라인 │ 하드코딩된 키 │      용도      │
-    │ 164  │ "event.type"  │ 이벤트 타입명  │
-    │ 165  │ "event.id"    │ 이벤트 고유 ID │
-  ```
-- [ ] publish 메서드 통합
 - [ ] 동적 입출력 테스트 보강
 - [ ] opensearch 모든 로그 수집
 - [ ] 필드 개선
@@ -128,6 +49,55 @@ claude plugin install product-management@knowledge-work-plugins
   .(...)
     .Apply()
   ```
+---
+- [x] IAdapter 인터페이스 구현 가이드 문서 통합
+- [x] Tests.Hosts\01-SingleHost 프로젝트의 레이어 폴더 재구성
+- [x] 서비스 레이어 구성 가이드 문서
+- [x] Guide 폴더 README 문서 업데이트
+- [x] 01-SingleHost 도메인 이벤트 핸들러에서 예외 추가
+- [x] 관찰 가능성 문서 분리
+- [x] 기존 관찰 가능성 문서 개선 "_" -> 제거
+- [x] product-management 플러그인 설치
+  ```
+  claude plugin marketplace add anthropics/knowledge-work-plugins
+  claude plugin install product-management@knowledge-work-plugins
+  ```
+- [x] 동적 로그 값 위치를 마지막으로 이동: with
+- [x] Usecase, Domain 이벤트 발생과 수신 관련 로그 형식 테스트 추가
+- [x] {request.layer} {request.category} {request.handler}.{request.handler.method} responded failure
+- [x] `domain_event.handler -> usecase`
+- [x] `request.handler.cqrs -> request.category.type`
+- [x] request.category.type: event
+- [x] requestCqrs -> requestCategoryType 변수명
+- [x] `application -> adapter`
+- [x] `request.category: domain_event.publisher -> domain_event`
+- [x] EvnetIds 조정
+  ```
+  Request	3001	event.request
+  Success	3002	event.response.success
+  Warning	3003	event.response.warning
+  Error	3004	event.response.error
+  ```
+- [x] 도메인 이벤트
+  - `aggregate.type`
+  - `event.type`
+  - `event.id`
+  - `event.occurred_at`
+  ```
+  ObservableDomainEventPublisher.cs:
+    │  라인   │         하드코딩된 키          │       용도       │
+    │ 55, 182 │ "aggregate.type"               │ Aggregate 타입명 │
+    │ 118     │ "event.type"                   │ 이벤트 타입명    │
+    │ 119     │ "event.occurred_at"            │ 이벤트 발생 시간 │
+    │ 56, 183 │ "request.event.count"          │ 요청 이벤트 개수 │
+    │ 206     │ "response.event.success_count" │ 성공 이벤트 개수 │
+    │ 207     │ "response.event.failure_count" │ 실패 이벤트 개수 │
+  ObservableDomainEventNotificationPublisher.cs:
+    │ 라인 │ 하드코딩된 키 │      용도      │
+    │ 164  │ "event.type"  │ 이벤트 타입명  │
+    │ 165  │ "event.id"    │ 이벤트 고유 ID │
+  ```
+- [x] ~~publish 메서드 통합~~
 ---
 - [ ] entity-guide.md 재구성
 - [ ] usecase-implementation-guide.md 재구성
