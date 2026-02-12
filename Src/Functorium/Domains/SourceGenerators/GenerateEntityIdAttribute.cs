@@ -5,7 +5,7 @@ namespace Functorium.Domains.SourceGenerators;
 /// 생성되는 타입: {EntityName}Id, {EntityName}IdComparer, {EntityName}IdConverter
 /// </summary>
 /// <remarks>
-/// 이 Attribute를 사용하려면 프로젝트에서 Functorium.Adapters.SourceGenerator를 참조해야 합니다.
+/// 이 Attribute를 사용하려면 프로젝트에서 Functorium.SourceGenerator를 참조해야 합니다.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
 public sealed class GenerateEntityIdAttribute : Attribute;

@@ -5,10 +5,10 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-using static Functorium.Adapters.SourceGenerators.Abstractions.Constants;
-using static Functorium.Adapters.SourceGenerators.Abstractions.Selectors;
+using static Functorium.SourceGenerators.Abstractions.Constants;
+using static Functorium.SourceGenerators.Abstractions.Selectors;
 
-namespace Functorium.Adapters.SourceGenerators.Generators.AdapterPipelineGenerator;
+namespace Functorium.SourceGenerators.Generators.AdapterPipelineGenerator;
 
 [Generator(LanguageNames.CSharp)]
 public sealed class AdapterPipelineGenerator()
@@ -18,7 +18,7 @@ public sealed class AdapterPipelineGenerator()
         AttachDebugger: false)  // ⚠️ 디버깅 필요 시 true로 변경 (자세한 내용: DEBUGGING_SOURCE_GENERATOR.md 참조)
 {
     private const string AttributeName = "GeneratePipeline";
-    private const string AttributeNamespace = "Functorium.Adapters.SourceGenerators";
+    private const string AttributeNamespace = "Functorium.SourceGenerators";
     private const string FullyQualifiedAttributeName = $"{AttributeNamespace}.{AttributeName}Attribute";
 
     // Diagnostic descriptors

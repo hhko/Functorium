@@ -1197,7 +1197,7 @@ SmartEnum Protocol 선택 기준 문서화
 - [x] .config 폴더를 이용해서 ReportGenerator 설치(ps1 파일 개선)
 - [x] commit.md와 .release-notes/scripts/docs 문서와 커밋 태그 통일
 - [x] commit.md와 .release-notes/scripts/docs 문서와 커밋 내용 통일(영문, 한글)
-- Functorium.Adapters.SourceGenerator
+- Functorium.SourceGenerator
   - [x] 파일 기반 네임스페이스
   - [x] 입출력 튜플 타입 제외
   - [x] 디버깅 방법 학습

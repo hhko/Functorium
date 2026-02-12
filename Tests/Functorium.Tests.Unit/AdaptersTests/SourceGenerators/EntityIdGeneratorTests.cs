@@ -1,4 +1,4 @@
-using Functorium.Adapters.SourceGenerators.Generators.EntityIdGenerator;
+using Functorium.SourceGenerators.Generators.EntityIdGenerator;
 using Functorium.Testing.Actions.SourceGenerators;
 
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
@@ -27,7 +27,7 @@ namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 // - JsonConverter 내장 확인
 // - TypeConverter 내장 확인
 //
-[Trait(nameof(UnitTest), UnitTest.Functorium_Adapters_SourceGenerator)]
+[Trait(nameof(UnitTest), UnitTest.Functorium_SourceGenerator)]
 public sealed class EntityIdGeneratorTests
 {
     private readonly EntityIdGenerator _sut;

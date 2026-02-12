@@ -1,7 +1,7 @@
 //using System.Collections.Generic;
 //using System.Text;
 
-//namespace Functorium.Adapters.SourceGenerator.Generators.AdapterPipelineGenerator;
+//namespace Functorium.SourceGenerator.Generators.AdapterPipelineGenerator;
 
 ///// <summary>
 ///// 코드 생성을 위한 StringBuilder 래퍼

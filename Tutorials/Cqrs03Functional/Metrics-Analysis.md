@@ -396,6 +396,6 @@ histogram_quantile(0.99, rate(adapter_repository_op_duration_bucket[5m]))
 - **Usecase Metrics**: `Src/Functorium/Applications/Pipelines/UsecaseMetricsPipeline.cs`
 - **Usecase Metrics 필드 정의**: `Src/Functorium/Applications/Observabilities/UsecaseFields.cs`
 - **IAdapter Metrics 구현**: `Src/Functorium/Adapters/Observabilities/Metrics/AdapterMetric.cs`
-- **IAdapter Pipeline 생성기**: `Src/Functorium.Adapters.SourceGenerator/AdapterPipelineGenerator.cs`
+- **IAdapter Pipeline 생성기**: `Src/Functorium.SourceGenerator/AdapterPipelineGenerator.cs`
 - **Observability 필드 정의**: `Src/Functorium/Adapters/Observabilities/ObservabilityFields.cs`
 

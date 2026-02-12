@@ -352,7 +352,7 @@ ProductRepository.cs     : 60줄 (순수 비즈니스 로직)
 ```
 Functorium/
 ├── Src/
-│   ├── Functorium.Adapters.SourceGenerator/            # 소스 생성기
+│   ├── Functorium.SourceGenerator/            # 소스 생성기
 │   │   ├── AdapterPipelineGenerator.cs                 # 메인 생성기
 │   │   └── Generators/
 │   │       ├── IncrementalGeneratorBase.cs             # 기본 패턴

@@ -1,4 +1,4 @@
-using Functorium.Adapters.SourceGenerators;
+using Functorium.SourceGenerators;
 using Functorium.Applications.Observabilities;
 using LanguageExt;
 using LanguageExt.Common;

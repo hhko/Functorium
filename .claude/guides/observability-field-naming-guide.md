@@ -223,7 +223,7 @@ response.event.failure_count     # 조합 count는 _count
 
 | 구성 요소 | 파일 경로 |
 |----------|----------|
-| 필드 이름 생성 헬퍼 | `Src/Functorium.Adapters.SourceGenerator/Generators/AdapterPipelineGenerator/CollectionTypeHelper.cs` |
+| 필드 이름 생성 헬퍼 | `Src/Functorium.SourceGenerator/Generators/AdapterPipelineGenerator/CollectionTypeHelper.cs` |
 | Application Logging | `Src/Functorium/Adapters/Observabilities/Pipelines/UsecaseLoggingPipeline.cs` |
 | Adapter Logging | Source Generator 생성 코드 |
 | Application Metrics | `Src/Functorium/Adapters/Observabilities/Pipelines/UsecaseMetricsPipeline.cs` |

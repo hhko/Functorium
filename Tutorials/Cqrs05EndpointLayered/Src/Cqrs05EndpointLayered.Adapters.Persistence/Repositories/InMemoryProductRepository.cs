@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Cqrs05EndpointLayered.Domains.Entities;
 using Cqrs05EndpointLayered.Domains.Repositories;
-using Functorium.Adapters.SourceGenerators;
+using Functorium.SourceGenerators;
 using LanguageExt;
 using LanguageExt.Common;
 using Microsoft.Extensions.Logging;

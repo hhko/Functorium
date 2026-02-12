@@ -1,7 +1,7 @@
 <Solution>
   <Folder Name="/Src/">
     <Project Path="Src/Functorium/Functorium.csproj" />
-    <Project Path="Src/Functorium.Adapters.SourceGenerator/Functorium.Adapters.SourceGenerator.csproj" />
+    <Project Path="Src/Functorium.SourceGenerator/Functorium.SourceGenerator.csproj" />
     <Project Path="Src/Functorium.Testing/Functorium.Testing.csproj" Id="38736c0d-ff4f-4c6f-bc1d-f43b860a570a" />
   </Folder>
   <Folder Name="/Tests.Hosts/" />

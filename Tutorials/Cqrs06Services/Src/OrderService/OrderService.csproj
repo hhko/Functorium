@@ -47,7 +47,7 @@
 
   <!-- Source Generator 참조 (Analyzer로 참조) -->
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Src\Functorium.Adapters.SourceGenerator\Functorium.Adapters.SourceGenerator.csproj"
+    <ProjectReference Include="..\..\..\..\Src\Functorium.SourceGenerator\Functorium.SourceGenerator.csproj"
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false" />
   </ItemGroup>

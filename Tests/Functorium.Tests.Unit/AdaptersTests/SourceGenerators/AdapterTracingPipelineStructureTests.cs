@@ -45,7 +45,7 @@ namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 /// +--------------------------+-------------------+-------------------+
 /// </code>
 /// </remarks>
-[Trait(nameof(UnitTest), UnitTest.Functorium_Adapters_SourceGenerator)]
+[Trait(nameof(UnitTest), UnitTest.Functorium_SourceGenerator)]
 public sealed class AdapterTracingPipelineStructureTests : IDisposable
 {
     private readonly ActivitySource _activitySource;

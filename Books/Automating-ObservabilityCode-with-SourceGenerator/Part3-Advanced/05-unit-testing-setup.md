@@ -171,7 +171,7 @@ return outputCompilation
     <ProjectReference Include="..\..\Src\Functorium.Testing\Functorium.Testing.csproj" />
 
     <!-- 테스트 대상 소스 생성기 -->
-    <ProjectReference Include="..\..\Src\Functorium.Adapters.SourceGenerator\Functorium.Adapters.SourceGenerator.csproj" />
+    <ProjectReference Include="..\..\Src\Functorium.SourceGenerator\Functorium.SourceGenerator.csproj" />
   </ItemGroup>
 
 </Project>
@@ -194,12 +194,12 @@ return outputCompilation
 
 ```csharp
 // AdapterPipelineGeneratorTests.cs
-using Functorium.Adapters.SourceGenerator;
+using Functorium.SourceGenerator;
 using Functorium.Testing.SourceGenerators;
 
 namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 
-[Trait(nameof(UnitTest), UnitTest.Functorium_Adapters_SourceGenerator)]
+[Trait(nameof(UnitTest), UnitTest.Functorium_SourceGenerator)]
 public sealed class AdapterPipelineGeneratorTests
 {
     private readonly AdapterPipelineGenerator _sut;
@@ -214,7 +214,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Adapters.SourceGenerator;
+            using Functorium.SourceGenerator;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -247,7 +247,7 @@ public sealed class AdapterPipelineGeneratorTests
 ```csharp
 string input = """
     // 1. 필요한 using 문
-    using Functorium.Adapters.SourceGenerator;
+    using Functorium.SourceGenerator;
     using Functorium.Applications.Observabilities;
     using LanguageExt;
 

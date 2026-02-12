@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
 using Functorium.Adapters.Errors;
-using Functorium.Adapters.SourceGenerators;
+using Functorium.SourceGenerators;
 using LanguageExt;
 using LanguageExt.Common;
 using static Functorium.Adapters.Errors.AdapterErrorType;

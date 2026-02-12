@@ -4,10 +4,10 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-using static Functorium.Adapters.SourceGenerators.Abstractions.Constants;
-using static Functorium.Adapters.SourceGenerators.Abstractions.Selectors;
+using static Functorium.SourceGenerators.Abstractions.Constants;
+using static Functorium.SourceGenerators.Abstractions.Selectors;
 
-namespace Functorium.Adapters.SourceGenerators.Generators.EntityIdGenerator;
+namespace Functorium.SourceGenerators.Generators.EntityIdGenerator;
 
 /// <summary>
 /// [GenerateEntityId] 속성이 붙은 Entity 클래스에 대해

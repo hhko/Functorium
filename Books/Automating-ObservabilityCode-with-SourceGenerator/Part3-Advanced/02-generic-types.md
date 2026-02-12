@@ -32,7 +32,7 @@ public override FinT<IO, User> GetUserAsync(int id) =>
 
 ```csharp
 // Generators/AdapterPipelineGenerator/TypeExtractor.cs
-namespace Functorium.Adapters.SourceGenerator.Generators.AdapterPipelineGenerator;
+namespace Functorium.SourceGenerator.Generators.AdapterPipelineGenerator;
 
 /// <summary>
 /// 제네릭 타입에서 내부 타입을 추출하는 유틸리티 클래스

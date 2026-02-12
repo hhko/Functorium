@@ -1,5 +1,5 @@
 using Functorium.Adapters.Observabilities.Naming;
-using Functorium.Adapters.SourceGenerators.Generators.AdapterPipelineGenerator;
+using Functorium.SourceGenerators.Generators.AdapterPipelineGenerator;
 using Functorium.Testing.Actions.SourceGenerators;
 
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
@@ -79,7 +79,7 @@ namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 /// +--------------------------+-------------------+-------------------+
 /// </code>
 /// </remarks>
-[Trait(nameof(UnitTest), UnitTest.Functorium_Adapters_SourceGenerator)]
+[Trait(nameof(UnitTest), UnitTest.Functorium_SourceGenerator)]
 public sealed class AdapterPipelineObservabilityTests
 {
     private readonly AdapterPipelineGenerator _sut;
@@ -350,7 +350,7 @@ public sealed class AdapterPipelineObservabilityTests
     private static string CreateSimpleAdapterInput()
     {
         return """
-            using Functorium.Adapters.SourceGenerators;
+            using Functorium.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 

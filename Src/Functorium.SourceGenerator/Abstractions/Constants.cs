@@ -1,4 +1,4 @@
-namespace Functorium.Adapters.SourceGenerators.Abstractions;
+namespace Functorium.SourceGenerators.Abstractions;
 
 public static class Constants
 {

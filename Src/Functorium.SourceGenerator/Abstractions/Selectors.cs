@@ -1,7 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Functorium.Adapters.SourceGenerators.Abstractions;
+namespace Functorium.SourceGenerators.Abstractions;
 
 public static class Selectors
 {

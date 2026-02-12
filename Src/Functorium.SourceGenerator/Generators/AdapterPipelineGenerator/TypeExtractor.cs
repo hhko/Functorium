@@ -1,4 +1,4 @@
-namespace Functorium.Adapters.SourceGenerators.Generators.AdapterPipelineGenerator;
+namespace Functorium.SourceGenerators.Generators.AdapterPipelineGenerator;
 
 /// <summary>
 /// 제네릭 타입에서 내부 타입을 추출하는 유틸리티 클래스

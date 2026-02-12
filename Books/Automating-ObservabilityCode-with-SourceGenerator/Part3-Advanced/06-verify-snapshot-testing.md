@@ -257,7 +257,7 @@ steps:
 public Task AdapterPipelineGenerator_ShouldGenerate_PipelineClass_WithSingleMethod()
 {
     string input = """
-        using Functorium.Adapters.SourceGenerator;
+        using Functorium.SourceGenerator;
         using Functorium.Applications.Observabilities;
         using LanguageExt;
 

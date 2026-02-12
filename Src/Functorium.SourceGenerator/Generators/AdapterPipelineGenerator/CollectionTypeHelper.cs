@@ -1,4 +1,4 @@
-namespace Functorium.Adapters.SourceGenerators.Generators.AdapterPipelineGenerator;
+namespace Functorium.SourceGenerators.Generators.AdapterPipelineGenerator;
 
 /// <summary>
 /// 컬렉션 타입 여부를 확인하는 헬퍼 클래스

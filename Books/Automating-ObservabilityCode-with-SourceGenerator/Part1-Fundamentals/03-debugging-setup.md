@@ -160,7 +160,7 @@ public Task Should_Generate_Pipeline_For_Simple_Adapter()
 {
     // Arrange
     string input = """
-        using Functorium.Adapters.SourceGenerator;
+        using Functorium.SourceGenerator;
         using LanguageExt;
 
         namespace MyApp.Adapters;
@@ -249,8 +249,8 @@ Visual Studio에서 생성된 코드를 직접 볼 수 있습니다:
 Solution Explorer
 → Dependencies
 → Analyzers
-→ Functorium.Adapters.SourceGenerator
-→ Functorium.Adapters.SourceGenerator.AdapterPipelineGenerator
+→ Functorium.SourceGenerator
+→ Functorium.SourceGenerator.AdapterPipelineGenerator
    → GeneratePipelineAttribute.g.cs
    → Repositories.UserRepositoryPipeline.g.cs
    → ...

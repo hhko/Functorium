@@ -25,7 +25,7 @@
 
   <!-- NuGet Package Settings -->
   <PropertyGroup>
-    <PackageId>Functorium.Adapters.SourceGenerator</PackageId>
+    <PackageId>Functorium.SourceGenerator</PackageId>
     <Description>Functorium Source Generator for Adapter Pipeline generation</Description>
     <PackageTags>$(PackageTags);source-generator;roslyn;analyzer</PackageTags>
   </PropertyGroup>

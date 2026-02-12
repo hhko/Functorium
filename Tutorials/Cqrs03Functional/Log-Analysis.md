@@ -578,6 +578,6 @@ IAdapter 로그는 소스 생성기(`AdapterPipelineGenerator`)에 의해 자동
 
 - **Usecase 로그**: `Src/Functorium/Applications/Pipelines/UsecaseLoggerPipeline.cs`
 - **Usecase 로거 확장**: `Src/Functorium/Adapters/Observabilities/Loggers/UsecaseLoggerExtensions.cs`
-- **IAdapter Pipeline 생성기**: `Src/Functorium.Adapters.SourceGenerator/AdapterPipelineGenerator.cs`
+- **IAdapter Pipeline 생성기**: `Src/Functorium.SourceGenerator/AdapterPipelineGenerator.cs`
 - **Observability 필드 정의**: `Src/Functorium/Adapters/Observabilities/ObservabilityFields.cs`
 

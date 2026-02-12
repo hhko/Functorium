@@ -492,7 +492,7 @@ public void Should_Generate_Pipeline_Code()
 
 ---
 
-### Functorium.Adapters.SourceGenerator Library
+### Functorium.SourceGenerator Library
 
 #### 1. Adapter Pipeline Generator
 
