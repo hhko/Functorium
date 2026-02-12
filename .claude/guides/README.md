@@ -8,6 +8,7 @@
 
 | 문서 | 설명 |
 |------|------|
+| [solution-configuration-guide.md](./solution-configuration-guide.md) | 솔루션 루트 구성 파일 및 빌드 스크립트 |
 | [service-project-structure-guide.md](./service-project-structure-guide.md) | 서비스 프로젝트 구성 (폴더, 네이밍, 의존성) |
 
 ### 도메인 레이어
@@ -65,7 +66,9 @@
 ## 문서 구조
 
 ```
-service-project-structure-guide.md (프로젝트 구성)
+solution-configuration-guide.md (솔루션 구성)
+│
+├── service-project-structure-guide.md (프로젝트 구성)
 │
 ├── Domain Layer
 │   ├── domain-modeling-overview.md (개요)
@@ -107,6 +110,7 @@ service-project-structure-guide.md (프로젝트 구성)
 - **검증 메서드**: [valueobject-guide.md#validationrulest-시작점](./valueobject-guide.md#validationrulest-시작점)
 - **에러 타입**: [error-guide.md](./error-guide.md)
 - **에러 테스트**: [error-testing-guide.md](./error-testing-guide.md)
+- **솔루션 구성 파일/빌드 스크립트**: [solution-configuration-guide.md](./solution-configuration-guide.md)
 - **프로젝트 구성/폴더 구조**: [service-project-structure-guide.md](./service-project-structure-guide.md)
 - **Observability 사양**: [observability-spec.md](./observability-spec.md)
 - **구조화된 로그 테스트**: [testing-library-guide.md#구조화된-로그-테스트](./testing-library-guide.md#구조화된-로그-테스트)

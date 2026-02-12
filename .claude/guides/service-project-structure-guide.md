@@ -823,6 +823,7 @@ Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 
 
 ## 참고 문서
 
+- [solution-configuration-guide.md](./solution-configuration-guide.md) — 솔루션 루트 구성 파일 및 빌드 스크립트
 - [entity-guide.md](./entity-guide.md) — Entity/Aggregate Root 구현 패턴
 - [valueobject-guide.md](./valueobject-guide.md) — 값 객체 구현 및 검증 패턴
 - [usecase-implementation-guide.md](./usecase-implementation-guide.md) — 유스케이스 (Command/Query) 구현
