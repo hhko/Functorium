@@ -29,7 +29,7 @@ public class GetOrderByIdQueryTests
         var request = new GetOrderByIdQuery.Request(order.Id.ToString());
 
         _orderRepository.GetById(Arg.Any<OrderId>())
-            .Returns(TestIO.Succ(order));
+            .Returns(FinTFactory.Succ(order));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -47,7 +47,7 @@ public class GetOrderByIdQueryTests
         var request = new GetOrderByIdQuery.Request(OrderId.New().ToString());
 
         _orderRepository.GetById(Arg.Any<OrderId>())
-            .Returns(TestIO.Fail<Order>(Error.New("Order not found")));
+            .Returns(FinTFactory.Fail<Order>(Error.New("Order not found")));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

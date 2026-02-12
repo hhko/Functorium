@@ -33,7 +33,7 @@ public class GetAllProductsQueryTests
         var request = new GetAllProductsQuery.Request();
 
         _productRepository.GetAll()
-            .Returns(TestIO.Succ(products));
+            .Returns(FinTFactory.Succ(products));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

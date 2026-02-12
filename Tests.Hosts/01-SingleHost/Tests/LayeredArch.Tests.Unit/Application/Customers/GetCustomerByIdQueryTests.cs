@@ -27,7 +27,7 @@ public class GetCustomerByIdQueryTests
         var request = new GetCustomerByIdQuery.Request(customer.Id.ToString());
 
         _customerRepository.GetById(Arg.Any<CustomerId>())
-            .Returns(TestIO.Succ(customer));
+            .Returns(FinTFactory.Succ(customer));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -45,7 +45,7 @@ public class GetCustomerByIdQueryTests
         var request = new GetCustomerByIdQuery.Request(CustomerId.New().ToString());
 
         _customerRepository.GetById(Arg.Any<CustomerId>())
-            .Returns(TestIO.Fail<Customer>(Error.New("Customer not found")));
+            .Returns(FinTFactory.Fail<Customer>(Error.New("Customer not found")));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

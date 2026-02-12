@@ -34,13 +34,13 @@ public class UpdateProductCommandTests
             existingProduct.Id.ToString(), "Updated Product", "Updated Desc", 200m, 20);
 
         _productRepository.GetById(Arg.Any<ProductId>())
-            .Returns(TestIO.Succ(existingProduct));
+            .Returns(FinTFactory.Succ(existingProduct));
         _productRepository.ExistsByName(Arg.Any<ProductName>(), Arg.Any<ProductId>())
-            .Returns(TestIO.Succ(false));
+            .Returns(FinTFactory.Succ(false));
         _productRepository.Update(Arg.Any<Product>())
-            .Returns(call => TestIO.Succ(call.Arg<Product>()));
+            .Returns(call => FinTFactory.Succ(call.Arg<Product>()));
         _eventPublisher.PublishEvents(Arg.Any<Product>(), Arg.Any<CancellationToken>())
-            .Returns(TestIO.Succ(unit));
+            .Returns(FinTFactory.Succ(unit));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -59,7 +59,7 @@ public class UpdateProductCommandTests
             ProductId.New().ToString(), "Updated", "Desc", 200m, 20);
 
         _productRepository.GetById(Arg.Any<ProductId>())
-            .Returns(TestIO.Fail<Product>(Error.New("Product not found")));
+            .Returns(FinTFactory.Fail<Product>(Error.New("Product not found")));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -77,9 +77,9 @@ public class UpdateProductCommandTests
             existingProduct.Id.ToString(), "Duplicate Name", "Desc", 200m, 20);
 
         _productRepository.GetById(Arg.Any<ProductId>())
-            .Returns(TestIO.Succ(existingProduct));
+            .Returns(FinTFactory.Succ(existingProduct));
         _productRepository.ExistsByName(Arg.Any<ProductName>(), Arg.Any<ProductId>())
-            .Returns(TestIO.Succ(true));
+            .Returns(FinTFactory.Succ(true));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

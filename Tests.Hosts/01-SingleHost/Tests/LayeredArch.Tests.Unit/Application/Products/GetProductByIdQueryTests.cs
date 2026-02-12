@@ -27,7 +27,7 @@ public class GetProductByIdQueryTests
         var request = new GetProductByIdQuery.Request(product.Id.ToString());
 
         _productRepository.GetById(Arg.Any<ProductId>())
-            .Returns(TestIO.Succ(product));
+            .Returns(FinTFactory.Succ(product));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -44,7 +44,7 @@ public class GetProductByIdQueryTests
         var request = new GetProductByIdQuery.Request(ProductId.New().ToString());
 
         _productRepository.GetById(Arg.Any<ProductId>())
-            .Returns(TestIO.Fail<Product>(Error.New("Product not found")));
+            .Returns(FinTFactory.Fail<Product>(Error.New("Product not found")));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

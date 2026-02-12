@@ -33,11 +33,11 @@ public class DeductStockCommandTests
         var request = new DeductStockCommand.Request(product.Id.ToString(), 3);
 
         _productRepository.GetById(Arg.Any<ProductId>())
-            .Returns(TestIO.Succ(product));
+            .Returns(FinTFactory.Succ(product));
         _productRepository.Update(Arg.Any<Product>())
-            .Returns(call => TestIO.Succ(call.Arg<Product>()));
+            .Returns(call => FinTFactory.Succ(call.Arg<Product>()));
         _eventPublisher.PublishEvents(Arg.Any<Product>(), Arg.Any<CancellationToken>())
-            .Returns(TestIO.Succ(unit));
+            .Returns(FinTFactory.Succ(unit));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -55,7 +55,7 @@ public class DeductStockCommandTests
         var request = new DeductStockCommand.Request(product.Id.ToString(), 5);
 
         _productRepository.GetById(Arg.Any<ProductId>())
-            .Returns(TestIO.Succ(product));
+            .Returns(FinTFactory.Succ(product));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -71,7 +71,7 @@ public class DeductStockCommandTests
         var request = new DeductStockCommand.Request(ProductId.New().ToString(), 3);
 
         _productRepository.GetById(Arg.Any<ProductId>())
-            .Returns(TestIO.Fail<Product>(Error.New("Product not found")));
+            .Returns(FinTFactory.Fail<Product>(Error.New("Product not found")));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

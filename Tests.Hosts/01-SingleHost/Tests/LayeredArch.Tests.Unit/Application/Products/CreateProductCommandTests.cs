@@ -22,11 +22,11 @@ public class CreateProductCommandTests
         var request = new CreateProductCommand.Request("Test Product", "Description", 100m, 10);
 
         _productRepository.ExistsByName(Arg.Any<ProductName>(), Arg.Any<ProductId?>())
-            .Returns(TestIO.Succ(false));
+            .Returns(FinTFactory.Succ(false));
         _productRepository.Create(Arg.Any<Product>())
-            .Returns(call => TestIO.Succ(call.Arg<Product>()));
+            .Returns(call => FinTFactory.Succ(call.Arg<Product>()));
         _eventPublisher.PublishEvents(Arg.Any<Product>(), Arg.Any<CancellationToken>())
-            .Returns(TestIO.Succ(unit));
+            .Returns(FinTFactory.Succ(unit));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -70,7 +70,7 @@ public class CreateProductCommandTests
         var request = new CreateProductCommand.Request("Existing Product", "Description", 100m, 10);
 
         _productRepository.ExistsByName(Arg.Any<ProductName>(), Arg.Any<ProductId?>())
-            .Returns(TestIO.Succ(true));
+            .Returns(FinTFactory.Succ(true));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

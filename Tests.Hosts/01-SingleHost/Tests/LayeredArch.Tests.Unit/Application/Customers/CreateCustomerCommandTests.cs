@@ -23,11 +23,11 @@ public class CreateCustomerCommandTests
         var request = new CreateCustomerCommand.Request("John", "john@example.com", 5000m);
 
         _customerRepository.ExistsByEmail(Arg.Any<Email>())
-            .Returns(TestIO.Succ(false));
+            .Returns(FinTFactory.Succ(false));
         _customerRepository.Create(Arg.Any<Customer>())
-            .Returns(call => TestIO.Succ(call.Arg<Customer>()));
+            .Returns(call => FinTFactory.Succ(call.Arg<Customer>()));
         _eventPublisher.PublishEvents(Arg.Any<Customer>(), Arg.Any<CancellationToken>())
-            .Returns(TestIO.Succ(unit));
+            .Returns(FinTFactory.Succ(unit));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -71,7 +71,7 @@ public class CreateCustomerCommandTests
         var request = new CreateCustomerCommand.Request("John", "john@example.com", 5000m);
 
         _customerRepository.ExistsByEmail(Arg.Any<Email>())
-            .Returns(TestIO.Succ(true));
+            .Returns(FinTFactory.Succ(true));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

@@ -27,13 +27,13 @@ public class CreateOrderCommandTests
         var request = new CreateOrderCommand.Request(productId.ToString(), 2, "Seoul, Korea");
 
         _productCatalog.ExistsById(Arg.Any<ProductId>())
-            .Returns(TestIO.Succ(true));
+            .Returns(FinTFactory.Succ(true));
         _productCatalog.GetPrice(Arg.Any<ProductId>())
-            .Returns(TestIO.Succ(Money.Create(100m).ThrowIfFail()));
+            .Returns(FinTFactory.Succ(Money.Create(100m).ThrowIfFail()));
         _orderRepository.Create(Arg.Any<Order>())
-            .Returns(call => TestIO.Succ(call.Arg<Order>()));
+            .Returns(call => FinTFactory.Succ(call.Arg<Order>()));
         _eventPublisher.PublishEvents(Arg.Any<Order>(), Arg.Any<CancellationToken>())
-            .Returns(TestIO.Succ(unit));
+            .Returns(FinTFactory.Succ(unit));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -51,7 +51,7 @@ public class CreateOrderCommandTests
         var request = new CreateOrderCommand.Request(ProductId.New().ToString(), 2, "Seoul, Korea");
 
         _productCatalog.ExistsById(Arg.Any<ProductId>())
-            .Returns(TestIO.Succ(false));
+            .Returns(FinTFactory.Succ(false));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
