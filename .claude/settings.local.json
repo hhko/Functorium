@@ -1,11 +1,6 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet test:*)",
-      "Bash(git add:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nrefactor\\(event\\): DomainEventPublisher 메서드 순서 정렬\n\nPublish → PublishEvents → PublishEventsWithResult 순으로\n메서드를 재배치하여 인터페이스 정의 순서와 일치시킴\nEOF\n\\)\")",
-      "Bash(git commit:*)",
-      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []
