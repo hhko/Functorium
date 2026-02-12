@@ -668,8 +668,8 @@ Kind: `Internal`
 | `request.category.type` | "event" | "event" |
 | `request.handler` | handler name | handler name |
 | `request.handler.method` | "Handle" | "Handle" |
-| `event.type` | event type name | event type name |
-| `event.id` | event id | event id |
+| `request.event.type` | event type name | event type name |
+| `request.event.id` | event id | event id |
 | `response.status` | "success" | "failure" |
 | `error.type` | - | "expected"/"exceptional" |
 | `error.code` | - | 에러 코드 |
@@ -677,16 +677,16 @@ Kind: `Internal`
 
 > **Note:** Handler의 `response.elapsed`는 Activity 태그에 설정되지 않습니다 (Logging 전용).
 
-### event.type과 event.id 필드
+### request.event.type과 request.event.id 필드
 
-Handler Span에는 `event.type`과 `event.id`라는 고유 태그가 있습니다:
+Handler Span에는 `request.event.type`과 `request.event.id`라는 고유 태그가 있습니다:
 
-- **`event.type`**: 이벤트 타입명. `request.handler`(핸들러명)와 **다른 값**입니다.
-  - 예: `request.handler = "OnProductCreated"`, `event.type = "CreatedEvent"`
+- **`request.event.type`**: 이벤트 타입명. `request.handler`(핸들러명)와 **다른 값**입니다.
+  - 예: `request.handler = "OnProductCreated"`, `request.event.type = "CreatedEvent"`
   - 하나의 이벤트 타입에 여러 핸들러가 등록될 수 있으므로 구분이 필요합니다.
 
-- **`event.id`**: 이벤트 인스턴스별 GUID. 동일 이벤트를 처리하는 여러 핸들러 간의 상관관계를 추적합니다.
-  - 예: `event.id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"`
+- **`request.event.id`**: 이벤트 인스턴스별 GUID. 동일 이벤트를 처리하는 여러 핸들러 간의 상관관계를 추적합니다.
+  - 예: `request.event.id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"`
 
 ### LayeredArch Trace 시각화
 
@@ -698,8 +698,8 @@ application usecase.command CreateProductCommand.Handle [Ok]
   ├─ adapter repository InMemoryProductRepository.Create [Ok]
   └─ adapter event Product.PublishEvents [Ok]
        └─ application usecase.event OnProductCreated.Handle [Ok]
-            ├─ event.type = "CreatedEvent"
-            └─ event.id = "515711cd-..."
+            ├─ request.event.type = "CreatedEvent"
+            └─ request.event.id = "515711cd-..."
 ```
 
 **핸들러 예외 (`POST /api/products` with `[handler-error]`):**
@@ -710,8 +710,8 @@ application usecase.command CreateProductCommand.Handle [Error]
   ├─ adapter repository InMemoryProductRepository.Create [Ok]
   └─ adapter event Product.PublishEvents [Error]
        └─ application usecase.event OnProductCreated.Handle [Error]
-            ├─ event.type = "CreatedEvent"
-            ├─ event.id = "f385a945-..."
+            ├─ request.event.type = "CreatedEvent"
+            ├─ request.event.id = "f385a945-..."
             ├─ error.type = "exceptional"
             └─ error.code = "InvalidOperationException"
 ```

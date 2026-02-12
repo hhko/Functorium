@@ -42,11 +42,9 @@ public static partial class ObservabilityNaming
         // Error 속성
         public const string ErrorCode = "error.code";
 
-        // Event 속성 (OpenTelemetry Semantic Conventions 준수)
-        public const string EventType = "event.type";
-        public const string EventId = "event.id";
-
         // Request Event 속성
+        public const string RequestEventType = "request.event.type";
+        public const string RequestEventId = "request.event.id";
         public const string RequestEventCount = "request.event.count";
 
         // Response Event 속성

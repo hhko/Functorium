@@ -37,8 +37,8 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Events;
 /// | request.category.type    | "event"           | "event"           |
 /// | request.handler          | handler name      | handler name      |
 /// | request.handler.method   | "Handle"          | "Handle"          |
-/// | event.type               | event type name   | event type name   |
-/// | event.id                 | event id          | event id          |
+/// | request.event.type       | event type name   | event type name   |
+/// | request.event.id         | event id          | event id          |
 /// | response.status          | "success"         | "failure"         |
 /// | error.type               | (none)            | "expected"/       |
 /// |                          |                   | "exceptional"     |
@@ -118,7 +118,7 @@ public sealed class DomainEventHandlerTracingStructureTests : IDisposable
 
     /// <summary>
     /// 성공 시 8개 태그를 가져야 합니다.
-    /// (request 5개 + event.type + event.id + response.status)
+    /// (request 5개 + request.event.type + request.event.id + response.status)
     /// </summary>
     [Fact(Skip = ".NET 10 preview: AccessViolationException occurs when calling GetType() on proxy objects")]
     public async Task Handle_Success_ShouldHaveEightTags()
@@ -145,7 +145,7 @@ public sealed class DomainEventHandlerTracingStructureTests : IDisposable
 
     /// <summary>
     /// 실패 시 10개 태그를 가져야 합니다.
-    /// (request 5개 + event.type + event.id + response.status + error.type + error.code)
+    /// (request 5개 + request.event.type + request.event.id + response.status + error.type + error.code)
     /// </summary>
     [Fact(Skip = ".NET 10 preview: AccessViolationException occurs when calling GetType() on proxy objects")]
     public async Task Handle_Failure_ShouldHaveTenTags()
@@ -275,7 +275,7 @@ public sealed class DomainEventHandlerTracingStructureTests : IDisposable
         var tags = ExtractActivityTags();
         await Verify(tags)
             .UseDirectory("Snapshots/DomainEventHandlerTracingStructure")
-            .ScrubMember(ObservabilityNaming.CustomAttributes.EventId);
+            .ScrubMember(ObservabilityNaming.CustomAttributes.RequestEventId);
     }
 
     /// <summary>
@@ -313,7 +313,7 @@ public sealed class DomainEventHandlerTracingStructureTests : IDisposable
         var tags = ExtractActivityTags();
         await Verify(tags)
             .UseDirectory("Snapshots/DomainEventHandlerTracingStructure")
-            .ScrubMember(ObservabilityNaming.CustomAttributes.EventId);
+            .ScrubMember(ObservabilityNaming.CustomAttributes.RequestEventId);
     }
 
     /// <summary>
@@ -351,7 +351,7 @@ public sealed class DomainEventHandlerTracingStructureTests : IDisposable
         var tags = ExtractActivityTags();
         await Verify(tags)
             .UseDirectory("Snapshots/DomainEventHandlerTracingStructure")
-            .ScrubMember(ObservabilityNaming.CustomAttributes.EventId);
+            .ScrubMember(ObservabilityNaming.CustomAttributes.RequestEventId);
     }
 
     #endregion
