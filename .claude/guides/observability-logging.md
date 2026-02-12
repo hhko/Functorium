@@ -744,17 +744,17 @@ Handler는 Application 레이어 Usecase 패턴을 따르되, `request.category.
 
 **요청:**
 ```
-{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} requesting with {@request.message}
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {request.event.type} {request.event.id} requesting with {@request.message}
 ```
 
 **성공 응답:**
 ```
-{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {request.event.type} {request.event.id} responded {response.status} in {response.elapsed:0.0000} s
 ```
 
 **실패 응답:**
 ```
-{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {request.event.type} {request.event.id} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
 
 ### 필드 비교표
@@ -768,6 +768,8 @@ Application Usecase, DomainEvent Publisher, DomainEvent Handler의 필드 비교
 | `request.category.type` | `"command"` / `"query"` | - | `"event"` |
 | `request.handler` | Handler 클래스명 | Event/Aggregate 타입명 | Handler 클래스명 |
 | `request.handler.method` | `"Handle"` | `"Publish"` / `"PublishEvents"` | `"Handle"` |
+| `request.event.type` | - | - | 이벤트 타입명 |
+| `request.event.id` | - | - | 이벤트 고유 ID |
 | `@request.message` | Command/Query 객체 | 이벤트 객체 | 이벤트 객체 |
 | `@response.message` | 응답 객체 | - | - |
 | `request.event.count` | - | O (Aggregate만) | - |
@@ -785,8 +787,8 @@ Application Usecase, DomainEvent Publisher, DomainEvent Handler의 필드 비교
 
 ```
 info: adapter event Product.PublishEvents requesting with 1 events
-info: application usecase.event OnProductCreated.Handle requesting with {@request.message}
-info: application usecase.event OnProductCreated.Handle responded success in 0.0001 s
+info: application usecase.event OnProductCreated.Handle ProductCreatedEvent 01J1234567890ABCDEFGHJKMNP requesting with {@request.message}
+info: application usecase.event OnProductCreated.Handle ProductCreatedEvent 01J1234567890ABCDEFGHJKMNP responded success in 0.0001 s
 info: adapter event Product.PublishEvents responded success in 0.0012 s with 1 events
 ```
 
@@ -794,8 +796,8 @@ info: adapter event Product.PublishEvents responded success in 0.0012 s with 1 e
 
 ```
 info: adapter event Product.PublishEvents requesting with 1 events
-info: application usecase.event OnProductCreated.Handle requesting with {@request.message}
-fail: application usecase.event OnProductCreated.Handle responded failure in 0.0008 s with exceptional:InvalidOperationException
+info: application usecase.event OnProductCreated.Handle ProductCreatedEvent 01J1234567890ABCDEFGHJKMNP requesting with {@request.message}
+fail: application usecase.event OnProductCreated.Handle ProductCreatedEvent 01J1234567890ABCDEFGHJKMNP responded failure in 0.0008 s with exceptional:InvalidOperationException
 fail: adapter event Product.PublishEvents responded failure in 0.0309 s with 1 events with exceptional:ApplicationErrors.DomainEventPublisher.PublishFailed {@error}
 ```
 

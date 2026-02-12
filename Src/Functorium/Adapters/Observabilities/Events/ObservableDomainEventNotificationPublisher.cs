@@ -194,8 +194,10 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
         activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestCategoryType, requestCategoryType);
         activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, handlerName);
         activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod);
-        activity?.SetTag(ObservabilityNaming.CustomAttributes.EventType, domainEvent.GetType().Name);
-        activity?.SetTag(ObservabilityNaming.CustomAttributes.EventId, domainEvent.EventId.ToString());
+        string eventTypeName = domainEvent.GetType().Name;
+        string eventId = domainEvent.EventId.ToString();
+        activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestEventType, eventTypeName);
+        activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestEventId, eventId);
 
         logger.LogDomainEventHandlerRequest(handlerName, domainEvent);
 
@@ -216,7 +218,7 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
             await handler.Handle(notification, cancellationToken);
 
             double elapsed = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);
-            logger.LogDomainEventHandlerResponseSuccess(handlerName, elapsed);
+            logger.LogDomainEventHandlerResponseSuccess(handlerName, eventTypeName, eventId, elapsed);
             activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success);
             activity?.SetStatus(ActivityStatusCode.Ok);
 
@@ -234,7 +236,7 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
             double elapsed = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);
             var (errorType, errorCode) = ErrorInfoExtractor.GetErrorInfo(ex);
 
-            logger.LogDomainEventHandlerResponseError(handlerName, elapsed, errorType, errorCode, ex);
+            logger.LogDomainEventHandlerResponseError(handlerName, eventTypeName, eventId, elapsed, errorType, errorCode, ex);
             activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);
             activity?.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, errorType);
             activity?.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, errorCode);

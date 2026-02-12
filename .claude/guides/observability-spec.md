@@ -122,8 +122,8 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `request.category.type` | ✅ | ✅ | ✅ | CQRS 타입 (`"event"`) |
 | `request.handler` | ✅ | ✅ | ✅ | Handler 클래스 이름 |
 | `request.handler.method` | ✅ | ✅ | ✅ | 메서드 이름 (`"Handle"`) |
-| `event.type` | - | - | ✅ | 이벤트 타입명 |
-| `event.id` | - | - | ✅ | 이벤트 고유 ID |
+| `request.event.type` | ✅ | - | ✅ | 이벤트 타입명 |
+| `request.event.id` | ✅ | - | ✅ | 이벤트 고유 ID |
 | `@request.message` | ✅ | - | - | 이벤트 객체 (요청 시) |
 | `response.status` | ✅ | ✅ | ✅ | 응답 상태 (`"success"`, `"failure"`) |
 | `response.elapsed` | ✅ | -* | ✅ | 처리 시간(초) |
@@ -487,8 +487,8 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `request.category.type` | `"event"` | `"event"` |
 | `request.handler` | handler name | handler name |
 | `request.handler.method` | `"Handle"` | `"Handle"` |
-| `event.type` | event type name | event type name |
-| `event.id` | event id | event id |
+| `request.event.type` | event type name | event type name |
+| `request.event.id` | event id | event id |
 | `response.status` | `"success"` | `"failure"` |
 | `error.type` | - | `"expected"` / `"exceptional"` |
 | `error.code` | - | 오류 코드 |

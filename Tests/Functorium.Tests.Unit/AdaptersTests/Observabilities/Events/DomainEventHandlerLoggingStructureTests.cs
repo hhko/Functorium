@@ -33,6 +33,8 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Events;
 /// | request.category.type    | "event"           | "event"           | "event"           |
 /// | request.handler          | handler type name | handler type name | handler type name |
 /// | request.handler.method   | "Handle"          | "Handle"          | "Handle"          |
+/// | request.event.type       | event type name   | event type name   | event type name   |
+/// | request.event.id         | event id          | event id          | event id          |
 /// | @request.message         | event object      | (none)            | (none)            |
 /// | response.status          | (none)            | "success"         | "failure"         |
 /// | response.elapsed         | (none)            | elapsed (s)       | elapsed (s)       |

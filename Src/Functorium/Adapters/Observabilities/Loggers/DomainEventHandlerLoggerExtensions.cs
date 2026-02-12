@@ -25,12 +25,14 @@ public static class DomainEventHandlerLoggerExtensions
 
         logger.LogInformation(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationRequest,
-            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} requesting with {@request.message}",
+            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {request.event.type} {request.event.id} requesting with {@request.message}",
             ObservabilityNaming.Layers.Application,
             ObservabilityNaming.Categories.Usecase,
             ObservabilityNaming.CategoryTypes.Event,
             handlerName,
             ObservabilityNaming.Methods.Handle,
+            domainEvent.GetType().Name,
+            domainEvent.EventId.ToString(),
             domainEvent);
     }
 
@@ -40,6 +42,8 @@ public static class DomainEventHandlerLoggerExtensions
     public static void LogDomainEventHandlerResponseSuccess(
         this ILogger logger,
         string handlerName,
+        string eventTypeName,
+        string eventId,
         double elapsed)
     {
         if (!logger.IsEnabled(LogLevel.Information))
@@ -47,12 +51,14 @@ public static class DomainEventHandlerLoggerExtensions
 
         logger.LogInformation(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseSuccess,
-            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s",
+            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {request.event.type} {request.event.id} responded {response.status} in {response.elapsed:0.0000} s",
             ObservabilityNaming.Layers.Application,
             ObservabilityNaming.Categories.Usecase,
             ObservabilityNaming.CategoryTypes.Event,
             handlerName,
             ObservabilityNaming.Methods.Handle,
+            eventTypeName,
+            eventId,
             ObservabilityNaming.Status.Success,
             elapsed);
     }
@@ -63,6 +69,8 @@ public static class DomainEventHandlerLoggerExtensions
     public static void LogDomainEventHandlerResponseWarning(
         this ILogger logger,
         string handlerName,
+        string eventTypeName,
+        string eventId,
         double elapsed,
         string errorType,
         string errorCode,
@@ -73,12 +81,14 @@ public static class DomainEventHandlerLoggerExtensions
 
         logger.LogWarning(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseWarning,
-            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {request.event.type} {request.event.id} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             ObservabilityNaming.Layers.Application,
             ObservabilityNaming.Categories.Usecase,
             ObservabilityNaming.CategoryTypes.Event,
             handlerName,
             ObservabilityNaming.Methods.Handle,
+            eventTypeName,
+            eventId,
             ObservabilityNaming.Status.Failure,
             elapsed,
             errorType,
@@ -92,6 +102,8 @@ public static class DomainEventHandlerLoggerExtensions
     public static void LogDomainEventHandlerResponseError(
         this ILogger logger,
         string handlerName,
+        string eventTypeName,
+        string eventId,
         double elapsed,
         string errorType,
         string errorCode,
@@ -102,12 +114,14 @@ public static class DomainEventHandlerLoggerExtensions
 
         logger.LogError(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseError,
-            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {request.event.type} {request.event.id} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             ObservabilityNaming.Layers.Application,
             ObservabilityNaming.Categories.Usecase,
             ObservabilityNaming.CategoryTypes.Event,
             handlerName,
             ObservabilityNaming.Methods.Handle,
+            eventTypeName,
+            eventId,
             ObservabilityNaming.Status.Failure,
             elapsed,
             errorType,
@@ -121,6 +135,8 @@ public static class DomainEventHandlerLoggerExtensions
     public static void LogDomainEventHandlerResponseError(
         this ILogger logger,
         string handlerName,
+        string eventTypeName,
+        string eventId,
         double elapsed,
         string errorType,
         string errorCode,
@@ -132,12 +148,14 @@ public static class DomainEventHandlerLoggerExtensions
         logger.LogError(
             ObservabilityNaming.EventIds.Application.ApplicationResponseError,
             exception,
-            "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code}",
+            "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {request.event.type} {request.event.id} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code}",
             ObservabilityNaming.Layers.Application,
             ObservabilityNaming.Categories.Usecase,
             ObservabilityNaming.CategoryTypes.Event,
             handlerName,
             ObservabilityNaming.Methods.Handle,
+            eventTypeName,
+            eventId,
             ObservabilityNaming.Status.Failure,
             elapsed,
             errorType,
