@@ -2,6 +2,13 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
+- [x] SourceGenerator -> SourceGenerators 폴더 이름 변경
+- [x] Functorium\SourceGenerators -> Functorium\Adapters\SourceGenerators 폴더 경로 조정
+- [x] Src\Functorium\Abstractions\Diagnostics에 CrashDumpHandler 추가
+- [x] CrashDumpHandler 가이드 문서 작성
+- [ ] CrashDumpHandler 테스트 목적의 Tests.Hosts 프로젝트 생성
+- [ ] CrashDumpHandler 테스트 목적 프로젝트 대상으로 테스트
+
 - [x] `event.id, event.type -> request., response.`
 - [x] `event.id -> ` 로그 통합
 - [ ] `response.event.type` 확인 필요?
@@ -12,7 +19,7 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
   - 정적 분석
   - 코드 복잡도
 - [ ] GitHub Action에 코드 품질 분석 포함
-- [ ] 소스 생성기 폴더 이름 변경
+- [x] 소스 생성기 폴더 이름 변경
 - [ ] 소스 생성기 Book 업데이트
 - [ ] https://code.claude.com/docs/ko/memory
 - [ ] [Claude 메모리 아키텍처 살펴보기 - CLAUDE.md, Memory Tool까지](https://goddaehee.tistory.com/433)
@@ -111,8 +118,8 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [ ] 커스텀 관찰 가능성 Usecase
 - [ ] 커스텀 관찰 가능성 IAdapter
 ---
-- [ ] 소스 생성기 프로젝트 이름 변경 또는 통합?
-  - Functorium.SourceGenerator
+- [x] 소스 생성기 프로젝트 이름 변경 또는 통합?
+  - Functorium.SourceGenerators
 - [ ] 스케줄러
 - [ ] 2개 호스트
 ---
@@ -1197,7 +1204,7 @@ SmartEnum Protocol 선택 기준 문서화
 - [x] .config 폴더를 이용해서 ReportGenerator 설치(ps1 파일 개선)
 - [x] commit.md와 .release-notes/scripts/docs 문서와 커밋 태그 통일
 - [x] commit.md와 .release-notes/scripts/docs 문서와 커밋 내용 통일(영문, 한글)
-- Functorium.SourceGenerator
+- Functorium.SourceGenerators
   - [x] 파일 기반 네임스페이스
   - [x] 입출력 튜플 타입 제외
   - [x] 디버깅 방법 학습
