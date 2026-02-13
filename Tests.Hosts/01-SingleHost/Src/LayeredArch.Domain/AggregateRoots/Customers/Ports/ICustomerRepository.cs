@@ -1,4 +1,4 @@
-using Functorium.Applications.Observabilities;
+using Functorium.Domains.Repositories;
 using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
 
 namespace LayeredArch.Domain.AggregateRoots.Customers;
@@ -6,18 +6,8 @@ namespace LayeredArch.Domain.AggregateRoots.Customers;
 /// <summary>
 /// 고객 리포지토리 인터페이스
 /// </summary>
-public interface ICustomerRepository : IAdapter
+public interface ICustomerRepository : IRepository<Customer, CustomerId>
 {
-    /// <summary>
-    /// 고객 생성
-    /// </summary>
-    FinT<IO, Customer> Create(Customer customer);
-
-    /// <summary>
-    /// ID로 고객 조회
-    /// </summary>
-    FinT<IO, Customer> GetById(CustomerId id);
-
     /// <summary>
     /// 이메일 중복 확인
     /// </summary>
