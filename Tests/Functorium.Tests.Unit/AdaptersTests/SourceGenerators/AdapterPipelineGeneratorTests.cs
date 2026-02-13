@@ -95,7 +95,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -130,7 +130,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -169,7 +169,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
 
             namespace TestNamespace;
@@ -202,7 +202,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -237,7 +237,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -272,7 +272,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -307,7 +307,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
             using System.Collections.Generic;
@@ -343,7 +343,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -379,7 +379,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -416,7 +416,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
             using System.Collections.Generic;
@@ -454,7 +454,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -494,7 +494,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -533,7 +533,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
             using System.Collections.Generic;
@@ -573,7 +573,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
             using System.Collections.Generic;
@@ -611,7 +611,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -648,7 +648,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
             using System.Collections.Generic;
@@ -686,7 +686,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -726,7 +726,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -761,7 +761,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -809,7 +809,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
             using Microsoft.Extensions.Logging;
@@ -852,7 +852,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -903,7 +903,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -938,7 +938,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -975,7 +975,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
             using System;
@@ -1016,7 +1016,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -1051,7 +1051,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -1093,7 +1093,7 @@ public sealed class AdapterPipelineGeneratorTests
         // ActivitySource 타입이 중복되는 케이스
         string input = """
             using System.Diagnostics;
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -1145,7 +1145,7 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using System.Diagnostics.Metrics;
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -1192,7 +1192,7 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using System.Diagnostics;
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 
@@ -1237,7 +1237,7 @@ public sealed class AdapterPipelineGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 

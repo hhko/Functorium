@@ -1,7 +1,7 @@
 using LayeredArch.Domain.Ports;
 using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Adapters.Errors;
-using Functorium.SourceGenerators;
+using Functorium.Adapters.SourceGenerators;
 using LanguageExt;
 using LanguageExt.Common;
 using static Functorium.Adapters.Errors.AdapterErrorType;

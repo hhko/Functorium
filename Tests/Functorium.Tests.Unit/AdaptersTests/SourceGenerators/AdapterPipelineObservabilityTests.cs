@@ -350,7 +350,7 @@ public sealed class AdapterPipelineObservabilityTests
     private static string CreateSimpleAdapterInput()
     {
         return """
-            using Functorium.SourceGenerators;
+            using Functorium.Adapters.SourceGenerators;
             using Functorium.Applications.Observabilities;
             using LanguageExt;
 

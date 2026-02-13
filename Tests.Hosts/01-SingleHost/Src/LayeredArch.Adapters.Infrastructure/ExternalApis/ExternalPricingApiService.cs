@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using Functorium.Adapters.Errors;
-using Functorium.SourceGenerators;
+using Functorium.Adapters.SourceGenerators;
 using LayeredArch.Application.Ports;
 using LanguageExt;
 using static Functorium.Adapters.Errors.AdapterErrorType;

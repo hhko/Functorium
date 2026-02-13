@@ -2,7 +2,7 @@
 // Source Generator 튜토리얼
 // ============================================================================
 //
-// 이 프로젝트는 Functorium.SourceGenerator의 동작을 이해하기 위한
+// 이 프로젝트는 Functorium.SourceGenerators의 동작을 이해하기 위한
 // 튜토리얼입니다.
 //
 // [GeneratePipeline] 어트리뷰트가 적용된 클래스에 대해 Source Generator가
@@ -11,7 +11,7 @@
 // 생성된 코드 확인 방법:
 //   1. 프로젝트 빌드: dotnet build
 //   2. 생성된 파일 확인:
-//      obj/Generated/Functorium.SourceGenerator/
+//      obj/Generated/Functorium.SourceGenerators/
 //      - GeneratePipelineAttribute.g.cs
 //      - Adapters.UserRepositoryPipeline.g.cs
 //

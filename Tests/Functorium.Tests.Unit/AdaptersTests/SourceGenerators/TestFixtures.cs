@@ -1,5 +1,5 @@
 using Functorium.Abstractions.Errors;
-using Functorium.SourceGenerators;
+using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Observabilities;
 
 using LanguageExt;
