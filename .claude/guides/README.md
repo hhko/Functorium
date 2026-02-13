@@ -10,6 +10,7 @@
 |------|------|
 | [solution-configuration-guide.md](./solution-configuration-guide.md) | 솔루션 루트 구성 파일 및 빌드 스크립트 |
 | [service-project-structure-guide.md](./service-project-structure-guide.md) | 서비스 프로젝트 구성 (폴더, 네이밍, 의존성) |
+| [crash-diagnostics-guide.md](./crash-diagnostics-guide.md) | 크래시 덤프 핸들러 설정 및 분석 가이드 |
 
 ### 도메인 레이어
 
@@ -69,6 +70,7 @@
 solution-configuration-guide.md (솔루션 구성)
 │
 ├── service-project-structure-guide.md (프로젝트 구성)
+├── crash-diagnostics-guide.md (크래시 덤프)
 │
 ├── Domain Layer
 │   ├── domain-modeling-overview.md (개요)
@@ -112,6 +114,7 @@ solution-configuration-guide.md (솔루션 구성)
 - **에러 테스트**: [error-testing-guide.md](./error-testing-guide.md)
 - **솔루션 구성 파일/빌드 스크립트**: [solution-configuration-guide.md](./solution-configuration-guide.md)
 - **프로젝트 구성/폴더 구조**: [service-project-structure-guide.md](./service-project-structure-guide.md)
+- **크래시 덤프 설정/분석**: [crash-diagnostics-guide.md](./crash-diagnostics-guide.md)
 - **Observability 사양**: [observability-spec.md](./observability-spec.md)
 - **구조화된 로그 테스트**: [testing-library-guide.md#구조화된-로그-테스트](./testing-library-guide.md#구조화된-로그-테스트)
 - **아키텍처 규칙 검증**: [testing-library-guide.md#아키텍처-규칙-검증](./testing-library-guide.md#아키텍처-규칙-검증)
