@@ -6,8 +6,8 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [x] Functorium\SourceGenerators -> Functorium\Adapters\SourceGenerators 폴더 경로 조정
 - [x] Src\Functorium\Abstractions\Diagnostics에 CrashDumpHandler 추가
 - [x] CrashDumpHandler 가이드 문서 작성
-- [ ] CrashDumpHandler 테스트 목적의 Tests.Hosts 프로젝트 생성
-- [ ] CrashDumpHandler 테스트 목적 프로젝트 대상으로 테스트
+- [x] CrashDumpHandler 테스트 목적의 Tests.Hosts 프로젝트 생성
+- [x] CrashDumpHandler 테스트 목적 프로젝트 대상으로 테스트
 
 - [x] `event.id, event.type -> request., response.`
 - [x] `event.id -> ` 로그 통합
