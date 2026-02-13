@@ -4,11 +4,6 @@
 
 Functorium v1.0.0-alpha.1은 **도메인 중심 함수형 아키텍처(Domain-Centric Functional Architecture)를** 구현하기 위한 C# 프레임워크의 첫 번째 알파 릴리스입니다.
 
-> **📺 미디어 자료**
->
-> - [릴리스 소개 영상 (MP4)](RELEASE-v1.0.0-alpha.1-KR.mp4)
-> - [릴리스 소개 음성 (MP3)](RELEASE-v1.0.0-alpha.1-KR.mp3)
-
 도메인 로직을 순수 함수로 표현하고, 부수 효과(Side Effects)를 아키텍처 경계로 밀어내어 **테스트 가능하고 예측 가능한 비즈니스 로직을** 작성할 수 있도록 지원합니다. LanguageExt 5.x 기반의 함수형 타입 시스템과 OpenTelemetry 통합 관찰 가능성을 핵심으로 제공합니다.
 
 ### 핵심 원칙
@@ -181,7 +176,7 @@ Mediator 파이프라인에 예외 처리, 로깅, 메트릭, 추적, 유효성 
 // 파이프라인 자동 적용 순서:
 // 1. UsecaseExceptionPipeline - 예외를 FinResponse.Fail로 변환
 // 2. UsecaseTracingPipeline - OpenTelemetry Span 생성
-// 3. UsecaseMetricsPipeline - 요청 수, 성공/실패, 지연시간 기록
+// 3. UsecaseMetricPipeline - 요청 수, 성공/실패, 지연시간 기록
 // 4. UsecaseLoggingPipeline - 요청/응답 구조화 로깅
 // 5. UsecaseValidationPipeline - FluentValidation 검증
 
@@ -497,7 +492,7 @@ public void Should_Generate_Pipeline_Code()
 
 ---
 
-### Functorium.SourceGenerator 라이브러리
+### Functorium.Adapters.SourceGenerator 라이브러리
 
 #### 1. Adapter Pipeline Generator
 
