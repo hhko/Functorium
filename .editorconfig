@@ -133,6 +133,9 @@ insert_final_newline = false
 csharp_style_namespace_declarations = file_scoped:warning
 dotnet_diagnostic.IDE0161.severity = warning
 
+# xUnit1051: LanguageExt IO.RunAsync()는 CancellationToken 오버로드가 없으므로 false positive
+dotnet_diagnostic.xUnit1051.severity = none
+
 # csharp_style_prefer_method_group_conversion = true:silent
 # csharp_style_prefer_primary_constructors = true:suggestion
 # csharp_style_prefer_top_level_statements = true:silent
