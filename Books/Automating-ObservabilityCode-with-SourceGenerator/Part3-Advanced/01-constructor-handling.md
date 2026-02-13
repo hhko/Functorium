@@ -45,7 +45,7 @@ public class UserRepositoryPipeline : UserRepository
 
 ```csharp
 // Generators/AdapterPipelineGenerator/ConstructorParameterExtractor.cs
-namespace Functorium.SourceGenerator.Generators.AdapterPipelineGenerator;
+namespace Functorium.SourceGenerators.Generators.AdapterPipelineGenerator;
 
 /// <summary>
 /// 클래스의 생성자 파라미터를 추출합니다.
@@ -169,7 +169,7 @@ public class UserRepositoryPipeline : UserRepository
 
 ```csharp
 // Generators/AdapterPipelineGenerator/ParameterNameResolver.cs
-namespace Functorium.SourceGenerator.Generators.AdapterPipelineGenerator;
+namespace Functorium.SourceGenerators.Generators.AdapterPipelineGenerator;
 
 /// <summary>
 /// 파라미터 이름 충돌을 해결합니다.

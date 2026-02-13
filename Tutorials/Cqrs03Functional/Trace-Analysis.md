@@ -318,7 +318,7 @@ ActivitySource는 OpenTelemetry 설정에서 자동으로 등록됩니다:
 
 - **Usecase Trace**: `Src/Functorium/Applications/Pipelines/UsecaseTracePipeline.cs`
 - **IAdapter Trace 구현**: `Src/Functorium/Adapters/Observabilities/Tracing/AdapterTrace.cs`
-- **IAdapter Pipeline 생성기**: `Src/Functorium.SourceGenerator/AdapterPipelineGenerator.cs`
+- **IAdapter Pipeline 생성기**: `Src/Functorium.SourceGenerators/AdapterPipelineGenerator.cs`
 - **Observability 필드 정의**: `Src/Functorium/Adapters/Observabilities/ObservabilityFields.cs`
 - **Trace Parent Context Holder**: `Src/Functorium/Applications/Observabilities/TraceParentContextHolder.cs`
 - **Trace Parent Activity Holder**: `Src/Functorium/Applications/Observabilities/TraceParentActivityHolder.cs`

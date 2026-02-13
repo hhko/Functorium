@@ -227,7 +227,7 @@ Automating-ObservabilityCode-with-SourceGenerator/
 
 이 책의 모든 예제 코드는 Functorium 프로젝트에서 확인할 수 있습니다:
 
-- 소스 생성기: `Src/Functorium.SourceGenerator/`
+- 소스 생성기: `Src/Functorium.SourceGenerators/`
 - 테스트: `Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/`
 - 테스트 유틸리티: `Src/Functorium.Testing/SourceGenerators/`
 

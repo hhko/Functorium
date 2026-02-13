@@ -30,7 +30,7 @@ void LogSuccess(User result, double elapsed)
 
 ```csharp
 // Generators/AdapterPipelineGenerator/TypeExtractor.cs
-namespace Functorium.SourceGenerator.Generators.AdapterPipelineGenerator;
+namespace Functorium.SourceGenerators.Generators.AdapterPipelineGenerator;
 
 /// <summary>
 /// 제네릭 타입에서 특정 타입 파라미터를 추출하는 유틸리티

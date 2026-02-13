@@ -188,7 +188,7 @@ context.SyntaxProvider
 
 ```csharp
 // Functorium 프로젝트의 Selectors.cs
-namespace Functorium.SourceGenerator.Abstractions;
+namespace Functorium.SourceGenerators.Abstractions;
 
 public static class Selectors
 {

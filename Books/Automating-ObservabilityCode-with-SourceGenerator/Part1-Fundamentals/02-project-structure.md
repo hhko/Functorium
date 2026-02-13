@@ -83,7 +83,7 @@ analyzers/dotnet/cs/MyGenerator.dll
 
 ---
 
-## 실제 프로젝트 분석: Functorium.SourceGenerator
+## 실제 프로젝트 분석: Functorium.SourceGenerators
 
 ### csproj 전체 구조
 
@@ -92,7 +92,7 @@ analyzers/dotnet/cs/MyGenerator.dll
 
   <!-- NuGet 패키지 설정 -->
   <PropertyGroup>
-    <PackageId>Functorium.SourceGenerator</PackageId>
+    <PackageId>Functorium.SourceGenerators</PackageId>
     <Description>Source generator for Functorium adapter pipeline</Description>
     <PackageTags>source-generator;roslyn;observability</PackageTags>
   </PropertyGroup>
@@ -158,9 +158,9 @@ PrivateAssets="all" 효과
 ## 프로젝트 파일 구조
 
 ```
-Functorium.SourceGenerator/
+Functorium.SourceGenerators/
 │
-├── Functorium.SourceGenerator.csproj
+├── Functorium.SourceGenerators.csproj
 │
 ├── AdapterPipelineGenerator.cs          # 메인 소스 생성기
 │
@@ -189,7 +189,7 @@ Functorium.SourceGenerator/
 ### PipelineClassInfo
 
 ```csharp
-namespace Functorium.SourceGenerator.Generators.AdapterPipelineGenerator;
+namespace Functorium.SourceGenerators.Generators.AdapterPipelineGenerator;
 
 /// <summary>
 /// 파이프라인 생성에 필요한 클래스 정보
@@ -246,7 +246,7 @@ public sealed record ParameterInfo(
   <ItemGroup>
     <!-- 소스 생성기 참조 (컴파일 타임만) -->
     <ProjectReference
-        Include="..\Functorium.SourceGenerator\Functorium.SourceGenerator.csproj"
+        Include="..\Functorium.SourceGenerators\Functorium.SourceGenerators.csproj"
         OutputItemType="Analyzer"
         ReferenceOutputAssembly="false" />
   </ItemGroup>
@@ -280,7 +280,7 @@ ReferenceOutputAssembly="false"
   <ItemGroup>
     <!-- 소스 생성기 직접 참조 (테스트용) -->
     <ProjectReference
-        Include="..\Functorium.SourceGenerator\Functorium.SourceGenerator.csproj" />
+        Include="..\Functorium.SourceGenerators\Functorium.SourceGenerators.csproj" />
 
     <!-- 테스트 유틸리티 -->
     <ProjectReference
@@ -304,12 +304,12 @@ ReferenceOutputAssembly="false"
 
 ```bash
 # 빌드
-dotnet build Functorium.SourceGenerator.csproj
+dotnet build Functorium.SourceGenerators.csproj
 
 # 출력 확인
 ls bin/Debug/netstandard2.0/
-# Functorium.SourceGenerator.dll
-# Functorium.SourceGenerator.pdb
+# Functorium.SourceGenerators.dll
+# Functorium.SourceGenerators.pdb
 ```
 
 ---

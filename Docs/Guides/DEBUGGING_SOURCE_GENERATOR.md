@@ -1,6 +1,6 @@
 # Source Generator 디버깅 가이드
 
-이 문서는 `Functorium.SourceGenerator` 프로젝트를 Visual Studio에서 디버깅하는 방법을 설명합니다.
+이 문서는 `Functorium.SourceGenerators` 프로젝트를 Visual Studio에서 디버깅하는 방법을 설명합니다.
 
 ## 목차
 
@@ -19,7 +19,7 @@ C# Source Generator는 컴파일 타임에 실행되므로, 일반적인 애플�
 
 **진입점**:
 ```
-Functorium.SourceGenerator\Generators\IncrementalGeneratorBase.cs
+Functorium.SourceGenerators\Generators\IncrementalGeneratorBase.cs
 - public void Initialize(IncrementalGeneratorInitializationContext context)
 ```
 
@@ -31,7 +31,7 @@ Functorium.SourceGenerator\Generators\IncrementalGeneratorBase.cs
 
 ### 1단계: AttachDebugger 파라미터 활성화
 
-`Functorium.SourceGenerator\AdapterPipelineGenerator.cs` 파일 수정:
+`Functorium.SourceGenerators\AdapterPipelineGenerator.cs` 파일 수정:
 
 ```csharp
 [Generator(LanguageNames.CSharp)]
@@ -51,10 +51,10 @@ public sealed class AdapterPipelineGenerator()
 디버깅하려는 위치에 브레이크포인트를 설정합니다:
 
 ```
-Functorium.SourceGenerator\Generators\IncrementalGeneratorBase.cs
+Functorium.SourceGenerators\Generators\IncrementalGeneratorBase.cs
 - Line 32: IncrementalValuesProvider<TValue> provider = ...
 
-Functorium.SourceGenerator\AdapterPipelineGenerator.cs
+Functorium.SourceGenerators\AdapterPipelineGenerator.cs
 - Line 66: private static PipelineClassInfo MapToPipelineClassInfo(...)
 - Line 130: private static void Generate(...)
 ```
@@ -139,7 +139,7 @@ public Task AdapterPipelineGenerator_ShouldGeneratePipeline_WithTupleTypes()
 ### 3단계: 소스 생성기 코드에 브레이크포인트 설정
 
 ```csharp
-// Functorium.SourceGenerator\AdapterPipelineGenerator.cs
+// Functorium.SourceGenerators\AdapterPipelineGenerator.cs
 private static PipelineClassInfo MapToPipelineClassInfo(
     GeneratorAttributeSyntaxContext context,
     CancellationToken cancellationToken)
@@ -221,8 +221,8 @@ Visual Studio에서 생성된 코드를 직접 볼 수 있습니다:
 Solution Explorer
 → Dependencies
 → Analyzers
-→ Functorium.SourceGenerator
-→ Functorium.SourceGenerator.AdapterPipelineGenerator
+→ Functorium.SourceGenerators
+→ Functorium.SourceGenerators.AdapterPipelineGenerator
    → GeneratePipelineAttribute.g.cs
    → Repositories.RepositoryIoPipeline.g.cs
    → ...
@@ -372,7 +372,7 @@ method.Parameters.Select(p => p.Type.ToDisplayString()).ToArray()
 1. 테스트 프로젝트 `.csproj`에 다음 참조 추가 확인:
    ```xml
    <ItemGroup>
-     <ProjectReference Include="..\Functorium.SourceGenerator\Functorium.SourceGenerator.csproj"
+     <ProjectReference Include="..\Functorium.SourceGenerators\Functorium.SourceGenerators.csproj"
                        OutputItemType="Analyzer"
                        ReferenceOutputAssembly="true" />
    </ItemGroup>

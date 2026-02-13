@@ -51,7 +51,7 @@ GeneratePipelineClassSource()
 ### Constants.cs
 
 ```csharp
-namespace Functorium.SourceGenerator.Abstractions;
+namespace Functorium.SourceGenerators.Abstractions;
 
 public static class Constants
 {

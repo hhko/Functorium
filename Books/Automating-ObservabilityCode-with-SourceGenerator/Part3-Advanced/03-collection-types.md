@@ -39,7 +39,7 @@ public override FinT<IO, List<User>> GetUsersAsync() =>
 
 ```csharp
 // Generators/AdapterPipelineGenerator/CollectionTypeHelper.cs
-namespace Functorium.SourceGenerator.Generators.AdapterPipelineGenerator;
+namespace Functorium.SourceGenerators.Generators.AdapterPipelineGenerator;
 
 /// <summary>
 /// 컬렉션 타입 여부를 확인하는 헬퍼 클래스
