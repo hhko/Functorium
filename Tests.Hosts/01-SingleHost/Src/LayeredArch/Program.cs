@@ -1,6 +1,7 @@
 using LayeredArch.Adapters.Infrastructure.Abstractions.Registrations;
 using LayeredArch.Adapters.Persistence.Abstractions.Registrations;
 using LayeredArch.Adapters.Presentation.Abstractions.Registrations;
+using Functorium.Abstractions.Diagnostics;
 using LayeredArch.CrashDiagnostics;
 
 // =================================================================

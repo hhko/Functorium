@@ -1,7 +1,8 @@
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace LayeredArch.CrashDiagnostics;
+namespace Functorium.Abstractions.Diagnostics;
 
 /// <summary>
 /// 크래시 덤프 생성을 위한 핸들러.
@@ -23,6 +24,12 @@ public static class CrashDumpHandler
     private static bool _isInitialized;
 
     /// <summary>
+    /// 크래시 덤프가 저장되는 디렉터리 경로.
+    /// <see cref="Initialize"/> 호출 후 사용할 수 있습니다.
+    /// </summary>
+    public static string DumpDirectory => _dumpDirectory;
+
+    /// <summary>
     /// 크래시 덤프 핸들러를 초기화합니다.
     /// </summary>
     /// <param name="dumpDirectory">덤프 파일이 저장될 디렉터리 경로</param>
@@ -34,9 +41,11 @@ public static class CrashDumpHandler
             return;
         }
 
+        var appName = Assembly.GetEntryAssembly()?.GetName().Name ?? "App";
+
         _dumpDirectory = dumpDirectory ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "LayeredArch",
+            appName,
             "CrashDumps");
 
         // 덤프 디렉터리 생성

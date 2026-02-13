@@ -1,3 +1,5 @@
+using Functorium.Abstractions.Diagnostics;
+
 namespace LayeredArch.CrashDiagnostics;
 
 /// <summary>
@@ -138,10 +140,7 @@ public static class CrashDiagnosticsEndpoints
     /// </summary>
     private static IResult GetDumpDirectory()
     {
-        var dumpDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "LayeredArch",
-            "CrashDumps");
+        var dumpDir = CrashDumpHandler.DumpDirectory;
 
         return Results.Ok(new DumpDirectoryResponse(
             dumpDir,
@@ -153,10 +152,7 @@ public static class CrashDiagnosticsEndpoints
     /// </summary>
     private static IResult ListDumpFiles()
     {
-        var dumpDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "LayeredArch",
-            "CrashDumps");
+        var dumpDir = CrashDumpHandler.DumpDirectory;
 
         if (!Directory.Exists(dumpDir))
         {
