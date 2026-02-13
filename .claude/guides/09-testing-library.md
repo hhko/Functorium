@@ -30,8 +30,8 @@
 
 | 기능 | 참조 가이드 |
 |---|---|
-| `HostTestFixture<TProgram>` — HTTP 엔드포인트 통합 테스트 | [service-project-structure-guide.md](./service-project-structure-guide.md) |
-| `ShouldBeDomainError`, `ShouldBeApplicationError` 등 에러 Assertion | [error-testing-guide.md](./error-testing-guide.md) |
+| `HostTestFixture<TProgram>` — HTTP 엔드포인트 통합 테스트 | [10-project-structure.md](./10-project-structure.md) |
+| `ShouldBeDomainError`, `ShouldBeApplicationError` 등 에러 Assertion | [05-error-system.md](./05-error-system.md) |
 
 ---
 
@@ -102,7 +102,7 @@
 | 일반 `ProjectReference` | 생성기 타입을 `new EntityIdGenerator()`처럼 인스턴스화 |
 | `OutputItemType="Analyzer"` | 빌드 시 `[GenerateEntityId]` 등의 어트리뷰트로 코드 생성 활성화 |
 
-> **참고**: 통합 테스트에서 Host 프로젝트를 참조할 때 Mediator SourceGenerator 중복을 방지하려면 `ExcludeAssets="analyzers"`를 추가합니다. 자세한 내용은 [service-project-structure-guide.md](./service-project-structure-guide.md)의 FAQ를 참조하세요.
+> **참고**: 통합 테스트에서 Host 프로젝트를 참조할 때 Mediator SourceGenerator 중복을 방지하려면 `ExcludeAssets="analyzers"`를 추가합니다. 자세한 내용은 [10-project-structure.md](./10-project-structure.md)의 FAQ를 참조하세요.
 
 ### Using.cs 권장 패턴
 
@@ -613,7 +613,7 @@ public async Task Job_ShouldThrow_WhenTimeout()
 
 ## 참고 문서
 
-- [unit-testing-guide.md](./unit-testing-guide.md) — 단위 테스트 규칙 (명명, AAA 패턴, MTP 설정)
-- [error-testing-guide.md](./error-testing-guide.md) — 에러 타입 Assertion 패턴
-- [service-project-structure-guide.md](./service-project-structure-guide.md) — 프로젝트 구성 (HostTestFixture, 통합 테스트)
+- [08-unit-testing.md](./08-unit-testing.md) — 단위 테스트 규칙 (명명, AAA 패턴, MTP 설정)
+- [05-error-system.md](./05-error-system.md) — 에러 타입 Assertion 패턴
+- [10-project-structure.md](./10-project-structure.md) — 프로젝트 구성 (HostTestFixture, 통합 테스트)
 - [observability-spec.md](./observability-spec.md) — Observability 사양 (로그 필드 정의)

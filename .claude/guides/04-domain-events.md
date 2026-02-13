@@ -1,0 +1,490 @@
+# 도메인 이벤트 (Domain Events)
+
+이 문서는 Functorium 프레임워크에서 도메인 이벤트를 정의, 발행, 구독하는 방법을 설명합니다.
+
+## 목차
+
+- [1. 왜 도메인 이벤트인가 (WHY)](#1-왜-도메인-이벤트인가-why)
+- [2. 도메인 이벤트란 무엇인가 (WHAT)](#2-도메인-이벤트란-무엇인가-what)
+- [3. 이벤트 정의 (HOW)](#3-이벤트-정의-how)
+- [4. 이벤트 발행 (HOW)](#4-이벤트-발행-how)
+- [5. 이벤트 핸들러 구현 (HOW)](#5-이벤트-핸들러-구현-how)
+- [6. 테스트 패턴](#6-테스트-패턴)
+- [7. 체크리스트](#7-체크리스트)
+- [참고 문서](#참고-문서)
+
+---
+
+## 1. 왜 도메인 이벤트인가 (WHY)
+
+도메인 이벤트는 DDD(Domain-Driven Design)에서 **"도메인에서 발생한 중요한 사건"**을 명시적으로 표현하는 전술 패턴입니다.
+
+### 도메인 이벤트가 해결하는 문제
+
+**Aggregate 간 최종 일관성 (Eventual Consistency)**:
+하나의 트랜잭션에서 하나의 Aggregate만 변경하고, 다른 Aggregate의 변경은 이벤트를 통해 비동기로 처리합니다. 이를 통해 Aggregate 경계를 깨뜨리지 않으면서도 도메인 간 협업이 가능합니다.
+
+**관심사 분리**:
+핵심 도메인 로직과 부수 효과(로깅, 알림, 외부 시스템 연동)를 분리합니다. 주문 생성 로직은 "주문을 만드는 것"에만 집중하고, 이메일 발송이나 재고 차감은 이벤트 핸들러에서 처리합니다.
+
+**감사 추적 (Audit Trail)**:
+도메인에서 무슨 일이 발생했는지 이벤트로 기록합니다. 각 이벤트는 발생 시각(`OccurredAt`)을 포함하므로 시간 순서대로 도메인의 변화를 추적할 수 있습니다.
+
+**확장성**:
+새로운 부수 효과가 필요할 때 기존 코드를 수정하지 않고 새 이벤트 핸들러를 추가하면 됩니다 (Open-Closed Principle).
+
+---
+
+## 2. 도메인 이벤트란 무엇인가 (WHAT)
+
+도메인 이벤트는 도메인에서 발생한 중요한 사건을 표현합니다. AggregateRoot에서만 발행할 수 있습니다.
+
+### 도메인 이벤트의 특성
+
+| 특성 | 설명 | 예시 |
+|------|------|------|
+| **과거형 (Past Tense)** | 이미 발생한 사실을 표현 | `CreatedEvent`, `ConfirmedEvent` |
+| **불변 (Immutable)** | 한번 생성되면 변경 불가 | `sealed record`로 정의 |
+| **시간 정보 포함** | 발생 시각을 기록 | `OccurredAt` 속성 |
+
+### IDomainEvent / DomainEvent
+
+**위치**: `Functorium.Domains.Events`
+
+```csharp
+// 인터페이스
+public interface IDomainEvent
+{
+    DateTimeOffset OccurredAt { get; }
+}
+
+// 기반 record
+public abstract record DomainEvent(DateTimeOffset OccurredAt) : IDomainEvent
+{
+    // 현재 시각으로 이벤트 생성
+    protected DomainEvent() : this(DateTimeOffset.UtcNow) { }
+}
+```
+
+### 이벤트 명명 규칙
+
+이벤트 이름은 과거형을 사용합니다:
+
+| 도메인 행위 | 이벤트 이름 |
+|------------|------------|
+| 생성 | `CreatedEvent` |
+| 확정 | `ConfirmedEvent` |
+| 취소 | `CancelledEvent` |
+| 배송 | `ShippedEvent` |
+
+### Functorium 타입 계층
+
+```
+IDomainEvent (인터페이스)
++-- OccurredAt 속성
+    |
+    `-- DomainEvent (abstract record)
+        +-- OccurredAt 자동 설정 (DateTimeOffset.UtcNow)
+        `-- 사용자 정의 이벤트들이 상속
+```
+
+---
+
+## 3. 이벤트 정의 (HOW)
+
+도메인 이벤트는 해당 Entity의 **중첩 클래스**로 정의합니다:
+
+```csharp
+[GenerateEntityId]
+public class Order : AggregateRoot<OrderId>
+{
+    #region Domain Events
+
+    // 도메인 이벤트 (중첩 클래스)
+    public sealed record CreatedEvent(OrderId OrderId, CustomerId CustomerId, Money TotalAmount) : DomainEvent;
+    public sealed record ConfirmedEvent(OrderId OrderId) : DomainEvent;
+    public sealed record CancelledEvent(OrderId OrderId, string Reason) : DomainEvent;
+
+    #endregion
+
+    // Entity 구현...
+}
+```
+
+**장점**:
+- 이벤트 소유권이 타입 시스템에서 명확 (`Order.CreatedEvent`)
+- IntelliSense에서 `Order.`만 치면 관련 이벤트 모두 표시
+- Entity 이름 중복 제거 (`OrderCreatedEvent` → `Order.CreatedEvent`)
+- **Event Handler에서 이벤트 발행 주체 명시**: Handler가 `IDomainEventHandler<Product.CreatedEvent>`를 상속받으면, 코드를 읽는 것만으로 "Product Entity가 발행한 이벤트"임을 즉시 파악 가능
+
+**사용 예시**:
+```csharp
+// Entity 내부에서 (짧게)
+AddDomainEvent(new CreatedEvent(Id, customerId, totalAmount));
+
+// 외부에서 (명시적)
+public void Handle(Order.CreatedEvent @event) { ... }
+```
+
+---
+
+## 4. 이벤트 발행 (HOW)
+
+### AggregateRoot에서 이벤트 수집
+
+AggregateRoot 내에서 `AddDomainEvent()`를 사용하여 이벤트를 수집합니다.
+
+```csharp
+[GenerateEntityId]
+public class Order : AggregateRoot<OrderId>
+{
+    #region Domain Events
+
+    public sealed record CreatedEvent(OrderId OrderId, Money TotalAmount) : DomainEvent;
+    public sealed record ShippedEvent(OrderId OrderId, Address ShippingAddress) : DomainEvent;
+
+    #endregion
+
+    public Money TotalAmount { get; private set; }
+    public OrderStatus Status { get; private set; }
+
+    private Order(OrderId id, Money totalAmount) : base(id)
+    {
+        TotalAmount = totalAmount;
+        Status = OrderStatus.Pending;
+    }
+
+    // Create: 이미 검증된 Value Object를 직접 받음
+    public static Order Create(Money totalAmount)
+    {
+        var id = OrderId.New();
+        var order = new Order(id, totalAmount);
+        // 생성 이벤트 발행 (내부에서는 짧게)
+        order.AddDomainEvent(new CreatedEvent(id, totalAmount));
+        return order;
+    }
+
+    public Fin<Unit> Ship(Address address)
+    {
+        if (Status != OrderStatus.Confirmed)
+            return DomainError.For<Order>(
+                new Custom("InvalidStatus"),
+                Status.ToString(),
+                "Order must be confirmed before shipping");
+
+        Status = OrderStatus.Shipped;
+        // 배송 이벤트 발행
+        AddDomainEvent(new ShippedEvent(Id, address));
+        return unit;
+    }
+}
+```
+
+### IDomainEventPublisher 통합 (Application Layer)
+
+`IDomainEvent`는 Mediator의 `INotification`을 확장하여 Pub/Sub 통합을 지원합니다.
+
+`IDomainEventPublisher`를 사용하여 Repository 저장 후 이벤트를 발행합니다. `IDomainEventPublisher`는 `FinT<IO, Unit>`을 반환하므로 Repository/Port와 동일한 LINQ 체이닝 패턴으로 사용할 수 있습니다:
+
+```csharp
+using Functorium.Applications.Events;
+
+public sealed class Usecase(
+    IProductRepository productRepository,
+    IDomainEventPublisher eventPublisher)  // 생성자 주입
+    : ICommandUsecase<Request, Response>
+{
+    private readonly IProductRepository _productRepository = productRepository;
+    private readonly IDomainEventPublisher _eventPublisher = eventPublisher;
+
+    public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
+    {
+        // ... 기존 검증 로직 ...
+
+        FinT<IO, Response> usecase =
+            from exists in _productRepository.ExistsByName(productName)
+            from _ in guard(!exists, /* error */)
+            from product in _productRepository.Create(productResult)
+            from __ in _eventPublisher.PublishEvents(product, cancellationToken)  // 직접 호출
+            select new Response(...);
+
+        Fin<Response> response = await usecase.Run().RunAsync();
+        return response.ToFinResponse();
+    }
+}
+```
+
+### PublishEvents 동작
+
+`PublishEvents`는 Aggregate의 모든 도메인 이벤트를 발행하고 클리어합니다:
+
+1. `aggregate.DomainEvents`에서 이벤트 목록 복사
+2. `aggregate.ClearDomainEvents()` 호출
+3. 각 이벤트를 Mediator를 통해 발행
+
+### 트랜잭션 고려사항
+
+| 상황 | 동작 |
+|------|------|
+| 저장 성공, 이벤트 발행 성공 | 정상 처리 |
+| 저장 실패 | 이벤트 발행 안 함 |
+| 저장 성공, 이벤트 발행 실패 | 저장은 커밋됨 (eventual consistency) |
+
+- 이벤트 발행은 트랜잭션 외부에서 실행됩니다
+- 발행 실패 시 비즈니스 로직은 이미 커밋됨 (eventual consistency)
+- 강한 일관성이 필요하면 Outbox 패턴을 고려하세요
+
+---
+
+## 5. 이벤트 핸들러 구현 (HOW)
+
+### Event Handler란?
+
+Event Handler는 **Event-Driven Use Case**입니다. Command/Query Use Case와 동일하게 Application Layer에 속하지만, 트리거가 다릅니다:
+
+| Use Case 유형 | 트리거 | 역할 |
+|---------------|--------|------|
+| Command | 외부 요청 (쓰기) | 상태 변경 |
+| Query | 외부 요청 (읽기) | 데이터 조회 |
+| **Event Handler** | 도메인 이벤트 | 부수 효과 수행 |
+
+### 중첩 클래스 이벤트의 장점
+
+도메인 이벤트가 Entity의 중첩 클래스로 정의되면(`Product.CreatedEvent`), Event Handler 선언만으로 **이벤트 발행 주체**가 명확해집니다:
+
+```csharp
+// Handler 선언만 보면 "Product가 발행한 CreatedEvent"임을 즉시 파악
+public sealed class OnProductCreated : IDomainEventHandler<Product.CreatedEvent>
+```
+
+| 비교 | 중첩 클래스 이벤트 | 독립 클래스 이벤트 |
+|------|-------------------|-------------------|
+| Handler 선언 | `IDomainEventHandler<Product.CreatedEvent>` | `IDomainEventHandler<ProductCreatedEvent>` |
+| 발행 주체 파악 | **타입 시스템에서 명시** (`Product.`) | 네이밍 컨벤션에 의존 |
+| IntelliSense | `Product.` 입력 시 관련 이벤트 목록 표시 | 전체 이벤트 중 검색 필요 |
+| 응집도 | Entity와 이벤트가 함께 배치 | 이벤트가 별도 파일/폴더에 분산 |
+
+### 네이밍 규칙
+
+| 핸들러 유형 | 명명 패턴 | 예시 |
+|------------|----------|------|
+| Command/Query Handler | `{Command/Query}Handler` | `CreateProductHandler`, `GetProductHandler` |
+| Domain Event Handler | `On{EventName}` | `OnProductCreated`, `OnOrderConfirmed` |
+
+Domain Event Handler는 `On` 접두사만 사용합니다:
+- `On` 접두사가 이미 이벤트 핸들러임을 나타내므로 `Handler` 접미사는 중복
+- Command/Query Handler와 자연스럽게 구분됨
+- 간결하고 가독성 향상
+
+| 구분 | 패턴 | 예시 |
+|------|------|------|
+| 파일명 | `On{EventName}.cs` | `OnProductCreated.cs` |
+| 클래스명 | `On{EventName}` | `OnProductCreated` |
+
+### 폴더 위치
+
+Event Handler는 관련 엔티티의 Usecases 폴더에 Command, Query와 함께 배치합니다:
+
+```
+Usecases/
+└── Products/
+    ├── CreateProductCommand.cs      # Command
+    ├── GetProductByIdQuery.cs       # Query
+    └── OnProductCreated.cs          # Event Handler
+```
+
+### 기본 구조
+
+```csharp
+using Functorium.Applications.Events;
+
+namespace {프로젝트}.Application.Usecases.{엔티티};
+
+/// <summary>
+/// {이벤트} 핸들러 - {처리 내용 설명}
+/// </summary>
+public sealed class On{EventName} : IDomainEventHandler<{Entity}.{Event}>
+{
+    public On{EventName}(/* 의존성 주입 */)
+    {
+    }
+
+    public ValueTask Handle({Entity}.{Event} notification, CancellationToken cancellationToken)
+    {
+        // 부수 효과 처리: 로깅, 알림, 외부 시스템 연동 등
+        return ValueTask.CompletedTask;
+    }
+}
+```
+
+### 완전한 예제
+
+```csharp
+using Functorium.Applications.Events;
+using LayeredArch.Domain.Entities;
+using Microsoft.Extensions.Logging;
+
+namespace LayeredArch.Application.Usecases.Products;
+
+/// <summary>
+/// Product.CreatedEvent 핸들러 - 상품 생성 로깅.
+/// </summary>
+public sealed class OnProductCreated : IDomainEventHandler<Product.CreatedEvent>
+{
+    private readonly ILogger<OnProductCreated> _logger;
+
+    public OnProductCreated(ILogger<OnProductCreated> logger)
+    {
+        _logger = logger;
+    }
+
+    public ValueTask Handle(Product.CreatedEvent notification, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation(
+            "[DomainEvent] Product created: {ProductId}, Name: {Name}, Price: {Price}",
+            notification.ProductId,
+            notification.Name,
+            notification.Price);
+
+        return ValueTask.CompletedTask;
+    }
+}
+```
+
+### 사용 시나리오
+
+| 시나리오 | 설명 |
+|----------|------|
+| 로깅/감사 | 도메인 이벤트 기록 |
+| 알림 발송 | 이메일, 푸시 알림 등 |
+| 외부 시스템 연동 | 결제, 배송 시스템 호출 |
+| 캐시 무효화 | 관련 캐시 갱신 |
+| 검색 인덱스 업데이트 | Elasticsearch 등 동기화 |
+
+### 핸들러 등록
+
+> **주의**: `Mediator.SourceGenerator`는 해당 패키지가 참조된 프로젝트 내의 핸들러만 자동 등록합니다.
+> 다른 어셈블리(예: Application 레이어)의 핸들러는 명시적으로 등록해야 합니다.
+
+Scrutor를 사용하여 어셈블리에서 핸들러를 스캔하고 등록합니다:
+
+```csharp
+services.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);
+services.RegisterDomainEventPublisher();  // IDomainEventPublisher 등록
+
+// Application 레이어의 도메인 이벤트 핸들러 등록
+services.RegisterDomainEventHandlersFromAssembly(
+    YourApp.Application.AssemblyReference.Assembly);
+```
+
+`RegisterDomainEventHandlersFromAssembly`는 Scrutor의 `Scan()` API를 사용하여 지정된 어셈블리에서 `IDomainEventHandler<T>` 구현체를 자동으로 검색하고 `INotificationHandler<T>`로 등록합니다.
+
+---
+
+## 6. 테스트 패턴
+
+### 이벤트 발행 검증
+
+Entity의 상태 변경 후 `DomainEvents` 컬렉션에 올바른 이벤트가 추가되었는지 검증합니다:
+
+```csharp
+[Fact]
+public void Create_ShouldRaise_CreatedEvent()
+{
+    // Arrange & Act
+    var order = Order.Create(Money.Create(10000m).ThrowIfFail());
+
+    // Assert
+    order.DomainEvents.ShouldContain(e => e is Order.CreatedEvent);
+}
+
+[Fact]
+public void Confirm_ShouldRaise_ConfirmedEvent()
+{
+    // Arrange
+    var order = Order.Create(Money.Create(10000m).ThrowIfFail());
+    order.ClearDomainEvents();  // 생성 이벤트 제거
+
+    // Act
+    var result = order.Confirm();
+
+    // Assert
+    result.IsSucc.ShouldBeTrue();
+    order.DomainEvents.ShouldContain(e => e is Order.ConfirmedEvent);
+}
+```
+
+### 이벤트 데이터 검증
+
+이벤트에 올바른 데이터가 포함되어 있는지 검증합니다:
+
+```csharp
+[Fact]
+public void Create_CreatedEvent_ShouldContainCorrectData()
+{
+    // Arrange & Act
+    var amount = Money.Create(10000m).ThrowIfFail();
+    var order = Order.Create(amount);
+
+    // Assert
+    var createdEvent = order.DomainEvents
+        .OfType<Order.CreatedEvent>()
+        .ShouldHaveSingleItem();
+
+    createdEvent.OrderId.ShouldBe(order.Id);
+    createdEvent.TotalAmount.ShouldBe(amount);
+}
+```
+
+### 이벤트 핸들러 단위 테스트
+
+Event Handler는 의존성을 모킹하여 단위 테스트합니다:
+
+```csharp
+[Fact]
+public async Task Handle_ShouldLogProductCreation()
+{
+    // Arrange
+    var logger = Substitute.For<ILogger<OnProductCreated>>();
+    var handler = new OnProductCreated(logger);
+    var @event = new Product.CreatedEvent(ProductId.New(), "Test Product", 1000m);
+
+    // Act
+    await handler.Handle(@event, CancellationToken.None);
+
+    // Assert
+    logger.ReceivedWithAnyArgs(1).LogInformation(default!);
+}
+```
+
+---
+
+## 7. 체크리스트
+
+### 이벤트 정의
+
+- [ ] 이벤트 이름이 과거형인가? (`CreatedEvent`, `UpdatedEvent`)
+- [ ] 이벤트가 Aggregate Root의 중첩 record로 정의되어 있는가?
+- [ ] `DomainEvent` 기반 record를 상속하는가?
+- [ ] 이벤트에 필요한 식별자(EntityId)가 포함되어 있는가?
+
+### 이벤트 발행
+
+- [ ] `AddDomainEvent()`가 상태 변경 직후 호출되는가?
+- [ ] `PublishEvents`가 Repository 저장 성공 후 호출되는가?
+
+### 이벤트 핸들러
+
+- [ ] Event Handler 이름이 `On{EventName}` 패턴을 따르는가?
+- [ ] Event Handler가 Usecases 폴더에 Command/Query와 함께 배치되어 있는가?
+- [ ] `IDomainEventHandler<T>`를 구현하는가?
+- [ ] `RegisterDomainEventHandlersFromAssembly`로 핸들러가 등록되어 있는가?
+
+---
+
+## 참고 문서
+
+- [03-entities-and-aggregates.md](./03-entities-and-aggregates.md) - Entity/Aggregate 구현
+- [06-usecases-and-cqrs.md](./06-usecases-and-cqrs.md) - Use Case 구현
+- [03-entities-and-aggregates.md](./03-entities-and-aggregates.md) - Entity 구현 가이드 (상세)
+- [06-usecases-and-cqrs.md](./06-usecases-and-cqrs.md) - 유스케이스 구현 가이드 (상세)

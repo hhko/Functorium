@@ -1,54 +1,44 @@
-# 레이어별 에러 시스템 가이드
+# 에러 시스템
 
-이 문서는 Functorium 프로젝트에서 각 아키텍처 레이어(Domain, Application, Adapter)별로 에러를 정의하고 반환하는 방법을 설명합니다.
+이 문서는 Functorium 프로젝트에서 에러를 정의, 반환, 테스트하는 방법을 통합적으로 설명합니다.
 
 ## 목차
 
-- [1. 개요](#1-개요)
+- [1. 왜 명시적 에러 처리인가](#1-왜-명시적-에러-처리인가)
 - [2. Fin과 에러 반환 패턴](#2-fin과-에러-반환-패턴)
 - [3. 에러 네이밍 규칙](#3-에러-네이밍-규칙)
-- [4. Domain 레이어 에러](#4-domain-레이어-에러)
-- [5. Application 레이어 에러](#5-application-레이어-에러)
-- [6. Adapter 레이어 에러](#6-adapter-레이어-에러)
-- [7. Custom 에러 가이드](#7-custom-에러-가이드)
-- [8. 레이어별 에러 타입 요약](#8-레이어별-에러-타입-요약)
-- [9. 체크리스트](#9-체크리스트)
-- [10. 참고 문서](#10-참고-문서)
-- [11. 변경 이력](#11-변경-이력)
+- [4. Domain 에러](#4-domain-에러)
+- [5. Application 에러](#5-application-에러)
+- [6. Adapter 에러](#6-adapter-에러)
+- [7. Custom 에러](#7-custom-에러)
+- [8. 테스트 모범 사례](#8-테스트-모범-사례)
+- [9. 레이어별 요약 + 체크리스트](#9-레이어별-요약--체크리스트)
+- [참고 문서](#참고-문서)
 
 ---
 
-## 1. 개요
+## 1. 왜 명시적 에러 처리인가
 
-### 핵심 원칙
+### 예외(Exception) vs 결과 타입(Result Type)
 
-Functorium의 에러 시스템은 다음 원칙을 따릅니다:
+전통적인 예외 기반 에러 처리는 제어 흐름이 암시적이고, 어떤 메서드가 어떤 에러를 반환하는지 시그니처에 드러나지 않습니다. 결과 타입(`Fin<T>`, `Validation<Error, T>`)은 성공과 실패를 타입 시스템으로 명시하여, 호출자가 반드시 두 경우를 모두 처리하도록 강제합니다.
 
-1. **레이어별 에러 팩토리 사용**: 각 레이어에 맞는 `DomainError`, `ApplicationError`, `AdapterError` 팩토리 메서드 사용
-2. **암시적 변환 활용**: `Fin.Fail<T>(error)` 대신 `error` 직접 반환 (LanguageExt 암시적 변환)
-3. **타입 안전 에러 코드**: 문자열 대신 `DomainErrorType`, `ApplicationErrorType`, `AdapterErrorType` 사용
+### Railway Oriented Programming
 
-### 에러 코드 형식
+Railway Oriented Programming(ROP)은 성공 트랙과 실패 트랙을 두 개의 레일로 비유합니다. 각 단계는 성공 시 다음 단계로, 실패 시 에러 트랙으로 자동 전환됩니다. `Fin<T>`의 `Bind`/`Map`과 LINQ 쿼리 문법이 이 패턴을 자연스럽게 지원합니다.
 
-모든 에러 코드는 다음 형식을 따릅니다:
+### DDD에서 에러의 역할
 
-```
-{LayerPrefix}.{TypeName}.{ErrorName}
-```
+도메인 주도 설계에서 에러는 단순한 예외가 아니라 **도메인 규칙 위반의 명시적 표현**입니다. Value Object의 불변식 위반, Entity의 상태 전이 제약, Aggregate의 비즈니스 규칙 등이 모두 타입화된 에러로 표현됩니다.
 
-| 레이어 | 접두사 | 예시 |
-|--------|--------|------|
-| Domain | `DomainErrors` | `DomainErrors.Email.Empty` |
-| Application | `ApplicationErrors` | `ApplicationErrors.CreateProductCommand.NotFound` |
-| Adapter | `AdapterErrors` | `AdapterErrors.ProductRepository.NotFound` |
+### Functorium의 접근
 
-### 레이어별 사용 시점
+Functorium은 LanguageExt의 `Fin<T>`와 `Validation<Error, T>`를 활용합니다:
 
-| 레이어 | 사용 시점 |
-|--------|----------|
-| **Domain** | Value Object 검증 실패, Entity 불변성 위반, Aggregate 비즈니스 규칙 위반 |
-| **Application** | 유스케이스 실행 중 비즈니스 로직 오류, 권한/인증 오류, 데이터 조회 실패, 동시성 충돌 |
-| **Adapter** | 파이프라인 검증/예외 처리, 외부 서비스 호출 실패, 직렬화/역직렬화 오류, 연결/타임아웃 오류 |
+- **`Fin<T>`**: 단일 에러를 반환하는 연산 (Entity 메서드, Usecase 등)
+- **`Validation<Error, T>`**: 여러 에러를 누적하는 검증 (Value Object 생성 등)
+- **레이어별 에러 팩토리**: `DomainError`, `ApplicationError`, `AdapterError`로 에러 출처를 명확히 구분
+- **타입 안전 에러 코드**: 문자열 대신 `DomainErrorType`, `ApplicationErrorType`, `AdapterErrorType` 사용
 
 ---
 
@@ -409,9 +399,9 @@ new CancelledOperation() // OperationCancelled가 표준
 
 ---
 
-## 4. Domain 레이어 에러
+## 4. Domain 에러
 
-### 에러 생성 및 반환
+### 4.1 에러 생성 및 반환
 
 ```csharp
 using Functorium.Domains.Errors;
@@ -466,7 +456,7 @@ public Fin<Triangle> Create(double a, double b, double c)
 }
 ```
 
-### Entity 메서드에서 에러 반환
+### 4.2 Entity 메서드에서 에러 반환
 
 ```csharp
 public sealed class Product : AggregateRoot<ProductId>
@@ -486,7 +476,7 @@ public sealed class Product : AggregateRoot<ProductId>
 }
 ```
 
-### DomainErrorType 범주 구조
+### 4.3 DomainErrorType 범주 구조 및 전체 목록
 
 | 범주 | 파일 | 설명 |
 |------|------|------|
@@ -498,8 +488,6 @@ public sealed class Product : AggregateRoot<ProductId>
 | Range | `DomainErrorType.Range.cs` | min/max 쌍 검증 |
 | Existence | `DomainErrorType.Existence.cs` | 존재 여부 검증 |
 | Custom | `DomainErrorType.Custom.cs` | 커스텀 에러 |
-
-### DomainErrorType 전체 목록
 
 #### Presence (값 존재 검증) - R1
 
@@ -567,7 +555,7 @@ public sealed class Product : AggregateRoot<ProductId>
 |-----------|------|----------|
 | `Custom` | 도메인 특화 에러 | `new Custom("AlreadyShipped")` |
 
-### Value Object 사용 예시
+### 4.4 Value Object 사용 예시
 
 ```csharp
 public sealed class Email : SimpleValueObject<string>
@@ -587,11 +575,198 @@ public sealed class Email : SimpleValueObject<string>
 }
 ```
 
+### 4.5 Domain 에러 테스트
+
+테스트 어설션 네임스페이스:
+
+```csharp
+using Functorium.Testing.Assertions.Errors;
+```
+
+#### Error 검증
+
+```csharp
+// 기본 에러 타입 검증
+[Fact]
+public void ShouldBeDomainError_WhenValueIsEmpty()
+{
+    // Arrange
+    var error = DomainError.For<Email>(
+        new DomainErrorType.Empty(),
+        currentValue: "",
+        message: "Email cannot be empty");
+
+    // Act & Assert
+    error.ShouldBeDomainError<Email>(new DomainErrorType.Empty());
+}
+
+// 현재 값 포함 검증
+[Fact]
+public void ShouldBeDomainError_WithValue_WhenValueIsNegative()
+{
+    // Arrange
+    var error = DomainError.For<Age, int>(
+        new DomainErrorType.Negative(),
+        currentValue: -5,
+        message: "Age cannot be negative");
+
+    // Act & Assert
+    error.ShouldBeDomainError<Age, int>(
+        new DomainErrorType.Negative(),
+        expectedCurrentValue: -5);
+}
+
+// 두 개의 값 포함 검증
+[Fact]
+public void ShouldBeDomainError_WithTwoValues_WhenRangeIsInvalid()
+{
+    // Arrange
+    var startDate = new DateTime(2024, 12, 31);
+    var endDate = new DateTime(2024, 1, 1);
+    var error = DomainError.For<DateRange, DateTime, DateTime>(
+        new DomainErrorType.Custom("InvalidRange"),
+        startDate,
+        endDate,
+        message: "Start date must be before end date");
+
+    // Act & Assert
+    error.ShouldBeDomainError<DateRange, DateTime, DateTime>(
+        new DomainErrorType.Custom("InvalidRange"),
+        expectedValue1: startDate,
+        expectedValue2: endDate);
+}
+
+// 세 개의 값 포함 검증
+[Fact]
+public void ShouldBeDomainError_WithThreeValues()
+{
+    // Arrange
+    var error = DomainError.For<Triangle, double, double, double>(
+        new DomainErrorType.Custom("InvalidTriangle"),
+        1.0, 2.0, 10.0,
+        message: "Invalid triangle sides");
+
+    // Act & Assert
+    error.ShouldBeDomainError<Triangle, double, double, double>(
+        new DomainErrorType.Custom("InvalidTriangle"),
+        expectedValue1: 1.0,
+        expectedValue2: 2.0,
+        expectedValue3: 10.0);
+}
+```
+
+#### Fin<T> 검증
+
+```csharp
+[Fact]
+public void Fin_ShouldBeDomainError_WhenCreationFails()
+{
+    // Arrange
+    Fin<Email> fin = DomainError.For<Email>(
+        new DomainErrorType.InvalidFormat(),
+        currentValue: "invalid-email",
+        message: "Invalid email format");
+
+    // Act & Assert
+    fin.ShouldBeDomainError<Email, Email>(new DomainErrorType.InvalidFormat());
+}
+
+[Fact]
+public void Fin_ShouldBeDomainError_WithValue()
+{
+    // Arrange
+    Fin<Age> fin = DomainError.For<Age, int>(
+        new DomainErrorType.Negative(),
+        currentValue: -5,
+        message: "Age cannot be negative");
+
+    // Act & Assert
+    fin.ShouldBeDomainError<Age, Age, int>(
+        new DomainErrorType.Negative(),
+        expectedCurrentValue: -5);
+}
+```
+
+#### Validation<Error, T> 검증
+
+```csharp
+// 특정 에러 포함 여부 검증
+[Fact]
+public void Validation_ShouldHaveDomainError()
+{
+    // Arrange
+    Validation<Error, Address> validation = Fail<Error, Address>(
+        DomainError.For<Street>(
+            new DomainErrorType.Empty(),
+            currentValue: "",
+            message: "Street cannot be empty"));
+
+    // Act & Assert
+    validation.ShouldHaveDomainError<Street, Address>(new DomainErrorType.Empty());
+}
+
+// 정확히 하나의 에러만 포함 검증
+[Fact]
+public void Validation_ShouldHaveOnlyDomainError()
+{
+    // Arrange
+    Validation<Error, PostalCode> validation = Fail<Error, PostalCode>(
+        DomainError.For<PostalCode>(
+            new DomainErrorType.InvalidFormat(),
+            currentValue: "invalid",
+            message: "Invalid postal code format"));
+
+    // Act & Assert
+    validation.ShouldHaveOnlyDomainError<PostalCode, PostalCode>(
+        new DomainErrorType.InvalidFormat());
+}
+
+// 여러 에러 모두 포함 검증
+[Fact]
+public void Validation_ShouldHaveDomainErrors_WhenMultipleErrorsExist()
+{
+    // Arrange
+    var error1 = DomainError.For<Password>(
+        new DomainErrorType.TooShort(MinLength: 8),
+        currentValue: "abc",
+        message: "Password too short");
+
+    var error2 = DomainError.For<Password>(
+        new DomainErrorType.NotUpperCase(),
+        currentValue: "abc",
+        message: "Password must contain uppercase");
+
+    Validation<Error, Password> validation = Fail<Error, Password>(Error.Many(error1, error2));
+
+    // Act & Assert
+    validation.ShouldHaveDomainErrors<Password, Password>(
+        new DomainErrorType.TooShort(MinLength: 8),
+        new DomainErrorType.NotUpperCase());
+}
+
+// 현재 값 포함 검증
+[Fact]
+public void Validation_ShouldHaveDomainError_WithValue()
+{
+    // Arrange
+    Validation<Error, Quantity> validation = Fail<Error, Quantity>(
+        DomainError.For<Quantity, int>(
+            new DomainErrorType.Negative(),
+            currentValue: -10,
+            message: "Quantity cannot be negative"));
+
+    // Act & Assert
+    validation.ShouldHaveDomainError<Quantity, Quantity, int>(
+        new DomainErrorType.Negative(),
+        expectedCurrentValue: -10);
+}
+```
+
 ---
 
-## 5. Application 레이어 에러
+## 5. Application 에러
 
-### 에러 생성 및 반환
+### 5.1 에러 생성 및 반환
 
 ```csharp
 using Functorium.Applications.Errors;
@@ -619,7 +794,7 @@ return ApplicationError.For<TransferCommand, decimal, decimal>(
     "잔액이 부족합니다");
 ```
 
-### ApplicationErrorType 전체 목록
+### 5.2 ApplicationErrorType 전체 목록
 
 #### 공통 에러 타입 - R1, R3, R4, R5
 
@@ -656,7 +831,7 @@ return ApplicationError.For<TransferCommand, decimal, decimal>(
 |-----------|------|----------|
 | `Custom` | 애플리케이션 특화 에러 | `new Custom("PaymentDeclined")` |
 
-### Usecase 에러 사용 패턴 (권장)
+### 5.3 Usecase 에러 사용 패턴
 
 ```csharp
 using Functorium.Applications.Errors;
@@ -692,7 +867,7 @@ public sealed class CreateProductCommand
 }
 ```
 
-### 에러 코드 형식
+에러 코드 형식:
 
 ```
 ApplicationErrors.{UsecaseName}.{ErrorTypeName}
@@ -703,7 +878,7 @@ ApplicationErrors.{UsecaseName}.{ErrorTypeName}
 - `ApplicationErrors.UpdateProductCommand.NotFound`
 - `ApplicationErrors.DeleteOrderCommand.BusinessRuleViolated`
 
-### 유스케이스 사용 예시
+유스케이스 사용 예시:
 
 ```csharp
 public sealed class CreateProductCommandHandler
@@ -739,11 +914,162 @@ public sealed class CreateProductCommandHandler
 }
 ```
 
+### 5.4 Application 에러 테스트
+
+테스트 어설션 네임스페이스:
+
+```csharp
+using Functorium.Testing.Assertions.Errors;
+```
+
+#### Error 검증
+
+```csharp
+// 기본 에러 타입 검증
+[Fact]
+public void ShouldBeApplicationError_WhenProductNotFound()
+{
+    // Arrange
+    var error = ApplicationError.For<GetProductQuery>(
+        new ApplicationErrorType.NotFound(),
+        currentValue: "PROD-001",
+        message: "Product not found");
+
+    // Act & Assert
+    error.ShouldBeApplicationError<GetProductQuery>(new ApplicationErrorType.NotFound());
+}
+
+// 현재 값 포함 검증
+[Fact]
+public void ShouldBeApplicationError_WithValue_WhenDuplicate()
+{
+    // Arrange
+    var productId = Guid.NewGuid();
+    var error = ApplicationError.For<CreateProductCommand, Guid>(
+        new ApplicationErrorType.AlreadyExists(),
+        currentValue: productId,
+        message: "Product already exists");
+
+    // Act & Assert
+    error.ShouldBeApplicationError<CreateProductCommand, Guid>(
+        new ApplicationErrorType.AlreadyExists(),
+        expectedCurrentValue: productId);
+}
+
+// 두 개의 값 포함 검증
+[Fact]
+public void ShouldBeApplicationError_WithTwoValues_WhenBusinessRuleViolated()
+{
+    // Arrange
+    var error = ApplicationError.For<TransferCommand, decimal, decimal>(
+        new ApplicationErrorType.BusinessRuleViolated("InsufficientBalance"),
+        100m,
+        500m,
+        message: "Insufficient balance for transfer");
+
+    // Act & Assert
+    error.ShouldBeApplicationError<TransferCommand, decimal, decimal>(
+        new ApplicationErrorType.BusinessRuleViolated("InsufficientBalance"),
+        expectedValue1: 100m,
+        expectedValue2: 500m);
+}
+```
+
+#### Fin<T> 검증
+
+```csharp
+[Fact]
+public void Fin_ShouldBeApplicationError_WhenQueryFails()
+{
+    // Arrange
+    Fin<Product> fin = ApplicationError.For<GetProductQuery>(
+        new ApplicationErrorType.NotFound(),
+        currentValue: "PROD-001",
+        message: "Product not found");
+
+    // Act & Assert
+    fin.ShouldBeApplicationError<GetProductQuery, Product>(
+        new ApplicationErrorType.NotFound());
+}
+
+[Fact]
+public void Fin_ShouldBeApplicationError_WithValue()
+{
+    // Arrange
+    var orderId = Guid.NewGuid();
+    Fin<Order> fin = ApplicationError.For<CancelOrderCommand, Guid>(
+        new ApplicationErrorType.InvalidState(),
+        currentValue: orderId,
+        message: "Cannot cancel shipped order");
+
+    // Act & Assert
+    fin.ShouldBeApplicationError<CancelOrderCommand, Order, Guid>(
+        new ApplicationErrorType.InvalidState(),
+        expectedCurrentValue: orderId);
+}
+```
+
+#### Validation<Error, T> 검증
+
+```csharp
+[Fact]
+public void Validation_ShouldHaveApplicationError()
+{
+    // Arrange
+    Validation<Error, ProductId> validation = Fail<Error, ProductId>(
+        ApplicationError.For<CreateProductCommand>(
+            new ApplicationErrorType.AlreadyExists(),
+            currentValue: "PROD-001",
+            message: "Product already exists"));
+
+    // Act & Assert
+    validation.ShouldHaveApplicationError<CreateProductCommand, ProductId>(
+        new ApplicationErrorType.AlreadyExists());
+}
+
+[Fact]
+public void Validation_ShouldHaveOnlyApplicationError()
+{
+    // Arrange
+    Validation<Error, Unit> validation = Fail<Error, Unit>(
+        ApplicationError.For<DeleteOrderCommand>(
+            new ApplicationErrorType.Forbidden(),
+            currentValue: "ORDER-001",
+            message: "Cannot delete this order"));
+
+    // Act & Assert
+    validation.ShouldHaveOnlyApplicationError<DeleteOrderCommand, Unit>(
+        new ApplicationErrorType.Forbidden());
+}
+
+[Fact]
+public void Validation_ShouldHaveApplicationErrors()
+{
+    // Arrange
+    var error1 = ApplicationError.For<UpdateUserCommand>(
+        new ApplicationErrorType.ValidationFailed("Email"),
+        currentValue: "",
+        message: "Email is required");
+
+    var error2 = ApplicationError.For<UpdateUserCommand>(
+        new ApplicationErrorType.ValidationFailed("Name"),
+        currentValue: "",
+        message: "Name is required");
+
+    Validation<Error, Unit> validation = Fail<Error, Unit>(Error.Many(error1, error2));
+
+    // Act & Assert
+    validation.ShouldHaveApplicationErrors<UpdateUserCommand, Unit>(
+        new ApplicationErrorType.ValidationFailed("Email"),
+        new ApplicationErrorType.ValidationFailed("Name"));
+}
+```
+
 ---
 
-## 6. Adapter 레이어 에러
+## 6. Adapter 에러
 
-### 에러 생성 및 반환
+### 6.1 에러 생성 및 반환
 
 ```csharp
 using Functorium.Adapters.Errors;
@@ -767,7 +1093,7 @@ return AdapterError.FromException<ExternalApiService>(
     exception);
 ```
 
-### AdapterErrorType 전체 목록
+### 6.2 AdapterErrorType 전체 목록
 
 #### 공통 에러 타입 - R1, R3, R4, R5, R7
 
@@ -811,7 +1137,7 @@ return AdapterError.FromException<ExternalApiService>(
 |-----------|------|----------|
 | `Custom` | 어댑터 특화 에러 | `new Custom("RateLimited")` |
 
-### Repository 구현 예시
+### 6.3 Repository 구현 예시
 
 ```csharp
 [GeneratePipeline]
@@ -871,7 +1197,7 @@ public class InMemoryProductRepository : IProductRepository
 }
 ```
 
-### 외부 API 서비스 구현 예시
+### 6.4 외부 API 서비스 구현 예시
 
 ```csharp
 [GeneratePipeline]
@@ -977,9 +1303,177 @@ public class ExternalPricingApiService : IExternalPricingService
 }
 ```
 
+### 6.5 Adapter 에러 테스트
+
+테스트 어설션 네임스페이스:
+
+```csharp
+using Functorium.Testing.Assertions.Errors;
+```
+
+어설션 메서드 요약:
+
+| 레이어 | Error 검증 | Fin<T> 검증 | Validation<Error, T> 검증 |
+|--------|-----------|-------------|--------------------------|
+| Domain | `ShouldBeDomainError` | `ShouldBeDomainError` | `ShouldHaveDomainError`, `ShouldHaveOnlyDomainError`, `ShouldHaveDomainErrors` |
+| Application | `ShouldBeApplicationError` | `ShouldBeApplicationError` | `ShouldHaveApplicationError`, `ShouldHaveOnlyApplicationError`, `ShouldHaveApplicationErrors` |
+| Adapter | `ShouldBeAdapterError`, `ShouldBeAdapterExceptionalError` | `ShouldBeAdapterError`, `ShouldBeAdapterExceptionalError` | `ShouldHaveAdapterError`, `ShouldHaveOnlyAdapterError`, `ShouldHaveAdapterErrors` |
+
+#### Error 검증
+
+```csharp
+// 기본 에러 타입 검증
+[Fact]
+public void ShouldBeAdapterError_WhenValidationFails()
+{
+    // Arrange
+    var error = AdapterError.For<UsecaseValidationPipeline>(
+        new AdapterErrorType.PipelineValidation("ProductName"),
+        currentValue: "",
+        message: "ProductName is required");
+
+    // Act & Assert
+    error.ShouldBeAdapterError<UsecaseValidationPipeline>(
+        new AdapterErrorType.PipelineValidation("ProductName"));
+}
+
+// 현재 값 포함 검증
+[Fact]
+public void ShouldBeAdapterError_WithValue_WhenTimeout()
+{
+    // Arrange
+    var url = "https://api.example.com/data";
+    var error = AdapterError.For<HttpClientAdapter, string>(
+        new AdapterErrorType.Timeout(Duration: TimeSpan.FromSeconds(30)),
+        currentValue: url,
+        message: "Request timed out");
+
+    // Act & Assert
+    error.ShouldBeAdapterError<HttpClientAdapter, string>(
+        new AdapterErrorType.Timeout(Duration: TimeSpan.FromSeconds(30)),
+        expectedCurrentValue: url);
+}
+
+// 예외 래핑 에러 검증
+[Fact]
+public void ShouldBeAdapterExceptionalError_WhenExceptionOccurs()
+{
+    // Arrange
+    var exception = new InvalidOperationException("Something went wrong");
+    var error = AdapterError.FromException<UsecaseExceptionPipeline>(
+        new AdapterErrorType.PipelineException(),
+        exception);
+
+    // Act & Assert
+    error.ShouldBeAdapterExceptionalError<UsecaseExceptionPipeline>(
+        new AdapterErrorType.PipelineException());
+}
+
+[Fact]
+public void ShouldBeAdapterExceptionalError_WithExceptionType()
+{
+    // Arrange
+    var exception = new TimeoutException("Connection timed out");
+    var error = AdapterError.FromException<DatabaseAdapter>(
+        new AdapterErrorType.ConnectionFailed("database"),
+        exception);
+
+    // Act & Assert
+    error.ShouldBeAdapterExceptionalError<DatabaseAdapter, TimeoutException>(
+        new AdapterErrorType.ConnectionFailed("database"));
+}
+```
+
+#### Fin<T> 검증
+
+```csharp
+[Fact]
+public void Fin_ShouldBeAdapterError_WhenServiceUnavailable()
+{
+    // Arrange
+    Fin<PaymentResult> fin = AdapterError.For<PaymentGatewayAdapter>(
+        new AdapterErrorType.ExternalServiceUnavailable("PaymentGateway"),
+        currentValue: "https://payment.example.com",
+        message: "Payment service unavailable");
+
+    // Act & Assert
+    fin.ShouldBeAdapterError<PaymentGatewayAdapter, PaymentResult>(
+        new AdapterErrorType.ExternalServiceUnavailable("PaymentGateway"));
+}
+
+[Fact]
+public void Fin_ShouldBeAdapterExceptionalError()
+{
+    // Arrange
+    Fin<Unit> fin = AdapterError.FromException<UsecaseExceptionPipeline>(
+        new AdapterErrorType.PipelineException(),
+        new Exception("Unexpected error"));
+
+    // Act & Assert
+    fin.ShouldBeAdapterExceptionalError<UsecaseExceptionPipeline, Unit>(
+        new AdapterErrorType.PipelineException());
+}
+```
+
+#### Validation<Error, T> 검증
+
+```csharp
+[Fact]
+public void Validation_ShouldHaveAdapterError()
+{
+    // Arrange
+    Validation<Error, Unit> validation = Fail<Error, Unit>(
+        AdapterError.For<CacheAdapter>(
+            new AdapterErrorType.ConnectionFailed("Redis"),
+            currentValue: "localhost:6379",
+            message: "Cannot connect to Redis"));
+
+    // Act & Assert
+    validation.ShouldHaveAdapterError<CacheAdapter, Unit>(
+        new AdapterErrorType.ConnectionFailed("Redis"));
+}
+
+[Fact]
+public void Validation_ShouldHaveOnlyAdapterError()
+{
+    // Arrange
+    Validation<Error, byte[]> validation = Fail<Error, byte[]>(
+        AdapterError.For<MessageSerializer>(
+            new AdapterErrorType.Serialization("JSON"),
+            currentValue: "invalid-object",
+            message: "Failed to serialize object to JSON"));
+
+    // Act & Assert
+    validation.ShouldHaveOnlyAdapterError<MessageSerializer, byte[]>(
+        new AdapterErrorType.Serialization("JSON"));
+}
+
+[Fact]
+public void Validation_ShouldHaveAdapterErrors()
+{
+    // Arrange
+    var error1 = AdapterError.For<UsecaseValidationPipeline>(
+        new AdapterErrorType.PipelineValidation("Name"),
+        currentValue: "",
+        message: "Name is required");
+
+    var error2 = AdapterError.For<UsecaseValidationPipeline>(
+        new AdapterErrorType.PipelineValidation("Price"),
+        currentValue: "-1",
+        message: "Price must be positive");
+
+    Validation<Error, Unit> validation = Fail<Error, Unit>(Error.Many(error1, error2));
+
+    // Act & Assert
+    validation.ShouldHaveAdapterErrors<UsecaseValidationPipeline, Unit>(
+        new AdapterErrorType.PipelineValidation("Name"),
+        new AdapterErrorType.PipelineValidation("Price"));
+}
+```
+
 ---
 
-## 7. Custom 에러 가이드
+## 7. Custom 에러
 
 ### 언제 Custom을 사용하는가?
 
@@ -1022,7 +1516,127 @@ public sealed record RateLimited : AdapterErrorType;
 
 ---
 
-## 8. 레이어별 에러 타입 요약
+## 8. 테스트 모범 사례
+
+### 실패 케이스 테스트
+
+에러가 발생하지 않아야 하는 성공 케이스도 테스트해야 합니다:
+
+```csharp
+[Fact]
+public void Create_ShouldSucceed_WhenValidValue()
+{
+    // Arrange
+    var validEmail = "user@example.com";
+
+    // Act
+    var result = Email.Create(validEmail);
+
+    // Assert
+    result.IsSucc.ShouldBeTrue();
+    result.IfSucc(email => email.Value.ShouldBe(validEmail));
+}
+
+[Fact]
+public void Validate_ShouldSucceed_WhenValidValue()
+{
+    // Arrange
+    var validPassword = "SecureP@ss123";
+
+    // Act
+    var result = Password.Validate(validPassword);
+
+    // Assert
+    result.IsSuccess.ShouldBeTrue();
+}
+```
+
+### 테스트 명명 규칙
+
+```csharp
+// 패턴: [Method]_Should[Behavior]_When[Condition]
+
+// Error 검증
+ShouldBeDomainError_WhenValueIsEmpty
+ShouldBeApplicationError_WhenProductNotFound
+ShouldBeAdapterError_WhenValidationFails
+
+// Fin 검증
+Create_ShouldFail_WhenEmailIsInvalid
+Execute_ShouldFail_WhenProductNotFound
+
+// Validation 검증
+Validate_ShouldHaveError_WhenPasswordTooShort
+Validate_ShouldHaveMultipleErrors_WhenMultipleValidationsFail
+```
+
+### Arrange-Act-Assert 패턴
+
+```csharp
+[Fact]
+public void Create_ShouldFail_WhenEmailIsEmpty()
+{
+    // Arrange
+    var emptyEmail = "";
+
+    // Act
+    var result = Email.Create(emptyEmail);
+
+    // Assert
+    result.ShouldBeDomainError<Email, Email>(new DomainErrorType.Empty());
+}
+```
+
+### Theory를 사용한 파라미터화 테스트
+
+```csharp
+[Theory]
+[InlineData("")]
+[InlineData(" ")]
+[InlineData(null)]
+public void Create_ShouldFail_WhenEmailIsEmptyOrWhitespace(string? email)
+{
+    // Act
+    var result = Email.Create(email);
+
+    // Assert
+    result.ShouldBeDomainError<Email, Email>(new DomainErrorType.Empty());
+}
+
+[Theory]
+[InlineData("invalid")]
+[InlineData("missing@domain")]
+[InlineData("@nodomain.com")]
+public void Create_ShouldFail_WhenEmailFormatIsInvalid(string email)
+{
+    // Act
+    var result = Email.Create(email);
+
+    // Assert
+    result.ShouldBeDomainError<Email, Email>(new DomainErrorType.InvalidFormat());
+}
+```
+
+### Custom 에러 테스트
+
+```csharp
+[Fact]
+public void Cancel_ShouldFail_WhenOrderAlreadyShipped()
+{
+    // Arrange
+    var error = DomainError.For<Order>(
+        new DomainErrorType.Custom("AlreadyShipped"),
+        currentValue: "ORDER-001",
+        message: "Cannot cancel shipped order");
+
+    // Act & Assert
+    error.ShouldBeDomainError<Order>(new DomainErrorType.Custom("AlreadyShipped"));
+}
+```
+
+---
+
+## 9. 레이어별 요약 + 체크리스트
 
 ### Domain (DomainErrorType)
 
@@ -1061,9 +1675,27 @@ public sealed record RateLimited : AdapterErrorType;
 커스텀:      Custom(Name)
 ```
 
----
+### 레이어별 사용 시점
 
-## 9. 체크리스트
+| 레이어 | 사용 시점 |
+|--------|----------|
+| **Domain** | Value Object 검증 실패, Entity 불변성 위반, Aggregate 비즈니스 규칙 위반 |
+| **Application** | 유스케이스 실행 중 비즈니스 로직 오류, 권한/인증 오류, 데이터 조회 실패, 동시성 충돌 |
+| **Adapter** | 파이프라인 검증/예외 처리, 외부 서비스 호출 실패, 직렬화/역직렬화 오류, 연결/타임아웃 오류 |
+
+### 에러 코드 형식
+
+모든 에러 코드는 다음 형식을 따릅니다:
+
+```
+{LayerPrefix}.{TypeName}.{ErrorName}
+```
+
+| 레이어 | 접두사 | 예시 |
+|--------|--------|------|
+| Domain | `DomainErrors` | `DomainErrors.Email.Empty` |
+| Application | `ApplicationErrors` | `ApplicationErrors.CreateProductCommand.NotFound` |
+| Adapter | `AdapterErrors` | `AdapterErrors.ProductRepository.NotFound` |
 
 ### 에러 정의 체크리스트
 
@@ -1087,23 +1719,21 @@ public sealed record RateLimited : AdapterErrorType;
 - [ ] 컨텍스트 정보가 필요한가? (MinLength, Pattern, PropertyName 등)
 - [ ] 에러 메시지가 에러 이름과 일관성 있는가?
 
+### 테스트 체크리스트
+
+- [ ] 모든 에러 케이스에 대한 테스트가 있는가?
+- [ ] 에러 타입이 정확히 일치하는지 검증하는가?
+- [ ] 필요한 경우 현재 값도 검증하는가?
+- [ ] Custom 에러의 이름이 정확히 일치하는지 검증하는가?
+- [ ] 유효한 입력에 대한 성공 테스트가 있는가?
+- [ ] 경계값(boundary values)에 대한 테스트가 있는가?
+- [ ] 반환값이 예상과 일치하는지 검증하는가?
+
 ---
 
-## 10. 참고 문서
+## 참고 문서
 
-- [valueobject-guide.md](./valueobject-guide.md) - 값 객체 구현 및 검증 패턴
-- [adapter-guide.md](./adapter-guide.md) - Adapter 구현 가이드
-- [error-testing-guide.md](./error-testing-guide.md) - 에러 테스트 패턴
-
----
-
-## 11. 변경 이력
-
-| 날짜 | 변경 사항 | 작성자 |
-|------|----------|--------|
-| 2026-01-31 | Fin<T> 반환 패턴 섹션 보강, 암시적 변환 패턴을 모든 예시에 통합 | - |
-| 2026-01-29 | 문서 통합 - layered-error-definition-guide.md, layered-error-naming-guide.md 병합 | - |
-| 2026-01-26 | 날짜 검증 에러 추가 (DefaultDate, NotInPast, NotInFuture, TooLate, TooEarly) | - |
-| 2026-01-26 | 숫자 검증 에러 추가 (Zero), 범위 검증 에러 추가 (RangeInverted, RangeEmpty) | - |
-| 2026-01-25 | Value Object 예시를 `ValidationRules<T>` 문법으로 업데이트 | - |
-| 2026-01-23 | 최초 작성 - 레이어별 에러 정의 및 네이밍 가이드 | - |
+- [02-value-objects.md](./02-value-objects.md) - 값 객체 구현 및 검증 패턴
+- [07-ports-and-adapters.md](./07-ports-and-adapters.md) - Adapter 구현 가이드
+- [08-unit-testing.md](./08-unit-testing.md) - 단위 테스트 가이드
+- [09-testing-library.md](./09-testing-library.md) - 에러 외 테스트 유틸리티 (로그/아키텍처/소스생성기/Job 테스트)

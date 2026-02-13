@@ -1,9 +1,10 @@
-# 유스케이스 구현 가이드
+# Use Case와 CQRS
 
 이 문서는 Functorium CQRS 패턴을 사용하여 유스케이스(Command/Query Handler)를 구현하는 방법을 설명합니다.
 
 ## 목차
 
+- [왜 CQRS인가 (WHY)](#왜-cqrs인가-why)
 - [요약](#요약)
 - [CQRS 패턴 개요](#cqrs-패턴-개요)
 - [프로젝트 구조](#프로젝트-구조)
@@ -13,12 +14,31 @@
 - [Application 에러 사용 패턴](#application-에러-사용-패턴)
 - [Command 구현](#command-구현)
 - [Query 구현](#query-구현)
-- [도메인 이벤트 발행](#도메인-이벤트-발행)
-- [Event Handler 구현](#event-handler-구현)
+- [도메인 이벤트](#도메인-이벤트)
 - [FinResponse와 오류 처리](#finresponse와-오류-처리)
 - [FluentValidation 통합](#fluentvalidation-통합)
 - [FAQ](#faq)
 - [참고 문서](#참고-문서)
+
+---
+
+## 왜 CQRS인가 (WHY)
+
+### DDD에서 Application Service의 역할
+
+Application Layer는 도메인 객체를 조율하여 유스케이스를 수행하는 계층입니다. 도메인 로직 자체를 포함하지 않고, 도메인 객체에게 작업을 위임합니다.
+
+### Command/Query 분리의 이점
+
+| 관점 | 통합 모델 | CQRS |
+|------|----------|------|
+| 읽기/쓰기 최적화 | 동일 모델로 타협 | 각각 최적화 가능 |
+| 확장성 | 함께 확장 | 독립적 확장 |
+| 복잡성 관리 | 한 곳에 집중 | 관심사 분리 |
+
+### 유스케이스 = 비즈니스 의도의 명시적 표현
+
+Functorium에서 각 유스케이스는 하나의 클래스로 표현됩니다. `CreateProductCommand`, `GetProductByIdQuery`처럼 비즈니스 의도가 클래스 이름에 드러납니다.
 
 ---
 
@@ -408,189 +428,6 @@ ApplicationErrors.{UsecaseName}.{ErrorTypeName}
 
 ---
 
-## 도메인 이벤트 발행
-
-### 이벤트 발행 시점
-
-도메인 이벤트는 **Repository 저장 성공 후** 발행합니다. `IDomainEventPublisher`를 주입받아 사용합니다.
-
-`IDomainEventPublisher`는 `FinT<IO, Unit>`을 반환하므로 Repository/Port와 동일한 LINQ 체이닝 패턴으로 사용할 수 있습니다. 별도의 헬퍼 메서드 없이 직접 호출합니다:
-
-```csharp
-using Functorium.Applications.Events;
-
-public sealed class Usecase(
-    IProductRepository productRepository,
-    IDomainEventPublisher eventPublisher)  // 생성자 주입
-    : ICommandUsecase<Request, Response>
-{
-    private readonly IProductRepository _productRepository = productRepository;
-    private readonly IDomainEventPublisher _eventPublisher = eventPublisher;
-
-    public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
-    {
-        // ... 기존 검증 로직 ...
-
-        FinT<IO, Response> usecase =
-            from exists in _productRepository.ExistsByName(productName)
-            from _ in guard(!exists, /* error */)
-            from product in _productRepository.Create(productResult)
-            from __ in _eventPublisher.PublishEvents(product, cancellationToken)  // 직접 호출
-            select new Response(...);
-
-        Fin<Response> response = await usecase.Run().RunAsync();
-        return response.ToFinResponse();
-    }
-}
-```
-
-### PublishEvents 동작
-
-`PublishEvents`는 Aggregate의 모든 도메인 이벤트를 발행하고 클리어합니다:
-
-1. `aggregate.DomainEvents`에서 이벤트 목록 복사
-2. `aggregate.ClearDomainEvents()` 호출
-3. 각 이벤트를 Mediator를 통해 발행
-
-### 트랜잭션 고려사항
-
-| 상황 | 동작 |
-|------|------|
-| 저장 성공, 이벤트 발행 성공 | 정상 처리 |
-| 저장 실패 | 이벤트 발행 안 함 |
-| 저장 성공, 이벤트 발행 실패 | 저장은 커밋됨 (eventual consistency) |
-
-강한 일관성이 필요하면 Outbox 패턴을 고려하세요.
-
----
-
-## Event Handler 구현
-
-### Event Handler란?
-
-Event Handler는 **Event-Driven Use Case**입니다. Command/Query Use Case와 동일하게 Application Layer에 속하지만, 트리거가 다릅니다:
-
-| Use Case 유형 | 트리거 | 역할 |
-|---------------|--------|------|
-| Command | 외부 요청 (쓰기) | 상태 변경 |
-| Query | 외부 요청 (읽기) | 데이터 조회 |
-| **Event Handler** | 도메인 이벤트 | 부수 효과 수행 |
-
-### 중첩 클래스 이벤트의 장점
-
-도메인 이벤트가 Entity의 중첩 클래스로 정의되면(`Product.CreatedEvent`), Event Handler 선언만으로 **이벤트 발행 주체**가 명확해집니다:
-
-```csharp
-// Handler 선언만 보면 "Product가 발행한 CreatedEvent"임을 즉시 파악
-public sealed class OnProductCreated : IDomainEventHandler<Product.CreatedEvent>
-```
-
-| 비교 | 중첩 클래스 이벤트 | 독립 클래스 이벤트 |
-|------|-------------------|-------------------|
-| Handler 선언 | `IDomainEventHandler<Product.CreatedEvent>` | `IDomainEventHandler<ProductCreatedEvent>` |
-| 발행 주체 파악 | **타입 시스템에서 명시** (`Product.`) | 네이밍 컨벤션에 의존 |
-| IntelliSense | `Product.` 입력 시 관련 이벤트 목록 표시 | 전체 이벤트 중 검색 필요 |
-| 응집도 | Entity와 이벤트가 함께 배치 | 이벤트가 별도 파일/폴더에 분산 |
-
-### 네이밍 규칙
-
-| 핸들러 유형 | 명명 패턴 | 예시 |
-|------------|----------|------|
-| Command/Query Handler | `{Command/Query}Handler` | `CreateProductHandler`, `GetProductHandler` |
-| Domain Event Handler | `On{EventName}` | `OnProductCreated`, `OnOrderConfirmed` |
-
-Domain Event Handler는 `On` 접두사만 사용합니다:
-- `On` 접두사가 이미 이벤트 핸들러임을 나타내므로 `Handler` 접미사는 중복
-- Command/Query Handler와 자연스럽게 구분됨
-- 간결하고 가독성 향상
-
-| 구분 | 패턴 | 예시 |
-|------|------|------|
-| 파일명 | `On{EventName}.cs` | `OnProductCreated.cs` |
-| 클래스명 | `On{EventName}` | `OnProductCreated` |
-
-### 폴더 위치
-
-Event Handler는 관련 엔티티의 Usecases 폴더에 Command, Query와 함께 배치합니다:
-
-```
-Usecases/
-└── Products/
-    ├── CreateProductCommand.cs      # Command
-    ├── GetProductByIdQuery.cs       # Query
-    └── OnProductCreated.cs          # Event Handler
-```
-
-### 기본 구조
-
-```csharp
-using Functorium.Applications.Events;
-
-namespace {프로젝트}.Application.Usecases.{엔티티};
-
-/// <summary>
-/// {이벤트} 핸들러 - {처리 내용 설명}
-/// </summary>
-public sealed class On{EventName} : IDomainEventHandler<{Entity}.{Event}>
-{
-    public On{EventName}(/* 의존성 주입 */)
-    {
-    }
-
-    public ValueTask Handle({Entity}.{Event} notification, CancellationToken cancellationToken)
-    {
-        // 부수 효과 처리: 로깅, 알림, 외부 시스템 연동 등
-        return ValueTask.CompletedTask;
-    }
-}
-```
-
-### 완전한 예제
-
-```csharp
-using Functorium.Applications.Events;
-using LayeredArch.Domain.Entities;
-using Microsoft.Extensions.Logging;
-
-namespace LayeredArch.Application.Usecases.Products;
-
-/// <summary>
-/// Product.CreatedEvent 핸들러 - 상품 생성 로깅.
-/// </summary>
-public sealed class OnProductCreated : IDomainEventHandler<Product.CreatedEvent>
-{
-    private readonly ILogger<OnProductCreated> _logger;
-
-    public OnProductCreated(ILogger<OnProductCreated> logger)
-    {
-        _logger = logger;
-    }
-
-    public ValueTask Handle(Product.CreatedEvent notification, CancellationToken cancellationToken)
-    {
-        _logger.LogInformation(
-            "[DomainEvent] Product created: {ProductId}, Name: {Name}, Price: {Price}",
-            notification.ProductId,
-            notification.Name,
-            notification.Price);
-
-        return ValueTask.CompletedTask;
-    }
-}
-```
-
-### 사용 시나리오
-
-| 시나리오 | 설명 |
-|----------|------|
-| 로깅/감사 | 도메인 이벤트 기록 |
-| 알림 발송 | 이메일, 푸시 알림 등 |
-| 외부 시스템 연동 | 결제, 배송 시스템 호출 |
-| 캐시 무효화 | 관련 캐시 갱신 |
-| 검색 인덱스 업데이트 | Elasticsearch 등 동기화 |
-
----
-
 ## Command 구현
 
 ### 완전한 Command 예제
@@ -795,6 +632,12 @@ public sealed class GetAllProductsQuery
 
 ---
 
+## 도메인 이벤트
+
+도메인 이벤트 발행과 Event Handler 구현에 대한 내용은 [04-domain-events.md](./04-domain-events.md)를 참조하세요.
+
+---
+
 ## FinResponse와 오류 처리
 
 ### FinResponse 타입
@@ -921,11 +764,12 @@ public sealed record Response(
 
 | 문서 | 설명 |
 |------|------|
-| [valueobject-guide.md](./valueobject-guide.md) | 값 객체 구현 및 검증 패턴 |
-| [entity-guide.md](./entity-guide.md) | Entity 구현 및 Create 패턴 |
-| [error-guide.md](./error-guide.md) | 에러 시스템 가이드 |
-| [adapter-guide.md](./adapter-guide.md) | Repository 인터페이스 설계 |
-| [unit-testing-guide.md](./unit-testing-guide.md) | Usecase 테스트 작성 방법 |
+| [02-value-objects.md](./02-value-objects.md) | 값 객체 구현 및 검증 패턴 |
+| [03-entities-and-aggregates.md](./03-entities-and-aggregates.md) | Entity 구현 및 Create 패턴 |
+| [04-domain-events.md](./04-domain-events.md) | 도메인 이벤트 발행 및 Event Handler |
+| [05-error-system.md](./05-error-system.md) | 에러 시스템 가이드 |
+| [07-ports-and-adapters.md](./07-ports-and-adapters.md) | Repository 인터페이스 설계 |
+| [08-unit-testing.md](./08-unit-testing.md) | Usecase 테스트 작성 방법 |
 
 **외부 참고:**
 - [Mediator](https://github.com/martinothamar/Mediator) - 기반 라이브러리

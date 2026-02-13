@@ -512,5 +512,5 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | [Logging 매뉴얼](./observability-logging.md) | 구조화된 로깅 상세 가이드 |
 | [Metrics 매뉴얼](./observability-metrics.md) | 메트릭 수집 및 분석 가이드 |
 | [Tracing 매뉴얼](./observability-tracing.md) | 분산 추적 상세 가이드 |
-| [코드 명명 규칙](./observability-naming-guide.md) | Observability 코드 명명 규칙 |
-| [필드 이름 규칙](./observability-field-naming-guide.md) | Field/Tag 이름 규칙 |
+| [코드 명명 규칙](./observability-naming.md) | Observability 코드 명명 규칙 |
+| [필드 이름 규칙](./observability-naming.md) | Field/Tag 이름 규칙 |
