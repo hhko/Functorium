@@ -229,7 +229,7 @@ global using LayeredArch.Domain.SharedKernel.ValueObjects;
 | Domain | `AggregateRoots/`, `SharedKernel/`, `Ports/` | *(없음)* |
 | Application | `Usecases/`, `Ports/` | *(없음)* |
 | Adapters.Presentation | `Endpoints/` | `Abstractions/` (Registrations/, Extensions/) |
-| Adapters.Persistence | `Repositories/` | `Abstractions/` (Registrations/) |
+| Adapters.Persistence | `Repositories/` (InMemory/, EfCore/) | `Abstractions/` (Options/, Registrations/) |
 | Adapters.Infrastructure | `ExternalApis/`, ... | `Abstractions/` (Registrations/) |
 
 ### Abstractions 폴더 규칙
@@ -238,11 +238,19 @@ Adapter 프로젝트의 부수 목표는 `Abstractions/` 폴더 아래에 배치
 
 ```
 Abstractions/
+├── Options/              ← Adapter 구성 옵션 (appsettings.json 바인딩, 필요 시)
+│   └── {Category}Options.cs
 ├── Registrations/        ← DI 서비스 등록 확장 메서드
 │   └── Adapter{Category}Registration.cs
 └── Extensions/           ← 공유 확장 메서드 (필요 시)
     └── {Name}Extensions.cs
 ```
+
+| 폴더 | 용도 | 예시 |
+|------|------|------|
+| `Options/` | appsettings.json 바인딩 Options 클래스 | `PersistenceOptions`, `FtpOptions` |
+| `Registrations/` | DI 서비스 등록 확장 메서드 | `AdapterPersistenceRegistration` |
+| `Extensions/` | 공유 확장 메서드 | `FinResponseExtensions` |
 
 > **주의:** Domain과 Application에는 `Abstractions/` 폴더가 없습니다. [FAQ 참조](#faq)
 
@@ -431,17 +439,33 @@ Adapter의 주 목표 폴더 이름은 구현 기술에 따라 달라집니다. 
 
 ```
 {ServiceName}.Adapters.Persistence/
-├── Repositories/
-│   ├── InMemoryProductRepository.cs
-│   ├── InMemoryCustomerRepository.cs
-│   ├── InMemoryOrderRepository.cs
-│   └── InMemoryProductCatalog.cs     ← 교차 Aggregate Port 구현
+├── Repositories/                    ← 구현 기술별 하위 폴더
+│   ├── InMemory/                    ← InMemory(ConcurrentDictionary) 구현
+│   │   ├── InMemoryProductRepository.cs
+│   │   ├── InMemoryCustomerRepository.cs
+│   │   ├── InMemoryOrderRepository.cs
+│   │   └── InMemoryProductCatalog.cs    ← 교차 Aggregate Port 구현
+│   └── EfCore/                      ← EF Core 기반 구현 (선택)
+│       ├── {ServiceName}DbContext.cs
+│       ├── Configurations/
+│       │   ├── ProductConfiguration.cs
+│       │   ├── OrderConfiguration.cs
+│       │   ├── CustomerConfiguration.cs
+│       │   └── TagConfiguration.cs
+│       ├── EfCoreProductRepository.cs
+│       ├── EfCoreOrderRepository.cs
+│       ├── EfCoreCustomerRepository.cs
+│       └── EfCoreProductCatalog.cs
 ├── Abstractions/
+│   ├── Options/                     ← Adapter 구성 옵션 (선택)
+│   │   └── PersistenceOptions.cs
 │   └── Registrations/
 │       └── AdapterPersistenceRegistration.cs
 ├── AssemblyReference.cs
 └── Using.cs
 ```
+
+> **참고**: `Repositories/EfCore/`와 `Abstractions/Options/`는 EF Core 기반 영속화를 사용할 때 추가합니다. InMemory만 사용하는 경우 `Repositories/InMemory/`와 `Abstractions/Registrations/`만 있으면 됩니다.
 
 ### Adapters.Infrastructure 구조
 
@@ -472,14 +496,16 @@ Adapter의 주 목표 폴더 이름은 구현 기술에 따라 달라집니다. 
 public static IServiceCollection RegisterAdapterPresentation(this IServiceCollection services) { ... }
 public static IApplicationBuilder UseAdapterPresentation(this IApplicationBuilder app) { ... }
 
-// AdapterPersistenceRegistration.cs
-public static IServiceCollection RegisterAdapterPersistence(this IServiceCollection services) { ... }
+// AdapterPersistenceRegistration.cs — Options 패턴 사용 시 IConfiguration 파라미터 추가
+public static IServiceCollection RegisterAdapterPersistence(this IServiceCollection services, IConfiguration configuration) { ... }
 public static IApplicationBuilder UseAdapterPersistence(this IApplicationBuilder app) { ... }
 
 // AdapterInfrastructureRegistration.cs
 public static IServiceCollection RegisterAdapterInfrastructure(this IServiceCollection services, IConfiguration configuration) { ... }
 public static IApplicationBuilder UseAdapterInfrastructure(this IApplicationBuilder app) { ... }
 ```
+
+> **참고**: `IConfiguration` 파라미터는 Options 패턴(`RegisterConfigureOptions`)을 사용하는 Adapter에서 필요합니다. Options 패턴 상세는 [08-ports-and-adapters.md §4.6](./08-ports-and-adapters.md#46-options-패턴-optionsconfigurator)을 참조하세요.
 
 ## Host 프로젝트
 
@@ -495,7 +521,7 @@ var builder = WebApplication.CreateBuilder(args);
 // 레이어별 서비스 등록
 builder.Services
     .RegisterAdapterPresentation()
-    .RegisterAdapterPersistence()
+    .RegisterAdapterPersistence(builder.Configuration)
     .RegisterAdapterInfrastructure(builder.Configuration);
 
 // App 빌드 및 미들웨어 설정
@@ -703,7 +729,9 @@ global using System.Net.Http.Json;
 | `Application/Ports/` | `{ServiceName}.Application.Ports` |
 | `Adapters.Presentation/Endpoints/Products/` | `{ServiceName}.Adapters.Presentation.Endpoints.Products` |
 | `Adapters.Presentation/Abstractions/Registrations/` | `{ServiceName}.Adapters.Presentation.Abstractions.Registrations` |
-| `Adapters.Persistence/Repositories/` | `{ServiceName}.Adapters.Persistence.Repositories` |
+| `Adapters.Persistence/Repositories/InMemory/` | `{ServiceName}.Adapters.Persistence.Repositories.InMemory` |
+| `Adapters.Persistence/Repositories/EfCore/` | `{ServiceName}.Adapters.Persistence.Repositories.EfCore` |
+| `Adapters.Persistence/Repositories/EfCore/Configurations/` | `{ServiceName}.Adapters.Persistence.Repositories.EfCore.Configurations` |
 | `Adapters.Persistence/Abstractions/Registrations/` | `{ServiceName}.Adapters.Persistence.Abstractions.Registrations` |
 | `Adapters.Infrastructure/ExternalApis/` | `{ServiceName}.Adapters.Infrastructure.ExternalApis` |
 | `Adapters.Infrastructure/Abstractions/Registrations/` | `{ServiceName}.Adapters.Infrastructure.Abstractions.Registrations` |

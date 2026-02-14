@@ -32,6 +32,7 @@
   - [2.5 IO.lift vs IO.liftAsync 판단](#25-iolift-vs-ioliftasync-판단)
   - [2.6 데이터 변환 (Mapper 패턴)](#26-데이터-변환-mapper-패턴)
   - [2.7 에러 처리 통합](#27-에러-처리-통합)
+  - [2.8 EF Core Repository Adapter](#28-ef-core-repository-adapter)
 - [Activity 3: Pipeline 생성 확인](#activity-3-pipeline-생성-확인)
   - [3.1 GeneratePipeline 소스 생성기](#31-generatepipeline-소스-생성기)
   - [3.2 생성 파일 확인](#32-생성-파일-확인)
@@ -44,6 +45,7 @@
   - [4.3 다중 인터페이스 등록](#43-다중-인터페이스-등록)
   - [4.4 DI Lifetime 선택 가이드](#44-di-lifetime-선택-가이드)
   - [4.5 Host Bootstrap 통합](#45-host-bootstrap-통합)
+  - [4.6 Options 패턴 (OptionsConfigurator)](#46-options-패턴-optionsconfigurator)
 - [Activity 5: 단위 테스트](#activity-5-단위-테스트)
   - [5.1 테스트 원칙 / IO 실행 패턴](#51-테스트-원칙--io-실행-패턴)
   - [5.2 Repository 테스트](#52-repository-테스트)
@@ -723,7 +725,7 @@ Adapter는 Port 인터페이스의 **구현체**입니다. `[GeneratePipeline]` 
 Repository Adapter는 데이터 저장소에 대한 CRUD 작업을 구현합니다.
 
 ```csharp
-// 파일: {Adapters.Persistence}/Repositories/InMemoryProductRepository.cs
+// 파일: {Adapters.Persistence}/Repositories/InMemory/InMemoryProductRepository.cs
 
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
@@ -786,7 +788,7 @@ public class InMemoryProductRepository : IProductRepository  // 2. Port 인터�
 }
 ```
 
-> **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Repositories/InMemoryProductRepository.cs`
+> **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryProductRepository.cs`
 
 **Repository Adapter 핵심 패턴**:
 
@@ -1253,6 +1255,195 @@ ManyErrors ───────────────────────
 └──────────────────┘  └──────────────┘  └──────────────────┘
 ```
 
+### 2.8 EF Core Repository Adapter
+
+InMemory(ConcurrentDictionary) 대신 EF Core를 사용하는 Repository Adapter 패턴입니다. 동일한 Port 인터페이스를 구현하되, `IO.liftAsync`를 사용하여 EF Core의 비동기 API를 래핑합니다.
+
+#### DbContext 정의
+
+```csharp
+// 파일: {Adapters.Persistence}/Repositories/EfCore/{ServiceName}DbContext.cs
+
+public class LayeredArchDbContext : DbContext
+{
+    public DbSet<Product> Products => Set<Product>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<Tag> Tags => Set<Tag>();
+
+    public LayeredArchDbContext(DbContextOptions<LayeredArchDbContext> options) : base(options)
+    {
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(LayeredArchDbContext).Assembly);
+    }
+}
+```
+
+> **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Repositories/EfCore/LayeredArchDbContext.cs`
+
+**핵심 포인트:**
+- `ApplyConfigurationsFromAssembly`로 동일 어셈블리의 `IEntityTypeConfiguration<T>` 구현체를 자동 검색
+- DbSet 프로퍼티는 `=> Set<T>()` 표현식으로 정의
+
+#### Entity Configuration — Value Object 변환 전략
+
+EF Core에서 도메인 Value Object를 데이터베이스 컬럼으로 매핑할 때, Value Object 타입별 변환 패턴:
+
+| Value Object 타입 | 변환 패턴 | 추가 설정 |
+|---|---|---|
+| `SimpleValueObject<string>` | `HasConversion(v => (string)v, s => XxxName.CreateFromValidated(s))` | `HasMaxLength(XxxName.MaxLength)` |
+| `ComparableSimpleValueObject<decimal>` | `HasConversion(v => (decimal)v, d => Money.CreateFromValidated(d))` | `HasPrecision(18, 4)` |
+| `ComparableSimpleValueObject<int>` | `HasConversion(v => (int)v, i => Quantity.CreateFromValidated(i))` | — |
+| EntityId (Ulid 기반) | `HasConversion(new XxxIdConverter())` | `HasMaxLength(26)` + `SetValueComparer(new XxxIdComparer())` |
+| 컬렉션 (Tags 등) | `HasMany().WithOne().HasForeignKey().OnDelete(Cascade)` | backing field (`UsePropertyAccessMode(Field)`) |
+
+**Entity Configuration 예시:**
+
+```csharp
+// 파일: {Adapters.Persistence}/Repositories/EfCore/Configurations/ProductConfiguration.cs
+
+public class ProductConfiguration : IEntityTypeConfiguration<Product>
+{
+    public void Configure(EntityTypeBuilder<Product> builder)
+    {
+        builder.ToTable("Products");
+        builder.HasKey(p => p.Id);
+
+        // EntityId — Converter + MaxLength(26) + ValueComparer
+        builder.Property(p => p.Id)
+            .HasConversion(new ProductIdConverter())
+            .HasMaxLength(26);
+        builder.Property(p => p.Id)
+            .Metadata.SetValueComparer(new ProductIdComparer());
+
+        // SimpleValueObject<string> — implicit conversion + MaxLength
+        builder.Property(p => p.Name)
+            .HasConversion(
+                v => (string)v,
+                s => ProductName.CreateFromValidated(s))
+            .HasMaxLength(ProductName.MaxLength)
+            .IsRequired();
+
+        // ComparableSimpleValueObject<decimal> — implicit conversion + Precision
+        builder.Property(p => p.Price)
+            .HasConversion(
+                v => (decimal)v,
+                d => Money.CreateFromValidated(d))
+            .HasPrecision(18, 4);
+
+        // ComparableSimpleValueObject<int> — implicit conversion
+        builder.Property(p => p.StockQuantity)
+            .HasConversion(
+                v => (int)v,
+                i => Quantity.CreateFromValidated(i));
+
+        // Tags 컬렉션 — backing field + Cascade delete
+        builder.HasMany(p => p.Tags)
+            .WithOne()
+            .HasForeignKey("ProductId")
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(p => p.Tags)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+    }
+}
+```
+
+> **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Repositories/EfCore/Configurations/ProductConfiguration.cs`
+
+#### EF Core Repository 구현
+
+기존 InMemory Repository와 동일한 Port를 구현하되, `IO.liftAsync`로 EF Core 비동기 API를 래핑합니다.
+
+```csharp
+// 파일: {Adapters.Persistence}/Repositories/EfCore/EfCoreProductRepository.cs
+
+using Functorium.Adapters.Errors;
+using Functorium.Adapters.SourceGenerators;
+using static Functorium.Adapters.Errors.AdapterErrorType;
+
+[GeneratePipeline]
+public class EfCoreProductRepository : IProductRepository
+{
+    private readonly LayeredArchDbContext _dbContext;
+
+    public string RequestCategory => "Repository";
+
+    public EfCoreProductRepository(LayeredArchDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+    public virtual FinT<IO, Product> Create(Product product)
+    {
+        return IO.liftAsync(async () =>
+        {
+            _dbContext.Products.Add(product);
+            await _dbContext.SaveChangesAsync();
+            return Fin.Succ(product);
+        });
+    }
+
+    public virtual FinT<IO, Product> GetById(ProductId id)
+    {
+        return IO.liftAsync(async () =>
+        {
+            var product = await _dbContext.Products
+                .Include(p => p.Tags)             // Navigation Property 로딩
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (product is not null)
+            {
+                return Fin.Succ(product);
+            }
+
+            return AdapterError.For<EfCoreProductRepository>(
+                new NotFound(),
+                id.ToString(),
+                $"상품 ID '{id}'을(를) 찾을 수 없습니다");
+        });
+    }
+
+    public virtual FinT<IO, Unit> Delete(ProductId id)
+    {
+        return IO.liftAsync(async () =>
+        {
+            var product = await _dbContext.Products.FindAsync(id);
+            if (product is null)
+            {
+                return AdapterError.For<EfCoreProductRepository>(
+                    new NotFound(),
+                    id.ToString(),
+                    $"상품 ID '{id}'을(를) 찾을 수 없습니다");
+            }
+
+            _dbContext.Products.Remove(product);
+            await _dbContext.SaveChangesAsync();
+            return Fin.Succ(unit);
+        });
+    }
+
+    // ... 나머지 메서드도 동일 패턴
+}
+```
+
+> **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Repositories/EfCore/EfCoreProductRepository.cs`
+
+**InMemory vs EF Core Repository 비교:**
+
+| 항목 | InMemory | EF Core |
+|---|---|---|
+| IO 래핑 | `IO.lift(() => { ... })` | `IO.liftAsync(async () => { ... })` |
+| 저장소 | `ConcurrentDictionary<TId, T>` | `DbContext.Set<T>()` |
+| 조회 | `_products.TryGetValue(id, ...)` | `_dbContext.Products.FindAsync(id)` |
+| Navigation 로딩 | 불필요 (메모리 내 참조) | `.Include(p => p.Tags)` |
+| 에러 패턴 | `AdapterError.For<T>(...)` | `AdapterError.For<T>(...)` (동일) |
+| Pipeline 생성 | `[GeneratePipeline]` | `[GeneratePipeline]` (동일) |
+| DI 등록 | `RegisterScopedAdapterPipeline<>` | `RegisterScopedAdapterPipeline<>` (동일) |
+
 ---
 
 ## Activity 3: Pipeline 생성 확인
@@ -1429,6 +1620,8 @@ public static class AdapterPersistenceRegistration
 
 > **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Abstractions/Registrations/AdapterPersistenceRegistration.cs`
 
+> **참고**: Adapter에 Options 패턴이 필요한 경우, Registration 메서드에 `IConfiguration` 파라미터를 추가합니다. [4.6 Options 패턴](#46-options-패턴-optionsconfigurator) 참조.
+
 ### 4.2 유형별 등록 패턴
 
 #### Repository 등록
@@ -1522,7 +1715,7 @@ var builder = WebApplication.CreateBuilder(args);
 // 레이어별 서비스 등록
 builder.Services
     .RegisterAdapterPresentation()
-    .RegisterAdapterPersistence()
+    .RegisterAdapterPersistence(builder.Configuration)       // Options 패턴 사용 시 IConfiguration 전달
     .RegisterAdapterInfrastructure(builder.Configuration);
 
 var app = builder.Build();
@@ -1540,6 +1733,272 @@ app.Run();
 - `RegisterAdapter{Layer}()`: `IServiceCollection` 확장 메서드로 서비스 등록
 - `UseAdapter{Layer}()`: `IApplicationBuilder` 확장 메서드로 미들웨어 설정
 - 등록 순서는 의존성 방향에 따라 결정 (Presentation → Persistence → Infrastructure)
+- Options 패턴을 사용하는 Adapter는 `IConfiguration` 파라미터를 받음 ([4.6](#46-options-패턴-optionsconfigurator) 참조)
+
+### 4.6 Options 패턴 (OptionsConfigurator)
+
+Adapter에 구성 옵션이 필요한 경우 `OptionsConfigurator` 패턴을 사용합니다. `appsettings.json`에서 설정을 읽고, 시작 시 FluentValidation으로 검증하며, StartupLogger에 자동 출력합니다.
+
+#### Options 클래스 구조
+
+```csharp
+// 파일: {Adapters.Persistence}/Abstractions/Options/PersistenceOptions.cs
+
+using FluentValidation;
+using Functorium.Adapters.Observabilities.Loggers;
+using Microsoft.Extensions.Logging;
+
+public sealed class PersistenceOptions : IStartupOptionsLogger
+{
+    public const string SectionName = "Persistence";   // appsettings.json 섹션 이름
+
+    public string Provider { get; set; } = "InMemory";
+    public string ConnectionString { get; set; } = "Data Source=layeredarch.db";
+
+    public static readonly string[] SupportedProviders = ["InMemory", "EfCoreInMemory", "Sqlite"];
+
+    // IStartupOptionsLogger — 시작 시 자동 로깅
+    public void LogConfiguration(ILogger logger)
+    {
+        const int labelWidth = 20;
+        logger.LogInformation("Persistence Configuration");
+        logger.LogInformation("  {Label}: {Value}", "Provider".PadRight(labelWidth), Provider);
+        if (Provider == "Sqlite")
+            logger.LogInformation("  {Label}: {Value}", "ConnectionString".PadRight(labelWidth), ConnectionString);
+    }
+
+    // FluentValidation — 시작 시 자동 검증
+    public sealed class Validator : AbstractValidator<PersistenceOptions>
+    {
+        public Validator()
+        {
+            RuleFor(x => x.Provider)
+                .NotEmpty()
+                .Must(p => SupportedProviders.Contains(p))
+                .WithMessage($"{nameof(Provider)} must be one of: {string.Join(", ", SupportedProviders)}");
+
+            RuleFor(x => x.ConnectionString)
+                .NotEmpty()
+                .When(x => x.Provider == "Sqlite")
+                .WithMessage($"{nameof(ConnectionString)} is required when Provider is 'Sqlite'.");
+        }
+    }
+}
+```
+
+> **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Abstractions/Options/PersistenceOptions.cs`
+
+#### Options 클래스 체크리스트
+
+- [ ] `sealed class`로 선언
+- [ ] `SectionName` 상수 정의 (appsettings.json 섹션 이름)
+- [ ] `IStartupOptionsLogger` 구현 (`LogConfiguration` 메서드)
+- [ ] 중첩 `Validator` 클래스 (`AbstractValidator<TOptions>` 상속)
+- [ ] 위치: `{Adapter}/Abstractions/Options/`
+
+#### Registration에서 Options 등록
+
+```csharp
+// Options 등록 (1줄로 완료)
+services.RegisterConfigureOptions<PersistenceOptions, PersistenceOptions.Validator>(
+    PersistenceOptions.SectionName);
+```
+
+`RegisterConfigureOptions`가 자동으로 처리하는 항목:
+
+| 항목 | 설명 |
+|------|------|
+| Options 바인딩 | `appsettings.json`의 `SectionName` → Options 프로퍼티 매핑 |
+| FluentValidation 연결 | `IValidator<TOptions>` 등록 및 `IValidateOptions<TOptions>` 연결 |
+| `ValidateOnStart()` | 프로그램 시작 시 검증 (실패 시 즉시 종료) |
+| `IStartupOptionsLogger` 등록 | `IStartupOptionsLogger` 구현 시 StartupLogger에 자동 출력 |
+
+> **참조**: `Src/Functorium/Adapters/Options/OptionsConfigurator.cs`
+
+#### Provider 분기 등록 패턴
+
+Options 값에 따라 다른 Adapter 구현체를 DI에 등록하는 패턴입니다.
+
+```csharp
+public static IServiceCollection RegisterAdapterPersistence(
+    this IServiceCollection services,
+    IConfiguration configuration)
+{
+    // 1. Options 등록
+    services.RegisterConfigureOptions<PersistenceOptions, PersistenceOptions.Validator>(
+        PersistenceOptions.SectionName);
+
+    // 2. 시작 시점에 Provider 읽기
+    var options = configuration
+        .GetSection(PersistenceOptions.SectionName)
+        .Get<PersistenceOptions>() ?? new PersistenceOptions();
+
+    // 3. Provider에 따라 분기 등록
+    switch (options.Provider)
+    {
+        case "EfCoreInMemory":
+            services.AddDbContext<LayeredArchDbContext>(opt =>
+                opt.UseInMemoryDatabase("LayeredArch"));
+            RegisterEfCoreRepositories(services);
+            break;
+
+        case "Sqlite":
+            services.AddDbContext<LayeredArchDbContext>(opt =>
+                opt.UseSqlite(options.ConnectionString));
+            RegisterEfCoreRepositories(services);
+            break;
+
+        case "InMemory":
+        default:
+            RegisterInMemoryRepositories(services);
+            break;
+    }
+
+    return services;
+}
+```
+
+> **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Abstractions/Registrations/AdapterPersistenceRegistration.cs`
+
+#### UseAdapter{Layer}에서 초기화
+
+```csharp
+public static IApplicationBuilder UseAdapterPersistence(this IApplicationBuilder app)
+{
+    var options = app.ApplicationServices
+        .GetRequiredService<IOptions<PersistenceOptions>>().Value;
+
+    if (options.Provider == "Sqlite")
+    {
+        using var scope = app.ApplicationServices.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<LayeredArchDbContext>();
+        dbContext.Database.EnsureCreated();
+    }
+
+    return app;
+}
+```
+
+#### appsettings.json 설정
+
+**SectionName ↔ JSON 키 매핑:**
+
+| Options 클래스 | SectionName | appsettings.json 키 |
+|---|---|---|
+| `PersistenceOptions` | `"Persistence"` | `"Persistence": { ... }` |
+| `OpenTelemetryOptions` | `"OpenTelemetry"` | `"OpenTelemetry": { ... }` |
+
+> 규칙: Options 클래스의 `SectionName` 상수값이 appsettings.json의 최상위 키와 정확히 일치해야 한다.
+
+**전체 appsettings.json 구조:**
+
+```json
+{
+  // --- Options 패턴으로 관리 ---
+  "Persistence": {
+    "Provider": "InMemory",
+    "ConnectionString": "Data Source=layeredarch.db"
+  },
+  "OpenTelemetry": {
+    "ServiceName": "LayeredArch",
+    "ServiceNamespace": "LayeredArch",
+    "CollectorEndpoint": "http://localhost:18889",
+    "CollectorProtocol": "Grpc",
+    "TracingCollectorEndpoint": "",
+    "MetricsCollectorEndpoint": "",
+    "LoggingCollectorEndpoint": "",
+    "SamplingRate": 1.0,
+    "EnablePrometheusExporter": false
+  },
+  // --- 라이브러리 자체 설정 (Options 패턴 아님) ---
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Warning",
+        "System": "Warning"
+      }
+    },
+    "WriteTo": [ ... ]
+  }
+}
+```
+
+**기본값 우선순위:**
+
+| 우선순위 | 소스 | 설명 |
+|---|---|---|
+| 1 (낮음) | C# 기본값 | Options 클래스 프로퍼티 초기화 값 |
+| 2 (높음) | appsettings.json | 파일에 키가 있으면 C# 기본값을 덮어씀 |
+
+- appsettings.json에 키가 없으면 C# 기본값 사용
+- 예: `Provider { get; set; } = "InMemory"` → appsettings.json에 Provider 키가 없어도 `"InMemory"` 적용
+
+**환경별 오버라이드 — appsettings.{Environment}.json:**
+
+- ASP.NET Core 기본 동작: `appsettings.json` → `appsettings.{Environment}.json` 순으로 로드
+- 환경별 파일은 기본 파일을 덮어쓰므로, **변경할 키만** 포함
+
+```json
+// appsettings.Development.json — 변경할 키만 포함
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  }
+}
+```
+
+**통합 테스트 appsettings.json:**
+
+- `HostTestFixture<TProgram>`은 `"Test"` 환경을 사용한다
+- 테스트 프로젝트에 별도 `appsettings.json`을 배치한다
+- `OpenTelemetry` 설정은 필수이다 (`ServiceName`, `ServiceNamespace`, `CollectorEndpoint`)
+- 테스트 환경에서는 로그 출력을 최소화한다 (Serilog `Default: "Warning"`, File sink 제외)
+
+```json
+// Tests/LayeredArch.Tests.Integration/appsettings.json
+{
+  "Persistence": {
+    "Provider": "InMemory",
+    "ConnectionString": "Data Source=layeredarch.db"
+  },
+  "OpenTelemetry": {
+    "ServiceName": "LayeredArch",
+    "ServiceNamespace": "LayeredArch",
+    "CollectorEndpoint": "http://localhost:18889",
+    "CollectorProtocol": "Grpc"
+  },
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Warning",
+      "Override": {
+        "Microsoft": "Warning",
+        "System": "Warning"
+      }
+    },
+    "WriteTo": [
+      {
+        "Name": "Console",
+        "Args": {
+          "theme": "Serilog.Sinks.SystemConsole.Themes.AnsiConsoleTheme::Code, Serilog.Sinks.Console",
+          "outputTemplate": "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"
+        }
+      }
+    ]
+  }
+}
+```
+
+**Provider 선택지:**
+
+| Provider | 설명 | 용도 |
+|---|---|---|
+| `"InMemory"` | ConcurrentDictionary 기반 | 개발/테스트 (기본값) |
+| `"EfCoreInMemory"` | EF Core InMemory Provider | EF Core 기능 테스트 |
+| `"Sqlite"` | SQLite 파일 DB | 로컬 영속화 |
 
 ---
 
@@ -1792,7 +2251,7 @@ public sealed class RabbitMqInventoryMessagingTests
 | Step | Activity | 파일 | 핵심 작업 |
 |------|----------|------|----------|
 | 1 | Port 정의 | `LayeredArch.Domain/Repositories/IProductRepository.cs` | `: IAdapter`, `FinT<IO, T>` 반환, 도메인 VO 매개변수 |
-| 2 | Adapter 구현 | `LayeredArch.Adapters.Persistence/Repositories/InMemoryProductRepository.cs` | `[GeneratePipeline]`, `virtual`, `IO.lift`, `AdapterError.For<T>` |
+| 2 | Adapter 구현 | `LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryProductRepository.cs` | `[GeneratePipeline]`, `virtual`, `IO.lift`, `AdapterError.For<T>` |
 | 3 | Pipeline 확인 | `obj/GeneratedFiles/.../Repositories.InMemoryProductRepositoryPipeline.g.cs` | 빌드 후 자동 생성 |
 | 4 | DI 등록 | `AdapterPersistenceRegistration.cs` → `Program.cs` | `RegisterScopedAdapterPipeline<IProductRepository, ...Pipeline>()` |
 | 5 | 테스트 | `InMemoryProductRepositoryTests.cs` | 원본 클래스 직접 테스트, [5.2](#52-repository-테스트) 참조 |

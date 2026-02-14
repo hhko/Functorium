@@ -58,6 +58,8 @@ Functorium은 DDD 전술적 설계 패턴과 함수형 프로그래밍을 결합
 | **에러 테스트 작성하기** | [05-error-system.md](./05-error-system.md) §4~6 테스트 |
 | **Usecase 만들기** | [07-usecases-and-cqrs.md](./07-usecases-and-cqrs.md) |
 | **Adapter 만들기** | [08-ports-and-adapters.md](./08-ports-and-adapters.md) |
+| **EF Core Repository 만들기** | [08-ports-and-adapters.md](./08-ports-and-adapters.md) §2.8 |
+| **Options 패턴 (OptionsConfigurator)** | [08-ports-and-adapters.md](./08-ports-and-adapters.md) §4.6 |
 | **검증 메서드 확인** | [02-value-objects.md](./02-value-objects.md) §검증 시스템 |
 | **솔루션 구성 파일/빌드 스크립트** | [12-solution-configuration.md](./12-solution-configuration.md) |
 | **프로젝트 구성/폴더 구조** | [11-project-structure.md](./11-project-structure.md) |
