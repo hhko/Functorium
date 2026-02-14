@@ -264,52 +264,58 @@ public interface IProductRepository : IRepository<Product, ProductId>
 
 ---
 
-## 6. Domain Services ❌
+## 6. Domain Services ✅
 
-### 현재 상태
+### 구현 완료
 
-`IDomainService` 마커 인터페이스가 **존재하지 않습니다**. 도메인 서비스 개념이 프레임워크 레벨에서 지원되지 않습니다.
-
-### 문제점
-
-1. **도메인 로직 유출**: 여러 Aggregate에 걸친 도메인 로직이 Usecase(Application Layer)에 배치될 수 있음
-   - TODO.md L535: `guard(!exists, ...)` 같은 비즈니스 규칙이 Usecase에 위치
-2. **역할 구분 불명확**: Domain Service vs Application Service(Usecase)의 경계를 프레임워크가 가이드하지 않음
-3. **아키텍처 테스트 불가**: Domain Service 마커가 없어 아키텍처 규칙으로 검증할 수 없음
-
-### 개선 방향
+`Functorium.Domains.Services` 네임스페이스에 `IDomainService` 마커 인터페이스를 제공합니다.
 
 ```csharp
-// Functorium.Domains (제안)
+// Functorium.Domains.Services
 public interface IDomainService { }
 ```
 
+**핵심 설계 결정:**
+- 빈 마커 인터페이스 (Domain Service는 각자 고유한 메서드를 가짐)
+- `IAdapter` 상속 없음 (Domain Service는 순수 도메인 로직, Port/Adapter가 아님)
+- 아키텍처 테스트에서 `is IDomainService`로 검증 가능
+
+**사용 예: 주문 신용 한도 검증 서비스**
+
 ```csharp
-// 사용 예: 가격 계산 도메인 서비스
-public sealed class PricingService : IDomainService
+// Domain Layer - 교차 Aggregate 순수 도메인 로직
+public sealed class OrderCreditCheckService : IDomainService
 {
-    public Fin<Money> CalculateDiscount(Order order, Customer customer)
+    public Fin<Unit> ValidateCreditLimit(Customer customer, Money orderAmount)
     {
-        // 여러 Aggregate의 정보를 참조하는 도메인 로직
-        var discount = customer.Tier switch
-        {
-            CustomerTier.Gold => order.TotalAmount.MultiplyBy(0.1m),
-            CustomerTier.Silver => order.TotalAmount.MultiplyBy(0.05m),
-            _ => Money.Zero(order.TotalAmount.Currency)
-        };
-        return discount;
+        if (orderAmount > customer.CreditLimit)
+            return DomainError.For<OrderCreditCheckService>(
+                new Custom("CreditLimitExceeded"),
+                customer.Id.ToString(),
+                $"주문 금액이 고객 신용 한도를 초과합니다");
+
+        return unit;
     }
 }
+```
+
+```csharp
+// Application Layer - Usecase에서 Domain Service 사용
+FinT<IO, Response> usecase =
+    from customer in _customerRepository.GetById(customerId)
+    from unitPrice in _productCatalog.GetPrice(productId)
+    from _2 in _creditCheckService.ValidateCreditLimit(customer, unitPrice.Multiply(quantity))
+    from order in _orderRepository.Create(Order.Create(...))
+    select new Response(...);
 ```
 
 **배치 규칙:**
 - Domain Service는 Domain Layer에 배치
 - 순수 함수로 구현 (외부 I/O 없음)
 - `IAdapter` 의존 없음 (Port/Adapter 사용 시 Usecase에서 조율)
+- `Fin<T>` 반환값은 `FinT<IO, T>` LINQ 체인에서 자동 리프팅
 
-### 우선순위
-
-**중간** — 마커 인터페이스 자체는 간단하나, 도메인 로직 배치 가이드라인이 함께 필요합니다.
+**참조:** `Src/Functorium/Domains/Services/IDomainService.cs`, `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/Services/OrderCreditCheckService.cs`
 
 ---
 
@@ -865,7 +871,7 @@ Tag (별도 Aggregate) — 여러 Post에서 공유
 | IRepository 공통 인터페이스 | 높음 | alpha.4 | EFCore 통합 | L354 |
 | Unit of Work | 높음 | alpha.4~5 | EFCore 통합 | L365 |
 | Integration Events | 높음 | alpha.4 | — | L150, L355 |
-| IDomainService 마커 | 중간 | alpha.3 | — | L535 |
+| IDomainService 마커 | ✅ 완료 | alpha.3 | — | L535 |
 | Resilience Patterns (Polly) | 중간 | alpha.4 | 외부 Adapter | L27 |
 | Outbox Pattern | 중간 | alpha.7 | Integration Events, UoW | L300, L378 |
 | Specification Pattern | 낮음 | alpha.4+ | EFCore 통합 | — |
@@ -898,7 +904,7 @@ Resilience (Polly) ──→ 외부 API Adapter                        │
 | Aggregate | ✅ 완전 구현 | [03-entities-and-aggregates.md](./03-entities-and-aggregates.md) |
 | Domain Event | ✅ 완전 구현 | [04-domain-events.md](./04-domain-events.md) |
 | Repository | ✅ 공통 인터페이스 구현 | 본 문서 §5 |
-| Domain Service | ❌ 마커 부재 | 본 문서 §6 |
+| Domain Service | ✅ 마커 인터페이스 구현 | 본 문서 §6 |
 | Specification | ❌ 미구현 | 본 문서 §7 |
 | Factory | ❌ 정적 팩토리만 존재 | 본 문서 §8 |
 | Application Service | ✅ CQRS Usecase | [06-usecases-and-cqrs.md](./06-usecases-and-cqrs.md) |
