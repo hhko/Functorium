@@ -1,5 +1,6 @@
 using Functorium.Abstractions.Registrations;
 using Functorium.Adapters.Observabilities.Events;
+using LayeredArch.Domain.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +13,11 @@ public static class AdapterInfrastructureRegistration
 {
     public static IServiceCollection RegisterAdapterInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        // =================================================================
+        // Domain Service 등록 (순수 도메인 로직, 상태 없음)
+        // =================================================================
+        services.AddSingleton<OrderCreditCheckService>();
+
         // =================================================================
         // Mediator 및 도메인 이벤트 발행자 등록
         // NotificationPublisherType: Handler 관점 관찰 가능성 활성화
