@@ -17,5 +17,7 @@ public sealed class TagName : SimpleValueObject<string>
             .ThenMaxLength(MaxLength)
             .ThenNormalize(v => v.Trim());
 
+    public static TagName CreateFromValidated(string value) => new(value);
+
     public static implicit operator string(TagName tagName) => tagName.Value;
 }

@@ -17,5 +17,7 @@ public sealed class ShippingAddress : SimpleValueObject<string>
             .ThenMaxLength(MaxLength)
             .ThenNormalize(v => v.Trim());
 
+    public static ShippingAddress CreateFromValidated(string value) => new(value);
+
     public static implicit operator string(ShippingAddress address) => address.Value;
 }

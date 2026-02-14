@@ -58,4 +58,29 @@ public class OrderTests
         ((decimal)sut.UnitPrice).ShouldBe(150m);
         ((string)sut.ShippingAddress).ShouldBe("Busan, Korea");
     }
+
+    [Fact]
+    public void CreateFromValidated_ShouldRestoreWithoutDomainEvent()
+    {
+        // Arrange
+        var id = OrderId.New();
+        var productId = ProductId.New();
+        var quantity = Quantity.Create(3).ThrowIfFail();
+        var unitPrice = Money.Create(100m).ThrowIfFail();
+        var totalAmount = Money.Create(300m).ThrowIfFail();
+        var address = ShippingAddress.Create("Seoul, Korea").ThrowIfFail();
+        var createdAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var updatedAt = new DateTime(2025, 6, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        // Act
+        var sut = Order.CreateFromValidated(id, productId, quantity, unitPrice, totalAmount, address, createdAt, updatedAt);
+
+        // Assert
+        sut.Id.ShouldBe(id);
+        sut.ProductId.ShouldBe(productId);
+        ((decimal)sut.TotalAmount).ShouldBe(300m);
+        sut.CreatedAt.ShouldBe(createdAt);
+        sut.UpdatedAt.ShouldBe(updatedAt);
+        sut.DomainEvents.ShouldBeEmpty();
+    }
 }

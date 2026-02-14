@@ -13,6 +13,8 @@ public sealed class Quantity : ComparableSimpleValueObject<int>
     public static Validation<Error, int> Validate(int value) =>
         ValidationRules<Quantity>.NonNegative(value);
 
+    public static Quantity CreateFromValidated(int value) => new(value);
+
     public static implicit operator int(Quantity quantity) => quantity.Value;
 
     public Quantity Add(int amount) => new(Value + amount);

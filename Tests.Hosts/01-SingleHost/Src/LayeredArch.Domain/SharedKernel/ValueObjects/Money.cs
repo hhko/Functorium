@@ -13,6 +13,8 @@ public sealed class Money : ComparableSimpleValueObject<decimal>
     public static Validation<Error, decimal> Validate(decimal value) =>
         ValidationRules<Money>.Positive(value);
 
+    public static Money CreateFromValidated(decimal value) => new(value);
+
     public static implicit operator decimal(Money money) => money.Value;
 
     public Money Add(Money other) => new(Value + other.Value);

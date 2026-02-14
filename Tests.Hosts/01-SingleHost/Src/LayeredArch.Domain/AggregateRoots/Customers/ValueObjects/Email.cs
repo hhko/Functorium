@@ -20,6 +20,8 @@ public sealed partial class Email : SimpleValueObject<string>
             .ThenMatches(EmailRegex(), "올바른 이메일 형식이 아닙니다")
             .ThenNormalize(v => v.Trim().ToLowerInvariant());
 
+    public static Email CreateFromValidated(string value) => new(value);
+
     public static implicit operator string(Email email) => email.Value;
 
     [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled)]

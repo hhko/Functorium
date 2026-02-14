@@ -63,4 +63,22 @@ public sealed class Customer : AggregateRoot<CustomerId>, IAuditable
         customer.AddDomainEvent(new CreatedEvent(customer.Id, name, email));
         return customer;
     }
+
+    /// <summary>
+    /// CreateFromValidated: ORM/Repository 복원용 (검증 없음)
+    /// </summary>
+    public static Customer CreateFromValidated(
+        CustomerId id,
+        CustomerName name,
+        Email email,
+        Money creditLimit,
+        DateTime createdAt,
+        DateTime? updatedAt)
+    {
+        return new Customer(id, name, email, creditLimit)
+        {
+            CreatedAt = createdAt,
+            UpdatedAt = updatedAt
+        };
+    }
 }

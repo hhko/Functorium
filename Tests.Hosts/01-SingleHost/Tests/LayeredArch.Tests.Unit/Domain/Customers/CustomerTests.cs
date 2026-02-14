@@ -38,4 +38,27 @@ public class CustomerTests
         ((string)sut.Email).ShouldBe("john@example.com");
         ((decimal)sut.CreditLimit).ShouldBe(5000m);
     }
+
+    [Fact]
+    public void CreateFromValidated_ShouldRestoreWithoutDomainEvent()
+    {
+        // Arrange
+        var id = CustomerId.New();
+        var name = CustomerName.Create("John").ThrowIfFail();
+        var email = Email.Create("john@example.com").ThrowIfFail();
+        var creditLimit = Money.Create(5000m).ThrowIfFail();
+        var createdAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var updatedAt = new DateTime(2025, 6, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        // Act
+        var sut = Customer.CreateFromValidated(id, name, email, creditLimit, createdAt, updatedAt);
+
+        // Assert
+        sut.Id.ShouldBe(id);
+        ((string)sut.Name).ShouldBe("John");
+        ((string)sut.Email).ShouldBe("john@example.com");
+        sut.CreatedAt.ShouldBe(createdAt);
+        sut.UpdatedAt.ShouldBe(updatedAt);
+        sut.DomainEvents.ShouldBeEmpty();
+    }
 }

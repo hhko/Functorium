@@ -76,4 +76,24 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditable
         order.AddDomainEvent(new CreatedEvent(order.Id, productId, quantity, totalAmount));
         return order;
     }
+
+    /// <summary>
+    /// CreateFromValidated: ORM/Repository 복원용 (검증 없음)
+    /// </summary>
+    public static Order CreateFromValidated(
+        OrderId id,
+        ProductId productId,
+        Quantity quantity,
+        Money unitPrice,
+        Money totalAmount,
+        ShippingAddress shippingAddress,
+        DateTime createdAt,
+        DateTime? updatedAt)
+    {
+        return new Order(id, productId, quantity, unitPrice, totalAmount, shippingAddress)
+        {
+            CreatedAt = createdAt,
+            UpdatedAt = updatedAt
+        };
+    }
 }

@@ -17,5 +17,7 @@ public sealed class CustomerName : SimpleValueObject<string>
             .ThenMaxLength(MaxLength)
             .ThenNormalize(v => v.Trim());
 
+    public static CustomerName CreateFromValidated(string value) => new(value);
+
     public static implicit operator string(CustomerName name) => name.Value;
 }

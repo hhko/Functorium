@@ -129,6 +129,30 @@ public class ProductTests
     }
 
     [Fact]
+    public void CreateFromValidated_ShouldRestoreWithoutDomainEvent()
+    {
+        // Arrange
+        var id = ProductId.New();
+        var name = ProductName.Create("Restored Product").ThrowIfFail();
+        var description = ProductDescription.Create("Restored Desc").ThrowIfFail();
+        var price = Money.Create(500m).ThrowIfFail();
+        var stock = Quantity.Create(20).ThrowIfFail();
+        var createdAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var updatedAt = new DateTime(2025, 6, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        // Act
+        var sut = Product.CreateFromValidated(id, name, description, price, stock, createdAt, updatedAt);
+
+        // Assert
+        sut.Id.ShouldBe(id);
+        ((string)sut.Name).ShouldBe("Restored Product");
+        ((decimal)sut.Price).ShouldBe(500m);
+        sut.CreatedAt.ShouldBe(createdAt);
+        sut.UpdatedAt.ShouldBe(updatedAt);
+        sut.DomainEvents.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void RemoveTag_ShouldRemoveTagAndPublishEvent()
     {
         // Arrange

@@ -18,5 +18,7 @@ public sealed class ProductDescription : SimpleValueObject<string>
             .ThenMaxLength(MaxLength)
             .ThenNormalize(v => v.Trim());
 
+    public static ProductDescription CreateFromValidated(string value) => new(value);
+
     public static implicit operator string(ProductDescription desc) => desc.Value;
 }
