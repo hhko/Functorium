@@ -6,7 +6,7 @@ using LanguageExt;
 using LanguageExt.Common;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
-namespace LayeredArch.Adapters.Persistence.Repositories;
+namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 
 /// <summary>
 /// 메모리 기반 주문 리포지토리 구현

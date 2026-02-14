@@ -1,17 +1,73 @@
-using LayeredArch.Adapters.Persistence.Repositories;
+using LayeredArch.Adapters.Persistence.Abstractions.Options;
+using LayeredArch.Adapters.Persistence.Repositories.EfCore;
+using LayeredArch.Adapters.Persistence.Repositories.InMemory;
 using LayeredArch.Domain.Ports;
 using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Orders;
 using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Abstractions.Registrations;
+using Functorium.Adapters.Options;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace LayeredArch.Adapters.Persistence.Abstractions.Registrations;
 
 public static class AdapterPersistenceRegistration
 {
-    public static IServiceCollection RegisterAdapterPersistence(this IServiceCollection services)
+    public static IServiceCollection RegisterAdapterPersistence(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        // Options 등록
+        services.RegisterConfigureOptions<PersistenceOptions, PersistenceOptions.Validator>(
+            PersistenceOptions.SectionName);
+
+        var options = configuration
+            .GetSection(PersistenceOptions.SectionName)
+            .Get<PersistenceOptions>() ?? new PersistenceOptions();
+
+        switch (options.Provider)
+        {
+            case "EfCoreInMemory":
+                services.AddDbContext<LayeredArchDbContext>(opt =>
+                    opt.UseInMemoryDatabase("LayeredArch"));
+                RegisterEfCoreRepositories(services);
+                break;
+
+            case "Sqlite":
+                services.AddDbContext<LayeredArchDbContext>(opt =>
+                    opt.UseSqlite(options.ConnectionString));
+                RegisterEfCoreRepositories(services);
+                break;
+
+            case "InMemory":
+            default:
+                RegisterInMemoryRepositories(services);
+                break;
+        }
+
+        return services;
+    }
+
+    public static IApplicationBuilder UseAdapterPersistence(this IApplicationBuilder app)
+    {
+        var options = app.ApplicationServices
+            .GetRequiredService<IOptions<PersistenceOptions>>().Value;
+
+        if (options.Provider == "Sqlite")
+        {
+            using var scope = app.ApplicationServices.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<LayeredArchDbContext>();
+            dbContext.Database.EnsureCreated();
+        }
+
+        return app;
+    }
+
+    private static void RegisterInMemoryRepositories(IServiceCollection services)
     {
         // Repository 등록 (Source Generator가 생성한 Pipeline 버전 사용)
         services.RegisterScopedAdapterPipeline<IProductRepository, InMemoryProductRepositoryPipeline>();
@@ -21,12 +77,16 @@ public static class AdapterPersistenceRegistration
         // 공유 Port 등록
         services.AddScoped<InMemoryProductRepository>();
         services.RegisterScopedAdapterPipeline<IProductCatalog, InMemoryProductCatalogPipeline>();
-
-        return services;
     }
 
-    public static IApplicationBuilder UseAdapterPersistence(this IApplicationBuilder app)
+    private static void RegisterEfCoreRepositories(IServiceCollection services)
     {
-        return app;
+        // Repository 등록 (Source Generator가 생성한 Pipeline 버전 사용)
+        services.RegisterScopedAdapterPipeline<IProductRepository, EfCoreProductRepositoryPipeline>();
+        services.RegisterScopedAdapterPipeline<IOrderRepository, EfCoreOrderRepositoryPipeline>();
+        services.RegisterScopedAdapterPipeline<ICustomerRepository, EfCoreCustomerRepositoryPipeline>();
+
+        // 공유 Port 등록
+        services.RegisterScopedAdapterPipeline<IProductCatalog, EfCoreProductCatalogPipeline>();
     }
 }

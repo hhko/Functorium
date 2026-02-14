@@ -17,7 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 // =================================================================
 builder.Services
     .RegisterAdapterPresentation()
-    .RegisterAdapterPersistence()
+    .RegisterAdapterPersistence(builder.Configuration)
     .RegisterAdapterInfrastructure(builder.Configuration);
 
 // =================================================================

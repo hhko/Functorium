@@ -1,47 +1,48 @@
-using System.Collections.Concurrent;
 using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
-using LanguageExt;
-using LanguageExt.Common;
+using Microsoft.EntityFrameworkCore;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
-namespace LayeredArch.Adapters.Persistence.Repositories;
+namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 
 /// <summary>
-/// 메모리 기반 고객 리포지토리 구현
+/// EF Core 기반 고객 리포지토리 구현
 /// </summary>
 [GeneratePipeline]
-public class InMemoryCustomerRepository : ICustomerRepository
+public class EfCoreCustomerRepository : ICustomerRepository
 {
-    private static readonly ConcurrentDictionary<CustomerId, Customer> _customers = new();
+    private readonly LayeredArchDbContext _dbContext;
 
     public string RequestCategory => "Repository";
 
-    public InMemoryCustomerRepository()
+    public EfCoreCustomerRepository(LayeredArchDbContext dbContext)
     {
+        _dbContext = dbContext;
     }
 
     public virtual FinT<IO, Customer> Create(Customer customer)
     {
-        return IO.lift(() =>
+        return IO.liftAsync(async () =>
         {
-            _customers[customer.Id] = customer;
+            _dbContext.Customers.Add(customer);
+            await _dbContext.SaveChangesAsync();
             return Fin.Succ(customer);
         });
     }
 
     public virtual FinT<IO, Customer> GetById(CustomerId id)
     {
-        return IO.lift(() =>
+        return IO.liftAsync(async () =>
         {
-            if (_customers.TryGetValue(id, out Customer? customer))
+            var customer = await _dbContext.Customers.FindAsync(id);
+            if (customer is not null)
             {
                 return Fin.Succ(customer);
             }
 
-            return AdapterError.For<InMemoryCustomerRepository>(
+            return AdapterError.For<EfCoreCustomerRepository>(
                 new NotFound(),
                 id.ToString(),
                 $"고객 ID '{id}'을(를) 찾을 수 없습니다");
@@ -50,43 +51,50 @@ public class InMemoryCustomerRepository : ICustomerRepository
 
     public virtual FinT<IO, Customer> Update(Customer customer)
     {
-        return IO.lift(() =>
+        return IO.liftAsync(async () =>
         {
-            if (!_customers.ContainsKey(customer.Id))
+            var exists = await _dbContext.Customers.AnyAsync(c => c.Id == customer.Id);
+            if (!exists)
             {
-                return AdapterError.For<InMemoryCustomerRepository>(
+                return AdapterError.For<EfCoreCustomerRepository>(
                     new NotFound(),
                     customer.Id.ToString(),
                     $"고객 ID '{customer.Id}'을(를) 찾을 수 없습니다");
             }
 
-            _customers[customer.Id] = customer;
+            _dbContext.Customers.Update(customer);
+            await _dbContext.SaveChangesAsync();
             return Fin.Succ(customer);
         });
     }
 
     public virtual FinT<IO, Unit> Delete(CustomerId id)
     {
-        return IO.lift(() =>
+        return IO.liftAsync(async () =>
         {
-            if (!_customers.TryRemove(id, out _))
+            var customer = await _dbContext.Customers.FindAsync(id);
+            if (customer is null)
             {
-                return AdapterError.For<InMemoryCustomerRepository>(
+                return AdapterError.For<EfCoreCustomerRepository>(
                     new NotFound(),
                     id.ToString(),
                     $"고객 ID '{id}'을(를) 찾을 수 없습니다");
             }
 
+            _dbContext.Customers.Remove(customer);
+            await _dbContext.SaveChangesAsync();
             return Fin.Succ(unit);
         });
     }
 
     public virtual FinT<IO, bool> ExistsByEmail(Email email)
     {
-        return IO.lift(() =>
+        return IO.liftAsync(async () =>
         {
-            bool exists = _customers.Values.Any(c =>
-                ((string)c.Email).Equals(email, StringComparison.OrdinalIgnoreCase));
+            var emailStr = (string)email;
+            bool exists = await _dbContext.Customers.AnyAsync(c =>
+                ((string)(object)c.Email) == emailStr);
+
             return Fin.Succ(exists);
         });
     }
