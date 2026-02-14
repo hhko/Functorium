@@ -77,6 +77,7 @@ DDD는 도메인 전문가와 개발자가 동일한 언어를 사용할 것을 
 | **Aggregate** | 일관성 경계를 가진 객체 그룹 | 트랜잭션 단위, 불변식 보호 |
 | **Domain Event** | 도메인에서 발생한 중요한 사건 | 과거형, 불변, Aggregate 간 통신 |
 | **Domain Service** | 교차 Aggregate 순수 도메인 로직 | 상태 없음, I/O 없음, IDomainService 마커 |
+| **Factory** | Aggregate 생성/복원 | 정적 `Create()`, `CreateFromValidated()` 메서드 |
 | **Repository** | Aggregate의 영속화 | Aggregate 단위로 저장/조회 |
 | **Application Service** | 유스케이스 조율 | Command/Query, 도메인 객체 위임 |
 
@@ -157,23 +158,28 @@ public sealed class Email : SimpleValueObject<string>
 Entity는 고유한 식별자(ID)를 가진 도메인 객체입니다. ID가 같으면 동일한 Entity입니다.
 
 ```csharp
-// Entity 예시: 주문
+// Entity 예시: 주문 (검증된 VO를 받아 Aggregate 생성)
 [GenerateEntityId]  // OrderId 자동 생성
-public class Order : AggregateRoot<OrderId>
+public sealed class Order : AggregateRoot<OrderId>
 {
+    public ProductId ProductId { get; private set; }
+    public Quantity Quantity { get; private set; }
+    public Money UnitPrice { get; private set; }
     public Money TotalAmount { get; private set; }
-    public CustomerId CustomerId { get; private set; }
 
-    private Order(OrderId id, Money totalAmount, CustomerId customerId) : base(id)
+    private Order(OrderId id, ProductId productId, Quantity quantity,
+        Money unitPrice, Money totalAmount) : base(id) { /* ... */ }
+
+    // Create: 검증된 VO를 받아 새 Aggregate 생성
+    public static Order Create(
+        ProductId productId, Quantity quantity,
+        Money unitPrice, ShippingAddress shippingAddress)
     {
-        TotalAmount = totalAmount;
-        CustomerId = customerId;
+        var totalAmount = unitPrice.Multiply(quantity);
+        var order = new Order(OrderId.New(), productId, quantity, unitPrice, totalAmount);
+        order.AddDomainEvent(new CreatedEvent(order.Id, productId, quantity, totalAmount));
+        return order;
     }
-
-    public static Fin<Order> Create(decimal amount, string currency, CustomerId customerId) =>
-        CreateFromValidation(
-            Money.Validate(amount, currency),
-            money => new Order(OrderId.New(), money, customerId));
 }
 ```
 
@@ -434,6 +440,7 @@ public void Create_ShouldSucceed_WhenEmailIsValid()
 | [06-domain-services.md](./06-domain-services.md) | 도메인 서비스 | IDomainService, 교차 Aggregate 로직, Usecase 통합 |
 | [09-unit-testing.md](./09-unit-testing.md) | 단위 테스트 | 테스트 규칙, 네이밍, 체크리스트 |
 | [10-testing-library.md](./10-testing-library.md) | 테스트 라이브러리 | 로그/아키텍처/소스생성기/Job 테스트 |
+| [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) | DDD 전술적 설계 개선 | Factory 패턴, EFCore 통합, 로드맵 |
 
 ## 8. 실전 예제 프로젝트
 

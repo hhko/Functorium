@@ -386,51 +386,339 @@ public sealed class ProductNameUniqueSpec : Specification<Product>
 
 ---
 
-## 8. Factories ❌
+## 8. Factories ✅
 
-### 현재 상태
+### 구현 완료
 
-별도의 Factory 클래스/인터페이스가 **존재하지 않습니다**. Entity와 Value Object는 정적 `Create` 팩토리 메서드를 사용합니다.
+Functorium은 별도의 Factory 클래스 대신 **정적 팩토리 메서드 패턴**을 채택합니다. 모든 Aggregate Root와 Value Object에 일관된 생성 패턴이 구현되어 있습니다.
 
-```csharp
-// 현재: 정적 팩토리 메서드
-public static Fin<Order> Create(decimal amount, string currency, CustomerId customerId) =>
-    CreateFromValidation(
-        Money.Validate(amount, currency),
-        money => new Order(OrderId.New(), money, customerId));
-```
+**팩토리 패턴 구성:**
 
-### 문제점
+| 패턴 | 위치 | 용도 |
+|------|------|------|
+| `Create()` | Aggregate/VO 내부 정적 메서드 | 새 Aggregate 생성 (ID 자동 발급, 이벤트 발행) |
+| `CreateFromValidated()` | Aggregate/VO 내부 정적 메서드 | ORM/Repository에서 기존 데이터 복원 (검증 스킵) |
+| Apply 패턴 | Usecase 내부 private 메서드 | 병렬 VO 검증 후 Aggregate 생성 |
+| Port 조율 패턴 | Usecase LINQ 체인 | 교차 Aggregate 데이터 조회 후 생성 |
 
-1. **복잡한 Aggregate 생성 한계**: 여러 외부 정보(다른 Repository 조회, 외부 서비스 호출)가 필요한 생성 로직을 정적 메서드로 처리하기 어려움
-2. **재구성(Reconstitution) 패턴 부재**: DB에서 읽어온 데이터로 Aggregate를 복원하는 별도 경로가 없음
+### 패턴 1: 정적 Create() 팩토리 메서드
 
-### 개선 방향
-
-대부분의 경우 정적 팩토리 메서드로 충분합니다. 복잡한 생성이 필요할 때만 별도 Factory를 도입합니다.
+이미 검증된 Value Object를 받아 새 Aggregate를 생성합니다. ID를 자동 발급하고 도메인 이벤트를 발행합니다.
 
 ```csharp
-// 복잡한 Aggregate 생성이 필요한 경우에만 (제안)
-public interface IAggregateFactory<TAggregate, TId>
-    where TAggregate : AggregateRoot<TId>
-    where TId : struct, IEntityId<TId>
+// Product.cs
+public static Product Create(
+    ProductName name,
+    ProductDescription description,
+    Money price,
+    Quantity stockQuantity)
 {
-    FinT<IO, TAggregate> Create(/* 생성에 필요한 파라미터 */);
+    var product = new Product(ProductId.New(), name, description, price, stockQuantity);
+    product.AddDomainEvent(new CreatedEvent(product.Id, name, price));
+    return product;
 }
 ```
 
-**권장 가이드라인:**
+**전체 Aggregate Root의 Create() 비교:**
 
-| 시나리오 | 권장 방식 |
-|---------|---------|
-| 단순 생성 (값 검증만) | 정적 `Create` 팩토리 메서드 |
-| 외부 데이터 필요 | Usecase에서 조율 후 `Create` 호출 |
-| 복잡한 Aggregate (5+ Entity) | 별도 Factory 클래스 |
-| DB 재구성 | EFCore 매핑 또는 `Reconstitute` 정적 메서드 |
+| Aggregate | 매개변수 | ID 생성 | 이벤트 |
+|-----------|---------|---------|--------|
+| `Product.Create()` | `ProductName, ProductDescription, Money, Quantity` | `ProductId.New()` | `CreatedEvent` |
+| `Order.Create()` | `ProductId, Quantity, Money, ShippingAddress` | `OrderId.New()` | `CreatedEvent` |
+| `Customer.Create()` | `CustomerName, Email, Money` | `CustomerId.New()` | `CreatedEvent` |
 
-### 우선순위
+**공통 규칙:**
+- `private` 생성자 + `public static Create()` 조합
+- 매개변수는 **이미 검증된 Value Object** (primitive 아님)
+- ID는 `XxxId.New()`로 내부에서 자동 생성
+- 도메인 이벤트를 생성 시점에 발행
 
-**낮음** — 현재 정적 팩토리 메서드 패턴이 잘 동작합니다. EFCore 통합 시 Reconstitution 패턴을 추가하면 됩니다.
+### 패턴 2: CreateFromValidated() ORM 복원
+
+DB에서 읽어온 데이터로 Aggregate를 복원합니다. 이미 한 번 검증을 통과한 데이터이므로 검증을 생략합니다.
+
+```csharp
+// Product.cs
+public static Product CreateFromValidated(
+    ProductId id,
+    ProductName name,
+    ProductDescription description,
+    Money price,
+    Quantity stockQuantity,
+    DateTime createdAt,
+    DateTime? updatedAt)
+{
+    return new Product(id, name, description, price, stockQuantity)
+    {
+        CreatedAt = createdAt,
+        UpdatedAt = updatedAt
+    };
+}
+```
+
+**Create vs CreateFromValidated 비교:**
+
+| 항목 | `Create()` | `CreateFromValidated()` |
+|------|-----------|------------------------|
+| 용도 | 새 Aggregate 생성 | ORM/Repository 복원 |
+| ID 생성 | `XxxId.New()` 자동 발급 | 외부에서 전달 |
+| 검증 | VO가 이미 검증됨 | 검증 스킵 (DB 데이터 신뢰) |
+| 이벤트 발행 | `AddDomainEvent()` 호출 | 이벤트 없음 |
+| Audit 필드 | 자동 설정 (`DateTime.UtcNow`) | 외부에서 전달 |
+
+### 패턴 3: Apply 패턴 (Usecase 내 병렬 검증 생성)
+
+Usecase에서 primitive → VO 변환과 병렬 검증을 수행한 뒤, 검증된 VO로 `Create()`를 호출합니다.
+
+```csharp
+// CreateProductCommand.cs — Usecase 내부 private 메서드
+private static Fin<Product> CreateProduct(Request request)
+{
+    // 모든 필드: VO Validate() 사용 (Validation<Error, T> 반환)
+    var name = ProductName.Validate(request.Name);
+    var description = ProductDescription.Validate(request.Description);
+    var price = Money.Validate(request.Price);
+    var stockQuantity = Quantity.Validate(request.StockQuantity);
+
+    // 모두 튜플로 병합 - Apply로 병렬 검증
+    return (name, description, price, stockQuantity)
+        .Apply((n, d, p, s) =>
+            Product.Create(
+                ProductName.Create(n).ThrowIfFail(),
+                ProductDescription.Create(d).ThrowIfFail(),
+                Money.Create(p).ThrowIfFail(),
+                Quantity.Create(s).ThrowIfFail()))
+        .As()
+        .ToFin();
+}
+```
+
+**Apply 패턴 흐름:**
+
+```
+Request (primitive)
+  ↓ Validate() × N개 (병렬 검증)
+Validation<Error, T> 튜플
+  ↓ Apply() (모든 검증 성공 시에만 진행, 실패 시 에러 누적)
+Product.Create(검증된 VO들)
+  ↓
+Fin<Product>
+```
+
+### 패턴 4: 교차 Aggregate 조율 (Usecase에서 Port 사용)
+
+다른 Aggregate의 데이터가 필요한 경우, Usecase의 LINQ 체인에서 Port를 통해 조회한 뒤 `Create()`를 호출합니다.
+
+```csharp
+// CreateOrderCommand.cs — Usecase Handler
+FinT<IO, Response> usecase =
+    from exists in _productCatalog.ExistsById(productId)
+    from _ in guard(exists, ApplicationError.For<CreateOrderCommand>(
+        new NotFound(),
+        request.ProductId,
+        $"상품을 찾을 수 없습니다: '{request.ProductId}'"))
+    from unitPrice in _productCatalog.GetPrice(productId)
+    from order in _orderRepository.Create(
+        Order.Create(productId, quantity, unitPrice, shippingAddress))
+    from __ in _eventPublisher.PublishEvents(order, cancellationToken)
+    select new Response(...);
+```
+
+**교차 Aggregate 조율 흐름:**
+
+```
+Usecase LINQ 체인
+  ├── Port 조회: IProductCatalog.ExistsById() → 존재 검증
+  ├── Port 조회: IProductCatalog.GetPrice() → 가격 조회
+  ├── Aggregate 생성: Order.Create(검증된 데이터)
+  ├── Repository 저장: IOrderRepository.Create(order)
+  └── 이벤트 발행: PublishEvents(order)
+```
+
+### 적용 사례
+
+**사례 1: Product 생성 (Apply → Create)**
+
+```
+[Presentation] POST /api/products  →  Request(primitive)
+    ↓
+[Application] CreateProductCommand.Usecase.Handle()
+    ├── CreateProduct() — Apply 패턴으로 병렬 VO 검증
+    │   ├── ProductName.Validate(string)
+    │   ├── ProductDescription.Validate(string)
+    │   ├── Money.Validate(decimal)
+    │   └── Quantity.Validate(int)
+    │       ↓ Apply()
+    │   └── Product.Create(name, description, price, quantity)
+    ├── ExistsByName() — 중복 검사
+    ├── IProductRepository.Create(product) — 저장
+    └── PublishEvents(product) — CreatedEvent 발행
+```
+
+**사례 2: Order 생성 (Port 조율 → Create)**
+
+```
+[Presentation] POST /api/orders  →  Request(primitive)
+    ↓
+[Application] CreateOrderCommand.Usecase.Handle()
+    ├── ShippingAddress.Create(string) — VO 생성
+    ├── Quantity.Create(int) — VO 생성
+    ├── IProductCatalog.ExistsById(productId) — 상품 존재 검증
+    ├── IProductCatalog.GetPrice(productId) — 가격 조회
+    ├── Order.Create(productId, quantity, unitPrice, shippingAddress)
+    ├── IOrderRepository.Create(order) — 저장
+    └── PublishEvents(order) — CreatedEvent 발행
+```
+
+**사례 3: ORM 복원 (CreateFromValidated)**
+
+```
+[Adapter] ProductRepository.GetById(productId)
+    ├── DB에서 행 조회
+    ├── 각 컬럼 → VO 복원 (CreateFromValidated)
+    │   ├── ProductName.CreateFromValidated(string)
+    │   ├── Money.CreateFromValidated(decimal, string)
+    │   └── Quantity.CreateFromValidated(int)
+    └── Product.CreateFromValidated(id, name, desc, price, qty, createdAt, updatedAt)
+        → 검증 스킵, 이벤트 없음
+```
+
+**사례 4: Customer 단순 생성**
+
+```
+// 가장 단순한 형태 — 외부 조율 없이 Create()만 호출
+var customer = Customer.Create(name, email, creditLimit);
+// → CustomerId.New() 자동 발급
+// → CreatedEvent 발행
+```
+
+### EFCore 통합에서의 팩토리 패턴
+
+EFCore에서 Value Object와 EntityId를 매핑할 때 팩토리 메서드가 핵심 역할을 합니다.
+
+**VO 매핑 전략:**
+
+| VO 유형 | EFCore 패턴 | 팩토리 메서드 | 예시 |
+|---------|------------|-------------|------|
+| `SimpleValueObject<T>` | `HasConversion` | `CreateFromValidated()` | Email, ProductCode |
+| `ValueObject` (복합) | `OwnsOne` | ORM private 생성자 | Address, Money |
+| `ValueObject` 컬렉션 | `OwnsMany` | ORM private 생성자 | OrderLineItem |
+| `EntityId` (Ulid) | `HasConversion` + `ValueComparer` | 소스 생성기 자동 생성 | ProductIdConverter |
+
+**Value Converter 패턴 — SimpleValueObject의 CreateFromValidated 활용:**
+
+```csharp
+// OrmIntegration/Program.cs
+// Email: SimpleValueObject<string> → string 변환
+modelBuilder.Entity<User>()
+    .Property(u => u.Email)
+    .HasConversion(
+        email => (string)email,                    // 저장: implicit operator → primitive
+        value => Email.CreateFromValidated(value)); // 로드: 검증 없이 복원
+```
+
+- 저장 시 `implicit operator`로 primitive 추출
+- 로드 시 `CreateFromValidated()`로 검증 없이 VO 복원 (DB 데이터는 이미 검증됨)
+
+**OwnsOne 패턴 — 복합 ValueObject (Address, Money):**
+
+```csharp
+// OrmIntegration/Program.cs
+// Address: 복합 ValueObject → 각 속성이 별도 컬럼
+modelBuilder.Entity<Customer>()
+    .OwnsOne(c => c.ShippingAddress);
+
+// Money: 복합 ValueObject → Amount, Currency 컬럼
+modelBuilder.Entity<Product>()
+    .OwnsOne(p => p.Price);
+```
+
+- EFCore가 `private` 생성자를 통해 객체 복원
+- 각 속성이 소유 엔티티의 테이블에 컬럼으로 매핑
+
+**OwnsMany 패턴 — ValueObject 컬렉션 (OrderLineItem):**
+
+```csharp
+// OrmIntegration/Program.cs
+// OrderLineItem: 컬렉션 ValueObject → 별도 테이블
+modelBuilder.Entity<Order>()
+    .OwnsMany(o => o.LineItems);
+```
+
+- 컬렉션 VO는 별도 테이블에 저장
+- EFCore가 `private` 생성자를 통해 각 항목 복원
+
+**EntityId Converter — [GenerateEntityId]가 자동 생성하는 Converter/Comparer:**
+
+```csharp
+// 03-entities-and-aggregates.md §13 — EntityIdGenerator가 생성
+modelBuilder.Entity<Product>(builder =>
+{
+    builder.Property(e => e.Id)
+        .HasConversion(new ProductIdConverter())
+        .HasMaxLength(26);  // Ulid 문자열 길이
+
+    builder.Property(e => e.Id)
+        .Metadata
+        .SetValueComparer(new ProductIdComparer());
+});
+
+// 교차 Aggregate 참조도 동일 패턴
+builder.Property(e => e.CustomerId)
+    .HasConversion(new CustomerIdConverter())
+    .HasMaxLength(26);
+```
+
+- `[GenerateEntityId]` 소스 생성기가 `XxxIdConverter`, `XxxIdComparer` 자동 생성
+- `Ulid ↔ string(26)` 변환
+- 교차 Aggregate 참조(FK)에도 동일 Converter 적용
+
+**EFCore 통합 흐름도:**
+
+```
+[저장] Domain → DB
+  Aggregate.Property (VO)
+    → SimpleValueObject: implicit operator → primitive → DB column
+    → ValueObject (복합): OwnsOne → 각 속성 → DB columns
+    → ValueObject (컬렉션): OwnsMany → 별도 테이블
+    → EntityId: Converter → Ulid.ToString() → DB column (string 26)
+
+[로드] DB → Domain
+  DB row
+    → SimpleValueObject: CreateFromValidated(primitive) → VO
+    → ValueObject (복합): EFCore private constructor → VO
+    → ValueObject (컬렉션): EFCore private constructor → VO 리스트
+    → EntityId: Converter → Ulid.Parse(string) → EntityId
+    → Aggregate: CreateFromValidated(id, VOs...) → Aggregate (이벤트 없음)
+```
+
+### 설계 결정 가이드라인
+
+| 시나리오 | 권장 방식 | 예시 |
+|---------|---------|------|
+| 단순 생성 (VO만 필요) | 정적 `Create()` 직접 호출 | `Customer.Create(name, email, creditLimit)` |
+| 병렬 VO 검증 필요 | Apply 패턴 (Usecase 내부) | `CreateProductCommand.CreateProduct()` |
+| 외부 데이터 필요 | Usecase에서 Port 조율 후 `Create()` | `CreateOrderCommand` + `IProductCatalog` |
+| DB에서 복원 | `CreateFromValidated()` (검증 스킵) | Repository/EFCore Converter |
+| ORM 기본 매핑 | EFCore `private` 생성자 | `OwnsOne`, `OwnsMany` 복합 VO |
+
+### DDD 원칙 충족
+
+- **캡슐화**: `private` 생성자로 직접 인스턴스화 차단, 팩토리 메서드만 공개
+- **불변식 보호**: `Create()`에서 검증된 VO만 수용, primitive 직접 전달 불가
+- **재구성 분리**: `Create()` (새 생성) vs `CreateFromValidated()` (복원) 명확 구분
+- **이벤트 일관성**: 새 생성 시에만 도메인 이벤트 발행, 복원 시 이벤트 없음
+- **레이어 책임**: Aggregate는 자기 생성만 담당, 외부 조율은 Usecase 책임
+
+### 참조
+
+- `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Products/Product.cs` — Create, CreateFromValidated
+- `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Orders/Order.cs` — Create (교차 Aggregate 참조)
+- `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Customers/Customer.cs` — Create (단순 생성)
+- `Tests.Hosts/01-SingleHost/Src/LayeredArch.Application/Usecases/Products/CreateProductCommand.cs` — Apply 패턴
+- `Tests.Hosts/01-SingleHost/Src/LayeredArch.Application/Usecases/Orders/CreateOrderCommand.cs` — Port 조율 패턴
+- `Books/Implementing-Functional-ValueObject/Part4-Practical-Guide/02-ORM-Integration/OrmIntegration/Program.cs` — EFCore 통합
+- [03-entities-and-aggregates.md](./03-entities-and-aggregates.md) §13 — EntityId Converter
 
 ---
 
@@ -875,7 +1163,7 @@ Tag (별도 Aggregate) — 여러 Post에서 공유
 | Resilience Patterns (Polly) | 중간 | alpha.4 | 외부 Adapter | L27 |
 | Outbox Pattern | 중간 | alpha.7 | Integration Events, UoW | L300, L378 |
 | Specification Pattern | 낮음 | alpha.4+ | EFCore 통합 | — |
-| Factory 패턴 가이드 | 낮음 | alpha.4+ | EFCore 통합 | — |
+| Factory 패턴 | ✅ 완료 | — | — | — |
 | Domain Event Versioning | 낮음 | alpha.7+ | Integration Events | — |
 
 ### 구현 순서 의존 관계
@@ -906,7 +1194,7 @@ Resilience (Polly) ──→ 외부 API Adapter                        │
 | Repository | ✅ 공통 인터페이스 구현 | 본 문서 §5 |
 | Domain Service | ✅ 마커 인터페이스 구현 | 본 문서 §6 |
 | Specification | ❌ 미구현 | 본 문서 §7 |
-| Factory | ❌ 정적 팩토리만 존재 | 본 문서 §8 |
+| Factory | ✅ 정적 팩토리 메서드 패턴 구현 | 본 문서 §8 |
 | Application Service | ✅ CQRS Usecase | [07-usecases-and-cqrs.md](./07-usecases-and-cqrs.md) |
 | Integration Event | ⚠️ 내부/외부 구분 없음 | 본 문서 §9 |
 | Unit of Work | ⚠️ 미구현 | 본 문서 §11 |

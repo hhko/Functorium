@@ -67,6 +67,7 @@ Functorium은 DDD 전술적 설계 패턴과 함수형 프로그래밍을 결합
 | **아키텍처 규칙 검증** | [10-testing-library.md](./10-testing-library.md) §아키텍처 규칙 검증 |
 | **소스 생성기 테스트** | [10-testing-library.md](./10-testing-library.md) §소스 생성기 테스트 |
 | **스케줄 Job 테스트** | [10-testing-library.md](./10-testing-library.md) §스케줄 Job 통합 테스트 |
+| **팩토리 패턴 (Create/CreateFromValidated)** | [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) §8 |
 | **DDD 개선 사항/로드맵 확인** | [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) |
 
 ## 문서 전체 목록

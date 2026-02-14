@@ -1085,6 +1085,8 @@ public static Product Create(
 }
 ```
 
+> **참조:** 팩토리 패턴의 전체 가이드(Apply 패턴, Port 조율, EFCore 통합 등)는 [ddd-tactical-improvements.md §8](./ddd-tactical-improvements.md#8-factories-) 참조
+
 ### 불변식을 보호하는 커맨드 메서드
 
 상태 변경은 Aggregate Root의 메서드를 통해서만 가능합니다. 비즈니스 규칙 위반 시 `Fin<Unit>`으로 실패를 반환합니다.
