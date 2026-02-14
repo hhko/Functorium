@@ -907,7 +907,7 @@ Resilience (Polly) ──→ 외부 API Adapter                        │
 | Domain Service | ✅ 마커 인터페이스 구현 | 본 문서 §6 |
 | Specification | ❌ 미구현 | 본 문서 §7 |
 | Factory | ❌ 정적 팩토리만 존재 | 본 문서 §8 |
-| Application Service | ✅ CQRS Usecase | [06-usecases-and-cqrs.md](./06-usecases-and-cqrs.md) |
+| Application Service | ✅ CQRS Usecase | [07-usecases-and-cqrs.md](./07-usecases-and-cqrs.md) |
 | Integration Event | ⚠️ 내부/외부 구분 없음 | 본 문서 §9 |
 | Unit of Work | ⚠️ 미구현 | 본 문서 §11 |
 
@@ -918,6 +918,6 @@ Resilience (Polly) ──→ 외부 API Adapter                        │
 - [01-ddd-tactical-overview.md](./01-ddd-tactical-overview.md) — DDD 전술적 설계 개요
 - [03-entities-and-aggregates.md](./03-entities-and-aggregates.md) — Aggregate 설계 원칙
 - [04-domain-events.md](./04-domain-events.md) — 도메인 이벤트
-- [06-usecases-and-cqrs.md](./06-usecases-and-cqrs.md) — Usecase/CQRS
-- [07-ports-and-adapters.md](./07-ports-and-adapters.md) — Port/Adapter
+- [07-usecases-and-cqrs.md](./07-usecases-and-cqrs.md) — Usecase/CQRS
+- [08-ports-and-adapters.md](./08-ports-and-adapters.md) — Port/Adapter
 - TODO.md — 프로젝트 로드맵

@@ -485,6 +485,6 @@ public async Task Handle_ShouldLogProductCreation()
 ## 참고 문서
 
 - [03-entities-and-aggregates.md](./03-entities-and-aggregates.md) - Entity/Aggregate 구현
-- [06-usecases-and-cqrs.md](./06-usecases-and-cqrs.md) - Use Case 구현
+- [07-usecases-and-cqrs.md](./07-usecases-and-cqrs.md) - Use Case 구현
 - [03-entities-and-aggregates.md](./03-entities-and-aggregates.md) - Entity 구현 가이드 (상세)
-- [06-usecases-and-cqrs.md](./06-usecases-and-cqrs.md) - 유스케이스 구현 가이드 (상세)
+- [07-usecases-and-cqrs.md](./07-usecases-and-cqrs.md) - 유스케이스 구현 가이드 (상세)

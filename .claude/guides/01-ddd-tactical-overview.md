@@ -429,11 +429,11 @@ public void Create_ShouldSucceed_WhenEmailIsValid()
 | [03-entities-and-aggregates.md](./03-entities-and-aggregates.md) | Entity/Aggregate 구현 | 설계 원칙, 클래스 계층, ID 시스템, 도메인 이벤트 |
 | [04-domain-events.md](./04-domain-events.md) | 도메인 이벤트 | 이벤트 정의, 발행, 핸들러 구현 |
 | [05-error-system.md](./05-error-system.md) | 에러 시스템 | 에러 정의, 네이밍, 테스트 패턴 |
-| [06-usecases-and-cqrs.md](./06-usecases-and-cqrs.md) | Usecase 구현 | CQRS 패턴, Apply 병합 |
-| [07-ports-and-adapters.md](./07-ports-and-adapters.md) | Adapter 구현 | Port 정의, Adapter 구현, Pipeline |
-| [12-domain-services.md](./12-domain-services.md) | 도메인 서비스 | IDomainService, 교차 Aggregate 로직, Usecase 통합 |
-| [08-unit-testing.md](./08-unit-testing.md) | 단위 테스트 | 테스트 규칙, 네이밍, 체크리스트 |
-| [09-testing-library.md](./09-testing-library.md) | 테스트 라이브러리 | 로그/아키텍처/소스생성기/Job 테스트 |
+| [07-usecases-and-cqrs.md](./07-usecases-and-cqrs.md) | Usecase 구현 | CQRS 패턴, Apply 병합 |
+| [08-ports-and-adapters.md](./08-ports-and-adapters.md) | Adapter 구현 | Port 정의, Adapter 구현, Pipeline |
+| [06-domain-services.md](./06-domain-services.md) | 도메인 서비스 | IDomainService, 교차 Aggregate 로직, Usecase 통합 |
+| [09-unit-testing.md](./09-unit-testing.md) | 단위 테스트 | 테스트 규칙, 네이밍, 체크리스트 |
+| [10-testing-library.md](./10-testing-library.md) | 테스트 라이브러리 | 로그/아키텍처/소스생성기/Job 테스트 |
 
 ## 8. 실전 예제 프로젝트
 

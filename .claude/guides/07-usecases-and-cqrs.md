@@ -768,8 +768,8 @@ public sealed record Response(
 | [03-entities-and-aggregates.md](./03-entities-and-aggregates.md) | Entity 구현 및 Create 패턴 |
 | [04-domain-events.md](./04-domain-events.md) | 도메인 이벤트 발행 및 Event Handler |
 | [05-error-system.md](./05-error-system.md) | 에러 시스템 가이드 |
-| [07-ports-and-adapters.md](./07-ports-and-adapters.md) | Repository 인터페이스 설계 |
-| [08-unit-testing.md](./08-unit-testing.md) | Usecase 테스트 작성 방법 |
+| [08-ports-and-adapters.md](./08-ports-and-adapters.md) | Repository 인터페이스 설계 |
+| [09-unit-testing.md](./09-unit-testing.md) | Usecase 테스트 작성 방법 |
 
 **외부 참고:**
 - [Mediator](https://github.com/martinothamar/Mediator) - 기반 라이브러리

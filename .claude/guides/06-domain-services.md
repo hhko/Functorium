@@ -485,9 +485,9 @@ LayeredArch.Tests.Unit/
 - [01-ddd-tactical-overview.md](./01-ddd-tactical-overview.md) - DDD 전술적 설계 개요, 타입 매핑 테이블
 - [03-entities-and-aggregates.md](./03-entities-and-aggregates.md) - Entity/Aggregate 설계 (단일 Aggregate 로직)
 - [05-error-system.md](./05-error-system.md) - DomainError 정의 및 테스트 패턴
-- [06-usecases-and-cqrs.md](./06-usecases-and-cqrs.md) - Usecase 구현 (Application Service)
-- [07-ports-and-adapters.md](./07-ports-and-adapters.md) - Port/Adapter 패턴 (IAdapter와의 차이)
-- [08-unit-testing.md](./08-unit-testing.md) - 단위 테스트 규칙 (T1_T2_T3, AAA 패턴)
+- [07-usecases-and-cqrs.md](./07-usecases-and-cqrs.md) - Usecase 구현 (Application Service)
+- [08-ports-and-adapters.md](./08-ports-and-adapters.md) - Port/Adapter 패턴 (IAdapter와의 차이)
+- [09-unit-testing.md](./09-unit-testing.md) - 단위 테스트 규칙 (T1_T2_T3, AAA 패턴)
 - [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) §6 - Domain Service 구현 완료 기록
 
 ### 실전 예제 파일

@@ -135,4 +135,4 @@ Verify.Xunit 스냅샷 테스트 결과를 승인하는 스크립트입니다.
 
 ### 단위 테스트 규칙
 
-단위 테스트 구현 시 `.claude/guides/08-unit-testing.md`의 규칙을 준수하십시오.
+단위 테스트 구현 시 `.claude/guides/09-unit-testing.md`의 규칙을 준수하십시오.

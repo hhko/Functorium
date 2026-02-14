@@ -20,7 +20,7 @@
 ## 개요
 
 이 가이드는 새 솔루션을 만들 때 루트 레벨 구성 파일과 빌드 스크립트를 어떻게 생성하고 설정하는지를 다룹니다.
-프로젝트 수준 파일(`AssemblyReference.cs`, `Using.cs`)은 [10-project-structure.md](./10-project-structure.md)를 참조하세요.
+프로젝트 수준 파일(`AssemblyReference.cs`, `Using.cs`)은 [11-project-structure.md](./11-project-structure.md)를 참조하세요.
 
 ### 솔루션 루트에 필요한 파일
 
@@ -929,6 +929,6 @@ Verify.Xunit 스냅샷 테스트 결과를 일괄 승인합니다.
 
 ## 참고 문서
 
-- [10-project-structure.md](./10-project-structure.md) — 프로젝트 수준 구성 (폴더, 네이밍, 의존성)
-- [08-unit-testing.md](./08-unit-testing.md) — 테스트 작성 방법론 (MTP 설정 포함)
-- [09-testing-library.md](./09-testing-library.md) — Functorium.Testing 라이브러리
+- [11-project-structure.md](./11-project-structure.md) — 프로젝트 수준 구성 (폴더, 네이밍, 의존성)
+- [09-unit-testing.md](./09-unit-testing.md) — 테스트 작성 방법론 (MTP 설정 포함)
+- [10-testing-library.md](./10-testing-library.md) — Functorium.Testing 라이브러리

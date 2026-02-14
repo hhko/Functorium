@@ -24,9 +24,9 @@
 |---|---|
 | AggregateRoots 폴더 구조 | [03-entities-and-aggregates.md](./03-entities-and-aggregates.md) — Entity/Aggregate 구현 |
 | ValueObjects 위치 규칙 | [02-value-objects.md](./02-value-objects.md) — 값 객체 구현 패턴 |
-| Domain Ports 위치 결정 기준 | [07-ports-and-adapters.md](./07-ports-and-adapters.md) — Adapter 설계 원칙 |
-| Usecases 폴더/파일 네이밍 | [06-usecases-and-cqrs.md](./06-usecases-and-cqrs.md) — 유스케이스 구현 |
-| Abstractions/Registrations 구조 | [07-ports-and-adapters.md](./07-ports-and-adapters.md) — 등록 코드 패턴 |
+| Domain Ports 위치 결정 기준 | [08-ports-and-adapters.md](./08-ports-and-adapters.md) — Adapter 설계 원칙 |
+| Usecases 폴더/파일 네이밍 | [07-usecases-and-cqrs.md](./07-usecases-and-cqrs.md) — 유스케이스 구현 |
+| Abstractions/Registrations 구조 | [08-ports-and-adapters.md](./08-ports-and-adapters.md) — 등록 코드 패턴 |
 
 ### 전체 프로젝트 구성 개요
 
@@ -513,7 +513,7 @@ app.Run();
 
 ## 테스트 프로젝트
 
-테스트 프로젝트는 `Tests/` 폴더 아래에 배치합니다. 테스트 작성 방법론(명명 규칙, AAA 패턴, MTP 설정 등)은 [08-unit-testing.md](./08-unit-testing.md)를 참조하세요.
+테스트 프로젝트는 `Tests/` 폴더 아래에 배치합니다. 테스트 작성 방법론(명명 규칙, AAA 패턴, MTP 설정 등)은 [09-unit-testing.md](./09-unit-testing.md)를 참조하세요.
 
 ### Tests.Unit 프로젝트
 
@@ -823,12 +823,12 @@ Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 
 
 ## 참고 문서
 
-- [11-solution-configuration.md](./11-solution-configuration.md) — 솔루션 루트 구성 파일 및 빌드 스크립트
+- [12-solution-configuration.md](./12-solution-configuration.md) — 솔루션 루트 구성 파일 및 빌드 스크립트
 - [03-entities-and-aggregates.md](./03-entities-and-aggregates.md) — Entity/Aggregate Root 구현 패턴
 - [02-value-objects.md](./02-value-objects.md) — 값 객체 구현 및 검증 패턴
-- [06-usecases-and-cqrs.md](./06-usecases-and-cqrs.md) — 유스케이스 (Command/Query) 구현
-- [07-ports-and-adapters.md](./07-ports-and-adapters.md) — Adapter 설계 원칙 + 단계별 활동
+- [07-usecases-and-cqrs.md](./07-usecases-and-cqrs.md) — 유스케이스 (Command/Query) 구현
+- [08-ports-and-adapters.md](./08-ports-and-adapters.md) — Adapter 설계 원칙 + 단계별 활동
 - [05-error-system.md](./05-error-system.md) — 레이어별 에러 시스템
 - [observability-spec.md](./observability-spec.md) — Observability 사양
-- [08-unit-testing.md](./08-unit-testing.md) — 테스트 작성 방법론 (명명 규칙, AAA 패턴, MTP 설정)
-- [09-testing-library.md](./09-testing-library.md) — Functorium.Testing 라이브러리 (LogTestContext, ArchitectureRules, QuartzTestFixture 등)
+- [09-unit-testing.md](./09-unit-testing.md) — 테스트 작성 방법론 (명명 규칙, AAA 패턴, MTP 설정)
+- [10-testing-library.md](./10-testing-library.md) — Functorium.Testing 라이브러리 (LogTestContext, ArchitectureRules, QuartzTestFixture 등)

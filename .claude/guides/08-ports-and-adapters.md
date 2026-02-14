@@ -1558,7 +1558,7 @@ Adapter의 단위 테스트는 **원본 클래스를 직접 테스트**합니다
 | 단언 라이브러리 | Shouldly |
 | Mock 라이브러리 | NSubstitute |
 
-> **참고**: 테스트 규칙 상세는 [08-unit-testing.md](./08-unit-testing.md)를 참조하세요.
+> **참고**: 테스트 규칙 상세는 [09-unit-testing.md](./09-unit-testing.md)를 참조하세요.
 
 **IO 실행 패턴** - `FinT<IO, T>` 반환값을 테스트에서 실행하는 패턴:
 
@@ -2065,11 +2065,11 @@ Pipeline이 자동 제공하는 Observability 기능의 요약입니다. 상세 
 | [domain-modeling-overview.md](./01-ddd-tactical-overview.md) | 도메인 모델링 전체 개요 |
 | [02-value-objects.md](./02-value-objects.md) | Value Object 구현 가이드 |
 | [03-entities-and-aggregates.md](./03-entities-and-aggregates.md) | Entity 구현 가이드 |
-| [06-usecases-and-cqrs.md](./06-usecases-and-cqrs.md) | 유스케이스 구현 (CQRS Command/Query) |
+| [07-usecases-and-cqrs.md](./07-usecases-and-cqrs.md) | 유스케이스 구현 (CQRS Command/Query) |
 | [05-error-system.md](./05-error-system.md) | 에러 시스템 가이드 |
-| [08-unit-testing.md](./08-unit-testing.md) | 단위 테스트 작성 가이드 |
+| [09-unit-testing.md](./09-unit-testing.md) | 단위 테스트 작성 가이드 |
 | [observability-spec.md](./observability-spec.md) | Observability 사양 (트레이싱, 로깅, 메트릭 상세) |
-| [10-project-structure.md](./10-project-structure.md) | 서비스 프로젝트 구조 가이드 |
+| [11-project-structure.md](./11-project-structure.md) | 서비스 프로젝트 구조 가이드 |
 
 **외부 참고:**
 
