@@ -21,17 +21,18 @@ Architecture
 │   │   └── [06] 06-entities-and-aggregates.md ─── Entity와 Aggregate
 │   │       └── [07] 07-domain-events.md ─── 도메인 이벤트
 │   ├── [08] 08-error-system.md ─── 에러 시스템 (Domain/Application/Adapter)
-│   └── [09] 09-domain-services.md ─── 도메인 서비스
+│   ├── [09] 09-domain-services.md ─── 도메인 서비스
+│   └── [10] 10-specifications.md ─── Specification 패턴
 │
 ├── Application Layer
-│   └── [10] 10-usecases-and-cqrs.md ─── Use Case와 CQRS
+│   └── [11] 11-usecases-and-cqrs.md ─── Use Case와 CQRS
 │
 ├── Adapter Layer
-│   └── [11] 11-ports-and-adapters.md ─── Port와 Adapter
+│   └── [12] 12-ports-and-adapters.md ─── Port와 Adapter
 │
 ├── Testing
-│   ├── [12] 12-unit-testing.md ─── 단위 테스트
-│   └── [13] 13-testing-library.md ─── 테스트 라이브러리
+│   ├── [13] 13-unit-testing.md ─── 단위 테스트
+│   └── [14] 14-testing-library.md ─── 테스트 라이브러리
 │
 ├── Observability
 │   ├── observability-spec.md ─── 사양
@@ -61,19 +62,20 @@ Architecture
 | **도메인 이벤트 정의/발행** | [07-domain-events.md](./07-domain-events.md) |
 | **Event Handler 만들기** | [07-domain-events.md](./07-domain-events.md) §5 |
 | **도메인 서비스 만들기** | [09-domain-services.md](./09-domain-services.md) |
+| **Specification 만들기** | [10-specifications.md](./10-specifications.md) |
 | **에러 타입 정의하기** | [08-error-system.md](./08-error-system.md) |
 | **에러 테스트 작성하기** | [08-error-system.md](./08-error-system.md) §4~6 테스트 |
-| **Usecase 만들기** | [10-usecases-and-cqrs.md](./10-usecases-and-cqrs.md) |
-| **Adapter 만들기** | [11-ports-and-adapters.md](./11-ports-and-adapters.md) |
-| **EF Core Repository 만들기** | [11-ports-and-adapters.md](./11-ports-and-adapters.md) §2.8 |
-| **Options 패턴 (OptionsConfigurator)** | [11-ports-and-adapters.md](./11-ports-and-adapters.md) §4.6 |
+| **Usecase 만들기** | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) |
+| **Adapter 만들기** | [12-ports-and-adapters.md](./12-ports-and-adapters.md) |
+| **EF Core Repository 만들기** | [12-ports-and-adapters.md](./12-ports-and-adapters.md) §2.8 |
+| **Options 패턴 (OptionsConfigurator)** | [12-ports-and-adapters.md](./12-ports-and-adapters.md) §4.6 |
 | **검증 메서드 확인** | [05-value-objects.md](./05-value-objects.md) §검증 시스템 |
 | **크래시 덤프 설정/분석** | [crash-diagnostics.md](./crash-diagnostics.md) |
 | **Observability 사양** | [observability-spec.md](./observability-spec.md) |
-| **구조화된 로그 테스트** | [13-testing-library.md](./13-testing-library.md) §구조화된 로그 테스트 |
-| **아키텍처 규칙 검증** | [13-testing-library.md](./13-testing-library.md) §아키텍처 규칙 검증 |
-| **소스 생성기 테스트** | [13-testing-library.md](./13-testing-library.md) §소스 생성기 테스트 |
-| **스케줄 Job 테스트** | [13-testing-library.md](./13-testing-library.md) §스케줄 Job 통합 테스트 |
+| **구조화된 로그 테스트** | [14-testing-library.md](./14-testing-library.md) §구조화된 로그 테스트 |
+| **아키텍처 규칙 검증** | [14-testing-library.md](./14-testing-library.md) §아키텍처 규칙 검증 |
+| **소스 생성기 테스트** | [14-testing-library.md](./14-testing-library.md) §소스 생성기 테스트 |
+| **스케줄 Job 테스트** | [14-testing-library.md](./14-testing-library.md) §스케줄 Job 통합 테스트 |
 | **팩토리 패턴 (Create/CreateFromValidated)** | [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) §8 |
 | **DDD 개선 사항/로드맵 확인** | [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) |
 | **아키텍처 개선 사항 확인** | [architecture-improvements.md](./architecture-improvements.md) |
@@ -90,8 +92,9 @@ Architecture
 | 07 | [07-domain-events.md](./07-domain-events.md) | 도메인 이벤트 정의, 발행, 핸들러 구현 |
 | 08 | [08-error-system.md](./08-error-system.md) | 레이어별 에러 시스템 (정의, 네이밍, 테스트) |
 | 09 | [09-domain-services.md](./09-domain-services.md) | 도메인 서비스 (교차 Aggregate 순수 로직, IDomainService) |
-| 10 | [10-usecases-and-cqrs.md](./10-usecases-and-cqrs.md) | Use Case 구현 (CQRS Command/Query) |
-| 11 | [11-ports-and-adapters.md](./11-ports-and-adapters.md) | Port 정의, Adapter 구현, Pipeline 자동 생성 |
+| 10 | [10-specifications.md](./10-specifications.md) | Specification 패턴 (비즈니스 규칙 캡슐화, 조합, Repository 통합) |
+| 11 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) | Use Case 구현 (CQRS Command/Query) |
+| 12 | [12-ports-and-adapters.md](./12-ports-and-adapters.md) | Port 정의, Adapter 구현, Pipeline 자동 생성 |
 
 ### 아키텍처
 
@@ -105,8 +108,8 @@ Architecture
 
 | 문서 | 설명 |
 |------|------|
-| [12-unit-testing.md](./12-unit-testing.md) | 단위 테스트 규칙 (명명, AAA 패턴, MTP 설정) |
-| [13-testing-library.md](./13-testing-library.md) | Functorium.Testing 라이브러리 (로그/아키텍처/소스생성기/Job 테스트) |
+| [13-unit-testing.md](./13-unit-testing.md) | 단위 테스트 규칙 (명명, AAA 패턴, MTP 설정) |
+| [14-testing-library.md](./14-testing-library.md) | Functorium.Testing 라이브러리 (로그/아키텍처/소스생성기/Job 테스트) |
 
 ### Observability
 

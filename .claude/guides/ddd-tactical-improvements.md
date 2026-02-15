@@ -10,7 +10,7 @@
 - [3. Aggregate Roots](#3-aggregate-roots-)
 - [4. Domain Events](#4-domain-events-)
 
-### Part 2: 미구현 패턴
+### Part 2: 구현 완료 패턴 (이전 미구현)
 - [5. Repository Pattern](#5-repository-pattern-)
 - [6. Domain Services](#6-domain-services-)
 - [7. Specifications](#7-specifications-)
@@ -225,7 +225,7 @@ public interface IDomainEventPublisher
 
 ---
 
-# Part 2: 미구현 패턴
+# Part 2: 구현 완료 패턴 (이전 미구현)
 
 ---
 
@@ -327,70 +327,54 @@ FinT<IO, Response> usecase =
 
 ---
 
-## 7. Specifications ❌
+## 7. Specifications ✅
 
-### 현재 상태
+### 구현 완료
 
-Specification 패턴이 **구현되어 있지 않습니다**. 쿼리 조건은 Repository 메서드에 직접 하드코딩됩니다.
+`Functorium.Domains.Specifications` 네임스페이스에 `Specification<T>` 추상 기반 클래스를 제공합니다.
 
 ```csharp
-// 현재: 쿼리 조건이 Repository 메서드에 고정
-public interface IProductRepository : IAdapter
+// Functorium.Domains.Specifications
+public abstract class Specification<T>
 {
-    FinT<IO, bool> ExistsByName(ProductName name, ProductId? excludeId = null);
-    // 새 조건이 필요하면 메서드를 추가해야 함
+    public abstract bool IsSatisfiedBy(T entity);
+
+    public Specification<T> And(Specification<T> other);
+    public Specification<T> Or(Specification<T> other);
+    public Specification<T> Not();
+
+    // 연산자 오버로드: &, |, !
 }
 ```
 
-### 문제점
+**핵심 설계 결정:**
+- `Expression<Func<T, bool>>` 대신 `bool IsSatisfiedBy(T)` 메서드 사용 (도메인 순수성 유지)
+- EfCore SQL 최적화는 Adapter에서 `switch` pattern-match로 처리
+- Specification의 파라미터를 public 프로퍼티로 노출하여 pattern-match 접근 가능
+- `And`/`Or`/`Not` 조합 및 `&`/`|`/`!` 연산자 오버로드 지원
+- 조합 클래스(`AndSpecification<T>`, `OrSpecification<T>`, `NotSpecification<T>`)는 `internal sealed`
 
-1. **쿼리 조건 재사용 불가**: 동일한 필터 조건을 여러 Repository 메서드에서 중복
-2. **조합 불가**: AND/OR 같은 조합이 필요하면 새 메서드를 만들어야 함
-3. **도메인 규칙과 쿼리 분리**: 비즈니스 규칙으로서의 조건이 인프라 계층에 흩어짐
+**구현된 실전 예제:**
 
-### 개선 방향
+| Specification | 용도 | Aggregate |
+|--------------|------|-----------|
+| `ProductNameUniqueSpec` | 상품명 중복 확인 (자기 제외 옵션) | Product |
+| `ProductPriceRangeSpec` | 가격 범위 필터 | Product |
+| `ProductLowStockSpec` | 재고 부족 필터 | Product |
+| `CustomerEmailSpec` | 이메일 중복 확인 | Customer |
 
-```csharp
-// Functorium.Domains (제안)
-public interface ISpecification<T>
-{
-    Expression<Func<T, bool>> ToExpression();
-}
-
-public abstract class Specification<T> : ISpecification<T>
-{
-    public abstract Expression<Func<T, bool>> ToExpression();
-
-    public Specification<T> And(Specification<T> other) => new AndSpecification<T>(this, other);
-    public Specification<T> Or(Specification<T> other) => new OrSpecification<T>(this, other);
-    public Specification<T> Not() => new NotSpecification<T>(this);
-}
-```
+**Repository 통합 패턴:**
 
 ```csharp
-// 사용 예
-public sealed class ProductNameUniqueSpec : Specification<Product>
-{
-    private readonly ProductName _name;
-    private readonly ProductId? _excludeId;
+// Port (Domain Layer)
+FinT<IO, bool> Exists(Specification<Product> spec);
+FinT<IO, Seq<Product>> FindAll(Specification<Product> spec);
 
-    public ProductNameUniqueSpec(ProductName name, ProductId? excludeId = null)
-    {
-        _name = name;
-        _excludeId = excludeId;
-    }
-
-    public override Expression<Func<Product, bool>> ToExpression() =>
-        product => product.Name == _name
-            && (_excludeId == null || product.Id != _excludeId);
-}
+// InMemory: IsSatisfiedBy() 직접 사용
+// EfCore: switch pattern-match SQL 최적화 + IsSatisfiedBy() 폴백
 ```
 
-### 우선순위
-
-**낮음** — EFCore 통합 이후에 의미가 있습니다. 현재 InMemory Repository에서는 단순 메서드로 충분합니다.
-
-**TODO.md 연계:** EFCore 통합 (alpha.4)
+**참조:** [10-specifications.md](./10-specifications.md), `Src/Functorium/Domains/Specifications/Specification.cs`
 
 ---
 
@@ -557,7 +541,7 @@ FinT<IO, Response> usecase =
 // SaveChanges + 도메인 이벤트 발행은 UsecaseTransactionPipeline이 자동 처리
 ```
 
-> **이전 패턴과의 차이**: 이전에는 Usecase에서 `_unitOfWork.SaveChanges()` → `_eventPublisher.PublishEvents()`를 LINQ 체인에서 직접 호출했으나, 파이프라인 도입으로 이 책임이 `UsecaseTransactionPipeline`으로 이전되었습니다. 자세한 내용은 [10-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./10-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-usecasetransactionpipeline)을 참조하세요.
+> **이전 패턴과의 차이**: 이전에는 Usecase에서 `_unitOfWork.SaveChanges()` → `_eventPublisher.PublishEvents()`를 LINQ 체인에서 직접 호출했으나, 파이프라인 도입으로 이 책임이 `UsecaseTransactionPipeline`으로 이전되었습니다. 자세한 내용은 [11-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./11-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-usecasetransactionpipeline)을 참조하세요.
 
 **핵심 설계 결정:**
 - `IAdapter` 상속으로 `[GeneratePipeline]` 소스 생성기 및 DI 등록 호환
@@ -844,7 +828,7 @@ Tag (별도 Aggregate) — 여러 Post에서 공유
 | IDomainService 마커 | ✅ 완료 | alpha.3 | — | L535 |
 | Resilience Patterns (Polly) | 중간 | alpha.4 | 외부 Adapter | L27 |
 | Outbox Pattern | 중간 | alpha.7 | Integration Events, UoW | L300, L378 |
-| Specification Pattern | 낮음 | alpha.4+ | EFCore 통합 | — |
+| Specification Pattern | ✅ 완료 | — | — | — |
 | Factory 패턴 | ✅ 완료 | — | — | — |
 | Domain Event Versioning | 낮음 | alpha.7+ | Integration Events | — |
 
@@ -875,9 +859,9 @@ Resilience (Polly) ──→ 외부 API Adapter                        │
 | Domain Event | ✅ 완전 구현 | [07-domain-events.md](./07-domain-events.md) |
 | Repository | ✅ 공통 인터페이스 구현 | 본 문서 §5 |
 | Domain Service | ✅ 마커 인터페이스 구현 | 본 문서 §6 |
-| Specification | ❌ 미구현 | 본 문서 §7 |
+| Specification | ✅ 완전 구현 | [10-specifications.md](./10-specifications.md) |
 | Factory | ✅ 정적 팩토리 메서드 패턴 구현 | 본 문서 §8 |
-| Application Service | ✅ CQRS Usecase | [10-usecases-and-cqrs.md](./10-usecases-and-cqrs.md) |
+| Application Service | ✅ CQRS Usecase | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) |
 | Integration Event | ⚠️ 내부/외부 구분 없음 | 본 문서 §9 |
 | Unit of Work | ✅ 완전 구현 | 본 문서 §11 |
 
@@ -888,6 +872,6 @@ Resilience (Polly) ──→ 외부 API Adapter                        │
 - [04-ddd-tactical-overview.md](./04-ddd-tactical-overview.md) — DDD 전술적 설계 개요
 - [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) — Aggregate 설계 원칙
 - [07-domain-events.md](./07-domain-events.md) — 도메인 이벤트
-- [10-usecases-and-cqrs.md](./10-usecases-and-cqrs.md) — Usecase/CQRS
-- [11-ports-and-adapters.md](./11-ports-and-adapters.md) — Port/Adapter
+- [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) — Usecase/CQRS
+- [12-ports-and-adapters.md](./12-ports-and-adapters.md) — Port/Adapter
 - TODO.md — 프로젝트 로드맵

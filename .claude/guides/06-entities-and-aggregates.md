@@ -2778,6 +2778,6 @@ public enum OrderStatus
 - [값 객체 구현 가이드](./05-value-objects.md) - Value Object 구현 및 검증 패턴
 - [에러 시스템 가이드](./08-error-system.md) - 레이어별 에러 정의 및 네이밍 규칙
 - [에러 테스트 가이드](./08-error-system.md) - 에러 테스트 패턴
-- [단위 테스트 가이드](./12-unit-testing.md)
+- [단위 테스트 가이드](./13-unit-testing.md)
 - [도메인 모델링 개요](./04-ddd-tactical-overview.md) - 도메인 모델링 개요
-- [유스케이스 구현 가이드](./10-usecases-and-cqrs.md) - Application Layer에서의 Aggregate 사용
+- [유스케이스 구현 가이드](./11-usecases-and-cqrs.md) - Application Layer에서의 Aggregate 사용

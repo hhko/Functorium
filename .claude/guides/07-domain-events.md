@@ -278,7 +278,7 @@ internal sealed class Usecase(
 - 발행 실패 시 비즈니스 로직은 이미 커밋됨 (eventual consistency, 경고 로그 기록)
 - 강한 일관성이 필요하면 Outbox 패턴을 고려하세요
 
-> **참조**: 파이프라인 상세는 [10-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./10-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-usecasetransactionpipeline)을 참조하세요.
+> **참조**: 파이프라인 상세는 [11-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./11-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-usecasetransactionpipeline)을 참조하세요.
 
 ---
 
@@ -531,6 +531,6 @@ public async Task Handle_ShouldLogProductCreation()
 ## 참고 문서
 
 - [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) - Entity/Aggregate 구현
-- [10-usecases-and-cqrs.md](./10-usecases-and-cqrs.md) - Use Case 구현
-- [10-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./10-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-usecasetransactionpipeline) - 파이프라인 자동 처리 패턴
-- [11-ports-and-adapters.md §2.9](./11-ports-and-adapters.md#29-unit-of-work-adapter) - UoW Adapter 구현
+- [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) - Use Case 구현
+- [11-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./11-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-usecasetransactionpipeline) - 파이프라인 자동 처리 패턴
+- [12-ports-and-adapters.md §2.9](./12-ports-and-adapters.md#29-unit-of-work-adapter) - UoW Adapter 구현

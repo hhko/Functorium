@@ -375,5 +375,5 @@ dotnet .release-notes/scripts/ApiGenerator.cs `
 
 - [02-solution-configuration.md](./02-solution-configuration.md) — dotnet-tools.json 관리, 빌드 스크립트 파이프라인
 - [01-project-structure.md](./01-project-structure.md) — 프로젝트 구조 및 의존성
-- [12-unit-testing.md](./12-unit-testing.md) — 단위 테스트 (Verify.Xunit 스냅샷 포함)
-- [13-testing-library.md](./13-testing-library.md) — Functorium.Testing 라이브러리 (소스 생성기 테스트 포함)
+- [13-unit-testing.md](./13-unit-testing.md) — 단위 테스트 (Verify.Xunit 스냅샷 포함)
+- [14-testing-library.md](./14-testing-library.md) — Functorium.Testing 라이브러리 (소스 생성기 테스트 포함)

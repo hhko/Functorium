@@ -613,7 +613,7 @@ public async Task Job_ShouldThrow_WhenTimeout()
 
 ## 참고 문서
 
-- [12-unit-testing.md](./12-unit-testing.md) — 단위 테스트 규칙 (명명, AAA 패턴, MTP 설정)
+- [13-unit-testing.md](./13-unit-testing.md) — 단위 테스트 규칙 (명명, AAA 패턴, MTP 설정)
 - [08-error-system.md](./08-error-system.md) — 에러 타입 Assertion 패턴
 - [01-project-structure.md](./01-project-structure.md) — 프로젝트 구성 (HostTestFixture, 통합 테스트)
 - [observability-spec.md](./observability-spec.md) — Observability 사양 (로그 필드 정의)

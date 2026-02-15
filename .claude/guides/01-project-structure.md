@@ -24,9 +24,9 @@
 |---|---|
 | AggregateRoots 폴더 구조 | [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) — Entity/Aggregate 구현 |
 | ValueObjects 위치 규칙 | [05-value-objects.md](./05-value-objects.md) — 값 객체 구현 패턴 |
-| Domain Ports 위치 결정 기준 | [11-ports-and-adapters.md](./11-ports-and-adapters.md) — Adapter 설계 원칙 |
-| Usecases 폴더/파일 네이밍 | [10-usecases-and-cqrs.md](./10-usecases-and-cqrs.md) — 유스케이스 구현 |
-| Abstractions/Registrations 구조 | [11-ports-and-adapters.md](./11-ports-and-adapters.md) — 등록 코드 패턴 |
+| Domain Ports 위치 결정 기준 | [12-ports-and-adapters.md](./12-ports-and-adapters.md) — Adapter 설계 원칙 |
+| Usecases 폴더/파일 네이밍 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) — 유스케이스 구현 |
+| Abstractions/Registrations 구조 | [12-ports-and-adapters.md](./12-ports-and-adapters.md) — 등록 코드 패턴 |
 
 ### 전체 프로젝트 구성 개요
 
@@ -505,7 +505,7 @@ public static IServiceCollection RegisterAdapterInfrastructure(this IServiceColl
 public static IApplicationBuilder UseAdapterInfrastructure(this IApplicationBuilder app) { ... }
 ```
 
-> **참고**: `IConfiguration` 파라미터는 Options 패턴(`RegisterConfigureOptions`)을 사용하는 Adapter에서 필요합니다. Options 패턴 상세는 [11-ports-and-adapters.md §4.6](./11-ports-and-adapters.md#46-options-패턴-optionsconfigurator)을 참조하세요.
+> **참고**: `IConfiguration` 파라미터는 Options 패턴(`RegisterConfigureOptions`)을 사용하는 Adapter에서 필요합니다. Options 패턴 상세는 [12-ports-and-adapters.md §4.6](./12-ports-and-adapters.md#46-options-패턴-optionsconfigurator)을 참조하세요.
 
 ## Host 프로젝트
 
@@ -539,7 +539,7 @@ app.Run();
 
 ## 테스트 프로젝트
 
-테스트 프로젝트는 `Tests/` 폴더 아래에 배치합니다. 테스트 작성 방법론(명명 규칙, AAA 패턴, MTP 설정 등)은 [12-unit-testing.md](./12-unit-testing.md)를 참조하세요.
+테스트 프로젝트는 `Tests/` 폴더 아래에 배치합니다. 테스트 작성 방법론(명명 규칙, AAA 패턴, MTP 설정 등)은 [13-unit-testing.md](./13-unit-testing.md)를 참조하세요.
 
 ### Tests.Unit 프로젝트
 
@@ -854,9 +854,9 @@ Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 
 - [02-solution-configuration.md](./02-solution-configuration.md) — 솔루션 루트 구성 파일 및 빌드 스크립트
 - [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) — Entity/Aggregate Root 구현 패턴
 - [05-value-objects.md](./05-value-objects.md) — 값 객체 구현 및 검증 패턴
-- [10-usecases-and-cqrs.md](./10-usecases-and-cqrs.md) — 유스케이스 (Command/Query) 구현
-- [11-ports-and-adapters.md](./11-ports-and-adapters.md) — Adapter 설계 원칙 + 단계별 활동
+- [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) — 유스케이스 (Command/Query) 구현
+- [12-ports-and-adapters.md](./12-ports-and-adapters.md) — Adapter 설계 원칙 + 단계별 활동
 - [08-error-system.md](./08-error-system.md) — 레이어별 에러 시스템
 - [observability-spec.md](./observability-spec.md) — Observability 사양
-- [12-unit-testing.md](./12-unit-testing.md) — 테스트 작성 방법론 (명명 규칙, AAA 패턴, MTP 설정)
-- [13-testing-library.md](./13-testing-library.md) — Functorium.Testing 라이브러리 (LogTestContext, ArchitectureRules, QuartzTestFixture 등)
+- [13-unit-testing.md](./13-unit-testing.md) — 테스트 작성 방법론 (명명 규칙, AAA 패턴, MTP 설정)
+- [14-testing-library.md](./14-testing-library.md) — Functorium.Testing 라이브러리 (LogTestContext, ArchitectureRules, QuartzTestFixture 등)

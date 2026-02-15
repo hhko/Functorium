@@ -733,7 +733,7 @@ public interface IUnitOfWork : IAdapter
 - `IAdapter`를 상속하므로 Pipeline 자동 생성 및 관찰성을 지원합니다.
 - EF Core 환경에서는 `DbContext.SaveChangesAsync()`를 호출하고, InMemory 환경에서는 no-op입니다.
 
-> **참조**: UoW Adapter 구현(EfCoreUnitOfWork, InMemoryUnitOfWork)은 [11-ports-and-adapters.md §2.9](./11-ports-and-adapters.md#29-unit-of-work-adapter)를 참조하세요.
+> **참조**: UoW Adapter 구현(EfCoreUnitOfWork, InMemoryUnitOfWork)은 [12-ports-and-adapters.md §2.9](./12-ports-and-adapters.md#29-unit-of-work-adapter)를 참조하세요.
 
 ---
 
@@ -877,8 +877,8 @@ public sealed record Response(
 | [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) | Entity 구현 및 Create 패턴 |
 | [07-domain-events.md](./07-domain-events.md) | 도메인 이벤트 발행 및 Event Handler |
 | [08-error-system.md](./08-error-system.md) | 에러 시스템 가이드 |
-| [11-ports-and-adapters.md](./11-ports-and-adapters.md) | Repository 인터페이스 설계 |
-| [12-unit-testing.md](./12-unit-testing.md) | Usecase 테스트 작성 방법 |
+| [12-ports-and-adapters.md](./12-ports-and-adapters.md) | Repository 인터페이스 설계 |
+| [13-unit-testing.md](./13-unit-testing.md) | Usecase 테스트 작성 방법 |
 
 **외부 참고:**
 - [Mediator](https://github.com/martinothamar/Mediator) - 기반 라이브러리

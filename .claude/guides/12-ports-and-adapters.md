@@ -1566,7 +1566,7 @@ Repository의 `Create()`, `Update()`, `Delete()` 메서드는 EF Core 변경 추
 - Repository가 순수한 데이터 접근 계층으로 유지됨
 - Repository는 `IDomainEventCollector.Track(aggregate)`를 호출하여 도메인 이벤트 수집 대상을 등록
 
-> **참조**: 파이프라인 패턴은 [10-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./10-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-usecasetransactionpipeline)을 참조하세요.
+> **참조**: 파이프라인 패턴은 [11-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./11-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-usecasetransactionpipeline)을 참조하세요.
 
 ---
 
@@ -2151,7 +2151,7 @@ Adapter의 단위 테스트는 **원본 클래스를 직접 테스트**합니다
 | 단언 라이브러리 | Shouldly |
 | Mock 라이브러리 | NSubstitute |
 
-> **참고**: 테스트 규칙 상세는 [12-unit-testing.md](./12-unit-testing.md)를 참조하세요.
+> **참고**: 테스트 규칙 상세는 [13-unit-testing.md](./13-unit-testing.md)를 참조하세요.
 
 **IO 실행 패턴** - `FinT<IO, T>` 반환값을 테스트에서 실행하는 패턴:
 
@@ -2658,9 +2658,9 @@ Pipeline이 자동 제공하는 Observability 기능의 요약입니다. 상세 
 | [domain-modeling-overview.md](./04-ddd-tactical-overview.md) | 도메인 모델링 전체 개요 |
 | [05-value-objects.md](./05-value-objects.md) | Value Object 구현 가이드 |
 | [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) | Entity 구현 가이드 |
-| [10-usecases-and-cqrs.md](./10-usecases-and-cqrs.md) | 유스케이스 구현 (CQRS Command/Query) |
+| [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) | 유스케이스 구현 (CQRS Command/Query) |
 | [08-error-system.md](./08-error-system.md) | 에러 시스템 가이드 |
-| [12-unit-testing.md](./12-unit-testing.md) | 단위 테스트 작성 가이드 |
+| [13-unit-testing.md](./13-unit-testing.md) | 단위 테스트 작성 가이드 |
 | [observability-spec.md](./observability-spec.md) | Observability 사양 (트레이싱, 로깅, 메트릭 상세) |
 | [01-project-structure.md](./01-project-structure.md) | 서비스 프로젝트 구조 가이드 |
 
