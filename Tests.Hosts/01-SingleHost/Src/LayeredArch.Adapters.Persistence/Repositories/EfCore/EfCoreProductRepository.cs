@@ -25,7 +25,6 @@ public class EfCoreProductRepository : IProductRepository
         return IO.liftAsync(async () =>
         {
             _dbContext.Products.Add(product);
-            await _dbContext.SaveChangesAsync();
             return Fin.Succ(product);
         });
     }
@@ -56,7 +55,7 @@ public class EfCoreProductRepository : IProductRepository
         {
             var product = await _dbContext.Products
                 .Include(p => p.Tags)
-                .FirstOrDefaultAsync(p => ((string)(object)p.Name) == (string)name);
+                .FirstOrDefaultAsync(p => EF.Property<string>(p, nameof(Product.Name)) == (string)name);
 
             return Fin.Succ(Optional(product));
         });
@@ -76,19 +75,9 @@ public class EfCoreProductRepository : IProductRepository
 
     public virtual FinT<IO, Product> Update(Product product)
     {
-        return IO.liftAsync(async () =>
+        return IO.lift(() =>
         {
-            var exists = await _dbContext.Products.AnyAsync(p => p.Id == product.Id);
-            if (!exists)
-            {
-                return AdapterError.For<EfCoreProductRepository>(
-                    new NotFound(),
-                    product.Id.ToString(),
-                    $"상품 ID '{product.Id}'을(를) 찾을 수 없습니다");
-            }
-
             _dbContext.Products.Update(product);
-            await _dbContext.SaveChangesAsync();
             return Fin.Succ(product);
         });
     }
@@ -107,7 +96,6 @@ public class EfCoreProductRepository : IProductRepository
             }
 
             _dbContext.Products.Remove(product);
-            await _dbContext.SaveChangesAsync();
             return Fin.Succ(unit);
         });
     }
@@ -118,7 +106,7 @@ public class EfCoreProductRepository : IProductRepository
         {
             var nameStr = (string)name;
             bool exists = await _dbContext.Products.AnyAsync(p =>
-                ((string)(object)p.Name) == nameStr &&
+                EF.Property<string>(p, nameof(Product.Name)) == nameStr &&
                 (excludeId == null || p.Id != excludeId.Value));
 
             return Fin.Succ(exists);

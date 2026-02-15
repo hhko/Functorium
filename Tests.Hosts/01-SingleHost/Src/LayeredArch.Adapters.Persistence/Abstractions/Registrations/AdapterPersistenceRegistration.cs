@@ -7,6 +7,7 @@ using LayeredArch.Domain.AggregateRoots.Orders;
 using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Abstractions.Registrations;
 using Functorium.Adapters.Options;
+using Functorium.Applications.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -74,6 +75,9 @@ public static class AdapterPersistenceRegistration
         services.RegisterScopedAdapterPipeline<IOrderRepository, InMemoryOrderRepositoryPipeline>();
         services.RegisterScopedAdapterPipeline<ICustomerRepository, InMemoryCustomerRepositoryPipeline>();
 
+        // UnitOfWork 등록
+        services.RegisterScopedAdapterPipeline<IUnitOfWork, InMemoryUnitOfWorkPipeline>();
+
         // 공유 Port 등록
         services.AddScoped<InMemoryProductRepository>();
         services.RegisterScopedAdapterPipeline<IProductCatalog, InMemoryProductCatalogPipeline>();
@@ -85,6 +89,9 @@ public static class AdapterPersistenceRegistration
         services.RegisterScopedAdapterPipeline<IProductRepository, EfCoreProductRepositoryPipeline>();
         services.RegisterScopedAdapterPipeline<IOrderRepository, EfCoreOrderRepositoryPipeline>();
         services.RegisterScopedAdapterPipeline<ICustomerRepository, EfCoreCustomerRepositoryPipeline>();
+
+        // UnitOfWork 등록
+        services.RegisterScopedAdapterPipeline<IUnitOfWork, EfCoreUnitOfWorkPipeline>();
 
         // 공유 Port 등록
         services.RegisterScopedAdapterPipeline<IProductCatalog, EfCoreProductCatalogPipeline>();

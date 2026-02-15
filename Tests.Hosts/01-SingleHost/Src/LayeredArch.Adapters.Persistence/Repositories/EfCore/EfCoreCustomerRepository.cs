@@ -27,7 +27,6 @@ public class EfCoreCustomerRepository : ICustomerRepository
         return IO.liftAsync(async () =>
         {
             _dbContext.Customers.Add(customer);
-            await _dbContext.SaveChangesAsync();
             return Fin.Succ(customer);
         });
     }
@@ -51,19 +50,9 @@ public class EfCoreCustomerRepository : ICustomerRepository
 
     public virtual FinT<IO, Customer> Update(Customer customer)
     {
-        return IO.liftAsync(async () =>
+        return IO.lift(() =>
         {
-            var exists = await _dbContext.Customers.AnyAsync(c => c.Id == customer.Id);
-            if (!exists)
-            {
-                return AdapterError.For<EfCoreCustomerRepository>(
-                    new NotFound(),
-                    customer.Id.ToString(),
-                    $"고객 ID '{customer.Id}'을(를) 찾을 수 없습니다");
-            }
-
             _dbContext.Customers.Update(customer);
-            await _dbContext.SaveChangesAsync();
             return Fin.Succ(customer);
         });
     }
@@ -82,7 +71,6 @@ public class EfCoreCustomerRepository : ICustomerRepository
             }
 
             _dbContext.Customers.Remove(customer);
-            await _dbContext.SaveChangesAsync();
             return Fin.Succ(unit);
         });
     }
@@ -93,7 +81,7 @@ public class EfCoreCustomerRepository : ICustomerRepository
         {
             var emailStr = (string)email;
             bool exists = await _dbContext.Customers.AnyAsync(c =>
-                ((string)(object)c.Email) == emailStr);
+                EF.Property<string>(c, nameof(Customer.Email)) == emailStr);
 
             return Fin.Succ(exists);
         });

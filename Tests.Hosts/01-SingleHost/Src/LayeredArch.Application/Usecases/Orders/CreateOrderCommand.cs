@@ -5,6 +5,7 @@ using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Applications.Errors;
 using Functorium.Applications.Events;
 using Functorium.Applications.Linq;
+using Functorium.Applications.Persistence;
 using static Functorium.Applications.Errors.ApplicationErrorType;
 
 namespace LayeredArch.Application.Usecases.Orders;
@@ -60,11 +61,13 @@ public sealed class CreateOrderCommand
     public sealed class Usecase(
         IOrderRepository orderRepository,
         IProductCatalog productCatalog,
+        IUnitOfWork unitOfWork,
         IDomainEventPublisher eventPublisher)
         : ICommandUsecase<Request, Response>
     {
         private readonly IOrderRepository _orderRepository = orderRepository;
         private readonly IProductCatalog _productCatalog = productCatalog;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
         private readonly IDomainEventPublisher _eventPublisher = eventPublisher;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
@@ -92,7 +95,8 @@ public sealed class CreateOrderCommand
                 from unitPrice in _productCatalog.GetPrice(productId)
                 from order in _orderRepository.Create(
                     Order.Create(productId, quantity, unitPrice, shippingAddress))
-                from __ in _eventPublisher.PublishEvents(order, cancellationToken)
+                from _1 in _unitOfWork.SaveChanges(cancellationToken)
+                from _2 in _eventPublisher.PublishEvents(order, cancellationToken)
                 select new Response(
                     order.Id.ToString(),
                     order.ProductId.ToString(),

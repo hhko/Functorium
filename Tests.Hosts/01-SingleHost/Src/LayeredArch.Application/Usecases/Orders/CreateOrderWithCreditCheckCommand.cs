@@ -7,6 +7,7 @@ using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Applications.Events;
 using Functorium.Applications.Linq;
 using Functorium.Applications.Errors;
+using Functorium.Applications.Persistence;
 using static Functorium.Applications.Errors.ApplicationErrorType;
 
 namespace LayeredArch.Application.Usecases.Orders;
@@ -76,6 +77,7 @@ public sealed class CreateOrderWithCreditCheckCommand
         IOrderRepository orderRepository,
         IProductCatalog productCatalog,
         OrderCreditCheckService creditCheckService,
+        IUnitOfWork unitOfWork,
         IDomainEventPublisher eventPublisher)
         : ICommandUsecase<Request, Response>
     {
@@ -83,6 +85,7 @@ public sealed class CreateOrderWithCreditCheckCommand
         private readonly IOrderRepository _orderRepository = orderRepository;
         private readonly IProductCatalog _productCatalog = productCatalog;
         private readonly OrderCreditCheckService _creditCheckService = creditCheckService;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
         private readonly IDomainEventPublisher _eventPublisher = eventPublisher;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
@@ -113,7 +116,8 @@ public sealed class CreateOrderWithCreditCheckCommand
                 from _2 in _creditCheckService.ValidateCreditLimit(customer, unitPrice.Multiply(quantity))   // Domain Service 호출
                 from order in _orderRepository.Create(
                     Order.Create(productId, quantity, unitPrice, shippingAddress))
-                from _3 in _eventPublisher.PublishEvents(order, cancellationToken)
+                from _3 in _unitOfWork.SaveChanges(cancellationToken)
+                from _4 in _eventPublisher.PublishEvents(order, cancellationToken)
                 select new Response(
                     order.Id.ToString(),
                     order.ProductId.ToString(),

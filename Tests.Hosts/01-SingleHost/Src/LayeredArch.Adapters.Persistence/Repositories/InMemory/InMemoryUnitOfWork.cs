@@ -1,0 +1,18 @@
+using Functorium.Adapters.SourceGenerators;
+using Functorium.Applications.Persistence;
+
+namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
+
+/// <summary>
+/// InMemory UnitOfWork - ConcurrentDictionary 기반이므로 SaveChanges 불필요 (no-op)
+/// </summary>
+[GeneratePipeline]
+public class InMemoryUnitOfWork : IUnitOfWork
+{
+    public string RequestCategory => "UnitOfWork";
+
+    public virtual FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = default)
+    {
+        return IO.lift(() => Fin.Succ(unit));
+    }
+}

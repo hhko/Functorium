@@ -1,6 +1,7 @@
 using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Applications.Events;
 using Functorium.Applications.Linq;
+using Functorium.Applications.Persistence;
 
 namespace LayeredArch.Application.Usecases.Products;
 
@@ -45,10 +46,12 @@ public sealed class DeductStockCommand
     /// </summary>
     public sealed class Usecase(
         IProductRepository productRepository,
+        IUnitOfWork unitOfWork,
         IDomainEventPublisher eventPublisher)
         : ICommandUsecase<Request, Response>
     {
         private readonly IProductRepository _productRepository = productRepository;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
         private readonly IDomainEventPublisher _eventPublisher = eventPublisher;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
@@ -71,7 +74,8 @@ public sealed class DeductStockCommand
                 from product in _productRepository.GetById(productId)                     // 1. 조회
                 from _1 in product.DeductStock(quantity)                                  // 2. 도메인 로직 (이벤트 추가됨)
                 from updated in _productRepository.Update(product)                        // 3. 영속화
-                from _2 in _eventPublisher.PublishEvents(updated, cancellationToken)      // 4. 이벤트 발행
+                from _2 in _unitOfWork.SaveChanges(cancellationToken)                    // 3-1. 커밋
+                from _3 in _eventPublisher.PublishEvents(updated, cancellationToken)      // 4. 이벤트 발행
                 select new Response(
                     updated.Id.ToString(),
                     updated.StockQuantity);

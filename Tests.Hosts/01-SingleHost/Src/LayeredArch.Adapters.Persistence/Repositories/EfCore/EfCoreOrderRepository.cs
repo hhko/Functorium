@@ -26,7 +26,6 @@ public class EfCoreOrderRepository : IOrderRepository
         return IO.liftAsync(async () =>
         {
             _dbContext.Orders.Add(order);
-            await _dbContext.SaveChangesAsync();
             return Fin.Succ(order);
         });
     }
@@ -50,19 +49,9 @@ public class EfCoreOrderRepository : IOrderRepository
 
     public virtual FinT<IO, Order> Update(Order order)
     {
-        return IO.liftAsync(async () =>
+        return IO.lift(() =>
         {
-            var exists = await _dbContext.Orders.AnyAsync(o => o.Id == order.Id);
-            if (!exists)
-            {
-                return AdapterError.For<EfCoreOrderRepository>(
-                    new NotFound(),
-                    order.Id.ToString(),
-                    $"주문 ID '{order.Id}'을(를) 찾을 수 없습니다");
-            }
-
             _dbContext.Orders.Update(order);
-            await _dbContext.SaveChangesAsync();
             return Fin.Succ(order);
         });
     }
@@ -81,7 +70,6 @@ public class EfCoreOrderRepository : IOrderRepository
             }
 
             _dbContext.Orders.Remove(order);
-            await _dbContext.SaveChangesAsync();
             return Fin.Succ(unit);
         });
     }
