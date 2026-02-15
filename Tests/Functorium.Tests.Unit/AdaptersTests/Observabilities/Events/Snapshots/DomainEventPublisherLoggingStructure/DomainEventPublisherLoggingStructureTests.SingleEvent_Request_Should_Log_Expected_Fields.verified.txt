@@ -4,7 +4,7 @@
     @request.message: {
       Message: TestMessage,
       OccurredAt: DateTimeOffset_1,
-      EventId: Guid_1
+      EventId: 01H00000000000000000000001
     },
     OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {@request.message},
     request.category: event,

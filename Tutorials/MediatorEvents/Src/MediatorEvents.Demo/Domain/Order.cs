@@ -81,7 +81,7 @@ public sealed record OrderCreatedEvent(
     decimal TotalAmount) : IDomainEvent
 {
     public DateTimeOffset OccurredAt { get; } = DateTimeOffset.UtcNow;
-    public Guid EventId { get; } = Guid.NewGuid();
+    public Ulid EventId { get; } = Ulid.NewUlid();
     public string? CorrelationId { get; init; }
     public string? CausationId { get; init; }
 }
@@ -94,7 +94,7 @@ public sealed record OrderShippedEvent(
     DateTime ShippedAt) : IDomainEvent
 {
     public DateTimeOffset OccurredAt { get; } = DateTimeOffset.UtcNow;
-    public Guid EventId { get; } = Guid.NewGuid();
+    public Ulid EventId { get; } = Ulid.NewUlid();
     public string? CorrelationId { get; init; }
     public string? CausationId { get; init; }
 }
@@ -106,7 +106,7 @@ public sealed record OrderCompletedEvent(
     string OrderId) : IDomainEvent
 {
     public DateTimeOffset OccurredAt { get; } = DateTimeOffset.UtcNow;
-    public Guid EventId { get; } = Guid.NewGuid();
+    public Ulid EventId { get; } = Ulid.NewUlid();
     public string? CorrelationId { get; init; }
     public string? CausationId { get; init; }
 }

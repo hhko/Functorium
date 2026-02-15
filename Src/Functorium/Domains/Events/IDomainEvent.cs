@@ -17,7 +17,7 @@ public interface IDomainEvent : INotification
     /// 이벤트 고유 식별자.
     /// 이벤트 중복 처리 방지 및 추적에 사용됩니다.
     /// </summary>
-    Guid EventId { get; }
+    Ulid EventId { get; }
 
     /// <summary>
     /// 요청 추적 ID.

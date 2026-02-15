@@ -10,14 +10,14 @@ namespace Functorium.Domains.Events;
 /// <param name="CausationId">원인 이벤트 ID</param>
 public abstract record DomainEvent(
     DateTimeOffset OccurredAt,
-    Guid EventId,
+    Ulid EventId,
     string? CorrelationId,
     string? CausationId) : IDomainEvent
 {
     /// <summary>
     /// 현재 시각과 새 EventId로 이벤트를 생성합니다.
     /// </summary>
-    protected DomainEvent() : this(DateTimeOffset.UtcNow, Guid.NewGuid(), null, null)
+    protected DomainEvent() : this(DateTimeOffset.UtcNow, Ulid.NewUlid(), null, null)
     {
     }
 
@@ -25,7 +25,7 @@ public abstract record DomainEvent(
     /// 현재 시각과 새 EventId, 지정된 CorrelationId로 이벤트를 생성합니다.
     /// </summary>
     /// <param name="correlationId">요청 추적 ID</param>
-    protected DomainEvent(string? correlationId) : this(DateTimeOffset.UtcNow, Guid.NewGuid(), correlationId, null)
+    protected DomainEvent(string? correlationId) : this(DateTimeOffset.UtcNow, Ulid.NewUlid(), correlationId, null)
     {
     }
 
@@ -35,7 +35,7 @@ public abstract record DomainEvent(
     /// <param name="correlationId">요청 추적 ID</param>
     /// <param name="causationId">원인 이벤트 ID</param>
     protected DomainEvent(string? correlationId, string? causationId)
-        : this(DateTimeOffset.UtcNow, Guid.NewGuid(), correlationId, causationId)
+        : this(DateTimeOffset.UtcNow, Ulid.NewUlid(), correlationId, causationId)
     {
     }
 }

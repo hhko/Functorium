@@ -102,7 +102,7 @@ public sealed class DomainEventCollectorTests
     /// <summary>
     /// 테스트용 IHasDomainEvents 구현
     /// </summary>
-    private sealed class TestAggregate : IHasDomainEvents
+    private sealed class TestAggregate : IDomainEventDrain
     {
         private readonly List<IDomainEvent> _events = [];
 
@@ -116,7 +116,7 @@ public sealed class DomainEventCollectorTests
     private sealed record TestDomainEvent : IDomainEvent
     {
         public DateTimeOffset OccurredAt { get; } = DateTimeOffset.UtcNow;
-        public Guid EventId { get; } = Guid.NewGuid();
+        public Ulid EventId { get; } = Ulid.NewUlid();
         public string? CorrelationId => null;
         public string? CausationId => null;
     }

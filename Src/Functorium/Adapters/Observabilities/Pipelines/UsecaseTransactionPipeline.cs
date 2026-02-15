@@ -84,7 +84,7 @@ internal sealed class UsecaseTransactionPipeline<TRequest, TResponse>
             foreach (var aggregate in trackedAggregates)
             {
                 var events = aggregate.DomainEvents.ToList();
-                aggregate.ClearDomainEvents();
+                (aggregate as IDomainEventDrain)?.ClearDomainEvents();
 
                 foreach (var evt in events)
                 {

@@ -72,10 +72,6 @@ public sealed class TestAggregateRoot : AggregateRoot<TestEntityId>
         AddDomainEvent(domainEvent);
     }
 
-    public void RemoveEvent(IDomainEvent domainEvent)
-    {
-        RemoveDomainEvent(domainEvent);
-    }
 }
 
 [Trait(nameof(UnitTest), UnitTest.Functorium_Domains)]
@@ -176,42 +172,6 @@ public class AggregateRootTests
 
     #endregion
 
-    #region RemoveDomainEvent Tests
-
-    [Fact]
-    public void RemoveDomainEvent_RemovesEvent_WhenEventExists()
-    {
-        // Arrange
-        var aggregate = new TestAggregateRootWithoutEvents(TestEntityId.New(), "Test");
-        var domainEvent = new TestDomainEvent("Test Event");
-        aggregate.AddEvent(domainEvent);
-
-        // Act
-        aggregate.RemoveEvent(domainEvent);
-
-        // Assert
-        aggregate.DomainEvents.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void RemoveDomainEvent_DoesNothing_WhenEventNotExists()
-    {
-        // Arrange
-        var aggregate = new TestAggregateRootWithoutEvents(TestEntityId.New(), "Test");
-        var existingEvent = new TestDomainEvent("Existing");
-        var nonExistingEvent = new TestDomainEvent("Non-existing");
-        aggregate.AddEvent(existingEvent);
-
-        // Act
-        aggregate.RemoveEvent(nonExistingEvent);
-
-        // Assert
-        aggregate.DomainEvents.Count.ShouldBe(1);
-        aggregate.DomainEvents[0].ShouldBe(existingEvent);
-    }
-
-    #endregion
-
     #region ClearDomainEvents Tests
 
     [Fact]
@@ -264,7 +224,7 @@ public class AggregateRootTests
     public void DomainEvent_EqualsAnother_WhenSameValues()
     {
         // Arrange
-        var eventId = Guid.NewGuid();
+        var eventId = Ulid.NewUlid();
         var occurredAt = DateTimeOffset.UtcNow;
         var event1 = new TestDomainEvent("Test") with { OccurredAt = occurredAt, EventId = eventId };
         var event2 = new TestDomainEvent("Test") with { OccurredAt = occurredAt, EventId = eventId };
@@ -287,7 +247,7 @@ public class AggregateRootTests
         var domainEvent = new TestDomainEvent("Test");
 
         // Assert
-        domainEvent.EventId.ShouldNotBe(Guid.Empty);
+        domainEvent.EventId.ShouldNotBe(default(Ulid));
     }
 
     [Fact]
@@ -421,8 +381,4 @@ public sealed class TestAggregateRootWithoutEvents : AggregateRoot<TestEntityId>
         AddDomainEvent(domainEvent);
     }
 
-    public void RemoveEvent(IDomainEvent domainEvent)
-    {
-        RemoveDomainEvent(domainEvent);
-    }
 }

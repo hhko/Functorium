@@ -85,7 +85,7 @@ public sealed class DomainEventHandlerLoggingStructureTests : IDisposable
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
-            EventId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+            EventId = Ulid.Parse("01H00000000000000000000001"),
             OccurredAt = new DateTimeOffset(2024, 1, 15, 10, 30, 0, TimeSpan.Zero)
         };
 
@@ -113,7 +113,7 @@ public sealed class DomainEventHandlerLoggingStructureTests : IDisposable
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
-            EventId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+            EventId = Ulid.Parse("01H00000000000000000000002"),
             OccurredAt = new DateTimeOffset(2024, 1, 15, 10, 30, 0, TimeSpan.Zero)
         };
 
@@ -146,7 +146,7 @@ public sealed class DomainEventHandlerLoggingStructureTests : IDisposable
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
-            EventId = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+            EventId = Ulid.Parse("01H00000000000000000000003"),
             OccurredAt = new DateTimeOffset(2024, 1, 15, 10, 30, 0, TimeSpan.Zero)
         };
 
@@ -187,7 +187,7 @@ public sealed class DomainEventHandlerLoggingStructureTests : IDisposable
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
-            EventId = Guid.Parse("44444444-4444-4444-4444-444444444444"),
+            EventId = Ulid.Parse("01H00000000000000000000004"),
             OccurredAt = new DateTimeOffset(2024, 1, 15, 10, 30, 0, TimeSpan.Zero)
         };
 
@@ -227,7 +227,7 @@ public sealed class DomainEventHandlerLoggingStructureTests : IDisposable
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
-            EventId = Guid.Parse("55555555-5555-5555-5555-555555555555"),
+            EventId = Ulid.Parse("01H00000000000000000000005"),
             OccurredAt = new DateTimeOffset(2024, 1, 15, 10, 30, 0, TimeSpan.Zero)
         };
 

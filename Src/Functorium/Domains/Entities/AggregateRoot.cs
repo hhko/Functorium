@@ -7,8 +7,7 @@ namespace Functorium.Domains.Entities;
 /// 도메인 이벤트 관리 기능을 제공합니다.
 /// </summary>
 /// <typeparam name="TId">EntityId 구현 타입</typeparam>
-[Serializable]
-public abstract class AggregateRoot<TId> : Entity<TId>, IHasDomainEvents
+public abstract class AggregateRoot<TId> : Entity<TId>, IDomainEventDrain
     where TId : struct, IEntityId<TId>
 {
     private readonly List<IDomainEvent> _domainEvents = [];
@@ -40,15 +39,6 @@ public abstract class AggregateRoot<TId> : Entity<TId>, IHasDomainEvents
     protected void AddDomainEvent(IDomainEvent domainEvent)
     {
         _domainEvents.Add(domainEvent);
-    }
-
-    /// <summary>
-    /// 도메인 이벤트를 제거합니다.
-    /// </summary>
-    /// <param name="domainEvent">제거할 도메인 이벤트</param>
-    protected void RemoveDomainEvent(IDomainEvent domainEvent)
-    {
-        _domainEvents.Remove(domainEvent);
     }
 
     /// <summary>
