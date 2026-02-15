@@ -33,6 +33,7 @@
   - [2.6 데이터 변환 (Mapper 패턴)](#26-데이터-변환-mapper-패턴)
   - [2.7 에러 처리 통합](#27-에러-처리-통합)
   - [2.8 EF Core Repository Adapter](#28-ef-core-repository-adapter)
+  - [2.9 Unit of Work Adapter](#29-unit-of-work-adapter)
 - [Activity 3: Pipeline 생성 확인](#activity-3-pipeline-생성-확인)
   - [3.1 GeneratePipeline 소스 생성기](#31-generatepipeline-소스-생성기)
   - [3.2 생성 파일 확인](#32-생성-파일-확인)
@@ -261,6 +262,9 @@ IAdapter (인터페이스)
 │   └── IOrderRepository : IRepository<Order, OrderId>
 │       └── (CRUD는 IRepository에서 상속)
 │
+├── IUnitOfWork : IAdapter   ← Application Layer의 트랜잭션 커밋 Port
+│   └── FinT<IO, Unit> SaveChanges(CancellationToken)
+│
 ├── IOrderMessaging : IAdapter
 │   ├── FinT<IO, Unit> PublishOrderCreated(OrderCreatedEvent @event)
 │   └── FinT<IO, CheckInventoryResponse> CheckInventory(CheckInventoryRequest request)
@@ -281,6 +285,7 @@ IAdapter (인터페이스)
 | 값 | 용도 | 예시 |
 |---|------|------|
 | `"Repository"` | 데이터베이스/영속화 | EF Core, Dapper, InMemory |
+| `"UnitOfWork"` | 트랜잭션 커밋 | EfCoreUnitOfWork, InMemoryUnitOfWork |
 | `"Messaging"` | 메시지 큐 | RabbitMQ, Kafka, Azure Service Bus |
 | `"Http"` | HTTP API 호출 | REST API, GraphQL |
 | `"Cache"` | 캐시 서비스 | Redis, InMemory Cache |
@@ -1382,7 +1387,6 @@ public class EfCoreProductRepository : IProductRepository
         return IO.liftAsync(async () =>
         {
             _dbContext.Products.Add(product);
-            await _dbContext.SaveChangesAsync();
             return Fin.Succ(product);
         });
     }
@@ -1421,7 +1425,6 @@ public class EfCoreProductRepository : IProductRepository
             }
 
             _dbContext.Products.Remove(product);
-            await _dbContext.SaveChangesAsync();
             return Fin.Succ(unit);
         });
     }
@@ -1440,9 +1443,99 @@ public class EfCoreProductRepository : IProductRepository
 | 저장소 | `ConcurrentDictionary<TId, T>` | `DbContext.Set<T>()` |
 | 조회 | `_products.TryGetValue(id, ...)` | `_dbContext.Products.FindAsync(id)` |
 | Navigation 로딩 | 불필요 (메모리 내 참조) | `.Include(p => p.Tags)` |
+| 트랜잭션 관리 | No-op (`InMemoryUnitOfWork`) | `DbContext.SaveChangesAsync()` (`EfCoreUnitOfWork`) |
 | 에러 패턴 | `AdapterError.For<T>(...)` | `AdapterError.For<T>(...)` (동일) |
 | Pipeline 생성 | `[GeneratePipeline]` | `[GeneratePipeline]` (동일) |
 | DI 등록 | `RegisterScopedAdapterPipeline<>` | `RegisterScopedAdapterPipeline<>` (동일) |
+
+### 2.9 Unit of Work Adapter
+
+Unit of Work(UoW)는 Usecase에서 트랜잭션을 커밋하는 Port입니다. Repository는 엔티티 변경만 추적하고, 실제 커밋은 UoW가 담당합니다.
+
+#### IUnitOfWork 인터페이스
+
+**위치**: `Functorium.Applications.Persistence`
+
+```csharp
+public interface IUnitOfWork : IAdapter
+{
+    FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = default);
+}
+```
+
+#### EfCoreUnitOfWork 구현
+
+`DbContext.SaveChangesAsync()`를 호출하여 변경사항을 커밋합니다. `DbUpdateException` 계열의 예외를 `AdapterError`로 변환합니다.
+
+```csharp
+// 파일: {Adapters.Persistence}/Repositories/EfCore/EfCoreUnitOfWork.cs
+
+[GeneratePipeline]
+public class EfCoreUnitOfWork : IUnitOfWork
+{
+    private readonly LayeredArchDbContext _dbContext;
+
+    public string RequestCategory => "UnitOfWork";
+
+    public EfCoreUnitOfWork(LayeredArchDbContext dbContext) => _dbContext = dbContext;
+
+    public virtual FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = default)
+    {
+        return IO.liftAsync(async () =>
+        {
+            try
+            {
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                return Fin.Succ(unit);
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                return AdapterError.FromException<EfCoreUnitOfWork>(
+                    new Custom("ConcurrencyConflict"), ex);
+            }
+            catch (DbUpdateException ex)
+            {
+                return AdapterError.FromException<EfCoreUnitOfWork>(
+                    new Custom("DatabaseUpdateFailed"), ex);
+            }
+        });
+    }
+}
+```
+
+> **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Repositories/EfCore/EfCoreUnitOfWork.cs`
+
+#### InMemoryUnitOfWork 구현
+
+`ConcurrentDictionary` 기반 InMemory 저장소는 즉시 반영되므로 SaveChanges가 no-op입니다.
+
+```csharp
+// 파일: {Adapters.Persistence}/Repositories/InMemory/InMemoryUnitOfWork.cs
+
+[GeneratePipeline]
+public class InMemoryUnitOfWork : IUnitOfWork
+{
+    public string RequestCategory => "UnitOfWork";
+
+    public virtual FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = default)
+    {
+        return IO.lift(() => Fin.Succ(unit));
+    }
+}
+```
+
+> **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryUnitOfWork.cs`
+
+#### Repository에서 SaveChanges를 호출하지 않는 이유
+
+Repository의 `Create()`, `Update()`, `Delete()` 메서드는 EF Core 변경 추적(Change Tracking)에 엔티티를 등록만 합니다. 실제 `SaveChangesAsync()` 호출은 `IUnitOfWork`를 통해 Usecase LINQ 체인에서 수행합니다.
+
+이 분리를 통해:
+- 여러 Repository 변경을 하나의 트랜잭션으로 묶을 수 있음
+- 이벤트 발행을 트랜잭션 성공 후로 보장할 수 있음
+- Repository가 순수한 데이터 접근 계층으로 유지됨
+
+> **참조**: Usecase에서의 UoW 사용 패턴은 [07-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./07-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-unit-of-work)을 참조하세요.
 
 ---
 
@@ -1631,6 +1724,16 @@ public static class AdapterPersistenceRegistration
 services.RegisterScopedAdapterPipeline<
     IProductRepository,                      // Port 인터페이스
     InMemoryProductRepositoryPipeline>();     // 생성된 Pipeline
+```
+
+#### UnitOfWork 등록
+
+```csharp
+// InMemory 환경
+services.RegisterScopedAdapterPipeline<IUnitOfWork, InMemoryUnitOfWorkPipeline>();
+
+// EF Core 환경
+services.RegisterScopedAdapterPipeline<IUnitOfWork, EfCoreUnitOfWorkPipeline>();
 ```
 
 #### External API 등록
