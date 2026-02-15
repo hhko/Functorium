@@ -46,6 +46,7 @@ public static partial class ObservabilityNaming
         public const string RequestEventType = "request.event.type";
         public const string RequestEventId = "request.event.id";
         public const string RequestEventCount = "request.event.count";
+        public const string RequestAggregateCount = "request.aggregate.count";
 
         // Response Event 속성
         public const string ResponseEventSuccessCount = "response.event.success_count";

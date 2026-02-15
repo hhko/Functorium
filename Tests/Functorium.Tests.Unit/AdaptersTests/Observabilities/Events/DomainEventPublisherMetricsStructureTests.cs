@@ -8,7 +8,6 @@ using Functorium.Applications.Events;
 using Functorium.Tests.Unit.DomainsTests.Entities;
 
 using LanguageExt;
-using LanguageExt.Common;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -278,66 +277,6 @@ public sealed class DomainEventPublisherMetricsStructureTests : IDisposable
 
         // Assert
         var tags = ExtractAndOrderTags("duration");
-        await Verify(tags).UseDirectory("Snapshots/DomainEventPublisherMetricsStructure");
-    }
-
-    /// <summary>
-    /// PublishEvents 메서드 Request 태그 구조를 스냅샷으로 검증합니다.
-    /// </summary>
-    [Fact]
-    public async Task Snapshot_PublishEvents_RequestTags()
-    {
-        // Arrange
-        _capturedMeasurements.Clear();
-        var sut = new ObservableDomainEventPublisher(
-            _activitySource, _mockInner, _mockLogger, _meterFactory, _openTelemetryOptions);
-
-        var aggregate = new TestAggregateRootWithoutEvents(TestEntityId.New(), "TestAggregate");
-        aggregate.AddEvent(new TestDomainEvent("Event1"));
-        aggregate.AddEvent(new TestDomainEvent("Event2"));
-
-        _mockInner
-            .PublishEvents(Arg.Any<TestAggregateRootWithoutEvents>(), Arg.Any<CancellationToken>())
-            .Returns(FinT.Succ<IO, LanguageExt.Unit>(LanguageExt.Unit.Default));
-
-        // Act
-        await sut.PublishEvents(aggregate).Run().RunAsync();
-
-        // Assert
-        var tags = ExtractAndOrderTags("requests");
-        await Verify(tags).UseDirectory("Snapshots/DomainEventPublisherMetricsStructure");
-    }
-
-    /// <summary>
-    /// PublishEventsWithResult Partial Failure 태그 구조를 스냅샷으로 검증합니다.
-    /// </summary>
-    [Fact]
-    public async Task Snapshot_PublishEventsWithResult_PartialFailure_Tags()
-    {
-        // Arrange
-        _capturedMeasurements.Clear();
-        var sut = new ObservableDomainEventPublisher(
-            _activitySource, _mockInner, _mockLogger, _meterFactory, _openTelemetryOptions);
-
-        var aggregate = new TestAggregateRootWithoutEvents(TestEntityId.New(), "TestAggregate");
-        var event1 = new TestDomainEvent("Event1");
-        var event2 = new TestDomainEvent("Event2");
-        aggregate.AddEvent(event1);
-        aggregate.AddEvent(event2);
-
-        var successfulEvents = LanguageExt.Seq<Functorium.Domains.Events.IDomainEvent>.Empty.Add(event1);
-        var failedEvents = LanguageExt.Seq<(Functorium.Domains.Events.IDomainEvent, Error)>.Empty.Add((event2, Error.New("Event2.Failed")));
-        var partialResult = new PublishResult(successfulEvents, failedEvents);
-
-        _mockInner
-            .PublishEventsWithResult(Arg.Any<TestAggregateRootWithoutEvents>(), Arg.Any<CancellationToken>())
-            .Returns(FinT.Succ<IO, PublishResult>(partialResult));
-
-        // Act
-        await sut.PublishEventsWithResult(aggregate).Run().RunAsync();
-
-        // Assert
-        var tags = ExtractAndOrderTags("responses", "requests");
         await Verify(tags).UseDirectory("Snapshots/DomainEventPublisherMetricsStructure");
     }
 

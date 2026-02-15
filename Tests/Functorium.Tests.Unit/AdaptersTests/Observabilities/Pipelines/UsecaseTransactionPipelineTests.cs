@@ -1,4 +1,3 @@
-using Functorium.Adapters.Events;
 using Functorium.Adapters.Observabilities.Pipelines;
 using Functorium.Applications.Events;
 using Functorium.Applications.Persistence;
@@ -20,12 +19,11 @@ public sealed class UsecaseTransactionPipelineTests
 {
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly IDomainEventPublisher _eventPublisher = Substitute.For<IDomainEventPublisher>();
-    private readonly DomainEventCollector _collector = new();
     private readonly ILogger<UsecaseTransactionPipeline<TestCommandRequest, TestResponse>> _logger =
         NullLogger<UsecaseTransactionPipeline<TestCommandRequest, TestResponse>>.Instance;
 
     private UsecaseTransactionPipeline<TestCommandRequest, TestResponse> CreateCommandPipeline()
-        => new(_unitOfWork, _eventPublisher, _collector, _logger);
+        => new(_unitOfWork, _eventPublisher, _logger);
 
     [Fact]
     public async Task Handle_Command_ShouldCallSaveChanges_WhenHandlerSucceeds()
@@ -37,6 +35,8 @@ public sealed class UsecaseTransactionPipelineTests
 
         _unitOfWork.SaveChanges(Arg.Any<CancellationToken>())
             .Returns(FinTFactory.Succ(unit));
+        _eventPublisher.PublishTrackedEvents(Arg.Any<CancellationToken>())
+            .Returns(FinTFactory.Succ(new Seq<PublishResult>()));
 
         MessageHandlerDelegate<TestCommandRequest, TestResponse> next =
             (_, _) => ValueTask.FromResult(expectedResponse);
@@ -91,21 +91,17 @@ public sealed class UsecaseTransactionPipelineTests
     }
 
     [Fact]
-    public async Task Handle_Command_ShouldPublishDomainEvents_WhenAggregateTracked()
+    public async Task Handle_Command_ShouldCallPublishTrackedEvents_WhenSaveChangesSucceeds()
     {
         // Arrange
         var pipeline = CreateCommandPipeline();
         var request = new TestCommandRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
-        var aggregate = new TestTrackedAggregate();
-        aggregate.AddTestEvent();
-        _collector.Track(aggregate);
-
         _unitOfWork.SaveChanges(Arg.Any<CancellationToken>())
             .Returns(FinTFactory.Succ(unit));
-        _eventPublisher.Publish(Arg.Any<IDomainEvent>(), Arg.Any<CancellationToken>())
-            .Returns(FinTFactory.Succ(unit));
+        _eventPublisher.PublishTrackedEvents(Arg.Any<CancellationToken>())
+            .Returns(FinTFactory.Succ(new Seq<PublishResult>()));
 
         MessageHandlerDelegate<TestCommandRequest, TestResponse> next =
             (_, _) => ValueTask.FromResult(expectedResponse);
@@ -115,34 +111,7 @@ public sealed class UsecaseTransactionPipelineTests
 
         // Assert
         result.IsSucc.ShouldBeTrue();
-        _eventPublisher.Received(1).Publish(Arg.Any<IDomainEvent>(), Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task Handle_Command_ShouldClearDomainEvents_AfterPublishing()
-    {
-        // Arrange
-        var pipeline = CreateCommandPipeline();
-        var request = new TestCommandRequest("Test");
-        var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
-
-        var aggregate = new TestTrackedAggregate();
-        aggregate.AddTestEvent();
-        _collector.Track(aggregate);
-
-        _unitOfWork.SaveChanges(Arg.Any<CancellationToken>())
-            .Returns(FinTFactory.Succ(unit));
-        _eventPublisher.Publish(Arg.Any<IDomainEvent>(), Arg.Any<CancellationToken>())
-            .Returns(FinTFactory.Succ(unit));
-
-        MessageHandlerDelegate<TestCommandRequest, TestResponse> next =
-            (_, _) => ValueTask.FromResult(expectedResponse);
-
-        // Act
-        await pipeline.Handle(request, next, CancellationToken.None);
-
-        // Assert
-        aggregate.DomainEvents.Count.ShouldBe(0);
+        _eventPublisher.Received(1).PublishTrackedEvents(Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -153,14 +122,10 @@ public sealed class UsecaseTransactionPipelineTests
         var request = new TestCommandRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
-        var aggregate = new TestTrackedAggregate();
-        aggregate.AddTestEvent();
-        _collector.Track(aggregate);
-
         _unitOfWork.SaveChanges(Arg.Any<CancellationToken>())
             .Returns(FinTFactory.Succ(unit));
-        _eventPublisher.Publish(Arg.Any<IDomainEvent>(), Arg.Any<CancellationToken>())
-            .Returns(FinTFactory.Fail<LanguageExt.Unit>(Error.New("Publish failed")));
+        _eventPublisher.PublishTrackedEvents(Arg.Any<CancellationToken>())
+            .Returns(FinTFactory.Fail<Seq<PublishResult>>(Error.New("Publish failed")));
 
         MessageHandlerDelegate<TestCommandRequest, TestResponse> next =
             (_, _) => ValueTask.FromResult(expectedResponse);
@@ -177,7 +142,7 @@ public sealed class UsecaseTransactionPipelineTests
     {
         // Arrange
         var queryPipeline = new UsecaseTransactionPipeline<TestQueryRequest, TestResponse>(
-            _unitOfWork, _eventPublisher, _collector,
+            _unitOfWork, _eventPublisher,
             NullLogger<UsecaseTransactionPipeline<TestQueryRequest, TestResponse>>.Instance);
         var request = new TestQueryRequest(Guid.NewGuid());
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
@@ -194,41 +159,6 @@ public sealed class UsecaseTransactionPipelineTests
     }
 
     [Fact]
-    public async Task Handle_Command_ShouldPublishAllEvents_WhenMultipleAggregatesTracked()
-    {
-        // Arrange
-        var pipeline = CreateCommandPipeline();
-        var request = new TestCommandRequest("Test");
-        var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
-
-        var aggregate1 = new TestTrackedAggregate();
-        aggregate1.AddTestEvent();
-        aggregate1.AddTestEvent();
-        var aggregate2 = new TestTrackedAggregate();
-        aggregate2.AddTestEvent();
-
-        _collector.Track(aggregate1);
-        _collector.Track(aggregate2);
-
-        _unitOfWork.SaveChanges(Arg.Any<CancellationToken>())
-            .Returns(FinTFactory.Succ(unit));
-        _eventPublisher.Publish(Arg.Any<IDomainEvent>(), Arg.Any<CancellationToken>())
-            .Returns(FinTFactory.Succ(unit));
-
-        MessageHandlerDelegate<TestCommandRequest, TestResponse> next =
-            (_, _) => ValueTask.FromResult(expectedResponse);
-
-        // Act
-        var result = await pipeline.Handle(request, next, CancellationToken.None);
-
-        // Assert — aggregate1은 2개, aggregate2는 1개, 총 3개 이벤트 발행
-        result.IsSucc.ShouldBeTrue();
-        _eventPublisher.Received(3).Publish(Arg.Any<IDomainEvent>(), Arg.Any<CancellationToken>());
-        aggregate1.DomainEvents.Count.ShouldBe(0);
-        aggregate2.DomainEvents.Count.ShouldBe(0);
-    }
-
-    [Fact]
     public async Task Handle_Command_ShouldSucceed_WhenNoEventsToPublish()
     {
         // Arrange — 추적된 Aggregate 없이 SaveChanges만 성공하는 경우
@@ -238,6 +168,8 @@ public sealed class UsecaseTransactionPipelineTests
 
         _unitOfWork.SaveChanges(Arg.Any<CancellationToken>())
             .Returns(FinTFactory.Succ(unit));
+        _eventPublisher.PublishTrackedEvents(Arg.Any<CancellationToken>())
+            .Returns(FinTFactory.Succ(new Seq<PublishResult>()));
 
         MessageHandlerDelegate<TestCommandRequest, TestResponse> next =
             (_, _) => ValueTask.FromResult(expectedResponse);
@@ -248,28 +180,6 @@ public sealed class UsecaseTransactionPipelineTests
         // Assert
         result.IsSucc.ShouldBeTrue();
         _unitOfWork.Received(1).SaveChanges(Arg.Any<CancellationToken>());
-        _eventPublisher.DidNotReceive().Publish(Arg.Any<IDomainEvent>(), Arg.Any<CancellationToken>());
-    }
-
-    /// <summary>
-    /// 테스트용 IDomainEventDrain 구현
-    /// </summary>
-    internal sealed class TestTrackedAggregate : IDomainEventDrain
-    {
-        private readonly List<IDomainEvent> _events = [];
-
-        public IReadOnlyList<IDomainEvent> DomainEvents => _events;
-
-        public void ClearDomainEvents() => _events.Clear();
-
-        public void AddTestEvent() => _events.Add(new TestDomainEvent());
-    }
-
-    private sealed record TestDomainEvent : IDomainEvent
-    {
-        public DateTimeOffset OccurredAt { get; } = DateTimeOffset.UtcNow;
-        public Ulid EventId { get; } = Ulid.NewUlid();
-        public string? CorrelationId => null;
-        public string? CausationId => null;
+        _eventPublisher.Received(1).PublishTrackedEvents(Arg.Any<CancellationToken>());
     }
 }

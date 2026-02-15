@@ -4,7 +4,6 @@ using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Loggers;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Applications.Events;
-using Functorium.Domains.Entities;
 using Functorium.Domains.Events;
 using LanguageExt;
 using LanguageExt.Common;
@@ -139,137 +138,57 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
         });
     }
 
-
     /// <inheritdoc />
-    public FinT<IO, LanguageExt.Unit> PublishEvents<TId>(
-        AggregateRoot<TId> aggregate,
+    public FinT<IO, Seq<PublishResult>> PublishTrackedEvents(
         CancellationToken cancellationToken = default)
-        where TId : struct, IEntityId<TId>
     {
         return IO.liftAsync(async () =>
         {
-            var eventCount = aggregate.DomainEvents.Count;
-            var aggregateType = aggregate.GetType().Name;
-
             using var activity = _activitySource.StartActivity(
                 ObservabilityNaming.Spans.OperationName(
                     ObservabilityNaming.Layers.Adapter,
                     ObservabilityNaming.Categories.Event,
-                    aggregateType,
-                    ObservabilityNaming.Methods.PublishEvents));
+                    nameof(PublishTrackedEvents),
+                    ObservabilityNaming.Methods.PublishTrackedEvents));
 
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter);
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Event);
-            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, aggregateType);
-            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.PublishEvents);
-            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestEventCount, eventCount);
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, nameof(PublishTrackedEvents));
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.PublishTrackedEvents);
 
-            _logger.LogDomainEventsPublisherRequest(aggregateType, ObservabilityNaming.Methods.PublishEvents, eventCount);
+            _logger.LogDomainEventsPublisherRequest(nameof(PublishTrackedEvents), ObservabilityNaming.Methods.PublishTrackedEvents, 0);
 
             TagList requestTags = new TagList
             {
                 { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
                 { ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Event },
-                { ObservabilityNaming.CustomAttributes.RequestHandler, aggregateType },
-                { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.PublishEvents }
+                { ObservabilityNaming.CustomAttributes.RequestHandler, nameof(PublishTrackedEvents) },
+                { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.PublishTrackedEvents }
             };
             _requestCounter.Add(1, requestTags);
 
             long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();
 
-            var result = await _inner.PublishEvents(aggregate, cancellationToken).Run().RunAsync();
+            var result = await _inner.PublishTrackedEvents(cancellationToken).Run().RunAsync();
 
             double elapsed = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);
 
             result.Match(
-                Succ: _ =>
+                Succ: publishResults =>
                 {
+                    int totalEvents = publishResults.Sum(r => r.TotalCount);
+                    int aggregateCount = publishResults.Count;
+
+                    activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestAggregateCount, aggregateCount);
+                    activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestEventCount, totalEvents);
                     activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsed);
-                    activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success);
-                    activity?.SetStatus(ActivityStatusCode.Ok);
-                    _logger.LogDomainEventsPublisherResponseSuccess(aggregateType, ObservabilityNaming.Methods.PublishEvents, eventCount, elapsed);
 
-                    TagList successTags = CreateSuccessTags(requestTags);
-                    _durationHistogram.Record(elapsed, successTags);
-                    _responseCounter.Add(1, successTags);
-                },
-                Fail: error =>
-                {
-                    var (errorType, errorCode) = ErrorInfoExtractor.GetErrorInfo(error);
-                    activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsed);
-                    activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);
-                    activity?.SetTag(ObservabilityNaming.OTelAttributes.ErrorType, errorType);
-                    activity?.SetTag(ObservabilityNaming.CustomAttributes.ErrorCode, errorCode);
-                    activity?.SetStatus(ActivityStatusCode.Error, error.Message);
-
-                    if (error.IsExceptional)
-                    {
-                        _logger.LogDomainEventsPublisherResponseError(aggregateType, ObservabilityNaming.Methods.PublishEvents, eventCount, elapsed, errorType, errorCode, error);
-                    }
-                    else
-                    {
-                        _logger.LogDomainEventsPublisherResponseWarning(aggregateType, ObservabilityNaming.Methods.PublishEvents, eventCount, elapsed, errorType, errorCode, error);
-                    }
-
-                    TagList failureTags = CreateFailureTags(requestTags, errorType, errorCode);
-                    _durationHistogram.Record(elapsed, failureTags);
-                    _responseCounter.Add(1, failureTags);
-                });
-
-            return result;
-        });
-    }
-
-    /// <inheritdoc />
-    public FinT<IO, PublishResult> PublishEventsWithResult<TId>(
-        AggregateRoot<TId> aggregate,
-        CancellationToken cancellationToken = default)
-        where TId : struct, IEntityId<TId>
-    {
-        return IO.liftAsync(async () =>
-        {
-            var eventCount = aggregate.DomainEvents.Count;
-            var aggregateType = aggregate.GetType().Name;
-
-            using var activity = _activitySource.StartActivity(
-                ObservabilityNaming.Spans.OperationName(
-                    ObservabilityNaming.Layers.Adapter,
-                    ObservabilityNaming.Categories.Event,
-                    aggregateType,
-                    ObservabilityNaming.Methods.PublishEventsWithResult));
-
-            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter);
-            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Event);
-            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, aggregateType);
-            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.PublishEventsWithResult);
-            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestEventCount, eventCount);
-
-            _logger.LogDomainEventsPublisherRequest(aggregateType, ObservabilityNaming.Methods.PublishEventsWithResult, eventCount);
-
-            TagList requestTags = new TagList
-            {
-                { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-                { ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Event },
-                { ObservabilityNaming.CustomAttributes.RequestHandler, aggregateType },
-                { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.PublishEventsWithResult }
-            };
-            _requestCounter.Add(1, requestTags);
-
-            long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();
-
-            var result = await _inner.PublishEventsWithResult(aggregate, cancellationToken).Run().RunAsync();
-
-            double elapsed = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);
-
-            result.Match(
-                Succ: publishResult =>
-                {
-                    activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsed);
-                    if (publishResult.IsAllSuccessful)
+                    bool allSuccessful = publishResults.ForAll(r => r.IsAllSuccessful);
+                    if (allSuccessful)
                     {
                         activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success);
                         activity?.SetStatus(ActivityStatusCode.Ok);
-                        _logger.LogDomainEventsPublisherResponseSuccess(aggregateType, ObservabilityNaming.Methods.PublishEventsWithResult, eventCount, elapsed);
+                        _logger.LogDomainEventsPublisherResponseSuccess(nameof(PublishTrackedEvents), ObservabilityNaming.Methods.PublishTrackedEvents, totalEvents, elapsed);
 
                         TagList successTags = CreateSuccessTags(requestTags);
                         _durationHistogram.Record(elapsed, successTags);
@@ -277,17 +196,20 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
                     }
                     else
                     {
+                        int successCount = publishResults.Sum(r => r.SuccessCount);
+                        int failureCount = publishResults.Sum(r => r.FailureCount);
+
                         activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure);
-                        activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseEventSuccessCount, publishResult.SuccessCount);
-                        activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseEventFailureCount, publishResult.FailureCount);
-                        activity?.SetStatus(ActivityStatusCode.Error, $"Partial failure: {publishResult.FailureCount} of {publishResult.TotalCount} events failed");
+                        activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseEventSuccessCount, successCount);
+                        activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseEventFailureCount, failureCount);
+                        activity?.SetStatus(ActivityStatusCode.Error, $"Partial failure: {failureCount} of {totalEvents} events failed");
 
                         _logger.LogDomainEventsPublisherResponsePartialFailure(
-                            aggregateType,
-                            ObservabilityNaming.Methods.PublishEventsWithResult,
-                            eventCount,
-                            publishResult.SuccessCount,
-                            publishResult.FailureCount,
+                            nameof(PublishTrackedEvents),
+                            ObservabilityNaming.Methods.PublishTrackedEvents,
+                            totalEvents,
+                            successCount,
+                            failureCount,
                             elapsed);
 
                         TagList partialFailureTags = CreatePartialFailureTags(requestTags);
@@ -306,11 +228,11 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
 
                     if (error.IsExceptional)
                     {
-                        _logger.LogDomainEventsPublisherResponseError(aggregateType, ObservabilityNaming.Methods.PublishEventsWithResult, eventCount, elapsed, errorType, errorCode, error);
+                        _logger.LogDomainEventsPublisherResponseError(nameof(PublishTrackedEvents), ObservabilityNaming.Methods.PublishTrackedEvents, 0, elapsed, errorType, errorCode, error);
                     }
                     else
                     {
-                        _logger.LogDomainEventsPublisherResponseWarning(aggregateType, ObservabilityNaming.Methods.PublishEventsWithResult, eventCount, elapsed, errorType, errorCode, error);
+                        _logger.LogDomainEventsPublisherResponseWarning(nameof(PublishTrackedEvents), ObservabilityNaming.Methods.PublishTrackedEvents, 0, elapsed, errorType, errorCode, error);
                     }
 
                     TagList failureTags = CreateFailureTags(requestTags, errorType, errorCode);

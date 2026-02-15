@@ -1,4 +1,3 @@
-using Functorium.Domains.Entities;
 using Functorium.Domains.Events;
 using LanguageExt;
 
@@ -22,27 +21,9 @@ public interface IDomainEventPublisher
         where TEvent : IDomainEvent;
 
     /// <summary>
-    /// Aggregate의 모든 도메인 이벤트를 발행하고 클리어합니다.
-    /// 첫 번째 실패 시 즉시 중단됩니다.
+    /// IDomainEventCollector에서 추적된 모든 Aggregate의 도메인 이벤트를 발행합니다.
+    /// 각 Aggregate의 이벤트를 모두 발행 시도하며, 발행 후 이벤트를 클리어합니다.
     /// </summary>
-    /// <typeparam name="TId">EntityId 타입</typeparam>
-    /// <param name="aggregate">도메인 이벤트를 가진 Aggregate Root</param>
-    /// <param name="cancellationToken">취소 토큰</param>
-    FinT<IO, LanguageExt.Unit> PublishEvents<TId>(
-        AggregateRoot<TId> aggregate,
-        CancellationToken cancellationToken = default)
-        where TId : struct, IEntityId<TId>;
-
-    /// <summary>
-    /// Aggregate의 모든 도메인 이벤트를 발행하고 상세 결과를 반환합니다.
-    /// 실패한 이벤트가 있어도 모든 이벤트 발행을 시도합니다.
-    /// </summary>
-    /// <typeparam name="TId">EntityId 타입</typeparam>
-    /// <param name="aggregate">도메인 이벤트를 가진 Aggregate Root</param>
-    /// <param name="cancellationToken">취소 토큰</param>
-    /// <returns>성공/실패 이벤트를 포함한 발행 결과</returns>
-    FinT<IO, PublishResult> PublishEventsWithResult<TId>(
-        AggregateRoot<TId> aggregate,
-        CancellationToken cancellationToken = default)
-        where TId : struct, IEntityId<TId>;
+    FinT<IO, Seq<PublishResult>> PublishTrackedEvents(
+        CancellationToken cancellationToken = default);
 }

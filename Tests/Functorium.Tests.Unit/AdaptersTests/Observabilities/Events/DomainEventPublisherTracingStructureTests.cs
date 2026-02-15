@@ -9,7 +9,6 @@ using Functorium.Applications.Events;
 using Functorium.Tests.Unit.DomainsTests.Entities;
 
 using LanguageExt;
-using LanguageExt.Common;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -48,31 +47,6 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Events;
 /// +--------------------------+-------------------+-------------------+
 /// | Total Tags               | 6                 | 8                 |
 /// +--------------------------+-------------------+-------------------+
-/// </code>
-/// <para>
-/// PublishEvents/PublishEventsWithResult 메서드 Activity 태그 구조 비교표:
-/// </para>
-/// <code>
-/// +--------------------------+-------------------+-------------------+-------------------+
-/// | Tag Key                  | Success           | Partial Failure   | Total Failure     |
-/// +--------------------------+-------------------+-------------------+-------------------+
-/// | request.layer            | "adapter"         | "adapter"         | "adapter"         |
-/// | request.category         | "event"           | "event"           | "event"           |
-/// | request.handler          | aggregate type    | aggregate type    | aggregate type    |
-/// | request.handler.method   | method name       | method name       | method name       |
-/// | request.event.count      | event count       | event count       | event count       |
-/// | response.elapsed         | elapsed seconds   | elapsed seconds   | elapsed seconds   |
-/// | response.status          | "success"         | "failure"         | "failure"         |
-/// | response.event.success   | (none)            | success count     | (none)            |
-/// |   _count                 |                   |                   |                   |
-/// | response.event.failure   | (none)            | failure count     | (none)            |
-/// |   _count                 |                   |                   |                   |
-/// | error.type               | (none)            | (none)            | "expected"/       |
-/// |                          |                   |                   | "exceptional"     |
-/// | error.code               | (none)            | (none)            | error code        |
-/// +--------------------------+-------------------+-------------------+-------------------+
-/// | Total Tags               | 7                 | 9                 | 9                 |
-/// +--------------------------+-------------------+-------------------+-------------------+
 /// </code>
 /// </remarks>
 [Trait(nameof(UnitTest), UnitTest.Functorium_Adapters)]
@@ -134,52 +108,6 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
         _capturedActivity.DisplayName.ShouldBe("adapter event TestDomainEvent.Publish");
     }
 
-    /// <summary>
-    /// PublishEvents 메서드 호출 시 Span 이름이 올바른 패턴을 따라야 합니다.
-    /// 패턴: "adapter event {AggregateType}.PublishEvents"
-    /// </summary>
-    [Fact]
-    public async Task PublishEvents_ShouldCreateActivityWithCorrectName()
-    {
-        // Arrange
-        var sut = CreateSut();
-        var aggregate = CreateAggregateWithEvents();
-        _mockInner
-            .PublishEvents(Arg.Any<TestAggregateRootWithoutEvents>(), Arg.Any<CancellationToken>())
-            .Returns(FinT.Succ<IO, LanguageExt.Unit>(LanguageExt.Unit.Default));
-
-        // Act
-        await sut.PublishEvents(aggregate).Run().RunAsync();
-
-        // Assert
-        _capturedActivity.ShouldNotBeNull();
-        _capturedActivity.DisplayName.ShouldBe("adapter event TestAggregateRootWithoutEvents.PublishEvents");
-    }
-
-    /// <summary>
-    /// PublishEventsWithResult 메서드 호출 시 Span 이름이 올바른 패턴을 따라야 합니다.
-    /// 패턴: "adapter event {AggregateType}.PublishEventsWithResult"
-    /// </summary>
-    [Fact]
-    public async Task PublishEventsWithResult_ShouldCreateActivityWithCorrectName()
-    {
-        // Arrange
-        var sut = CreateSut();
-        var aggregate = CreateAggregateWithEvents();
-        _mockInner
-            .PublishEventsWithResult(Arg.Any<TestAggregateRootWithoutEvents>(), Arg.Any<CancellationToken>())
-            .Returns(FinT.Succ<IO, PublishResult>(
-                PublishResult.Success(LanguageExt.Seq<Functorium.Domains.Events.IDomainEvent>.Empty
-                    .Add(aggregate.DomainEvents[0]).Add(aggregate.DomainEvents[1]))));
-
-        // Act
-        await sut.PublishEventsWithResult(aggregate).Run().RunAsync();
-
-        // Assert
-        _capturedActivity.ShouldNotBeNull();
-        _capturedActivity.DisplayName.ShouldBe("adapter event TestAggregateRootWithoutEvents.PublishEventsWithResult");
-    }
-
     #endregion
 
     #region Tag 개수 검증
@@ -227,81 +155,6 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
         // Assert
         _capturedActivity.ShouldNotBeNull();
         _capturedActivity.TagObjects.Count().ShouldBe(8);
-    }
-
-    /// <summary>
-    /// PublishEvents 성공 시 7개 태그를 가져야 합니다.
-    /// (request 4개 + request.event.count + response.elapsed + response.status)
-    /// </summary>
-    [Fact]
-    public async Task PublishEvents_Success_ShouldHaveSevenTags()
-    {
-        // Arrange
-        var sut = CreateSut();
-        var aggregate = CreateAggregateWithEvents();
-        _mockInner
-            .PublishEvents(Arg.Any<TestAggregateRootWithoutEvents>(), Arg.Any<CancellationToken>())
-            .Returns(FinT.Succ<IO, LanguageExt.Unit>(LanguageExt.Unit.Default));
-
-        // Act
-        await sut.PublishEvents(aggregate).Run().RunAsync();
-
-        // Assert
-        _capturedActivity.ShouldNotBeNull();
-        _capturedActivity.TagObjects.Count().ShouldBe(7);
-    }
-
-    /// <summary>
-    /// PublishEvents 실패 시 9개 태그를 가져야 합니다.
-    /// (request 4개 + request.event.count + response.elapsed + response.status + error.type + error.code)
-    /// </summary>
-    [Fact]
-    public async Task PublishEvents_Failure_ShouldHaveNineTags()
-    {
-        // Arrange
-        var sut = CreateSut();
-        var aggregate = CreateAggregateWithEvents();
-        var error = new ErrorCodeExpected("Event.PublishFailed", "testValue", "Publish failed");
-        _mockInner
-            .PublishEvents(Arg.Any<TestAggregateRootWithoutEvents>(), Arg.Any<CancellationToken>())
-            .Returns(FinT.Fail<IO, LanguageExt.Unit>(error));
-
-        // Act
-        await sut.PublishEvents(aggregate).Run().RunAsync();
-
-        // Assert
-        _capturedActivity.ShouldNotBeNull();
-        _capturedActivity.TagObjects.Count().ShouldBe(9);
-    }
-
-    /// <summary>
-    /// PublishEventsWithResult Partial Failure 시 9개 태그를 가져야 합니다.
-    /// (request 4개 + request.event.count + response.elapsed + response.status
-    ///  + response.event.success_count + response.event.failure_count)
-    /// </summary>
-    [Fact]
-    public async Task PublishEventsWithResult_PartialFailure_ShouldHaveNineTags()
-    {
-        // Arrange
-        var sut = CreateSut();
-        var aggregate = CreateAggregateWithEvents();
-        var event1 = aggregate.DomainEvents[0];
-        var event2 = aggregate.DomainEvents[1];
-
-        var successfulEvents = LanguageExt.Seq<Functorium.Domains.Events.IDomainEvent>.Empty.Add(event1);
-        var failedEvents = LanguageExt.Seq<(Functorium.Domains.Events.IDomainEvent, Error)>.Empty.Add((event2, Error.New("Event2.Failed")));
-        var partialResult = new PublishResult(successfulEvents, failedEvents);
-
-        _mockInner
-            .PublishEventsWithResult(Arg.Any<TestAggregateRootWithoutEvents>(), Arg.Any<CancellationToken>())
-            .Returns(FinT.Succ<IO, PublishResult>(partialResult));
-
-        // Act
-        await sut.PublishEventsWithResult(aggregate).Run().RunAsync();
-
-        // Assert
-        _capturedActivity.ShouldNotBeNull();
-        _capturedActivity.TagObjects.Count().ShouldBe(9);
     }
 
     #endregion
@@ -427,132 +280,6 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
-    /// <summary>
-    /// PublishEvents 메서드 Success 태그 구조를 스냅샷으로 검증합니다.
-    /// </summary>
-    [Fact]
-    public async Task Snapshot_PublishEvents_SuccessTags()
-    {
-        // Arrange
-        var sut = CreateSut();
-        var aggregate = CreateAggregateWithEvents();
-        _mockInner
-            .PublishEvents(Arg.Any<TestAggregateRootWithoutEvents>(), Arg.Any<CancellationToken>())
-            .Returns(FinT.Succ<IO, LanguageExt.Unit>(LanguageExt.Unit.Default));
-
-        // Act
-        await sut.PublishEvents(aggregate).Run().RunAsync();
-
-        // Assert
-        var tags = ExtractActivityTags();
-        await Verify(tags)
-            .UseDirectory("Snapshots/DomainEventPublisherTracingStructure")
-            .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
-    }
-
-    /// <summary>
-    /// PublishEvents 메서드 Failure 태그 구조를 스냅샷으로 검증합니다.
-    /// </summary>
-    [Fact]
-    public async Task Snapshot_PublishEvents_FailureResponse_Tags()
-    {
-        // Arrange
-        var sut = CreateSut();
-        var aggregate = CreateAggregateWithEvents();
-        var error = new ErrorCodeExpected("Event.PublishFailed", "testValue", "Publish failed");
-        _mockInner
-            .PublishEvents(Arg.Any<TestAggregateRootWithoutEvents>(), Arg.Any<CancellationToken>())
-            .Returns(FinT.Fail<IO, LanguageExt.Unit>(error));
-
-        // Act
-        await sut.PublishEvents(aggregate).Run().RunAsync();
-
-        // Assert
-        var tags = ExtractActivityTags();
-        await Verify(tags)
-            .UseDirectory("Snapshots/DomainEventPublisherTracingStructure")
-            .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
-    }
-
-    /// <summary>
-    /// PublishEventsWithResult 메서드 Success 태그 구조를 스냅샷으로 검증합니다.
-    /// </summary>
-    [Fact]
-    public async Task Snapshot_PublishEventsWithResult_SuccessTags()
-    {
-        // Arrange
-        var sut = CreateSut();
-        var aggregate = CreateAggregateWithEvents();
-        _mockInner
-            .PublishEventsWithResult(Arg.Any<TestAggregateRootWithoutEvents>(), Arg.Any<CancellationToken>())
-            .Returns(FinT.Succ<IO, PublishResult>(
-                PublishResult.Success(LanguageExt.Seq<Functorium.Domains.Events.IDomainEvent>.Empty
-                    .Add(aggregate.DomainEvents[0]).Add(aggregate.DomainEvents[1]))));
-
-        // Act
-        await sut.PublishEventsWithResult(aggregate).Run().RunAsync();
-
-        // Assert
-        var tags = ExtractActivityTags();
-        await Verify(tags)
-            .UseDirectory("Snapshots/DomainEventPublisherTracingStructure")
-            .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
-    }
-
-    /// <summary>
-    /// PublishEventsWithResult Partial Failure 태그 구조를 스냅샷으로 검증합니다.
-    /// </summary>
-    [Fact]
-    public async Task Snapshot_PublishEventsWithResult_PartialFailure_Tags()
-    {
-        // Arrange
-        var sut = CreateSut();
-        var aggregate = CreateAggregateWithEvents();
-        var event1 = aggregate.DomainEvents[0];
-        var event2 = aggregate.DomainEvents[1];
-
-        var successfulEvents = LanguageExt.Seq<Functorium.Domains.Events.IDomainEvent>.Empty.Add(event1);
-        var failedEvents = LanguageExt.Seq<(Functorium.Domains.Events.IDomainEvent, Error)>.Empty.Add((event2, Error.New("Event2.Failed")));
-        var partialResult = new PublishResult(successfulEvents, failedEvents);
-
-        _mockInner
-            .PublishEventsWithResult(Arg.Any<TestAggregateRootWithoutEvents>(), Arg.Any<CancellationToken>())
-            .Returns(FinT.Succ<IO, PublishResult>(partialResult));
-
-        // Act
-        await sut.PublishEventsWithResult(aggregate).Run().RunAsync();
-
-        // Assert
-        var tags = ExtractActivityTags();
-        await Verify(tags)
-            .UseDirectory("Snapshots/DomainEventPublisherTracingStructure")
-            .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
-    }
-
-    /// <summary>
-    /// PublishEventsWithResult Total Failure 태그 구조를 스냅샷으로 검증합니다.
-    /// </summary>
-    [Fact]
-    public async Task Snapshot_PublishEventsWithResult_TotalFailure_Tags()
-    {
-        // Arrange
-        var sut = CreateSut();
-        var aggregate = CreateAggregateWithEvents();
-        var error = new ErrorCodeExceptional("Event.ConnectionError", new InvalidOperationException("Connection failed"));
-        _mockInner
-            .PublishEventsWithResult(Arg.Any<TestAggregateRootWithoutEvents>(), Arg.Any<CancellationToken>())
-            .Returns(FinT.Fail<IO, PublishResult>(error));
-
-        // Act
-        await sut.PublishEventsWithResult(aggregate).Run().RunAsync();
-
-        // Assert
-        var tags = ExtractActivityTags();
-        await Verify(tags)
-            .UseDirectory("Snapshots/DomainEventPublisherTracingStructure")
-            .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
-    }
-
     #endregion
 
     #region Helper Methods
@@ -561,14 +288,6 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
     {
         return new ObservableDomainEventPublisher(
             _activitySource, _mockInner, _mockLogger, _meterFactory, _openTelemetryOptions);
-    }
-
-    private static TestAggregateRootWithoutEvents CreateAggregateWithEvents()
-    {
-        var aggregate = new TestAggregateRootWithoutEvents(TestEntityId.New(), "TestAggregate");
-        aggregate.AddEvent(new TestDomainEvent("Event1"));
-        aggregate.AddEvent(new TestDomainEvent("Event2"));
-        return aggregate;
     }
 
     private Dictionary<string, string?> ExtractActivityTags()

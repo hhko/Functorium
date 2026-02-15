@@ -72,8 +72,7 @@ public static partial class ObservabilityNaming
     {
         public const string Handle = "Handle";
         public const string Publish = "Publish";
-        public const string PublishEvents = "PublishEvents";
-        public const string PublishEventsWithResult = "PublishEventsWithResult";
+        public const string PublishTrackedEvents = "PublishTrackedEvents";
     }
 
 }

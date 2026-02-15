@@ -1,10 +1,8 @@
 using Functorium.Applications.Errors;
 using Functorium.Applications.Events;
-using Functorium.Domains.Entities;
 using Functorium.Domains.Events;
 using LanguageExt;
 using Mediator;
-using static LanguageExt.Prelude;
 
 namespace Functorium.Adapters.Events;
 
@@ -14,12 +12,13 @@ namespace Functorium.Adapters.Events;
 public sealed class DomainEventPublisher : IDomainEventPublisher
 {
     private readonly IPublisher _publisher;
+    private readonly IDomainEventCollector _collector;
 
-    public DomainEventPublisher(IPublisher publisher)
+    public DomainEventPublisher(IPublisher publisher, IDomainEventCollector collector)
     {
         _publisher = publisher;
+        _collector = collector;
     }
-
 
     /// <inheritdoc />
     public FinT<IO, LanguageExt.Unit> Publish<TEvent>(
@@ -53,85 +52,60 @@ public sealed class DomainEventPublisher : IDomainEventPublisher
     }
 
     /// <inheritdoc />
-    public FinT<IO, LanguageExt.Unit> PublishEvents<TId>(
-        AggregateRoot<TId> aggregate,
+    public FinT<IO, Seq<PublishResult>> PublishTrackedEvents(
         CancellationToken cancellationToken = default)
-        where TId : struct, IEntityId<TId>
     {
         return IO.liftAsync(async () =>
         {
-            var events = aggregate.DomainEvents.ToList();
-            aggregate.ClearDomainEvents();
+            var trackedAggregates = _collector.GetTrackedAggregates();
+            var results = new List<PublishResult>();
 
-            foreach (var domainEvent in events)
+            foreach (var aggregate in trackedAggregates)
             {
-                try
-                {
-                    await _publisher.Publish(domainEvent, cancellationToken);
-                }
-                catch (OperationCanceledException)
-                {
-                    return Fin.Fail<LanguageExt.Unit>(
-                        EventError.For<DomainEventPublisher>(
-                            new EventErrorType.PublishCancelled(),
-                            domainEvent.GetType().Name,
-                            "Event publishing was cancelled"));
-                }
-                catch (Exception ex)
-                {
-                    return Fin.Fail<LanguageExt.Unit>(
-                        EventError.FromException<DomainEventPublisher>(
-                            new EventErrorType.PublishFailed(),
-                            ex));
-                }
+                var events = aggregate.DomainEvents.ToList();
+                (aggregate as IDomainEventDrain)?.ClearDomainEvents();
+
+                var result = await PublishEventsCore(events, cancellationToken);
+                results.Add(result);
             }
-            return Fin.Succ(LanguageExt.Unit.Default);
+
+            return Fin.Succ(new Seq<PublishResult>(results));
         });
     }
 
-    /// <inheritdoc />
-    public FinT<IO, PublishResult> PublishEventsWithResult<TId>(
-        AggregateRoot<TId> aggregate,
-        CancellationToken cancellationToken = default)
-        where TId : struct, IEntityId<TId>
+    private async Task<PublishResult> PublishEventsCore(
+        List<IDomainEvent> events,
+        CancellationToken cancellationToken)
     {
-        return IO.liftAsync(async () =>
+        var successfulEvents = new List<IDomainEvent>();
+        var failedEvents = new List<(IDomainEvent Event, LanguageExt.Common.Error Error)>();
+
+        foreach (var domainEvent in events)
         {
-            var events = aggregate.DomainEvents.ToList();
-            aggregate.ClearDomainEvents();
-
-            var successfulEvents = new List<IDomainEvent>();
-            var failedEvents = new List<(IDomainEvent Event, LanguageExt.Common.Error Error)>();
-
-            foreach (var domainEvent in events)
+            try
             {
-                try
-                {
-                    await _publisher.Publish(domainEvent, cancellationToken);
-                    successfulEvents.Add(domainEvent);
-                }
-                catch (OperationCanceledException)
-                {
-                    var error = EventError.For<DomainEventPublisher>(
-                        new EventErrorType.PublishCancelled(),
-                        domainEvent.GetType().Name,
-                        "Event publishing was cancelled");
-                    failedEvents.Add((domainEvent, error));
-                }
-                catch (Exception ex)
-                {
-                    var error = EventError.FromException<DomainEventPublisher>(
-                        new EventErrorType.PublishFailed(),
-                        ex);
-                    failedEvents.Add((domainEvent, error));
-                }
+                await _publisher.Publish(domainEvent, cancellationToken);
+                successfulEvents.Add(domainEvent);
             }
+            catch (OperationCanceledException)
+            {
+                var error = EventError.For<DomainEventPublisher>(
+                    new EventErrorType.PublishCancelled(),
+                    domainEvent.GetType().Name,
+                    "Event publishing was cancelled");
+                failedEvents.Add((domainEvent, error));
+            }
+            catch (Exception ex)
+            {
+                var error = EventError.FromException<DomainEventPublisher>(
+                    new EventErrorType.PublishFailed(),
+                    ex);
+                failedEvents.Add((domainEvent, error));
+            }
+        }
 
-            var result = new PublishResult(
-                new Seq<IDomainEvent>(successfulEvents),
-                new Seq<(IDomainEvent Event, LanguageExt.Common.Error Error)>(failedEvents));
-
-            return Fin.Succ(result);
-        });
+        return new PublishResult(
+            new Seq<IDomainEvent>(successfulEvents),
+            new Seq<(IDomainEvent Event, LanguageExt.Common.Error Error)>(failedEvents));
     }
 }
