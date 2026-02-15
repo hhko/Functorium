@@ -1,5 +1,3 @@
-using Functorium.Applications.Events;
-using Functorium.Applications.Persistence;
 using LayeredArch.Application.Usecases.Orders;
 using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
@@ -17,16 +15,12 @@ public class CreateOrderWithCreditCheckCommandTests
     private readonly IOrderRepository _orderRepository = Substitute.For<IOrderRepository>();
     private readonly IProductCatalog _productCatalog = Substitute.For<IProductCatalog>();
     private readonly OrderCreditCheckService _creditCheckService = new();
-    private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
-    private readonly IDomainEventPublisher _eventPublisher = Substitute.For<IDomainEventPublisher>();
     private readonly CreateOrderWithCreditCheckCommand.Usecase _sut;
 
     public CreateOrderWithCreditCheckCommandTests()
     {
-        _unitOfWork.SaveChanges(Arg.Any<CancellationToken>())
-            .Returns(FinTFactory.Succ(unit));
         _sut = new CreateOrderWithCreditCheckCommand.Usecase(
-            _customerRepository, _orderRepository, _productCatalog, _creditCheckService, _unitOfWork, _eventPublisher);
+            _customerRepository, _orderRepository, _productCatalog, _creditCheckService);
     }
 
     private static Customer CreateSampleCustomer(decimal creditLimit = 5000m)
@@ -54,8 +48,6 @@ public class CreateOrderWithCreditCheckCommandTests
             .Returns(FinTFactory.Succ(Money.Create(1000m).ThrowIfFail()));
         _orderRepository.Create(Arg.Any<Order>())
             .Returns(call => FinTFactory.Succ(call.Arg<Order>()));
-        _eventPublisher.PublishEvents(Arg.Any<Order>(), Arg.Any<CancellationToken>())
-            .Returns(FinTFactory.Succ(unit));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -123,53 +115,5 @@ public class CreateOrderWithCreditCheckCommandTests
 
         // Assert
         actual.IsSucc.ShouldBeFalse();
-    }
-
-    [Fact]
-    public async Task Handle_CallsSaveChangesBeforePublishEvents_WhenRequestIsValid()
-    {
-        // Arrange
-        var callOrder = new List<string>();
-        var customer = CreateSampleCustomer(creditLimit: 5000m);
-        var productId = ProductId.New();
-        var request = new CreateOrderWithCreditCheckCommand.Request(
-            customer.Id.ToString(), productId.ToString(), 2, "Seoul, Korea");
-
-        _customerRepository.GetById(Arg.Any<CustomerId>())
-            .Returns(FinTFactory.Succ(customer));
-        _productCatalog.ExistsById(Arg.Any<ProductId>())
-            .Returns(FinTFactory.Succ(true));
-        _productCatalog.GetPrice(Arg.Any<ProductId>())
-            .Returns(FinTFactory.Succ(Money.Create(1000m).ThrowIfFail()));
-        _orderRepository.Create(Arg.Any<Order>())
-            .Returns(call => FinTFactory.Succ(call.Arg<Order>()));
-        _unitOfWork.SaveChanges(Arg.Any<CancellationToken>())
-            .Returns(FinTFactory.Succ(unit))
-            .AndDoes(_ => callOrder.Add("SaveChanges"));
-        _eventPublisher.PublishEvents(Arg.Any<Order>(), Arg.Any<CancellationToken>())
-            .Returns(FinTFactory.Succ(unit))
-            .AndDoes(_ => callOrder.Add("PublishEvents"));
-
-        // Act
-        var actual = await _sut.Handle(request, CancellationToken.None);
-
-        // Assert
-        actual.IsSucc.ShouldBeTrue();
-        callOrder.ShouldBe(["SaveChanges", "PublishEvents"]);
-    }
-
-    [Fact]
-    public async Task Handle_DoesNotCallSaveChanges_WhenValidationFails()
-    {
-        // Arrange — 배송지 주소가 빈 문자열이면 VO 생성에 실패하여 조기 반환됨
-        var request = new CreateOrderWithCreditCheckCommand.Request(
-            CustomerId.New().ToString(), ProductId.New().ToString(), 2, "");
-
-        // Act
-        var actual = await _sut.Handle(request, CancellationToken.None);
-
-        // Assert
-        actual.IsSucc.ShouldBeFalse();
-        _unitOfWork.DidNotReceive().SaveChanges(Arg.Any<CancellationToken>());
     }
 }

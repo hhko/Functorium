@@ -1,7 +1,10 @@
 using Functorium.Adapters.Observabilities.Builders.Configurators;
 using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Applications.Events;
+using Functorium.Applications.Persistence;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
 
 namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Configurators;
 
@@ -16,6 +19,7 @@ public sealed class PipelineConfiguratorTests
     {
         // Arrange
         var services = new ServiceCollection();
+        RegisterTransactionDependencies(services);
         var configurator = CreateConfigurator();
 
         // Act
@@ -24,7 +28,7 @@ public sealed class PipelineConfiguratorTests
 
         // Assert
         var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
-        pipelineBehaviors.Count.ShouldBe(5); // Metrics, Tracing, Logging, Validation, Exception
+        pipelineBehaviors.Count.ShouldBe(6); // Metrics, Tracing, Logging, Validation, Exception, Transaction
     }
 
     [Fact]
@@ -219,10 +223,11 @@ public sealed class PipelineConfiguratorTests
     }
 
     [Fact]
-    public void PipelineOrder_MetricsTracingLoggingValidationException()
+    public void PipelineOrder_MetricsTracingLoggingValidationExceptionTransaction()
     {
         // Arrange
         var services = new ServiceCollection();
+        RegisterTransactionDependencies(services);
         var configurator = CreateConfigurator();
 
         // Act
@@ -236,6 +241,7 @@ public sealed class PipelineConfiguratorTests
         pipelineBehaviors[2].ImplementationType.ShouldBe(typeof(UsecaseLoggingPipeline<,>));
         pipelineBehaviors[3].ImplementationType.ShouldBe(typeof(UsecaseValidationPipeline<,>));
         pipelineBehaviors[4].ImplementationType.ShouldBe(typeof(UsecaseExceptionPipeline<,>));
+        pipelineBehaviors[5].ImplementationType.ShouldBe(typeof(UsecaseTransactionPipeline<,>));
     }
 
     [Fact]
@@ -274,6 +280,74 @@ public sealed class PipelineConfiguratorTests
     }
 
     [Fact]
+    public void UseTransaction_RegistersTransactionPipeline_WhenDependenciesExist()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        RegisterTransactionDependencies(services);
+        var configurator = CreateConfigurator();
+
+        // Act
+        configurator.UseTransaction();
+        configurator.Apply(services);
+
+        // Assert
+        var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
+        pipelineBehaviors.Count.ShouldBe(1);
+        pipelineBehaviors[0].ImplementationType.ShouldBe(typeof(UsecaseTransactionPipeline<,>));
+    }
+
+    [Fact]
+    public void UseAll_IncludesTransaction_WhenDependenciesExist()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        RegisterTransactionDependencies(services);
+        var configurator = CreateConfigurator();
+
+        // Act
+        configurator.UseAll();
+        configurator.Apply(services);
+
+        // Assert
+        var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
+        pipelineBehaviors.ShouldContain(s => s.ImplementationType == typeof(UsecaseTransactionPipeline<,>));
+    }
+
+    [Fact]
+    public void UseAll_SkipsTransaction_WhenDependenciesMissing()
+    {
+        // Arrange — Transaction 의존성(IUnitOfWork 등) 미등록
+        var services = new ServiceCollection();
+        var configurator = CreateConfigurator();
+
+        // Act
+        configurator.UseAll();
+        configurator.Apply(services);
+
+        // Assert — Transaction 제외한 5개만 등록
+        var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
+        pipelineBehaviors.Count.ShouldBe(5);
+        pipelineBehaviors.ShouldNotContain(s => s.ImplementationType == typeof(UsecaseTransactionPipeline<,>));
+    }
+
+    [Fact]
+    public void UseTransaction_SkipsRegistration_WhenDependenciesMissing()
+    {
+        // Arrange — Transaction 의존성 미등록
+        var services = new ServiceCollection();
+        var configurator = CreateConfigurator();
+
+        // Act
+        configurator.UseTransaction();
+        configurator.Apply(services);
+
+        // Assert
+        var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
+        pipelineBehaviors.Count.ShouldBe(0);
+    }
+
+    [Fact]
     public void MultipleCustomPipelines_RegisteredInOrder()
     {
         // Arrange
@@ -302,6 +376,16 @@ public sealed class PipelineConfiguratorTests
         return (PipelineConfigurator)Activator.CreateInstance(
             typeof(PipelineConfigurator),
             nonPublic: true)!;
+    }
+
+    /// <summary>
+    /// Transaction 파이프라인에 필요한 의존성을 ServiceCollection에 등록합니다.
+    /// </summary>
+    private static void RegisterTransactionDependencies(IServiceCollection services)
+    {
+        services.AddScoped(_ => Substitute.For<IUnitOfWork>());
+        services.AddScoped(_ => Substitute.For<IDomainEventPublisher>());
+        services.AddScoped(_ => Substitute.For<IDomainEventCollector>());
     }
 
     #region Test Fixtures
