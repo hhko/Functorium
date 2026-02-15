@@ -915,6 +915,13 @@ LogDomainEventsPublisherResponsePartialFailure(...)
 3. 필요한 Status 결정 (`Success`, `Warning`, `Error`)
 4. 패턴에 따라 메서드 이름 작성
 
+## 관련 문서
+
+- [observability-spec.md](./observability-spec.md) — Observability 사양 (Field/Tag, Meter, 메시지 템플릿)
+- [observability-logging.md](./observability-logging.md) — Observability 로깅 상세
+- [observability-metrics.md](./observability-metrics.md) — Observability 메트릭 상세
+- [observability-tracing.md](./observability-tracing.md) — Observability 트레이싱 상세
+
 ## 참고 자료
 
 - [OpenTelemetry Specification](https://opentelemetry.io/docs/specs/)

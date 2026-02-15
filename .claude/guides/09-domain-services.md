@@ -28,7 +28,7 @@
 Domain Service(순수 도메인 로직)와 Application Service(Usecase, I/O 조율)의 경계가 명확해집니다.
 
 **아키텍처 테스트 가능**:
-`IDomainService` 마커 인터페이스로 아키텍처 규칙을 검증할 수 있습니다 (예: Domain Service가 IAdapter를 의존하지 않는지).
+`IDomainService` 마커 인터페이스로 아키텍처 규칙을 검증할 수 있습니다 (예: Domain Service가 [IAdapter](./12-ports-and-adapters.md)를 의존하지 않는지).
 
 ### 도메인 로직 배치 판단
 

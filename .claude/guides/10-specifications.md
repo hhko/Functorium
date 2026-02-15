@@ -386,7 +386,7 @@ public sealed class Usecase(IProductRepository productRepository)
     }
 }
 
-// file-scoped 폴백 Specification
+// file-scoped 폴백 Specification (C# 11 file 접근 제한자: 이 파일 내에서만 접근 가능)
 file sealed class AllProductsSpec : Specification<Product>
 {
     public override bool IsSatisfiedBy(Product product) => true;

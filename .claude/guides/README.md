@@ -58,25 +58,25 @@ Architecture
 | **도구 사용법 (커버리지/스냅샷/ER 다이어그램)** | [03-dotnet-tools.md](./03-dotnet-tools.md) |
 | **값 객체 만들기** | [05-value-objects.md](./05-value-objects.md) |
 | **Entity/Aggregate 만들기** | [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) |
-| **Aggregate 경계 설계하기** | [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) §Part 1 |
+| **Aggregate 경계 설계하기** | [06-entities-and-aggregates.md — Part 1: Aggregate 경계 설계](./06-entities-and-aggregates.md) |
 | **도메인 이벤트 정의/발행** | [07-domain-events.md](./07-domain-events.md) |
-| **Event Handler 만들기** | [07-domain-events.md](./07-domain-events.md) §5 |
+| **Event Handler 만들기** | [07-domain-events.md — 5. Event Handler](./07-domain-events.md) |
 | **도메인 서비스 만들기** | [09-domain-services.md](./09-domain-services.md) |
 | **Specification 만들기** | [10-specifications.md](./10-specifications.md) |
 | **에러 타입 정의하기** | [08-error-system.md](./08-error-system.md) |
-| **에러 테스트 작성하기** | [08-error-system.md](./08-error-system.md) §4~6 테스트 |
+| **에러 테스트 작성하기** | [08-error-system.md — 4~6. 레이어별 에러 테스트](./08-error-system.md) |
 | **Usecase 만들기** | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) |
 | **Adapter 만들기** | [12-ports-and-adapters.md](./12-ports-and-adapters.md) |
-| **EF Core Repository 만들기** | [12-ports-and-adapters.md](./12-ports-and-adapters.md) §2.8 |
-| **Options 패턴 (OptionsConfigurator)** | [12-ports-and-adapters.md](./12-ports-and-adapters.md) §4.6 |
-| **검증 메서드 확인** | [05-value-objects.md](./05-value-objects.md) §검증 시스템 |
+| **EF Core Repository 만들기** | [12-ports-and-adapters.md — 2.8 EF Core Repository](./12-ports-and-adapters.md) |
+| **Options 패턴 (OptionsConfigurator)** | [12-ports-and-adapters.md — 4.6 Options 패턴](./12-ports-and-adapters.md) |
+| **검증 메서드 확인** | [05-value-objects.md — 검증 시스템](./05-value-objects.md) |
 | **크래시 덤프 설정/분석** | [crash-diagnostics.md](./crash-diagnostics.md) |
 | **Observability 사양** | [observability-spec.md](./observability-spec.md) |
-| **구조화된 로그 테스트** | [14-testing-library.md](./14-testing-library.md) §구조화된 로그 테스트 |
-| **아키텍처 규칙 검증** | [14-testing-library.md](./14-testing-library.md) §아키텍처 규칙 검증 |
-| **소스 생성기 테스트** | [14-testing-library.md](./14-testing-library.md) §소스 생성기 테스트 |
-| **스케줄 Job 테스트** | [14-testing-library.md](./14-testing-library.md) §스케줄 Job 통합 테스트 |
-| **팩토리 패턴 (Create/CreateFromValidated)** | [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) §8 |
+| **구조화된 로그 테스트** | [14-testing-library.md — 구조화된 로그 테스트](./14-testing-library.md) |
+| **아키텍처 규칙 검증** | [14-testing-library.md — 아키텍처 규칙 검증](./14-testing-library.md) |
+| **소스 생성기 테스트** | [14-testing-library.md — 소스 생성기 테스트](./14-testing-library.md) |
+| **스케줄 Job 테스트** | [14-testing-library.md — 스케줄 Job 통합 테스트](./14-testing-library.md) |
+| **팩토리 패턴 (Create/CreateFromValidated)** | [06-entities-and-aggregates.md — 8. 팩토리 패턴](./06-entities-and-aggregates.md) |
 | **DDD 개선 사항/로드맵 확인** | [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) |
 | **아키텍처 개선 사항 확인** | [architecture-improvements.md](./architecture-improvements.md) |
 

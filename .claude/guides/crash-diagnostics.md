@@ -36,8 +36,11 @@ var builder = WebApplication.CreateBuilder(args);
 ### 커스텀 경로 지정
 
 ```csharp
-// 명시적 경로 지정
+// 명시적 경로 지정 (Linux/macOS)
 CrashDumpHandler.Initialize("/var/log/myapp/dumps");
+
+// 명시적 경로 지정 (Windows)
+CrashDumpHandler.Initialize(@"C:\Logs\MyApp\Dumps");
 
 // 환경 변수 사용
 var dumpDir = Environment.GetEnvironmentVariable("CRASH_DUMP_DIR");

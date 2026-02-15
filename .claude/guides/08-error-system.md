@@ -668,6 +668,7 @@ public void Fin_ShouldBeDomainError_WhenCreationFails()
         message: "Invalid email format");
 
     // Act & Assert
+    // ShouldBeDomainError<TErrorSource, TFin>: TErrorSource = 에러 소스 타입, TFin = Fin<T>의 T
     fin.ShouldBeDomainError<Email, Email>(new DomainErrorType.InvalidFormat());
 }
 

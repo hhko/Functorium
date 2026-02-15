@@ -1094,4 +1094,9 @@ Console.WriteLine($"TraceId: {Activity.Current?.TraceId}");
 - [Jaeger Documentation](https://www.jaegertracing.io/docs/)
 - [Grafana Tempo Documentation](https://grafana.com/docs/tempo/latest/)
 - [.NET Activity and DiagnosticSource](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/distributed-tracing)
-- [Observability Specification](./observability-spec.md)
+
+**내부 문서:**
+- [observability-spec.md](./observability-spec.md) — Observability 사양 (Field/Tag, Meter, 메시지 템플릿)
+- [observability-naming.md](./observability-naming.md) — Observability 네이밍 가이드
+- [observability-logging.md](./observability-logging.md) — Observability 로깅 상세
+- [observability-metrics.md](./observability-metrics.md) — Observability 메트릭 상세

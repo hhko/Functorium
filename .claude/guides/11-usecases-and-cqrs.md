@@ -877,6 +877,7 @@ public sealed record Response(
 | [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) | Entity 구현 및 Create 패턴 |
 | [07-domain-events.md](./07-domain-events.md) | 도메인 이벤트 발행 및 Event Handler |
 | [08-error-system.md](./08-error-system.md) | 에러 시스템 가이드 |
+| [10-specifications.md](./10-specifications.md) | Specification 패턴 (Usecase에서 활용) |
 | [12-ports-and-adapters.md](./12-ports-and-adapters.md) | Repository 인터페이스 설계 |
 | [13-unit-testing.md](./13-unit-testing.md) | Usecase 테스트 작성 방법 |
 
