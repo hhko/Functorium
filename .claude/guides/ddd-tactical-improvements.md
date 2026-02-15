@@ -512,62 +512,47 @@ Aggregate → Domain Event → Domain Event Handler
 
 ---
 
-## 11. Unit of Work ⚠️
+## 11. Unit of Work ✅
 
-### 현재 상태
+### 구현 완료
 
-명시적 `IUnitOfWork` 인터페이스가 **존재하지 않습니다**. 각 Repository 메서드가 독립적인 `FinT<IO, T>` 연산을 반환합니다.
+`Functorium.Applications.Persistence` 네임스페이스에 `IUnitOfWork` 인터페이스를 제공하며, EF Core 및 InMemory 구현체가 구현되어 있습니다.
 
-```csharp
-// 현재: 개별 Repository 호출
-from product in productRepository.Create(product)
-from _ in eventPublisher.PublishEvents(product)
-select new Response(product.Id.ToString());
-```
-
-### 문제점
-
-1. **트랜잭션 경계 불명확**: 여러 Repository 호출이 하나의 트랜잭션에 묶이는지 보장 없음
-2. **부분 실패 위험**: 첫 번째 저장 성공 후 두 번째 저장 실패 시 롤백 불가
-3. **EFCore와의 통합 미정의**: `DbContext.SaveChanges()`를 어디서 호출할지 패턴이 없음
-
-### 개선 방향
+**인터페이스:**
 
 ```csharp
-// Functorium.Applications (제안)
+// Functorium.Applications.Persistence
 public interface IUnitOfWork : IAdapter
 {
     FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = default);
 }
 ```
 
-```csharp
-// Usecase에서 사용
-public sealed class Usecase(
-    IProductRepository productRepository,
-    IUnitOfWork unitOfWork,
-    IDomainEventPublisher eventPublisher)
-    : ICommandUsecase<Request, Response>
-{
-    public async ValueTask<FinResponse<Response>> Handle(Request request, ...)
-    {
-        FinT<IO, Response> usecase =
-            from product in productRepository.Create(newProduct)
-            from _ in unitOfWork.SaveChanges(cancellationToken)
-            from __ in eventPublisher.PublishEvents(product)
-            select new Response(product.Id.ToString());
+**구현체:**
 
-        return await usecase.RunAsync().ConfigureAwait(false);
-    }
-}
+| 구현체 | 위치 | 용도 |
+|--------|------|------|
+| `EfCoreUnitOfWork` | Adapters.Persistence | EF Core `DbContext.SaveChangesAsync()` 호출, `DbUpdateException` 처리 |
+| `InMemoryUnitOfWork` | Adapters.Persistence | 테스트/개발용, 즉시 성공 반환 |
+
+**Usecase 사용 패턴:**
+
+모든 Command Handler에서 `Repository → SaveChanges → PublishEvents` 순서를 일관되게 적용합니다.
+
+```csharp
+FinT<IO, Response> usecase =
+    from product in _productRepository.Create(newProduct)
+    from _1 in _unitOfWork.SaveChanges(cancellationToken)      // 트랜잭션 커밋
+    from _2 in _eventPublisher.PublishEvents(product, cancellationToken)  // 이벤트 발행
+    select new Response(product.Id.ToString());
 ```
 
-### 우선순위
+**핵심 설계 결정:**
+- `IAdapter` 상속으로 `[GeneratePipeline]` 소스 생성기 및 DI 등록 호환
+- EF Core 구현체에서 `DbUpdateConcurrencyException` → `ConcurrencyConflict`, `DbUpdateException` → `DatabaseUpdateFailed` 에러 변환
+- DI 등록 시 Strategy 패턴으로 InMemory/EfCore 전환 가능
 
-**높음** — EFCore 통합의 전제 조건입니다.
-
-**TODO.md 연계:**
-- L365: `Unit of Work` (alpha.5)
+**참조:** `Src/Functorium/Applications/Persistence/IUnitOfWork.cs`, `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/EfCoreUnitOfWork.cs`
 
 ---
 
@@ -838,7 +823,7 @@ Tag (별도 Aggregate) — 여러 Post에서 공유
 |----------|---------|----------|--------|-------------|
 | DTO Mapping Strategy | 높음 | alpha.2 | — | L112~116 |
 | IRepository 공통 인터페이스 | 높음 | alpha.4 | EFCore 통합 | L354 |
-| Unit of Work | 높음 | alpha.4~5 | EFCore 통합 | L365 |
+| Unit of Work | ✅ 완료 | — | EFCore 통합 | L365 |
 | Integration Events | 높음 | alpha.4 | — | L150, L355 |
 | IDomainService 마커 | ✅ 완료 | alpha.3 | — | L535 |
 | Resilience Patterns (Polly) | 중간 | alpha.4 | 외부 Adapter | L27 |
@@ -878,7 +863,7 @@ Resilience (Polly) ──→ 외부 API Adapter                        │
 | Factory | ✅ 정적 팩토리 메서드 패턴 구현 | 본 문서 §8 |
 | Application Service | ✅ CQRS Usecase | [07-usecases-and-cqrs.md](./07-usecases-and-cqrs.md) |
 | Integration Event | ⚠️ 내부/외부 구분 없음 | 본 문서 §9 |
-| Unit of Work | ⚠️ 미구현 | 본 문서 §11 |
+| Unit of Work | ✅ 완전 구현 | 본 문서 §11 |
 
 ---
 

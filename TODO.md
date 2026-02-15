@@ -2,6 +2,19 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
+- [ ] ER 다이어그램 도구
+- [ ] UoW 패턴 개선
+- [ ] Entity & Aggregate 생성 패턴 확인?
+- [ ] Specifications 패턴 개선
+- [ ] DTO 저장소 적용?
+---
+- [ ] LanaguageExt RunAsync 취소 처리?
+---
+- [x] 도메인 이벤트 인터페이스 적용
+- [x] Entity & Aggregate 생성 패턴 개선
+- [x] Sqlite 추가
+- [x] 옵션 처리 문서화 보강 
+---
 - [x] SourceGenerator -> SourceGenerators 폴더 이름 변경
 - [x] Functorium\SourceGenerators -> Functorium\Adapters\SourceGenerators 폴더 경로 조정
 - [x] Src\Functorium\Abstractions\Diagnostics에 CrashDumpHandler 추가
