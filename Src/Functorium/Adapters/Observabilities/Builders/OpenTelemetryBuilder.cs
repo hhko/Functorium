@@ -492,20 +492,45 @@ public partial class OpenTelemetryBuilder
 
     private void RegisterPipelinesInternal()
     {
+        PipelineConfigurator? configurator = null;
+
         if (_usePipelinesWithDefaults)
         {
             // 기본값: 모든 파이프라인 활성화
-            var configurator = new PipelineConfigurator();
+            configurator = new PipelineConfigurator();
             configurator.UseAll();
             configurator.Apply(_services);
         }
         else if (_pipelineConfigurator != null)
         {
             // 커스텀 설정 적용
-            var configurator = new PipelineConfigurator();
+            configurator = new PipelineConfigurator();
             _pipelineConfigurator(configurator);
             configurator.Apply(_services);
         }
+
+        if (configurator != null)
+        {
+            RegisterUsecasePipelineStartupLogger(configurator);
+        }
+    }
+
+    private void RegisterUsecasePipelineStartupLogger(PipelineConfigurator configurator)
+    {
+        var allPipelineNames = configurator.GetRegisteredPipelineNames();
+
+        // Command 파이프라인 = 전체 등록된 파이프라인 이름 그대로
+        var commandPipelineNames = allPipelineNames;
+
+        // Query 파이프라인 = Transaction 제외
+        var queryPipelineNames = allPipelineNames
+            .Where(name => name != "Transaction")
+            .ToList();
+
+        _services.AddSingleton<IStartupOptionsLogger>(
+            new UsecasePipelineStartupLogger(
+                commandPipelineNames,
+                queryPipelineNames));
     }
 }
 
