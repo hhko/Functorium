@@ -24,6 +24,7 @@
 |---|---|
 | AggregateRoots 폴더 구조 | [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) — Entity/Aggregate 구현 |
 | ValueObjects 위치 규칙 | [05-value-objects.md](./05-value-objects.md) — 값 객체 구현 패턴 |
+| Specifications 위치 규칙 | [10-specifications.md](./10-specifications.md) — Specification 패턴 구현 |
 | Domain Ports 위치 결정 기준 | [12-ports-and-adapters.md](./12-ports-and-adapters.md) — Adapter 설계 원칙 |
 | Usecases 폴더/파일 네이밍 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) — 유스케이스 구현 |
 | Abstractions/Registrations 구조 | [12-ports-and-adapters.md](./12-ports-and-adapters.md) — 등록 코드 패턴 |
@@ -279,6 +280,10 @@ AggregateRoots/
 │   │   └── ProductVariant.cs
 │   ├── Ports/
 │   │   └── IProductRepository.cs  ← 이 Aggregate 전용 Port
+│   ├── Specifications/
+│   │   ├── ProductNameUniqueSpec.cs    ← 이 Aggregate 전용 Specification
+│   │   ├── ProductPriceRangeSpec.cs
+│   │   └── ProductLowStockSpec.cs
 │   └── ValueObjects/
 │       ├── ProductName.cs         ← 이 Aggregate 전용 Value Object
 │       └── ProductDescription.cs
@@ -286,6 +291,8 @@ AggregateRoots/
 │   ├── Customer.cs
 │   ├── Ports/
 │   │   └── ICustomerRepository.cs
+│   ├── Specifications/
+│   │   └── CustomerEmailSpec.cs
 │   └── ValueObjects/
 │       ├── CustomerName.cs
 │       └── Email.cs
@@ -304,6 +311,7 @@ AggregateRoots/
 - Aggregate의 자식 Entity는 `{Aggregate}/Entities/` 에 배치
 - Aggregate 전용 Port는 `{Aggregate}/Ports/` 에 배치
 - Aggregate 전용 Value Object는 `{Aggregate}/ValueObjects/` 에 배치
+- Aggregate 전용 Specification은 `{Aggregate}/Specifications/` 에 배치
 
 ### SharedKernel 내부 구조
 
@@ -564,7 +572,7 @@ Domain/Application 레이어의 단위 테스트를 담당합니다.
 {ServiceName}.Tests.Unit/
 ├── Domain/                    ← Domain 레이어 미러링
 │   ├── SharedKernel/          ← ValueObject 테스트
-│   ├── {Aggregate}/           ← Aggregate/Entity/ValueObject 테스트
+│   ├── {Aggregate}/           ← Aggregate/Entity/ValueObject/Specification 테스트
 │   └── ...
 ├── Application/               ← Application 레이어 미러링
 │   ├── {Aggregate}/           ← Usecase 핸들러 테스트
@@ -720,6 +728,7 @@ global using System.Net.Http.Json;
 | `Domain/` | `{ServiceName}.Domain` |
 | `Domain/AggregateRoots/Products/` | `{ServiceName}.Domain.AggregateRoots.Products` |
 | `Domain/AggregateRoots/Products/Ports/` | `{ServiceName}.Domain.AggregateRoots.Products` *(Port는 Aggregate 네임스페이스)* |
+| `Domain/AggregateRoots/Products/Specifications/` | `{ServiceName}.Domain.AggregateRoots.Products.Specifications` |
 | `Domain/AggregateRoots/Products/ValueObjects/` | `{ServiceName}.Domain.AggregateRoots.Products.ValueObjects` |
 | `Domain/SharedKernel/ValueObjects/` | `{ServiceName}.Domain.SharedKernel.ValueObjects` |
 | `Domain/SharedKernel/Entities/` | `{ServiceName}.Domain.SharedKernel.Entities` |
@@ -854,6 +863,7 @@ Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 
 - [02-solution-configuration.md](./02-solution-configuration.md) — 솔루션 루트 구성 파일 및 빌드 스크립트
 - [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) — Entity/Aggregate Root 구현 패턴
 - [05-value-objects.md](./05-value-objects.md) — 값 객체 구현 및 검증 패턴
+- [10-specifications.md](./10-specifications.md) — Specification 패턴 구현
 - [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) — 유스케이스 (Command/Query) 구현
 - [12-ports-and-adapters.md](./12-ports-and-adapters.md) — Adapter 설계 원칙 + 단계별 활동
 - [08-error-system.md](./08-error-system.md) — 레이어별 에러 시스템
