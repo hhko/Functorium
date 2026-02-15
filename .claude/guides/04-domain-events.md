@@ -6,6 +6,7 @@
 
 - [1. 왜 도메인 이벤트인가 (WHY)](#1-왜-도메인-이벤트인가-why)
 - [2. 도메인 이벤트란 무엇인가 (WHAT)](#2-도메인-이벤트란-무엇인가-what)
+  - [IHasDomainEvents / IDomainEventDrain 패턴](#ihasdomainevents--idomaineventdrain-패턴)
 - [3. 이벤트 정의 (HOW)](#3-이벤트-정의-how)
 - [4. 이벤트 발행 (HOW)](#4-이벤트-발행-how)
 - [5. 이벤트 핸들러 구현 (HOW)](#5-이벤트-핸들러-구현-how)
@@ -46,25 +47,41 @@
 | **과거형 (Past Tense)** | 이미 발생한 사실을 표현 | `CreatedEvent`, `ConfirmedEvent` |
 | **불변 (Immutable)** | 한번 생성되면 변경 불가 | `sealed record`로 정의 |
 | **시간 정보 포함** | 발생 시각을 기록 | `OccurredAt` 속성 |
+| **이벤트 식별** | 고유 ID로 중복 방지 | `EventId` (Ulid) |
+| **요청 추적** | 동일 요청의 이벤트 연결 | `CorrelationId` |
+| **인과 관계** | 이벤트 간 원인-결과 추적 | `CausationId` |
 
 ### IDomainEvent / DomainEvent
 
 **위치**: `Functorium.Domains.Events`
 
 ```csharp
-// 인터페이스
-public interface IDomainEvent
+// 인터페이스 — Mediator.INotification 확장으로 Pub/Sub 통합
+public interface IDomainEvent : INotification
 {
     DateTimeOffset OccurredAt { get; }
+    Ulid EventId { get; }
+    string? CorrelationId { get; }
+    string? CausationId { get; }
 }
 
 // 기반 record
-public abstract record DomainEvent(DateTimeOffset OccurredAt) : IDomainEvent
+public abstract record DomainEvent(
+    DateTimeOffset OccurredAt,
+    Ulid EventId,
+    string? CorrelationId,
+    string? CausationId) : IDomainEvent
 {
-    // 현재 시각으로 이벤트 생성
-    protected DomainEvent() : this(DateTimeOffset.UtcNow) { }
+    protected DomainEvent() : this(DateTimeOffset.UtcNow, Ulid.NewUlid(), null, null) { }
+    protected DomainEvent(string? correlationId) : this(DateTimeOffset.UtcNow, Ulid.NewUlid(), correlationId, null) { }
+    protected DomainEvent(string? correlationId, string? causationId) : this(DateTimeOffset.UtcNow, Ulid.NewUlid(), correlationId, causationId) { }
 }
 ```
+
+**이벤트 추적성 (Traceability)**:
+- `EventId`: 이벤트 고유 식별자. 중복 처리 방지(멱등성) 및 이벤트 추적에 사용됩니다.
+- `CorrelationId`: 동일한 요청에서 발생한 이벤트를 그룹으로 추적합니다.
+- `CausationId`: 이 이벤트를 발생시킨 이전 이벤트의 ID로, 이벤트 간 인과 관계를 추적합니다.
 
 ### 이벤트 명명 규칙
 
@@ -80,13 +97,43 @@ public abstract record DomainEvent(DateTimeOffset OccurredAt) : IDomainEvent
 ### Functorium 타입 계층
 
 ```
-IDomainEvent (인터페이스)
-+-- OccurredAt 속성
-    |
-    `-- DomainEvent (abstract record)
-        +-- OccurredAt 자동 설정 (DateTimeOffset.UtcNow)
-        `-- 사용자 정의 이벤트들이 상속
+IDomainEvent : INotification (인터페이스)
+├── OccurredAt (DateTimeOffset)
+├── EventId (Ulid)
+├── CorrelationId (string?)
+└── CausationId (string?)
+    │
+    └── DomainEvent (abstract record)
+        ├── 기본 생성자: OccurredAt, EventId 자동 설정
+        ├── CorrelationId 생성자: 요청 추적 ID 지정
+        ├── 전체 생성자: CorrelationId + CausationId 지정
+        └── 사용자 정의 이벤트들이 상속
 ```
+
+### IHasDomainEvents / IDomainEventDrain 패턴
+
+AggregateRoot에서 도메인 이벤트를 관리하는 두 인터페이스가 분리되어 있습니다:
+
+```csharp
+// 도메인 계층의 읽기 전용 계약 — 이벤트 조회만 허용
+public interface IHasDomainEvents
+{
+    IReadOnlyList<IDomainEvent> DomainEvents { get; }
+}
+
+// 인프라용 이벤트 정리 인터페이스 (internal)
+internal interface IDomainEventDrain : IHasDomainEvents
+{
+    void ClearDomainEvents();
+}
+```
+
+**설계 원칙**: 도메인 이벤트는 **불변의 사실(fact)**입니다. 도메인 계약(`IHasDomainEvents`)에서는 이벤트 삭제를 허용하지 않으며, 이벤트 정리는 인프라 관심사(`IDomainEventDrain`)로 분리합니다.
+
+| 인터페이스 | 가시성 | 역할 |
+|-----------|--------|------|
+| `IHasDomainEvents` | `public` | 도메인 계층에서 이벤트 목록 조회 |
+| `IDomainEventDrain` | `internal` | 이벤트 발행 후 정리 (인프라 전용) |
 
 ---
 

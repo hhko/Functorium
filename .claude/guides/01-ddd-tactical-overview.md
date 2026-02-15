@@ -265,11 +265,10 @@ IEntity<TId> (인터페이스)
         ├── CreateFromValidation<TEntity, TValue>() 헬퍼
         └── GetUnproxiedType() - ORM 프록시 지원
             │
-            └── AggregateRoot<TId>
-                ├── DomainEvents (읽기 전용)
-                ├── AddDomainEvent()
-                ├── RemoveDomainEvent()
-                └── ClearDomainEvents()
+            └── AggregateRoot<TId> : IDomainEventDrain
+                ├── DomainEvents (읽기 전용, IHasDomainEvents)
+                ├── AddDomainEvent() (protected)
+                └── ClearDomainEvents() (IDomainEventDrain)
 
 IEntityId<T> (인터페이스) - Ulid 기반
 ├── Ulid Value
@@ -277,11 +276,18 @@ IEntityId<T> (인터페이스) - Ulid 기반
 ├── static T Create(Ulid)
 └── static T Create(string)
 
-IDomainEvent (인터페이스)
-└── DateTimeOffset OccurredAt
+IDomainEvent : INotification (인터페이스)
+├── DateTimeOffset OccurredAt
+├── Ulid EventId
+├── string? CorrelationId
+└── string? CausationId
     │
     └── DomainEvent (abstract record)
-        └── UTC 시간 자동 설정
+        ├── 기본 생성자: OccurredAt, EventId 자동 설정
+        └── CorrelationId, CausationId 선택적 지정
+
+IHasDomainEvents (읽기 전용 이벤트 조회)
+└── IDomainEventDrain (internal, 이벤트 정리)
 ```
 
 ### Error 계층

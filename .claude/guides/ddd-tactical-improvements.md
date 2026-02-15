@@ -149,14 +149,13 @@ public sealed class Customer : AggregateRoot<CustomerId>, IAuditable
 ### 현재 구현
 
 ```csharp
-public abstract class AggregateRoot<TId> : Entity<TId>
+public abstract class AggregateRoot<TId> : Entity<TId>, IDomainEventDrain
     where TId : struct, IEntityId<TId>
 {
     private readonly List<IDomainEvent> _domainEvents = [];
 
     public IReadOnlyList<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
     protected void AddDomainEvent(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
-    public void RemoveDomainEvent(IDomainEvent domainEvent) => _domainEvents.Remove(domainEvent);
     public void ClearDomainEvents() => _domainEvents.Clear();
 }
 ```
@@ -178,14 +177,23 @@ public abstract class AggregateRoot<TId> : Entity<TId>
 **이벤트 정의:**
 
 ```csharp
-public interface IDomainEvent
+public interface IDomainEvent : INotification
 {
     DateTimeOffset OccurredAt { get; }
+    Ulid EventId { get; }
+    string? CorrelationId { get; }
+    string? CausationId { get; }
 }
 
-public abstract record DomainEvent(DateTimeOffset OccurredAt) : IDomainEvent
+public abstract record DomainEvent(
+    DateTimeOffset OccurredAt,
+    Ulid EventId,
+    string? CorrelationId,
+    string? CausationId) : IDomainEvent
 {
-    protected DomainEvent() : this(DateTimeOffset.UtcNow) { }
+    protected DomainEvent() : this(DateTimeOffset.UtcNow, Ulid.NewUlid(), null, null) { }
+    protected DomainEvent(string? correlationId) : this(DateTimeOffset.UtcNow, Ulid.NewUlid(), correlationId, null) { }
+    protected DomainEvent(string? correlationId, string? causationId) : this(DateTimeOffset.UtcNow, Ulid.NewUlid(), correlationId, causationId) { }
 }
 ```
 
@@ -414,10 +422,13 @@ Functorium은 별도의 Factory 클래스 대신 **정적 팩토리 메서드 �
 모든 이벤트가 `IDomainEvent`로 통합되어 있습니다. 내부(In-Process) 이벤트와 외부(Cross-Service) 이벤트의 구분이 없습니다.
 
 ```csharp
-// 현재: 단일 이벤트 타입
-public interface IDomainEvent
+// 현재: 단일 이벤트 타입 (추적 속성 포함)
+public interface IDomainEvent : INotification
 {
     DateTimeOffset OccurredAt { get; }
+    Ulid EventId { get; }
+    string? CorrelationId { get; }
+    string? CausationId { get; }
 }
 ```
 
@@ -581,7 +592,11 @@ public sealed record CreatedEvent(
 
 ```csharp
 // 제안: 이벤트 메타데이터 확장
-public abstract record DomainEvent(DateTimeOffset OccurredAt) : IDomainEvent
+public abstract record DomainEvent(
+    DateTimeOffset OccurredAt,
+    Ulid EventId,
+    string? CorrelationId,
+    string? CausationId) : IDomainEvent
 {
     public virtual int Version => 1;
 }

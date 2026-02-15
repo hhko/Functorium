@@ -714,18 +714,17 @@ IEntity<TId> (인터페이스)
         +-- CreateFromValidation<TEntity, TValue>() 헬퍼
         `-- GetUnproxiedType() - ORM 프록시 지원
             |
-            `-- AggregateRoot<TId>
-                +-- DomainEvents (읽기 전용)
-                +-- AddDomainEvent()
-                +-- RemoveDomainEvent()
-                `-- ClearDomainEvents()
+            `-- AggregateRoot<TId> : IDomainEventDrain
+                +-- DomainEvents (읽기 전용, IHasDomainEvents)
+                +-- AddDomainEvent() (protected)
+                `-- ClearDomainEvents() (IDomainEventDrain)
 ```
 
 **계층 이해하기:**
 
 - **IEntity\<TId\>**: Entity의 계약을 정의하는 인터페이스. `Create`, `CreateFromValidated` 메서드명 상수를 포함합니다.
 - **Entity\<TId\>**: ID 기반 동등성(`Equals`, `GetHashCode`, `==`, `!=`)을 자동 구현. ORM 프록시 타입도 처리합니다.
-- **AggregateRoot\<TId\>**: 도메인 이벤트 관리 기능을 제공합니다.
+- **AggregateRoot\<TId\>**: 도메인 이벤트 관리 기능을 제공합니다. `IDomainEventDrain`(internal)을 구현하여, 이벤트 조회(`IHasDomainEvents`)와 정리(`IDomainEventDrain`)를 분리합니다.
 
 ### Entity\<TId\>
 
@@ -824,11 +823,10 @@ public class Product : Entity<ProductId>
 **위치**: `Functorium.Domains.Entities.AggregateRoot<TId>`
 
 ```csharp
-[Serializable]
-public abstract class AggregateRoot<TId> : Entity<TId>
+public abstract class AggregateRoot<TId> : Entity<TId>, IDomainEventDrain
     where TId : struct, IEntityId<TId>
 {
-    // 도메인 이벤트 목록 (읽기 전용)
+    // 도메인 이벤트 목록 (읽기 전용, IHasDomainEvents)
     public IReadOnlyList<IDomainEvent> DomainEvents { get; }
 
     // 기본 생성자 (ORM/직렬화용)
@@ -840,13 +838,15 @@ public abstract class AggregateRoot<TId> : Entity<TId>
     // 도메인 이벤트 추가
     protected void AddDomainEvent(IDomainEvent domainEvent);
 
-    // 도메인 이벤트 제거
-    protected void RemoveDomainEvent(IDomainEvent domainEvent);
-
-    // 모든 도메인 이벤트 제거
+    // 모든 도메인 이벤트 제거 (IDomainEventDrain)
     public void ClearDomainEvents();
 }
 ```
+
+**인터페이스 분리 원칙**:
+- `IHasDomainEvents`: 도메인 계층의 읽기 전용 계약 (이벤트 조회만 허용)
+- `IDomainEventDrain` (internal): 이벤트 발행 후 정리를 위한 인프라 인터페이스
+- 도메인 이벤트는 불변의 사실(fact)이므로, 도메인 계약에서 개별 삭제 메서드를 제공하지 않습니다
 
 **예제:**
 
