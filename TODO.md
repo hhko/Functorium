@@ -2,10 +2,23 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
-- [ ] Specification 패턴 문서화
-- [ ] 
-
-
+- [ ] DTO 저장소 적용?
+- [ ] UoW 지금은 인터페이스만 제공, 추가 개선 사항이 없을까?
+- [ ] Entity & Aggregate 생성 패턴 확인?
+---
+- [ ] 복수개 서비스 예제 추가
+- [ ] Integration Events vs Domain Events
+---
+- [ ] LanaguageExt RunAsync 취소 처리?
+- [ ] usecase 유효성 검사 단순화
+- [ ] usecase 파이프라인 유효성 검사 오픈소스 재확인
+---
+- [ ] MinVer 재도입
+- [ ] 빌드 자동화에 코드 품질 분석 포함
+  - 코드 포맷
+  - 코드 커버리지
+  - 정적 분석
+  - 코드 복잡도
 
 ```
   관심사 3: CorrelationId / CausationId의 위치
@@ -79,11 +92,11 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
   "Simplicity First" 원칙에 부합합니다.
 ```
 
-
+- [x] Specification 패턴 문서화
 - [x] ER 다이어그램 도구
 - [x] UoW 패턴 개선
 - [x] UOW과 도메인 이벤트를 유스케이스 파이프라인으로 책임 이동 
-- [ ] Specifications 패턴 개선
+- [x] Specifications 패턴 개선
   ```
   ddd-tactical-improvements.md §7에서 식별된 개선 사항: 쿼리 조건이 Repository 메서드에 하드코딩되어 있어 재사용/조합이 불가능합니다.
   
@@ -92,15 +105,6 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
   - 동일 필터 조건의 Repository 간 중복
   - AND/OR 조합 시 새 메서드 생성 필요
   ```
-- [ ] UoW 지금은 인터페이스만 제공, 추가 개선 사항이 없을까?
-- [ ] Entity & Aggregate 생성 패턴 확인?
-- [ ] Integration Events vs Domain Events
-- [ ] DTO 저장소 적용?
----
-- [ ] LanaguageExt RunAsync 취소 처리?
-- [ ] usecase 유효성 검사 단순화
-- [ ] usecase 파이프라인 유효성 검사 오픈소스 재확인
----
 - [x] 도메인 이벤트 인터페이스 적용
 - [x] Entity & Aggregate 생성 패턴 개선
 - [x] Sqlite 추가
@@ -116,18 +120,12 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [x] `event.id, event.type -> request., response.`
 - [x] `event.id -> ` 로그 통합
 - [ ] `response.event.type` 확인 필요?
-- [ ] MinVer 재도입
-- [ ] 빌드 자동화에 코드 품질 분석 포함
-  - 코드 포맷
-  - 코드 커버리지
-  - 정적 분석
-  - 코드 복잡도
 - [ ] GitHub Action에 코드 품질 분석 포함
 - [x] 소스 생성기 폴더 이름 변경
 - [ ] 소스 생성기 Book 업데이트
 - [ ] https://code.claude.com/docs/ko/memory
 - [ ] [Claude 메모리 아키텍처 살펴보기 - CLAUDE.md, Memory Tool까지](https://goddaehee.tistory.com/433)
-- [ ] crash
+- [x] crash
 - [ ] io + polly: timeout, retry, 서킷브레이커, ...
 - [ ] 동적 입출력 테스트 보강
 - [ ] opensearch 모든 로그 수집
