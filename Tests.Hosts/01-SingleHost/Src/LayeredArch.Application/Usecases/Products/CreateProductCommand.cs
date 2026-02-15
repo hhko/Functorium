@@ -1,4 +1,5 @@
 using LayeredArch.Domain.AggregateRoots.Products;
+using LayeredArch.Domain.AggregateRoots.Products.Specifications;
 using Functorium.Applications.Errors;
 using Functorium.Applications.Linq;
 using static Functorium.Applications.Errors.ApplicationErrorType;
@@ -80,7 +81,7 @@ public sealed class CreateProductCommand
 
             // 4. 중복 검사 및 저장
             FinT<IO, Response> usecase =
-                from exists in _productRepository.ExistsByName(productName)
+                from exists in _productRepository.Exists(new ProductNameUniqueSpec(productName))
                 from _ in guard(!exists, ApplicationError.For<CreateProductCommand>(
                     new AlreadyExists(),
                     request.Name,

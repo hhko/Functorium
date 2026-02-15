@@ -23,4 +23,15 @@ public interface IProductRepository : IRepository<Product, ProductId>
     /// excludeId가 지정되면 해당 상품은 제외하고 검사합니다.
     /// </summary>
     FinT<IO, bool> ExistsByName(ProductName name, ProductId? excludeId = null);
+
+    /// <summary>
+    /// Specification 기반 존재 여부 확인.
+    /// </summary>
+    FinT<IO, bool> Exists(Specification<Product> spec);
+
+    /// <summary>
+    /// Specification 기반 상품 조회.
+    /// 조건에 맞는 모든 상품을 반환합니다.
+    /// </summary>
+    FinT<IO, Seq<Product>> FindAll(Specification<Product> spec);
 }

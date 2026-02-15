@@ -3,6 +3,7 @@ using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
+using Functorium.Domains.Specifications;
 using LanguageExt;
 using LanguageExt.Common;
 using Microsoft.Extensions.Logging;
@@ -138,6 +139,24 @@ public class InMemoryProductRepository : IProductRepository
                 ((string)p.Name).Equals(name, StringComparison.OrdinalIgnoreCase) &&
                 (excludeId is null || p.Id != excludeId.Value));
             return Fin.Succ(exists);
+        });
+    }
+
+    public virtual FinT<IO, bool> Exists(Specification<Product> spec)
+    {
+        return IO.lift(() =>
+        {
+            bool exists = _products.Values.Any(p => spec.IsSatisfiedBy(p));
+            return Fin.Succ(exists);
+        });
+    }
+
+    public virtual FinT<IO, Seq<Product>> FindAll(Specification<Product> spec)
+    {
+        return IO.lift(() =>
+        {
+            var products = _products.Values.Where(p => spec.IsSatisfiedBy(p));
+            return Fin.Succ(toSeq(products));
         });
     }
 }

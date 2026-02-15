@@ -12,4 +12,9 @@ public interface ICustomerRepository : IRepository<Customer, CustomerId>
     /// 이메일 중복 확인
     /// </summary>
     FinT<IO, bool> ExistsByEmail(Email email);
+
+    /// <summary>
+    /// Specification 기반 존재 여부 확인.
+    /// </summary>
+    FinT<IO, bool> Exists(Specification<Customer> spec);
 }

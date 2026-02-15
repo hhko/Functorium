@@ -1,8 +1,10 @@
 using LayeredArch.Domain.AggregateRoots.Customers;
+using LayeredArch.Domain.AggregateRoots.Customers.Specifications;
 using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
+using Functorium.Domains.Specifications;
 using Microsoft.EntityFrameworkCore;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
@@ -87,6 +89,21 @@ public class EfCoreCustomerRepository : ICustomerRepository
             var emailStr = (string)email;
             bool exists = await _dbContext.Customers.AnyAsync(c =>
                 EF.Property<string>(c, nameof(Customer.Email)) == emailStr);
+
+            return Fin.Succ(exists);
+        });
+    }
+
+    public virtual FinT<IO, bool> Exists(Specification<Customer> spec)
+    {
+        return IO.liftAsync(async () =>
+        {
+            bool exists = spec switch
+            {
+                CustomerEmailSpec s => await _dbContext.Customers.AnyAsync(c =>
+                    EF.Property<string>(c, nameof(Customer.Email)) == (string)s.Email),
+                _ => await _dbContext.Customers.AnyAsync(c => spec.IsSatisfiedBy(c))
+            };
 
             return Fin.Succ(exists);
         });

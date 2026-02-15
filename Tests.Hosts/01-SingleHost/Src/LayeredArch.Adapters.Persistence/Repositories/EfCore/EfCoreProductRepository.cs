@@ -1,6 +1,8 @@
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
+using Functorium.Domains.Specifications;
+using LayeredArch.Domain.AggregateRoots.Products.Specifications;
 using Microsoft.EntityFrameworkCore;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
@@ -115,6 +117,41 @@ public class EfCoreProductRepository : IProductRepository
                 (excludeId == null || p.Id != excludeId.Value));
 
             return Fin.Succ(exists);
+        });
+    }
+
+    public virtual FinT<IO, bool> Exists(Specification<Product> spec)
+    {
+        return IO.liftAsync(async () =>
+        {
+            bool exists = spec switch
+            {
+                ProductNameUniqueSpec s => await _dbContext.Products.AnyAsync(p =>
+                    EF.Property<string>(p, nameof(Product.Name)) == (string)s.Name &&
+                    (s.ExcludeId == null || p.Id != s.ExcludeId.Value)),
+                _ => await _dbContext.Products.AnyAsync(p => spec.IsSatisfiedBy(p))
+            };
+
+            return Fin.Succ(exists);
+        });
+    }
+
+    public virtual FinT<IO, Seq<Product>> FindAll(Specification<Product> spec)
+    {
+        return IO.liftAsync(async () =>
+        {
+            IQueryable<Product> query = spec switch
+            {
+                ProductPriceRangeSpec s => _dbContext.Products.Where(p =>
+                    EF.Property<decimal>(p, nameof(Product.Price)) >= (decimal)s.MinPrice &&
+                    EF.Property<decimal>(p, nameof(Product.Price)) <= (decimal)s.MaxPrice),
+                ProductLowStockSpec s => _dbContext.Products.Where(p =>
+                    EF.Property<int>(p, nameof(Product.StockQuantity)) < (int)s.Threshold),
+                _ => _dbContext.Products.Where(p => spec.IsSatisfiedBy(p))
+            };
+
+            var products = await query.Include(p => p.Tags).ToListAsync();
+            return Fin.Succ(toSeq(products));
         });
     }
 }

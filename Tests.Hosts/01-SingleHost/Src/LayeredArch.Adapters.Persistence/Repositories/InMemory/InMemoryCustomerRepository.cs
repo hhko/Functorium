@@ -4,6 +4,7 @@ using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
+using Functorium.Domains.Specifications;
 using LanguageExt;
 using LanguageExt.Common;
 using static Functorium.Adapters.Errors.AdapterErrorType;
@@ -92,6 +93,15 @@ public class InMemoryCustomerRepository : ICustomerRepository
         {
             bool exists = _customers.Values.Any(c =>
                 ((string)c.Email).Equals(email, StringComparison.OrdinalIgnoreCase));
+            return Fin.Succ(exists);
+        });
+    }
+
+    public virtual FinT<IO, bool> Exists(Specification<Customer> spec)
+    {
+        return IO.lift(() =>
+        {
+            bool exists = _customers.Values.Any(c => spec.IsSatisfiedBy(c));
             return Fin.Succ(exists);
         });
     }

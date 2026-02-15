@@ -8,4 +8,5 @@ global using Functorium.Domains.ValueObjects.Validations.Typed;
 global using LayeredArch.Domain.SharedKernel.Events;
 global using LayeredArch.Domain.SharedKernel.Entities;
 global using Functorium.Domains.Services;
+global using Functorium.Domains.Specifications;
 global using LayeredArch.Domain.SharedKernel.ValueObjects;

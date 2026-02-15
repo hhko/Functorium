@@ -1,0 +1,115 @@
+using Functorium.Domains.Specifications;
+using LayeredArch.Domain.AggregateRoots.Products;
+using LayeredArch.Domain.AggregateRoots.Products.Specifications;
+
+namespace LayeredArch.Application.Usecases.Products;
+
+/// <summary>
+/// 상품 검색 Query - Specification 패턴 조합 데모
+/// 가격 범위, 재고 부족 등 선택적 필터를 Specification으로 조합하여 검색
+/// </summary>
+public sealed class SearchProductsQuery
+{
+    /// <summary>
+    /// Query Request - 선택적 검색 필터
+    /// </summary>
+    public sealed record Request(
+        decimal? MinPrice,
+        decimal? MaxPrice,
+        int? LowStockThreshold) : IQueryRequest<Response>;
+
+    /// <summary>
+    /// Query Response - 검색 결과 상품 목록
+    /// </summary>
+    public sealed record Response(Seq<ProductDto> Products);
+
+    /// <summary>
+    /// 상품 DTO - 클라이언트 응답용
+    /// </summary>
+    public sealed record ProductDto(
+        string ProductId,
+        string Name,
+        decimal Price,
+        int StockQuantity);
+
+    /// <summary>
+    /// Request Validator - FluentValidation 검증 규칙
+    /// </summary>
+    public sealed class Validator : AbstractValidator<Request>
+    {
+        public Validator()
+        {
+            RuleFor(x => x.MinPrice)
+                .GreaterThan(0).When(x => x.MinPrice.HasValue)
+                .WithMessage("최소 가격은 0보다 커야 합니다");
+
+            RuleFor(x => x.MaxPrice)
+                .GreaterThan(0).When(x => x.MaxPrice.HasValue)
+                .WithMessage("최대 가격은 0보다 커야 합니다");
+
+            RuleFor(x => x.MaxPrice)
+                .GreaterThanOrEqualTo(x => x.MinPrice!.Value)
+                .When(x => x.MinPrice.HasValue && x.MaxPrice.HasValue)
+                .WithMessage("최대 가격은 최소 가격 이상이어야 합니다");
+
+            RuleFor(x => x.LowStockThreshold)
+                .GreaterThan(0).When(x => x.LowStockThreshold.HasValue)
+                .WithMessage("재고 임계값은 0보다 커야 합니다");
+        }
+    }
+
+    /// <summary>
+    /// Query Handler - Specification 조합으로 상품 검색
+    /// </summary>
+    public sealed class Usecase(IProductRepository productRepository)
+        : IQueryUsecase<Request, Response>
+    {
+        private readonly IProductRepository _productRepository = productRepository;
+
+        public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
+        {
+            var spec = BuildSpecification(request);
+
+            FinT<IO, Response> usecase =
+                from products in _productRepository.FindAll(spec)
+                select new Response(
+                    products
+                        .Select(p => new ProductDto(p.Id.ToString(), p.Name, p.Price, p.StockQuantity))
+                        .ToSeq());
+
+            Fin<Response> response = await usecase.Run().RunAsync();
+
+            return response.ToFinResponse();
+        }
+
+        private static Specification<Product> BuildSpecification(Request request)
+        {
+            Specification<Product>? spec = null;
+
+            if (request.MinPrice.HasValue && request.MaxPrice.HasValue)
+            {
+                spec = new ProductPriceRangeSpec(
+                    Money.Create(request.MinPrice.Value).ThrowIfFail(),
+                    Money.Create(request.MaxPrice.Value).ThrowIfFail());
+            }
+
+            if (request.LowStockThreshold.HasValue)
+            {
+                var lowStockSpec = new ProductLowStockSpec(
+                    Quantity.Create(request.LowStockThreshold.Value).ThrowIfFail());
+
+                spec = spec is not null ? spec & lowStockSpec : lowStockSpec;
+            }
+
+            return spec ?? new AllProductsSpec();
+        }
+    }
+}
+
+/// <summary>
+/// 모든 상품을 만족하는 Specification (필터 없음)
+/// </summary>
+file sealed class AllProductsSpec : Specification<Product>
+{
+    public override bool IsSatisfiedBy(Product product) => true;
+}

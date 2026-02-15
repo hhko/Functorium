@@ -1,4 +1,5 @@
 using LayeredArch.Domain.AggregateRoots.Customers;
+using LayeredArch.Domain.AggregateRoots.Customers.Specifications;
 using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
 using Functorium.Applications.Errors;
 using Functorium.Applications.Linq;
@@ -77,7 +78,7 @@ public sealed class CreateCustomerCommand
 
             // 4. 중복 검사 및 저장
             FinT<IO, Response> usecase =
-                from exists in _customerRepository.ExistsByEmail(email)
+                from exists in _customerRepository.Exists(new CustomerEmailSpec(email))
                 from _ in guard(!exists, ApplicationError.For<CreateCustomerCommand>(
                     new AlreadyExists(),
                     request.Email,
