@@ -2,6 +2,7 @@ using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
+using Functorium.Applications.Events;
 using Microsoft.EntityFrameworkCore;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
@@ -14,12 +15,14 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 public class EfCoreCustomerRepository : ICustomerRepository
 {
     private readonly LayeredArchDbContext _dbContext;
+    private readonly IDomainEventCollector _eventCollector;
 
     public string RequestCategory => "Repository";
 
-    public EfCoreCustomerRepository(LayeredArchDbContext dbContext)
+    public EfCoreCustomerRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
     {
         _dbContext = dbContext;
+        _eventCollector = eventCollector;
     }
 
     public virtual FinT<IO, Customer> Create(Customer customer)
@@ -27,6 +30,7 @@ public class EfCoreCustomerRepository : ICustomerRepository
         return IO.liftAsync(async () =>
         {
             _dbContext.Customers.Add(customer);
+            _eventCollector.Track(customer);
             return Fin.Succ(customer);
         });
     }
@@ -53,6 +57,7 @@ public class EfCoreCustomerRepository : ICustomerRepository
         return IO.lift(() =>
         {
             _dbContext.Customers.Update(customer);
+            _eventCollector.Track(customer);
             return Fin.Succ(customer);
         });
     }

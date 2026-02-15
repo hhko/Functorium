@@ -1,6 +1,7 @@
 using LayeredArch.Domain.AggregateRoots.Orders;
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
+using Functorium.Applications.Events;
 using Microsoft.EntityFrameworkCore;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
@@ -13,12 +14,14 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 public class EfCoreOrderRepository : IOrderRepository
 {
     private readonly LayeredArchDbContext _dbContext;
+    private readonly IDomainEventCollector _eventCollector;
 
     public string RequestCategory => "Repository";
 
-    public EfCoreOrderRepository(LayeredArchDbContext dbContext)
+    public EfCoreOrderRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
     {
         _dbContext = dbContext;
+        _eventCollector = eventCollector;
     }
 
     public virtual FinT<IO, Order> Create(Order order)
@@ -26,6 +29,7 @@ public class EfCoreOrderRepository : IOrderRepository
         return IO.liftAsync(async () =>
         {
             _dbContext.Orders.Add(order);
+            _eventCollector.Track(order);
             return Fin.Succ(order);
         });
     }
@@ -52,6 +56,7 @@ public class EfCoreOrderRepository : IOrderRepository
         return IO.lift(() =>
         {
             _dbContext.Orders.Update(order);
+            _eventCollector.Track(order);
             return Fin.Succ(order);
         });
     }

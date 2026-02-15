@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using LayeredArch.Domain.AggregateRoots.Orders;
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
+using Functorium.Applications.Events;
 using LanguageExt;
 using LanguageExt.Common;
 using static Functorium.Adapters.Errors.AdapterErrorType;
@@ -15,11 +16,13 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 public class InMemoryOrderRepository : IOrderRepository
 {
     private static readonly ConcurrentDictionary<OrderId, Order> _orders = new();
+    private readonly IDomainEventCollector _eventCollector;
 
     public string RequestCategory => "Repository";
 
-    public InMemoryOrderRepository()
+    public InMemoryOrderRepository(IDomainEventCollector eventCollector)
     {
+        _eventCollector = eventCollector;
     }
 
     public virtual FinT<IO, Order> Create(Order order)
@@ -27,6 +30,7 @@ public class InMemoryOrderRepository : IOrderRepository
         return IO.lift(() =>
         {
             _orders[order.Id] = order;
+            _eventCollector.Track(order);
             return Fin.Succ(order);
         });
     }
@@ -60,6 +64,7 @@ public class InMemoryOrderRepository : IOrderRepository
             }
 
             _orders[order.Id] = order;
+            _eventCollector.Track(order);
             return Fin.Succ(order);
         });
     }

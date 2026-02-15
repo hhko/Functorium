@@ -8,7 +8,7 @@ namespace Functorium.Domains.Entities;
 /// </summary>
 /// <typeparam name="TId">EntityId 구현 타입</typeparam>
 [Serializable]
-public abstract class AggregateRoot<TId> : Entity<TId>
+public abstract class AggregateRoot<TId> : Entity<TId>, IHasDomainEvents
     where TId : struct, IEntityId<TId>
 {
     private readonly List<IDomainEvent> _domainEvents = [];

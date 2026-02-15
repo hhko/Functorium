@@ -1,4 +1,6 @@
 using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Applications.Events;
+using Functorium.Applications.Persistence;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,7 +12,7 @@ namespace Functorium.Adapters.Observabilities.Builders.Configurators;
 /// </summary>
 /// <remarks>
 /// 파이프라인 실행 순서 (등록 순서):
-/// Request → Metrics → Tracing → Logging → Validation → Exception → Custom → Handler
+/// Request → Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler
 /// </remarks>
 public class PipelineConfigurator
 {
@@ -19,6 +21,7 @@ public class PipelineConfigurator
     private bool _useLogging;
     private bool _useValidation;
     private bool _useException;
+    private bool _useTransaction;
     private ServiceLifetime _lifetime = ServiceLifetime.Scoped;
     private readonly List<Type> _customPipelines = new();
 
@@ -28,7 +31,7 @@ public class PipelineConfigurator
 
     /// <summary>
     /// 모든 기본 파이프라인을 활성화합니다.
-    /// Metrics, Tracing, Logging, Validation, Exception 파이프라인이 등록됩니다.
+    /// Metrics, Tracing, Logging, Validation, Exception, Transaction 파이프라인이 등록됩니다.
     /// </summary>
     public PipelineConfigurator UseAll()
     {
@@ -37,6 +40,7 @@ public class PipelineConfigurator
         _useLogging = true;
         _useValidation = true;
         _useException = true;
+        _useTransaction = true;
         return this;
     }
 
@@ -91,6 +95,21 @@ public class PipelineConfigurator
     }
 
     /// <summary>
+    /// Transaction Pipeline을 활성화합니다.
+    /// Command Usecase에 대해 UoW.SaveChanges + 도메인 이벤트 발행을 자동 처리합니다.
+    /// Query는 바이패스됩니다.
+    /// </summary>
+    /// <remarks>
+    /// IUnitOfWork, IDomainEventPublisher, IDomainEventCollector가 DI에 등록되어 있어야 합니다.
+    /// UseAll()에 포함되어 있으므로 별도 호출 없이도 활성화됩니다.
+    /// </remarks>
+    public PipelineConfigurator UseTransaction()
+    {
+        _useTransaction = true;
+        return this;
+    }
+
+    /// <summary>
     /// 파이프라인 서비스의 Lifetime을 설정합니다.
     /// 기본값: Scoped
     /// </summary>
@@ -120,7 +139,7 @@ public class PipelineConfigurator
     internal void Apply(IServiceCollection services)
     {
         // 파이프라인 등록 순서:
-        // Request → Metrics → Tracing → Logging → Validation → Exception → Custom → Handler
+        // Request → Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler
 
         if (_useMetrics)
         {
@@ -147,6 +166,11 @@ public class PipelineConfigurator
             RegisterPipeline(services, typeof(UsecaseExceptionPipeline<,>));
         }
 
+        if (_useTransaction && HasTransactionDependencies(services))
+        {
+            RegisterPipeline(services, typeof(UsecaseTransactionPipeline<,>));
+        }
+
         // 커스텀 파이프라인 등록
         foreach (Type customPipeline in _customPipelines)
         {
@@ -168,5 +192,16 @@ public class PipelineConfigurator
                 services.AddTransient(typeof(IPipelineBehavior<,>), pipelineType);
                 break;
         }
+    }
+
+    /// <summary>
+    /// Transaction 파이프라인에 필요한 서비스가 DI에 등록되어 있는지 확인합니다.
+    /// IUnitOfWork, IDomainEventPublisher, IDomainEventCollector 모두 등록되어야 합니다.
+    /// </summary>
+    private static bool HasTransactionDependencies(IServiceCollection services)
+    {
+        return services.Any(s => s.ServiceType == typeof(IUnitOfWork))
+            && services.Any(s => s.ServiceType == typeof(IDomainEventPublisher))
+            && services.Any(s => s.ServiceType == typeof(IDomainEventCollector));
     }
 }

@@ -3,6 +3,7 @@ using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
+using Functorium.Applications.Events;
 using LanguageExt;
 using LanguageExt.Common;
 using static Functorium.Adapters.Errors.AdapterErrorType;
@@ -16,11 +17,13 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 public class InMemoryCustomerRepository : ICustomerRepository
 {
     private static readonly ConcurrentDictionary<CustomerId, Customer> _customers = new();
+    private readonly IDomainEventCollector _eventCollector;
 
     public string RequestCategory => "Repository";
 
-    public InMemoryCustomerRepository()
+    public InMemoryCustomerRepository(IDomainEventCollector eventCollector)
     {
+        _eventCollector = eventCollector;
     }
 
     public virtual FinT<IO, Customer> Create(Customer customer)
@@ -28,6 +31,7 @@ public class InMemoryCustomerRepository : ICustomerRepository
         return IO.lift(() =>
         {
             _customers[customer.Id] = customer;
+            _eventCollector.Track(customer);
             return Fin.Succ(customer);
         });
     }
@@ -61,6 +65,7 @@ public class InMemoryCustomerRepository : ICustomerRepository
             }
 
             _customers[customer.Id] = customer;
+            _eventCollector.Track(customer);
             return Fin.Succ(customer);
         });
     }

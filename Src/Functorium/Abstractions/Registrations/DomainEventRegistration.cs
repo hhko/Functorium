@@ -48,6 +48,7 @@ public static class DomainEventRegistration
     public static IServiceCollection RegisterDomainEventPublisher(this IServiceCollection services)
     {
         services.TryAddScoped<DomainEventPublisher>();
+        services.TryAddScoped<IDomainEventCollector, DomainEventCollector>();
 
         services.AddScoped<IDomainEventPublisher>(sp =>
         {

@@ -1,9 +1,7 @@
 using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
 using Functorium.Applications.Errors;
-using Functorium.Applications.Events;
 using Functorium.Applications.Linq;
-using Functorium.Applications.Persistence;
 using static Functorium.Applications.Errors.ApplicationErrorType;
 
 namespace LayeredArch.Application.Usecases.Customers;
@@ -56,14 +54,10 @@ public sealed class CreateCustomerCommand
     /// Command Handler - Apply 패턴 적용
     /// </summary>
     public sealed class Usecase(
-        ICustomerRepository customerRepository,
-        IUnitOfWork unitOfWork,
-        IDomainEventPublisher eventPublisher)
+        ICustomerRepository customerRepository)
         : ICommandUsecase<Request, Response>
     {
         private readonly ICustomerRepository _customerRepository = customerRepository;
-        private readonly IUnitOfWork _unitOfWork = unitOfWork;
-        private readonly IDomainEventPublisher _eventPublisher = eventPublisher;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
@@ -89,8 +83,6 @@ public sealed class CreateCustomerCommand
                     request.Email,
                     $"이미 등록된 이메일입니다: '{request.Email}'"))
                 from customer in _customerRepository.Create((Customer)customerResult)
-                from _1 in _unitOfWork.SaveChanges(cancellationToken)
-                from _2 in _eventPublisher.PublishEvents(customer, cancellationToken)
                 select new Response(
                     customer.Id.ToString(),
                     customer.Name,

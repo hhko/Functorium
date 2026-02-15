@@ -1,8 +1,6 @@
 using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Applications.Errors;
-using Functorium.Applications.Events;
 using Functorium.Applications.Linq;
-using Functorium.Applications.Persistence;
 using static Functorium.Applications.Errors.ApplicationErrorType;
 
 namespace LayeredArch.Application.Usecases.Products;
@@ -59,14 +57,10 @@ public sealed class CreateProductCommand
     /// Command Handler - Entity Guide의 Apply 패턴 적용
     /// </summary>
     public sealed class Usecase(
-        IProductRepository productRepository,
-        IUnitOfWork unitOfWork,
-        IDomainEventPublisher eventPublisher)
+        IProductRepository productRepository)
         : ICommandUsecase<Request, Response>
     {
         private readonly IProductRepository _productRepository = productRepository;
-        private readonly IUnitOfWork _unitOfWork = unitOfWork;
-        private readonly IDomainEventPublisher _eventPublisher = eventPublisher;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
@@ -92,8 +86,6 @@ public sealed class CreateProductCommand
                     request.Name,
                     $"Product name already exists: '{request.Name}'"))
                 from product in _productRepository.Create((Product)productResult)
-                from _1 in _unitOfWork.SaveChanges(cancellationToken)
-                from _2 in _eventPublisher.PublishEvents(product, cancellationToken)
                 select new Response(
                     product.Id.ToString(),
                     product.Name,

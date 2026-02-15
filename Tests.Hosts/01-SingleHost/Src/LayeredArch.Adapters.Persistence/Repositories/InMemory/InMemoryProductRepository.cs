@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
+using Functorium.Applications.Events;
 using LanguageExt;
 using LanguageExt.Common;
 using Microsoft.Extensions.Logging;
@@ -19,17 +20,16 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 public class InMemoryProductRepository : IProductRepository
 {
     private static readonly ConcurrentDictionary<ProductId, Product> _products = new();
+    private readonly IDomainEventCollector _eventCollector;
 
     /// <summary>
     /// 관찰 가능성 로그를 위한 요청 카테고리
     /// </summary>
     public string RequestCategory => "Repository";
 
-    /// <summary>
-    /// 테스트용 생성자 (ActivityContext 없이)
-    /// </summary>
-    public InMemoryProductRepository()
+    public InMemoryProductRepository(IDomainEventCollector eventCollector)
     {
+        _eventCollector = eventCollector;
     }
 
     public virtual FinT<IO, Product> Create(Product product)
@@ -44,6 +44,7 @@ public class InMemoryProductRepository : IProductRepository
             }
 
             _products[product.Id] = product;
+            _eventCollector.Track(product);
             return Fin.Succ(product);
         });
     }
@@ -106,6 +107,7 @@ public class InMemoryProductRepository : IProductRepository
             }
 
             _products[product.Id] = product;
+            _eventCollector.Track(product);
             return Fin.Succ(product);
         });
     }

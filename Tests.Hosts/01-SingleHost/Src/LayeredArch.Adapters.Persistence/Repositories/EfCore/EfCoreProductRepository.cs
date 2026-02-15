@@ -1,5 +1,6 @@
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
+using Functorium.Applications.Events;
 using Microsoft.EntityFrameworkCore;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
@@ -12,12 +13,14 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 public class EfCoreProductRepository : IProductRepository
 {
     private readonly LayeredArchDbContext _dbContext;
+    private readonly IDomainEventCollector _eventCollector;
 
     public string RequestCategory => "Repository";
 
-    public EfCoreProductRepository(LayeredArchDbContext dbContext)
+    public EfCoreProductRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
     {
         _dbContext = dbContext;
+        _eventCollector = eventCollector;
     }
 
     public virtual FinT<IO, Product> Create(Product product)
@@ -25,6 +28,7 @@ public class EfCoreProductRepository : IProductRepository
         return IO.liftAsync(async () =>
         {
             _dbContext.Products.Add(product);
+            _eventCollector.Track(product);
             return Fin.Succ(product);
         });
     }
@@ -78,6 +82,7 @@ public class EfCoreProductRepository : IProductRepository
         return IO.lift(() =>
         {
             _dbContext.Products.Update(product);
+            _eventCollector.Track(product);
             return Fin.Succ(product);
         });
     }
