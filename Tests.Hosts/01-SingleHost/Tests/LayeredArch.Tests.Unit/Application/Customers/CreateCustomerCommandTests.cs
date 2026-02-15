@@ -1,3 +1,4 @@
+using Functorium.Domains.Specifications;
 using LayeredArch.Application.Usecases.Customers;
 using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
@@ -20,7 +21,7 @@ public class CreateCustomerCommandTests
         // Arrange
         var request = new CreateCustomerCommand.Request("John", "john@example.com", 5000m);
 
-        _customerRepository.ExistsByEmail(Arg.Any<Email>())
+        _customerRepository.Exists(Arg.Any<Specification<Customer>>())
             .Returns(FinTFactory.Succ(false));
         _customerRepository.Create(Arg.Any<Customer>())
             .Returns(call => FinTFactory.Succ(call.Arg<Customer>()));
@@ -66,7 +67,7 @@ public class CreateCustomerCommandTests
         // Arrange
         var request = new CreateCustomerCommand.Request("John", "john@example.com", 5000m);
 
-        _customerRepository.ExistsByEmail(Arg.Any<Email>())
+        _customerRepository.Exists(Arg.Any<Specification<Customer>>())
             .Returns(FinTFactory.Succ(true));
 
         // Act

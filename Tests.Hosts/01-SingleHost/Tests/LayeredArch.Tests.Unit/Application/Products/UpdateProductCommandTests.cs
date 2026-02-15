@@ -1,3 +1,4 @@
+using Functorium.Domains.Specifications;
 using LayeredArch.Application.Usecases.Products;
 using LayeredArch.Domain.AggregateRoots.Products;
 using LayeredArch.Domain.SharedKernel.ValueObjects;
@@ -33,7 +34,7 @@ public class UpdateProductCommandTests
 
         _productRepository.GetById(Arg.Any<ProductId>())
             .Returns(FinTFactory.Succ(existingProduct));
-        _productRepository.ExistsByName(Arg.Any<ProductName>(), Arg.Any<ProductId>())
+        _productRepository.Exists(Arg.Any<Specification<Product>>())
             .Returns(FinTFactory.Succ(false));
         _productRepository.Update(Arg.Any<Product>())
             .Returns(call => FinTFactory.Succ(call.Arg<Product>()));
@@ -74,7 +75,7 @@ public class UpdateProductCommandTests
 
         _productRepository.GetById(Arg.Any<ProductId>())
             .Returns(FinTFactory.Succ(existingProduct));
-        _productRepository.ExistsByName(Arg.Any<ProductName>(), Arg.Any<ProductId>())
+        _productRepository.Exists(Arg.Any<Specification<Product>>())
             .Returns(FinTFactory.Succ(true));
 
         // Act

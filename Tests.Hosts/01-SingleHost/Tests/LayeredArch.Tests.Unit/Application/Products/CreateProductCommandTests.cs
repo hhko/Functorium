@@ -1,3 +1,4 @@
+using Functorium.Domains.Specifications;
 using LayeredArch.Application.Usecases.Products;
 using LayeredArch.Domain.AggregateRoots.Products;
 
@@ -19,7 +20,7 @@ public class CreateProductCommandTests
         // Arrange
         var request = new CreateProductCommand.Request("Test Product", "Description", 100m, 10);
 
-        _productRepository.ExistsByName(Arg.Any<ProductName>(), Arg.Any<ProductId?>())
+        _productRepository.Exists(Arg.Any<Specification<Product>>())
             .Returns(FinTFactory.Succ(false));
         _productRepository.Create(Arg.Any<Product>())
             .Returns(call => FinTFactory.Succ(call.Arg<Product>()));
@@ -65,7 +66,7 @@ public class CreateProductCommandTests
         // Arrange
         var request = new CreateProductCommand.Request("Existing Product", "Description", 100m, 10);
 
-        _productRepository.ExistsByName(Arg.Any<ProductName>(), Arg.Any<ProductId?>())
+        _productRepository.Exists(Arg.Any<Specification<Product>>())
             .Returns(FinTFactory.Succ(true));
 
         // Act
