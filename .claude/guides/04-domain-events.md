@@ -180,22 +180,18 @@ public class Order : AggregateRoot<OrderId>
 }
 ```
 
-### IDomainEventPublisher 통합 (Application Layer)
+### UsecaseTransactionPipeline 통합
 
 `IDomainEvent`는 Mediator의 `INotification`을 확장하여 Pub/Sub 통합을 지원합니다.
 
-`IDomainEventPublisher`를 사용하여 Repository 저장 후 이벤트를 발행합니다. `IDomainEventPublisher`는 `FinT<IO, Unit>`을 반환하므로 Repository/Port와 동일한 LINQ 체이닝 패턴으로 사용할 수 있습니다:
+**SaveChanges와 도메인 이벤트 발행은 `UsecaseTransactionPipeline`이 자동으로 처리합니다.** Usecase에서 `IUnitOfWork`나 `IDomainEventPublisher`를 직접 주입할 필요가 없습니다:
 
 ```csharp
-using Functorium.Applications.Events;
-
-public sealed class Usecase(
-    IProductRepository productRepository,
-    IDomainEventPublisher eventPublisher)  // 생성자 주입
+internal sealed class Usecase(
+    IProductRepository productRepository)   // Repository만 주입
     : ICommandUsecase<Request, Response>
 {
     private readonly IProductRepository _productRepository = productRepository;
-    private readonly IDomainEventPublisher _eventPublisher = eventPublisher;
 
     public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
     {
@@ -204,9 +200,9 @@ public sealed class Usecase(
         FinT<IO, Response> usecase =
             from exists in _productRepository.ExistsByName(productName)
             from _ in guard(!exists, /* error */)
-            from product in _productRepository.Create(productResult)
-            from __ in _eventPublisher.PublishEvents(product, cancellationToken)  // 직접 호출
+            from product in _productRepository.Create(newProduct)  // Repository가 IDomainEventCollector.Track() 자동 호출
             select new Response(...);
+        // SaveChanges + 도메인 이벤트 발행은 UsecaseTransactionPipeline이 자동 처리
 
         Fin<Response> response = await usecase.Run().RunAsync();
         return response.ToFinResponse();
@@ -214,25 +210,28 @@ public sealed class Usecase(
 }
 ```
 
-### PublishEvents 동작
+### 파이프라인 발행 흐름
 
-`PublishEvents`는 Aggregate의 모든 도메인 이벤트를 발행하고 클리어합니다:
+`UsecaseTransactionPipeline`은 Handler 실행 후 다음 순서로 동작합니다:
 
-1. `aggregate.DomainEvents`에서 이벤트 목록 복사
-2. `aggregate.ClearDomainEvents()` 호출
-3. 각 이벤트를 Mediator를 통해 발행
+1. Handler 실행 → 실패 시 커밋 안함, 응답 반환
+2. `UoW.SaveChanges()` → 트랜잭션 커밋
+3. `IDomainEventCollector.GetTrackedAggregates()` → 추적된 Aggregate 수집
+4. 각 Aggregate의 `DomainEvents`를 Mediator를 통해 발행 후 `ClearDomainEvents()` 호출
 
 ### 트랜잭션 고려사항
 
 | 상황 | 동작 |
 |------|------|
 | 저장 성공, 이벤트 발행 성공 | 정상 처리 |
-| 저장 실패 | 이벤트 발행 안 함 |
-| 저장 성공, 이벤트 발행 실패 | 저장은 커밋됨 (eventual consistency) |
+| 저장 실패 | 이벤트 발행 안 함 (파이프라인이 Fail 응답 반환) |
+| 저장 성공, 이벤트 발행 실패 | 저장은 커밋됨, 성공 응답 유지 (eventual consistency) |
 
-- 이벤트 발행은 트랜잭션 외부에서 실행됩니다
-- 발행 실패 시 비즈니스 로직은 이미 커밋됨 (eventual consistency)
+- 이벤트 발행은 `SaveChanges()` 성공 후에만 실행됩니다 (파이프라인 보장)
+- 발행 실패 시 비즈니스 로직은 이미 커밋됨 (eventual consistency, 경고 로그 기록)
 - 강한 일관성이 필요하면 Outbox 패턴을 고려하세요
+
+> **참조**: 파이프라인 상세는 [07-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./07-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-usecasetransactionpipeline)을 참조하세요.
 
 ---
 
@@ -471,7 +470,7 @@ public async Task Handle_ShouldLogProductCreation()
 ### 이벤트 발행
 
 - [ ] `AddDomainEvent()`가 상태 변경 직후 호출되는가?
-- [ ] `PublishEvents`가 Repository 저장 성공 후 호출되는가?
+- [ ] `UsecaseTransactionPipeline`이 자동 발행하도록 구성되었는가? (`UseAll()` 또는 `UseTransaction()` 등록 확인)
 
 ### 이벤트 핸들러
 
@@ -486,5 +485,5 @@ public async Task Handle_ShouldLogProductCreation()
 
 - [03-entities-and-aggregates.md](./03-entities-and-aggregates.md) - Entity/Aggregate 구현
 - [07-usecases-and-cqrs.md](./07-usecases-and-cqrs.md) - Use Case 구현
-- [03-entities-and-aggregates.md](./03-entities-and-aggregates.md) - Entity 구현 가이드 (상세)
-- [07-usecases-and-cqrs.md](./07-usecases-and-cqrs.md) - 유스케이스 구현 가이드 (상세)
+- [07-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./07-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-usecasetransactionpipeline) - 파이프라인 자동 처리 패턴
+- [08-ports-and-adapters.md §2.9](./08-ports-and-adapters.md#29-unit-of-work-adapter) - UoW Adapter 구현

@@ -9,6 +9,8 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 - [ ] DTO 저장소 적용?
 ---
 - [ ] LanaguageExt RunAsync 취소 처리?
+- [ ] usecase 유효성 검사 단순화
+- [ ] usecase 파이프라인 유효성 검사 오픈소스 재확인
 ---
 - [x] 도메인 이벤트 인터페이스 적용
 - [x] Entity & Aggregate 생성 패턴 개선

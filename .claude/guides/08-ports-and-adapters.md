@@ -1526,16 +1526,47 @@ public class InMemoryUnitOfWork : IUnitOfWork
 
 > **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryUnitOfWork.cs`
 
+#### IDomainEventCollector — Repository와 Pipeline의 브릿지
+
+`IDomainEventCollector`는 Repository에서 추적된 Aggregate를 `UsecaseTransactionPipeline`에 전달하는 브릿지 역할을 합니다.
+
+**위치**: `Functorium.Applications.Events`
+
+```csharp
+public interface IDomainEventCollector
+{
+    void Track(IHasDomainEvents aggregate);
+    IReadOnlyList<IHasDomainEvents> GetTrackedAggregates();
+}
+```
+
+**Repository에서의 사용**: Repository의 `Create()`, `Update()` 메서드에서 `_eventCollector.Track(aggregate)`를 호출하여 Aggregate를 추적 대상으로 등록해야 합니다:
+
+```csharp
+public FinT<IO, Product> Create(Product product)
+{
+    _eventCollector.Track(product);  // 필수: 도메인 이벤트 수집 대상 등록
+    // ... 저장 로직 ...
+}
+```
+
+**등록**: `RegisterDomainEventPublisher()` 호출 시 `IDomainEventCollector`가 Scoped 서비스로 자동 등록됩니다:
+
+```csharp
+services.RegisterDomainEventPublisher();  // IDomainEventPublisher + IDomainEventCollector 등록
+```
+
 #### Repository에서 SaveChanges를 호출하지 않는 이유
 
-Repository의 `Create()`, `Update()`, `Delete()` 메서드는 EF Core 변경 추적(Change Tracking)에 엔티티를 등록만 합니다. 실제 `SaveChangesAsync()` 호출은 `IUnitOfWork`를 통해 Usecase LINQ 체인에서 수행합니다.
+Repository의 `Create()`, `Update()`, `Delete()` 메서드는 EF Core 변경 추적(Change Tracking)에 엔티티를 등록만 합니다. 실제 `SaveChangesAsync()` 호출은 `UsecaseTransactionPipeline`이 Handler 실행 후 자동으로 수행합니다.
 
 이 분리를 통해:
-- 여러 Repository 변경을 하나의 트랜잭션으로 묶을 수 있음
-- 이벤트 발행을 트랜잭션 성공 후로 보장할 수 있음
+- 여러 Repository 변경을 하나의 트랜잭션으로 묶을 수 있음 (파이프라인 보장)
+- 이벤트 발행을 트랜잭션 성공 후로 보장할 수 있음 (파이프라인 보장)
 - Repository가 순수한 데이터 접근 계층으로 유지됨
+- Repository는 `IDomainEventCollector.Track(aggregate)`를 호출하여 도메인 이벤트 수집 대상을 등록
 
-> **참조**: Usecase에서의 UoW 사용 패턴은 [07-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./07-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-unit-of-work)을 참조하세요.
+> **참조**: 파이프라인 패턴은 [07-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./07-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-usecasetransactionpipeline)을 참조하세요.
 
 ---
 

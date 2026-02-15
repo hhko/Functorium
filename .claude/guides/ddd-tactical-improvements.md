@@ -537,15 +537,16 @@ public interface IUnitOfWork : IAdapter
 
 **Usecase 사용 패턴:**
 
-모든 Command Handler에서 `Repository → SaveChanges → PublishEvents` 순서를 일관되게 적용합니다.
+Command Handler는 Repository만 호출하며, SaveChanges와 이벤트 발행은 `UsecaseTransactionPipeline`이 자동 처리합니다:
 
 ```csharp
 FinT<IO, Response> usecase =
-    from product in _productRepository.Create(newProduct)
-    from _1 in _unitOfWork.SaveChanges(cancellationToken)      // 트랜잭션 커밋
-    from _2 in _eventPublisher.PublishEvents(product, cancellationToken)  // 이벤트 발행
+    from product in _productRepository.Create(newProduct)  // Repository가 IDomainEventCollector.Track() 자동 호출
     select new Response(product.Id.ToString());
+// SaveChanges + 도메인 이벤트 발행은 UsecaseTransactionPipeline이 자동 처리
 ```
+
+> **이전 패턴과의 차이**: 이전에는 Usecase에서 `_unitOfWork.SaveChanges()` → `_eventPublisher.PublishEvents()`를 LINQ 체인에서 직접 호출했으나, 파이프라인 도입으로 이 책임이 `UsecaseTransactionPipeline`으로 이전되었습니다. 자세한 내용은 [07-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./07-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-usecasetransactionpipeline)을 참조하세요.
 
 **핵심 설계 결정:**
 - `IAdapter` 상속으로 `[GeneratePipeline]` 소스 생성기 및 DI 등록 호환

@@ -15,7 +15,7 @@
 - [Command 구현](#command-구현)
 - [Query 구현](#query-구현)
 - [도메인 이벤트](#도메인-이벤트)
-- [트랜잭션과 이벤트 발행 (Unit of Work)](#트랜잭션과-이벤트-발행-unit-of-work)
+- [트랜잭션과 이벤트 발행 (UsecaseTransactionPipeline)](#트랜잭션과-이벤트-발행-usecasetransactionpipeline)
 - [FinResponse와 오류 처리](#finresponse와-오류-처리)
 - [FluentValidation 통합](#fluentvalidation-통합)
 - [FAQ](#faq)
@@ -66,8 +66,6 @@ Functorium에서 각 유스케이스는 하나의 클래스로 표현됩니다. 
 
 ```csharp
 using Functorium.Applications.Errors;
-using Functorium.Applications.Events;
-using Functorium.Applications.Persistence;
 using static Functorium.Applications.Errors.ApplicationErrorType;
 
 public sealed class CreateProductCommand
@@ -77,9 +75,7 @@ public sealed class CreateProductCommand
     public sealed class Validator : AbstractValidator<Request> { ... }
 
     internal sealed class Usecase(
-        IProductRepository productRepository,
-        IUnitOfWork unitOfWork,
-        IDomainEventPublisher eventPublisher)
+        IProductRepository productRepository)
         : ICommandUsecase<Request, Response>
     {
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
@@ -103,9 +99,8 @@ public sealed class CreateProductCommand
                     request.Name,
                     $"Product name already exists: '{request.Name}'"))
                 from product in _productRepository.Create((Product)productResult)
-                from _1 in _unitOfWork.SaveChanges(cancellationToken)
-                from _2 in _eventPublisher.PublishEvents(product, cancellationToken)
                 select new Response(...);
+            // SaveChanges + 도메인 이벤트 발행은 UsecaseTransactionPipeline이 자동 처리
 
             Fin<Response> response = await usecase.Run().RunAsync();
             return response.ToFinResponse();
@@ -445,9 +440,7 @@ using LayeredArch.Domain.Entities;
 using LayeredArch.Domain.ValueObjects;
 using LayeredArch.Domain.Repositories;
 using Functorium.Applications.Errors;
-using Functorium.Applications.Events;
 using Functorium.Applications.Linq;
-using Functorium.Applications.Persistence;
 using static Functorium.Applications.Errors.ApplicationErrorType;
 
 namespace LayeredArch.Application.Usecases.Products;
@@ -491,14 +484,10 @@ public sealed class CreateProductCommand
     }
 
     internal sealed class Usecase(
-        IProductRepository productRepository,
-        IUnitOfWork unitOfWork,
-        IDomainEventPublisher eventPublisher)
+        IProductRepository productRepository)
         : ICommandUsecase<Request, Response>
     {
         private readonly IProductRepository _productRepository = productRepository;
-        private readonly IUnitOfWork _unitOfWork = unitOfWork;
-        private readonly IDomainEventPublisher _eventPublisher = eventPublisher;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
@@ -514,7 +503,7 @@ public sealed class CreateProductCommand
             // 2. ProductName 생성 (중복 검사용)
             var productName = ProductName.Create(request.Name).ThrowIfFail();
 
-            // 3. LINQ로 중복 검사, 저장, 트랜잭션 커밋, 이벤트 발행
+            // 3. LINQ로 중복 검사 + 저장 (SaveChanges + 이벤트 발행은 파이프라인이 자동 처리)
             FinT<IO, Response> usecase =
                 from exists in _productRepository.ExistsByName(productName)
                 from _ in guard(!exists, ApplicationError.For<CreateProductCommand>(
@@ -522,8 +511,6 @@ public sealed class CreateProductCommand
                     request.Name,
                     $"Product name already exists: '{request.Name}'"))
                 from product in _productRepository.Create((Product)productResult)
-                from _1 in _unitOfWork.SaveChanges(cancellationToken)
-                from _2 in _eventPublisher.PublishEvents(product, cancellationToken)
                 select new Response(
                     product.Id.ToString(),
                     product.Name,
@@ -655,23 +642,82 @@ public sealed class GetAllProductsQuery
 
 ---
 
-## 트랜잭션과 이벤트 발행 (Unit of Work)
+## 트랜잭션과 이벤트 발행 (UsecaseTransactionPipeline)
 
-### Command Handler의 표준 실행 흐름
+### 파이프라인 자동 처리
 
-Command Handler(상태 변경 Usecase)는 다음 순서를 따릅니다:
+Command의 트랜잭션 커밋(`SaveChanges`)과 도메인 이벤트 발행은 `UsecaseTransactionPipeline`이 자동으로 처리합니다. **Usecase에서 `IUnitOfWork`나 `IDomainEventPublisher`를 직접 주입할 필요가 없습니다.**
 
 ```
-Repository 변경 → UoW.SaveChanges() → EventPublisher.PublishEvents()
+[Command Handler]
+  ↓ Repository.Create(aggregate)
+  ↓   → IDomainEventCollector.Track(aggregate)  ← Repository가 자동 호출
+  ↓ return FinResponse.Succ(response)
+  ↓
+[UsecaseTransactionPipeline]
+  1. response = await next()           ← Handler 실행
+  2. if (response.IsFail) return       ← 실패 시 커밋 안함
+  3. UoW.SaveChanges()                 ← 트랜잭션 커밋
+  4. collector.GetTrackedAggregates()  ← 이벤트 수집
+  5. foreach event → Publish()         ← 이벤트 발행 + Clear
+  6. return response                   ← 원래 성공 응답 반환
 ```
+
+### Usecase 생성자 패턴
+
+```csharp
+// Command: Repository만 주입 (SaveChanges + 이벤트 발행은 파이프라인이 처리)
+internal sealed class Usecase(
+    IProductRepository productRepository)
+    : ICommandUsecase<Request, Response>
+
+// Query: Repository만 주입 (파이프라인은 자동 바이패스)
+internal sealed class Usecase(IProductRepository productRepository)
+    : IQueryUsecase<Request, Response>
+```
+
+### Command LINQ 패턴
 
 ```csharp
 FinT<IO, Response> usecase =
-    from product in _productRepository.Create(newProduct)       // 1. Repository 변경
-    from _1 in _unitOfWork.SaveChanges(cancellationToken)       // 2. 트랜잭션 커밋
-    from _2 in _eventPublisher.PublishEvents(product, cancellationToken) // 3. 이벤트 발행
+    from product in _productRepository.Create(newProduct)  // Repository 변경
     select new Response(...);
+// SaveChanges + 도메인 이벤트 발행은 UsecaseTransactionPipeline이 자동 처리
 ```
+
+### 파이프라인 실행 순서
+
+```
+Request → Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler
+```
+
+- Transaction은 Exception 뒤에 위치 → `SaveChanges` 예외 발생 시 Exception 파이프라인이 처리
+- Command만 활성화, Query는 바이패스
+
+### 파이프라인 등록
+
+`UseAll()`에 Transaction 파이프라인이 포함되어 있습니다:
+
+```csharp
+services
+    .RegisterOpenTelemetry(configuration, AssemblyReference.Assembly)
+    .ConfigurePipelines(pipelines => pipelines
+        .UseAll())   // Metrics, Tracing, Logging, Validation, Exception, Transaction 모두 포함
+    .Build();
+```
+
+> Transaction 파이프라인은 `IUnitOfWork`, `IDomainEventPublisher`, `IDomainEventCollector`가 DI에 등록되어 있어야 합니다.
+
+### 핵심 원칙
+
+| 원칙 | 설명 |
+|------|------|
+| SaveChanges 호출 위치 | **파이프라인**이 자동 처리 (Usecase에서 호출하지 않음) |
+| Repository 역할 | 엔티티 변경 + `IDomainEventCollector.Track()` 호출 |
+| 여러 Repository 호출 | 하나의 `SaveChanges()`로 트랜잭션에 묶임 (파이프라인 보장) |
+| 이벤트 발행 시점 | `SaveChanges()` 성공 후에만 발행 (파이프라인 보장) |
+| 이벤트 발행 실패 시 | 성공 응답 유지 (데이터는 이미 커밋됨, 경고 로그만 기록) |
+| Query에서의 동작 | 파이프라인이 자동 바이패스 |
 
 ### IUnitOfWork 인터페이스
 
@@ -686,31 +732,6 @@ public interface IUnitOfWork : IAdapter
 
 - `IAdapter`를 상속하므로 Pipeline 자동 생성 및 관찰성을 지원합니다.
 - EF Core 환경에서는 `DbContext.SaveChangesAsync()`를 호출하고, InMemory 환경에서는 no-op입니다.
-
-### 핵심 원칙
-
-| 원칙 | 설명 |
-|------|------|
-| SaveChanges 호출 위치 | **Usecase** LINQ 체인 내부 (Repository가 아님) |
-| Repository 역할 | 엔티티 변경(Add/Update/Remove)만 담당, 트랜잭션 커밋하지 않음 |
-| 여러 Repository 호출 | 하나의 `SaveChanges()`로 트랜잭션에 묶임 |
-| 이벤트 발행 시점 | `SaveChanges()` 성공 후에만 발행 |
-| Query에서의 UoW | **불필요** — 읽기 전용이므로 `IUnitOfWork`를 주입하지 않음 |
-
-### Usecase 생성자 패턴
-
-```csharp
-// Command: IUnitOfWork + IDomainEventPublisher 주입
-internal sealed class Usecase(
-    IProductRepository productRepository,
-    IUnitOfWork unitOfWork,
-    IDomainEventPublisher eventPublisher)
-    : ICommandUsecase<Request, Response>
-
-// Query: Repository만 주입 (UoW 불필요)
-internal sealed class Usecase(IProductRepository productRepository)
-    : IQueryUsecase<Request, Response>
-```
 
 > **참조**: UoW Adapter 구현(EfCoreUnitOfWork, InMemoryUnitOfWork)은 [08-ports-and-adapters.md §2.9](./08-ports-and-adapters.md#29-unit-of-work-adapter)를 참조하세요.
 
@@ -836,13 +857,15 @@ public sealed record Response(
 
 **A:** 네, 비동기 메서드에는 항상 CancellationToken을 전달하세요. 다만 FinT<IO, T> 패턴을 사용하는 경우 Repository 내부에서 처리됩니다.
 
-### Q7. SaveChanges는 왜 Repository가 아닌 Usecase에서 호출하나요?
+### Q7. SaveChanges와 이벤트 발행은 어디서 처리하나요?
 
-**A:** 세 가지 이유가 있습니다:
+**A:** `UsecaseTransactionPipeline`이 자동으로 처리합니다. Usecase에서 `IUnitOfWork`나 `IDomainEventPublisher`를 직접 주입할 필요가 없습니다.
 
-1. **Repository는 개별 엔티티 변경만 담당**: Repository의 `Create()`, `Update()`, `Delete()`는 변경 추적만 수행하고, 실제 트랜잭션 커밋은 Usecase가 결정합니다.
-2. **여러 Repository 호출이 하나의 트랜잭션에 묶임**: 예를 들어 주문 생성 시 `OrderRepository.Create()` + `ProductRepository.Update()`를 하나의 `SaveChanges()`로 커밋할 수 있습니다.
-3. **이벤트 발행은 트랜잭션 성공 후에만 수행**: LINQ 체인에서 `SaveChanges()` 다음에 `PublishEvents()`를 배치하여, 트랜잭션이 실패하면 이벤트가 발행되지 않습니다.
+1. **Usecase는 비즈니스 로직만 담당**: Repository의 `Create()`, `Update()` 호출까지만 작성합니다.
+2. **파이프라인이 SaveChanges 자동 호출**: Handler 성공 시 `IUnitOfWork.SaveChanges()`를 호출하고, 실패 시 커밋하지 않습니다.
+3. **파이프라인이 도메인 이벤트 자동 발행**: Repository가 `IDomainEventCollector.Track()`으로 추적한 Aggregate의 도메인 이벤트를 `SaveChanges()` 성공 후 자동 발행합니다.
+
+활성화: `.ConfigurePipelines(pipelines => pipelines.UseAll().UseTransaction())`
 
 ---
 
