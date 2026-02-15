@@ -6,9 +6,9 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build-LayeredArch",
-      "program": "${workspaceFolder}/Tests.Hosts/01-SingleHost/LayeredArch/bin/Debug/net10.0/LayeredArch.dll",
+      "program": "${workspaceFolder}/Tests.Hosts/01-SingleHost/Src/LayeredArch/bin/Debug/net10.0/LayeredArch.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/Tests.Hosts/01-SingleHost/LayeredArch",
+      "cwd": "${workspaceFolder}/Tests.Hosts/01-SingleHost/Src/LayeredArch",
       "stopAtEntry": false,
       "console": "integratedTerminal",
       "env": {
