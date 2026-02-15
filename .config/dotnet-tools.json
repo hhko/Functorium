@@ -15,6 +15,13 @@
         "dotnet-verify"
       ],
       "rollForward": false
+    },
+    "gman.siren": {
+      "version": "9.0.4",
+      "commands": [
+        "siren-gen"
+      ],
+      "rollForward": true
     }
   }
 }
