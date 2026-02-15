@@ -2,10 +2,99 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
-- [ ] ER 다이어그램 도구
-- [ ] UoW 패턴 개선
-- [ ] Entity & Aggregate 생성 패턴 확인?
+- [ ] Specification 패턴 문서화
+- [ ] 
+
+
+
+```
+  관심사 3: CorrelationId / CausationId의 위치
+
+  현재 코드 (IDomainEvent.cs:26-33):
+  public interface IDomainEvent
+  {
+      DateTimeOffset OccurredAt { get; }
+      Ulid EventId { get; }
+      string? CorrelationId { get; }  // ← 도메인 관심사인가?
+      string? CausationId { get; }    // ← 도메인 관심사인가?
+  }
+
+  Evans 관점: 두 가지 해석이 가능합니다.
+
+  ┌───────────────┬────────────────────────────────────────────────────────────────────┐
+  │     해석      │                                근거                                │
+  ├───────────────┼────────────────────────────────────────────────────────────────────┤
+  │ 도메인에 유지 │ Saga/Process Manager에서 이벤트 인과관계 추적은 도메인 로직의 일부 │
+  ├───────────────┼────────────────────────────────────────────────────────────────────┤
+  │ 인프라로 분리 │ 분산 추적, 로깅을 위한 메타데이터이며 도메인 전문가의 언어에 없음  │
+  └───────────────┴────────────────────────────────────────────────────────────────────┘
+
+  현재 구현에서 CorrelationId와 CausationId는 도메인 핸들러에서 사용되지 않고 Observability 계층(ObservableDomainEventNotificationPublisher)에서만
+  참조됩니다. 이는 인프라 메타데이터에 가깝다는 증거입니다.
+
+  개선 방향: Envelope 패턴으로 분리
+  // 순수 도메인 이벤트
+  public interface IDomainEvent
+  {
+      DateTimeOffset OccurredAt { get; }
+      Ulid EventId { get; }
+  }
+
+  // 인프라 envelope (Publisher/Pipeline에서 래핑)
+  public record DomainEventEnvelope<T>(
+      T Event,
+      string? CorrelationId,
+      string? CausationId) where T : IDomainEvent;
+
+  단, 프로젝트가 향후 Saga/Process Manager를 도메인 수준에서 구현할 계획이라면 현재 위치가 적절합니다.
+```
+```
+  관심사 4: 시간 의존성의 암묵적 결합
+
+  현재 코드 (DomainEvent.cs:20):
+  protected DomainEvent() : this(DateTimeOffset.UtcNow, Ulid.NewUlid(), null, null) { }
+
+  Evans 관점: 도메인 객체가 시스템 시계에 암묵적으로 의존합니다. 이는 두 가지 문제를 야기합니다:
+
+  1. 테스트에서 시간 제어 불가: 이벤트 발생 시각을 검증하려면 근사치 비교(±1초)에 의존해야 함
+  2. 도메인 규칙과 시간: "주문은 30분 내에 확인되어야 한다" 같은 시간 기반 규칙을 테스트할 때 비결정적
+
+  개선 방향: .NET 8의 TimeProvider 활용
+  protected DomainEvent(TimeProvider? timeProvider = null)
+      : this(
+          (timeProvider ?? TimeProvider.System).GetUtcNow(),
+          Ulid.NewUlid(),
+          null, null) { }
+
+  단, 현재 프로젝트에서 시간 기반 도메인 규칙이 없고 이벤트 시각을 정밀하게 검증하는 테스트도 없다면, 실질적 필요가 생길 때 도입해도 충분합니다.
+
+---
+  관심사 4: 시간 암묵적 의존 — 보류
+
+  DomainEvent record에 TimeProvider를 주입하려면 두 가지 anti-pattern 중 하나를 선택해야 합니다:
+  - 서비스 주입: record(값 타입)에 서비스 의존성 → record 패턴 파괴
+  - mutable static: DomainEvent.Clock = fakeTimeProvider → 전역 상태, 스레드 안전성 문제
+
+  현재 코드에 시간 기반 도메인 규칙이 없고, 테스트에서 with { OccurredAt = ... }로 시간 제어가 가능하므로 실질적 필요가 생길 때 도입하는 것이 CLAUDE.md의
+  "Simplicity First" 원칙에 부합합니다.
+```
+
+
+- [x] ER 다이어그램 도구
+- [x] UoW 패턴 개선
+- [x] UOW과 도메인 이벤트를 유스케이스 파이프라인으로 책임 이동 
 - [ ] Specifications 패턴 개선
+  ```
+  ddd-tactical-improvements.md §7에서 식별된 개선 사항: 쿼리 조건이 Repository 메서드에 하드코딩되어 있어 재사용/조합이 불가능합니다.
+  
+  현재 문제:
+  - ExistsByName(ProductName, ProductId?), ExistsByEmail(Email) 등 조건별 메서드 추가 필요
+  - 동일 필터 조건의 Repository 간 중복
+  - AND/OR 조합 시 새 메서드 생성 필요
+  ```
+- [ ] UoW 지금은 인터페이스만 제공, 추가 개선 사항이 없을까?
+- [ ] Entity & Aggregate 생성 패턴 확인?
+- [ ] Integration Events vs Domain Events
 - [ ] DTO 저장소 적용?
 ---
 - [ ] LanaguageExt RunAsync 취소 처리?
