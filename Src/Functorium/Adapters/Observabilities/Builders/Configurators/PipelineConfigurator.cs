@@ -24,6 +24,7 @@ public class PipelineConfigurator
     private bool _useTransaction;
     private ServiceLifetime _lifetime = ServiceLifetime.Scoped;
     private readonly List<Type> _customPipelines = new();
+    private readonly List<string> _registeredPipelineNames = new();
 
     internal PipelineConfigurator()
     {
@@ -141,41 +142,77 @@ public class PipelineConfigurator
         // 파이프라인 등록 순서:
         // Request → Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler
 
+        _registeredPipelineNames.Clear();
+
         if (_useMetrics)
         {
             RegisterPipeline(services, typeof(UsecaseMetricsPipeline<,>));
+            _registeredPipelineNames.Add("Metrics");
         }
 
         if (_useTracing)
         {
             RegisterPipeline(services, typeof(UsecaseTracingPipeline<,>));
+            _registeredPipelineNames.Add("Tracing");
         }
 
         if (_useLogging)
         {
             RegisterPipeline(services, typeof(UsecaseLoggingPipeline<,>));
+            _registeredPipelineNames.Add("Logging");
         }
 
         if (_useValidation)
         {
             RegisterPipeline(services, typeof(UsecaseValidationPipeline<,>));
+            _registeredPipelineNames.Add("Validation");
         }
 
         if (_useException)
         {
             RegisterPipeline(services, typeof(UsecaseExceptionPipeline<,>));
+            _registeredPipelineNames.Add("Exception");
         }
 
         if (_useTransaction && HasTransactionDependencies(services))
         {
             RegisterPipeline(services, typeof(UsecaseTransactionPipeline<,>));
+            _registeredPipelineNames.Add("Transaction");
         }
 
         // 커스텀 파이프라인 등록
         foreach (Type customPipeline in _customPipelines)
         {
             RegisterPipeline(services, customPipeline);
+            _registeredPipelineNames.Add(ExtractPipelineName(customPipeline));
         }
+
+        _registeredPipelineNames.Add("Handler");
+    }
+
+    /// <summary>
+    /// Apply() 이후 등록된 파이프라인 이름 목록을 반환합니다.
+    /// </summary>
+    internal IReadOnlyList<string> GetRegisteredPipelineNames() => _registeredPipelineNames;
+
+    /// <summary>
+    /// 타입명에서 파이프라인 표시 이름을 추출합니다.
+    /// 제네릭 backtick 제거 및 "Pipeline" 접미사 제거.
+    /// </summary>
+    private static string ExtractPipelineName(Type pipelineType)
+    {
+        string name = pipelineType.Name;
+
+        // 제네릭 backtick 제거 (예: "MyPipeline`2" → "MyPipeline")
+        int backtickIndex = name.IndexOf('`');
+        if (backtickIndex > 0)
+            name = name.Substring(0, backtickIndex);
+
+        // "Pipeline" 접미사 제거
+        if (name.EndsWith("Pipeline", StringComparison.Ordinal))
+            name = name.Substring(0, name.Length - "Pipeline".Length);
+
+        return name;
     }
 
     private void RegisterPipeline(IServiceCollection services, Type pipelineType)

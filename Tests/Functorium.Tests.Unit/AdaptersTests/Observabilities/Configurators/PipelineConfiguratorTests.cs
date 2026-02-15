@@ -367,6 +367,73 @@ public sealed class PipelineConfiguratorTests
         pipelineBehaviors[1].ImplementationType.ShouldBe(typeof(SecondCustomPipeline<TestMessage, TestResponse>));
     }
 
+    [Fact]
+    public void GetRegisteredPipelineNames_ReturnsAllNames_WhenUseAll()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        RegisterTransactionDependencies(services);
+        var configurator = CreateConfigurator();
+
+        // Act
+        configurator.UseAll();
+        configurator.Apply(services);
+        var actual = GetRegisteredPipelineNames(configurator);
+
+        // Assert
+        actual.ShouldBe(new[] { "Metrics", "Tracing", "Logging", "Validation", "Exception", "Transaction", "Handler" });
+    }
+
+    [Fact]
+    public void GetRegisteredPipelineNames_ExcludesTransaction_WhenDepsMissing()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configurator = CreateConfigurator();
+
+        // Act
+        configurator.UseAll();
+        configurator.Apply(services);
+        var actual = GetRegisteredPipelineNames(configurator);
+
+        // Assert
+        actual.ShouldBe(new[] { "Metrics", "Tracing", "Logging", "Validation", "Exception", "Handler" });
+        actual.ShouldNotContain("Transaction");
+    }
+
+    [Fact]
+    public void GetRegisteredPipelineNames_IncludesCustomPipelineName()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configurator = CreateConfigurator();
+
+        // Act
+        configurator
+            .UseException()
+            .AddCustomPipeline<CustomTestPipeline<TestMessage, TestResponse>>();
+        configurator.Apply(services);
+        var actual = GetRegisteredPipelineNames(configurator);
+
+        // Assert
+        actual.ShouldBe(new[] { "Exception", "CustomTest", "Handler" });
+    }
+
+    [Fact]
+    public void GetRegisteredPipelineNames_ReturnsOnlyHandler_WhenNoPipelinesConfigured()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configurator = CreateConfigurator();
+
+        // Act
+        configurator.Apply(services);
+        var actual = GetRegisteredPipelineNames(configurator);
+
+        // Assert
+        actual.ShouldBe(new[] { "Handler" });
+    }
+
     /// <summary>
     /// PipelineConfigurator를 생성합니다.
     /// 생성자가 internal이므로 리플렉션을 사용합니다.
@@ -376,6 +443,17 @@ public sealed class PipelineConfiguratorTests
         return (PipelineConfigurator)Activator.CreateInstance(
             typeof(PipelineConfigurator),
             nonPublic: true)!;
+    }
+
+    /// <summary>
+    /// GetRegisteredPipelineNames를 호출합니다.
+    /// internal 메서드이므로 리플렉션을 사용합니다.
+    /// </summary>
+    private static IReadOnlyList<string> GetRegisteredPipelineNames(PipelineConfigurator configurator)
+    {
+        return (IReadOnlyList<string>)typeof(PipelineConfigurator)
+            .GetMethod("GetRegisteredPipelineNames", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .Invoke(configurator, null)!;
     }
 
     /// <summary>
