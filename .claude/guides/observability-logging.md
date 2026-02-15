@@ -703,14 +703,14 @@ Publisher와 Handler는 각각 소속 레이어의 Event ID를 사용합니다:
 
 ### Publisher 메시지 템플릿
 
-Publisher는 Adapter 레이어 패턴을 따르며, 단일 이벤트(Publish)와 Aggregate 다중 이벤트(PublishEvents/PublishEventsWithResult)를 구분합니다:
+Publisher는 Adapter 레이어 패턴을 따르며, 단일 이벤트(Publish)와 추적 이벤트(PublishTrackedEvents)를 구분합니다:
 
 **단일 이벤트 요청 (Publish):**
 ```
 {request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {@request.message}
 ```
 
-**Aggregate 다중 이벤트 요청 (PublishEvents/PublishEventsWithResult):**
+**추적 이벤트 요청 (PublishTrackedEvents):**
 ```
 {request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.event.count} events
 ```
@@ -735,7 +735,7 @@ Publisher는 Adapter 레이어 패턴을 따르며, 단일 이벤트(Publish)와
 {request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {request.event.count} events with {error.type}:{error.code} {@error}
 ```
 
-**부분 실패 응답 (PublishEventsWithResult — Aggregate):**
+**부분 실패 응답 (PublishTrackedEvents):**
 ```
 {request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {request.event.count} events partial failure: {response.event.success_count} succeeded, {response.event.failure_count} failed
 ```
@@ -769,12 +769,12 @@ Application Usecase, DomainEvent Publisher, DomainEvent Handler의 필드 비교
 | `request.category` | `"usecase"` | `"event"` | `"usecase"` |
 | `request.category.type` | `"command"` / `"query"` | - | `"event"` |
 | `request.handler` | Handler 클래스명 | Event/Aggregate 타입명 | Handler 클래스명 |
-| `request.handler.method` | `"Handle"` | `"Publish"` / `"PublishEvents"` | `"Handle"` |
+| `request.handler.method` | `"Handle"` | `"Publish"` / `"PublishTrackedEvents"` | `"Handle"` |
 | `request.event.type` | - | - | 이벤트 타입명 |
 | `request.event.id` | - | - | 이벤트 고유 ID |
 | `@request.message` | Command/Query 객체 | 이벤트 객체 | 이벤트 객체 |
 | `@response.message` | 응답 객체 | - | - |
-| `request.event.count` | - | O (Aggregate만) | - |
+| `request.event.count` | - | O (PublishTrackedEvents만) | - |
 | `response.event.success_count` | - | O (Partial Failure만) | - |
 | `response.event.failure_count` | - | O (Partial Failure만) | - |
 | `response.status` | `"success"` / `"failure"` | `"success"` / `"failure"` | `"success"` / `"failure"` |
@@ -788,19 +788,19 @@ Application Usecase, DomainEvent Publisher, DomainEvent Handler의 필드 비교
 **상품 생성 성공 (`POST /api/products`):**
 
 ```
-info: adapter event Product.PublishEvents requesting with 1 events
+info: adapter event PublishTrackedEvents.PublishTrackedEvents requesting with 1 events
 info: application usecase.event OnProductCreated.Handle ProductCreatedEvent 01J1234567890ABCDEFGHJKMNP requesting with {@request.message}
 info: application usecase.event OnProductCreated.Handle ProductCreatedEvent 01J1234567890ABCDEFGHJKMNP responded success in 0.0001 s
-info: adapter event Product.PublishEvents responded success in 0.0012 s with 1 events
+info: adapter event PublishTrackedEvents.PublishTrackedEvents responded success in 0.0012 s with 1 events
 ```
 
 **핸들러 예외 (`POST /api/products` with `[handler-error]`):**
 
 ```
-info: adapter event Product.PublishEvents requesting with 1 events
+info: adapter event PublishTrackedEvents.PublishTrackedEvents requesting with 1 events
 info: application usecase.event OnProductCreated.Handle ProductCreatedEvent 01J1234567890ABCDEFGHJKMNP requesting with {@request.message}
 fail: application usecase.event OnProductCreated.Handle ProductCreatedEvent 01J1234567890ABCDEFGHJKMNP responded failure in 0.0008 s with exceptional:InvalidOperationException
-fail: adapter event Product.PublishEvents responded failure in 0.0309 s with 1 events with exceptional:ApplicationErrors.DomainEventPublisher.PublishFailed {@error}
+fail: adapter event PublishTrackedEvents.PublishTrackedEvents responded failure in 0.0309 s with 1 events with exceptional:ApplicationErrors.DomainEventPublisher.PublishFailed {@error}
 ```
 
 > **Note:** Handler에서 발생한 예외의 `error.code`는 예외 타입명(`InvalidOperationException`)이고, Publisher에서는 이를 래핑한 에러 코드(`ApplicationErrors.DomainEventPublisher.PublishFailed`)가 기록됩니다.

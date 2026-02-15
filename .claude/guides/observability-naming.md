@@ -742,7 +742,7 @@ response.event.success.count     # 조합 count는 _count 사용
 | `request.category` | ✅ | ✅ | ✅ | `"event"` (Publisher), `"usecase"` (Handler) |
 | `request.category.type` | ✅ | ✅ | ✅ | `"event"` (Handler만) |
 | `request.handler` | ✅ | ✅ | ✅ | Event/Aggregate 타입명 또는 Handler 클래스명 |
-| `request.handler.method` | ✅ | ✅ | ✅ | `"Publish"`, `"PublishEvents"`, `"Handle"` |
+| `request.handler.method` | ✅ | ✅ | ✅ | `"Publish"`, `"PublishTrackedEvents"`, `"Handle"` |
 | `request.event.type` | ✅ | - | ✅ | 이벤트 타입명 (Handler만) |
 | `request.event.id` | ✅ | - | ✅ | 이벤트 고유 ID (Handler만) |
 | `request.event.count` | ✅ | - | ✅ | 배치 발행 시 이벤트 개수 |

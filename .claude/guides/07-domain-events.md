@@ -263,8 +263,7 @@ internal sealed class Usecase(
 
 1. Handler 실행 → 실패 시 커밋 안함, 응답 반환
 2. `UoW.SaveChanges()` → 트랜잭션 커밋
-3. `IDomainEventCollector.GetTrackedAggregates()` → 추적된 Aggregate 수집
-4. 각 Aggregate의 `DomainEvents`를 Mediator를 통해 발행 후 `ClearDomainEvents()` 호출
+3. `IDomainEventPublisher.PublishTrackedEvents()` → 추적된 Aggregate의 이벤트 수집·발행·클리어
 
 ### 트랜잭션 고려사항
 

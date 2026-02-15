@@ -1526,9 +1526,9 @@ public class InMemoryUnitOfWork : IUnitOfWork
 
 > **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryUnitOfWork.cs`
 
-#### IDomainEventCollector — Repository와 Pipeline의 브릿지
+#### IDomainEventCollector — Repository와 Publisher의 브릿지
 
-`IDomainEventCollector`는 Repository에서 추적된 Aggregate를 `UsecaseTransactionPipeline`에 전달하는 브릿지 역할을 합니다.
+`IDomainEventCollector`는 Repository에서 추적된 Aggregate를 `DomainEventPublisher`에 전달하는 브릿지 역할을 합니다.
 
 **위치**: `Functorium.Applications.Events`
 

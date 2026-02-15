@@ -247,8 +247,7 @@ public sealed class Usecase(
     ICustomerRepository customerRepository,
     IOrderRepository orderRepository,
     IProductCatalog productCatalog,
-    OrderCreditCheckService creditCheckService,  // Domain Service 주입
-    IDomainEventPublisher eventPublisher)
+    OrderCreditCheckService creditCheckService)  // Domain Service 주입
     : ICommandUsecase<Request, Response>
 {
     public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
@@ -279,8 +278,8 @@ public sealed class Usecase(
                 customer, unitPrice.Multiply(quantity))
             from order in _orderRepository.Create(                             // 6. 주문 생성
                 Order.Create(productId, quantity, unitPrice, shippingAddress))
-            from _3 in _eventPublisher.PublishEvents(order, cancellationToken)  // 7. 이벤트 발행
             select new Response(...);
+            // SaveChanges + 이벤트 발행은 UsecaseTransactionPipeline이 자동 처리
 
         Fin<Response> response = await usecase.Run().RunAsync();
         return response.ToFinResponse();
@@ -296,8 +295,8 @@ Usecase (Application Layer, I/O 조율)
 ├── Repository.GetById()        ← I/O (Adapter)
 ├── ProductCatalog.GetPrice()   ← I/O (Adapter)
 ├── CreditCheckService.Validate()  ← 순수 로직 (Domain Service)
-├── Repository.Create()         ← I/O (Adapter)
-└── EventPublisher.Publish()    ← I/O (Adapter)
+└── Repository.Create()         ← I/O (Adapter)
+    // SaveChanges + 이벤트 발행은 UsecaseTransactionPipeline이 자동 처리
 ```
 
 Domain Service는 I/O 없이 순수 비즈니스 규칙만 수행하고, Usecase가 I/O를 조율합니다.

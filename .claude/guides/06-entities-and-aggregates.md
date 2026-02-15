@@ -1186,8 +1186,8 @@ FinT<IO, Response> usecase =
     from unitPrice in _productCatalog.GetPrice(productId)
     from order in _orderRepository.Create(
         Order.Create(productId, quantity, unitPrice, shippingAddress))
-    from __ in _eventPublisher.PublishEvents(order, cancellationToken)
     select new Response(...);
+// SaveChanges + 이벤트 발행은 UsecaseTransactionPipeline이 자동 처리
 ```
 
 **교차 Aggregate 조율 흐름:**
@@ -1197,8 +1197,8 @@ Usecase LINQ 체인
   ├── Port 조회: IProductCatalog.ExistsById() → 존재 검증
   ├── Port 조회: IProductCatalog.GetPrice() → 가격 조회
   ├── Aggregate 생성: Order.Create(검증된 데이터)
-  ├── Repository 저장: IOrderRepository.Create(order)
-  └── 이벤트 발행: PublishEvents(order)
+  └── Repository 저장: IOrderRepository.Create(order)
+  // SaveChanges + 이벤트 발행은 UsecaseTransactionPipeline이 자동 처리
 ```
 
 ### 적용 사례
@@ -1217,8 +1217,8 @@ Usecase LINQ 체인
     │       ↓ Apply()
     │   └── Product.Create(name, description, price, quantity)
     ├── ExistsByName() — 중복 검사
-    ├── IProductRepository.Create(product) — 저장
-    └── PublishEvents(product) — CreatedEvent 발행
+    └── IProductRepository.Create(product) — 저장
+    // SaveChanges + 이벤트 발행은 UsecaseTransactionPipeline이 자동 처리
 ```
 
 **사례 2: Order 생성 (Port 조율 → Create)**
@@ -1232,8 +1232,8 @@ Usecase LINQ 체인
     ├── IProductCatalog.ExistsById(productId) — 상품 존재 검증
     ├── IProductCatalog.GetPrice(productId) — 가격 조회
     ├── Order.Create(productId, quantity, unitPrice, shippingAddress)
-    ├── IOrderRepository.Create(order) — 저장
-    └── PublishEvents(order) — CreatedEvent 발행
+    └── IOrderRepository.Create(order) — 저장
+    // SaveChanges + 이벤트 발행은 UsecaseTransactionPipeline이 자동 처리
 ```
 
 **사례 3: ORM 복원 (CreateFromValidated)**
@@ -1489,14 +1489,13 @@ public sealed class Product : AggregateRoot<ProductId>
 
 `IDomainEvent`는 Mediator의 `INotification`을 확장하여 Pub/Sub 통합을 지원합니다.
 
-**이벤트 발행 (Application Layer에서):**
+**이벤트 발행 (UsecaseTransactionPipeline 자동 처리):**
 
-`IDomainEventPublisher`를 사용하여 Repository 저장 후 이벤트를 발행합니다. `IDomainEventPublisher`는 `FinT<IO, Unit>`을 반환하므로 Repository/Port와 동일한 LINQ 체이닝 패턴으로 사용할 수 있습니다:
+도메인 이벤트 발행은 `UsecaseTransactionPipeline`이 자동으로 처리합니다. Usecase에서 `IDomainEventPublisher`를 직접 주입할 필요가 없습니다:
 
 ```csharp
 public sealed class Usecase(
-    IProductRepository productRepository,
-    IDomainEventPublisher eventPublisher)
+    IProductRepository productRepository)
     : ICommandUsecase<Request, Response>
 {
     public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken ct)
@@ -1504,10 +1503,9 @@ public sealed class Usecase(
         // 1. Entity 생성/수정
         var product = Product.Create(...);
 
-        // 2. Repository 저장 + 이벤트 발행 (LINQ 체이닝)
+        // 2. Repository 저장 (SaveChanges + 이벤트 발행은 파이프라인이 자동 처리)
         FinT<IO, Response> usecase =
             from savedProduct in _productRepository.Create(product)
-            from _ in _eventPublisher.PublishEvents(savedProduct, ct)  // 저장 성공 후 이벤트 발행
             select new Response(...);
 
         Fin<Response> response = await usecase.Run().RunAsync();

@@ -99,7 +99,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `request.layer` | ✅ | ✅ | ✅ | 아키텍처 레이어 (`"adapter"`) |
 | `request.category` | ✅ | ✅ | ✅ | 요청 카테고리 (`"event"`) |
 | `request.handler` | ✅ | ✅ | ✅ | Event 타입명 또는 Aggregate 타입명 |
-| `request.handler.method` | ✅ | ✅ | ✅ | 메서드 이름 (`"Publish"`, `"PublishEvents"`, `"PublishEventsWithResult"`) |
+| `request.handler.method` | ✅ | ✅ | ✅ | 메서드 이름 (`"Publish"`, `"PublishTrackedEvents"`) |
 | `request.event.count` | ✅ | - | ✅ | 배치 발행 시 이벤트 개수 (Aggregate 전용) |
 | `response.status` | ✅ | ✅ | ✅ | 응답 상태 (`"success"`, `"failure"`) |
 | `response.elapsed` | ✅ | -* | ✅ | 처리 시간(초) |
@@ -221,7 +221,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `request.category` | `"usecase"` | `"event"` | `"usecase"` |
 | `request.category.type` | `"command"` / `"query"` | - | `"event"` |
 | `request.handler` | Handler 클래스명 | Event/Aggregate 타입명 | Handler 클래스명 |
-| `request.handler.method` | `"Handle"` | `"Publish"` / `"PublishEvents"` | `"Handle"` |
+| `request.handler.method` | `"Handle"` | `"Publish"` / `"PublishTrackedEvents"` | `"Handle"` |
 | `@request.message` | Command/Query 객체 | 이벤트 객체 | 이벤트 객체 |
 | `@response.message` | 응답 객체 | - | - |
 | `request.event.count` | - | O (Aggregate만) | - |
@@ -433,9 +433,9 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 
 #### Publisher Span 구조
 
-| Property | Publish | PublishEvents / PublishEventsWithResult |
-|----------|---------|---------------------------------------|
-| Span Name | `adapter event {EventType}.Publish` | `adapter event {AggregateType}.PublishEvents` / `adapter event {AggregateType}.PublishEventsWithResult` |
+| Property | Publish | PublishTrackedEvents |
+|----------|---------|---------------------|
+| Span Name | `adapter event {EventType}.Publish` | `adapter event PublishTrackedEvents.PublishTrackedEvents` |
 | Kind | `Internal` | `Internal` |
 
 #### Publisher Tag 구조 (Publish)
@@ -452,16 +452,15 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `error.code` | - | - | 오류 코드 |
 | **Total Tags** | **4** | **6** | **8** |
 
-#### Publisher Tag 구조 (PublishEvents)
-
-*PublishEvents / PublishEventsWithResult 메서드:*
+#### Publisher Tag 구조 (PublishTrackedEvents)
 
 | Tag Key | Request | Success | Partial Failure | Total Failure |
 |---------|---------|---------|-----------------|---------------|
 | `request.layer` | `"adapter"` | `"adapter"` | `"adapter"` | `"adapter"` |
 | `request.category` | `"event"` | `"event"` | `"event"` | `"event"` |
-| `request.handler` | aggregate type | aggregate type | aggregate type | aggregate type |
-| `request.handler.method` | method name | method name | method name | method name |
+| `request.handler` | `"PublishTrackedEvents"` | `"PublishTrackedEvents"` | `"PublishTrackedEvents"` | `"PublishTrackedEvents"` |
+| `request.handler.method` | `"PublishTrackedEvents"` | `"PublishTrackedEvents"` | `"PublishTrackedEvents"` | `"PublishTrackedEvents"` |
+| `request.aggregate.count` | aggregate count | aggregate count | aggregate count | aggregate count |
 | `request.event.count` | event count | event count | event count | event count |
 | `response.elapsed` | - | 처리 시간(초) | 처리 시간(초) | 처리 시간(초) |
 | `response.status` | - | `"success"` | `"failure"` | `"failure"` |
@@ -469,7 +468,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `response.event.failure_count` | - | - | failure count | - |
 | `error.type` | - | - | - | `"expected"` / `"exceptional"` |
 | `error.code` | - | - | - | 오류 코드 |
-| **Total Tags** | **5** | **7** | **9** | **9** |
+| **Total Tags** | **6** | **8** | **10** | **10** |
 
 #### Handler Span 구조
 

@@ -658,9 +658,8 @@ Command의 트랜잭션 커밋(`SaveChanges`)과 도메인 이벤트 발행은 `
   1. response = await next()           ← Handler 실행
   2. if (response.IsFail) return       ← 실패 시 커밋 안함
   3. UoW.SaveChanges()                 ← 트랜잭션 커밋
-  4. collector.GetTrackedAggregates()  ← 이벤트 수집
-  5. foreach event → Publish()         ← 이벤트 발행 + Clear
-  6. return response                   ← 원래 성공 응답 반환
+  4. PublishTrackedEvents()            ← 이벤트 수집·발행·클리어
+  5. return response                   ← 원래 성공 응답 반환
 ```
 
 ### Usecase 생성자 패턴
@@ -706,7 +705,7 @@ services
     .Build();
 ```
 
-> Transaction 파이프라인은 `IUnitOfWork`, `IDomainEventPublisher`, `IDomainEventCollector`가 DI에 등록되어 있어야 합니다.
+> Transaction 파이프라인은 `IUnitOfWork`, `IDomainEventPublisher`가 DI에 등록되어 있어야 합니다 (`IDomainEventCollector`는 Publisher 내부 의존성).
 
 ### 핵심 원칙
 
