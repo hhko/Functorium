@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Src\LayeredArch.Domain\LayeredArch.Domain.csproj" />
     <ProjectReference Include="..\..\Src\LayeredArch.Application\LayeredArch.Application.csproj" />
+    <ProjectReference Include="..\..\Src\LayeredArch.Adapters.Persistence\LayeredArch.Adapters.Persistence.csproj" />
     <ProjectReference Include="..\..\..\..\Src\Functorium.Testing\Functorium.Testing.csproj" />
   </ItemGroup>
 

@@ -1,4 +1,4 @@
-using LayeredArch.Application.Usecases.Products;
+using LayeredArch.Adapters.Presentation.Endpoints.Products;
 using LayeredArch.Tests.Integration.Fixtures;
 
 namespace LayeredArch.Tests.Integration.Endpoints.Products;
@@ -21,7 +21,7 @@ public class GetProductByIdEndpointTests : IntegrationTestBase
         var createResponse = await Client.PostAsJsonAsync("/api/products", createRequest, TestContext.Current.CancellationToken);
         createResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var created = await createResponse.Content.ReadFromJsonAsync<CreateProductCommand.Response>(TestContext.Current.CancellationToken);
+        var created = await createResponse.Content.ReadFromJsonAsync<CreateProductEndpoint.Response>(TestContext.Current.CancellationToken);
         created.ShouldNotBeNull();
 
         // Act
@@ -30,7 +30,7 @@ public class GetProductByIdEndpointTests : IntegrationTestBase
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<GetProductByIdQuery.Response>(TestContext.Current.CancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<GetProductByIdEndpoint.Response>(TestContext.Current.CancellationToken);
         result.ShouldNotBeNull();
         result.Name.ShouldBe(createRequest.Name);
     }

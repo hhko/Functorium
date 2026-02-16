@@ -1,4 +1,4 @@
-using LayeredArch.Application.Usecases.Customers;
+using LayeredArch.Adapters.Presentation.Endpoints.Customers;
 using LayeredArch.Tests.Integration.Fixtures;
 
 namespace LayeredArch.Tests.Integration.Endpoints.Customers;
@@ -20,7 +20,7 @@ public class GetCustomerByIdEndpointTests : IntegrationTestBase
         var createResponse = await Client.PostAsJsonAsync("/api/customers", createRequest, TestContext.Current.CancellationToken);
         createResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var created = await createResponse.Content.ReadFromJsonAsync<CreateCustomerCommand.Response>(TestContext.Current.CancellationToken);
+        var created = await createResponse.Content.ReadFromJsonAsync<CreateCustomerEndpoint.Response>(TestContext.Current.CancellationToken);
         created.ShouldNotBeNull();
 
         // Act
@@ -29,7 +29,7 @@ public class GetCustomerByIdEndpointTests : IntegrationTestBase
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<GetCustomerByIdQuery.Response>(TestContext.Current.CancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<GetCustomerByIdEndpoint.Response>(TestContext.Current.CancellationToken);
         result.ShouldNotBeNull();
         result.Name.ShouldBe(createRequest.Name);
     }

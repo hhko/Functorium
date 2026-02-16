@@ -1,5 +1,5 @@
-using LayeredArch.Application.Usecases.Orders;
-using LayeredArch.Application.Usecases.Products;
+using LayeredArch.Adapters.Presentation.Endpoints.Orders;
+using LayeredArch.Adapters.Presentation.Endpoints.Products;
 using LayeredArch.Tests.Integration.Fixtures;
 
 namespace LayeredArch.Tests.Integration.Endpoints.Orders;
@@ -22,7 +22,7 @@ public class GetOrderByIdEndpointTests : IntegrationTestBase
         var productResponse = await Client.PostAsJsonAsync("/api/products", productRequest, TestContext.Current.CancellationToken);
         productResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var product = await productResponse.Content.ReadFromJsonAsync<CreateProductCommand.Response>(TestContext.Current.CancellationToken);
+        var product = await productResponse.Content.ReadFromJsonAsync<CreateProductEndpoint.Response>(TestContext.Current.CancellationToken);
         product.ShouldNotBeNull();
 
         var orderRequest = new
@@ -34,7 +34,7 @@ public class GetOrderByIdEndpointTests : IntegrationTestBase
         var orderResponse = await Client.PostAsJsonAsync("/api/orders", orderRequest, TestContext.Current.CancellationToken);
         orderResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var order = await orderResponse.Content.ReadFromJsonAsync<CreateOrderCommand.Response>(TestContext.Current.CancellationToken);
+        var order = await orderResponse.Content.ReadFromJsonAsync<CreateOrderEndpoint.Response>(TestContext.Current.CancellationToken);
         order.ShouldNotBeNull();
 
         // Act
@@ -43,7 +43,7 @@ public class GetOrderByIdEndpointTests : IntegrationTestBase
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<GetOrderByIdQuery.Response>(TestContext.Current.CancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<GetOrderByIdEndpoint.Response>(TestContext.Current.CancellationToken);
         result.ShouldNotBeNull();
         result.Quantity.ShouldBe(3);
         result.TotalAmount.ShouldBe(450.00m);

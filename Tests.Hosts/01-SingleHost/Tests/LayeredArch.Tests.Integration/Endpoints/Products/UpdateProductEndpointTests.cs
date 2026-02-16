@@ -1,4 +1,4 @@
-using LayeredArch.Application.Usecases.Products;
+using LayeredArch.Adapters.Presentation.Endpoints.Products;
 using LayeredArch.Tests.Integration.Fixtures;
 
 namespace LayeredArch.Tests.Integration.Endpoints.Products;
@@ -21,7 +21,7 @@ public class UpdateProductEndpointTests : IntegrationTestBase
         var createResponse = await Client.PostAsJsonAsync("/api/products", createRequest, TestContext.Current.CancellationToken);
         createResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var created = await createResponse.Content.ReadFromJsonAsync<CreateProductCommand.Response>(TestContext.Current.CancellationToken);
+        var created = await createResponse.Content.ReadFromJsonAsync<CreateProductEndpoint.Response>(TestContext.Current.CancellationToken);
         created.ShouldNotBeNull();
 
         var updateRequest = new
@@ -38,7 +38,7 @@ public class UpdateProductEndpointTests : IntegrationTestBase
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<UpdateProductCommand.Response>(TestContext.Current.CancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<UpdateProductEndpoint.Response>(TestContext.Current.CancellationToken);
         result.ShouldNotBeNull();
         result.Name.ShouldBe(updateRequest.Name);
         result.Price.ShouldBe(updateRequest.Price);
@@ -58,7 +58,7 @@ public class UpdateProductEndpointTests : IntegrationTestBase
         var createResponse = await Client.PostAsJsonAsync("/api/products", createRequest, TestContext.Current.CancellationToken);
         createResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var created = await createResponse.Content.ReadFromJsonAsync<CreateProductCommand.Response>(TestContext.Current.CancellationToken);
+        var created = await createResponse.Content.ReadFromJsonAsync<CreateProductEndpoint.Response>(TestContext.Current.CancellationToken);
         created.ShouldNotBeNull();
 
         var updateRequest = new

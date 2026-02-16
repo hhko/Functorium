@@ -1,4 +1,4 @@
-using LayeredArch.Application.Usecases.Products;
+using LayeredArch.Adapters.Presentation.Endpoints.Products;
 using LayeredArch.Tests.Integration.Fixtures;
 
 namespace LayeredArch.Tests.Integration.Endpoints.Products;
@@ -25,7 +25,7 @@ public class CreateProductEndpointTests : IntegrationTestBase
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var result = await response.Content.ReadFromJsonAsync<CreateProductCommand.Response>(TestContext.Current.CancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<CreateProductEndpoint.Response>(TestContext.Current.CancellationToken);
         result.ShouldNotBeNull();
         result.Name.ShouldBe(request.Name);
         result.Price.ShouldBe(request.Price);

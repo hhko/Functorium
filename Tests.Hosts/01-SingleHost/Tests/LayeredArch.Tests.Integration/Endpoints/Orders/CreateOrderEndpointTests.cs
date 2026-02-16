@@ -1,5 +1,5 @@
-using LayeredArch.Application.Usecases.Orders;
-using LayeredArch.Application.Usecases.Products;
+using LayeredArch.Adapters.Presentation.Endpoints.Orders;
+using LayeredArch.Adapters.Presentation.Endpoints.Products;
 using LayeredArch.Tests.Integration.Fixtures;
 
 namespace LayeredArch.Tests.Integration.Endpoints.Orders;
@@ -22,7 +22,7 @@ public class CreateOrderEndpointTests : IntegrationTestBase
         var productResponse = await Client.PostAsJsonAsync("/api/products", productRequest, TestContext.Current.CancellationToken);
         productResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var product = await productResponse.Content.ReadFromJsonAsync<CreateProductCommand.Response>(TestContext.Current.CancellationToken);
+        var product = await productResponse.Content.ReadFromJsonAsync<CreateProductEndpoint.Response>(TestContext.Current.CancellationToken);
         product.ShouldNotBeNull();
 
         var orderRequest = new
@@ -38,7 +38,7 @@ public class CreateOrderEndpointTests : IntegrationTestBase
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var result = await response.Content.ReadFromJsonAsync<CreateOrderCommand.Response>(TestContext.Current.CancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<CreateOrderEndpoint.Response>(TestContext.Current.CancellationToken);
         result.ShouldNotBeNull();
         result.Quantity.ShouldBe(2);
         result.TotalAmount.ShouldBe(200.00m);

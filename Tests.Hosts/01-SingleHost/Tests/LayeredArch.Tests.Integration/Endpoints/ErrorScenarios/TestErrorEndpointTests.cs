@@ -1,4 +1,3 @@
-using LayeredArch.Application.Usecases.TestErrors;
 using LayeredArch.Tests.Integration.Fixtures;
 
 namespace LayeredArch.Tests.Integration.Endpoints.ErrorScenarios;

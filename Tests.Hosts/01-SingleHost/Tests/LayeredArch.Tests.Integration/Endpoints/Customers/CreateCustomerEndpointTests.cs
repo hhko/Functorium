@@ -1,4 +1,4 @@
-using LayeredArch.Application.Usecases.Customers;
+using LayeredArch.Adapters.Presentation.Endpoints.Customers;
 using LayeredArch.Tests.Integration.Fixtures;
 
 namespace LayeredArch.Tests.Integration.Endpoints.Customers;
@@ -24,7 +24,7 @@ public class CreateCustomerEndpointTests : IntegrationTestBase
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var result = await response.Content.ReadFromJsonAsync<CreateCustomerCommand.Response>(TestContext.Current.CancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<CreateCustomerEndpoint.Response>(TestContext.Current.CancellationToken);
         result.ShouldNotBeNull();
         result.Name.ShouldBe(request.Name);
         result.Email.ShouldBe(request.Email.ToLowerInvariant());

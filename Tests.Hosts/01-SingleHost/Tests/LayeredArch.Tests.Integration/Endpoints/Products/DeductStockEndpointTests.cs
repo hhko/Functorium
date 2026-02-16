@@ -1,4 +1,4 @@
-using LayeredArch.Application.Usecases.Products;
+using LayeredArch.Adapters.Presentation.Endpoints.Products;
 using LayeredArch.Tests.Integration.Fixtures;
 
 namespace LayeredArch.Tests.Integration.Endpoints.Products;
@@ -21,7 +21,7 @@ public class DeductStockEndpointTests : IntegrationTestBase
         var createResponse = await Client.PostAsJsonAsync("/api/products", createRequest, TestContext.Current.CancellationToken);
         createResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var created = await createResponse.Content.ReadFromJsonAsync<CreateProductCommand.Response>(TestContext.Current.CancellationToken);
+        var created = await createResponse.Content.ReadFromJsonAsync<CreateProductEndpoint.Response>(TestContext.Current.CancellationToken);
         created.ShouldNotBeNull();
 
         var deductRequest = new { Quantity = 3 };
@@ -32,7 +32,7 @@ public class DeductStockEndpointTests : IntegrationTestBase
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<DeductStockCommand.Response>(TestContext.Current.CancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<DeductStockEndpoint.Response>(TestContext.Current.CancellationToken);
         result.ShouldNotBeNull();
         result.RemainingStock.ShouldBe(7);
     }
@@ -51,7 +51,7 @@ public class DeductStockEndpointTests : IntegrationTestBase
         var createResponse = await Client.PostAsJsonAsync("/api/products", createRequest, TestContext.Current.CancellationToken);
         createResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var created = await createResponse.Content.ReadFromJsonAsync<CreateProductCommand.Response>(TestContext.Current.CancellationToken);
+        var created = await createResponse.Content.ReadFromJsonAsync<CreateProductEndpoint.Response>(TestContext.Current.CancellationToken);
         created.ShouldNotBeNull();
 
         var deductRequest = new { Quantity = 10 };
