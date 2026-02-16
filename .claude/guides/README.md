@@ -44,9 +44,12 @@ Architecture
 ├── 진단
 │   └── crash-diagnostics.md ─── 크래시 덤프
 │
-└── 개선
-    ├── ddd-tactical-improvements.md ─── DDD 전술적 설계 갭 분석/로드맵
-    └── architecture-improvements.md ─── 아키텍처 갭 분석/개선 계획
+├── 개선
+│   ├── ddd-tactical-improvements.md ─── DDD 전술적 설계 갭 분석/로드맵
+│   └── architecture-improvements.md ─── 아키텍처 갭 분석/개선 계획
+│
+└── 리뷰
+    └── dto-strategy-review.md ─── DTO 매핑 전략 리뷰 (DDD & Hexagonal)
 ```
 
 ## 빠른 참조 (작업별 가이드 바로가기)
@@ -68,6 +71,8 @@ Architecture
 | **Usecase 만들기** | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) |
 | **Adapter 만들기** | [12-ports-and-adapters.md](./12-ports-and-adapters.md) |
 | **EF Core Repository 만들기** | [12-ports-and-adapters.md — 2.8 EF Core Repository](./12-ports-and-adapters.md) |
+| **Persistence Model/Mapper 만들기** | [12-ports-and-adapters.md — 2.6 데이터 변환](./12-ports-and-adapters.md) |
+| **Endpoint Response DTO 만들기** | [12-ports-and-adapters.md — 2.6 데이터 변환](./12-ports-and-adapters.md) |
 | **Options 패턴 (OptionsConfigurator)** | [12-ports-and-adapters.md — 4.6 Options 패턴](./12-ports-and-adapters.md) |
 | **검증 메서드 확인** | [05-value-objects.md — 검증 시스템](./05-value-objects.md) |
 | **크래시 덤프 설정/분석** | [crash-diagnostics.md](./crash-diagnostics.md) |
@@ -79,6 +84,7 @@ Architecture
 | **팩토리 패턴 (Create/CreateFromValidated)** | [06-entities-and-aggregates.md — 8. 팩토리 패턴](./06-entities-and-aggregates.md) |
 | **DDD 개선 사항/로드맵 확인** | [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) |
 | **아키텍처 개선 사항 확인** | [architecture-improvements.md](./architecture-improvements.md) |
+| **DTO 전략 리뷰 확인** | [dto-strategy-review.md](../dto-strategy-review.md) |
 
 ## 문서 전체 목록
 
@@ -127,6 +133,12 @@ Architecture
 |------|------|
 | [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) | DDD 전술적 설계 갭 분석, 개선 방향, 로드맵 |
 | [architecture-improvements.md](./architecture-improvements.md) | 아키텍처 레이어 갭 분석, 개선 계획 |
+
+### 리뷰
+
+| 문서 | 설명 |
+|------|------|
+| [dto-strategy-review.md](../dto-strategy-review.md) | DTO 매핑 전략 리뷰 (DDD & Hexagonal Architecture 관점) |
 
 ### 기타
 

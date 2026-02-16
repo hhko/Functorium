@@ -471,10 +471,15 @@ public interface IProductRepository : IAdapter
 │                           PRESENTATION LAYER                                   │
 │  ┌──────────────────────────────────────────────────────────────────────────┐ │
 │  │ CreateProductEndpoint                                                     │ │
-│  │   Request { Name: string, Price: decimal }  ← JSON 직렬화                │ │
-│  │   Response { ProductId: Guid, ... }                                       │ │
+│  │   Request { Name, Description, Price, StockQuantity }  ← JSON 직렬화    │ │
+│  │   Response { ProductId, Name, Description, ... }  ← Endpoint 자체 DTO   │ │
+│  │                                                                           │ │
+│  │   // [변환 책임 A] Endpoint Request → Usecase Request (수동 매핑)         │ │
+│  │   var usecaseRequest = new CreateProductCommand.Request(req.Name, ...);  │ │
+│  │   // [변환 책임 B] Usecase Response → Endpoint Response                   │ │
+│  │   result.Map(r => new Response(r.ProductId, r.Name, ...));               │ │
 │  └──────────────────────────────────────────────────────────────────────────┘ │
-│                              │ [자동 바인딩]                                   │
+│                              │                                                 │
 └──────────────────────────────┼─────────────────────────────────────────────────┘
                                ▼
 ┌────────────────────────────────────────────────────────────────────────────────┐
@@ -484,15 +489,15 @@ public interface IProductRepository : IAdapter
 │  │   Request { Name: string, Price: decimal } : ICommandRequest<Response>   │ │
 │  │                                                                           │ │
 │  │   // [변환 책임 1] Usecase 내부에서 값 객체 생성                           │ │
-│  │   var productId = ProductId.Create(Guid.NewGuid());                       │ │
+│  │   var productId = ProductId.New();                                        │ │
 │  │   var productName = ProductName.Create(request.Name);                     │ │
 │  │   var money = Money.Create(request.Price, "KRW");                         │ │
 │  └──────────────────────────────────────────────────────────────────────────┘ │
 │                              │                                                 │
 │  ┌──────────────────────────────────────────────────────────────────────────┐ │
 │  │ IProductRepository : IAdapter  (Port Interface)                          │ │
-│  │   CreateRequest { Product }       ← 도메인 값 객체/엔티티                 │ │
-│  │   CreateResponse { Product }                                              │ │
+│  │   Create(Product) → FinT<IO, Product>   ← 도메인 엔티티                  │ │
+│  │   GetById(ProductId) → FinT<IO, Product>                                 │ │
 │  └──────────────────────────────────────────────────────────────────────────┘ │
 └──────────────────────────────┼─────────────────────────────────────────────────┘
                                ▼
@@ -500,12 +505,12 @@ public interface IProductRepository : IAdapter
 │                      INFRASTRUCTURE / PERSISTENCE LAYER                        │
 │  ┌──────────────────────────────────────────────────────────────────────────┐ │
 │  │ [GeneratePipeline]                                                        │ │
-│  │ ProductRepository : IProductRepository                                    │ │
+│  │ EfCoreProductRepository : IProductRepository                              │ │
 │  │   RequestCategory => "Repository"                                         │ │
 │  │                                                                           │ │
-│  │   // [변환 책임 2] Adapter 내부에서 기술 DTO 변환                          │ │
-│  │   ProductMapper.ToEntity(product)  : Product → ProductEntity              │ │
-│  │   ProductMapper.ToDomain(entity)   : ProductEntity → Product              │ │
+│  │   // [변환 책임 2] Adapter 내부에서 Persistence Model 변환                │ │
+│  │   product.ToModel()   : Product → ProductModel (POCO)                    │ │
+│  │   model.ToDomain()    : ProductModel → Product                            │ │
 │  └──────────────────────────────────────────────────────────────────────────┘ │
 └──────────────────────────────┼─────────────────────────────────────────────────┘
                                ▼
@@ -522,9 +527,11 @@ public interface IProductRepository : IAdapter
 
 | 경계 | 변환 주체 | 변환 내용 | 에러 처리 |
 |------|----------|----------|----------|
-| Presentation → Application | 프레임워크 | JSON → Usecase.Request | 400 Bad Request |
+| Presentation → Application | **Endpoint** | Endpoint.Request → Usecase.Request (수동 매핑) | 400 Bad Request |
+| Application → Presentation | **Endpoint** | `FinResponse<A>.Map<B>()` (Usecase.Response → Endpoint.Response) | — |
 | Application 내부 | **Usecase 클래스** | Primitive → 값 객체 | FinResponse.Fail |
-| Application → Infrastructure | **Adapter Mapper** | 값 객체 → 기술 DTO | FinT<IO, T> |
+| Application → Persistence | **Adapter Mapper** | 도메인 엔티티 → Persistence Model (POCO) | FinT<IO, T> |
+| Persistence → Application | **Adapter Mapper** | Persistence Model → 도메인 엔티티 (`CreateFromValidated`) | FinT<IO, T> |
 | Infrastructure → External | HttpClient / DbContext | DTO → 외부 프로토콜 | Exception → Fin.Fail |
 
 #### Port Request/Response 정의 원칙
@@ -556,7 +563,7 @@ sealed record Request(ProductId Id, ProductName Name);
 sealed record Request(Guid Id, string Name);
 
 // ❌ Bad - 기술 관심사 타입 사용
-sealed record Request(ProductEntity Entity);  // EF Core 타입
+sealed record Request(ProductModel Model);  // Persistence 타입
 ```
 
 **원칙 3: 메서드 수에 따른 네이밍 전략**
@@ -1102,56 +1109,102 @@ internal record EquipDto(string LineId, string TypeId, string ModelId, ...);
 
 #### Persistence Adapter (Repository)
 
+Persistence Adapter는 **Persistence Model(POCO)** 과 **Mapper(확장 메서드)** 를 사용하여 도메인 엔티티와 DB 모델을 분리합니다. EF Core `HasConversion` 대신 Mapper에서 명시적으로 변환합니다.
+
 ```csharp
-// Adapters.Persistence/Repositories/ProductRepository.cs
-[GeneratePipeline]
-public class ProductRepository : IProductRepository
+// Persistence Model — POCO (primitive 타입만, 도메인 의존성 없음)
+// 파일: {Adapters.Persistence}/Repositories/EfCore/Models/ProductModel.cs
+public class ProductModel
 {
-    private readonly ApplicationDbContext _dbContext;
+    public string Id { get; set; } = default!;
+    public string Name { get; set; } = default!;
+    public string Description { get; set; } = default!;
+    public decimal Price { get; set; }
+    public int StockQuantity { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public List<TagModel> Tags { get; set; } = [];
+}
+```
+
+```csharp
+// Mapper — internal static class, 확장 메서드
+// 파일: {Adapters.Persistence}/Repositories/EfCore/Mappers/ProductMapper.cs
+internal static class ProductMapper
+{
+    public static ProductModel ToModel(this Product product) => new()
+    {
+        Id = product.Id.ToString(),
+        Name = product.Name,
+        Description = product.Description,
+        Price = product.Price,
+        StockQuantity = product.StockQuantity,
+        CreatedAt = product.CreatedAt,
+        UpdatedAt = product.UpdatedAt,
+        Tags = product.Tags.Select(t => t.ToModel(product.Id.ToString())).ToList()
+    };
+
+    public static Product ToDomain(this ProductModel model)
+    {
+        var product = Product.CreateFromValidated(   // 검증 없이 복원
+            ProductId.Create(model.Id),
+            ProductName.CreateFromValidated(model.Name),
+            ProductDescription.CreateFromValidated(model.Description),
+            Money.CreateFromValidated(model.Price),
+            Quantity.CreateFromValidated(model.StockQuantity),
+            model.CreatedAt,
+            model.UpdatedAt);
+
+        foreach (var tag in model.Tags)
+            product.AddTag(tag.ToDomain());
+
+        // AddTag이 발행한 이벤트는 복원 과정의 부산물이므로 제거
+        product.ClearDomainEvents();
+
+        return product;
+    }
+}
+```
+
+```csharp
+// Repository — Mapper 확장 메서드 사용
+// 파일: {Adapters.Persistence}/Repositories/EfCore/EfCoreProductRepository.cs
+[GeneratePipeline]
+public class EfCoreProductRepository : IProductRepository
+{
+    private readonly LayeredArchDbContext _dbContext;
 
     public string RequestCategory => "Repository";
 
-    public virtual FinT<IO, IProductRepository.GetByIdResponse> GetById(
-        IProductRepository.GetByIdRequest request)
+    public virtual FinT<IO, Product> GetById(ProductId id)
     {
         return IO.liftAsync(async () =>
         {
-            // 1. 값 객체 → Primitive 변환 (implicit conversion)
-            var entity = await _dbContext.Products
-                .FirstOrDefaultAsync(p => p.Id == (Guid)request.Id);
+            var model = await _dbContext.Products
+                .AsNoTracking()
+                .Include(p => p.Tags)
+                .FirstOrDefaultAsync(p => p.Id == id.ToString());
 
-            if (entity is null)
+            if (model is not null)
             {
-                return Fin.Fail<IProductRepository.GetByIdResponse>(
-                    AdapterError.For<ProductRepository>(
-                        new NotFound(),
-                        request.Id.ToString(),
-                        $"Product with ID '{request.Id}' not found"));
+                return Fin.Succ(model.ToDomain());   // 확장 메서드로 도메인 복원
             }
 
-            // 2. Entity → 도메인 모델 변환
-            var product = ProductMapper.ToDomain(entity);
-            return Fin.Succ(new IProductRepository.GetByIdResponse(product));
+            return AdapterError.For<EfCoreProductRepository>(
+                new NotFound(),
+                id.ToString(),
+                $"상품 ID '{id}'을(를) 찾을 수 없습니다");
         });
     }
-}
 
-// Mapper 클래스 (Persistence 내부 - internal)
-internal static class ProductMapper
-{
-    public static Product ToDomain(ProductEntity entity)
-        => Product.Create(
-            ProductId.Create(entity.Id).IfFail(e => throw new InvalidOperationException(e.Message)),
-            ProductName.Create(entity.Name).IfFail(e => throw new InvalidOperationException(e.Message)),
-            Money.Create(entity.Price, "KRW").IfFail(e => throw new InvalidOperationException(e.Message)));
-
-    public static ProductEntity ToEntity(Product domain)
-        => new()
+    public virtual FinT<IO, Product> Create(Product product)
+    {
+        return IO.liftAsync(async () =>
         {
-            Id = domain.Id,
-            Name = domain.Name,
-            Price = domain.Price
-        };
+            _dbContext.Products.Add(product.ToModel());  // 확장 메서드로 Model 변환
+            return Fin.Succ(product);
+        });
+    }
 }
 ```
 
@@ -1251,13 +1304,13 @@ ManyErrors ───────────────────────
                               │
               ┌───────────────┼───────────────┐
               ▼               ▼               ▼
-┌──────────────────┐  ┌──────────────┐  ┌──────────────────┐
-│ Application      │  │ Infrastructure│  │ Persistence      │
-│ (Usecase)        │  │ (API Adapter) │  │ (Repository)     │
-│                  │  │               │  │                  │
-│ ProductId 사용   │  │ ProductId →   │  │ ProductId →      │
-│                  │  │ string (DTO)  │  │ Guid (Entity)    │
-└──────────────────┘  └──────────────┘  └──────────────────┘
+┌──────────────────┐  ┌──────────────┐  ┌───────────────────────┐
+│ Application      │  │ Infrastructure│  │ Persistence           │
+│ (Usecase)        │  │ (API Adapter) │  │ (Repository)          │
+│                  │  │               │  │                       │
+│ ProductId 사용   │  │ ProductId →   │  │ ProductModel (POCO)   │
+│                  │  │ string (DTO)  │  │ ProductId → string    │
+└──────────────────┘  └──────────────┘  └───────────────────────┘
 ```
 
 ### 2.8 EF Core Repository Adapter
@@ -1266,15 +1319,17 @@ InMemory(ConcurrentDictionary) 대신 EF Core를 사용하는 Repository Adapter
 
 #### DbContext 정의
 
+DbContext는 **Persistence Model(POCO)** 을 DbSet 타입으로 사용합니다. 도메인 엔티티가 아닌 Model을 직접 참조합니다.
+
 ```csharp
 // 파일: {Adapters.Persistence}/Repositories/EfCore/{ServiceName}DbContext.cs
 
 public class LayeredArchDbContext : DbContext
 {
-    public DbSet<Product> Products => Set<Product>();
-    public DbSet<Order> Orders => Set<Order>();
-    public DbSet<Customer> Customers => Set<Customer>();
-    public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<ProductModel> Products => Set<ProductModel>();
+    public DbSet<OrderModel> Orders => Set<OrderModel>();
+    public DbSet<CustomerModel> Customers => Set<CustomerModel>();
+    public DbSet<TagModel> Tags => Set<TagModel>();
 
     public LayeredArchDbContext(DbContextOptions<LayeredArchDbContext> options) : base(options)
     {
@@ -1287,106 +1342,99 @@ public class LayeredArchDbContext : DbContext
 }
 ```
 
-> **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Repositories/EfCore/LayeredArchDbContext.cs`
+> **참조**: `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/LayeredArchDbContext.cs`
 
 **핵심 포인트:**
+- DbSet 타입은 **Persistence Model** (`ProductModel`, `OrderModel`, ...) — 도메인 엔티티(`Product`, `Order`, ...)가 아님
 - `ApplyConfigurationsFromAssembly`로 동일 어셈블리의 `IEntityTypeConfiguration<T>` 구현체를 자동 검색
 - DbSet 프로퍼티는 `=> Set<T>()` 표현식으로 정의
 
-#### Entity Configuration — Value Object 변환 전략
+#### Entity Configuration — Persistence Model 직접 매핑
 
-EF Core에서 도메인 Value Object를 데이터베이스 컬럼으로 매핑할 때, Value Object 타입별 변환 패턴:
+Persistence Model은 primitive 타입만 사용하므로, EF Core `HasConversion`이 불필요합니다. Configuration은 `IEntityTypeConfiguration<XxxModel>`을 구현합니다.
 
-| Value Object 타입 | 변환 패턴 | 추가 설정 |
+| Model 프로퍼티 타입 | EF Core 설정 | 비고 |
 |---|---|---|
-| `SimpleValueObject<string>` | `HasConversion(v => (string)v, s => XxxName.CreateFromValidated(s))` | `HasMaxLength(XxxName.MaxLength)` |
-| `ComparableSimpleValueObject<decimal>` | `HasConversion(v => (decimal)v, d => Money.CreateFromValidated(d))` | `HasPrecision(18, 4)` |
-| `ComparableSimpleValueObject<int>` | `HasConversion(v => (int)v, i => Quantity.CreateFromValidated(i))` | — |
-| EntityId (Ulid 기반) | `HasConversion(new XxxIdConverter())` | `HasMaxLength(26)` + `SetValueComparer(new XxxIdComparer())` |
-| 컬렉션 (Tags 등) | `HasMany().WithOne().HasForeignKey().OnDelete(Cascade)` | backing field (`UsePropertyAccessMode(Field)`) |
+| `string` (EntityId) | `HasMaxLength(26)` | Ulid 문자열 (26자) |
+| `string` (이름 등) | `HasMaxLength(N).IsRequired()` | — |
+| `decimal` (금액) | `HasPrecision(18, 4)` | — |
+| `int` (수량) | — | 기본 매핑 |
+| `List<TagModel>` (컬렉션) | `HasMany().WithOne().HasForeignKey().OnDelete(Cascade)` | — |
 
 **Entity Configuration 예시:**
 
 ```csharp
 // 파일: {Adapters.Persistence}/Repositories/EfCore/Configurations/ProductConfiguration.cs
 
-public class ProductConfiguration : IEntityTypeConfiguration<Product>
+public class ProductConfiguration : IEntityTypeConfiguration<ProductModel>
 {
-    public void Configure(EntityTypeBuilder<Product> builder)
+    public void Configure(EntityTypeBuilder<ProductModel> builder)
     {
         builder.ToTable("Products");
         builder.HasKey(p => p.Id);
 
-        // EntityId — Converter + MaxLength(26) + ValueComparer
         builder.Property(p => p.Id)
-            .HasConversion(new ProductIdConverter())
             .HasMaxLength(26);
-        builder.Property(p => p.Id)
-            .Metadata.SetValueComparer(new ProductIdComparer());
 
-        // SimpleValueObject<string> — implicit conversion + MaxLength
         builder.Property(p => p.Name)
-            .HasConversion(
-                v => (string)v,
-                s => ProductName.CreateFromValidated(s))
-            .HasMaxLength(ProductName.MaxLength)
+            .HasMaxLength(200)
             .IsRequired();
 
-        // ComparableSimpleValueObject<decimal> — implicit conversion + Precision
+        builder.Property(p => p.Description)
+            .HasMaxLength(1000)
+            .IsRequired();
+
         builder.Property(p => p.Price)
-            .HasConversion(
-                v => (decimal)v,
-                d => Money.CreateFromValidated(d))
             .HasPrecision(18, 4);
 
-        // ComparableSimpleValueObject<int> — implicit conversion
-        builder.Property(p => p.StockQuantity)
-            .HasConversion(
-                v => (int)v,
-                i => Quantity.CreateFromValidated(i));
+        builder.Property(p => p.CreatedAt);
+        builder.Property(p => p.UpdatedAt);
 
-        // Tags 컬렉션 — backing field + Cascade delete
         builder.HasMany(p => p.Tags)
             .WithOne()
-            .HasForeignKey("ProductId")
+            .HasForeignKey(t => t.ProductId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Navigation(p => p.Tags)
-            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
 ```
 
-> **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Repositories/EfCore/Configurations/ProductConfiguration.cs`
+> **참조**: `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/Configurations/ProductConfiguration.cs`
+
+**이전 패턴과의 차이:** 도메인 엔티티를 직접 매핑하던 이전 방식에서는 Value Object마다 `HasConversion` + `IdConverter`/`IdComparer`가 필요했습니다. Persistence Model(POCO)을 사용하면 primitive 타입이므로 변환이 불필요합니다.
 
 #### EF Core Repository 구현
 
-기존 InMemory Repository와 동일한 Port를 구현하되, `IO.liftAsync`로 EF Core 비동기 API를 래핑합니다.
+기존 InMemory Repository와 동일한 Port를 구현하되, `IO.liftAsync`로 EF Core 비동기 API를 래핑합니다. DbContext는 **Persistence Model** 을 다루므로, Mapper 확장 메서드(`ToModel()` / `ToDomain()`)로 도메인 엔티티와 변환합니다.
 
 ```csharp
 // 파일: {Adapters.Persistence}/Repositories/EfCore/EfCoreProductRepository.cs
 
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
+using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
+using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
 [GeneratePipeline]
 public class EfCoreProductRepository : IProductRepository
 {
     private readonly LayeredArchDbContext _dbContext;
+    private readonly IDomainEventCollector _eventCollector;
 
     public string RequestCategory => "Repository";
 
-    public EfCoreProductRepository(LayeredArchDbContext dbContext)
+    public EfCoreProductRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
     {
         _dbContext = dbContext;
+        _eventCollector = eventCollector;
     }
 
     public virtual FinT<IO, Product> Create(Product product)
     {
         return IO.liftAsync(async () =>
         {
-            _dbContext.Products.Add(product);
+            _dbContext.Products.Add(product.ToModel());  // 도메인 → Model
+            _eventCollector.Track(product);
             return Fin.Succ(product);
         });
     }
@@ -1395,13 +1443,14 @@ public class EfCoreProductRepository : IProductRepository
     {
         return IO.liftAsync(async () =>
         {
-            var product = await _dbContext.Products
-                .Include(p => p.Tags)             // Navigation Property 로딩
-                .FirstOrDefaultAsync(p => p.Id == id);
+            var model = await _dbContext.Products
+                .AsNoTracking()
+                .Include(p => p.Tags)
+                .FirstOrDefaultAsync(p => p.Id == id.ToString());  // string 비교
 
-            if (product is not null)
+            if (model is not null)
             {
-                return Fin.Succ(product);
+                return Fin.Succ(model.ToDomain());  // Model → 도메인
             }
 
             return AdapterError.For<EfCoreProductRepository>(
@@ -1415,8 +1464,8 @@ public class EfCoreProductRepository : IProductRepository
     {
         return IO.liftAsync(async () =>
         {
-            var product = await _dbContext.Products.FindAsync(id);
-            if (product is null)
+            var model = await _dbContext.Products.FindAsync(id.ToString());
+            if (model is null)
             {
                 return AdapterError.For<EfCoreProductRepository>(
                     new NotFound(),
@@ -1424,7 +1473,7 @@ public class EfCoreProductRepository : IProductRepository
                     $"상품 ID '{id}'을(를) 찾을 수 없습니다");
             }
 
-            _dbContext.Products.Remove(product);
+            _dbContext.Products.Remove(model);
             return Fin.Succ(unit);
         });
     }
@@ -1433,15 +1482,16 @@ public class EfCoreProductRepository : IProductRepository
 }
 ```
 
-> **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Repositories/EfCore/EfCoreProductRepository.cs`
+> **참조**: `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/EfCoreProductRepository.cs`
 
 **InMemory vs EF Core Repository 비교:**
 
 | 항목 | InMemory | EF Core |
 |---|---|---|
 | IO 래핑 | `IO.lift(() => { ... })` | `IO.liftAsync(async () => { ... })` |
-| 저장소 | `ConcurrentDictionary<TId, T>` | `DbContext.Set<T>()` |
-| 조회 | `_products.TryGetValue(id, ...)` | `_dbContext.Products.FindAsync(id)` |
+| 저장소 | `ConcurrentDictionary<TId, T>` | `DbContext.Set<TModel>()` |
+| 저장/조회 변환 | 불필요 (도메인 객체 직접 저장) | `product.ToModel()` / `model.ToDomain()` |
+| 조회 | `_products.TryGetValue(id, ...)` | `_dbContext.Products.FindAsync(id.ToString())` |
 | Navigation 로딩 | 불필요 (메모리 내 참조) | `.Include(p => p.Tags)` |
 | 트랜잭션 관리 | No-op (`InMemoryUnitOfWork`) | `DbContext.SaveChangesAsync()` (`EfCoreUnitOfWork`) |
 | 에러 패턴 | `AdapterError.For<T>(...)` | `AdapterError.For<T>(...)` (동일) |

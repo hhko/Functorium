@@ -21,7 +21,7 @@
 - [10. Outbox Pattern](#10-outbox-pattern-)
 - [11. Unit of Work](#11-unit-of-work-)
 - [12. Domain Event Versioning](#12-domain-event-versioning-)
-- [13. DTO Mapping Strategy](#13-dto-mapping-strategy-)
+- [13. DTO Mapping Strategy](#13-dto-mapping-strategy-) ✅
 - [14. Resilience Patterns](#14-resilience-patterns-)
 
 ### Part 4: 전략적 개선
@@ -602,59 +602,44 @@ public sealed record CreatedEventV2(
 
 ---
 
-## 13. DTO Mapping Strategy ⚠️
+## 13. DTO Mapping Strategy ✅
 
 ### 현재 상태
 
-레이어별 DTO 전략이 **정립되지 않았습니다**. Usecase의 Request/Response record가 사실상 DTO 역할을 겸합니다.
+레이어별 DTO 전략이 **구현되었습니다**. 각 레이어가 자체 DTO를 소유하며, 수동 매핑으로 레이어 경계를 명확히 분리합니다.
 
-```csharp
-// 현재: Usecase 내부 record가 API 응답으로도 사용됨
-public sealed record Response(
-    string ProductId,
-    string Name,
-    decimal Price,
-    int StockQuantity);
-```
-
-### 문제점
-
-1. **레이어 경계 위반 가능**: 도메인 객체가 API 응답에 그대로 노출될 수 있음
-2. **변환 전략 미정의**: Entity ↔ DTO, DTO ↔ API Response 변환 패턴이 없음
-3. **성능 고려 부재**: 매핑 라이브러리(AutoMapper 등) vs 수동 매핑 가이드가 없음
-
-### 개선 방향
-
-**레이어별 DTO 역할:**
+**구현된 레이어별 DTO 역할:**
 
 | 레이어 | DTO 유형 | 역할 |
 |--------|---------|------|
-| Presentation | API Request/Response | 외부 인터페이스 계약 |
-| Application | Command/Query Record | Usecase 입출력 |
-| Adapter | Persistence Model | DB 스키마 매핑 |
+| Presentation | `Endpoint.Response` record | 외부 인터페이스 계약 (API 응답) |
+| Application | `Command/Query.Response` record | Usecase 입출력 |
+| Persistence | `XxxModel` POCO class | DB 스키마 매핑 (primitive 타입) |
 
-**변환 패턴:**
+**구현된 변환 패턴:**
 
 ```
-API Request → Usecase Request → Domain Object → Persistence Model
-API Response ← Usecase Response ← Domain Object ← Persistence Model
+API Request → Endpoint.Request → Usecase.Request → Domain Entity → PersistenceModel
+API Response ← Endpoint.Response ← Usecase.Response ← Domain Entity ← PersistenceModel
 ```
 
-**권장 매핑 방식:**
+**매핑 방식:**
 
 | 시나리오 | 방식 |
 |---------|------|
-| 단순 매핑 (1:1) | 수동 매핑 (확장 메서드) |
-| 복잡한 매핑 | Mapperly (소스 생성기 기반, 성능 우수) |
-| 도메인 ↔ DB | EFCore 매핑 설정 |
+| Usecase Response → Endpoint Response | `FinResponse<A>.Map<B>()` |
+| Domain Entity ↔ Persistence Model | 수동 매핑 (확장 메서드: `ToModel()` / `ToDomain()`) |
+| Application DTO 공유 | `Usecases/Xxx/Dtos/` 네임스페이스 |
 
-### 우선순위
+**주요 구현 사항:**
 
-**높음** — DTO 전략은 모든 레이어에 영향을 미치며, 일관된 패턴이 필요합니다.
+1. **Presentation Layer**: 모든 Endpoint에 `new sealed record Response(...)` 추가, `result.Map(r => new Response(...))` 패턴
+2. **Application Layer**: 중복 `ProductDto` → 공유 `ProductSummaryDto`로 통합
+3. **Persistence Layer**: `ProductModel`, `CustomerModel`, `OrderModel`, `TagModel` POCO 도입, `HasConversion()` 제거
+4. **Domain 순수성**: 도메인 엔티티에서 ORM용 파라미터 없는 생성자 제거
+5. **Mapper 라운드트립 테스트**: `Domain → Model → Domain` 검증 테스트 추가
 
-**TODO.md 연계:**
-- L112~116: `DTO Usecase`, `DTO FastEndpoint`, `DTO IAdapter`, `DTO EFCore`, `DTO 성능 고려`
-- L452: `DTO IRequest/IResponse`
+**상세 리뷰**: [dto-strategy-review.md](./dto-strategy-review.md) — Eric Evans DDD & Hexagonal Architecture 관점의 종합 리뷰 (전체 평가: 우수)
 
 ---
 
@@ -821,7 +806,7 @@ Tag (별도 Aggregate) — 여러 Post에서 공유
 
 | 개선 항목 | 우선순위 | 목표 버전 | 의존성 | TODO.md 참조 |
 |----------|---------|----------|--------|-------------|
-| DTO Mapping Strategy | 높음 | alpha.2 | — | L112~116 |
+| DTO Mapping Strategy | 높음 | alpha.2 | ✅ 구현됨 | L112~116 |
 | IRepository 공통 인터페이스 | 높음 | alpha.4 | EFCore 통합 | L354 |
 | Unit of Work | ✅ 완료 | — | EFCore 통합 | L365 |
 | Integration Events | 높음 | alpha.4 | — | L150, L355 |

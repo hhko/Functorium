@@ -2,6 +2,10 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
+```
+DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하도록 개선
+```
+
 - [ ] DTO 저장소 적용?
 - [ ] UoW 지금은 인터페이스만 제공, 추가 개선 사항이 없을까?
 - [ ] Entity & Aggregate 생성 패턴 확인?

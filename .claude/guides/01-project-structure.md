@@ -421,6 +421,8 @@ Adapter의 주 목표 폴더 이름은 구현 기술에 따라 달라집니다. 
 {ServiceName}.Adapters.Presentation/
 ├── Endpoints/
 │   ├── Products/
+│   │   ├── Dtos/                        ← Endpoint 간 공유 DTO
+│   │   │   └── ProductSummaryDto.cs
 │   │   ├── CreateProductEndpoint.cs
 │   │   ├── UpdateProductEndpoint.cs
 │   │   ├── DeductStockEndpoint.cs
@@ -441,7 +443,7 @@ Adapter의 주 목표 폴더 이름은 구현 기술에 따라 달라집니다. 
 └── Using.cs
 ```
 
-**Endpoints 폴더 규칙:** Aggregate별 하위 폴더, 엔드포인트 파일명은 `{동사}{Aggregate}Endpoint.cs` 패턴을 따릅니다.
+**Endpoints 폴더 규칙:** Aggregate별 하위 폴더, 엔드포인트 파일명은 `{동사}{Aggregate}Endpoint.cs` 패턴을 따릅니다. 여러 Endpoint에서 공유하는 DTO가 있으면 `Dtos/` 하위 폴더에 배치합니다. 각 Endpoint의 Request/Response DTO는 Endpoint 클래스 내부에 nested record로 정의합니다.
 
 ### Adapters.Persistence 구조
 
@@ -454,12 +456,22 @@ Adapter의 주 목표 폴더 이름은 구현 기술에 따라 달라집니다. 
 │   │   ├── InMemoryOrderRepository.cs
 │   │   └── InMemoryProductCatalog.cs    ← 교차 Aggregate Port 구현
 │   └── EfCore/                      ← EF Core 기반 구현 (선택)
-│       ├── {ServiceName}DbContext.cs
+│       ├── Models/                  ← Persistence Model (POCO, primitive 타입만)
+│       │   ├── ProductModel.cs
+│       │   ├── OrderModel.cs
+│       │   ├── CustomerModel.cs
+│       │   └── TagModel.cs
+│       ├── Mappers/                 ← 도메인 ↔ Model 변환 (확장 메서드)
+│       │   ├── ProductMapper.cs
+│       │   ├── OrderMapper.cs
+│       │   ├── CustomerMapper.cs
+│       │   └── TagMapper.cs
 │       ├── Configurations/
 │       │   ├── ProductConfiguration.cs
 │       │   ├── OrderConfiguration.cs
 │       │   ├── CustomerConfiguration.cs
 │       │   └── TagConfiguration.cs
+│       ├── {ServiceName}DbContext.cs
 │       ├── EfCoreProductRepository.cs
 │       ├── EfCoreOrderRepository.cs
 │       ├── EfCoreCustomerRepository.cs
@@ -473,7 +485,7 @@ Adapter의 주 목표 폴더 이름은 구현 기술에 따라 달라집니다. 
 └── Using.cs
 ```
 
-> **참고**: `Repositories/EfCore/`와 `Abstractions/Options/`는 EF Core 기반 영속화를 사용할 때 추가합니다. InMemory만 사용하는 경우 `Repositories/InMemory/`와 `Abstractions/Registrations/`만 있으면 됩니다.
+> **참고**: `Repositories/EfCore/`와 `Abstractions/Options/`는 EF Core 기반 영속화를 사용할 때 추가합니다. InMemory만 사용하는 경우 `Repositories/InMemory/`와 `Abstractions/Registrations/`만 있으면 됩니다. EF Core 사용 시 `Models/`(Persistence Model)과 `Mappers/`(도메인 ↔ Model 변환)가 함께 추가됩니다.
 
 ### Adapters.Infrastructure 구조
 
