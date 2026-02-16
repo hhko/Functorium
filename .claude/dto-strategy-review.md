@@ -224,31 +224,30 @@ FinT<IO, bool> Exists(Specification<Product> spec);     // ✅ 도메인 Spec
 
 ## 4. 논의 사항 (Discussion Points)
 
-### 4.1 ProductSummaryDto 양층 중복 — 의도적 설계, 타당함
+### 4.1 ProductSummaryDto — Application DTO 재사용 (Pragmatic 접근)
 
-**현상**: 동일한 `ProductSummaryDto` record가 Application과 Presentation 양쪽에 존재합니다.
+**현상**: `ProductSummaryDto`는 Application 레이어(`Dtos/` 폴더)에만 존재하며, Presentation(`GetAllProductsEndpoint`)에서 직접 참조합니다. Presentation 전용 DTO는 삭제되었습니다.
 
 ```
-Application/Usecases/Products/Dtos/ProductSummaryDto.cs
-Presentation/Endpoints/Products/Dtos/ProductSummaryDto.cs
+Application/Usecases/Products/Dtos/ProductSummaryDto.cs   ← 유일한 정의
 ```
 
-`GetAllProductsEndpoint`에서 Application DTO → Presentation DTO로의 identity mapping이 발생합니다:
+`GetAllProductsEndpoint`에서 Application DTO를 직접 사용하고, `Seq → List` 변환만 수행합니다:
 
 ```csharp
-// GetAllProductsEndpoint.cs — identity mapping
-var mapped = result.Map(r => new Response(
-    r.Products
-        .Select(p => new ProductSummaryDto(p.ProductId, p.Name, p.Price, p.StockQuantity))
-        .ToList()));
+// GetAllProductsEndpoint.cs — Application DTO 재사용, Seq → List 변환만 수행
+var mapped = result.Map(r => new Response(r.Products.ToList()));
+
+public new sealed record Response(List<ProductSummaryDto> Products);
 ```
 
 **DDD/Hexagonal 관점 평가**:
-- **정당한 이유**: 각 레이어가 자신의 DTO를 소유함으로써, Presentation 계약 변경이 Application에 영향을 주지 않고, 그 역도 마찬가지. 이는 Hexagonal Architecture의 핵심 원칙.
-- **현실적 비용**: 현재 필드가 동일하므로 identity mapping 오버헤드가 있지만, 향후 API 버저닝이나 필드 추가/제거 시 각 레이어가 독립적으로 진화 가능.
-- **Seq → List 변환**: Application은 `Seq<T>` (LanguageExt FP 타입), Presentation은 `List<T>` (JSON 직렬화 호환). 이 변환 자체가 레이어 분리의 실질적 이유.
+- **Pragmatic 판단**: 읽기 전용 Query 응답이고, 필드가 동일하여 identity mapping이 발생하는 상황. Presentation 전용 DTO를 유지하는 것은 boilerplate만 증가시킴.
+- **의존성 방향 준수**: Presentation → Application 방향 참조이므로 아키텍처 규칙 위반 아님.
+- **Seq → List 변환**: `Seq<T>`(Application) → `List<T>`(Presentation) 변환은 Response wrapper에서 처리.
+- **해제 시점**: Presentation 고유 필드가 필요하거나 API 버저닝이 필요해지면 Endpoint 전용 DTO로 전환.
 
-**결론**: 가이드 문서의 설계 결정과 일관되며, DDD/Hexagonal 원칙에 부합. 추가 조치 불필요.
+**결론**: 재사용 허용 조건(읽기 전용 Query, 동일 필드, Presentation 고유 필드 불필요, 컬렉션 변환만 필요)을 모두 충족. 상세 기준은 [15-dto-strategy.md](./guides/15-dto-strategy.md)의 "Application DTO 재사용 허용 조건" 참조.
 
 ### 4.2 Application 레이어의 Value Object 암시적 변환
 

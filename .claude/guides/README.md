@@ -30,6 +30,9 @@ Architecture
 ├── Adapter Layer
 │   └── [12] 12-ports-and-adapters.md ─── Port와 Adapter
 │
+├── DTO 전략
+│   └── [15] 15-dto-strategy.md ─── DTO 전략
+│
 ├── Testing
 │   ├── [13] 13-unit-testing.md ─── 단위 테스트
 │   └── [14] 14-testing-library.md ─── 테스트 라이브러리
@@ -73,6 +76,7 @@ Architecture
 | **EF Core Repository 만들기** | [12-ports-and-adapters.md — 2.8 EF Core Repository](./12-ports-and-adapters.md) |
 | **Persistence Model/Mapper 만들기** | [12-ports-and-adapters.md — 2.6 데이터 변환](./12-ports-and-adapters.md) |
 | **Endpoint Response DTO 만들기** | [12-ports-and-adapters.md — 2.6 데이터 변환](./12-ports-and-adapters.md) |
+| **DTO 전략/재사용 규칙** | [15-dto-strategy.md](./15-dto-strategy.md) |
 | **Options 패턴 (OptionsConfigurator)** | [12-ports-and-adapters.md — 4.6 Options 패턴](./12-ports-and-adapters.md) |
 | **검증 메서드 확인** | [05-value-objects.md — 검증 시스템](./05-value-objects.md) |
 | **크래시 덤프 설정/분석** | [crash-diagnostics.md](./crash-diagnostics.md) |
@@ -101,6 +105,7 @@ Architecture
 | 10 | [10-specifications.md](./10-specifications.md) | Specification 패턴 (비즈니스 규칙 캡슐화, 조합, Repository 통합) |
 | 11 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) | Use Case 구현 (CQRS Command/Query) |
 | 12 | [12-ports-and-adapters.md](./12-ports-and-adapters.md) | Port 정의, Adapter 구현, Pipeline 자동 생성 |
+| 15 | [15-dto-strategy.md](./15-dto-strategy.md) | DTO 전략 (레이어별 소유권, 재사용 규칙, 변환 패턴) |
 
 ### 아키텍처
 
