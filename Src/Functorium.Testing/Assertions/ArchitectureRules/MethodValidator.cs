@@ -52,6 +52,16 @@ public sealed class MethodValidator
         return this;
     }
 
+    public MethodValidator RequireExtensionMethod()
+    {
+        if (!_targetMethod.Attributes.Any(a =>
+            a.FullName?.Contains("ExtensionAttribute") == true))
+        {
+            _failures.Add($"Method '{_targetMethod.Name}' in class '{_targetMethod.DeclaringType.Name}' must be an extension method.");
+        }
+        return this;
+    }
+
     public MethodValidator RequireReturnType(Type returnType)
     {
         if (!IsReturnTypeCompatible(_targetMethod.ReturnType, returnType))
@@ -67,6 +77,21 @@ public sealed class MethodValidator
         if (_targetMethod.ReturnType.Name != declaringClassName)
         {
             _failures.Add($"Method '{_targetMethod.Name}' in class '{_targetMethod.DeclaringType.Name}' must return '{declaringClassName}'.");
+        }
+        return this;
+    }
+
+    public MethodValidator RequireReturnTypeOfDeclaringTopLevelClass()
+    {
+        var declaringFullName = _targetMethod.DeclaringType.FullName;
+        // 중첩 클래스인 경우 '+' 앞의 최상위 클래스 이름을 추출
+        var topLevelClassName = declaringFullName.Contains('+')
+            ? declaringFullName[..declaringFullName.IndexOf('+')].Split('.')[^1]
+            : _targetMethod.DeclaringType.Name;
+
+        if (_targetMethod.ReturnType.Name != topLevelClassName)
+        {
+            _failures.Add($"Method '{_targetMethod.Name}' in class '{_targetMethod.DeclaringType.Name}' must return top-level class '{topLevelClassName}'.");
         }
         return this;
     }

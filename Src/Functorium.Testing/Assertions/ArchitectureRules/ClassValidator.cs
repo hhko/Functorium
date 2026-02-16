@@ -81,6 +81,122 @@ public sealed class ClassValidator
         return this;
     }
 
+    public ClassValidator RequireNotSealed()
+    {
+        if (_targetClass.IsSealed == true)
+        {
+            _failures.Add($"Class '{_targetClass.Name}' must not be sealed.");
+        }
+        return this;
+    }
+
+    public ClassValidator RequireStatic()
+    {
+        // C# static class는 IL에서 abstract + sealed로 표현됨
+        if (_targetClass.IsAbstract != true || _targetClass.IsSealed != true)
+        {
+            _failures.Add($"Class '{_targetClass.Name}' must be static.");
+        }
+        return this;
+    }
+
+    public ClassValidator RequireNotStatic()
+    {
+        // C# static class는 IL에서 abstract + sealed로 표현됨
+        if (_targetClass.IsAbstract == true && _targetClass.IsSealed == true)
+        {
+            _failures.Add($"Class '{_targetClass.Name}' must not be static.");
+        }
+        return this;
+    }
+
+    public ClassValidator RequireAttribute(string attributeName)
+    {
+        if (!_targetClass.Attributes.Any(a =>
+            a.FullName != null && a.FullName.Contains(attributeName)))
+        {
+            _failures.Add($"Class '{_targetClass.Name}' must have '{attributeName}' attribute.");
+        }
+        return this;
+    }
+
+    public ClassValidator RequireRecord()
+    {
+        if (_targetClass.IsRecord != true)
+        {
+            _failures.Add($"Class '{_targetClass.Name}' must be a record.");
+        }
+        return this;
+    }
+
+    public ClassValidator RequireOnlyPrimitiveProperties()
+        => RequireOnlyPrimitiveProperties(additionalAllowedTypePrefixes: []);
+
+    public ClassValidator RequireOnlyPrimitiveProperties(params string[] additionalAllowedTypePrefixes)
+    {
+        var nonPrimitiveProperties = _targetClass.Members
+            .OfType<PropertyMember>()
+            .Where(p => p.IsStatic != true && !IsCompilerGenerated(p))
+            .Where(p => !IsPrimitiveOrAllowedType(p.Type, additionalAllowedTypePrefixes))
+            .ToList();
+
+        if (nonPrimitiveProperties.Any())
+        {
+            var details = string.Join(", ", nonPrimitiveProperties.Select(p => $"{p.Name} ({p.Type.Name})"));
+            _failures.Add($"Class '{_targetClass.Name}' has non-primitive properties: {details}");
+        }
+        return this;
+    }
+
+    private static bool IsCompilerGenerated(PropertyMember property)
+    {
+        return property.Name.StartsWith("<") || property.Name == "EqualityContract";
+    }
+
+    private static bool IsPrimitiveOrAllowedType(IType type, string[] additionalAllowedTypePrefixes)
+    {
+        // Enum 타입은 값 타입이므로 항상 허용
+        if (type is ArchUnitNET.Domain.Enum)
+            return true;
+
+        var fullName = type.FullName ?? "";
+
+        // 추가 허용 타입 접두사 검사
+        foreach (var prefix in additionalAllowedTypePrefixes)
+        {
+            if (fullName.StartsWith(prefix))
+                return true;
+        }
+
+        // Nullable<T> 허용
+        if (fullName.StartsWith("System.Nullable"))
+            return true;
+
+        // List<T> 허용 (Model 간 관계)
+        if (fullName.StartsWith("System.Collections.Generic.List"))
+            return true;
+
+        var allowedTypes = new HashSet<string>
+        {
+            "System.String",
+            "System.Int32",
+            "System.Int64",
+            "System.Decimal",
+            "System.Double",
+            "System.Single",
+            "System.Boolean",
+            "System.DateTime",
+            "System.DateTimeOffset",
+            "System.Guid",
+            "System.Byte",
+            "System.Int16",
+            "System.UInt32",
+            "System.UInt64",
+        };
+
+        return allowedTypes.Contains(fullName);
+    }
+
     public ClassValidator RequireImplements(Type interfaceType)
     {
         if (!_targetClass.ImplementedInterfaces.Any(i =>
