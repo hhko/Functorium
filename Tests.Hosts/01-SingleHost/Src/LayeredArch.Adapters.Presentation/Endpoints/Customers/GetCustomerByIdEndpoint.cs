@@ -8,7 +8,7 @@ namespace LayeredArch.Adapters.Presentation.Endpoints.Customers;
 /// GET /api/customers/{id}
 /// </summary>
 public sealed class GetCustomerByIdEndpoint
-    : Endpoint<GetCustomerByIdEndpoint.Request, GetCustomerByIdQuery.Response>
+    : Endpoint<GetCustomerByIdEndpoint.Request, GetCustomerByIdEndpoint.Response>
 {
     private readonly IMediator _mediator;
 
@@ -32,8 +32,20 @@ public sealed class GetCustomerByIdEndpoint
     {
         var usecaseRequest = new GetCustomerByIdQuery.Request(req.Id);
         var result = await _mediator.Send(usecaseRequest, ct);
-        await this.SendFinResponseWithNotFoundAsync(result, ct);
+        var mapped = result.Map(r => new Response(
+            r.CustomerId, r.Name, r.Email, r.CreditLimit, r.CreatedAt));
+        await this.SendFinResponseWithNotFoundAsync(mapped, ct);
     }
 
     public sealed record Request(string Id);
+
+    /// <summary>
+    /// Endpoint Response DTO
+    /// </summary>
+    public new sealed record Response(
+        string CustomerId,
+        string Name,
+        string Email,
+        decimal CreditLimit,
+        DateTime CreatedAt);
 }

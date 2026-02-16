@@ -8,7 +8,7 @@ namespace LayeredArch.Adapters.Presentation.Endpoints.Products;
 /// PUT /api/products/{id}
 /// </summary>
 public sealed class UpdateProductEndpoint
-    : Endpoint<UpdateProductEndpoint.Request, UpdateProductCommand.Response>
+    : Endpoint<UpdateProductEndpoint.Request, UpdateProductEndpoint.Response>
 {
     private readonly IMediator _mediator;
 
@@ -39,7 +39,9 @@ public sealed class UpdateProductEndpoint
             SimulateException: false);
 
         var result = await _mediator.Send(usecaseRequest, ct);
-        await this.SendFinResponseWithNotFoundAsync(result, ct);
+        var mapped = result.Map(r => new Response(
+            r.ProductId, r.Name, r.Description, r.Price, r.StockQuantity, r.UpdatedAt));
+        await this.SendFinResponseWithNotFoundAsync(mapped, ct);
     }
 
     public sealed record Request(
@@ -48,4 +50,15 @@ public sealed class UpdateProductEndpoint
         string Description,
         decimal Price,
         int StockQuantity);
+
+    /// <summary>
+    /// Endpoint Response DTO
+    /// </summary>
+    public new sealed record Response(
+        string ProductId,
+        string Name,
+        string Description,
+        decimal Price,
+        int StockQuantity,
+        DateTime UpdatedAt);
 }

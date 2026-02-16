@@ -8,7 +8,7 @@ namespace LayeredArch.Adapters.Presentation.Endpoints.Customers;
 /// POST /api/customers
 /// </summary>
 public sealed class CreateCustomerEndpoint
-    : Endpoint<CreateCustomerEndpoint.Request, CreateCustomerCommand.Response>
+    : Endpoint<CreateCustomerEndpoint.Request, CreateCustomerEndpoint.Response>
 {
     private readonly IMediator _mediator;
 
@@ -36,11 +36,23 @@ public sealed class CreateCustomerEndpoint
             req.CreditLimit);
 
         var result = await _mediator.Send(usecaseRequest, ct);
-        await this.SendCreatedFinResponseAsync(result, ct);
+        var mapped = result.Map(r => new Response(
+            r.CustomerId, r.Name, r.Email, r.CreditLimit, r.CreatedAt));
+        await this.SendCreatedFinResponseAsync(mapped, ct);
     }
 
     public sealed record Request(
         string Name,
         string Email,
         decimal CreditLimit);
+
+    /// <summary>
+    /// Endpoint Response DTO
+    /// </summary>
+    public new sealed record Response(
+        string CustomerId,
+        string Name,
+        string Email,
+        decimal CreditLimit,
+        DateTime CreatedAt);
 }

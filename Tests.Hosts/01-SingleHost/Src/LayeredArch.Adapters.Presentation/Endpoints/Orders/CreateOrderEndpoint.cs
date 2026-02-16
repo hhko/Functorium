@@ -8,7 +8,7 @@ namespace LayeredArch.Adapters.Presentation.Endpoints.Orders;
 /// POST /api/orders
 /// </summary>
 public sealed class CreateOrderEndpoint
-    : Endpoint<CreateOrderEndpoint.Request, CreateOrderCommand.Response>
+    : Endpoint<CreateOrderEndpoint.Request, CreateOrderEndpoint.Response>
 {
     private readonly IMediator _mediator;
 
@@ -36,11 +36,25 @@ public sealed class CreateOrderEndpoint
             req.ShippingAddress);
 
         var result = await _mediator.Send(usecaseRequest, ct);
-        await this.SendCreatedFinResponseAsync(result, ct);
+        var mapped = result.Map(r => new Response(
+            r.OrderId, r.ProductId, r.Quantity, r.UnitPrice, r.TotalAmount, r.ShippingAddress, r.CreatedAt));
+        await this.SendCreatedFinResponseAsync(mapped, ct);
     }
 
     public sealed record Request(
         string ProductId,
         int Quantity,
         string ShippingAddress);
+
+    /// <summary>
+    /// Endpoint Response DTO
+    /// </summary>
+    public new sealed record Response(
+        string OrderId,
+        string ProductId,
+        int Quantity,
+        decimal UnitPrice,
+        decimal TotalAmount,
+        string ShippingAddress,
+        DateTime CreatedAt);
 }

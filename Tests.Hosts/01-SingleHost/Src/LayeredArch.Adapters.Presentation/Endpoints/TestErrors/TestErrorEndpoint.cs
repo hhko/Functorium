@@ -8,7 +8,7 @@ namespace LayeredArch.Adapters.Presentation.Endpoints.TestErrors;
 /// POST /api/test-error
 /// </summary>
 public sealed class TestErrorEndpoint
-    : Endpoint<TestErrorEndpoint.Request, TestErrorCommand.Response>
+    : Endpoint<TestErrorEndpoint.Request, TestErrorEndpoint.Response>
 {
     private readonly IMediator _mediator;
 
@@ -45,8 +45,12 @@ public sealed class TestErrorEndpoint
         // Mediator로 Usecase 호출
         var result = await _mediator.Send(usecaseRequest, ct);
 
+        // Usecase Response -> Endpoint Response 매핑 (ErrorScenario enum → string)
+        var mapped = result.Map(r => new Response(
+            r.Scenario.ToString(), r.Message, r.ExecutedAt));
+
         // FinResponse를 HTTP Response로 변환
-        await this.SendFinResponseAsync(result, ct);
+        await this.SendFinResponseAsync(mapped, ct);
     }
 
     /// <summary>
@@ -55,4 +59,12 @@ public sealed class TestErrorEndpoint
     public sealed record Request(
         string Scenario,
         string TestMessage);
+
+    /// <summary>
+    /// Endpoint Response DTO
+    /// </summary>
+    public new sealed record Response(
+        string Scenario,
+        string Message,
+        DateTime ExecutedAt);
 }

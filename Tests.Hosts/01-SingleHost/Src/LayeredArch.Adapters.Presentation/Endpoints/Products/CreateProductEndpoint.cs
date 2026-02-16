@@ -8,7 +8,7 @@ namespace LayeredArch.Adapters.Presentation.Endpoints.Products;
 /// POST /api/products
 /// </summary>
 public sealed class CreateProductEndpoint
-    : Endpoint<CreateProductEndpoint.Request, CreateProductCommand.Response>
+    : Endpoint<CreateProductEndpoint.Request, CreateProductEndpoint.Response>
 {
     private readonly IMediator _mediator;
 
@@ -40,8 +40,12 @@ public sealed class CreateProductEndpoint
         // Mediator로 Usecase 호출
         var result = await _mediator.Send(usecaseRequest, ct);
 
+        // Usecase Response -> Endpoint Response 매핑
+        var mapped = result.Map(r => new Response(
+            r.ProductId, r.Name, r.Description, r.Price, r.StockQuantity, r.CreatedAt));
+
         // FinResponse를 HTTP Response로 변환
-        await this.SendCreatedFinResponseAsync(result, ct);
+        await this.SendCreatedFinResponseAsync(mapped, ct);
     }
 
     /// <summary>
@@ -52,4 +56,15 @@ public sealed class CreateProductEndpoint
         string Description,
         decimal Price,
         int StockQuantity);
+
+    /// <summary>
+    /// Endpoint Response DTO
+    /// </summary>
+    public new sealed record Response(
+        string ProductId,
+        string Name,
+        string Description,
+        decimal Price,
+        int StockQuantity,
+        DateTime CreatedAt);
 }

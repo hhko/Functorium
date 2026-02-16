@@ -1,4 +1,5 @@
 using LayeredArch.Adapters.Presentation.Abstractions.Extensions;
+using LayeredArch.Adapters.Presentation.Endpoints.Products.Dtos;
 using LayeredArch.Application.Usecases.Products;
 
 namespace LayeredArch.Adapters.Presentation.Endpoints.Products;
@@ -8,7 +9,7 @@ namespace LayeredArch.Adapters.Presentation.Endpoints.Products;
 /// GET /api/products
 /// </summary>
 public sealed class GetAllProductsEndpoint
-    : EndpointWithoutRequest<GetAllProductsQuery.Response>
+    : EndpointWithoutRequest<GetAllProductsEndpoint.Response>
 {
     private readonly IMediator _mediator;
 
@@ -31,6 +32,15 @@ public sealed class GetAllProductsEndpoint
     public override async Task HandleAsync(CancellationToken ct)
     {
         var result = await _mediator.Send(new GetAllProductsQuery.Request(), ct);
-        await this.SendFinResponseAsync(result, ct);
+        var mapped = result.Map(r => new Response(
+            r.Products
+                .Select(p => new ProductSummaryDto(p.ProductId, p.Name, p.Price, p.StockQuantity))
+                .ToList()));
+        await this.SendFinResponseAsync(mapped, ct);
     }
+
+    /// <summary>
+    /// Endpoint Response DTO
+    /// </summary>
+    public new sealed record Response(List<ProductSummaryDto> Products);
 }

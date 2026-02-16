@@ -8,7 +8,7 @@ namespace LayeredArch.Adapters.Presentation.Endpoints.Products;
 /// POST /api/products/{id}/deduct-stock
 /// </summary>
 public sealed class DeductStockEndpoint
-    : Endpoint<DeductStockEndpoint.Request, DeductStockCommand.Response>
+    : Endpoint<DeductStockEndpoint.Request, DeductStockEndpoint.Response>
 {
     private readonly IMediator _mediator;
 
@@ -35,10 +35,18 @@ public sealed class DeductStockEndpoint
             req.Quantity);
 
         var result = await _mediator.Send(usecaseRequest, ct);
-        await this.SendFinResponseWithNotFoundAsync(result, ct);
+        var mapped = result.Map(r => new Response(r.ProductId, r.RemainingStock));
+        await this.SendFinResponseWithNotFoundAsync(mapped, ct);
     }
 
     public sealed record Request(
         string Id,
         int Quantity);
+
+    /// <summary>
+    /// Endpoint Response DTO
+    /// </summary>
+    public new sealed record Response(
+        string ProductId,
+        int RemainingStock);
 }

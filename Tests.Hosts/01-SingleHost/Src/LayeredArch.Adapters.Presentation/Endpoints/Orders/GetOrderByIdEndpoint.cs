@@ -8,7 +8,7 @@ namespace LayeredArch.Adapters.Presentation.Endpoints.Orders;
 /// GET /api/orders/{id}
 /// </summary>
 public sealed class GetOrderByIdEndpoint
-    : Endpoint<GetOrderByIdEndpoint.Request, GetOrderByIdQuery.Response>
+    : Endpoint<GetOrderByIdEndpoint.Request, GetOrderByIdEndpoint.Response>
 {
     private readonly IMediator _mediator;
 
@@ -32,8 +32,22 @@ public sealed class GetOrderByIdEndpoint
     {
         var usecaseRequest = new GetOrderByIdQuery.Request(req.Id);
         var result = await _mediator.Send(usecaseRequest, ct);
-        await this.SendFinResponseWithNotFoundAsync(result, ct);
+        var mapped = result.Map(r => new Response(
+            r.OrderId, r.ProductId, r.Quantity, r.UnitPrice, r.TotalAmount, r.ShippingAddress, r.CreatedAt));
+        await this.SendFinResponseWithNotFoundAsync(mapped, ct);
     }
 
     public sealed record Request(string Id);
+
+    /// <summary>
+    /// Endpoint Response DTO
+    /// </summary>
+    public new sealed record Response(
+        string OrderId,
+        string ProductId,
+        int Quantity,
+        decimal UnitPrice,
+        decimal TotalAmount,
+        string ShippingAddress,
+        DateTime CreatedAt);
 }
