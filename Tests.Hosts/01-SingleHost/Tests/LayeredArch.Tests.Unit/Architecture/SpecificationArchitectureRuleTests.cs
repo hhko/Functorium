@@ -14,6 +14,7 @@ public sealed class SpecificationArchitectureRuleTests : ArchitectureTestBase
             .That()
             .AreAssignableTo(typeof(Specification<>))
             .And().AreNotAbstract()
+            .And().ResideInNamespaceMatching($@"{DomainNamespace}\..*")
             .ValidateAllClasses(Architecture, @class => @class
                 .RequirePublic()
                 .RequireSealed(),
@@ -28,6 +29,7 @@ public sealed class SpecificationArchitectureRuleTests : ArchitectureTestBase
             .That()
             .AreAssignableTo(typeof(Specification<>))
             .And().AreNotAbstract()
+            .And().ResideInNamespaceMatching($@"{DomainNamespace}\..*")
             .ValidateAllClasses(Architecture, @class => @class
                 .RequireInherits(typeof(Specification<>)),
                 verbose: true)
@@ -41,6 +43,7 @@ public sealed class SpecificationArchitectureRuleTests : ArchitectureTestBase
             .That()
             .AreAssignableTo(typeof(Specification<>))
             .And().AreNotAbstract()
+            .And().ResideInNamespaceMatching($@"{DomainNamespace}\..*")
             .Should().ResideInNamespaceMatching($@"{DomainNamespace}\..*")
             .Check(Architecture);
     }

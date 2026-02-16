@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Functorium.Domains.Specifications;
 
 namespace LayeredArch.Domain.AggregateRoots.Products.Specifications;
@@ -5,9 +6,9 @@ namespace LayeredArch.Domain.AggregateRoots.Products.Specifications;
 /// <summary>
 /// 재고 부족 Specification.
 /// 재고가 Threshold 미만인 상품을 만족합니다.
-/// public 프로퍼티는 EfCore adapter에서 pattern-match로 SQL 최적화에 사용됩니다.
+/// Expression 기반으로 EF Core 자동 SQL 번역을 지원합니다.
 /// </summary>
-public sealed class ProductLowStockSpec : Specification<Product>
+public sealed class ProductLowStockSpec : ExpressionSpecification<Product>
 {
     public Quantity Threshold { get; }
 
@@ -16,6 +17,9 @@ public sealed class ProductLowStockSpec : Specification<Product>
         Threshold = threshold;
     }
 
-    public override bool IsSatisfiedBy(Product product) =>
-        product.StockQuantity < Threshold;
+    public override Expression<Func<Product, bool>> ToExpression()
+    {
+        int threshold = Threshold;
+        return product => (int)product.StockQuantity < threshold;
+    }
 }

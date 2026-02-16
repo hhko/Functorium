@@ -1,11 +1,12 @@
 using LayeredArch.Domain.AggregateRoots.Customers;
-using LayeredArch.Domain.AggregateRoots.Customers.Specifications;
 using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
 using Functorium.Domains.Specifications;
+using Functorium.Domains.Specifications.Expressions;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
+using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
 using Microsoft.EntityFrameworkCore;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
@@ -17,6 +18,13 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 [GeneratePipeline]
 public class EfCoreCustomerRepository : ICustomerRepository
 {
+    private static readonly PropertyMap<Customer, CustomerModel> _propertyMap =
+        new PropertyMap<Customer, CustomerModel>()
+            .Map(c => (string)c.Email, m => m.Email)
+            .Map(c => (string)c.Name, m => m.Name)
+            .Map(c => (decimal)c.CreditLimit, m => m.CreditLimit)
+            .Map(c => c.Id.ToString(), m => m.Id);
+
     private readonly LayeredArchDbContext _dbContext;
     private readonly IDomainEventCollector _eventCollector;
 
@@ -99,14 +107,14 @@ public class EfCoreCustomerRepository : ICustomerRepository
     {
         return IO.liftAsync(async () =>
         {
-            bool exists = spec switch
+            var expression = SpecificationExpressionResolver.TryResolve(spec);
+            if (expression is not null)
             {
-                CustomerEmailSpec s => await _dbContext.Customers.AnyAsync(c =>
-                    c.Email == (string)s.Email),
-                _ => await _dbContext.Customers.AnyAsync(_ => true)
-            };
+                var modelExpression = _propertyMap.Translate(expression);
+                return Fin.Succ(await _dbContext.Customers.AnyAsync(modelExpression));
+            }
 
-            return Fin.Succ(exists);
+            return Fin.Succ(await _dbContext.Customers.AnyAsync(_ => true));
         });
     }
 }

@@ -2,9 +2,9 @@ using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
 using Functorium.Domains.Specifications;
+using Functorium.Domains.Specifications.Expressions;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
-using LayeredArch.Domain.AggregateRoots.Products.Specifications;
 using Microsoft.EntityFrameworkCore;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
@@ -16,6 +16,13 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 [GeneratePipeline]
 public class EfCoreProductRepository : IProductRepository
 {
+    private static readonly PropertyMap<Product, ProductModel> _propertyMap =
+        new PropertyMap<Product, ProductModel>()
+            .Map(p => (decimal)p.Price, m => m.Price)
+            .Map(p => (string)p.Name, m => m.Name)
+            .Map(p => (int)p.StockQuantity, m => m.StockQuantity)
+            .Map(p => p.Id.ToString(), m => m.Id);
+
     private readonly LayeredArchDbContext _dbContext;
     private readonly IDomainEventCollector _eventCollector;
 
@@ -147,25 +154,15 @@ public class EfCoreProductRepository : IProductRepository
 
     private IQueryable<ProductModel> BuildQuery(Specification<Product> spec)
     {
-        return spec switch
+        var expression = SpecificationExpressionResolver.TryResolve(spec);
+        if (expression is not null)
         {
-            ProductNameUniqueSpec s => _dbContext.Products.Where(p =>
-                p.Name == (string)s.Name &&
-                (s.ExcludeId == null || p.Id != s.ExcludeId.Value.ToString())),
-            ProductPriceRangeSpec s => _dbContext.Products.Where(p =>
-                p.Price >= (decimal)s.MinPrice &&
-                p.Price <= (decimal)s.MaxPrice),
-            ProductLowStockSpec s => _dbContext.Products.Where(p =>
-                p.StockQuantity < (int)s.Threshold),
-            AndSpecification<Product> a =>
-                BuildQuery(a.Left).Intersect(BuildQuery(a.Right)),
-            OrSpecification<Product> o =>
-                BuildQuery(o.Left).Union(BuildQuery(o.Right)),
-            NotSpecification<Product> n =>
-                _dbContext.Products.Except(BuildQuery(n.Inner)),
-            _ => throw new NotSupportedException(
-                $"Specification '{spec.GetType().Name}'에 대한 SQL 번역이 정의되지 않았습니다. " +
-                $"EfCoreProductRepository.BuildQuery()에 케이스를 추가하세요.")
-        };
+            var modelExpression = _propertyMap.Translate(expression);
+            return _dbContext.Products.Where(modelExpression);
+        }
+
+        throw new NotSupportedException(
+            $"Specification '{spec.GetType().Name}'에 대한 Expression이 정의되지 않았습니다. " +
+            $"ExpressionSpecification<T>을 상속하고 ToExpression()을 구현하세요.");
     }
 }

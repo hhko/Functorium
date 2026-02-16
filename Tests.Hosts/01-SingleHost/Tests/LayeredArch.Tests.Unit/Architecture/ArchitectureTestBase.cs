@@ -7,6 +7,7 @@ public abstract class ArchitectureTestBase
     protected static readonly ArchUnitNET.Domain.Architecture Architecture =
         new ArchLoader()
             .LoadAssemblies(
+                typeof(Functorium.Domains.Specifications.Specification<>).Assembly,
                 LayeredArch.Domain.AssemblyReference.Assembly,
                 LayeredArch.Application.AssemblyReference.Assembly,
                 LayeredArch.Adapters.Persistence.AssemblyReference.Assembly,
