@@ -48,8 +48,8 @@ Architecture
 │   └── crash-diagnostics.md ─── 크래시 덤프
 │
 ├── 개선
-│   ├── ddd-tactical-improvements.md ─── DDD 전술적 설계 갭 분석/로드맵
-│   └── architecture-improvements.md ─── 아키텍처 갭 분석/개선 계획
+│   ├── ddd-tactical-improvements.md ─── 에릭 에반스 DDD 전술적 설계 갭 분석/로드맵
+│   └── architecture-improvements.md ─── 헥사고날 아키텍처 갭 분석/개선 계획
 │
 └── 리뷰
     └── dto-strategy-review.md ─── DTO 매핑 전략 리뷰 (DDD & Hexagonal)
@@ -136,8 +136,8 @@ Architecture
 
 | 문서 | 설명 |
 |------|------|
-| [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) | DDD 전술적 설계 갭 분석, 개선 방향, 로드맵 |
-| [architecture-improvements.md](./architecture-improvements.md) | 아키텍처 레이어 갭 분석, 개선 계획 |
+| [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) | 에릭 에반스 DDD 전술적 설계 관점 갭 분석 및 개선 로드맵 |
+| [architecture-improvements.md](./architecture-improvements.md) | 헥사고날 아키텍처 관점 갭 분석 및 개선 계획 |
 
 ### 리뷰
 

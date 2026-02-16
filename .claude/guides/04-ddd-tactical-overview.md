@@ -461,7 +461,7 @@ public void Create_ShouldSucceed_WhenEmailIsValid()
 | [10-specifications.md](./10-specifications.md) | Specification 패턴 | 비즈니스 규칙 캡슐화, And/Or/Not 조합, Repository 통합 |
 | [13-unit-testing.md](./13-unit-testing.md) | 단위 테스트 | 테스트 규칙, 네이밍, 체크리스트 |
 | [14-testing-library.md](./14-testing-library.md) | 테스트 라이브러리 | 로그/아키텍처/소스생성기/Job 테스트 |
-| [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) | DDD 전술적 설계 개선 | Factory 패턴, EFCore 통합, 로드맵 |
+| [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) | DDD 전술적 설계 갭 분석 | 에릭 에반스 DDD 관점 갭 분석 및 개선 로드맵 |
 
 ## 8. 실전 예제 프로젝트
 

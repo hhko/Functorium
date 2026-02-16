@@ -487,7 +487,7 @@ LayeredArch.Tests.Unit/
 - [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) - Usecase 구현 (Application Service)
 - [12-ports-and-adapters.md](./12-ports-and-adapters.md) - Port/Adapter 패턴 (IAdapter와의 차이)
 - [13-unit-testing.md](./13-unit-testing.md) - 단위 테스트 규칙 (T1_T2_T3, AAA 패턴)
-- [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) §6 - Domain Service 구현 완료 기록
+- [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) §1 - Domain Service 구현 완료 기록
 
 ### 실전 예제 파일
 
