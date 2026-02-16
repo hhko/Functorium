@@ -35,9 +35,17 @@ public sealed class SearchProductsQuery
                 .GreaterThan(0).When(x => x.MinPrice.HasValue)
                 .WithMessage("최소 가격은 0보다 커야 합니다");
 
+            RuleFor(x => x.MinPrice)
+                .NotNull().When(x => x.MaxPrice.HasValue)
+                .WithMessage("최대 가격을 지정할 때는 최소 가격도 함께 지정해야 합니다");
+
             RuleFor(x => x.MaxPrice)
                 .GreaterThan(0).When(x => x.MaxPrice.HasValue)
                 .WithMessage("최대 가격은 0보다 커야 합니다");
+
+            RuleFor(x => x.MaxPrice)
+                .NotNull().When(x => x.MinPrice.HasValue)
+                .WithMessage("최소 가격을 지정할 때는 최대 가격도 함께 지정해야 합니다");
 
             RuleFor(x => x.MaxPrice)
                 .GreaterThanOrEqualTo(x => x.MinPrice!.Value)
@@ -63,7 +71,9 @@ public sealed class SearchProductsQuery
             var spec = BuildSpecification(request);
 
             FinT<IO, Response> usecase =
-                from products in _productRepository.FindAll(spec)
+                from products in spec is not null
+                    ? _productRepository.FindAll(spec)
+                    : _productRepository.GetAll()
                 select new Response(
                     products
                         .Select(p => new ProductSummaryDto(p.Id.ToString(), p.Name, p.Price, p.StockQuantity))
@@ -74,7 +84,7 @@ public sealed class SearchProductsQuery
             return response.ToFinResponse();
         }
 
-        private static Specification<Product> BuildSpecification(Request request)
+        private static Specification<Product>? BuildSpecification(Request request)
         {
             Specification<Product>? spec = null;
 
@@ -93,15 +103,7 @@ public sealed class SearchProductsQuery
                 spec = spec is not null ? spec & lowStockSpec : lowStockSpec;
             }
 
-            return spec ?? new AllProductsSpec();
+            return spec;
         }
     }
-}
-
-/// <summary>
-/// 모든 상품을 만족하는 Specification (필터 없음)
-/// </summary>
-file sealed class AllProductsSpec : Specification<Product>
-{
-    public override bool IsSatisfiedBy(Product product) => true;
 }
