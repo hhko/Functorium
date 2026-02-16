@@ -37,11 +37,6 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditable
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
-    // ORM용 기본 생성자
-#pragma warning disable CS8618
-    private Order() { }
-#pragma warning restore CS8618
-
     // 내부 생성자: 이미 검증된 VO를 받음
     private Order(
         OrderId id,

@@ -10,11 +10,6 @@ public sealed class Tag : Entity<TagId>
 {
     public TagName Name { get; private set; }
 
-    // ORM용 기본 생성자
-#pragma warning disable CS8618
-    private Tag() { }
-#pragma warning restore CS8618
-
     private Tag(TagId id, TagName name) : base(id)
     {
         Name = name;
