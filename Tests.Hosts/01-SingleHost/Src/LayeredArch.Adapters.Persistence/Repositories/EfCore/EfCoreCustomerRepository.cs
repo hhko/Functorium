@@ -5,6 +5,7 @@ using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
 using Functorium.Domains.Specifications;
+using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
 using Microsoft.EntityFrameworkCore;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
@@ -31,7 +32,7 @@ public class EfCoreCustomerRepository : ICustomerRepository
     {
         return IO.liftAsync(async () =>
         {
-            _dbContext.Customers.Add(customer);
+            _dbContext.Customers.Add(customer.ToModel());
             _eventCollector.Track(customer);
             return Fin.Succ(customer);
         });
@@ -41,10 +42,11 @@ public class EfCoreCustomerRepository : ICustomerRepository
     {
         return IO.liftAsync(async () =>
         {
-            var customer = await _dbContext.Customers.FindAsync(id);
-            if (customer is not null)
+            var model = await _dbContext.Customers.AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == id.ToString());
+            if (model is not null)
             {
-                return Fin.Succ(customer);
+                return Fin.Succ(model.ToDomain());
             }
 
             return AdapterError.For<EfCoreCustomerRepository>(
@@ -58,7 +60,7 @@ public class EfCoreCustomerRepository : ICustomerRepository
     {
         return IO.lift(() =>
         {
-            _dbContext.Customers.Update(customer);
+            _dbContext.Customers.Update(customer.ToModel());
             _eventCollector.Track(customer);
             return Fin.Succ(customer);
         });
@@ -68,8 +70,8 @@ public class EfCoreCustomerRepository : ICustomerRepository
     {
         return IO.liftAsync(async () =>
         {
-            var customer = await _dbContext.Customers.FindAsync(id);
-            if (customer is null)
+            var model = await _dbContext.Customers.FindAsync(id.ToString());
+            if (model is null)
             {
                 return AdapterError.For<EfCoreCustomerRepository>(
                     new NotFound(),
@@ -77,7 +79,7 @@ public class EfCoreCustomerRepository : ICustomerRepository
                     $"고객 ID '{id}'을(를) 찾을 수 없습니다");
             }
 
-            _dbContext.Customers.Remove(customer);
+            _dbContext.Customers.Remove(model);
             return Fin.Succ(unit);
         });
     }
@@ -87,8 +89,7 @@ public class EfCoreCustomerRepository : ICustomerRepository
         return IO.liftAsync(async () =>
         {
             var emailStr = (string)email;
-            bool exists = await _dbContext.Customers.AnyAsync(c =>
-                EF.Property<string>(c, nameof(Customer.Email)) == emailStr);
+            bool exists = await _dbContext.Customers.AnyAsync(c => c.Email == emailStr);
 
             return Fin.Succ(exists);
         });
@@ -101,8 +102,8 @@ public class EfCoreCustomerRepository : ICustomerRepository
             bool exists = spec switch
             {
                 CustomerEmailSpec s => await _dbContext.Customers.AnyAsync(c =>
-                    EF.Property<string>(c, nameof(Customer.Email)) == (string)s.Email),
-                _ => await _dbContext.Customers.AnyAsync(c => spec.IsSatisfiedBy(c))
+                    c.Email == (string)s.Email),
+                _ => await _dbContext.Customers.AnyAsync(_ => true)
             };
 
             return Fin.Succ(exists);

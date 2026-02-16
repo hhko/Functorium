@@ -2,6 +2,7 @@ using LayeredArch.Domain.AggregateRoots.Orders;
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
+using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
 using Microsoft.EntityFrameworkCore;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
@@ -28,7 +29,7 @@ public class EfCoreOrderRepository : IOrderRepository
     {
         return IO.liftAsync(async () =>
         {
-            _dbContext.Orders.Add(order);
+            _dbContext.Orders.Add(order.ToModel());
             _eventCollector.Track(order);
             return Fin.Succ(order);
         });
@@ -38,10 +39,11 @@ public class EfCoreOrderRepository : IOrderRepository
     {
         return IO.liftAsync(async () =>
         {
-            var order = await _dbContext.Orders.FindAsync(id);
-            if (order is not null)
+            var model = await _dbContext.Orders.AsNoTracking()
+                .FirstOrDefaultAsync(o => o.Id == id.ToString());
+            if (model is not null)
             {
-                return Fin.Succ(order);
+                return Fin.Succ(model.ToDomain());
             }
 
             return AdapterError.For<EfCoreOrderRepository>(
@@ -55,7 +57,7 @@ public class EfCoreOrderRepository : IOrderRepository
     {
         return IO.lift(() =>
         {
-            _dbContext.Orders.Update(order);
+            _dbContext.Orders.Update(order.ToModel());
             _eventCollector.Track(order);
             return Fin.Succ(order);
         });
@@ -65,8 +67,8 @@ public class EfCoreOrderRepository : IOrderRepository
     {
         return IO.liftAsync(async () =>
         {
-            var order = await _dbContext.Orders.FindAsync(id);
-            if (order is null)
+            var model = await _dbContext.Orders.FindAsync(id.ToString());
+            if (model is null)
             {
                 return AdapterError.For<EfCoreOrderRepository>(
                     new NotFound(),
@@ -74,7 +76,7 @@ public class EfCoreOrderRepository : IOrderRepository
                     $"주문 ID '{id}'을(를) 찾을 수 없습니다");
             }
 
-            _dbContext.Orders.Remove(order);
+            _dbContext.Orders.Remove(model);
             return Fin.Succ(unit);
         });
     }

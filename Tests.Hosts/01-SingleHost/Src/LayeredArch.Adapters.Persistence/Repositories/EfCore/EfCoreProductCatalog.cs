@@ -26,7 +26,7 @@ public class EfCoreProductCatalog : IProductCatalog
     {
         return IO.liftAsync(async () =>
         {
-            var exists = await _dbContext.Products.AnyAsync(p => p.Id == productId);
+            var exists = await _dbContext.Products.AnyAsync(p => p.Id == productId.ToString());
             return Fin.Succ(exists);
         });
     }
@@ -35,10 +35,11 @@ public class EfCoreProductCatalog : IProductCatalog
     {
         return IO.liftAsync(async () =>
         {
-            var product = await _dbContext.Products.FindAsync(productId);
-            if (product is not null)
+            var model = await _dbContext.Products.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == productId.ToString());
+            if (model is not null)
             {
-                return Fin.Succ(product.Price);
+                return Fin.Succ(Money.CreateFromValidated(model.Price));
             }
 
             return AdapterError.For<EfCoreProductCatalog>(

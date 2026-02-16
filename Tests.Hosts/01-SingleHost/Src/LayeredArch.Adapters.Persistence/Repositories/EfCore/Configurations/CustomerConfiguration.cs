@@ -1,41 +1,28 @@
-using LayeredArch.Domain.AggregateRoots.Customers;
-using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
+using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.EfCore.Configurations;
 
-public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
+public class CustomerConfiguration : IEntityTypeConfiguration<CustomerModel>
 {
-    public void Configure(EntityTypeBuilder<Customer> builder)
+    public void Configure(EntityTypeBuilder<CustomerModel> builder)
     {
         builder.ToTable("Customers");
         builder.HasKey(c => c.Id);
 
         builder.Property(c => c.Id)
-            .HasConversion(new CustomerIdConverter())
             .HasMaxLength(26);
-        builder.Property(c => c.Id)
-            .Metadata.SetValueComparer(new CustomerIdComparer());
 
         builder.Property(c => c.Name)
-            .HasConversion(
-                v => (string)v,
-                s => CustomerName.CreateFromValidated(s))
-            .HasMaxLength(CustomerName.MaxLength)
+            .HasMaxLength(100)
             .IsRequired();
 
         builder.Property(c => c.Email)
-            .HasConversion(
-                v => (string)v,
-                s => Email.CreateFromValidated(s))
-            .HasMaxLength(Email.MaxLength)
+            .HasMaxLength(255)
             .IsRequired();
 
         builder.Property(c => c.CreditLimit)
-            .HasConversion(
-                v => (decimal)v,
-                d => Money.CreateFromValidated(d))
             .HasPrecision(18, 4);
 
         builder.Property(c => c.CreatedAt);

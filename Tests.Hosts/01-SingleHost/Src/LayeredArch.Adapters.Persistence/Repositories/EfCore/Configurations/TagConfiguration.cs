@@ -1,27 +1,25 @@
-using LayeredArch.Domain.SharedKernel.Entities;
+using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.EfCore.Configurations;
 
-public class TagConfiguration : IEntityTypeConfiguration<Tag>
+public class TagConfiguration : IEntityTypeConfiguration<TagModel>
 {
-    public void Configure(EntityTypeBuilder<Tag> builder)
+    public void Configure(EntityTypeBuilder<TagModel> builder)
     {
         builder.ToTable("Tags");
         builder.HasKey(t => t.Id);
 
         builder.Property(t => t.Id)
-            .HasConversion(new TagIdConverter())
             .HasMaxLength(26);
-        builder.Property(t => t.Id)
-            .Metadata.SetValueComparer(new TagIdComparer());
 
         builder.Property(t => t.Name)
-            .HasConversion(
-                v => (string)v,
-                s => TagName.CreateFromValidated(s))
-            .HasMaxLength(TagName.MaxLength)
+            .HasMaxLength(100)
+            .IsRequired();
+
+        builder.Property(t => t.ProductId)
+            .HasMaxLength(26)
             .IsRequired();
     }
 }

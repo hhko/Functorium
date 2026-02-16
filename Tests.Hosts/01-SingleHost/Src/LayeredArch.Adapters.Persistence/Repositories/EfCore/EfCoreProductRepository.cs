@@ -2,6 +2,8 @@ using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
 using Functorium.Domains.Specifications;
+using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
+using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
 using LayeredArch.Domain.AggregateRoots.Products.Specifications;
 using Microsoft.EntityFrameworkCore;
 using static Functorium.Adapters.Errors.AdapterErrorType;
@@ -29,7 +31,7 @@ public class EfCoreProductRepository : IProductRepository
     {
         return IO.liftAsync(async () =>
         {
-            _dbContext.Products.Add(product);
+            _dbContext.Products.Add(product.ToModel());
             _eventCollector.Track(product);
             return Fin.Succ(product);
         });
@@ -39,13 +41,14 @@ public class EfCoreProductRepository : IProductRepository
     {
         return IO.liftAsync(async () =>
         {
-            var product = await _dbContext.Products
+            var model = await _dbContext.Products
+                .AsNoTracking()
                 .Include(p => p.Tags)
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .FirstOrDefaultAsync(p => p.Id == id.ToString());
 
-            if (product is not null)
+            if (model is not null)
             {
-                return Fin.Succ(product);
+                return Fin.Succ(model.ToDomain());
             }
 
             return AdapterError.For<EfCoreProductRepository>(
@@ -59,11 +62,12 @@ public class EfCoreProductRepository : IProductRepository
     {
         return IO.liftAsync(async () =>
         {
-            var product = await _dbContext.Products
+            var model = await _dbContext.Products
+                .AsNoTracking()
                 .Include(p => p.Tags)
-                .FirstOrDefaultAsync(p => EF.Property<string>(p, nameof(Product.Name)) == (string)name);
+                .FirstOrDefaultAsync(p => p.Name == (string)name);
 
-            return Fin.Succ(Optional(product));
+            return Fin.Succ(Optional(model is not null ? model.ToDomain() : null));
         });
     }
 
@@ -71,11 +75,12 @@ public class EfCoreProductRepository : IProductRepository
     {
         return IO.liftAsync(async () =>
         {
-            var products = await _dbContext.Products
+            var models = await _dbContext.Products
+                .AsNoTracking()
                 .Include(p => p.Tags)
                 .ToListAsync();
 
-            return Fin.Succ(toSeq(products));
+            return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
         });
     }
 
@@ -83,7 +88,7 @@ public class EfCoreProductRepository : IProductRepository
     {
         return IO.lift(() =>
         {
-            _dbContext.Products.Update(product);
+            _dbContext.Products.Update(product.ToModel());
             _eventCollector.Track(product);
             return Fin.Succ(product);
         });
@@ -93,8 +98,8 @@ public class EfCoreProductRepository : IProductRepository
     {
         return IO.liftAsync(async () =>
         {
-            var product = await _dbContext.Products.FindAsync(id);
-            if (product is null)
+            var model = await _dbContext.Products.FindAsync(id.ToString());
+            if (model is null)
             {
                 return AdapterError.For<EfCoreProductRepository>(
                     new NotFound(),
@@ -102,7 +107,7 @@ public class EfCoreProductRepository : IProductRepository
                     $"상품 ID '{id}'을(를) 찾을 수 없습니다");
             }
 
-            _dbContext.Products.Remove(product);
+            _dbContext.Products.Remove(model);
             return Fin.Succ(unit);
         });
     }
@@ -112,9 +117,10 @@ public class EfCoreProductRepository : IProductRepository
         return IO.liftAsync(async () =>
         {
             var nameStr = (string)name;
+            var excludeIdStr = excludeId?.ToString();
             bool exists = await _dbContext.Products.AnyAsync(p =>
-                EF.Property<string>(p, nameof(Product.Name)) == nameStr &&
-                (excludeId == null || p.Id != excludeId.Value));
+                p.Name == nameStr &&
+                (excludeIdStr == null || p.Id != excludeIdStr));
 
             return Fin.Succ(exists);
         });
@@ -127,9 +133,9 @@ public class EfCoreProductRepository : IProductRepository
             bool exists = spec switch
             {
                 ProductNameUniqueSpec s => await _dbContext.Products.AnyAsync(p =>
-                    EF.Property<string>(p, nameof(Product.Name)) == (string)s.Name &&
-                    (s.ExcludeId == null || p.Id != s.ExcludeId.Value)),
-                _ => await _dbContext.Products.AnyAsync(p => spec.IsSatisfiedBy(p))
+                    p.Name == (string)s.Name &&
+                    (s.ExcludeId == null || p.Id != s.ExcludeId.Value.ToString())),
+                _ => await ExistsBySpecInMemory(spec)
             };
 
             return Fin.Succ(exists);
@@ -140,18 +146,24 @@ public class EfCoreProductRepository : IProductRepository
     {
         return IO.liftAsync(async () =>
         {
-            IQueryable<Product> query = spec switch
+            IQueryable<ProductModel> query = spec switch
             {
                 ProductPriceRangeSpec s => _dbContext.Products.Where(p =>
-                    EF.Property<decimal>(p, nameof(Product.Price)) >= (decimal)s.MinPrice &&
-                    EF.Property<decimal>(p, nameof(Product.Price)) <= (decimal)s.MaxPrice),
+                    p.Price >= (decimal)s.MinPrice &&
+                    p.Price <= (decimal)s.MaxPrice),
                 ProductLowStockSpec s => _dbContext.Products.Where(p =>
-                    EF.Property<int>(p, nameof(Product.StockQuantity)) < (int)s.Threshold),
-                _ => _dbContext.Products.Where(p => spec.IsSatisfiedBy(p))
+                    p.StockQuantity < (int)s.Threshold),
+                _ => _dbContext.Products
             };
 
-            var products = await query.Include(p => p.Tags).ToListAsync();
-            return Fin.Succ(toSeq(products));
+            var models = await query.AsNoTracking().Include(p => p.Tags).ToListAsync();
+            return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
         });
+    }
+
+    private async Task<bool> ExistsBySpecInMemory(Specification<Product> spec)
+    {
+        var models = await _dbContext.Products.AsNoTracking().Include(p => p.Tags).ToListAsync();
+        return models.Select(m => m.ToDomain()).Any(spec.IsSatisfiedBy);
     }
 }
