@@ -1,6 +1,6 @@
 using LayeredArch.Adapters.Presentation.Abstractions.Extensions;
-using LayeredArch.Adapters.Presentation.Endpoints.Products.Dtos;
 using LayeredArch.Application.Usecases.Products;
+using LayeredArch.Application.Usecases.Products.Dtos;
 
 namespace LayeredArch.Adapters.Presentation.Endpoints.Products;
 
@@ -32,10 +32,7 @@ public sealed class GetAllProductsEndpoint
     public override async Task HandleAsync(CancellationToken ct)
     {
         var result = await _mediator.Send(new GetAllProductsQuery.Request(), ct);
-        var mapped = result.Map(r => new Response(
-            r.Products
-                .Select(p => new ProductSummaryDto(p.ProductId, p.Name, p.Price, p.StockQuantity))
-                .ToList()));
+        var mapped = result.Map(r => new Response(r.Products.ToList()));
         await this.SendFinResponseAsync(mapped, ct);
     }
 

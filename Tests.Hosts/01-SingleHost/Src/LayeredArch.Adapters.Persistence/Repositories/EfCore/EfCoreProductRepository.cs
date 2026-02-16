@@ -130,14 +130,7 @@ public class EfCoreProductRepository : IProductRepository
     {
         return IO.liftAsync(async () =>
         {
-            bool exists = spec switch
-            {
-                ProductNameUniqueSpec s => await _dbContext.Products.AnyAsync(p =>
-                    p.Name == (string)s.Name &&
-                    (s.ExcludeId == null || p.Id != s.ExcludeId.Value.ToString())),
-                _ => await ExistsBySpecInMemory(spec)
-            };
-
+            bool exists = await BuildQuery(spec).AnyAsync();
             return Fin.Succ(exists);
         });
     }
@@ -146,24 +139,33 @@ public class EfCoreProductRepository : IProductRepository
     {
         return IO.liftAsync(async () =>
         {
-            IQueryable<ProductModel> query = spec switch
-            {
-                ProductPriceRangeSpec s => _dbContext.Products.Where(p =>
-                    p.Price >= (decimal)s.MinPrice &&
-                    p.Price <= (decimal)s.MaxPrice),
-                ProductLowStockSpec s => _dbContext.Products.Where(p =>
-                    p.StockQuantity < (int)s.Threshold),
-                _ => _dbContext.Products
-            };
-
-            var models = await query.AsNoTracking().Include(p => p.Tags).ToListAsync();
+            var models = await BuildQuery(spec)
+                .AsNoTracking().Include(p => p.Tags).ToListAsync();
             return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
         });
     }
 
-    private async Task<bool> ExistsBySpecInMemory(Specification<Product> spec)
+    private IQueryable<ProductModel> BuildQuery(Specification<Product> spec)
     {
-        var models = await _dbContext.Products.AsNoTracking().Include(p => p.Tags).ToListAsync();
-        return models.Select(m => m.ToDomain()).Any(spec.IsSatisfiedBy);
+        return spec switch
+        {
+            ProductNameUniqueSpec s => _dbContext.Products.Where(p =>
+                p.Name == (string)s.Name &&
+                (s.ExcludeId == null || p.Id != s.ExcludeId.Value.ToString())),
+            ProductPriceRangeSpec s => _dbContext.Products.Where(p =>
+                p.Price >= (decimal)s.MinPrice &&
+                p.Price <= (decimal)s.MaxPrice),
+            ProductLowStockSpec s => _dbContext.Products.Where(p =>
+                p.StockQuantity < (int)s.Threshold),
+            AndSpecification<Product> a =>
+                BuildQuery(a.Left).Intersect(BuildQuery(a.Right)),
+            OrSpecification<Product> o =>
+                BuildQuery(o.Left).Union(BuildQuery(o.Right)),
+            NotSpecification<Product> n =>
+                _dbContext.Products.Except(BuildQuery(n.Inner)),
+            _ => throw new NotSupportedException(
+                $"Specification '{spec.GetType().Name}'에 대한 SQL 번역이 정의되지 않았습니다. " +
+                $"EfCoreProductRepository.BuildQuery()에 케이스를 추가하세요.")
+        };
     }
 }
