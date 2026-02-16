@@ -1,3 +1,4 @@
+using LayeredArch.Application.Usecases.Products.Dtos;
 using LayeredArch.Domain.AggregateRoots.Products;
 
 namespace LayeredArch.Application.Usecases.Products;
@@ -16,16 +17,7 @@ public sealed class GetAllProductsQuery
     /// <summary>
     /// Query Response - 상품 목록
     /// </summary>
-    public sealed record Response(Seq<ProductDto> Products);
-
-    /// <summary>
-    /// 상품 DTO - 클라이언트 응답용
-    /// </summary>
-    public sealed record ProductDto(
-        string ProductId,
-        string Name,
-        decimal Price,
-        int StockQuantity);
+    public sealed record Response(Seq<ProductSummaryDto> Products);
 
     /// <summary>
     /// Query Handler - 전체 상품 조회 로직
@@ -47,7 +39,7 @@ public sealed class GetAllProductsQuery
                 from products in _productRepository.GetAll()
                 select new Response(
                     products
-                        .Select(p => new ProductDto(p.Id.ToString(), p.Name, p.Price, p.StockQuantity))
+                        .Select(p => new ProductSummaryDto(p.Id.ToString(), p.Name, p.Price, p.StockQuantity))
                         .ToSeq());
 
             // FinT<IO, Response>

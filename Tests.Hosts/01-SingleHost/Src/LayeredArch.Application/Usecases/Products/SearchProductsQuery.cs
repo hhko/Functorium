@@ -1,4 +1,5 @@
 using Functorium.Domains.Specifications;
+using LayeredArch.Application.Usecases.Products.Dtos;
 using LayeredArch.Domain.AggregateRoots.Products;
 using LayeredArch.Domain.AggregateRoots.Products.Specifications;
 
@@ -21,16 +22,7 @@ public sealed class SearchProductsQuery
     /// <summary>
     /// Query Response - 검색 결과 상품 목록
     /// </summary>
-    public sealed record Response(Seq<ProductDto> Products);
-
-    /// <summary>
-    /// 상품 DTO - 클라이언트 응답용
-    /// </summary>
-    public sealed record ProductDto(
-        string ProductId,
-        string Name,
-        decimal Price,
-        int StockQuantity);
+    public sealed record Response(Seq<ProductSummaryDto> Products);
 
     /// <summary>
     /// Request Validator - FluentValidation 검증 규칙
@@ -74,7 +66,7 @@ public sealed class SearchProductsQuery
                 from products in _productRepository.FindAll(spec)
                 select new Response(
                     products
-                        .Select(p => new ProductDto(p.Id.ToString(), p.Name, p.Price, p.StockQuantity))
+                        .Select(p => new ProductSummaryDto(p.Id.ToString(), p.Name, p.Price, p.StockQuantity))
                         .ToSeq());
 
             Fin<Response> response = await usecase.Run().RunAsync();
