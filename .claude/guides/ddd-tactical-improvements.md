@@ -158,20 +158,24 @@ Persistence Model 분리 + Mapper 패턴이 완료되었습니다.
 - 페이지네이션 표현 Value Object 설계 가이드
 - Read Model 분리 시점 판단 기준 (Specification으로 충분한 경우 vs 별도 Read Model 필요)
 
-## §7. Specification 패턴 고도화 — LOW
+## §7. Specification 패턴 고도화 — ✅ 완료
 
-### 현재 상태
+### 이전 상태
 
-[10-specifications.md](./10-specifications.md)에서 And/Or/Not 조합 + Adapter에서 switch 기반 SQL 번역 패턴을 다룹니다.
+switch 기반 pattern-match SQL 번역 → 새 Specification 추가 시 Adapter switch 케이스 수동 추가 필요, 누락 시 런타임 오류.
 
-### 인지된 Trade-off
+### 개선 내용
 
-새 Specification 추가 시 Adapter의 switch 케이스 누락 가능성이 있으며, 누락 시 인메모리 폴백으로 성능 문제가 발생할 수 있습니다. 이 trade-off는 의도적 설계 결정이며, 아키텍처 테스트로 누락을 감지할 수 있습니다.
+Expression 기반 자동 번역으로 개선 완료:
 
-### 개선 방향
+- **`ExpressionSpecification<T>`**: `ToExpression()` 구현으로 `IsSatisfiedBy()` 자동 제공
+- **`SpecificationExpressionResolver`**: And/Or/Not 조합 시 Expression 자동 합성
+- **`PropertyMap<TEntity, TModel>`**: Entity Expression → Model Expression 자동 변환
+- **Adapter switch 제거**: `BuildQuery()`에서 switch 대신 `PropertyMap.Translate()` 사용
 
-- Expression 기반 자동 번역 고려 (장기 과제)
-- 아키텍처 테스트로 switch 케이스 누락 감지 강화
+새 Specification 추가 시 Adapter 코드 변경 불필요 — `ExpressionSpecification<T>`만 상속하면 자동 SQL 번역.
+
+> 참고: [10-specifications.md](./10-specifications.md)
 
 ## §8. 모듈 패키징과 DDD 빌딩블록 매핑 — LOW
 

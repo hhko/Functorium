@@ -103,13 +103,21 @@ var spec = priceRange & !lowStock;
 
 ```
 Functorium.Domains.Specifications
-├── Specification<T>          (추상 기반 클래스)
-│   ├── IsSatisfiedBy()       (추상 메서드)
-│   ├── And() / Or() / Not()  (조합 메서드)
-│   └── & / | / !             (연산자 오버로드)
-├── AndSpecification<T>       (internal sealed)
-├── OrSpecification<T>        (internal sealed)
-└── NotSpecification<T>       (internal sealed)
+├── Specification<T>              (추상 기반 클래스)
+│   ├── IsSatisfiedBy()           (추상 메서드)
+│   ├── And() / Or() / Not()     (조합 메서드)
+│   └── & / | / !                (연산자 오버로드)
+├── ExpressionSpecification<T>    (추상, Expression 기반 — 권장)
+│   ├── ToExpression()            (추상 메서드)
+│   └── IsSatisfiedBy()           (자동 구현, delegate 캐싱)
+├── IExpressionSpec<T>            (Expression 제공 인터페이스)
+├── AndSpecification<T>           (internal sealed)
+├── OrSpecification<T>            (internal sealed)
+└── NotSpecification<T>           (internal sealed)
+
+Functorium.Domains.Specifications.Expressions
+├── SpecificationExpressionResolver  (And/Or/Not Expression 합성)
+└── PropertyMap<TEntity, TModel>     (Entity → Model Expression 변환)
 ```
 
 ---
@@ -136,13 +144,13 @@ LayeredArch.Domain/
 ### 기본 구조 (template)
 
 ```csharp
+using System.Linq.Expressions;
 using Functorium.Domains.Specifications;
 
 namespace {프로젝트}.Domain.AggregateRoots.{Aggregate}.Specifications;
 
-public sealed class {Aggregate}{조건}Spec : Specification<{Aggregate}>
+public sealed class {Aggregate}{조건}Spec : ExpressionSpecification<{Aggregate}>
 {
-    // public 프로퍼티: EfCore adapter에서 pattern-match SQL 최적화에 사용
     public {ValueObjectType} {PropertyName} { get; }
 
     public {Aggregate}{조건}Spec({ValueObjectType} {paramName})
@@ -150,17 +158,28 @@ public sealed class {Aggregate}{조건}Spec : Specification<{Aggregate}>
         {PropertyName} = {paramName};
     }
 
-    public override bool IsSatisfiedBy({Aggregate} entity) =>
-        // 조건 로직
+    public override Expression<Func<{Aggregate}, bool>> ToExpression()
+    {
+        // Value Object → primitive 변환 후 클로저 캡처
+        var {paramPrimitive} = ({PrimitiveType}){PropertyName};
+        return entity => ({PrimitiveType})entity.{EntityProperty} == {paramPrimitive};
+    }
+    // IsSatisfiedBy()는 ToExpression() 컴파일로 자동 구현됨
 }
 ```
+
+**핵심 규칙:**
+- `ExpressionSpecification<T>` 상속 (Expression 기반 자동 SQL 번역 지원)
+- `ToExpression()`에서 Value Object를 primitive로 변환하여 클로저에 캡처
+- Entity 프로퍼티 접근 시 `(primitiveType)entity.Property` 캐스트 사용
+- `IsSatisfiedBy()`는 자동 구현되므로 별도 구현 불필요
 
 ### 실전 예제
 
 #### 상품명 중복 확인 (ProductNameUniqueSpec)
 
 ```csharp
-public sealed class ProductNameUniqueSpec : Specification<Product>
+public sealed class ProductNameUniqueSpec : ExpressionSpecification<Product>
 {
     public ProductName Name { get; }
     public ProductId? ExcludeId { get; }
@@ -171,16 +190,20 @@ public sealed class ProductNameUniqueSpec : Specification<Product>
         ExcludeId = excludeId;
     }
 
-    public override bool IsSatisfiedBy(Product product) =>
-        (string)product.Name == (string)Name &&
-        (ExcludeId is null || product.Id != ExcludeId.Value);
+    public override Expression<Func<Product, bool>> ToExpression()
+    {
+        string nameStr = Name;
+        string? excludeIdStr = ExcludeId?.ToString();
+        return product => (string)product.Name == nameStr &&
+                          (excludeIdStr == null || product.Id.ToString() != excludeIdStr);
+    }
 }
 ```
 
 #### 가격 범위 (ProductPriceRangeSpec)
 
 ```csharp
-public sealed class ProductPriceRangeSpec : Specification<Product>
+public sealed class ProductPriceRangeSpec : ExpressionSpecification<Product>
 {
     public Money MinPrice { get; }
     public Money MaxPrice { get; }
@@ -191,15 +214,19 @@ public sealed class ProductPriceRangeSpec : Specification<Product>
         MaxPrice = maxPrice;
     }
 
-    public override bool IsSatisfiedBy(Product product) =>
-        product.Price >= MinPrice && product.Price <= MaxPrice;
+    public override Expression<Func<Product, bool>> ToExpression()
+    {
+        decimal min = MinPrice;
+        decimal max = MaxPrice;
+        return product => (decimal)product.Price >= min && (decimal)product.Price <= max;
+    }
 }
 ```
 
 #### 재고 부족 (ProductLowStockSpec)
 
 ```csharp
-public sealed class ProductLowStockSpec : Specification<Product>
+public sealed class ProductLowStockSpec : ExpressionSpecification<Product>
 {
     public Quantity Threshold { get; }
 
@@ -208,22 +235,29 @@ public sealed class ProductLowStockSpec : Specification<Product>
         Threshold = threshold;
     }
 
-    public override bool IsSatisfiedBy(Product product) =>
-        product.StockQuantity < Threshold;
+    public override Expression<Func<Product, bool>> ToExpression()
+    {
+        int threshold = Threshold;
+        return product => (int)product.StockQuantity < threshold;
+    }
 }
 ```
 
-### public 프로퍼티 패턴 (EfCore SQL 최적화용)
+### Expression에서 Value Object 변환 패턴
 
-Specification의 파라미터를 **public 프로퍼티**로 노출하면, EfCore Adapter에서 `switch` pattern-match로 SQL 최적화 쿼리를 생성할 수 있습니다:
+`ToExpression()`에서 Value Object를 primitive로 변환할 때:
 
 ```csharp
-// ✅ public 프로퍼티 — EfCore에서 pattern-match 가능
-public Money MinPrice { get; }
-public Money MaxPrice { get; }
+// ✅ 클로저 캡처 전에 primitive로 변환
+decimal min = MinPrice;  // Value Object → primitive (implicit operator)
+return product => (decimal)product.Price >= min;
 
-// ❌ private 필드 — EfCore에서 접근 불가, 클라이언트 필터링으로 폴백
-private readonly Money _minPrice;
+// ✅ EntityId는 ToString()으로 변환
+string? excludeIdStr = ExcludeId?.ToString();
+return product => product.Id.ToString() != excludeIdStr;
+
+// ❌ Expression 내부에서 Value Object 직접 비교 (PropertyMap이 변환 불가)
+return product => product.Price >= MinPrice;
 ```
 
 ---
@@ -267,50 +301,41 @@ public virtual FinT<IO, Seq<Product>> FindAll(Specification<Product> spec)
 }
 ```
 
-### EfCore 구현 패턴 (pattern-match SQL 최적화)
+### EfCore 구현 패턴 (Expression 기반 자동 SQL 번역)
 
-알려진 Specification 타입은 `switch` pattern-match로 EF Core LINQ 쿼리로 변환하여 SQL 최적화합니다. 미지의 타입은 `IsSatisfiedBy()`로 폴백합니다:
+`PropertyMap`으로 Entity Expression → Model Expression 자동 변환 후 EF Core LINQ에 적용합니다. **switch 케이스 불필요**:
 
 ```csharp
-public virtual FinT<IO, bool> Exists(Specification<Product> spec)
+// PropertyMap 구성 (static readonly, 한 번만)
+private static readonly PropertyMap<Product, ProductModel> _propertyMap =
+    new PropertyMap<Product, ProductModel>()
+        .Map(p => (decimal)p.Price, m => m.Price)
+        .Map(p => (string)p.Name, m => m.Name)
+        .Map(p => (int)p.StockQuantity, m => m.StockQuantity)
+        .Map(p => p.Id.ToString(), m => m.Id);
+
+// BuildQuery — switch 제거, 자동 변환
+private IQueryable<ProductModel> BuildQuery(Specification<Product> spec)
 {
-    return IO.liftAsync(async () =>
+    var expression = SpecificationExpressionResolver.TryResolve(spec);
+    if (expression is not null)
     {
-        bool exists = spec switch
-        {
-            // 알려진 Spec → SQL 최적화 쿼리
-            ProductNameUniqueSpec s => await _dbContext.Products.AnyAsync(p =>
-                EF.Property<string>(p, nameof(Product.Name)) == (string)s.Name &&
-                (s.ExcludeId == null || p.Id != s.ExcludeId.Value)),
-            // 미지의 Spec → 클라이언트 평가 폴백
-            _ => await _dbContext.Products.AnyAsync(p => spec.IsSatisfiedBy(p))
-        };
+        var modelExpression = _propertyMap.Translate(expression);
+        return _dbContext.Products.Where(modelExpression);
+    }
 
-        return Fin.Succ(exists);
-    });
-}
-
-public virtual FinT<IO, Seq<Product>> FindAll(Specification<Product> spec)
-{
-    return IO.liftAsync(async () =>
-    {
-        IQueryable<Product> query = spec switch
-        {
-            ProductPriceRangeSpec s => _dbContext.Products.Where(p =>
-                EF.Property<decimal>(p, nameof(Product.Price)) >= (decimal)s.MinPrice &&
-                EF.Property<decimal>(p, nameof(Product.Price)) <= (decimal)s.MaxPrice),
-            ProductLowStockSpec s => _dbContext.Products.Where(p =>
-                EF.Property<int>(p, nameof(Product.StockQuantity)) < (int)s.Threshold),
-            _ => _dbContext.Products.Where(p => spec.IsSatisfiedBy(p))
-        };
-
-        var products = await query.Include(p => p.Tags).ToListAsync();
-        return Fin.Succ(toSeq(products));
-    });
+    throw new NotSupportedException(
+        $"Specification '{spec.GetType().Name}'에 대한 Expression이 정의되지 않았습니다. " +
+        $"ExpressionSpecification<T>을 상속하고 ToExpression()을 구현하세요.");
 }
 ```
 
-> **설계 결정**: `Expression<Func<T, bool>>` 대신 `bool IsSatisfiedBy(T)` 메서드를 사용합니다. Expression Tree는 EF Core와의 결합도가 높고 Value Object 변환에서 복잡성이 증가합니다. Pattern-match 접근법은 도메인 순수성을 유지하면서 필요한 곳에서만 SQL 최적화를 적용합니다.
+**새 Specification 추가 시 변경 사항:**
+- Domain: `ExpressionSpecification<T>`만 상속하고 `ToExpression()` 구현
+- Adapter: **변경 불필요** (PropertyMap에 이미 매핑된 프로퍼티만 사용한다면)
+- PropertyMap: 새 Entity 프로퍼티를 사용하는 Spec이면 매핑 추가
+
+> **설계 결정**: `ExpressionSpecification<T>`의 `ToExpression()`은 도메인 엔터티 기준으로 Expression을 정의하되, Value Object를 primitive로 캐스트합니다. `PropertyMap`의 `ExpressionVisitor`가 이 캐스트 패턴을 인식하여 Model 프로퍼티로 자동 변환합니다. And/Or/Not 조합도 `SpecificationExpressionResolver`가 자동 합성합니다.
 
 ---
 
@@ -502,18 +527,18 @@ public class SearchProductsQueryTests
 
 ### Specification 구현 시
 
-- [ ] `Specification<T>` 상속 (`Functorium.Domains.Specifications`)
+- [ ] `ExpressionSpecification<T>` 상속 (`Functorium.Domains.Specifications`)
 - [ ] `sealed class`로 선언
-- [ ] `IsSatisfiedBy()` 구현 — 순수 함수 (I/O 없음)
-- [ ] 파라미터를 **public 프로퍼티**로 노출 (EfCore SQL 최적화용)
+- [ ] `ToExpression()` 구현 — Value Object → primitive 캐스트 사용
 - [ ] `{Aggregate}/Specifications/` 폴더에 배치
 - [ ] 네이밍: `{Aggregate}{조건}Spec`
 
 ### Repository 통합 시
 
 - [ ] Port에 `Exists(Specification<T>)` / `FindAll(Specification<T>)` 추가
-- [ ] InMemory 구현: `IsSatisfiedBy()` 직접 사용
-- [ ] EfCore 구현: 알려진 Spec은 pattern-match SQL 최적화, 미지는 폴백
+- [ ] InMemory 구현: `IsSatisfiedBy()` 직접 사용 (자동 구현됨)
+- [ ] EfCore 구현: `PropertyMap` 구성 + `SpecificationExpressionResolver.TryResolve()` 사용
+- [ ] 새 Entity 프로퍼티 사용 시 `PropertyMap.Map()` 추가
 
 ### 테스트 시
 
