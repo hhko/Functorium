@@ -1,3 +1,4 @@
+using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Applications.Linq;
 
@@ -5,6 +6,7 @@ namespace LayeredArch.Application.Usecases.Products;
 
 /// <summary>
 /// 재고 차감 Command - 트랜잭션 후 이벤트 발행 패턴 예제
+/// Inventory Aggregate를 통해 재고를 차감합니다.
 /// </summary>
 public sealed class DeductStockCommand
 {
@@ -40,13 +42,13 @@ public sealed class DeductStockCommand
     }
 
     /// <summary>
-    /// Command Handler - 트랜잭션 후 이벤트 발행 패턴 적용
+    /// Command Handler - Inventory Aggregate를 통한 재고 차감
     /// </summary>
     public sealed class Usecase(
-        IProductRepository productRepository)
+        IInventoryRepository inventoryRepository)
         : ICommandUsecase<Request, Response>
     {
-        private readonly IProductRepository _productRepository = productRepository;
+        private readonly IInventoryRepository _inventoryRepository = inventoryRepository;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
@@ -63,11 +65,11 @@ public sealed class DeductStockCommand
             var quantity = (Quantity)quantityResult;
 
             FinT<IO, Response> usecase =
-                from product in _productRepository.GetById(productId)
-                from _1 in product.DeductStock(quantity)
-                from updated in _productRepository.Update(product)
+                from inventory in _inventoryRepository.GetByProductId(productId)
+                from _1 in inventory.DeductStock(quantity)
+                from updated in _inventoryRepository.Update(inventory)
                 select new Response(
-                    updated.Id.ToString(),
+                    updated.ProductId.ToString(),
                     updated.StockQuantity);
 
             Fin<Response> response = await usecase.Run().RunAsync();

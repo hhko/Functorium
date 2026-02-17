@@ -7,7 +7,8 @@ namespace LayeredArch.Application.Usecases.Products;
 
 /// <summary>
 /// 상품 검색 Query - Specification 패턴 조합 데모
-/// 가격 범위, 재고 부족 등 선택적 필터를 Specification으로 조합하여 검색
+/// 가격 범위 등 선택적 필터를 Specification으로 조합하여 검색.
+/// 재고 관련 검색은 Inventory Aggregate 관할입니다.
 /// </summary>
 public sealed class SearchProductsQuery
 {
@@ -16,8 +17,7 @@ public sealed class SearchProductsQuery
     /// </summary>
     public sealed record Request(
         decimal? MinPrice,
-        decimal? MaxPrice,
-        int? LowStockThreshold) : IQueryRequest<Response>;
+        decimal? MaxPrice) : IQueryRequest<Response>;
 
     /// <summary>
     /// Query Response - 검색 결과 상품 목록
@@ -51,10 +51,6 @@ public sealed class SearchProductsQuery
                 .GreaterThanOrEqualTo(x => x.MinPrice!.Value)
                 .When(x => x.MinPrice.HasValue && x.MaxPrice.HasValue)
                 .WithMessage("최대 가격은 최소 가격 이상이어야 합니다");
-
-            RuleFor(x => x.LowStockThreshold)
-                .GreaterThan(0).When(x => x.LowStockThreshold.HasValue)
-                .WithMessage("재고 임계값은 0보다 커야 합니다");
         }
     }
 
@@ -76,7 +72,7 @@ public sealed class SearchProductsQuery
                     : _productRepository.GetAll()
                 select new Response(
                     products
-                        .Select(p => new ProductSummaryDto(p.Id.ToString(), p.Name, p.Price, p.StockQuantity))
+                        .Select(p => new ProductSummaryDto(p.Id.ToString(), p.Name, p.Price))
                         .ToSeq());
 
             Fin<Response> response = await usecase.Run().RunAsync();
@@ -93,14 +89,6 @@ public sealed class SearchProductsQuery
                 spec = new ProductPriceRangeSpec(
                     Money.Create(request.MinPrice.Value).ThrowIfFail(),
                     Money.Create(request.MaxPrice.Value).ThrowIfFail());
-            }
-
-            if (request.LowStockThreshold.HasValue)
-            {
-                var lowStockSpec = new ProductLowStockSpec(
-                    Quantity.Create(request.LowStockThreshold.Value).ThrowIfFail());
-
-                spec = spec is not null ? spec & lowStockSpec : lowStockSpec;
             }
 
             return spec;

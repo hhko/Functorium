@@ -1,7 +1,3 @@
-using Functorium.Domains.Errors;
-using static Functorium.Domains.Errors.DomainErrorType;
-using static LanguageExt.Prelude;
-
 namespace LayeredArch.Domain.AggregateRoots.Products;
 
 /// <summary>
@@ -23,18 +19,12 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     /// </summary>
     public sealed record UpdatedEvent(ProductId ProductId, ProductName Name, Money OldPrice, Money NewPrice) : DomainEvent;
 
-    /// <summary>
-    /// 재고 차감 이벤트
-    /// </summary>
-    public sealed record StockDeductedEvent(ProductId ProductId, Quantity Quantity) : DomainEvent;
-
     #endregion
 
     // Value Object 속성
     public ProductName Name { get; private set; }
     public ProductDescription Description { get; private set; }
     public Money Price { get; private set; }
-    public Quantity StockQuantity { get; private set; }
 
     // Tags 컬렉션 (SharedKernel Entity)
     private readonly List<Tag> _tags = [];
@@ -49,14 +39,12 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
         ProductId id,
         ProductName name,
         ProductDescription description,
-        Money price,
-        Quantity stockQuantity)
+        Money price)
         : base(id)
     {
         Name = name;
         Description = description;
         Price = price;
-        StockQuantity = stockQuantity;
         CreatedAt = DateTime.UtcNow;
     }
 
@@ -67,10 +55,9 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     public static Product Create(
         ProductName name,
         ProductDescription description,
-        Money price,
-        Quantity stockQuantity)
+        Money price)
     {
-        var product = new Product(ProductId.New(), name, description, price, stockQuantity);
+        var product = new Product(ProductId.New(), name, description, price);
         product.AddDomainEvent(new CreatedEvent(product.Id, name, price));
         return product;
     }
@@ -83,11 +70,10 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
         ProductName name,
         ProductDescription description,
         Money price,
-        Quantity stockQuantity,
         DateTime createdAt,
         DateTime? updatedAt)
     {
-        return new Product(id, name, description, price, stockQuantity)
+        return new Product(id, name, description, price)
         {
             CreatedAt = createdAt,
             UpdatedAt = updatedAt
@@ -100,41 +86,18 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     public Product Update(
         ProductName name,
         ProductDescription description,
-        Money price,
-        Quantity stockQuantity)
+        Money price)
     {
         var oldPrice = Price;
 
         Name = name;
         Description = description;
         Price = price;
-        StockQuantity = stockQuantity;
         UpdatedAt = DateTime.UtcNow;
 
         AddDomainEvent(new UpdatedEvent(Id, name, oldPrice, price));
 
         return this;
-    }
-
-    /// <summary>
-    /// 재고가 지정된 임계값 미만인지 확인합니다.
-    /// </summary>
-    public bool HasLowStock(Quantity threshold) => StockQuantity < threshold;
-
-    /// <summary>
-    /// 재고를 차감합니다.
-    /// </summary>
-    public Fin<Unit> DeductStock(Quantity quantity)
-    {
-        if (quantity > StockQuantity)
-            return DomainError.For<Product, int>(
-                new Custom("InsufficientStock"),
-                currentValue: StockQuantity,
-                message: $"Insufficient stock. Current: {StockQuantity}, Requested: {quantity}");
-
-        StockQuantity = StockQuantity.Subtract(quantity);
-        AddDomainEvent(new StockDeductedEvent(Id, quantity));
-        return unit;
     }
 
     /// <summary>

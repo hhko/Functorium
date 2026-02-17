@@ -1,4 +1,5 @@
 using LayeredArch.Application.Usecases.Products;
+using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Products;
 using LayeredArch.Domain.SharedKernel.ValueObjects;
 
@@ -6,20 +7,18 @@ namespace LayeredArch.Tests.Unit.Application.Products;
 
 public class DeductStockCommandTests
 {
-    private readonly IProductRepository _productRepository = Substitute.For<IProductRepository>();
+    private readonly IInventoryRepository _inventoryRepository = Substitute.For<IInventoryRepository>();
     private readonly DeductStockCommand.Usecase _sut;
 
     public DeductStockCommandTests()
     {
-        _sut = new DeductStockCommand.Usecase(_productRepository);
+        _sut = new DeductStockCommand.Usecase(_inventoryRepository);
     }
 
-    private static Product CreateProductWithStock(int stock)
+    private static Inventory CreateInventoryWithStock(int stock)
     {
-        return Product.Create(
-            ProductName.Create("Test Product").ThrowIfFail(),
-            ProductDescription.Create("Desc").ThrowIfFail(),
-            Money.Create(100m).ThrowIfFail(),
+        return Inventory.Create(
+            ProductId.New(),
             Quantity.Create(stock).ThrowIfFail());
     }
 
@@ -27,13 +26,13 @@ public class DeductStockCommandTests
     public async Task Handle_ShouldReturnSuccess_WhenSufficientStock()
     {
         // Arrange
-        var product = CreateProductWithStock(10);
-        var request = new DeductStockCommand.Request(product.Id.ToString(), 3);
+        var inventory = CreateInventoryWithStock(10);
+        var request = new DeductStockCommand.Request(inventory.ProductId.ToString(), 3);
 
-        _productRepository.GetById(Arg.Any<ProductId>())
-            .Returns(FinTFactory.Succ(product));
-        _productRepository.Update(Arg.Any<Product>())
-            .Returns(call => FinTFactory.Succ(call.Arg<Product>()));
+        _inventoryRepository.GetByProductId(Arg.Any<ProductId>())
+            .Returns(FinTFactory.Succ(inventory));
+        _inventoryRepository.Update(Arg.Any<Inventory>())
+            .Returns(call => FinTFactory.Succ(call.Arg<Inventory>()));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -47,11 +46,11 @@ public class DeductStockCommandTests
     public async Task Handle_ShouldReturnFailure_WhenInsufficientStock()
     {
         // Arrange
-        var product = CreateProductWithStock(2);
-        var request = new DeductStockCommand.Request(product.Id.ToString(), 5);
+        var inventory = CreateInventoryWithStock(2);
+        var request = new DeductStockCommand.Request(inventory.ProductId.ToString(), 5);
 
-        _productRepository.GetById(Arg.Any<ProductId>())
-            .Returns(FinTFactory.Succ(product));
+        _inventoryRepository.GetByProductId(Arg.Any<ProductId>())
+            .Returns(FinTFactory.Succ(inventory));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -66,8 +65,8 @@ public class DeductStockCommandTests
         // Arrange
         var request = new DeductStockCommand.Request(ProductId.New().ToString(), 3);
 
-        _productRepository.GetById(Arg.Any<ProductId>())
-            .Returns(FinTFactory.Fail<Product>(Error.New("Product not found")));
+        _inventoryRepository.GetByProductId(Arg.Any<ProductId>())
+            .Returns(FinTFactory.Fail<Inventory>(Error.New("Inventory not found")));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -79,7 +78,7 @@ public class DeductStockCommandTests
     [Fact]
     public async Task Handle_ShouldReturnFailure_WhenQuantityIsInvalid()
     {
-        // Arrange — 수량 -1은 VO 생성에 실패하여 조기 반환됨
+        // Arrange -- 수량 -1은 VO 생성에 실패하여 조기 반환됨
         var request = new DeductStockCommand.Request(ProductId.New().ToString(), -1);
 
         // Act

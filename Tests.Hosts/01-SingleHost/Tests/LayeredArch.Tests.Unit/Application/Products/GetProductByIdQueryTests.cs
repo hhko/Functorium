@@ -21,8 +21,7 @@ public class GetProductByIdQueryTests
         var product = Product.Create(
             ProductName.Create("Test Product").ThrowIfFail(),
             ProductDescription.Create("Desc").ThrowIfFail(),
-            Money.Create(100m).ThrowIfFail(),
-            Quantity.Create(10).ThrowIfFail());
+            Money.Create(100m).ThrowIfFail());
 
         var request = new GetProductByIdQuery.Request(product.Id.ToString());
 

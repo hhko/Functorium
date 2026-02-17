@@ -8,6 +8,7 @@ namespace LayeredArch.Application.Usecases.Products;
 
 /// <summary>
 /// 상품 업데이트 Command - Entity Guide의 Apply 패턴 + Exception Pipeline 데모
+/// 재고(StockQuantity)는 Inventory Aggregate 관할이므로 제외됩니다.
 /// </summary>
 public sealed class UpdateProductCommand
 {
@@ -19,7 +20,6 @@ public sealed class UpdateProductCommand
         string Name,
         string Description,
         decimal Price,
-        int StockQuantity,
         bool SimulateException = false) : ICommandRequest<Response>;
 
     /// <summary>
@@ -30,7 +30,6 @@ public sealed class UpdateProductCommand
         string Name,
         string Description,
         decimal Price,
-        int StockQuantity,
         DateTime UpdatedAt);
 
     /// <summary>
@@ -53,9 +52,6 @@ public sealed class UpdateProductCommand
 
             RuleFor(x => x.Price)
                 .GreaterThan(0).WithMessage("가격은 0보다 커야 합니다");
-
-            RuleFor(x => x.StockQuantity)
-                .GreaterThanOrEqualTo(0).WithMessage("재고 수량은 0 이상이어야 합니다");
         }
     }
 
@@ -87,7 +83,7 @@ public sealed class UpdateProductCommand
 
             // 2. 조회 및 업데이트
             var productId = ProductId.Create(request.ProductId);
-            var (name, description, price, stockQuantity) = (UpdateData)updateData;
+            var (name, description, price) = (UpdateData)updateData;
 
             // 3. 중복 검사 및 업데이트
             FinT<IO, Response> usecase =
@@ -98,13 +94,12 @@ public sealed class UpdateProductCommand
                     request.Name,
                     $"Product name already exists: '{request.Name}'"))
                 from updatedProduct in _productRepository.Update(
-                    existingProduct.Update(name, description, price, stockQuantity))
+                    existingProduct.Update(name, description, price))
                 select new Response(
                     updatedProduct.Id.ToString(),
                     updatedProduct.Name,
                     updatedProduct.Description,
                     updatedProduct.Price,
-                    updatedProduct.StockQuantity,
                     updatedProduct.UpdatedAt ?? DateTime.UtcNow);
 
             Fin<Response> response = await usecase.Run().RunAsync();
@@ -120,16 +115,14 @@ public sealed class UpdateProductCommand
             var name = ProductName.Validate(request.Name);
             var description = ProductDescription.Validate(request.Description);
             var price = Money.Validate(request.Price);
-            var stockQuantity = Quantity.Validate(request.StockQuantity);
 
             // 모두 튜플로 병합 - Apply로 병렬 검증
-            return (name, description, price, stockQuantity)
-                .Apply((n, d, p, s) =>
+            return (name, description, price)
+                .Apply((n, d, p) =>
                     new UpdateData(
                         ProductName.Create(n).ThrowIfFail(),
                         ProductDescription.Create(d).ThrowIfFail(),
-                        Money.Create(p).ThrowIfFail(),
-                        Quantity.Create(s).ThrowIfFail()))
+                        Money.Create(p).ThrowIfFail()))
                 .As()
                 .ToFin();
         }
@@ -137,7 +130,6 @@ public sealed class UpdateProductCommand
         private sealed record UpdateData(
             ProductName Name,
             ProductDescription Description,
-            Money Price,
-            Quantity StockQuantity);
+            Money Price);
     }
 }

@@ -1,5 +1,6 @@
 using Functorium.Domains.Specifications;
 using LayeredArch.Application.Usecases.Products;
+using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Products;
 
 namespace LayeredArch.Tests.Unit.Application.Products;
@@ -7,11 +8,12 @@ namespace LayeredArch.Tests.Unit.Application.Products;
 public class CreateProductCommandTests
 {
     private readonly IProductRepository _productRepository = Substitute.For<IProductRepository>();
+    private readonly IInventoryRepository _inventoryRepository = Substitute.For<IInventoryRepository>();
     private readonly CreateProductCommand.Usecase _sut;
 
     public CreateProductCommandTests()
     {
-        _sut = new CreateProductCommand.Usecase(_productRepository);
+        _sut = new CreateProductCommand.Usecase(_productRepository, _inventoryRepository);
     }
 
     [Fact]
@@ -24,6 +26,8 @@ public class CreateProductCommandTests
             .Returns(FinTFactory.Succ(false));
         _productRepository.Create(Arg.Any<Product>())
             .Returns(call => FinTFactory.Succ(call.Arg<Product>()));
+        _inventoryRepository.Create(Arg.Any<Inventory>())
+            .Returns(call => FinTFactory.Succ(call.Arg<Inventory>()));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

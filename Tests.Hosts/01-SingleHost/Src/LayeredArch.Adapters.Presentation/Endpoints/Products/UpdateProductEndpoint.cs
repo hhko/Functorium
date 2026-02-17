@@ -35,12 +35,11 @@ public sealed class UpdateProductEndpoint
             req.Name,
             req.Description,
             req.Price,
-            req.StockQuantity,
             SimulateException: false);
 
         var result = await _mediator.Send(usecaseRequest, ct);
         var mapped = result.Map(r => new Response(
-            r.ProductId, r.Name, r.Description, r.Price, r.StockQuantity, r.UpdatedAt));
+            r.ProductId, r.Name, r.Description, r.Price, r.UpdatedAt));
         await this.SendFinResponseWithNotFoundAsync(mapped, ct);
     }
 
@@ -48,8 +47,7 @@ public sealed class UpdateProductEndpoint
         string Id,
         string Name,
         string Description,
-        decimal Price,
-        int StockQuantity);
+        decimal Price);
 
     /// <summary>
     /// Endpoint Response DTO
@@ -59,6 +57,5 @@ public sealed class UpdateProductEndpoint
         string Name,
         string Description,
         decimal Price,
-        int StockQuantity,
         DateTime UpdatedAt);
 }

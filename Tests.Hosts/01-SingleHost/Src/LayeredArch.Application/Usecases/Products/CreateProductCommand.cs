@@ -1,3 +1,4 @@
+using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Products;
 using LayeredArch.Domain.AggregateRoots.Products.Specifications;
 using Functorium.Applications.Errors;
@@ -9,6 +10,7 @@ namespace LayeredArch.Application.Usecases.Products;
 /// <summary>
 /// 상품 생성 Command - Entity Guide의 Apply 패턴 데모
 /// Value Object 생성 + Apply 병합 패턴 적용
+/// Product 생성 후 Inventory도 함께 생성합니다.
 /// </summary>
 public sealed class CreateProductCommand
 {
@@ -56,22 +58,25 @@ public sealed class CreateProductCommand
 
     /// <summary>
     /// Command Handler - Entity Guide의 Apply 패턴 적용
+    /// Product 생성 후 Inventory도 함께 생성합니다.
     /// </summary>
     public sealed class Usecase(
-        IProductRepository productRepository)
+        IProductRepository productRepository,
+        IInventoryRepository inventoryRepository)
         : ICommandUsecase<Request, Response>
     {
         private readonly IProductRepository _productRepository = productRepository;
+        private readonly IInventoryRepository _inventoryRepository = inventoryRepository;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             // 1. Value Object 생성 (Apply 패턴)
-            var productResult = CreateProduct(request);
+            var createData = CreateProductData(request);
 
             // 2. 검증 실패 시 조기 반환
-            if (productResult.IsFail)
+            if (createData.IsFail)
             {
-                return productResult.Match(
+                return createData.Match(
                     Succ: _ => throw new InvalidOperationException(),
                     Fail: error => FinResponse.Fail<Response>(error));
             }
@@ -79,21 +84,25 @@ public sealed class CreateProductCommand
             // 3. ProductName 생성 (중복 검사용)
             var productName = ProductName.Create(request.Name).ThrowIfFail();
 
-            // 4. 중복 검사 및 저장
+            // 4. 중복 검사, Product 저장, Inventory 생성
+            var (product, stockQuantity) = (ProductData)createData;
+
             FinT<IO, Response> usecase =
                 from exists in _productRepository.Exists(new ProductNameUniqueSpec(productName))
                 from _ in guard(!exists, ApplicationError.For<CreateProductCommand>(
                     new AlreadyExists(),
                     request.Name,
                     $"Product name already exists: '{request.Name}'"))
-                from product in _productRepository.Create((Product)productResult)
+                from createdProduct in _productRepository.Create(product)
+                from createdInventory in _inventoryRepository.Create(
+                    Inventory.Create(createdProduct.Id, stockQuantity))
                 select new Response(
-                    product.Id.ToString(),
-                    product.Name,
-                    product.Description,
-                    product.Price,
-                    product.StockQuantity,
-                    product.CreatedAt);
+                    createdProduct.Id.ToString(),
+                    createdProduct.Name,
+                    createdProduct.Description,
+                    createdProduct.Price,
+                    createdInventory.StockQuantity,
+                    createdProduct.CreatedAt);
 
             Fin<Response> response = await usecase.Run().RunAsync();
             return response.ToFinResponse();
@@ -103,7 +112,7 @@ public sealed class CreateProductCommand
         /// Entity Guide 패턴: VO Validate() + Apply 병합
         /// Validation 타입을 사용하여 병렬 검증 후 Entity 생성
         /// </summary>
-        private static Fin<Product> CreateProduct(Request request)
+        private static Fin<ProductData> CreateProductData(Request request)
         {
             // 모든 필드: VO Validate() 사용 (Validation<Error, T> 반환)
             var name = ProductName.Validate(request.Name);
@@ -114,13 +123,16 @@ public sealed class CreateProductCommand
             // 모두 튜플로 병합 - Apply로 병렬 검증
             return (name, description, price, stockQuantity)
                 .Apply((n, d, p, s) =>
-                    Product.Create(
-                        ProductName.Create(n).ThrowIfFail(),
-                        ProductDescription.Create(d).ThrowIfFail(),
-                        Money.Create(p).ThrowIfFail(),
+                    new ProductData(
+                        Product.Create(
+                            ProductName.Create(n).ThrowIfFail(),
+                            ProductDescription.Create(d).ThrowIfFail(),
+                            Money.Create(p).ThrowIfFail()),
                         Quantity.Create(s).ThrowIfFail()))
                 .As()
                 .ToFin();
         }
+
+        private sealed record ProductData(Product Product, Quantity StockQuantity);
     }
 }

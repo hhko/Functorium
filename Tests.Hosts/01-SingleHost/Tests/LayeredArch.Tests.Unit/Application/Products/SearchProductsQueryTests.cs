@@ -14,7 +14,7 @@ public class SearchProductsQueryValidatorTests
     public void Validate_ReturnsNoError_WhenNoPricesProvided()
     {
         // Arrange
-        var request = new SearchProductsQuery.Request(null, null, null);
+        var request = new SearchProductsQuery.Request(null, null);
 
         // Act
         var actual = _sut.Validate(request);
@@ -27,7 +27,7 @@ public class SearchProductsQueryValidatorTests
     public void Validate_ReturnsNoError_WhenBothPricesProvided()
     {
         // Arrange
-        var request = new SearchProductsQuery.Request(100m, 200m, null);
+        var request = new SearchProductsQuery.Request(100m, 200m);
 
         // Act
         var actual = _sut.Validate(request);
@@ -40,7 +40,7 @@ public class SearchProductsQueryValidatorTests
     public void Validate_ReturnsValidationError_WhenOnlyMinPriceProvided()
     {
         // Arrange
-        var request = new SearchProductsQuery.Request(100m, null, null);
+        var request = new SearchProductsQuery.Request(100m, null);
 
         // Act
         var actual = _sut.Validate(request);
@@ -56,7 +56,7 @@ public class SearchProductsQueryValidatorTests
     public void Validate_ReturnsValidationError_WhenOnlyMaxPriceProvided()
     {
         // Arrange
-        var request = new SearchProductsQuery.Request(null, 200m, null);
+        var request = new SearchProductsQuery.Request(null, 200m);
 
         // Act
         var actual = _sut.Validate(request);
@@ -85,18 +85,15 @@ public class SearchProductsQueryTests
             Product.Create(
                 ProductName.Create("Cheap Item").ThrowIfFail(),
                 ProductDescription.Create("Desc").ThrowIfFail(),
-                Money.Create(50m).ThrowIfFail(),
-                Quantity.Create(100).ThrowIfFail()),
+                Money.Create(50m).ThrowIfFail()),
             Product.Create(
                 ProductName.Create("Mid Item").ThrowIfFail(),
                 ProductDescription.Create("Desc").ThrowIfFail(),
-                Money.Create(150m).ThrowIfFail(),
-                Quantity.Create(3).ThrowIfFail()),
+                Money.Create(150m).ThrowIfFail()),
             Product.Create(
                 ProductName.Create("Expensive Item").ThrowIfFail(),
                 ProductDescription.Create("Desc").ThrowIfFail(),
-                Money.Create(500m).ThrowIfFail(),
-                Quantity.Create(2).ThrowIfFail()));
+                Money.Create(500m).ThrowIfFail()));
     }
 
     [Fact]
@@ -104,7 +101,7 @@ public class SearchProductsQueryTests
     {
         // Arrange
         var products = CreateSampleProducts();
-        var request = new SearchProductsQuery.Request(null, null, null);
+        var request = new SearchProductsQuery.Request(null, null);
 
         _productRepository.GetAll()
             .Returns(FinTFactory.Succ(products));
@@ -124,50 +121,7 @@ public class SearchProductsQueryTests
         var products = CreateSampleProducts();
         var matchingProducts = products.Where(p => p.Price >= (Money)Money.Create(100m).ThrowIfFail()
                                                 && p.Price <= (Money)Money.Create(200m).ThrowIfFail()).ToSeq();
-        var request = new SearchProductsQuery.Request(100m, 200m, null);
-
-        _productRepository.FindAll(Arg.Any<Specification<Product>>())
-            .Returns(FinTFactory.Succ(matchingProducts));
-
-        // Act
-        var actual = await _sut.Handle(request, CancellationToken.None);
-
-        // Assert
-        actual.IsSucc.ShouldBeTrue();
-        actual.ThrowIfFail().Products.Count.ShouldBe(1);
-        actual.ThrowIfFail().Products[0].Name.ShouldBe("Mid Item");
-    }
-
-    [Fact]
-    public async Task Handle_ReturnsSuccess_WhenLowStockThresholdProvided()
-    {
-        // Arrange
-        var products = CreateSampleProducts();
-        var matchingProducts = products.Where(p => p.StockQuantity < (Quantity)Quantity.Create(5).ThrowIfFail()).ToSeq();
-        var request = new SearchProductsQuery.Request(null, null, 5);
-
-        _productRepository.FindAll(Arg.Any<Specification<Product>>())
-            .Returns(FinTFactory.Succ(matchingProducts));
-
-        // Act
-        var actual = await _sut.Handle(request, CancellationToken.None);
-
-        // Assert
-        actual.IsSucc.ShouldBeTrue();
-        actual.ThrowIfFail().Products.Count.ShouldBe(2);
-    }
-
-    [Fact]
-    public async Task Handle_ReturnsSuccess_WhenMultipleFiltersProvided()
-    {
-        // Arrange
-        var products = CreateSampleProducts();
-        var matchingProducts = products
-            .Where(p => p.Price >= (Money)Money.Create(100m).ThrowIfFail()
-                     && p.Price <= (Money)Money.Create(200m).ThrowIfFail()
-                     && p.StockQuantity < (Quantity)Quantity.Create(5).ThrowIfFail())
-            .ToSeq();
-        var request = new SearchProductsQuery.Request(100m, 200m, 5);
+        var request = new SearchProductsQuery.Request(100m, 200m);
 
         _productRepository.FindAll(Arg.Any<Specification<Product>>())
             .Returns(FinTFactory.Succ(matchingProducts));

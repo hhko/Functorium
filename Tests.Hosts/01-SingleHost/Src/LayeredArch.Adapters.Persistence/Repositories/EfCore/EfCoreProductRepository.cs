@@ -20,7 +20,6 @@ public class EfCoreProductRepository : IProductRepository
         new PropertyMap<Product, ProductModel>()
             .Map(p => (decimal)p.Price, m => m.Price)
             .Map(p => (string)p.Name, m => m.Name)
-            .Map(p => (int)p.StockQuantity, m => m.StockQuantity)
             .Map(p => p.Id.ToString(), m => m.Id);
 
     private readonly LayeredArchDbContext _dbContext;

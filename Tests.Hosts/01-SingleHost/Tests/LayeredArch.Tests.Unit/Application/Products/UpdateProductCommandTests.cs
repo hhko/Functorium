@@ -20,8 +20,7 @@ public class UpdateProductCommandTests
         return Product.Create(
             ProductName.Create("Old Product").ThrowIfFail(),
             ProductDescription.Create("Old Desc").ThrowIfFail(),
-            Money.Create(100m).ThrowIfFail(),
-            Quantity.Create(10).ThrowIfFail());
+            Money.Create(100m).ThrowIfFail());
     }
 
     [Fact]
@@ -30,7 +29,7 @@ public class UpdateProductCommandTests
         // Arrange
         var existingProduct = CreateExistingProduct();
         var request = new UpdateProductCommand.Request(
-            existingProduct.Id.ToString(), "Updated Product", "Updated Desc", 200m, 20);
+            existingProduct.Id.ToString(), "Updated Product", "Updated Desc", 200m);
 
         _productRepository.GetById(Arg.Any<ProductId>())
             .Returns(FinTFactory.Succ(existingProduct));
@@ -53,7 +52,7 @@ public class UpdateProductCommandTests
     {
         // Arrange
         var request = new UpdateProductCommand.Request(
-            ProductId.New().ToString(), "Updated", "Desc", 200m, 20);
+            ProductId.New().ToString(), "Updated", "Desc", 200m);
 
         _productRepository.GetById(Arg.Any<ProductId>())
             .Returns(FinTFactory.Fail<Product>(Error.New("Product not found")));
@@ -71,7 +70,7 @@ public class UpdateProductCommandTests
         // Arrange
         var existingProduct = CreateExistingProduct();
         var request = new UpdateProductCommand.Request(
-            existingProduct.Id.ToString(), "Duplicate Name", "Desc", 200m, 20);
+            existingProduct.Id.ToString(), "Duplicate Name", "Desc", 200m);
 
         _productRepository.GetById(Arg.Any<ProductId>())
             .Returns(FinTFactory.Succ(existingProduct));
@@ -90,7 +89,7 @@ public class UpdateProductCommandTests
     {
         // Arrange
         var request = new UpdateProductCommand.Request(
-            ProductId.New().ToString(), "", "Desc", 200m, 20);
+            ProductId.New().ToString(), "", "Desc", 200m);
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

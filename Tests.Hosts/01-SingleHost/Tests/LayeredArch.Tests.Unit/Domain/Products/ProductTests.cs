@@ -10,14 +10,12 @@ public class ProductTests
     private static Product CreateSampleProduct(
         string name = "Test Product",
         string description = "Test Description",
-        decimal price = 100m,
-        int stockQuantity = 10)
+        decimal price = 100m)
     {
         return Product.Create(
             ProductName.Create(name).ThrowIfFail(),
             ProductDescription.Create(description).ThrowIfFail(),
-            Money.Create(price).ThrowIfFail(),
-            Quantity.Create(stockQuantity).ThrowIfFail());
+            Money.Create(price).ThrowIfFail());
     }
 
     [Fact]
@@ -35,13 +33,12 @@ public class ProductTests
     public void Create_ShouldSetProperties()
     {
         // Act
-        var sut = CreateSampleProduct(name: "Laptop", description: "Good laptop", price: 1500m, stockQuantity: 5);
+        var sut = CreateSampleProduct(name: "Laptop", description: "Good laptop", price: 1500m);
 
         // Assert
         ((string)sut.Name).ShouldBe("Laptop");
         ((string)sut.Description).ShouldBe("Good laptop");
         ((decimal)sut.Price).ShouldBe(1500m);
-        ((int)sut.StockQuantity).ShouldBe(5);
     }
 
     [Fact]
@@ -54,45 +51,13 @@ public class ProductTests
         var newName = ProductName.Create("Updated Name").ThrowIfFail();
         var newDescription = ProductDescription.Create("Updated Desc").ThrowIfFail();
         var newPrice = Money.Create(200m).ThrowIfFail();
-        var newStock = Quantity.Create(20).ThrowIfFail();
 
         // Act
-        sut.Update(newName, newDescription, newPrice, newStock);
+        sut.Update(newName, newDescription, newPrice);
 
         // Assert
         sut.DomainEvents.ShouldContain(e => e is Product.UpdatedEvent);
         ((string)sut.Name).ShouldBe("Updated Name");
-    }
-
-    [Fact]
-    public void DeductStock_ShouldSucceed_WhenSufficientStock()
-    {
-        // Arrange
-        var sut = CreateSampleProduct(stockQuantity: 10);
-        sut.ClearDomainEvents();
-        var quantity = Quantity.Create(3).ThrowIfFail();
-
-        // Act
-        var actual = sut.DeductStock(quantity);
-
-        // Assert
-        actual.IsSucc.ShouldBeTrue();
-        ((int)sut.StockQuantity).ShouldBe(7);
-        sut.DomainEvents.ShouldContain(e => e is Product.StockDeductedEvent);
-    }
-
-    [Fact]
-    public void DeductStock_ShouldFail_WhenInsufficientStock()
-    {
-        // Arrange
-        var sut = CreateSampleProduct(stockQuantity: 2);
-        var quantity = Quantity.Create(5).ThrowIfFail();
-
-        // Act
-        var actual = sut.DeductStock(quantity);
-
-        // Assert
-        actual.IsFail.ShouldBeTrue();
     }
 
     [Fact]
@@ -136,12 +101,11 @@ public class ProductTests
         var name = ProductName.Create("Restored Product").ThrowIfFail();
         var description = ProductDescription.Create("Restored Desc").ThrowIfFail();
         var price = Money.Create(500m).ThrowIfFail();
-        var stock = Quantity.Create(20).ThrowIfFail();
         var createdAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var updatedAt = new DateTime(2025, 6, 1, 0, 0, 0, DateTimeKind.Utc);
 
         // Act
-        var sut = Product.CreateFromValidated(id, name, description, price, stock, createdAt, updatedAt);
+        var sut = Product.CreateFromValidated(id, name, description, price, createdAt, updatedAt);
 
         // Assert
         sut.Id.ShouldBe(id);

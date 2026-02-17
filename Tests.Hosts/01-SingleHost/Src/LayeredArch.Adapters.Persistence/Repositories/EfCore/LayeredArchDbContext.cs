@@ -6,6 +6,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 public class LayeredArchDbContext : DbContext
 {
     public DbSet<ProductModel> Products => Set<ProductModel>();
+    public DbSet<InventoryModel> Inventories => Set<InventoryModel>();
     public DbSet<OrderModel> Orders => Set<OrderModel>();
     public DbSet<CustomerModel> Customers => Set<CustomerModel>();
     public DbSet<TagModel> Tags => Set<TagModel>();

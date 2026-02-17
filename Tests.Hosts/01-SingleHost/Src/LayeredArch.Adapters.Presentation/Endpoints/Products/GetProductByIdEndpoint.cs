@@ -33,7 +33,7 @@ public sealed class GetProductByIdEndpoint
         var usecaseRequest = new GetProductByIdQuery.Request(req.Id);
         var result = await _mediator.Send(usecaseRequest, ct);
         var mapped = result.Map(r => new Response(
-            r.ProductId, r.Name, r.Description, r.Price, r.StockQuantity, r.CreatedAt, r.UpdatedAt));
+            r.ProductId, r.Name, r.Description, r.Price, r.CreatedAt, r.UpdatedAt));
         await this.SendFinResponseWithNotFoundAsync(mapped, ct);
     }
 
@@ -47,7 +47,6 @@ public sealed class GetProductByIdEndpoint
         string Name,
         string Description,
         decimal Price,
-        int StockQuantity,
         DateTime CreatedAt,
         DateTime? UpdatedAt);
 }

@@ -9,14 +9,12 @@ public class ProductNameUniqueSpecTests
     private static Product CreateSampleProduct(
         string name = "Test Product",
         string description = "Test Description",
-        decimal price = 100m,
-        int stockQuantity = 10)
+        decimal price = 100m)
     {
         return Product.Create(
             ProductName.Create(name).ThrowIfFail(),
             ProductDescription.Create(description).ThrowIfFail(),
-            Money.Create(price).ThrowIfFail(),
-            Quantity.Create(stockQuantity).ThrowIfFail());
+            Money.Create(price).ThrowIfFail());
     }
 
     [Fact]

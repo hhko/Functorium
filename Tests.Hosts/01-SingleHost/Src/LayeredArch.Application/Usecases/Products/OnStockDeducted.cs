@@ -1,13 +1,13 @@
 using Functorium.Applications.Events;
-using LayeredArch.Domain.AggregateRoots.Products;
+using LayeredArch.Domain.AggregateRoots.Inventories;
 using Microsoft.Extensions.Logging;
 
 namespace LayeredArch.Application.Usecases.Products;
 
 /// <summary>
-/// Product.StockDeductedEvent 핸들러 - 재고 차감 로깅.
+/// Inventory.StockDeductedEvent 핸들러 - 재고 차감 로깅.
 /// </summary>
-public sealed class OnStockDeducted : IDomainEventHandler<Product.StockDeductedEvent>
+public sealed class OnStockDeducted : IDomainEventHandler<Inventory.StockDeductedEvent>
 {
     private readonly ILogger<OnStockDeducted> _logger;
 
@@ -16,7 +16,7 @@ public sealed class OnStockDeducted : IDomainEventHandler<Product.StockDeductedE
         _logger = logger;
     }
 
-    public ValueTask Handle(Product.StockDeductedEvent notification, CancellationToken cancellationToken)
+    public ValueTask Handle(Inventory.StockDeductedEvent notification, CancellationToken cancellationToken)
     {
         int quantity = notification.Quantity;
         if (quantity == 999)

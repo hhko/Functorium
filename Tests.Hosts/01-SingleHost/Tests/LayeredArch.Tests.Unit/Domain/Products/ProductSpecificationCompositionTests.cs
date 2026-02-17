@@ -6,24 +6,25 @@ namespace LayeredArch.Tests.Unit.Domain.Products;
 
 public class ProductSpecificationCompositionTests
 {
-    private static Product CreateSampleProduct(decimal price = 100m, int stockQuantity = 10)
+    private static Product CreateSampleProduct(
+        string name = "Test Product",
+        decimal price = 100m)
     {
         return Product.Create(
-            ProductName.Create("Test Product").ThrowIfFail(),
+            ProductName.Create(name).ThrowIfFail(),
             ProductDescription.Create("Test Description").ThrowIfFail(),
-            Money.Create(price).ThrowIfFail(),
-            Quantity.Create(stockQuantity).ThrowIfFail());
+            Money.Create(price).ThrowIfFail());
     }
 
     [Fact]
     public void AndOperator_ReturnsTrue_WhenBothSpecsSatisfied()
     {
-        // Arrange: 가격 100~200 AND 재고 < 5
-        var product = CreateSampleProduct(price: 150m, stockQuantity: 3);
+        // Arrange: 가격 100~200 AND 이름 일치
+        var product = CreateSampleProduct(name: "Test Product", price: 150m);
         var sut = new ProductPriceRangeSpec(
                 Money.Create(100m).ThrowIfFail(),
                 Money.Create(200m).ThrowIfFail())
-            & new ProductLowStockSpec(Quantity.Create(5).ThrowIfFail());
+            & new ProductNameUniqueSpec(ProductName.Create("Test Product").ThrowIfFail());
 
         // Act
         var actual = sut.IsSatisfiedBy(product);
@@ -35,12 +36,12 @@ public class ProductSpecificationCompositionTests
     [Fact]
     public void AndOperator_ReturnsFalse_WhenOnlyPriceSpecSatisfied()
     {
-        // Arrange: 가격 범위 내이지만 재고 충분
-        var product = CreateSampleProduct(price: 150m, stockQuantity: 10);
+        // Arrange: 가격 범위 내이지만 이름 불일치
+        var product = CreateSampleProduct(name: "Test Product", price: 150m);
         var sut = new ProductPriceRangeSpec(
                 Money.Create(100m).ThrowIfFail(),
                 Money.Create(200m).ThrowIfFail())
-            & new ProductLowStockSpec(Quantity.Create(5).ThrowIfFail());
+            & new ProductNameUniqueSpec(ProductName.Create("Other Name").ThrowIfFail());
 
         // Act
         var actual = sut.IsSatisfiedBy(product);
@@ -52,12 +53,12 @@ public class ProductSpecificationCompositionTests
     [Fact]
     public void OrOperator_ReturnsTrue_WhenEitherSpecSatisfied()
     {
-        // Arrange: 가격 범위 내 OR 재고 부족
-        var product = CreateSampleProduct(price: 150m, stockQuantity: 10);
+        // Arrange: 가격 범위 내 OR 이름 일치
+        var product = CreateSampleProduct(name: "Test Product", price: 150m);
         var sut = new ProductPriceRangeSpec(
                 Money.Create(100m).ThrowIfFail(),
                 Money.Create(200m).ThrowIfFail())
-            | new ProductLowStockSpec(Quantity.Create(5).ThrowIfFail());
+            | new ProductNameUniqueSpec(ProductName.Create("Other Name").ThrowIfFail());
 
         // Act
         var actual = sut.IsSatisfiedBy(product);
@@ -69,9 +70,9 @@ public class ProductSpecificationCompositionTests
     [Fact]
     public void NotOperator_ReturnsTrue_WhenSpecNotSatisfied()
     {
-        // Arrange: 재고 부족이 아닌 상품
-        var product = CreateSampleProduct(stockQuantity: 10);
-        var sut = !new ProductLowStockSpec(Quantity.Create(5).ThrowIfFail());
+        // Arrange: 이름이 일치하지 않는 상품
+        var product = CreateSampleProduct(name: "Test Product");
+        var sut = !new ProductNameUniqueSpec(ProductName.Create("Other Name").ThrowIfFail());
 
         // Act
         var actual = sut.IsSatisfiedBy(product);
@@ -81,14 +82,14 @@ public class ProductSpecificationCompositionTests
     }
 
     [Fact]
-    public void Composite_PriceRangeAndNotLowStock_ReturnsExpected()
+    public void Composite_PriceRangeAndNotNameMatch_ReturnsExpected()
     {
-        // Arrange: 가격 범위 내이면서 재고 충분한 상품
-        var product = CreateSampleProduct(price: 150m, stockQuantity: 10);
+        // Arrange: 가격 범위 내이면서 특정 이름이 아닌 상품
+        var product = CreateSampleProduct(name: "Test Product", price: 150m);
         var sut = new ProductPriceRangeSpec(
                 Money.Create(100m).ThrowIfFail(),
                 Money.Create(200m).ThrowIfFail())
-            & !new ProductLowStockSpec(Quantity.Create(5).ThrowIfFail());
+            & !new ProductNameUniqueSpec(ProductName.Create("Other Name").ThrowIfFail());
 
         // Act
         var actual = sut.IsSatisfiedBy(product);

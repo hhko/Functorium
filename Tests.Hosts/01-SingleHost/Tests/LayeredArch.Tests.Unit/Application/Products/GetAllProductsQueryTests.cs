@@ -22,13 +22,11 @@ public class GetAllProductsQueryTests
             Product.Create(
                 ProductName.Create("Product A").ThrowIfFail(),
                 ProductDescription.Create("Desc A").ThrowIfFail(),
-                Money.Create(100m).ThrowIfFail(),
-                Quantity.Create(10).ThrowIfFail()),
+                Money.Create(100m).ThrowIfFail()),
             Product.Create(
                 ProductName.Create("Product B").ThrowIfFail(),
                 ProductDescription.Create("Desc B").ThrowIfFail(),
-                Money.Create(200m).ThrowIfFail(),
-                Quantity.Create(20).ThrowIfFail()));
+                Money.Create(200m).ThrowIfFail()));
 
         var request = new GetAllProductsQuery.Request();
 

@@ -11,8 +11,7 @@ public class ProductPriceRangeSpecTests
         return Product.Create(
             ProductName.Create("Test Product").ThrowIfFail(),
             ProductDescription.Create("Test Description").ThrowIfFail(),
-            Money.Create(price).ThrowIfFail(),
-            Quantity.Create(10).ThrowIfFail());
+            Money.Create(price).ThrowIfFail());
     }
 
     [Fact]

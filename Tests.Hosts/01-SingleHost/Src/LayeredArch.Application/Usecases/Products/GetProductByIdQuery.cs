@@ -21,7 +21,6 @@ public sealed class GetProductByIdQuery
         string Name,
         string Description,
         decimal Price,
-        int StockQuantity,
         DateTime CreatedAt,
         DateTime? UpdatedAt);
 
@@ -49,7 +48,6 @@ public sealed class GetProductByIdQuery
                     product.Name,
                     product.Description,
                     product.Price,
-                    product.StockQuantity,
                     product.CreatedAt,
                     product.UpdatedAt);
 

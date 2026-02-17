@@ -3,6 +3,7 @@ using LayeredArch.Adapters.Persistence.Repositories.EfCore;
 using LayeredArch.Adapters.Persistence.Repositories.InMemory;
 using LayeredArch.Domain.Ports;
 using LayeredArch.Domain.AggregateRoots.Customers;
+using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Orders;
 using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Abstractions.Registrations;
@@ -72,6 +73,7 @@ public static class AdapterPersistenceRegistration
     {
         // Repository 등록 (Source Generator가 생성한 Pipeline 버전 사용)
         services.RegisterScopedAdapterPipeline<IProductRepository, InMemoryProductRepositoryPipeline>();
+        services.RegisterScopedAdapterPipeline<IInventoryRepository, InMemoryInventoryRepositoryPipeline>();
         services.RegisterScopedAdapterPipeline<IOrderRepository, InMemoryOrderRepositoryPipeline>();
         services.RegisterScopedAdapterPipeline<ICustomerRepository, InMemoryCustomerRepositoryPipeline>();
 
@@ -87,6 +89,7 @@ public static class AdapterPersistenceRegistration
     {
         // Repository 등록 (Source Generator가 생성한 Pipeline 버전 사용)
         services.RegisterScopedAdapterPipeline<IProductRepository, EfCoreProductRepositoryPipeline>();
+        services.RegisterScopedAdapterPipeline<IInventoryRepository, EfCoreInventoryRepositoryPipeline>();
         services.RegisterScopedAdapterPipeline<IOrderRepository, EfCoreOrderRepositoryPipeline>();
         services.RegisterScopedAdapterPipeline<ICustomerRepository, EfCoreCustomerRepositoryPipeline>();
 

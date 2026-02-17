@@ -11,7 +11,6 @@ internal static class ProductMapper
         Name = product.Name,
         Description = product.Description,
         Price = product.Price,
-        StockQuantity = product.StockQuantity,
         CreatedAt = product.CreatedAt,
         UpdatedAt = product.UpdatedAt,
         Tags = product.Tags.Select(t => t.ToModel(product.Id.ToString())).ToList()
@@ -24,7 +23,6 @@ internal static class ProductMapper
             ProductName.CreateFromValidated(model.Name),
             ProductDescription.CreateFromValidated(model.Description),
             Money.CreateFromValidated(model.Price),
-            Quantity.CreateFromValidated(model.StockQuantity),
             model.CreatedAt,
             model.UpdatedAt);
 

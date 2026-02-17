@@ -39,7 +39,7 @@ public sealed class GetAllProductsQuery
                 from products in _productRepository.GetAll()
                 select new Response(
                     products
-                        .Select(p => new ProductSummaryDto(p.Id.ToString(), p.Name, p.Price, p.StockQuantity))
+                        .Select(p => new ProductSummaryDto(p.Id.ToString(), p.Name, p.Price))
                         .ToSeq());
 
             // FinT<IO, Response>

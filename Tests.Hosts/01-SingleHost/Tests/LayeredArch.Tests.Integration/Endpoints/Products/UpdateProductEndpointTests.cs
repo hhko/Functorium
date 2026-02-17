@@ -28,8 +28,7 @@ public class UpdateProductEndpointTests : IntegrationTestBase
         {
             Name = $"Updated Product {Guid.NewGuid()}",
             Description = "Updated Description",
-            Price = 200.00m,
-            StockQuantity = 20
+            Price = 200.00m
         };
 
         // Act
@@ -65,8 +64,7 @@ public class UpdateProductEndpointTests : IntegrationTestBase
         {
             Name = "",
             Description = "Updated Description",
-            Price = 200.00m,
-            StockQuantity = 20
+            Price = 200.00m
         };
 
         // Act
