@@ -372,12 +372,19 @@ public sealed class Usecase(IProductRepository productRepository)
 public sealed class Usecase(IProductRepository productRepository)
     : IQueryUsecase<Request, Response>
 {
+    private readonly IProductRepository _productRepository = productRepository;
+
     public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
     {
         var spec = BuildSpecification(request);
 
+        // spec이 null이면 필터 없음 → GetAll() 폴백
+        // (Specification<T>을 상속한 폴백 클래스는 ExpressionSpecification<T>이 아니므로
+        //  EfCore에서 NotSupportedException이 발생합니다)
         FinT<IO, Response> usecase =
-            from products in _productRepository.FindAll(spec)
+            from products in spec is not null
+                ? _productRepository.FindAll(spec)
+                : _productRepository.GetAll()
             select new Response(
                 products
                     .Select(p => new ProductDto(p.Id.ToString(), p.Name, p.Price, p.StockQuantity))
@@ -387,7 +394,7 @@ public sealed class Usecase(IProductRepository productRepository)
         return response.ToFinResponse();
     }
 
-    private static Specification<Product> BuildSpecification(Request request)
+    private static Specification<Product>? BuildSpecification(Request request)
     {
         Specification<Product>? spec = null;
 
@@ -406,21 +413,15 @@ public sealed class Usecase(IProductRepository productRepository)
             spec = spec is not null ? spec & lowStockSpec : lowStockSpec;
         }
 
-        // 필터가 없으면 모든 상품 반환
-        return spec ?? new AllProductsSpec();
+        return spec;
     }
-}
-
-// file-scoped 폴백 Specification (C# 11 file 접근 제한자: 이 파일 내에서만 접근 가능)
-file sealed class AllProductsSpec : Specification<Product>
-{
-    public override bool IsSatisfiedBy(Product product) => true;
 }
 ```
 
 **포인트:**
 - `BuildSpecification`에서 선택적 필터를 `&` 연산자로 점진적 조합
-- 필터가 없을 때의 폴백용 `AllProductsSpec`은 `file` 접근자로 Usecase 파일 내부에 선언
+- 필터가 없으면 `null` 반환 → Usecase에서 `GetAll()` 폴백
+- `AllProductsSpec` 같은 비-Expression 폴백 클래스는 EfCore에서 `NotSupportedException`이 발생하므로 사용 금지
 
 ---
 
