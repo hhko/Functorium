@@ -1,27 +1,25 @@
 using Functorium.Applications.Queries;
 using Functorium.Domains.Specifications;
-using LayeredArch.Application.Usecases.Products.Dtos;
-using LayeredArch.Application.Usecases.Products.Ports;
-using LayeredArch.Domain.AggregateRoots.Products;
-using LayeredArch.Domain.AggregateRoots.Products.Specifications;
+using LayeredArch.Application.Usecases.Inventories.Dtos;
+using LayeredArch.Application.Usecases.Inventories.Ports;
+using LayeredArch.Domain.AggregateRoots.Inventories;
+using LayeredArch.Domain.AggregateRoots.Inventories.Specifications;
 
-namespace LayeredArch.Application.Usecases.Products;
+namespace LayeredArch.Application.Usecases.Inventories;
 
 /// <summary>
-/// 상품 검색 Query - Specification 패턴 조합 + 페이지네이션/정렬 데모
-/// 가격 범위 등 선택적 필터를 Specification으로 조합하여 검색.
+/// 재고 검색 Query - 페이지네이션/정렬 + LowStock 필터 지원
 /// Read Adapter를 통해 Aggregate 재구성 없이 DTO로 직접 프로젝션합니다.
 /// </summary>
-public sealed class SearchProductsQuery
+public sealed class SearchInventoryQuery
 {
-    private static readonly string[] AllowedSortFields = ["Name", "Price"];
+    private static readonly string[] AllowedSortFields = ["StockQuantity", "ProductId"];
 
     /// <summary>
     /// Query Request - 선택적 검색 필터 + 페이지네이션/정렬
     /// </summary>
     public sealed record Request(
-        decimal? MinPrice,
-        decimal? MaxPrice,
+        int? LowStockThreshold = null,
         int? Page = null,
         int? PageSize = null,
         string? SortBy = null,
@@ -31,7 +29,7 @@ public sealed class SearchProductsQuery
     /// Query Response - 페이지네이션된 검색 결과
     /// </summary>
     public sealed record Response(
-        Seq<ProductSummaryDto> Products,
+        Seq<InventorySummaryDto> Inventories,
         int TotalCount,
         int Page,
         int PageSize,
@@ -46,26 +44,9 @@ public sealed class SearchProductsQuery
     {
         public Validator()
         {
-            RuleFor(x => x.MinPrice)
-                .GreaterThan(0).When(x => x.MinPrice.HasValue)
-                .WithMessage("최소 가격은 0보다 커야 합니다");
-
-            RuleFor(x => x.MinPrice)
-                .NotNull().When(x => x.MaxPrice.HasValue)
-                .WithMessage("최대 가격을 지정할 때는 최소 가격도 함께 지정해야 합니다");
-
-            RuleFor(x => x.MaxPrice)
-                .GreaterThan(0).When(x => x.MaxPrice.HasValue)
-                .WithMessage("최대 가격은 0보다 커야 합니다");
-
-            RuleFor(x => x.MaxPrice)
-                .NotNull().When(x => x.MinPrice.HasValue)
-                .WithMessage("최소 가격을 지정할 때는 최대 가격도 함께 지정해야 합니다");
-
-            RuleFor(x => x.MaxPrice)
-                .GreaterThanOrEqualTo(x => x.MinPrice!.Value)
-                .When(x => x.MinPrice.HasValue && x.MaxPrice.HasValue)
-                .WithMessage("최대 가격은 최소 가격 이상이어야 합니다");
+            RuleFor(x => x.LowStockThreshold)
+                .GreaterThan(0).When(x => x.LowStockThreshold.HasValue)
+                .WithMessage("재고 부족 임계값은 0보다 커야 합니다");
 
             RuleFor(x => x.SortBy)
                 .Must(sortBy => AllowedSortFields.Contains(sortBy, StringComparer.OrdinalIgnoreCase))
@@ -83,10 +64,10 @@ public sealed class SearchProductsQuery
     /// <summary>
     /// Query Handler - Read Adapter를 통한 페이지네이션 검색
     /// </summary>
-    public sealed class Usecase(IProductQueryAdapter readAdapter)
+    public sealed class Usecase(IInventoryQueryAdapter readAdapter)
         : IQueryUsecase<Request, Response>
     {
-        private readonly IProductQueryAdapter _readAdapter = readAdapter;
+        private readonly IInventoryQueryAdapter _readAdapter = readAdapter;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
@@ -112,18 +93,15 @@ public sealed class SearchProductsQuery
             return response.ToFinResponse();
         }
 
-        private static Specification<Product>? BuildSpecification(Request request)
+        private static Specification<Inventory>? BuildSpecification(Request request)
         {
-            Specification<Product>? spec = null;
-
-            if (request.MinPrice.HasValue && request.MaxPrice.HasValue)
+            if (request.LowStockThreshold.HasValue)
             {
-                spec = new ProductPriceRangeSpec(
-                    Money.Create(request.MinPrice.Value).ThrowIfFail(),
-                    Money.Create(request.MaxPrice.Value).ThrowIfFail());
+                return new InventoryLowStockSpec(
+                    Quantity.Create(request.LowStockThreshold.Value).ThrowIfFail());
             }
 
-            return spec;
+            return null;
         }
 
         private static SortExpression BuildSortExpression(Request request)

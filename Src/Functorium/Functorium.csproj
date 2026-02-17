@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dapper" />
     <PackageReference Include="LanguageExt.Core" />
     <PackageReference Include="Ulid" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />

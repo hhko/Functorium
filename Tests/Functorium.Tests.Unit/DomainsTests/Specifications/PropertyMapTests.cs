@@ -141,4 +141,43 @@ public class PropertyMapTests
         compiled(new StringIdModel { Id = "ABC123" }).ShouldBeTrue();
         compiled(new StringIdModel { Id = "OTHER" }).ShouldBeFalse();
     }
+
+    [Fact]
+    public void TranslateFieldName_ReturnsModelFieldName_WhenMappingExists()
+    {
+        // Arrange
+        var sut = CreateSut();
+
+        // Act
+        var actual = sut.TranslateFieldName("Stock");
+
+        // Assert
+        actual.ShouldBe("StockQuantity");
+    }
+
+    [Fact]
+    public void TranslateFieldName_ReturnsSameName_WhenEntityAndModelNamesMatch()
+    {
+        // Arrange
+        var sut = CreateSut();
+
+        // Act
+        var actual = sut.TranslateFieldName("Price");
+
+        // Assert
+        actual.ShouldBe("Price");
+    }
+
+    [Fact]
+    public void TranslateFieldName_ReturnsNull_WhenMappingDoesNotExist()
+    {
+        // Arrange
+        var sut = CreateSut();
+
+        // Act
+        var actual = sut.TranslateFieldName("NonExistent");
+
+        // Assert
+        actual.ShouldBeNull();
+    }
 }

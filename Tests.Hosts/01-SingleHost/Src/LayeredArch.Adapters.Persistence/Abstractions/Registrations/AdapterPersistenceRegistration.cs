@@ -1,4 +1,6 @@
+using System.Data;
 using LayeredArch.Adapters.Persistence.Abstractions.Options;
+using LayeredArch.Adapters.Persistence.Repositories.Dapper;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore;
 using LayeredArch.Adapters.Persistence.Repositories.InMemory;
 using LayeredArch.Domain.Ports;
@@ -9,7 +11,10 @@ using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Abstractions.Registrations;
 using Functorium.Adapters.Options;
 using Functorium.Applications.Persistence;
+using LayeredArch.Application.Usecases.Inventories.Ports;
+using LayeredArch.Application.Usecases.Products.Ports;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,16 +38,11 @@ public static class AdapterPersistenceRegistration
 
         switch (options.Provider)
         {
-            case "EfCoreInMemory":
-                services.AddDbContext<LayeredArchDbContext>(opt =>
-                    opt.UseInMemoryDatabase("LayeredArch"));
-                RegisterEfCoreRepositories(services);
-                break;
-
             case "Sqlite":
                 services.AddDbContext<LayeredArchDbContext>(opt =>
                     opt.UseSqlite(options.ConnectionString));
-                RegisterEfCoreRepositories(services);
+                RegisterSqliteRepositories(services);
+                RegisterDapperQueryAdapters(services, options.ConnectionString);
                 break;
 
             case "InMemory":
@@ -83,9 +83,14 @@ public static class AdapterPersistenceRegistration
         // 공유 Port 등록
         services.AddScoped<InMemoryProductRepository>();
         services.RegisterScopedAdapterPipeline<IProductCatalog, InMemoryProductCatalogPipeline>();
+
+        // Read Adapter 등록
+        services.RegisterScopedAdapterPipeline<IProductQueryAdapter, InMemoryProductQueryAdapterPipeline>();
+        services.AddScoped<InMemoryInventoryRepository>();
+        services.RegisterScopedAdapterPipeline<IInventoryQueryAdapter, InMemoryInventoryQueryAdapterPipeline>();
     }
 
-    private static void RegisterEfCoreRepositories(IServiceCollection services)
+    private static void RegisterSqliteRepositories(IServiceCollection services)
     {
         // Repository 등록 (Source Generator가 생성한 Pipeline 버전 사용)
         services.RegisterScopedAdapterPipeline<IProductRepository, EfCoreProductRepositoryPipeline>();
@@ -98,5 +103,19 @@ public static class AdapterPersistenceRegistration
 
         // 공유 Port 등록
         services.RegisterScopedAdapterPipeline<IProductCatalog, EfCoreProductCatalogPipeline>();
+    }
+
+    private static void RegisterDapperQueryAdapters(
+        IServiceCollection services, string connectionString)
+    {
+        services.AddScoped<IDbConnection>(_ =>
+        {
+            var conn = new SqliteConnection(connectionString);
+            conn.Open();
+            return conn;
+        });
+
+        services.RegisterScopedAdapterPipeline<IProductQueryAdapter, DapperProductQueryAdapterPipeline>();
+        services.RegisterScopedAdapterPipeline<IInventoryQueryAdapter, DapperInventoryQueryAdapterPipeline>();
     }
 }

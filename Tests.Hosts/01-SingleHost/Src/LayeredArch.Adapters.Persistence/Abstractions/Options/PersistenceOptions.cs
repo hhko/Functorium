@@ -6,14 +6,14 @@ namespace LayeredArch.Adapters.Persistence.Abstractions.Options;
 
 /// <summary>
 /// Persistence 어댑터 옵션
-/// Provider에 따라 InMemory(ConcurrentDictionary), EfCoreInMemory, Sqlite 선택
+/// Provider에 따라 InMemory(ConcurrentDictionary), Sqlite 선택
 /// </summary>
 public sealed class PersistenceOptions : IStartupOptionsLogger
 {
     public const string SectionName = "Persistence";
 
     /// <summary>
-    /// 영속성 Provider: "InMemory" | "EfCoreInMemory" | "Sqlite"
+    /// 영속성 Provider: "InMemory" | "Sqlite"
     /// </summary>
     public string Provider { get; set; } = "InMemory";
 
@@ -22,7 +22,7 @@ public sealed class PersistenceOptions : IStartupOptionsLogger
     /// </summary>
     public string ConnectionString { get; set; } = "Data Source=layeredarch.db";
 
-    public static readonly string[] SupportedProviders = ["InMemory", "EfCoreInMemory", "Sqlite"];
+    public static readonly string[] SupportedProviders = ["InMemory", "Sqlite"];
 
     public void LogConfiguration(ILogger logger)
     {

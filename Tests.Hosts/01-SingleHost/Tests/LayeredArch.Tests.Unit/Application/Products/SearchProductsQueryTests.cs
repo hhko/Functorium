@@ -1,6 +1,9 @@
 using FluentValidation;
+using Functorium.Applications.Queries;
 using Functorium.Domains.Specifications;
 using LayeredArch.Application.Usecases.Products;
+using LayeredArch.Application.Usecases.Products.Dtos;
+using LayeredArch.Application.Usecases.Products.Ports;
 using LayeredArch.Domain.AggregateRoots.Products;
 using LayeredArch.Domain.SharedKernel.ValueObjects;
 
@@ -67,44 +70,81 @@ public class SearchProductsQueryValidatorTests
             e.PropertyName == "MinPrice"
             && e.ErrorMessage.Contains("최대 가격을 지정할 때는 최소 가격도 함께 지정해야 합니다"));
     }
+
+    [Fact]
+    public void Validate_ReturnsNoError_WhenValidSortByProvided()
+    {
+        // Arrange
+        var request = new SearchProductsQuery.Request(null, null, SortBy: "Name");
+
+        // Act
+        var actual = _sut.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Validate_ReturnsValidationError_WhenInvalidSortByProvided()
+    {
+        // Arrange
+        var request = new SearchProductsQuery.Request(null, null, SortBy: "InvalidField");
+
+        // Act
+        var actual = _sut.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeFalse();
+        actual.Errors.ShouldContain(e => e.PropertyName == "SortBy");
+    }
+
+    [Fact]
+    public void Validate_ReturnsValidationError_WhenInvalidSortDirectionProvided()
+    {
+        // Arrange
+        var request = new SearchProductsQuery.Request(null, null, SortDirection: "invalid");
+
+        // Act
+        var actual = _sut.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeFalse();
+        actual.Errors.ShouldContain(e => e.PropertyName == "SortDirection");
+    }
 }
 
 public class SearchProductsQueryTests
 {
-    private readonly IProductRepository _productRepository = Substitute.For<IProductRepository>();
+    private readonly IProductQueryAdapter _readAdapter = Substitute.For<IProductQueryAdapter>();
     private readonly SearchProductsQuery.Usecase _sut;
 
     public SearchProductsQueryTests()
     {
-        _sut = new SearchProductsQuery.Usecase(_productRepository);
+        _sut = new SearchProductsQuery.Usecase(_readAdapter);
     }
 
-    private static Seq<Product> CreateSampleProducts()
+    private static PagedResult<ProductSummaryDto> CreateSamplePagedResult(int totalCount = 3)
     {
-        return Seq(
-            Product.Create(
-                ProductName.Create("Cheap Item").ThrowIfFail(),
-                ProductDescription.Create("Desc").ThrowIfFail(),
-                Money.Create(50m).ThrowIfFail()),
-            Product.Create(
-                ProductName.Create("Mid Item").ThrowIfFail(),
-                ProductDescription.Create("Desc").ThrowIfFail(),
-                Money.Create(150m).ThrowIfFail()),
-            Product.Create(
-                ProductName.Create("Expensive Item").ThrowIfFail(),
-                ProductDescription.Create("Desc").ThrowIfFail(),
-                Money.Create(500m).ThrowIfFail()));
+        var items = Seq(
+            new ProductSummaryDto(ProductId.New().ToString(), "Cheap Item", 50m),
+            new ProductSummaryDto(ProductId.New().ToString(), "Mid Item", 150m),
+            new ProductSummaryDto(ProductId.New().ToString(), "Expensive Item", 500m));
+
+        return new PagedResult<ProductSummaryDto>(items, totalCount, 1, 20);
     }
 
     [Fact]
     public async Task Handle_ReturnsSuccess_WhenNoFiltersProvided()
     {
         // Arrange
-        var products = CreateSampleProducts();
+        var pagedResult = CreateSamplePagedResult();
         var request = new SearchProductsQuery.Request(null, null);
 
-        _productRepository.GetAll()
-            .Returns(FinTFactory.Succ(products));
+        _readAdapter.Search(
+                Arg.Any<Specification<Product>?>(),
+                Arg.Any<PageRequest>(),
+                Arg.Any<SortExpression>())
+            .Returns(FinTFactory.Succ(pagedResult));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -112,19 +152,22 @@ public class SearchProductsQueryTests
         // Assert
         actual.IsSucc.ShouldBeTrue();
         actual.ThrowIfFail().Products.Count.ShouldBe(3);
+        actual.ThrowIfFail().TotalCount.ShouldBe(3);
     }
 
     [Fact]
     public async Task Handle_ReturnsSuccess_WhenPriceRangeProvided()
     {
         // Arrange
-        var products = CreateSampleProducts();
-        var matchingProducts = products.Where(p => p.Price >= (Money)Money.Create(100m).ThrowIfFail()
-                                                && p.Price <= (Money)Money.Create(200m).ThrowIfFail()).ToSeq();
+        var items = Seq(new ProductSummaryDto(ProductId.New().ToString(), "Mid Item", 150m));
+        var pagedResult = new PagedResult<ProductSummaryDto>(items, 1, 1, 20);
         var request = new SearchProductsQuery.Request(100m, 200m);
 
-        _productRepository.FindAll(Arg.Any<Specification<Product>>())
-            .Returns(FinTFactory.Succ(matchingProducts));
+        _readAdapter.Search(
+                Arg.Any<Specification<Product>?>(),
+                Arg.Any<PageRequest>(),
+                Arg.Any<SortExpression>())
+            .Returns(FinTFactory.Succ(pagedResult));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -133,5 +176,33 @@ public class SearchProductsQueryTests
         actual.IsSucc.ShouldBeTrue();
         actual.ThrowIfFail().Products.Count.ShouldBe(1);
         actual.ThrowIfFail().Products[0].Name.ShouldBe("Mid Item");
+    }
+
+    [Fact]
+    public async Task Handle_ReturnsPaginationMetadata_WhenPageProvided()
+    {
+        // Arrange
+        var items = Seq(new ProductSummaryDto(ProductId.New().ToString(), "Item", 100m));
+        var pagedResult = new PagedResult<ProductSummaryDto>(items, 50, 2, 10);
+        var request = new SearchProductsQuery.Request(null, null, Page: 2, PageSize: 10);
+
+        _readAdapter.Search(
+                Arg.Any<Specification<Product>?>(),
+                Arg.Any<PageRequest>(),
+                Arg.Any<SortExpression>())
+            .Returns(FinTFactory.Succ(pagedResult));
+
+        // Act
+        var actual = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        actual.IsSucc.ShouldBeTrue();
+        var response = actual.ThrowIfFail();
+        response.Page.ShouldBe(2);
+        response.PageSize.ShouldBe(10);
+        response.TotalCount.ShouldBe(50);
+        response.TotalPages.ShouldBe(5);
+        response.HasPreviousPage.ShouldBeTrue();
+        response.HasNextPage.ShouldBeTrue();
     }
 }

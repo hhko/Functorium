@@ -30,6 +30,13 @@ public sealed class PropertyMap<TEntity, TModel>
     }
 
     /// <summary>
+    /// 도메인 엔터티 필드명을 퍼시스턴스 모델 필드명으로 번역합니다.
+    /// 매핑이 없으면 null을 반환합니다.
+    /// </summary>
+    public string? TranslateFieldName(string entityFieldName)
+        => _mappings.TryGetValue(entityFieldName, out var modelFieldName) ? modelFieldName : null;
+
+    /// <summary>
     /// Entity 기준 Expression을 Model 기준 Expression으로 변환합니다.
     /// </summary>
     public Expression<Func<TModel, bool>> Translate(Expression<Func<TEntity, bool>> expression)
