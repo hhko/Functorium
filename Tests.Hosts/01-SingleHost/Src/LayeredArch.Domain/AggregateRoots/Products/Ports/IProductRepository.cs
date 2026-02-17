@@ -19,12 +19,6 @@ public interface IProductRepository : IRepository<Product, ProductId>
     FinT<IO, Seq<Product>> GetAll();
 
     /// <summary>
-    /// 상품명 중복 확인.
-    /// excludeId가 지정되면 해당 상품은 제외하고 검사합니다.
-    /// </summary>
-    FinT<IO, bool> ExistsByName(ProductName name, ProductId? excludeId = null);
-
-    /// <summary>
     /// Specification 기반 존재 여부 확인.
     /// </summary>
     FinT<IO, bool> Exists(Specification<Product> spec);

@@ -1,5 +1,4 @@
 using Functorium.Domains.Repositories;
-using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
 
 namespace LayeredArch.Domain.AggregateRoots.Customers;
 
@@ -8,11 +7,6 @@ namespace LayeredArch.Domain.AggregateRoots.Customers;
 /// </summary>
 public interface ICustomerRepository : IRepository<Customer, CustomerId>
 {
-    /// <summary>
-    /// 이메일 중복 확인
-    /// </summary>
-    FinT<IO, bool> ExistsByEmail(Email email);
-
     /// <summary>
     /// Specification 기반 존재 여부 확인.
     /// </summary>

@@ -119,20 +119,6 @@ public class EfCoreProductRepository : IProductRepository
         });
     }
 
-    public virtual FinT<IO, bool> ExistsByName(ProductName name, ProductId? excludeId = null)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var nameStr = (string)name;
-            var excludeIdStr = excludeId?.ToString();
-            bool exists = await _dbContext.Products.AnyAsync(p =>
-                p.Name == nameStr &&
-                (excludeIdStr == null || p.Id != excludeIdStr));
-
-            return Fin.Succ(exists);
-        });
-    }
-
     public virtual FinT<IO, bool> Exists(Specification<Product> spec)
     {
         return IO.liftAsync(async () =>

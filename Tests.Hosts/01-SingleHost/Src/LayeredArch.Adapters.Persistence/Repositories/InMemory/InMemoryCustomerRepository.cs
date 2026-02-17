@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using LayeredArch.Domain.AggregateRoots.Customers;
-using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
@@ -84,16 +83,6 @@ public class InMemoryCustomerRepository : ICustomerRepository
             }
 
             return Fin.Succ(unit);
-        });
-    }
-
-    public virtual FinT<IO, bool> ExistsByEmail(Email email)
-    {
-        return IO.lift(() =>
-        {
-            bool exists = _customers.Values.Any(c =>
-                ((string)c.Email).Equals(email, StringComparison.OrdinalIgnoreCase));
-            return Fin.Succ(exists);
         });
     }
 

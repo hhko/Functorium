@@ -130,18 +130,6 @@ public class InMemoryProductRepository : IProductRepository
         });
     }
 
-    public virtual FinT<IO, bool> ExistsByName(ProductName name, ProductId? excludeId = null)
-    {
-        // Pipeline이 자동으로 Activity 생성 및 로깅 처리
-        return IO.lift(() =>
-        {
-            bool exists = _products.Values.Any(p =>
-                ((string)p.Name).Equals(name, StringComparison.OrdinalIgnoreCase) &&
-                (excludeId is null || p.Id != excludeId.Value));
-            return Fin.Succ(exists);
-        });
-    }
-
     public virtual FinT<IO, bool> Exists(Specification<Product> spec)
     {
         return IO.lift(() =>
