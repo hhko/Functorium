@@ -1,5 +1,4 @@
 using LayeredArch.Domain.AggregateRoots.Customers;
-using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
@@ -92,17 +91,6 @@ public class EfCoreCustomerRepository : ICustomerRepository
         });
     }
 
-    public virtual FinT<IO, bool> ExistsByEmail(Email email)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var emailStr = (string)email;
-            bool exists = await _dbContext.Customers.AnyAsync(c => c.Email == emailStr);
-
-            return Fin.Succ(exists);
-        });
-    }
-
     public virtual FinT<IO, bool> Exists(Specification<Customer> spec)
     {
         return IO.liftAsync(async () =>
@@ -114,7 +102,9 @@ public class EfCoreCustomerRepository : ICustomerRepository
                 return Fin.Succ(await _dbContext.Customers.AnyAsync(modelExpression));
             }
 
-            return Fin.Succ(await _dbContext.Customers.AnyAsync(_ => true));
+            throw new NotSupportedException(
+                $"Specification '{spec.GetType().Name}'에 대한 Expression이 정의되지 않았습니다. " +
+                $"ExpressionSpecification<T>을 상속하고 ToExpression()을 구현하세요.");
         });
     }
 }
