@@ -85,7 +85,7 @@ Architecture
 | **아키텍처 규칙 검증** | [14-testing-library.md — 아키텍처 규칙 검증](./14-testing-library.md) |
 | **소스 생성기 테스트** | [14-testing-library.md — 소스 생성기 테스트](./14-testing-library.md) |
 | **스케줄 Job 테스트** | [14-testing-library.md — 스케줄 Job 통합 테스트](./14-testing-library.md) |
-| **팩토리 패턴 (Create/CreateFromValidated)** | [06-entities-and-aggregates.md — 8. 팩토리 패턴](./06-entities-and-aggregates.md) |
+| **생성 패턴 (Create/CreateFromValidated)** | [06-entities-and-aggregates.md — 8. 생성 패턴](./06-entities-and-aggregates.md) |
 | **DDD 개선 사항/로드맵 확인** | [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) |
 | **아키텍처 개선 사항 확인** | [architecture-improvements.md](./architecture-improvements.md) |
 | **DTO 전략 리뷰 확인** | [dto-strategy-review.md](../dto-strategy-review.md) |

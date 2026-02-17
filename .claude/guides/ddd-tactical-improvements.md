@@ -9,7 +9,7 @@
 | §1 | Factory 패턴, Domain Service, EF Core 통합 | — | ✅ 완료 |
 | §2 | 유비쿼터스 언어 일관성 | LOW | 미완 |
 | §3 | Bounded Context 경계 정의 | MEDIUM | 미완 |
-| §4 | Aggregate 설계 심화 | MEDIUM | 미완 |
+| §4 | Aggregate 설계 심화 | MEDIUM | ✅ 완료 |
 | §5 | Domain Event 고급 패턴 | MEDIUM | 미완 |
 | §6 | Repository 고급 패턴 | LOW | 미완 |
 | §7 | Specification 패턴 고도화 | LOW | 미완 |
@@ -28,7 +28,7 @@
 
 [dto-strategy-review.md](../dto-strategy-review.md) §2.3에서 "✅ 우수" 평가를 받았습니다.
 
-> 참고: [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) §8 팩토리 패턴
+> 참고: [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) §8 생성 패턴
 
 ### Domain Service — ✅ 완료
 
@@ -88,28 +88,20 @@ Persistence Model 분리 + Mapper 패턴이 완료되었습니다.
 - 서비스 간 Bounded Context 경계 설계 기준
 - Functorium에서 Multi-Context 구현 시 프로젝트 구조 가이드
 
-## §4. Aggregate 설계 심화 — MEDIUM
+## §4. Aggregate 설계 심화 — ✅ 완료
 
-### 현재 상태
+### 완료 내용
 
-[06-entities-and-aggregates.md](./06-entities-and-aggregates.md)에서 4가지 Aggregate 설계 규칙을 제공합니다:
+Product Aggregate를 Product(카탈로그) + Inventory(재고)로 분할하여 구체적 Before/After 사례를 구현했습니다.
 
-1. Aggregate Root를 통한 접근
-2. 트랜잭션 일관성 경계
-3. ID 참조를 통한 Aggregate 간 연결
-4. 결과적 일관성 (Domain Event)
+- **프레임워크**: `IConcurrencyAware` 인터페이스 추가 (낙관적 동시성 제어 믹스인)
+- **분할 구현**: Product에서 `StockQuantity`/`DeductStock()`/`HasLowStock()` 제거, Inventory Aggregate 신설
+- **Inventory Aggregate**: `IConcurrencyAware` 구현, `RowVersion` 보유, `DeductStock()`/`AddStock()` 메서드
+- **Application 계층**: `CreateProductCommand`가 Product + Inventory 동시 생성, `DeductStockCommand`가 Inventory 사용
+- **Persistence 계층**: `InventoryModel`, `InventoryConfiguration`(IsRowVersion), EfCore/InMemory Repository
+- **가이드 문서**: [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) §4에 분할/병합 의사결정 트리, 동시성 가이드 통합
 
-### 갭
-
-- 복잡한 Aggregate **분할/병합 판단** 사례 부족
-- 성능 기반 경계 조정 가이드 없음 (큰 Aggregate → 분할 기준)
-- 동시성 충돌이 잦은 경우의 경계 재설계 전략 미기술
-
-### 개선 방향
-
-- Aggregate 경계 재설계 의사결정 트리
-- 분할 사례: 락 경합이 높은 큰 Aggregate → 작은 Aggregate + Domain Event
-- 병합 사례: 항상 함께 변경되는 분리된 Aggregate → 병합 고려
+> 참고: [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) §4 Aggregate 경계 설정 실전 예제
 
 ## §5. Domain Event 고급 패턴 — MEDIUM
 
