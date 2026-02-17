@@ -86,6 +86,9 @@ Architecture
 | **소스 생성기 테스트** | [14-testing-library.md — 소스 생성기 테스트](./14-testing-library.md) |
 | **스케줄 Job 테스트** | [14-testing-library.md — 스케줄 Job 통합 테스트](./14-testing-library.md) |
 | **생성 패턴 (Create/CreateFromValidated)** | [06-entities-and-aggregates.md — 8. 생성 패턴](./06-entities-and-aggregates.md) |
+| **모듈과 프로젝트 구조 매핑** | [04-ddd-tactical-overview.md — §6](./04-ddd-tactical-overview.md) |
+| **네이밍 규칙/용어집** | [04-ddd-tactical-overview.md — §7](./04-ddd-tactical-overview.md) |
+| **Bounded Context/Context Map** | [04-ddd-tactical-overview.md — §8](./04-ddd-tactical-overview.md) |
 | **DDD 개선 사항/로드맵 확인** | [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) |
 | **아키텍처 개선 사항 확인** | [architecture-improvements.md](./architecture-improvements.md) |
 | **DTO 전략 리뷰 확인** | [dto-strategy-review.md](../dto-strategy-review.md) |

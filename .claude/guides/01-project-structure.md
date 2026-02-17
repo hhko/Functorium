@@ -28,6 +28,7 @@
 | Domain Ports 위치 결정 기준 | [12-ports-and-adapters.md](./12-ports-and-adapters.md) — Adapter 설계 원칙 |
 | Usecases 폴더/파일 네이밍 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) — 유스케이스 구현 |
 | Abstractions/Registrations 구조 | [12-ports-and-adapters.md](./12-ports-and-adapters.md) — 등록 코드 패턴 |
+| WHY (모듈 매핑 근거) | [04-ddd-tactical-overview.md §6](./04-ddd-tactical-overview.md) — Module과 프로젝트 구조 매핑 |
 
 ### 전체 프로젝트 구성 개요
 

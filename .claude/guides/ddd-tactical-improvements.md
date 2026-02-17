@@ -7,13 +7,13 @@
 | § | 갭 | 영향도 | 상태 |
 |---|-----|--------|------|
 | §1 | Factory 패턴, Domain Service, EF Core 통합 | — | ✅ 완료 |
-| §2 | 유비쿼터스 언어 일관성 | LOW | 미완 |
-| §3 | Bounded Context 경계 정의 | MEDIUM | 미완 |
+| §2 | 유비쿼터스 언어 일관성 | LOW | ✅ 완료 |
+| §3 | Bounded Context 경계 정의 | MEDIUM | ✅ 완료 |
 | §4 | Aggregate 설계 심화 | MEDIUM | ✅ 완료 |
 | §5 | Domain Event 고급 패턴 | MEDIUM | 미완 |
 | §6 | Repository 고급 패턴 | LOW | ✅ 완료 |
 | §7 | Specification 패턴 고도화 | LOW | 미완 |
-| §8 | 모듈 패키징과 DDD 빌딩블록 매핑 | LOW | 미완 |
+| §8 | 모듈 패키징과 DDD 빌딩블록 매핑 | LOW | ✅ 완료 |
 
 ## §1. 완료 항목
 
@@ -51,42 +51,21 @@ Persistence Model 분리 + Mapper 패턴이 완료되었습니다.
 
 > 참고: [12-ports-and-adapters.md](./12-ports-and-adapters.md) §2.8 EF Core Repository
 
-## §2. 유비쿼터스 언어 일관성 — LOW
+## §2. 유비쿼터스 언어 일관성 — ✅ 완료
 
-### 현재 상태
+### 완료 내용
 
-코드에서 도메인 타입명을 직접 사용하고 있어 양호합니다 (`Email`, `Money`, `Quantity`, `ProductName` 등의 Value Object).
+모든 빌딩블록의 네이밍 패턴 참조 테이블, 용어집 템플릿, 도메인 전문가 협업 원칙을 중앙 참조 문서로 통합했습니다.
 
-### 갭
+> 참고: [04-ddd-tactical-overview.md](./04-ddd-tactical-overview.md) §7 유비쿼터스 언어와 네이밍 가이드
 
-가이드 문서에서 유비쿼터스 언어 **수립 프로세스**가 기술되어 있지 않습니다.
+## §3. Bounded Context 경계 정의 — ✅ 완료
 
-- 도메인 용어집(Glossary) 템플릿 없음
-- 도메인 전문가 협업 패턴 미기술
-- 코드 네이밍과 도메인 용어의 매핑 가이드라인 없음
+### 완료 내용
 
-### 개선 방향
+Context Map 7개 표준 패턴과 Functorium 매핑, SingleHost 선행 패턴 식별, Multi-Context 프로젝트 구조, §6 진화 경로(WHEN)와의 관계(HOW)를 문서화했습니다.
 
-- 용어집 템플릿과 네이밍 가이드라인 추가 고려
-- 도메인 전문가와의 용어 합의 프로세스 가이드
-
-## §3. Bounded Context 경계 정의 — MEDIUM
-
-### 현재 상태
-
-모든 가이드가 **단일 서비스 내 3-Layer 구조**만 다루고 있습니다. [04-ddd-tactical-overview.md](./04-ddd-tactical-overview.md)의 레이어 아키텍처 섹션은 Domain → Application → Adapter 단일 서비스 관점입니다.
-
-### 갭
-
-- 서비스 간 **Bounded Context 경계 정의** 부재
-- Context Map 패턴 미기술 (Shared Kernel, Customer-Supplier, ACL 등)
-- 서비스 간 통합 전략 가이드 없음
-
-### 개선 방향
-
-- Context Map 패턴 가이드 작성 (ACL, Shared Kernel, Open Host Service, Published Language)
-- 서비스 간 Bounded Context 경계 설계 기준
-- Functorium에서 Multi-Context 구현 시 프로젝트 구조 가이드
+> 참고: [04-ddd-tactical-overview.md](./04-ddd-tactical-overview.md) §8 Bounded Context와 Context Map
 
 ## §4. Aggregate 설계 심화 — ✅ 완료
 
@@ -174,20 +153,19 @@ Expression 기반 자동 번역으로 개선 완료:
 
 > 참고: [10-specifications.md](./10-specifications.md)
 
-## §8. 모듈 패키징과 DDD 빌딩블록 매핑 — LOW
+## §8. 모듈 패키징과 DDD 빌딩블록 매핑 — ✅ 완료
 
-### 현재 상태
+### 완료 내용
 
-[01-project-structure.md](./01-project-structure.md)에서 8-프로젝트 매핑을 정의하고, [04-ddd-tactical-overview.md](./04-ddd-tactical-overview.md) §5에서 레이어별 빌딩블록 배치를 다룹니다.
+Evans의 Module 개념과 Functorium .NET 프로젝트 구조의 매핑 근거를 문서화했습니다.
 
-### 갭
+- **Evans의 Module 개념**: 정의(응집도 기반 그룹화), 핵심 원칙(높은 응집도, 낮은 결합도, 커뮤니케이션)
+- **이중 축 매핑**: Layer(수평, .csproj) × Module(수직, 폴더/네임스페이스) ASCII 그리드 다이어그램
+- **SingleHost 모듈 경계**: Products/Inventories/Orders/Customers/SharedKernel 각 모듈의 Domain·Application·Adapter 요소 매핑
+- **모듈 응집도 규칙**: Module 내부 배치 vs SharedKernel/프로젝트 루트 이동 기준
+- **Multi-Aggregate 확장 가이드**: 3단계 진화 경로(단일 Aggregate → Multi-Aggregate 동일 서비스 → 별도 Bounded Context) + 분리 판단 기준 테이블
 
-에릭 에반스의 **Module** 개념과 .NET 프로젝트 구조의 매핑 근거가 명시되어 있지 않습니다. 현재는 기술적 관심사(Layer)로 프로젝트를 분할하지만, DDD의 Module은 도메인 개념의 응집도를 기준으로 합니다.
-
-### 개선 방향
-
-- Evans의 Module 패턴과 현재 프로젝트 구조의 매핑 근거 문서화
-- 단일 Aggregate 서비스 → Multi-Aggregate 서비스 확장 시 모듈 분리 기준
+> 참고: [04-ddd-tactical-overview.md](./04-ddd-tactical-overview.md) §6 모듈과 프로젝트 구조 매핑
 
 ## 참고 문서
 
