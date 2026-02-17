@@ -365,6 +365,8 @@ public static Order Create(
 // }
 ```
 
+> **참고**: 위 이벤트 핸들러는 최종 일관성이 필요한 경우의 예시입니다. 같은 Bounded Context 내에서 관련 Aggregate를 동시에 **생성**하는 경우 등 실용적 예외는 [§4 트랜잭션 경계 실전 가이드라인](#트랜잭션-경계-실전-가이드라인)을 참조하세요.
+
 ---
 
 ## 3. Aggregate vs Entity vs Value Object 구분
@@ -593,6 +595,49 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
 - Application Layer에서 Product 생성 시 Inventory도 함께 생성 (같은 Usecase)
 - 재고 차감은 Inventory Aggregate에 직접 요청
 
+#### 트랜잭션 경계 실전 가이드라인
+
+[§1의 원칙](#트랜잭션-경계로서의-aggregate)은 **하나의 트랜잭션 = 하나의 Aggregate 변경**입니다. 실전에서는 다음과 같이 패턴을 분류합니다.
+
+**패턴 분류:**
+
+| 패턴 | 허용 | 예시 | 근거 |
+|------|------|------|------|
+| 단일 Aggregate 변경 | ✅ | `DeductStockCommand`: Inventory만 변경 | 원칙 준수 |
+| 읽기 + 단일 Aggregate 변경 | ✅ | `CreateOrderCommand`: Product 읽기 → Order 생성 | 읽기는 트랜잭션 경합 없음 |
+| 동시 생성 (같은 BC) | ⚠️ 예외 허용 | `CreateProductCommand`: Product + Inventory 동시 생성 | 아래 허용 조건 참조 |
+| 동시 변경 (기존 Aggregate) | ❌ | 주문 처리 시 Order 생성 + Inventory 차감 | 동시성 충돌 위험 |
+
+**동시 생성 예외 허용 조건** — 다음을 **모두** 충족해야 합니다:
+
+1. **같은 Bounded Context 내**: 서로 다른 BC의 Aggregate를 동시 생성하지 않음
+2. **생성(Create) 시점에만**: 기존 Aggregate의 상태 변경이 아닌, 새 Aggregate 생성
+3. **상호 불변식 없음**: 두 Aggregate 간에 서로의 상태에 의존하는 불변식이 없음
+
+```csharp
+// ✅ 동시 생성 허용: Product + Inventory (CreateProductCommand)
+// - 같은 BC 내, 생성 시점, 상호 불변식 없음
+FinT<IO, Response> usecase =
+    from exists in _productRepository.Exists(new ProductNameUniqueSpec(productName))
+    from _ in guard(!exists, /* ... */)
+    from createdProduct in _productRepository.Create(product)
+    from createdInventory in _inventoryRepository.Create(
+        Inventory.Create(createdProduct.Id, stockQuantity))
+    select new Response(/* ... */);
+```
+
+```csharp
+// ❌ 동시 변경 금지: Order 생성 + Inventory 차감
+// - Inventory는 기존 Aggregate의 상태 변경 → 별도 트랜잭션으로 처리해야 함
+FinT<IO, Response> usecase =
+    from inventory in _inventoryRepository.GetByProductId(productId)
+    from _1 in inventory.DeductStock(quantity)        // 기존 Aggregate 변경!
+    from updated in _inventoryRepository.Update(inventory)
+    from order in _orderRepository.Create(
+        Order.Create(productId, quantity, unitPrice, shippingAddress))  // 동시에 다른 Aggregate 생성
+    select new Response(/* ... */);
+```
+
 #### 동시성 고려사항
 
 고경합 Aggregate에는 `IConcurrencyAware` 인터페이스를 선택적으로 적용합니다.
@@ -615,6 +660,58 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
 | 카탈로그 정보 수정 | 불필요 | 관리자만 저빈도 변경 |
 | 주문 상태 변경 | 상황에 따라 | 동시 상태 변경 가능성 평가 |
 | 고객 정보 수정 | 불필요 | 본인만 수정, 충돌 가능성 낮음 |
+
+#### 동시성 충돌 처리 전략
+
+`IConcurrencyAware`를 적용한 Aggregate에서 동시성 충돌이 발생하면, 다음 흐름으로 처리됩니다.
+
+**에러 흐름:**
+
+```
+요청 → Handler → UoW.SaveChanges()
+                        │
+                        ├─ 성공 → 정상 응답
+                        │
+                        └─ DbUpdateConcurrencyException
+                              → AdapterError("ConcurrencyConflict")
+                              → Pipeline
+                              → 에러 응답 (클라이언트에 위임)
+```
+
+**현재 전략: Fail-Fast**
+
+```csharp
+// EfCoreUnitOfWork: 동시성 예외를 AdapterError로 변환, 재시도 없이 반환
+public virtual FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = default)
+{
+    return IO.liftAsync(async () =>
+    {
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            return Fin.Succ(unit);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            return AdapterError.FromException<EfCoreUnitOfWork>(
+                new Custom("ConcurrencyConflict"), ex);
+        }
+    });
+}
+```
+
+**전략 비교:**
+
+| 전략 | 구현 | 적합한 상황 |
+|------|------|-------------|
+| **Fail-Fast** (현재) | 충돌 시 즉시 에러 반환, 클라이언트가 재시도 판단 | 충돌 빈도 낮음, 클라이언트가 재시도 로직 보유 |
+| **Application 재시도** (미구현) | Handler에서 N회 자동 재시도 후 실패 | 충돌 빈도 높고, 재시도가 항상 안전한 멱등 연산 |
+
+**Fail-Fast 선택 근거:**
+
+- Handler는 **비즈니스 로직에 집중** — 재시도 정책은 인프라 관심사
+- 재시도가 안전한지(멱등성) 여부는 Usecase마다 다름 — 일괄 자동 재시도는 위험
+- 충돌 빈도가 높아지면 Aggregate 분할을 먼저 검토 (근본 원인 해결)
 
 ### Order Aggregate: Cross-Aggregate 참조 + 값 계산
 

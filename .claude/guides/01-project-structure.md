@@ -455,6 +455,9 @@ Adapter의 주 목표 폴더 이름은 구현 기술에 따라 달라집니다. 
 │   │   ├── InMemoryCustomerRepository.cs
 │   │   ├── InMemoryOrderRepository.cs
 │   │   └── InMemoryProductCatalog.cs    ← 교차 Aggregate Port 구현
+│   ├── Dapper/                      ← Dapper 기반 Query Adapter (CQRS Read 측)
+│   │   ├── DapperProductQueryAdapter.cs
+│   │   └── DapperInventoryQueryAdapter.cs
 │   └── EfCore/                      ← EF Core 기반 구현 (선택)
 │       ├── Models/                  ← Persistence Model (POCO, primitive 타입만)
 │       │   ├── ProductModel.cs
@@ -751,6 +754,7 @@ global using System.Net.Http.Json;
 | `Adapters.Presentation/Endpoints/Products/` | `{ServiceName}.Adapters.Presentation.Endpoints.Products` |
 | `Adapters.Presentation/Abstractions/Registrations/` | `{ServiceName}.Adapters.Presentation.Abstractions.Registrations` |
 | `Adapters.Persistence/Repositories/InMemory/` | `{ServiceName}.Adapters.Persistence.Repositories.InMemory` |
+| `Adapters.Persistence/Repositories/Dapper/` | `{ServiceName}.Adapters.Persistence.Repositories.Dapper` |
 | `Adapters.Persistence/Repositories/EfCore/` | `{ServiceName}.Adapters.Persistence.Repositories.EfCore` |
 | `Adapters.Persistence/Repositories/EfCore/Configurations/` | `{ServiceName}.Adapters.Persistence.Repositories.EfCore.Configurations` |
 | `Adapters.Persistence/Abstractions/Registrations/` | `{ServiceName}.Adapters.Persistence.Abstractions.Registrations` |
