@@ -27,6 +27,8 @@ public sealed class LayerDependencyArchitectureRuleTests : ArchitectureTestBase
             .ResideInNamespace(PersistenceNamespace)
             .OrShould().NotDependOnAnyTypesThat()
             .ResideInNamespace(InfrastructureNamespace)
+            .OrShould().NotDependOnAnyTypesThat()
+            .ResideInNamespace(PresentationNamespace)
             .Check(Architecture);
     }
 
@@ -40,6 +42,47 @@ public sealed class LayerDependencyArchitectureRuleTests : ArchitectureTestBase
             .ResideInNamespace(PersistenceNamespace)
             .OrShould().NotDependOnAnyTypesThat()
             .ResideInNamespace(InfrastructureNamespace)
+            .OrShould().NotDependOnAnyTypesThat()
+            .ResideInNamespace(PresentationNamespace)
+            .Check(Architecture);
+    }
+
+    [Fact]
+    public void PresentationAdapter_ShouldNotDependOn_OtherAdapters()
+    {
+        Types()
+            .That()
+            .ResideInNamespace(PresentationNamespace)
+            .Should().NotDependOnAnyTypesThat()
+            .ResideInNamespace(PersistenceNamespace)
+            .OrShould().NotDependOnAnyTypesThat()
+            .ResideInNamespace(InfrastructureNamespace)
+            .Check(Architecture);
+    }
+
+    [Fact]
+    public void PersistenceAdapter_ShouldNotDependOn_OtherAdapters()
+    {
+        Types()
+            .That()
+            .ResideInNamespace(PersistenceNamespace)
+            .Should().NotDependOnAnyTypesThat()
+            .ResideInNamespace(PresentationNamespace)
+            .OrShould().NotDependOnAnyTypesThat()
+            .ResideInNamespace(InfrastructureNamespace)
+            .Check(Architecture);
+    }
+
+    [Fact]
+    public void InfrastructureAdapter_ShouldNotDependOn_OtherAdapters()
+    {
+        Types()
+            .That()
+            .ResideInNamespace(InfrastructureNamespace)
+            .Should().NotDependOnAnyTypesThat()
+            .ResideInNamespace(PresentationNamespace)
+            .OrShould().NotDependOnAnyTypesThat()
+            .ResideInNamespace(PersistenceNamespace)
             .Check(Architecture);
     }
 }
