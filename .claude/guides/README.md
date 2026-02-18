@@ -47,10 +47,6 @@ Architecture
 ├── 진단
 │   └── crash-diagnostics.md ─── 크래시 덤프
 │
-├── 개선
-│   ├── ddd-tactical-improvements.md ─── 에릭 에반스 DDD 전술적 설계 갭 분석/로드맵
-│   └── architecture-improvements.md ─── 헥사고날 아키텍처 갭 분석/개선 계획
-│
 └── 리뷰
     └── dto-strategy-review.md ─── DTO 매핑 전략 리뷰 (DDD & Hexagonal)
 ```
@@ -89,8 +85,6 @@ Architecture
 | **모듈과 프로젝트 구조 매핑** | [04-ddd-tactical-overview.md — §6](./04-ddd-tactical-overview.md) |
 | **네이밍 규칙/용어집** | [04-ddd-tactical-overview.md — §7](./04-ddd-tactical-overview.md) |
 | **Bounded Context/Context Map** | [04-ddd-tactical-overview.md — §8](./04-ddd-tactical-overview.md) |
-| **DDD 개선 사항/로드맵 확인** | [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) |
-| **아키텍처 개선 사항 확인** | [architecture-improvements.md](./architecture-improvements.md) |
 | **DTO 전략 리뷰 확인** | [dto-strategy-review.md](../dto-strategy-review.md) |
 
 ## 문서 전체 목록
@@ -134,13 +128,6 @@ Architecture
 | [observability-logging.md](./observability-logging.md) | Observability 로깅 상세 |
 | [observability-metrics.md](./observability-metrics.md) | Observability 메트릭 상세 |
 | [observability-tracing.md](./observability-tracing.md) | Observability 트레이싱 상세 |
-
-### 개선 사항
-
-| 문서 | 설명 |
-|------|------|
-| [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) | 에릭 에반스 DDD 전술적 설계 관점 갭 분석 및 개선 로드맵 |
-| [architecture-improvements.md](./architecture-improvements.md) | 헥사고날 아키텍처 관점 갭 분석 및 개선 계획 |
 
 ### 리뷰
 

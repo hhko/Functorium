@@ -12,6 +12,7 @@
 - [5. 이벤트 핸들러 구현 (HOW)](#5-이벤트-핸들러-구현-how)
 - [6. 테스트 패턴](#6-테스트-패턴)
 - [7. 체크리스트](#7-체크리스트)
+- [향후 고급 패턴](#향후-고급-패턴)
 - [참고 문서](#참고-문서)
 
 ---
@@ -524,6 +525,17 @@ public async Task Handle_ShouldLogProductCreation()
 - [ ] Event Handler가 Usecases 폴더에 Command/Query와 함께 배치되어 있는가?
 - [ ] `IDomainEventHandler<T>`를 구현하는가?
 - [ ] `RegisterDomainEventHandlersFromAssembly`로 핸들러가 등록되어 있는가?
+
+---
+
+## 향후 고급 패턴
+
+서비스 성숙도가 높아질 때 필요한 고급 패턴입니다. 현재는 미구현이며, 필요 시 단계적으로 도입합니다.
+
+- **Outbox 패턴**: DB 트랜잭션과 이벤트 발행의 원자성 보장
+- **Event Versioning**: 이벤트 스키마 변경 시 하위 호환 전략
+- **Saga / Process Manager**: 다중 Aggregate 간 장기 트랜잭션 조율
+- **이벤트 재처리 전략**: 멱등성(Idempotency) 보장 패턴
 
 ---
 
