@@ -917,10 +917,10 @@ LogDomainEventsPublisherResponsePartialFailure(...)
 
 ## 관련 문서
 
-- [observability-spec.md](./observability-spec.md) — Observability 사양 (Field/Tag, Meter, 메시지 템플릿)
-- [observability-logging.md](./observability-logging.md) — Observability 로깅 상세
-- [observability-metrics.md](./observability-metrics.md) — Observability 메트릭 상세
-- [observability-tracing.md](./observability-tracing.md) — Observability 트레이싱 상세
+- [18-observability-spec.md](./18-observability-spec.md) — Observability 사양 (Field/Tag, Meter, 메시지 템플릿)
+- [20-observability-logging.md](./20-observability-logging.md) — Observability 로깅 상세
+- [21-observability-metrics.md](./21-observability-metrics.md) — Observability 메트릭 상세
+- [22-observability-tracing.md](./22-observability-tracing.md) — Observability 트레이싱 상세
 
 ## 참고 자료
 

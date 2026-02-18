@@ -553,8 +553,8 @@ public class SearchProductsQueryTests
 
 - [04-ddd-tactical-overview.md](./04-ddd-tactical-overview.md) — DDD 전술적 설계 개요
 - [09-domain-services.md](./09-domain-services.md) — 도메인 서비스
-- [12-ports-and-adapters.md](./12-ports-and-adapters.md) — Port와 Adapter
-- [13-unit-testing.md](./13-unit-testing.md) — 단위 테스트 규칙
+- [12-ports.md](./12-ports.md) — Port 아키텍처
+- [15-unit-testing.md](./15-unit-testing.md) — 단위 테스트 규칙
 
 ### 실전 예제 파일
 

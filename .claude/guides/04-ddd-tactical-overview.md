@@ -484,14 +484,14 @@ SingleHost 프로젝트의 실제 모듈 구성입니다.
 | Command | `{Verb}{Aggregate}Command` (nested Request/Response/Usecase) | `CreateProductCommand` | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) |
 | Query | `{Get/Search}{Description}Query` (nested Request/Response/Usecase) | `SearchProductsQuery` | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) |
 | Event Handler | `On{DomainEvent}` | `OnProductCreated` | [01-project-structure.md](./01-project-structure.md) |
-| Repository Interface | `I{Aggregate}Repository` | `IProductRepository` | [12-ports-and-adapters.md](./12-ports-and-adapters.md) |
-| Repository Impl | `{Technology}{Aggregate}Repository` | `EfCoreProductRepository` | [12-ports-and-adapters.md](./12-ports-and-adapters.md) |
-| Query Adapter Interface | `I{Aggregate}QueryAdapter` | `IProductQueryAdapter` | [12-ports-and-adapters.md](./12-ports-and-adapters.md) |
-| Query Adapter Impl | `{Technology}{Aggregate}QueryAdapter` | `DapperProductQueryAdapter` | [12-ports-and-adapters.md](./12-ports-and-adapters.md) |
-| Cross-Aggregate Port | `I{Concept}` | `IProductCatalog` | [12-ports-and-adapters.md](./12-ports-and-adapters.md) |
+| Repository Interface | `I{Aggregate}Repository` | `IProductRepository` | [12-ports.md](./12-ports.md) |
+| Repository Impl | `{Technology}{Aggregate}Repository` | `EfCoreProductRepository` | [13-adapters.md](./13-adapters.md) |
+| Query Adapter Interface | `I{Aggregate}QueryAdapter` | `IProductQueryAdapter` | [12-ports.md](./12-ports.md) |
+| Query Adapter Impl | `{Technology}{Aggregate}QueryAdapter` | `DapperProductQueryAdapter` | [13-adapters.md](./13-adapters.md) |
+| Cross-Aggregate Port | `I{Concept}` | `IProductCatalog` | [12-ports.md](./12-ports.md) |
 | Endpoint | `{Verb}{Aggregate}Endpoint` | `CreateProductEndpoint` | [01-project-structure.md](./01-project-structure.md) |
-| Persistence Model | `{Aggregate}Model` | `ProductModel` | [12-ports-and-adapters.md](./12-ports-and-adapters.md) |
-| Mapper | `{Aggregate}Mapper` | `ProductMapper` | [12-ports-and-adapters.md](./12-ports-and-adapters.md) |
+| Persistence Model | `{Aggregate}Model` | `ProductModel` | [13-adapters.md](./13-adapters.md) |
+| Mapper | `{Aggregate}Mapper` | `ProductMapper` | [13-adapters.md](./13-adapters.md) |
 | Module (폴더) | 복수 명사 (유비쿼터스 언어) | `Products/`, `Orders/` | §6 |
 
 ### 용어집 템플릿
@@ -662,11 +662,13 @@ public void Create_ShouldSucceed_WhenEmailIsValid()
 | [07-domain-events.md](./07-domain-events.md) | 도메인 이벤트 | 이벤트 정의, 발행, 핸들러 구현 |
 | [08-error-system.md](./08-error-system.md) | 에러 시스템 | 에러 정의, 네이밍, 테스트 패턴 |
 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) | Usecase 구현 | CQRS 패턴, Apply 병합 |
-| [12-ports-and-adapters.md](./12-ports-and-adapters.md) | Adapter 구현 | Port 정의, Adapter 구현, Pipeline |
+| [12-ports.md](./12-ports.md) | Port 아키텍처 | Port 정의, IAdapter 계층 |
+| [13-adapters.md](./13-adapters.md) | Adapter 구현 | Repository, External API, Messaging, Query |
+| [14-adapter-wiring.md](./14-adapter-wiring.md) | Adapter 연결 | Pipeline, DI, Options, 테스트 |
 | [09-domain-services.md](./09-domain-services.md) | 도메인 서비스 | IDomainService, 교차 Aggregate 로직, Usecase 통합 |
 | [10-specifications.md](./10-specifications.md) | Specification 패턴 | 비즈니스 규칙 캡슐화, And/Or/Not 조합, Repository 통합 |
-| [13-unit-testing.md](./13-unit-testing.md) | 단위 테스트 | 테스트 규칙, 네이밍, 체크리스트 |
-| [14-testing-library.md](./14-testing-library.md) | 테스트 라이브러리 | 로그/아키텍처/소스생성기/Job 테스트 |
+| [15-unit-testing.md](./15-unit-testing.md) | 단위 테스트 | 테스트 규칙, 네이밍, 체크리스트 |
+| [16-testing-library.md](./16-testing-library.md) | 테스트 라이브러리 | 로그/아키텍처/소스생성기/Job 테스트 |
 
 
 ## 11. 실전 예제 프로젝트

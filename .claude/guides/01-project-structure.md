@@ -26,9 +26,9 @@
 | AggregateRoots 폴더 구조 | [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) — Entity/Aggregate 구현 |
 | ValueObjects 위치 규칙 | [05-value-objects.md](./05-value-objects.md) — 값 객체 구현 패턴 |
 | Specifications 위치 규칙 | [10-specifications.md](./10-specifications.md) — Specification 패턴 구현 |
-| Domain Ports 위치 결정 기준 | [12-ports-and-adapters.md](./12-ports-and-adapters.md) — Adapter 설계 원칙 |
+| Domain Ports 위치 결정 기준 | [12-ports.md](./12-ports.md) — Port 아키텍처와 설계 원칙 |
 | Usecases 폴더/파일 네이밍 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) — 유스케이스 구현 |
-| Abstractions/Registrations 구조 | [12-ports-and-adapters.md](./12-ports-and-adapters.md) — 등록 코드 패턴 |
+| Abstractions/Registrations 구조 | [14-adapter-wiring.md](./14-adapter-wiring.md) — DI 등록 코드 패턴 |
 | WHY (모듈 매핑 근거) | [04-ddd-tactical-overview.md §6](./04-ddd-tactical-overview.md) — Module과 프로젝트 구조 매핑 |
 
 ### 전체 프로젝트 구성 개요
@@ -330,7 +330,7 @@ Port 인터페이스
 └─ 외부 DTO나 기술적 관심사 포함? → Application/Ports/
 ```
 
-> Port 배치의 상세 기준은 [FAQ §4](#4-port를-domain에-둘지-application에-둘지-판단-기준)와 [12-ports-and-adapters.md](./12-ports-and-adapters.md)를 참조하세요.
+> Port 배치의 상세 기준은 [FAQ §4](#4-port를-domain에-둘지-application에-둘지-판단-기준)와 [12-ports.md](./12-ports.md)를 참조하세요.
 
 ## Domain 레이어
 
@@ -488,7 +488,7 @@ Adapter는 항상 3개 프로젝트로 분할합니다.
 | `Adapters.Persistence` | 데이터 저장/조회 | **Driven** (Inside → Outside) | `Repositories/` |
 | `Adapters.Infrastructure` | 외부 API, 횡단 관심사(Observability, Mediator 등) | **Driven** (Inside → Outside) | `ExternalApis/`, ... |
 
-> Driving/Driven 구분과 Presentation에 Port가 없는 설계 결정의 근거는 [12-ports-and-adapters.md](./12-ports-and-adapters.md)의 "Driving vs Driven Adapter 구분" 참조.
+> Driving/Driven 구분과 Presentation에 Port가 없는 설계 결정의 근거는 [12-ports.md](./12-ports.md)의 "Driving vs Driven Adapter 구분" 참조.
 
 ### 주 목표 폴더가 고정되지 않는 이유
 
@@ -607,7 +607,7 @@ public static IServiceCollection RegisterAdapterInfrastructure(this IServiceColl
 public static IApplicationBuilder UseAdapterInfrastructure(this IApplicationBuilder app) { ... }
 ```
 
-> **참고**: `IConfiguration` 파라미터는 Options 패턴(`RegisterConfigureOptions`)을 사용하는 Adapter에서 필요합니다. Options 패턴 상세는 [12-ports-and-adapters.md §4.6](./12-ports-and-adapters.md#46-options-패턴-optionsconfigurator)을 참조하세요.
+> **참고**: `IConfiguration` 파라미터는 Options 패턴(`RegisterConfigureOptions`)을 사용하는 Adapter에서 필요합니다. Options 패턴 상세는 [14-adapter-wiring.md §4.6](./14-adapter-wiring.md#46-options-패턴-optionsconfigurator)을 참조하세요.
 
 ## Host 프로젝트
 
@@ -690,7 +690,7 @@ app.Run();
 
 ## 테스트 프로젝트
 
-테스트 프로젝트는 `Tests/` 폴더 아래에 배치합니다. 테스트 작성 방법론(명명 규칙, AAA 패턴, MTP 설정 등)은 [13-unit-testing.md](./13-unit-testing.md)를 참조하세요.
+테스트 프로젝트는 `Tests/` 폴더 아래에 배치합니다. 테스트 작성 방법론(명명 규칙, AAA 패턴, MTP 설정 등)은 [15-unit-testing.md](./15-unit-testing.md)를 참조하세요.
 
 ### Tests.Unit 프로젝트
 
@@ -1009,8 +1009,8 @@ Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 
 - [05-value-objects.md](./05-value-objects.md) — 값 객체 구현 및 검증 패턴
 - [10-specifications.md](./10-specifications.md) — Specification 패턴 구현
 - [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) — 유스케이스 (Command/Query) 구현
-- [12-ports-and-adapters.md](./12-ports-and-adapters.md) — Adapter 설계 원칙 + 단계별 활동
+- [12-ports.md](./12-ports.md) — Port 아키텍처, [13-adapters.md](./13-adapters.md) — Adapter 구현, [14-adapter-wiring.md](./14-adapter-wiring.md) — Pipeline/DI/테스트
 - [08-error-system.md](./08-error-system.md) — 레이어별 에러 시스템
-- [observability-spec.md](./observability-spec.md) — Observability 사양
-- [13-unit-testing.md](./13-unit-testing.md) — 테스트 작성 방법론 (명명 규칙, AAA 패턴, MTP 설정)
-- [14-testing-library.md](./14-testing-library.md) — Functorium.Testing 라이브러리 (LogTestContext, ArchitectureRules, QuartzTestFixture 등)
+- [18-observability-spec.md](./18-observability-spec.md) — Observability 사양
+- [15-unit-testing.md](./15-unit-testing.md) — 테스트 작성 방법론 (명명 규칙, AAA 패턴, MTP 설정)
+- [16-testing-library.md](./16-testing-library.md) — Functorium.Testing 라이브러리 (LogTestContext, ArchitectureRules, QuartzTestFixture 등)

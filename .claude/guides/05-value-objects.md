@@ -1800,6 +1800,6 @@ public class CreateProductValidator : AbstractValidator<CreateProductRequest>
 
 - [에러 시스템 가이드](./08-error-system.md) - 레이어별 에러 정의 및 네이밍 규칙
 - [에러 테스트 가이드](./08-error-system.md) - 에러 테스트 패턴
-- [단위 테스트 가이드](./13-unit-testing.md)
+- [단위 테스트 가이드](./15-unit-testing.md)
 - [LanguageExt](https://github.com/louthy/language-ext)
 - [Ardalis.SmartEnum](https://github.com/ardalis/SmartEnum)

@@ -544,4 +544,4 @@ public async Task Handle_ShouldLogProductCreation()
 - [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) - Entity/Aggregate 구현
 - [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) - Use Case 구현
 - [11-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./11-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-usecasetransactionpipeline) - 파이프라인 자동 처리 패턴
-- [12-ports-and-adapters.md §2.9](./12-ports-and-adapters.md#29-unit-of-work-adapter) - UoW Adapter 구현
+- [13-adapters.md](./13-adapters.md) - UoW Adapter 구현

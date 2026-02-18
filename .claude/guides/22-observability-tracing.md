@@ -1096,7 +1096,7 @@ Console.WriteLine($"TraceId: {Activity.Current?.TraceId}");
 - [.NET Activity and DiagnosticSource](https://learn.microsoft.com/en-us/dotnet/core/diagnostics/distributed-tracing)
 
 **내부 문서:**
-- [observability-spec.md](./observability-spec.md) — Observability 사양 (Field/Tag, Meter, 메시지 템플릿)
-- [observability-naming.md](./observability-naming.md) — Observability 네이밍 가이드
-- [observability-logging.md](./observability-logging.md) — Observability 로깅 상세
-- [observability-metrics.md](./observability-metrics.md) — Observability 메트릭 상세
+- [18-observability-spec.md](./18-observability-spec.md) — Observability 사양 (Field/Tag, Meter, 메시지 템플릿)
+- [19-observability-naming.md](./19-observability-naming.md) — Observability 네이밍 가이드
+- [20-observability-logging.md](./20-observability-logging.md) — Observability 로깅 상세
+- [21-observability-metrics.md](./21-observability-metrics.md) — Observability 메트릭 상세

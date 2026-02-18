@@ -270,7 +270,7 @@ EF Core `HasConversion`은 도메인 Entity에 직접 적용되어, 도메인이
 ## 참고 문서
 
 - [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) — Usecase Request/Response 패턴
-- [12-ports-and-adapters.md §1.4](./12-ports-and-adapters.md) — Port Request/Response 설계
-- [12-ports-and-adapters.md §2.6](./12-ports-and-adapters.md) — 데이터 변환 (Mapper 패턴)
+- [12-ports.md §1.4](./12-ports.md) — Port Request/Response 설계
+- [13-adapters.md §2.6](./13-adapters.md) — 데이터 변환 (Mapper 패턴)
 - [01-project-structure.md](./01-project-structure.md) — Dtos/ 폴더 위치 규칙
 - [dto-strategy-review.md](../dto-strategy-review.md) — DTO 매핑 전략 리뷰 (DDD & Hexagonal 관점)

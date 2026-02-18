@@ -20,7 +20,7 @@ Architecture
 │   ├── [05] 05-value-objects.md ─── 값 객체
 │   │   └── [06] 06-entities-and-aggregates.md ─── Entity와 Aggregate
 │   │       └── [07] 07-domain-events.md ─── 도메인 이벤트
-│   ├── [08] 08-error-system.md ─── 에러 시스템 (Domain/Application/Adapter)
+│   ├── [08] 08-error-system.md ─── 에러 시스템
 │   ├── [09] 09-domain-services.md ─── 도메인 서비스
 │   └── [10] 10-specifications.md ─── Specification 패턴
 │
@@ -28,27 +28,26 @@ Architecture
 │   └── [11] 11-usecases-and-cqrs.md ─── Use Case와 CQRS
 │
 ├── Adapter Layer
-│   └── [12] 12-ports-and-adapters.md ─── Port와 Adapter
-│
-├── DTO 전략
-│   └── [15] 15-dto-strategy.md ─── DTO 전략
+│   ├── [12] 12-ports.md ─── Port 정의
+│   ├── [13] 13-adapters.md ─── Adapter 구현
+│   └── [14] 14-adapter-wiring.md ─── Pipeline, DI, 테스트
 │
 ├── Testing
-│   ├── [13] 13-unit-testing.md ─── 단위 테스트
-│   └── [14] 14-testing-library.md ─── 테스트 라이브러리
+│   ├── [15] 15-unit-testing.md ─── 단위 테스트
+│   └── [16] 16-testing-library.md ─── 테스트 라이브러리
+│
+├── DTO 전략
+│   └── [17] 17-dto-strategy.md ─── DTO 전략
 │
 ├── Observability
-│   ├── observability-spec.md ─── 사양
-│   ├── observability-naming.md ─── 네이밍
-│   ├── observability-logging.md ─── 로깅
-│   ├── observability-metrics.md ─── 메트릭
-│   └── observability-tracing.md ─── 트레이싱
+│   ├── [18] 18-observability-spec.md ─── 사양
+│   ├── [19] 19-observability-naming.md ─── 네이밍
+│   ├── [20] 20-observability-logging.md ─── 로깅
+│   ├── [21] 21-observability-metrics.md ─── 메트릭
+│   └── [22] 22-observability-tracing.md ─── 트레이싱
 │
-├── 진단
-│   └── crash-diagnostics.md ─── 크래시 덤프
-│
-└── 리뷰
-    └── dto-strategy-review.md ─── DTO 매핑 전략 리뷰 (DDD & Hexagonal)
+└── 진단
+    └── [23] 23-crash-diagnostics.md ─── 크래시 덤프
 ```
 
 ## 빠른 참조 (작업별 가이드 바로가기)
@@ -68,19 +67,21 @@ Architecture
 | **에러 타입 정의하기** | [08-error-system.md](./08-error-system.md) |
 | **에러 테스트 작성하기** | [08-error-system.md — 4~6. 레이어별 에러 테스트](./08-error-system.md) |
 | **Usecase 만들기** | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) |
-| **Adapter 만들기** | [12-ports-and-adapters.md](./12-ports-and-adapters.md) |
-| **EF Core Repository 만들기** | [12-ports-and-adapters.md — 2.8 EF Core Repository](./12-ports-and-adapters.md) |
-| **Persistence Model/Mapper 만들기** | [12-ports-and-adapters.md — 2.6 데이터 변환](./12-ports-and-adapters.md) |
-| **Endpoint Response DTO 만들기** | [12-ports-and-adapters.md — 2.6 데이터 변환](./12-ports-and-adapters.md) |
-| **DTO 전략/재사용 규칙** | [15-dto-strategy.md](./15-dto-strategy.md) |
-| **Options 패턴 (OptionsConfigurator)** | [12-ports-and-adapters.md — 4.6 Options 패턴](./12-ports-and-adapters.md) |
+| **Port 인터페이스 정의하기** | [12-ports.md](./12-ports.md) |
+| **Adapter 구현하기** | [13-adapters.md](./13-adapters.md) |
+| **EF Core Repository 만들기** | [13-adapters.md — §2.3 Repository Adapter](./13-adapters.md) |
+| **Persistence Model/Mapper 만들기** | [13-adapters.md — §2.2 공통 패턴](./13-adapters.md) |
+| **Endpoint Response DTO 만들기** | [13-adapters.md — §2.2 공통 패턴](./13-adapters.md) |
+| **Options 패턴 (OptionsConfigurator)** | [14-adapter-wiring.md — §4.6 Options 패턴](./14-adapter-wiring.md) |
+| **Pipeline/DI 등록** | [14-adapter-wiring.md](./14-adapter-wiring.md) |
+| **DTO 전략/재사용 규칙** | [17-dto-strategy.md](./17-dto-strategy.md) |
 | **검증 메서드 확인** | [05-value-objects.md — 검증 시스템](./05-value-objects.md) |
-| **크래시 덤프 설정/분석** | [crash-diagnostics.md](./crash-diagnostics.md) |
-| **Observability 사양** | [observability-spec.md](./observability-spec.md) |
-| **구조화된 로그 테스트** | [14-testing-library.md — 구조화된 로그 테스트](./14-testing-library.md) |
-| **아키텍처 규칙 검증** | [14-testing-library.md — 아키텍처 규칙 검증](./14-testing-library.md) |
-| **소스 생성기 테스트** | [14-testing-library.md — 소스 생성기 테스트](./14-testing-library.md) |
-| **스케줄 Job 테스트** | [14-testing-library.md — 스케줄 Job 통합 테스트](./14-testing-library.md) |
+| **크래시 덤프 설정/분석** | [23-crash-diagnostics.md](./23-crash-diagnostics.md) |
+| **Observability 사양** | [18-observability-spec.md](./18-observability-spec.md) |
+| **구조화된 로그 테스트** | [16-testing-library.md — 구조화된 로그 테스트](./16-testing-library.md) |
+| **아키텍처 규칙 검증** | [16-testing-library.md — 아키텍처 규칙 검증](./16-testing-library.md) |
+| **소스 생성기 테스트** | [16-testing-library.md — 소스 생성기 테스트](./16-testing-library.md) |
+| **스케줄 Job 테스트** | [16-testing-library.md — 스케줄 Job 통합 테스트](./16-testing-library.md) |
 | **생성 패턴 (Create/CreateFromValidated)** | [06-entities-and-aggregates.md — 8. 생성 패턴](./06-entities-and-aggregates.md) |
 | **모듈과 프로젝트 구조 매핑** | [04-ddd-tactical-overview.md — §6](./04-ddd-tactical-overview.md) |
 | **네이밍 규칙/용어집** | [04-ddd-tactical-overview.md — §7](./04-ddd-tactical-overview.md) |
@@ -101,8 +102,10 @@ Architecture
 | 09 | [09-domain-services.md](./09-domain-services.md) | 도메인 서비스 (교차 Aggregate 순수 로직, IDomainService) |
 | 10 | [10-specifications.md](./10-specifications.md) | Specification 패턴 (비즈니스 규칙 캡슐화, 조합, Repository 통합) |
 | 11 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) | Use Case 구현 (CQRS Command/Query) |
-| 12 | [12-ports-and-adapters.md](./12-ports-and-adapters.md) | Port 정의, Adapter 구현, Pipeline 자동 생성 |
-| 15 | [15-dto-strategy.md](./15-dto-strategy.md) | DTO 전략 (레이어별 소유권, 재사용 규칙, 변환 패턴) |
+| 12 | [12-ports.md](./12-ports.md) | Port 아키텍처, IAdapter 계층, Port 정의 규칙 |
+| 13 | [13-adapters.md](./13-adapters.md) | Adapter 구현 (Repository, External API, Messaging, Query) |
+| 14 | [14-adapter-wiring.md](./14-adapter-wiring.md) | Pipeline 생성, DI 등록, Options 패턴, 테스트 |
+| 17 | [17-dto-strategy.md](./17-dto-strategy.md) | DTO 전략 (레이어별 소유권, 재사용 규칙, 변환 패턴) |
 
 ### 아키텍처
 
@@ -116,18 +119,24 @@ Architecture
 
 | 문서 | 설명 |
 |------|------|
-| [13-unit-testing.md](./13-unit-testing.md) | 단위 테스트 규칙 (명명, AAA 패턴, MTP 설정) |
-| [14-testing-library.md](./14-testing-library.md) | Functorium.Testing 라이브러리 (로그/아키텍처/소스생성기/Job 테스트) |
+| [15-unit-testing.md](./15-unit-testing.md) | 단위 테스트 규칙 (명명, AAA 패턴, MTP 설정) |
+| [16-testing-library.md](./16-testing-library.md) | Functorium.Testing 라이브러리 (로그/아키텍처/소스생성기/Job 테스트) |
 
 ### Observability
 
 | 문서 | 설명 |
 |------|------|
-| [observability-spec.md](./observability-spec.md) | Observability 사양 (Field/Tag, Meter, 메시지 템플릿) |
-| [observability-naming.md](./observability-naming.md) | Observability 네이밍 가이드 (코드, 필드, Logger 메서드) |
-| [observability-logging.md](./observability-logging.md) | Observability 로깅 상세 |
-| [observability-metrics.md](./observability-metrics.md) | Observability 메트릭 상세 |
-| [observability-tracing.md](./observability-tracing.md) | Observability 트레이싱 상세 |
+| [18-observability-spec.md](./18-observability-spec.md) | Observability 사양 (Field/Tag, Meter, 메시지 템플릿) |
+| [19-observability-naming.md](./19-observability-naming.md) | Observability 네이밍 가이드 (코드, 필드, Logger 메서드) |
+| [20-observability-logging.md](./20-observability-logging.md) | Observability 로깅 상세 |
+| [21-observability-metrics.md](./21-observability-metrics.md) | Observability 메트릭 상세 |
+| [22-observability-tracing.md](./22-observability-tracing.md) | Observability 트레이싱 상세 |
+
+### 진단
+
+| 문서 | 설명 |
+|------|------|
+| [23-crash-diagnostics.md](./23-crash-diagnostics.md) | 크래시 덤프 핸들러 설정 및 분석 가이드 |
 
 ### 리뷰
 
@@ -139,6 +148,4 @@ Architecture
 
 | 문서 | 설명 |
 |------|------|
-| [crash-diagnostics.md](./crash-diagnostics.md) | 크래시 덤프 핸들러 설정 및 분석 가이드 |
-| [_book-writing-guide.md](./_book-writing-guide.md) | 서적 집필 가이드 |
-
+| [book-writing-guide.md](../book-writing-guide.md) | 서적 집필 가이드 |

@@ -28,7 +28,7 @@
 Domain Service(순수 도메인 로직)와 Application Service(Usecase, I/O 조율)의 경계가 명확해집니다.
 
 **아키텍처 테스트 가능**:
-`IDomainService` 마커 인터페이스로 아키텍처 규칙을 검증할 수 있습니다 (예: Domain Service가 [IAdapter](./12-ports-and-adapters.md)를 의존하지 않는지).
+`IDomainService` 마커 인터페이스로 아키텍처 규칙을 검증할 수 있습니다 (예: Domain Service가 [IAdapter](./12-ports.md)를 의존하지 않는지).
 
 ### 도메인 로직 배치 판단
 
@@ -485,8 +485,8 @@ LayeredArch.Tests.Unit/
 - [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) - Entity/Aggregate 설계 (단일 Aggregate 로직)
 - [08-error-system.md](./08-error-system.md) - DomainError 정의 및 테스트 패턴
 - [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) - Usecase 구현 (Application Service)
-- [12-ports-and-adapters.md](./12-ports-and-adapters.md) - Port/Adapter 패턴 (IAdapter와의 차이)
-- [13-unit-testing.md](./13-unit-testing.md) - 단위 테스트 규칙 (T1_T2_T3, AAA 패턴)
+- [12-ports.md](./12-ports.md) - Port/Adapter 패턴 (IAdapter와의 차이)
+- [15-unit-testing.md](./15-unit-testing.md) - 단위 테스트 규칙 (T1_T2_T3, AAA 패턴)
 
 ### 실전 예제 파일
 

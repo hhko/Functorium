@@ -247,7 +247,7 @@ public new sealed record Response(List<ProductSummaryDto> Products);
 - **Seq → List 변환**: `Seq<T>`(Application) → `List<T>`(Presentation) 변환은 Response wrapper에서 처리.
 - **해제 시점**: Presentation 고유 필드가 필요하거나 API 버저닝이 필요해지면 Endpoint 전용 DTO로 전환.
 
-**결론**: 재사용 허용 조건(읽기 전용 Query, 동일 필드, Presentation 고유 필드 불필요, 컬렉션 변환만 필요)을 모두 충족. 상세 기준은 [15-dto-strategy.md](./guides/15-dto-strategy.md)의 "Application DTO 재사용 허용 조건" 참조.
+**결론**: 재사용 허용 조건(읽기 전용 Query, 동일 필드, Presentation 고유 필드 불필요, 컬렉션 변환만 필요)을 모두 충족. 상세 기준은 [17-dto-strategy.md](./guides/17-dto-strategy.md)의 "Application DTO 재사용 허용 조건" 참조.
 
 ### 4.2 Application 레이어의 Value Object 암시적 변환
 

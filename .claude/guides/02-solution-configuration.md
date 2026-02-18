@@ -933,5 +933,5 @@ Verify.Xunit 스냅샷 테스트 결과를 일괄 승인합니다.
 ## 참고 문서
 
 - [01-project-structure.md](./01-project-structure.md) — 프로젝트 수준 구성 (폴더, 네이밍, 의존성)
-- [13-unit-testing.md](./13-unit-testing.md) — 테스트 작성 방법론 (MTP 설정 포함)
-- [14-testing-library.md](./14-testing-library.md) — Functorium.Testing 라이브러리
+- [15-unit-testing.md](./15-unit-testing.md) — 테스트 작성 방법론 (MTP 설정 포함)
+- [16-testing-library.md](./16-testing-library.md) — Functorium.Testing 라이브러리

@@ -858,5 +858,5 @@ Resilience (Polly) ──→ 외부 API Adapter                        │
 - [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) — Aggregate 설계 원칙
 - [07-domain-events.md](./07-domain-events.md) — 도메인 이벤트
 - [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) — Usecase/CQRS
-- [12-ports-and-adapters.md](./12-ports-and-adapters.md) — Port/Adapter
+- [12-ports.md](./12-ports.md) — Port 아키텍처
 - TODO.md — 프로젝트 로드맵

@@ -1735,6 +1735,6 @@ public void Cancel_ShouldFail_WhenOrderAlreadyShipped()
 ## 참고 문서
 
 - [05-value-objects.md](./05-value-objects.md) - 값 객체 구현 및 검증 패턴
-- [12-ports-and-adapters.md](./12-ports-and-adapters.md) - Adapter 구현 가이드
-- [13-unit-testing.md](./13-unit-testing.md) - 단위 테스트 가이드
-- [14-testing-library.md](./14-testing-library.md) - 에러 외 테스트 유틸리티 (로그/아키텍처/소스생성기/Job 테스트)
+- [13-adapters.md](./13-adapters.md) - Adapter 구현 가이드
+- [15-unit-testing.md](./15-unit-testing.md) - 단위 테스트 가이드
+- [16-testing-library.md](./16-testing-library.md) - 에러 외 테스트 유틸리티 (로그/아키텍처/소스생성기/Job 테스트)

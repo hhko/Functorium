@@ -508,8 +508,8 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 
 | 문서 | 설명 |
 |------|------|
-| [Logging 매뉴얼](./observability-logging.md) | 구조화된 로깅 상세 가이드 |
-| [Metrics 매뉴얼](./observability-metrics.md) | 메트릭 수집 및 분석 가이드 |
-| [Tracing 매뉴얼](./observability-tracing.md) | 분산 추적 상세 가이드 |
-| [코드 명명 규칙](./observability-naming.md) | Observability 코드 명명 규칙 |
-| [필드 이름 규칙](./observability-naming.md) | Field/Tag 이름 규칙 |
+| [Logging 매뉴얼](./20-observability-logging.md) | 구조화된 로깅 상세 가이드 |
+| [Metrics 매뉴얼](./21-observability-metrics.md) | 메트릭 수집 및 분석 가이드 |
+| [Tracing 매뉴얼](./22-observability-tracing.md) | 분산 추적 상세 가이드 |
+| [코드 명명 규칙](./19-observability-naming.md) | Observability 코드 명명 규칙 |
+| [필드 이름 규칙](./19-observability-naming.md) | Field/Tag 이름 규칙 |

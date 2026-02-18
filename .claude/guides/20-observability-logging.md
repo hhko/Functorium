@@ -1195,7 +1195,7 @@ A: 로그 시스템에 따라 다릅니다:
 - [Grafana Loki LogQL](https://grafana.com/docs/loki/latest/logql/)
 
 **내부 문서:**
-- [observability-spec.md](./observability-spec.md) — Observability 사양 (Field/Tag, Meter, 메시지 템플릿)
-- [observability-naming.md](./observability-naming.md) — Observability 네이밍 가이드
-- [observability-metrics.md](./observability-metrics.md) — Observability 메트릭 상세
-- [observability-tracing.md](./observability-tracing.md) — Observability 트레이싱 상세
+- [18-observability-spec.md](./18-observability-spec.md) — Observability 사양 (Field/Tag, Meter, 메시지 템플릿)
+- [19-observability-naming.md](./19-observability-naming.md) — Observability 네이밍 가이드
+- [21-observability-metrics.md](./21-observability-metrics.md) — Observability 메트릭 상세
+- [22-observability-tracing.md](./22-observability-tracing.md) — Observability 트레이싱 상세

@@ -103,7 +103,7 @@ Driving/Driven 용어를 가이드에 명시하고, Presentation Adapter에 Port
 
 | 파일 | 변경 내용 |
 |------|----------|
-| [12-ports-and-adapters.md](./12-ports-and-adapters.md) | "Driving vs Driven Adapter 구분" 섹션 추가, "Presentation Adapter에 Port가 없는 이유" 섹션 추가, Adapter 유형 표에 `헥사고날 역할` 컬럼 추가 |
+| [12-ports-and-adapters.md](./12-ports.md) | "Driving vs Driven Adapter 구분" 섹션 추가, "Presentation Adapter에 Port가 없는 이유" 섹션 추가, Adapter 유형 표에 `헥사고날 역할` 컬럼 추가 |
 | [01-project-structure.md](./01-project-structure.md) | 3분할 원칙 표에 `헥사고날 역할` 컬럼 추가 + 크로스 레퍼런스 |
 
 ### 문서화된 설계 결정
@@ -139,9 +139,9 @@ Database, External API 외 나머지 외부 시스템 유형(Message Broker, Fil
 
 | 파일 | 변경 내용 |
 |------|----------|
-| [12-ports-and-adapters.md](./12-ports-and-adapters.md) | §2.2에 "외부 시스템 유형별 ACL 체크리스트" 서브섹션 추가 (공통 원칙, 유형별 매핑 표, 적용 판단 기준) |
-| [12-ports-and-adapters.md](./12-ports-and-adapters.md) | §2.5에 "Messaging ACL: 메시지 스키마 변환이 필요한 경우" 노트 추가 |
-| [12-ports-and-adapters.md](./12-ports-and-adapters.md) | "각 경계에서의 변환 책임" 표에 Application ↔ Messaging 행 추가 |
+| [12-ports-and-adapters.md](./12-ports.md) | §2.2에 "외부 시스템 유형별 ACL 체크리스트" 서브섹션 추가 (공통 원칙, 유형별 매핑 표, 적용 판단 기준) |
+| [12-ports-and-adapters.md](./12-ports.md) | §2.5에 "Messaging ACL: 메시지 스키마 변환이 필요한 경우" 노트 추가 |
+| [12-ports-and-adapters.md](./12-ports.md) | "각 경계에서의 변환 책임" 표에 Application ↔ Messaging 행 추가 |
 
 ### 통합된 내용
 
@@ -154,7 +154,7 @@ Database, External API 외 나머지 외부 시스템 유형(Message Broker, Fil
 ### 완료 현황
 
 - [01-project-structure.md](./01-project-structure.md)에 3개 서브섹션 추가 완료
-- [12-ports-and-adapters.md](./12-ports-and-adapters.md) §4.5에 크로스 레퍼런스 추가
+- [12-ports-and-adapters.md](./12-ports.md) §4.5에 크로스 레퍼런스 추가
 
 ### 변경 파일
 
@@ -173,6 +173,6 @@ Database, External API 외 나머지 외부 시스템 유형(Message Broker, Fil
 
 - [01-project-structure.md](./01-project-structure.md) — 서비스 프로젝트 구성
 - [04-ddd-tactical-overview.md](./04-ddd-tactical-overview.md) — DDD 전술적 설계 개요
-- [12-ports-and-adapters.md](./12-ports-and-adapters.md) — Port와 Adapter
-- [14-testing-library.md](./14-testing-library.md) — 테스트 라이브러리 (아키텍처 규칙 검증)
+- [12-ports.md](./12-ports.md) — Port 아키텍처
+- [16-testing-library.md](./16-testing-library.md) — 테스트 라이브러리 (아키텍처 규칙 검증)
 - [ddd-tactical-improvements.md](./ddd-tactical-improvements.md) — DDD 전술적 설계 갭 분석
