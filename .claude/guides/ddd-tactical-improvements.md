@@ -12,7 +12,7 @@
 | §4 | Aggregate 설계 심화 | MEDIUM | ✅ 완료 |
 | §5 | Domain Event 고급 패턴 | MEDIUM | 미완 |
 | §6 | Repository 고급 패턴 | LOW | ✅ 완료 |
-| §7 | Specification 패턴 고도화 | LOW | 미완 |
+| §7 | Specification 패턴 고도화 | LOW | ✅ 완료 |
 | §8 | 모듈 패키징과 DDD 빌딩블록 매핑 | LOW | ✅ 완료 |
 
 ## §1. 완료 항목

@@ -27,6 +27,7 @@
 - [Activity 2: Adapter 구현](#activity-2-adapter-구현)
   - [2.1 공통 구현 체크리스트](#21-공통-구현-체크리스트)
   - [2.2 공통 패턴](#22-공통-패턴)
+    - [외부 시스템 유형별 ACL 체크리스트](#외부-시스템-유형별-acl-체크리스트)
   - [2.3 Repository Adapter](#23-repository-adapter)
   - [2.4 External API Adapter](#24-external-api-adapter)
   - [2.5 Messaging Adapter](#25-messaging-adapter)
@@ -82,6 +83,47 @@ Functorium의 Adapter 시스템은 Hexagonal Architecture의 Port와 Adapter 개
 - **Port** = 도메인/애플리케이션이 필요로 하는 인터페이스 (`IProductRepository`, `IExternalPricingService`)
 - **Adapter** = Port의 구현체 (`InMemoryProductRepository`, `ExternalPricingApiService`)
 - **Pipeline** = 소스 생성기가 자동 생성하는 관찰성 래퍼
+
+#### Driving vs Driven Adapter 구분
+
+헥사고날 아키텍처에서 Adapter는 호출 방향에 따라 두 종류로 나뉩니다.
+
+| 구분 | Driving (Primary) | Driven (Secondary) |
+|------|-------------------|---------------------|
+| **역할** | 외부에서 애플리케이션을 호출 | 애플리케이션이 외부를 호출 |
+| **방향** | Outside → Inside | Inside → Outside |
+| **Port 위치** | 없음 (Mediator가 대신) | Domain 또는 Application Layer |
+| **Functorium 매핑** | `Adapters.Presentation` | `Adapters.Persistence`, `Adapters.Infrastructure` |
+
+#### Presentation Adapter에 Port가 없는 이유
+
+Driving Adapter인 Presentation은 별도의 Port 인터페이스 없이 Mediator를 직접 호출합니다. 이 설계 결정의 근거:
+
+1. **Mediator가 Port 역할을 대신함** — `IMediator.Send()`가 Presentation과 Application 사이의 계약으로 작동
+2. **Command/Query가 이미 계약** — Request/Response 타입 자체가 명시적 인터페이스 역할 수행
+3. **불필요한 간접 계층 제거** — Driving Adapter에 Port를 도입하면 Mediator와 중복되는 추상화
+4. **Driven Adapter와의 비대칭은 의도적** — Driven Adapter는 구현체 교체가 빈번하므로 Port가 필수, Driving Adapter는 교체 시나리오가 희소
+
+```csharp
+// Driving Adapter: Port 없이 Mediator 직접 호출
+public class CreateProductEndpoint : EndpointBase
+{
+    public override void Configure(RouteGroupBuilder group) =>
+        group.MapPost("/products", HandleAsync);
+
+    private Task<IResult> HandleAsync(
+        IMediator mediator,               // ← Mediator가 Port 역할
+        CreateProductRequest request) =>
+        mediator.Send(new CreateProduct.Command(request.Name, request.Price))
+                .ToApiResultAsync();
+}
+
+// Driven Adapter: Port(인터페이스) 구현
+public interface IProductRepository : IAdapter  // ← Port
+{
+    FinT<IO, Product> FindById(ProductId id);
+}
+```
 
 ---
 
@@ -172,12 +214,12 @@ public class InMemoryProductRepository : IProductRepository
 
 ### Adapter 유형
 
-| 유형 | 용도 | RequestCategory | 예시 |
-|------|------|-----------------|------|
-| **Repository** | 데이터 영속화 | `"Repository"` | `IProductRepository`, `IOrderRepository` |
-| **Messaging** | 메시지 큐/이벤트 | `"Messaging"` | `IOrderMessaging`, `IInventoryMessaging` |
-| **External API** | 외부 서비스 호출 | `"ExternalApi"` | `IPaymentApiService`, `IWeatherApiService` |
-| **Query Adapter** | 읽기 전용 조회 (DTO 직접 반환) | `"QueryAdapter"` | `IProductQueryAdapter`, `IInventoryQueryAdapter`, `IProductWithStockQueryAdapter` (JOIN) |
+| 유형 | 용도 | RequestCategory | 헥사고날 역할 | 예시 |
+|------|------|-----------------|---------------|------|
+| **Repository** | 데이터 영속화 | `"Repository"` | Driven | `IProductRepository`, `IOrderRepository` |
+| **Messaging** | 메시지 큐/이벤트 | `"Messaging"` | Driven | `IOrderMessaging`, `IInventoryMessaging` |
+| **External API** | 외부 서비스 호출 | `"ExternalApi"` | Driven | `IPaymentApiService`, `IWeatherApiService` |
+| **Query Adapter** | 읽기 전용 조회 (DTO 직접 반환) | `"QueryAdapter"` | Driven | `IProductQueryAdapter`, `IInventoryQueryAdapter`, `IProductWithStockQueryAdapter` (JOIN) |
 
 ### 구현 라이프사이클 개요
 
@@ -575,6 +617,8 @@ public interface IProductRepository : IAdapter
 | Application → Persistence | **Adapter Mapper** | 도메인 엔티티 → Persistence Model (POCO) | FinT<IO, T> |
 | Persistence → Application | **Adapter Mapper** | Persistence Model → 도메인 엔티티 (`CreateFromValidated`) | FinT<IO, T> |
 | Infrastructure → External | HttpClient / DbContext | DTO → 외부 프로토콜 | Exception → Fin.Fail |
+| Application → Messaging | **Adapter Mapper** | Domain Type → Broker Message (해당 시) | FinT<IO, T> |
+| Messaging → Application | **Adapter Mapper** | Broker Message → Domain Type (해당 시) | FinT<IO, T> |
 
 #### Port Request/Response 정의 원칙
 
@@ -1070,6 +1114,37 @@ ManyErrors ───────────────────────
 │                  │  │ string (DTO)  │  │ ProductId → string    │
 └──────────────────┘  └──────────────┘  └───────────────────────┘
 ```
+
+#### 외부 시스템 유형별 ACL 체크리스트
+
+##### ACL 공통 원칙
+
+- Port는 도메인 타입(VO, Entity, Domain Event)만 사용한다
+- Adapter 내부에 기술 특화 모델/DTO를 정의한다 (`internal` 가시성)
+- Adapter 내부에 Mapper를 정의한다 (`internal static class`, 확장 메서드)
+- 외부 타입은 Application/Domain 레이어로 절대 노출하지 않는다
+
+##### 시스템 유형별 매핑 표
+
+| 외부 시스템 유형 | Adapter 프로젝트 | 내부 변환 타입 | Mapper 패턴 | 기존 예시 |
+|---|---|---|---|---|
+| Database (RDBMS) | Persistence | `internal class XxxModel` (POCO) | `internal static class XxxMapper` (확장 메서드) | `ProductModel` + `ProductMapper` (§2.2) |
+| External HTTP API | Infrastructure | `internal record XxxDto` | `internal static class XxxApiMapper` | `CriteriaApiMapper` (§2.2) |
+| Message Broker | Infrastructure | `internal record XxxMessage` | `internal static class XxxMessageMapper` | 해당 시 적용 (§2.5 참조) |
+| File System | Infrastructure | `internal record/class XxxFileModel` | `internal static class XxxFileMapper` | — (패턴 동일) |
+| Cache | Infrastructure | `internal record XxxCacheEntry` | `internal static class XxxCacheMapper` | — (패턴 동일) |
+| 외부 인증/인가 | Infrastructure | `internal record XxxAuthResponse` | `internal static class XxxAuthMapper` | — (패턴 동일) |
+
+##### ACL 적용 판단 기준
+
+```
+새 외부 시스템 연동
+├─ 외부 스키마가 독립적으로 변경 가능? → ACL 필수 (internal DTO + Mapper)
+└─ 공유 계약(shared contract)으로 공동 관리? → ACL 선택적 (Pass-through 허용)
+```
+
+- **ACL 필수 예**: 레거시 DB, 외부 팀의 API, 서드파티 메시지 스키마
+- **Pass-through 허용 예**: 같은 팀의 공유 메시지 계약 (현재 Messaging Adapter 패턴)
 
 ### 2.3 Repository Adapter
 
@@ -1666,6 +1741,19 @@ public class RabbitMqInventoryMessaging : IInventoryMessaging
 | Fire-and-Forget | `_messageBus.SendAsync(command)` | 응답 없이 메시지 전송 |
 | 에러 래핑 | `Fin.Fail<T>(Error.New(ex.Message))` | 메시징 예외를 `Fin.Fail`로 변환 |
 
+##### Messaging ACL: 메시지 스키마 변환이 필요한 경우
+
+현재 예시는 공유 DTO를 직접 전달하며, 공동 설계된 계약일 때 유효합니다.
+외부/레거시 메시지 스키마와 통합 시에는 ACL을 적용합니다:
+
+```
+수신: Broker Message → internal XxxMessage → Mapper → Domain Type (Port)
+발신: Domain Type (Port) → Mapper → internal XxxMessage → Broker Message
+```
+
+- 동일 패턴: `internal record` + `internal static class XxxMessageMapper`
+- 판단 기준은 [외부 시스템 유형별 ACL 체크리스트](#외부-시스템-유형별-acl-체크리스트) 참조
+
 ### 2.6 Query Adapter (CQRS Read 측)
 
 Query Adapter는 CQRS의 Read 측을 담당하는 Adapter입니다. Aggregate 재구성 없이 DTO를 직접 반환하며, 페이지네이션/정렬을 DB 레벨에서 처리합니다.
@@ -2200,6 +2288,8 @@ app.Run();
 - `UseAdapter{Layer}()`: `IApplicationBuilder` 확장 메서드로 미들웨어 설정
 - 등록 순서는 의존성 방향에 따라 결정 (Presentation → Persistence → Infrastructure)
 - Options 패턴을 사용하는 Adapter는 `IConfiguration` 파라미터를 받음 ([4.6](#46-options-패턴-optionsconfigurator) 참조)
+
+> **참고**: 등록 순서의 근거와 환경별 구성 분기는 [01-project-structure.md — Host 프로젝트](./01-project-structure.md#등록-순서-근거)를 참조하세요.
 
 ### 4.6 Options 패턴 (OptionsConfigurator)
 

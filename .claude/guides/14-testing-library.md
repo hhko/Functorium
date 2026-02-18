@@ -335,6 +335,20 @@ MyProject.ValueObjects.PhoneNumber:
   - Method 'Create' in class 'PhoneNumber' must be static.
 ```
 
+### SingleHost 아키텍처 테스트 인벤토리
+
+`Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Architecture/` 에 구현된 테스트 클래스 목록입니다.
+
+| 테스트 클래스 | 테스트 수 | 검증 대상 |
+|--------------|----------|----------|
+| `LayerDependencyArchitectureRuleTests` | 6 | 레이어 간 의존성 방향 (Domain !→ Application, Adapter 간 교차 참조 금지 등) |
+| `EntityArchitectureRuleTests` | 5 | AggregateRoot/Entity: public sealed, 상속, Create/CreateFromValidated 팩토리 |
+| `ValueObjectArchitectureRuleTests` | 4 | ValueObject: public sealed, 불변성, Create/Validate 팩토리 |
+| `DtoArchitectureRuleTests` | 5 | DTO/Model/Mapper: Persistence Mapper internal static, Usecase nested Request/Response |
+| `UsecaseArchitectureRuleTests` | 4 | Command/Query: 내부 Validator/Usecase nested class 존재 |
+| `SpecificationArchitectureRuleTests` | 3 | Specification: public sealed, 상속, Domain 레이어 거주 |
+| `PortAndAdapterArchitectureRuleTests` | 3 | Adapter: GeneratePipeline 어트리뷰트, RequestCategory, DomainService sealed |
+
 ### 사용 패턴: ValueObject 불변성 검증
 
 ```csharp

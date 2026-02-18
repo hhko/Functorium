@@ -5,6 +5,7 @@
 - [개요](#개요)
 - [프로젝트 공통 파일](#프로젝트-공통-파일)
 - [주 목표와 부수 목표](#주-목표와-부수-목표)
+- [코드 배치 의사결정 가이드](#코드-배치-의사결정-가이드)
 - [Domain 레이어](#domain-레이어)
 - [Application 레이어](#application-레이어)
 - [Adapter 레이어](#adapter-레이어)
@@ -104,6 +105,32 @@
 ```
 
 > **규칙:** 의존성은 항상 바깥에서 안쪽으로만 향합니다. Domain은 아무것도 참조하지 않고, Application은 Domain만, Adapter는 Application만 참조합니다.
+
+### 프로젝트 간 참조 규칙 매트릭스
+
+| From \ To | Domain | Application | Presentation | Persistence | Infrastructure | Host |
+|-----------|--------|-------------|--------------|-------------|----------------|------|
+| **Domain** | — | ✗ | ✗ | ✗ | ✗ | ✗ |
+| **Application** | ✓ | — | ✗ | ✗ | ✗ | ✗ |
+| **Presentation** | (전이) | ✓ | — | ✗ | ✗ | ✗ |
+| **Persistence** | (전이) | ✓ | ✗ | — | ✗ | ✗ |
+| **Infrastructure** | (전이) | ✓ | ✗ | ✗ | — | ✗ |
+| **Host** | (전이) | ✓ | ✓ | ✓ | ✓ | — |
+
+- **✓**: 직접 참조 허용 (csproj `ProjectReference`)
+- **✗**: 참조 금지
+- **(전이)**: 직접 참조 없음, 상위 참조를 통한 전이 참조로 타입 접근
+- **—**: 자기 자신
+
+**핵심 원칙:**
+
+1. **Domain은 아무것도 참조하지 않습니다** — 순수한 비즈니스 규칙만 포함
+2. **Application은 Domain만 직접 참조합니다** — 유스케이스 조율 레이어
+3. **Adapter는 Application만 직접 참조합니다** — Domain은 Application 전이 참조로 접근
+4. **Adapter 간 상호 참조는 금지합니다** — Presentation, Persistence, Infrastructure는 서로 독립
+5. **Host만 모든 레이어를 참조할 수 있습니다** — Composition Root 역할
+
+> **검증:** 이 매트릭스는 `LayerDependencyArchitectureRuleTests` 아키텍처 테스트로 자동 검증됩니다.
 
 ### 테스트 프로젝트 의존성
 
@@ -256,6 +283,55 @@ Abstractions/
 
 > **주의:** Domain과 Application에는 `Abstractions/` 폴더가 없습니다. [FAQ 참조](#faq)
 
+## 코드 배치 의사결정 가이드
+
+새 코드를 작성할 때 "이 코드를 어디에 둘까?"를 3단계로 결정합니다.
+
+### Step 1. 레이어 결정
+
+```
+새 코드 작성
+├─ 비즈니스 규칙인가? → Domain Layer
+├─ 유스케이스 조율인가? → Application Layer
+└─ 기술적 구현인가? → Adapter Layer
+```
+
+### Step 2. 프로젝트 및 폴더 결정
+
+| 코드 유형 | 프로젝트 | 폴더 |
+|-----------|---------|------|
+| Entity, Aggregate Root | Domain | `AggregateRoots/{Aggregate}/` |
+| Value Object (단일 Aggregate) | Domain | `AggregateRoots/{Aggregate}/ValueObjects/` |
+| Value Object (공유) | Domain | `SharedKernel/ValueObjects/` |
+| Domain Event | Domain | `AggregateRoots/{Aggregate}/Events/` |
+| Domain Service | Domain | `SharedKernel/Services/` |
+| Repository Port (영속성) | Domain | `AggregateRoots/{Aggregate}/Ports/` |
+| 교차 Aggregate 읽기 전용 Port | Domain | `Ports/` |
+| Command / Query | Application | `Usecases/{Feature}/` |
+| Event Handler | Application | `Usecases/{Feature}/` |
+| Application Port (외부 시스템) | Application | `Ports/` |
+| HTTP Endpoint | Presentation | `Endpoints/{Feature}/` |
+| Repository 구현체 | Persistence | `Repositories/` |
+| Query Adapter 구현체 | Persistence | `Repositories/Dapper/` |
+| 외부 API 서비스 | Infrastructure | `ExternalApis/` |
+| 횡단 관심사 (Mediator 등) | Infrastructure | `Abstractions/Registrations/` |
+
+> 각 프로젝트의 상세 폴더 구조는 [Domain 레이어](#domain-레이어), [Application 레이어](#application-레이어), [Adapter 레이어](#adapter-레이어) 섹션을 참조하세요.
+
+### Step 3. Port 배치 판단
+
+Port 인터페이스는 빈번한 판단 포인트이므로 별도로 정리합니다.
+
+```
+Port 인터페이스
+├─ 메서드 시그니처가 도메인 타입만 사용? → Domain
+│  ├─ 특정 Aggregate 전용 CRUD? → AggregateRoots/{Agg}/Ports/
+│  └─ 교차 Aggregate 읽기 전용? → Ports/ (프로젝트 루트)
+└─ 외부 DTO나 기술적 관심사 포함? → Application/Ports/
+```
+
+> Port 배치의 상세 기준은 [FAQ §4](#4-port를-domain에-둘지-application에-둘지-판단-기준)와 [12-ports-and-adapters.md](./12-ports-and-adapters.md)를 참조하세요.
+
 ## Domain 레이어
 
 ### 주 목표 폴더
@@ -406,11 +482,13 @@ Usecases/
 
 Adapter는 항상 3개 프로젝트로 분할합니다.
 
-| 프로젝트 | 관심사 | 대표 폴더 |
-|---------|--------|----------|
-| `Adapters.Presentation` | HTTP 입출력 | `Endpoints/` |
-| `Adapters.Persistence` | 데이터 저장/조회 | `Repositories/` |
-| `Adapters.Infrastructure` | 외부 API, 횡단 관심사(Observability, Mediator 등) | `ExternalApis/`, ... |
+| 프로젝트 | 관심사 | 헥사고날 역할 | 대표 폴더 |
+|---------|--------|---------------|----------|
+| `Adapters.Presentation` | HTTP 입출력 | **Driving** (Outside → Inside) | `Endpoints/` |
+| `Adapters.Persistence` | 데이터 저장/조회 | **Driven** (Inside → Outside) | `Repositories/` |
+| `Adapters.Infrastructure` | 외부 API, 횡단 관심사(Observability, Mediator 등) | **Driven** (Inside → Outside) | `ExternalApis/`, ... |
+
+> Driving/Driven 구분과 Presentation에 Port가 없는 설계 결정의 근거는 [12-ports-and-adapters.md](./12-ports-and-adapters.md)의 "Driving vs Driven Adapter 구분" 참조.
 
 ### 주 목표 폴더가 고정되지 않는 이유
 
@@ -560,6 +638,55 @@ app.Run();
 
 **등록 순서:** Presentation → Persistence → Infrastructure (서비스 등록)
 **미들웨어 순서:** Infrastructure → Persistence → Presentation (미들웨어 설정)
+
+### 등록 순서 근거
+
+**서비스 등록 순서** (Presentation → Persistence → Infrastructure):
+
+| 순서 | Adapter | 근거 |
+|------|---------|------|
+| 1 | Presentation | 외부 의존성 없음 (FastEndpoints만 등록) |
+| 2 | Persistence | Configuration 필요, DB Context/Repository 등록 |
+| 3 | Infrastructure | Mediator, Validation, OpenTelemetry, Pipeline 등록 — Pipeline이 앞서 등록된 Adapter를 래핑하므로 마지막 |
+
+- 핵심: Infrastructure가 마지막인 이유는 `ConfigurePipelines().UseAll()`이 이전 단계에서 등록된 모든 Adapter Pipeline을 활성화하기 때문
+
+**미들웨어 순서** (Infrastructure → Persistence → Presentation):
+
+| 순서 | Adapter | 근거 |
+|------|---------|------|
+| 1 | Infrastructure | 관찰성 미들웨어 — 가장 바깥쪽에서 모든 요청/응답 캡처 |
+| 2 | Persistence | DB 초기화 (`EnsureCreated`) |
+| 3 | Presentation | 엔드포인트 매핑 (`UseFastEndpoints`) — 가장 안쪽, 실제 요청 처리 |
+
+- 원칙: 먼저 등록된 미들웨어가 요청 파이프라인의 바깥쪽에 위치
+
+### 환경별 구성 분기
+
+- 파일 구조: `appsettings.json` (기본) + `appsettings.{Environment}.json` (오버라이드)
+
+| 구분 | 방법 | 예시 |
+|------|------|------|
+| 설정값 분기 | `appsettings.{Environment}.json` | Persistence.Provider, OpenTelemetry 설정 |
+| 코드 분기 | `app.Environment.IsDevelopment()` | 진단 엔드포인트, Swagger |
+| Options 패턴 | `RegisterConfigureOptions<T, TValidator>()` | 시작 시 검증 + 자동 로깅 |
+
+- 원칙: 설정값으로 분기 가능하면 appsettings 사용, 코드 분기는 개발 전용 엔드포인트 등 코드 레벨 차이에만 사용
+
+### 미들웨어 파이프라인 확장 포인트
+
+운영 요구사항 추가 시 미들웨어 삽입 위치:
+
+```
+① 예외 처리 (가장 바깥쪽) — app.UseExceptionHandler()
+② 관찰성                  — app.UseAdapterInfrastructure()
+③ 보안 (HTTPS, CORS, 인증) — app.UseHttpsRedirection() / UseCors() / UseAuthentication() / UseAuthorization()
+④ 데이터                  — app.UseAdapterPersistence()
+⑤ Health Check            — app.MapHealthChecks("/health")
+⑥ 엔드포인트 (가장 안쪽)   — app.UseAdapterPresentation()
+```
+
+- 참고: 현재 예외 처리는 Adapter Pipeline(`ExceptionHandlingPipeline`)에서 Usecase 레벨로 처리. ASP.NET 미들웨어 레벨 예외 처리는 인프라 오류(직렬화 실패 등)에만 필요
 
 ## 테스트 프로젝트
 
