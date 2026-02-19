@@ -18,12 +18,12 @@ public abstract class DapperQueryAdapterBase<TEntity, TDto>
     protected abstract string CountSql { get; }
     protected abstract string DefaultOrderBy { get; }
     protected abstract Dictionary<string, string> AllowedSortColumns { get; }
-    protected abstract (string Where, DynamicParameters Params) BuildWhereClause(Specification<TEntity>? spec);
+    protected abstract (string Where, DynamicParameters Params) BuildWhereClause(Specification<TEntity> spec);
 
     protected DapperQueryAdapterBase(IDbConnection connection) => _connection = connection;
 
     public virtual FinT<IO, PagedResult<TDto>> Search(
-        Specification<TEntity>? spec, PageRequest page, SortExpression sort)
+        Specification<TEntity> spec, PageRequest page, SortExpression sort)
     {
         return IO.liftAsync(async () =>
         {

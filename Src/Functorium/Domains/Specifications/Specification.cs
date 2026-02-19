@@ -8,6 +8,17 @@ namespace Functorium.Domains.Specifications;
 public abstract class Specification<T>
 {
     /// <summary>
+    /// 모든 엔터티를 만족하는 Specification (Null Object).
+    /// And 연산의 항등원: All &amp; X = X, X &amp; All = X.
+    /// </summary>
+    public static Specification<T> All => AllSpecification<T>.Instance;
+
+    /// <summary>
+    /// 이 Specification이 All(항등원)인지 여부를 반환합니다.
+    /// </summary>
+    public virtual bool IsAll => false;
+
+    /// <summary>
     /// 엔터티가 조건을 만족하는지 확인합니다.
     /// </summary>
     public abstract bool IsSatisfiedBy(T entity);
@@ -31,7 +42,7 @@ public abstract class Specification<T>
     /// AND 연산자 오버로드. left.And(right)와 동일합니다.
     /// </summary>
     public static Specification<T> operator &(Specification<T> left, Specification<T> right)
-        => new AndSpecification<T>(left, right);
+        => left.IsAll ? right : right.IsAll ? left : new AndSpecification<T>(left, right);
 
     /// <summary>
     /// OR 연산자 오버로드. left.Or(right)와 동일합니다.

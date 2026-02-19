@@ -1,4 +1,5 @@
 using Functorium.Domains.Specifications;
+using System.Linq.Expressions;
 
 namespace Functorium.Tests.Unit.DomainsTests.Specifications;
 
@@ -105,5 +106,102 @@ public class SpecificationOperatorTests
         actualOperator.ShouldBe(expected);
         actualMethod.ShouldBe(expected);
         actualOperator.ShouldBe(actualMethod);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(int.MaxValue)]
+    public void All_IsSatisfiedBy_ReturnsTrue_WhenAnyValue(int value)
+    {
+        // Arrange
+        var sut = Specification<int>.All;
+
+        // Act
+        var actual = sut.IsSatisfiedBy(value);
+
+        // Assert
+        actual.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void All_IsAll_ReturnsTrue()
+    {
+        // Arrange
+        var sut = Specification<int>.All;
+
+        // Act & Assert
+        sut.IsAll.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void All_ToExpression_ReturnsTrueForAll()
+    {
+        // Arrange
+        var sut = (IExpressionSpec<int>)Specification<int>.All;
+
+        // Act
+        Expression<Func<int, bool>> expr = sut.ToExpression();
+        var compiled = expr.Compile();
+
+        // Assert
+        compiled(0).ShouldBeTrue();
+        compiled(-1).ShouldBeTrue();
+        compiled(int.MaxValue).ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData(1, true)]
+    [InlineData(0, false)]
+    [InlineData(-1, false)]
+    public void AllAndSpec_ReturnsSpec_WhenLeftIsAll(int value, bool expected)
+    {
+        // Arrange: All & X = X (항등원 — 좌측)
+        var sut = Specification<int>.All & new IsPositiveSpec();
+
+        // Act
+        var actual = sut.IsSatisfiedBy(value);
+
+        // Assert
+        actual.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(1, true)]
+    [InlineData(0, false)]
+    [InlineData(-1, false)]
+    public void SpecAndAll_ReturnsSpec_WhenRightIsAll(int value, bool expected)
+    {
+        // Arrange: X & All = X (항등원 — 우측)
+        var sut = new IsPositiveSpec() & Specification<int>.All;
+
+        // Act
+        var actual = sut.IsSatisfiedBy(value);
+
+        // Assert
+        actual.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void AllAndSpec_ReturnsOriginalSpec_NotAndSpecification()
+    {
+        // Arrange & Act: All & X should return X itself, not wrapped in AndSpecification
+        var spec = new IsPositiveSpec();
+        var result = Specification<int>.All & spec;
+
+        // Assert
+        result.ShouldBeSameAs(spec);
+    }
+
+    [Fact]
+    public void SpecAndAll_ReturnsOriginalSpec_NotAndSpecification()
+    {
+        // Arrange & Act: X & All should return X itself, not wrapped in AndSpecification
+        var spec = new IsPositiveSpec();
+        var result = spec & Specification<int>.All;
+
+        // Assert
+        result.ShouldBeSameAs(spec);
     }
 }

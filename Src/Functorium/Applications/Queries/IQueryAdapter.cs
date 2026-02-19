@@ -14,7 +14,7 @@ public interface IQueryAdapter : IAdapter { }
 public interface IQueryAdapter<TEntity, TDto> : IQueryAdapter
 {
     FinT<IO, PagedResult<TDto>> Search(
-        Specification<TEntity>? spec,
+        Specification<TEntity> spec,
         PageRequest page,
         SortExpression sort);
 }
