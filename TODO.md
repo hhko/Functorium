@@ -6,9 +6,62 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하도록 개선
 ```
 
+## 01-SingleHost 이해
+- [x] 01-SingleHost Doamin 프로젝트 폴더 정리
+  - AggregateRoots
+    - {Entity}s
+      - Specifications/
+      - ValueObjects/
+      - {Entity}.cs
+      - I{Entity}Repository.cs
+  - SharedModels
+    - Entities
+    - ValueObjects
+    - Services
+- [x] 01-SingleHost Application 프로젝트 폴더 정리
+  - Usecases
+    - {Entity}s
+      - Commands
+      - Events
+      - Queries
+      - I{Entity}Query.cs: DTO 타입
+- [ ] `On--- -> ---Event` 이벤트 핸들러 이름 변경
+- [ ] `IProductDetailQueryAdapter -> IProductDetailQuery` Query 인터페이스 이름 변경
+- [ ] `Specification? -> Option<T>`
+- [ ] `services.AddSingleton<OrderCreditCheckService>();` 도메인 서비스를 의존성 등록한것은 너무 과한것 같다
+- [ ] Enum타입 유효성 검사 강화: 표준 값 객체, SortDirection
+- [ ] 유스케이스 문서화
+- [ ] 용어집
+- [ ] .Adapters 프로젝트 분리
+- [ ] 릴리스 노트
+
+## Book
+- [ ] 파이프라인 & 공변성
+- [ ] 업데이트
+- [ ] Lanaguage-Ext 101
+
+## 플러그인
+- [ ] 스킬
+- [ ] Cowork 통합
+
+## 03-MultipleHosts 예제
+- [ ] N개 서비스 프로젝트 생성
+- [ ] 도메인 이벤트 RabbitMQ
+- [ ] 도메인 이벤트 구분: 내부, 외부
+- [ ] 컨테이너 기반 통합 테스트
+- [ ] Polly: 타임 아웃, 재시도, 서킷브레이커, ...
+- [ ] 릴리스 노트
+
+## 컨터이너 강화
+- [ ] Aspire
+- [ ] 인증/인가
+- [ ] 캐시
+- [ ] OpenSearch
+- [ ] Api Geteway
+
+---
 - [ ] UsecaseTransactionPipeline.cs 제네릭 제약 조건으로 필터링
 - [ ] UsecaseTransactionPipeline.cs 로그 개선
-- [ ] 
 ---
 - [ ] DTO 저장소 적용?
 - [ ] UoW 지금은 인터페이스만 제공, 추가 개선 사항이 없을까?
