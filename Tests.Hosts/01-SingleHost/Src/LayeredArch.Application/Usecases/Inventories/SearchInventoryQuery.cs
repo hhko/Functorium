@@ -53,11 +53,9 @@ public sealed class SearchInventoryQuery
                 .When(x => x.SortBy is not null)
                 .WithMessage($"정렬 필드는 {string.Join(", ", AllowedSortFields)} 중 하나여야 합니다");
 
-            RuleFor(x => x.SortDirection)
-                .Must(dir => string.Equals(dir, "asc", StringComparison.OrdinalIgnoreCase)
-                          || string.Equals(dir, "desc", StringComparison.OrdinalIgnoreCase))
-                .When(x => x.SortDirection is not null)
-                .WithMessage("정렬 방향은 'asc' 또는 'desc'여야 합니다");
+            RuleFor(x => x.SortDirection!)
+                .MustBeEnumValue<Request, Functorium.Applications.Queries.SortDirection>()
+                .When(x => x.SortDirection is not null);
         }
     }
 
@@ -109,11 +107,7 @@ public sealed class SearchInventoryQuery
             if (request.SortBy is null)
                 return SortExpression.Empty;
 
-            var direction = string.Equals(request.SortDirection, "desc", StringComparison.OrdinalIgnoreCase)
-                ? Functorium.Applications.Queries.SortDirection.Descending
-                : Functorium.Applications.Queries.SortDirection.Ascending;
-
-            return SortExpression.By(request.SortBy, direction);
+            return SortExpression.By(request.SortBy, Functorium.Applications.Queries.SortDirection.Parse(request.SortDirection));
         }
     }
 }

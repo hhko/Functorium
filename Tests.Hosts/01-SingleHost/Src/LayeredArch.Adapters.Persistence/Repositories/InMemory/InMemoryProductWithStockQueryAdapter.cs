@@ -12,7 +12,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 /// 데이터를 결합하여 정렬/페이지네이션/DTO 변환합니다.
 /// </summary>
 [GeneratePipeline]
-public class InMemoryProductWithStockQueryAdapter : IProductWithStockQueryAdapter
+public class InMemoryProductWithStockQueryAdapter : IProductWithStockQuery
 {
     public string RequestCategory => "QueryAdapter";
 
@@ -66,11 +66,12 @@ public class InMemoryProductWithStockQueryAdapter : IProductWithStockQueryAdapte
                 _ => p => p.Name
             };
 
-            ordered = (ordered, field.Direction) switch
+            var isDesc = field.Direction == SortDirection.Descending;
+            ordered = (ordered, isDesc) switch
             {
-                (null, SortDirection.Ascending) => items.OrderBy(selector),
-                (null, SortDirection.Descending) => items.OrderByDescending(selector),
-                (_, SortDirection.Ascending) => ordered!.ThenBy(selector),
+                (null, false) => items.OrderBy(selector),
+                (null, true) => items.OrderByDescending(selector),
+                (_, false) => ordered!.ThenBy(selector),
                 _ => ordered!.ThenByDescending(selector),
             };
         }

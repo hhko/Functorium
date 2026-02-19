@@ -72,20 +72,18 @@ public sealed class SearchProductsWithStockQuery
                 .WithMessage($"SortBy must be one of: {string.Join(", ", AllowedSortFields)}");
 
             RuleFor(x => x.SortDirection)
-                .Must(dir => string.Equals(dir, "asc", StringComparison.OrdinalIgnoreCase)
-                          || string.Equals(dir, "desc", StringComparison.OrdinalIgnoreCase))
-                .When(x => x.SortDirection.Length > 0)
-                .WithMessage("SortDirection must be 'asc' or 'desc'");
+                .MustBeEnumValue<Request, Functorium.Applications.Queries.SortDirection>()
+                .When(x => x.SortDirection.Length > 0);
         }
     }
 
     /// <summary>
     /// Query Handler - Read Adapter를 통한 페이지네이션 검색 (재고 포함)
     /// </summary>
-    public sealed class Usecase(IProductWithStockQueryAdapter productWithStockQuery)
+    public sealed class Usecase(IProductWithStockQuery productWithStockQuery)
         : IQueryUsecase<Request, Response>
     {
-        private readonly IProductWithStockQueryAdapter _productWithStockQuery = productWithStockQuery;
+        private readonly IProductWithStockQuery _productWithStockQuery = productWithStockQuery;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
@@ -126,11 +124,7 @@ public sealed class SearchProductsWithStockQuery
             if (request.SortBy.Length == 0)
                 return SortExpression.Empty;
 
-            var direction = string.Equals(request.SortDirection, "desc", StringComparison.OrdinalIgnoreCase)
-                ? Functorium.Applications.Queries.SortDirection.Descending
-                : Functorium.Applications.Queries.SortDirection.Ascending;
-
-            return SortExpression.By(request.SortBy, direction);
+            return SortExpression.By(request.SortBy, Functorium.Applications.Queries.SortDirection.Parse(request.SortDirection));
         }
     }
 }

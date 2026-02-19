@@ -56,11 +56,12 @@ public class InMemoryInventoryQueryAdapter : IInventoryQueryAdapter
                 _ => i => i.Id.ToString()
             };
 
-            ordered = (ordered, field.Direction) switch
+            var isDesc = field.Direction == SortDirection.Descending;
+            ordered = (ordered, isDesc) switch
             {
-                (null, SortDirection.Ascending) => inventories.OrderBy(selector),
-                (null, SortDirection.Descending) => inventories.OrderByDescending(selector),
-                (_, SortDirection.Ascending) => ordered!.ThenBy(selector),
+                (null, false) => inventories.OrderBy(selector),
+                (null, true) => inventories.OrderByDescending(selector),
+                (_, false) => ordered!.ThenBy(selector),
                 _ => ordered!.ThenByDescending(selector),
             };
         }

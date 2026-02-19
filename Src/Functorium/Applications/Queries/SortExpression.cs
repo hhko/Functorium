@@ -16,9 +16,15 @@ public sealed class SortExpression
 
     public static SortExpression Empty => new(LanguageExt.Seq<SortField>.Empty);
 
-    public static SortExpression By(string fieldName, SortDirection direction = SortDirection.Ascending)
+    public static SortExpression By(string fieldName)
+        => By(fieldName, SortDirection.Ascending);
+
+    public static SortExpression By(string fieldName, SortDirection direction)
         => new(Seq([new SortField(fieldName, direction)]));
 
-    public SortExpression ThenBy(string fieldName, SortDirection direction = SortDirection.Ascending)
+    public SortExpression ThenBy(string fieldName)
+        => ThenBy(fieldName, SortDirection.Ascending);
+
+    public SortExpression ThenBy(string fieldName, SortDirection direction)
         => new(_fields.Add(new SortField(fieldName, direction)));
 }

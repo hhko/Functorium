@@ -62,6 +62,31 @@ public static partial class FluentValidationExtensions
     }
 
     /// <summary>
+    /// SmartEnum의 Value로 검증합니다 (string Value인 경우 대소문자 무시).
+    /// </summary>
+    /// <typeparam name="TRequest">요청 타입</typeparam>
+    /// <typeparam name="TSmartEnum">SmartEnum 타입</typeparam>
+    /// <param name="ruleBuilder">FluentValidation 규칙 빌더</param>
+    /// <returns>FluentValidation 규칙 빌더 옵션</returns>
+    [Pure]
+    public static IRuleBuilderOptions<TRequest, string> MustBeEnumValue<TRequest, TSmartEnum>(
+        this IRuleBuilder<TRequest, string> ruleBuilder)
+        where TSmartEnum : SmartEnum<TSmartEnum, string>
+    {
+        return (IRuleBuilderOptions<TRequest, string>)ruleBuilder.Custom((value, context) =>
+        {
+            if (string.IsNullOrEmpty(value)) return;
+
+            if (!SmartEnum<TSmartEnum, string>.TryFromValue(value.ToLowerInvariant(), out _))
+            {
+                context.AddFailure(context.PropertyPath,
+                    $"'{context.PropertyPath}' must be one of: {string.Join(", ",
+                        SmartEnum<TSmartEnum, string>.List.Select(e => e.Value))}");
+            }
+        });
+    }
+
+    /// <summary>
     /// int 기반 SmartEnum 값 객체에 대한 간소화 오버로드
     /// </summary>
     /// <typeparam name="TRequest">요청 타입</typeparam>
