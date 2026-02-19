@@ -13,7 +13,8 @@ public sealed class ShippingAddress : SimpleValueObject<string>
         CreateFromValidation(Validate(value), v => new ShippingAddress(v));
 
     public static Validation<Error, string> Validate(string? value) =>
-        ValidationRules<ShippingAddress>.NotEmpty(value ?? "")
+        ValidationRules<ShippingAddress>.NotNull(value)
+            .ThenNotEmpty()
             .ThenMaxLength(MaxLength)
             .ThenNormalize(v => v.Trim());
 

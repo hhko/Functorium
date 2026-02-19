@@ -14,7 +14,8 @@ public sealed class TagName : SimpleValueObject<string>
 
     public static Validation<Error, string> Validate(string? value) =>
         ValidationRules<TagName>
-            .NotEmpty(value ?? "")
+            .NotNull(value)
+            .ThenNotEmpty()
             .ThenMaxLength(MaxLength)
             .ThenNormalize(v => v.Trim());
 

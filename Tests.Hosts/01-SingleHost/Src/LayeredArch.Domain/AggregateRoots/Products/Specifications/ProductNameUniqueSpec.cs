@@ -11,9 +11,9 @@ namespace LayeredArch.Domain.AggregateRoots.Products.Specifications;
 public sealed class ProductNameUniqueSpec : ExpressionSpecification<Product>
 {
     public ProductName Name { get; }
-    public ProductId? ExcludeId { get; }
+    public Option<ProductId> ExcludeId { get; }
 
-    public ProductNameUniqueSpec(ProductName name, ProductId? excludeId = null)
+    public ProductNameUniqueSpec(ProductName name, Option<ProductId> excludeId = default)
     {
         Name = name;
         ExcludeId = excludeId;
@@ -22,7 +22,7 @@ public sealed class ProductNameUniqueSpec : ExpressionSpecification<Product>
     public override Expression<Func<Product, bool>> ToExpression()
     {
         string nameStr = Name;
-        string? excludeIdStr = ExcludeId?.ToString();
+        string? excludeIdStr = ExcludeId.Match<string?>(id => id.ToString(), () => null);
         return product => (string)product.Name == nameStr &&
                           (excludeIdStr == null || product.Id.ToString() != excludeIdStr);
     }

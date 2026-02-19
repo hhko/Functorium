@@ -15,7 +15,8 @@ public sealed partial class Email : SimpleValueObject<string>
         CreateFromValidation(Validate(value), v => new Email(v));
 
     public static Validation<Error, string> Validate(string? value) =>
-        ValidationRules<Email>.NotEmpty(value ?? "")
+        ValidationRules<Email>.NotNull(value)
+            .ThenNotEmpty()
             .ThenMaxLength(MaxLength)
             .ThenMatches(EmailRegex(), "올바른 이메일 형식이 아닙니다")
             .ThenNormalize(v => v.Trim().ToLowerInvariant());

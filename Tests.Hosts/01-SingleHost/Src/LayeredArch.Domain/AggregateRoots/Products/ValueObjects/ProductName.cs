@@ -14,7 +14,8 @@ public sealed class ProductName : SimpleValueObject<string>
 
     public static Validation<Error, string> Validate(string? value) =>
         ValidationRules<ProductName>
-            .NotEmpty(value ?? "")
+            .NotNull(value)
+            .ThenNotEmpty()
             .ThenMaxLength(MaxLength)
             .ThenNormalize(v => v.Trim());
 
