@@ -27,9 +27,15 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
       - I{Entity}Query.cs: DTO 타입
 - [x] `On--- -> ---Event` 이벤트 핸들러 이름 변경
 - [x] `IProductDetailQueryAdapter -> IProductDetailQuery` Query 인터페이스 이름 변경
-- [x] `Specification? -> Option<T>`
+- [x] Enum타입 유효성 검사 강화: 표준 값 객체, SortDirection
+- [ ] IAuditable 인터페이스에 정의된 nullable
+- [ ] `Specification? -> Option<T>`
+- [ ] nullable 전체 개선
 - [ ] `services.AddSingleton<OrderCreditCheckService>();` 도메인 서비스를 의존성 등록한것은 너무 과한것 같다
-- [ ] Enum타입 유효성 검사 강화: 표준 값 객체, SortDirection
+- [ ] 유스케이스 전체 리팩토링
+---
+- [ ] Specification 패턴 이해
+- [ ] ISoftDeletable 적용 사례
 - [ ] 유스케이스 문서화
 - [ ] 용어집
 - [ ] .Adapters 프로젝트 분리
