@@ -7,11 +7,11 @@ namespace LayeredArch.Application.Usecases.Products.Events;
 /// <summary>
 /// Product.CreatedEvent 핸들러 - 상품 생성 로깅.
 /// </summary>
-public sealed class OnProductCreated : IDomainEventHandler<Product.CreatedEvent>
+public sealed class ProductCreatedEvent : IDomainEventHandler<Product.CreatedEvent>
 {
-    private readonly ILogger<OnProductCreated> _logger;
+    private readonly ILogger<ProductCreatedEvent> _logger;
 
-    public OnProductCreated(ILogger<OnProductCreated> logger)
+    public ProductCreatedEvent(ILogger<ProductCreatedEvent> logger)
     {
         _logger = logger;
     }
@@ -22,7 +22,7 @@ public sealed class OnProductCreated : IDomainEventHandler<Product.CreatedEvent>
         if (name.Contains("[handler-error]", StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException(
-                $"[{nameof(OnProductCreated)}] 시뮬레이션된 핸들러 예외: 이벤트 핸들러 예외 처리 데모");
+                $"[{nameof(ProductCreatedEvent)}] 시뮬레이션된 핸들러 예외: 이벤트 핸들러 예외 처리 데모");
         }
 
         _logger.LogInformation(

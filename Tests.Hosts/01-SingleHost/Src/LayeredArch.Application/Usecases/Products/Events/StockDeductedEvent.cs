@@ -7,11 +7,11 @@ namespace LayeredArch.Application.Usecases.Products.Events;
 /// <summary>
 /// Inventory.StockDeductedEvent 핸들러 - 재고 차감 로깅.
 /// </summary>
-public sealed class OnStockDeducted : IDomainEventHandler<Inventory.StockDeductedEvent>
+public sealed class StockDeductedEvent : IDomainEventHandler<Inventory.StockDeductedEvent>
 {
-    private readonly ILogger<OnStockDeducted> _logger;
+    private readonly ILogger<StockDeductedEvent> _logger;
 
-    public OnStockDeducted(ILogger<OnStockDeducted> logger)
+    public StockDeductedEvent(ILogger<StockDeductedEvent> logger)
     {
         _logger = logger;
     }
@@ -22,7 +22,7 @@ public sealed class OnStockDeducted : IDomainEventHandler<Inventory.StockDeducte
         if (quantity == 999)
         {
             throw new InvalidOperationException(
-                $"[{nameof(OnStockDeducted)}] 시뮬레이션된 핸들러 예외: 이벤트 핸들러 예외 처리 데모");
+                $"[{nameof(StockDeductedEvent)}] 시뮬레이션된 핸들러 예외: 이벤트 핸들러 예외 처리 데모");
         }
 
         _logger.LogInformation(

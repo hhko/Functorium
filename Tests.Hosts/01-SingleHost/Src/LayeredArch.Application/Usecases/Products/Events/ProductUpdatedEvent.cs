@@ -7,11 +7,11 @@ namespace LayeredArch.Application.Usecases.Products.Events;
 /// <summary>
 /// Product.UpdatedEvent 핸들러 - 상품 업데이트 로깅.
 /// </summary>
-public sealed class OnProductUpdated : IDomainEventHandler<Product.UpdatedEvent>
+public sealed class ProductUpdatedEvent : IDomainEventHandler<Product.UpdatedEvent>
 {
-    private readonly ILogger<OnProductUpdated> _logger;
+    private readonly ILogger<ProductUpdatedEvent> _logger;
 
-    public OnProductUpdated(ILogger<OnProductUpdated> logger)
+    public ProductUpdatedEvent(ILogger<ProductUpdatedEvent> logger)
     {
         _logger = logger;
     }
@@ -22,7 +22,7 @@ public sealed class OnProductUpdated : IDomainEventHandler<Product.UpdatedEvent>
         if (name.Contains("[handler-error]", StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException(
-                $"[{nameof(OnProductUpdated)}] 시뮬레이션된 핸들러 예외: 이벤트 핸들러 예외 처리 데모");
+                $"[{nameof(ProductUpdatedEvent)}] 시뮬레이션된 핸들러 예외: 이벤트 핸들러 예외 처리 데모");
         }
 
         _logger.LogInformation(

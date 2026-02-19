@@ -87,11 +87,11 @@ public static class AdapterPersistenceRegistration
         services.RegisterScopedAdapterPipeline<IProductCatalog, InMemoryProductCatalogPipeline>();
 
         // Read Adapter 등록
-        services.RegisterScopedAdapterPipeline<IProductQueryAdapter, InMemoryProductQueryAdapterPipeline>();
-        services.RegisterScopedAdapterPipeline<IProductDetailQueryAdapter, InMemoryProductDetailQueryAdapterPipeline>();
+        services.RegisterScopedAdapterPipeline<IProductQuery, InMemoryProductQueryAdapterPipeline>();
+        services.RegisterScopedAdapterPipeline<IProductDetailQuery, InMemoryProductDetailQueryAdapterPipeline>();
         services.AddScoped<InMemoryInventoryRepository>();
         services.RegisterScopedAdapterPipeline<IInventoryQueryAdapter, InMemoryInventoryQueryAdapterPipeline>();
-        services.RegisterScopedAdapterPipeline<IProductWithStockQueryAdapter, InMemoryProductWithStockQueryAdapterPipeline>();
+        services.RegisterScopedAdapterPipeline<IProductWithStockQuery, InMemoryProductWithStockQueryAdapterPipeline>();
         services.RegisterScopedAdapterPipeline<ICustomerDetailQueryAdapter, InMemoryCustomerDetailQueryAdapterPipeline>();
         services.RegisterScopedAdapterPipeline<IOrderDetailQueryAdapter, InMemoryOrderDetailQueryAdapterPipeline>();
     }
@@ -121,8 +121,8 @@ public static class AdapterPersistenceRegistration
             return conn;
         });
 
-        services.RegisterScopedAdapterPipeline<IProductQueryAdapter, DapperProductQueryAdapterPipeline>();
-        services.RegisterScopedAdapterPipeline<IProductWithStockQueryAdapter, DapperProductWithStockQueryAdapterPipeline>();
+        services.RegisterScopedAdapterPipeline<IProductQuery, DapperProductQueryAdapterPipeline>();
+        services.RegisterScopedAdapterPipeline<IProductWithStockQuery, DapperProductWithStockQueryAdapterPipeline>();
         services.RegisterScopedAdapterPipeline<IInventoryQueryAdapter, DapperInventoryQueryAdapterPipeline>();
     }
 }

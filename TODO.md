@@ -25,9 +25,9 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
       - Events
       - Queries
       - I{Entity}Query.cs: DTO 타입
-- [ ] `On--- -> ---Event` 이벤트 핸들러 이름 변경
-- [ ] `IProductDetailQueryAdapter -> IProductDetailQuery` Query 인터페이스 이름 변경
-- [ ] `Specification? -> Option<T>`
+- [x] `On--- -> ---Event` 이벤트 핸들러 이름 변경
+- [x] `IProductDetailQueryAdapter -> IProductDetailQuery` Query 인터페이스 이름 변경
+- [x] `Specification? -> Option<T>`
 - [ ] `services.AddSingleton<OrderCreditCheckService>();` 도메인 서비스를 의존성 등록한것은 너무 과한것 같다
 - [ ] Enum타입 유효성 검사 강화: 표준 값 객체, SortDirection
 - [ ] 유스케이스 문서화

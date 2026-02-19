@@ -112,7 +112,7 @@ public class SearchProductsWithStockQueryValidatorTests
 
 public class SearchProductsWithStockQueryTests
 {
-    private readonly IProductWithStockQueryAdapter _readAdapter = Substitute.For<IProductWithStockQueryAdapter>();
+    private readonly IProductWithStockQuery _readAdapter = Substitute.For<IProductWithStockQuery>();
     private readonly SearchProductsWithStockQuery.Usecase _sut;
 
     public SearchProductsWithStockQueryTests()

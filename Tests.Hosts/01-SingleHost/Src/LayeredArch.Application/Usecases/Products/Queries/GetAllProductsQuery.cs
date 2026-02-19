@@ -23,10 +23,10 @@ public sealed class GetAllProductsQuery
     /// <summary>
     /// Query Handler - Read Adapter를 통한 전체 상품 조회
     /// </summary>
-    public sealed class Usecase(IProductQueryAdapter productQuery)
+    public sealed class Usecase(IProductQuery productQuery)
         : IQueryUsecase<Request, Response>
     {
-        private readonly IProductQueryAdapter _productQuery = productQuery;
+        private readonly IProductQuery _productQuery = productQuery;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {

@@ -7,7 +7,7 @@ namespace LayeredArch.Application.Usecases.Products.Ports;
 /// Product 읽기 전용 어댑터 포트.
 /// Aggregate 재구성 없이 DB에서 DTO로 직접 프로젝션합니다.
 /// </summary>
-public interface IProductQueryAdapter : IQueryAdapter<Product, ProductSummaryDto> { }
+public interface IProductQuery : IQueryAdapter<Product, ProductSummaryDto> { }
 
 public sealed record ProductSummaryDto(
     string ProductId,

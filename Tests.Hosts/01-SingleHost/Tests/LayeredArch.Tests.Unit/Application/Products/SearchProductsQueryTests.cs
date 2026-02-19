@@ -140,7 +140,7 @@ public class SearchProductsQueryValidatorTests
 
 public class SearchProductsQueryTests
 {
-    private readonly IProductQueryAdapter _readAdapter = Substitute.For<IProductQueryAdapter>();
+    private readonly IProductQuery _readAdapter = Substitute.For<IProductQuery>();
     private readonly SearchProductsQuery.Usecase _sut;
 
     public SearchProductsQueryTests()

@@ -28,10 +28,10 @@ public sealed class GetProductByIdQuery
     /// <summary>
     /// Query Handler - 상품 조회 로직
     /// </summary>
-    public sealed class Usecase(IProductDetailQueryAdapter productDetailQuery)
+    public sealed class Usecase(IProductDetailQuery productDetailQuery)
         : IQueryUsecase<Request, Response>
     {
-        private readonly IProductDetailQueryAdapter _productDetailQuery = productDetailQuery;
+        private readonly IProductDetailQuery _productDetailQuery = productDetailQuery;
 
         /// <summary>
         /// LINQ 쿼리 표현식을 사용한 함수형 체이닝

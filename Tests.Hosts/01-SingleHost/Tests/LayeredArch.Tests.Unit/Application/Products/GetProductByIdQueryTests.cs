@@ -6,7 +6,7 @@ namespace LayeredArch.Tests.Unit.Application.Products;
 
 public class GetProductByIdQueryTests
 {
-    private readonly IProductDetailQueryAdapter _adapter = Substitute.For<IProductDetailQueryAdapter>();
+    private readonly IProductDetailQuery _adapter = Substitute.For<IProductDetailQuery>();
     private readonly GetProductByIdQuery.Usecase _sut;
 
     public GetProductByIdQueryTests()

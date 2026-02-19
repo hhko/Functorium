@@ -11,7 +11,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.Dapper;
 
 [GeneratePipeline]
 public class DapperProductQueryAdapter
-    : DapperQueryAdapterBase<Product, ProductSummaryDto>, IProductQueryAdapter
+    : DapperQueryAdapterBase<Product, ProductSummaryDto>, IProductQuery
 {
     public string RequestCategory => "QueryAdapter";
 

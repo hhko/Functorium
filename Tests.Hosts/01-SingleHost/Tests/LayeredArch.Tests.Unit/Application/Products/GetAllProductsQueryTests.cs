@@ -8,7 +8,7 @@ namespace LayeredArch.Tests.Unit.Application.Products;
 
 public class GetAllProductsQueryTests
 {
-    private readonly IProductQueryAdapter _productQuery = Substitute.For<IProductQueryAdapter>();
+    private readonly IProductQuery _productQuery = Substitute.For<IProductQuery>();
     private readonly GetAllProductsQuery.Usecase _sut;
 
     public GetAllProductsQueryTests()
