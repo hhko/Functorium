@@ -15,7 +15,7 @@ internal static class OrderMapper
         TotalAmount = order.TotalAmount,
         ShippingAddress = order.ShippingAddress,
         CreatedAt = order.CreatedAt,
-        UpdatedAt = order.UpdatedAt
+        UpdatedAt = order.UpdatedAt.ToNullable()
     };
 
     public static Order ToDomain(this OrderModel model) =>
@@ -27,5 +27,5 @@ internal static class OrderMapper
             Money.CreateFromValidated(model.TotalAmount),
             ShippingAddress.CreateFromValidated(model.ShippingAddress),
             model.CreatedAt,
-            model.UpdatedAt);
+            Optional(model.UpdatedAt));
 }

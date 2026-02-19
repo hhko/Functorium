@@ -95,7 +95,7 @@ public sealed class UpdateProductCommand
                     updatedProduct.Name,
                     updatedProduct.Description,
                     updatedProduct.Price,
-                    updatedProduct.UpdatedAt ?? DateTime.UtcNow);
+                    updatedProduct.UpdatedAt.IfNone(DateTime.UtcNow));
 
             Fin<Response> response = await usecase.Run().RunAsync();
             return response.ToFinResponse();

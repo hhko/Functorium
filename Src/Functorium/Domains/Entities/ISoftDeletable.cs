@@ -6,14 +6,14 @@ namespace Functorium.Domains.Entities;
 public interface ISoftDeletable
 {
     /// <summary>
-    /// 삭제 여부.
-    /// </summary>
-    bool IsDeleted { get; }
-
-    /// <summary>
     /// 삭제 시각.
     /// </summary>
-    DateTime? DeletedAt { get; }
+    Option<DateTime> DeletedAt { get; }
+
+    /// <summary>
+    /// 삭제 여부 (DeletedAt에서 파생).
+    /// </summary>
+    bool IsDeleted => DeletedAt.IsSome;
 }
 
 /// <summary>
@@ -24,5 +24,5 @@ public interface ISoftDeletableWithUser : ISoftDeletable
     /// <summary>
     /// 삭제자 식별자.
     /// </summary>
-    string? DeletedBy { get; }
+    Option<string> DeletedBy { get; }
 }

@@ -13,7 +13,7 @@ internal static class InventoryMapper
         StockQuantity = inventory.StockQuantity,
         RowVersion = inventory.RowVersion,
         CreatedAt = inventory.CreatedAt,
-        UpdatedAt = inventory.UpdatedAt
+        UpdatedAt = inventory.UpdatedAt.ToNullable()
     };
 
     public static Inventory ToDomain(this InventoryModel model) =>
@@ -23,5 +23,5 @@ internal static class InventoryMapper
             Quantity.CreateFromValidated(model.StockQuantity),
             model.RowVersion,
             model.CreatedAt,
-            model.UpdatedAt);
+            Optional(model.UpdatedAt));
 }

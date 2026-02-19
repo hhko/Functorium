@@ -32,7 +32,7 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
 
     // Audit 속성
     public DateTime CreatedAt { get; private set; }
-    public DateTime? UpdatedAt { get; private set; }
+    public Option<DateTime> UpdatedAt { get; private set; }
 
     // 내부 생성자: 이미 검증된 VO를 받음
     private Product(
@@ -71,7 +71,7 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
         ProductDescription description,
         Money price,
         DateTime createdAt,
-        DateTime? updatedAt)
+        Option<DateTime> updatedAt)
     {
         return new Product(id, name, description, price)
         {

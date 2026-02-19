@@ -80,7 +80,7 @@ public class OrderTests
         sut.ProductId.ShouldBe(productId);
         ((decimal)sut.TotalAmount).ShouldBe(300m);
         sut.CreatedAt.ShouldBe(createdAt);
-        sut.UpdatedAt.ShouldBe(updatedAt);
+        sut.UpdatedAt.ShouldBe(Some(updatedAt));
         sut.DomainEvents.ShouldBeEmpty();
     }
 }

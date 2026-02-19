@@ -27,7 +27,7 @@ public class InMemoryProductDetailQueryAdapter : IProductDetailQuery
                     product.Description,
                     product.Price,
                     product.CreatedAt,
-                    product.UpdatedAt));
+                    product.UpdatedAt.ToNullable()));
             }
 
             return AdapterError.For<InMemoryProductDetailQueryAdapter>(

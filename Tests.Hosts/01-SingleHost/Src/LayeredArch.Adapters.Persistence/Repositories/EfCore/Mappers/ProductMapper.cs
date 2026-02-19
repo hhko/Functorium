@@ -12,7 +12,7 @@ internal static class ProductMapper
         Description = product.Description,
         Price = product.Price,
         CreatedAt = product.CreatedAt,
-        UpdatedAt = product.UpdatedAt,
+        UpdatedAt = product.UpdatedAt.ToNullable(),
         Tags = product.Tags.Select(t => t.ToModel(product.Id.ToString())).ToList()
     };
 
@@ -24,7 +24,7 @@ internal static class ProductMapper
             ProductDescription.CreateFromValidated(model.Description),
             Money.CreateFromValidated(model.Price),
             model.CreatedAt,
-            model.UpdatedAt);
+            Optional(model.UpdatedAt));
 
         foreach (var tag in model.Tags)
             product.AddTag(tag.ToDomain());

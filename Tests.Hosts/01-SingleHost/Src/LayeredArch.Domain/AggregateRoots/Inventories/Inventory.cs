@@ -45,7 +45,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
 
     // Audit 속성
     public DateTime CreatedAt { get; private set; }
-    public DateTime? UpdatedAt { get; private set; }
+    public Option<DateTime> UpdatedAt { get; private set; }
 
     // 내부 생성자: 이미 검증된 VO를 받음
     private Inventory(
@@ -81,7 +81,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
         Quantity stockQuantity,
         byte[] rowVersion,
         DateTime createdAt,
-        DateTime? updatedAt)
+        Option<DateTime> updatedAt)
     {
         return new Inventory(id, productId, stockQuantity)
         {

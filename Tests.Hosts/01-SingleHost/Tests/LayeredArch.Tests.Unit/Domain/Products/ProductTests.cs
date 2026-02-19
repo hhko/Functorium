@@ -112,7 +112,7 @@ public class ProductTests
         ((string)sut.Name).ShouldBe("Restored Product");
         ((decimal)sut.Price).ShouldBe(500m);
         sut.CreatedAt.ShouldBe(createdAt);
-        sut.UpdatedAt.ShouldBe(updatedAt);
+        sut.UpdatedAt.ShouldBe(Some(updatedAt));
         sut.DomainEvents.ShouldBeEmpty();
     }
 

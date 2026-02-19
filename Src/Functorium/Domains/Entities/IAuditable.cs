@@ -13,7 +13,7 @@ public interface IAuditable
     /// <summary>
     /// 최종 수정 시각.
     /// </summary>
-    DateTime? UpdatedAt { get; }
+    Option<DateTime> UpdatedAt { get; }
 }
 
 /// <summary>
@@ -24,10 +24,10 @@ public interface IAuditableWithUser : IAuditable
     /// <summary>
     /// 생성자 식별자.
     /// </summary>
-    string? CreatedBy { get; }
+    Option<string> CreatedBy { get; }
 
     /// <summary>
     /// 최종 수정자 식별자.
     /// </summary>
-    string? UpdatedBy { get; }
+    Option<string> UpdatedBy { get; }
 }

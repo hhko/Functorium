@@ -13,7 +13,7 @@ internal static class CustomerMapper
         Email = customer.Email,
         CreditLimit = customer.CreditLimit,
         CreatedAt = customer.CreatedAt,
-        UpdatedAt = customer.UpdatedAt
+        UpdatedAt = customer.UpdatedAt.ToNullable()
     };
 
     public static Customer ToDomain(this CustomerModel model) =>
@@ -23,5 +23,5 @@ internal static class CustomerMapper
             Email.CreateFromValidated(model.Email),
             Money.CreateFromValidated(model.CreditLimit),
             model.CreatedAt,
-            model.UpdatedAt);
+            Optional(model.UpdatedAt));
 }

@@ -29,7 +29,7 @@ public sealed class Customer : AggregateRoot<CustomerId>, IAuditable
 
     // Audit 속성
     public DateTime CreatedAt { get; private set; }
-    public DateTime? UpdatedAt { get; private set; }
+    public Option<DateTime> UpdatedAt { get; private set; }
 
     // 내부 생성자: 이미 검증된 VO를 받음
     private Customer(
@@ -68,7 +68,7 @@ public sealed class Customer : AggregateRoot<CustomerId>, IAuditable
         Email email,
         Money creditLimit,
         DateTime createdAt,
-        DateTime? updatedAt)
+        Option<DateTime> updatedAt)
     {
         return new Customer(id, name, email, creditLimit)
         {

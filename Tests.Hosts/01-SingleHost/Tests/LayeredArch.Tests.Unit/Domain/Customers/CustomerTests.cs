@@ -58,7 +58,7 @@ public class CustomerTests
         ((string)sut.Name).ShouldBe("John");
         ((string)sut.Email).ShouldBe("john@example.com");
         sut.CreatedAt.ShouldBe(createdAt);
-        sut.UpdatedAt.ShouldBe(updatedAt);
+        sut.UpdatedAt.ShouldBe(Some(updatedAt));
         sut.DomainEvents.ShouldBeEmpty();
     }
 }
