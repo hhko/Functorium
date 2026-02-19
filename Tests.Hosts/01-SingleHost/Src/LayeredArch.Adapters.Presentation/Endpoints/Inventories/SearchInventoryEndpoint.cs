@@ -1,6 +1,6 @@
 using LayeredArch.Adapters.Presentation.Abstractions.Extensions;
-using LayeredArch.Application.Usecases.Inventories;
-using LayeredArch.Application.Usecases.Inventories.Dtos;
+using LayeredArch.Application.Usecases.Inventories.Ports;
+using LayeredArch.Application.Usecases.Inventories.Queries;
 
 namespace LayeredArch.Adapters.Presentation.Endpoints.Inventories;
 
@@ -32,11 +32,11 @@ public sealed class SearchInventoryEndpoint
     public override async Task HandleAsync(Request req, CancellationToken ct)
     {
         var usecaseRequest = new SearchInventoryQuery.Request(
-            req.LowStockThreshold,
-            req.Page,
-            req.PageSize,
-            req.SortBy,
-            req.SortDirection);
+            req.LowStockThreshold ?? 0,
+            req.Page ?? 1,
+            req.PageSize ?? Functorium.Applications.Queries.PageRequest.DefaultPageSize,
+            req.SortBy ?? "",
+            req.SortDirection ?? "");
 
         var result = await _mediator.Send(usecaseRequest, ct);
 

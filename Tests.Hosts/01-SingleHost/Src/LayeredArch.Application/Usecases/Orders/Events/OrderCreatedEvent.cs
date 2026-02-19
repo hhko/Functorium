@@ -2,16 +2,16 @@ using Functorium.Applications.Events;
 using LayeredArch.Domain.AggregateRoots.Orders;
 using Microsoft.Extensions.Logging;
 
-namespace LayeredArch.Application.Usecases.Orders;
+namespace LayeredArch.Application.Usecases.Orders.Events;
 
 /// <summary>
 /// Order.CreatedEvent 핸들러 - 주문 생성 로깅
 /// </summary>
-public sealed class OnOrderCreated : IDomainEventHandler<Order.CreatedEvent>
+public sealed class OrderCreatedEvent : IDomainEventHandler<Order.CreatedEvent>
 {
-    private readonly ILogger<OnOrderCreated> _logger;
+    private readonly ILogger<OrderCreatedEvent> _logger;
 
-    public OnOrderCreated(ILogger<OnOrderCreated> logger)
+    public OrderCreatedEvent(ILogger<OrderCreatedEvent> logger)
     {
         _logger = logger;
     }

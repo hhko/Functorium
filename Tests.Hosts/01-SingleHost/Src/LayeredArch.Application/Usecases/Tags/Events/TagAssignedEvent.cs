@@ -2,16 +2,16 @@ using Functorium.Applications.Events;
 using LayeredArch.Domain.SharedModels.Entities;
 using Microsoft.Extensions.Logging;
 
-namespace LayeredArch.Application.Usecases.Tags;
+namespace LayeredArch.Application.Usecases.Tags.Events;
 
 /// <summary>
 /// Tag.AssignedEvent 핸들러 - 태그 할당 로깅.
 /// </summary>
-public sealed class OnTagAssigned : IDomainEventHandler<Tag.AssignedEvent>
+public sealed class TagAssignedEvent : IDomainEventHandler<Tag.AssignedEvent>
 {
-    private readonly ILogger<OnTagAssigned> _logger;
+    private readonly ILogger<TagAssignedEvent> _logger;
 
-    public OnTagAssigned(ILogger<OnTagAssigned> logger)
+    public TagAssignedEvent(ILogger<TagAssignedEvent> logger)
     {
         _logger = logger;
     }

@@ -1,7 +1,7 @@
 using LayeredArch.Application.Usecases.Orders.Ports;
 using LayeredArch.Domain.AggregateRoots.Orders;
 
-namespace LayeredArch.Application.Usecases.Orders;
+namespace LayeredArch.Application.Usecases.Orders.Queries;
 
 /// <summary>
 /// ID로 주문 조회 Query
@@ -28,10 +28,10 @@ public sealed class GetOrderByIdQuery
     /// <summary>
     /// Query Handler
     /// </summary>
-    public sealed class Usecase(IOrderDetailQueryAdapter orderDetailQueryAdapter)
+    public sealed class Usecase(IOrderDetailQuery orderDetailQuery)
         : IQueryUsecase<Request, Response>
     {
-        private readonly IOrderDetailQueryAdapter _adapter = orderDetailQueryAdapter;
+        private readonly IOrderDetailQuery _adapter = orderDetailQuery;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {

@@ -1,7 +1,7 @@
 using Functorium.Applications.Observabilities;
 using LayeredArch.Domain.AggregateRoots.Products;
 
-namespace LayeredArch.Application.Usecases.Orders;
+namespace LayeredArch.Application.Usecases.Orders.Ports;
 
 /// <summary>
 /// 교차 Aggregate 상품 카탈로그 Port

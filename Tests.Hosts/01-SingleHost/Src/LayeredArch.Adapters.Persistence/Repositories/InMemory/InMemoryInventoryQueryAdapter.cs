@@ -1,7 +1,6 @@
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Queries;
 using Functorium.Domains.Specifications;
-using LayeredArch.Application.Usecases.Inventories.Dtos;
 using LayeredArch.Application.Usecases.Inventories.Ports;
 using LayeredArch.Domain.AggregateRoots.Inventories;
 
@@ -12,19 +11,17 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 /// InMemoryInventoryRepository의 정적 저장소에서 데이터를 가져온 후 정렬/페이지네이션/DTO 변환합니다.
 /// </summary>
 [GeneratePipeline]
-public class InMemoryInventoryQueryAdapter : IInventoryQueryAdapter
+public class InMemoryInventoryQueryAdapter : IInventoryQuery
 {
     public string RequestCategory => "QueryAdapter";
 
     public virtual FinT<IO, PagedResult<InventorySummaryDto>> Search(
-        Specification<Inventory>? spec, PageRequest page, SortExpression sort)
+        Specification<Inventory> spec, PageRequest page, SortExpression sort)
     {
         return IO.lift(() =>
         {
             var allInventories = toSeq(InMemoryInventoryRepository.Inventories.Values);
-            var filtered = spec is not null
-                ? allInventories.Where(i => spec.IsSatisfiedBy(i)).ToSeq()
-                : allInventories;
+            var filtered = allInventories.Where(i => spec.IsSatisfiedBy(i)).ToSeq();
 
             var sorted = ApplySort(filtered, sort);
             var totalCount = sorted.Count;

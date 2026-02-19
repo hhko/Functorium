@@ -23,7 +23,7 @@ public sealed class GetProductByIdQuery
         string Description,
         decimal Price,
         DateTime CreatedAt,
-        DateTime? UpdatedAt);
+        Option<DateTime> UpdatedAt);
 
     /// <summary>
     /// Query Handler - 상품 조회 로직

@@ -5,7 +5,7 @@ using Functorium.Applications.Errors;
 using Functorium.Applications.Linq;
 using static Functorium.Applications.Errors.ApplicationErrorType;
 
-namespace LayeredArch.Application.Usecases.Customers;
+namespace LayeredArch.Application.Usecases.Customers.Commands;
 
 /// <summary>
 /// 고객 생성 Command - Apply 패턴 데모

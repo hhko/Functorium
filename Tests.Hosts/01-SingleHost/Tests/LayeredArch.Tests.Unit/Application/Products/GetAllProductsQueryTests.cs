@@ -28,7 +28,7 @@ public class GetAllProductsQueryTests
         var request = new GetAllProductsQuery.Request();
 
         _productQuery.Search(
-                Arg.Any<Specification<Product>?>(),
+                Arg.Any<Specification<Product>>(),
                 Arg.Any<PageRequest>(),
                 Arg.Any<SortExpression>())
             .Returns(FinTFactory.Succ(pagedResult));

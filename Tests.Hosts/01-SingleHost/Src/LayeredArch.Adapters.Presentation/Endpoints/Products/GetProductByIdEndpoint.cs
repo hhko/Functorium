@@ -1,3 +1,4 @@
+using LanguageExt;
 using LayeredArch.Adapters.Presentation.Abstractions.Extensions;
 using LayeredArch.Application.Usecases.Products.Queries;
 
@@ -33,7 +34,7 @@ public sealed class GetProductByIdEndpoint
         var usecaseRequest = new GetProductByIdQuery.Request(req.Id);
         var result = await _mediator.Send(usecaseRequest, ct);
         var mapped = result.Map(r => new Response(
-            r.ProductId, r.Name, r.Description, r.Price, r.CreatedAt, r.UpdatedAt));
+            r.ProductId, r.Name, r.Description, r.Price, r.CreatedAt, r.UpdatedAt.ToNullable()));
         await this.SendFinResponseWithNotFoundAsync(mapped, ct);
     }
 

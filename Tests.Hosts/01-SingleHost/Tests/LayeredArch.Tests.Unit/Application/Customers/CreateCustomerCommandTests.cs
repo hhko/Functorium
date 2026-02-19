@@ -1,5 +1,5 @@
 using Functorium.Domains.Specifications;
-using LayeredArch.Application.Usecases.Customers;
+using LayeredArch.Application.Usecases.Customers.Commands;
 using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
 

@@ -18,4 +18,4 @@ public sealed record ProductDetailDto(
     string Description,
     decimal Price,
     DateTime CreatedAt,
-    DateTime? UpdatedAt);
+    Option<DateTime> UpdatedAt);

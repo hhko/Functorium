@@ -1,7 +1,7 @@
 using LayeredArch.Application.Usecases.Customers.Ports;
 using LayeredArch.Domain.AggregateRoots.Customers;
 
-namespace LayeredArch.Application.Usecases.Customers;
+namespace LayeredArch.Application.Usecases.Customers.Queries;
 
 /// <summary>
 /// ID로 고객 조회 Query
@@ -26,10 +26,10 @@ public sealed class GetCustomerByIdQuery
     /// <summary>
     /// Query Handler
     /// </summary>
-    public sealed class Usecase(ICustomerDetailQueryAdapter customerDetailQueryAdapter)
+    public sealed class Usecase(ICustomerDetailQuery customerDetailQuery)
         : IQueryUsecase<Request, Response>
     {
-        private readonly ICustomerDetailQueryAdapter _adapter = customerDetailQueryAdapter;
+        private readonly ICustomerDetailQuery _adapter = customerDetailQuery;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {

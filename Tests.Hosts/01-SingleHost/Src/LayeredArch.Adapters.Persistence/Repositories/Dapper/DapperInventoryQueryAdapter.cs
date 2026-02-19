@@ -3,7 +3,6 @@ using Dapper;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Adapters.Repositories;
 using Functorium.Domains.Specifications;
-using LayeredArch.Application.Usecases.Inventories.Dtos;
 using LayeredArch.Application.Usecases.Inventories.Ports;
 using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Inventories.Specifications;
@@ -12,7 +11,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.Dapper;
 
 [GeneratePipeline]
 public class DapperInventoryQueryAdapter
-    : DapperQueryAdapterBase<Inventory, InventorySummaryDto>, IInventoryQueryAdapter
+    : DapperQueryAdapterBase<Inventory, InventorySummaryDto>, IInventoryQuery
 {
     public string RequestCategory => "QueryAdapter";
 
@@ -24,10 +23,10 @@ public class DapperInventoryQueryAdapter
 
     public DapperInventoryQueryAdapter(IDbConnection connection) : base(connection) { }
 
-    protected override (string, DynamicParameters) BuildWhereClause(Specification<Inventory>? spec)
+    protected override (string, DynamicParameters) BuildWhereClause(Specification<Inventory> spec)
         => spec switch
         {
-            null => ("", new DynamicParameters()),
+            { IsAll: true } => ("", new DynamicParameters()),
             InventoryLowStockSpec s => (
                 "WHERE StockQuantity < @Threshold",
                 Params(("Threshold", (int)s.Threshold))),

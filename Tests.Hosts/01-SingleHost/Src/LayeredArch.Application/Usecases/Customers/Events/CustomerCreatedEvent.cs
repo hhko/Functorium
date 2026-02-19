@@ -2,16 +2,16 @@ using Functorium.Applications.Events;
 using LayeredArch.Domain.AggregateRoots.Customers;
 using Microsoft.Extensions.Logging;
 
-namespace LayeredArch.Application.Usecases.Customers;
+namespace LayeredArch.Application.Usecases.Customers.Events;
 
 /// <summary>
 /// Customer.CreatedEvent 핸들러 - 고객 생성 로깅
 /// </summary>
-public sealed class OnCustomerCreated : IDomainEventHandler<Customer.CreatedEvent>
+public sealed class CustomerCreatedEvent : IDomainEventHandler<Customer.CreatedEvent>
 {
-    private readonly ILogger<OnCustomerCreated> _logger;
+    private readonly ILogger<CustomerCreatedEvent> _logger;
 
-    public OnCustomerCreated(ILogger<OnCustomerCreated> logger)
+    public CustomerCreatedEvent(ILogger<CustomerCreatedEvent> logger)
     {
         _logger = logger;
     }

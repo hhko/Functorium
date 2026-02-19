@@ -4,7 +4,7 @@ using Functorium.Adapters.SourceGenerators;
 using LanguageExt;
 using LanguageExt.Common;
 using static Functorium.Adapters.Errors.AdapterErrorType;
-using LayeredArch.Application.Usecases.Orders;
+using LayeredArch.Application.Usecases.Orders.Ports;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 

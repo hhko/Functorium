@@ -1,6 +1,5 @@
-using LayeredArch.Application.Usecases.Orders;
-using LayeredArch.Application.Usecases.Orders.Dtos;
 using LayeredArch.Application.Usecases.Orders.Ports;
+using LayeredArch.Application.Usecases.Orders.Queries;
 using LayeredArch.Domain.AggregateRoots.Orders;
 using LayeredArch.Domain.AggregateRoots.Products;
 
@@ -8,7 +7,7 @@ namespace LayeredArch.Tests.Unit.Application.Orders;
 
 public class GetOrderByIdQueryTests
 {
-    private readonly IOrderDetailQueryAdapter _adapter = Substitute.For<IOrderDetailQueryAdapter>();
+    private readonly IOrderDetailQuery _adapter = Substitute.For<IOrderDetailQuery>();
     private readonly GetOrderByIdQuery.Usecase _sut;
 
     public GetOrderByIdQueryTests()

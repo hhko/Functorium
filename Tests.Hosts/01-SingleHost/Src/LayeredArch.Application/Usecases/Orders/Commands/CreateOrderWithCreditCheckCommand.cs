@@ -1,21 +1,26 @@
+using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Orders;
 using LayeredArch.Domain.AggregateRoots.Orders.ValueObjects;
 using LayeredArch.Domain.AggregateRoots.Products;
-using Functorium.Applications.Errors;
 using Functorium.Applications.Linq;
+using Functorium.Applications.Errors;
 using static Functorium.Applications.Errors.ApplicationErrorType;
-namespace LayeredArch.Application.Usecases.Orders;
+using LayeredArch.Domain.SharedModels.Services;
+using LayeredArch.Application.Usecases.Orders.Ports;
+
+namespace LayeredArch.Application.Usecases.Orders.Commands;
 
 /// <summary>
-/// 주문 생성 Command - 공유 Port(IProductCatalog) 사용 데모
-/// IProductCatalog로 상품 존재/가격 검증 후 주문 생성
+/// 신용 한도 검증 후 주문 생성 Command - Domain Service 사용 데모
+/// OrderCreditCheckService로 고객 신용 한도를 검증한 후 주문을 생성합니다.
 /// </summary>
-public sealed class CreateOrderCommand
+public sealed class CreateOrderWithCreditCheckCommand
 {
     /// <summary>
     /// Command Request
     /// </summary>
     public sealed record Request(
+        string CustomerId,
         string ProductId,
         int Quantity,
         string ShippingAddress) : ICommandRequest<Response>;
@@ -39,6 +44,9 @@ public sealed class CreateOrderCommand
     {
         public Validator()
         {
+            RuleFor(x => x.CustomerId)
+                .NotEmpty().WithMessage("고객 ID는 필수입니다");
+
             RuleFor(x => x.ProductId)
                 .NotEmpty().WithMessage("상품 ID는 필수입니다");
 
@@ -52,15 +60,27 @@ public sealed class CreateOrderCommand
     }
 
     /// <summary>
-    /// Command Handler - IProductCatalog 공유 Port를 사용하여 교차 Aggregate 검증
+    /// Command Handler - Domain Service(OrderCreditCheckService)를 사용하여 신용 한도 검증
     /// </summary>
+    /// <remarks>
+    /// 실행 흐름:
+    /// 1. 고객 조회 (ICustomerRepository)
+    /// 2. 상품 존재 및 가격 검증 (IProductCatalog)
+    /// 3. 신용 한도 검증 (OrderCreditCheckService - 순수 도메인 로직)
+    /// 4. 주문 생성 및 영속화 (IOrderRepository)
+    /// 5. 도메인 이벤트 발행 (IDomainEventPublisher)
+    /// </remarks>
     public sealed class Usecase(
+        ICustomerRepository customerRepository,
         IOrderRepository orderRepository,
-        IProductCatalog productCatalog)
+        IProductCatalog productCatalog,
+        OrderCreditCheckService creditCheckService)
         : ICommandUsecase<Request, Response>
     {
+        private readonly ICustomerRepository _customerRepository = customerRepository;
         private readonly IOrderRepository _orderRepository = orderRepository;
         private readonly IProductCatalog _productCatalog = productCatalog;
+        private readonly OrderCreditCheckService _creditCheckService = creditCheckService;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
@@ -73,18 +93,21 @@ public sealed class CreateOrderCommand
             if (quantityResult.IsFail)
                 return FinResponse.Fail<Response>(quantityResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
 
+            var customerId = CustomerId.Create(request.CustomerId);
             var productId = ProductId.Create(request.ProductId);
             var shippingAddress = (ShippingAddress)shippingAddressResult;
             var quantity = (Quantity)quantityResult;
 
-            // 2. IProductCatalog로 상품 검증 및 가격 조회 후 주문 생성
+            // 2. 조회 → 신용 검증(Domain Service) → 주문 생성 → 이벤트 발행
             FinT<IO, Response> usecase =
+                from customer in _customerRepository.GetById(customerId)
                 from exists in _productCatalog.ExistsById(productId)
-                from _ in guard(exists, ApplicationError.For<CreateOrderCommand>(
+                from _1 in guard(exists, ApplicationError.For<CreateOrderWithCreditCheckCommand>(
                     new NotFound(),
                     request.ProductId,
                     $"상품을 찾을 수 없습니다: '{request.ProductId}'"))
                 from unitPrice in _productCatalog.GetPrice(productId)
+                from _2 in _creditCheckService.ValidateCreditLimit(customer, unitPrice.Multiply(quantity))   // Domain Service 호출
                 from order in _orderRepository.Create(
                     Order.Create(productId, quantity, unitPrice, shippingAddress))
                 select new Response(

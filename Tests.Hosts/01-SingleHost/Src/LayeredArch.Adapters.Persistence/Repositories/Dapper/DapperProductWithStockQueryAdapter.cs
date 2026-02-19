@@ -35,10 +35,10 @@ public class DapperProductWithStockQueryAdapter
 
     public DapperProductWithStockQueryAdapter(IDbConnection connection) : base(connection) { }
 
-    protected override (string, DynamicParameters) BuildWhereClause(Specification<Product>? spec)
+    protected override (string, DynamicParameters) BuildWhereClause(Specification<Product> spec)
         => spec switch
         {
-            null => ("", new DynamicParameters()),
+            { IsAll: true } => ("", new DynamicParameters()),
             ProductPriceRangeSpec s => (
                 "WHERE p.Price >= @MinPrice AND p.Price <= @MaxPrice",
                 Params(("MinPrice", (decimal)s.MinPrice), ("MaxPrice", (decimal)s.MaxPrice))),

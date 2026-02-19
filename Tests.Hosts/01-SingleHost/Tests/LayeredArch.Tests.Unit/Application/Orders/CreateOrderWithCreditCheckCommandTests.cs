@@ -1,4 +1,5 @@
-using LayeredArch.Application.Usecases.Orders;
+using LayeredArch.Application.Usecases.Orders.Commands;
+using LayeredArch.Application.Usecases.Orders.Ports;
 using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
 using LayeredArch.Domain.AggregateRoots.Orders;

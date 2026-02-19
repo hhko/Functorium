@@ -17,14 +17,12 @@ public class InMemoryProductWithStockQueryAdapter : IProductWithStockQuery
     public string RequestCategory => "QueryAdapter";
 
     public virtual FinT<IO, PagedResult<ProductWithStockDto>> Search(
-        Specification<Product>? spec, PageRequest page, SortExpression sort)
+        Specification<Product> spec, PageRequest page, SortExpression sort)
     {
         return IO.lift(() =>
         {
             var allProducts = toSeq(InMemoryProductRepository.Products.Values);
-            var filtered = spec is not null
-                ? allProducts.Where(p => spec.IsSatisfiedBy(p)).ToSeq()
-                : allProducts;
+            var filtered = allProducts.Where(p => spec.IsSatisfiedBy(p)).ToSeq();
 
             // Product + Inventory JOIN
             var joined = filtered

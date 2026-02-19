@@ -166,7 +166,7 @@ public class SearchProductsQueryTests
         var request = new SearchProductsQuery.Request();
 
         _readAdapter.Search(
-                Arg.Any<Specification<Product>?>(),
+                Arg.Any<Specification<Product>>(),
                 Arg.Any<PageRequest>(),
                 Arg.Any<SortExpression>())
             .Returns(FinTFactory.Succ(pagedResult));
@@ -189,7 +189,7 @@ public class SearchProductsQueryTests
         var request = new SearchProductsQuery.Request(MinPrice: 100m, MaxPrice: 200m);
 
         _readAdapter.Search(
-                Arg.Any<Specification<Product>?>(),
+                Arg.Any<Specification<Product>>(),
                 Arg.Any<PageRequest>(),
                 Arg.Any<SortExpression>())
             .Returns(FinTFactory.Succ(pagedResult));
@@ -212,7 +212,7 @@ public class SearchProductsQueryTests
         var request = new SearchProductsQuery.Request(Name: "Test Product");
 
         _readAdapter.Search(
-                Arg.Any<Specification<Product>?>(),
+                Arg.Any<Specification<Product>>(),
                 Arg.Any<PageRequest>(),
                 Arg.Any<SortExpression>())
             .Returns(FinTFactory.Succ(pagedResult));
@@ -235,7 +235,7 @@ public class SearchProductsQueryTests
         var request = new SearchProductsQuery.Request(Name: "Test Product", MinPrice: 100m, MaxPrice: 200m);
 
         _readAdapter.Search(
-                Arg.Any<Specification<Product>?>(),
+                Arg.Any<Specification<Product>>(),
                 Arg.Any<PageRequest>(),
                 Arg.Any<SortExpression>())
             .Returns(FinTFactory.Succ(pagedResult));
@@ -257,7 +257,7 @@ public class SearchProductsQueryTests
         var request = new SearchProductsQuery.Request(Page: 2, PageSize: 10);
 
         _readAdapter.Search(
-                Arg.Any<Specification<Product>?>(),
+                Arg.Any<Specification<Product>>(),
                 Arg.Any<PageRequest>(),
                 Arg.Any<SortExpression>())
             .Returns(FinTFactory.Succ(pagedResult));

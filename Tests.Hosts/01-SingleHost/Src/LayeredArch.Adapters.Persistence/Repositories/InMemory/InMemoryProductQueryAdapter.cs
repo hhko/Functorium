@@ -16,14 +16,12 @@ public class InMemoryProductQueryAdapter : IProductQuery
     public string RequestCategory => "QueryAdapter";
 
     public virtual FinT<IO, PagedResult<ProductSummaryDto>> Search(
-        Specification<Product>? spec, PageRequest page, SortExpression sort)
+        Specification<Product> spec, PageRequest page, SortExpression sort)
     {
         return IO.lift(() =>
         {
             var allProducts = toSeq(InMemoryProductRepository.Products.Values);
-            var filtered = spec is not null
-                ? allProducts.Where(p => spec.IsSatisfiedBy(p)).ToSeq()
-                : allProducts;
+            var filtered = allProducts.Where(p => spec.IsSatisfiedBy(p)).ToSeq();
 
             var sorted = ApplySort(filtered, sort);
             var totalCount = sorted.Count;

@@ -20,8 +20,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using LayeredArch.Application.Usecases.Orders;
-
 namespace LayeredArch.Adapters.Persistence.Abstractions.Registrations;
 
 public static class AdapterPersistenceRegistration
@@ -90,10 +88,10 @@ public static class AdapterPersistenceRegistration
         services.RegisterScopedAdapterPipeline<IProductQuery, InMemoryProductQueryAdapterPipeline>();
         services.RegisterScopedAdapterPipeline<IProductDetailQuery, InMemoryProductDetailQueryAdapterPipeline>();
         services.AddScoped<InMemoryInventoryRepository>();
-        services.RegisterScopedAdapterPipeline<IInventoryQueryAdapter, InMemoryInventoryQueryAdapterPipeline>();
+        services.RegisterScopedAdapterPipeline<IInventoryQuery, InMemoryInventoryQueryAdapterPipeline>();
         services.RegisterScopedAdapterPipeline<IProductWithStockQuery, InMemoryProductWithStockQueryAdapterPipeline>();
-        services.RegisterScopedAdapterPipeline<ICustomerDetailQueryAdapter, InMemoryCustomerDetailQueryAdapterPipeline>();
-        services.RegisterScopedAdapterPipeline<IOrderDetailQueryAdapter, InMemoryOrderDetailQueryAdapterPipeline>();
+        services.RegisterScopedAdapterPipeline<ICustomerDetailQuery, InMemoryCustomerDetailQueryAdapterPipeline>();
+        services.RegisterScopedAdapterPipeline<IOrderDetailQuery, InMemoryOrderDetailQueryAdapterPipeline>();
     }
 
     private static void RegisterSqliteRepositories(IServiceCollection services)
@@ -123,6 +121,6 @@ public static class AdapterPersistenceRegistration
 
         services.RegisterScopedAdapterPipeline<IProductQuery, DapperProductQueryAdapterPipeline>();
         services.RegisterScopedAdapterPipeline<IProductWithStockQuery, DapperProductWithStockQueryAdapterPipeline>();
-        services.RegisterScopedAdapterPipeline<IInventoryQueryAdapter, DapperInventoryQueryAdapterPipeline>();
+        services.RegisterScopedAdapterPipeline<IInventoryQuery, DapperInventoryQueryAdapterPipeline>();
     }
 }

@@ -1,6 +1,5 @@
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
-using LayeredArch.Application.Usecases.Orders.Dtos;
 using LayeredArch.Application.Usecases.Orders.Ports;
 using LayeredArch.Domain.AggregateRoots.Orders;
 using static Functorium.Adapters.Errors.AdapterErrorType;
@@ -12,7 +11,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 /// InMemoryOrderRepository의 정적 저장소에서 데이터를 가져온 후 DTO로 프로젝션합니다.
 /// </summary>
 [GeneratePipeline]
-public class InMemoryOrderDetailQueryAdapter : IOrderDetailQueryAdapter
+public class InMemoryOrderDetailQueryAdapter : IOrderDetailQuery
 {
     public string RequestCategory => "QueryAdapter";
 

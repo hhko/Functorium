@@ -1,11 +1,10 @@
 using Functorium.Applications.Queries;
 using Functorium.Domains.Specifications;
-using LayeredArch.Application.Usecases.Inventories.Dtos;
 using LayeredArch.Application.Usecases.Inventories.Ports;
 using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Inventories.Specifications;
 
-namespace LayeredArch.Application.Usecases.Inventories;
+namespace LayeredArch.Application.Usecases.Inventories.Queries;
 
 /// <summary>
 /// 재고 검색 Query - 페이지네이션/정렬 + LowStock 필터 지원
@@ -19,11 +18,11 @@ public sealed class SearchInventoryQuery
     /// Query Request - 선택적 검색 필터 + 페이지네이션/정렬
     /// </summary>
     public sealed record Request(
-        int? LowStockThreshold = null,
-        int? Page = null,
-        int? PageSize = null,
-        string? SortBy = null,
-        string? SortDirection = null) : IQueryRequest<Response>;
+        int LowStockThreshold = 0,
+        int Page = 1,
+        int PageSize = PageRequest.DefaultPageSize,
+        string SortBy = "",
+        string SortDirection = "") : IQueryRequest<Response>;
 
     /// <summary>
     /// Query Response - 페이지네이션된 검색 결과
@@ -45,34 +44,32 @@ public sealed class SearchInventoryQuery
         public Validator()
         {
             RuleFor(x => x.LowStockThreshold)
-                .GreaterThan(0).When(x => x.LowStockThreshold.HasValue)
+                .GreaterThan(0).When(x => x.LowStockThreshold != 0)
                 .WithMessage("재고 부족 임계값은 0보다 커야 합니다");
 
             RuleFor(x => x.SortBy)
                 .Must(sortBy => AllowedSortFields.Contains(sortBy, StringComparer.OrdinalIgnoreCase))
-                .When(x => x.SortBy is not null)
+                .When(x => x.SortBy.Length > 0)
                 .WithMessage($"정렬 필드는 {string.Join(", ", AllowedSortFields)} 중 하나여야 합니다");
 
-            RuleFor(x => x.SortDirection!)
+            RuleFor(x => x.SortDirection)
                 .MustBeEnumValue<Request, Functorium.Applications.Queries.SortDirection>()
-                .When(x => x.SortDirection is not null);
+                .When(x => x.SortDirection.Length > 0);
         }
     }
 
     /// <summary>
     /// Query Handler - Read Adapter를 통한 페이지네이션 검색
     /// </summary>
-    public sealed class Usecase(IInventoryQueryAdapter readAdapter)
+    public sealed class Usecase(IInventoryQuery readAdapter)
         : IQueryUsecase<Request, Response>
     {
-        private readonly IInventoryQueryAdapter _readAdapter = readAdapter;
+        private readonly IInventoryQuery _readAdapter = readAdapter;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var spec = BuildSpecification(request);
-            var pageRequest = new PageRequest(
-                request.Page ?? 1,
-                request.PageSize ?? PageRequest.DefaultPageSize);
+            var pageRequest = new PageRequest(request.Page, request.PageSize);
             var sortExpression = BuildSortExpression(request);
 
             FinT<IO, Response> usecase =
@@ -91,20 +88,20 @@ public sealed class SearchInventoryQuery
             return response.ToFinResponse();
         }
 
-        private static Specification<Inventory>? BuildSpecification(Request request)
+        private static Specification<Inventory> BuildSpecification(Request request)
         {
-            if (request.LowStockThreshold.HasValue)
+            if (request.LowStockThreshold > 0)
             {
                 return new InventoryLowStockSpec(
-                    Quantity.Create(request.LowStockThreshold.Value).ThrowIfFail());
+                    Quantity.Create(request.LowStockThreshold).ThrowIfFail());
             }
 
-            return null;
+            return Specification<Inventory>.All;
         }
 
         private static SortExpression BuildSortExpression(Request request)
         {
-            if (request.SortBy is null)
+            if (request.SortBy.Length == 0)
                 return SortExpression.Empty;
 
             return SortExpression.By(request.SortBy, Functorium.Applications.Queries.SortDirection.Parse(request.SortDirection));

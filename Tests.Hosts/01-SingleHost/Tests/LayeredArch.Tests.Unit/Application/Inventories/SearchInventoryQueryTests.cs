@@ -1,9 +1,8 @@
 using FluentValidation;
 using Functorium.Applications.Queries;
 using Functorium.Domains.Specifications;
-using LayeredArch.Application.Usecases.Inventories;
-using LayeredArch.Application.Usecases.Inventories.Dtos;
 using LayeredArch.Application.Usecases.Inventories.Ports;
+using LayeredArch.Application.Usecases.Inventories.Queries;
 using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Products;
 
@@ -40,10 +39,23 @@ public class SearchInventoryQueryValidatorTests
     }
 
     [Fact]
-    public void Validate_ReturnsValidationError_WhenLowStockThresholdIsZero()
+    public void Validate_ReturnsNoError_WhenLowStockThresholdIsZero()
+    {
+        // Arrange — 0은 "필터 없음"이므로 유효
+        var request = new SearchInventoryQuery.Request(LowStockThreshold: 0);
+
+        // Act
+        var actual = _sut.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Validate_ReturnsValidationError_WhenLowStockThresholdIsNegative()
     {
         // Arrange
-        var request = new SearchInventoryQuery.Request(LowStockThreshold: 0);
+        var request = new SearchInventoryQuery.Request(LowStockThreshold: -1);
 
         // Act
         var actual = _sut.Validate(request);
@@ -70,7 +82,7 @@ public class SearchInventoryQueryValidatorTests
 
 public class SearchInventoryQueryTests
 {
-    private readonly IInventoryQueryAdapter _readAdapter = Substitute.For<IInventoryQueryAdapter>();
+    private readonly IInventoryQuery _readAdapter = Substitute.For<IInventoryQuery>();
     private readonly SearchInventoryQuery.Usecase _sut;
 
     public SearchInventoryQueryTests()
@@ -89,7 +101,7 @@ public class SearchInventoryQueryTests
         var request = new SearchInventoryQuery.Request();
 
         _readAdapter.Search(
-                Arg.Any<Specification<Inventory>?>(),
+                Arg.Any<Specification<Inventory>>(),
                 Arg.Any<PageRequest>(),
                 Arg.Any<SortExpression>())
             .Returns(FinTFactory.Succ(pagedResult));
@@ -113,7 +125,7 @@ public class SearchInventoryQueryTests
         var request = new SearchInventoryQuery.Request(LowStockThreshold: 10);
 
         _readAdapter.Search(
-                Arg.Any<Specification<Inventory>?>(),
+                Arg.Any<Specification<Inventory>>(),
                 Arg.Any<PageRequest>(),
                 Arg.Any<SortExpression>())
             .Returns(FinTFactory.Succ(pagedResult));
@@ -136,7 +148,7 @@ public class SearchInventoryQueryTests
         var request = new SearchInventoryQuery.Request(Page: 2, PageSize: 10);
 
         _readAdapter.Search(
-                Arg.Any<Specification<Inventory>?>(),
+                Arg.Any<Specification<Inventory>>(),
                 Arg.Any<PageRequest>(),
                 Arg.Any<SortExpression>())
             .Returns(FinTFactory.Succ(pagedResult));

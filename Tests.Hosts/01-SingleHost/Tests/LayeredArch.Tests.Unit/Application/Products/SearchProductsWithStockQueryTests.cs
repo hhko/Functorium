@@ -138,7 +138,7 @@ public class SearchProductsWithStockQueryTests
         var request = new SearchProductsWithStockQuery.Request();
 
         _readAdapter.Search(
-                Arg.Any<Specification<Product>?>(),
+                Arg.Any<Specification<Product>>(),
                 Arg.Any<PageRequest>(),
                 Arg.Any<SortExpression>())
             .Returns(FinTFactory.Succ(pagedResult));
@@ -161,7 +161,7 @@ public class SearchProductsWithStockQueryTests
         var request = new SearchProductsWithStockQuery.Request(MinPrice: 100m, MaxPrice: 200m);
 
         _readAdapter.Search(
-                Arg.Any<Specification<Product>?>(),
+                Arg.Any<Specification<Product>>(),
                 Arg.Any<PageRequest>(),
                 Arg.Any<SortExpression>())
             .Returns(FinTFactory.Succ(pagedResult));
@@ -184,7 +184,7 @@ public class SearchProductsWithStockQueryTests
         var request = new SearchProductsWithStockQuery.Request(Page: 2, PageSize: 10);
 
         _readAdapter.Search(
-                Arg.Any<Specification<Product>?>(),
+                Arg.Any<Specification<Product>>(),
                 Arg.Any<PageRequest>(),
                 Arg.Any<SortExpression>())
             .Returns(FinTFactory.Succ(pagedResult));

@@ -112,24 +112,18 @@ public sealed class SearchProductsQuery
             return response.ToFinResponse();
         }
 
-        private static Specification<Product>? BuildSpecification(Request request)
+        private static Specification<Product> BuildSpecification(Request request)
         {
-            Specification<Product>? spec = null;
+            var spec = Specification<Product>.All;
 
             if (request.Name.Length > 0)
-            {
-                spec = new ProductNameSpec(
+                spec &= new ProductNameSpec(
                     ProductName.Create(request.Name).ThrowIfFail());
-            }
 
             if (request.MinPrice > 0 && request.MaxPrice > 0)
-            {
-                var priceSpec = new ProductPriceRangeSpec(
+                spec &= new ProductPriceRangeSpec(
                     Money.Create(request.MinPrice).ThrowIfFail(),
                     Money.Create(request.MaxPrice).ThrowIfFail());
-
-                spec = spec is not null ? spec & priceSpec : priceSpec;
-            }
 
             return spec;
         }

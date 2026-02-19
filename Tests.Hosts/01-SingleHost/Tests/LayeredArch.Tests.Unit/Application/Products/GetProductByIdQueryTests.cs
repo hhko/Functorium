@@ -21,7 +21,7 @@ public class GetProductByIdQueryTests
         var productId = ProductId.New();
         var dto = new ProductDetailDto(
             productId.ToString(), "Test Product", "Desc", 100m,
-            DateTime.UtcNow, null);
+            DateTime.UtcNow, None);
 
         var request = new GetProductByIdQuery.Request(productId.ToString());
 

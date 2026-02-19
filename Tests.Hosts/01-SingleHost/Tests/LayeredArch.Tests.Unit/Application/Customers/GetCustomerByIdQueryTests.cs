@@ -1,13 +1,12 @@
-using LayeredArch.Application.Usecases.Customers;
-using LayeredArch.Application.Usecases.Customers.Dtos;
 using LayeredArch.Application.Usecases.Customers.Ports;
+using LayeredArch.Application.Usecases.Customers.Queries;
 using LayeredArch.Domain.AggregateRoots.Customers;
 
 namespace LayeredArch.Tests.Unit.Application.Customers;
 
 public class GetCustomerByIdQueryTests
 {
-    private readonly ICustomerDetailQueryAdapter _adapter = Substitute.For<ICustomerDetailQueryAdapter>();
+    private readonly ICustomerDetailQuery _adapter = Substitute.For<ICustomerDetailQuery>();
     private readonly GetCustomerByIdQuery.Usecase _sut;
 
     public GetCustomerByIdQueryTests()

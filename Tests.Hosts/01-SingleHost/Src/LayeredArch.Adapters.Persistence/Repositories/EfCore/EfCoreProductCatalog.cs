@@ -2,7 +2,7 @@ using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using Microsoft.EntityFrameworkCore;
 using static Functorium.Adapters.Errors.AdapterErrorType;
-using LayeredArch.Application.Usecases.Orders;
+using LayeredArch.Application.Usecases.Orders.Ports;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 

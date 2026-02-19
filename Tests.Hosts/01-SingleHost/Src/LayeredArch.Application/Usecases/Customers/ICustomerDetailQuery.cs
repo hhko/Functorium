@@ -1,5 +1,4 @@
 using Functorium.Applications.Queries;
-using LayeredArch.Application.Usecases.Customers.Dtos;
 using LayeredArch.Domain.AggregateRoots.Customers;
 
 namespace LayeredArch.Application.Usecases.Customers.Ports;
@@ -8,7 +7,14 @@ namespace LayeredArch.Application.Usecases.Customers.Ports;
 /// Customer 단건 조회용 읽기 전용 어댑터 포트.
 /// Aggregate 재구성 없이 DB에서 DTO로 직접 프로젝션합니다.
 /// </summary>
-public interface ICustomerDetailQueryAdapter : IQueryAdapter
+public interface ICustomerDetailQuery : IQueryAdapter
 {
     FinT<IO, CustomerDetailDto> GetById(CustomerId id);
 }
+
+public sealed record CustomerDetailDto(
+    string CustomerId,
+    string Name,
+    string Email,
+    decimal CreditLimit,
+    DateTime CreatedAt);

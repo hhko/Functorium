@@ -107,7 +107,7 @@ public sealed class SearchProductsWithStockQuery
             return response.ToFinResponse();
         }
 
-        private static Specification<Product>? BuildSpecification(Request request)
+        private static Specification<Product> BuildSpecification(Request request)
         {
             if (request.MinPrice > 0 && request.MaxPrice > 0)
             {
@@ -116,7 +116,7 @@ public sealed class SearchProductsWithStockQuery
                     Money.Create(request.MaxPrice).ThrowIfFail());
             }
 
-            return null;
+            return Specification<Product>.All;
         }
 
         private static SortExpression BuildSortExpression(Request request)

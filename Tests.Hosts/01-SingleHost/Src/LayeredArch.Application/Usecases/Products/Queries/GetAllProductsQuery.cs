@@ -1,4 +1,5 @@
 using Functorium.Applications.Queries;
+using Functorium.Domains.Specifications;
 using LayeredArch.Application.Usecases.Products.Ports;
 using LayeredArch.Domain.AggregateRoots.Products;
 
@@ -33,7 +34,7 @@ public sealed class GetAllProductsQuery
             PageRequest pageRequest = new(1, int.MaxValue);
 
             FinT<IO, Response> usecase =
-                from result in _productQuery.Search(spec: null, pageRequest, SortExpression.Empty)
+                from result in _productQuery.Search(Specification<Product>.All, pageRequest, SortExpression.Empty)
                 select new Response(result.Items);
 
             Fin<Response> response = await usecase.Run().RunAsync();

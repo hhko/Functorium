@@ -2,16 +2,16 @@ using Functorium.Applications.Events;
 using LayeredArch.Domain.SharedModels.Entities;
 using Microsoft.Extensions.Logging;
 
-namespace LayeredArch.Application.Usecases.Tags;
+namespace LayeredArch.Application.Usecases.Tags.Events;
 
 /// <summary>
 /// Tag.RemovedEvent 핸들러 - 태그 제거 로깅.
 /// </summary>
-public sealed class OnTagRemoved : IDomainEventHandler<Tag.RemovedEvent>
+public sealed class TagRemovedEvent : IDomainEventHandler<Tag.RemovedEvent>
 {
-    private readonly ILogger<OnTagRemoved> _logger;
+    private readonly ILogger<TagRemovedEvent> _logger;
 
-    public OnTagRemoved(ILogger<OnTagRemoved> logger)
+    public TagRemovedEvent(ILogger<TagRemovedEvent> logger)
     {
         _logger = logger;
     }
