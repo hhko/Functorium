@@ -60,6 +60,34 @@ public class SearchProductsEndpointTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task SearchProducts_ShouldReturn200Ok_WhenNameProvided()
+    {
+        // Arrange - create a product first
+        var productName = $"NameSearchTest {Guid.NewGuid()}";
+        var createRequest = new
+        {
+            Name = productName,
+            Description = "Test Description",
+            Price = 100.00m,
+            StockQuantity = 10
+        };
+        await Client.PostAsJsonAsync("/api/products", createRequest, TestContext.Current.CancellationToken);
+
+        // Act
+        var response = await Client.GetAsync(
+            $"/api/products/search?name={Uri.EscapeDataString(productName)}",
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var result = await response.Content.ReadFromJsonAsync<SearchProductsEndpoint.Response>(
+            TestContext.Current.CancellationToken);
+        result.ShouldNotBeNull();
+        result.Products.ShouldNotBeNull();
+    }
+
+    [Fact]
     public async Task SearchProducts_ShouldReturn200Ok_WhenPriceRangeProvided()
     {
         // Arrange - create a product first

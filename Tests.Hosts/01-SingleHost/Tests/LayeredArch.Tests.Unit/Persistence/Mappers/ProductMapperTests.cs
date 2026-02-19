@@ -1,7 +1,8 @@
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
 using LayeredArch.Domain.AggregateRoots.Products;
-using LayeredArch.Domain.SharedKernel.Entities;
-using LayeredArch.Domain.SharedKernel.ValueObjects;
+using LayeredArch.Domain.SharedModels.Entities;
+using LayeredArch.Domain.SharedModels.Entities.ValueObjects;
+using LayeredArch.Domain.SharedModels.ValueObjects;
 
 namespace LayeredArch.Tests.Unit.Persistence.Mappers;
 

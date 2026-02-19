@@ -1,6 +1,7 @@
+using Functorium.Applications.Queries;
 using LayeredArch.Adapters.Presentation.Abstractions.Extensions;
-using LayeredArch.Application.Usecases.Products;
-using LayeredArch.Application.Usecases.Products.Dtos;
+using LayeredArch.Application.Usecases.Products.Ports;
+using LayeredArch.Application.Usecases.Products.Queries;
 
 namespace LayeredArch.Adapters.Presentation.Endpoints.Products;
 
@@ -32,12 +33,13 @@ public sealed class SearchProductsEndpoint
     public override async Task HandleAsync(Request req, CancellationToken ct)
     {
         var usecaseRequest = new SearchProductsQuery.Request(
-            req.MinPrice,
-            req.MaxPrice,
-            req.Page,
-            req.PageSize,
-            req.SortBy,
-            req.SortDirection);
+            req.Name ?? "",
+            req.MinPrice ?? 0,
+            req.MaxPrice ?? 0,
+            req.Page ?? 1,
+            req.PageSize ?? PageRequest.DefaultPageSize,
+            req.SortBy ?? "",
+            req.SortDirection ?? "");
 
         var result = await _mediator.Send(usecaseRequest, ct);
 
@@ -54,6 +56,7 @@ public sealed class SearchProductsEndpoint
     }
 
     public sealed record Request(
+        [property: QueryParam] string? Name = null,
         [property: QueryParam] decimal? MinPrice = null,
         [property: QueryParam] decimal? MaxPrice = null,
         [property: QueryParam] int? Page = null,

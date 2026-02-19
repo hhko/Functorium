@@ -1,5 +1,5 @@
 using LayeredArch.Adapters.Presentation.Abstractions.Extensions;
-using LayeredArch.Application.Usecases.Products;
+using LayeredArch.Application.Usecases.Products.Commands;
 
 namespace LayeredArch.Adapters.Presentation.Endpoints.Products;
 

@@ -20,7 +20,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 [GeneratePipeline]
 public class InMemoryProductRepository : IProductRepository
 {
-    private static readonly ConcurrentDictionary<ProductId, Product> _products = new();
+    internal static readonly ConcurrentDictionary<ProductId, Product> Products = new();
     private readonly IDomainEventCollector _eventCollector;
 
     /// <summary>
@@ -44,7 +44,7 @@ public class InMemoryProductRepository : IProductRepository
                     $"[{nameof(InMemoryProductRepository)}] 시뮬레이션된 어댑터 예외: Repository Create 예외 처리 데모");
             }
 
-            _products[product.Id] = product;
+            Products[product.Id] = product;
             _eventCollector.Track(product);
             return Fin.Succ(product);
         });
@@ -55,7 +55,7 @@ public class InMemoryProductRepository : IProductRepository
         // Pipeline이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
-            if (_products.TryGetValue(id, out Product? product))
+            if (Products.TryGetValue(id, out Product? product))
             {
                 return Fin.Succ(product);
             }
@@ -67,33 +67,12 @@ public class InMemoryProductRepository : IProductRepository
         });
     }
 
-    public virtual FinT<IO, Option<Product>> GetByName(ProductName name)
-    {
-        // Pipeline이 자동으로 Activity 생성 및 로깅 처리
-        return IO.lift(() =>
-        {
-            var product = _products.Values.FirstOrDefault(p =>
-                ((string)p.Name).Equals(name, StringComparison.OrdinalIgnoreCase));
-            return Fin.Succ(Optional(product));
-        });
-    }
-
-    public virtual FinT<IO, Seq<Product>> GetAll()
-    {
-        // Pipeline이 자동으로 Activity 생성 및 로깅 처리
-        return IO.lift(() =>
-        {
-            Seq<Product> products = toSeq(_products.Values);
-            return Fin.Succ(products);
-        });
-    }
-
     public virtual FinT<IO, Product> Update(Product product)
     {
         // Pipeline이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
-            if (!_products.ContainsKey(product.Id))
+            if (!Products.ContainsKey(product.Id))
             {
                 return AdapterError.For<InMemoryProductRepository>(
                     new NotFound(),
@@ -107,7 +86,7 @@ public class InMemoryProductRepository : IProductRepository
                     $"[{nameof(InMemoryProductRepository)}] 시뮬레이션된 어댑터 예외: Repository Update 예외 처리 데모");
             }
 
-            _products[product.Id] = product;
+            Products[product.Id] = product;
             _eventCollector.Track(product);
             return Fin.Succ(product);
         });
@@ -118,7 +97,7 @@ public class InMemoryProductRepository : IProductRepository
         // Pipeline이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
-            if (!_products.TryRemove(id, out _))
+            if (!Products.TryRemove(id, out _))
             {
                 return AdapterError.For<InMemoryProductRepository>(
                     new NotFound(),
@@ -134,17 +113,9 @@ public class InMemoryProductRepository : IProductRepository
     {
         return IO.lift(() =>
         {
-            bool exists = _products.Values.Any(p => spec.IsSatisfiedBy(p));
+            bool exists = Products.Values.Any(p => spec.IsSatisfiedBy(p));
             return Fin.Succ(exists);
         });
     }
 
-    public virtual FinT<IO, Seq<Product>> FindAll(Specification<Product> spec)
-    {
-        return IO.lift(() =>
-        {
-            var products = _products.Values.Where(p => spec.IsSatisfiedBy(p));
-            return Fin.Succ(toSeq(products));
-        });
-    }
 }

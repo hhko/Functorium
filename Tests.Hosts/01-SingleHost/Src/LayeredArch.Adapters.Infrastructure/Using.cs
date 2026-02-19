@@ -1,2 +1,2 @@
 global using FluentValidation;
-global using LayeredArch.Domain.SharedKernel.ValueObjects;
+global using LayeredArch.Domain.SharedModels.ValueObjects;

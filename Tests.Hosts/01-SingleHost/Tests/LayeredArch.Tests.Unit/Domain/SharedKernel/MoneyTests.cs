@@ -1,6 +1,6 @@
-using LayeredArch.Domain.SharedKernel.ValueObjects;
+using LayeredArch.Domain.SharedModels.ValueObjects;
 
-namespace LayeredArch.Tests.Unit.Domain.SharedKernel;
+namespace LayeredArch.Tests.Unit.Domain.SharedModels;
 
 public class MoneyTests
 {

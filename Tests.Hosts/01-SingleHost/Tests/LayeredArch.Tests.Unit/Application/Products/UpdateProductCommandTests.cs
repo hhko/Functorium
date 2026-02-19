@@ -1,7 +1,7 @@
 using Functorium.Domains.Specifications;
-using LayeredArch.Application.Usecases.Products;
+using LayeredArch.Application.Usecases.Products.Commands;
 using LayeredArch.Domain.AggregateRoots.Products;
-using LayeredArch.Domain.SharedKernel.ValueObjects;
+using LayeredArch.Domain.SharedModels.ValueObjects;
 
 namespace LayeredArch.Tests.Unit.Application.Products;
 

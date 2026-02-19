@@ -3,7 +3,6 @@ using Dapper;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Adapters.Repositories;
 using Functorium.Domains.Specifications;
-using LayeredArch.Application.Usecases.Products.Dtos;
 using LayeredArch.Application.Usecases.Products.Ports;
 using LayeredArch.Domain.AggregateRoots.Products;
 using LayeredArch.Domain.AggregateRoots.Products.Specifications;

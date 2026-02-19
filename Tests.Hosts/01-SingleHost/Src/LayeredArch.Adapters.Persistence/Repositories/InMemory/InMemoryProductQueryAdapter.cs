@@ -1,7 +1,6 @@
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Queries;
 using Functorium.Domains.Specifications;
-using LayeredArch.Application.Usecases.Products.Dtos;
 using LayeredArch.Application.Usecases.Products.Ports;
 using LayeredArch.Domain.AggregateRoots.Products;
 
@@ -9,44 +8,33 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 
 /// <summary>
 /// InMemory 기반 Product 읽기 전용 어댑터.
-/// InMemoryProductRepository를 위임하여 데이터를 가져온 후 정렬/페이지네이션/DTO 변환합니다.
+/// InMemoryProductRepository의 정적 저장소에서 데이터를 가져온 후 정렬/페이지네이션/DTO 변환합니다.
 /// </summary>
 [GeneratePipeline]
 public class InMemoryProductQueryAdapter : IProductQueryAdapter
 {
-    private readonly InMemoryProductRepository _repository;
-
     public string RequestCategory => "QueryAdapter";
-
-    public InMemoryProductQueryAdapter(InMemoryProductRepository repository)
-    {
-        _repository = repository;
-    }
 
     public virtual FinT<IO, PagedResult<ProductSummaryDto>> Search(
         Specification<Product>? spec, PageRequest page, SortExpression sort)
     {
-        return IO.liftAsync(async () =>
+        return IO.lift(() =>
         {
-            Fin<Seq<Product>> result = spec is not null
-                ? await _repository.FindAll(spec).Run().RunAsync()
-                : await _repository.GetAll().Run().RunAsync();
+            var allProducts = toSeq(InMemoryProductRepository.Products.Values);
+            var filtered = spec is not null
+                ? allProducts.Where(p => spec.IsSatisfiedBy(p)).ToSeq()
+                : allProducts;
 
-            return result.Match(
-                Succ: products =>
-                {
-                    var sorted = ApplySort(products, sort);
-                    var totalCount = sorted.Count;
-                    var items = sorted
-                        .Skip(page.Skip)
-                        .Take(page.PageSize)
-                        .Select(p => new ProductSummaryDto(p.Id.ToString(), p.Name, p.Price))
-                        .ToSeq();
+            var sorted = ApplySort(filtered, sort);
+            var totalCount = sorted.Count;
+            var items = sorted
+                .Skip(page.Skip)
+                .Take(page.PageSize)
+                .Select(p => new ProductSummaryDto(p.Id.ToString(), p.Name, p.Price))
+                .ToSeq();
 
-                    return Fin.Succ(new PagedResult<ProductSummaryDto>(
-                        items, totalCount, page.Page, page.PageSize));
-                },
-                Fail: error => Fin.Fail<PagedResult<ProductSummaryDto>>(error));
+            return Fin.Succ(new PagedResult<ProductSummaryDto>(
+                items, totalCount, page.Page, page.PageSize));
         });
     }
 

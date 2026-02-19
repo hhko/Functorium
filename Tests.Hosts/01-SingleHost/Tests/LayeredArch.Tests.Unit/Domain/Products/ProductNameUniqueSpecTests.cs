@@ -1,6 +1,6 @@
 using LayeredArch.Domain.AggregateRoots.Products;
 using LayeredArch.Domain.AggregateRoots.Products.Specifications;
-using LayeredArch.Domain.SharedKernel.ValueObjects;
+using LayeredArch.Domain.SharedModels.ValueObjects;
 
 namespace LayeredArch.Tests.Unit.Domain.Products;
 

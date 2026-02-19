@@ -1,3 +1,4 @@
+using LayeredArch.Application.Usecases.Orders.Ports;
 using LayeredArch.Domain.AggregateRoots.Orders;
 
 namespace LayeredArch.Application.Usecases.Orders;
@@ -27,24 +28,24 @@ public sealed class GetOrderByIdQuery
     /// <summary>
     /// Query Handler
     /// </summary>
-    public sealed class Usecase(IOrderRepository orderRepository)
+    public sealed class Usecase(IOrderDetailQueryAdapter orderDetailQueryAdapter)
         : IQueryUsecase<Request, Response>
     {
-        private readonly IOrderRepository _orderRepository = orderRepository;
+        private readonly IOrderDetailQueryAdapter _adapter = orderDetailQueryAdapter;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var orderId = OrderId.Create(request.OrderId);
             FinT<IO, Response> usecase =
-                from order in _orderRepository.GetById(orderId)
+                from dto in _adapter.GetById(orderId)
                 select new Response(
-                    order.Id.ToString(),
-                    order.ProductId.ToString(),
-                    order.Quantity,
-                    order.UnitPrice,
-                    order.TotalAmount,
-                    order.ShippingAddress,
-                    order.CreatedAt);
+                    dto.OrderId,
+                    dto.ProductId,
+                    dto.Quantity,
+                    dto.UnitPrice,
+                    dto.TotalAmount,
+                    dto.ShippingAddress,
+                    dto.CreatedAt);
 
             Fin<Response> response = await usecase.Run().RunAsync();
             return response.ToFinResponse();

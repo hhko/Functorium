@@ -1,13 +1,13 @@
 using Functorium.Applications.Events;
-using LayeredArch.Domain.SharedKernel.Events;
+using LayeredArch.Domain.SharedModels.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace LayeredArch.Application.Usecases.Tags;
 
 /// <summary>
-/// TagAssignedEvent 핸들러 - 태그 할당 로깅.
+/// Tag.AssignedEvent 핸들러 - 태그 할당 로깅.
 /// </summary>
-public sealed class OnTagAssigned : IDomainEventHandler<TagAssignedEvent>
+public sealed class OnTagAssigned : IDomainEventHandler<Tag.AssignedEvent>
 {
     private readonly ILogger<OnTagAssigned> _logger;
 
@@ -16,7 +16,7 @@ public sealed class OnTagAssigned : IDomainEventHandler<TagAssignedEvent>
         _logger = logger;
     }
 
-    public ValueTask Handle(TagAssignedEvent notification, CancellationToken cancellationToken)
+    public ValueTask Handle(Tag.AssignedEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "[DomainEvent] Tag assigned: {TagId}, Name: {TagName}",

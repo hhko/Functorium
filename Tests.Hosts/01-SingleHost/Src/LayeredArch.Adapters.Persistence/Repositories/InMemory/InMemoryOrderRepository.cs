@@ -15,7 +15,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 [GeneratePipeline]
 public class InMemoryOrderRepository : IOrderRepository
 {
-    private static readonly ConcurrentDictionary<OrderId, Order> _orders = new();
+    internal static readonly ConcurrentDictionary<OrderId, Order> Orders = new();
     private readonly IDomainEventCollector _eventCollector;
 
     public string RequestCategory => "Repository";
@@ -29,7 +29,7 @@ public class InMemoryOrderRepository : IOrderRepository
     {
         return IO.lift(() =>
         {
-            _orders[order.Id] = order;
+            Orders[order.Id] = order;
             _eventCollector.Track(order);
             return Fin.Succ(order);
         });
@@ -39,7 +39,7 @@ public class InMemoryOrderRepository : IOrderRepository
     {
         return IO.lift(() =>
         {
-            if (_orders.TryGetValue(id, out Order? order))
+            if (Orders.TryGetValue(id, out Order? order))
             {
                 return Fin.Succ(order);
             }
@@ -55,7 +55,7 @@ public class InMemoryOrderRepository : IOrderRepository
     {
         return IO.lift(() =>
         {
-            if (!_orders.ContainsKey(order.Id))
+            if (!Orders.ContainsKey(order.Id))
             {
                 return AdapterError.For<InMemoryOrderRepository>(
                     new NotFound(),
@@ -63,7 +63,7 @@ public class InMemoryOrderRepository : IOrderRepository
                     $"주문 ID '{order.Id}'을(를) 찾을 수 없습니다");
             }
 
-            _orders[order.Id] = order;
+            Orders[order.Id] = order;
             _eventCollector.Track(order);
             return Fin.Succ(order);
         });
@@ -73,7 +73,7 @@ public class InMemoryOrderRepository : IOrderRepository
     {
         return IO.lift(() =>
         {
-            if (!_orders.TryRemove(id, out _))
+            if (!Orders.TryRemove(id, out _))
             {
                 return AdapterError.For<InMemoryOrderRepository>(
                     new NotFound(),

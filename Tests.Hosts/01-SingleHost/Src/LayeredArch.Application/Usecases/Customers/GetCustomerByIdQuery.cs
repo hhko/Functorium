@@ -1,3 +1,4 @@
+using LayeredArch.Application.Usecases.Customers.Ports;
 using LayeredArch.Domain.AggregateRoots.Customers;
 
 namespace LayeredArch.Application.Usecases.Customers;
@@ -25,22 +26,22 @@ public sealed class GetCustomerByIdQuery
     /// <summary>
     /// Query Handler
     /// </summary>
-    public sealed class Usecase(ICustomerRepository customerRepository)
+    public sealed class Usecase(ICustomerDetailQueryAdapter customerDetailQueryAdapter)
         : IQueryUsecase<Request, Response>
     {
-        private readonly ICustomerRepository _customerRepository = customerRepository;
+        private readonly ICustomerDetailQueryAdapter _adapter = customerDetailQueryAdapter;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var customerId = CustomerId.Create(request.CustomerId);
             FinT<IO, Response> usecase =
-                from customer in _customerRepository.GetById(customerId)
+                from dto in _adapter.GetById(customerId)
                 select new Response(
-                    customer.Id.ToString(),
-                    customer.Name,
-                    customer.Email,
-                    customer.CreditLimit,
-                    customer.CreatedAt);
+                    dto.CustomerId,
+                    dto.Name,
+                    dto.Email,
+                    dto.CreditLimit,
+                    dto.CreatedAt);
 
             Fin<Response> response = await usecase.Run().RunAsync();
             return response.ToFinResponse();

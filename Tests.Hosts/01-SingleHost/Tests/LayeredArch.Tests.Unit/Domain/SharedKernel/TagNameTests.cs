@@ -1,6 +1,6 @@
-using LayeredArch.Domain.SharedKernel.ValueObjects;
+using LayeredArch.Domain.SharedModels.Entities.ValueObjects;
 
-namespace LayeredArch.Tests.Unit.Domain.SharedKernel;
+namespace LayeredArch.Tests.Unit.Domain.SharedModels;
 
 public class TagNameTests
 {

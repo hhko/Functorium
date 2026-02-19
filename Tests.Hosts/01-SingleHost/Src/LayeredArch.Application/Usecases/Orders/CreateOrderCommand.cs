@@ -1,11 +1,9 @@
-using LayeredArch.Domain.Ports;
 using LayeredArch.Domain.AggregateRoots.Orders;
 using LayeredArch.Domain.AggregateRoots.Orders.ValueObjects;
 using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Applications.Errors;
 using Functorium.Applications.Linq;
 using static Functorium.Applications.Errors.ApplicationErrorType;
-
 namespace LayeredArch.Application.Usecases.Orders;
 
 /// <summary>

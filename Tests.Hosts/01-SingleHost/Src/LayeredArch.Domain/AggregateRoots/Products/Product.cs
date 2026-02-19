@@ -26,7 +26,7 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     public ProductDescription Description { get; private set; }
     public Money Price { get; private set; }
 
-    // Tags 컬렉션 (SharedKernel Entity)
+    // Tags 컬렉션 (SharedModels Entity)
     private readonly List<Tag> _tags = [];
     public IReadOnlyList<Tag> Tags => _tags.AsReadOnly();
 
@@ -101,7 +101,7 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     }
 
     /// <summary>
-    /// 태그를 추가합니다. (SharedKernel 이벤트 발행)
+    /// 태그를 추가합니다. (SharedModels 이벤트 발행)
     /// </summary>
     public Product AddTag(Tag tag)
     {
@@ -109,12 +109,12 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
             return this;
 
         _tags.Add(tag);
-        AddDomainEvent(new TagAssignedEvent(tag.Id, tag.Name));
+        AddDomainEvent(new Tag.AssignedEvent(tag.Id, tag.Name));
         return this;
     }
 
     /// <summary>
-    /// 태그를 제거합니다. (SharedKernel 이벤트 발행)
+    /// 태그를 제거합니다. (SharedModels 이벤트 발행)
     /// </summary>
     public Product RemoveTag(TagId tagId)
     {
@@ -123,7 +123,7 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
             return this;
 
         _tags.Remove(tag);
-        AddDomainEvent(new TagRemovedEvent(tagId));
+        AddDomainEvent(new Tag.RemovedEvent(tagId));
         return this;
     }
 }

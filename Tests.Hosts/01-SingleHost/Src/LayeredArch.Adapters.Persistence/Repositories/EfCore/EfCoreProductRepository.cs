@@ -64,32 +64,6 @@ public class EfCoreProductRepository : IProductRepository
         });
     }
 
-    public virtual FinT<IO, Option<Product>> GetByName(ProductName name)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var model = await _dbContext.Products
-                .AsNoTracking()
-                .Include(p => p.Tags)
-                .FirstOrDefaultAsync(p => p.Name == (string)name);
-
-            return Fin.Succ(Optional(model is not null ? model.ToDomain() : null));
-        });
-    }
-
-    public virtual FinT<IO, Seq<Product>> GetAll()
-    {
-        return IO.liftAsync(async () =>
-        {
-            var models = await _dbContext.Products
-                .AsNoTracking()
-                .Include(p => p.Tags)
-                .ToListAsync();
-
-            return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
-        });
-    }
-
     public virtual FinT<IO, Product> Update(Product product)
     {
         return IO.lift(() =>
@@ -124,16 +98,6 @@ public class EfCoreProductRepository : IProductRepository
         {
             bool exists = await BuildQuery(spec).AnyAsync();
             return Fin.Succ(exists);
-        });
-    }
-
-    public virtual FinT<IO, Seq<Product>> FindAll(Specification<Product> spec)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var models = await BuildQuery(spec)
-                .AsNoTracking().Include(p => p.Tags).ToListAsync();
-            return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
         });
     }
 

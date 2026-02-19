@@ -16,7 +16,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 [GeneratePipeline]
 public class InMemoryInventoryRepository : IInventoryRepository
 {
-    private static readonly ConcurrentDictionary<InventoryId, Inventory> _inventories = new();
+    internal static readonly ConcurrentDictionary<InventoryId, Inventory> Inventories = new();
     private readonly IDomainEventCollector _eventCollector;
 
     public string RequestCategory => "Repository";
@@ -30,7 +30,7 @@ public class InMemoryInventoryRepository : IInventoryRepository
     {
         return IO.lift(() =>
         {
-            _inventories[inventory.Id] = inventory;
+            Inventories[inventory.Id] = inventory;
             _eventCollector.Track(inventory);
             return Fin.Succ(inventory);
         });
@@ -40,7 +40,7 @@ public class InMemoryInventoryRepository : IInventoryRepository
     {
         return IO.lift(() =>
         {
-            if (_inventories.TryGetValue(id, out Inventory? inventory))
+            if (Inventories.TryGetValue(id, out Inventory? inventory))
             {
                 return Fin.Succ(inventory);
             }
@@ -56,7 +56,7 @@ public class InMemoryInventoryRepository : IInventoryRepository
     {
         return IO.lift(() =>
         {
-            var inventory = _inventories.Values.FirstOrDefault(i =>
+            var inventory = Inventories.Values.FirstOrDefault(i =>
                 i.ProductId.Equals(productId));
 
             if (inventory is not null)
@@ -75,7 +75,7 @@ public class InMemoryInventoryRepository : IInventoryRepository
     {
         return IO.lift(() =>
         {
-            if (!_inventories.ContainsKey(inventory.Id))
+            if (!Inventories.ContainsKey(inventory.Id))
             {
                 return AdapterError.For<InMemoryInventoryRepository>(
                     new NotFound(),
@@ -83,7 +83,7 @@ public class InMemoryInventoryRepository : IInventoryRepository
                     $"재고 ID '{inventory.Id}'을(를) 찾을 수 없습니다");
             }
 
-            _inventories[inventory.Id] = inventory;
+            Inventories[inventory.Id] = inventory;
             _eventCollector.Track(inventory);
             return Fin.Succ(inventory);
         });
@@ -93,7 +93,7 @@ public class InMemoryInventoryRepository : IInventoryRepository
     {
         return IO.lift(() =>
         {
-            if (!_inventories.TryRemove(id, out _))
+            if (!Inventories.TryRemove(id, out _))
             {
                 return AdapterError.For<InMemoryInventoryRepository>(
                     new NotFound(),
@@ -109,17 +109,8 @@ public class InMemoryInventoryRepository : IInventoryRepository
     {
         return IO.lift(() =>
         {
-            bool exists = _inventories.Values.Any(i => spec.IsSatisfiedBy(i));
+            bool exists = Inventories.Values.Any(i => spec.IsSatisfiedBy(i));
             return Fin.Succ(exists);
-        });
-    }
-
-    public virtual FinT<IO, Seq<Inventory>> FindAll(Specification<Inventory> spec)
-    {
-        return IO.lift(() =>
-        {
-            var inventories = _inventories.Values.Where(i => spec.IsSatisfiedBy(i));
-            return Fin.Succ(toSeq(inventories));
         });
     }
 }

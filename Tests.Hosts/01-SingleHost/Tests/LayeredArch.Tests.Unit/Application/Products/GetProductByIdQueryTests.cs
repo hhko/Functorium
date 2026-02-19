@@ -1,32 +1,32 @@
-using LayeredArch.Application.Usecases.Products;
+using LayeredArch.Application.Usecases.Products.Ports;
+using LayeredArch.Application.Usecases.Products.Queries;
 using LayeredArch.Domain.AggregateRoots.Products;
-using LayeredArch.Domain.SharedKernel.ValueObjects;
 
 namespace LayeredArch.Tests.Unit.Application.Products;
 
 public class GetProductByIdQueryTests
 {
-    private readonly IProductRepository _productRepository = Substitute.For<IProductRepository>();
+    private readonly IProductDetailQueryAdapter _adapter = Substitute.For<IProductDetailQueryAdapter>();
     private readonly GetProductByIdQuery.Usecase _sut;
 
     public GetProductByIdQueryTests()
     {
-        _sut = new GetProductByIdQuery.Usecase(_productRepository);
+        _sut = new GetProductByIdQuery.Usecase(_adapter);
     }
 
     [Fact]
     public async Task Handle_ShouldReturnProduct_WhenExists()
     {
         // Arrange
-        var product = Product.Create(
-            ProductName.Create("Test Product").ThrowIfFail(),
-            ProductDescription.Create("Desc").ThrowIfFail(),
-            Money.Create(100m).ThrowIfFail());
+        var productId = ProductId.New();
+        var dto = new ProductDetailDto(
+            productId.ToString(), "Test Product", "Desc", 100m,
+            DateTime.UtcNow, null);
 
-        var request = new GetProductByIdQuery.Request(product.Id.ToString());
+        var request = new GetProductByIdQuery.Request(productId.ToString());
 
-        _productRepository.GetById(Arg.Any<ProductId>())
-            .Returns(FinTFactory.Succ(product));
+        _adapter.GetById(Arg.Any<ProductId>())
+            .Returns(FinTFactory.Succ(dto));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -42,8 +42,8 @@ public class GetProductByIdQueryTests
         // Arrange
         var request = new GetProductByIdQuery.Request(ProductId.New().ToString());
 
-        _productRepository.GetById(Arg.Any<ProductId>())
-            .Returns(FinTFactory.Fail<Product>(Error.New("Product not found")));
+        _adapter.GetById(Arg.Any<ProductId>())
+            .Returns(FinTFactory.Fail<ProductDetailDto>(Error.New("Product not found")));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

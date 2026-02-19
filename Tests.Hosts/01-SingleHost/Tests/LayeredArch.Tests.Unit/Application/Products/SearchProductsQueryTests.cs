@@ -1,11 +1,10 @@
 using FluentValidation;
 using Functorium.Applications.Queries;
 using Functorium.Domains.Specifications;
-using LayeredArch.Application.Usecases.Products;
-using LayeredArch.Application.Usecases.Products.Dtos;
 using LayeredArch.Application.Usecases.Products.Ports;
+using LayeredArch.Application.Usecases.Products.Queries;
 using LayeredArch.Domain.AggregateRoots.Products;
-using LayeredArch.Domain.SharedKernel.ValueObjects;
+using LayeredArch.Domain.SharedModels.ValueObjects;
 
 namespace LayeredArch.Tests.Unit.Application.Products;
 
@@ -14,10 +13,10 @@ public class SearchProductsQueryValidatorTests
     private readonly SearchProductsQuery.Validator _sut = new();
 
     [Fact]
-    public void Validate_ReturnsNoError_WhenNoPricesProvided()
+    public void Validate_ReturnsNoError_WhenNoFiltersProvided()
     {
         // Arrange
-        var request = new SearchProductsQuery.Request(null, null);
+        var request = new SearchProductsQuery.Request();
 
         // Act
         var actual = _sut.Validate(request);
@@ -30,7 +29,7 @@ public class SearchProductsQueryValidatorTests
     public void Validate_ReturnsNoError_WhenBothPricesProvided()
     {
         // Arrange
-        var request = new SearchProductsQuery.Request(100m, 200m);
+        var request = new SearchProductsQuery.Request(MinPrice: 100m, MaxPrice: 200m);
 
         // Act
         var actual = _sut.Validate(request);
@@ -43,7 +42,7 @@ public class SearchProductsQueryValidatorTests
     public void Validate_ReturnsValidationError_WhenOnlyMinPriceProvided()
     {
         // Arrange
-        var request = new SearchProductsQuery.Request(100m, null);
+        var request = new SearchProductsQuery.Request(MinPrice: 100m);
 
         // Act
         var actual = _sut.Validate(request);
@@ -52,14 +51,14 @@ public class SearchProductsQueryValidatorTests
         actual.IsValid.ShouldBeFalse();
         actual.Errors.ShouldContain(e =>
             e.PropertyName == "MaxPrice"
-            && e.ErrorMessage.Contains("최소 가격을 지정할 때는 최대 가격도 함께 지정해야 합니다"));
+            && e.ErrorMessage.Contains("MaxPrice is required when MinPrice is specified"));
     }
 
     [Fact]
     public void Validate_ReturnsValidationError_WhenOnlyMaxPriceProvided()
     {
         // Arrange
-        var request = new SearchProductsQuery.Request(null, 200m);
+        var request = new SearchProductsQuery.Request(MaxPrice: 200m);
 
         // Act
         var actual = _sut.Validate(request);
@@ -68,14 +67,14 @@ public class SearchProductsQueryValidatorTests
         actual.IsValid.ShouldBeFalse();
         actual.Errors.ShouldContain(e =>
             e.PropertyName == "MinPrice"
-            && e.ErrorMessage.Contains("최대 가격을 지정할 때는 최소 가격도 함께 지정해야 합니다"));
+            && e.ErrorMessage.Contains("MinPrice is required when MaxPrice is specified"));
     }
 
     [Fact]
     public void Validate_ReturnsNoError_WhenValidSortByProvided()
     {
         // Arrange
-        var request = new SearchProductsQuery.Request(null, null, SortBy: "Name");
+        var request = new SearchProductsQuery.Request(SortBy: "Name");
 
         // Act
         var actual = _sut.Validate(request);
@@ -88,7 +87,7 @@ public class SearchProductsQueryValidatorTests
     public void Validate_ReturnsValidationError_WhenInvalidSortByProvided()
     {
         // Arrange
-        var request = new SearchProductsQuery.Request(null, null, SortBy: "InvalidField");
+        var request = new SearchProductsQuery.Request(SortBy: "InvalidField");
 
         // Act
         var actual = _sut.Validate(request);
@@ -102,7 +101,7 @@ public class SearchProductsQueryValidatorTests
     public void Validate_ReturnsValidationError_WhenInvalidSortDirectionProvided()
     {
         // Arrange
-        var request = new SearchProductsQuery.Request(null, null, SortDirection: "invalid");
+        var request = new SearchProductsQuery.Request(SortDirection: "invalid");
 
         // Act
         var actual = _sut.Validate(request);
@@ -110,6 +109,32 @@ public class SearchProductsQueryValidatorTests
         // Assert
         actual.IsValid.ShouldBeFalse();
         actual.Errors.ShouldContain(e => e.PropertyName == "SortDirection");
+    }
+
+    [Fact]
+    public void Validate_ReturnsNoError_WhenValidNameProvided()
+    {
+        // Arrange
+        var request = new SearchProductsQuery.Request(Name: "Test Product");
+
+        // Act
+        var actual = _sut.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Validate_ReturnsNoError_WhenNameIsEmpty()
+    {
+        // Arrange — empty name means "no filter", should be valid
+        var request = new SearchProductsQuery.Request(Name: "");
+
+        // Act
+        var actual = _sut.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeTrue();
     }
 }
 
@@ -138,7 +163,7 @@ public class SearchProductsQueryTests
     {
         // Arrange
         var pagedResult = CreateSamplePagedResult();
-        var request = new SearchProductsQuery.Request(null, null);
+        var request = new SearchProductsQuery.Request();
 
         _readAdapter.Search(
                 Arg.Any<Specification<Product>?>(),
@@ -161,7 +186,7 @@ public class SearchProductsQueryTests
         // Arrange
         var items = Seq(new ProductSummaryDto(ProductId.New().ToString(), "Mid Item", 150m));
         var pagedResult = new PagedResult<ProductSummaryDto>(items, 1, 1, 20);
-        var request = new SearchProductsQuery.Request(100m, 200m);
+        var request = new SearchProductsQuery.Request(MinPrice: 100m, MaxPrice: 200m);
 
         _readAdapter.Search(
                 Arg.Any<Specification<Product>?>(),
@@ -179,12 +204,57 @@ public class SearchProductsQueryTests
     }
 
     [Fact]
+    public async Task Handle_ReturnsSuccess_WhenNameProvided()
+    {
+        // Arrange
+        var items = Seq(new ProductSummaryDto(ProductId.New().ToString(), "Test Product", 100m));
+        var pagedResult = new PagedResult<ProductSummaryDto>(items, 1, 1, 20);
+        var request = new SearchProductsQuery.Request(Name: "Test Product");
+
+        _readAdapter.Search(
+                Arg.Any<Specification<Product>?>(),
+                Arg.Any<PageRequest>(),
+                Arg.Any<SortExpression>())
+            .Returns(FinTFactory.Succ(pagedResult));
+
+        // Act
+        var actual = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        actual.IsSucc.ShouldBeTrue();
+        actual.ThrowIfFail().Products.Count.ShouldBe(1);
+        actual.ThrowIfFail().Products[0].Name.ShouldBe("Test Product");
+    }
+
+    [Fact]
+    public async Task Handle_ReturnsSuccess_WhenNameAndPriceRangeProvided()
+    {
+        // Arrange
+        var items = Seq(new ProductSummaryDto(ProductId.New().ToString(), "Test Product", 150m));
+        var pagedResult = new PagedResult<ProductSummaryDto>(items, 1, 1, 20);
+        var request = new SearchProductsQuery.Request(Name: "Test Product", MinPrice: 100m, MaxPrice: 200m);
+
+        _readAdapter.Search(
+                Arg.Any<Specification<Product>?>(),
+                Arg.Any<PageRequest>(),
+                Arg.Any<SortExpression>())
+            .Returns(FinTFactory.Succ(pagedResult));
+
+        // Act
+        var actual = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        actual.IsSucc.ShouldBeTrue();
+        actual.ThrowIfFail().Products.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task Handle_ReturnsPaginationMetadata_WhenPageProvided()
     {
         // Arrange
         var items = Seq(new ProductSummaryDto(ProductId.New().ToString(), "Item", 100m));
         var pagedResult = new PagedResult<ProductSummaryDto>(items, 50, 2, 10);
-        var request = new SearchProductsQuery.Request(null, null, Page: 2, PageSize: 10);
+        var request = new SearchProductsQuery.Request(Page: 2, PageSize: 10);
 
         _readAdapter.Search(
                 Arg.Any<Specification<Product>?>(),

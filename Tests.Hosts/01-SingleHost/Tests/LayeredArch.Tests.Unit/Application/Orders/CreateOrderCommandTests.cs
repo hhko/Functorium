@@ -1,8 +1,7 @@
 using LayeredArch.Application.Usecases.Orders;
 using LayeredArch.Domain.AggregateRoots.Orders;
 using LayeredArch.Domain.AggregateRoots.Products;
-using LayeredArch.Domain.Ports;
-using LayeredArch.Domain.SharedKernel.ValueObjects;
+using LayeredArch.Domain.SharedModels.ValueObjects;
 
 namespace LayeredArch.Tests.Unit.Application.Orders;
 

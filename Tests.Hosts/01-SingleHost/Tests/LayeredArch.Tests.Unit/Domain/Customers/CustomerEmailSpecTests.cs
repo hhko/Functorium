@@ -1,7 +1,7 @@
 using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Customers.Specifications;
 using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
-using LayeredArch.Domain.SharedKernel.ValueObjects;
+using LayeredArch.Domain.SharedModels.ValueObjects;
 
 namespace LayeredArch.Tests.Unit.Domain.Customers;
 

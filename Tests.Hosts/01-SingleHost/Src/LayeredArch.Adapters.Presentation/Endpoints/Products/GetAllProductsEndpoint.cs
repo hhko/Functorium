@@ -1,6 +1,6 @@
 using LayeredArch.Adapters.Presentation.Abstractions.Extensions;
-using LayeredArch.Application.Usecases.Products;
-using LayeredArch.Application.Usecases.Products.Dtos;
+using LayeredArch.Application.Usecases.Products.Ports;
+using LayeredArch.Application.Usecases.Products.Queries;
 
 namespace LayeredArch.Adapters.Presentation.Endpoints.Products;
 

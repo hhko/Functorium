@@ -1,6 +1,6 @@
 using Functorium.Abstractions.Registrations;
 using Functorium.Adapters.Observabilities.Events;
-using LayeredArch.Domain.Services;
+using LayeredArch.Domain.SharedModels.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

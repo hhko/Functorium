@@ -1,35 +1,35 @@
 using LayeredArch.Application.Usecases.Orders;
+using LayeredArch.Application.Usecases.Orders.Dtos;
+using LayeredArch.Application.Usecases.Orders.Ports;
 using LayeredArch.Domain.AggregateRoots.Orders;
-using LayeredArch.Domain.AggregateRoots.Orders.ValueObjects;
 using LayeredArch.Domain.AggregateRoots.Products;
-using LayeredArch.Domain.SharedKernel.ValueObjects;
 
 namespace LayeredArch.Tests.Unit.Application.Orders;
 
 public class GetOrderByIdQueryTests
 {
-    private readonly IOrderRepository _orderRepository = Substitute.For<IOrderRepository>();
+    private readonly IOrderDetailQueryAdapter _adapter = Substitute.For<IOrderDetailQueryAdapter>();
     private readonly GetOrderByIdQuery.Usecase _sut;
 
     public GetOrderByIdQueryTests()
     {
-        _sut = new GetOrderByIdQuery.Usecase(_orderRepository);
+        _sut = new GetOrderByIdQuery.Usecase(_adapter);
     }
 
     [Fact]
     public async Task Handle_ShouldReturnOrder_WhenExists()
     {
         // Arrange
-        var order = Order.Create(
-            ProductId.New(),
-            Quantity.Create(2).ThrowIfFail(),
-            Money.Create(100m).ThrowIfFail(),
-            ShippingAddress.Create("Seoul, Korea").ThrowIfFail());
+        var orderId = OrderId.New();
+        var productId = ProductId.New();
+        var dto = new OrderDetailDto(
+            orderId.ToString(), productId.ToString(), 2, 100m, 200m,
+            "Seoul, Korea", DateTime.UtcNow);
 
-        var request = new GetOrderByIdQuery.Request(order.Id.ToString());
+        var request = new GetOrderByIdQuery.Request(orderId.ToString());
 
-        _orderRepository.GetById(Arg.Any<OrderId>())
-            .Returns(FinTFactory.Succ(order));
+        _adapter.GetById(Arg.Any<OrderId>())
+            .Returns(FinTFactory.Succ(dto));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -46,8 +46,8 @@ public class GetOrderByIdQueryTests
         // Arrange
         var request = new GetOrderByIdQuery.Request(OrderId.New().ToString());
 
-        _orderRepository.GetById(Arg.Any<OrderId>())
-            .Returns(FinTFactory.Fail<Order>(Error.New("Order not found")));
+        _adapter.GetById(Arg.Any<OrderId>())
+            .Returns(FinTFactory.Fail<OrderDetailDto>(Error.New("Order not found")));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

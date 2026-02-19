@@ -16,7 +16,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 [GeneratePipeline]
 public class InMemoryCustomerRepository : ICustomerRepository
 {
-    private static readonly ConcurrentDictionary<CustomerId, Customer> _customers = new();
+    internal static readonly ConcurrentDictionary<CustomerId, Customer> Customers = new();
     private readonly IDomainEventCollector _eventCollector;
 
     public string RequestCategory => "Repository";
@@ -30,7 +30,7 @@ public class InMemoryCustomerRepository : ICustomerRepository
     {
         return IO.lift(() =>
         {
-            _customers[customer.Id] = customer;
+            Customers[customer.Id] = customer;
             _eventCollector.Track(customer);
             return Fin.Succ(customer);
         });
@@ -40,7 +40,7 @@ public class InMemoryCustomerRepository : ICustomerRepository
     {
         return IO.lift(() =>
         {
-            if (_customers.TryGetValue(id, out Customer? customer))
+            if (Customers.TryGetValue(id, out Customer? customer))
             {
                 return Fin.Succ(customer);
             }
@@ -56,7 +56,7 @@ public class InMemoryCustomerRepository : ICustomerRepository
     {
         return IO.lift(() =>
         {
-            if (!_customers.ContainsKey(customer.Id))
+            if (!Customers.ContainsKey(customer.Id))
             {
                 return AdapterError.For<InMemoryCustomerRepository>(
                     new NotFound(),
@@ -64,7 +64,7 @@ public class InMemoryCustomerRepository : ICustomerRepository
                     $"고객 ID '{customer.Id}'을(를) 찾을 수 없습니다");
             }
 
-            _customers[customer.Id] = customer;
+            Customers[customer.Id] = customer;
             _eventCollector.Track(customer);
             return Fin.Succ(customer);
         });
@@ -74,7 +74,7 @@ public class InMemoryCustomerRepository : ICustomerRepository
     {
         return IO.lift(() =>
         {
-            if (!_customers.TryRemove(id, out _))
+            if (!Customers.TryRemove(id, out _))
             {
                 return AdapterError.For<InMemoryCustomerRepository>(
                     new NotFound(),
@@ -90,7 +90,7 @@ public class InMemoryCustomerRepository : ICustomerRepository
     {
         return IO.lift(() =>
         {
-            bool exists = _customers.Values.Any(c => spec.IsSatisfiedBy(c));
+            bool exists = Customers.Values.Any(c => spec.IsSatisfiedBy(c));
             return Fin.Succ(exists);
         });
     }

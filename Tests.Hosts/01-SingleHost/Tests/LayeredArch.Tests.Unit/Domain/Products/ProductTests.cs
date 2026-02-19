@@ -1,7 +1,7 @@
 using LayeredArch.Domain.AggregateRoots.Products;
-using LayeredArch.Domain.SharedKernel.Entities;
-using LayeredArch.Domain.SharedKernel.Events;
-using LayeredArch.Domain.SharedKernel.ValueObjects;
+using LayeredArch.Domain.SharedModels.Entities;
+using LayeredArch.Domain.SharedModels.Entities.ValueObjects;
+using LayeredArch.Domain.SharedModels.ValueObjects;
 
 namespace LayeredArch.Tests.Unit.Domain.Products;
 
@@ -74,7 +74,7 @@ public class ProductTests
 
         // Assert
         sut.Tags.ShouldContain(t => t.Id == tag.Id);
-        sut.DomainEvents.ShouldContain(e => e is TagAssignedEvent);
+        sut.DomainEvents.ShouldContain(e => e is Tag.AssignedEvent);
     }
 
     [Fact]
@@ -131,6 +131,6 @@ public class ProductTests
 
         // Assert
         sut.Tags.ShouldBeEmpty();
-        sut.DomainEvents.ShouldContain(e => e is TagRemovedEvent);
+        sut.DomainEvents.ShouldContain(e => e is Tag.RemovedEvent);
     }
 }

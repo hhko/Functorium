@@ -1,8 +1,8 @@
-using LayeredArch.Domain.Ports;
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using Microsoft.EntityFrameworkCore;
 using static Functorium.Adapters.Errors.AdapterErrorType;
+using LayeredArch.Application.Usecases.Orders;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 

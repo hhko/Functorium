@@ -1,37 +1,37 @@
-using LayeredArch.Application.Usecases.Products;
+using Functorium.Applications.Queries;
+using Functorium.Domains.Specifications;
+using LayeredArch.Application.Usecases.Products.Ports;
+using LayeredArch.Application.Usecases.Products.Queries;
 using LayeredArch.Domain.AggregateRoots.Products;
-using LayeredArch.Domain.SharedKernel.ValueObjects;
 
 namespace LayeredArch.Tests.Unit.Application.Products;
 
 public class GetAllProductsQueryTests
 {
-    private readonly IProductRepository _productRepository = Substitute.For<IProductRepository>();
+    private readonly IProductQueryAdapter _productQuery = Substitute.For<IProductQueryAdapter>();
     private readonly GetAllProductsQuery.Usecase _sut;
 
     public GetAllProductsQueryTests()
     {
-        _sut = new GetAllProductsQuery.Usecase(_productRepository);
+        _sut = new GetAllProductsQuery.Usecase(_productQuery);
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnProducts()
+    public async Task Handle_ReturnsProducts_WhenProductsExist()
     {
         // Arrange
-        var products = Seq(
-            Product.Create(
-                ProductName.Create("Product A").ThrowIfFail(),
-                ProductDescription.Create("Desc A").ThrowIfFail(),
-                Money.Create(100m).ThrowIfFail()),
-            Product.Create(
-                ProductName.Create("Product B").ThrowIfFail(),
-                ProductDescription.Create("Desc B").ThrowIfFail(),
-                Money.Create(200m).ThrowIfFail()));
+        var items = Seq(
+            new ProductSummaryDto(ProductId.New().ToString(), "Product A", 100m),
+            new ProductSummaryDto(ProductId.New().ToString(), "Product B", 200m));
+        var pagedResult = new PagedResult<ProductSummaryDto>(items, 2, 1, int.MaxValue);
 
         var request = new GetAllProductsQuery.Request();
 
-        _productRepository.GetAll()
-            .Returns(FinTFactory.Succ(products));
+        _productQuery.Search(
+                Arg.Any<Specification<Product>?>(),
+                Arg.Any<PageRequest>(),
+                Arg.Any<SortExpression>())
+            .Returns(FinTFactory.Succ(pagedResult));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

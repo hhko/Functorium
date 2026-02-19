@@ -3,7 +3,6 @@ using LayeredArch.Adapters.Persistence.Abstractions.Options;
 using LayeredArch.Adapters.Persistence.Repositories.Dapper;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore;
 using LayeredArch.Adapters.Persistence.Repositories.InMemory;
-using LayeredArch.Domain.Ports;
 using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Orders;
@@ -11,7 +10,9 @@ using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Abstractions.Registrations;
 using Functorium.Adapters.Options;
 using Functorium.Applications.Persistence;
+using LayeredArch.Application.Usecases.Customers.Ports;
 using LayeredArch.Application.Usecases.Inventories.Ports;
+using LayeredArch.Application.Usecases.Orders.Ports;
 using LayeredArch.Application.Usecases.Products.Ports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Data.Sqlite;
@@ -19,6 +20,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using LayeredArch.Application.Usecases.Orders;
 
 namespace LayeredArch.Adapters.Persistence.Abstractions.Registrations;
 
@@ -86,8 +88,12 @@ public static class AdapterPersistenceRegistration
 
         // Read Adapter 등록
         services.RegisterScopedAdapterPipeline<IProductQueryAdapter, InMemoryProductQueryAdapterPipeline>();
+        services.RegisterScopedAdapterPipeline<IProductDetailQueryAdapter, InMemoryProductDetailQueryAdapterPipeline>();
         services.AddScoped<InMemoryInventoryRepository>();
         services.RegisterScopedAdapterPipeline<IInventoryQueryAdapter, InMemoryInventoryQueryAdapterPipeline>();
+        services.RegisterScopedAdapterPipeline<IProductWithStockQueryAdapter, InMemoryProductWithStockQueryAdapterPipeline>();
+        services.RegisterScopedAdapterPipeline<ICustomerDetailQueryAdapter, InMemoryCustomerDetailQueryAdapterPipeline>();
+        services.RegisterScopedAdapterPipeline<IOrderDetailQueryAdapter, InMemoryOrderDetailQueryAdapterPipeline>();
     }
 
     private static void RegisterSqliteRepositories(IServiceCollection services)
@@ -116,6 +122,7 @@ public static class AdapterPersistenceRegistration
         });
 
         services.RegisterScopedAdapterPipeline<IProductQueryAdapter, DapperProductQueryAdapterPipeline>();
+        services.RegisterScopedAdapterPipeline<IProductWithStockQueryAdapter, DapperProductWithStockQueryAdapterPipeline>();
         services.RegisterScopedAdapterPipeline<IInventoryQueryAdapter, DapperInventoryQueryAdapterPipeline>();
     }
 }

@@ -122,16 +122,6 @@ public class EfCoreInventoryRepository : IInventoryRepository
         });
     }
 
-    public virtual FinT<IO, Seq<Inventory>> FindAll(Specification<Inventory> spec)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var models = await BuildQuery(spec)
-                .AsNoTracking().ToListAsync();
-            return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
-        });
-    }
-
     private IQueryable<InventoryModel> BuildQuery(Specification<Inventory> spec)
     {
         var expression = SpecificationExpressionResolver.TryResolve(spec);

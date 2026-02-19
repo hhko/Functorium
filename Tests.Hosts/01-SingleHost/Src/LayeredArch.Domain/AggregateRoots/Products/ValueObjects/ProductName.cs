@@ -13,7 +13,8 @@ public sealed class ProductName : SimpleValueObject<string>
         CreateFromValidation(Validate(value), v => new ProductName(v));
 
     public static Validation<Error, string> Validate(string? value) =>
-        ValidationRules<ProductName>.NotEmpty(value ?? "")
+        ValidationRules<ProductName>
+            .NotEmpty(value ?? "")
             .ThenMaxLength(MaxLength)
             .ThenNormalize(v => v.Trim());
 

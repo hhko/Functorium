@@ -1,5 +1,5 @@
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
-using LayeredArch.Domain.SharedKernel.Entities;
+using LayeredArch.Domain.SharedModels.Entities;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
 

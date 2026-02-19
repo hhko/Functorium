@@ -1,5 +1,5 @@
 using Functorium.Domains.Specifications;
-using LayeredArch.Application.Usecases.Products;
+using LayeredArch.Application.Usecases.Products.Commands;
 using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Products;
 
