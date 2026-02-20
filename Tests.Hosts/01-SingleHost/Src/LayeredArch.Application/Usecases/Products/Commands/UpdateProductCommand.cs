@@ -64,7 +64,7 @@ public sealed class UpdateProductCommand
             // 예외 시뮬레이션 - UsecaseExceptionPipeline 데모용
             if (request.SimulateException)
             {
-                throw new InvalidOperationException("시뮬레이션된 예외: 데모 목적으로 발생된 예외입니다");
+                throw new InvalidOperationException("Simulated exception: raised for demo purposes");
             }
 
             // 1. Value Object 생성 (Apply 패턴)

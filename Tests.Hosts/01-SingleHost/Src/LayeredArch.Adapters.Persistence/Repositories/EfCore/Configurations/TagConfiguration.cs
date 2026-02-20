@@ -18,8 +18,9 @@ public class TagConfiguration : IEntityTypeConfiguration<TagModel>
             .HasMaxLength(100)
             .IsRequired();
 
-        builder.Property(t => t.ProductId)
-            .HasMaxLength(26)
+        builder.Property(t => t.CreatedAt)
             .IsRequired();
+
+        builder.Property(t => t.UpdatedAt);
     }
 }

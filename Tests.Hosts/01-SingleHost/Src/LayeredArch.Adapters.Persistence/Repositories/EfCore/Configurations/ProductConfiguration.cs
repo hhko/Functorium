@@ -28,9 +28,9 @@ public class ProductConfiguration : IEntityTypeConfiguration<ProductModel>
         builder.Property(p => p.CreatedAt);
         builder.Property(p => p.UpdatedAt);
 
-        builder.HasMany(p => p.Tags)
+        builder.HasMany(p => p.ProductTags)
             .WithOne()
-            .HasForeignKey(t => t.ProductId)
+            .HasForeignKey(pt => pt.ProductId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

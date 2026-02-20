@@ -49,7 +49,7 @@ public class EfCoreProductRepository : IProductRepository
         {
             var model = await _dbContext.Products
                 .AsNoTracking()
-                .Include(p => p.Tags)
+                .Include(p => p.ProductTags)
                 .FirstOrDefaultAsync(p => p.Id == id.ToString());
 
             if (model is not null)

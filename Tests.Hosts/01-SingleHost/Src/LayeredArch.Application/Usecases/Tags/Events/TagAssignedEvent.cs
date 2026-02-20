@@ -1,13 +1,13 @@
 using Functorium.Applications.Events;
-using LayeredArch.Domain.SharedModels.Entities;
+using LayeredArch.Domain.AggregateRoots.Products;
 using Microsoft.Extensions.Logging;
 
 namespace LayeredArch.Application.Usecases.Tags.Events;
 
 /// <summary>
-/// Tag.AssignedEvent 핸들러 - 태그 할당 로깅.
+/// Product.TagAssignedEvent 핸들러 - 태그 할당 로깅.
 /// </summary>
-public sealed class TagAssignedEvent : IDomainEventHandler<Tag.AssignedEvent>
+public sealed class TagAssignedEvent : IDomainEventHandler<Product.TagAssignedEvent>
 {
     private readonly ILogger<TagAssignedEvent> _logger;
 
@@ -16,12 +16,12 @@ public sealed class TagAssignedEvent : IDomainEventHandler<Tag.AssignedEvent>
         _logger = logger;
     }
 
-    public ValueTask Handle(Tag.AssignedEvent notification, CancellationToken cancellationToken)
+    public ValueTask Handle(Product.TagAssignedEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
-            "[DomainEvent] Tag assigned: {TagId}, Name: {TagName}",
-            notification.TagId,
-            notification.TagName);
+            "[DomainEvent] Tag assigned to product: {ProductId}, TagId: {TagId}",
+            notification.ProductId,
+            notification.TagId);
 
         return ValueTask.CompletedTask;
     }

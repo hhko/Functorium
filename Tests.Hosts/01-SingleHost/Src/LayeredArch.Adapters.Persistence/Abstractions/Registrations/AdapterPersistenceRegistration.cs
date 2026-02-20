@@ -7,6 +7,7 @@ using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Orders;
 using LayeredArch.Domain.AggregateRoots.Products;
+using LayeredArch.Domain.SharedModels.Entities;
 using Functorium.Abstractions.Registrations;
 using Functorium.Adapters.Options;
 using Functorium.Applications.Persistence;
@@ -76,6 +77,7 @@ public static class AdapterPersistenceRegistration
         services.RegisterScopedAdapterPipeline<IInventoryRepository, InMemoryInventoryRepositoryPipeline>();
         services.RegisterScopedAdapterPipeline<IOrderRepository, InMemoryOrderRepositoryPipeline>();
         services.RegisterScopedAdapterPipeline<ICustomerRepository, InMemoryCustomerRepositoryPipeline>();
+        services.RegisterScopedAdapterPipeline<ITagRepository, InMemoryTagRepositoryPipeline>();
 
         // UnitOfWork 등록
         services.RegisterScopedAdapterPipeline<IUnitOfWork, InMemoryUnitOfWorkPipeline>();
@@ -101,6 +103,7 @@ public static class AdapterPersistenceRegistration
         services.RegisterScopedAdapterPipeline<IInventoryRepository, EfCoreInventoryRepositoryPipeline>();
         services.RegisterScopedAdapterPipeline<IOrderRepository, EfCoreOrderRepositoryPipeline>();
         services.RegisterScopedAdapterPipeline<ICustomerRepository, EfCoreCustomerRepositoryPipeline>();
+        services.RegisterScopedAdapterPipeline<ITagRepository, EfCoreTagRepositoryPipeline>();
 
         // UnitOfWork 등록
         services.RegisterScopedAdapterPipeline<IUnitOfWork, EfCoreUnitOfWorkPipeline>();

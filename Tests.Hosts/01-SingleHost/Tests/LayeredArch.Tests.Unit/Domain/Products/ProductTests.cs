@@ -61,36 +61,36 @@ public class ProductTests
     }
 
     [Fact]
-    public void AddTag_ShouldAddTagAndPublishEvent()
+    public void AssignTag_ShouldAddTagIdAndPublishEvent()
     {
         // Arrange
         var sut = CreateSampleProduct();
         sut.ClearDomainEvents();
-        var tagName = TagName.Create("sale").ThrowIfFail();
-        var tag = Tag.Create(tagName);
+        var tagId = TagId.New();
 
         // Act
-        sut.AddTag(tag);
+        sut.AssignTag(tagId);
 
         // Assert
-        sut.Tags.ShouldContain(t => t.Id == tag.Id);
-        sut.DomainEvents.ShouldContain(e => e is Tag.AssignedEvent);
+        sut.TagIds.ShouldContain(tagId);
+        var assignedEvent = sut.DomainEvents.OfType<Product.TagAssignedEvent>().ShouldHaveSingleItem();
+        assignedEvent.ProductId.ShouldBe(sut.Id);
+        assignedEvent.TagId.ShouldBe(tagId);
     }
 
     [Fact]
-    public void AddTag_ShouldNotDuplicate_WhenSameTagAddedTwice()
+    public void AssignTag_ShouldNotDuplicate_WhenSameTagAssignedTwice()
     {
         // Arrange
         var sut = CreateSampleProduct();
-        var tagName = TagName.Create("sale").ThrowIfFail();
-        var tag = Tag.Create(tagName);
-        sut.AddTag(tag);
+        var tagId = TagId.New();
+        sut.AssignTag(tagId);
 
         // Act
-        sut.AddTag(tag);
+        sut.AssignTag(tagId);
 
         // Assert
-        sut.Tags.Count.ShouldBe(1);
+        sut.TagIds.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -101,36 +101,39 @@ public class ProductTests
         var name = ProductName.Create("Restored Product").ThrowIfFail();
         var description = ProductDescription.Create("Restored Desc").ThrowIfFail();
         var price = Money.Create(500m).ThrowIfFail();
+        var tagIds = new[] { TagId.New(), TagId.New() };
         var createdAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var updatedAt = new DateTime(2025, 6, 1, 0, 0, 0, DateTimeKind.Utc);
 
         // Act
-        var sut = Product.CreateFromValidated(id, name, description, price, createdAt, updatedAt);
+        var sut = Product.CreateFromValidated(id, name, description, price, tagIds, createdAt, updatedAt);
 
         // Assert
         sut.Id.ShouldBe(id);
         ((string)sut.Name).ShouldBe("Restored Product");
         ((decimal)sut.Price).ShouldBe(500m);
+        sut.TagIds.Count.ShouldBe(2);
         sut.CreatedAt.ShouldBe(createdAt);
         sut.UpdatedAt.ShouldBe(Some(updatedAt));
         sut.DomainEvents.ShouldBeEmpty();
     }
 
     [Fact]
-    public void RemoveTag_ShouldRemoveTagAndPublishEvent()
+    public void UnassignTag_ShouldRemoveTagIdAndPublishEvent()
     {
         // Arrange
         var sut = CreateSampleProduct();
-        var tagName = TagName.Create("sale").ThrowIfFail();
-        var tag = Tag.Create(tagName);
-        sut.AddTag(tag);
+        var tagId = TagId.New();
+        sut.AssignTag(tagId);
         sut.ClearDomainEvents();
 
         // Act
-        sut.RemoveTag(tag.Id);
+        sut.UnassignTag(tagId);
 
         // Assert
-        sut.Tags.ShouldBeEmpty();
-        sut.DomainEvents.ShouldContain(e => e is Tag.RemovedEvent);
+        sut.TagIds.ShouldBeEmpty();
+        var unassignedEvent = sut.DomainEvents.OfType<Product.TagUnassignedEvent>().ShouldHaveSingleItem();
+        unassignedEvent.ProductId.ShouldBe(sut.Id);
+        unassignedEvent.TagId.ShouldBe(tagId);
     }
 }

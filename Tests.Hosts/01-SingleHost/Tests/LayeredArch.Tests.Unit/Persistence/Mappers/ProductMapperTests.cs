@@ -30,7 +30,7 @@ public class ProductMapperTests
     }
 
     [Fact]
-    public void RoundTrip_ShouldPreserveTags()
+    public void RoundTrip_ShouldPreserveTagIds()
     {
         // Arrange
         var product = Product.Create(
@@ -38,21 +38,23 @@ public class ProductMapperTests
             ProductDescription.Create("With tags").ThrowIfFail(),
             Money.Create(50m).ThrowIfFail());
 
-        product.AddTag(Tag.Create(TagName.Create("tag-a").ThrowIfFail()));
-        product.AddTag(Tag.Create(TagName.Create("tag-b").ThrowIfFail()));
+        var tagId1 = TagId.New();
+        var tagId2 = TagId.New();
+        product.AssignTag(tagId1);
+        product.AssignTag(tagId2);
         product.ClearDomainEvents();
 
         // Act
         var actual = product.ToModel().ToDomain();
 
         // Assert
-        actual.Tags.Count.ShouldBe(2);
-        actual.Tags.Select(t => (string)t.Name).ShouldBe(
-            product.Tags.Select(t => (string)t.Name), ignoreOrder: true);
+        actual.TagIds.Count.ShouldBe(2);
+        actual.TagIds.Select(t => t.ToString()).ShouldBe(
+            product.TagIds.Select(t => t.ToString()), ignoreOrder: true);
     }
 
     [Fact]
-    public void RoundTrip_ShouldClearDomainEvents()
+    public void RoundTrip_ShouldNotProduceDomainEvents()
     {
         // Arrange
         var product = Product.Create(
@@ -60,12 +62,12 @@ public class ProductMapperTests
             ProductDescription.Create("Desc").ThrowIfFail(),
             Money.Create(10m).ThrowIfFail());
 
-        product.AddTag(Tag.Create(TagName.Create("tag").ThrowIfFail()));
+        product.AssignTag(TagId.New());
 
         // Act
         var actual = product.ToModel().ToDomain();
 
-        // Assert - 복원 과정에서 발행된 이벤트는 제거되어야 함
+        // Assert - 복원 과정에서 이벤트가 발생하지 않아야 함
         actual.DomainEvents.ShouldBeEmpty();
     }
 }

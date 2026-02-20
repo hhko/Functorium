@@ -1,5 +1,6 @@
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
 using LayeredArch.Domain.AggregateRoots.Products;
+using LayeredArch.Domain.SharedModels.Entities;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
 
@@ -13,25 +14,24 @@ internal static class ProductMapper
         Price = product.Price,
         CreatedAt = product.CreatedAt,
         UpdatedAt = product.UpdatedAt.ToNullable(),
-        Tags = product.Tags.Select(t => t.ToModel(product.Id.ToString())).ToList()
+        ProductTags = product.TagIds.Select(tagId => new ProductTagModel
+        {
+            ProductId = product.Id.ToString(),
+            TagId = tagId.ToString()
+        }).ToList()
     };
 
     public static Product ToDomain(this ProductModel model)
     {
-        var product = Product.CreateFromValidated(
+        var tagIds = model.ProductTags.Select(pt => TagId.Create(pt.TagId));
+
+        return Product.CreateFromValidated(
             ProductId.Create(model.Id),
             ProductName.CreateFromValidated(model.Name),
             ProductDescription.CreateFromValidated(model.Description),
             Money.CreateFromValidated(model.Price),
+            tagIds,
             model.CreatedAt,
             Optional(model.UpdatedAt));
-
-        foreach (var tag in model.Tags)
-            product.AddTag(tag.ToDomain());
-
-        // AddTag이 발행한 이벤트는 복원 과정의 부산물이므로 제거
-        product.ClearDomainEvents();
-
-        return product;
     }
 }

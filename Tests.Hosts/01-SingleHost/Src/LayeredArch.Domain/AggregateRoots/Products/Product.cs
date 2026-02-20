@@ -19,6 +19,16 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     /// </summary>
     public sealed record UpdatedEvent(ProductId ProductId, ProductName Name, Money OldPrice, Money NewPrice) : DomainEvent;
 
+    /// <summary>
+    /// 태그 할당 이벤트
+    /// </summary>
+    public sealed record TagAssignedEvent(ProductId ProductId, TagId TagId) : DomainEvent;
+
+    /// <summary>
+    /// 태그 해제 이벤트
+    /// </summary>
+    public sealed record TagUnassignedEvent(ProductId ProductId, TagId TagId) : DomainEvent;
+
     #endregion
 
     // Value Object 속성
@@ -26,9 +36,9 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     public ProductDescription Description { get; private set; }
     public Money Price { get; private set; }
 
-    // Tags 컬렉션 (SharedModels Entity)
-    private readonly List<Tag> _tags = [];
-    public IReadOnlyList<Tag> Tags => _tags.AsReadOnly();
+    // TagId 참조 컬렉션 (Tag는 독립 Aggregate Root)
+    private readonly List<TagId> _tagIds = [];
+    public IReadOnlyList<TagId> TagIds => _tagIds.AsReadOnly();
 
     // Audit 속성
     public DateTime CreatedAt { get; private set; }
@@ -70,14 +80,17 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
         ProductName name,
         ProductDescription description,
         Money price,
+        IEnumerable<TagId> tagIds,
         DateTime createdAt,
         Option<DateTime> updatedAt)
     {
-        return new Product(id, name, description, price)
+        var product = new Product(id, name, description, price)
         {
             CreatedAt = createdAt,
             UpdatedAt = updatedAt
         };
+        product._tagIds.AddRange(tagIds);
+        return product;
     }
 
     /// <summary>
@@ -101,29 +114,27 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     }
 
     /// <summary>
-    /// 태그를 추가합니다. (SharedModels 이벤트 발행)
+    /// 태그를 할당합니다. (멱등성 보장)
     /// </summary>
-    public Product AddTag(Tag tag)
+    public Product AssignTag(TagId tagId)
     {
-        if (_tags.Any(t => t.Id == tag.Id))
+        if (_tagIds.Any(t => t == tagId))
             return this;
 
-        _tags.Add(tag);
-        AddDomainEvent(new Tag.AssignedEvent(tag.Id, tag.Name));
+        _tagIds.Add(tagId);
+        AddDomainEvent(new TagAssignedEvent(Id, tagId));
         return this;
     }
 
     /// <summary>
-    /// 태그를 제거합니다. (SharedModels 이벤트 발행)
+    /// 태그를 해제합니다. (멱등성 보장)
     /// </summary>
-    public Product RemoveTag(TagId tagId)
+    public Product UnassignTag(TagId tagId)
     {
-        var tag = _tags.FirstOrDefault(t => t.Id == tagId);
-        if (tag is null)
+        if (!_tagIds.Remove(tagId))
             return this;
 
-        _tags.Remove(tag);
-        AddDomainEvent(new Tag.RemovedEvent(tagId));
+        AddDomainEvent(new TagUnassignedEvent(Id, tagId));
         return this;
     }
 }
