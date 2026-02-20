@@ -15,6 +15,13 @@ namespace LayeredArch.Domain.AggregateRoots.Orders;
 [GenerateEntityId]
 public sealed class Order : AggregateRoot<OrderId>, IAuditable
 {
+    #region Error Types
+
+    public sealed record EmptyOrderLines : DomainErrorType.Custom;
+    public sealed record InvalidOrderStatusTransition : DomainErrorType.Custom;
+
+    #endregion
+
     #region Domain Events
 
     /// <summary>
@@ -103,7 +110,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditable
         var lines = orderLines.ToList();
         if (lines.Count == 0)
             return DomainError.For<Order, int>(
-                new Custom("EmptyOrderLines"),
+                new EmptyOrderLines(),
                 currentValue: 0,
                 message: "Order must contain at least one order line");
 
@@ -160,7 +167,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditable
     {
         if (!Status.CanTransitionTo(target))
             return DomainError.For<Order, string, string>(
-                new Custom("InvalidOrderStatusTransition"),
+                new InvalidOrderStatusTransition(),
                 value1: Status,
                 value2: target,
                 message: $"Cannot transition from '{Status}' to '{target}'");

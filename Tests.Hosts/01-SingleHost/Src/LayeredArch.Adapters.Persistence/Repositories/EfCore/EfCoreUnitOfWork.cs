@@ -12,6 +12,13 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 [GeneratePipeline]
 public class EfCoreUnitOfWork : IUnitOfWork
 {
+    #region Error Types
+
+    public sealed record ConcurrencyConflict : AdapterErrorType.Custom;
+    public sealed record DatabaseUpdateFailed : AdapterErrorType.Custom;
+
+    #endregion
+
     private readonly LayeredArchDbContext _dbContext;
 
     public string RequestCategory => "UnitOfWork";
@@ -30,12 +37,12 @@ public class EfCoreUnitOfWork : IUnitOfWork
             catch (DbUpdateConcurrencyException ex)
             {
                 return AdapterError.FromException<EfCoreUnitOfWork>(
-                    new Custom("ConcurrencyConflict"), ex);
+                    new ConcurrencyConflict(), ex);
             }
             catch (DbUpdateException ex)
             {
                 return AdapterError.FromException<EfCoreUnitOfWork>(
-                    new Custom("DatabaseUpdateFailed"), ex);
+                    new DatabaseUpdateFailed(), ex);
             }
         });
     }

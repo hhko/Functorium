@@ -12,6 +12,12 @@ namespace LayeredArch.Domain.AggregateRoots.Orders;
 [GenerateEntityId]
 public sealed class OrderLine : Entity<OrderLineId>
 {
+    #region Error Types
+
+    public sealed record InvalidQuantity : DomainErrorType.Custom;
+
+    #endregion
+
     public ProductId ProductId { get; private set; }
     public Quantity Quantity { get; private set; }
     public Money UnitPrice { get; private set; }
@@ -41,7 +47,7 @@ public sealed class OrderLine : Entity<OrderLineId>
     {
         if ((int)quantity <= 0)
             return DomainError.For<OrderLine, int>(
-                new Custom("InvalidQuantity"),
+                new InvalidQuantity(),
                 currentValue: quantity,
                 message: "Order line quantity must be greater than 0");
 

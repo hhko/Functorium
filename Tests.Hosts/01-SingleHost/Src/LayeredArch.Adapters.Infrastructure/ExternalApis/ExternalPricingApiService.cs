@@ -16,6 +16,16 @@ namespace LayeredArch.Adapters.Infrastructure.ExternalApis;
 [GeneratePipeline]
 public class ExternalPricingApiService : IExternalPricingService
 {
+    #region Error Types
+
+    public sealed record OperationCancelled : AdapterErrorType.Custom;
+    public sealed record UnexpectedException : AdapterErrorType.Custom;
+    public sealed record PriceConversionFailed : AdapterErrorType.Custom;
+    public sealed record RateLimited : AdapterErrorType.Custom;
+    public sealed record HttpError : AdapterErrorType.Custom;
+
+    #endregion
+
     private readonly HttpClient _httpClient;
 
     /// <summary>
@@ -78,7 +88,7 @@ public class ExternalPricingApiService : IExternalPricingService
             {
                 // 사용자 취소
                 return AdapterError.For<ExternalPricingApiService>(
-                    new Custom("OperationCancelled"),
+                    new OperationCancelled(),
                     productCode,
                     "요청이 취소되었습니다");
             }
@@ -93,7 +103,7 @@ public class ExternalPricingApiService : IExternalPricingService
             {
                 // 기타 예외 → 일반 예외 래핑
                 return AdapterError.FromException<ExternalPricingApiService>(
-                    new Custom("UnexpectedException"),
+                    new UnexpectedException(),
                     ex);
             }
         });
@@ -144,7 +154,7 @@ public class ExternalPricingApiService : IExternalPricingService
                 {
                     var failedCodes = string.Join(", ", failed.Select(f => f.Code));
                     return AdapterError.For<ExternalPricingApiService>(
-                        new Custom("PriceConversionFailed"),
+                        new PriceConversionFailed(),
                         failedCodes,
                         $"가격 변환에 실패한 상품이 있습니다: {failedCodes}");
                 }
@@ -164,7 +174,7 @@ public class ExternalPricingApiService : IExternalPricingService
             catch (TaskCanceledException ex) when (ex.CancellationToken == cancellationToken)
             {
                 return AdapterError.For<ExternalPricingApiService>(
-                    new Custom("OperationCancelled"),
+                    new OperationCancelled(),
                     string.Join(",", productCodes),
                     "요청이 취소되었습니다");
             }
@@ -177,7 +187,7 @@ public class ExternalPricingApiService : IExternalPricingService
             catch (Exception ex)
             {
                 return AdapterError.FromException<ExternalPricingApiService>(
-                    new Custom("UnexpectedException"),
+                    new UnexpectedException(),
                     ex);
             }
         });
@@ -205,7 +215,7 @@ public class ExternalPricingApiService : IExternalPricingService
                 "외부 API 접근이 금지되었습니다"),
 
             HttpStatusCode.TooManyRequests => AdapterError.For<ExternalPricingApiService>(
-                new Custom("RateLimited"),
+                new RateLimited(),
                 context,
                 "외부 API 요청 제한에 도달했습니다"),
 
@@ -215,7 +225,7 @@ public class ExternalPricingApiService : IExternalPricingService
                 "외부 가격 서비스를 사용할 수 없습니다"),
 
             _ => AdapterError.For<ExternalPricingApiService, HttpStatusCode>(
-                new Custom("HttpError"),
+                new HttpError(),
                 response.StatusCode,
                 $"외부 API 호출 실패. Status: {response.StatusCode}")
         };

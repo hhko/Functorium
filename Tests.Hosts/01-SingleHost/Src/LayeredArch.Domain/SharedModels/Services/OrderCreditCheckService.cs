@@ -13,6 +13,12 @@ namespace LayeredArch.Domain.SharedModels.Services;
 /// </summary>
 public sealed class OrderCreditCheckService : IDomainService
 {
+    #region Error Types
+
+    public sealed record CreditLimitExceeded : DomainErrorType.Custom;
+
+    #endregion
+
     /// <summary>
     /// 주문 금액이 고객의 신용 한도 내에 있는지 검증합니다.
     /// </summary>
@@ -20,7 +26,7 @@ public sealed class OrderCreditCheckService : IDomainService
     {
         if (orderAmount > customer.CreditLimit)
             return DomainError.For<OrderCreditCheckService>(
-                new Custom("CreditLimitExceeded"),
+                new CreditLimitExceeded(),
                 customer.Id.ToString(),
                 $"Order amount {(decimal)orderAmount} exceeds customer credit limit {(decimal)customer.CreditLimit}");
 
@@ -40,7 +46,7 @@ public sealed class OrderCreditCheckService : IDomainService
 
         if (totalWithNew > customer.CreditLimit)
             return DomainError.For<OrderCreditCheckService>(
-                new Custom("CreditLimitExceeded"),
+                new CreditLimitExceeded(),
                 customer.Id.ToString(),
                 $"Total order amount {(decimal)totalWithNew} (existing: {(decimal)totalExisting} + new: {(decimal)newOrderAmount}) exceeds customer credit limit {(decimal)customer.CreditLimit}");
 

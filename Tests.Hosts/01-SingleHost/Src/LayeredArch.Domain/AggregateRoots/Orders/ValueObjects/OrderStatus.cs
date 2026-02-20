@@ -11,6 +11,12 @@ namespace LayeredArch.Domain.AggregateRoots.Orders.ValueObjects;
 /// </summary>
 public sealed class OrderStatus : SimpleValueObject<string>
 {
+    #region Error Types
+
+    public sealed record InvalidValue : DomainErrorType.Custom;
+
+    #endregion
+
     public static readonly OrderStatus Pending = new("Pending");
     public static readonly OrderStatus Confirmed = new("Confirmed");
     public static readonly OrderStatus Shipped = new("Shipped");
@@ -37,7 +43,7 @@ public sealed class OrderStatus : SimpleValueObject<string>
     public static Validation<Error, OrderStatus> Validate(string value) =>
         All.Find(value)
             .ToValidation(DomainError.For<OrderStatus>(
-                new Custom("InvalidValue"),
+                new InvalidValue(),
                 currentValue: value,
                 message: $"Invalid order status: '{value}'"));
 

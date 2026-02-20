@@ -15,6 +15,12 @@ namespace LayeredArch.Domain.AggregateRoots.Inventories;
 [GenerateEntityId]
 public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurrencyAware
 {
+    #region Error Types
+
+    public sealed record InsufficientStock : DomainErrorType.Custom;
+
+    #endregion
+
     #region Domain Events
 
     /// <summary>
@@ -98,7 +104,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
     {
         if (quantity > StockQuantity)
             return DomainError.For<Inventory, int>(
-                new Custom("InsufficientStock"),
+                new InsufficientStock(),
                 currentValue: StockQuantity,
                 message: $"Insufficient stock. Current: {StockQuantity}, Requested: {quantity}");
 
