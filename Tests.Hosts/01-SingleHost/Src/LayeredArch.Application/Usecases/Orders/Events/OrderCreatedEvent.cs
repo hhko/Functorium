@@ -19,10 +19,9 @@ public sealed class OrderCreatedEvent : IDomainEventHandler<Order.CreatedEvent>
     public ValueTask Handle(Order.CreatedEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
-            "[DomainEvent] Order created: {OrderId}, ProductId: {ProductId}, Quantity: {Quantity}, TotalAmount: {TotalAmount}",
+            "[DomainEvent] Order created: {OrderId}, OrderLines: {OrderLineCount}, TotalAmount: {TotalAmount}",
             notification.OrderId,
-            notification.ProductId,
-            notification.Quantity,
+            notification.OrderLines.Count,
             notification.TotalAmount);
 
         return ValueTask.CompletedTask;

@@ -23,9 +23,11 @@ public class InMemoryOrderDetailQueryAdapter : IOrderDetailQuery
             {
                 return Fin.Succ(new OrderDetailDto(
                     order.Id.ToString(),
-                    order.ProductId.ToString(),
-                    order.Quantity,
-                    order.UnitPrice,
+                    Seq(order.OrderLines.Select(l => new OrderLineDetailDto(
+                        l.ProductId.ToString(),
+                        l.Quantity,
+                        l.UnitPrice,
+                        l.LineTotal))),
                     order.TotalAmount,
                     order.ShippingAddress,
                     order.CreatedAt));

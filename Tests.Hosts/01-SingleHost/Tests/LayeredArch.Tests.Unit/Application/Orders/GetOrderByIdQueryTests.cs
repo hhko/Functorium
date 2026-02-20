@@ -22,8 +22,11 @@ public class GetOrderByIdQueryTests
         var orderId = OrderId.New();
         var productId = ProductId.New();
         var dto = new OrderDetailDto(
-            orderId.ToString(), productId.ToString(), 2, 100m, 200m,
-            "Seoul, Korea", DateTime.UtcNow);
+            orderId.ToString(),
+            Seq(new OrderLineDetailDto(productId.ToString(), 2, 100m, 200m)),
+            200m,
+            "Seoul, Korea",
+            DateTime.UtcNow);
 
         var request = new GetOrderByIdQuery.Request(orderId.ToString());
 
@@ -35,7 +38,7 @@ public class GetOrderByIdQueryTests
 
         // Assert
         actual.IsSucc.ShouldBeTrue();
-        actual.ThrowIfFail().Quantity.ShouldBe(2);
+        actual.ThrowIfFail().OrderLines.Count.ShouldBe(1);
         actual.ThrowIfFail().TotalAmount.ShouldBe(200m);
     }
 

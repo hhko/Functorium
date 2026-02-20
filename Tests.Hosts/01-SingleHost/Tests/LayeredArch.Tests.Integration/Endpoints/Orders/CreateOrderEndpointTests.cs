@@ -1,3 +1,4 @@
+using LayeredArch.Adapters.Presentation.Endpoints.Customers;
 using LayeredArch.Adapters.Presentation.Endpoints.Orders;
 using LayeredArch.Adapters.Presentation.Endpoints.Products;
 using LayeredArch.Tests.Integration.Fixtures;
@@ -11,7 +12,19 @@ public class CreateOrderEndpointTests : IntegrationTestBase
     [Fact]
     public async Task CreateOrder_ShouldReturn201Created_WhenRequestIsValid()
     {
-        // Arrange - Create a product first
+        // Arrange - Create a customer and a product first
+        var customerRequest = new
+        {
+            Name = "TestCustomer",
+            Email = $"test-{Guid.NewGuid()}@example.com",
+            CreditLimit = 10000.00m
+        };
+        var customerResponse = await Client.PostAsJsonAsync("/api/customers", customerRequest, TestContext.Current.CancellationToken);
+        customerResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        var customer = await customerResponse.Content.ReadFromJsonAsync<CreateCustomerEndpoint.Response>(TestContext.Current.CancellationToken);
+        customer.ShouldNotBeNull();
+
         var productRequest = new
         {
             Name = $"Product {Guid.NewGuid()}",
@@ -27,8 +40,11 @@ public class CreateOrderEndpointTests : IntegrationTestBase
 
         var orderRequest = new
         {
-            ProductId = product.ProductId,
-            Quantity = 2,
+            CustomerId = customer.CustomerId,
+            OrderLines = new[]
+            {
+                new { ProductId = product.ProductId, Quantity = 2 }
+            },
             ShippingAddress = "Seoul, Korea"
         };
 
@@ -40,7 +56,7 @@ public class CreateOrderEndpointTests : IntegrationTestBase
 
         var result = await response.Content.ReadFromJsonAsync<CreateOrderEndpoint.Response>(TestContext.Current.CancellationToken);
         result.ShouldNotBeNull();
-        result.Quantity.ShouldBe(2);
+        result.OrderLines.Count.ShouldBe(1);
         result.TotalAmount.ShouldBe(200.00m);
     }
 
@@ -50,8 +66,11 @@ public class CreateOrderEndpointTests : IntegrationTestBase
         // Arrange
         var orderRequest = new
         {
-            ProductId = Guid.NewGuid().ToString(),
-            Quantity = 2,
+            CustomerId = Guid.NewGuid().ToString(),
+            OrderLines = new[]
+            {
+                new { ProductId = Guid.NewGuid().ToString(), Quantity = 2 }
+            },
             ShippingAddress = "Seoul, Korea"
         };
 

@@ -33,20 +33,28 @@ public sealed class GetOrderByIdEndpoint
         var usecaseRequest = new GetOrderByIdQuery.Request(req.Id);
         var result = await _mediator.Send(usecaseRequest, ct);
         var mapped = result.Map(r => new Response(
-            r.OrderId, r.ProductId, r.Quantity, r.UnitPrice, r.TotalAmount, r.ShippingAddress, r.CreatedAt));
+            r.OrderId,
+            r.OrderLines.Select(l => new OrderLineResponse(l.ProductId, l.Quantity, l.UnitPrice, l.LineTotal)).ToList(),
+            r.TotalAmount,
+            r.ShippingAddress,
+            r.CreatedAt));
         await this.SendFinResponseWithNotFoundAsync(mapped, ct);
     }
 
     public sealed record Request(string Id);
+
+    public sealed record OrderLineResponse(
+        string ProductId,
+        int Quantity,
+        decimal UnitPrice,
+        decimal LineTotal);
 
     /// <summary>
     /// Endpoint Response DTO
     /// </summary>
     public new sealed record Response(
         string OrderId,
-        string ProductId,
-        int Quantity,
-        decimal UnitPrice,
+        List<OrderLineResponse> OrderLines,
         decimal TotalAmount,
         string ShippingAddress,
         DateTime CreatedAt);

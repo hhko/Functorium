@@ -1,5 +1,6 @@
 using LayeredArch.Application.Usecases.Orders.Commands;
 using LayeredArch.Application.Usecases.Orders.Ports;
+using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Orders;
 using LayeredArch.Domain.AggregateRoots.Products;
 using LayeredArch.Domain.SharedModels.ValueObjects;
@@ -21,8 +22,12 @@ public class CreateOrderCommandTests
     public async Task Handle_ShouldReturnSuccess_WhenRequestIsValid()
     {
         // Arrange
+        var customerId = CustomerId.New();
         var productId = ProductId.New();
-        var request = new CreateOrderCommand.Request(productId.ToString(), 2, "Seoul, Korea");
+        var request = new CreateOrderCommand.Request(
+            customerId.ToString(),
+            Seq(new CreateOrderCommand.OrderLineRequest(productId.ToString(), 2)),
+            "Seoul, Korea");
 
         _productCatalog.ExistsById(Arg.Any<ProductId>())
             .Returns(FinTFactory.Succ(true));
@@ -36,7 +41,7 @@ public class CreateOrderCommandTests
 
         // Assert
         actual.IsSucc.ShouldBeTrue();
-        actual.ThrowIfFail().Quantity.ShouldBe(2);
+        actual.ThrowIfFail().OrderLines.Count.ShouldBe(1);
         actual.ThrowIfFail().TotalAmount.ShouldBe(200m);
     }
 
@@ -44,7 +49,10 @@ public class CreateOrderCommandTests
     public async Task Handle_ShouldReturnFailure_WhenProductNotFound()
     {
         // Arrange
-        var request = new CreateOrderCommand.Request(ProductId.New().ToString(), 2, "Seoul, Korea");
+        var request = new CreateOrderCommand.Request(
+            CustomerId.New().ToString(),
+            Seq(new CreateOrderCommand.OrderLineRequest(ProductId.New().ToString(), 2)),
+            "Seoul, Korea");
 
         _productCatalog.ExistsById(Arg.Any<ProductId>())
             .Returns(FinTFactory.Succ(false));
@@ -60,7 +68,10 @@ public class CreateOrderCommandTests
     public async Task Handle_ShouldReturnFailure_WhenShippingAddressIsEmpty()
     {
         // Arrange
-        var request = new CreateOrderCommand.Request(ProductId.New().ToString(), 2, "");
+        var request = new CreateOrderCommand.Request(
+            CustomerId.New().ToString(),
+            Seq(new CreateOrderCommand.OrderLineRequest(ProductId.New().ToString(), 2)),
+            "");
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

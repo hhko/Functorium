@@ -14,12 +14,9 @@ public class OrderConfiguration : IEntityTypeConfiguration<OrderModel>
         builder.Property(o => o.Id)
             .HasMaxLength(26);
 
-        builder.Property(o => o.ProductId)
+        builder.Property(o => o.CustomerId)
             .HasMaxLength(26)
             .IsRequired();
-
-        builder.Property(o => o.UnitPrice)
-            .HasPrecision(18, 4);
 
         builder.Property(o => o.TotalAmount)
             .HasPrecision(18, 4);
@@ -28,7 +25,16 @@ public class OrderConfiguration : IEntityTypeConfiguration<OrderModel>
             .HasMaxLength(500)
             .IsRequired();
 
+        builder.Property(o => o.Status)
+            .HasMaxLength(20)
+            .IsRequired();
+
         builder.Property(o => o.CreatedAt);
         builder.Property(o => o.UpdatedAt);
+
+        builder.HasMany(o => o.OrderLines)
+            .WithOne()
+            .HasForeignKey(l => l.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

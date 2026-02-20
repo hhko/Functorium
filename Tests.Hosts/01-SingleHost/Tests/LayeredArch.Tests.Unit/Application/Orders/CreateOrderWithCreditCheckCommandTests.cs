@@ -38,7 +38,9 @@ public class CreateOrderWithCreditCheckCommandTests
         var customer = CreateSampleCustomer(creditLimit: 5000m);
         var productId = ProductId.New();
         var request = new CreateOrderWithCreditCheckCommand.Request(
-            customer.Id.ToString(), productId.ToString(), 2, "Seoul, Korea");
+            customer.Id.ToString(),
+            Seq(new CreateOrderWithCreditCheckCommand.OrderLineRequest(productId.ToString(), 2)),
+            "Seoul, Korea");
 
         _customerRepository.GetById(Arg.Any<CustomerId>())
             .Returns(FinTFactory.Succ(customer));
@@ -64,7 +66,9 @@ public class CreateOrderWithCreditCheckCommandTests
         var customer = CreateSampleCustomer(creditLimit: 1000m);
         var productId = ProductId.New();
         var request = new CreateOrderWithCreditCheckCommand.Request(
-            customer.Id.ToString(), productId.ToString(), 2, "Seoul, Korea");
+            customer.Id.ToString(),
+            Seq(new CreateOrderWithCreditCheckCommand.OrderLineRequest(productId.ToString(), 2)),
+            "Seoul, Korea");
 
         _customerRepository.GetById(Arg.Any<CustomerId>())
             .Returns(FinTFactory.Succ(customer));
@@ -86,7 +90,9 @@ public class CreateOrderWithCreditCheckCommandTests
         // Arrange
         var customer = CreateSampleCustomer();
         var request = new CreateOrderWithCreditCheckCommand.Request(
-            customer.Id.ToString(), ProductId.New().ToString(), 2, "Seoul, Korea");
+            customer.Id.ToString(),
+            Seq(new CreateOrderWithCreditCheckCommand.OrderLineRequest(ProductId.New().ToString(), 2)),
+            "Seoul, Korea");
 
         _customerRepository.GetById(Arg.Any<CustomerId>())
             .Returns(FinTFactory.Succ(customer));
@@ -105,8 +111,14 @@ public class CreateOrderWithCreditCheckCommandTests
     {
         // Arrange
         var request = new CreateOrderWithCreditCheckCommand.Request(
-            CustomerId.New().ToString(), ProductId.New().ToString(), 2, "Seoul, Korea");
+            CustomerId.New().ToString(),
+            Seq(new CreateOrderWithCreditCheckCommand.OrderLineRequest(ProductId.New().ToString(), 2)),
+            "Seoul, Korea");
 
+        _productCatalog.ExistsById(Arg.Any<ProductId>())
+            .Returns(FinTFactory.Succ(true));
+        _productCatalog.GetPrice(Arg.Any<ProductId>())
+            .Returns(FinTFactory.Succ(Money.Create(100m).ThrowIfFail()));
         _customerRepository.GetById(Arg.Any<CustomerId>())
             .Returns(FinTFactory.Fail<Customer>(Error.New("Customer not found")));
 

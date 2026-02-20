@@ -17,12 +17,25 @@ namespace LayeredArch.Application.Usecases.Orders.Commands;
 public sealed class CreateOrderWithCreditCheckCommand
 {
     /// <summary>
+    /// 주문 라인 요청 DTO
+    /// </summary>
+    public sealed record OrderLineRequest(string ProductId, int Quantity);
+
+    /// <summary>
+    /// 주문 라인 응답 DTO
+    /// </summary>
+    public sealed record OrderLineResponse(
+        string ProductId,
+        int Quantity,
+        decimal UnitPrice,
+        decimal LineTotal);
+
+    /// <summary>
     /// Command Request
     /// </summary>
     public sealed record Request(
         string CustomerId,
-        string ProductId,
-        int Quantity,
+        Seq<OrderLineRequest> OrderLines,
         string ShippingAddress) : ICommandRequest<Response>;
 
     /// <summary>
@@ -30,9 +43,7 @@ public sealed class CreateOrderWithCreditCheckCommand
     /// </summary>
     public sealed record Response(
         string OrderId,
-        string ProductId,
-        int Quantity,
-        decimal UnitPrice,
+        Seq<OrderLineResponse> OrderLines,
         decimal TotalAmount,
         string ShippingAddress,
         DateTime CreatedAt);
@@ -45,31 +56,28 @@ public sealed class CreateOrderWithCreditCheckCommand
         public Validator()
         {
             RuleFor(x => x.CustomerId)
-                .NotEmpty().WithMessage("고객 ID는 필수입니다");
+                .NotEmpty().WithMessage("Customer ID is required");
 
-            RuleFor(x => x.ProductId)
-                .NotEmpty().WithMessage("상품 ID는 필수입니다");
+            RuleFor(x => x.OrderLines)
+                .Must(lines => !lines.IsEmpty).WithMessage("At least one order line is required");
 
-            RuleFor(x => x.Quantity)
-                .GreaterThan(0).WithMessage("주문 수량은 0보다 커야 합니다");
+            RuleForEach(x => x.OrderLines).ChildRules(line =>
+            {
+                line.RuleFor(l => l.ProductId)
+                    .NotEmpty().WithMessage("Product ID is required");
+                line.RuleFor(l => l.Quantity)
+                    .GreaterThan(0).WithMessage("Order quantity must be greater than 0");
+            });
 
             RuleFor(x => x.ShippingAddress)
-                .NotEmpty().WithMessage("배송지 주소는 필수입니다")
-                .MaximumLength(ShippingAddress.MaxLength).WithMessage($"배송지 주소는 {ShippingAddress.MaxLength}자를 초과할 수 없습니다");
+                .NotEmpty().WithMessage("Shipping address is required")
+                .MaximumLength(ShippingAddress.MaxLength).WithMessage($"Shipping address must not exceed {ShippingAddress.MaxLength} characters");
         }
     }
 
     /// <summary>
     /// Command Handler - Domain Service(OrderCreditCheckService)를 사용하여 신용 한도 검증
     /// </summary>
-    /// <remarks>
-    /// 실행 흐름:
-    /// 1. 고객 조회 (ICustomerRepository)
-    /// 2. 상품 존재 및 가격 검증 (IProductCatalog)
-    /// 3. 신용 한도 검증 (OrderCreditCheckService - 순수 도메인 로직)
-    /// 4. 주문 생성 및 영속화 (IOrderRepository)
-    /// 5. 도메인 이벤트 발행 (IDomainEventPublisher)
-    /// </remarks>
     public sealed class Usecase(
         ICustomerRepository customerRepository,
         IOrderRepository orderRepository,
@@ -86,38 +94,67 @@ public sealed class CreateOrderWithCreditCheckCommand
         {
             // 1. Value Object 생성
             var shippingAddressResult = ShippingAddress.Create(request.ShippingAddress);
-            var quantityResult = Quantity.Create(request.Quantity);
 
             if (shippingAddressResult.IsFail)
                 return FinResponse.Fail<Response>(shippingAddressResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
-            if (quantityResult.IsFail)
-                return FinResponse.Fail<Response>(quantityResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
 
             var customerId = CustomerId.Create(request.CustomerId);
-            var productId = ProductId.Create(request.ProductId);
             var shippingAddress = (ShippingAddress)shippingAddressResult;
-            var quantity = (Quantity)quantityResult;
 
-            // 2. 조회 → 신용 검증(Domain Service) → 주문 생성 → 이벤트 발행
+            // 2. 각 라인별 상품 검증 및 가격 조회 → OrderLine 생성
+            var orderLines = new List<OrderLine>();
+            foreach (var lineReq in request.OrderLines)
+            {
+                var productId = ProductId.Create(lineReq.ProductId);
+                var quantityResult = Quantity.Create(lineReq.Quantity);
+                if (quantityResult.IsFail)
+                    return FinResponse.Fail<Response>(quantityResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
+
+                var quantity = (Quantity)quantityResult;
+
+                var existsResult = await _productCatalog.ExistsById(productId).Run().RunAsync();
+                if (existsResult.IsFail)
+                    return FinResponse.Fail<Response>(existsResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
+                if (!existsResult.ThrowIfFail())
+                    return FinResponse.Fail<Response>(ApplicationError.For<CreateOrderWithCreditCheckCommand>(
+                        new NotFound(),
+                        lineReq.ProductId,
+                        $"Product not found: '{lineReq.ProductId}'"));
+
+                var priceResult = await _productCatalog.GetPrice(productId).Run().RunAsync();
+                if (priceResult.IsFail)
+                    return FinResponse.Fail<Response>(priceResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
+
+                var unitPrice = priceResult.ThrowIfFail();
+                var orderLineResult = OrderLine.Create(productId, quantity, unitPrice);
+                if (orderLineResult.IsFail)
+                    return FinResponse.Fail<Response>(orderLineResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
+
+                orderLines.Add(orderLineResult.ThrowIfFail());
+            }
+
+            // 3. Order 생성
+            var orderResult = Order.Create(customerId, orderLines, shippingAddress);
+            if (orderResult.IsFail)
+                return FinResponse.Fail<Response>(orderResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
+
+            var newOrder = orderResult.ThrowIfFail();
+
+            // 4. 고객 조회 → 신용 검증 → 저장
             FinT<IO, Response> usecase =
                 from customer in _customerRepository.GetById(customerId)
-                from exists in _productCatalog.ExistsById(productId)
-                from _1 in guard(exists, ApplicationError.For<CreateOrderWithCreditCheckCommand>(
-                    new NotFound(),
-                    request.ProductId,
-                    $"상품을 찾을 수 없습니다: '{request.ProductId}'"))
-                from unitPrice in _productCatalog.GetPrice(productId)
-                from _2 in _creditCheckService.ValidateCreditLimit(customer, unitPrice.Multiply(quantity))   // Domain Service 호출
-                from order in _orderRepository.Create(
-                    Order.Create(productId, quantity, unitPrice, shippingAddress))
+                from _ in _creditCheckService.ValidateCreditLimit(customer, newOrder.TotalAmount)
+                from saved in _orderRepository.Create(newOrder)
                 select new Response(
-                    order.Id.ToString(),
-                    order.ProductId.ToString(),
-                    order.Quantity,
-                    order.UnitPrice,
-                    order.TotalAmount,
-                    order.ShippingAddress,
-                    order.CreatedAt);
+                    saved.Id.ToString(),
+                    Seq(saved.OrderLines.Select(l => new OrderLineResponse(
+                        l.ProductId.ToString(),
+                        l.Quantity,
+                        l.UnitPrice,
+                        l.LineTotal))),
+                    saved.TotalAmount,
+                    saved.ShippingAddress,
+                    saved.CreatedAt);
 
             Fin<Response> response = await usecase.Run().RunAsync();
             return response.ToFinResponse();

@@ -22,7 +22,7 @@ public sealed class OrderCreditCheckService : IDomainService
             return DomainError.For<OrderCreditCheckService>(
                 new Custom("CreditLimitExceeded"),
                 customer.Id.ToString(),
-                $"주문 금액 {(decimal)orderAmount}이(가) 고객 신용 한도 {(decimal)customer.CreditLimit}을(를) 초과합니다");
+                $"Order amount {(decimal)orderAmount} exceeds customer credit limit {(decimal)customer.CreditLimit}");
 
         return unit;
     }
@@ -35,14 +35,14 @@ public sealed class OrderCreditCheckService : IDomainService
         Seq<Order> existingOrders,
         Money newOrderAmount)
     {
-        var totalExisting = existingOrders.Fold(0m, (acc, o) => acc + (decimal)o.TotalAmount);
-        var totalWithNew = totalExisting + (decimal)newOrderAmount;
+        var totalExisting = Money.Sum(existingOrders.Map(o => o.TotalAmount));
+        var totalWithNew = totalExisting.Add(newOrderAmount);
 
-        if (totalWithNew > (decimal)customer.CreditLimit)
+        if (totalWithNew > customer.CreditLimit)
             return DomainError.For<OrderCreditCheckService>(
                 new Custom("CreditLimitExceeded"),
                 customer.Id.ToString(),
-                $"총 주문 금액 {totalWithNew} (기존: {totalExisting} + 신규: {(decimal)newOrderAmount})이(가) 고객 신용 한도 {(decimal)customer.CreditLimit}을(를) 초과합니다");
+                $"Total order amount {(decimal)totalWithNew} (existing: {(decimal)totalExisting} + new: {(decimal)newOrderAmount}) exceeds customer credit limit {(decimal)customer.CreditLimit}");
 
         return unit;
     }

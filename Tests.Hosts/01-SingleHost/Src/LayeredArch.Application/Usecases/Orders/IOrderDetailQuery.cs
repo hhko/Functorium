@@ -12,11 +12,15 @@ public interface IOrderDetailQuery : IQueryAdapter
     FinT<IO, OrderDetailDto> GetById(OrderId id);
 }
 
-public sealed record OrderDetailDto(
-    string OrderId,
+public sealed record OrderLineDetailDto(
     string ProductId,
     int Quantity,
     decimal UnitPrice,
+    decimal LineTotal);
+
+public sealed record OrderDetailDto(
+    string OrderId,
+    Seq<OrderLineDetailDto> OrderLines,
     decimal TotalAmount,
     string ShippingAddress,
     DateTime CreatedAt);

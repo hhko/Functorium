@@ -9,6 +9,15 @@ namespace LayeredArch.Application.Usecases.Orders.Queries;
 public sealed class GetOrderByIdQuery
 {
     /// <summary>
+    /// 주문 라인 응답 DTO
+    /// </summary>
+    public sealed record OrderLineResponse(
+        string ProductId,
+        int Quantity,
+        decimal UnitPrice,
+        decimal LineTotal);
+
+    /// <summary>
     /// Query Request
     /// </summary>
     public sealed record Request(string OrderId) : IQueryRequest<Response>;
@@ -18,9 +27,7 @@ public sealed class GetOrderByIdQuery
     /// </summary>
     public sealed record Response(
         string OrderId,
-        string ProductId,
-        int Quantity,
-        decimal UnitPrice,
+        Seq<OrderLineResponse> OrderLines,
         decimal TotalAmount,
         string ShippingAddress,
         DateTime CreatedAt);
@@ -40,9 +47,8 @@ public sealed class GetOrderByIdQuery
                 from dto in _adapter.GetById(orderId)
                 select new Response(
                     dto.OrderId,
-                    dto.ProductId,
-                    dto.Quantity,
-                    dto.UnitPrice,
+                    dto.OrderLines.Select(l => new OrderLineResponse(
+                        l.ProductId, l.Quantity, l.UnitPrice, l.LineTotal)).ToSeq(),
                     dto.TotalAmount,
                     dto.ShippingAddress,
                     dto.CreatedAt);

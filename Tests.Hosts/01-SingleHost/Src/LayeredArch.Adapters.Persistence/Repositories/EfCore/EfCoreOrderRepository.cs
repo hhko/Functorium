@@ -40,6 +40,7 @@ public class EfCoreOrderRepository : IOrderRepository
         return IO.liftAsync(async () =>
         {
             var model = await _dbContext.Orders.AsNoTracking()
+                .Include(o => o.OrderLines)
                 .FirstOrDefaultAsync(o => o.Id == id.ToString());
             if (model is not null)
             {

@@ -22,11 +22,14 @@ public class OrderCreditCheckServiceTests
 
     private static Order CreateSampleOrder(decimal unitPrice = 100m, int quantity = 1)
     {
-        return Order.Create(
+        var line = OrderLine.Create(
             ProductId.New(),
             Quantity.Create(quantity).ThrowIfFail(),
-            Money.Create(unitPrice).ThrowIfFail(),
-            ShippingAddress.Create("Seoul, Korea").ThrowIfFail());
+            Money.Create(unitPrice).ThrowIfFail()).ThrowIfFail();
+        return Order.Create(
+            CustomerId.New(),
+            [line],
+            ShippingAddress.Create("Seoul, Korea").ThrowIfFail()).ThrowIfFail();
     }
 
     [Fact]

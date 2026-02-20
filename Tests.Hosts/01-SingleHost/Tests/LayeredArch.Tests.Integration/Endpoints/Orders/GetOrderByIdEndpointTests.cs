@@ -1,3 +1,4 @@
+using LayeredArch.Adapters.Presentation.Endpoints.Customers;
 using LayeredArch.Adapters.Presentation.Endpoints.Orders;
 using LayeredArch.Adapters.Presentation.Endpoints.Products;
 using LayeredArch.Tests.Integration.Fixtures;
@@ -11,7 +12,19 @@ public class GetOrderByIdEndpointTests : IntegrationTestBase
     [Fact]
     public async Task GetOrderById_ShouldReturn200Ok_WhenOrderExists()
     {
-        // Arrange - Create a product, then an order
+        // Arrange - Create a customer, a product, then an order
+        var customerRequest = new
+        {
+            Name = "TestCustomer",
+            Email = $"test-{Guid.NewGuid()}@example.com",
+            CreditLimit = 10000.00m
+        };
+        var customerResponse = await Client.PostAsJsonAsync("/api/customers", customerRequest, TestContext.Current.CancellationToken);
+        customerResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        var customer = await customerResponse.Content.ReadFromJsonAsync<CreateCustomerEndpoint.Response>(TestContext.Current.CancellationToken);
+        customer.ShouldNotBeNull();
+
         var productRequest = new
         {
             Name = $"Product {Guid.NewGuid()}",
@@ -27,8 +40,11 @@ public class GetOrderByIdEndpointTests : IntegrationTestBase
 
         var orderRequest = new
         {
-            ProductId = product.ProductId,
-            Quantity = 3,
+            CustomerId = customer.CustomerId,
+            OrderLines = new[]
+            {
+                new { ProductId = product.ProductId, Quantity = 3 }
+            },
             ShippingAddress = "Busan, Korea"
         };
         var orderResponse = await Client.PostAsJsonAsync("/api/orders", orderRequest, TestContext.Current.CancellationToken);
@@ -45,7 +61,7 @@ public class GetOrderByIdEndpointTests : IntegrationTestBase
 
         var result = await response.Content.ReadFromJsonAsync<GetOrderByIdEndpoint.Response>(TestContext.Current.CancellationToken);
         result.ShouldNotBeNull();
-        result.Quantity.ShouldBe(3);
+        result.OrderLines.Count.ShouldBe(1);
         result.TotalAmount.ShouldBe(450.00m);
     }
 
