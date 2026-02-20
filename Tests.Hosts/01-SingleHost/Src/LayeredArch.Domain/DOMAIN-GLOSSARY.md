@@ -3,7 +3,7 @@
 ## 1. 도메인 개요
 
 이 도메인은 **단일 Bounded Context(전자상거래 주문 처리)**로 모델링한다.
-**고객(Customer)**, **상품(Product)**, **주문(Order)**, **재고(Inventory)** 4개 핵심 영역과 **태그(Tag)** 공유 Aggregate로 구성된다.
+**고객(Customer)**, **상품(Product)**, **주문(Order)**, **재고(Inventory)**, **태그(Tag)** 5개 핵심 영역으로 구성된다.
 
 > **Bounded Context 경계**: 현재 모든 Aggregate는 동일한 Bounded Context에 속하며, 단일 배포 단위로 관리된다. 향후 도메인이 확장되면 주문/재고를 별도 Context로 분리할 수 있다.
 
@@ -18,7 +18,7 @@
 | 상품 | Product | 애그리거트 루트 | 판매 대상. 이름, 설명, 가격, 태그ID 목록을 가진다 |
 | 상품명 | ProductName | 값 객체 | 상품의 이름 (최대 100자, 공백 불가) |
 | 상품설명 | ProductDescription | 값 객체 | 상품의 상세 설명 (최대 1000자, 빈 값 허용) |
-| 태그 | Tag | 공유 애그리거트 루트 | 상품에 부여할 수 있는 분류 라벨. 독립 생명주기를 가지며 ITagRepository로 관리된다. 이름(TagName)을 가진다 |
+| 태그 | Tag | 애그리거트 루트 | 상품에 부여할 수 있는 분류 라벨. 독립 생명주기를 가지며 ITagRepository로 관리된다. 이름(TagName)을 가진다 |
 | 태그명 | TagName | 값 객체 | 태그의 이름 (최대 50자, 공백 불가) |
 | 주문 | Order | 애그리거트 루트 | 고객이 상품을 구매하는 행위의 기록. 다중 주문라인을 포함한다 |
 | 주문라인 | OrderLine | 엔티티 | 주문 내 개별 상품의 수량·단가·소계. Order의 Child Entity |
@@ -86,15 +86,15 @@
 - **속성**: 태그명(TagName), CreatedAt, UpdatedAt (IAuditable)
 - **기능**: 태그 생성, 태그 이름 변경(`Rename` → `Tag` 반환, fluent + `UpdatedAt` 갱신)
 - **생명주기 관리**: 독립 Aggregate Root로서 ITagRepository를 통해 생성/조회/수정/삭제 가능. Product는 TagId만 참조하며 Tag 객체를 직접 포함하지 않는다.
-- **설계 결정 근거**: Tag는 여러 Product에서 공유되므로 Product의 하위 Entity가 아닌 독립 Aggregate Root로 승격했다. 이를 통해 Tag의 독립적 생명주기(생성, 삭제)와 다대다 관계를 명확히 표현한다.
+- **설계 결정 근거**: Tag는 독립 생명주기를 가지므로 Product의 하위 Entity가 아닌 독립 Aggregate Root로 모델링했다. Product는 TagId만 참조한다.
 
 ## 4. 애그리거트 간 관계
 
 ```
-범례: 이름 = 애그리거트 루트 | [이름] = 자식 엔티티 | *이름* = 공유 애그리거트 루트 | [*이름*] = 공유 자식 엔티티
+범례: 이름 = 애그리거트 루트 | [이름] = 자식 엔티티
 범례: ──▶ = ID 참조/포함 | ┄┄▷ = 도메인 서비스 검증
 
-Customer ──(고객ID 참조)──▶ Order ──(포함)──▶ [OrderLine] ◀──(상품ID 참조)── Product ──(태그ID 참조)──▶ *Tag*
+Customer ──(고객ID 참조)──▶ Order ──(포함)──▶ [OrderLine] ◀──(상품ID 참조)── Product ──(태그ID 참조)──▶ Tag
                               ┆
                               ┆ (신용한도 검증)
                               ▽
