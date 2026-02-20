@@ -1,4 +1,4 @@
-namespace LayeredArch.Domain.SharedModels.Entities.ValueObjects;
+namespace LayeredArch.Domain.AggregateRoots.Tags;
 
 /// <summary>
 /// 태그명 값 객체

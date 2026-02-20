@@ -1,5 +1,5 @@
 using System.Collections.Concurrent;
-using LayeredArch.Domain.SharedModels.Entities;
+using LayeredArch.Domain.AggregateRoots.Tags;
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;

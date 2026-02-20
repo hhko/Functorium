@@ -1,7 +1,6 @@
-using LayeredArch.Domain.SharedModels.Entities;
-using LayeredArch.Domain.SharedModels.Entities.ValueObjects;
+using LayeredArch.Domain.AggregateRoots.Tags;
 
-namespace LayeredArch.Tests.Unit.Domain.SharedModels;
+namespace LayeredArch.Tests.Unit.Domain.Tags;
 
 public class TagTests
 {

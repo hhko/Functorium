@@ -1,5 +1,5 @@
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
-using LayeredArch.Domain.SharedModels.Entities;
+using LayeredArch.Domain.AggregateRoots.Tags;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
 

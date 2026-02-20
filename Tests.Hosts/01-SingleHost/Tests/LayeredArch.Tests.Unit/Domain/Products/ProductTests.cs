@@ -1,6 +1,5 @@
 using LayeredArch.Domain.AggregateRoots.Products;
-using LayeredArch.Domain.SharedModels.Entities;
-using LayeredArch.Domain.SharedModels.Entities.ValueObjects;
+using LayeredArch.Domain.AggregateRoots.Tags;
 using LayeredArch.Domain.SharedModels.ValueObjects;
 
 namespace LayeredArch.Tests.Unit.Domain.Products;

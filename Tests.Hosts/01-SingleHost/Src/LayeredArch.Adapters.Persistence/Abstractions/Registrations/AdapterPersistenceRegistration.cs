@@ -7,7 +7,7 @@ using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Orders;
 using LayeredArch.Domain.AggregateRoots.Products;
-using LayeredArch.Domain.SharedModels.Entities;
+using LayeredArch.Domain.AggregateRoots.Tags;
 using Functorium.Abstractions.Registrations;
 using Functorium.Adapters.Options;
 using Functorium.Applications.Persistence;

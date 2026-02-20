@@ -1,6 +1,5 @@
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
-using LayeredArch.Domain.SharedModels.Entities;
-using LayeredArch.Domain.SharedModels.Entities.ValueObjects;
+using LayeredArch.Domain.AggregateRoots.Tags;
 
 namespace LayeredArch.Tests.Unit.Persistence.Mappers;
 

@@ -1,9 +1,7 @@
-namespace LayeredArch.Domain.SharedModels.Entities;
+namespace LayeredArch.Domain.AggregateRoots.Tags;
 
 /// <summary>
 /// 태그 도메인 모델 (Aggregate Root)
-/// 독립 생명주기를 가진 공유 Aggregate Root입니다.
-/// 여러 Aggregate에서 ID로 참조합니다.
 /// TagId는 [GenerateEntityId] 속성에 의해 소스 생성기로 자동 생성됩니다.
 /// </summary>
 [GenerateEntityId]

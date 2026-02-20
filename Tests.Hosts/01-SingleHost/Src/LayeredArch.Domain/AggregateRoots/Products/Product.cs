@@ -1,3 +1,5 @@
+using LayeredArch.Domain.AggregateRoots.Tags;
+
 namespace LayeredArch.Domain.AggregateRoots.Products;
 
 /// <summary>
