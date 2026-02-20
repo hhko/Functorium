@@ -13,6 +13,7 @@ namespace ApplyBindCombinedValidation.ValueObjects;
 /// </summary>
 public sealed class OrderInfo : ValueObject
 {
+    public sealed record DiscountAmountExceedsOrder : DomainErrorType.Custom;
     public string CustomerName { get; }
     public string CustomerEmail { get; }
     public decimal OrderAmount { get; }
@@ -65,7 +66,7 @@ public sealed class OrderInfo : ValueObject
         decimal.TryParse(discountInput, out var discount) &&
         discount >= 0 && discount <= orderAmount
             ? orderAmount - discount
-            : DomainError.For<OrderInfo>(new DomainErrorType.Custom("DiscountAmountExceedsOrder"), $"{orderAmountInput}:{discountInput}",
+            : DomainError.For<OrderInfo>(new DiscountAmountExceedsOrder(), $"{orderAmountInput}:{discountInput}",
                 $"Discount amount cannot exceed order amount. Order: '{orderAmountInput}', Discount: '{discountInput}'");
 
     protected override IEnumerable<object> GetEqualityComponents()

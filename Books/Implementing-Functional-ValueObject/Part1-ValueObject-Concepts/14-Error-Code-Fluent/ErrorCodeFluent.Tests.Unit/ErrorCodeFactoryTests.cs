@@ -14,6 +14,8 @@ using ErrorCodeFluent.ValueObjects.ComparableNot.CompositePrimitiveValueObjects;
 [Trait("Concept-14-Error-Code-Fluent", "DomainErrorTests")]
 public class DomainErrorTests
 {
+    private sealed record Unsupported : DomainErrorType.Custom;
+    private sealed record Zero : DomainErrorType.Custom;
     #region Fin<T> 결과 검증 - ShouldBeDomainError
 
     /// <summary>
@@ -118,7 +120,7 @@ public class DomainErrorTests
     }
 
     /// <summary>
-    /// Currency에서 Custom("Unsupported") 에러 검증
+    /// Currency에서 Unsupported (Custom 파생) 에러 검증
     /// </summary>
     [Fact]
     public void Currency_Create_ShouldReturnDomainError_WhenUnsupported()
@@ -127,7 +129,7 @@ public class DomainErrorTests
         var result = Currency.Create("XYZ");
 
         // Assert - 도메인 특화 에러 검증 (Fin<Currency>)
-        result.ShouldBeDomainError<Currency, Currency>(new DomainErrorType.Custom("Unsupported"));
+        result.ShouldBeDomainError<Currency, Currency>(new Unsupported());
     }
 
     /// <summary>
@@ -164,7 +166,7 @@ public class DomainErrorTests
         Validation<Error, int> validation = Denominator.Validate(value);
 
         // Assert - Validation 결과에 대한 타입 안전 검증
-        validation.ShouldHaveDomainError<Denominator, int>(new DomainErrorType.Custom("Zero"));
+        validation.ShouldHaveDomainError<Denominator, int>(new Zero());
     }
 
     /// <summary>
@@ -181,7 +183,7 @@ public class DomainErrorTests
 
         // Assert - 에러 타입과 현재 값 모두 검증
         validation.ShouldHaveDomainError<Denominator, int, int>(
-            new DomainErrorType.Custom("Zero"),
+            new Zero(),
             expectedCurrentValue: 0);
     }
 

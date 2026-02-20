@@ -14,6 +14,7 @@ public sealed class Currency
     : SmartEnum<Currency, string>
     , IValueObject
 {
+    public sealed record Unsupported : DomainErrorType.Custom;
     public static readonly Currency KRW = new(nameof(KRW), "KRW", "한국 원화", "₩");
     public static readonly Currency USD = new(nameof(USD), "USD", "미국 달러", "$");
     public static readonly Currency EUR = new(nameof(EUR), "EUR", "유로", "€");
@@ -52,7 +53,7 @@ public sealed class Currency
             .ThenNormalize(v => v.ToUpperInvariant())
             .ThenMust(
                 v => SupportedCodes.Contains(v),
-                new DomainErrorType.Custom("Unsupported"),
+                new Unsupported(),
                 v => $"Currency '{v}' is not supported");
 
     public static IEnumerable<Currency> GetAllSupportedCurrencies() =>

@@ -13,6 +13,7 @@ using ValidationFluent.ValueObjects.Comparable.CompositeValueObjects;
 [Trait("Concept-15-Validation-Fluent", "CurrencyTests")]
 public class CurrencyTests
 {
+    private sealed record Unsupported : DomainErrorType.Custom;
     #region 실패 케이스 - 타입 안전 Assertion 사용
 
     /// <summary>
@@ -68,7 +69,7 @@ public class CurrencyTests
         var actual = Currency.Create(value);
 
         // Assert
-        actual.ShouldBeDomainError<Currency, Currency>(new DomainErrorType.Custom("Unsupported"));
+        actual.ShouldBeDomainError<Currency, Currency>(new Unsupported());
     }
 
     /// <summary>

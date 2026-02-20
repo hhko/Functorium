@@ -211,6 +211,8 @@ public sealed class Email : SimpleValueObject<string>
 /// </summary>
 public sealed class Password : IEquatable<Password>
 {
+    public sealed record InsufficientComplexity : DomainErrorType.Custom;
+
     public const int MinLength = 8;
     public const int MaxLength = 128;
 
@@ -268,7 +270,7 @@ public sealed class Password : IEquatable<Password>
         var score = new[] { hasUpperCase, hasLowerCase, hasDigit, hasSpecialChar }.Count(x => x);
         return score >= 3
             ? value
-            : DomainError.For<Password, int>(new DomainErrorType.Custom("InsufficientComplexity"), score,
+            : DomainError.For<Password, int>(new InsufficientComplexity(), score,
                 $"Password must contain at least 3 of: uppercase, lowercase, digits, special characters. Current complexity score: '{score}'");
     }
 
@@ -377,6 +379,8 @@ public sealed class PhoneNumber : ValueObject
 /// </summary>
 public sealed class Username : SimpleValueObject<string>
 {
+    public sealed record Reserved : DomainErrorType.Custom;
+
     public const int MinLength = 3;
     public const int MaxLength = 30;
 
@@ -442,7 +446,7 @@ public sealed class Username : SimpleValueObject<string>
     private static Validation<Error, string> ValidateNotReserved(string value) =>
         !ReservedNames.Contains(value)
             ? value
-            : DomainError.For<Username>(new DomainErrorType.Custom("Reserved"), value,
+            : DomainError.For<Username>(new Reserved(), value,
                 $"This username is reserved and cannot be used. Current value: '{value}'");
 
     public static implicit operator string(Username username) => username.Value;

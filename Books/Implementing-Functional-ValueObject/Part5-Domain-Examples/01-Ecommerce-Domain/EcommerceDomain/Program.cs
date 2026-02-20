@@ -183,6 +183,9 @@ class Program
 /// </summary>
 public sealed class Money : ValueObject, IComparable<Money>
 {
+    public sealed record CurrencyEmpty : DomainErrorType.Custom;
+    public sealed record CurrencyNotThreeCharacters : DomainErrorType.Custom;
+
     // 1.1 속성 선언
     public decimal Amount { get; }
     public string Currency { get; }
@@ -217,14 +220,14 @@ public sealed class Money : ValueObject, IComparable<Money>
     private static Validation<Error, string> ValidateCurrencyNotEmpty(string currency) =>
         !string.IsNullOrWhiteSpace(currency)
             ? currency
-            : DomainError.For<Money>(new DomainErrorType.Custom("CurrencyEmpty"), currency,
+            : DomainError.For<Money>(new CurrencyEmpty(), currency,
                 $"Currency code cannot be empty. Current value: '{currency}'");
 
     // 5.3 통화 코드 길이 검증
     private static Validation<Error, string> ValidateCurrencyLength(string currency) =>
         !string.IsNullOrWhiteSpace(currency) && currency.Length == 3
             ? currency
-            : DomainError.For<Money>(new DomainErrorType.Custom("CurrencyNotThreeCharacters"), currency,
+            : DomainError.For<Money>(new CurrencyNotThreeCharacters(), currency,
                 $"Currency code must be exactly 3 characters. Current value: '{currency}'");
 
     // 도메인 메서드
@@ -369,6 +372,10 @@ public sealed class Quantity : ComparableSimpleValueObject<int>
 /// </summary>
 public sealed class OrderStatus : SmartEnum<OrderStatus, string>
 {
+    public sealed record AlreadyCancelled : DomainErrorType.Custom;
+    public sealed record AlreadyDelivered : DomainErrorType.Custom;
+    public sealed record CannotRevertToPending : DomainErrorType.Custom;
+
     public static readonly OrderStatus Pending = new("PENDING", "대기중", canCancel: true);
     public static readonly OrderStatus Confirmed = new("CONFIRMED", "확인됨", canCancel: true);
     public static readonly OrderStatus Shipped = new("SHIPPED", "배송중", canCancel: false);
@@ -389,11 +396,11 @@ public sealed class OrderStatus : SmartEnum<OrderStatus, string>
     {
         return (this, next) switch
         {
-            (var s, _) when s == Cancelled => DomainError.For<OrderStatus>(new DomainErrorType.Custom("AlreadyCancelled"), $"{Value}->{next.Value}",
+            (var s, _) when s == Cancelled => DomainError.For<OrderStatus>(new AlreadyCancelled(), $"{Value}->{next.Value}",
                 $"Cannot change status of a cancelled order. Current status: '{Value}', Target status: '{next.Value}'"),
-            (var s, _) when s == Delivered => DomainError.For<OrderStatus>(new DomainErrorType.Custom("AlreadyDelivered"), $"{Value}->{next.Value}",
+            (var s, _) when s == Delivered => DomainError.For<OrderStatus>(new AlreadyDelivered(), $"{Value}->{next.Value}",
                 $"Cannot change status of a delivered order. Current status: '{Value}', Target status: '{next.Value}'"),
-            (_, var n) when n == Pending => DomainError.For<OrderStatus>(new DomainErrorType.Custom("CannotRevertToPending"), $"{Value}->{next.Value}",
+            (_, var n) when n == Pending => DomainError.For<OrderStatus>(new CannotRevertToPending(), $"{Value}->{next.Value}",
                 $"Cannot revert to pending status. Current status: '{Value}', Target status: '{next.Value}'"),
             _ => next
         };
@@ -405,6 +412,13 @@ public sealed class OrderStatus : SmartEnum<OrderStatus, string>
 /// </summary>
 public sealed class ShippingAddress : ValueObject
 {
+    public sealed record RecipientNameEmpty : DomainErrorType.Custom;
+    public sealed record StreetEmpty : DomainErrorType.Custom;
+    public sealed record CityEmpty : DomainErrorType.Custom;
+    public sealed record PostalCodeEmpty : DomainErrorType.Custom;
+    public sealed record PostalCodeLengthOutOfRange : DomainErrorType.Custom;
+    public sealed record CountryEmpty : DomainErrorType.Custom;
+
     // 1.1 속성 선언
     public string RecipientName { get; }
     public string Street { get; }
@@ -447,33 +461,33 @@ public sealed class ShippingAddress : ValueObject
     private static Validation<Error, string> ValidateRecipientName(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainError.For<ShippingAddress>(new DomainErrorType.Custom("RecipientNameEmpty"), value,
+            : DomainError.For<ShippingAddress>(new RecipientNameEmpty(), value,
                 $"Recipient name cannot be empty. Current value: '{value}'");
 
     // 5.2 도로명 검증
     private static Validation<Error, string> ValidateStreet(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainError.For<ShippingAddress>(new DomainErrorType.Custom("StreetEmpty"), value,
+            : DomainError.For<ShippingAddress>(new StreetEmpty(), value,
                 $"Street address cannot be empty. Current value: '{value}'");
 
     // 5.3 도시 검증
     private static Validation<Error, string> ValidateCity(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainError.For<ShippingAddress>(new DomainErrorType.Custom("CityEmpty"), value,
+            : DomainError.For<ShippingAddress>(new CityEmpty(), value,
                 $"City cannot be empty. Current value: '{value}'");
 
     // 5.4 우편번호 검증
     private static Validation<Error, string> ValidatePostalCode(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return DomainError.For<ShippingAddress>(new DomainErrorType.Custom("PostalCodeEmpty"), value,
+            return DomainError.For<ShippingAddress>(new PostalCodeEmpty(), value,
                 $"Postal code cannot be empty. Current value: '{value}'");
 
         var normalized = value.Replace("-", "").Replace(" ", "");
         if (normalized.Length < 5 || normalized.Length > 10)
-            return DomainError.For<ShippingAddress>(new DomainErrorType.Custom("PostalCodeLengthOutOfRange"), value,
+            return DomainError.For<ShippingAddress>(new PostalCodeLengthOutOfRange(), value,
                 $"Postal code must be 5-10 characters. Current value: '{value}'");
 
         return normalized;
@@ -483,7 +497,7 @@ public sealed class ShippingAddress : ValueObject
     private static Validation<Error, string> ValidateCountry(string value) =>
         !string.IsNullOrWhiteSpace(value)
             ? value
-            : DomainError.For<ShippingAddress>(new DomainErrorType.Custom("CountryEmpty"), value,
+            : DomainError.For<ShippingAddress>(new CountryEmpty(), value,
                 $"Country code cannot be empty. Current value: '{value}'");
 
     // 6. 동등성 컴포넌트 구현

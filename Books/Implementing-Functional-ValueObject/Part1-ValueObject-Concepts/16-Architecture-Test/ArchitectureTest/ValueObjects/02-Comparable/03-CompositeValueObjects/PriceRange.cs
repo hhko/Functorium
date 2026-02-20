@@ -12,6 +12,7 @@ namespace ArchitectureTest.ValueObjects.Comparable.CompositeValueObjects;
 /// </summary>
 public sealed class PriceRange : ComparableValueObject
 {
+    public sealed record MinExceedsMax : DomainErrorType.Custom;
     /// <summary>
     /// 최소 가격
     /// </summary>
@@ -81,7 +82,7 @@ public sealed class PriceRange : ComparableValueObject
     /// <returns>검증 결과</returns>
     private static Validation<Error, (Price MinPrice, Price MaxPrice)> ValidatePriceRange(Price minPrice, Price maxPrice) =>
         (decimal)minPrice.Amount > (decimal)maxPrice.Amount
-            ? DomainError.For<PriceRange>(new DomainErrorType.Custom("MinExceedsMax"),
+            ? DomainError.For<PriceRange>(new MinExceedsMax(),
                 $"MinPrice: {minPrice}, MaxPrice: {maxPrice}",
                 $"Minimum price cannot exceed maximum price. Min: '{minPrice}', Max: '{maxPrice}'")
             : (MinPrice: minPrice, MaxPrice: maxPrice);

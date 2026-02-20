@@ -16,7 +16,9 @@ namespace Framework.Layers.Domains;
 ///
 /// DomainError.For&lt;Email&gt;(new Empty(), value, "Email cannot be empty");
 /// DomainError.For&lt;Password&gt;(new TooShort(MinLength: 8), value, "Password too short");
-/// DomainError.For&lt;Currency&gt;(new Custom("Unsupported"), value, "Currency not supported");
+/// // 커스텀 에러: sealed record 파생 정의
+/// // public sealed record Unsupported : DomainErrorType.Custom;
+/// DomainError.For&lt;Currency&gt;(new Unsupported(), value, "Currency not supported");
 /// </code>
 /// </remarks>
 public static class DomainError

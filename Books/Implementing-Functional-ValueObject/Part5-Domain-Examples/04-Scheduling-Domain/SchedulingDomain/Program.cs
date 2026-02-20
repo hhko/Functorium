@@ -195,6 +195,8 @@ class Program
 /// </summary>
 public sealed class DateRange : ValueObject
 {
+    public sealed record EndBeforeStart : DomainErrorType.Custom;
+
     // 1.1 속성 선언
     public DateOnly Start { get; }
     public DateOnly End { get; }
@@ -224,7 +226,7 @@ public sealed class DateRange : ValueObject
     private static Validation<Error, DateOnly> ValidateEndNotBeforeStart(DateOnly start, DateOnly end) =>
         end >= start
             ? end
-            : DomainError.For<DateRange>(new DomainErrorType.Custom("EndBeforeStart"), $"{start}~{end}",
+            : DomainError.For<DateRange>(new EndBeforeStart(), $"{start}~{end}",
                 $"End date cannot be before start date. Start: '{start}', End: '{end}'");
 
     // 도메인 메서드
@@ -261,6 +263,8 @@ public sealed class DateRange : ValueObject
 /// </summary>
 public sealed class TimeSlot : ValueObject
 {
+    public sealed record EndNotAfterStart : DomainErrorType.Custom;
+
     // 1.1 속성 선언
     public TimeOnly Start { get; }
     public TimeOnly End { get; }
@@ -290,7 +294,7 @@ public sealed class TimeSlot : ValueObject
     private static Validation<Error, TimeOnly> ValidateEndAfterStart(TimeOnly start, TimeOnly end) =>
         end > start
             ? end
-            : DomainError.For<TimeSlot>(new DomainErrorType.Custom("EndNotAfterStart"), $"{start}~{end}",
+            : DomainError.For<TimeSlot>(new EndNotAfterStart(), $"{start}~{end}",
                 $"End time must be after start time. Start: '{start}', End: '{end}'");
 
     // 도메인 메서드

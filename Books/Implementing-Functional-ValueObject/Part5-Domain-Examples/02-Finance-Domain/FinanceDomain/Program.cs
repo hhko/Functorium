@@ -174,6 +174,10 @@ public sealed class InterestRate : ComparableSimpleValueObject<decimal>
 /// </summary>
 public sealed class ExchangeRate : ValueObject
 {
+    public sealed record InvalidBaseCurrency : DomainErrorType.Custom;
+    public sealed record InvalidQuoteCurrency : DomainErrorType.Custom;
+    public sealed record SameCurrency : DomainErrorType.Custom;
+
     public string BaseCurrency { get; }
     public string QuoteCurrency { get; }
     public decimal Rate { get; }
@@ -192,26 +196,26 @@ public sealed class ExchangeRate : ValueObject
 
     public static Validation<Error, (string BaseCurrency, string QuoteCurrency, decimal Rate)> Validate(
         string baseCurrency, string quoteCurrency, decimal rate) =>
-        (ValidateCurrency(baseCurrency, "BaseCurrency"),
-         ValidateCurrency(quoteCurrency, "QuoteCurrency"),
+        (ValidateCurrency(baseCurrency, new InvalidBaseCurrency(), "basecurrency"),
+         ValidateCurrency(quoteCurrency, new InvalidQuoteCurrency(), "quotecurrency"),
          ValidationRules<ExchangeRate>.Positive(rate))
             .Apply((b, q, r) => (BaseCurrency: b, QuoteCurrency: q, Rate: r))
             .Bind(v => ValidateDifferentCurrencies(v.BaseCurrency, v.QuoteCurrency)
                 .Map(_ => (v.BaseCurrency, v.QuoteCurrency, v.Rate)));
 
-    private static Validation<Error, string> ValidateCurrency(string value, string fieldName) =>
+    private static Validation<Error, string> ValidateCurrency(string value, DomainErrorType errorType, string fieldName) =>
         !string.IsNullOrWhiteSpace(value) && value.Length == 3
             ? value
             : DomainError.For<ExchangeRate>(
-                new DomainErrorType.Custom($"Invalid{fieldName}"),
+                errorType,
                 value,
-                $"Invalid {fieldName.ToLowerInvariant()} code. Must be 3 characters. Current value: '{value}'");
+                $"Invalid {fieldName} code. Must be 3 characters. Current value: '{value}'");
 
     private static Validation<Error, Unit> ValidateDifferentCurrencies(string baseCurrency, string quoteCurrency) =>
         !baseCurrency.Equals(quoteCurrency, StringComparison.OrdinalIgnoreCase)
             ? unit
             : DomainError.For<ExchangeRate, string, string>(
-                new DomainErrorType.Custom("SameCurrency"),
+                new SameCurrency(),
                 baseCurrency, quoteCurrency,
                 $"Base and quote currency cannot be the same. Base: '{baseCurrency}', Quote: '{quoteCurrency}'");
 

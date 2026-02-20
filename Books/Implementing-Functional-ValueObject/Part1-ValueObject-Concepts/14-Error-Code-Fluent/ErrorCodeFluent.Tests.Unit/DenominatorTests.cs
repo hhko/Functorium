@@ -11,6 +11,7 @@ using ErrorCodeFluent.ValueObjects.Comparable.PrimitiveValueObjects;
 [Trait("Concept-14-Error-Code-Fluent", "DenominatorTests")]
 public class DenominatorTests
 {
+    private sealed record Zero : DomainErrorType.Custom;
     #region 실패 케이스 - 타입 안전 Assertion 사용
 
     /// <summary>
@@ -33,7 +34,7 @@ public class DenominatorTests
 
         // Assert - 타입 안전 Assertion
         // Fin<Denominator>에서 에러 검증
-        actual.ShouldBeDomainError<Denominator, Denominator>(new DomainErrorType.Custom("Zero"));
+        actual.ShouldBeDomainError<Denominator, Denominator>(new Zero());
     }
 
     /// <summary>
@@ -50,7 +51,7 @@ public class DenominatorTests
 
         // Assert - 에러 타입과 현재 값 모두 검증
         actual.ShouldBeDomainError<Denominator, Denominator, int>(
-            new DomainErrorType.Custom("Zero"),
+            new Zero(),
             expectedCurrentValue: 0);
     }
 
@@ -67,7 +68,7 @@ public class DenominatorTests
         Validation<Error, int> validation = Denominator.Validate(value);
 
         // Assert - Validation 결과에 대한 타입 안전 검증
-        validation.ShouldHaveDomainError<Denominator, int>(new DomainErrorType.Custom("Zero"));
+        validation.ShouldHaveDomainError<Denominator, int>(new Zero());
     }
 
     #endregion

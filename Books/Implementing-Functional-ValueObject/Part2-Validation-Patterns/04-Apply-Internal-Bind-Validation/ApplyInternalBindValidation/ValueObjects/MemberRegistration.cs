@@ -11,6 +11,10 @@ namespace ApplyInternalBindValidation.ValueObjects;
 /// </summary>
 public sealed class MemberRegistration : ValueObject
 {
+    public sealed record UsernameNotAvailable : DomainErrorType.Custom;
+    public sealed record EmailDomainUnsupported : DomainErrorType.Custom;
+    public sealed record PasswordTooWeak : DomainErrorType.Custom;
+    public sealed record PasswordInHistory : DomainErrorType.Custom;
     public string Username { get; }
     public string Email { get; }
     public string Password { get; }
@@ -61,7 +65,7 @@ public sealed class MemberRegistration : ValueObject
     private static Validation<Error, string> ValidateUsernameAvailability(string username) =>
         !username.StartsWith("admin")
             ? username
-            : DomainError.For<MemberRegistration>(new DomainErrorType.Custom("UsernameNotAvailable"), username,
+            : DomainError.For<MemberRegistration>(new UsernameNotAvailable(), username,
                 $"Username is not available. Reserved usernames cannot start with 'admin'. Current value: '{username}'");
 
     private static Validation<Error, string> ValidateEmailFormat(string email) =>
@@ -73,19 +77,19 @@ public sealed class MemberRegistration : ValueObject
     private static Validation<Error, string> ValidateEmailDomain(string email) =>
         email.EndsWith(".com") || email.EndsWith(".co.kr")
             ? email
-            : DomainError.For<MemberRegistration>(new DomainErrorType.Custom("EmailDomainUnsupported"), email,
+            : DomainError.For<MemberRegistration>(new EmailDomainUnsupported(), email,
                 $"Email domain is not supported. Only '.com' and '.co.kr' are allowed. Current value: '{email}'");
 
     private static Validation<Error, string> ValidatePasswordStrength(string password) =>
         password.Length >= 6 && password.Any(char.IsDigit)
             ? password
-            : DomainError.For<MemberRegistration>(new DomainErrorType.Custom("PasswordTooWeak"), password,
+            : DomainError.For<MemberRegistration>(new PasswordTooWeak(), password,
                 $"Password is too weak. Must be at least 6 characters and contain a digit. Current value: '{password}'");
 
     private static Validation<Error, string> ValidatePasswordHistory(string password) =>
         password != "password123"
             ? password
-            : DomainError.For<MemberRegistration>(new DomainErrorType.Custom("PasswordInHistory"), password,
+            : DomainError.For<MemberRegistration>(new PasswordInHistory(), password,
                 $"Password was previously used. Please choose a different password. Current value: '{password}'");
 
     protected override IEnumerable<object> GetEqualityComponents()

@@ -12,6 +12,7 @@ namespace ComparableValueObjectPrimitive.ValueObjects;
 /// </summary>
 public sealed class DateRange : ComparableValueObject
 {
+    public sealed record StartAfterEnd : DomainErrorType.Custom;
     public DateTime StartDate { get; }
     public DateTime EndDate { get; }
 
@@ -30,7 +31,7 @@ public sealed class DateRange : ComparableValueObject
     public static Validation<Error, (DateTime startDate, DateTime endDate)> Validate(DateTime startDate, DateTime endDate) =>
         startDate <= endDate
             ? (startDate, endDate)
-            : DomainError.For<DateRange, DateTime, DateTime>(new DomainErrorType.Custom("StartAfterEnd"), startDate, endDate,
+            : DomainError.For<DateRange, DateTime, DateTime>(new StartAfterEnd(), startDate, endDate,
                 $"Start date cannot be after end date. Start: '{startDate:yyyy-MM-dd}', End: '{endDate:yyyy-MM-dd}'");
 
     protected override IEnumerable<IComparable> GetComparableEqualityComponents()

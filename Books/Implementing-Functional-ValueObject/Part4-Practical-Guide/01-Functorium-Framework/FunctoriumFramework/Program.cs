@@ -191,6 +191,10 @@ public sealed class Age : ComparableSimpleValueObject<int>
 /// </summary>
 public sealed class Address : ValueObject
 {
+    public sealed record CityEmpty : DomainErrorType.Custom;
+    public sealed record StreetEmpty : DomainErrorType.Custom;
+    public sealed record PostalCodeEmpty : DomainErrorType.Custom;
+
     public string City { get; }
     public string Street { get; }
     public string PostalCode { get; }
@@ -218,19 +222,19 @@ public sealed class Address : ValueObject
     private static Validation<Error, string> ValidateCityNotEmpty(string city) =>
         !string.IsNullOrWhiteSpace(city)
             ? city
-            : DomainError.For<Address>(new DomainErrorType.Custom("CityEmpty"), city ?? "null",
+            : DomainError.For<Address>(new CityEmpty(), city ?? "null",
                 $"City cannot be empty. Current value: '{city}'");
 
     private static Validation<Error, string> ValidateStreetNotEmpty(string street) =>
         !string.IsNullOrWhiteSpace(street)
             ? street
-            : DomainError.For<Address>(new DomainErrorType.Custom("StreetEmpty"), street ?? "null",
+            : DomainError.For<Address>(new StreetEmpty(), street ?? "null",
                 $"Street cannot be empty. Current value: '{street}'");
 
     private static Validation<Error, string> ValidatePostalCodeNotEmpty(string postalCode) =>
         !string.IsNullOrWhiteSpace(postalCode)
             ? postalCode
-            : DomainError.For<Address>(new DomainErrorType.Custom("PostalCodeEmpty"), postalCode ?? "null",
+            : DomainError.For<Address>(new PostalCodeEmpty(), postalCode ?? "null",
                 $"Postal code cannot be empty. Current value: '{postalCode}'");
 
     protected override IEnumerable<object> GetEqualityComponents()

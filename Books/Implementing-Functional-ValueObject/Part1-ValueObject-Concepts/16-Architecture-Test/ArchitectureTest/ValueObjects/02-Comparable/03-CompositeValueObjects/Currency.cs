@@ -14,6 +14,7 @@ public sealed class Currency
     : SmartEnum<Currency, string>
     , IValueObject
 {
+    public sealed record Unsupported : DomainErrorType.Custom;
     /// <summary>
     /// 한국 원화
     /// </summary>
@@ -153,7 +154,7 @@ public sealed class Currency
         }
         catch (SmartEnumNotFoundException)
         {
-            return DomainError.For<Currency>(new DomainErrorType.Custom("Unsupported"), currencyCode,
+            return DomainError.For<Currency>(new Unsupported(), currencyCode,
                 $"Currency code is not supported. Current value: '{currencyCode}'");
         }
     }

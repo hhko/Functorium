@@ -12,6 +12,7 @@ namespace BindInternalApplyValidation.ValueObjects;
 /// </summary>
 public sealed class PhoneNumber : ValueObject
 {
+    public sealed record CountryCodeUnsupported : DomainErrorType.Custom;
     public string CountryCode { get; }
     public string AreaCode { get; }
     public string LocalNumber { get; }
@@ -49,7 +50,7 @@ public sealed class PhoneNumber : ValueObject
     private static Validation<Error, string> ValidateCountryCode(string phoneNumber) =>
         phoneNumber.StartsWith("+82") || phoneNumber.StartsWith("+1")
             ? phoneNumber.Substring(0, 3)
-            : DomainError.For<PhoneNumber>(new DomainErrorType.Custom("CountryCodeUnsupported"), phoneNumber,
+            : DomainError.For<PhoneNumber>(new CountryCodeUnsupported(), phoneNumber,
                 $"Country code is not supported. Only '+82' (Korea) and '+1' (USA) are allowed. Current value: '{phoneNumber}'");
 
     private static Validation<Error, string> ValidateAreaCode(string phoneNumber) =>

@@ -14,6 +14,7 @@ namespace TypeSafeEnums.ValueObjects.Comparable.CompositeValueObjects;
 /// </summary>
 public sealed class PriceRange : ComparableValueObject
 {
+    public sealed record MinGreaterThanMax : DomainErrorType.Custom;
     /// <summary>
     /// 최소 가격
     /// </summary>
@@ -84,7 +85,7 @@ public sealed class PriceRange : ComparableValueObject
     private static Validation<Error, (Price MinPrice, Price MaxPrice)> ValidatePriceRange(Price minPrice, Price maxPrice) =>
         (decimal)minPrice.Amount > (decimal)maxPrice.Amount
             ? DomainError.For<PriceRange, Price, Price>(
-                new DomainErrorType.Custom("MinGreaterThanMax"),
+                new MinGreaterThanMax(),
                 minPrice,
                 maxPrice,
                 $"최소 가격은 최대 가격보다 작거나 같아야 합니다. Current value: '{minPrice} > {maxPrice}'")

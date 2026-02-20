@@ -11,6 +11,7 @@ namespace ArchitectureTest.ValueObjects.Comparable.PrimitiveValueObjects;
 /// </summary>
 public sealed class Denominator : ComparableSimpleValueObject<int>
 {
+    public sealed record Zero : DomainErrorType.Custom;
     /// <summary>
     /// Denominator 인스턴스를 생성하는 private 생성자
     /// 직접 인스턴스 생성 방지
@@ -49,7 +50,7 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
     /// <returns>검증 결과</returns>
     public static Validation<Error, int> Validate(int value) =>
         value == 0
-            ? DomainError.For<Denominator, int>(new DomainErrorType.Custom("Zero"), value,
+            ? DomainError.For<Denominator, int>(new Zero(), value,
                 $"Denominator cannot be zero. Current value: '{value}'")
             : value;
 

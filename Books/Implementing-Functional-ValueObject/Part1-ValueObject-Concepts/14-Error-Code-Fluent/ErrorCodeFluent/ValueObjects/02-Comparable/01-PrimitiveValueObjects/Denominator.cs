@@ -11,6 +11,8 @@ namespace ErrorCodeFluent.ValueObjects.Comparable.PrimitiveValueObjects;
 /// </summary>
 public sealed class Denominator : ComparableSimpleValueObject<int>
 {
+    public sealed record Zero : DomainErrorType.Custom;
+
     private Denominator(int value) : base(value) { }
 
     public static Fin<Denominator> Create(int value) =>
@@ -21,7 +23,7 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
 
     public static Validation<Error, int> Validate(int value) =>
         value == 0
-            ? DomainError.For<Denominator, int>(new DomainErrorType.Custom("Zero"), value,
+            ? DomainError.For<Denominator, int>(new Zero(), value,
                 $"Denominator cannot be zero. Current value: '{value}'")
             : value;
 }

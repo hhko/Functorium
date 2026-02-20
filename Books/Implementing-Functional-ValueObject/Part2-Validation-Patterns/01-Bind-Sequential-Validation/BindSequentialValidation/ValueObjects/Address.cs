@@ -11,6 +11,7 @@ namespace BindSequentialValidation.ValueObjects;
 /// </summary>
 public sealed class Address : ValueObject
 {
+    public sealed record CountryPostalCodeMismatch : DomainErrorType.Custom;
     public string Street { get; }
     public string City { get; }
     public string PostalCode { get; }
@@ -65,7 +66,7 @@ public sealed class Address : ValueObject
             ("KR", var code) when code.Length == 5 && code.All(char.IsDigit) => country,
             ("US", var code) when code.Length == 5 && code.All(char.IsDigit) => country,
             ("JP", var code) when code.Length == 7 && code.All(char.IsDigit) => country,
-            _ => DomainError.For<Address>(new DomainErrorType.Custom("CountryPostalCodeMismatch"), $"{country}:{postalCode}",
+            _ => DomainError.For<Address>(new CountryPostalCodeMismatch(), $"{country}:{postalCode}",
                 $"Country and postal code format do not match. Current value: '{country}:{postalCode}'")
         };
 

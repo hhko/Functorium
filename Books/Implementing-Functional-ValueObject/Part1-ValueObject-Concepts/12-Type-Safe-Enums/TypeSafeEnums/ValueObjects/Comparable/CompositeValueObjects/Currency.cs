@@ -12,10 +12,11 @@ namespace TypeSafeEnums.ValueObjects.Comparable.CompositeValueObjects;
 /// SmartEnum을 사용하여 타입 안전하고 강력한 통화 열거형 구현
 /// ValueObject 규칙을 준수하여 구현
 /// </summary>
-public sealed class Currency 
+public sealed class Currency
     : SmartEnum<Currency, string>
     , IValueObject
 {
+    public sealed record Unsupported : DomainErrorType.Custom;
     /// <summary>
     /// 한국 원화
     /// </summary>
@@ -160,7 +161,7 @@ public sealed class Currency
         catch (SmartEnumNotFoundException)
         {
             return DomainError.For<Currency>(
-                new DomainErrorType.Custom("Unsupported"),
+                new Unsupported(),
                 currencyCode,
                 $"지원하지 않는 통화 코드입니다. Current value: '{currencyCode}'");
         }

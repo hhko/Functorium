@@ -10,6 +10,10 @@ namespace ErrorCodeFluent.ValueObjects.Comparable.CompositePrimitiveValueObjects
 /// </summary>
 public sealed class DateRange : ComparableValueObject
 {
+    public sealed record InvalidStartDate : DomainErrorType.Custom;
+    public sealed record InvalidEndDate : DomainErrorType.Custom;
+    public sealed record StartAfterEnd : DomainErrorType.Custom;
+
     public DateTime StartDate { get; }
     public DateTime EndDate { get; }
 
@@ -35,19 +39,19 @@ public sealed class DateRange : ComparableValueObject
 
     private static Validation<Error, DateTime> ValidateStartDate(DateTime startDate) =>
         startDate < DateTime.MinValue || startDate > DateTime.MaxValue
-            ? DomainError.For<DateRange, DateTime>(new DomainErrorType.Custom("InvalidStartDate"), startDate,
+            ? DomainError.For<DateRange, DateTime>(new InvalidStartDate(), startDate,
                 $"Start date is invalid. Current value: '{startDate}'")
             : startDate;
 
     private static Validation<Error, DateTime> ValidateEndDate(DateTime endDate) =>
         endDate < DateTime.MinValue || endDate > DateTime.MaxValue
-            ? DomainError.For<DateRange, DateTime>(new DomainErrorType.Custom("InvalidEndDate"), endDate,
+            ? DomainError.For<DateRange, DateTime>(new InvalidEndDate(), endDate,
                 $"End date is invalid. Current value: '{endDate}'")
             : endDate;
 
     private static Validation<Error, (DateTime StartDate, DateTime EndDate)> ValidateDateRange(DateTime startDate, DateTime endDate) =>
         startDate >= endDate
-            ? DomainError.For<DateRange, DateTime, DateTime>(new DomainErrorType.Custom("StartAfterEnd"), startDate, endDate,
+            ? DomainError.For<DateRange, DateTime, DateTime>(new StartAfterEnd(), startDate, endDate,
                 $"Start date cannot be after or equal to end date. Start: '{startDate}', End: '{endDate}'")
             : (StartDate: startDate, EndDate: endDate);
 
