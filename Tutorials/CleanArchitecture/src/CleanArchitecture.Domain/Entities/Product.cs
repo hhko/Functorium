@@ -16,6 +16,12 @@ namespace CleanArchitecture.Domain.Entities;
 [GenerateEntityId]
 public class Product : Entity<ProductId>
 {
+    #region Error Types
+
+    public sealed record AlreadyInactive : DomainErrorType.Custom;
+
+    #endregion
+
     public string Name { get; private set; } = null!;
     public string Sku { get; private set; } = null!;
     public Money Price { get; private set; } = null!;
@@ -97,7 +103,7 @@ public class Product : Entity<ProductId>
     public Fin<Unit> Deactivate()
     {
         if (!IsActive)
-            return DomainError.For<Product>(new Custom("AlreadyInactive"), IsActive.ToString(), "Product is already inactive");
+            return DomainError.For<Product>(new AlreadyInactive(), IsActive.ToString(), "Product is already inactive");
         IsActive = false;
         return unit;
     }
