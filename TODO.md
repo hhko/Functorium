@@ -6,6 +6,11 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하도록 개선
 ```
 
+- [x] 도메인 모델 정의서 md
+- [x] 도메인 모델 정의서 템플릿 md
+- [x] 도메인 모델 정의서 템플릿 가이드 md
+- [ ] 
+
 ## 01-SingleHost 이해
 - [x] 01-SingleHost Doamin 프로젝트 폴더 정리
   - AggregateRoots
@@ -28,8 +33,8 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
 - [x] `On--- -> ---Event` 이벤트 핸들러 이름 변경
 - [x] `IProductDetailQueryAdapter -> IProductDetailQuery` Query 인터페이스 이름 변경
 - [x] Enum타입 유효성 검사 강화: 표준 값 객체, SortDirection
-- [ ] IAuditable 인터페이스에 정의된 nullable
-- [ ] `Specification? -> Option<T>`
+- [x] IAuditable 인터페이스에 정의된 nullable
+- [x] `Specification? -> Option<T>`
 - [ ] nullable 전체 개선
 - [ ] `services.AddSingleton<OrderCreditCheckService>();` 도메인 서비스를 의존성 등록한것은 너무 과한것 같다
 - [ ] 유스케이스 전체 리팩토링
