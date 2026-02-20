@@ -58,11 +58,11 @@ public sealed class TestErrorCommand
         public Validator()
         {
             RuleFor(x => x.Scenario)
-                .IsInEnum().WithMessage("유효한 에러 시나리오를 선택해야 합니다");
+                .IsInEnum().WithMessage("A valid error scenario must be selected");
 
             RuleFor(x => x.TestMessage)
-                .NotEmpty().WithMessage("테스트 메시지는 필수입니다")
-                .MaximumLength(200).WithMessage("테스트 메시지는 200자를 초과할 수 없습니다");
+                .NotEmpty().WithMessage("Test message is required")
+                .MaximumLength(200).WithMessage("Test message must not exceed 200 characters");
         }
     }
 

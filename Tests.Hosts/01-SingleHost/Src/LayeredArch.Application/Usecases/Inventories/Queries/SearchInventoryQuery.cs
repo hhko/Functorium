@@ -45,12 +45,12 @@ public sealed class SearchInventoryQuery
         {
             RuleFor(x => x.LowStockThreshold)
                 .GreaterThan(0).When(x => x.LowStockThreshold != 0)
-                .WithMessage("재고 부족 임계값은 0보다 커야 합니다");
+                .WithMessage("Low stock threshold must be greater than 0");
 
             RuleFor(x => x.SortBy)
                 .Must(sortBy => AllowedSortFields.Contains(sortBy, StringComparer.OrdinalIgnoreCase))
                 .When(x => x.SortBy.Length > 0)
-                .WithMessage($"정렬 필드는 {string.Join(", ", AllowedSortFields)} 중 하나여야 합니다");
+                .WithMessage($"Sort field must be one of: {string.Join(", ", AllowedSortFields)}");
 
             RuleFor(x => x.SortDirection)
                 .MustBeEnumValue<Request, Functorium.Applications.Queries.SortDirection>()
