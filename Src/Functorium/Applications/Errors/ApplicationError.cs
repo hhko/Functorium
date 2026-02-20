@@ -16,7 +16,9 @@ namespace Functorium.Applications.Errors;
 ///
 /// ApplicationError.For&lt;CreateProductCommand&gt;(new AlreadyExists(), productId, "Product already exists");
 /// ApplicationError.For&lt;UpdateOrderCommand&gt;(new ValidationFailed("Quantity"), value, "Quantity must be positive");
-/// ApplicationError.For&lt;DeleteOrderCommand&gt;(new Custom("CannotDeleteShipped"), orderId, "Cannot delete shipped order");
+/// // 커스텀 에러: sealed record 파생 정의
+/// // public sealed record CannotDeleteShipped : ApplicationErrorType.Custom;
+/// ApplicationError.For&lt;DeleteOrderCommand&gt;(new CannotDeleteShipped(), orderId, "Cannot delete shipped order");
 /// </code>
 /// </remarks>
 public static class ApplicationError

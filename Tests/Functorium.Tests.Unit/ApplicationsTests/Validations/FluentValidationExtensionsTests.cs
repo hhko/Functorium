@@ -64,7 +64,7 @@ public sealed class TestAge : ComparableSimpleValueObject<int>
         int.TryParse(value, out var parsed)
             ? ValidateInt(parsed)
             : DomainError.For<TestAge>(
-                new Custom("InvalidFormat"),
+                new InvalidFormat(),
                 value,
                 $"'{value}'은(는) 유효한 숫자가 아닙니다");
 }

@@ -16,7 +16,9 @@ namespace Functorium.Domains.Errors;
 ///
 /// DomainError.For&lt;Email&gt;(new Empty(), value, "Email cannot be empty");
 /// DomainError.For&lt;Password&gt;(new TooShort(MinLength: 8), value, "Password too short");
-/// DomainError.For&lt;Currency&gt;(new Custom("Unsupported"), value, "Currency not supported");
+/// // 커스텀 에러: sealed record 파생 정의
+/// // public sealed record Unsupported : DomainErrorType.Custom;
+/// DomainError.For&lt;Currency&gt;(new Unsupported(), value, "Currency not supported");
 /// </code>
 /// </remarks>
 public static class DomainError
@@ -130,7 +132,7 @@ public static class DomainError
     /// </code>
     /// </remarks>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Error ForContext(
+    internal static Error ForContext(
         string contextName,
         DomainErrorType errorType,
         string currentValue,
@@ -150,7 +152,7 @@ public static class DomainError
     /// <param name="message">오류 메시지</param>
     /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Error ForContext<TValue>(
+    internal static Error ForContext<TValue>(
         string contextName,
         DomainErrorType errorType,
         TValue currentValue,

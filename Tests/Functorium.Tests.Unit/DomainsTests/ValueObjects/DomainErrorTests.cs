@@ -13,6 +13,12 @@ public sealed class TestValueObject : SimpleValueObject<string>
 [Trait(nameof(UnitTest), UnitTest.Functorium_Domains)]
 public class DomainErrorTests
 {
+    private sealed record StartAfterEnd : DomainErrorType.Custom;
+    private sealed record Unsupported : DomainErrorType.Custom;
+    private sealed record CustomError : DomainErrorType.Custom;
+    private sealed record MyError : DomainErrorType.Custom;
+    private sealed record MyCustomError : DomainErrorType.Custom;
+
     #region DomainErrorType 기본 테스트
 
     [Fact]
@@ -63,7 +69,7 @@ public class DomainErrorTests
 
         // Act
         var actual = DomainError.For<TestValueObject, DateTime, DateTime>(
-            new DomainErrorType.Custom("StartAfterEnd"),
+            new StartAfterEnd(),
             startDate,
             endDate,
             message);
@@ -147,7 +153,7 @@ public class DomainErrorTests
 
         // Act
         var actual = DomainError.For<TestValueObject>(
-            new DomainErrorType.Custom("Unsupported"),
+            new Unsupported(),
             currentValue,
             message);
 
@@ -200,7 +206,7 @@ public class DomainErrorTests
         { new DomainErrorType.AlreadyExists(), "AlreadyExists" },
         { new DomainErrorType.Duplicate(), "Duplicate" },
         { new DomainErrorType.Mismatch(), "Mismatch" },
-        { new DomainErrorType.Custom("CustomError"), "CustomError" }
+        { new CustomError(), "CustomError" }
     };
 
     #endregion
@@ -213,7 +219,7 @@ public class DomainErrorTests
         // Assert
         new DomainErrorType.Empty().ErrorName.ShouldBe("Empty");
         new DomainErrorType.TooShort(MinLength: 8).ErrorName.ShouldBe("TooShort");
-        new DomainErrorType.Custom("MyError").ErrorName.ShouldBe("MyError");
+        new MyError().ErrorName.ShouldBe("MyError");
     }
 
     [Fact]
@@ -292,10 +298,9 @@ public class DomainErrorTests
     public void DomainErrorType_Custom_ContainsNameContext()
     {
         // Arrange
-        var errorType = new DomainErrorType.Custom("MyCustomError");
+        var errorType = new MyCustomError();
 
         // Assert
-        errorType.Name.ShouldBe("MyCustomError");
         errorType.ErrorName.ShouldBe("MyCustomError");
     }
 

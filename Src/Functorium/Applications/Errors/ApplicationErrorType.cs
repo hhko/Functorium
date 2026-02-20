@@ -107,13 +107,15 @@ public abstract record ApplicationErrorType : ErrorType
     #region 커스텀
 
     /// <summary>
-    /// 애플리케이션 특화 커스텀 에러 (표준 에러에 해당하지 않는 경우)
+    /// 애플리케이션 특화 커스텀 에러의 기본 클래스 (표준 에러에 해당하지 않는 경우)
     /// </summary>
-    /// <param name="Name">커스텀 에러 이름</param>
-    public sealed record Custom(string Name) : ApplicationErrorType
-    {
-        public override string ErrorName => Name;
-    }
+    /// <remarks>
+    /// 파생 sealed record로 정의하여 타입 안전하게 사용합니다.
+    /// <code>
+    /// public sealed record CannotProcess : ApplicationErrorType.Custom;
+    /// </code>
+    /// </remarks>
+    public abstract record Custom : ApplicationErrorType;
 
     #endregion
 }

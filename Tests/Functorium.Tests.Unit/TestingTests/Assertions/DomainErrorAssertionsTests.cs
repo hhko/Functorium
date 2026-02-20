@@ -15,6 +15,10 @@ public sealed class DummyValueObject : SimpleValueObject<string>
 [Trait(nameof(UnitTest), UnitTest.Functorium_Testing)]
 public class DomainErrorAssertionsTests
 {
+    private sealed record Unsupported : DomainErrorType.Custom;
+    private sealed record StartAfterEnd : DomainErrorType.Custom;
+    private sealed record DateRangeWithDuration : DomainErrorType.Custom;
+
     #region Error - ShouldBeDomainError<TValueObject>
 
     [Fact]
@@ -49,12 +53,12 @@ public class DomainErrorAssertionsTests
     {
         // Arrange
         var error = DomainError.For<DummyValueObject>(
-            new DomainErrorType.Custom("Unsupported"),
+            new Unsupported(),
             currentValue: "test",
             message: "Not supported");
 
         // Act & Assert (should not throw)
-        error.ShouldBeDomainError<DummyValueObject>(new DomainErrorType.Custom("Unsupported"));
+        error.ShouldBeDomainError<DummyValueObject>(new Unsupported());
     }
 
     #endregion
@@ -103,14 +107,14 @@ public class DomainErrorAssertionsTests
         var startDate = new DateTime(2024, 12, 31);
         var endDate = new DateTime(2024, 1, 1);
         var error = DomainError.For<DummyValueObject, DateTime, DateTime>(
-            new DomainErrorType.Custom("StartAfterEnd"),
+            new StartAfterEnd(),
             startDate,
             endDate,
             message: "Start date cannot be after end date");
 
         // Act & Assert (should not throw)
         error.ShouldBeDomainError<DummyValueObject, DateTime, DateTime>(
-            new DomainErrorType.Custom("StartAfterEnd"),
+            new StartAfterEnd(),
             expectedValue1: startDate,
             expectedValue2: endDate);
     }
@@ -122,7 +126,7 @@ public class DomainErrorAssertionsTests
         var startDate = new DateTime(2024, 12, 31);
         var endDate = new DateTime(2024, 1, 1);
         var error = DomainError.For<DummyValueObject, DateTime, DateTime>(
-            new DomainErrorType.Custom("StartAfterEnd"),
+            new StartAfterEnd(),
             startDate,
             endDate,
             message: "Start date cannot be after end date");
@@ -130,7 +134,7 @@ public class DomainErrorAssertionsTests
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             error.ShouldBeDomainError<DummyValueObject, DateTime, DateTime>(
-                new DomainErrorType.Custom("StartAfterEnd"),
+                new StartAfterEnd(),
                 expectedValue1: new DateTime(2024, 1, 1),
                 expectedValue2: endDate));
     }
@@ -147,7 +151,7 @@ public class DomainErrorAssertionsTests
         var endDate = new DateTime(2024, 12, 31);
         var duration = 365;
         var error = DomainError.For<DummyValueObject, DateTime, DateTime, int>(
-            new DomainErrorType.Custom("DateRangeWithDuration"),
+            new DateRangeWithDuration(),
             startDate,
             endDate,
             duration,
@@ -155,7 +159,7 @@ public class DomainErrorAssertionsTests
 
         // Act & Assert (should not throw)
         error.ShouldBeDomainError<DummyValueObject, DateTime, DateTime, int>(
-            new DomainErrorType.Custom("DateRangeWithDuration"),
+            new DateRangeWithDuration(),
             expectedValue1: startDate,
             expectedValue2: endDate,
             expectedValue3: duration);
@@ -169,7 +173,7 @@ public class DomainErrorAssertionsTests
         var endDate = new DateTime(2024, 12, 31);
         var duration = 365;
         var error = DomainError.For<DummyValueObject, DateTime, DateTime, int>(
-            new DomainErrorType.Custom("DateRangeWithDuration"),
+            new DateRangeWithDuration(),
             startDate,
             endDate,
             duration,
@@ -178,7 +182,7 @@ public class DomainErrorAssertionsTests
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             error.ShouldBeDomainError<DummyValueObject, DateTime, DateTime, int>(
-                new DomainErrorType.Custom("DateRangeWithDuration"),
+                new DateRangeWithDuration(),
                 expectedValue1: startDate,
                 expectedValue2: endDate,
                 expectedValue3: 366)); // Wrong value
@@ -423,7 +427,7 @@ public class DomainErrorAssertionsTests
         var startDate = new DateTime(2024, 12, 31);
         var endDate = new DateTime(2024, 1, 1);
         var error = DomainError.For<DummyValueObject, DateTime, DateTime>(
-            new DomainErrorType.Custom("StartAfterEnd"),
+            new StartAfterEnd(),
             startDate,
             endDate,
             message: "Start date cannot be after end date");
@@ -431,7 +435,7 @@ public class DomainErrorAssertionsTests
 
         // Act & Assert (should not throw)
         validation.ShouldHaveDomainError<DummyValueObject, string, DateTime, DateTime>(
-            new DomainErrorType.Custom("StartAfterEnd"),
+            new StartAfterEnd(),
             expectedValue1: startDate,
             expectedValue2: endDate);
     }
@@ -443,7 +447,7 @@ public class DomainErrorAssertionsTests
         var startDate = new DateTime(2024, 12, 31);
         var endDate = new DateTime(2024, 1, 1);
         var error = DomainError.For<DummyValueObject, DateTime, DateTime>(
-            new DomainErrorType.Custom("StartAfterEnd"),
+            new StartAfterEnd(),
             startDate,
             endDate,
             message: "Start date cannot be after end date");
@@ -452,7 +456,7 @@ public class DomainErrorAssertionsTests
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             validation.ShouldHaveDomainError<DummyValueObject, string, DateTime, DateTime>(
-                new DomainErrorType.Custom("StartAfterEnd"),
+                new StartAfterEnd(),
                 expectedValue1: new DateTime(2024, 1, 1),
                 expectedValue2: endDate));
     }
@@ -469,7 +473,7 @@ public class DomainErrorAssertionsTests
         var endDate = new DateTime(2024, 12, 31);
         var duration = 365;
         var error = DomainError.For<DummyValueObject, DateTime, DateTime, int>(
-            new DomainErrorType.Custom("DateRangeWithDuration"),
+            new DateRangeWithDuration(),
             startDate,
             endDate,
             duration,
@@ -478,7 +482,7 @@ public class DomainErrorAssertionsTests
 
         // Act & Assert (should not throw)
         validation.ShouldHaveDomainError<DummyValueObject, string, DateTime, DateTime, int>(
-            new DomainErrorType.Custom("DateRangeWithDuration"),
+            new DateRangeWithDuration(),
             expectedValue1: startDate,
             expectedValue2: endDate,
             expectedValue3: duration);
@@ -492,7 +496,7 @@ public class DomainErrorAssertionsTests
         var endDate = new DateTime(2024, 12, 31);
         var duration = 365;
         var error = DomainError.For<DummyValueObject, DateTime, DateTime, int>(
-            new DomainErrorType.Custom("DateRangeWithDuration"),
+            new DateRangeWithDuration(),
             startDate,
             endDate,
             duration,
@@ -502,7 +506,7 @@ public class DomainErrorAssertionsTests
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             validation.ShouldHaveDomainError<DummyValueObject, string, DateTime, DateTime, int>(
-                new DomainErrorType.Custom("DateRangeWithDuration"),
+                new DateRangeWithDuration(),
                 expectedValue1: startDate,
                 expectedValue2: endDate,
                 expectedValue3: 366)); // Wrong value

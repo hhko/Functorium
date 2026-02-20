@@ -38,11 +38,13 @@ public abstract record EventErrorType : ErrorType
     public sealed record PublishCancelled : EventErrorType;
 
     /// <summary>
-    /// 이벤트 특화 커스텀 에러 (표준 에러에 해당하지 않는 경우).
+    /// 이벤트 특화 커스텀 에러의 기본 클래스 (표준 에러에 해당하지 않는 경우).
     /// </summary>
-    /// <param name="Name">커스텀 에러 이름</param>
-    public sealed record Custom(string Name) : EventErrorType
-    {
-        public override string ErrorName => Name;
-    }
+    /// <remarks>
+    /// 파생 sealed record로 정의하여 타입 안전하게 사용합니다.
+    /// <code>
+    /// public sealed record RetryExhausted : EventErrorType.Custom;
+    /// </code>
+    /// </remarks>
+    public abstract record Custom : EventErrorType;
 }

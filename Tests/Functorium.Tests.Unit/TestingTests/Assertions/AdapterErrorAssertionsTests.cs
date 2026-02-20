@@ -11,6 +11,9 @@ public sealed class DummyAdapter { }
 [Trait(nameof(UnitTest), UnitTest.Functorium_Testing)]
 public class AdapterErrorAssertionsTests
 {
+    private sealed record RateLimited : AdapterErrorType.Custom;
+    private sealed record ServiceError : AdapterErrorType.Custom;
+
     #region Error - ShouldBeAdapterError<TAdapter>
 
     [Fact]
@@ -45,12 +48,12 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange
         var error = AdapterError.For<DummyAdapter>(
-            new AdapterErrorType.Custom("RateLimited"),
+            new RateLimited(),
             currentValue: "https://api.example.com",
             message: "Rate limit exceeded");
 
         // Act & Assert (should not throw)
-        error.ShouldBeAdapterError<DummyAdapter>(new AdapterErrorType.Custom("RateLimited"));
+        error.ShouldBeAdapterError<DummyAdapter>(new RateLimited());
     }
 
     [Fact]
@@ -155,7 +158,7 @@ public class AdapterErrorAssertionsTests
         var endpoint = "/api/payments";
         var statusCode = 503;
         var error = AdapterError.For<DummyAdapter, string, string, int>(
-            new AdapterErrorType.Custom("ServiceError"),
+            new ServiceError(),
             serviceName,
             endpoint,
             statusCode,
@@ -163,7 +166,7 @@ public class AdapterErrorAssertionsTests
 
         // Act & Assert (should not throw)
         error.ShouldBeAdapterError<DummyAdapter, string, string, int>(
-            new AdapterErrorType.Custom("ServiceError"),
+            new ServiceError(),
             expectedValue1: serviceName,
             expectedValue2: endpoint,
             expectedValue3: statusCode);
@@ -174,7 +177,7 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange
         var error = AdapterError.For<DummyAdapter, string, string, int>(
-            new AdapterErrorType.Custom("ServiceError"),
+            new ServiceError(),
             "service",
             "/endpoint",
             503,
@@ -183,7 +186,7 @@ public class AdapterErrorAssertionsTests
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             error.ShouldBeAdapterError<DummyAdapter, string, string, int>(
-                new AdapterErrorType.Custom("ServiceError"),
+                new ServiceError(),
                 expectedValue1: "service",
                 expectedValue2: "/endpoint",
                 expectedValue3: 500)); // Wrong value
@@ -533,7 +536,7 @@ public class AdapterErrorAssertionsTests
         var endpoint = "/api/payments";
         var statusCode = 503;
         var error = AdapterError.For<DummyAdapter, string, string, int>(
-            new AdapterErrorType.Custom("ServiceError"),
+            new ServiceError(),
             serviceName,
             endpoint,
             statusCode,
@@ -542,7 +545,7 @@ public class AdapterErrorAssertionsTests
 
         // Act & Assert (should not throw)
         validation.ShouldHaveAdapterError<DummyAdapter, string, string, string, int>(
-            new AdapterErrorType.Custom("ServiceError"),
+            new ServiceError(),
             expectedValue1: serviceName,
             expectedValue2: endpoint,
             expectedValue3: statusCode);
@@ -553,7 +556,7 @@ public class AdapterErrorAssertionsTests
     {
         // Arrange
         var error = AdapterError.For<DummyAdapter, string, string, int>(
-            new AdapterErrorType.Custom("ServiceError"),
+            new ServiceError(),
             "service",
             "/endpoint",
             503,
@@ -563,7 +566,7 @@ public class AdapterErrorAssertionsTests
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             validation.ShouldHaveAdapterError<DummyAdapter, string, string, string, int>(
-                new AdapterErrorType.Custom("ServiceError"),
+                new ServiceError(),
                 expectedValue1: "service",
                 expectedValue2: "/endpoint",
                 expectedValue3: 500)); // Wrong value

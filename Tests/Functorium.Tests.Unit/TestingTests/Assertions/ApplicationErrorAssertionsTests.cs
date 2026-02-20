@@ -11,6 +11,10 @@ public sealed class DummyUsecase { }
 [Trait(nameof(UnitTest), UnitTest.Functorium_Testing)]
 public class ApplicationErrorAssertionsTests
 {
+    private sealed record CannotProcess : ApplicationErrorType.Custom;
+    private sealed record ProductNotInOrder : ApplicationErrorType.Custom;
+    private sealed record InsufficientStock : ApplicationErrorType.Custom;
+
     #region Error - ShouldBeApplicationError<TUsecase>
 
     [Fact]
@@ -45,12 +49,12 @@ public class ApplicationErrorAssertionsTests
     {
         // Arrange
         var error = ApplicationError.For<DummyUsecase>(
-            new ApplicationErrorType.Custom("CannotProcess"),
+            new CannotProcess(),
             currentValue: "test",
             message: "Cannot process");
 
         // Act & Assert (should not throw)
-        error.ShouldBeApplicationError<DummyUsecase>(new ApplicationErrorType.Custom("CannotProcess"));
+        error.ShouldBeApplicationError<DummyUsecase>(new CannotProcess());
     }
 
     [Fact]
@@ -113,14 +117,14 @@ public class ApplicationErrorAssertionsTests
         var orderId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var error = ApplicationError.For<DummyUsecase, Guid, Guid>(
-            new ApplicationErrorType.Custom("ProductNotInOrder"),
+            new ProductNotInOrder(),
             orderId,
             productId,
             message: "Product not in order");
 
         // Act & Assert (should not throw)
         error.ShouldBeApplicationError<DummyUsecase, Guid, Guid>(
-            new ApplicationErrorType.Custom("ProductNotInOrder"),
+            new ProductNotInOrder(),
             expectedValue1: orderId,
             expectedValue2: productId);
     }
@@ -132,7 +136,7 @@ public class ApplicationErrorAssertionsTests
         var orderId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var error = ApplicationError.For<DummyUsecase, Guid, Guid>(
-            new ApplicationErrorType.Custom("ProductNotInOrder"),
+            new ProductNotInOrder(),
             orderId,
             productId,
             message: "Product not in order");
@@ -140,7 +144,7 @@ public class ApplicationErrorAssertionsTests
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             error.ShouldBeApplicationError<DummyUsecase, Guid, Guid>(
-                new ApplicationErrorType.Custom("ProductNotInOrder"),
+                new ProductNotInOrder(),
                 expectedValue1: Guid.Empty,
                 expectedValue2: productId));
     }
@@ -157,7 +161,7 @@ public class ApplicationErrorAssertionsTests
         var productId = Guid.NewGuid();
         var quantity = 10;
         var error = ApplicationError.For<DummyUsecase, Guid, Guid, int>(
-            new ApplicationErrorType.Custom("InsufficientStock"),
+            new InsufficientStock(),
             orderId,
             productId,
             quantity,
@@ -165,7 +169,7 @@ public class ApplicationErrorAssertionsTests
 
         // Act & Assert (should not throw)
         error.ShouldBeApplicationError<DummyUsecase, Guid, Guid, int>(
-            new ApplicationErrorType.Custom("InsufficientStock"),
+            new InsufficientStock(),
             expectedValue1: orderId,
             expectedValue2: productId,
             expectedValue3: quantity);
@@ -179,7 +183,7 @@ public class ApplicationErrorAssertionsTests
         var productId = Guid.NewGuid();
         var quantity = 10;
         var error = ApplicationError.For<DummyUsecase, Guid, Guid, int>(
-            new ApplicationErrorType.Custom("InsufficientStock"),
+            new InsufficientStock(),
             orderId,
             productId,
             quantity,
@@ -188,7 +192,7 @@ public class ApplicationErrorAssertionsTests
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             error.ShouldBeApplicationError<DummyUsecase, Guid, Guid, int>(
-                new ApplicationErrorType.Custom("InsufficientStock"),
+                new InsufficientStock(),
                 expectedValue1: orderId,
                 expectedValue2: productId,
                 expectedValue3: 20)); // Wrong value
@@ -435,7 +439,7 @@ public class ApplicationErrorAssertionsTests
         var orderId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var error = ApplicationError.For<DummyUsecase, Guid, Guid>(
-            new ApplicationErrorType.Custom("ProductNotInOrder"),
+            new ProductNotInOrder(),
             orderId,
             productId,
             message: "Product not in order");
@@ -443,7 +447,7 @@ public class ApplicationErrorAssertionsTests
 
         // Act & Assert (should not throw)
         validation.ShouldHaveApplicationError<DummyUsecase, string, Guid, Guid>(
-            new ApplicationErrorType.Custom("ProductNotInOrder"),
+            new ProductNotInOrder(),
             expectedValue1: orderId,
             expectedValue2: productId);
     }
@@ -455,7 +459,7 @@ public class ApplicationErrorAssertionsTests
         var orderId = Guid.NewGuid();
         var productId = Guid.NewGuid();
         var error = ApplicationError.For<DummyUsecase, Guid, Guid>(
-            new ApplicationErrorType.Custom("ProductNotInOrder"),
+            new ProductNotInOrder(),
             orderId,
             productId,
             message: "Product not in order");
@@ -464,7 +468,7 @@ public class ApplicationErrorAssertionsTests
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             validation.ShouldHaveApplicationError<DummyUsecase, string, Guid, Guid>(
-                new ApplicationErrorType.Custom("ProductNotInOrder"),
+                new ProductNotInOrder(),
                 expectedValue1: Guid.Empty,
                 expectedValue2: productId));
     }
@@ -481,7 +485,7 @@ public class ApplicationErrorAssertionsTests
         var productId = Guid.NewGuid();
         var quantity = 10;
         var error = ApplicationError.For<DummyUsecase, Guid, Guid, int>(
-            new ApplicationErrorType.Custom("InsufficientStock"),
+            new InsufficientStock(),
             orderId,
             productId,
             quantity,
@@ -490,7 +494,7 @@ public class ApplicationErrorAssertionsTests
 
         // Act & Assert (should not throw)
         validation.ShouldHaveApplicationError<DummyUsecase, string, Guid, Guid, int>(
-            new ApplicationErrorType.Custom("InsufficientStock"),
+            new InsufficientStock(),
             expectedValue1: orderId,
             expectedValue2: productId,
             expectedValue3: quantity);
@@ -504,7 +508,7 @@ public class ApplicationErrorAssertionsTests
         var productId = Guid.NewGuid();
         var quantity = 10;
         var error = ApplicationError.For<DummyUsecase, Guid, Guid, int>(
-            new ApplicationErrorType.Custom("InsufficientStock"),
+            new InsufficientStock(),
             orderId,
             productId,
             quantity,
@@ -514,7 +518,7 @@ public class ApplicationErrorAssertionsTests
         // Act & Assert
         Should.Throw<ShouldAssertException>(() =>
             validation.ShouldHaveApplicationError<DummyUsecase, string, Guid, Guid, int>(
-                new ApplicationErrorType.Custom("InsufficientStock"),
+                new InsufficientStock(),
                 expectedValue1: orderId,
                 expectedValue2: productId,
                 expectedValue3: 20)); // Wrong value

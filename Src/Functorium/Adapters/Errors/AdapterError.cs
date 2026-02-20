@@ -16,7 +16,9 @@ namespace Functorium.Adapters.Errors;
 ///
 /// AdapterError.For&lt;UsecaseValidationPipeline&gt;(new PipelineValidation("PropertyName"), value, "Validation failed");
 /// AdapterError.FromException&lt;UsecaseExceptionPipeline&gt;(new PipelineException(), exception);
-/// AdapterError.For&lt;HttpClientAdapter&gt;(new Custom("RateLimited"), url, "Rate limit exceeded");
+/// // 커스텀 에러: sealed record 파생 정의
+/// // public sealed record RateLimited : AdapterErrorType.Custom;
+/// AdapterError.For&lt;HttpClientAdapter&gt;(new RateLimited(), url, "Rate limit exceeded");
 /// </code>
 /// </remarks>
 public static class AdapterError
