@@ -39,15 +39,15 @@ public sealed class CreateCustomerCommand
         public Validator()
         {
             RuleFor(x => x.Name)
-                .NotEmpty().WithMessage("고객명은 필수입니다")
-                .MaximumLength(CustomerName.MaxLength).WithMessage($"고객명은 {CustomerName.MaxLength}자를 초과할 수 없습니다");
+                .NotEmpty().WithMessage("Customer name is required")
+                .MaximumLength(CustomerName.MaxLength).WithMessage($"Customer name must not exceed {CustomerName.MaxLength} characters");
 
             RuleFor(x => x.Email)
-                .NotEmpty().WithMessage("이메일은 필수입니다")
-                .MaximumLength(Email.MaxLength).WithMessage($"이메일은 {Email.MaxLength}자를 초과할 수 없습니다");
+                .NotEmpty().WithMessage("Email is required")
+                .MaximumLength(Email.MaxLength).WithMessage($"Email must not exceed {Email.MaxLength} characters");
 
             RuleFor(x => x.CreditLimit)
-                .GreaterThan(0).WithMessage("신용 한도는 0보다 커야 합니다");
+                .GreaterThan(0).WithMessage("Credit limit must be greater than 0");
         }
     }
 
@@ -82,7 +82,7 @@ public sealed class CreateCustomerCommand
                 from _ in guard(!exists, ApplicationError.For<CreateCustomerCommand>(
                     new AlreadyExists(),
                     request.Email,
-                    $"이미 등록된 이메일입니다: '{request.Email}'"))
+                    $"Email already exists: '{request.Email}'"))
                 from customer in _customerRepository.Create((Customer)customerResult)
                 select new Response(
                     customer.Id.ToString(),

@@ -20,6 +20,22 @@ public sealed class Customer : AggregateRoot<CustomerId>, IAuditable
         CustomerName Name,
         Email Email) : DomainEvent;
 
+    /// <summary>
+    /// 신용한도 변경 이벤트
+    /// </summary>
+    public sealed record CreditLimitUpdatedEvent(
+        CustomerId CustomerId,
+        Money OldCreditLimit,
+        Money NewCreditLimit) : DomainEvent;
+
+    /// <summary>
+    /// 이메일 변경 이벤트
+    /// </summary>
+    public sealed record EmailChangedEvent(
+        CustomerId CustomerId,
+        Email OldEmail,
+        Email NewEmail) : DomainEvent;
+
     #endregion
 
     // Value Object 속성
@@ -57,6 +73,31 @@ public sealed class Customer : AggregateRoot<CustomerId>, IAuditable
         var customer = new Customer(CustomerId.New(), name, email, creditLimit);
         customer.AddDomainEvent(new CreatedEvent(customer.Id, name, email));
         return customer;
+    }
+
+    /// <summary>
+    /// 신용한도를 변경합니다.
+    /// </summary>
+    public Customer UpdateCreditLimit(Money newLimit)
+    {
+        var oldLimit = CreditLimit;
+        CreditLimit = newLimit;
+        UpdatedAt = DateTime.UtcNow;
+        AddDomainEvent(new CreditLimitUpdatedEvent(Id, oldLimit, newLimit));
+        return this;
+    }
+
+    /// <summary>
+    /// 이메일을 변경합니다.
+    /// Application Layer에서 이메일 고유성 확인 후 호출해야 합니다.
+    /// </summary>
+    public Customer ChangeEmail(Email newEmail)
+    {
+        var oldEmail = Email;
+        Email = newEmail;
+        UpdatedAt = DateTime.UtcNow;
+        AddDomainEvent(new EmailChangedEvent(Id, oldEmail, newEmail));
+        return this;
     }
 
     /// <summary>
