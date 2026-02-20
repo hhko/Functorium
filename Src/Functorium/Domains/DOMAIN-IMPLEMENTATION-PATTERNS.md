@@ -353,6 +353,61 @@ NotNull(value)
 | `Option<T>` | null 대체 (값이 없을 수 있음) | `IAuditable.UpdatedAt`, `ProductNameUniqueSpec.ExcludeId` |
 | `Seq<T>` | 불변 시퀀스 | `OrderCreditCheckService.ValidateCreditLimitWithExistingOrders(Seq<Order>)` |
 
+## 도메인 에러 구현 패턴
+
+### 에러 팩토리
+
+`DomainError.For<T>(...)` 정적 메서드로 에러를 생성한다. 반환값은 `Error`이며, `Fin<T>`로 암시적 변환된다.
+
+```csharp
+// 기본 형태
+DomainError.For<Email>(new Empty(), currentValue: "", message: "이메일은 비어있을 수 없습니다");
+
+// 제네릭 값 타입
+DomainError.For<Age, int>(new Negative(), currentValue: -5, message: "나이는 음수일 수 없습니다");
+```
+
+### 표준 에러 vs Custom 에러
+
+**표준 에러 타입** (`DomainErrorType` 범주):
+
+| 범주 | 대표 타입 |
+|------|----------|
+| Presence | `Empty`, `Null` |
+| Length | `TooShort`, `TooLong`, `WrongLength` |
+| Format | `InvalidFormat`, `NotUpperCase`, `NotLowerCase` |
+| Numeric | `Zero`, `Negative`, `NotPositive`, `OutOfRange`, `BelowMinimum`, `AboveMaximum` |
+| Existence | `NotFound`, `AlreadyExists`, `Duplicate`, `Mismatch` |
+
+**Custom 에러** — 표준 타입으로 표현할 수 없는 도메인 특화 에러:
+
+```csharp
+public sealed record InsufficientStock : DomainErrorType.Custom;
+```
+
+### Custom 에러 정의 위치
+
+Custom 에러는 해당 엔티티/VO 내부에 nested sealed record로 정의한다.
+
+```csharp
+public sealed class Inventory : AggregateRoot<InventoryId>
+{
+    public sealed record InsufficientStock : DomainErrorType.Custom;
+
+    public Fin<Unit> DeductStock(Quantity quantity)
+    {
+        if ((int)quantity > (int)StockQuantity)
+            return DomainError.For<Inventory, int>(
+                new InsufficientStock(),
+                currentValue: (int)StockQuantity,
+                message: $"재고 부족. 현재: {(int)StockQuantity}, 요청: {(int)quantity}");
+        // ...
+    }
+}
+```
+
+> **참조**: `.claude/guides/08-error-system.md` — 에러 네이밍 규칙(R1–R8), 레이어별 에러 타입 전체 목록, 테스트 어설션 패턴
+
 ## 도메인 이벤트
 
 ### 기반 속성
