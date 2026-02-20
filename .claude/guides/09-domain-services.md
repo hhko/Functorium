@@ -130,12 +130,14 @@ namespace {프로젝트}.Domain.Services;
 
 public sealed class {ServiceName} : IDomainService
 {
+    public sealed record {ErrorName} : DomainErrorType.Custom;
+
     public Fin<Unit> {메서드명}({AggregateA} a, {AggregateB 데이터} b)
     {
         // 교차 Aggregate 비즈니스 규칙 검증
         if (/* 규칙 위반 */)
             return DomainError.For<{ServiceName}>(
-                new Custom("{ErrorName}"),
+                new {ErrorName}(),
                 currentValue,
                 "에러 메시지");
 
@@ -160,6 +162,8 @@ namespace LayeredArch.Domain.Services;
 
 public sealed class OrderCreditCheckService : IDomainService
 {
+    public sealed record CreditLimitExceeded : DomainErrorType.Custom;
+
     /// <summary>
     /// 주문 금액이 고객의 신용 한도 내에 있는지 검증합니다.
     /// </summary>
@@ -167,7 +171,7 @@ public sealed class OrderCreditCheckService : IDomainService
     {
         if (orderAmount > customer.CreditLimit)
             return DomainError.For<OrderCreditCheckService>(
-                new Custom("CreditLimitExceeded"),
+                new CreditLimitExceeded(),
                 customer.Id.ToString(),
                 $"주문 금액 {(decimal)orderAmount}이(가) 고객 신용 한도 {(decimal)customer.CreditLimit}을(를) 초과합니다");
 
@@ -187,7 +191,7 @@ public sealed class OrderCreditCheckService : IDomainService
 
         if (totalWithNew > (decimal)customer.CreditLimit)
             return DomainError.For<OrderCreditCheckService>(
-                new Custom("CreditLimitExceeded"),
+                new CreditLimitExceeded(),
                 customer.Id.ToString(),
                 $"총 주문 금액 {totalWithNew}이(가) 고객 신용 한도 {(decimal)customer.CreditLimit}을(를) 초과합니다");
 

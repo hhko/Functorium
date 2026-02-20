@@ -212,11 +212,13 @@ public class Order : AggregateRoot<OrderId>
         return order;
     }
 
+    public sealed record InvalidStatus : DomainErrorType.Custom;
+
     public Fin<Unit> Ship(Address address)
     {
         if (Status != OrderStatus.Confirmed)
             return DomainError.For<Order>(
-                new Custom("InvalidStatus"),
+                new InvalidStatus(),
                 Status.ToString(),
                 "Order must be confirmed before shipping");
 

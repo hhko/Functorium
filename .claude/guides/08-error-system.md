@@ -76,11 +76,12 @@ return AdapterError.For<MyAdapter>(
 
 ```csharp
 // Domain Layer - Entity 메서드
+// Error type definition: public sealed record InsufficientStock : DomainErrorType.Custom;
 public Fin<Unit> DeductStock(Quantity quantity)
 {
     if ((int)quantity > (int)StockQuantity)
         return DomainError.For<Product, int>(
-            new Custom("InsufficientStock"),
+            new InsufficientStock(),
             currentValue: (int)StockQuantity,
             message: $"재고 부족. 현재: {(int)StockQuantity}, 요청: {(int)quantity}");
 
@@ -130,6 +131,7 @@ return IO.lift(() =>
 });
 
 // 비동기 작업
+// Error type definition: public sealed record HttpError : AdapterErrorType.Custom;
 return IO.liftAsync(async () =>
 {
     try
@@ -137,7 +139,7 @@ return IO.liftAsync(async () =>
         var response = await _httpClient.GetAsync(url, cancellationToken);
         if (!response.IsSuccessStatusCode)
             return AdapterError.For<MyAdapter>(
-                new Custom("HttpError"),
+                new HttpError(),
                 response.StatusCode.ToString(),
                 "API 호출 실패");
 
@@ -177,10 +179,13 @@ catch (HttpRequestException ex)
         new ConnectionFailed("ExternalPricingApi"),
         ex);
 }
+// Error type definitions:
+// public sealed record OperationCancelled : AdapterErrorType.Custom;
+// public sealed record UnexpectedException : AdapterErrorType.Custom;
 catch (TaskCanceledException ex) when (ex.CancellationToken == cancellationToken)
 {
     return AdapterError.For<ExternalPricingApiService>(
-        new Custom("OperationCancelled"),
+        new OperationCancelled(),
         productCode,
         "요청이 취소되었습니다");
 }
@@ -193,7 +198,7 @@ catch (TaskCanceledException ex)
 catch (Exception ex)
 {
     return AdapterError.FromException<ExternalPricingApiService>(
-        new Custom("UnexpectedException"),
+        new UnexpectedException(),
         ex);
 }
 ```
@@ -432,11 +437,12 @@ public Fin<Age> Create(int value)
 }
 
 // 두 개의 값 포함
+// Error type definition: public sealed record InvalidRange : DomainErrorType.Custom;
 public Fin<DateRange> Create(DateTime start, DateTime end)
 {
     if (start >= end)
         return DomainError.For<DateRange, DateTime, DateTime>(
-            new Custom("InvalidRange"),
+            new InvalidRange(),
             start, end,
             message: "시작 날짜는 종료 날짜보다 이전이어야 합니다");
 
@@ -444,11 +450,12 @@ public Fin<DateRange> Create(DateTime start, DateTime end)
 }
 
 // 세 개의 값 포함
+// Error type definition: public sealed record InvalidTriangle : DomainErrorType.Custom;
 public Fin<Triangle> Create(double a, double b, double c)
 {
     if (a + b <= c || b + c <= a || c + a <= b)
         return DomainError.For<Triangle, double, double, double>(
-            new Custom("InvalidTriangle"),
+            new InvalidTriangle(),
             a, b, c,
             message: "유효한 삼각형을 만들 수 없습니다");
 
@@ -461,11 +468,13 @@ public Fin<Triangle> Create(double a, double b, double c)
 ```csharp
 public sealed class Product : AggregateRoot<ProductId>
 {
+    public sealed record InsufficientStock : DomainErrorType.Custom;
+
     public Fin<Unit> DeductStock(Quantity quantity)
     {
         if ((int)quantity > (int)StockQuantity)
             return DomainError.For<Product, int>(
-                new Custom("InsufficientStock"),
+                new InsufficientStock(),
                 currentValue: (int)StockQuantity,
                 message: $"재고 부족. 현재: {(int)StockQuantity}, 요청: {(int)quantity}");
 
@@ -553,7 +562,7 @@ public sealed class Product : AggregateRoot<ProductId>
 
 | 에러 타입 | 설명 | 사용 예시 |
 |-----------|------|----------|
-| `Custom` | 도메인 특화 에러 | `new Custom("AlreadyShipped")` |
+| `Custom` | 도메인 특화 에러 (abstract) | `sealed record AlreadyShipped : DomainErrorType.Custom;` → `new AlreadyShipped()` |
 
 ### 4.4 Value Object 사용 예시
 
@@ -617,6 +626,7 @@ public void ShouldBeDomainError_WithValue_WhenValueIsNegative()
 }
 
 // 두 개의 값 포함 검증
+// Error type definition: public sealed record InvalidRange : DomainErrorType.Custom;
 [Fact]
 public void ShouldBeDomainError_WithTwoValues_WhenRangeIsInvalid()
 {
@@ -624,31 +634,32 @@ public void ShouldBeDomainError_WithTwoValues_WhenRangeIsInvalid()
     var startDate = new DateTime(2024, 12, 31);
     var endDate = new DateTime(2024, 1, 1);
     var error = DomainError.For<DateRange, DateTime, DateTime>(
-        new DomainErrorType.Custom("InvalidRange"),
+        new InvalidRange(),
         startDate,
         endDate,
         message: "Start date must be before end date");
 
     // Act & Assert
     error.ShouldBeDomainError<DateRange, DateTime, DateTime>(
-        new DomainErrorType.Custom("InvalidRange"),
+        new InvalidRange(),
         expectedValue1: startDate,
         expectedValue2: endDate);
 }
 
 // 세 개의 값 포함 검증
+// Error type definition: public sealed record InvalidTriangle : DomainErrorType.Custom;
 [Fact]
 public void ShouldBeDomainError_WithThreeValues()
 {
     // Arrange
     var error = DomainError.For<Triangle, double, double, double>(
-        new DomainErrorType.Custom("InvalidTriangle"),
+        new InvalidTriangle(),
         1.0, 2.0, 10.0,
         message: "Invalid triangle sides");
 
     // Act & Assert
     error.ShouldBeDomainError<Triangle, double, double, double>(
-        new DomainErrorType.Custom("InvalidTriangle"),
+        new InvalidTriangle(),
         expectedValue1: 1.0,
         expectedValue2: 2.0,
         expectedValue3: 10.0);
@@ -830,7 +841,7 @@ return ApplicationError.For<TransferCommand, decimal, decimal>(
 
 | 에러 타입 | 설명 | 사용 예시 |
 |-----------|------|----------|
-| `Custom` | 애플리케이션 특화 에러 | `new Custom("PaymentDeclined")` |
+| `Custom` | 애플리케이션 특화 에러 (abstract) | `sealed record PaymentDeclined : ApplicationErrorType.Custom;` → `new PaymentDeclined()` |
 
 ### 5.3 Usecase 에러 사용 패턴
 
@@ -1136,7 +1147,7 @@ return AdapterError.FromException<ExternalApiService>(
 
 | 에러 타입 | 설명 | 사용 예시 |
 |-----------|------|----------|
-| `Custom` | 어댑터 특화 에러 | `new Custom("RateLimited")` |
+| `Custom` | 어댑터 특화 에러 (abstract) | `sealed record RateLimited : AdapterErrorType.Custom;` → `new RateLimited()` |
 
 ### 6.3 Repository 구현 예시
 
@@ -1204,6 +1215,11 @@ public class InMemoryProductRepository : IProductRepository
 [GeneratePipeline]
 public class ExternalPricingApiService : IExternalPricingService
 {
+    public sealed record OperationCancelled : AdapterErrorType.Custom;
+    public sealed record UnexpectedException : AdapterErrorType.Custom;
+    public sealed record RateLimited : AdapterErrorType.Custom;
+    public sealed record HttpError : AdapterErrorType.Custom;
+
     private readonly HttpClient _httpClient;
 
     public string RequestCategory => "ExternalApi";
@@ -1245,7 +1261,7 @@ public class ExternalPricingApiService : IExternalPricingService
             catch (TaskCanceledException ex) when (ex.CancellationToken == cancellationToken)
             {
                 return AdapterError.For<ExternalPricingApiService>(
-                    new Custom("OperationCancelled"),
+                    new OperationCancelled(),
                     productCode,
                     "요청이 취소되었습니다");
             }
@@ -1258,7 +1274,7 @@ public class ExternalPricingApiService : IExternalPricingService
             catch (Exception ex)
             {
                 return AdapterError.FromException<ExternalPricingApiService>(
-                    new Custom("UnexpectedException"),
+                    new UnexpectedException(),
                     ex);
             }
         });
@@ -1287,7 +1303,7 @@ public class ExternalPricingApiService : IExternalPricingService
                 "외부 API 접근이 금지되었습니다"),
 
             HttpStatusCode.TooManyRequests => AdapterError.For<ExternalPricingApiService>(
-                new Custom("RateLimited"),
+                new RateLimited(),
                 context,
                 "외부 API 요청 제한에 도달했습니다"),
 
@@ -1297,7 +1313,7 @@ public class ExternalPricingApiService : IExternalPricingService
                 "외부 가격 서비스를 사용할 수 없습니다"),
 
             _ => AdapterError.For<ExternalPricingApiService, HttpStatusCode>(
-                new Custom("HttpError"),
+                new HttpError(),
                 response.StatusCode,
                 $"외부 API 호출 실패. Status: {response.StatusCode}")
         };
@@ -1486,14 +1502,17 @@ public void Validation_ShouldHaveAdapterErrors()
 
 ```csharp
 // ✅ Good - 명확하고 구체적
-new Custom("AlreadyShipped")     // 이미 배송됨
-new Custom("PaymentDeclined")    // 결제 거부됨
-new Custom("StockDepleted")      // 재고 소진
+// public sealed record AlreadyShipped : DomainErrorType.Custom;
+// public sealed record PaymentDeclined : ApplicationErrorType.Custom;
+// public sealed record StockDepleted : DomainErrorType.Custom;
+new AlreadyShipped()     // 이미 배송됨
+new PaymentDeclined()    // 결제 거부됨
+new StockDepleted()      // 재고 소진
 
 // ❌ Bad - 모호하거나 너무 일반적
-new Custom("Error")              // 의미 없음
-new Custom("Failed")             // 너무 일반적
-new Custom("Invalid")            // 구체적이지 않음
+// sealed record Error : XxxErrorType.Custom;       // 의미 없음
+// sealed record Failed : XxxErrorType.Custom;      // 너무 일반적
+// sealed record Invalid : XxxErrorType.Custom;     // 구체적이지 않음
 ```
 
 ### 레이어별 Custom 에러 예시
@@ -1621,17 +1640,20 @@ public void Create_ShouldFail_WhenEmailFormatIsInvalid(string email)
 ### Custom 에러 테스트
 
 ```csharp
+// Error type definition (nested in Order class):
+// public sealed record AlreadyShipped : DomainErrorType.Custom;
+
 [Fact]
 public void Cancel_ShouldFail_WhenOrderAlreadyShipped()
 {
     // Arrange
     var error = DomainError.For<Order>(
-        new DomainErrorType.Custom("AlreadyShipped"),
+        new Order.AlreadyShipped(),
         currentValue: "ORDER-001",
         message: "Cannot cancel shipped order");
 
     // Act & Assert
-    error.ShouldBeDomainError<Order>(new DomainErrorType.Custom("AlreadyShipped"));
+    error.ShouldBeDomainError<Order>(new Order.AlreadyShipped());
 }
 ```
 
@@ -1651,7 +1673,7 @@ public void Cancel_ShouldFail_WhenOrderAlreadyShipped()
 숫자 범위:   Zero, Negative, NotPositive, OutOfRange, BelowMinimum, AboveMaximum
 존재 여부:   NotFound, AlreadyExists, Duplicate
 비교:        Mismatch
-커스텀:      Custom(Name)
+커스텀:      Custom (abstract → sealed record MyError : DomainErrorType.Custom)
 ```
 
 ### Application (ApplicationErrorType)
@@ -1662,7 +1684,7 @@ public void Cancel_ShouldFail_WhenOrderAlreadyShipped()
 검증:        ValidationFailed
 비즈니스:    BusinessRuleViolated, ConcurrencyConflict, ResourceLocked,
              OperationCancelled, InsufficientPermission
-커스텀:      Custom(Name)
+커스텀:      Custom (abstract → sealed record MyError : ApplicationErrorType.Custom)
 ```
 
 ### Adapter (AdapterErrorType)
@@ -1673,7 +1695,7 @@ public void Cancel_ShouldFail_WhenOrderAlreadyShipped()
 파이프라인:  PipelineValidation, PipelineException
 외부서비스:  ExternalServiceUnavailable, ConnectionFailed, Timeout
 데이터:      Serialization, Deserialization, DataCorruption
-커스텀:      Custom(Name)
+커스텀:      Custom (abstract → sealed record MyError : AdapterErrorType.Custom)
 ```
 
 ### 레이어별 사용 시점

@@ -424,7 +424,7 @@ return FinResponse.Fail<Response>(
 | `BusinessRuleViolated` | 비즈니스 규칙 위반 | `new BusinessRuleViolated(RuleName: "MaxOrderLimit")` |
 | `Unauthorized` | 인증되지 않음 | `new Unauthorized()` |
 | `Forbidden` | 접근 금지 | `new Forbidden()` |
-| `Custom` | 커스텀 에러 | `new Custom("PaymentDeclined")` |
+| `Custom` | 커스텀 에러 (상속 정의) | `public sealed record PaymentDeclined : ApplicationErrorType.Custom;` → `new PaymentDeclined()` |
 
 ### 에러 코드 형식
 

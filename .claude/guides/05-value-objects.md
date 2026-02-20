@@ -474,7 +474,7 @@ using Functorium.Domains.ValueObjects.Validations.Contextual;
 | **Numeric** | `Positive`, `NonNegative`, `NotZero`, `Between`, `AtMost`, `AtLeast` | `NotPositive`, `Negative`, `Zero`, `OutOfRange`, `AboveMaximum`, `BelowMinimum` | 숫자 값/범위 검증 |
 | **Range** | `ValidRange`, `ValidStrictRange` | `RangeInverted`, `RangeEmpty` | min/max 쌍 검증 |
 | **Collection** | `NotEmptyArray` | `Empty` | 배열 검증 |
-| **Custom** | `Must`, `ThenMust` | `Custom(Name)` | 사용자 정의 검증 |
+| **Custom** | `Must`, `ThenMust` | `Custom` (abstract record, 사용자 정의 파생) | 사용자 정의 검증 |
 
 ### ValidationRules\<T\> 시작점
 
@@ -592,10 +592,11 @@ ValidationRules<EventDate>.DateBetween(value, min, max)  // min <= value <= max
 #### 커스텀 검증 메서드
 
 ```csharp
+// Error type definition: public sealed record Unsupported : DomainErrorType.Custom;
 ValidationRules<Currency>.Must(
     value,
     v => SupportedCurrencies.Contains(v),
-    new Custom("Unsupported"),
+    new Unsupported(),
     $"Currency '{value}' is not supported")
 ```
 
@@ -673,10 +674,11 @@ ValidationRules<Currency>.Must(
 | `ThenMust(predicate, errorType, messageFactory)` | 커스텀 조건 (메시지 생성 함수) |
 
 ```csharp
+// Error type definition: public sealed record Unsupported : DomainErrorType.Custom;
 // 메시지 생성 함수 사용
 .ThenMust(
     v => SupportedCurrencies.Contains(v),
-    new Custom("Unsupported"),
+    new Unsupported(),
     v => $"Currency '{v}' is not supported")  // 값 포함 동적 메시지
 ```
 
@@ -943,11 +945,13 @@ public sealed class Validator : AbstractValidator<Request>
 // string → Validation<Error, int> (입력: string, 출력: int)
 public sealed class Age : ComparableSimpleValueObject<int>
 {
+    public sealed record InvalidFormat : DomainErrorType.Custom;
+
     // 문자열을 받아서 정수로 변환 후 검증
     public static Validation<Error, int> Validate(string value) =>
         int.TryParse(value, out var parsed)
             ? ValidationRules<Age>.Between(parsed, 0, 150)
-            : DomainError.For<Age>(new Custom("InvalidFormat"), value,
+            : DomainError.For<Age>(new InvalidFormat(), value,
                 $"'{value}' is not a valid number");
 }
 
@@ -1017,7 +1021,7 @@ using static Functorium.Domains.Errors.DomainErrorType;
 | Numeric | 숫자 검증 | `Zero`, `Negative`, `NotPositive`, `OutOfRange`, `BelowMinimum`, `AboveMaximum` |
 | Range | 범위 쌍 검증 | `RangeInverted`, `RangeEmpty` |
 | Existence | 존재 여부 검증 | `NotFound`, `AlreadyExists`, `Duplicate`, `Mismatch` |
-| Custom | 커스텀 에러 | `Custom(Name)` |
+| Custom | 커스텀 에러 | `Custom` (abstract record, 사용자 정의 파생) |
 
 ### DomainError.For\<T\>() 헬퍼
 
@@ -1121,10 +1125,11 @@ typed.Message.ShouldBe("Age cannot be negative");
 **두 값 → `ErrorCodeExpected<T1, T2>`**
 
 ```csharp
+// Error type definition: public sealed record InvalidRange : DomainErrorType.Custom;
 var startDate = new DateTime(2024, 12, 31);
 var endDate = new DateTime(2024, 1, 1);
 var error = DomainError.For<DateRange, DateTime, DateTime>(
-    new Custom("InvalidRange"), startDate, endDate, "Start must be before end");
+    new InvalidRange(), startDate, endDate, "Start must be before end");
 
 // 타입 검증
 error.ShouldBeOfType<ErrorCodeExpected<DateTime, DateTime>>();
@@ -1147,8 +1152,9 @@ typed.Message.ShouldBe("Start must be before end");
 **세 값 → `ErrorCodeExpected<T1, T2, T3>`**
 
 ```csharp
+// Error type definition: public sealed record InvalidTriangle : DomainErrorType.Custom;
 var error = DomainError.For<Triangle, double, double, double>(
-    new Custom("InvalidTriangle"), 1.0, 2.0, 10.0, "Invalid triangle sides");
+    new InvalidTriangle(), 1.0, 2.0, 10.0, "Invalid triangle sides");
 
 // 타입 검증
 error.ShouldBeOfType<ErrorCodeExpected<double, double, double>>();
@@ -1310,6 +1316,8 @@ using Functorium.Domains.ValueObjects;
 
 public sealed class Currency : SmartEnum<Currency, string>, IValueObject
 {
+    public sealed record Unsupported : DomainErrorType.Custom;
+
     public static readonly Currency KRW = new(nameof(KRW), "KRW", "한국 원화", "₩");
     public static readonly Currency USD = new(nameof(USD), "USD", "미국 달러", "$");
     public static readonly Currency EUR = new(nameof(EUR), "EUR", "유로", "€");
@@ -1355,7 +1363,7 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
         try { FromValue(currencyCode); return currencyCode; }
         catch (SmartEnumNotFoundException)
         {
-            return DomainError.For<Currency>(new Custom("Unsupported"), currencyCode,
+            return DomainError.For<Currency>(new Unsupported(), currencyCode,
                 $"Currency code is not supported");
         }
     }

@@ -62,6 +62,10 @@ public class CriteriaApiService : ICriteriaApiService
 
     public string RequestCategory => "ExternalApi";
 
+    #region Error Types
+    public sealed record ResponseNull : AdapterErrorType.Custom;
+    #endregion
+
     public virtual FinT<IO, ICriteriaApiService.Response> GetEquipHistoriesAsync(
         ICriteriaApiService.Request request,
         CancellationToken cancellationToken)
@@ -90,7 +94,7 @@ public class CriteriaApiService : ICriteriaApiService
             return dto?.Histories is not null
                 ? Fin.Succ(CriteriaApiMapper.ToResponse(dto))
                 : Fin.Fail<ICriteriaApiService.Response>(
-                    AdapterError.For<CriteriaApiService>(new Custom("ResponseNull"), url, "Response data is null"));
+                    AdapterError.For<CriteriaApiService>(new ResponseNull(), url, "Response data is null"));
         });
     }
 }
@@ -280,8 +284,9 @@ AdapterError.For<CriteriaApiService>(
     "API connection failed");
 
 // Custom - 사용자 정의 에러 타입
+// Error type definition: public sealed record ReservationFailed : AdapterErrorType.Custom;
 AdapterError.For<InventoryRepository>(
-    new Custom("ReservationFailed"),
+    new ReservationFailed(),
     orderId.ToString(),
     "Failed to reserve inventory");
 
@@ -653,6 +658,11 @@ public class EfCoreUnitOfWork : IUnitOfWork
 
     public string RequestCategory => "UnitOfWork";
 
+    #region Error Types
+    public sealed record ConcurrencyConflict : AdapterErrorType.Custom;
+    public sealed record DatabaseUpdateFailed : AdapterErrorType.Custom;
+    #endregion
+
     public EfCoreUnitOfWork(LayeredArchDbContext dbContext) => _dbContext = dbContext;
 
     public virtual FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = default)
@@ -667,12 +677,12 @@ public class EfCoreUnitOfWork : IUnitOfWork
             catch (DbUpdateConcurrencyException ex)
             {
                 return AdapterError.FromException<EfCoreUnitOfWork>(
-                    new Custom("ConcurrencyConflict"), ex);
+                    new ConcurrencyConflict(), ex);
             }
             catch (DbUpdateException ex)
             {
                 return AdapterError.FromException<EfCoreUnitOfWork>(
-                    new Custom("DatabaseUpdateFailed"), ex);
+                    new DatabaseUpdateFailed(), ex);
             }
         });
     }
@@ -762,6 +772,13 @@ public class ExternalPricingApiService : IExternalPricingService
 
     public string RequestCategory => "ExternalApi";       // 2. 요청 카테고리
 
+    #region Error Types
+    public sealed record OperationCancelled : AdapterErrorType.Custom;
+    public sealed record UnexpectedException : AdapterErrorType.Custom;
+    public sealed record RateLimited : AdapterErrorType.Custom;
+    public sealed record HttpError : AdapterErrorType.Custom;
+    #endregion
+
     public ExternalPricingApiService(HttpClient httpClient)  // 3. 생성자 주입
     {
         _httpClient = httpClient;
@@ -809,7 +826,7 @@ public class ExternalPricingApiService : IExternalPricingService
             catch (TaskCanceledException ex) when (ex.CancellationToken == cancellationToken)
             {
                 return AdapterError.For<ExternalPricingApiService>(  // 9. 사용자 취소
-                    new Custom("OperationCancelled"),
+                    new OperationCancelled(),
                     productCode,
                     "요청이 취소되었습니다");
             }
@@ -822,7 +839,7 @@ public class ExternalPricingApiService : IExternalPricingService
             catch (Exception ex)                          // 11. 기타 예외
             {
                 return AdapterError.FromException<ExternalPricingApiService>(
-                    new Custom("UnexpectedException"),
+                    new UnexpectedException(),
                     ex);
             }
         });
@@ -843,14 +860,14 @@ public class ExternalPricingApiService : IExternalPricingService
                 new Forbidden(), context, "접근이 금지되었습니다"),
 
             HttpStatusCode.TooManyRequests => AdapterError.For<ExternalPricingApiService>(
-                new Custom("RateLimited"), context, "요청 제한에 도달했습니다"),
+                new RateLimited(), context, "요청 제한에 도달했습니다"),
 
             HttpStatusCode.ServiceUnavailable => AdapterError.For<ExternalPricingApiService>(
                 new ExternalServiceUnavailable("ExternalPricingApi"),
                 context, "서비스를 사용할 수 없습니다"),
 
             _ => AdapterError.For<ExternalPricingApiService, HttpStatusCode>(
-                new Custom("HttpError"), response.StatusCode,
+                new HttpError(), response.StatusCode,
                 $"API 호출 실패. Status: {response.StatusCode}")
         };
 }
@@ -865,18 +882,18 @@ public class ExternalPricingApiService : IExternalPricingService
 | 404 | `new NotFound()` | 리소스 없음 |
 | 401 | `new Unauthorized()` | 인증 실패 |
 | 403 | `new Forbidden()` | 접근 거부 |
-| 429 | `new Custom("RateLimited")` | 요청 제한 초과 |
+| 429 | `new RateLimited()` | 요청 제한 초과 |
 | 503 | `new ExternalServiceUnavailable(name)` | 서비스 불가 |
-| 기타 | `new Custom("HttpError")` | 일반 HTTP 에러 |
+| 기타 | `new HttpError()` | 일반 HTTP 에러 |
 
 **예외 → AdapterErrorType 매핑 참조**:
 
 | 예외 타입 | AdapterErrorType | 설명 |
 |----------|------------------|------|
 | `HttpRequestException` | `new ConnectionFailed(name)` | 연결 실패 |
-| `TaskCanceledException` (사용자) | `new Custom("OperationCancelled")` | 요청 취소 |
+| `TaskCanceledException` (사용자) | `new OperationCancelled()` | 요청 취소 |
 | `TaskCanceledException` (타임아웃) | `new Timeout(timespan)` | 응답 시간 초과 |
-| `Exception` | `new Custom("UnexpectedException")` | 예상 외 예외 |
+| `Exception` | `new UnexpectedException()` | 예상 외 예외 |
 
 ### 2.5 Messaging Adapter
 

@@ -72,11 +72,12 @@ Aggregate는 **하나의 단위로 일관성을 보장하는 객체 그룹**입�
 
 ```csharp
 // Inventory Aggregate의 불변식: 재고는 음수가 될 수 없다
+// Error type definition: public sealed record InsufficientStock : DomainErrorType.Custom;
 public Fin<Unit> DeductStock(Quantity quantity)
 {
     if (quantity > StockQuantity)
         return DomainError.For<Inventory, int>(
-            new Custom("InsufficientStock"),
+            new InsufficientStock(),
             currentValue: StockQuantity,
             message: $"Insufficient stock. Current: {StockQuantity}, Requested: {quantity}");
 
@@ -525,6 +526,12 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
 [GenerateEntityId]
 public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurrencyAware
 {
+    #region Error Types
+
+    public sealed record InsufficientStock : DomainErrorType.Custom;
+
+    #endregion
+
     public ProductId ProductId { get; private set; }
     public Quantity StockQuantity { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
@@ -534,7 +541,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
     {
         if (quantity > StockQuantity)
             return DomainError.For<Inventory, int>(
-                new Custom("InsufficientStock"),
+                new InsufficientStock(),
                 currentValue: StockQuantity,
                 message: $"Insufficient stock. Current: {StockQuantity}, Requested: {quantity}");
 
@@ -682,6 +689,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
 
 ```csharp
 // EfCoreUnitOfWork: 동시성 예외를 AdapterError로 변환, 재시도 없이 반환
+// Error type definition: public sealed record ConcurrencyConflict : AdapterErrorType.Custom;
 public virtual FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = default)
 {
     return IO.liftAsync(async () =>
@@ -694,7 +702,7 @@ public virtual FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = 
         catch (DbUpdateConcurrencyException ex)
         {
             return AdapterError.FromException<EfCoreUnitOfWork>(
-                new Custom("ConcurrencyConflict"), ex);
+                new ConcurrencyConflict(), ex);
         }
     });
 }
@@ -999,6 +1007,12 @@ public abstract class AggregateRoot<TId> : Entity<TId>, IDomainEventDrain
 [GenerateEntityId]
 public class Order : AggregateRoot<OrderId>
 {
+    #region Error Types
+
+    public sealed record InvalidStatus : DomainErrorType.Custom;
+
+    #endregion
+
     public Money TotalAmount { get; private set; }
     public OrderStatus Status { get; private set; }
 
@@ -1025,7 +1039,7 @@ public class Order : AggregateRoot<OrderId>
     {
         if (Status != OrderStatus.Pending)
             return DomainError.For<Order>(
-                new Custom("InvalidStatus"),
+                new InvalidStatus(),
                 Status.ToString(),
                 "Order can only be confirmed when pending");
 
@@ -1308,6 +1322,12 @@ public static Order Create(Money amount, CustomerId customerId)
 [GenerateEntityId]
 public class Product : Entity<ProductId>
 {
+    #region Error Types
+
+    public sealed record SellingPriceBelowCost : DomainErrorType.Custom;
+
+    #endregion
+
     public ProductName Name { get; private set; }
     public Price SellingPrice { get; private set; }
     public Money Cost { get; private set; }
@@ -1317,7 +1337,7 @@ public class Product : Entity<ProductId>
         sellingPrice.Value > cost.Amount
             ? Success<Error, Unit>(unit)
             : DomainError.For<Product>(
-                new Custom("SellingPriceBelowCost"),
+                new SellingPriceBelowCost(),
                 sellingPrice.Value,
                 $"Selling price must be greater than cost. Price: {sellingPrice.Value}, Cost: {cost.Amount}");
 
@@ -1334,6 +1354,12 @@ public class Product : Entity<ProductId>
 [GenerateEntityId]
 public class Subscription : Entity<SubscriptionId>
 {
+    #region Error Types
+
+    public sealed record StartAfterEnd : DomainErrorType.Custom;
+
+    #endregion
+
     public Date StartDate { get; private set; }
     public Date EndDate { get; private set; }
     public CustomerId CustomerId { get; private set; }
@@ -1343,7 +1369,7 @@ public class Subscription : Entity<SubscriptionId>
         startDate < endDate
             ? Success<Error, Unit>(unit)
             : DomainError.For<Subscription>(
-                new Custom("StartAfterEnd"),
+                new StartAfterEnd(),
                 startDate.Value,
                 $"Start date must be before end date. Start: {startDate.Value}, End: {endDate.Value}");
 
@@ -1385,11 +1411,12 @@ public class Subscription : Entity<SubscriptionId>
 
 ```csharp
 // Inventory: 재고 차감 (불변식: 재고 ≥ 0)
+// Error type definition: public sealed record InsufficientStock : DomainErrorType.Custom;
 public Fin<Unit> DeductStock(Quantity quantity)
 {
     if (quantity > StockQuantity)
         return DomainError.For<Inventory, int>(
-            new Custom("InsufficientStock"),
+            new InsufficientStock(),
             currentValue: StockQuantity,
             message: $"Insufficient stock. Current: {StockQuantity}, Requested: {quantity}");
 
@@ -1599,6 +1626,12 @@ AggregateRoot 내에서 `AddDomainEvent()`를 사용하여 이벤트를 수집�
 [GenerateEntityId]
 public class Order : AggregateRoot<OrderId>
 {
+    #region Error Types
+
+    public sealed record InvalidStatus : DomainErrorType.Custom;
+
+    #endregion
+
     #region Domain Events
 
     public sealed record CreatedEvent(OrderId OrderId, Money TotalAmount) : DomainEvent;
@@ -1620,7 +1653,7 @@ public class Order : AggregateRoot<OrderId>
     {
         if (Status != OrderStatus.Confirmed)
             return DomainError.For<Order>(
-                new Custom("InvalidStatus"),
+                new InvalidStatus(),
                 Status.ToString(),
                 "Order must be confirmed before shipping");
 
@@ -1896,6 +1929,13 @@ using static Functorium.Domains.Errors.DomainErrorType;
 [GenerateEntityId]
 public class Order : AggregateRoot<OrderId>, IAuditableWithUser
 {
+    #region Error Types
+
+    public sealed record InvalidStatus : DomainErrorType.Custom;
+    public sealed record CannotCancel : DomainErrorType.Custom;
+
+    #endregion
+
     #region Domain Events
 
     public sealed record CreatedEvent(OrderId OrderId, CustomerId CustomerId, Money TotalAmount) : DomainEvent;
@@ -1990,7 +2030,7 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
     {
         if (Status != OrderStatus.Pending)
             return DomainError.For<Order>(
-                new Custom("InvalidStatus"),
+                new InvalidStatus(),
                 Status.ToString(),
                 "Order can only be confirmed when pending");
 
@@ -2006,7 +2046,7 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
     {
         if (Status == OrderStatus.Shipped || Status == OrderStatus.Delivered)
             return DomainError.For<Order>(
-                new Custom("CannotCancel"),
+                new CannotCancel(),
                 Status.ToString(),
                 "Cannot cancel shipped or delivered orders");
 
@@ -2022,7 +2062,7 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
     {
         if (Status != OrderStatus.Pending)
             return DomainError.For<Order>(
-                new Custom("InvalidStatus"),
+                new InvalidStatus(),
                 Status.ToString(),
                 "Shipping address can only be changed for pending orders");
 

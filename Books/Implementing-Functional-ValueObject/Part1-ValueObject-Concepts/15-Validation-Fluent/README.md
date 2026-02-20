@@ -77,7 +77,7 @@ Validate<MoneyAmount>.AtMost(value, 999999.99m)  // 최대값 검증
 Validate<MoneyAmount>.AtLeast(value, 0)          // 최소값 검증
 
 // 커스텀 검증 메서드
-Validate<Denominator>.Must(value, v => v != 0, new DomainErrorType.Custom("Zero"), "message")
+Validate<Denominator>.Must(value, v => v != 0, new Zero(), "message")  // sealed record Zero : DomainErrorType.Custom;
 ```
 
 ### 두 번째 개념: TypedValidation&lt;TValueObject, T&gt; 래퍼
@@ -143,7 +143,7 @@ public static Validation<Error, string> Validate(string value) =>
 
 // ThenMust: 조건부 검증 (실패할 수 있음)
 .ThenMust(v => SupportedCurrencies.Contains(v),
-    new DomainErrorType.Custom("Unsupported"),
+    new Unsupported(),  // sealed record Unsupported : DomainErrorType.Custom;
     v => $"Currency '{v}' is not supported")
 ```
 
@@ -413,6 +413,9 @@ public sealed class Currency
     : SmartEnum<Currency, string>
     , IValueObject
 {
+    // 커스텀 에러 타입 정의
+    public sealed record Unsupported : DomainErrorType.Custom;
+
     public static readonly Currency KRW = new(nameof(KRW), "KRW", "한국 원화", "₩");
     public static readonly Currency USD = new(nameof(USD), "USD", "미국 달러", "$");
     // ... 기타 통화들 ...
@@ -431,7 +434,7 @@ public sealed class Currency
             .ThenNormalize(v => v.ToUpperInvariant())
             .ThenMust(
                 v => SupportedCodes.Contains(v),
-                new DomainErrorType.Custom("Unsupported"),
+                new Unsupported(),  // sealed record Unsupported : DomainErrorType.Custom;
                 v => $"Currency '{v}' is not supported");
 }
 ```
@@ -542,9 +545,10 @@ public static Validation<Error, string> Validate(string value) =>
         .ThenExactLength(5);
 
 // DomainError.For<T>() 사용 - 복잡한 비즈니스 로직
+// sealed record MinExceedsMax : DomainErrorType.Custom;
 private static Validation<Error, (Price Min, Price Max)> ValidatePriceRange(Price min, Price max) =>
     (decimal)min.Amount > (decimal)max.Amount
-        ? DomainError.For<PriceRange>(new DomainErrorType.Custom("MinExceedsMax"),
+        ? DomainError.For<PriceRange>(new MinExceedsMax(),
             $"Min: {min}, Max: {max}",
             $"Minimum price cannot exceed maximum price.")
         : (Min: min, Max: max);
@@ -571,12 +575,12 @@ Validate<Currency>.NotEmpty(value)
 ```csharp
 // 정적 메시지 (값 정보 없음)
 .ThenMust(v => SupportedCodes.Contains(v),
-    new DomainErrorType.Custom("Unsupported"),
+    new Unsupported(),  // sealed record Unsupported : DomainErrorType.Custom;
     "Currency is not supported")
 
 // 동적 메시지 (값 정보 포함) - 권장
 .ThenMust(v => SupportedCodes.Contains(v),
-    new DomainErrorType.Custom("Unsupported"),
+    new Unsupported(),  // sealed record Unsupported : DomainErrorType.Custom;
     v => $"Currency '{v}' is not supported")
 ```
 
