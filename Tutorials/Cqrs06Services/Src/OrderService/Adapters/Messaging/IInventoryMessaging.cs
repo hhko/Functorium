@@ -1,4 +1,4 @@
-using Functorium.Applications.Observabilities;
+using Functorium.Domains.Observabilities;
 using LanguageExt;
 using LanguageExt.Common;
 using Cqrs06Services.Messages;
@@ -9,7 +9,7 @@ namespace OrderService.Adapters.Messaging;
 /// 재고 서비스 메시징 인터페이스
 /// 관찰 가능성 로그를 위한 IAdapter 인터페이스 상속
 /// </summary>
-public interface IInventoryMessaging : IAdapter
+public interface IInventoryMessaging : IPort
 {
     /// <summary>
     /// 재고 확인 (Request/Reply 패턴)

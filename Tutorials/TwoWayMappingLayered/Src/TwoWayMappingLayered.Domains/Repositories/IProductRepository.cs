@@ -1,4 +1,4 @@
-using Functorium.Applications.Observabilities;
+using Functorium.Domains.Observabilities;
 using LanguageExt;
 using TwoWayMappingLayered.Domains.Entities;
 using TwoWayMappingLayered.Domains.ValueObjects;
@@ -15,7 +15,7 @@ namespace TwoWayMappingLayered.Domains.Repositories;
 ///
 /// IAdapter 상속: 관찰 가능성 로그 지원
 /// </summary>
-public interface IProductRepository : IAdapter
+public interface IProductRepository : IPort
 {
     /// <summary>
     /// 상품 생성

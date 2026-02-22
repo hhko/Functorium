@@ -1,4 +1,4 @@
-using Functorium.Applications.Observabilities;
+using Functorium.Domains.Observabilities;
 
 namespace LayeredArch.Application.Ports;
 
@@ -6,7 +6,7 @@ namespace LayeredArch.Application.Ports;
 /// 외부 가격 조회 서비스 Port 인터페이스
 /// Infrastructure Adapter에서 구현합니다.
 /// </summary>
-public interface IExternalPricingService : IAdapter
+public interface IExternalPricingService : IPort
 {
     /// <summary>
     /// 외부 API에서 상품 가격을 조회합니다.

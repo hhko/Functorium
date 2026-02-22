@@ -16,9 +16,9 @@ namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 // - GeneratePipelineAttribute 자동 생성 확인
 //
 // ### 2. 기본 어댑터 시나리오
-// - 단일 메서드 어댑터: IAdapter 구현, 1개 메서드
+// - 단일 메서드 어댑터: IPort 구현, 1개 메서드
 // - 다중 메서드 어댑터: 여러 메서드 포함
-// - 메서드 없는 어댑터: IAdapter만 구현, 파이프라인 미생성
+// - 메서드 없는 어댑터: IPort만 구현, 파이프라인 미생성
 //
 // ### 3. 파라미터 시나리오
 // - 파라미터 0개: LoggerMessage.Define 사용 (4개 파라미터)
@@ -46,8 +46,8 @@ namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 //
 // ### 6. 인터페이스 시나리오
 // - IAdapter 직접 구현
-// - IAdapter 상속 인터페이스: IUserRepository : IAdapter
-// - 다중 인터페이스: IAdapter + IDisposable
+// - IAdapter 상속 인터페이스: IUserRepository : IPort
+// - 다중 인터페이스: IPort + IDisposable
 //
 // ### 7. 네임스페이스 시나리오
 // - 단순 네임스페이스: MyApp
@@ -96,12 +96,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface ITestAdapter : IAdapter
+            public interface ITestAdapter : IPort
             {
                 FinT<IO, int> GetValue();
             }
@@ -131,12 +131,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface IMultiMethodAdapter : IAdapter
+            public interface IMultiMethodAdapter : IPort
             {
                 FinT<IO, int> GetValue();
                 FinT<IO, string> GetName();
@@ -170,12 +170,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
 
             namespace TestNamespace;
 
             [GeneratePipeline]
-            public class EmptyAdapter : IAdapter
+            public class EmptyAdapter : IPort
             {
                 public string RequestCategory => "Test";
             }
@@ -203,12 +203,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface IZeroParamAdapter : IAdapter
+            public interface IZeroParamAdapter : IPort
             {
                 FinT<IO, int> GetValue();
             }
@@ -238,12 +238,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface ITwoParamAdapter : IAdapter
+            public interface ITwoParamAdapter : IPort
             {
                 FinT<IO, string> GetData(int id, string name);
             }
@@ -273,12 +273,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface IThreeParamAdapter : IAdapter
+            public interface IThreeParamAdapter : IPort
             {
                 FinT<IO, string> GetData(int id, string name, bool isActive);
             }
@@ -308,13 +308,13 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
             using System.Collections.Generic;
 
             namespace TestNamespace;
 
-            public interface ICollectionParamAdapter : IAdapter
+            public interface ICollectionParamAdapter : IPort
             {
                 FinT<IO, int> ProcessItems(List<string> items);
             }
@@ -344,12 +344,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface INullableParamAdapter : IAdapter
+            public interface INullableParamAdapter : IPort
             {
                 FinT<IO, string> GetData(int? id, string? name);
             }
@@ -380,12 +380,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface ITupleInputAdapter : IAdapter
+            public interface ITupleInputAdapter : IPort
             {
                 FinT<IO, string> ProcessUser((int Id, string Name) user);
             }
@@ -417,13 +417,13 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
             using System.Collections.Generic;
 
             namespace TestNamespace;
 
-            public interface ITupleWithCollectionInputAdapter : IAdapter
+            public interface ITupleWithCollectionInputAdapter : IPort
             {
                 FinT<IO, int> ProcessUserWithTags((int Id, List<string> Tags) user);
             }
@@ -455,12 +455,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface ITupleWithArrayInputAdapter : IAdapter
+            public interface ITupleWithArrayInputAdapter : IPort
             {
                 FinT<IO, double> CalculateAverage((string Name, int[] Scores) student);
             }
@@ -495,12 +495,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface ISimpleReturnAdapter : IAdapter
+            public interface ISimpleReturnAdapter : IPort
             {
                 FinT<IO, int> GetNumber();
                 FinT<IO, string> GetText();
@@ -534,7 +534,7 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
             using System.Collections.Generic;
 
@@ -542,7 +542,7 @@ public sealed class AdapterPipelineGeneratorTests
 
             public record User(int Id, string Name);
 
-            public interface ICollectionReturnAdapter : IAdapter
+            public interface ICollectionReturnAdapter : IPort
             {
                 FinT<IO, List<User>> GetUsers();
                 FinT<IO, string[]> GetNames();
@@ -574,13 +574,13 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
             using System.Collections.Generic;
 
             namespace TestNamespace;
 
-            public interface IComplexGenericAdapter : IAdapter
+            public interface IComplexGenericAdapter : IPort
             {
                 FinT<IO, Dictionary<string, List<int>>> GetComplexData();
             }
@@ -612,12 +612,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface ITupleAdapter : IAdapter
+            public interface ITupleAdapter : IPort
             {
                 FinT<IO, (int Id, string Name)> GetUserInfo();
             }
@@ -649,13 +649,13 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
             using System.Collections.Generic;
 
             namespace TestNamespace;
 
-            public interface ITupleWithCollectionAdapter : IAdapter
+            public interface ITupleWithCollectionAdapter : IPort
             {
                 FinT<IO, (int Id, List<string> Tags)> GetUserWithTags();
             }
@@ -687,12 +687,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface ITupleWithArrayAdapter : IAdapter
+            public interface ITupleWithArrayAdapter : IPort
             {
                 FinT<IO, (string Name, int[] Scores)> GetStudentScores();
             }
@@ -727,12 +727,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface IPrimaryCtorAdapter : IAdapter
+            public interface IPrimaryCtorAdapter : IPort
             {
                 FinT<IO, string> GetConnectionString();
             }
@@ -762,12 +762,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface IMultiCtorAdapter : IAdapter
+            public interface IMultiCtorAdapter : IPort
             {
                 FinT<IO, string> GetInfo();
             }
@@ -810,13 +810,13 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
             using Microsoft.Extensions.Logging;
 
             namespace TestNamespace;
 
-            public interface IConflictParamAdapter : IAdapter
+            public interface IConflictParamAdapter : IPort
             {
                 FinT<IO, string> GetData();
             }
@@ -853,7 +853,7 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -868,7 +868,7 @@ public sealed class AdapterPipelineGeneratorTests
                 }
             }
 
-            public interface IDerivedAdapter : IAdapter
+            public interface IDerivedAdapter : IPort
             {
                 FinT<IO, string> GetConnection();
             }
@@ -895,7 +895,7 @@ public sealed class AdapterPipelineGeneratorTests
     #region 6 인터페이스 시나리오
 
     /// <summary>
-    /// 시나리오 16: IAdapter 직접 구현
+    /// 시나리오 16: IPort 직접 구현
     /// IAdapter를 직접 구현하는 경우 파이프라인이 생성되는지 확인합니다.
     /// </summary>
     [Fact]
@@ -904,12 +904,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface IDirectAdapter : IAdapter
+            public interface IDirectAdapter : IPort
             {
                 FinT<IO, int> GetValue();
             }
@@ -930,7 +930,7 @@ public sealed class AdapterPipelineGeneratorTests
     }
 
     /// <summary>
-    /// 시나리오: IAdapter 상속 인터페이스
+    /// 시나리오: IPort 상속 인터페이스
     /// IAdapter를 상속하는 커스텀 인터페이스를 구현하는 경우 처리되는지 확인합니다.
     /// </summary>
     [Fact]
@@ -939,12 +939,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface IUserRepository : IAdapter
+            public interface IUserRepository : IPort
             {
                 FinT<IO, string> GetUserById(int id);
                 FinT<IO, bool> UpdateUser(int id, string name);
@@ -976,13 +976,13 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
             using System;
 
             namespace TestNamespace;
 
-            public interface IDisposableAdapter : IAdapter, IDisposable
+            public interface IDisposableAdapter : IPort, IDisposable
             {
                 FinT<IO, int> GetValue();
             }
@@ -1017,12 +1017,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace MyApp;
 
-            public interface ISimpleNamespaceAdapter : IAdapter
+            public interface ISimpleNamespaceAdapter : IPort
             {
                 FinT<IO, int> GetValue();
             }
@@ -1052,12 +1052,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace Company.Domain.Adapters.Infrastructure.Repositories;
 
-            public interface IDeepNamespaceAdapter : IAdapter
+            public interface IDeepNamespaceAdapter : IPort
             {
                 FinT<IO, int> GetValue();
             }
@@ -1094,12 +1094,12 @@ public sealed class AdapterPipelineGeneratorTests
         string input = """
             using System.Diagnostics;
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface IDuplicateParamAdapter : IAdapter
+            public interface IDuplicateParamAdapter : IPort
             {
                 FinT<IO, int> GetValue();
             }
@@ -1146,12 +1146,12 @@ public sealed class AdapterPipelineGeneratorTests
         string input = """
             using System.Diagnostics.Metrics;
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface IDuplicateMeterAdapter : IAdapter
+            public interface IDuplicateMeterAdapter : IPort
             {
                 FinT<IO, string> GetData();
             }
@@ -1193,12 +1193,12 @@ public sealed class AdapterPipelineGeneratorTests
         string input = """
             using System.Diagnostics;
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface ILocationTestAdapter : IAdapter
+            public interface ILocationTestAdapter : IPort
             {
                 FinT<IO, int> GetValue();
             }
@@ -1238,12 +1238,12 @@ public sealed class AdapterPipelineGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface INoDuplicateAdapter : IAdapter
+            public interface INoDuplicateAdapter : IPort
             {
                 FinT<IO, int> GetValue();
             }

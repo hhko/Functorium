@@ -1,5 +1,5 @@
 using Cqrs05EndpointLayered.Domains.Entities;
-using Functorium.Applications.Observabilities;
+using Functorium.Domains.Observabilities;
 using LanguageExt;
 
 namespace Cqrs05EndpointLayered.Domains.Repositories;
@@ -8,7 +8,7 @@ namespace Cqrs05EndpointLayered.Domains.Repositories;
 /// 상품 리포지토리 인터페이스
 /// 관찰 가능성 로그를 위한 IAdapter 인터페이스 상속
 /// </summary>
-public interface IProductRepository : IAdapter
+public interface IProductRepository : IPort
 {
     /// <summary>
     /// 상품 생성

@@ -1,4 +1,4 @@
-using Functorium.Applications.Observabilities;
+using Functorium.Domains.Observabilities;
 
 using LanguageExt;
 
@@ -11,7 +11,7 @@ namespace SourceGenerator.Demo.Contracts;
 /// IAdapter를 상속하므로 [GeneratePipeline]이 적용된 구현체에 대해
 /// Source Generator가 Pipeline 래퍼를 생성합니다.
 /// </summary>
-public interface IUserRepository : IAdapter
+public interface IUserRepository : IPort
 {
     /// <summary>
     /// ID로 사용자를 조회합니다.

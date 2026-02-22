@@ -351,12 +351,12 @@ public sealed class AdapterPipelineObservabilityTests
     {
         return """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Domains.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
 
-            public interface ITestAdapter : IAdapter
+            public interface ITestAdapter : IPort
             {
                 FinT<IO, int> GetValue();
             }

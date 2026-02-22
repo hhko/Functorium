@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Microsoft.Extensions.DependencyInjection;
-using Functorium.Applications.Observabilities;
+using Functorium.Domains.Observabilities;
 
 namespace Functorium.Abstractions.Registrations;
 
@@ -49,7 +49,7 @@ public static class AdapterPipelineRegistration
     /// </example>
     public static IServiceCollection RegisterScopedAdapterPipeline<TService, TImplementation>(
         this IServiceCollection services)
-            where TService : class, IAdapter
+            where TService : class, IPort
             where TImplementation : class, TService
     {
         return services.AddScoped<TService>(sp => ActivatorUtilities.CreateInstance<TImplementation>(sp));
@@ -70,7 +70,7 @@ public static class AdapterPipelineRegistration
     /// </example>
     public static IServiceCollection RegisterTransientAdapterPipeline<TService, TImplementation>(
         this IServiceCollection services)
-            where TService : class, IAdapter
+            where TService : class, IPort
             where TImplementation : class, TService
     {
         return services.AddTransient<TService>(sp => ActivatorUtilities.CreateInstance<TImplementation>(sp));
@@ -91,7 +91,7 @@ public static class AdapterPipelineRegistration
     /// </example>
     public static IServiceCollection RegisterSingletonAdapterPipeline<TService, TImplementation>(
         this IServiceCollection services)
-            where TService : class, IAdapter
+            where TService : class, IPort
             where TImplementation : class, TService
     {
         return services.AddSingleton<TService>(sp => ActivatorUtilities.CreateInstance<TImplementation>(sp));
@@ -115,8 +115,8 @@ public static class AdapterPipelineRegistration
     /// </example>
     public static IServiceCollection RegisterScopedAdapterPipelineFor<TService1, TService2, TImplementation>(
         this IServiceCollection services)
-            where TService1 : class, IAdapter
-            where TService2 : class, IAdapter
+            where TService1 : class, IPort
+            where TService2 : class, IPort
             where TImplementation : class, TService1, TService2
     {
         // 구현체 등록
@@ -147,9 +147,9 @@ public static class AdapterPipelineRegistration
     /// </example>
     public static IServiceCollection RegisterScopedAdapterPipelineFor<TService1, TService2, TService3, TImplementation>(
         this IServiceCollection services)
-            where TService1 : class, IAdapter
-            where TService2 : class, IAdapter
-            where TService3 : class, IAdapter
+            where TService1 : class, IPort
+            where TService2 : class, IPort
+            where TService3 : class, IPort
             where TImplementation : class, TService1, TService2, TService3
     {
         // 구현체 등록
@@ -172,7 +172,7 @@ public static class AdapterPipelineRegistration
     /// <param name="services">서비스 컬렉션</param>
     /// <param name="serviceTypes">등록할 서비스 인터페이스 타입 배열</param>
     /// <returns>서비스 컬렉션</returns>
-    /// <exception cref="ArgumentException">서비스 타입이 IAdapter를 구현하지 않거나, 구현 클래스가 서비스 타입을 구현하지 않을 때</exception>
+    /// <exception cref="ArgumentException">서비스 타입이 IPort를 구현하지 않거나, 구현 클래스가 서비스 타입을 구현하지 않을 때</exception>
     /// <example>
     /// <code>
     /// services.RegisterScopedAdapterPipelineFor&lt;MyPipeline&gt;(
@@ -182,16 +182,16 @@ public static class AdapterPipelineRegistration
     public static IServiceCollection RegisterScopedAdapterPipelineFor<TImplementation>(
         this IServiceCollection services,
         params Type[] serviceTypes)
-            where TImplementation : class, IAdapter
+            where TImplementation : class, IPort
     {
         // 런타임 검증
         Type implementationType = typeof(TImplementation);
         foreach (Type serviceType in serviceTypes)
         {
-            if (!typeof(IAdapter).IsAssignableFrom(serviceType))
+            if (!typeof(IPort).IsAssignableFrom(serviceType))
             {
                 throw new ArgumentException(
-                    $"Service type '{serviceType.Name}' must implement IAdapter interface.",
+                    $"Service type '{serviceType.Name}' must implement IPort interface.",
                     nameof(serviceTypes));
             }
 
@@ -232,8 +232,8 @@ public static class AdapterPipelineRegistration
     /// </example>
     public static IServiceCollection RegisterTransientAdapterPipelineFor<TService1, TService2, TImplementation>(
         this IServiceCollection services)
-            where TService1 : class, IAdapter
-            where TService2 : class, IAdapter
+            where TService1 : class, IPort
+            where TService2 : class, IPort
             where TImplementation : class, TService1, TService2
     {
         // 구현체 등록
@@ -264,9 +264,9 @@ public static class AdapterPipelineRegistration
     /// </example>
     public static IServiceCollection RegisterTransientAdapterPipelineFor<TService1, TService2, TService3, TImplementation>(
         this IServiceCollection services)
-            where TService1 : class, IAdapter
-            where TService2 : class, IAdapter
-            where TService3 : class, IAdapter
+            where TService1 : class, IPort
+            where TService2 : class, IPort
+            where TService3 : class, IPort
             where TImplementation : class, TService1, TService2, TService3
     {
         // 구현체 등록
@@ -289,7 +289,7 @@ public static class AdapterPipelineRegistration
     /// <param name="services">서비스 컬렉션</param>
     /// <param name="serviceTypes">등록할 서비스 인터페이스 타입 배열</param>
     /// <returns>서비스 컬렉션</returns>
-    /// <exception cref="ArgumentException">서비스 타입이 IAdapter를 구현하지 않거나, 구현 클래스가 서비스 타입을 구현하지 않을 때</exception>
+    /// <exception cref="ArgumentException">서비스 타입이 IPort를 구현하지 않거나, 구현 클래스가 서비스 타입을 구현하지 않을 때</exception>
     /// <example>
     /// <code>
     /// services.RegisterTransientAdapterPipelineFor&lt;MyPipeline&gt;(
@@ -299,16 +299,16 @@ public static class AdapterPipelineRegistration
     public static IServiceCollection RegisterTransientAdapterPipelineFor<TImplementation>(
         this IServiceCollection services,
         params Type[] serviceTypes)
-            where TImplementation : class, IAdapter
+            where TImplementation : class, IPort
     {
         // 런타임 검증
         Type implementationType = typeof(TImplementation);
         foreach (Type serviceType in serviceTypes)
         {
-            if (!typeof(IAdapter).IsAssignableFrom(serviceType))
+            if (!typeof(IPort).IsAssignableFrom(serviceType))
             {
                 throw new ArgumentException(
-                    $"Service type '{serviceType.Name}' must implement IAdapter interface.",
+                    $"Service type '{serviceType.Name}' must implement IPort interface.",
                     nameof(serviceTypes));
             }
 
@@ -349,8 +349,8 @@ public static class AdapterPipelineRegistration
     /// </example>
     public static IServiceCollection RegisterSingletonAdapterPipelineFor<TService1, TService2, TImplementation>(
         this IServiceCollection services)
-            where TService1 : class, IAdapter
-            where TService2 : class, IAdapter
+            where TService1 : class, IPort
+            where TService2 : class, IPort
             where TImplementation : class, TService1, TService2
     {
         // 구현체 등록
@@ -381,9 +381,9 @@ public static class AdapterPipelineRegistration
     /// </example>
     public static IServiceCollection RegisterSingletonAdapterPipelineFor<TService1, TService2, TService3, TImplementation>(
         this IServiceCollection services)
-            where TService1 : class, IAdapter
-            where TService2 : class, IAdapter
-            where TService3 : class, IAdapter
+            where TService1 : class, IPort
+            where TService2 : class, IPort
+            where TService3 : class, IPort
             where TImplementation : class, TService1, TService2, TService3
     {
         // 구현체 등록
@@ -406,7 +406,7 @@ public static class AdapterPipelineRegistration
     /// <param name="services">서비스 컬렉션</param>
     /// <param name="serviceTypes">등록할 서비스 인터페이스 타입 배열</param>
     /// <returns>서비스 컬렉션</returns>
-    /// <exception cref="ArgumentException">서비스 타입이 IAdapter를 구현하지 않거나, 구현 클래스가 서비스 타입을 구현하지 않을 때</exception>
+    /// <exception cref="ArgumentException">서비스 타입이 IPort를 구현하지 않거나, 구현 클래스가 서비스 타입을 구현하지 않을 때</exception>
     /// <example>
     /// <code>
     /// services.RegisterSingletonAdapterPipelineFor&lt;MyPipeline&gt;(
@@ -416,16 +416,16 @@ public static class AdapterPipelineRegistration
     public static IServiceCollection RegisterSingletonAdapterPipelineFor<TImplementation>(
         this IServiceCollection services,
         params Type[] serviceTypes)
-            where TImplementation : class, IAdapter
+            where TImplementation : class, IPort
     {
         // 런타임 검증
         Type implementationType = typeof(TImplementation);
         foreach (Type serviceType in serviceTypes)
         {
-            if (!typeof(IAdapter).IsAssignableFrom(serviceType))
+            if (!typeof(IPort).IsAssignableFrom(serviceType))
             {
                 throw new ArgumentException(
-                    $"Service type '{serviceType.Name}' must implement IAdapter interface.",
+                    $"Service type '{serviceType.Name}' must implement IPort interface.",
                     nameof(serviceTypes));
             }
 

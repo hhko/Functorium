@@ -103,13 +103,13 @@ public sealed class AdapterPipelineGenerator()
     private static bool ImplementsIAdapter(INamedTypeSymbol interfaceSymbol)
     {
         // IAdapter 자체인지 확인
-        if (interfaceSymbol.Name == "IAdapter")
+        if (interfaceSymbol.Name == "IPort")
         {
             return true;
         }
 
         // IAdapter를 상속받은 인터페이스인지 확인
-        return interfaceSymbol.AllInterfaces.Any(i => i.Name == "IAdapter");
+        return interfaceSymbol.AllInterfaces.Any(i => i.Name == "IPort");
     }
 
     // 매핑된 PipelineClassInfo로부터 소스 파일을 생성합니다.
@@ -177,7 +177,7 @@ public sealed class AdapterPipelineGenerator()
             .AppendLine("using System.Diagnostics.Metrics;")
             .AppendLine("using Functorium.Adapters.Observabilities;")
             .AppendLine("using Functorium.Adapters.Observabilities.Naming;")
-            .AppendLine("using Functorium.Applications.Observabilities;")
+            .AppendLine("using Functorium.Domains.Observabilities;")
             .AppendLine()
             .AppendLine("using LanguageExt;")
             .AppendLine("using Microsoft.Extensions.Logging;")

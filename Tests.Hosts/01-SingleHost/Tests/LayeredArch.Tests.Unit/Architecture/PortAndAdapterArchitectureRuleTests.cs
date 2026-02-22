@@ -1,5 +1,5 @@
 using ArchUnitNET.Fluent;
-using Functorium.Applications.Observabilities;
+using Functorium.Domains.Observabilities;
 using Functorium.Domains.Services;
 using Functorium.Testing.Assertions.ArchitectureRules;
 
@@ -12,7 +12,7 @@ public sealed class PortAndAdapterArchitectureRuleTests : ArchitectureTestBase
     {
         ArchRuleDefinition.Classes()
             .That()
-            .ImplementInterface(typeof(IAdapter))
+            .ImplementInterface(typeof(IPort))
             .And().AreNotAbstract()
             .And().DoNotHaveNameEndingWith("Pipeline")
             .ValidateAllClasses(Architecture, @class => @class
@@ -26,7 +26,7 @@ public sealed class PortAndAdapterArchitectureRuleTests : ArchitectureTestBase
     {
         ArchRuleDefinition.Classes()
             .That()
-            .ImplementInterface(typeof(IAdapter))
+            .ImplementInterface(typeof(IPort))
             .And().AreNotAbstract()
             .And().DoNotHaveNameEndingWith("Pipeline")
             .ValidateAllClasses(Architecture, @class => @class

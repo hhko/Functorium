@@ -1,4 +1,4 @@
-using Functorium.Applications.Observabilities;
+using Functorium.Domains.Observabilities;
 using LanguageExt;
 using LanguageExt.Common;
 
@@ -8,7 +8,7 @@ namespace InventoryService.Domain;
 /// 재고 리포지토리 인터페이스
 /// 관찰 가능성 로그를 위한 IAdapter 인터페이스 상속
 /// </summary>
-public interface IInventoryRepository : IAdapter
+public interface IInventoryRepository : IPort
 {
     /// <summary>
     /// 재고 항목 생성

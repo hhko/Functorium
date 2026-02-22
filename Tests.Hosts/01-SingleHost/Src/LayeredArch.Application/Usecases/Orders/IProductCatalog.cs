@@ -1,4 +1,4 @@
-using Functorium.Applications.Observabilities;
+using Functorium.Domains.Observabilities;
 using LayeredArch.Domain.AggregateRoots.Products;
 
 namespace LayeredArch.Application.Usecases.Orders.Ports;
@@ -7,7 +7,7 @@ namespace LayeredArch.Application.Usecases.Orders.Ports;
 /// 교차 Aggregate 상품 카탈로그 Port
 /// Order 등 다른 Aggregate에서 상품 검증용으로 사용
 /// </summary>
-public interface IProductCatalog : IAdapter
+public interface IProductCatalog : IPort
 {
     /// <summary>
     /// 상품 존재 여부 확인

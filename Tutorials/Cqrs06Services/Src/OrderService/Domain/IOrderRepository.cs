@@ -1,4 +1,4 @@
-using Functorium.Applications.Observabilities;
+using Functorium.Domains.Observabilities;
 using LanguageExt;
 
 namespace OrderService.Domain;
@@ -7,7 +7,7 @@ namespace OrderService.Domain;
 /// 주문 리포지토리 인터페이스
 /// 관찰 가능성 로그를 위한 IAdapter 인터페이스 상속
 /// </summary>
-public interface IOrderRepository : IAdapter
+public interface IOrderRepository : IPort
 {
     /// <summary>
     /// 주문 생성

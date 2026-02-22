@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using Cqrs04Endpoint.WebApi.Domain;
 using Cqrs04Endpoint.WebApi.Domain.ValueObjects;
 using Functorium.Adapters.SourceGenerators;
-using Functorium.Applications.Observabilities;
+using Functorium.Domains.Observabilities;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
 

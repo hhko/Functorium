@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using Functorium.Adapters.SourceGenerators;
-using Functorium.Applications.Observabilities;
+using Functorium.Domains.Observabilities;
 using LanguageExt;
 using LanguageExt.Common;
 using Microsoft.Extensions.Logging;

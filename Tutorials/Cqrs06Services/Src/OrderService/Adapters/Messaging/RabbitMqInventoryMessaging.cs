@@ -1,5 +1,5 @@
 using Functorium.Adapters.SourceGenerators;
-using Functorium.Applications.Observabilities;
+using Functorium.Domains.Observabilities;
 using LanguageExt;
 using LanguageExt.Common;
 using Cqrs06Services.Messages;

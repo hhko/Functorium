@@ -1,6 +1,6 @@
 using Functorium.Abstractions.Errors;
 using Functorium.Adapters.SourceGenerators;
-using Functorium.Applications.Observabilities;
+using Functorium.Domains.Observabilities;
 
 using LanguageExt;
 using LanguageExt.Common;
@@ -15,7 +15,7 @@ public sealed record TestEntity(Guid Id, string Name);
 /// <summary>
 /// 테스트용 Adapter 인터페이스
 /// </summary>
-public interface ITestObservabilityAdapter : IAdapter
+public interface ITestObservabilityAdapter : IPort
 {
     FinT<IO, Guid> GetById(Guid id);
     FinT<IO, LanguageExt.Unit> Save(TestEntity entity);
