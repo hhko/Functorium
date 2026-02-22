@@ -42,13 +42,14 @@
 
 ### 상품(Product)
 
-- **속성**: 상품명, 상품설명, 가격(Money), 태그ID 목록(TagId 참조)
-- **기능**: 상품 생성, 상품 수정(이름/설명/가격) → `Product` 반환(fluent) + `UpdatedAt` 갱신, 태그 할당(`AssignTag`), 태그 해제(`UnassignTag` — 존재하지 않는 태그 해제 시 no-op, 멱등)
+- **속성**: 상품명, 상품설명, 가격(Money), 태그ID 목록(TagId 참조), 삭제 시각(DeletedAt), 삭제자(DeletedBy)
+- **기능**: 상품 생성, 상품 수정(이름/설명/가격) → `Fin<Product>` 반환(삭제된 상품이면 실패) + `UpdatedAt` 갱신, 태그 할당(`AssignTag`), 태그 해제(`UnassignTag` — 존재하지 않는 태그 해제 시 no-op, 멱등), **상품 삭제(`Delete`)** → `Product` 반환(멱등) + DeletedAt/DeletedBy 설정, **상품 복원(`Restore`)** → `Product` 반환(멱등) + DeletedAt/DeletedBy 초기화
 - **불변 조건**:
   - 상품명은 비어있을 수 없으며 최대 100자
   - 상품설명은 최대 1000자 (빈 값 허용)
   - 가격은 반드시 양수
   - 동일 태그 중복 부여 불가 (태그 ID 기준 멱등성)
+  - 삭제된 상품은 수정할 수 없다 (AlreadyDeleted 오류)
 - **조회 규칙**:
   - 상품명 정확 일치 검색 (ProductNameSpec)
   - 상품명 고유성 검증 — 수정 시 자기 자신 제외 (ProductNameUniqueSpec)
@@ -136,6 +137,8 @@ Customer ──(고객ID 참조)──▶ Order ──(포함)──▶ [OrderLi
 | Product.UpdatedEvent | 상품 수정 | 상품ID, 상품명, 변경 전 가격, 변경 후 가격 |
 | Product.TagAssignedEvent | 태그 할당 | 상품ID, 태그ID |
 | Product.TagUnassignedEvent | 태그 해제 | 상품ID, 태그ID |
+| Product.DeletedEvent | 상품 삭제 | 상품ID, 삭제자 |
+| Product.RestoredEvent | 상품 복원 | 상품ID |
 | Tag.CreatedEvent | 태그 생성 | 태그ID, 태그명 |
 | Tag.RenamedEvent | 태그 이름 변경 | 태그ID, 이전 태그명, 새 태그명 |
 | Order.CreatedEvent | 주문 생성 | 주문ID, 고객ID, 주문라인 목록(Seq&lt;OrderLineInfo&gt;), 총액 |
@@ -163,6 +166,8 @@ Customer ──(고객ID 참조)──▶ Order ──(포함)──▶ [OrderLi
 | 상품명 고유성 | 동일 상품명 중복 불가 | 스펙으로 검증 |
 | 이메일 고유성 | 동일 이메일 중복 불가 | 스펙으로 검증 |
 | 태그 중복 | 동일 상품에 같은 태그 중복 부여 불가 (멱등) | 무시(멱등 처리) |
+| 삭제된 상품 수정 불가 | 삭제된 상품은 수정(Update)할 수 없다 | AlreadyDeleted |
+| 상품 물리 삭제 불가 | 상품은 물리 삭제할 수 없다 (Repository.Delete는 soft delete로 동작) | ISoftDeletableWithUser |
 | 재고 동시성 | 낙관적 잠금(RowVersion)으로 충돌 감지 | 동시성 충돌 오류 |
 
 ---
