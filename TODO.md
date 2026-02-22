@@ -49,6 +49,15 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
   현재 구현은 도메인 레이어의 soft delete 모델링(2, 3, 4)에 집중되어 있고, 인프라 레이어에서 ISoftDeletable 인터페이스를 활용한 자동 필터링(5번)은 빠져
   있습니다. 5번까지 구현해야 인터페이스의 진정한 가치가 증명됩니다.
   ```
+  ```
+  1. 참조 무결성 - OK (물리 삭제 없음)
+  2. 비즈니스 의미 분리 - OK (도메인 모델에서 Delete/Restore 분리)
+  ---
+  3. 복원 가능성 - 미완성 (Restore 커맨드/엔드포인트 없음)
+  4. 감사 추적 - 위반 (deletedBy가 "system"으로 하드코딩)
+  5. 인프라 관심사 분리 - 위반 (EfCore Repository가 도메인 모델 우회)
+  ```
+- [ ] 도메인 모델 삭제 패턴 정리????
 - [ ] IAuditable 적용 사례
 - [ ] IConcurrencyAware 적용 사례
 - [ ] Specification 적용 사례
@@ -60,12 +69,12 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
 - [ ] Src\Functorium\Applications\Observabilities\IAdapter.cs 인터페이스 정의 위치를 Domain으로 이동(Repositories 때문에)
 ---
 - [ ] 유스케이스 전체 리팩토링
+- [ ] .Adapters 프로젝트 분리
 - [ ] 도메인 시나리오 문서화
 - [ ] 도메인 시나리오 + PRD 문서
 - [ ] 도메인 요구사항 + PRD 통합
 - [x] 도메일 모델 ㄹ용어집
 - [x] 도메인 요구사항
-- [ ] .Adapters 프로젝트 분리
 - [ ] 릴리스 노트
 
 ---
