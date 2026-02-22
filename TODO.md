@@ -56,9 +56,9 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
   4. 감사 추적 - OK (DeletedBy 추적, DeleteProductCommand에서 deletedBy 전달)
   5. 인프라 관심사 분리 - OK (EF Core Global Query Filter + Dapper WHERE DeletedAt IS NULL)
   ```
-- [ ] 도메인 모델 삭제 패턴 정리????
+- [x] 도메인 모델 삭제 패턴 정리????
 - [x] IAuditable 적용 사례
-- [ ] IConcurrencyAware 적용 사례
+- [x] IConcurrencyAware 적용 사례
 - [ ] Specification 적용 사례
 - [ ] 도메인 모델 패턴
   - ISoftDeletable
