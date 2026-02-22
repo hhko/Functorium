@@ -62,7 +62,7 @@ SemanticModel semanticModel = compilation.GetSemanticModel(syntaxTree);
 ```csharp
 context.SyntaxProvider
     .ForAttributeWithMetadataName(
-        "MyNamespace.GeneratePipelineAttribute",
+        "MyNamespace.GeneratePortObservableAttribute",
         predicate: (node, _) => node is ClassDeclarationSyntax,
         transform: (ctx, _) =>
         {
@@ -162,14 +162,14 @@ Console.WriteLine($"인터페이스: {string.Join(", ", classSymbol?.AllInterfac
 ### GeneratorAttributeSyntaxContext 활용
 
 ```csharp
-private static PipelineClassInfo MapToPipelineClassInfo(
+private static ObservableClassInfo MapToObservableClassInfo(
     GeneratorAttributeSyntaxContext context,
     CancellationToken cancellationToken)
 {
     // 1. 타겟 심볼 직접 접근 (Semantic API)
     if (context.TargetSymbol is not INamedTypeSymbol classSymbol)
     {
-        return PipelineClassInfo.None;
+        return ObservableClassInfo.None;
     }
 
     // 2. 클래스 정보 추출
@@ -188,7 +188,7 @@ private static PipelineClassInfo MapToPipelineClassInfo(
         .Where(m => m.MethodKind == MethodKind.Ordinary)
         .ToList();
 
-    return new PipelineClassInfo(@namespace, className, methods);
+    return new ObservableClassInfo(@namespace, className, methods);
 }
 ```
 
@@ -269,10 +269,10 @@ if (method.IsGenericMethod)
 
 ---
 
-## 실제 코드 예시: AdapterPipelineGenerator
+## 실제 코드 예시: PortObservableGenerator
 
 ```csharp
-// AdapterPipelineGenerator.cs에서 메서드 정보 추출
+// PortObservableGenerator.cs에서 메서드 정보 추출
 var methods = classSymbol.AllInterfaces
     .Where(ImplementsIPort)
     .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())

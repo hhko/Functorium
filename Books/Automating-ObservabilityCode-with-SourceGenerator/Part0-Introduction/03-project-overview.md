@@ -2,15 +2,15 @@
 
 ## 학습 목표
 
-- AdapterPipelineGenerator의 목적과 기대 효과 이해
+- PortObservableGenerator의 목적과 기대 효과 이해
 - 소스 생성기로 구현한 이유 파악
 - 전체 프로젝트 구조 파악
 
 ---
 
-## AdapterPipelineGenerator란?
+## PortObservableGenerator란?
 
-**AdapterPipelineGenerator**는 어댑터 클래스에 **Observability(관측 가능성)** 기능을 자동으로 추가하는 소스 생성기입니다.
+**PortObservableGenerator**는 어댑터 클래스에 **Observability(관측 가능성)** 기능을 자동으로 추가하는 소스 생성기입니다.
 
 ### 해결하려는 문제
 
@@ -109,7 +109,7 @@ public class UserRepository : IPort
 
 ```csharp
 // 개발자가 작성하는 코드 - 핵심 로직에만 집중
-[GeneratePipeline]
+[GeneratePortObservable]
 public class UserRepository(ILogger<UserRepository> logger) : IPort
 {
     public FinT<IO, User> GetUserAsync(int userId) =>
@@ -123,7 +123,7 @@ public class UserRepository(ILogger<UserRepository> logger) : IPort
 }
 
 // 소스 생성기가 자동으로 생성하는 코드
-public class UserRepositoryPipeline : UserRepository
+public class UserRepositoryObservable : UserRepository
 {
     // 로깅, 추적, 메트릭이 모든 메서드에 자동 적용
 }
@@ -149,7 +149,7 @@ public class UserRepositoryPipeline : UserRepository
 
 ```csharp
 // 소스 생성기가 생성하는 고성능 로깅 코드
-internal static class UserRepositoryPipelineLoggers
+internal static class UserRepositoryObservableLoggers
 {
     private static readonly Action<ILogger, int, Exception?> s_getUserAsyncRequest =
         LoggerMessage.Define<int>(
@@ -212,8 +212,8 @@ IncrementalGeneratorBase (추상 클래스)
 │   ├── registerSourceProvider()  # 추상 단계 1
 │   └── generate()                # 추상 단계 2
 │
-└── AdapterPipelineGenerator (구체 클래스)
-    ├── RegisterSourceProvider()  # 구현: [GeneratePipeline] 클래스 필터링
+└── PortObservableGenerator (구체 클래스)
+    ├── RegisterSourceProvider()  # 구현: [GeneratePortObservable] 클래스 필터링
     └── Generate()                # 구현: Pipeline 코드 생성
 ```
 
@@ -257,7 +257,7 @@ IPort (전략 인터페이스)
 │
 ├── IUserRepository        # 사용자 관련 전략
 │   └── UserRepository     # 구체적 구현
-│       └── UserRepositoryPipeline  ← 소스 생성기가 생성
+│       └── UserRepositoryObservable  ← 소스 생성기가 생성
 │
 ├── IOrderRepository       # 주문 관련 전략
 │   └── OrderRepository    # 구체적 구현
@@ -272,7 +272,7 @@ IPort (전략 인터페이스)
 
 ```csharp
 // 개발자가 작성 - 전략 구현
-[GeneratePipeline]
+[GeneratePortObservable]
 public class UserRepository(ILogger<UserRepository> logger) : IUserRepository
 {
     public FinT<IO, User> GetUserAsync(int id) =>
@@ -282,7 +282,7 @@ public class UserRepository(ILogger<UserRepository> logger) : IUserRepository
 }
 
 // 소스 생성기가 자동 생성 - 전략 데코레이터
-public class UserRepositoryPipeline : UserRepository
+public class UserRepositoryObservable : UserRepository
 {
     // 원본 전략을 상속받아 관찰 가능성 기능 추가
     // 로깅, 추적, 메트릭이 자동으로 적용됨
@@ -296,7 +296,7 @@ public class UserRepositoryPipeline : UserRepository
 
 ```csharp
 // DI 등록 시 Pipeline 클래스 사용
-services.AddScoped<IUserRepository, UserRepositoryPipeline>();
+services.AddScoped<IUserRepository, UserRepositoryObservable>();
 services.AddScoped<IOrderRepository, OrderRepositoryPipeline>();
 ```
 
@@ -334,9 +334,9 @@ ProductRepository.cs     : 60줄 (순수 비즈니스 로직)
 총합                      : 150줄 (75% 감소)
 
 + 자동 생성되는 Pipeline 클래스
-  UserRepositoryPipeline.g.cs    : 자동 생성
-  OrderRepositoryPipeline.g.cs   : 자동 생성
-  ProductRepositoryPipeline.g.cs : 자동 생성
+  UserRepositoryObservable.g.cs    : 자동 생성
+  OrderRepositoryObservable.g.cs   : 자동 생성
+  ProductRepositoryObservable.g.cs : 자동 생성
 
 장점
 ====
@@ -353,11 +353,11 @@ ProductRepository.cs     : 60줄 (순수 비즈니스 로직)
 Functorium/
 ├── Src/
 │   ├── Functorium.SourceGenerators/            # 소스 생성기
-│   │   ├── AdapterPipelineGenerator.cs                 # 메인 생성기
+│   │   ├── PortObservableGenerator.cs                 # 메인 생성기
 │   │   └── Generators/
 │   │       ├── IncrementalGeneratorBase.cs             # 기본 패턴
-│   │       └── AdapterPipelineGenerator/
-│   │           ├── PipelineClassInfo.cs                # 클래스 정보 모델
+│   │       └── PortObservableGenerator/
+│   │           ├── ObservableClassInfo.cs                # 클래스 정보 모델
 │   │           ├── MethodInfo.cs                       # 메서드 정보 모델
 │   │           ├── ParameterInfo.cs                    # 파라미터 정보 모델
 │   │           ├── TypeExtractor.cs                    # 타입 추출 유틸리티
@@ -379,7 +379,7 @@ Functorium/
     └── Functorium.Tests.Unit/
         └── AdaptersTests/
             └── SourceGenerators/
-                ├── AdapterPipelineGeneratorTests.cs    # 27개 테스트
+                ├── PortObservableGeneratorTests.cs    # 27개 테스트
                 └── *.verified.txt                      # 스냅샷 파일
 ```
 
@@ -387,19 +387,19 @@ Functorium/
 
 ## 핵심 컴포넌트
 
-### 1. AdapterPipelineGenerator
+### 1. PortObservableGenerator
 
 메인 소스 생성기 클래스입니다. 3단계 파이프라인으로 동작합니다:
 
 ```
 1단계: 속성 정의 생성
 =====================
-[GeneratePipeline] 속성을 자동으로 정의하여
+[GeneratePortObservable] 속성을 자동으로 정의하여
 개발자가 별도로 선언할 필요 없음
 
 2단계: 대상 클래스 필터링
 ========================
-[GeneratePipeline] 속성이 붙고
+[GeneratePortObservable] 속성이 붙고
 IPort를 구현한 클래스만 선택
 
 3단계: Pipeline 클래스 생성
@@ -482,7 +482,7 @@ Chapter 08: 테스트 전략
 
 | 항목 | 설명 |
 |------|------|
-| 프로젝트 이름 | AdapterPipelineGenerator |
+| 프로젝트 이름 | PortObservableGenerator |
 | 목적 | 어댑터에 Observability 자동 추가 |
 | 해결 문제 | 반복적인 로깅/추적/메트릭 코드 제거 |
 | 구현 이유 | 일관성, 성능, 타입 안전성, AOT 지원 |

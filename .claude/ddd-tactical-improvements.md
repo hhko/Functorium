@@ -544,7 +544,7 @@ FinT<IO, Response> usecase =
 > **이전 패턴과의 차이**: 이전에는 Usecase에서 `_unitOfWork.SaveChanges()` → `_eventPublisher.PublishEvents()`를 LINQ 체인에서 직접 호출했으나, 파이프라인 도입으로 이 책임이 `UsecaseTransactionPipeline`으로 이전되었습니다. 자세한 내용은 [11-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./11-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-usecasetransactionpipeline)을 참조하세요.
 
 **핵심 설계 결정:**
-- `IPort` 상속으로 `[GeneratePipeline]` 소스 생성기 및 DI 등록 호환
+- `IPort` 상속으로 `[GeneratePortObservable]` 소스 생성기 및 DI 등록 호환
 - EF Core 구현체에서 `DbUpdateConcurrencyException` → `ConcurrencyConflict`, `DbUpdateException` → `DatabaseUpdateFailed` 에러 변환
 - DI 등록 시 Strategy 패턴으로 InMemory/EfCore 전환 가능
 
@@ -659,7 +659,7 @@ API Response ← Endpoint.Response ← Usecase.Response ← Domain Entity ← Pe
 
 ```csharp
 // Adapter에서 Polly 통합 예시
-[GeneratePipeline]
+[GeneratePortObservable]
 public sealed class ExternalPricingApiService : IExternalPricingService
 {
     private readonly HttpClient _httpClient;  // Polly 정책 적용된 HttpClient

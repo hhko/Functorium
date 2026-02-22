@@ -149,7 +149,7 @@ Usecase Trace는 `UsecaseTracePipeline<TRequest, TResponse>`에서 자동으로 
 
 ## IPort Trace 형식
 
-IPort Trace는 소스 생성기(`AdapterPipelineGenerator`)에 의해 자동 생성된 Pipeline 클래스에서 `IPortTrace` 인터페이스를 통해 수집됩니다. `[GeneratePipeline]` 애트리뷰트가 적용된 클래스에 대해 자동으로 Trace 수집이 활성화됩니다.
+IPort Trace는 소스 생성기(`PortObservableGenerator`)에 의해 자동 생성된 Pipeline 클래스에서 `IPortTrace` 인터페이스를 통해 수집됩니다. `[GeneratePortObservable]` 애트리뷰트가 적용된 클래스에 대해 자동으로 Trace 수집이 활성화됩니다.
 
 ### 1. Activity 생성
 
@@ -318,7 +318,7 @@ ActivitySource는 OpenTelemetry 설정에서 자동으로 등록됩니다:
 
 - **Usecase Trace**: `Src/Functorium/Applications/Pipelines/UsecaseTracePipeline.cs`
 - **IPort Trace 구현**: `Src/Functorium/Adapters/Observabilities/Tracing/AdapterTrace.cs`
-- **IPort Pipeline 생성기**: `Src/Functorium.SourceGenerators/AdapterPipelineGenerator.cs`
+- **IPort Pipeline 생성기**: `Src/Functorium.SourceGenerators/PortObservableGenerator.cs`
 - **Observability 필드 정의**: `Src/Functorium/Adapters/Observabilities/ObservabilityFields.cs`
 - **Trace Parent Context Holder**: `Src/Functorium/Applications/Observabilities/TraceParentContextHolder.cs`
 - **Trace Parent Activity Holder**: `Src/Functorium/Applications/Observabilities/TraceParentActivityHolder.cs`

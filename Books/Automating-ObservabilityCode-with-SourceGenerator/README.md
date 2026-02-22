@@ -123,7 +123,7 @@ Phase 1: Hello World (Part 0~1)
 └── 난이도: ★☆☆☆☆
 
 Phase 2: 속성 기반 필터링 (Part 2: 1~4장)
-├── [GeneratePipeline] 속성이 붙은 클래스만 처리
+├── [GeneratePortObservable] 속성이 붙은 클래스만 처리
 └── 난이도: ★★☆☆☆
 
 Phase 3: 메서드 분석 (Part 2: 5~8장)
@@ -141,11 +141,11 @@ Phase 5: 고급 처리 (Part 3)
 
 ---
 
-## 실습 프로젝트: AdapterPipelineGenerator
+## 실습 프로젝트: PortObservableGenerator
 
-이 책에서는 **AdapterPipelineGenerator**라는 실제 소스 생성기를 단계별로 구현합니다.
+이 책에서는 **PortObservableGenerator**라는 실제 소스 생성기를 단계별로 구현합니다.
 
-### AdapterPipelineGenerator란?
+### PortObservableGenerator란?
 
 어댑터 클래스에 **관찰 가능성(Observability)** 코드를 자동으로 생성하는 소스 생성기입니다:
 
@@ -157,14 +157,14 @@ Phase 5: 고급 처리 (Part 3)
 
 ```csharp
 // 개발자가 작성하는 코드 - 비즈니스 로직만 집중
-[GeneratePipeline]
+[GeneratePortObservable]
 public class UserRepository(ILogger<UserRepository> logger) : IPort
 {
     public FinT<IO, User> GetUserAsync(int id) => /* 순수 로직 */;
 }
 
 // 소스 생성기가 자동 생성 - 관찰 가능성 코드 포함
-public class UserRepositoryPipeline : UserRepository
+public class UserRepositoryObservable : UserRepository
 {
     // 로깅, 추적, 메트릭이 모든 메서드에 자동 적용
 }

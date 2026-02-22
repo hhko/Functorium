@@ -66,7 +66,7 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
   - IConcurrencyAware
   - Specification
 - [x] Src\Functorium\Applications\Observabilities\IPort.cs 인터페이스 정의 위치를 Domain으로 이동(Repositories 때문에)
-- [ ] AdapterPipelineGenerator, AdapterPipelineRegistration, GeneratePipelineAttribute???
+- [ ] PortObservableGenerator, PortObservableRegistration, GeneratePortObservableAttribute???
 ---
 - [ ] 유스케이스 전체 리팩토링
 - [ ] .Adapters 프로젝트 분리
@@ -729,7 +729,7 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
 - [x] ApplicationError 정의 및 테스트 방법 확장
 - [x] AdapterError 정의 및 테스트 방법 확장
 - [x] 에러 `개발 가이드 문서`
-- [x] RegisterSingletonAdapterPipelineFor: Src\Functorium\Abstractions\Registrations\AdapterPipelineRegistration.cs
+- [x] RegisterSingletonPortObservableFor: Src\Functorium\Abstractions\Registrations\PortObservableRegistration.cs
 - [x] 값 객체 ValidationPipeline
 - [x] Enum 값 객체 ValidationPipeline
 - [x] Validation<Error, Currency> Validate(string? value) -> Validation<Error, string?> Validate(string? value)

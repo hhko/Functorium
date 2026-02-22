@@ -68,7 +68,7 @@ Functorium uses [OpenTelemetry Service Attributes](https://opentelemetry.io/docs
 | `error.code` | ✅ | ✅ | ✅ | Domain-specific error code |
 | `@error` | ✅ | - | - | Structured error object (detailed) |
 
-**Adapter Layer:** (Unit Tests: [Logging](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterLoggingPipelineStructureTests.cs), [Metrics](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterMetricsPipelineStructureTests.cs), [Tracing](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterTracingPipelineStructureTests.cs))
+**Adapter Layer:** (Unit Tests: [Logging](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/PortObservableLoggingStructureTests.cs), [Metrics](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/PortObservableMetricsStructureTests.cs), [Tracing](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/PortObservableTracingStructureTests.cs))
 
 | Field/Tag | Logging | Metrics | Tracing | Description |
 |-----------|---------|---------|---------|-------------|
@@ -175,7 +175,7 @@ Functorium uses [OpenTelemetry Service Attributes](https://opentelemetry.io/docs
 | Layer | Method | Tests | Note |
 |-------|--------|-------|------|
 | Application | Direct `ILogger.LogXxx()` calls | [UsecaseLoggingPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseLoggingPipelineStructureTests.cs) | 7+ parameters exceed `LoggerMessage.Define` limit of 6 |
-| Adapter | `LoggerMessage.Define` delegates | [AdapterLoggingPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterLoggingPipelineStructureTests.cs) | Zero allocation, high performance |
+| Adapter | `LoggerMessage.Define` delegates | [PortObservableLoggingStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/PortObservableLoggingStructureTests.cs) | Zero allocation, high performance |
 
 ### Metrics
 
@@ -236,7 +236,7 @@ Functorium uses [OpenTelemetry Service Attributes](https://opentelemetry.io/docs
 | Layer | Method | Tests | Note |
 |-------|--------|-------|------|
 | Application | `IPipelineBehavior` + `IMeterFactory` | [UsecaseMetricsPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseMetricsPipelineStructureTests.cs) | Mediator pipeline |
-| Adapter | Source Generator | [AdapterMetricsPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterMetricsPipelineStructureTests.cs) | Auto-generated metrics instruments |
+| Adapter | Source Generator | [PortObservableMetricsStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/PortObservableMetricsStructureTests.cs) | Auto-generated metrics instruments |
 
 ### Tracing
 
@@ -281,4 +281,4 @@ Functorium uses [OpenTelemetry Service Attributes](https://opentelemetry.io/docs
 | Layer | Method | Tests | Note |
 |-------|--------|-------|------|
 | Application | `IPipelineBehavior` + `ActivitySource.StartActivity()` | [UsecaseTracingPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseTracingPipelineStructureTests.cs) | Mediator pipeline |
-| Adapter | Source Generator | [AdapterTracingPipelineStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/AdapterTracingPipelineStructureTests.cs) | Auto-generated Activity spans |
+| Adapter | Source Generator | [PortObservableTracingStructureTests](./Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/PortObservableTracingStructureTests.cs) | Auto-generated Activity spans |

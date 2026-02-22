@@ -193,20 +193,20 @@ return outputCompilation
 ### 테스트 클래스 구조
 
 ```csharp
-// AdapterPipelineGeneratorTests.cs
+// PortObservableGeneratorTests.cs
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Testing.SourceGenerators;
 
 namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 
 [Trait(nameof(UnitTest), UnitTest.Functorium_SourceGenerator)]
-public sealed class AdapterPipelineGeneratorTests
+public sealed class PortObservableGeneratorTests
 {
-    private readonly AdapterPipelineGenerator _sut;
+    private readonly PortObservableGenerator _sut;
 
-    public AdapterPipelineGeneratorTests()
+    public PortObservableGeneratorTests()
     {
-        _sut = new AdapterPipelineGenerator();
+        _sut = new PortObservableGenerator();
     }
 
     [Fact]
@@ -225,7 +225,7 @@ public sealed class AdapterPipelineGeneratorTests
                 FinT<IO, int> GetValue();
             }
 
-            [GeneratePipeline]
+            [GeneratePortObservable]
             public class TestAdapter : ITestAdapter
             {
                 public string RequestCategory => "Test";
@@ -260,8 +260,8 @@ string input = """
         FinT<IO, int> GetValue();
     }
 
-    // 4. [GeneratePipeline] 속성 적용
-    [GeneratePipeline]
+    // 4. [GeneratePortObservable] 속성 적용
+    [GeneratePortObservable]
     public class TestAdapter : ITestAdapter
     {
         public string RequestCategory => "Test";
@@ -299,7 +299,7 @@ public void Should_Return_Null_When_NoAttributeApplied()
 
     string? actual = _sut.Generate(input);
 
-    // [GeneratePipeline] 속성이 없으면 생성 안 됨
+    // [GeneratePortObservable] 속성이 없으면 생성 안 됨
     actual.ShouldBeNull();
 }
 ```
@@ -323,7 +323,7 @@ dotnet test Tests/Functorium.Tests.Unit/Functorium.Tests.Unit.csproj
 ### 특정 테스트만 실행
 
 ```bash
-dotnet test --filter "FullyQualifiedName~AdapterPipelineGeneratorTests"
+dotnet test --filter "FullyQualifiedName~PortObservableGeneratorTests"
 ```
 
 ---

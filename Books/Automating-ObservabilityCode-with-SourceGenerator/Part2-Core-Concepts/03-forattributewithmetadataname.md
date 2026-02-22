@@ -40,7 +40,7 @@ var classes = context.SyntaxProvider
 
             // 속성 확인
             return symbol?.GetAttributes()
-                .Any(a => a.AttributeClass?.Name == "GeneratePipelineAttribute")
+                .Any(a => a.AttributeClass?.Name == "GeneratePortObservableAttribute")
                     == true ? symbol : null;
         })
     .Where(x => x is not null);
@@ -48,7 +48,7 @@ var classes = context.SyntaxProvider
 // ✅ ForAttributeWithMetadataName (효율적)
 var classes = context.SyntaxProvider
     .ForAttributeWithMetadataName(
-        "MyNamespace.GeneratePipelineAttribute",  // 컴파일러가 최적화
+        "MyNamespace.GeneratePortObservableAttribute",  // 컴파일러가 최적화
         predicate: (node, _) => node is ClassDeclarationSyntax,
         transform: (ctx, _) => ctx.TargetSymbol);  // 이미 심볼이 준비됨
 ```
@@ -92,10 +92,10 @@ ForAttributeWithMetadataName
 // 속성 정의
 namespace Functorium.Adapters.SourceGenerators;
 
-public class GeneratePipelineAttribute : System.Attribute { }
+public class GeneratePortObservableAttribute : System.Attribute { }
 
 // 메타데이터 이름
-"Functorium.Adapters.SourceGenerators.GeneratePipelineAttribute"
+"Functorium.Adapters.SourceGenerators.GeneratePortObservableAttribute"
 
 // 제네릭 속성의 경우
 "MyNamespace.MyAttribute`1"  // <T>를 가진 속성
@@ -161,29 +161,29 @@ public readonly struct GeneratorAttributeSyntaxContext
 
 ---
 
-## 실제 코드: AdapterPipelineGenerator
+## 실제 코드: PortObservableGenerator
 
 ```csharp
 [Generator(LanguageNames.CSharp)]
-public sealed class AdapterPipelineGenerator()
-    : IncrementalGeneratorBase<PipelineClassInfo>(
+public sealed class PortObservableGenerator()
+    : IncrementalGeneratorBase<ObservableClassInfo>(
         RegisterSourceProvider,
         Generate,
         AttachDebugger: false)
 {
-    private const string AttributeName = "GeneratePipeline";
+    private const string AttributeName = "GeneratePortObservable";
     private const string AttributeNamespace = "Functorium.Adapters.SourceGenerators";
     private const string FullyQualifiedAttributeName =
         $"{AttributeNamespace}.{AttributeName}Attribute";
 
-    private static IncrementalValuesProvider<PipelineClassInfo> RegisterSourceProvider(
+    private static IncrementalValuesProvider<ObservableClassInfo> RegisterSourceProvider(
         IncrementalGeneratorInitializationContext context)
     {
         // 1. 속성 정의 생성
         context.RegisterPostInitializationOutput(ctx =>
             ctx.AddSource(
-                hintName: "GeneratePipelineAttribute.g.cs",
-                sourceText: SourceText.From(GeneratePipelineAttribute, Encoding.UTF8)));
+                hintName: "GeneratePortObservableAttribute.g.cs",
+                sourceText: SourceText.From(GeneratePortObservableAttribute, Encoding.UTF8)));
 
         // 2. ForAttributeWithMetadataName으로 필터링
         return context
@@ -191,8 +191,8 @@ public sealed class AdapterPipelineGenerator()
             .ForAttributeWithMetadataName(
                 fullyQualifiedMetadataName: FullyQualifiedAttributeName,
                 predicate: IsClass,                    // 클래스인지 확인
-                transform: MapToPipelineClassInfo)     // 클래스 정보 추출
-            .Where(x => x != PipelineClassInfo.None);  // 유효한 것만
+                transform: MapToObservableClassInfo)     // 클래스 정보 추출
+            .Where(x => x != ObservableClassInfo.None);  // 유효한 것만
     }
 
     // predicate 구현
@@ -200,14 +200,14 @@ public sealed class AdapterPipelineGenerator()
         => node is ClassDeclarationSyntax;
 
     // transform 구현
-    private static PipelineClassInfo MapToPipelineClassInfo(
+    private static ObservableClassInfo MapToObservableClassInfo(
         GeneratorAttributeSyntaxContext context,
         CancellationToken cancellationToken)
     {
         // 클래스 심볼 확인
         if (context.TargetSymbol is not INamedTypeSymbol classSymbol)
         {
-            return PipelineClassInfo.None;
+            return ObservableClassInfo.None;
         }
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -235,14 +235,14 @@ public sealed class AdapterPipelineGenerator()
         // 메서드가 없으면 생성 불필요
         if (methods.Count == 0)
         {
-            return PipelineClassInfo.None;
+            return ObservableClassInfo.None;
         }
 
         // 생성자 파라미터 추출
         var baseConstructorParameters =
             ConstructorParameterExtractor.ExtractParameters(classSymbol);
 
-        return new PipelineClassInfo(
+        return new ObservableClassInfo(
             @namespace, className, methods, baseConstructorParameters);
     }
 }
@@ -256,7 +256,7 @@ ForAttributeWithMetadataName을 사용하려면 **속성이 정의**되어 있�
 
 ```csharp
 // RegisterPostInitializationOutput에서 속성 정의 생성
-public const string GeneratePipelineAttribute = """
+public const string GeneratePortObservableAttribute = """
     // <auto-generated/>
 
     namespace Functorium.Adapters.SourceGenerators;
@@ -270,7 +270,7 @@ public const string GeneratePipelineAttribute = """
         Inherited = false)]
     [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage(
         Justification = "Generated by source generator.")]
-    public class GeneratePipelineAttribute : global::System.Attribute;
+    public class GeneratePortObservableAttribute : global::System.Attribute;
     """;
 ```
 
@@ -278,11 +278,11 @@ public const string GeneratePipelineAttribute = """
 
 ```csharp
 // ❌ 충돌 가능성
-public class GeneratePipelineAttribute : System.Attribute;
+public class GeneratePortObservableAttribute : System.Attribute;
 // 사용자 코드에 System 네임스페이스가 있으면 충돌
 
 // ✅ 항상 안전
-public class GeneratePipelineAttribute : global::System.Attribute;
+public class GeneratePortObservableAttribute : global::System.Attribute;
 // global::은 항상 전역 네임스페이스에서 시작
 ```
 

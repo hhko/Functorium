@@ -31,8 +31,8 @@ public override FinT<IO, User> GetUserAsync(int id) =>
 ### 전체 코드
 
 ```csharp
-// Generators/AdapterPipelineGenerator/TypeExtractor.cs
-namespace Functorium.SourceGenerators.Generators.AdapterPipelineGenerator;
+// Generators/PortObservableGenerator/TypeExtractor.cs
+namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
 
 /// <summary>
 /// 제네릭 타입에서 내부 타입을 추출하는 유틸리티 클래스
@@ -366,7 +366,7 @@ null
 public Task Should_Extract_SimpleType()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class DataRepository : IPort
         {
             public virtual FinT<IO, int> GetNumber() => FinT<IO, int>.Succ(42);
@@ -391,7 +391,7 @@ public Task Should_Extract_CollectionType()
     string input = """
         public class User { public int Id { get; set; } }
 
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class UserRepository : IPort
         {
             public virtual FinT<IO, List<User>> GetUsers()
@@ -415,7 +415,7 @@ public Task Should_Extract_CollectionType()
 public Task Should_Extract_ComplexGenericType()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class DataRepository : IPort
         {
             public virtual FinT<IO, Dictionary<string, List<int>>> GetComplexData()
@@ -438,7 +438,7 @@ public Task Should_Extract_ComplexGenericType()
 public Task Should_Extract_TupleType()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class UserRepository : IPort
         {
             public virtual FinT<IO, (int Id, string Name)> GetUserInfo()

@@ -17,10 +17,10 @@
 ```
 소스 코드 → 컴파일러 → 소스 생성기 → 추가 코드 → 최종 어셈블리
                          ↓
-                    [GeneratePipeline]
+                    [GeneratePortObservable]
                     public class UserRepository
                          ↓
-                    UserRepositoryPipeline.g.cs
+                    UserRepositoryObservable.g.cs
 ```
 
 ### 왜 소스 생성기인가?
@@ -58,14 +58,14 @@ public interface IIncrementalGenerator
 
 ```csharp
 context.SyntaxProvider.ForAttributeWithMetadataName(
-    "Namespace.GeneratePipelineAttribute",
+    "Namespace.GeneratePortObservableAttribute",
     predicate: (node, _) => node is ClassDeclarationSyntax,
     transform: (ctx, _) => ExtractInfo(ctx))
 ```
 
 ---
 
-## AdapterPipelineGenerator 설계
+## PortObservableGenerator 설계
 
 ### 템플릿 메서드 패턴
 
@@ -98,7 +98,7 @@ public class OrderRepository : IPort { }
 ### 생성 흐름
 
 ```
-1. [GeneratePipeline] 속성 감지
+1. [GeneratePortObservable] 속성 감지
 2. IPort 인터페이스 확인
 3. 메서드 시그니처 추출
 4. Pipeline 클래스 생성
@@ -112,10 +112,10 @@ public class OrderRepository : IPort { }
 ### 생성되는 코드 구조
 
 ```csharp
-public class UserRepositoryPipeline : UserRepository
+public class UserRepositoryObservable : UserRepository
 {
     // 1. 필드 (Logging, Tracing, Metrics)
-    private readonly ILogger<UserRepositoryPipeline> _logger;
+    private readonly ILogger<UserRepositoryObservable> _logger;
     private readonly IPortTrace _adapterTrace;
     private readonly IPortMetric _adapterMetric;
 
@@ -123,7 +123,7 @@ public class UserRepositoryPipeline : UserRepository
     private static readonly Action<ILogger, ...> _logRequest = ...;
 
     // 3. 생성자 (의존성 주입)
-    public UserRepositoryPipeline(...) { }
+    public UserRepositoryObservable(...) { }
 
     // 4. 메서드 오버라이드 (관찰 가능성 주입)
     public override FinT<IO, User> GetUserAsync(int id) =>
@@ -259,7 +259,7 @@ public Task Should_Generate_PipelineClass()
 
 | 파일 | 역할 |
 |------|------|
-| `AdapterPipelineGenerator.cs` | 메인 소스 생성기 |
+| `PortObservableGenerator.cs` | 메인 소스 생성기 |
 | `IncrementalGeneratorBase.cs` | 템플릿 메서드 패턴 |
 | `TypeExtractor.cs` | 제네릭 타입 추출 |
 | `CollectionTypeHelper.cs` | 컬렉션 타입 처리 |

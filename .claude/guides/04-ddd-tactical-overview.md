@@ -99,7 +99,7 @@ DDD는 도메인 전문가와 개발자가 동일한 언어를 사용할 것을 
 | Application Error | `ApplicationError`, `ApplicationErrorType` | `Functorium.Applications.Errors` |
 | Port | `IPort` | `Functorium.Domains.Ports` |
 | Repository | `IRepository<TAggregate, TId>` | `Functorium.Domains.Repositories` |
-| Adapter | `[GeneratePipeline]` | Adapter Layer 프로젝트 |
+| Adapter | `[GeneratePortObservable]` | Adapter Layer 프로젝트 |
 | Adapter Error | `AdapterError`, `AdapterErrorType` | `Functorium.Adapters.Errors` |
 | 검증 | `ValidationRules<T>`, `TypedValidation<T,V>` | `Functorium.Domains.ValueObjects.Validations` |
 | 결과 타입 | `Fin<T>`, `Validation<Error, T>`, `FinResponse<T>` | LanguageExt / Functorium |

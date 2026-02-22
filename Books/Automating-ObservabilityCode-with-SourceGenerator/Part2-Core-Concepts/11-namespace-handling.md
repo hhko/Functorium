@@ -57,7 +57,7 @@ if (!string.IsNullOrEmpty(@namespace))
 // 생성 결과:
 // namespace MyApp.Infrastructure.Repositories;
 //
-// public class UserRepositoryPipeline : UserRepository
+// public class UserRepositoryObservable : UserRepository
 // {
 // }
 ```
@@ -93,16 +93,16 @@ else
 // MyApp.Services.UserRepository
 
 // 같은 파일명으로 충돌 발생
-// UserRepositoryPipeline.g.cs  (어느 것?)
+// UserRepositoryObservable.g.cs  (어느 것?)
 ```
 
 ### 네임스페이스 접미사 추출
 
 ```csharp
-// AdapterPipelineGenerator.cs의 실제 코드
+// PortObservableGenerator.cs의 실제 코드
 private static void Generate(
     SourceProductionContext context,
-    ImmutableArray<PipelineClassInfo> pipelineClasses)
+    ImmutableArray<ObservableClassInfo> pipelineClasses)
 {
     foreach (var pipelineClass in pipelineClasses)
     {
@@ -120,8 +120,8 @@ private static void Generate(
         }
 
         // 파일명 생성
-        string fileName = $"{namespaceSuffix}{pipelineClass.ClassName}Pipeline.g.cs";
-        // "Repositories.UserRepositoryPipeline.g.cs"
+        string fileName = $"{namespaceSuffix}{pipelineClass.ClassName}Observable.g.cs";
+        // "Repositories.UserRepositoryObservable.g.cs"
 
         context.AddSource(fileName, SourceText.From(source, Encoding.UTF8));
     }
@@ -133,10 +133,10 @@ private static void Generate(
 ```
 입력 클래스                              생성되는 파일명
 ==========                              ===============
-MyApp.Repositories.UserRepository       Repositories.UserRepositoryPipeline.g.cs
-MyApp.Services.UserRepository           Services.UserRepositoryPipeline.g.cs
-MyApp.Data.UserRepository               Data.UserRepositoryPipeline.g.cs
-GlobalClass (글로벌 네임스페이스)        GlobalClassPipeline.g.cs
+MyApp.Repositories.UserRepository       Repositories.UserRepositoryObservable.g.cs
+MyApp.Services.UserRepository           Services.UserRepositoryObservable.g.cs
+MyApp.Data.UserRepository               Data.UserRepositoryObservable.g.cs
+GlobalClass (글로벌 네임스페이스)        GlobalClassObservable.g.cs
 ```
 
 ---
@@ -234,13 +234,13 @@ public class NamespaceTests
         string input = """
             namespace MyApp;
 
-            [GeneratePipeline]
+            [GeneratePortObservable]
             public class UserRepository : IPort { }
             """;
 
         string? actual = _sut.Generate(input);
         return Verify(actual);
-        // 생성 파일: UserRepositoryPipeline.g.cs
+        // 생성 파일: UserRepositoryObservable.g.cs
         // 코드 내 namespace: MyApp;
     }
 
@@ -250,13 +250,13 @@ public class NamespaceTests
         string input = """
             namespace A.B.C.D.E;
 
-            [GeneratePipeline]
+            [GeneratePortObservable]
             public class UserRepository : IPort { }
             """;
 
         string? actual = _sut.Generate(input);
         return Verify(actual);
-        // 생성 파일: E.UserRepositoryPipeline.g.cs
+        // 생성 파일: E.UserRepositoryObservable.g.cs
         // 코드 내 namespace: A.B.C.D.E;
     }
 
@@ -264,13 +264,13 @@ public class NamespaceTests
     public Task Should_Handle_Global_Namespace()
     {
         string input = """
-            [GeneratePipeline]
+            [GeneratePortObservable]
             public class UserRepository : IPort { }
             """;
 
         string? actual = _sut.Generate(input);
         return Verify(actual);
-        // 생성 파일: UserRepositoryPipeline.g.cs
+        // 생성 파일: UserRepositoryObservable.g.cs
         // 코드 내 namespace: 없음 (글로벌)
     }
 }

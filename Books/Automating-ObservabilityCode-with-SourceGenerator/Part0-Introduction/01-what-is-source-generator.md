@@ -58,14 +58,14 @@
 
 ```csharp
 // 개발자가 작성한 코드
-[GeneratePipeline]
+[GeneratePortObservable]
 public class UserRepository : IPort
 {
     public FinT<IO, User> GetUserAsync(int id) => ...;
 }
 
 // 컴파일러가 자동 생성한 코드 (소스 생성기에 의해)
-public partial class UserRepositoryPipeline
+public partial class UserRepositoryObservable
 {
     public FinT<IO, User> GetUserAsync(int id)
     {

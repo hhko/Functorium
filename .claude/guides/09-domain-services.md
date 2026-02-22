@@ -324,7 +324,7 @@ private readonly OrderCreditCheckService _creditCheckService = new();
 
 | 구분 | Domain Service | Adapter (IPort) |
 |------|---------------|-------------------|
-| **생성 방식** | Usecase에서 `new()` 직접 생성 | DI `RegisterScopedAdapterPipeline<I, P>()` |
+| **생성 방식** | Usecase에서 `new()` 직접 생성 | DI `RegisterScopedPortObservable<I, P>()` |
 | **Pipeline** | 불필요 (순수 로직) | 자동 생성 (관찰 가능성) |
 | **Lifetime** | Usecase와 동일 | Scoped (요청별) |
 | **관찰 가능성** | 불필요 | 자동 적용 |

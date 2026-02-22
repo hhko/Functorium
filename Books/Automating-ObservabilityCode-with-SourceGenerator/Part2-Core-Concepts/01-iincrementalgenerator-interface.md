@@ -240,13 +240,13 @@ public abstract class IncrementalGeneratorBase<TValue>(
 
 ```csharp
 [Generator(LanguageNames.CSharp)]
-public sealed class AdapterPipelineGenerator()
-    : IncrementalGeneratorBase<PipelineClassInfo>(
+public sealed class PortObservableGenerator()
+    : IncrementalGeneratorBase<ObservableClassInfo>(
         RegisterSourceProvider,    // 1단계 구현
         Generate,                  // 2단계 구현
         AttachDebugger: false)
 {
-    private static IncrementalValuesProvider<PipelineClassInfo> RegisterSourceProvider(
+    private static IncrementalValuesProvider<ObservableClassInfo> RegisterSourceProvider(
         IncrementalGeneratorInitializationContext context)
     {
         // 속성 정의 생성 + 클래스 필터링
@@ -254,7 +254,7 @@ public sealed class AdapterPipelineGenerator()
 
     private static void Generate(
         SourceProductionContext context,
-        ImmutableArray<PipelineClassInfo> pipelineClasses)
+        ImmutableArray<ObservableClassInfo> pipelineClasses)
     {
         // 각 클래스에 대해 Pipeline 코드 생성
     }
@@ -289,7 +289,7 @@ public readonly struct SourceProductionContext
 ctx.AddSource("UserRepository.g.cs", code);
 
 // 네임스페이스 충돌 방지를 위한 접두사 추가
-ctx.AddSource("Repositories.UserRepositoryPipeline.g.cs", code);
+ctx.AddSource("Repositories.UserRepositoryObservable.g.cs", code);
 ```
 
 ---

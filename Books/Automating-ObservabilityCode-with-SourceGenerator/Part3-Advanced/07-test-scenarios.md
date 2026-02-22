@@ -10,7 +10,7 @@
 
 ## 테스트 카테고리 개요
 
-AdapterPipelineGenerator는 27개의 테스트 시나리오를 7개 카테고리로 구성합니다.
+PortObservableGenerator는 27개의 테스트 시나리오를 7개 카테고리로 구성합니다.
 
 | 카테고리 | 테스트 수 | 검증 내용 |
 |----------|-----------|----------|
@@ -26,14 +26,14 @@ AdapterPipelineGenerator는 27개의 테스트 시나리오를 7개 카테고리
 
 ## 1. 기본 생성 테스트
 
-### GeneratePipelineAttribute 자동 생성
+### GeneratePortObservableAttribute 자동 생성
 
 ```csharp
 /// <summary>
-/// 소스 생성기가 [GeneratePipeline] Attribute를 자동으로 생성하는지 확인합니다.
+/// 소스 생성기가 [GeneratePortObservable] Attribute를 자동으로 생성하는지 확인합니다.
 /// </summary>
 [Fact]
-public Task AdapterPipelineGenerator_ShouldGenerate_GeneratePipelineAttribute()
+public Task PortObservableGenerator_ShouldGenerate_GeneratePortObservableAttribute()
 {
     // 빈 입력으로도 Attribute 코드가 생성됨
     string input = string.Empty;
@@ -61,7 +61,7 @@ public Task AdapterPipelineGenerator_ShouldGenerate_GeneratePipelineAttribute()
 public Task Should_Generate_PipelineClass_WithSingleMethod()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class TestAdapter : ITestAdapter
         {
             public virtual FinT<IO, int> GetValue() => FinT<IO, int>.Succ(42);
@@ -83,7 +83,7 @@ public Task Should_Generate_PipelineClass_WithSingleMethod()
 public Task Should_Generate_PipelineClass_WithMultipleMethods()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class MultiMethodAdapter : IMultiMethodAdapter
         {
             public virtual FinT<IO, int> GetValue() => ...;
@@ -107,7 +107,7 @@ public Task Should_Generate_PipelineClass_WithMultipleMethods()
 public Task Should_NotGenerate_PipelineClass_WhenNoMethods()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class EmptyAdapter : IPort
         {
             public string RequestCategory => "Test";
@@ -137,7 +137,7 @@ public Task Should_NotGenerate_PipelineClass_WhenNoMethods()
 public Task Should_Generate_LoggerMessageDefine_WithZeroParameters()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class ZeroParamAdapter : IPort
         {
             public virtual FinT<IO, int> GetValue() => ...;
@@ -151,7 +151,7 @@ public Task Should_Generate_LoggerMessageDefine_WithZeroParameters()
 public Task Should_Generate_LoggerMessageDefine_WithTwoParameters()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class TwoParamAdapter : IPort
         {
             public virtual FinT<IO, string> GetData(int id, string name) => ...;
@@ -165,7 +165,7 @@ public Task Should_Generate_LoggerMessageDefine_WithTwoParameters()
 public Task Should_Generate_LogDebugFallback_WithThreeParameters()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class ThreeParamAdapter : IPort
         {
             public virtual FinT<IO, string> GetData(int id, string name, bool flag) => ...;
@@ -185,7 +185,7 @@ public Task Should_Generate_LogDebugFallback_WithThreeParameters()
 public Task Should_Generate_CollectionCountFields()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class CollectionParamAdapter : IPort
         {
             public virtual FinT<IO, int> ProcessItems(List<string> items) => ...;
@@ -205,7 +205,7 @@ public Task Should_Generate_CollectionCountFields()
 public Task Should_NotGenerate_Count_ForTupleParameter()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class TupleAdapter : IPort
         {
             // 튜플 내부에 List가 있어도 Count 미생성
@@ -230,7 +230,7 @@ public Task Should_NotGenerate_Count_ForTupleParameter()
 public Task Should_Generate_PipelineClass_WithSimpleReturnType()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class SimpleAdapter : IPort
         {
             public virtual FinT<IO, int> GetNumber() => ...;
@@ -252,7 +252,7 @@ public Task Should_Generate_PipelineClass_WithSimpleReturnType()
 public Task Should_Generate_PipelineClass_WithCollectionReturnType()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class CollectionAdapter : IPort
         {
             public virtual FinT<IO, List<User>> GetUsers() => ...;
@@ -273,7 +273,7 @@ public Task Should_Generate_PipelineClass_WithCollectionReturnType()
 public Task Should_Generate_PipelineClass_WithComplexGenericReturnType()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class ComplexAdapter : IPort
         {
             public virtual FinT<IO, Dictionary<string, List<int>>> GetComplexData() => ...;
@@ -293,7 +293,7 @@ public Task Should_Generate_PipelineClass_WithComplexGenericReturnType()
 public Task Should_Generate_PipelineClass_WithTupleReturnType()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class TupleAdapter : IPort
         {
             public virtual FinT<IO, (int Id, string Name)> GetUserInfo() => ...;
@@ -318,7 +318,7 @@ public Task Should_Generate_PipelineClass_WithTupleReturnType()
 public Task Should_Generate_PipelineClass_WithPrimaryConstructor()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class PrimaryCtorAdapter(string connectionString) : IPort
         {
             public virtual FinT<IO, string> GetConnectionString() => ...;
@@ -338,7 +338,7 @@ public Task Should_Generate_PipelineClass_WithPrimaryConstructor()
 public Task Should_Generate_PipelineClass_WithMultipleConstructors()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class MultiCtorAdapter : IPort
         {
             public MultiCtorAdapter() { }
@@ -360,7 +360,7 @@ public Task Should_Generate_PipelineClass_WithMultipleConstructors()
 public Task Should_Generate_PipelineClass_WithParameterNameConflict()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class ConflictAdapter(ILogger<ConflictAdapter> logger) : IPort
         {
             // logger → baseLogger로 변환 필요
@@ -381,7 +381,7 @@ public Task Should_Generate_PipelineClass_WithParameterNameConflict()
 public Task Should_Generate_PipelineClass_WithDirectIPortImplementation()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class DirectAdapter : IPort
         {
             public virtual FinT<IO, int> GetValue() => ...;
@@ -406,7 +406,7 @@ public Task Should_Generate_PipelineClass_WithInheritedIPortInterface()
             FinT<IO, string> GetUserById(int id);
         }
 
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class UserRepository : IUserRepository { ... }
         """;
     // ...
@@ -420,7 +420,7 @@ public Task Should_Generate_PipelineClass_WithInheritedIPortInterface()
 public Task Should_Generate_PipelineClass_WithMultipleInterfaces()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class MultiInterfaceAdapter : IPort, IDisposable
         {
             public virtual FinT<IO, int> GetValue() => ...;
@@ -444,10 +444,10 @@ public Task Should_Generate_PipelineClass_WithSimpleNamespace()
     string input = """
         namespace MyApp;
 
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class SimpleAdapter : IPort { ... }
         """;
-    // 생성 파일: MyApp.SimpleAdapterPipeline.g.cs
+    // 생성 파일: MyApp.SimplePortObservable.g.cs
 }
 ```
 
@@ -460,10 +460,10 @@ public Task Should_Generate_PipelineClass_WithDeepNamespace()
     string input = """
         namespace Company.Domain.Adapters.Infrastructure.Repositories;
 
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class DeepAdapter : IPort { ... }
         """;
-    // 생성 파일: Company.Domain.Adapters.Infrastructure.Repositories.DeepAdapterPipeline.g.cs
+    // 생성 파일: Company.Domain.Adapters.Infrastructure.Repositories.DeepPortObservable.g.cs
 }
 ```
 
@@ -506,8 +506,8 @@ Should_NotGenerate_Count_ForTupleContainingCollection()
 {Generator}_{Should/ShouldNot}_{Action}_{Condition}
 
 예시:
-AdapterPipelineGenerator_ShouldGenerate_PipelineClass_WithPrimaryConstructor
-AdapterPipelineGenerator_ShouldNotGenerate_Count_ForTupleReturnType
+PortObservableGenerator_ShouldGenerate_PipelineClass_WithPrimaryConstructor
+PortObservableGenerator_ShouldNotGenerate_Count_ForTupleReturnType
 ```
 
 ---

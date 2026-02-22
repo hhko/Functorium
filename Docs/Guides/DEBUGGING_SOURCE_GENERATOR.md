@@ -31,12 +31,12 @@ Functorium.SourceGenerators\Generators\IncrementalGeneratorBase.cs
 
 ### 1단계: AttachDebugger 파라미터 활성화
 
-`Functorium.SourceGenerators\AdapterPipelineGenerator.cs` 파일 수정:
+`Functorium.SourceGenerators\PortObservableGenerator.cs` 파일 수정:
 
 ```csharp
 [Generator(LanguageNames.CSharp)]
-public sealed class AdapterPipelineGenerator()
-    : IncrementalGeneratorBase<PipelineClassInfo>(
+public sealed class PortObservableGenerator()
+    : IncrementalGeneratorBase<ObservableClassInfo>(
         RegisterSourceProvider,
         Generate,
         AttachDebugger: true)  // 🔧 디버깅 활성화
@@ -54,8 +54,8 @@ public sealed class AdapterPipelineGenerator()
 Functorium.SourceGenerators\Generators\IncrementalGeneratorBase.cs
 - Line 32: IncrementalValuesProvider<TValue> provider = ...
 
-Functorium.SourceGenerators\AdapterPipelineGenerator.cs
-- Line 66: private static PipelineClassInfo MapToPipelineClassInfo(...)
+Functorium.SourceGenerators\PortObservableGenerator.cs
+- Line 66: private static ObservableClassInfo MapToObservableClassInfo(...)
 - Line 130: private static void Generate(...)
 ```
 
@@ -95,8 +95,8 @@ dotnet build Observability.Adapters.Infrastructure
 
 ```csharp
 [Generator(LanguageNames.CSharp)]
-public sealed class AdapterPipelineGenerator()
-    : IncrementalGeneratorBase<PipelineClassInfo>(
+public sealed class PortObservableGenerator()
+    : IncrementalGeneratorBase<ObservableClassInfo>(
         RegisterSourceProvider,
         Generate,
         AttachDebugger: false)  // ⚠️ 디버깅 비활성화
@@ -113,14 +113,14 @@ public sealed class AdapterPipelineGenerator()
 ### 1단계: 테스트 프로젝트 열기
 
 ```
-Functorium.Tests.Unit\AdaptersTests\SourceGenerators\AdapterPipelineGeneratorTests.cs
+Functorium.Tests.Unit\AdaptersTests\SourceGenerators\PortObservableGeneratorTests.cs
 ```
 
 ### 2단계: 테스트 코드에 브레이크포인트 설정
 
 ```csharp
 [Fact]
-public Task AdapterPipelineGenerator_ShouldGeneratePipeline_WithTupleTypes()
+public Task PortObservableGenerator_ShouldGenerateObservable_WithTupleTypes()
 {
     // Arrange
     string input = """
@@ -139,15 +139,15 @@ public Task AdapterPipelineGenerator_ShouldGeneratePipeline_WithTupleTypes()
 ### 3단계: 소스 생성기 코드에 브레이크포인트 설정
 
 ```csharp
-// Functorium.SourceGenerators\AdapterPipelineGenerator.cs
-private static PipelineClassInfo MapToPipelineClassInfo(
+// Functorium.SourceGenerators\PortObservableGenerator.cs
+private static ObservableClassInfo MapToObservableClassInfo(
     GeneratorAttributeSyntaxContext context,
     CancellationToken cancellationToken)
 {
     // 클래스가 없을 때
     if (context.TargetSymbol is not INamedTypeSymbol classSymbol)  // ⬅️ 브레이크포인트
     {
-        return PipelineClassInfo.None;
+        return ObservableClassInfo.None;
     }
 
     // 클래스 이름과 네임스페이스
@@ -222,9 +222,9 @@ Solution Explorer
 → Dependencies
 → Analyzers
 → Functorium.SourceGenerators
-→ Functorium.SourceGenerators.AdapterPipelineGenerator
-   → GeneratePipelineAttribute.g.cs
-   → Repositories.RepositoryIoPipeline.g.cs
+→ Functorium.SourceGenerators.PortObservableGenerator
+   → GeneratePortObservableAttribute.g.cs
+   → Repositories.RepositoryIoObservable.g.cs
    → ...
 ```
 
@@ -244,12 +244,12 @@ dotnet build Observability.Adapters.Infrastructure -v:diag > build.log
 생성기 내에서 심볼 정보를 확인하는 코드:
 
 ```csharp
-private static PipelineClassInfo MapToPipelineClassInfo(
+private static ObservableClassInfo MapToObservableClassInfo(
     GeneratorAttributeSyntaxContext context,
     CancellationToken cancellationToken)
 {
     if (context.TargetSymbol is not INamedTypeSymbol classSymbol)
-        return PipelineClassInfo.None;
+        return ObservableClassInfo.None;
 
     // 디버깅: 클래스 정보 확인
     string className = classSymbol.Name;  // ⬅️ 브레이크포인트: "RepositoryIo"

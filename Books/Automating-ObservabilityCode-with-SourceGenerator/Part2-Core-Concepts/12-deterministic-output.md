@@ -33,12 +33,12 @@
 ```
 결정적 출력
 ==========
-빌드 1: UserRepository → UserRepositoryPipeline.g.cs (내용 X)
+빌드 1: UserRepository → UserRepositoryObservable.g.cs (내용 X)
 빌드 2: UserRepository (변경 없음) → 캐시 사용 (빌드 생략)
 
 비결정적 출력
 ============
-빌드 1: UserRepository → UserRepositoryPipeline.g.cs (내용 X)
+빌드 1: UserRepository → UserRepositoryObservable.g.cs (내용 X)
 빌드 2: UserRepository (변경 없음) → 내용 X' (다름) → 다시 빌드
 ```
 
@@ -231,7 +231,7 @@ diff /tmp/first.cs /tmp/second.cs
 public void Generated_Code_Should_Be_Deterministic()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class UserRepository : IPort
         {
             public FinT<IO, User> GetUserAsync(int id) => throw new();
@@ -254,7 +254,7 @@ public void Generated_Code_Should_Be_Deterministic()
 public Task Generated_Code_Should_Match_Snapshot()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class UserRepository : IPort
         {
             public FinT<IO, User> GetUserAsync(int id) => throw new();

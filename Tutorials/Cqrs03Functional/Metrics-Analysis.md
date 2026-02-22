@@ -144,7 +144,7 @@ Usecase Metrics는 `UsecaseMetricsPipeline<TRequest, TResponse>`에서 자동으
 
 ## IPort Metrics 형식
 
-IPort Metrics는 소스 생성기(`AdapterPipelineGenerator`)에 의해 자동 생성된 Pipeline 클래스에서 `IPortMetric` 인터페이스를 통해 수집됩니다. `[GeneratePipeline]` 애트리뷰트가 적용된 클래스에 대해 자동으로 Metrics 수집이 활성화됩니다.
+IPort Metrics는 소스 생성기(`PortObservableGenerator`)에 의해 자동 생성된 Pipeline 클래스에서 `IPortMetric` 인터페이스를 통해 수집됩니다. `[GeneratePortObservable]` 애트리뷰트가 적용된 클래스에 대해 자동으로 Metrics 수집이 활성화됩니다.
 
 **중요**: IPort Metrics는 **RequestCategory별로 Meter와 Metrics가 분리**되어 관리됩니다.
 
@@ -396,6 +396,6 @@ histogram_quantile(0.99, rate(adapter_repository_op_duration_bucket[5m]))
 - **Usecase Metrics**: `Src/Functorium/Applications/Pipelines/UsecaseMetricsPipeline.cs`
 - **Usecase Metrics 필드 정의**: `Src/Functorium/Applications/Observabilities/UsecaseFields.cs`
 - **IPort Metrics 구현**: `Src/Functorium/Adapters/Observabilities/Metrics/AdapterMetric.cs`
-- **IPort Pipeline 생성기**: `Src/Functorium.SourceGenerators/AdapterPipelineGenerator.cs`
+- **IPort Pipeline 생성기**: `Src/Functorium.SourceGenerators/PortObservableGenerator.cs`
 - **Observability 필드 정의**: `Src/Functorium/Adapters/Observabilities/ObservabilityFields.cs`
 

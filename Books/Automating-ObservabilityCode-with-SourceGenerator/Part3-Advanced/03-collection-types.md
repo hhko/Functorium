@@ -38,8 +38,8 @@ public override FinT<IO, List<User>> GetUsersAsync() =>
 ### 컬렉션 패턴 정의
 
 ```csharp
-// Generators/AdapterPipelineGenerator/CollectionTypeHelper.cs
-namespace Functorium.SourceGenerators.Generators.AdapterPipelineGenerator;
+// Generators/PortObservableGenerator/CollectionTypeHelper.cs
+namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
 
 /// <summary>
 /// 컬렉션 타입 여부를 확인하는 헬퍼 클래스
@@ -354,7 +354,7 @@ activityContext?.SetTag("Response_ResultCount", result?.Length ?? 0);  // ← Le
 public Task Should_Generate_CollectionCountFields_WithCollectionParameters()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class DataRepository : IPort
         {
             public virtual FinT<IO, int> ProcessItems(List<string> items)
@@ -380,7 +380,7 @@ public Task Should_Not_Generate_Count_ForTupleContainingCollection()
 {
     // 튜플 내부에 컬렉션이 있어도 Count 미생성
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class UserRepository : IPort
         {
             public virtual FinT<IO, (int Id, List<string> Tags)> GetUserWithTags()
@@ -404,7 +404,7 @@ public Task Should_Not_Generate_Count_ForTupleContainingCollection()
 public Task Should_Not_Generate_Length_ForTupleContainingArray()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class StudentRepository : IPort
         {
             public virtual FinT<IO, (string Name, int[] Scores)> GetStudentScores()

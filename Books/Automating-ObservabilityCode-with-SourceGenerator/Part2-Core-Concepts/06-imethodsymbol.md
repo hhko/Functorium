@@ -187,7 +187,7 @@ bool isThis = param.IsThis;          // 확장 메서드의 this
 ## 실제 활용: MethodInfo 생성
 
 ```csharp
-// AdapterPipelineGenerator.cs에서 메서드 정보 추출
+// PortObservableGenerator.cs에서 메서드 정보 추출
 var methods = classSymbol.AllInterfaces
     .Where(ImplementsIPort)
     .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
@@ -210,13 +210,13 @@ var methods = classSymbol.AllInterfaces
 ### MethodInfo 레코드
 
 ```csharp
-// Generators/AdapterPipelineGenerator/MethodInfo.cs
+// Generators/PortObservableGenerator/MethodInfo.cs
 public sealed record MethodInfo(
     string Name,
     List<ParameterInfo> Parameters,
     string ReturnType);
 
-// Generators/AdapterPipelineGenerator/ParameterInfo.cs
+// Generators/PortObservableGenerator/ParameterInfo.cs
 public sealed record ParameterInfo(
     string Name,
     string Type,

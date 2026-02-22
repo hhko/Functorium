@@ -347,7 +347,7 @@ MyProject.ValueObjects.PhoneNumber:
 | `DtoArchitectureRuleTests` | 5 | DTO/Model/Mapper: Persistence Mapper internal static, Usecase nested Request/Response |
 | `UsecaseArchitectureRuleTests` | 4 | Command/Query: 내부 Validator/Usecase nested class 존재 |
 | `SpecificationArchitectureRuleTests` | 3 | Specification: public sealed, 상속, Domain 레이어 거주 |
-| `PortAndAdapterArchitectureRuleTests` | 3 | Adapter: GeneratePipeline 어트리뷰트, RequestCategory, DomainService sealed |
+| `PortAndAdapterArchitectureRuleTests` | 3 | Adapter: GeneratePortObservable 어트리뷰트, RequestCategory, DomainService sealed |
 
 ### 사용 패턴: ValueObject 불변성 검증
 

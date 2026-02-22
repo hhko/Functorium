@@ -94,7 +94,7 @@ ProcessData(int id, List<T> data, string name)
 ### 파라미터 수 계산
 
 ```csharp
-// AdapterPipelineGenerator.cs
+// PortObservableGenerator.cs
 
 // ===== LoggerMessage.Define 제약 검사 =====
 // .NET의 LoggerMessage.Define<T1, T2, ..., T6>은 최대 6개의 타입 파라미터만 지원합니다.
@@ -231,7 +231,7 @@ int totalResponseFields = baseResponseFields + (isCollectionReturn ? 1 : 0);
 public Task Should_Generate_LoggerMessageDefine_WithTwoParameters()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class DataRepository : IPort
         {
             public virtual FinT<IO, string> GetData(int id, string name)
@@ -256,7 +256,7 @@ public Task Should_Generate_LoggerMessageDefine_WithTwoParameters()
 public Task Should_Generate_LogDebugFallback_WithThreeParameters()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class DataRepository : IPort
         {
             public virtual FinT<IO, string> GetData(int id, string name, bool isActive)
@@ -280,7 +280,7 @@ public Task Should_Generate_LogDebugFallback_WithThreeParameters()
 public Task Should_Generate_LoggerMessageDefine_WithZeroParameters()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class DataRepository : IPort
         {
             public virtual FinT<IO, int> GetValue()

@@ -29,8 +29,8 @@ void LogSuccess(User result, double elapsed)
 ### 전체 구현
 
 ```csharp
-// Generators/AdapterPipelineGenerator/TypeExtractor.cs
-namespace Functorium.SourceGenerators.Generators.AdapterPipelineGenerator;
+// Generators/PortObservableGenerator/TypeExtractor.cs
+namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
 
 /// <summary>
 /// 제네릭 타입에서 특정 타입 파라미터를 추출하는 유틸리티
@@ -119,10 +119,10 @@ public static class TypeExtractor
 ### 로깅 메서드 생성
 
 ```csharp
-// AdapterPipelineGenerator.cs에서
+// PortObservableGenerator.cs에서
 private static void GenerateMethod(
     StringBuilder sb,
-    PipelineClassInfo classInfo,
+    ObservableClassInfo classInfo,
     MethodInfo method)
 {
     // 반환 타입에서 실제 타입 추출
@@ -154,7 +154,7 @@ public interface IUserRepository : IPort
 }
 
 // 생성되는 코드
-public class UserRepositoryPipeline : UserRepository
+public class UserRepositoryObservable : UserRepository
 {
     // GetUserAsync의 성공 로깅 - User 타입 사용
     private void LogGetUserAsyncSuccess(

@@ -1152,7 +1152,7 @@ return AdapterError.FromException<ExternalApiService>(
 ### 6.3 Repository 구현 예시
 
 ```csharp
-[GeneratePipeline]
+[GeneratePortObservable]
 public class InMemoryProductRepository : IProductRepository
 {
     private static readonly ConcurrentDictionary<ProductId, Product> _products = new();
@@ -1212,7 +1212,7 @@ public class InMemoryProductRepository : IProductRepository
 ### 6.4 외부 API 서비스 구현 예시
 
 ```csharp
-[GeneratePipeline]
+[GeneratePortObservable]
 public class ExternalPricingApiService : IExternalPricingService
 {
     public sealed record OperationCancelled : AdapterErrorType.Custom;

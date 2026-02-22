@@ -162,7 +162,7 @@ Functorium.SourceGenerators/
 │
 ├── Functorium.SourceGenerators.csproj
 │
-├── AdapterPipelineGenerator.cs          # 메인 소스 생성기
+├── PortObservableGenerator.cs          # 메인 소스 생성기
 │
 ├── Abstractions/
 │   ├── Constants.cs                     # 공통 상수 (헤더 등)
@@ -171,8 +171,8 @@ Functorium.SourceGenerators/
 └── Generators/
     ├── IncrementalGeneratorBase.cs      # 템플릿 메서드 패턴 기반 클래스
     │
-    └── AdapterPipelineGenerator/        # 생성기별 헬퍼 클래스
-        ├── PipelineClassInfo.cs         # 클래스 정보 레코드
+    └── PortObservableGenerator/        # 생성기별 헬퍼 클래스
+        ├── ObservableClassInfo.cs         # 클래스 정보 레코드
         ├── MethodInfo.cs                # 메서드 정보 레코드
         ├── ParameterInfo.cs             # 파라미터 정보 레코드
         ├── TypeExtractor.cs             # 타입 추출 유틸리티
@@ -186,21 +186,21 @@ Functorium.SourceGenerators/
 
 ## 데이터 모델 (레코드)
 
-### PipelineClassInfo
+### ObservableClassInfo
 
 ```csharp
-namespace Functorium.SourceGenerators.Generators.AdapterPipelineGenerator;
+namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
 
 /// <summary>
 /// 파이프라인 생성에 필요한 클래스 정보
 /// </summary>
-public sealed record PipelineClassInfo(
+public sealed record ObservableClassInfo(
     string Namespace,                               // 네임스페이스
     string ClassName,                               // 클래스 이름
     List<MethodInfo> Methods,                       // 메서드 목록
     List<ParameterInfo> BaseConstructorParameters)  // 생성자 파라미터
 {
-    public static readonly PipelineClassInfo None = new(
+    public static readonly ObservableClassInfo None = new(
         string.Empty, string.Empty, [], []);
 }
 ```
@@ -321,7 +321,7 @@ ls bin/Debug/netstandard2.0/
 | `IsRoslynComponent` | IDE가 소스 생성기로 인식 |
 | `PrivateAssets="all"` | Roslyn 패키지 전이 방지 |
 | `OutputItemType="Analyzer"` | 프로젝트 참조 시 분석기로 처리 |
-| 데이터 모델 | 불변 레코드로 정의 (PipelineClassInfo 등) |
+| 데이터 모델 | 불변 레코드로 정의 (ObservableClassInfo 등) |
 
 ---
 

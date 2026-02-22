@@ -56,8 +56,8 @@ RegisterSourceOutput
 **복수(0개 이상)**의 값을 나타냅니다:
 
 ```csharp
-// 여러 클래스가 [GeneratePipeline] 속성을 가질 수 있음
-IncrementalValuesProvider<PipelineClassInfo> provider = context.SyntaxProvider
+// 여러 클래스가 [GeneratePortObservable] 속성을 가질 수 있음
+IncrementalValuesProvider<ObservableClassInfo> provider = context.SyntaxProvider
     .ForAttributeWithMetadataName(...);
 
 // 0개: 속성이 붙은 클래스 없음
@@ -75,7 +75,7 @@ IncrementalValueProvider<CompilationOptions> options =
     context.CompilationOptionsProvider;
 
 // Collect로 변환하면 단일 값이 됨
-IncrementalValueProvider<ImmutableArray<PipelineClassInfo>> collected =
+IncrementalValueProvider<ImmutableArray<ObservableClassInfo>> collected =
     provider.Collect();
 ```
 
@@ -91,7 +91,7 @@ var classNames = context.SyntaxProvider
     .ForAttributeWithMetadataName(...)
     .Select((ctx, _) => ctx.TargetSymbol.Name);
 
-// PipelineClassInfo → 생성할 코드
+// ObservableClassInfo → 생성할 코드
 var codes = provider
     .Select((info, _) => GenerateCode(info));
 ```
@@ -101,7 +101,7 @@ var codes = provider
 ```csharp
 // 유효한 항목만 선택
 var validClasses = provider
-    .Where(x => x != PipelineClassInfo.None);
+    .Where(x => x != ObservableClassInfo.None);
 
 // public 클래스만 선택
 var publicClasses = provider
@@ -140,28 +140,28 @@ context.RegisterSourceOutput(combined, (ctx, pair) =>
 
 ---
 
-## 실제 코드: AdapterPipelineGenerator
+## 실제 코드: PortObservableGenerator
 
 ```csharp
-private static IncrementalValuesProvider<PipelineClassInfo> RegisterSourceProvider(
+private static IncrementalValuesProvider<ObservableClassInfo> RegisterSourceProvider(
     IncrementalGeneratorInitializationContext context)
 {
     // 1단계: 고정 코드 생성 (Attribute 정의)
     context.RegisterPostInitializationOutput(ctx =>
         ctx.AddSource(
-            hintName: GeneratePipelineAttributeFileName,
-            sourceText: SourceText.From(GeneratePipelineAttribute, Encoding.UTF8)));
+            hintName: GeneratePortObservableAttributeFileName,
+            sourceText: SourceText.From(GeneratePortObservableAttribute, Encoding.UTF8)));
 
     // 2단계: 파이프라인 구성
     return context
         .SyntaxProvider
-        // [GeneratePipeline] 속성이 붙은 클래스만 선택
+        // [GeneratePortObservable] 속성이 붙은 클래스만 선택
         .ForAttributeWithMetadataName(
             fullyQualifiedMetadataName: FullyQualifiedAttributeName,
             predicate: IsClass,                    // Syntax 수준 필터
-            transform: MapToPipelineClassInfo)     // Semantic 정보 추출
+            transform: MapToObservableClassInfo)     // Semantic 정보 추출
         // 유효하지 않은 항목 제외
-        .Where(x => x != PipelineClassInfo.None);
+        .Where(x => x != ObservableClassInfo.None);
 }
 ```
 
@@ -288,14 +288,14 @@ Provider 패턴의 핵심 장점은 **자동 캐싱**입니다:
 
 ```csharp
 // ✅ 레코드 사용 (자동으로 Equals/GetHashCode 구현)
-public sealed record PipelineClassInfo(
+public sealed record ObservableClassInfo(
     string Namespace,
     string ClassName,
     List<MethodInfo> Methods,
     List<ParameterInfo> BaseConstructorParameters)
 {
     // None 패턴으로 null 대신 빈 객체 사용
-    public static readonly PipelineClassInfo None = new(
+    public static readonly ObservableClassInfo None = new(
         string.Empty, string.Empty, [], []);
 }
 

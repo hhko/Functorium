@@ -152,7 +152,7 @@ public class GetProductUsecase(IProductRepository repository)
 }
 
 // Infrastructure Layer에서 구현 + 자동 관찰성
-[GeneratePipeline]  // 로깅, 트레이싱, 메트릭 자동 생성
+[GeneratePortObservable]  // 로깅, 트레이싱, 메트릭 자동 생성
 public class InMemoryProductRepository : IProductRepository
 {
     public string RequestCategory => "Repository";
@@ -174,7 +174,7 @@ public class InMemoryProductRepository : IProductRepository
 |------|------|
 | **Port-Adapter 패턴** | Application Layer는 Port(인터페이스)만 알고, Infrastructure Layer가 Adapter를 구현 |
 | **함수형 반환 타입** | `FinT<IO, T>`로 비동기 작업과 에러 처리를 함수형으로 합성 |
-| **자동 관찰성** | `[GeneratePipeline]` 속성으로 로깅, 트레이싱, 메트릭 자동 생성 |
+| **자동 관찰성** | `[GeneratePortObservable]` 속성으로 로깅, 트레이싱, 메트릭 자동 생성 |
 | **테스트 용이성** | 인터페이스 기반으로 Mock 객체 쉽게 생성 |
 
 ### Adapter 유형
@@ -553,7 +553,7 @@ public interface IProductRepository : IPort
 ┌────────────────────────────────────────────────────────────────────────────────┐
 │                      INFRASTRUCTURE / PERSISTENCE LAYER                        │
 │  ┌──────────────────────────────────────────────────────────────────────────┐ │
-│  │ [GeneratePipeline]                                                        │ │
+│  │ [GeneratePortObservable]                                                        │ │
 │  │ EfCoreProductRepository : IProductRepository                              │ │
 │  │   RequestCategory => "Repository"                                         │ │
 │  │                                                                           │ │

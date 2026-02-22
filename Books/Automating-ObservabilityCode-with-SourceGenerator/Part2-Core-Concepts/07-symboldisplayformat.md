@@ -20,7 +20,7 @@
 "global::MyApp.Models.User"
 
 // 문제: 캐싱 무효화
-// 빌드 A에서: "User" → UserPipeline.g.cs 생성
+// 빌드 A에서: "User" → UserObservable.g.cs 생성
 // 빌드 B에서: "MyApp.User" → 다른 파일로 인식 → 캐시 미스
 ```
 
@@ -172,7 +172,7 @@ SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
 ### SymbolDisplayFormats.cs
 
 ```csharp
-namespace Functorium.SourceGenerators.Generators.AdapterPipelineGenerator;
+namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
 
 /// <summary>
 /// 결정적 코드 생성을 위한 SymbolDisplayFormat 정의

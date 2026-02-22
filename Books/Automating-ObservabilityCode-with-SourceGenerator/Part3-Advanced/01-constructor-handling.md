@@ -14,19 +14,19 @@ Pipeline 클래스는 원본 클래스를 **상속**합니다. 부모 클래스�
 
 ```csharp
 // 원본 클래스 (Primary Constructor)
-[GeneratePipeline]
+[GeneratePortObservable]
 public class UserRepository(ILogger<UserRepository> logger) : IPort
 {
     public FinT<IO, User> GetUserAsync(int id) => ...;
 }
 
 // 생성되는 Pipeline 클래스
-public class UserRepositoryPipeline : UserRepository
+public class UserRepositoryObservable : UserRepository
 {
     // 부모의 logger 파라미터를 전달해야 함!
-    public UserRepositoryPipeline(
+    public UserRepositoryObservable(
         ActivityContext parentContext,
-        ILogger<UserRepositoryPipeline> logger,
+        ILogger<UserRepositoryObservable> logger,
         IPortTrace adapterTrace,
         IPortMetric adapterMetric,
         ILogger<UserRepository> baseLogger)  // ← 부모용 logger
@@ -44,8 +44,8 @@ public class UserRepositoryPipeline : UserRepository
 ### 전체 구현
 
 ```csharp
-// Generators/AdapterPipelineGenerator/ConstructorParameterExtractor.cs
-namespace Functorium.SourceGenerators.Generators.AdapterPipelineGenerator;
+// Generators/PortObservableGenerator/ConstructorParameterExtractor.cs
+namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
 
 /// <summary>
 /// 클래스의 생성자 파라미터를 추출합니다.
@@ -154,10 +154,10 @@ var constructor = classSymbol.Constructors
 public class UserRepository(ILogger<UserRepository> logger) : IPort { }
 
 // 생성되는 Pipeline (충돌!)
-public class UserRepositoryPipeline : UserRepository
+public class UserRepositoryObservable : UserRepository
 {
-    public UserRepositoryPipeline(
-        ILogger<UserRepositoryPipeline> logger,  // Pipeline용 logger
+    public UserRepositoryObservable(
+        ILogger<UserRepositoryObservable> logger,  // Pipeline용 logger
         ILogger<UserRepository> logger)          // ❌ 같은 이름!
         : base(logger)
     {
@@ -168,8 +168,8 @@ public class UserRepositoryPipeline : UserRepository
 ### ParameterNameResolver
 
 ```csharp
-// Generators/AdapterPipelineGenerator/ParameterNameResolver.cs
-namespace Functorium.SourceGenerators.Generators.AdapterPipelineGenerator;
+// Generators/PortObservableGenerator/ParameterNameResolver.cs
+namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
 
 /// <summary>
 /// 파라미터 이름 충돌을 해결합니다.
@@ -221,11 +221,11 @@ public sealed record ResolvedParameter(
 // 원본: logger
 // 해결: baseLogger
 
-public class UserRepositoryPipeline : UserRepository
+public class UserRepositoryObservable : UserRepository
 {
-    public UserRepositoryPipeline(
+    public UserRepositoryObservable(
         ActivityContext parentContext,
-        ILogger<UserRepositoryPipeline> logger,      // Pipeline용
+        ILogger<UserRepositoryObservable> logger,      // Pipeline용
         IPortTrace adapterTrace,
         IPortMetric adapterMetric,
         ILogger<UserRepository> baseLogger)           // ← 이름 변경됨
@@ -297,7 +297,7 @@ private static string GenerateBaseConstructorCall(
 public Task Should_Handle_Primary_Constructor()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class UserRepository(ILogger<UserRepository> logger) : IPort
         {
             public FinT<IO, User> GetUserAsync(int id) => throw new();
@@ -316,7 +316,7 @@ public Task Should_Handle_Primary_Constructor()
 public Task Should_Select_Constructor_With_Most_Parameters()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class UserRepository : IPort
         {
             public UserRepository() { }
@@ -337,7 +337,7 @@ public Task Should_Select_Constructor_With_Most_Parameters()
 public Task Should_Resolve_Parameter_Name_Conflict()
 {
     string input = """
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class UserRepository(ILogger<UserRepository> logger) : IPort { }
         """;
 

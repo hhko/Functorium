@@ -68,10 +68,10 @@ public abstract class IncrementalGeneratorBase<TValue>(
 ### 디버깅 활성화
 
 ```csharp
-// AdapterPipelineGenerator.cs
+// PortObservableGenerator.cs
 [Generator(LanguageNames.CSharp)]
-public sealed class AdapterPipelineGenerator()
-    : IncrementalGeneratorBase<PipelineClassInfo>(
+public sealed class PortObservableGenerator()
+    : IncrementalGeneratorBase<ObservableClassInfo>(
         RegisterSourceProvider,
         Generate,
         AttachDebugger: true)  // 🔧 true로 변경
@@ -170,7 +170,7 @@ public Task Should_Generate_Pipeline_For_Simple_Adapter()
             FinT<IO, User> GetUserAsync(int id);
         }
 
-        [GeneratePipeline]
+        [GeneratePortObservable]
         public class UserRepository : IUserRepository
         {
             public FinT<IO, User> GetUserAsync(int id) => throw new NotImplementedException();
@@ -191,8 +191,8 @@ public Task Should_Generate_Pipeline_For_Simple_Adapter()
 1. 테스트 메서드에 브레이크포인트 설정
 
 2. 소스 생성기 코드에 브레이크포인트 설정
-   - AdapterPipelineGenerator.cs: MapToPipelineClassInfo()
-   - AdapterPipelineGenerator.cs: Generate()
+   - PortObservableGenerator.cs: MapToObservableClassInfo()
+   - PortObservableGenerator.cs: Generate()
 
 3. Test Explorer 열기 (Ctrl+E, T)
 
@@ -250,9 +250,9 @@ Solution Explorer
 → Dependencies
 → Analyzers
 → Functorium.SourceGenerators
-→ Functorium.SourceGenerators.AdapterPipelineGenerator
-   → GeneratePipelineAttribute.g.cs
-   → Repositories.UserRepositoryPipeline.g.cs
+→ Functorium.SourceGenerators.PortObservableGenerator
+   → GeneratePortObservableAttribute.g.cs
+   → Repositories.UserRepositoryObservable.g.cs
    → ...
 ```
 

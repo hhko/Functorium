@@ -4,7 +4,7 @@
 
 - INamedTypeSymbol로 클래스/인터페이스 정보 추출
 - AllInterfaces, GetMembers() 활용법 습득
-- 실제 AdapterPipelineGenerator에서의 활용 패턴 학습
+- 실제 PortObservableGenerator에서의 활용 패턴 학습
 
 ---
 
@@ -108,7 +108,7 @@ var allInterfaces = classSymbol.AllInterfaces;
 ### IPort 구현 확인
 
 ```csharp
-// AdapterPipelineGenerator.cs에서
+// PortObservableGenerator.cs에서
 private static bool ImplementsIPort(INamedTypeSymbol interfaceSymbol)
 {
     // IPort 자체인지 확인
@@ -153,7 +153,7 @@ var fields = classSymbol.GetMembers()
 ### 인터페이스에서 메서드 추출
 
 ```csharp
-// AdapterPipelineGenerator.cs의 실제 코드
+// PortObservableGenerator.cs의 실제 코드
 var methods = classSymbol.AllInterfaces
     .Where(ImplementsIPort)
     .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
@@ -280,17 +280,17 @@ if (classSymbol.IsGenericType)
 
 ---
 
-## 실제 활용: PipelineClassInfo 생성
+## 실제 활용: ObservableClassInfo 생성
 
 ```csharp
-private static PipelineClassInfo MapToPipelineClassInfo(
+private static ObservableClassInfo MapToObservableClassInfo(
     GeneratorAttributeSyntaxContext context,
     CancellationToken cancellationToken)
 {
     // 1. 타입 심볼 확인
     if (context.TargetSymbol is not INamedTypeSymbol classSymbol)
     {
-        return PipelineClassInfo.None;
+        return ObservableClassInfo.None;
     }
 
     cancellationToken.ThrowIfCancellationRequested();
@@ -312,7 +312,7 @@ private static PipelineClassInfo MapToPipelineClassInfo(
     // 4. 메서드가 없으면 생성 불필요
     if (methods.Count == 0)
     {
-        return PipelineClassInfo.None;
+        return ObservableClassInfo.None;
     }
 
     // 5. 생성자 파라미터 추출
@@ -320,7 +320,7 @@ private static PipelineClassInfo MapToPipelineClassInfo(
         ConstructorParameterExtractor.ExtractParameters(classSymbol);
 
     // 6. 결과 반환
-    return new PipelineClassInfo(
+    return new ObservableClassInfo(
         @namespace, className, methods, baseConstructorParameters);
 }
 ```

@@ -60,12 +60,12 @@ Provider 파이프라인의 캐싱
 ```
 첫 번째 빌드
 ===========
-UserRepository.cs   → [처리] → UserRepositoryPipeline.g.cs
-OrderRepository.cs  → [처리] → OrderRepositoryPipeline.g.cs
+UserRepository.cs   → [처리] → UserRepositoryObservable.g.cs
+OrderRepository.cs  → [처리] → OrderRepositoryObservable.g.cs
 
 두 번째 빌드 (UserRepository.cs만 수정)
 ======================================
-UserRepository.cs   → [처리] → UserRepositoryPipeline.g.cs (갱신)
+UserRepository.cs   → [처리] → UserRepositoryObservable.g.cs (갱신)
 OrderRepository.cs  → [캐시] → (처리 생략)
 ```
 
@@ -79,7 +79,7 @@ OrderRepository.cs  → [캐시] → (처리 생략)
 
 ```csharp
 // ✅ 레코드: 자동으로 Equals/GetHashCode 구현
-public sealed record PipelineClassInfo(
+public sealed record ObservableClassInfo(
     string Namespace,
     string ClassName,
     List<MethodInfo> Methods,
@@ -92,13 +92,13 @@ public sealed record PipelineClassInfo(
 
 ```csharp
 // ✅ ImmutableArray 사용
-public sealed record PipelineClassInfo(
+public sealed record ObservableClassInfo(
     string Namespace,
     string ClassName,
     ImmutableArray<MethodInfo> Methods);  // 불변
 
 // ⚠️ List는 참조 비교만 함
-public sealed record PipelineClassInfo(
+public sealed record ObservableClassInfo(
     string Namespace,
     string ClassName,
     List<MethodInfo> Methods);  // 내용이 같아도 다른 인스턴스면 다름
@@ -147,7 +147,7 @@ Functorium 프로젝트의 결정적 포맷 정의:
 
 ```csharp
 // SymbolDisplayFormats.cs
-namespace Functorium.SourceGenerators.Generators.AdapterPipelineGenerator;
+namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
 
 public static class SymbolDisplayFormats
 {
@@ -231,10 +231,10 @@ grep -i "generator" build.log | grep -i "cache"
 ```
 캐시 작동 시
 ===========
-UserRepositoryPipeline.g.cs  수정 시간: 10:00:00
+UserRepositoryObservable.g.cs  수정 시간: 10:00:00
 (파일 A 수정)
-UserRepositoryPipeline.g.cs  수정 시간: 10:00:05 (갱신됨)
-OrderRepositoryPipeline.g.cs 수정 시간: 10:00:00 (변경 없음)
+UserRepositoryObservable.g.cs  수정 시간: 10:00:05 (갱신됨)
+OrderRepositoryObservable.g.cs 수정 시간: 10:00:00 (변경 없음)
 
 캐시 미작동 시
 =============

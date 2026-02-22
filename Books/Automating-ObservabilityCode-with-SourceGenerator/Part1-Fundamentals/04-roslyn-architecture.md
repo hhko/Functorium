@@ -79,7 +79,7 @@ Roslyn 컴파일러는 소스 코드를 여러 단계를 거쳐 IL 코드로 변
 │  Syntax Tree + Semantic Model을 분석하여             │
 │  새로운 소스 코드 생성                               │
 │                                                      │
-│  예: [GeneratePipeline] → UserRepositoryPipeline.g.cs│
+│  예: [GeneratePortObservable] → UserRepositoryObservable.g.cs│
 └────────────────────────┬─────────────────────────────┘
                          │
                          ▼

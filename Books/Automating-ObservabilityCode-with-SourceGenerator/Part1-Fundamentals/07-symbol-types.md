@@ -203,12 +203,12 @@ method.TypeParameters       // 타입 파라미터
 
 ---
 
-## 실제 활용: AdapterPipelineGenerator
+## 실제 활용: PortObservableGenerator
 
 ### 메서드 정보 추출
 
 ```csharp
-// AdapterPipelineGenerator.cs
+// PortObservableGenerator.cs
 var methods = classSymbol.AllInterfaces
     .Where(ImplementsIPort)
     .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
