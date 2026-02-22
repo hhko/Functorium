@@ -13,7 +13,8 @@ public sealed class CustomerName : SimpleValueObject<string>
         CreateFromValidation(Validate(value), v => new CustomerName(v));
 
     public static Validation<Error, string> Validate(string? value) =>
-        ValidationRules<CustomerName>.NotNull(value)
+        ValidationRules<CustomerName>
+            .NotNull(value)
             .ThenNotEmpty()
             .ThenMaxLength(MaxLength)
             .ThenNormalize(v => v.Trim());
