@@ -220,7 +220,7 @@ global using Functorium.Domains.Services;
 
 ## 4. Usecase에서 사용 (HOW)
 
-Domain Service는 Usecase에서 생성자 주입으로 사용합니다. `Fin<Unit>` 반환값은 `FinT<IO, T>` LINQ 체인에서 **자동 리프팅**됩니다.
+Domain Service는 순수 함수(상태 없음, I/O 없음)이므로 Usecase에서 **멤버 변수로 직접 생성**합니다. DI 주입이 불필요합니다. `Fin<Unit>` 반환값은 `FinT<IO, T>` LINQ 체인에서 **자동 리프팅**됩니다.
 
 ### Fin<T> 자동 리프팅
 
@@ -250,10 +250,14 @@ from _2 in _creditCheckService.ValidateCreditLimit(customer, amount)  // Fin<Uni
 public sealed class Usecase(
     ICustomerRepository customerRepository,
     IOrderRepository orderRepository,
-    IProductCatalog productCatalog,
-    OrderCreditCheckService creditCheckService)  // Domain Service 주입
+    IProductCatalog productCatalog)
     : ICommandUsecase<Request, Response>
 {
+    private readonly ICustomerRepository _customerRepository = customerRepository;
+    private readonly IOrderRepository _orderRepository = orderRepository;
+    private readonly IProductCatalog _productCatalog = productCatalog;
+    private readonly OrderCreditCheckService _creditCheckService = new();  // 직접 생성
+
     public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
     {
         // 1. Value Object 생성 (순수 검증)
@@ -307,22 +311,22 @@ Domain Service는 I/O 없이 순수 비즈니스 규칙만 수행하고, Usecase
 
 ---
 
-## 5. DI 등록
+## 5. DI 등록 불필요
 
-Domain Service는 상태가 없으므로 **Singleton**으로 등록합니다.
+Domain Service는 순수 함수(상태 없음, I/O 없음, 생성자 파라미터 없음)이므로 **DI 컨테이너에 등록하지 않습니다**. Usecase에서 멤버 변수로 직접 생성하는 것이 권장 패턴입니다.
 
 ```csharp
-// AdapterInfrastructureRegistration.cs
-services.AddSingleton<OrderCreditCheckService>();
+// Usecase 내부에서 직접 생성
+private readonly OrderCreditCheckService _creditCheckService = new();
 ```
 
 **`IAdapter`와의 차이:**
 
 | 구분 | Domain Service | Adapter (IAdapter) |
 |------|---------------|-------------------|
-| **등록 방식** | `AddSingleton<T>()` | `RegisterScopedAdapterPipeline<I, P>()` |
+| **생성 방식** | Usecase에서 `new()` 직접 생성 | DI `RegisterScopedAdapterPipeline<I, P>()` |
 | **Pipeline** | 불필요 (순수 로직) | 자동 생성 (관찰 가능성) |
-| **Lifetime** | Singleton (상태 없음) | Scoped (요청별) |
+| **Lifetime** | Usecase와 동일 | Scoped (요청별) |
 | **관찰 가능성** | 불필요 | 자동 적용 |
 
 ---
@@ -398,7 +402,7 @@ public class OrderCreditCheckServiceTests
 
 ### Usecase 단위 테스트 (Domain Service 포함)
 
-Usecase 테스트에서 Domain Service는 실제 인스턴스를 사용하고, Repository/Adapter만 Mock합니다:
+Usecase 테스트에서 Domain Service는 Usecase 내부에서 직접 생성되므로 별도 설정이 불필요합니다. Repository/Adapter만 Mock합니다:
 
 ```csharp
 public class CreateOrderWithCreditCheckCommandTests
@@ -406,8 +410,13 @@ public class CreateOrderWithCreditCheckCommandTests
     private readonly ICustomerRepository _customerRepository = Substitute.For<ICustomerRepository>();
     private readonly IOrderRepository _orderRepository = Substitute.For<IOrderRepository>();
     private readonly IProductCatalog _productCatalog = Substitute.For<IProductCatalog>();
-    private readonly OrderCreditCheckService _creditCheckService = new();  // 실제 인스턴스
-    private readonly IDomainEventPublisher _eventPublisher = Substitute.For<IDomainEventPublisher>();
+    private readonly CreateOrderWithCreditCheckCommand.Usecase _sut;
+
+    public CreateOrderWithCreditCheckCommandTests()
+    {
+        _sut = new CreateOrderWithCreditCheckCommand.Usecase(
+            _customerRepository, _orderRepository, _productCatalog);
+    }
 
     [Fact]
     public async Task Handle_ReturnsFail_WhenCreditLimitExceeded()
@@ -422,7 +431,10 @@ public class CreateOrderWithCreditCheckCommandTests
             .Returns(FinTFactory.Succ(Money.Create(1000m).ThrowIfFail()));
 
         var request = new CreateOrderWithCreditCheckCommand.Request(
-            customer.Id.ToString(), ProductId.New().ToString(), 2, "Seoul, Korea");
+            customer.Id.ToString(),
+            Seq(new CreateOrderWithCreditCheckCommand.OrderLineRequest(
+                ProductId.New().ToString(), 2)),
+            "Seoul, Korea");
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -471,9 +483,8 @@ LayeredArch.Tests.Unit/
 
 ### Usecase 통합
 
-- [ ] Usecase에서 생성자 주입으로 사용하는가?
+- [ ] Usecase에서 멤버 변수로 직접 생성하는가? (`new()`)
 - [ ] `FinT<IO, T>` LINQ 체인에서 `from ... in` 구문으로 호출하는가?
-- [ ] DI에 Singleton으로 등록되어 있는가?
 
 ### 테스트
 
