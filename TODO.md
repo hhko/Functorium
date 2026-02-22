@@ -6,6 +6,74 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하도록 개선
 ```
 
+- [x] `services.AddSingleton<OrderCreditCheckService>();` 도메인 서비스를 의존성 등록한것은 너무 과한것 같다
+- [x] 도메일 모데리 nullable 원칙
+- [ ] ISoftDeletable 적용 사례
+  ```
+  ISoftDeletable이 DDD에서 왜 필요한가?
+
+  핵심 이유는 참조 무결성과 이력 보존입니다. 이번 구현이 좋은 예시입니다:
+
+  1. 물리 삭제 불가: Product가 삭제되더라도 기존 Order의 OrderLine이 ProductId를 참조하고 있으므로 물리적으로 삭제하면 참조가 깨짐
+  2. 비즈니스 의미 분리: "단종(discontinued)"은 도메인 개념이지 데이터 소멸이 아님. 인터페이스로 이 개념을 명시적으로 표현
+  3. 복원 가능성: 실수로 삭제하거나 일시적으로 판매 중지할 때 Restore로 복구 가능
+  4. 감사 추적: DeletedBy로 누가 삭제했는지 추적 (ISoftDeletableWithUser)
+  5. 인프라 관심사 분리: 인터페이스를 통해 Repository/ORM 레이어에서 IsDeleted 기반 자동 필터링을 일관되게 적용할 수 있음 (EF Core의 Global Query Filter 등)
+  ```
+  ```
+  #: 1
+  가치: 물리 삭제 불가 (참조 무결성)
+  적용 여부: 설계 동기만
+  설명: OrderLine→ProductId 참조 관계가 존재하므로 soft delete를 선택한 이유일 뿐, 물리 삭제를 방지하는 코드는 없음
+  ────────────────────────────────────────
+  #: 2
+  가치: 비즈니스 의미 분리
+  적용 여부: 적용됨
+  설명: Delete()/Restore() 도메인 메서드 + 도메인 이벤트로 "단종" 개념을 명시적으로 모델링
+  ────────────────────────────────────────
+  #: 3
+  가치: 복원 가능성
+  적용 여부: 적용됨
+  설명: Restore() 메서드, 멱등성, 테스트 검증 완료
+  ────────────────────────────────────────
+  #: 4
+  가치: 감사 추적
+  적용 여부: 적용됨
+  설명: ISoftDeletableWithUser의 DeletedBy 속성으로 삭제자 추적
+  ────────────────────────────────────────
+  #: 5
+  가치: 인프라 관심사 분리 (Global Query Filter)
+  적용 여부: 미적용
+  설명: Mapper에 필드를 추가했을 뿐, EF Core Global Query Filter 등 자동 필터링은 구현하지 않음
+
+  현재 구현은 도메인 레이어의 soft delete 모델링(2, 3, 4)에 집중되어 있고, 인프라 레이어에서 ISoftDeletable 인터페이스를 활용한 자동 필터링(5번)은 빠져
+  있습니다. 5번까지 구현해야 인터페이스의 진정한 가치가 증명됩니다.
+  ```
+- [ ] IAuditable 적용 사례
+- [ ] IConcurrencyAware 적용 사례
+- [ ] Specification 적용 사례
+- [ ] 도메인 모델 패턴
+  - ISoftDeletable
+  - IAuditable
+  - IConcurrencyAware
+  - Specification
+- [ ] Src\Functorium\Applications\Observabilities\IAdapter.cs 인터페이스 정의 위치를 Domain으로 이동(Repositories 때문에)
+---
+- [ ] 유스케이스 전체 리팩토링
+- [ ] 도메인 시나리오 문서화
+- [ ] 도메인 시나리오 + PRD 문서
+- [ ] 도메인 요구사항 + PRD 통합
+- [x] 도메일 모델 ㄹ용어집
+- [x] 도메인 요구사항
+- [ ] .Adapters 프로젝트 분리
+- [ ] 릴리스 노트
+
+---
+- [ ] Functorium + Functorium.Adapters 분리
+- [ ] `도메인 시나리오(Usecase) -> 도메인 모델(Aggregate Root)` 플러그인
+
+---
+
 - [x] 도메인 모델 정의서 md
 - [x] 도메인 모델 정의서 템플릿 md
 - [x] 도메인 모델 정의서 템플릿 가이드 md
@@ -45,16 +113,6 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
 - [x] Enum타입 유효성 검사 강화: 표준 값 객체, SortDirection
 - [x] IAuditable 인터페이스에 정의된 nullable
 - [x] `Specification? -> Option<T>`
-- [ ] nullable 전체 개선
-- [ ] `services.AddSingleton<OrderCreditCheckService>();` 도메인 서비스를 의존성 등록한것은 너무 과한것 같다
-- [ ] 유스케이스 전체 리팩토링
----
-- [ ] Specification 패턴 이해
-- [ ] ISoftDeletable 적용 사례
-- [ ] 유스케이스 문서화
-- [ ] 용어집
-- [ ] .Adapters 프로젝트 분리
-- [ ] 릴리스 노트
 
 ## Book
 - [ ] 파이프라인 & 공변성
