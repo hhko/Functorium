@@ -81,14 +81,13 @@ public sealed class CreateOrderWithCreditCheckCommand
     public sealed class Usecase(
         ICustomerRepository customerRepository,
         IOrderRepository orderRepository,
-        IProductCatalog productCatalog,
-        OrderCreditCheckService creditCheckService)
+        IProductCatalog productCatalog)
         : ICommandUsecase<Request, Response>
     {
         private readonly ICustomerRepository _customerRepository = customerRepository;
         private readonly IOrderRepository _orderRepository = orderRepository;
         private readonly IProductCatalog _productCatalog = productCatalog;
-        private readonly OrderCreditCheckService _creditCheckService = creditCheckService;
+        private readonly OrderCreditCheckService _creditCheckService = new();
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {

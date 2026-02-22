@@ -4,7 +4,6 @@ using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
 using LayeredArch.Domain.AggregateRoots.Orders;
 using LayeredArch.Domain.AggregateRoots.Products;
-using LayeredArch.Domain.SharedModels.Services;
 using LayeredArch.Domain.SharedModels.ValueObjects;
 
 namespace LayeredArch.Tests.Unit.Application.Orders;
@@ -14,13 +13,12 @@ public class CreateOrderWithCreditCheckCommandTests
     private readonly ICustomerRepository _customerRepository = Substitute.For<ICustomerRepository>();
     private readonly IOrderRepository _orderRepository = Substitute.For<IOrderRepository>();
     private readonly IProductCatalog _productCatalog = Substitute.For<IProductCatalog>();
-    private readonly OrderCreditCheckService _creditCheckService = new();
     private readonly CreateOrderWithCreditCheckCommand.Usecase _sut;
 
     public CreateOrderWithCreditCheckCommandTests()
     {
         _sut = new CreateOrderWithCreditCheckCommand.Usecase(
-            _customerRepository, _orderRepository, _productCatalog, _creditCheckService);
+            _customerRepository, _orderRepository, _productCatalog);
     }
 
     private static Customer CreateSampleCustomer(decimal creditLimit = 5000m)
