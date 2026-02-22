@@ -2046,9 +2046,11 @@ Soft Delete를 새 Aggregate에 적용할 때 확인할 항목:
 
 ### IConcurrencyAware
 
-낙관적 동시성 제어를 지원합니다. 고경합 Aggregate에 선택적으로 적용합니다.
+낙관적 동시성 제어를 지원합니다. Aggregate의 불변식(Invariant)은 단일 트랜잭션 안에서만 보호되므로, 동시 트랜잭션 간에는 도메인 로직만으로 불변식 보호가 불가능합니다(Lost Update). 도메인이 "나는 동시성 보호가 필요하다"고 명시적으로 선언하는 인터페이스이며, 고경합 Aggregate에 선택적으로 적용합니다.
 
 **위치**: `Functorium.Domains.Entities.IConcurrencyAware`
+
+#### 인터페이스 정의
 
 ```csharp
 public interface IConcurrencyAware
@@ -2057,20 +2059,183 @@ public interface IConcurrencyAware
 }
 ```
 
-**사용 예제:**
+#### 왜 필요한가 — Lost Update 시나리오
+
+Inventory의 `DeductStock` 예시로 동시성 문제를 설명합니다:
+
+```
+초기 상태: 재고 = 10개
+
+1. [트랜잭션 A] 재고를 읽음 → 10개
+2. [트랜잭션 B] 재고를 읽음 → 10개  (A가 아직 저장 전이므로 같은 값)
+3. [트랜잭션 A] DeductStock(7): 7 ≤ 10 ✓ → 재고 = 3 → DB 저장
+4. [트랜잭션 B] DeductStock(7): 7 ≤ 10 ✓ → 재고 = 3 → DB 저장 (A의 결과를 덮어씀!)
+
+최종 결과: 재고 = 3개
+기대 결과: B는 거부되어야 함 (A 반영 후 실제 재고 = 3, 7개 차감 불가)
+```
+
+핵심: `DeductStock()`의 `if (quantity > StockQuantity)` 가드는 **읽은 시점의 값**으로만 판단합니다. 트랜잭션 B는 A가 저장하기 전의 값(10)을 읽었기 때문에 검증을 통과하지만, 실제로는 재고가 이미 3개로 줄어든 상태입니다. 이것이 **Lost Update** 문제이며, 도메인 로직만으로는 방지할 수 없습니다.
+
+#### 왜 도메인 레이어에 두는가
+
+| 관점 | 설명 |
+|------|------|
+| 도메인 모델링 결정 | 어떤 Aggregate가 고경합인지는 도메인 지식. Inventory(주문마다 차감)는 고경합, Product(관리자 저빈도 수정)는 저경합 |
+| 명시적 선언 | 인프라가 추측하는 것이 아니라, 도메인이 선언 |
+| 인프라 분리 | 인터페이스는 도메인, `IsRowVersion()` 매핑은 인프라. 도메인은 DB를 모름 |
+
+#### 도메인 모델 구현 패턴
+
+**참조**: `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Inventories/Inventory.cs`
 
 ```csharp
 [GenerateEntityId]
 public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurrencyAware
 {
+    public sealed record InsufficientStock : DomainErrorType.Custom;
+
+    // Value Object 속성
     public Quantity StockQuantity { get; private set; }
+
+    // 낙관적 동시성 제어
     public byte[] RowVersion { get; private set; } = [];
+
+    // Audit 속성
     public DateTime CreatedAt { get; private set; }
-    public DateTime? UpdatedAt { get; private set; }
+    public Option<DateTime> UpdatedAt { get; private set; }
+
+    // 비즈니스 메서드: RowVersion은 DB가 자동 갱신
+    public Fin<Unit> DeductStock(Quantity quantity)
+    {
+        if (quantity > StockQuantity)
+            return DomainError.For<Inventory, int>(
+                new InsufficientStock(),
+                currentValue: StockQuantity,
+                message: $"Insufficient stock. Current: {StockQuantity}, Requested: {quantity}");
+
+        StockQuantity = StockQuantity.Subtract(quantity);
+        UpdatedAt = DateTime.UtcNow;
+        AddDomainEvent(new StockDeductedEvent(Id, ProductId, quantity));
+        return unit;
+    }
+
+    // ORM 복원용: byte[] rowVersion 파라미터 포함
+    public static Inventory CreateFromValidated(
+        InventoryId id, ProductId productId, Quantity stockQuantity,
+        byte[] rowVersion, DateTime createdAt, Option<DateTime> updatedAt)
+    {
+        return new Inventory(id, productId, stockQuantity)
+        {
+            RowVersion = rowVersion,
+            CreatedAt = createdAt,
+            UpdatedAt = updatedAt
+        };
+    }
 }
 ```
 
-`IConcurrencyAware` 적용 시기와 EF Core `IsRowVersion()` 매핑은 [§4. Aggregate 경계 설정 실전 예제 — 동시성 고려사항](#동시성-고려사항)을 참고하세요.
+**핵심 패턴 요약:**
+
+| 패턴 | 구현 |
+|------|------|
+| RowVersion 선언 | `byte[] RowVersion { get; private set; } = []` |
+| 초기값 | 빈 배열 `[]` — DB 저장 시 EF Core가 자동 생성 |
+| 비즈니스 메서드 | `RowVersion`을 직접 변경하지 않음 — DB가 자동 갱신 |
+| ORM 복원 | `CreateFromValidated()`에 `byte[] rowVersion` 파라미터로 전달 |
+
+#### 인프라 구현 — 전체 흐름
+
+`IConcurrencyAware`를 인프라에서 지원하려면 4개 파일이 협력합니다:
+
+```
+Domain Model ──→ Mapper ──→ Persistence Model ──→ DB 저장 (UoW)
+(byte[] RowVersion)  (직접 전달)  (byte[] RowVersion)     │
+                                       ↑                   │
+                              EF Core Configuration        │
+                              (.IsRowVersion())            │
+                                                           ↓
+                                                  UPDATE ... WHERE RowVersion = @original
+                                                           │
+                                              ┌────────────┴────────────┐
+                                              │                         │
+                                         행 갱신 성공              행 갱신 0건
+                                              │                         │
+                                         정상 응답         DbUpdateConcurrencyException
+                                                                        │
+                                                              ConcurrencyConflict 에러
+```
+
+**Step 1. Persistence Model** — `byte[] RowVersion` 속성 정의
+
+```csharp
+// InventoryModel.cs
+public class InventoryModel
+{
+    public string Id { get; set; } = default!;
+    public string ProductId { get; set; } = default!;
+    public int StockQuantity { get; set; }
+    public byte[] RowVersion { get; set; } = [];    // ← 동시성 토큰
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+```
+
+**Step 2. EF Core Configuration** — `.IsRowVersion()`으로 SQL Server ROWVERSION 매핑
+
+```csharp
+// InventoryConfiguration.cs
+builder.Property(i => i.RowVersion)
+    .IsRowVersion();    // SQL Server: 자동 증가하는 8바이트 타임스탬프
+```
+
+**Step 3. Mapper** — Domain ↔ Persistence Model 양방향 `byte[]` 직접 전달
+
+```csharp
+// InventoryMapper.cs — Domain → Persistence Model
+public static InventoryModel ToModel(this Inventory inventory) => new()
+{
+    // ...
+    RowVersion = inventory.RowVersion,
+};
+
+// InventoryMapper.cs — Persistence Model → Domain
+public static Inventory ToDomain(this InventoryModel model) =>
+    Inventory.CreateFromValidated(
+        // ...
+        model.RowVersion,       // byte[] 직접 전달
+        // ...);
+```
+
+**Step 4. UoW 충돌 처리** — `DbUpdateConcurrencyException` → `ConcurrencyConflict` 에러 변환
+
+```csharp
+// EfCoreUnitOfWork.SaveChanges() 내부
+catch (DbUpdateConcurrencyException ex)
+{
+    return AdapterError.FromException<EfCoreUnitOfWork>(
+        new ConcurrencyConflict(), ex);
+}
+```
+
+**동작 원리:** EF Core는 `IsRowVersion()`으로 설정된 속성을 UPDATE/DELETE 쿼리의 `WHERE` 조건에 자동 추가합니다. DB에 저장된 RowVersion이 읽어온 시점의 값과 다르면 갱신 행이 0건이 되고, EF Core가 `DbUpdateConcurrencyException`을 발생시킵니다. UoW는 이를 `ConcurrencyConflict` 에러로 변환하여 반환합니다.
+
+> 적용 시기, 충돌 처리 전략(Fail-Fast), 전체 UoW 코드는 [§4. Aggregate 경계 설정 실전 예제 — 동시성 고려사항](#동시성-고려사항)을 참고하세요.
+
+**참조 파일:**
+- `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/Models/InventoryModel.cs`
+- `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/Configurations/InventoryConfiguration.cs`
+- `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/Mappers/InventoryMapper.cs`
+- `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/EfCoreUnitOfWork.cs`
+
+#### 체크리스트 — 새 Aggregate에 IConcurrencyAware 적용 시
+
+- [ ] 도메인 모델: `IConcurrencyAware` 구현 (`byte[] RowVersion` 속성)
+- [ ] 도메인 모델: `CreateFromValidated()`에 `byte[] rowVersion` 파라미터
+- [ ] Persistence Model: `byte[] RowVersion` 속성
+- [ ] EF Core Configuration: `.IsRowVersion()` 설정
+- [ ] Mapper: `RowVersion` 양방향 직접 전달
+- [ ] 적용 판단: [§4 적용 기준표](#동시성-고려사항) 참고
 
 ---
 
