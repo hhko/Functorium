@@ -1,5 +1,9 @@
 @baseUrl = http://localhost:5000
 
+###############################################################################
+# 1. 상품 (Product) - 기본 CRUD
+###############################################################################
+
 ### 상품 생성
 POST {{baseUrl}}/api/products
 Content-Type: application/json
@@ -24,8 +28,7 @@ Content-Type: application/json
 {
   "Name": "노트북 Pro",
   "Description": "업그레이드된 고성능 노트북",
-  "Price": 2000000,
-  "StockQuantity": 5
+  "Price": 2000000
 }
 
 ### 재고 차감
@@ -37,7 +40,89 @@ Content-Type: application/json
 }
 
 ###############################################################################
-# 고객 (Customer)
+# 2. 상품 (Product) - 검색
+###############################################################################
+
+### 상품 검색 - 기본 (페이지네이션)
+GET {{baseUrl}}/api/products/search?Page=1&PageSize=10
+
+### 상품 검색 - 이름 필터
+GET {{baseUrl}}/api/products/search?Name=노트북
+
+### 상품 검색 - 가격 범위 + 정렬
+GET {{baseUrl}}/api/products/search?MinPrice=100000&MaxPrice=3000000&SortBy=Price&SortDirection=desc
+
+### 상품+재고 검색 (Dapper JOIN) - 기본
+GET {{baseUrl}}/api/products/with-stock?Page=1&PageSize=10
+
+### 상품+재고 검색 - 가격 범위 + 정렬
+GET {{baseUrl}}/api/products/with-stock?MinPrice=100000&MaxPrice=3000000&SortBy=Price&SortDirection=asc
+
+###############################################################################
+# 3. 상품 (Product) - 삭제/복원
+###############################################################################
+
+### 상품 삭제 (soft delete)
+DELETE {{baseUrl}}/api/products/{{productId}}
+
+### 삭제된 상품 복원
+POST {{baseUrl}}/api/products/{{productId}}/restore
+
+###############################################################################
+# 4. 상품 (Product) - 비즈니스 규칙 검증
+###############################################################################
+
+### [PRD-R06] 상품명 빈값 → 실패
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "Name": "",
+  "Description": "상품명 빈값 테스트",
+  "Price": 1000,
+  "StockQuantity": 5
+}
+
+### [PRD-R08] 가격 음수 → 실패
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "Name": "가격 음수 테스트 상품",
+  "Description": "가격이 음수인 상품",
+  "Price": -1,
+  "StockQuantity": 5
+}
+
+### [PRD-R10] 상품명 중복 → 실패 (먼저 위의 "노트북" 생성 후 동일 이름으로 재생성)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "Name": "노트북",
+  "Description": "중복 이름 테스트",
+  "Price": 2000000,
+  "StockQuantity": 3
+}
+
+### [PRD-R16] 삭제된 상품 수정 불가 → 실패 (먼저 DELETE 실행 후 PUT 시도)
+PUT {{baseUrl}}/api/products/{{productId}}
+Content-Type: application/json
+
+{
+  "Name": "삭제된 상품 수정 시도",
+  "Description": "삭제된 상품은 수정할 수 없습니다",
+  "Price": 9999
+}
+
+### [PRD-R14] 삭제 멱등성 → 이미 삭제된 상품 다시 DELETE
+DELETE {{baseUrl}}/api/products/{{productId}}
+
+### [PRD-R15] 복원 멱등성 → 삭제되지 않은 상품 RESTORE
+POST {{baseUrl}}/api/products/{{productId}}/restore
+
+###############################################################################
+# 5. 고객 (Customer)
 ###############################################################################
 
 ### 고객 생성
@@ -54,16 +139,55 @@ Content-Type: application/json
 GET {{baseUrl}}/api/customers/{{customerId}}
 
 ###############################################################################
-# 주문 (Order) - 교차 Aggregate 참조 (IProductCatalog)
+# 6. 고객 (Customer) - 비즈니스 규칙 검증
 ###############################################################################
 
-### 주문 생성 (먼저 상품을 생성한 후 productId 사용)
+### [CUS-R06] 이메일 형식 오류 → 실패
+POST {{baseUrl}}/api/customers
+Content-Type: application/json
+
+{
+  "Name": "이메일오류",
+  "Email": "invalid-email",
+  "CreditLimit": 1000000
+}
+
+### [CUS-R08] 신용한도 음수 → 실패
+POST {{baseUrl}}/api/customers
+Content-Type: application/json
+
+{
+  "Name": "신용한도음수",
+  "Email": "negative-credit@example.com",
+  "CreditLimit": -1
+}
+
+### [CUS-R09] 이메일 중복 → 실패 (먼저 위의 "hong@example.com" 생성 후 동일 이메일로 재생성)
+POST {{baseUrl}}/api/customers
+Content-Type: application/json
+
+{
+  "Name": "홍길동2",
+  "Email": "hong@example.com",
+  "CreditLimit": 3000000
+}
+
+###############################################################################
+# 7. 주문 (Order) - 교차 Aggregate 참조 (IProductCatalog)
+###############################################################################
+
+### 주문 생성 (먼저 상품과 고객을 생성한 후 ID 사용)
 POST {{baseUrl}}/api/orders
 Content-Type: application/json
 
 {
-  "ProductId": "{{productId}}",
-  "Quantity": 2,
+  "CustomerId": "{{customerId}}",
+  "OrderLines": [
+    {
+      "ProductId": "{{productId}}",
+      "Quantity": 2
+    }
+  ],
   "ShippingAddress": "서울특별시 강남구 테헤란로 123"
 }
 
@@ -71,7 +195,98 @@ Content-Type: application/json
 GET {{baseUrl}}/api/orders/{{orderId}}
 
 ###############################################################################
-# 이벤트 핸들러 예외 테스트 (Event Handler Exception Scenarios)
+# 8. 주문 (Order) - 비즈니스 규칙 검증
+###############################################################################
+
+### [ORD-R10] 주문라인 없음 → 실패
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "CustomerId": "{{customerId}}",
+  "OrderLines": [],
+  "ShippingAddress": "서울특별시 강남구 테헤란로 123"
+}
+
+### [ORD-R08] 수량 0 → 실패
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "CustomerId": "{{customerId}}",
+  "OrderLines": [
+    {
+      "ProductId": "{{productId}}",
+      "Quantity": 0
+    }
+  ],
+  "ShippingAddress": "서울특별시 강남구 테헤란로 123"
+}
+
+### [ORD-R12] 배송주소 빈값 → 실패
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "CustomerId": "{{customerId}}",
+  "OrderLines": [
+    {
+      "ProductId": "{{productId}}",
+      "Quantity": 1
+    }
+  ],
+  "ShippingAddress": ""
+}
+
+### [CRS-R02] 신용한도 초과 → 실패 (CreditLimit보다 큰 주문)
+# 먼저 신용한도가 낮은 고객을 생성한 후 해당 고객 ID 사용
+# POST /api/customers → CreditLimit: 100 → {{lowCreditCustomerId}}
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "CustomerId": "{{lowCreditCustomerId}}",
+  "OrderLines": [
+    {
+      "ProductId": "{{productId}}",
+      "Quantity": 100
+    }
+  ],
+  "ShippingAddress": "서울특별시 강남구 테헤란로 123"
+}
+
+###############################################################################
+# 9. 재고 (Inventory) - 검색
+###############################################################################
+
+### 재고 검색 - 기본 (페이지네이션)
+GET {{baseUrl}}/api/inventories/search?Page=1&PageSize=10
+
+### 재고 검색 - 저재고 임계값 필터
+GET {{baseUrl}}/api/inventories/search?LowStockThreshold=5
+
+### 재고 검색 - 정렬
+GET {{baseUrl}}/api/inventories/search?SortBy=StockQuantity&SortDirection=asc
+
+###############################################################################
+# 10. 재고 (Inventory) - 비즈니스 규칙 검증
+###############################################################################
+
+### [INV-R06] 재고 부족 → 실패 (보유수량 초과 차감)
+# 먼저 상품 생성(StockQuantity: 10) 후 해당 상품 ID 사용
+POST {{baseUrl}}/api/products/{{productId}}/deduct-stock
+Content-Type: application/json
+
+{
+  "Quantity": 9999
+}
+
+### [INV-R09] 저재고 임계값 검색
+# LowStockThreshold=100 → 재고가 100 미만인 상품만 조회
+GET {{baseUrl}}/api/inventories/search?LowStockThreshold=100&Page=1&PageSize=10
+
+###############################################################################
+# 11. 이벤트 핸들러 예외 테스트 (Event Handler Exception Scenarios)
 ###############################################################################
 #
 # 도메인 이벤트 핸들러에서 예외가 발생할 때 관측성 파이프라인을 검증합니다.
@@ -116,7 +331,7 @@ Content-Type: application/json
 }
 
 ###############################################################################
-# 어댑터 예외 테스트 (Adapter Exception Scenarios)
+# 12. 어댑터 예외 테스트 (Adapter Exception Scenarios)
 ###############################################################################
 #
 # IAdapter 구현체([GeneratePipeline])에서 예외가 발생할 때 관측성 파이프라인을 검증합니다.
@@ -153,7 +368,7 @@ Content-Type: application/json
 }
 
 ###############################################################################
-# 에러 테스트 (Error Test Scenarios)
+# 13. 에러 테스트 (Error Test Scenarios)
 ###############################################################################
 
 ### 에러 테스트 - 성공
@@ -211,7 +426,7 @@ Content-Type: application/json
 }
 
 ###############################################################################
-# 크래시 진단 (Crash Diagnostics) - 개발 환경 전용
+# 14. 크래시 진단 (Crash Diagnostics) - 개발 환경 전용
 ###############################################################################
 #
 # 생성되는 덤프 파일:
