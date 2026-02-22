@@ -43,19 +43,18 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
   ────────────────────────────────────────
   #: 5
   가치: 인프라 관심사 분리 (Global Query Filter)
-  적용 여부: 미적용
-  설명: Mapper에 필드를 추가했을 뿐, EF Core Global Query Filter 등 자동 필터링은 구현하지 않음
+  적용 여부: 적용됨
+  설명: EF Core Global Query Filter + Dapper BuildWhereClause에서 DeletedAt IS NULL 자동 필터링 적용
 
-  현재 구현은 도메인 레이어의 soft delete 모델링(2, 3, 4)에 집중되어 있고, 인프라 레이어에서 ISoftDeletable 인터페이스를 활용한 자동 필터링(5번)은 빠져
-  있습니다. 5번까지 구현해야 인터페이스의 진정한 가치가 증명됩니다.
+  모든 5가지 가치가 적용되었습니다. EF Core Global Query Filter와 Dapper BuildWhereClause에서
+  DeletedAt IS NULL 기반 자동 필터링을 일관되게 적용합니다.
   ```
   ```
   1. 참조 무결성 - OK (물리 삭제 없음)
   2. 비즈니스 의미 분리 - OK (도메인 모델에서 Delete/Restore 분리)
-  ---
-  3. 복원 가능성 - 미완성 (Restore 커맨드/엔드포인트 없음)
-  4. 감사 추적 - 위반 (deletedBy가 "system"으로 하드코딩)
-  5. 인프라 관심사 분리 - 위반 (EfCore Repository가 도메인 모델 우회)
+  3. 복원 가능성 - OK (Restore 커맨드/엔드포인트 구현 완료)
+  4. 감사 추적 - OK (DeletedBy 추적, DeleteProductCommand에서 deletedBy 전달)
+  5. 인프라 관심사 분리 - OK (EF Core Global Query Filter + Dapper WHERE DeletedAt IS NULL)
   ```
 - [ ] 도메인 모델 삭제 패턴 정리????
 - [ ] IAuditable 적용 사례
