@@ -64,10 +64,10 @@ public sealed class AdapterPipelineGenerator()
             ? string.Empty
             : classSymbol.ContainingNamespace.ToString();
 
-        // IAdapter를 상속받은 모든 인터페이스의 메서드를 직접 추출
+        // IPort를 상속받은 모든 인터페이스의 메서드를 직접 추출
         // 클래스 구현을 찾을 필요 없이 인터페이스 정의에서 바로 가져옴
         var methods = classSymbol.AllInterfaces
-            .Where(ImplementsIAdapter)
+            .Where(ImplementsIPort)
             .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
             .Where(m => m.MethodKind == MethodKind.Ordinary)
             .Select(m => new MethodInfo(
@@ -79,7 +79,7 @@ public sealed class AdapterPipelineGenerator()
                 m.ReturnType.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat)))
             .ToList();
 
-        // IAdapter를 구현하지 않은 경우 (메서드가 없음) - 파이프라인 생성하지 않음
+        // IPort를 구현하지 않은 경우 (메서드가 없음) - 파이프라인 생성하지 않음
         if (methods.Count == 0)
         {
             return PipelineClassInfo.None;
@@ -96,19 +96,19 @@ public sealed class AdapterPipelineGenerator()
     }
 
     /// <summary>
-    /// 인터페이스가 IAdapter를 상속받았는지 확인합니다.
+    /// 인터페이스가 IPort를 상속받았는지 확인합니다.
     /// </summary>
     /// <param name="interfaceSymbol">확인할 인터페이스 심볼</param>
-    /// <returns>IAdapter를 상속받았으면 true, 아니면 false</returns>
-    private static bool ImplementsIAdapter(INamedTypeSymbol interfaceSymbol)
+    /// <returns>IPort를 상속받았으면 true, 아니면 false</returns>
+    private static bool ImplementsIPort(INamedTypeSymbol interfaceSymbol)
     {
-        // IAdapter 자체인지 확인
+        // IPort 자체인지 확인
         if (interfaceSymbol.Name == "IPort")
         {
             return true;
         }
 
-        // IAdapter를 상속받은 인터페이스인지 확인
+        // IPort를 상속받은 인터페이스인지 확인
         return interfaceSymbol.AllInterfaces.Any(i => i.Name == "IPort");
     }
 

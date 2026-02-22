@@ -12,7 +12,7 @@ public sealed class CqrsArchitectureRuleTests : ArchitectureTestBase
     public void QueryUsecase_ShouldNotDependOn_IRepository()
     {
         // Query 유스케이스의 Usecase 클래스가 IRepository 파생 인터페이스에 의존하면 안 됨.
-        // IQueryAdapter 기반 포트를 사용해야 합니다.
+        // IQueryPort 기반 포트를 사용해야 합니다.
         Classes()
             .That()
             .HaveFullNameContaining("Query+Usecase")

@@ -8,7 +8,7 @@ namespace Functorium.Domains.Services;
 /// <list type="bullet">
 /// <item>순수 함수로 구현 (외부 I/O 없음)</item>
 /// <item>여러 Aggregate를 참조하는 비즈니스 로직 배치</item>
-/// <item>IAdapter 의존성 없음 (Port/Adapter는 Usecase에서 사용)</item>
+/// <item>IPort 의존성 없음 (Port/Adapter는 Usecase에서 사용)</item>
 /// <item>Domain Layer에 배치</item>
 /// </list>
 /// </remarks>

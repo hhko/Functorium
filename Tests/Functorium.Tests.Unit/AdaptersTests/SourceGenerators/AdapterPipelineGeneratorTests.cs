@@ -45,8 +45,8 @@ namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 // - 부모 클래스 생성자: 상속 체인 처리
 //
 // ### 6. 인터페이스 시나리오
-// - IAdapter 직접 구현
-// - IAdapter 상속 인터페이스: IUserRepository : IPort
+// - IPort 직접 구현
+// - IPort 상속 인터페이스: IUserRepository : IPort
 // - 다중 인터페이스: IPort + IDisposable
 //
 // ### 7. 네임스페이스 시나리오
@@ -88,7 +88,7 @@ public sealed class AdapterPipelineGeneratorTests
 
     /// <summary>
     /// 시나리오: 단일 메서드 어댑터
-    /// IAdapter를 구현하고 단일 메서드를 가진 어댑터에 대해 파이프라인 클래스가 생성되는지 확인합니다.
+    /// IPort를 구현하고 단일 메서드를 가진 어댑터에 대해 파이프라인 클래스가 생성되는지 확인합니다.
     /// </summary>
     [Fact]
     public Task AdapterPipelineGenerator_ShouldGenerate_PipelineClass_WithSingleMethod()
@@ -162,7 +162,7 @@ public sealed class AdapterPipelineGeneratorTests
 
     /// <summary>
     /// 시나리오: 메서드 없는 어댑터
-    /// IAdapter를 직접 구현하지만 추가 메서드가 없는 경우 파이프라인이 생성되지 않아야 합니다.
+    /// IPort를 직접 구현하지만 추가 메서드가 없는 경우 파이프라인이 생성되지 않아야 합니다.
     /// </summary>
     [Fact]
     public Task AdapterPipelineGenerator_ShouldNotGenerate_PipelineClass_WhenNoMethods()
@@ -896,10 +896,10 @@ public sealed class AdapterPipelineGeneratorTests
 
     /// <summary>
     /// 시나리오 16: IPort 직접 구현
-    /// IAdapter를 직접 구현하는 경우 파이프라인이 생성되는지 확인합니다.
+    /// IPort를 직접 구현하는 경우 파이프라인이 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task AdapterPipelineGenerator_ShouldGenerate_PipelineClass_WithDirectIAdapterImplementation()
+    public Task AdapterPipelineGenerator_ShouldGenerate_PipelineClass_WithDirectIPortImplementation()
     {
         // Arrange
         string input = """
@@ -931,10 +931,10 @@ public sealed class AdapterPipelineGeneratorTests
 
     /// <summary>
     /// 시나리오: IPort 상속 인터페이스
-    /// IAdapter를 상속하는 커스텀 인터페이스를 구현하는 경우 처리되는지 확인합니다.
+    /// IPort를 상속하는 커스텀 인터페이스를 구현하는 경우 처리되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task AdapterPipelineGenerator_ShouldGenerate_PipelineClass_WithInheritedIAdapterInterface()
+    public Task AdapterPipelineGenerator_ShouldGenerate_PipelineClass_WithInheritedIPortInterface()
     {
         // Arrange
         string input = """
@@ -968,7 +968,7 @@ public sealed class AdapterPipelineGeneratorTests
 
     /// <summary>
     /// 시나리오: 다중 인터페이스 구현
-    /// 여러 인터페이스를 구현하는 경우 IAdapter 관련 메서드만 파이프라인에 포함되는지 확인합니다.
+    /// 여러 인터페이스를 구현하는 경우 IPort 관련 메서드만 파이프라인에 포함되는지 확인합니다.
     /// </summary>
     [Fact]
     public Task AdapterPipelineGenerator_ShouldGenerate_PipelineClass_WithMultipleInterfaces()

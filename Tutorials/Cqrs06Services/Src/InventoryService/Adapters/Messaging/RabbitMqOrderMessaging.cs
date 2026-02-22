@@ -10,7 +10,7 @@ namespace InventoryService.Adapters.Messaging;
 
 /// <summary>
 /// RabbitMQ 기반 주문 서비스 메시징 구현
-/// 관찰 가능성 로그를 위한 IAdapter 인터페이스 구현
+/// 관찰 가능성 로그를 위한 IPort 인터페이스 구현
 /// GeneratePipeline 애트리뷰트로 파이프라인 버전 자동 생성
 /// </summary>
 [GeneratePipeline]

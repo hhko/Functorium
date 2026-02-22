@@ -7,7 +7,7 @@ namespace LayeredArch.Application.Usecases.Customers.Ports;
 /// Customer 단건 조회용 읽기 전용 어댑터 포트.
 /// Aggregate 재구성 없이 DB에서 DTO로 직접 프로젝션합니다.
 /// </summary>
-public interface ICustomerDetailQuery : IQueryAdapter
+public interface ICustomerDetailQuery : IQueryPort
 {
     FinT<IO, CustomerDetailDto> GetById(CustomerId id);
 }
