@@ -165,7 +165,7 @@ public Task Should_Generate_Pipeline_For_Simple_Adapter()
 
         namespace MyApp.Adapters;
 
-        public interface IUserRepository : IAdapter
+        public interface IUserRepository : IPort
         {
             FinT<IO, User> GetUserAsync(int id);
         }
@@ -267,7 +267,7 @@ classSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
 
 // 모든 인터페이스
 classSymbol.AllInterfaces.Select(i => i.Name).ToArray()
-// → ["IUserRepository", "IAdapter"]
+// → ["IUserRepository", "IPort"]
 
 // 메서드 시그니처
 method.ToDisplayString()

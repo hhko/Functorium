@@ -171,7 +171,7 @@ public sealed class Product : AggregateRoot<ProductId> { ... }
 
 #### AdapterPipelineGenerator
 
-`[GeneratePipeline]`을 IAdapter 구현 클래스에 적용하면 Observability 래핑 Pipeline을 자동 생성합니다.
+`[GeneratePipeline]`을 IPort 구현 클래스에 적용하면 Observability 래핑 Pipeline을 자동 생성합니다.
 
 ```csharp
 [GeneratePipeline]

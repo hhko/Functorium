@@ -258,9 +258,9 @@ private static PipelineClassInfo MapToPipelineClassInfo(
     // 디버깅: 모든 인터페이스 확인
     var interfaces = classSymbol.AllInterfaces;  // ⬅️ Watch 창에서 확인
 
-    // 디버깅: IAdapter를 구현하는 인터페이스의 메서드 확인
+    // 디버깅: IPort를 구현하는 인터페이스의 메서드 확인
     var methods = classSymbol.AllInterfaces
-        .Where(ImplementsIAdapter)
+        .Where(ImplementsIPort)
         .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())  // ⬅️ Watch 창에서 확인
         .ToList();
 

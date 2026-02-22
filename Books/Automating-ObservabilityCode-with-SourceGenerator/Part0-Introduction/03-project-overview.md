@@ -42,11 +42,11 @@
 
 ```csharp
 // 수동 구현 - 모든 메서드에 반복되는 보일러플레이트 코드
-public class UserRepository : IAdapter
+public class UserRepository : IPort
 {
     private readonly ILogger<UserRepository> _logger;
-    private readonly IAdapterTrace _trace;
-    private readonly IAdapterMetric _metric;
+    private readonly IPortTrace _trace;
+    private readonly IPortMetric _metric;
 
     public FinT<IO, User> GetUserAsync(int userId)
     {
@@ -110,7 +110,7 @@ public class UserRepository : IAdapter
 ```csharp
 // 개발자가 작성하는 코드 - 핵심 로직에만 집중
 [GeneratePipeline]
-public class UserRepository(ILogger<UserRepository> logger) : IAdapter
+public class UserRepository(ILogger<UserRepository> logger) : IPort
 {
     public FinT<IO, User> GetUserAsync(int userId) =>
         // 순수한 비즈니스 로직만 작성
@@ -222,27 +222,27 @@ IncrementalGeneratorBase (추상 클래스)
 - 새로운 생성기 추가 시 핵심 로직만 구현
 - 디버깅 플래그 등 **공통 기능 중앙 관리**
 
-### 전략 패턴 (Strategy Pattern) with IAdapter
+### 전략 패턴 (Strategy Pattern) with IPort
 
-`IAdapter` 인터페이스를 통해 **전략 패턴**을 구현합니다. 각 어댑터는 특정 외부 시스템과의 통신 전략을 캡슐화합니다:
+`IPort` 인터페이스를 통해 **전략 패턴**을 구현합니다. 각 어댑터는 특정 외부 시스템과의 통신 전략을 캡슐화합니다:
 
 ```csharp
-// IAdapter 인터페이스 - 전략의 공통 계약
-public interface IAdapter
+// IPort 인터페이스 - 전략의 공통 계약
+public interface IPort
 {
     // 마커 인터페이스로 사용
     // 실제 메서드는 각 도메인별 인터페이스에서 정의
 }
 
 // 구체적인 전략 정의 - 사용자 저장소
-public interface IUserRepository : IAdapter
+public interface IUserRepository : IPort
 {
     FinT<IO, User> GetUserAsync(int id);
     FinT<IO, IEnumerable<User>> GetUsersAsync();
 }
 
 // 구체적인 전략 정의 - 주문 저장소
-public interface IOrderRepository : IAdapter
+public interface IOrderRepository : IPort
 {
     FinT<IO, Order> GetOrderAsync(int id);
     FinT<IO, Unit> CreateOrderAsync(Order order);
@@ -253,7 +253,7 @@ public interface IOrderRepository : IAdapter
 전략 패턴 구조
 =============
 
-IAdapter (전략 인터페이스)
+IPort (전략 인터페이스)
 │
 ├── IUserRepository        # 사용자 관련 전략
 │   └── UserRepository     # 구체적 구현
@@ -400,7 +400,7 @@ Functorium/
 2단계: 대상 클래스 필터링
 ========================
 [GeneratePipeline] 속성이 붙고
-IAdapter를 구현한 클래스만 선택
+IPort를 구현한 클래스만 선택
 
 3단계: Pipeline 클래스 생성
 =========================

@@ -15,7 +15,7 @@ Pipeline 클래스는 원본 클래스를 **상속**합니다. 부모 클래스�
 ```csharp
 // 원본 클래스 (Primary Constructor)
 [GeneratePipeline]
-public class UserRepository(ILogger<UserRepository> logger) : IAdapter
+public class UserRepository(ILogger<UserRepository> logger) : IPort
 {
     public FinT<IO, User> GetUserAsync(int id) => ...;
 }
@@ -27,8 +27,8 @@ public class UserRepositoryPipeline : UserRepository
     public UserRepositoryPipeline(
         ActivityContext parentContext,
         ILogger<UserRepositoryPipeline> logger,
-        IAdapterTrace adapterTrace,
-        IAdapterMetric adapterMetric,
+        IPortTrace adapterTrace,
+        IPortMetric adapterMetric,
         ILogger<UserRepository> baseLogger)  // ← 부모용 logger
         : base(baseLogger)  // ← 부모 생성자 호출
     {
@@ -113,13 +113,13 @@ public static class ConstructorParameterExtractor
 
 ```csharp
 // Primary Constructor 형태
-public class UserRepository(ILogger<UserRepository> logger) : IAdapter
+public class UserRepository(ILogger<UserRepository> logger) : IPort
 {
     // logger는 클래스 전체에서 사용 가능
 }
 
 // 동일한 일반 생성자
-public class UserRepository : IAdapter
+public class UserRepository : IPort
 {
     private readonly ILogger<UserRepository> _logger;
 
@@ -151,7 +151,7 @@ var constructor = classSymbol.Constructors
 
 ```csharp
 // 원본 클래스
-public class UserRepository(ILogger<UserRepository> logger) : IAdapter { }
+public class UserRepository(ILogger<UserRepository> logger) : IPort { }
 
 // 생성되는 Pipeline (충돌!)
 public class UserRepositoryPipeline : UserRepository
@@ -226,8 +226,8 @@ public class UserRepositoryPipeline : UserRepository
     public UserRepositoryPipeline(
         ActivityContext parentContext,
         ILogger<UserRepositoryPipeline> logger,      // Pipeline용
-        IAdapterTrace adapterTrace,
-        IAdapterMetric adapterMetric,
+        IPortTrace adapterTrace,
+        IPortMetric adapterMetric,
         ILogger<UserRepository> baseLogger)           // ← 이름 변경됨
         : base(baseLogger)                            // ← 부모에 전달
     {
@@ -298,7 +298,7 @@ public Task Should_Handle_Primary_Constructor()
 {
     string input = """
         [GeneratePipeline]
-        public class UserRepository(ILogger<UserRepository> logger) : IAdapter
+        public class UserRepository(ILogger<UserRepository> logger) : IPort
         {
             public FinT<IO, User> GetUserAsync(int id) => throw new();
         }
@@ -317,7 +317,7 @@ public Task Should_Select_Constructor_With_Most_Parameters()
 {
     string input = """
         [GeneratePipeline]
-        public class UserRepository : IAdapter
+        public class UserRepository : IPort
         {
             public UserRepository() { }
             public UserRepository(ILogger<UserRepository> logger) { }
@@ -338,7 +338,7 @@ public Task Should_Resolve_Parameter_Name_Conflict()
 {
     string input = """
         [GeneratePipeline]
-        public class UserRepository(ILogger<UserRepository> logger) : IAdapter { }
+        public class UserRepository(ILogger<UserRepository> logger) : IPort { }
         """;
 
     string? actual = _sut.Generate(input);

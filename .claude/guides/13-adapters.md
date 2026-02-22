@@ -638,7 +638,7 @@ Unit of Work(UoW)는 Usecase에서 트랜잭션을 커밋하는 Port입니다. R
 **위치**: `Functorium.Applications.Persistence`
 
 ```csharp
-public interface IUnitOfWork : IAdapter
+public interface IUnitOfWork : IPort
 {
     FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = default);
 }
@@ -1205,7 +1205,7 @@ public class InMemoryProductQueryAdapter : IProductQueryAdapter
 
 | 문서 | 설명 |
 |------|------|
-| [12-ports.md](./12-ports.md) | Port 아키텍처, IAdapter 계층, Port 정의 규칙 |
+| [12-ports.md](./12-ports.md) | Port 아키텍처, IPort 계층, Port 정의 규칙 |
 | [14-adapter-wiring.md](./14-adapter-wiring.md) | Pipeline 생성, DI 등록, Options 패턴, 테스트 |
 | [15-unit-testing.md](./15-unit-testing.md) | 단위 테스트 작성 가이드 |
 | [08-error-system.md](./08-error-system.md) | 에러 시스템 가이드 |

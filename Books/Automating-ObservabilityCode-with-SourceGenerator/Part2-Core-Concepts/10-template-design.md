@@ -161,8 +161,8 @@ private static void GenerateFields(StringBuilder sb, PipelineClassInfo classInfo
     sb.AppendLine("    private readonly ActivityContext _parentContext;")
       .AppendLine()
       .AppendLine($"    private readonly ILogger<{classInfo.ClassName}Pipeline> _logger;")
-      .AppendLine("    private readonly IAdapterTrace _adapterTrace;")
-      .AppendLine("    private readonly IAdapterMetric _adapterMetric;")
+      .AppendLine("    private readonly IPortTrace _adapterTrace;")
+      .AppendLine("    private readonly IPortMetric _adapterMetric;")
       .AppendLine();
 
     // 상수
@@ -190,8 +190,8 @@ private static void GenerateConstructor(StringBuilder sb, PipelineClassInfo clas
       .AppendLine()
       .AppendLine("        ActivityContext parentContext,")
       .AppendLine($"        ILogger<{classInfo.ClassName}Pipeline> logger,")
-      .AppendLine("        IAdapterTrace adapterTrace,")
-      .Append("        IAdapterMetric adapterMetric");
+      .AppendLine("        IPortTrace adapterTrace,")
+      .Append("        IPortMetric adapterMetric");
 
     // 부모 클래스 파라미터 (동적)
     string baseParams = GenerateBaseConstructorParameters(

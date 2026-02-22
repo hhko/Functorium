@@ -220,7 +220,7 @@ public sealed class AdapterPipelineGeneratorTests
 
             namespace TestNamespace;
 
-            public interface ITestAdapter : IAdapter
+            public interface ITestAdapter : IPort
             {
                 FinT<IO, int> GetValue();
             }
@@ -254,8 +254,8 @@ string input = """
     // 2. 네임스페이스
     namespace TestNamespace;
 
-    // 3. 인터페이스 정의 (IAdapter 상속)
-    public interface ITestAdapter : IAdapter
+    // 3. 인터페이스 정의 (IPort 상속)
+    public interface ITestAdapter : IPort
     {
         FinT<IO, int> GetValue();
     }

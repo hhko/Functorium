@@ -367,7 +367,7 @@ public Task Should_Extract_SimpleType()
 {
     string input = """
         [GeneratePipeline]
-        public class DataRepository : IAdapter
+        public class DataRepository : IPort
         {
             public virtual FinT<IO, int> GetNumber() => FinT<IO, int>.Succ(42);
             public virtual FinT<IO, string> GetText() => FinT<IO, string>.Succ("hello");
@@ -392,7 +392,7 @@ public Task Should_Extract_CollectionType()
         public class User { public int Id { get; set; } }
 
         [GeneratePipeline]
-        public class UserRepository : IAdapter
+        public class UserRepository : IPort
         {
             public virtual FinT<IO, List<User>> GetUsers()
                 => FinT<IO, List<User>>.Succ(new List<User>());
@@ -416,7 +416,7 @@ public Task Should_Extract_ComplexGenericType()
 {
     string input = """
         [GeneratePipeline]
-        public class DataRepository : IAdapter
+        public class DataRepository : IPort
         {
             public virtual FinT<IO, Dictionary<string, List<int>>> GetComplexData()
                 => FinT<IO, Dictionary<string, List<int>>>.Succ(
@@ -439,7 +439,7 @@ public Task Should_Extract_TupleType()
 {
     string input = """
         [GeneratePipeline]
-        public class UserRepository : IAdapter
+        public class UserRepository : IPort
         {
             public virtual FinT<IO, (int Id, string Name)> GetUserInfo()
                 => FinT<IO, (int Id, string Name)>.Succ((1, "Test"));

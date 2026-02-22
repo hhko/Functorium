@@ -210,7 +210,7 @@ method.TypeParameters       // 타입 파라미터
 ```csharp
 // AdapterPipelineGenerator.cs
 var methods = classSymbol.AllInterfaces
-    .Where(ImplementsIAdapter)
+    .Where(ImplementsIPort)
     .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
     .Where(m => m.MethodKind == MethodKind.Ordinary)  // ★ 일반 메서드만
     .Select(m => new MethodInfo(
@@ -255,19 +255,19 @@ public static List<ParameterInfo> ExtractParameters(INamedTypeSymbol classSymbol
 }
 ```
 
-### IAdapter 구현 확인
+### IPort 구현 확인
 
 ```csharp
-private static bool ImplementsIAdapter(INamedTypeSymbol interfaceSymbol)
+private static bool ImplementsIPort(INamedTypeSymbol interfaceSymbol)
 {
-    // IAdapter 자체인지 확인
-    if (interfaceSymbol.Name == "IAdapter")
+    // IPort 자체인지 확인
+    if (interfaceSymbol.Name == "IPort")
     {
         return true;
     }
 
-    // IAdapter를 상속받은 인터페이스인지 확인
-    return interfaceSymbol.AllInterfaces.Any(i => i.Name == "IAdapter");
+    // IPort를 상속받은 인터페이스인지 확인
+    return interfaceSymbol.AllInterfaces.Any(i => i.Name == "IPort");
 }
 ```
 

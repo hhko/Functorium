@@ -235,7 +235,7 @@ public class NamespaceTests
             namespace MyApp;
 
             [GeneratePipeline]
-            public class UserRepository : IAdapter { }
+            public class UserRepository : IPort { }
             """;
 
         string? actual = _sut.Generate(input);
@@ -251,7 +251,7 @@ public class NamespaceTests
             namespace A.B.C.D.E;
 
             [GeneratePipeline]
-            public class UserRepository : IAdapter { }
+            public class UserRepository : IPort { }
             """;
 
         string? actual = _sut.Generate(input);
@@ -265,7 +265,7 @@ public class NamespaceTests
     {
         string input = """
             [GeneratePipeline]
-            public class UserRepository : IAdapter { }
+            public class UserRepository : IPort { }
             """;
 
         string? actual = _sut.Generate(input);

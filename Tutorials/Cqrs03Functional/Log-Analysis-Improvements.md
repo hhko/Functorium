@@ -42,7 +42,7 @@ public static class TelemetryLogKeys
 
 **현재 상태**:
 - Usecase Log: `Elapsed: 200.4511` (밀리초)
-- IAdapter Log: `Elapsed: 96.0635` (밀리초)
+- IPort Log: `Elapsed: 96.0635` (밀리초)
 - Trace: `response.elapsed: 200.4511` (밀리초)
 
 **개선 방안**:
@@ -97,10 +97,10 @@ public static class TelemetryLogKeys
 
 ## 데이터 구조 문제
 
-### 5. IAdapter 파라미터 필드명의 동적 생성
+### 5. IPort 파라미터 필드명의 동적 생성
 
 **문제점**:
-- IAdapter 로그의 파라미터 필드명이 메서드 파라미터명에 따라 동적으로 생성됨
+- IPort 로그의 파라미터 필드명이 메서드 파라미터명에 따라 동적으로 생성됨
 - 일관된 필드명이 없어 쿼리 작성이 어려움
 
 **현재 상태**:
@@ -136,9 +136,9 @@ public static class TelemetryLogKeys
 ### 7. Error 객체 구조의 불일치
 
 **문제점**:
-- Usecase와 IAdapter의 Error 객체 구조가 다름
+- Usecase와 IPort의 Error 객체 구조가 다름
 - Usecase: 상세한 에러 정보 (ErrorType, ErrorCode, Message, ErrorCurrentValue 등)
-- IAdapter: 간단한 에러 정보 (ErrorType, ErrorCodeId, Message)
+- IPort: 간단한 에러 정보 (ErrorType, ErrorCodeId, Message)
 
 **현재 상태**:
 ```json
@@ -151,7 +151,7 @@ public static class TelemetryLogKeys
   "ErrorCurrentValue": {...}
 }
 
-// IAdapter Error
+// IPort Error
 {
   "ErrorType": "Expected",
   "ErrorCodeId": 0,
@@ -161,7 +161,7 @@ public static class TelemetryLogKeys
 
 **개선 방안**:
 - Error 객체 구조를 통일하여 일관된 쿼리 작성 가능하도록 개선
-- 또는 Usecase/IAdapter 구분을 명시적으로 문서화
+- 또는 Usecase/IPort 구분을 명시적으로 문서화
 
 **영향도**: 중간 - 에러 분석 시 구조 불일치로 인한 복잡도 증가
 
@@ -173,7 +173,7 @@ public static class TelemetryLogKeys
 
 **문제점**:
 - Usecase Log: `Status: "Success"` / `Status: "Failure"` (대문자 시작)
-- IAdapter Log: `Status: "Success"` / `Status: "failure"` (소문자, 일관성 없음)
+- IPort Log: `Status: "Success"` / `Status: "failure"` (소문자, 일관성 없음)
 
 **현재 상태**:
 - 문서에는 "Success", "failure"로 표기되어 있으나 실제 코드 확인 필요
@@ -211,7 +211,7 @@ public static class TelemetryLogKeys
 
 ---
 
-### 10. IAdapter Information 레벨의 데이터 손실
+### 10. IPort Information 레벨의 데이터 손실
 
 **문제점**:
 - MinimumLevel이 Information일 때 파라미터와 반환값 정보가 완전히 제거됨
@@ -277,5 +277,5 @@ public static class TelemetryLogKeys
 1. **필드명 통일**: Log/Trace/Metrics 간 필드명 규칙 통일 (소문자 + 점 구분 권장)
 2. **값 표준화**: Status, ErrorType 등 고정값의 대소문자 통일
 3. **타입 명시**: 모든 필드의 정확한 타입과 단위 명시
-4. **구조 통일**: Usecase/IAdapter 간 데이터 구조 일관성 확보
+4. **구조 통일**: Usecase/IPort 간 데이터 구조 일관성 확보
 5. **스키마 정의**: JSON 스키마 또는 OpenAPI 스펙으로 데이터 구조 명시

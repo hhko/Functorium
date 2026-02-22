@@ -102,7 +102,7 @@ Architecture
 | 09 | [09-domain-services.md](./09-domain-services.md) | 도메인 서비스 (교차 Aggregate 순수 로직, IDomainService) |
 | 10 | [10-specifications.md](./10-specifications.md) | Specification 패턴 (비즈니스 규칙 캡슐화, 조합, Repository 통합) |
 | 11 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) | Use Case 구현 (CQRS Command/Query) |
-| 12 | [12-ports.md](./12-ports.md) | Port 아키텍처, IAdapter 계층, Port 정의 규칙 |
+| 12 | [12-ports.md](./12-ports.md) | Port 아키텍처, IPort 계층, Port 정의 규칙 |
 | 13 | [13-adapters.md](./13-adapters.md) | Adapter 구현 (Repository, External API, Messaging, Query) |
 | 14 | [14-adapter-wiring.md](./14-adapter-wiring.md) | Pipeline 생성, DI 등록, Options 패턴, 테스트 |
 | 17 | [17-dto-strategy.md](./17-dto-strategy.md) | DTO 전략 (레이어별 소유권, 재사용 규칙, 변환 패턴) |

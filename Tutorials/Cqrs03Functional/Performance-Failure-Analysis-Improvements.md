@@ -288,12 +288,12 @@ Usecase: Elapsed = 200.4511 ms (전체 시간만)
 
 **문제점**:
 - 에러 재현을 위한 충분한 정보가 로그에 없을 수 있음
-- 특히 IAdapter Information 레벨에서는 파라미터 정보 없음
+- 특히 IPort Information 레벨에서는 파라미터 정보 없음
 
 **현재 상태**:
 - Usecase: Request 전체 객체 기록 ✅
-- IAdapter Debug: 파라미터 기록 ✅
-- IAdapter Information: 파라미터 없음 ❌
+- IPort Debug: 파라미터 기록 ✅
+- IPort Information: 파라미터 없음 ❌
 
 **개선 방안**:
 - **에러 발생 시 파라미터 강제 기록**: Information 레벨에서도 에러 발생 시 파라미터 기록
@@ -530,7 +530,7 @@ Usecase: Elapsed = 200.4511 ms (전체 시간만)
 ## 관련 코드 위치
 
 - **Usecase Pipeline**: `Src/Functorium/Applications/Pipelines/UsecasePipelineBase.cs`
-- **IAdapter Pipeline 생성기**: `Src/Functorium.SourceGenerators/AdapterPipelineGenerator.cs`
+- **IPort Pipeline 생성기**: `Src/Functorium.SourceGenerators/AdapterPipelineGenerator.cs`
 - **Metrics 수집**: `Src/Functorium/Applications/Pipelines/UsecaseMetricsPipeline.cs`, `Src/Functorium/Adapters/Observabilities/Metrics/AdapterMetric.cs`
 - **Trace 수집**: `Src/Functorium/Applications/Pipelines/UsecaseTracePipeline.cs`, `Src/Functorium/Adapters/Observabilities/Tracing/AdapterTrace.cs`
 - **Log 수집**: `Src/Functorium/Applications/Pipelines/UsecaseLoggerPipeline.cs`

@@ -237,7 +237,7 @@ public interface IDomainEventPublisher
 
 ```csharp
 // Functorium.Domains.Repositories
-public interface IRepository<TAggregate, TId> : IAdapter
+public interface IRepository<TAggregate, TId> : IPort
     where TAggregate : AggregateRoot<TId>
     where TId : struct, IEntityId<TId>
 {
@@ -251,7 +251,7 @@ public interface IRepository<TAggregate, TId> : IAdapter
 **핵심 설계 결정:**
 - `AggregateRoot<TId>` 제약으로 **컴파일 타임에 Aggregate Root 단위 Repository를 강제**
 - 풀 CRUD (`Create` + `GetById` + `Update` + `Delete`) 표준 제공
-- `IAdapter`를 전이적으로 상속하여 기존 소스 생성기 및 DI 등록과 호환
+- `IPort`를 전이적으로 상속하여 기존 소스 생성기 및 DI 등록과 호환
 
 **사용 예:**
 
@@ -285,7 +285,7 @@ public interface IDomainService { }
 
 **핵심 설계 결정:**
 - 빈 마커 인터페이스 (Domain Service는 각자 고유한 메서드를 가짐)
-- `IAdapter` 상속 없음 (Domain Service는 순수 도메인 로직, Port/Adapter가 아님)
+- `IPort` 상속 없음 (Domain Service는 순수 도메인 로직, Port/Adapter가 아님)
 - 아키텍처 테스트에서 `is IDomainService`로 검증 가능
 
 **사용 예: 주문 신용 한도 검증 서비스**
@@ -320,7 +320,7 @@ FinT<IO, Response> usecase =
 **배치 규칙:**
 - Domain Service는 Domain Layer에 배치
 - 순수 함수로 구현 (외부 I/O 없음)
-- `IAdapter` 의존 없음 (Port/Adapter 사용 시 Usecase에서 조율)
+- `IPort` 의존 없음 (Port/Adapter 사용 시 Usecase에서 조율)
 - `Fin<T>` 반환값은 `FinT<IO, T>` LINQ 체인에서 자동 리프팅
 
 **참조:** `Src/Functorium/Domains/Services/IDomainService.cs`, `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/Services/OrderCreditCheckService.cs`
@@ -517,7 +517,7 @@ Aggregate → Domain Event → Domain Event Handler
 
 ```csharp
 // Functorium.Applications.Persistence
-public interface IUnitOfWork : IAdapter
+public interface IUnitOfWork : IPort
 {
     FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = default);
 }
@@ -544,7 +544,7 @@ FinT<IO, Response> usecase =
 > **이전 패턴과의 차이**: 이전에는 Usecase에서 `_unitOfWork.SaveChanges()` → `_eventPublisher.PublishEvents()`를 LINQ 체인에서 직접 호출했으나, 파이프라인 도입으로 이 책임이 `UsecaseTransactionPipeline`으로 이전되었습니다. 자세한 내용은 [11-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./11-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-usecasetransactionpipeline)을 참조하세요.
 
 **핵심 설계 결정:**
-- `IAdapter` 상속으로 `[GeneratePipeline]` 소스 생성기 및 DI 등록 호환
+- `IPort` 상속으로 `[GeneratePipeline]` 소스 생성기 및 DI 등록 호환
 - EF Core 구현체에서 `DbUpdateConcurrencyException` → `ConcurrencyConflict`, `DbUpdateException` → `DatabaseUpdateFailed` 에러 변환
 - DI 등록 시 Strategy 패턴으로 InMemory/EfCore 전환 가능
 

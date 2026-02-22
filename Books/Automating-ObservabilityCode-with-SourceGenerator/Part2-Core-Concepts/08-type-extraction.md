@@ -147,7 +147,7 @@ private static string ExtractActualReturnType(string returnType)
 
 ```csharp
 // 원본 인터페이스
-public interface IUserRepository : IAdapter
+public interface IUserRepository : IPort
 {
     FinT<IO, User> GetUserAsync(int id);
     FinT<IO, IEnumerable<User>> GetUsersAsync();

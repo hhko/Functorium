@@ -183,7 +183,7 @@ private static PipelineClassInfo MapToPipelineClassInfo(
 
     // 4. 인터페이스의 메서드 추출
     var methods = interfaces
-        .Where(ImplementsIAdapter)
+        .Where(ImplementsIPort)
         .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
         .Where(m => m.MethodKind == MethodKind.Ordinary)
         .ToList();
@@ -210,9 +210,9 @@ bool areSameType = SymbolEqualityComparer.Default.Equals(type1, type2);
 ### 특정 타입인지 확인
 
 ```csharp
-// IAdapter 인터페이스를 구현하는지 확인
-bool implementsIAdapter = classSymbol.AllInterfaces
-    .Any(i => i.Name == "IAdapter");
+// IPort 인터페이스를 구현하는지 확인
+bool implementsIPort = classSymbol.AllInterfaces
+    .Any(i => i.Name == "IPort");
 
 // 특정 네임스페이스의 타입인지 확인
 bool isInMyNamespace = classSymbol.ContainingNamespace
@@ -274,7 +274,7 @@ if (method.IsGenericMethod)
 ```csharp
 // AdapterPipelineGenerator.cs에서 메서드 정보 추출
 var methods = classSymbol.AllInterfaces
-    .Where(ImplementsIAdapter)
+    .Where(ImplementsIPort)
     .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
     .Where(m => m.MethodKind == MethodKind.Ordinary)
     .Select(m => new MethodInfo(

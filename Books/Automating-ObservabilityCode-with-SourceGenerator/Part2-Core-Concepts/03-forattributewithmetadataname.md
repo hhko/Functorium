@@ -218,9 +218,9 @@ public sealed class AdapterPipelineGenerator()
             ? string.Empty
             : classSymbol.ContainingNamespace.ToString();
 
-        // IAdapter 인터페이스의 메서드 추출
+        // IPort 인터페이스의 메서드 추출
         var methods = classSymbol.AllInterfaces
-            .Where(ImplementsIAdapter)
+            .Where(ImplementsIPort)
             .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
             .Where(m => m.MethodKind == MethodKind.Ordinary)
             .Select(m => new MethodInfo(

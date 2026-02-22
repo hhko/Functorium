@@ -59,7 +59,7 @@
 ```csharp
 // 개발자가 작성한 코드
 [GeneratePipeline]
-public class UserRepository : IAdapter
+public class UserRepository : IPort
 {
     public FinT<IO, User> GetUserAsync(int id) => ...;
 }

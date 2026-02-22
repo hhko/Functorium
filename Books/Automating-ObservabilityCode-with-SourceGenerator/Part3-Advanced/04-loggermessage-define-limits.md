@@ -232,7 +232,7 @@ public Task Should_Generate_LoggerMessageDefine_WithTwoParameters()
 {
     string input = """
         [GeneratePipeline]
-        public class DataRepository : IAdapter
+        public class DataRepository : IPort
         {
             public virtual FinT<IO, string> GetData(int id, string name)
                 => FinT<IO, string>.Succ($"{id}:{name}");
@@ -257,7 +257,7 @@ public Task Should_Generate_LogDebugFallback_WithThreeParameters()
 {
     string input = """
         [GeneratePipeline]
-        public class DataRepository : IAdapter
+        public class DataRepository : IPort
         {
             public virtual FinT<IO, string> GetData(int id, string name, bool isActive)
                 => FinT<IO, string>.Succ($"{id}:{name}:{isActive}");
@@ -281,7 +281,7 @@ public Task Should_Generate_LoggerMessageDefine_WithZeroParameters()
 {
     string input = """
         [GeneratePipeline]
-        public class DataRepository : IAdapter
+        public class DataRepository : IPort
         {
             public virtual FinT<IO, int> GetValue()
                 => FinT<IO, int>.Succ(42);

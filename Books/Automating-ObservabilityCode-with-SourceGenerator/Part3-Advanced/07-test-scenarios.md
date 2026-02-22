@@ -19,7 +19,7 @@ AdapterPipelineGenerator는 27개의 테스트 시나리오를 7개 카테고리
 | 3. 파라미터 | 8개 | 입력 파라미터 처리 |
 | 4. 반환 타입 | 6개 | 출력 타입 처리 |
 | 5. 생성자 | 4개 | 생성자 파라미터 |
-| 6. 인터페이스 | 3개 | IAdapter 구현 |
+| 6. 인터페이스 | 3개 | IPort 구현 |
 | 7. 네임스페이스 | 2개 | 네임스페이스 처리 |
 
 ---
@@ -54,7 +54,7 @@ public Task AdapterPipelineGenerator_ShouldGenerate_GeneratePipelineAttribute()
 
 ```csharp
 /// <summary>
-/// IAdapter를 구현하고 단일 메서드를 가진 어댑터에 대해
+/// IPort를 구현하고 단일 메서드를 가진 어댑터에 대해
 /// 파이프라인 클래스가 생성되는지 확인합니다.
 /// </summary>
 [Fact]
@@ -101,14 +101,14 @@ public Task Should_Generate_PipelineClass_WithMultipleMethods()
 
 ```csharp
 /// <summary>
-/// IAdapter만 구현하고 메서드가 없는 경우 파이프라인이 생성되지 않아야 합니다.
+/// IPort만 구현하고 메서드가 없는 경우 파이프라인이 생성되지 않아야 합니다.
 /// </summary>
 [Fact]
 public Task Should_NotGenerate_PipelineClass_WhenNoMethods()
 {
     string input = """
         [GeneratePipeline]
-        public class EmptyAdapter : IAdapter
+        public class EmptyAdapter : IPort
         {
             public string RequestCategory => "Test";
         }
@@ -138,7 +138,7 @@ public Task Should_Generate_LoggerMessageDefine_WithZeroParameters()
 {
     string input = """
         [GeneratePipeline]
-        public class ZeroParamAdapter : IAdapter
+        public class ZeroParamAdapter : IPort
         {
             public virtual FinT<IO, int> GetValue() => ...;
         }
@@ -152,7 +152,7 @@ public Task Should_Generate_LoggerMessageDefine_WithTwoParameters()
 {
     string input = """
         [GeneratePipeline]
-        public class TwoParamAdapter : IAdapter
+        public class TwoParamAdapter : IPort
         {
             public virtual FinT<IO, string> GetData(int id, string name) => ...;
         }
@@ -166,7 +166,7 @@ public Task Should_Generate_LogDebugFallback_WithThreeParameters()
 {
     string input = """
         [GeneratePipeline]
-        public class ThreeParamAdapter : IAdapter
+        public class ThreeParamAdapter : IPort
         {
             public virtual FinT<IO, string> GetData(int id, string name, bool flag) => ...;
         }
@@ -186,7 +186,7 @@ public Task Should_Generate_CollectionCountFields()
 {
     string input = """
         [GeneratePipeline]
-        public class CollectionParamAdapter : IAdapter
+        public class CollectionParamAdapter : IPort
         {
             public virtual FinT<IO, int> ProcessItems(List<string> items) => ...;
         }
@@ -206,7 +206,7 @@ public Task Should_NotGenerate_Count_ForTupleParameter()
 {
     string input = """
         [GeneratePipeline]
-        public class TupleAdapter : IAdapter
+        public class TupleAdapter : IPort
         {
             // 튜플 내부에 List가 있어도 Count 미생성
             public virtual FinT<IO, int> Process((int Id, List<string> Tags) user) => ...;
@@ -231,7 +231,7 @@ public Task Should_Generate_PipelineClass_WithSimpleReturnType()
 {
     string input = """
         [GeneratePipeline]
-        public class SimpleAdapter : IAdapter
+        public class SimpleAdapter : IPort
         {
             public virtual FinT<IO, int> GetNumber() => ...;
             public virtual FinT<IO, string> GetText() => ...;
@@ -253,7 +253,7 @@ public Task Should_Generate_PipelineClass_WithCollectionReturnType()
 {
     string input = """
         [GeneratePipeline]
-        public class CollectionAdapter : IAdapter
+        public class CollectionAdapter : IPort
         {
             public virtual FinT<IO, List<User>> GetUsers() => ...;
             public virtual FinT<IO, string[]> GetNames() => ...;
@@ -274,7 +274,7 @@ public Task Should_Generate_PipelineClass_WithComplexGenericReturnType()
 {
     string input = """
         [GeneratePipeline]
-        public class ComplexAdapter : IAdapter
+        public class ComplexAdapter : IPort
         {
             public virtual FinT<IO, Dictionary<string, List<int>>> GetComplexData() => ...;
         }
@@ -294,7 +294,7 @@ public Task Should_Generate_PipelineClass_WithTupleReturnType()
 {
     string input = """
         [GeneratePipeline]
-        public class TupleAdapter : IAdapter
+        public class TupleAdapter : IPort
         {
             public virtual FinT<IO, (int Id, string Name)> GetUserInfo() => ...;
             public virtual FinT<IO, (int Id, List<string> Tags)> GetUserWithTags() => ...;
@@ -319,7 +319,7 @@ public Task Should_Generate_PipelineClass_WithPrimaryConstructor()
 {
     string input = """
         [GeneratePipeline]
-        public class PrimaryCtorAdapter(string connectionString) : IAdapter
+        public class PrimaryCtorAdapter(string connectionString) : IPort
         {
             public virtual FinT<IO, string> GetConnectionString() => ...;
         }
@@ -339,7 +339,7 @@ public Task Should_Generate_PipelineClass_WithMultipleConstructors()
 {
     string input = """
         [GeneratePipeline]
-        public class MultiCtorAdapter : IAdapter
+        public class MultiCtorAdapter : IPort
         {
             public MultiCtorAdapter() { }
             public MultiCtorAdapter(string connStr) { }
@@ -361,7 +361,7 @@ public Task Should_Generate_PipelineClass_WithParameterNameConflict()
 {
     string input = """
         [GeneratePipeline]
-        public class ConflictAdapter(ILogger<ConflictAdapter> logger) : IAdapter
+        public class ConflictAdapter(ILogger<ConflictAdapter> logger) : IPort
         {
             // logger → baseLogger로 변환 필요
         }
@@ -374,15 +374,15 @@ public Task Should_Generate_PipelineClass_WithParameterNameConflict()
 
 ## 6. 인터페이스 시나리오
 
-### IAdapter 직접 구현
+### IPort 직접 구현
 
 ```csharp
 [Fact]
-public Task Should_Generate_PipelineClass_WithDirectIAdapterImplementation()
+public Task Should_Generate_PipelineClass_WithDirectIPortImplementation()
 {
     string input = """
         [GeneratePipeline]
-        public class DirectAdapter : IAdapter
+        public class DirectAdapter : IPort
         {
             public virtual FinT<IO, int> GetValue() => ...;
         }
@@ -391,17 +391,17 @@ public Task Should_Generate_PipelineClass_WithDirectIAdapterImplementation()
 }
 ```
 
-### IAdapter 상속 인터페이스
+### IPort 상속 인터페이스
 
 ```csharp
 /// <summary>
-/// IUserRepository : IAdapter 형태의 상속 인터페이스를 확인합니다.
+/// IUserRepository : IPort 형태의 상속 인터페이스를 확인합니다.
 /// </summary>
 [Fact]
-public Task Should_Generate_PipelineClass_WithInheritedIAdapterInterface()
+public Task Should_Generate_PipelineClass_WithInheritedIPortInterface()
 {
     string input = """
-        public interface IUserRepository : IAdapter
+        public interface IUserRepository : IPort
         {
             FinT<IO, string> GetUserById(int id);
         }
@@ -421,7 +421,7 @@ public Task Should_Generate_PipelineClass_WithMultipleInterfaces()
 {
     string input = """
         [GeneratePipeline]
-        public class MultiInterfaceAdapter : IAdapter, IDisposable
+        public class MultiInterfaceAdapter : IPort, IDisposable
         {
             public virtual FinT<IO, int> GetValue() => ...;
             public void Dispose() { }
@@ -445,7 +445,7 @@ public Task Should_Generate_PipelineClass_WithSimpleNamespace()
         namespace MyApp;
 
         [GeneratePipeline]
-        public class SimpleAdapter : IAdapter { ... }
+        public class SimpleAdapter : IPort { ... }
         """;
     // 생성 파일: MyApp.SimpleAdapterPipeline.g.cs
 }
@@ -461,7 +461,7 @@ public Task Should_Generate_PipelineClass_WithDeepNamespace()
         namespace Company.Domain.Adapters.Infrastructure.Repositories;
 
         [GeneratePipeline]
-        public class DeepAdapter : IAdapter { ... }
+        public class DeepAdapter : IPort { ... }
         """;
     // 생성 파일: Company.Domain.Adapters.Infrastructure.Repositories.DeepAdapterPipeline.g.cs
 }

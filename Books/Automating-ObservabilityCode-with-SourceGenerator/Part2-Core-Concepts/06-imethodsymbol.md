@@ -189,7 +189,7 @@ bool isThis = param.IsThis;          // 확장 메서드의 this
 ```csharp
 // AdapterPipelineGenerator.cs에서 메서드 정보 추출
 var methods = classSymbol.AllInterfaces
-    .Where(ImplementsIAdapter)
+    .Where(ImplementsIPort)
     .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
     .Where(m => m.MethodKind == MethodKind.Ordinary)
     .Select(m => new MethodInfo(

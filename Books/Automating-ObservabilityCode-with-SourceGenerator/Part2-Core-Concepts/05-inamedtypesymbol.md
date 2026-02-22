@@ -98,32 +98,32 @@ var directInterfaces = classSymbol.Interfaces;
 var allInterfaces = classSymbol.AllInterfaces;
 
 // 예시:
-// public interface IUserRepository : IAdapter { }
+// public interface IUserRepository : IPort { }
 // public class UserRepository : IUserRepository { }
 
 // classSymbol.Interfaces → [IUserRepository]
-// classSymbol.AllInterfaces → [IUserRepository, IAdapter]
+// classSymbol.AllInterfaces → [IUserRepository, IPort]
 ```
 
-### IAdapter 구현 확인
+### IPort 구현 확인
 
 ```csharp
 // AdapterPipelineGenerator.cs에서
-private static bool ImplementsIAdapter(INamedTypeSymbol interfaceSymbol)
+private static bool ImplementsIPort(INamedTypeSymbol interfaceSymbol)
 {
-    // IAdapter 자체인지 확인
-    if (interfaceSymbol.Name == "IAdapter")
+    // IPort 자체인지 확인
+    if (interfaceSymbol.Name == "IPort")
     {
         return true;
     }
 
-    // IAdapter를 상속받은 인터페이스인지 확인
-    return interfaceSymbol.AllInterfaces.Any(i => i.Name == "IAdapter");
+    // IPort를 상속받은 인터페이스인지 확인
+    return interfaceSymbol.AllInterfaces.Any(i => i.Name == "IPort");
 }
 
 // 사용
 var adapterInterfaces = classSymbol.AllInterfaces
-    .Where(ImplementsIAdapter);
+    .Where(ImplementsIPort);
 ```
 
 ---
@@ -155,7 +155,7 @@ var fields = classSymbol.GetMembers()
 ```csharp
 // AdapterPipelineGenerator.cs의 실제 코드
 var methods = classSymbol.AllInterfaces
-    .Where(ImplementsIAdapter)
+    .Where(ImplementsIPort)
     .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
     .Where(m => m.MethodKind == MethodKind.Ordinary)  // 일반 메서드만
     .Select(m => new MethodInfo(
@@ -192,7 +192,7 @@ var primaryConstructor = classSymbol.Constructors
 
 ```csharp
 // Primary Constructor 예시
-public class UserRepository(ILogger<UserRepository> logger) : IAdapter
+public class UserRepository(ILogger<UserRepository> logger) : IPort
 {
 }
 
@@ -303,7 +303,7 @@ private static PipelineClassInfo MapToPipelineClassInfo(
 
     // 3. 인터페이스에서 메서드 추출
     var methods = classSymbol.AllInterfaces
-        .Where(ImplementsIAdapter)
+        .Where(ImplementsIPort)
         .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
         .Where(m => m.MethodKind == MethodKind.Ordinary)
         .Select(m => MapToMethodInfo(m))

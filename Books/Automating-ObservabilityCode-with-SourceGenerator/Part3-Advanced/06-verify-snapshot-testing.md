@@ -64,7 +64,7 @@ public Task Should_Generate_PipelineClass()
 {
     string input = """
         [GeneratePipeline]
-        public class TestAdapter : IAdapter
+        public class TestAdapter : IPort
         {
             public virtual FinT<IO, int> GetValue() => FinT<IO, int>.Succ(42);
         }
@@ -263,7 +263,7 @@ public Task AdapterPipelineGenerator_ShouldGenerate_PipelineClass_WithSingleMeth
 
         namespace TestNamespace;
 
-        public interface ITestAdapter : IAdapter
+        public interface ITestAdapter : IPort
         {
             FinT<IO, int> GetValue();
         }
@@ -292,8 +292,8 @@ public class TestAdapterPipeline : TestAdapter
 {
     private readonly ActivityContext _parentContext;
     private readonly ILogger<TestAdapterPipeline> _logger;
-    private readonly IAdapterTrace _adapterTrace;
-    private readonly IAdapterMetric _adapterMetric;
+    private readonly IPortTrace _adapterTrace;
+    private readonly IPortMetric _adapterMetric;
 
     // ... 전체 생성된 코드
 }
@@ -372,7 +372,7 @@ public Task Should_Generate_CountAndLength() { }
 // ✅ 좋은 예 - 테스트에 필요한 최소 코드
 string input = """
     [GeneratePipeline]
-    public class TestAdapter : IAdapter
+    public class TestAdapter : IPort
     {
         public virtual FinT<IO, List<int>> GetItems() => ...;
     }
@@ -384,7 +384,7 @@ string input = """
     public interface IOtherInterface { }  // 테스트와 무관
 
     [GeneratePipeline]
-    public class TestAdapter : IAdapter
+    public class TestAdapter : IPort
     {
         private readonly string _unused;  // 테스트와 무관
         public virtual FinT<IO, List<int>> GetItems() => ...;

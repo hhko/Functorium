@@ -158,7 +158,7 @@ Phase 5: 고급 처리 (Part 3)
 ```csharp
 // 개발자가 작성하는 코드 - 비즈니스 로직만 집중
 [GeneratePipeline]
-public class UserRepository(ILogger<UserRepository> logger) : IAdapter
+public class UserRepository(ILogger<UserRepository> logger) : IPort
 {
     public FinT<IO, User> GetUserAsync(int id) => /* 순수 로직 */;
 }

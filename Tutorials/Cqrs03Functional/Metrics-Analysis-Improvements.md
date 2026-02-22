@@ -8,17 +8,17 @@
 
 **문제점**:
 - Usecase Metrics: `application.usecase.{cqrs}.requests` (점 구분, 소문자)
-- IAdapter Metrics: `adapter.{category}.op.request` (점 구분, 소문자, `.op` 포함)
+- IPort Metrics: `adapter.{category}.op.request` (점 구분, 소문자, `.op` 포함)
 
 **현재 상태**:
 ```
 Usecase:   application.usecase.command.requests
-IAdapter:  adapter.repository.op.request
+IPort:  adapter.repository.op.request
 ```
 
 **개선 방안**:
 - 메트릭 이름 형식을 통일: `application.usecase.{cqrs}.requests` vs `application.adapter.{category}.requests`
-- 또는 IAdapter의 `.op` 접미사 제거 또는 Usecase에도 추가
+- 또는 IPort의 `.op` 접미사 제거 또는 Usecase에도 추가
 
 **영향도**: 높음 - 메트릭 이름 패턴 불일치로 인한 쿼리 복잡도 증가
 
@@ -157,11 +157,11 @@ Duration Histogram 태그:
 
 ---
 
-### 7. Usecase와 IAdapter의 태그 차이
+### 7. Usecase와 IPort의 태그 차이
 
 **문제점**:
 - Usecase: `request.category.type` 태그 포함
-- IAdapter: `request.category.type` 태그 없음
+- IPort: `request.category.type` 태그 없음
 - 태그 구조가 완전히 다름
 
 **현재 상태**:
@@ -173,7 +173,7 @@ Usecase 태그:
   - request.handler: "CreateProductCommand"
   - request.handler.method: "Handle"
 
-IAdapter 태그:
+IPort 태그:
   - request.layer: "Adapter"
   - request.category: "Repository"
   - request.handler: "InMemoryProductRepository"
@@ -222,7 +222,7 @@ IAdapter 태그:
 // Usecase
 durationHistogram.Record(elapsed / 1000.0, tags);  // 밀리초 → 초
 
-// IAdapter
+// IPort
 DurationHistogram.Record(elapsed / 1000.0, tags);  // 밀리초 → 초
 ```
 
@@ -254,12 +254,12 @@ DurationHistogram.Record(elapsed / 1000.0, tags);  // 밀리초 → 초
 
 **문제점**:
 - Usecase: 단일 Meter (`{ServiceNamespace}.Application`)
-- IAdapter: RequestCategory별 Meter 분리 (`{ServiceNamespace}.Adapter.{RequestCategory}`)
+- IPort: RequestCategory별 Meter 분리 (`{ServiceNamespace}.Adapter.{RequestCategory}`)
 
 **현재 상태**:
 ```
 Usecase Meter:   Cqrs03Functional.Demo.Application (1개)
-IAdapter Meter:  Cqrs03Functional.Demo.Adapter.Repository (N개)
+IPort Meter:  Cqrs03Functional.Demo.Adapter.Repository (N개)
                  Cqrs03Functional.Demo.Adapter.Db (N개)
                  ...
 ```
@@ -275,7 +275,7 @@ IAdapter Meter:  Cqrs03Functional.Demo.Adapter.Repository (N개)
 ### 12. 지연 초기화(Lazy Initialization)의 데이터 손실 가능성
 
 **문제점**:
-- IAdapter Metrics는 첫 요청 시점에 초기화됨
+- IPort Metrics는 첫 요청 시점에 초기화됨
 - 초기화 전 요청은 메트릭 수집되지 않을 수 있음
 
 **현재 상태**:
@@ -312,7 +312,7 @@ private void EnsureMetricsForCategory(string requestCategory)
 
 ## 권장 개선 방향
 
-1. **메트릭 이름 통일**: Usecase/IAdapter 간 메트릭 이름 패턴 통일
+1. **메트릭 이름 통일**: Usecase/IPort 간 메트릭 이름 패턴 통일
 2. **태그 값 표준화**: 모든 태그 값을 소문자로 통일 (Prometheus 권장)
 3. **태그 구성 통일**: 관련 메트릭 간 태그 세트 통일
 4. **카디널리티 관리**: 동적 태그 값에 대한 카디널리티 제한 설정

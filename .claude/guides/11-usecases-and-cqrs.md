@@ -44,7 +44,7 @@ CQRS의 이점을 Adapter 계층에서 실현합니다:
 
 | 측면 | Command | Query |
 |------|---------|-------|
-| **Adapter 유형** | Repository (`IRepository<T, TId>`) | Query Adapter (`IQueryAdapter<TEntity, TDto>`) |
+| **Adapter 유형** | Repository (`IRepository<T, TId>`) | Query Adapter (`IQueryPort<TEntity, TDto>`) |
 | **ORM** | EF Core | Dapper + 명시적 SQL |
 | **이유** | 변경 추적, UnitOfWork, 마이그레이션 | 성능 극대화, SQL 튜닝 용이 |
 | **반환 타입** | Domain Entity (`FinT<IO, T>`) | DTO (`FinT<IO, PagedResult<TDto>>`) |
@@ -738,13 +738,13 @@ services
 **위치**: `Functorium.Applications.Persistence`
 
 ```csharp
-public interface IUnitOfWork : IAdapter
+public interface IUnitOfWork : IPort
 {
     FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = default);
 }
 ```
 
-- `IAdapter`를 상속하므로 Pipeline 자동 생성 및 관찰성을 지원합니다.
+- `IPort`를 상속하므로 Pipeline 자동 생성 및 관찰성을 지원합니다.
 - EF Core 환경에서는 `DbContext.SaveChangesAsync()`를 호출하고, InMemory 환경에서는 no-op입니다.
 
 > **참조**: UoW Adapter 구현(EfCoreUnitOfWork, InMemoryUnitOfWork)은 [13-adapters.md](./13-adapters.md)를 참조하세요.

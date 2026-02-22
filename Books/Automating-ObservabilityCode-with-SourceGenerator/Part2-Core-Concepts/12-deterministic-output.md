@@ -232,7 +232,7 @@ public void Generated_Code_Should_Be_Deterministic()
 {
     string input = """
         [GeneratePipeline]
-        public class UserRepository : IAdapter
+        public class UserRepository : IPort
         {
             public FinT<IO, User> GetUserAsync(int id) => throw new();
         }
@@ -255,7 +255,7 @@ public Task Generated_Code_Should_Match_Snapshot()
 {
     string input = """
         [GeneratePipeline]
-        public class UserRepository : IAdapter
+        public class UserRepository : IPort
         {
             public FinT<IO, User> GetUserAsync(int id) => throw new();
         }

@@ -349,7 +349,7 @@ public static class ProductMapper
 ```csharp
 // TwoWayMappingLayered.Domains/Repositories/IProductRepository.cs
 
-public interface IProductRepository : IAdapter
+public interface IProductRepository : IPort
 {
     FinT<IO, Product> Create(Product product);      // ✅ Product 반환
     FinT<IO, Product> GetById(ProductId id);        // ✅ Product 반환

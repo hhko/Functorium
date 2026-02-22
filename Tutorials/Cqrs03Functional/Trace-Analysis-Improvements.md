@@ -8,13 +8,13 @@
 
 **문제점**:
 - Usecase: `Application Usecase.Command CreateProductCommand.Handle` (공백 포함)
-- IAdapter: `Adapter Repository InMemoryProductRepository.ExistsByName` (공백 포함)
+- IPort: `Adapter Repository InMemoryProductRepository.ExistsByName` (공백 포함)
 - Activity 이름에 공백이 포함되어 일부 도구에서 파싱 어려움 가능
 
 **현재 상태**:
 ```
 Usecase:   "Application Usecase.Command CreateProductCommand.Handle"
-IAdapter:  "Adapter Repository InMemoryProductRepository.ExistsByName"
+IPort:    "Adapter Repository InMemoryProductRepository.ExistsByName"
 ```
 
 **개선 방안**:
@@ -95,11 +95,11 @@ activity.SetStatus(ActivityStatusCode.Ok);     // 열거형
 
 ## 데이터 구조 문제
 
-### 5. Usecase와 IAdapter의 에러 태그 불일치
+### 5. Usecase와 IPort의 에러 태그 불일치
 
 **문제점**:
 - Usecase: 상세한 에러 태그 (`error.type`, `error.code`, `error.message`, `error.count`)
-- IAdapter: 에러 태그 없음 (StatusDescription만 설정)
+- IPort: 에러 태그 없음 (StatusDescription만 설정)
 
 **현재 상태**:
 ```
@@ -109,16 +109,16 @@ Usecase 에러 태그:
   - error.message: "Name: 상품명은 필수입니다"
   - error.count: 3 (ManyErrors인 경우)
 
-IAdapter 에러 태그:
+IPort 에러 태그:
   - 없음 ❌
   - StatusDescription만: error.Message
 ```
 
 **개선 방안**:
-- IAdapter에도 동일한 에러 태그 구조 적용
-- 또는 IAdapter는 간소화된 에러 정보만 기록하는 것을 명시
+- IPort에도 동일한 에러 태그 구조 적용
+- 또는 IPort는 간소화된 에러 정보만 기록하는 것을 명시
 
-**영향도**: 중간 - 에러 분석 시 Usecase/IAdapter 간 불일치
+**영향도**: 중간 - 에러 분석 시 Usecase/IPort 간 불일치
 
 ---
 
@@ -126,7 +126,7 @@ IAdapter 에러 태그:
 
 **문제점**:
 - Usecase: `request.category.type` 태그 포함
-- IAdapter: `request.category.type` 태그 없음
+- IPort: `request.category.type` 태그 없음
 - 태그 구조가 다름
 
 **현재 상태**:
@@ -137,7 +137,7 @@ Usecase Request 태그:
   - request.category.type: "Command" / "Query" ✅
   - request.handler: "CreateProductCommand"
 
-IAdapter Request 태그:
+IPort Request 태그:
   - request.layer: "Adapter"
   - request.category: "Repository"
   - request.handler: "InMemoryProductRepository"
@@ -156,7 +156,7 @@ IAdapter Request 태그:
 
 **문제점**:
 - Usecase: `response.status` 태그 포함
-- IAdapter: `response.status` 태그 없음 (ActivityStatusCode만 사용)
+- IPort: `response.status` 태그 없음 (ActivityStatusCode만 사용)
 
 **현재 상태**:
 ```
@@ -164,14 +164,14 @@ Usecase Response 태그:
   - response.elapsed: 200.4511
   - response.status: "Success" / "Failure" ✅
 
-IAdapter Response 태그:
+IPort Response 태그:
   - response.elapsed: 96.0635
   - response.status: 없음 ❌
   - ActivityStatusCode만 사용
 ```
 
 **개선 방안**:
-- IAdapter에도 `response.status` 태그 추가
+- IPort에도 `response.status` 태그 추가
 - 또는 Usecase에서 태그 제거하고 ActivityStatusCode만 사용
 
 **영향도**: 중간 - 태그 불일치로 인한 쿼리 복잡도 증가
@@ -207,7 +207,7 @@ if (activity == null)
 ### 9. Parent Context 결정 로직의 복잡성
 
 **문제점**:
-- IAdapter의 Parent Context 결정이 복잡함 (Traverse Activity 우선, 없으면 Usecase Activity)
+- IPort의 Parent Context 결정이 복잡함 (Traverse Activity 우선, 없으면 Usecase Activity)
 - 결정 로직이 명확하지 않으면 Trace 계층 구조가 예상과 다를 수 있음
 
 **현재 상태**:
@@ -236,13 +236,13 @@ else
 ### 10. StartTime 정확성
 
 **문제점**:
-- IAdapter는 `DateTimeOffset.UtcNow` 사용
+- IPort는 `DateTimeOffset.UtcNow` 사용
 - Usecase는 `ElapsedTimeCalculator.GetCurrentTimestamp()` 사용
 - 시간 측정 방식이 다름
 
 **현재 상태**:
 ```csharp
-// IAdapter
+// IPort
 DateTimeOffset startTime = DateTimeOffset.UtcNow;
 
 // Usecase
@@ -263,7 +263,7 @@ long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();
 
 **문제점**:
 - Usecase: Activity 생성 후 개별 `SetTag()` 호출
-- IAdapter: Activity 생성 시 `ActivityTagsCollection`으로 한 번에 전달
+- IPort: Activity 생성 시 `ActivityTagsCollection`으로 한 번에 전달
 - 성능 차이 발생 가능
 
 **현재 상태**:
@@ -272,7 +272,7 @@ long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();
 using Activity? activity = _activitySource.StartActivity(...);
 SetRequestTags(activity, ...);  // 개별 SetTag() 호출
 
-// IAdapter
+// IPort
 ActivityTagsCollection tags = new ActivityTagsCollection { ... };
 Activity? activity = _activitySource.StartActivity(..., tags, ...);  // 한 번에 전달
 ```
@@ -335,6 +335,6 @@ switch (error)
 
 1. **Activity 이름 표준화**: 공백 제거 또는 표준 구분자 사용
 2. **태그 값 타입 통일**: 모든 태그 값을 문자열로 통일 또는 숫자 태그 표준화
-3. **태그 구조 통일**: Usecase/IAdapter 간 공통 태그 구조 통일
-4. **에러 태그 통일**: Usecase/IAdapter 간 에러 태그 구조 통일
+3. **태그 구조 통일**: Usecase/IPort 간 공통 태그 구조 통일
+4. **에러 태그 통일**: Usecase/IPort 간 에러 태그 구조 통일
 5. **Status 표현 통일**: 태그와 상태 코드 중 하나로 통일 또는 역할 명확히 구분

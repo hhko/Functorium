@@ -787,7 +787,7 @@ public async Task Search_ReturnsPagedResult_WhenProductsExist()
 
 | Step | Activity | 파일 | 핵심 작업 |
 |------|----------|------|----------|
-| 1 | Port 정의 | `LayeredArch.Domain/Repositories/IProductRepository.cs` | `: IAdapter`, `FinT<IO, T>` 반환, 도메인 VO 매개변수 |
+| 1 | Port 정의 | `LayeredArch.Domain/Repositories/IProductRepository.cs` | `: IPort`, `FinT<IO, T>` 반환, 도메인 VO 매개변수 |
 | 2 | Adapter 구현 | `LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryProductRepository.cs` | `[GeneratePipeline]`, `virtual`, `IO.lift`, `AdapterError.For<T>` |
 | 3 | Pipeline 확인 | `obj/GeneratedFiles/.../Repositories.InMemoryProductRepositoryPipeline.g.cs` | 빌드 후 자동 생성 |
 | 4 | DI 등록 | `AdapterPersistenceRegistration.cs` → `Program.cs` | `RegisterScopedAdapterPipeline<IProductRepository, ...Pipeline>()` |
@@ -817,7 +817,7 @@ public async Task Search_ReturnsPagedResult_WhenProductsExist()
 
 | Step | Activity | 파일 | 핵심 작업 |
 |------|----------|------|----------|
-| 1 | Port 정의 | `LayeredArch.Application/Usecases/Products/Ports/IProductQueryAdapter.cs` | `: IQueryAdapter<Product, ProductSummaryDto>` |
+| 1 | Port 정의 | `LayeredArch.Application/Usecases/Products/Ports/IProductQueryAdapter.cs` | `: IQueryPort<Product, ProductSummaryDto>` |
 | 2a | Dapper 구현 | `LayeredArch.Adapters.Persistence/Repositories/Dapper/DapperProductQueryAdapter.cs` | `DapperQueryAdapterBase` 상속, `[GeneratePipeline]`, SQL 선언만 담당 |
 | 2b | InMemory 구현 | `LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryProductQueryAdapter.cs` | `[GeneratePipeline]`, Repository 위임 |
 | 3 | Pipeline 확인 | `obj/GeneratedFiles/.../Repositories.Dapper.DapperProductQueryAdapterPipeline.g.cs` | 빌드 후 자동 생성 |
@@ -845,7 +845,7 @@ public async Task Search_ReturnsPagedResult_WhenProductsExist()
 |  │   - 비즈니스 로직 구현                                       │  |
 |  └─────────────────────────────────────────────────────────────┘  |
 |  ┌─────────────────────────────────────────────────────────────┐  |
-|  │ IProductRepository : IAdapter (Port Interface)              │  |
+|  │ IProductRepository : IPort (Port Interface)              │  |
 |  │   - FinT<IO, Product> GetById(Guid id)                      │  |
 |  │   - FinT<IO, Product> Create(Product product)               │  |
 |  └─────────────────────────────────────────────────────────────┘  |
@@ -969,7 +969,7 @@ public InMemoryProductRepository(
 
 **아니요, 특정 메서드만 제외하는 기능은 지원되지 않습니다.**
 
-`[GeneratePipeline]` 어트리뷰트는 **클래스 단위로만 적용**되며, `IAdapter` 인터페이스의 모든 메서드에 대해 Pipeline 래퍼가 생성됩니다. `virtual` 키워드가 없으면 빌드 에러(`CS0506`)가 발생합니다.
+`[GeneratePipeline]` 어트리뷰트는 **클래스 단위로만 적용**되며, `IPort` 인터페이스의 모든 메서드에 대해 Pipeline 래퍼가 생성됩니다. `virtual` 키워드가 없으면 빌드 에러(`CS0506`)가 발생합니다.
 
 **대안**: 특정 메서드에 대해 Observability를 적용하고 싶지 않다면, 해당 메서드를 별도의 클래스로 분리하고 `[GeneratePipeline]` 어트리뷰트를 적용하지 마세요.
 
@@ -978,7 +978,7 @@ public InMemoryProductRepository(
 **판단 기준**: 조회 결과로 Aggregate를 재구성할 필요가 있는가?
 
 - **Aggregate 필요** (도메인 불변식 검증, Create/Update/Delete) → **Repository** (`IRepository<T, TId>`, Domain Layer, EF Core)
-- **DTO 직접 반환** (읽기 전용, 페이지네이션/정렬) → **Query Adapter** (`IQueryAdapter<TEntity, TDto>`, Application Layer, Dapper)
+- **DTO 직접 반환** (읽기 전용, 페이지네이션/정렬) → **Query Adapter** (`IQueryPort<TEntity, TDto>`, Application Layer, Dapper)
 
 > 상세 판단 기준은 [2.6 Query Adapter](#26-query-adapter-cqrs-read-측)의 비교 테이블을 참조하세요.
 
@@ -1000,7 +1000,7 @@ public InMemoryProductRepository(
 |------|------|------|
 | `virtual` 누락 | `CS0506: cannot override because it is not virtual` | 모든 인터페이스 메서드에 `virtual` 키워드 추가 |
 | `[GeneratePipeline]` 누락 | Pipeline 클래스가 `obj/GeneratedFiles/`에 생성되지 않음 | 클래스에 `[GeneratePipeline]` 어트리뷰트 추가 |
-| `IAdapter` 미상속 | `RegisterScopedAdapterPipeline` 컴파일 에러 | Port 인터페이스에 `: IAdapter` 상속 추가 |
+| `IPort` 미상속 | `RegisterScopedAdapterPipeline` 컴파일 에러 | Port 인터페이스에 `: IPort` 상속 추가 |
 | 생성자 타입 충돌 | Source Generator 에러 또는 잘못된 Pipeline 생성 | 생성자 매개변수에 고유 타입 사용 (동일 타입 중복 금지) |
 | Pipeline DI 미등록 | `InvalidOperationException: No service for type 'IXxx'` | `RegisterScopedAdapterPipeline<IXxx, XxxPipeline>()` 호출 확인 |
 | Pipeline 타입 미발견 | `The type or namespace name 'XxxPipeline' could not be found` | `dotnet build` 실행 후 재시도 (Source Generator 트리거) |
@@ -1012,7 +1012,7 @@ public InMemoryProductRepository(
 
 #### Port 인터페이스
 
-- [ ] `IAdapter` 상속
+- [ ] `IPort` 상속
 - [ ] 반환 타입: `FinT<IO, T>`
 - [ ] 도메인 VO 사용 (Repository)
 - [ ] `CancellationToken` (External API)

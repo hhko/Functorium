@@ -81,25 +81,25 @@ public abstract class IncrementalGeneratorBase<TValue> : IIncrementalGenerator
 }
 ```
 
-### 전략 패턴 (IAdapter)
+### 전략 패턴 (IPort)
 
 ```csharp
 // 전략 인터페이스
-public interface IAdapter
+public interface IPort
 {
     string RequestCategory { get; }
 }
 
 // 각 Repository는 전략 구현체
-public class UserRepository : IAdapter { }
-public class OrderRepository : IAdapter { }
+public class UserRepository : IPort { }
+public class OrderRepository : IPort { }
 ```
 
 ### 생성 흐름
 
 ```
 1. [GeneratePipeline] 속성 감지
-2. IAdapter 인터페이스 확인
+2. IPort 인터페이스 확인
 3. 메서드 시그니처 추출
 4. Pipeline 클래스 생성
 5. 관찰 가능성 코드 주입
@@ -116,8 +116,8 @@ public class UserRepositoryPipeline : UserRepository
 {
     // 1. 필드 (Logging, Tracing, Metrics)
     private readonly ILogger<UserRepositoryPipeline> _logger;
-    private readonly IAdapterTrace _adapterTrace;
-    private readonly IAdapterMetric _adapterMetric;
+    private readonly IPortTrace _adapterTrace;
+    private readonly IPortMetric _adapterMetric;
 
     // 2. LoggerMessage.Define delegate
     private static readonly Action<ILogger, ...> _logRequest = ...;

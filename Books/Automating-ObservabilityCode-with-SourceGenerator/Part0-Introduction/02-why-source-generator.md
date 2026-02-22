@@ -205,7 +205,7 @@ public static partial class Log
 ```csharp
 // 입력 - 개발자가 작성
 [GeneratePipeline]
-public class UserRepository(ILogger<UserRepository> logger) : IAdapter
+public class UserRepository(ILogger<UserRepository> logger) : IPort
 {
     public FinT<IO, User> GetUserAsync(int id) => ...;
 }
