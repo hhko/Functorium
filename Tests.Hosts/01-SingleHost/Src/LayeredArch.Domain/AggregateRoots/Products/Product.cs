@@ -1,4 +1,6 @@
+using Functorium.Domains.Errors;
 using LayeredArch.Domain.AggregateRoots.Tags;
+using static Functorium.Domains.Errors.DomainErrorType;
 
 namespace LayeredArch.Domain.AggregateRoots.Products;
 
@@ -7,8 +9,14 @@ namespace LayeredArch.Domain.AggregateRoots.Products;
 /// ProductId는 [GenerateEntityId] 속성에 의해 소스 생성기로 자동 생성됩니다.
 /// </summary>
 [GenerateEntityId]
-public sealed class Product : AggregateRoot<ProductId>, IAuditable
+public sealed class Product : AggregateRoot<ProductId>, IAuditable, ISoftDeletableWithUser
 {
+    #region Error Types
+
+    public sealed record AlreadyDeleted : DomainErrorType.Custom;
+
+    #endregion
+
     #region Domain Events
 
     /// <summary>
@@ -31,6 +39,16 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     /// </summary>
     public sealed record TagUnassignedEvent(ProductId ProductId, TagId TagId) : DomainEvent;
 
+    /// <summary>
+    /// 상품 삭제 이벤트
+    /// </summary>
+    public sealed record DeletedEvent(ProductId ProductId, string DeletedBy) : DomainEvent;
+
+    /// <summary>
+    /// 상품 복원 이벤트
+    /// </summary>
+    public sealed record RestoredEvent(ProductId ProductId) : DomainEvent;
+
     #endregion
 
     // Value Object 속성
@@ -45,6 +63,10 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     // Audit 속성
     public DateTime CreatedAt { get; private set; }
     public Option<DateTime> UpdatedAt { get; private set; }
+
+    // SoftDelete 속성
+    public Option<DateTime> DeletedAt { get; private set; }
+    public Option<string> DeletedBy { get; private set; }
 
     // 내부 생성자: 이미 검증된 VO를 받음
     private Product(
@@ -84,12 +106,16 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
         Money price,
         IEnumerable<TagId> tagIds,
         DateTime createdAt,
-        Option<DateTime> updatedAt)
+        Option<DateTime> updatedAt,
+        Option<DateTime> deletedAt,
+        Option<string> deletedBy)
     {
         var product = new Product(id, name, description, price)
         {
             CreatedAt = createdAt,
-            UpdatedAt = updatedAt
+            UpdatedAt = updatedAt,
+            DeletedAt = deletedAt,
+            DeletedBy = deletedBy
         };
         product._tagIds.AddRange(tagIds);
         return product;
@@ -98,11 +124,17 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     /// <summary>
     /// 상품 정보를 업데이트합니다.
     /// </summary>
-    public Product Update(
+    public Fin<Product> Update(
         ProductName name,
         ProductDescription description,
         Money price)
     {
+        if (DeletedAt.IsSome)
+            return DomainError.For<Product>(
+                new AlreadyDeleted(),
+                Id.ToString(),
+                "Cannot update a deleted product");
+
         var oldPrice = Price;
 
         Name = name;
@@ -112,6 +144,34 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
 
         AddDomainEvent(new UpdatedEvent(Id, name, oldPrice, price));
 
+        return this;
+    }
+
+    /// <summary>
+    /// 상품을 삭제합니다. (멱등성 보장)
+    /// </summary>
+    public Product Delete(string deletedBy)
+    {
+        if (DeletedAt.IsSome)
+            return this;
+
+        DeletedAt = DateTime.UtcNow;
+        DeletedBy = deletedBy;
+        AddDomainEvent(new DeletedEvent(Id, deletedBy));
+        return this;
+    }
+
+    /// <summary>
+    /// 삭제된 상품을 복원합니다. (멱등성 보장)
+    /// </summary>
+    public Product Restore()
+    {
+        if (DeletedAt.IsNone)
+            return this;
+
+        DeletedAt = Option<DateTime>.None;
+        DeletedBy = Option<string>.None;
+        AddDomainEvent(new RestoredEvent(Id));
         return this;
     }
 

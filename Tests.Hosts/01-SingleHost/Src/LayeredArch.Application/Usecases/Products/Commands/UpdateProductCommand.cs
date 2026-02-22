@@ -88,8 +88,8 @@ public sealed class UpdateProductCommand
                     new AlreadyExists(),
                     request.Name,
                     $"Product name already exists: '{request.Name}'"))
-                from updatedProduct in _productRepository.Update(
-                    existingProduct.Update(name, description, price))
+                from updated in existingProduct.Update(name, description, price)
+                from updatedProduct in _productRepository.Update(updated)
                 select new Response(
                     updatedProduct.Id.ToString(),
                     updatedProduct.Name,

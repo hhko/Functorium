@@ -55,7 +55,7 @@ public class InMemoryProductRepository : IProductRepository
         // Pipeline이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
-            if (Products.TryGetValue(id, out Product? product))
+            if (Products.TryGetValue(id, out Product? product) && product.DeletedAt.IsNone)
             {
                 return Fin.Succ(product);
             }
@@ -97,7 +97,7 @@ public class InMemoryProductRepository : IProductRepository
         // Pipeline이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
-            if (!Products.TryRemove(id, out _))
+            if (!Products.TryGetValue(id, out var product))
             {
                 return AdapterError.For<InMemoryProductRepository>(
                     new NotFound(),
@@ -105,6 +105,7 @@ public class InMemoryProductRepository : IProductRepository
                     $"상품 ID '{id}'을(를) 찾을 수 없습니다");
             }
 
+            product.Delete("system");
             return Fin.Succ(unit);
         });
     }
@@ -113,7 +114,9 @@ public class InMemoryProductRepository : IProductRepository
     {
         return IO.lift(() =>
         {
-            bool exists = Products.Values.Any(p => spec.IsSatisfiedBy(p));
+            bool exists = Products.Values
+                .Where(p => p.DeletedAt.IsNone)
+                .Any(p => spec.IsSatisfiedBy(p));
             return Fin.Succ(exists);
         });
     }

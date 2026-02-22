@@ -21,7 +21,8 @@ public class InMemoryProductWithStockQueryAdapter : IProductWithStockQuery
     {
         return IO.lift(() =>
         {
-            var allProducts = toSeq(InMemoryProductRepository.Products.Values);
+            var allProducts = toSeq(InMemoryProductRepository.Products.Values)
+                .Where(p => p.DeletedAt.IsNone).ToSeq();
             var filtered = allProducts.Where(p => spec.IsSatisfiedBy(p)).ToSeq();
 
             // Product + Inventory JOIN

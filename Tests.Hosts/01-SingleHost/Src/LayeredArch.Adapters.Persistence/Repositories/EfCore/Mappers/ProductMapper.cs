@@ -14,6 +14,8 @@ internal static class ProductMapper
         Price = product.Price,
         CreatedAt = product.CreatedAt,
         UpdatedAt = product.UpdatedAt.ToNullable(),
+        DeletedAt = product.DeletedAt.ToNullable(),
+        DeletedBy = product.DeletedBy.Match(Some: v => (string?)v, None: () => null),
         ProductTags = product.TagIds.Select(tagId => new ProductTagModel
         {
             ProductId = product.Id.ToString(),
@@ -32,6 +34,8 @@ internal static class ProductMapper
             Money.CreateFromValidated(model.Price),
             tagIds,
             model.CreatedAt,
-            Optional(model.UpdatedAt));
+            Optional(model.UpdatedAt),
+            Optional(model.DeletedAt),
+            Optional(model.DeletedBy));
     }
 }

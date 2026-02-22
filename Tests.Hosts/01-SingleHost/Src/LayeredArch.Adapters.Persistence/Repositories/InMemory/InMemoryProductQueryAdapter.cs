@@ -20,7 +20,8 @@ public class InMemoryProductQueryAdapter : IProductQuery
     {
         return IO.lift(() =>
         {
-            var allProducts = toSeq(InMemoryProductRepository.Products.Values);
+            var allProducts = toSeq(InMemoryProductRepository.Products.Values)
+                .Where(p => p.DeletedAt.IsNone).ToSeq();
             var filtered = allProducts.Where(p => spec.IsSatisfiedBy(p)).ToSeq();
 
             var sorted = ApplySort(filtered, sort);

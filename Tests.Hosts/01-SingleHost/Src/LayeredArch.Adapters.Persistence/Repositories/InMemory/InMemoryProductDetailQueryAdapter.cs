@@ -19,7 +19,7 @@ public class InMemoryProductDetailQueryAdapter : IProductDetailQuery
     {
         return IO.lift(() =>
         {
-            if (InMemoryProductRepository.Products.TryGetValue(id, out var product))
+            if (InMemoryProductRepository.Products.TryGetValue(id, out var product) && product.DeletedAt.IsNone)
             {
                 return Fin.Succ(new ProductDetailDto(
                     product.Id.ToString(),

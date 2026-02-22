@@ -28,6 +28,12 @@ public class ProductConfiguration : IEntityTypeConfiguration<ProductModel>
         builder.Property(p => p.CreatedAt);
         builder.Property(p => p.UpdatedAt);
 
+        builder.Property(p => p.DeletedAt);
+        builder.Property(p => p.DeletedBy).HasMaxLength(320);
+
+        // Global Query Filter: 삭제된 상품 자동 제외
+        builder.HasQueryFilter(p => p.DeletedAt == null);
+
         builder.HasMany(p => p.ProductTags)
             .WithOne()
             .HasForeignKey(pt => pt.ProductId)

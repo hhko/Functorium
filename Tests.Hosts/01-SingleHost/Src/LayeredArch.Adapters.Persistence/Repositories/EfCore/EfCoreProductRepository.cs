@@ -78,7 +78,10 @@ public class EfCoreProductRepository : IProductRepository
     {
         return IO.liftAsync(async () =>
         {
-            var model = await _dbContext.Products.FindAsync(id.ToString());
+            var model = await _dbContext.Products
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(p => p.Id == id.ToString());
+
             if (model is null)
             {
                 return AdapterError.For<EfCoreProductRepository>(
@@ -87,7 +90,8 @@ public class EfCoreProductRepository : IProductRepository
                     $"상품 ID '{id}'을(를) 찾을 수 없습니다");
             }
 
-            _dbContext.Products.Remove(model);
+            model.DeletedAt = DateTime.UtcNow;
+            model.DeletedBy = "system";
             return Fin.Succ(unit);
         });
     }

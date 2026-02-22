@@ -53,6 +53,25 @@ public class ProductMapperTests
     }
 
     [Fact]
+    public void RoundTrip_ShouldPreserveSoftDeleteFields()
+    {
+        // Arrange
+        var product = Product.Create(
+            ProductName.Create("Deleted Product").ThrowIfFail(),
+            ProductDescription.Create("Will be deleted").ThrowIfFail(),
+            Money.Create(30m).ThrowIfFail());
+
+        product.Delete("admin@test.com");
+
+        // Act
+        var actual = product.ToModel().ToDomain();
+
+        // Assert
+        actual.DeletedAt.IsSome.ShouldBeTrue();
+        actual.DeletedBy.ShouldBe(Some("admin@test.com"));
+    }
+
+    [Fact]
     public void RoundTrip_ShouldNotProduceDomainEvents()
     {
         // Arrange

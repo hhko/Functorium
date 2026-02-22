@@ -8,5 +8,7 @@ public class ProductModel
     public decimal Price { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public DateTime? DeletedAt { get; set; }
+    public string? DeletedBy { get; set; }
     public List<ProductTagModel> ProductTags { get; set; } = [];
 }
