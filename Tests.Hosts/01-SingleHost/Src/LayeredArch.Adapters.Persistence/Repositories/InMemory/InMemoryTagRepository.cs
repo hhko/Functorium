@@ -12,7 +12,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 /// <summary>
 /// 메모리 기반 태그 리포지토리 구현
 /// </summary>
-[GeneratePipeline]
+[GeneratePortObservable]
 public class InMemoryTagRepository : ITagRepository
 {
     internal static readonly ConcurrentDictionary<TagId, Tag> Tags = new();

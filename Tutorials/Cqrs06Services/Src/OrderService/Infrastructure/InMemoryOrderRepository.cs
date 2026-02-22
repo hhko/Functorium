@@ -11,9 +11,9 @@ namespace OrderService.Infrastructure;
 /// <summary>
 /// 메모리 기반 주문 리포지토리 구현
 /// 관찰 가능성 로그를 위한 IPort 인터페이스 구현
-/// GeneratePipeline 애트리뷰트로 파이프라인 버전 자동 생성
+/// GeneratePortObservable 애트리뷰트로 Observable 버전 자동 생성
 /// </summary>
-[GeneratePipeline]
+[GeneratePortObservable]
 public class InMemoryOrderRepository : IOrderRepository
 {
     private readonly ILogger<InMemoryOrderRepository> _logger;
@@ -34,7 +34,7 @@ public class InMemoryOrderRepository : IOrderRepository
 
     public virtual FinT<IO, Order> Create(Order order)
     {
-        // Pipeline이 자동으로 Activity 생성 및 로깅 처리
+        // Observable이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
             _orders[order.Id] = order;
@@ -44,7 +44,7 @@ public class InMemoryOrderRepository : IOrderRepository
 
     public virtual FinT<IO, Order> GetById(OrderId id)
     {
-        // Pipeline이 자동으로 Activity 생성 및 로깅 처리
+        // Observable이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
             if (_orders.TryGetValue(id, out Order? order))

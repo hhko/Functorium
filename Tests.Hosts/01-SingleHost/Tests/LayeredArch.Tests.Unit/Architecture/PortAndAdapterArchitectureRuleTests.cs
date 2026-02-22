@@ -8,17 +8,17 @@ namespace LayeredArch.Tests.Unit.Architecture;
 public sealed class PortAndAdapterArchitectureRuleTests : ArchitectureTestBase
 {
     [Fact]
-    public void AdapterImplementation_ShouldHave_GeneratePipelineAttribute()
+    public void AdapterImplementation_ShouldHave_GeneratePortObservableAttribute()
     {
         ArchRuleDefinition.Classes()
             .That()
             .ImplementInterface(typeof(IPort))
             .And().AreNotAbstract()
-            .And().DoNotHaveNameEndingWith("Pipeline")
+            .And().DoNotHaveNameEndingWith("Observable")
             .ValidateAllClasses(Architecture, @class => @class
-                .RequireAttribute("GeneratePipeline"),
+                .RequireAttribute("GeneratePortObservable"),
                 verbose: true)
-            .ThrowIfAnyFailures("Adapter GeneratePipeline Attribute Rule");
+            .ThrowIfAnyFailures("Adapter GeneratePortObservable Attribute Rule");
     }
 
     [Fact]
@@ -28,7 +28,7 @@ public sealed class PortAndAdapterArchitectureRuleTests : ArchitectureTestBase
             .That()
             .ImplementInterface(typeof(IPort))
             .And().AreNotAbstract()
-            .And().DoNotHaveNameEndingWith("Pipeline")
+            .And().DoNotHaveNameEndingWith("Observable")
             .ValidateAllClasses(Architecture, @class => @class
                 .RequireMethod("get_RequestCategory", m => m
                     .RequireVisibility(ArchUnitNET.Domain.Visibility.Public)),

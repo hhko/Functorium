@@ -54,10 +54,10 @@ services
     .Build();
 
 // Repository 등록 (관찰 가능성 로그 지원)
-// RegisterScopedAdapterPipeline은 ActivityContext를 첫 번째 매개변수로 받는 생성자를 사용
-// 소스 생성기가 [GeneratePipeline] 애트리뷰트를 감지하여 InMemoryProductRepositoryPipeline 클래스를 자동 생성
-// Pipeline이 자동으로 Activity 생성, 로깅, 추적, 메트릭 수집을 처리
-services.RegisterScopedAdapterPipeline<IProductRepository, InMemoryProductRepositoryPipeline>();
+// RegisterScopedPortObservable은 ActivityContext를 첫 번째 매개변수로 받는 생성자를 사용
+// 소스 생성기가 [GeneratePortObservable] 애트리뷰트를 감지하여 InMemoryProductRepositoryObservable 클래스를 자동 생성
+// Observable이 자동으로 Activity 생성, 로깅, 추적, 메트릭 수집을 처리
+services.RegisterScopedPortObservable<IProductRepository, InMemoryProductRepositoryObservable>();
 
 // Service Provider 빌드
 await using ServiceProvider serviceProvider = services.BuildServiceProvider();

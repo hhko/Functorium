@@ -15,7 +15,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 /// <summary>
 /// EF Core 기반 재고 리포지토리 구현
 /// </summary>
-[GeneratePipeline]
+[GeneratePortObservable]
 public class EfCoreInventoryRepository : IInventoryRepository
 {
     private static readonly PropertyMap<Inventory, InventoryModel> _propertyMap =

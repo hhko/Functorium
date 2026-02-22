@@ -13,7 +13,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 /// <summary>
 /// 메모리 기반 재고 리포지토리 구현
 /// </summary>
-[GeneratePipeline]
+[GeneratePortObservable]
 public class InMemoryInventoryRepository : IInventoryRepository
 {
     internal static readonly ConcurrentDictionary<InventoryId, Inventory> Inventories = new();

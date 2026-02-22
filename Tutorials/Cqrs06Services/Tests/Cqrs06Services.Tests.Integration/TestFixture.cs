@@ -129,8 +129,8 @@ public class OrderServiceTestFixture : IAsyncLifetime
             .Build();
 
         // Repository 및 Messaging Adapter 등록
-        services.RegisterScopedAdapterPipeline<IOrderRepository, InMemoryOrderRepositoryPipeline>();
-        services.RegisterScopedAdapterPipeline<IInventoryMessaging, RabbitMqInventoryMessagingPipeline>();
+        services.RegisterScopedPortObservable<IOrderRepository, InMemoryOrderRepositoryObservable>();
+        services.RegisterScopedPortObservable<IInventoryMessaging, RabbitMqInventoryMessagingObservable>();
 
         // Host 생성
         _host = Host.CreateDefaultBuilder()
@@ -228,8 +228,8 @@ public class InventoryServiceTestFixture : IAsyncLifetime
             .Build();
 
         // Repository 및 Messaging Adapter 등록
-        services.RegisterScopedAdapterPipeline<IInventoryRepository, InMemoryInventoryRepositoryPipeline>();
-        services.RegisterScopedAdapterPipeline<IOrderMessaging, RabbitMqOrderMessagingPipeline>();
+        services.RegisterScopedPortObservable<IInventoryRepository, InMemoryInventoryRepositoryObservable>();
+        services.RegisterScopedPortObservable<IOrderMessaging, RabbitMqOrderMessagingObservable>();
 
         // Host 생성
         _host = Host.CreateDefaultBuilder()

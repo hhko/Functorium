@@ -14,7 +14,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 /// <summary>
 /// EF Core 기반 고객 리포지토리 구현
 /// </summary>
-[GeneratePipeline]
+[GeneratePortObservable]
 public class EfCoreCustomerRepository : ICustomerRepository
 {
     private static readonly PropertyMap<Customer, CustomerModel> _propertyMap =

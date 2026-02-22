@@ -13,7 +13,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.Dapper;
 /// Product + Inventory JOIN 쿼리 어댑터.
 /// 베이스 클래스의 JOIN 지원을 검증하는 예제입니다.
 /// </summary>
-[GeneratePipeline]
+[GeneratePortObservable]
 public class DapperProductWithStockQueryAdapter
     : DapperQueryAdapterBase<Product, ProductWithStockDto>, IProductWithStockQuery
 {

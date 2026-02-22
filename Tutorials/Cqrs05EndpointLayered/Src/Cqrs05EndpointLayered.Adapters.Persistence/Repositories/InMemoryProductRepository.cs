@@ -12,9 +12,9 @@ namespace Cqrs05EndpointLayered.Adapters.Persistence.Repositories;
 /// <summary>
 /// 메모리 기반 상품 리포지토리 구현
 /// 관찰 가능성 로그를 위한 IPort 인터페이스 구현
-/// GeneratePipeline 애트리뷰트로 파이프라인 버전 자동 생성
+/// GeneratePortObservable 애트리뷰트로 Observable 버전 자동 생성
 /// </summary>
-[GeneratePipeline]
+[GeneratePortObservable]
 public class InMemoryProductRepository : IProductRepository
 {
     private readonly ILogger<InMemoryProductRepository> _logger;
@@ -35,7 +35,7 @@ public class InMemoryProductRepository : IProductRepository
 
     public virtual FinT<IO, Product> Create(Product product)
     {
-        // Pipeline이 자동으로 Activity 생성 및 로깅 처리
+        // Observable이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
             _products[product.Id] = product;
@@ -45,7 +45,7 @@ public class InMemoryProductRepository : IProductRepository
 
     public virtual FinT<IO, Product> GetById(Guid id)
     {
-        // Pipeline이 자동으로 Activity 생성 및 로깅 처리
+        // Observable이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
             if (_products.TryGetValue(id, out Product? product))
@@ -59,7 +59,7 @@ public class InMemoryProductRepository : IProductRepository
 
     public virtual FinT<IO, Seq<Product>> GetAll()
     {
-        // Pipeline이 자동으로 Activity 생성 및 로깅 처리
+        // Observable이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
             Seq<Product> products = toSeq(_products.Values);
@@ -69,7 +69,7 @@ public class InMemoryProductRepository : IProductRepository
 
     public virtual FinT<IO, Product> Update(Product product)
     {
-        // Pipeline이 자동으로 Activity 생성 및 로깅 처리
+        // Observable이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
             if (!_products.ContainsKey(product.Id))
@@ -84,7 +84,7 @@ public class InMemoryProductRepository : IProductRepository
 
     public virtual FinT<IO, bool> ExistsByName(string name)
     {
-        // Pipeline이 자동으로 Activity 생성 및 로깅 처리
+        // Observable이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
             bool exists = _products.Values.Any(p =>

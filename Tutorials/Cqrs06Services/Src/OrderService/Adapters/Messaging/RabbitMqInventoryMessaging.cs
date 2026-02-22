@@ -11,9 +11,9 @@ namespace OrderService.Adapters.Messaging;
 /// <summary>
 /// RabbitMQ 기반 재고 서비스 메시징 구현
 /// 관찰 가능성 로그를 위한 IPort 인터페이스 구현
-/// GeneratePipeline 애트리뷰트로 파이프라인 버전 자동 생성
+/// GeneratePortObservable 애트리뷰트로 Observable 버전 자동 생성
 /// </summary>
-[GeneratePipeline]
+[GeneratePortObservable]
 public class RabbitMqInventoryMessaging : IInventoryMessaging
 {
     private readonly IMessageBus _messageBus;
@@ -39,7 +39,7 @@ public class RabbitMqInventoryMessaging : IInventoryMessaging
     /// <returns>재고 확인 응답</returns>
     public virtual FinT<IO, CheckInventoryResponse> CheckInventory(CheckInventoryRequest request)
     {
-        // Pipeline이 자동으로 Activity 생성 및 로깅 처리
+        // Observable이 자동으로 Activity 생성 및 로깅 처리
         return IO.liftAsync(async () =>
         {
             try
@@ -61,7 +61,7 @@ public class RabbitMqInventoryMessaging : IInventoryMessaging
     /// <returns>Unit (Fire and Forget이므로 응답 없음)</returns>
     public virtual FinT<IO, Unit> ReserveInventory(ReserveInventoryCommand command)
     {
-        // Pipeline이 자동으로 Activity 생성 및 로깅 처리
+        // Observable이 자동으로 Activity 생성 및 로깅 처리
         return IO.liftAsync(async () =>
         {
             try

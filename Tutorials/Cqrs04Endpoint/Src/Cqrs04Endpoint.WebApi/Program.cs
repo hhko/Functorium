@@ -49,7 +49,7 @@ builder.Services
 // =================================================================
 // Repository 등록
 // =================================================================
-builder.Services.RegisterScopedAdapterPipeline<IProductRepository, InMemoryProductRepositoryPipeline>();
+builder.Services.RegisterScopedPortObservable<IProductRepository, InMemoryProductRepositoryObservable>();
 
 // =================================================================
 // App 빌드 및 미들웨어 설정

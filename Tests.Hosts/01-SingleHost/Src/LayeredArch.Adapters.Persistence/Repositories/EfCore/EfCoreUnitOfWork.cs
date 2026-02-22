@@ -9,7 +9,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 /// <summary>
 /// EF Core UnitOfWork - DbContext.SaveChangesAsync()를 호출하여 변경사항 커밋
 /// </summary>
-[GeneratePipeline]
+[GeneratePortObservable]
 public class EfCoreUnitOfWork : IUnitOfWork
 {
     #region Error Types

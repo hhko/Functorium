@@ -9,7 +9,7 @@ using LayeredArch.Domain.AggregateRoots.Products.Specifications;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.Dapper;
 
-[GeneratePipeline]
+[GeneratePortObservable]
 public class DapperProductQueryAdapter
     : DapperQueryAdapterBase<Product, ProductSummaryDto>, IProductQuery
 {

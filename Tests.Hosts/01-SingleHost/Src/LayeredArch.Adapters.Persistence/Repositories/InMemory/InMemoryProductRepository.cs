@@ -15,9 +15,9 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 /// <summary>
 /// 메모리 기반 상품 리포지토리 구현
 /// 관찰 가능성 로그를 위한 IPort 인터페이스 구현
-/// GeneratePipeline 애트리뷰트로 파이프라인 버전 자동 생성
+/// GeneratePortObservable 애트리뷰트로 Observable 버전 자동 생성
 /// </summary>
-[GeneratePipeline]
+[GeneratePortObservable]
 public class InMemoryProductRepository : IProductRepository
 {
     internal static readonly ConcurrentDictionary<ProductId, Product> Products = new();
@@ -35,7 +35,7 @@ public class InMemoryProductRepository : IProductRepository
 
     public virtual FinT<IO, Product> Create(Product product)
     {
-        // Pipeline이 자동으로 Activity 생성 및 로깅 처리
+        // Observable이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
             if (((string)product.Name).Contains("[adapter-error]", StringComparison.OrdinalIgnoreCase))
@@ -52,7 +52,7 @@ public class InMemoryProductRepository : IProductRepository
 
     public virtual FinT<IO, Product> GetById(ProductId id)
     {
-        // Pipeline이 자동으로 Activity 생성 및 로깅 처리
+        // Observable이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
             if (Products.TryGetValue(id, out Product? product) && product.DeletedAt.IsNone)
@@ -69,7 +69,7 @@ public class InMemoryProductRepository : IProductRepository
 
     public virtual FinT<IO, Product> Update(Product product)
     {
-        // Pipeline이 자동으로 Activity 생성 및 로깅 처리
+        // Observable이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
             if (!Products.ContainsKey(product.Id))
@@ -94,7 +94,7 @@ public class InMemoryProductRepository : IProductRepository
 
     public virtual FinT<IO, Unit> Delete(ProductId id)
     {
-        // Pipeline이 자동으로 Activity 생성 및 로깅 처리
+        // Observable이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
             if (!Products.TryGetValue(id, out var product))

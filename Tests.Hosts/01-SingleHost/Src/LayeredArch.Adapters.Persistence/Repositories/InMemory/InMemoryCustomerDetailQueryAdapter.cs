@@ -10,7 +10,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 /// InMemory 기반 Customer 단건 조회 읽기 전용 어댑터.
 /// InMemoryCustomerRepository의 정적 저장소에서 데이터를 가져온 후 DTO로 프로젝션합니다.
 /// </summary>
-[GeneratePipeline]
+[GeneratePortObservable]
 public class InMemoryCustomerDetailQueryAdapter : ICustomerDetailQuery
 {
     public string RequestCategory => "QueryAdapter";

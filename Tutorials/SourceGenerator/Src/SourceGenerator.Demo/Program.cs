@@ -5,15 +5,15 @@
 // 이 프로젝트는 Functorium.SourceGenerators의 동작을 이해하기 위한
 // 튜토리얼입니다.
 //
-// [GeneratePipeline] 어트리뷰트가 적용된 클래스에 대해 Source Generator가
-// 자동으로 Pipeline 래퍼 클래스를 생성합니다.
+// [GeneratePortObservable] 어트리뷰트가 적용된 클래스에 대해 Source Generator가
+// 자동으로 Observable 래퍼 클래스를 생성합니다.
 //
 // 생성된 코드 확인 방법:
 //   1. 프로젝트 빌드: dotnet build
 //   2. 생성된 파일 확인:
 //      obj/Generated/Functorium.SourceGenerators/
-//      - GeneratePipelineAttribute.g.cs
-//      - Adapters.UserRepositoryPipeline.g.cs
+//      - GeneratePortObservableAttribute.g.cs
+//      - Adapters.UserRepositoryObservable.g.cs
 //
 // ============================================================================
 
@@ -26,7 +26,7 @@ using Microsoft.Extensions.Options;
 using SourceGenerator.Demo.Adapters;
 
 // ============================================================================
-// 1. 원본 Repository vs Pipeline
+// 1. 원본 Repository vs Observable
 // ============================================================================
 Console.WriteLine("1. Original UserRepository (Observability 없음):");
 Console.WriteLine("-------------------------------------------");
@@ -36,9 +36,9 @@ Console.WriteLine($"   RequestCategory: {repository.RequestCategory}");
 Console.WriteLine();
 
 // ============================================================================
-// 2. Pipeline 인스턴스 생성 (Source Generator가 생성한 클래스)
+// 2. Observable 인스턴스 생성 (Source Generator가 생성한 클래스)
 // ============================================================================
-Console.WriteLine("2. UserRepositoryPipeline (Observability 포함):");
+Console.WriteLine("2. UserRepositoryObservable (Observability 포함):");
 Console.WriteLine("-------------------------------------------");
 
 // Logger 설정 (콘솔 출력)
@@ -54,15 +54,15 @@ using var loggerFactory = LoggerFactory.Create(builder =>
         });
 });
 
-var logger = loggerFactory.CreateLogger<UserRepositoryPipeline>();
+var logger = loggerFactory.CreateLogger<UserRepositoryObservable>();
 
 // OpenTelemetry 직접 사용
 var activitySource = new ActivitySource("SourceGenerator.Demo");
 var meterFactory = new SimpleMeterFactory();
 var openTelemetryOptions = Options.Create(new OpenTelemetryOptions());
 
-// Pipeline 인스턴스 생성 (새로운 생성자 시그니처)
-var pipeline = new UserRepositoryPipeline(
+// Observable 인스턴스 생성 (새로운 생성자 시그니처)
+var pipeline = new UserRepositoryObservable(
     activitySource: activitySource,
     logger: logger,
     meterFactory: meterFactory,
@@ -73,7 +73,7 @@ Console.WriteLine($"   Base Type: {pipeline.GetType().BaseType?.Name}");
 Console.WriteLine();
 
 // ============================================================================
-// 3. Pipeline 메서드 실행 - Observability 확인
+// 3. Observable 메서드 실행 - Observability 확인
 // ============================================================================
 Console.WriteLine("3. GetUserById(1) 실행 (Observability 출력 확인):");
 Console.WriteLine("-------------------------------------------");
@@ -263,7 +263,7 @@ Console.WriteLine();
 Console.WriteLine("  현재 방식 (FinTToIO → IO<A>):");
 Console.WriteLine("    - Fail 시 예외 발생");
 Console.WriteLine("    - try-catch로 처리");
-Console.WriteLine("    - Pipeline에서 IfFail로 예외 재처리 가능");
+Console.WriteLine("    - Observable에서 IfFail로 예외 재처리 가능");
 Console.WriteLine();
 Console.WriteLine("  대안 방식 (FinT.Run() → IO<Fin<A>>):");
 Console.WriteLine("    - Fail 시 Fin.Fail 값 반환");

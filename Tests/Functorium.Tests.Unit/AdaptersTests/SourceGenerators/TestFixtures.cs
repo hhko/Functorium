@@ -23,9 +23,9 @@ public interface ITestObservabilityAdapter : IPort
 
 /// <summary>
 /// Observability 테스트용 Adapter.
-/// [GeneratePipeline] 속성으로 파이프라인 클래스가 자동 생성됩니다.
+/// [GeneratePortObservable] 속성으로 파이프라인 클래스가 자동 생성됩니다.
 /// </summary>
-[GeneratePipeline]
+[GeneratePortObservable]
 public class TestObservabilityAdapter : ITestObservabilityAdapter
 {
     public string RequestCategory => "Repository";

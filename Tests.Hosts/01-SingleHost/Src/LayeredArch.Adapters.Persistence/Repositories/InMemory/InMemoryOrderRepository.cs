@@ -12,7 +12,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 /// <summary>
 /// 메모리 기반 주문 리포지토리 구현
 /// </summary>
-[GeneratePipeline]
+[GeneratePortObservable]
 public class InMemoryOrderRepository : IOrderRepository
 {
     internal static readonly ConcurrentDictionary<OrderId, Order> Orders = new();

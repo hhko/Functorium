@@ -47,14 +47,14 @@ services
     .Build();
 
 // Repository 등록 (관찰 가능성 로그 지원)
-// RegisterScopedAdapterPipeline은 ActivityContext를 첫 번째 매개변수로 받는 생성자를 사용
-// 소스 생성기가 [GeneratePipeline] 애트리뷰트를 감지하여 InMemoryOrderRepositoryPipeline 클래스를 자동 생성
-// Pipeline이 자동으로 Activity 생성, 로깅, 추적, 메트릭 수집을 처리
-services.RegisterScopedAdapterPipeline<IOrderRepository, OrderService.Infrastructure.InMemoryOrderRepositoryPipeline>();
+// RegisterScopedPortObservable은 ActivityContext를 첫 번째 매개변수로 받는 생성자를 사용
+// 소스 생성기가 [GeneratePortObservable] 애트리뷰트를 감지하여 InMemoryOrderRepositoryObservable 클래스를 자동 생성
+// Observable이 자동으로 Activity 생성, 로깅, 추적, 메트릭 수집을 처리
+services.RegisterScopedPortObservable<IOrderRepository, OrderService.Infrastructure.InMemoryOrderRepositoryObservable>();
 
 // Messaging Adapter 등록 (관찰 가능성 로그 지원)
-// 소스 생성기가 [GeneratePipeline] 애트리뷰트를 감지하여 RabbitMqInventoryMessagingPipeline 클래스를 자동 생성
-services.RegisterScopedAdapterPipeline<IInventoryMessaging, OrderService.Adapters.Messaging.RabbitMqInventoryMessagingPipeline>();
+// 소스 생성기가 [GeneratePortObservable] 애트리뷰트를 감지하여 RabbitMqInventoryMessagingObservable 클래스를 자동 생성
+services.RegisterScopedPortObservable<IInventoryMessaging, OrderService.Adapters.Messaging.RabbitMqInventoryMessagingObservable>();
 
 // Wolverine 및 RabbitMQ 설정
 var host = Host.CreateDefaultBuilder()

@@ -13,7 +13,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 /// <summary>
 /// EF Core 기반 상품 리포지토리 구현
 /// </summary>
-[GeneratePipeline]
+[GeneratePortObservable]
 public class EfCoreProductRepository : IProductRepository
 {
     private static readonly PropertyMap<Product, ProductModel> _propertyMap =
