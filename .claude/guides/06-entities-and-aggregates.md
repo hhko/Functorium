@@ -1787,53 +1787,111 @@ Entity에 추가 기능을 부여하는 인터페이스들입니다.
 
 ### IAuditable
 
-생성/수정 시각을 추적합니다.
+생성/수정 시각을 추적합니다. Cross-Cutting Concern이지만, 엔티티가 자신의 상태를 직접 관리하는 원칙에 따라 도메인 레이어에 배치합니다. EF Core `SaveChanges` 인터셉터 등 인프라에 위임하지 않고, 비즈니스 메서드가 명시적으로 시각을 설정합니다.
 
 **위치**: `Functorium.Domains.Entities.IAuditable`
+
+#### 인터페이스 정의
 
 ```csharp
 // 시각만 추적
 public interface IAuditable
 {
     DateTime CreatedAt { get; }
-    DateTime? UpdatedAt { get; }
+    Option<DateTime> UpdatedAt { get; }
 }
 
 // 시각 + 사용자 추적
 public interface IAuditableWithUser : IAuditable
 {
-    string? CreatedBy { get; }
-    string? UpdatedBy { get; }
+    Option<string> CreatedBy { get; }
+    Option<string> UpdatedBy { get; }
 }
 ```
 
-**사용 예제:**
+**설계 포인트:** `Option<T>`을 사용하여 값의 존재/부재를 명시적으로 표현합니다. `null` 대신 `Option.None`으로 "아직 수정되지 않음"을 타입 안전하게 나타냅니다.
+
+#### 구현 패턴 — 도메인이 직접 관리
+
+SingleHost의 5개 엔티티 모두 `IAuditable`을 구현하며, 동일한 패턴을 따릅니다.
+
+| Entity | CreatedAt 설정 위치 | UpdatedAt 설정 위치 |
+|--------|-------------------|-------------------|
+| Product | 생성자 | `Update()` |
+| Order | 생성자 | `TransitionTo()` |
+| Tag | 생성자 | `Rename()` |
+| Customer | 생성자 | `UpdateCreditLimit()`, `ChangeEmail()` |
+| Inventory | 생성자 | `DeductStock()`, `AddStock()` |
+
+**사용 예제 (Product.cs 발췌):**
 
 ```csharp
 [GenerateEntityId]
-public class Product : Entity<ProductId>, IAuditableWithUser
+public sealed class Product : AggregateRoot<ProductId>, IAuditable, ISoftDeletableWithUser
 {
-    public ProductName Name { get; private set; }
     public DateTime CreatedAt { get; private set; }
-    public DateTime? UpdatedAt { get; private set; }
-    public string? CreatedBy { get; private set; }
-    public string? UpdatedBy { get; private set; }
+    public Option<DateTime> UpdatedAt { get; private set; }
 
-    private Product(ProductId id, ProductName name, string createdBy) : base(id)
+    // 생성자: CreatedAt 설정
+    private Product(ProductId id, ProductName name, ...) : base(id)
     {
         Name = name;
         CreatedAt = DateTime.UtcNow;
-        CreatedBy = createdBy;
     }
 
-    public void UpdateName(ProductName name, string updatedBy)
+    // 비즈니스 메서드: UpdatedAt 설정
+    public Fin<Product> Update(ProductName name, ...)
     {
         Name = name;
         UpdatedAt = DateTime.UtcNow;
-        UpdatedBy = updatedBy;
+        return this;
+    }
+
+    // ORM 복원용: createdAt, updatedAt을 파라미터로 수신
+    public static Product CreateFromValidated(
+        ProductId id, ...,
+        DateTime createdAt,
+        Option<DateTime> updatedAt, ...)
+    {
+        var product = new Product(id, ...) { CreatedAt = createdAt, UpdatedAt = updatedAt };
+        return product;
     }
 }
 ```
+
+#### 인프라 전략 — Mapper 변환
+
+| 관점 | 현재 구현 | 대안 (미사용) |
+|------|----------|-------------|
+| 감사 필드 설정 | 도메인 모델이 직접 설정 | EF Core `SaveChanges` 인터셉터로 자동 주입 |
+| Mapper 변환 | `Option<DateTime>.ToNullable()` / `Optional()` | — |
+| Persistence Model | `DateTime?` (nullable) | — |
+
+```csharp
+// Domain → Persistence Model (ToModel)
+CreatedAt = product.CreatedAt,
+UpdatedAt = product.UpdatedAt.ToNullable(),    // Option<DateTime> → DateTime?
+
+// Persistence Model → Domain (ToDomain)
+Product.CreateFromValidated(
+    ...,
+    model.CreatedAt,
+    Optional(model.UpdatedAt),                  // DateTime? → Option<DateTime>
+    ...);
+```
+
+#### IAuditableWithUser 참고
+
+`IAuditableWithUser`는 사용자 추적이 필요한 경우를 위해 제공됩니다. SingleHost에서는 아직 사용되지 않으며, 멀티테넌트 등 사용자 식별이 필요한 시나리오에서 적용합니다.
+
+#### 체크리스트 — 새 엔티티에 IAuditable 적용 시
+
+- [ ] `IAuditable` 구현 (`CreatedAt`, `UpdatedAt` 속성)
+- [ ] 생성자에서 `CreatedAt = DateTime.UtcNow`
+- [ ] 상태 변경 메서드에서 `UpdatedAt = DateTime.UtcNow`
+- [ ] `CreateFromValidated()`에 `createdAt`, `updatedAt` 파라미터
+- [ ] Persistence Model: `DateTime?` 타입
+- [ ] Mapper: `Option<DateTime>.ToNullable()` / `Optional()` 변환
 
 ### ISoftDeletable
 
@@ -1841,47 +1899,150 @@ public class Product : Entity<ProductId>, IAuditableWithUser
 
 **위치**: `Functorium.Domains.Entities.ISoftDeletable`
 
+#### 왜 Soft Delete인가 — 5가지 원칙
+
+| # | 가치 | 설명 |
+|---|------|------|
+| 1 | **참조 무결성** | Cross-Aggregate 참조 보존. 예: `OrderLine → ProductId` 참조가 존재하므로 물리 삭제 불가 |
+| 2 | **비즈니스 의미 분리** | "단종"은 도메인 개념이지 데이터 소멸이 아님. `Delete()`/`Restore()` + 도메인 이벤트로 명시적 모델링 |
+| 3 | **복원 가능성** | `Restore()` 메서드로 복구 가능. 멱등성 보장 |
+| 4 | **감사 추적** | `ISoftDeletableWithUser`의 `DeletedBy`로 삭제자 추적 |
+| 5 | **인프라 관심사 분리** | EF Core Global Query Filter + Dapper `WHERE DeletedAt IS NULL` 자동 필터링 |
+
+#### 인터페이스 정의
+
 ```csharp
-// 삭제 여부만 추적
+// 삭제 여부 추적 — Option<DateTime>이 단일 진실 원천
 public interface ISoftDeletable
 {
-    bool IsDeleted { get; }
-    DateTime? DeletedAt { get; }
+    Option<DateTime> DeletedAt { get; }
+    bool IsDeleted => DeletedAt.IsSome;  // default interface member (파생 속성)
 }
 
 // 삭제 여부 + 삭제자 추적
 public interface ISoftDeletableWithUser : ISoftDeletable
 {
-    string? DeletedBy { get; }
+    Option<string> DeletedBy { get; }
 }
 ```
 
-**사용 예제:**
+**설계 포인트:** `bool IsDeleted`는 `DeletedAt`에서 파생되는 default interface member입니다. `Option<DateTime>`이 단일 진실 원천(Single Source of Truth)이므로 상태 불일치가 불가능합니다.
+
+#### 도메인 모델 구현 패턴
+
+**참조**: `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Products/Product.cs`
 
 ```csharp
 [GenerateEntityId]
-public class Product : Entity<ProductId>, ISoftDeletableWithUser
+public sealed class Product : AggregateRoot<ProductId>, ISoftDeletableWithUser
 {
-    public ProductName Name { get; private set; }
-    public bool IsDeleted { get; private set; }
-    public DateTime? DeletedAt { get; private set; }
-    public string? DeletedBy { get; private set; }
+    // --- Error Type ---
+    public sealed record AlreadyDeleted : DomainErrorType.Custom;
 
-    public void Delete(string deletedBy)
+    // --- Domain Events ---
+    public sealed record DeletedEvent(ProductId ProductId, string DeletedBy) : DomainEvent;
+    public sealed record RestoredEvent(ProductId ProductId) : DomainEvent;
+
+    // --- SoftDelete 속성 ---
+    public Option<DateTime> DeletedAt { get; private set; }
+    public Option<string> DeletedBy { get; private set; }
+
+    // --- Delete: 멱등성 보장 ---
+    public Product Delete(string deletedBy)
     {
-        IsDeleted = true;
+        if (DeletedAt.IsSome)           // 이미 삭제됨 → 아무것도 하지 않음
+            return this;
+
         DeletedAt = DateTime.UtcNow;
         DeletedBy = deletedBy;
+        AddDomainEvent(new DeletedEvent(Id, deletedBy));
+        return this;
     }
 
-    public void Restore()
+    // --- Restore: 멱등성 보장 ---
+    public Product Restore()
     {
-        IsDeleted = false;
-        DeletedAt = null;
-        DeletedBy = null;
+        if (DeletedAt.IsNone)           // 삭제되지 않음 → 아무것도 하지 않음
+            return this;
+
+        DeletedAt = Option<DateTime>.None;
+        DeletedBy = Option<string>.None;
+        AddDomainEvent(new RestoredEvent(Id));
+        return this;
+    }
+
+    // --- Update 가드: 삭제된 엔티티 수정 방지 ---
+    public Fin<Product> Update(ProductName name, ProductDescription description, Money price)
+    {
+        if (DeletedAt.IsSome)
+            return DomainError.For<Product>(
+                new AlreadyDeleted(), Id.ToString(),
+                "Cannot update a deleted product");
+        // ... 업데이트 로직
+        return this;
+    }
+
+    // --- ORM 복원용 팩토리: deletedAt, deletedBy 파라미터 포함 ---
+    public static Product CreateFromValidated(
+        ProductId id, ...,
+        Option<DateTime> deletedAt, Option<string> deletedBy)
+    {
+        var product = new Product(id, ...) { DeletedAt = deletedAt, DeletedBy = deletedBy };
+        return product;
     }
 }
 ```
+
+**핵심 패턴 요약:**
+
+| 패턴 | 구현 |
+|------|------|
+| 멱등성 | `Delete()` — `DeletedAt.IsSome` → early return |
+| 멱등성 | `Restore()` — `DeletedAt.IsNone` → early return |
+| 에러 가드 | `Update()` — `DeletedAt.IsSome` → `Fin.Fail(AlreadyDeleted)` |
+| 도메인 이벤트 | 상태 변경 시 `DeletedEvent`/`RestoredEvent` 발행 |
+| 초기화 | `Option<T>.None`으로 복원 (null이 아님) |
+
+#### Repository Port 패턴
+
+**참조**: `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Products/IProductRepository.cs`
+
+```csharp
+public interface IProductRepository : IRepository<Product, ProductId>
+{
+    FinT<IO, Product> GetByIdIncludingDeleted(ProductId id);
+}
+```
+
+`GetByIdIncludingDeleted()`가 필요한 이유: Delete/Restore 커맨드가 삭제된 엔티티에 접근해야 하므로 Global Query Filter를 우회하는 별도 메서드가 필요합니다.
+
+#### 인프라 필터링 전략
+
+| Adapter | 필터 전략 | 우회 방법 |
+|---------|-----------|-----------|
+| EF Core | `HasQueryFilter(p => p.DeletedAt == null)` | `IgnoreQueryFilters()` |
+| Dapper | `WHERE DeletedAt IS NULL` (BuildWhereClause) | 별도 쿼리 작성 |
+| InMemory | `p.DeletedAt.IsNone` 조건 | 조건 제거 |
+
+**Mapper 변환:**
+- Domain → Model: `Option<DateTime>.ToNullable()` (DB에 `NULL`로 저장)
+- Model → Domain: `Optional(model.DeletedAt)` (`NULL` → `Option.None`)
+
+> 인프라 구현 상세는 [Adapter 구현 가이드](./13-adapters.md)를 참조하세요.
+
+#### 체크리스트
+
+Soft Delete를 새 Aggregate에 적용할 때 확인할 항목:
+
+- [ ] 도메인 모델: `ISoftDeletableWithUser` 구현
+- [ ] 도메인 모델: `Delete()`/`Restore()` 멱등성 메서드
+- [ ] 도메인 모델: 상태 변경 메서드에 `DeletedAt.IsSome` 가드
+- [ ] 도메인 모델: 도메인 이벤트 (`DeletedEvent`, `RestoredEvent`) 발행
+- [ ] 도메인 모델: `CreateFromValidated()`에 `deletedAt`/`deletedBy` 파라미터
+- [ ] Repository Port: `GetByIdIncludingDeleted()` 메서드
+- [ ] EF Core: `HasQueryFilter(e => e.DeletedAt == null)` 설정
+- [ ] Dapper: `WHERE DeletedAt IS NULL` 자동 필터링
+- [ ] Mapper: `Option<DateTime>` ↔ `DateTime?` 변환
 
 ### IConcurrencyAware
 

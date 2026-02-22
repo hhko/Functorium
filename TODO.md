@@ -8,7 +8,7 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
 
 - [x] `services.AddSingleton<OrderCreditCheckService>();` 도메인 서비스를 의존성 등록한것은 너무 과한것 같다
 - [x] 도메일 모데리 nullable 원칙
-- [ ] ISoftDeletable 적용 사례
+- [x] ISoftDeletable 적용 사례
   ```
   ISoftDeletable이 DDD에서 왜 필요한가?
 
@@ -57,7 +57,7 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
   5. 인프라 관심사 분리 - OK (EF Core Global Query Filter + Dapper WHERE DeletedAt IS NULL)
   ```
 - [ ] 도메인 모델 삭제 패턴 정리????
-- [ ] IAuditable 적용 사례
+- [x] IAuditable 적용 사례
 - [ ] IConcurrencyAware 적용 사례
 - [ ] Specification 적용 사례
 - [ ] 도메인 모델 패턴
