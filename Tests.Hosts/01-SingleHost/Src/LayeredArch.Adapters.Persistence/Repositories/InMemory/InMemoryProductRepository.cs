@@ -106,7 +106,24 @@ public class InMemoryProductRepository : IProductRepository
             }
 
             product.Delete("system");
+            _eventCollector.Track(product);
             return Fin.Succ(unit);
+        });
+    }
+
+    public virtual FinT<IO, Product> GetByIdIncludingDeleted(ProductId id)
+    {
+        return IO.lift(() =>
+        {
+            if (Products.TryGetValue(id, out Product? product))
+            {
+                return Fin.Succ(product);
+            }
+
+            return AdapterError.For<InMemoryProductRepository>(
+                new NotFound(),
+                id.ToString(),
+                $"상품 ID '{id}'을(를) 찾을 수 없습니다");
         });
     }
 

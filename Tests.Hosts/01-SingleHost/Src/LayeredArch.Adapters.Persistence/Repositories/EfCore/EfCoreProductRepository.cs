@@ -80,6 +80,7 @@ public class EfCoreProductRepository : IProductRepository
         {
             var model = await _dbContext.Products
                 .IgnoreQueryFilters()
+                .Include(p => p.ProductTags)
                 .FirstOrDefaultAsync(p => p.Id == id.ToString());
 
             if (model is null)
@@ -90,9 +91,33 @@ public class EfCoreProductRepository : IProductRepository
                     $"상품 ID '{id}'을(를) 찾을 수 없습니다");
             }
 
-            model.DeletedAt = DateTime.UtcNow;
-            model.DeletedBy = "system";
+            var product = model.ToDomain();
+            product.Delete("system");
+            _dbContext.Products.Update(product.ToModel());
+            _eventCollector.Track(product);
             return Fin.Succ(unit);
+        });
+    }
+
+    public virtual FinT<IO, Product> GetByIdIncludingDeleted(ProductId id)
+    {
+        return IO.liftAsync(async () =>
+        {
+            var model = await _dbContext.Products
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Include(p => p.ProductTags)
+                .FirstOrDefaultAsync(p => p.Id == id.ToString());
+
+            if (model is not null)
+            {
+                return Fin.Succ(model.ToDomain());
+            }
+
+            return AdapterError.For<EfCoreProductRepository>(
+                new NotFound(),
+                id.ToString(),
+                $"상품 ID '{id}'을(를) 찾을 수 없습니다");
         });
     }
 
