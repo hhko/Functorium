@@ -5,7 +5,7 @@ namespace LayeredArch.Application.Usecases.Products.Commands;
 
 /// <summary>
 /// 상품 삭제 Command - Soft Delete (도메인 모델 경유)
-/// GetById → product.Delete(deletedBy) → repository.Update(product) 흐름으로
+/// GetByIdIncludingDeleted → product.Delete(deletedBy) → repository.Update(product) 흐름으로
 /// 도메인 이벤트(DeletedEvent)가 자동 발행됩니다.
 /// </summary>
 public sealed class DeleteProductCommand
@@ -42,7 +42,7 @@ public sealed class DeleteProductCommand
     }
 
     /// <summary>
-    /// Command Handler - GetById → Delete → Update 패턴
+    /// Command Handler - GetByIdIncludingDeleted → Delete → Update 패턴
     /// </summary>
     public sealed class Usecase(
         IProductRepository productRepository)
@@ -55,7 +55,7 @@ public sealed class DeleteProductCommand
             var productId = ProductId.Create(request.ProductId);
 
             FinT<IO, Response> usecase =
-                from product in _productRepository.GetById(productId)
+                from product in _productRepository.GetByIdIncludingDeleted(productId)
                 let deleted = product.Delete(request.DeletedBy)
                 from updated in _productRepository.Update(deleted)
                 select new Response(updated.Id.ToString());

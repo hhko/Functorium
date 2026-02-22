@@ -38,9 +38,9 @@ public class DapperProductWithStockQueryAdapter
     protected override (string, DynamicParameters) BuildWhereClause(Specification<Product> spec)
         => spec switch
         {
-            { IsAll: true } => ("", new DynamicParameters()),
+            { IsAll: true } => ("WHERE p.DeletedAt IS NULL", new DynamicParameters()),
             ProductPriceRangeSpec s => (
-                "WHERE p.Price >= @MinPrice AND p.Price <= @MaxPrice",
+                "WHERE p.DeletedAt IS NULL AND p.Price >= @MinPrice AND p.Price <= @MaxPrice",
                 Params(("MinPrice", (decimal)s.MinPrice), ("MaxPrice", (decimal)s.MaxPrice))),
             _ => throw new NotSupportedException(
                 $"Specification '{spec.GetType().Name}'은 Dapper QueryAdapter에서 지원되지 않습니다.")

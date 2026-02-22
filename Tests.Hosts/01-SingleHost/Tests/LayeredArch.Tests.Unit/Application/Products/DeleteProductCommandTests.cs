@@ -30,7 +30,7 @@ public class DeleteProductCommandTests
         var request = new DeleteProductCommand.Request(
             existingProduct.Id.ToString(), "admin");
 
-        _productRepository.GetById(Arg.Any<ProductId>())
+        _productRepository.GetByIdIncludingDeleted(Arg.Any<ProductId>())
             .Returns(FinTFactory.Succ(existingProduct));
         _productRepository.Update(Arg.Any<Product>())
             .Returns(call => FinTFactory.Succ(call.Arg<Product>()));
@@ -52,7 +52,7 @@ public class DeleteProductCommandTests
         var request = new DeleteProductCommand.Request(
             existingProduct.Id.ToString(), "admin");
 
-        _productRepository.GetById(Arg.Any<ProductId>())
+        _productRepository.GetByIdIncludingDeleted(Arg.Any<ProductId>())
             .Returns(FinTFactory.Succ(existingProduct));
         _productRepository.Update(Arg.Any<Product>())
             .Returns(call => FinTFactory.Succ(call.Arg<Product>()));
@@ -71,7 +71,7 @@ public class DeleteProductCommandTests
         var request = new DeleteProductCommand.Request(
             ProductId.New().ToString(), "admin");
 
-        _productRepository.GetById(Arg.Any<ProductId>())
+        _productRepository.GetByIdIncludingDeleted(Arg.Any<ProductId>())
             .Returns(FinTFactory.Fail<Product>(Error.New("Product not found")));
 
         // Act
