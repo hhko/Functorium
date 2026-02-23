@@ -1091,10 +1091,11 @@ Pipeline이 자동 제공하는 Observability 기능의 요약입니다. 상세 
 | 문서 | 설명 |
 |------|------|
 | [domain-modeling-overview.md](./04-ddd-tactical-overview.md) | 도메인 모델링 전체 개요 |
-| [05-value-objects.md](./05-value-objects.md) | Value Object 구현 가이드 |
-| [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) | Entity 구현 가이드 |
+| [05a-value-objects.md](./05a-value-objects.md) | Value Object 구현 가이드 |
+| [06b-entity-aggregate-implementation.md](./06b-entity-aggregate-implementation.md) | Entity/Aggregate 구현 가이드 |
 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) | 유스케이스 구현 (CQRS Command/Query) |
-| [08-error-system.md](./08-error-system.md) | 에러 시스템 가이드 |
+| [08a-error-system.md](./08a-error-system.md) | 에러 시스템: 기초와 네이밍 |
+| [08b-error-system-layers.md](./08b-error-system-layers.md) | 에러 시스템: 레이어별 구현과 테스트 |
 | [12-ports.md](./12-ports.md) | Port 정의 가이드 |
 | [13-adapters.md](./13-adapters.md) | Adapter 구현 가이드 |
 | [15-unit-testing.md](./15-unit-testing.md) | 단위 테스트 작성 가이드 |

@@ -473,12 +473,12 @@ SingleHost 프로젝트의 실제 모듈 구성입니다.
 
 | 빌딩블록 | 네이밍 패턴 | 예시 | 상세 참조 |
 |----------|-----------|------|----------|
-| Value Object | `{Concept}` | `ProductName`, `Email` | [05-value-objects.md](./05-value-objects.md) |
-| Entity | `{EntityName}` | `Tag` | [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) |
-| Aggregate Root | `{Aggregate}` | `Product`, `Order` | [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) |
-| Entity ID | `{Aggregate}Id` + `[GenerateEntityId]` | `ProductId`, `OrderId` | [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) |
+| Value Object | `{Concept}` | `ProductName`, `Email` | [05a-value-objects.md](./05a-value-objects.md) |
+| Entity | `{EntityName}` | `Tag` | [06b-entity-aggregate-implementation.md](./06b-entity-aggregate-implementation.md) |
+| Aggregate Root | `{Aggregate}` | `Product`, `Order` | [06b-entity-aggregate-implementation.md](./06b-entity-aggregate-implementation.md) |
+| Entity ID | `{Aggregate}Id` + `[GenerateEntityId]` | `ProductId`, `OrderId` | [06b-entity-aggregate-implementation.md](./06b-entity-aggregate-implementation.md) |
 | Domain Event | `{Aggregate}.{PastTense}Event` (nested record) | `Product.CreatedEvent` | [07-domain-events.md](./07-domain-events.md) |
-| Domain Error | `DomainError.For<{Type}>()` | `DomainError.For<Email>()` | [08-error-system.md](./08-error-system.md) §3 |
+| Domain Error | `DomainError.For<{Type}>()` | `DomainError.For<Email>()` | [08b-error-system-layers.md](./08b-error-system-layers.md) §4 |
 | Domain Service | `{DomainConcept}Service` : `IDomainService` | `OrderCreditCheckService` | [09-domain-services.md](./09-domain-services.md) |
 | Specification | `{Aggregate}{Concept}Spec` | `ProductNameUniqueSpec` | [10-specifications.md](./10-specifications.md) |
 | Command | `{Verb}{Aggregate}Command` (nested Request/Response/Usecase) | `CreateProductCommand` | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) |
@@ -657,10 +657,13 @@ public void Create_ShouldSucceed_WhenEmailIsValid()
 
 | 문서 | 설명 | 주요 내용 |
 |------|------|----------|
-| [05-value-objects.md](./05-value-objects.md) | 값 객체 구현 | 기반 클래스, 검증 시스템, 구현 패턴, 실전 예제 |
-| [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) | Entity/Aggregate 구현 | 설계 원칙, 클래스 계층, ID 시스템, 도메인 이벤트 |
+| [05a-value-objects.md](./05a-value-objects.md) | 값 객체 구현 | 기반 클래스, 검증 시스템, 구현 패턴, 실전 예제 |
+| [05b-value-objects-validation.md](./05b-value-objects-validation.md) | 값 객체 검증·열거형 | 열거형 구현, Application 검증, FAQ |
+| [06a-aggregate-design.md](./06a-aggregate-design.md) | Aggregate 설계 | 설계 원칙, 경계 설정, 안티패턴 |
+| [06b-entity-aggregate-implementation.md](./06b-entity-aggregate-implementation.md) | Entity/Aggregate 구현 | 클래스 계층, ID 시스템, 도메인 이벤트 |
 | [07-domain-events.md](./07-domain-events.md) | 도메인 이벤트 | 이벤트 정의, 발행, 핸들러 구현 |
-| [08-error-system.md](./08-error-system.md) | 에러 시스템 | 에러 정의, 네이밍, 테스트 패턴 |
+| [08a-error-system.md](./08a-error-system.md) | 에러 시스템: 기초와 네이밍 | 에러 처리 원칙, Fin 패턴, 네이밍 규칙 |
+| [08b-error-system-layers.md](./08b-error-system-layers.md) | 에러 시스템: 레이어별 구현과 테스트 | 레이어별 에러 정의, 테스트 패턴, 체크리스트 |
 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) | Usecase 구현 | CQRS 패턴, Apply 병합 |
 | [12-ports.md](./12-ports.md) | Port 아키텍처 | Port 정의, IObservablePort 계층 |
 | [13-adapters.md](./13-adapters.md) | Adapter 구현 | Repository, External API, Messaging, Query |

@@ -23,8 +23,8 @@
 
 | WHERE (이 가이드) | HOW (참조 가이드) |
 |---|---|
-| AggregateRoots 폴더 구조 | [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) — Entity/Aggregate 구현 |
-| ValueObjects 위치 규칙 | [05-value-objects.md](./05-value-objects.md) — 값 객체 구현 패턴 |
+| AggregateRoots 폴더 구조 | [06a-aggregate-design.md](./06a-aggregate-design.md) (설계) + [06b-entity-aggregate-implementation.md](./06b-entity-aggregate-implementation.md) (구현) |
+| ValueObjects 위치 규칙 | [05a-value-objects.md](./05a-value-objects.md) — 값 객체 구현 패턴 |
 | Specifications 위치 규칙 | [10-specifications.md](./10-specifications.md) — Specification 패턴 구현 |
 | Domain Ports 위치 결정 기준 | [12-ports.md](./12-ports.md) — Port 아키텍처와 설계 원칙 |
 | Usecases 폴더/파일 네이밍 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) — 유스케이스 구현 |
@@ -181,9 +181,9 @@ services.AddValidatorsFromAssembly(AssemblyReference.Assembly);
 services.AddValidatorsFromAssembly(LayeredArch.Application.AssemblyReference.Assembly);
 ```
 
-### Using.cs (또는 Usings.cs)
+### Using.cs
 
-레이어별 global using 선언 파일입니다. 파일 이름은 `Using.cs` 또는 `Usings.cs`를 사용합니다.
+레이어별 global using 선언 파일입니다. 모든 프로젝트에서 파일 이름은 `Using.cs`로 통일합니다.
 
 | 프로젝트 | global using 내용 |
 |---------|------------------|
@@ -210,7 +210,7 @@ global using LayeredArch.Domain.SharedKernel.Entities;
 global using LayeredArch.Domain.SharedKernel.ValueObjects;
 ```
 
-**Application — Usings.cs**
+**Application — Using.cs**
 ```csharp
 global using LanguageExt;
 global using LanguageExt.Common;
@@ -431,7 +431,7 @@ Ports/
 ├── Usecases/             ← Aggregate별 유스케이스
 ├── Ports/                ← 외부 시스템 Port 인터페이스
 ├── AssemblyReference.cs
-└── Usings.cs
+└── Using.cs
 ```
 
 ### Usecases 내부 구조
@@ -707,7 +707,7 @@ Domain/Application 레이어의 단위 테스트를 담당합니다.
 ```
 
 - 추가 패키지: `NSubstitute` (Mocking)
-- 구성 파일: `Usings.cs`, `xunit.runner.json`
+- 구성 파일: `Using.cs`, `xunit.runner.json`
 
 **폴더 구조:**
 
@@ -721,7 +721,7 @@ Domain/Application 레이어의 단위 테스트를 담당합니다.
 │   ├── {Aggregate}/           ← Usecase 핸들러 테스트
 │   └── ...
 ├── TestIO.cs                  ← FinT<IO, T> Mock 헬퍼
-├── Usings.cs
+├── Using.cs
 └── xunit.runner.json
 ```
 
@@ -752,7 +752,7 @@ internal static class TestIO
 
 > 단위 테스트는 Mock 기반으로 각 테스트가 독립적이므로 `parallelizeTestCollections: true` (병렬 허용)
 
-**Usings.cs:**
+**Using.cs:**
 
 ```csharp
 global using Xunit;
@@ -780,7 +780,7 @@ HTTP 엔드포인트의 통합 테스트를 담당합니다.
 ```
 
 - 추가 패키지: `Microsoft.AspNetCore.Mvc.Testing`
-- 구성 파일: `Usings.cs`, `xunit.runner.json`, `appsettings.json`
+- 구성 파일: `Using.cs`, `xunit.runner.json`, `appsettings.json`
 
 > **ExcludeAssets=analyzers:** Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 프로젝트에서도 SourceGenerator가 실행되어 중복 코드가 생성됩니다. `ExcludeAssets=analyzers`로 이를 방지합니다.
 
@@ -795,7 +795,7 @@ HTTP 엔드포인트의 통합 테스트를 담당합니다.
 │   ├── {Aggregate}/
 │   │   └── {Endpoint}Tests.cs
 │   └── ErrorScenarios/               ← 에러 처리 검증
-├── Usings.cs
+├── Using.cs
 ├── xunit.runner.json
 └── appsettings.json                   ← OpenTelemetry 설정 필수
 ```
@@ -853,7 +853,7 @@ public abstract class IntegrationTestBase : IClassFixture<{ServiceName}Fixture>
 }
 ```
 
-**Usings.cs:**
+**Using.cs:**
 
 ```csharp
 global using Xunit;
@@ -907,7 +907,7 @@ global using System.Net.Http.Json;
 2. **Application 프로젝트**
    - [ ] `{ServiceName}.Application` 프로젝트 생성
    - [ ] `AssemblyReference.cs` 추가
-   - [ ] `Usings.cs` 추가
+   - [ ] `Using.cs` 추가
    - [ ] `Usecases/` 폴더 생성
    - [ ] `Ports/` 폴더 생성 (외부 시스템 Port가 있을 경우)
    - [ ] Domain 프로젝트 참조 추가
@@ -942,7 +942,7 @@ global using System.Net.Http.Json;
 
 7. **Tests.Unit 프로젝트**
    - [ ] `{ServiceName}.Tests.Unit` 프로젝트 생성
-   - [ ] `Usings.cs` 추가
+   - [ ] `Using.cs` 추가
    - [ ] `xunit.runner.json` 추가 (parallelizeTestCollections: true)
    - [ ] `TestIO.cs` 헬퍼 추가
    - [ ] Domain + Application + Functorium.Testing 참조 추가
@@ -951,7 +951,7 @@ global using System.Net.Http.Json;
 
 8. **Tests.Integration 프로젝트**
    - [ ] `{ServiceName}.Tests.Integration` 프로젝트 생성
-   - [ ] `Usings.cs` 추가
+   - [ ] `Using.cs` 추가
    - [ ] `xunit.runner.json` 추가 (parallelizeTestCollections: false, maxParallelThreads: 1)
    - [ ] `appsettings.json` 추가 (OpenTelemetry 설정)
    - [ ] Host(ExcludeAssets=analyzers) + Application + Functorium.Testing 참조 추가
@@ -1005,12 +1005,13 @@ Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 
 ## 참고 문서
 
 - [02-solution-configuration.md](./02-solution-configuration.md) — 솔루션 루트 구성 파일 및 빌드 스크립트
-- [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) — Entity/Aggregate Root 구현 패턴
-- [05-value-objects.md](./05-value-objects.md) — 값 객체 구현 및 검증 패턴
+- [06a-aggregate-design.md](./06a-aggregate-design.md) — Aggregate 설계 원칙, [06b-entity-aggregate-implementation.md](./06b-entity-aggregate-implementation.md) — Entity/Aggregate 구현 패턴
+- [05a-value-objects.md](./05a-value-objects.md) — 값 객체 구현 패턴, [05b-value-objects-validation.md](./05b-value-objects-validation.md) — 열거형·검증·FAQ
 - [10-specifications.md](./10-specifications.md) — Specification 패턴 구현
 - [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) — 유스케이스 (Command/Query) 구현
 - [12-ports.md](./12-ports.md) — Port 아키텍처, [13-adapters.md](./13-adapters.md) — Adapter 구현, [14-adapter-wiring.md](./14-adapter-wiring.md) — Pipeline/DI/테스트
-- [08-error-system.md](./08-error-system.md) — 레이어별 에러 시스템
+- [08a-error-system.md](./08a-error-system.md) — 에러 시스템: 기초와 네이밍
+- [08b-error-system-layers.md](./08b-error-system-layers.md) — 에러 시스템: 레이어별 구현과 테스트
 - [18-observability-spec.md](./18-observability-spec.md) — Observability 사양
 - [15-unit-testing.md](./15-unit-testing.md) — 테스트 작성 방법론 (명명 규칙, AAA 패턴, MTP 설정)
 - [16-testing-library.md](./16-testing-library.md) — Functorium.Testing 라이브러리 (LogTestContext, ArchitectureRules, QuartzTestFixture 등)

@@ -1208,4 +1208,5 @@ public class InMemoryProductQueryAdapter : IProductQueryAdapter
 | [12-ports.md](./12-ports.md) | Port 아키텍처, IObservablePort 계층, Port 정의 규칙 |
 | [14-adapter-wiring.md](./14-adapter-wiring.md) | Pipeline 생성, DI 등록, Options 패턴, 테스트 |
 | [15-unit-testing.md](./15-unit-testing.md) | 단위 테스트 작성 가이드 |
-| [08-error-system.md](./08-error-system.md) | 에러 시스템 가이드 |
+| [08a-error-system.md](./08a-error-system.md) | 에러 시스템: 기초와 네이밍 |
+| [08b-error-system-layers.md](./08b-error-system-layers.md) | 에러 시스템: 레이어별 구현과 테스트 |

@@ -17,10 +17,13 @@ Architecture
 [04] 04-ddd-tactical-overview.md ─── DDD 전술적 설계 개요
 │
 ├── Domain Layer
-│   ├── [05] 05-value-objects.md ─── 값 객체
-│   │   └── [06] 06-entities-and-aggregates.md ─── Entity와 Aggregate
-│   │       └── [07] 07-domain-events.md ─── 도메인 이벤트
-│   ├── [08] 08-error-system.md ─── 에러 시스템
+│   ├── [05a] 05a-value-objects.md ─── 값 객체 (핵심 개념·검증·구현 패턴)
+│   ├── [05b] 05b-value-objects-validation.md ─── 값 객체 (열거형·실전·FAQ)
+│   │   └── [06a] 06a-aggregate-design.md ─── Aggregate 설계 (WHY + WHAT)
+│   │       └── [06b] 06b-entity-aggregate-implementation.md ─── Entity/Aggregate 구현 (HOW)
+│   │           └── [07] 07-domain-events.md ─── 도메인 이벤트
+│   ├── [08a] 08a-error-system.md ─── 에러 시스템: 기초와 네이밍
+│   ├── [08b] 08b-error-system-layers.md ─── 에러 시스템: 레이어별 구현과 테스트
 │   ├── [09] 09-domain-services.md ─── 도메인 서비스
 │   └── [10] 10-specifications.md ─── Specification 패턴
 │
@@ -57,15 +60,18 @@ Architecture
 | **프로젝트 구성/폴더 구조** | [01-project-structure.md](./01-project-structure.md) |
 | **솔루션 구성 파일/빌드 스크립트** | [02-solution-configuration.md](./02-solution-configuration.md) |
 | **도구 사용법 (커버리지/스냅샷/ER 다이어그램)** | [03-dotnet-tools.md](./03-dotnet-tools.md) |
-| **값 객체 만들기** | [05-value-objects.md](./05-value-objects.md) |
-| **Entity/Aggregate 만들기** | [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) |
-| **Aggregate 경계 설계하기** | [06-entities-and-aggregates.md — Part 1: Aggregate 경계 설계](./06-entities-and-aggregates.md) |
+| **값 객체 만들기** | [05a-value-objects.md](./05a-value-objects.md) |
+| **검증 메서드 확인** | [05a-value-objects.md — 검증 시스템](./05a-value-objects.md) |
+| **열거형(SmartEnum) 패턴** | [05b-value-objects-validation.md — 열거형 구현 패턴](./05b-value-objects-validation.md) |
+| **Aggregate 경계 설계하기** | [06a-aggregate-design.md](./06a-aggregate-design.md) |
+| **Entity/Aggregate 구현하기** | [06b-entity-aggregate-implementation.md](./06b-entity-aggregate-implementation.md) |
+| **생성 패턴 (Create/CreateFromValidated)** | [06b-entity-aggregate-implementation.md — 8. 생성 패턴](./06b-entity-aggregate-implementation.md) |
 | **도메인 이벤트 정의/발행** | [07-domain-events.md](./07-domain-events.md) |
 | **Event Handler 만들기** | [07-domain-events.md — 5. Event Handler](./07-domain-events.md) |
+| **에러 타입 정의하기** | [08a-error-system.md](./08a-error-system.md), [08b-error-system-layers.md](./08b-error-system-layers.md) |
+| **에러 테스트 작성하기** | [08b-error-system-layers.md — 4~6. 레이어별 에러 테스트](./08b-error-system-layers.md) |
 | **도메인 서비스 만들기** | [09-domain-services.md](./09-domain-services.md) |
 | **Specification 만들기** | [10-specifications.md](./10-specifications.md) |
-| **에러 타입 정의하기** | [08-error-system.md](./08-error-system.md) |
-| **에러 테스트 작성하기** | [08-error-system.md — 4~6. 레이어별 에러 테스트](./08-error-system.md) |
 | **Usecase 만들기** | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) |
 | **Port 인터페이스 정의하기** | [12-ports.md](./12-ports.md) |
 | **Adapter 구현하기** | [13-adapters.md](./13-adapters.md) |
@@ -75,18 +81,24 @@ Architecture
 | **Options 패턴 (OptionsConfigurator)** | [14-adapter-wiring.md — §4.6 Options 패턴](./14-adapter-wiring.md) |
 | **Pipeline/DI 등록** | [14-adapter-wiring.md](./14-adapter-wiring.md) |
 | **DTO 전략/재사용 규칙** | [17-dto-strategy.md](./17-dto-strategy.md) |
-| **검증 메서드 확인** | [05-value-objects.md — 검증 시스템](./05-value-objects.md) |
 | **크래시 덤프 설정/분석** | [23-crash-diagnostics.md](./23-crash-diagnostics.md) |
 | **Observability 사양** | [18-observability-spec.md](./18-observability-spec.md) |
 | **구조화된 로그 테스트** | [16-testing-library.md — 구조화된 로그 테스트](./16-testing-library.md) |
 | **아키텍처 규칙 검증** | [16-testing-library.md — 아키텍처 규칙 검증](./16-testing-library.md) |
 | **소스 생성기 테스트** | [16-testing-library.md — 소스 생성기 테스트](./16-testing-library.md) |
 | **스케줄 Job 테스트** | [16-testing-library.md — 스케줄 Job 통합 테스트](./16-testing-library.md) |
-| **생성 패턴 (Create/CreateFromValidated)** | [06-entities-and-aggregates.md — 8. 생성 패턴](./06-entities-and-aggregates.md) |
 | **모듈과 프로젝트 구조 매핑** | [04-ddd-tactical-overview.md — §6](./04-ddd-tactical-overview.md) |
 | **네이밍 규칙/용어집** | [04-ddd-tactical-overview.md — §7](./04-ddd-tactical-overview.md) |
 | **Bounded Context/Context Map** | [04-ddd-tactical-overview.md — §8](./04-ddd-tactical-overview.md) |
 | **DTO 전략 리뷰 확인** | [dto-strategy-review.md](../dto-strategy-review.md) |
+
+## 코드 예시 규칙
+
+| 구분 | 형식 | 설명 |
+|------|------|------|
+| 규칙 구현 코드 | 실제 C# 코드 | 컴파일 가능한 수준의 코드 (타입, 메서드, 패턴 예시) |
+| 아키텍처 흐름 설명 | pseudo-code 허용 | 반드시 `pseudo-code` 또는 `개념 코드` 라벨을 코드 블록 앞에 표기 |
+| 코드 블록 언어 태그 | 항상 명시 | ` ```csharp `, ` ```xml `, ` ```bash `, ` ```promql ` 등 |
 
 ## 문서 전체 목록
 
@@ -95,10 +107,13 @@ Architecture
 | 번호 | 문서 | 설명 |
 |------|------|------|
 | 04 | [04-ddd-tactical-overview.md](./04-ddd-tactical-overview.md) | DDD 전술적 설계 개요, 빌딩블록 맵, Functorium 타입 매핑 |
-| 05 | [05-value-objects.md](./05-value-objects.md) | 값 객체 구현 (기반 클래스, 검증 시스템, 구현 패턴) |
-| 06 | [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) | Entity/Aggregate 설계 원칙과 구현 |
+| 05a | [05a-value-objects.md](./05a-value-objects.md) | 값 객체 (핵심 개념, 기반 클래스, 검증 시스템, 구현 패턴) |
+| 05b | [05b-value-objects-validation.md](./05b-value-objects-validation.md) | 값 객체 (열거형 패턴, 실전 예제, Application 검증, FAQ) |
+| 06a | [06a-aggregate-design.md](./06a-aggregate-design.md) | Aggregate 설계 (WHY + WHAT: 설계 규칙, 경계 설정, 안티패턴) |
+| 06b | [06b-entity-aggregate-implementation.md](./06b-entity-aggregate-implementation.md) | Entity/Aggregate 구현 (HOW: 클래스 계층, ID, 생성 패턴, 이벤트) |
 | 07 | [07-domain-events.md](./07-domain-events.md) | 도메인 이벤트 정의, 발행, 핸들러 구현 |
-| 08 | [08-error-system.md](./08-error-system.md) | 레이어별 에러 시스템 (정의, 네이밍, 테스트) |
+| 08a | [08a-error-system.md](./08a-error-system.md) | 에러 시스템: 기초와 네이밍 (WHY, Fin 패턴, 네이밍 규칙) |
+| 08b | [08b-error-system-layers.md](./08b-error-system-layers.md) | 에러 시스템: 레이어별 구현과 테스트 (Domain/Application/Adapter 에러, 체크리스트) |
 | 09 | [09-domain-services.md](./09-domain-services.md) | 도메인 서비스 (교차 Aggregate 순수 로직, IDomainService) |
 | 10 | [10-specifications.md](./10-specifications.md) | Specification 패턴 (비즈니스 규칙 캡슐화, 조합, Repository 통합) |
 | 11 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) | Use Case 구현 (CQRS Command/Query) |
