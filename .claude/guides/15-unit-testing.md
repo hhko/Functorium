@@ -295,7 +295,7 @@ dotnet add package NSubstitute
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <!-- MTP 필수 설정 -->
+    <!-- MTP 필수 설정 (상세: §MTP 설정 참조) -->
     <OutputType>Exe</OutputType>
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
@@ -325,7 +325,7 @@ dotnet add package NSubstitute
 </Project>
 ```
 
-> **중요**: `OutputType`과 `UseMicrosoftTestingPlatformRunner`는 MTP 동작을 위한 **필수 설정**입니다.
+> **중요**: `OutputType`과 `UseMicrosoftTestingPlatformRunner`는 MTP 동작을 위한 필수 설정입니다. 각 속성의 역할과 SDK 버전별 추가 설정은 [MTP 설정](#mtp-설정) 섹션을 참조하세요.
 
 ### xunit.runner.json 설정
 
@@ -416,6 +416,14 @@ Handle_ReturnsFail_WhenEntityNotFound
 Handle_ReturnsTemperatureCBasedOnTitleLength_WhenSuccessful
 Handle_ReturnsTemperatureCEqualToTitleLength_WhenSuccessful
 ```
+
+### [Fact] vs [Theory] 선택 기준
+
+| 시나리오 | 어트리뷰트 | 데이터 소스 | 예시 |
+|----------|-----------|------------|------|
+| 단일 시나리오 검증 | `[Fact]` | 없음 | 생성 성공, 특정 비즈니스 규칙 |
+| 동일 로직·다중 입력 | `[Theory]` + `[InlineData]` | 인라인 값 | 경계값, 다양한 유효/무효 입력 |
+| 복잡한 객체 입력 | `[Theory]` + `[MemberData]` | 정적 메서드/속성 | VO 조합, Entity 상태 조합 |
 
 ### T2 (예상 결과) 표준 용어
 
@@ -797,7 +805,7 @@ reportgenerator -reports:"**/coverage.xml" -targetdir:"coverage-report"
 - 구조화된 로그 테스트 (LogTestContext), 아키텍처 규칙 검증, 소스 생성기 테스트, 스케줄 Job 테스트:
   [16-testing-library.md](./16-testing-library.md)
 - 에러 타입 Assertion (ShouldBeDomainError 등):
-  [08-error-system.md](./08-error-system.md)
+  [08b-error-system-layers.md](./08b-error-system-layers.md)
 
 ### xUnit v3
 - [xUnit.net v3 What's New](https://xunit.net/docs/getting-started/v3/whats-new)

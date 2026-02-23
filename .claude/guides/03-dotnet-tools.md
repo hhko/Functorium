@@ -136,6 +136,29 @@ dotnet siren-gen `
 
 이 제약으로 인해 SingleHost에서는 `Build-ERDiagram.ps1` 스크립트로 EF Core Configuration 기반 Mermaid ER 다이어그램을 직접 생성합니다. 결과: [Tests.Hosts/01-SingleHost/ER-Diagram.md](../../Tests.Hosts/01-SingleHost/ER-Diagram.md)
 
+### 1.5 Build-ERDiagram.ps1 (ER 다이어그램 직접 생성)
+
+| 항목 | 값 |
+|------|-----|
+| 위치 | `Tests.Hosts/01-SingleHost/Build-ERDiagram.ps1` |
+| 용도 | EF Core Configuration 기반 Mermaid ER 다이어그램 생성 |
+| 출력 | `Tests.Hosts/01-SingleHost/ER-Diagram.md` |
+
+Siren 도구의 제약(Migration 필수 또는 SQL Server 전용)을 우회하여, 스크립트 내부에 정의된 ER 다이어그램 템플릿을 `ER-Diagram.md`로 출력합니다. 스키마 변경 시 스크립트 내부의 `$erDiagram` 변수를 수동으로 업데이트해야 합니다.
+
+**실행:**
+
+```powershell
+# Tests.Hosts/01-SingleHost/ 디렉토리에서 실행
+./Build-ERDiagram.ps1
+
+# 도움말
+./Build-ERDiagram.ps1 -Help
+```
+
+**참조 파일**: EF Core Configuration 변경 시 다음 파일을 참고하여 스크립트를 업데이트하세요:
+- `Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/Configurations/`
+
 ## §2. 소스 생성기
 
 ### 2.1 Functorium.SourceGenerators (자체)

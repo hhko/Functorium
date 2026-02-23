@@ -1,5 +1,8 @@
 # Functorium.Testing 라이브러리 가이드
 
+테스트 코드는 프로덕션 코드와 동일한 수준의 일관성이 필요합니다. 프로젝트가 성장하면 로그 캡처, 아키텍처 규칙 검증, 소스 생성기 테스트 등 반복적인 테스트 인프라 코드가 각 프로젝트에 중복됩니다.
+`Functorium.Testing`은 이러한 반복을 제거하고, 프레임워크에 특화된 테스트 유틸리티를 단일 라이브러리로 제공하여 테스트 코드의 일관성과 유지보수성을 확보합니다.
+
 ## 목차
 - [개요](#개요)
 - [프로젝트 참조 설정](#프로젝트-참조-설정)
@@ -31,7 +34,7 @@
 | 기능 | 참조 가이드 |
 |---|---|
 | `HostTestFixture<TProgram>` — HTTP 엔드포인트 통합 테스트 | [01-project-structure.md](./01-project-structure.md) |
-| `ShouldBeDomainError`, `ShouldBeApplicationError` 등 에러 Assertion | [08-error-system.md](./08-error-system.md) |
+| `ShouldBeDomainError`, `ShouldBeApplicationError` 등 에러 Assertion | [08b-error-system-layers.md](./08b-error-system-layers.md) |
 
 ---
 
@@ -625,9 +628,25 @@ public async Task Job_ShouldThrow_WhenTimeout()
 
 ---
 
+## FAQ
+
+**Q: `LogTestContext`와 `ITestOutputHelper` 차이는?**
+
+`LogTestContext`는 Serilog 기반으로 구조화된 로그 필드(속성명, 값 타입, 중첩 구조)까지 캡처하여 스냅샷 테스트가 가능합니다. `ITestOutputHelper`는 단순 텍스트 출력만 지원하므로 필드 구조 검증에는 적합하지 않습니다.
+
+**Q: `ArchitectureRules`를 커스텀할 수 있는가?**
+
+가능합니다. 기본 제공 규칙(`RequireImmutable`, `RequireSealed` 등) 외에 `ValidateAllClasses`의 `Action<ClassValidator>` 콜백에서 프로젝트별 규칙을 조합하여 추가할 수 있습니다.
+
+**Q: `QuartzTestFixture`에서 실제 Job이 실행되는가?**
+
+인메모리 스케줄러에서 Job이 실제로 실행됩니다. DI 컨테이너의 모든 서비스가 주입되므로, 외부 의존성(DB, API 등)만 Mock으로 교체하면 통합 수준의 검증이 가능합니다.
+
+---
+
 ## 참고 문서
 
 - [15-unit-testing.md](./15-unit-testing.md) — 단위 테스트 규칙 (명명, AAA 패턴, MTP 설정)
-- [08-error-system.md](./08-error-system.md) — 에러 타입 Assertion 패턴
+- [08b-error-system-layers.md](./08b-error-system-layers.md) — 에러 타입 Assertion 패턴
 - [01-project-structure.md](./01-project-structure.md) — 프로젝트 구성 (HostTestFixture, 통합 테스트)
 - [18-observability-spec.md](./18-observability-spec.md) — Observability 사양 (로그 필드 정의)

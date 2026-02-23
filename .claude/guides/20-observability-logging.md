@@ -45,6 +45,19 @@ Functorium은 OpenTelemetry 표준을 따르는 **구조화된 로깅(Structured
 - 로깅의 기본 개념 (Log Level, Logger 등)
 - JSON 형식에 대한 이해
 
+### DomainEvent 로깅 요약
+
+DomainEvent의 로깅은 Publisher(Adapter 레이어)와 Handler(Application 레이어)로 구분됩니다:
+
+| 항목 | DomainEvent Publisher | DomainEvent Handler |
+|------|----------------------|---------------------|
+| `request.layer` | `"adapter"` | `"application"` |
+| `request.category` | `"event"` | `"usecase"` |
+| `request.category.type` | - | `"event"` |
+| Event ID 범위 | 2001-2004 | 1001-1004 |
+
+> 상세 필드 비교와 메시지 템플릿은 [DomainEvent 로깅](#domainevent-로깅) 섹션을 참조하세요.
+
 ---
 
 ## 로깅의 기초

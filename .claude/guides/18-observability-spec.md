@@ -504,6 +504,55 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | DomainEvent Publisher | Decorator + `ActivitySource.StartActivity()` | [DomainEventPublisherTracingStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherTracingStructureTests.cs) | Adapter 레이어 패턴 |
 | DomainEvent Handler | `INotificationPublisher` + `ActivitySource.StartActivity()` | [DomainEventHandlerTracingStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerTracingStructureTests.cs) | Application 레이어 패턴 |
 
+## 새 Usecase에 Observability 추가하기 (Quick Start)
+
+Functorium Pipeline은 Usecase와 Adapter 양쪽에서 Logging, Metrics, Tracing 세 가지 신호를 **자동 생성**합니다. 개발자가 별도의 관측성 코드를 작성할 필요가 없습니다.
+
+### 설정
+
+```csharp
+services
+    .RegisterOpenTelemetry(configuration, AssemblyReference.Assembly)
+    .ConfigurePipelines(pipelines => pipelines.UseAll())  // Metrics, Tracing, Logging 포함
+    .Build();
+```
+
+### 단일 요청의 관측성 출력
+
+`CreateProductCommand` 요청 시 Pipeline이 자동으로 생성하는 세 가지 신호:
+
+**1. Logging** -- 구조화된 로그 (Seq, Console 등)
+```
+[INF] application usecase.command CreateProductCommand.Handle requesting with {@request.message}
+[INF] application usecase.command CreateProductCommand.Handle responded success in 0.0234 s with {@response.message}
+[INF] adapter repository EfCoreProductRepository.Create requesting
+[INF] adapter repository EfCoreProductRepository.Create responded success in 0.0012 s
+```
+
+**2. Metrics** -- 카운터, 히스토그램 (Prometheus, OTLP 등)
+- `application.usecase.command.requests` +1 (request.handler=CreateProductCommand)
+- `application.usecase.command.responses` +1 (response.status=success)
+- `application.usecase.command.duration` 0.0234s (히스토그램 버킷)
+- Adapter도 동일 구조로 `adapter.repository.requests/responses/duration` 기록
+
+**3. Tracing** -- 분산 추적 span (Jaeger, Zipkin 등)
+```
+[Span] application usecase.command CreateProductCommand.Handle (23.4ms)
+  └── [Span] adapter repository EfCoreProductRepository.Create (1.2ms)
+```
+
+### 실패 시
+
+비즈니스 오류(Expected)는 Warning 로그 + `error.type=expected` 태그, 시스템 오류(Exceptional)는 Error 로그 + `error.type=exceptional` 태그로 자동 분류됩니다.
+
+### 핵심 원칙
+
+- **Usecase**: `UseAll()` Pipeline이 Logging/Metrics/Tracing 자동 처리
+- **Adapter**: `[GenerateObservablePort]` 소스 생성기가 Pipeline 클래스 자동 생성
+- **추가 코드 불필요**: 새 Usecase나 Adapter를 구현하면 관측성이 자동으로 따라옵니다
+
+> Observability로 해결할 수 없는 프로세스 크래시 분석은 [23-crash-diagnostics.md](./23-crash-diagnostics.md)을 참고하세요.
+
 ## 관련 문서
 
 | 문서 | 설명 |

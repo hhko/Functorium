@@ -1,5 +1,8 @@
 # 크래시 덤프 핸들러 가이드
 
+프로덕션 환경의 크래시는 로그와 메트릭만으로 원인을 파악하기 어려운 경우가 있습니다. 특히 `AccessViolationException`이나 `StackOverflowException`처럼 `try-catch`로 잡을 수 없는 예외는 일반적인 Observability 도구로는 진단이 불가능합니다.
+크래시 덤프는 프로세스 종료 시점의 메모리 스냅샷으로, 스택 트레이스와 힙 상태 등을 사후에 분석할 수 있게 해주는 최후 수단의 진단 도구입니다.
+
 이 가이드는 `Functorium.Abstractions.Diagnostics.CrashDumpHandler`를 사용하여 .NET 애플리케이션의 크래시 덤프를 생성하고 분석하는 방법을 설명합니다.
 
 ## CrashDumpHandler 개요
@@ -226,6 +229,19 @@ Source Link 사용을 권장합니다:
 
 Docker: `cap_add: SYS_PTRACE` + `security_opt: seccomp:unconfined`
 Kubernetes: `securityContext.capabilities.add: ["SYS_PTRACE"]`
+
+## Observability와의 관계
+
+Observability(Logging, Metrics, Tracing)는 **실행 중인** 프로세스의 동작을 관찰하는 도구입니다. 크래시 덤프는 프로세스가 **비정상 종료된 후**의 사후 분석 도구로, 성격이 다릅니다.
+
+문제 진단 시 권장하는 순서:
+
+1. **Logging** -- 구조화된 로그로 오류 코드와 컨텍스트 확인
+2. **Metrics** -- 에러율, 응답 시간 등 추이 변화 확인
+3. **Tracing** -- 분산 요청 흐름에서 병목/실패 지점 추적
+4. **크래시 덤프** -- 위 도구로 해결할 수 없는 프로세스 크래시 분석 (최후 수단)
+
+> Observability 사양은 [18-observability-spec.md](./18-observability-spec.md)을 참조하세요.
 
 ## 참고
 

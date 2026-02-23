@@ -371,6 +371,20 @@ select new Response(...)
 
 `guard(condition, error)`는 조건이 `false`일 때 `FinT.Fail`을 반환합니다.
 
+### guard() 함수란?
+
+`guard()`는 LanguageExt가 제공하는 함수로, LINQ comprehension 구문에서 조건부 단락(short-circuit)을 수행합니다. 조건이 `false`이면 지정된 에러로 즉시 실패하고, `true`이면 `Unit`을 반환하여 다음 단계로 진행합니다.
+
+```csharp
+// guard() in LINQ comprehension
+from _  in guard(condition, Error.New("error message"))
+
+// 동등한 명령형 코드
+if (!condition) return Fin.Fail<T>(Error.New("error message"));
+```
+
+`guard()`를 사용하면 명령형 `if` + `return` 패턴 없이 LINQ 체인 안에서 조건 검사를 선언적으로 표현할 수 있습니다. 반환 타입이 `Fin<Unit>`이므로 `FinT<IO, T>` 체인에서 자동 리프팅됩니다.
+
 ### 실행 흐름
 
 ```csharp
@@ -1021,10 +1035,11 @@ public sealed record Response(
 
 | 문서 | 설명 |
 |------|------|
-| [05-value-objects.md](./05-value-objects.md) | 값 객체 구현 및 검증 패턴 |
-| [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) | Entity 구현 및 Create 패턴 |
+| [05a-value-objects.md](./05a-value-objects.md) | 값 객체 구현 패턴 |
+| [06b-entity-aggregate-implementation.md](./06b-entity-aggregate-implementation.md) | Entity 구현 및 Create 패턴 |
 | [07-domain-events.md](./07-domain-events.md) | 도메인 이벤트 발행 및 Event Handler |
-| [08-error-system.md](./08-error-system.md) | 에러 시스템 가이드 |
+| [08a-error-system.md](./08a-error-system.md) | 에러 시스템: 기초와 네이밍 |
+| [08b-error-system-layers.md](./08b-error-system-layers.md) | 에러 시스템: 레이어별 구현과 테스트 |
 | [10-specifications.md](./10-specifications.md) | Specification 패턴 (Usecase에서 활용) |
 | [12-ports.md](./12-ports.md) | Repository 인터페이스 설계 |
 | [15-unit-testing.md](./15-unit-testing.md) | Usecase 테스트 작성 방법 |

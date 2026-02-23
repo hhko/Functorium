@@ -472,6 +472,8 @@ Usecase의 Request/Response 패턴과 동일한 이름 패턴을 IObservablePort
 | **검증 책임** | FluentValidation 입력 검증 | 값 객체 불변식으로 보장 |
 | **직렬화** | JSON 직렬화 필요 (외부 노출) | 직렬화 불필요 (내부 사용) |
 
+> **Usecase Request/Response에서 기본 타입을 사용하는 이유**: Port는 Application-Adapter 경계의 DTO 역할이며, Value Object는 Domain 내부 개념입니다. Usecase Request/Response에 기본 타입(string, int, decimal 등)을 사용하여 Adapter(Presentation)가 Domain 타입에 의존하지 않도록 합니다. Primitive → Value Object 변환은 Usecase 내부에서 수행합니다.
+
 #### 패턴 비교
 
 ```csharp

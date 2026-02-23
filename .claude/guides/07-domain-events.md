@@ -84,6 +84,25 @@ public abstract record DomainEvent(
 - `CorrelationId`: 동일한 요청에서 발생한 이벤트를 그룹으로 추적합니다.
 - `CausationId`: 이 이벤트를 발생시킨 이전 이벤트의 ID로, 이벤트 간 인과 관계를 추적합니다.
 
+### CorrelationId 전파 흐름
+
+`CorrelationId`는 하나의 요청에서 발생한 모든 도메인 이벤트를 연결하는 비즈니스 수준 식별자입니다:
+
+```
+HTTP Request
+  → 미들웨어: CorrelationId 생성 또는 헤더에서 추출
+    → Usecase 실행
+      → Entity.AddDomainEvent(new CreatedEvent(...) { CorrelationId = correlationId })
+        → Event Handler: 동일 CorrelationId로 이벤트 추적
+```
+
+| 식별자 | 수준 | 용도 |
+|--------|------|------|
+| `CorrelationId` | 비즈니스 | 동일 요청에서 발생한 이벤트 그룹핑 |
+| OpenTelemetry `TraceId` | 인프라 | 분산 시스템 간 요청 추적 (span 기반) |
+
+두 식별자는 독립적이지만 보완적입니다. `CorrelationId`로 비즈니스 흐름을 추적하고, `TraceId`로 인프라 성능을 분석합니다.
+
 ### 이벤트 명명 규칙
 
 이벤트 이름은 과거형을 사용합니다:
@@ -543,7 +562,7 @@ public async Task Handle_ShouldLogProductCreation()
 
 ## 참고 문서
 
-- [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) - Entity/Aggregate 구현
+- [06a-aggregate-design.md](./06a-aggregate-design.md) - Aggregate 설계, [06b-entity-aggregate-implementation.md](./06b-entity-aggregate-implementation.md) - Entity/Aggregate 구현
 - [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) - Use Case 구현
 - [11-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./11-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-usecasetransactionpipeline) - 파이프라인 자동 처리 패턴
 - [13-adapters.md](./13-adapters.md) - UoW Adapter 구현
