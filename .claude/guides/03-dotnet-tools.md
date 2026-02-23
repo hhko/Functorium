@@ -18,7 +18,7 @@
 | 카테고리 | 설명 | 예시 |
 |---------|------|------|
 | CLI 도구 | `dotnet tool` 매니페스트 관리 | ReportGenerator, Verify.Tool, Siren |
-| 소스 생성기 | 컴파일 시 코드 자동 생성 | EntityIdGenerator, PortObservableGenerator |
+| 소스 생성기 | 컴파일 시 코드 자동 생성 | EntityIdGenerator, ObservablePortGenerator |
 | .NET 10 스크립트 | `.cs` 파일 직접 실행 | SummarizeSlowestTests, ApiGenerator |
 
 > **02-solution-configuration.md와의 관계**: `dotnet-tools.json` 매니페스트 생성/관리 방법과 빌드 스크립트 파이프라인 개요는 [02-solution-configuration.md](./02-solution-configuration.md)를 참조하세요. 이 문서는 각 도구의 목적, 명령어, 파라미터, 실행 예시를 다룹니다.
@@ -151,7 +151,7 @@ dotnet siren-gen `
 | 생성기 | 트리거 어트리뷰트 | 생성 결과 |
 |--------|------------------|----------|
 | `EntityIdGenerator` | `[GenerateEntityId]` | EntityId struct + EF Core Converter/Comparer |
-| `PortObservableGenerator` | `[GeneratePortObservable]` | Observability 래핑 Pipeline 클래스 |
+| `ObservablePortGenerator` | `[GenerateObservablePort]` | Observability 래핑 Pipeline 클래스 |
 
 #### EntityIdGenerator
 
@@ -169,12 +169,12 @@ public sealed class Product : AggregateRoot<ProductId> { ... }
 - JSON 직렬화/역직렬화 (`JsonConverter`)
 - 비교 연산자 (`<`, `>`, `<=`, `>=`)
 
-#### PortObservableGenerator
+#### ObservablePortGenerator
 
-`[GeneratePortObservable]`을 IPort 구현 클래스에 적용하면 Observability 래핑 Pipeline을 자동 생성합니다.
+`[GenerateObservablePort]`을 IObservablePort 구현 클래스에 적용하면 Observability 래핑 Pipeline을 자동 생성합니다.
 
 ```csharp
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class EfCoreProductRepository : IProductRepository { ... }
 ```
 
@@ -293,7 +293,7 @@ dotnet .release-notes/scripts/ApiGenerator.cs `
 | 생성기 | 어트리뷰트 | 프로젝트 |
 |--------|-----------|---------|
 | EntityIdGenerator | `[GenerateEntityId]` | Functorium.SourceGenerators |
-| PortObservableGenerator | `[GeneratePortObservable]` | Functorium.SourceGenerators |
+| ObservablePortGenerator | `[GenerateObservablePort]` | Functorium.SourceGenerators |
 | Mediator.SourceGenerator | 인터페이스 기반 | NuGet (v3.0.1) |
 
 ### .NET 10 파일 기반 프로그램

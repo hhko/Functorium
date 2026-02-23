@@ -349,7 +349,7 @@ public static class ProductMapper
 ```csharp
 // TwoWayMappingLayered.Domains/Repositories/IProductRepository.cs
 
-public interface IProductRepository : IPort
+public interface IProductRepository : IObservablePort
 {
     FinT<IO, Product> Create(Product product);      // ✅ Product 반환
     FinT<IO, Product> GetById(ProductId id);        // ✅ Product 반환
@@ -364,7 +364,7 @@ public interface IProductRepository : IPort
 ```csharp
 // TwoWayMappingLayered.Adapters.Persistence/Repositories/InMemoryProductRepository.cs
 
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class InMemoryProductRepository : IProductRepository
 {
     // ⭐ 내부 저장소: Adapter 모델(ProductEntity) 사용
@@ -912,7 +912,7 @@ curl -X PUT http://localhost:5000/api/products/{id} \
 | **Validate<T>** | 타입 안전한 검증 (`NonNegative`, `ThenExactLength`) |
 | **CQRS** | Command/Query 분리 (`ICommandUsecase`, `IQueryUsecase`) |
 | **FinResponse<T>** | 성공/실패를 표현하는 응답 타입 |
-| **[GeneratePortObservable]** | 관찰 가능성 파이프라인 자동 생성 |
+| **[GenerateObservablePort]** | 관찰 가능성 파이프라인 자동 생성 |
 | **MustSatisfyValidation** | FluentValidation과 Value Object 검증 통합 (입력 == 출력 타입) |
 | **MustSatisfyValidationOf<T>** | FluentValidation과 Value Object 검증 통합 (입력 != 출력 타입) |
 

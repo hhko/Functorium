@@ -31,11 +31,11 @@ Functorium.SourceGenerators\Generators\IncrementalGeneratorBase.cs
 
 ### 1단계: AttachDebugger 파라미터 활성화
 
-`Functorium.SourceGenerators\PortObservableGenerator.cs` 파일 수정:
+`Functorium.SourceGenerators\ObservablePortGenerator.cs` 파일 수정:
 
 ```csharp
 [Generator(LanguageNames.CSharp)]
-public sealed class PortObservableGenerator()
+public sealed class ObservablePortGenerator()
     : IncrementalGeneratorBase<ObservableClassInfo>(
         RegisterSourceProvider,
         Generate,
@@ -54,7 +54,7 @@ public sealed class PortObservableGenerator()
 Functorium.SourceGenerators\Generators\IncrementalGeneratorBase.cs
 - Line 32: IncrementalValuesProvider<TValue> provider = ...
 
-Functorium.SourceGenerators\PortObservableGenerator.cs
+Functorium.SourceGenerators\ObservablePortGenerator.cs
 - Line 66: private static ObservableClassInfo MapToObservableClassInfo(...)
 - Line 130: private static void Generate(...)
 ```
@@ -95,7 +95,7 @@ dotnet build Observability.Adapters.Infrastructure
 
 ```csharp
 [Generator(LanguageNames.CSharp)]
-public sealed class PortObservableGenerator()
+public sealed class ObservablePortGenerator()
     : IncrementalGeneratorBase<ObservableClassInfo>(
         RegisterSourceProvider,
         Generate,
@@ -113,14 +113,14 @@ public sealed class PortObservableGenerator()
 ### 1단계: 테스트 프로젝트 열기
 
 ```
-Functorium.Tests.Unit\AdaptersTests\SourceGenerators\PortObservableGeneratorTests.cs
+Functorium.Tests.Unit\AdaptersTests\SourceGenerators\ObservablePortGeneratorTests.cs
 ```
 
 ### 2단계: 테스트 코드에 브레이크포인트 설정
 
 ```csharp
 [Fact]
-public Task PortObservableGenerator_ShouldGenerateObservable_WithTupleTypes()
+public Task ObservablePortGenerator_ShouldGenerateObservable_WithTupleTypes()
 {
     // Arrange
     string input = """
@@ -139,7 +139,7 @@ public Task PortObservableGenerator_ShouldGenerateObservable_WithTupleTypes()
 ### 3단계: 소스 생성기 코드에 브레이크포인트 설정
 
 ```csharp
-// Functorium.SourceGenerators\PortObservableGenerator.cs
+// Functorium.SourceGenerators\ObservablePortGenerator.cs
 private static ObservableClassInfo MapToObservableClassInfo(
     GeneratorAttributeSyntaxContext context,
     CancellationToken cancellationToken)
@@ -222,8 +222,8 @@ Solution Explorer
 → Dependencies
 → Analyzers
 → Functorium.SourceGenerators
-→ Functorium.SourceGenerators.PortObservableGenerator
-   → GeneratePortObservableAttribute.g.cs
+→ Functorium.SourceGenerators.ObservablePortGenerator
+   → GenerateObservablePortAttribute.g.cs
    → Repositories.RepositoryIoObservable.g.cs
    → ...
 ```
@@ -258,9 +258,9 @@ private static ObservableClassInfo MapToObservableClassInfo(
     // 디버깅: 모든 인터페이스 확인
     var interfaces = classSymbol.AllInterfaces;  // ⬅️ Watch 창에서 확인
 
-    // 디버깅: IPort를 구현하는 인터페이스의 메서드 확인
+    // 디버깅: IObservablePort를 구현하는 인터페이스의 메서드 확인
     var methods = classSymbol.AllInterfaces
-        .Where(ImplementsIPort)
+        .Where(ImplementsIObservablePort)
         .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())  // ⬅️ Watch 창에서 확인
         .ToList();
 

@@ -2,15 +2,15 @@
 
 ## 학습 목표
 
-- PortObservableGenerator의 목적과 기대 효과 이해
+- ObservablePortGenerator의 목적과 기대 효과 이해
 - 소스 생성기로 구현한 이유 파악
 - 전체 프로젝트 구조 파악
 
 ---
 
-## PortObservableGenerator란?
+## ObservablePortGenerator란?
 
-**PortObservableGenerator**는 어댑터 클래스에 **Observability(관측 가능성)** 기능을 자동으로 추가하는 소스 생성기입니다.
+**ObservablePortGenerator**는 어댑터 클래스에 **Observability(관측 가능성)** 기능을 자동으로 추가하는 소스 생성기입니다.
 
 ### 해결하려는 문제
 
@@ -42,7 +42,7 @@
 
 ```csharp
 // 수동 구현 - 모든 메서드에 반복되는 보일러플레이트 코드
-public class UserRepository : IPort
+public class UserRepository : IObservablePort
 {
     private readonly ILogger<UserRepository> _logger;
     private readonly IPortTrace _trace;
@@ -109,8 +109,8 @@ public class UserRepository : IPort
 
 ```csharp
 // 개발자가 작성하는 코드 - 핵심 로직에만 집중
-[GeneratePortObservable]
-public class UserRepository(ILogger<UserRepository> logger) : IPort
+[GenerateObservablePort]
+public class UserRepository(ILogger<UserRepository> logger) : IObservablePort
 {
     public FinT<IO, User> GetUserAsync(int userId) =>
         // 순수한 비즈니스 로직만 작성
@@ -212,8 +212,8 @@ IncrementalGeneratorBase (추상 클래스)
 │   ├── registerSourceProvider()  # 추상 단계 1
 │   └── generate()                # 추상 단계 2
 │
-└── PortObservableGenerator (구체 클래스)
-    ├── RegisterSourceProvider()  # 구현: [GeneratePortObservable] 클래스 필터링
+└── ObservablePortGenerator (구체 클래스)
+    ├── RegisterSourceProvider()  # 구현: [GenerateObservablePort] 클래스 필터링
     └── Generate()                # 구현: Pipeline 코드 생성
 ```
 
@@ -222,27 +222,27 @@ IncrementalGeneratorBase (추상 클래스)
 - 새로운 생성기 추가 시 핵심 로직만 구현
 - 디버깅 플래그 등 **공통 기능 중앙 관리**
 
-### 전략 패턴 (Strategy Pattern) with IPort
+### 전략 패턴 (Strategy Pattern) with IObservablePort
 
-`IPort` 인터페이스를 통해 **전략 패턴**을 구현합니다. 각 어댑터는 특정 외부 시스템과의 통신 전략을 캡슐화합니다:
+`IObservablePort` 인터페이스를 통해 **전략 패턴**을 구현합니다. 각 어댑터는 특정 외부 시스템과의 통신 전략을 캡슐화합니다:
 
 ```csharp
-// IPort 인터페이스 - 전략의 공통 계약
-public interface IPort
+// IObservablePort 인터페이스 - 전략의 공통 계약
+public interface IObservablePort
 {
     // 마커 인터페이스로 사용
     // 실제 메서드는 각 도메인별 인터페이스에서 정의
 }
 
 // 구체적인 전략 정의 - 사용자 저장소
-public interface IUserRepository : IPort
+public interface IUserRepository : IObservablePort
 {
     FinT<IO, User> GetUserAsync(int id);
     FinT<IO, IEnumerable<User>> GetUsersAsync();
 }
 
 // 구체적인 전략 정의 - 주문 저장소
-public interface IOrderRepository : IPort
+public interface IOrderRepository : IObservablePort
 {
     FinT<IO, Order> GetOrderAsync(int id);
     FinT<IO, Unit> CreateOrderAsync(Order order);
@@ -253,7 +253,7 @@ public interface IOrderRepository : IPort
 전략 패턴 구조
 =============
 
-IPort (전략 인터페이스)
+IObservablePort (전략 인터페이스)
 │
 ├── IUserRepository        # 사용자 관련 전략
 │   └── UserRepository     # 구체적 구현
@@ -272,7 +272,7 @@ IPort (전략 인터페이스)
 
 ```csharp
 // 개발자가 작성 - 전략 구현
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class UserRepository(ILogger<UserRepository> logger) : IUserRepository
 {
     public FinT<IO, User> GetUserAsync(int id) =>
@@ -353,10 +353,10 @@ ProductRepository.cs     : 60줄 (순수 비즈니스 로직)
 Functorium/
 ├── Src/
 │   ├── Functorium.SourceGenerators/            # 소스 생성기
-│   │   ├── PortObservableGenerator.cs                 # 메인 생성기
+│   │   ├── ObservablePortGenerator.cs                 # 메인 생성기
 │   │   └── Generators/
 │   │       ├── IncrementalGeneratorBase.cs             # 기본 패턴
-│   │       └── PortObservableGenerator/
+│   │       └── ObservablePortGenerator/
 │   │           ├── ObservableClassInfo.cs                # 클래스 정보 모델
 │   │           ├── MethodInfo.cs                       # 메서드 정보 모델
 │   │           ├── ParameterInfo.cs                    # 파라미터 정보 모델
@@ -379,7 +379,7 @@ Functorium/
     └── Functorium.Tests.Unit/
         └── AdaptersTests/
             └── SourceGenerators/
-                ├── PortObservableGeneratorTests.cs    # 27개 테스트
+                ├── ObservablePortGeneratorTests.cs    # 27개 테스트
                 └── *.verified.txt                      # 스냅샷 파일
 ```
 
@@ -387,20 +387,20 @@ Functorium/
 
 ## 핵심 컴포넌트
 
-### 1. PortObservableGenerator
+### 1. ObservablePortGenerator
 
 메인 소스 생성기 클래스입니다. 3단계 파이프라인으로 동작합니다:
 
 ```
 1단계: 속성 정의 생성
 =====================
-[GeneratePortObservable] 속성을 자동으로 정의하여
+[GenerateObservablePort] 속성을 자동으로 정의하여
 개발자가 별도로 선언할 필요 없음
 
 2단계: 대상 클래스 필터링
 ========================
-[GeneratePortObservable] 속성이 붙고
-IPort를 구현한 클래스만 선택
+[GenerateObservablePort] 속성이 붙고
+IObservablePort를 구현한 클래스만 선택
 
 3단계: Pipeline 클래스 생성
 =========================
@@ -482,7 +482,7 @@ Chapter 08: 테스트 전략
 
 | 항목 | 설명 |
 |------|------|
-| 프로젝트 이름 | PortObservableGenerator |
+| 프로젝트 이름 | ObservablePortGenerator |
 | 목적 | 어댑터에 Observability 자동 추가 |
 | 해결 문제 | 반복적인 로깅/추적/메트릭 코드 제거 |
 | 구현 이유 | 일관성, 성능, 타입 안전성, AOT 지원 |

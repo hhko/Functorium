@@ -801,7 +801,7 @@ response.event.failure_count     # 조합 count는 _count
 
 | 구성 요소 | 파일 경로 |
 |----------|----------|
-| 필드 이름 생성 헬퍼 | `Src/Functorium.SourceGenerators/Generators/PortObservableGenerator/CollectionTypeHelper.cs` |
+| 필드 이름 생성 헬퍼 | `Src/Functorium.SourceGenerators/Generators/ObservablePortGenerator/CollectionTypeHelper.cs` |
 | Application Logging | `Src/Functorium/Adapters/Observabilities/Pipelines/UsecaseLoggingPipeline.cs` |
 | Adapter Logging | Source Generator 생성 코드 |
 | Application Metrics | `Src/Functorium/Adapters/Observabilities/Pipelines/UsecaseMetricsPipeline.cs` |
@@ -813,11 +813,11 @@ response.event.failure_count     # 조합 count는 _count
 | 테스트 | 파일 경로 |
 |--------|----------|
 | Application Logging 구조 | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseLoggingPipelineStructureTests.cs` |
-| Adapter Logging 구조 | `Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/PortObservableLoggingStructureTests.cs` |
+| Adapter Logging 구조 | `Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortLoggingStructureTests.cs` |
 | Application Metrics 구조 | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseMetricsPipelineStructureTests.cs` |
-| Adapter Metrics 구조 | `Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/PortObservableMetricsStructureTests.cs` |
+| Adapter Metrics 구조 | `Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortMetricsStructureTests.cs` |
 | Application Tracing 구조 | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseTracingPipelineStructureTests.cs` |
-| Adapter Tracing 구조 | `Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/PortObservableTracingStructureTests.cs` |
+| Adapter Tracing 구조 | `Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortTracingStructureTests.cs` |
 | DomainEvent Publisher Logging | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherLoggingStructureTests.cs` |
 | DomainEvent Handler Logging | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerLoggingStructureTests.cs` |
 

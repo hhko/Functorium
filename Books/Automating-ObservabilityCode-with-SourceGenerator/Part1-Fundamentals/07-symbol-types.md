@@ -203,14 +203,14 @@ method.TypeParameters       // 타입 파라미터
 
 ---
 
-## 실제 활용: PortObservableGenerator
+## 실제 활용: ObservablePortGenerator
 
 ### 메서드 정보 추출
 
 ```csharp
-// PortObservableGenerator.cs
+// ObservablePortGenerator.cs
 var methods = classSymbol.AllInterfaces
-    .Where(ImplementsIPort)
+    .Where(ImplementsIObservablePort)
     .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
     .Where(m => m.MethodKind == MethodKind.Ordinary)  // ★ 일반 메서드만
     .Select(m => new MethodInfo(
@@ -255,19 +255,19 @@ public static List<ParameterInfo> ExtractParameters(INamedTypeSymbol classSymbol
 }
 ```
 
-### IPort 구현 확인
+### IObservablePort 구현 확인
 
 ```csharp
-private static bool ImplementsIPort(INamedTypeSymbol interfaceSymbol)
+private static bool ImplementsIObservablePort(INamedTypeSymbol interfaceSymbol)
 {
-    // IPort 자체인지 확인
-    if (interfaceSymbol.Name == "IPort")
+    // IObservablePort 자체인지 확인
+    if (interfaceSymbol.Name == "IObservablePort")
     {
         return true;
     }
 
-    // IPort를 상속받은 인터페이스인지 확인
-    return interfaceSymbol.AllInterfaces.Any(i => i.Name == "IPort");
+    // IObservablePort를 상속받은 인터페이스인지 확인
+    return interfaceSymbol.AllInterfaces.Any(i => i.Name == "IObservablePort");
 }
 ```
 

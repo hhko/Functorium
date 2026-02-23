@@ -231,8 +231,8 @@ diff /tmp/first.cs /tmp/second.cs
 public void Generated_Code_Should_Be_Deterministic()
 {
     string input = """
-        [GeneratePortObservable]
-        public class UserRepository : IPort
+        [GenerateObservablePort]
+        public class UserRepository : IObservablePort
         {
             public FinT<IO, User> GetUserAsync(int id) => throw new();
         }
@@ -254,8 +254,8 @@ public void Generated_Code_Should_Be_Deterministic()
 public Task Generated_Code_Should_Match_Snapshot()
 {
     string input = """
-        [GeneratePortObservable]
-        public class UserRepository : IPort
+        [GenerateObservablePort]
+        public class UserRepository : IObservablePort
         {
             public FinT<IO, User> GetUserAsync(int id) => throw new();
         }

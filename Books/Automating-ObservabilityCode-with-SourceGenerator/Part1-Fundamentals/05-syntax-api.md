@@ -171,7 +171,7 @@ foreach (var ancestor in ancestors)
 ```csharp
 context.SyntaxProvider
     .ForAttributeWithMetadataName(
-        "MyNamespace.GeneratePortObservableAttribute",
+        "MyNamespace.GenerateObservablePortAttribute",
         // predicate: Syntax API 사용
         predicate: (node, cancellationToken) =>
         {

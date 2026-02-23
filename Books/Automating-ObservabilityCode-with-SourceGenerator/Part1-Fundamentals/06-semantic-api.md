@@ -62,7 +62,7 @@ SemanticModel semanticModel = compilation.GetSemanticModel(syntaxTree);
 ```csharp
 context.SyntaxProvider
     .ForAttributeWithMetadataName(
-        "MyNamespace.GeneratePortObservableAttribute",
+        "MyNamespace.GenerateObservablePortAttribute",
         predicate: (node, _) => node is ClassDeclarationSyntax,
         transform: (ctx, _) =>
         {
@@ -183,7 +183,7 @@ private static ObservableClassInfo MapToObservableClassInfo(
 
     // 4. 인터페이스의 메서드 추출
     var methods = interfaces
-        .Where(ImplementsIPort)
+        .Where(ImplementsIObservablePort)
         .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
         .Where(m => m.MethodKind == MethodKind.Ordinary)
         .ToList();
@@ -210,9 +210,9 @@ bool areSameType = SymbolEqualityComparer.Default.Equals(type1, type2);
 ### 특정 타입인지 확인
 
 ```csharp
-// IPort 인터페이스를 구현하는지 확인
-bool implementsIPort = classSymbol.AllInterfaces
-    .Any(i => i.Name == "IPort");
+// IObservablePort 인터페이스를 구현하는지 확인
+bool implementsIObservablePort = classSymbol.AllInterfaces
+    .Any(i => i.Name == "IObservablePort");
 
 // 특정 네임스페이스의 타입인지 확인
 bool isInMyNamespace = classSymbol.ContainingNamespace
@@ -269,12 +269,12 @@ if (method.IsGenericMethod)
 
 ---
 
-## 실제 코드 예시: PortObservableGenerator
+## 실제 코드 예시: ObservablePortGenerator
 
 ```csharp
-// PortObservableGenerator.cs에서 메서드 정보 추출
+// ObservablePortGenerator.cs에서 메서드 정보 추출
 var methods = classSymbol.AllInterfaces
-    .Where(ImplementsIPort)
+    .Where(ImplementsIObservablePort)
     .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
     .Where(m => m.MethodKind == MethodKind.Ordinary)
     .Select(m => new MethodInfo(

@@ -99,7 +99,7 @@ else
 ### 네임스페이스 접미사 추출
 
 ```csharp
-// PortObservableGenerator.cs의 실제 코드
+// ObservablePortGenerator.cs의 실제 코드
 private static void Generate(
     SourceProductionContext context,
     ImmutableArray<ObservableClassInfo> pipelineClasses)
@@ -234,8 +234,8 @@ public class NamespaceTests
         string input = """
             namespace MyApp;
 
-            [GeneratePortObservable]
-            public class UserRepository : IPort { }
+            [GenerateObservablePort]
+            public class UserRepository : IObservablePort { }
             """;
 
         string? actual = _sut.Generate(input);
@@ -250,8 +250,8 @@ public class NamespaceTests
         string input = """
             namespace A.B.C.D.E;
 
-            [GeneratePortObservable]
-            public class UserRepository : IPort { }
+            [GenerateObservablePort]
+            public class UserRepository : IObservablePort { }
             """;
 
         string? actual = _sut.Generate(input);
@@ -264,8 +264,8 @@ public class NamespaceTests
     public Task Should_Handle_Global_Namespace()
     {
         string input = """
-            [GeneratePortObservable]
-            public class UserRepository : IPort { }
+            [GenerateObservablePort]
+            public class UserRepository : IObservablePort { }
             """;
 
         string? actual = _sut.Generate(input);

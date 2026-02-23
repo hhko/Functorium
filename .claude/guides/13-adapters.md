@@ -15,13 +15,13 @@
 
 ## Activity 2: Adapter 구현
 
-Adapter는 Port 인터페이스의 **구현체**입니다. `[GeneratePortObservable]` 어트리뷰트를 통해 Observability Pipeline이 자동 생성됩니다.
+Adapter는 Port 인터페이스의 **구현체**입니다. `[GenerateObservablePort]` 어트리뷰트를 통해 Observability Pipeline이 자동 생성됩니다.
 
 ### 2.1 공통 구현 체크리스트
 
 모든 Adapter 구현에 필수인 항목입니다.
 
-- [ ] `[GeneratePortObservable]` 어트리뷰트를 클래스에 적용했는가?
+- [ ] `[GenerateObservablePort]` 어트리뷰트를 클래스에 적용했는가?
 - [ ] Port 인터페이스를 구현하는가?
 - [ ] `RequestCategory` 프로퍼티를 정의했는가?
 - [ ] 모든 인터페이스 메서드에 `virtual` 키워드를 추가했는가?
@@ -55,7 +55,7 @@ Adapter 내부에서 Port의 도메인 모델과 기술 관심사 DTO 간의 변
 
 ```csharp
 // Adapters.Infrastructure/Apis/CriteriaApi/CriteriaApiService.cs
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class CriteriaApiService : ICriteriaApiService
 {
     private readonly HttpClient _httpClient;
@@ -185,7 +185,7 @@ internal static class ProductMapper
 ```csharp
 // Repository — Mapper 확장 메서드 사용
 // 파일: {Adapters.Persistence}/Repositories/EfCore/EfCoreProductRepository.cs
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class EfCoreProductRepository : IProductRepository
 {
     private readonly LayeredArchDbContext _dbContext;
@@ -375,7 +375,7 @@ using Functorium.Adapters.SourceGenerators;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 using static LanguageExt.Prelude;
 
-[GeneratePortObservable]                                    // 1. Pipeline 자동 생성
+[GenerateObservablePort]                                    // 1. Pipeline 자동 생성
 public class InMemoryProductRepository : IProductRepository  // 2. Port 인터페이스 구현
 {
     private static readonly ConcurrentDictionary<ProductId, Product> _products = new();
@@ -546,7 +546,7 @@ using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class EfCoreProductRepository : IProductRepository
 {
     private readonly LayeredArchDbContext _dbContext;
@@ -626,8 +626,8 @@ public class EfCoreProductRepository : IProductRepository
 | Navigation 로딩 | 불필요 (메모리 내 참조) | `.Include(p => p.Tags)` |
 | 트랜잭션 관리 | No-op (`InMemoryUnitOfWork`) | `DbContext.SaveChangesAsync()` (`EfCoreUnitOfWork`) |
 | 에러 패턴 | `AdapterError.For<T>(...)` | `AdapterError.For<T>(...)` (동일) |
-| Pipeline 생성 | `[GeneratePortObservable]` | `[GeneratePortObservable]` (동일) |
-| DI 등록 | `RegisterScopedPortObservable<>` | `RegisterScopedPortObservable<>` (동일) |
+| Pipeline 생성 | `[GenerateObservablePort]` | `[GenerateObservablePort]` (동일) |
+| DI 등록 | `RegisterScopedObservablePort<>` | `RegisterScopedObservablePort<>` (동일) |
 
 #### Unit of Work
 
@@ -638,7 +638,7 @@ Unit of Work(UoW)는 Usecase에서 트랜잭션을 커밋하는 Port입니다. R
 **위치**: `Functorium.Applications.Persistence`
 
 ```csharp
-public interface IUnitOfWork : IPort
+public interface IUnitOfWork : IObservablePort
 {
     FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = default);
 }
@@ -651,7 +651,7 @@ public interface IUnitOfWork : IPort
 ```csharp
 // 파일: {Adapters.Persistence}/Repositories/EfCore/EfCoreUnitOfWork.cs
 
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class EfCoreUnitOfWork : IUnitOfWork
 {
     private readonly LayeredArchDbContext _dbContext;
@@ -698,7 +698,7 @@ public class EfCoreUnitOfWork : IUnitOfWork
 ```csharp
 // 파일: {Adapters.Persistence}/Repositories/InMemory/InMemoryUnitOfWork.cs
 
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class InMemoryUnitOfWork : IUnitOfWork
 {
     public string RequestCategory => "UnitOfWork";
@@ -765,7 +765,7 @@ using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class ExternalPricingApiService : IExternalPricingService
 {
     private readonly HttpClient _httpClient;              // 1. HttpClient 주입
@@ -906,7 +906,7 @@ using Functorium.Adapters.SourceGenerators;
 using static LanguageExt.Prelude;
 using Wolverine;
 
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class RabbitMqInventoryMessaging : IInventoryMessaging
 {
     private readonly IMessageBus _messageBus;              // 1. MessageBus 주입
@@ -1083,7 +1083,7 @@ var sort = SortExpression.Empty;
 핵심: SQL 선언부만 작성하면 Search/ORDER BY/페이지네이션은 베이스가 처리합니다.
 
 ```csharp
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class DapperProductQueryAdapter
     : DapperQueryAdapterBase<Product, ProductSummaryDto>, IProductQueryAdapter
 {
@@ -1117,7 +1117,7 @@ public class DapperProductQueryAdapter
 `SelectSql`/`CountSql`을 통째로 선언하므로 JOIN, GROUP BY 등 복잡한 쿼리도 자유롭게 작성할 수 있습니다.
 
 ```csharp
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class DapperProductWithStockQueryAdapter
     : DapperQueryAdapterBase<Product, ProductWithStockDto>, IProductWithStockQueryAdapter
 {
@@ -1182,7 +1182,7 @@ protected override (string, DynamicParameters) BuildWhereClause(Specification<Pr
 InMemory 구현은 기존 Repository를 위임하여 데이터를 가져온 후 인메모리 정렬/페이지네이션합니다.
 
 ```csharp
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class InMemoryProductQueryAdapter : IProductQueryAdapter
 {
     private readonly InMemoryProductRepository _repository;
@@ -1205,7 +1205,7 @@ public class InMemoryProductQueryAdapter : IProductQueryAdapter
 
 | 문서 | 설명 |
 |------|------|
-| [12-ports.md](./12-ports.md) | Port 아키텍처, IPort 계층, Port 정의 규칙 |
+| [12-ports.md](./12-ports.md) | Port 아키텍처, IObservablePort 계층, Port 정의 규칙 |
 | [14-adapter-wiring.md](./14-adapter-wiring.md) | Pipeline 생성, DI 등록, Options 패턴, 테스트 |
 | [15-unit-testing.md](./15-unit-testing.md) | 단위 테스트 작성 가이드 |
 | [08-error-system.md](./08-error-system.md) | 에러 시스템 가이드 |

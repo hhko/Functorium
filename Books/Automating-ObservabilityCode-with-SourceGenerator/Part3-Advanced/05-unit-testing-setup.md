@@ -193,20 +193,20 @@ return outputCompilation
 ### 테스트 클래스 구조
 
 ```csharp
-// PortObservableGeneratorTests.cs
+// ObservablePortGeneratorTests.cs
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Testing.SourceGenerators;
 
 namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 
 [Trait(nameof(UnitTest), UnitTest.Functorium_SourceGenerator)]
-public sealed class PortObservableGeneratorTests
+public sealed class ObservablePortGeneratorTests
 {
-    private readonly PortObservableGenerator _sut;
+    private readonly ObservablePortGenerator _sut;
 
-    public PortObservableGeneratorTests()
+    public ObservablePortGeneratorTests()
     {
-        _sut = new PortObservableGenerator();
+        _sut = new ObservablePortGenerator();
     }
 
     [Fact]
@@ -220,12 +220,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface ITestAdapter : IPort
+            public interface ITestAdapter : IObservablePort
             {
                 FinT<IO, int> GetValue();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class TestAdapter : ITestAdapter
             {
                 public string RequestCategory => "Test";
@@ -254,14 +254,14 @@ string input = """
     // 2. 네임스페이스
     namespace TestNamespace;
 
-    // 3. 인터페이스 정의 (IPort 상속)
-    public interface ITestAdapter : IPort
+    // 3. 인터페이스 정의 (IObservablePort 상속)
+    public interface ITestAdapter : IObservablePort
     {
         FinT<IO, int> GetValue();
     }
 
-    // 4. [GeneratePortObservable] 속성 적용
-    [GeneratePortObservable]
+    // 4. [GenerateObservablePort] 속성 적용
+    [GenerateObservablePort]
     public class TestAdapter : ITestAdapter
     {
         public string RequestCategory => "Test";
@@ -299,7 +299,7 @@ public void Should_Return_Null_When_NoAttributeApplied()
 
     string? actual = _sut.Generate(input);
 
-    // [GeneratePortObservable] 속성이 없으면 생성 안 됨
+    // [GenerateObservablePort] 속성이 없으면 생성 안 됨
     actual.ShouldBeNull();
 }
 ```
@@ -323,7 +323,7 @@ dotnet test Tests/Functorium.Tests.Unit/Functorium.Tests.Unit.csproj
 ### 특정 테스트만 실행
 
 ```bash
-dotnet test --filter "FullyQualifiedName~PortObservableGeneratorTests"
+dotnet test --filter "FullyQualifiedName~ObservablePortGeneratorTests"
 ```
 
 ---

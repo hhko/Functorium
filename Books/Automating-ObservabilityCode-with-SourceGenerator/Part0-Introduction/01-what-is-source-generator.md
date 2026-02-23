@@ -58,8 +58,8 @@
 
 ```csharp
 // 개발자가 작성한 코드
-[GeneratePortObservable]
-public class UserRepository : IPort
+[GenerateObservablePort]
+public class UserRepository : IObservablePort
 {
     public FinT<IO, User> GetUserAsync(int id) => ...;
 }

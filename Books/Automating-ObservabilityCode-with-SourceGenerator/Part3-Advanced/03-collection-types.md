@@ -38,8 +38,8 @@ public override FinT<IO, List<User>> GetUsersAsync() =>
 ### 컬렉션 패턴 정의
 
 ```csharp
-// Generators/PortObservableGenerator/CollectionTypeHelper.cs
-namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
+// Generators/ObservablePortGenerator/CollectionTypeHelper.cs
+namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
 /// 컬렉션 타입 여부를 확인하는 헬퍼 클래스
@@ -354,8 +354,8 @@ activityContext?.SetTag("Response_ResultCount", result?.Length ?? 0);  // ← Le
 public Task Should_Generate_CollectionCountFields_WithCollectionParameters()
 {
     string input = """
-        [GeneratePortObservable]
-        public class DataRepository : IPort
+        [GenerateObservablePort]
+        public class DataRepository : IObservablePort
         {
             public virtual FinT<IO, int> ProcessItems(List<string> items)
                 => FinT<IO, int>.Succ(items?.Count ?? 0);
@@ -380,8 +380,8 @@ public Task Should_Not_Generate_Count_ForTupleContainingCollection()
 {
     // 튜플 내부에 컬렉션이 있어도 Count 미생성
     string input = """
-        [GeneratePortObservable]
-        public class UserRepository : IPort
+        [GenerateObservablePort]
+        public class UserRepository : IObservablePort
         {
             public virtual FinT<IO, (int Id, List<string> Tags)> GetUserWithTags()
                 => FinT<IO, (int Id, List<string> Tags)>.Succ((1, new List<string>()));
@@ -404,8 +404,8 @@ public Task Should_Not_Generate_Count_ForTupleContainingCollection()
 public Task Should_Not_Generate_Length_ForTupleContainingArray()
 {
     string input = """
-        [GeneratePortObservable]
-        public class StudentRepository : IPort
+        [GenerateObservablePort]
+        public class StudentRepository : IObservablePort
         {
             public virtual FinT<IO, (string Name, int[] Scores)> GetStudentScores()
                 => FinT<IO, (string Name, int[] Scores)>.Succ(("Student", new[] { 90, 85 }));

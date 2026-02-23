@@ -31,8 +31,8 @@ public override FinT<IO, User> GetUserAsync(int id) =>
 ### 전체 코드
 
 ```csharp
-// Generators/PortObservableGenerator/TypeExtractor.cs
-namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
+// Generators/ObservablePortGenerator/TypeExtractor.cs
+namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
 /// 제네릭 타입에서 내부 타입을 추출하는 유틸리티 클래스
@@ -366,8 +366,8 @@ null
 public Task Should_Extract_SimpleType()
 {
     string input = """
-        [GeneratePortObservable]
-        public class DataRepository : IPort
+        [GenerateObservablePort]
+        public class DataRepository : IObservablePort
         {
             public virtual FinT<IO, int> GetNumber() => FinT<IO, int>.Succ(42);
             public virtual FinT<IO, string> GetText() => FinT<IO, string>.Succ("hello");
@@ -391,8 +391,8 @@ public Task Should_Extract_CollectionType()
     string input = """
         public class User { public int Id { get; set; } }
 
-        [GeneratePortObservable]
-        public class UserRepository : IPort
+        [GenerateObservablePort]
+        public class UserRepository : IObservablePort
         {
             public virtual FinT<IO, List<User>> GetUsers()
                 => FinT<IO, List<User>>.Succ(new List<User>());
@@ -415,8 +415,8 @@ public Task Should_Extract_CollectionType()
 public Task Should_Extract_ComplexGenericType()
 {
     string input = """
-        [GeneratePortObservable]
-        public class DataRepository : IPort
+        [GenerateObservablePort]
+        public class DataRepository : IObservablePort
         {
             public virtual FinT<IO, Dictionary<string, List<int>>> GetComplexData()
                 => FinT<IO, Dictionary<string, List<int>>>.Succ(
@@ -438,8 +438,8 @@ public Task Should_Extract_ComplexGenericType()
 public Task Should_Extract_TupleType()
 {
     string input = """
-        [GeneratePortObservable]
-        public class UserRepository : IPort
+        [GenerateObservablePort]
+        public class UserRepository : IObservablePort
         {
             public virtual FinT<IO, (int Id, string Name)> GetUserInfo()
                 => FinT<IO, (int Id, string Name)>.Succ((1, "Test"));

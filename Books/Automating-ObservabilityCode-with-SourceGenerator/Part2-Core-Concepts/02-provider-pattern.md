@@ -56,7 +56,7 @@ RegisterSourceOutput
 **복수(0개 이상)**의 값을 나타냅니다:
 
 ```csharp
-// 여러 클래스가 [GeneratePortObservable] 속성을 가질 수 있음
+// 여러 클래스가 [GenerateObservablePort] 속성을 가질 수 있음
 IncrementalValuesProvider<ObservableClassInfo> provider = context.SyntaxProvider
     .ForAttributeWithMetadataName(...);
 
@@ -140,7 +140,7 @@ context.RegisterSourceOutput(combined, (ctx, pair) =>
 
 ---
 
-## 실제 코드: PortObservableGenerator
+## 실제 코드: ObservablePortGenerator
 
 ```csharp
 private static IncrementalValuesProvider<ObservableClassInfo> RegisterSourceProvider(
@@ -149,13 +149,13 @@ private static IncrementalValuesProvider<ObservableClassInfo> RegisterSourceProv
     // 1단계: 고정 코드 생성 (Attribute 정의)
     context.RegisterPostInitializationOutput(ctx =>
         ctx.AddSource(
-            hintName: GeneratePortObservableAttributeFileName,
-            sourceText: SourceText.From(GeneratePortObservableAttribute, Encoding.UTF8)));
+            hintName: GenerateObservablePortAttributeFileName,
+            sourceText: SourceText.From(GenerateObservablePortAttribute, Encoding.UTF8)));
 
     // 2단계: 파이프라인 구성
     return context
         .SyntaxProvider
-        // [GeneratePortObservable] 속성이 붙은 클래스만 선택
+        // [GenerateObservablePort] 속성이 붙은 클래스만 선택
         .ForAttributeWithMetadataName(
             fullyQualifiedMetadataName: FullyQualifiedAttributeName,
             predicate: IsClass,                    // Syntax 수준 필터

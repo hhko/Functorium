@@ -14,8 +14,8 @@ Pipeline 클래스는 원본 클래스를 **상속**합니다. 부모 클래스�
 
 ```csharp
 // 원본 클래스 (Primary Constructor)
-[GeneratePortObservable]
-public class UserRepository(ILogger<UserRepository> logger) : IPort
+[GenerateObservablePort]
+public class UserRepository(ILogger<UserRepository> logger) : IObservablePort
 {
     public FinT<IO, User> GetUserAsync(int id) => ...;
 }
@@ -44,8 +44,8 @@ public class UserRepositoryObservable : UserRepository
 ### 전체 구현
 
 ```csharp
-// Generators/PortObservableGenerator/ConstructorParameterExtractor.cs
-namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
+// Generators/ObservablePortGenerator/ConstructorParameterExtractor.cs
+namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
 /// 클래스의 생성자 파라미터를 추출합니다.
@@ -113,13 +113,13 @@ public static class ConstructorParameterExtractor
 
 ```csharp
 // Primary Constructor 형태
-public class UserRepository(ILogger<UserRepository> logger) : IPort
+public class UserRepository(ILogger<UserRepository> logger) : IObservablePort
 {
     // logger는 클래스 전체에서 사용 가능
 }
 
 // 동일한 일반 생성자
-public class UserRepository : IPort
+public class UserRepository : IObservablePort
 {
     private readonly ILogger<UserRepository> _logger;
 
@@ -151,7 +151,7 @@ var constructor = classSymbol.Constructors
 
 ```csharp
 // 원본 클래스
-public class UserRepository(ILogger<UserRepository> logger) : IPort { }
+public class UserRepository(ILogger<UserRepository> logger) : IObservablePort { }
 
 // 생성되는 Pipeline (충돌!)
 public class UserRepositoryObservable : UserRepository
@@ -168,8 +168,8 @@ public class UserRepositoryObservable : UserRepository
 ### ParameterNameResolver
 
 ```csharp
-// Generators/PortObservableGenerator/ParameterNameResolver.cs
-namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
+// Generators/ObservablePortGenerator/ParameterNameResolver.cs
+namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
 /// 파라미터 이름 충돌을 해결합니다.
@@ -297,8 +297,8 @@ private static string GenerateBaseConstructorCall(
 public Task Should_Handle_Primary_Constructor()
 {
     string input = """
-        [GeneratePortObservable]
-        public class UserRepository(ILogger<UserRepository> logger) : IPort
+        [GenerateObservablePort]
+        public class UserRepository(ILogger<UserRepository> logger) : IObservablePort
         {
             public FinT<IO, User> GetUserAsync(int id) => throw new();
         }
@@ -316,8 +316,8 @@ public Task Should_Handle_Primary_Constructor()
 public Task Should_Select_Constructor_With_Most_Parameters()
 {
     string input = """
-        [GeneratePortObservable]
-        public class UserRepository : IPort
+        [GenerateObservablePort]
+        public class UserRepository : IObservablePort
         {
             public UserRepository() { }
             public UserRepository(ILogger<UserRepository> logger) { }
@@ -337,8 +337,8 @@ public Task Should_Select_Constructor_With_Most_Parameters()
 public Task Should_Resolve_Parameter_Name_Conflict()
 {
     string input = """
-        [GeneratePortObservable]
-        public class UserRepository(ILogger<UserRepository> logger) : IPort { }
+        [GenerateObservablePort]
+        public class UserRepository(ILogger<UserRepository> logger) : IObservablePort { }
         """;
 
     string? actual = _sut.Generate(input);

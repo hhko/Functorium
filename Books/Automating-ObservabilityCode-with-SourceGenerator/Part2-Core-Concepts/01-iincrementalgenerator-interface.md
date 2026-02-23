@@ -240,7 +240,7 @@ public abstract class IncrementalGeneratorBase<TValue>(
 
 ```csharp
 [Generator(LanguageNames.CSharp)]
-public sealed class PortObservableGenerator()
+public sealed class ObservablePortGenerator()
     : IncrementalGeneratorBase<ObservableClassInfo>(
         RegisterSourceProvider,    // 1단계 구현
         Generate,                  // 2단계 구현

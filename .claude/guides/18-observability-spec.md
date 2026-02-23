@@ -69,7 +69,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `error.code` | ✅ | ✅ | ✅ | 도메인 특화 오류 코드 |
 | `@error` | ✅ | - | - | 구조화된 오류 객체(상세) |
 
-**Adapter 레이어:** (단위 테스트: [Logging](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/PortObservableLoggingStructureTests.cs), [Metrics](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/PortObservableMetricsStructureTests.cs), [Tracing](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/PortObservableTracingStructureTests.cs))
+**Adapter 레이어:** (단위 테스트: [Logging](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortLoggingStructureTests.cs), [Metrics](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortMetricsStructureTests.cs), [Tracing](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortTracingStructureTests.cs))
 
 | Field/Tag | Logging | Metrics | Tracing | 설명 |
 |-----------|---------|---------|---------|------|
@@ -207,7 +207,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | 레이어 | 방식 | 테스트 | 참고 |
 |-------|------|--------|------|
 | Application | 직접 `ILogger.LogXxx()` 호출 | [UsecaseLoggingPipelineStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseLoggingPipelineStructureTests.cs) | 7개 이상의 파라미터가 `LoggerMessage.Define`의 6개 제한을 초과 |
-| Adapter | `LoggerMessage.Define` 델리게이트 | [PortObservableLoggingStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/PortObservableLoggingStructureTests.cs) | 제로 할당, 고성능 |
+| Adapter | `LoggerMessage.Define` 델리게이트 | [ObservablePortLoggingStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortLoggingStructureTests.cs) | 제로 할당, 고성능 |
 
 ### DomainEvent Logging
 
@@ -393,7 +393,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | 레이어 | 방식 | 테스트 | 참고 |
 |-------|------|--------|------|
 | Application | `IPipelineBehavior` + `IMeterFactory` | [UsecaseMetricsPipelineStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseMetricsPipelineStructureTests.cs) | Mediator pipeline |
-| Adapter | Source Generator | [PortObservableMetricsStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/PortObservableMetricsStructureTests.cs) | 자동 생성된 metrics instruments |
+| Adapter | Source Generator | [ObservablePortMetricsStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortMetricsStructureTests.cs) | 자동 생성된 metrics instruments |
 | DomainEvent Publisher | Decorator + `IMeterFactory` | [DomainEventPublisherMetricsStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherMetricsStructureTests.cs) | Adapter 레이어 패턴 |
 | DomainEvent Handler | `INotificationPublisher` + `IMeterFactory` | [DomainEventHandlerMetricsStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerMetricsStructureTests.cs) | Application 레이어 패턴 |
 
@@ -500,7 +500,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | 레이어 | 방식 | 테스트 | 참고 |
 |-------|------|--------|------|
 | Application | `IPipelineBehavior` + `ActivitySource.StartActivity()` | [UsecaseTracingPipelineStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseTracingPipelineStructureTests.cs) | Mediator pipeline |
-| Adapter | Source Generator | [PortObservableTracingStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/PortObservableTracingStructureTests.cs) | 자동 생성된 Activity spans |
+| Adapter | Source Generator | [ObservablePortTracingStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortTracingStructureTests.cs) | 자동 생성된 Activity spans |
 | DomainEvent Publisher | Decorator + `ActivitySource.StartActivity()` | [DomainEventPublisherTracingStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherTracingStructureTests.cs) | Adapter 레이어 패턴 |
 | DomainEvent Handler | `INotificationPublisher` + `ActivitySource.StartActivity()` | [DomainEventHandlerTracingStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerTracingStructureTests.cs) | Application 레이어 패턴 |
 

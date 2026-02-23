@@ -147,7 +147,7 @@ Functorium 프로젝트의 결정적 포맷 정의:
 
 ```csharp
 // SymbolDisplayFormats.cs
-namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
+namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 public static class SymbolDisplayFormats
 {

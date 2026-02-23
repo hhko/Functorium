@@ -162,7 +162,7 @@ Functorium.SourceGenerators/
 │
 ├── Functorium.SourceGenerators.csproj
 │
-├── PortObservableGenerator.cs          # 메인 소스 생성기
+├── ObservablePortGenerator.cs          # 메인 소스 생성기
 │
 ├── Abstractions/
 │   ├── Constants.cs                     # 공통 상수 (헤더 등)
@@ -171,7 +171,7 @@ Functorium.SourceGenerators/
 └── Generators/
     ├── IncrementalGeneratorBase.cs      # 템플릿 메서드 패턴 기반 클래스
     │
-    └── PortObservableGenerator/        # 생성기별 헬퍼 클래스
+    └── ObservablePortGenerator/        # 생성기별 헬퍼 클래스
         ├── ObservableClassInfo.cs         # 클래스 정보 레코드
         ├── MethodInfo.cs                # 메서드 정보 레코드
         ├── ParameterInfo.cs             # 파라미터 정보 레코드
@@ -189,7 +189,7 @@ Functorium.SourceGenerators/
 ### ObservableClassInfo
 
 ```csharp
-namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
+namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
 /// 파이프라인 생성에 필요한 클래스 정보

@@ -4,7 +4,7 @@
 
 - INamedTypeSymbol로 클래스/인터페이스 정보 추출
 - AllInterfaces, GetMembers() 활용법 습득
-- 실제 PortObservableGenerator에서의 활용 패턴 학습
+- 실제 ObservablePortGenerator에서의 활용 패턴 학습
 
 ---
 
@@ -98,32 +98,32 @@ var directInterfaces = classSymbol.Interfaces;
 var allInterfaces = classSymbol.AllInterfaces;
 
 // 예시:
-// public interface IUserRepository : IPort { }
+// public interface IUserRepository : IObservablePort { }
 // public class UserRepository : IUserRepository { }
 
 // classSymbol.Interfaces → [IUserRepository]
-// classSymbol.AllInterfaces → [IUserRepository, IPort]
+// classSymbol.AllInterfaces → [IUserRepository, IObservablePort]
 ```
 
-### IPort 구현 확인
+### IObservablePort 구현 확인
 
 ```csharp
-// PortObservableGenerator.cs에서
-private static bool ImplementsIPort(INamedTypeSymbol interfaceSymbol)
+// ObservablePortGenerator.cs에서
+private static bool ImplementsIObservablePort(INamedTypeSymbol interfaceSymbol)
 {
-    // IPort 자체인지 확인
-    if (interfaceSymbol.Name == "IPort")
+    // IObservablePort 자체인지 확인
+    if (interfaceSymbol.Name == "IObservablePort")
     {
         return true;
     }
 
-    // IPort를 상속받은 인터페이스인지 확인
-    return interfaceSymbol.AllInterfaces.Any(i => i.Name == "IPort");
+    // IObservablePort를 상속받은 인터페이스인지 확인
+    return interfaceSymbol.AllInterfaces.Any(i => i.Name == "IObservablePort");
 }
 
 // 사용
 var adapterInterfaces = classSymbol.AllInterfaces
-    .Where(ImplementsIPort);
+    .Where(ImplementsIObservablePort);
 ```
 
 ---
@@ -153,9 +153,9 @@ var fields = classSymbol.GetMembers()
 ### 인터페이스에서 메서드 추출
 
 ```csharp
-// PortObservableGenerator.cs의 실제 코드
+// ObservablePortGenerator.cs의 실제 코드
 var methods = classSymbol.AllInterfaces
-    .Where(ImplementsIPort)
+    .Where(ImplementsIObservablePort)
     .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
     .Where(m => m.MethodKind == MethodKind.Ordinary)  // 일반 메서드만
     .Select(m => new MethodInfo(
@@ -192,7 +192,7 @@ var primaryConstructor = classSymbol.Constructors
 
 ```csharp
 // Primary Constructor 예시
-public class UserRepository(ILogger<UserRepository> logger) : IPort
+public class UserRepository(ILogger<UserRepository> logger) : IObservablePort
 {
 }
 
@@ -303,7 +303,7 @@ private static ObservableClassInfo MapToObservableClassInfo(
 
     // 3. 인터페이스에서 메서드 추출
     var methods = classSymbol.AllInterfaces
-        .Where(ImplementsIPort)
+        .Where(ImplementsIObservablePort)
         .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
         .Where(m => m.MethodKind == MethodKind.Ordinary)
         .Select(m => MapToMethodInfo(m))

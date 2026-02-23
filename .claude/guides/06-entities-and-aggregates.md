@@ -1692,7 +1692,7 @@ public sealed class Order : AggregateRoot<OrderId>
 
 ```csharp
 // Domain Layer: Port 정의
-public interface IProductCatalog : IPort
+public interface IProductCatalog : IObservablePort
 {
     /// <summary>
     /// 상품 존재 여부 확인

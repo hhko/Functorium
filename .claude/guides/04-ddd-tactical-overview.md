@@ -97,9 +97,9 @@ DDD는 도메인 전문가와 개발자가 동일한 언어를 사용할 것을 
 | Query | `IQueryRequest<T>`, `IQueryUsecase<T,R>` | `Functorium.Applications.Usecases` |
 | Event Handler | `IDomainEventHandler<T>` | `Functorium.Applications.Events` |
 | Application Error | `ApplicationError`, `ApplicationErrorType` | `Functorium.Applications.Errors` |
-| Port | `IPort` | `Functorium.Domains.Ports` |
+| Port | `IObservablePort` | `Functorium.Domains.Observabilities` |
 | Repository | `IRepository<TAggregate, TId>` | `Functorium.Domains.Repositories` |
-| Adapter | `[GeneratePortObservable]` | Adapter Layer 프로젝트 |
+| Adapter | `[GenerateObservablePort]` | Adapter Layer 프로젝트 |
 | Adapter Error | `AdapterError`, `AdapterErrorType` | `Functorium.Adapters.Errors` |
 | 검증 | `ValidationRules<T>`, `TypedValidation<T,V>` | `Functorium.Domains.ValueObjects.Validations` |
 | 결과 타입 | `Fin<T>`, `Validation<Error, T>`, `FinResponse<T>` | LanguageExt / Functorium |
@@ -662,7 +662,7 @@ public void Create_ShouldSucceed_WhenEmailIsValid()
 | [07-domain-events.md](./07-domain-events.md) | 도메인 이벤트 | 이벤트 정의, 발행, 핸들러 구현 |
 | [08-error-system.md](./08-error-system.md) | 에러 시스템 | 에러 정의, 네이밍, 테스트 패턴 |
 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) | Usecase 구현 | CQRS 패턴, Apply 병합 |
-| [12-ports.md](./12-ports.md) | Port 아키텍처 | Port 정의, IPort 계층 |
+| [12-ports.md](./12-ports.md) | Port 아키텍처 | Port 정의, IObservablePort 계층 |
 | [13-adapters.md](./13-adapters.md) | Adapter 구현 | Repository, External API, Messaging, Query |
 | [14-adapter-wiring.md](./14-adapter-wiring.md) | Adapter 연결 | Pipeline, DI, Options, 테스트 |
 | [09-domain-services.md](./09-domain-services.md) | 도메인 서비스 | IDomainService, 교차 Aggregate 로직, Usecase 통합 |

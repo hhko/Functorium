@@ -65,8 +65,8 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
   - IAuditable
   - IConcurrencyAware
   - Specification
-- [x] Src\Functorium\Applications\Observabilities\IPort.cs 인터페이스 정의 위치를 Domain으로 이동(Repositories 때문에)
-- [ ] PortObservableGenerator, PortObservableRegistration, GeneratePortObservableAttribute???
+- [x] Src\Functorium\Applications\Observabilities\IObservablePort.cs 인터페이스 정의 위치를 Domain으로 이동(Repositories 때문에)
+- [ ] ObservablePortGenerator, ObservablePortRegistration, GenerateObservablePortAttribute???
 ---
 - [ ] 유스케이스 전체 리팩토링
 - [ ] .Adapters 프로젝트 분리
@@ -308,7 +308,7 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
     .Apply()
   ```
 ---
-- [x] IPort 인터페이스 구현 가이드 문서 통합
+- [x] IObservablePort 인터페이스 구현 가이드 문서 통합
 - [x] Tests.Hosts\01-SingleHost 프로젝트의 레이어 폴더 재구성
 - [x] 서비스 레이어 구성 가이드 문서
 - [x] Guide 폴더 README 문서 업데이트
@@ -362,12 +362,12 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
 ---
 - [ ] DTO Usecase
 - [ ] DTO FastEndpoint
-- [ ] DTO IPort
+- [ ] DTO IObservablePort
 - [ ] DTO EFCore + Entity?
 - [ ] DTO 성능 고려
 ---
 - [ ] 커스텀 관찰 가능성 Usecase
-- [ ] 커스텀 관찰 가능성 IPort
+- [ ] 커스텀 관찰 가능성 IObservablePort
 ---
 - [x] 소스 생성기 프로젝트 이름 변경 또는 통합?
   - Functorium.SourceGenerators
@@ -514,8 +514,8 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
 - [ ] ISoftDeletable 사례
 - [ ] IAuditable 사례
 ---
-- [ ] IPort.md
-- [ ] IPort.DTO.md
+- [ ] IObservablePort.md
+- [ ] IObservablePort.DTO.md
 - [ ] Usecase
 - [ ] Usecase.DTO.md
 ---
@@ -529,7 +529,7 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
 - [ ] 3개 Host: Scheduling + HTTP + RabbitMQ
 ---
 - [ ] Observability Usecase 커스텀
-- [ ] Observability IPort 커스텀
+- [ ] Observability IObservablePort 커스텀
 ---
 - [ ] dotnet new template
 - [ ] Usecase 구현 스킬
@@ -701,7 +701,7 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
   using DomainErrorType = Functorium.Domains.Errors.DomainErrorType;
   ```
 - [ ] DTO IRequest/IResponse
-- [ ] DTO IPort
+- [ ] DTO IObservablePort
 - [x] 16-Architecture-Test 을 15번 기반으로 개선
 - [x] Validate.cs -> Validate.{범주}.cs
   ```
@@ -729,7 +729,7 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
 - [x] ApplicationError 정의 및 테스트 방법 확장
 - [x] AdapterError 정의 및 테스트 방법 확장
 - [x] 에러 `개발 가이드 문서`
-- [x] RegisterSingletonPortObservableFor: Src\Functorium\Abstractions\Registrations\PortObservableRegistration.cs
+- [x] RegisterSingletonObservablePortFor: Src\Functorium\Abstractions\Registrations\ObservablePortRegistration.cs
 - [x] 값 객체 ValidationPipeline
 - [x] Enum 값 객체 ValidationPipeline
 - [x] Validation<Error, Currency> Validate(string? value) -> Validation<Error, string?> Validate(string? value)
@@ -741,7 +741,7 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
 - [x] `MustSatisfyValueObjectValidation<Request, decimal, decimal>` 타입 노출 최소화
 - [ ] Validation<Error, T> Validate(T value) 검토을 위한 아키텍처 테스트 구현
 ---
-- [ ] IPort 인터페이스 `개발 가이드 문서`
+- [ ] IObservablePort 인터페이스 `개발 가이드 문서`
 ---
 - [x] ValidationPipeline에 Domain Validate 통합
 - [x] 값 객체 구현 개발 가이드 문서
@@ -858,8 +858,8 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
 - [ ] wolverine 관찰 가능성 의존성 등록 패턴 학습
 - [ ] wolverine 관찰 가능성 데이터 확인: 지표, 추적, 로그?
 - [ ] wolverine 관찰 가능성 의존성 등록 패턴 적용
-- [ ] IPortMetric, IPortTrace 이해
-- [ ] IPort 구현 가이드
+- [ ] IObservablePortMetric, IObservablePortTrace 이해
+- [ ] IObservablePort 구현 가이드
 - [ ] 의존성 등록 가이드
 - [ ] 커스텀 유스케이스 로그
 - [ ] 커스텀 유스케이스 지표
@@ -870,7 +870,7 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
   - 실패율?
 - [ ] Application 레이어 테스트
 - [ ] Observability 코드 리뷰
-- [ ] IPortMetric/IPortTrace 인터페이스 의존성 등록 코드 정리
+- [ ] IObservablePortMetric/IObservablePortTrace 인터페이스 의존성 등록 코드 정리
 
 ## Framework
 ### Abstractions
@@ -888,7 +888,7 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
 ### Application Layer
 - [x] CQRS
 - [x] Pipeline
-- [x] IPort(Observability)
+- [x] IObservablePort(Observability)
 - [ ] Usecase(LINQ: FinT, Fin, IO, Guard, Validation)
 
 ### Domain Layer
@@ -1145,7 +1145,7 @@ SmartEnum Protocol 선택 기준 문서화
     - Startup Logging
   - [ ] Observability
 - Adapters.SourceGenerator
-  - [x] IPort Observability
+  - [x] IObservablePort Observability
 - Application Layer
   - [ ] CQRS
   - [ ] Pipeline

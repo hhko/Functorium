@@ -29,8 +29,8 @@ void LogSuccess(User result, double elapsed)
 ### 전체 구현
 
 ```csharp
-// Generators/PortObservableGenerator/TypeExtractor.cs
-namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
+// Generators/ObservablePortGenerator/TypeExtractor.cs
+namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
 /// 제네릭 타입에서 특정 타입 파라미터를 추출하는 유틸리티
@@ -119,7 +119,7 @@ public static class TypeExtractor
 ### 로깅 메서드 생성
 
 ```csharp
-// PortObservableGenerator.cs에서
+// ObservablePortGenerator.cs에서
 private static void GenerateMethod(
     StringBuilder sb,
     ObservableClassInfo classInfo,
@@ -147,7 +147,7 @@ private static string ExtractActualReturnType(string returnType)
 
 ```csharp
 // 원본 인터페이스
-public interface IUserRepository : IPort
+public interface IUserRepository : IObservablePort
 {
     FinT<IO, User> GetUserAsync(int id);
     FinT<IO, IEnumerable<User>> GetUsersAsync();

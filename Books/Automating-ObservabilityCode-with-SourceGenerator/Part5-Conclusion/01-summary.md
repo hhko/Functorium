@@ -17,7 +17,7 @@
 ```
 소스 코드 → 컴파일러 → 소스 생성기 → 추가 코드 → 최종 어셈블리
                          ↓
-                    [GeneratePortObservable]
+                    [GenerateObservablePort]
                     public class UserRepository
                          ↓
                     UserRepositoryObservable.g.cs
@@ -58,14 +58,14 @@ public interface IIncrementalGenerator
 
 ```csharp
 context.SyntaxProvider.ForAttributeWithMetadataName(
-    "Namespace.GeneratePortObservableAttribute",
+    "Namespace.GenerateObservablePortAttribute",
     predicate: (node, _) => node is ClassDeclarationSyntax,
     transform: (ctx, _) => ExtractInfo(ctx))
 ```
 
 ---
 
-## PortObservableGenerator 설계
+## ObservablePortGenerator 설계
 
 ### 템플릿 메서드 패턴
 
@@ -81,25 +81,25 @@ public abstract class IncrementalGeneratorBase<TValue> : IIncrementalGenerator
 }
 ```
 
-### 전략 패턴 (IPort)
+### 전략 패턴 (IObservablePort)
 
 ```csharp
 // 전략 인터페이스
-public interface IPort
+public interface IObservablePort
 {
     string RequestCategory { get; }
 }
 
 // 각 Repository는 전략 구현체
-public class UserRepository : IPort { }
-public class OrderRepository : IPort { }
+public class UserRepository : IObservablePort { }
+public class OrderRepository : IObservablePort { }
 ```
 
 ### 생성 흐름
 
 ```
-1. [GeneratePortObservable] 속성 감지
-2. IPort 인터페이스 확인
+1. [GenerateObservablePort] 속성 감지
+2. IObservablePort 인터페이스 확인
 3. 메서드 시그니처 추출
 4. Pipeline 클래스 생성
 5. 관찰 가능성 코드 주입
@@ -259,7 +259,7 @@ public Task Should_Generate_PipelineClass()
 
 | 파일 | 역할 |
 |------|------|
-| `PortObservableGenerator.cs` | 메인 소스 생성기 |
+| `ObservablePortGenerator.cs` | 메인 소스 생성기 |
 | `IncrementalGeneratorBase.cs` | 템플릿 메서드 패턴 |
 | `TypeExtractor.cs` | 제네릭 타입 추출 |
 | `CollectionTypeHelper.cs` | 컬렉션 타입 처리 |

@@ -172,7 +172,7 @@ SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
 ### SymbolDisplayFormats.cs
 
 ```csharp
-namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
+namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
 /// 결정적 코드 생성을 위한 SymbolDisplayFormat 정의

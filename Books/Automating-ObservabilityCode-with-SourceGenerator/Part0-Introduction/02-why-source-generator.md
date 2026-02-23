@@ -198,14 +198,14 @@ public static partial class Log
 }
 ```
 
-### 3. Functorium PortObservableGenerator
+### 3. Functorium ObservablePortGenerator
 
 이 책에서 구현할 소스 생성기로, **어댑터 파이프라인 코드**를 자동 생성합니다.
 
 ```csharp
 // 입력 - 개발자가 작성
-[GeneratePortObservable]
-public class UserRepository(ILogger<UserRepository> logger) : IPort
+[GenerateObservablePort]
+public class UserRepository(ILogger<UserRepository> logger) : IObservablePort
 {
     public FinT<IO, User> GetUserAsync(int id) => ...;
 }
