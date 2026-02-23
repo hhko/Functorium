@@ -563,44 +563,101 @@ public sealed class CreateProductCommand
 
 ## Query 구현
 
-### 단일 조회 Query 예제
+> **핵심 원칙**: Query는 `IRepository`를 사용하지 않습니다. `IQueryPort` 기반 Read Adapter를 통해 **Aggregate 재구성 없이 SQL → DTO 직접 매핑**합니다. 이 규칙은 `CqrsArchitectureRuleTests`로 강제됩니다.
+
+### Query Port 정의 패턴
+
+Query에서 사용하는 Port는 Application 레이어에 정의합니다 (Domain의 `IRepository`와 다름):
+
+| 패턴 | 인터페이스 | 용도 | Adapter 기반 클래스 |
+|------|-----------|------|-------------------|
+| 목록/검색 | `IQueryPort<TEntity, TDto>` | `Search(spec, page, sort)` → `PagedResult<TDto>` | `DapperQueryAdapterBase<TEntity, TDto>` |
+| 단일 조회 | `IQueryPort` (비제네릭) | 커스텀 메서드 직접 정의 | 직접 구현 |
+
+#### 목록 조회용 Port 정의
 
 ```csharp
-public sealed class GetProductByIdQuery
+// Application/Usecases/Products/Ports/IProductQuery.cs
+using Functorium.Applications.Queries;
+using LayeredArch.Domain.AggregateRoots.Products;
+
+namespace LayeredArch.Application.Usecases.Products.Ports;
+
+/// <summary>
+/// Product 읽기 전용 어댑터 포트.
+/// Aggregate 재구성 없이 DB에서 DTO로 직접 프로젝션합니다.
+/// </summary>
+public interface IProductQuery : IQueryPort<Product, ProductSummaryDto> { }
+
+public sealed record ProductSummaryDto(
+    string ProductId,
+    string Name,
+    decimal Price);
+```
+
+#### 단일 조회용 Port 정의
+
+```csharp
+// Application/Usecases/Products/Ports/IProductDetailQuery.cs
+using Functorium.Applications.Queries;
+using LayeredArch.Domain.AggregateRoots.Products;
+
+namespace LayeredArch.Application.Usecases.Products.Ports;
+
+/// <summary>
+/// Product 단건 조회용 읽기 전용 어댑터 포트.
+/// Aggregate 재구성 없이 DB에서 DTO로 직접 프로젝션합니다.
+/// </summary>
+public interface IProductDetailQuery : IQueryPort
 {
-    public sealed record Request(string ProductId) : IQueryRequest<Response>;
+    FinT<IO, ProductDetailDto> GetById(ProductId id);
+}
+
+public sealed record ProductDetailDto(
+    string ProductId,
+    string Name,
+    string Description,
+    decimal Price,
+    DateTime CreatedAt,
+    Option<DateTime> UpdatedAt);
+```
+
+### 단일 조회 Query 예제
+
+`IQueryPort` (비제네릭)를 확장한 커스텀 Port를 주입합니다:
+
+```csharp
+// 참조: Tests.Hosts/01-SingleHost/.../GetCustomerByIdQuery.cs
+using LayeredArch.Application.Usecases.Customers.Ports;
+using LayeredArch.Domain.AggregateRoots.Customers;
+
+public sealed class GetCustomerByIdQuery
+{
+    public sealed record Request(string CustomerId) : IQueryRequest<Response>;
 
     public sealed record Response(
-        string ProductId,
+        string CustomerId,
         string Name,
-        string Description,
-        decimal Price,
-        int StockQuantity,
-        DateTime CreatedAt,
-        DateTime? UpdatedAt);
+        string Email,
+        decimal CreditLimit,
+        DateTime CreatedAt);
 
-    internal sealed class Usecase(IProductRepository productRepository)
+    public sealed class Usecase(ICustomerDetailQuery customerDetailQuery)
         : IQueryUsecase<Request, Response>
     {
-        private readonly IProductRepository _productRepository = productRepository;
+        private readonly ICustomerDetailQuery _adapter = customerDetailQuery;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            if (!ProductId.TryParse(request.ProductId, null, out var productId))
-            {
-                return FinResponse.Fail<Response>(Error.New("Invalid ProductId"));
-            }
-
+            var customerId = CustomerId.Create(request.CustomerId);
             FinT<IO, Response> usecase =
-                from product in _productRepository.GetById(productId)
+                from dto in _adapter.GetById(customerId)
                 select new Response(
-                    product.Id.ToString(),
-                    product.Name,
-                    product.Description,
-                    product.Price,
-                    product.StockQuantity,
-                    product.CreatedAt,
-                    product.UpdatedAt);
+                    dto.CustomerId,
+                    dto.Name,
+                    dto.Email,
+                    dto.CreditLimit,
+                    dto.CreatedAt);
 
             Fin<Response> response = await usecase.Run().RunAsync();
             return response.ToFinResponse();
@@ -609,38 +666,115 @@ public sealed class GetProductByIdQuery
 }
 ```
 
-### 목록 조회 Query 예제
+> **포인트**: Entity → DTO 변환 코드가 없습니다. Adapter가 SQL로 DTO를 직접 반환합니다.
+
+### 목록/검색 Query 예제
+
+`IQueryPort<TEntity, TDto>`의 `Search()` 메서드와 Specification 패턴을 사용합니다:
 
 ```csharp
+// 참조: Tests.Hosts/01-SingleHost/.../SearchProductsQuery.cs
+using Functorium.Applications.Queries;
+using Functorium.Domains.Specifications;
+using LayeredArch.Application.Usecases.Products.Ports;
+using LayeredArch.Domain.AggregateRoots.Products;
+using LayeredArch.Domain.AggregateRoots.Products.Specifications;
+
+public sealed class SearchProductsQuery
+{
+    public sealed record Request(
+        string Name = "",
+        decimal MinPrice = 0,
+        decimal MaxPrice = 0,
+        int Page = 1,
+        int PageSize = PageRequest.DefaultPageSize,
+        string SortBy = "",
+        string SortDirection = "") : IQueryRequest<Response>;
+
+    public sealed record Response(
+        Seq<ProductSummaryDto> Products,
+        int TotalCount,
+        int Page,
+        int PageSize,
+        int TotalPages,
+        bool HasNextPage,
+        bool HasPreviousPage);
+
+    public sealed class Usecase(IProductQuery productQuery)
+        : IQueryUsecase<Request, Response>
+    {
+        private readonly IProductQuery _productQuery = productQuery;
+
+        public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
+        {
+            var spec = BuildSpecification(request);
+            var pageRequest = new PageRequest(request.Page, request.PageSize);
+            var sortExpression = BuildSortExpression(request);
+
+            FinT<IO, Response> usecase =
+                from result in _productQuery.Search(spec, pageRequest, sortExpression)
+                select new Response(
+                    result.Items,
+                    result.TotalCount,
+                    result.Page,
+                    result.PageSize,
+                    result.TotalPages,
+                    result.HasNextPage,
+                    result.HasPreviousPage);
+
+            Fin<Response> response = await usecase.Run().RunAsync();
+            return response.ToFinResponse();
+        }
+
+        private static Specification<Product> BuildSpecification(Request request)
+        {
+            var spec = Specification<Product>.All;
+
+            if (request.Name.Length > 0)
+                spec &= new ProductNameSpec(
+                    ProductName.Create(request.Name).ThrowIfFail());
+
+            if (request.MinPrice > 0 && request.MaxPrice > 0)
+                spec &= new ProductPriceRangeSpec(
+                    Money.Create(request.MinPrice).ThrowIfFail(),
+                    Money.Create(request.MaxPrice).ThrowIfFail());
+
+            return spec;
+        }
+
+        private static SortExpression BuildSortExpression(Request request)
+        {
+            if (request.SortBy.Length == 0)
+                return SortExpression.Empty;
+
+            return SortExpression.By(request.SortBy, SortDirection.Parse(request.SortDirection));
+        }
+    }
+}
+```
+
+### 전체 조회 (필터 없음)
+
+```csharp
+// 참조: Tests.Hosts/01-SingleHost/.../GetAllProductsQuery.cs
 public sealed class GetAllProductsQuery
 {
     public sealed record Request() : IQueryRequest<Response>;
 
-    public sealed record Response(Seq<ProductDto> Products);
+    public sealed record Response(Seq<ProductSummaryDto> Products);
 
-    public sealed record ProductDto(
-        string ProductId,
-        string Name,
-        decimal Price,
-        int StockQuantity);
-
-    internal sealed class Usecase(IProductRepository productRepository)
+    public sealed class Usecase(IProductQuery productQuery)
         : IQueryUsecase<Request, Response>
     {
-        private readonly IProductRepository _productRepository = productRepository;
+        private readonly IProductQuery _productQuery = productQuery;
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
+            PageRequest pageRequest = new(1, int.MaxValue);
+
             FinT<IO, Response> usecase =
-                from products in _productRepository.GetAll()
-                select new Response(
-                    products
-                        .Select(p => new ProductDto(
-                            p.Id.ToString(),
-                            p.Name,
-                            p.Price,
-                            p.StockQuantity))
-                        .ToSeq());
+                from result in _productQuery.Search(Specification<Product>.All, pageRequest, SortExpression.Empty)
+                select new Response(result.Items);
 
             Fin<Response> response = await usecase.Run().RunAsync();
             return response.ToFinResponse();
@@ -685,8 +819,8 @@ internal sealed class Usecase(
     IProductRepository productRepository)
     : ICommandUsecase<Request, Response>
 
-// Query: Repository만 주입 (파이프라인은 자동 바이패스)
-internal sealed class Usecase(IProductRepository productRepository)
+// Query: IQueryPort 기반 Read Adapter 주입 (파이프라인은 자동 바이패스)
+internal sealed class Usecase(IProductQuery productQuery)
     : IQueryUsecase<Request, Response>
 ```
 
@@ -738,13 +872,13 @@ services
 **위치**: `Functorium.Applications.Persistence`
 
 ```csharp
-public interface IUnitOfWork : IPort
+public interface IUnitOfWork : IObservablePort
 {
     FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = default);
 }
 ```
 
-- `IPort`를 상속하므로 Pipeline 자동 생성 및 관찰성을 지원합니다.
+- `IObservablePort`를 상속하므로 Pipeline 자동 생성 및 관찰성을 지원합니다.
 - EF Core 환경에서는 `DbContext.SaveChangesAsync()`를 호출하고, InMemory 환경에서는 no-op입니다.
 
 > **참조**: UoW Adapter 구현(EfCoreUnitOfWork, InMemoryUnitOfWork)은 [13-adapters.md](./13-adapters.md)를 참조하세요.
