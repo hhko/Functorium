@@ -48,14 +48,14 @@ services
     .Build();
 
 // Repository 등록 (관찰 가능성 로그 지원)
-// RegisterScopedPortObservable은 ActivityContext를 첫 번째 매개변수로 받는 생성자를 사용
-// 소스 생성기가 [GeneratePortObservable] 애트리뷰트를 감지하여 InMemoryInventoryRepositoryObservable 클래스를 자동 생성
+// RegisterScopedObservablePort은 ActivityContext를 첫 번째 매개변수로 받는 생성자를 사용
+// 소스 생성기가 [GenerateObservablePort] 애트리뷰트를 감지하여 InMemoryInventoryRepositoryObservable 클래스를 자동 생성
 // Observable이 자동으로 Activity 생성, 로깅, 추적, 메트릭 수집을 처리
-services.RegisterScopedPortObservable<IInventoryRepository, InventoryService.Infrastructure.InMemoryInventoryRepositoryObservable>();
+services.RegisterScopedObservablePort<IInventoryRepository, InventoryService.Infrastructure.InMemoryInventoryRepositoryObservable>();
 
 // Messaging Adapter 등록 (관찰 가능성 로그 지원)
-// 소스 생성기가 [GeneratePortObservable] 애트리뷰트를 감지하여 RabbitMqOrderMessagingObservable 클래스를 자동 생성
-services.RegisterScopedPortObservable<IOrderMessaging, InventoryService.Adapters.Messaging.RabbitMqOrderMessagingObservable>();
+// 소스 생성기가 [GenerateObservablePort] 애트리뷰트를 감지하여 RabbitMqOrderMessagingObservable 클래스를 자동 생성
+services.RegisterScopedObservablePort<IOrderMessaging, InventoryService.Adapters.Messaging.RabbitMqOrderMessagingObservable>();
 
 // Wolverine 및 RabbitMQ 설정
 var host = Host.CreateDefaultBuilder()

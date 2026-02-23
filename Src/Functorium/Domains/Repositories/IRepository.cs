@@ -9,7 +9,7 @@ namespace Functorium.Domains.Repositories;
 /// </summary>
 /// <typeparam name="TAggregate">Aggregate Root 타입</typeparam>
 /// <typeparam name="TId">EntityId 구현 타입</typeparam>
-public interface IRepository<TAggregate, TId> : IPort
+public interface IRepository<TAggregate, TId> : IObservablePort
     where TAggregate : AggregateRoot<TId>
     where TId : struct, IEntityId<TId>
 {

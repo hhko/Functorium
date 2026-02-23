@@ -48,13 +48,13 @@ namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 /// </code>
 /// </remarks>
 [Trait(nameof(UnitTest), UnitTest.Functorium_SourceGenerator)]
-public sealed class PortObservableLoggingStructureTests : IDisposable
+public sealed class ObservablePortLoggingStructureTests : IDisposable
 {
     private readonly ActivitySource _activitySource;
     private readonly IMeterFactory _meterFactory;
     private readonly IOptions<OpenTelemetryOptions> _openTelemetryOptions;
 
-    public PortObservableLoggingStructureTests()
+    public ObservablePortLoggingStructureTests()
     {
         _activitySource = new ActivitySource("Test.AdapterLogging");
         _meterFactory = new TestMeterFactory();
@@ -88,7 +88,7 @@ public sealed class PortObservableLoggingStructureTests : IDisposable
         await pipeline.GetById(testId).Run().RunAsync();
 
         // Assert
-        await Verify(context.ExtractFirstLogData()).UseDirectory("Snapshots/PortObservableLoggingStructure");
+        await Verify(context.ExtractFirstLogData()).UseDirectory("Snapshots/ObservablePortLoggingStructure");
     }
 
     // ===== Success Response 로그 필드 검증 =====
@@ -113,7 +113,7 @@ public sealed class PortObservableLoggingStructureTests : IDisposable
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots/PortObservableLoggingStructure")
+            .UseDirectory("Snapshots/ObservablePortLoggingStructure")
             .ScrubMember("response.elapsed");
     }
 
@@ -149,7 +149,7 @@ public sealed class PortObservableLoggingStructureTests : IDisposable
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots/PortObservableLoggingStructure")
+            .UseDirectory("Snapshots/ObservablePortLoggingStructure")
             .ScrubMember("response.elapsed");
     }
 
@@ -183,7 +183,7 @@ public sealed class PortObservableLoggingStructureTests : IDisposable
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots/PortObservableLoggingStructure")
+            .UseDirectory("Snapshots/ObservablePortLoggingStructure")
             .ScrubMember("response.elapsed");
     }
 
@@ -219,7 +219,7 @@ public sealed class PortObservableLoggingStructureTests : IDisposable
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots/PortObservableLoggingStructure")
+            .UseDirectory("Snapshots/ObservablePortLoggingStructure")
             .ScrubMember("response.elapsed");
     }
 
@@ -255,7 +255,7 @@ public sealed class PortObservableLoggingStructureTests : IDisposable
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots/PortObservableLoggingStructure")
+            .UseDirectory("Snapshots/ObservablePortLoggingStructure")
             .ScrubMember("response.elapsed");
     }
 

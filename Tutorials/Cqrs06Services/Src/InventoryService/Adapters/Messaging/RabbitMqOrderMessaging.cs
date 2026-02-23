@@ -10,10 +10,10 @@ namespace InventoryService.Adapters.Messaging;
 
 /// <summary>
 /// RabbitMQ 기반 주문 서비스 메시징 구현
-/// 관찰 가능성 로그를 위한 IPort 인터페이스 구현
-/// GeneratePortObservable 애트리뷰트로 Observable 버전 자동 생성
+/// 관찰 가능성 로그를 위한 IObservablePort 인터페이스 구현
+/// GenerateObservablePort 애트리뷰트로 Observable 버전 자동 생성
 /// </summary>
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class RabbitMqOrderMessaging : IOrderMessaging
 {
     private readonly IMessageBus _messageBus;

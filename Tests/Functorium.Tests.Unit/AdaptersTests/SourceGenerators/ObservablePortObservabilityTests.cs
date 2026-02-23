@@ -1,5 +1,5 @@
 using Functorium.Adapters.Observabilities.Naming;
-using Functorium.SourceGenerators.Generators.PortObservableGenerator;
+using Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 using Functorium.Testing.Actions.SourceGenerators;
 
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
@@ -7,7 +7,7 @@ using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 
 /// <summary>
-/// PortObservableGenerator가 생성하는 코드의 Observability 태그 구조를 검증하는 테스트입니다.
+/// ObservablePortGenerator가 생성하는 코드의 Observability 태그 구조를 검증하는 테스트입니다.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -80,13 +80,13 @@ namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 /// </code>
 /// </remarks>
 [Trait(nameof(UnitTest), UnitTest.Functorium_SourceGenerator)]
-public sealed class PortObservableObservabilityTests
+public sealed class ObservablePortObservabilityTests
 {
-    private readonly PortObservableGenerator _sut;
+    private readonly ObservablePortGenerator _sut;
 
-    public PortObservableObservabilityTests()
+    public ObservablePortObservabilityTests()
     {
-        _sut = new PortObservableGenerator();
+        _sut = new ObservablePortGenerator();
     }
 
     #region Metrics 태그 구조 검증
@@ -356,12 +356,12 @@ public sealed class PortObservableObservabilityTests
 
             namespace TestNamespace;
 
-            public interface ITestAdapter : IPort
+            public interface ITestAdapter : IObservablePort
             {
                 FinT<IO, int> GetValue();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class TestAdapter : ITestAdapter
             {
                 public string RequestCategory => "Test";

@@ -9,7 +9,7 @@ namespace SourceGenerator.Demo.Adapters;
 /// <summary>
 /// 사용자 Repository 구현체.
 ///
-/// [GeneratePortObservable] 어트리뷰트가 적용되어 있으므로
+/// [GenerateObservablePort] 어트리뷰트가 적용되어 있으므로
 /// Source Generator가 자동으로 UserRepositoryObservable 클래스를 생성합니다.
 ///
 /// 생성된 Observable 클래스는:
@@ -17,7 +17,7 @@ namespace SourceGenerator.Demo.Adapters;
 /// - 각 메서드를 override하여 Observability(로깅, 트레이싱, 메트릭) 추가
 /// - ActivityContext 전파 처리
 /// </summary>
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class UserRepository : IUserRepository
 {
     public string RequestCategory => "repository";

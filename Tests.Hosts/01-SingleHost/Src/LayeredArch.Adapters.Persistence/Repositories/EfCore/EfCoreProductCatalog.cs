@@ -10,7 +10,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 /// EF Core 기반 공유 Port IProductCatalog 구현
 /// DbContext를 직접 사용하여 교차 Aggregate 검증을 제공
 /// </summary>
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class EfCoreProductCatalog : IProductCatalog
 {
     private readonly LayeredArchDbContext _dbContext;

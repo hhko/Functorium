@@ -6,7 +6,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 /// <summary>
 /// InMemory UnitOfWork - ConcurrentDictionary 기반이므로 SaveChanges 불필요 (no-op)
 /// </summary>
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class InMemoryUnitOfWork : IUnitOfWork
 {
     public string RequestCategory => "UnitOfWork";

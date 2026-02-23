@@ -5,9 +5,9 @@ namespace OrderService.Domain;
 
 /// <summary>
 /// 주문 리포지토리 인터페이스
-/// 관찰 가능성 로그를 위한 IPort 인터페이스 상속
+/// 관찰 가능성 로그를 위한 IObservablePort 인터페이스 상속
 /// </summary>
-public interface IOrderRepository : IPort
+public interface IOrderRepository : IObservablePort
 {
     /// <summary>
     /// 주문 생성

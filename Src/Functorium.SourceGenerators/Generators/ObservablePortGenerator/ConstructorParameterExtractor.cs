@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
+namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
 /// 클래스의 생성자 파라미터를 추출하는 유틸리티 클래스

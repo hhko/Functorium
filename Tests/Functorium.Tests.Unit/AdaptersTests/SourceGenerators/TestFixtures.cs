@@ -15,7 +15,7 @@ public sealed record TestEntity(Guid Id, string Name);
 /// <summary>
 /// 테스트용 Adapter 인터페이스
 /// </summary>
-public interface ITestObservabilityAdapter : IPort
+public interface ITestObservabilityAdapter : IObservablePort
 {
     FinT<IO, Guid> GetById(Guid id);
     FinT<IO, LanguageExt.Unit> Save(TestEntity entity);
@@ -23,9 +23,9 @@ public interface ITestObservabilityAdapter : IPort
 
 /// <summary>
 /// Observability 테스트용 Adapter.
-/// [GeneratePortObservable] 속성으로 파이프라인 클래스가 자동 생성됩니다.
+/// [GenerateObservablePort] 속성으로 파이프라인 클래스가 자동 생성됩니다.
 /// </summary>
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class TestObservabilityAdapter : ITestObservabilityAdapter
 {
     public string RequestCategory => "Repository";

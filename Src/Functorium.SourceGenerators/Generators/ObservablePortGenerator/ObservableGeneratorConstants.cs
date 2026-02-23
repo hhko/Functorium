@@ -1,4 +1,4 @@
-namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
+namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
 /// Observable 생성기에서 사용하는 상수들

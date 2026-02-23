@@ -37,13 +37,13 @@ public sealed class IInventoryMessagingTests
     }
 
     [Fact]
-    public void IInventoryMessaging_ShouldInheritFromIPort()
+    public void IInventoryMessaging_ShouldInheritFromIObservablePort()
     {
         // Arrange & Act
         var baseType = typeof(IInventoryMessaging).GetInterfaces();
 
         // Assert
-        baseType.ShouldContain(t => t.Name == "IPort");
+        baseType.ShouldContain(t => t.Name == "IObservablePort");
     }
 }
 

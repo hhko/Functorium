@@ -1,4 +1,4 @@
-namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
+namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
 /// 제네릭 타입에서 내부 타입을 추출하는 유틸리티 클래스

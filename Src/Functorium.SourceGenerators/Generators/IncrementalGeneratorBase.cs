@@ -22,7 +22,7 @@ public abstract class IncrementalGeneratorBase<TValue>(
     {
 #if DEBUG
         // DEBUG 빌드에서만 디버거 연결 지원
-        // 디버깅 필요 시 PortObservableGenerator에서 AttachDebugger: true로 설정
+        // 디버깅 필요 시 ObservablePortGenerator에서 AttachDebugger: true로 설정
         if (_attachDebugger && Debugger.IsAttached is false)
         {
             Debugger.Launch();

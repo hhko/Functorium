@@ -8,16 +8,16 @@ using Microsoft.CodeAnalysis.Text;
 using static Functorium.SourceGenerators.Abstractions.Constants;
 using static Functorium.SourceGenerators.Abstractions.Selectors;
 
-namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
+namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 [Generator(LanguageNames.CSharp)]
-public sealed class PortObservableGenerator()
+public sealed class ObservablePortGenerator()
     : IncrementalGeneratorBase<ObservableClassInfo>(
         RegisterSourceProvider,
         Generate,
         AttachDebugger: false)  // ⚠️ 디버깅 필요 시 true로 변경 (자세한 내용: DEBUGGING_SOURCE_GENERATOR.md 참조)
 {
-    private const string AttributeName = "GeneratePortObservable";
+    private const string AttributeName = "GenerateObservablePort";
     private const string AttributeNamespace = "Functorium.Adapters.SourceGenerators";
     private const string FullyQualifiedAttributeName = $"{AttributeNamespace}.{AttributeName}Attribute";
 
@@ -34,7 +34,7 @@ public sealed class PortObservableGenerator()
         IncrementalGeneratorInitializationContext context)
     {
         //
-        // [GeneratePortObservable] 속성이 붙은 "클래스"만 대상으로 필터링
+        // [GenerateObservablePort] 속성이 붙은 "클래스"만 대상으로 필터링
         // 속성은 Functorium 라이브러리에 정의되어 있음
         //
         return context
@@ -64,10 +64,10 @@ public sealed class PortObservableGenerator()
             ? string.Empty
             : classSymbol.ContainingNamespace.ToString();
 
-        // IPort를 상속받은 모든 인터페이스의 메서드를 직접 추출
+        // IObservablePort를 상속받은 모든 인터페이스의 메서드를 직접 추출
         // 클래스 구현을 찾을 필요 없이 인터페이스 정의에서 바로 가져옴
         var methods = classSymbol.AllInterfaces
-            .Where(ImplementsIPort)
+            .Where(ImplementsIObservablePort)
             .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
             .Where(m => m.MethodKind == MethodKind.Ordinary)
             .Select(m => new MethodInfo(
@@ -79,7 +79,7 @@ public sealed class PortObservableGenerator()
                 m.ReturnType.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat)))
             .ToList();
 
-        // IPort를 구현하지 않은 경우 (메서드가 없음) - Observable 생성하지 않음
+        // IObservablePort를 구현하지 않은 경우 (메서드가 없음) - Observable 생성하지 않음
         if (methods.Count == 0)
         {
             return ObservableClassInfo.None;
@@ -96,20 +96,20 @@ public sealed class PortObservableGenerator()
     }
 
     /// <summary>
-    /// 인터페이스가 IPort를 상속받았는지 확인합니다.
+    /// 인터페이스가 IObservablePort를 상속받았는지 확인합니다.
     /// </summary>
     /// <param name="interfaceSymbol">확인할 인터페이스 심볼</param>
-    /// <returns>IPort를 상속받았으면 true, 아니면 false</returns>
-    private static bool ImplementsIPort(INamedTypeSymbol interfaceSymbol)
+    /// <returns>IObservablePort를 상속받았으면 true, 아니면 false</returns>
+    private static bool ImplementsIObservablePort(INamedTypeSymbol interfaceSymbol)
     {
-        // IPort 자체인지 확인
-        if (interfaceSymbol.Name == "IPort")
+        // IObservablePort 자체인지 확인
+        if (interfaceSymbol.Name == "IObservablePort")
         {
             return true;
         }
 
-        // IPort를 상속받은 인터페이스인지 확인
-        return interfaceSymbol.AllInterfaces.Any(i => i.Name == "IPort");
+        // IObservablePort를 상속받은 인터페이스인지 확인
+        return interfaceSymbol.AllInterfaces.Any(i => i.Name == "IObservablePort");
     }
 
     // 매핑된 ObservableClassInfo로부터 소스 파일을 생성합니다.

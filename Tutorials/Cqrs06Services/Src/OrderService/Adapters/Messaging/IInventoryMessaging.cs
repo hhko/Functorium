@@ -7,9 +7,9 @@ namespace OrderService.Adapters.Messaging;
 
 /// <summary>
 /// 재고 서비스 메시징 인터페이스
-/// 관찰 가능성 로그를 위한 IPort 인터페이스 상속
+/// 관찰 가능성 로그를 위한 IObservablePort 인터페이스 상속
 /// </summary>
-public interface IInventoryMessaging : IPort
+public interface IInventoryMessaging : IObservablePort
 {
     /// <summary>
     /// 재고 확인 (Request/Reply 패턴)

@@ -11,7 +11,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 /// <summary>
 /// EF Core 기반 주문 리포지토리 구현
 /// </summary>
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class EfCoreOrderRepository : IOrderRepository
 {
     private readonly LayeredArchDbContext _dbContext;

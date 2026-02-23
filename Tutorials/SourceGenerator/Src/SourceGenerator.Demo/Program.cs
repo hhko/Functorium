@@ -5,14 +5,14 @@
 // 이 프로젝트는 Functorium.SourceGenerators의 동작을 이해하기 위한
 // 튜토리얼입니다.
 //
-// [GeneratePortObservable] 어트리뷰트가 적용된 클래스에 대해 Source Generator가
+// [GenerateObservablePort] 어트리뷰트가 적용된 클래스에 대해 Source Generator가
 // 자동으로 Observable 래퍼 클래스를 생성합니다.
 //
 // 생성된 코드 확인 방법:
 //   1. 프로젝트 빌드: dotnet build
 //   2. 생성된 파일 확인:
 //      obj/Generated/Functorium.SourceGenerators/
-//      - GeneratePortObservableAttribute.g.cs
+//      - GenerateObservablePortAttribute.g.cs
 //      - Adapters.UserRepositoryObservable.g.cs
 //
 // ============================================================================

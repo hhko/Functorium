@@ -13,7 +13,7 @@ namespace LayeredArch.Adapters.Infrastructure.ExternalApis;
 /// 외부 가격 조회 API 서비스 구현
 /// 예외를 명시적 실패(Fin.Fail)로 처리하는 패턴을 보여줍니다.
 /// </summary>
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class ExternalPricingApiService : IExternalPricingService
 {
     #region Error Types

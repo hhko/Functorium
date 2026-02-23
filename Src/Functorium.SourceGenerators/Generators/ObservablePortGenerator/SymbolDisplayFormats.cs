@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 
-namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
+namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
 /// 타입 표시를 위한 SymbolDisplayFormat 정의

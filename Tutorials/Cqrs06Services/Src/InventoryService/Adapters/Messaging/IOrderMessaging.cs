@@ -7,9 +7,9 @@ namespace InventoryService.Adapters.Messaging;
 
 /// <summary>
 /// 주문 서비스 메시징 인터페이스
-/// 관찰 가능성 로그를 위한 IPort 인터페이스 상속
+/// 관찰 가능성 로그를 위한 IObservablePort 인터페이스 상속
 /// </summary>
-public interface IOrderMessaging : IPort
+public interface IOrderMessaging : IObservablePort
 {
     /// <summary>
     /// 주문 완료 알림 (Fire and Forget 패턴)

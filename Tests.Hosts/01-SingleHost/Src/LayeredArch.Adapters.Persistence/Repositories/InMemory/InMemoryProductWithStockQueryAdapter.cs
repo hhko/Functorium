@@ -11,7 +11,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 /// InMemoryProductRepository와 InMemoryInventoryRepository의 정적 저장소에서
 /// 데이터를 결합하여 정렬/페이지네이션/DTO 변환합니다.
 /// </summary>
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class InMemoryProductWithStockQueryAdapter : IProductWithStockQuery
 {
     public string RequestCategory => "QueryAdapter";

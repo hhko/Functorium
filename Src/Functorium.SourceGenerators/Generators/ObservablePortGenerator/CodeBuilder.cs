@@ -1,7 +1,7 @@
 //using System.Collections.Generic;
 //using System.Text;
 
-//namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
+//namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 ///// <summary>
 ///// 코드 생성을 위한 StringBuilder 래퍼

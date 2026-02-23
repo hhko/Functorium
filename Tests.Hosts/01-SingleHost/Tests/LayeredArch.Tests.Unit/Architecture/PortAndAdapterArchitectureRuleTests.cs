@@ -8,17 +8,17 @@ namespace LayeredArch.Tests.Unit.Architecture;
 public sealed class PortAndAdapterArchitectureRuleTests : ArchitectureTestBase
 {
     [Fact]
-    public void AdapterImplementation_ShouldHave_GeneratePortObservableAttribute()
+    public void AdapterImplementation_ShouldHave_GenerateObservablePortAttribute()
     {
         ArchRuleDefinition.Classes()
             .That()
-            .ImplementInterface(typeof(IPort))
+            .ImplementInterface(typeof(IObservablePort))
             .And().AreNotAbstract()
             .And().DoNotHaveNameEndingWith("Observable")
             .ValidateAllClasses(Architecture, @class => @class
-                .RequireAttribute("GeneratePortObservable"),
+                .RequireAttribute("GenerateObservablePort"),
                 verbose: true)
-            .ThrowIfAnyFailures("Adapter GeneratePortObservable Attribute Rule");
+            .ThrowIfAnyFailures("Adapter GenerateObservablePort Attribute Rule");
     }
 
     [Fact]
@@ -26,7 +26,7 @@ public sealed class PortAndAdapterArchitectureRuleTests : ArchitectureTestBase
     {
         ArchRuleDefinition.Classes()
             .That()
-            .ImplementInterface(typeof(IPort))
+            .ImplementInterface(typeof(IObservablePort))
             .And().AreNotAbstract()
             .And().DoNotHaveNameEndingWith("Observable")
             .ValidateAllClasses(Architecture, @class => @class

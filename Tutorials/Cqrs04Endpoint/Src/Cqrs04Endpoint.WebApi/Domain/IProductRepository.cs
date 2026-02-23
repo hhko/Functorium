@@ -5,9 +5,9 @@ namespace Cqrs04Endpoint.WebApi.Domain;
 
 /// <summary>
 /// 상품 리포지토리 인터페이스
-/// 관찰 가능성 로그를 위한 IPort 인터페이스 상속
+/// 관찰 가능성 로그를 위한 IObservablePort 인터페이스 상속
 /// </summary>
-public interface IProductRepository : IPort
+public interface IProductRepository : IObservablePort
 {
     /// <summary>
     /// 상품 생성

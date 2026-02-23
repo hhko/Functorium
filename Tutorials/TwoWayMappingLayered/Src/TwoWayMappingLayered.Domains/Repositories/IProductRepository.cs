@@ -13,9 +13,9 @@ namespace TwoWayMappingLayered.Domains.Repositories;
 /// - Adapter 내부에서 ProductEntity ↔ Product 변환 수행
 /// - 비즈니스 메서드가 포함된 완전한 Domain 객체 반환
 ///
-/// IPort 상속: 관찰 가능성 로그 지원
+/// IObservablePort 상속: 관찰 가능성 로그 지원
 /// </summary>
-public interface IProductRepository : IPort
+public interface IProductRepository : IObservablePort
 {
     /// <summary>
     /// 상품 생성

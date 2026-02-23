@@ -5,32 +5,32 @@ using Functorium.Domains.Observabilities;
 
 namespace Functorium.Abstractions.Registrations;
 
-// # PortObservableRegistration 메서드 명명 규칙
+// # ObservablePortRegistration 메서드 명명 규칙
 // ## 기본 패턴
-// `Register{Lifetime}PortObservable` - 단일 인터페이스를 하나의 구현체로 등록
+// `Register{Lifetime}ObservablePort` - 단일 인터페이스를 하나의 구현체로 등록
 //
 // ## For 접미사 패턴
-// `Register{Lifetime}PortObservableFor` - 여러 인터페이스를 하나의 구현체로 등록
+// `Register{Lifetime}ObservablePortFor` - 여러 인터페이스를 하나의 구현체로 등록
 //
 // - For 접미사가 없을 때
-//   - `Register{Lifetime}PortObservable<TService>`: 단일 인터페이스 등록
+//   - `Register{Lifetime}ObservablePort<TService>`: 단일 인터페이스 등록
 // - For 접미사가 있을 때
-//   - `Register{Lifetime}PortObservableFor<T1, T2, TImpl>`: 2개 인터페이스 → 1개 구현체
-//   - `Register{Lifetime}PortObservableFor<T1, T2, T3, TImpl>`: 3개 인터페이스 → 1개 구현체
-//   - `Register{Lifetime}PortObservableFor<TImpl>(params Type[])`: N개 인터페이스 → 1개 구현체
+//   - `Register{Lifetime}ObservablePortFor<T1, T2, TImpl>`: 2개 인터페이스 → 1개 구현체
+//   - `Register{Lifetime}ObservablePortFor<T1, T2, T3, TImpl>`: 3개 인터페이스 → 1개 구현체
+//   - `Register{Lifetime}ObservablePortFor<TImpl>(params Type[])`: N개 인터페이스 → 1개 구현체
 //
 // ## For 접미사 의미
 //  "해당 인터페이스들을 위해(For) 단일 구현체를 등록한다"는 의미로,
 //  동일한 구현체 인스턴스를 여러 서비스 인터페이스로 해결(resolve)할 수 있게 합니다.
-public static class PortObservableRegistration
+public static class ObservablePortRegistration
 {
-    // - RegisterScopedPortObservable
-    // - RegisterTransientPortObservable
-    // - RegisterSingletonPortObservable
+    // - RegisterScopedObservablePort
+    // - RegisterTransientObservablePort
+    // - RegisterSingletonObservablePort
     //
-    // - RegisterScopedPortObservableFor
-    // - RegisterTransientPortObservableFor
-    // - RegisterSingletonPortObservableFor
+    // - RegisterScopedObservablePortFor
+    // - RegisterTransientObservablePortFor
+    // - RegisterSingletonObservablePortFor
 
     // For 접미사가 없을 때: 단일 인터페이스 등록
 
@@ -44,12 +44,12 @@ public static class PortObservableRegistration
     /// <returns>서비스 컬렉션</returns>
     /// <example>
     /// <code>
-    /// services.RegisterScopedPortObservable&lt;IRepositoryIO, RepositoryIoObservable&gt;();
+    /// services.RegisterScopedObservablePort&lt;IRepositoryIO, RepositoryIoObservable&gt;();
     /// </code>
     /// </example>
-    public static IServiceCollection RegisterScopedPortObservable<TService, TImplementation>(
+    public static IServiceCollection RegisterScopedObservablePort<TService, TImplementation>(
         this IServiceCollection services)
-            where TService : class, IPort
+            where TService : class, IObservablePort
             where TImplementation : class, TService
     {
         return services.AddScoped<TService>(sp => ActivatorUtilities.CreateInstance<TImplementation>(sp));
@@ -65,12 +65,12 @@ public static class PortObservableRegistration
     /// <returns>서비스 컬렉션</returns>
     /// <example>
     /// <code>
-    /// services.RegisterTransientPortObservable&lt;IRepositoryIO, RepositoryIoObservable&gt;();
+    /// services.RegisterTransientObservablePort&lt;IRepositoryIO, RepositoryIoObservable&gt;();
     /// </code>
     /// </example>
-    public static IServiceCollection RegisterTransientPortObservable<TService, TImplementation>(
+    public static IServiceCollection RegisterTransientObservablePort<TService, TImplementation>(
         this IServiceCollection services)
-            where TService : class, IPort
+            where TService : class, IObservablePort
             where TImplementation : class, TService
     {
         return services.AddTransient<TService>(sp => ActivatorUtilities.CreateInstance<TImplementation>(sp));
@@ -86,12 +86,12 @@ public static class PortObservableRegistration
     /// <returns>서비스 컬렉션</returns>
     /// <example>
     /// <code>
-    /// services.RegisterSingletonPortObservable&lt;IMessagePublisher, MessagePublisherObservable&gt;();
+    /// services.RegisterSingletonObservablePort&lt;IMessagePublisher, MessagePublisherObservable&gt;();
     /// </code>
     /// </example>
-    public static IServiceCollection RegisterSingletonPortObservable<TService, TImplementation>(
+    public static IServiceCollection RegisterSingletonObservablePort<TService, TImplementation>(
         this IServiceCollection services)
-            where TService : class, IPort
+            where TService : class, IObservablePort
             where TImplementation : class, TService
     {
         return services.AddSingleton<TService>(sp => ActivatorUtilities.CreateInstance<TImplementation>(sp));
@@ -110,13 +110,13 @@ public static class PortObservableRegistration
     /// <returns>서비스 컬렉션</returns>
     /// <example>
     /// <code>
-    /// services.RegisterScopedPortObservableFor&lt;IService1, IService2, MyObservable&gt;();
+    /// services.RegisterScopedObservablePortFor&lt;IService1, IService2, MyObservable&gt;();
     /// </code>
     /// </example>
-    public static IServiceCollection RegisterScopedPortObservableFor<TService1, TService2, TImplementation>(
+    public static IServiceCollection RegisterScopedObservablePortFor<TService1, TService2, TImplementation>(
         this IServiceCollection services)
-            where TService1 : class, IPort
-            where TService2 : class, IPort
+            where TService1 : class, IObservablePort
+            where TService2 : class, IObservablePort
             where TImplementation : class, TService1, TService2
     {
         // 구현체 등록
@@ -142,14 +142,14 @@ public static class PortObservableRegistration
     /// <returns>서비스 컬렉션</returns>
     /// <example>
     /// <code>
-    /// services.RegisterScopedPortObservableFor&lt;IService1, IService2, IService3, MyObservable&gt;();
+    /// services.RegisterScopedObservablePortFor&lt;IService1, IService2, IService3, MyObservable&gt;();
     /// </code>
     /// </example>
-    public static IServiceCollection RegisterScopedPortObservableFor<TService1, TService2, TService3, TImplementation>(
+    public static IServiceCollection RegisterScopedObservablePortFor<TService1, TService2, TService3, TImplementation>(
         this IServiceCollection services)
-            where TService1 : class, IPort
-            where TService2 : class, IPort
-            where TService3 : class, IPort
+            where TService1 : class, IObservablePort
+            where TService2 : class, IObservablePort
+            where TService3 : class, IObservablePort
             where TImplementation : class, TService1, TService2, TService3
     {
         // 구현체 등록
@@ -172,26 +172,26 @@ public static class PortObservableRegistration
     /// <param name="services">서비스 컬렉션</param>
     /// <param name="serviceTypes">등록할 서비스 인터페이스 타입 배열</param>
     /// <returns>서비스 컬렉션</returns>
-    /// <exception cref="ArgumentException">서비스 타입이 IPort를 구현하지 않거나, 구현 클래스가 서비스 타입을 구현하지 않을 때</exception>
+    /// <exception cref="ArgumentException">서비스 타입이 IObservablePort를 구현하지 않거나, 구현 클래스가 서비스 타입을 구현하지 않을 때</exception>
     /// <example>
     /// <code>
-    /// services.RegisterScopedPortObservableFor&lt;MyObservable&gt;(
+    /// services.RegisterScopedObservablePortFor&lt;MyObservable&gt;(
     ///     typeof(IService1), typeof(IService2), typeof(IService3), typeof(IService4));
     /// </code>
     /// </example>
-    public static IServiceCollection RegisterScopedPortObservableFor<TImplementation>(
+    public static IServiceCollection RegisterScopedObservablePortFor<TImplementation>(
         this IServiceCollection services,
         params Type[] serviceTypes)
-            where TImplementation : class, IPort
+            where TImplementation : class, IObservablePort
     {
         // 런타임 검증
         Type implementationType = typeof(TImplementation);
         foreach (Type serviceType in serviceTypes)
         {
-            if (!typeof(IPort).IsAssignableFrom(serviceType))
+            if (!typeof(IObservablePort).IsAssignableFrom(serviceType))
             {
                 throw new ArgumentException(
-                    $"Service type '{serviceType.Name}' must implement IPort interface.",
+                    $"Service type '{serviceType.Name}' must implement IObservablePort interface.",
                     nameof(serviceTypes));
             }
 
@@ -227,13 +227,13 @@ public static class PortObservableRegistration
     /// <returns>서비스 컬렉션</returns>
     /// <example>
     /// <code>
-    /// services.RegisterTransientPortObservableFor&lt;IService1, IService2, MyObservable&gt;();
+    /// services.RegisterTransientObservablePortFor&lt;IService1, IService2, MyObservable&gt;();
     /// </code>
     /// </example>
-    public static IServiceCollection RegisterTransientPortObservableFor<TService1, TService2, TImplementation>(
+    public static IServiceCollection RegisterTransientObservablePortFor<TService1, TService2, TImplementation>(
         this IServiceCollection services)
-            where TService1 : class, IPort
-            where TService2 : class, IPort
+            where TService1 : class, IObservablePort
+            where TService2 : class, IObservablePort
             where TImplementation : class, TService1, TService2
     {
         // 구현체 등록
@@ -259,14 +259,14 @@ public static class PortObservableRegistration
     /// <returns>서비스 컬렉션</returns>
     /// <example>
     /// <code>
-    /// services.RegisterTransientPortObservableFor&lt;IService1, IService2, IService3, MyObservable&gt;();
+    /// services.RegisterTransientObservablePortFor&lt;IService1, IService2, IService3, MyObservable&gt;();
     /// </code>
     /// </example>
-    public static IServiceCollection RegisterTransientPortObservableFor<TService1, TService2, TService3, TImplementation>(
+    public static IServiceCollection RegisterTransientObservablePortFor<TService1, TService2, TService3, TImplementation>(
         this IServiceCollection services)
-            where TService1 : class, IPort
-            where TService2 : class, IPort
-            where TService3 : class, IPort
+            where TService1 : class, IObservablePort
+            where TService2 : class, IObservablePort
+            where TService3 : class, IObservablePort
             where TImplementation : class, TService1, TService2, TService3
     {
         // 구현체 등록
@@ -289,26 +289,26 @@ public static class PortObservableRegistration
     /// <param name="services">서비스 컬렉션</param>
     /// <param name="serviceTypes">등록할 서비스 인터페이스 타입 배열</param>
     /// <returns>서비스 컬렉션</returns>
-    /// <exception cref="ArgumentException">서비스 타입이 IPort를 구현하지 않거나, 구현 클래스가 서비스 타입을 구현하지 않을 때</exception>
+    /// <exception cref="ArgumentException">서비스 타입이 IObservablePort를 구현하지 않거나, 구현 클래스가 서비스 타입을 구현하지 않을 때</exception>
     /// <example>
     /// <code>
-    /// services.RegisterTransientPortObservableFor&lt;MyObservable&gt;(
+    /// services.RegisterTransientObservablePortFor&lt;MyObservable&gt;(
     ///     typeof(IService1), typeof(IService2), typeof(IService3), typeof(IService4));
     /// </code>
     /// </example>
-    public static IServiceCollection RegisterTransientPortObservableFor<TImplementation>(
+    public static IServiceCollection RegisterTransientObservablePortFor<TImplementation>(
         this IServiceCollection services,
         params Type[] serviceTypes)
-            where TImplementation : class, IPort
+            where TImplementation : class, IObservablePort
     {
         // 런타임 검증
         Type implementationType = typeof(TImplementation);
         foreach (Type serviceType in serviceTypes)
         {
-            if (!typeof(IPort).IsAssignableFrom(serviceType))
+            if (!typeof(IObservablePort).IsAssignableFrom(serviceType))
             {
                 throw new ArgumentException(
-                    $"Service type '{serviceType.Name}' must implement IPort interface.",
+                    $"Service type '{serviceType.Name}' must implement IObservablePort interface.",
                     nameof(serviceTypes));
             }
 
@@ -344,13 +344,13 @@ public static class PortObservableRegistration
     /// <returns>서비스 컬렉션</returns>
     /// <example>
     /// <code>
-    /// services.RegisterSingletonPortObservableFor&lt;IService1, IService2, MyObservable&gt;();
+    /// services.RegisterSingletonObservablePortFor&lt;IService1, IService2, MyObservable&gt;();
     /// </code>
     /// </example>
-    public static IServiceCollection RegisterSingletonPortObservableFor<TService1, TService2, TImplementation>(
+    public static IServiceCollection RegisterSingletonObservablePortFor<TService1, TService2, TImplementation>(
         this IServiceCollection services)
-            where TService1 : class, IPort
-            where TService2 : class, IPort
+            where TService1 : class, IObservablePort
+            where TService2 : class, IObservablePort
             where TImplementation : class, TService1, TService2
     {
         // 구현체 등록
@@ -376,14 +376,14 @@ public static class PortObservableRegistration
     /// <returns>서비스 컬렉션</returns>
     /// <example>
     /// <code>
-    /// services.RegisterSingletonPortObservableFor&lt;IService1, IService2, IService3, MyObservable&gt;();
+    /// services.RegisterSingletonObservablePortFor&lt;IService1, IService2, IService3, MyObservable&gt;();
     /// </code>
     /// </example>
-    public static IServiceCollection RegisterSingletonPortObservableFor<TService1, TService2, TService3, TImplementation>(
+    public static IServiceCollection RegisterSingletonObservablePortFor<TService1, TService2, TService3, TImplementation>(
         this IServiceCollection services)
-            where TService1 : class, IPort
-            where TService2 : class, IPort
-            where TService3 : class, IPort
+            where TService1 : class, IObservablePort
+            where TService2 : class, IObservablePort
+            where TService3 : class, IObservablePort
             where TImplementation : class, TService1, TService2, TService3
     {
         // 구현체 등록
@@ -406,26 +406,26 @@ public static class PortObservableRegistration
     /// <param name="services">서비스 컬렉션</param>
     /// <param name="serviceTypes">등록할 서비스 인터페이스 타입 배열</param>
     /// <returns>서비스 컬렉션</returns>
-    /// <exception cref="ArgumentException">서비스 타입이 IPort를 구현하지 않거나, 구현 클래스가 서비스 타입을 구현하지 않을 때</exception>
+    /// <exception cref="ArgumentException">서비스 타입이 IObservablePort를 구현하지 않거나, 구현 클래스가 서비스 타입을 구현하지 않을 때</exception>
     /// <example>
     /// <code>
-    /// services.RegisterSingletonPortObservableFor&lt;MyObservable&gt;(
+    /// services.RegisterSingletonObservablePortFor&lt;MyObservable&gt;(
     ///     typeof(IService1), typeof(IService2), typeof(IService3), typeof(IService4));
     /// </code>
     /// </example>
-    public static IServiceCollection RegisterSingletonPortObservableFor<TImplementation>(
+    public static IServiceCollection RegisterSingletonObservablePortFor<TImplementation>(
         this IServiceCollection services,
         params Type[] serviceTypes)
-            where TImplementation : class, IPort
+            where TImplementation : class, IObservablePort
     {
         // 런타임 검증
         Type implementationType = typeof(TImplementation);
         foreach (Type serviceType in serviceTypes)
         {
-            if (!typeof(IPort).IsAssignableFrom(serviceType))
+            if (!typeof(IObservablePort).IsAssignableFrom(serviceType))
             {
                 throw new ArgumentException(
-                    $"Service type '{serviceType.Name}' must implement IPort interface.",
+                    $"Service type '{serviceType.Name}' must implement IObservablePort interface.",
                     nameof(serviceTypes));
             }
 

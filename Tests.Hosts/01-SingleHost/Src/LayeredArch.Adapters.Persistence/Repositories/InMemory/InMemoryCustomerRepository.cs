@@ -13,7 +13,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 /// <summary>
 /// 메모리 기반 고객 리포지토리 구현
 /// </summary>
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class InMemoryCustomerRepository : ICustomerRepository
 {
     internal static readonly ConcurrentDictionary<CustomerId, Customer> Customers = new();

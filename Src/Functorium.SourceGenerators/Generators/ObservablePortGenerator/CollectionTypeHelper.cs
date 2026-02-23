@@ -1,4 +1,4 @@
-namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
+namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
 /// 컬렉션 타입 여부를 확인하는 헬퍼 클래스

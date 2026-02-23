@@ -29,7 +29,7 @@ namespace TwoWayMappingLayered.Adapters.Persistence.Repositories;
 /// - 명확한 아키텍처 경계: Domain이 기술 의존성 없음
 /// - 완전한 Domain 객체 반환: 비즈니스 메서드 즉시 사용 가능
 /// </summary>
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class InMemoryProductRepository : IProductRepository
 {
     private readonly ILogger<InMemoryProductRepository> _logger;

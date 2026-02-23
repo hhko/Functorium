@@ -1,24 +1,24 @@
-using Functorium.SourceGenerators.Generators.PortObservableGenerator;
+using Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 using Functorium.Testing.Actions.SourceGenerators;
 using Microsoft.CodeAnalysis;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 
 namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 
-// # PortObservableGenerator 소스 생성기 테스트
+// # ObservablePortGenerator 소스 생성기 테스트
 //
-// [GeneratePortObservable] 속성이 붙은 어댑터 클래스에 대해
+// [GenerateObservablePort] 속성이 붙은 어댑터 클래스에 대해
 // 파이프라인 래퍼 클래스가 올바르게 생성되는지 검증합니다.
 //
 // ## 테스트 시나리오
 //
 // ### 1. 기본 생성 테스트
-// - GeneratePortObservableAttribute 자동 생성 확인
+// - GenerateObservablePortAttribute 자동 생성 확인
 //
 // ### 2. 기본 어댑터 시나리오
-// - 단일 메서드 어댑터: IPort 구현, 1개 메서드
+// - 단일 메서드 어댑터: IObservablePort 구현, 1개 메서드
 // - 다중 메서드 어댑터: 여러 메서드 포함
-// - 메서드 없는 어댑터: IPort만 구현, 파이프라인 미생성
+// - 메서드 없는 어댑터: IObservablePort만 구현, 파이프라인 미생성
 //
 // ### 3. 파라미터 시나리오
 // - 파라미터 0개: LoggerMessage.Define 사용 (4개 파라미터)
@@ -45,32 +45,32 @@ namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 // - 부모 클래스 생성자: 상속 체인 처리
 //
 // ### 6. 인터페이스 시나리오
-// - IPort 직접 구현
-// - IPort 상속 인터페이스: IUserRepository : IPort
-// - 다중 인터페이스: IPort + IDisposable
+// - IObservablePort 직접 구현
+// - IObservablePort 상속 인터페이스: IUserRepository : IObservablePort
+// - 다중 인터페이스: IObservablePort + IDisposable
 //
 // ### 7. 네임스페이스 시나리오
 // - 단순 네임스페이스: MyApp
 // - 깊은 네임스페이스: Company.Domain.Adapters.Infrastructure.Repositories
 //
 [Trait(nameof(UnitTest), UnitTest.Functorium_SourceGenerator)]
-public sealed class PortObservableGeneratorTests
+public sealed class ObservablePortGeneratorTests
 {
-    private readonly PortObservableGenerator _sut;
+    private readonly ObservablePortGenerator _sut;
 
-    public PortObservableGeneratorTests()
+    public ObservablePortGeneratorTests()
     {
-        _sut = new PortObservableGenerator();
+        _sut = new ObservablePortGenerator();
     }
 
     #region 1. 기본 생성 테스트
 
     /// <summary>
-    /// 시나리오: 소스 생성기가 [GeneratePortObservable] Attribute를 자동으로 생성하는지 확인합니다.
+    /// 시나리오: 소스 생성기가 [GenerateObservablePort] Attribute를 자동으로 생성하는지 확인합니다.
     /// 이 Attribute는 어댑터 클래스에 붙여 파이프라인 생성을 지시하는 마커입니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_GeneratePortObservableAttribute()
+    public Task ObservablePortGenerator_ShouldGenerate_GenerateObservablePortAttribute()
     {
         // Arrange
         string input = string.Empty;
@@ -79,7 +79,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     #endregion
@@ -88,10 +88,10 @@ public sealed class PortObservableGeneratorTests
 
     /// <summary>
     /// 시나리오: 단일 메서드 어댑터
-    /// IPort를 구현하고 단일 메서드를 가진 어댑터에 대해 파이프라인 클래스가 생성되는지 확인합니다.
+    /// IObservablePort를 구현하고 단일 메서드를 가진 어댑터에 대해 파이프라인 클래스가 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithSingleMethod()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithSingleMethod()
     {
         // Arrange
         string input = """
@@ -101,12 +101,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface ITestAdapter : IPort
+            public interface ITestAdapter : IObservablePort
             {
                 FinT<IO, int> GetValue();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class TestAdapter : ITestAdapter
             {
                 public string RequestCategory => "Test";
@@ -118,7 +118,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
@@ -126,7 +126,7 @@ public sealed class PortObservableGeneratorTests
     /// 여러 메서드를 가진 어댑터에 대해 모든 메서드가 오버라이드되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithMultipleMethods()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithMultipleMethods()
     {
         // Arrange
         string input = """
@@ -136,14 +136,14 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface IMultiMethodAdapter : IPort
+            public interface IMultiMethodAdapter : IObservablePort
             {
                 FinT<IO, int> GetValue();
                 FinT<IO, string> GetName();
                 FinT<IO, bool> IsValid();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class MultiMethodAdapter : IMultiMethodAdapter
             {
                 public string RequestCategory => "Test";
@@ -157,15 +157,15 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
     /// 시나리오: 메서드 없는 어댑터
-    /// IPort를 직접 구현하지만 추가 메서드가 없는 경우 파이프라인이 생성되지 않아야 합니다.
+    /// IObservablePort를 직접 구현하지만 추가 메서드가 없는 경우 파이프라인이 생성되지 않아야 합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldNotGenerate_ObservableClass_WhenNoMethods()
+    public Task ObservablePortGenerator_ShouldNotGenerate_ObservableClass_WhenNoMethods()
     {
         // Arrange
         string input = """
@@ -174,8 +174,8 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            [GeneratePortObservable]
-            public class EmptyAdapter : IPort
+            [GenerateObservablePort]
+            public class EmptyAdapter : IObservablePort
             {
                 public string RequestCategory => "Test";
             }
@@ -185,7 +185,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     #endregion
@@ -198,7 +198,7 @@ public sealed class PortObservableGeneratorTests
     /// (기본 4개 파라미터만 사용)
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_LoggerMessageDefine_WithZeroParameters()
+    public Task ObservablePortGenerator_ShouldGenerate_LoggerMessageDefine_WithZeroParameters()
     {
         // Arrange
         string input = """
@@ -208,12 +208,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface IZeroParamAdapter : IPort
+            public interface IZeroParamAdapter : IObservablePort
             {
                 FinT<IO, int> GetValue();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class ZeroParamAdapter : IZeroParamAdapter
             {
                 public string RequestCategory => "Test";
@@ -225,7 +225,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
@@ -233,7 +233,7 @@ public sealed class PortObservableGeneratorTests
     /// LoggerMessage.Define 제한(6개)에 맞는 경우 고성능 로깅이 사용되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_LoggerMessageDefine_WithTwoParameters()
+    public Task ObservablePortGenerator_ShouldGenerate_LoggerMessageDefine_WithTwoParameters()
     {
         // Arrange
         string input = """
@@ -243,12 +243,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface ITwoParamAdapter : IPort
+            public interface ITwoParamAdapter : IObservablePort
             {
                 FinT<IO, string> GetData(int id, string name);
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class TwoParamAdapter : ITwoParamAdapter
             {
                 public string RequestCategory => "Test";
@@ -260,7 +260,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
@@ -268,7 +268,7 @@ public sealed class PortObservableGeneratorTests
     /// LoggerMessage.Define 제한(6개)을 초과하여 logger.LogDebug()로 폴백되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_LogDebugFallback_WithThreeParameters()
+    public Task ObservablePortGenerator_ShouldGenerate_LogDebugFallback_WithThreeParameters()
     {
         // Arrange
         string input = """
@@ -278,12 +278,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface IThreeParamAdapter : IPort
+            public interface IThreeParamAdapter : IObservablePort
             {
                 FinT<IO, string> GetData(int id, string name, bool isActive);
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class ThreeParamAdapter : IThreeParamAdapter
             {
                 public string RequestCategory => "Test";
@@ -295,7 +295,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
@@ -303,7 +303,7 @@ public sealed class PortObservableGeneratorTests
     /// 컬렉션 타입 파라미터에 대해 Count 필드가 추가되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_CollectionCountFields_WithCollectionParameters()
+    public Task ObservablePortGenerator_ShouldGenerate_CollectionCountFields_WithCollectionParameters()
     {
         // Arrange
         string input = """
@@ -314,12 +314,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface ICollectionParamAdapter : IPort
+            public interface ICollectionParamAdapter : IObservablePort
             {
                 FinT<IO, int> ProcessItems(List<string> items);
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class CollectionParamAdapter : ICollectionParamAdapter
             {
                 public string RequestCategory => "Test";
@@ -331,7 +331,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
@@ -339,7 +339,7 @@ public sealed class PortObservableGeneratorTests
     /// nullable 타입 파라미터가 올바르게 처리되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithNullableParameters()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithNullableParameters()
     {
         // Arrange
         string input = """
@@ -349,12 +349,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface INullableParamAdapter : IPort
+            public interface INullableParamAdapter : IObservablePort
             {
                 FinT<IO, string> GetData(int? id, string? name);
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class NullableParamAdapter : INullableParamAdapter
             {
                 public string RequestCategory => "Test";
@@ -366,7 +366,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
@@ -375,7 +375,7 @@ public sealed class PortObservableGeneratorTests
     /// 튜플은 컬렉션으로 취급되지 않으므로 Count 필드가 생성되지 않습니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithTupleInputParameter()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithTupleInputParameter()
     {
         // Arrange
         string input = """
@@ -385,12 +385,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface ITupleInputAdapter : IPort
+            public interface ITupleInputAdapter : IObservablePort
             {
                 FinT<IO, string> ProcessUser((int Id, string Name) user);
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class TupleInputAdapter : ITupleInputAdapter
             {
                 public string RequestCategory => "Test";
@@ -403,7 +403,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
@@ -412,7 +412,7 @@ public sealed class PortObservableGeneratorTests
     /// 튜플 내부에 List가 있더라도 튜플 전체는 컬렉션으로 취급되지 않으므로 Count 필드가 생성되지 않습니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithTupleInputContainingCollection()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithTupleInputContainingCollection()
     {
         // Arrange
         string input = """
@@ -423,12 +423,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface ITupleWithCollectionInputAdapter : IPort
+            public interface ITupleWithCollectionInputAdapter : IObservablePort
             {
                 FinT<IO, int> ProcessUserWithTags((int Id, List<string> Tags) user);
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class TupleWithCollectionInputAdapter : ITupleWithCollectionInputAdapter
             {
                 public string RequestCategory => "Test";
@@ -441,7 +441,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
@@ -450,7 +450,7 @@ public sealed class PortObservableGeneratorTests
     /// 튜플 내부에 배열이 있더라도 튜플 전체는 컬렉션으로 취급되지 않으므로 Length 필드가 생성되지 않습니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithTupleInputContainingArray()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithTupleInputContainingArray()
     {
         // Arrange
         string input = """
@@ -460,12 +460,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface ITupleWithArrayInputAdapter : IPort
+            public interface ITupleWithArrayInputAdapter : IObservablePort
             {
                 FinT<IO, double> CalculateAverage((string Name, int[] Scores) student);
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class TupleWithArrayInputAdapter : ITupleWithArrayInputAdapter
             {
                 public string RequestCategory => "Test";
@@ -478,7 +478,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     #endregion
@@ -490,7 +490,7 @@ public sealed class PortObservableGeneratorTests
     /// FinT&lt;IO, int&gt; 형태의 단순 반환 타입이 올바르게 추출되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithSimpleReturnType()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithSimpleReturnType()
     {
         // Arrange
         string input = """
@@ -500,14 +500,14 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface ISimpleReturnAdapter : IPort
+            public interface ISimpleReturnAdapter : IObservablePort
             {
                 FinT<IO, int> GetNumber();
                 FinT<IO, string> GetText();
                 FinT<IO, bool> GetFlag();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class SimpleReturnAdapter : ISimpleReturnAdapter
             {
                 public string RequestCategory => "Test";
@@ -521,7 +521,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
@@ -529,7 +529,7 @@ public sealed class PortObservableGeneratorTests
     /// FinT&lt;IO, List&lt;User&gt;&gt; 형태의 컬렉션 반환 타입이 올바르게 처리되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithCollectionReturnType()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithCollectionReturnType()
     {
         // Arrange
         string input = """
@@ -542,13 +542,13 @@ public sealed class PortObservableGeneratorTests
 
             public record User(int Id, string Name);
 
-            public interface ICollectionReturnAdapter : IPort
+            public interface ICollectionReturnAdapter : IObservablePort
             {
                 FinT<IO, List<User>> GetUsers();
                 FinT<IO, string[]> GetNames();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class CollectionReturnAdapter : ICollectionReturnAdapter
             {
                 public string RequestCategory => "Test";
@@ -561,7 +561,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
@@ -569,7 +569,7 @@ public sealed class PortObservableGeneratorTests
     /// FinT&lt;IO, Dictionary&lt;string, List&lt;int&gt;&gt;&gt; 형태의 복잡한 제네릭이 올바르게 추출되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithComplexGenericReturnType()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithComplexGenericReturnType()
     {
         // Arrange
         string input = """
@@ -580,12 +580,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface IComplexGenericAdapter : IPort
+            public interface IComplexGenericAdapter : IObservablePort
             {
                 FinT<IO, Dictionary<string, List<int>>> GetComplexData();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class ComplexGenericAdapter : IComplexGenericAdapter
             {
                 public string RequestCategory => "Test";
@@ -598,7 +598,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
@@ -607,7 +607,7 @@ public sealed class PortObservableGeneratorTests
     /// 튜플은 컬렉션으로 인식되지 않으므로 Count 필드가 생성되지 않습니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithSimpleTupleReturnType()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithSimpleTupleReturnType()
     {
         // Arrange
         string input = """
@@ -617,12 +617,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface ITupleAdapter : IPort
+            public interface ITupleAdapter : IObservablePort
             {
                 FinT<IO, (int Id, string Name)> GetUserInfo();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class TupleAdapter : ITupleAdapter
             {
                 public string RequestCategory => "Test";
@@ -635,7 +635,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
@@ -644,7 +644,7 @@ public sealed class PortObservableGeneratorTests
     /// 튜플 내부의 List는 감지되지 않으므로 Count 필드가 생성되지 않습니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithTupleContainingCollection()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithTupleContainingCollection()
     {
         // Arrange
         string input = """
@@ -655,12 +655,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface ITupleWithCollectionAdapter : IPort
+            public interface ITupleWithCollectionAdapter : IObservablePort
             {
                 FinT<IO, (int Id, List<string> Tags)> GetUserWithTags();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class TupleWithCollectionAdapter : ITupleWithCollectionAdapter
             {
                 public string RequestCategory => "Test";
@@ -673,7 +673,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
@@ -682,7 +682,7 @@ public sealed class PortObservableGeneratorTests
     /// 튜플 내부의 배열은 감지되지 않으므로 Length 필드가 생성되지 않습니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithTupleContainingArray()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithTupleContainingArray()
     {
         // Arrange
         string input = """
@@ -692,12 +692,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface ITupleWithArrayAdapter : IPort
+            public interface ITupleWithArrayAdapter : IObservablePort
             {
                 FinT<IO, (string Name, int[] Scores)> GetStudentScores();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class TupleWithArrayAdapter : ITupleWithArrayAdapter
             {
                 public string RequestCategory => "Test";
@@ -710,7 +710,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     #endregion
@@ -722,7 +722,7 @@ public sealed class PortObservableGeneratorTests
     /// Primary constructor 문법을 사용하는 클래스가 올바르게 처리되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithPrimaryConstructor()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithPrimaryConstructor()
     {
         // Arrange
         string input = """
@@ -732,12 +732,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface IPrimaryCtorAdapter : IPort
+            public interface IPrimaryCtorAdapter : IObservablePort
             {
                 FinT<IO, string> GetConnectionString();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class PrimaryCtorAdapter(string connectionString, int timeout) : IPrimaryCtorAdapter
             {
                 public string RequestCategory => "Database";
@@ -749,7 +749,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
@@ -757,7 +757,7 @@ public sealed class PortObservableGeneratorTests
     /// 여러 생성자 중 파라미터가 가장 많은 생성자가 선택되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithMultipleConstructors()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithMultipleConstructors()
     {
         // Arrange
         string input = """
@@ -767,12 +767,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface IMultiCtorAdapter : IPort
+            public interface IMultiCtorAdapter : IObservablePort
             {
                 FinT<IO, string> GetInfo();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class MultiCtorAdapter : IMultiCtorAdapter
             {
                 private readonly string _connectionString;
@@ -797,7 +797,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
@@ -805,7 +805,7 @@ public sealed class PortObservableGeneratorTests
     /// 예약된 파라미터명(logger, parentContext 등)과 충돌 시 리네이밍되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithParameterNameConflict()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithParameterNameConflict()
     {
         // Arrange
         string input = """
@@ -816,12 +816,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface IConflictParamAdapter : IPort
+            public interface IConflictParamAdapter : IObservablePort
             {
                 FinT<IO, string> GetData();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class ConflictParamAdapter : IConflictParamAdapter
             {
                 private readonly ILogger _logger;
@@ -840,7 +840,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
@@ -848,7 +848,7 @@ public sealed class PortObservableGeneratorTests
     /// 상속 체인에서 부모 클래스의 생성자 파라미터가 올바르게 전달되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithBaseClassConstructor()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithBaseClassConstructor()
     {
         // Arrange
         string input = """
@@ -868,12 +868,12 @@ public sealed class PortObservableGeneratorTests
                 }
             }
 
-            public interface IDerivedAdapter : IPort
+            public interface IDerivedAdapter : IObservablePort
             {
                 FinT<IO, string> GetConnection();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class DerivedAdapter : BaseAdapter, IDerivedAdapter
             {
                 public DerivedAdapter(string connectionString) : base(connectionString) { }
@@ -887,7 +887,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     #endregion
@@ -895,11 +895,11 @@ public sealed class PortObservableGeneratorTests
     #region 6 인터페이스 시나리오
 
     /// <summary>
-    /// 시나리오 16: IPort 직접 구현
-    /// IPort를 직접 구현하는 경우 파이프라인이 생성되는지 확인합니다.
+    /// 시나리오 16: IObservablePort 직접 구현
+    /// IObservablePort를 직접 구현하는 경우 파이프라인이 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithDirectIPortImplementation()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithDirectIObservablePortImplementation()
     {
         // Arrange
         string input = """
@@ -909,12 +909,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface IDirectAdapter : IPort
+            public interface IDirectAdapter : IObservablePort
             {
                 FinT<IO, int> GetValue();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class DirectAdapter : IDirectAdapter
             {
                 public string RequestCategory => "Direct";
@@ -926,15 +926,15 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
-    /// 시나리오: IPort 상속 인터페이스
-    /// IPort를 상속하는 커스텀 인터페이스를 구현하는 경우 처리되는지 확인합니다.
+    /// 시나리오: IObservablePort 상속 인터페이스
+    /// IObservablePort를 상속하는 커스텀 인터페이스를 구현하는 경우 처리되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithInheritedIPortInterface()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithInheritedIObservablePortInterface()
     {
         // Arrange
         string input = """
@@ -944,13 +944,13 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface IUserRepository : IPort
+            public interface IUserRepository : IObservablePort
             {
                 FinT<IO, string> GetUserById(int id);
                 FinT<IO, bool> UpdateUser(int id, string name);
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class UserRepository : IUserRepository
             {
                 public string RequestCategory => "Repository";
@@ -963,15 +963,15 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
     /// 시나리오: 다중 인터페이스 구현
-    /// 여러 인터페이스를 구현하는 경우 IPort 관련 메서드만 파이프라인에 포함되는지 확인합니다.
+    /// 여러 인터페이스를 구현하는 경우 IObservablePort 관련 메서드만 파이프라인에 포함되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithMultipleInterfaces()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithMultipleInterfaces()
     {
         // Arrange
         string input = """
@@ -982,12 +982,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface IDisposableAdapter : IPort, IDisposable
+            public interface IDisposableAdapter : IObservablePort, IDisposable
             {
                 FinT<IO, int> GetValue();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class DisposableAdapter : IDisposableAdapter
             {
                 public string RequestCategory => "Disposable";
@@ -1000,7 +1000,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     #endregion
@@ -1012,7 +1012,7 @@ public sealed class PortObservableGeneratorTests
     /// 단순 네임스페이스에서 파일명이 올바르게 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithSimpleNamespace()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithSimpleNamespace()
     {
         // Arrange
         string input = """
@@ -1022,12 +1022,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace MyApp;
 
-            public interface ISimpleNamespaceAdapter : IPort
+            public interface ISimpleNamespaceAdapter : IObservablePort
             {
                 FinT<IO, int> GetValue();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class SimpleNamespaceAdapter : ISimpleNamespaceAdapter
             {
                 public string RequestCategory => "Simple";
@@ -1039,7 +1039,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     /// <summary>
@@ -1047,7 +1047,7 @@ public sealed class PortObservableGeneratorTests
     /// 깊은 네임스페이스에서 마지막 부분만 파일명에 포함되는지 확인합니다.
     /// </summary>
     [Fact]
-    public Task PortObservableGenerator_ShouldGenerate_ObservableClass_WithDeepNamespace()
+    public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithDeepNamespace()
     {
         // Arrange
         string input = """
@@ -1057,12 +1057,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace Company.Domain.Adapters.Infrastructure.Repositories;
 
-            public interface IDeepNamespaceAdapter : IPort
+            public interface IDeepNamespaceAdapter : IObservablePort
             {
                 FinT<IO, int> GetValue();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class DeepNamespaceAdapter : IDeepNamespaceAdapter
             {
                 public string RequestCategory => "Repository";
@@ -1074,7 +1074,7 @@ public sealed class PortObservableGeneratorTests
         string? actual = _sut.Generate(input);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/PortObservableGenerator");
+        return Verify(actual).UseDirectory("Snapshots/ObservablePortGenerator");
     }
 
     #endregion
@@ -1087,7 +1087,7 @@ public sealed class PortObservableGeneratorTests
     /// Observable은 ActivitySource, ILogger, IMeterFactory를 추가하므로 이들과 중복되면 진단이 발생합니다.
     /// </summary>
     [Fact]
-    public void PortObservableGenerator_ShouldReportDiagnostic_WhenDuplicateParameterTypes()
+    public void ObservablePortGenerator_ShouldReportDiagnostic_WhenDuplicateParameterTypes()
     {
         // Arrange
         // ActivitySource 타입이 중복되는 케이스
@@ -1099,12 +1099,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface IDuplicateParamAdapter : IPort
+            public interface IDuplicateParamAdapter : IObservablePort
             {
                 FinT<IO, int> GetValue();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class DuplicateParamAdapter : IDuplicateParamAdapter
             {
                 private readonly ActivitySource _customActivitySource;
@@ -1130,7 +1130,7 @@ public sealed class PortObservableGeneratorTests
         diagnostic.GetMessage().ShouldContain("DuplicateParamAdapter");
         diagnostic.GetMessage().ShouldContain("ActivitySource");
 
-        // 코드가 생성되지 않아야 함 (GeneratePortObservableAttribute만 생성)
+        // 코드가 생성되지 않아야 함 (GenerateObservablePortAttribute만 생성)
         generatedCode?.ShouldNotContain("DuplicateParamAdapterObservable");
     }
 
@@ -1140,7 +1140,7 @@ public sealed class PortObservableGeneratorTests
     /// (Observable이 ILogger&lt;T&gt; 제네릭 타입을 추가하므로, 비제네릭 IMeterFactory로 테스트)
     /// </summary>
     [Fact]
-    public void PortObservableGenerator_ShouldReportDiagnostic_WhenDuplicateMeterFactoryParameter()
+    public void ObservablePortGenerator_ShouldReportDiagnostic_WhenDuplicateMeterFactoryParameter()
     {
         // Arrange
         string input = """
@@ -1151,12 +1151,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface IDuplicateMeterAdapter : IPort
+            public interface IDuplicateMeterAdapter : IObservablePort
             {
                 FinT<IO, string> GetData();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class DuplicateMeterAdapter : IDuplicateMeterAdapter
             {
                 private readonly IMeterFactory _customMeterFactory;
@@ -1187,7 +1187,7 @@ public sealed class PortObservableGeneratorTests
     /// 진단이 원본 소스 파일의 클래스 선언 위치를 가리키는지 확인합니다.
     /// </summary>
     [Fact]
-    public void PortObservableGenerator_ShouldReportDiagnostic_WithCorrectLocation()
+    public void ObservablePortGenerator_ShouldReportDiagnostic_WithCorrectLocation()
     {
         // Arrange
         string input = """
@@ -1198,12 +1198,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface ILocationTestAdapter : IPort
+            public interface ILocationTestAdapter : IObservablePort
             {
                 FinT<IO, int> GetValue();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class LocationTestAdapter : ILocationTestAdapter
             {
                 public LocationTestAdapter(ActivitySource activitySource) { }
@@ -1233,7 +1233,7 @@ public sealed class PortObservableGeneratorTests
     /// 중복 파라미터 타입이 없는 경우 FUNCTORIUM001 진단이 발생하지 않아야 합니다.
     /// </summary>
     [Fact]
-    public void PortObservableGenerator_ShouldNotReportDiagnostic_WhenNoParameterDuplication()
+    public void ObservablePortGenerator_ShouldNotReportDiagnostic_WhenNoParameterDuplication()
     {
         // Arrange
         string input = """
@@ -1243,12 +1243,12 @@ public sealed class PortObservableGeneratorTests
 
             namespace TestNamespace;
 
-            public interface INoDuplicateAdapter : IPort
+            public interface INoDuplicateAdapter : IObservablePort
             {
                 FinT<IO, int> GetValue();
             }
 
-            [GeneratePortObservable]
+            [GenerateObservablePort]
             public class NoDuplicateAdapter : INoDuplicateAdapter
             {
                 private readonly string _connectionString;

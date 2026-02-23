@@ -46,7 +46,7 @@ namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 /// </code>
 /// </remarks>
 [Trait(nameof(UnitTest), UnitTest.Functorium_SourceGenerator)]
-public sealed class PortObservableMetricsStructureTests : IDisposable
+public sealed class ObservablePortMetricsStructureTests : IDisposable
 {
     private readonly ActivitySource _activitySource;
     private readonly IMeterFactory _meterFactory;
@@ -55,7 +55,7 @@ public sealed class PortObservableMetricsStructureTests : IDisposable
     private readonly List<CapturedMeasurement> _capturedMeasurements;
     private readonly LogTestContext _logContext;
 
-    public PortObservableMetricsStructureTests()
+    public ObservablePortMetricsStructureTests()
     {
         _activitySource = new ActivitySource("Test.AdapterMetrics");
         _meterFactory = new TestMeterFactory();
@@ -236,7 +236,7 @@ public sealed class PortObservableMetricsStructureTests : IDisposable
             .OrderBy(t => t.Key)
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
-        await Verify(tags).UseDirectory("Snapshots/PortObservableMetricsStructure");
+        await Verify(tags).UseDirectory("Snapshots/ObservablePortMetricsStructure");
     }
 
     /// <summary>
@@ -268,7 +268,7 @@ public sealed class PortObservableMetricsStructureTests : IDisposable
             .OrderBy(t => t.Key)
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
-        await Verify(tags).UseDirectory("Snapshots/PortObservableMetricsStructure");
+        await Verify(tags).UseDirectory("Snapshots/ObservablePortMetricsStructure");
     }
 
     /// <summary>
@@ -310,7 +310,7 @@ public sealed class PortObservableMetricsStructureTests : IDisposable
             .OrderBy(t => t.Key)
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
-        await Verify(tags).UseDirectory("Snapshots/PortObservableMetricsStructure");
+        await Verify(tags).UseDirectory("Snapshots/ObservablePortMetricsStructure");
     }
 
     /// <summary>
@@ -352,7 +352,7 @@ public sealed class PortObservableMetricsStructureTests : IDisposable
             .OrderBy(t => t.Key)
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
-        await Verify(tags).UseDirectory("Snapshots/PortObservableMetricsStructure");
+        await Verify(tags).UseDirectory("Snapshots/ObservablePortMetricsStructure");
     }
 
     /// <summary>
@@ -394,7 +394,7 @@ public sealed class PortObservableMetricsStructureTests : IDisposable
             .OrderBy(t => t.Key)
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
-        await Verify(tags).UseDirectory("Snapshots/PortObservableMetricsStructure");
+        await Verify(tags).UseDirectory("Snapshots/ObservablePortMetricsStructure");
     }
 
     /// <summary>
@@ -426,7 +426,7 @@ public sealed class PortObservableMetricsStructureTests : IDisposable
             .OrderBy(t => t.Key)
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
-        await Verify(tags).UseDirectory("Snapshots/PortObservableMetricsStructure");
+        await Verify(tags).UseDirectory("Snapshots/ObservablePortMetricsStructure");
     }
 
     #endregion

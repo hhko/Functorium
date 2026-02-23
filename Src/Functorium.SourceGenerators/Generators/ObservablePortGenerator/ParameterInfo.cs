@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 
-namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
+namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 public class ParameterInfo
 {

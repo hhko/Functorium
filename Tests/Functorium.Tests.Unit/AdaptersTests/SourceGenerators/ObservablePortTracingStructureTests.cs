@@ -46,7 +46,7 @@ namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 /// </code>
 /// </remarks>
 [Trait(nameof(UnitTest), UnitTest.Functorium_SourceGenerator)]
-public sealed class PortObservableTracingStructureTests : IDisposable
+public sealed class ObservablePortTracingStructureTests : IDisposable
 {
     private readonly ActivitySource _activitySource;
     private readonly ActivityListener _activityListener;
@@ -55,7 +55,7 @@ public sealed class PortObservableTracingStructureTests : IDisposable
     private readonly LogTestContext _logContext;
     private Activity? _capturedActivity;
 
-    public PortObservableTracingStructureTests()
+    public ObservablePortTracingStructureTests()
     {
         _activitySource = new ActivitySource("Test.AdapterTracing");
         _activityListener = new ActivityListener
@@ -263,7 +263,7 @@ public sealed class PortObservableTracingStructureTests : IDisposable
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
         await Verify(tags)
-            .UseDirectory("Snapshots/PortObservableTracingStructure")
+            .UseDirectory("Snapshots/ObservablePortTracingStructure")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
@@ -303,7 +303,7 @@ public sealed class PortObservableTracingStructureTests : IDisposable
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
         await Verify(tags)
-            .UseDirectory("Snapshots/PortObservableTracingStructure")
+            .UseDirectory("Snapshots/ObservablePortTracingStructure")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
@@ -343,7 +343,7 @@ public sealed class PortObservableTracingStructureTests : IDisposable
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
         await Verify(tags)
-            .UseDirectory("Snapshots/PortObservableTracingStructure")
+            .UseDirectory("Snapshots/ObservablePortTracingStructure")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
@@ -383,7 +383,7 @@ public sealed class PortObservableTracingStructureTests : IDisposable
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
         await Verify(tags)
-            .UseDirectory("Snapshots/PortObservableTracingStructure")
+            .UseDirectory("Snapshots/ObservablePortTracingStructure")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
@@ -423,7 +423,7 @@ public sealed class PortObservableTracingStructureTests : IDisposable
             .ToDictionary(t => t.Key, t => t.Value?.ToString());
 
         await Verify(tags)
-            .UseDirectory("Snapshots/PortObservableTracingStructure")
+            .UseDirectory("Snapshots/ObservablePortTracingStructure")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 

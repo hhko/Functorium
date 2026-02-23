@@ -1,4 +1,4 @@
-namespace Functorium.SourceGenerators.Generators.PortObservableGenerator;
+namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
 /// 파라미터 이름 충돌을 해결하는 유틸리티 클래스

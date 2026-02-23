@@ -10,7 +10,7 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 /// InMemory 기반 Inventory 읽기 전용 어댑터.
 /// InMemoryInventoryRepository의 정적 저장소에서 데이터를 가져온 후 정렬/페이지네이션/DTO 변환합니다.
 /// </summary>
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class InMemoryInventoryQueryAdapter : IInventoryQuery
 {
     public string RequestCategory => "QueryAdapter";

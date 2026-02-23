@@ -9,7 +9,7 @@ using LayeredArch.Domain.AggregateRoots.Inventories.Specifications;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.Dapper;
 
-[GeneratePortObservable]
+[GenerateObservablePort]
 public class DapperInventoryQueryAdapter
     : DapperQueryAdapterBase<Inventory, InventorySummaryDto>, IInventoryQuery
 {
