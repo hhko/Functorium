@@ -8,7 +8,7 @@
 - [2. 도메인 서비스란 무엇인가 (WHAT)](#2-도메인-서비스란-무엇인가-what)
 - [3. 도메인 서비스 구현 (HOW)](#3-도메인-서비스-구현-how)
 - [4. Usecase에서 사용 (HOW)](#4-usecase에서-사용-how)
-- [5. DI 등록](#5-di-등록)
+- [5. DI 등록 불필요](#5-di-등록-불필요)
 - [6. 테스트 패턴](#6-테스트-패턴)
 - [7. 체크리스트](#7-체크리스트)
 - [참고 문서](#참고-문서)
@@ -329,6 +329,26 @@ private readonly OrderCreditCheckService _creditCheckService = new();
 | **Lifetime** | Usecase와 동일 | Scoped (요청별) |
 | **관찰 가능성** | 불필요 | 자동 적용 |
 
+### Domain Service 간 상호 호출
+
+Domain Service는 순수 함수이므로 다른 Domain Service를 호출할 수 있습니다:
+
+```csharp
+public sealed class OrderPricingService : IDomainService
+{
+    private readonly DiscountCalculationService _discountService = new();
+
+    public Fin<Money> CalculateFinalPrice(Order order, Customer customer)
+    {
+        // 다른 Domain Service 호출
+        var discount = _discountService.CalculateDiscount(customer, order.TotalAmount);
+        return discount.Map(d => order.TotalAmount.Subtract(d));
+    }
+}
+```
+
+**주의**: Domain Service 간 호출이 3개 이상으로 빈번해지면, 상위 조율 서비스(orchestrating Domain Service)를 도입하거나 Usecase에서 직접 조율하는 것을 검토하세요.
+
 ---
 
 ## 6. 테스트 패턴
@@ -497,8 +517,9 @@ LayeredArch.Tests.Unit/
 ## 참고 문서
 
 - [04-ddd-tactical-overview.md](./04-ddd-tactical-overview.md) - DDD 전술적 설계 개요, 타입 매핑 테이블
-- [06-entities-and-aggregates.md](./06-entities-and-aggregates.md) - Entity/Aggregate 설계 (단일 Aggregate 로직)
-- [08-error-system.md](./08-error-system.md) - DomainError 정의 및 테스트 패턴
+- [06a-aggregate-design.md](./06a-aggregate-design.md) - Aggregate 설계 원칙, [06b-entity-aggregate-implementation.md](./06b-entity-aggregate-implementation.md) - Entity/Aggregate 구현
+- [08a-error-system.md](./08a-error-system.md) - 에러 처리 기본 원칙과 네이밍 규칙
+- [08b-error-system-layers.md](./08b-error-system-layers.md) - DomainError 정의 및 테스트 패턴
 - [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) - Usecase 구현 (Application Service)
 - [12-ports.md](./12-ports.md) - Port/Adapter 패턴 (IPort와의 차이)
 - [15-unit-testing.md](./15-unit-testing.md) - 단위 테스트 규칙 (T1_T2_T3, AAA 패턴)

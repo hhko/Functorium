@@ -161,6 +161,8 @@ Time -->
 | Status.OK | ActivityStatusCode.Ok |
 | Status.ERROR | ActivityStatusCode.Error |
 
+> 이 문서는 OpenTelemetry 용어(Span)를 기본으로 사용합니다. .NET API를 직접 다루는 코드 예시에서만 Activity를 사용합니다.
+
 ### 로깅, 메트릭, 트레이싱 비교
 
 세 가지 관찰 가능성 도구는 서로 다른 질문에 답합니다:
@@ -675,7 +677,7 @@ Kind: `Internal`
 | `error.code` | - | 에러 코드 |
 | **총 태그 수** | **8** | **10** |
 
-> **Note:** Handler의 `response.elapsed`는 Activity 태그에 설정되지 않습니다 (Logging 전용).
+> **Note:** Handler Span에는 `response.elapsed`를 기록하지 않습니다. Span은 자체적으로 시작/종료 시간(duration)을 가지므로 별도의 elapsed 필드는 중복입니다. 반면 Logging에는 고유한 duration 개념이 없어 `response.elapsed` 필드가 필요합니다.
 
 ### request.event.type과 request.event.id 필드
 
