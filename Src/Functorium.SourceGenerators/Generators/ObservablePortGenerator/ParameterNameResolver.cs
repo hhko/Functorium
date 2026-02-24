@@ -27,7 +27,7 @@ internal static class ParameterNameResolver
 
         if (ObservableGeneratorConstants.ReservedParameterNames.Contains(parameterName))
         {
-            // 예: logger -> baseLogger, adapterTrace -> baseAdapterTrace
+            // 예: logger -> baseLogger, activitySource -> baseActivitySource
             return $"{ObservableGeneratorConstants.NameConflictPrefix}{char.ToUpper(parameterName[0])}{parameterName.Substring(1)}";
         }
 

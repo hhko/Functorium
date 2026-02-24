@@ -11,10 +11,10 @@ internal static class ObservableGeneratorConstants
     /// </summary>
     public static readonly HashSet<string> ReservedParameterNames = new()
     {
-        "parentContext",
+        "activitySource",
         "logger",
-        "adapterTrace",
-        "adapterMetric"
+        "meterFactory",
+        "openTelemetryOptions"
     };
 
     /// <summary>

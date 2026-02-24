@@ -802,7 +802,7 @@ public sealed class ObservablePortGeneratorTests
 
     /// <summary>
     /// 시나리오: 파라미터명 충돌
-    /// 예약된 파라미터명(logger, parentContext 등)과 충돌 시 리네이밍되는지 확인합니다.
+    /// 예약된 파라미터명(logger, activitySource 등)과 충돌 시 리네이밍되는지 확인합니다.
     /// </summary>
     [Fact]
     public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithParameterNameConflict()

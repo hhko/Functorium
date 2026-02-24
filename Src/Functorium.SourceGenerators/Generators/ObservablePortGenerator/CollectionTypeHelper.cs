@@ -125,7 +125,7 @@ public static class CollectionTypeHelper
     /// <summary>
     /// Response 결과에 대한 필드 이름을 생성합니다.
     /// 반환값: "response.result"
-    /// Usecase Pipeline의 @response.message와 구분되는 개별 반환값 필드입니다.
+    /// Usecase Observable의 @response.message와 구분되는 개별 반환값 필드입니다.
     /// </summary>
     public static string GetResponseFieldName()
     {
