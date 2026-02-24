@@ -4,11 +4,11 @@
 
 [![Build](https://github.com/hhko/Functorium/actions/workflows/build.yml/badge.svg)](https://github.com/hhko/Functorium/actions/workflows/build.yml) [![Publish](https://github.com/hhko/Functorium/actions/workflows/publish.yml/badge.svg)](https://github.com/hhko/Functorium/actions/workflows/publish.yml)
 
-> A functional domain is **`functor + dominium`**, seasoned with **`fun`**, designed to bridge **결정론적 규칙의 시대(the age of deterministic rules)와 확률론적 직관의 시대(the age of probabilistic intuition)**.
+> Functorium is **`functor + dominium`**, seasoned with **`fun`**, designed to bridge **결정론적 규칙의 시대(the age of deterministic rules)와 확률론적 직관의 시대(the age of probabilistic intuition)**.
 >
-> - `Domain-Driven Design`: 객체 단위로 비즈니스 관심사를 캡슐화한다.
-> - `Functional Architecture`: 레이어 단위로 비즈니스 관심사를 순수화한다.
-> - `Microservices Architecture`: 서비스 단위로 비즈니스 관심사를 자율화한다.
+> - Domain-Driven Design: 객체 단위로 비즈니스 관심사를 캡슐화한다.
+> - Functional Architecture: 레이어 단위로 비즈니스 관심사를 순수화한다.
+> - Microservices Architecture: 서비스 단위로 비즈니스 관심사를 자율화한다.
 >
 > 그래서 우리는 유스케이스 단위를 최상위 설계 단위로 삼는다!
 
