@@ -90,7 +90,7 @@ public class MathOperationsTests
 
     // 테스트 시나리오: 같은 입력에 대해 항상 동일한 결과를 반환하는 순수 함수여야 한다
     [Fact]
-    public void Divide_ShouldBePureFunction_WhenDenominatorIstZero()
+    public void Divide_ShouldBePureFunction_WhenDenominatorIsZero()
     {
         // Arrange
         int numerator = 10;

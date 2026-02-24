@@ -90,7 +90,7 @@ public class DenominatorTests
 
     // 테스트 시나리오: 유효하지 않은 같은 입력에 대해 항상 동일한 결과를 반환하는 순수 함수여야 한다
     [Fact]
-    public void Create_ShouldBePureFunction_WhenDenominatorIstZero()
+    public void Create_ShouldBePureFunction_WhenDenominatorIsZero()
     {
         // Arrange
         int denominator = 0;
