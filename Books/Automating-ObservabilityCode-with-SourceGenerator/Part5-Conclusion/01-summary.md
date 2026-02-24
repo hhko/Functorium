@@ -101,7 +101,7 @@ public class OrderRepository : IObservablePort { }
 1. [GenerateObservablePort] 속성 감지
 2. IObservablePort 인터페이스 확인
 3. 메서드 시그니처 추출
-4. Pipeline 클래스 생성
+4. Observable 클래스 생성
 5. 관찰 가능성 코드 주입
 ```
 
@@ -115,25 +115,32 @@ public class OrderRepository : IObservablePort { }
 public class UserRepositoryObservable : UserRepository
 {
     // 1. 필드 (Logging, Tracing, Metrics)
+    private readonly ActivitySource _activitySource;
     private readonly ILogger<UserRepositoryObservable> _logger;
-    private readonly IPortTrace _adapterTrace;
-    private readonly IPortMetric _adapterMetric;
+    private readonly Counter<long> _requestCounter;
+    private readonly Counter<long> _responseCounter;
+    private readonly Histogram<double> _durationHistogram;
 
     // 2. LoggerMessage.Define delegate
-    private static readonly Action<ILogger, ...> _logRequest = ...;
+    private static readonly Action<ILogger, ...> _logRequestDebug = ...;
 
     // 3. 생성자 (의존성 주입)
-    public UserRepositoryObservable(...) { }
+    public UserRepositoryObservable(
+        ActivitySource activitySource,
+        ILogger<UserRepositoryObservable> logger,
+        IMeterFactory meterFactory,
+        IOptions<OpenTelemetryOptions> openTelemetryOptions) { }
 
     // 4. 메서드 오버라이드 (관찰 가능성 주입)
-    public override FinT<IO, User> GetUserAsync(int id) =>
-        FinT.lift<IO, User>(
-            from activityContext in IO.lift(() => CreateActivity("GetUserAsync"))
-            from _ in IO.lift(() => LogRequest(...))
-            from result in FinTToIO(base.GetUserAsync(id))
-            from __ in IO.lift(() => LogResponse(...))
-            select result
-        );
+    public new FinT<IO, User> GetUserAsync(int id) =>
+        global::LanguageExt.FinT.lift<IO, User>(
+            IO.lift(() => ExecuteWithSpan(
+                RequestHandler,
+                nameof(GetUserAsync),
+                FinTToIO(base.GetUserAsync(id)),
+                () => LogGetUserAsyncRequest(id),
+                LogGetUserAsyncResponseSuccess,
+                LogGetUserAsyncResponseFailure)));
 }
 ```
 
@@ -203,7 +210,7 @@ ParameterNameResolver.ResolveNames(parameters);
 
 ```csharp
 [Fact]
-public Task Should_Generate_PipelineClass()
+public Task Should_Generate_ObservableClass()
 {
     string? actual = _sut.Generate(input);
     return Verify(actual);  // .verified.txt와 비교

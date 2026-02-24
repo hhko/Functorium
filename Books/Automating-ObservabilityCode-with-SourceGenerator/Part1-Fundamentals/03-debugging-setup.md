@@ -51,16 +51,28 @@ public abstract class IncrementalGeneratorBase<TValue>(
     bool AttachDebugger = false)  // ← 디버깅 플래그
     : IIncrementalGenerator
 {
+    private readonly bool _attachDebugger = AttachDebugger;
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // 디버거 연결 요청
-        if (AttachDebugger)
+#if DEBUG
+        // DEBUG 빌드에서만 디버거 연결 지원
+        // 디버깅 필요 시 ObservablePortGenerator에서 AttachDebugger: true로 설정
+        if (_attachDebugger && Debugger.IsAttached is false)
         {
             Debugger.Launch();  // ← JIT 디버거 대화상자 표시
         }
+#endif
 
-        var provider = registerSourceProvider(context);
-        context.RegisterSourceOutput(provider.Collect(), generate);
+        IncrementalValuesProvider<TValue> provider = registerSourceProvider(context)
+            .Where(static m => m is not null);
+
+        context.RegisterSourceOutput(provider.Collect(), Execute);
+    }
+
+    private void Execute(SourceProductionContext context, ImmutableArray<TValue> values)
+    {
+        generate(context, values);
     }
 }
 ```
@@ -156,7 +168,7 @@ public static class SourceGeneratorTestRunner
 
 ```csharp
 [Fact]
-public Task Should_Generate_Pipeline_For_Simple_Adapter()
+public Task Should_Generate_Observable_For_Simple_Adapter()
 {
     // Arrange
     string input = """

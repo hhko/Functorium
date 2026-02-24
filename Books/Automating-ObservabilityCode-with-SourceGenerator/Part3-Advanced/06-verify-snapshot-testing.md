@@ -60,7 +60,7 @@ public class MyTests
 
 ```csharp
 [Fact]
-public Task Should_Generate_PipelineClass()
+public Task Should_Generate_ObservableClass()
 {
     string input = """
         [GenerateObservablePort]
@@ -87,7 +87,7 @@ public Task Should_Generate_PipelineClass()
 {TestClassName}.{TestMethodName}.verified.txt
 
 예시:
-ObservablePortGeneratorTests.ObservablePortGenerator_ShouldGenerate_PipelineClass_WithSingleMethod.verified.txt
+ObservablePortGeneratorTests.ObservablePortGenerator_ShouldGenerate_ObservableClass_WithSingleMethod.verified.txt
 ```
 
 ### 파일 내용
@@ -104,19 +104,22 @@ ObservablePortGeneratorTests.ObservablePortGenerator_ShouldGenerate_PipelineClas
 
 #nullable enable
 
-using Functorium.Abstractions;
-using Functorium.Applications.Observabilities;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using Functorium.Adapters.Observabilities;
+using Functorium.Adapters.Observabilities.Naming;
+using Functorium.Domains.Observabilities;
 
 using LanguageExt;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics;
+using Microsoft.Extensions.Options;
 
 namespace TestNamespace;
 
-public class TestObservablePort : TestAdapter
+public class TestAdapterObservable : TestAdapter
 {
-    private readonly ActivityContext _parentContext;
-    private readonly ILogger<TestObservablePort> _logger;
+    private readonly ActivitySource _activitySource;
+    private readonly ILogger<TestAdapterObservable> _logger;
     // ... 생성된 전체 코드
 }
 ```
@@ -184,16 +187,16 @@ dotnet tool run verify.tool accept
 
 ```csharp
 // 변경 전
-sb.AppendLine("    private readonly ActivityContext _parentContext;");
+sb.AppendLine("    private readonly ActivitySource _activitySource;");
 
 // 변경 후
-sb.AppendLine("    private readonly ActivityContext _activityContext;");
+sb.AppendLine("    private readonly ActivitySource _newActivitySource;");
 ```
 
 ### 테스트 결과
 
 ```
-[xUnit.net 00:00:01.23]     Should_Generate_PipelineClass [FAIL]
+[xUnit.net 00:00:01.23]     Should_Generate_ObservableClass [FAIL]
 
   Verify mismatch:
   - Received: _activityContext
@@ -254,7 +257,7 @@ steps:
 
 ```csharp
 [Fact]
-public Task ObservablePortGenerator_ShouldGenerate_PipelineClass_WithSingleMethod()
+public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithSingleMethod()
 {
     string input = """
         using Functorium.Adapters.SourceGenerators;
@@ -285,15 +288,16 @@ public Task ObservablePortGenerator_ShouldGenerate_PipelineClass_WithSingleMetho
 ### 해당 .verified.txt 파일
 
 ```
-// TestNamespace/TestObservablePort.g.cs
+// TestNamespace/TestAdapterObservable.g.cs
 // 파일명: TestAdapter.Observable.g.cs
 
-public class TestObservablePort : TestAdapter
+public class TestAdapterObservable : TestAdapter
 {
-    private readonly ActivityContext _parentContext;
-    private readonly ILogger<TestObservablePort> _logger;
-    private readonly IPortTrace _adapterTrace;
-    private readonly IPortMetric _adapterMetric;
+    private readonly ActivitySource _activitySource;
+    private readonly ILogger<TestAdapterObservable> _logger;
+    private readonly Counter<long> _requestCounter;
+    private readonly Counter<long> _responseCounter;
+    private readonly Histogram<double> _durationHistogram;
 
     // ... 전체 생성된 코드
 }
@@ -313,6 +317,7 @@ Tests/Functorium.Tests.Unit/
         ├── ObservablePortGeneratorTests.*.WithSingleMethod.verified.txt
         ├── ObservablePortGeneratorTests.*.WithMultipleMethods.verified.txt
         ├── ObservablePortGeneratorTests.*.WithPrimaryConstructor.verified.txt
+
         └── ...
 ```
 
@@ -345,7 +350,7 @@ Tests/Functorium.Tests.Unit/
 
 ```csharp
 // ✅ 좋은 예
-public Task Should_Generate_PipelineClass_WithPrimaryConstructor()
+public Task Should_Generate_ObservableClass_WithPrimaryConstructor()
 
 // ❌ 나쁜 예
 public Task Test1()

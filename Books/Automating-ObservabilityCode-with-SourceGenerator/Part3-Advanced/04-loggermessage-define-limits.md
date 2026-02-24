@@ -58,18 +58,18 @@ LoggerMessage.Define<T1, T2, T3, T4, T5, T6, T7>(...)  // 7개 이상
 
 ---
 
-## Pipeline 로깅 필드 계산
+## Observable 로깅 필드 계산
 
 ### 기본 필드 (4개)
 
-Pipeline은 기본적으로 4개의 필드를 로깅합니다.
+Observable은 기본적으로 4개의 필드를 로깅합니다.
 
 ```csharp
 // 기본 필드
-1. ClassName      // "UserRepository"
-2. MethodName     // "GetUser"
-3. TraceId        // "abc123..."
-4. SpanId         // "def456..."
+1. requestLayer           // "adapter"
+2. requestCategory        // "repository"
+3. requestHandler         // "UserRepository"
+4. requestHandlerMethod   // "GetUser"
 ```
 
 ### 추가 필드 계산
@@ -100,11 +100,11 @@ ProcessData(int id, List<T> data, string name)
 // .NET의 LoggerMessage.Define<T1, T2, ..., T6>은 최대 6개의 타입 파라미터만 지원합니다.
 
 // 로그 파라미터 수 계산:
-// - 기본 4개: ClassName, MethodName, TraceId, SpanId
+// - 기본 4개: requestLayer, requestCategory, requestHandler, requestHandlerMethod
 // - 메서드 파라미터: 각 파라미터당 1개
 // - 컬렉션 파라미터: 추가로 Count 필드 1개 (배열/리스트 등)
 
-int baseFieldCount = 4;  // ClassName, MethodName, TraceId, SpanId
+int baseFieldCount = 4;  // requestLayer, requestCategory, requestHandler, requestHandlerMethod
 int parameterCount = method.Parameters.Count;
 int collectionCount = CountCollectionParameters(method);
 
@@ -138,10 +138,10 @@ private static int CountCollectionParameters(MethodInfo method)
 if (totalRequestFields <= 6)
 {
     // ✅ 고성능 경로: LoggerMessage.Define 사용
-    sb.AppendLine($"    private static readonly Action<ILogger, {typeParams}, Exception?> _log{method.Name}Request =");
+    sb.AppendLine($"    private static readonly Action<ILogger, {typeParams}, Exception?> _log{method.Name}RequestDebug =");
     sb.AppendLine($"        LoggerMessage.Define<{typeParams}>(");
     sb.AppendLine($"            LogLevel.Debug,");
-    sb.AppendLine($"            new EventId({eventId}, \"{method.Name}Request\"),");
+    sb.AppendLine($"            ObservabilityNaming.EventIds.Adapter.AdapterRequest,");
     sb.AppendLine($"            \"{logTemplate}\");");
 }
 ```
@@ -169,14 +169,14 @@ else
 // 원본: GetData(int id, string name) - 6개 필드
 
 // 생성된 delegate 필드
-private static readonly Action<ILogger, string, string, string, string, int, string, Exception?> _logGetDataRequest =
+private static readonly Action<ILogger, string, string, string, string, int, string, Exception?> _logGetDataRequestDebug =
     LoggerMessage.Define<string, string, string, string, int, string>(
         LogLevel.Debug,
-        new EventId(1001, "GetDataRequest"),
-        "[{ClassName}.{MethodName}] TraceId={TraceId}, SpanId={SpanId}, Request_Id={Request_Id}, Request_Name={Request_Name}");
+        ObservabilityNaming.EventIds.Adapter.AdapterRequest,
+        "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.id} {request.name}");
 
 // 생성된 호출 코드
-_logGetDataRequest(logger, className, methodName, traceId, spanId, id, name, null);
+_logGetDataRequestDebug(logger, layer, category, handler, method, id, name, null);
 ```
 
 ### logger.LogDebug() 폴백 (> 6개)
@@ -186,8 +186,8 @@ _logGetDataRequest(logger, className, methodName, traceId, spanId, id, name, nul
 
 // 생성된 호출 코드 (delegate 없음)
 logger.LogDebug(
-    "[{ClassName}.{MethodName}] TraceId={TraceId}, SpanId={SpanId}, Request_A={Request_A}, Request_B={Request_B}, Request_C={Request_C}",
-    className, methodName, traceId, spanId, a, b, c);
+    "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.a} {request.b} {request.c}",
+    layer, category, handler, method, a, b, c);
 ```
 
 ---
@@ -198,22 +198,22 @@ logger.LogDebug(
 
 ```csharp
 // 기본 필드 (6개)
-1. ClassName      // "UserRepository"
-2. MethodName     // "GetUser"
-3. TraceId        // "abc123..."
-4. SpanId         // "def456..."
-5. ElapsedMs      // 123.45
-6. Result         // 결과값 또는 에러
+1. requestLayer           // "adapter"
+2. requestCategory        // "repository"
+3. requestHandler         // "UserRepository"
+4. requestHandlerMethod   // "GetUser"
+5. status                 // "success" 또는 "failure"
+6. elapsed                // 0.0123 (초 단위)
 
 // 컬렉션 반환 시 추가 필드
-7. ResultCount    // 결과 크기 (List, 배열 등)
+7. response.count         // 결과 크기 (List, 배열 등)
 ```
 
 ### Response 필드 계산
 
 ```csharp
 // Response용 필드 계산
-int baseResponseFields = 6;  // ClassName, MethodName, TraceId, SpanId, ElapsedMs, Result/Error
+int baseResponseFields = 6;  // requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed
 bool isCollectionReturn = CollectionTypeHelper.IsCollectionType(actualReturnType);
 
 int totalResponseFields = baseResponseFields + (isCollectionReturn ? 1 : 0);
@@ -328,7 +328,7 @@ public Task Should_Generate_LoggerMessageDefine_WithZeroParameters()
 | 개념 | 설명 |
 |------|------|
 | 6개 제한 | .NET LoggerMessage.Define 최대 파라미터 수 |
-| 기본 필드 | ClassName, MethodName, TraceId, SpanId (4개) |
+| 기본 필드 | requestLayer, requestCategory, requestHandler, requestHandlerMethod (4개) |
 | 컬렉션 추가 | 각 컬렉션 파라미터당 Count 필드 +1 |
 | 폴백 | 6개 초과 시 logger.LogDebug() 사용 |
 

@@ -45,8 +45,9 @@
 public class UserRepository : IObservablePort
 {
     private readonly ILogger<UserRepository> _logger;
-    private readonly IPortTrace _trace;
-    private readonly IPortMetric _metric;
+    private readonly ActivitySource _activitySource;
+    private readonly Counter<long> _requestCounter;
+    private readonly Histogram<double> _durationHistogram;
 
     public FinT<IO, User> GetUserAsync(int userId)
     {
@@ -57,7 +58,7 @@ public class UserRepository : IObservablePort
         _logger.LogInformation("GetUserAsync 요청: userId={UserId}", userId);
 
         // 추적 Activity 생성
-        using var activity = _trace.StartActivity("GetUserAsync");
+        using var activity = _activitySource.StartActivity("GetUserAsync");
 
         try
         {
@@ -69,7 +70,7 @@ public class UserRepository : IObservablePort
             _logger.LogInformation("GetUserAsync 성공: {Elapsed}ms", elapsed);
 
             // 메트릭 기록
-            _metric.RecordSuccess("GetUserAsync", elapsed);
+            _requestCounter.Add(1);
 
             return result;
         }
@@ -80,7 +81,7 @@ public class UserRepository : IObservablePort
             _logger.LogError(ex, "GetUserAsync 실패: {Elapsed}ms", elapsed);
 
             // 메트릭 기록
-            _metric.RecordFailure("GetUserAsync", elapsed);
+            _durationHistogram.Record(elapsed);
 
             throw;
         }
@@ -151,17 +152,17 @@ public class UserRepositoryObservable : UserRepository
 // 소스 생성기가 생성하는 고성능 로깅 코드
 internal static class UserRepositoryObservableLoggers
 {
-    private static readonly Action<ILogger, int, Exception?> s_getUserAsyncRequest =
-        LoggerMessage.Define<int>(
-            LogLevel.Information,
-            new EventId(1001, "AdapterRequest"),
-            "GetUserAsync Request: userId={userId}");
+    private static readonly Action<ILogger, string, string, string, string, int, Exception?> s_getUserAsyncRequestDebug =
+        LoggerMessage.Define<string, string, string, string, int>(
+            LogLevel.Debug,
+            ObservabilityNaming.EventIds.Adapter.AdapterRequest,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.userId}");
 
-    public static void GetUserAsyncRequest(ILogger logger, int userId)
+    public static void GetUserAsyncRequestDebug(ILogger logger, string layer, string category, string handler, string method, int userId)
     {
-        if (logger.IsEnabled(LogLevel.Information))
+        if (logger.IsEnabled(LogLevel.Debug))
         {
-            s_getUserAsyncRequest(logger, userId, null);
+            s_getUserAsyncRequestDebug(logger, layer, category, handler, method, userId, null);
         }
     }
 }
@@ -187,17 +188,29 @@ public abstract class IncrementalGeneratorBase<TValue>(
     Action<SourceProductionContext, ImmutableArray<TValue>> generate, // 2단계: 코드 생성
     bool AttachDebugger = false) : IIncrementalGenerator
 {
+    private readonly bool _attachDebugger = AttachDebugger;
+
     // 템플릿 메서드 - 고정된 알고리즘 흐름
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        if (AttachDebugger)
+#if DEBUG
+        if (_attachDebugger && Debugger.IsAttached is false)
+        {
             Debugger.Launch();
+        }
+#endif
 
         // 1단계: 소스 코드에서 관심 대상 추출
-        var provider = registerSourceProvider(context);
+        IncrementalValuesProvider<TValue> provider = registerSourceProvider(context)
+            .Where(static m => m is not null);
 
         // 2단계: 추출된 정보로 코드 생성
-        context.RegisterSourceOutput(provider.Collect(), generate);
+        context.RegisterSourceOutput(provider.Collect(), Execute);
+    }
+
+    private void Execute(SourceProductionContext context, ImmutableArray<TValue> values)
+    {
+        generate(context, values);
     }
 }
 ```
@@ -210,11 +223,12 @@ IncrementalGeneratorBase (추상 클래스)
 │
 ├── Initialize()           # 템플릿 메서드 (고정)
 │   ├── registerSourceProvider()  # 추상 단계 1
-│   └── generate()                # 추상 단계 2
+│   ├── .Where(not null)          # null 필터링
+│   └── Execute() → generate()   # 추상 단계 2
 │
 └── ObservablePortGenerator (구체 클래스)
     ├── RegisterSourceProvider()  # 구현: [GenerateObservablePort] 클래스 필터링
-    └── Generate()                # 구현: Pipeline 코드 생성
+    └── Generate()                # 구현: Observable 코드 생성
 ```
 
 **장점:**
@@ -261,11 +275,11 @@ IObservablePort (전략 인터페이스)
 │
 ├── IOrderRepository       # 주문 관련 전략
 │   └── OrderRepository    # 구체적 구현
-│       └── OrderRepositoryPipeline ← 소스 생성기가 생성
+│       └── OrderRepositoryObservable ← 소스 생성기가 생성
 │
 └── IProductRepository     # 상품 관련 전략
     └── ProductRepository  # 구체적 구현
-        └── ProductRepositoryPipeline ← 소스 생성기가 생성
+        └── ProductRepositoryObservable ← 소스 생성기가 생성
 ```
 
 **소스 생성기의 역할:**
@@ -292,12 +306,12 @@ public class UserRepositoryObservable : UserRepository
 **장점:**
 - 각 어댑터(전략)의 **비즈니스 로직 격리**
 - 관찰 가능성 코드의 **일관된 자동 적용**
-- DI 컨테이너에서 **Pipeline 클래스로 교체** 용이
+- DI 컨테이너에서 **Observable 클래스로 교체** 용이
 
 ```csharp
-// DI 등록 시 Pipeline 클래스 사용
+// DI 등록 시 Observable 클래스 사용
 services.AddScoped<IUserRepository, UserRepositoryObservable>();
-services.AddScoped<IOrderRepository, OrderRepositoryPipeline>();
+services.AddScoped<IOrderRepository, OrderRepositoryObservable>();
 ```
 
 ---
@@ -333,7 +347,7 @@ ProductRepository.cs     : 60줄 (순수 비즈니스 로직)
 -----------------------------------------
 총합                      : 150줄 (75% 감소)
 
-+ 자동 생성되는 Pipeline 클래스
++ 자동 생성되는 Observable 클래스
   UserRepositoryObservable.g.cs    : 자동 생성
   OrderRepositoryObservable.g.cs   : 자동 생성
   ProductRepositoryObservable.g.cs : 자동 생성
@@ -369,7 +383,10 @@ Functorium/
 │   ├── Functorium/                                     # 핵심 라이브러리
 │   │   └── Adapters/
 │   │       └── Observabilities/
-│   │           └── ObservabilityFields.cs              # 관측 가능성 상수
+│   │           └── Naming/
+│   │               ├── ObservabilityNaming.cs           # 관측 가능성 네이밍 규칙
+│   │               ├── ObservabilityNaming.Events.cs    # 이벤트 ID 정의
+│   │               └── ObservabilityNaming.Attributes.cs # 속성 키 정의
 │   │
 │   └── Functorium.Testing/                             # 테스트 유틸리티
 │       └── SourceGenerators/
@@ -402,8 +419,8 @@ Functorium/
 [GenerateObservablePort] 속성이 붙고
 IObservablePort를 구현한 클래스만 선택
 
-3단계: Pipeline 클래스 생성
-=========================
+3단계: Observable 클래스 생성
+===========================
 각 메서드에 대해 로깅, 추적, 메트릭 코드를
 포함한 래퍼 메서드 생성
 ```
@@ -419,13 +436,26 @@ public abstract class IncrementalGeneratorBase<TValue>(
     Action<SourceProductionContext, ImmutableArray<TValue>> generate,
     bool AttachDebugger = false) : IIncrementalGenerator
 {
+    private readonly bool _attachDebugger = AttachDebugger;
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        if (AttachDebugger)
+#if DEBUG
+        if (_attachDebugger && Debugger.IsAttached is false)
+        {
             Debugger.Launch();
+        }
+#endif
 
-        var provider = registerSourceProvider(context);
-        context.RegisterSourceOutput(provider.Collect(), generate);
+        IncrementalValuesProvider<TValue> provider = registerSourceProvider(context)
+            .Where(static m => m is not null);
+
+        context.RegisterSourceOutput(provider.Collect(), Execute);
+    }
+
+    private void Execute(SourceProductionContext context, ImmutableArray<TValue> values)
+    {
+        generate(context, values);
     }
 }
 ```

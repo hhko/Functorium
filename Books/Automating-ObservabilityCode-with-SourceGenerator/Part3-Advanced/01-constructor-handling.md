@@ -10,7 +10,7 @@
 
 ## 생성자 처리의 필요성
 
-Pipeline 클래스는 원본 클래스를 **상속**합니다. 부모 클래스에 생성자 파라미터가 있으면 이를 전달해야 합니다.
+Observable 클래스는 원본 클래스를 **상속**합니다. 부모 클래스에 생성자 파라미터가 있으면 이를 전달해야 합니다.
 
 ```csharp
 // 원본 클래스 (Primary Constructor)
@@ -20,15 +20,15 @@ public class UserRepository(ILogger<UserRepository> logger) : IObservablePort
     public FinT<IO, User> GetUserAsync(int id) => ...;
 }
 
-// 생성되는 Pipeline 클래스
+// 생성되는 Observable 클래스
 public class UserRepositoryObservable : UserRepository
 {
     // 부모의 logger 파라미터를 전달해야 함!
     public UserRepositoryObservable(
-        ActivityContext parentContext,
+        ActivitySource activitySource,
         ILogger<UserRepositoryObservable> logger,
-        IPortTrace adapterTrace,
-        IPortMetric adapterMetric,
+        IMeterFactory meterFactory,
+        IOptions<OpenTelemetryOptions> openTelemetryOptions,
         ILogger<UserRepository> baseLogger)  // ← 부모용 logger
         : base(baseLogger)  // ← 부모 생성자 호출
     {
@@ -48,42 +48,87 @@ public class UserRepositoryObservable : UserRepository
 namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
-/// 클래스의 생성자 파라미터를 추출합니다.
-/// Primary Constructor와 일반 생성자를 모두 지원합니다.
+/// 클래스의 생성자 파라미터를 추출하는 유틸리티 클래스
 /// </summary>
-public static class ConstructorParameterExtractor
+internal static class ConstructorParameterExtractor
 {
     /// <summary>
-    /// 클래스의 생성자 파라미터를 추출합니다.
-    /// 타겟 클래스에 생성자가 없으면 부모 클래스에서 찾습니다.
+    /// 타겟 클래스 또는 부모 클래스에서 생성자 파라미터를 추출합니다.
+    ///
+    /// 우선순위:
+    /// 1. 타겟 클래스 자체의 생성자 (파라미터가 있는 경우)
+    /// 2. 부모 클래스의 생성자 (타겟 클래스에 파라미터 생성자가 없는 경우)
     /// </summary>
     public static List<ParameterInfo> ExtractParameters(INamedTypeSymbol classSymbol)
     {
-        // 1. 타겟 클래스의 생성자에서 파라미터 찾기
-        var constructor = classSymbol.Constructors
-            .Where(c => c.DeclaredAccessibility == Accessibility.Public)
-            .Where(c => !c.IsStatic)  // 정적 생성자 제외
-            .OrderByDescending(c => c.Parameters.Length)  // 파라미터 많은 것 우선
+        // 1. 타겟 클래스의 생성자 확인 (우선순위)
+        var targetConstructorParams = TryExtractFromTargetClass(classSymbol);
+        if (targetConstructorParams.Count > 0)
+        {
+            return targetConstructorParams;
+        }
+
+        // 2. 부모 클래스의 생성자 확인
+        return TryExtractFromBaseClass(classSymbol);
+    }
+
+    private static List<ParameterInfo> TryExtractFromTargetClass(INamedTypeSymbol classSymbol)
+    {
+        var constructors = GetPublicConstructors(classSymbol);
+        var selectedConstructor = SelectBestConstructor(constructors);
+
+        if (selectedConstructor != null && selectedConstructor.Parameters.Length > 0)
+        {
+            return ConvertToParameterInfoList(selectedConstructor.Parameters);
+        }
+
+        return new List<ParameterInfo>();
+    }
+
+    private static List<ParameterInfo> TryExtractFromBaseClass(INamedTypeSymbol classSymbol)
+    {
+        if (classSymbol.BaseType == null || classSymbol.BaseType.SpecialType == SpecialType.System_Object)
+        {
+            return new List<ParameterInfo>();
+        }
+
+        var constructors = GetPublicConstructors(classSymbol.BaseType);
+        var selectedConstructor = SelectBestConstructor(constructors);
+
+        if (selectedConstructor != null && selectedConstructor.Parameters.Length > 0)
+        {
+            return ConvertToParameterInfoList(selectedConstructor.Parameters);
+        }
+
+        return new List<ParameterInfo>();
+    }
+
+    /// <summary>
+    /// 가장 적절한 생성자를 선택합니다.
+    /// 우선순위: 1. Primary constructor (C# 12+), 2. 파라미터가 가장 많은 생성자
+    /// </summary>
+    private static IMethodSymbol? SelectBestConstructor(List<IMethodSymbol> constructors)
+    {
+        // 1순위: Primary constructor
+        var primaryConstructor = constructors.FirstOrDefault(IsPrimaryConstructor);
+        if (primaryConstructor != null)
+        {
+            return primaryConstructor;
+        }
+
+        // 2순위: 파라미터가 가장 많은 생성자
+        return constructors
+            .OrderByDescending(c => c.Parameters.Length)
             .FirstOrDefault();
+    }
 
-        if (constructor is not null && constructor.Parameters.Length > 0)
-        {
-            return constructor.Parameters
-                .Select(p => new ParameterInfo(
-                    p.Name,
-                    p.Type.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat),
-                    p.RefKind))
-                .ToList();
-        }
+    private static bool IsPrimaryConstructor(IMethodSymbol constructor)
+    {
+        var syntaxReferences = constructor.DeclaringSyntaxReferences;
+        if (syntaxReferences.Length == 0) return false;
 
-        // 2. 부모 클래스의 생성자에서 찾기 (재귀)
-        if (classSymbol.BaseType is not null
-            && classSymbol.BaseType.SpecialType != SpecialType.System_Object)
-        {
-            return ExtractParameters(classSymbol.BaseType);
-        }
-
-        return [];
+        var syntax = syntaxReferences[0].GetSyntax();
+        return syntax is TypeDeclarationSyntax typeDecl && typeDecl.ParameterList != null;
     }
 }
 ```
@@ -91,18 +136,18 @@ public static class ConstructorParameterExtractor
 ### 동작 흐름
 
 ```
-1. 타겟 클래스의 public 생성자 검색
+1. TryExtractFromTargetClass: 타겟 클래스의 public 생성자 검색
    │
-   ├─ 생성자 있음 → 파라미터 추출 → 반환
+   ├─ 생성자 있음 → SelectBestConstructor → 파라미터 추출 → 반환
    │
    └─ 생성자 없음 (또는 파라미터 없음)
        │
        ▼
-2. 부모 클래스에서 재귀적으로 검색
+2. TryExtractFromBaseClass: 부모 클래스의 public 생성자 검색
    │
    ├─ object까지 도달 → 빈 리스트 반환
    │
-   └─ 생성자 발견 → 파라미터 추출 → 반환
+   └─ 생성자 발견 → SelectBestConstructor → 파라미터 추출 → 반환
 ```
 
 ---
@@ -153,11 +198,11 @@ var constructor = classSymbol.Constructors
 // 원본 클래스
 public class UserRepository(ILogger<UserRepository> logger) : IObservablePort { }
 
-// 생성되는 Pipeline (충돌!)
+// 생성되는 Observable (충돌!)
 public class UserRepositoryObservable : UserRepository
 {
     public UserRepositoryObservable(
-        ILogger<UserRepositoryObservable> logger,  // Pipeline용 logger
+        ILogger<UserRepositoryObservable> logger,  // Observable용 logger
         ILogger<UserRepository> logger)          // ❌ 같은 이름!
         : base(logger)
     {
@@ -172,47 +217,46 @@ public class UserRepositoryObservable : UserRepository
 namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
-/// 파라미터 이름 충돌을 해결합니다.
+/// 파라미터 이름 충돌을 해결하는 유틸리티 클래스
 /// </summary>
-public static class ParameterNameResolver
+internal static class ParameterNameResolver
 {
-    // Pipeline 생성자에서 사용하는 예약된 파라미터 이름
-    private static readonly HashSet<string> ReservedNames = new(StringComparer.Ordinal)
-    {
-        "parentContext",
-        "logger",
-        "adapterTrace",
-        "adapterMetric"
-    };
-
     /// <summary>
-    /// 파라미터 이름 충돌을 해결하여 반환합니다.
+    /// 예약된 이름과 충돌하는 경우 새로운 이름을 반환합니다.
     /// </summary>
-    public static List<ResolvedParameter> ResolveNames(List<ParameterInfo> parameters)
+    public static string ResolveName(string parameterName)
     {
-        var result = new List<ResolvedParameter>();
-
-        foreach (var param in parameters)
+        if (string.IsNullOrEmpty(parameterName))
         {
-            string resolvedName = param.Name;
-
-            // 예약된 이름과 충돌하면 "base" 접두사 추가
-            if (ReservedNames.Contains(param.Name))
-            {
-                resolvedName = $"base{char.ToUpper(param.Name[0])}{param.Name.Substring(1)}";
-                // "logger" → "baseLogger"
-            }
-
-            result.Add(new ResolvedParameter(param, resolvedName));
+            return parameterName;
         }
 
-        return result;
+        // 언더스코어로 시작하는 경우: _logger → baseLogger
+        if (parameterName.StartsWith("_"))
+        {
+            string nameWithoutUnderscore = parameterName.Substring(1);
+            return $"{ObservableGeneratorConstants.NameConflictPrefix}{char.ToUpper(nameWithoutUnderscore[0])}{nameWithoutUnderscore.Substring(1)}";
+        }
+
+        // 예약된 이름과 충돌: logger → baseLogger
+        if (ObservableGeneratorConstants.ReservedParameterNames.Contains(parameterName))
+        {
+            return $"{ObservableGeneratorConstants.NameConflictPrefix}{char.ToUpper(parameterName[0])}{parameterName.Substring(1)}";
+        }
+
+        return parameterName;
+    }
+
+    /// <summary>
+    /// 파라미터 목록의 이름들을 충돌 없이 해결합니다.
+    /// </summary>
+    public static List<(ParameterInfo Original, string ResolvedName)> ResolveNames(List<ParameterInfo> parameters)
+    {
+        return parameters
+            .Select(p => (Original: p, ResolvedName: ResolveName(p.Name)))
+            .ToList();
     }
 }
-
-public sealed record ResolvedParameter(
-    ParameterInfo Original,
-    string ResolvedName);
 ```
 
 ### 해결 결과
@@ -224,10 +268,10 @@ public sealed record ResolvedParameter(
 public class UserRepositoryObservable : UserRepository
 {
     public UserRepositoryObservable(
-        ActivityContext parentContext,
-        ILogger<UserRepositoryObservable> logger,      // Pipeline용
-        IPortTrace adapterTrace,
-        IPortMetric adapterMetric,
+        ActivitySource activitySource,
+        ILogger<UserRepositoryObservable> logger,      // Observable용
+        IMeterFactory meterFactory,
+        IOptions<OpenTelemetryOptions> openTelemetryOptions,
         ILogger<UserRepository> baseLogger)           // ← 이름 변경됨
         : base(baseLogger)                            // ← 부모에 전달
     {
@@ -368,6 +412,10 @@ public Task Should_Resolve_Parameter_Name_Conflict()
 | `parentContext` | `baseParentContext` |
 | `adapterTrace` | `baseAdapterTrace` |
 | `adapterMetric` | `baseAdapterMetric` |
+| `_logger` | `baseLogger` (언더스코어 제거 + 접두사) |
+
+> 참고: 실제 Observable 생성자는 `activitySource`, `meterFactory`, `openTelemetryOptions`를 사용하지만,
+> `ObservableGeneratorConstants.ReservedParameterNames`에는 레거시 호환성을 위해 위 이름들이 유지됩니다.
 
 ---
 

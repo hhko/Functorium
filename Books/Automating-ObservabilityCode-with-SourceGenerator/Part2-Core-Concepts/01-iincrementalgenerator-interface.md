@@ -219,19 +219,29 @@ public abstract class IncrementalGeneratorBase<TValue>(
     bool AttachDebugger = false)
     : IIncrementalGenerator
 {
+    private readonly bool _attachDebugger = AttachDebugger;
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // 디버거 연결 (옵션)
-        if (AttachDebugger)
+#if DEBUG
+        // DEBUG 빌드에서만 디버거 연결 지원
+        if (_attachDebugger && Debugger.IsAttached is false)
         {
             Debugger.Launch();
         }
+#endif
 
-        // 1단계: 소스 제공자 등록 (구현체에서 정의)
-        IncrementalValuesProvider<TValue> provider = registerSourceProvider(context);
+        // 1단계: 소스 제공자 등록 (구현체에서 정의) + null 필터링
+        IncrementalValuesProvider<TValue> provider = registerSourceProvider(context)
+            .Where(static m => m is not null);
 
         // 2단계: 코드 생성 등록 (구현체에서 정의)
-        context.RegisterSourceOutput(provider.Collect(), generate);
+        context.RegisterSourceOutput(provider.Collect(), Execute);
+    }
+
+    private void Execute(SourceProductionContext context, ImmutableArray<TValue> values)
+    {
+        generate(context, values);
     }
 }
 ```
@@ -254,9 +264,9 @@ public sealed class ObservablePortGenerator()
 
     private static void Generate(
         SourceProductionContext context,
-        ImmutableArray<ObservableClassInfo> pipelineClasses)
+        ImmutableArray<ObservableClassInfo> observableClasses)
     {
-        // 각 클래스에 대해 Pipeline 코드 생성
+        // 각 클래스에 대해 Observable 코드 생성
     }
 }
 ```

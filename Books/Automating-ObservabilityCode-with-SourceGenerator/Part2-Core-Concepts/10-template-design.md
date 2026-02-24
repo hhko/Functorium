@@ -107,14 +107,15 @@ private static string GenerateObservableClassSource(
       .AppendLine();
 
     // 2. Using 문
-    sb.AppendLine("using Functorium.Abstractions;")
-      .AppendLine("using Functorium.Applications.Observabilities;")
+    sb.AppendLine("using System.Diagnostics;")
+      .AppendLine("using System.Diagnostics.Metrics;")
+      .AppendLine("using Functorium.Adapters.Observabilities;")
+      .AppendLine("using Functorium.Adapters.Observabilities.Naming;")
+      .AppendLine("using Functorium.Domains.Observabilities;")
       .AppendLine()
       .AppendLine("using LanguageExt;")
       .AppendLine("using Microsoft.Extensions.Logging;")
-      .AppendLine("using System.Diagnostics;")
-      .AppendLine()
-      .AppendLine("using ObservabilityFields = Functorium.Adapters.Observabilities.ObservabilityFields;")
+      .AppendLine("using Microsoft.Extensions.Options;")
       .AppendLine();
 
     // 3. 네임스페이스 (동적)
@@ -122,7 +123,7 @@ private static string GenerateObservableClassSource(
       .AppendLine();
 
     // 4. 클래스 선언 (동적)
-    sb.AppendLine($"public class {classInfo.ClassName}Pipeline : {classInfo.ClassName}")
+    sb.AppendLine($"public class {classInfo.ClassName}Observable : {classInfo.ClassName}")
       .AppendLine("{");
 
     // 5. 필드
@@ -158,15 +159,19 @@ private static string GenerateObservableClassSource(
 private static void GenerateFields(StringBuilder sb, ObservableClassInfo classInfo)
 {
     // 관찰 가능성 필드
-    sb.AppendLine("    private readonly ActivityContext _parentContext;")
+    sb.AppendLine("    private readonly ActivitySource _activitySource;")
+      .AppendLine($"    private readonly ILogger<{classInfo.ClassName}Observable> _logger;")
       .AppendLine()
-      .AppendLine($"    private readonly ILogger<{classInfo.ClassName}Pipeline> _logger;")
-      .AppendLine("    private readonly IPortTrace _adapterTrace;")
-      .AppendLine("    private readonly IPortMetric _adapterMetric;")
+      .AppendLine("    // Metrics")
+      .AppendLine("    private readonly Counter<long> _requestCounter;")
+      .AppendLine("    private readonly Counter<long> _responseCounter;")
+      .AppendLine("    private readonly Histogram<double> _durationHistogram;")
       .AppendLine();
 
     // 상수
     sb.AppendLine($"    private const string RequestHandler = nameof({classInfo.ClassName});")
+      .AppendLine()
+      .AppendLine("    private readonly string _requestCategoryLowerCase;")
       .AppendLine();
 
     // 로깅 레벨 캐시 (성능 최적화)
@@ -186,12 +191,12 @@ private static void GenerateFields(StringBuilder sb, ObservableClassInfo classIn
 private static void GenerateConstructor(StringBuilder sb, ObservableClassInfo classInfo)
 {
     // 생성자 시작
-    sb.Append($"    public {classInfo.ClassName}Pipeline(")
+    sb.Append($"    public {classInfo.ClassName}Observable(")
       .AppendLine()
-      .AppendLine("        ActivityContext parentContext,")
-      .AppendLine($"        ILogger<{classInfo.ClassName}Pipeline> logger,")
-      .AppendLine("        IPortTrace adapterTrace,")
-      .Append("        IPortMetric adapterMetric");
+      .AppendLine("        ActivitySource activitySource,")
+      .AppendLine($"        ILogger<{classInfo.ClassName}Observable> logger,")
+      .AppendLine("        IMeterFactory meterFactory,")
+      .Append("        IOptions<OpenTelemetryOptions> openTelemetryOptions");
 
     // 부모 클래스 파라미터 (동적)
     string baseParams = GenerateBaseConstructorParameters(
@@ -215,13 +220,24 @@ private static void GenerateConstructor(StringBuilder sb, ObservableClassInfo cl
     // 생성자 본문
     sb.AppendLine()
       .AppendLine("    {")
-      .AppendLine("        global::System.ArgumentNullException.ThrowIfNull(adapterTrace);")
-      .AppendLine("        global::System.ArgumentNullException.ThrowIfNull(adapterMetric);")
+      .AppendLine("        global::System.ArgumentNullException.ThrowIfNull(activitySource);")
+      .AppendLine("        global::System.ArgumentNullException.ThrowIfNull(meterFactory);")
+      .AppendLine("        global::System.ArgumentNullException.ThrowIfNull(openTelemetryOptions);")
       .AppendLine()
-      .AppendLine("        _parentContext = parentContext;")
+      .AppendLine("        _activitySource = activitySource;")
       .AppendLine("        _logger = logger;")
-      .AppendLine("        _adapterTrace = adapterTrace;")
-      .AppendLine("        _adapterMetric = adapterMetric;")
+      .AppendLine()
+      .AppendLine("        // RequestCategory 캐싱")
+      .AppendLine("        _requestCategoryLowerCase = this.RequestCategory?.ToLowerInvariant()")
+      .AppendLine("            ?? ObservabilityNaming.Categories.Unknown;")
+      .AppendLine()
+      .AppendLine("        // Meter 및 Metrics 초기화")
+      .AppendLine("        string serviceNamespace = openTelemetryOptions.Value.ServiceNamespace;")
+      .AppendLine("        string meterName = $\"{serviceNamespace}.adapter.{_requestCategoryLowerCase}\";")
+      .AppendLine("        var meter = meterFactory.Create(meterName);")
+      .AppendLine("        _requestCounter = meter.CreateCounter<long>(...);")
+      .AppendLine("        _responseCounter = meter.CreateCounter<long>(...);")
+      .AppendLine("        _durationHistogram = meter.CreateHistogram<double>(...);")
       .AppendLine()
       .AppendLine("        _isDebugEnabled = logger.IsEnabled(LogLevel.Debug);")
       .AppendLine("        _isInformationEnabled = logger.IsEnabled(LogLevel.Information);")
@@ -249,23 +265,18 @@ private static void GenerateMethod(
     sb.AppendLine($"    public new {method.ReturnType} {method.Name}({parameters})")
       .AppendLine("    {");
 
-    // 2. 시작 시간 기록
-    sb.AppendLine("        long startTimestamp = global::System.Diagnostics.Stopwatch.GetTimestamp();")
-      .AppendLine();
-
-    // 3. ExecuteWithActivity 호출
-    sb.AppendLine("        return ExecuteWithActivity(")
-      .AppendLine("            RequestHandler,")
-      .AppendLine($"            nameof({method.Name}),");
-
-    // 4. 실제 메서드 호출 (동적)
+    // 2. FinT.lift + ExecuteWithSpan 패턴
     string arguments = GenerateArgumentList(method.Parameters);
-    sb.AppendLine($"            FinTToIO(base.{method.Name}({arguments})),");
+    sb.AppendLine($"        return global::LanguageExt.FinT.lift<IO, {method.ActualReturnType}>(")
+      .AppendLine($"            IO.lift(() => ExecuteWithSpan(")
+      .AppendLine($"                RequestHandler,")
+      .AppendLine($"                nameof({method.Name}),")
+      .AppendLine($"                FinTToIO(base.{method.Name}({arguments})),");
 
-    // 5. 로깅 람다 (동적)
+    // 3. 로깅 람다 (동적)
     GenerateLoggingLambda(sb, method);
 
-    sb.AppendLine("            startTimestamp);")
+    sb.AppendLine($"            )));")
       .AppendLine("    }")
       .AppendLine();
 }
@@ -277,16 +288,14 @@ private static void GenerateMethod(
 // 생성된 메서드
 public new FinT<IO, User> GetUserAsync(int userId)
 {
-    long startTimestamp = global::System.Diagnostics.Stopwatch.GetTimestamp();
-
-    return ExecuteWithActivity(
-        RequestHandler,
-        nameof(GetUserAsync),
-        FinTToIO(base.GetUserAsync(userId)),
-        () => LogGetUserAsyncRequest(userId),
-        LogGetUserAsyncResponseSuccess,
-        LogGetUserAsyncResponseFailure,
-        startTimestamp);
+    return global::LanguageExt.FinT.lift<IO, User>(
+        IO.lift(() => ExecuteWithSpan(
+            RequestHandler,
+            nameof(GetUserAsync),
+            FinTToIO(base.GetUserAsync(userId)),
+            () => LogGetUserAsyncRequest(userId),
+            LogGetUserAsyncResponseSuccess,
+            LogGetUserAsyncResponseFailure)));
 }
 ```
 
@@ -320,44 +329,49 @@ private static void GenerateLoggingMethods(
 }
 ```
 
+### 로깅 레벨 전략
+
+생성기는 **Debug/Information 멀티 레벨 로깅**을 생성합니다:
+
+| 로그 레벨 | 내용 | 용도 |
+|-----------|------|------|
+| Debug | 파라미터 값, 결과 값 포함 | 상세 디버깅 |
+| Information | 핸들러/메서드명만 | 운영 모니터링 |
+| Warning | 예상 에러 (Expected) | 비즈니스 에러 추적 |
+| Error | 시스템 에러 (Exceptional) | 장애 감지 |
+
 ### 생성 결과 예시
 
 ```csharp
 internal static class UserRepositoryObservableLoggers
 {
-    // 요청 로깅 (고성능)
-    private static readonly Action<ILogger, int, Exception?> s_getUserAsyncRequest =
-        LoggerMessage.Define<int>(
+    // 요청 로깅 (Debug - 파라미터 포함, 고성능)
+    private static readonly Action<ILogger, string, string, string, string, int, Exception?> s_getUserAsyncRequestDebug =
+        LoggerMessage.Define<string, string, string, string, int>(
+            LogLevel.Debug,
+            ObservabilityNaming.EventIds.Adapter.AdapterRequest,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.userId}");
+
+    // 요청 로깅 (Information - 핸들러명만)
+    private static readonly Action<ILogger, string, string, string, string, Exception?> s_getUserAsyncRequest =
+        LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
-            new EventId(1001, "AdapterRequest"),
-            "[Adapter] Request: UserRepository.GetUserAsync(userId={userId})");
+            ObservabilityNaming.EventIds.Adapter.AdapterRequest,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    public static void GetUserAsyncRequest(ILogger logger, int userId)
-    {
-        if (logger.IsEnabled(LogLevel.Information))
-        {
-            s_getUserAsyncRequest(logger, userId, null);
-        }
-    }
+    // 응답 로깅 (Debug - 결과 포함, 고성능)
+    private static readonly Action<ILogger, string, string, string, string, string, double, Exception?> s_getUserAsyncResponseSuccessDebug =
+        LoggerMessage.Define<string, string, string, string, string, double>(
+            LogLevel.Debug,
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
-    // 응답 로깅 (고성능)
-    private static readonly Action<ILogger, string, string, double, Exception?> s_getUserAsyncResponseSuccess =
-        LoggerMessage.Define<string, string, double>(
+    // 응답 로깅 (Information - 상태만)
+    private static readonly Action<ILogger, string, string, string, string, string, double, Exception?> s_getUserAsyncResponseSuccess =
+        LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
-            new EventId(1002, "AdapterResponse"),
-            "[Adapter] Response: {RequestHandler}.{Method} completed in {ElapsedMs}ms");
-
-    public static void GetUserAsyncResponseSuccess(
-        ILogger logger,
-        string requestHandler,
-        string method,
-        double elapsedMs)
-    {
-        if (logger.IsEnabled(LogLevel.Information))
-        {
-            s_getUserAsyncResponseSuccess(logger, requestHandler, method, elapsedMs, null);
-        }
-    }
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 }
 ```
 
@@ -370,7 +384,7 @@ internal static class UserRepositoryObservableLoggers
 | 헤더 | 고정 | auto-generated 주석 |
 | Using 문 | 고정 | 필요한 네임스페이스 |
 | 네임스페이스 | 동적 | 원본 클래스와 동일 |
-| 클래스 선언 | 동적 | 원본 + Pipeline 접미사 |
+| 클래스 선언 | 동적 | 원본 + Observable 접미사 |
 | 필드 | 패턴 | 타입만 동적 |
 | 생성자 | 패턴 | 파라미터만 동적 |
 | 메서드 | 패턴 | 시그니처, 호출만 동적 |
