@@ -408,14 +408,11 @@ public Task Should_Resolve_Parameter_Name_Conflict()
 
 | 충돌 이름 | 해결 이름 |
 |-----------|-----------|
+| `activitySource` | `baseActivitySource` |
 | `logger` | `baseLogger` |
-| `parentContext` | `baseParentContext` |
-| `adapterTrace` | `baseAdapterTrace` |
-| `adapterMetric` | `baseAdapterMetric` |
+| `meterFactory` | `baseMeterFactory` |
+| `openTelemetryOptions` | `baseOpenTelemetryOptions` |
 | `_logger` | `baseLogger` (언더스코어 제거 + 접두사) |
-
-> 참고: 실제 Observable 생성자는 `activitySource`, `meterFactory`, `openTelemetryOptions`를 사용하지만,
-> `ObservableGeneratorConstants.ReservedParameterNames`에는 레거시 호환성을 위해 위 이름들이 유지됩니다.
 
 ---
 
