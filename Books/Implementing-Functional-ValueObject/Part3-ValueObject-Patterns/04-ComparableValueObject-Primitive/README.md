@@ -193,6 +193,7 @@ bool overlaps = range1 <= range2;    // range1이 range2와 겹치는가?
 ```csharp
 public sealed class DateRange : ComparableValueObject
 {
+    public sealed record StartAfterEnd : DomainErrorType.Custom;
     public DateTime StartDate { get; }
     public DateTime EndDate { get; }
 
@@ -203,19 +204,18 @@ public sealed class DateRange : ComparableValueObject
     }
 
     public static Fin<DateRange> Create(DateTime startDate, DateTime endDate) =>
-        CreateFromValidation(
-            Validate(startDate, endDate),
-            validValues => new DateRange(validValues.startDate, validValues.endDate));
+        CreateFromValidation(Validate(startDate, endDate), v => new DateRange(v.startDate, v.endDate));
 
     public static DateRange CreateFromValidated((DateTime startDate, DateTime endDate) validatedValues) =>
-        new DateRange(validatedValues.startDate, validatedValues.endDate);
+        new(validatedValues.startDate, validatedValues.endDate);
 
     // 날짜 범위 검증
     public static Validation<Error, (DateTime startDate, DateTime endDate)> Validate(
         DateTime startDate, DateTime endDate) =>
         startDate <= endDate
             ? (startDate, endDate)
-            : DomainErrors.StartAfterEnd(startDate, endDate);
+            : DomainError.For<DateRange, DateTime, DateTime>(new StartAfterEnd(), startDate, endDate,
+                $"Start date cannot be after end date. Start: '{startDate:yyyy-MM-dd}', End: '{endDate:yyyy-MM-dd}'");
 
     // 비교 순서 정의
     protected override IEnumerable<IComparable> GetComparableEqualityComponents()
@@ -224,15 +224,7 @@ public sealed class DateRange : ComparableValueObject
         yield return EndDate;    // 시작 날짜 같으면 종료 날짜 비교
     }
 
-    internal static class DomainErrors
-    {
-        public static Error StartAfterEnd(DateTime startDate, DateTime endDate) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(DateRange)}.{nameof(StartAfterEnd)}",
-                errorCurrentValue1: startDate,
-                errorCurrentValue2: endDate,
-                errorMessage: $"Start date cannot be after or equal to end date. Start: '{startDate}', End: '{endDate}'");
-    }
+    public override string ToString() => $"{StartDate:yyyy-MM-dd} ~ {EndDate:yyyy-MM-dd}";
 }
 ```
 

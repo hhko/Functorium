@@ -55,26 +55,27 @@
 AccountNumber는 은행 계좌번호를 검증하고 파싱합니다. 은행 코드 추출과 마스킹 기능을 제공합니다.
 
 ```csharp
-public sealed class AccountNumber : IEquatable<AccountNumber>
+public sealed class AccountNumber : SimpleValueObject<string>
 {
-    public string Value { get; }
+    private static readonly Regex Format = new(@"^\d{3}-\d{10,14}$", RegexOptions.Compiled);
 
-    public static Fin<AccountNumber> Create(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return DomainErrors.Empty(value ?? "null");
+    private AccountNumber(string value) : base(value) { }
 
-        var normalized = value.Replace(" ", "").Replace("−", "-");
-
-        if (!Regex.IsMatch(normalized, @"^\d{3}-\d{10,14}$"))
-            return DomainErrors.InvalidFormat(normalized);
-
-        return new AccountNumber(normalized);
-    }
-
+    public string FullNumber => Value;  // protected Value에 대한 public 접근자
     public string BankCode => Value[..3];            // "110"
     public string Number => Value[4..];              // "1234567890"
     public string Masked => $"{BankCode}-****{Number[^4..]}"; // "110-****7890"
+
+    public static Fin<AccountNumber> Create(string? value) =>
+        CreateFromValidation(Validate(value ?? "null"), v => new AccountNumber(v));
+
+    public static Validation<Error, string> Validate(string value) =>
+        ValidationRules<AccountNumber>.NotEmpty(value)
+            .ThenNormalize(v => v.Replace(" ", "").Replace("\u2212", "-"))
+            .ThenMatches(Format,
+                $"Invalid account number format. Expected: 'NNN-NNNNNNNNNN'. Current value: '{value}'");
+
+    public static implicit operator string(AccountNumber account) => account.Value;
 }
 ```
 
@@ -85,29 +86,29 @@ public sealed class AccountNumber : IEquatable<AccountNumber>
 InterestRate는 이자율을 백분율로 저장하고, 단리/복리 이자 계산 기능을 제공합니다.
 
 ```csharp
-public sealed class InterestRate : IComparable<InterestRate>, IEquatable<InterestRate>
+public sealed class InterestRate : ComparableSimpleValueObject<decimal>
 {
-    public decimal Value { get; }  // 백분율 (예: 5.5)
-
-    public static Fin<InterestRate> Create(decimal percentValue)
-    {
-        if (percentValue < 0)
-            return DomainErrors.Negative(percentValue);
-        if (percentValue > 100)
-            return DomainErrors.ExceedsMaximum(percentValue);
-        return new InterestRate(percentValue);
-    }
+    private InterestRate(decimal value) : base(value) { }
 
     public decimal Percentage => Value;          // 5.5 (%)
     public decimal Decimal => Value / 100m;      // 0.055
 
-    // 단리: 원금 × 이율 × 기간
+    public static Fin<InterestRate> Create(decimal percentValue) =>
+        CreateFromValidation(Validate(percentValue), v => new InterestRate(v));
+
+    public static Validation<Error, decimal> Validate(decimal value) =>
+        ValidationRules<InterestRate>.NonNegative(value)
+            .ThenAtMost(100m);
+
+    // 단리: 원금 x 이율 x 기간
     public decimal CalculateSimpleInterest(decimal principal, int years) =>
         principal * Decimal * years;
 
-    // 복리: 원금 × ((1 + 이율)^기간 - 1)
+    // 복리: 원금 x ((1 + 이율)^기간 - 1)
     public decimal CalculateCompoundInterest(decimal principal, int years) =>
         principal * ((decimal)Math.Pow((double)(1 + Decimal), years) - 1);
+
+    public static implicit operator decimal(InterestRate rate) => rate.Decimal;
 }
 ```
 
@@ -118,34 +119,44 @@ public sealed class InterestRate : IComparable<InterestRate>, IEquatable<Interes
 ExchangeRate는 통화 쌍(USD/KRW)과 환율을 관리합니다. 변환과 역환율 계산 기능을 제공합니다.
 
 ```csharp
-public sealed class ExchangeRate : IEquatable<ExchangeRate>
+public sealed class ExchangeRate : ValueObject
 {
+    public sealed record InvalidBaseCurrency : DomainErrorType.Custom;
+    public sealed record InvalidQuoteCurrency : DomainErrorType.Custom;
+    public sealed record SameCurrency : DomainErrorType.Custom;
+
     public string BaseCurrency { get; }    // "USD"
     public string QuoteCurrency { get; }   // "KRW"
     public decimal Rate { get; }           // 1350.50
 
-    public static Fin<ExchangeRate> Create(string baseCurrency, string quoteCurrency, decimal rate)
+    private ExchangeRate(string baseCurrency, string quoteCurrency, decimal rate)
     {
-        if (string.IsNullOrWhiteSpace(baseCurrency) || baseCurrency.Length != 3)
-            return DomainErrors.InvalidBaseCurrency(baseCurrency ?? "null");
-        if (string.IsNullOrWhiteSpace(quoteCurrency) || quoteCurrency.Length != 3)
-            return DomainErrors.InvalidQuoteCurrency(quoteCurrency ?? "null");
-        if (rate <= 0)
-            return DomainErrors.InvalidRate(rate);
-        if (baseCurrency.Equals(quoteCurrency, StringComparison.OrdinalIgnoreCase))
-            return DomainErrors.SameCurrency(baseCurrency, quoteCurrency);
-
-        return new ExchangeRate(
-            baseCurrency.ToUpperInvariant(),
-            quoteCurrency.ToUpperInvariant(),
-            rate);
+        BaseCurrency = baseCurrency; QuoteCurrency = quoteCurrency; Rate = rate;
     }
 
-    public decimal Convert(decimal amount) => amount * Rate;       // 100 USD → 135,050 KRW
-    public decimal ConvertBack(decimal amount) => amount / Rate;   // 135,050 KRW → 100 USD
-    public ExchangeRate Invert() => new(QuoteCurrency, BaseCurrency, 1m / Rate);
+    public static Fin<ExchangeRate> Create(string? baseCurrency, string? quoteCurrency, decimal rate) =>
+        CreateFromValidation(
+            Validate(baseCurrency ?? "null", quoteCurrency ?? "null", rate),
+            v => new ExchangeRate(v.BaseCurrency.ToUpperInvariant(), v.QuoteCurrency.ToUpperInvariant(), v.Rate));
 
-    public string Pair => $"{BaseCurrency}/{QuoteCurrency}";  // "USD/KRW"
+    public static Validation<Error, (string BaseCurrency, string QuoteCurrency, decimal Rate)> Validate(
+        string baseCurrency, string quoteCurrency, decimal rate) =>
+        (ValidateCurrency(baseCurrency, new InvalidBaseCurrency(), "basecurrency"),
+         ValidateCurrency(quoteCurrency, new InvalidQuoteCurrency(), "quotecurrency"),
+         ValidationRules<ExchangeRate>.Positive(rate))
+            .Apply((b, q, r) => (BaseCurrency: b, QuoteCurrency: q, Rate: r))
+            .Bind(v => ValidateDifferentCurrencies(v.BaseCurrency, v.QuoteCurrency)
+                .Map(_ => (v.BaseCurrency, v.QuoteCurrency, v.Rate)));
+
+    public decimal Convert(decimal amount) => amount * Rate;       // 100 USD -> 135,050 KRW
+    public decimal ConvertBack(decimal amount) => amount / Rate;   // 135,050 KRW -> 100 USD
+    public ExchangeRate Invert() => new(QuoteCurrency, BaseCurrency, 1m / Rate);
+    public string Pair => $"{BaseCurrency}/{QuoteCurrency}";       // "USD/KRW"
+
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return BaseCurrency; yield return QuoteCurrency; yield return Rate;
+    }
 }
 ```
 
@@ -239,9 +250,9 @@ decimal UpdateBalance(decimal balance, TransactionType type, decimal amount) =>
 
 | 값 객체 | 프레임워크 타입 | 특징 |
 |--------|---------------|------|
-| AccountNumber | SimpleValueObject 패턴 | 형식 검증, 파싱, 마스킹 |
-| InterestRate | ComparableSimpleValueObject 패턴 | 단리/복리 계산 |
-| ExchangeRate | ValueObject 패턴 | 통화 쌍 관리, 변환 |
+| AccountNumber | SimpleValueObject\<string\> | ValidationRules 체인, 파싱, 마스킹 |
+| InterestRate | ComparableSimpleValueObject\<decimal\> | ValidationRules 체인, 단리/복리 계산 |
+| ExchangeRate | ValueObject | 병렬 검증 + Bind, 통화 쌍 관리, 변환 |
 | TransactionType | SmartEnum | 입금/출금 분류 |
 
 ## 한눈에 보는 정리

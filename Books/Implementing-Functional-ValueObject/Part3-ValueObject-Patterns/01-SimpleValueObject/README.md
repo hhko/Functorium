@@ -153,7 +153,7 @@ ProductId productId = ProductId.Create(456);
 1. **`SimpleValueObject<T>` 상속**: 기본적인 값 객체 기능을 상속받습니다.
 2. **private 생성자**: 외부에서 직접 생성하지 못하도록 제한합니다.
 3. **정적 Create 메서드**: 유효성 검증과 객체 생성을 담당합니다.
-4. **DomainErrors**: 구조화된 에러 처리를 위한 중첩 클래스입니다.
+4. **DomainError.For\<T>()**: 구조화된 에러 처리를 위한 정적 메서드입니다.
 
 ## 프로젝트 설명
 
@@ -176,24 +176,16 @@ public sealed class BinaryData : SimpleValueObject<byte[]>
     private BinaryData(byte[] value) : base(value) { }
 
     public static Fin<BinaryData> Create(byte[] value) =>
-        CreateFromValidation(Validate(value), val => new BinaryData(val));
+        CreateFromValidation(Validate(value), v => new BinaryData(v));
 
     public static BinaryData CreateFromValidated(byte[] validatedValue) =>
-        new BinaryData(validatedValue);
+        new(validatedValue);
 
     public static Validation<Error, byte[]> Validate(byte[] value) =>
         value != null && value.Length > 0
             ? value
-            : DomainErrors.Empty(value);
-
-    internal static class DomainErrors
-    {
-        public static Error Empty(byte[] value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(BinaryData)}.{nameof(Empty)}",
-                errorCurrentValue: value,
-                errorMessage: $"Binary data cannot be empty or null. Current value: '{(value == null ? "null" : value.Length.ToString())}'");
-    }
+            : DomainError.For<BinaryData, byte[]>(new DomainErrorType.Empty(), value!,
+                $"Binary data cannot be empty or null. Current value: '{(value == null ? "null" : $"{value.Length} bytes")}'");
 }
 ```
 
@@ -255,9 +247,9 @@ var bytes = (byte[])binaryData;
 
 이는 마치 프로그래밍 언어에서 `==`와 `===`을 구분하는 것처럼, 필요한 경우에만 특정 기능을 제공하는 최소주의 설계 원칙을 따르는 것입니다. 비교가 필요한 경우에는 `ComparableSimpleValueObject<T>`를 사용해야 합니다.
 
-### Q4: DomainErrors는 왜 internal로 선언되나요?
-**A**: `DomainErrors`는 내부 구현 세부사항이므로 `internal`로 선언하여 같은 어셈블리 내에서만 접근할 수 있도록 제한합니다. 이는 캡슐화를 강화하고 외부에서의 잘못된 사용을 방지합니다.
+### Q4: DomainError.For\<T>()는 어떻게 에러를 구조화하나요?
+**A**: `DomainError.For<T>()`는 `DomainErrorType` 레코드와 결합하여 구조화된 에러를 생성합니다. 이 패턴은 에러 코드를 자동으로 생성하고, 현재 값과 메시지를 포함하는 일관된 에러 형식을 제공합니다.
 
-이는 마치 private 멤버를 외부에서 접근하지 못하게 하는 것처럼, 내부 구현 세부사항을 보호하는 역할을 합니다. 외부 코드에서 에러를 직접 생성하는 것을 방지하여 도메인의 무결성을 보장할 수 있습니다.
+예를 들어, `DomainError.For<BinaryData, byte[]>(new DomainErrorType.Empty(), value, "message")`는 `DomainErrors.BinaryData.Empty`와 같은 구조화된 에러 코드를 자동으로 생성합니다. 이는 에러 코드만으로도 어떤 값 객체의 어떤 에러인지 즉시 파악할 수 있게 합니다.
 
-또한 `internal` 키워드를 사용함으로써 API의 의도를 명확히 표현할 수 있습니다. 이는 마치 접근 제한자를 통해 메서드의 사용 범위를 명확히 하는 것처럼, 이 클래스가 내부용이라는 것을 명확히 알려주는 역할을 합니다.
+이 방식은 각 값 객체마다 내부 DomainErrors 중첩 클래스를 직접 구현하는 대신, 프레임워크에서 제공하는 `DomainError.For<T>()` 정적 메서드를 사용하여 보일러플레이트 코드를 줄이면서도 일관된 에러 처리를 보장합니다.

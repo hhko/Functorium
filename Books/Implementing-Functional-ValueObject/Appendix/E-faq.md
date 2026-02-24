@@ -93,12 +93,12 @@ public sealed class Email : SimpleValueObject<string>
 {
     private Email(string value) : base(value) { }
 
-    public static Fin<Email> Create(string value)
-    {
-        if (!IsValid(value))
-            return Error.New("유효하지 않은 이메일");
-        return new Email(value);
-    }
+    public static Fin<Email> Create(string? value) =>
+        CreateFromValidation(
+            ValidationRules<Email>.NotNull(value)
+                .ThenNotEmpty()
+                .ThenMaxLength(255),
+            v => new Email(v));
 }
 var result = Email.Create("not-an-email"); // Fail 반환
 ```
@@ -318,6 +318,36 @@ public void ValueObjects_ShouldNotHavePublicConstructors()
     rule.Check(Architecture);
 }
 ```
+
+---
+
+### Q: ValidationRules<T>와 raw Validation<Error, T>는 언제 사용하나요?
+
+**A:** 검증의 복잡도에 따라 선택합니다.
+
+| 방식 | 특징 | 사용 시기 |
+|------|------|----------|
+| `ValidationRules<T>` | 타입 이름 자동 포함, 체이닝 | 단일 필드 순차 검증 |
+| raw `Validation<Error, T>` | 유연한 조합, Apply/Bind | 복합 필드, 커스텀 로직 |
+
+```csharp
+// ValidationRules<T>: 단일 필드 순차 검증 (간결)
+public static Fin<Email> Create(string? value) =>
+    CreateFromValidation(
+        ValidationRules<Email>.NotNull(value)
+            .ThenNotEmpty()
+            .ThenMaxLength(255),
+        v => new Email(v));
+
+// raw Validation: 복합 값 객체에서 Apply 조합
+public static Fin<Money> Create(decimal amount, string currency) =>
+    CreateFromValidation(
+        (ValidateAmount(amount), ValidateCurrency(currency))
+            .Apply((a, c) => (a, c)),
+        t => new Money(t.a, t.c));
+```
+
+**권장**: 단일 필드 값 객체에는 `ValidationRules<T>`를 사용하고, 복합 값 객체에서 여러 필드를 병렬 검증할 때는 raw `Validation`과 Apply를 조합합니다.
 
 ---
 

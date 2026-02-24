@@ -42,19 +42,25 @@ result.Bind(value => NextOperation(value));
 
 ## D
 
-### Domain Error (도메인 오류)
-비즈니스 규칙 위반을 나타내는 오류. 예외가 아닌 `Error` 타입으로 표현.
-
-```csharp
-internal static class DomainErrors
-{
-    public static readonly Error InvalidEmail =
-        Error.New("Email.Invalid", "유효하지 않은 이메일 형식입니다.");
-}
-```
-
 ### DDD (Domain-Driven Design)
 도메인 모델을 중심으로 소프트웨어를 설계하는 방법론.
+
+### DomainError
+`DomainError.For<T>()` 정적 메서드를 통해 값 객체의 도메인 오류를 생성하는 헬퍼 클래스. 에러 코드를 `DomainErrors.{ValueObjectName}.{ErrorName}` 형식으로 자동 생성.
+
+```csharp
+using static Functorium.Domains.Errors.DomainErrorType;
+DomainError.For<Email>(new Empty(), value, "Email cannot be empty");
+DomainError.For<Password>(new TooShort(MinLength: 8), value, "Password too short");
+```
+
+### DomainErrorType
+도메인 에러 타입의 기본 record 클래스. sealed record 계층으로 타입 안전한 에러를 정의. 기본 제공 타입: `Empty`, `Null`, `TooShort`, `TooLong`, `WrongLength`, `OutOfRange`, `Negative`, `NotPositive`, `InvalidFormat` 등. `Custom` record를 파생하여 커스텀 에러 타입 정의 가능.
+
+```csharp
+// 커스텀 에러 타입 정의
+public sealed record Unsupported : DomainErrorType.Custom;
+```
 
 ---
 
@@ -209,6 +215,13 @@ Bind 체인에서 실패 발생 시 이후 연산을 건너뛰는 동작.
 
 ---
 
+## T
+
+### TypedValidation<TValueObject, T>
+`ValidationRules<T>`의 반환 타입으로, 검증 체이닝 중 값 객체 타입 정보를 전달하는 readonly struct. `Validation<Error, T>`로 암시적 변환 가능.
+
+---
+
 ## U
 
 ### Unit
@@ -224,6 +237,13 @@ Fin<Unit> SaveData(data) => unit;
 
 ### Validation<Error, T>
 병렬 검증과 오류 수집을 지원하는 타입. Apply 패턴과 함께 사용.
+
+### ValidationRules<T>
+타입 파라미터를 한 번만 지정하여 검증 체인을 시작하는 정적 클래스. `NotNull`, `NotEmpty`, `MinLength`, `MaxLength` 등의 시작 메서드와 `ThenNotEmpty`, `ThenMaxLength` 등의 체이닝 메서드를 제공. 에러 코드에 값 객체 타입 이름이 자동으로 포함됨.
+
+```csharp
+ValidationRules<Email>.NotNull(value).ThenNotEmpty().ThenMaxLength(255)
+```
 
 ### Value Equality (값 동등성)
 참조가 아닌 값으로 동등성을 판단. `Equals`, `GetHashCode` 구현 필요.

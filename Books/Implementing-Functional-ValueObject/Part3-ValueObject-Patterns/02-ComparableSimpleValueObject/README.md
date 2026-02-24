@@ -200,24 +200,15 @@ public sealed class UserId : ComparableSimpleValueObject<int>
     public int Id => Value; // public 접근자 제공
 
     public static Fin<UserId> Create(int value) =>
-        CreateFromValidation(Validate(value), val => new UserId(val));
+        CreateFromValidation(Validate(value), v => new UserId(v));
 
     public static UserId CreateFromValidated(int validatedValue) =>
-        new UserId(validatedValue);
+        new(validatedValue);
 
     public static Validation<Error, int> Validate(int value) =>
-        value > 0
-            ? value
-            : DomainErrors.NotPositive(value);
+        ValidationRules<UserId>.Positive(value);
 
-    internal static class DomainErrors
-    {
-        public static Error NotPositive(int value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(UserId)}.{nameof(NotPositive)}",
-                errorCurrentValue: value,
-                errorMessage: $"User ID must be a positive number. Current value: '{value}'");
-    }
+    public static implicit operator int(UserId userId) => userId.Value;
 }
 ```
 

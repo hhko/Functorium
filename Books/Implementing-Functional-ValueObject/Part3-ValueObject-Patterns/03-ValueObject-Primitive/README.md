@@ -177,12 +177,10 @@ public sealed class Coordinate : ValueObject
     }
 
     public static Fin<Coordinate> Create(int x, int y) =>
-        CreateFromValidation(
-            Validate(x, y),
-            validValues => new Coordinate(validValues.x, validValues.y));
+        CreateFromValidation(Validate(x, y), v => new Coordinate(v.x, v.y));
 
     public static Coordinate CreateFromValidated((int x, int y) validatedValues) =>
-        new Coordinate(validatedValues.x, validatedValues.y);
+        new(validatedValues.x, validatedValues.y);
 
     // LINQ Expression을 활용한 복합 검증
     public static Validation<Error, (int x, int y)> Validate(int x, int y) =>
@@ -190,12 +188,12 @@ public sealed class Coordinate : ValueObject
         from validY in ValidateY(y)
         select (x: validX, y: validY);
 
-    // 개별 검증 메서드들
+    // ValidationRules<T>를 활용한 개별 검증
     private static Validation<Error, int> ValidateX(int x) =>
-        x >= 0 ? x : DomainErrors.XOutOfRange(x);
+        ValidationRules<Coordinate>.NonNegative(x);
 
     private static Validation<Error, int> ValidateY(int y) =>
-        y >= 0 && y <= 1000 ? y : DomainErrors.YOutOfRange(y);
+        ValidationRules<Coordinate>.Between(y, 0, 1000);
 
     // 동등성 비교를 위한 구성 요소
     protected override IEnumerable<object> GetEqualityComponents()
@@ -204,20 +202,7 @@ public sealed class Coordinate : ValueObject
         yield return Y;
     }
 
-    internal static class DomainErrors
-    {
-        public static Error XOutOfRange(int value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(XOutOfRange)}",
-                errorCurrentValue: value,
-                errorMessage: $"X coordinate must be non-negative. Current value: '{value}'");
-
-        public static Error YOutOfRange(int value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Coordinate)}.{nameof(YOutOfRange)}",
-                errorCurrentValue: value,
-                errorMessage: $"Y coordinate must be between 0 and 1000. Current value: '{value}'");
-    }
+    public override string ToString() => $"({X}, {Y})";
 }
 ```
 
@@ -307,16 +292,16 @@ select (x: validX, y: validY)  // 결과 조합
 예를 들어, X 좌표를 양수로 제한하려면:
 ```csharp
 private static Validation<Error, int> ValidateX(int x) =>
-    x > 0 ? x : DomainErrors.XMustBePositive(x);
+    ValidationRules<Coordinate>.Positive(x);
 ```
 
 또는 1사분면(양수 X, 양수 Y)만 허용하려면:
 ```csharp
 private static Validation<Error, int> ValidateX(int x) =>
-    x >= 0 ? x : DomainErrors.XMustBeNonNegative(x);
+    ValidationRules<Coordinate>.NonNegative(x);
 
 private static Validation<Error, int> ValidateY(int y) =>
-    y >= 0 ? y : DomainErrors.YMustBeNonNegative(y);
+    ValidationRules<Coordinate>.NonNegative(y);
 ```
 
 이렇게 함으로써 도메인 규칙을 코드에 명확히 반영할 수 있습니다. 이는 마치 비즈니스 요구사항을 코드로 직접 표현하는 것처럼, 도메인 전문가가 코드를 읽고 이해할 수 있게 합니다. 실제 프로젝트에서는 이러한 검증 로직을 통해 UI에서 잘못된 좌표 입력을 방지하거나, 데이터베이스 저장 전에 유효성을 보장할 수 있습니다.

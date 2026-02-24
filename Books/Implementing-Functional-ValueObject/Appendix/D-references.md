@@ -119,7 +119,17 @@ Src/Functorium/Domains/ValueObjects/
 ├── ValueObject.cs                     # 복합 값 객체
 ├── SimpleValueObject.cs               # 단일 값 래퍼
 ├── ComparableValueObject.cs           # 비교 가능 복합
-└── ComparableSimpleValueObject.cs     # 비교 가능 단일
+├── ComparableSimpleValueObject.cs     # 비교 가능 단일
+└── Validations/
+    ├── ValidationApplyExtensions.cs   # 튜플 Apply (.As() 내부 처리)
+    └── Typed/
+        ├── ValidationRules.cs         # 타입 안전 검증 시작점
+        ├── TypedValidation.cs         # 타입 정보 전달 래퍼
+        └── TypedValidationExtensions.*.cs  # Then 체이닝 메서드
+
+Src/Functorium/Domains/Errors/
+├── DomainError.cs                     # DomainError.For<T>() 헬퍼
+└── DomainErrorType.cs                 # 에러 타입 sealed record 계층
 ```
 
 ### CQRS 통합
@@ -133,10 +143,12 @@ Src/Functorium/Applications/Cqrs/
 ### 튜토리얼 프로젝트
 
 ```
-Books/Functional-ValueObject/
-├── 01-Concept/                        # Part 1: 개념 (14개)
-├── 02-Validation/                     # Part 2: 검증 (5개)
-└── 03-Patterns/                       # Part 3: 패턴 (8개)
+Books/Implementing-Functional-ValueObject/
+├── Part1-ValueObject-Concepts/        # Part 1: 개념 이해 (16개)
+├── Part2-Validation-Patterns/         # Part 2: 검증 패턴 (5개)
+├── Part3-ValueObject-Patterns/        # Part 3: 값 객체 패턴 (8개)
+├── Part4-Practical-Guide/             # Part 4: 실전 가이드 (4개)
+└── Part5-Domain-Examples/             # Part 5: 도메인 예제 (4개)
 ```
 
 ---

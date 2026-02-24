@@ -154,16 +154,15 @@
 ## 프레임워크 타입 계층 구조
 
 ```
-IValueObject (인터페이스 - 명명 규칙)
+IValueObject (인터페이스 — 명명 규칙 상수)
     │
-    └── AbstractValueObject (기본 클래스 - 동등성, 해시코드)
+    └── AbstractValueObject (기본 클래스 — 동등성, 해시코드, ORM 프록시 처리)
         │
-        ├── ValueObject (검증 헬퍼 메서드)
+        ├── ValueObject (CreateFromValidation<TVO, TValue> 헬퍼)
+        │   ├── SimpleValueObject<T> (단일 값 래퍼, CreateFromValidation<TVO> 헬퍼)
         │   │
-        │   ├── SimpleValueObject<T> (단일 값 래퍼)
-        │   │   └── ComparableSimpleValueObject<T> (비교 가능)
-        │   │
-        │   └── ComparableValueObject (복합 비교 가능)
+        │   └── ComparableValueObject (IComparable, 비교 연산자)
+        │       └── ComparableSimpleValueObject<T> (단일 비교 가능 값 래퍼)
         │
         └── SmartEnum<TValue, TKey> + IValueObject (열거형)
 ```
@@ -232,7 +231,7 @@ Implementing-Functional-ValueObject/
 
 ## 테스트
 
-모든 Part의 예제 프로젝트에는 단위 테스트가 포함되어 있습니다. 테스트는 [Guide-01-Unit-Testing.md](../../Docs/Functorium/Guide-01-Unit-Testing.md) 가이드를 따릅니다.
+모든 Part의 예제 프로젝트에는 단위 테스트가 포함되어 있습니다. 테스트는 [15-unit-testing.md](../../.claude/guides/15-unit-testing.md) 가이드를 따릅니다.
 
 ### 테스트 실행 방법
 

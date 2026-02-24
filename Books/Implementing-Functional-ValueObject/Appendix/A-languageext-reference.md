@@ -385,6 +385,61 @@ var result = user
 
 ---
 
+## Functorium 검증 헬퍼
+
+### ValidationRules<T> - 타입 안전 검증 시작점
+
+`ValidationRules<T>`는 값 객체 타입 파라미터를 한 번만 지정하여 검증 체인을 시작하는 정적 클래스입니다. 에러 코드에 값 객체 타입 이름이 자동으로 포함됩니다.
+
+```csharp
+using Functorium.Domains.ValueObjects.Validations.Typed;
+
+// 체이닝 검증: NotNull → ThenNotEmpty → ThenMaxLength
+ValidationRules<Email>.NotNull(value)
+    .ThenNotEmpty()
+    .ThenMaxLength(255);
+
+// 시작 메서드: NotNull, NotEmpty, MinLength, MaxLength, ExactLength 등
+// 체이닝 메서드: ThenNotEmpty, ThenMinLength, ThenMaxLength, ThenExactLength, ThenNormalize 등
+```
+
+### TypedValidation<TValueObject, T> - 타입 정보 전달 래퍼
+
+`ValidationRules<T>`의 반환 타입으로, 체이닝 중 값 객체 타입 정보를 전달합니다. `Validation<Error, T>`로 암시적 변환됩니다.
+
+```csharp
+// TypedValidation은 Validation<Error, T>로 암시적 변환
+TypedValidation<Email, string> typed = ValidationRules<Email>.NotNull(value);
+Validation<Error, string> validation = typed; // 암시적 변환
+
+// CreateFromValidation에 직접 전달 가능
+public static Fin<Email> Create(string? value) =>
+    CreateFromValidation(
+        ValidationRules<Email>.NotNull(value)
+            .ThenNotEmpty()
+            .ThenMaxLength(255),
+        v => new Email(v));
+```
+
+### ValidationApplyExtensions - 튜플 Apply 확장
+
+`ValidationApplyExtensions`는 `Validation<Error, T>` 튜플에 대한 Apply 오버로드를 제공하여, LanguageExt의 제네릭 Apply가 반환하는 `K<Validation<Error>, T>`를 내부에서 `.As()`로 변환합니다. 호출 측에서 `.As()`를 직접 호출할 필요가 없습니다.
+
+```csharp
+using Functorium.Domains.ValueObjects.Validations;
+
+// .As() 없이 concrete Validation<Error, R> 반환
+var result = (
+    ValidateAmount(amount),
+    ValidateCurrency(currency)
+).Apply((a, c) => new Money(a, c));
+// result 타입: Validation<Error, Money> (K<> 아님)
+
+// 2~5 튜플까지 지원
+```
+
+---
+
 ## 다음 단계
 
 프레임워크 타입 선택 가이드를 확인합니다.

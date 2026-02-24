@@ -55,37 +55,40 @@
 DateRange는 시작일과 종료일을 관리합니다. 포함 여부, 겹침 검사, 교집합 계산 기능을 제공합니다.
 
 ```csharp
-public sealed class DateRange : IEquatable<DateRange>
+public sealed class DateRange : ValueObject
 {
+    public sealed record EndBeforeStart : DomainErrorType.Custom;
+
     public DateOnly Start { get; }
     public DateOnly End { get; }
 
-    public static Fin<DateRange> Create(DateOnly start, DateOnly end)
+    private DateRange(DateOnly start, DateOnly end)
     {
-        if (end < start)
-            return DomainErrors.EndBeforeStart(start, end);
-        return new DateRange(start, end);
+        Start = start; End = end;
     }
+
+    public static Fin<DateRange> Create(DateOnly start, DateOnly end) =>
+        CreateFromValidation(
+            Validate(start, end),
+            validValues => new DateRange(validValues.Start, validValues.End));
+
+    public static Validation<Error, (DateOnly Start, DateOnly End)> Validate(DateOnly start, DateOnly end) =>
+        ValidateEndNotBeforeStart(start, end).Map(_ => (start, end));
+
+    private static Validation<Error, DateOnly> ValidateEndNotBeforeStart(DateOnly start, DateOnly end) =>
+        end >= start
+            ? end
+            : DomainError.For<DateRange>(new EndBeforeStart(), $"{start}~{end}",
+                $"End date cannot be before start date. Start: '{start}', End: '{end}'");
 
     public int TotalDays => End.DayNumber - Start.DayNumber + 1;
-
     public bool Contains(DateOnly date) => date >= Start && date <= End;
+    public bool Overlaps(DateRange other) => Start <= other.End && End >= other.Start;
 
-    public bool Overlaps(DateRange other) =>
-        Start <= other.End && End >= other.Start;
-
-    public Option<DateRange> Intersect(DateRange other)
+    protected override IEnumerable<object> GetEqualityComponents()
     {
-        if (!Overlaps(other))
-            return None;
-
-        var newStart = Start > other.Start ? Start : other.Start;
-        var newEnd = End < other.End ? End : other.End;
-        return new DateRange(newStart, newEnd);
+        yield return Start; yield return End;
     }
-
-    public DateRange Extend(int days) =>
-        new(Start, End.AddDays(days));
 }
 ```
 
@@ -96,24 +99,36 @@ public sealed class DateRange : IEquatable<DateRange>
 TimeSlot은 하루 중 시간대를 표현합니다. 시간 충돌 검사와 기간 계산 기능을 제공합니다.
 
 ```csharp
-public sealed class TimeSlot : IEquatable<TimeSlot>
+public sealed class TimeSlot : ValueObject
 {
+    public sealed record EndNotAfterStart : DomainErrorType.Custom;
+
     public TimeOnly Start { get; }
     public TimeOnly End { get; }
-
-    public static Fin<TimeSlot> Create(TimeOnly start, TimeOnly end)
-    {
-        if (end <= start)
-            return DomainErrors.EndBeforeOrEqualStart(start, end);
-        return new TimeSlot(start, end);
-    }
-
     public TimeSpan Duration => End - Start;
 
-    public bool Contains(TimeOnly time) => time >= Start && time < End;
+    private TimeSlot(TimeOnly start, TimeOnly end)
+    {
+        Start = start; End = end;
+    }
 
-    public bool Conflicts(TimeSlot other) =>
-        Start < other.End && End > other.Start;
+    public static Fin<TimeSlot> Create(TimeOnly start, TimeOnly end) =>
+        CreateFromValidation(
+            Validate(start, end),
+            validValues => new TimeSlot(validValues.Start, validValues.End));
+
+    public static Validation<Error, (TimeOnly Start, TimeOnly End)> Validate(TimeOnly start, TimeOnly end) =>
+        (end > start ? end : DomainError.For<TimeSlot>(new EndNotAfterStart(), $"{start}~{end}",
+            $"End time must be after start time. Start: '{start}', End: '{end}'"))
+            .Map(_ => (start, end));
+
+    public bool Contains(TimeOnly time) => time >= Start && time < End;
+    public bool Conflicts(TimeSlot other) => Start < other.End && End > other.Start;
+
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return Start; yield return End;
+    }
 }
 ```
 
@@ -124,42 +139,34 @@ public sealed class TimeSlot : IEquatable<TimeSlot>
 Duration은 분 단위로 기간을 저장하고, 시간/일 단위로 변환하는 기능을 제공합니다.
 
 ```csharp
-public sealed class Duration : IComparable<Duration>, IEquatable<Duration>
+public sealed class Duration : ComparableSimpleValueObject<int>
 {
-    public int TotalMinutes { get; }
+    private Duration(int totalMinutes) : base(totalMinutes) { }
 
-    public static Fin<Duration> FromMinutes(int minutes)
-    {
-        if (minutes < 0)
-            return DomainErrors.NegativeDuration(minutes);
-        if (minutes > 525600)  // 1년
-            return DomainErrors.ExceedsMaximum(minutes);
-        return new Duration(minutes);
-    }
-
-    public static Fin<Duration> FromHours(int hours) =>
-        FromMinutes(hours * 60);
-
-    public static Fin<Duration> FromDays(int days) =>
-        FromMinutes(days * 24 * 60);
-
+    public int TotalMinutes => Value;  // protected Value에 대한 public 접근자
+    public double TotalHours => Value / 60.0;
+    public double TotalDays => Value / (24.0 * 60.0);
     public static Duration Zero => new(0);
 
-    public double TotalHours => TotalMinutes / 60.0;
-    public double TotalDays => TotalMinutes / (24.0 * 60.0);
+    public static Fin<Duration> FromMinutes(int minutes) =>
+        CreateFromValidation(Validate(minutes), v => new Duration(v));
 
-    public Duration Add(Duration other) => new(TotalMinutes + other.TotalMinutes);
-    public Duration Subtract(Duration other) =>
-        new(Math.Max(0, TotalMinutes - other.TotalMinutes));
+    public static Fin<Duration> FromHours(int hours) => FromMinutes(hours * 60);
+    public static Fin<Duration> FromDays(int days) => FromMinutes(days * 24 * 60);
 
-    public override string ToString()
-    {
-        if (TotalMinutes < 60)
-            return $"{TotalMinutes}분";
-        if (TotalMinutes % 60 == 0)
-            return $"{TotalMinutes / 60}시간";
-        return $"{TotalMinutes / 60}시간 {TotalMinutes % 60}분";
-    }
+    public static Validation<Error, int> Validate(int minutes) =>
+        ValidateNotNegative(minutes)
+            .Bind(_ => ValidateNotExceedsMaximum(minutes))
+            .Map(_ => minutes);
+
+    private static Validation<Error, int> ValidateNotNegative(int minutes) =>
+        minutes >= 0
+            ? minutes
+            : DomainError.For<Duration, int>(new DomainErrorType.Negative(), minutes,
+                $"Duration cannot be negative. Current value: '{minutes}'");
+
+    public Duration Add(Duration other) => new(Value + other.Value);
+    public Duration Subtract(Duration other) => new(Math.Max(0, Value - other.Value));
 }
 ```
 
@@ -170,71 +177,47 @@ public sealed class Duration : IComparable<Duration>, IEquatable<Duration>
 RecurrenceRule은 반복 일정의 규칙을 표현합니다. 다음 발생일들을 계산하는 기능을 제공합니다.
 
 ```csharp
-public sealed class RecurrenceRule : IEquatable<RecurrenceRule>
+public sealed class RecurrenceRule : ValueObject
 {
     public RecurrenceType Type { get; }
     public IReadOnlyList<DayOfWeek> DaysOfWeek { get; }
     public int? DayOfMonth { get; }
     public int Interval { get; }
 
-    public static Fin<RecurrenceRule> Daily(int interval = 1)
+    private RecurrenceRule(RecurrenceType type, IReadOnlyList<DayOfWeek> daysOfWeek, int? dayOfMonth, int interval)
     {
-        if (interval < 1)
-            return DomainErrors.InvalidInterval(interval);
-        return new RecurrenceRule(RecurrenceType.Daily, [], null, interval);
+        Type = type; DaysOfWeek = daysOfWeek; DayOfMonth = dayOfMonth; Interval = interval;
     }
 
-    public static Fin<RecurrenceRule> Weekly(params DayOfWeek[] days)
+    public static Fin<RecurrenceRule> Daily(int interval = 1) =>
+        CreateFromValidation(
+            ValidateDailyInterval(interval),
+            validInterval => new RecurrenceRule(RecurrenceType.Daily, [], null, validInterval));
+
+    public static Fin<RecurrenceRule> Weekly(params DayOfWeek[] days) =>
+        CreateFromValidation(
+            ValidateWeeklyDays(days),
+            validDays => new RecurrenceRule(RecurrenceType.Weekly, validDays, null, 1));
+
+    public static Fin<RecurrenceRule> Monthly(int dayOfMonth) =>
+        CreateFromValidation(
+            ValidateMonthlyDay(dayOfMonth),
+            validDay => new RecurrenceRule(RecurrenceType.Monthly, [], validDay, 1));
+
+    private static Validation<Error, int> ValidateDailyInterval(int interval) =>
+        interval >= 1
+            ? interval
+            : DomainError.For<RecurrenceRule, int>(new DomainErrorType.BelowMinimum(), interval,
+                $"Interval must be at least 1. Current value: '{interval}'");
+
+    public IEnumerable<DateOnly> GetOccurrences(DateOnly from, int count) { ... }
+
+    protected override IEnumerable<object> GetEqualityComponents()
     {
-        if (days.Length == 0)
-            return DomainErrors.NoDaysSpecified(0);
-        return new RecurrenceRule(RecurrenceType.Weekly, days.Distinct().OrderBy(d => d).ToArray(), null, 1);
+        yield return Type; yield return DaysOfWeek.Count;
+        foreach (var day in DaysOfWeek) yield return day;
+        yield return DayOfMonth ?? 0; yield return Interval;
     }
-
-    public static Fin<RecurrenceRule> Weekdays() =>
-        Weekly(DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday);
-
-    public static Fin<RecurrenceRule> Monthly(int dayOfMonth)
-    {
-        if (dayOfMonth < 1 || dayOfMonth > 31)
-            return DomainErrors.InvalidDayOfMonth(dayOfMonth);
-        return new RecurrenceRule(RecurrenceType.Monthly, [], dayOfMonth, 1);
-    }
-
-    public IEnumerable<DateOnly> GetOccurrences(DateOnly from, int count)
-    {
-        var results = new List<DateOnly>();
-        var current = from;
-
-        while (results.Count < count)
-        {
-            if (IsOccurrence(current))
-                results.Add(current);
-            current = current.AddDays(1);
-
-            if (current > from.AddYears(3))  // 무한 루프 방지
-                break;
-        }
-
-        return results;
-    }
-
-    private bool IsOccurrence(DateOnly date) => Type switch
-    {
-        RecurrenceType.Daily => true,
-        RecurrenceType.Weekly => DaysOfWeek.Contains(date.DayOfWeek),
-        RecurrenceType.Monthly => date.Day == DayOfMonth,
-        _ => false
-    };
-
-    public override string ToString() => Type switch
-    {
-        RecurrenceType.Daily when Interval == 1 => "매일",
-        RecurrenceType.Daily => $"{Interval}일마다",
-        RecurrenceType.Weekly => $"매주 {string.Join(", ", DaysOfWeek.Select(GetKoreanDay))}",
-        RecurrenceType.Monthly => $"매월 {DayOfMonth}일",
-        _ => "알 수 없음"
-    };
 }
 ```
 
@@ -306,10 +289,10 @@ public sealed class RecurrenceRule : IEquatable<RecurrenceRule>
 
 | 값 객체 | 프레임워크 타입 | 특징 |
 |--------|---------------|------|
-| DateRange | ValueObject 패턴 | 범위 검증, 겹침/교집합 계산 |
-| TimeSlot | ValueObject 패턴 | 범위 검증, 충돌 검사 |
-| Duration | ComparableSimpleValueObject 패턴 | 단위 변환, 산술 연산 |
-| RecurrenceRule | ValueObject 패턴 | 반복 규칙, 발생일 계산 |
+| DateRange | ValueObject | 범위 검증, 겹침/교집합 계산 |
+| TimeSlot | ValueObject | 범위 검증, 충돌 검사 |
+| Duration | ComparableSimpleValueObject\<int\> | 단위 변환, 산술 연산 |
+| RecurrenceRule | ValueObject | 반복 규칙, 발생일 계산 |
 
 ## 한눈에 보는 정리
 

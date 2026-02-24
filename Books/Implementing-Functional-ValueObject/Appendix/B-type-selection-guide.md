@@ -76,11 +76,12 @@ public sealed class Email : SimpleValueObject<string>
 {
     private Email(string value) : base(value) { }
 
-    public static Fin<Email> Create(string value)
-    {
-        // 검증 로직
-        return new Email(normalized);
-    }
+    public static Fin<Email> Create(string? value) =>
+        CreateFromValidation(
+            ValidationRules<Email>.NotNull(value)
+                .ThenNotEmpty()
+                .ThenMaxLength(255),
+            v => new Email(v));
 }
 ```
 
@@ -111,7 +112,7 @@ public sealed class Age : ComparableSimpleValueObject<int>
     public static Fin<Age> Create(int value)
     {
         if (value < 0 || value > 150)
-            return Error.New("유효하지 않은 나이");
+            return DomainError.For<Age, int>(new OutOfRange("0", "150"), value, "유효하지 않은 나이");
         return new Age(value);
     }
 }
@@ -182,7 +183,7 @@ public sealed class Money : ComparableValueObject
     public decimal Amount { get; }
     public string Currency { get; }
 
-    protected override IEnumerable<IComparable> GetComparableComponents()
+    protected override IEnumerable<IComparable> GetComparableEqualityComponents()
     {
         yield return Currency;
         yield return Amount;

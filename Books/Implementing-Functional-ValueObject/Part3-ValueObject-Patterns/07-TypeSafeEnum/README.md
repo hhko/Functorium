@@ -121,72 +121,103 @@ public string FormatAmountWithoutDecimals(decimal amount) => $"{Symbol}{amount:N
 ```csharp
 public sealed class Currency : SmartEnum<Currency, string>, IValueObject
 {
+    public sealed record Unsupported : DomainErrorType.Custom;
+
     // 정적 인스턴스들
     public static readonly Currency KRW = new(nameof(KRW), "KRW", "한국 원화", "₩");
     public static readonly Currency USD = new(nameof(USD), "USD", "미국 달러", "$");
-    
+
     // 도메인 속성
     public string KoreanName { get; }
     public string Symbol { get; }
-    
+
     // Private 생성자
-    private Currency(string name, string value, string koreanName, string symbol) 
+    private Currency(string name, string value, string koreanName, string symbol)
         : base(name, value)
     {
         KoreanName = koreanName;
         Symbol = symbol;
     }
-    
+
     // 팩토리 메서드
     public static Fin<Currency> Create(string currencyCode) =>
         Validate(currencyCode).Map(FromValue).ToFin();
-    
-    // 검증 로직 - ValueObject 규칙 준수
+
+    // 검증 로직 - DomainError.For<T>() 패턴
     public static Validation<Error, string> Validate(string currencyCode) =>
         ValidateNotEmpty(currencyCode)
             .Bind(ValidateFormat)
             .Bind(ValidateSupported);
-    
-    // 개별 검증 메서드들 - 삼항 연산자 패턴 적용
+
+    // 개별 검증 메서드들 - DomainError.For<T>() 패턴 적용
     private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =>
         !string.IsNullOrWhiteSpace(currencyCode)
             ? currencyCode
-            : DomainErrors.Empty(currencyCode);
-    
+            : DomainError.For<Currency>(new DomainErrorType.Empty(), currencyCode,
+                $"Currency code cannot be empty. Current value: '{currencyCode}'");
+
     private static Validation<Error, string> ValidateFormat(string currencyCode) =>
         currencyCode.Length == 3 && currencyCode.All(char.IsLetter)
             ? currencyCode.ToUpperInvariant()
-            : DomainErrors.NotThreeLetters(currencyCode);
-    
+            : DomainError.For<Currency>(new DomainErrorType.WrongLength(), currencyCode,
+                $"Currency code must be exactly 3 letters. Current value: '{currencyCode}'");
+
     // 비즈니스 로직
     public string FormatAmount(decimal amount) => $"{Symbol}{amount:N2}";
-    
-    // DomainErrors 중첩 클래스 - ValueObject 규칙 준수
-    // ErrorCodeFactory를 사용한 구조화된 에러 처리
-    internal static class DomainErrors
-    {
-        public static Error Empty(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Empty)}",
-                errorCurrentValue: value,
-                errorMessage: $"Currency code cannot be empty. Current value: '{value}'");
-
-        public static Error NotThreeLetters(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(NotThreeLetters)}",
-                errorCurrentValue: value,
-                errorMessage: $"Currency code must be exactly 3 letters. Current value: '{value}'");
-
-        public static Error Unsupported(string value) =>
-            ErrorCodeFactory.Create(
-                errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Unsupported)}",
-                errorCurrentValue: value,
-                errorMessage: $"Currency code is not supported. Current value: '{value}'");
-    }
 }
 ```
 
-### **2. 데모 프로그램**
+### **2. 대안: SimpleValueObject\<string> + HashMap 패턴**
+
+SmartEnum 외에도 프레임워크의 `SimpleValueObject<string>`과 LanguageExt의 `HashMap`을 조합하여 타입 안전한 열거형을 구현할 수 있습니다. 이 패턴은 외부 라이브러리 의존성 없이 프레임워크만으로 구현 가능합니다.
+
+> 참고: `Tests.Hosts/01-SingleHost`의 `OrderStatus` 구현
+
+```csharp
+public sealed class OrderStatus : SimpleValueObject<string>
+{
+    public sealed record InvalidValue : DomainErrorType.Custom;
+
+    // 정적 인스턴스들
+    public static readonly OrderStatus Pending = new("Pending");
+    public static readonly OrderStatus Confirmed = new("Confirmed");
+    public static readonly OrderStatus Shipped = new("Shipped");
+    public static readonly OrderStatus Delivered = new("Delivered");
+    public static readonly OrderStatus Cancelled = new("Cancelled");
+
+    // HashMap을 사용한 유효값 목록
+    private static readonly HashMap<string, OrderStatus> All = HashMap(
+        ("Pending", Pending),
+        ("Confirmed", Confirmed),
+        ("Shipped", Shipped),
+        ("Delivered", Delivered),
+        ("Cancelled", Cancelled));
+
+    private OrderStatus(string value) : base(value) { }
+
+    public static Fin<OrderStatus> Create(string value) =>
+        Validate(value).ToFin();
+
+    public static OrderStatus CreateFromValidated(string validatedValue) =>
+        All[validatedValue];
+
+    public static Validation<Error, OrderStatus> Validate(string value) =>
+        All.Find(value)
+            .ToValidation(DomainError.For<OrderStatus>(
+                new InvalidValue(), currentValue: value,
+                message: $"Invalid order status: '{value}'"));
+}
+```
+
+**SmartEnum vs SimpleValueObject+HashMap 비교:**
+| 특징 | SmartEnum | SimpleValueObject+HashMap |
+|------|-----------|---------------------------|
+| **외부 의존성** | Ardalis.SmartEnum 필요 | 프레임워크만 사용 |
+| **도메인 속성** | 자유롭게 추가 가능 | 제한적 (별도 속성 관리) |
+| **ValueObject 호환** | IValueObject 수동 구현 | 자동 상속 |
+| **HashMap 조회** | 내장 FromValue/FromName | LanguageExt HashMap 사용 |
+
+### **3. 데모 프로그램**
 ```csharp
 // 기본 사용법
 var krw = Currency.KRW;
@@ -339,39 +370,25 @@ public class ExtendedCurrency : Currency
 ### Q7. SmartEnum에서 ValueObject 규칙을 어떻게 준수하나요?
 **A7.** SmartEnum도 ValueObject 규칙을 준수해야 합니다:
 - **IValueObject 인터페이스 구현**: Framework의 IValueObject 사용
-- **DomainErrors 중첩 클래스**: ErrorCodeFactory를 사용한 구조화된 에러 처리
+- **DomainError.For\<T>() 패턴**: 구조화된 에러 처리
+- **DomainErrorType 레코드**: 커스텀 에러 타입 정의 (예: `sealed record Unsupported : DomainErrorType.Custom`)
 - **삼항 연산자 패턴**: `조건 ? 성공값 : 실패에러` 형식
 - **Bind 순차 검증**: 의존성이 있는 검증 단계들을 순차적으로 실행
-- **1:1 매핑**: 각 Validate 메서드마다 대응하는 DomainErrors 메서드
-- **InternalsVisibleTo**: Framework의 internal 클래스에 접근하기 위한 설정
 
 ```csharp
 // ValueObject 규칙 준수 예시
 private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =>
     !string.IsNullOrWhiteSpace(currencyCode)
         ? currencyCode                    // 성공: 값 반환
-        : DomainErrors.Empty(currencyCode); // 실패: 에러 반환
-
-internal static class DomainErrors
-{
-    public static Error Empty(string value) =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{nameof(DomainErrors)}.{nameof(Currency)}.{nameof(Empty)}",
-            errorCurrentValue: value,
-            errorMessage: $"Currency code cannot be empty. Current value: '{value}'");
-}
+        : DomainError.For<Currency>(      // 실패: DomainError.For<T>() 사용
+            new DomainErrorType.Empty(), currencyCode,
+            $"Currency code cannot be empty. Current value: '{currencyCode}'");
 ```
 
-### Q8. ErrorCodeFactory를 사용하는 이유는 무엇인가요?
-**A8.** ErrorCodeFactory를 사용하는 이유는 다음과 같습니다:
-- **구조화된 에러 코드**: 일관된 형식의 에러 코드 생성 (`DomainErrors.Currency.Empty`)
-- **타입 안전성**: 컴파일 타임에 에러 코드 형식 검증
+### Q8. DomainError.For\<T>()를 사용하는 이유는 무엇인가요?
+**A8.** `DomainError.For<T>()`를 사용하는 이유는 다음과 같습니다:
+- **구조화된 에러 코드**: 타입 이름 기반 자동 에러 코드 생성 (`DomainErrors.Currency.Empty`)
+- **DomainErrorType 활용**: 내장 타입(`Empty`, `WrongLength`, `InvalidFormat`) + 커스텀 타입(`sealed record Unsupported : DomainErrorType.Custom`)
+- **보일러플레이트 제거**: 내부 `DomainErrors` 중첩 클래스를 직접 구현할 필요 없음
 - **디버깅 효율성**: 에러 코드만으로도 어떤 ValueObject의 어떤 에러인지 즉시 파악
-- **로깅 및 모니터링**: 구조화된 에러 정보로 시스템 모니터링 용이
 - **프로젝트 간 일관성**: 모든 프로젝트에서 동일한 에러 처리 방식 적용
-
-```csharp
-// 에러 출력 예시
-❌ 에러: 코드: DomainErrors.Currency.NotThreeLetters, 값: US
-❌ 에러: 코드: DomainErrors.Currency.Unsupported, 값: XYZ
-```

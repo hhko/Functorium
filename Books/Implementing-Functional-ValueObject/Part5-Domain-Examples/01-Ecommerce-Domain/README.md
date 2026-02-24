@@ -57,21 +57,34 @@
 Money는 금액(Amount)과 통화(Currency)를 함께 관리하는 복합 값 객체입니다. 같은 통화끼리만 연산이 가능합니다.
 
 ```csharp
-public sealed class Money : IComparable<Money>, IEquatable<Money>
+public sealed class Money : ValueObject, IComparable<Money>
 {
+    public sealed record CurrencyEmpty : DomainErrorType.Custom;
+    public sealed record CurrencyNotThreeCharacters : DomainErrorType.Custom;
+
     public decimal Amount { get; }
     public string Currency { get; }
 
-    public static Fin<Money> Create(decimal amount, string currency)
+    private Money(decimal amount, string currency)
     {
-        if (amount < 0)
-            return DomainErrors.NegativeAmount(amount);
-        if (string.IsNullOrWhiteSpace(currency))
-            return DomainErrors.EmptyCurrency(currency ?? "");
-        if (currency.Length != 3)
-            return DomainErrors.InvalidCurrencyLength(currency);
-        return new Money(amount, currency.ToUpperInvariant());
+        Amount = amount;
+        Currency = currency;
     }
+
+    public static Fin<Money> Create(decimal amount, string? currency) =>
+        CreateFromValidation(
+            Validate(amount, currency ?? ""),
+            validValues => new Money(validValues.Amount, validValues.Currency.ToUpperInvariant()));
+
+    public static Validation<Error, (decimal Amount, string Currency)> Validate(decimal amount, string currency) =>
+        (ValidateAmountNotNegative(amount), ValidateCurrencyNotEmpty(currency), ValidateCurrencyLength(currency))
+            .Apply((validAmount, validCurrency, _) => (validAmount, validCurrency));
+
+    private static Validation<Error, decimal> ValidateAmountNotNegative(decimal amount) =>
+        amount >= 0
+            ? amount
+            : DomainError.For<Money, decimal>(new DomainErrorType.Negative(), amount,
+                $"Amount cannot be negative. Current value: '{amount}'");
 
     public Money Add(Money other)
     {
@@ -88,6 +101,12 @@ public sealed class Money : IComparable<Money>, IEquatable<Money>
     }
 
     public Money Multiply(decimal factor) => new(Amount * factor, Currency);
+
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return Amount;
+        yield return Currency;
+    }
 }
 ```
 
@@ -98,25 +117,39 @@ public sealed class Money : IComparable<Money>, IEquatable<Money>
 ProductCode는 `"EL-001234"` 형식의 상품 코드를 검증합니다. 카테고리(2자리 영문)와 번호(6자리 숫자)를 파싱하는 기능도 제공합니다.
 
 ```csharp
-public sealed class ProductCode : IEquatable<ProductCode>
+public sealed class ProductCode : SimpleValueObject<string>
 {
-    public string Value { get; }
+    private ProductCode(string value) : base(value) { }
 
-    public static Fin<ProductCode> Create(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return DomainErrors.Empty(value ?? "");
-
-        var normalized = value.ToUpperInvariant().Trim();
-
-        if (!Regex.IsMatch(normalized, @"^[A-Z]{2}-\d{6}$"))
-            return DomainErrors.InvalidFormat(value);
-
-        return new ProductCode(normalized);
-    }
-
+    public string Code => Value;  // protected Value에 대한 public 접근자
     public string Category => Value[..2];   // "EL"
     public string Number => Value[3..];      // "001234"
+
+    public static Fin<ProductCode> Create(string? value) =>
+        CreateFromValidation(
+            Validate(value ?? ""),
+            validValue => new ProductCode(validValue));
+
+    public static Validation<Error, string> Validate(string value) =>
+        ValidateNotEmpty(value)
+            .Bind(_ => ValidateFormat(value));
+
+    private static Validation<Error, string> ValidateNotEmpty(string value) =>
+        !string.IsNullOrWhiteSpace(value)
+            ? value
+            : DomainError.For<ProductCode>(new DomainErrorType.Empty(), value,
+                $"Product code cannot be empty. Current value: '{value}'");
+
+    private static Validation<Error, string> ValidateFormat(string value)
+    {
+        var normalized = value.ToUpperInvariant().Trim();
+        return Regex.IsMatch(normalized, @"^[A-Z]{2}-\d{6}$")
+            ? normalized
+            : DomainError.For<ProductCode>(new DomainErrorType.InvalidFormat(), value,
+                $"Product code must match 'XX-NNNNNN' pattern. Current value: '{value}'");
+    }
+
+    public static implicit operator string(ProductCode code) => code.Value;
 }
 ```
 
@@ -127,27 +160,38 @@ public sealed class ProductCode : IEquatable<ProductCode>
 Quantity는 비교 가능하고 산술 연산이 가능한 값 객체입니다. 음수와 최대 한계를 검증합니다.
 
 ```csharp
-public sealed class Quantity : IComparable<Quantity>, IEquatable<Quantity>
+public sealed class Quantity : ComparableSimpleValueObject<int>
 {
-    public int Value { get; }
+    private Quantity(int value) : base(value) { }
 
-    public static Fin<Quantity> Create(int value)
-    {
-        if (value < 0)
-            return DomainErrors.Negative(value);
-        if (value > 10000)
-            return DomainErrors.ExceedsLimit(value);
-        return new Quantity(value);
-    }
+    public int Amount => Value;  // protected Value에 대한 public 접근자
 
     public static Quantity Zero => new(0);
     public static Quantity One => new(1);
 
+    public static Fin<Quantity> Create(int value) =>
+        CreateFromValidation(
+            Validate(value),
+            validValue => new Quantity(validValue));
+
+    public static Validation<Error, int> Validate(int value) =>
+        ValidateNotNegative(value)
+            .Bind(_ => ValidateNotExceedsLimit(value))
+            .Map(_ => value);
+
+    private static Validation<Error, int> ValidateNotNegative(int value) =>
+        value >= 0
+            ? value
+            : DomainError.For<Quantity, int>(new DomainErrorType.Negative(), value,
+                $"Quantity cannot be negative. Current value: '{value}'");
+
+    public Quantity Add(Quantity other) => new(Value + other.Value);
+    public Quantity Subtract(Quantity other) => new(Math.Max(0, Value - other.Value));
+
     public static Quantity operator +(Quantity a, Quantity b) => a.Add(b);
     public static Quantity operator -(Quantity a, Quantity b) => a.Subtract(b);
 
-    public static bool operator <(Quantity left, Quantity right) => left.CompareTo(right) < 0;
-    public static bool operator >(Quantity left, Quantity right) => left.CompareTo(right) > 0;
+    public static implicit operator int(Quantity quantity) => quantity.Value;
 }
 ```
 
@@ -160,6 +204,10 @@ OrderStatus는 SmartEnum을 사용한 타입 안전 열거형입니다. 각 상�
 ```csharp
 public sealed class OrderStatus : SmartEnum<OrderStatus, string>
 {
+    public sealed record AlreadyCancelled : DomainErrorType.Custom;
+    public sealed record AlreadyDelivered : DomainErrorType.Custom;
+    public sealed record CannotRevertToPending : DomainErrorType.Custom;
+
     public static readonly OrderStatus Pending = new("PENDING", "대기중", canCancel: true);
     public static readonly OrderStatus Confirmed = new("CONFIRMED", "확인됨", canCancel: true);
     public static readonly OrderStatus Shipped = new("SHIPPED", "배송중", canCancel: false);
@@ -173,9 +221,15 @@ public sealed class OrderStatus : SmartEnum<OrderStatus, string>
     {
         return (this, next) switch
         {
-            (var s, _) when s == Cancelled => DomainErrors.AlreadyCancelled(Value, next.Value),
-            (var s, _) when s == Delivered => DomainErrors.AlreadyDelivered(Value, next.Value),
-            (_, var n) when n == Pending => DomainErrors.CannotRevertToPending(Value, next.Value),
+            (var s, _) when s == Cancelled => DomainError.For<OrderStatus>(
+                new AlreadyCancelled(), $"{Value}->{next.Value}",
+                $"Cannot change status of a cancelled order. Current: '{Value}', Target: '{next.Value}'"),
+            (var s, _) when s == Delivered => DomainError.For<OrderStatus>(
+                new AlreadyDelivered(), $"{Value}->{next.Value}",
+                $"Cannot change status of a delivered order. Current: '{Value}', Target: '{next.Value}'"),
+            (_, var n) when n == Pending => DomainError.For<OrderStatus>(
+                new CannotRevertToPending(), $"{Value}->{next.Value}",
+                $"Cannot revert to pending status. Current: '{Value}', Target: '{next.Value}'"),
             _ => next
         };
     }
@@ -189,30 +243,43 @@ public sealed class OrderStatus : SmartEnum<OrderStatus, string>
 ShippingAddress는 수령인, 도로명, 도시, 우편번호, 국가를 포함하는 복합 값 객체입니다.
 
 ```csharp
-public sealed class ShippingAddress : IEquatable<ShippingAddress>
+public sealed class ShippingAddress : ValueObject
 {
+    public sealed record RecipientNameEmpty : DomainErrorType.Custom;
+    public sealed record StreetEmpty : DomainErrorType.Custom;
+    public sealed record CityEmpty : DomainErrorType.Custom;
+    public sealed record CountryEmpty : DomainErrorType.Custom;
+
     public string RecipientName { get; }
     public string Street { get; }
     public string City { get; }
     public string PostalCode { get; }
     public string Country { get; }
 
-    public static Fin<ShippingAddress> Create(
-        string recipientName, string street, string city, string postalCode, string country)
+    private ShippingAddress(string recipientName, string street, string city, string postalCode, string country)
     {
-        if (string.IsNullOrWhiteSpace(recipientName))
-            return DomainErrors.EmptyRecipientName(recipientName ?? "");
-        if (string.IsNullOrWhiteSpace(street))
-            return DomainErrors.EmptyStreet(street ?? "");
-        // ... 나머지 검증
+        RecipientName = recipientName; Street = street; City = city;
+        PostalCode = postalCode; Country = country;
+    }
 
-        return new ShippingAddress(
-            recipientName.Trim(),
-            street.Trim(),
-            city.Trim(),
-            normalizedPostal,
-            country.Trim().ToUpperInvariant()
-        );
+    public static Fin<ShippingAddress> Create(
+        string? recipientName, string? street, string? city, string? postalCode, string? country) =>
+        CreateFromValidation(
+            Validate(recipientName ?? "", street ?? "", city ?? "", postalCode ?? "", country ?? ""),
+            v => new ShippingAddress(v.RecipientName.Trim(), v.Street.Trim(), v.City.Trim(),
+                v.PostalCode, v.Country.Trim().ToUpperInvariant()));
+
+    public static Validation<Error, (string RecipientName, string Street, string City, string PostalCode, string Country)>
+        Validate(string recipientName, string street, string city, string postalCode, string country) =>
+        (ValidateRecipientName(recipientName), ValidateStreet(street), ValidateCity(city), ValidateCountry(country))
+            .Apply((r, s, c, co) => (r, s, c, co))
+            .Bind(values => ValidatePostalCode(postalCode)
+                .Map(p => (values.r, values.s, values.c, p, values.co)));
+
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return RecipientName; yield return Street; yield return City;
+        yield return PostalCode; yield return Country;
     }
 }
 ```
@@ -290,11 +357,11 @@ public sealed class ShippingAddress : IEquatable<ShippingAddress>
 
 | 값 객체 | 프레임워크 타입 | 특징 |
 |--------|---------------|------|
-| Money | IComparable + IEquatable | 복합 값, 동일 통화 연산 |
-| ProductCode | SimpleValueObject 패턴 | 형식 검증, 파싱 |
-| Quantity | ComparableSimpleValueObject 패턴 | 연산자 오버로딩 |
+| Money | ValueObject + IComparable | 복합 값, 동일 통화 연산 |
+| ProductCode | SimpleValueObject\<string\> | 형식 검증, 파싱 |
+| Quantity | ComparableSimpleValueObject\<int\> | 연산자 오버로딩 |
 | OrderStatus | SmartEnum | 상태 전이 규칙 |
-| ShippingAddress | ValueObject 패턴 | 다중 필드 검증 |
+| ShippingAddress | ValueObject | 다중 필드 검증 |
 
 ## 한눈에 보는 정리
 
@@ -364,7 +431,8 @@ public Fin<Quantity> SafeSubtract(Quantity other)
     var result = Value - other.Value;
     return result >= 0
         ? new Quantity(result)
-        : DomainErrors.ResultWouldBeNegative(Value, other.Value);
+        : DomainError.For<Quantity, int>(new DomainErrorType.Negative(), result,
+            $"Result would be negative. Current: '{Value}', Other: '{other.Value}'");
 }
 ```
 
@@ -387,7 +455,8 @@ public static Fin<ShippingAddress> CreateWithAllErrors(...)
 
 private static Validation<Error, string> ValidateRecipientName(string? value) =>
     string.IsNullOrWhiteSpace(value)
-        ? DomainErrors.EmptyRecipientName(value ?? "")
+        ? DomainError.For<ShippingAddress>(new RecipientNameEmpty(), value ?? "",
+            $"Recipient name cannot be empty. Current value: '{value}'")
         : value.Trim();
 ```
 

@@ -185,14 +185,18 @@ public sealed class EmailLocalPart : SimpleValueObject<string>
     private EmailLocalPart(string value) : base(value) { }
 
     public static Fin<EmailLocalPart> Create(string value) =>
-        CreateFromValidation(
-            Validate(value),
-            validValue => new EmailLocalPart(validValue));
+        CreateFromValidation(Validate(value), v => new EmailLocalPart(v));
+
+    public static EmailLocalPart CreateFromValidated(string validatedValue) =>
+        new(validatedValue);
 
     public static Validation<Error, string> Validate(string value) =>
         !string.IsNullOrWhiteSpace(value) && value.Length >= 1 && value.Length <= 64
             ? value
-            : DomainErrors.EmptyOrOutOfRange(value);
+            : DomainError.For<EmailLocalPart>(new DomainErrorType.WrongLength(), value,
+                $"Email local part is empty or out of range. Must be 1-64 characters. Current value: '{value}'");
+
+    public override string ToString() => Value;
 }
 ```
 

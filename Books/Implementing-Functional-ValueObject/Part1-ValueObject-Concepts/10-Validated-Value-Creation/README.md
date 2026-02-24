@@ -18,7 +18,7 @@
 
 ### **핵심 학습 목표**
 1. **CreateFromValidated 메서드 구현**: 이미 검증된 값으로 직접 객체 생성하는 효율적인 방법 구현
-2. **복합 검증 조합**: 여러 값 객체의 검증 결과를 함수형 프로그래밍의 모나드 체이닝으로 조합
+2. **복합 검증 조합**: 여러 값 객체의 검증 결과를 함수형 프로그래밍의 tuple Apply 패턴으로 조합
 3. **성능 최적화**: 불필요한 중복 검증을 제거하여 복합 객체 생성 성능 향상
 
 ### **실습을 통해 확인할 내용**
@@ -80,30 +80,22 @@ public static Address CreateFromValidated(Street street, City city, PostalCode p
 
 ### 두 번째 개념: 복합 검증 조합 (Composite Validation Composition)
 
-**핵심 아이디어는 "함수형 모나드 체이닝을 통한 복합 검증"입니다.** 마치 함수형 프로그래밍의 Applicative Functor처럼, 여러 검증 결과를 조합하여 하나의 복합 결과를 만듭니다.
+**핵심 아이디어는 "tuple Apply 패턴을 통한 복합 검증"입니다.** 마치 함수형 프로그래밍의 Applicative Functor처럼, 여러 검증 결과를 조합하여 하나의 복합 결과를 만듭니다.
 
-LanguageExt의 Validation 모나드를 활용하여 각 구성 요소의 검증을 독립적으로 수행하고, 모든 검증이 성공했을 때만 복합 객체를 생성합니다. 이는 마치 Promise.all()처럼 모든 비동기 작업이 완료되어야 다음 단계로 진행하는 것과 유사합니다.
+LanguageExt의 tuple Apply 패턴을 활용하여 각 구성 요소의 검증을 독립적으로 수행하고, 모든 검증이 성공했을 때만 복합 객체를 생성합니다. 이는 마치 Promise.all()처럼 모든 비동기 작업이 완료되어야 다음 단계로 진행하는 것과 유사합니다.
 
 ```csharp
-// 복합 검증 조합 - 함수형 모나드 체이닝
+// 복합 검증 조합 - tuple Apply 패턴
 public static Validation<Error, (Street Street, City City, PostalCode PostalCode)> Validate(
-    string streetValue, string cityValue, string postalCodeValue)
-{
-    var streetValidation = Street.Validate(streetValue);      // 독립적 검증
-    var cityValidation = City.Validate(cityValue);            // 독립적 검증
-    var postalCodeValidation = PostalCode.Validate(postalCodeValue); // 독립적 검증
-
-    // 모든 검증이 성공해야만 조합 성공
-    return from street in streetValidation
-           from city in cityValidation
-           from postalCode in postalCodeValidation
-           select (Street: Street.CreateFromValidated(street),    // 검증된 값으로 직접 생성
-                   City: City.CreateFromValidated(city),          // 검증된 값으로 직접 생성
-                   PostalCode: PostalCode.CreateFromValidated(postalCode)); // 검증된 값으로 직접 생성
-}
+    string streetValue, string cityValue, string postalCodeValue) =>
+    (Street.Validate(streetValue), City.Validate(cityValue), PostalCode.Validate(postalCodeValue))
+        .Apply((street, city, postalCode) =>
+            (Street: Street.CreateFromValidated(street),       // 검증된 값으로 직접 생성
+             City: City.CreateFromValidated(city),             // 검증된 값으로 직접 생성
+             PostalCode: PostalCode.CreateFromValidated(postalCode))); // 검증된 값으로 직접 생성
 ```
 
-이 방식의 장점은 각 검증이 독립적으로 수행되어 병렬 처리 가능하고, 하나라도 실패하면 전체가 실패하는 안전한 조합을 제공한다는 점입니다.
+이 방식의 장점은 각 검증이 독립적으로 수행되어 모든 검증 오류를 한 번에 수집하고, 하나라도 실패하면 전체가 실패하는 안전한 조합을 제공한다는 점입니다.
 
 ### 세 번째 개념: 3가지 메서드 패턴 (Three-Method Pattern)
 
@@ -160,7 +152,7 @@ var address2 = Address.CreateFromValidated(street, city, postalCode);
 
 ### 핵심 구현 포인트
 1. **CreateFromValidated 메서드 구현**: internal 접근자로 외부에서는 사용할 수 없지만 내부에서는 활용 가능하도록 설계
-2. **복합 검증 조합**: LanguageExt의 Validation 모나드를 활용한 함수형 조합으로 안전한 복합 검증 구현
+2. **복합 검증 조합**: LanguageExt의 tuple Apply 패턴을 활용한 함수형 조합으로 안전한 복합 검증 구현
 3. **3가지 메서드 패턴**: 상황에 맞는 최적의 생성 방법을 제공하여 성능과 유연성 확보
 
 ## 프로젝트 설명
@@ -206,19 +198,12 @@ public static Address CreateFromValidated(Street street, City city, PostalCode p
 /// 각 구성 요소들의 검증을 조합하여 복합 검증 수행
 /// </summary>
 public static Validation<Error, (Street Street, City City, PostalCode PostalCode)> Validate(
-    string streetValue, string cityValue, string postalCodeValue)
-{
-    var streetValidation = Street.Validate(streetValue);
-    var cityValidation = City.Validate(cityValue);
-    var postalCodeValidation = PostalCode.Validate(postalCodeValue);
-
-    return from street in streetValidation
-           from city in cityValidation
-           from postalCode in postalCodeValidation
-           select (Street: Street.CreateFromValidated(street),
-                   City: City.CreateFromValidated(city),
-                   PostalCode: PostalCode.CreateFromValidated(postalCode));
-}
+    string streetValue, string cityValue, string postalCodeValue) =>
+    (Street.Validate(streetValue), City.Validate(cityValue), PostalCode.Validate(postalCodeValue))
+        .Apply((street, city, postalCode) =>
+            (Street: Street.CreateFromValidated(street),
+             City: City.CreateFromValidated(city),
+             PostalCode: PostalCode.CreateFromValidated(postalCode)));
 ```
 
 #### Program.cs - 3가지 메서드 패턴 사용 예제
@@ -252,7 +237,7 @@ var address = Address.CreateFromValidated(street, city, postalCode);
 | **메서드 수** | Create, Validate 2개 | Create, Validate, CreateFromValidated 3개 |
 | **중복 검증** | 복합 객체 생성 시 각 구성 요소 재검증 | CreateFromValidated로 중복 검증 방지 |
 | **성능** | 모든 경우에 검증 수행 | 상황에 맞는 최적화된 생성 |
-| **복합 검증** | 단순한 순차 검증 | 함수형 모나드 체이닝으로 안전한 조합 |
+| **복합 검증** | 단순한 순차 검증 | tuple Apply 패턴으로 안전한 조합 |
 | **유연성** | 제한적인 생성 방법 | 3가지 상황별 최적화된 생성 방법 |
 
 ### 장단점 표
@@ -321,15 +306,12 @@ var address = Address.CreateFromValidated(street, city, postalCode);
 **실제 예시:**
 ```csharp
 // 올바른 사용: Address 내부 어셈블리에서만 사용
-public static Validation<Error, (Street Street, City City, PostalCode PostalCode)> Validate(...)
-{
-    return from street in streetValidation
-           from city in cityValidation
-           from postalCode in postalCodeValidation
-           select (Street: Street.CreateFromValidated(street),              // 내부 어셈블리에서만 사용
-                   City: City.CreateFromValidated(city),                    // 내부 어셈블리에서만 사용
-                   PostalCode: PostalCode.CreateFromValidated(postalCode)); // 내부 어셈블리에서만 사용
-}
+public static Validation<Error, (Street Street, City City, PostalCode PostalCode)> Validate(...) =>
+    (Street.Validate(streetValue), City.Validate(cityValue), PostalCode.Validate(postalCodeValue))
+        .Apply((street, city, postalCode) =>
+            (Street: Street.CreateFromValidated(street),              // 내부 어셈블리에서만 사용
+             City: City.CreateFromValidated(city),                    // 내부 어셈블리에서만 사용
+             PostalCode: PostalCode.CreateFromValidated(postalCode))); // 내부 어셈블리에서만 사용
 
 // 잘못된 사용: 외부 어셈블리에서 직접 사용 (컴파일 에러)
 // var street = Street.CreateFromValidated("123 Main St"); // 접근 불가
@@ -375,13 +357,12 @@ public static Validation<Error, (Street Street, City City, PostalCode PostalCode
 
 **실제 예시:**
 ```csharp
-// 모든 검증이 성공해야만 조합 성공
-return from street in streetValidation      // 1단계: 거리명 검증
-       from city in cityValidation          // 2단계: 도시명 검증 (1단계 성공 시에만)
-       from postalCode in postalCodeValidation // 3단계: 우편번호 검증 (1,2단계 성공 시에만)
-       select (Street: Street.CreateFromValidated(street),
-               City: City.CreateFromValidated(city),
-               PostalCode: PostalCode.CreateFromValidated(postalCode));
+// tuple Apply 패턴: 모든 검증을 병렬로 수행하고 모든 오류를 수집
+(Street.Validate(streetValue), City.Validate(cityValue), PostalCode.Validate(postalCodeValue))
+    .Apply((street, city, postalCode) =>
+        (Street: Street.CreateFromValidated(street),       // 1단계: 거리명 검증
+         City: City.CreateFromValidated(city),             // 2단계: 도시명 검증
+         PostalCode: PostalCode.CreateFromValidated(postalCode))); // 3단계: 우편번호 검증
 ```
 
 ### Q10: 다음 단계에서는 어떤 내용을 학습하게 되나요?
