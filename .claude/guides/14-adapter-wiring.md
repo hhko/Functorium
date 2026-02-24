@@ -5,24 +5,24 @@
 ## 목차
 
 - [Activity 3: Pipeline 생성 확인](#activity-3-pipeline-생성-확인)
-  - [3.1 GenerateObservablePort 소스 생성기](#31-generateobservableport-소스-생성기)
-  - [3.2 생성 파일 확인](#32-생성-파일-확인)
-  - [3.3 생성 코드 구조](#33-생성-코드-구조)
-  - [3.4 자동 제공 기능 (요약)](#34-자동-제공-기능-요약)
-  - [3.5 빌드 에러 대응](#35-빌드-에러-대응)
+  - [GenerateObservablePort 소스 생성기](#generateobservableport-소스-생성기)
+  - [생성 파일 확인](#생성-파일-확인)
+  - [생성 코드 구조](#생성-코드-구조)
+  - [자동 제공 기능 (요약)](#자동-제공-기능-요약)
+  - [빌드 에러 대응](#빌드-에러-대응)
 - [Activity 4: DI 등록](#activity-4-di-등록)
-  - [4.1 Registration 클래스 생성](#41-registration-클래스-생성)
-  - [4.2 유형별 등록 패턴](#42-유형별-등록-패턴)
-  - [4.3 다중 인터페이스 등록](#43-다중-인터페이스-등록)
-  - [4.4 DI Lifetime 선택 가이드](#44-di-lifetime-선택-가이드)
-  - [4.5 Host Bootstrap 통합](#45-host-bootstrap-통합)
-  - [4.6 Options 패턴 (OptionsConfigurator)](#46-options-패턴-optionsconfigurator)
+  - [Registration 클래스 생성](#registration-클래스-생성)
+  - [유형별 등록 패턴](#유형별-등록-패턴)
+  - [다중 인터페이스 등록](#다중-인터페이스-등록)
+  - [DI Lifetime 선택 가이드](#di-lifetime-선택-가이드)
+  - [Host Bootstrap 통합](#host-bootstrap-통합)
+  - [Options 패턴 (OptionsConfigurator)](#options-패턴-optionsconfigurator)
 - [Activity 5: 단위 테스트](#activity-5-단위-테스트)
-  - [5.1 테스트 원칙 / IO 실행 패턴](#51-테스트-원칙--io-실행-패턴)
-  - [5.2 Repository 테스트](#52-repository-테스트)
-  - [5.3 External API 테스트](#53-external-api-테스트)
-  - [5.4 Messaging 테스트](#54-messaging-테스트)
-  - [5.5 Query Adapter 테스트](#55-query-adapter-테스트)
+  - [테스트 원칙 / IO 실행 패턴](#테스트-원칙--io-실행-패턴)
+  - [Repository 테스트](#repository-테스트)
+  - [External API 테스트](#external-api-테스트)
+  - [Messaging 테스트](#messaging-테스트)
+  - [Query Adapter 테스트](#query-adapter-테스트)
 - [End-to-End Walkthroughs](#end-to-end-walkthroughs)
 - [부록](#부록)
   - [A. Clean Architecture 전체 흐름](#a-clean-architecture-전체-흐름)
@@ -38,7 +38,7 @@
 
 `[GenerateObservablePort]` 어트리뷰트가 적용된 Adapter를 빌드하면, Source Generator가 자동으로 Pipeline 클래스를 생성합니다.
 
-### 3.1 GenerateObservablePort 소스 생성기
+### GenerateObservablePort 소스 생성기
 
 `[GenerateObservablePort]` 속성을 클래스에 적용하면 Source Generator가 **Pipeline 래퍼 클래스를 자동 생성**합니다.
 
@@ -66,7 +66,7 @@ public sealed class GenerateObservablePortAttribute : Attribute { }
                                     └─────────────────────────────────────┘
 ```
 
-### 3.2 생성 파일 확인
+### 생성 파일 확인
 
 빌드 후 다음 경로에서 생성된 파일을 확인합니다.
 
@@ -89,7 +89,7 @@ OrderService/obj/GeneratedFiles/.../
   └── Messaging.RabbitMqInventoryMessagingObservable.g.cs
 ```
 
-### 3.3 생성 코드 구조
+### 생성 코드 구조
 
 생성된 Pipeline 클래스는 다음과 같은 구조를 가집니다.
 
@@ -127,7 +127,7 @@ public class InMemoryProductRepositoryObservable : InMemoryProductRepository
 - 생성자에 `ActivitySource`, `ILogger`, `IMeterFactory` 등 Observability 의존성 주입
 - 원본 생성자 매개변수도 함께 전달
 
-### 3.4 자동 제공 기능 (요약)
+### 자동 제공 기능 (요약)
 
 Pipeline은 다음 관찰성 기능을 **자동으로** 제공합니다. 모든 필드는 OpenTelemetry 시맨틱 규칙과의 일관성을 위해 `snake_case + dot` 표기법을 사용합니다.
 
@@ -159,7 +159,7 @@ Pipeline은 다음 관찰성 기능을 **자동으로** 제공합니다. 모든 
 
 > **상세 사양**: 트레이싱 Tag 구조, 로그 Message Template, 메트릭 Instrument 정의 등 상세 내용은 [18-observability-spec.md](./18-observability-spec.md)를 참조하세요.
 
-### 3.5 빌드 에러 대응
+### 빌드 에러 대응
 
 | 에러 | 증상 | 원인 | 해결 |
 |------|------|------|------|
@@ -174,7 +174,7 @@ Pipeline은 다음 관찰성 기능을 **자동으로** 제공합니다. 모든 
 
 생성된 Pipeline 클래스를 DI 컨테이너에 등록합니다.
 
-### 4.1 Registration 클래스 생성
+### Registration 클래스 생성
 
 **위치 규칙**: `{Project}.Adapters.{Layer}/Abstractions/Registrations/`
 
@@ -208,9 +208,9 @@ public static class AdapterPersistenceRegistration
 
 > **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Abstractions/Registrations/AdapterPersistenceRegistration.cs`
 
-> **참고**: Adapter에 Options 패턴이 필요한 경우, Registration 메서드에 `IConfiguration` 파라미터를 추가합니다. [4.6 Options 패턴](#46-options-패턴-optionsconfigurator) 참조.
+> **참고**: Adapter에 Options 패턴이 필요한 경우, Registration 메서드에 `IConfiguration` 파라미터를 추가합니다. [4.6 Options 패턴](#options-패턴-optionsconfigurator) 참조.
 
-### 4.2 유형별 등록 패턴
+### 유형별 등록 패턴
 
 #### Repository 등록
 
@@ -225,10 +225,10 @@ services.RegisterScopedObservablePort<
 
 ```csharp
 // InMemory 환경
-services.RegisterScopedObservablePort<IUnitOfWork, InMemoryUnitOfWorkPipeline>();
+services.RegisterScopedObservablePort<IUnitOfWork, InMemoryUnitOfWorkObservable>();
 
 // EF Core 환경
-services.RegisterScopedObservablePort<IUnitOfWork, EfCoreUnitOfWorkPipeline>();
+services.RegisterScopedObservablePort<IUnitOfWork, EfCoreUnitOfWorkObservable>();
 ```
 
 #### External API 등록
@@ -237,7 +237,7 @@ External API Adapter는 HttpClient와 Pipeline 두 가지를 등록해야 합니
 
 ```csharp
 // 1단계: HttpClient 등록
-services.AddHttpClient<ExternalPricingApiServicePipeline>(client =>
+services.AddHttpClient<ExternalPricingApiServiceObservable>(client =>
 {
     client.BaseAddress = new Uri(configuration["ExternalApi:BaseUrl"]
         ?? "https://api.example.com");
@@ -247,10 +247,12 @@ services.AddHttpClient<ExternalPricingApiServicePipeline>(client =>
 // 2단계: Pipeline 등록
 services.RegisterScopedObservablePort<
     IExternalPricingService,
-    ExternalPricingApiServicePipeline>();
+    ExternalPricingApiServiceObservable>();
 ```
 
-> **참고**: `HttpClient`는 Pipeline 클래스 타입으로 등록합니다. Pipeline이 원본 Adapter를 상속하므로 생성자의 `HttpClient` 매개변수를 그대로 받습니다.
+> **참고**: `HttpClient`는 Observable 클래스 타입으로 등록합니다. Observable이 원본 Adapter를 상속하므로 생성자의 `HttpClient` 매개변수를 그대로 받습니다.
+
+> **HttpClient Lifetime 관리**: `AddHttpClient<T>()`는 내부적으로 `IHttpClientFactory`를 사용하여 `HttpClient`의 수명을 관리합니다. `HttpClient`를 직접 `new`하면 소켓 고갈(socket exhaustion) 문제가 발생할 수 있으므로 반드시 `IHttpClientFactory`를 통해 생성해야 합니다. `IHttpClientFactory`는 내부 `HttpMessageHandler`의 풀링과 수명 관리(기본 2분 순환)를 자동으로 처리하여 DNS 변경 반영과 커넥션 풀링을 최적화합니다.
 
 #### Messaging 등록
 
@@ -258,7 +260,7 @@ services.RegisterScopedObservablePort<
 // Pipeline 등록 (MessageBus는 별도 등록 필요)
 services.RegisterScopedObservablePort<
     IInventoryMessaging,
-    RabbitMqInventoryMessagingPipeline>();
+    RabbitMqInventoryMessagingObservable>();
 ```
 
 > **참조**: `Tutorials/Cqrs06Services/Src/OrderService/Program.cs` (57행)
@@ -269,33 +271,35 @@ services.RegisterScopedObservablePort<
 // InMemory Provider — Query Adapter Pipeline 등록
 services.RegisterScopedObservablePort<
     IProductQueryAdapter,
-    InMemoryProductQueryObservablePort>();
+    InMemoryProductQueryAdapterObservable>();
 
 // Sqlite Provider — Dapper Query Adapter Pipeline 등록
 services.RegisterScopedObservablePort<
     IProductQueryAdapter,
-    DapperProductQueryObservablePort>();
+    DapperProductQueryAdapterObservable>();
 ```
 
-> **참고**: Query Adapter는 Repository와 동일한 `RegisterScopedObservablePort` API를 사용합니다. Provider 분기 패턴([4.6](#46-options-패턴-optionsconfigurator))에서 InMemory는 InMemory Query Adapter를, Sqlite는 Dapper Query Adapter를 등록합니다.
+> **참고**: Query Adapter는 Repository와 동일한 `RegisterScopedObservablePort` API를 사용합니다. Provider 분기 패턴([4.6](#options-패턴-optionsconfigurator))에서 InMemory는 InMemory Query Adapter를, Sqlite는 Dapper Query Adapter를 등록합니다.
 
-### 4.3 다중 인터페이스 등록
+### 다중 인터페이스 등록
 
 하나의 구현 클래스가 여러 인터페이스를 구현하는 경우:
 
 ```csharp
-// 2개 인터페이스
-services.RegisterScopedObservablePortFor<IReadRepository, IWriteRepository, ProductRepositoryPipeline>();
+// 2개 인터페이스 (Scoped 예시 — Transient/Singleton도 동일한 For 패턴 지원)
+services.RegisterScopedObservablePortFor<IReadRepository, IWriteRepository, ProductRepositoryObservable>();
 
 // 3개 인터페이스
 services.RegisterScopedObservablePortFor<IService1, IService2, IService3, MyServiceObservable>();
 
-// 4개 이상 인터페이스
+// 4개 이상 인터페이스 (params Type[] 오버로드)
 services.RegisterScopedObservablePortFor<MyServiceObservable>(
     typeof(IService1), typeof(IService2), typeof(IService3), typeof(IService4));
 ```
 
-### 4.4 DI Lifetime 선택 가이드
+> **참고**: `For` 접미사 메서드는 Scoped, Transient, Singleton 세 가지 Lifetime 모두 지원합니다 (예: `RegisterTransientObservablePortFor`, `RegisterSingletonObservablePortFor`).
+
+### DI Lifetime 선택 가이드
 
 | Lifetime | 사용 시점 | 주의사항 |
 |----------|----------|---------|
@@ -312,12 +316,13 @@ services.RegisterScopedObservablePortFor<MyServiceObservable>(
 | `RegisterScopedObservablePort<TService, TImpl>()` | Scoped | HTTP 요청당 1개 (기본 권장) |
 | `RegisterTransientObservablePort<TService, TImpl>()` | Transient | 매 요청마다 새 인스턴스 |
 | `RegisterSingletonObservablePort<TService, TImpl>()` | Singleton | 애플리케이션 전체 1개 |
-| `RegisterScopedObservablePortFor<T1, T2, TImpl>()` | Scoped | 2개 인터페이스 → 1개 구현체 |
-| `RegisterScopedObservablePortFor<T1, T2, T3, TImpl>()` | Scoped | 3개 인터페이스 → 1개 구현체 |
+| `Register{Lifetime}ObservablePortFor<T1, T2, TImpl>()` | Scoped/Transient/Singleton | 2개 인터페이스 → 1개 구현체 |
+| `Register{Lifetime}ObservablePortFor<T1, T2, T3, TImpl>()` | Scoped/Transient/Singleton | 3개 인터페이스 → 1개 구현체 |
+| `Register{Lifetime}ObservablePortFor<TImpl>(params Type[])` | Scoped/Transient/Singleton | 4개 이상 인터페이스 → 1개 구현체 |
 
 > **참조**: `Src/Functorium/Abstractions/Registrations/ObservablePortRegistration.cs`
 
-### 4.5 Host Bootstrap 통합
+### Host Bootstrap 통합
 
 `Program.cs`에서 레이어별 Registration을 호출합니다.
 
@@ -347,11 +352,13 @@ app.Run();
 - `RegisterAdapter{Layer}()`: `IServiceCollection` 확장 메서드로 서비스 등록
 - `UseAdapter{Layer}()`: `IApplicationBuilder` 확장 메서드로 미들웨어 설정
 - 등록 순서는 의존성 방향에 따라 결정 (Presentation → Persistence → Infrastructure)
-- Options 패턴을 사용하는 Adapter는 `IConfiguration` 파라미터를 받음 ([4.6](#46-options-패턴-optionsconfigurator) 참조)
+- Options 패턴을 사용하는 Adapter는 `IConfiguration` 파라미터를 받음 ([4.6](#options-패턴-optionsconfigurator) 참조)
+
+> **참고**: 등록 순서는 DI 컨테이너의 의존성 해석과 무관하며, 가독성을 위해 도메인 → 어댑터 → 인프라 순서를 권장한다.
 
 > **참고**: 등록 순서의 근거와 환경별 구성 분기는 [01-project-structure.md — Host 프로젝트](./01-project-structure.md#등록-순서-근거)를 참조하세요.
 
-### 4.6 Options 패턴 (OptionsConfigurator)
+### Options 패턴 (OptionsConfigurator)
 
 Adapter에 구성 옵션이 필요한 경우 `OptionsConfigurator` 패턴을 사용합니다. `appsettings.json`에서 설정을 읽고, 시작 시 FluentValidation으로 검증하며, StartupLogger에 자동 출력합니다.
 
@@ -516,7 +523,7 @@ appsettings.json에서 Options 클래스의 `SectionName` 상수값과 일치하
 
 Adapter의 단위 테스트는 **원본 클래스를 직접 테스트**합니다 (Pipeline이 아님).
 
-### 5.1 테스트 원칙 / IO 실행 패턴
+### 테스트 원칙 / IO 실행 패턴
 
 | 원칙 | 설명 |
 |------|------|
@@ -541,7 +548,7 @@ var result = await Task.Run(() => ioResult.Run());  // Fin<T> 실행
 result.IsSucc.ShouldBeTrue();
 ```
 
-### 5.2 Repository 테스트
+### Repository 테스트
 
 Repository Adapter는 외부 의존성이 없으므로 (In-Memory 구현의 경우) 직접 인스턴스를 생성하여 테스트합니다.
 
@@ -594,7 +601,7 @@ public sealed class InMemoryProductRepositoryTests
 }
 ```
 
-### 5.3 External API 테스트
+### External API 테스트
 
 External API Adapter는 `HttpClient`를 Mock하여 테스트합니다.
 
@@ -678,7 +685,7 @@ public sealed class ExternalPricingApiServiceTests
 }
 ```
 
-### 5.4 Messaging 테스트
+### Messaging 테스트
 
 Messaging Adapter는 `IMessageBus`를 NSubstitute로 Mock하여 테스트합니다.
 
@@ -750,7 +757,7 @@ public sealed class RabbitMqInventoryMessagingTests
 
 > **참조**: `Tutorials/Cqrs06Services/Tests/OrderService.Tests.Unit/LayerTests/Adapters/RabbitMqInventoryMessagingTests.cs`
 
-### 5.5 Query Adapter 테스트
+### Query Adapter 테스트
 
 Query Adapter는 InMemory 구현을 직접 인스턴스화하여 테스트합니다. Repository 테스트와 동일한 IO 실행 패턴을 사용합니다.
 
@@ -790,8 +797,8 @@ public async Task Search_ReturnsPagedResult_WhenProductsExist()
 | 1 | Port 정의 | `LayeredArch.Domain/Repositories/IProductRepository.cs` | `: IObservablePort`, `FinT<IO, T>` 반환, 도메인 VO 매개변수 |
 | 2 | Adapter 구현 | `LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryProductRepository.cs` | `[GenerateObservablePort]`, `virtual`, `IO.lift`, `AdapterError.For<T>` |
 | 3 | Pipeline 확인 | `obj/GeneratedFiles/.../Repositories.InMemoryProductRepositoryObservable.g.cs` | 빌드 후 자동 생성 |
-| 4 | DI 등록 | `AdapterPersistenceRegistration.cs` → `Program.cs` | `RegisterScopedObservablePort<IProductRepository, ...Pipeline>()` |
-| 5 | 테스트 | `InMemoryProductRepositoryTests.cs` | 원본 클래스 직접 테스트, [5.2](#52-repository-테스트) 참조 |
+| 4 | DI 등록 | `AdapterPersistenceRegistration.cs` → `Program.cs` | `RegisterScopedObservablePort<IProductRepository, ...Observable>()` |
+| 5 | 테스트 | `InMemoryProductRepositoryTests.cs` | 원본 클래스 직접 테스트, [Repository 테스트](#repository-테스트) 참조 |
 
 ### External API (01-SingleHost IExternalPricingService)
 
@@ -800,8 +807,8 @@ public async Task Search_ReturnsPagedResult_WhenProductsExist()
 | 1 | Port 정의 | `LayeredArch.Application/Ports/IExternalPricingService.cs` | `CancellationToken` 포함, `Async` 접미사 |
 | 2 | Adapter 구현 | `LayeredArch.Adapters.Infrastructure/ExternalApis/ExternalPricingApiService.cs` | `IO.liftAsync`, `HandleHttpError<T>`, try/catch 패턴 |
 | 3 | Pipeline 확인 | `obj/GeneratedFiles/.../ExternalApis.ExternalPricingApiServiceObservable.g.cs` | 빌드 후 자동 생성 |
-| 4 | DI 등록 | `AdapterInfrastructureRegistration.cs` → `Program.cs` | `AddHttpClient<...Pipeline>()` + `RegisterScopedObservablePort` |
-| 5 | 테스트 | `ExternalPricingApiServiceTests.cs` | `MockHttpMessageHandler` 사용, [5.3](#53-external-api-테스트) 참조 |
+| 4 | DI 등록 | `AdapterInfrastructureRegistration.cs` → `Program.cs` | `AddHttpClient<...Observable>()` + `RegisterScopedObservablePort` |
+| 5 | 테스트 | `ExternalPricingApiServiceTests.cs` | `MockHttpMessageHandler` 사용, [External API 테스트](#external-api-테스트) 참조 |
 
 ### Messaging (Cqrs06Services IInventoryMessaging)
 
@@ -811,7 +818,7 @@ public async Task Search_ReturnsPagedResult_WhenProductsExist()
 | 2 | Adapter 구현 | `OrderService/Adapters/Messaging/RabbitMqInventoryMessaging.cs` | `IMessageBus` 주입, `InvokeAsync` / `SendAsync` |
 | 3 | Pipeline 확인 | `obj/GeneratedFiles/.../Messaging.RabbitMqInventoryMessagingObservable.g.cs` | 빌드 후 자동 생성 |
 | 4 | DI 등록 | `OrderService/Program.cs` (57행) | `RegisterScopedObservablePort`, MessageBus는 Wolverine 별도 등록 |
-| 5 | 테스트 | `RabbitMqInventoryMessagingTests.cs` | NSubstitute로 `IMessageBus` Mock, [5.4](#54-messaging-테스트) 참조 |
+| 5 | 테스트 | `RabbitMqInventoryMessagingTests.cs` | NSubstitute로 `IMessageBus` Mock, [Messaging 테스트](#messaging-테스트) 참조 |
 
 ### Query Adapter (01-SingleHost IProductQueryAdapter)
 
@@ -820,9 +827,9 @@ public async Task Search_ReturnsPagedResult_WhenProductsExist()
 | 1 | Port 정의 | `LayeredArch.Application/Usecases/Products/Ports/IProductQueryAdapter.cs` | `: IQueryPort<Product, ProductSummaryDto>` |
 | 2a | Dapper 구현 | `LayeredArch.Adapters.Persistence/Repositories/Dapper/DapperProductQueryAdapter.cs` | `DapperQueryAdapterBase` 상속, `[GenerateObservablePort]`, SQL 선언만 담당 |
 | 2b | InMemory 구현 | `LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryProductQueryAdapter.cs` | `[GenerateObservablePort]`, Repository 위임 |
-| 3 | Pipeline 확인 | `obj/GeneratedFiles/.../Repositories.Dapper.DapperProductQueryObservablePort.g.cs` | 빌드 후 자동 생성 |
-| 4 | DI 등록 | `AdapterPersistenceRegistration.cs` → `Program.cs` | Sqlite: Dapper Pipeline, InMemory: InMemory Pipeline |
-| 5 | 테스트 | `SearchProductsQueryTests.cs` | InMemory Query Adapter 직접 테스트, [5.5](#55-query-adapter-테스트) 참조 |
+| 3 | Pipeline 확인 | `obj/GeneratedFiles/.../Repositories.Dapper.DapperProductQueryAdapterObservable.g.cs` | 빌드 후 자동 생성 |
+| 4 | DI 등록 | `AdapterPersistenceRegistration.cs` → `Program.cs` | Sqlite: Dapper Observable, InMemory: InMemory Observable |
+| 5 | 테스트 | `SearchProductsQueryTests.cs` | InMemory Query Adapter 직접 테스트, [Query Adapter 테스트](#query-adapter-테스트) 참조 |
 
 ---
 
@@ -980,7 +987,7 @@ public InMemoryProductRepository(
 - **Aggregate 필요** (도메인 불변식 검증, Create/Update/Delete) → **Repository** (`IRepository<T, TId>`, Domain Layer, EF Core)
 - **DTO 직접 반환** (읽기 전용, 페이지네이션/정렬) → **Query Adapter** (`IQueryPort<TEntity, TDto>`, Application Layer, Dapper)
 
-> 상세 판단 기준은 [2.6 Query Adapter](#26-query-adapter-cqrs-read-측)의 비교 테이블을 참조하세요.
+> 상세 판단 기준은 [Query Adapter](./13-adapters.md#query-adapter-cqrs-read-측)의 비교 테이블을 참조하세요.
 
 #### Q7. RequestCategory 값은 어떻게 정하나요?
 
@@ -1002,11 +1009,11 @@ public InMemoryProductRepository(
 | `[GenerateObservablePort]` 누락 | Pipeline 클래스가 `obj/GeneratedFiles/`에 생성되지 않음 | 클래스에 `[GenerateObservablePort]` 어트리뷰트 추가 |
 | `IObservablePort` 미상속 | `RegisterScopedObservablePort` 컴파일 에러 | Port 인터페이스에 `: IObservablePort` 상속 추가 |
 | 생성자 타입 충돌 | Source Generator 에러 또는 잘못된 Pipeline 생성 | 생성자 매개변수에 고유 타입 사용 (동일 타입 중복 금지) |
-| Pipeline DI 미등록 | `InvalidOperationException: No service for type 'IXxx'` | `RegisterScopedObservablePort<IXxx, XxxPipeline>()` 호출 확인 |
-| Pipeline 타입 미발견 | `The type or namespace name 'XxxPipeline' could not be found` | `dotnet build` 실행 후 재시도 (Source Generator 트리거) |
+| Pipeline DI 미등록 | `InvalidOperationException: No service for type 'IXxx'` | `RegisterScopedObservablePort<IXxx, XxxObservable>()` 호출 확인 |
+| Pipeline 타입 미발견 | `The type or namespace name 'XxxObservable' could not be found` | `dotnet build` 실행 후 재시도 (Source Generator 트리거) |
 | `RequestCategory` 누락 | 컴파일 에러 | `public string RequestCategory => "카테고리명";` 추가 |
 | `IO.lift` 내 `await` 사용 | 컴파일 에러 (async 불가) | `IO.liftAsync(async () => ...)` 로 변경 |
-| HttpClient 미등록 | `No service for type 'HttpClient'` | `services.AddHttpClient<XxxPipeline>(...)` 등록 |
+| HttpClient 미등록 | `No service for type 'HttpClient'` | `services.AddHttpClient<XxxObservable>(...)` 등록 |
 
 ### D. Quick Reference 체크리스트
 
@@ -1034,7 +1041,7 @@ public InMemoryProductRepository(
 - [ ] Registration 클래스 생성 (`Adapter{Layer}Registration`)
 - [ ] `RegisterScopedObservablePort<IObservablePort, ObservablePort>()`
 - [ ] HttpClient 등록 (External API)
-- [ ] Query Adapter Pipeline 등록 (Dapper 또는 InMemory)
+- [ ] Query Adapter Observable 등록 (Dapper 또는 InMemory)
 - [ ] `Program.cs`에서 Registration 호출
 
 #### 단위 테스트
@@ -1090,7 +1097,7 @@ Pipeline이 자동 제공하는 Observability 기능의 요약입니다. 상세 
 
 | 문서 | 설명 |
 |------|------|
-| [domain-modeling-overview.md](./04-ddd-tactical-overview.md) | 도메인 모델링 전체 개요 |
+| [04-ddd-tactical-overview.md](./04-ddd-tactical-overview.md) | 도메인 모델링 전체 개요 |
 | [05a-value-objects.md](./05a-value-objects.md) | Value Object 구현 가이드 |
 | [06b-entity-aggregate-implementation.md](./06b-entity-aggregate-implementation.md) | Entity/Aggregate 구현 가이드 |
 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) | 유스케이스 구현 (CQRS Command/Query) |

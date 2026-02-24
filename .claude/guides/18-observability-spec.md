@@ -7,6 +7,18 @@
 
 ![](../../Functorium.Observability.png)
 
+## 목차
+
+- [공통 사양](#공통-사양)
+- [Field/Tag 일관성](#fieldtag-일관성)
+- [Logging](#logging)
+- [Metrics](#metrics)
+- [Tracing](#tracing)
+- [새 Usecase에 Observability 추가하기 (Quick Start)](#새-usecase에-observability-추가하기-quick-start)
+- [참고 문서](#참고-문서)
+
+---
+
 ## 공통 사양
 
 ### Service Attributes
@@ -19,6 +31,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `service.name` | 서비스의 논리적 이름. 수평 확장된 모든 인스턴스에서 동일해야 합니다. | `orderservice` |
 | `service.version` | 서비스 API 또는 구현의 버전 문자열. | `2.0.0` |
 | `service.instance.id` | 서비스 인스턴스의 고유 ID. `service.namespace,service.name` 쌍당 전역적으로 고유해야 합니다. 가능한 경우 `HOSTNAME` 환경 변수를 사용하고, 그렇지 않으면 `Environment.MachineName`으로 대체됩니다. | `my-pod-abc123` (Kubernetes), `DESKTOP-ABC123` (Windows) |
+| `deployment.environment` | 배포 환경을 식별하는 속성. | `production`, `staging` |
 
 > **권장**: `service.name`과 `service.namespace`에는 소문자 값을 사용하세요(예: `mycompany.production`, `orderservice`).
 > 이렇게 하면 OpenTelemetry 규칙과의 일관성을 보장하고 다운스트림 시스템(대시보드, 쿼리, 알림)에서 대소문자 구분 문제를 방지할 수 있습니다.
@@ -126,11 +139,12 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | `request.event.id` | ✅ | - | ✅ | 이벤트 고유 ID |
 | `@request.message` | ✅ | - | - | 이벤트 객체 (요청 시) |
 | `response.status` | ✅ | ✅ | ✅ | 응답 상태 (`"success"`, `"failure"`) |
-| `response.elapsed` | ✅ | -* | ✅ | 처리 시간(초) |
+| `response.elapsed` | ✅ | -* | - | 처리 시간(초) |
 | `error.type` | ✅ | ✅ | ✅ | 오류 분류 (`"expected"`, `"exceptional"`) |
 | `error.code` | ✅ | ✅ | ✅ | 도메인 특화 오류 코드 |
 
-> **Note:** DomainEventHandler의 ErrorResponse는 Exception 객체가 직접 로깅됩니다 (`@error` 대신).
+> **Note:** DomainEventHandler의 `response.elapsed`는 Tracing Span 태그에 설정되지 않습니다 (Logging 전용). Span은 자체적으로 시작/종료 시간(duration)을 가지므로 별도의 elapsed 필드는 중복입니다.
+> DomainEventHandler의 ErrorResponse는 Exception 객체가 직접 로깅됩니다 (`@error` 대신).
 
 ## Logging
 
@@ -277,13 +291,13 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 
 ```
 # Request
-{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} requesting with {@request.message}
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {request.event.type} {request.event.id} requesting with {@request.message}
 
 # Response - Success
-{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {request.event.type} {request.event.id} responded {response.status} in {response.elapsed:0.0000} s
 
 # Response - Warning/Error
-{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} {request.event.type} {request.event.id} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
 ```
 
 #### Handler Event IDs
@@ -406,7 +420,7 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | Property | Application 레이어 | Adapter 레이어 |
 |----------|-------------------|---------------|
 | Span Name | `{layer} {category}.{type} {handler}.{method}` | `{layer} {category} {handler}.{method}` |
-| Example | `application usecase.command CreateOrderCommandHandler.Handle` | `adapter Repository OrderRepository.GetById` |
+| Example | `application usecase.command CreateOrderCommandHandler.Handle` | `adapter repository OrderRepository.GetById` |
 | Kind | `Internal` | `Internal` |
 
 #### Tag 구조
@@ -553,7 +567,7 @@ services
 
 > Observability로 해결할 수 없는 프로세스 크래시 분석은 [23-crash-diagnostics.md](./23-crash-diagnostics.md)을 참고하세요.
 
-## 관련 문서
+## 참고 문서
 
 | 문서 | 설명 |
 |------|------|

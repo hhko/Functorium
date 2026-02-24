@@ -22,6 +22,7 @@
 |---|---|
 | `Functorium.Testing.Arrangements.Logging` | 구조화된 로그 캡처 (LogTestContext, StructuredTestLogger) |
 | `Functorium.Testing.Arrangements.Loggers` | 인메모리 Serilog Sink (TestSink) |
+| `Functorium.Testing.Arrangements.Effects` | `FinT<IO, T>` 반환값 생성 헬퍼 (FinTFactory) |
 | `Functorium.Testing.Arrangements.Hosting` | HTTP 통합 테스트 Fixture (HostTestFixture) |
 | `Functorium.Testing.Arrangements.ScheduledJobs` | 스케줄 Job 테스트 Fixture (QuartzTestFixture) |
 | `Functorium.Testing.Actions.SourceGenerators` | 소스 생성기 테스트 Runner |
@@ -225,6 +226,34 @@ using Functorium.Testing.Assertions.Logging;
 |---|---|
 | `ToAnonymousObject(LogEventPropertyValue)` | StructureValue → Dictionary, SequenceValue → Array, ScalarValue → 원시값 |
 
+### LogEventPropertyExtractor 사용 예시
+
+스냅샷 테스트가 아닌 직접 Assertion으로 로그 필드를 검증하는 패턴:
+
+```csharp
+[Fact]
+public async Task Pipeline_Should_Log_RequestLayer_And_Handler()
+{
+    // Arrange
+    using var context = new LogTestContext();
+    var logger = context.CreateLogger<UsecaseLoggingPipeline<TestRequest, TestResponse>>();
+    var pipeline = new UsecaseLoggingPipeline<TestRequest, TestResponse>(logger);
+
+    // Act
+    await pipeline.Handle(new TestRequest("Test"), next, CancellationToken.None);
+
+    // Assert - 첫 번째 로그의 속성을 직접 검증
+    var firstLog = context.GetFirstLog();
+    var data = LogEventPropertyExtractor.ExtractLogData(firstLog);
+
+    // Properties에서 특정 필드 검증
+    var properties = (IDictionary<string, object?>)data.Properties;
+    properties["request.layer"].ShouldBe("application");
+    properties["request.category"].ShouldBe("usecase");
+    properties["request.handler"].ShouldNotBeNull();
+}
+```
+
 ### Verify 스냅샷 연동 패턴
 
 ```csharp
@@ -348,6 +377,7 @@ MyProject.ValueObjects.PhoneNumber:
 | `EntityArchitectureRuleTests` | 5 | AggregateRoot/Entity: public sealed, 상속, Create/CreateFromValidated 팩토리 |
 | `ValueObjectArchitectureRuleTests` | 4 | ValueObject: public sealed, 불변성, Create/Validate 팩토리 |
 | `DtoArchitectureRuleTests` | 5 | DTO/Model/Mapper: Persistence Mapper internal static, Usecase nested Request/Response |
+| `CqrsArchitectureRuleTests` | 1 | CQRS 패턴 준수: Query Usecase가 IRepository에 의존하지 않도록 강제 |
 | `UsecaseArchitectureRuleTests` | 4 | Command/Query: 내부 Validator/Usecase nested class 존재 |
 | `SpecificationArchitectureRuleTests` | 3 | Specification: public sealed, 상속, Domain 레이어 거주 |
 | `PortAndAdapterArchitectureRuleTests` | 3 | Adapter: GenerateObservablePort 어트리뷰트, RequestCategory, DomainService sealed |
@@ -516,6 +546,14 @@ using Functorium.Testing.Arrangements.ScheduledJobs;
 // appsettings.Test.json이 자동으로 로드됩니다
 protected virtual string EnvironmentName => "Test";
 ```
+
+> **참고**: `appsettings.Test.json` 파일은 Host 프로젝트 루트에 위치해야 하며, `.csproj`에서 `CopyToOutputDirectory`를 설정해야 합니다:
+> ```xml
+> <ItemGroup>
+>   <Content Include="appsettings.Test.json" CopyToOutputDirectory="PreserveNewest" />
+> </ItemGroup>
+> ```
+> `WebApplicationFactory`가 Host 프로젝트의 `ContentRootPath`를 기준으로 설정 파일을 로드하므로, 테스트 프로젝트가 아닌 **Host 프로젝트**에 파일이 있어야 합니다.
 
 #### DI 확장점
 

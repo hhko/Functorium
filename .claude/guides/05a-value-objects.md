@@ -4,7 +4,7 @@
 
 ## 목차
 
-- [왜 값 객체인가 (WHY)](#1-왜-값-객체인가-why)
+- [왜 값 객체인가](#왜-값-객체인가)
 - [개요](#개요)
 - [클래스 계층 구조](#클래스-계층-구조)
 - [기반 클래스](#기반-클래스)
@@ -24,10 +24,11 @@
   - [DomainErrorType 개요](#domainerrortype-개요)
   - [DomainError.For\<T\>() 헬퍼](#domainerrorfort-헬퍼)
 - [구현 패턴](#구현-패턴)
+- [참고 문서](#참고-문서)
 
 ---
 
-## 1. 왜 값 객체인가 (WHY)
+## 왜 값 객체인가
 
 DDD 전술적 설계에서 값 객체는 **도메인 개념을 명시적으로 표현하는 가장 기본적인 빌딩블록**입니다.
 
@@ -107,7 +108,7 @@ var email = Email.Create("not-an-email");  // Fin<Email> - 실패 결과 반환
 | 단일 값 래핑 | `SimpleValueObject<T>` | 단일 값으로 동등성 판단 |
 | 복합 속성 + 비교 | `ComparableValueObject` | 정렬, 비교 연산 지원 |
 | 단일 값 + 비교 | `ComparableSimpleValueObject<T>` | 정렬, 비교 연산 지원 |
-| 타입 안전한 열거형 | `SmartEnum<T, TValue>` | 도메인 로직 내장 열거형 |
+| 타입 안전한 열거형 | `SmartEnum<T, TValue>` (Ardalis.SmartEnum) | 도메인 로직 내장 열거형. IValueObject 수동 구현 필요 |
 
 ### 핵심 패턴
 
@@ -173,7 +174,7 @@ AbstractValueObject (추상 클래스)
 
 **계층 이해하기:**
 
-- **IValueObject**: 모든 값 객체가 구현하는 마커 인터페이스. SmartEnum도 이를 구현합니다.
+- **IValueObject**: 모든 값 객체가 구현하는 마커 인터페이스. SmartEnum은 IValueObject를 자동으로 구현하지 않으므로, SmartEnum 기반 값 객체에서는 IValueObject를 명시적으로 구현해야 합니다.
 - **AbstractValueObject**: 동등성 비교(`Equals`, `GetHashCode`, `==`, `!=`)를 자동 구현. ORM 프록시 타입도 처리합니다.
 - **ValueObject**: 복합 속성 값 객체의 기반. `CreateFromValidation` 헬퍼 메서드를 제공합니다.
 - **SimpleValueObject\<T\>**: 단일 값 래핑용. `GetEqualityComponents()`가 자동 구현됩니다.
@@ -1287,4 +1288,6 @@ public static Validation<Error, (string BaseCurrency, string QuoteCurrency, deci
 
 ---
 
-다음 문서: [값 객체: 열거형·검증·실전 패턴](./05b-value-objects-validation.md)
+## 참고 문서
+
+- [값 객체: 열거형·검증·실전 패턴](./05b-value-objects-validation.md)

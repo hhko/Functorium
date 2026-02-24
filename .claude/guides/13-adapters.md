@@ -5,19 +5,23 @@
 ## 목차
 
 - [Activity 2: Adapter 구현](#activity-2-adapter-구현)
-- [2.1 공통 구현 체크리스트](#21-공통-구현-체크리스트)
-- [2.2 공통 패턴](#22-공통-패턴)
+- [공통 구현 체크리스트](#공통-구현-체크리스트)
+- [공통 패턴](#공통-패턴)
   - [외부 시스템 유형별 ACL 체크리스트](#외부-시스템-유형별-acl-체크리스트)
-- [2.3 Repository Adapter](#23-repository-adapter)
-- [2.4 External API Adapter](#24-external-api-adapter)
-- [2.5 Messaging Adapter](#25-messaging-adapter)
-- [2.6 Query Adapter (CQRS Read 측)](#26-query-adapter-cqrs-read-측)
+- [Repository Adapter](#repository-adapter)
+- [External API Adapter](#external-api-adapter)
+- [Messaging Adapter](#messaging-adapter)
+- [Query Adapter (CQRS Read 측)](#query-adapter-cqrs-read-측)
+
+---
 
 ## Activity 2: Adapter 구현
 
 Adapter는 Port 인터페이스의 **구현체**입니다. `[GenerateObservablePort]` 어트리뷰트를 통해 Observability Pipeline이 자동 생성됩니다.
 
-### 2.1 공통 구현 체크리스트
+> **Source Generator 참고**: `[GenerateObservablePort]`는 Roslyn Incremental Source Generator로 구현되어 있어 빌드 시 증분 생성됩니다. Adapter 수가 많은 프로젝트에서는 `obj/GeneratedFiles/`에 생성된 코드를 확인하여 Pipeline이 올바르게 생성되었는지 검증하세요. `IO.lift`/`IO.liftAsync`로 래핑된 메서드만 Pipeline 대상이 되며, `virtual` 키워드가 없으면 Pipeline이 메서드를 오버라이드할 수 없습니다.
+
+### 공통 구현 체크리스트
 
 모든 Adapter 구현에 필수인 항목입니다.
 
@@ -28,7 +32,7 @@ Adapter는 Port 인터페이스의 **구현체**입니다. `[GenerateObservableP
 - [ ] `IO.lift()` 또는 `IO.liftAsync()` 로 비즈니스 로직을 래핑했는가?
 - [ ] Mapper 클래스가 `internal`로 선언되어 있는가? (해당 시)
 
-### 2.2 공통 패턴
+### 공통 패턴
 
 모든 Adapter 유형에 공통으로 적용되는 패턴입니다. 유형별 Adapter 구현 전에 먼저 숙지하세요.
 
@@ -136,10 +140,11 @@ public class ProductModel
     public string Name { get; set; } = default!;
     public string Description { get; set; } = default!;
     public decimal Price { get; set; }
-    public int StockQuantity { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
-    public List<TagModel> Tags { get; set; } = [];
+    public DateTime? DeletedAt { get; set; }
+    public string? DeletedBy { get; set; }
+    public List<ProductTagModel> ProductTags { get; set; } = [];
 }
 ```
 
@@ -154,30 +159,31 @@ internal static class ProductMapper
         Name = product.Name,
         Description = product.Description,
         Price = product.Price,
-        StockQuantity = product.StockQuantity,
         CreatedAt = product.CreatedAt,
-        UpdatedAt = product.UpdatedAt,
-        Tags = product.Tags.Select(t => t.ToModel(product.Id.ToString())).ToList()
+        UpdatedAt = product.UpdatedAt.ToNullable(),
+        DeletedAt = product.DeletedAt.ToNullable(),
+        DeletedBy = product.DeletedBy.Match(Some: v => (string?)v, None: () => null),
+        ProductTags = product.TagIds.Select(tagId => new ProductTagModel
+        {
+            ProductId = product.Id.ToString(),
+            TagId = tagId.ToString()
+        }).ToList()
     };
 
     public static Product ToDomain(this ProductModel model)
     {
-        var product = Product.CreateFromValidated(   // 검증 없이 복원
+        var tagIds = model.ProductTags.Select(pt => TagId.Create(pt.TagId));
+
+        return Product.CreateFromValidated(   // 검증 없이 복원
             ProductId.Create(model.Id),
             ProductName.CreateFromValidated(model.Name),
             ProductDescription.CreateFromValidated(model.Description),
             Money.CreateFromValidated(model.Price),
-            Quantity.CreateFromValidated(model.StockQuantity),
+            tagIds,
             model.CreatedAt,
-            model.UpdatedAt);
-
-        foreach (var tag in model.Tags)
-            product.AddTag(tag.ToDomain());
-
-        // AddTag이 발행한 이벤트는 복원 과정의 부산물이므로 제거
-        product.ClearDomainEvents();
-
-        return product;
+            Optional(model.UpdatedAt),
+            Optional(model.DeletedAt),
+            Optional(model.DeletedBy));
     }
 }
 ```
@@ -189,6 +195,7 @@ internal static class ProductMapper
 public class EfCoreProductRepository : IProductRepository
 {
     private readonly LayeredArchDbContext _dbContext;
+    private readonly IDomainEventCollector _eventCollector;
 
     public string RequestCategory => "Repository";
 
@@ -198,7 +205,7 @@ public class EfCoreProductRepository : IProductRepository
         {
             var model = await _dbContext.Products
                 .AsNoTracking()
-                .Include(p => p.Tags)
+                .Include(p => p.ProductTags)
                 .FirstOrDefaultAsync(p => p.Id == id.ToString());
 
             if (model is not null)
@@ -218,6 +225,7 @@ public class EfCoreProductRepository : IProductRepository
         return IO.liftAsync(async () =>
         {
             _dbContext.Products.Add(product.ToModel());  // 확장 메서드로 Model 변환
+            _eventCollector.Track(product);
             return Fin.Succ(product);
         });
     }
@@ -361,7 +369,7 @@ ManyErrors ───────────────────────
 - **ACL 필수 예**: 레거시 DB, 외부 팀의 API, 서드파티 메시지 스키마
 - **Pass-through 허용 예**: 같은 팀의 공유 메시지 계약 (현재 Messaging Adapter 패턴)
 
-### 2.3 Repository Adapter
+### Repository Adapter
 
 Repository Adapter는 데이터 저장소에 대한 CRUD 작업을 구현합니다.
 
@@ -378,19 +386,22 @@ using static LanguageExt.Prelude;
 [GenerateObservablePort]                                    // 1. Pipeline 자동 생성
 public class InMemoryProductRepository : IProductRepository  // 2. Port 인터페이스 구현
 {
-    private static readonly ConcurrentDictionary<ProductId, Product> _products = new();
+    internal static readonly ConcurrentDictionary<ProductId, Product> Products = new();
+    private readonly IDomainEventCollector _eventCollector;
 
     public string RequestCategory => "Repository";     // 3. 요청 카테고리
 
-    public InMemoryProductRepository()                 // 4. 생성자
+    public InMemoryProductRepository(IDomainEventCollector eventCollector)  // 4. 생성자
     {
+        _eventCollector = eventCollector;
     }
 
     public virtual FinT<IO, Product> Create(Product product)  // 5. virtual 필수
     {
         return IO.lift(() =>                           // 6. IO.lift (동기)
         {
-            _products[product.Id] = product;
+            Products[product.Id] = product;
+            _eventCollector.Track(product);
             return Fin.Succ(product);                  // 7. 성공 반환
         });
     }
@@ -399,7 +410,7 @@ public class InMemoryProductRepository : IProductRepository  // 2. Port 인터�
     {
         return IO.lift(() =>
         {
-            if (_products.TryGetValue(id, out Product? product))
+            if (Products.TryGetValue(id, out Product? product) && product.DeletedAt.IsNone)
             {
                 return Fin.Succ(product);
             }
@@ -415,7 +426,7 @@ public class InMemoryProductRepository : IProductRepository  // 2. Port 인터�
     {
         return IO.lift(() =>
         {
-            if (!_products.TryRemove(id, out _))
+            if (!Products.TryGetValue(id, out var product))
             {
                 return AdapterError.For<InMemoryProductRepository>(
                     new NotFound(),
@@ -423,6 +434,8 @@ public class InMemoryProductRepository : IProductRepository  // 2. Port 인터�
                     $"상품 ID '{id}'을(를) 찾을 수 없습니다");
             }
 
+            product.Delete("system");
+            _eventCollector.Track(product);
             return Fin.Succ(unit);                     // 9. Unit 반환
         });
     }
@@ -431,7 +444,7 @@ public class InMemoryProductRepository : IProductRepository  // 2. Port 인터�
 }
 ```
 
-> **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryProductRepository.cs`
+> **참조**: `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryProductRepository.cs`
 
 **Repository Adapter 핵심 패턴**:
 
@@ -458,9 +471,12 @@ DbContext는 **Persistence Model(POCO)** 을 DbSet 타입으로 사용합니다.
 public class LayeredArchDbContext : DbContext
 {
     public DbSet<ProductModel> Products => Set<ProductModel>();
+    public DbSet<InventoryModel> Inventories => Set<InventoryModel>();
     public DbSet<OrderModel> Orders => Set<OrderModel>();
+    public DbSet<OrderLineModel> OrderLines => Set<OrderLineModel>();
     public DbSet<CustomerModel> Customers => Set<CustomerModel>();
     public DbSet<TagModel> Tags => Set<TagModel>();
+    public DbSet<ProductTagModel> ProductTags => Set<ProductTagModel>();
 
     public LayeredArchDbContext(DbContextOptions<LayeredArchDbContext> options) : base(options)
     {
@@ -490,7 +506,9 @@ Persistence Model은 primitive 타입만 사용하므로, EF Core `HasConversion
 | `string` (이름 등) | `HasMaxLength(N).IsRequired()` | — |
 | `decimal` (금액) | `HasPrecision(18, 4)` | — |
 | `int` (수량) | — | 기본 매핑 |
-| `List<TagModel>` (컬렉션) | `HasMany().WithOne().HasForeignKey().OnDelete(Cascade)` | — |
+| `DateTime?` (삭제일시) | — | Soft Delete 지원 |
+| `string?` (삭제자) | `HasMaxLength(320)` | — |
+| `List<ProductTagModel>` (컬렉션) | `HasMany().WithOne().HasForeignKey().OnDelete(Cascade)` | — |
 
 **Entity Configuration 예시:**
 
@@ -521,9 +539,15 @@ public class ProductConfiguration : IEntityTypeConfiguration<ProductModel>
         builder.Property(p => p.CreatedAt);
         builder.Property(p => p.UpdatedAt);
 
-        builder.HasMany(p => p.Tags)
+        builder.Property(p => p.DeletedAt);
+        builder.Property(p => p.DeletedBy).HasMaxLength(320);
+
+        // Global Query Filter: 삭제된 상품 자동 제외
+        builder.HasQueryFilter(p => p.DeletedAt == null);
+
+        builder.HasMany(p => p.ProductTags)
             .WithOne()
-            .HasForeignKey(t => t.ProductId)
+            .HasForeignKey(pt => pt.ProductId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
@@ -576,7 +600,7 @@ public class EfCoreProductRepository : IProductRepository
         {
             var model = await _dbContext.Products
                 .AsNoTracking()
-                .Include(p => p.Tags)
+                .Include(p => p.ProductTags)
                 .FirstOrDefaultAsync(p => p.Id == id.ToString());  // string 비교
 
             if (model is not null)
@@ -595,7 +619,11 @@ public class EfCoreProductRepository : IProductRepository
     {
         return IO.liftAsync(async () =>
         {
-            var model = await _dbContext.Products.FindAsync(id.ToString());
+            var model = await _dbContext.Products
+                .IgnoreQueryFilters()
+                .Include(p => p.ProductTags)
+                .FirstOrDefaultAsync(p => p.Id == id.ToString());
+
             if (model is null)
             {
                 return AdapterError.For<EfCoreProductRepository>(
@@ -604,7 +632,10 @@ public class EfCoreProductRepository : IProductRepository
                     $"상품 ID '{id}'을(를) 찾을 수 없습니다");
             }
 
-            _dbContext.Products.Remove(model);
+            var product = model.ToDomain();
+            product.Delete("system");
+            _dbContext.Products.Update(product.ToModel());
+            _eventCollector.Track(product);
             return Fin.Succ(unit);
         });
     }
@@ -622,8 +653,9 @@ public class EfCoreProductRepository : IProductRepository
 | IO 래핑 | `IO.lift(() => { ... })` | `IO.liftAsync(async () => { ... })` |
 | 저장소 | `ConcurrentDictionary<TId, T>` | `DbContext.Set<TModel>()` |
 | 저장/조회 변환 | 불필요 (도메인 객체 직접 저장) | `product.ToModel()` / `model.ToDomain()` |
-| 조회 | `_products.TryGetValue(id, ...)` | `_dbContext.Products.FindAsync(id.ToString())` |
-| Navigation 로딩 | 불필요 (메모리 내 참조) | `.Include(p => p.Tags)` |
+| 조회 | `Products.TryGetValue(id, ...)` | `_dbContext.Products.FirstOrDefaultAsync(...)` |
+| Navigation 로딩 | 불필요 (메모리 내 참조) | `.Include(p => p.ProductTags)` |
+| 삭제 방식 | Soft Delete (`product.Delete(...)`) | Soft Delete (`product.Delete(...)` + `Update`) |
 | 트랜잭션 관리 | No-op (`InMemoryUnitOfWork`) | `DbContext.SaveChangesAsync()` (`EfCoreUnitOfWork`) |
 | 에러 패턴 | `AdapterError.For<T>(...)` | `AdapterError.For<T>(...)` (동일) |
 | Pipeline 생성 | `[GenerateObservablePort]` | `[GenerateObservablePort]` (동일) |
@@ -689,7 +721,7 @@ public class EfCoreUnitOfWork : IUnitOfWork
 }
 ```
 
-> **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Repositories/EfCore/EfCoreUnitOfWork.cs`
+> **참조**: `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/EfCoreUnitOfWork.cs`
 
 ##### InMemoryUnitOfWork 구현
 
@@ -710,7 +742,7 @@ public class InMemoryUnitOfWork : IUnitOfWork
 }
 ```
 
-> **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryUnitOfWork.cs`
+> **참조**: `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryUnitOfWork.cs`
 
 ##### IDomainEventCollector — Repository와 Publisher의 브릿지
 
@@ -754,7 +786,7 @@ Repository의 `Create()`, `Update()`, `Delete()` 메서드는 EF Core 변경 추
 
 > **참조**: 파이프라인 패턴은 [11-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](./11-usecases-and-cqrs.md#트랜잭션과-이벤트-발행-usecasetransactionpipeline)을 참조하세요.
 
-### 2.4 External API Adapter
+### External API Adapter
 
 External API Adapter는 HTTP 클라이언트를 통한 외부 시스템 호출을 구현합니다.
 
@@ -873,7 +905,7 @@ public class ExternalPricingApiService : IExternalPricingService
 }
 ```
 
-> **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Adapters.Infrastructure/ExternalApis/ExternalPricingApiService.cs`
+> **참조**: `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Infrastructure/ExternalApis/ExternalPricingApiService.cs`
 
 **HTTP 상태 코드 → AdapterErrorType 매핑 참조**:
 
@@ -895,7 +927,7 @@ public class ExternalPricingApiService : IExternalPricingService
 | `TaskCanceledException` (타임아웃) | `new Timeout(timespan)` | 응답 시간 초과 |
 | `Exception` | `new UnexpectedException()` | 예상 외 예외 |
 
-### 2.5 Messaging Adapter
+### Messaging Adapter
 
 Messaging Adapter는 메시지 브로커를 통한 서비스 간 통신을 구현합니다.
 
@@ -981,7 +1013,7 @@ public class RabbitMqInventoryMessaging : IInventoryMessaging
 - 동일 패턴: `internal record` + `internal static class XxxMessageMapper`
 - 판단 기준은 [외부 시스템 유형별 ACL 체크리스트](#외부-시스템-유형별-acl-체크리스트) 참조
 
-### 2.6 Query Adapter (CQRS Read 측)
+### Query Adapter (CQRS Read 측)
 
 Query Adapter는 CQRS의 Read 측을 담당하는 Adapter입니다. Aggregate 재구성 없이 DTO를 직접 반환하며, 페이지네이션/정렬을 DB 레벨에서 처리합니다.
 
@@ -1057,7 +1089,7 @@ var sort = SortExpression.Empty;
 ┌────────────────────────────────┐      ┌──────────────────────────────────┐
 │ DapperQueryAdapterBase<T,TDto> │      │ DapperProductQueryAdapter        │
 │                                │      │   : DapperQueryAdapterBase<...>  │
-│ • Search() — 실행 엔진         │ ◄─── │   , IProductQueryAdapter         │
+│ • Search() — 실행 엔진         │ ◄─── │   , IProductQuery                │
 │ • BuildOrderByClause()        │      │                                  │
 │ • Params() 헬퍼               │      │ • SelectSql, CountSql            │
 │ • IDbConnection 보유           │      │ • DefaultOrderBy                 │
@@ -1085,7 +1117,7 @@ var sort = SortExpression.Empty;
 ```csharp
 [GenerateObservablePort]
 public class DapperProductQueryAdapter
-    : DapperQueryAdapterBase<Product, ProductSummaryDto>, IProductQueryAdapter
+    : DapperQueryAdapterBase<Product, ProductSummaryDto>, IProductQuery
 {
     public string RequestCategory => "QueryAdapter";
 
@@ -1097,12 +1129,12 @@ public class DapperProductQueryAdapter
 
     public DapperProductQueryAdapter(IDbConnection connection) : base(connection) { }
 
-    protected override (string, DynamicParameters) BuildWhereClause(Specification<Product>? spec)
+    protected override (string, DynamicParameters) BuildWhereClause(Specification<Product> spec)
         => spec switch
         {
-            null => ("", new DynamicParameters()),
+            { IsAll: true } => ("WHERE DeletedAt IS NULL", new DynamicParameters()),
             ProductPriceRangeSpec s => (
-                "WHERE Price >= @MinPrice AND Price <= @MaxPrice",
+                "WHERE DeletedAt IS NULL AND Price >= @MinPrice AND Price <= @MaxPrice",
                 Params(("MinPrice", (decimal)s.MinPrice), ("MaxPrice", (decimal)s.MaxPrice))),
             _ => throw new NotSupportedException(
                 $"Specification '{spec.GetType().Name}'은 Dapper QueryAdapter에서 지원되지 않습니다.")
@@ -1119,7 +1151,7 @@ public class DapperProductQueryAdapter
 ```csharp
 [GenerateObservablePort]
 public class DapperProductWithStockQueryAdapter
-    : DapperQueryAdapterBase<Product, ProductWithStockDto>, IProductWithStockQueryAdapter
+    : DapperQueryAdapterBase<Product, ProductWithStockDto>, IProductWithStockQuery
 {
     public string RequestCategory => "QueryAdapter";
 
@@ -1139,12 +1171,12 @@ public class DapperProductWithStockQueryAdapter
 
     public DapperProductWithStockQueryAdapter(IDbConnection connection) : base(connection) { }
 
-    protected override (string, DynamicParameters) BuildWhereClause(Specification<Product>? spec)
+    protected override (string, DynamicParameters) BuildWhereClause(Specification<Product> spec)
         => spec switch
         {
-            null => ("", new DynamicParameters()),
+            { IsAll: true } => ("WHERE p.DeletedAt IS NULL", new DynamicParameters()),
             ProductPriceRangeSpec s => (
-                "WHERE p.Price >= @MinPrice AND p.Price <= @MaxPrice",
+                "WHERE p.DeletedAt IS NULL AND p.Price >= @MinPrice AND p.Price <= @MaxPrice",
                 Params(("MinPrice", (decimal)s.MinPrice), ("MaxPrice", (decimal)s.MaxPrice))),
             _ => throw new NotSupportedException(...)
         };
@@ -1158,16 +1190,26 @@ public class DapperProductWithStockQueryAdapter
 Dapper Query Adapter는 Specification을 패턴 매칭으로 SQL WHERE 절로 변환합니다. 모든 값은 `@Parameter`로 바인딩합니다.
 
 ```csharp
-protected override (string, DynamicParameters) BuildWhereClause(Specification<Product>? spec)
+protected override (string, DynamicParameters) BuildWhereClause(Specification<Product> spec)
     => spec switch
     {
-        null => ("", new DynamicParameters()),
+        { IsAll: true } => ("WHERE DeletedAt IS NULL", new DynamicParameters()),
         ProductPriceRangeSpec s => (
-            "WHERE Price >= @MinPrice AND Price <= @MaxPrice",
+            "WHERE DeletedAt IS NULL AND Price >= @MinPrice AND Price <= @MaxPrice",
             Params(("MinPrice", (decimal)s.MinPrice), ("MaxPrice", (decimal)s.MaxPrice))),
         _ => throw new NotSupportedException(...)
     };
 ```
+
+#### Dapper SQL 작성 체크리스트
+
+- [ ] 모든 WHERE 조건의 값은 `@Parameter`로 바인딩했는가? (문자열 결합 금지)
+- [ ] `SelectSql`/`CountSql`에 `WHERE`/`ORDER BY`를 포함하지 않았는가? (베이스 클래스가 처리)
+- [ ] 컬럼 alias는 DTO 프로퍼티명과 일치하는가? (예: `Id AS ProductId`)
+- [ ] JOIN 시 테이블 alias를 사용했는가? (예: `p.Name`, `i.StockQuantity`)
+- [ ] `AllowedSortColumns`에 정렬 가능한 필드를 모두 등록했는가?
+- [ ] `DefaultOrderBy`에 유효한 기본 정렬을 지정했는가?
+- [ ] 미지원 Specification에 대해 `NotSupportedException`을 던지는가?
 
 #### SQL 인젝션 방지 (3중 보호)
 
@@ -1183,22 +1225,24 @@ InMemory 구현은 기존 Repository를 위임하여 데이터를 가져온 후 
 
 ```csharp
 [GenerateObservablePort]
-public class InMemoryProductQueryAdapter : IProductQueryAdapter
+public class InMemoryProductQueryAdapter : IProductQuery
 {
-    private readonly InMemoryProductRepository _repository;
-
     public string RequestCategory => "QueryAdapter";
 
     public virtual FinT<IO, PagedResult<ProductSummaryDto>> Search(
-        Specification<Product>? spec, PageRequest page, SortExpression sort)
+        Specification<Product> spec, PageRequest page, SortExpression sort)
     {
-        // Repository에서 데이터 조회 → 인메모리 정렬/페이지네이션/DTO 변환
+        return IO.lift(() =>
+        {
+            // InMemoryProductRepository.Products 정적 필드에서 데이터 조회
+            // → 인메모리 정렬/페이지네이션/DTO 변환
+        });
     }
 }
 ```
 
 - InMemory는 테스트용이므로 Aggregate 재구성 비용이 무시 가능
-- `InMemoryProductRepository`를 생성자 주입받아 `GetAll()`/`FindAll()` 사용
+- `InMemoryProductRepository.Products` 정적 필드를 직접 참조하여 데이터 조회
 ---
 
 ## 참고 문서

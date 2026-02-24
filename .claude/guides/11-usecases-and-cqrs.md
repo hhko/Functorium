@@ -4,7 +4,7 @@
 
 ## 목차
 
-- [왜 CQRS인가 (WHY)](#왜-cqrs인가-why)
+- [왜 CQRS인가](#왜-cqrs인가)
 - [요약](#요약)
 - [CQRS 패턴 개요](#cqrs-패턴-개요)
 - [프로젝트 구조](#프로젝트-구조)
@@ -23,7 +23,7 @@
 
 ---
 
-## 왜 CQRS인가 (WHY)
+## 왜 CQRS인가
 
 ### DDD에서 Application Service의 역할
 
@@ -76,6 +76,7 @@ Functorium에서 각 유스케이스는 하나의 클래스로 표현됩니다. 
 | `FinT<IO, A>` | IO 효과를 포함한 Fin 타입 | Repository/Adapter |
 | `FinResponse<A>` | Functorium Response 성공/실패 타입 | Usecase |
 | `Error` | 오류 정보 | 공통 |
+| `ICacheable` | Query 캐싱 마커 인터페이스 (`CacheKey`, `Duration`) | Usecase |
 
 ### 권장 구현 패턴
 
@@ -431,13 +432,20 @@ return FinResponse.Fail<Response>(
 
 | 에러 타입 | 설명 | 사용 예시 |
 |-----------|------|----------|
-| `AlreadyExists` | 이미 존재함 | `new AlreadyExists()` |
+| `Empty` | 값이 비어있음 | `new Empty()` |
+| `Null` | 값이 null임 | `new Null()` |
 | `NotFound` | 찾을 수 없음 | `new NotFound()` |
+| `AlreadyExists` | 이미 존재함 | `new AlreadyExists()` |
 | `Duplicate` | 중복됨 | `new Duplicate()` |
-| `ValidationFailed` | 검증 실패 | `new ValidationFailed(PropertyName: "Email")` |
-| `BusinessRuleViolated` | 비즈니스 규칙 위반 | `new BusinessRuleViolated(RuleName: "MaxOrderLimit")` |
+| `InvalidState` | 유효하지 않은 상태 | `new InvalidState()` |
 | `Unauthorized` | 인증되지 않음 | `new Unauthorized()` |
 | `Forbidden` | 접근 금지 | `new Forbidden()` |
+| `ValidationFailed` | 검증 실패 | `new ValidationFailed(PropertyName: "Email")` |
+| `BusinessRuleViolated` | 비즈니스 규칙 위반 | `new BusinessRuleViolated(RuleName: "MaxOrderLimit")` |
+| `ConcurrencyConflict` | 동시성 충돌 | `new ConcurrencyConflict()` |
+| `ResourceLocked` | 리소스 잠금 | `new ResourceLocked(ResourceName: "Order")` |
+| `OperationCancelled` | 작업 취소됨 | `new OperationCancelled()` |
+| `InsufficientPermission` | 권한 부족 | `new InsufficientPermission(Permission: "Admin")` |
 | `Custom` | 커스텀 에러 (상속 정의) | `public sealed record PaymentDeclined : ApplicationErrorType.Custom;` → `new PaymentDeclined()` |
 
 ### 에러 코드 형식
@@ -868,7 +876,11 @@ services
     .Build();
 ```
 
-> Transaction 파이프라인은 `IUnitOfWork`, `IDomainEventPublisher`가 DI에 등록되어 있어야 합니다 (`IDomainEventCollector`는 Publisher 내부 의존성).
+> Transaction 파이프라인은 `IUnitOfWork`, `IDomainEventPublisher`, `IDomainEventCollector` 세 가지 모두 DI에 등록되어 있어야 합니다 (`HasTransactionDependencies`로 검증).
+
+### 트랜잭션 격리와 동시성
+
+여러 Repository가 하나의 DbContext를 공유하므로 기본 격리 수준은 Read Committed이며, 동시성 충돌은 EF Core의 Optimistic Concurrency(`[ConcurrencyCheck]` 또는 `IsConcurrencyToken()`)로 처리합니다. Optimistic Concurrency 충돌 시 `DbUpdateConcurrencyException`이 발생하고, `UsecaseExceptionPipeline`이 이를 `FinResponse.Fail`로 변환합니다.
 
 ### 핵심 원칙
 
@@ -963,11 +975,74 @@ public sealed class Validator : AbstractValidator<Request>
 
 ### Pipeline을 통한 자동 검증
 
-`UsecaseValidationPipeline`을 등록하면 Handler 실행 전에 자동으로 Validator가 실행됩니다:
+`UsecaseValidationPipeline`은 `ConfigurePipelines`의 `UseAll()` 또는 `UseValidation()`으로 등록됩니다. Handler 실행 전에 자동으로 Validator가 실행됩니다:
 
 ```csharp
-services.AddValidatorsFromAssembly(typeof(Program).Assembly);
-services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UsecaseValidationPipeline<,>));
+services
+    .AddValidatorsFromAssembly(typeof(Program).Assembly)
+    .ConfigurePipelines(pipelines => pipelines
+        .UseAll());   // Validation 파이프라인 포함
+```
+
+### FluentValidation 실패와 에러 타입 매핑
+
+FluentValidation 검증 실패는 `UsecaseValidationPipeline`에서 `AdapterErrorType.PipelineValidation`으로 변환됩니다. 이는 Application 레이어의 `ApplicationErrorType.ValidationFailed`와는 다른 에러 타입입니다:
+
+| 검증 레이어 | 에러 타입 | 사용 위치 |
+|------------|----------|----------|
+| FluentValidation (Pipeline) | `AdapterErrorType.PipelineValidation(PropertyName)` | `UsecaseValidationPipeline` 자동 처리 |
+| VO/비즈니스 규칙 (Usecase) | `ApplicationErrorType.ValidationFailed(PropertyName)` | Usecase 내 수동 사용 |
+
+FluentValidation 실패 시 각 `ValidationFailure`의 `PropertyName`과 `ErrorMessage`가 `AdapterError.For<UsecaseValidationPipeline>(new PipelineValidation(PropertyName), ...)` 형태로 변환되어 `FinResponse.Fail`로 반환됩니다.
+
+### Value Object 검증 확장 메서드
+
+Functorium은 C#14 extension members 문법을 사용하여 Value Object의 `Validate()` 메서드를 FluentValidation 규칙으로 통합하는 확장 메서드를 제공합니다:
+
+| 메서드 | 사용 조건 | 예시 |
+|--------|----------|------|
+| `MustSatisfyValidation` | 입력 타입 == 출력 타입 | `RuleFor(x => x.Price).MustSatisfyValidation(Money.ValidateAmount)` |
+| `MustSatisfyValidationOf<TVO>` | 입력 타입 != 출력 타입 | `RuleFor(x => x.Name).MustSatisfyValidationOf<ProductName>(ProductName.Validate)` |
+
+```csharp
+public sealed class Validator : AbstractValidator<Request>
+{
+    public Validator()
+    {
+        // 입력/출력 타입 동일: decimal → Validation<Error, decimal>
+        RuleFor(x => x.Price)
+            .MustSatisfyValidation(Money.ValidateAmount);
+
+        // 입력/출력 타입 다름: string → Validation<Error, ProductName>
+        RuleFor(x => x.Name)
+            .MustSatisfyValidationOf<ProductName>(ProductName.Validate);
+    }
+}
+```
+
+> **참고**: `MustSatisfyValidationOf`는 C#14 extension members의 타입 추론 제한으로 `IRuleBuilderInitial`에서 추가 제네릭 파라미터 해결이 안 되는 경우, 전통적인 확장 메서드 오버로드(`MustSatisfyValidationOf<TRequest, TProperty, TValueObject>`)도 제공됩니다.
+
+### SmartEnum 검증 확장 메서드
+
+Ardalis.SmartEnum에 대한 FluentValidation 확장 메서드도 제공됩니다:
+
+| 메서드 | 용도 |
+|--------|------|
+| `MustBeEnum<TSmartEnum, TValue>` | SmartEnum Value로 검증 |
+| `MustBeEnum<TSmartEnum>` | int 기반 SmartEnum 간소화 오버로드 |
+| `MustBeEnumName<TSmartEnum, TValue>` | SmartEnum Name으로 검증 |
+| `MustBeEnumValue<TSmartEnum>` | string Value SmartEnum (대소문자 무시) |
+
+### ICacheable 인터페이스
+
+Query Request에 `ICacheable`을 구현하면 캐싱을 지원할 수 있습니다:
+
+```csharp
+public sealed record Request(string ProductId) : IQueryRequest<Response>, ICacheable
+{
+    public string CacheKey => $"Product:{ProductId}";
+    public TimeSpan? Duration => TimeSpan.FromMinutes(5);
+}
 ```
 
 ---
@@ -1019,6 +1094,8 @@ public sealed record Response(
 
 **A:** 네, 비동기 메서드에는 항상 CancellationToken을 전달하세요. 다만 FinT<IO, T> 패턴을 사용하는 경우 Repository 내부에서 처리됩니다.
 
+> **Query Handler 참고**: Query Handler의 `Handle` 메서드는 `CancellationToken cancellationToken` 파라미터를 받지만, FinT<IO, T> LINQ 체인 내에서는 직접 전달할 위치가 없습니다. CancellationToken은 Adapter 내부의 `IO.liftAsync` 블록에서 필요한 경우 Adapter 메서드 시그니처에 포함하여 전달합니다.
+
 ### Q7. SaveChanges와 이벤트 발행은 어디서 처리하나요?
 
 **A:** `UsecaseTransactionPipeline`이 자동으로 처리합니다. Usecase에서 `IUnitOfWork`나 `IDomainEventPublisher`를 직접 주입할 필요가 없습니다.
@@ -1027,7 +1104,7 @@ public sealed record Response(
 2. **파이프라인이 SaveChanges 자동 호출**: Handler 성공 시 `IUnitOfWork.SaveChanges()`를 호출하고, 실패 시 커밋하지 않습니다.
 3. **파이프라인이 도메인 이벤트 자동 발행**: Repository가 `IDomainEventCollector.Track()`으로 추적한 Aggregate의 도메인 이벤트를 `SaveChanges()` 성공 후 자동 발행합니다.
 
-활성화: `.ConfigurePipelines(pipelines => pipelines.UseAll().UseTransaction())`
+활성화: `.ConfigurePipelines(pipelines => pipelines.UseAll())` (`UseAll()`에 Transaction 포함)
 
 ---
 

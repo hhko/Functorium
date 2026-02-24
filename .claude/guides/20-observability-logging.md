@@ -1201,7 +1201,7 @@ A: 로그 시스템에 따라 다릅니다:
 
 ---
 
-## 참조
+## 참고 문서
 
 - [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/)
 - [Serilog Structured Logging](https://serilog.net/)

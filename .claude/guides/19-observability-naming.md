@@ -1,6 +1,15 @@
 # Observability 네이밍 가이드
 
-## 1. 코드 네이밍 규칙
+## 목차
+
+- [코드 네이밍 규칙](#코드-네이밍-규칙)
+- [필드/태그 네이밍 규칙](#필드태그-네이밍-규칙)
+- [Logger 메서드 네이밍 규칙](#logger-메서드-네이밍-규칙)
+- [참고 문서](#참고-문서)
+
+---
+
+## 코드 네이밍 규칙
 
 ### 개요
 
@@ -373,6 +382,16 @@ Src/Functorium/Adapters/Observabilities/
 └── Context/          ✅
 ```
 
+> **참고**: 위 구조는 설계 의도를 나타내며, 현재 코드베이스의 실제 구조와 차이가 있습니다. 현재 `Applications/Observabilities/` 디렉토리는 존재하지 않고, `Adapters/Observabilities/`의 실제 하위 폴더 구조는 다음과 같습니다:
+> ```
+> Src/Functorium/Adapters/Observabilities/
+> ├── Builders/Configurators/   (LoggingConfigurator, TracingConfigurator, MetricsConfigurator 등)
+> ├── Events/                   (ObservableDomainEventPublisher 등)
+> ├── Loggers/                  (UsecaseLoggerExtensions, StartupLogger 등)
+> ├── Naming/                   (ObservabilityNaming 상수)
+> └── Pipelines/                (UsecaseLoggingPipeline, UsecaseTracingPipeline, UsecaseMetricsPipeline 등)
+> ```
+
 ### 네임스페이스 구조
 
 ```
@@ -416,19 +435,28 @@ Functorium.Adapters.Observabilities.Pipelines/
 `ObservabilityNaming` 클래스는 모든 관찰 가능성 관련 상수를 정의합니다.
 
 ```csharp
-public static class ObservabilityNaming
+public static partial class ObservabilityNaming
 {
-    /// <summary>
-    /// OpenTelemetry Signals
-    /// - Logging: 로그 신호 시스템
-    /// - Tracing: 분산 추적 신호 시스템
-    /// - Metrics: 메트릭 신호 시스템
-    /// </summary>
-    public static class Signals
+    public static class Layers
     {
-        public const string Logging = "logging";
-        public const string Tracing = "tracing";
-        public const string Metrics = "metrics";
+        public const string Application = "application";
+        public const string Adapter = "adapter";
+    }
+
+    public static class Categories
+    {
+        public const string Usecase = "usecase";
+        public const string Repository = "repository";
+        public const string Event = "event";
+        public const string Unknown = "unknown";
+    }
+
+    public static class CategoryTypes
+    {
+        public const string Command = "command";
+        public const string Query = "query";
+        public const string Event = "event";
+        public const string Unknown = "unknown";
     }
 
     /// <summary>
@@ -437,8 +465,11 @@ public static class ObservabilityNaming
     /// </summary>
     public static class OTelAttributes
     {
-        public const string CodeFunction = "code.function";
         public const string ErrorType = "error.type";
+        public const string ServiceNamespace = "service.namespace";
+        public const string ServiceName = "service.name";
+        public const string ServiceVersion = "service.version";
+        public const string ServiceInstanceId = "service.instance.id";
         // ...
     }
 
@@ -448,7 +479,13 @@ public static class ObservabilityNaming
     public static class CustomAttributes
     {
         public const string RequestLayer = "request.layer";
+        public const string RequestCategory = "request.category";
+        public const string RequestCategoryType = "request.category.type";
+        public const string RequestHandler = "request.handler";
+        public const string RequestHandlerMethod = "request.handler.method";
         public const string ResponseStatus = "response.status";
+        public const string ResponseElapsed = "response.elapsed";
+        public const string ErrorCode = "error.code";
         // ...
     }
 }
@@ -582,7 +619,7 @@ services.AddOpenTelemetry(options, builder =>
 
 > **Section 1과 Section 2의 관계:** Section 1은 C# 소스 코드에서 사용하는 식별자 명명 규칙을 다룹니다. 클래스명은 PascalCase(`TracingConfigurator`, `UsecaseLoggingPipeline`), 파라미터는 camelCase를 따릅니다. Section 2는 이러한 코드가 실행 시 방출하는 Observability 데이터의 식별자 명명 규칙을 다룹니다. 계측 데이터에서는 dot-separated lowercase(`request.layer`, `response.status`)와 snake_case(`success_count`)를 사용합니다. 즉, Section 1은 "코드를 어떻게 작성하는가"에 대한 규칙이고, Section 2는 "코드가 생성하는 텔레메트리 데이터를 어떻게 명명하는가"에 대한 규칙입니다.
 
-## 2. 필드/태그 네이밍 규칙
+## 필드/태그 네이밍 규칙
 
 ### 개요
 
@@ -827,7 +864,7 @@ response.event.failure_count     # 조합 count는 _count
 | DomainEvent Publisher Logging | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherLoggingStructureTests.cs` |
 | DomainEvent Handler Logging | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerLoggingStructureTests.cs` |
 
-## 3. Logger 메서드 네이밍 규칙
+## Logger 메서드 네이밍 규칙
 
 LoggerExtensions 클래스에서 로그 메서드 이름을 작성할 때 따라야 하는 규칙입니다.
 
@@ -921,15 +958,12 @@ LogDomainEventsPublisherResponsePartialFailure(...)
 3. 필요한 Status 결정 (`Success`, `Warning`, `Error`)
 4. 패턴에 따라 메서드 이름 작성
 
-## 관련 문서
+## 참고 문서
 
 - [18-observability-spec.md](./18-observability-spec.md) — Observability 사양 (Field/Tag, Meter, 메시지 템플릿)
 - [20-observability-logging.md](./20-observability-logging.md) — Observability 로깅 상세
 - [21-observability-metrics.md](./21-observability-metrics.md) — Observability 메트릭 상세
 - [22-observability-tracing.md](./22-observability-tracing.md) — Observability 트레이싱 상세
-
-## 참고 자료
-
 - [OpenTelemetry Specification](https://opentelemetry.io/docs/specs/)
 - [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/)
 - [OpenTelemetry .NET](https://github.com/open-telemetry/opentelemetry-dotnet)

@@ -4,18 +4,18 @@
 
 ## 목차
 
-- [1. 왜 Specification 패턴인가 (WHY)](#1-왜-specification-패턴인가-why)
-- [2. Specification이란 무엇인가 (WHAT)](#2-specification이란-무엇인가-what)
-- [3. Specification 구현 (HOW)](#3-specification-구현-how)
-- [4. Repository에서 사용 (HOW)](#4-repository에서-사용-how)
-- [5. Usecase에서 사용 (HOW)](#5-usecase에서-사용-how)
-- [6. 테스트 패턴](#6-테스트-패턴)
-- [7. 체크리스트](#7-체크리스트)
+- [왜 Specification 패턴인가](#왜-specification-패턴인가)
+- [Specification이란 무엇인가 (WHAT)](#specification이란-무엇인가-what)
+- [Specification 구현 (HOW)](#specification-구현-how)
+- [Repository에서 사용 (HOW)](#repository에서-사용-how)
+- [Usecase에서 사용 (HOW)](#usecase에서-사용-how)
+- [테스트 패턴](#테스트-패턴)
+- [체크리스트](#체크리스트)
 - [참고 문서](#참고-문서)
 
 ---
 
-## 1. 왜 Specification 패턴인가 (WHY)
+## 왜 Specification 패턴인가
 
 Specification 패턴은 DDD에서 **비즈니스 규칙을 캡슐화하고 조합 가능하게** 만드는 빌딩블록입니다.
 
@@ -53,7 +53,7 @@ public interface IProductRepository
 
 ---
 
-## 2. Specification이란 무엇인가 (WHAT)
+## Specification이란 무엇인가 (WHAT)
 
 ### `Specification<T>` 추상 클래스
 
@@ -99,6 +99,45 @@ var spec = priceRange & !lowStock;
 | `OrSpecification<T>` | `Or()` / `\|` | 한쪽이라도 만족 시 `true` |
 | `NotSpecification<T>` | `Not()` / `!` | 반전 |
 
+### `Specification<T>.All` (항등원)
+
+`Specification<T>.All`은 모든 엔터티를 만족하는 Null Object Specification입니다. `&` 연산의 항등원으로 동작합니다:
+
+```csharp
+// All & X = X, X & All = X (항등원)
+Specification<Product>.All & priceRange  // → priceRange
+priceRange & Specification<Product>.All  // → priceRange
+```
+
+**주요 용도 — 선택적 필터 조합의 초기값**:
+
+필터 조건이 선택적일 때 `null` 대신 `All`을 초기값으로 사용하면 null 체크 없이 `&` 연산자로 점진적 조합이 가능합니다:
+
+```csharp
+private static Specification<Product> BuildSpecification(Request request)
+{
+    var spec = Specification<Product>.All;  // null 대신 All로 시작
+
+    if (request.Name.Length > 0)
+        spec &= new ProductNameSpec(ProductName.Create(request.Name).ThrowIfFail());
+
+    if (request.MinPrice > 0 && request.MaxPrice > 0)
+        spec &= new ProductPriceRangeSpec(
+            Money.Create(request.MinPrice).ThrowIfFail(),
+            Money.Create(request.MaxPrice).ThrowIfFail());
+
+    return spec;  // 필터 없으면 All 그대로 반환 → 전체 조회
+}
+```
+
+`AllSpecification<T>`는 `ExpressionSpecification<T>`을 상속하므로 EfCore `PropertyMap` 번역도 정상 동작합니다 (`_ => true`).
+
+| 속성/메서드 | 설명 |
+|------------|------|
+| `Specification<T>.All` | `AllSpecification<T>.Instance` (싱글턴) |
+| `IsAll` | `true` 반환. `&` 연산자에서 항등원 최적화에 사용 |
+| `ToExpression()` | `_ => true` |
+
 ### Functorium 타입 계층에서의 위치
 
 ```
@@ -111,6 +150,7 @@ Functorium.Domains.Specifications
 │   ├── ToExpression()            (추상 메서드)
 │   └── IsSatisfiedBy()           (자동 구현, delegate 캐싱)
 ├── IExpressionSpec<T>            (Expression 제공 인터페이스)
+├── AllSpecification<T>            (internal sealed, Null Object)
 ├── AndSpecification<T>           (internal sealed)
 ├── OrSpecification<T>            (internal sealed)
 └── NotSpecification<T>           (internal sealed)
@@ -122,7 +162,7 @@ Functorium.Domains.Specifications.Expressions
 
 ---
 
-## 3. Specification 구현 (HOW)
+## Specification 구현 (HOW)
 
 ### 폴더 구조
 
@@ -172,7 +212,7 @@ public sealed class {Aggregate}{조건}Spec : ExpressionSpecification<{Aggregate
 - `ExpressionSpecification<T>` 상속 (Expression 기반 자동 SQL 번역 지원)
 - `ToExpression()`에서 Value Object를 primitive로 변환하여 클로저에 캡처
 - Entity 프로퍼티 접근 시 `(primitiveType)entity.Property` 캐스트 사용
-- `IsSatisfiedBy()`는 자동 구현되므로 별도 구현 불필요
+- `IsSatisfiedBy()`는 `ToExpression()` 컴파일 결과를 내부 캐싱하여 자동 구현 — 별도 구현 불필요
 
 ### 실전 예제
 
@@ -262,7 +302,7 @@ return product => product.Price >= MinPrice;
 
 ---
 
-## 4. Repository에서 사용 (HOW)
+## Repository에서 사용 (HOW)
 
 ### Port 정의 (Domain Layer)
 
@@ -339,7 +379,7 @@ private IQueryable<ProductModel> BuildQuery(Specification<Product> spec)
 
 ---
 
-## 5. Usecase에서 사용 (HOW)
+## Usecase에서 사용 (HOW)
 
 ### 단일 Spec 사용 — 중복 검사 (CreateProductCommand)
 
@@ -423,9 +463,11 @@ public sealed class Usecase(IProductRepository productRepository)
 - 필터가 없으면 `null` 반환 → Usecase에서 `GetAll()` 폴백
 - `AllProductsSpec` 같은 비-Expression 폴백 클래스는 EfCore에서 `NotSupportedException`이 발생하므로 사용 금지
 
+> **권장**: `null` 폴백 대신 `Specification<T>.All`을 초기값으로 사용하면 null 체크 없이 코드가 단순해집니다. `All`은 `ExpressionSpecification<T>`을 상속하므로 EfCore에서도 정상 동작합니다. 상세는 [§`Specification<T>.All` (항등원)](#specificationtall-항등원)을 참조하세요.
+
 ---
 
-## 6. 테스트 패턴
+## 테스트 패턴
 
 ### Specification 자체 테스트 (경계값)
 
@@ -524,7 +566,7 @@ public class SearchProductsQueryTests
 
 ---
 
-## 7. 체크리스트
+## 체크리스트
 
 ### Specification 구현 시
 

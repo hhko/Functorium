@@ -16,6 +16,8 @@
 - [FAQ](#faq)
 - [참고 문서](#참고-문서)
 
+---
+
 ## 개요
 
 이 가이드는 서비스의 **프로젝트 구성** — 폴더 이름, 파일 배치, 의존성 방향 — 을 다룹니다.
@@ -187,11 +189,11 @@ services.AddValidatorsFromAssembly(LayeredArch.Application.AssemblyReference.Ass
 
 | 프로젝트 | global using 내용 |
 |---------|------------------|
-| Domain | LanguageExt, Functorium.Domains.*, 자체 SharedKernel |
-| Application | LanguageExt, Functorium.Applications.Cqrs, FluentValidation, 자체 SharedKernel |
+| Domain | LanguageExt, Functorium.Domains.*, 자체 SharedModels |
+| Application | LanguageExt, Functorium.Applications.Cqrs, FluentValidation, 자체 SharedModels |
 | Adapters.Presentation | FastEndpoints, Mediator, LanguageExt.Common |
-| Adapters.Persistence | LanguageExt, Domain Aggregate, 자체 SharedKernel |
-| Adapters.Infrastructure | FluentValidation, 자체 SharedKernel |
+| Adapters.Persistence | LanguageExt, Domain Aggregate, 자체 SharedModels |
+| Adapters.Infrastructure | FluentValidation, 자체 SharedModels |
 
 <details>
 <summary>레이어별 Using.cs 전체 코드</summary>
@@ -205,9 +207,7 @@ global using Functorium.Domains.Events;
 global using Functorium.Domains.SourceGenerators;
 global using Functorium.Domains.ValueObjects;
 global using Functorium.Domains.ValueObjects.Validations.Typed;
-global using LayeredArch.Domain.SharedKernel.Events;
-global using LayeredArch.Domain.SharedKernel.Entities;
-global using LayeredArch.Domain.SharedKernel.ValueObjects;
+global using LayeredArch.Domain.SharedModels.ValueObjects;
 ```
 
 **Application — Using.cs**
@@ -219,7 +219,7 @@ global using Functorium.Applications.Cqrs;
 global using Functorium.Domains.ValueObjects.Validations.Typed;
 global using Functorium.Domains.ValueObjects.Validations.Contextual;
 global using FluentValidation;
-global using LayeredArch.Domain.SharedKernel.ValueObjects;
+global using LayeredArch.Domain.SharedModels.ValueObjects;
 ```
 
 **Adapters.Presentation — Using.cs**
@@ -235,13 +235,13 @@ global using LanguageExt;
 global using LanguageExt.Common;
 global using LayeredArch.Domain.AggregateRoots.Products;
 global using static LanguageExt.Prelude;
-global using LayeredArch.Domain.SharedKernel.ValueObjects;
+global using LayeredArch.Domain.SharedModels.ValueObjects;
 ```
 
 **Adapters.Infrastructure — Using.cs**
 ```csharp
 global using FluentValidation;
-global using LayeredArch.Domain.SharedKernel.ValueObjects;
+global using LayeredArch.Domain.SharedModels.ValueObjects;
 ```
 
 </details>
@@ -255,7 +255,7 @@ global using LayeredArch.Domain.SharedKernel.ValueObjects;
 
 | 프로젝트 | 주 목표 폴더 | 부수 목표 폴더 |
 |---------|------------|------------|
-| Domain | `AggregateRoots/`, `SharedKernel/`, `Ports/` | *(없음)* |
+| Domain | `AggregateRoots/`, `SharedModels/`, `Ports/` | *(없음)* |
 | Application | `Usecases/`, `Ports/` | *(없음)* |
 | Adapters.Presentation | `Endpoints/` | `Abstractions/` (Registrations/, Extensions/) |
 | Adapters.Persistence | `Repositories/` (InMemory/, EfCore/) | `Abstractions/` (Options/, Registrations/) |
@@ -302,9 +302,9 @@ Abstractions/
 |-----------|---------|------|
 | Entity, Aggregate Root | Domain | `AggregateRoots/{Aggregate}/` |
 | Value Object (단일 Aggregate) | Domain | `AggregateRoots/{Aggregate}/ValueObjects/` |
-| Value Object (공유) | Domain | `SharedKernel/ValueObjects/` |
+| Value Object (공유) | Domain | `SharedModels/ValueObjects/` |
 | Domain Event | Domain | `AggregateRoots/{Aggregate}/Events/` |
-| Domain Service | Domain | `SharedKernel/Services/` |
+| Domain Service | Domain | `SharedModels/Services/` |
 | Repository Port (영속성) | Domain | `AggregateRoots/{Aggregate}/Ports/` |
 | 교차 Aggregate 읽기 전용 Port | Domain | `Ports/` |
 | Command / Query | Application | `Usecases/{Feature}/` |
@@ -330,7 +330,7 @@ Port 인터페이스
 └─ 외부 DTO나 기술적 관심사 포함? → Application/Ports/
 ```
 
-> Port 배치의 상세 기준은 [FAQ §4](#4-port를-domain에-둘지-application에-둘지-판단-기준)와 [12-ports.md](./12-ports.md)를 참조하세요.
+> Port 배치의 상세 기준은 [FAQ §Port를 Domain에 둘지 Application에 둘지](#port를-domain에-둘지-application에-둘지-판단-기준)와 [12-ports.md](./12-ports.md)를 참조하세요.
 
 ## Domain 레이어
 
@@ -339,7 +339,7 @@ Port 인터페이스
 ```
 {ServiceName}.Domain/
 ├── AggregateRoots/       ← Aggregate Root별 하위 폴더
-├── SharedKernel/         ← 교차 Aggregate 공유 타입
+├── SharedModels/         ← 교차 Aggregate 공유 타입
 ├── Ports/                ← 교차 Aggregate Port 인터페이스
 ├── AssemblyReference.cs
 └── Using.cs
@@ -390,12 +390,12 @@ AggregateRoots/
 - Aggregate 전용 Value Object는 `{Aggregate}/ValueObjects/` 에 배치
 - Aggregate 전용 Specification은 `{Aggregate}/Specifications/` 에 배치
 
-### SharedKernel 내부 구조
+### SharedModels 내부 구조
 
 여러 Aggregate에서 공유하는 타입을 배치합니다.
 
 ```
-SharedKernel/
+SharedModels/
 ├── Entities/
 │   └── Tag.cs                ← 공유 Entity
 ├── Events/
@@ -607,7 +607,7 @@ public static IServiceCollection RegisterAdapterInfrastructure(this IServiceColl
 public static IApplicationBuilder UseAdapterInfrastructure(this IApplicationBuilder app) { ... }
 ```
 
-> **참고**: `IConfiguration` 파라미터는 Options 패턴(`RegisterConfigureOptions`)을 사용하는 Adapter에서 필요합니다. Options 패턴 상세는 [14-adapter-wiring.md §4.6](./14-adapter-wiring.md#46-options-패턴-optionsconfigurator)을 참조하세요.
+> **참고**: `IConfiguration` 파라미터는 Options 패턴(`RegisterConfigureOptions`)을 사용하는 Adapter에서 필요합니다. Options 패턴 상세는 [14-adapter-wiring.md §4.6](./14-adapter-wiring.md#options-패턴-optionsconfigurator)을 참조하세요.
 
 ## Host 프로젝트
 
@@ -714,7 +714,7 @@ Domain/Application 레이어의 단위 테스트를 담당합니다.
 ```
 {ServiceName}.Tests.Unit/
 ├── Domain/                    ← Domain 레이어 미러링
-│   ├── SharedKernel/          ← ValueObject 테스트
+│   ├── SharedModels/          ← ValueObject 테스트
 │   ├── {Aggregate}/           ← Aggregate/Entity/ValueObject/Specification 테스트
 │   └── ...
 ├── Application/               ← Application 레이어 미러링
@@ -873,9 +873,8 @@ global using System.Net.Http.Json;
 | `Domain/AggregateRoots/Products/Ports/` | `{ServiceName}.Domain.AggregateRoots.Products` *(Port는 Aggregate 네임스페이스)* |
 | `Domain/AggregateRoots/Products/Specifications/` | `{ServiceName}.Domain.AggregateRoots.Products.Specifications` |
 | `Domain/AggregateRoots/Products/ValueObjects/` | `{ServiceName}.Domain.AggregateRoots.Products.ValueObjects` |
-| `Domain/SharedKernel/ValueObjects/` | `{ServiceName}.Domain.SharedKernel.ValueObjects` |
-| `Domain/SharedKernel/Entities/` | `{ServiceName}.Domain.SharedKernel.Entities` |
-| `Domain/SharedKernel/Events/` | `{ServiceName}.Domain.SharedKernel.Events` |
+| `Domain/SharedModels/ValueObjects/` | `{ServiceName}.Domain.SharedModels.ValueObjects` |
+| `Domain/SharedModels/Services/` | `{ServiceName}.Domain.SharedModels.Services` |
 | `Domain/Ports/` | `{ServiceName}.Domain.Ports` |
 | `Application/Usecases/Products/` | `{ServiceName}.Application.Usecases.Products` |
 | `Application/Ports/` | `{ServiceName}.Application.Ports` |
@@ -888,7 +887,7 @@ global using System.Net.Http.Json;
 | `Adapters.Persistence/Abstractions/Registrations/` | `{ServiceName}.Adapters.Persistence.Abstractions.Registrations` |
 | `Adapters.Infrastructure/ExternalApis/` | `{ServiceName}.Adapters.Infrastructure.ExternalApis` |
 | `Adapters.Infrastructure/Abstractions/Registrations/` | `{ServiceName}.Adapters.Infrastructure.Abstractions.Registrations` |
-| `Tests.Unit/Domain/SharedKernel/` | `{ServiceName}.Tests.Unit.Domain.SharedKernel` |
+| `Tests.Unit/Domain/SharedModels/` | `{ServiceName}.Tests.Unit.Domain.SharedModels` |
 | `Tests.Unit/Domain/{Aggregate}/` | `{ServiceName}.Tests.Unit.Domain.{Aggregate}` |
 | `Tests.Unit/Application/{Aggregate}/` | `{ServiceName}.Tests.Unit.Application.{Aggregate}` |
 | `Tests.Integration/Fixtures/` | `{ServiceName}.Tests.Integration.Fixtures` |
@@ -901,7 +900,7 @@ global using System.Net.Http.Json;
    - [ ] `AssemblyReference.cs` 추가
    - [ ] `Using.cs` 추가
    - [ ] `AggregateRoots/` 폴더 생성
-   - [ ] `SharedKernel/` 폴더 생성 (필요 시)
+   - [ ] `SharedModels/` 폴더 생성 (필요 시)
    - [ ] `Ports/` 폴더 생성 (교차 Aggregate Port가 있을 경우)
 
 2. **Application 프로젝트**
@@ -960,24 +959,24 @@ global using System.Net.Http.Json;
 
 ## FAQ
 
-### 1. Domain에 Abstractions/ 폴더가 없는 이유
+### Domain에 Abstractions/ 폴더가 없는 이유
 
 Domain 레이어에는 부수 목표가 없습니다. Domain은 순수한 비즈니스 규칙만 포함하며, DI 등록이나 프레임워크 설정 같은 인프라 관심사가 존재하지 않기 때문입니다. Application도 동일한 이유로 Abstractions가 없습니다.
 
-### 2. Adapter 주 목표 폴더 이름이 고정되지 않는 이유
+### Adapter 주 목표 폴더 이름이 고정되지 않는 이유
 
 Adapter의 주 목표 폴더 이름은 구현 기술에 따라 달라집니다. 예를 들어 Presentation이 FastEndpoints를 사용하면 `Endpoints/`, gRPC를 사용하면 `Services/`가 됩니다. 반면 부수 목표 폴더(`Abstractions/`)는 기술과 무관하게 항상 같은 이름을 사용합니다.
 
-### 3. Value Object를 SharedKernel과 AggregateRoots 사이 어디에 둘지 판단 기준
+### Value Object를 SharedModels과 AggregateRoots 사이 어디에 둘지 판단 기준
 
 - **하나의 Aggregate에서만 사용** → `AggregateRoots/{Aggregate}/ValueObjects/`
   - 예: `ProductName`, `ProductDescription` → `Products/ValueObjects/`
-- **여러 Aggregate에서 공유** → `SharedKernel/ValueObjects/`
-  - 예: `Money`, `Quantity` → `SharedKernel/ValueObjects/`
+- **여러 Aggregate에서 공유** → `SharedModels/ValueObjects/`
+  - 예: `Money`, `Quantity` → `SharedModels/ValueObjects/`
 
-처음에는 Aggregate 전용으로 배치하고, 공유가 필요해지면 SharedKernel로 이동합니다.
+처음에는 Aggregate 전용으로 배치하고, 공유가 필요해지면 SharedModels로 이동합니다.
 
-### 4. Port를 Domain에 둘지 Application에 둘지 판단 기준
+### Port를 Domain에 둘지 Application에 둘지 판단 기준
 
 - **도메인 객체의 영속성/조회** → Domain의 `AggregateRoots/{Aggregate}/Ports/` 또는 `Ports/`
   - 예: `IProductRepository`, `IProductCatalog`
@@ -986,19 +985,19 @@ Adapter의 주 목표 폴더 이름은 구현 기술에 따라 달라집니다. 
 
 핵심 기준: 인터페이스의 메서드 시그니처가 도메인 타입만 사용하면 Domain, 외부 DTO나 기술적 관심사를 포함하면 Application에 배치합니다.
 
-### 5. Infrastructure에 Observability 설정이 들어가는 이유
+### Infrastructure에 Observability 설정이 들어가는 이유
 
 Observability(OpenTelemetry, Serilog 등)는 횡단 관심사로, 특정 Adapter 카테고리에 속하지 않습니다. Infrastructure Adapter가 Mediator, Validator, OpenTelemetry, Pipeline 등 횡단 관심사를 종합적으로 관리하는 역할을 담당하기 때문에 이곳에 배치합니다.
 
-### 6. 통합 테스트에서 Host 참조 시 ExcludeAssets=analyzers가 필요한 이유
+### 통합 테스트에서 Host 참조 시 ExcludeAssets=analyzers가 필요한 이유
 
 Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 프로젝트에서도 SourceGenerator가 실행되어 중복 코드가 생성됩니다. `ExcludeAssets=analyzers`로 이를 방지합니다.
 
-### 7. 통합 테스트에 appsettings.json이 필요한 이유
+### 통합 테스트에 appsettings.json이 필요한 이유
 
 `HostTestFixture`는 ContentRoot를 테스트 프로젝트 경로로 설정합니다. Host 프로젝트의 `appsettings.json`이 아닌 테스트 프로젝트의 `appsettings.json`을 로드하므로, OpenTelemetry 등 필수 설정을 테스트 프로젝트에도 배치해야 합니다.
 
-### 8. 단위 테스트와 통합 테스트의 병렬 실행 설정이 다른 이유
+### 단위 테스트와 통합 테스트의 병렬 실행 설정이 다른 이유
 
 단위 테스트는 Mock 기반으로 각 테스트가 독립적이므로 병렬 실행이 가능합니다. 통합 테스트는 In-memory 저장소를 공유하므로 테스트 간 상태 간섭을 방지하기 위해 순차 실행합니다.
 

@@ -4,19 +4,20 @@
 
 ## 목차
 
-- [4. Domain 에러](#4-domain-에러)
-- [5. Application 에러](#5-application-에러)
-- [6. Adapter 에러](#6-adapter-에러)
-- [7. Custom 에러](#7-custom-에러)
-- [8. 테스트 모범 사례](#8-테스트-모범-사례)
-- [9. 레이어별 요약 + 체크리스트](#9-레이어별-요약--체크리스트)
+- [Domain 에러](#domain-에러)
+- [Application 에러](#application-에러)
+- [Event 에러](#event-에러)
+- [Adapter 에러](#adapter-에러)
+- [Custom 에러](#custom-에러)
+- [테스트 모범 사례](#테스트-모범-사례)
+- [레이어별 요약 + 체크리스트](#레이어별-요약--체크리스트)
 - [참고 문서](#참고-문서)
 
 ---
 
-## 4. Domain 에러
+## Domain 에러
 
-### 4.1 에러 생성 및 반환
+### 에러 생성 및 반환
 
 ```csharp
 using Functorium.Domains.Errors;
@@ -73,7 +74,7 @@ public Fin<Triangle> Create(double a, double b, double c)
 }
 ```
 
-### 4.2 Entity 메서드에서 에러 반환
+### Entity 메서드에서 에러 반환
 
 ```csharp
 public sealed class Product : AggregateRoot<ProductId>
@@ -95,7 +96,7 @@ public sealed class Product : AggregateRoot<ProductId>
 }
 ```
 
-### 4.3 DomainErrorType 범주 구조 및 전체 목록
+### DomainErrorType 범주 구조 및 전체 목록
 
 | 범주 | 파일 | 설명 |
 |------|------|------|
@@ -174,7 +175,7 @@ public sealed class Product : AggregateRoot<ProductId>
 |-----------|------|----------|
 | `Custom` | 도메인 특화 에러 (abstract) | `sealed record AlreadyShipped : DomainErrorType.Custom;` → `new AlreadyShipped()` |
 
-### 4.4 Value Object 사용 예시
+### Value Object 사용 예시
 
 ```csharp
 public sealed class Email : SimpleValueObject<string>
@@ -194,7 +195,7 @@ public sealed class Email : SimpleValueObject<string>
 }
 ```
 
-### 4.5 Domain 에러 테스트
+### Domain 에러 테스트
 
 테스트 어설션 네임스페이스:
 
@@ -386,9 +387,9 @@ public void Validation_ShouldHaveDomainError_WithValue()
 
 ---
 
-## 5. Application 에러
+## Application 에러
 
-### 5.1 에러 생성 및 반환
+### 에러 생성 및 반환
 
 ```csharp
 using Functorium.Applications.Errors;
@@ -416,7 +417,7 @@ return ApplicationError.For<TransferCommand, decimal, decimal>(
     "잔액이 부족합니다");
 ```
 
-### 5.2 ApplicationErrorType 전체 목록
+### ApplicationErrorType 전체 목록
 
 #### 공통 에러 타입 - R1, R3, R4, R5
 
@@ -453,7 +454,7 @@ return ApplicationError.For<TransferCommand, decimal, decimal>(
 |-----------|------|----------|
 | `Custom` | 애플리케이션 특화 에러 (abstract) | `sealed record PaymentDeclined : ApplicationErrorType.Custom;` → `new PaymentDeclined()` |
 
-### 5.3 Usecase 에러 사용 패턴
+### Usecase 에러 사용 패턴
 
 ```csharp
 using Functorium.Applications.Errors;
@@ -536,7 +537,7 @@ public sealed class CreateProductCommandHandler
 }
 ```
 
-### 5.4 Application 에러 테스트
+### Application 에러 테스트
 
 테스트 어설션 네임스페이스:
 
@@ -689,9 +690,63 @@ public void Validation_ShouldHaveApplicationErrors()
 
 ---
 
-## 6. Adapter 에러
+## Event 에러
 
-### 6.1 에러 생성 및 반환
+### 에러 생성 및 반환
+
+```csharp
+using Functorium.Applications.Errors;
+using static Functorium.Applications.Errors.EventErrorType;
+
+// 기본 사용법 - 이벤트 발행 실패
+EventError.For<DomainEventPublisher>(
+    new PublishFailed(),
+    eventType,
+    "Failed to publish event");
+
+// 제네릭 값 타입
+EventError.For<ObservableDomainEventPublisher, Guid>(
+    new HandlerFailed(),
+    eventId,
+    "Event handler threw exception");
+
+// 예외 래핑 (기본 PublishFailed 타입)
+EventError.FromException<DomainEventPublisher>(exception);
+
+// 예외 래핑 (특정 에러 타입 지정)
+EventError.FromException<DomainEventPublisher>(
+    new HandlerFailed(),
+    exception);
+```
+
+### EventErrorType 전체 목록
+
+| 에러 타입 | 설명 | 사용 예시 |
+|-----------|------|----------|
+| `PublishFailed` | 이벤트 발행 실패 | `new PublishFailed()` |
+| `HandlerFailed` | 이벤트 핸들러 실행 실패 | `new HandlerFailed()` |
+| `InvalidEventType` | 이벤트 타입이 유효하지 않음 | `new InvalidEventType()` |
+| `PublishCancelled` | 이벤트 발행 취소됨 | `new PublishCancelled()` |
+| `Custom` | 이벤트 특화 커스텀 에러 (abstract) | `sealed record RetryExhausted : EventErrorType.Custom;` → `new RetryExhausted()` |
+
+### 에러 코드 형식
+
+EventError는 Application 레이어 접두사를 사용합니다:
+
+```
+ApplicationErrors.{PublisherName}.{ErrorTypeName}
+```
+
+예시:
+- `ApplicationErrors.DomainEventPublisher.PublishFailed`
+- `ApplicationErrors.ObservableDomainEventPublisher.HandlerFailed`
+- `ApplicationErrors.DomainEventPublisher.InvalidEventType`
+
+---
+
+## Adapter 에러
+
+### 에러 생성 및 반환
 
 ```csharp
 using Functorium.Adapters.Errors;
@@ -715,7 +770,7 @@ return AdapterError.FromException<ExternalApiService>(
     exception);
 ```
 
-### 6.2 AdapterErrorType 전체 목록
+### AdapterErrorType 전체 목록
 
 #### 공통 에러 타입 - R1, R3, R4, R5, R7
 
@@ -759,7 +814,7 @@ return AdapterError.FromException<ExternalApiService>(
 |-----------|------|----------|
 | `Custom` | 어댑터 특화 에러 (abstract) | `sealed record RateLimited : AdapterErrorType.Custom;` → `new RateLimited()` |
 
-### 6.3 Repository 구현 예시
+### Repository 구현 예시
 
 ```csharp
 [GenerateObservablePort]
@@ -819,7 +874,7 @@ public class InMemoryProductRepository : IProductRepository
 }
 ```
 
-### 6.4 외부 API 서비스 구현 예시
+### 외부 API 서비스 구현 예시
 
 ```csharp
 [GenerateObservablePort]
@@ -930,7 +985,7 @@ public class ExternalPricingApiService : IExternalPricingService
 }
 ```
 
-### 6.5 Adapter 에러 테스트
+### Adapter 에러 테스트
 
 테스트 어설션 네임스페이스:
 
@@ -1100,7 +1155,7 @@ public void Validation_ShouldHaveAdapterErrors()
 
 ---
 
-## 7. Custom 에러
+## Custom 에러
 
 ### 언제 Custom을 사용하는가?
 
@@ -1135,7 +1190,12 @@ new StockDepleted()      // 재고 소진
 
 ### 표준 에러로 승격 기준
 
-자주 사용되는 Custom 에러는 표준 에러 타입으로 승격을 고려합니다:
+자주 사용되는 Custom 에러는 표준 에러 타입으로 승격을 고려합니다 ([08a 승격 기준](./08a-error-system.md#custom--표준-에러-승격-기준) 참조):
+
+> 1. **3개 이상의 서로 다른 위치**에서 동일 Custom 에러 사용
+> 2. **재사용 의미가 명확** (도메인 개념으로 자리잡음)
+> 3. 기존 네이밍 규칙(R1-R8)에 **자연스럽게 매핑** 가능
+> 4. **안정성 확인** (더 이상 의미가 변하지 않음)
 
 ```csharp
 // 자주 사용되는 패턴 발견 시 표준 타입으로 추가
@@ -1146,7 +1206,7 @@ public sealed record RateLimited : AdapterErrorType;
 
 ---
 
-## 8. 테스트 모범 사례
+## 테스트 모범 사례
 
 ### 실패 케이스 테스트
 
@@ -1269,7 +1329,7 @@ public void Cancel_ShouldFail_WhenOrderAlreadyShipped()
 
 ---
 
-## 9. 레이어별 요약 + 체크리스트
+## 레이어별 요약 + 체크리스트
 
 ### Domain (DomainErrorType)
 
@@ -1295,6 +1355,15 @@ public void Cancel_ShouldFail_WhenOrderAlreadyShipped()
 비즈니스:    BusinessRuleViolated, ConcurrencyConflict, ResourceLocked,
              OperationCancelled, InsufficientPermission
 커스텀:      Custom (abstract → sealed record MyError : ApplicationErrorType.Custom)
+```
+
+### Event (EventErrorType)
+
+```
+발행:        PublishFailed, PublishCancelled
+핸들러:      HandlerFailed
+검증:        InvalidEventType
+커스텀:      Custom (abstract → sealed record MyError : EventErrorType.Custom)
 ```
 
 ### Adapter (AdapterErrorType)

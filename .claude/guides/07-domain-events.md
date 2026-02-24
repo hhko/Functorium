@@ -4,20 +4,20 @@
 
 ## 목차
 
-- [1. 왜 도메인 이벤트인가 (WHY)](#1-왜-도메인-이벤트인가-why)
-- [2. 도메인 이벤트란 무엇인가 (WHAT)](#2-도메인-이벤트란-무엇인가-what)
+- [왜 도메인 이벤트인가](#왜-도메인-이벤트인가)
+- [도메인 이벤트란 무엇인가 (WHAT)](#도메인-이벤트란-무엇인가-what)
   - [IHasDomainEvents / IDomainEventDrain 패턴](#ihasdomainevents--idomaineventdrain-패턴)
-- [3. 이벤트 정의 (HOW)](#3-이벤트-정의-how)
-- [4. 이벤트 발행 (HOW)](#4-이벤트-발행-how)
-- [5. 이벤트 핸들러 구현 (HOW)](#5-이벤트-핸들러-구현-how)
-- [6. 테스트 패턴](#6-테스트-패턴)
-- [7. 체크리스트](#7-체크리스트)
+- [이벤트 정의 (HOW)](#이벤트-정의-how)
+- [이벤트 발행 (HOW)](#이벤트-발행-how)
+- [이벤트 핸들러 구현 (HOW)](#이벤트-핸들러-구현-how)
+- [테스트 패턴](#테스트-패턴)
+- [체크리스트](#체크리스트)
 - [향후 고급 패턴](#향후-고급-패턴)
 - [참고 문서](#참고-문서)
 
 ---
 
-## 1. 왜 도메인 이벤트인가 (WHY)
+## 왜 도메인 이벤트인가
 
 도메인 이벤트는 DDD(Domain-Driven Design)에서 **"도메인에서 발생한 중요한 사건"**을 명시적으로 표현하는 전술 패턴입니다.
 
@@ -37,7 +37,7 @@
 
 ---
 
-## 2. 도메인 이벤트란 무엇인가 (WHAT)
+## 도메인 이벤트란 무엇인가 (WHAT)
 
 도메인 이벤트는 도메인에서 발생한 중요한 사건을 표현합니다. AggregateRoot에서만 발행할 수 있습니다.
 
@@ -157,7 +157,7 @@ internal interface IDomainEventDrain : IHasDomainEvents
 
 ---
 
-## 3. 이벤트 정의 (HOW)
+## 이벤트 정의 (HOW)
 
 도메인 이벤트는 해당 Entity의 **중첩 클래스**로 정의합니다:
 
@@ -195,7 +195,7 @@ public void Handle(Order.CreatedEvent @event) { ... }
 
 ---
 
-## 4. 이벤트 발행 (HOW)
+## 이벤트 발행 (HOW)
 
 ### AggregateRoot에서 이벤트 수집
 
@@ -281,11 +281,24 @@ internal sealed class Usecase(
 
 ### 파이프라인 발행 흐름
 
-`UsecaseTransactionPipeline`은 Handler 실행 후 다음 순서로 동작합니다:
+`UsecaseTransactionPipeline`은 Command Usecase에 대해 UoW 커밋과 도메인 이벤트 발행을 자동 처리합니다 (Query는 바이패스).
 
-1. Handler 실행 → 실패 시 커밋 안함, 응답 반환
-2. `UoW.SaveChanges()` → 트랜잭션 커밋
-3. `IDomainEventPublisher.PublishTrackedEvents()` → 추적된 Aggregate의 이벤트 수집·발행·클리어
+**이벤트 수집 시점**: Usecase 실행 중 Repository의 `Create`/`Update` 메서드가 `IDomainEventCollector.Track(aggregate)`를 호출하여 변경된 Aggregate를 추적 대상으로 등록합니다. Aggregate 내부에서는 `AddDomainEvent()`로 이벤트를 수집합니다.
+
+**파이프라인 실행 순서**:
+
+1. **Handler 실행** (`next()`) → 실패 시 커밋 안함, 실패 응답 즉시 반환
+2. **`UoW.SaveChanges()`** → 트랜잭션 커밋. 실패 시 이벤트 발행 안함, 실패 응답 반환
+3. **`IDomainEventPublisher.PublishTrackedEvents()`** → `IDomainEventCollector`에서 추적된 Aggregate의 이벤트를 수집, Mediator를 통해 발행, 발행 후 `ClearDomainEvents()` 호출
+
+```
+Usecase Handler 실행
+  → Repository.Create(entity)  ─→ IDomainEventCollector.Track(entity)
+  → entity.AddDomainEvent(...)  ─→ entity.DomainEvents에 이벤트 축적
+  → Handler 완료 (성공)
+    → UoW.SaveChanges()         ─→ DB 커밋
+    → PublishTrackedEvents()    ─→ 추적된 Aggregate의 이벤트 발행 → ClearDomainEvents()
+```
 
 ### 트랜잭션 고려사항
 
@@ -303,7 +316,7 @@ internal sealed class Usecase(
 
 ---
 
-## 5. 이벤트 핸들러 구현 (HOW)
+## 이벤트 핸들러 구현 (HOW)
 
 ### Event Handler란?
 
@@ -448,7 +461,7 @@ services.RegisterDomainEventHandlersFromAssembly(
 
 ---
 
-## 6. 테스트 패턴
+## 테스트 패턴
 
 ### 이벤트 발행 검증
 
@@ -526,7 +539,7 @@ public async Task Handle_ShouldLogProductCreation()
 
 ---
 
-## 7. 체크리스트
+## 체크리스트
 
 ### 이벤트 정의
 

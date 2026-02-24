@@ -7,7 +7,7 @@
 
 ## 목차
 
-- [왜 레이어별 DTO가 필요한가 (WHY)](#왜-레이어별-dto가-필요한가-why)
+- [왜 레이어별 DTO가 필요한가](#왜-레이어별-dto가-필요한가)
 - [레이어별 DTO 소유권 (WHAT)](#레이어별-dto-소유권-what)
 - [레이어별 DTO 구현 (HOW)](#레이어별-dto-구현-how)
   - [Presentation Layer](#presentation-layer)
@@ -20,7 +20,7 @@
 
 ---
 
-## 왜 레이어별 DTO가 필요한가 (WHY)
+## 왜 레이어별 DTO가 필요한가
 
 Hexagonal Architecture에서 각 레이어(Port/Adapter)는 자신만의 데이터 표현을 소유합니다. 이는 레이어 간 독립적 진화를 보장합니다.
 
@@ -55,7 +55,7 @@ Database
 |--------|----------|----------|----------|
 | Presentation | Endpoint nested record | primitive (JSON 직렬화) | Endpoint 클래스 내부 |
 | Application | Usecase nested record | primitive (직렬화 가능) | Usecase 클래스 내부 |
-| Application (공유) | 독립 record | primitive | `Usecases/{Aggregate}/Dtos/` |
+| Application (공유) | 독립 record | primitive | Query Port 파일 또는 `Usecases/{Aggregate}/Dtos/` |
 | Persistence | Model (POCO) | primitive (DB 매핑) | `Repositories/EfCore/Models/` |
 
 ---
@@ -96,7 +96,7 @@ public sealed class CreateProductEndpoint
 
 ```csharp
 // GetAllProductsEndpoint.cs — Application DTO 재사용 예시
-using LayeredArch.Application.Usecases.Products.Dtos;
+using LayeredArch.Application.Usecases.Products.Ports;
 
 public sealed class GetAllProductsEndpoint
     : EndpointWithoutRequest<GetAllProductsEndpoint.Response>
@@ -130,33 +130,33 @@ public sealed class CreateProductCommand
 }
 ```
 
-**공유 DTO**: 여러 Usecase에서 동일한 DTO가 필요하면 `Dtos/` 폴더에 독립 record로 정의합니다.
+**공유 DTO**: 여러 Usecase에서 동일한 DTO가 필요하면 Query Port 인터페이스 파일에 함께 정의하거나, `Dtos/` 폴더에 독립 record로 분리합니다.
 
 ```
 Application/Usecases/Products/
+├── IProductQuery.cs              ← Query Port + ProductSummaryDto 정의
 ├── GetAllProductsQuery.cs        ← Response에서 ProductSummaryDto 참조
-├── SearchProductsQuery.cs        ← Response에서 ProductSummaryDto 참조
-└── Dtos/
-    └── ProductSummaryDto.cs      ← 교차 Usecase 공유 DTO
+└── SearchProductsQuery.cs        ← Response에서 ProductSummaryDto 참조
 ```
 
 ```csharp
-// Dtos/ProductSummaryDto.cs
-namespace LayeredArch.Application.Usecases.Products.Dtos;
+// IProductQuery.cs — Query Port와 공유 DTO를 함께 정의
+namespace LayeredArch.Application.Usecases.Products.Ports;
+
+public interface IProductQuery : IQueryPort<Product, ProductSummaryDto> { }
 
 public sealed record ProductSummaryDto(
     string ProductId,
     string Name,
-    decimal Price,
-    int StockQuantity);
+    decimal Price);
 ```
 
 **도메인 → Application DTO 변환**: Value Object의 `implicit operator`를 통해 자연스럽게 primitive로 변환됩니다.
 
 ```csharp
 // Usecase 내부 — VO → primitive 암시적 변환
-new ProductSummaryDto(p.Id.ToString(), p.Name, p.Price, p.StockQuantity)
-//                     ↑ Ulid→string    ↑ ProductName→string  ↑ Money→decimal  ↑ Quantity→int
+new ProductSummaryDto(p.Id.ToString(), p.Name, p.Price)
+//                     ↑ Ulid→string    ↑ ProductName→string  ↑ Money→decimal
 ```
 
 ### Persistence Layer

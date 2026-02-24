@@ -4,19 +4,16 @@
 
 ## 목차
 
-- [1. 왜 Aggregate인가](#1-왜-aggregate인가)
-- [2. Aggregate 설계 규칙](#2-aggregate-설계-규칙)
-- [3. Aggregate vs Entity vs Value Object 구분](#3-aggregate-vs-entity-vs-value-object-구분)
-- [4. Aggregate 경계 설정 실전 예제](#4-aggregate-경계-설정-실전-예제)
-- [5. 안티패턴](#5-안티패턴)
+- [왜 Aggregate인가](#왜-aggregate인가)
+- [Aggregate 설계 규칙](#aggregate-설계-규칙)
+- [Aggregate vs Entity vs Value Object 구분](#aggregate-vs-entity-vs-value-object-구분)
+- [Aggregate 경계 설정 실전 예제](#aggregate-경계-설정-실전-예제)
+- [안티패턴](#안티패턴)
+- [참고 문서](#참고-문서)
 
 ---
 
-# Part 1: Aggregate 설계 (WHY + WHAT)
-
----
-
-## 1. 왜 Aggregate인가
+## 왜 Aggregate인가
 
 ### 이 가이드의 목적
 
@@ -211,7 +208,7 @@ public class Order : AggregateRoot<OrderId>
 
 ---
 
-## 2. Aggregate 설계 규칙
+## Aggregate 설계 규칙
 
 ### 규칙 1: Aggregate 경계 안에서 불변식 보호
 
@@ -349,11 +346,11 @@ public static Order Create(
 // }
 ```
 
-> **참고**: 위 이벤트 핸들러는 최종 일관성이 필요한 경우의 예시입니다. 같은 Bounded Context 내에서 관련 Aggregate를 동시에 **생성**하는 경우 등 실용적 예외는 [§4 트랜잭션 경계 실전 가이드라인](#트랜잭션-경계-실전-가이드라인)을 참조하세요.
+> **참고**: 하나의 트랜잭션에서 여러 Aggregate를 동시에 변경할 수 없으므로, Cross-Aggregate 부수 효과는 이벤트 핸들러(최종 일관성)로 처리합니다. 같은 Bounded Context 내에서 관련 Aggregate를 동시에 **생성**하는 경우 등 실용적 예외는 [§4 트랜잭션 경계 실전 가이드라인](#트랜잭션-경계-실전-가이드라인)을 참조하세요.
 
 ---
 
-## 3. Aggregate vs Entity vs Value Object 구분
+## Aggregate vs Entity vs Value Object 구분
 
 ### 의사결정 흐름도
 
@@ -403,7 +400,7 @@ public static Order Create(
 
 ---
 
-## 4. Aggregate 경계 설정 실전 예제
+## Aggregate 경계 설정 실전 예제
 
 LayeredArch.Domain의 세 가지 Aggregate를 분석합니다.
 
@@ -581,7 +578,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
 - 분리 후 Inventory에만 `IConcurrencyAware`(RowVersion) 적용 — 재고 충돌만 감지
 
 **연결 방식:**
-- Inventory는 `ProductId`로 Product를 **ID 참조** (객체 참조 아님, [§12 참조](./06b-entity-aggregate-implementation.md#12-cross-aggregate-관계))
+- Inventory는 `ProductId`로 Product를 **ID 참조** (객체 참조 아님, [§12 참조](./06b-entity-aggregate-implementation.md#cross-aggregate-관계))
 - Application Layer에서 Product 생성 시 Inventory도 함께 생성 (같은 Usecase)
 - 재고 차감은 Inventory Aggregate에 직접 요청
 
@@ -595,7 +592,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
 |------|------|------|------|
 | 단일 Aggregate 변경 | ✅ | `DeductStockCommand`: Inventory만 변경 | 원칙 준수 |
 | 읽기 + 단일 Aggregate 변경 | ✅ | `CreateOrderCommand`: Product 읽기 → Order 생성 | 읽기는 트랜잭션 경합 없음 |
-| 동시 생성 (같은 BC) | ⚠️ 예외 허용 | `CreateProductCommand`: Product + Inventory 동시 생성 | 아래 허용 조건 참조 |
+| 동시 생성 (같은 BC) | 예외 허용 | `CreateProductCommand`: Product + Inventory 동시 생성 | 아래 허용 조건 참조 |
 | 동시 변경 (기존 Aggregate) | ❌ | 주문 처리 시 Order 생성 + Inventory 차감 | 동시성 충돌 위험 |
 
 **동시 생성 예외 허용 조건** — 다음을 **모두** 충족해야 합니다:
@@ -696,7 +693,7 @@ public virtual FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = 
 | 전략 | 구현 | 적합한 상황 |
 |------|------|-------------|
 | **Fail-Fast** (현재) | 충돌 시 즉시 에러 반환, 클라이언트가 재시도 판단 | 충돌 빈도 낮음, 클라이언트가 재시도 로직 보유 |
-| **Application 재시도** (미구현) | Handler에서 N회 자동 재시도 후 실패 | 충돌 빈도 높고, 재시도가 항상 안전한 멱등 연산 |
+| **Application 재시도** (미구현) | Handler에서 N회 자동 재시도 후 실패 | 충돌 빈도 높고, 재시도가 항상 안전한 멱등 연산 (예: 조회 후 상태 갱신처럼 부수 효과가 동일한 연산) |
 
 **Fail-Fast 선택 근거:**
 
@@ -759,7 +756,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditable
 
 ---
 
-## 5. 안티패턴
+## 안티패턴
 
 ### 거대한 Aggregate (God Aggregate)
 
@@ -868,6 +865,6 @@ public sealed class Tag : Entity<TagId>
 
 ---
 
-## 다음 문서
+## 참고 문서
 
 - [Entity/Aggregate 구현 (HOW)](./06b-entity-aggregate-implementation.md)
