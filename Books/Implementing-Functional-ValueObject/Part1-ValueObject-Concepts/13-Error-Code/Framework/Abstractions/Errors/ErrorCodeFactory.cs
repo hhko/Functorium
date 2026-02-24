@@ -1,6 +1,6 @@
-﻿using LanguageExt.Common;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
+using LanguageExt.Common;
 
 namespace Framework.Abstractions.Errors;
 
@@ -14,15 +14,6 @@ public static class ErrorCodeFactory
         new ErrorCodeExpected(
             errorCode,
             errorCurrentValue,
-            errorMessage);
-
-    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Error Create(string errorCode,
-                               int errorCurrentValue,
-                               string errorMessage) =>
-        new ErrorCodeExpected(
-            errorCode,
-            errorCurrentValue.ToString(),
             errorMessage);
 
     // ErrorCodeExpected<T>
@@ -73,4 +64,3 @@ public static class ErrorCodeFactory
     public static string Format(params string[] parts) =>
         string.Join('.', parts);
 }
-

@@ -16,15 +16,6 @@ public static class ErrorCodeFactory
             errorCurrentValue,
             errorMessage);
 
-    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Error Create(string errorCode,
-                               int errorCurrentValue,
-                               string errorMessage) =>
-        new ErrorCodeExpected(
-            errorCode,
-            errorCurrentValue.ToString(),
-            errorMessage);
-
     // ErrorCodeExpected<T>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error Create<T>(string errorCode,

@@ -7,12 +7,12 @@ internal static class ErrorCodeFieldNames
     public const string ErrorCurrentValue = nameof(ErrorCodeExpected.ErrorCurrentValue);
     public const string ErrorCodeId = nameof(ErrorCodeExpected.ErrorCodeId);
 
-    public const string ErrorReason = nameof(ErrorReason);
+    public const string ErrorType = nameof(ErrorType);
     public const string Count = nameof(Count);
     public const string Errors = nameof(Errors);
     public const string InnerError = nameof(InnerError);
     public const string ExceptionDetails = nameof(ExceptionDetails);
 
-    public const string UnkownErrorCode = "UNKNOWN.ERROR-CODE";
-    public const string UnkownErrorMessage = "UNKNOWN.ERROR-MESSAGE";
+    public const string UnknownErrorCode = "UNKNOWN.ERROR-CODE";
+    public const string UnknownErrorMessage = "UNKNOWN.ERROR-MESSAGE";
 }

@@ -29,7 +29,7 @@ public static class DomainError
     /// <typeparam name="TDomain">도메인 타입 (Value Object, Entity, Aggregate 등)</typeparam>
     /// <param name="errorType">에러 타입 record</param>
     /// <param name="currentValue">현재 값</param>
-    /// <param name="message">오류 메시지 (이 챕터에서는 사용되지 않음)</param>
+    /// <param name="message">오류 메시지</param>
     /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TDomain>(
@@ -38,7 +38,8 @@ public static class DomainError
         string message) =>
         ErrorCodeFactory.Create(
             errorCode: $"{ErrorType.DomainErrorsPrefix}.{typeof(TDomain).Name}.{errorType.ErrorName}",
-            errorCurrentValue: currentValue);
+            errorCurrentValue: currentValue,
+            errorMessage: message);
 
     /// <summary>
     /// DomainErrorType record를 사용하여 에러를 생성합니다. (제네릭 값 타입)
@@ -47,7 +48,7 @@ public static class DomainError
     /// <typeparam name="TValue">현재 값의 타입</typeparam>
     /// <param name="errorType">에러 타입 record</param>
     /// <param name="currentValue">현재 값</param>
-    /// <param name="message">오류 메시지 (이 챕터에서는 사용되지 않음)</param>
+    /// <param name="message">오류 메시지</param>
     /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TDomain, TValue>(
@@ -57,7 +58,8 @@ public static class DomainError
         where TValue : notnull =>
         ErrorCodeFactory.Create(
             errorCode: $"{ErrorType.DomainErrorsPrefix}.{typeof(TDomain).Name}.{errorType.ErrorName}",
-            errorCurrentValue: currentValue);
+            errorCurrentValue: currentValue,
+            errorMessage: message);
 
     /// <summary>
     /// DomainErrorType record를 사용하여 에러를 생성합니다. (두 개의 값 포함)
@@ -68,7 +70,7 @@ public static class DomainError
     /// <param name="errorType">에러 타입 record</param>
     /// <param name="value1">첫 번째 값</param>
     /// <param name="value2">두 번째 값</param>
-    /// <param name="message">오류 메시지 (이 챕터에서는 사용되지 않음)</param>
+    /// <param name="message">오류 메시지</param>
     /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TDomain, T1, T2>(
@@ -80,8 +82,9 @@ public static class DomainError
         where T2 : notnull =>
         ErrorCodeFactory.Create(
             errorCode: $"{ErrorType.DomainErrorsPrefix}.{typeof(TDomain).Name}.{errorType.ErrorName}",
-            errorCurrentValue1: value1,
-            errorCurrentValue2: value2);
+            value1,
+            value2,
+            errorMessage: message);
 
     /// <summary>
     /// DomainErrorType record를 사용하여 에러를 생성합니다. (세 개의 값 포함)
@@ -94,7 +97,7 @@ public static class DomainError
     /// <param name="value1">첫 번째 값</param>
     /// <param name="value2">두 번째 값</param>
     /// <param name="value3">세 번째 값</param>
-    /// <param name="message">오류 메시지 (이 챕터에서는 사용되지 않음)</param>
+    /// <param name="message">오류 메시지</param>
     /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TDomain, T1, T2, T3>(
@@ -108,7 +111,8 @@ public static class DomainError
         where T3 : notnull =>
         ErrorCodeFactory.Create(
             errorCode: $"{ErrorType.DomainErrorsPrefix}.{typeof(TDomain).Name}.{errorType.ErrorName}",
-            errorCurrentValue1: value1,
-            errorCurrentValue2: value2,
-            errorCurrentValue3: value3);
+            value1,
+            value2,
+            value3,
+            errorMessage: message);
 }

@@ -33,24 +33,24 @@ public class ErrorCodeFactoryTests
         errorCodeExpected.Message.ShouldBe(errorMessage);
     }
 
-    // 테스트 시나리오: 문자열 에러 코드와 정수 값을 사용하여 기본 에러를 생성해야 한다
+    // 테스트 시나리오: 문자열 에러 코드와 정수 값을 사용하여 제네릭 에러를 생성해야 한다
     [Fact]
-    public void Create_ShouldReturnErrorCodeExpected_WhenUsingStringAndIntParameters()
+    public void Create_ShouldReturnErrorCodeExpectedInt_WhenUsingStringAndIntParameters()
     {
         // Arrange
         string errorCode = "DomainErrors.Age.OutOfRange";
         int errorCurrentValue = 150;
 
         string expectedErrorCode = "DomainErrors.Age.OutOfRange";
-        string expectedCurrentValue = "150";
+        int expectedCurrentValue = 150;
         string errorMessage = "Age is out of range. Current value: '150'";
 
         // Act
         var actual = ErrorCodeFactory.Create(errorCode, errorCurrentValue, errorMessage);
 
         // Assert
-        actual.ShouldBeOfType<ErrorCodeExpected>();
-        var errorCodeExpected = actual as ErrorCodeExpected;
+        actual.ShouldBeOfType<ErrorCodeExpected<int>>();
+        var errorCodeExpected = actual as ErrorCodeExpected<int>;
         errorCodeExpected!.ErrorCode.ShouldBe(expectedErrorCode);
         errorCodeExpected.ErrorCurrentValue.ShouldBe(expectedCurrentValue);
         errorCodeExpected.Message.ShouldBe(errorMessage);

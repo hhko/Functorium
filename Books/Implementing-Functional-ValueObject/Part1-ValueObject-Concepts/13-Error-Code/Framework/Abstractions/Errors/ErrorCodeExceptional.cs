@@ -7,7 +7,7 @@ using static LanguageExt.Prelude;
 namespace Framework.Abstractions.Errors;
 
 [DataContract]
-internal record ErrorCodeExceptional : Error
+internal record ErrorCodeExceptional : Error, IHasErrorCode
 {
     [Pure]
     [DataMember]
