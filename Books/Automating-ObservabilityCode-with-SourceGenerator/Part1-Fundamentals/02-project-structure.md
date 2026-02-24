@@ -31,8 +31,8 @@
     <!-- 5. Nullable 참조 타입 -->
     <Nullable>enable</Nullable>
 
-    <!-- 6. 암시적 using 비활성화 (netstandard2.0에서 권장) -->
-    <ImplicitUsings>disable</ImplicitUsings>
+    <!-- 6. 암시적 using 활성화 -->
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
 </Project>
@@ -47,7 +47,7 @@
 | `IsRoslynComponent` | `true` | IDE가 소스 생성기로 인식 |
 | `EnforceExtendedAnalyzerRules` | `true` | 분석기 개발 모범 사례 강제 |
 | `Nullable` | `enable` | null 안전성 검사 |
-| `ImplicitUsings` | `disable` | netstandard2.0 호환성 |
+| `ImplicitUsings` | `enable` | 암시적 using 활성화 |
 
 ---
 
@@ -104,16 +104,14 @@ analyzers/dotnet/cs/MyGenerator.dll
     <IsRoslynComponent>true</IsRoslynComponent>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <Nullable>enable</Nullable>
-    <ImplicitUsings>disable</ImplicitUsings>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <!-- NuGet 패키지 참조 -->
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp"
-                      Version="4.12.0"
                       PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers"
-                      Version="3.11.0"
                       PrivateAssets="all" />
   </ItemGroup>
 
@@ -162,8 +160,6 @@ Functorium.SourceGenerators/
 │
 ├── Functorium.SourceGenerators.csproj
 │
-├── ObservablePortGenerator.cs          # 메인 소스 생성기
-│
 ├── Abstractions/
 │   ├── Constants.cs                     # 공통 상수 (헤더 등)
 │   └── Selectors.cs                     # 공통 선택자
@@ -171,10 +167,12 @@ Functorium.SourceGenerators/
 └── Generators/
     ├── IncrementalGeneratorBase.cs      # 템플릿 메서드 패턴 기반 클래스
     │
-    └── ObservablePortGenerator/        # 생성기별 헬퍼 클래스
-        ├── ObservableClassInfo.cs         # 클래스 정보 레코드
-        ├── MethodInfo.cs                # 메서드 정보 레코드
-        ├── ParameterInfo.cs             # 파라미터 정보 레코드
+    └── ObservablePortGenerator/        # 생성기별 클래스
+        ├── ObservablePortGenerator.cs   # 메인 소스 생성기
+        ├── ObservableGeneratorConstants.cs  # 생성기 전용 상수
+        ├── ObservableClassInfo.cs       # 클래스 정보 레코드
+        ├── MethodInfo.cs                # 메서드 정보
+        ├── ParameterInfo.cs             # 파라미터 정보
         ├── TypeExtractor.cs             # 타입 추출 유틸리티
         ├── CollectionTypeHelper.cs      # 컬렉션 타입 판별
         ├── SymbolDisplayFormats.cs      # 타입 문자열 포맷
@@ -189,19 +187,37 @@ Functorium.SourceGenerators/
 ### ObservableClassInfo
 
 ```csharp
+using Microsoft.CodeAnalysis;
+
 namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
 /// 파이프라인 생성에 필요한 클래스 정보
 /// </summary>
-public sealed record ObservableClassInfo(
-    string Namespace,                               // 네임스페이스
-    string ClassName,                               // 클래스 이름
-    List<MethodInfo> Methods,                       // 메서드 목록
-    List<ParameterInfo> BaseConstructorParameters)  // 생성자 파라미터
+public readonly record struct ObservableClassInfo
 {
+    public readonly string Namespace;
+    public readonly string ClassName;
+    public readonly List<MethodInfo> Methods;
+    public readonly List<ParameterInfo> BaseConstructorParameters;
+    public readonly Location? Location;                              // 진단 위치
+
     public static readonly ObservableClassInfo None = new(
-        string.Empty, string.Empty, [], []);
+        string.Empty, string.Empty, new List<MethodInfo>(), new List<ParameterInfo>(), null);
+
+    public ObservableClassInfo(
+        string @namespace,
+        string className,
+        List<MethodInfo> methods,
+        List<ParameterInfo> baseConstructorParameters,
+        Location? location)
+    {
+        Namespace = @namespace;
+        ClassName = className;
+        Methods = methods;
+        BaseConstructorParameters = baseConstructorParameters;
+        Location = location;
+    }
 }
 ```
 
@@ -211,10 +227,19 @@ public sealed record ObservableClassInfo(
 /// <summary>
 /// 메서드 정보
 /// </summary>
-public sealed record MethodInfo(
-    string Name,                    // 메서드 이름
-    List<ParameterInfo> Parameters, // 파라미터 목록
-    string ReturnType);             // 반환 타입 (global:: 접두사 포함)
+public class MethodInfo
+{
+    public string Name { get; }
+    public List<ParameterInfo> Parameters { get; }
+    public string ReturnType { get; }
+
+    public MethodInfo(string name, List<ParameterInfo> parameters, string returnType)
+    {
+        Name = name;
+        Parameters = parameters;
+        ReturnType = returnType;
+    }
+}
 ```
 
 ### ParameterInfo
@@ -223,10 +248,21 @@ public sealed record MethodInfo(
 /// <summary>
 /// 파라미터 정보
 /// </summary>
-public sealed record ParameterInfo(
-    string Name,            // 파라미터 이름
-    string Type,            // 타입 (global:: 접두사 포함)
-    RefKind RefKind);       // ref, out, in 키워드
+public class ParameterInfo
+{
+    public string Name { get; }
+    public string Type { get; }
+    public RefKind RefKind { get; }
+    public bool IsCollection { get; }       // 컬렉션 타입 여부
+
+    public ParameterInfo(string name, string type, RefKind refKind)
+    {
+        Name = name;
+        Type = type;
+        RefKind = refKind;
+        IsCollection = CollectionTypeHelper.IsCollectionType(type);
+    }
+}
 ```
 
 ---
@@ -321,7 +357,7 @@ ls bin/Debug/netstandard2.0/
 | `IsRoslynComponent` | IDE가 소스 생성기로 인식 |
 | `PrivateAssets="all"` | Roslyn 패키지 전이 방지 |
 | `OutputItemType="Analyzer"` | 프로젝트 참조 시 분석기로 처리 |
-| 데이터 모델 | 불변 레코드로 정의 (ObservableClassInfo 등) |
+| 데이터 모델 | 불변 타입으로 정의 (ObservableClassInfo 등) |
 
 ---
 

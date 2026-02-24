@@ -122,7 +122,7 @@ public class UserRepositoryObservable : UserRepository
     private readonly Histogram<double> _durationHistogram;
 
     // 2. LoggerMessage.Define delegate
-    private static readonly Action<ILogger, ...> _logRequestDebug = ...;
+    private static readonly Action<ILogger, ...> _logAdapterRequestDebug_... = ...;
 
     // 3. 생성자 (의존성 주입)
     public UserRepositoryObservable(

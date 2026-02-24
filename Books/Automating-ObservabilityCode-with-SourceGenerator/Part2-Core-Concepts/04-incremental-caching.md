@@ -78,8 +78,8 @@ OrderRepository.cs  → [캐시] → (처리 생략)
 ### 1. 레코드(Record) 사용
 
 ```csharp
-// ✅ 레코드: 자동으로 Equals/GetHashCode 구현
-public sealed record ObservableClassInfo(
+// ✅ readonly record struct: 값 의미론 + 자동 Equals/GetHashCode
+public readonly record struct ObservableClassInfo(
     string Namespace,
     string ClassName,
     List<MethodInfo> Methods,
@@ -92,13 +92,13 @@ public sealed record ObservableClassInfo(
 
 ```csharp
 // ✅ ImmutableArray 사용
-public sealed record ObservableClassInfo(
+public readonly record struct ObservableClassInfo(
     string Namespace,
     string ClassName,
     ImmutableArray<MethodInfo> Methods);  // 불변
 
 // ⚠️ List는 참조 비교만 함
-public sealed record ObservableClassInfo(
+public readonly record struct ObservableClassInfo(
     string Namespace,
     string ClassName,
     List<MethodInfo> Methods);  // 내용이 같아도 다른 인스턴스면 다름

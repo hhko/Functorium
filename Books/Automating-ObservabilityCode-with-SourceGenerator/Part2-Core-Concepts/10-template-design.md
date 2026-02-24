@@ -41,7 +41,8 @@ GenerateObservableClassSource()
     │       ├── 시그니처 생성
     │       ├── 로깅 호출 생성
     │       └── 실제 호출 생성
-    └── GenerateLoggingMethods()
+    └── {ClassName}ObservableLoggers 클래스
+        └── GenerateLoggingMethods() (각 메서드)
 ```
 
 ---
@@ -145,7 +146,13 @@ private static string GenerateObservableClassSource(
     sb.AppendLine("}");
 
     // 10. 로깅 확장 클래스
-    GenerateLoggingExtensions(sb, classInfo);
+    sb.AppendLine($"internal static class {classInfo.ClassName}ObservableLoggers")
+      .AppendLine("{");
+    foreach (var method in classInfo.Methods)
+    {
+        GenerateLoggingMethods(sb, classInfo, method);
+    }
+    sb.AppendLine("}");
 
     return sb.ToString();
 }
@@ -261,23 +268,29 @@ private static void GenerateMethod(
     MethodInfo method)
 {
     // 1. 메서드 시그니처
-    string parameters = GenerateParameterList(method.Parameters);
-    sb.AppendLine($"    public new {method.ReturnType} {method.Name}({parameters})")
-      .AppendLine("    {");
+    string actualReturnType = ExtractActualReturnType(method.ReturnType);
+
+    sb.AppendLine($"    public override {method.ReturnType} {method.Name}(");
+    for (int i = 0; i < method.Parameters.Count; i++)
+    {
+        var param = method.Parameters[i];
+        var comma = i < method.Parameters.Count - 1 ? "," : "";
+        sb.AppendLine($"        {param.Type} {param.Name}{comma}");
+    }
 
     // 2. FinT.lift + ExecuteWithSpan 패턴
-    string arguments = GenerateArgumentList(method.Parameters);
-    sb.AppendLine($"        return global::LanguageExt.FinT.lift<IO, {method.ActualReturnType}>(")
-      .AppendLine($"            IO.lift(() => ExecuteWithSpan(")
-      .AppendLine($"                RequestHandler,")
-      .AppendLine($"                nameof({method.Name}),")
-      .AppendLine($"                FinTToIO(base.{method.Name}({arguments})),");
-
-    // 3. 로깅 람다 (동적)
-    GenerateLoggingLambda(sb, method);
-
-    sb.AppendLine($"            )));")
-      .AppendLine("    }")
+    string arguments = string.Join(", ", method.Parameters.Select(p => p.Name));
+    sb.AppendLine("    ) =>")
+      .AppendLine($"        global::LanguageExt.FinT.lift<global::LanguageExt.IO, {actualReturnType}>(")
+      .AppendLine("            (from result in ExecuteWithSpan(")
+      .AppendLine($"                requestHandler: RequestHandler,")
+      .AppendLine($"                requestHandlerMethod: nameof({method.Name}),")
+      .AppendLine($"                operation: FinTToIO(base.{method.Name}({arguments})),")
+      .AppendLine($"                requestLog: () => AdapterRequestLog_..._{method.Name}(...),")
+      .AppendLine($"                responseLogSuccess: AdapterResponseSuccessLog_..._{method.Name},")
+      .AppendLine($"                responseLogFailure: AdapterResponseFailureLog_..._{method.Name},")
+      .AppendLine("                startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())")
+      .AppendLine($"            select result).Map(r => global::LanguageExt.Fin.Succ(r)));")
       .AppendLine();
 }
 ```
@@ -286,17 +299,19 @@ private static void GenerateMethod(
 
 ```csharp
 // 생성된 메서드
-public new FinT<IO, User> GetUserAsync(int userId)
-{
-    return global::LanguageExt.FinT.lift<IO, User>(
-        IO.lift(() => ExecuteWithSpan(
-            RequestHandler,
-            nameof(GetUserAsync),
-            FinTToIO(base.GetUserAsync(userId)),
-            () => LogGetUserAsyncRequest(userId),
-            LogGetUserAsyncResponseSuccess,
-            LogGetUserAsyncResponseFailure)));
-}
+public override FinT<IO, User> GetUserAsync(
+    int userId
+) =>
+    global::LanguageExt.FinT.lift<global::LanguageExt.IO, User>(
+        (from result in ExecuteWithSpan(
+            requestHandler: RequestHandler,
+            requestHandlerMethod: nameof(GetUserAsync),
+            operation: FinTToIO(base.GetUserAsync(userId)),
+            requestLog: () => AdapterRequestLog_UserRepository_GetUserAsync(RequestHandler, nameof(GetUserAsync), userId),
+            responseLogSuccess: AdapterResponseSuccessLog_UserRepository_GetUserAsync,
+            responseLogFailure: AdapterResponseFailureLog_UserRepository_GetUserAsync,
+            startTimestamp: ElapsedTimeCalculator.GetCurrentTimestamp())
+        select result).Map(r => global::LanguageExt.Fin.Succ(r)));
 ```
 
 ---
@@ -345,33 +360,60 @@ private static void GenerateLoggingMethods(
 ```csharp
 internal static class UserRepositoryObservableLoggers
 {
-    // 요청 로깅 (Debug - 파라미터 포함, 고성능)
-    private static readonly Action<ILogger, string, string, string, string, int, Exception?> s_getUserAsyncRequestDebug =
-        LoggerMessage.Define<string, string, string, string, int>(
-            LogLevel.Debug,
-            ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.userId}");
+    // ===== LoggerMessage.Define delegates for GetUserAsync =====
 
     // 요청 로깅 (Information - 핸들러명만)
-    private static readonly Action<ILogger, string, string, string, string, Exception?> s_getUserAsyncRequest =
+    private static readonly Action<ILogger, string, string, string, string, Exception?> _logAdapterRequest_UserRepository_GetUserAsync =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
 
-    // 응답 로깅 (Debug - 결과 포함, 고성능)
-    private static readonly Action<ILogger, string, string, string, string, string, double, Exception?> s_getUserAsyncResponseSuccessDebug =
-        LoggerMessage.Define<string, string, string, string, string, double>(
+    // 요청 로깅 (Debug - 파라미터 포함, 고성능)
+    private static readonly Action<ILogger, string, string, string, string, int, Exception?> _logAdapterRequestDebug_UserRepository_GetUserAsync =
+        LoggerMessage.Define<string, string, string, string, int>(
             LogLevel.Debug,
-            ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
+            ObservabilityNaming.EventIds.Adapter.AdapterRequest,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.params.userid}");
 
     // 응답 로깅 (Information - 상태만)
-    private static readonly Action<ILogger, string, string, string, string, string, double, Exception?> s_getUserAsyncResponseSuccess =
+    private static readonly Action<ILogger, string, string, string, string, string, double, Exception?> _logAdapterResponseSuccess_UserRepository_GetUserAsync =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
             "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
+
+    // 응답 로깅 (Debug - 결과 포함, 고성능)
+    private static readonly Action<ILogger, string, string, string, string, string, double, User, Exception?> _logAdapterResponseSuccessDebug_UserRepository_GetUserAsync =
+        LoggerMessage.Define<string, string, string, string, string, double, User>(
+            LogLevel.Debug,
+            ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {response.result}");
+
+    // 확장 메서드: LogAdapterRequestDebug_UserRepository_GetUserAsync
+    public static void LogAdapterRequestDebug_UserRepository_GetUserAsync(
+        this ILogger logger, string requestLayer, string requestCategory,
+        string requestHandler, string requestHandlerMethod, int userId) { ... }
+
+    // 확장 메서드: LogAdapterRequest_UserRepository_GetUserAsync
+    public static void LogAdapterRequest_UserRepository_GetUserAsync(
+        this ILogger logger, string requestLayer, string requestCategory,
+        string requestHandler, string requestHandlerMethod) { ... }
+
+    // 확장 메서드: LogAdapterResponseSuccessDebug_UserRepository_GetUserAsync
+    public static void LogAdapterResponseSuccessDebug_UserRepository_GetUserAsync(
+        this ILogger logger, string requestLayer, string requestCategory,
+        string requestHandler, string requestHandlerMethod,
+        string status, User result, double elapsed) { ... }
+
+    // 확장 메서드: LogAdapterResponseSuccess_UserRepository_GetUserAsync
+    public static void LogAdapterResponseSuccess_UserRepository_GetUserAsync(
+        this ILogger logger, string requestLayer, string requestCategory,
+        string requestHandler, string requestHandlerMethod,
+        string status, double elapsed) { ... }
+
+    // 확장 메서드: LogAdapterResponseWarning_UserRepository_GetUserAsync
+    // 확장 메서드: LogAdapterResponseError_UserRepository_GetUserAsync
 }
 ```
 

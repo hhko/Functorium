@@ -287,27 +287,65 @@ Provider 패턴의 핵심 장점은 **자동 캐싱**입니다:
 캐싱이 올바르게 작동하려면 데이터 모델이 **값 의미론**을 가져야 합니다:
 
 ```csharp
-// ✅ 레코드 사용 (자동으로 Equals/GetHashCode 구현)
-public sealed record ObservableClassInfo(
-    string Namespace,
-    string ClassName,
-    List<MethodInfo> Methods,
-    List<ParameterInfo> BaseConstructorParameters)
+// ✅ readonly record struct 사용 (값 의미론 + 자동 Equals/GetHashCode)
+public readonly record struct ObservableClassInfo
 {
+    public readonly string Namespace;
+    public readonly string ClassName;
+    public readonly List<MethodInfo> Methods;
+    public readonly List<ParameterInfo> BaseConstructorParameters;
+    public readonly Location? Location;
+
     // None 패턴으로 null 대신 빈 객체 사용
     public static readonly ObservableClassInfo None = new(
-        string.Empty, string.Empty, [], []);
+        string.Empty, string.Empty, new List<MethodInfo>(),
+        new List<ParameterInfo>(), null);
+
+    public ObservableClassInfo(
+        string @namespace, string className,
+        List<MethodInfo> methods,
+        List<ParameterInfo> baseConstructorParameters,
+        Location? location)
+    {
+        Namespace = @namespace;
+        ClassName = className;
+        Methods = methods;
+        BaseConstructorParameters = baseConstructorParameters;
+        Location = location;
+    }
 }
 
-public sealed record MethodInfo(
-    string Name,
-    List<ParameterInfo> Parameters,
-    string ReturnType);
+// 생성자 기반 class
+public class MethodInfo
+{
+    public string Name { get; }
+    public List<ParameterInfo> Parameters { get; }
+    public string ReturnType { get; }
 
-public sealed record ParameterInfo(
-    string Name,
-    string Type,
-    RefKind RefKind);
+    public MethodInfo(string name, List<ParameterInfo> parameters,
+        string returnType)
+    {
+        Name = name;
+        Parameters = parameters;
+        ReturnType = returnType;
+    }
+}
+
+public class ParameterInfo
+{
+    public string Name { get; }
+    public string Type { get; }
+    public RefKind RefKind { get; }
+    public bool IsCollection { get; }
+
+    public ParameterInfo(string name, string type, RefKind refKind)
+    {
+        Name = name;
+        Type = type;
+        RefKind = refKind;
+        IsCollection = CollectionTypeHelper.IsCollectionType(type);
+    }
+}
 ```
 
 ---

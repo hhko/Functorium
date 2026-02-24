@@ -152,18 +152,19 @@ public class UserRepositoryObservable : UserRepository
 // 소스 생성기가 생성하는 고성능 로깅 코드
 internal static class UserRepositoryObservableLoggers
 {
-    private static readonly Action<ILogger, string, string, string, string, int, Exception?> s_getUserAsyncRequestDebug =
+    private static readonly Action<ILogger, string, string, string, string, int, Exception?> _logAdapterRequestDebug_UserRepository_GetUserAsync =
         LoggerMessage.Define<string, string, string, string, int>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.userId}");
+            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.params.userid}");
 
-    public static void GetUserAsyncRequestDebug(ILogger logger, string layer, string category, string handler, string method, int userId)
+    public static void LogAdapterRequestDebug_UserRepository_GetUserAsync(
+        this ILogger logger, string requestLayer, string requestCategory, string requestHandler, string requestHandlerMethod, int userId)
     {
-        if (logger.IsEnabled(LogLevel.Debug))
-        {
-            s_getUserAsyncRequestDebug(logger, layer, category, handler, method, userId, null);
-        }
+        if (!logger.IsEnabled(LogLevel.Debug))
+            return;
+
+        _logAdapterRequestDebug_UserRepository_GetUserAsync(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, userId, null);
     }
 }
 ```
@@ -244,8 +245,7 @@ IncrementalGeneratorBase (추상 클래스)
 // IObservablePort 인터페이스 - 전략의 공통 계약
 public interface IObservablePort
 {
-    // 마커 인터페이스로 사용
-    // 실제 메서드는 각 도메인별 인터페이스에서 정의
+    string RequestCategory { get; }
 }
 
 // 구체적인 전략 정의 - 사용자 저장소
@@ -406,20 +406,16 @@ Functorium/
 
 ### 1. ObservablePortGenerator
 
-메인 소스 생성기 클래스입니다. 3단계 파이프라인으로 동작합니다:
+메인 소스 생성기 클래스입니다. 2단계 파이프라인으로 동작합니다:
 
 ```
-1단계: 속성 정의 생성
-=====================
-[GenerateObservablePort] 속성을 자동으로 정의하여
-개발자가 별도로 선언할 필요 없음
-
-2단계: 대상 클래스 필터링
+1단계: 대상 클래스 필터링
 ========================
+Functorium 라이브러리에 미리 정의된
 [GenerateObservablePort] 속성이 붙고
 IObservablePort를 구현한 클래스만 선택
 
-3단계: Observable 클래스 생성
+2단계: Observable 클래스 생성
 ===========================
 각 메서드에 대해 로깅, 추적, 메트릭 코드를
 포함한 래퍼 메서드 생성

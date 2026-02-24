@@ -138,7 +138,7 @@ private static int CountCollectionParameters(MethodInfo method)
 if (totalRequestFields <= 6)
 {
     // ✅ 고성능 경로: LoggerMessage.Define 사용
-    sb.AppendLine($"    private static readonly Action<ILogger, {typeParams}, Exception?> _log{method.Name}RequestDebug =");
+    sb.AppendLine($"    private static readonly Action<ILogger, {typeParams}, Exception?> _logAdapterRequestDebug_{classInfo.ClassName}_{method.Name} =");
     sb.AppendLine($"        LoggerMessage.Define<{typeParams}>(");
     sb.AppendLine($"            LogLevel.Debug,");
     sb.AppendLine($"            ObservabilityNaming.EventIds.Adapter.AdapterRequest,");
@@ -169,14 +169,14 @@ else
 // 원본: GetData(int id, string name) - 6개 필드
 
 // 생성된 delegate 필드
-private static readonly Action<ILogger, string, string, string, string, int, string, Exception?> _logGetDataRequestDebug =
+private static readonly Action<ILogger, string, string, string, string, int, string, Exception?> _logAdapterRequestDebug_DataRepository_GetData =
     LoggerMessage.Define<string, string, string, string, int, string>(
         LogLevel.Debug,
         ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-        "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.id} {request.name}");
+        "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.params.id} {request.params.name}");
 
-// 생성된 호출 코드
-_logGetDataRequestDebug(logger, layer, category, handler, method, id, name, null);
+// 생성된 호출 코드 (확장 메서드 형태)
+_logger.LogAdapterRequestDebug_DataRepository_GetData(layer, category, handler, method, id, name, null);
 ```
 
 ### logger.LogDebug() 폴백 (> 6개)
@@ -186,7 +186,7 @@ _logGetDataRequestDebug(logger, layer, category, handler, method, id, name, null
 
 // 생성된 호출 코드 (delegate 없음)
 logger.LogDebug(
-    "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.a} {request.b} {request.c}",
+    "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.params.a} {request.params.b} {request.params.c}",
     layer, category, handler, method, a, b, c);
 ```
 

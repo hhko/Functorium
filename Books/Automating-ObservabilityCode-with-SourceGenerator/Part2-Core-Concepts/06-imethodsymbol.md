@@ -211,16 +211,37 @@ var methods = classSymbol.AllInterfaces
 
 ```csharp
 // Generators/ObservablePortGenerator/MethodInfo.cs
-public sealed record MethodInfo(
-    string Name,
-    List<ParameterInfo> Parameters,
-    string ReturnType);
+public class MethodInfo
+{
+    public string Name { get; }
+    public List<ParameterInfo> Parameters { get; }
+    public string ReturnType { get; }
+
+    public MethodInfo(string name, List<ParameterInfo> parameters,
+        string returnType)
+    {
+        Name = name;
+        Parameters = parameters;
+        ReturnType = returnType;
+    }
+}
 
 // Generators/ObservablePortGenerator/ParameterInfo.cs
-public sealed record ParameterInfo(
-    string Name,
-    string Type,
-    RefKind RefKind);
+public class ParameterInfo
+{
+    public string Name { get; }
+    public string Type { get; }
+    public RefKind RefKind { get; }
+    public bool IsCollection { get; }
+
+    public ParameterInfo(string name, string type, RefKind refKind)
+    {
+        Name = name;
+        Type = type;
+        RefKind = refKind;
+        IsCollection = CollectionTypeHelper.IsCollectionType(type);
+    }
+}
 ```
 
 ---

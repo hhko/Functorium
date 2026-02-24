@@ -23,7 +23,7 @@ public override FinT<IO, List<User>> GetUsersAsync() =>
         from __ in IO.lift(() =>
         {
             // ← 컬렉션 크기를 태그로 기록
-            activityContext?.SetTag("Response_ResultCount", result?.Count ?? 0);
+            activityContext?.SetTag("response.result.count", result?.Count ?? 0);
             activityContext?.Dispose();
             return Unit.Default;
         })
@@ -182,29 +182,30 @@ public static string? GetCountExpression(string variableName, string typeFullNam
 ```csharp
 /// <summary>
 /// Request 파라미터에 대한 필드 이름을 생성합니다.
-/// 예: "ms" -> "Request_Ms", "name" -> "Request_Name"
+/// 예: "ms" -> "request.params.ms", "name" -> "request.params.name"
+/// 동적 필드는 request.params.{name} 형식으로 정적 필드와 구분됩니다.
 /// </summary>
 public static string GetRequestFieldName(string parameterName)
 {
     if (string.IsNullOrEmpty(parameterName))
         return parameterName;
 
-    // 첫 글자를 대문자로 변환
-    string capitalizedName = char.ToUpper(parameterName[0]) + parameterName.Substring(1);
-    return $"Request_{capitalizedName}";
+    // 소문자로 변환하여 snake_case + dot 형식 사용
+    return $"request.params.{parameterName.ToLowerInvariant()}";
 }
 
 /// <summary>
 /// Request 파라미터에 대한 Count 필드 이름을 생성합니다.
-/// 예: "orders" -> "Request_OrdersCount"
+/// 예: "orders" -> "request.params.orders.count"
 /// </summary>
+/// <returns>Count 필드 이름. parameterName이 비어있으면 null</returns>
 public static string? GetRequestCountFieldName(string parameterName)
 {
     if (string.IsNullOrEmpty(parameterName))
         return null;
 
-    string capitalizedName = char.ToUpper(parameterName[0]) + parameterName.Substring(1);
-    return $"Request_{capitalizedName}Count";
+    // 소문자로 변환하여 snake_case + dot 형식 사용
+    return $"request.params.{parameterName.ToLowerInvariant()}.count";
 }
 ```
 
@@ -213,18 +214,20 @@ public static string? GetRequestCountFieldName(string parameterName)
 ```csharp
 /// <summary>
 /// Response 결과에 대한 필드 이름을 생성합니다.
+/// 반환값: "response.result"
 /// </summary>
 public static string GetResponseFieldName()
 {
-    return "Response_Result";
+    return "response.result";
 }
 
 /// <summary>
 /// Response 결과에 대한 Count 필드 이름을 생성합니다.
+/// 반환값: "response.result.count"
 /// </summary>
 public static string GetResponseCountFieldName()
 {
-    return "Response_ResultCount";
+    return "response.result.count";
 }
 ```
 
@@ -297,8 +300,8 @@ public override FinT<IO, int> ProcessItems(List<string> items) =>
         from activityContext in IO.lift(() => CreateActivity("ProcessItems"))
         from _ in IO.lift(() =>
         {
-            activityContext?.SetTag("Request_Items", items);
-            activityContext?.SetTag("Request_ItemsCount", items?.Count ?? 0);  // ← Count 태그
+            activityContext?.SetTag("request.params.items", items);
+            activityContext?.SetTag("request.params.items.count", items?.Count ?? 0);  // ← Count 태그
             StartActivity(activityContext);
             return Unit.Default;
         })
@@ -324,7 +327,7 @@ public override FinT<IO, List<User>> GetUsers() =>
         // ...
         from __ in IO.lift(() =>
         {
-            activityContext?.SetTag("Response_ResultCount", result?.Count ?? 0);  // ← Count 태그
+            activityContext?.SetTag("response.result.count", result?.Count ?? 0);  // ← Count 태그
             activityContext?.Dispose();
             return Unit.Default;
         })
@@ -340,7 +343,7 @@ public virtual FinT<IO, string[]> GetNames() => ...;
 
 // 생성된 코드
 // ...
-activityContext?.SetTag("Response_ResultCount", result?.Length ?? 0);  // ← Length 사용
+activityContext?.SetTag("response.result.count", result?.Length ?? 0);  // ← Length 사용
 ```
 
 ---
@@ -364,8 +367,8 @@ public Task Should_Generate_CollectionCountFields_WithCollectionParameters()
 
     string? actual = _sut.Generate(input);
 
-    // Request_ItemsCount 필드 확인
-    actual.ShouldContain("Request_ItemsCount");
+    // request.params.items.count 필드 확인
+    actual.ShouldContain("request.params.items.count");
     actual.ShouldContain("items?.Count ?? 0");
 
     return Verify(actual);
@@ -390,8 +393,8 @@ public Task Should_Not_Generate_Count_ForTupleContainingCollection()
 
     string? actual = _sut.Generate(input);
 
-    // Response_ResultCount 미생성 확인
-    actual.ShouldNotContain("Response_ResultCount");
+    // response.result.count 미생성 확인
+    actual.ShouldNotContain("response.result.count");
 
     return Verify(actual);
 }
@@ -414,8 +417,8 @@ public Task Should_Not_Generate_Length_ForTupleContainingArray()
 
     string? actual = _sut.Generate(input);
 
-    // Response_ResultCount (Length) 미생성 확인
-    actual.ShouldNotContain("Response_ResultCount");
+    // response.result.count (Length) 미생성 확인
+    actual.ShouldNotContain("response.result.count");
 
     return Verify(actual);
 }
@@ -446,7 +449,7 @@ public Task Should_Not_Generate_Length_ForTupleContainingArray()
 | 튜플 제외 | `IsTupleType()` 체크 |
 | Count 생성 | `GetCountExpression()` |
 | Length 생성 | 배열 타입 전용 |
-| 필드명 규칙 | `Request_*`, `Response_*` |
+| 필드명 규칙 | `request.params.*`, `response.result*` |
 
 ---
 
