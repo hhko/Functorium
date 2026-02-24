@@ -1,4 +1,5 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
 using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
@@ -38,8 +39,7 @@ public sealed class MemberRegistration : ValueObject
     public static Validation<Error, (string Username, string Email, string Password)> Validate(
         string username, string email, string password) =>
         (ValidateUsername(username), ValidateEmail(email), ValidatePassword(password))
-            .Apply((u, e, p) => (Username: u, Email: e, Password: p))
-            .As();
+            .Apply((u, e, p) => (Username: u, Email: e, Password: p));
 
     // 사용자명 검증 - 내부 Bind (2단계 검증)
     private static Validation<Error, string> ValidateUsername(string username) =>

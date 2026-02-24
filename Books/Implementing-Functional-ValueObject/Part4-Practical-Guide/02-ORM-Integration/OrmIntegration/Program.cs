@@ -1,4 +1,5 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
 using Functorium.Domains.Errors;
 using Microsoft.EntityFrameworkCore;
 using LanguageExt;
@@ -154,8 +155,7 @@ public sealed class Email : SimpleValueObject<string>
 
     public static Validation<Error, string> Validate(string value) =>
         (ValidateNotEmpty(value), ValidateFormat(value))
-            .Apply((_, validFormat) => validFormat.ToLowerInvariant())
-            .As();
+            .Apply((_, validFormat) => validFormat.ToLowerInvariant());
 
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
@@ -250,8 +250,7 @@ public sealed class Address : ValueObject
     public static Validation<Error, (string City, string Street, string PostalCode)> Validate(
         string city, string street, string postalCode) =>
         (ValidateCityNotEmpty(city), ValidateStreetNotEmpty(street), ValidatePostalCodeNotEmpty(postalCode))
-            .Apply((validCity, validStreet, validPostalCode) => (validCity, validStreet, validPostalCode))
-            .As();
+            .Apply((validCity, validStreet, validPostalCode) => (validCity, validStreet, validPostalCode));
 
     private static Validation<Error, string> ValidateCityNotEmpty(string city) =>
         !string.IsNullOrWhiteSpace(city)
@@ -316,8 +315,7 @@ public sealed class Money : ValueObject
 
     public static Validation<Error, (decimal Amount, string Currency)> Validate(decimal amount, string currency) =>
         (ValidateAmountNotNegative(amount), ValidateCurrencyNotEmpty(currency), ValidateCurrencyLength(currency))
-            .Apply((validAmount, validCurrency, _) => (validAmount, validCurrency))
-            .As();
+            .Apply((validAmount, validCurrency, _) => (validAmount, validCurrency));
 
     private static Validation<Error, decimal> ValidateAmountNotNegative(decimal amount) =>
         amount >= 0
@@ -381,8 +379,7 @@ public sealed class OrderLineItem : ValueObject
 
     public static Validation<Error, (string Name, int Qty, decimal Price)> Validate(string name, int qty, decimal price) =>
         (ValidateNameNotEmpty(name), ValidateQuantityPositive(qty), ValidatePriceNotNegative(price))
-            .Apply((validName, validQty, validPrice) => (validName, validQty, validPrice))
-            .As();
+            .Apply((validName, validQty, validPrice) => (validName, validQty, validPrice));
 
     private static Validation<Error, string> ValidateNameNotEmpty(string name) =>
         !string.IsNullOrWhiteSpace(name)

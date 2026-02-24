@@ -1,5 +1,6 @@
 using Functorium.Abstractions.Errors;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
 using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
@@ -206,8 +207,7 @@ public sealed class Money : ValueObject, IComparable<Money>
     // 5. Public Validate 메서드 - 독립 검증 규칙들을 병렬로 실행
     public static Validation<Error, (decimal Amount, string Currency)> Validate(decimal amount, string currency) =>
         (ValidateAmountNotNegative(amount), ValidateCurrencyNotEmpty(currency), ValidateCurrencyLength(currency))
-            .Apply((validAmount, validCurrency, _) => (validAmount, validCurrency))
-            .As();
+            .Apply((validAmount, validCurrency, _) => (validAmount, validCurrency));
 
     // 5.1 금액 검증
     private static Validation<Error, decimal> ValidateAmountNotNegative(decimal amount) =>
@@ -453,7 +453,6 @@ public sealed class ShippingAddress : ValueObject
         string recipientName, string street, string city, string postalCode, string country) =>
         (ValidateRecipientName(recipientName), ValidateStreet(street), ValidateCity(city), ValidateCountry(country))
             .Apply((validRecipient, validStreet, validCity, validCountry) => (validRecipient, validStreet, validCity, validCountry))
-            .As()
             .Bind(values => ValidatePostalCode(postalCode)
                 .Map(validPostal => (values.validRecipient, values.validStreet, values.validCity, validPostal, values.validCountry)));
 

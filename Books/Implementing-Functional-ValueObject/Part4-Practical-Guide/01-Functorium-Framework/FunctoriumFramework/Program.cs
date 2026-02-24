@@ -92,19 +92,12 @@ class Program
         Console.WriteLine("4. 프레임워크 타입 계층 구조");
         Console.WriteLine("─".PadRight(40, '─'));
         Console.WriteLine(@"
-   IValueObject (인터페이스)
-       │
-       └── AbstractValueObject (기본 클래스)
-           │
-           ├── ValueObject (복합 값 객체)
-           │   │
-           │   └── SimpleValueObject<T>
-           │
-           ├── ComparableValueObject
-           │   │
-           │   └── ComparableSimpleValueObject<T>
-           │
-           └── SmartEnum + IValueObject (열거형)
+   IValueObject (인터페이스 — 명명 규칙 상수)
+       └── AbstractValueObject (기본 클래스 — 동등성, 해시코드, ORM 프록시)
+           ├── ValueObject (CreateFromValidation<TVO, TValue> 헬퍼)
+           │   └── SimpleValueObject<T> (단일 값 래퍼, protected T Value)
+           └── ComparableValueObject (IComparable, 비교 연산자)
+               └── ComparableSimpleValueObject<T> (단일 비교 가능 값 래퍼, protected T Value)
 ");
     }
 }

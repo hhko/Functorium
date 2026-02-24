@@ -1,4 +1,5 @@
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
 using Functorium.Domains.Errors;
 using LanguageExt;
 using LanguageExt.Common;
@@ -78,8 +79,7 @@ public sealed class UserRegistrationFunApply : ValueObject
         string email, string password, string name, string ageInput) =>
         (ValidateEmailFormat(email), ValidatePasswordStrength(password), ValidateNameFormat(name), ValidateAgeFormat(ageInput))
             .Apply((validEmail, validPassword, validName, validAge) =>
-                (Email: validEmail, Password: validPassword, Name: validName, Age: validAge))
-            .As();
+                (Email: validEmail, Password: validPassword, Name: validName, Age: validAge));
 
     // 검증 메서드들 (UserRegistration과 동일)
     private static Validation<Error, string> ValidateEmailFormat(string email) =>

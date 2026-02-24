@@ -1,5 +1,6 @@
 using Functorium.Applications.Cqrs;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Validations;
 using Functorium.Domains.Errors;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
@@ -128,8 +129,7 @@ public sealed class Email : SimpleValueObject<string>
 
     public static Validation<Error, string> Validate(string value) =>
         (ValidateNotEmpty(value), ValidateFormat(value))
-            .Apply((_, validFormat) => validFormat.ToLowerInvariant())
-            .As();
+            .Apply((_, validFormat) => validFormat.ToLowerInvariant());
 
     private static Validation<Error, string> ValidateNotEmpty(string value) =>
         !string.IsNullOrWhiteSpace(value)
