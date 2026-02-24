@@ -58,11 +58,11 @@ public sealed class Address : IEquatable<Address>
     /// 검증 책임 - 단일 책임 원칙
     /// 검증 로직만 담당하는 별도 메서드
     /// 각 구성 요소들의 검증을 조합하여 복합 검증 수행
-    /// 
+    ///
     /// 검증 방식: AND 조건 (All or Nothing)
     /// - 모든 구성 요소(Street, City, PostalCode)가 유효해야만 성공
     /// - 하나라도 유효하지 않으면 전체 검증 실패
-    /// - LanguageExt의 Validation 모나드를 사용하여 순차적 AND 검증 수행
+    /// - LanguageExt의 tuple Apply 패턴을 사용하여 병렬 AND 검증 수행
     /// </summary>
     /// <param name="streetValue">검증할 거리명</param>
     /// <param name="cityValue">검증할 도시명</param>
@@ -71,21 +71,12 @@ public sealed class Address : IEquatable<Address>
     public static Validation<Error, (Street Street, City City, PostalCode PostalCode)> Validate(
         string streetValue,
         string cityValue,
-        string postalCodeValue)
-    {
-        var streetValidation = Street.Validate(streetValue);
-        var cityValidation = City.Validate(cityValue);
-        var postalCodeValidation = PostalCode.Validate(postalCodeValue);
-
-        // AND 조건 검증: street AND city AND postalCode
-        // 모든 검증이 성공해야만 전체가 성공 (All or Nothing)
-        return from street in streetValidation
-               from city in cityValidation
-               from postalCode in postalCodeValidation
-               select (Street: Street.CreateFromValidated(street),
-                       City: City.CreateFromValidated(city),
-                       PostalCode: PostalCode.CreateFromValidated(postalCode));
-    }
+        string postalCodeValue) =>
+        (Street.Validate(streetValue), City.Validate(cityValue), PostalCode.Validate(postalCodeValue))
+            .Apply((street, city, postalCode) =>
+                (Street: Street.CreateFromValidated(street),
+                 City: City.CreateFromValidated(city),
+                 PostalCode: PostalCode.CreateFromValidated(postalCode)));
 
     // 값 기반 동등성 구현
 
