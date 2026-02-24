@@ -90,6 +90,13 @@
     <Project Path="Tutorials/TwoWayMappingLayered/Src/TwoWayMappingLayered.Domains/TwoWayMappingLayered.Domains.csproj" />
     <Project Path="Tutorials/TwoWayMappingLayered/Src/TwoWayMappingLayered/TwoWayMappingLayered.csproj" />
   </Folder>
+  <Folder Name="/Tutorials/SpecificationPattern/" />
+  <Folder Name="/Tutorials/SpecificationPattern/Src/">
+    <Project Path="Tutorials/SpecificationPattern/Src/SpecificationPattern.Demo/SpecificationPattern.Demo.csproj" />
+  </Folder>
+  <Folder Name="/Tutorials/SpecificationPattern/Tests/">
+    <Project Path="Tutorials/SpecificationPattern/Tests/SpecificationPattern.Demo.Tests.Unit/SpecificationPattern.Demo.Tests.Unit.csproj" />
+  </Folder>
   <Folder Name="/Tutorials/HistogramExploration/" />
   <Folder Name="/Tutorials/HistogramExploration/Src/">
     <Project Path="Tutorials/HistogramExploration/Src/HistogramExploration.Demo/HistogramExploration.Demo.csproj" />
@@ -285,5 +292,83 @@
   <Folder Name="/Books/Implementing-Functional-ValueObject/Part5-Domain-Examples/04-Scheduling-Domain/">
     <Project Path="Books/Implementing-Functional-ValueObject/Part5-Domain-Examples/04-Scheduling-Domain/SchedulingDomain.Tests.Unit/SchedulingDomain.Tests.Unit.csproj" />
     <Project Path="Books/Implementing-Functional-ValueObject/Part5-Domain-Examples/04-Scheduling-Domain/SchedulingDomain/SchedulingDomain.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Specification-Pattern/" />
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part1-Specification-Basics/" />
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part1-Specification-Basics/01-First-Specification/">
+    <Project Path="Books/Implementing-Specification-Pattern/Part1-Specification-Basics/01-First-Specification/FirstSpecification/FirstSpecification.csproj" />
+    <Project Path="Books/Implementing-Specification-Pattern/Part1-Specification-Basics/01-First-Specification/FirstSpecification.Tests.Unit/FirstSpecification.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part1-Specification-Basics/02-Composition/">
+    <Project Path="Books/Implementing-Specification-Pattern/Part1-Specification-Basics/02-Composition/Composition/Composition.csproj" />
+    <Project Path="Books/Implementing-Specification-Pattern/Part1-Specification-Basics/02-Composition/Composition.Tests.Unit/Composition.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part1-Specification-Basics/03-Operators/">
+    <Project Path="Books/Implementing-Specification-Pattern/Part1-Specification-Basics/03-Operators/Operators/Operators.csproj" />
+    <Project Path="Books/Implementing-Specification-Pattern/Part1-Specification-Basics/03-Operators/Operators.Tests.Unit/Operators.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part1-Specification-Basics/04-All-Identity/">
+    <Project Path="Books/Implementing-Specification-Pattern/Part1-Specification-Basics/04-All-Identity/AllIdentity/AllIdentity.csproj" />
+    <Project Path="Books/Implementing-Specification-Pattern/Part1-Specification-Basics/04-All-Identity/AllIdentity.Tests.Unit/AllIdentity.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part2-Expression-Specification/" />
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part2-Expression-Specification/01-Expression-Introduction/">
+    <Project Path="Books/Implementing-Specification-Pattern/Part2-Expression-Specification/01-Expression-Introduction/ExpressionIntro/ExpressionIntro.csproj" />
+    <Project Path="Books/Implementing-Specification-Pattern/Part2-Expression-Specification/01-Expression-Introduction/ExpressionIntro.Tests.Unit/ExpressionIntro.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part2-Expression-Specification/02-ExpressionSpecification-Class/">
+    <Project Path="Books/Implementing-Specification-Pattern/Part2-Expression-Specification/02-ExpressionSpecification-Class/ExpressionSpec/ExpressionSpec.csproj" />
+    <Project Path="Books/Implementing-Specification-Pattern/Part2-Expression-Specification/02-ExpressionSpecification-Class/ExpressionSpec.Tests.Unit/ExpressionSpec.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part2-Expression-Specification/03-ValueObject-Primitive-Conversion/">
+    <Project Path="Books/Implementing-Specification-Pattern/Part2-Expression-Specification/03-ValueObject-Primitive-Conversion/ValueObjectConversion/ValueObjectConversion.csproj" />
+    <Project Path="Books/Implementing-Specification-Pattern/Part2-Expression-Specification/03-ValueObject-Primitive-Conversion/ValueObjectConversion.Tests.Unit/ValueObjectConversion.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part2-Expression-Specification/04-Expression-Resolver/">
+    <Project Path="Books/Implementing-Specification-Pattern/Part2-Expression-Specification/04-Expression-Resolver/ExpressionResolver/ExpressionResolver.csproj" />
+    <Project Path="Books/Implementing-Specification-Pattern/Part2-Expression-Specification/04-Expression-Resolver/ExpressionResolver.Tests.Unit/ExpressionResolver.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part3-Repository-Integration/" />
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part3-Repository-Integration/01-Repository-With-Specification/">
+    <Project Path="Books/Implementing-Specification-Pattern/Part3-Repository-Integration/01-Repository-With-Specification/RepositorySpec/RepositorySpec.csproj" />
+    <Project Path="Books/Implementing-Specification-Pattern/Part3-Repository-Integration/01-Repository-With-Specification/RepositorySpec.Tests.Unit/RepositorySpec.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part3-Repository-Integration/02-InMemory-Implementation/">
+    <Project Path="Books/Implementing-Specification-Pattern/Part3-Repository-Integration/02-InMemory-Implementation/InMemoryImpl/InMemoryImpl.csproj" />
+    <Project Path="Books/Implementing-Specification-Pattern/Part3-Repository-Integration/02-InMemory-Implementation/InMemoryImpl.Tests.Unit/InMemoryImpl.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part3-Repository-Integration/03-PropertyMap/">
+    <Project Path="Books/Implementing-Specification-Pattern/Part3-Repository-Integration/03-PropertyMap/PropertyMapDemo/PropertyMapDemo.csproj" />
+    <Project Path="Books/Implementing-Specification-Pattern/Part3-Repository-Integration/03-PropertyMap/PropertyMapDemo.Tests.Unit/PropertyMapDemo.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part3-Repository-Integration/04-EfCore-Implementation/">
+    <Project Path="Books/Implementing-Specification-Pattern/Part3-Repository-Integration/04-EfCore-Implementation/EfCoreImpl/EfCoreImpl.csproj" />
+    <Project Path="Books/Implementing-Specification-Pattern/Part3-Repository-Integration/04-EfCore-Implementation/EfCoreImpl.Tests.Unit/EfCoreImpl.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part4-Real-World-Patterns/" />
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part4-Real-World-Patterns/01-Usecase-Patterns/">
+    <Project Path="Books/Implementing-Specification-Pattern/Part4-Real-World-Patterns/01-Usecase-Patterns/UsecasePatterns/UsecasePatterns.csproj" />
+    <Project Path="Books/Implementing-Specification-Pattern/Part4-Real-World-Patterns/01-Usecase-Patterns/UsecasePatterns.Tests.Unit/UsecasePatterns.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part4-Real-World-Patterns/02-Dynamic-Filter-Builder/">
+    <Project Path="Books/Implementing-Specification-Pattern/Part4-Real-World-Patterns/02-Dynamic-Filter-Builder/DynamicFilter/DynamicFilter.csproj" />
+    <Project Path="Books/Implementing-Specification-Pattern/Part4-Real-World-Patterns/02-Dynamic-Filter-Builder/DynamicFilter.Tests.Unit/DynamicFilter.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part4-Real-World-Patterns/03-Testing-Strategies/">
+    <Project Path="Books/Implementing-Specification-Pattern/Part4-Real-World-Patterns/03-Testing-Strategies/TestingStrategies/TestingStrategies.csproj" />
+    <Project Path="Books/Implementing-Specification-Pattern/Part4-Real-World-Patterns/03-Testing-Strategies/TestingStrategies.Tests.Unit/TestingStrategies.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part4-Real-World-Patterns/04-Architecture-Rules/">
+    <Project Path="Books/Implementing-Specification-Pattern/Part4-Real-World-Patterns/04-Architecture-Rules/ArchitectureRules/ArchitectureRules.csproj" />
+    <Project Path="Books/Implementing-Specification-Pattern/Part4-Real-World-Patterns/04-Architecture-Rules/ArchitectureRules.Tests.Unit/ArchitectureRules.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part5-Domain-Examples/" />
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part5-Domain-Examples/01-Ecommerce-Product-Filtering/">
+    <Project Path="Books/Implementing-Specification-Pattern/Part5-Domain-Examples/01-Ecommerce-Product-Filtering/EcommerceFiltering/EcommerceFiltering.csproj" />
+    <Project Path="Books/Implementing-Specification-Pattern/Part5-Domain-Examples/01-Ecommerce-Product-Filtering/EcommerceFiltering.Tests.Unit/EcommerceFiltering.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-Specification-Pattern/Part5-Domain-Examples/02-Customer-Management/">
+    <Project Path="Books/Implementing-Specification-Pattern/Part5-Domain-Examples/02-Customer-Management/CustomerManagement/CustomerManagement.csproj" />
+    <Project Path="Books/Implementing-Specification-Pattern/Part5-Domain-Examples/02-Customer-Management/CustomerManagement.Tests.Unit/CustomerManagement.Tests.Unit.csproj" />
   </Folder>
 </Solution>
