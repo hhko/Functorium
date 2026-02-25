@@ -33,8 +33,7 @@ Architecture
 │   └── [10] 10-specifications.md ─── Specification 패턴
 │
 ├── Application Layer
-│   ├── [11] 11-usecases-and-cqrs.md ─── Use Case와 CQRS
-│   └── [11b] A03-response-type-evolution.md ─── FinResponse 타입 진화
+│   └── [11] 11-usecases-and-cqrs.md ─── Use Case와 CQRS
 │
 ├── Adapter Layer
 │   ├── [12] 12-ports.md ─── Port 정의
@@ -53,16 +52,17 @@ Architecture
 ├── Observability
 │   ├── [18a] 18a-observability-spec.md ─── 사양
 │   ├── [18b] 18b-observability-naming.md ─── 네이밍
-│   ├── [20] 19-observability-logging.md ─── 로깅
-│   ├── [21] 20-observability-metrics.md ─── 메트릭
-│   └── [22] 21-observability-tracing.md ─── 트레이싱
+│   ├── [19] 19-observability-logging.md ─── 로깅
+│   ├── [20] 20-observability-metrics.md ─── 메트릭
+│   └── [21] 21-observability-tracing.md ─── 트레이싱
 │
 ├── 진단
-│   └── [23] 22-crash-diagnostics.md ─── 크래시 덤프
+│   └── [22] 22-crash-diagnostics.md ─── 크래시 덤프
 │
-└── 개발 도구
-    ├── [24] A01-vscode-debugging.md ─── VSCode 디버깅
-    └── [25] A02-git-reference.md ─── Git 참조
+└── Appendix
+    ├── [A01] A01-vscode-debugging.md ─── VSCode 디버깅
+    ├── [A02] A02-git-reference.md ─── Git 참조
+    └── [A03] A03-response-type-evolution.md ─── FinResponse 타입 진화
 ```
 
 ## 빠른 참조 (작업별 가이드 바로가기)
@@ -139,7 +139,6 @@ Architecture
 | 09 | [09-domain-services.md](./09-domain-services.md) | 도메인 서비스 (교차 Aggregate 순수 로직, IDomainService) |
 | 10 | [10-specifications.md](./10-specifications.md) | Specification 패턴 (비즈니스 규칙 캡슐화, 조합, Repository 통합) |
 | 11 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) | Use Case 구현 (CQRS Command/Query) |
-| 11b | [A03-response-type-evolution.md](./A03-response-type-evolution.md) | FinResponse 타입 진화 기록 |
 | 12 | [12-ports.md](./12-ports.md) | Port 아키텍처, IObservablePort 계층, Port 정의 규칙 |
 | 13 | [13-adapters.md](./13-adapters.md) | Adapter 구현 (Repository, External API, Messaging, Query) |
 | 14a | [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di.md) | Pipeline 생성, DI 등록, Options 패턴 |
@@ -179,12 +178,13 @@ Architecture
 |------|------|
 | [22-crash-diagnostics.md](./22-crash-diagnostics.md) | 크래시 덤프 핸들러 설정 및 분석 가이드 |
 
-### 개발 도구
+### Appendix
 
 | 문서 | 설명 |
 |------|------|
 | [A01-vscode-debugging.md](./A01-vscode-debugging.md) | VSCode 디버깅 및 개발 환경 설정 |
 | [A02-git-reference.md](./A02-git-reference.md) | Git 명령어 참조 및 Git Hooks |
+| [A03-response-type-evolution.md](./A03-response-type-evolution.md) | FinResponse 타입 진화 기록 |
 
 ### 리뷰
 
