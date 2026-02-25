@@ -1102,7 +1102,7 @@ public class DatabaseTests(DatabaseFixture fixture)
 - 구조화된 로그 테스트 (LogTestContext), 아키텍처 규칙 검증, 소스 생성기 테스트, 스케줄 Job 테스트:
   [16-testing-library.md](./16-testing-library.md)
 - 에러 타입 Assertion (ShouldBeDomainError 등):
-  [08b-error-system-layers.md](./08b-error-system-layers.md)
+  [08b-error-system-domain-app.md](./08b-error-system-domain-app.md), [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing.md)
 
 ### xUnit v3
 - [xUnit.net v3 What's New](https://xunit.net/docs/getting-started/v3/whats-new)

@@ -1276,7 +1276,7 @@ public Fin<Money> Add(Money other) =>
 
 이렇게 분리하면 **Validate 메서드를 다른 곳(FluentValidation 파이프라인 등)에서 재사용**할 수 있습니다.
 
-> **참고**: Entity도 동일한 Create/Validate 분리 패턴을 따릅니다. 자세한 내용은 [Entity 구현 가이드 - 구현 패턴](./06b-entity-aggregate-implementation.md#구현-패턴)을 참고하세요.
+> **참고**: Entity도 동일한 Create/Validate 분리 패턴을 따릅니다. 자세한 내용은 [Entity 구현 가이드 - 생성 패턴](./06b-entity-aggregate-core.md#생성-패턴)을 참고하세요.
 
 ### Create/Validate 패턴
 

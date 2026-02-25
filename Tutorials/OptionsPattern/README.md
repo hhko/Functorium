@@ -367,7 +367,7 @@ changeToken?.Dispose();
 
 ### Functorium 코드베이스
 - `Src/Functorium/Adapters/Options/OptionsConfigurator.cs`: Options 등록 확장 메서드
-- `Docs/guides/14-adapter-wiring.md`: Options 패턴 가이드
+- `Docs/guides/14a-adapter-pipeline-di.md`: Options 패턴 가이드
 - `Src/Functorium/Adapters/Observabilities/OpenTelemetryOptions.cs`: 참조 구현체
 
 ## 🛠️ 요구사항

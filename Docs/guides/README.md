@@ -23,10 +23,12 @@ Architecture
 │   ├── [05a] 05a-value-objects.md ─── 값 객체 (핵심 개념·검증·구현 패턴)
 │   ├── [05b] 05b-value-objects-validation.md ─── 값 객체 (열거형·실전·FAQ)
 │   │   └── [06a] 06a-aggregate-design.md ─── Aggregate 설계 (WHY + WHAT)
-│   │       └── [06b] 06b-entity-aggregate-implementation.md ─── Entity/Aggregate 구현 (HOW)
+│   │       ├── [06b] 06b-entity-aggregate-core.md ─── Entity/Aggregate 핵심 패턴 (HOW)
+│   │       └── [06c] 06c-entity-aggregate-advanced.md ─── Entity/Aggregate 고급 패턴
 │   │           └── [07] 07-domain-events.md ─── 도메인 이벤트
 │   ├── [08a] 08a-error-system.md ─── 에러 시스템: 기초와 네이밍
-│   ├── [08b] 08b-error-system-layers.md ─── 에러 시스템: 레이어별 구현과 테스트
+│   ├── [08b] 08b-error-system-domain-app.md ─── 에러 시스템: Domain/Application 에러
+│   ├── [08c] 08c-error-system-adapter-testing.md ─── 에러 시스템: Adapter 에러와 테스트
 │   ├── [09] 09-domain-services.md ─── 도메인 서비스
 │   └── [10] 10-specifications.md ─── Specification 패턴
 │
@@ -37,7 +39,8 @@ Architecture
 ├── Adapter Layer
 │   ├── [12] 12-ports.md ─── Port 정의
 │   ├── [13] 13-adapters.md ─── Adapter 구현
-│   └── [14] 14-adapter-wiring.md ─── Pipeline, DI, 테스트
+│   ├── [14a] 14a-adapter-pipeline-di.md ─── Pipeline, DI
+│   └── [14b] 14b-adapter-testing.md ─── 단위 테스트
 │
 ├── Testing
 │   ├── [15] 15a-unit-testing.md ─── 단위 테스트
@@ -73,13 +76,14 @@ Architecture
 | **검증 메서드 확인** | [05a-value-objects.md — 검증 시스템](./05a-value-objects.md) |
 | **열거형(SmartEnum) 패턴** | [05b-value-objects-validation.md — 열거형 구현 패턴](./05b-value-objects-validation.md) |
 | **Aggregate 경계 설계하기** | [06a-aggregate-design.md](./06a-aggregate-design.md) |
-| **Entity/Aggregate 구현하기** | [06b-entity-aggregate-implementation.md](./06b-entity-aggregate-implementation.md) |
-| **생성 패턴 (Create/CreateFromValidated)** | [06b-entity-aggregate-implementation.md — 8. 생성 패턴](./06b-entity-aggregate-implementation.md) |
+| **Entity/Aggregate 구현하기** | [06b-entity-aggregate-core.md](./06b-entity-aggregate-core.md) |
+| **생성 패턴 (Create/CreateFromValidated)** | [06b-entity-aggregate-core.md — 생성 패턴](./06b-entity-aggregate-core.md) |
+| **Cross-Aggregate 관계, 부가 인터페이스** | [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced.md) |
 | **도메인 이벤트 정의/발행** | [07-domain-events.md](./07-domain-events.md) |
 | **Event Handler 만들기** | [07-domain-events.md — 5. Event Handler](./07-domain-events.md) |
-| **에러 타입 정의하기** | [08a-error-system.md](./08a-error-system.md), [08b-error-system-layers.md](./08b-error-system-layers.md) |
-| **에러 테스트 작성하기** | [08b-error-system-layers.md — 4~6. 레이어별 에러 테스트](./08b-error-system-layers.md) |
-| **범용 에러 Assertion (ErrorCode, Exceptional)** | [08b-error-system-layers.md — 범용 에러 Assertion 유틸리티](./08b-error-system-layers.md) |
+| **에러 타입 정의하기** | [08a-error-system.md](./08a-error-system.md), [08b-error-system-domain-app.md](./08b-error-system-domain-app.md), [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing.md) |
+| **에러 테스트 작성하기** | [08b-error-system-domain-app.md](./08b-error-system-domain-app.md), [08c-error-system-adapter-testing.md — 테스트 모범 사례](./08c-error-system-adapter-testing.md) |
+| **범용 에러 Assertion (ErrorCode, Exceptional)** | [08c-error-system-adapter-testing.md — 범용 에러 Assertion 유틸리티](./08c-error-system-adapter-testing.md) |
 | **도메인 서비스 만들기** | [09-domain-services.md](./09-domain-services.md) |
 | **Specification 만들기** | [10-specifications.md](./10-specifications.md) |
 | **Usecase 만들기** | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) |
@@ -88,8 +92,8 @@ Architecture
 | **EF Core Repository 만들기** | [13-adapters.md — §2.3 Repository Adapter](./13-adapters.md) |
 | **Persistence Model/Mapper 만들기** | [13-adapters.md — §2.2 공통 패턴](./13-adapters.md) |
 | **Endpoint Response DTO 만들기** | [13-adapters.md — §2.2 공통 패턴](./13-adapters.md) |
-| **Options 패턴 (OptionsConfigurator)** | [14-adapter-wiring.md — §4.6 Options 패턴](./14-adapter-wiring.md) |
-| **Pipeline/DI 등록** | [14-adapter-wiring.md](./14-adapter-wiring.md) |
+| **Options 패턴 (OptionsConfigurator)** | [14a-adapter-pipeline-di.md — §4.6 Options 패턴](./14a-adapter-pipeline-di.md) |
+| **Pipeline/DI 등록** | [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di.md) |
 | **DTO 전략/재사용 규칙** | [17-dto-strategy.md](./17-dto-strategy.md) |
 | **크래시 덤프 설정/분석** | [22-crash-diagnostics.md](./22-crash-diagnostics.md) |
 | **Observability 사양** | [18a-observability-spec.md](./18a-observability-spec.md) |
@@ -126,17 +130,20 @@ Architecture
 | 05a | [05a-value-objects.md](./05a-value-objects.md) | 값 객체 (핵심 개념, 기반 클래스, 검증 시스템, 구현 패턴) |
 | 05b | [05b-value-objects-validation.md](./05b-value-objects-validation.md) | 값 객체 (열거형 패턴, 실전 예제, Application 검증, FAQ) |
 | 06a | [06a-aggregate-design.md](./06a-aggregate-design.md) | Aggregate 설계 (WHY + WHAT: 설계 규칙, 경계 설정, 안티패턴) |
-| 06b | [06b-entity-aggregate-implementation.md](./06b-entity-aggregate-implementation.md) | Entity/Aggregate 구현 (HOW: 클래스 계층, ID, 생성 패턴, 이벤트) |
+| 06b | [06b-entity-aggregate-core.md](./06b-entity-aggregate-core.md) | Entity/Aggregate 핵심 패턴 (HOW: 클래스 계층, ID, 생성 패턴, 이벤트) |
+| 06c | [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced.md) | Entity/Aggregate 고급 패턴 (Cross-Aggregate 관계, 부가 인터페이스, 실전 예제) |
 | 07 | [07-domain-events.md](./07-domain-events.md) | 도메인 이벤트 정의, 발행, 핸들러 구현 |
 | 08a | [08a-error-system.md](./08a-error-system.md) | 에러 시스템: 기초와 네이밍 (WHY, Fin 패턴, 네이밍 규칙) |
-| 08b | [08b-error-system-layers.md](./08b-error-system-layers.md) | 에러 시스템: 레이어별 구현과 테스트 (Domain/Application/Adapter 에러, 체크리스트) |
+| 08b | [08b-error-system-domain-app.md](./08b-error-system-domain-app.md) | 에러 시스템: Domain/Application 에러 (Domain/Application/Event 에러 정의와 테스트) |
+| 08c | [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing.md) | 에러 시스템: Adapter 에러와 테스트 (Adapter 에러, Custom 에러, 테스트 모범 사례, 체크리스트) |
 | 09 | [09-domain-services.md](./09-domain-services.md) | 도메인 서비스 (교차 Aggregate 순수 로직, IDomainService) |
 | 10 | [10-specifications.md](./10-specifications.md) | Specification 패턴 (비즈니스 규칙 캡슐화, 조합, Repository 통합) |
 | 11 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) | Use Case 구현 (CQRS Command/Query) |
 | 11b | [A03-response-type-evolution.md](./A03-response-type-evolution.md) | FinResponse 타입 진화 기록 |
 | 12 | [12-ports.md](./12-ports.md) | Port 아키텍처, IObservablePort 계층, Port 정의 규칙 |
 | 13 | [13-adapters.md](./13-adapters.md) | Adapter 구현 (Repository, External API, Messaging, Query) |
-| 14 | [14-adapter-wiring.md](./14-adapter-wiring.md) | Pipeline 생성, DI 등록, Options 패턴, 테스트 |
+| 14a | [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di.md) | Pipeline 생성, DI 등록, Options 패턴 |
+| 14b | [14b-adapter-testing.md](./14b-adapter-testing.md) | Adapter 단위 테스트, E2E Walkthrough |
 | 17 | [17-dto-strategy.md](./17-dto-strategy.md) | DTO 전략 (레이어별 소유권, 재사용 규칙, 변환 패턴) |
 
 ### 아키텍처

@@ -68,12 +68,12 @@ dotnet test --solution {ServiceName}.slnx
 
 | WHERE (이 가이드) | HOW (참조 가이드) |
 |---|---|
-| AggregateRoots 폴더 구조 | [06a-aggregate-design.md](./06a-aggregate-design.md) (설계) + [06b-entity-aggregate-implementation.md](./06b-entity-aggregate-implementation.md) (구현) |
+| AggregateRoots 폴더 구조 | [06a-aggregate-design.md](./06a-aggregate-design.md) (설계) + [06b-entity-aggregate-core.md](./06b-entity-aggregate-core.md) (핵심 패턴) + [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced.md) (고급 패턴) |
 | ValueObjects 위치 규칙 | [05a-value-objects.md](./05a-value-objects.md) — 값 객체 구현 패턴 |
 | Specifications 위치 규칙 | [10-specifications.md](./10-specifications.md) — Specification 패턴 구현 |
 | Domain Ports 위치 결정 기준 | [12-ports.md](./12-ports.md) — Port 아키텍처와 설계 원칙 |
 | Usecases 폴더/파일 네이밍 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) — 유스케이스 구현 |
-| Abstractions/Registrations 구조 | [14-adapter-wiring.md](./14-adapter-wiring.md) — DI 등록 코드 패턴 |
+| Abstractions/Registrations 구조 | [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di.md) — DI 등록 코드 패턴 |
 | WHY (모듈 매핑 근거) | [04-ddd-tactical-overview.md §6](./04-ddd-tactical-overview.md) — Module과 프로젝트 구조 매핑 |
 
 ### 전체 프로젝트 구성 개요
@@ -650,7 +650,7 @@ public static IServiceCollection RegisterAdapterInfrastructure(this IServiceColl
 public static IApplicationBuilder UseAdapterInfrastructure(this IApplicationBuilder app) { ... }
 ```
 
-> **참고**: `IConfiguration` 파라미터는 Options 패턴(`RegisterConfigureOptions`)을 사용하는 Adapter에서 필요합니다. Options 패턴 상세는 [14-adapter-wiring.md §4.6](./14-adapter-wiring.md#options-패턴-optionsconfigurator)을 참조하세요.
+> **참고**: `IConfiguration` 파라미터는 Options 패턴(`RegisterConfigureOptions`)을 사용하는 Adapter에서 필요합니다. Options 패턴 상세는 [14a-adapter-pipeline-di.md §4.6](./14a-adapter-pipeline-di.md#options-패턴-optionsconfigurator)을 참조하세요.
 
 ## Host 프로젝트
 
@@ -1080,13 +1080,14 @@ Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 
 ## 참고 문서
 
 - [02-solution-configuration.md](./02-solution-configuration.md) — 솔루션 루트 구성 파일 및 빌드 스크립트
-- [06a-aggregate-design.md](./06a-aggregate-design.md) — Aggregate 설계 원칙, [06b-entity-aggregate-implementation.md](./06b-entity-aggregate-implementation.md) — Entity/Aggregate 구현 패턴
+- [06a-aggregate-design.md](./06a-aggregate-design.md) — Aggregate 설계 원칙, [06b-entity-aggregate-core.md](./06b-entity-aggregate-core.md) — Entity/Aggregate 핵심 패턴, [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced.md) — 고급 패턴
 - [05a-value-objects.md](./05a-value-objects.md) — 값 객체 구현 패턴, [05b-value-objects-validation.md](./05b-value-objects-validation.md) — 열거형·검증·FAQ
 - [10-specifications.md](./10-specifications.md) — Specification 패턴 구현
 - [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) — 유스케이스 (Command/Query) 구현
-- [12-ports.md](./12-ports.md) — Port 아키텍처, [13-adapters.md](./13-adapters.md) — Adapter 구현, [14-adapter-wiring.md](./14-adapter-wiring.md) — Pipeline/DI/테스트
+- [12-ports.md](./12-ports.md) — Port 아키텍처, [13-adapters.md](./13-adapters.md) — Adapter 구현, [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di.md) — Pipeline/DI, [14b-adapter-testing.md](./14b-adapter-testing.md) — 테스트
 - [08a-error-system.md](./08a-error-system.md) — 에러 시스템: 기초와 네이밍
-- [08b-error-system-layers.md](./08b-error-system-layers.md) — 에러 시스템: 레이어별 구현과 테스트
+- [08b-error-system-domain-app.md](./08b-error-system-domain-app.md) — 에러 시스템: Domain/Application 에러
+- [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing.md) — 에러 시스템: Adapter 에러와 테스트
 - [18a-observability-spec.md](./18a-observability-spec.md) — Observability 사양
 - [15a-unit-testing.md](./15a-unit-testing.md) — 테스트 작성 방법론 (명명 규칙, AAA 패턴, MTP 설정)
 - [16-testing-library.md](./16-testing-library.md) — Functorium.Testing 라이브러리 (LogTestContext, ArchitectureRules, QuartzTestFixture 등)

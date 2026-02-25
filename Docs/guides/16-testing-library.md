@@ -90,7 +90,7 @@ _repository.GetById(Arg.Any<ProductId>())
 | 기능 | 참조 가이드 |
 |---|---|
 | `HostTestFixture<TProgram>` — HTTP 엔드포인트 통합 테스트 | [01-project-structure.md](./01-project-structure.md) |
-| `ShouldBeDomainError`, `ShouldBeApplicationError` 등 에러 Assertion | [08b-error-system-layers.md](./08b-error-system-layers.md) |
+| `ShouldBeDomainError`, `ShouldBeApplicationError` 등 에러 Assertion | [08b-error-system-domain-app.md](./08b-error-system-domain-app.md), [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing.md) |
 
 ---
 
@@ -827,6 +827,7 @@ public async Task Job_ShouldThrow_WhenTimeout()
 ## 참고 문서
 
 - [15a-unit-testing.md](./15a-unit-testing.md) — 단위 테스트 규칙 (명명, AAA 패턴, MTP 설정)
-- [08b-error-system-layers.md](./08b-error-system-layers.md) — 에러 타입 Assertion 패턴
+- [08b-error-system-domain-app.md](./08b-error-system-domain-app.md) — Domain/Application 에러 Assertion 패턴
+- [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing.md) — Adapter 에러 Assertion 및 범용 에러 Assertion
 - [01-project-structure.md](./01-project-structure.md) — 프로젝트 구성 (HostTestFixture, 통합 테스트)
 - [18a-observability-spec.md](./18a-observability-spec.md) — Observability 사양 (로그 필드 정의)

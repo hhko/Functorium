@@ -1130,10 +1130,11 @@ public sealed record Response(
 | 문서 | 설명 |
 |------|------|
 | [05a-value-objects.md](./05a-value-objects.md) | 값 객체 구현 패턴 |
-| [06b-entity-aggregate-implementation.md](./06b-entity-aggregate-implementation.md) | Entity 구현 및 Create 패턴 |
+| [06b-entity-aggregate-core.md](./06b-entity-aggregate-core.md) | Entity 핵심 패턴 및 Create 패턴 |
 | [07-domain-events.md](./07-domain-events.md) | 도메인 이벤트 발행 및 Event Handler |
 | [08a-error-system.md](./08a-error-system.md) | 에러 시스템: 기초와 네이밍 |
-| [08b-error-system-layers.md](./08b-error-system-layers.md) | 에러 시스템: 레이어별 구현과 테스트 |
+| [08b-error-system-domain-app.md](./08b-error-system-domain-app.md) | 에러 시스템: Domain/Application 에러 |
+| [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing.md) | 에러 시스템: Adapter 에러와 테스트 |
 | [10-specifications.md](./10-specifications.md) | Specification 패턴 (Usecase에서 활용) |
 | [12-ports.md](./12-ports.md) | Repository 인터페이스 설계 |
 | [15a-unit-testing.md](./15a-unit-testing.md) | Usecase 테스트 작성 방법 |
