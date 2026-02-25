@@ -1087,6 +1087,6 @@ Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 
 - [12-ports.md](./12-ports.md) — Port 아키텍처, [13-adapters.md](./13-adapters.md) — Adapter 구현, [14-adapter-wiring.md](./14-adapter-wiring.md) — Pipeline/DI/테스트
 - [08a-error-system.md](./08a-error-system.md) — 에러 시스템: 기초와 네이밍
 - [08b-error-system-layers.md](./08b-error-system-layers.md) — 에러 시스템: 레이어별 구현과 테스트
-- [18-observability-spec.md](./18-observability-spec.md) — Observability 사양
+- [18a-observability-spec.md](./18a-observability-spec.md) — Observability 사양
 - [15a-unit-testing.md](./15a-unit-testing.md) — 테스트 작성 방법론 (명명 규칙, AAA 패턴, MTP 설정)
 - [16-testing-library.md](./16-testing-library.md) — Functorium.Testing 라이브러리 (LogTestContext, ArchitectureRules, QuartzTestFixture 등)

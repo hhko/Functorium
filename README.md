@@ -232,7 +232,7 @@ Functorium은 OpenTelemetry 기반의 통합 관측성(Logging, Metrics, Tracing
 
 ![](./Functorium.Observability.png)
 
-- **사양**: [Observability Specification](./Docs/guides/18-observability-spec.md) — Field/Tag 구조, Meter/Instrument 사양, 메시지 템플릿
+- **사양**: [Observability Specification](./Docs/guides/18a-observability-spec.md) — Field/Tag 구조, Meter/Instrument 사양, 메시지 템플릿
 - **Logging 매뉴얼**: [Logging Guide](./Docs/guides/19-observability-logging.md) — 구조화된 로깅 상세 가이드
 - **Metrics 매뉴얼**: [Metrics Guide](./Docs/guides/20-observability-metrics.md) — 메트릭 수집 및 분석 가이드
 - **Tracing 매뉴얼**: [Tracing Guide](./Docs/guides/21-observability-tracing.md) — 분산 추적 상세 가이드

@@ -199,7 +199,7 @@ Pipeline은 다음 관찰성 기능을 **자동으로** 제공합니다. 모든 
 | `Expected` (LanguageExt) | `"expected"` | 타입 이름 | Warning |
 | `Exceptional` (LanguageExt) | `"exceptional"` | 타입 이름 | Error |
 
-> **상세 사양**: 트레이싱 Tag 구조, 로그 Message Template, 메트릭 Instrument 정의 등 상세 내용은 [18-observability-spec.md](./18-observability-spec.md)를 참조하세요.
+> **상세 사양**: 트레이싱 Tag 구조, 로그 Message Template, 메트릭 Instrument 정의 등 상세 내용은 [18a-observability-spec.md](./18a-observability-spec.md)를 참조하세요.
 
 ### 빌드 에러 대응
 
@@ -1062,7 +1062,7 @@ public sealed class GetProductByIdQuery
 
 ### E. Observability 상세 사양 요약
 
-Pipeline이 자동 제공하는 Observability 기능의 요약입니다. 상세 사양은 [18-observability-spec.md](./18-observability-spec.md)를 참조하세요.
+Pipeline이 자동 제공하는 Observability 기능의 요약입니다. 상세 사양은 [18a-observability-spec.md](./18a-observability-spec.md)를 참조하세요.
 
 **Span 이름 패턴**: `{layer} {category} {handler}.{method}`
 
@@ -1251,7 +1251,7 @@ public InMemoryProductRepository(
 | [12-ports.md](./12-ports.md) | Port 정의 가이드 |
 | [13-adapters.md](./13-adapters.md) | Adapter 구현 가이드 |
 | [15a-unit-testing.md](./15a-unit-testing.md) | 단위 테스트 작성 가이드 |
-| [18-observability-spec.md](./18-observability-spec.md) | Observability 사양 (트레이싱, 로깅, 메트릭 상세) |
+| [18a-observability-spec.md](./18a-observability-spec.md) | Observability 사양 (트레이싱, 로깅, 메트릭 상세) |
 | [01-project-structure.md](./01-project-structure.md) | 서비스 프로젝트 구조 가이드 |
 
 **외부 참고:**

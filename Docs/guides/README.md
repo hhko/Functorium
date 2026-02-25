@@ -14,8 +14,7 @@ Functorium은 DDD 전술적 설계 패턴과 함수형 프로그래밍을 결합
 Architecture
 ├── [01] 01-project-structure.md ─── 프로젝트 구조
 ├── [02] 02-solution-configuration.md ─── 솔루션 구성
-├── [02b] 02b-ci-cd.md ─── CI/CD 워크플로우
-├── [02c] 02c-versioning.md ─── 버전 관리
+├── [02b] 02b-ci-cd-and-versioning.md ─── CI/CD 워크플로우 및 버전 관리
 └── [03] 03-dotnet-tools.md ─── .NET 도구
 
 [04] 04-ddd-tactical-overview.md ─── DDD 전술적 설계 개요
@@ -49,8 +48,8 @@ Architecture
 │   └── [17] 17-dto-strategy.md ─── DTO 전략
 │
 ├── Observability
-│   ├── [18] 18-observability-spec.md ─── 사양
-│   ├── [19] 19-observability-naming.md ─── 네이밍
+│   ├── [18a] 18a-observability-spec.md ─── 사양
+│   ├── [18b] 18b-observability-naming.md ─── 네이밍
 │   ├── [20] 19-observability-logging.md ─── 로깅
 │   ├── [21] 20-observability-metrics.md ─── 메트릭
 │   └── [22] 21-observability-tracing.md ─── 트레이싱
@@ -93,7 +92,7 @@ Architecture
 | **Pipeline/DI 등록** | [14-adapter-wiring.md](./14-adapter-wiring.md) |
 | **DTO 전략/재사용 규칙** | [17-dto-strategy.md](./17-dto-strategy.md) |
 | **크래시 덤프 설정/분석** | [22-crash-diagnostics.md](./22-crash-diagnostics.md) |
-| **Observability 사양** | [18-observability-spec.md](./18-observability-spec.md) |
+| **Observability 사양** | [18a-observability-spec.md](./18a-observability-spec.md) |
 | **구조화된 로그 테스트** | [16-testing-library.md — 구조화된 로그 테스트](./16-testing-library.md) |
 | **아키텍처 규칙 검증** | [16-testing-library.md — 아키텍처 규칙 검증](./16-testing-library.md) |
 | **소스 생성기 테스트** | [16-testing-library.md — 소스 생성기 테스트](./16-testing-library.md) |
@@ -102,8 +101,7 @@ Architecture
 | **네이밍 규칙/용어집** | [04-ddd-tactical-overview.md — §7](./04-ddd-tactical-overview.md) |
 | **Bounded Context/Context Map** | [04-ddd-tactical-overview.md — §8](./04-ddd-tactical-overview.md) |
 | **DTO 전략 리뷰 확인** | [dto-strategy-review.md](../../.claude/dto-strategy-review.md) |
-| **CI/CD 워크플로우** | [02b-ci-cd.md](./02b-ci-cd.md) |
-| **버전 관리 (MinVer)** | [02c-versioning.md](./02c-versioning.md) |
+| **CI/CD 워크플로우 및 버전 관리** | [02b-ci-cd-and-versioning.md](./02b-ci-cd-and-versioning.md) |
 | **FinResponse 타입 진화** | [A03-response-type-evolution.md](./A03-response-type-evolution.md) |
 | **통합 테스트 (HostTestFixture)** | [15b-integration-testing.md](./15b-integration-testing.md) |
 | **VSCode 디버깅/개발 환경 설정** | [A01-vscode-debugging.md](./A01-vscode-debugging.md) |
@@ -147,8 +145,7 @@ Architecture
 |------|------|
 | [01-project-structure.md](./01-project-structure.md) | 서비스 프로젝트 구성 (폴더, 네이밍, 의존성) |
 | [02-solution-configuration.md](./02-solution-configuration.md) | 솔루션 루트 구성 파일 및 빌드 스크립트 |
-| [02b-ci-cd.md](./02b-ci-cd.md) | CI/CD 워크플로우 (GitHub Actions, NuGet 패키지) |
-| [02c-versioning.md](./02c-versioning.md) | 버전 관리 (MinVer, 버전 제안 커맨드) |
+| [02b-ci-cd-and-versioning.md](./02b-ci-cd-and-versioning.md) | CI/CD 워크플로우 및 버전 관리 (GitHub Actions, NuGet 패키지, MinVer, 버전 제안 커맨드) |
 | [03-dotnet-tools.md](./03-dotnet-tools.md) | .NET 도구 가이드 (CLI 도구, 소스 생성기, 파일 기반 스크립트) |
 
 ### 테스트
@@ -163,8 +160,8 @@ Architecture
 
 | 문서 | 설명 |
 |------|------|
-| [18-observability-spec.md](./18-observability-spec.md) | Observability 사양 (Field/Tag, Meter, 메시지 템플릿) |
-| [19-observability-naming.md](./19-observability-naming.md) | Observability 네이밍 가이드 (코드, 필드, Logger 메서드) |
+| [18a-observability-spec.md](./18a-observability-spec.md) | Observability 사양 (Field/Tag, Meter, 메시지 템플릿) |
+| [18b-observability-naming.md](./18b-observability-naming.md) | Observability 네이밍 가이드 (코드, Logger 메서드) |
 | [19-observability-logging.md](./19-observability-logging.md) | Observability 로깅 상세 |
 | [20-observability-metrics.md](./20-observability-metrics.md) | Observability 메트릭 상세 |
 | [21-observability-tracing.md](./21-observability-tracing.md) | Observability 트레이싱 상세 |
