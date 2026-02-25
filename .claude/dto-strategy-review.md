@@ -1,6 +1,6 @@
 # DTO 전략 리뷰: Eric Evans DDD & Hexagonal Architecture 관점
 
-`.claude/guides` 문서에 정의된 DTO 매핑 전략을 `Tests.Hosts/01-SingleHost`의 Src와 Tests에 실제 적용한 결과를 리뷰합니다. 리뷰 기준은 Eric Evans의 DDD 전술적 설계 원칙과 Alistair Cockburn의 Hexagonal Architecture(Ports and Adapters) 원칙입니다.
+`Docs/guides` 문서에 정의된 DTO 매핑 전략을 `Tests.Hosts/01-SingleHost`의 Src와 Tests에 실제 적용한 결과를 리뷰합니다. 리뷰 기준은 Eric Evans의 DDD 전술적 설계 원칙과 Alistair Cockburn의 Hexagonal Architecture(Ports and Adapters) 원칙입니다.
 
 ---
 

@@ -1103,7 +1103,7 @@ SmartEnum Protocol 선택 기준 문서화
 - [ ] docs | 유스케이스 with 함수형 book
 ---
 - [ ] .sprint 양식 개선
-- [ ] .claude/guides 문서 표준 양식
+- [ ] Docs/guides 문서 표준 양식
 - [ ] Serilog 단위 테스트 이해
 - [ ] Docs 폴더 정리
 - [ ] README 도메인 중심의 함수형 아키텍처 다이어그램

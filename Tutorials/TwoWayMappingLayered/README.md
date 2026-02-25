@@ -921,5 +921,5 @@ curl -X PUT http://localhost:5000/api/products/{id} \
 ## 참고 자료
 
 - [HappyCoders - Hexagonal Architecture](https://www.happycoders.eu/software-craftsmanship/hexagonal-architecture/)
-- [Functorium Value Object 가이드](../../.claude/guides/valueobject-implementation-guide.md)
+- [Functorium Value Object 가이드](../../Docs/guides/valueobject-implementation-guide.md)
 - [LanguageExt - Functional Programming in C#](https://github.com/louthy/language-ext)

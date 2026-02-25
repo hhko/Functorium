@@ -3,7 +3,7 @@
     "Src/Functorium",
     "Src/Functorium.SourceGenerator",
     "Src/Functorium.Testing",
-    ".claude/guides",
+    "Docs/guides",
     "Books"
   ]
 }

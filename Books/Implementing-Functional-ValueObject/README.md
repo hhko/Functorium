@@ -231,7 +231,7 @@ Implementing-Functional-ValueObject/
 
 ## 테스트
 
-모든 Part의 예제 프로젝트에는 단위 테스트가 포함되어 있습니다. 테스트는 [15-unit-testing.md](../../.claude/guides/15-unit-testing.md) 가이드를 따릅니다.
+모든 Part의 예제 프로젝트에는 단위 테스트가 포함되어 있습니다. 테스트는 [15-unit-testing.md](../../Docs/guides/15-unit-testing.md) 가이드를 따릅니다.
 
 ### 테스트 실행 방법
 

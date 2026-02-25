@@ -43,7 +43,7 @@
 | Quantity | VO | 식별자 없음, 값으로 비교, 불변, 행위 메서드(Add/Subtract) |
 | ShippingAddress | VO | 식별자 없음, 값으로 비교, 불변 |
 
-> **참조**: `.claude/guides/06-entities-and-aggregates.md` §3
+> **참조**: `Docs/guides/06-entities-and-aggregates.md` §3
 
 ### Aggregate 경계 설계
 
@@ -108,7 +108,7 @@ Product Aggregate (카탈로그)        Inventory Aggregate (재고)
 - 재고는 주문마다 변경(고빈도), 카탈로그는 관리자만 변경(저빈도) — **변경 빈도 불균형**
 - 분리 후 Inventory에만 `IConcurrencyAware`(RowVersion) 적용 — 재고 충돌만 감지
 
-> **참조**: `.claude/guides/06-entities-and-aggregates.md` §1, §2, §4
+> **참조**: `Docs/guides/06-entities-and-aggregates.md` §1, §2, §4
 
 ### Rich Domain Model vs 빈혈 모델 (Anemic Model)
 
@@ -158,7 +158,7 @@ Product Aggregate (카탈로그)        Inventory Aggregate (재고)
 
 공통 패턴: 두 유형 모두 `Fin<Unit>` 반환 (성공: `unit`, 실패: `DomainError`)
 
-> **참조**: `.claude/guides/09-domain-services.md` §1
+> **참조**: `Docs/guides/09-domain-services.md` §1
 
 ### 도메인 로직 배치 판단
 
@@ -189,7 +189,7 @@ Product Aggregate (카탈로그)        Inventory Aggregate (재고)
 | Anemic Domain Model | Entity가 getter/setter만 보유 | Entity에 비즈니스 메서드 추가 |
 | Domain Service 남용 | 모든 로직을 Domain Service에 배치 | 단일 Aggregate 로직은 Entity 메서드로 |
 
-> **참조**: `.claude/guides/09-domain-services.md` §1
+> **참조**: `Docs/guides/09-domain-services.md` §1
 
 ---
 
@@ -275,7 +275,7 @@ NotNull(value)
 | `SortDirection` | `SmartEnum<SortDirection, string>` | Functorium Application |
 | `OtlpCollectorProtocol` | `SmartEnum<OtlpCollectorProtocol>` | Functorium Adapter |
 
-> **참조**: `.claude/guides/05-value-objects.md` §열거형 구현 패턴
+> **참조**: `Docs/guides/05-value-objects.md` §열거형 구현 패턴
 
 ## 애그리거트 구현 패턴
 
@@ -406,7 +406,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>
 }
 ```
 
-> **참조**: `.claude/guides/08-error-system.md` — 에러 네이밍 규칙(R1–R8), 레이어별 에러 타입 전체 목록, 테스트 어설션 패턴
+> **참조**: `Docs/guides/08-error-system.md` — 에러 네이밍 규칙(R1–R8), 레이어별 에러 타입 전체 목록, 테스트 어설션 패턴
 
 ## 도메인 이벤트
 
