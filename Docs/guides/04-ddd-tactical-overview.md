@@ -736,7 +736,7 @@ public void Create_ShouldSucceed_WhenEmailIsValid()
 | [14-adapter-wiring.md](./14-adapter-wiring.md) | Adapter 연결 | Pipeline, DI, Options, 테스트 |
 | [09-domain-services.md](./09-domain-services.md) | 도메인 서비스 | IDomainService, 교차 Aggregate 로직, Usecase 통합 |
 | [10-specifications.md](./10-specifications.md) | Specification 패턴 | 비즈니스 규칙 캡슐화, And/Or/Not 조합, Repository 통합 |
-| [15-unit-testing.md](./15-unit-testing.md) | 단위 테스트 | 테스트 규칙, 네이밍, 체크리스트 |
+| [15a-unit-testing.md](./15a-unit-testing.md) | 단위 테스트 | 테스트 규칙, 네이밍, 체크리스트 |
 | [16-testing-library.md](./16-testing-library.md) | 테스트 라이브러리 | 로그/아키텍처/소스생성기/Job 테스트 |
 
 

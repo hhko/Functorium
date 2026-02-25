@@ -738,7 +738,7 @@ services
 - **Adapter**: `[GenerateObservablePort]` 소스 생성기가 Pipeline 클래스 자동 생성
 - **추가 코드 불필요**: 새 Usecase나 Adapter를 구현하면 관측성이 자동으로 따라옵니다
 
-> Observability로 해결할 수 없는 프로세스 크래시 분석은 [23-crash-diagnostics.md](./23-crash-diagnostics.md)을 참고하세요.
+> Observability로 해결할 수 없는 프로세스 크래시 분석은 [22-crash-diagnostics.md](./22-crash-diagnostics.md)을 참고하세요.
 
 ## 트러블슈팅
 
@@ -805,8 +805,8 @@ Publisher는 이벤트 발행이라는 인프라 관심사를 담당하므로 Ad
 
 | 문서 | 설명 |
 |------|------|
-| [Logging 매뉴얼](./20-observability-logging.md) | 구조화된 로깅 상세 가이드 |
-| [Metrics 매뉴얼](./21-observability-metrics.md) | 메트릭 수집 및 분석 가이드 |
-| [Tracing 매뉴얼](./22-observability-tracing.md) | 분산 추적 상세 가이드 |
+| [Logging 매뉴얼](./19-observability-logging.md) | 구조화된 로깅 상세 가이드 |
+| [Metrics 매뉴얼](./20-observability-metrics.md) | 메트릭 수집 및 분석 가이드 |
+| [Tracing 매뉴얼](./21-observability-tracing.md) | 분산 추적 상세 가이드 |
 | [코드 명명 규칙](./19-observability-naming.md) | Observability 코드 명명 규칙 |
 | [필드 이름 규칙](./19-observability-naming.md) | Field/Tag 이름 규칙 |

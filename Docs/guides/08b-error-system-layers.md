@@ -1625,5 +1625,5 @@ Domain 에러는 도메인 모델 내부에서 발생하는 불변식 위반(VO 
 
 - [05a-value-objects.md](./05a-value-objects.md) - 값 객체 구현 패턴, [05b-value-objects-validation.md](./05b-value-objects-validation.md) - 열거형·검증·FAQ
 - [13-adapters.md](./13-adapters.md) - Adapter 구현 가이드
-- [15-unit-testing.md](./15-unit-testing.md) - 단위 테스트 가이드
+- [15a-unit-testing.md](./15a-unit-testing.md) - 단위 테스트 가이드
 - [16-testing-library.md](./16-testing-library.md) - 에러 외 테스트 유틸리티 (로그/아키텍처/소스생성기/Job 테스트)

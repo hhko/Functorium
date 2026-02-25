@@ -648,7 +648,7 @@ Adapter의 단위 테스트는 **원본 클래스를 직접 테스트**합니다
 | 단언 라이브러리 | Shouldly |
 | Mock 라이브러리 | NSubstitute |
 
-> **참고**: 테스트 규칙 상세는 [15-unit-testing.md](./15-unit-testing.md)를 참조하세요.
+> **참고**: 테스트 규칙 상세는 [15a-unit-testing.md](./15a-unit-testing.md)를 참조하세요.
 
 **IO 실행 패턴** - `FinT<IO, T>` 반환값을 테스트에서 실행하는 패턴:
 
@@ -1250,7 +1250,7 @@ public InMemoryProductRepository(
 | [08b-error-system-layers.md](./08b-error-system-layers.md) | 에러 시스템: 레이어별 구현과 테스트 |
 | [12-ports.md](./12-ports.md) | Port 정의 가이드 |
 | [13-adapters.md](./13-adapters.md) | Adapter 구현 가이드 |
-| [15-unit-testing.md](./15-unit-testing.md) | 단위 테스트 작성 가이드 |
+| [15a-unit-testing.md](./15a-unit-testing.md) | 단위 테스트 작성 가이드 |
 | [18-observability-spec.md](./18-observability-spec.md) | Observability 사양 (트레이싱, 로깅, 메트릭 상세) |
 | [01-project-structure.md](./01-project-structure.md) | 서비스 프로젝트 구조 가이드 |
 

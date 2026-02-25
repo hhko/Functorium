@@ -25,7 +25,7 @@
 ```
 {번호}-{주제}.md
 
-예시: 15-unit-testing.md, 24-vscode-debugging.md
+예시: 15a-unit-testing.md, A01-vscode-debugging.md
 ```
 
 **섹션 구분:**
@@ -93,7 +93,7 @@
 |------|------|------|
 | 번호 | 두 자리 숫자 (카테고리별) | `00`, `15`, `24` |
 | 주제 | 소문자, 하이픈으로 연결 | `unit-testing`, `vscode-debugging` |
-| 확장자 | `.md` (Markdown) | `15-unit-testing.md` |
+| 확장자 | `.md` (Markdown) | `15a-unit-testing.md` |
 
 ### 번호 체계
 
@@ -110,10 +110,10 @@
 
 ```
 00-writing-guide.md            # 문서 작성 가이드
-15-unit-testing.md             # 단위 테스트 가이드
+15a-unit-testing.md             # 단위 테스트 가이드
 15b-integration-testing.md     # 통합 테스트 가이드 (하위 번호)
-24-vscode-debugging.md         # VSCode 디버깅 가이드
-25-git-reference.md            # Git 명령어 참조
+A01-vscode-debugging.md         # VSCode 디버깅 가이드
+A02-git-reference.md            # Git 명령어 참조
 ```
 
 
@@ -572,8 +572,8 @@ git commit
 ### Q2. 파일명은 어떻게 정하나요?
 
 `{번호}-{주제}.md` 형식을 사용합니다:
-- `15-unit-testing.md`
-- `24-vscode-debugging.md`
+- `15a-unit-testing.md`
+- `A01-vscode-debugging.md`
 
 번호는 카테고리별로 배정합니다. 하위 주제는 알파벳 접미사를 사용합니다 (예: `15b-integration-testing.md`).
 
@@ -601,7 +601,7 @@ git commit
 상대 경로로 링크하세요:
 
 ```markdown
-[단위 테스트 가이드](./15-unit-testing.md)를 참조하세요.
+[단위 테스트 가이드](./15a-unit-testing.md)를 참조하세요.
 
 자세한 내용은 [에러 시스템](./08a-error-system.md#섹션)을 확인하세요.
 ```

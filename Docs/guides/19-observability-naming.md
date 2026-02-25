@@ -1043,9 +1043,9 @@ Functorium은 **내부 일관성 우선 원칙**을 따릅니다. `LoggingConfig
 ## 참고 문서
 
 - [18-observability-spec.md](./18-observability-spec.md) — Observability 사양 (Field/Tag, Meter, 메시지 템플릿)
-- [20-observability-logging.md](./20-observability-logging.md) — Observability 로깅 상세
-- [21-observability-metrics.md](./21-observability-metrics.md) — Observability 메트릭 상세
-- [22-observability-tracing.md](./22-observability-tracing.md) — Observability 트레이싱 상세
+- [19-observability-logging.md](./19-observability-logging.md) — Observability 로깅 상세
+- [20-observability-metrics.md](./20-observability-metrics.md) — Observability 메트릭 상세
+- [21-observability-tracing.md](./21-observability-tracing.md) — Observability 트레이싱 상세
 - [OpenTelemetry Specification](https://opentelemetry.io/docs/specs/)
 - [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/)
 - [OpenTelemetry .NET](https://github.com/open-telemetry/opentelemetry-dotnet)

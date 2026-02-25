@@ -616,6 +616,6 @@ public class CreateProductValidator : AbstractValidator<CreateProductRequest>
 
 - [에러 시스템: 기초와 네이밍](./08a-error-system.md) - 에러 처리 기본 원칙과 네이밍 규칙
 - [에러 시스템: 레이어별 구현과 테스트](./08b-error-system-layers.md) - 레이어별 에러 정의 및 테스트 패턴
-- [단위 테스트 가이드](./15-unit-testing.md)
+- [단위 테스트 가이드](./15a-unit-testing.md)
 - [LanguageExt](https://github.com/louthy/language-ext)
 - [Ardalis.SmartEnum](https://github.com/ardalis/SmartEnum)

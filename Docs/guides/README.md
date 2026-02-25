@@ -33,7 +33,7 @@ Architecture
 │
 ├── Application Layer
 │   ├── [11] 11-usecases-and-cqrs.md ─── Use Case와 CQRS
-│   └── [11b] 11b-response-type-evolution.md ─── FinResponse 타입 진화
+│   └── [11b] A03-response-type-evolution.md ─── FinResponse 타입 진화
 │
 ├── Adapter Layer
 │   ├── [12] 12-ports.md ─── Port 정의
@@ -41,7 +41,7 @@ Architecture
 │   └── [14] 14-adapter-wiring.md ─── Pipeline, DI, 테스트
 │
 ├── Testing
-│   ├── [15] 15-unit-testing.md ─── 단위 테스트
+│   ├── [15] 15a-unit-testing.md ─── 단위 테스트
 │   ├── [15b] 15b-integration-testing.md ─── 통합 테스트
 │   └── [16] 16-testing-library.md ─── 테스트 라이브러리
 │
@@ -51,16 +51,16 @@ Architecture
 ├── Observability
 │   ├── [18] 18-observability-spec.md ─── 사양
 │   ├── [19] 19-observability-naming.md ─── 네이밍
-│   ├── [20] 20-observability-logging.md ─── 로깅
-│   ├── [21] 21-observability-metrics.md ─── 메트릭
-│   └── [22] 22-observability-tracing.md ─── 트레이싱
+│   ├── [20] 19-observability-logging.md ─── 로깅
+│   ├── [21] 20-observability-metrics.md ─── 메트릭
+│   └── [22] 21-observability-tracing.md ─── 트레이싱
 │
 ├── 진단
-│   └── [23] 23-crash-diagnostics.md ─── 크래시 덤프
+│   └── [23] 22-crash-diagnostics.md ─── 크래시 덤프
 │
 └── 개발 도구
-    ├── [24] 24-vscode-debugging.md ─── VSCode 디버깅
-    └── [25] 25-git-reference.md ─── Git 참조
+    ├── [24] A01-vscode-debugging.md ─── VSCode 디버깅
+    └── [25] A02-git-reference.md ─── Git 참조
 ```
 
 ## 빠른 참조 (작업별 가이드 바로가기)
@@ -92,7 +92,7 @@ Architecture
 | **Options 패턴 (OptionsConfigurator)** | [14-adapter-wiring.md — §4.6 Options 패턴](./14-adapter-wiring.md) |
 | **Pipeline/DI 등록** | [14-adapter-wiring.md](./14-adapter-wiring.md) |
 | **DTO 전략/재사용 규칙** | [17-dto-strategy.md](./17-dto-strategy.md) |
-| **크래시 덤프 설정/분석** | [23-crash-diagnostics.md](./23-crash-diagnostics.md) |
+| **크래시 덤프 설정/분석** | [22-crash-diagnostics.md](./22-crash-diagnostics.md) |
 | **Observability 사양** | [18-observability-spec.md](./18-observability-spec.md) |
 | **구조화된 로그 테스트** | [16-testing-library.md — 구조화된 로그 테스트](./16-testing-library.md) |
 | **아키텍처 규칙 검증** | [16-testing-library.md — 아키텍처 규칙 검증](./16-testing-library.md) |
@@ -104,10 +104,10 @@ Architecture
 | **DTO 전략 리뷰 확인** | [dto-strategy-review.md](../../.claude/dto-strategy-review.md) |
 | **CI/CD 워크플로우** | [02b-ci-cd.md](./02b-ci-cd.md) |
 | **버전 관리 (MinVer)** | [02c-versioning.md](./02c-versioning.md) |
-| **FinResponse 타입 진화** | [11b-response-type-evolution.md](./11b-response-type-evolution.md) |
+| **FinResponse 타입 진화** | [A03-response-type-evolution.md](./A03-response-type-evolution.md) |
 | **통합 테스트 (HostTestFixture)** | [15b-integration-testing.md](./15b-integration-testing.md) |
-| **VSCode 디버깅/개발 환경 설정** | [24-vscode-debugging.md](./24-vscode-debugging.md) |
-| **Git 명령어/Hooks** | [25-git-reference.md](./25-git-reference.md) |
+| **VSCode 디버깅/개발 환경 설정** | [A01-vscode-debugging.md](./A01-vscode-debugging.md) |
+| **Git 명령어/Hooks** | [A02-git-reference.md](./A02-git-reference.md) |
 | **문서 작성 가이드** | [00-writing-guide.md](./00-writing-guide.md) |
 
 ## 코드 예시 규칙
@@ -135,7 +135,7 @@ Architecture
 | 09 | [09-domain-services.md](./09-domain-services.md) | 도메인 서비스 (교차 Aggregate 순수 로직, IDomainService) |
 | 10 | [10-specifications.md](./10-specifications.md) | Specification 패턴 (비즈니스 규칙 캡슐화, 조합, Repository 통합) |
 | 11 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) | Use Case 구현 (CQRS Command/Query) |
-| 11b | [11b-response-type-evolution.md](./11b-response-type-evolution.md) | FinResponse 타입 진화 기록 |
+| 11b | [A03-response-type-evolution.md](./A03-response-type-evolution.md) | FinResponse 타입 진화 기록 |
 | 12 | [12-ports.md](./12-ports.md) | Port 아키텍처, IObservablePort 계층, Port 정의 규칙 |
 | 13 | [13-adapters.md](./13-adapters.md) | Adapter 구현 (Repository, External API, Messaging, Query) |
 | 14 | [14-adapter-wiring.md](./14-adapter-wiring.md) | Pipeline 생성, DI 등록, Options 패턴, 테스트 |
@@ -155,7 +155,7 @@ Architecture
 
 | 문서 | 설명 |
 |------|------|
-| [15-unit-testing.md](./15-unit-testing.md) | 단위 테스트 규칙 (명명, AAA 패턴, MTP 설정) |
+| [15a-unit-testing.md](./15a-unit-testing.md) | 단위 테스트 규칙 (명명, AAA 패턴, MTP 설정) |
 | [15b-integration-testing.md](./15b-integration-testing.md) | 통합 테스트 (HostTestFixture, 환경 설정) |
 | [16-testing-library.md](./16-testing-library.md) | Functorium.Testing 라이브러리 (로그/아키텍처/소스생성기/Job 테스트) |
 
@@ -165,22 +165,22 @@ Architecture
 |------|------|
 | [18-observability-spec.md](./18-observability-spec.md) | Observability 사양 (Field/Tag, Meter, 메시지 템플릿) |
 | [19-observability-naming.md](./19-observability-naming.md) | Observability 네이밍 가이드 (코드, 필드, Logger 메서드) |
-| [20-observability-logging.md](./20-observability-logging.md) | Observability 로깅 상세 |
-| [21-observability-metrics.md](./21-observability-metrics.md) | Observability 메트릭 상세 |
-| [22-observability-tracing.md](./22-observability-tracing.md) | Observability 트레이싱 상세 |
+| [19-observability-logging.md](./19-observability-logging.md) | Observability 로깅 상세 |
+| [20-observability-metrics.md](./20-observability-metrics.md) | Observability 메트릭 상세 |
+| [21-observability-tracing.md](./21-observability-tracing.md) | Observability 트레이싱 상세 |
 
 ### 진단
 
 | 문서 | 설명 |
 |------|------|
-| [23-crash-diagnostics.md](./23-crash-diagnostics.md) | 크래시 덤프 핸들러 설정 및 분석 가이드 |
+| [22-crash-diagnostics.md](./22-crash-diagnostics.md) | 크래시 덤프 핸들러 설정 및 분석 가이드 |
 
 ### 개발 도구
 
 | 문서 | 설명 |
 |------|------|
-| [24-vscode-debugging.md](./24-vscode-debugging.md) | VSCode 디버깅 및 개발 환경 설정 |
-| [25-git-reference.md](./25-git-reference.md) | Git 명령어 참조 및 Git Hooks |
+| [A01-vscode-debugging.md](./A01-vscode-debugging.md) | VSCode 디버깅 및 개발 환경 설정 |
+| [A02-git-reference.md](./A02-git-reference.md) | Git 명령어 참조 및 Git Hooks |
 
 ### 리뷰
 

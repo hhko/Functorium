@@ -1311,5 +1311,5 @@ dotnet clean && dotnet build --no-incremental
 ## 참고 문서
 
 - [01-project-structure.md](./01-project-structure.md) — 프로젝트 수준 구성 (폴더, 네이밍, 의존성)
-- [15-unit-testing.md](./15-unit-testing.md) — 테스트 작성 방법론 (MTP 설정 포함)
+- [15a-unit-testing.md](./15a-unit-testing.md) — 테스트 작성 방법론 (MTP 설정 포함)
 - [16-testing-library.md](./16-testing-library.md) — Functorium.Testing 라이브러리

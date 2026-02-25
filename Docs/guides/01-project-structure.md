@@ -733,7 +733,7 @@ app.Run();
 
 ## 테스트 프로젝트
 
-테스트 프로젝트는 `Tests/` 폴더 아래에 배치합니다. 테스트 작성 방법론(명명 규칙, AAA 패턴, MTP 설정 등)은 [15-unit-testing.md](./15-unit-testing.md)를 참조하세요.
+테스트 프로젝트는 `Tests/` 폴더 아래에 배치합니다. 테스트 작성 방법론(명명 규칙, AAA 패턴, MTP 설정 등)은 [15a-unit-testing.md](./15a-unit-testing.md)를 참조하세요.
 
 ### Tests.Unit 프로젝트
 
@@ -1088,5 +1088,5 @@ Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 
 - [08a-error-system.md](./08a-error-system.md) — 에러 시스템: 기초와 네이밍
 - [08b-error-system-layers.md](./08b-error-system-layers.md) — 에러 시스템: 레이어별 구현과 테스트
 - [18-observability-spec.md](./18-observability-spec.md) — Observability 사양
-- [15-unit-testing.md](./15-unit-testing.md) — 테스트 작성 방법론 (명명 규칙, AAA 패턴, MTP 설정)
+- [15a-unit-testing.md](./15a-unit-testing.md) — 테스트 작성 방법론 (명명 규칙, AAA 패턴, MTP 설정)
 - [16-testing-library.md](./16-testing-library.md) — Functorium.Testing 라이브러리 (LogTestContext, ArchitectureRules, QuartzTestFixture 등)

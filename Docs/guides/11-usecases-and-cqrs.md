@@ -1136,7 +1136,7 @@ public sealed record Response(
 | [08b-error-system-layers.md](./08b-error-system-layers.md) | 에러 시스템: 레이어별 구현과 테스트 |
 | [10-specifications.md](./10-specifications.md) | Specification 패턴 (Usecase에서 활용) |
 | [12-ports.md](./12-ports.md) | Repository 인터페이스 설계 |
-| [15-unit-testing.md](./15-unit-testing.md) | Usecase 테스트 작성 방법 |
+| [15a-unit-testing.md](./15a-unit-testing.md) | Usecase 테스트 작성 방법 |
 
 **외부 참고:**
 - [Mediator](https://github.com/martinothamar/Mediator) - 기반 라이브러리
