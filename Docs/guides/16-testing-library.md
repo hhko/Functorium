@@ -597,7 +597,7 @@ public Task EntityIdGenerator_ShouldGenerate_EntityId_ForSimpleEntity()
 {
     // Arrange
     string input = """
-        using Functorium.Domains.SourceGenerators;
+        using Functorium.Domains.Entities;
 
         namespace MyApp.Domain.Entities;
 
