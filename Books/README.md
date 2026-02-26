@@ -1,3 +1,0 @@
-- [Automating Release Notes with Claude Code and .NET 10](./Automating-ReleaseNotes-with-ClaudeCode-and-.NET10/README.md)
-- [Automating Observability Code with SourceGenerator](./Automating-ObservabilityCode-with-SourceGenerator/README.md)
-- [Implementing Functional ValueObject](./Implementing-Functional-ValueObject/README.md)
