@@ -1,7 +1,7 @@
 using System.Diagnostics.Contracts;
 using LanguageExt.Common;
 
-namespace Functorium.Applications.Cqrs;
+namespace Functorium.Applications.Usecases;
 
 public abstract record FinResponse<A> : IFinResponse<A>, IFinResponseFactory<FinResponse<A>>
 {

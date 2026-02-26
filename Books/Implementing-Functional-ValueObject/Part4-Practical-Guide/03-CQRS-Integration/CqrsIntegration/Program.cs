@@ -1,4 +1,4 @@
-using Functorium.Applications.Cqrs;
+using Functorium.Applications.Usecases;
 using Functorium.Domains.ValueObjects;
 using Functorium.Domains.ValueObjects.Validations;
 using Functorium.Domains.Errors;

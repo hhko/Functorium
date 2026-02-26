@@ -1,4 +1,4 @@
-﻿namespace Functorium.Applications.Cqrs;
+﻿namespace Functorium.Applications.Usecases;
 
 public interface ICacheable
 {

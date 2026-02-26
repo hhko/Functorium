@@ -3,7 +3,7 @@ using System.Diagnostics;
 using Functorium.Abstractions.Errors;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Adapters.Observabilities.Pipelines;
-using Functorium.Applications.Cqrs;
+using Functorium.Applications.Usecases;
 
 using LanguageExt.Common;
 

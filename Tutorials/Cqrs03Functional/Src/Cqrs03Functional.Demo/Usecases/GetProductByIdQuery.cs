@@ -1,5 +1,5 @@
 using Cqrs03Functional.Demo.Domain;
-using Functorium.Applications.Cqrs;
+using Functorium.Applications.Usecases;
 using Functorium.Applications.Linq;
 using LanguageExt.Common;
 using Microsoft.Extensions.Logging;

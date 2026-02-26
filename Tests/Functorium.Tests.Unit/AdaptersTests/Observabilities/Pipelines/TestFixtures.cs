@@ -1,6 +1,6 @@
 using FluentValidation;
 using Functorium.Abstractions.Errors;
-using Functorium.Applications.Cqrs;
+using Functorium.Applications.Usecases;
 using LanguageExt.Common;
 using Mediator;
 

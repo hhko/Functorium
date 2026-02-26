@@ -1,5 +1,5 @@
 using FastEndpoints;
-using Functorium.Applications.Cqrs;
+using Functorium.Applications.Usecases;
 using LanguageExt.Common;
 
 namespace Cqrs04Endpoint.WebApi.Extensions;

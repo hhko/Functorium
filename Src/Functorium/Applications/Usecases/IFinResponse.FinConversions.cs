@@ -1,7 +1,7 @@
 using LanguageExt;
 using LanguageExt.Common;
 
-namespace Functorium.Applications.Cqrs;
+namespace Functorium.Applications.Usecases;
 
 /// <summary>
 /// FinToFinResponse{B}에서 Fin{A}로 변환하는 확장 메서드.

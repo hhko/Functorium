@@ -2,7 +2,7 @@ using FluentValidation;
 
 using Functorium.Abstractions.Utilities;
 using Functorium.Adapters.Errors;
-using Functorium.Applications.Cqrs;
+using Functorium.Applications.Usecases;
 
 using LanguageExt.Common;
 

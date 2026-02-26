@@ -1,5 +1,5 @@
 using Functorium.Adapters.Observabilities.Naming;
-using Functorium.Applications.Cqrs;
+using Functorium.Applications.Usecases;
 using Functorium.Applications.Events;
 using Functorium.Applications.Persistence;
 

@@ -2,7 +2,7 @@ using Cqrs04Endpoint.WebApi.Domain;
 using Cqrs04Endpoint.WebApi.Domain.ValueObjects;
 using FluentValidation;
 using Functorium.Abstractions.Errors;
-using Functorium.Applications.Cqrs;
+using Functorium.Applications.Usecases;
 using Functorium.Applications.Linq;
 using LanguageExt;
 using LanguageExt.Common;

@@ -1,5 +1,5 @@
 using Functorium.Adapters.Errors;
-using Functorium.Applications.Cqrs;
+using Functorium.Applications.Usecases;
 
 using LanguageExt.Common;
 

@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 using Functorium.Abstractions.Errors;
 using Functorium.Adapters.Observabilities.Naming;
-using Functorium.Applications.Cqrs;
+using Functorium.Applications.Usecases;
 
 using LanguageExt.Common;
 

@@ -1,4 +1,4 @@
-using Functorium.Applications.Cqrs;
+using Functorium.Applications.Usecases;
 
 namespace LayeredArch.Adapters.Presentation.Abstractions.Extensions;
 

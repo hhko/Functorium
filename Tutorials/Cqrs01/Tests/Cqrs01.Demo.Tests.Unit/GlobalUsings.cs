@@ -3,7 +3,7 @@ global using Shouldly;
 global using NSubstitute;
 global using LanguageExt;
 global using LanguageExt.Common;
-global using Functorium.Applications.Cqrs;
+global using Functorium.Applications.Usecases;
 global using Cqrs01.Demo.Domain;
 global using Cqrs01.Demo.Domain.ValueObjects;
 global using Cqrs01.Demo.Usecases;

@@ -1,4 +1,4 @@
-using Functorium.Applications.Cqrs;
+using Functorium.Applications.Usecases;
 using LanguageExt;
 using LanguageExt.Common;
 

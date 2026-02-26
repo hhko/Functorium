@@ -5,7 +5,7 @@ using Cqrs02Pipeline.Demo.Infrastructure;
 using Cqrs02Pipeline.Demo.Usecases;
 using FluentValidation;
 using Functorium.Abstractions.Registrations;
-using Functorium.Applications.Cqrs;
+using Functorium.Applications.Usecases;
 using LanguageExt;
 using LanguageExt.Common;
 using Mediator;

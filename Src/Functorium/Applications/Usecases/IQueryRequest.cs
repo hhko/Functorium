@@ -1,6 +1,6 @@
 using Mediator;
 
-namespace Functorium.Applications.Cqrs;
+namespace Functorium.Applications.Usecases;
 
 /// <summary>
 /// Result 패턴을 사용하는 Query 인터페이스.

@@ -1,7 +1,7 @@
 using Cqrs01.Demo.Domain;
 using Cqrs01.Demo.Infrastructure;
 using Cqrs01.Demo.Usecases;
-using Functorium.Applications.Cqrs;
+using Functorium.Applications.Usecases;
 using LanguageExt;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;

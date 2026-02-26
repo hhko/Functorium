@@ -2,7 +2,7 @@ using System.Diagnostics.Metrics;
 using System.Text.RegularExpressions;
 
 using Functorium.Adapters.Observabilities.Naming;
-using Functorium.Applications.Cqrs;
+using Functorium.Applications.Usecases;
 
 namespace Functorium.Adapters.Observabilities.Pipelines;
 

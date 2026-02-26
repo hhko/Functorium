@@ -1,6 +1,6 @@
 using Functorium.Adapters.Observabilities.Loggers;
 using Functorium.Adapters.Observabilities.Naming;
-using Functorium.Applications.Cqrs;
+using Functorium.Applications.Usecases;
 
 using LanguageExt.Common;
 

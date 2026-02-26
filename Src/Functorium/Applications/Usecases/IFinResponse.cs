@@ -1,6 +1,6 @@
 using LanguageExt.Common;
 
-namespace Functorium.Applications.Cqrs;
+namespace Functorium.Applications.Usecases;
 
 // =============================================================================
 // IFinResponse 파일 구조

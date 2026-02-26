@@ -316,42 +316,42 @@ namespace Functorium.Adapters.Options
             where TValidator :  class, FluentValidation.IValidator<TOptions> { }
     }
 }
-namespace Functorium.Applications.Cqrs
+namespace Functorium.Applications.Usecases
 {
     public static class FinResponse
     {
-        public static Functorium.Applications.Cqrs.FinResponse<A> Fail<A>(LanguageExt.Common.Error error) { }
-        public static Functorium.Applications.Cqrs.FinResponse<A> Succ<A>()
+        public static Functorium.Applications.Usecases.FinResponse<A> Fail<A>(LanguageExt.Common.Error error) { }
+        public static Functorium.Applications.Usecases.FinResponse<A> Succ<A>()
             where A : new() { }
-        public static Functorium.Applications.Cqrs.FinResponse<A> Succ<A>(A value) { }
+        public static Functorium.Applications.Usecases.FinResponse<A> Succ<A>(A value) { }
     }
-    public abstract class FinResponse<A> : Functorium.Applications.Cqrs.IFinResponse, Functorium.Applications.Cqrs.IFinResponseFactory<Functorium.Applications.Cqrs.FinResponse<A>>, Functorium.Applications.Cqrs.IFinResponse<A>, System.IEquatable<Functorium.Applications.Cqrs.FinResponse<A>>
+    public abstract class FinResponse<A> : Functorium.Applications.Usecases.IFinResponse, Functorium.Applications.Usecases.IFinResponseFactory<Functorium.Applications.Usecases.FinResponse<A>>, Functorium.Applications.Usecases.IFinResponse<A>, System.IEquatable<Functorium.Applications.Usecases.FinResponse<A>>
     {
         protected FinResponse() { }
         public abstract bool IsFail { get; }
         public abstract bool IsSucc { get; }
-        public Functorium.Applications.Cqrs.FinResponse<B> BiBind<B>(System.Func<A, Functorium.Applications.Cqrs.FinResponse<B>> Succ, System.Func<LanguageExt.Common.Error, Functorium.Applications.Cqrs.FinResponse<B>> Fail) { }
-        public Functorium.Applications.Cqrs.FinResponse<B> BiMap<B>(System.Func<A, B> Succ, System.Func<LanguageExt.Common.Error, LanguageExt.Common.Error> Fail) { }
-        public Functorium.Applications.Cqrs.FinResponse<B> Bind<B>(System.Func<A, Functorium.Applications.Cqrs.FinResponse<B>> f) { }
-        public Functorium.Applications.Cqrs.FinResponse<A> BindFail(System.Func<LanguageExt.Common.Error, Functorium.Applications.Cqrs.FinResponse<A>> Fail) { }
+        public Functorium.Applications.Usecases.FinResponse<B> BiBind<B>(System.Func<A, Functorium.Applications.Usecases.FinResponse<B>> Succ, System.Func<LanguageExt.Common.Error, Functorium.Applications.Usecases.FinResponse<B>> Fail) { }
+        public Functorium.Applications.Usecases.FinResponse<B> BiMap<B>(System.Func<A, B> Succ, System.Func<LanguageExt.Common.Error, LanguageExt.Common.Error> Fail) { }
+        public Functorium.Applications.Usecases.FinResponse<B> Bind<B>(System.Func<A, Functorium.Applications.Usecases.FinResponse<B>> f) { }
+        public Functorium.Applications.Usecases.FinResponse<A> BindFail(System.Func<LanguageExt.Common.Error, Functorium.Applications.Usecases.FinResponse<A>> Fail) { }
         public A IfFail(A alternative) { }
         public void IfFail(System.Action<LanguageExt.Common.Error> Fail) { }
         public A IfFail(System.Func<LanguageExt.Common.Error, A> Fail) { }
         public void IfSucc(System.Action<A> Succ) { }
-        public Functorium.Applications.Cqrs.FinResponse<B> Map<B>(System.Func<A, B> f) { }
-        public Functorium.Applications.Cqrs.FinResponse<A> MapFail(System.Func<LanguageExt.Common.Error, LanguageExt.Common.Error> f) { }
+        public Functorium.Applications.Usecases.FinResponse<B> Map<B>(System.Func<A, B> f) { }
+        public Functorium.Applications.Usecases.FinResponse<A> MapFail(System.Func<LanguageExt.Common.Error, LanguageExt.Common.Error> f) { }
         public void Match(System.Action<A> Succ, System.Action<LanguageExt.Common.Error> Fail) { }
         public abstract B Match<B>(System.Func<A, B> Succ, System.Func<LanguageExt.Common.Error, B> Fail);
-        public Functorium.Applications.Cqrs.FinResponse<B> Select<B>(System.Func<A, B> f) { }
-        public Functorium.Applications.Cqrs.FinResponse<C> SelectMany<B, C>(System.Func<A, Functorium.Applications.Cqrs.FinResponse<B>> bind, System.Func<A, B, C> project) { }
+        public Functorium.Applications.Usecases.FinResponse<B> Select<B>(System.Func<A, B> f) { }
+        public Functorium.Applications.Usecases.FinResponse<C> SelectMany<B, C>(System.Func<A, Functorium.Applications.Usecases.FinResponse<B>> bind, System.Func<A, B, C> project) { }
         public A ThrowIfFail() { }
-        public static Functorium.Applications.Cqrs.FinResponse<A> CreateFail(LanguageExt.Common.Error error) { }
-        public static Functorium.Applications.Cqrs.FinResponse<A> op_Implicit(A value) { }
-        public static Functorium.Applications.Cqrs.FinResponse<A> op_Implicit(LanguageExt.Common.Error error) { }
-        public static bool operator false(Functorium.Applications.Cqrs.FinResponse<A> ma) { }
-        public static bool operator true(Functorium.Applications.Cqrs.FinResponse<A> ma) { }
-        public static Functorium.Applications.Cqrs.FinResponse<A> operator |(Functorium.Applications.Cqrs.FinResponse<A> lhs, Functorium.Applications.Cqrs.FinResponse<A> rhs) { }
-        public sealed class Fail : Functorium.Applications.Cqrs.FinResponse<A>, Functorium.Applications.Cqrs.IFinResponseWithError, System.IEquatable<Functorium.Applications.Cqrs.FinResponse<A>.Fail>
+        public static Functorium.Applications.Usecases.FinResponse<A> CreateFail(LanguageExt.Common.Error error) { }
+        public static Functorium.Applications.Usecases.FinResponse<A> op_Implicit(A value) { }
+        public static Functorium.Applications.Usecases.FinResponse<A> op_Implicit(LanguageExt.Common.Error error) { }
+        public static bool operator false(Functorium.Applications.Usecases.FinResponse<A> ma) { }
+        public static bool operator true(Functorium.Applications.Usecases.FinResponse<A> ma) { }
+        public static Functorium.Applications.Usecases.FinResponse<A> operator |(Functorium.Applications.Usecases.FinResponse<A> lhs, Functorium.Applications.Usecases.FinResponse<A> rhs) { }
+        public sealed class Fail : Functorium.Applications.Usecases.FinResponse<A>, Functorium.Applications.Usecases.IFinResponseWithError, System.IEquatable<Functorium.Applications.Usecases.FinResponse<A>.Fail>
         {
             public Fail(LanguageExt.Common.Error Error) { }
             public LanguageExt.Common.Error Error { get; init; }
@@ -361,7 +361,7 @@ namespace Functorium.Applications.Cqrs
             public override B Match<B>(System.Func<A, B> Succ, System.Func<LanguageExt.Common.Error, B> Fail) { }
             public override string ToString() { }
         }
-        public sealed class Succ : Functorium.Applications.Cqrs.FinResponse<A>, System.IEquatable<Functorium.Applications.Cqrs.FinResponse<A>.Succ>
+        public sealed class Succ : Functorium.Applications.Usecases.FinResponse<A>, System.IEquatable<Functorium.Applications.Usecases.FinResponse<A>.Succ>
         {
             public Succ(A Value) { }
             public override bool IsFail { get; }
@@ -374,26 +374,26 @@ namespace Functorium.Applications.Cqrs
     }
     public static class FinToFinResponse
     {
-        public static Functorium.Applications.Cqrs.FinResponse<A> ToFinResponse<A>(this LanguageExt.Fin<A> fin) { }
-        public static Functorium.Applications.Cqrs.FinResponse<B> ToFinResponse<A, B>(this LanguageExt.Fin<A> fin, System.Func<B> factory) { }
-        public static Functorium.Applications.Cqrs.FinResponse<B> ToFinResponse<A, B>(this LanguageExt.Fin<A> fin, System.Func<A, B> mapper) { }
-        public static Functorium.Applications.Cqrs.FinResponse<B> ToFinResponse<A, B>(this LanguageExt.Fin<A> fin, System.Func<A, Functorium.Applications.Cqrs.FinResponse<B>> onSucc, System.Func<LanguageExt.Common.Error, Functorium.Applications.Cqrs.FinResponse<B>> onFail) { }
+        public static Functorium.Applications.Usecases.FinResponse<A> ToFinResponse<A>(this LanguageExt.Fin<A> fin) { }
+        public static Functorium.Applications.Usecases.FinResponse<B> ToFinResponse<A, B>(this LanguageExt.Fin<A> fin, System.Func<B> factory) { }
+        public static Functorium.Applications.Usecases.FinResponse<B> ToFinResponse<A, B>(this LanguageExt.Fin<A> fin, System.Func<A, B> mapper) { }
+        public static Functorium.Applications.Usecases.FinResponse<B> ToFinResponse<A, B>(this LanguageExt.Fin<A> fin, System.Func<A, Functorium.Applications.Usecases.FinResponse<B>> onSucc, System.Func<LanguageExt.Common.Error, Functorium.Applications.Usecases.FinResponse<B>> onFail) { }
     }
     public interface ICacheable
     {
         string CacheKey { get; }
         System.TimeSpan? Duration { get; }
     }
-    public interface ICommandRequest<TSuccess> : Mediator.IBaseCommand, Mediator.ICommand<Functorium.Applications.Cqrs.FinResponse<TSuccess>>, Mediator.IMessage { }
-    public interface ICommandUsecase<in TCommand, TSuccess> : Mediator.ICommandHandler<TCommand, Functorium.Applications.Cqrs.FinResponse<TSuccess>>
-        where in TCommand : Functorium.Applications.Cqrs.ICommandRequest<TSuccess> { }
+    public interface ICommandRequest<TSuccess> : Mediator.IBaseCommand, Mediator.ICommand<Functorium.Applications.Usecases.FinResponse<TSuccess>>, Mediator.IMessage { }
+    public interface ICommandUsecase<in TCommand, TSuccess> : Mediator.ICommandHandler<TCommand, Functorium.Applications.Usecases.FinResponse<TSuccess>>
+        where in TCommand : Functorium.Applications.Usecases.ICommandRequest<TSuccess> { }
     public interface IFinResponse
     {
         bool IsFail { get; }
         bool IsSucc { get; }
     }
     public interface IFinResponseFactory<TSelf>
-        where TSelf : Functorium.Applications.Cqrs.IFinResponseFactory<TSelf>
+        where TSelf : Functorium.Applications.Usecases.IFinResponseFactory<TSelf>
     {
         TSelf CreateFail(LanguageExt.Common.Error error);
     }
@@ -401,10 +401,10 @@ namespace Functorium.Applications.Cqrs
     {
         LanguageExt.Common.Error Error { get; }
     }
-    public interface IFinResponse<out A> : Functorium.Applications.Cqrs.IFinResponse { }
-    public interface IQueryRequest<TSuccess> : Mediator.IBaseQuery, Mediator.IMessage, Mediator.IQuery<Functorium.Applications.Cqrs.FinResponse<TSuccess>> { }
-    public interface IQueryUsecase<in TQuery, TSuccess> : Mediator.IQueryHandler<TQuery, Functorium.Applications.Cqrs.FinResponse<TSuccess>>
-        where in TQuery : Functorium.Applications.Cqrs.IQueryRequest<TSuccess> { }
+    public interface IFinResponse<out A> : Functorium.Applications.Usecases.IFinResponse { }
+    public interface IQueryRequest<TSuccess> : Mediator.IBaseQuery, Mediator.IMessage, Mediator.IQuery<Functorium.Applications.Usecases.FinResponse<TSuccess>> { }
+    public interface IQueryUsecase<in TQuery, TSuccess> : Mediator.IQueryHandler<TQuery, Functorium.Applications.Usecases.FinResponse<TSuccess>>
+        where in TQuery : Functorium.Applications.Usecases.IQueryRequest<TSuccess> { }
 }
 namespace Functorium.Applications.Linq
 {
@@ -586,14 +586,14 @@ namespace Functorium.Applications.Pipelines
 {
     public sealed class UsecaseExceptionPipeline<TRequest, TResponse> : Functorium.Applications.Pipelines.UsecasePipelineBase<TRequest>, Mediator.IPipelineBehavior<TRequest, TResponse>
         where TRequest : Mediator.IMessage
-        where TResponse : Functorium.Applications.Cqrs.IFinResponseFactory<TResponse>
+        where TResponse : Functorium.Applications.Usecases.IFinResponseFactory<TResponse>
     {
         public UsecaseExceptionPipeline() { }
         public System.Threading.Tasks.ValueTask<TResponse> Handle(TRequest request, Mediator.MessageHandlerDelegate<TRequest, TResponse> next, System.Threading.CancellationToken cancellationToken) { }
     }
     public sealed class UsecaseLoggingPipeline<TRequest, TResponse> : Functorium.Applications.Pipelines.UsecasePipelineBase<TRequest>, Mediator.IPipelineBehavior<TRequest, TResponse>
         where TRequest : Mediator.IMessage
-        where TResponse : Functorium.Applications.Cqrs.IFinResponse, Functorium.Applications.Cqrs.IFinResponseFactory<TResponse>
+        where TResponse : Functorium.Applications.Usecases.IFinResponse, Functorium.Applications.Usecases.IFinResponseFactory<TResponse>
     {
         public UsecaseLoggingPipeline(Microsoft.Extensions.Logging.ILogger<Functorium.Applications.Pipelines.UsecaseLoggingPipeline<TRequest, TResponse>> logger) { }
         public System.Threading.Tasks.ValueTask<TResponse> Handle(TRequest request, Mediator.MessageHandlerDelegate<TRequest, TResponse> next, System.Threading.CancellationToken cancellationToken) { }
@@ -614,7 +614,7 @@ namespace Functorium.Applications.Pipelines
     }
     public sealed class UsecaseMetricPipeline<TRequest, TResponse> : Functorium.Applications.Pipelines.UsecasePipelineBase<TRequest>, Mediator.IPipelineBehavior<TRequest, TResponse>
         where TRequest : Mediator.IMessage
-        where TResponse : Functorium.Applications.Cqrs.IFinResponse, Functorium.Applications.Cqrs.IFinResponseFactory<TResponse>
+        where TResponse : Functorium.Applications.Usecases.IFinResponse, Functorium.Applications.Usecases.IFinResponseFactory<TResponse>
     {
         public UsecaseMetricPipeline(Functorium.Adapters.Observabilities.IOpenTelemetryOptions openTelemetryOptions, System.Diagnostics.Metrics.IMeterFactory meterFactory) { }
         public System.Threading.Tasks.ValueTask<TResponse> Handle(TRequest request, Mediator.MessageHandlerDelegate<TRequest, TResponse> next, System.Threading.CancellationToken cancellationToken) { }
@@ -628,14 +628,14 @@ namespace Functorium.Applications.Pipelines
     }
     public sealed class UsecaseTracingPipeline<TRequest, TResponse> : Functorium.Applications.Pipelines.UsecasePipelineBase<TRequest>, Mediator.IPipelineBehavior<TRequest, TResponse>
         where TRequest : Mediator.IMessage
-        where TResponse : Functorium.Applications.Cqrs.IFinResponse, Functorium.Applications.Cqrs.IFinResponseFactory<TResponse>
+        where TResponse : Functorium.Applications.Usecases.IFinResponse, Functorium.Applications.Usecases.IFinResponseFactory<TResponse>
     {
         public UsecaseTracingPipeline(System.Diagnostics.ActivitySource activitySource) { }
         public System.Threading.Tasks.ValueTask<TResponse> Handle(TRequest request, Mediator.MessageHandlerDelegate<TRequest, TResponse> next, System.Threading.CancellationToken cancellationToken) { }
     }
     public sealed class UsecaseValidationPipeline<TRequest, TResponse> : Functorium.Applications.Pipelines.UsecasePipelineBase<TRequest>, Mediator.IPipelineBehavior<TRequest, TResponse>
         where TRequest : Mediator.IMessage
-        where TResponse : Functorium.Applications.Cqrs.IFinResponseFactory<TResponse>
+        where TResponse : Functorium.Applications.Usecases.IFinResponseFactory<TResponse>
     {
         public UsecaseValidationPipeline(System.Collections.Generic.IEnumerable<FluentValidation.IValidator<TRequest>> validators) { }
         public System.Threading.Tasks.ValueTask<TResponse> Handle(TRequest request, Mediator.MessageHandlerDelegate<TRequest, TResponse> next, System.Threading.CancellationToken cancellationToken) { }
