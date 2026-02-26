@@ -6,6 +6,29 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하도록 개선
 ```
 
+- [ ] 폴더 정리
+- [x] Domains 레이어 관점 폴저 정리
+- [x] Application 레이어 관점 폴더 정리
+- [ ] 01-SingleHost\Src\LayeredArch.Adapters.Presentation\Abstractions\Extensions\FinResponseExtensions.cs Http 전용 확장 메서드
+- [ ] Adapter 레이어 관점 폴더 정리
+- [ ] DTO Book
+- [ ] 공병성 Book
+- [ ] 유스케이스 구현 패턴.md
+- [ ] cowork 통합?
+  - prd - ddd 구현 - ddd 테스트
+  - adapter 구현 - 통합 테스트
+  - dashboard 통합
+  - [ ] 커스텀 Pipeline
+- [ ] Adapters 프로젝트 분리
+---
+- [ ] 정적 사이트 개발
+- [ ] ddd 프로제트 포팅: cowork 통합으로
+---
+- [ ] 복수 서비스 예제
+- [ ] 컨테이너 기반 통합 테스트
+- [ ] 도메인 이벤트 확장: 내부/외부
+
+---
 - [x] `services.AddSingleton<OrderCreditCheckService>();` 도메인 서비스를 의존성 등록한것은 너무 과한것 같다
 - [x] 도메일 모데리 nullable 원칙
 - [x] ISoftDeletable 적용 사례
@@ -66,7 +89,7 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
   - IConcurrencyAware
   - Specification
 - [x] Src\Functorium\Applications\Observabilities\IObservablePort.cs 인터페이스 정의 위치를 Domain으로 이동(Repositories 때문에)
-- [ ] ObservablePortGenerator, ObservablePortRegistration, GenerateObservablePortAttribute???
+- [x] ObservablePortGenerator, ObservablePortRegistration, GenerateObservablePortAttribute???
 ---
 - [ ] 유스케이스 전체 리팩토링
 - [ ] .Adapters 프로젝트 분리
