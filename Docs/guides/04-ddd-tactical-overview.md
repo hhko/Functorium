@@ -490,6 +490,63 @@ SingleHost 프로젝트의 실제 모듈 구성입니다.
 
 > **패턴**: 각 Module은 Domain → Application → Adapter 전 Layer를 관통하는 **수직 슬라이스**입니다. 폴더 이름이 곧 Module 이름이고, Module 이름이 곧 유비쿼터스 언어입니다.
 
+### 도메인 계층 폴더 구성
+
+호스트 프로젝트의 도메인 계층은 다음과 같은 폴더 구조를 따릅니다.
+
+**참조 예시** (01-SingleHost `LayeredArch.Domain/`):
+
+```
+LayeredArch.Domain/
+├── AggregateRoots/
+│   ├── Customers/
+│   │   ├── Customer.cs
+│   │   ├── ICustomerRepository.cs
+│   │   ├── Specifications/
+│   │   │   └── CustomerEmailSpec.cs
+│   │   └── ValueObjects/
+│   │       ├── CustomerName.cs
+│   │       └── Email.cs
+│   ├── Inventories/
+│   │   ├── Inventory.cs
+│   │   ├── IInventoryRepository.cs
+│   │   └── Specifications/
+│   │       └── InventoryLowStockSpec.cs
+│   ├── Orders/
+│   │   ├── Order.cs
+│   │   ├── IOrderRepository.cs
+│   │   └── ValueObjects/
+│   │       └── ShippingAddress.cs
+│   └── Products/
+│       ├── Product.cs
+│       ├── IProductRepository.cs
+│       ├── Specifications/
+│       │   ├── ProductNameSpec.cs
+│       │   ├── ProductNameUniqueSpec.cs
+│       │   └── ProductPriceRangeSpec.cs
+│       └── ValueObjects/
+│           ├── ProductDescription.cs
+│           └── ProductName.cs
+├── SharedModels/
+│   ├── Entities/
+│   │   ├── Tag.cs
+│   │   └── ValueObjects/
+│   │       └── TagName.cs
+│   ├── Services/
+│   │   └── OrderCreditCheckService.cs
+│   └── ValueObjects/
+│       ├── Money.cs
+│       └── Quantity.cs
+├── DOMAIN-GLOSSARY.md
+├── Using.cs
+└── AssemblyReference.cs
+```
+
+**구조 요약**:
+- `AggregateRoots/{Aggregate}/` — 애그리거트 루트, 리포지토리 인터페이스, 하위 `Specifications/`와 `ValueObjects/`
+- `SharedModels/` — 여러 애그리거트가 공유하는 `Entities/`, `Services/`, `ValueObjects/`
+- 루트 — `DOMAIN-GLOSSARY.md`, `Using.cs`, `AssemblyReference.cs`
+
 ### 모듈 응집도 규칙
 
 **Module 내부 배치 (기본)**
