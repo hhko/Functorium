@@ -69,7 +69,7 @@ public sealed class EntityIdGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.SourceGenerators;
+            using Functorium.Domains.Entities;
 
             namespace MyApp.Domain.Entities;
 
@@ -96,7 +96,7 @@ public sealed class EntityIdGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.SourceGenerators;
+            using Functorium.Domains.Entities;
 
             namespace Company.Project.Domain.Entities.Products;
 
@@ -127,7 +127,7 @@ public sealed class EntityIdGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.SourceGenerators;
+            using Functorium.Domains.Entities;
 
             namespace TestNamespace;
 
@@ -157,7 +157,7 @@ public sealed class EntityIdGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.SourceGenerators;
+            using Functorium.Domains.Entities;
 
             namespace TestNamespace;
 
@@ -191,7 +191,7 @@ public sealed class EntityIdGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.SourceGenerators;
+            using Functorium.Domains.Entities;
 
             namespace TestNamespace;
 
@@ -222,7 +222,7 @@ public sealed class EntityIdGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.SourceGenerators;
+            using Functorium.Domains.Entities;
 
             namespace TestNamespace;
 
@@ -259,7 +259,7 @@ public sealed class EntityIdGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.SourceGenerators;
+            using Functorium.Domains.Entities;
 
             namespace TestNamespace;
 
@@ -287,7 +287,7 @@ public sealed class EntityIdGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.SourceGenerators;
+            using Functorium.Domains.Entities;
 
             namespace TestNamespace;
 
@@ -321,7 +321,7 @@ public sealed class EntityIdGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.SourceGenerators;
+            using Functorium.Domains.Entities;
 
             namespace TestNamespace;
 
@@ -355,7 +355,7 @@ public sealed class EntityIdGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.SourceGenerators;
+            using Functorium.Domains.Entities;
 
             namespace TestNamespace;
 

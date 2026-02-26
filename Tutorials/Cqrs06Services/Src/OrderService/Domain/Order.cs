@@ -1,5 +1,4 @@
 using Functorium.Domains.Entities;
-using Functorium.Domains.SourceGenerators;
 using LanguageExt;
 using OrderService.Domain.ValueObjects;
 

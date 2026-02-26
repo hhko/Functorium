@@ -1,4 +1,4 @@
-namespace Functorium.Domains.SourceGenerators;
+namespace Functorium.Domains.Entities;
 
 /// <summary>
 /// Entity 클래스에 이 속성을 적용하면 해당 Entity의 ID 타입이 자동으로 생성됩니다.

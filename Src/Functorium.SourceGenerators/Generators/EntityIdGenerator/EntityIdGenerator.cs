@@ -21,7 +21,7 @@ public sealed class EntityIdGenerator()
         AttachDebugger: false)
 {
     private const string AttributeName = "GenerateEntityId";
-    private const string AttributeNamespace = "Functorium.Domains.SourceGenerators";
+    private const string AttributeNamespace = "Functorium.Domains.Entities";
     private const string FullyQualifiedAttributeName = $"{AttributeNamespace}.{AttributeName}Attribute";
 
     private static IncrementalValuesProvider<EntityIdInfo> RegisterSourceProvider(
