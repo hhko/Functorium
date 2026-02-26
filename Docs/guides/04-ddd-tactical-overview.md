@@ -157,8 +157,8 @@ DDD는 도메인 전문가와 개발자가 동일한 언어를 사용할 것을 
 | Domain Service | `IDomainService` | `Functorium.Domains.Services` |
 | Specification | `Specification<T>` | `Functorium.Domains.Specifications` |
 | Domain Error | `DomainError`, `DomainErrorType` | `Functorium.Domains.Errors` |
-| Command | `ICommandRequest<T>`, `ICommandUsecase<T,R>` | `Functorium.Applications.Cqrs` |
-| Query | `IQueryRequest<T>`, `IQueryUsecase<T,R>` | `Functorium.Applications.Cqrs` |
+| Command | `ICommandRequest<T>`, `ICommandUsecase<T,R>` | `Functorium.Applications.Usecases` |
+| Query | `IQueryRequest<T>`, `IQueryUsecase<T,R>` | `Functorium.Applications.Usecases` |
 | Event Handler | `IDomainEventHandler<T>` | `Functorium.Applications.Events` |
 | Application Error | `ApplicationError`, `ApplicationErrorType` | `Functorium.Applications.Errors` |
 | Port | `IObservablePort` | `Functorium.Domains.Observabilities` |

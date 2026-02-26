@@ -233,7 +233,7 @@ services.AddValidatorsFromAssembly(LayeredArch.Application.AssemblyReference.Ass
 | 프로젝트 | global using 내용 |
 |---------|------------------|
 | Domain | LanguageExt, Functorium.Domains.*, 자체 SharedModels |
-| Application | LanguageExt, Functorium.Applications.Cqrs, FluentValidation, 자체 SharedModels |
+| Application | LanguageExt, Functorium.Applications.Usecases, FluentValidation, 자체 SharedModels |
 | Adapters.Presentation | FastEndpoints, Mediator, LanguageExt.Common |
 | Adapters.Persistence | LanguageExt, Domain Aggregate, 자체 SharedModels |
 | Adapters.Infrastructure | FluentValidation, 자체 SharedModels |
@@ -257,7 +257,7 @@ global using LayeredArch.Domain.SharedModels.ValueObjects;
 global using LanguageExt;
 global using LanguageExt.Common;
 global using static LanguageExt.Prelude;
-global using Functorium.Applications.Cqrs;
+global using Functorium.Applications.Usecases;
 global using Functorium.Domains.ValueObjects.Validations.Typed;
 global using Functorium.Domains.ValueObjects.Validations.Contextual;
 global using FluentValidation;
