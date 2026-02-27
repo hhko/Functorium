@@ -1,10 +1,10 @@
+using System.Linq.Expressions;
 using LayeredArch.Domain.AggregateRoots.Tags;
-using Functorium.Adapters.Errors;
+using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
-using Microsoft.EntityFrameworkCore;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 
@@ -12,116 +12,37 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 /// EF Core 기반 태그 리포지토리 구현
 /// </summary>
 [GenerateObservablePort]
-public class EfCoreTagRepository : ITagRepository
+public class EfCoreTagRepository
+    : EfCoreRepositoryBase<Tag, TagId, TagModel>, ITagRepository
 {
     private readonly LayeredArchDbContext _dbContext;
-    private readonly IDomainEventCollector _eventCollector;
 
-    public string RequestCategory => "Repository";
+    public override string RequestCategory => "Repository";
 
     public EfCoreTagRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
+        : base(eventCollector)
+        => _dbContext = dbContext;
+
+    // ─── 필수 선언 ───────────────────────────────────
+
+    protected override DbSet<TagModel> DbSet => _dbContext.Tags;
+
+    protected override IQueryable<TagModel> ApplyIncludes(IQueryable<TagModel> query)
+        => query;
+
+    protected override Tag ToDomain(TagModel model) => model.ToDomain();
+    protected override TagModel ToModel(Tag tag) => tag.ToModel();
+
+    protected override Expression<Func<TagModel, bool>> ByIdPredicate(TagId id)
     {
-        _dbContext = dbContext;
-        _eventCollector = eventCollector;
+        var s = id.ToString();
+        return m => m.Id == s;
     }
 
-    public virtual FinT<IO, Tag> Create(Tag tag)
+    protected override Expression<Func<TagModel, bool>> ByIdsPredicate(
+        IReadOnlyList<TagId> ids)
     {
-        return IO.liftAsync(async () =>
-        {
-            _dbContext.Tags.Add(tag.ToModel());
-            _eventCollector.Track(tag);
-            return Fin.Succ(tag);
-        });
-    }
-
-    public virtual FinT<IO, Tag> GetById(TagId id)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var model = await _dbContext.Tags.AsNoTracking()
-                .FirstOrDefaultAsync(t => t.Id == id.ToString());
-            if (model is not null)
-            {
-                return Fin.Succ(model.ToDomain());
-            }
-
-            return AdapterError.For<EfCoreTagRepository>(
-                new NotFound(),
-                id.ToString(),
-                $"태그 ID '{id}'을(를) 찾을 수 없습니다");
-        });
-    }
-
-    public virtual FinT<IO, Tag> Update(Tag tag)
-    {
-        return IO.lift(() =>
-        {
-            _dbContext.Tags.Update(tag.ToModel());
-            _eventCollector.Track(tag);
-            return Fin.Succ(tag);
-        });
-    }
-
-    public virtual FinT<IO, Unit> Delete(TagId id)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var model = await _dbContext.Tags.FindAsync(id.ToString());
-            if (model is null)
-            {
-                return AdapterError.For<EfCoreTagRepository>(
-                    new NotFound(),
-                    id.ToString(),
-                    $"태그 ID '{id}'을(를) 찾을 수 없습니다");
-            }
-
-            _dbContext.Tags.Remove(model);
-            return Fin.Succ(unit);
-        });
-    }
-
-    public virtual FinT<IO, Seq<Tag>> CreateRange(IReadOnlyList<Tag> tags)
-    {
-        return IO.liftAsync(async () =>
-        {
-            _dbContext.Tags.AddRange(tags.Select(t => t.ToModel()));
-            _eventCollector.TrackRange(tags);
-            return Fin.Succ(toSeq(tags));
-        });
-    }
-
-    public virtual FinT<IO, Seq<Tag>> GetByIds(IReadOnlyList<TagId> ids)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var idStrings = ids.Select(id => id.ToString()).ToList();
-            var models = await _dbContext.Tags.AsNoTracking()
-                .Where(t => idStrings.Contains(t.Id))
-                .ToListAsync();
-            return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
-        });
-    }
-
-    public virtual FinT<IO, Seq<Tag>> UpdateRange(IReadOnlyList<Tag> tags)
-    {
-        return IO.lift(() =>
-        {
-            _dbContext.Tags.UpdateRange(tags.Select(t => t.ToModel()));
-            _eventCollector.TrackRange(tags);
-            return Fin.Succ(toSeq(tags));
-        });
-    }
-
-    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<TagId> ids)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var idStrings = ids.Select(id => id.ToString()).ToList();
-            await _dbContext.Tags
-                .Where(t => idStrings.Contains(t.Id))
-                .ExecuteDeleteAsync();
-            return Fin.Succ(unit);
-        });
+        var ss = ids.Select(id => id.ToString()).ToList();
+        return m => ss.Contains(m.Id);
     }
 }

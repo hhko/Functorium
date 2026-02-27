@@ -1,10 +1,10 @@
+using System.Linq.Expressions;
 using LayeredArch.Domain.AggregateRoots.Orders;
-using Functorium.Adapters.Errors;
+using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
-using Microsoft.EntityFrameworkCore;
-using static Functorium.Adapters.Errors.AdapterErrorType;
+using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 
@@ -12,118 +12,37 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 /// EF Core 기반 주문 리포지토리 구현
 /// </summary>
 [GenerateObservablePort]
-public class EfCoreOrderRepository : IOrderRepository
+public class EfCoreOrderRepository
+    : EfCoreRepositoryBase<Order, OrderId, OrderModel>, IOrderRepository
 {
     private readonly LayeredArchDbContext _dbContext;
-    private readonly IDomainEventCollector _eventCollector;
 
-    public string RequestCategory => "Repository";
+    public override string RequestCategory => "Repository";
 
     public EfCoreOrderRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
+        : base(eventCollector)
+        => _dbContext = dbContext;
+
+    // ─── 필수 선언 ───────────────────────────────────
+
+    protected override DbSet<OrderModel> DbSet => _dbContext.Orders;
+
+    protected override IQueryable<OrderModel> ApplyIncludes(IQueryable<OrderModel> query)
+        => query.Include(o => o.OrderLines);
+
+    protected override Order ToDomain(OrderModel model) => model.ToDomain();
+    protected override OrderModel ToModel(Order order) => order.ToModel();
+
+    protected override Expression<Func<OrderModel, bool>> ByIdPredicate(OrderId id)
     {
-        _dbContext = dbContext;
-        _eventCollector = eventCollector;
+        var s = id.ToString();
+        return m => m.Id == s;
     }
 
-    public virtual FinT<IO, Order> Create(Order order)
+    protected override Expression<Func<OrderModel, bool>> ByIdsPredicate(
+        IReadOnlyList<OrderId> ids)
     {
-        return IO.liftAsync(async () =>
-        {
-            _dbContext.Orders.Add(order.ToModel());
-            _eventCollector.Track(order);
-            return Fin.Succ(order);
-        });
-    }
-
-    public virtual FinT<IO, Order> GetById(OrderId id)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var model = await _dbContext.Orders.AsNoTracking()
-                .Include(o => o.OrderLines)
-                .FirstOrDefaultAsync(o => o.Id == id.ToString());
-            if (model is not null)
-            {
-                return Fin.Succ(model.ToDomain());
-            }
-
-            return AdapterError.For<EfCoreOrderRepository>(
-                new NotFound(),
-                id.ToString(),
-                $"주문 ID '{id}'을(를) 찾을 수 없습니다");
-        });
-    }
-
-    public virtual FinT<IO, Order> Update(Order order)
-    {
-        return IO.lift(() =>
-        {
-            _dbContext.Orders.Update(order.ToModel());
-            _eventCollector.Track(order);
-            return Fin.Succ(order);
-        });
-    }
-
-    public virtual FinT<IO, Unit> Delete(OrderId id)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var model = await _dbContext.Orders.FindAsync(id.ToString());
-            if (model is null)
-            {
-                return AdapterError.For<EfCoreOrderRepository>(
-                    new NotFound(),
-                    id.ToString(),
-                    $"주문 ID '{id}'을(를) 찾을 수 없습니다");
-            }
-
-            _dbContext.Orders.Remove(model);
-            return Fin.Succ(unit);
-        });
-    }
-
-    public virtual FinT<IO, Seq<Order>> CreateRange(IReadOnlyList<Order> orders)
-    {
-        return IO.liftAsync(async () =>
-        {
-            _dbContext.Orders.AddRange(orders.Select(o => o.ToModel()));
-            _eventCollector.TrackRange(orders);
-            return Fin.Succ(toSeq(orders));
-        });
-    }
-
-    public virtual FinT<IO, Seq<Order>> GetByIds(IReadOnlyList<OrderId> ids)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var idStrings = ids.Select(id => id.ToString()).ToList();
-            var models = await _dbContext.Orders.AsNoTracking()
-                .Include(o => o.OrderLines)
-                .Where(o => idStrings.Contains(o.Id))
-                .ToListAsync();
-            return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
-        });
-    }
-
-    public virtual FinT<IO, Seq<Order>> UpdateRange(IReadOnlyList<Order> orders)
-    {
-        return IO.lift(() =>
-        {
-            _dbContext.Orders.UpdateRange(orders.Select(o => o.ToModel()));
-            _eventCollector.TrackRange(orders);
-            return Fin.Succ(toSeq(orders));
-        });
-    }
-
-    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<OrderId> ids)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var idStrings = ids.Select(id => id.ToString()).ToList();
-            await _dbContext.Orders
-                .Where(o => idStrings.Contains(o.Id))
-                .ExecuteDeleteAsync();
-            return Fin.Succ(unit);
-        });
+        var ss = ids.Select(id => id.ToString()).ToList();
+        return m => ss.Contains(m.Id);
     }
 }

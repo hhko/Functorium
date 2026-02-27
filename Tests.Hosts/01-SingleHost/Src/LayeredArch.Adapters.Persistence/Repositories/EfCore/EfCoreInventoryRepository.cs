@@ -1,4 +1,5 @@
-using Functorium.Adapters.Errors;
+using System.Linq.Expressions;
+using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
 using Functorium.Domains.Specifications;
@@ -6,8 +7,6 @@ using Functorium.Domains.Specifications.Expressions;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
 using LayeredArch.Domain.AggregateRoots.Inventories;
-using LayeredArch.Domain.AggregateRoots.Products;
-using Microsoft.EntityFrameworkCore;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
@@ -16,7 +15,8 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 /// EF Core 기반 재고 리포지토리 구현
 /// </summary>
 [GenerateObservablePort]
-public class EfCoreInventoryRepository : IInventoryRepository
+public class EfCoreInventoryRepository
+    : EfCoreRepositoryBase<Inventory, InventoryId, InventoryModel>, IInventoryRepository
 {
     private static readonly PropertyMap<Inventory, InventoryModel> _propertyMap =
         new PropertyMap<Inventory, InventoryModel>()
@@ -25,136 +25,55 @@ public class EfCoreInventoryRepository : IInventoryRepository
             .Map(i => i.Id.ToString(), m => m.Id);
 
     private readonly LayeredArchDbContext _dbContext;
-    private readonly IDomainEventCollector _eventCollector;
 
-    public string RequestCategory => "Repository";
+    public override string RequestCategory => "Repository";
 
     public EfCoreInventoryRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
+        : base(eventCollector)
+        => _dbContext = dbContext;
+
+    // ─── 필수 선언 ───────────────────────────────────
+
+    protected override DbSet<InventoryModel> DbSet => _dbContext.Inventories;
+
+    protected override IQueryable<InventoryModel> ApplyIncludes(IQueryable<InventoryModel> query)
+        => query;
+
+    protected override Inventory ToDomain(InventoryModel model) => model.ToDomain();
+    protected override InventoryModel ToModel(Inventory inventory) => inventory.ToModel();
+
+    protected override Expression<Func<InventoryModel, bool>> ByIdPredicate(InventoryId id)
     {
-        _dbContext = dbContext;
-        _eventCollector = eventCollector;
+        var s = id.ToString();
+        return m => m.Id == s;
     }
 
-    public virtual FinT<IO, Inventory> Create(Inventory inventory)
+    protected override Expression<Func<InventoryModel, bool>> ByIdsPredicate(
+        IReadOnlyList<InventoryId> ids)
     {
-        return IO.liftAsync(async () =>
-        {
-            _dbContext.Inventories.Add(inventory.ToModel());
-            _eventCollector.Track(inventory);
-            return Fin.Succ(inventory);
-        });
+        var ss = ids.Select(id => id.ToString()).ToList();
+        return m => ss.Contains(m.Id);
     }
 
-    public virtual FinT<IO, Inventory> GetById(InventoryId id)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var model = await _dbContext.Inventories
-                .AsNoTracking()
-                .FirstOrDefaultAsync(i => i.Id == id.ToString());
-
-            if (model is not null)
-            {
-                return Fin.Succ(model.ToDomain());
-            }
-
-            return AdapterError.For<EfCoreInventoryRepository>(
-                new NotFound(),
-                id.ToString(),
-                $"재고 ID '{id}'을(를) 찾을 수 없습니다");
-        });
-    }
+    // ─── Inventory 고유 메서드 ───────────────────────
 
     public virtual FinT<IO, Inventory> GetByProductId(ProductId productId)
     {
         return IO.liftAsync(async () =>
         {
-            var model = await _dbContext.Inventories
-                .AsNoTracking()
-                .FirstOrDefaultAsync(i => i.ProductId == productId.ToString());
+            var s = productId.ToString();
+            var model = await ReadQuery()
+                .FirstOrDefaultAsync(i => i.ProductId == s);
 
             if (model is not null)
             {
-                return Fin.Succ(model.ToDomain());
+                return Fin.Succ(ToDomain(model));
             }
 
-            return AdapterError.For<EfCoreInventoryRepository>(
+            return Functorium.Adapters.Errors.AdapterError.For(GetType(),
                 new NotFound(),
                 productId.ToString(),
                 $"상품 ID '{productId}'에 대한 재고를 찾을 수 없습니다");
-        });
-    }
-
-    public virtual FinT<IO, Inventory> Update(Inventory inventory)
-    {
-        return IO.lift(() =>
-        {
-            _dbContext.Inventories.Update(inventory.ToModel());
-            _eventCollector.Track(inventory);
-            return Fin.Succ(inventory);
-        });
-    }
-
-    public virtual FinT<IO, Unit> Delete(InventoryId id)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var model = await _dbContext.Inventories.FindAsync(id.ToString());
-            if (model is null)
-            {
-                return AdapterError.For<EfCoreInventoryRepository>(
-                    new NotFound(),
-                    id.ToString(),
-                    $"재고 ID '{id}'을(를) 찾을 수 없습니다");
-            }
-
-            _dbContext.Inventories.Remove(model);
-            return Fin.Succ(unit);
-        });
-    }
-
-    public virtual FinT<IO, Seq<Inventory>> CreateRange(IReadOnlyList<Inventory> inventories)
-    {
-        return IO.liftAsync(async () =>
-        {
-            _dbContext.Inventories.AddRange(inventories.Select(i => i.ToModel()));
-            _eventCollector.TrackRange(inventories);
-            return Fin.Succ(toSeq(inventories));
-        });
-    }
-
-    public virtual FinT<IO, Seq<Inventory>> GetByIds(IReadOnlyList<InventoryId> ids)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var idStrings = ids.Select(id => id.ToString()).ToList();
-            var models = await _dbContext.Inventories
-                .AsNoTracking()
-                .Where(i => idStrings.Contains(i.Id))
-                .ToListAsync();
-            return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
-        });
-    }
-
-    public virtual FinT<IO, Seq<Inventory>> UpdateRange(IReadOnlyList<Inventory> inventories)
-    {
-        return IO.lift(() =>
-        {
-            _dbContext.Inventories.UpdateRange(inventories.Select(i => i.ToModel()));
-            _eventCollector.TrackRange(inventories);
-            return Fin.Succ(toSeq(inventories));
-        });
-    }
-
-    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<InventoryId> ids)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var idStrings = ids.Select(id => id.ToString()).ToList();
-            await _dbContext.Inventories
-                .Where(i => idStrings.Contains(i.Id))
-                .ExecuteDeleteAsync();
-            return Fin.Succ(unit);
         });
     }
 
@@ -173,7 +92,7 @@ public class EfCoreInventoryRepository : IInventoryRepository
         if (expression is not null)
         {
             var modelExpression = _propertyMap.Translate(expression);
-            return _dbContext.Inventories.Where(modelExpression);
+            return DbSet.Where(modelExpression);
         }
 
         throw new NotSupportedException(

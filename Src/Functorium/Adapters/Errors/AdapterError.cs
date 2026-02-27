@@ -42,6 +42,26 @@ public static class AdapterError
             errorMessage: message);
 
     /// <summary>
+    /// AdapterErrorType record를 사용하여 에러를 생성합니다. (런타임 Type)
+    /// 베이스 클래스에서 GetType()으로 실제 서브클래스 타입을 전달할 때 사용합니다.
+    /// </summary>
+    /// <param name="adapterType">어댑터 런타임 타입</param>
+    /// <param name="errorType">에러 타입 record</param>
+    /// <param name="currentValue">현재 값</param>
+    /// <param name="message">오류 메시지</param>
+    /// <returns>생성된 Error</returns>
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Error For(
+        Type adapterType,
+        AdapterErrorType errorType,
+        string currentValue,
+        string message) =>
+        ErrorCodeFactory.Create(
+            errorCode: $"{ErrorType.AdapterErrorsPrefix}.{adapterType.Name}.{errorType.ErrorName}",
+            errorCurrentValue: currentValue,
+            errorMessage: message);
+
+    /// <summary>
     /// AdapterErrorType record를 사용하여 에러를 생성합니다. (제네릭 값 타입)
     /// </summary>
     /// <typeparam name="TAdapter">어댑터 타입</typeparam>

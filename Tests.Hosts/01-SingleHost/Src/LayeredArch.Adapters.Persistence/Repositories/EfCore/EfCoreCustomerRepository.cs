@@ -1,13 +1,12 @@
+using System.Linq.Expressions;
 using LayeredArch.Domain.AggregateRoots.Customers;
-using Functorium.Adapters.Errors;
+using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
 using Functorium.Domains.Specifications;
 using Functorium.Domains.Specifications.Expressions;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
-using Microsoft.EntityFrameworkCore;
-using static Functorium.Adapters.Errors.AdapterErrorType;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 
@@ -15,7 +14,8 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 /// EF Core 기반 고객 리포지토리 구현
 /// </summary>
 [GenerateObservablePort]
-public class EfCoreCustomerRepository : ICustomerRepository
+public class EfCoreCustomerRepository
+    : EfCoreRepositoryBase<Customer, CustomerId, CustomerModel>, ICustomerRepository
 {
     private static readonly PropertyMap<Customer, CustomerModel> _propertyMap =
         new PropertyMap<Customer, CustomerModel>()
@@ -25,115 +25,37 @@ public class EfCoreCustomerRepository : ICustomerRepository
             .Map(c => c.Id.ToString(), m => m.Id);
 
     private readonly LayeredArchDbContext _dbContext;
-    private readonly IDomainEventCollector _eventCollector;
 
-    public string RequestCategory => "Repository";
+    public override string RequestCategory => "Repository";
 
     public EfCoreCustomerRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
+        : base(eventCollector)
+        => _dbContext = dbContext;
+
+    // ─── 필수 선언 ───────────────────────────────────
+
+    protected override DbSet<CustomerModel> DbSet => _dbContext.Customers;
+
+    protected override IQueryable<CustomerModel> ApplyIncludes(IQueryable<CustomerModel> query)
+        => query;
+
+    protected override Customer ToDomain(CustomerModel model) => model.ToDomain();
+    protected override CustomerModel ToModel(Customer customer) => customer.ToModel();
+
+    protected override Expression<Func<CustomerModel, bool>> ByIdPredicate(CustomerId id)
     {
-        _dbContext = dbContext;
-        _eventCollector = eventCollector;
+        var s = id.ToString();
+        return m => m.Id == s;
     }
 
-    public virtual FinT<IO, Customer> Create(Customer customer)
+    protected override Expression<Func<CustomerModel, bool>> ByIdsPredicate(
+        IReadOnlyList<CustomerId> ids)
     {
-        return IO.liftAsync(async () =>
-        {
-            _dbContext.Customers.Add(customer.ToModel());
-            _eventCollector.Track(customer);
-            return Fin.Succ(customer);
-        });
+        var ss = ids.Select(id => id.ToString()).ToList();
+        return m => ss.Contains(m.Id);
     }
 
-    public virtual FinT<IO, Customer> GetById(CustomerId id)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var model = await _dbContext.Customers.AsNoTracking()
-                .FirstOrDefaultAsync(c => c.Id == id.ToString());
-            if (model is not null)
-            {
-                return Fin.Succ(model.ToDomain());
-            }
-
-            return AdapterError.For<EfCoreCustomerRepository>(
-                new NotFound(),
-                id.ToString(),
-                $"고객 ID '{id}'을(를) 찾을 수 없습니다");
-        });
-    }
-
-    public virtual FinT<IO, Customer> Update(Customer customer)
-    {
-        return IO.lift(() =>
-        {
-            _dbContext.Customers.Update(customer.ToModel());
-            _eventCollector.Track(customer);
-            return Fin.Succ(customer);
-        });
-    }
-
-    public virtual FinT<IO, Unit> Delete(CustomerId id)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var model = await _dbContext.Customers.FindAsync(id.ToString());
-            if (model is null)
-            {
-                return AdapterError.For<EfCoreCustomerRepository>(
-                    new NotFound(),
-                    id.ToString(),
-                    $"고객 ID '{id}'을(를) 찾을 수 없습니다");
-            }
-
-            _dbContext.Customers.Remove(model);
-            return Fin.Succ(unit);
-        });
-    }
-
-    public virtual FinT<IO, Seq<Customer>> CreateRange(IReadOnlyList<Customer> customers)
-    {
-        return IO.liftAsync(async () =>
-        {
-            _dbContext.Customers.AddRange(customers.Select(c => c.ToModel()));
-            _eventCollector.TrackRange(customers);
-            return Fin.Succ(toSeq(customers));
-        });
-    }
-
-    public virtual FinT<IO, Seq<Customer>> GetByIds(IReadOnlyList<CustomerId> ids)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var idStrings = ids.Select(id => id.ToString()).ToList();
-            var models = await _dbContext.Customers.AsNoTracking()
-                .Where(c => idStrings.Contains(c.Id))
-                .ToListAsync();
-            return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
-        });
-    }
-
-    public virtual FinT<IO, Seq<Customer>> UpdateRange(IReadOnlyList<Customer> customers)
-    {
-        return IO.lift(() =>
-        {
-            _dbContext.Customers.UpdateRange(customers.Select(c => c.ToModel()));
-            _eventCollector.TrackRange(customers);
-            return Fin.Succ(toSeq(customers));
-        });
-    }
-
-    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<CustomerId> ids)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var idStrings = ids.Select(id => id.ToString()).ToList();
-            await _dbContext.Customers
-                .Where(c => idStrings.Contains(c.Id))
-                .ExecuteDeleteAsync();
-            return Fin.Succ(unit);
-        });
-    }
+    // ─── Customer 고유 메서드 ────────────────────────
 
     public virtual FinT<IO, bool> Exists(Specification<Customer> spec)
     {
@@ -143,7 +65,7 @@ public class EfCoreCustomerRepository : ICustomerRepository
             if (expression is not null)
             {
                 var modelExpression = _propertyMap.Translate(expression);
-                return Fin.Succ(await _dbContext.Customers.AnyAsync(modelExpression));
+                return Fin.Succ(await DbSet.AnyAsync(modelExpression));
             }
 
             throw new NotSupportedException(

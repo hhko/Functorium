@@ -1,11 +1,12 @@
+using System.Linq.Expressions;
 using Functorium.Adapters.Errors;
+using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
 using Functorium.Domains.Specifications;
 using Functorium.Domains.Specifications.Expressions;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
-using Microsoft.EntityFrameworkCore;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
@@ -14,7 +15,8 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 /// EF Core 기반 상품 리포지토리 구현
 /// </summary>
 [GenerateObservablePort]
-public class EfCoreProductRepository : IProductRepository
+public class EfCoreProductRepository
+    : EfCoreRepositoryBase<Product, ProductId, ProductModel>, IProductRepository
 {
     private static readonly PropertyMap<Product, ProductModel> _propertyMap =
         new PropertyMap<Product, ProductModel>()
@@ -23,149 +25,86 @@ public class EfCoreProductRepository : IProductRepository
             .Map(p => p.Id.ToString(), m => m.Id);
 
     private readonly LayeredArchDbContext _dbContext;
-    private readonly IDomainEventCollector _eventCollector;
 
-    public string RequestCategory => "Repository";
+    public override string RequestCategory => "Repository";
 
     public EfCoreProductRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
+        : base(eventCollector)
+        => _dbContext = dbContext;
+
+    // ─── 필수 선언 ───────────────────────────────────
+
+    protected override DbSet<ProductModel> DbSet => _dbContext.Products;
+
+    protected override IQueryable<ProductModel> ApplyIncludes(IQueryable<ProductModel> query)
+        => query.Include(p => p.ProductTags);
+
+    protected override Product ToDomain(ProductModel model) => model.ToDomain();
+    protected override ProductModel ToModel(Product p) => p.ToModel();
+
+    protected override Expression<Func<ProductModel, bool>> ByIdPredicate(ProductId id)
     {
-        _dbContext = dbContext;
-        _eventCollector = eventCollector;
+        var s = id.ToString();
+        return m => m.Id == s;
     }
 
-    public virtual FinT<IO, Product> Create(Product product)
+    protected override Expression<Func<ProductModel, bool>> ByIdsPredicate(
+        IReadOnlyList<ProductId> ids)
+    {
+        var ss = ids.Select(id => id.ToString()).ToList();
+        return m => ss.Contains(m.Id);
+    }
+
+    // ─── Soft Delete 오버라이드 ──────────────────────
+
+    public override FinT<IO, Unit> Delete(ProductId id)
     {
         return IO.liftAsync(async () =>
         {
-            _dbContext.Products.Add(product.ToModel());
-            _eventCollector.Track(product);
-            return Fin.Succ(product);
-        });
-    }
-
-    public virtual FinT<IO, Product> GetById(ProductId id)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var model = await _dbContext.Products
-                .AsNoTracking()
-                .Include(p => p.ProductTags)
-                .FirstOrDefaultAsync(p => p.Id == id.ToString());
-
-            if (model is not null)
-            {
-                return Fin.Succ(model.ToDomain());
-            }
-
-            return AdapterError.For<EfCoreProductRepository>(
-                new NotFound(),
-                id.ToString(),
-                $"상품 ID '{id}'을(를) 찾을 수 없습니다");
-        });
-    }
-
-    public virtual FinT<IO, Product> Update(Product product)
-    {
-        return IO.lift(() =>
-        {
-            _dbContext.Products.Update(product.ToModel());
-            _eventCollector.Track(product);
-            return Fin.Succ(product);
-        });
-    }
-
-    public virtual FinT<IO, Unit> Delete(ProductId id)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var model = await _dbContext.Products
-                .IgnoreQueryFilters()
-                .Include(p => p.ProductTags)
-                .FirstOrDefaultAsync(p => p.Id == id.ToString());
+            var model = await ApplyIncludes(DbSet.IgnoreQueryFilters())
+                .FirstOrDefaultAsync(ByIdPredicate(id));
 
             if (model is null)
             {
-                return AdapterError.For<EfCoreProductRepository>(
-                    new NotFound(),
-                    id.ToString(),
-                    $"상품 ID '{id}'을(를) 찾을 수 없습니다");
+                return NotFoundError(id);
             }
 
-            var product = model.ToDomain();
+            var product = ToDomain(model);
             product.Delete("system");
-            _dbContext.Products.Update(product.ToModel());
-            _eventCollector.Track(product);
+            DbSet.Update(ToModel(product));
+            EventCollector.Track(product);
             return Fin.Succ(unit);
         });
     }
+
+    public override FinT<IO, Unit> DeleteRange(IReadOnlyList<ProductId> ids)
+    {
+        return IO.liftAsync(async () =>
+        {
+            await DbSet
+                .Where(ByIdsPredicate(ids))
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(p => p.DeletedAt, DateTime.UtcNow)
+                    .SetProperty(p => p.DeletedBy, "system"));
+            return Fin.Succ(unit);
+        });
+    }
+
+    // ─── Product 고유 메서드 ─────────────────────────
 
     public virtual FinT<IO, Product> GetByIdIncludingDeleted(ProductId id)
     {
         return IO.liftAsync(async () =>
         {
-            var model = await _dbContext.Products
-                .IgnoreQueryFilters()
-                .AsNoTracking()
-                .Include(p => p.ProductTags)
-                .FirstOrDefaultAsync(p => p.Id == id.ToString());
+            var model = await ReadQueryIgnoringFilters()
+                .FirstOrDefaultAsync(ByIdPredicate(id));
 
             if (model is not null)
             {
-                return Fin.Succ(model.ToDomain());
+                return Fin.Succ(ToDomain(model));
             }
 
-            return AdapterError.For<EfCoreProductRepository>(
-                new NotFound(),
-                id.ToString(),
-                $"상품 ID '{id}'을(를) 찾을 수 없습니다");
-        });
-    }
-
-    public virtual FinT<IO, Seq<Product>> CreateRange(IReadOnlyList<Product> products)
-    {
-        return IO.liftAsync(async () =>
-        {
-            _dbContext.Products.AddRange(products.Select(p => p.ToModel()));
-            _eventCollector.TrackRange(products);
-            return Fin.Succ(toSeq(products));
-        });
-    }
-
-    public virtual FinT<IO, Seq<Product>> GetByIds(IReadOnlyList<ProductId> ids)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var idStrings = ids.Select(id => id.ToString()).ToList();
-            var models = await _dbContext.Products
-                .AsNoTracking()
-                .Include(p => p.ProductTags)
-                .Where(p => idStrings.Contains(p.Id))
-                .ToListAsync();
-            return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
-        });
-    }
-
-    public virtual FinT<IO, Seq<Product>> UpdateRange(IReadOnlyList<Product> products)
-    {
-        return IO.lift(() =>
-        {
-            _dbContext.Products.UpdateRange(products.Select(p => p.ToModel()));
-            _eventCollector.TrackRange(products);
-            return Fin.Succ(toSeq(products));
-        });
-    }
-
-    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<ProductId> ids)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var idStrings = ids.Select(id => id.ToString()).ToList();
-            await _dbContext.Products
-                .Where(p => idStrings.Contains(p.Id))
-                .ExecuteUpdateAsync(s => s
-                    .SetProperty(p => p.DeletedAt, DateTime.UtcNow)
-                    .SetProperty(p => p.DeletedBy, "system"));
-            return Fin.Succ(unit);
+            return NotFoundError(id);
         });
     }
 
@@ -184,7 +123,7 @@ public class EfCoreProductRepository : IProductRepository
         if (expression is not null)
         {
             var modelExpression = _propertyMap.Translate(expression);
-            return _dbContext.Products.Where(modelExpression);
+            return DbSet.Where(modelExpression);
         }
 
         throw new NotSupportedException(
