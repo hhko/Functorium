@@ -6,6 +6,7 @@ using Functorium.Applications.Events;
 using LanguageExt;
 using LanguageExt.Common;
 using static Functorium.Adapters.Errors.AdapterErrorType;
+using static LanguageExt.Prelude;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 
@@ -81,6 +82,50 @@ public class InMemoryTagRepository : ITagRepository
                     $"태그 ID '{id}'을(를) 찾을 수 없습니다");
             }
 
+            return Fin.Succ(unit);
+        });
+    }
+
+    public virtual FinT<IO, Seq<Tag>> CreateRange(IReadOnlyList<Tag> tags)
+    {
+        return IO.lift(() =>
+        {
+            foreach (var tag in tags)
+                Tags[tag.Id] = tag;
+            _eventCollector.TrackRange(tags);
+            return Fin.Succ(toSeq(tags));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Tag>> GetByIds(IReadOnlyList<TagId> ids)
+    {
+        return IO.lift(() =>
+        {
+            var result = ids
+                .Where(id => Tags.ContainsKey(id))
+                .Select(id => Tags[id])
+                .ToList();
+            return Fin.Succ(toSeq(result));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Tag>> UpdateRange(IReadOnlyList<Tag> tags)
+    {
+        return IO.lift(() =>
+        {
+            foreach (var tag in tags)
+                Tags[tag.Id] = tag;
+            _eventCollector.TrackRange(tags);
+            return Fin.Succ(toSeq(tags));
+        });
+    }
+
+    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<TagId> ids)
+    {
+        return IO.lift(() =>
+        {
+            foreach (var id in ids)
+                Tags.TryRemove(id, out _);
             return Fin.Succ(unit);
         });
     }

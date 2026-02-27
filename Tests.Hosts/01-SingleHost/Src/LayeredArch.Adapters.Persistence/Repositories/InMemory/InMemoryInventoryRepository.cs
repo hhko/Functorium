@@ -105,6 +105,50 @@ public class InMemoryInventoryRepository : IInventoryRepository
         });
     }
 
+    public virtual FinT<IO, Seq<Inventory>> CreateRange(IReadOnlyList<Inventory> inventories)
+    {
+        return IO.lift(() =>
+        {
+            foreach (var inventory in inventories)
+                Inventories[inventory.Id] = inventory;
+            _eventCollector.TrackRange(inventories);
+            return Fin.Succ(toSeq(inventories));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Inventory>> GetByIds(IReadOnlyList<InventoryId> ids)
+    {
+        return IO.lift(() =>
+        {
+            var result = ids
+                .Where(id => Inventories.ContainsKey(id))
+                .Select(id => Inventories[id])
+                .ToList();
+            return Fin.Succ(toSeq(result));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Inventory>> UpdateRange(IReadOnlyList<Inventory> inventories)
+    {
+        return IO.lift(() =>
+        {
+            foreach (var inventory in inventories)
+                Inventories[inventory.Id] = inventory;
+            _eventCollector.TrackRange(inventories);
+            return Fin.Succ(toSeq(inventories));
+        });
+    }
+
+    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<InventoryId> ids)
+    {
+        return IO.lift(() =>
+        {
+            foreach (var id in ids)
+                Inventories.TryRemove(id, out _);
+            return Fin.Succ(unit);
+        });
+    }
+
     public virtual FinT<IO, bool> Exists(Specification<Inventory> spec)
     {
         return IO.lift(() =>

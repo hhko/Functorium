@@ -81,4 +81,49 @@ public class EfCoreOrderRepository : IOrderRepository
             return Fin.Succ(unit);
         });
     }
+
+    public virtual FinT<IO, Seq<Order>> CreateRange(IReadOnlyList<Order> orders)
+    {
+        return IO.liftAsync(async () =>
+        {
+            _dbContext.Orders.AddRange(orders.Select(o => o.ToModel()));
+            _eventCollector.TrackRange(orders);
+            return Fin.Succ(toSeq(orders));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Order>> GetByIds(IReadOnlyList<OrderId> ids)
+    {
+        return IO.liftAsync(async () =>
+        {
+            var idStrings = ids.Select(id => id.ToString()).ToList();
+            var models = await _dbContext.Orders.AsNoTracking()
+                .Include(o => o.OrderLines)
+                .Where(o => idStrings.Contains(o.Id))
+                .ToListAsync();
+            return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Order>> UpdateRange(IReadOnlyList<Order> orders)
+    {
+        return IO.lift(() =>
+        {
+            _dbContext.Orders.UpdateRange(orders.Select(o => o.ToModel()));
+            _eventCollector.TrackRange(orders);
+            return Fin.Succ(toSeq(orders));
+        });
+    }
+
+    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<OrderId> ids)
+    {
+        return IO.liftAsync(async () =>
+        {
+            var idStrings = ids.Select(id => id.ToString()).ToList();
+            await _dbContext.Orders
+                .Where(o => idStrings.Contains(o.Id))
+                .ExecuteDeleteAsync();
+            return Fin.Succ(unit);
+        });
+    }
 }

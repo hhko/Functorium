@@ -113,6 +113,51 @@ public class EfCoreInventoryRepository : IInventoryRepository
         });
     }
 
+    public virtual FinT<IO, Seq<Inventory>> CreateRange(IReadOnlyList<Inventory> inventories)
+    {
+        return IO.liftAsync(async () =>
+        {
+            _dbContext.Inventories.AddRange(inventories.Select(i => i.ToModel()));
+            _eventCollector.TrackRange(inventories);
+            return Fin.Succ(toSeq(inventories));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Inventory>> GetByIds(IReadOnlyList<InventoryId> ids)
+    {
+        return IO.liftAsync(async () =>
+        {
+            var idStrings = ids.Select(id => id.ToString()).ToList();
+            var models = await _dbContext.Inventories
+                .AsNoTracking()
+                .Where(i => idStrings.Contains(i.Id))
+                .ToListAsync();
+            return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Inventory>> UpdateRange(IReadOnlyList<Inventory> inventories)
+    {
+        return IO.lift(() =>
+        {
+            _dbContext.Inventories.UpdateRange(inventories.Select(i => i.ToModel()));
+            _eventCollector.TrackRange(inventories);
+            return Fin.Succ(toSeq(inventories));
+        });
+    }
+
+    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<InventoryId> ids)
+    {
+        return IO.liftAsync(async () =>
+        {
+            var idStrings = ids.Select(id => id.ToString()).ToList();
+            await _dbContext.Inventories
+                .Where(i => idStrings.Contains(i.Id))
+                .ExecuteDeleteAsync();
+            return Fin.Succ(unit);
+        });
+    }
+
     public virtual FinT<IO, bool> Exists(Specification<Inventory> spec)
     {
         return IO.liftAsync(async () =>

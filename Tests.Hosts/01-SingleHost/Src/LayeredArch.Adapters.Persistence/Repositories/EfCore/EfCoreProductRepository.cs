@@ -121,6 +121,54 @@ public class EfCoreProductRepository : IProductRepository
         });
     }
 
+    public virtual FinT<IO, Seq<Product>> CreateRange(IReadOnlyList<Product> products)
+    {
+        return IO.liftAsync(async () =>
+        {
+            _dbContext.Products.AddRange(products.Select(p => p.ToModel()));
+            _eventCollector.TrackRange(products);
+            return Fin.Succ(toSeq(products));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Product>> GetByIds(IReadOnlyList<ProductId> ids)
+    {
+        return IO.liftAsync(async () =>
+        {
+            var idStrings = ids.Select(id => id.ToString()).ToList();
+            var models = await _dbContext.Products
+                .AsNoTracking()
+                .Include(p => p.ProductTags)
+                .Where(p => idStrings.Contains(p.Id))
+                .ToListAsync();
+            return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Product>> UpdateRange(IReadOnlyList<Product> products)
+    {
+        return IO.lift(() =>
+        {
+            _dbContext.Products.UpdateRange(products.Select(p => p.ToModel()));
+            _eventCollector.TrackRange(products);
+            return Fin.Succ(toSeq(products));
+        });
+    }
+
+    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<ProductId> ids)
+    {
+        return IO.liftAsync(async () =>
+        {
+            var idStrings = ids.Select(id => id.ToString()).ToList();
+            await _dbContext.Products
+                .Where(p => idStrings.Contains(p.Id))
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(p => p.DeletedAt, DateTime.UtcNow)
+                    .SetProperty(p => p.DeletedBy, "system"));
+            return Fin.Succ(unit);
+        });
+    }
+
     public virtual FinT<IO, bool> Exists(Specification<Product> spec)
     {
         return IO.liftAsync(async () =>

@@ -1,7 +1,9 @@
+using System.Runtime.CompilerServices;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Queries;
 using Functorium.Domains.Specifications;
 using LayeredArch.Application.Usecases.Products.Ports;
+using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Products;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
@@ -46,6 +48,33 @@ public class InMemoryProductWithStockQueryAdapter : IProductWithStockQuery
             return Fin.Succ(new PagedResult<ProductWithStockDto>(
                 items, totalCount, page.Page, page.PageSize));
         });
+    }
+
+    public virtual async IAsyncEnumerable<ProductWithStockDto> Stream(
+        Specification<Product> spec,
+        SortExpression sort,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var allProducts = InMemoryProductRepository.Products.Values
+            .Where(p => p.DeletedAt.IsNone && spec.IsSatisfiedBy(p));
+
+        var joined = allProducts.Select(p =>
+        {
+            var inventory = InMemoryInventoryRepository.Inventories.Values
+                .FirstOrDefault(i => i.ProductId.Equals(p.Id));
+            var stockQuantity = inventory is not null ? (int)inventory.StockQuantity : 0;
+            return new ProductWithStockDto(p.Id.ToString(), p.Name, p.Price, stockQuantity);
+        });
+
+        var sorted = ApplySort(toSeq(joined), sort);
+
+        foreach (var item in sorted)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            yield return item;
+        }
+
+        await Task.CompletedTask;
     }
 
     private static Seq<ProductWithStockDto> ApplySort(Seq<ProductWithStockDto> items, SortExpression sort)

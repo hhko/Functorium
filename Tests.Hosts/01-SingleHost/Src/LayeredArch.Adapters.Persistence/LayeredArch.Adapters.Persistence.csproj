@@ -31,6 +31,8 @@
   <ItemGroup>
     <InternalsVisibleTo Include="LayeredArch.Tests.Integration" />
     <InternalsVisibleTo Include="LayeredArch.Tests.Unit" />
+    <InternalsVisibleTo Include="BulkCrud.Benchmarks" />
+    <InternalsVisibleTo Include="BulkCrud.Benchmarks.Runner" />
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
   </ItemGroup>
 

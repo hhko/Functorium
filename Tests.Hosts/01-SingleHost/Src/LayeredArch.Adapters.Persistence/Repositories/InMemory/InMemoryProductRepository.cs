@@ -127,6 +127,53 @@ public class InMemoryProductRepository : IProductRepository
         });
     }
 
+    public virtual FinT<IO, Seq<Product>> CreateRange(IReadOnlyList<Product> products)
+    {
+        return IO.lift(() =>
+        {
+            foreach (var product in products)
+                Products[product.Id] = product;
+            _eventCollector.TrackRange(products);
+            return Fin.Succ(toSeq(products));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Product>> GetByIds(IReadOnlyList<ProductId> ids)
+    {
+        return IO.lift(() =>
+        {
+            var result = ids
+                .Where(id => Products.TryGetValue(id, out var p) && p.DeletedAt.IsNone)
+                .Select(id => Products[id])
+                .ToList();
+            return Fin.Succ(toSeq(result));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Product>> UpdateRange(IReadOnlyList<Product> products)
+    {
+        return IO.lift(() =>
+        {
+            foreach (var product in products)
+                Products[product.Id] = product;
+            _eventCollector.TrackRange(products);
+            return Fin.Succ(toSeq(products));
+        });
+    }
+
+    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<ProductId> ids)
+    {
+        return IO.lift(() =>
+        {
+            foreach (var id in ids)
+            {
+                if (Products.TryGetValue(id, out var product))
+                    product.Delete("system");
+            }
+            return Fin.Succ(unit);
+        });
+    }
+
     public virtual FinT<IO, bool> Exists(Specification<Product> spec)
     {
         return IO.lift(() =>

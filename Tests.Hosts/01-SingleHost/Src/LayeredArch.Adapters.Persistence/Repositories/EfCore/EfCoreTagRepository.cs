@@ -80,4 +80,48 @@ public class EfCoreTagRepository : ITagRepository
             return Fin.Succ(unit);
         });
     }
+
+    public virtual FinT<IO, Seq<Tag>> CreateRange(IReadOnlyList<Tag> tags)
+    {
+        return IO.liftAsync(async () =>
+        {
+            _dbContext.Tags.AddRange(tags.Select(t => t.ToModel()));
+            _eventCollector.TrackRange(tags);
+            return Fin.Succ(toSeq(tags));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Tag>> GetByIds(IReadOnlyList<TagId> ids)
+    {
+        return IO.liftAsync(async () =>
+        {
+            var idStrings = ids.Select(id => id.ToString()).ToList();
+            var models = await _dbContext.Tags.AsNoTracking()
+                .Where(t => idStrings.Contains(t.Id))
+                .ToListAsync();
+            return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Tag>> UpdateRange(IReadOnlyList<Tag> tags)
+    {
+        return IO.lift(() =>
+        {
+            _dbContext.Tags.UpdateRange(tags.Select(t => t.ToModel()));
+            _eventCollector.TrackRange(tags);
+            return Fin.Succ(toSeq(tags));
+        });
+    }
+
+    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<TagId> ids)
+    {
+        return IO.liftAsync(async () =>
+        {
+            var idStrings = ids.Select(id => id.ToString()).ToList();
+            await _dbContext.Tags
+                .Where(t => idStrings.Contains(t.Id))
+                .ExecuteDeleteAsync();
+            return Fin.Succ(unit);
+        });
+    }
 }

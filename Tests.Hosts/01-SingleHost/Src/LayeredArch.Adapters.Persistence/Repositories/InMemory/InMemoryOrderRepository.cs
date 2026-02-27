@@ -6,6 +6,7 @@ using Functorium.Applications.Events;
 using LanguageExt;
 using LanguageExt.Common;
 using static Functorium.Adapters.Errors.AdapterErrorType;
+using static LanguageExt.Prelude;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 
@@ -81,6 +82,50 @@ public class InMemoryOrderRepository : IOrderRepository
                     $"주문 ID '{id}'을(를) 찾을 수 없습니다");
             }
 
+            return Fin.Succ(unit);
+        });
+    }
+
+    public virtual FinT<IO, Seq<Order>> CreateRange(IReadOnlyList<Order> orders)
+    {
+        return IO.lift(() =>
+        {
+            foreach (var order in orders)
+                Orders[order.Id] = order;
+            _eventCollector.TrackRange(orders);
+            return Fin.Succ(toSeq(orders));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Order>> GetByIds(IReadOnlyList<OrderId> ids)
+    {
+        return IO.lift(() =>
+        {
+            var result = ids
+                .Where(id => Orders.ContainsKey(id))
+                .Select(id => Orders[id])
+                .ToList();
+            return Fin.Succ(toSeq(result));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Order>> UpdateRange(IReadOnlyList<Order> orders)
+    {
+        return IO.lift(() =>
+        {
+            foreach (var order in orders)
+                Orders[order.Id] = order;
+            _eventCollector.TrackRange(orders);
+            return Fin.Succ(toSeq(orders));
+        });
+    }
+
+    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<OrderId> ids)
+    {
+        return IO.lift(() =>
+        {
+            foreach (var id in ids)
+                Orders.TryRemove(id, out _);
             return Fin.Succ(unit);
         });
     }

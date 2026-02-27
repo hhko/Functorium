@@ -91,6 +91,50 @@ public class EfCoreCustomerRepository : ICustomerRepository
         });
     }
 
+    public virtual FinT<IO, Seq<Customer>> CreateRange(IReadOnlyList<Customer> customers)
+    {
+        return IO.liftAsync(async () =>
+        {
+            _dbContext.Customers.AddRange(customers.Select(c => c.ToModel()));
+            _eventCollector.TrackRange(customers);
+            return Fin.Succ(toSeq(customers));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Customer>> GetByIds(IReadOnlyList<CustomerId> ids)
+    {
+        return IO.liftAsync(async () =>
+        {
+            var idStrings = ids.Select(id => id.ToString()).ToList();
+            var models = await _dbContext.Customers.AsNoTracking()
+                .Where(c => idStrings.Contains(c.Id))
+                .ToListAsync();
+            return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Customer>> UpdateRange(IReadOnlyList<Customer> customers)
+    {
+        return IO.lift(() =>
+        {
+            _dbContext.Customers.UpdateRange(customers.Select(c => c.ToModel()));
+            _eventCollector.TrackRange(customers);
+            return Fin.Succ(toSeq(customers));
+        });
+    }
+
+    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<CustomerId> ids)
+    {
+        return IO.liftAsync(async () =>
+        {
+            var idStrings = ids.Select(id => id.ToString()).ToList();
+            await _dbContext.Customers
+                .Where(c => idStrings.Contains(c.Id))
+                .ExecuteDeleteAsync();
+            return Fin.Succ(unit);
+        });
+    }
+
     public virtual FinT<IO, bool> Exists(Specification<Customer> spec)
     {
         return IO.liftAsync(async () =>

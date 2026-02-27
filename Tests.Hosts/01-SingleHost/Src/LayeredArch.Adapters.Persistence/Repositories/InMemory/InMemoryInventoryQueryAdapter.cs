@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Queries;
 using Functorium.Domains.Specifications;
@@ -35,6 +36,25 @@ public class InMemoryInventoryQueryAdapter : IInventoryQuery
             return Fin.Succ(new PagedResult<InventorySummaryDto>(
                 items, totalCount, page.Page, page.PageSize));
         });
+    }
+
+    public virtual async IAsyncEnumerable<InventorySummaryDto> Stream(
+        Specification<Inventory> spec,
+        SortExpression sort,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var allInventories = InMemoryInventoryRepository.Inventories.Values
+            .Where(i => spec.IsSatisfiedBy(i));
+        var sorted = ApplySort(toSeq(allInventories), sort);
+
+        foreach (var i in sorted)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            yield return new InventorySummaryDto(
+                i.Id.ToString(), i.ProductId.ToString(), i.StockQuantity);
+        }
+
+        await Task.CompletedTask;
     }
 
     private static Seq<Inventory> ApplySort(Seq<Inventory> inventories, SortExpression sort)

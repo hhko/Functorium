@@ -7,6 +7,7 @@ using Functorium.Domains.Specifications;
 using LanguageExt;
 using LanguageExt.Common;
 using static Functorium.Adapters.Errors.AdapterErrorType;
+using static LanguageExt.Prelude;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 
@@ -82,6 +83,50 @@ public class InMemoryCustomerRepository : ICustomerRepository
                     $"고객 ID '{id}'을(를) 찾을 수 없습니다");
             }
 
+            return Fin.Succ(unit);
+        });
+    }
+
+    public virtual FinT<IO, Seq<Customer>> CreateRange(IReadOnlyList<Customer> customers)
+    {
+        return IO.lift(() =>
+        {
+            foreach (var customer in customers)
+                Customers[customer.Id] = customer;
+            _eventCollector.TrackRange(customers);
+            return Fin.Succ(toSeq(customers));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Customer>> GetByIds(IReadOnlyList<CustomerId> ids)
+    {
+        return IO.lift(() =>
+        {
+            var result = ids
+                .Where(id => Customers.ContainsKey(id))
+                .Select(id => Customers[id])
+                .ToList();
+            return Fin.Succ(toSeq(result));
+        });
+    }
+
+    public virtual FinT<IO, Seq<Customer>> UpdateRange(IReadOnlyList<Customer> customers)
+    {
+        return IO.lift(() =>
+        {
+            foreach (var customer in customers)
+                Customers[customer.Id] = customer;
+            _eventCollector.TrackRange(customers);
+            return Fin.Succ(toSeq(customers));
+        });
+    }
+
+    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<CustomerId> ids)
+    {
+        return IO.lift(() =>
+        {
+            foreach (var id in ids)
+                Customers.TryRemove(id, out _);
             return Fin.Succ(unit);
         });
     }

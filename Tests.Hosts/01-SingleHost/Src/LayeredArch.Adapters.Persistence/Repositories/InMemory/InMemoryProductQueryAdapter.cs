@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Queries;
 using Functorium.Domains.Specifications;
@@ -35,6 +36,24 @@ public class InMemoryProductQueryAdapter : IProductQuery
             return Fin.Succ(new PagedResult<ProductSummaryDto>(
                 items, totalCount, page.Page, page.PageSize));
         });
+    }
+
+    public virtual async IAsyncEnumerable<ProductSummaryDto> Stream(
+        Specification<Product> spec,
+        SortExpression sort,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var allProducts = InMemoryProductRepository.Products.Values
+            .Where(p => p.DeletedAt.IsNone && spec.IsSatisfiedBy(p));
+        var sorted = ApplySort(toSeq(allProducts), sort);
+
+        foreach (var p in sorted)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            yield return new ProductSummaryDto(p.Id.ToString(), p.Name, p.Price);
+        }
+
+        await Task.CompletedTask;
     }
 
     private static Seq<Product> ApplySort(Seq<Product> products, SortExpression sort)
