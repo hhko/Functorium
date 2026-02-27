@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Src\Functorium\Functorium.csproj" />
+    <ProjectReference Include="..\..\Tests.Hosts\01-SingleHost\Src\LayeredArch.Domain\LayeredArch.Domain.csproj" />
+    <ProjectReference Include="..\..\Tests.Hosts\01-SingleHost\Src\LayeredArch.Adapters.Persistence\LayeredArch.Adapters.Persistence.csproj"
+                      ExcludeAssets="analyzers" />
+  </ItemGroup>
+
+  <!-- Source Generator 참조 -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Src\Functorium.SourceGenerators\Functorium.SourceGenerators.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+  </ItemGroup>
+
+</Project>
