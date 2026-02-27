@@ -70,6 +70,8 @@ public sealed class ObservablePortGenerator()
             .Where(ImplementsIObservablePort)
             .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
             .Where(m => m.MethodKind == MethodKind.Ordinary)
+            .Where(m => m.ReturnType.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat)
+                .Contains("FinT<", StringComparison.Ordinal))
             .Select(m => new MethodInfo(
                 m.Name,
                 m.Parameters.Select(p => new ParameterInfo(

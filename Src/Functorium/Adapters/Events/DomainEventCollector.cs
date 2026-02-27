@@ -12,11 +12,13 @@ namespace Functorium.Adapters.Events;
 /// </remarks>
 internal sealed class DomainEventCollector : IDomainEventCollector
 {
-    private readonly List<IHasDomainEvents> _tracked = [];
+    private readonly System.Collections.Generic.HashSet<IHasDomainEvents> _tracked = new(ReferenceEqualityComparer.Instance);
 
-    public void Track(IHasDomainEvents aggregate)
+    public void Track(IHasDomainEvents aggregate) => _tracked.Add(aggregate);
+
+    public void TrackRange(IEnumerable<IHasDomainEvents> aggregates)
     {
-        if (!_tracked.Any(a => ReferenceEquals(a, aggregate)))
+        foreach (var aggregate in aggregates)
             _tracked.Add(aggregate);
     }
 

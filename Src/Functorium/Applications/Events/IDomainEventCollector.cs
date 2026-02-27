@@ -16,6 +16,11 @@ public interface IDomainEventCollector
     void Track(IHasDomainEvents aggregate);
 
     /// <summary>
+    /// 여러 Aggregate를 추적 대상으로 일괄 등록합니다.
+    /// </summary>
+    void TrackRange(IEnumerable<IHasDomainEvents> aggregates);
+
+    /// <summary>
     /// 추적 중인 Aggregate 중 도메인 이벤트가 있는 것들을 반환합니다.
     /// </summary>
     IReadOnlyList<IHasDomainEvents> GetTrackedAggregates();

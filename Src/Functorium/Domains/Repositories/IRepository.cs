@@ -32,4 +32,24 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     /// ID로 Aggregate를 삭제합니다.
     /// </summary>
     FinT<IO, Unit> Delete(TId id);
+
+    /// <summary>
+    /// 여러 Aggregate를 일괄 생성합니다.
+    /// </summary>
+    FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates);
+
+    /// <summary>
+    /// 여러 ID로 Aggregate를 일괄 조회합니다.
+    /// </summary>
+    FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
+
+    /// <summary>
+    /// 여러 Aggregate를 일괄 업데이트합니다.
+    /// </summary>
+    FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates);
+
+    /// <summary>
+    /// 여러 ID로 Aggregate를 일괄 삭제합니다.
+    /// </summary>
+    FinT<IO, Unit> DeleteRange(IReadOnlyList<TId> ids);
 }

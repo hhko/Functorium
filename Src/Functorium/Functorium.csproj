@@ -16,6 +16,8 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Functorium.Tests.Unit" />
     <InternalsVisibleTo Include="Functorium.Testing" />
+    <InternalsVisibleTo Include="BulkCrud.Benchmarks" />
+    <InternalsVisibleTo Include="BulkCrud.Benchmarks.Runner" />
   </ItemGroup>
 
   <ItemGroup>

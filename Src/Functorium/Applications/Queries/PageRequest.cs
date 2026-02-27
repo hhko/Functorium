@@ -7,7 +7,7 @@ namespace Functorium.Applications.Queries;
 public sealed record PageRequest
 {
     public const int DefaultPageSize = 20;
-    public const int MaxPageSize = 100;
+    public const int MaxPageSize = 10_000;
 
     public int Page { get; }
     public int PageSize { get; }

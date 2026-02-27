@@ -45,7 +45,7 @@ public class PageRequestTests
     public void Ctor_ClampsPageSizeToMax_WhenPageSizeExceedsMax()
     {
         // Act
-        var actual = new PageRequest(pageSize: 200);
+        var actual = new PageRequest(pageSize: 20_000);
 
         // Assert
         actual.PageSize.ShouldBe(PageRequest.MaxPageSize);

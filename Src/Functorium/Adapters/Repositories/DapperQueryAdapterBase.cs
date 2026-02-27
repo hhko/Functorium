@@ -1,4 +1,5 @@
 using System.Data;
+using System.Data.Common;
 using Dapper;
 using Functorium.Applications.Queries;
 using Functorium.Domains.Specifications;
@@ -58,6 +59,24 @@ public abstract class DapperQueryAdapterBase<TEntity, TDto>
         }
 
         return $"ORDER BY {string.Join(", ", clauses)}";
+    }
+
+    public virtual async IAsyncEnumerable<TDto> Stream(
+        Specification<TEntity> spec,
+        SortExpression sort,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var (where, parameters) = BuildWhereClause(spec);
+        var orderBy = BuildOrderByClause(sort);
+
+        var sql = $"{SelectSql} {where} {orderBy}";
+        var dbConnection = _connection as DbConnection
+            ?? throw new InvalidOperationException("Stream requires a DbConnection instance.");
+        await foreach (var item in dbConnection.QueryUnbufferedAsync<TDto>(sql, parameters)
+            .WithCancellation(cancellationToken))
+        {
+            yield return item;
+        }
     }
 
     protected static DynamicParameters Params(params (string Name, object Value)[] values)

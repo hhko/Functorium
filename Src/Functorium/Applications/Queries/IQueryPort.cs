@@ -17,4 +17,12 @@ public interface IQueryPort<TEntity, TDto> : IQueryPort
         Specification<TEntity> spec,
         PageRequest page,
         SortExpression sort);
+
+    /// <summary>
+    /// Specification 기반 스트리밍 조회. 대량 데이터를 메모리에 전체 적재하지 않고 yield합니다.
+    /// </summary>
+    IAsyncEnumerable<TDto> Stream(
+        Specification<TEntity> spec,
+        SortExpression sort,
+        CancellationToken cancellationToken = default);
 }
