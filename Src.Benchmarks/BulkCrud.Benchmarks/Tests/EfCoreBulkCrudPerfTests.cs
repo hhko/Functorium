@@ -22,7 +22,7 @@ public sealed class EfCoreBulkCrudPerfTests : IAsyncLifetime
         _dbPath = Path.GetTempFileName();
         _tempPaths.Add(_dbPath);
         var options = new DbContextOptionsBuilder<LayeredArchDbContext>()
-            .UseSqlite($"Data Source={_dbPath}")
+            .UseSqlite($"Data Source={_dbPath};Pooling=false")
             .Options;
         _dbContext = new LayeredArchDbContext(options);
         await _dbContext.Database.EnsureCreatedAsync();
@@ -114,12 +114,8 @@ public sealed class EfCoreBulkCrudPerfTests : IAsyncLifetime
     {
         await _dbContext.DisposeAsync();
 
-        // SQLite 연결 풀 정리 후 temp 파일 삭제
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         foreach (var path in _tempPaths)
-        {
-            try { File.Delete(path); } catch { /* OS가 정리 */ }
-        }
+            File.Delete(path);
     }
 
     private async Task<LayeredArchDbContext> CreateFreshContext()
@@ -127,7 +123,7 @@ public sealed class EfCoreBulkCrudPerfTests : IAsyncLifetime
         var path = Path.GetTempFileName();
         _tempPaths.Add(path);
         var options = new DbContextOptionsBuilder<LayeredArchDbContext>()
-            .UseSqlite($"Data Source={path}")
+            .UseSqlite($"Data Source={path};Pooling=false")
             .Options;
         var ctx = new LayeredArchDbContext(options);
         await ctx.Database.EnsureCreatedAsync();
