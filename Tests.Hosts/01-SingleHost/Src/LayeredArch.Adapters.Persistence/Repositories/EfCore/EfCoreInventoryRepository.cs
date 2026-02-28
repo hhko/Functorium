@@ -26,8 +26,6 @@ public class EfCoreInventoryRepository
 
     private readonly LayeredArchDbContext _dbContext;
 
-    public override string RequestCategory => "Repository";
-
     public EfCoreInventoryRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
         : base(eventCollector)
         => _dbContext = dbContext;
@@ -35,9 +33,6 @@ public class EfCoreInventoryRepository
     // ─── 필수 선언 ───────────────────────────────────
 
     protected override DbSet<InventoryModel> DbSet => _dbContext.Inventories;
-
-    protected override IQueryable<InventoryModel> ApplyIncludes(IQueryable<InventoryModel> query)
-        => query;
 
     protected override Inventory ToDomain(InventoryModel model) => model.ToDomain();
     protected override InventoryModel ToModel(Inventory inventory) => inventory.ToModel();

@@ -11,7 +11,7 @@ namespace Functorium.Adapters.Repositories;
 
 /// <summary>
 /// EF Core Repository의 공통 베이스 클래스.
-/// ApplyIncludes()에서 선언한 Include가 ReadQuery()를 통해 모든 읽기 쿼리에 자동 적용되어
+/// 생성자의 applyIncludes에서 선언한 Include가 ReadQuery()를 통해 모든 읽기 쿼리에 자동 적용되어
 /// N+1 문제를 구조적으로 방지합니다.
 /// </summary>
 /// <typeparam name="TAggregate">Aggregate Root 타입</typeparam>
@@ -23,8 +23,21 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     where TId : struct, IEntityId<TId>
     where TModel : class
 {
-    protected EfCoreRepositoryBase(IDomainEventCollector eventCollector)
-        => EventCollector = eventCollector;
+    private readonly Func<IQueryable<TModel>, IQueryable<TModel>> _applyIncludes;
+
+    /// <param name="eventCollector">도메인 이벤트 수집기</param>
+    /// <param name="applyIncludes">
+    /// Navigation Property Include 선언 (N+1 방지의 핵심).
+    /// ReadQuery()를 통해 모든 읽기 쿼리에 자동 적용됩니다.
+    /// Navigation Property가 없으면 null(기본값)을 사용합니다.
+    /// </param>
+    protected EfCoreRepositoryBase(
+        IDomainEventCollector eventCollector,
+        Func<IQueryable<TModel>, IQueryable<TModel>>? applyIncludes = null)
+    {
+        EventCollector = eventCollector;
+        _applyIncludes = applyIncludes ?? (static q => q);
+    }
 
     /// <summary>도메인 이벤트 수집기. 서브클래스에서 override 메서드 내 이벤트 추적에 사용합니다.</summary>
     protected IDomainEventCollector EventCollector { get; }
@@ -33,13 +46,6 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 
     /// <summary>엔티티 모델의 DbSet</summary>
     protected abstract DbSet<TModel> DbSet { get; }
-
-    /// <summary>
-    /// Navigation Property Include 선언 (N+1 방지의 핵심).
-    /// 여기서 선언한 Include가 모든 읽기 쿼리에 자동 적용됩니다.
-    /// Navigation Property가 없으면 query를 그대로 반환합니다.
-    /// </summary>
-    protected abstract IQueryable<TModel> ApplyIncludes(IQueryable<TModel> query);
 
     /// <summary>Model → Domain 매핑</summary>
     protected abstract TAggregate ToDomain(TModel model);
@@ -55,21 +61,21 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 
     // ─── 중앙화된 쿼리 인프라 ─────────────────────────
 
-    public abstract string RequestCategory { get; }
+    public virtual string RequestCategory => "Repository";
 
     /// <summary>
     /// Include가 자동 적용된 읽기 전용 쿼리.
     /// 모든 읽기 메서드는 이 메서드를 사용하므로 N+1이 구조적으로 불가능합니다.
     /// </summary>
     protected IQueryable<TModel> ReadQuery()
-        => ApplyIncludes(DbSet.AsNoTracking());
+        => _applyIncludes(DbSet.AsNoTracking());
 
     /// <summary>
     /// Include가 자동 적용된 읽기 전용 쿼리 (글로벌 필터 무시).
     /// Soft Delete된 엔티티 조회 등 IgnoreQueryFilters가 필요한 경우 사용합니다.
     /// </summary>
     protected IQueryable<TModel> ReadQueryIgnoringFilters()
-        => ApplyIncludes(DbSet.IgnoreQueryFilters().AsNoTracking());
+        => _applyIncludes(DbSet.IgnoreQueryFilters().AsNoTracking());
 
     // ─── IRepository 구현 ─────────────────────────────
 
@@ -173,5 +179,5 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     protected Error NotFoundError(TId id) =>
         AdapterError.For(GetType(),
             new NotFound(), id.ToString()!,
-            $"ID '{id}'을(를) 찾을 수 없습니다");
+            $"No record found for ID '{id}'");
 }

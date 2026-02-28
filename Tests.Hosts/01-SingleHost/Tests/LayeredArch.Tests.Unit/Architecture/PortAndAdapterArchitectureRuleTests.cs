@@ -22,21 +22,6 @@ public sealed class PortAndAdapterArchitectureRuleTests : ArchitectureTestBase
     }
 
     [Fact]
-    public void AdapterImplementation_ShouldHave_RequestCategoryProperty()
-    {
-        ArchRuleDefinition.Classes()
-            .That()
-            .ImplementInterface(typeof(IObservablePort))
-            .And().AreNotAbstract()
-            .And().DoNotHaveNameEndingWith("Observable")
-            .ValidateAllClasses(Architecture, @class => @class
-                .RequireMethod("get_RequestCategory", m => m
-                    .RequireVisibility(ArchUnitNET.Domain.Visibility.Public)),
-                verbose: true)
-            .ThrowIfAnyFailures("Adapter RequestCategory Property Rule");
-    }
-
-    [Fact]
     public void DomainService_ShouldBe_PublicSealed()
     {
         ArchRuleDefinition.Classes()

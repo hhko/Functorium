@@ -17,8 +17,6 @@ public class EfCoreTagRepository
 {
     private readonly LayeredArchDbContext _dbContext;
 
-    public override string RequestCategory => "Repository";
-
     public EfCoreTagRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
         : base(eventCollector)
         => _dbContext = dbContext;
@@ -26,9 +24,6 @@ public class EfCoreTagRepository
     // ─── 필수 선언 ───────────────────────────────────
 
     protected override DbSet<TagModel> DbSet => _dbContext.Tags;
-
-    protected override IQueryable<TagModel> ApplyIncludes(IQueryable<TagModel> query)
-        => query;
 
     protected override Tag ToDomain(TagModel model) => model.ToDomain();
     protected override TagModel ToModel(Tag tag) => tag.ToModel();

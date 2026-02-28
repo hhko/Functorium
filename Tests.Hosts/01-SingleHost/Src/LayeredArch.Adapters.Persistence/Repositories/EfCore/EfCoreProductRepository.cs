@@ -26,18 +26,13 @@ public class EfCoreProductRepository
 
     private readonly LayeredArchDbContext _dbContext;
 
-    public override string RequestCategory => "Repository";
-
     public EfCoreProductRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
-        : base(eventCollector)
+        : base(eventCollector, q => q.Include(p => p.ProductTags))
         => _dbContext = dbContext;
 
     // ─── 필수 선언 ───────────────────────────────────
 
     protected override DbSet<ProductModel> DbSet => _dbContext.Products;
-
-    protected override IQueryable<ProductModel> ApplyIncludes(IQueryable<ProductModel> query)
-        => query.Include(p => p.ProductTags);
 
     protected override Product ToDomain(ProductModel model) => model.ToDomain();
     protected override ProductModel ToModel(Product p) => p.ToModel();
@@ -61,7 +56,7 @@ public class EfCoreProductRepository
     {
         return IO.liftAsync(async () =>
         {
-            var model = await ApplyIncludes(DbSet.IgnoreQueryFilters())
+            var model = await ReadQueryIgnoringFilters()
                 .FirstOrDefaultAsync(ByIdPredicate(id));
 
             if (model is null)
@@ -77,6 +72,11 @@ public class EfCoreProductRepository
         });
     }
 
+    /// <summary>
+    /// Soft Delete 벌크 처리. ExecuteUpdateAsync로 직접 SQL을 실행하여 성능을 최적화합니다.
+    /// 도메인 객체를 생성하지 않으므로 도메인 이벤트가 발행되지 않습니다.
+    /// 이벤트가 필요한 경우 단건 Delete()를 사용하세요.
+    /// </summary>
     public override FinT<IO, Unit> DeleteRange(IReadOnlyList<ProductId> ids)
     {
         return IO.liftAsync(async () =>

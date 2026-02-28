@@ -26,8 +26,6 @@ public class EfCoreCustomerRepository
 
     private readonly LayeredArchDbContext _dbContext;
 
-    public override string RequestCategory => "Repository";
-
     public EfCoreCustomerRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
         : base(eventCollector)
         => _dbContext = dbContext;
@@ -35,9 +33,6 @@ public class EfCoreCustomerRepository
     // ─── 필수 선언 ───────────────────────────────────
 
     protected override DbSet<CustomerModel> DbSet => _dbContext.Customers;
-
-    protected override IQueryable<CustomerModel> ApplyIncludes(IQueryable<CustomerModel> query)
-        => query;
 
     protected override Customer ToDomain(CustomerModel model) => model.ToDomain();
     protected override CustomerModel ToModel(Customer customer) => customer.ToModel();
@@ -61,16 +56,22 @@ public class EfCoreCustomerRepository
     {
         return IO.liftAsync(async () =>
         {
-            var expression = SpecificationExpressionResolver.TryResolve(spec);
-            if (expression is not null)
-            {
-                var modelExpression = _propertyMap.Translate(expression);
-                return Fin.Succ(await DbSet.AnyAsync(modelExpression));
-            }
-
-            throw new NotSupportedException(
-                $"Specification '{spec.GetType().Name}'에 대한 Expression이 정의되지 않았습니다. " +
-                $"ExpressionSpecification<T>을 상속하고 ToExpression()을 구현하세요.");
+            bool exists = await BuildQuery(spec).AnyAsync();
+            return Fin.Succ(exists);
         });
+    }
+
+    private IQueryable<CustomerModel> BuildQuery(Specification<Customer> spec)
+    {
+        var expression = SpecificationExpressionResolver.TryResolve(spec);
+        if (expression is not null)
+        {
+            var modelExpression = _propertyMap.Translate(expression);
+            return DbSet.Where(modelExpression);
+        }
+
+        throw new NotSupportedException(
+            $"Specification '{spec.GetType().Name}'에 대한 Expression이 정의되지 않았습니다. " +
+            $"ExpressionSpecification<T>을 상속하고 ToExpression()을 구현하세요.");
     }
 }

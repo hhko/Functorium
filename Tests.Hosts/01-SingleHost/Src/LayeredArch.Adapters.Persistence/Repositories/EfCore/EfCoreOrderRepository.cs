@@ -17,18 +17,13 @@ public class EfCoreOrderRepository
 {
     private readonly LayeredArchDbContext _dbContext;
 
-    public override string RequestCategory => "Repository";
-
     public EfCoreOrderRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
-        : base(eventCollector)
+        : base(eventCollector, q => q.Include(o => o.OrderLines))
         => _dbContext = dbContext;
 
     // ─── 필수 선언 ───────────────────────────────────
 
     protected override DbSet<OrderModel> DbSet => _dbContext.Orders;
-
-    protected override IQueryable<OrderModel> ApplyIncludes(IQueryable<OrderModel> query)
-        => query.Include(o => o.OrderLines);
 
     protected override Order ToDomain(OrderModel model) => model.ToDomain();
     protected override OrderModel ToModel(Order order) => order.ToModel();
