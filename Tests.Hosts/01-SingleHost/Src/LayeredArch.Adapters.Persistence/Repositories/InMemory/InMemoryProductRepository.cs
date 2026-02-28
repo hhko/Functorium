@@ -92,22 +92,19 @@ public class InMemoryProductRepository : IProductRepository
         });
     }
 
-    public virtual FinT<IO, Unit> Delete(ProductId id)
+    public virtual FinT<IO, int> Delete(ProductId id)
     {
         // Observable이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
             if (!Products.TryGetValue(id, out var product))
             {
-                return AdapterError.For<InMemoryProductRepository>(
-                    new NotFound(),
-                    id.ToString(),
-                    $"상품 ID '{id}'을(를) 찾을 수 없습니다");
+                return Fin.Succ(0);
             }
 
             product.Delete("system");
             _eventCollector.Track(product);
-            return Fin.Succ(unit);
+            return Fin.Succ(1);
         });
     }
 
@@ -161,16 +158,20 @@ public class InMemoryProductRepository : IProductRepository
         });
     }
 
-    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<ProductId> ids)
+    public virtual FinT<IO, int> DeleteRange(IReadOnlyList<ProductId> ids)
     {
         return IO.lift(() =>
         {
+            int affected = 0;
             foreach (var id in ids)
             {
                 if (Products.TryGetValue(id, out var product))
+                {
                     product.Delete("system");
+                    affected++;
+                }
             }
-            return Fin.Succ(unit);
+            return Fin.Succ(affected);
         });
     }
 

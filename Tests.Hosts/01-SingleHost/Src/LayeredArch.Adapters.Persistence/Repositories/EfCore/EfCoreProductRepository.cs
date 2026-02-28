@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using Functorium.Adapters.Errors;
 using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
@@ -7,7 +6,6 @@ using Functorium.Domains.Specifications;
 using Functorium.Domains.Specifications.Expressions;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
-using static Functorium.Adapters.Errors.AdapterErrorType;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 
@@ -18,16 +16,15 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 public class EfCoreProductRepository
     : EfCoreRepositoryBase<Product, ProductId, ProductModel>, IProductRepository
 {
-    private static readonly PropertyMap<Product, ProductModel> _propertyMap =
-        new PropertyMap<Product, ProductModel>()
-            .Map(p => (decimal)p.Price, m => m.Price)
-            .Map(p => (string)p.Name, m => m.Name)
-            .Map(p => p.Id.ToString(), m => m.Id);
-
     private readonly LayeredArchDbContext _dbContext;
 
     public EfCoreProductRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
-        : base(eventCollector, q => q.Include(p => p.ProductTags))
+        : base(eventCollector,
+               q => q.Include(p => p.ProductTags),
+               new PropertyMap<Product, ProductModel>()
+                   .Map(p => (decimal)p.Price, m => m.Price)
+                   .Map(p => (string)p.Name, m => m.Name)
+                   .Map(p => p.Id.ToString(), m => m.Id))
         => _dbContext = dbContext;
 
     // ─── 필수 선언 ───────────────────────────────────
@@ -52,7 +49,7 @@ public class EfCoreProductRepository
 
     // ─── Soft Delete 오버라이드 ──────────────────────
 
-    public override FinT<IO, Unit> Delete(ProductId id)
+    public override FinT<IO, int> Delete(ProductId id)
     {
         return IO.liftAsync(async () =>
         {
@@ -73,7 +70,7 @@ public class EfCoreProductRepository
             _dbContext.Entry(updatedModel).Property(p => p.DeletedBy).IsModified = true;
 
             EventCollector.Track(product);
-            return Fin.Succ(unit);
+            return Fin.Succ(1);
         });
     }
 
@@ -82,16 +79,16 @@ public class EfCoreProductRepository
     /// 도메인 객체를 생성하지 않으므로 도메인 이벤트가 발행되지 않습니다.
     /// 이벤트가 필요한 경우 단건 Delete()를 사용하세요.
     /// </summary>
-    public override FinT<IO, Unit> DeleteRange(IReadOnlyList<ProductId> ids)
+    public override FinT<IO, int> DeleteRange(IReadOnlyList<ProductId> ids)
     {
         return IO.liftAsync(async () =>
         {
-            await DbSet
+            int affected = await DbSet
                 .Where(ByIdsPredicate(ids))
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(p => p.DeletedAt, DateTime.UtcNow)
                     .SetProperty(p => p.DeletedBy, "system"));
-            return Fin.Succ(unit);
+            return Fin.Succ(affected);
         });
     }
 
@@ -114,25 +111,5 @@ public class EfCoreProductRepository
     }
 
     public virtual FinT<IO, bool> Exists(Specification<Product> spec)
-    {
-        return IO.liftAsync(async () =>
-        {
-            bool exists = await BuildQuery(spec).AnyAsync();
-            return Fin.Succ(exists);
-        });
-    }
-
-    private IQueryable<ProductModel> BuildQuery(Specification<Product> spec)
-    {
-        var expression = SpecificationExpressionResolver.TryResolve(spec);
-        if (expression is not null)
-        {
-            var modelExpression = _propertyMap.Translate(expression);
-            return DbSet.AsNoTracking().Where(modelExpression);
-        }
-
-        throw new NotSupportedException(
-            $"Specification '{spec.GetType().Name}'에 대한 Expression이 정의되지 않았습니다. " +
-            $"ExpressionSpecification<T>을 상속하고 ToExpression()을 구현하세요.");
-    }
+        => ExistsBySpec(spec);
 }

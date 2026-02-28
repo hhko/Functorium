@@ -71,19 +71,11 @@ public class InMemoryCustomerRepository : ICustomerRepository
         });
     }
 
-    public virtual FinT<IO, Unit> Delete(CustomerId id)
+    public virtual FinT<IO, int> Delete(CustomerId id)
     {
         return IO.lift(() =>
         {
-            if (!Customers.TryRemove(id, out _))
-            {
-                return AdapterError.For<InMemoryCustomerRepository>(
-                    new NotFound(),
-                    id.ToString(),
-                    $"고객 ID '{id}'을(를) 찾을 수 없습니다");
-            }
-
-            return Fin.Succ(unit);
+            return Fin.Succ(Customers.TryRemove(id, out _) ? 1 : 0);
         });
     }
 
@@ -121,13 +113,17 @@ public class InMemoryCustomerRepository : ICustomerRepository
         });
     }
 
-    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<CustomerId> ids)
+    public virtual FinT<IO, int> DeleteRange(IReadOnlyList<CustomerId> ids)
     {
         return IO.lift(() =>
         {
+            int affected = 0;
             foreach (var id in ids)
-                Customers.TryRemove(id, out _);
-            return Fin.Succ(unit);
+            {
+                if (Customers.TryRemove(id, out _))
+                    affected++;
+            }
+            return Fin.Succ(affected);
         });
     }
 

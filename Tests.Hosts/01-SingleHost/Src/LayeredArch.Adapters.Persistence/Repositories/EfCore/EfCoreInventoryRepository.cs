@@ -18,16 +18,14 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 public class EfCoreInventoryRepository
     : EfCoreRepositoryBase<Inventory, InventoryId, InventoryModel>, IInventoryRepository
 {
-    private static readonly PropertyMap<Inventory, InventoryModel> _propertyMap =
-        new PropertyMap<Inventory, InventoryModel>()
-            .Map(i => (int)i.StockQuantity, m => m.StockQuantity)
-            .Map(i => i.ProductId.ToString(), m => m.ProductId)
-            .Map(i => i.Id.ToString(), m => m.Id);
-
     private readonly LayeredArchDbContext _dbContext;
 
     public EfCoreInventoryRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
-        : base(eventCollector)
+        : base(eventCollector,
+               propertyMap: new PropertyMap<Inventory, InventoryModel>()
+                   .Map(i => (int)i.StockQuantity, m => m.StockQuantity)
+                   .Map(i => i.ProductId.ToString(), m => m.ProductId)
+                   .Map(i => i.Id.ToString(), m => m.Id))
         => _dbContext = dbContext;
 
     // ─── 필수 선언 ───────────────────────────────────
@@ -73,25 +71,5 @@ public class EfCoreInventoryRepository
     }
 
     public virtual FinT<IO, bool> Exists(Specification<Inventory> spec)
-    {
-        return IO.liftAsync(async () =>
-        {
-            bool exists = await BuildQuery(spec).AnyAsync();
-            return Fin.Succ(exists);
-        });
-    }
-
-    private IQueryable<InventoryModel> BuildQuery(Specification<Inventory> spec)
-    {
-        var expression = SpecificationExpressionResolver.TryResolve(spec);
-        if (expression is not null)
-        {
-            var modelExpression = _propertyMap.Translate(expression);
-            return DbSet.AsNoTracking().Where(modelExpression);
-        }
-
-        throw new NotSupportedException(
-            $"Specification '{spec.GetType().Name}'에 대한 Expression이 정의되지 않았습니다. " +
-            $"ExpressionSpecification<T>을 상속하고 ToExpression()을 구현하세요.");
-    }
+        => ExistsBySpec(spec);
 }

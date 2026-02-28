@@ -29,9 +29,9 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     FinT<IO, TAggregate> Update(TAggregate aggregate);
 
     /// <summary>
-    /// ID로 Aggregate를 삭제합니다.
+    /// ID로 Aggregate를 삭제합니다. 삭제된 건수를 반환합니다.
     /// </summary>
-    FinT<IO, Unit> Delete(TId id);
+    FinT<IO, int> Delete(TId id);
 
     /// <summary>
     /// 여러 Aggregate를 일괄 생성합니다.
@@ -49,7 +49,7 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates);
 
     /// <summary>
-    /// 여러 ID로 Aggregate를 일괄 삭제합니다.
+    /// 여러 ID로 Aggregate를 일괄 삭제합니다. 삭제된 건수를 반환합니다.
     /// </summary>
-    FinT<IO, Unit> DeleteRange(IReadOnlyList<TId> ids);
+    FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);
 }

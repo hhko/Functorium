@@ -70,19 +70,11 @@ public class InMemoryOrderRepository : IOrderRepository
         });
     }
 
-    public virtual FinT<IO, Unit> Delete(OrderId id)
+    public virtual FinT<IO, int> Delete(OrderId id)
     {
         return IO.lift(() =>
         {
-            if (!Orders.TryRemove(id, out _))
-            {
-                return AdapterError.For<InMemoryOrderRepository>(
-                    new NotFound(),
-                    id.ToString(),
-                    $"주문 ID '{id}'을(를) 찾을 수 없습니다");
-            }
-
-            return Fin.Succ(unit);
+            return Fin.Succ(Orders.TryRemove(id, out _) ? 1 : 0);
         });
     }
 
@@ -120,13 +112,17 @@ public class InMemoryOrderRepository : IOrderRepository
         });
     }
 
-    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<OrderId> ids)
+    public virtual FinT<IO, int> DeleteRange(IReadOnlyList<OrderId> ids)
     {
         return IO.lift(() =>
         {
+            int affected = 0;
             foreach (var id in ids)
-                Orders.TryRemove(id, out _);
-            return Fin.Succ(unit);
+            {
+                if (Orders.TryRemove(id, out _))
+                    affected++;
+            }
+            return Fin.Succ(affected);
         });
     }
 }

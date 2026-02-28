@@ -89,19 +89,11 @@ public class InMemoryInventoryRepository : IInventoryRepository
         });
     }
 
-    public virtual FinT<IO, Unit> Delete(InventoryId id)
+    public virtual FinT<IO, int> Delete(InventoryId id)
     {
         return IO.lift(() =>
         {
-            if (!Inventories.TryRemove(id, out _))
-            {
-                return AdapterError.For<InMemoryInventoryRepository>(
-                    new NotFound(),
-                    id.ToString(),
-                    $"재고 ID '{id}'을(를) 찾을 수 없습니다");
-            }
-
-            return Fin.Succ(unit);
+            return Fin.Succ(Inventories.TryRemove(id, out _) ? 1 : 0);
         });
     }
 
@@ -139,13 +131,17 @@ public class InMemoryInventoryRepository : IInventoryRepository
         });
     }
 
-    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<InventoryId> ids)
+    public virtual FinT<IO, int> DeleteRange(IReadOnlyList<InventoryId> ids)
     {
         return IO.lift(() =>
         {
+            int affected = 0;
             foreach (var id in ids)
-                Inventories.TryRemove(id, out _);
-            return Fin.Succ(unit);
+            {
+                if (Inventories.TryRemove(id, out _))
+                    affected++;
+            }
+            return Fin.Succ(affected);
         });
     }
 

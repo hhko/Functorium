@@ -17,17 +17,15 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 public class EfCoreCustomerRepository
     : EfCoreRepositoryBase<Customer, CustomerId, CustomerModel>, ICustomerRepository
 {
-    private static readonly PropertyMap<Customer, CustomerModel> _propertyMap =
-        new PropertyMap<Customer, CustomerModel>()
-            .Map(c => (string)c.Email, m => m.Email)
-            .Map(c => (string)c.Name, m => m.Name)
-            .Map(c => (decimal)c.CreditLimit, m => m.CreditLimit)
-            .Map(c => c.Id.ToString(), m => m.Id);
-
     private readonly LayeredArchDbContext _dbContext;
 
     public EfCoreCustomerRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
-        : base(eventCollector)
+        : base(eventCollector,
+               propertyMap: new PropertyMap<Customer, CustomerModel>()
+                   .Map(c => (string)c.Email, m => m.Email)
+                   .Map(c => (string)c.Name, m => m.Name)
+                   .Map(c => (decimal)c.CreditLimit, m => m.CreditLimit)
+                   .Map(c => c.Id.ToString(), m => m.Id))
         => _dbContext = dbContext;
 
     // ─── 필수 선언 ───────────────────────────────────
@@ -53,25 +51,5 @@ public class EfCoreCustomerRepository
     // ─── Customer 고유 메서드 ────────────────────────
 
     public virtual FinT<IO, bool> Exists(Specification<Customer> spec)
-    {
-        return IO.liftAsync(async () =>
-        {
-            bool exists = await BuildQuery(spec).AnyAsync();
-            return Fin.Succ(exists);
-        });
-    }
-
-    private IQueryable<CustomerModel> BuildQuery(Specification<Customer> spec)
-    {
-        var expression = SpecificationExpressionResolver.TryResolve(spec);
-        if (expression is not null)
-        {
-            var modelExpression = _propertyMap.Translate(expression);
-            return DbSet.AsNoTracking().Where(modelExpression);
-        }
-
-        throw new NotSupportedException(
-            $"Specification '{spec.GetType().Name}'에 대한 Expression이 정의되지 않았습니다. " +
-            $"ExpressionSpecification<T>을 상속하고 ToExpression()을 구현하세요.");
-    }
+        => ExistsBySpec(spec);
 }

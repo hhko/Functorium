@@ -36,6 +36,11 @@ public abstract record AdapterErrorType : ErrorType
     public sealed record NotFound : AdapterErrorType;
 
     /// <summary>
+    /// 요청한 ID 중 일부를 찾을 수 없음
+    /// </summary>
+    public sealed record PartialNotFound : AdapterErrorType;
+
+    /// <summary>
     /// 값이 이미 존재함
     /// </summary>
     public sealed record AlreadyExists : AdapterErrorType;

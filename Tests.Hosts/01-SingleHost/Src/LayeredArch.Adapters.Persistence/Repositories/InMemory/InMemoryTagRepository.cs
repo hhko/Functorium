@@ -70,19 +70,11 @@ public class InMemoryTagRepository : ITagRepository
         });
     }
 
-    public virtual FinT<IO, Unit> Delete(TagId id)
+    public virtual FinT<IO, int> Delete(TagId id)
     {
         return IO.lift(() =>
         {
-            if (!Tags.TryRemove(id, out _))
-            {
-                return AdapterError.For<InMemoryTagRepository>(
-                    new NotFound(),
-                    id.ToString(),
-                    $"태그 ID '{id}'을(를) 찾을 수 없습니다");
-            }
-
-            return Fin.Succ(unit);
+            return Fin.Succ(Tags.TryRemove(id, out _) ? 1 : 0);
         });
     }
 
@@ -120,13 +112,17 @@ public class InMemoryTagRepository : ITagRepository
         });
     }
 
-    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<TagId> ids)
+    public virtual FinT<IO, int> DeleteRange(IReadOnlyList<TagId> ids)
     {
         return IO.lift(() =>
         {
+            int affected = 0;
             foreach (var id in ids)
-                Tags.TryRemove(id, out _);
-            return Fin.Succ(unit);
+            {
+                if (Tags.TryRemove(id, out _))
+                    affected++;
+            }
+            return Fin.Succ(affected);
         });
     }
 }

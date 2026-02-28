@@ -4,6 +4,8 @@ using Functorium.Applications.Events;
 using Functorium.Domains.Entities;
 using Functorium.Domains.Observabilities;
 using Functorium.Domains.Repositories;
+using Functorium.Domains.Specifications;
+using Functorium.Domains.Specifications.Expressions;
 using Microsoft.EntityFrameworkCore;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
@@ -31,16 +33,25 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     /// ReadQuery()를 통해 모든 읽기 쿼리에 자동 적용됩니다.
     /// Navigation Property가 없으면 null(기본값)을 사용합니다.
     /// </param>
+    /// <param name="propertyMap">
+    /// Specification → Model Expression 변환을 위한 프로퍼티 매핑.
+    /// BuildQuery/ExistsBySpec 사용 시 필수입니다.
+    /// </param>
     protected EfCoreRepositoryBase(
         IDomainEventCollector eventCollector,
-        Func<IQueryable<TModel>, IQueryable<TModel>>? applyIncludes = null)
+        Func<IQueryable<TModel>, IQueryable<TModel>>? applyIncludes = null,
+        PropertyMap<TAggregate, TModel>? propertyMap = null)
     {
         EventCollector = eventCollector;
         _applyIncludes = applyIncludes ?? (static q => q);
+        PropertyMap = propertyMap;
     }
 
     /// <summary>도메인 이벤트 수집기. 서브클래스에서 override 메서드 내 이벤트 추적에 사용합니다.</summary>
     protected IDomainEventCollector EventCollector { get; }
+
+    /// <summary>Specification → Model Expression 변환을 위한 프로퍼티 매핑.</summary>
+    protected PropertyMap<TAggregate, TModel>? PropertyMap { get; }
 
     // ─── 서브클래스 필수 구현 ────────────────────────────
 
@@ -76,6 +87,34 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     /// </summary>
     protected IQueryable<TModel> ReadQueryIgnoringFilters()
         => _applyIncludes(DbSet.IgnoreQueryFilters().AsNoTracking());
+
+    /// <summary>
+    /// Specification → Model Expression 쿼리 빌더. PropertyMap 필수.
+    /// </summary>
+    protected IQueryable<TModel> BuildQuery(Specification<TAggregate> spec)
+    {
+        if (PropertyMap is null)
+            throw new InvalidOperationException(
+                $"{GetType().Name}: BuildQuery를 사용하려면 생성자에서 PropertyMap을 제공해야 합니다.");
+
+        var expression = SpecificationExpressionResolver.TryResolve(spec)
+            ?? throw new NotSupportedException(
+                $"Specification '{spec.GetType().Name}'에 대한 Expression이 정의되지 않았습니다.");
+
+        return DbSet.AsNoTracking().Where(PropertyMap.Translate(expression));
+    }
+
+    /// <summary>
+    /// Specification 기반 존재 여부 확인. PropertyMap 필수.
+    /// </summary>
+    protected FinT<IO, bool> ExistsBySpec(Specification<TAggregate> spec)
+    {
+        return IO.liftAsync(async () =>
+        {
+            bool exists = await BuildQuery(spec).AnyAsync();
+            return Fin.Succ(exists);
+        });
+    }
 
     // ─── IRepository 구현 ─────────────────────────────
 
@@ -115,18 +154,13 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
         });
     }
 
-    public virtual FinT<IO, Unit> Delete(TId id)
+    public virtual FinT<IO, int> Delete(TId id)
     {
         return IO.liftAsync(async () =>
         {
-            var model = await DbSet.FindAsync(id.ToString());
-            if (model is null)
-            {
-                return NotFoundError(id);
-            }
-
-            DbSet.Remove(model);
-            return Fin.Succ(unit);
+            int affected = await DbSet.Where(ByIdPredicate(id))
+                .ExecuteDeleteAsync();
+            return Fin.Succ(affected);
         });
     }
 
@@ -147,7 +181,14 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
             var models = await ReadQuery()
                 .Where(ByIdsPredicate(ids))
                 .ToListAsync();
-            return Fin.Succ(toSeq(models.Select(ToDomain)));
+            var aggregates = toSeq(models.Select(ToDomain));
+
+            if (aggregates.Count != ids.Count)
+            {
+                return PartialNotFoundError(ids, aggregates);
+            }
+
+            return Fin.Succ(aggregates);
         });
     }
 
@@ -161,13 +202,13 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
         });
     }
 
-    public virtual FinT<IO, Unit> DeleteRange(IReadOnlyList<TId> ids)
+    public virtual FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids)
     {
         return IO.liftAsync(async () =>
         {
-            await DbSet.Where(ByIdsPredicate(ids))
+            int affected = await DbSet.Where(ByIdsPredicate(ids))
                 .ExecuteDeleteAsync();
-            return Fin.Succ(unit);
+            return Fin.Succ(affected);
         });
     }
 
@@ -180,4 +221,18 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
         AdapterError.For(GetType(),
             new NotFound(), id.ToString()!,
             $"No record found for ID '{id}'");
+
+    /// <summary>
+    /// PartialNotFound 에러 생성. 요청 건수와 결과 건수가 다를 때 사용합니다.
+    /// </summary>
+    protected Error PartialNotFoundError(IReadOnlyList<TId> requestedIds, Seq<TAggregate> foundAggregates)
+    {
+        var foundIds = foundAggregates.Select(a => a.Id.ToString()).ToHashSet();
+        var missingIds = requestedIds.Where(id => !foundIds.Contains(id.ToString()!)).ToList();
+        var missingIdsStr = string.Join(", ", missingIds);
+
+        return AdapterError.For(GetType(),
+            new PartialNotFound(), missingIdsStr,
+            $"Requested {requestedIds.Count} but found {foundAggregates.Count}. Missing IDs: {missingIdsStr}");
+    }
 }
