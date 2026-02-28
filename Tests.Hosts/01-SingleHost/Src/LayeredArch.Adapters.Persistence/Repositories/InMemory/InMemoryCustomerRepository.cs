@@ -94,10 +94,22 @@ public class InMemoryCustomerRepository : ICustomerRepository
     {
         return IO.lift(() =>
         {
-            var result = ids
+            var distinctIds = ids.Distinct().ToList();
+            var result = distinctIds
                 .Where(id => Customers.ContainsKey(id))
                 .Select(id => Customers[id])
                 .ToList();
+
+            if (result.Count != distinctIds.Count)
+            {
+                var foundIds = result.Select(c => c.Id.ToString()).ToHashSet();
+                var missingIds = distinctIds.Where(id => !foundIds.Contains(id.ToString())).ToList();
+                var missingIdsStr = FormatIds(missingIds);
+                return AdapterError.For<InMemoryCustomerRepository>(
+                    new PartialNotFound(), missingIdsStr,
+                    $"Requested {distinctIds.Count} but found {result.Count}. Missing IDs: {missingIdsStr}");
+            }
+
             return Fin.Succ(toSeq(result));
         });
     }
@@ -125,6 +137,15 @@ public class InMemoryCustomerRepository : ICustomerRepository
             }
             return Fin.Succ(affected);
         });
+    }
+
+    private static string FormatIds<T>(IEnumerable<T> ids, int maxDisplay = 3)
+    {
+        var list = ids.Select(id => id!.ToString()!).ToList();
+        if (list.Count <= maxDisplay)
+            return string.Join(", ", list);
+
+        return string.Join(", ", list.Take(maxDisplay)) + $" ... (+{list.Count - maxDisplay} more)";
     }
 
     public virtual FinT<IO, bool> Exists(Specification<Customer> spec)

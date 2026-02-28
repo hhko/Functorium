@@ -139,10 +139,22 @@ public class InMemoryProductRepository : IProductRepository
     {
         return IO.lift(() =>
         {
-            var result = ids
+            var distinctIds = ids.Distinct().ToList();
+            var result = distinctIds
                 .Where(id => Products.TryGetValue(id, out var p) && p.DeletedAt.IsNone)
                 .Select(id => Products[id])
                 .ToList();
+
+            if (result.Count != distinctIds.Count)
+            {
+                var foundIds = result.Select(p => p.Id.ToString()).ToHashSet();
+                var missingIds = distinctIds.Where(id => !foundIds.Contains(id.ToString())).ToList();
+                var missingIdsStr = FormatIds(missingIds);
+                return AdapterError.For<InMemoryProductRepository>(
+                    new PartialNotFound(), missingIdsStr,
+                    $"Requested {distinctIds.Count} but found {result.Count}. Missing IDs: {missingIdsStr}");
+            }
+
             return Fin.Succ(toSeq(result));
         });
     }
@@ -156,6 +168,15 @@ public class InMemoryProductRepository : IProductRepository
             _eventCollector.TrackRange(products);
             return Fin.Succ(toSeq(products));
         });
+    }
+
+    private static string FormatIds<T>(IEnumerable<T> ids, int maxDisplay = 3)
+    {
+        var list = ids.Select(id => id!.ToString()!).ToList();
+        if (list.Count <= maxDisplay)
+            return string.Join(", ", list);
+
+        return string.Join(", ", list.Take(maxDisplay)) + $" ... (+{list.Count - maxDisplay} more)";
     }
 
     public virtual FinT<IO, int> DeleteRange(IReadOnlyList<ProductId> ids)

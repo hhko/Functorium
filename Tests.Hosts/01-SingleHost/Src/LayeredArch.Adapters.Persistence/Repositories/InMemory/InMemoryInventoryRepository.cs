@@ -112,10 +112,22 @@ public class InMemoryInventoryRepository : IInventoryRepository
     {
         return IO.lift(() =>
         {
-            var result = ids
+            var distinctIds = ids.Distinct().ToList();
+            var result = distinctIds
                 .Where(id => Inventories.ContainsKey(id))
                 .Select(id => Inventories[id])
                 .ToList();
+
+            if (result.Count != distinctIds.Count)
+            {
+                var foundIds = result.Select(i => i.Id.ToString()).ToHashSet();
+                var missingIds = distinctIds.Where(id => !foundIds.Contains(id.ToString())).ToList();
+                var missingIdsStr = FormatIds(missingIds);
+                return AdapterError.For<InMemoryInventoryRepository>(
+                    new PartialNotFound(), missingIdsStr,
+                    $"Requested {distinctIds.Count} but found {result.Count}. Missing IDs: {missingIdsStr}");
+            }
+
             return Fin.Succ(toSeq(result));
         });
     }
@@ -143,6 +155,15 @@ public class InMemoryInventoryRepository : IInventoryRepository
             }
             return Fin.Succ(affected);
         });
+    }
+
+    private static string FormatIds<T>(IEnumerable<T> ids, int maxDisplay = 3)
+    {
+        var list = ids.Select(id => id!.ToString()!).ToList();
+        if (list.Count <= maxDisplay)
+            return string.Join(", ", list);
+
+        return string.Join(", ", list.Take(maxDisplay)) + $" ... (+{list.Count - maxDisplay} more)";
     }
 
     public virtual FinT<IO, bool> Exists(Specification<Inventory> spec)

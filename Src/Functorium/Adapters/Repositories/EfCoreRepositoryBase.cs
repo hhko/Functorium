@@ -101,7 +101,7 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
             ?? throw new NotSupportedException(
                 $"Specification '{spec.GetType().Name}'에 대한 Expression이 정의되지 않았습니다.");
 
-        return DbSet.AsNoTracking().Where(PropertyMap.Translate(expression));
+        return _applyIncludes(DbSet.AsNoTracking()).Where(PropertyMap.Translate(expression));
     }
 
     /// <summary>
@@ -178,14 +178,15 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     {
         return IO.liftAsync(async () =>
         {
+            var distinctIds = ids.Distinct().ToList();
             var models = await ReadQuery()
-                .Where(ByIdsPredicate(ids))
+                .Where(ByIdsPredicate(distinctIds))
                 .ToListAsync();
             var aggregates = toSeq(models.Select(ToDomain));
 
-            if (aggregates.Count != ids.Count)
+            if (aggregates.Count != distinctIds.Count)
             {
-                return PartialNotFoundError(ids, aggregates);
+                return PartialNotFoundError(distinctIds, aggregates);
             }
 
             return Fin.Succ(aggregates);
@@ -229,10 +230,19 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     {
         var foundIds = foundAggregates.Select(a => a.Id.ToString()).ToHashSet();
         var missingIds = requestedIds.Where(id => !foundIds.Contains(id.ToString()!)).ToList();
-        var missingIdsStr = string.Join(", ", missingIds);
+        var missingIdsStr = FormatIds(missingIds.Select(id => id.ToString()!));
 
         return AdapterError.For(GetType(),
             new PartialNotFound(), missingIdsStr,
             $"Requested {requestedIds.Count} but found {foundAggregates.Count}. Missing IDs: {missingIdsStr}");
+    }
+
+    private static string FormatIds(IEnumerable<string> ids, int maxDisplay = 3)
+    {
+        var list = ids.ToList();
+        if (list.Count <= maxDisplay)
+            return string.Join(", ", list);
+
+        return string.Join(", ", list.Take(maxDisplay)) + $" ... (+{list.Count - maxDisplay} more)";
     }
 }
