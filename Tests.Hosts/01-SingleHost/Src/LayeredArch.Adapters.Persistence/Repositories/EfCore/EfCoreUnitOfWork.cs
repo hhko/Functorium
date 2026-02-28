@@ -2,6 +2,7 @@ using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
@@ -45,5 +46,21 @@ public class EfCoreUnitOfWork : IUnitOfWork
                     new DatabaseUpdateFailed(), ex);
             }
         });
+    }
+
+    public virtual async Task<IUnitOfWorkTransaction> BeginTransactionAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        return new EfCoreTransaction(transaction);
+    }
+
+    private sealed class EfCoreTransaction(IDbContextTransaction transaction) : IUnitOfWorkTransaction
+    {
+        public Task CommitAsync(CancellationToken cancellationToken = default)
+            => transaction.CommitAsync(cancellationToken);
+
+        public ValueTask DisposeAsync()
+            => transaction.DisposeAsync();
     }
 }

@@ -15,4 +15,15 @@ public class InMemoryUnitOfWork : IUnitOfWork
     {
         return IO.lift(() => Fin.Succ(unit));
     }
+
+    public virtual Task<IUnitOfWorkTransaction> BeginTransactionAsync(
+        CancellationToken cancellationToken = default)
+        => Task.FromResult<IUnitOfWorkTransaction>(NoOpTransaction.Instance);
+
+    private sealed class NoOpTransaction : IUnitOfWorkTransaction
+    {
+        public static readonly NoOpTransaction Instance = new();
+        public Task CommitAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
 }
