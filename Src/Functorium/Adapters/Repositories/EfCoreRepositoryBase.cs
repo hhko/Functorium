@@ -81,7 +81,7 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 
     public virtual FinT<IO, TAggregate> Create(TAggregate aggregate)
     {
-        return IO.liftAsync(async () =>
+        return IO.lift(() =>
         {
             DbSet.Add(ToModel(aggregate));
             EventCollector.Track(aggregate);
@@ -132,7 +132,7 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 
     public virtual FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates)
     {
-        return IO.liftAsync(async () =>
+        return IO.lift(() =>
         {
             DbSet.AddRange(aggregates.Select(ToModel));
             EventCollector.TrackRange(aggregates);

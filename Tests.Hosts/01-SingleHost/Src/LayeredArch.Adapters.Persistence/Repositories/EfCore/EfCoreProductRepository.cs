@@ -66,7 +66,12 @@ public class EfCoreProductRepository
 
             var product = ToDomain(model);
             product.Delete("system");
-            DbSet.Update(ToModel(product));
+
+            var updatedModel = ToModel(product);
+            DbSet.Attach(updatedModel);
+            _dbContext.Entry(updatedModel).Property(p => p.DeletedAt).IsModified = true;
+            _dbContext.Entry(updatedModel).Property(p => p.DeletedBy).IsModified = true;
+
             EventCollector.Track(product);
             return Fin.Succ(unit);
         });
@@ -123,7 +128,7 @@ public class EfCoreProductRepository
         if (expression is not null)
         {
             var modelExpression = _propertyMap.Translate(expression);
-            return DbSet.Where(modelExpression);
+            return DbSet.AsNoTracking().Where(modelExpression);
         }
 
         throw new NotSupportedException(

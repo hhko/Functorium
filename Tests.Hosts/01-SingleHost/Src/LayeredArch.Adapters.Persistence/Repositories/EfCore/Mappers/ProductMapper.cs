@@ -6,22 +6,26 @@ namespace LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
 
 internal static class ProductMapper
 {
-    public static ProductModel ToModel(this Product product) => new()
+    public static ProductModel ToModel(this Product product)
     {
-        Id = product.Id.ToString(),
-        Name = product.Name,
-        Description = product.Description,
-        Price = product.Price,
-        CreatedAt = product.CreatedAt,
-        UpdatedAt = product.UpdatedAt.ToNullable(),
-        DeletedAt = product.DeletedAt.ToNullable(),
-        DeletedBy = product.DeletedBy.Match(Some: v => (string?)v, None: () => null),
-        ProductTags = product.TagIds.Select(tagId => new ProductTagModel
+        var productId = product.Id.ToString();
+        return new()
         {
-            ProductId = product.Id.ToString(),
-            TagId = tagId.ToString()
-        }).ToList()
-    };
+            Id = productId,
+            Name = product.Name,
+            Description = product.Description,
+            Price = product.Price,
+            CreatedAt = product.CreatedAt,
+            UpdatedAt = product.UpdatedAt.ToNullable(),
+            DeletedAt = product.DeletedAt.ToNullable(),
+            DeletedBy = product.DeletedBy.Match(Some: v => (string?)v, None: () => null),
+            ProductTags = product.TagIds.Select(tagId => new ProductTagModel
+            {
+                ProductId = productId,
+                TagId = tagId.ToString()
+            }).ToList()
+        };
+    }
 
     public static Product ToDomain(this ProductModel model)
     {

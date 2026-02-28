@@ -87,7 +87,7 @@ public class EfCoreInventoryRepository
         if (expression is not null)
         {
             var modelExpression = _propertyMap.Translate(expression);
-            return DbSet.Where(modelExpression);
+            return DbSet.AsNoTracking().Where(modelExpression);
         }
 
         throw new NotSupportedException(
