@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
@@ -33,19 +32,6 @@ public class EfCoreProductRepository
 
     protected override Product ToDomain(ProductModel model) => model.ToDomain();
     protected override ProductModel ToModel(Product p) => p.ToModel();
-
-    protected override Expression<Func<ProductModel, bool>> ByIdPredicate(ProductId id)
-    {
-        var s = id.ToString();
-        return m => m.Id == s;
-    }
-
-    protected override Expression<Func<ProductModel, bool>> ByIdsPredicate(
-        IReadOnlyList<ProductId> ids)
-    {
-        var ss = ids.Select(id => id.ToString()).ToList();
-        return m => ss.Contains(m.Id);
-    }
 
     // ─── Soft Delete 오버라이드 ──────────────────────
 
@@ -83,6 +69,9 @@ public class EfCoreProductRepository
     {
         return IO.liftAsync(async () =>
         {
+            if (ids.Count == 0)
+                return Fin.Succ(0);
+
             int affected = await DbSet
                 .Where(ByIdsPredicate(ids))
                 .ExecuteUpdateAsync(s => s

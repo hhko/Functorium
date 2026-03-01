@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using LayeredArch.Domain.AggregateRoots.Tags;
 using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
@@ -27,17 +26,4 @@ public class EfCoreTagRepository
 
     protected override Tag ToDomain(TagModel model) => model.ToDomain();
     protected override TagModel ToModel(Tag tag) => tag.ToModel();
-
-    protected override Expression<Func<TagModel, bool>> ByIdPredicate(TagId id)
-    {
-        var s = id.ToString();
-        return m => m.Id == s;
-    }
-
-    protected override Expression<Func<TagModel, bool>> ByIdsPredicate(
-        IReadOnlyList<TagId> ids)
-    {
-        var ss = ids.Select(id => id.ToString()).ToList();
-        return m => ss.Contains(m.Id);
-    }
 }

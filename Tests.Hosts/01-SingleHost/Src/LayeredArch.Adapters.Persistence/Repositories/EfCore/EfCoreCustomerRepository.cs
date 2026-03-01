@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using LayeredArch.Domain.AggregateRoots.Customers;
 using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
@@ -34,19 +33,6 @@ public class EfCoreCustomerRepository
 
     protected override Customer ToDomain(CustomerModel model) => model.ToDomain();
     protected override CustomerModel ToModel(Customer customer) => customer.ToModel();
-
-    protected override Expression<Func<CustomerModel, bool>> ByIdPredicate(CustomerId id)
-    {
-        var s = id.ToString();
-        return m => m.Id == s;
-    }
-
-    protected override Expression<Func<CustomerModel, bool>> ByIdsPredicate(
-        IReadOnlyList<CustomerId> ids)
-    {
-        var ss = ids.Select(id => id.ToString()).ToList();
-        return m => ss.Contains(m.Id);
-    }
 
     // ─── Customer 고유 메서드 ────────────────────────
 

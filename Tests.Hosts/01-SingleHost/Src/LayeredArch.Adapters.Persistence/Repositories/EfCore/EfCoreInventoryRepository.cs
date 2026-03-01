@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
@@ -34,19 +33,6 @@ public class EfCoreInventoryRepository
 
     protected override Inventory ToDomain(InventoryModel model) => model.ToDomain();
     protected override InventoryModel ToModel(Inventory inventory) => inventory.ToModel();
-
-    protected override Expression<Func<InventoryModel, bool>> ByIdPredicate(InventoryId id)
-    {
-        var s = id.ToString();
-        return m => m.Id == s;
-    }
-
-    protected override Expression<Func<InventoryModel, bool>> ByIdsPredicate(
-        IReadOnlyList<InventoryId> ids)
-    {
-        var ss = ids.Select(id => id.ToString()).ToList();
-        return m => ss.Contains(m.Id);
-    }
 
     // ─── Inventory 고유 메서드 ───────────────────────
 

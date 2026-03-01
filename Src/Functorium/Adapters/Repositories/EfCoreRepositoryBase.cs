@@ -23,7 +23,7 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     : IRepository<TAggregate, TId>
     where TAggregate : AggregateRoot<TId>
     where TId : struct, IEntityId<TId>
-    where TModel : class
+    where TModel : class, IHasStringId
 {
     private readonly Func<IQueryable<TModel>, IQueryable<TModel>> _applyIncludes;
 
@@ -53,6 +53,9 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     /// <summary>Specification → Model Expression 변환을 위한 프로퍼티 매핑.</summary>
     protected PropertyMap<TAggregate, TModel>? PropertyMap { get; }
 
+    /// <summary>SQL IN 절 파라미터 한계 방지를 위한 배치 크기 (기본값: 500).</summary>
+    protected virtual int IdBatchSize => 500;
+
     // ─── 서브클래스 필수 구현 ────────────────────────────
 
     /// <summary>엔티티 모델의 DbSet</summary>
@@ -64,11 +67,35 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     /// <summary>Domain → Model 매핑</summary>
     protected abstract TModel ToModel(TAggregate aggregate);
 
-    /// <summary>단일 ID 매칭 Expression</summary>
-    protected abstract Expression<Func<TModel, bool>> ByIdPredicate(TId id);
+    /// <summary>
+    /// 단일 ID 매칭 Expression. IHasStringId 기반 기본 구현을 제공합니다.
+    /// Expression을 수동 빌드하여 TModel의 구체 프로퍼티를 참조합니다 (EF Core 호환).
+    /// </summary>
+    protected virtual Expression<Func<TModel, bool>> ByIdPredicate(TId id)
+    {
+        var s = id.ToString();
+        var param = Expression.Parameter(typeof(TModel), "m");
+        var body = Expression.Equal(
+            Expression.Property(param, nameof(IHasStringId.Id)),
+            Expression.Constant(s));
+        return Expression.Lambda<Func<TModel, bool>>(body, param);
+    }
 
-    /// <summary>복수 ID 매칭 Expression</summary>
-    protected abstract Expression<Func<TModel, bool>> ByIdsPredicate(IReadOnlyList<TId> ids);
+    /// <summary>
+    /// 복수 ID 매칭 Expression. IHasStringId 기반 기본 구현을 제공합니다.
+    /// Expression을 수동 빌드하여 TModel의 구체 프로퍼티를 참조합니다 (EF Core 호환).
+    /// </summary>
+    protected virtual Expression<Func<TModel, bool>> ByIdsPredicate(IReadOnlyList<TId> ids)
+    {
+        var ss = ids.Select(id => id.ToString()).ToList();
+        var param = Expression.Parameter(typeof(TModel), "m");
+        var containsMethod = typeof(System.Collections.Generic.List<string>).GetMethod("Contains", [typeof(string)])!;
+        var body = Expression.Call(
+            Expression.Constant(ss),
+            containsMethod,
+            Expression.Property(param, nameof(IHasStringId.Id)));
+        return Expression.Lambda<Func<TModel, bool>>(body, param);
+    }
 
     // ─── 중앙화된 쿼리 인프라 ─────────────────────────
 
@@ -91,17 +118,22 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     /// <summary>
     /// Specification → Model Expression 쿼리 빌더. PropertyMap 필수.
     /// </summary>
-    protected IQueryable<TModel> BuildQuery(Specification<TAggregate> spec)
+    protected Fin<IQueryable<TModel>> BuildQuery(Specification<TAggregate> spec)
     {
         if (PropertyMap is null)
-            throw new InvalidOperationException(
-                $"{GetType().Name}: BuildQuery를 사용하려면 생성자에서 PropertyMap을 제공해야 합니다.");
+        {
+            return NotConfiguredError(
+                $"PropertyMap is required for BuildQuery/ExistsBySpec. Provide it via the {GetType().Name} constructor.");
+        }
 
-        var expression = SpecificationExpressionResolver.TryResolve(spec)
-            ?? throw new NotSupportedException(
-                $"Specification '{spec.GetType().Name}'에 대한 Expression이 정의되지 않았습니다.");
+        var expression = SpecificationExpressionResolver.TryResolve(spec);
+        if (expression is null)
+        {
+            return NotSupportedError(spec.GetType().Name,
+                $"No Expression is defined for Specification '{spec.GetType().Name}'.");
+        }
 
-        return _applyIncludes(DbSet.AsNoTracking()).Where(PropertyMap.Translate(expression));
+        return Fin.Succ(_applyIncludes(DbSet.AsNoTracking()).Where(PropertyMap.Translate(expression)));
     }
 
     /// <summary>
@@ -111,8 +143,9 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     {
         return IO.liftAsync(async () =>
         {
-            bool exists = await BuildQuery(spec).AnyAsync();
-            return Fin.Succ(exists);
+            return await BuildQuery(spec).Match<Task<Fin<bool>>>(
+                Succ: async query => Fin.Succ(await query.AnyAsync()),
+                Fail: error => Task.FromResult(Fin.Fail<bool>(error)));
         });
     }
 
@@ -168,6 +201,9 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     {
         return IO.lift(() =>
         {
+            if (aggregates.Count == 0)
+                return Fin.Succ(LanguageExt.Seq<TAggregate>.Empty);
+
             DbSet.AddRange(aggregates.Select(ToModel));
             EventCollector.TrackRange(aggregates);
             return Fin.Succ(toSeq(aggregates));
@@ -178,10 +214,30 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     {
         return IO.liftAsync(async () =>
         {
+            if (ids.Count == 0)
+                return Fin.Succ(LanguageExt.Seq<TAggregate>.Empty);
+
             var distinctIds = ids.Distinct().ToList();
-            var models = await ReadQuery()
-                .Where(ByIdsPredicate(distinctIds))
-                .ToListAsync();
+
+            List<TModel> models;
+            if (distinctIds.Count <= IdBatchSize)
+            {
+                models = await ReadQuery()
+                    .Where(ByIdsPredicate(distinctIds))
+                    .ToListAsync();
+            }
+            else
+            {
+                models = new List<TModel>(distinctIds.Count);
+                foreach (var batch in Chunk(distinctIds, IdBatchSize))
+                {
+                    var batchResult = await ReadQuery()
+                        .Where(ByIdsPredicate(batch))
+                        .ToListAsync();
+                    models.AddRange(batchResult);
+                }
+            }
+
             var aggregates = toSeq(models.Select(ToDomain));
 
             if (aggregates.Count != distinctIds.Count)
@@ -197,6 +253,9 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     {
         return IO.lift(() =>
         {
+            if (aggregates.Count == 0)
+                return Fin.Succ(LanguageExt.Seq<TAggregate>.Empty);
+
             DbSet.UpdateRange(aggregates.Select(ToModel));
             EventCollector.TrackRange(aggregates);
             return Fin.Succ(toSeq(aggregates));
@@ -207,9 +266,27 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     {
         return IO.liftAsync(async () =>
         {
-            int affected = await DbSet.Where(ByIdsPredicate(ids))
-                .ExecuteDeleteAsync();
-            return Fin.Succ(affected);
+            if (ids.Count == 0)
+                return Fin.Succ(0);
+
+            var distinctIds = ids.Distinct().ToList();
+
+            if (distinctIds.Count <= IdBatchSize)
+            {
+                int affected = await DbSet.Where(ByIdsPredicate(distinctIds))
+                    .ExecuteDeleteAsync();
+                return Fin.Succ(affected);
+            }
+            else
+            {
+                int totalAffected = 0;
+                foreach (var batch in Chunk(distinctIds, IdBatchSize))
+                {
+                    totalAffected += await DbSet.Where(ByIdsPredicate(batch))
+                        .ExecuteDeleteAsync();
+                }
+                return Fin.Succ(totalAffected);
+            }
         });
     }
 
@@ -221,7 +298,7 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     protected Error NotFoundError(TId id) =>
         AdapterError.For(GetType(),
             new NotFound(), id.ToString()!,
-            $"No record found for ID '{id}'");
+            $"NotFound: No record found for ID '{id}'");
 
     /// <summary>
     /// PartialNotFound 에러 생성. 요청 건수와 결과 건수가 다를 때 사용합니다.
@@ -237,6 +314,22 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
             $"Requested {requestedIds.Count} but found {foundAggregates.Count}. Missing IDs: {missingIdsStr}");
     }
 
+    /// <summary>
+    /// NotConfigured 에러 생성. 필수 설정이 누락되었을 때 사용합니다.
+    /// </summary>
+    protected Error NotConfiguredError(string message) =>
+        AdapterError.For(GetType(),
+            new NotConfigured(), GetType().Name, message);
+
+    /// <summary>
+    /// NotSupported 에러 생성. 지원되지 않는 연산 요청 시 사용합니다.
+    /// </summary>
+    protected Error NotSupportedError(string currentValue, string message) =>
+        AdapterError.For(GetType(),
+            new NotSupported(), currentValue, message);
+
+    // ─── 내부 헬퍼 ───────────────────────────────────
+
     private static string FormatIds(IEnumerable<string> ids, int maxDisplay = 3)
     {
         var list = ids.ToList();
@@ -244,5 +337,15 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
             return string.Join(", ", list);
 
         return string.Join(", ", list.Take(maxDisplay)) + $" ... (+{list.Count - maxDisplay} more)";
+    }
+
+    private static List<List<T>> Chunk<T>(List<T> source, int chunkSize)
+    {
+        var chunks = new List<List<T>>();
+        for (int i = 0; i < source.Count; i += chunkSize)
+        {
+            chunks.Add(source.GetRange(i, Math.Min(chunkSize, source.Count - i)));
+        }
+        return chunks;
     }
 }

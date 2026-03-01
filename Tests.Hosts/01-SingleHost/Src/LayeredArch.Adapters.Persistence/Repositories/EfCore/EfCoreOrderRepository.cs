@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using LayeredArch.Domain.AggregateRoots.Orders;
 using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
@@ -27,17 +26,4 @@ public class EfCoreOrderRepository
 
     protected override Order ToDomain(OrderModel model) => model.ToDomain();
     protected override OrderModel ToModel(Order order) => order.ToModel();
-
-    protected override Expression<Func<OrderModel, bool>> ByIdPredicate(OrderId id)
-    {
-        var s = id.ToString();
-        return m => m.Id == s;
-    }
-
-    protected override Expression<Func<OrderModel, bool>> ByIdsPredicate(
-        IReadOnlyList<OrderId> ids)
-    {
-        var ss = ids.Select(id => id.ToString()).ToList();
-        return m => ss.Contains(m.Id);
-    }
 }

@@ -1,6 +1,8 @@
+using Functorium.Adapters.Repositories;
+
 namespace LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
 
-public class OrderModel
+public class OrderModel : IHasStringId
 {
     public string Id { get; set; } = default!;
     public string CustomerId { get; set; } = default!;
