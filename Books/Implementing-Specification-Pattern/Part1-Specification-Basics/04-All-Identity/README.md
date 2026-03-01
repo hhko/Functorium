@@ -41,10 +41,10 @@
 Specification<Product>? spec = null;
 
 if (hasCategory)
-    spec = spec == null ? new CategorySpec(cat) : spec.And(new CategorySpec(cat));
+    spec = spec == null ? new ProductCategorySpec(cat) : spec.And(new ProductCategorySpec(cat));
 
 if (hasPrice)
-    spec = spec == null ? new PriceRangeSpec(min, max) : spec.And(new PriceRangeSpec(min, max));
+    spec = spec == null ? new ProductPriceRangeSpec(min, max) : spec.And(new ProductPriceRangeSpec(min, max));
 
 // 실행 시에도 null 체크
 var results = spec == null ? products : products.Where(p => spec.IsSatisfiedBy(p));
@@ -57,10 +57,10 @@ var results = spec == null ? products : products.Where(p => spec.IsSatisfiedBy(p
 var spec = Specification<Product>.All;
 
 if (hasCategory)
-    spec &= new CategorySpec(cat);
+    spec &= new ProductCategorySpec(cat);
 
 if (hasPrice)
-    spec &= new PriceRangeSpec(min, max);
+    spec &= new ProductPriceRangeSpec(min, max);
 
 // 실행 - All이면 모든 상품, 조건이 있으면 필터링
 var results = products.Where(p => spec.IsSatisfiedBy(p));
@@ -72,7 +72,7 @@ var results = products.Where(p => spec.IsSatisfiedBy(p));
 
 ```csharp
 var all = Specification<Product>.All;
-var inStock = new InStockSpec();
+var inStock = new ProductInStockSpec();
 
 var result = all & inStock;
 ReferenceEquals(result, inStock); // true - 새 객체가 아님!
@@ -88,13 +88,13 @@ ReferenceEquals(result, inStock); // true - 새 객체가 아님!
 var spec = Specification<Product>.All;
 
 if (categoryFilter is not null)
-    spec &= new CategorySpec(categoryFilter);
+    spec &= new ProductCategorySpec(categoryFilter);
 
 if (nameFilter is not null)
-    spec &= new NameContainsSpec(nameFilter);
+    spec &= new ProductNameContainsSpec(nameFilter);
 
 if (onlyInStock)
-    spec &= new InStockSpec();
+    spec &= new ProductInStockSpec();
 
 var results = products.Where(p => spec.IsSatisfiedBy(p));
 ```
@@ -110,10 +110,10 @@ AllIdentity/
 ├── Product.cs
 ├── SampleProducts.cs
 ├── Specifications/
-│   ├── InStockSpec.cs
-│   ├── PriceRangeSpec.cs
-│   ├── CategorySpec.cs
-│   └── NameContainsSpec.cs
+│   ├── ProductInStockSpec.cs
+│   ├── ProductPriceRangeSpec.cs
+│   ├── ProductCategorySpec.cs
+│   └── ProductNameContainsSpec.cs
 └── AllIdentity.csproj
 
 AllIdentity.Tests.Unit/
@@ -130,10 +130,10 @@ AllIdentity.Tests.Unit/
 var spec = Specification<Product>.All;
 
 if (categoryFilter is not null)
-    spec &= new CategorySpec(categoryFilter);
+    spec &= new ProductCategorySpec(categoryFilter);
 
 if (onlyInStock)
-    spec &= new InStockSpec();
+    spec &= new ProductInStockSpec();
 
 var results = SampleProducts.All.Where(p => spec.IsSatisfiedBy(p));
 ```

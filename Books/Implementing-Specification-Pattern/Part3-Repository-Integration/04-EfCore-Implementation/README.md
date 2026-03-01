@@ -75,7 +75,7 @@ private IQueryable<ProductDbModel> BuildQuery(Specification<Product> spec)
 
 ```csharp
 // 새 Specification 추가 - Repository 변경 없음!
-var newSpec = new CategoryExprSpec("전자제품") & new PriceRangeExprSpec(50_000, decimal.MaxValue);
+var newSpec = new ProductCategorySpec("전자제품") & new ProductPriceRangeSpec(50_000, decimal.MaxValue);
 var results = repository.FindAll(newSpec);  // 그냥 동작함
 ```
 
@@ -91,9 +91,9 @@ EfCoreImpl/                              # 메인 프로젝트
 ├── SimulatedEfCoreProductRepository.cs  # EF Core 시뮬레이션 구현
 ├── ProductPropertyMap.cs                # PropertyMap 정의
 ├── Specifications/
-│   ├── InStockExprSpec.cs               # 재고 (Expression 기반)
-│   ├── PriceRangeExprSpec.cs            # 가격 범위 (Expression 기반)
-│   └── CategoryExprSpec.cs              # 카테고리 (Expression 기반)
+│   ├── ProductInStockSpec.cs               # 재고 (Expression 기반)
+│   ├── ProductPriceRangeSpec.cs            # 가격 범위 (Expression 기반)
+│   └── ProductCategorySpec.cs              # 카테고리 (Expression 기반)
 ├── Program.cs                           # 전체 파이프라인 데모
 └── EfCoreImpl.csproj
 EfCoreImpl.Tests.Unit/                   # 테스트 프로젝트

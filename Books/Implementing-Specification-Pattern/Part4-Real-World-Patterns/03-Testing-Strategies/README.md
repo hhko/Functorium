@@ -32,10 +32,10 @@ Specification 테스트를 3가지 레벨로 구성하는 전략을 학습합니
 [InlineData(0, false)]     // 경계: 재고 0
 [InlineData(1, true)]      // 경계: 재고 1
 [InlineData(100, true)]    // 일반 케이스
-public void InStockSpec_ShouldReturnExpected_WhenStockIs(int stock, bool expected)
+public void ProductInStockSpec_ShouldReturnExpected_WhenStockIs(int stock, bool expected)
 {
     var product = new Product("Test", 1000, stock, "Test");
-    var spec = new InStockSpec();
+    var spec = new ProductInStockSpec();
     spec.IsSatisfiedBy(product).ShouldBe(expected);
 }
 ```
@@ -45,7 +45,7 @@ public void InStockSpec_ShouldReturnExpected_WhenStockIs(int stock, bool expecte
 실제 데이터로 `And`, `Or`, `Not` 조합을 검증합니다.
 
 ```csharp
-var spec = new CategorySpec("Electronics") & new InStockSpec();
+var spec = new ProductCategorySpec("Electronics") & new ProductInStockSpec();
 spec.IsSatisfiedBy(inStockElectronics).ShouldBeTrue();
 spec.IsSatisfiedBy(outOfStockElectronics).ShouldBeFalse();
 ```
@@ -72,9 +72,9 @@ TestingStrategies/
 ├── Product.cs
 ├── IProductRepository.cs
 ├── Specifications/
-│   ├── InStockSpec.cs
-│   ├── PriceRangeSpec.cs
-│   ├── CategorySpec.cs
+│   ├── ProductInStockSpec.cs
+│   ├── ProductPriceRangeSpec.cs
+│   ├── ProductCategorySpec.cs
 │   └── ProductNameUniqueSpec.cs
 └── Program.cs
 
@@ -101,4 +101,4 @@ TestingStrategies.Tests.Unit/
 **A**: 네, 프로젝트에서 이미 사용 중이라면 Mocking 프레임워크를 사용해도 됩니다. 이 예제에서는 외부 의존성 없이 Mock 클래스를 직접 구현하여 패턴을 명확히 보여줍니다.
 
 ### Q3: Specification 테스트에서 가장 흔한 실수는 무엇인가요?
-**A**: 경계값 누락입니다. 예를 들어 `PriceRangeSpec(1000, 10000)`에서 정확히 1000과 10000인 경우를 테스트하지 않으면, `>=`와 `>`의 차이로 인한 버그를 놓칠 수 있습니다.
+**A**: 경계값 누락입니다. 예를 들어 `ProductPriceRangeSpec(1000, 10000)`에서 정확히 1000과 10000인 경우를 테스트하지 않으면, `>=`와 `>`의 차이로 인한 버그를 놓칠 수 있습니다.

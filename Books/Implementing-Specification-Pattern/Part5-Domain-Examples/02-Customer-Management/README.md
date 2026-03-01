@@ -35,7 +35,7 @@ public sealed class CustomerEmailSpec : ExpressionSpecification<Customer>
 }
 
 // non-Expression Specification: 인메모리 검증만 필요한 경우
-public sealed class ActiveCustomerSpec : Specification<Customer>
+public sealed class CustomerActiveSpec : Specification<Customer>
 {
     public override bool IsSatisfiedBy(Customer entity) => entity.IsActive;
 }
@@ -58,8 +58,8 @@ public override Expression<Func<Customer, bool>> ToExpression()
 ExpressionSpecification과 non-Expression Specification은 기반 클래스인 `Specification<T>`의 `&`, `|`, `!` 연산자를 통해 자유롭게 조합할 수 있습니다.
 
 ```csharp
-// ActiveCustomerSpec(non-Expression) & CustomerNameContainsSpec(Expression)
-var spec = new ActiveCustomerSpec() & new CustomerNameContainsSpec(new CustomerName("수"));
+// CustomerActiveSpec(non-Expression) & CustomerNameContainsSpec(Expression)
+var spec = new CustomerActiveSpec() & new CustomerNameContainsSpec(new CustomerName("수"));
 ```
 
 ## 프로젝트 설명
@@ -77,7 +77,7 @@ CustomerManagement/
 │   └── Specifications/
 │       ├── CustomerEmailSpec.cs          # ExpressionSpecification
 │       ├── CustomerNameContainsSpec.cs   # ExpressionSpecification
-│       └── ActiveCustomerSpec.cs         # non-Expression Specification
+│       └── CustomerActiveSpec.cs         # non-Expression Specification
 ├── Infrastructure/
 │   └── InMemoryCustomerRepository.cs
 ├── SampleCustomers.cs
@@ -90,7 +90,7 @@ CustomerManagement/
 |---------------|-------------|------|
 | `CustomerEmailSpec` | ExpressionSpecification | 이메일 정확 일치 |
 | `CustomerNameContainsSpec` | ExpressionSpecification | 이름 부분 일치 (대소문자 무시) |
-| `ActiveCustomerSpec` | Specification | 활성 고객 확인 |
+| `CustomerActiveSpec` | Specification | 활성 고객 확인 |
 
 ## 한눈에 보는 정리
 
@@ -99,7 +99,7 @@ CustomerManagement/
 | **도메인** | 고객 관리 (Customer) |
 | **Value Objects** | CustomerId, CustomerName, Email |
 | **ExpressionSpecification** | CustomerEmailSpec, CustomerNameContainsSpec |
-| **non-Expression Specification** | ActiveCustomerSpec |
+| **non-Expression Specification** | CustomerActiveSpec |
 | **핵심 패턴** | Expression/non-Expression 혼합 조합 |
 
 ### Expression vs non-Expression 선택 기준
@@ -114,7 +114,7 @@ CustomerManagement/
 ## FAQ
 
 ### Q1: 언제 ExpressionSpecification 대신 일반 Specification을 사용하나요?
-**A**: EF Core 등 ORM을 통한 SQL 번역이 필요하지 않고, 인메모리에서만 검증하는 단순한 조건이라면 일반 Specification이 더 간결합니다. `ActiveCustomerSpec`처럼 단순 속성 확인이 대표적인 예입니다.
+**A**: EF Core 등 ORM을 통한 SQL 번역이 필요하지 않고, 인메모리에서만 검증하는 단순한 조건이라면 일반 Specification이 더 간결합니다. `CustomerActiveSpec`처럼 단순 속성 확인이 대표적인 예입니다.
 
 ### Q2: Expression과 non-Expression Specification을 조합할 수 있는 이유는?
 **A**: 두 가지 모두 `Specification<T>` 기반 클래스를 상속하므로, `&`, `|`, `!` 연산자를 통해 자유롭게 조합할 수 있습니다. 조합 결과는 인메모리에서 `IsSatisfiedBy`를 통해 평가됩니다.

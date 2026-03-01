@@ -73,9 +73,9 @@ Operators/
 ├── Program.cs
 ├── Product.cs
 ├── Specifications/
-│   ├── InStockSpec.cs
-│   ├── PriceRangeSpec.cs
-│   └── CategorySpec.cs
+│   ├── ProductInStockSpec.cs
+│   ├── ProductPriceRangeSpec.cs
+│   └── ProductCategorySpec.cs
 └── Operators.csproj
 
 Operators.Tests.Unit/

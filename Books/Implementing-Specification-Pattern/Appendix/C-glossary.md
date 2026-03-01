@@ -18,8 +18,8 @@ spec &= new ActiveProductSpec();
 두 Specification을 결합하여 둘 다 만족하는 후보만 통과시키는 조합 연산.
 
 ```csharp
-var spec = new ActiveProductSpec().And(new InStockSpec());
-// 또는 연산자: new ActiveProductSpec() & new InStockSpec()
+var spec = new ActiveProductSpec().And(new ProductInStockSpec());
+// 또는 연산자: new ActiveProductSpec() & new ProductInStockSpec()
 ```
 
 ---

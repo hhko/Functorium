@@ -20,9 +20,9 @@
 var spec = Specification<Product>.All;  // 초기값
 
 if (!string.IsNullOrWhiteSpace(request.Name))
-    spec &= new NameContainsSpec(request.Name);
+    spec &= new ProductNameContainsSpec(request.Name);
 if (!string.IsNullOrWhiteSpace(request.Category))
-    spec &= new CategorySpec(request.Category);
+    spec &= new ProductCategorySpec(request.Category);
 
 return spec;  // 필터 없으면 All 반환
 ```
@@ -54,10 +54,10 @@ DynamicFilter/
 ├── SearchProductsRequest.cs            # 검색 요청 DTO
 ├── ProductFilterBuilder.cs             # 동적 필터 빌더
 ├── Specifications/
-│   ├── NameContainsSpec.cs             # 이름 포함 검색
-│   ├── CategorySpec.cs                 # 카테고리 필터
-│   ├── PriceRangeSpec.cs               # 가격 범위
-│   └── InStockSpec.cs                  # 재고 있음
+│   ├── ProductNameContainsSpec.cs             # 이름 포함 검색
+│   ├── ProductCategorySpec.cs                 # 카테고리 필터
+│   ├── ProductPriceRangeSpec.cs               # 가격 범위
+│   └── ProductInStockSpec.cs                  # 재고 있음
 └── Program.cs                          # 데모 실행
 ```
 

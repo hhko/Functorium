@@ -116,7 +116,7 @@ var result = products.AsQueryable()
 ### 5. Specification 패턴
 
 ```csharp
-var spec = new ActiveProductSpec() & new CategorySpec("Electronics");
+var spec = new ActiveProductSpec() & new ProductCategorySpec("Electronics");
 var products = await repository.FindAsync(spec);
 ```
 

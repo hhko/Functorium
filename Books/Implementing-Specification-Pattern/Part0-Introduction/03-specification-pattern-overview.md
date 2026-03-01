@@ -55,7 +55,7 @@ public interface IProductRepository
 }
 
 // 조건을 자유롭게 조합
-var spec = new ActiveProductSpec() & new CategorySpec("Electronics");
+var spec = new ActiveProductSpec() & new ProductCategorySpec("Electronics");
 var products = await repository.FindAsync(spec);
 ```
 

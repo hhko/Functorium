@@ -84,10 +84,10 @@ ExpressionResolver/                          # 메인 프로젝트
 ├── Program.cs                               # Resolver 데모
 ├── Product.cs                               # 상품 레코드
 ├── Specifications/
-│   ├── InStockExprSpec.cs                   # Expression 기반 재고 Spec
-│   ├── PriceRangeExprSpec.cs                # Expression 기반 가격 Spec
-│   ├── CategoryExprSpec.cs                  # Expression 기반 카테고리 Spec
-│   └── InStockSpec.cs                       # Non-expression 재고 Spec (fallback 데모)
+│   ├── ProductInStockSpec.cs                   # Expression 기반 재고 Spec
+│   ├── ProductPriceRangeSpec.cs                # Expression 기반 가격 Spec
+│   ├── ProductCategorySpec.cs                  # Expression 기반 카테고리 Spec
+│   └── ProductInStockPlainSpec.cs            # Non-expression 재고 Spec (fallback 데모)
 ├── ExpressionResolver.csproj                # 프로젝트 파일
 ExpressionResolver.Tests.Unit/               # 테스트 프로젝트
 ├── ExpressionResolverTests.cs               # Resolver 테스트

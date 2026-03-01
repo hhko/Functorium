@@ -200,7 +200,7 @@ Specification 패턴의 핵심 가치는 **단일 규칙의 캡슐화와 조합*
 var spec = Specification<Product>.All;
 
 if (filter.Category is not null)
-    spec &= new CategorySpec(filter.Category);
+    spec &= new ProductCategorySpec(filter.Category);
 if (filter.MinPrice is not null)
     spec &= new MinPriceSpec(filter.MinPrice.Value);
 if (filter.IsActive is not null)
@@ -230,7 +230,7 @@ public class ProductController : ControllerBase
         // 💥 프레젠테이션 계층에서 도메인 Specification 직접 조합
         var spec = new ActiveProductSpec();
         if (category is not null)
-            spec &= new CategorySpec(category);
+            spec &= new ProductCategorySpec(category);
 
         var products = await _repository.FindAsync(spec);
         return Ok(products);
@@ -256,7 +256,7 @@ public sealed class GetProductsQueryHandler
     {
         var spec = Specification<Product>.All;
         if (query.Category is not null)
-            spec &= new CategorySpec(query.Category);
+            spec &= new ProductCategorySpec(query.Category);
 
         var products = await _repository.FindAsync(spec);
         return products.Select(p => p.ToDto()).ToList();

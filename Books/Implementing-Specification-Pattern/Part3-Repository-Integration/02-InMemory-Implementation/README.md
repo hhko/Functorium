@@ -66,9 +66,9 @@ InMemoryImpl/                            # 메인 프로젝트
 ├── InMemoryProductRepository.cs         # InMemory 구현
 ├── SampleProducts.cs                    # 샘플 데이터 (8개 상품)
 ├── Specifications/
-│   ├── InStockSpec.cs                   # 재고 있는 상품
-│   ├── PriceRangeSpec.cs                # 가격 범위 상품
-│   └── CategorySpec.cs                  # 카테고리별 상품
+│   ├── ProductInStockSpec.cs                   # 재고 있는 상품
+│   ├── ProductPriceRangeSpec.cs                # 가격 범위 상품
+│   └── ProductCategorySpec.cs                  # 카테고리별 상품
 ├── Program.cs                           # FindAll/Exists 데모
 └── InMemoryImpl.csproj
 InMemoryImpl.Tests.Unit/                 # 테스트 프로젝트

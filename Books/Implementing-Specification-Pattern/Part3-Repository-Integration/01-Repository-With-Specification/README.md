@@ -62,9 +62,9 @@ RepositorySpec/                          # 메인 프로젝트
 ├── Product.cs                           # 도메인 모델
 ├── IProductRepository.cs                # Repository 인터페이스
 ├── Specifications/
-│   ├── InStockSpec.cs                   # 재고 있는 상품
-│   ├── PriceRangeSpec.cs                # 가격 범위 상품
-│   └── CategorySpec.cs                  # 카테고리별 상품
+│   ├── ProductInStockSpec.cs                   # 재고 있는 상품
+│   ├── ProductPriceRangeSpec.cs                # 가격 범위 상품
+│   └── ProductCategorySpec.cs                  # 카테고리별 상품
 ├── Program.cs                           # Before/After 비교 데모
 └── RepositorySpec.csproj
 RepositorySpec.Tests.Unit/               # 테스트 프로젝트

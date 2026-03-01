@@ -63,8 +63,8 @@ internal sealed class AndSpecification<T>(Specification<T> left, Specification<T
 중요한 점은 `And()`, `Or()`, `Not()`이 **원본을 변경하지 않고 새로운 Specification 객체를 반환**한다는 것입니다. 이는 불변성(immutability)을 보장합니다.
 
 ```csharp
-var inStock = new InStockSpec();
-var affordable = new PriceRangeSpec(10_000m, 100_000m);
+var inStock = new ProductInStockSpec();
+var affordable = new ProductPriceRangeSpec(10_000m, 100_000m);
 
 // 원본은 변경되지 않음 - 새로운 Specification이 생성됨
 var combined = inStock.And(affordable);
@@ -78,9 +78,9 @@ Composition/
 ├── Program.cs
 ├── Product.cs
 ├── Specifications/
-│   ├── InStockSpec.cs
-│   ├── PriceRangeSpec.cs
-│   └── CategorySpec.cs
+│   ├── ProductInStockSpec.cs
+│   ├── ProductPriceRangeSpec.cs
+│   └── ProductCategorySpec.cs
 └── Composition.csproj
 
 Composition.Tests.Unit/
@@ -92,9 +92,9 @@ Composition.Tests.Unit/
 
 ### 핵심 코드
 
-#### CategorySpec.cs
+#### ProductCategorySpec.cs
 ```csharp
-public sealed class CategorySpec(string category) : Specification<Product>
+public sealed class ProductCategorySpec(string category) : Specification<Product>
 {
     public override bool IsSatisfiedBy(Product entity) =>
         entity.Category.Equals(category, StringComparison.OrdinalIgnoreCase);
@@ -103,9 +103,9 @@ public sealed class CategorySpec(string category) : Specification<Product>
 
 #### 조합 사용 예
 ```csharp
-var inStock = new InStockSpec();
-var affordable = new PriceRangeSpec(10_000m, 100_000m);
-var electronics = new CategorySpec("전자제품");
+var inStock = new ProductInStockSpec();
+var affordable = new ProductPriceRangeSpec(10_000m, 100_000m);
+var electronics = new ProductCategorySpec("전자제품");
 
 // And: 재고 있고 저렴한 상품
 var spec1 = inStock.And(affordable);

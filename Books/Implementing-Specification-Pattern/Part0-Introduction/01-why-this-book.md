@@ -60,7 +60,7 @@ var activeProducts = products.Where(spec.IsSatisfiedBy).ToList();
 ```csharp
 // 개별 Specification 정의
 var isActive = new ActiveProductSpec();
-var isInStock = new InStockSpec();
+var isInStock = new ProductInStockSpec();
 var isPremium = new PremiumProductSpec();
 
 // 조합으로 복합 규칙 표현
@@ -95,7 +95,7 @@ public interface IProductRepository
 // 동적 필터 체이닝
 var spec = Specification<Product>.All;
 if (filter.Category is not null)
-    spec &= new CategorySpec(filter.Category);
+    spec &= new ProductCategorySpec(filter.Category);
 if (filter.MinPrice is not null)
     spec &= new MinPriceSpec(filter.MinPrice.Value);
 ```

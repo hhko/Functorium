@@ -24,8 +24,8 @@
    - Expression 기반이므로 ORM에서 SQL 변환 가능
 
 3. **실제 Specification 정의 방법**
-   - 파라미터 없는 Specification (InStockExprSpec)
-   - 생성자 파라미터를 가진 Specification (PriceRangeExprSpec, CategoryExprSpec)
+   - 파라미터 없는 Specification (ProductInStockSpec)
+   - 생성자 파라미터를 가진 Specification (ProductPriceRangeSpec, ProductCategorySpec)
 
 ### 실습을 통해 확인할 내용
 - IsSatisfiedBy가 Expression 컴파일 결과를 올바르게 반환
@@ -65,14 +65,14 @@ public abstract class ExpressionSpecification<T> : Specification<T>
 
 ```csharp
 // 파라미터 없는 Specification
-public sealed class InStockExprSpec : ExpressionSpecification<Product>
+public sealed class ProductInStockSpec : ExpressionSpecification<Product>
 {
     public override Expression<Func<Product, bool>> ToExpression()
         => product => product.Stock > 0;
 }
 
 // 생성자 파라미터가 있는 Specification
-public sealed class PriceRangeExprSpec(decimal min, decimal max)
+public sealed class ProductPriceRangeSpec(decimal min, decimal max)
     : ExpressionSpecification<Product>
 {
     public override Expression<Func<Product, bool>> ToExpression()
@@ -88,9 +88,9 @@ ExpressionSpec/                           # 메인 프로젝트
 ├── Program.cs                            # ExpressionSpecification 데모
 ├── Product.cs                            # 상품 레코드
 ├── Specifications/
-│   ├── InStockExprSpec.cs                # 재고 Specification
-│   ├── PriceRangeExprSpec.cs             # 가격 범위 Specification
-│   └── CategoryExprSpec.cs               # 카테고리 Specification
+│   ├── ProductInStockSpec.cs                # 재고 Specification
+│   ├── ProductPriceRangeSpec.cs             # 가격 범위 Specification
+│   └── ProductCategorySpec.cs               # 카테고리 Specification
 ├── ExpressionSpec.csproj                 # 프로젝트 파일
 ExpressionSpec.Tests.Unit/                # 테스트 프로젝트
 ├── ExpressionSpecTests.cs                # ExpressionSpecification 테스트

@@ -63,8 +63,8 @@ PropertyMapDemo/                         # 메인 프로젝트
 ├── ProductDbModel.cs                    # 퍼시스턴스 모델
 ├── ProductPropertyMap.cs                # PropertyMap 정의
 ├── Specifications/
-│   ├── InStockExprSpec.cs               # 재고 (Expression 기반)
-│   └── PriceRangeExprSpec.cs            # 가격 범위 (Expression 기반)
+│   ├── ProductInStockSpec.cs               # 재고 (Expression 기반)
+│   └── ProductPriceRangeSpec.cs            # 가격 범위 (Expression 기반)
 ├── Program.cs                           # 변환 데모
 └── PropertyMapDemo.csproj
 PropertyMapDemo.Tests.Unit/              # 테스트 프로젝트
