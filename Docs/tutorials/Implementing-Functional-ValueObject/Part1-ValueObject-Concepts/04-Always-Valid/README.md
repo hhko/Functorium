@@ -1,5 +1,4 @@
-# 4장: 항상 유효한 타입으로 개선하기 🟡
-
+# 4장: 항상 유효한 타입으로 개선하기
 > **Part 1: 값 객체 개념 이해** | [← 이전: 3장 함수형 결과 타입](../../03-Functional-Result/FunctionalResult/README.md) | [목차](../../../README.md) | [다음: 5장 연산자 오버로딩 →](../../05-Operator-Overloading/OperatorOverloading/README.md)
 
 ---

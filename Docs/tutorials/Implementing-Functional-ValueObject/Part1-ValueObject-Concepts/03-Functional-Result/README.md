@@ -1,5 +1,4 @@
-# 3장: 함수형 결과 타입으로 개선하기 🟢
-
+# 3장: 함수형 결과 타입으로 개선하기
 > **Part 1: 값 객체 개념 이해** | [← 이전: 2장 방어적 프로그래밍](../../02-Defensive-Programming/DefensiveProgramming/README.md) | [목차](../../../README.md) | [다음: 4장 항상 유효한 타입 →](../../04-Always-Valid/AlwaysValid/README.md)
 
 ---

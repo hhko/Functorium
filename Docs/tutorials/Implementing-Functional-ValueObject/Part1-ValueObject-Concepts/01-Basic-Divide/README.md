@@ -1,5 +1,4 @@
-# 1장: 기본 나눗셈에서 시작하기 🟢
-
+# 1장: 기본 나눗셈에서 시작하기
 > **Part 1: 값 객체 개념 이해** | [← 목차로](../../../README.md) | [다음: 2장 방어적 프로그래밍 →](../../02-Defensive-Programming/DefensiveProgramming/README.md)
 
 ---

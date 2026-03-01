@@ -1,5 +1,4 @@
-# 6장: LINQ 표현식 사용하기 🟡
-
+# 6장: LINQ 표현식 사용하기
 > **Part 1: 값 객체 개념 이해** | [← 이전: 5장 연산자 오버로딩](../../05-Operator-Overloading/OperatorOverloading/README.md) | [목차](../../../README.md) | [다음: 7장 값 기반 동등성 →](../../07-Value-Equality/ValueEquality/README.md)
 
 ---

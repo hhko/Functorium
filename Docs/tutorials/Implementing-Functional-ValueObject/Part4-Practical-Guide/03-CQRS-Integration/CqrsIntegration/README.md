@@ -1,5 +1,4 @@
-# 4.3 CQRS와 값 객체 통합 🔴
-
+# 4.3 CQRS와 값 객체 통합
 > **Part 4: 실전 가이드** | [← 이전: 4.2 ORM 통합](../../02-ORM-Integration/OrmIntegration/README.md) | [목차](../../../README.md) | [다음: 4.4 테스트 전략 →](../../04-Testing-Strategies/TestingStrategies/README.md)
 
 ---

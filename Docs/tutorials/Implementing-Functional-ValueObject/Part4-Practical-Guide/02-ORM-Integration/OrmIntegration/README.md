@@ -1,5 +1,4 @@
-# 4.2 ORM 통합 패턴 🔴
-
+# 4.2 ORM 통합 패턴
 > **Part 4: 실전 가이드** | [← 이전: 4.1 Functorium 프레임워크](../../01-Functorium-Framework/FunctoriumFramework/README.md) | [목차](../../../README.md) | [다음: 4.3 CQRS 통합 →](../../03-CQRS-Integration/CqrsIntegration/README.md)
 
 ---

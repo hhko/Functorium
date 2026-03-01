@@ -1,5 +1,4 @@
-# 5.1 이커머스 도메인 🔴
-
+# 5.1 이커머스 도메인
 > **Part 5: 도메인별 실전 예제** | [← 이전: 4.4 테스트 전략](../../../04-practical-guide/04-Testing-Strategies/TestingStrategies/README.md) | [목차](../../../README.md) | [다음: 5.2 금융 도메인 →](../../02-Finance-Domain/FinanceDomain/README.md)
 
 ---

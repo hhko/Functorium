@@ -1,5 +1,4 @@
-# 5장: 연산자 오버로딩을 통한 자연스러운 나눗셈 연산하기 🟡
-
+# 5장: 연산자 오버로딩을 통한 자연스러운 나눗셈 연산하기
 > **Part 1: 값 객체 개념 이해** | [← 이전: 4장 항상 유효한 타입](../../04-Always-Valid/AlwaysValid/README.md) | [목차](../../../README.md) | [다음: 6장 LINQ 표현식 →](../../06-Linq-Expression/LinqExpression/README.md)
 
 ---

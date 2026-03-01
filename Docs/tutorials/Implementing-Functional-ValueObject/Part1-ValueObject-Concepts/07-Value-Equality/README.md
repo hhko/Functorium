@@ -1,5 +1,4 @@
-# 7장: 값 기반 동등성 비교하기 🟡
-
+# 7장: 값 기반 동등성 비교하기
 > **Part 1: 값 객체 개념 이해** | [← 이전: 6장 LINQ 표현식](../../06-Linq-Expression/LinqExpression/README.md) | [목차](../../../README.md) | [다음: 8장 값 기반 크기 비교 →](../../08-Value-Comparability/ValueComparability/README.md)
 
 ---
