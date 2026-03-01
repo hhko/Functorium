@@ -20,7 +20,7 @@
 
 ---
 
-## 도서
+## 참고 자료
 
 ### Domain-Driven Design
 - **제목**: Domain-Driven Design: Tackling Complexity in the Heart of Software
@@ -72,7 +72,7 @@
 
 | 라이브러리 | 설명 | NuGet |
 |-----------|------|-------|
-| Functorium | 본 도서의 Specification 프레임워크 | ✅ |
+| Functorium | 본 튜토리얼의 Specification 프레임워크 | ✅ |
 | Ardalis.Specification | Steve Smith의 Specification 라이브러리 | ✅ |
 
 ### DDD & Clean Architecture
@@ -130,19 +130,19 @@ Docs/tutorials/Implementing-Specification-Pattern/
 
 ### 초급자 (패턴 입문)
 1. Eric Evans DDD 책의 Specification 챕터
-2. 본 도서 Part 1 (1~4장)
+2. 본 튜토리얼 Part 1 (1~4장)
 3. Functorium Specification 소스 코드 읽기
 
 ### 중급자 (실전 적용)
 1. .NET Expression Trees 공식 문서
-2. 본 도서 Part 2~3
+2. 본 튜토리얼 Part 2~3
 3. Ardalis.Specification 비교 분석
 
 ### 고급자 (아키텍처 설계)
 1. "Implementing Domain-Driven Design" 책
-2. 본 도서 Part 4~5
+2. 본 튜토리얼 Part 4~5
 3. ArchUnitNET으로 아키텍처 테스트 작성
 
 ---
 
-이 책은 Functorium 프로젝트의 실제 Specification 프레임워크 개발 경험을 바탕으로 작성되었습니다.
+이 튜토리얼은 Functorium 프로젝트의 실제 Specification 프레임워크 개발 경험을 바탕으로 작성되었습니다.

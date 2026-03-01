@@ -4,9 +4,9 @@
 
 ---
 
-## 이 책에 대하여
+## 이 튜토리얼에 대하여
 
-이 책은 **C# 소스 생성기(Source Generator)**를 처음부터 배워 실전에서 활용할 수 있도록 안내합니다. Roslyn 컴파일러 플랫폼의 기초부터 시작하여, **IIncrementalGenerator 패턴**을 활용한 고성능 소스 생성기 개발까지 단계별로 학습합니다.
+이 튜토리얼은 **C# 소스 생성기(Source Generator)**를 처음부터 배워 실전에서 활용할 수 있도록 안내합니다. Roslyn 컴파일러 플랫폼의 기초부터 시작하여, **IIncrementalGenerator 패턴**을 활용한 고성능 소스 생성기 개발까지 단계별로 학습합니다.
 
 > **반복적인 보일러플레이트 코드를 자동화하고, 100% 일관된 관찰 가능성을 보장하는 소스 생성기를 직접 구현해보세요.**
 
@@ -20,7 +20,7 @@
 
 ### 학습 목표
 
-이 책을 완료하면 다음을 할 수 있습니다:
+이 튜토리얼을 완료하면 다음을 할 수 있습니다:
 
 1. **Roslyn 컴파일러 플랫폼**의 구조와 동작 원리 이해
 2. **IIncrementalGenerator 인터페이스**를 구현한 소스 생성기 개발
@@ -143,7 +143,7 @@ Phase 5: 고급 처리 (Part 3)
 
 ## 실습 프로젝트: ObservablePortGenerator
 
-이 책에서는 **ObservablePortGenerator**라는 실제 소스 생성기를 단계별로 구현합니다.
+이 튜토리얼에서는 **ObservablePortGenerator**라는 실제 소스 생성기를 단계별로 구현합니다.
 
 ### ObservablePortGenerator란?
 
@@ -225,7 +225,7 @@ Automating-ObservabilityCode-with-SourceGenerator/
 
 ## 소스 코드
 
-이 책의 모든 예제 코드는 Functorium 프로젝트에서 확인할 수 있습니다:
+이 튜토리얼의 모든 예제 코드는 Functorium 프로젝트에서 확인할 수 있습니다:
 
 - 소스 생성기: `Src/Functorium.SourceGenerators/`
 - 테스트: `Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/`
@@ -233,4 +233,4 @@ Automating-ObservabilityCode-with-SourceGenerator/
 
 ---
 
-이 책은 Functorium 프로젝트의 실제 소스 생성기 개발 경험을 바탕으로 작성되었습니다.
+이 튜토리얼은 Functorium 프로젝트의 실제 소스 생성기 개발 경험을 바탕으로 작성되었습니다.

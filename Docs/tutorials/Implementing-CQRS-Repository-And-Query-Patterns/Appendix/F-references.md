@@ -22,7 +22,7 @@
 
 ---
 
-## 도서
+## 참고 자료
 
 ### Domain-Driven Design
 - **제목**: Domain-Driven Design: Tackling Complexity in the Heart of Software
@@ -90,7 +90,7 @@
 
 | 라이브러리 | 설명 | NuGet |
 |-----------|------|-------|
-| Functorium | 본 도서의 CQRS 프레임워크 | - |
+| Functorium | 본 튜토리얼의 CQRS 프레임워크 | - |
 | Mediator | Source Generator 기반 Mediator 패턴 | ✅ |
 
 ### ORM & 데이터 접근
@@ -149,11 +149,11 @@ Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/
 
 ---
 
-## 관련 도서
+## 관련 튜토리얼
 
-이 책은 다음 도서와 함께 학습하면 더 효과적입니다:
+이 튜토리얼은 다음 튜토리얼과 함께 학습하면 더 효과적입니다:
 
-- **[Specification 패턴으로 도메인 규칙 구현하기](../Implementing-Specification-Pattern/README.md)**: Specification 패턴 기초부터 Repository 통합까지. 이 책의 IQueryPort, IRepository에서 Specification을 매개변수로 사용합니다.
+- **[Specification 패턴으로 도메인 규칙 구현하기](../Implementing-Specification-Pattern/README.md)**: Specification 패턴 기초부터 Repository 통합까지. 이 튜토리얼의 IQueryPort, IRepository에서 Specification을 매개변수로 사용합니다.
 
 ---
 
@@ -161,19 +161,19 @@ Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/
 
 ### 초급자 (패턴 입문)
 1. Eric Evans DDD 책의 Repository 챕터
-2. 본 도서 Part 1 (1~4장)
+2. 본 튜토리얼 Part 1 (1~4장)
 3. Functorium Repository/Entity 소스 코드 읽기
 
 ### 중급자 (실전 적용)
 1. Martin Fowler의 CQRS 문서
-2. 본 도서 Part 2~3
+2. 본 튜토리얼 Part 2~3
 3. EF Core / Dapper 공식 문서
 
 ### 고급자 (아키텍처 설계)
 1. Greg Young의 CQRS Documents
-2. 본 도서 Part 4~5
+2. 본 튜토리얼 Part 4~5
 3. LanguageExt 함수형 타입 심화 학습
 
 ---
 
-이 책은 Functorium 프로젝트의 실제 CQRS 프레임워크 개발 경험을 바탕으로 작성되었습니다.
+이 튜토리얼은 Functorium 프로젝트의 실제 CQRS 프레임워크 개발 경험을 바탕으로 작성되었습니다.

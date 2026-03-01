@@ -6,7 +6,7 @@
 
 ## .NET 10이란?
 
-.NET 10은 Microsoft의 최신 오픈소스 개발 플랫폼입니다. 이 책에서는 .NET 10의 **file-based app** 기능을 활용합니다.
+.NET 10은 Microsoft의 최신 오픈소스 개발 플랫폼입니다. 이 튜토리얼에서는 .NET 10의 **file-based app** 기능을 활용합니다.
 
 ### file-based app이란?
 

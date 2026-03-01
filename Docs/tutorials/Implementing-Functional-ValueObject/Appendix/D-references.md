@@ -21,7 +21,7 @@
 
 ---
 
-## 도서
+## 참고 자료
 
 ### Domain-Driven Design
 - **제목**: Domain-Driven Design: Tackling Complexity in the Heart of Software
@@ -158,16 +158,16 @@ Docs/tutorials/Implementing-Functional-ValueObject/
 ### 초급자 (함수형 입문)
 1. LanguageExt 공식 문서의 Quick Start
 2. "Functional Programming in C#" 책 1-5장
-3. 본 도서 Part 1 (1-6장)
+3. 본 튜토리얼 Part 1 (1-6장)
 
 ### 중급자 (실전 적용)
 1. "Domain Modeling Made Functional" 책
-2. 본 도서 Part 2-3
+2. 본 튜토리얼 Part 2-3
 3. Railway Oriented Programming 블로그
 
 ### 고급자 (아키텍처 설계)
 1. "Implementing Domain-Driven Design" 책
-2. 본 도서 Part 4-5
+2. 본 튜토리얼 Part 4-5
 3. ArchUnitNET으로 아키텍처 테스트 작성
 
 ---

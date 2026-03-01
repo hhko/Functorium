@@ -93,7 +93,7 @@ where TResponse : IFinResponseFactory<TResponse>
 where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 ```
 
-## 이 책에서 다루는 흐름
+## 이 튜토리얼에서 다루는 흐름
 
 ```
 Part 1: 변성 기초           이 아키텍처의 기반이 되는 C# 제네릭 변성 이해

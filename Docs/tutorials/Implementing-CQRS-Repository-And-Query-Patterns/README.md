@@ -4,9 +4,9 @@
 
 ---
 
-## 이 책에 대하여
+## 이 튜토리얼에 대하여
 
-이 책은 **CQRS 패턴을 활용한 Command와 Query 분리**를 단계별로 학습할 수 있도록 구성된 종합적인 교육 과정입니다. 도메인 엔티티 기초에서 시작하여 Repository 패턴, Query 어댑터, Usecase 통합까지, **22개의 실습 프로젝트**를 통해 CQRS 패턴의 모든 측면을 체계적으로 학습할 수 있습니다.
+이 튜토리얼은 **CQRS 패턴을 활용한 Command와 Query 분리**를 단계별로 학습할 수 있도록 구성된 종합적인 교육 과정입니다. 도메인 엔티티 기초에서 시작하여 Repository 패턴, Query 어댑터, Usecase 통합까지, **22개의 실습 프로젝트**를 통해 CQRS 패턴의 모든 측면을 체계적으로 학습할 수 있습니다.
 
 > **하나의 모델로 읽기와 쓰기를 모두 처리하던 방식에서 벗어나, Command와 Query를 분리하여 각각 최적화하는 과정을 함께 경험해보세요.**
 
@@ -20,7 +20,7 @@
 
 ### 학습 목표
 
-이 책을 완료하면 다음을 할 수 있습니다:
+이 튜토리얼을 완료하면 다음을 할 수 있습니다:
 
 1. **CQRS 패턴의 개념과 필요성**을 이해하고 Command/Query 분리 설계 적용
 2. **IRepository 기반 Repository 패턴**으로 Aggregate Root 단위 영속화 구현
@@ -320,7 +320,7 @@ public void Create_ReturnsAggregate_WhenValid()
 
 ## 소스 코드
 
-이 책의 모든 예제 코드는 Functorium 프로젝트에서 확인할 수 있습니다:
+이 튜토리얼의 모든 예제 코드는 Functorium 프로젝트에서 확인할 수 있습니다:
 
 - Repository 인터페이스: `Src/Functorium/Domains/Repositories/`
 - Repository 구현체: `Src/Functorium/Adapters/Repositories/`
@@ -329,12 +329,12 @@ public void Create_ReturnsAggregate_WhenValid()
 - 트랜잭션 파이프라인: `Src/Functorium/Adapters/Observabilities/Pipelines/`
 - 튜토리얼 프로젝트: `Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/`
 
-### 관련 도서
+### 관련 튜토리얼
 
-이 책은 다음 도서와 함께 학습하면 더 효과적입니다:
+이 튜토리얼은 다음 튜토리얼과 함께 학습하면 더 효과적입니다:
 
-- **[Specification 패턴으로 도메인 규칙 구현하기](../Implementing-Specification-Pattern/README.md)**: Specification 패턴 기초부터 Repository 통합까지. 이 책의 IQueryPort, IRepository에서 Specification을 매개변수로 사용합니다.
+- **[Specification 패턴으로 도메인 규칙 구현하기](../Implementing-Specification-Pattern/README.md)**: Specification 패턴 기초부터 Repository 통합까지. 이 튜토리얼의 IQueryPort, IRepository에서 Specification을 매개변수로 사용합니다.
 
 ---
 
-이 책은 Functorium 프로젝트의 실제 CQRS 프레임워크 개발 경험을 바탕으로 작성되었습니다.
+이 튜토리얼은 Functorium 프로젝트의 실제 CQRS 프레임워크 개발 경험을 바탕으로 작성되었습니다.

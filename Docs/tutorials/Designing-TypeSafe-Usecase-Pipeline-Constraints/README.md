@@ -4,9 +4,9 @@
 
 ---
 
-## 이 책에 대하여
+## 이 튜토리얼에 대하여
 
-이 책은 **C# 제네릭 변성(공변성/반공변성)의 기초**에서 시작하여, **Mediator Pipeline에서 리플렉션 없이 타입 안전한 응답 처리**를 구현하기까지의 설계 과정을 단계별로 학습할 수 있도록 구성된 실전 가이드입니다. **20개의 실습 프로젝트**를 통해 변성 기초 → Fin\<T\> 한계 → IFinResponse 계층 → Pipeline 제약 → 실전 Usecase까지 체계적으로 학습할 수 있습니다.
+이 튜토리얼은 **C# 제네릭 변성(공변성/반공변성)의 기초**에서 시작하여, **Mediator Pipeline에서 리플렉션 없이 타입 안전한 응답 처리**를 구현하기까지의 설계 과정을 단계별로 학습할 수 있도록 구성된 실전 가이드입니다. **20개의 실습 프로젝트**를 통해 변성 기초 → Fin\<T\> 한계 → IFinResponse 계층 → Pipeline 제약 → 실전 Usecase까지 체계적으로 학습할 수 있습니다.
 
 > **`Fin<T>`는 sealed struct라 제약 조건으로 사용할 수 없다 — 이 한 줄의 제약에서 시작된 IFinResponse 인터페이스 계층 설계의 모든 과정을 함께 경험해보세요.**
 
@@ -20,7 +20,7 @@
 
 ### 학습 목표
 
-이 책을 완료하면 다음을 할 수 있습니다:
+이 튜토리얼을 완료하면 다음을 할 수 있습니다:
 
 1. **C# 제네릭 변성**(공변성, 반공변성, 불변성)의 원리와 적용 조건을 이해
 2. **sealed struct의 제약 한계**와 인터페이스 계층으로 우회하는 설계 패턴 습득
@@ -250,7 +250,7 @@ public void Assign_Succeeds_WhenCovarianceApplies()
 
 ## 소스 코드
 
-이 책의 모든 예제 코드는 Functorium 프로젝트에서 확인할 수 있습니다:
+이 튜토리얼의 모든 예제 코드는 Functorium 프로젝트에서 확인할 수 있습니다:
 
 - IFinResponse 인터페이스: `Src/Functorium/Applications/Usecases/IFinResponse.cs`
 - FinResponse 구현체: `Src/Functorium/Applications/Usecases/IFinResponse.Impl.cs`
@@ -259,12 +259,12 @@ public void Assign_Succeeds_WhenCovarianceApplies()
 - Command/Query 인터페이스: `Src/Functorium/Applications/Usecases/ICommandRequest.cs`, `IQueryRequest.cs`
 - Pipeline 구현: `Src/Functorium/Adapters/Observabilities/Pipelines/`
 
-### 관련 도서
+### 관련 튜토리얼
 
-이 책은 다음 도서와 함께 학습하면 더 효과적입니다:
+이 튜토리얼은 다음 튜토리얼과 함께 학습하면 더 효과적입니다:
 
-- **[CQRS 패턴으로 Command와 Query 분리하기](../Implementing-CQRS-Repository-And-Query-Patterns/README.md)**: CQRS 패턴 기초부터 Usecase 통합까지. 이 책의 Pipeline 제약이 적용되는 CQRS 아키텍처를 학습합니다.
+- **[CQRS 패턴으로 Command와 Query 분리하기](../Implementing-CQRS-Repository-And-Query-Patterns/README.md)**: CQRS 패턴 기초부터 Usecase 통합까지. 이 튜토리얼의 Pipeline 제약이 적용되는 CQRS 아키텍처를 학습합니다.
 
 ---
 
-이 책은 Functorium 프로젝트의 IFinResponse 인터페이스 계층 설계 경험을 바탕으로 작성되었습니다.
+이 튜토리얼은 Functorium 프로젝트의 IFinResponse 인터페이스 계층 설계 경험을 바탕으로 작성되었습니다.

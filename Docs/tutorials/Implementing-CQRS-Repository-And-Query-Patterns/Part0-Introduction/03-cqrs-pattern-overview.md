@@ -236,7 +236,7 @@ Client -> Controller -> Mediator
 
 ## Functorium 타입 계층
 
-이 책에서 사용하는 Functorium의 CQRS 타입 계층입니다:
+이 튜토리얼에서 사용하는 Functorium의 CQRS 타입 계층입니다:
 
 ```
 도메인 엔티티
@@ -269,7 +269,7 @@ Query 측 (읽기)
 
 ---
 
-## 이 책의 학습 흐름
+## 이 튜토리얼의 학습 흐름
 
 ```
 Part 1: 도메인 엔티티 기초

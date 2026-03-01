@@ -6,7 +6,7 @@
 
 ## 개요
 
-이 책은 **CQRS 패턴을 활용한 Command와 Query 분리**를 단계별로 학습할 수 있도록 구성된 종합적인 교육 과정입니다. 도메인 엔티티 기초에서 시작하여 Repository 패턴, Query 어댑터, Usecase 통합까지, **22개의 실습 프로젝트**를 통해 CQRS 패턴의 모든 측면을 체계적으로 학습할 수 있습니다.
+이 튜토리얼은 **CQRS 패턴을 활용한 Command와 Query 분리**를 단계별로 학습할 수 있도록 구성된 종합적인 교육 과정입니다. 도메인 엔티티 기초에서 시작하여 Repository 패턴, Query 어댑터, Usecase 통합까지, **22개의 실습 프로젝트**를 통해 CQRS 패턴의 모든 측면을 체계적으로 학습할 수 있습니다.
 
 ---
 
@@ -93,7 +93,7 @@ public interface IQueryPort<TEntity, TDto>
 
 ## 학습 전제 조건
 
-이 책을 효과적으로 학습하기 위해 다음 지식이 필요합니다:
+이 튜토리얼을 효과적으로 학습하기 위해 다음 지식이 필요합니다:
 
 ### 필수
 - C# 기본 문법 이해 (클래스, 인터페이스, 제네릭)
@@ -110,7 +110,7 @@ public interface IQueryPort<TEntity, TDto>
 
 ## 기대 효과
 
-이 책을 완료하면 다음을 할 수 있습니다:
+이 튜토리얼을 완료하면 다음을 할 수 있습니다:
 
 ### 1. Aggregate Root 단위 Repository로 쓰기 작업 구현
 
@@ -170,7 +170,7 @@ ICommandRequest<TSuccess> -> UsecaseTransactionPipeline -> ICommandUsecase
 
 ---
 
-## 이 책의 구성
+## 이 튜토리얼의 구성
 
 ```
 Part 0: 서론
@@ -214,7 +214,7 @@ Part 5: 도메인별 실전 예제
 
 ## Tutorial과의 차이점
 
-| 구분 | Tutorial | 이 책 |
+| 구분 | Tutorial | 이 튜토리얼 |
 |------|----------|-------|
 | **목적** | 빠른 실습과 결과 확인 | 개념 이해와 설계 원리 학습 |
 | **깊이** | 핵심 사용법 중심 | 내부 구현과 원리 심화 |

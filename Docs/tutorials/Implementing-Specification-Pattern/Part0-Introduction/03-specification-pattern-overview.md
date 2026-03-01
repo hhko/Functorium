@@ -107,7 +107,7 @@ Specification 패턴은 DDD의 **도메인 계층**에 위치합니다:
 
 ## Functorium 타입 계층
 
-이 책에서 사용하는 Functorium의 Specification 타입 계층입니다:
+이 튜토리얼에서 사용하는 Functorium의 Specification 타입 계층입니다:
 
 ```
 Specification<T> (추상 클래스)
@@ -158,7 +158,7 @@ public sealed class ActiveProductSpec : ExpressionSpecification<Product>
 
 ---
 
-## 이 책의 학습 흐름
+## 이 튜토리얼의 학습 흐름
 
 ```
 Part 1: Specification 기초

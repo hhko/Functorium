@@ -4,9 +4,9 @@
 
 ---
 
-## 이 책에 대하여
+## 이 튜토리얼에 대하여
 
-이 책은 **Claude Code의 사용자 정의 Command**와 **.NET 10 file-based app**을 활용하여 릴리스 노트 생성을 완전히 자동화하는 방법을 다룹니다. 실제 오픈소스 프로젝트인 **Functorium**의 릴리스 노트 자동화 시스템을 분석하며, **5단계 워크플로우**를 통해 체계적으로 학습할 수 있습니다.
+이 튜토리얼은 **Claude Code의 사용자 정의 Command**와 **.NET 10 file-based app**을 활용하여 릴리스 노트 생성을 완전히 자동화하는 방법을 다룹니다. 실제 오픈소스 프로젝트인 **Functorium**의 릴리스 노트 자동화 시스템을 분석하며, **5단계 워크플로우**를 통해 체계적으로 학습할 수 있습니다.
 
 > **수동 릴리스 노트 작성에서 완전 자동화 시스템까지, AI와 C# 스크립트의 조합으로 구현합니다.**
 
@@ -20,7 +20,7 @@
 
 ### 학습 목표
 
-이 책을 완료하면 다음을 할 수 있습니다:
+이 튜토리얼을 완료하면 다음을 할 수 있습니다:
 
 1. **Claude Code 사용자 정의 Command** 작성 및 활용
 2. **.NET 10 file-based app**으로 CLI 스크립트 개발
@@ -197,7 +197,7 @@ Automating-ReleaseNotes-with-ClaudeCode-and-.NET10/
 
 ## 소스 코드
 
-이 책의 모든 예제 코드는 Functorium 프로젝트에서 확인할 수 있습니다:
+이 튜토리얼의 모든 예제 코드는 Functorium 프로젝트에서 확인할 수 있습니다:
 
 ```bash
 git clone https://github.com/hhko/Functorium.git
@@ -210,4 +210,4 @@ cd Functorium
 
 ---
 
-이 책은 Functorium 프로젝트의 실제 릴리스 노트 자동화 시스템 개발 경험을 바탕으로 작성되었습니다.
+이 튜토리얼은 Functorium 프로젝트의 실제 릴리스 노트 자동화 시스템 개발 경험을 바탕으로 작성되었습니다.

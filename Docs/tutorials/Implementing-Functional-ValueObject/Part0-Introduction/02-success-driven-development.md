@@ -1,6 +1,6 @@
 # 0.2 성공 주도 개발이란?
 
-> **Part 0: 서론** | [← 이전: 0.1 이 책을 읽어야 하는 이유](01-why-this-book.md) | [목차](../README.md) | [다음: 0.3 환경 설정 →](03-environment-setup.md)
+> **Part 0: 서론** | [← 이전: 0.1 이 튜토리얼을 읽어야 하는 이유](01-why-this-book.md) | [목차](../README.md) | [다음: 0.3 환경 설정 →](03-environment-setup.md)
 
 ---
 
@@ -87,7 +87,7 @@ result.Match(
 
 ## LanguageExt 라이브러리
 
-이 책에서는 [LanguageExt](https://github.com/louthy/language-ext) 라이브러리를 사용합니다. LanguageExt는 C#에서 함수형 프로그래밍을 가능하게 하는 강력한 라이브러리입니다.
+이 튜토리얼에서는 [LanguageExt](https://github.com/louthy/language-ext) 라이브러리를 사용합니다. LanguageExt는 C#에서 함수형 프로그래밍을 가능하게 하는 강력한 라이브러리입니다.
 
 ### 설치
 

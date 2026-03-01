@@ -200,7 +200,7 @@ public static partial class Log
 
 ### 3. Functorium ObservablePortGenerator
 
-이 책에서 구현할 소스 생성기로, **어댑터 파이프라인 코드**를 자동 생성합니다.
+이 튜토리얼에서 구현할 소스 생성기로, **어댑터 파이프라인 코드**를 자동 생성합니다.
 
 ```csharp
 // 입력 - 개발자가 작성
@@ -238,6 +238,6 @@ public partial class UserRepositoryObservable
 
 ## 다음 단계
 
-다음 섹션에서는 이 책에서 구현할 프로젝트의 전체 구조를 살펴봅니다.
+다음 섹션에서는 이 튜토리얼에서 구현할 프로젝트의 전체 구조를 살펴봅니다.
 
 ➡️ [03. 프로젝트 개요](03-project-overview.md)

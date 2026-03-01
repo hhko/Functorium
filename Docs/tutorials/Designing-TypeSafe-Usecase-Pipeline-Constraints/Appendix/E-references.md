@@ -2,7 +2,7 @@
 
 ## 개요
 
-이 책의 학습에 도움이 되는 참고 자료를 정리합니다.
+이 튜토리얼의 학습에 도움이 되는 참고 자료를 정리합니다.
 
 ---
 
@@ -77,7 +77,7 @@ C#을 위한 함수형 프로그래밍 라이브러리. `Fin<T>`, `Option<T>`, `
 
 ## Functorium 소스 파일
 
-이 책에서 다루는 Functorium의 핵심 소스 파일 목록입니다.
+이 튜토리얼에서 다루는 Functorium의 핵심 소스 파일 목록입니다.
 
 ### IFinResponse 인터페이스 계층
 
@@ -104,9 +104,9 @@ C#을 위한 함수형 프로그래밍 라이브러리. `Fin<T>`, `Option<T>`, `
 
 ---
 
-## 관련 도서
+## 관련 튜토리얼
 
-| 도서 | 위치 | 설명 |
+| 튜토리얼 | 위치 | 설명 |
 |------|------|------|
 | CQRS 패턴으로 Command와 Query 분리하기 | `Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/` | CQRS 패턴 기초부터 Usecase 통합까지 |
 

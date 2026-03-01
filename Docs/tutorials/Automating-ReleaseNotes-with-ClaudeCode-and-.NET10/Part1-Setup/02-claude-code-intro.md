@@ -163,7 +163,7 @@ argument-hint: "<name> 이름"
 
 ## 릴리스 노트 Command 예시
 
-이 책에서 다루는 `release-note` Command의 핵심 구조:
+이 튜토리얼에서 다루는 `release-note` Command의 핵심 구조:
 
 ```markdown
 ---

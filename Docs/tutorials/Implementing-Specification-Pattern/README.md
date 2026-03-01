@@ -4,9 +4,9 @@
 
 ---
 
-## 이 책에 대하여
+## 이 튜토리얼에 대하여
 
-이 책은 **Specification 패턴을 활용한 도메인 규칙 구현**을 단계별로 학습할 수 있도록 구성된 종합적인 교육 과정입니다. 기본적인 Specification 클래스에서 시작하여 Expression Tree 기반 Repository 통합까지, **18개의 실습 프로젝트**를 통해 Specification 패턴의 모든 측면을 체계적으로 학습할 수 있습니다.
+이 튜토리얼은 **Specification 패턴을 활용한 도메인 규칙 구현**을 단계별로 학습할 수 있도록 구성된 종합적인 교육 과정입니다. 기본적인 Specification 클래스에서 시작하여 Expression Tree 기반 Repository 통합까지, **18개의 실습 프로젝트**를 통해 Specification 패턴의 모든 측면을 체계적으로 학습할 수 있습니다.
 
 > **단순한 조건 분기에서 시작하여 조합 가능한 비즈니스 규칙으로 진화하는 과정을 함께 경험해보세요.**
 
@@ -20,7 +20,7 @@
 
 ### 학습 목표
 
-이 책을 완료하면 다음을 할 수 있습니다:
+이 튜토리얼을 완료하면 다음을 할 수 있습니다:
 
 1. **Specification 패턴의 개념과 필요성**을 이해하고 설명
 2. **And, Or, Not 조합**으로 복합 비즈니스 규칙 구현
@@ -36,7 +36,7 @@
 
 서론에서는 Specification 패턴의 개념과 환경 설정을 다룹니다.
 
-- [0.1 이 책을 읽어야 하는 이유](Part0-Introduction/01-why-this-book.md)
+- [0.1 이 튜토리얼을 읽어야 하는 이유](Part0-Introduction/01-why-this-book.md)
 - [0.2 사전 준비와 환경 설정](Part0-Introduction/02-prerequisites-and-setup.md)
 - [0.3 Specification 패턴 개요](Part0-Introduction/03-specification-pattern-overview.md)
 
@@ -275,11 +275,11 @@ public void IsSatisfiedBy_ReturnsTrue_WhenProductIsActive()
 
 ## 소스 코드
 
-이 책의 모든 예제 코드는 Functorium 프로젝트에서 확인할 수 있습니다:
+이 튜토리얼의 모든 예제 코드는 Functorium 프로젝트에서 확인할 수 있습니다:
 
 - 프레임워크 타입: `Src/Functorium/Domains/Specifications/`
 - 튜토리얼 프로젝트: `Docs/tutorials/Implementing-Specification-Pattern/`
 
 ---
 
-이 책은 Functorium 프로젝트의 실제 Specification 프레임워크 개발 경험을 바탕으로 작성되었습니다.
+이 튜토리얼은 Functorium 프로젝트의 실제 Specification 프레임워크 개발 경험을 바탕으로 작성되었습니다.
