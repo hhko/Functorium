@@ -12,7 +12,7 @@ namespace Functorium.Adapters.Observabilities.Builders.Configurators;
 /// </summary>
 /// <remarks>
 /// 파이프라인 실행 순서 (등록 순서):
-/// Request → Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler
+/// Request → Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction → Custom → Handler
 /// </remarks>
 public class PipelineConfigurator
 {
@@ -20,6 +20,7 @@ public class PipelineConfigurator
     private bool _useTracing;
     private bool _useLogging;
     private bool _useValidation;
+    private bool _useCaching;
     private bool _useException;
     private bool _useTransaction;
     private ServiceLifetime _lifetime = ServiceLifetime.Scoped;
@@ -86,6 +87,17 @@ public class PipelineConfigurator
     }
 
     /// <summary>
+    /// Caching Pipeline을 활성화합니다.
+    /// ICacheable을 구현한 Query 요청에 대해 IMemoryCache 기반 캐싱을 수행합니다.
+    /// IMemoryCache가 DI에 등록되어 있어야 합니다 (AddMemoryCache()).
+    /// </summary>
+    public PipelineConfigurator UseCaching()
+    {
+        _useCaching = true;
+        return this;
+    }
+
+    /// <summary>
     /// Exception Pipeline을 활성화합니다.
     /// 예외를 FinResponse.Fail로 변환합니다.
     /// </summary>
@@ -140,7 +152,7 @@ public class PipelineConfigurator
     internal void Apply(IServiceCollection services)
     {
         // 파이프라인 등록 순서:
-        // Request → Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler
+        // Request → Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction → Custom → Handler
 
         _registeredPipelineNames.Clear();
 
@@ -166,6 +178,12 @@ public class PipelineConfigurator
         {
             RegisterPipeline(services, typeof(UsecaseValidationPipeline<,>));
             _registeredPipelineNames.Add("Validation");
+        }
+
+        if (_useCaching)
+        {
+            RegisterPipeline(services, typeof(UsecaseCachingPipeline<,>));
+            _registeredPipelineNames.Add("Caching");
         }
 
         if (_useException)
