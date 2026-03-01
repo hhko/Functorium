@@ -10,8 +10,8 @@ using LayeredArch.Domain.AggregateRoots.Products.Specifications;
 namespace LayeredArch.Adapters.Persistence.Repositories.Dapper;
 
 [GenerateObservablePort]
-public class DapperProductQueryAdapter
-    : DapperQueryAdapterBase<Product, ProductSummaryDto>, IProductQuery
+public class DapperProductQuery
+    : DapperQueryBase<Product, ProductSummaryDto>, IProductQuery
 {
     public string RequestCategory => "QueryAdapter";
 
@@ -21,7 +21,7 @@ public class DapperProductQueryAdapter
     protected override Dictionary<string, string> AllowedSortColumns { get; } =
         new(StringComparer.OrdinalIgnoreCase) { ["Name"] = "Name", ["Price"] = "Price" };
 
-    public DapperProductQueryAdapter(IDbConnection connection) : base(connection) { }
+    public DapperProductQuery(IDbConnection connection) : base(connection) { }
 
     protected override (string, DynamicParameters) BuildWhereClause(Specification<Product> spec)
         => spec switch

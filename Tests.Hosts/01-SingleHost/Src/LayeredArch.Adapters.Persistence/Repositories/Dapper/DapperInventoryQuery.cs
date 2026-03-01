@@ -10,8 +10,8 @@ using LayeredArch.Domain.AggregateRoots.Inventories.Specifications;
 namespace LayeredArch.Adapters.Persistence.Repositories.Dapper;
 
 [GenerateObservablePort]
-public class DapperInventoryQueryAdapter
-    : DapperQueryAdapterBase<Inventory, InventorySummaryDto>, IInventoryQuery
+public class DapperInventoryQuery
+    : DapperQueryBase<Inventory, InventorySummaryDto>, IInventoryQuery
 {
     public string RequestCategory => "QueryAdapter";
 
@@ -21,7 +21,7 @@ public class DapperInventoryQueryAdapter
     protected override Dictionary<string, string> AllowedSortColumns { get; } =
         new(StringComparer.OrdinalIgnoreCase) { ["StockQuantity"] = "StockQuantity", ["ProductId"] = "ProductId" };
 
-    public DapperInventoryQueryAdapter(IDbConnection connection) : base(connection) { }
+    public DapperInventoryQuery(IDbConnection connection) : base(connection) { }
 
     protected override (string, DynamicParameters) BuildWhereClause(Specification<Inventory> spec)
         => spec switch

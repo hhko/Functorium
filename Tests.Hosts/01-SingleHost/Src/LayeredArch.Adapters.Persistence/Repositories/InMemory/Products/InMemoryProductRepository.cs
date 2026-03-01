@@ -8,7 +8,7 @@ using Functorium.Domains.Specifications;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 using static LanguageExt.Prelude;
 
-namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
+namespace LayeredArch.Adapters.Persistence.Repositories.InMemory.Products;
 
 /// <summary>
 /// 메모리 기반 상품 리포지토리 구현

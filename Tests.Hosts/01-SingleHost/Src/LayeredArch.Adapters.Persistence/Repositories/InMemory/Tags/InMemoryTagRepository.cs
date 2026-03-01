@@ -4,7 +4,7 @@ using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
 
-namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
+namespace LayeredArch.Adapters.Persistence.Repositories.InMemory.Tags;
 
 /// <summary>
 /// 메모리 기반 태그 리포지토리 구현

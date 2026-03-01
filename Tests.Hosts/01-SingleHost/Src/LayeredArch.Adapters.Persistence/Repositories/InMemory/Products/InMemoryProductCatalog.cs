@@ -6,7 +6,7 @@ using LanguageExt.Common;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 using LayeredArch.Application.Usecases.Orders.Ports;
 
-namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
+namespace LayeredArch.Adapters.Persistence.Repositories.InMemory.Products;
 
 /// <summary>
 /// 공유 Port IProductCatalog 구현

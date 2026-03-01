@@ -4,14 +4,14 @@ using LayeredArch.Application.Usecases.Products.Ports;
 using LayeredArch.Domain.AggregateRoots.Products;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
-namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
+namespace LayeredArch.Adapters.Persistence.Repositories.InMemory.Products;
 
 /// <summary>
 /// InMemory 기반 Product 단건 조회 읽기 전용 어댑터.
 /// InMemoryProductRepository의 정적 저장소에서 데이터를 가져온 후 DTO로 프로젝션합니다.
 /// </summary>
 [GenerateObservablePort]
-public class InMemoryProductDetailQueryAdapter : IProductDetailQuery
+public class InMemoryProductDetailQuery : IProductDetailQuery
 {
     public string RequestCategory => "QueryAdapter";
 
@@ -30,7 +30,7 @@ public class InMemoryProductDetailQueryAdapter : IProductDetailQuery
                     product.UpdatedAt));
             }
 
-            return AdapterError.For<InMemoryProductDetailQueryAdapter>(
+            return AdapterError.For<InMemoryProductDetailQuery>(
                 new NotFound(),
                 id.ToString(),
                 $"상품 ID '{id}'을(를) 찾을 수 없습니다");

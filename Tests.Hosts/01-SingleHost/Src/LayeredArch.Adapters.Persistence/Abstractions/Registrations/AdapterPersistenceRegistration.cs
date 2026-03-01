@@ -3,6 +3,11 @@ using LayeredArch.Adapters.Persistence.Abstractions.Options;
 using LayeredArch.Adapters.Persistence.Repositories.Dapper;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore;
 using LayeredArch.Adapters.Persistence.Repositories.InMemory;
+using LayeredArch.Adapters.Persistence.Repositories.InMemory.Customers;
+using LayeredArch.Adapters.Persistence.Repositories.InMemory.Inventories;
+using LayeredArch.Adapters.Persistence.Repositories.InMemory.Orders;
+using LayeredArch.Adapters.Persistence.Repositories.InMemory.Products;
+using LayeredArch.Adapters.Persistence.Repositories.InMemory.Tags;
 using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Orders;
@@ -43,7 +48,7 @@ public static class AdapterPersistenceRegistration
                 services.AddDbContext<LayeredArchDbContext>(opt =>
                     opt.UseSqlite(options.ConnectionString));
                 RegisterSqliteRepositories(services);
-                RegisterDapperQueryAdapters(services, options.ConnectionString);
+                RegisterDapperQueries(services, options.ConnectionString);
                 break;
 
             case "InMemory":
@@ -87,13 +92,17 @@ public static class AdapterPersistenceRegistration
         services.RegisterScopedObservablePort<IProductCatalog, InMemoryProductCatalogObservable>();
 
         // Read Adapter 등록
-        services.RegisterScopedObservablePort<IProductQuery, InMemoryProductQueryAdapterObservable>();
-        services.RegisterScopedObservablePort<IProductDetailQuery, InMemoryProductDetailQueryAdapterObservable>();
+        services.RegisterScopedObservablePort<IProductQuery, InMemoryProductQueryObservable>();
+        services.RegisterScopedObservablePort<IProductDetailQuery, InMemoryProductDetailQueryObservable>();
         services.AddScoped<InMemoryInventoryRepository>();
-        services.RegisterScopedObservablePort<IInventoryQuery, InMemoryInventoryQueryAdapterObservable>();
-        services.RegisterScopedObservablePort<IProductWithStockQuery, InMemoryProductWithStockQueryAdapterObservable>();
-        services.RegisterScopedObservablePort<ICustomerDetailQuery, InMemoryCustomerDetailQueryAdapterObservable>();
-        services.RegisterScopedObservablePort<IOrderDetailQuery, InMemoryOrderDetailQueryAdapterObservable>();
+        services.RegisterScopedObservablePort<IInventoryQuery, InMemoryInventoryQueryObservable>();
+        services.RegisterScopedObservablePort<IProductWithStockQuery, InMemoryProductWithStockQueryObservable>();
+        services.RegisterScopedObservablePort<IProductWithOptionalStockQuery, InMemoryProductWithOptionalStockQueryObservable>();
+        services.RegisterScopedObservablePort<ICustomerDetailQuery, InMemoryCustomerDetailQueryObservable>();
+        services.RegisterScopedObservablePort<ICustomerOrderSummaryQuery, InMemoryCustomerOrderSummaryQueryObservable>();
+        services.RegisterScopedObservablePort<ICustomerOrdersQuery, InMemoryCustomerOrdersQueryObservable>();
+        services.RegisterScopedObservablePort<IOrderDetailQuery, InMemoryOrderDetailQueryObservable>();
+        services.RegisterScopedObservablePort<IOrderWithProductsQuery, InMemoryOrderWithProductsQueryObservable>();
     }
 
     private static void RegisterSqliteRepositories(IServiceCollection services)
@@ -112,7 +121,7 @@ public static class AdapterPersistenceRegistration
         services.RegisterScopedObservablePort<IProductCatalog, EfCoreProductCatalogObservable>();
     }
 
-    private static void RegisterDapperQueryAdapters(
+    private static void RegisterDapperQueries(
         IServiceCollection services, string connectionString)
     {
         services.AddScoped<IDbConnection>(_ =>
@@ -122,8 +131,12 @@ public static class AdapterPersistenceRegistration
             return conn;
         });
 
-        services.RegisterScopedObservablePort<IProductQuery, DapperProductQueryAdapterObservable>();
-        services.RegisterScopedObservablePort<IProductWithStockQuery, DapperProductWithStockQueryAdapterObservable>();
-        services.RegisterScopedObservablePort<IInventoryQuery, DapperInventoryQueryAdapterObservable>();
+        services.RegisterScopedObservablePort<IProductQuery, DapperProductQueryObservable>();
+        services.RegisterScopedObservablePort<IProductWithStockQuery, DapperProductWithStockQueryObservable>();
+        services.RegisterScopedObservablePort<IProductWithOptionalStockQuery, DapperProductWithOptionalStockQueryObservable>();
+        services.RegisterScopedObservablePort<IInventoryQuery, DapperInventoryQueryObservable>();
+        services.RegisterScopedObservablePort<ICustomerOrderSummaryQuery, DapperCustomerOrderSummaryQueryObservable>();
+        services.RegisterScopedObservablePort<ICustomerOrdersQuery, DapperCustomerOrdersQueryObservable>();
+        services.RegisterScopedObservablePort<IOrderWithProductsQuery, DapperOrderWithProductsQueryObservable>();
     }
 }

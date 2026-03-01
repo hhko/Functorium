@@ -5,7 +5,7 @@ using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
 using Functorium.Domains.Specifications;
 
-namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
+namespace LayeredArch.Adapters.Persistence.Repositories.InMemory.Customers;
 
 /// <summary>
 /// 메모리 기반 고객 리포지토리 구현

@@ -8,7 +8,7 @@ using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Products;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
-namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
+namespace LayeredArch.Adapters.Persistence.Repositories.InMemory.Inventories;
 
 /// <summary>
 /// 메모리 기반 재고 리포지토리 구현

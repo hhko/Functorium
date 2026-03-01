@@ -14,8 +14,8 @@ namespace LayeredArch.Adapters.Persistence.Repositories.Dapper;
 /// 베이스 클래스의 JOIN 지원을 검증하는 예제입니다.
 /// </summary>
 [GenerateObservablePort]
-public class DapperProductWithStockQueryAdapter
-    : DapperQueryAdapterBase<Product, ProductWithStockDto>, IProductWithStockQuery
+public class DapperProductWithStockQuery
+    : DapperQueryBase<Product, ProductWithStockDto>, IProductWithStockQuery
 {
     public string RequestCategory => "QueryAdapter";
 
@@ -33,7 +33,7 @@ public class DapperProductWithStockQueryAdapter
             ["StockQuantity"] = "i.StockQuantity"
         };
 
-    public DapperProductWithStockQueryAdapter(IDbConnection connection) : base(connection) { }
+    public DapperProductWithStockQuery(IDbConnection connection) : base(connection) { }
 
     protected override (string, DynamicParameters) BuildWhereClause(Specification<Product> spec)
         => spec switch

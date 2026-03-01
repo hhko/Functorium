@@ -4,14 +4,14 @@ using LayeredArch.Application.Usecases.Customers.Ports;
 using LayeredArch.Domain.AggregateRoots.Customers;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
-namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
+namespace LayeredArch.Adapters.Persistence.Repositories.InMemory.Customers;
 
 /// <summary>
 /// InMemory 기반 Customer 단건 조회 읽기 전용 어댑터.
 /// InMemoryCustomerRepository의 정적 저장소에서 데이터를 가져온 후 DTO로 프로젝션합니다.
 /// </summary>
 [GenerateObservablePort]
-public class InMemoryCustomerDetailQueryAdapter : ICustomerDetailQuery
+public class InMemoryCustomerDetailQuery : ICustomerDetailQuery
 {
     public string RequestCategory => "QueryAdapter";
 
@@ -29,7 +29,7 @@ public class InMemoryCustomerDetailQueryAdapter : ICustomerDetailQuery
                     customer.CreatedAt));
             }
 
-            return AdapterError.For<InMemoryCustomerDetailQueryAdapter>(
+            return AdapterError.For<InMemoryCustomerDetailQuery>(
                 new NotFound(),
                 id.ToString(),
                 $"고객 ID '{id}'을(를) 찾을 수 없습니다");
