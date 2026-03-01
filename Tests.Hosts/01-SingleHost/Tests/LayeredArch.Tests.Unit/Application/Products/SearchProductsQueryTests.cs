@@ -150,10 +150,12 @@ public class SearchProductsQueryTests
 
     private static PagedResult<ProductSummaryDto> CreateSamplePagedResult(int totalCount = 3)
     {
-        var items = Seq(
-            new ProductSummaryDto(ProductId.New().ToString(), "Cheap Item", 50m),
-            new ProductSummaryDto(ProductId.New().ToString(), "Mid Item", 150m),
-            new ProductSummaryDto(ProductId.New().ToString(), "Expensive Item", 500m));
+        List<ProductSummaryDto> items =
+        [
+            new(ProductId.New().ToString(), "Cheap Item", 50m),
+            new(ProductId.New().ToString(), "Mid Item", 150m),
+            new(ProductId.New().ToString(), "Expensive Item", 500m),
+        ];
 
         return new PagedResult<ProductSummaryDto>(items, totalCount, 1, 20);
     }
@@ -184,7 +186,7 @@ public class SearchProductsQueryTests
     public async Task Handle_ReturnsSuccess_WhenPriceRangeProvided()
     {
         // Arrange
-        var items = Seq(new ProductSummaryDto(ProductId.New().ToString(), "Mid Item", 150m));
+        List<ProductSummaryDto> items = [new(ProductId.New().ToString(), "Mid Item", 150m)];
         var pagedResult = new PagedResult<ProductSummaryDto>(items, 1, 1, 20);
         var request = new SearchProductsQuery.Request(MinPrice: 100m, MaxPrice: 200m);
 
@@ -207,7 +209,7 @@ public class SearchProductsQueryTests
     public async Task Handle_ReturnsSuccess_WhenNameProvided()
     {
         // Arrange
-        var items = Seq(new ProductSummaryDto(ProductId.New().ToString(), "Test Product", 100m));
+        List<ProductSummaryDto> items = [new(ProductId.New().ToString(), "Test Product", 100m)];
         var pagedResult = new PagedResult<ProductSummaryDto>(items, 1, 1, 20);
         var request = new SearchProductsQuery.Request(Name: "Test Product");
 
@@ -230,7 +232,7 @@ public class SearchProductsQueryTests
     public async Task Handle_ReturnsSuccess_WhenNameAndPriceRangeProvided()
     {
         // Arrange
-        var items = Seq(new ProductSummaryDto(ProductId.New().ToString(), "Test Product", 150m));
+        List<ProductSummaryDto> items = [new(ProductId.New().ToString(), "Test Product", 150m)];
         var pagedResult = new PagedResult<ProductSummaryDto>(items, 1, 1, 20);
         var request = new SearchProductsQuery.Request(Name: "Test Product", MinPrice: 100m, MaxPrice: 200m);
 
@@ -252,7 +254,7 @@ public class SearchProductsQueryTests
     public async Task Handle_ReturnsPaginationMetadata_WhenPageProvided()
     {
         // Arrange
-        var items = Seq(new ProductSummaryDto(ProductId.New().ToString(), "Item", 100m));
+        List<ProductSummaryDto> items = [new(ProductId.New().ToString(), "Item", 100m)];
         var pagedResult = new PagedResult<ProductSummaryDto>(items, 50, 2, 10);
         var request = new SearchProductsQuery.Request(Page: 2, PageSize: 10);
 

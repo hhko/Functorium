@@ -77,10 +77,12 @@ public class SearchCustomerOrderSummaryQueryTests
 
     private static PagedResult<CustomerOrderSummaryDto> CreateSamplePagedResult(int totalCount = 3)
     {
-        var items = Seq(
-            new CustomerOrderSummaryDto(CustomerId.New().ToString(), "Alice", 5, 1500m, DateTime.UtcNow.AddDays(-1)),
-            new CustomerOrderSummaryDto(CustomerId.New().ToString(), "Bob", 0, 0m, null),
-            new CustomerOrderSummaryDto(CustomerId.New().ToString(), "Charlie", 3, 750m, DateTime.UtcNow.AddDays(-7)));
+        List<CustomerOrderSummaryDto> items =
+        [
+            new(CustomerId.New().ToString(), "Alice", 5, 1500m, DateTime.UtcNow.AddDays(-1)),
+            new(CustomerId.New().ToString(), "Bob", 0, 0m, null),
+            new(CustomerId.New().ToString(), "Charlie", 3, 750m, DateTime.UtcNow.AddDays(-7)),
+        ];
 
         return new PagedResult<CustomerOrderSummaryDto>(items, totalCount, 1, 20);
     }
@@ -111,8 +113,8 @@ public class SearchCustomerOrderSummaryQueryTests
     public async Task Handle_ReturnsCustomerWithNoOrders_WhenCustomerHasZeroOrders()
     {
         // Arrange
-        var items = Seq(
-            new CustomerOrderSummaryDto(CustomerId.New().ToString(), "New Customer", 0, 0m, null));
+        List<CustomerOrderSummaryDto> items =
+            [new(CustomerId.New().ToString(), "New Customer", 0, 0m, null)];
         var pagedResult = new PagedResult<CustomerOrderSummaryDto>(items, 1, 1, 20);
         var request = new SearchCustomerOrderSummaryQuery.Request();
 
@@ -137,8 +139,8 @@ public class SearchCustomerOrderSummaryQueryTests
     public async Task Handle_ReturnsPaginationMetadata_WhenPageProvided()
     {
         // Arrange
-        var items = Seq(
-            new CustomerOrderSummaryDto(CustomerId.New().ToString(), "Alice", 5, 1500m, DateTime.UtcNow));
+        List<CustomerOrderSummaryDto> items =
+            [new(CustomerId.New().ToString(), "Alice", 5, 1500m, DateTime.UtcNow)];
         var pagedResult = new PagedResult<CustomerOrderSummaryDto>(items, 50, 2, 10);
         var request = new SearchCustomerOrderSummaryQuery.Request(Page: 2, PageSize: 10);
 

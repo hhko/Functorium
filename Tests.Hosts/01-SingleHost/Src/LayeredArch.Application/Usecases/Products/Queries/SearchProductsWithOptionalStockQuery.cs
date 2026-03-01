@@ -23,7 +23,7 @@ public sealed class SearchProductsWithOptionalStockQuery
         string SortDirection = "") : IQueryRequest<Response>;
 
     public sealed record Response(
-        Seq<ProductWithOptionalStockDto> Products,
+        IReadOnlyList<ProductWithOptionalStockDto> Products,
         int TotalCount,
         int Page,
         int PageSize,

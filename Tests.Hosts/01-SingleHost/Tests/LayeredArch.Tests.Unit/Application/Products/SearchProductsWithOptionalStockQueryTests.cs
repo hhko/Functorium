@@ -122,10 +122,12 @@ public class SearchProductsWithOptionalStockQueryTests
 
     private static PagedResult<ProductWithOptionalStockDto> CreateSamplePagedResult(int totalCount = 3)
     {
-        var items = Seq(
-            new ProductWithOptionalStockDto(ProductId.New().ToString(), "Cheap Item", 50m, 10),
-            new ProductWithOptionalStockDto(ProductId.New().ToString(), "Mid Item", 150m, null),
-            new ProductWithOptionalStockDto(ProductId.New().ToString(), "Expensive Item", 500m, 2));
+        List<ProductWithOptionalStockDto> items =
+        [
+            new(ProductId.New().ToString(), "Cheap Item", 50m, 10),
+            new(ProductId.New().ToString(), "Mid Item", 150m, null),
+            new(ProductId.New().ToString(), "Expensive Item", 500m, 2),
+        ];
 
         return new PagedResult<ProductWithOptionalStockDto>(items, totalCount, 1, 20);
     }
@@ -156,8 +158,8 @@ public class SearchProductsWithOptionalStockQueryTests
     public async Task Handle_ReturnsProductsWithNullStock_WhenNoInventoryExists()
     {
         // Arrange
-        var items = Seq(
-            new ProductWithOptionalStockDto(ProductId.New().ToString(), "No Stock Item", 100m, null));
+        List<ProductWithOptionalStockDto> items =
+            [new(ProductId.New().ToString(), "No Stock Item", 100m, null)];
         var pagedResult = new PagedResult<ProductWithOptionalStockDto>(items, 1, 1, 20);
         var request = new SearchProductsWithOptionalStockQuery.Request();
 
@@ -179,7 +181,7 @@ public class SearchProductsWithOptionalStockQueryTests
     public async Task Handle_ReturnsSuccess_WhenPriceRangeProvided()
     {
         // Arrange
-        var items = Seq(new ProductWithOptionalStockDto(ProductId.New().ToString(), "Mid Item", 150m, 5));
+        List<ProductWithOptionalStockDto> items = [new(ProductId.New().ToString(), "Mid Item", 150m, 5)];
         var pagedResult = new PagedResult<ProductWithOptionalStockDto>(items, 1, 1, 20);
         var request = new SearchProductsWithOptionalStockQuery.Request(MinPrice: 100m, MaxPrice: 200m);
 
@@ -202,7 +204,7 @@ public class SearchProductsWithOptionalStockQueryTests
     public async Task Handle_ReturnsPaginationMetadata_WhenPageProvided()
     {
         // Arrange
-        var items = Seq(new ProductWithOptionalStockDto(ProductId.New().ToString(), "Item", 100m, 10));
+        List<ProductWithOptionalStockDto> items = [new(ProductId.New().ToString(), "Item", 100m, 10)];
         var pagedResult = new PagedResult<ProductWithOptionalStockDto>(items, 50, 2, 10);
         var request = new SearchProductsWithOptionalStockQuery.Request(Page: 2, PageSize: 10);
 

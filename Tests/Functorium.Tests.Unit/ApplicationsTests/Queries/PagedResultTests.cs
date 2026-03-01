@@ -14,7 +14,7 @@ public class PagedResultTests
         int totalCount, int pageSize, int expectedTotalPages)
     {
         // Act
-        var actual = new PagedResult<string>(LanguageExt.Seq<string>.Empty, totalCount, 1, pageSize);
+        var actual = new PagedResult<string>([], totalCount, 1, pageSize);
 
         // Assert
         actual.TotalPages.ShouldBe(expectedTotalPages);
@@ -27,7 +27,7 @@ public class PagedResultTests
     public void HasPreviousPage_ReturnsCorrectValue_WhenPageProvided(int page, bool expected)
     {
         // Act
-        var actual = new PagedResult<string>(LanguageExt.Seq<string>.Empty, 100, page, 10);
+        var actual = new PagedResult<string>([], 100, page, 10);
 
         // Assert
         actual.HasPreviousPage.ShouldBe(expected);
@@ -42,7 +42,7 @@ public class PagedResultTests
         int page, int pageSize, int totalCount, bool expected)
     {
         // Act
-        var actual = new PagedResult<string>(LanguageExt.Seq<string>.Empty, totalCount, page, pageSize);
+        var actual = new PagedResult<string>([], totalCount, page, pageSize);
 
         // Assert
         actual.HasNextPage.ShouldBe(expected);

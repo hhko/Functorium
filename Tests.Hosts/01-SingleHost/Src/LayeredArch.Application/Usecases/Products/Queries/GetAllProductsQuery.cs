@@ -19,7 +19,7 @@ public sealed class GetAllProductsQuery
     /// <summary>
     /// Query Response - 상품 목록
     /// </summary>
-    public sealed record Response(Seq<ProductSummaryDto> Products);
+    public sealed record Response(IReadOnlyList<ProductSummaryDto> Products);
 
     /// <summary>
     /// Query Handler - Read Adapter를 통한 전체 상품 조회

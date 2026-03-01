@@ -31,7 +31,7 @@ public sealed class SearchProductsQuery
     /// Query Response - 페이지네이션된 검색 결과
     /// </summary>
     public sealed record Response(
-        Seq<ProductSummaryDto> Products,
+        IReadOnlyList<ProductSummaryDto> Products,
         int TotalCount,
         int Page,
         int PageSize,

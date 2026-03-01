@@ -94,9 +94,11 @@ public class SearchInventoryQueryTests
     public async Task Handle_ReturnsSuccess_WhenNoFiltersProvided()
     {
         // Arrange
-        var items = Seq(
-            new InventorySummaryDto(InventoryId.New().ToString(), ProductId.New().ToString(), 100),
-            new InventorySummaryDto(InventoryId.New().ToString(), ProductId.New().ToString(), 5));
+        List<InventorySummaryDto> items =
+        [
+            new(InventoryId.New().ToString(), ProductId.New().ToString(), 100),
+            new(InventoryId.New().ToString(), ProductId.New().ToString(), 5),
+        ];
         var pagedResult = new PagedResult<InventorySummaryDto>(items, 2, 1, 20);
         var request = new SearchInventoryQuery.Request();
 
@@ -119,8 +121,8 @@ public class SearchInventoryQueryTests
     public async Task Handle_ReturnsSuccess_WhenLowStockThresholdProvided()
     {
         // Arrange
-        var items = Seq(
-            new InventorySummaryDto(InventoryId.New().ToString(), ProductId.New().ToString(), 3));
+        List<InventorySummaryDto> items =
+            [new(InventoryId.New().ToString(), ProductId.New().ToString(), 3)];
         var pagedResult = new PagedResult<InventorySummaryDto>(items, 1, 1, 20);
         var request = new SearchInventoryQuery.Request(LowStockThreshold: 10);
 
@@ -142,8 +144,8 @@ public class SearchInventoryQueryTests
     public async Task Handle_ReturnsPaginationMetadata_WhenPageProvided()
     {
         // Arrange
-        var items = Seq(
-            new InventorySummaryDto(InventoryId.New().ToString(), ProductId.New().ToString(), 50));
+        List<InventorySummaryDto> items =
+            [new(InventoryId.New().ToString(), ProductId.New().ToString(), 50)];
         var pagedResult = new PagedResult<InventorySummaryDto>(items, 30, 2, 10);
         var request = new SearchInventoryQuery.Request(Page: 2, PageSize: 10);
 

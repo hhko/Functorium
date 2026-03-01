@@ -122,10 +122,12 @@ public class SearchProductsWithStockQueryTests
 
     private static PagedResult<ProductWithStockDto> CreateSamplePagedResult(int totalCount = 3)
     {
-        var items = Seq(
-            new ProductWithStockDto(ProductId.New().ToString(), "Cheap Item", 50m, 10),
-            new ProductWithStockDto(ProductId.New().ToString(), "Mid Item", 150m, 5),
-            new ProductWithStockDto(ProductId.New().ToString(), "Expensive Item", 500m, 2));
+        List<ProductWithStockDto> items =
+        [
+            new(ProductId.New().ToString(), "Cheap Item", 50m, 10),
+            new(ProductId.New().ToString(), "Mid Item", 150m, 5),
+            new(ProductId.New().ToString(), "Expensive Item", 500m, 2),
+        ];
 
         return new PagedResult<ProductWithStockDto>(items, totalCount, 1, 20);
     }
@@ -156,7 +158,7 @@ public class SearchProductsWithStockQueryTests
     public async Task Handle_ReturnsSuccess_WhenPriceRangeProvided()
     {
         // Arrange
-        var items = Seq(new ProductWithStockDto(ProductId.New().ToString(), "Mid Item", 150m, 5));
+        List<ProductWithStockDto> items = [new(ProductId.New().ToString(), "Mid Item", 150m, 5)];
         var pagedResult = new PagedResult<ProductWithStockDto>(items, 1, 1, 20);
         var request = new SearchProductsWithStockQuery.Request(MinPrice: 100m, MaxPrice: 200m);
 
@@ -179,7 +181,7 @@ public class SearchProductsWithStockQueryTests
     public async Task Handle_ReturnsPaginationMetadata_WhenPageProvided()
     {
         // Arrange
-        var items = Seq(new ProductWithStockDto(ProductId.New().ToString(), "Item", 100m, 10));
+        List<ProductWithStockDto> items = [new(ProductId.New().ToString(), "Item", 100m, 10)];
         var pagedResult = new PagedResult<ProductWithStockDto>(items, 50, 2, 10);
         var request = new SearchProductsWithStockQuery.Request(Page: 2, PageSize: 10);
 

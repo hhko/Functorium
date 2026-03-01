@@ -20,9 +20,11 @@ public class GetAllProductsQueryTests
     public async Task Handle_ReturnsProducts_WhenProductsExist()
     {
         // Arrange
-        var items = Seq(
-            new ProductSummaryDto(ProductId.New().ToString(), "Product A", 100m),
-            new ProductSummaryDto(ProductId.New().ToString(), "Product B", 200m));
+        List<ProductSummaryDto> items =
+        [
+            new(ProductId.New().ToString(), "Product A", 100m),
+            new(ProductId.New().ToString(), "Product B", 200m),
+        ];
         var pagedResult = new PagedResult<ProductSummaryDto>(items, 2, 1, int.MaxValue);
 
         var request = new GetAllProductsQuery.Request();

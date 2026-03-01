@@ -28,7 +28,7 @@ public sealed class SearchInventoryQuery
     /// Query Response - 페이지네이션된 검색 결과
     /// </summary>
     public sealed record Response(
-        Seq<InventorySummaryDto> Inventories,
+        IReadOnlyList<InventorySummaryDto> Inventories,
         int TotalCount,
         int Page,
         int PageSize,

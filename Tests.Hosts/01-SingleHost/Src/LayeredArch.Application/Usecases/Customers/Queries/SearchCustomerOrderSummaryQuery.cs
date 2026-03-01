@@ -20,7 +20,7 @@ public sealed class SearchCustomerOrderSummaryQuery
         string SortDirection = "") : IQueryRequest<Response>;
 
     public sealed record Response(
-        Seq<CustomerOrderSummaryDto> Customers,
+        IReadOnlyList<CustomerOrderSummaryDto> Customers,
         int TotalCount,
         int Page,
         int PageSize,
