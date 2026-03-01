@@ -4,15 +4,11 @@ using Functorium.Domains.Specifications;
 
 namespace CustomerManagement.Domain.Specifications;
 
-public sealed class CustomerNameContainsSpec : ExpressionSpecification<Customer>
+public sealed class CustomerNameContainsSpec(CustomerName searchName) : ExpressionSpecification<Customer>
 {
-    public CustomerName SearchName { get; }
-
-    public CustomerNameContainsSpec(CustomerName searchName) => SearchName = searchName;
-
     public override Expression<Func<Customer, bool>> ToExpression()
     {
-        string searchLower = ((string)SearchName).ToLower();
+        string searchLower = ((string)searchName).ToLower();
         return customer => ((string)customer.Name).ToLower().Contains(searchLower);
     }
 }

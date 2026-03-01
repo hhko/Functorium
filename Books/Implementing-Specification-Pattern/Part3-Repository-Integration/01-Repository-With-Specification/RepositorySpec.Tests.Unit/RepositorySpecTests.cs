@@ -46,7 +46,7 @@ public class RepositorySpecTests
     public void InStockSpec_ShouldReturnTrue_WhenStockIsPositive()
     {
         // Arrange
-        var spec = new InStockSpec();
+        var spec = new ProductInStockSpec();
         var product = new Product("테스트", 1000m, 5, "카테고리");
 
         // Act
@@ -61,7 +61,7 @@ public class RepositorySpecTests
     public void InStockSpec_ShouldReturnFalse_WhenStockIsZero()
     {
         // Arrange
-        var spec = new InStockSpec();
+        var spec = new ProductInStockSpec();
         var product = new Product("테스트", 1000m, 0, "카테고리");
 
         // Act
@@ -76,7 +76,7 @@ public class RepositorySpecTests
     public void PriceRangeSpec_ShouldReturnTrue_WhenPriceIsInRange()
     {
         // Arrange
-        var spec = new PriceRangeSpec(1000m, 5000m);
+        var spec = new ProductPriceRangeSpec(1000m, 5000m);
         var product = new Product("테스트", 3000m, 1, "카테고리");
 
         // Act
@@ -91,7 +91,7 @@ public class RepositorySpecTests
     public void CategorySpec_ShouldReturnTrue_WhenCategoryMatches()
     {
         // Arrange
-        var spec = new CategorySpec("전자제품");
+        var spec = new ProductCategorySpec("전자제품");
         var product = new Product("테스트", 1000m, 1, "전자제품");
 
         // Act
@@ -106,7 +106,7 @@ public class RepositorySpecTests
     public void CombinedSpec_ShouldWork_WithAndOperator()
     {
         // Arrange
-        var spec = new InStockSpec() & new CategorySpec("전자제품");
+        var spec = new ProductInStockSpec() & new ProductCategorySpec("전자제품");
         var matching = new Product("마우스", 15000m, 50, "전자제품");
         var noStock = new Product("모니터", 350000m, 0, "전자제품");
         var wrongCategory = new Product("노트", 2000m, 150, "문구류");

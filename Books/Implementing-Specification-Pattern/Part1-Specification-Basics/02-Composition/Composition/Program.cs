@@ -12,9 +12,9 @@ var products = new[]
     new Product("USB 케이블", 5_000m, 10, "주변기기"),
 };
 
-var inStock = new InStockSpec();
-var affordable = new PriceRangeSpec(10_000m, 100_000m);
-var electronics = new CategorySpec("전자제품");
+var inStock = new ProductInStockSpec();
+var affordable = new ProductPriceRangeSpec(10_000m, 100_000m);
+var electronics = new ProductCategorySpec("전자제품");
 
 // And 조합: 재고 있고 AND 저렴한 상품
 var inStockAndAffordable = inStock.And(affordable);

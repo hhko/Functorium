@@ -19,7 +19,7 @@ public class CompositionTests
     public void And_ShouldCombine_ActiveAndEmail()
     {
         // Arrange
-        var spec = new ActiveCustomerSpec()
+        var spec = new CustomerActiveSpec()
             & new CustomerEmailSpec(new Email("chulsoo@example.com"));
 
         // Act & Assert
@@ -32,7 +32,7 @@ public class CompositionTests
     public void And_ShouldCombine_ActiveAndNameContains()
     {
         // Arrange: 활성 AND 이름에 '수' 포함
-        var spec = new ActiveCustomerSpec()
+        var spec = new CustomerActiveSpec()
             & new CustomerNameContainsSpec(new CustomerName("수"));
 
         // Act & Assert
@@ -45,7 +45,7 @@ public class CompositionTests
     public void Not_ShouldNegate_ActiveSpec()
     {
         // Arrange: 비활성 고객
-        var inactiveSpec = !new ActiveCustomerSpec();
+        var inactiveSpec = !new CustomerActiveSpec();
 
         // Act & Assert
         inactiveSpec.IsSatisfiedBy(_비활성_박지민).ShouldBeTrue();

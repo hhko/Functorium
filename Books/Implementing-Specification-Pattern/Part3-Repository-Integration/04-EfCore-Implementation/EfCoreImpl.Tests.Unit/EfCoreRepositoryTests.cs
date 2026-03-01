@@ -27,10 +27,10 @@ public class EfCoreRepositoryTests
 
     // 테스트 시나리오: FindAll은 재고 있는 상품만 반환해야 한다
     [Fact]
-    public void FindAll_ShouldReturnInStockProducts_WhenInStockExprSpec()
+    public void FindAll_ShouldReturnInStockProducts_WhenProductInStockSpec()
     {
         // Arrange
-        var spec = new InStockExprSpec();
+        var spec = new ProductInStockSpec();
 
         // Act
         var actual = _sut.FindAll(spec).ToList();
@@ -45,7 +45,7 @@ public class EfCoreRepositoryTests
     public void FindAll_ShouldReturnMatchingProducts_WhenCombinedSpec()
     {
         // Arrange
-        var spec = new InStockExprSpec() & new PriceRangeExprSpec(0, 10_000);
+        var spec = new ProductInStockSpec() & new ProductPriceRangeSpec(0, 10_000);
 
         // Act
         var actual = _sut.FindAll(spec).ToList();
@@ -60,7 +60,7 @@ public class EfCoreRepositoryTests
     public void FindAll_ShouldReturnDomainProducts_NotDbModels()
     {
         // Arrange
-        var spec = new CategoryExprSpec("전자제품");
+        var spec = new ProductCategorySpec("전자제품");
 
         // Act
         var actual = _sut.FindAll(spec).ToList();
@@ -76,7 +76,7 @@ public class EfCoreRepositoryTests
     public void Exists_ShouldReturnTrue_WhenMatchingProductExists()
     {
         // Arrange
-        var spec = new CategoryExprSpec("가구") & new PriceRangeExprSpec(100_000, decimal.MaxValue);
+        var spec = new ProductCategorySpec("가구") & new ProductPriceRangeSpec(100_000, decimal.MaxValue);
 
         // Act
         var actual = _sut.Exists(spec);
@@ -90,7 +90,7 @@ public class EfCoreRepositoryTests
     public void Exists_ShouldReturnFalse_WhenNoMatchingProductExists()
     {
         // Arrange
-        var spec = new CategoryExprSpec("가구") & new PriceRangeExprSpec(0, 10_000);
+        var spec = new ProductCategorySpec("가구") & new ProductPriceRangeSpec(0, 10_000);
 
         // Act
         var actual = _sut.Exists(spec);
@@ -104,7 +104,7 @@ public class EfCoreRepositoryTests
     public void FindAll_ShouldWorkWithNewSpec_WithoutRepositoryChange()
     {
         // Arrange - 새로운 Specification: 5만원 이상 전자제품
-        var spec = new CategoryExprSpec("전자제품") & new PriceRangeExprSpec(50_000, decimal.MaxValue);
+        var spec = new ProductCategorySpec("전자제품") & new ProductPriceRangeSpec(50_000, decimal.MaxValue);
 
         // Act
         var actual = _sut.FindAll(spec).ToList();

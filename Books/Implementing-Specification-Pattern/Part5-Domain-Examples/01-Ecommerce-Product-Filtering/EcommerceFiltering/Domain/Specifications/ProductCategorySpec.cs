@@ -4,15 +4,11 @@ using Functorium.Domains.Specifications;
 
 namespace EcommerceFiltering.Domain.Specifications;
 
-public sealed class ProductCategorySpec : ExpressionSpecification<Product>
+public sealed class ProductCategorySpec(Category category) : ExpressionSpecification<Product>
 {
-    public Category Category { get; }
-
-    public ProductCategorySpec(Category category) => Category = category;
-
     public override Expression<Func<Product, bool>> ToExpression()
     {
-        string categoryStr = Category;
+        string categoryStr = category;
         return product => (string)product.Category == categoryStr;
     }
 }

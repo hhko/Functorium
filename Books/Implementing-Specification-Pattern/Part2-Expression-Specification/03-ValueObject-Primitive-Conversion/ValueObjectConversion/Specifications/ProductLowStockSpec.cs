@@ -3,15 +3,13 @@ using Functorium.Domains.Specifications;
 
 namespace ValueObjectConversion.Specifications;
 
-public sealed class ProductLowStockSpec : ExpressionSpecification<Product>
+public sealed class ProductLowStockSpec(Quantity threshold) : ExpressionSpecification<Product>
 {
-    public Quantity Threshold { get; }
-
-    public ProductLowStockSpec(Quantity threshold) => Threshold = threshold;
+    public Quantity Threshold { get; } = threshold;
 
     public override Expression<Func<Product, bool>> ToExpression()
     {
-        int threshold = Threshold;
-        return product => (int)product.Stock <= threshold;
+        int thresholdVal = Threshold;
+        return product => (int)product.Stock <= thresholdVal;
     }
 }

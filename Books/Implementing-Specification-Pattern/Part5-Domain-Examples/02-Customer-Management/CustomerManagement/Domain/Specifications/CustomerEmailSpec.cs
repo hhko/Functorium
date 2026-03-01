@@ -4,15 +4,11 @@ using Functorium.Domains.Specifications;
 
 namespace CustomerManagement.Domain.Specifications;
 
-public sealed class CustomerEmailSpec : ExpressionSpecification<Customer>
+public sealed class CustomerEmailSpec(Email email) : ExpressionSpecification<Customer>
 {
-    public Email Email { get; }
-
-    public CustomerEmailSpec(Email email) => Email = email;
-
     public override Expression<Func<Customer, bool>> ToExpression()
     {
-        string emailStr = Email;
+        string emailStr = email;
         return customer => (string)customer.Email == emailStr;
     }
 }

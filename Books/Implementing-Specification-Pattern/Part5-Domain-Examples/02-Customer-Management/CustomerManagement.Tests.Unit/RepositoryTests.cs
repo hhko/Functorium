@@ -12,7 +12,7 @@ public class RepositoryTests
     public void FindAll_ShouldReturnActiveCustomers()
     {
         // Arrange
-        var spec = new ActiveCustomerSpec();
+        var spec = new CustomerActiveSpec();
 
         // Act
         var results = _repository.FindAll(spec).ToList();
@@ -59,7 +59,7 @@ public class RepositoryTests
     public void FindAll_ShouldReturnFilteredCustomers_WhenCompositeSpecUsed()
     {
         // Arrange: 활성 AND 이름에 '수' 포함
-        var spec = new ActiveCustomerSpec()
+        var spec = new CustomerActiveSpec()
             & new CustomerNameContainsSpec(new CustomerName("수"));
 
         // Act

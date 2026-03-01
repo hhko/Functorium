@@ -4,15 +4,11 @@ using Functorium.Domains.Specifications;
 
 namespace EcommerceFiltering.Domain.Specifications;
 
-public sealed class ProductLowStockSpec : ExpressionSpecification<Product>
+public sealed class ProductLowStockSpec(Quantity threshold) : ExpressionSpecification<Product>
 {
-    public Quantity Threshold { get; }
-
-    public ProductLowStockSpec(Quantity threshold) => Threshold = threshold;
-
     public override Expression<Func<Product, bool>> ToExpression()
     {
-        int threshold = Threshold;
-        return product => (int)product.Stock < threshold;
+        int value = threshold;
+        return product => (int)product.Stock < value;
     }
 }

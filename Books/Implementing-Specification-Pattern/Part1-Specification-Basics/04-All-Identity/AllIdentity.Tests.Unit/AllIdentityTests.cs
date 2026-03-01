@@ -31,7 +31,7 @@ public class AllIdentityTests
     {
         // Arrange
         var all = Specification<Product>.All;
-        var inStock = new InStockSpec();
+        var inStock = new ProductInStockSpec();
 
         // Act
         var result = all & inStock;
@@ -46,7 +46,7 @@ public class AllIdentityTests
     {
         // Arrange
         var all = Specification<Product>.All;
-        var inStock = new InStockSpec();
+        var inStock = new ProductInStockSpec();
 
         // Act
         var result = inStock & all;
@@ -76,8 +76,8 @@ public class AllIdentityTests
     {
         // Arrange
         var spec = Specification<Product>.All;
-        spec &= new InStockSpec();
-        spec &= new CategorySpec("전자제품");
+        spec &= new ProductInStockSpec();
+        spec &= new ProductCategorySpec("전자제품");
 
         // Act
         var actual = SampleProducts.All.Where(p => spec.IsSatisfiedBy(p)).ToArray();

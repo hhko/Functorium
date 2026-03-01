@@ -22,7 +22,7 @@ var repository = new SimulatedEfCoreProductRepository(dbModels, propertyMap);
 
 // 3) 도메인 Specification으로 조회 (Repository는 자동으로 Expression 변환)
 Console.WriteLine("--- FindAll(재고 있는 상품) ---");
-var inStock = new InStockExprSpec();
+var inStock = new ProductInStockSpec();
 foreach (var p in repository.FindAll(inStock))
     Console.WriteLine($"  {p.Name} ({p.Price:N0}원, 재고: {p.Stock})");
 
@@ -30,7 +30,7 @@ Console.WriteLine();
 
 // 4) 복합 Specification
 Console.WriteLine("--- FindAll(재고 있고 1만원 이하) ---");
-var affordable = new InStockExprSpec() & new PriceRangeExprSpec(0, 10_000);
+var affordable = new ProductInStockSpec() & new ProductPriceRangeSpec(0, 10_000);
 foreach (var p in repository.FindAll(affordable))
     Console.WriteLine($"  {p.Name} ({p.Price:N0}원, 재고: {p.Stock})");
 
@@ -38,14 +38,14 @@ Console.WriteLine();
 
 // 5) 카테고리 + 재고
 Console.WriteLine("--- FindAll(전자제품 + 재고 있음) ---");
-var electronics = new CategoryExprSpec("전자제품") & new InStockExprSpec();
+var electronics = new ProductCategorySpec("전자제품") & new ProductInStockSpec();
 foreach (var p in repository.FindAll(electronics))
     Console.WriteLine($"  {p.Name} ({p.Category})");
 
 Console.WriteLine();
 
 // 6) Exists
-var expensiveFurniture = new CategoryExprSpec("가구") & new PriceRangeExprSpec(100_000, decimal.MaxValue);
+var expensiveFurniture = new ProductCategorySpec("가구") & new ProductPriceRangeSpec(100_000, decimal.MaxValue);
 Console.WriteLine($"--- 10만원 이상 가구 존재: {repository.Exists(expensiveFurniture)} ---");
 
 Console.WriteLine();

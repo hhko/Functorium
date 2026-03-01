@@ -16,7 +16,7 @@ public class Level2_CompositionTests
     public void And_ShouldRequireBothConditions()
     {
         // Arrange: Electronics AND InStock
-        var spec = new CategorySpec("Electronics") & new InStockSpec();
+        var spec = new ProductCategorySpec("Electronics") & new ProductInStockSpec();
 
         // Act & Assert
         spec.IsSatisfiedBy(InStockElectronics).ShouldBeTrue();
@@ -28,7 +28,7 @@ public class Level2_CompositionTests
     public void Or_ShouldRequireEitherCondition()
     {
         // Arrange: Electronics OR InStock
-        var spec = new CategorySpec("Electronics") | new InStockSpec();
+        var spec = new ProductCategorySpec("Electronics") | new ProductInStockSpec();
 
         // Act & Assert
         spec.IsSatisfiedBy(InStockElectronics).ShouldBeTrue();
@@ -40,7 +40,7 @@ public class Level2_CompositionTests
     public void Not_ShouldNegateCondition()
     {
         // Arrange: NOT InStock (= 재고 없는 상품)
-        var spec = !new InStockSpec();
+        var spec = !new ProductInStockSpec();
 
         // Act & Assert
         spec.IsSatisfiedBy(InStockElectronics).ShouldBeFalse();
@@ -51,7 +51,7 @@ public class Level2_CompositionTests
     public void ComplexComposition_ShouldWorkCorrectly()
     {
         // Arrange: Furniture AND InStock AND PriceRange(100, 1000)
-        var spec = new CategorySpec("Furniture") & new InStockSpec() & new PriceRangeSpec(100, 1000);
+        var spec = new ProductCategorySpec("Furniture") & new ProductInStockSpec() & new ProductPriceRangeSpec(100, 1000);
 
         // Act & Assert
         spec.IsSatisfiedBy(InStockFurniture).ShouldBeTrue();      // Furniture, in stock, $200
@@ -63,7 +63,7 @@ public class Level2_CompositionTests
     public void All_And_Spec_ShouldReturnSpec()
     {
         // Arrange
-        var inStock = new InStockSpec();
+        var inStock = new ProductInStockSpec();
         var spec = Specification<Product>.All & inStock;
 
         // Act & Assert

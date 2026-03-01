@@ -18,9 +18,9 @@ public class OperatorTests
         new("USB 케이블", 5_000m, 10, "주변기기"),
     ];
 
-    private readonly InStockSpec _inStock = new();
-    private readonly PriceRangeSpec _affordable = new(10_000m, 100_000m);
-    private readonly CategorySpec _electronics = new("전자제품");
+    private readonly ProductInStockSpec _inStock = new();
+    private readonly ProductPriceRangeSpec _affordable = new(10_000m, 100_000m);
+    private readonly ProductCategorySpec _electronics = new("전자제품");
 
     // 테스트 시나리오: & 연산자는 And() 메서드와 동일한 결과를 반환해야 한다
     [Fact]

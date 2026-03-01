@@ -16,11 +16,11 @@ public class SearchProductsQueryHandler
         var spec = Specification<Product>.All;
 
         if (query.Category is not null)
-            spec &= new Specifications.CategorySpec(query.Category);
+            spec &= new Specifications.ProductCategorySpec(query.Category);
         if (query.MinPrice.HasValue && query.MaxPrice.HasValue)
-            spec &= new Specifications.PriceRangeSpec(query.MinPrice.Value, query.MaxPrice.Value);
+            spec &= new Specifications.ProductPriceRangeSpec(query.MinPrice.Value, query.MaxPrice.Value);
         if (query.InStockOnly == true)
-            spec &= new Specifications.InStockSpec();
+            spec &= new Specifications.ProductInStockSpec();
 
         return _repository.FindAll(spec);
     }

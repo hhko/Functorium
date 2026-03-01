@@ -10,7 +10,7 @@ ICustomerRepository repository = new InMemoryCustomerRepository(SampleCustomers.
 
 // 1. 활성 고객 조회
 Console.WriteLine("--- 활성 고객 ---");
-var activeSpec = new ActiveCustomerSpec();
+var activeSpec = new CustomerActiveSpec();
 foreach (var customer in repository.FindAll(activeSpec))
     Console.WriteLine($"  {customer.Name} ({customer.Email})");
 
@@ -33,7 +33,7 @@ Console.WriteLine();
 
 // 4. 복합 조건: 활성 AND 이름에 '수' 포함
 Console.WriteLine("--- 활성 고객 중 이름에 '수' 포함 ---");
-var compositeSpec = new ActiveCustomerSpec()
+var compositeSpec = new CustomerActiveSpec()
     & new CustomerNameContainsSpec(new CustomerName("수"));
 foreach (var customer in repository.FindAll(compositeSpec))
     Console.WriteLine($"  {customer.Name} ({customer.Email})");
@@ -42,6 +42,6 @@ Console.WriteLine();
 
 // 5. 비활성 고객 (NOT 활성)
 Console.WriteLine("--- 비활성 고객 ---");
-var inactiveSpec = !new ActiveCustomerSpec();
+var inactiveSpec = !new CustomerActiveSpec();
 foreach (var customer in repository.FindAll(inactiveSpec))
     Console.WriteLine($"  {customer.Name} ({customer.Email})");

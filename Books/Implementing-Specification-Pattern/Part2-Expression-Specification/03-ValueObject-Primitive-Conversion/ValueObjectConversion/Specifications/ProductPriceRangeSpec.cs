@@ -3,17 +3,15 @@ using Functorium.Domains.Specifications;
 
 namespace ValueObjectConversion.Specifications;
 
-public sealed class ProductPriceRangeSpec : ExpressionSpecification<Product>
+public sealed class ProductPriceRangeSpec(Money min, Money max) : ExpressionSpecification<Product>
 {
-    public Money MinPrice { get; }
-    public Money MaxPrice { get; }
-
-    public ProductPriceRangeSpec(Money min, Money max) { MinPrice = min; MaxPrice = max; }
+    public Money MinPrice { get; } = min;
+    public Money MaxPrice { get; } = max;
 
     public override Expression<Func<Product, bool>> ToExpression()
     {
-        decimal min = MinPrice;
-        decimal max = MaxPrice;
-        return product => (decimal)product.Price >= min && (decimal)product.Price <= max;
+        decimal minVal = MinPrice;
+        decimal maxVal = MaxPrice;
+        return product => (decimal)product.Price >= minVal && (decimal)product.Price <= maxVal;
     }
 }

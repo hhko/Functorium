@@ -11,8 +11,8 @@ var products = new[]
     new Product("모니터", 350_000m, 0, "전자제품"),
 };
 
-var inStock = new InStockSpec();
-var midRange = new PriceRangeSpec(50_000m, 500_000m);
+var inStock = new ProductInStockSpec();
+var midRange = new ProductPriceRangeSpec(50_000m, 500_000m);
 
 Console.WriteLine("--- 재고 있는 상품 ---");
 foreach (var p in products.Where(p => inStock.IsSatisfiedBy(p)))

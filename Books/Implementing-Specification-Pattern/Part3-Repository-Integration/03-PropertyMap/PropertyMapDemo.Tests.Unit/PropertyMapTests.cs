@@ -43,7 +43,7 @@ public class PropertyMapTests
     public void Translate_ShouldConvertDomainExpressionToModelExpression()
     {
         // Arrange
-        var spec = new InStockExprSpec();
+        var spec = new ProductInStockSpec();
         var domainExpr = spec.ToExpression();
 
         // Act
@@ -59,7 +59,7 @@ public class PropertyMapTests
     public void TranslatedExpression_ShouldFilterDbModels_WhenInStockSpec()
     {
         // Arrange
-        var spec = new InStockExprSpec();
+        var spec = new ProductInStockSpec();
         var modelExpr = _map.Translate(spec.ToExpression());
         var dbModels = new List<ProductDbModel>
         {
@@ -80,7 +80,7 @@ public class PropertyMapTests
     public void TranslatedExpression_ShouldFilterDbModels_WhenCombinedSpec()
     {
         // Arrange
-        var spec = new InStockExprSpec() & new PriceRangeExprSpec(0, 10_000);
+        var spec = new ProductInStockSpec() & new ProductPriceRangeSpec(0, 10_000);
         var compositeExpr = SpecificationExpressionResolver.TryResolve(spec);
         var modelExpr = _map.Translate(compositeExpr!);
         var dbModels = new List<ProductDbModel>

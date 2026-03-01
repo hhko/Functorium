@@ -16,7 +16,7 @@ var products = new List<Product>
 
 // --- 1) 단일 ExpressionSpecification → Expression 추출 ---
 Console.WriteLine("▶ 단일 ExpressionSpec → Expression:");
-var inStock = new InStockExprSpec();
+var inStock = new ProductInStockSpec();
 var expr1 = SpecificationExpressionResolver.TryResolve(inStock);
 Console.WriteLine($"  Body: {expr1?.Body}");
 
@@ -24,7 +24,7 @@ Console.WriteLine();
 
 // --- 2) And 복합 → 합성된 Expression ---
 Console.WriteLine("▶ And 복합 → Expression:");
-Specification<Product> andSpec = new InStockExprSpec() & new PriceRangeExprSpec(0, 50_000);
+Specification<Product> andSpec = new ProductInStockSpec() & new ProductPriceRangeSpec(0, 50_000);
 var expr2 = SpecificationExpressionResolver.TryResolve(andSpec);
 Console.WriteLine($"  Body: {expr2?.Body}");
 
@@ -32,7 +32,7 @@ Console.WriteLine();
 
 // --- 3) Or 복합 → 합성된 Expression ---
 Console.WriteLine("▶ Or 복합 → Expression:");
-Specification<Product> orSpec = new InStockExprSpec() | new CategoryExprSpec("문구류");
+Specification<Product> orSpec = new ProductInStockSpec() | new ProductCategorySpec("문구류");
 var expr3 = SpecificationExpressionResolver.TryResolve(orSpec);
 Console.WriteLine($"  Body: {expr3?.Body}");
 
@@ -40,7 +40,7 @@ Console.WriteLine();
 
 // --- 4) Not → 부정 Expression ---
 Console.WriteLine("▶ Not → Expression:");
-Specification<Product> notSpec = !new PriceRangeExprSpec(50_000, decimal.MaxValue);
+Specification<Product> notSpec = !new ProductPriceRangeSpec(50_000, decimal.MaxValue);
 var expr4 = SpecificationExpressionResolver.TryResolve(notSpec);
 Console.WriteLine($"  Body: {expr4?.Body}");
 
@@ -48,7 +48,7 @@ Console.WriteLine();
 
 // --- 5) Non-expression Spec → null (graceful fallback) ---
 Console.WriteLine("▶ Non-expression Spec → null:");
-var nonExprSpec = new InStockSpec();
+var nonExprSpec = new ProductInStockPlainSpec();
 var expr5 = SpecificationExpressionResolver.TryResolve(nonExprSpec);
 Console.WriteLine($"  Result is null: {expr5 is null}");
 

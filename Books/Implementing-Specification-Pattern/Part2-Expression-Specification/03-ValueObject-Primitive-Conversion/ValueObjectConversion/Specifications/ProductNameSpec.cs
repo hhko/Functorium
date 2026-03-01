@@ -3,11 +3,9 @@ using Functorium.Domains.Specifications;
 
 namespace ValueObjectConversion.Specifications;
 
-public sealed class ProductNameSpec : ExpressionSpecification<Product>
+public sealed class ProductNameSpec(ProductName name) : ExpressionSpecification<Product>
 {
-    public ProductName Name { get; }
-
-    public ProductNameSpec(ProductName name) => Name = name;
+    public ProductName Name { get; } = name;
 
     public override Expression<Func<Product, bool>> ToExpression()
     {

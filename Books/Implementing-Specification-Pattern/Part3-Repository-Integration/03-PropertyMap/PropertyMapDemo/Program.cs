@@ -18,7 +18,7 @@ Console.WriteLine($"  Category -> {map.TranslateFieldName("Category")}");
 Console.WriteLine();
 
 // 3) 단일 Expression 변환
-var inStock = new InStockExprSpec();
+var inStock = new ProductInStockSpec();
 Expression<Func<Product, bool>> domainExpr = inStock.ToExpression();
 var modelExpr = map.Translate(domainExpr);
 
@@ -29,7 +29,7 @@ Console.WriteLine($"  모델:   {modelExpr.Body}");
 Console.WriteLine();
 
 // 4) 복합 Expression 변환
-var composite = new InStockExprSpec() & new PriceRangeExprSpec(0, 10_000);
+var composite = new ProductInStockSpec() & new ProductPriceRangeSpec(0, 10_000);
 var compositeExpr = SpecificationExpressionResolver.TryResolve(composite);
 if (compositeExpr is not null)
 {

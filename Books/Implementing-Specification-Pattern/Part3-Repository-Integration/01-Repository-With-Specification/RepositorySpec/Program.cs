@@ -25,9 +25,9 @@ Console.WriteLine();
 // --- 사용 예시 ---
 Console.WriteLine("--- Specification 조합 예시 ---");
 
-var inStock = new InStockSpec();
-var affordable = new PriceRangeSpec(0, 10_000);
-var electronics = new CategorySpec("전자제품");
+var inStock = new ProductInStockSpec();
+var affordable = new ProductPriceRangeSpec(0, 10_000);
+var electronics = new ProductCategorySpec("전자제품");
 
 Console.WriteLine($"  재고 있는 상품: {inStock}");
 Console.WriteLine($"  1만원 이하: {affordable}");

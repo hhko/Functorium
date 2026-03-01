@@ -9,13 +9,13 @@ public static class ProductFilterBuilder
         var spec = Specification<Product>.All;
 
         if (!string.IsNullOrWhiteSpace(request.Name))
-            spec &= new Specifications.NameContainsSpec(request.Name);
+            spec &= new Specifications.ProductNameContainsSpec(request.Name);
         if (!string.IsNullOrWhiteSpace(request.Category))
-            spec &= new Specifications.CategorySpec(request.Category);
+            spec &= new Specifications.ProductCategorySpec(request.Category);
         if (request.MinPrice.HasValue && request.MaxPrice.HasValue)
-            spec &= new Specifications.PriceRangeSpec(request.MinPrice.Value, request.MaxPrice.Value);
+            spec &= new Specifications.ProductPriceRangeSpec(request.MinPrice.Value, request.MaxPrice.Value);
         if (request.InStockOnly)
-            spec &= new Specifications.InStockSpec();
+            spec &= new Specifications.ProductInStockSpec();
 
         return spec;
     }

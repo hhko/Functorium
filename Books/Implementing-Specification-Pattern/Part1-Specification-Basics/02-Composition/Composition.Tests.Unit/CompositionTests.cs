@@ -9,9 +9,9 @@ namespace Composition.Tests.Unit;
 [Trait("Part1-Composition", "CompositionTests")]
 public class CompositionTests
 {
-    private readonly InStockSpec _inStock = new();
-    private readonly PriceRangeSpec _affordable = new(10_000m, 100_000m);
-    private readonly CategorySpec _electronics = new("전자제품");
+    private readonly ProductInStockSpec _inStock = new();
+    private readonly ProductPriceRangeSpec _affordable = new(10_000m, 100_000m);
+    private readonly ProductCategorySpec _electronics = new("전자제품");
 
     // 테스트 시나리오: And 조합은 두 조건 모두 만족할 때만 true
     [Fact]

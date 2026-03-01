@@ -11,9 +11,9 @@ Console.WriteLine($"All.IsAll = {all.IsAll}");
 Console.WriteLine();
 
 // All & X == X (항등원)
-var inStock = new InStockSpec();
+var inStock = new ProductInStockSpec();
 var combined = all & inStock;
-Console.WriteLine($"All & InStock은 InStock과 동일 객체: {ReferenceEquals(combined, inStock)}");
+Console.WriteLine($"All & ProductInStock은 ProductInStock과 동일 객체: {ReferenceEquals(combined, inStock)}");
 Console.WriteLine();
 
 // 동적 필터 패턴
@@ -25,13 +25,13 @@ bool onlyInStock = true;
 var spec = Specification<Product>.All;
 
 if (categoryFilter is not null)
-    spec &= new CategorySpec(categoryFilter);
+    spec &= new ProductCategorySpec(categoryFilter);
 
 if (nameFilter is not null)
-    spec &= new NameContainsSpec(nameFilter);
+    spec &= new ProductNameContainsSpec(nameFilter);
 
 if (onlyInStock)
-    spec &= new InStockSpec();
+    spec &= new ProductInStockSpec();
 
 Console.WriteLine($"필터: 카테고리={categoryFilter ?? "없음"}, 이름={nameFilter ?? "없음"}, 재고만={onlyInStock}");
 Console.WriteLine("결과:");

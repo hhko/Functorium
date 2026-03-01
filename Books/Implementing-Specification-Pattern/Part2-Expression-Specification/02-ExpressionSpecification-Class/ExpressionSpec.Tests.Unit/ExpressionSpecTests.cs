@@ -18,24 +18,24 @@ public class ExpressionSpecTests
     private static readonly Product OutOfStockProduct = new("품절 키보드", 80_000, 0, "전자제품");
     private static readonly Product CheapProduct = new("볼펜", 500, 100, "문구류");
 
-    // 테스트 시나리오: 재고가 있는 상품은 InStockExprSpec을 만족해야 한다
+    // 테스트 시나리오: 재고가 있는 상품은 ProductInStockSpec을 만족해야 한다
     [Fact]
-    public void InStockExprSpec_ShouldBeSatisfied_WhenStockIsPositive()
+    public void ProductInStockSpec_ShouldBeSatisfied_WhenStockIsPositive()
     {
         // Arrange
-        var spec = new InStockExprSpec();
+        var spec = new ProductInStockSpec();
 
         // Act & Assert
         spec.IsSatisfiedBy(InStockProduct).ShouldBeTrue();
         spec.IsSatisfiedBy(OutOfStockProduct).ShouldBeFalse();
     }
 
-    // 테스트 시나리오: 가격 범위 내 상품은 PriceRangeExprSpec을 만족해야 한다
+    // 테스트 시나리오: 가격 범위 내 상품은 ProductPriceRangeSpec을 만족해야 한다
     [Fact]
-    public void PriceRangeExprSpec_ShouldBeSatisfied_WhenPriceInRange()
+    public void ProductPriceRangeSpec_ShouldBeSatisfied_WhenPriceInRange()
     {
         // Arrange
-        var spec = new PriceRangeExprSpec(1_000, 100_000);
+        var spec = new ProductPriceRangeSpec(1_000, 100_000);
 
         // Act & Assert
         spec.IsSatisfiedBy(OutOfStockProduct).ShouldBeTrue();  // 80,000원
@@ -43,12 +43,12 @@ public class ExpressionSpecTests
         spec.IsSatisfiedBy(CheapProduct).ShouldBeFalse();       // 500원
     }
 
-    // 테스트 시나리오: 특정 카테고리 상품은 CategoryExprSpec을 만족해야 한다
+    // 테스트 시나리오: 특정 카테고리 상품은 ProductCategorySpec을 만족해야 한다
     [Fact]
-    public void CategoryExprSpec_ShouldBeSatisfied_WhenCategoryMatches()
+    public void ProductCategorySpec_ShouldBeSatisfied_WhenCategoryMatches()
     {
         // Arrange
-        var spec = new CategoryExprSpec("전자제품");
+        var spec = new ProductCategorySpec("전자제품");
 
         // Act & Assert
         spec.IsSatisfiedBy(InStockProduct).ShouldBeTrue();
@@ -60,7 +60,7 @@ public class ExpressionSpecTests
     public void ToExpression_ShouldReturnValidExpression()
     {
         // Arrange
-        var spec = new InStockExprSpec();
+        var spec = new ProductInStockSpec();
 
         // Act
         var expr = spec.ToExpression();
@@ -76,7 +76,7 @@ public class ExpressionSpecTests
     public void ToExpression_ShouldWorkWithAsQueryable()
     {
         // Arrange
-        var spec = new PriceRangeExprSpec(0, 50_000);
+        var spec = new ProductPriceRangeSpec(0, 50_000);
         var products = new List<Product> { InStockProduct, OutOfStockProduct, CheapProduct };
 
         // Act
@@ -93,7 +93,7 @@ public class ExpressionSpecTests
     public void IsSatisfiedBy_ShouldReturnConsistentResults_WhenCalledMultipleTimes()
     {
         // Arrange
-        var spec = new InStockExprSpec();
+        var spec = new ProductInStockSpec();
 
         // Act & Assert - 캐싱된 델리게이트가 일관된 결과를 반환하는지 확인
         spec.IsSatisfiedBy(InStockProduct).ShouldBeTrue();

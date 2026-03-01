@@ -14,10 +14,10 @@ public class InMemoryRepositoryTests
 
     // 테스트 시나리오: FindAll은 조건을 만족하는 상품만 반환해야 한다
     [Fact]
-    public void FindAll_ShouldReturnMatchingProducts_WhenInStockSpec()
+    public void FindAll_ShouldReturnMatchingProducts_WhenProductInStockSpec()
     {
         // Arrange
-        var spec = new InStockSpec();
+        var spec = new ProductInStockSpec();
 
         // Act
         var actual = _sut.FindAll(spec).ToList();
@@ -29,10 +29,10 @@ public class InMemoryRepositoryTests
 
     // 테스트 시나리오: FindAll은 가격 범위 내 상품만 반환해야 한다
     [Fact]
-    public void FindAll_ShouldReturnMatchingProducts_WhenPriceRangeSpec()
+    public void FindAll_ShouldReturnMatchingProducts_WhenProductPriceRangeSpec()
     {
         // Arrange
-        var spec = new PriceRangeSpec(0, 10_000);
+        var spec = new ProductPriceRangeSpec(0, 10_000);
 
         // Act
         var actual = _sut.FindAll(spec).ToList();
@@ -47,7 +47,7 @@ public class InMemoryRepositoryTests
     public void FindAll_ShouldReturnMatchingProducts_WhenCombinedSpec()
     {
         // Arrange
-        var spec = new InStockSpec() & new CategorySpec("전자제품");
+        var spec = new ProductInStockSpec() & new ProductCategorySpec("전자제품");
 
         // Act
         var actual = _sut.FindAll(spec).ToList();
@@ -62,7 +62,7 @@ public class InMemoryRepositoryTests
     public void FindAll_ShouldReturnEmpty_WhenNoProductsMatch()
     {
         // Arrange
-        var spec = new CategorySpec("존재하지않는카테고리");
+        var spec = new ProductCategorySpec("존재하지않는카테고리");
 
         // Act
         var actual = _sut.FindAll(spec).ToList();
@@ -76,7 +76,7 @@ public class InMemoryRepositoryTests
     public void Exists_ShouldReturnTrue_WhenMatchingProductExists()
     {
         // Arrange
-        var spec = new CategorySpec("전자제품") & new InStockSpec();
+        var spec = new ProductCategorySpec("전자제품") & new ProductInStockSpec();
 
         // Act
         var actual = _sut.Exists(spec);
@@ -90,7 +90,7 @@ public class InMemoryRepositoryTests
     public void Exists_ShouldReturnFalse_WhenNoMatchingProductExists()
     {
         // Arrange
-        var spec = new CategorySpec("가구") & new PriceRangeSpec(0, 10_000);
+        var spec = new ProductCategorySpec("가구") & new ProductPriceRangeSpec(0, 10_000);
 
         // Act
         var actual = _sut.Exists(spec);

@@ -69,7 +69,7 @@ public class Level3_UsecaseTests
     {
         // Arrange
         var repository = new MockProductRepository(SampleProducts);
-        var spec = new CategorySpec("Electronics") & new InStockSpec();
+        var spec = new ProductCategorySpec("Electronics") & new ProductInStockSpec();
 
         // Act
         var results = repository.FindAll(spec).ToList();

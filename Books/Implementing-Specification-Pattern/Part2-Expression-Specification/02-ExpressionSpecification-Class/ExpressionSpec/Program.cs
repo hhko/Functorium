@@ -13,16 +13,16 @@ var products = new List<Product>
 };
 
 // --- IsSatisfiedBy: sealed 메서드로 자동 컴파일 + 캐싱 ---
-Console.WriteLine("▶ InStockExprSpec - IsSatisfiedBy (자동 컴파일):");
-var inStock = new InStockExprSpec();
+Console.WriteLine("▶ ProductInStockSpec - IsSatisfiedBy (자동 컴파일):");
+var inStock = new ProductInStockSpec();
 foreach (var p in products.Where(inStock.IsSatisfiedBy))
     Console.WriteLine($"  {p.Name} (재고: {p.Stock})");
 
 Console.WriteLine();
 
 // --- ToExpression: Expression Tree 직접 사용 ---
-Console.WriteLine("▶ PriceRangeExprSpec - ToExpression (IQueryable 사용):");
-var affordable = new PriceRangeExprSpec(0, 50_000);
+Console.WriteLine("▶ ProductPriceRangeSpec - ToExpression (IQueryable 사용):");
+var affordable = new ProductPriceRangeSpec(0, 50_000);
 Expression<Func<Product, bool>> expr = affordable.ToExpression();
 Console.WriteLine($"  Expression Body: {expr.Body}");
 
@@ -32,8 +32,8 @@ foreach (var p in queryResults)
 
 Console.WriteLine();
 
-// --- CategoryExprSpec ---
-Console.WriteLine("▶ CategoryExprSpec - 카테고리 필터:");
-var electronics = new CategoryExprSpec("전자제품");
+// --- ProductCategorySpec ---
+Console.WriteLine("▶ ProductCategorySpec - 카테고리 필터:");
+var electronics = new ProductCategorySpec("전자제품");
 foreach (var p in products.Where(electronics.IsSatisfiedBy))
     Console.WriteLine($"  {p.Name}");

@@ -25,7 +25,7 @@ public class ExpressionResolverTests
     public void TryResolve_ShouldReturnExpression_WhenSingleExpressionSpec()
     {
         // Arrange
-        var spec = new InStockExprSpec();
+        var spec = new ProductInStockSpec();
 
         // Act
         var expr = SpecificationExpressionResolver.TryResolve(spec);
@@ -42,7 +42,7 @@ public class ExpressionResolverTests
     public void TryResolve_ShouldReturnCombinedExpression_WhenAndComposite()
     {
         // Arrange
-        Specification<Product> spec = new InStockExprSpec() & new PriceRangeExprSpec(0, 50_000);
+        Specification<Product> spec = new ProductInStockSpec() & new ProductPriceRangeSpec(0, 50_000);
 
         // Act
         var expr = SpecificationExpressionResolver.TryResolve(spec);
@@ -60,7 +60,7 @@ public class ExpressionResolverTests
     public void TryResolve_ShouldReturnCombinedExpression_WhenOrComposite()
     {
         // Arrange
-        Specification<Product> spec = new InStockExprSpec() | new PriceRangeExprSpec(0, 50_000);
+        Specification<Product> spec = new ProductInStockSpec() | new ProductPriceRangeSpec(0, 50_000);
 
         // Act
         var expr = SpecificationExpressionResolver.TryResolve(spec);
@@ -78,7 +78,7 @@ public class ExpressionResolverTests
     public void TryResolve_ShouldReturnNegatedExpression_WhenNotSpec()
     {
         // Arrange
-        Specification<Product> spec = !new PriceRangeExprSpec(50_000, decimal.MaxValue);
+        Specification<Product> spec = !new ProductPriceRangeSpec(50_000, decimal.MaxValue);
 
         // Act
         var expr = SpecificationExpressionResolver.TryResolve(spec);
@@ -95,7 +95,7 @@ public class ExpressionResolverTests
     public void TryResolve_ShouldReturnNull_WhenNonExpressionSpec()
     {
         // Arrange
-        var spec = new InStockSpec();
+        var spec = new ProductInStockPlainSpec();
 
         // Act
         var expr = SpecificationExpressionResolver.TryResolve(spec);
@@ -109,7 +109,7 @@ public class ExpressionResolverTests
     public void TryResolve_ShouldReturnNull_WhenMixedWithNonExpressionSpec()
     {
         // Arrange
-        Specification<Product> spec = new InStockSpec() & new PriceRangeExprSpec(0, 50_000);
+        Specification<Product> spec = new ProductInStockPlainSpec() & new ProductPriceRangeSpec(0, 50_000);
 
         // Act
         var expr = SpecificationExpressionResolver.TryResolve(spec);
@@ -123,7 +123,7 @@ public class ExpressionResolverTests
     public void TryResolve_ShouldWorkWithAsQueryable()
     {
         // Arrange
-        Specification<Product> spec = new InStockExprSpec() & new PriceRangeExprSpec(0, 50_000);
+        Specification<Product> spec = new ProductInStockSpec() & new ProductPriceRangeSpec(0, 50_000);
         var products = new List<Product> { InStockCheap, InStockExpensive, OutOfStock };
 
         // Act

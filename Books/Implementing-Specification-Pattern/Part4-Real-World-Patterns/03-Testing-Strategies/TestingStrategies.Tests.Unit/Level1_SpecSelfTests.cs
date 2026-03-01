@@ -10,10 +10,10 @@ public class Level1_SpecSelfTests
     [InlineData(0, false)]
     [InlineData(1, true)]
     [InlineData(100, true)]
-    public void InStockSpec_ShouldReturnExpected_WhenStockIs(int stock, bool expected)
+    public void ProductInStockSpec_ShouldReturnExpected_WhenStockIs(int stock, bool expected)
     {
         var product = new Product("Test", 1000, stock, "Test");
-        var spec = new InStockSpec();
+        var spec = new ProductInStockSpec();
         spec.IsSatisfiedBy(product).ShouldBe(expected);
     }
 
@@ -23,10 +23,10 @@ public class Level1_SpecSelfTests
     [InlineData(5000, true)]    // in range
     [InlineData(10000, true)]   // exactly max
     [InlineData(10001, false)]  // above max
-    public void PriceRangeSpec_ShouldReturnExpected_WhenPriceIs(decimal price, bool expected)
+    public void ProductPriceRangeSpec_ShouldReturnExpected_WhenPriceIs(decimal price, bool expected)
     {
         var product = new Product("Test", price, 1, "Test");
-        var spec = new PriceRangeSpec(1000, 10000);
+        var spec = new ProductPriceRangeSpec(1000, 10000);
         spec.IsSatisfiedBy(product).ShouldBe(expected);
     }
 
@@ -35,10 +35,10 @@ public class Level1_SpecSelfTests
     [InlineData("electronics", true)]
     [InlineData("ELECTRONICS", true)]
     [InlineData("Furniture", false)]
-    public void CategorySpec_ShouldReturnExpected_WhenCategoryIs(string category, bool expected)
+    public void ProductCategorySpec_ShouldReturnExpected_WhenCategoryIs(string category, bool expected)
     {
         var product = new Product("Test", 1000, 1, "Electronics");
-        var spec = new CategorySpec(category);
+        var spec = new ProductCategorySpec(category);
         spec.IsSatisfiedBy(product).ShouldBe(expected);
     }
 
