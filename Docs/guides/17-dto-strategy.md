@@ -43,7 +43,7 @@ internal static class ProductMapper
 }
 
 // 컬렉션 변환
-result.Map(r => new Response(r.Products.ToList()));  // Seq → List
+result.Map(r => new Response(r.Products));  // PagedResult.Items는 이미 IReadOnlyList<T>
 return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));  // List → Seq
 ```
 
@@ -58,7 +58,7 @@ return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));  // List → Seq
 1. 읽기 전용 Query 응답인지 확인
 2. 필드가 동일하여 identity mapping인지 확인
 3. Presentation 고유 필드가 불필요한지 확인
-4. `Seq<T>` → `List<T>` 변환만 필요한지 확인
+4. 컬렉션 타입 변환이 최소한인지 확인 (`PagedResult.Items`는 이미 `IReadOnlyList<T>`)
 5. 4가지 조건 모두 충족 시 재사용 허용
 
 ### 주요 개념
@@ -69,7 +69,7 @@ return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));  // List → Seq
 | Usecase nested record | Command/Query 클래스 내부에 Request/Response를 중첩 정의 |
 | Persistence Model | primitive 타입만 사용하는 POCO, 도메인 의존성 없음 |
 | Mapper 패턴 | `internal static` 확장 메서드로 Domain ↔ Model 양방향 변환 |
-| `Seq<T>` vs `List<T>` | Application은 `Seq<T>`, Presentation/Persistence는 `List<T>` 사용 |
+| `Seq<T>` vs `List<T>` | Application 도메인 컬렉션은 `Seq<T>`, Presentation/Persistence는 `List<T>` 사용. `PagedResult.Items`는 `IReadOnlyList<T>` |
 
 ---
 
@@ -266,7 +266,7 @@ internal static class ProductMapper
 
 ## 컬렉션 타입 변환
 
-Application Layer는 `Seq<T>` (LanguageExt FP 타입), Presentation/Persistence는 `List<T>` (JSON 직렬화/EF Core 호환)를 사용합니다.
+Application Layer의 도메인 컬렉션은 `Seq<T>` (LanguageExt FP 타입), Presentation/Persistence는 `List<T>` (JSON 직렬화/EF Core 호환)를 사용합니다. 단, `PagedResult<T>.Items`는 `IReadOnlyList<T>`이므로 Presentation에서 별도 변환 없이 사용할 수 있습니다.
 
 ```
 Application (Seq<T>) ──.ToList()──→ Presentation (List<T>)
@@ -275,8 +275,11 @@ Persistence (List<T>) ──toSeq()───→ Application  (Seq<T>)
 ```
 
 ```csharp
-// Presentation: Seq → List (Endpoint에서 변환)
-var mapped = result.Map(r => new Response(r.Products.ToList()));
+// Presentation: PagedResult.Items는 IReadOnlyList<T> — 변환 불필요
+var mapped = result.Map(r => new Response(r.Products));
+
+// 도메인 Seq<T> 컬렉션: Seq → List (Endpoint에서 변환)
+var mapped = result.Map(r => new Response(r.Items.ToList()));  // Seq<T> → List<T>
 
 // Persistence: List → Seq (Repository에서 변환)
 return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
@@ -295,7 +298,7 @@ return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
 | 1 | **읽기 전용 Query** 응답이다 | Command 결과는 레이어별 진화 가능성이 높음 |
 | 2 | **필드가 동일**하여 identity mapping이 발생한다 | 필드 추가/제거 예정이면 분리 유지 |
 | 3 | Presentation 고유 필드(HATEOAS link 등)가 **불필요**하다 | 고유 필드가 필요하면 Endpoint DTO 필요 |
-| 4 | **`Seq<T>` → `List<T>` 변환만** 필요하다 | 컬렉션 타입 변환은 Response wrapper에서 처리 |
+| 4 | **컬렉션 타입 변환이 최소한**이다 | `PagedResult.Items`는 `IReadOnlyList<T>`이므로 변환 불필요. 도메인 `Seq<T>`만 `List<T>`로 변환 |
 
 **적용 예시**: `GetAllProductsEndpoint`는 `ProductSummaryDto`를 직접 참조하되, Response wrapper에서 `Seq → List` 변환만 수행합니다.
 

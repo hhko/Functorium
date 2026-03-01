@@ -64,20 +64,15 @@ public sealed class Order : AggregateRoot<OrderId>
 public interface IProductCatalog : IObservablePort
 {
     /// <summary>
-    /// 상품 존재 여부 확인
+    /// 여러 상품의 가격을 배치로 조회
     /// </summary>
-    FinT<IO, bool> ExistsById(ProductId productId);
-
-    /// <summary>
-    /// 상품 가격 조회
-    /// </summary>
-    FinT<IO, Money> GetPrice(ProductId productId);
+    FinT<IO, Map<ProductId, Money>> GetPricesForProducts(IReadOnlyList<ProductId> productIds);
 }
 ```
 
 Port는 **도메인이 필요한 것**을 표현합니다:
 - `IProductCatalog`는 Product Aggregate 전체를 노출하지 않음
-- 필요한 정보(존재 여부, 가격)만 제공
+- 배치 API로 필요한 정보(가격)를 효율적으로 제공 (N+1 문제 방지)
 - 구현은 Application/Adapter Layer에서 담당
 
 ### 도메인 이벤트를 통한 Aggregate 간 통신

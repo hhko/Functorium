@@ -1142,13 +1142,20 @@ var sort = SortExpression.Empty;
 │ DapperQueryBase<T,TDto>        │      │ DapperProductQuery               │
 │                                │      │   : DapperQueryBase<...>         │
 │ • Search() — 실행 엔진         │ ◄─── │   , IProductQuery                │
-│ • BuildOrderByClause()        │      │                                  │
-│ • Params() 헬퍼               │      │ • SelectSql, CountSql            │
-│ • IDbConnection 보유           │      │ • DefaultOrderBy                 │
-└────────────────────────────────┘      │ • AllowedSortColumns             │
-                                        │ • BuildWhereClause()             │
-                                        └──────────────────────────────────┘
+│ • SearchByCursor() — 커서 검색 │      │                                  │
+│ • Stream() — 스트리밍          │      │ • SelectSql, CountSql            │
+│ • BuildOrderByClause()        │      │ • DefaultOrderBy                 │
+│ • Params() 헬퍼               │      │ • AllowedSortColumns             │
+│ • IDbConnection 보유           │      │ • BuildWhereClause() (optional)  │
+└────────────────────────────────┘      └──────────────────────────────────┘
 ```
+
+**생성자 오버로드:**
+
+| 생성자 | 설명 |
+|--------|------|
+| `base(connection)` | 기본 생성자. `BuildWhereClause()`를 직접 override해야 함 |
+| `base(connection, translator, tableAlias)` | `DapperSpecTranslator` 기반. WHERE 변환을 translator에 위임 |
 
 **서브클래스가 선언하는 것 (abstract):**
 
@@ -1158,7 +1165,7 @@ var sort = SortExpression.Empty;
 | `CountSql` | 전체 COUNT문 (WHERE 제외) | `"SELECT COUNT(*) FROM Products"` |
 | `DefaultOrderBy` | 정렬 미지정 시 기본값 | `"Name ASC"` |
 | `AllowedSortColumns` | 허용 정렬 필드 Allowlist | `{ ["Name"] = "Name", ["Price"] = "Price" }` |
-| `BuildWhereClause()` | Spec → SQL WHERE + Parameters | `ProductPriceRangeSpec → "WHERE Price >= @Min ..."` |
+| `BuildWhereClause()` | Spec → SQL WHERE + Parameters (virtual — translator 사용 시 override 불필요) | `ProductPriceRangeSpec → "WHERE Price >= @Min ..."` |
 
 > **참조**: `Src/Functorium/Adapters/Repositories/DapperQueryBase.cs`
 
@@ -1179,18 +1186,8 @@ public class DapperProductQuery
     protected override Dictionary<string, string> AllowedSortColumns { get; } =
         new(StringComparer.OrdinalIgnoreCase) { ["Name"] = "Name", ["Price"] = "Price" };
 
-    public DapperProductQuery(IDbConnection connection) : base(connection) { }
-
-    protected override (string, DynamicParameters) BuildWhereClause(Specification<Product> spec)
-        => spec switch
-        {
-            { IsAll: true } => ("WHERE DeletedAt IS NULL", new DynamicParameters()),
-            ProductPriceRangeSpec s => (
-                "WHERE DeletedAt IS NULL AND Price >= @MinPrice AND Price <= @MaxPrice",
-                Params(("MinPrice", (decimal)s.MinPrice), ("MaxPrice", (decimal)s.MaxPrice))),
-            _ => throw new NotSupportedException(
-                $"Specification '{spec.GetType().Name}'은 Dapper QueryAdapter에서 지원되지 않습니다.")
-        };
+    public DapperProductQuery(IDbConnection connection)
+        : base(connection, ProductSpecTranslator.Instance) { }
 }
 ```
 
@@ -1221,37 +1218,51 @@ public class DapperProductWithStockQuery
             ["StockQuantity"] = "i.StockQuantity"
         };
 
-    public DapperProductWithStockQuery(IDbConnection connection) : base(connection) { }
-
-    protected override (string, DynamicParameters) BuildWhereClause(Specification<Product> spec)
-        => spec switch
-        {
-            { IsAll: true } => ("WHERE p.DeletedAt IS NULL", new DynamicParameters()),
-            ProductPriceRangeSpec s => (
-                "WHERE p.DeletedAt IS NULL AND p.Price >= @MinPrice AND p.Price <= @MaxPrice",
-                Params(("MinPrice", (decimal)s.MinPrice), ("MaxPrice", (decimal)s.MaxPrice))),
-            _ => throw new NotSupportedException(...)
-        };
+    public DapperProductWithStockQuery(IDbConnection connection)
+        : base(connection, ProductSpecTranslator.Instance, "p") { }
 }
 ```
 
 > **참조**: `Tests.Hosts/01-SingleHost/Src/LayeredArch.Adapters.Persistence/Repositories/Dapper/DapperProductWithStockQuery.cs`
 
-#### Specification → SQL WHERE 변환
+#### Specification → SQL WHERE 변환 (DapperSpecTranslator)
 
-Dapper Query Adapter는 Specification을 패턴 매칭으로 SQL WHERE 절로 변환합니다. 모든 값은 `@Parameter`로 바인딩합니다.
+`DapperSpecTranslator<T>`는 Specification을 SQL WHERE 절로 변환하는 Fluent API 기반 translator입니다. Query 서브클래스에서 `BuildWhereClause()`를 직접 override하는 대신, translator를 생성자에 전달하면 베이스 클래스가 자동으로 위임합니다.
 
 ```csharp
-protected override (string, DynamicParameters) BuildWhereClause(Specification<Product> spec)
-    => spec switch
-    {
-        { IsAll: true } => ("WHERE DeletedAt IS NULL", new DynamicParameters()),
-        ProductPriceRangeSpec s => (
-            "WHERE DeletedAt IS NULL AND Price >= @MinPrice AND Price <= @MaxPrice",
-            Params(("MinPrice", (decimal)s.MinPrice), ("MaxPrice", (decimal)s.MaxPrice))),
-        _ => throw new NotSupportedException(...)
-    };
+public static class ProductSpecTranslator
+{
+    public static readonly DapperSpecTranslator<Product> Instance = new DapperSpecTranslator<Product>()
+        .WhenAll(alias =>
+        {
+            var p = DapperSpecTranslator<Product>.Prefix(alias);
+            return ($"WHERE {p}DeletedAt IS NULL", new DynamicParameters());
+        })
+        .When<ProductPriceRangeSpec>((spec, alias) =>
+        {
+            var p = DapperSpecTranslator<Product>.Prefix(alias);
+            var @params = DapperSpecTranslator<Product>.Params(
+                ("MinPrice", (decimal)spec.MinPrice),
+                ("MaxPrice", (decimal)spec.MaxPrice));
+            return ($"WHERE {p}DeletedAt IS NULL AND {p}Price >= @MinPrice AND {p}Price <= @MaxPrice", @params);
+        });
+}
 ```
+
+**DapperSpecTranslator Fluent API:**
+
+| 메서드 | 설명 |
+|--------|------|
+| `.WhenAll(alias => ...)` | `Specification.All` (기본 조건) 처리 |
+| `.When<TSpec>((spec, alias) => ...)` | 특정 Specification 타입 처리 |
+| `Translate(spec, tableAlias)` | `(string Where, DynamicParameters Params)` 반환 |
+
+**Static 헬퍼:**
+
+| 헬퍼 | 설명 | 예시 |
+|------|------|------|
+| `Prefix(alias)` | 테이블 alias가 있으면 `"p."`, 없으면 `""` 반환 | `Prefix("p")` → `"p."` |
+| `Params(...)` | `DynamicParameters` 생성 | `Params(("MinPrice", 100m))` |
 
 #### Dapper SQL 작성 체크리스트
 
@@ -1310,7 +1321,8 @@ public class InMemoryProductQuery
 | `DefaultSortField` | `abstract string` | 정렬 미지정 시 기본 필드명 |
 | `GetProjectedItems()` | `abstract` | 필터링 + DTO 프로젝션 (JOIN 로직 포함) |
 | `SortSelector()` | `abstract` | 필드명 → 정렬 키 셀렉터 함수 |
-| `Search()` | `virtual` | 페이지네이션 검색 (베이스 제공) |
+| `Search()` | `virtual` | Offset 기반 페이지네이션 검색 (베이스 제공) |
+| `SearchByCursor()` | `virtual` | Cursor 기반 페이지네이션 검색 (베이스 제공) |
 | `Stream()` | `virtual` | `IAsyncEnumerable<TDto>` 스트리밍 (베이스 제공) |
 
 - InMemory는 테스트용이므로 Aggregate 재구성 비용이 무시 가능

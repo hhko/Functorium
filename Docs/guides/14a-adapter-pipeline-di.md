@@ -58,6 +58,8 @@ ls {Project}/obj/GeneratedFiles/Functorium.SourceGenerators/.../*.g.cs
 | Registration 클래스 | Adapter 프로젝트별 DI 등록을 모아둔 정적 클래스 |
 | Options 패턴 | `OptionsConfigurator<T>`로 설정 값을 강타입 바인딩 |
 
+> **참고**: `UsecaseCachingPipeline`은 `IMemoryCache`에 의존합니다. `UseAll()` 사용 시 `services.AddMemoryCache()`를 DI에 등록해야 합니다.
+
 ---
 
 ## Activity 3: Pipeline 생성 확인

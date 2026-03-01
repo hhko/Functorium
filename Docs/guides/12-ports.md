@@ -333,7 +333,9 @@ IObservablePort (인터페이스)
 ├── IQueryPort : IObservablePort   ← 비제네릭 마커 (런타임 타입 체크, DI 스캐닝용)
 │
 └── IQueryPort<TEntity, TDto> : IQueryPort   ← 읽기 전용 조회 (DTO 직접 반환)
-    └── FinT<IO, PagedResult<TDto>> Search(Specification<TEntity>, PageRequest, SortExpression)
+    ├── FinT<IO, PagedResult<TDto>> Search(Specification<TEntity>, PageRequest, SortExpression)
+    ├── FinT<IO, CursorPagedResult<TDto>> SearchByCursor(Specification<TEntity>, CursorPageRequest, SortExpression)
+    └── IAsyncEnumerable<TDto> Stream(Specification<TEntity>, SortExpression, CancellationToken)
     │
     ├── IProductQuery : IQueryPort<Product, ProductSummaryDto>
     ├── IProductWithStockQuery : IQueryPort<Product, ProductWithStockDto>  ← JOIN 예제
@@ -485,9 +487,19 @@ public interface IQueryPort : IObservablePort { }
 public interface IQueryPort<TEntity, TDto> : IQueryPort
 {
     FinT<IO, PagedResult<TDto>> Search(
-        Specification<TEntity> spec,   // 전체 조회 시 Specification<TEntity>.All 사용
+        Specification<TEntity> spec,
         PageRequest page,
         SortExpression sort);
+
+    FinT<IO, CursorPagedResult<TDto>> SearchByCursor(
+        Specification<TEntity> spec,
+        CursorPageRequest cursor,
+        SortExpression sort);
+
+    IAsyncEnumerable<TDto> Stream(
+        Specification<TEntity> spec,
+        SortExpression sort,
+        CancellationToken cancellationToken = default);
 }
 ```
 
@@ -498,6 +510,22 @@ public interface IQueryPort<TEntity, TDto> : IQueryPort
 | `spec` | `Specification<TEntity>` | 도메인 Specification 패턴으로 필터 조건 표현. 전체 조회 시 `Specification<TEntity>.All` 사용. 상세는 [10-specifications.md](./10-specifications.md) 참조 |
 | `page` | `PageRequest` | Offset 기반 페이지네이션 (`Page`, `PageSize`). 기본값 page=1, pageSize=20, 최대 100 |
 | `sort` | `SortExpression` | 다중 필드 정렬 표현. `SortExpression.Empty`이면 Adapter의 `DefaultOrderBy` 사용 |
+
+**SearchByCursor 파라미터 설명:**
+
+| 파라미터 | 타입 | 설명 |
+|----------|------|------|
+| `spec` | `Specification<TEntity>` | Search와 동일한 Specification 패턴 |
+| `cursor` | `CursorPageRequest` | Keyset 기반 커서 (`After`, `Before`, `PageSize`). 기본값 pageSize=20, 최대 10,000 |
+| `sort` | `SortExpression` | 커서 페이지네이션의 정렬 기준. `SortExpression.Empty`이면 Adapter의 `DefaultOrderBy` 사용 |
+
+**Stream 파라미터 설명:**
+
+| 파라미터 | 타입 | 설명 |
+|----------|------|------|
+| `spec` | `Specification<TEntity>` | Search와 동일한 Specification 패턴 |
+| `sort` | `SortExpression` | 정렬 기준 |
+| `cancellationToken` | `CancellationToken` | 스트리밍 취소 토큰 (기본값 `default`) |
 
 ```csharp
 // 단일 테이블 — 파일: {Application}/Usecases/Products/IProductQuery.cs

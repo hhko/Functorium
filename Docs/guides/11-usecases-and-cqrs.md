@@ -715,7 +715,7 @@ public sealed class SearchProductsQuery
         string SortDirection = "") : IQueryRequest<Response>;
 
     public sealed record Response(
-        Seq<ProductSummaryDto> Products,
+        IReadOnlyList<ProductSummaryDto> Products,
         int TotalCount,
         int Page,
         int PageSize,
@@ -784,7 +784,7 @@ public sealed class GetAllProductsQuery
 {
     public sealed record Request() : IQueryRequest<Response>;
 
-    public sealed record Response(Seq<ProductSummaryDto> Products);
+    public sealed record Response(IReadOnlyList<ProductSummaryDto> Products);
 
     public sealed class Usecase(IProductQuery productQuery)
         : IQueryUsecase<Request, Response>
@@ -859,7 +859,7 @@ FinT<IO, Response> usecase =
 ### 파이프라인 실행 순서
 
 ```
-Request → Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler
+Request → Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction → Custom → Handler
 ```
 
 - Transaction은 Exception 뒤에 위치 → `SaveChanges` 예외 발생 시 Exception 파이프라인이 처리
@@ -1045,6 +1045,12 @@ public sealed record Request(string ProductId) : IQueryRequest<Response>, ICache
     public TimeSpan? Duration => TimeSpan.FromMinutes(5);
 }
 ```
+
+`UsecaseCachingPipeline`이 `ICacheable`을 구현한 Query Request를 자동으로 캐싱합니다:
+- `IMemoryCache`를 사용하여 `CacheKey` 기반으로 캐시 히트/미스 처리
+- 캐시 히트 시 Handler를 호출하지 않고 캐싱된 응답을 즉시 반환
+- `response.IsSucc`인 경우에만 캐싱 (실패 응답은 캐싱하지 않음)
+- `Duration`이 `null`이면 기본 5분 캐시
 
 ---
 
