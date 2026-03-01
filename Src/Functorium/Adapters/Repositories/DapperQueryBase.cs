@@ -11,7 +11,7 @@ namespace Functorium.Adapters.Repositories;
 /// Dapper 기반 QueryAdapter의 공통 인프라.
 /// 서브클래스는 SQL 선언(SelectSql, CountSql)과 WHERE 빌드만 담당합니다.
 /// </summary>
-public abstract class DapperQueryAdapterBase<TEntity, TDto>
+public abstract class DapperQueryBase<TEntity, TDto>
 {
     private readonly IDbConnection _connection;
 
@@ -21,7 +21,7 @@ public abstract class DapperQueryAdapterBase<TEntity, TDto>
     protected abstract Dictionary<string, string> AllowedSortColumns { get; }
     protected abstract (string Where, DynamicParameters Params) BuildWhereClause(Specification<TEntity> spec);
 
-    protected DapperQueryAdapterBase(IDbConnection connection) => _connection = connection;
+    protected DapperQueryBase(IDbConnection connection) => _connection = connection;
 
     public virtual FinT<IO, PagedResult<TDto>> Search(
         Specification<TEntity> spec, PageRequest page, SortExpression sort)
