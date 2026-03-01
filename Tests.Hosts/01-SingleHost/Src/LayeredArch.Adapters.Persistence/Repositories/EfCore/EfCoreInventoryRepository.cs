@@ -29,6 +29,7 @@ public class EfCoreInventoryRepository
 
     // ─── 필수 선언 ───────────────────────────────────
 
+    protected override DbContext DbContext => _dbContext;
     protected override DbSet<InventoryModel> DbSet => _dbContext.Inventories;
 
     protected override Inventory ToDomain(InventoryModel model) => model.ToDomain();

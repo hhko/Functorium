@@ -1,8 +1,6 @@
 using System.Data;
-using Dapper;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Adapters.Repositories;
-using Functorium.Domains.Specifications;
 using LayeredArch.Application.Usecases.Customers.Ports;
 using LayeredArch.Domain.AggregateRoots.Customers;
 
@@ -16,6 +14,8 @@ namespace LayeredArch.Adapters.Persistence.Repositories.Dapper;
 public class DapperCustomerOrderSummaryQuery
     : DapperQueryBase<Customer, CustomerOrderSummaryDto>, ICustomerOrderSummaryQuery
 {
+    private static readonly DapperSpecTranslator<Customer> Translator = new();
+
     public string RequestCategory => "QueryAdapter";
 
     protected override string SelectSql =>
@@ -37,13 +37,5 @@ public class DapperCustomerOrderSummaryQuery
             ["LastOrderDate"] = "LastOrderDate"
         };
 
-    public DapperCustomerOrderSummaryQuery(IDbConnection connection) : base(connection) { }
-
-    protected override (string, DynamicParameters) BuildWhereClause(Specification<Customer> spec)
-        => spec switch
-        {
-            { IsAll: true } => ("", new DynamicParameters()),
-            _ => throw new NotSupportedException(
-                $"Specification '{spec.GetType().Name}'은 Dapper QueryAdapter에서 지원되지 않습니다.")
-        };
+    public DapperCustomerOrderSummaryQuery(IDbConnection connection) : base(connection, Translator) { }
 }

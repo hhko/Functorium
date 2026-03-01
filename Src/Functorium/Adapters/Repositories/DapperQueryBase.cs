@@ -1,10 +1,10 @@
+using System.Collections.Concurrent;
 using System.Data;
 using System.Data.Common;
+using System.Reflection;
 using Dapper;
 using Functorium.Applications.Queries;
 using Functorium.Domains.Specifications;
-using static LanguageExt.Prelude;
-
 namespace Functorium.Adapters.Repositories;
 
 /// <summary>
@@ -14,14 +14,50 @@ namespace Functorium.Adapters.Repositories;
 public abstract class DapperQueryBase<TEntity, TDto>
 {
     private readonly IDbConnection _connection;
+    private readonly DapperSpecTranslator<TEntity>? _translator;
+    private readonly string _tableAlias;
+    private string? _cachedDefaultColumn;
 
     protected abstract string SelectSql { get; }
     protected abstract string CountSql { get; }
     protected abstract string DefaultOrderBy { get; }
     protected abstract Dictionary<string, string> AllowedSortColumns { get; }
-    protected abstract (string Where, DynamicParameters Params) BuildWhereClause(Specification<TEntity> spec);
 
-    protected DapperQueryBase(IDbConnection connection) => _connection = connection;
+    /// <summary>
+    /// Specification → SQL WHERE 절 변환.
+    /// DapperSpecTranslator를 주입받은 경우 기본 구현이 제공됩니다.
+    /// 그렇지 않으면 서브클래스에서 반드시 오버라이드해야 합니다.
+    /// </summary>
+    protected virtual (string Where, DynamicParameters Params) BuildWhereClause(Specification<TEntity> spec)
+    {
+        if (_translator is not null)
+            return _translator.Translate(spec, _tableAlias);
+        throw new NotSupportedException(
+            "Override BuildWhereClause or provide a DapperSpecTranslator via constructor.");
+    }
+
+    /// <summary>DB 방언별 Offset 페이지네이션 절. 서브클래스에서 오버라이드하여 SQL Server 등 지원.</summary>
+    protected virtual string PaginationClause => "LIMIT @PageSize OFFSET @Skip";
+
+    /// <summary>DB 방언별 Keyset 페이지네이션 절. 서브클래스에서 오버라이드하여 SQL Server 등 지원.</summary>
+    protected virtual string CursorPaginationClause => "LIMIT @PageSize";
+
+    protected DapperQueryBase(IDbConnection connection)
+    {
+        _connection = connection;
+        _tableAlias = "";
+    }
+
+    protected DapperQueryBase(
+        IDbConnection connection, DapperSpecTranslator<TEntity> translator, string tableAlias = "")
+        : this(connection)
+    {
+        _translator = translator;
+        _tableAlias = tableAlias;
+    }
+
+    private string DefaultColumn => _cachedDefaultColumn ??=
+        DefaultOrderBy[..DefaultOrderBy.IndexOf(' ')];
 
     public virtual FinT<IO, PagedResult<TDto>> Search(
         Specification<TEntity> spec, PageRequest page, SortExpression sort)
@@ -30,18 +66,83 @@ public abstract class DapperQueryBase<TEntity, TDto>
         {
             var (where, parameters) = BuildWhereClause(spec);
             var orderBy = BuildOrderByClause(sort);
-
-            var totalCount = await _connection.ExecuteScalarAsync<int>(
-                $"{CountSql} {where}", parameters);
-
             parameters.Add("PageSize", page.PageSize);
             parameters.Add("Skip", page.Skip);
-            var items = await _connection.QueryAsync<TDto>(
-                $"{SelectSql} {where} {orderBy} LIMIT @PageSize OFFSET @Skip", parameters);
+
+            var sql = $"{CountSql} {where};\n{SelectSql} {where} {orderBy} {PaginationClause}";
+            using var multi = await _connection.QueryMultipleAsync(sql, parameters);
+            var totalCount = await multi.ReadSingleAsync<int>();
+            var items = await multi.ReadAsync<TDto>();
 
             return Fin.Succ(new PagedResult<TDto>(
-                toSeq(items), totalCount, page.Page, page.PageSize));
+                items.ToList(), totalCount, page.Page, page.PageSize));
         });
+    }
+
+    public virtual FinT<IO, CursorPagedResult<TDto>> SearchByCursor(
+        Specification<TEntity> spec, CursorPageRequest cursor, SortExpression sort)
+    {
+        return IO.liftAsync(async () =>
+        {
+            var (where, parameters) = BuildWhereClause(spec);
+            var sortColumn = ResolveSortColumn(sort);
+            var orderBy = BuildOrderByClause(sort);
+
+            if (cursor.After is not null)
+            {
+                where = string.IsNullOrEmpty(where)
+                    ? $"WHERE {sortColumn} > @CursorValue"
+                    : $"{where} AND {sortColumn} > @CursorValue";
+                parameters.Add("CursorValue", cursor.After);
+            }
+            else if (cursor.Before is not null)
+            {
+                where = string.IsNullOrEmpty(where)
+                    ? $"WHERE {sortColumn} < @CursorValue"
+                    : $"{where} AND {sortColumn} < @CursorValue";
+                parameters.Add("CursorValue", cursor.Before);
+            }
+
+            parameters.Add("PageSize", cursor.PageSize + 1);
+
+            var sql = $"{SelectSql} {where} {orderBy} {CursorPaginationClause}";
+            var items = (await _connection.QueryAsync<TDto>(sql, parameters)).ToList();
+
+            var hasMore = items.Count > cursor.PageSize;
+            if (hasMore) items.RemoveAt(items.Count - 1);
+
+            var fieldName = ResolveSortFieldName(sort);
+            string? nextCursor = hasMore && items.Count > 0 ? GetCursorValue(items[^1], fieldName) : null;
+            string? prevCursor = items.Count > 0 ? GetCursorValue(items[0], fieldName) : null;
+
+            return Fin.Succ(new CursorPagedResult<TDto>(items, nextCursor, prevCursor, hasMore));
+        });
+    }
+
+    private string ResolveSortColumn(SortExpression sort)
+    {
+        if (sort.IsEmpty) return DefaultColumn;
+        return AllowedSortColumns.GetValueOrDefault(sort.Fields[0].FieldName, DefaultColumn);
+    }
+
+    private string ResolveSortFieldName(SortExpression sort)
+    {
+        if (!sort.IsEmpty) return sort.Fields[0].FieldName;
+        foreach (var kvp in AllowedSortColumns)
+            if (kvp.Value == DefaultColumn) return kvp.Key;
+        return DefaultColumn;
+    }
+
+    private static readonly ConcurrentDictionary<string, PropertyInfo?> CursorPropertyCache =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    protected virtual string? GetCursorValue(TDto item, string fieldName)
+    {
+        if (item is null) return null;
+        var prop = CursorPropertyCache.GetOrAdd(fieldName,
+            name => typeof(TDto).GetProperty(name,
+                BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase));
+        return prop?.GetValue(item)?.ToString();
     }
 
     private string BuildOrderByClause(SortExpression sort)
@@ -49,11 +150,10 @@ public abstract class DapperQueryBase<TEntity, TDto>
         if (sort.IsEmpty)
             return $"ORDER BY {DefaultOrderBy}";
 
-        var defaultColumn = DefaultOrderBy.Split(' ')[0];
         var clauses = new List<string>();
         foreach (var field in sort.Fields)
         {
-            var column = AllowedSortColumns.GetValueOrDefault(field.FieldName, defaultColumn);
+            var column = AllowedSortColumns.GetValueOrDefault(field.FieldName, DefaultColumn);
             var direction = field.Direction == SortDirection.Descending ? "DESC" : "ASC";
             clauses.Add($"{column} {direction}");
         }

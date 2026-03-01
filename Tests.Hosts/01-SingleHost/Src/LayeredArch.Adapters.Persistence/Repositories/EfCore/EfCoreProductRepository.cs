@@ -28,6 +28,7 @@ public class EfCoreProductRepository
 
     // ─── 필수 선언 ───────────────────────────────────
 
+    protected override DbContext DbContext => _dbContext;
     protected override DbSet<ProductModel> DbSet => _dbContext.Products;
 
     protected override Product ToDomain(ProductModel model) => model.ToDomain();
@@ -81,14 +82,23 @@ public class EfCoreProductRepository
         });
     }
 
+    // ─── Compiled Query (opt-in 성능 최적화) ──────────
+    // EF.CompileAsyncQuery를 사용하면 LINQ → SQL 컴파일을 1회만 수행합니다.
+    // 반복 호출 시 ~10-15% 성능 향상을 기대할 수 있습니다.
+
+    private static readonly Func<LayeredArchDbContext, string, Task<ProductModel?>> GetByIdIgnoringFiltersCompiled =
+        EF.CompileAsyncQuery((LayeredArchDbContext ctx, string id) =>
+            ctx.Products.IgnoreQueryFilters()
+                .Include(p => p.ProductTags)
+                .FirstOrDefault(m => m.Id == id));
+
     // ─── Product 고유 메서드 ─────────────────────────
 
     public virtual FinT<IO, Product> GetByIdIncludingDeleted(ProductId id)
     {
         return IO.liftAsync(async () =>
         {
-            var model = await ReadQueryIgnoringFilters()
-                .FirstOrDefaultAsync(ByIdPredicate(id));
+            var model = await GetByIdIgnoringFiltersCompiled(_dbContext, id.ToString());
 
             if (model is not null)
             {

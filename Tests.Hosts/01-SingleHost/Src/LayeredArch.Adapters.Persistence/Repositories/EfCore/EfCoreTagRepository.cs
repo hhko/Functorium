@@ -22,6 +22,7 @@ public class EfCoreTagRepository
 
     // ─── 필수 선언 ───────────────────────────────────
 
+    protected override DbContext DbContext => _dbContext;
     protected override DbSet<TagModel> DbSet => _dbContext.Tags;
 
     protected override Tag ToDomain(TagModel model) => model.ToDomain();

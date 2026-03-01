@@ -1,12 +1,10 @@
-using LanguageExt;
-
 namespace Functorium.Applications.Queries;
 
 /// <summary>
 /// 페이지네이션 결과 컨테이너.
 /// </summary>
 public sealed record PagedResult<T>(
-    Seq<T> Items,
+    IReadOnlyList<T> Items,
     int TotalCount,
     int Page,
     int PageSize)

@@ -22,6 +22,7 @@ public class EfCoreOrderRepository
 
     // ─── 필수 선언 ───────────────────────────────────
 
+    protected override DbContext DbContext => _dbContext;
     protected override DbSet<OrderModel> DbSet => _dbContext.Orders;
 
     protected override Order ToDomain(OrderModel model) => model.ToDomain();

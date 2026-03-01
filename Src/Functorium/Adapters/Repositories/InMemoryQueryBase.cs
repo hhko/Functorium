@@ -1,8 +1,6 @@
 using System.Runtime.CompilerServices;
 using Functorium.Applications.Queries;
 using Functorium.Domains.Specifications;
-using static LanguageExt.Prelude;
-
 namespace Functorium.Adapters.Repositories;
 
 /// <summary>
@@ -26,16 +24,49 @@ public abstract class InMemoryQueryBase<TEntity, TDto>
     {
         return IO.lift(() =>
         {
-            var projected = toSeq(GetProjectedItems(spec));
-            var sorted = ApplySort(projected, sort);
-            var totalCount = sorted.Count;
-            var items = sorted
-                .Skip(page.Skip)
-                .Take(page.PageSize)
-                .ToSeq();
+            var projected = GetProjectedItems(spec).ToList();
+            var totalCount = projected.Count;
+            ApplySortInPlace(projected, sort);
+            var items = projected.Skip(page.Skip).Take(page.PageSize).ToList();
 
             return Fin.Succ(new PagedResult<TDto>(
                 items, totalCount, page.Page, page.PageSize));
+        });
+    }
+
+    public virtual FinT<IO, CursorPagedResult<TDto>> SearchByCursor(
+        Specification<TEntity> spec, CursorPageRequest cursor, SortExpression sort)
+    {
+        return IO.lift(() =>
+        {
+            var projected = GetProjectedItems(spec).ToList();
+            ApplySortInPlace(projected, sort);
+
+            var fieldName = sort.IsEmpty ? DefaultSortField : sort.Fields[0].FieldName;
+            var selector = SortSelector(fieldName);
+
+            IEnumerable<TDto> filtered = projected;
+            if (cursor.After is not null)
+            {
+                var afterIndex = projected.FindLastIndex(item =>
+                    string.Compare(selector(item)?.ToString(), cursor.After, StringComparison.Ordinal) <= 0);
+                filtered = afterIndex >= 0 ? projected.Skip(afterIndex + 1) : projected;
+            }
+            else if (cursor.Before is not null)
+            {
+                var beforeIndex = projected.FindIndex(item =>
+                    string.Compare(selector(item)?.ToString(), cursor.Before, StringComparison.Ordinal) >= 0);
+                filtered = beforeIndex > 0 ? projected.Take(beforeIndex) : [];
+            }
+
+            var items = filtered.Take(cursor.PageSize + 1).ToList();
+            var hasMore = items.Count > cursor.PageSize;
+            if (hasMore) items.RemoveAt(items.Count - 1);
+
+            string? nextCursor = hasMore && items.Count > 0 ? selector(items[^1])?.ToString() : null;
+            string? prevCursor = items.Count > 0 ? selector(items[0])?.ToString() : null;
+
+            return Fin.Succ(new CursorPagedResult<TDto>(items, nextCursor, prevCursor, hasMore));
         });
     }
 
@@ -44,10 +75,10 @@ public abstract class InMemoryQueryBase<TEntity, TDto>
         SortExpression sort,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var projected = toSeq(GetProjectedItems(spec));
-        var sorted = ApplySort(projected, sort);
+        var projected = GetProjectedItems(spec).ToList();
+        ApplySortInPlace(projected, sort);
 
-        foreach (var item in sorted)
+        foreach (var item in projected)
         {
             cancellationToken.ThrowIfCancellationRequested();
             yield return item;
@@ -56,26 +87,30 @@ public abstract class InMemoryQueryBase<TEntity, TDto>
         await Task.CompletedTask;
     }
 
-    private Seq<TDto> ApplySort(Seq<TDto> items, SortExpression sort)
+    private void ApplySortInPlace(List<TDto> items, SortExpression sort)
     {
-        if (sort.IsEmpty)
-            return toSeq(items.OrderBy(SortSelector(DefaultSortField)));
+        var sortField = sort.IsEmpty
+            ? new SortField(DefaultSortField, SortDirection.Ascending)
+            : sort.Fields[0];
 
-        IOrderedEnumerable<TDto>? ordered = null;
+        Comparison<TDto> comparison = BuildComparison(sort.IsEmpty
+            ? [sortField]
+            : sort.Fields);
+        items.Sort(comparison);
+    }
 
-        foreach (var field in sort.Fields)
+    private Comparison<TDto> BuildComparison(IEnumerable<SortField> fields)
+    {
+        return (x, y) =>
         {
-            var selector = SortSelector(field.FieldName);
-            var isDesc = field.Direction == SortDirection.Descending;
-            ordered = (ordered, isDesc) switch
+            foreach (var field in fields)
             {
-                (null, false) => items.OrderBy(selector),
-                (null, true) => items.OrderByDescending(selector),
-                (_, false) => ordered!.ThenBy(selector),
-                _ => ordered!.ThenByDescending(selector),
-            };
-        }
-
-        return ordered is not null ? toSeq(ordered) : items;
+                var selector = SortSelector(field.FieldName);
+                var cmp = Comparer<object>.Default.Compare(selector(x), selector(y));
+                if (cmp != 0)
+                    return field.Direction == SortDirection.Descending ? -cmp : cmp;
+            }
+            return 0;
+        };
     }
 }

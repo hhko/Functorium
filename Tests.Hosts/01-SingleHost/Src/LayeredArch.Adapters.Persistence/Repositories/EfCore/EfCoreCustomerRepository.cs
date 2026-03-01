@@ -29,6 +29,7 @@ public class EfCoreCustomerRepository
 
     // ─── 필수 선언 ───────────────────────────────────
 
+    protected override DbContext DbContext => _dbContext;
     protected override DbSet<CustomerModel> DbSet => _dbContext.Customers;
 
     protected override Customer ToDomain(CustomerModel model) => model.ToDomain();

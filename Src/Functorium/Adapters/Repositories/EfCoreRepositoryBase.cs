@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Reflection;
 using Functorium.Adapters.Errors;
 using Functorium.Applications.Events;
 using Functorium.Domains.Entities;
@@ -58,6 +59,9 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 
     // ─── 서브클래스 필수 구현 ────────────────────────────
 
+    /// <summary>EF Core DbContext. Update의 TrackedMerge 전략에서 사용됩니다.</summary>
+    protected abstract DbContext DbContext { get; }
+
     /// <summary>엔티티 모델의 DbSet</summary>
     protected abstract DbSet<TModel> DbSet { get; }
 
@@ -67,18 +71,23 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     /// <summary>Domain → Model 매핑</summary>
     protected abstract TModel ToModel(TAggregate aggregate);
 
+    // ─── 정적 캐싱: Expression 공유 구성요소 ─────────
+
+    private static readonly MethodInfo ListContainsMethod =
+        typeof(System.Collections.Generic.List<string>).GetMethod("Contains", [typeof(string)])!;
+    private static readonly ParameterExpression ModelParam =
+        Expression.Parameter(typeof(TModel), "m");
+    private static readonly MemberExpression IdProperty =
+        Expression.Property(ModelParam, nameof(IHasStringId.Id));
+
     /// <summary>
     /// 단일 ID 매칭 Expression. IHasStringId 기반 기본 구현을 제공합니다.
     /// Expression을 수동 빌드하여 TModel의 구체 프로퍼티를 참조합니다 (EF Core 호환).
     /// </summary>
     protected virtual Expression<Func<TModel, bool>> ByIdPredicate(TId id)
     {
-        var s = id.ToString();
-        var param = Expression.Parameter(typeof(TModel), "m");
-        var body = Expression.Equal(
-            Expression.Property(param, nameof(IHasStringId.Id)),
-            Expression.Constant(s));
-        return Expression.Lambda<Func<TModel, bool>>(body, param);
+        var body = Expression.Equal(IdProperty, Expression.Constant(id.ToString()));
+        return Expression.Lambda<Func<TModel, bool>>(body, ModelParam);
     }
 
     /// <summary>
@@ -88,13 +97,8 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
     protected virtual Expression<Func<TModel, bool>> ByIdsPredicate(IReadOnlyList<TId> ids)
     {
         var ss = ids.Select(id => id.ToString()).ToList();
-        var param = Expression.Parameter(typeof(TModel), "m");
-        var containsMethod = typeof(System.Collections.Generic.List<string>).GetMethod("Contains", [typeof(string)])!;
-        var body = Expression.Call(
-            Expression.Constant(ss),
-            containsMethod,
-            Expression.Property(param, nameof(IHasStringId.Id)));
-        return Expression.Lambda<Func<TModel, bool>>(body, param);
+        var body = Expression.Call(Expression.Constant(ss), ListContainsMethod, IdProperty);
+        return Expression.Lambda<Func<TModel, bool>>(body, ModelParam);
     }
 
     // ─── 중앙화된 쿼리 인프라 ─────────────────────────
@@ -179,9 +183,15 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
 
     public virtual FinT<IO, TAggregate> Update(TAggregate aggregate)
     {
-        return IO.lift(() =>
+        return IO.liftAsync(async () =>
         {
-            DbSet.Update(ToModel(aggregate));
+            var id = aggregate.Id.ToString();
+            var existing = await DbSet.FindAsync(id);
+            if (existing is null)
+                return NotFoundError(aggregate.Id);
+
+            var updated = ToModel(aggregate);
+            DbContext.Entry(existing).CurrentValues.SetValues(updated);
             EventCollector.Track(aggregate);
             return Fin.Succ(aggregate);
         });
@@ -229,7 +239,7 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
             else
             {
                 models = new List<TModel>(distinctIds.Count);
-                foreach (var batch in Chunk(distinctIds, IdBatchSize))
+                foreach (var batch in distinctIds.Chunk(IdBatchSize))
                 {
                     var batchResult = await ReadQuery()
                         .Where(ByIdsPredicate(batch))
@@ -280,7 +290,7 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
             else
             {
                 int totalAffected = 0;
-                foreach (var batch in Chunk(distinctIds, IdBatchSize))
+                foreach (var batch in distinctIds.Chunk(IdBatchSize))
                 {
                     totalAffected += await DbSet.Where(ByIdsPredicate(batch))
                         .ExecuteDeleteAsync();
@@ -337,15 +347,5 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
             return string.Join(", ", list);
 
         return string.Join(", ", list.Take(maxDisplay)) + $" ... (+{list.Count - maxDisplay} more)";
-    }
-
-    private static List<List<T>> Chunk<T>(List<T> source, int chunkSize)
-    {
-        var chunks = new List<List<T>>();
-        for (int i = 0; i < source.Count; i += chunkSize)
-        {
-            chunks.Add(source.GetRange(i, Math.Min(chunkSize, source.Count - i)));
-        }
-        return chunks;
     }
 }
