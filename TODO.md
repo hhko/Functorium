@@ -7,6 +7,14 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
 ```
 
 - [ ] 폴더 정리
+- [x] Bulk 성능 개선
+- [x] N+1 개선
+- [x] 레파지토리 패턴 구현 베스트 프렉티스
+  - 올바른 예제
+  - 잘못된 예제
+  - FAQ
+- [ ] 레파지토리 패턴 Book
+- [ ] N+1 문제 이해 코드
 - [x] Domains 레이어 관점 폴저 정리
 - [x] Application 레이어 관점 폴더 정리
 - [ ] 01-SingleHost\Src\LayeredArch.Adapters.Presentation\Abstractions\Extensions\FinResponseExtensions.cs Http 전용 확장 메서드
