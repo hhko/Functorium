@@ -498,4 +498,98 @@
     <Project Path="Books/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/05-Custom-Generator-Template/CustomGeneratorTemplate.Usage/CustomGeneratorTemplate.Usage.csproj" />
     <Project Path="Books/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/05-Custom-Generator-Template/CustomGeneratorTemplate.Tests.Unit/CustomGeneratorTemplate.Tests.Unit.csproj" />
   </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/" />
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/" />
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity/EntityAndIdentity.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity.Tests.Unit/EntityAndIdentity.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/02-Aggregate-Root/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/02-Aggregate-Root/AggregateRoot/AggregateRoot.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/02-Aggregate-Root/AggregateRoot.Tests.Unit/AggregateRoot.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/03-Domain-Events/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/03-Domain-Events/DomainEvents/DomainEvents.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/03-Domain-Events/DomainEvents.Tests.Unit/DomainEvents.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/04-Entity-Interfaces/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/04-Entity-Interfaces/EntityInterfaces/EntityInterfaces.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/04-Entity-Interfaces/EntityInterfaces.Tests.Unit/EntityInterfaces.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/" />
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/01-Repository-Interface/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/01-Repository-Interface/RepositoryInterface/RepositoryInterface.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/01-Repository-Interface/RepositoryInterface.Tests.Unit/RepositoryInterface.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/02-InMemory-Repository/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/02-InMemory-Repository/InMemoryRepository/InMemoryRepository.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/02-InMemory-Repository/InMemoryRepository.Tests.Unit/InMemoryRepository.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/03-EfCore-Repository/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/03-EfCore-Repository/EfCoreRepository/EfCoreRepository.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/03-EfCore-Repository/EfCoreRepository.Tests.Unit/EfCoreRepository.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/04-Unit-Of-Work/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/04-Unit-Of-Work/UnitOfWork/UnitOfWork.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/04-Unit-Of-Work/UnitOfWork.Tests.Unit/UnitOfWork.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/" />
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/01-QueryPort-Interface/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/01-QueryPort-Interface/QueryPortInterface/QueryPortInterface.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/01-QueryPort-Interface/QueryPortInterface.Tests.Unit/QueryPortInterface.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/02-DTO-Separation/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/02-DTO-Separation/DtoSeparation/DtoSeparation.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/02-DTO-Separation/DtoSeparation.Tests.Unit/DtoSeparation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/03-Pagination-And-Sorting/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/03-Pagination-And-Sorting/PaginationAndSorting/PaginationAndSorting.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/03-Pagination-And-Sorting/PaginationAndSorting.Tests.Unit/PaginationAndSorting.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/04-InMemory-Query-Adapter/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/04-InMemory-Query-Adapter/InMemoryQueryAdapter/InMemoryQueryAdapter.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/04-InMemory-Query-Adapter/InMemoryQueryAdapter.Tests.Unit/InMemoryQueryAdapter.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/05-Dapper-Query-Adapter/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/05-Dapper-Query-Adapter/DapperQueryAdapter/DapperQueryAdapter.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/05-Dapper-Query-Adapter/DapperQueryAdapter.Tests.Unit/DapperQueryAdapter.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/" />
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/01-Command-Usecase/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/01-Command-Usecase/CommandUsecase/CommandUsecase.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/01-Command-Usecase/CommandUsecase.Tests.Unit/CommandUsecase.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/02-Query-Usecase/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/02-Query-Usecase/QueryUsecase/QueryUsecase.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/02-Query-Usecase/QueryUsecase.Tests.Unit/QueryUsecase.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/03-FinT-To-FinResponse/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/03-FinT-To-FinResponse/FinTToFinResponse/FinTToFinResponse.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/03-FinT-To-FinResponse/FinTToFinResponse.Tests.Unit/FinTToFinResponse.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/04-Domain-Event-Flow/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/04-Domain-Event-Flow/DomainEventFlow/DomainEventFlow.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/04-Domain-Event-Flow/DomainEventFlow.Tests.Unit/DomainEventFlow.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/05-Transaction-Pipeline/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/05-Transaction-Pipeline/TransactionPipeline/TransactionPipeline.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/05-Transaction-Pipeline/TransactionPipeline.Tests.Unit/TransactionPipeline.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/" />
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/01-Ecommerce-Order-Management/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/01-Ecommerce-Order-Management/EcommerceOrderManagement/EcommerceOrderManagement.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/01-Ecommerce-Order-Management/EcommerceOrderManagement.Tests.Unit/EcommerceOrderManagement.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/02-Customer-Management/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/02-Customer-Management/CustomerManagement/CustomerManagement.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/02-Customer-Management/CustomerManagement.Tests.Unit/CustomerManagement.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/03-Inventory-Management/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/03-Inventory-Management/InventoryManagement/InventoryManagement.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/03-Inventory-Management/InventoryManagement.Tests.Unit/InventoryManagement.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Books/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/04-Catalog-Search/">
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/04-Catalog-Search/CatalogSearch/CatalogSearch.csproj" />
+    <Project Path="Books/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/04-Catalog-Search/CatalogSearch.Tests.Unit/CatalogSearch.Tests.Unit.csproj" />
+  </Folder>
 </Solution>
