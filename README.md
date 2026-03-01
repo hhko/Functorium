@@ -220,10 +220,10 @@ Adapters/
 ## Book
 
 - [Architecture](./Docs/architecture-is/README.md)
-- [Automating Release Notes with Claude Code and .NET 10](./Books/Automating-ReleaseNotes-with-ClaudeCode-and-.NET10/README.md)
-- [Automating Observability Code with SourceGenerator](./Books/Automating-ObservabilityCode-with-SourceGenerator/README.md)
-- [Implementing Functional ValueObject](./Books/Implementing-Functional-ValueObject/README.md)
-- [Implementing Specification Pattern](./Books/Implementing-Specification-Pattern/README.md)
+- [Automating Release Notes with Claude Code and .NET 10](./Docs/tutorials/Automating-ReleaseNotes-with-ClaudeCode-and-.NET10/README.md)
+- [Automating Observability Code with SourceGenerator](./Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/README.md)
+- [Implementing Functional ValueObject](./Docs/tutorials/Implementing-Functional-ValueObject/README.md)
+- [Implementing Specification Pattern](./Docs/tutorials/Implementing-Specification-Pattern/README.md)
 
 ## Observability
 
