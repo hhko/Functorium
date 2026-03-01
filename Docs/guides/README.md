@@ -39,7 +39,8 @@ Architecture
 │   ├── [12] 12-ports.md ─── Port 정의
 │   ├── [13] 13-adapters.md ─── Adapter 구현
 │   ├── [14a] 14a-adapter-pipeline-di.md ─── Pipeline, DI
-│   └── [14b] 14b-adapter-testing.md ─── 단위 테스트
+│   ├── [14b] 14b-adapter-testing.md ─── 단위 테스트
+│   └── [14c] 14c-repository-query-implementation-guide.md ─── Repository & Query 구현 가이드
 │
 ├── Testing
 │   ├── [15] 15a-unit-testing.md ─── 단위 테스트
@@ -107,6 +108,9 @@ Architecture
 | **DTO 전략 리뷰 확인** | [dto-strategy-review.md](../../.claude/dto-strategy-review.md) |
 | **CI/CD 워크플로우 및 버전 관리** | [02b-ci-cd-and-versioning.md](./02b-ci-cd-and-versioning.md) |
 | **FinResponse 타입 진화** | [A03-response-type-evolution.md](./A03-response-type-evolution.md) |
+| **새 Repository 구현** | [14c-repository-query-implementation-guide.md](./14c-repository-query-implementation-guide.md) |
+| **새 Query Adapter 구현** | [14c-repository-query-implementation-guide.md](./14c-repository-query-implementation-guide.md) |
+| **CRUD 대칭성 확인** | [14c-repository-query-implementation-guide.md — §2.7](./14c-repository-query-implementation-guide.md) |
 | **통합 테스트 (HostTestFixture)** | [15b-integration-testing.md](./15b-integration-testing.md) |
 | **VSCode 디버깅/개발 환경 설정** | [A01-vscode-debugging.md](./A01-vscode-debugging.md) |
 | **Git 명령어/Hooks** | [A02-git-reference.md](./A02-git-reference.md) |
@@ -143,6 +147,7 @@ Architecture
 | 13 | [13-adapters.md](./13-adapters.md) | Adapter 구현 (Repository, External API, Messaging, Query) |
 | 14a | [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di.md) | Pipeline 생성, DI 등록, Options 패턴 |
 | 14b | [14b-adapter-testing.md](./14b-adapter-testing.md) | Adapter 단위 테스트, E2E Walkthrough |
+| 14c | [14c-repository-query-implementation-guide.md](./14c-repository-query-implementation-guide.md) | Repository & Query 구현 가이드 |
 | 17 | [17-dto-strategy.md](./17-dto-strategy.md) | DTO 전략 (레이어별 소유권, 재사용 규칙, 변환 패턴) |
 
 ### 아키텍처

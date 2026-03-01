@@ -19,7 +19,7 @@
 ├─────────┼─────────────────────────┼─────────────┤
 │  Adapter Layer                    │             │
 │         │                         │             │
-│  ┌──────┴───────┐        ┌───────┴──────────┐   │
+│  ┌──────┴───────┐        ┌────────┴─────────┐   │
 │  │EfCoreRepo    │        │DapperQuery       │   │
 │  │InMemoryRepo  │        │InMemoryQuery     │   │
 │  └──────────────┘        └──────────────────┘   │
@@ -82,9 +82,9 @@ public interface IProductRepository : IRepository<Product, ProductId>
 
 ```csharp
 protected EfCoreRepositoryBase(
-    IDomainEventCollector eventCollector,           // 필수: 도메인 이벤트 수집
-    Func<IQueryable<TModel>, IQueryable<TModel>>? applyIncludes = null,  // Navigation Property Include
-    PropertyMap<TAggregate, TModel>? propertyMap = null)  // Specification → SQL 변환
+    IDomainEventCollector eventCollector,                                 // 필수: 도메인 이벤트 수집
+    Func<IQueryable<TModel>, IQueryable<TModel>>? applyIncludes = null,   // Navigation Property Include
+    PropertyMap<TAggregate, TModel>? propertyMap = null)                  // Specification → SQL 변환
 ```
 
 - **eventCollector** — 항상 필수
@@ -147,8 +147,8 @@ public class EfCoreProductRepository
 
     public EfCoreProductRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
         : base(eventCollector,
-               q => q.Include(p => p.ProductTags),              // Navigation Include
-               new PropertyMap<Product, ProductModel>()          // Specification 매핑
+               q => q.Include(p => p.ProductTags),                // Navigation Include
+               new PropertyMap<Product, ProductModel>()           // Specification 매핑
                    .Map(p => (decimal)p.Price, m => m.Price)
                    .Map(p => (string)p.Name, m => m.Name)
                    .Map(p => p.Id.ToString(), m => m.Id))
@@ -173,10 +173,10 @@ Domain의 Value Object를 Model의 primitive 타입에 매핑합니다:
 
 ```csharp
 new PropertyMap<Customer, CustomerModel>()
-    .Map(c => (string)c.Email, m => m.Email)          // Email(VO) → string
-    .Map(c => (string)c.Name, m => m.Name)            // CustomerName(VO) → string
-    .Map(c => (decimal)c.CreditLimit, m => m.CreditLimit)  // Money(VO) → decimal
-    .Map(c => c.Id.ToString(), m => m.Id)             // CustomerId → string
+    .Map(c => (string)c.Email, m => m.Email)                // Email(VO) → string
+    .Map(c => (string)c.Name, m => m.Name)                  // CustomerName(VO) → string
+    .Map(c => (decimal)c.CreditLimit, m => m.CreditLimit)   // Money(VO) → decimal
+    .Map(c => c.Id.ToString(), m => m.Id)                   // CustomerId → string
 ```
 
 ### 2.4 InMemoryRepositoryBase 구현 패턴

@@ -572,13 +572,36 @@ Adapter의 주 목표 폴더 이름은 구현 기술에 따라 달라집니다. 
 {ServiceName}.Adapters.Persistence/
 ├── Repositories/                    ← 구현 기술별 하위 폴더
 │   ├── InMemory/                    ← InMemory(ConcurrentDictionary) 구현
-│   │   ├── InMemoryProductRepository.cs
-│   │   ├── InMemoryCustomerRepository.cs
-│   │   ├── InMemoryOrderRepository.cs
-│   │   └── InMemoryProductCatalog.cs    ← 교차 Aggregate Port 구현
+│   │   ├── Products/
+│   │   │   ├── InMemoryProductRepository.cs
+│   │   │   ├── InMemoryProductCatalog.cs    ← 교차 Aggregate Port 구현
+│   │   │   ├── InMemoryProductQuery.cs
+│   │   │   ├── InMemoryProductDetailQuery.cs
+│   │   │   ├── InMemoryProductWithStockQuery.cs
+│   │   │   └── InMemoryProductWithOptionalStockQuery.cs
+│   │   ├── Customers/
+│   │   │   ├── InMemoryCustomerRepository.cs
+│   │   │   ├── InMemoryCustomerDetailQuery.cs
+│   │   │   ├── InMemoryCustomerOrderSummaryQuery.cs
+│   │   │   └── InMemoryCustomerOrdersQuery.cs
+│   │   ├── Orders/
+│   │   │   ├── InMemoryOrderRepository.cs
+│   │   │   ├── InMemoryOrderDetailQuery.cs
+│   │   │   └── InMemoryOrderWithProductsQuery.cs
+│   │   ├── Inventories/
+│   │   │   ├── InMemoryInventoryRepository.cs
+│   │   │   └── InMemoryInventoryQuery.cs
+│   │   ├── Tags/
+│   │   │   └── InMemoryTagRepository.cs
+│   │   └── InMemoryUnitOfWork.cs
 │   ├── Dapper/                      ← Dapper 기반 Query Adapter (CQRS Read 측)
-│   │   ├── DapperProductQueryAdapter.cs
-│   │   └── DapperInventoryQueryAdapter.cs
+│   │   ├── DapperProductQuery.cs
+│   │   ├── DapperProductWithStockQuery.cs
+│   │   ├── DapperProductWithOptionalStockQuery.cs
+│   │   ├── DapperInventoryQuery.cs
+│   │   ├── DapperCustomerOrderSummaryQuery.cs
+│   │   ├── DapperCustomerOrdersQuery.cs
+│   │   └── DapperOrderWithProductsQuery.cs
 │   └── EfCore/                      ← EF Core 기반 구현 (선택)
 │       ├── Models/                  ← Persistence Model (POCO, primitive 타입만)
 │       │   ├── ProductModel.cs

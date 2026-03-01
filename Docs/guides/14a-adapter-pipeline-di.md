@@ -295,13 +295,13 @@ services.RegisterScopedObservablePort<
 ```csharp
 // InMemory Provider -- Query Adapter Pipeline 등록
 services.RegisterScopedObservablePort<
-    IProductQueryAdapter,
-    InMemoryProductQueryAdapterObservable>();
+    IProductQuery,
+    InMemoryProductQueryObservable>();
 
 // Sqlite Provider -- Dapper Query Adapter Pipeline 등록
 services.RegisterScopedObservablePort<
-    IProductQueryAdapter,
-    DapperProductQueryAdapterObservable>();
+    IProductQuery,
+    DapperProductQueryObservable>();
 ```
 
 > **참고**: Query Adapter는 Repository와 동일한 `RegisterScopedObservablePort` API를 사용합니다. Provider 분기 패턴([4.6](#options-패턴-optionsconfigurator))에서 InMemory는 InMemory Query Adapter를, Sqlite는 Dapper Query Adapter를 등록합니다.
@@ -560,7 +560,7 @@ public static IServiceCollection RegisterAdapterPersistence(
             services.AddDbContext<LayeredArchDbContext>(opt =>
                 opt.UseSqlite(options.ConnectionString));
             RegisterSqliteRepositories(services);       // Command 측: EF Core
-            RegisterDapperQueryAdapters(services, options.ConnectionString);  // Query 측: Dapper
+            RegisterDapperQueries(services, options.ConnectionString);  // Query 측: Dapper
             break;
 
         case "InMemory":

@@ -297,7 +297,7 @@ Query Adapter는 InMemory 구현을 직접 인스턴스화하여 테스트합니
 public async Task Search_ReturnsPagedResult_WhenProductsExist()
 {
     // Arrange
-    var queryAdapter = new InMemoryProductQueryAdapter(repository);
+    var queryAdapter = new InMemoryProductQuery(repository);
 
     // Act
     var ioFin = queryAdapter.Search(spec: null, new PageRequest(), SortExpression.Empty);
@@ -349,14 +349,14 @@ public async Task Search_ReturnsPagedResult_WhenProductsExist()
 | 4 | DI 등록 | `OrderService/Program.cs` (57행) | `RegisterScopedObservablePort`, MessageBus는 Wolverine 별도 등록 |
 | 5 | 테스트 | `RabbitMqInventoryMessagingTests.cs` | NSubstitute로 `IMessageBus` Mock, [Messaging 테스트](#messaging-테스트) 참조 |
 
-### Query Adapter (01-SingleHost IProductQueryAdapter)
+### Query Adapter (01-SingleHost IProductQuery)
 
 | Step | Activity | 파일 | 핵심 작업 |
 |------|----------|------|----------|
-| 1 | Port 정의 | `LayeredArch.Application/Usecases/Products/Ports/IProductQueryAdapter.cs` | `: IQueryPort<Product, ProductSummaryDto>` |
-| 2a | Dapper 구현 | `LayeredArch.Adapters.Persistence/Repositories/Dapper/DapperProductQueryAdapter.cs` | `DapperQueryAdapterBase` 상속, `[GenerateObservablePort]`, SQL 선언만 담당 |
-| 2b | InMemory 구현 | `LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryProductQueryAdapter.cs` | `[GenerateObservablePort]`, Repository 위임 |
-| 3 | Pipeline 확인 | `obj/GeneratedFiles/.../Repositories.Dapper.DapperProductQueryAdapterObservable.g.cs` | 빌드 후 자동 생성 |
+| 1 | Port 정의 | `LayeredArch.Application/Usecases/Products/Ports/IProductQuery.cs` | `: IQueryPort<Product, ProductSummaryDto>` |
+| 2a | Dapper 구현 | `LayeredArch.Adapters.Persistence/Repositories/Dapper/DapperProductQuery.cs` | `DapperQueryBase` 상속, `[GenerateObservablePort]`, SQL 선언만 담당 |
+| 2b | InMemory 구현 | `LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryProductQuery.cs` | `[GenerateObservablePort]`, Repository 위임 |
+| 3 | Pipeline 확인 | `obj/GeneratedFiles/.../Repositories.Dapper.DapperProductQueryObservable.g.cs` | 빌드 후 자동 생성 |
 | 4 | DI 등록 | `AdapterPersistenceRegistration.cs` -> `Program.cs` | Sqlite: Dapper Observable, InMemory: InMemory Observable |
 | 5 | 테스트 | `SearchProductsQueryTests.cs` | InMemory Query Adapter 직접 테스트, [Query Adapter 테스트](#query-adapter-테스트) 참조 |
 

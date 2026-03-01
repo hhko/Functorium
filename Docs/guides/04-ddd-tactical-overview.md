@@ -482,8 +482,8 @@ SingleHost 프로젝트의 실제 모듈 구성입니다.
 
 | Module | Domain | Application | Adapter |
 |--------|--------|-------------|---------|
-| **Products** | `AggregateRoots/Products/` (Aggregate, Ports, Specs, VOs) | `Usecases/Products/` (Commands, Queries, Dtos, Ports) | Endpoints, Repository, QueryAdapter |
-| **Inventories** | `AggregateRoots/Inventories/` (Aggregate, Ports, Specs) | `Usecases/Inventories/` (Commands, Queries, Dtos, Ports) | Endpoints, Repository, QueryAdapter |
+| **Products** | `AggregateRoots/Products/` (Aggregate, Ports, Specs, VOs) | `Usecases/Products/` (Commands, Queries, Dtos, Ports) | Endpoints, Repository, Query |
+| **Inventories** | `AggregateRoots/Inventories/` (Aggregate, Ports, Specs) | `Usecases/Inventories/` (Commands, Queries, Dtos, Ports) | Endpoints, Repository, Query |
 | **Orders** | `AggregateRoots/Orders/` (Aggregate, Ports, VOs) | `Usecases/Orders/` (Commands, Queries) | Endpoints, Repository |
 | **Customers** | `AggregateRoots/Customers/` (Aggregate, Ports, Specs, VOs) | `Usecases/Customers/` (Commands, Queries) | Endpoints, Repository |
 | **SharedModels** | `SharedModels/` (공유 VO, Entity, Event) | — | — |
@@ -609,8 +609,8 @@ LayeredArch.Domain/
 | Event Handler | `On{DomainEvent}` | `OnProductCreated` | [01-project-structure.md](./01-project-structure.md) |
 | Repository Interface | `I{Aggregate}Repository` | `IProductRepository` | [12-ports.md](./12-ports.md) |
 | Repository Impl | `{Technology}{Aggregate}Repository` | `EfCoreProductRepository` | [13-adapters.md](./13-adapters.md) |
-| Query Adapter Interface | `I{Aggregate}QueryAdapter` | `IProductQueryAdapter` | [12-ports.md](./12-ports.md) |
-| Query Adapter Impl | `{Technology}{Aggregate}QueryAdapter` | `DapperProductQueryAdapter` | [13-adapters.md](./13-adapters.md) |
+| Query Adapter Interface | `I{Aggregate}Query` | `IProductQuery` | [12-ports.md](./12-ports.md) |
+| Query Adapter Impl | `{Technology}{Aggregate}Query` | `DapperProductQuery` | [13-adapters.md](./13-adapters.md) |
 | Cross-Aggregate Port | `I{Concept}` | `IProductCatalog` | [12-ports.md](./12-ports.md) |
 | Endpoint | `{Verb}{Aggregate}Endpoint` | `CreateProductEndpoint` | [01-project-structure.md](./01-project-structure.md) |
 | Persistence Model | `{Aggregate}Model` | `ProductModel` | [13-adapters.md](./13-adapters.md) |

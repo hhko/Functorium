@@ -594,7 +594,7 @@ Query에서 사용하는 Port는 Application 레이어에 정의합니다 (Domai
 
 | 패턴 | 인터페이스 | 용도 | Adapter 기반 클래스 |
 |------|-----------|------|-------------------|
-| 목록/검색 | `IQueryPort<TEntity, TDto>` | `Search(spec, page, sort)` → `PagedResult<TDto>` | `DapperQueryAdapterBase<TEntity, TDto>` |
+| 목록/검색 | `IQueryPort<TEntity, TDto>` | `Search(spec, page, sort)` → `PagedResult<TDto>` | `DapperQueryBase<TEntity, TDto>` |
 | 단일 조회 | `IQueryPort` (비제네릭) | 커스텀 메서드 직접 정의 | 직접 구현 |
 
 #### 목록 조회용 Port 정의

@@ -161,7 +161,7 @@ public class InMemoryProductRepository : IProductRepository
         });
     }
 
-    public virtual FinT<IO, Unit> Delete(ProductId id)
+    public virtual FinT<IO, int> Delete(ProductId id)
     {
         return IO.lift(() =>
         {

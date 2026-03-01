@@ -307,7 +307,11 @@ IObservablePort (인터페이스)
 │   ├── FinT<IO, TAggregate> Create(TAggregate aggregate)
 │   ├── FinT<IO, TAggregate> GetById(TId id)
 │   ├── FinT<IO, TAggregate> Update(TAggregate aggregate)
-│   └── FinT<IO, Unit> Delete(TId id)
+│   ├── FinT<IO, int> Delete(TId id)
+│   ├── FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates)
+│   ├── FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids)
+│   ├── FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates)
+│   └── FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids)
 │   │
 │   ├── IProductRepository : IRepository<Product, ProductId>
 │   │   ├── FinT<IO, bool> Exists(Specification<Product> spec)  ← 도메인 전용
@@ -766,7 +770,12 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     FinT<IO, TAggregate> Create(TAggregate aggregate);
     FinT<IO, TAggregate> GetById(TId id);
     FinT<IO, TAggregate> Update(TAggregate aggregate);
-    FinT<IO, Unit> Delete(TId id);
+    FinT<IO, int> Delete(TId id);
+
+    FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
+    FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);
 }
 ```
 
@@ -806,7 +815,11 @@ public interface IProductRepository : IRepository<Product, ProductId>
 | **GetAll / GetMany** | `FinT<IO, Seq<Entity>>` | 빈 목록도 성공 |
 | **ExistsBy** | `FinT<IO, bool>` | 존재 여부만 확인 |
 | **Update** | `FinT<IO, Entity>` | 업데이트된 Entity 반환 |
-| **Delete** | `FinT<IO, Unit>` | 성공/실패만 반환 |
+| **Delete** | `FinT<IO, int>` | 삭제된 건수 반환 |
+| **CreateRange** | `FinT<IO, Seq<Entity>>` | 일괄 생성된 Entity 목록 반환 |
+| **GetByIds** | `FinT<IO, Seq<Entity>>` | 일괄 조회된 Entity 목록 반환 |
+| **UpdateRange** | `FinT<IO, Seq<Entity>>` | 일괄 업데이트된 Entity 목록 반환 |
+| **DeleteRange** | `FinT<IO, int>` | 삭제된 건수 반환 |
 
 #### ExistsByName with excludeId 패턴
 
