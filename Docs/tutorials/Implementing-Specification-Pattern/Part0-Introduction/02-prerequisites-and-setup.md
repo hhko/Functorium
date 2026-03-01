@@ -1,6 +1,6 @@
 # 0.2 사전 준비와 환경 설정
 
-> **Part 0: 서론** | [← 이전: 0.1 이 튜토리얼을 읽어야 하는 이유](01-why-this-book.md) | [목차](../README.md) | [다음: 0.3 Specification 패턴 개요 →](03-specification-pattern-overview.md)
+> **Part 0: 서론** | [← 이전: 0.1 이 튜토리얼을 읽어야 하는 이유](01-why-this-tutorial.md) | [목차](../README.md) | [다음: 0.3 Specification 패턴 개요 →](03-specification-pattern-overview.md)
 
 ---
 

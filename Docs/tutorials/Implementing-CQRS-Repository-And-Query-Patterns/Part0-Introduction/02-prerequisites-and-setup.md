@@ -1,6 +1,6 @@
 # 0.2 환경 설정
 
-> **Part 0: 서론** | [<- 이전: 0.1 왜 CQRS인가](01-why-this-book.md) | [목차](../README.md) | [다음: 0.3 CQRS 패턴 개요 ->](03-cqrs-pattern-overview.md)
+> **Part 0: 서론** | [<- 이전: 0.1 왜 CQRS인가](01-why-this-tutorial.md) | [목차](../README.md) | [다음: 0.3 CQRS 패턴 개요 ->](03-cqrs-pattern-overview.md)
 
 ---
 

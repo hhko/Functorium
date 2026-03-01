@@ -36,7 +36,7 @@
 
 서론에서는 CQRS 패턴의 개념과 환경 설정을 다룹니다.
 
-- [0.1 왜 CQRS인가](Part0-Introduction/01-why-this-book.md)
+- [0.1 왜 CQRS인가](Part0-Introduction/01-why-this-tutorial.md)
 - [0.2 환경 설정](Part0-Introduction/02-prerequisites-and-setup.md)
 - [0.3 CQRS 패턴 개요](Part0-Introduction/03-cqrs-pattern-overview.md)
 

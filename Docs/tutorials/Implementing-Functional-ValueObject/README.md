@@ -35,7 +35,7 @@
 
 서론에서는 성공 주도 개발의 개념과 환경 설정을 다룹니다.
 
-- [0.1 이 튜토리얼을 읽어야 하는 이유](Part0-Introduction/01-why-this-book.md)
+- [0.1 이 튜토리얼을 읽어야 하는 이유](Part0-Introduction/01-why-this-tutorial.md)
 - [0.2 성공 주도 개발이란?](Part0-Introduction/02-success-driven-development.md)
 - [0.3 환경 설정](Part0-Introduction/03-environment-setup.md)
 

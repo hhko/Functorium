@@ -36,7 +36,7 @@
 
 서론에서는 Specification 패턴의 개념과 환경 설정을 다룹니다.
 
-- [0.1 이 튜토리얼을 읽어야 하는 이유](Part0-Introduction/01-why-this-book.md)
+- [0.1 이 튜토리얼을 읽어야 하는 이유](Part0-Introduction/01-why-this-tutorial.md)
 - [0.2 사전 준비와 환경 설정](Part0-Introduction/02-prerequisites-and-setup.md)
 - [0.3 Specification 패턴 개요](Part0-Introduction/03-specification-pattern-overview.md)
 

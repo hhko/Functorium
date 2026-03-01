@@ -36,7 +36,7 @@
 
 타입 안전한 파이프라인이 왜 필요한지, 전체 아키텍처의 개요를 소개합니다.
 
-- [0.1 왜 타입 안전한 파이프라인인가](Part0-Introduction/01-why-this-book.md)
+- [0.1 왜 타입 안전한 파이프라인인가](Part0-Introduction/01-why-this-tutorial.md)
 - [0.2 환경 설정](Part0-Introduction/02-prerequisites-and-setup.md)
 - [0.3 Usecase Pipeline 아키텍처 개요](Part0-Introduction/03-usecase-pipeline-overview.md)
 
