@@ -29,10 +29,13 @@ public class CreateOrderCommandTests
             Seq(new CreateOrderCommand.OrderLineRequest(productId.ToString(), 2)),
             "Seoul, Korea");
 
-        _productCatalog.ExistsById(Arg.Any<ProductId>())
-            .Returns(FinTFactory.Succ(true));
-        _productCatalog.GetPrice(Arg.Any<ProductId>())
-            .Returns(FinTFactory.Succ(Money.Create(100m).ThrowIfFail()));
+        _productCatalog.GetPricesForProducts(Arg.Any<IReadOnlyList<ProductId>>())
+            .Returns(call =>
+            {
+                var ids = call.Arg<IReadOnlyList<ProductId>>();
+                var prices = toSeq(ids.Select(id => (id, Money.Create(100m).ThrowIfFail())));
+                return FinTFactory.Succ(prices);
+            });
         _orderRepository.Create(Arg.Any<Order>())
             .Returns(call => FinTFactory.Succ(call.Arg<Order>()));
 
@@ -54,8 +57,8 @@ public class CreateOrderCommandTests
             Seq(new CreateOrderCommand.OrderLineRequest(ProductId.New().ToString(), 2)),
             "Seoul, Korea");
 
-        _productCatalog.ExistsById(Arg.Any<ProductId>())
-            .Returns(FinTFactory.Succ(false));
+        _productCatalog.GetPricesForProducts(Arg.Any<IReadOnlyList<ProductId>>())
+            .Returns(FinTFactory.Succ(LanguageExt.Seq<(ProductId Id, Money Price)>.Empty));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

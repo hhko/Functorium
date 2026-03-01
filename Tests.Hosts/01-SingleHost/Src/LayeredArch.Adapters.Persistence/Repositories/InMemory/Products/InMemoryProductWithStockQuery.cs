@@ -23,13 +23,14 @@ public class InMemoryProductWithStockQuery
 
     protected override IEnumerable<ProductWithStockDto> GetProjectedItems(Specification<Product> spec)
     {
+        var inventoryLookup = InMemoryInventoryRepository.Inventories.Values
+            .ToDictionary(i => i.ProductId, i => (int)i.StockQuantity);
+
         return InMemoryProductRepository.Products.Values
             .Where(p => p.DeletedAt.IsNone && spec.IsSatisfiedBy(p))
             .Select(p =>
             {
-                var inventory = InMemoryInventoryRepository.Inventories.Values
-                    .FirstOrDefault(i => i.ProductId.Equals(p.Id));
-                var stockQuantity = inventory is not null ? (int)inventory.StockQuantity : 0;
+                var stockQuantity = inventoryLookup.GetValueOrDefault(p.Id, 0);
                 return new ProductWithStockDto(p.Id.ToString(), p.Name, p.Price, stockQuantity);
             });
     }

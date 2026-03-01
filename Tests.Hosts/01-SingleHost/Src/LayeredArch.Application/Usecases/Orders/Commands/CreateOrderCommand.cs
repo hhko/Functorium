@@ -96,8 +96,8 @@ public sealed class CreateOrderCommand
             var customerId = CustomerId.Create(request.CustomerId);
             var shippingAddress = (ShippingAddress)shippingAddressResult;
 
-            // 2. 각 라인별 상품 검증 및 가격 조회 → OrderLine 생성
-            var orderLines = new List<OrderLine>();
+            // 2. 라인별 Quantity 검증 + ProductId 수집
+            var lineRequests = new List<(ProductId ProductId, Quantity Quantity)>();
             foreach (var lineReq in request.OrderLines)
             {
                 var productId = ProductId.Create(lineReq.ProductId);
@@ -105,23 +105,27 @@ public sealed class CreateOrderCommand
                 if (quantityResult.IsFail)
                     return FinResponse.Fail<Response>(quantityResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
 
-                var quantity = (Quantity)quantityResult;
+                lineRequests.Add((productId, (Quantity)quantityResult));
+            }
 
-                // 상품 존재 검증 및 가격 조회
-                var existsResult = await _productCatalog.ExistsById(productId).Run().RunAsync();
-                if (existsResult.IsFail)
-                    return FinResponse.Fail<Response>(existsResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
-                if (!existsResult.ThrowIfFail())
+            // 3. 배치 가격 조회 (단일 라운드트립)
+            var productIds = lineRequests.Select(l => l.ProductId).Distinct().ToList();
+            var pricesResult = await _productCatalog.GetPricesForProducts(productIds).Run().RunAsync();
+            if (pricesResult.IsFail)
+                return FinResponse.Fail<Response>(pricesResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
+
+            var priceLookup = pricesResult.ThrowIfFail().ToDictionary(p => p.Id, p => p.Price);
+
+            // 4. 존재 검증 + OrderLine 생성
+            var orderLines = new List<OrderLine>();
+            foreach (var (productId, quantity) in lineRequests)
+            {
+                if (!priceLookup.TryGetValue(productId, out var unitPrice))
                     return FinResponse.Fail<Response>(ApplicationError.For<CreateOrderCommand>(
                         new NotFound(),
-                        lineReq.ProductId,
-                        $"Product not found: '{lineReq.ProductId}'"));
+                        productId.ToString(),
+                        $"Product not found: '{productId}'"));
 
-                var priceResult = await _productCatalog.GetPrice(productId).Run().RunAsync();
-                if (priceResult.IsFail)
-                    return FinResponse.Fail<Response>(priceResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
-
-                var unitPrice = priceResult.ThrowIfFail();
                 var orderLineResult = OrderLine.Create(productId, quantity, unitPrice);
                 if (orderLineResult.IsFail)
                     return FinResponse.Fail<Response>(orderLineResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
@@ -129,12 +133,11 @@ public sealed class CreateOrderCommand
                 orderLines.Add(orderLineResult.ThrowIfFail());
             }
 
-            // 3. Order 생성
+            // 5. Order 생성 + 저장
             var orderResult = Order.Create(customerId, orderLines, shippingAddress);
             if (orderResult.IsFail)
                 return FinResponse.Fail<Response>(orderResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
 
-            // 4. 저장
             FinT<IO, Response> usecase =
                 from order in _orderRepository.Create(orderResult.ThrowIfFail())
                 select new Response(

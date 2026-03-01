@@ -42,10 +42,13 @@ public class CreateOrderWithCreditCheckCommandTests
 
         _customerRepository.GetById(Arg.Any<CustomerId>())
             .Returns(FinTFactory.Succ(customer));
-        _productCatalog.ExistsById(Arg.Any<ProductId>())
-            .Returns(FinTFactory.Succ(true));
-        _productCatalog.GetPrice(Arg.Any<ProductId>())
-            .Returns(FinTFactory.Succ(Money.Create(1000m).ThrowIfFail()));
+        _productCatalog.GetPricesForProducts(Arg.Any<IReadOnlyList<ProductId>>())
+            .Returns(call =>
+            {
+                var ids = call.Arg<IReadOnlyList<ProductId>>();
+                var prices = toSeq(ids.Select(id => (id, Money.Create(1000m).ThrowIfFail())));
+                return FinTFactory.Succ(prices);
+            });
         _orderRepository.Create(Arg.Any<Order>())
             .Returns(call => FinTFactory.Succ(call.Arg<Order>()));
 
@@ -70,10 +73,13 @@ public class CreateOrderWithCreditCheckCommandTests
 
         _customerRepository.GetById(Arg.Any<CustomerId>())
             .Returns(FinTFactory.Succ(customer));
-        _productCatalog.ExistsById(Arg.Any<ProductId>())
-            .Returns(FinTFactory.Succ(true));
-        _productCatalog.GetPrice(Arg.Any<ProductId>())
-            .Returns(FinTFactory.Succ(Money.Create(1000m).ThrowIfFail()));
+        _productCatalog.GetPricesForProducts(Arg.Any<IReadOnlyList<ProductId>>())
+            .Returns(call =>
+            {
+                var ids = call.Arg<IReadOnlyList<ProductId>>();
+                var prices = toSeq(ids.Select(id => (id, Money.Create(1000m).ThrowIfFail())));
+                return FinTFactory.Succ(prices);
+            });
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -94,8 +100,8 @@ public class CreateOrderWithCreditCheckCommandTests
 
         _customerRepository.GetById(Arg.Any<CustomerId>())
             .Returns(FinTFactory.Succ(customer));
-        _productCatalog.ExistsById(Arg.Any<ProductId>())
-            .Returns(FinTFactory.Succ(false));
+        _productCatalog.GetPricesForProducts(Arg.Any<IReadOnlyList<ProductId>>())
+            .Returns(FinTFactory.Succ(LanguageExt.Seq<(ProductId Id, Money Price)>.Empty));
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
@@ -113,10 +119,13 @@ public class CreateOrderWithCreditCheckCommandTests
             Seq(new CreateOrderWithCreditCheckCommand.OrderLineRequest(ProductId.New().ToString(), 2)),
             "Seoul, Korea");
 
-        _productCatalog.ExistsById(Arg.Any<ProductId>())
-            .Returns(FinTFactory.Succ(true));
-        _productCatalog.GetPrice(Arg.Any<ProductId>())
-            .Returns(FinTFactory.Succ(Money.Create(100m).ThrowIfFail()));
+        _productCatalog.GetPricesForProducts(Arg.Any<IReadOnlyList<ProductId>>())
+            .Returns(call =>
+            {
+                var ids = call.Arg<IReadOnlyList<ProductId>>();
+                var prices = toSeq(ids.Select(id => (id, Money.Create(100m).ThrowIfFail())));
+                return FinTFactory.Succ(prices);
+            });
         _customerRepository.GetById(Arg.Any<CustomerId>())
             .Returns(FinTFactory.Fail<Customer>(Error.New("Customer not found")));
 

@@ -29,11 +29,11 @@ public class InMemoryOrderWithProductsQuery : IOrderWithProductsQuery
                     $"주문 ID '{id}'을(를) 찾을 수 없습니다");
             }
 
+            var productLookup = InMemoryProductRepository.Products;
             var orderLines = toSeq(order.OrderLines.Select(l =>
             {
-                var product = InMemoryProductRepository.Products.Values
-                    .FirstOrDefault(p => p.Id.Equals(l.ProductId));
-                var productName = product is not null ? (string)product.Name : "Unknown";
+                var productName = productLookup.TryGetValue(l.ProductId, out var product)
+                    ? (string)product.Name : "Unknown";
                 return new OrderLineWithProductDto(
                     l.ProductId.ToString(), productName,
                     l.Quantity, l.UnitPrice, l.LineTotal);

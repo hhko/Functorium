@@ -30,6 +30,7 @@ public class InMemoryCustomerOrdersQuery : ICustomerOrdersQuery
                     $"고객 ID '{id}'을(를) 찾을 수 없습니다");
             }
 
+            var productLookup = InMemoryProductRepository.Products;
             var orders = toSeq(InMemoryOrderRepository.Orders.Values
                 .Where(o => o.CustomerId.Equals(id))
                 .OrderByDescending(o => o.CreatedAt)
@@ -37,9 +38,8 @@ public class InMemoryCustomerOrdersQuery : ICustomerOrdersQuery
                 {
                     var orderLines = toSeq(o.OrderLines.Select(l =>
                     {
-                        var product = InMemoryProductRepository.Products.Values
-                            .FirstOrDefault(p => p.Id.Equals(l.ProductId));
-                        var productName = product is not null ? (string)product.Name : "Unknown";
+                        var productName = productLookup.TryGetValue(l.ProductId, out var product)
+                            ? (string)product.Name : "Unknown";
                         return new CustomerOrderLineDto(
                             l.ProductId.ToString(), productName,
                             l.Quantity, l.UnitPrice, l.LineTotal);

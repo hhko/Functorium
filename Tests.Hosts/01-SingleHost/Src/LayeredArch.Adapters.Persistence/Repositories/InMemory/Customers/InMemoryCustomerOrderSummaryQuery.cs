@@ -22,14 +22,15 @@ public class InMemoryCustomerOrderSummaryQuery
 
     protected override IEnumerable<CustomerOrderSummaryDto> GetProjectedItems(Specification<Customer> spec)
     {
+        var ordersByCustomer = InMemoryOrderRepository.Orders.Values
+            .GroupBy(o => o.CustomerId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
         return InMemoryCustomerRepository.Customers.Values
             .Where(c => spec.IsSatisfiedBy(c))
             .Select(c =>
             {
-                var customerOrders = InMemoryOrderRepository.Orders.Values
-                    .Where(o => o.CustomerId.Equals(c.Id))
-                    .ToList();
-
+                var customerOrders = ordersByCustomer.GetValueOrDefault(c.Id, []);
                 return new CustomerOrderSummaryDto(
                     c.Id.ToString(),
                     c.Name,
