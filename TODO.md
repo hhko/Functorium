@@ -5,7 +5,17 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하도록 개선
 ```
-
+- [ ] Src\Functorium\Adapters\SourceGenerators\GenerateObservablePortAttribute.cs 폴더 이동
+  ```
+  Src\Functorium\Adapters\Observabilities\GenerateObservablePortAttribute.cs
+  ```
+- [ ] https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory?view=aspnetcore-10.0 설정 연동
+- [ ] 레파지토리 패턴 Book
+  - N+1 문제 이해 코드
+  - DTO
+  - Command(레파지토리 패턴 + DTO) vs Query(전용 인터페이스 + No DTO)
+- [ ] 파이프라인
+  - 공변성/반공변성
 - [ ] 폴더 정리
 - [x] Bulk 성능 개선
 - [x] N+1 개선
@@ -13,12 +23,9 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
   - 올바른 예제
   - 잘못된 예제
   - FAQ
-- [ ] 레파지토리 패턴 Book
-- [ ] N+1 문제 이해 코드
 - [x] Domains 레이어 관점 폴저 정리
 - [x] Application 레이어 관점 폴더 정리
 - [ ] 01-SingleHost\Src\LayeredArch.Adapters.Presentation\Abstractions\Extensions\FinResponseExtensions.cs Http 전용 확장 메서드
-- [ ] Adapter 레이어 관점 폴더 정리
 - [ ] DTO Book
 - [ ] 공병성 Book
 - [ ] 유스케이스 구현 패턴.md
