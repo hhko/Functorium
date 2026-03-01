@@ -1,12 +1,10 @@
 using System.Collections.Concurrent;
 using LayeredArch.Domain.AggregateRoots.Products;
 using Functorium.Adapters.Errors;
+using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
 using Functorium.Domains.Specifications;
-using LanguageExt;
-using LanguageExt.Common;
-using Microsoft.Extensions.Logging;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 using static LanguageExt.Prelude;
 
@@ -14,28 +12,22 @@ namespace LayeredArch.Adapters.Persistence.Repositories.InMemory;
 
 /// <summary>
 /// 메모리 기반 상품 리포지토리 구현
-/// 관찰 가능성 로그를 위한 IObservablePort 인터페이스 구현
-/// GenerateObservablePort 애트리뷰트로 Observable 버전 자동 생성
+/// Soft Delete + 에러 시뮬레이션을 위해 다수 메서드를 오버라이드합니다.
 /// </summary>
 [GenerateObservablePort]
-public class InMemoryProductRepository : IProductRepository
+public class InMemoryProductRepository
+    : InMemoryRepositoryBase<Product, ProductId>, IProductRepository
 {
     internal static readonly ConcurrentDictionary<ProductId, Product> Products = new();
-    private readonly IDomainEventCollector _eventCollector;
-
-    /// <summary>
-    /// 관찰 가능성 로그를 위한 요청 카테고리
-    /// </summary>
-    public string RequestCategory => "Repository";
+    protected override ConcurrentDictionary<ProductId, Product> Store => Products;
 
     public InMemoryProductRepository(IDomainEventCollector eventCollector)
-    {
-        _eventCollector = eventCollector;
-    }
+        : base(eventCollector) { }
 
-    public virtual FinT<IO, Product> Create(Product product)
+    // ─── 에러 시뮬레이션 오버라이드 ──────────────────
+
+    public override FinT<IO, Product> Create(Product product)
     {
-        // Observable이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
             if (((string)product.Name).Contains("[adapter-error]", StringComparison.OrdinalIgnoreCase))
@@ -45,39 +37,18 @@ public class InMemoryProductRepository : IProductRepository
             }
 
             Products[product.Id] = product;
-            _eventCollector.Track(product);
+            EventCollector.Track(product);
             return Fin.Succ(product);
         });
     }
 
-    public virtual FinT<IO, Product> GetById(ProductId id)
+    public override FinT<IO, Product> Update(Product product)
     {
-        // Observable이 자동으로 Activity 생성 및 로깅 처리
-        return IO.lift(() =>
-        {
-            if (Products.TryGetValue(id, out Product? product) && product.DeletedAt.IsNone)
-            {
-                return Fin.Succ(product);
-            }
-
-            return AdapterError.For<InMemoryProductRepository>(
-                new NotFound(),
-                id.ToString(),
-                $"상품 ID '{id}'을(를) 찾을 수 없습니다");
-        });
-    }
-
-    public virtual FinT<IO, Product> Update(Product product)
-    {
-        // Observable이 자동으로 Activity 생성 및 로깅 처리
         return IO.lift(() =>
         {
             if (!Products.ContainsKey(product.Id))
             {
-                return AdapterError.For<InMemoryProductRepository>(
-                    new NotFound(),
-                    product.Id.ToString(),
-                    $"상품 ID '{product.Id}'을(를) 찾을 수 없습니다");
+                return NotFoundError(product.Id);
             }
 
             if (((string)product.Name).Contains("[adapter-error]", StringComparison.OrdinalIgnoreCase))
@@ -87,58 +58,33 @@ public class InMemoryProductRepository : IProductRepository
             }
 
             Products[product.Id] = product;
-            _eventCollector.Track(product);
+            EventCollector.Track(product);
             return Fin.Succ(product);
         });
     }
 
-    public virtual FinT<IO, int> Delete(ProductId id)
-    {
-        // Observable이 자동으로 Activity 생성 및 로깅 처리
-        return IO.lift(() =>
-        {
-            if (!Products.TryGetValue(id, out var product))
-            {
-                return Fin.Succ(0);
-            }
+    // ─── Soft Delete 오버라이드 ──────────────────────
 
-            product.Delete("system");
-            _eventCollector.Track(product);
-            return Fin.Succ(1);
-        });
-    }
-
-    public virtual FinT<IO, Product> GetByIdIncludingDeleted(ProductId id)
+    public override FinT<IO, Product> GetById(ProductId id)
     {
         return IO.lift(() =>
         {
-            if (Products.TryGetValue(id, out Product? product))
+            if (Products.TryGetValue(id, out Product? product) && product.DeletedAt.IsNone)
             {
                 return Fin.Succ(product);
             }
 
-            return AdapterError.For<InMemoryProductRepository>(
-                new NotFound(),
-                id.ToString(),
-                $"상품 ID '{id}'을(를) 찾을 수 없습니다");
+            return NotFoundError(id);
         });
     }
 
-    public virtual FinT<IO, Seq<Product>> CreateRange(IReadOnlyList<Product> products)
+    public override FinT<IO, Seq<Product>> GetByIds(IReadOnlyList<ProductId> ids)
     {
         return IO.lift(() =>
         {
-            foreach (var product in products)
-                Products[product.Id] = product;
-            _eventCollector.TrackRange(products);
-            return Fin.Succ(toSeq(products));
-        });
-    }
+            if (ids.Count == 0)
+                return Fin.Succ(LanguageExt.Seq<Product>.Empty);
 
-    public virtual FinT<IO, Seq<Product>> GetByIds(IReadOnlyList<ProductId> ids)
-    {
-        return IO.lift(() =>
-        {
             var distinctIds = ids.Distinct().ToList();
             var result = distinctIds
                 .Where(id => Products.TryGetValue(id, out var p) && p.DeletedAt.IsNone)
@@ -147,42 +93,35 @@ public class InMemoryProductRepository : IProductRepository
 
             if (result.Count != distinctIds.Count)
             {
-                var foundIds = result.Select(p => p.Id.ToString()).ToHashSet();
-                var missingIds = distinctIds.Where(id => !foundIds.Contains(id.ToString())).ToList();
-                var missingIdsStr = FormatIds(missingIds);
-                return AdapterError.For<InMemoryProductRepository>(
-                    new PartialNotFound(), missingIdsStr,
-                    $"Requested {distinctIds.Count} but found {result.Count}. Missing IDs: {missingIdsStr}");
+                return PartialNotFoundError(distinctIds, result);
             }
 
             return Fin.Succ(toSeq(result));
         });
     }
 
-    public virtual FinT<IO, Seq<Product>> UpdateRange(IReadOnlyList<Product> products)
+    public override FinT<IO, int> Delete(ProductId id)
     {
         return IO.lift(() =>
         {
-            foreach (var product in products)
-                Products[product.Id] = product;
-            _eventCollector.TrackRange(products);
-            return Fin.Succ(toSeq(products));
+            if (!Products.TryGetValue(id, out var product))
+            {
+                return Fin.Succ(0);
+            }
+
+            product.Delete("system");
+            EventCollector.Track(product);
+            return Fin.Succ(1);
         });
     }
 
-    private static string FormatIds<T>(IEnumerable<T> ids, int maxDisplay = 3)
-    {
-        var list = ids.Select(id => id!.ToString()!).ToList();
-        if (list.Count <= maxDisplay)
-            return string.Join(", ", list);
-
-        return string.Join(", ", list.Take(maxDisplay)) + $" ... (+{list.Count - maxDisplay} more)";
-    }
-
-    public virtual FinT<IO, int> DeleteRange(IReadOnlyList<ProductId> ids)
+    public override FinT<IO, int> DeleteRange(IReadOnlyList<ProductId> ids)
     {
         return IO.lift(() =>
         {
+            if (ids.Count == 0)
+                return Fin.Succ(0);
+
             int affected = 0;
             foreach (var id in ids)
             {
@@ -196,6 +135,21 @@ public class InMemoryProductRepository : IProductRepository
         });
     }
 
+    // ─── Product 고유 메서드 ─────────────────────────
+
+    public virtual FinT<IO, Product> GetByIdIncludingDeleted(ProductId id)
+    {
+        return IO.lift(() =>
+        {
+            if (Products.TryGetValue(id, out Product? product))
+            {
+                return Fin.Succ(product);
+            }
+
+            return NotFoundError(id);
+        });
+    }
+
     public virtual FinT<IO, bool> Exists(Specification<Product> spec)
     {
         return IO.lift(() =>
@@ -206,5 +160,4 @@ public class InMemoryProductRepository : IProductRepository
             return Fin.Succ(exists);
         });
     }
-
 }
