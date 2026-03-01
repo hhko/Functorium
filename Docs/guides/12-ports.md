@@ -367,7 +367,7 @@ IObservablePort (인터페이스)
 
 ## Activity 1: Port 인터페이스 정의
 
-Port 인터페이스는 Application Layer가 외부 시스템과 통신하기 위한 **계약(Contract)**입니다.
+Port 인터페이스는 Application Layer가 외부 시스템과 통신하기 위한 **계약(Contract)입니다**.
 
 ### 위치 규칙
 

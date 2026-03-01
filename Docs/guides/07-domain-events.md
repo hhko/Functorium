@@ -190,7 +190,7 @@ internal interface IDomainEventDrain : IHasDomainEvents
 }
 ```
 
-**설계 원칙**: 도메인 이벤트는 **불변의 사실(fact)**입니다. 도메인 계약(`IHasDomainEvents`)에서는 이벤트 삭제를 허용하지 않으며, 이벤트 정리는 인프라 관심사(`IDomainEventDrain`)로 분리합니다.
+**설계 원칙**: 도메인 이벤트는 **불변의 사실(fact)입니다**. 도메인 계약(`IHasDomainEvents`)에서는 이벤트 삭제를 허용하지 않으며, 이벤트 정리는 인프라 관심사(`IDomainEventDrain`)로 분리합니다.
 
 | 인터페이스 | 가시성 | 역할 |
 |-----------|--------|------|

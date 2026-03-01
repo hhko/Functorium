@@ -2,7 +2,7 @@
 
 ## 개요
 
-**Railway Oriented Programming(ROP)**은 Scott Wlaschin이 제안한 함수형 에러 처리 패턴입니다. 모든 함수가 성공(Success) 또는 실패(Failure) 트랙을 반환하며, 실패가 발생하면 이후 단계를 건너뛰고 실패 트랙으로 전파됩니다. Functorium의 `FinResponse<A>`는 이 ROP 패턴을 C#에서 구현한 것입니다.
+**Railway Oriented Programming(ROP)은** Scott Wlaschin이 제안한 함수형 에러 처리 패턴입니다. 모든 함수가 성공(Success) 또는 실패(Failure) 트랙을 반환하며, 실패가 발생하면 이후 단계를 건너뛰고 실패 트랙으로 전파됩니다. Functorium의 `FinResponse<A>`는 이 ROP 패턴을 C#에서 구현한 것입니다.
 
 ---
 

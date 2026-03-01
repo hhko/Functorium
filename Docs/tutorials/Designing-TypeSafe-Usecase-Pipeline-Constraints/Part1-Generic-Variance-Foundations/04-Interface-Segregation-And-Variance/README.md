@@ -2,7 +2,7 @@
 
 ## 개요
 
-**인터페이스 분리 원칙(ISP, Interface Segregation Principle)**을 변성과 결합하면, 각 인터페이스에 적절한 변성을 부여할 수 있습니다. 읽기 인터페이스에는 `out`(공변), 쓰기 인터페이스에는 `in`(반공변), 팩토리 인터페이스에는 CRTP(Curiously Recurring Template Pattern)를 적용합니다.
+**인터페이스 분리 원칙(ISP, Interface Segregation Principle)을** 변성과 결합하면, 각 인터페이스에 적절한 변성을 부여할 수 있습니다. 읽기 인터페이스에는 `out`(공변), 쓰기 인터페이스에는 `in`(반공변), 팩토리 인터페이스에는 CRTP(Curiously Recurring Template Pattern)를 적용합니다.
 
 ```
 IReadable<out T>     → 공변 (읽기 전용)

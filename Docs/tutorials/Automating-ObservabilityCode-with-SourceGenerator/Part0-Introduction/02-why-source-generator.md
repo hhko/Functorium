@@ -63,7 +63,7 @@ public void Process(User user)
 
 ### 3. 디버깅 용이성
 
-생성된 코드는 일반 C# 코드이므로 **디버거로 스텝 인(step-in)**할 수 있습니다.
+생성된 코드는 일반 C# 코드이므로 **디버거로 스텝 인(step-in)할** 수 있습니다.
 
 ```
 Visual Studio에서 생성된 코드 보기

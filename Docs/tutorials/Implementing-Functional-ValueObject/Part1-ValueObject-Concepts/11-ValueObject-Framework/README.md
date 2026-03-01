@@ -691,7 +691,7 @@ public sealed class PriceRange : ComparableValueObject
 ## FAQ
 
 ### Q1: 4가지 프레임워크 타입의 차이점은 무엇인가요?
-**A**: 프레임워크는 **`IComparable<T>` 지원 유무**와 **값의 복잡성(단일/복합)**에 따라 4가지로 구분됩니다. 이는 마치 컬렉션 타입을 선택하는 것과 같습니다. 각각 특정 용도에 최적화되어 있습니다.
+**A**: 프레임워크는 **`IComparable<T>` 지원 유무**와 **값의 복잡성(단일/복합)에** 따라 4가지로 구분됩니다. 이는 마치 컬렉션 타입을 선택하는 것과 같습니다. 각각 특정 용도에 최적화되어 있습니다.
 
 **비교 가능한 단일값**: `ComparableSimpleValueObject<T>`는 비교 가능한 단일 값을 래핑할 때 사용하며, 자동으로 동등성 비교, 해시코드, 타입 변환, 비교 가능성 기능을 모두 제공합니다. 예를 들어 `Denominator`는 `int` 값을 래핑하므로 `ComparableSimpleValueObject<int>`를 상속받습니다.
 

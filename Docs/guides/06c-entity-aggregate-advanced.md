@@ -57,7 +57,7 @@ public sealed class Order : AggregateRoot<OrderId>
 
 ### Domain Port를 통한 외부 Aggregate 조회
 
-다른 Aggregate의 정보가 필요할 때는 **Domain Port(인터페이스)**를 정의하고, Application Layer에서 구현합니다.
+다른 Aggregate의 정보가 필요할 때는 **Domain Port(인터페이스)를** 정의하고, Application Layer에서 구현합니다.
 
 ```csharp
 // Domain Layer: Port 정의

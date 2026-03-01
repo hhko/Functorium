@@ -53,7 +53,7 @@ RegisterSourceOutput
 
 ### IncrementalValuesProvider<T>
 
-**복수(0개 이상)**의 값을 나타냅니다:
+**복수(0개 이상)의** 값을 나타냅니다:
 
 ```csharp
 // 여러 클래스가 [GenerateObservablePort] 속성을 가질 수 있음

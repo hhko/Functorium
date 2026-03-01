@@ -66,7 +66,7 @@ Functorium 프레임워크에서 분산 추적을 활용하여
 
 현대의 애플리케이션은 여러 서비스와 컴포넌트가 협력하여 동작합니다. 하나의 HTTP 요청이 처리되는 동안 데이터베이스 조회, 외부 API 호출, 캐시 접근 등 다양한 작업이 순차적 또는 병렬로 실행됩니다. 이러한 환경에서 "어디서 느려졌는가?"라는 질문에 답하는 것은 로그나 메트릭만으로는 매우 어렵습니다.
 
-**분산 추적(Distributed Tracing)**은 이러한 복잡한 요청 흐름을 하나의 "여정"으로 시각화하는 기술입니다. 하나의 요청이 시스템을 통과하는 전체 경로를 추적하고, 각 단계에서 소요된 시간을 측정합니다.
+**분산 추적(Distributed Tracing)은** 이러한 복잡한 요청 흐름을 하나의 "여정"으로 시각화하는 기술입니다. 하나의 요청이 시스템을 통과하는 전체 경로를 추적하고, 각 단계에서 소요된 시간을 측정합니다.
 
 Functorium은 OpenTelemetry Tracing 표준을 따르는 분산 추적 기능을 자동으로 제공합니다.
 
@@ -142,7 +142,7 @@ Trace: Order Processing (Trace ID: 4bf92f...)
 
 Context는 Span들을 하나의 Trace로 연결하는 정보입니다. Context에는 Trace ID와 현재 Span ID가 포함됩니다.
 
-요청이 서비스 간에 전달될 때 Context도 함께 **전파(Propagation)**됩니다. HTTP의 경우 `traceparent` 헤더를 통해 전파됩니다:
+요청이 서비스 간에 전달될 때 Context도 함께 **전파(Propagation)됩니다**. HTTP의 경우 `traceparent` 헤더를 통해 전파됩니다:
 
 ```
 HTTP Header:

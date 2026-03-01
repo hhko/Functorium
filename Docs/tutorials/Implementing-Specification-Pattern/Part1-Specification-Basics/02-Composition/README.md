@@ -146,7 +146,7 @@ var spec4 = inStock.And(electronics.Not());
 **A**: 기술적으로 제한은 없지만, 너무 깊은 중첩은 가독성을 해칩니다. 복잡한 조합이 필요하다면 중간 변수에 이름을 부여하거나, 의미 있는 이름의 새로운 Specification 클래스를 만드는 것이 좋습니다.
 
 ### Q3: And와 Or의 평가 순서가 중요한가요?
-**A**: `AndSpecification`은 `&&` 연산자를 사용하므로 **단축 평가(short-circuit evaluation)**가 적용됩니다. 즉, 왼쪽이 false이면 오른쪽은 평가하지 않습니다. `OrSpecification`도 마찬가지로 왼쪽이 true이면 오른쪽을 평가하지 않습니다.
+**A**: `AndSpecification`은 `&&` 연산자를 사용하므로 **단축 평가(short-circuit evaluation)가** 적용됩니다. 즉, 왼쪽이 false이면 오른쪽은 평가하지 않습니다. `OrSpecification`도 마찬가지로 왼쪽이 true이면 오른쪽을 평가하지 않습니다.
 
 ### Q4: 다음 장에서는 무엇을 배우나요?
 **A**: 3장에서는 `And()`, `Or()`, `Not()` 메서드 대신 `&`, `|`, `!` 연산자를 사용하는 방법을 배웁니다. 연산자 오버로딩을 통해 더 간결하고 직관적인 문법으로 조합을 표현할 수 있습니다.

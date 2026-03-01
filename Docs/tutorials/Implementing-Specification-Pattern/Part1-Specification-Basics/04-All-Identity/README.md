@@ -6,7 +6,7 @@
 
 ## 개요
 
-`Specification<T>.All`은 **모든 엔터티를 만족하는 특별한 Specification**입니다. 이 장에서는 `All`이 AND 연산의 **항등원(identity element)**으로서 동적 필터 구성을 어떻게 간결하게 만드는지 배웁니다.
+`Specification<T>.All`은 **모든 엔터티를 만족하는 특별한 Specification**입니다. 이 장에서는 `All`이 AND 연산의 **항등원(identity element)으로서** 동적 필터 구성을 어떻게 간결하게 만드는지 배웁니다.
 
 > **`All & X == X` — 수학의 1 * x == x처럼, All은 AND 연산에서 아무 영향을 주지 않는 중립 요소입니다.**
 

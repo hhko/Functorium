@@ -8,7 +8,7 @@
 
 전통적인 Repository 패턴에서는 조회 조건이 추가될 때마다 새로운 메서드를 만들어야 합니다. `FindByCategory`, `FindByPriceRange`, `FindInStock`, `FindByCategoryAndPriceRange`... 조건의 조합이 늘어날수록 메서드 수가 기하급수적으로 폭발합니다.
 
-Specification 패턴은 이 문제를 근본적으로 해결합니다. Repository에는 `FindAll(Specification<T> spec)` 단 하나의 메서드만 두고, **무엇을 찾을지(WHAT)**는 Specification에게 위임합니다.
+Specification 패턴은 이 문제를 근본적으로 해결합니다. Repository에는 `FindAll(Specification<T> spec)` 단 하나의 메서드만 두고, **무엇을 찾을지(WHAT)는** Specification에게 위임합니다.
 
 ## 학습 목표
 

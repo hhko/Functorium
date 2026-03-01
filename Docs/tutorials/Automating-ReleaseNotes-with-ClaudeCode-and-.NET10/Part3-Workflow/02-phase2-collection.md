@@ -85,7 +85,7 @@ dotnet ExtractApiChanges.cs
 위치: .analysis-output/api-changes-build-current/all-api-changes.txt
 ```
 
-이 파일은 **단일 진실 소스(Single Source of Truth)**입니다:
+이 파일은 **단일 진실 소스(Single Source of Truth)입니다**:
 - 현재 빌드의 **모든 Public API** 정의
 - 정확한 매개변수 이름과 타입
 - **코드 샘플 검증에 필수** - 이 파일에 없으면 문서화하지 않음

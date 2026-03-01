@@ -2,7 +2,7 @@
 
 ## 개요
 
-**비제네릭 마커 인터페이스(Non-Generic Marker Interface)**는 제네릭 타입 파라미터 없이도 공통 속성에 접근할 수 있게 하는 패턴입니다. `IFinResponse`에 `IsSucc`과 `IsFail` 속성을 정의하면, Pipeline에서 응답의 제네릭 타입 `T`를 몰라도 성공/실패를 확인할 수 있습니다.
+**비제네릭 마커 인터페이스(Non-Generic Marker Interface)는** 제네릭 타입 파라미터 없이도 공통 속성에 접근할 수 있게 하는 패턴입니다. `IFinResponse`에 `IsSucc`과 `IsFail` 속성을 정의하면, Pipeline에서 응답의 제네릭 타입 `T`를 몰라도 성공/실패를 확인할 수 있습니다.
 
 ```
 IFinResponse          ← 비제네릭 마커

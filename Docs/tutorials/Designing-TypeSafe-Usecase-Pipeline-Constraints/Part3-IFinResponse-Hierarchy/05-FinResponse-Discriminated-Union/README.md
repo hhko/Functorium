@@ -19,7 +19,7 @@ FinResponse<A>                            Discriminated Union
 
 ### 1. Discriminated Union
 
-`FinResponse<A>`는 `abstract record`이며, `Succ`와 `Fail` 두 가지 `sealed record`만 존재합니다. 새로운 케이스를 추가할 수 없으므로, 패턴 매칭이 **완전(exhaustive)**합니다.
+`FinResponse<A>`는 `abstract record`이며, `Succ`와 `Fail` 두 가지 `sealed record`만 존재합니다. 새로운 케이스를 추가할 수 없으므로, 패턴 매칭이 **완전(exhaustive)합니다**.
 
 ```csharp
 public abstract record FinResponse<A> : IFinResponse<A>, IFinResponseFactory<FinResponse<A>>

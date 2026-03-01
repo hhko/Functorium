@@ -24,7 +24,7 @@ Pipeline 실행 순서 (Command 성공 시):
 
 ### 1. Pipeline 실행 순서
 
-Mediator Pipeline은 **러시안 인형(Matryoshka)**처럼 중첩됩니다. 가장 바깥쪽 Pipeline이 먼저 실행되고, 안쪽으로 들어간 후, 다시 바깥으로 나오면서 후처리합니다.
+Mediator Pipeline은 **러시안 인형(Matryoshka)처럼** 중첩됩니다. 가장 바깥쪽 Pipeline이 먼저 실행되고, 안쪽으로 들어간 후, 다시 바깥으로 나오면서 후처리합니다.
 
 ```
 Exception → Validation → Logging → Tracing → Metrics → Transaction → Handler

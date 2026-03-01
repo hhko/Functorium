@@ -89,7 +89,7 @@ public static int Divide(int numerator, int denominator)
 
 ### **두 번째 방법: 사전 검증을 통한 예외 없이 bool 반환을 활용한 TryDivide**
 
-이 방법은 **예외 없이도 안전한 실패 처리를 할 수 있는 방어적 프로그래밍의 진화된 형태**입니다. `bool TryParse(string? s, out int result)` 패턴과 동일한 방식으로, .NET Framework에서 널리 사용되는 **표준 패턴(Standard Pattern)**입니다.
+이 방법은 **예외 없이도 안전한 실패 처리를 할 수 있는 방어적 프로그래밍의 진화된 형태**입니다. `bool TryParse(string? s, out int result)` 패턴과 동일한 방식으로, .NET Framework에서 널리 사용되는 **표준 패턴(Standard Pattern)입니다**.
 
 ```csharp
 // 방어적 프로그래밍 - 예외 없이 bool 반환
@@ -229,7 +229,7 @@ Try 패턴은 .NET Framework에서 다음과 같은 곳에서 사용됩니다:
 - **타입 안전성**: 컴파일 타임에 유효하지 않은 입력을 차단
 - **순수성**: 모든 부작용 없이 불변 객체 반환
 - **명시적 오류 처리**: 구체적인 오류 정보를 타입으로 표현
-- **합성성 제한 해결**: **모나드 체이닝(Monadic Chaining)**을 통한 복잡한 로직 구성
+- **합성성 제한 해결**: **모나드 체이닝(Monadic Chaining)을** 통한 복잡한 로직 구성
 - **도메인 특화 타입**: 강력한 타입 시스템을 활용한 표현력 향상
 
 **Try 패턴은 방어적 프로그래밍의 중요한 발전이지만, 동시에 그 한계점을 인식하는 것이 중요합니다.** 이는 다음 단계에서 함수형 결과 타입을 도입해야 하는 이유를 명확히 보여줍니다.
@@ -791,7 +791,7 @@ else
 }
 ```
 
-**함수형 접근법의 해결책**: 잘못된 입력이 아예 함수 시그니처 차원에서 들어올 수 없도록 **도메인 특화 타입(Domain-Specific Type)**을 정의합니다.
+**함수형 접근법의 해결책**: 잘못된 입력이 아예 함수 시그니처 차원에서 들어올 수 없도록 **도메인 특화 타입(Domain-Specific Type)을** 정의합니다.
 
 ```csharp
 // 값 객체 정의
@@ -821,7 +821,7 @@ public static Fin<int> Divide(int numerator, Denominator denominator) =>
 
 #### 2. 부작용 존재 (Side Effects)
 
-**문제점**: Try 패턴은 `out` 매개변수를 통해 함수 외부 상태를 변경합니다. 이는 **부작용(Side Effect)**을 발생시키며, 함수의 **순수성(Purity)**과 **참조 투명성(Referential Transparency)**을 깨뜨립니다.
+**문제점**: Try 패턴은 `out` 매개변수를 통해 함수 외부 상태를 변경합니다. 이는 **부작용(Side Effect)을** 발생시키며, 함수의 **순수성(Purity)과** **참조 투명성(Referential Transparency)을** 깨뜨립니다.
 
 **현재 Try 패턴의 문제**:
 ```csharp
@@ -846,7 +846,7 @@ public static Result<int> Divide(int numerator, Denominator denominator) =>
     Result<int>.Success(numerator / denominator.Value);
 ```
 
-**기술적 관점**: `out` 매개변수는 **참조 전달(Pass by Reference)**을 통해 외부 상태를 변경합니다. 이로 인해 함수형 프로그래밍의 순수성, 불변성, 참조 투명성 같은 핵심 원칙이 위반됩니다.
+**기술적 관점**: `out` 매개변수는 **참조 전달(Pass by Reference)을** 통해 외부 상태를 변경합니다. 이로 인해 함수형 프로그래밍의 순수성, 불변성, 참조 투명성 같은 핵심 원칙이 위반됩니다.
 
 #### 3. 명시적 오류 처리 부족 (Explicit Error Handling Deficiency)
 
@@ -872,7 +872,7 @@ result.Match(
 );
 ```
 
-**기술적 관점**: Try 패턴은 **불린 반환값(Boolean Return Value)**만 제공하므로, 실패 원인을 파악하기 어렵습니다. 이는 **오류 정보 손실(Information Loss)**을 의미합니다.
+**기술적 관점**: Try 패턴은 **불린 반환값(Boolean Return Value)만** 제공하므로, 실패 원인을 파악하기 어렵습니다. 이는 **오류 정보 손실(Information Loss)을** 의미합니다.
 
 #### 4. 합성성 제한 (Composability Limitation)
 
@@ -904,7 +904,7 @@ var result = from age in Age.Parse(ageInput)
              select CalculateBMI(age, height);
 ```
 
-**기술적 관점**: Try 패턴의 중첩 구조는 **모나드 체이닝(Monadic Chaining)**이나 **함수형 합성(Functional Composition)**을 구현하기 어렵게 만듭니다. 이는 **합성성(Composability)**을 저해합니다.
+**기술적 관점**: Try 패턴의 중첩 구조는 **모나드 체이닝(Monadic Chaining)이나** **함수형 합성(Functional Composition)을** 구현하기 어렵게 만듭니다. 이는 **합성성(Composability)을** 저해합니다.
 
 #### 5. 타입 시스템 활용 부족 (Type System Underutilization)
 
@@ -922,7 +922,7 @@ public static bool TryDivide(int numerator, int denominator, out int result)
 public static Result<Ratio> Divide(Numerator numerator, Denominator denominator)
 ```
 
-**기술적 관점**: Try 패턴은 **기본 타입(Primitive Types)**에 의존하므로, **도메인 특화 타입(Domain-Specific Types)**이 제공하는 표현력과 안전성을 활용하지 못합니다. 이는 **타입 시스템의 표현력(Expressiveness)**을 제한합니다.
+**기술적 관점**: Try 패턴은 **기본 타입(Primitive Types)에** 의존하므로, **도메인 특화 타입(Domain-Specific Types)이** 제공하는 표현력과 안전성을 활용하지 못합니다. 이는 **타입 시스템의 표현력(Expressiveness)을** 제한합니다.
 
 #### Try 패턴의 5가지 한계점
 
