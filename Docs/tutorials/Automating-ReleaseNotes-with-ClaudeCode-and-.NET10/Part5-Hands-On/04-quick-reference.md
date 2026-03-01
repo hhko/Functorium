@@ -232,4 +232,4 @@ dotnet nuget locals all --clear
 
 ## 다음 단계
 
-- [부록 A: 용어사전](../appendix/A-glossary.md)
+- [부록 A: 용어사전](../Appendix/A-glossary.md)

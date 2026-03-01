@@ -6,7 +6,7 @@
 
 ## 이 튜토리얼에 대하여
 
-이 튜토리얼은 **C# 소스 생성기(Source Generator)**를 처음부터 배워 실전에서 활용할 수 있도록 안내합니다. Roslyn 컴파일러 플랫폼의 기초부터 시작하여, **IIncrementalGenerator 패턴**을 활용한 고성능 소스 생성기 개발까지 단계별로 학습합니다.
+이 튜토리얼은 **C# 소스 생성기(Source Generator)를** 처음부터 배워 실전에서 활용할 수 있도록 안내합니다. Roslyn 컴파일러 플랫폼의 기초부터 시작하여, **IIncrementalGenerator 패턴**을 활용한 고성능 소스 생성기 개발까지 단계별로 학습합니다.
 
 > **반복적인 보일러플레이트 코드를 자동화하고, 100% 일관된 관찰 가능성을 보장하는 소스 생성기를 직접 구현해보세요.**
 
@@ -106,16 +106,16 @@
 - [5.1 정리](Part5-Conclusion/01-summary.md)
 - [5.2 다음 단계](Part5-Conclusion/02-next-steps.md)
 
-### [부록](appendix/)
+### [부록](Appendix/)
 
-- [A. 개발 환경 준비](appendix/A-development-environment.md)
-- [B. API 레퍼런스](appendix/B-api-reference.md)
-- [C. 테스트 시나리오 카탈로그](appendix/C-test-scenario-catalog.md)
-- [D. 문제 해결](appendix/D-troubleshooting.md)
+- [A. 개발 환경 준비](Appendix/A-development-environment.md)
+- [B. API 레퍼런스](Appendix/B-api-reference.md)
+- [C. 테스트 시나리오 카탈로그](Appendix/C-test-scenario-catalog.md)
+- [D. 문제 해결](Appendix/D-troubleshooting.md)
 
 ---
 
-## 실습 진화 과정
+## 핵심 진화 과정
 
 ```
 Phase 1: Hello World (Part 0~1)
@@ -213,7 +213,7 @@ Automating-ObservabilityCode-with-SourceGenerator/
 ├── Part5-Conclusion/           # Part 5: 결론
 │   ├── 01-summary.md
 │   └── 02-next-steps.md
-├── appendix/                   # 부록
+├── Appendix/                   # 부록
 │   ├── A-development-environment.md
 │   ├── B-api-reference.md
 │   ├── C-test-scenario-catalog.md

@@ -335,10 +335,10 @@ context.ReportDiagnostic(Diagnostic.Create(
 
 더 자세한 정보는 부록을 참조하세요.
 
-- [A. 개발 환경](../appendix/A-development-environment.md)
-- [B. API 레퍼런스](../appendix/B-api-reference.md)
-- [C. 테스트 시나리오 카탈로그](../appendix/C-test-scenario-catalog.md)
-- [D. 트러블슈팅](../appendix/D-troubleshooting.md)
+- [A. 개발 환경](../Appendix/A-development-environment.md)
+- [B. API 레퍼런스](../Appendix/B-api-reference.md)
+- [C. 테스트 시나리오 카탈로그](../Appendix/C-test-scenario-catalog.md)
+- [D. 트러블슈팅](../Appendix/D-troubleshooting.md)
 
 ---
 

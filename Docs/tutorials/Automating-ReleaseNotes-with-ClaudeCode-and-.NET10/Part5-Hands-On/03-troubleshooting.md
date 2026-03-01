@@ -342,4 +342,4 @@ npx markdownlint-cli@0.45.0 .release-notes/RELEASE-v1.0.0.md
 
 ## 다음 단계
 
-- [부록 A: 용어 사전](../appendix/A-glossary.md)
+- [부록 A: 용어 사전](../Appendix/A-glossary.md)
