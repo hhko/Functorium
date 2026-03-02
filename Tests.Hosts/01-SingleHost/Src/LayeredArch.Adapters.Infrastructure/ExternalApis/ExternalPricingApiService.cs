@@ -196,7 +196,7 @@ public class ExternalPricingApiService : IExternalPricingService
     /// <summary>
     /// HTTP 오류 응답을 AdapterError로 변환합니다.
     /// </summary>
-    private static Fin<T> HandleHttpError<T>(HttpResponseMessage response, string context) =>
+    protected virtual Fin<T> HandleHttpError<T>(HttpResponseMessage response, string context) =>
         response.StatusCode switch
         {
             HttpStatusCode.NotFound => AdapterError.For<ExternalPricingApiService>(
