@@ -8,7 +8,9 @@
 
 ## 주요 핵심 기능
 
-**타입 안전한 함수형 도메인 모델링**
+### 타입 안전한 함수형 도메인 모델링
+
+예외 대신 `FinResponse<T>` Discriminated Union으로 결과를 명시적으로 처리하고, `FinT<IO, T>` Monad Transformer로 사이드 이펙트 경계를 타입 수준에서 추적합니다. 구조화된 에러 코드와 Specification 합성, 함수형 검증을 통해 도메인 로직의 정확성과 합성 가능성을 동시에 확보합니다.
 
 | 기능 | 설명 |
 |------|------|
@@ -18,14 +20,18 @@
 | Specification Pattern | &/\|/! 연산자 합성. Expression Tree → SQL 변환. PropertyMap 브릿지 |
 | 함수형 검증 (Bind + Apply) | 순차(Bind) vs 병렬(Apply) 검증. Always-valid Value Object |
 
-**자동 코드 생성 (Source Generator)**
+### 자동 코드 생성 (Source Generator)
+
+반복적인 보일러플레이트 코드를 Source Generator가 컴파일 시점에 자동 생성합니다. Observable wrapper와 EntityId 관련 코드를 어트리뷰트 하나로 생성하여 개발 생산성과 일관성을 높입니다.
 
 | 기능 | 설명 |
 |------|------|
 | \[GenerateObservablePort\] | Adapter에 Observable wrapper 자동 생성. OpenTelemetry Tracing/Logging/Metrics 제로 보일러플레이트 |
 | \[GenerateEntityId\] | Ulid 기반 EntityId + EF Core Converter + Comparer 자동 생성 |
 
-**아키텍처 품질 자동화**
+### 아키텍처 품질 자동화
+
+타입 시스템과 단위 테스트를 활용하여 아키텍처 규칙을 자동으로 검증합니다. CQRS 기반 읽기/쓰기 분리, Pipeline 제약 조건, 불변성·가시성·상속 규칙이 코드 수준에서 강제되어 설계 의도가 지속적으로 보존됩니다.
 
 | 기능 | 설명 |
 |------|------|
