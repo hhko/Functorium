@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using Functorium.Adapters.Observabilities;
 using LanguageExt.Traits;
 
 namespace Functorium.Applications.Linq;
@@ -9,10 +7,6 @@ namespace Functorium.Applications.Linq;
 /// </summary>
 public static partial class FinTLinqExtensions
 {
-    /// <summary>
-    /// Traverse Activity의 이름 형식
-    /// </summary>
-    private const string TraverseActivityNameFormat = "Application Traverse {0} [{1}]";
 
     // =========================================================================
     // FinT Filter
@@ -108,142 +102,152 @@ public static partial class FinTLinqExtensions
     // =========================================================================
     // TraverseSerial (IO 모나드 + OpenTelemetry Activity)
     // =========================================================================
+    // NOTE: Functorium.Adapters 분리로 인해 주석 처리됨.
+    // ElapsedTimeCalculator가 Functorium.Adapters에 위치하므로
+    // 코어 프로젝트에서 참조할 수 없음.
+    // 향후 Functorium.Adapters에서 확장 메서드로 제공 예정.
+    // =========================================================================
 
-    /// <summary>
-    /// Seq를 순차적으로 순회하며 각 요소를 FinT로 변환합니다. (OpenTelemetry Activity 추적 지원)
-    ///
-    /// 각 항목 처리 시 개별 Activity를 생성하여 분산 추적 시각화에서 명확히 구분합니다.
-    ///
-    /// Activity 구조:
-    ///   - 이름: "Application Traverse {operationName} [{identifier}]"
-    ///   - Tags:
-    ///     - request.layer: "Application"
-    ///     - request.category: "Traverse"
-    ///     - traverse.item.index: 0, 1, 2...
-    ///     - traverse.item.count: 총 항목 수
-    ///     - traverse.item.identifier: 항목 식별자 (예: LineId)
-    ///     - traverse.item.type: 항목 타입명
-    ///     - elapsed: 처리 시간 (ms)
-    ///
-    /// 사용 예:
-    ///   from results in ftpInfos.TraverseSerial(
-    ///       f: ftpInfo =&gt; ProcessFtp(ftpInfo),
-    ///       activitySource: _activitySource,
-    ///       operationName: "ProcessFtpLine",
-    ///       getItemIdentifier: (ftpInfo, index) =&gt; ftpInfo.LineId)
-    ///   select results;
-    ///
-    /// 성능 최적화:
-    ///   - ActivityTagsCollection: StartActivity에 태그 일괄 전달 (SetTag() 호출 제거)
-    ///   - List&lt;B&gt; 누적: O(1) amortized 추가, 마지막에 ToSeq() 한 번만 호출 (O(n^2) → O(n))
-    ///
-    /// 주의:
-    ///   - ActivitySource는 DI 컨테이너에서 주입받은 인스턴스 사용
-    ///   - Activity 생성 실패 시에도 처리는 정상 진행
-    ///   - 순차 처리 보장: 각 항목이 완전히 처리된 후 다음 항목 시작
-    ///   - .NET의 ExecutionContext가 Activity.Current를 자동으로 전파하여 Activity 계층 유지
-    /// </summary>
-    /// <typeparam name="A">입력 요소 타입</typeparam>
-    /// <typeparam name="B">변환된 결과 타입</typeparam>
-    /// <param name="seq">처리할 시퀀스</param>
-    /// <param name="f">각 요소를 FinT로 변환하는 함수</param>
-    /// <param name="activitySource">Activity를 생성할 ActivitySource (DI 주입)</param>
-    /// <param name="operationName">작업 이름 (Activity 이름에 사용)</param>
-    /// <param name="getItemIdentifier">각 항목의 식별자를 추출하는 함수</param>
-    /// <returns>모든 결과를 포함하는 FinT Seq</returns>
-    public static FinT<IO, Seq<B>> TraverseSerial<A, B>(
-        this Seq<A> seq,
-        Func<A, FinT<IO, B>> f,
-        ActivitySource activitySource,
-        string operationName,
-        Func<A, int, string> getItemIdentifier)
-    {
-        int totalCount = seq.Count;
+    // /// <summary>
+    // /// Traverse Activity의 이름 형식
+    // /// </summary>
+    // private const string TraverseActivityNameFormat = "Application Traverse {0} [{1}]";
 
-        // 전체를 하나의 IO 효과로 처리 (for 루프 기반)
-        // 성능 최적화: List<B> 사용으로 O(n²) → O(n) 개선
-        IO<Fin<Seq<B>>> io = IO.liftAsync<Fin<Seq<B>>>(async () =>
-        {
-            List<B> results = new List<B>(totalCount);  // 용량 미리 예약
-
-            for (int i = 0; i < totalCount; i++)
-            {
-                A item = seq[i];
-                string itemIdentifier = getItemIdentifier(item, i);
-
-                // 1. Activity 태그 컬렉션 준비 (성능 최적화: SetTag() 호출 제거)
-                ActivityTagsCollection tags = new ActivityTagsCollection
-                {
-                    { "request.layer", "Application" },
-                    { "request.category", "Traverse" },
-                    { "traverse.item.index", i },
-                    { "traverse.item.count", totalCount },
-                    { "traverse.item.identifier", itemIdentifier },
-                    { "traverse.item.type", typeof(A).Name }
-                };
-
-                // 2. Activity 생성 (태그를 StartActivity에 전달)
-                // 부모 ActivityContext 결정:
-                // .NET의 ExecutionContext가 Activity.Current를 자동으로 전파하므로
-                // Activity.Current를 직접 사용합니다.
-                string activityName = string.Format(TraverseActivityNameFormat, operationName, itemIdentifier);
-
-                Activity? activity = Activity.Current != null
-                    ? activitySource.StartActivity(
-                        activityName,
-                        ActivityKind.Internal,
-                        Activity.Current.Context,
-                        tags)
-                    : activitySource.StartActivity(
-                        activityName,
-                        ActivityKind.Internal,
-                        default(ActivityContext),
-                        tags);
-
-                // 참고: StartActivity는 sampling 정책이나 리소스 제약으로 인해 null을 반환할 수 있습니다.
-                // null인 경우에도 비즈니스 로직은 계속 실행되며, Activity는 관찰성(observability) 목적으로만 사용됩니다.
-
-                long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();
-
-                try
-                {
-                    // 3. 실제 작업 실행
-                    // .NET의 ExecutionContext가 Activity.Current를 자동으로 전파하므로
-                    // 추가적인 AsyncLocal 관리가 필요하지 않습니다.
-                    Fin<B> finResult = await f(item).Run().RunAsync();
-
-                    // 4. 실패 시 즉시 반환
-                    if (finResult.IsFail)
-                    {
-                        return finResult.Match(
-                            Succ: _ => throw new InvalidOperationException("Unreachable"),
-                            Fail: error => Fin.Fail<Seq<B>>(error)
-                        );
-                    }
-
-                    // 5. 성공 시 결과 누적 (List.Add는 O(1) amortized)
-                    results.Add(finResult.ThrowIfFail());
-
-                    // 6. 성능 메트릭 설정
-                    if (activity != null)
-                    {
-                        double elapsed = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);
-                        activity.SetTag("elapsed", elapsed);
-                        activity.SetStatus(ActivityStatusCode.Ok);
-                    }
-                }
-                finally
-                {
-                    // 7. Activity 정리 (성공/실패 관계없이)
-                    activity?.Stop();
-                    activity?.Dispose();
-                }
-            }
-
-            // List<B>를 Seq<B>로 변환 (마지막에 한 번만)
-            return Fin.Succ(new Seq<B>(results));
-        });
-
-        return FinT.lift<IO, Seq<B>>(io);
-    }
+    // /// <summary>
+    // /// Seq를 순차적으로 순회하며 각 요소를 FinT로 변환합니다. (OpenTelemetry Activity 추적 지원)
+    // ///
+    // /// 각 항목 처리 시 개별 Activity를 생성하여 분산 추적 시각화에서 명확히 구분합니다.
+    // ///
+    // /// Activity 구조:
+    // ///   - 이름: "Application Traverse {operationName} [{identifier}]"
+    // ///   - Tags:
+    // ///     - request.layer: "Application"
+    // ///     - request.category: "Traverse"
+    // ///     - traverse.item.index: 0, 1, 2...
+    // ///     - traverse.item.count: 총 항목 수
+    // ///     - traverse.item.identifier: 항목 식별자 (예: LineId)
+    // ///     - traverse.item.type: 항목 타입명
+    // ///     - elapsed: 처리 시간 (ms)
+    // ///
+    // /// 사용 예:
+    // ///   from results in ftpInfos.TraverseSerial(
+    // ///       f: ftpInfo =&gt; ProcessFtp(ftpInfo),
+    // ///       activitySource: _activitySource,
+    // ///       operationName: "ProcessFtpLine",
+    // ///       getItemIdentifier: (ftpInfo, index) =&gt; ftpInfo.LineId)
+    // ///   select results;
+    // ///
+    // /// 성능 최적화:
+    // ///   - ActivityTagsCollection: StartActivity에 태그 일괄 전달 (SetTag() 호출 제거)
+    // ///   - List&lt;B&gt; 누적: O(1) amortized 추가, 마지막에 ToSeq() 한 번만 호출 (O(n^2) → O(n))
+    // ///
+    // /// 주의:
+    // ///   - ActivitySource는 DI 컨테이너에서 주입받은 인스턴스 사용
+    // ///   - Activity 생성 실패 시에도 처리는 정상 진행
+    // ///   - 순차 처리 보장: 각 항목이 완전히 처리된 후 다음 항목 시작
+    // ///   - .NET의 ExecutionContext가 Activity.Current를 자동으로 전파하여 Activity 계층 유지
+    // /// </summary>
+    // /// <typeparam name="A">입력 요소 타입</typeparam>
+    // /// <typeparam name="B">변환된 결과 타입</typeparam>
+    // /// <param name="seq">처리할 시퀀스</param>
+    // /// <param name="f">각 요소를 FinT로 변환하는 함수</param>
+    // /// <param name="activitySource">Activity를 생성할 ActivitySource (DI 주입)</param>
+    // /// <param name="operationName">작업 이름 (Activity 이름에 사용)</param>
+    // /// <param name="getItemIdentifier">각 항목의 식별자를 추출하는 함수</param>
+    // /// <returns>모든 결과를 포함하는 FinT Seq</returns>
+    // public static FinT<IO, Seq<B>> TraverseSerial<A, B>(
+    //     this Seq<A> seq,
+    //     Func<A, FinT<IO, B>> f,
+    //     ActivitySource activitySource,
+    //     string operationName,
+    //     Func<A, int, string> getItemIdentifier)
+    // {
+    //     int totalCount = seq.Count;
+    //
+    //     // 전체를 하나의 IO 효과로 처리 (for 루프 기반)
+    //     // 성능 최적화: List<B> 사용으로 O(n²) → O(n) 개선
+    //     IO<Fin<Seq<B>>> io = IO.liftAsync<Fin<Seq<B>>>(async () =>
+    //     {
+    //         List<B> results = new List<B>(totalCount);  // 용량 미리 예약
+    //
+    //         for (int i = 0; i < totalCount; i++)
+    //         {
+    //             A item = seq[i];
+    //             string itemIdentifier = getItemIdentifier(item, i);
+    //
+    //             // 1. Activity 태그 컬렉션 준비 (성능 최적화: SetTag() 호출 제거)
+    //             ActivityTagsCollection tags = new ActivityTagsCollection
+    //             {
+    //                 { "request.layer", "Application" },
+    //                 { "request.category", "Traverse" },
+    //                 { "traverse.item.index", i },
+    //                 { "traverse.item.count", totalCount },
+    //                 { "traverse.item.identifier", itemIdentifier },
+    //                 { "traverse.item.type", typeof(A).Name }
+    //             };
+    //
+    //             // 2. Activity 생성 (태그를 StartActivity에 전달)
+    //             // 부모 ActivityContext 결정:
+    //             // .NET의 ExecutionContext가 Activity.Current를 자동으로 전파하므로
+    //             // Activity.Current를 직접 사용합니다.
+    //             string activityName = string.Format(TraverseActivityNameFormat, operationName, itemIdentifier);
+    //
+    //             Activity? activity = Activity.Current != null
+    //                 ? activitySource.StartActivity(
+    //                     activityName,
+    //                     ActivityKind.Internal,
+    //                     Activity.Current.Context,
+    //                     tags)
+    //                 : activitySource.StartActivity(
+    //                     activityName,
+    //                     ActivityKind.Internal,
+    //                     default(ActivityContext),
+    //                     tags);
+    //
+    //             // 참고: StartActivity는 sampling 정책이나 리소스 제약으로 인해 null을 반환할 수 있습니다.
+    //             // null인 경우에도 비즈니스 로직은 계속 실행되며, Activity는 관찰성(observability) 목적으로만 사용됩니다.
+    //
+    //             long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();
+    //
+    //             try
+    //             {
+    //                 // 3. 실제 작업 실행
+    //                 // .NET의 ExecutionContext가 Activity.Current를 자동으로 전파하므로
+    //                 // 추가적인 AsyncLocal 관리가 필요하지 않습니다.
+    //                 Fin<B> finResult = await f(item).Run().RunAsync();
+    //
+    //                 // 4. 실패 시 즉시 반환
+    //                 if (finResult.IsFail)
+    //                 {
+    //                     return finResult.Match(
+    //                         Succ: _ => throw new InvalidOperationException("Unreachable"),
+    //                         Fail: error => Fin.Fail<Seq<B>>(error)
+    //                     );
+    //                 }
+    //
+    //                 // 5. 성공 시 결과 누적 (List.Add는 O(1) amortized)
+    //                 results.Add(finResult.ThrowIfFail());
+    //
+    //                 // 6. 성능 메트릭 설정
+    //                 if (activity != null)
+    //                 {
+    //                     double elapsed = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);
+    //                     activity.SetTag("elapsed", elapsed);
+    //                     activity.SetStatus(ActivityStatusCode.Ok);
+    //                 }
+    //             }
+    //             finally
+    //             {
+    //                 // 7. Activity 정리 (성공/실패 관계없이)
+    //                 activity?.Stop();
+    //                 activity?.Dispose();
+    //             }
+    //         }
+    //
+    //         // List<B>를 Seq<B>로 변환 (마지막에 한 번만)
+    //         return Fin.Succ(new Seq<B>(results));
+    //     });
+    //
+    //     return FinT.lift<IO, Seq<B>>(io);
+    // }
 }
