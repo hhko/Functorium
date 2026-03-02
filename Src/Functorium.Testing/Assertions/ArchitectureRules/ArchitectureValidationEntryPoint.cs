@@ -4,15 +4,6 @@ namespace Functorium.Testing.Assertions.ArchitectureRules;
 
 /// <summary>
 /// 아키텍처 검증을 위한 확장 메서드들을 제공합니다.
-///
-/// 이 클래스는 ArchUnitNET을 기반으로 한 커스텀 아키텍처 검증 프레임워크의
-/// 핵심 유틸리티 기능을 제공합니다. 주로 클래스 집합에 대한 검증 규칙을
-/// 일괄 적용하고 결과를 집계하는 기능을 담당합니다.
-///
-/// 주요 기능:
-/// - 클래스 집합에 대한 검증 규칙 일괄 적용
-/// - 검증 결과 집계 및 요약
-/// - 테스트 출력을 통한 검증 과정 로깅
 /// </summary>
 public static class ArchitectureValidationEntryPoint
 {
@@ -48,12 +39,54 @@ public static class ArchitectureValidationEntryPoint
         return processor;
     }
 
+    public static ValidationResultSummary ValidateAllInterfaces(
+        this IObjectProvider<Interface> interfaces,
+        Architecture architecture,
+        Action<InterfaceValidator> validationRule)
+    {
+        return ValidateAllInterfaces(interfaces, architecture, validationRule, verbose: false);
+    }
+
+    public static ValidationResultSummary ValidateAllInterfaces(
+        this IObjectProvider<Interface> interfaces,
+        Architecture architecture,
+        Action<InterfaceValidator> validationRule,
+        bool verbose)
+    {
+        var processor = new ValidationResultSummary();
+        var targetInterfaces = interfaces.GetObjects(architecture).ToList();
+
+        if (verbose)
+        {
+            LogValidationTargets(targetInterfaces);
+        }
+
+        foreach (var targetInterface in targetInterfaces)
+        {
+            var validator = new InterfaceValidator(architecture, targetInterface);
+            validationRule(validator);
+            processor.ProcessValidationResult(targetInterface, validator.Validate());
+        }
+
+        return processor;
+    }
+
     private static void LogValidationTargets(IList<Class> targetClasses)
     {
         Console.WriteLine($"Validating {targetClasses.Count} classes:");
         foreach (var targetClass in targetClasses)
         {
             Console.WriteLine($"  - {targetClass.FullName}");
+        }
+        Console.WriteLine();
+    }
+
+    private static void LogValidationTargets(IList<Interface> targetInterfaces)
+    {
+        Console.WriteLine($"Validating {targetInterfaces.Count} interfaces:");
+        foreach (var targetInterface in targetInterfaces)
+        {
+            Console.WriteLine($"  - {targetInterface.FullName}");
         }
         Console.WriteLine();
     }
