@@ -6,6 +6,57 @@
 
 단순한 설계 패턴 모음이 아니라, 요구사항 정의부터 운영 안정성 확보까지 일관된 철학으로 연결되는 구조적 접근 방식을 담고 있습니다.
 
+## 주요 핵심 기능
+
+**타입 안전한 함수형 도메인 모델링**
+
+| 기능 | 설명 |
+|------|------|
+| FinResponse\<T\> Discriminated Union | sealed record 기반 Success/Failure. 예외 없이 명시적 결과 처리. LINQ 합성 지원 |
+| FinT\<IO, T\> Monad Transformer | 사이드 이펙트를 타입으로 추적. Repository 반환 타입으로 순수/비순수 경계 명시 |
+| 구조화된 에러 코드 시스템 | `DomainErrors.Email.Empty` 형태 자동 생성. 8가지 명명 규칙(R1–R8) |
+| Specification Pattern | &/\|/! 연산자 합성. Expression Tree → SQL 변환. PropertyMap 브릿지 |
+| 함수형 검증 (Bind + Apply) | 순차(Bind) vs 병렬(Apply) 검증. Always-valid Value Object |
+
+**자동 코드 생성 (Source Generator)**
+
+| 기능 | 설명 |
+|------|------|
+| \[GenerateObservablePort\] | Adapter에 Observable wrapper 자동 생성. OpenTelemetry Tracing/Logging/Metrics 제로 보일러플레이트 |
+| \[GenerateEntityId\] | Ulid 기반 EntityId + EF Core Converter + Comparer 자동 생성 |
+
+**아키텍처 품질 자동화**
+
+| 기능 | 설명 |
+|------|------|
+| 타입 안전한 Pipeline 제약 | IFinResponse 인터페이스 계층 + CRTP 팩토리. 리플렉션 없이 Pipeline별 최소 제약 |
+| CQRS 읽기/쓰기 분리 | Command(IRepository + EF Core) vs Query(IQueryPort + Dapper). Cursor 페이지네이션 |
+| 아키텍처 규칙 테스트 | ClassValidator/InterfaceValidator/MethodValidator. 불변성·가시성·상속 규칙을 단위 테스트로 강제 |
+
+**Quick Example** — DomainError + Always-valid Value Object + FinResponse LINQ 합성:
+
+```csharp
+// 구조화된 에러 코드: "DomainErrors.Email.Empty"
+public sealed record Empty : IDomainErrorType;
+
+// Always-valid Value Object
+public sealed class Email : AbstractValueObject
+{
+    public string Value { get; }
+    private Email(string value) => Value = value;
+
+    public static FinResponse<Email> Create(string? input) =>
+        from value in Validate(input)
+        from email in ValidateFormat(value)
+        select new Email(email);
+
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return Value;
+    }
+}
+```
+
 ## 왜 이 프레임워크가 필요한가
 
 많은 조직에서 요구사항은 개발 관점과 운영 관점으로 분리되어 정의됩니다. 기능 구현을 중심으로 작성된 명세와 운영 안정성을 고려한 요구가 서로 다른 체계로 관리되면서, **공통 언어는 정립되지 못하고 내부 아키텍처 기준 역시 명확히 수립되지 않는** 경우가 많습니다.
@@ -207,6 +258,7 @@ Adapters/
 - 사이드 이펙트 영역은 명시적으로 분리되어 **검증 가능한 구조**를 갖습니다.
 - 배포 이전 단계에서 **Observability 검증**이 완료됩니다.
 - 정의된 에러 코드와 복구 절차는 **문서화되고 검증**됩니다.
+- 아키텍처 규칙은 ClassValidator/InterfaceValidator를 통해 **단위 테스트로 자동 검증**됩니다.
 
 > 품질은 결과가 아니라 구조에서 비롯됩니다.
 
@@ -217,13 +269,27 @@ Adapters/
 - 반복적인 장애 대응과 유지보수 비용이 **구조적으로 감소**합니다.
 - 기술 도입이 목적이 아니라, 도메인 중심 사고를 기반으로 한 **조직적 역량 강화**가 핵심 성과입니다.
 
+## 시작하기
+
+```bash
+dotnet add package Functorium
+dotnet add package Functorium.SourceGenerators
+dotnet add package Functorium.Testing
+```
+
 ## Book
 
 - [Architecture](./Docs/architecture-is/README.md)
-- [Automating Release Notes with Claude Code and .NET 10](./Docs/tutorials/Automating-ReleaseNotes-with-ClaudeCode-and-.NET10/README.md)
-- [Automating Observability Code with SourceGenerator](./Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/README.md)
-- [Implementing Functional ValueObject](./Docs/tutorials/Implementing-Functional-ValueObject/README.md)
-- [Implementing Specification Pattern](./Docs/tutorials/Implementing-Specification-Pattern/README.md)
+
+| Tutorial | 주제 | 실습 |
+|----------|------|------|
+| [Implementing Functional ValueObject](./Docs/tutorials/Implementing-Functional-ValueObject/README.md) | Value Object, 검증, 불변성 | 29개 |
+| [Implementing Specification Pattern](./Docs/tutorials/Implementing-Specification-Pattern/README.md) | Specification, Expression Tree | 18개 |
+| [Implementing CQRS Repository And Query Patterns](./Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/README.md) | CQRS, Repository, Query 어댑터 | 22개 |
+| [Designing TypeSafe Usecase Pipeline Constraints](./Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/README.md) | 제네릭 변성, IFinResponse, Pipeline 제약 | 20개 |
+| [Enforcing Architecture Rules with Testing](./Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/README.md) | 아키텍처 규칙, ClassValidator | 16개 |
+| [Automating ObservabilityCode with SourceGenerator](./Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/README.md) | Source Generator, Observable wrapper | — |
+| [Automating ReleaseNotes with ClaudeCode and .NET 10](./Docs/tutorials/Automating-ReleaseNotes-with-ClaudeCode-and-.NET10/README.md) | AI 자동화, 릴리스 노트 | — |
 
 ## Observability
 
