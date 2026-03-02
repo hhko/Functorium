@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using ArchUnitNET.Domain;
 
 namespace Functorium.Testing.Assertions.ArchitectureRules;
@@ -23,7 +24,7 @@ public sealed class MethodValidator
     {
         if (_targetMethod.Visibility != visibility)
         {
-            AddViolation("RequireVisibility",
+            AddViolation(
                 $"Method '{_targetMethod.Name}' in class '{_targetMethod.DeclaringType.Name}' must be {visibility.ToString().ToLower()}.");
         }
         return this;
@@ -33,7 +34,7 @@ public sealed class MethodValidator
     {
         if (_targetMethod.IsStatic != true)
         {
-            AddViolation("RequireStatic",
+            AddViolation(
                 $"Method '{_targetMethod.Name}' in class '{_targetMethod.DeclaringType.Name}' must be static.");
         }
         return this;
@@ -44,7 +45,7 @@ public sealed class MethodValidator
         if (!_targetMethod.Attributes.Any(a =>
             a.FullName?.Contains("ExtensionAttribute") == true))
         {
-            AddViolation("RequireExtensionMethod",
+            AddViolation(
                 $"Method '{_targetMethod.Name}' in class '{_targetMethod.DeclaringType.Name}' must be an extension method.");
         }
         return this;
@@ -54,7 +55,7 @@ public sealed class MethodValidator
     {
         if (!IsReturnTypeCompatible(_targetMethod.ReturnType, returnType))
         {
-            AddViolation("RequireReturnType",
+            AddViolation(
                 $"Method '{_targetMethod.Name}' in class '{_targetMethod.DeclaringType.Name}' must return '{returnType.Name}'.");
         }
         return this;
@@ -65,7 +66,7 @@ public sealed class MethodValidator
         var declaringClassName = _targetMethod.DeclaringType.Name;
         if (_targetMethod.ReturnType.Name != declaringClassName)
         {
-            AddViolation("RequireReturnTypeOfDeclaringClass",
+            AddViolation(
                 $"Method '{_targetMethod.Name}' in class '{_targetMethod.DeclaringType.Name}' must return '{declaringClassName}'.");
         }
         return this;
@@ -80,7 +81,7 @@ public sealed class MethodValidator
 
         if (_targetMethod.ReturnType.Name != topLevelClassName)
         {
-            AddViolation("RequireReturnTypeOfDeclaringTopLevelClass",
+            AddViolation(
                 $"Method '{_targetMethod.Name}' in class '{_targetMethod.DeclaringType.Name}' must return top-level class '{topLevelClassName}'.");
         }
         return this;
@@ -97,7 +98,7 @@ public sealed class MethodValidator
         var reflectionMethod = ResolveReflectionMethod();
         if (reflectionMethod != null && (!reflectionMethod.IsVirtual || reflectionMethod.IsFinal))
         {
-            AddViolation("RequireVirtual",
+            AddViolation(
                 $"Method '{_targetMethod.Name}' in class '{_targetMethod.DeclaringType.Name}' must be virtual.");
         }
         return this;
@@ -107,7 +108,7 @@ public sealed class MethodValidator
     {
         if (_targetMethod.IsStatic == true)
         {
-            AddViolation("RequireNotStatic",
+            AddViolation(
                 $"Method '{_targetMethod.Name}' in class '{_targetMethod.DeclaringType.Name}' must not be static.");
         }
         return this;
@@ -124,7 +125,7 @@ public sealed class MethodValidator
         var reflectionMethod = ResolveReflectionMethod();
         if (reflectionMethod != null && reflectionMethod.IsVirtual && !reflectionMethod.IsFinal)
         {
-            AddViolation("RequireNotVirtual",
+            AddViolation(
                 $"Method '{_targetMethod.Name}' in class '{_targetMethod.DeclaringType.Name}' must not be virtual.");
         }
         return this;
@@ -138,7 +139,7 @@ public sealed class MethodValidator
             var actualCount = reflectionMethod.GetParameters().Length;
             if (actualCount != expectedCount)
             {
-                AddViolation("RequireParameterCount",
+                AddViolation(
                     $"Method '{_targetMethod.Name}' in class '{_targetMethod.DeclaringType.Name}' must have {expectedCount} parameter(s), but has {actualCount}.");
             }
         }
@@ -153,7 +154,7 @@ public sealed class MethodValidator
             var actualCount = reflectionMethod.GetParameters().Length;
             if (actualCount < minimumCount)
             {
-                AddViolation("RequireParameterCountAtLeast",
+                AddViolation(
                     $"Method '{_targetMethod.Name}' in class '{_targetMethod.DeclaringType.Name}' must have at least {minimumCount} parameter(s), but has {actualCount}.");
             }
         }
@@ -168,13 +169,13 @@ public sealed class MethodValidator
             var parameters = reflectionMethod.GetParameters();
             if (parameters.Length == 0)
             {
-                AddViolation("RequireFirstParameterTypeContaining",
+                AddViolation(
                     $"Method '{_targetMethod.Name}' in class '{_targetMethod.DeclaringType.Name}' must have at least one parameter to check first parameter type.");
             }
             else if (!parameters[0].ParameterType.FullName?.Contains(typeNameFragment) == true
                      && !parameters[0].ParameterType.Name.Contains(typeNameFragment))
             {
-                AddViolation("RequireFirstParameterTypeContaining",
+                AddViolation(
                     $"Method '{_targetMethod.Name}' in class '{_targetMethod.DeclaringType.Name}' first parameter type must contain '{typeNameFragment}', but is '{parameters[0].ParameterType.Name}'.");
             }
         }
@@ -191,7 +192,7 @@ public sealed class MethodValidator
                 p.ParameterType.FullName?.Contains(typeNameFragment) == true
                 || p.ParameterType.Name.Contains(typeNameFragment)))
             {
-                AddViolation("RequireAnyParameterTypeContaining",
+                AddViolation(
                     $"Method '{_targetMethod.Name}' in class '{_targetMethod.DeclaringType.Name}' must have a parameter with type containing '{typeNameFragment}'.");
             }
         }
@@ -202,7 +203,7 @@ public sealed class MethodValidator
     {
         if (_targetMethod.ReturnType.FullName?.Contains(typeNameFragment) != true)
         {
-            AddViolation("RequireReturnTypeContaining",
+            AddViolation(
                 $"Method '{_targetMethod.Name}' in class '{_targetMethod.DeclaringType.Name}' must have return type containing '{typeNameFragment}'.");
         }
         return this;
@@ -258,7 +259,7 @@ public sealed class MethodValidator
         return false;
     }
 
-    private void AddViolation(string ruleName, string description)
+    private void AddViolation(string description, [CallerMemberName] string ruleName = "")
     {
         _violations.Add(new RuleViolation(_targetMethod.DeclaringType.FullName, ruleName, description));
     }

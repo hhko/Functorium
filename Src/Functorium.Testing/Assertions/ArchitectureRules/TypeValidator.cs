@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using ArchUnitNET.Domain;
 
@@ -47,8 +48,7 @@ public abstract class TypeValidator<TType, TSelf>
     {
         if (!_target.Name.StartsWith(prefix))
         {
-            AddViolation("RequireNameStartsWith",
-                $"{TypeKind} '{_target.Name}' must have name starting with '{prefix}'.");
+            AddViolation($"{TypeKind} '{_target.Name}' must have name starting with '{prefix}'.");
         }
         return (TSelf)this;
     }
@@ -57,8 +57,7 @@ public abstract class TypeValidator<TType, TSelf>
     {
         if (!_target.Name.EndsWith(suffix))
         {
-            AddViolation("RequireNameEndsWith",
-                $"{TypeKind} '{_target.Name}' must have name ending with '{suffix}'.");
+            AddViolation($"{TypeKind} '{_target.Name}' must have name ending with '{suffix}'.");
         }
         return (TSelf)this;
     }
@@ -67,8 +66,7 @@ public abstract class TypeValidator<TType, TSelf>
     {
         if (!Regex.IsMatch(_target.Name, regexPattern))
         {
-            AddViolation("RequireNameMatching",
-                $"{TypeKind} '{_target.Name}' must match pattern '{regexPattern}'.");
+            AddViolation($"{TypeKind} '{_target.Name}' must match pattern '{regexPattern}'.");
         }
         return (TSelf)this;
     }
@@ -80,8 +78,7 @@ public abstract class TypeValidator<TType, TSelf>
         if (!_target.ImplementedInterfaces.Any(i =>
             i.FullName != null && i.FullName.StartsWith(interfaceType.FullName!)))
         {
-            AddViolation("RequireImplements",
-                $"{TypeKind} '{_target.Name}' must implement '{interfaceType.Name}'.");
+            AddViolation($"{TypeKind} '{_target.Name}' must implement '{interfaceType.Name}'.");
         }
         return (TSelf)this;
     }
@@ -91,8 +88,7 @@ public abstract class TypeValidator<TType, TSelf>
         if (!_target.ImplementedInterfaces.Any(i =>
             i.FullName != null && i.FullName.Contains(genericInterfaceName)))
         {
-            AddViolation("RequireImplementsGenericInterface",
-                $"{TypeKind} '{_target.Name}' must implement '{genericInterfaceName}' interface.");
+            AddViolation($"{TypeKind} '{_target.Name}' must implement '{genericInterfaceName}' interface.");
         }
         return (TSelf)this;
     }
@@ -108,7 +104,7 @@ public abstract class TypeValidator<TType, TSelf>
         if (forbidden.Any())
         {
             var details = string.Join(", ", forbidden.Select(d => d.Target.FullName).Distinct());
-            AddViolation("RequireNoDependencyOn",
+            AddViolation(
                 $"{TypeKind} '{_target.Name}' must not depend on '{typeNameContains}', but found dependencies: {details}");
         }
         return (TSelf)this;
@@ -125,8 +121,7 @@ public abstract class TypeValidator<TType, TSelf>
 
         if (!methods.Any())
         {
-            AddViolation("RequireMethod",
-                $"{TypeKind} '{_target.Name}' must have a method named '{methodName}'.");
+            AddViolation($"{TypeKind} '{_target.Name}' must have a method named '{methodName}'.");
             return (TSelf)this;
         }
 
@@ -201,8 +196,7 @@ public abstract class TypeValidator<TType, TSelf>
 
         if (!hasProperty)
         {
-            AddViolation("RequireProperty",
-                $"{TypeKind} '{_target.Name}' must have property '{propertyName}'.");
+            AddViolation($"{TypeKind} '{_target.Name}' must have property '{propertyName}'.");
         }
         return (TSelf)this;
     }
@@ -232,7 +226,7 @@ public abstract class TypeValidator<TType, TSelf>
         }
     }
 
-    protected void AddViolation(string ruleName, string description)
+    protected void AddViolation(string description, [CallerMemberName] string ruleName = "")
     {
         _violations.Add(new RuleViolation(_target.FullName, ruleName, description));
     }

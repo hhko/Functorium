@@ -7,6 +7,8 @@ namespace Functorium.Testing.Assertions.ArchitectureRules;
 /// </summary>
 public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
 {
+    private static readonly Rules.ImmutabilityRule s_immutabilityRule = new();
+
     public ClassValidator(Architecture architecture, Class targetClass)
         : base(architecture, targetClass)
     {
@@ -27,7 +29,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
     {
         if (_target.Visibility != Visibility.Public)
         {
-            AddViolation("RequirePublic", $"Class '{_target.Name}' must be public.");
+            AddViolation($"Class '{_target.Name}' must be public.");
         }
         return this;
     }
@@ -36,7 +38,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
     {
         if (_target.Visibility != Visibility.Internal)
         {
-            AddViolation("RequireInternal", $"Class '{_target.Name}' must be internal.");
+            AddViolation($"Class '{_target.Name}' must be internal.");
         }
         return this;
     }
@@ -47,7 +49,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
     {
         if (_target.IsSealed != true)
         {
-            AddViolation("RequireSealed", $"Class '{_target.Name}' must be sealed.");
+            AddViolation($"Class '{_target.Name}' must be sealed.");
         }
         return this;
     }
@@ -56,7 +58,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
     {
         if (_target.IsSealed == true)
         {
-            AddViolation("RequireNotSealed", $"Class '{_target.Name}' must not be sealed.");
+            AddViolation($"Class '{_target.Name}' must not be sealed.");
         }
         return this;
     }
@@ -66,7 +68,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
         // C# static class는 IL에서 abstract + sealed로 표현됨
         if (_target.IsAbstract != true || _target.IsSealed != true)
         {
-            AddViolation("RequireStatic", $"Class '{_target.Name}' must be static.");
+            AddViolation($"Class '{_target.Name}' must be static.");
         }
         return this;
     }
@@ -76,7 +78,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
         // C# static class는 IL에서 abstract + sealed로 표현됨
         if (_target.IsAbstract == true && _target.IsSealed == true)
         {
-            AddViolation("RequireNotStatic", $"Class '{_target.Name}' must not be static.");
+            AddViolation($"Class '{_target.Name}' must not be static.");
         }
         return this;
     }
@@ -86,7 +88,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
         // static class는 IL에서 abstract + sealed이므로 제외
         if (_target.IsAbstract != true || (_target.IsAbstract == true && _target.IsSealed == true))
         {
-            AddViolation("RequireAbstract", $"Class '{_target.Name}' must be abstract.");
+            AddViolation($"Class '{_target.Name}' must be abstract.");
         }
         return this;
     }
@@ -96,7 +98,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
         // static class(abstract + sealed)는 abstract로 취급하지 않음
         if (_target.IsAbstract == true && _target.IsSealed != true)
         {
-            AddViolation("RequireNotAbstract", $"Class '{_target.Name}' must not be abstract.");
+            AddViolation($"Class '{_target.Name}' must not be abstract.");
         }
         return this;
     }
@@ -107,7 +109,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
     {
         if (_target.IsRecord != true)
         {
-            AddViolation("RequireRecord", $"Class '{_target.Name}' must be a record.");
+            AddViolation($"Class '{_target.Name}' must be a record.");
         }
         return this;
     }
@@ -116,7 +118,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
     {
         if (_target.IsRecord == true)
         {
-            AddViolation("RequireNotRecord", $"Class '{_target.Name}' must not be a record.");
+            AddViolation($"Class '{_target.Name}' must not be a record.");
         }
         return this;
     }
@@ -126,7 +128,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
         if (!_target.Attributes.Any(a =>
             a.FullName != null && a.FullName.Contains(attributeName)))
         {
-            AddViolation("RequireAttribute", $"Class '{_target.Name}' must have '{attributeName}' attribute.");
+            AddViolation($"Class '{_target.Name}' must have '{attributeName}' attribute.");
         }
         return this;
     }
@@ -138,7 +140,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
         if (!_target.InheritedClasses.Any(b =>
             b.FullName != null && b.FullName.StartsWith(baseType.FullName!)))
         {
-            AddViolation("RequireInherits", $"Class '{_target.Name}' must inherit from '{baseType.Name}'.");
+            AddViolation($"Class '{_target.Name}' must inherit from '{baseType.Name}'.");
         }
         return this;
     }
@@ -150,8 +152,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
         var parameterlessConstructor = _target.Constructors.FirstOrDefault(c => c.Parameters.Count() == 0);
         if (parameterlessConstructor == null || parameterlessConstructor.Visibility != Visibility.Private)
         {
-            AddViolation("RequirePrivateAnyParameterlessConstructor",
-                $"Class '{_target.Name}' must have a private parameterless constructor.");
+            AddViolation($"Class '{_target.Name}' must have a private parameterless constructor.");
         }
         return this;
     }
@@ -162,7 +163,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
         if (nonPrivateConstructors.Any())
         {
             var constructorNames = string.Join(", ", nonPrivateConstructors.Select(c => c.Name));
-            AddViolation("RequireAllPrivateConstructors",
+            AddViolation(
                 $"All constructors in class '{_target.Name}' must be private. Found non-private constructors: {constructorNames}");
         }
         return this;
@@ -180,8 +181,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
         if (propertiesWithPublicSetters.Any())
         {
             var details = string.Join(", ", propertiesWithPublicSetters.Select(p => p.Name));
-            AddViolation("RequireNoPublicSetters",
-                $"Class '{_target.Name}' must not have public setters, but found: {details}");
+            AddViolation($"Class '{_target.Name}' must not have public setters, but found: {details}");
         }
         return this;
     }
@@ -200,8 +200,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
         if (nonPrimitiveProperties.Any())
         {
             var details = string.Join(", ", nonPrimitiveProperties.Select(p => $"{p.Name} ({p.Type.Name})"));
-            AddViolation("RequireOnlyPrimitiveProperties",
-                $"Class '{_target.Name}' has non-primitive properties: {details}");
+            AddViolation($"Class '{_target.Name}' has non-primitive properties: {details}");
         }
         return this;
     }
@@ -219,8 +218,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
         if (instanceFields.Any())
         {
             var details = string.Join(", ", instanceFields.Select(f => f.Name));
-            AddViolation("RequireNoInstanceFields",
-                $"Class '{_target.Name}' must have no instance fields, but found: {details}");
+            AddViolation($"Class '{_target.Name}' must have no instance fields, but found: {details}");
         }
         return this;
     }
@@ -232,7 +230,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
         Class? nestedClass = _architecture.Classes.FirstOrDefault(c => c.FullName == _target.FullName + "+" + nestedClassName);
         if (nestedClass == null)
         {
-            AddViolation("RequireNestedClass", $"Nested class '{nestedClassName}' must be required but not found.");
+            AddViolation($"Nested class '{nestedClassName}' must be required but not found.");
             return this;
         }
 
@@ -256,7 +254,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
 
     public ClassValidator RequireImmutable()
     {
-        return Apply(new Rules.ImmutabilityRule());
+        return Apply(s_immutabilityRule);
     }
 
     // --- Private helpers ---

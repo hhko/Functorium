@@ -23,7 +23,7 @@ public sealed class ImmutabilityRule : IArchRule<Class>
         "ConcurrentDictionary<", "BlockingCollection<"
     ];
 
-    private static readonly string[] s_equalityMethods =
+    private static readonly HashSet<string> s_equalityMethods =
     [
         "Equals", "GetHashCode", "GetEqualityComponents", "GetComparableEqualityComponents"
     ];
