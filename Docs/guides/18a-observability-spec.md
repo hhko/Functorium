@@ -689,7 +689,7 @@ public sealed class OtlpCollectorProtocol : SmartEnum<OtlpCollectorProtocol>
 Request → Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler
 ```
 
-> **참조**: `Src/Functorium/Adapters/Observabilities/Builders/Configurators/PipelineConfigurator.cs`
+> **참조**: `Src/Functorium.Adapters/Observabilities/Builders/Configurators/PipelineConfigurator.cs`
 
 ---
 
@@ -968,11 +968,11 @@ response.event.failure_count     # 조합 count는 _count
 | 구성 요소 | 파일 경로 |
 |----------|----------|
 | 필드 이름 생성 헬퍼 | `Src/Functorium.SourceGenerators/Generators/ObservablePortGenerator/CollectionTypeHelper.cs` |
-| Application Logging | `Src/Functorium/Adapters/Observabilities/Pipelines/UsecaseLoggingPipeline.cs` |
+| Application Logging | `Src/Functorium.Adapters/Observabilities/Pipelines/UsecaseLoggingPipeline.cs` |
 | Adapter Logging | Source Generator 생성 코드 |
-| Application Metrics | `Src/Functorium/Adapters/Observabilities/Pipelines/UsecaseMetricsPipeline.cs` |
-| Application Tracing | `Src/Functorium/Adapters/Observabilities/Pipelines/UsecaseTracingPipeline.cs` |
-| DomainEvent Publisher | `Src/Functorium/Adapters/Observabilities/Events/ObservableDomainEventPublisher.cs` |
+| Application Metrics | `Src/Functorium.Adapters/Observabilities/Pipelines/UsecaseMetricsPipeline.cs` |
+| Application Tracing | `Src/Functorium.Adapters/Observabilities/Pipelines/UsecaseTracingPipeline.cs` |
+| DomainEvent Publisher | `Src/Functorium.Adapters/Observabilities/Events/ObservableDomainEventPublisher.cs` |
 
 ### 관련 테스트
 

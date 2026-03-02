@@ -477,7 +477,7 @@ public static OptionsBuilder<TOptions> RegisterConfigureOptions<TOptions, TValid
 - **반환 타입**: `OptionsBuilder<TOptions>` (추가 체이닝 가능)
 - **제약 조건**: `TOptions : class`, `TValidator : class, IValidator<TOptions>`
 
-> **참조**: `Src/Functorium/Adapters/Options/OptionsConfigurator.cs`
+> **참조**: `Src/Functorium.Adapters/Options/OptionsConfigurator.cs`
 
 #### IStartupOptionsLogger 인터페이스
 

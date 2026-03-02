@@ -1167,7 +1167,7 @@ var sort = SortExpression.Empty;
 | `AllowedSortColumns` | 허용 정렬 필드 Allowlist | `{ ["Name"] = "Name", ["Price"] = "Price" }` |
 | `BuildWhereClause()` | Spec → SQL WHERE + Parameters (virtual — translator 사용 시 override 불필요) | `ProductPriceRangeSpec → "WHERE Price >= @Min ..."` |
 
-> **참조**: `Src/Functorium/Adapters/Repositories/DapperQueryBase.cs`
+> **참조**: `Src/Functorium.Adapters/Repositories/DapperQueryBase.cs`
 
 #### Dapper Query 구현 — 단일 테이블
 

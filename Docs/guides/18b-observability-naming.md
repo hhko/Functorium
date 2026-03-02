@@ -412,7 +412,7 @@ Src/Functorium/Applications/Observabilities/
 ├── Spans/            ✅ Span 관련 클래스들을 담고 있음
 └── Context/          ✅ Context 관련 클래스들을 담고 있음
 
-Src/Functorium/Adapters/Observabilities/
+Src/Functorium.Adapters/Observabilities/
 ├── Loggers/          ✅
 ├── Metrics/          ✅
 ├── Spans/            ✅
@@ -421,7 +421,7 @@ Src/Functorium/Adapters/Observabilities/
 
 > **참고**: 위 구조는 설계 의도를 나타내며, 현재 코드베이스의 실제 구조와 차이가 있습니다. 현재 `Applications/Observabilities/` 디렉토리는 존재하지 않고, `Adapters/Observabilities/`의 실제 하위 폴더 구조는 다음과 같습니다:
 > ```
-> Src/Functorium/Adapters/Observabilities/
+> Src/Functorium.Adapters/Observabilities/
 > ├── Builders/Configurators/   (LoggingConfigurator, TracingConfigurator, MetricsConfigurator 등)
 > ├── Events/                   (ObservableDomainEventPublisher 등)
 > ├── Loggers/                  (UsecaseLoggerExtensions, StartupLogger 등)

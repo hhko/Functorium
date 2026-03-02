@@ -492,7 +492,9 @@ Src/Functorium/Abstractions/Errors/
 ├── ErrorCodeFactory.cs               # 팩토리 메서드
 ├── ErrorCodeFieldNames.cs            # 필드명 상수
 ├── ErrorType.cs                      # 에러 접두사 상수 (DomainErrorsPrefix 등)
-├── IHasErrorCode.cs                  # 에러 코드 접근 인터페이스
+└── IHasErrorCode.cs                  # 에러 코드 접근 인터페이스
+
+Src/Functorium.Adapters/Abstractions/Errors/
 └── DestructuringPolicies/            # Serilog 구조화 정책
     ├── IErrorDestructurer.cs
     ├── ErrorsDestructuringPolicy.cs
