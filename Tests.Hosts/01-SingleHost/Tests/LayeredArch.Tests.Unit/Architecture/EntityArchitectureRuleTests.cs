@@ -96,4 +96,47 @@ public sealed class EntityArchitectureRuleTests : ArchitectureTestBase
                 verbose: true)
             .ThrowIfAnyFailures("Entity Factory Method Rule");
     }
+
+    [Fact]
+    public void AggregateRoot_ShouldHave_GenerateEntityIdAttribute()
+    {
+        ArchRuleDefinition.Classes()
+            .That()
+            .ResideInNamespace(DomainNamespace)
+            .And().AreAssignableTo(typeof(AggregateRoot<>))
+            .And().AreNotAbstract()
+            .ValidateAllClasses(Architecture, @class => @class
+                .RequireAttribute("GenerateEntityId"),
+                verbose: true)
+            .ThrowIfAnyFailures("AggregateRoot GenerateEntityId Attribute Rule");
+    }
+
+    [Fact]
+    public void AggregateRoot_ShouldHave_AllPrivateConstructors()
+    {
+        ArchRuleDefinition.Classes()
+            .That()
+            .ResideInNamespace(DomainNamespace)
+            .And().AreAssignableTo(typeof(AggregateRoot<>))
+            .And().AreNotAbstract()
+            .ValidateAllClasses(Architecture, @class => @class
+                .RequireAllPrivateConstructors(),
+                verbose: true)
+            .ThrowIfAnyFailures("AggregateRoot Private Constructors Rule");
+    }
+
+    [Fact]
+    public void Entity_ShouldHave_AllPrivateConstructors()
+    {
+        ArchRuleDefinition.Classes()
+            .That()
+            .ResideInNamespace(DomainNamespace)
+            .And().AreAssignableTo(typeof(Entity<>))
+            .And().AreNotAbstract()
+            .And().AreNotAssignableTo(typeof(AggregateRoot<>))
+            .ValidateAllClasses(Architecture, @class => @class
+                .RequireAllPrivateConstructors(),
+                verbose: true)
+            .ThrowIfAnyFailures("Entity Private Constructors Rule");
+    }
 }
