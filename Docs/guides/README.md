@@ -63,7 +63,8 @@ Architecture
 └── Appendix
     ├── [A01] A01-vscode-debugging.md ─── VSCode 디버깅
     ├── [A02] A02-git-reference.md ─── Git 참조
-    └── [A03] A03-response-type-evolution.md ─── FinResponse 타입 진화
+    ├── [A03] A03-response-type-evolution.md ─── FinResponse 타입 진화
+    └── [A04] A04-architecture-rules-coverage.md ─── 아키텍처 규칙 검증 커버리지
 ```
 
 ## 빠른 참조 (작업별 가이드 바로가기)
@@ -100,6 +101,7 @@ Architecture
 | **Observability 사양** | [18a-observability-spec.md](./18a-observability-spec.md) |
 | **구조화된 로그 테스트** | [16-testing-library.md — 구조화된 로그 테스트](./16-testing-library.md) |
 | **아키텍처 규칙 검증** | [16-testing-library.md — 아키텍처 규칙 검증](./16-testing-library.md) |
+| **아키텍처 규칙 커버리지 매트릭스** | [A04-architecture-rules-coverage.md](./A04-architecture-rules-coverage.md) |
 | **소스 생성기 테스트** | [16-testing-library.md — 소스 생성기 테스트](./16-testing-library.md) |
 | **스케줄 Job 테스트** | [16-testing-library.md — 스케줄 Job 통합 테스트](./16-testing-library.md) |
 | **모듈과 프로젝트 구조 매핑** | [04-ddd-tactical-overview.md — §6](./04-ddd-tactical-overview.md) |
@@ -193,6 +195,7 @@ Architecture
 | [A01-vscode-debugging.md](./A01-vscode-debugging.md) | VSCode 디버깅 및 개발 환경 설정 |
 | [A02-git-reference.md](./A02-git-reference.md) | Git 명령어 참조 및 Git Hooks |
 | [A03-response-type-evolution.md](./A03-response-type-evolution.md) | FinResponse 타입 진화 기록 |
+| [A04-architecture-rules-coverage.md](./A04-architecture-rules-coverage.md) | 아키텍처 규칙 검증 커버리지 매트릭스 |
 
 ### 리뷰
 
