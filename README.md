@@ -277,11 +277,11 @@ dotnet add package Functorium.SourceGenerators
 dotnet add package Functorium.Testing
 ```
 
-## Book
+## 튜토리얼
 
 - [Architecture](./Docs/architecture-is/README.md)
 
-| Tutorial | 주제 | 실습 |
+| 튜토리얼 | 주제 | 실습 |
 |----------|------|------|
 | [Implementing Functional ValueObject](./Docs/tutorials/Implementing-Functional-ValueObject/README.md) | Value Object, 검증, 불변성 | 29개 |
 | [Implementing Specification Pattern](./Docs/tutorials/Implementing-Specification-Pattern/README.md) | Specification, Expression Tree | 18개 |
