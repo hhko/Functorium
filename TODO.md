@@ -8,6 +8,7 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
 
 - [x] Book 폴더 전체 구성 동기화
 - [ ] CRTP 패턴 사례 개선 Book
+- [ ] Traverse, TraverseM 이해 LanaguageExt
 - [x] 아키텍처 테스트 개선
 - [ ] 아키텍처 대상 문서화(비교표)
 - [ ] 아키텍처 Book
