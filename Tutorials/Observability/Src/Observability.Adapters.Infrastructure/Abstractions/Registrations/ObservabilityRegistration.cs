@@ -1,4 +1,4 @@
-using Functorium.Abstractions.Registrations;
+using Functorium.Adapters.Abstractions.Registrations;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

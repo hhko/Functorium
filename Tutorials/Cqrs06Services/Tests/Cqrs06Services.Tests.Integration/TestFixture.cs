@@ -1,6 +1,7 @@
 using System.Reflection;
 using FluentValidation;
 using Functorium.Abstractions.Registrations;
+using Functorium.Adapters.Abstractions.Registrations;
 using Functorium.Applications.Usecases;
 using Mediator;
 using Microsoft.Extensions.Configuration;

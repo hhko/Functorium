@@ -9,7 +9,7 @@ using Microsoft.Extensions.Options;
 
 using Serilog;
 
-namespace Functorium.Abstractions.Registrations;
+namespace Functorium.Adapters.Abstractions.Registrations;
 
 /// <summary>
 /// OpenTelemetry 등록을 위한 확장 메서드

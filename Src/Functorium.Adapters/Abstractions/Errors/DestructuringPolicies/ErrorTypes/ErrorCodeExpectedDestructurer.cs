@@ -1,30 +1,26 @@
-﻿using Serilog.Core;
+﻿using Functorium.Abstractions.Errors;
+using Serilog.Core;
 using Serilog.Events;
 
-namespace Functorium.Abstractions.Errors.DestructuringPolicies.ErrorTypes;
+namespace Functorium.Adapters.Abstractions.Errors.DestructuringPolicies.ErrorTypes;
 
-public class ExpectedDestructurer : IErrorDestructurer
+public class ErrorCodeExpectedDestructurer : IErrorDestructurer
 {
     public bool CanHandle(Error error) =>
-        error is Expected;
+        error is ErrorCodeExpected;
 
     public LogEventPropertyValue Destructure(Error error, ILogEventPropertyValueFactory factory)
     {
-        Expected e = (Expected)error;
+        ErrorCodeExpected e = (ErrorCodeExpected)error;
+
         List<LogEventProperty> props =
         [
             new(ErrorCodeFieldNames.ErrorType, new ScalarValue(e.GetType().Name)),
-            // ErrorCode
+            new(ErrorCodeFieldNames.ErrorCode, new ScalarValue(e.ErrorCode)),
             new(ErrorCodeFieldNames.ErrorCodeId, new ScalarValue(e.Code)),
-            // ErrorCurrentValue
+            new(ErrorCodeFieldNames.ErrorCurrentValue, new ScalarValue(e.ErrorCurrentValue)),
             new(ErrorCodeFieldNames.Message, new ScalarValue(e.Message))
         ];
-
-        // InnerError
-        e.Inner.IfSome(inner =>
-        {
-            props.Add(new(ErrorCodeFieldNames.InnerError, ErrorsDestructuringPolicy.DestructureError(inner, factory)));
-        });
 
         return new StructureValue(props);
     }

@@ -1,4 +1,4 @@
-using Functorium.Abstractions.Registrations;
+using Functorium.Adapters.Abstractions.Registrations;
 using Functorium.Adapters.Observabilities.Events;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;

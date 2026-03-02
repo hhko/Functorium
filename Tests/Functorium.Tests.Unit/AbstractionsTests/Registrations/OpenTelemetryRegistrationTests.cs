@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Reflection;
-using Functorium.Abstractions.Registrations;
+using Functorium.Adapters.Abstractions.Registrations;
 using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Builders;
 using Microsoft.Extensions.Configuration;

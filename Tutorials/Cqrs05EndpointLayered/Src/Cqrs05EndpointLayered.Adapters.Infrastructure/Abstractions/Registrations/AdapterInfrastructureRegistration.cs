@@ -1,5 +1,5 @@
 using FluentValidation;
-using Functorium.Abstractions.Registrations;
+using Functorium.Adapters.Abstractions.Registrations;
 using Mediator;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;

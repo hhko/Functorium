@@ -31,6 +31,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Functorium\Functorium.csproj" />
+    <ProjectReference Include="..\Functorium.Adapters\Functorium.Adapters.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,11 +1,11 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-using Functorium.Abstractions.Errors.DestructuringPolicies.ErrorTypes;
+using Functorium.Adapters.Abstractions.Errors.DestructuringPolicies.ErrorTypes;
 
 using Serilog.Core;
 using Serilog.Events;
 
-namespace Functorium.Abstractions.Errors.DestructuringPolicies;
+namespace Functorium.Adapters.Abstractions.Errors.DestructuringPolicies;
 
 public class ErrorsDestructuringPolicy : IDestructuringPolicy
 {

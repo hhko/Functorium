@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Src\Functorium.Adapters\Functorium.Adapters.csproj" />
     <ProjectReference Include="..\Cqrs05EndpointLayered.Applications\Cqrs05EndpointLayered.Applications.csproj" />
   </ItemGroup>
 

@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Src\Functorium.Adapters\Functorium.Adapters.csproj" />
     <ProjectReference Include="..\LayeredArch.Application\LayeredArch.Application.csproj" />
   </ItemGroup>
 

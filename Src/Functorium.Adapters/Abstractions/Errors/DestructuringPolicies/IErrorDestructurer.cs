@@ -1,7 +1,7 @@
 ﻿using Serilog.Core;
 using Serilog.Events;
 
-namespace Functorium.Abstractions.Errors.DestructuringPolicies;
+namespace Functorium.Adapters.Abstractions.Errors.DestructuringPolicies;
 
 // Field                | ErrorCodeExpected | ErrorCodeExpected<T>  | ErrorCodeExceptional  | ManyErrors
 // ---                  | ---               | ---                   | ---                   | ---

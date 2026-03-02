@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Functorium.Abstractions.Registrations;
+namespace Functorium.Adapters.Abstractions.Registrations;
 
 /// <summary>
 /// 도메인 이벤트 관련 서비스 등록 확장 메서드.

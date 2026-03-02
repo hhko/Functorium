@@ -1,9 +1,9 @@
 ﻿using System.Reflection;
-
+using Functorium.Abstractions.Errors;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace Functorium.Abstractions.Errors.DestructuringPolicies.ErrorTypes;
+namespace Functorium.Adapters.Abstractions.Errors.DestructuringPolicies.ErrorTypes;
 
 public class ErrorCodeExpectedTDestructurer : IErrorDestructurer
 {

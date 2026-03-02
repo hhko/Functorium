@@ -1,7 +1,7 @@
 using System.Reflection;
 using Cqrs03Functional.Demo.Infrastructure;
 using FluentValidation;
-using Functorium.Abstractions.Registrations;
+using Functorium.Adapters.Abstractions.Registrations;
 using Mediator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

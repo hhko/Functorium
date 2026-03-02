@@ -14,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Functorium.Adapters" />
     <InternalsVisibleTo Include="Functorium.Tests.Unit" />
     <InternalsVisibleTo Include="Functorium.Testing" />
     <InternalsVisibleTo Include="BulkCrud.Benchmarks" />
@@ -21,28 +22,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dapper" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="LanguageExt.Core" />
     <PackageReference Include="Ulid" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" />
-    <PackageReference Include="Serilog" />
-    <PackageReference Include="Serilog.Extensions.Hosting" />
-    <PackageReference Include="Serilog.Settings.Configuration" />
-    <PackageReference Include="Serilog.Sinks.OpenTelemetry" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-    <PackageReference Include="OpenTelemetry" />
-    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
-    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
-    <PackageReference Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
     <PackageReference Include="Ardalis.SmartEnum" />
     <PackageReference Include="Mediator.Abstractions" />
-    <PackageReference Include="Scrutor" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>
 
 </Project>

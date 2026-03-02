@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Reflection;
-using Functorium.Abstractions.Errors.DestructuringPolicies;
+using Functorium.Adapters.Abstractions.Errors.DestructuringPolicies;
 using Functorium.Adapters.Observabilities.Builders.Configurators;
 using Functorium.Adapters.Observabilities.Loggers;
 using Microsoft.Extensions.Configuration;

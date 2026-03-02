@@ -1,4 +1,4 @@
-using Functorium.Abstractions.Errors.DestructuringPolicies;
+using Functorium.Adapters.Abstractions.Errors.DestructuringPolicies;
 using Serilog.Core;
 using Serilog.Events;
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;

@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Src\Functorium\Functorium.csproj" />
+    <ProjectReference Include="..\..\Src\Functorium.Adapters\Functorium.Adapters.csproj" />
     <ProjectReference Include="..\..\Src\Functorium.Testing\Functorium.Testing.csproj" />
     <!-- 기존 테스트에서 PipelineGenerator 타입 사용을 위한 참조 -->
     <ProjectReference Include="..\..\Src\Functorium.SourceGenerators\Functorium.SourceGenerators.csproj" />

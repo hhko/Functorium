@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\Src\Observability.Applications\Observability.Applications.csproj" />
     <ProjectReference Include="..\..\Src\Observability.Domains\Observability.Domains.csproj" />
     <ProjectReference Include="..\..\..\..\Src\Functorium\Functorium.csproj" />
+    <ProjectReference Include="..\..\..\..\Src\Functorium.Adapters\Functorium.Adapters.csproj" />
     <ProjectReference Include="..\..\..\..\Src\Functorium.Testing\Functorium.Testing.csproj" />
   </ItemGroup>
 
