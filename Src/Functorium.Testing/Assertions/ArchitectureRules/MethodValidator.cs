@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using ArchUnitNET.Domain;
 
 namespace Functorium.Testing.Assertions.ArchitectureRules;
@@ -219,7 +220,8 @@ public sealed class MethodValidator
         return s_reflectionCache.GetOrAdd((declaringTypeFullName, methodName), key =>
         {
             var type = AppDomain.CurrentDomain.GetAssemblies()
-                .Select(a => { try { return a.GetType(key.TypeFullName); } catch { return null; } })
+                .Where(a => !a.IsDynamic)
+                .Select(a => a.GetType(key.TypeFullName))
                 .FirstOrDefault(t => t != null);
 
             if (type == null)
@@ -244,11 +246,8 @@ public sealed class MethodValidator
 
         if (expectedReturnType.IsGenericTypeDefinition)
         {
-            return actualReturnType.FullName?.StartsWith(expectedReturnType.FullName?
-                .Replace("`1", "")
-                .Replace("`2", "")
-                .Replace("`3", "")
-                .Replace("`4", "") ?? "") == true;
+            var prefix = Regex.Replace(expectedReturnType.FullName ?? "", @"`\d+", "");
+            return actualReturnType.FullName?.StartsWith(prefix) == true;
         }
 
         if (expectedReturnType == typeof(object))

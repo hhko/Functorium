@@ -15,6 +15,8 @@ namespace Functorium.Testing.Assertions.ArchitectureRules.Rules;
 /// </summary>
 public sealed class ImmutabilityRule : IArchRule<Class>
 {
+    public string Description => "Requires class to be immutable";
+
     private static readonly string[] s_mutableCollectionTypes =
     [
         "List<", "Dictionary<", "HashSet<", "Queue<", "Stack<",
@@ -32,53 +34,46 @@ public sealed class ImmutabilityRule : IArchRule<Class>
 
     public IReadOnlyList<RuleViolation> Validate(Class target, Architecture architecture)
     {
-        var failures = new List<string>();
+        var violations = new List<RuleViolation>();
         var nonStaticMembers = target.Members
             .Where(m => m.IsStatic == false)
             .ToList();
 
-        failures.AddRange(ValidateWritability(nonStaticMembers));
-        failures.AddRange(ValidateConstructors(target));
-        failures.AddRange(ValidateProperties(target));
-        failures.AddRange(ValidateFields(target));
-        failures.AddRange(ValidateCollections(nonStaticMembers));
-        failures.AddRange(ValidateMethods(target));
+        violations.AddRange(ValidateWritability(target, nonStaticMembers));
+        violations.AddRange(ValidateConstructors(target));
+        violations.AddRange(ValidateProperties(target));
+        violations.AddRange(ValidateFields(target));
+        violations.AddRange(ValidateCollections(target, nonStaticMembers));
+        violations.AddRange(ValidateMethods(target));
 
-        if (failures.Count == 0)
-            return [];
-
-        return
-        [
-            new RuleViolation(
-                target.FullName,
-                "RequireImmutable",
-                $"Class '{target.Name}' must be immutable. {string.Join("; ", failures)}")
-        ];
+        return violations;
     }
 
-    private static List<string> ValidateWritability(List<IMember> nonStaticMembers)
+    private static List<RuleViolation> ValidateWritability(Class target, List<IMember> nonStaticMembers)
     {
         var mutableMembers = nonStaticMembers
             .Where(m => !m.Writability.IsImmutable())
             .ToList();
 
         return mutableMembers.Count > 0
-            ? [$"Found mutable members: {string.Join(", ", mutableMembers.Select(m => m.Name))}"]
+            ? [new RuleViolation(target.FullName, "RequireImmutable.Writability",
+                $"Class '{target.Name}' has mutable members: {string.Join(", ", mutableMembers.Select(m => m.Name))}")]
             : [];
     }
 
-    private static List<string> ValidateConstructors(Class target)
+    private static List<RuleViolation> ValidateConstructors(Class target)
     {
         var publicConstructors = target.Constructors
             .Where(c => c.Visibility == Visibility.Public)
             .ToList();
 
         return publicConstructors.Count > 0
-            ? [$"Found public constructors: {string.Join(", ", publicConstructors.Select(c => c.Name))}"]
+            ? [new RuleViolation(target.FullName, "RequireImmutable.Constructors",
+                $"Class '{target.Name}' has public constructors: {string.Join(", ", publicConstructors.Select(c => c.Name))}")]
             : [];
     }
 
-    private static List<string> ValidateProperties(Class target)
+    private static List<RuleViolation> ValidateProperties(Class target)
     {
         var propertiesWithSetters = target.Members
             .OfType<PropertyMember>()
@@ -86,11 +81,12 @@ public sealed class ImmutabilityRule : IArchRule<Class>
             .ToList();
 
         return propertiesWithSetters.Count > 0
-            ? [$"Found properties with setters: {string.Join(", ", propertiesWithSetters.Select(p => p.Name))}"]
+            ? [new RuleViolation(target.FullName, "RequireImmutable.PropertySetters",
+                $"Class '{target.Name}' has properties with setters: {string.Join(", ", propertiesWithSetters.Select(p => p.Name))}")]
             : [];
     }
 
-    private static List<string> ValidateFields(Class target)
+    private static List<RuleViolation> ValidateFields(Class target)
     {
         var publicFields = target.Members
             .OfType<FieldMember>()
@@ -98,11 +94,12 @@ public sealed class ImmutabilityRule : IArchRule<Class>
             .ToList();
 
         return publicFields.Count > 0
-            ? [$"Found public fields: {string.Join(", ", publicFields.Select(f => f.Name))}"]
+            ? [new RuleViolation(target.FullName, "RequireImmutable.PublicFields",
+                $"Class '{target.Name}' has public fields: {string.Join(", ", publicFields.Select(f => f.Name))}")]
             : [];
     }
 
-    private static List<string> ValidateCollections(List<IMember> nonStaticMembers)
+    private static List<RuleViolation> ValidateCollections(Class target, List<IMember> nonStaticMembers)
     {
         var mutableCollectionMembers = nonStaticMembers
             .OfType<FieldMember>()
@@ -110,11 +107,12 @@ public sealed class ImmutabilityRule : IArchRule<Class>
             .ToList();
 
         return mutableCollectionMembers.Count > 0
-            ? [$"Found mutable collection types: {string.Join(", ", mutableCollectionMembers.Select(m => m.Name))}"]
+            ? [new RuleViolation(target.FullName, "RequireImmutable.MutableCollections",
+                $"Class '{target.Name}' has mutable collection types: {string.Join(", ", mutableCollectionMembers.Select(m => m.Name))}")]
             : [];
     }
 
-    private static List<string> ValidateMethods(Class target)
+    private static List<RuleViolation> ValidateMethods(Class target)
     {
         var stateChangingMethods = target.Members
             .OfType<MethodMember>()
@@ -124,7 +122,8 @@ public sealed class ImmutabilityRule : IArchRule<Class>
             .ToList();
 
         return stateChangingMethods.Count > 0
-            ? [$"Found potentially state-changing methods: {string.Join(", ", stateChangingMethods.Select(m => m.Name))}"]
+            ? [new RuleViolation(target.FullName, "RequireImmutable.StateChangingMethods",
+                $"Class '{target.Name}' has potentially state-changing methods: {string.Join(", ", stateChangingMethods.Select(m => m.Name))}")]
             : [];
     }
 

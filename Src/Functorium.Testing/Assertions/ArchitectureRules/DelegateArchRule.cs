@@ -10,8 +10,11 @@ public sealed class DelegateArchRule<TType> : IArchRule<TType> where TType : ITy
 {
     private readonly Func<TType, Architecture, IReadOnlyList<RuleViolation>> _validate;
 
-    public DelegateArchRule(Func<TType, Architecture, IReadOnlyList<RuleViolation>> validate)
+    public string Description { get; }
+
+    public DelegateArchRule(string description, Func<TType, Architecture, IReadOnlyList<RuleViolation>> validate)
     {
+        Description = description;
         _validate = validate;
     }
 

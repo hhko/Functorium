@@ -10,6 +10,11 @@ namespace Functorium.Testing.Assertions.ArchitectureRules;
 public interface IArchRule<in TType> where TType : IType
 {
     /// <summary>
+    /// 규칙에 대한 설명을 반환합니다.
+    /// </summary>
+    string Description { get; }
+
+    /// <summary>
     /// 주어진 대상 타입에 대해 규칙을 검증합니다.
     /// </summary>
     /// <param name="target">검증 대상 타입</param>

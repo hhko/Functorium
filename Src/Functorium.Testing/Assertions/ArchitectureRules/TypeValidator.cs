@@ -212,19 +212,7 @@ public abstract class TypeValidator<TType, TSelf>
 
     // --- 결과 ---
 
-    internal ValidationResult Validate()
-    {
-        return new ValidationResult(_violations);
-    }
-
-    public void ValidateAndThrow()
-    {
-        if (_violations.Any())
-        {
-            string message = string.Join(", ", _violations.Select(v => $"[{v.RuleName}] {v.Description}"));
-            throw new InvalidOperationException($"{_target.FullName}: {message}");
-        }
-    }
+    internal IReadOnlyList<RuleViolation> GetViolations() => _violations;
 
     protected void AddViolation(string description, [CallerMemberName] string ruleName = "")
     {

@@ -10,83 +10,61 @@ public static class ArchitectureValidationEntryPoint
     public static ValidationResultSummary ValidateAllClasses(
         this IObjectProvider<Class> classes,
         Architecture architecture,
-        Action<ClassValidator> validationRule)
-    {
-        return ValidateAllClasses(classes, architecture, validationRule, verbose: false);
-    }
-
-    public static ValidationResultSummary ValidateAllClasses(
-        this IObjectProvider<Class> classes,
-        Architecture architecture,
         Action<ClassValidator> validationRule,
-        bool verbose)
+        bool verbose = false)
     {
-        var processor = new ValidationResultSummary();
-        var targetClasses = classes.GetObjects(architecture).ToList();
-
-        if (verbose)
-        {
-            LogValidationTargets(targetClasses);
-        }
-
-        foreach (var targetClass in targetClasses)
-        {
-            var validator = new ClassValidator(architecture, targetClass);
-            validationRule(validator);
-            processor.ProcessValidationResult(targetClass, validator.Validate());
-        }
-
-        return processor;
-    }
-
-    public static ValidationResultSummary ValidateAllInterfaces(
-        this IObjectProvider<Interface> interfaces,
-        Architecture architecture,
-        Action<InterfaceValidator> validationRule)
-    {
-        return ValidateAllInterfaces(interfaces, architecture, validationRule, verbose: false);
+        return ValidateAll<Class, ClassValidator>(
+            classes, architecture, validationRule,
+            (arch, target) => new ClassValidator(arch, target),
+            verbose);
     }
 
     public static ValidationResultSummary ValidateAllInterfaces(
         this IObjectProvider<Interface> interfaces,
         Architecture architecture,
         Action<InterfaceValidator> validationRule,
+        bool verbose = false)
+    {
+        return ValidateAll<Interface, InterfaceValidator>(
+            interfaces, architecture, validationRule,
+            (arch, target) => new InterfaceValidator(arch, target),
+            verbose);
+    }
+
+    private static ValidationResultSummary ValidateAll<TType, TValidator>(
+        IObjectProvider<TType> provider,
+        Architecture architecture,
+        Action<TValidator> validationRule,
+        Func<Architecture, TType, TValidator> validatorFactory,
         bool verbose)
+        where TType : IType
+        where TValidator : TypeValidator<TType, TValidator>
     {
         var processor = new ValidationResultSummary();
-        var targetInterfaces = interfaces.GetObjects(architecture).ToList();
+        var targets = provider.GetObjects(architecture).ToList();
 
         if (verbose)
         {
-            LogValidationTargets(targetInterfaces);
+            LogValidationTargets(targets);
         }
 
-        foreach (var targetInterface in targetInterfaces)
+        foreach (var target in targets)
         {
-            var validator = new InterfaceValidator(architecture, targetInterface);
+            var validator = validatorFactory(architecture, target);
             validationRule(validator);
-            processor.ProcessValidationResult(targetInterface, validator.Validate());
+            processor.ProcessViolations(target, validator.GetViolations());
         }
 
         return processor;
     }
 
-    private static void LogValidationTargets(IList<Class> targetClasses)
+    private static void LogValidationTargets<TType>(IList<TType> targets)
+        where TType : IType
     {
-        Console.WriteLine($"Validating {targetClasses.Count} classes:");
-        foreach (var targetClass in targetClasses)
+        Console.WriteLine($"Validating {targets.Count} {typeof(TType).Name.ToLower()}s:");
+        foreach (var target in targets)
         {
-            Console.WriteLine($"  - {targetClass.FullName}");
-        }
-        Console.WriteLine();
-    }
-
-    private static void LogValidationTargets(IList<Interface> targetInterfaces)
-    {
-        Console.WriteLine($"Validating {targetInterfaces.Count} interfaces:");
-        foreach (var targetInterface in targetInterfaces)
-        {
-            Console.WriteLine($"  - {targetInterface.FullName}");
+            Console.WriteLine($"  - {target.FullName}");
         }
         Console.WriteLine();
     }

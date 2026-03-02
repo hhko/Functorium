@@ -17,7 +17,9 @@ public sealed class RuleCompositionTests : ArchitectureTestBase
     /// <summary>
     /// 도메인 클래스에 인프라 접미사(Dto, ViewModel, Handler, Controller)를 금지합니다.
     /// </summary>
-    private static readonly DelegateArchRule<Class> s_domainNamingRule = new((target, _) =>
+    private static readonly DelegateArchRule<Class> s_domainNamingRule = new(
+        "Forbids infrastructure suffixes on domain classes",
+        (target, _) =>
     {
         string[] forbiddenSuffixes = ["Dto", "ViewModel", "Handler", "Controller"];
         foreach (var suffix in forbiddenSuffixes)
@@ -32,7 +34,9 @@ public sealed class RuleCompositionTests : ArchitectureTestBase
     /// <summary>
     /// 도메인 클래스가 인프라 네임스페이스(System.IO, System.Net, EntityFrameworkCore)에 의존하지 않도록 합니다.
     /// </summary>
-    private static readonly DelegateArchRule<Class> s_noInfrastructureDependencyRule = new((target, _) =>
+    private static readonly DelegateArchRule<Class> s_noInfrastructureDependencyRule = new(
+        "Forbids infrastructure namespace dependencies",
+        (target, _) =>
     {
         string[] forbiddenNamespaces = ["System.IO", "System.Net", "Microsoft.EntityFrameworkCore"];
         var forbidden = target.Dependencies

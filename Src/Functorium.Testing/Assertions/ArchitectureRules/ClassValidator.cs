@@ -23,6 +23,9 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
 
     protected override IEnumerable<IMember> GetSearchableMembers() => _target.MembersIncludingInherited;
 
+    // C# static class는 IL에서 abstract + sealed로 표현됨
+    private bool IsStaticClass => _target.IsAbstract == true && _target.IsSealed == true;
+
     // --- Visibility ---
 
     public ClassValidator RequirePublic()
@@ -65,8 +68,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
 
     public ClassValidator RequireStatic()
     {
-        // C# static class는 IL에서 abstract + sealed로 표현됨
-        if (_target.IsAbstract != true || _target.IsSealed != true)
+        if (!IsStaticClass)
         {
             AddViolation($"Class '{_target.Name}' must be static.");
         }
@@ -75,8 +77,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
 
     public ClassValidator RequireNotStatic()
     {
-        // C# static class는 IL에서 abstract + sealed로 표현됨
-        if (_target.IsAbstract == true && _target.IsSealed == true)
+        if (IsStaticClass)
         {
             AddViolation($"Class '{_target.Name}' must not be static.");
         }
@@ -85,8 +86,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
 
     public ClassValidator RequireAbstract()
     {
-        // static class는 IL에서 abstract + sealed이므로 제외
-        if (_target.IsAbstract != true || (_target.IsAbstract == true && _target.IsSealed == true))
+        if (_target.IsAbstract != true || IsStaticClass)
         {
             AddViolation($"Class '{_target.Name}' must be abstract.");
         }
@@ -95,8 +95,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
 
     public ClassValidator RequireNotAbstract()
     {
-        // static class(abstract + sealed)는 abstract로 취급하지 않음
-        if (_target.IsAbstract == true && _target.IsSealed != true)
+        if (_target.IsAbstract == true && !IsStaticClass)
         {
             AddViolation($"Class '{_target.Name}' must not be abstract.");
         }
@@ -185,9 +184,6 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
         }
         return this;
     }
-
-    public ClassValidator RequireOnlyPrimitiveProperties()
-        => RequireOnlyPrimitiveProperties(additionalAllowedTypePrefixes: []);
 
     public ClassValidator RequireOnlyPrimitiveProperties(params string[] additionalAllowedTypePrefixes)
     {
@@ -282,7 +278,7 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
         "System.UInt64",
     ];
 
-    internal static bool IsPrimitiveOrAllowedType(IType type, string[] additionalAllowedTypePrefixes)
+    private static bool IsPrimitiveOrAllowedType(IType type, string[] additionalAllowedTypePrefixes)
     {
         if (type is ArchUnitNET.Domain.Enum)
             return true;

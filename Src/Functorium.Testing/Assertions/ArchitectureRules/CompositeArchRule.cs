@@ -10,6 +10,8 @@ public sealed class CompositeArchRule<TType> : IArchRule<TType> where TType : IT
 {
     private readonly IReadOnlyList<IArchRule<TType>> _rules;
 
+    public string Description => string.Join(" AND ", _rules.Select(r => r.Description));
+
     public CompositeArchRule(params IArchRule<TType>[] rules)
     {
         _rules = rules;
