@@ -6,7 +6,10 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하도록 개선
 ```
 
-- [ ] Book 폴더 전체 구성 동기화
+- [x] Book 폴더 전체 구성 동기화
+- [ ] 아키텍처 테스트 개선
+- [ ] 아키텍처 대상 문서화(비교표)
+- [ ] 아키텍처 Book
 - [ ] Src\Functorium\Adapters\SourceGenerators\GenerateObservablePortAttribute.cs 폴더 이동
   ```
   Src\Functorium\Adapters\Observabilities\GenerateObservablePortAttribute.cs
@@ -17,7 +20,8 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
   - DTO
   - Command(레파지토리 패턴 + DTO) vs Query(전용 인터페이스 + No DTO)
 - [ ] N+1 정의, 문제점, 개선 방향 Book 개선
-- [ ] 파이프라인 Book
+- [ ] CRTP 패턴 배경 보강
+- [x] 파이프라인 Book
   - 공변성/반공변성
 - [ ] 폴더 정리
 - [ ] IAudit 로그 출력?
