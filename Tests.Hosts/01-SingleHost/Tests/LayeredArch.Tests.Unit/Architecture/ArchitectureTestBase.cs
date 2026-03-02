@@ -8,6 +8,7 @@ public abstract class ArchitectureTestBase
         new ArchLoader()
             .LoadAssemblies(
                 typeof(Functorium.Domains.Specifications.Specification<>).Assembly,
+                typeof(Functorium.Adapters.Repositories.InMemoryRepositoryBase<,>).Assembly,
                 LayeredArch.Domain.AssemblyReference.Assembly,
                 LayeredArch.Application.AssemblyReference.Assembly,
                 LayeredArch.Adapters.Persistence.AssemblyReference.Assembly,
