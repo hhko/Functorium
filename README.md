@@ -10,11 +10,13 @@
 
 ### 타입 안전한 함수형 도메인 모델링
 
-예외 대신 `FinResponse<T>` Discriminated Union으로 결과를 명시적으로 처리하고, `FinT<IO, T>` Monad Transformer로 사이드 이펙트 경계를 타입 수준에서 추적합니다. 구조화된 에러 코드와 Specification 합성, 함수형 검증을 통해 도메인 로직의 정확성과 합성 가능성을 동시에 확보합니다.
+Value Object와 Entity를 함수형 팩토리 패턴으로 생성하여 도메인 불변식을 생성 시점에 보장하고, 예외 대신 `FinResponse<T>` Discriminated Union으로 유스케이스 결과를 명시적으로 처리합니다. `FinT<IO, T>` Monad Transformer로 사이드 이펙트 경계를 타입 수준에서 추적하고, 구조화된 에러 코드와 Specification 합성, 함수형 검증을 통해 도메인 로직의 정확성과 합성 가능성을 동시에 확보합니다.
 
 | 기능 | 설명 |
 |------|------|
-| FinResponse\<T\> Discriminated Union | sealed record 기반 Success/Failure. 예외 없이 명시적 결과 처리. LINQ 합성 지원 |
+| Value Object 계층 | AbstractValueObject → SimpleValueObject\<T\> → ComparableValueObject. 값 기반 동등성, Always-valid 팩토리 |
+| Entity / AggregateRoot | Ulid 기반 타입 안전한 ID(IEntityId\<T\>). AggregateRoot에서 도메인 이벤트 수집·발행 |
+| FinResponse\<T\> Discriminated Union | sealed record 기반 Success/Failure. 모든 유스케이스의 명시적 결과 처리. LINQ 합성 지원 |
 | FinT\<IO, T\> Monad Transformer | 사이드 이펙트를 타입으로 추적. Repository 반환 타입으로 순수/비순수 경계 명시 |
 | 구조화된 에러 코드 시스템 | `DomainErrors.Email.Empty` 형태 자동 생성. 8가지 명명 규칙(R1–R8) |
 | Specification Pattern | &/\|/! 연산자 합성. Expression Tree → SQL 변환. PropertyMap 브릿지 |
@@ -22,30 +24,30 @@
 
 ### 자동 코드 생성 (Source Generator)
 
-반복적인 보일러플레이트 코드를 Source Generator가 컴파일 시점에 자동 생성합니다. Observable wrapper와 EntityId 관련 코드를 어트리뷰트 하나로 생성하여 개발 생산성과 일관성을 높입니다.
+Source Generator가 컴파일 시점에 Domain과 Adapter 계층 간 브릿지 코드를 자동 생성합니다. 포트 구현체에 관측성 래퍼를 씌우고, 도메인 ID 타입에 영속성 변환기를 생성하여 계층 간 연결 보일러플레이트를 제거합니다.
 
 | 기능 | 설명 |
 |------|------|
-| \[GenerateObservablePort\] | Adapter에 Observable wrapper 자동 생성. OpenTelemetry Tracing/Logging/Metrics 제로 보일러플레이트 |
-| \[GenerateEntityId\] | Ulid 기반 EntityId + EF Core Converter + Comparer 자동 생성 |
+| \[GenerateObservablePort\] | Adapter 포트 구현체에 OpenTelemetry Tracing/Logging/Metrics Observable wrapper 자동 생성 |
+| \[GenerateEntityId\] | Ulid 기반 EntityId + EF Core ValueConverter/ValueComparer 자동 생성. Domain ↔ Adapter 영속성 브릿지 |
 
 ### 아키텍처 품질 자동화
 
-타입 시스템과 단위 테스트를 활용하여 아키텍처 규칙을 자동으로 검증합니다. CQRS 기반 읽기/쓰기 분리, Pipeline 제약 조건, 불변성·가시성·상속 규칙이 코드 수준에서 강제되어 설계 의도가 지속적으로 보존됩니다.
+모든 유스케이스에 횡단 관심사 Pipeline이 자동 적용되고, CQRS 기반으로 읽기/쓰기 경로가 분리됩니다. 타입 시스템과 단위 테스트가 Pipeline 제약 조건, 불변성·가시성·상속 규칙을 코드 수준에서 강제하여 설계 의도가 지속적으로 보존됩니다.
 
 | 기능 | 설명 |
 |------|------|
+| Usecase 횡단 관심사 Pipeline | Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction 순서로 자동 적용 |
 | 타입 안전한 Pipeline 제약 | IFinResponse 인터페이스 계층 + CRTP 팩토리. 리플렉션 없이 Pipeline별 최소 제약 |
 | CQRS 읽기/쓰기 분리 | Command(IRepository + EF Core) vs Query(IQueryPort + Dapper). Cursor 페이지네이션 |
 | 아키텍처 규칙 테스트 | ClassValidator/InterfaceValidator/MethodValidator. 불변성·가시성·상속 규칙을 단위 테스트로 강제 |
 
-**Quick Example** — DomainError + Always-valid Value Object + FinResponse LINQ 합성:
+**Quick Example** — Domain Value Object 생성 → Usecase FinResponse 반환:
 
 ```csharp
-// 구조화된 에러 코드: "DomainErrors.Email.Empty"
+// Domain: 구조화된 에러 코드 + Always-valid Value Object
 public sealed record Empty : IDomainErrorType;
 
-// Always-valid Value Object
 public sealed class Email : AbstractValueObject
 {
     public string Value { get; }
@@ -60,6 +62,19 @@ public sealed class Email : AbstractValueObject
     {
         yield return Value;
     }
+}
+
+// Application: Usecase → FinResponse<T>로 결과 반환
+public sealed record RegisterUser(string? Email) : ICommandRequest<UserId>;
+
+public sealed class RegisterUserUsecase(IRepository<User, UserId> repository)
+    : ICommandUsecase<RegisterUser, UserId>
+{
+    public async ValueTask<FinResponse<UserId>> Handle(
+        RegisterUser command, CancellationToken token) =>
+        from email in Email.Create(command.Email)             // Domain 검증
+        from user  in repository.Create(new User(email))      // Adapter 사이드 이펙트
+        select user.Id;
 }
 ```
 
