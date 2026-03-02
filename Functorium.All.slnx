@@ -674,4 +674,73 @@
     <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part5-Practical-Usecase-Examples/03-Full-Pipeline-Integration/FullPipelineIntegration/FullPipelineIntegration.csproj" />
     <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part5-Practical-Usecase-Examples/03-Full-Pipeline-Integration/FullPipelineIntegration.Tests.Unit/FullPipelineIntegration.Tests.Unit.csproj" />
   </Folder>
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/" />
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/" />
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/01-First-Architecture-Test/">
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/01-First-Architecture-Test/FirstArchitectureTest/FirstArchitectureTest.csproj" />
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/01-First-Architecture-Test/FirstArchitectureTest.Tests.Unit/FirstArchitectureTest.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/02-Visibility-And-Modifiers/">
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/02-Visibility-And-Modifiers/VisibilityAndModifiers/VisibilityAndModifiers.csproj" />
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/02-Visibility-And-Modifiers/VisibilityAndModifiers.Tests.Unit/VisibilityAndModifiers.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/03-Naming-Rules/">
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/03-Naming-Rules/NamingRules/NamingRules.csproj" />
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/03-Naming-Rules/NamingRules.Tests.Unit/NamingRules.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/04-Inheritance-And-Interface/">
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/04-Inheritance-And-Interface/InheritanceAndInterface/InheritanceAndInterface.csproj" />
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/04-Inheritance-And-Interface/InheritanceAndInterface.Tests.Unit/InheritanceAndInterface.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/" />
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/01-Method-Validation/">
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/01-Method-Validation/MethodValidation/MethodValidation.csproj" />
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/01-Method-Validation/MethodValidation.Tests.Unit/MethodValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/02-Return-Type-Validation/">
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/02-Return-Type-Validation/ReturnTypeValidation/ReturnTypeValidation.csproj" />
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/02-Return-Type-Validation/ReturnTypeValidation.Tests.Unit/ReturnTypeValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/03-Parameter-Validation/">
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/03-Parameter-Validation/ParameterValidation/ParameterValidation.csproj" />
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/03-Parameter-Validation/ParameterValidation.Tests.Unit/ParameterValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/04-Property-And-Field-Validation/">
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/04-Property-And-Field-Validation/PropertyAndFieldValidation/PropertyAndFieldValidation.csproj" />
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/04-Property-And-Field-Validation/PropertyAndFieldValidation.Tests.Unit/PropertyAndFieldValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/" />
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/01-Immutability-Rule/">
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/01-Immutability-Rule/ImmutabilityRule/ImmutabilityRule.csproj" />
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/01-Immutability-Rule/ImmutabilityRule.Tests.Unit/ImmutabilityRule.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/02-Nested-Class-Validation/">
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/02-Nested-Class-Validation/NestedClassValidation/NestedClassValidation.csproj" />
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/02-Nested-Class-Validation/NestedClassValidation.Tests.Unit/NestedClassValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/03-Interface-Validation/">
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/03-Interface-Validation/InterfaceValidation/InterfaceValidation.csproj" />
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/03-Interface-Validation/InterfaceValidation.Tests.Unit/InterfaceValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/04-Custom-Rules/">
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/04-Custom-Rules/CustomRules/CustomRules.csproj" />
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/04-Custom-Rules/CustomRules.Tests.Unit/CustomRules.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/" />
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/01-Domain-Layer-Rules/">
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/01-Domain-Layer-Rules/DomainLayerRules/DomainLayerRules.csproj" />
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/01-Domain-Layer-Rules/DomainLayerRules.Tests.Unit/DomainLayerRules.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/02-Application-Layer-Rules/">
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/02-Application-Layer-Rules/ApplicationLayerRules/ApplicationLayerRules.csproj" />
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/02-Application-Layer-Rules/ApplicationLayerRules.Tests.Unit/ApplicationLayerRules.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/03-Adapter-Layer-Rules/">
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/03-Adapter-Layer-Rules/AdapterLayerRules/AdapterLayerRules.csproj" />
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/03-Adapter-Layer-Rules/AdapterLayerRules.Tests.Unit/AdapterLayerRules.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/04-Layer-Dependency-Rules/">
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/04-Layer-Dependency-Rules/LayerDependencyRules/LayerDependencyRules.csproj" />
+    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/04-Layer-Dependency-Rules/LayerDependencyRules.Tests.Unit/LayerDependencyRules.Tests.Unit.csproj" />
+  </Folder>
 </Solution>
