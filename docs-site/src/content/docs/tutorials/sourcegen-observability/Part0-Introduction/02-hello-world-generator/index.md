@@ -1,5 +1,5 @@
 ---
-title: "헬로 월드 생성기"
+title: "Hello World 생성기"
 ---
 
 최소한의 IIncrementalGenerator 구현 예제입니다.
