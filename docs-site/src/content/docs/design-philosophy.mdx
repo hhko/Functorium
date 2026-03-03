@@ -140,6 +140,7 @@ public class OrderRepository : IRepository<Order, OrderId> { ... }
 |----------|------|
 | `UsecaseExceptionPipeline` | 예외 → 구조화된 에러 변환 |
 | `UsecaseValidationPipeline` | FluentValidation 기반 입력 검증 |
+| `UsecaseCachingPipeline` | ICacheable 요청 캐싱. 캐시 히트 시 DB 라운드트립 없이 즉시 반환 |
 | `UsecaseLoggingPipeline` | 구조화된 로그 자동 기록 |
 | `UsecaseMetricsPipeline` | 유스케이스 메트릭 자동 수집 |
 | `UsecaseTracingPipeline` | 분산 추적 컨텍스트 전파 |
