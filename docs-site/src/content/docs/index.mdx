@@ -120,14 +120,14 @@ public sealed class GetCustomerByIdQuery
     public sealed record Request(string CustomerId) : IQueryRequest<Response>;
     public sealed record Response(string CustomerId, string Name, string Email);
 
-    public sealed class Usecase(ICustomerDetailQuery adapter)
+    public sealed class Usecase(ICustomerDetailQuery query)
         : IQueryUsecase<Request, Response>
     {
         public async ValueTask<FinResponse<Response>> Handle(
             Request request, CancellationToken token)
         {
             FinT<IO, Response> usecase =
-                from dto in adapter.GetById(CustomerId.Create(request.CustomerId))
+                from dto in query.GetById(CustomerId.Create(request.CustomerId))
                 select new Response(dto.CustomerId, dto.Name, dto.Email);
 
             Fin<Response> result = await usecase.Run().RunAsync();
