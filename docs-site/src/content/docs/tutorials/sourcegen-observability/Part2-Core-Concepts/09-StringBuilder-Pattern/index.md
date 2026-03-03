@@ -1,5 +1,5 @@
 ---
-title: "StringBuilder 패턴"
+title: "StringBuilder Pattern"
 ---
 
 ## 학습 목표

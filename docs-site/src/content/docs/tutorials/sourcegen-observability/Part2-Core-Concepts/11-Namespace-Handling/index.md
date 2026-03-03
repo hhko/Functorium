@@ -1,5 +1,5 @@
 ---
-title: "네임스페이스 처리"
+title: "Namespace 처리"
 ---
 
 ## 학습 목표

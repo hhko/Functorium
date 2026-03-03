@@ -1,5 +1,5 @@
 ---
-title: "테스트 시나리오"
+title: "Test Scenario"
 ---
 
 ## 학습 목표

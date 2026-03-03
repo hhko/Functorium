@@ -1,5 +1,5 @@
 ---
-title: "증분 캐싱"
+title: "Incremental Caching"
 ---
 
 ## 학습 목표

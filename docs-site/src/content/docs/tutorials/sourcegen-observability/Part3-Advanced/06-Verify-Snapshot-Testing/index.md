@@ -1,5 +1,5 @@
 ---
-title: "Verify 스냅샷 테스트"
+title: "Verify Snapshot Test"
 ---
 
 ## 학습 목표

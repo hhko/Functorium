@@ -1,5 +1,5 @@
 ---
-title: "왜 소스 생성기인가"
+title: "왜 Source Generator인가"
 ---
 
 ## 학습 목표

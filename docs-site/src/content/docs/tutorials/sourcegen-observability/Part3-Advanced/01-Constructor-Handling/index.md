@@ -1,5 +1,5 @@
 ---
-title: "생성자 처리"
+title: "Constructor 처리"
 ---
 
 ## 학습 목표

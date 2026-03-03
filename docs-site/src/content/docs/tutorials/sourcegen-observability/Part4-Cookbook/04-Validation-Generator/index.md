@@ -1,5 +1,5 @@
 ---
-title: "유효성 검증 생성기"
+title: "Validation Generator"
 ---
 
 ## 학습 목표

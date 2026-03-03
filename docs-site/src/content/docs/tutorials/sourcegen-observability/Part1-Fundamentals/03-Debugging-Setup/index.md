@@ -1,5 +1,5 @@
 ---
-title: "디버깅 설정"
+title: "Debugging 설정"
 ---
 
 ## 학습 목표

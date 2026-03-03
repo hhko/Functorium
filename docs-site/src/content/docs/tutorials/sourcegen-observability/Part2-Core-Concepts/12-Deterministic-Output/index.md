@@ -1,5 +1,5 @@
 ---
-title: "결정적 출력"
+title: "Deterministic Output"
 ---
 
 ## 학습 목표

@@ -1,5 +1,5 @@
 ---
-title: "템플릿 설계"
+title: "Template 설계"
 ---
 
 ## 학습 목표

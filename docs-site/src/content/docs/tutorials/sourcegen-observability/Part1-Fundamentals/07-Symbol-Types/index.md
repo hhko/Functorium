@@ -1,5 +1,5 @@
 ---
-title: "심볼 타입"
+title: "Symbol Type"
 ---
 
 ## 학습 목표

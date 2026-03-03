@@ -1,5 +1,5 @@
 ---
-title: "소스 생성기 개발 절차"
+title: "Source Generator 개발 절차"
 ---
 
 ## 학습 목표

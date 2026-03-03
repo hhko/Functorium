@@ -1,5 +1,5 @@
 ---
-title: "제네릭 타입 처리"
+title: "Generic Type 처리"
 ---
 
 ## 학습 목표

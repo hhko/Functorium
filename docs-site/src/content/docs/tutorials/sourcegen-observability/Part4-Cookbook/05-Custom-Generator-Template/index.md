@@ -1,5 +1,5 @@
 ---
-title: "커스텀 생성기 템플릿"
+title: "Custom Generator Template"
 ---
 
 ## 학습 목표

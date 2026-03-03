@@ -1,5 +1,5 @@
 ---
-title: "컬렉션 타입 처리"
+title: "Collection Type 처리"
 ---
 
 ## 학습 목표

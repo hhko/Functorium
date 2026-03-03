@@ -1,5 +1,5 @@
 ---
-title: "소스 생성기란 무엇인가"
+title: "Source Generator란 무엇인가"
 ---
 
 ## 학습 목표
