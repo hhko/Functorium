@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsTestProject>false</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TngTech.ArchUnitNET" />
+    <PackageReference Include="xunit.v3.extensibility.core" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,20 @@
+using Functorium.Applications.Events;
+using Functorium.Domains.Events;
+
+namespace DomainEventFlow;
+
+public sealed class SimpleDomainEventCollector : IDomainEventCollector
+{
+    private readonly HashSet<IHasDomainEvents> _tracked = new(ReferenceEqualityComparer.Instance);
+
+    public void Track(IHasDomainEvents aggregate) => _tracked.Add(aggregate);
+
+    public void TrackRange(IEnumerable<IHasDomainEvents> aggregates)
+    {
+        foreach (var aggregate in aggregates)
+            _tracked.Add(aggregate);
+    }
+
+    public IReadOnlyList<IHasDomainEvents> GetTrackedAggregates()
+        => _tracked.Where(a => a.DomainEvents.Count > 0).ToList();
+}

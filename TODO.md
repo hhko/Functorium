@@ -6,6 +6,8 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하도록 개선
 ```
 
+- [ ] 1. 문서 내 상대 링크(.md 확장자)를 Starlight 슬러그 형식으로 변환 (현재 errorOnRelativeLinks: false로 우회)
+- [ ] 2. sourcegen-observability 중복 ID 해결 (폴더/index.md + standalone .md 공존)
 - [x] Book 폴더 전체 구성 동기화
 - [ ] CRTP 패턴 사례 개선 Book
 - [ ] Traverse, TraverseM 이해 LanaguageExt

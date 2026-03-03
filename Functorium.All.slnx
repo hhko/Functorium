@@ -135,613 +135,613 @@
     <Project Path="Tests/Functorium.Tests.Unit/Functorium.Tests.Unit.csproj" Id="20685fd7-39c5-40e4-89d1-6ac8db7c174a" />
     <Project Path="Tests/Functorium.Tests.Integration/Functorium.Tests.Integration.csproj" />
   </Folder>
-  <Folder Name="/Docs/tutorials/" />
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/" />
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/" />
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/01-Basic-Divide/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/01-Basic-Divide/BasicDivide/BasicDivide.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/01-Basic-Divide/BasicDivide.Tests.Unit/BasicDivide.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/02-Defensive-Programming/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/02-Defensive-Programming/DefensiveProgramming/DefensiveProgramming.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/02-Defensive-Programming/DefensiveProgramming.Tests.Unit/DefensiveProgramming.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/03-Functional-Result/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/03-Functional-Result/FunctionalResult/FunctionalResult.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/03-Functional-Result/FunctionalResult.Tests.Unit/FunctionalResult.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/04-Always-Valid/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/04-Always-Valid/AlwaysValid/AlwaysValid.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/04-Always-Valid/AlwaysValid.Tests.Unit/AlwaysValid.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/05-Operator-Overloading/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/05-Operator-Overloading/OperatorOverloading/OperatorOverloading.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/05-Operator-Overloading/OperatorOverloading.Tests.Unit/OperatorOverloading.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/06-Linq-Expression/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/06-Linq-Expression/LinqExpression/LinqExpression.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/06-Linq-Expression/LinqExpression.Tests.Unit/LinqExpression.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/07-Value-Equality/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/07-Value-Equality/ValueEquality/ValueEquality.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/07-Value-Equality/ValueEquality.Tests.Unit/ValueEquality.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/08-Value-Comparability/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/08-Value-Comparability/ValueComparability/ValueComparability.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/08-Value-Comparability/ValueComparability.Tests.Unit/ValueComparability.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/09-Create-Validate-Separation/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/09-Create-Validate-Separation/CreateValidateSeparation/CreateValidateSeparation.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/09-Create-Validate-Separation/CreateValidateSeparation.Tests.Unit/CreateValidateSeparation.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/10-Validated-Value-Creation/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/10-Validated-Value-Creation/ValidatedValueCreation/ValidatedValueCreation.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/10-Validated-Value-Creation/ValidatedValueCreation.Tests.Unit/ValidatedValueCreation.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/11-ValueObject-Framework/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/11-ValueObject-Framework/Framework/Framework.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/11-ValueObject-Framework/ValueObjectFramework/ValueObjectFramework.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/11-ValueObject-Framework/ValueObjectFramework.Tests.Unit/ValueObjectFramework.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/12-Type-Safe-Enums/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/12-Type-Safe-Enums/Framework/Framework.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/12-Type-Safe-Enums/TypeSafeEnums/TypeSafeEnums.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/12-Type-Safe-Enums/TypeSafeEnums.Tests.Unit/TypeSafeEnums.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/13-Error-Code/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/13-Error-Code/ErrorCode/ErrorCode.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/13-Error-Code/ErrorCode.Tests.Unit/ErrorCode.Tests.Unit.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/13-Error-Code/Framework/Framework.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/14-Error-Code-Fluent/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/14-Error-Code-Fluent/ErrorCodeFluent/ErrorCodeFluent.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/14-Error-Code-Fluent/ErrorCodeFluent.Tests.Unit/ErrorCodeFluent.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/15-Validation-Fluent/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/15-Validation-Fluent/ValidationFluent/ValidationFluent.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/15-Validation-Fluent/ValidationFluent.Tests.Unit/ValidationFluent.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/16-Architecture-Test/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/16-Architecture-Test/ArchitectureTest/ArchitectureTest.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/16-Architecture-Test/ArchitectureTest.Tests.Unit/ArchitectureTest.Tests.Unit.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/16-Architecture-Test/Framework/Framework.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/16-Architecture-Test/Framework.Testing/Framework.Testing.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part2-Validation-Patterns/" />
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part2-Validation-Patterns/01-Bind-Sequential-Validation/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part2-Validation-Patterns/01-Bind-Sequential-Validation/BindSequentialValidation/BindSequentialValidation.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part2-Validation-Patterns/01-Bind-Sequential-Validation/BindSequentialValidation.Tests.Unit/BindSequentialValidation.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part2-Validation-Patterns/02-Apply-Parallel-Validation/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part2-Validation-Patterns/02-Apply-Parallel-Validation/ApplyParallelValidation/ApplyParallelValidation.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part2-Validation-Patterns/02-Apply-Parallel-Validation/ApplyParallelValidation.Tests.Unit/ApplyParallelValidation.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part2-Validation-Patterns/03-Apply-Bind-Combined-Validation/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part2-Validation-Patterns/03-Apply-Bind-Combined-Validation/ApplyBindCombinedValidation/ApplyBindCombinedValidation.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part2-Validation-Patterns/03-Apply-Bind-Combined-Validation/ApplyBindCombinedValidation.Tests.Unit/ApplyBindCombinedValidation.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part2-Validation-Patterns/04-Apply-Internal-Bind-Validation/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part2-Validation-Patterns/04-Apply-Internal-Bind-Validation/ApplyInternalBindValidation/ApplyInternalBindValidation.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part2-Validation-Patterns/04-Apply-Internal-Bind-Validation/ApplyInternalBindValidation.Tests.Unit/ApplyInternalBindValidation.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part2-Validation-Patterns/05-Bind-Internal-Apply-Validation/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part2-Validation-Patterns/05-Bind-Internal-Apply-Validation/BindInternalApplyValidation/BindInternalApplyValidation.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part2-Validation-Patterns/05-Bind-Internal-Apply-Validation/BindInternalApplyValidation.Tests.Unit/BindInternalApplyValidation.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/" />
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/01-SimpleValueObject/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/01-SimpleValueObject/SimpleValueObject/SimpleValueObject.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/01-SimpleValueObject/SimpleValueObject.Tests.Unit/SimpleValueObject.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/02-ComparableSimpleValueObject/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/02-ComparableSimpleValueObject/ComparableSimpleValueObject/ComparableSimpleValueObject.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/02-ComparableSimpleValueObject/ComparableSimpleValueObject.Tests.Unit/ComparableSimpleValueObject.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/03-ValueObject-Primitive/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/03-ValueObject-Primitive/ValueObjectPrimitive/ValueObjectPrimitive.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/03-ValueObject-Primitive/ValueObjectPrimitive.Tests.Unit/ValueObjectPrimitive.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/04-ComparableValueObject-Primitive/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/04-ComparableValueObject-Primitive/ComparableValueObjectPrimitive/ComparableValueObjectPrimitive.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/04-ComparableValueObject-Primitive/ComparableValueObjectPrimitive.Tests.Unit/ComparableValueObjectPrimitive.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/05-ValueObject-Composite/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/05-ValueObject-Composite/ValueObjectComposite/ValueObjectComposite.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/05-ValueObject-Composite/ValueObjectComposite.Tests.Unit/ValueObjectComposite.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/06-ComparableValueObject-Composite/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/06-ComparableValueObject-Composite/ComparableValueObjectComposite/ComparableValueObjectComposite.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/06-ComparableValueObject-Composite/ComparableValueObjectComposite.Tests.Unit/ComparableValueObjectComposite.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/07-TypeSafeEnum/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/07-TypeSafeEnum/TypeSafeEnum/TypeSafeEnum.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/07-TypeSafeEnum/TypeSafeEnum.Tests.Unit/TypeSafeEnum.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/08-Architecture-Test/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/08-Architecture-Test/ArchitectureTest/ArchitectureTest.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part4-Practical-Guide/" />
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part4-Practical-Guide/01-Functorium-Framework/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part4-Practical-Guide/01-Functorium-Framework/FunctoriumFramework.Tests.Unit/FunctoriumFramework.Tests.Unit.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part4-Practical-Guide/01-Functorium-Framework/FunctoriumFramework/FunctoriumFramework.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part4-Practical-Guide/02-ORM-Integration/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part4-Practical-Guide/02-ORM-Integration/OrmIntegration.Tests.Unit/OrmIntegration.Tests.Unit.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part4-Practical-Guide/02-ORM-Integration/OrmIntegration/OrmIntegration.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part4-Practical-Guide/03-CQRS-Integration/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part4-Practical-Guide/03-CQRS-Integration/CqrsIntegration.Tests.Unit/CqrsIntegration.Tests.Unit.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part4-Practical-Guide/03-CQRS-Integration/CqrsIntegration/CqrsIntegration.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part4-Practical-Guide/04-Testing-Strategies/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part4-Practical-Guide/04-Testing-Strategies/TestingStrategies.Tests.Unit/TestingStrategies.Tests.Unit.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part4-Practical-Guide/04-Testing-Strategies/TestingStrategies/TestingStrategies.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part5-Domain-Examples/" />
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part5-Domain-Examples/01-Ecommerce-Domain/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part5-Domain-Examples/01-Ecommerce-Domain/EcommerceDomain/EcommerceDomain.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part5-Domain-Examples/01-Ecommerce-Domain/EcommerceDomain.Tests.Unit/EcommerceDomain.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part5-Domain-Examples/02-Finance-Domain/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part5-Domain-Examples/02-Finance-Domain/FinanceDomain.Tests.Unit/FinanceDomain.Tests.Unit.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part5-Domain-Examples/02-Finance-Domain/FinanceDomain/FinanceDomain.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part5-Domain-Examples/03-User-Management-Domain/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part5-Domain-Examples/03-User-Management-Domain/UserManagementDomain.Tests.Unit/UserManagementDomain.Tests.Unit.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part5-Domain-Examples/03-User-Management-Domain/UserManagementDomain/UserManagementDomain.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Functional-ValueObject/Part5-Domain-Examples/04-Scheduling-Domain/">
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part5-Domain-Examples/04-Scheduling-Domain/SchedulingDomain.Tests.Unit/SchedulingDomain.Tests.Unit.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Functional-ValueObject/Part5-Domain-Examples/04-Scheduling-Domain/SchedulingDomain/SchedulingDomain.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/" />
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part1-Specification-Basics/" />
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part1-Specification-Basics/01-First-Specification/">
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part1-Specification-Basics/01-First-Specification/FirstSpecification/FirstSpecification.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part1-Specification-Basics/01-First-Specification/FirstSpecification.Tests.Unit/FirstSpecification.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part1-Specification-Basics/02-Composition/">
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part1-Specification-Basics/02-Composition/Composition/Composition.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part1-Specification-Basics/02-Composition/Composition.Tests.Unit/Composition.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part1-Specification-Basics/03-Operators/">
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part1-Specification-Basics/03-Operators/Operators/Operators.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part1-Specification-Basics/03-Operators/Operators.Tests.Unit/Operators.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part1-Specification-Basics/04-All-Identity/">
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part1-Specification-Basics/04-All-Identity/AllIdentity/AllIdentity.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part1-Specification-Basics/04-All-Identity/AllIdentity.Tests.Unit/AllIdentity.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part2-Expression-Specification/" />
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part2-Expression-Specification/01-Expression-Introduction/">
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part2-Expression-Specification/01-Expression-Introduction/ExpressionIntro/ExpressionIntro.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part2-Expression-Specification/01-Expression-Introduction/ExpressionIntro.Tests.Unit/ExpressionIntro.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part2-Expression-Specification/02-ExpressionSpecification-Class/">
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part2-Expression-Specification/02-ExpressionSpecification-Class/ExpressionSpec/ExpressionSpec.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part2-Expression-Specification/02-ExpressionSpecification-Class/ExpressionSpec.Tests.Unit/ExpressionSpec.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part2-Expression-Specification/03-ValueObject-Primitive-Conversion/">
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part2-Expression-Specification/03-ValueObject-Primitive-Conversion/ValueObjectConversion/ValueObjectConversion.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part2-Expression-Specification/03-ValueObject-Primitive-Conversion/ValueObjectConversion.Tests.Unit/ValueObjectConversion.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part2-Expression-Specification/04-Expression-Resolver/">
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part2-Expression-Specification/04-Expression-Resolver/ExpressionResolver/ExpressionResolver.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part2-Expression-Specification/04-Expression-Resolver/ExpressionResolver.Tests.Unit/ExpressionResolver.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part3-Repository-Integration/" />
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part3-Repository-Integration/01-Repository-With-Specification/">
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part3-Repository-Integration/01-Repository-With-Specification/RepositorySpec/RepositorySpec.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part3-Repository-Integration/01-Repository-With-Specification/RepositorySpec.Tests.Unit/RepositorySpec.Tests.Unit.csproj" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/01-Basic-Divide/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/01-Basic-Divide/BasicDivide/BasicDivide.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/01-Basic-Divide/BasicDivide.Tests.Unit/BasicDivide.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/02-Defensive-Programming/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/02-Defensive-Programming/DefensiveProgramming/DefensiveProgramming.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/02-Defensive-Programming/DefensiveProgramming.Tests.Unit/DefensiveProgramming.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/03-Functional-Result/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/03-Functional-Result/FunctionalResult/FunctionalResult.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/03-Functional-Result/FunctionalResult.Tests.Unit/FunctionalResult.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/04-Always-Valid/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/04-Always-Valid/AlwaysValid/AlwaysValid.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/04-Always-Valid/AlwaysValid.Tests.Unit/AlwaysValid.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/05-Operator-Overloading/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/05-Operator-Overloading/OperatorOverloading/OperatorOverloading.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/05-Operator-Overloading/OperatorOverloading.Tests.Unit/OperatorOverloading.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/06-Linq-Expression/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/06-Linq-Expression/LinqExpression/LinqExpression.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/06-Linq-Expression/LinqExpression.Tests.Unit/LinqExpression.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/07-Value-Equality/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/07-Value-Equality/ValueEquality/ValueEquality.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/07-Value-Equality/ValueEquality.Tests.Unit/ValueEquality.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/08-Value-Comparability/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/08-Value-Comparability/ValueComparability/ValueComparability.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/08-Value-Comparability/ValueComparability.Tests.Unit/ValueComparability.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/09-Create-Validate-Separation/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/09-Create-Validate-Separation/CreateValidateSeparation/CreateValidateSeparation.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/09-Create-Validate-Separation/CreateValidateSeparation.Tests.Unit/CreateValidateSeparation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/10-Validated-Value-Creation/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/10-Validated-Value-Creation/ValidatedValueCreation/ValidatedValueCreation.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/10-Validated-Value-Creation/ValidatedValueCreation.Tests.Unit/ValidatedValueCreation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/11-ValueObject-Framework/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/11-ValueObject-Framework/Framework/Framework.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/11-ValueObject-Framework/ValueObjectFramework/ValueObjectFramework.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/11-ValueObject-Framework/ValueObjectFramework.Tests.Unit/ValueObjectFramework.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/12-Type-Safe-Enums/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/12-Type-Safe-Enums/Framework/Framework.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/12-Type-Safe-Enums/TypeSafeEnums/TypeSafeEnums.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/12-Type-Safe-Enums/TypeSafeEnums.Tests.Unit/TypeSafeEnums.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/13-Error-Code/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/13-Error-Code/ErrorCode/ErrorCode.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/13-Error-Code/ErrorCode.Tests.Unit/ErrorCode.Tests.Unit.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/13-Error-Code/Framework/Framework.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/14-Error-Code-Fluent/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/14-Error-Code-Fluent/ErrorCodeFluent/ErrorCodeFluent.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/14-Error-Code-Fluent/ErrorCodeFluent.Tests.Unit/ErrorCodeFluent.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/15-Validation-Fluent/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/15-Validation-Fluent/ValidationFluent/ValidationFluent.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/15-Validation-Fluent/ValidationFluent.Tests.Unit/ValidationFluent.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/16-Architecture-Test/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/16-Architecture-Test/ArchitectureTest/ArchitectureTest.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/16-Architecture-Test/ArchitectureTest.Tests.Unit/ArchitectureTest.Tests.Unit.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/16-Architecture-Test/Framework/Framework.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part1-ValueObject-Concepts/16-Architecture-Test/Framework.Testing/Framework.Testing.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part2-Validation-Patterns/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part2-Validation-Patterns/01-Bind-Sequential-Validation/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part2-Validation-Patterns/01-Bind-Sequential-Validation/BindSequentialValidation/BindSequentialValidation.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part2-Validation-Patterns/01-Bind-Sequential-Validation/BindSequentialValidation.Tests.Unit/BindSequentialValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part2-Validation-Patterns/02-Apply-Parallel-Validation/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part2-Validation-Patterns/02-Apply-Parallel-Validation/ApplyParallelValidation/ApplyParallelValidation.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part2-Validation-Patterns/02-Apply-Parallel-Validation/ApplyParallelValidation.Tests.Unit/ApplyParallelValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part2-Validation-Patterns/03-Apply-Bind-Combined-Validation/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part2-Validation-Patterns/03-Apply-Bind-Combined-Validation/ApplyBindCombinedValidation/ApplyBindCombinedValidation.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part2-Validation-Patterns/03-Apply-Bind-Combined-Validation/ApplyBindCombinedValidation.Tests.Unit/ApplyBindCombinedValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part2-Validation-Patterns/04-Apply-Internal-Bind-Validation/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part2-Validation-Patterns/04-Apply-Internal-Bind-Validation/ApplyInternalBindValidation/ApplyInternalBindValidation.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part2-Validation-Patterns/04-Apply-Internal-Bind-Validation/ApplyInternalBindValidation.Tests.Unit/ApplyInternalBindValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part2-Validation-Patterns/05-Bind-Internal-Apply-Validation/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part2-Validation-Patterns/05-Bind-Internal-Apply-Validation/BindInternalApplyValidation/BindInternalApplyValidation.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part2-Validation-Patterns/05-Bind-Internal-Apply-Validation/BindInternalApplyValidation.Tests.Unit/BindInternalApplyValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/01-SimpleValueObject/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/01-SimpleValueObject/SimpleValueObject/SimpleValueObject.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/01-SimpleValueObject/SimpleValueObject.Tests.Unit/SimpleValueObject.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/02-ComparableSimpleValueObject/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/02-ComparableSimpleValueObject/ComparableSimpleValueObject/ComparableSimpleValueObject.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/02-ComparableSimpleValueObject/ComparableSimpleValueObject.Tests.Unit/ComparableSimpleValueObject.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/03-ValueObject-Primitive/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/03-ValueObject-Primitive/ValueObjectPrimitive/ValueObjectPrimitive.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/03-ValueObject-Primitive/ValueObjectPrimitive.Tests.Unit/ValueObjectPrimitive.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/04-ComparableValueObject-Primitive/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/04-ComparableValueObject-Primitive/ComparableValueObjectPrimitive/ComparableValueObjectPrimitive.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/04-ComparableValueObject-Primitive/ComparableValueObjectPrimitive.Tests.Unit/ComparableValueObjectPrimitive.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/05-ValueObject-Composite/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/05-ValueObject-Composite/ValueObjectComposite/ValueObjectComposite.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/05-ValueObject-Composite/ValueObjectComposite.Tests.Unit/ValueObjectComposite.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/06-ComparableValueObject-Composite/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/06-ComparableValueObject-Composite/ComparableValueObjectComposite/ComparableValueObjectComposite.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/06-ComparableValueObject-Composite/ComparableValueObjectComposite.Tests.Unit/ComparableValueObjectComposite.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/07-TypeSafeEnum/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/07-TypeSafeEnum/TypeSafeEnum/TypeSafeEnum.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/07-TypeSafeEnum/TypeSafeEnum.Tests.Unit/TypeSafeEnum.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/08-Architecture-Test/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part3-ValueObject-Patterns/08-Architecture-Test/ArchitectureTest/ArchitectureTest.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part4-Practical-Guide/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part4-Practical-Guide/01-Functorium-Framework/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part4-Practical-Guide/01-Functorium-Framework/FunctoriumFramework.Tests.Unit/FunctoriumFramework.Tests.Unit.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part4-Practical-Guide/01-Functorium-Framework/FunctoriumFramework/FunctoriumFramework.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part4-Practical-Guide/02-ORM-Integration/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part4-Practical-Guide/02-ORM-Integration/OrmIntegration.Tests.Unit/OrmIntegration.Tests.Unit.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part4-Practical-Guide/02-ORM-Integration/OrmIntegration/OrmIntegration.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part4-Practical-Guide/03-CQRS-Integration/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part4-Practical-Guide/03-CQRS-Integration/CqrsIntegration.Tests.Unit/CqrsIntegration.Tests.Unit.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part4-Practical-Guide/03-CQRS-Integration/CqrsIntegration/CqrsIntegration.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part4-Practical-Guide/04-Testing-Strategies/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part4-Practical-Guide/04-Testing-Strategies/TestingStrategies.Tests.Unit/TestingStrategies.Tests.Unit.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part4-Practical-Guide/04-Testing-Strategies/TestingStrategies/TestingStrategies.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part5-Domain-Examples/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part5-Domain-Examples/01-Ecommerce-Domain/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part5-Domain-Examples/01-Ecommerce-Domain/EcommerceDomain/EcommerceDomain.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part5-Domain-Examples/01-Ecommerce-Domain/EcommerceDomain.Tests.Unit/EcommerceDomain.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part5-Domain-Examples/02-Finance-Domain/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part5-Domain-Examples/02-Finance-Domain/FinanceDomain.Tests.Unit/FinanceDomain.Tests.Unit.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part5-Domain-Examples/02-Finance-Domain/FinanceDomain/FinanceDomain.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part5-Domain-Examples/03-User-Management-Domain/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part5-Domain-Examples/03-User-Management-Domain/UserManagementDomain.Tests.Unit/UserManagementDomain.Tests.Unit.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part5-Domain-Examples/03-User-Management-Domain/UserManagementDomain/UserManagementDomain.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/functional-valueobject/Part5-Domain-Examples/04-Scheduling-Domain/">
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part5-Domain-Examples/04-Scheduling-Domain/SchedulingDomain.Tests.Unit/SchedulingDomain.Tests.Unit.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/functional-valueobject/Part5-Domain-Examples/04-Scheduling-Domain/SchedulingDomain/SchedulingDomain.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part1-Specification-Basics/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part1-Specification-Basics/01-First-Specification/">
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part1-Specification-Basics/01-First-Specification/FirstSpecification/FirstSpecification.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part1-Specification-Basics/01-First-Specification/FirstSpecification.Tests.Unit/FirstSpecification.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part1-Specification-Basics/02-Composition/">
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part1-Specification-Basics/02-Composition/Composition/Composition.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part1-Specification-Basics/02-Composition/Composition.Tests.Unit/Composition.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part1-Specification-Basics/03-Operators/">
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part1-Specification-Basics/03-Operators/Operators/Operators.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part1-Specification-Basics/03-Operators/Operators.Tests.Unit/Operators.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part1-Specification-Basics/04-All-Identity/">
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part1-Specification-Basics/04-All-Identity/AllIdentity/AllIdentity.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part1-Specification-Basics/04-All-Identity/AllIdentity.Tests.Unit/AllIdentity.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part2-Expression-Specification/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part2-Expression-Specification/01-Expression-Introduction/">
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part2-Expression-Specification/01-Expression-Introduction/ExpressionIntro/ExpressionIntro.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part2-Expression-Specification/01-Expression-Introduction/ExpressionIntro.Tests.Unit/ExpressionIntro.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part2-Expression-Specification/02-ExpressionSpecification-Class/">
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part2-Expression-Specification/02-ExpressionSpecification-Class/ExpressionSpec/ExpressionSpec.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part2-Expression-Specification/02-ExpressionSpecification-Class/ExpressionSpec.Tests.Unit/ExpressionSpec.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part2-Expression-Specification/03-ValueObject-Primitive-Conversion/">
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part2-Expression-Specification/03-ValueObject-Primitive-Conversion/ValueObjectConversion/ValueObjectConversion.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part2-Expression-Specification/03-ValueObject-Primitive-Conversion/ValueObjectConversion.Tests.Unit/ValueObjectConversion.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part2-Expression-Specification/04-Expression-Resolver/">
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part2-Expression-Specification/04-Expression-Resolver/ExpressionResolver/ExpressionResolver.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part2-Expression-Specification/04-Expression-Resolver/ExpressionResolver.Tests.Unit/ExpressionResolver.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part3-Repository-Integration/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part3-Repository-Integration/01-Repository-With-Specification/">
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part3-Repository-Integration/01-Repository-With-Specification/RepositorySpec/RepositorySpec.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part3-Repository-Integration/01-Repository-With-Specification/RepositorySpec.Tests.Unit/RepositorySpec.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part3-Repository-Integration/02-InMemory-Implementation/">
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part3-Repository-Integration/02-InMemory-Implementation/InMemoryImpl/InMemoryImpl.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part3-Repository-Integration/02-InMemory-Implementation/InMemoryImpl.Tests.Unit/InMemoryImpl.Tests.Unit.csproj" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part3-Repository-Integration/02-InMemory-Implementation/">
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part3-Repository-Integration/02-InMemory-Implementation/InMemoryImpl/InMemoryImpl.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part3-Repository-Integration/02-InMemory-Implementation/InMemoryImpl.Tests.Unit/InMemoryImpl.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part3-Repository-Integration/03-PropertyMap/">
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part3-Repository-Integration/03-PropertyMap/PropertyMapDemo/PropertyMapDemo.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part3-Repository-Integration/03-PropertyMap/PropertyMapDemo.Tests.Unit/PropertyMapDemo.Tests.Unit.csproj" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part3-Repository-Integration/03-PropertyMap/">
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part3-Repository-Integration/03-PropertyMap/PropertyMapDemo/PropertyMapDemo.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part3-Repository-Integration/03-PropertyMap/PropertyMapDemo.Tests.Unit/PropertyMapDemo.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part3-Repository-Integration/04-EfCore-Implementation/">
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part3-Repository-Integration/04-EfCore-Implementation/EfCoreImpl/EfCoreImpl.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part3-Repository-Integration/04-EfCore-Implementation/EfCoreImpl.Tests.Unit/EfCoreImpl.Tests.Unit.csproj" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part3-Repository-Integration/04-EfCore-Implementation/">
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part3-Repository-Integration/04-EfCore-Implementation/EfCoreImpl/EfCoreImpl.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part3-Repository-Integration/04-EfCore-Implementation/EfCoreImpl.Tests.Unit/EfCoreImpl.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part4-Real-World-Patterns/" />
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part4-Real-World-Patterns/01-Usecase-Patterns/">
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part4-Real-World-Patterns/01-Usecase-Patterns/UsecasePatterns/UsecasePatterns.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part4-Real-World-Patterns/01-Usecase-Patterns/UsecasePatterns.Tests.Unit/UsecasePatterns.Tests.Unit.csproj" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part4-Real-World-Patterns/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part4-Real-World-Patterns/01-Usecase-Patterns/">
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part4-Real-World-Patterns/01-Usecase-Patterns/UsecasePatterns/UsecasePatterns.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part4-Real-World-Patterns/01-Usecase-Patterns/UsecasePatterns.Tests.Unit/UsecasePatterns.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part4-Real-World-Patterns/02-Dynamic-Filter-Builder/">
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part4-Real-World-Patterns/02-Dynamic-Filter-Builder/DynamicFilter/DynamicFilter.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part4-Real-World-Patterns/02-Dynamic-Filter-Builder/DynamicFilter.Tests.Unit/DynamicFilter.Tests.Unit.csproj" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part4-Real-World-Patterns/02-Dynamic-Filter-Builder/">
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part4-Real-World-Patterns/02-Dynamic-Filter-Builder/DynamicFilter/DynamicFilter.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part4-Real-World-Patterns/02-Dynamic-Filter-Builder/DynamicFilter.Tests.Unit/DynamicFilter.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part4-Real-World-Patterns/03-Testing-Strategies/">
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part4-Real-World-Patterns/03-Testing-Strategies/TestingStrategies/TestingStrategies.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part4-Real-World-Patterns/03-Testing-Strategies/TestingStrategies.Tests.Unit/TestingStrategies.Tests.Unit.csproj" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part4-Real-World-Patterns/03-Testing-Strategies/">
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part4-Real-World-Patterns/03-Testing-Strategies/TestingStrategies/TestingStrategies.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part4-Real-World-Patterns/03-Testing-Strategies/TestingStrategies.Tests.Unit/TestingStrategies.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part4-Real-World-Patterns/04-Architecture-Rules/">
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part4-Real-World-Patterns/04-Architecture-Rules/ArchitectureRules/ArchitectureRules.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part4-Real-World-Patterns/04-Architecture-Rules/ArchitectureRules.Tests.Unit/ArchitectureRules.Tests.Unit.csproj" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part4-Real-World-Patterns/04-Architecture-Rules/">
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part4-Real-World-Patterns/04-Architecture-Rules/ArchitectureRules/ArchitectureRules.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part4-Real-World-Patterns/04-Architecture-Rules/ArchitectureRules.Tests.Unit/ArchitectureRules.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part5-Domain-Examples/" />
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part5-Domain-Examples/01-Ecommerce-Product-Filtering/">
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part5-Domain-Examples/01-Ecommerce-Product-Filtering/EcommerceFiltering/EcommerceFiltering.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part5-Domain-Examples/01-Ecommerce-Product-Filtering/EcommerceFiltering.Tests.Unit/EcommerceFiltering.Tests.Unit.csproj" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part5-Domain-Examples/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part5-Domain-Examples/01-Ecommerce-Product-Filtering/">
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part5-Domain-Examples/01-Ecommerce-Product-Filtering/EcommerceFiltering/EcommerceFiltering.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part5-Domain-Examples/01-Ecommerce-Product-Filtering/EcommerceFiltering.Tests.Unit/EcommerceFiltering.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-Specification-Pattern/Part5-Domain-Examples/02-Customer-Management/">
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part5-Domain-Examples/02-Customer-Management/CustomerManagement/CustomerManagement.csproj" />
-    <Project Path="Docs/tutorials/Implementing-Specification-Pattern/Part5-Domain-Examples/02-Customer-Management/CustomerManagement.Tests.Unit/CustomerManagement.Tests.Unit.csproj" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/specification-pattern/Part5-Domain-Examples/02-Customer-Management/">
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part5-Domain-Examples/02-Customer-Management/CustomerManagement/CustomerManagement.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/specification-pattern/Part5-Domain-Examples/02-Customer-Management/CustomerManagement.Tests.Unit/CustomerManagement.Tests.Unit.csproj" />
   </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/" />
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part0-Introduction/" />
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part0-Introduction/01-Hello-World-Generator/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part0-Introduction/01-Hello-World-Generator/HelloWorldGenerator.Generator/HelloWorldGenerator.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part0-Introduction/01-Hello-World-Generator/HelloWorldGenerator.Usage/HelloWorldGenerator.Usage.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part0-Introduction/02-Reflection-Vs-SourceGen/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part0-Introduction/02-Reflection-Vs-SourceGen/ReflectionVsSourceGen/ReflectionVsSourceGen.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part1-Fundamentals/" />
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part1-Fundamentals/02-Data-Models/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part1-Fundamentals/02-Data-Models/DataModels/DataModels.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part1-Fundamentals/03-Debugging-Setup/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part1-Fundamentals/03-Debugging-Setup/DebuggingSetup.Generator/DebuggingSetup.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part1-Fundamentals/03-Debugging-Setup/DebuggingSetup.Usage/DebuggingSetup.Usage.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part1-Fundamentals/04-Roslyn-Architecture/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part1-Fundamentals/04-Roslyn-Architecture/RoslynArchitecture/RoslynArchitecture.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part1-Fundamentals/05-Syntax-Api/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part1-Fundamentals/05-Syntax-Api/SyntaxApi/SyntaxApi.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part1-Fundamentals/06-Semantic-Api/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part1-Fundamentals/06-Semantic-Api/SemanticApi/SemanticApi.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part1-Fundamentals/07-Symbol-Types/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part1-Fundamentals/07-Symbol-Types/SymbolTypes/SymbolTypes.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/" />
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/01-IIncrementalGenerator/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/01-IIncrementalGenerator/IncrementalGenerator.Generator/IncrementalGenerator.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/01-IIncrementalGenerator/IncrementalGenerator.Usage/IncrementalGenerator.Usage.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/02-Provider-Pattern/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/02-Provider-Pattern/ProviderPattern.Generator/ProviderPattern.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/02-Provider-Pattern/ProviderPattern.Usage/ProviderPattern.Usage.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/03-ForAttribute/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/03-ForAttribute/ForAttribute.Generator/ForAttribute.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/03-ForAttribute/ForAttribute.Usage/ForAttribute.Usage.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/04-Incremental-Caching/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/04-Incremental-Caching/IncrementalCaching.Generator/IncrementalCaching.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/04-Incremental-Caching/IncrementalCaching.Usage/IncrementalCaching.Usage.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/05-INamedTypeSymbol/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/05-INamedTypeSymbol/NamedTypeSymbol/NamedTypeSymbol.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/06-IMethodSymbol/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/06-IMethodSymbol/MethodSymbol/MethodSymbol.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/07-SymbolDisplayFormat/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/07-SymbolDisplayFormat/SymbolDisplayFormat/SymbolDisplayFormat.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/08-Type-Extraction/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/08-Type-Extraction/TypeExtraction/TypeExtraction.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/09-StringBuilder-Pattern/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/09-StringBuilder-Pattern/StringBuilderPattern/StringBuilderPattern.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/10-Template-Design/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/10-Template-Design/TemplateDesign.Generator/TemplateDesign.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/10-Template-Design/TemplateDesign.Usage/TemplateDesign.Usage.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/11-Namespace-Handling/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/11-Namespace-Handling/NamespaceHandling.Generator/NamespaceHandling.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/11-Namespace-Handling/NamespaceHandling.Usage/NamespaceHandling.Usage.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/12-Deterministic-Output/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/12-Deterministic-Output/DeterministicOutput.Generator/DeterministicOutput.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part2-Core-Concepts/12-Deterministic-Output/DeterministicOutput.Usage/DeterministicOutput.Usage.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/" />
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/01-Constructor-Handling/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/01-Constructor-Handling/ConstructorHandling.Generator/ConstructorHandling.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/01-Constructor-Handling/ConstructorHandling.Usage/ConstructorHandling.Usage.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/02-Generic-Types/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/02-Generic-Types/GenericTypes.Generator/GenericTypes.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/02-Generic-Types/GenericTypes.Usage/GenericTypes.Usage.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/03-Collection-Types/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/03-Collection-Types/CollectionTypes/CollectionTypes.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/04-LoggerMessage-Limits/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/04-LoggerMessage-Limits/LoggerMessageLimits.Generator/LoggerMessageLimits.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/04-LoggerMessage-Limits/LoggerMessageLimits.Usage/LoggerMessageLimits.Usage.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/05-Unit-Testing-Setup/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/05-Unit-Testing-Setup/UnitTestingSetup.Generator/UnitTestingSetup.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/05-Unit-Testing-Setup/UnitTestingSetup.Usage/UnitTestingSetup.Usage.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/06-Verify-Snapshot-Testing/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/06-Verify-Snapshot-Testing/VerifySnapshotTesting.Generator/VerifySnapshotTesting.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/06-Verify-Snapshot-Testing/VerifySnapshotTesting.Usage/VerifySnapshotTesting.Usage.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/07-Test-Scenarios/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/07-Test-Scenarios/TestScenarios.Generator/TestScenarios.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part3-Advanced/07-Test-Scenarios/TestScenarios.Usage/TestScenarios.Usage.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/" />
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/01-Development-Workflow/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/01-Development-Workflow/DevelopmentWorkflow.Generator/DevelopmentWorkflow.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/01-Development-Workflow/DevelopmentWorkflow.Usage/DevelopmentWorkflow.Usage.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/01-Development-Workflow/DevelopmentWorkflow.Tests.Unit/DevelopmentWorkflow.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/02-Entity-Id-Generator/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/02-Entity-Id-Generator/EntityIdGenerator.Generator/EntityIdGenerator.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/02-Entity-Id-Generator/EntityIdGenerator.Usage/EntityIdGenerator.Usage.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/02-Entity-Id-Generator/EntityIdGenerator.Tests.Unit/EntityIdGenerator.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/03-EfCore-Value-Converter/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/03-EfCore-Value-Converter/EfCoreValueConverter.Generator/EfCoreValueConverter.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/03-EfCore-Value-Converter/EfCoreValueConverter.Usage/EfCoreValueConverter.Usage.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/03-EfCore-Value-Converter/EfCoreValueConverter.Tests.Unit/EfCoreValueConverter.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/04-Validation-Generator/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/04-Validation-Generator/ValidationGenerator.Generator/ValidationGenerator.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/04-Validation-Generator/ValidationGenerator.Usage/ValidationGenerator.Usage.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/04-Validation-Generator/ValidationGenerator.Tests.Unit/ValidationGenerator.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/05-Custom-Generator-Template/">
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/05-Custom-Generator-Template/CustomGeneratorTemplate.Generator/CustomGeneratorTemplate.Generator.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/05-Custom-Generator-Template/CustomGeneratorTemplate.Usage/CustomGeneratorTemplate.Usage.csproj" />
-    <Project Path="Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/Part4-Cookbook/05-Custom-Generator-Template/CustomGeneratorTemplate.Tests.Unit/CustomGeneratorTemplate.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/" />
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/" />
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity/EntityAndIdentity.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity.Tests.Unit/EntityAndIdentity.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/02-Aggregate-Root/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/02-Aggregate-Root/AggregateRoot/AggregateRoot.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/02-Aggregate-Root/AggregateRoot.Tests.Unit/AggregateRoot.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/03-Domain-Events/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/03-Domain-Events/DomainEvents/DomainEvents.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/03-Domain-Events/DomainEvents.Tests.Unit/DomainEvents.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/04-Entity-Interfaces/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/04-Entity-Interfaces/EntityInterfaces/EntityInterfaces.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/04-Entity-Interfaces/EntityInterfaces.Tests.Unit/EntityInterfaces.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/" />
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/01-Repository-Interface/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/01-Repository-Interface/RepositoryInterface/RepositoryInterface.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/01-Repository-Interface/RepositoryInterface.Tests.Unit/RepositoryInterface.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/02-InMemory-Repository/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/02-InMemory-Repository/InMemoryRepository/InMemoryRepository.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/02-InMemory-Repository/InMemoryRepository.Tests.Unit/InMemoryRepository.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/03-EfCore-Repository/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/03-EfCore-Repository/EfCoreRepository/EfCoreRepository.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/03-EfCore-Repository/EfCoreRepository.Tests.Unit/EfCoreRepository.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/04-Unit-Of-Work/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/04-Unit-Of-Work/UnitOfWork/UnitOfWork.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/04-Unit-Of-Work/UnitOfWork.Tests.Unit/UnitOfWork.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/" />
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/01-QueryPort-Interface/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/01-QueryPort-Interface/QueryPortInterface/QueryPortInterface.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/01-QueryPort-Interface/QueryPortInterface.Tests.Unit/QueryPortInterface.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/02-DTO-Separation/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/02-DTO-Separation/DtoSeparation/DtoSeparation.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/02-DTO-Separation/DtoSeparation.Tests.Unit/DtoSeparation.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/03-Pagination-And-Sorting/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/03-Pagination-And-Sorting/PaginationAndSorting/PaginationAndSorting.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/03-Pagination-And-Sorting/PaginationAndSorting.Tests.Unit/PaginationAndSorting.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/04-InMemory-Query-Adapter/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/04-InMemory-Query-Adapter/InMemoryQueryAdapter/InMemoryQueryAdapter.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/04-InMemory-Query-Adapter/InMemoryQueryAdapter.Tests.Unit/InMemoryQueryAdapter.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/05-Dapper-Query-Adapter/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/05-Dapper-Query-Adapter/DapperQueryAdapter/DapperQueryAdapter.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/05-Dapper-Query-Adapter/DapperQueryAdapter.Tests.Unit/DapperQueryAdapter.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/" />
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/01-Command-Usecase/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/01-Command-Usecase/CommandUsecase/CommandUsecase.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/01-Command-Usecase/CommandUsecase.Tests.Unit/CommandUsecase.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/02-Query-Usecase/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/02-Query-Usecase/QueryUsecase/QueryUsecase.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/02-Query-Usecase/QueryUsecase.Tests.Unit/QueryUsecase.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/03-FinT-To-FinResponse/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/03-FinT-To-FinResponse/FinTToFinResponse/FinTToFinResponse.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/03-FinT-To-FinResponse/FinTToFinResponse.Tests.Unit/FinTToFinResponse.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/04-Domain-Event-Flow/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/04-Domain-Event-Flow/DomainEventFlow/DomainEventFlow.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/04-Domain-Event-Flow/DomainEventFlow.Tests.Unit/DomainEventFlow.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/05-Transaction-Pipeline/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/05-Transaction-Pipeline/TransactionPipeline/TransactionPipeline.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/05-Transaction-Pipeline/TransactionPipeline.Tests.Unit/TransactionPipeline.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/" />
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/01-Ecommerce-Order-Management/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/01-Ecommerce-Order-Management/EcommerceOrderManagement/EcommerceOrderManagement.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/01-Ecommerce-Order-Management/EcommerceOrderManagement.Tests.Unit/EcommerceOrderManagement.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/02-Customer-Management/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/02-Customer-Management/CustomerManagement/CustomerManagement.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/02-Customer-Management/CustomerManagement.Tests.Unit/CustomerManagement.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/03-Inventory-Management/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/03-Inventory-Management/InventoryManagement/InventoryManagement.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/03-Inventory-Management/InventoryManagement.Tests.Unit/InventoryManagement.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/04-Catalog-Search/">
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/04-Catalog-Search/CatalogSearch/CatalogSearch.csproj" />
-    <Project Path="Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/04-Catalog-Search/CatalogSearch.Tests.Unit/CatalogSearch.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/" />
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part1-Generic-Variance-Foundations/" />
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part1-Generic-Variance-Foundations/01-Covariance/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part1-Generic-Variance-Foundations/01-Covariance/Covariance/Covariance.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part1-Generic-Variance-Foundations/01-Covariance/Covariance.Tests.Unit/Covariance.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part1-Generic-Variance-Foundations/02-Contravariance/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part1-Generic-Variance-Foundations/02-Contravariance/Contravariance/Contravariance.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part1-Generic-Variance-Foundations/02-Contravariance/Contravariance.Tests.Unit/Contravariance.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part1-Generic-Variance-Foundations/03-Invariance-And-Constraints/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part1-Generic-Variance-Foundations/03-Invariance-And-Constraints/InvarianceAndConstraints/InvarianceAndConstraints.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part1-Generic-Variance-Foundations/03-Invariance-And-Constraints/InvarianceAndConstraints.Tests.Unit/InvarianceAndConstraints.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part1-Generic-Variance-Foundations/04-Interface-Segregation-And-Variance/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part1-Generic-Variance-Foundations/04-Interface-Segregation-And-Variance/InterfaceSegregationAndVariance/InterfaceSegregationAndVariance.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part1-Generic-Variance-Foundations/04-Interface-Segregation-And-Variance/InterfaceSegregationAndVariance.Tests.Unit/InterfaceSegregationAndVariance.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part2-Problem-Definition/" />
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part2-Problem-Definition/01-Mediator-Pipeline-Structure/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part2-Problem-Definition/01-Mediator-Pipeline-Structure/MediatorPipelineStructure/MediatorPipelineStructure.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part2-Problem-Definition/01-Mediator-Pipeline-Structure/MediatorPipelineStructure.Tests.Unit/MediatorPipelineStructure.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part2-Problem-Definition/02-Fin-Direct-Limitation/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part2-Problem-Definition/02-Fin-Direct-Limitation/FinDirectLimitation/FinDirectLimitation.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part2-Problem-Definition/02-Fin-Direct-Limitation/FinDirectLimitation.Tests.Unit/FinDirectLimitation.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part2-Problem-Definition/03-IFinResponse-Wrapper-Limitation/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part2-Problem-Definition/03-IFinResponse-Wrapper-Limitation/FinResponseWrapperLimitation/FinResponseWrapperLimitation.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part2-Problem-Definition/03-IFinResponse-Wrapper-Limitation/FinResponseWrapperLimitation.Tests.Unit/FinResponseWrapperLimitation.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part3-IFinResponse-Hierarchy/" />
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part3-IFinResponse-Hierarchy/01-IFinResponse-Marker/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part3-IFinResponse-Hierarchy/01-IFinResponse-Marker/FinResponseMarker/FinResponseMarker.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part3-IFinResponse-Hierarchy/01-IFinResponse-Marker/FinResponseMarker.Tests.Unit/FinResponseMarker.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part3-IFinResponse-Hierarchy/02-IFinResponse-Covariant/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part3-IFinResponse-Hierarchy/02-IFinResponse-Covariant/FinResponseCovariant/FinResponseCovariant.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part3-IFinResponse-Hierarchy/02-IFinResponse-Covariant/FinResponseCovariant.Tests.Unit/FinResponseCovariant.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part3-IFinResponse-Hierarchy/03-IFinResponseFactory-CRTP/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part3-IFinResponse-Hierarchy/03-IFinResponseFactory-CRTP/FinResponseFactoryCrtp/FinResponseFactoryCrtp.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part3-IFinResponse-Hierarchy/03-IFinResponseFactory-CRTP/FinResponseFactoryCrtp.Tests.Unit/FinResponseFactoryCrtp.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part3-IFinResponse-Hierarchy/04-IFinResponseWithError/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part3-IFinResponse-Hierarchy/04-IFinResponseWithError/FinResponseWithError/FinResponseWithError.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part3-IFinResponse-Hierarchy/04-IFinResponseWithError/FinResponseWithError.Tests.Unit/FinResponseWithError.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part3-IFinResponse-Hierarchy/05-FinResponse-Discriminated-Union/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part3-IFinResponse-Hierarchy/05-FinResponse-Discriminated-Union/FinResponseDiscriminatedUnion/FinResponseDiscriminatedUnion.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part3-IFinResponse-Hierarchy/05-FinResponse-Discriminated-Union/FinResponseDiscriminatedUnion.Tests.Unit/FinResponseDiscriminatedUnion.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part4-Pipeline-Constraint-Patterns/" />
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part4-Pipeline-Constraint-Patterns/01-Create-Only-Constraint/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part4-Pipeline-Constraint-Patterns/01-Create-Only-Constraint/CreateOnlyConstraint/CreateOnlyConstraint.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part4-Pipeline-Constraint-Patterns/01-Create-Only-Constraint/CreateOnlyConstraint.Tests.Unit/CreateOnlyConstraint.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part4-Pipeline-Constraint-Patterns/02-Read-Create-Constraint/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part4-Pipeline-Constraint-Patterns/02-Read-Create-Constraint/ReadCreateConstraint/ReadCreateConstraint.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part4-Pipeline-Constraint-Patterns/02-Read-Create-Constraint/ReadCreateConstraint.Tests.Unit/ReadCreateConstraint.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part4-Pipeline-Constraint-Patterns/03-Transaction-Caching-Pipeline/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part4-Pipeline-Constraint-Patterns/03-Transaction-Caching-Pipeline/TransactionCachingPipeline/TransactionCachingPipeline.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part4-Pipeline-Constraint-Patterns/03-Transaction-Caching-Pipeline/TransactionCachingPipeline.Tests.Unit/TransactionCachingPipeline.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part4-Pipeline-Constraint-Patterns/04-Fin-To-FinResponse-Bridge/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part4-Pipeline-Constraint-Patterns/04-Fin-To-FinResponse-Bridge/FinToFinResponseBridge/FinToFinResponseBridge.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part4-Pipeline-Constraint-Patterns/04-Fin-To-FinResponse-Bridge/FinToFinResponseBridge.Tests.Unit/FinToFinResponseBridge.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part5-Practical-Usecase-Examples/" />
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part5-Practical-Usecase-Examples/01-Command-Usecase-Example/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part5-Practical-Usecase-Examples/01-Command-Usecase-Example/CommandUsecaseExample/CommandUsecaseExample.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part5-Practical-Usecase-Examples/01-Command-Usecase-Example/CommandUsecaseExample.Tests.Unit/CommandUsecaseExample.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part5-Practical-Usecase-Examples/02-Query-Usecase-Example/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part5-Practical-Usecase-Examples/02-Query-Usecase-Example/QueryUsecaseExample/QueryUsecaseExample.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part5-Practical-Usecase-Examples/02-Query-Usecase-Example/QueryUsecaseExample.Tests.Unit/QueryUsecaseExample.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part5-Practical-Usecase-Examples/03-Full-Pipeline-Integration/">
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part5-Practical-Usecase-Examples/03-Full-Pipeline-Integration/FullPipelineIntegration/FullPipelineIntegration.csproj" />
-    <Project Path="Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part5-Practical-Usecase-Examples/03-Full-Pipeline-Integration/FullPipelineIntegration.Tests.Unit/FullPipelineIntegration.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/" />
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/" />
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/01-First-Architecture-Test/">
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/01-First-Architecture-Test/FirstArchitectureTest/FirstArchitectureTest.csproj" />
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/01-First-Architecture-Test/FirstArchitectureTest.Tests.Unit/FirstArchitectureTest.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/02-Visibility-And-Modifiers/">
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/02-Visibility-And-Modifiers/VisibilityAndModifiers/VisibilityAndModifiers.csproj" />
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/02-Visibility-And-Modifiers/VisibilityAndModifiers.Tests.Unit/VisibilityAndModifiers.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/03-Naming-Rules/">
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/03-Naming-Rules/NamingRules/NamingRules.csproj" />
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/03-Naming-Rules/NamingRules.Tests.Unit/NamingRules.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/04-Inheritance-And-Interface/">
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/04-Inheritance-And-Interface/InheritanceAndInterface/InheritanceAndInterface.csproj" />
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/04-Inheritance-And-Interface/InheritanceAndInterface.Tests.Unit/InheritanceAndInterface.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/" />
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/01-Method-Validation/">
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/01-Method-Validation/MethodValidation/MethodValidation.csproj" />
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/01-Method-Validation/MethodValidation.Tests.Unit/MethodValidation.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/02-Return-Type-Validation/">
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/02-Return-Type-Validation/ReturnTypeValidation/ReturnTypeValidation.csproj" />
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/02-Return-Type-Validation/ReturnTypeValidation.Tests.Unit/ReturnTypeValidation.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/03-Parameter-Validation/">
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/03-Parameter-Validation/ParameterValidation/ParameterValidation.csproj" />
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/03-Parameter-Validation/ParameterValidation.Tests.Unit/ParameterValidation.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/04-Property-And-Field-Validation/">
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/04-Property-And-Field-Validation/PropertyAndFieldValidation/PropertyAndFieldValidation.csproj" />
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part2-Method-And-Property-Validation/04-Property-And-Field-Validation/PropertyAndFieldValidation.Tests.Unit/PropertyAndFieldValidation.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/" />
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/01-Immutability-Rule/">
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/01-Immutability-Rule/ImmutabilityRule/ImmutabilityRule.csproj" />
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/01-Immutability-Rule/ImmutabilityRule.Tests.Unit/ImmutabilityRule.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/02-Nested-Class-Validation/">
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/02-Nested-Class-Validation/NestedClassValidation/NestedClassValidation.csproj" />
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/02-Nested-Class-Validation/NestedClassValidation.Tests.Unit/NestedClassValidation.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/03-Interface-Validation/">
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/03-Interface-Validation/InterfaceValidation/InterfaceValidation.csproj" />
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/03-Interface-Validation/InterfaceValidation.Tests.Unit/InterfaceValidation.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/04-Custom-Rules/">
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/04-Custom-Rules/CustomRules/CustomRules.csproj" />
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part3-Advanced-Validation/04-Custom-Rules/CustomRules.Tests.Unit/CustomRules.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/" />
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/01-Domain-Layer-Rules/">
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/01-Domain-Layer-Rules/DomainLayerRules/DomainLayerRules.csproj" />
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/01-Domain-Layer-Rules/DomainLayerRules.Tests.Unit/DomainLayerRules.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/02-Application-Layer-Rules/">
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/02-Application-Layer-Rules/ApplicationLayerRules/ApplicationLayerRules.csproj" />
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/02-Application-Layer-Rules/ApplicationLayerRules.Tests.Unit/ApplicationLayerRules.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/03-Adapter-Layer-Rules/">
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/03-Adapter-Layer-Rules/AdapterLayerRules/AdapterLayerRules.csproj" />
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/03-Adapter-Layer-Rules/AdapterLayerRules.Tests.Unit/AdapterLayerRules.Tests.Unit.csproj" />
-  </Folder>
-  <Folder Name="/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/04-Layer-Dependency-Rules/">
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/04-Layer-Dependency-Rules/LayerDependencyRules/LayerDependencyRules.csproj" />
-    <Project Path="Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part4-Real-World-Patterns/04-Layer-Dependency-Rules/LayerDependencyRules.Tests.Unit/LayerDependencyRules.Tests.Unit.csproj" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part0-Introduction/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part0-Introduction/01-Hello-World-Generator/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part0-Introduction/01-Hello-World-Generator/HelloWorldGenerator.Generator/HelloWorldGenerator.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part0-Introduction/01-Hello-World-Generator/HelloWorldGenerator.Usage/HelloWorldGenerator.Usage.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part0-Introduction/02-Reflection-Vs-SourceGen/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part0-Introduction/02-Reflection-Vs-SourceGen/ReflectionVsSourceGen/ReflectionVsSourceGen.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part1-Fundamentals/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part1-Fundamentals/02-Data-Models/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part1-Fundamentals/02-Data-Models/DataModels/DataModels.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part1-Fundamentals/03-Debugging-Setup/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part1-Fundamentals/03-Debugging-Setup/DebuggingSetup.Generator/DebuggingSetup.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part1-Fundamentals/03-Debugging-Setup/DebuggingSetup.Usage/DebuggingSetup.Usage.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part1-Fundamentals/04-Roslyn-Architecture/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part1-Fundamentals/04-Roslyn-Architecture/RoslynArchitecture/RoslynArchitecture.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part1-Fundamentals/05-Syntax-Api/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part1-Fundamentals/05-Syntax-Api/SyntaxApi/SyntaxApi.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part1-Fundamentals/06-Semantic-Api/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part1-Fundamentals/06-Semantic-Api/SemanticApi/SemanticApi.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part1-Fundamentals/07-Symbol-Types/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part1-Fundamentals/07-Symbol-Types/SymbolTypes/SymbolTypes.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/01-IIncrementalGenerator/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/01-IIncrementalGenerator/IncrementalGenerator.Generator/IncrementalGenerator.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/01-IIncrementalGenerator/IncrementalGenerator.Usage/IncrementalGenerator.Usage.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/02-Provider-Pattern/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/02-Provider-Pattern/ProviderPattern.Generator/ProviderPattern.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/02-Provider-Pattern/ProviderPattern.Usage/ProviderPattern.Usage.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/03-ForAttribute/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/03-ForAttribute/ForAttribute.Generator/ForAttribute.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/03-ForAttribute/ForAttribute.Usage/ForAttribute.Usage.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/04-Incremental-Caching/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/04-Incremental-Caching/IncrementalCaching.Generator/IncrementalCaching.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/04-Incremental-Caching/IncrementalCaching.Usage/IncrementalCaching.Usage.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/05-INamedTypeSymbol/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/05-INamedTypeSymbol/NamedTypeSymbol/NamedTypeSymbol.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/06-IMethodSymbol/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/06-IMethodSymbol/MethodSymbol/MethodSymbol.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/07-SymbolDisplayFormat/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/07-SymbolDisplayFormat/SymbolDisplayFormat/SymbolDisplayFormat.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/08-Type-Extraction/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/08-Type-Extraction/TypeExtraction/TypeExtraction.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/09-StringBuilder-Pattern/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/09-StringBuilder-Pattern/StringBuilderPattern/StringBuilderPattern.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/10-Template-Design/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/10-Template-Design/TemplateDesign.Generator/TemplateDesign.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/10-Template-Design/TemplateDesign.Usage/TemplateDesign.Usage.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/11-Namespace-Handling/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/11-Namespace-Handling/NamespaceHandling.Generator/NamespaceHandling.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/11-Namespace-Handling/NamespaceHandling.Usage/NamespaceHandling.Usage.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/12-Deterministic-Output/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/12-Deterministic-Output/DeterministicOutput.Generator/DeterministicOutput.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part2-Core-Concepts/12-Deterministic-Output/DeterministicOutput.Usage/DeterministicOutput.Usage.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/01-Constructor-Handling/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/01-Constructor-Handling/ConstructorHandling.Generator/ConstructorHandling.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/01-Constructor-Handling/ConstructorHandling.Usage/ConstructorHandling.Usage.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/02-Generic-Types/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/02-Generic-Types/GenericTypes.Generator/GenericTypes.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/02-Generic-Types/GenericTypes.Usage/GenericTypes.Usage.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/03-Collection-Types/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/03-Collection-Types/CollectionTypes/CollectionTypes.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/04-LoggerMessage-Limits/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/04-LoggerMessage-Limits/LoggerMessageLimits.Generator/LoggerMessageLimits.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/04-LoggerMessage-Limits/LoggerMessageLimits.Usage/LoggerMessageLimits.Usage.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/05-Unit-Testing-Setup/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/05-Unit-Testing-Setup/UnitTestingSetup.Generator/UnitTestingSetup.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/05-Unit-Testing-Setup/UnitTestingSetup.Usage/UnitTestingSetup.Usage.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/06-Verify-Snapshot-Testing/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/06-Verify-Snapshot-Testing/VerifySnapshotTesting.Generator/VerifySnapshotTesting.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/06-Verify-Snapshot-Testing/VerifySnapshotTesting.Usage/VerifySnapshotTesting.Usage.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/07-Test-Scenarios/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/07-Test-Scenarios/TestScenarios.Generator/TestScenarios.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part3-Advanced/07-Test-Scenarios/TestScenarios.Usage/TestScenarios.Usage.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/01-Development-Workflow/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/01-Development-Workflow/DevelopmentWorkflow.Generator/DevelopmentWorkflow.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/01-Development-Workflow/DevelopmentWorkflow.Usage/DevelopmentWorkflow.Usage.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/01-Development-Workflow/DevelopmentWorkflow.Tests.Unit/DevelopmentWorkflow.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/02-Entity-Id-Generator/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/02-Entity-Id-Generator/EntityIdGenerator.Generator/EntityIdGenerator.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/02-Entity-Id-Generator/EntityIdGenerator.Usage/EntityIdGenerator.Usage.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/02-Entity-Id-Generator/EntityIdGenerator.Tests.Unit/EntityIdGenerator.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/03-EfCore-Value-Converter/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/03-EfCore-Value-Converter/EfCoreValueConverter.Generator/EfCoreValueConverter.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/03-EfCore-Value-Converter/EfCoreValueConverter.Usage/EfCoreValueConverter.Usage.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/03-EfCore-Value-Converter/EfCoreValueConverter.Tests.Unit/EfCoreValueConverter.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/04-Validation-Generator/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/04-Validation-Generator/ValidationGenerator.Generator/ValidationGenerator.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/04-Validation-Generator/ValidationGenerator.Usage/ValidationGenerator.Usage.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/04-Validation-Generator/ValidationGenerator.Tests.Unit/ValidationGenerator.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/05-Custom-Generator-Template/">
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/05-Custom-Generator-Template/CustomGeneratorTemplate.Generator/CustomGeneratorTemplate.Generator.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/05-Custom-Generator-Template/CustomGeneratorTemplate.Usage/CustomGeneratorTemplate.Usage.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/sourcegen-observability/Part4-Cookbook/05-Custom-Generator-Template/CustomGeneratorTemplate.Tests.Unit/CustomGeneratorTemplate.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity/EntityAndIdentity.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity.Tests.Unit/EntityAndIdentity.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/02-Aggregate-Root/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/02-Aggregate-Root/AggregateRoot/AggregateRoot.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/02-Aggregate-Root/AggregateRoot.Tests.Unit/AggregateRoot.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/03-Domain-Events/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/03-Domain-Events/DomainEvents/DomainEvents.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/03-Domain-Events/DomainEvents.Tests.Unit/DomainEvents.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/04-Entity-Interfaces/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/04-Entity-Interfaces/EntityInterfaces/EntityInterfaces.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/04-Entity-Interfaces/EntityInterfaces.Tests.Unit/EntityInterfaces.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part2-Command-Repository/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part2-Command-Repository/01-Repository-Interface/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part2-Command-Repository/01-Repository-Interface/RepositoryInterface/RepositoryInterface.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part2-Command-Repository/01-Repository-Interface/RepositoryInterface.Tests.Unit/RepositoryInterface.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part2-Command-Repository/02-InMemory-Repository/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part2-Command-Repository/02-InMemory-Repository/InMemoryRepository/InMemoryRepository.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part2-Command-Repository/02-InMemory-Repository/InMemoryRepository.Tests.Unit/InMemoryRepository.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part2-Command-Repository/03-EfCore-Repository/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part2-Command-Repository/03-EfCore-Repository/EfCoreRepository/EfCoreRepository.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part2-Command-Repository/03-EfCore-Repository/EfCoreRepository.Tests.Unit/EfCoreRepository.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part2-Command-Repository/04-Unit-Of-Work/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part2-Command-Repository/04-Unit-Of-Work/UnitOfWork/UnitOfWork.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part2-Command-Repository/04-Unit-Of-Work/UnitOfWork.Tests.Unit/UnitOfWork.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part3-Query-Patterns/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part3-Query-Patterns/01-QueryPort-Interface/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part3-Query-Patterns/01-QueryPort-Interface/QueryPortInterface/QueryPortInterface.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part3-Query-Patterns/01-QueryPort-Interface/QueryPortInterface.Tests.Unit/QueryPortInterface.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part3-Query-Patterns/02-DTO-Separation/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part3-Query-Patterns/02-DTO-Separation/DtoSeparation/DtoSeparation.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part3-Query-Patterns/02-DTO-Separation/DtoSeparation.Tests.Unit/DtoSeparation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part3-Query-Patterns/03-Pagination-And-Sorting/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part3-Query-Patterns/03-Pagination-And-Sorting/PaginationAndSorting/PaginationAndSorting.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part3-Query-Patterns/03-Pagination-And-Sorting/PaginationAndSorting.Tests.Unit/PaginationAndSorting.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part3-Query-Patterns/04-InMemory-Query-Adapter/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part3-Query-Patterns/04-InMemory-Query-Adapter/InMemoryQueryAdapter/InMemoryQueryAdapter.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part3-Query-Patterns/04-InMemory-Query-Adapter/InMemoryQueryAdapter.Tests.Unit/InMemoryQueryAdapter.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part3-Query-Patterns/05-Dapper-Query-Adapter/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part3-Query-Patterns/05-Dapper-Query-Adapter/DapperQueryAdapter/DapperQueryAdapter.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part3-Query-Patterns/05-Dapper-Query-Adapter/DapperQueryAdapter.Tests.Unit/DapperQueryAdapter.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part4-CQRS-Usecase-Integration/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part4-CQRS-Usecase-Integration/01-Command-Usecase/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part4-CQRS-Usecase-Integration/01-Command-Usecase/CommandUsecase/CommandUsecase.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part4-CQRS-Usecase-Integration/01-Command-Usecase/CommandUsecase.Tests.Unit/CommandUsecase.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part4-CQRS-Usecase-Integration/02-Query-Usecase/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part4-CQRS-Usecase-Integration/02-Query-Usecase/QueryUsecase/QueryUsecase.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part4-CQRS-Usecase-Integration/02-Query-Usecase/QueryUsecase.Tests.Unit/QueryUsecase.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part4-CQRS-Usecase-Integration/03-FinT-To-FinResponse/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part4-CQRS-Usecase-Integration/03-FinT-To-FinResponse/FinTToFinResponse/FinTToFinResponse.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part4-CQRS-Usecase-Integration/03-FinT-To-FinResponse/FinTToFinResponse.Tests.Unit/FinTToFinResponse.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part4-CQRS-Usecase-Integration/04-Domain-Event-Flow/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part4-CQRS-Usecase-Integration/04-Domain-Event-Flow/DomainEventFlow/DomainEventFlow.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part4-CQRS-Usecase-Integration/04-Domain-Event-Flow/DomainEventFlow.Tests.Unit/DomainEventFlow.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part4-CQRS-Usecase-Integration/05-Transaction-Pipeline/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part4-CQRS-Usecase-Integration/05-Transaction-Pipeline/TransactionPipeline/TransactionPipeline.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part4-CQRS-Usecase-Integration/05-Transaction-Pipeline/TransactionPipeline.Tests.Unit/TransactionPipeline.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part5-Domain-Examples/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part5-Domain-Examples/01-Ecommerce-Order-Management/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part5-Domain-Examples/01-Ecommerce-Order-Management/EcommerceOrderManagement/EcommerceOrderManagement.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part5-Domain-Examples/01-Ecommerce-Order-Management/EcommerceOrderManagement.Tests.Unit/EcommerceOrderManagement.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part5-Domain-Examples/02-Customer-Management/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part5-Domain-Examples/02-Customer-Management/CustomerManagement/CustomerManagement.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part5-Domain-Examples/02-Customer-Management/CustomerManagement.Tests.Unit/CustomerManagement.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part5-Domain-Examples/03-Inventory-Management/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part5-Domain-Examples/03-Inventory-Management/InventoryManagement/InventoryManagement.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part5-Domain-Examples/03-Inventory-Management/InventoryManagement.Tests.Unit/InventoryManagement.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/cqrs-repository/Part5-Domain-Examples/04-Catalog-Search/">
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part5-Domain-Examples/04-Catalog-Search/CatalogSearch/CatalogSearch.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/cqrs-repository/Part5-Domain-Examples/04-Catalog-Search/CatalogSearch.Tests.Unit/CatalogSearch.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part1-Generic-Variance-Foundations/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part1-Generic-Variance-Foundations/01-Covariance/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part1-Generic-Variance-Foundations/01-Covariance/Covariance/Covariance.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part1-Generic-Variance-Foundations/01-Covariance/Covariance.Tests.Unit/Covariance.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part1-Generic-Variance-Foundations/02-Contravariance/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part1-Generic-Variance-Foundations/02-Contravariance/Contravariance/Contravariance.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part1-Generic-Variance-Foundations/02-Contravariance/Contravariance.Tests.Unit/Contravariance.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part1-Generic-Variance-Foundations/03-Invariance-And-Constraints/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part1-Generic-Variance-Foundations/03-Invariance-And-Constraints/InvarianceAndConstraints/InvarianceAndConstraints.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part1-Generic-Variance-Foundations/03-Invariance-And-Constraints/InvarianceAndConstraints.Tests.Unit/InvarianceAndConstraints.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part1-Generic-Variance-Foundations/04-Interface-Segregation-And-Variance/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part1-Generic-Variance-Foundations/04-Interface-Segregation-And-Variance/InterfaceSegregationAndVariance/InterfaceSegregationAndVariance.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part1-Generic-Variance-Foundations/04-Interface-Segregation-And-Variance/InterfaceSegregationAndVariance.Tests.Unit/InterfaceSegregationAndVariance.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part2-Problem-Definition/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part2-Problem-Definition/01-Mediator-Pipeline-Structure/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part2-Problem-Definition/01-Mediator-Pipeline-Structure/MediatorPipelineStructure/MediatorPipelineStructure.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part2-Problem-Definition/01-Mediator-Pipeline-Structure/MediatorPipelineStructure.Tests.Unit/MediatorPipelineStructure.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part2-Problem-Definition/02-Fin-Direct-Limitation/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part2-Problem-Definition/02-Fin-Direct-Limitation/FinDirectLimitation/FinDirectLimitation.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part2-Problem-Definition/02-Fin-Direct-Limitation/FinDirectLimitation.Tests.Unit/FinDirectLimitation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part2-Problem-Definition/03-IFinResponse-Wrapper-Limitation/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part2-Problem-Definition/03-IFinResponse-Wrapper-Limitation/FinResponseWrapperLimitation/FinResponseWrapperLimitation.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part2-Problem-Definition/03-IFinResponse-Wrapper-Limitation/FinResponseWrapperLimitation.Tests.Unit/FinResponseWrapperLimitation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part3-IFinResponse-Hierarchy/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part3-IFinResponse-Hierarchy/01-IFinResponse-Marker/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part3-IFinResponse-Hierarchy/01-IFinResponse-Marker/FinResponseMarker/FinResponseMarker.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part3-IFinResponse-Hierarchy/01-IFinResponse-Marker/FinResponseMarker.Tests.Unit/FinResponseMarker.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part3-IFinResponse-Hierarchy/02-IFinResponse-Covariant/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part3-IFinResponse-Hierarchy/02-IFinResponse-Covariant/FinResponseCovariant/FinResponseCovariant.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part3-IFinResponse-Hierarchy/02-IFinResponse-Covariant/FinResponseCovariant.Tests.Unit/FinResponseCovariant.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part3-IFinResponse-Hierarchy/03-IFinResponseFactory-CRTP/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part3-IFinResponse-Hierarchy/03-IFinResponseFactory-CRTP/FinResponseFactoryCrtp/FinResponseFactoryCrtp.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part3-IFinResponse-Hierarchy/03-IFinResponseFactory-CRTP/FinResponseFactoryCrtp.Tests.Unit/FinResponseFactoryCrtp.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part3-IFinResponse-Hierarchy/04-IFinResponseWithError/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part3-IFinResponse-Hierarchy/04-IFinResponseWithError/FinResponseWithError/FinResponseWithError.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part3-IFinResponse-Hierarchy/04-IFinResponseWithError/FinResponseWithError.Tests.Unit/FinResponseWithError.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part3-IFinResponse-Hierarchy/05-FinResponse-Discriminated-Union/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part3-IFinResponse-Hierarchy/05-FinResponse-Discriminated-Union/FinResponseDiscriminatedUnion/FinResponseDiscriminatedUnion.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part3-IFinResponse-Hierarchy/05-FinResponse-Discriminated-Union/FinResponseDiscriminatedUnion.Tests.Unit/FinResponseDiscriminatedUnion.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part4-Pipeline-Constraint-Patterns/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part4-Pipeline-Constraint-Patterns/01-Create-Only-Constraint/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part4-Pipeline-Constraint-Patterns/01-Create-Only-Constraint/CreateOnlyConstraint/CreateOnlyConstraint.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part4-Pipeline-Constraint-Patterns/01-Create-Only-Constraint/CreateOnlyConstraint.Tests.Unit/CreateOnlyConstraint.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part4-Pipeline-Constraint-Patterns/02-Read-Create-Constraint/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part4-Pipeline-Constraint-Patterns/02-Read-Create-Constraint/ReadCreateConstraint/ReadCreateConstraint.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part4-Pipeline-Constraint-Patterns/02-Read-Create-Constraint/ReadCreateConstraint.Tests.Unit/ReadCreateConstraint.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part4-Pipeline-Constraint-Patterns/03-Transaction-Caching-Pipeline/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part4-Pipeline-Constraint-Patterns/03-Transaction-Caching-Pipeline/TransactionCachingPipeline/TransactionCachingPipeline.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part4-Pipeline-Constraint-Patterns/03-Transaction-Caching-Pipeline/TransactionCachingPipeline.Tests.Unit/TransactionCachingPipeline.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part4-Pipeline-Constraint-Patterns/04-Fin-To-FinResponse-Bridge/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part4-Pipeline-Constraint-Patterns/04-Fin-To-FinResponse-Bridge/FinToFinResponseBridge/FinToFinResponseBridge.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part4-Pipeline-Constraint-Patterns/04-Fin-To-FinResponse-Bridge/FinToFinResponseBridge.Tests.Unit/FinToFinResponseBridge.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part5-Practical-Usecase-Examples/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part5-Practical-Usecase-Examples/01-Command-Usecase-Example/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part5-Practical-Usecase-Examples/01-Command-Usecase-Example/CommandUsecaseExample/CommandUsecaseExample.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part5-Practical-Usecase-Examples/01-Command-Usecase-Example/CommandUsecaseExample.Tests.Unit/CommandUsecaseExample.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part5-Practical-Usecase-Examples/02-Query-Usecase-Example/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part5-Practical-Usecase-Examples/02-Query-Usecase-Example/QueryUsecaseExample/QueryUsecaseExample.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part5-Practical-Usecase-Examples/02-Query-Usecase-Example/QueryUsecaseExample.Tests.Unit/QueryUsecaseExample.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/usecase-pipeline/Part5-Practical-Usecase-Examples/03-Full-Pipeline-Integration/">
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part5-Practical-Usecase-Examples/03-Full-Pipeline-Integration/FullPipelineIntegration/FullPipelineIntegration.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/usecase-pipeline/Part5-Practical-Usecase-Examples/03-Full-Pipeline-Integration/FullPipelineIntegration.Tests.Unit/FullPipelineIntegration.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part1-ClassValidator-Basics/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part1-ClassValidator-Basics/01-First-Architecture-Test/">
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part1-ClassValidator-Basics/01-First-Architecture-Test/FirstArchitectureTest/FirstArchitectureTest.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part1-ClassValidator-Basics/01-First-Architecture-Test/FirstArchitectureTest.Tests.Unit/FirstArchitectureTest.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part1-ClassValidator-Basics/02-Visibility-And-Modifiers/">
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part1-ClassValidator-Basics/02-Visibility-And-Modifiers/VisibilityAndModifiers/VisibilityAndModifiers.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part1-ClassValidator-Basics/02-Visibility-And-Modifiers/VisibilityAndModifiers.Tests.Unit/VisibilityAndModifiers.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part1-ClassValidator-Basics/03-Naming-Rules/">
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part1-ClassValidator-Basics/03-Naming-Rules/NamingRules/NamingRules.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part1-ClassValidator-Basics/03-Naming-Rules/NamingRules.Tests.Unit/NamingRules.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part1-ClassValidator-Basics/04-Inheritance-And-Interface/">
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part1-ClassValidator-Basics/04-Inheritance-And-Interface/InheritanceAndInterface/InheritanceAndInterface.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part1-ClassValidator-Basics/04-Inheritance-And-Interface/InheritanceAndInterface.Tests.Unit/InheritanceAndInterface.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part2-Method-And-Property-Validation/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part2-Method-And-Property-Validation/01-Method-Validation/">
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part2-Method-And-Property-Validation/01-Method-Validation/MethodValidation/MethodValidation.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part2-Method-And-Property-Validation/01-Method-Validation/MethodValidation.Tests.Unit/MethodValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part2-Method-And-Property-Validation/02-Return-Type-Validation/">
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part2-Method-And-Property-Validation/02-Return-Type-Validation/ReturnTypeValidation/ReturnTypeValidation.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part2-Method-And-Property-Validation/02-Return-Type-Validation/ReturnTypeValidation.Tests.Unit/ReturnTypeValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part2-Method-And-Property-Validation/03-Parameter-Validation/">
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part2-Method-And-Property-Validation/03-Parameter-Validation/ParameterValidation/ParameterValidation.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part2-Method-And-Property-Validation/03-Parameter-Validation/ParameterValidation.Tests.Unit/ParameterValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part2-Method-And-Property-Validation/04-Property-And-Field-Validation/">
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part2-Method-And-Property-Validation/04-Property-And-Field-Validation/PropertyAndFieldValidation/PropertyAndFieldValidation.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part2-Method-And-Property-Validation/04-Property-And-Field-Validation/PropertyAndFieldValidation.Tests.Unit/PropertyAndFieldValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part3-Advanced-Validation/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part3-Advanced-Validation/01-Immutability-Rule/">
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part3-Advanced-Validation/01-Immutability-Rule/ImmutabilityRule/ImmutabilityRule.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part3-Advanced-Validation/01-Immutability-Rule/ImmutabilityRule.Tests.Unit/ImmutabilityRule.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part3-Advanced-Validation/02-Nested-Class-Validation/">
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part3-Advanced-Validation/02-Nested-Class-Validation/NestedClassValidation/NestedClassValidation.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part3-Advanced-Validation/02-Nested-Class-Validation/NestedClassValidation.Tests.Unit/NestedClassValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part3-Advanced-Validation/03-Interface-Validation/">
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part3-Advanced-Validation/03-Interface-Validation/InterfaceValidation/InterfaceValidation.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part3-Advanced-Validation/03-Interface-Validation/InterfaceValidation.Tests.Unit/InterfaceValidation.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part3-Advanced-Validation/04-Custom-Rules/">
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part3-Advanced-Validation/04-Custom-Rules/CustomRules/CustomRules.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part3-Advanced-Validation/04-Custom-Rules/CustomRules.Tests.Unit/CustomRules.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part4-Real-World-Patterns/" />
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part4-Real-World-Patterns/01-Domain-Layer-Rules/">
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part4-Real-World-Patterns/01-Domain-Layer-Rules/DomainLayerRules/DomainLayerRules.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part4-Real-World-Patterns/01-Domain-Layer-Rules/DomainLayerRules.Tests.Unit/DomainLayerRules.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part4-Real-World-Patterns/02-Application-Layer-Rules/">
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part4-Real-World-Patterns/02-Application-Layer-Rules/ApplicationLayerRules/ApplicationLayerRules.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part4-Real-World-Patterns/02-Application-Layer-Rules/ApplicationLayerRules.Tests.Unit/ApplicationLayerRules.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part4-Real-World-Patterns/03-Adapter-Layer-Rules/">
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part4-Real-World-Patterns/03-Adapter-Layer-Rules/AdapterLayerRules/AdapterLayerRules.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part4-Real-World-Patterns/03-Adapter-Layer-Rules/AdapterLayerRules.Tests.Unit/AdapterLayerRules.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/docs-site/src/content/docs/tutorials/architecture-rules/Part4-Real-World-Patterns/04-Layer-Dependency-Rules/">
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part4-Real-World-Patterns/04-Layer-Dependency-Rules/LayerDependencyRules/LayerDependencyRules.csproj" />
+    <Project Path="docs-site/src/content/docs/tutorials/architecture-rules/Part4-Real-World-Patterns/04-Layer-Dependency-Rules/LayerDependencyRules.Tests.Unit/LayerDependencyRules.Tests.Unit.csproj" />
   </Folder>
 </Solution>

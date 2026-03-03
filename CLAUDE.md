@@ -135,7 +135,7 @@ Verify.Xunit 스냅샷 테스트 결과를 승인하는 스크립트입니다.
 
 ### 단위 테스트 규칙
 
-단위 테스트 구현 시 `Docs/guides/15a-unit-testing.md`의 규칙을 준수하십시오.
+단위 테스트 구현 시 `docs-site/src/content/docs/guides/testing/15a-unit-testing.md`의 규칙을 준수하십시오.
 
 ### Markdown 볼드 작성 규칙
 

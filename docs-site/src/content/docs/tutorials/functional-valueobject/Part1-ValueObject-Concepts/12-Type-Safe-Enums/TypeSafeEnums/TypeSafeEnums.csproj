@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Ardalis.SmartEnum" />
+    <PackageReference Include="LanguageExt.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Framework\Framework.csproj" />
+    <ProjectReference Include="..\..\..\..\..\..\..\..\Src\Functorium\Functorium.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="TypeSafeEnums.Tests.Unit" />
+  </ItemGroup>
+
+</Project>
