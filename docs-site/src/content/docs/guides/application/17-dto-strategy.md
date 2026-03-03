@@ -7,23 +7,6 @@ title: "DTO 전략"
 
 이 문서는 Functorium 프레임워크에서 레이어 간 데이터 전송 객체(DTO)의 설계 원칙, 소유권, 변환 규칙을 통합적으로 다룹니다.
 
-## 목차
-
-- [요약](#요약)
-- [왜 레이어별 DTO가 필요한가](#왜-레이어별-dto가-필요한가)
-- [레이어별 DTO 소유권 (WHAT)](#레이어별-dto-소유권-what)
-- [레이어별 DTO 구현 (HOW)](#레이어별-dto-구현-how)
-  - [Presentation Layer](#presentation-layer)
-  - [Application Layer](#application-layer)
-  - [Persistence Layer](#persistence-layer)
-- [컬렉션 타입 변환](#컬렉션-타입-변환)
-- [Application DTO 재사용 허용 조건](#application-dto-재사용-허용-조건)
-- [트러블슈팅](#트러블슈팅)
-- [FAQ](#faq)
-- [참고 문서](#참고-문서)
-
----
-
 ## 요약
 
 ### 주요 명령

@@ -4,28 +4,6 @@ title: "Use Case와 CQRS"
 
 이 문서는 Functorium CQRS 패턴을 사용하여 유스케이스(Command/Query Handler)를 구현하는 방법을 설명합니다.
 
-## 목차
-
-- [왜 CQRS인가](#왜-cqrs인가)
-- [요약](#요약)
-- [CQRS 패턴 개요](#cqrs-패턴-개요)
-- [프로젝트 구조](#프로젝트-구조)
-- [중첩 클래스 패턴](#중첩-클래스-패턴)
-- [Value Object 검증과 Apply 병합 패턴](#value-object-검증과-apply-병합-패턴)
-- [LINQ 기반 함수형 구현](#linq-기반-함수형-구현)
-- [Application 에러 사용 패턴](#application-에러-사용-패턴)
-- [Command 구현](#command-구현)
-- [Query 구현](#query-구현)
-- [도메인 이벤트](#도메인-이벤트)
-- [트랜잭션과 이벤트 발행 (UsecaseTransactionPipeline)](#트랜잭션과-이벤트-발행-usecasetransactionpipeline)
-- [FinResponse와 오류 처리](#finresponse와-오류-처리)
-- [FluentValidation 통합](#fluentvalidation-통합)
-- [트러블슈팅](#트러블슈팅)
-- [FAQ](#faq)
-- [참고 문서](#참고-문서)
-
----
-
 ## 왜 CQRS인가
 
 ### DDD에서 Application Service의 역할

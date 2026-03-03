@@ -32,8 +32,6 @@ title: "CQRS 패턴으로 Command와 Query 분리하기"
 
 ---
 
-## 목차
-
 ### Part 0: 서론
 
 서론에서는 CQRS 패턴의 개념과 환경 설정을 다룹니다.

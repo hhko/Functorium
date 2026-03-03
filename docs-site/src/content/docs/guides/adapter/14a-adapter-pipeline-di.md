@@ -4,28 +4,6 @@ title: "Adapter 연결 -- Pipeline과 DI"
 
 이 문서는 Adapter의 Pipeline 생성, DI 등록, Options 패턴을 다루는 가이드입니다. Port 정의는 [12-ports.md](./12-ports), Adapter 구현은 [13-adapters.md](./13-adapters), 단위 테스트는 [14b-adapter-testing.md](./14b-adapter-testing)를 참조하세요.
 
-## 목차
-
-- [요약](#요약)
-- [Activity 3: Pipeline 생성 확인](#activity-3-pipeline-생성-확인)
-  - [GenerateObservablePort 소스 생성기](#generateobservableport-소스-생성기)
-  - [생성 파일 확인](#생성-파일-확인)
-  - [생성 코드 구조](#생성-코드-구조)
-  - [자동 제공 기능 (요약)](#자동-제공-기능-요약)
-  - [빌드 에러 대응](#빌드-에러-대응)
-- [Activity 4: DI 등록](#activity-4-di-등록)
-  - [Registration 클래스 생성](#registration-클래스-생성)
-  - [유형별 등록 패턴](#유형별-등록-패턴)
-  - [다중 인터페이스 등록](#다중-인터페이스-등록)
-  - [DI Lifetime 선택 가이드](#di-lifetime-선택-가이드)
-  - [Host Bootstrap 통합](#host-bootstrap-통합)
-  - [Options 패턴 (OptionsConfigurator)](#options-패턴-optionsconfigurator)
-- [트러블슈팅](#트러블슈팅)
-- [FAQ](#faq)
-- [참고 문서](#참고-문서)
-
----
-
 ## 요약
 
 ### 주요 명령

@@ -4,26 +4,6 @@ title: "Adapter 연결 -- 단위 테스트"
 
 이 문서는 Adapter의 단위 테스트 작성, End-to-End Walkthrough, 아키텍처 부록을 다루는 가이드입니다. Pipeline 생성과 DI 등록은 [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di), Port 정의는 [12-ports.md](./12-ports), Adapter 구현은 [13-adapters.md](./13-adapters)을 참조하세요.
 
-## 목차
-
-- [요약](#요약)
-- [Activity 5: 단위 테스트](#activity-5-단위-테스트)
-  - [테스트 원칙 / IO 실행 패턴](#테스트-원칙--io-실행-패턴)
-  - [Repository 테스트](#repository-테스트)
-  - [External API 테스트](#external-api-테스트)
-  - [Messaging 테스트](#messaging-테스트)
-  - [Query Adapter 테스트](#query-adapter-테스트)
-- [End-to-End Walkthroughs](#end-to-end-walkthroughs)
-- [부록](#부록)
-  - [A. Clean Architecture 전체 흐름](#a-clean-architecture-전체-흐름)
-  - [D. Quick Reference 체크리스트](#d-quick-reference-체크리스트)
-  - [E. Observability 상세 사양 요약](#e-observability-상세-사양-요약)
-- [트러블슈팅](#트러블슈팅)
-- [FAQ](#faq)
-- [참고 문서](#참고-문서)
-
----
-
 ## 요약
 
 ### 주요 명령

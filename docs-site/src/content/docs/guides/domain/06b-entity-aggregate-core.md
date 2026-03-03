@@ -4,22 +4,6 @@ title: "Entity와 Aggregate 구현 — 핵심 패턴"
 
 이 문서는 Functorium 프레임워크로 Entity와 Aggregate를 구현하는 핵심 방법을 다룹니다. 설계 원칙과 개념은 [06a-aggregate-design.md](./06a-aggregate-design)를 참조하세요. 고급 패턴(Cross-Aggregate 관계, 부가 인터페이스, 실전 예제)은 [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced)를 참조하세요.
 
-## 목차
-
-- [요약](#요약)
-- [클래스 계층](#클래스-계층)
-- [Entity ID 시스템](#entity-id-시스템)
-- [생성 패턴](#생성-패턴)
-- [커맨드 메서드와 불변식 보호](#커맨드-메서드와-불변식-보호)
-- [자식 Entity 구현 패턴](#자식-entity-구현-패턴)
-- [도메인 이벤트](#도메인-이벤트)
-- [체크리스트](#체크리스트)
-- [트러블슈팅](#트러블슈팅)
-- [FAQ](#faq)
-- [참고 문서](#참고-문서)
-
----
-
 ## 요약
 
 ### 주요 명령

@@ -4,23 +4,6 @@ title: "Adapter 구현"
 
 이 문서는 Port 인터페이스의 구현체인 Adapter를 유형별로 구현하는 가이드입니다. Port 정의는 [12-ports.md](./12-ports), Pipeline 생성과 DI 등록은 [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di)을 참조하세요.
 
-## 목차
-
-- [요약](#요약)
-- [Activity 2: Adapter 구현](#activity-2-adapter-구현)
-- [공통 구현 체크리스트](#공통-구현-체크리스트)
-- [공통 패턴](#공통-패턴)
-  - [외부 시스템 유형별 ACL 체크리스트](#외부-시스템-유형별-acl-체크리스트)
-- [Repository Adapter](#repository-adapter)
-- [External API Adapter](#external-api-adapter)
-- [Messaging Adapter](#messaging-adapter)
-- [Query Adapter (CQRS Read 측)](#query-adapter-cqrs-read-측)
-- [트러블슈팅](#트러블슈팅)
-- [FAQ](#faq)
-- [참고 문서](#참고-문서)
-
----
-
 ## 요약
 
 ### 주요 명령

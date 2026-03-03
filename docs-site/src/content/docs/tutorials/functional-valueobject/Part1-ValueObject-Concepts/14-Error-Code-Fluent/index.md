@@ -2,18 +2,6 @@
 title: "DomainError 헬퍼를 사용한 간결한 에러 처리"
 ---
 
-## 목차
-- [개요](#개요)
-- [학습 목표](#학습-목표)
-- [왜 필요한가?](#왜-필요한가)
-- [핵심 개념](#핵심-개념)
-- [Before/After 비교](#beforeafter-비교)
-- [실전 지침](#실전-지침)
-- [프로젝트 설명](#프로젝트-설명)
-- [한눈에 보는 정리](#한눈에-보는-정리)
-- [FAQ](#faq)
-- [타입 안전 테스트 Assertion](#타입-안전-테스트-assertion)
-
 ## 개요
 
 이 프로젝트는 Functorium 프레임워크의 `DomainError` 헬퍼와 `DomainErrorType` 레코드를 활용하여 값 객체의 에러 처리 코드를 대폭 간소화하는 패턴을 시연합니다. 기존의 `DomainErrors` 중첩 클래스와 `ErrorCodeFactory.Create()` 호출을 `DomainError.For<T>()` 한 줄로 대체하여 **코드량을 약 60% 감소**시키고, **타입 안전한 에러 코드**를 보장합니다.

@@ -32,8 +32,6 @@ title: "Specification 패턴으로 도메인 규칙 구현하기"
 
 ---
 
-## 목차
-
 ### Part 0: 서론
 
 서론에서는 Specification 패턴의 개념과 환경 설정을 다룹니다.

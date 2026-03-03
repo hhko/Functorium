@@ -4,24 +4,6 @@ title: "FinResponse 타입 진화 기록"
 
 이 문서는 Functorium의 응답 타입 시스템이 `IFinResponse`에서 `FinResponse<A>` abstract record로 진화한 과정과 기술적 이슈 해결 과정을 기록합니다.
 
-## 목차
-
-- [요약](#요약)
-- [개요](#개요)
-- [1단계: IFinResponse](#1단계-ifinresponse)
-- [2단계: Fin&lt;T&gt; 직접 사용](#2단계-fint-직접-사용)
-- [3단계: IResponse&lt;T&gt; + ResponseBase&lt;T&gt;](#3단계-responset--responsebaset)
-- [발견된 버그와 해결](#발견된-버그와-해결)
-- [4단계: Positional Record 문법 적용](#4단계-positional-record-문법-적용)
-- [5단계: ToResponse 확장 메서드](#5단계-toresponse-확장-메서드)
-- [최종 구조: FinResponse&lt;A&gt;](#최종-구조-finresponsea)
-- [핵심 교훈](#핵심-교훈)
-- [트러블슈팅](#트러블슈팅)
-- [FAQ](#faq)
-- [참고 문서](#참고-문서)
-
----
-
 ## 요약
 
 ### 주요 명령

@@ -5,34 +5,6 @@ title: "Port 아키텍처와 정의"
 이 문서는 Functorium 프레임워크에서 Port 아키텍처의 설계 원칙과 Port 인터페이스 정의 방법을 다루는 가이드입니다.
 Adapter 구현, Pipeline 생성, DI 등록, 테스트는 별도 문서를 참고하십시오.
 
-## 목차
-
-- [요약](#요약)
-- [왜 Port-Adapter 아키텍처인가](#왜-port-adapter-아키텍처인가)
-  - [DDD에서 Anti-Corruption Layer의 역할](#ddd에서-anti-corruption-layer의-역할)
-  - [도메인 순수성 보호: 외부 의존성 격리](#도메인-순수성-보호-외부-의존성-격리)
-  - [Hexagonal Architecture와의 관계](#hexagonal-architecture와의-관계)
-- [개요](#개요)
-  - [왜 Adapter 패턴을 사용하나요?](#왜-adapter-패턴을-사용하나요)
-  - [핵심 특징](#핵심-특징)
-  - [Adapter 유형](#adapter-유형)
-  - [구현 라이프사이클 개요](#구현-라이프사이클-개요)
-  - [단계별 소속 레이어/프로젝트](#단계별-소속-레이어프로젝트)
-- [IObservablePort 인터페이스](#iobservableport-인터페이스)
-  - [인터페이스 계층 구조](#인터페이스-계층-구조)
-  - [RequestCategory 값 가이드](#requestcategory-값-가이드)
-- [Activity 1: Port 인터페이스 정의](#activity-1-port-인터페이스-정의)
-  - [위치 규칙](#위치-규칙)
-  - [Port 정의 체크리스트](#port-정의-체크리스트)
-  - [유형별 Port 정의 패턴](#유형별-port-정의-패턴)
-  - [Port Request/Response 설계](#port-requestresponse-설계)
-  - [Repository 인터페이스 설계 원칙](#repository-인터페이스-설계-원칙)
-- [트러블슈팅](#트러블슈팅)
-- [FAQ](#faq)
-- [참고 문서](#참고-문서)
-
----
-
 ## 요약
 
 ### 주요 명령

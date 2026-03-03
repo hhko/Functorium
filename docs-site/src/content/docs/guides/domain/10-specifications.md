@@ -4,22 +4,6 @@ title: "Specification 패턴"
 
 이 문서는 Functorium 프레임워크에서 Specification 패턴을 정의하고 사용하는 방법을 설명합니다.
 
-## 목차
-
-- [요약](#요약)
-- [왜 Specification 패턴인가](#왜-specification-패턴인가)
-- [Specification이란 무엇인가 (WHAT)](#specification이란-무엇인가-what)
-- [Specification 구현 (HOW)](#specification-구현-how)
-- [Repository에서 사용 (HOW)](#repository에서-사용-how)
-- [Usecase에서 사용 (HOW)](#usecase에서-사용-how)
-- [테스트 패턴](#테스트-패턴)
-- [체크리스트](#체크리스트)
-- [트러블슈팅](#트러블슈팅)
-- [FAQ](#faq)
-- [참고 문서](#참고-문서)
-
----
-
 ## 요약
 
 ### 주요 명령

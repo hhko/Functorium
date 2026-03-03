@@ -5,26 +5,6 @@ title: "Functorium Metrics 매뉴얼"
 Functorium 프레임워크에서 메트릭을 수집하고 활용하여
 애플리케이션의 성능과 건강 상태를 모니터링하는 방법을 알아봅니다.
 
-## 목차
-
-- [요약](#요약)
-- [들어가며](#들어가며)
-- [메트릭의 기초](#메트릭의-기초)
-- [Functorium 메트릭 아키텍처](#functorium-메트릭-아키텍처)
-- [Meter와 Instrument 이해하기](#meter와-instrument-이해하기)
-- [태그 시스템 상세 가이드](#태그-시스템-상세-가이드)
-- [Application Layer 메트릭](#application-layer-메트릭)
-- [Adapter Layer 메트릭](#adapter-layer-메트릭)
-- [DomainEvent 메트릭](#domainevent-메트릭)
-- [에러 메트릭 이해하기](#에러-메트릭-이해하기)
-- [대시보드 구성하기](#대시보드-구성하기)
-- [실습: 메트릭 분석하기](#실습-메트릭-분석하기)
-- [트러블슈팅](#트러블슈팅)
-- [FAQ](#faq)
-- [TagList 성능 최적화](#taglist-성능-최적화)
-
----
-
 ## 요약
 
 ### 주요 명령

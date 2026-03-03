@@ -9,23 +9,6 @@ title: "Observability Specification"
 
 ![](../../../../assets/Functorium.Observability.png)
 
-## 목차
-
-- [요약](#요약)
-- [공통 사양](#공통-사양)
-- [Field/Tag 일관성](#fieldtag-일관성)
-- [Logging](#logging)
-- [Metrics](#metrics)
-- [Tracing](#tracing)
-- [OpenTelemetryOptions 설정](#opentelemetryoptions-설정)
-- [새 Usecase에 Observability 추가하기 (Quick Start)](#새-usecase에-observability-추가하기-quick-start)
-- [필드/태그 네이밍 규칙](#필드태그-네이밍-규칙)
-- [트러블슈팅](#트러블슈팅)
-- [FAQ](#faq)
-- [참고 문서](#참고-문서)
-
----
-
 ## 요약
 
 ### 주요 명령

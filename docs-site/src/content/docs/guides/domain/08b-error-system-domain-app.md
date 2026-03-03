@@ -4,18 +4,6 @@ title: "에러 시스템 — Domain/Application 에러"
 
 이 문서는 Domain/Application/Event 레이어별 에러 정의와 테스트 패턴을 다룹니다. 에러 처리의 기본 원칙과 네이밍 규칙은 [08a-error-system.md](./08a-error-system)을 참고하세요. Adapter 에러, Custom 에러, 테스트 모범 사례, 레이어별 체크리스트는 [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing)을 참고하세요.
 
-## 목차
-
-- [요약](#요약)
-- [Domain 에러](#domain-에러)
-- [Application 에러](#application-에러)
-- [Event 에러](#event-에러)
-- [트러블슈팅](#트러블슈팅)
-- [FAQ](#faq)
-- [참고 문서](#참고-문서)
-
----
-
 ## 요약
 
 ### 주요 명령

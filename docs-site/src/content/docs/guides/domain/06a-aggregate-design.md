@@ -4,20 +4,6 @@ title: "Aggregate 설계 (WHY + WHAT)"
 
 이 문서는 DDD 전술적 설계 관점에서 Aggregate 설계 원칙과 개념을 다룹니다. Entity/Aggregate 구현 방법은 [06b-entity-aggregate-core.md](./06b-entity-aggregate-core)를 참조하세요.
 
-## 목차
-
-- [요약](#요약)
-- [왜 Aggregate인가](#왜-aggregate인가)
-- [Aggregate 설계 규칙](#aggregate-설계-규칙)
-- [Aggregate vs Entity vs Value Object 구분](#aggregate-vs-entity-vs-value-object-구분)
-- [Aggregate 경계 설정 실전 예제](#aggregate-경계-설정-실전-예제)
-- [안티패턴](#안티패턴)
-- [트러블슈팅](#트러블슈팅)
-- [FAQ](#faq)
-- [참고 문서](#참고-문서)
-
----
-
 ## 요약
 
 ### 주요 명령

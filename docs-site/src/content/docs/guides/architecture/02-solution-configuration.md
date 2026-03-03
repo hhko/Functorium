@@ -2,29 +2,6 @@
 title: "솔루션 구성 가이드"
 ---
 
-## 목차
-
-- [요약](#요약)
-- [개요](#개요)
-- [솔루션 파일 (.slnx)](#솔루션-파일-slnx)
-- [global.json](#globaljson)
-- [Directory.Build.props](#directorybuildprops)
-- [Directory.Build.targets](#directorybuildtargets)
-- [Directory.Packages.props](#directorypackagesprops)
-- [.editorconfig](#editorconfig)
-- [.gitignore / .gitattributes](#gitignore--gitattributes)
-- [nuget.config](#nugetconfig)
-- [.config/dotnet-tools.json](#configdotnet-toolsjson)
-- [빌드 스크립트](#빌드-스크립트)
-- [중첩 구성 파일](#중첩-구성-파일)
-- [새 솔루션 구성 체크리스트](#새-솔루션-구성-체크리스트)
-- [PowerShell 스크립트 개발 표준](#powershell-스크립트-개발-표준)
-- [트러블슈팅](#트러블슈팅)
-- [FAQ](#faq)
-- [참고 문서](#참고-문서)
-
----
-
 ## 요약
 
 ### 주요 명령

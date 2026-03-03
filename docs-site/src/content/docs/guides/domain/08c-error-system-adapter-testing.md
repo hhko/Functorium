@@ -4,19 +4,6 @@ title: "에러 시스템 — Adapter 에러와 테스트"
 
 이 문서는 Adapter 에러, Custom 에러 정의, 테스트 모범 사례, 레이어별 체크리스트를 다룹니다. 에러 처리의 기본 원칙과 네이밍 규칙은 [08a-error-system.md](./08a-error-system)을 참고하세요. Domain/Application/Event 에러는 [08b-error-system-domain-app.md](./08b-error-system-domain-app)을 참고하세요.
 
-## 목차
-
-- [요약](#요약)
-- [Adapter 에러](#adapter-에러)
-- [Custom 에러](#custom-에러)
-- [테스트 모범 사례](#테스트-모범-사례)
-- [레이어별 요약 + 체크리스트](#레이어별-요약--체크리스트)
-- [트러블슈팅](#트러블슈팅)
-- [FAQ](#faq)
-- [참고 문서](#참고-문서)
-
----
-
 ## 요약
 
 ### 주요 명령

@@ -4,20 +4,6 @@ title: "Entity와 Aggregate 구현 — 고급 패턴"
 
 이 문서는 Entity/Aggregate의 고급 구현 패턴을 다룹니다. 핵심 패턴(클래스 계층, ID 시스템, 생성 패턴, 커맨드 메서드, 도메인 이벤트)은 [06b-entity-aggregate-core.md](./06b-entity-aggregate-core)를 참조하세요.
 
-## 목차
-
-- [요약](#요약)
-- [Cross-Aggregate 관계](#cross-aggregate-관계)
-- [부가 인터페이스](#부가-인터페이스)
-- [실전 예제](#실전-예제)
-- [체크리스트](#체크리스트)
-- [트러블슈팅](#트러블슈팅)
-- [FAQ](#faq)
-- [참고 문서](#참고-문서)
-- [Dictionary 조회 성능 팁](#dictionary-조회-성능-팁)
-
----
-
 ## 요약
 
 ### 주요 개념
