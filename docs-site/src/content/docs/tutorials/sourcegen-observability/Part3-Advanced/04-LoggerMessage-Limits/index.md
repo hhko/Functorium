@@ -1,5 +1,5 @@
 ---
-title: "04: LoggerMessage Limits"
+title: "LoggerMessage 제한"
 ---
 
 LoggerMessage.Define의 6-파라미터 제한과 fallback 전략을 보여줍니다.

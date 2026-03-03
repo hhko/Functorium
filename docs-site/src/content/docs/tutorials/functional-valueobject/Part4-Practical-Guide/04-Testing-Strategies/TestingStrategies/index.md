@@ -1,5 +1,5 @@
 ---
-title: "4.4 테스트 전략"
+title: "테스트 전략"
 ---
 
 > **Part 4: 실전 가이드** | [← 이전: 4.3 CQRS 통합](../../03-CQRS-Integration/CqrsIntegration/) | [목차](../../../) | [다음: Part 5 도메인별 실전 예제 →](../../../05-domain-examples/01-Ecommerce-Domain/EcommerceDomain/)

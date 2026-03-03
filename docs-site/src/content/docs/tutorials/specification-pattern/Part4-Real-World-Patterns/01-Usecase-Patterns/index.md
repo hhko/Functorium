@@ -1,5 +1,5 @@
 ---
-title: "Part 4 - Chapter 13: Usecase Patterns"
+title: "유스케이스 패턴"
 ---
 
 ## 개요

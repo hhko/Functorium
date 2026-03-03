@@ -1,5 +1,5 @@
 ---
-title: "Part 5 - Chapter 18: 고객 관리 시스템"
+title: "고객 관리 시스템"
 ---
 
 > **Part 5: 도메인 예제** | [← 이전: 17장 전자상거래 상품 필터링](../01-Ecommerce-Product-Filtering/) | [← 목차로](../../)

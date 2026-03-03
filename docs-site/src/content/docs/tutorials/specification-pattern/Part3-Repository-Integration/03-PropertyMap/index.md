@@ -1,5 +1,5 @@
 ---
-title: "Part 3 - Chapter 11: PropertyMap"
+title: "PropertyMap"
 ---
 
 > **Part 3: Repository 연동** | [이전: 10장 InMemory 구현 <-](../02-InMemory-Implementation/) | [다음: 12장 EF Core 구현 ->](../04-EfCore-Implementation/)

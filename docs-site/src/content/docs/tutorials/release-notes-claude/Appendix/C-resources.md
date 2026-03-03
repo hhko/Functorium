@@ -1,4 +1,4 @@
 ---
-title: "Resources"
+title: "참고 자료"
 ---
 

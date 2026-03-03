@@ -1,5 +1,5 @@
 ---
-title: "Part 5 - Chapter 20: 고객 관리"
+title: "고객 관리"
 ---
 
 > **Part 5: 도메인별 실전 예제** | [← 이전: 19장 E-commerce Order Management →](../01-Ecommerce-Order-Management) | [다음: 21장 Inventory Management →](../03-Inventory-Management)

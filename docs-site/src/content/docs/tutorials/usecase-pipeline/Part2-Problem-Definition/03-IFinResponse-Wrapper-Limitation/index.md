@@ -1,5 +1,5 @@
 ---
-title: "7장: IFinResponse 래퍼의 한계"
+title: "IFinResponse 래퍼의 한계"
 ---
 
 ## 개요

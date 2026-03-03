@@ -23,7 +23,7 @@
     <ProjectReference Include="..\..\05-ValueObject-Composite\ValueObjectComposite\ValueObjectComposite.csproj" />
     <ProjectReference Include="..\..\06-ComparableValueObject-Composite\ComparableValueObjectComposite\ComparableValueObjectComposite.csproj" />
     <ProjectReference Include="..\..\07-TypeSafeEnum\TypeSafeEnum\TypeSafeEnum.csproj" />
-    <ProjectReference Include="..\..\..\..\..\..\..\..\Src\Functorium.Testing\Functorium.Testing.csproj" />
+    <ProjectReference Include="..\..\..\..\..\Src\Functorium.Testing\Functorium.Testing.csproj" />
   </ItemGroup>
 
 </Project>

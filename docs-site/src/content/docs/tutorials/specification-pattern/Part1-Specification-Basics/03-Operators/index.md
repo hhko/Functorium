@@ -1,5 +1,5 @@
 ---
-title: "Part 1 - Chapter 3: 연산자 오버로딩"
+title: "연산자 오버로딩"
 ---
 
 > **Part 1: Specification 기초** | [← 이전: 2장 조합](../02-Composition/) | [다음: 4장 All 항등원 →](../04-All-Identity/)

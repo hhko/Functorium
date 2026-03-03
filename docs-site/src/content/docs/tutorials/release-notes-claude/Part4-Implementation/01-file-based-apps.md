@@ -1,5 +1,5 @@
 ---
-title: "5.1 .NET 10 File-based App 소개"
+title: ".NET 10 파일 기반 앱 소개"
 ---
 
 > 이 절에서는 .NET 10에서 도입된 File-based App(파일 기반 앱)의 개념과 사용 방법을 알아봅니다.

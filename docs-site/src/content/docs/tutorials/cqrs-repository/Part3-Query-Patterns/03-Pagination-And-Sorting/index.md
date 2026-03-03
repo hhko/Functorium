@@ -1,5 +1,5 @@
 ---
-title: "Part 3 - Chapter 11: Pagination and Sorting"
+title: "페이지네이션과 정렬"
 ---
 
 > **Part 3: Query 측 — 읽기 전용 패턴** | [← 이전: 10장 DTO Separation →](../02-DTO-Separation/) | [다음: 12장 InMemory Query Adapter →](../04-InMemory-Query-Adapter/)

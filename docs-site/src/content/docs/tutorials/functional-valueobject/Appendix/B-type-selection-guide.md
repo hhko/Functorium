@@ -1,5 +1,5 @@
 ---
-title: "부록 B. 프레임워크 타입 선택 가이드"
+title: "프레임워크 타입 선택 가이드"
 ---
 
 > **부록** | [← 이전: A. LanguageExt 참조](A-languageext-reference.md) | [목차](../) | [다음: C. 용어집 →](C-glossary.md)

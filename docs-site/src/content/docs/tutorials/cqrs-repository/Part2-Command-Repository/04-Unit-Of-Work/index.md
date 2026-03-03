@@ -1,5 +1,5 @@
 ---
-title: "Part 2 - Chapter 8: Unit of Work"
+title: "작업 단위"
 ---
 
 > **Part 2: Command 측 -- Repository 패턴** | [← 이전: 7장 EF Core Repository](../03-EfCore-Repository/) | [다음: 9장 QueryPort Interface →](../../Part3-Query-Patterns/01-QueryPort-Interface/)

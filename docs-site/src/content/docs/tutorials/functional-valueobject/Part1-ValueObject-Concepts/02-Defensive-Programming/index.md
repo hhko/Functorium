@@ -1,5 +1,5 @@
 ---
-title: "2장: 방어적 프로그래밍의 두 가지 구현 방법"
+title: "방어적 프로그래밍의 두 가지 구현 방법"
 ---
 
 > **Part 1: 값 객체 개념 이해** | [← 이전: 1장 기본 나눗셈](../../01-Basic-Divide/BasicDivide/) | [목차](../../../) | [다음: 3장 함수형 결과 타입 →](../../03-Functional-Result/FunctionalResult/)

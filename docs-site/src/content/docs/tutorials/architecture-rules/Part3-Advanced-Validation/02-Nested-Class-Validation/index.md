@@ -1,5 +1,5 @@
 ---
-title: "Chapter 10: 중첩 클래스 검증 (Nested Class Validation)"
+title: "중첩 클래스 검증"
 ---
 
 ## 소개

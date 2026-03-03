@@ -1,5 +1,5 @@
 ---
-title: "Part 1 - Chapter 3: Domain Events"
+title: "도메인 이벤트"
 ---
 
 > **Part 1: 도메인 엔티티 기초** | [← 이전: 2장 Aggregate Root](../02-Aggregate-Root/) | [다음: 4장 Entity Interfaces →](../04-Entity-Interfaces/)

@@ -1,5 +1,5 @@
 ---
-title: "05: Custom Generator Template"
+title: "커스텀 생성기 템플릿"
 ---
 
 커스텀 생성기 템플릿 패턴(AutoMapper 예제)을 보여줍니다.

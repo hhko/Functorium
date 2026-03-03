@@ -2,7 +2,7 @@
 title: "값 객체: 열거형·검증·실전 패턴"
 ---
 
-이 문서는 값 객체의 열거형 패턴, 실전 예제, Application Layer 검증 병합, FAQ를 다룹니다. 핵심 개념과 기반 클래스는 [05a-value-objects.md](./05a-value-objects.md)을 참고하세요.
+이 문서는 값 객체의 열거형 패턴, 실전 예제, Application Layer 검증 병합, FAQ를 다룹니다. 핵심 개념과 기반 클래스는 [05a-value-objects.md](./05a-value-objects)을 참고하세요.
 
 ## 목차
 
@@ -616,8 +616,8 @@ public class CreateProductValidator : AbstractValidator<CreateProductRequest>
 
 ## 참고 문서
 
-- [에러 시스템: 기초와 네이밍](./08a-error-system.md) - 에러 처리 기본 원칙과 네이밍 규칙
-- [에러 시스템: Domain/Application 에러](./08b-error-system-domain-app.md) - Domain/Application 에러 정의 및 테스트 패턴
-- [단위 테스트 가이드](./15a-unit-testing.md)
+- [에러 시스템: 기초와 네이밍](./08a-error-system) - 에러 처리 기본 원칙과 네이밍 규칙
+- [에러 시스템: Domain/Application 에러](./08b-error-system-domain-app) - Domain/Application 에러 정의 및 테스트 패턴
+- [단위 테스트 가이드](../testing/15a-unit-testing)
 - [LanguageExt](https://github.com/louthy/language-ext)
 - [Ardalis.SmartEnum](https://github.com/ardalis/SmartEnum)

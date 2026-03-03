@@ -1,5 +1,5 @@
 ---
-title: "Part 2 - Chapter 7: Value Object Primitive 변환"
+title: "값 객체 프리미티브 변환"
 ---
 
 > **Part 2: Expression Specification** | [← 목차로](../../../)

@@ -1,5 +1,5 @@
 ---
-title: "02: Entity Id Generator"
+title: "엔티티 ID 생성기"
 ---
 
 강타입 EntityId를 자동 생성하는 소스 생성기입니다.

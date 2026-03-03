@@ -1,5 +1,5 @@
 ---
-title: "Part 4 - Chapter 18: Transaction Pipeline"
+title: "트랜잭션 파이프라인"
 ---
 
 > **Part 4: CQRS Usecase 통합** | [← 이전: 17장 Domain Event Flow](../04-Domain-Event-Flow/) | [다음: 19장 E-commerce Order Management →](../../Part5-Domain-Examples/01-Ecommerce-Order-Management/)

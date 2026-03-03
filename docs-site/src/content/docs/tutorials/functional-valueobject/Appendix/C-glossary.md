@@ -1,5 +1,5 @@
 ---
-title: "부록 C. 용어집"
+title: "용어집"
 ---
 
 > **부록** | [← 이전: B. 타입 선택 가이드](B-type-selection-guide.md) | [목차](../) | [다음: D. 참고 자료 →](D-references.md)

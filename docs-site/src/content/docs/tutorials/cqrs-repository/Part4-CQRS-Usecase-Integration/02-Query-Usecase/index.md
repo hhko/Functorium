@@ -1,5 +1,5 @@
 ---
-title: "Part 4 - Chapter 15: Query Usecase"
+title: "쿼리 유스케이스"
 ---
 
 > **Part 4: CQRS Usecase 통합** | [← 이전: 14장 Command Usecase](../01-Command-Usecase/) | [다음: 16장 FinT to FinResponse →](../03-FinT-To-FinResponse/)

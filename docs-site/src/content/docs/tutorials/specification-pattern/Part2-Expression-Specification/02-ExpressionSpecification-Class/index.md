@@ -1,5 +1,5 @@
 ---
-title: "Part 2 - Chapter 6: ExpressionSpecification 클래스"
+title: "ExpressionSpecification 클래스"
 ---
 
 > **Part 2: Expression Specification** | [← 목차로](../../../)

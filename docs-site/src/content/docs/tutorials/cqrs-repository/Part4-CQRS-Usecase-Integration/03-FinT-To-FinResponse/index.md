@@ -1,5 +1,5 @@
 ---
-title: "Part 4 - Chapter 16: FinT to FinResponse"
+title: "FinT에서 FinResponse로"
 ---
 
 > **Part 4: CQRS Usecase 통합** | [← 이전: 15장 Query Usecase](../02-Query-Usecase/) | [다음: 17장 Domain Event Flow →](../04-Domain-Event-Flow/)

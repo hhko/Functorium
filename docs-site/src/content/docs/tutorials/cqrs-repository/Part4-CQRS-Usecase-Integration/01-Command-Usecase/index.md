@@ -1,5 +1,5 @@
 ---
-title: "Part 4 - Chapter 14: Command Usecase"
+title: "커맨드 유스케이스"
 ---
 
 > **Part 4: CQRS Usecase 통합** | [← 이전: 13장 Dapper Query Adapter](../../Part3-Query-Patterns/05-Dapper-Query-Adapter/) | [다음: 15장 Query Usecase →](../02-Query-Usecase/)

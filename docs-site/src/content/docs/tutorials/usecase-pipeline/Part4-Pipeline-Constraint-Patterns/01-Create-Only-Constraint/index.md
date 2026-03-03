@@ -1,5 +1,5 @@
 ---
-title: "14장: Create-Only 제약 (Validation/Exception)"
+title: "Create-Only 제약 (Validation/Exception)"
 ---
 
 ## 개요

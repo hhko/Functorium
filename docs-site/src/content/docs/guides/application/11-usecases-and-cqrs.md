@@ -53,7 +53,7 @@ CQRS의 이점을 Adapter 계층에서 실현합니다:
 | **반환 타입** | Domain Entity (`FinT<IO, T>`) | DTO (`FinT<IO, PagedResult<TDto>>`) |
 | **Port 위치** | Domain Layer | Application Layer |
 
-> 상세 구현은 [13-adapters.md](./13-adapters.md) §2.6 Query Adapter 참조
+> 상세 구현은 [13-adapters.md](../adapter/13-adapters) §2.6 Query Adapter 참조
 
 ### 유스케이스 = 비즈니스 의도의 명시적 표현
 
@@ -812,7 +812,7 @@ public sealed class GetAllProductsQuery
 
 ## 도메인 이벤트
 
-도메인 이벤트 발행과 Event Handler 구현에 대한 내용은 [07-domain-events.md](./07-domain-events.md)를 참조하세요.
+도메인 이벤트 발행과 Event Handler 구현에 대한 내용은 [07-domain-events.md](../domain/07-domain-events)를 참조하세요.
 
 ---
 
@@ -910,7 +910,7 @@ public interface IUnitOfWork : IObservablePort
 - `IObservablePort`를 상속하므로 Pipeline 자동 생성 및 관찰성을 지원합니다.
 - EF Core 환경에서는 `DbContext.SaveChangesAsync()`를 호출하고, InMemory 환경에서는 no-op입니다.
 
-> **참조**: UoW Adapter 구현(EfCoreUnitOfWork, InMemoryUnitOfWork)은 [13-adapters.md](./13-adapters.md)를 참조하세요.
+> **참조**: UoW Adapter 구현(EfCoreUnitOfWork, InMemoryUnitOfWork)은 [13-adapters.md](../adapter/13-adapters)를 참조하세요.
 
 ---
 
@@ -1137,15 +1137,15 @@ public sealed record Response(
 
 | 문서 | 설명 |
 |------|------|
-| [05a-value-objects.md](./05a-value-objects.md) | 값 객체 구현 패턴 |
-| [06b-entity-aggregate-core.md](./06b-entity-aggregate-core.md) | Entity 핵심 패턴 및 Create 패턴 |
-| [07-domain-events.md](./07-domain-events.md) | 도메인 이벤트 발행 및 Event Handler |
-| [08a-error-system.md](./08a-error-system.md) | 에러 시스템: 기초와 네이밍 |
-| [08b-error-system-domain-app.md](./08b-error-system-domain-app.md) | 에러 시스템: Domain/Application 에러 |
-| [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing.md) | 에러 시스템: Adapter 에러와 테스트 |
-| [10-specifications.md](./10-specifications.md) | Specification 패턴 (Usecase에서 활용) |
-| [12-ports.md](./12-ports.md) | Repository 인터페이스 설계 |
-| [15a-unit-testing.md](./15a-unit-testing.md) | Usecase 테스트 작성 방법 |
+| [05a-value-objects.md](../domain/05a-value-objects) | 값 객체 구현 패턴 |
+| [06b-entity-aggregate-core.md](../domain/06b-entity-aggregate-core) | Entity 핵심 패턴 및 Create 패턴 |
+| [07-domain-events.md](../domain/07-domain-events) | 도메인 이벤트 발행 및 Event Handler |
+| [08a-error-system.md](../domain/08a-error-system) | 에러 시스템: 기초와 네이밍 |
+| [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) | 에러 시스템: Domain/Application 에러 |
+| [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) | 에러 시스템: Adapter 에러와 테스트 |
+| [10-specifications.md](../domain/10-specifications) | Specification 패턴 (Usecase에서 활용) |
+| [12-ports.md](../adapter/12-ports) | Repository 인터페이스 설계 |
+| [15a-unit-testing.md](../testing/15a-unit-testing) | Usecase 테스트 작성 방법 |
 
 **외부 참고:**
 - [Mediator](https://github.com/martinothamar/Mediator) - 기반 라이브러리

@@ -1,5 +1,5 @@
 ---
-title: "부록 A: API 레퍼런스"
+title: "API 레퍼런스"
 ---
 
 ## ClassValidator

@@ -1,5 +1,5 @@
 ---
-title: "Part 3 - Chapter 10: DTO Separation"
+title: "DTO 분리"
 ---
 
 > **Part 3: Query 측 — 읽기 전용 패턴** | [← 이전: 9장 IQueryPort Interface →](../01-QueryPort-Interface/) | [다음: 11장 Pagination and Sorting →](../03-Pagination-And-Sorting/)

@@ -521,7 +521,7 @@ git commit
 
 ## 참고 문서
 
-- [관련 가이드](./XX-related.md)
+- [관련 가이드](./XX-related)
 ````
 
 
@@ -603,7 +603,7 @@ git commit
 상대 경로로 링크하세요:
 
 ```markdown
-[단위 테스트 가이드](./15a-unit-testing.md)를 참조하세요.
+[단위 테스트 가이드](../testing/15a-unit-testing)를 참조하세요.
 
-자세한 내용은 [에러 시스템](./08a-error-system.md#섹션)을 확인하세요.
+자세한 내용은 [에러 시스템](../domain/08a-error-system#섹션)을 확인하세요.
 ```

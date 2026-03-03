@@ -1,5 +1,5 @@
 ---
-title: "13장: FinResponse<A> Discriminated Union"
+title: "FinResponse<A> Discriminated Union"
 ---
 
 ## 개요

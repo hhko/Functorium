@@ -1,5 +1,5 @@
 ---
-title: "B. Pipeline 제약 조건 vs 대안 비교"
+title: "파이프라인 제약 조건 vs 대안 비교"
 ---
 
 ## 개요

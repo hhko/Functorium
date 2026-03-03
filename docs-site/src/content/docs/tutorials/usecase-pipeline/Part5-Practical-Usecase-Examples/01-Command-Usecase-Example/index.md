@@ -1,5 +1,5 @@
 ---
-title: "18장: Command Usecase 완전 예제"
+title: "Command Usecase 완전 예제"
 ---
 
 ## 개요

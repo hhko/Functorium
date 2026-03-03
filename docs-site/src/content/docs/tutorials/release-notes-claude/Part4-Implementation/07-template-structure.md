@@ -1,5 +1,5 @@
 ---
-title: "6.1 TEMPLATE.md 구조"
+title: "TEMPLATE.md 구조"
 ---
 
 > 이 절에서는 릴리스 노트 생성에 사용되는 TEMPLATE.md 파일의 구조와 작성 방법을 알아봅니다.

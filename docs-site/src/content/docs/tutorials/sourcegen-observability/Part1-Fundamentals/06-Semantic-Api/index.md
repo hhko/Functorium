@@ -1,5 +1,5 @@
 ---
-title: "06: Semantic API"
+title: "의미 API"
 ---
 
 Roslyn Semantic API로 심볼 정보를 분석합니다.

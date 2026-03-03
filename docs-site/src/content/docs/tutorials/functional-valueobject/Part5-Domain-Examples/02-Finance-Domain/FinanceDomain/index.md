@@ -1,5 +1,5 @@
 ---
-title: "5.2 금융 도메인"
+title: "금융 도메인"
 ---
 
 > **Part 5: 도메인별 실전 예제** | [← 이전: 5.1 이커머스 도메인](../../01-Ecommerce-Domain/EcommerceDomain/) | [목차](../../../) | [다음: 5.3 사용자 관리 도메인 →](../../03-User-Management-Domain/UserManagementDomain/)

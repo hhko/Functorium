@@ -1,5 +1,5 @@
 ---
-title: "부록 D. CQRS 안티패턴"
+title: "CQRS 안티패턴"
 ---
 
 > **부록** | [<- 이전: C. FinT / FinResponse 타입 참조](C-fint-finresponse-reference.md) | [목차](../) | [다음: E. 용어집 ->](E-glossary.md)

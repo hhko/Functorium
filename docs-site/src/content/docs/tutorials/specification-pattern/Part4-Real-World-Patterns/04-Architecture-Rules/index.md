@@ -1,5 +1,5 @@
 ---
-title: "Part 4 - Chapter 16: Architecture Rules"
+title: "아키텍처 규칙"
 ---
 
 ## 개요

@@ -1,5 +1,5 @@
 ---
-title: "Part 1 - Chapter 4: Entity Interfaces"
+title: "엔티티 인터페이스"
 ---
 
 > **Part 1: 도메인 엔티티 기초** | [← 이전: 3장 Domain Events](../03-Domain-Events/) | [다음: 5장 Repository Interface →](../../Part2-Command-Repository/01-Repository-Interface/)

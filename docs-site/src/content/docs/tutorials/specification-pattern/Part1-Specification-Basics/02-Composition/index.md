@@ -1,5 +1,5 @@
 ---
-title: "Part 1 - Chapter 2: Specification 조합"
+title: "명세 조합"
 ---
 
 > **Part 1: Specification 기초** | [← 이전: 1장 첫 번째 Specification](../01-First-Specification/) | [다음: 3장 연산자 →](../03-Operators/)

@@ -91,8 +91,8 @@ _repository.GetById(Arg.Any<ProductId>())
 
 | 기능 | 참조 가이드 |
 |---|---|
-| `HostTestFixture<TProgram>` — HTTP 엔드포인트 통합 테스트 | [01-project-structure.md](./01-project-structure.md) |
-| `ShouldBeDomainError`, `ShouldBeApplicationError` 등 에러 Assertion | [08b-error-system-domain-app.md](./08b-error-system-domain-app.md), [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing.md) |
+| `HostTestFixture<TProgram>` — HTTP 엔드포인트 통합 테스트 | [01-project-structure.md](../architecture/01-project-structure) |
+| `ShouldBeDomainError`, `ShouldBeApplicationError` 등 에러 Assertion | [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app), [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) |
 
 ---
 
@@ -163,7 +163,7 @@ _repository.GetById(Arg.Any<ProductId>())
 | 일반 `ProjectReference` | 생성기 타입을 `new EntityIdGenerator()`처럼 인스턴스화 |
 | `OutputItemType="Analyzer"` | 빌드 시 `[GenerateEntityId]` 등의 어트리뷰트로 코드 생성 활성화 |
 
-> **참고**: 통합 테스트에서 Host 프로젝트를 참조할 때 Mediator SourceGenerator 중복을 방지하려면 `ExcludeAssets="analyzers"`를 추가합니다. 자세한 내용은 [01-project-structure.md](./01-project-structure.md)의 FAQ를 참조하세요.
+> **참고**: 통합 테스트에서 Host 프로젝트를 참조할 때 Mediator SourceGenerator 중복을 방지하려면 `ExcludeAssets="analyzers"`를 추가합니다. 자세한 내용은 [01-project-structure.md](../architecture/01-project-structure)의 FAQ를 참조하세요.
 
 ### Using.cs 권장 패턴
 
@@ -828,8 +828,8 @@ public async Task Job_ShouldThrow_WhenTimeout()
 
 ## 참고 문서
 
-- [15a-unit-testing.md](./15a-unit-testing.md) — 단위 테스트 규칙 (명명, AAA 패턴, MTP 설정)
-- [08b-error-system-domain-app.md](./08b-error-system-domain-app.md) — Domain/Application 에러 Assertion 패턴
-- [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing.md) — Adapter 에러 Assertion 및 범용 에러 Assertion
-- [01-project-structure.md](./01-project-structure.md) — 프로젝트 구성 (HostTestFixture, 통합 테스트)
-- [18a-observability-spec.md](./18a-observability-spec.md) — Observability 사양 (로그 필드 정의)
+- [15a-unit-testing.md](./15a-unit-testing) — 단위 테스트 규칙 (명명, AAA 패턴, MTP 설정)
+- [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) — Domain/Application 에러 Assertion 패턴
+- [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) — Adapter 에러 Assertion 및 범용 에러 Assertion
+- [01-project-structure.md](../architecture/01-project-structure) — 프로젝트 구성 (HostTestFixture, 통합 테스트)
+- [18a-observability-spec.md](../observability/18a-observability-spec) — Observability 사양 (로그 필드 정의)

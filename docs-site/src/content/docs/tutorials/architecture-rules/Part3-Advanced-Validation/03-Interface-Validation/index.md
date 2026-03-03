@@ -1,5 +1,5 @@
 ---
-title: "Chapter 11: 인터페이스 검증 (Interface Validation)"
+title: "인터페이스 검증"
 ---
 
 ## 소개

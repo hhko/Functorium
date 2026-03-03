@@ -1,5 +1,5 @@
 ---
-title: "Part 1 - Chapter 1: 첫 번째 Specification"
+title: "첫 번째 명세"
 ---
 
 > **Part 1: Specification 기초** | [← 목차로](../../../) | [다음: 2장 조합 →](../02-Composition/)

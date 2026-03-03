@@ -655,7 +655,7 @@ services
 
 ---
 
-> 필드/태그 네이밍 규칙은 [18a-observability-spec.md](./18a-observability-spec.md)를 참조하세요.
+> 필드/태그 네이밍 규칙은 [18a-observability-spec.md](./18a-observability-spec)를 참조하세요.
 
 ## Logger 메서드 네이밍 규칙
 
@@ -789,10 +789,10 @@ Functorium은 **내부 일관성 우선 원칙**을 따릅니다. `LoggingConfig
 
 ## 참고 문서
 
-- [18a-observability-spec.md](./18a-observability-spec.md) — Observability 사양 (Field/Tag, Meter, 메시지 템플릿)
-- [19-observability-logging.md](./19-observability-logging.md) — Observability 로깅 상세
-- [20-observability-metrics.md](./20-observability-metrics.md) — Observability 메트릭 상세
-- [21-observability-tracing.md](./21-observability-tracing.md) — Observability 트레이싱 상세
+- [18a-observability-spec.md](./18a-observability-spec) — Observability 사양 (Field/Tag, Meter, 메시지 템플릿)
+- [19-observability-logging.md](./19-observability-logging) — Observability 로깅 상세
+- [20-observability-metrics.md](./20-observability-metrics) — Observability 메트릭 상세
+- [21-observability-tracing.md](./21-observability-tracing) — Observability 트레이싱 상세
 - [OpenTelemetry Specification](https://opentelemetry.io/docs/specs/)
 - [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/)
 - [OpenTelemetry .NET](https://github.com/open-telemetry/opentelemetry-dotnet)

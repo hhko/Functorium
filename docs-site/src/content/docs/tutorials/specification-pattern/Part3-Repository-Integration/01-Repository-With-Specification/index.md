@@ -1,5 +1,5 @@
 ---
-title: "Part 3 - Chapter 9: Repository와 Specification"
+title: "리포지토리와 명세"
 ---
 
 > **Part 3: Repository 연동** | [다음: 10장 InMemory 구현 ->](../02-InMemory-Implementation/)

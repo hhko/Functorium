@@ -1,5 +1,5 @@
 ---
-title: "Part 4 - Chapter 14: Dynamic Filter Builder"
+title: "동적 필터 빌더"
 ---
 
 ## 개요

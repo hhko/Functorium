@@ -1,5 +1,5 @@
 ---
-title: "부록 E. FAQ"
+title: "FAQ"
 ---
 
 > **부록** | [← 이전: D. 참고 자료](D-references.md) | [목차](../)

@@ -1,5 +1,5 @@
 ---
-title: "Part 1 - Chapter 4: All 항등원과 동적 필터"
+title: "All 항등원과 동적 필터"
 ---
 
 > **Part 1: Specification 기초** | [← 이전: 3장 연산자](../03-Operators/) | [다음: Part 2 →](../../Part2-Expression-Specification/)

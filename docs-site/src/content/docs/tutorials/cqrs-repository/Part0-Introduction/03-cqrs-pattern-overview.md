@@ -1,5 +1,5 @@
 ---
-title: "0.3 CQRS 패턴 개요"
+title: "CQRS 패턴 개요"
 ---
 
 > **Part 0: 서론** | [<- 이전: 0.2 환경 설정](02-prerequisites-and-setup.md) | [목차](../) | [다음: 1장 Entity와 Identity ->](../Part1-Domain-Entity-Foundations/01-Entity-And-Identity/)

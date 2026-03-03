@@ -1,5 +1,5 @@
 ---
-title: "2장: 가시성과 한정자"
+title: "가시성과 한정자"
 ---
 
 > **Part 1: ClassValidator 기초** | [← 이전: 1장 첫 번째 아키텍처 테스트](../01-First-Architecture-Test/) | [다음: 3장 네이밍 규칙 →](../03-Naming-Rules/)

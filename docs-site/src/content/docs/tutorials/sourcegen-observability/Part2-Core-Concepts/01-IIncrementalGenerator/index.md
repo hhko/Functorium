@@ -1,5 +1,5 @@
 ---
-title: "01: IIncrementalGenerator"
+title: "IIncrementalGenerator"
 ---
 
 IIncrementalGenerator 인터페이스의 최소 구현과 파이프라인 설정을 보여줍니다.

@@ -1,5 +1,5 @@
 ---
-title: "부록 C: FAQ"
+title: "FAQ"
 ---
 
 ## 일반

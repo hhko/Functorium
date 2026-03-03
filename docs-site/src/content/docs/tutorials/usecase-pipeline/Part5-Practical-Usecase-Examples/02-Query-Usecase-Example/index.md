@@ -1,5 +1,5 @@
 ---
-title: "19장: Query Usecase 완전 예제"
+title: "Query Usecase 완전 예제"
 ---
 
 ## 개요

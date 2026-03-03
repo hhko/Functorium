@@ -1,5 +1,5 @@
 ---
-title: "8장: 값 기반 크기 비교하기"
+title: "값 기반 크기 비교하기"
 ---
 
 > **Part 1: 값 객체 개념 이해** | [← 이전: 7장 값 기반 동등성](../../07-Value-Equality/ValueEquality/) | [목차](../../../) | [다음: 9장 생성/검증 분리 →](../../09-Create-Validate-Separation/CreateValidateSeparation/)

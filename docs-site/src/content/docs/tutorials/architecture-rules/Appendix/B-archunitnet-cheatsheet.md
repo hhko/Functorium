@@ -1,5 +1,5 @@
 ---
-title: "부록 B: ArchUnitNET 치트시트"
+title: "ArchUnitNET 치트시트"
 ---
 
 ## 기본 구조

@@ -1,5 +1,5 @@
 ---
-title: "Part 4 - Chapter 15: Testing Strategies"
+title: "테스트 전략"
 ---
 
 ## 개요

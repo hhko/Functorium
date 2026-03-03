@@ -1,5 +1,5 @@
 ---
-title: "6.2 component-priority.json 설정"
+title: "component-priority.json 설정"
 ---
 
 > 이 절에서는 분석 대상 컴포넌트를 설정하는 component-priority.json 파일을 알아봅니다.

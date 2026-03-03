@@ -1,5 +1,5 @@
 ---
-title: "0.3 Usecase Pipeline 아키텍처 개요"
+title: "유스케이스 파이프라인 아키텍처 개요"
 ---
 
 ## Mediator Pipeline이란?

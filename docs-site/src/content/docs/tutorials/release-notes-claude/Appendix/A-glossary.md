@@ -1,4 +1,4 @@
 ---
-title: "Glossary"
+title: "용어집"
 ---
 

@@ -1,5 +1,5 @@
 ---
-title: "부록 A. Specification vs 대안 비교"
+title: "명세 vs 대안 비교"
 ---
 
 > **부록** | [목차](../) | [다음: B. 안티패턴 →](B-anti-patterns.md)

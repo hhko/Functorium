@@ -1,5 +1,5 @@
 ---
-title: "0.3 Specification 패턴 개요"
+title: "명세 패턴 개요"
 ---
 
 > **Part 0: 서론** | [← 이전: 0.2 사전 준비와 환경 설정](02-prerequisites-and-setup.md) | [목차](../) | [다음: 1장 첫 번째 Specification →](../Part1-Specification-Basics/01-First-Specification/)

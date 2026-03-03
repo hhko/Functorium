@@ -1,5 +1,5 @@
 ---
-title: "06: Verify Snapshot Testing"
+title: "Verify 스냅샷 테스트"
 ---
 
 Verify.Xunit 스냅샷 비교 패턴을 보여줍니다.

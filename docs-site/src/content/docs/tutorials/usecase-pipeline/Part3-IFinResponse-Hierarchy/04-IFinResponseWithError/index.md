@@ -1,5 +1,5 @@
 ---
-title: "12장: IFinResponseWithError 에러 접근"
+title: "IFinResponseWithError 에러 접근"
 ---
 
 ## 개요

@@ -1,5 +1,5 @@
 ---
-title: "Part 3 - Chapter 13: Dapper Query Adapter"
+title: "Dapper 쿼리 어댑터"
 ---
 
 > **Part 3: Query 측 — 읽기 전용 패턴** | [← 이전: 12장 InMemory Query Adapter →](../04-InMemory-Query-Adapter/) | [다음: 14장 Command Usecase →](../../Part4-CQRS-Usecase-Integration/01-Command-Usecase/)

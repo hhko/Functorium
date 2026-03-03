@@ -497,7 +497,7 @@ LINQ 기반 Usecase에서 `FinT<IO, Response>` 합성 후, `usecase.Run().RunAsy
 
 | 문서 | 설명 |
 |------|------|
-| [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) | Use Case와 CQRS (FinResponse 사용 패턴) |
+| [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) | Use Case와 CQRS (FinResponse 사용 패턴) |
 | [C# 11 Static Abstract Members](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-11#generic-math-support) | C# 11 static abstract 공식 문서 |
 | [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern) | Curiously Recurring Template Pattern |
 | [LanguageExt](https://github.com/louthy/language-ext) | Fin 타입 제공 라이브러리 |

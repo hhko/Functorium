@@ -1,5 +1,5 @@
 ---
-title: "12: Deterministic Output"
+title: "결정적 출력"
 ---
 
 정렬을 통한 결정적 출력 보장 패턴을 보여줍니다.

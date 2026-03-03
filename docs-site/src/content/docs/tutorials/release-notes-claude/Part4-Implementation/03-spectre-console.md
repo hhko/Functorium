@@ -1,5 +1,5 @@
 ---
-title: "5.3 Spectre.Console 패키지"
+title: "Spectre.Console 패키지"
 ---
 
 > 이 절에서는 풍부한 콘솔 UI를 제공하는 Spectre.Console 패키지 사용법을 알아봅니다.

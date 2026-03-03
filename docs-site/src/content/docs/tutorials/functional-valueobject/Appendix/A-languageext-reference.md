@@ -1,5 +1,5 @@
 ---
-title: "부록 A. LanguageExt 주요 타입 참조"
+title: "LanguageExt 주요 타입 참조"
 ---
 
 > **부록** | [← 이전: 5.4 일정/예약 도메인](../05-domain-examples/04-scheduling-domain.md) | [목차](../) | [다음: B. 프레임워크 타입 선택 가이드 →](B-type-selection-guide.md)

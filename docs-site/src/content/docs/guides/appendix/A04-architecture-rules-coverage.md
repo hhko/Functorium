@@ -503,20 +503,20 @@ private static readonly CompositeArchRule<Class> s_valueObjectCoreRule = new(
 
 ### Q7. SingleHost 예제에는 어떤 아키텍처 테스트가 있나요?
 
-`Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Architecture/`에 13개 테스트 클래스가 구현되어 있습니다. [16-testing-library.md](./16-testing-library.md)의 "SingleHost 아키텍처 테스트 인벤토리"를 참조하세요.
+`Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Architecture/`에 13개 테스트 클래스가 구현되어 있습니다. [16-testing-library.md](../testing/16-testing-library)의 "SingleHost 아키텍처 테스트 인벤토리"를 참조하세요.
 
 ---
 
 ## 참고 문서
 
-- [16-testing-library.md](./16-testing-library.md) — Functorium.Testing 라이브러리 가이드 (ArchitectureRules API 상세)
-- [01-project-structure.md](./01-project-structure.md) — 프로젝트 구조 (레이어 의존성, 네임스페이스)
-- [04-ddd-tactical-overview.md](./04-ddd-tactical-overview.md) — DDD 전술적 설계 개요
-- [05a-value-objects.md](./05a-value-objects.md) — 값 객체 규칙
-- [06b-entity-aggregate-core.md](./06b-entity-aggregate-core.md) — Entity/Aggregate 핵심 패턴
-- [07-domain-events.md](./07-domain-events.md) — 도메인 이벤트
-- [08a-error-system.md](./08a-error-system.md) — 에러 시스템
-- [09-domain-services.md](./09-domain-services.md) — 도메인 서비스
-- [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) — Usecase와 CQRS
-- [12-ports.md](./12-ports.md) — Port 아키텍처
-- [13-adapters.md](./13-adapters.md) — Adapter 구현
+- [16-testing-library.md](../testing/16-testing-library) — Functorium.Testing 라이브러리 가이드 (ArchitectureRules API 상세)
+- [01-project-structure.md](../architecture/01-project-structure) — 프로젝트 구조 (레이어 의존성, 네임스페이스)
+- [04-ddd-tactical-overview.md](../domain/04-ddd-tactical-overview) — DDD 전술적 설계 개요
+- [05a-value-objects.md](../domain/05a-value-objects) — 값 객체 규칙
+- [06b-entity-aggregate-core.md](../domain/06b-entity-aggregate-core) — Entity/Aggregate 핵심 패턴
+- [07-domain-events.md](../domain/07-domain-events) — 도메인 이벤트
+- [08a-error-system.md](../domain/08a-error-system) — 에러 시스템
+- [09-domain-services.md](../domain/09-domain-services) — 도메인 서비스
+- [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) — Usecase와 CQRS
+- [12-ports.md](../adapter/12-ports) — Port 아키텍처
+- [13-adapters.md](../adapter/13-adapters) — Adapter 구현

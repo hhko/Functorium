@@ -1462,6 +1462,6 @@ A: Source Generator가 관찰 가능한 래퍼 클래스(`XxxObservable`)를 자
 
 ## 9. 참고 문서
 
-- [13-adapters.md](./13-adapters.md) — Adapter 구현 가이드
-- [15a-unit-testing.md](./15a-unit-testing.md) — 단위 테스트 규칙
+- [13-adapters.md](./13-adapters) — Adapter 구현 가이드
+- [15a-unit-testing.md](../testing/15a-unit-testing) — 단위 테스트 규칙
 - [OPTIMIZATION-TECHNIQUES.md](../../Src.Benchmarks/BulkCrud.Benchmarks/OPTIMIZATION-TECHNIQUES.md) — 대량 CRUD 성능 최적화 기법

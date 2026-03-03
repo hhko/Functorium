@@ -1,5 +1,5 @@
 ---
-title: "Part 2 - Chapter 8: Expression Resolver"
+title: "표현식 리졸버"
 ---
 
 > **Part 2: Expression Specification** | [← 목차로](../../../)

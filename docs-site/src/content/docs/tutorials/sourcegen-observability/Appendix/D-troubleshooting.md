@@ -1,4 +1,4 @@
 ---
-title: "Troubleshooting"
+title: "문제 해결"
 ---
 

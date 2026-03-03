@@ -1,5 +1,5 @@
 ---
-title: "Part 5 - Chapter 19: E-commerce 주문 관리"
+title: "전자상거래 주문 관리"
 ---
 
 > **Part 5: 도메인별 실전 예제** | [← 이전: 18장 Transaction Pipeline →](../../Part4-CQRS-Usecase-Integration/05-Transaction-Pipeline) | [다음: 20장 Customer Management →](../02-Customer-Management)

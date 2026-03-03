@@ -1,5 +1,5 @@
 ---
-title: "Part 3 - Chapter 10: InMemory 구현"
+title: "인메모리 구현"
 ---
 
 > **Part 3: Repository 연동** | [이전: 9장 Repository와 Specification <-](../01-Repository-With-Specification/) | [다음: 11장 PropertyMap ->](../03-PropertyMap/)

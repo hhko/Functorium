@@ -1,5 +1,5 @@
 ---
-title: "11장: IFinResponseFactory CRTP 팩토리"
+title: "IFinResponseFactory CRTP 팩토리"
 ---
 
 ## 개요

@@ -1,5 +1,5 @@
 ---
-title: "Part 2 - Chapter 5: Repository Interface"
+title: "리포지토리 인터페이스"
 ---
 
 > **Part 2: Command 측 -- Repository 패턴** | [← 이전: 4장 →](../../Part1-Domain-Entity-Foundations/04-Entity-Interfaces/) | [다음: 6장 →](../02-InMemory-Repository/)

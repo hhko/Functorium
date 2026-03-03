@@ -1,5 +1,5 @@
 ---
-title: "08: Type Extraction"
+title: "타입 추출"
 ---
 
 타입 파라미터 추출 유틸리티를 보여줍니다.

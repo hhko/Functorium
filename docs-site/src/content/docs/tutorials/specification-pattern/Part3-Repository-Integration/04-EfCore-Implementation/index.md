@@ -1,5 +1,5 @@
 ---
-title: "Part 3 - Chapter 12: EF Core 구현"
+title: "EF Core 구현"
 ---
 
 > **Part 3: Repository 연동** | [이전: 11장 PropertyMap <-](../03-PropertyMap/)

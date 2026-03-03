@@ -1,5 +1,5 @@
 ---
-title: "15장: Read+Create 제약 (Logging/Tracing/Metrics)"
+title: "Read+Create 제약 (Logging/Tracing/Metrics)"
 ---
 
 ## 개요

@@ -1,5 +1,5 @@
 ---
-title: "2.2 Claude Code 소개"
+title: "Claude Code 소개"
 ---
 
 > Claude Code는 Anthropic에서 개발한 AI 기반 CLI(Command Line Interface) 도구입니다. 이 절에서는 Claude Code의 기본 개념과 사용자 정의 Command 기능을 소개합니다.

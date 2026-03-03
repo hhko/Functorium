@@ -61,13 +61,13 @@ public class MyIntegrationTests : IClassFixture<MyTestFixture>
 
 ### 테스트 작성 규칙
 
-통합 테스트 작성 시 기본적인 테스트 명명 규칙, 변수 명명 규칙, AAA 패턴 등은 [단위 테스트 가이드](./15a-unit-testing.md)를 준수합니다.
+통합 테스트 작성 시 기본적인 테스트 명명 규칙, 변수 명명 규칙, AAA 패턴 등은 [단위 테스트 가이드](./15a-unit-testing)를 준수합니다.
 
 | 규칙 | 참조 |
 |------|------|
-| 테스트 명명 (T1_T2_T3) | [테스트 명명 규칙](./15a-unit-testing.md#테스트-명명-규칙) |
-| 변수 명명 (`sut`, `actual` 등) | [변수 명명 규칙](./15a-unit-testing.md#변수-명명-규칙) |
-| AAA 패턴 | [AAA 패턴](./15a-unit-testing.md#aaa-패턴) |
+| 테스트 명명 (T1_T2_T3) | [테스트 명명 규칙](./15a-unit-testing#테스트-명명-규칙) |
+| 변수 명명 (`sut`, `actual` 등) | [변수 명명 규칙](./15a-unit-testing#변수-명명-규칙) |
+| AAA 패턴 | [AAA 패턴](./15a-unit-testing#aaa-패턴) |
 
 
 
@@ -585,7 +585,7 @@ var response = await _fixture.Client.GetAsync("/api/health");
 
 ## 참고 문서
 
-- [단위 테스트 가이드](./15a-unit-testing.md) - 테스트 명명 규칙, AAA 패턴 등 기본 테스트 작성 규칙
-- [테스트 라이브러리](./16-testing-library.md) - Functorium.Testing 라이브러리 가이드
+- [단위 테스트 가이드](./15a-unit-testing) - 테스트 명명 규칙, AAA 패턴 등 기본 테스트 작성 규칙
+- [테스트 라이브러리](./16-testing-library) - Functorium.Testing 라이브러리 가이드
 - [Microsoft.AspNetCore.Mvc.Testing](https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests)
 - [xUnit Class Fixtures](https://xunit.net/docs/shared-context#class-fixture)

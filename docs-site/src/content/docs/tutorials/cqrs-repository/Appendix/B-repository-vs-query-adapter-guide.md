@@ -1,5 +1,5 @@
 ---
-title: "부록 B. Repository vs Query 어댑터 선택 가이드"
+title: "Repository vs Query 어댑터 선택 가이드"
 ---
 
 > **부록** | [<- 이전: A. CQRS vs 전통적 CRUD](A-cqrs-vs-crud.md) | [목차](../) | [다음: C. FinT / FinResponse 타입 참조 ->](C-fint-finresponse-reference.md)

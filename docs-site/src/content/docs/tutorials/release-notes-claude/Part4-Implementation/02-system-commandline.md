@@ -1,5 +1,5 @@
 ---
-title: "5.2 System.CommandLine 패키지"
+title: "System.CommandLine 패키지"
 ---
 
 > 이 절에서는 CLI 애플리케이션의 인자 파싱을 위한 System.CommandLine 패키지 사용법을 알아봅니다.

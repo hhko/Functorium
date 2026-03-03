@@ -1,5 +1,5 @@
 ---
-title: "5.5 ExtractApiChanges.cs 분석"
+title: "ExtractApiChanges.cs 분석"
 ---
 
 > 이 절에서는 Public API를 추출하고 변경사항을 감지하는 ExtractApiChanges.cs 스크립트를 분석합니다.

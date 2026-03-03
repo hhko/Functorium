@@ -1,5 +1,5 @@
 ---
-title: "DDD Entity Id 생성기"
+title: "DDD 엔티티 ID 생성기"
 ---
 
 ## 학습 목표

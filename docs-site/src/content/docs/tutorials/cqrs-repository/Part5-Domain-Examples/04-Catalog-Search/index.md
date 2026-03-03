@@ -1,5 +1,5 @@
 ---
-title: "Part 5 - Chapter 22: 카탈로그 검색"
+title: "카탈로그 검색"
 ---
 
 > **Part 5: 도메인별 실전 예제** | [← 이전: 21장 Inventory Management →](../03-Inventory-Management) | [다음: 부록 →](../../../Appendix/)

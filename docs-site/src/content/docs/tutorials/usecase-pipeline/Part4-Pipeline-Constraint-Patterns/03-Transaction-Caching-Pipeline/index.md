@@ -1,5 +1,5 @@
 ---
-title: "16장: Transaction/Caching Pipeline"
+title: "Transaction/Caching 파이프라인"
 ---
 
 ## 개요

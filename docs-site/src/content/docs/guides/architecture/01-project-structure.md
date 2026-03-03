@@ -70,13 +70,13 @@ dotnet test --solution {ServiceName}.slnx
 
 | WHERE (이 가이드) | HOW (참조 가이드) |
 |---|---|
-| AggregateRoots 폴더 구조 | [06a-aggregate-design.md](./06a-aggregate-design.md) (설계) + [06b-entity-aggregate-core.md](./06b-entity-aggregate-core.md) (핵심 패턴) + [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced.md) (고급 패턴) |
-| ValueObjects 위치 규칙 | [05a-value-objects.md](./05a-value-objects.md) — 값 객체 구현 패턴 |
-| Specifications 위치 규칙 | [10-specifications.md](./10-specifications.md) — Specification 패턴 구현 |
-| Domain Ports 위치 결정 기준 | [12-ports.md](./12-ports.md) — Port 아키텍처와 설계 원칙 |
-| Usecases 폴더/파일 네이밍 | [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) — 유스케이스 구현 |
-| Abstractions/Registrations 구조 | [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di.md) — DI 등록 코드 패턴 |
-| WHY (모듈 매핑 근거) | [04-ddd-tactical-overview.md §6](./04-ddd-tactical-overview.md) — Module과 프로젝트 구조 매핑 |
+| AggregateRoots 폴더 구조 | [06a-aggregate-design.md](../domain/06a-aggregate-design) (설계) + [06b-entity-aggregate-core.md](../domain/06b-entity-aggregate-core) (핵심 패턴) + [06c-entity-aggregate-advanced.md](../domain/06c-entity-aggregate-advanced) (고급 패턴) |
+| ValueObjects 위치 규칙 | [05a-value-objects.md](../domain/05a-value-objects) — 값 객체 구현 패턴 |
+| Specifications 위치 규칙 | [10-specifications.md](../domain/10-specifications) — Specification 패턴 구현 |
+| Domain Ports 위치 결정 기준 | [12-ports.md](../adapter/12-ports) — Port 아키텍처와 설계 원칙 |
+| Usecases 폴더/파일 네이밍 | [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) — 유스케이스 구현 |
+| Abstractions/Registrations 구조 | [14a-adapter-pipeline-di.md](../adapter/14a-adapter-pipeline-di) — DI 등록 코드 패턴 |
+| WHY (모듈 매핑 근거) | [04-ddd-tactical-overview.md §6](../domain/04-ddd-tactical-overview) — Module과 프로젝트 구조 매핑 |
 
 ### 전체 프로젝트 구성 개요
 
@@ -374,7 +374,7 @@ Port 인터페이스
 └─ 외부 DTO나 기술적 관심사 포함? → Application/Ports/
 ```
 
-> Port 배치의 상세 기준은 [FAQ §Port를 Domain에 둘지 Application에 둘지](#port를-domain에-둘지-application에-둘지-판단-기준)와 [12-ports.md](./12-ports.md)를 참조하세요.
+> Port 배치의 상세 기준은 [FAQ §Port를 Domain에 둘지 Application에 둘지](#port를-domain에-둘지-application에-둘지-판단-기준)와 [12-ports.md](../adapter/12-ports)를 참조하세요.
 
 ## Domain 레이어
 
@@ -532,7 +532,7 @@ Adapter는 항상 3개 프로젝트로 분할합니다.
 | `Adapters.Persistence` | 데이터 저장/조회 | **Driven** (Inside → Outside) | `Repositories/` |
 | `Adapters.Infrastructure` | 외부 API, 횡단 관심사(Observability, Mediator 등) | **Driven** (Inside → Outside) | `ExternalApis/`, ... |
 
-> Driving/Driven 구분과 Presentation에 Port가 없는 설계 결정의 근거는 [12-ports.md](./12-ports.md)의 "Driving vs Driven Adapter 구분" 참조.
+> Driving/Driven 구분과 Presentation에 Port가 없는 설계 결정의 근거는 [12-ports.md](../adapter/12-ports)의 "Driving vs Driven Adapter 구분" 참조.
 
 ### 주 목표 폴더가 고정되지 않는 이유
 
@@ -674,7 +674,7 @@ public static IServiceCollection RegisterAdapterInfrastructure(this IServiceColl
 public static IApplicationBuilder UseAdapterInfrastructure(this IApplicationBuilder app) { ... }
 ```
 
-> **참고**: `IConfiguration` 파라미터는 Options 패턴(`RegisterConfigureOptions`)을 사용하는 Adapter에서 필요합니다. Options 패턴 상세는 [14a-adapter-pipeline-di.md §4.6](./14a-adapter-pipeline-di.md#options-패턴-optionsconfigurator)을 참조하세요.
+> **참고**: `IConfiguration` 파라미터는 Options 패턴(`RegisterConfigureOptions`)을 사용하는 Adapter에서 필요합니다. Options 패턴 상세는 [14a-adapter-pipeline-di.md §4.6](../adapter/14a-adapter-pipeline-di#options-패턴-optionsconfigurator)을 참조하세요.
 
 ## Host 프로젝트
 
@@ -757,7 +757,7 @@ app.Run();
 
 ## 테스트 프로젝트
 
-테스트 프로젝트는 `Tests/` 폴더 아래에 배치합니다. 테스트 작성 방법론(명명 규칙, AAA 패턴, MTP 설정 등)은 [15a-unit-testing.md](./15a-unit-testing.md)를 참조하세요.
+테스트 프로젝트는 `Tests/` 폴더 아래에 배치합니다. 테스트 작성 방법론(명명 규칙, AAA 패턴, MTP 설정 등)은 [15a-unit-testing.md](../testing/15a-unit-testing)를 참조하세요.
 
 ### Tests.Unit 프로젝트
 
@@ -1103,15 +1103,15 @@ Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 
 
 ## 참고 문서
 
-- [02-solution-configuration.md](./02-solution-configuration.md) — 솔루션 루트 구성 파일 및 빌드 스크립트
-- [06a-aggregate-design.md](./06a-aggregate-design.md) — Aggregate 설계 원칙, [06b-entity-aggregate-core.md](./06b-entity-aggregate-core.md) — Entity/Aggregate 핵심 패턴, [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced.md) — 고급 패턴
-- [05a-value-objects.md](./05a-value-objects.md) — 값 객체 구현 패턴, [05b-value-objects-validation.md](./05b-value-objects-validation.md) — 열거형·검증·FAQ
-- [10-specifications.md](./10-specifications.md) — Specification 패턴 구현
-- [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) — 유스케이스 (Command/Query) 구현
-- [12-ports.md](./12-ports.md) — Port 아키텍처, [13-adapters.md](./13-adapters.md) — Adapter 구현, [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di.md) — Pipeline/DI, [14b-adapter-testing.md](./14b-adapter-testing.md) — 테스트
-- [08a-error-system.md](./08a-error-system.md) — 에러 시스템: 기초와 네이밍
-- [08b-error-system-domain-app.md](./08b-error-system-domain-app.md) — 에러 시스템: Domain/Application 에러
-- [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing.md) — 에러 시스템: Adapter 에러와 테스트
-- [18a-observability-spec.md](./18a-observability-spec.md) — Observability 사양
-- [15a-unit-testing.md](./15a-unit-testing.md) — 테스트 작성 방법론 (명명 규칙, AAA 패턴, MTP 설정)
-- [16-testing-library.md](./16-testing-library.md) — Functorium.Testing 라이브러리 (LogTestContext, ArchitectureRules, QuartzTestFixture 등)
+- [02-solution-configuration.md](./02-solution-configuration) — 솔루션 루트 구성 파일 및 빌드 스크립트
+- [06a-aggregate-design.md](../domain/06a-aggregate-design) — Aggregate 설계 원칙, [06b-entity-aggregate-core.md](../domain/06b-entity-aggregate-core) — Entity/Aggregate 핵심 패턴, [06c-entity-aggregate-advanced.md](../domain/06c-entity-aggregate-advanced) — 고급 패턴
+- [05a-value-objects.md](../domain/05a-value-objects) — 값 객체 구현 패턴, [05b-value-objects-validation.md](../domain/05b-value-objects-validation) — 열거형·검증·FAQ
+- [10-specifications.md](../domain/10-specifications) — Specification 패턴 구현
+- [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) — 유스케이스 (Command/Query) 구현
+- [12-ports.md](../adapter/12-ports) — Port 아키텍처, [13-adapters.md](../adapter/13-adapters) — Adapter 구현, [14a-adapter-pipeline-di.md](../adapter/14a-adapter-pipeline-di) — Pipeline/DI, [14b-adapter-testing.md](../adapter/14b-adapter-testing) — 테스트
+- [08a-error-system.md](../domain/08a-error-system) — 에러 시스템: 기초와 네이밍
+- [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) — 에러 시스템: Domain/Application 에러
+- [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) — 에러 시스템: Adapter 에러와 테스트
+- [18a-observability-spec.md](../observability/18a-observability-spec) — Observability 사양
+- [15a-unit-testing.md](../testing/15a-unit-testing) — 테스트 작성 방법론 (명명 규칙, AAA 패턴, MTP 설정)
+- [16-testing-library.md](../testing/16-testing-library) — Functorium.Testing 라이브러리 (LogTestContext, ArchitectureRules, QuartzTestFixture 등)

@@ -1,5 +1,5 @@
 ---
-title: "Part 1: ClassValidator 기초"
+title: "ClassValidator 기초"
 ---
 
 > **테스트로 아키텍처 규칙 강제하기** | [← 목차로](../) | [다음: Part 2 →](../Part2-Method-And-Property-Validation/)

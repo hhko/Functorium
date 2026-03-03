@@ -1,5 +1,5 @@
 ---
-title: "03: EF Core Value Converter"
+title: "EF Core 값 변환기"
 ---
 
 EF Core ValueConverter를 자동 생성하는 패턴입니다.

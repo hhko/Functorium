@@ -1,5 +1,5 @@
 ---
-title: "부록 E. 용어집"
+title: "용어집"
 ---
 
 > **부록** | [<- 이전: D. CQRS 안티패턴](D-anti-patterns.md) | [목차](../) | [다음: F. 참고 자료 ->](F-references.md)

@@ -1,5 +1,5 @@
 ---
-title: "Chapter 9: 불변성 규칙 (Immutability Rule)"
+title: "불변성 규칙"
 ---
 
 ## 소개

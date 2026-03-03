@@ -1,5 +1,5 @@
 ---
-title: "Semantic API"
+title: "의미 API"
 ---
 
 ## 학습 목표

@@ -1,5 +1,5 @@
 ---
-title: "0.1 왜 CQRS인가"
+title: "왜 CQRS인가"
 ---
 
 > **Part 0: 서론** | [목차](../) | [다음: 0.2 환경 설정 ->](02-prerequisites-and-setup.md)

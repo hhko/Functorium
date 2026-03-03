@@ -1,5 +1,5 @@
 ---
-title: "C. Railway Oriented Programming 참조"
+title: "Railway Oriented Programming 참조"
 ---
 
 ## 개요

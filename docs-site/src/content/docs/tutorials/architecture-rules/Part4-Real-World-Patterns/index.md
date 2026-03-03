@@ -1,5 +1,5 @@
 ---
-title: "Part 4: Real-World Patterns"
+title: "실전 패턴"
 ---
 
 ## 개요

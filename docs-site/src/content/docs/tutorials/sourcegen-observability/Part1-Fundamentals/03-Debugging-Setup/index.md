@@ -1,5 +1,5 @@
 ---
-title: "03: Debugging Setup"
+title: "디버깅 설정"
 ---
 
 소스 생성기 디버깅 설정 방법을 보여줍니다.

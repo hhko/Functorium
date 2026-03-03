@@ -1,5 +1,5 @@
 ---
-title: "Part 1 - Chapter 1: Entity와 Identity"
+title: "엔티티와 식별자"
 ---
 
 > **Part 1: 도메인 엔티티 기초** | [← 목차로](../../../) | [다음: 2장 Aggregate Root →](../02-Aggregate-Root/)

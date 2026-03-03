@@ -1,5 +1,5 @@
 ---
-title: "Part 2 - Chapter 5: Expression Tree 기초"
+title: "표현식 트리 기초"
 ---
 
 > **Part 2: Expression Specification** | [← 목차로](../../../)

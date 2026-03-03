@@ -2,7 +2,7 @@
 title: "Adapter 연결 -- Pipeline과 DI"
 ---
 
-이 문서는 Adapter의 Pipeline 생성, DI 등록, Options 패턴을 다루는 가이드입니다. Port 정의는 [12-ports.md](./12-ports.md), Adapter 구현은 [13-adapters.md](./13-adapters.md), 단위 테스트는 [14b-adapter-testing.md](./14b-adapter-testing.md)를 참조하세요.
+이 문서는 Adapter의 Pipeline 생성, DI 등록, Options 패턴을 다루는 가이드입니다. Port 정의는 [12-ports.md](./12-ports), Adapter 구현은 [13-adapters.md](./13-adapters), 단위 테스트는 [14b-adapter-testing.md](./14b-adapter-testing)를 참조하세요.
 
 ## 목차
 
@@ -187,7 +187,7 @@ Pipeline은 다음 관찰성 기능을 **자동으로** 제공합니다. 모든 
 | `Expected` (LanguageExt) | `"expected"` | 타입 이름 | Warning |
 | `Exceptional` (LanguageExt) | `"exceptional"` | 타입 이름 | Error |
 
-> **상세 사양**: 트레이싱 Tag 구조, 로그 Message Template, 메트릭 Instrument 정의 등 상세 내용은 [18a-observability-spec.md](./18a-observability-spec.md)를 참조하세요.
+> **상세 사양**: 트레이싱 Tag 구조, 로그 Message Template, 메트릭 Instrument 정의 등 상세 내용은 [18a-observability-spec.md](../observability/18a-observability-spec)를 참조하세요.
 
 ### 빌드 에러 대응
 
@@ -385,7 +385,7 @@ app.Run();
 
 > **참고**: 등록 순서는 DI 컨테이너의 의존성 해석과 무관하며, 가독성을 위해 도메인 -> 어댑터 -> 인프라 순서를 권장한다.
 
-> **참고**: 등록 순서의 근거와 환경별 구성 분기는 [01-project-structure.md -- Host 프로젝트](./01-project-structure.md#등록-순서-근거)를 참조하세요.
+> **참고**: 등록 순서의 근거와 환경별 구성 분기는 [01-project-structure.md -- Host 프로젝트](../architecture/01-project-structure#등록-순서-근거)를 참조하세요.
 
 ### Options 패턴 (OptionsConfigurator)
 
@@ -609,7 +609,7 @@ public static IApplicationBuilder UseAdapterPersistence(this IApplicationBuilder
 
 > 규칙: Options 클래스의 `SectionName` 상수값이 appsettings.json의 최상위 키와 정확히 일치해야 한다.
 
-appsettings.json에서 Options 클래스의 `SectionName` 상수값과 일치하는 섹션을 정의합니다. 환경별 오버라이드는 [ASP.NET Core Configuration](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration) 문서를 참조하세요. 통합 테스트 appsettings 설정은 [16-testing-library.md](./16-testing-library.md)를 참조하세요.
+appsettings.json에서 Options 클래스의 `SectionName` 상수값과 일치하는 섹션을 정의합니다. 환경별 오버라이드는 [ASP.NET Core Configuration](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration) 문서를 참조하세요. 통합 테스트 appsettings 설정은 [16-testing-library.md](../testing/16-testing-library)를 참조하세요.
 
 **Provider 선택지:**
 
@@ -745,19 +745,19 @@ public InMemoryProductRepository(
 
 | 문서 | 설명 |
 |------|------|
-| [04-ddd-tactical-overview.md](./04-ddd-tactical-overview.md) | 도메인 모델링 전체 개요 |
-| [05a-value-objects.md](./05a-value-objects.md) | Value Object 구현 가이드 |
-| [06b-entity-aggregate-core.md](./06b-entity-aggregate-core.md) | Entity/Aggregate 핵심 패턴 |
-| [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) | 유스케이스 구현 (CQRS Command/Query) |
-| [08a-error-system.md](./08a-error-system.md) | 에러 시스템: 기초와 네이밍 |
-| [08b-error-system-domain-app.md](./08b-error-system-domain-app.md) | 에러 시스템: Domain/Application 에러 |
-| [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing.md) | 에러 시스템: Adapter 에러와 테스트 |
-| [12-ports.md](./12-ports.md) | Port 정의 가이드 |
-| [13-adapters.md](./13-adapters.md) | Adapter 구현 가이드 |
-| [14b-adapter-testing.md](./14b-adapter-testing.md) | Adapter 단위 테스트 가이드 |
-| [15a-unit-testing.md](./15a-unit-testing.md) | 단위 테스트 작성 가이드 |
-| [18a-observability-spec.md](./18a-observability-spec.md) | Observability 사양 (트레이싱, 로깅, 메트릭 상세) |
-| [01-project-structure.md](./01-project-structure.md) | 서비스 프로젝트 구조 가이드 |
+| [04-ddd-tactical-overview.md](../domain/04-ddd-tactical-overview) | 도메인 모델링 전체 개요 |
+| [05a-value-objects.md](../domain/05a-value-objects) | Value Object 구현 가이드 |
+| [06b-entity-aggregate-core.md](../domain/06b-entity-aggregate-core) | Entity/Aggregate 핵심 패턴 |
+| [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) | 유스케이스 구현 (CQRS Command/Query) |
+| [08a-error-system.md](../domain/08a-error-system) | 에러 시스템: 기초와 네이밍 |
+| [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) | 에러 시스템: Domain/Application 에러 |
+| [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) | 에러 시스템: Adapter 에러와 테스트 |
+| [12-ports.md](./12-ports) | Port 정의 가이드 |
+| [13-adapters.md](./13-adapters) | Adapter 구현 가이드 |
+| [14b-adapter-testing.md](./14b-adapter-testing) | Adapter 단위 테스트 가이드 |
+| [15a-unit-testing.md](../testing/15a-unit-testing) | 단위 테스트 작성 가이드 |
+| [18a-observability-spec.md](../observability/18a-observability-spec) | Observability 사양 (트레이싱, 로깅, 메트릭 상세) |
+| [01-project-structure.md](../architecture/01-project-structure) | 서비스 프로젝트 구조 가이드 |
 
 **외부 참고:**
 

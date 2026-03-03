@@ -2,7 +2,7 @@
 title: "Adapter 연결 -- 단위 테스트"
 ---
 
-이 문서는 Adapter의 단위 테스트 작성, End-to-End Walkthrough, 아키텍처 부록을 다루는 가이드입니다. Pipeline 생성과 DI 등록은 [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di.md), Port 정의는 [12-ports.md](./12-ports.md), Adapter 구현은 [13-adapters.md](./13-adapters.md)을 참조하세요.
+이 문서는 Adapter의 단위 테스트 작성, End-to-End Walkthrough, 아키텍처 부록을 다루는 가이드입니다. Pipeline 생성과 DI 등록은 [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di), Port 정의는 [12-ports.md](./12-ports), Adapter 구현은 [13-adapters.md](./13-adapters)을 참조하세요.
 
 ## 목차
 
@@ -65,7 +65,7 @@ Adapter의 단위 테스트는 **원본 클래스를 직접 테스트**합니다
 | 단언 라이브러리 | Shouldly |
 | Mock 라이브러리 | NSubstitute |
 
-> **참고**: 테스트 규칙 상세는 [15a-unit-testing.md](./15a-unit-testing.md)를 참조하세요.
+> **참고**: 테스트 규칙 상세는 [15a-unit-testing.md](../testing/15a-unit-testing)를 참조하세요.
 
 **IO 실행 패턴** - `FinT<IO, T>` 반환값을 테스트에서 실행하는 패턴:
 
@@ -479,7 +479,7 @@ public sealed class GetProductByIdQuery
 
 ### E. Observability 상세 사양 요약
 
-Pipeline이 자동 제공하는 Observability 기능의 요약입니다. 상세 사양은 [18a-observability-spec.md](./18a-observability-spec.md)를 참조하세요.
+Pipeline이 자동 제공하는 Observability 기능의 요약입니다. 상세 사양은 [18a-observability-spec.md](../observability/18a-observability-spec)를 참조하세요.
 
 **Span 이름 패턴**: `{layer} {category} {handler}.{method}`
 
@@ -548,7 +548,7 @@ var result = await Task.Run(() => ioResult.Run());  // Fin<T> 실행
 - **Aggregate 필요** (도메인 불변식 검증, Create/Update/Delete) -> **Repository** (`IRepository<T, TId>`, Domain Layer, EF Core)
 - **DTO 직접 반환** (읽기 전용, 페이지네이션/정렬) -> **Query Adapter** (`IQueryPort<TEntity, TDto>`, Application Layer, Dapper)
 
-> 상세 판단 기준은 [Query Adapter](./13-adapters.md#query-adapter-cqrs-read-측)의 비교 테이블을 참조하세요.
+> 상세 판단 기준은 [Query Adapter](./13-adapters#query-adapter-cqrs-read-측)의 비교 테이블을 참조하세요.
 
 ---
 
@@ -556,17 +556,17 @@ var result = await Task.Run(() => ioResult.Run());  // Fin<T> 실행
 
 | 문서 | 설명 |
 |------|------|
-| [04-ddd-tactical-overview.md](./04-ddd-tactical-overview.md) | 도메인 모델링 전체 개요 |
-| [11-usecases-and-cqrs.md](./11-usecases-and-cqrs.md) | 유스케이스 구현 (CQRS Command/Query) |
-| [08a-error-system.md](./08a-error-system.md) | 에러 시스템: 기초와 네이밍 |
-| [08b-error-system-domain-app.md](./08b-error-system-domain-app.md) | 에러 시스템: Domain/Application 에러 |
-| [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing.md) | 에러 시스템: Adapter 에러와 테스트 |
-| [12-ports.md](./12-ports.md) | Port 정의 가이드 |
-| [13-adapters.md](./13-adapters.md) | Adapter 구현 가이드 |
-| [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di.md) | Pipeline 생성, DI 등록, Options 패턴 |
-| [15a-unit-testing.md](./15a-unit-testing.md) | 단위 테스트 작성 가이드 |
-| [18a-observability-spec.md](./18a-observability-spec.md) | Observability 사양 (트레이싱, 로깅, 메트릭 상세) |
-| [01-project-structure.md](./01-project-structure.md) | 서비스 프로젝트 구조 가이드 |
+| [04-ddd-tactical-overview.md](../domain/04-ddd-tactical-overview) | 도메인 모델링 전체 개요 |
+| [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) | 유스케이스 구현 (CQRS Command/Query) |
+| [08a-error-system.md](../domain/08a-error-system) | 에러 시스템: 기초와 네이밍 |
+| [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) | 에러 시스템: Domain/Application 에러 |
+| [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) | 에러 시스템: Adapter 에러와 테스트 |
+| [12-ports.md](./12-ports) | Port 정의 가이드 |
+| [13-adapters.md](./13-adapters) | Adapter 구현 가이드 |
+| [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di) | Pipeline 생성, DI 등록, Options 패턴 |
+| [15a-unit-testing.md](../testing/15a-unit-testing) | 단위 테스트 작성 가이드 |
+| [18a-observability-spec.md](../observability/18a-observability-spec) | Observability 사양 (트레이싱, 로깅, 메트릭 상세) |
+| [01-project-structure.md](../architecture/01-project-structure) | 서비스 프로젝트 구조 가이드 |
 
 **외부 참고:**
 

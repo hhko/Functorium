@@ -1,5 +1,5 @@
 ---
-title: "3.4 commit.md 소개"
+title: "commit.md 소개"
 ---
 
 > 이 절에서는 일관된 커밋 메시지 작성을 위한 `commit.md` Command를 소개합니다. 이 Command는 릴리스 노트 자동화의 기반이 되는 커밋 히스토리 품질을 유지합니다.

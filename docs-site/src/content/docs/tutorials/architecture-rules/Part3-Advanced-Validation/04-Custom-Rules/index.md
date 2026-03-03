@@ -1,5 +1,5 @@
 ---
-title: "Chapter 12: 커스텀 규칙 (Custom Rules)"
+title: "커스텀 규칙"
 ---
 
 ## 소개

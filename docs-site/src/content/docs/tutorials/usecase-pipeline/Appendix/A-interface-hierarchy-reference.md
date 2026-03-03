@@ -1,5 +1,5 @@
 ---
-title: "A. IFinResponse 인터페이스 계층 전체 참조"
+title: "IFinResponse 인터페이스 계층 전체 참조"
 ---
 
 ## 개요

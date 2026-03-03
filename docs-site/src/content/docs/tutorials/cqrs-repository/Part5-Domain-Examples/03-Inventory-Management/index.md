@@ -1,5 +1,5 @@
 ---
-title: "Part 5 - Chapter 21: 재고 관리"
+title: "재고 관리"
 ---
 
 > **Part 5: 도메인별 실전 예제** | [← 이전: 20장 Customer Management →](../02-Customer-Management) | [다음: 22장 Catalog Search →](../04-Catalog-Search)

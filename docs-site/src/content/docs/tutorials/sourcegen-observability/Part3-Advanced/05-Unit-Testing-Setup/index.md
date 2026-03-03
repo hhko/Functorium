@@ -1,5 +1,5 @@
 ---
-title: "05: Unit Testing Setup"
+title: "단위 테스트 설정"
 ---
 
 CSharpGeneratorDriver를 사용한 소스 생성기 단위 테스트 설정을 보여줍니다.

@@ -1,5 +1,5 @@
 ---
-title: "Syntax API"
+title: "구문 API"
 ---
 
 ## 학습 목표

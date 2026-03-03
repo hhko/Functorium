@@ -1,5 +1,5 @@
 ---
-title: "04: Incremental Caching"
+title: "증분 캐싱"
 ---
 
 값 동등성을 통한 증분 캐싱 메커니즘을 보여줍니다.

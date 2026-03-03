@@ -1,5 +1,5 @@
 ---
-title: "4장: 상속과 인터페이스"
+title: "상속과 인터페이스"
 ---
 
 > **Part 1: ClassValidator 기초** | [← 이전: 3장 네이밍 규칙](../03-Naming-Rules/) | [다음: Part 2 →](../../Part2-Method-And-Property-Validation/)

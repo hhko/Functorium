@@ -1,5 +1,5 @@
 ---
-title: "Part 4 - Chapter 17: Domain Event Flow"
+title: "도메인 이벤트 흐름"
 ---
 
 > **Part 4: CQRS Usecase 통합** | [← 이전: 16장 FinT to FinResponse](../03-FinT-To-FinResponse/) | [다음: 18장 Transaction Pipeline →](../05-Transaction-Pipeline/)

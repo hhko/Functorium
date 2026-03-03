@@ -1,5 +1,5 @@
 ---
-title: "2.3 Git 기초"
+title: "Git 기초"
 ---
 
 > 릴리스 노트 자동화 시스템은 Git의 커밋 히스토리와 diff 기능을 활용합니다. 이 절에서는 필요한 Git 명령어와 Conventional Commits 규칙을 알아봅니다.

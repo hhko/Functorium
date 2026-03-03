@@ -1,5 +1,5 @@
 ---
-title: "5.4 AnalyzeAllComponents.cs 분석"
+title: "AnalyzeAllComponents.cs 분석"
 ---
 
 > 이 절에서는 컴포넌트별 변경사항을 분석하는 AnalyzeAllComponents.cs 스크립트의 구조와 동작을 분석합니다.

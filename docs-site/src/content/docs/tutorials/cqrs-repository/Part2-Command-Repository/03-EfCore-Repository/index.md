@@ -1,5 +1,5 @@
 ---
-title: "Part 2 - Chapter 7: EF Core Repository"
+title: "EF Core 리포지토리"
 ---
 
 > **Part 2: Command 측 -- Repository 패턴** | [← 이전: 6장 →](../02-InMemory-Repository/) | [다음: 8장 →](../04-Unit-Of-Work/)

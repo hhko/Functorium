@@ -1,5 +1,5 @@
 ---
-title: "부록 A. CQRS vs 전통적 CRUD"
+title: "CQRS vs 전통적 CRUD"
 ---
 
 > **부록** | [목차](../) | [다음: B. Repository vs Query 어댑터 선택 가이드 ->](B-repository-vs-query-adapter-guide.md)

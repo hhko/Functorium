@@ -1,5 +1,5 @@
 ---
-title: "0.3 환경 설정"
+title: "환경 설정"
 ---
 
 > **Part 0: 서론** | [← 이전: 0.2 성공 주도 개발이란?](02-success-driven-development.md) | [목차](../) | [다음: 1장 기본 나눗셈에서 시작하기 →](../01-Concept/01-Basic-Divide/BasicDivide/)

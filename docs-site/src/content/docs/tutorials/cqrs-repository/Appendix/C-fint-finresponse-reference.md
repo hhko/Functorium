@@ -1,5 +1,5 @@
 ---
-title: "부록 C. FinT / FinResponse 타입 참조"
+title: "FinT / FinResponse 타입 참조"
 ---
 
 > **부록** | [<- 이전: B. Repository vs Query 어댑터 선택 가이드](B-repository-vs-query-adapter-guide.md) | [목차](../) | [다음: D. CQRS 안티패턴 ->](D-anti-patterns.md)

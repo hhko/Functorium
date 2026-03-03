@@ -2,7 +2,7 @@
 title: "에러 시스템: 기초와 네이밍"
 ---
 
-이 문서는 에러 처리의 기본 원칙, Fin 패턴, 에러 네이밍 규칙을 다룹니다. Domain/Application/Event 에러는 [08b-error-system-domain-app.md](./08b-error-system-domain-app.md), Adapter 에러와 테스트 패턴은 [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing.md)을 참고하세요.
+이 문서는 에러 처리의 기본 원칙, Fin 패턴, 에러 네이밍 규칙을 다룹니다. Domain/Application/Event 에러는 [08b-error-system-domain-app.md](./08b-error-system-domain-app), Adapter 에러와 테스트 패턴은 [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing)을 참고하세요.
 
 ## 목차
 
@@ -612,5 +612,5 @@ Log.Logger = new LoggerConfiguration()
 
 ## 참고 문서
 
-- [08b-error-system-domain-app.md](./08b-error-system-domain-app.md) - Domain/Application 에러 정의와 테스트
-- [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing.md) - Adapter 에러, Custom 에러, 테스트 모범 사례
+- [08b-error-system-domain-app.md](./08b-error-system-domain-app) - Domain/Application 에러 정의와 테스트
+- [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing) - Adapter 에러, Custom 에러, 테스트 모범 사례

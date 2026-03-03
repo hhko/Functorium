@@ -7,7 +7,7 @@ title: "Observability Specification"
 
 > 모든 관측성 필드는 OpenTelemetry 시맨틱 규칙과의 일관성을 위해 `snake_case + dot` 표기법을 사용합니다.
 
-![](../../Functorium.Observability.png)
+![](../../../../assets/Functorium.Observability.png)
 
 ## 목차
 
@@ -742,7 +742,7 @@ services
 - **Adapter**: `[GenerateObservablePort]` 소스 생성기가 Pipeline 클래스 자동 생성
 - **추가 코드 불필요**: 새 Usecase나 Adapter를 구현하면 관측성이 자동으로 따라옵니다
 
-> Observability로 해결할 수 없는 프로세스 크래시 분석은 [22-crash-diagnostics.md](./22-crash-diagnostics.md)을 참고하세요.
+> Observability로 해결할 수 없는 프로세스 크래시 분석은 [22-crash-diagnostics.md](./22-crash-diagnostics)을 참고하세요.
 
 ## 필드/태그 네이밍 규칙
 
@@ -1066,8 +1066,8 @@ Publisher는 이벤트 발행이라는 인프라 관심사를 담당하므로 Ad
 
 | 문서 | 설명 |
 |------|------|
-| [Logging 매뉴얼](./19-observability-logging.md) | 구조화된 로깅 상세 가이드 |
-| [Metrics 매뉴얼](./20-observability-metrics.md) | 메트릭 수집 및 분석 가이드 |
-| [Tracing 매뉴얼](./21-observability-tracing.md) | 분산 추적 상세 가이드 |
-| [코드 명명 규칙](./18b-observability-naming.md) | Observability 코드 명명 규칙 |
-| [Logger 메서드 명명 규칙](./18b-observability-naming.md) | Logger 메서드 네이밍 규칙 |
+| [Logging 매뉴얼](./19-observability-logging) | 구조화된 로깅 상세 가이드 |
+| [Metrics 매뉴얼](./20-observability-metrics) | 메트릭 수집 및 분석 가이드 |
+| [Tracing 매뉴얼](./21-observability-tracing) | 분산 추적 상세 가이드 |
+| [코드 명명 규칙](./18b-observability-naming) | Observability 코드 명명 규칙 |
+| [Logger 메서드 명명 규칙](./18b-observability-naming) | Logger 메서드 네이밍 규칙 |

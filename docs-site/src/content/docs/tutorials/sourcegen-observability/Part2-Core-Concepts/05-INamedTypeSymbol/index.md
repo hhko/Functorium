@@ -1,5 +1,5 @@
 ---
-title: "05: INamedTypeSymbol"
+title: "INamedTypeSymbol"
 ---
 
 INamedTypeSymbol의 주요 속성을 탐색합니다.

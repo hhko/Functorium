@@ -1,5 +1,5 @@
 ---
-title: "Part 3 - Chapter 12: InMemory Query Adapter"
+title: "인메모리 쿼리 어댑터"
 ---
 
 > **Part 3: Query 측 — 읽기 전용 패턴** | [← 이전: 11장 Pagination and Sorting →](../03-Pagination-And-Sorting/) | [다음: 13장 Dapper Query Adapter →](../05-Dapper-Query-Adapter/)

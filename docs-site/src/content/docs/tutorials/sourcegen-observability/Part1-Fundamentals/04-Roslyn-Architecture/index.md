@@ -1,5 +1,5 @@
 ---
-title: "04: Roslyn Architecture"
+title: "Roslyn 아키텍처"
 ---
 
 Roslyn의 SyntaxTree, CompilationUnit 구조를 탐색합니다.

@@ -1,5 +1,5 @@
 ---
-title: "9장: IFinResponse 비제네릭 마커"
+title: "IFinResponse 비제네릭 마커"
 ---
 
 ## 개요

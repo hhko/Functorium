@@ -1,5 +1,5 @@
 ---
-title: "07: SymbolDisplayFormat"
+title: "SymbolDisplayFormat"
 ---
 
 다양한 심볼 표시 형식을 비교합니다.

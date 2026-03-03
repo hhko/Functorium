@@ -1,5 +1,5 @@
 ---
-title: "Part 2 - Chapter 6: InMemory Repository"
+title: "인메모리 리포지토리"
 ---
 
 > **Part 2: Command 측 -- Repository 패턴** | [← 이전: 5장 →](../01-Repository-Interface/) | [다음: 7장 →](../03-EfCore-Repository/)

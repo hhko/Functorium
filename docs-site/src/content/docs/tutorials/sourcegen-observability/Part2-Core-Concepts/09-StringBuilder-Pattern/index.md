@@ -1,5 +1,5 @@
 ---
-title: "09: StringBuilder Pattern"
+title: "StringBuilder 패턴"
 ---
 
 소스 생성에 사용되는 StringBuilder 패턴을 보여줍니다.

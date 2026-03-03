@@ -1,5 +1,5 @@
 ---
-title: "5장: Mediator Pipeline Behavior 구조"
+title: "Mediator Pipeline Behavior 구조"
 ---
 
 ## 개요

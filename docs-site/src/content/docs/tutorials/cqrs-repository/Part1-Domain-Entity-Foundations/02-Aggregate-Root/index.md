@@ -1,5 +1,5 @@
 ---
-title: "Part 1 - Chapter 2: Aggregate Root"
+title: "애그리거트 루트"
 ---
 
 > **Part 1: 도메인 엔티티 기초** | [← 이전: 1장 Entity와 Identity](../01-Entity-And-Identity/) | [다음: 3장 Domain Events →](../03-Domain-Events/)

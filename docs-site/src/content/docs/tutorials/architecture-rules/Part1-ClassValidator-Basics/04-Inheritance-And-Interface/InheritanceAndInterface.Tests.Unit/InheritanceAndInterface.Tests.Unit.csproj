@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\InheritanceAndInterface\InheritanceAndInterface.csproj" />
-    <ProjectReference Include="..\..\..\..\..\..\..\..\..\..\..\..\Src\Functorium.Testing\Functorium.Testing.csproj" />
+    <ProjectReference Include="..\..\..\..\..\..\Src\Functorium.Testing\Functorium.Testing.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,5 @@
 ---
-title: "05: Syntax API"
+title: "구문 API"
 ---
 
 Roslyn Syntax API의 핵심 탐색 메서드를 데모합니다.

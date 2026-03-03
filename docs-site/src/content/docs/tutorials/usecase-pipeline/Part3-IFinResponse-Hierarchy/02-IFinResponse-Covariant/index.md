@@ -1,5 +1,5 @@
 ---
-title: "10장: IFinResponse<out A> 공변 인터페이스"
+title: "IFinResponse<out A> 공변 인터페이스"
 ---
 
 ## 개요

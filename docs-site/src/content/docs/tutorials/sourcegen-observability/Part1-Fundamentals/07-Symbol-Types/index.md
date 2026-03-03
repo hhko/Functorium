@@ -1,5 +1,5 @@
 ---
-title: "07: Symbol Types"
+title: "심볼 타입"
 ---
 
 Roslyn 심볼 타입 계층(INamedTypeSymbol, IMethodSymbol, IPropertySymbol)을 탐색합니다.

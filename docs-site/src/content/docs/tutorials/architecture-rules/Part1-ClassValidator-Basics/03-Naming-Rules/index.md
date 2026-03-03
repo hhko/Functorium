@@ -1,5 +1,5 @@
 ---
-title: "3장: 네이밍 규칙"
+title: "네이밍 규칙"
 ---
 
 > **Part 1: ClassValidator 기초** | [← 이전: 2장 가시성과 한정자](../02-Visibility-And-Modifiers/) | [다음: 4장 상속과 인터페이스 →](../04-Inheritance-And-Interface/)

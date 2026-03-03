@@ -1,5 +1,5 @@
 ---
-title: "1장: 첫 번째 아키텍처 테스트"
+title: "첫 번째 아키텍처 테스트"
 ---
 
 > **Part 1: ClassValidator 기초** | [← 목차로](../../) | [다음: 2장 가시성과 한정자 →](../02-Visibility-And-Modifiers/)

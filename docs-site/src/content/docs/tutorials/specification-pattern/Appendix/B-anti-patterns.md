@@ -1,5 +1,5 @@
 ---
-title: "부록 B. 안티패턴"
+title: "안티패턴"
 ---
 
 > **부록** | [← 이전: A. Specification vs 대안 비교](A-specification-vs-alternatives.md) | [목차](../) | [다음: C. 용어집 →](C-glossary.md)

@@ -1,5 +1,5 @@
 ---
-title: "17장: Fin -> FinResponse 브릿지"
+title: "Fin -> FinResponse 브릿지"
 ---
 
 ## 개요
