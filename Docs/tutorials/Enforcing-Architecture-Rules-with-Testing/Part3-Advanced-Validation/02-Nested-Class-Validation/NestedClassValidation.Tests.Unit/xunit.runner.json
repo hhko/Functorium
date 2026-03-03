@@ -1,8 +1,0 @@
-{
-  "$schema": "https://xunit.net/schema/current/xunit.runner.schema.json",
-  "parallelizeAssembly": false,
-  "parallelizeTestCollections": true,
-  "methodDisplay": "method",
-  "methodDisplayOptions": "replaceUnderscoreWithSpace",
-  "diagnosticMessages": true
-}
