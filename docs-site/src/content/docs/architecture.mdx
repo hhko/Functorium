@@ -1,0 +1,64 @@
+---
+title: 구조 개요
+description: Domain, Application, Adapter 3계층 아키텍처
+---
+
+import { FileTree } from '@astrojs/starlight/components';
+
+![Functorium Architecture](../../assets/Functorium.Architecture.png)
+
+시스템은 세 가지 계층으로 구성됩니다. 도메인은 외부에 의존하지 않으며, 의존성은 항상 안쪽을 향합니다.
+
+:::note[의존성 방향]
+Adapter → Application → Domain 방향으로만 의존합니다. 도메인은 어떤 외부 계층도 알지 못합니다.
+:::
+
+## Domain Layer — 순수 비즈니스 로직
+
+외부 의존성 없이, 순수 함수 기반으로 비즈니스 규칙을 표현합니다.
+
+<FileTree>
+- Domains/
+  - Entities/ Entity, AggregateRoot, IEntityId
+  - ValueObjects/ AbstractValueObject, Validations
+  - Errors/ DomainError, DomainErrorType
+  - Events/ IDomainEvent, DomainEvent
+  - Repositories/ IRepository (포트 정의)
+  - Specifications/ Specification Pattern
+  - Services/ IDomainService
+  - Observabilities/ IObservablePort
+</FileTree>
+
+## Application Layer — 유스케이스 조립
+
+도메인 로직과 인프라를 연결하고, 사이드 이펙트의 경계를 관리합니다.
+
+<FileTree>
+- Applications/
+  - Cqrs/ ICommandRequest, IQueryRequest, FinResponse
+  - Events/ IDomainEventHandler, IDomainEventPublisher
+  - Errors/ ApplicationError, EventError
+  - Validations/ FluentValidation 확장
+  - Linq/ FinT LINQ 확장
+  - Queries/ PagedResult, SortExpression
+  - Persistence/ IUnitOfWork
+</FileTree>
+
+## Adapter Layer — 인프라 구현
+
+데이터 저장소, 외부 시스템 연동, 관측성 구현을 담당합니다. 도메인에 의존하지만, 도메인은 인프라에 의존하지 않습니다.
+
+<FileTree>
+- Adapters/
+  - Observabilities/
+    - Builders/ OpenTelemetry 구성
+    - Pipelines/ Usecase Pipeline (Logging, Metrics, Tracing, ...)
+    - Events/ Observable 도메인 이벤트 발행
+    - Loggers/ 구조화된 로거 확장
+    - Naming/ Observability 네이밍 규칙
+  - Events/ DomainEventCollector, DomainEventPublisher
+  - Repositories/ DapperQueryAdapterBase
+  - Errors/ AdapterError
+  - Options/ 옵션 설정
+  - SourceGenerators/ [GenerateObservablePort]
+</FileTree>

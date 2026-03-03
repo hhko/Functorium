@@ -1,0 +1,152 @@
+---
+title: Functorium
+description: 도메인 주도 설계(DDD)와 함수형 아키텍처 원칙 기반의 .NET 아키텍처 프레임워크
+template: splash
+hero:
+  tagline: |
+    함수형 아키텍처 + DDD + Observability
+    .NET 통합 아키텍처 프레임워크
+  image:
+    html: '<img src="/Functorium/Functorium.png" alt="Functorium logo" width="400" height="400" />'
+  actions:
+    - text: 시작하기
+      link: /Functorium/getting-started/
+      icon: right-arrow
+    - text: 주요 핵심 기능
+      link: /Functorium/key-features/
+      icon: star
+      variant: secondary
+    - text: GitHub
+      link: https://github.com/hhko/Functorium
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+**Functorium은** **`functor + dominium`** 에 **`fun`** 을 더한 이름으로, 단순한 설계 패턴 모음이 아니라 요구사항 정의부터 운영 안정성 확보까지 일관된 철학으로 연결되는 구조적 접근 방식을 담고 있습니다.
+
+## Quick Example
+
+### Domain: Always-valid Value Object
+
+`Fin<T>`로 검증 결과를 반환하고, `ValidationRules<T>` 체이닝으로 불변식을 보장합니다.
+검증 실패 시 `DomainError`가 에러 코드를 `"DomainErrors.Email.Empty"` 형식으로 자동 생성합니다:
+
+```csharp
+// 검증 실패 → DomainError: "DomainErrors.Email.Empty", "DomainErrors.Email.InvalidFormat" 등
+public sealed partial class Email : SimpleValueObject<string>
+{
+    private Email(string value) : base(value) { }
+
+    public static Fin<Email> Create(string? value) =>
+        CreateFromValidation(Validate(value), v => new Email(v));
+
+    public static Validation<Error, string> Validate(string? value) =>
+        ValidationRules<Email>
+            .NotNull(value)
+            .ThenNotEmpty()
+            .ThenMaxLength(320)
+            .ThenMatches(EmailRegex(), "Invalid email format")
+            .ThenNormalize(v => v.Trim().ToLowerInvariant());
+}
+```
+
+### Application: CQRS Usecase
+
+Command(쓰기)와 Query(읽기) 경로를 분리하고, `FinT<IO, T>`로 사이드 이펙트를 합성합니다.
+비즈니스 규칙 위반 시 `ApplicationError`가 에러 코드를 `"ApplicationErrors.CreateCustomerCommand.AlreadyExists"` 형식으로 자동 생성합니다:
+
+```csharp
+// ── Command 경로 ──────────────────────────────────────────────
+// ICustomerRepository : IRepository<Customer, CustomerId>
+//   → Domain 계층에 정의된 포트. Aggregate Root 단위로 영속화
+//   → 반환 타입: FinT<IO, Customer> (도메인 객체)
+//   → 구현: EF Core (변경 추적, 트랜잭션)
+
+using static Functorium.Applications.Errors.ApplicationErrorType;
+
+public sealed class CreateCustomerCommand
+{
+    public sealed record Request(string Name, string Email, decimal CreditLimit)
+        : ICommandRequest<Response>;
+    public sealed record Response(string CustomerId, string Name, string Email);
+
+    public sealed class Usecase(ICustomerRepository repository)
+        : ICommandUsecase<Request, Response>
+    {
+        public async ValueTask<FinResponse<Response>> Handle(
+            Request request, CancellationToken token)
+        {
+            FinT<IO, Response> usecase =
+                from exists  in repository.Exists(new CustomerEmailSpec(email))
+                from _       in guard(!exists, ApplicationError.For<CreateCustomerCommand>(
+                    new AlreadyExists(),                    // ApplicationErrorType sealed record
+                    request.Email,                          // 현재 값
+                    $"Email already exists: '{request.Email}'"))
+                from customer in repository.Create(newCustomer)
+                select new Response(
+                    customer.Id.ToString(), customer.Name, customer.Email);
+
+            Fin<Response> result = await usecase.Run().RunAsync();
+            return result.ToFinResponse();
+        }
+    }
+}
+
+// ── Query 경로 ────────────────────────────────────────────────
+// ICustomerDetailQuery : IQueryPort
+//   → Application 계층에 정의된 포트. Aggregate 재구성 없이 DTO로 직접 프로젝션
+//   → 반환 타입: FinT<IO, CustomerDetailDto> (읽기 전용 DTO)
+//   → 구현: Dapper (경량 SQL 매핑)
+
+public sealed class GetCustomerByIdQuery
+{
+    public sealed record Request(string CustomerId) : IQueryRequest<Response>;
+    public sealed record Response(string CustomerId, string Name, string Email);
+
+    public sealed class Usecase(ICustomerDetailQuery adapter)
+        : IQueryUsecase<Request, Response>
+    {
+        public async ValueTask<FinResponse<Response>> Handle(
+            Request request, CancellationToken token)
+        {
+            FinT<IO, Response> usecase =
+                from dto in adapter.GetById(CustomerId.Create(request.CustomerId))
+                select new Response(dto.CustomerId, dto.Name, dto.Email);
+
+            Fin<Response> result = await usecase.Run().RunAsync();
+            return result.ToFinResponse();
+        }
+    }
+}
+```
+
+:::tip[레이어별 구조적 에러 + CQRS]
+각 계층은 독립적인 에러 코드 체계를 가집니다:
+- **Domain**: `DomainError.For<Email>(new Empty(), ...)` → `"DomainErrors.Email.Empty"`
+- **Application**: `ApplicationError.For<CreateCustomerCommand>(new AlreadyExists(), ...)` → `"ApplicationErrors.CreateCustomerCommand.AlreadyExists"`
+
+`from ... in ... select` 구문으로 `FinT<IO, T>` 사이드 이펙트를 합성하고, 최종 결과를 `FinResponse<T>`로 변환합니다.
+Command는 `IRepository`(Domain 계층, EF Core, Aggregate Root 반환), Query는 `IQueryPort`(Application 계층, Dapper, DTO 직접 프로젝션)로 읽기/쓰기 경로가 분리됩니다.
+:::
+
+<CardGrid>
+  <Card title="타입 안전한 함수형 도메인 모델링" icon="pencil">
+    Value Object, Entity, FinResponse DU, Monad Transformer로 도메인 불변식을 보장합니다.
+  </Card>
+  <Card title="자동 코드 생성" icon="setting">
+    Source Generator가 Observable wrapper와 EntityId 변환기를 컴파일 시점에 생성합니다.
+  </Card>
+  <Card title="아키텍처 품질 자동화" icon="approve-check">
+    Usecase Pipeline, CQRS 분리, 아키텍처 규칙 테스트로 설계 의도를 보존합니다.
+  </Card>
+  <Card title="Observability by Design" icon="open-book">
+    OpenTelemetry 기반 Logging, Metrics, Tracing이 설계 단계부터 내재화됩니다.
+  </Card>
+</CardGrid>
+
+<CardGrid>
+  <LinkCard title="설계 동기" href="/Functorium/motivation/" description="도메인 로직, 공통 언어, Observability 관점의 구조적 문제와 해결 방향" />
+  <LinkCard title="구조 개요" href="/Functorium/architecture/" description="Domain, Application, Adapter 3계층 아키텍처" />
+</CardGrid>

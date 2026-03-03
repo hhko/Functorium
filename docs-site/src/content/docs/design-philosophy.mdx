@@ -1,0 +1,146 @@
+---
+title: 설계 철학
+description: 도메인 중심 설계, 함수형 아키텍처, Observability by Design
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+## 도메인 중심 설계
+
+모든 핵심 비즈니스 로직은 도메인 모델 안에 위치하며, 엔티티와 값 객체, 애그리게이트, 도메인 서비스는 명확한 책임을 가집니다. 공통 언어는 단순한 용어 정리가 아니라, 코드와 문서, 운영 지표에까지 반영되어야 하는 일관된 개념 체계입니다.
+
+**Value Object** — 값 기반 동등성과 불변성을 보장합니다:
+
+```csharp
+public abstract class AbstractValueObject : IValueObject, IEquatable<AbstractValueObject>
+{
+    protected abstract IEnumerable<object> GetEqualityComponents();
+
+    // 값 기반 동등성, 캐시된 해시코드, ORM 프록시 처리
+}
+```
+
+:::note[값 기반 동등성]
+Value Object는 참조가 아닌 값으로 비교됩니다. `GetEqualityComponents()`가 반환하는 구성 요소가 동일하면 같은 객체로 취급됩니다.
+:::
+
+**Entity / AggregateRoot** — Ulid 기반 ID와 도메인 이벤트 관리를 제공합니다:
+
+```csharp
+public interface IEntityId<T> : IEquatable<T>, IComparable<T>
+    where T : struct, IEntityId<T>
+{
+    Ulid Value { get; }
+    static abstract T New();
+    static abstract T Create(Ulid id);
+    static abstract T Create(string id);
+}
+
+public abstract class AggregateRoot<TId> : Entity<TId>, IDomainEventDrain
+    where TId : struct, IEntityId<TId>
+{
+    protected void AddDomainEvent(IDomainEvent domainEvent);
+    public void ClearDomainEvents();
+}
+```
+
+**DomainError** — 구조화된 에러 코드로 복구 가능성을 확보합니다:
+
+```csharp
+// 에러 코드 자동 생성: "DomainErrors.Email.Empty"
+DomainError.For<Email>(new Empty(), value, "Email cannot be empty");
+
+// 에러 코드 자동 생성: "DomainErrors.Password.TooShort"
+DomainError.For<Password>(new TooShort(MinLength: 8), value, "Password too short");
+```
+
+:::note[자동 생성]
+에러 코드는 타입 이름에서 자동으로 생성됩니다. `DomainError.For<Email>(new Empty(), ...)` → `"DomainErrors.Email.Empty"`.
+:::
+
+**Domain Event** — Mediator 기반 Pub/Sub과 이벤트 추적을 통합합니다:
+
+```csharp
+public interface IDomainEvent : INotification
+{
+    DateTimeOffset OccurredAt { get; }
+    Ulid EventId { get; }
+    string? CorrelationId { get; }
+    string? CausationId { get; }
+}
+```
+
+## 함수형 아키텍처 전환
+
+핵심 도메인 로직은 순수 함수로 구성됩니다. 입력이 동일하면 항상 동일한 출력을 반환하는 구조를 유지함으로써, 로직은 예측 가능하고 테스트하기 쉬운 형태가 됩니다. 사이드 이펙트(데이터베이스, 외부 API, 메시징, 파일 I/O)는 도메인 로직 바깥에서 처리됩니다.
+
+**`Fin<T>`, `FinT<IO, T>`** — 예외 대신 명시적 결과 타입으로 오류를 처리합니다:
+
+```csharp
+// Repository는 FinT<IO, T>를 반환하여 사이드 이펙트를 명시적으로 표현
+public interface IRepository<TAggregate, TId> : IObservablePort
+    where TAggregate : AggregateRoot<TId>
+    where TId : struct, IEntityId<TId>
+{
+    FinT<IO, TAggregate> Create(TAggregate aggregate);
+    FinT<IO, TAggregate> GetById(TId id);
+    FinT<IO, TAggregate> Update(TAggregate aggregate);
+    FinT<IO, Unit> Delete(TId id);
+}
+```
+
+**CQRS** — Command/Query를 명확히 분리하고, `FinResponse<T>`로 결과를 통합합니다:
+
+<Tabs>
+  <TabItem label="Command">
+```csharp
+public interface ICommandRequest<TSuccess> : ICommand<FinResponse<TSuccess>> { }
+public interface ICommandUsecase<in TCommand, TSuccess>
+    : ICommandHandler<TCommand, FinResponse<TSuccess>>
+    where TCommand : ICommandRequest<TSuccess> { }
+```
+  </TabItem>
+  <TabItem label="Query">
+```csharp
+public interface IQueryRequest<TSuccess> : IQuery<FinResponse<TSuccess>> { }
+public interface IQueryUsecase<in TQuery, TSuccess>
+    : IQueryHandler<TQuery, FinResponse<TSuccess>>
+    where TQuery : IQueryRequest<TSuccess> { }
+```
+  </TabItem>
+</Tabs>
+
+:::note[Pipeline 실행 순서]
+모든 유스케이스는 Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction 순서의 Pipeline을 자동으로 통과합니다.
+:::
+
+## Observability by Design
+
+운영 안정성은 배포 이후에 보완하는 것이 아니라, 설계 단계에서부터 고려됩니다. 구조화된 로그, 핵심 비즈니스 메트릭, 분산 추적 정보가 도메인 흐름과 함께 정의됩니다.
+
+**IObservablePort** — 모든 외부 의존성이 관측 가능한 포트로 추상화됩니다:
+
+```csharp
+public interface IObservablePort
+{
+    string RequestCategory { get; }
+}
+```
+
+**`[GenerateObservablePort]`** — Source Generator가 Adapter에 대한 Observable wrapper를 자동 생성하여, OpenTelemetry 기반의 Tracing/Logging/Metrics를 투명하게 제공합니다:
+
+```csharp
+[GenerateObservablePort]  // → Observable{ClassName} 자동 생성
+public class OrderRepository : IRepository<Order, OrderId> { ... }
+```
+
+**Usecase Pipeline** — 모든 유스케이스는 파이프라인을 통해 횡단 관심사를 처리합니다:
+
+| Pipeline | 역할 |
+|----------|------|
+| `UsecaseExceptionPipeline` | 예외 → 구조화된 에러 변환 |
+| `UsecaseValidationPipeline` | FluentValidation 기반 입력 검증 |
+| `UsecaseLoggingPipeline` | 구조화된 로그 자동 기록 |
+| `UsecaseMetricsPipeline` | 유스케이스 메트릭 자동 수집 |
+| `UsecaseTracingPipeline` | 분산 추적 컨텍스트 전파 |
+| `UsecaseTransactionPipeline` | 트랜잭션 경계 관리 |

@@ -1,0 +1,57 @@
+---
+title: 주요 핵심 기능
+description: Functorium의 3가지 핵심 기능 영역
+---
+
+import { LinkCard, CardGrid } from '@astrojs/starlight/components';
+
+## 타입 안전한 함수형 도메인 모델링
+
+Value Object와 Entity를 함수형 팩토리 패턴으로 생성하여 도메인 불변식을 생성 시점에 보장하고, 예외 대신 `FinResponse<T>` Discriminated Union으로 유스케이스 결과를 명시적으로 처리합니다. `FinT<IO, T>` Monad Transformer로 사이드 이펙트 경계를 타입 수준에서 추적하고, 구조화된 에러 코드와 Specification 합성, 함수형 검증을 통해 도메인 로직의 정확성과 합성 가능성을 동시에 확보합니다.
+
+:::note[핵심 원칙]
+모든 도메인 객체는 생성 시점에 유효성이 보장됩니다(Always-valid). 유효하지 않은 상태의 객체는 존재할 수 없습니다.
+:::
+
+| 기능 | 설명 |
+|------|------|
+| Value Object 계층 | AbstractValueObject → SimpleValueObject\<T\> → ComparableValueObject. 값 기반 동등성, Always-valid 팩토리 |
+| Entity / AggregateRoot | Ulid 기반 타입 안전한 ID(IEntityId\<T\>). AggregateRoot에서 도메인 이벤트 수집·발행 |
+| FinResponse\<T\> Discriminated Union | sealed record 기반 Success/Failure. 모든 유스케이스의 명시적 결과 처리. LINQ 합성 지원 |
+| FinT\<IO, T\> Monad Transformer | 사이드 이펙트를 타입으로 추적. Repository 반환 타입으로 순수/비순수 경계 명시 |
+| 구조화된 에러 코드 시스템 | `DomainErrors.Email.Empty` 형태 자동 생성. 8가지 명명 규칙(R1–R8) |
+| Specification Pattern | &/\|/! 연산자 합성. Expression Tree → SQL 변환. PropertyMap 브릿지 |
+| 함수형 검증 (Bind + Apply) | 순차(Bind) vs 병렬(Apply) 검증. Always-valid Value Object |
+
+## 자동 코드 생성 (Source Generator)
+
+Source Generator가 컴파일 시점에 Domain과 Adapter 계층 간 브릿지 코드를 자동 생성합니다. 포트 구현체에 관측성 래퍼를 씌우고, 도메인 ID 타입에 영속성 변환기를 생성하여 계층 간 연결 보일러플레이트를 제거합니다.
+
+:::tip[보일러플레이트 제거]
+어트리뷰트 하나로 Observable wrapper와 EntityId 변환기가 자동 생성되어, 반복 코드 없이 계층 간 연결이 완성됩니다.
+:::
+
+| 기능 | 설명 |
+|------|------|
+| \[GenerateObservablePort\] | Adapter 포트 구현체에 OpenTelemetry Tracing/Logging/Metrics Observable wrapper 자동 생성 |
+| \[GenerateEntityId\] | Ulid 기반 EntityId + EF Core ValueConverter/ValueComparer 자동 생성. Domain ↔ Adapter 영속성 브릿지 |
+
+## 아키텍처 품질 자동화
+
+모든 유스케이스에 횡단 관심사 Pipeline이 자동 적용되고, CQRS 기반으로 읽기/쓰기 경로가 분리됩니다. 타입 시스템과 단위 테스트가 Pipeline 제약 조건, 불변성·가시성·상속 규칙을 코드 수준에서 강제하여 설계 의도가 지속적으로 보존됩니다.
+
+:::note[설계 의도 보존]
+아키텍처 규칙이 코드에 내재화되어, 리뷰어 없이도 설계 원칙이 지속적으로 유지됩니다.
+:::
+
+| 기능 | 설명 |
+|------|------|
+| Usecase 횡단 관심사 Pipeline | Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction 순서로 자동 적용 |
+| 타입 안전한 Pipeline 제약 | IFinResponse 인터페이스 계층 + CRTP 팩토리. 리플렉션 없이 Pipeline별 최소 제약 |
+| CQRS 읽기/쓰기 분리 | Command(IRepository + EF Core) vs Query(IQueryPort + Dapper). Cursor 페이지네이션 |
+| 아키텍처 규칙 테스트 | ClassValidator/InterfaceValidator/MethodValidator. 불변성·가시성·상속 규칙을 단위 테스트로 강제 |
+
+<CardGrid>
+  <LinkCard title="설계 철학" href="/Functorium/design-philosophy/" description="도메인 중심 설계, 함수형 아키텍처, Observability by Design" />
+  <LinkCard title="시작하기" href="/Functorium/getting-started/" description="Functorium 설치, 튜토리얼, Observability 가이드" />
+</CardGrid>
