@@ -439,5 +439,9 @@ tmpclaude-*-cwd
 # Coverage
 .coverage/reports/
 
+# Astro (docs-site)
+docs-site/dist/
+docs-site/.astro/
+
 # Others
 GitHub/
