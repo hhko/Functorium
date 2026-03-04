@@ -398,6 +398,63 @@ dotnet add package Functorium.SourceGenerators
 dotnet add package Functorium.Testing
 ```
 
+## Observability
+
+Functorium은 OpenTelemetry 기반의 통합 관측성(Logging, Metrics, Tracing)을 제공합니다.
+모든 관측성 필드는 OpenTelemetry 시맨틱 규칙과의 일관성을 위해 `snake_case + dot` 표기법을 사용합니다.
+
+![](./Functorium.Observability.png)
+
+### 두 가지 관측 경로
+
+| 구분 | 외부 입출력 (Usecase Pipeline) | 내부 입출력 (Observable Port) |
+|------|-------------------------------|------------------------------|
+| **적용 대상** | 모든 Command / Query 유스케이스 | Repository, QueryAdapter 등 IObservablePort 구현체 |
+| **적용 방식** | Mediator `IPipelineBehavior` 자동 래핑 | `[GenerateObservablePort]` Source Generator 자동 생성 |
+| **구성 요소** | `UsecaseLoggingPipeline`, `UsecaseMetricsPipeline`, `UsecaseTracingPipeline` | 메서드별 Logging / Metrics / Tracing wrapper |
+| **EventId 범위** | Application 1001–1004 | Adapter 2001–2004 |
+
+### 로그 표준화 형식
+
+**필드 네이밍 규칙** (`snake_case + dot`):
+
+`request.layer`, `request.category`, `request.category.type`, `request.handler`, `request.handler.method`, `response.status`, `response.elapsed`, `error.type`, `error.code`
+
+**메시지 템플릿 패턴:**
+
+```
+// 요청
+{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} requesting with {@request.message}
+
+// 성공
+... responded {response.status} in {response.elapsed:0.0000} s with {@response.message}
+
+// 실패
+... responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}
+```
+
+**EventId 범위:**
+
+| 계층 | 범위 | 이벤트 |
+|------|------|--------|
+| Application | 1001–1004 | request, response.success, response.warning, response.error |
+| Adapter | 2001–2004 | request, response.success, response.warning, response.error |
+
+**에러 타입 분류:**
+
+| 타입 | 설명 | 로그 수준 |
+|------|------|-----------|
+| `expected` | 예상된 비즈니스 에러 | Warning |
+| `exceptional` | 예외적 시스템 에러 | Error |
+| `aggregate` | 복합 에러 | Error |
+
+### 상세 가이드
+
+- **사양**: [Observability Specification](./Docs/guides/18a-observability-spec.md) — Field/Tag 구조, Meter/Instrument 사양, 메시지 템플릿
+- **Logging 매뉴얼**: [Logging Guide](./Docs/guides/19-observability-logging.md) — 구조화된 로깅 상세 가이드
+- **Metrics 매뉴얼**: [Metrics Guide](./Docs/guides/20-observability-metrics.md) — 메트릭 수집 및 분석 가이드
+- **Tracing 매뉴얼**: [Tracing Guide](./Docs/guides/21-observability-tracing.md) — 분산 추적 상세 가이드
+
 ## 튜토리얼
 
 - [Architecture](./Docs/architecture-is/README.md)
@@ -411,15 +468,3 @@ dotnet add package Functorium.Testing
 | [Enforcing Architecture Rules with Testing](./Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/README.md) | 아키텍처 규칙, ClassValidator | 16개 |
 | [Automating ObservabilityCode with SourceGenerator](./Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/README.md) | Source Generator, Observable wrapper | — |
 | [Automating ReleaseNotes with ClaudeCode and .NET 10](./Docs/tutorials/Automating-ReleaseNotes-with-ClaudeCode-and-.NET10/README.md) | AI 자동화, 릴리스 노트 | — |
-
-## Observability
-
-Functorium은 OpenTelemetry 기반의 통합 관측성(Logging, Metrics, Tracing)을 제공합니다.
-모든 관측성 필드는 OpenTelemetry 시맨틱 규칙과의 일관성을 위해 `snake_case + dot` 표기법을 사용합니다.
-
-![](./Functorium.Observability.png)
-
-- **사양**: [Observability Specification](./Docs/guides/18a-observability-spec.md) — Field/Tag 구조, Meter/Instrument 사양, 메시지 템플릿
-- **Logging 매뉴얼**: [Logging Guide](./Docs/guides/19-observability-logging.md) — 구조화된 로깅 상세 가이드
-- **Metrics 매뉴얼**: [Metrics Guide](./Docs/guides/20-observability-metrics.md) — 메트릭 수집 및 분석 가이드
-- **Tracing 매뉴얼**: [Tracing Guide](./Docs/guides/21-observability-tracing.md) — 분산 추적 상세 가이드
