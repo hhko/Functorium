@@ -46,9 +46,7 @@ import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 ### Domain: Always-valid Value Object
 
 `Fin<T>`로 검증 결과를 반환하고, `ValidationRules<T>` 체이닝으로 불변식을 보장합니다.
-각 유효성 검사 조건(`NotNull`, `ThenNotEmpty`, `ThenMaxLength`, `ThenMatches`)은 실패 시 조건별로 세분화된 에러 코드를 자동 생성합니다.
-예를 들어 `null` 입력은 `"DomainErrors.Email.Null"`, 빈 문자열은 `"DomainErrors.Email.Empty"`, 길이 초과는 `"DomainErrors.Email.TooLong"`, 정규식 불일치는 `"DomainErrors.Email.InvalidFormat"`이 됩니다.
-복합 Value Object에서는 Apply 패턴으로 여러 필드를 병렬 검증하여, 복수 조건 실패 시 모든 에러를 한꺼번에 수집합니다:
+각 검증 조건이 실패하면 조건에 대응하는 에러 코드가 자동 생성되고, 복합 Value Object는 Apply 패턴으로 복수 필드를 병렬 검증하여 실패한 모든 에러를 한꺼번에 수집합니다:
 
 ```csharp
 // 검증 실패 시 조건별 DomainError 자동 생성:
@@ -63,6 +61,13 @@ public sealed partial class Email : SimpleValueObject<string>
     public static Fin<Email> Create(string? value) =>
         CreateFromValidation(Validate(value), v => new Email(v));
 
+    // 각 검증 조건이 실패하면 조건에 대응하는 에러 코드가 자동 생성됩니다.
+    //   NotNull  → "DomainErrors.Email.Null"
+    //   NotEmpty → "DomainErrors.Email.Empty"
+    //   MaxLength→ "DomainErrors.Email.TooLong"
+    //   Matches  → "DomainErrors.Email.InvalidFormat"
+    // 복합 Value Object는 Apply 패턴으로 복수 필드를 병렬 검증하여
+    // 실패한 모든 에러를 한꺼번에 수집합니다.
     public static Validation<Error, string> Validate(string? value) =>
         ValidationRules<Email>
             .NotNull(value)
