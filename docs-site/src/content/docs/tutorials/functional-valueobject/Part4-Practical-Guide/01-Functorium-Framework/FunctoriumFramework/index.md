@@ -126,7 +126,7 @@ public abstract class ComparableSimpleValueObject<T> : ComparableValueObject
 // 타입 파라미터를 한 번만 지정하는 검증 시작점
 ValidationRules<Email>.NotNull(value)
     .ThenNotEmpty()
-    .ThenMaxLength(320)
+    .ThenMaxLength(MaxLength)    // public const int MaxLength = 320;
     .ThenMatches(EmailRegex(), "Invalid email format")
     .ThenNormalize(v => v.Trim().ToLowerInvariant());
 

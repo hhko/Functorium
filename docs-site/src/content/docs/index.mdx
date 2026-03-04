@@ -46,12 +46,18 @@ import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 ### Domain: Always-valid Value Object
 
 `Fin<T>`로 검증 결과를 반환하고, `ValidationRules<T>` 체이닝으로 불변식을 보장합니다.
-검증 실패 시 `DomainError`가 에러 코드를 `"DomainErrors.Email.Empty"` 형식으로 자동 생성합니다:
+각 유효성 검사 조건(`NotNull`, `ThenNotEmpty`, `ThenMaxLength`, `ThenMatches`)은 실패 시 조건별로 세분화된 에러 코드를 자동 생성합니다.
+예를 들어 `null` 입력은 `"DomainErrors.Email.Null"`, 빈 문자열은 `"DomainErrors.Email.Empty"`, 길이 초과는 `"DomainErrors.Email.TooLong"`, 정규식 불일치는 `"DomainErrors.Email.InvalidFormat"`이 됩니다.
+복합 Value Object에서는 Apply 패턴으로 여러 필드를 병렬 검증하여, 복수 조건 실패 시 모든 에러를 한꺼번에 수집합니다:
 
 ```csharp
-// 검증 실패 → DomainError: "DomainErrors.Email.Empty", "DomainErrors.Email.InvalidFormat" 등
+// 검증 실패 시 조건별 DomainError 자동 생성:
+//   "DomainErrors.Email.Null", "DomainErrors.Email.Empty",
+//   "DomainErrors.Email.TooLong", "DomainErrors.Email.InvalidFormat"
 public sealed partial class Email : SimpleValueObject<string>
 {
+    public const int MaxLength = 320;
+
     private Email(string value) : base(value) { }
 
     public static Fin<Email> Create(string? value) =>
@@ -61,7 +67,7 @@ public sealed partial class Email : SimpleValueObject<string>
         ValidationRules<Email>
             .NotNull(value)
             .ThenNotEmpty()
-            .ThenMaxLength(320)
+            .ThenMaxLength(MaxLength)
             .ThenMatches(EmailRegex(), "Invalid email format")
             .ThenNormalize(v => v.Trim().ToLowerInvariant());
 }
@@ -141,6 +147,37 @@ public sealed class GetCustomerByIdQuery
 각 계층은 독립적인 에러 코드 체계를 가집니다:
 - **Domain**: `DomainError.For<Email>(new Empty(), ...)` → `"DomainErrors.Email.Empty"`
 - **Application**: `ApplicationError.For<CreateCustomerCommand>(new AlreadyExists(), ...)` → `"ApplicationErrors.CreateCustomerCommand.AlreadyExists"`
+- **Adapter**: `AdapterError.For<OrderRepository>(new NotFound(), ...)` → `"AdapterErrors.OrderRepository.NotFound"`
+
+Adapter 계층은 인프라 오류(DB 조회 실패, 외부 서비스 장애, 파이프라인 예외 등)를 구조화된 에러로 표현합니다.
+`NotFound`, `Timeout`, `ConnectionFailed`, `PipelineException` 등 인프라 특성에 맞는 에러 타입이 제공되며, `FromException`으로 예외를 에러 코드로 래핑할 수도 있습니다.
+
+모든 에러는 구조화된 로그로 출력되어 Observability 파이프라인과 연계됩니다:
+
+```json
+// 단일 에러 — Domain 검증 실패
+{
+  "error.code": "DomainErrors.Email.Empty",
+  "error.type": "expected",
+  "@error": {
+    "ErrorCode": "DomainErrors.Email.Empty",
+    "ErrorCurrentValue": "",
+    "Message": "Email cannot be empty"
+  }
+}
+
+// 복수 에러 — Apply 패턴으로 여러 조건 실패를 한꺼번에 수집
+{
+  "error.code": "DomainErrors.Email.Empty",
+  "error.type": "aggregate",
+  "@error": {
+    "Errors": [
+      { "ErrorCode": "DomainErrors.Email.Empty", "ErrorCurrentValue": "", "Message": "Email cannot be empty" },
+      { "ErrorCode": "DomainErrors.Password.TooShort", "ErrorCurrentValue": "ab", "Message": "Password too short" }
+    ]
+  }
+}
+```
 
 `from ... in ... select` 구문으로 `FinT<IO, T>` 사이드 이펙트를 합성하고, 최종 결과를 `FinResponse<T>`로 변환합니다.
 Command는 `IRepository`(Domain 계층, EF Core, Aggregate Root 반환), Query는 `IQueryPort`(Application 계층, Dapper, DTO 직접 프로젝션)로 읽기/쓰기 경로가 분리됩니다.

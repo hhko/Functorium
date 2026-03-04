@@ -120,11 +120,13 @@ DomainError.For<Currency>(new Unsupported(), value, "Currency not supported");
 `ValidationRules<T>`는 타입 파라미터를 한 번만 지정하고, 검증 규칙을 체인으로 연결합니다.
 
 ```csharp
+public const int MaxLength = 320;
+
 public static Validation<Error, string> Validate(string? value) =>
     ValidationRules<Email>
         .NotNull(value)
         .ThenNotEmpty()
-        .ThenMaxLength(320)
+        .ThenMaxLength(MaxLength)
         .ThenMatches(EmailRegex(), "Invalid email format")
         .ThenNormalize(v => v.Trim().ToLowerInvariant());
 ```
@@ -170,19 +172,22 @@ using static Functorium.Domains.Errors.DomainErrorType;
 // 1. SimpleValueObject<T> 상속
 public sealed class Email : SimpleValueObject<string>
 {
-    // 2. private 생성자
+    // 2. 도메인 제약 조건을 상수로 선언
+    public const int MaxLength = 320;
+
+    // 3. private 생성자
     private Email(string value) : base(value) { }
 
-    // 3. Fin<T> 반환하는 Create 메서드
+    // 4. Fin<T> 반환하는 Create 메서드
     public static Fin<Email> Create(string? value) =>
         CreateFromValidation(Validate(value), v => new Email(v));
 
-    // 4. ValidationRules<T> 체이닝으로 검증
+    // 5. ValidationRules<T> 체이닝으로 검증
     public static Validation<Error, string> Validate(string? value) =>
         ValidationRules<Email>
             .NotNull(value)
             .ThenNotEmpty()
-            .ThenMaxLength(320)
+            .ThenMaxLength(MaxLength)
             .ThenMatches(EmailRegex(), "Invalid email format")
             .ThenNormalize(v => v.Trim().ToLowerInvariant());
 
