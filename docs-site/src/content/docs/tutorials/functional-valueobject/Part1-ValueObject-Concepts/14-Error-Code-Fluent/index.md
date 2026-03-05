@@ -1,5 +1,5 @@
 ---
-title: "DomainError 헬퍼를 사용한 간결한 에러 처리"
+title: "DomainError 헬퍼"
 ---
 
 ## 개요

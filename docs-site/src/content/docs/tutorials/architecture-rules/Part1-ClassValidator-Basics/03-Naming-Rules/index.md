@@ -1,11 +1,6 @@
 ---
 title: "네이밍 규칙"
 ---
-
-> **Part 1: ClassValidator 기초** | [← 이전: 2장 가시성과 한정자](../02-Visibility-And-Modifiers/) | [다음: 4장 상속과 인터페이스 →](../04-Inheritance-And-Interface/)
-
----
-
 ## 개요
 
 이 장에서는 **클래스와 인터페이스의 네이밍 규칙을** 아키텍처 테스트로 강제하는 방법을 학습합니다. 접두사, 접미사, 정규식 패턴을 사용하여 일관된 명명 규칙을 코드베이스 전체에 적용합니다.
@@ -138,7 +133,3 @@ public void RepositoryInterfaces_ShouldMatch_RepositoryPattern()
 - **`ValidateAllClasses`** -- `ClassValidator`를 사용하여 클래스 검증
 - **`ValidateAllInterfaces`** -- `InterfaceValidator`를 사용하여 인터페이스 검증
 - 두 Validator 모두 `TypeValidator`를 상속하여 네이밍 규칙(`RequireNameStartsWith`, `RequireNameEndsWith`, `RequireNameMatching`)과 인터페이스 구현 규칙을 공유합니다.
-
----
-
-> [← 이전: 2장 가시성과 한정자](../02-Visibility-And-Modifiers/) | [다음: 4장 상속과 인터페이스 →](../04-Inheritance-And-Interface/)

@@ -1,11 +1,6 @@
 ---
 title: "인메모리 쿼리 어댑터"
 ---
-
-> **Part 3: Query 측 — 읽기 전용 패턴** | [← 이전: 11장 Pagination and Sorting →](../03-Pagination-And-Sorting/) | [다음: 13장 Dapper Query Adapter →](../05-Dapper-Query-Adapter/)
-
----
-
 ## 개요
 
 InMemoryQueryBase<TEntity, TDto>는 메모리 내 데이터 소스에 대한 Query Adapter의 공통 인프라입니다. 서브클래스는 GetProjectedItems(필터링 + DTO 프로젝션)와 SortSelector(정렬 키 셀렉터)만 구현하면 Search, SearchByCursor, Stream이 자동으로 동작합니다.

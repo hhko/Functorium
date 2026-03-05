@@ -1,11 +1,6 @@
 ---
 title: "Dapper 쿼리 어댑터"
 ---
-
-> **Part 3: Query 측 — 읽기 전용 패턴** | [← 이전: 12장 InMemory Query Adapter →](../04-InMemory-Query-Adapter/) | [다음: 14장 Command Usecase →](../../Part4-CQRS-Usecase-Integration/01-Command-Usecase/)
-
----
-
 ## 개요
 
 DapperQueryBase<TEntity, TDto>는 Dapper를 사용한 SQL 기반 Query Adapter의 공통 인프라입니다. InMemoryQueryBase가 메모리 내 데이터를 LINQ로 처리하는 것과 달리, DapperQueryBase는 SQL 쿼리를 조합하여 데이터베이스에 직접 실행합니다. 이 장에서는 실제 DB 없이 SqlQueryBuilder를 통해 SQL 생성 패턴을 학습합니다.

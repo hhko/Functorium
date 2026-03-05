@@ -1,5 +1,5 @@
 ---
-title: "타입 안전한 Usecase 파이프라인 제약 설계하기"
+title: "유스케이스 파이프라인 제약"
 ---
 
 **C# 제네릭 변성에서 Mediator Pipeline 제약 해결까지 실전 가이드**

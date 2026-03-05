@@ -1,11 +1,6 @@
 ---
 title: "CQRS와 값 객체 통합"
 ---
-
-> **Part 4: 실전 가이드** | [← 이전: ORM 통합](../02-ORM-Integration/) | [목차](../../) | [다음: 테스트 전략 →](../04-Testing-Strategies/)
-
----
-
 ## 개요
 
 이 프로젝트는 CQRS(Command Query Responsibility Segregation) 패턴에서 값 객체를 활용하는 방법을 학습합니다. Command와 Query에서 값 객체를 사용하여 입력 검증을 수행하고, `Fin<T>`를 API Response로 변환하는 패턴을 익힙니다.

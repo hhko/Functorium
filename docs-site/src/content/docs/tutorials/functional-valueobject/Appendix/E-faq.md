@@ -1,11 +1,6 @@
 ---
 title: "FAQ"
 ---
-
-> **부록** | [← 이전: D. 참고 자료](D-references.md) | [목차](../)
-
----
-
 ## 일반 질문
 
 ### Q: 값 객체와 엔티티의 차이점은 무엇인가요?
@@ -412,7 +407,3 @@ public sealed class Order : ValueObject
 - GitHub Issues에 질문 등록
 - Stack Overflow에 태그 `value-objects`, `languageext` 사용
 - 커뮤니티 토론 참여
-
----
-
-> **끝** | [← 목차로 돌아가기](../)

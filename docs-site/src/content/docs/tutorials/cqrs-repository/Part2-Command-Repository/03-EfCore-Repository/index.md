@@ -1,11 +1,6 @@
 ---
 title: "EF Core 리포지토리"
 ---
-
-> **Part 2: Command 측 -- Repository 패턴** | [← 이전: 6장 →](../02-InMemory-Repository/) | [다음: 8장 →](../04-Unit-Of-Work/)
-
----
-
 ## 개요
 
 `EfCoreRepositoryBase<TAggregate, TId, TModel>`는 EF Core 기반의 `IRepository` 구현체입니다.

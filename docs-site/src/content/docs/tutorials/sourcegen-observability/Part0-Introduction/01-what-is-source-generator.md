@@ -1,5 +1,5 @@
 ---
-title: "Source Generator란 무엇인가"
+title: "Source Generator란"
 ---
 
 ## 학습 목표

@@ -1,11 +1,6 @@
 ---
 title: "첫 번째 명세"
 ---
-
-> **Part 1: Specification 기초** | [← 목차로](../../../) | [다음: 2장 조합 →](../02-Composition/)
-
----
-
 ## 개요
 
 Specification 패턴의 핵심은 **비즈니스 조건을 독립적인 객체로 캡슐화**하는 것입니다. 이 장에서는 `Specification<T>` 추상 클래스를 상속하여 첫 번째 Specification을 직접 만들어봅니다.

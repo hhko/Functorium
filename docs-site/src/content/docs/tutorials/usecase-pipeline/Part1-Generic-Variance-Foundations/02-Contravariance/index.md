@@ -101,6 +101,3 @@ dotnet run --project Contravariance
 dotnet test --project Contravariance.Tests.Unit
 ```
 
----
-
-[← 이전: 1장 공변성 (out)](../01-Covariance/) | [다음: 3장 불변성과 제약 →](../03-Invariance-And-Constraints/)

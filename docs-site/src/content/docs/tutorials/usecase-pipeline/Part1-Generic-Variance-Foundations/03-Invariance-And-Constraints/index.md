@@ -96,6 +96,3 @@ dotnet run --project InvarianceAndConstraints
 dotnet test --project InvarianceAndConstraints.Tests.Unit
 ```
 
----
-
-[← 이전: 2장 반공변성 (in)](../02-Contravariance/) | [다음: 4장 인터페이스 분리와 변성 조합 →](../04-Interface-Segregation-And-Variance/)

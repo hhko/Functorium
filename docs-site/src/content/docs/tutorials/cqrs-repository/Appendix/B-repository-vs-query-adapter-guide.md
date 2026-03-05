@@ -1,11 +1,6 @@
 ---
-title: "Repository vs Query 어댑터 선택 가이드"
+title: "Repository vs Query 선택"
 ---
-
-> **부록** | [<- 이전: A. CQRS vs 전통적 CRUD](A-cqrs-vs-crud.md) | [목차](../) | [다음: C. FinT / FinResponse 타입 참조 ->](C-fint-finresponse-reference.md)
-
----
-
 ## 개요
 
 Functorium CQRS에서 데이터 접근은 **IRepository**(Command 측)와 **IQueryPort**(Query 측) 두 가지 경로로 나뉩니다. 이 가이드는 상황에 따라 어떤 경로를 선택해야 하는지 안내합니다.
@@ -175,5 +170,3 @@ public class CreateOrderUsecase(
 ## 다음 단계
 
 FinT와 FinResponse 타입 참조를 확인합니다.
-
--> [C. FinT / FinResponse 타입 참조](C-fint-finresponse-reference.md)

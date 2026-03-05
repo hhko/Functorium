@@ -1,11 +1,6 @@
 ---
 title: "페이지네이션과 정렬"
 ---
-
-> **Part 3: Query 측 — 읽기 전용 패턴** | [← 이전: 10장 DTO Separation →](../02-DTO-Separation/) | [다음: 12장 InMemory Query Adapter →](../04-InMemory-Query-Adapter/)
-
----
-
 ## 개요
 
 IQueryPort의 Search와 SearchByCursor 메서드는 각각 PageRequest와 CursorPageRequest를 받아 페이지네이션된 결과를 반환합니다. 이 장에서는 Offset 기반과 Cursor(Keyset) 기반 페이지네이션의 차이, SortExpression을 사용한 다중 필드 정렬을 학습합니다.

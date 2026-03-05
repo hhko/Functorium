@@ -1,11 +1,6 @@
 ---
 title: "상속과 인터페이스"
 ---
-
-> **Part 1: ClassValidator 기초** | [← 이전: 3장 네이밍 규칙](../03-Naming-Rules/) | [다음: Part 2 →](../../Part2-Method-And-Property-Validation/)
-
----
-
 ## 개요
 
 이 장에서는 클래스의 **상속 관계와 인터페이스 구현을** 아키텍처 테스트로 검증하는 방법을 학습합니다. 도메인 엔티티가 올바른 기본 클래스를 상속하는지, 필요한 인터페이스를 구현하는지를 강제하여 도메인 모델의 일관성을 보장합니다.
@@ -141,7 +136,3 @@ public void Repositories_ShouldImplement_GenericIRepository()
 ### 필터링과 규칙의 조합
 
 ArchUnitNET의 필터링 메서드(`.AreNotAbstract()`, `.HaveNameEndingWith()` 등)와 ClassValidator 규칙을 결합하면, 특정 조건을 만족하는 클래스 집합에만 규칙을 적용할 수 있습니다.
-
----
-
-> [← 이전: 3장 네이밍 규칙](../03-Naming-Rules/) | [다음: Part 2 →](../../Part2-Method-And-Property-Validation/)

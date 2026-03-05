@@ -1,11 +1,6 @@
 ---
 title: "인메모리 구현"
 ---
-
-> **Part 3: Repository 연동** | [이전: 9장 Repository와 Specification <-](../01-Repository-With-Specification/) | [다음: 11장 PropertyMap ->](../03-PropertyMap/)
-
----
-
 ## 개요
 
 9장에서 설계한 `IProductRepository` 인터페이스를 실제로 구현합니다. InMemory 구현은 가장 단순한 형태의 Repository로, Specification의 `IsSatisfiedBy` 메서드를 직접 활용합니다. LINQ의 `Where`와 `Any`에 메서드 참조(`spec.IsSatisfiedBy`)를 전달하는 것만으로 구현이 완성됩니다.

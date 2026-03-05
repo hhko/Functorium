@@ -1,11 +1,6 @@
 ---
 title: "표현식 트리 기초"
 ---
-
-> **Part 2: Expression Specification** | [← 목차로](../../../)
-
----
-
 ## 개요
 
 이 장에서는 C#의 `Expression<Func<T, bool>>`과 일반 `Func<T, bool>`의 차이를 학습합니다. Expression Tree는 코드를 데이터로 표현하는 구조로, ORM(Entity Framework Core 등)이 C# 조건식을 SQL로 변환할 수 있게 해주는 핵심 기술입니다.

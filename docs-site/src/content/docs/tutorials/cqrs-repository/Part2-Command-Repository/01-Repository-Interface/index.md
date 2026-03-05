@@ -1,11 +1,6 @@
 ---
 title: "리포지토리 인터페이스"
 ---
-
-> **Part 2: Command 측 -- Repository 패턴** | [← 이전: 4장 →](../../Part1-Domain-Entity-Foundations/04-Entity-Interfaces/) | [다음: 6장 →](../02-InMemory-Repository/)
-
----
-
 ## 개요
 
 `IRepository<TAggregate, TId>`는 Aggregate Root 단위 영속화를 위한 공통 인터페이스입니다.

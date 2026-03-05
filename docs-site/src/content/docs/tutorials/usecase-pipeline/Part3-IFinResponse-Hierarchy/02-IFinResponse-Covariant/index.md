@@ -1,5 +1,5 @@
 ---
-title: "IFinResponse<out A> 공변 인터페이스"
+title: "IFinResponse 공변 인터페이스"
 ---
 
 ## 개요
@@ -92,6 +92,3 @@ dotnet run --project FinResponseCovariant
 dotnet test --project FinResponseCovariant.Tests.Unit
 ```
 
----
-
-[← 이전: 9장 IFinResponse 비제네릭 마커](../01-IFinResponse-Marker/) | [다음: 11장 IFinResponseFactory CRTP 팩토리 →](../03-IFinResponseFactory-CRTP/)

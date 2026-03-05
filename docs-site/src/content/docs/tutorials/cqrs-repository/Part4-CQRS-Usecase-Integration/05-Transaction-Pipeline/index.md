@@ -1,11 +1,6 @@
 ---
 title: "트랜잭션 파이프라인"
 ---
-
-> **Part 4: CQRS Usecase 통합** | [← 이전: 17장 Domain Event Flow](../04-Domain-Event-Flow/) | [다음: 19장 E-commerce Order Management →](../../Part5-Domain-Examples/01-Ecommerce-Order-Management/)
-
----
-
 ## 개요
 
 Transaction Pipeline은 Command Usecase의 실행 흐름을 자동으로 관리하는 인프라 계층입니다. Handler 실행 후 SaveChanges, 트랜잭션 커밋, 도메인 이벤트 발행을 순차적으로 처리하며, 실패 시 자동으로 롤백합니다. Usecase 개발자는 비즈니스 로직에만 집중하면 됩니다.

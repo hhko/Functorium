@@ -1,5 +1,5 @@
 ---
-title: "DDD Entity ID Generator"
+title: "Entity ID Generator"
 ---
 
 ## 학습 목표

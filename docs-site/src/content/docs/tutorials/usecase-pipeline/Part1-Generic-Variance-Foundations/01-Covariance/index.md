@@ -87,6 +87,3 @@ dotnet run --project Covariance
 dotnet test --project Covariance.Tests.Unit
 ```
 
----
-
-[← Part 0: 서론](../../Part0-Introduction/01-why-this-tutorial.md) | [다음: 2장 반공변성 (in) →](../02-Contravariance/)

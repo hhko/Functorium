@@ -1,5 +1,5 @@
 ---
-title: "Bind 순차 검증 (Bind Sequential Validation)"
+title: "Bind 순차 검증"
 ---
 
 ## 개요

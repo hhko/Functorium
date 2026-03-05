@@ -1,5 +1,5 @@
 ---
-title: "Create와 Validate 책임 분리하기"
+title: "Create/Validate 분리"
 ---
 
 ## 개요

@@ -1,5 +1,5 @@
 ---
-title: "Bind 내부 Apply 중첩 검증 (Bind Internal Apply Validation)"
+title: "Bind 내부 Apply 검증"
 ---
 
 ## 개요

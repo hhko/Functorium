@@ -1,11 +1,6 @@
 ---
-title: "방어적 프로그래밍의 두 가지 구현 방법"
+title: "방어적 프로그래밍"
 ---
-
-> **Part 1: 값 객체 개념 이해** | [← 이전: 1장 기본 나눗셈](../../01-Basic-Divide/BasicDivide/) | [목차](../../../) | [다음: 3장 함수형 결과 타입 →](../../03-Functional-Result/FunctionalResult/)
-
----
-
 ## 개요
 
 첫 번째 단계인 `01-Basic-Divide`에서는 기본 나눗셈 함수가 0으로 나누기를 시도할 때 `DivideByZeroException`을 발생시켜 프로그램을 중단시키는 문제를 확인했습니다. 

@@ -1,5 +1,5 @@
 ---
-title: "IFinResponse 래퍼의 한계"
+title: "IFinResponse 래퍼 한계"
 ---
 
 ## 개요
@@ -109,6 +109,3 @@ dotnet run --project FinResponseWrapperLimitation
 dotnet test --project FinResponseWrapperLimitation.Tests.Unit
 ```
 
----
-
-[← 이전: 6장 Fin<T> 직접 사용의 한계](../02-Fin-Direct-Limitation/) | [다음: 8장 Pipeline 요구사항 정리 →](../04-pipeline-requirements-summary.md)

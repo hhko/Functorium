@@ -1,5 +1,5 @@
 ---
-title: "Transaction/Caching 파이프라인"
+title: "Transaction/Caching"
 ---
 
 ## 개요
@@ -142,6 +142,3 @@ dotnet run --project TransactionCachingPipeline
 dotnet test --project TransactionCachingPipeline.Tests.Unit
 ```
 
----
-
-[← 이전: 15장 Read+Create 제약](../02-Read-Create-Constraint/) | [다음: 17장 Fin -> FinResponse 브릿지 →](../04-Fin-To-FinResponse-Bridge/)

@@ -1,5 +1,5 @@
 ---
-title: "IFinResponse 인터페이스 계층 전체 참조"
+title: "IFinResponse 계층 참조"
 ---
 
 ## 개요
@@ -178,6 +178,3 @@ Transaction Pipeline        IFinResponse, IFinResponseFactory<TResponse>     Rea
 Caching Pipeline            IFinResponse, IFinResponseFactory<TResponse>     Read + Create
 ```
 
----
-
-[← 이전: 20장 Pipeline 전체 흐름 통합](../Part5-Practical-Usecase-Examples/03-Full-Pipeline-Integration/) | [다음: B. Pipeline 제약 조건 vs 대안 비교 →](B-constraint-vs-alternatives.md)

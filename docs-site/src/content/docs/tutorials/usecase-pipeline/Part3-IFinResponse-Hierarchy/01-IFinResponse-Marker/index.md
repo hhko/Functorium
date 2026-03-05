@@ -100,6 +100,3 @@ dotnet run --project FinResponseMarker
 dotnet test --project FinResponseMarker.Tests.Unit
 ```
 
----
-
-[← 이전: 8장 요구사항 정리](../../Part2-Problem-Definition/04-pipeline-requirements-summary.md) | [다음: 10장 IFinResponse<out A> 공변 인터페이스 →](../02-IFinResponse-Covariant/)

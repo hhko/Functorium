@@ -112,6 +112,3 @@ C#을 위한 함수형 프로그래밍 라이브러리. `Fin<T>`, `Option<T>`, `
 |------|------|------|
 | CQRS 패턴으로 Command와 Query 분리하기 | `Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/` | CQRS 패턴 기초부터 Usecase 통합까지 |
 
----
-
-[← 이전: D. 용어집](D-glossary.md) | [목차로 돌아가기 →](../)

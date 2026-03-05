@@ -1,11 +1,6 @@
 ---
 title: "엔티티와 식별자"
 ---
-
-> **Part 1: 도메인 엔티티 기초** | [← 목차로](../../../) | [다음: 2장 Aggregate Root →](../02-Aggregate-Root/)
-
----
-
 ## 개요
 
 DDD에서 Entity는 **고유한 식별자(Identity)로 구별되는 도메인 객체**입니다. 같은 속성 값을 가지더라도 ID가 다르면 다른 Entity이고, 속성이 달라도 ID가 같으면 같은 Entity입니다. 이 장에서는 Functorium의 `Entity<TId>`와 Ulid 기반 `IEntityId<TId>`를 사용하여 Entity의 Identity 개념을 실습합니다.

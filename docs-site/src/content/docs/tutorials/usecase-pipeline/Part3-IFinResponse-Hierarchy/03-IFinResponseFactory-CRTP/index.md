@@ -1,5 +1,5 @@
 ---
-title: "IFinResponseFactory CRTP 팩토리"
+title: "IFinResponseFactory CRTP"
 ---
 
 ## 개요
@@ -112,6 +112,3 @@ dotnet run --project FinResponseFactoryCrtp
 dotnet test --project FinResponseFactoryCrtp.Tests.Unit
 ```
 
----
-
-[← 이전: 10장 IFinResponse<out A> 공변 인터페이스](../02-IFinResponse-Covariant/) | [다음: 12장 IFinResponseWithError 에러 접근 →](../04-IFinResponseWithError/)

@@ -1,5 +1,5 @@
 ---
-title: "Validate&lt;T&gt; Fluent API로 검증 간소화하기"
+title: "Validate Fluent API"
 ---
 
 ## 개요

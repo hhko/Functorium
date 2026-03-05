@@ -1,5 +1,5 @@
 ---
-title: "Create-Only 제약 (Validation/Exception)"
+title: "Create-Only 제약"
 ---
 
 ## 개요
@@ -122,6 +122,3 @@ dotnet run --project CreateOnlyConstraint
 dotnet test --project CreateOnlyConstraint.Tests.Unit
 ```
 
----
-
-[← 이전: 13장 FinResponse\<A\> Discriminated Union](../../Part3-IFinResponse-Hierarchy/05-FinResponse-Discriminated-Union/) | [다음: 15장 Read+Create 제약 →](../02-Read-Create-Constraint/)

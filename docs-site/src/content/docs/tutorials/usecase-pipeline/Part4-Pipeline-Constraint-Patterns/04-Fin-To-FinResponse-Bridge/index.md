@@ -1,5 +1,5 @@
 ---
-title: "Fin -> FinResponse 브릿지"
+title: "Fin→FinResponse 브릿지"
 ---
 
 ## 개요
@@ -105,6 +105,3 @@ dotnet run --project FinToFinResponseBridge
 dotnet test --project FinToFinResponseBridge.Tests.Unit
 ```
 
----
-
-[← 이전: 16장 Transaction/Caching Pipeline](../03-Transaction-Caching-Pipeline/) | [다음: 18장 Command Usecase 완전 예제 →](../../Part5-Practical-Usecase-Examples/01-Command-Usecase-Example/)

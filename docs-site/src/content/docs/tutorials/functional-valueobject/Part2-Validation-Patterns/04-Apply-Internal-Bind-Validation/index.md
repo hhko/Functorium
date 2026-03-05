@@ -1,5 +1,5 @@
 ---
-title: "Apply 내부 Bind 중첩 검증 (Apply Internal Bind Validation)"
+title: "Apply 내부 Bind 검증"
 ---
 
 ## 개요

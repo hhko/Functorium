@@ -1,11 +1,6 @@
 ---
 title: "첫 번째 아키텍처 테스트"
 ---
-
-> **Part 1: ClassValidator 기초** | [← 목차로](../../) | [다음: 2장 가시성과 한정자 →](../02-Visibility-And-Modifiers/)
-
----
-
 ## 개요
 
 이 장에서는 **Functorium ArchitectureRules 프레임워크를** 사용하여 첫 번째 아키텍처 테스트를 작성합니다. 도메인 클래스가 `public`이고 `sealed`인지 검증하는 간단한 테스트를 통해 프레임워크의 기본 사용법을 익힙니다.
@@ -134,7 +129,3 @@ public void DomainClasses_ShouldBe_PublicAndSealed()
 | **ClassValidator** | 클래스별 규칙을 정의하는 플루언트 API |
 | **ThrowIfAnyFailures** | 위반 사항이 있으면 상세 메시지와 함께 예외 발생 |
 | **verbose: true** | 검증 대상 클래스 목록을 콘솔에 출력 |
-
----
-
-> [← 목차로](../../) | [다음: 2장 가시성과 한정자 →](../02-Visibility-And-Modifiers/)

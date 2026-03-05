@@ -1,5 +1,5 @@
 ---
-title: "ArchUnitNET과 Functorium"
+title: "ArchUnitNET 소개"
 ---
 
 ## ArchUnitNET 소개

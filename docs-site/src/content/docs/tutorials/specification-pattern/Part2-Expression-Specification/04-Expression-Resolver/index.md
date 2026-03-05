@@ -1,11 +1,6 @@
 ---
 title: "표현식 리졸버"
 ---
-
-> **Part 2: Expression Specification** | [← 목차로](../../../)
-
----
-
 ## 개요
 
 이 장에서는 `SpecificationExpressionResolver`를 학습합니다. 이 유틸리티는 단일 또는 복합(And/Or/Not) Specification에서 Expression Tree를 재귀적으로 추출하고 합성합니다. ORM 어댑터가 Specification을 SQL Where 절로 변환할 때 이 Resolver를 사용합니다.

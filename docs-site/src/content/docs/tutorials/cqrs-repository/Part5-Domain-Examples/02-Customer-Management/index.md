@@ -1,11 +1,6 @@
 ---
 title: "고객 관리"
 ---
-
-> **Part 5: 도메인별 실전 예제** | [← 이전: 19장 E-commerce Order Management →](../01-Ecommerce-Order-Management) | [다음: 21장 Inventory Management →](../03-Inventory-Management)
-
----
-
 ## 개요
 
 고객(Customer) 도메인을 통해 Specification 패턴을 활용한 검색과 Repository의 `Exists()` 메서드를 구현합니다. IAuditable 인터페이스로 생성/수정 시각을 추적하고, 동적 필터 빌더 패턴을 보여줍니다.

@@ -126,6 +126,3 @@ where TResponse : IFinResponseFactory<TResponse>
 where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 ```
 
----
-
-[← 이전: 7장 IFinResponse 래퍼의 한계](03-IFinResponse-Wrapper-Limitation/) | [다음: Part 3 →](../../Part3-IFinResponse-Hierarchy/01-IFinResponse-Marker/)

@@ -1,11 +1,6 @@
 ---
 title: "커맨드 유스케이스"
 ---
-
-> **Part 4: CQRS Usecase 통합** | [← 이전: 13장 Dapper Query Adapter](../../Part3-Query-Patterns/05-Dapper-Query-Adapter/) | [다음: 15장 Query Usecase →](../02-Query-Usecase/)
-
----
-
 ## 개요
 
 Command Usecase는 CQRS의 Command 측면에서 비즈니스 로직을 실행하는 핵심 패턴입니다. `ICommandRequest<TSuccess>`로 요청을 정의하고, `ICommandUsecase<TCommand, TSuccess>`로 처리 로직을 구현합니다. 결과는 `FinResponse<T>`로 감싸서 성공/실패를 명확하게 전달합니다.

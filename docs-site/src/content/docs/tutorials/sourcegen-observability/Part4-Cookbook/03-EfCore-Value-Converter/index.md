@@ -1,5 +1,5 @@
 ---
-title: "EF Core Value Converter Generator"
+title: "Value Converter Generator"
 ---
 
 ## 학습 목표

@@ -1,11 +1,6 @@
 ---
 title: "PropertyMap"
 ---
-
-> **Part 3: Repository 연동** | [이전: 10장 InMemory 구현 <-](../02-InMemory-Implementation/) | [다음: 12장 EF Core 구현 ->](../04-EfCore-Implementation/)
-
----
-
 ## 개요
 
 도메인 엔티티와 DB 모델의 프로퍼티 이름이 다른 경우가 실무에서 흔합니다. 예를 들어 도메인의 `Price`가 DB에서는 `UnitPrice`로, `Stock`이 `StockQuantity`로 저장될 수 있습니다. `PropertyMap`은 이런 이름 불일치를 해결하여, **도메인 기준으로 작성된 Expression을 DB 모델 기준 Expression으로 자동 변환**합니다.

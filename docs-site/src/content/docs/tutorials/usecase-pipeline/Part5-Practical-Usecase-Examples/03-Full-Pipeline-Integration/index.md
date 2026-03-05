@@ -1,5 +1,5 @@
 ---
-title: "파이프라인 전체 흐름 통합"
+title: "전체 흐름 통합"
 ---
 
 ## 개요
@@ -119,6 +119,3 @@ dotnet run --project FullPipelineIntegration
 dotnet test --project FullPipelineIntegration.Tests.Unit
 ```
 
----
-
-[← 이전: 19장 Query Usecase 완전 예제](../02-Query-Usecase-Example/) | [다음: 부록 A. IFinResponse 인터페이스 계층 전체 참조 →](../../Appendix/A-interface-hierarchy-reference.md)

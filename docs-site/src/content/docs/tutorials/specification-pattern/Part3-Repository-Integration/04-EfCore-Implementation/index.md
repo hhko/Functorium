@@ -1,11 +1,6 @@
 ---
 title: "EF Core 구현"
 ---
-
-> **Part 3: Repository 연동** | [이전: 11장 PropertyMap <-](../03-PropertyMap/)
-
----
-
 ## 개요
 
 지금까지 배운 모든 것을 조합하여 **EF Core 어댑터 시뮬레이션**을 구현합니다. 실제 EF Core 의존성 없이 `AsQueryable()`을 사용하여 전체 파이프라인을 재현합니다: Specification에서 Expression을 추출하고, PropertyMap으로 변환하고, Queryable에 적용합니다.

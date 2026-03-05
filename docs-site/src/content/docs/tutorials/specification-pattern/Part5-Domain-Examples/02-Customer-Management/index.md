@@ -1,11 +1,6 @@
 ---
-title: "고객 관리 시스템"
+title: "고객 관리"
 ---
-
-> **Part 5: 도메인 예제** | [← 이전: 17장 전자상거래 상품 필터링](../01-Ecommerce-Product-Filtering/) | [← 목차로](../../)
-
----
-
 ## 개요
 
 상품(Product)과는 다른 집합체(Aggregate)인 고객(Customer) 도메인에서 Specification 패턴을 적용합니다. 이 장에서는 ExpressionSpecification과 non-Expression Specification을 혼합하여 사용하는 방법을 학습합니다.

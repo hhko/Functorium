@@ -1,11 +1,6 @@
 ---
 title: "도메인 이벤트 흐름"
 ---
-
-> **Part 4: CQRS Usecase 통합** | [← 이전: 16장 FinT to FinResponse](../03-FinT-To-FinResponse/) | [다음: 18장 Transaction Pipeline →](../05-Transaction-Pipeline/)
-
----
-
 ## 개요
 
 Domain Event는 Aggregate 내에서 발생한 비즈니스 사실을 나타냅니다. Aggregate가 상태를 변경할 때 이벤트를 생성하고, Repository가 Aggregate를 추적하며, SaveChanges 이후 이벤트가 발행됩니다. 이 장에서는 이벤트의 생성부터 수집, 발행, 정리까지의 전체 흐름을 학습합니다.

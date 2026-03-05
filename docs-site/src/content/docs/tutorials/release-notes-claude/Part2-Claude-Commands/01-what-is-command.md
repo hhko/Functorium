@@ -1,5 +1,5 @@
 ---
-title: "사용자 정의 Command란?"
+title: "사용자 정의 Command"
 ---
 
 > Claude Code의 사용자 정의 Command는 복잡한 작업을 간단한 명령어로 실행할 수 있게 해주는 기능입니다. 이 절에서는 Command의 개념과 구조를 알아봅니다.

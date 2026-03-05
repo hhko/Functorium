@@ -1,11 +1,6 @@
 ---
 title: "테스트 전략"
 ---
-
-> **Part 4: 실전 가이드** | [← 이전: 4.3 CQRS 통합](../../03-CQRS-Integration/CqrsIntegration/) | [목차](../../../) | [다음: Part 5 도메인별 실전 예제 →](../../../05-domain-examples/01-Ecommerce-Domain/EcommerceDomain/)
-
----
-
 ## 개요
 
 값 객체의 테스트 전략을 학습합니다. 단위 테스트 패턴, 테스트 헬퍼, 아키텍처 테스트를 다룹니다.

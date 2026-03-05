@@ -1,11 +1,6 @@
 ---
-title: "리포지토리와 명세"
+title: "명세 기반 리포지토리"
 ---
-
-> **Part 3: Repository 연동** | [다음: 10장 InMemory 구현 ->](../02-InMemory-Implementation/)
-
----
-
 ## 개요
 
 전통적인 Repository 패턴에서는 조회 조건이 추가될 때마다 새로운 메서드를 만들어야 합니다. `FindByCategory`, `FindByPriceRange`, `FindInStock`, `FindByCategoryAndPriceRange`... 조건의 조합이 늘어날수록 메서드 수가 기하급수적으로 폭발합니다.

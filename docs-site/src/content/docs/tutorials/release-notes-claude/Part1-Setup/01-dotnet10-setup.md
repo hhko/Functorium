@@ -1,5 +1,5 @@
 ---
-title: ".NET 10 설치 및 환경 설정"
+title: ".NET 10 환경 설정"
 ---
 
 > 이 절에서는 .NET 10 SDK를 설치하고 file-based app을 실행할 수 있는 환경을 구성합니다.

@@ -1,11 +1,6 @@
 ---
 title: "재고 관리"
 ---
-
-> **Part 5: 도메인별 실전 예제** | [← 이전: 20장 Customer Management →](../02-Customer-Management) | [다음: 22장 Catalog Search →](../04-Catalog-Search)
-
----
-
 ## 개요
 
 재고(Inventory) 도메인을 통해 ISoftDeletable 패턴과 Cursor 기반 페이지네이션을 구현합니다. 논리 삭제/복원 메커니즘과 ActiveProductSpec을 사용한 필터링을 보여주며, Cursor 페이지네이션으로 대규모 데이터 처리 패턴을 학습합니다.

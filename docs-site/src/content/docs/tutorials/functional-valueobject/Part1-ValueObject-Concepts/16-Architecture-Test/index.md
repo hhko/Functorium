@@ -1,5 +1,5 @@
 ---
-title: "ArchitectureTest.Tests.Unit"
+title: "아키텍처 테스트"
 ---
 
 ## 개요

@@ -1,11 +1,6 @@
 ---
 title: "전자상거래 주문 관리"
 ---
-
-> **Part 5: 도메인별 실전 예제** | [← 이전: 18장 Transaction Pipeline →](../../Part4-CQRS-Usecase-Integration/05-Transaction-Pipeline) | [다음: 20장 Customer Management →](../02-Customer-Management)
-
----
-
 ## 개요
 
 E-commerce 주문 도메인을 통해 CQRS 패턴의 Command 측을 완전한 예제로 구현합니다. Order Aggregate Root, OrderLine 자식 Entity, 상태 전이 규칙, 도메인 이벤트, Repository 패턴을 하나의 예제에서 종합적으로 다룹니다.

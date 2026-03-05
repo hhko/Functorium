@@ -1,5 +1,5 @@
 ---
-title: "Apply Bind 혼합 검증 (Apply Bind Combined Validation)"
+title: "Apply+Bind 혼합 검증"
 ---
 
 ## 개요

@@ -1,11 +1,6 @@
 ---
 title: "ExpressionSpecification 클래스"
 ---
-
-> **Part 2: Expression Specification** | [← 목차로](../../../)
-
----
-
 ## 개요
 
 이 장에서는 Functorium 프레임워크의 `ExpressionSpecification<T>` 추상 클래스를 학습합니다. 이 클래스는 `Specification<T>`을 상속하면서 `ToExpression()` 메서드를 통해 Expression Tree를 제공하고, `IsSatisfiedBy()`는 sealed로 자동 컴파일 + 캐싱을 수행합니다.

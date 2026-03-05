@@ -1,5 +1,5 @@
 ---
-title: "Source Generator 개발 절차"
+title: "개발 절차"
 ---
 
 ## 학습 목표

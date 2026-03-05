@@ -1,5 +1,5 @@
 ---
-title: "인터페이스 분리와 변성 조합"
+title: "인터페이스 분리와 변성"
 ---
 
 ## 개요
@@ -102,6 +102,3 @@ dotnet run --project InterfaceSegregationAndVariance
 dotnet test --project InterfaceSegregationAndVariance.Tests.Unit
 ```
 
----
-
-[← 이전: 3장 불변성과 제약](../03-Invariance-And-Constraints/) | [다음: Part 2 문제 정의 →](../../Part2-Problem-Definition/01-Mediator-Pipeline-Structure/)

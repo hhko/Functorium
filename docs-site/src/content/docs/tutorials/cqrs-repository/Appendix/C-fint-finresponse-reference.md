@@ -1,11 +1,6 @@
 ---
-title: "FinT / FinResponse 타입 참조"
+title: "FinT/FinResponse 참조"
 ---
-
-> **부록** | [<- 이전: B. Repository vs Query 어댑터 선택 가이드](B-repository-vs-query-adapter-guide.md) | [목차](../) | [다음: D. CQRS 안티패턴 ->](D-anti-patterns.md)
-
----
-
 ## 개요
 
 Functorium CQRS에서 사용하는 함수형 타입의 참조 문서입니다. Repository 계층의 `FinT<IO, T>`와 Usecase 계층의 `FinResponse<T>`, 그리고 이를 연결하는 `ToFinResponse()` 변환을 설명합니다.
@@ -242,5 +237,3 @@ var pipeline =
 ## 다음 단계
 
 CQRS 안티패턴을 확인합니다.
-
--> [D. CQRS 안티패턴](D-anti-patterns.md)

@@ -1,11 +1,6 @@
 ---
-title: "이 튜토리얼을 읽어야 하는 이유"
+title: "왜 명세 패턴인가"
 ---
-
-> **Part 0: 서론** | [목차](../) | [다음: 0.2 사전 준비와 환경 설정 →](02-prerequisites-and-setup.md)
-
----
-
 ## 개요
 
 이 튜토리얼은 **Specification 패턴을 활용한 도메인 규칙 구현**을 단계별로 학습할 수 있도록 구성된 종합적인 교육 과정입니다. 기본적인 Specification 클래스에서 시작하여 Expression Tree 기반 Repository 통합까지, **18개의 실습 프로젝트**를 통해 Specification 패턴의 모든 측면을 체계적으로 학습할 수 있습니다.

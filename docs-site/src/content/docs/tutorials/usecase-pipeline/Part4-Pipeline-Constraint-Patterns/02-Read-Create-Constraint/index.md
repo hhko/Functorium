@@ -1,5 +1,5 @@
 ---
-title: "Read+Create 제약 (Logging/Tracing/Metrics)"
+title: "Read+Create 제약"
 ---
 
 ## 개요
@@ -143,6 +143,3 @@ dotnet run --project ReadCreateConstraint
 dotnet test --project ReadCreateConstraint.Tests.Unit
 ```
 
----
-
-[← 이전: 14장 Create-Only 제약](../01-Create-Only-Constraint/) | [다음: 16장 Transaction/Caching Pipeline →](../03-Transaction-Caching-Pipeline/)

@@ -1,11 +1,6 @@
 ---
 title: "안티패턴"
 ---
-
-> **부록** | [← 이전: A. Specification vs 대안 비교](A-specification-vs-alternatives.md) | [목차](../) | [다음: C. 용어집 →](C-glossary.md)
-
----
-
 ## 개요
 
 Specification 패턴을 사용할 때 흔히 발생하는 안티패턴과 그 해결 방법을 정리합니다.

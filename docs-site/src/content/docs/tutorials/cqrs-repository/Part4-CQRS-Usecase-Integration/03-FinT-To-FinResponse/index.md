@@ -1,11 +1,6 @@
 ---
 title: "FinT에서 FinResponse로"
 ---
-
-> **Part 4: CQRS Usecase 통합** | [← 이전: 15장 Query Usecase](../02-Query-Usecase/) | [다음: 17장 Domain Event Flow →](../04-Domain-Event-Flow/)
-
----
-
 ## 개요
 
 `FinT<IO, T>`는 LanguageExt의 모나딕 타입으로, IO 효과와 성공/실패를 LINQ 구문으로 합성할 수 있게 합니다. Usecase에서는 이 합성 결과를 `.Run().RunAsync()`로 실행한 후 `.ToFinResponse()`로 변환하여 API 레이어에 전달합니다. 이 장에서는 다양한 LINQ 합성 패턴을 학습합니다.

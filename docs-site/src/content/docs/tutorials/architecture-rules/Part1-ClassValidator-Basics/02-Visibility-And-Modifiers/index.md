@@ -1,11 +1,6 @@
 ---
 title: "가시성과 한정자"
 ---
-
-> **Part 1: ClassValidator 기초** | [← 이전: 1장 첫 번째 아키텍처 테스트](../01-First-Architecture-Test/) | [다음: 3장 네이밍 규칙 →](../03-Naming-Rules/)
-
----
-
 ## 개요
 
 이 장에서는 **ClassValidator의** 가시성과 한정자 검증 메서드를 체계적으로 학습합니다. `public`/`internal` 가시성, `sealed`/`abstract`/`static` 한정자, 그리고 `record` 타입 검증까지 다양한 클래스 속성을 아키텍처 테스트로 강제하는 방법을 익힙니다.
@@ -162,7 +157,3 @@ public void RecordTypes_ShouldBe_Record()
 | `RequireNotStatic()` | static 아님 | 인스턴스 클래스 |
 | `RequireRecord()` | record 타입 | DTO, 값 객체 |
 | `RequireNotRecord()` | record 아님 | 일반 클래스 |
-
----
-
-> [← 이전: 1장 첫 번째 아키텍처 테스트](../01-First-Architecture-Test/) | [다음: 3장 네이밍 규칙 →](../03-Naming-Rules/)

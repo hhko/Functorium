@@ -1,5 +1,5 @@
 ---
-title: "release-note.md 상세 분석"
+title: "release-note.md 분석"
 ---
 
 > 이 절에서는 릴리스 노트 자동화의 핵심인 `release-note.md` Command 파일을 상세히 분석합니다.

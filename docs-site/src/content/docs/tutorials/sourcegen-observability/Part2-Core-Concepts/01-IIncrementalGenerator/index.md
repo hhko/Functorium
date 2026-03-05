@@ -1,5 +1,5 @@
 ---
-title: "IIncrementalGenerator 인터페이스"
+title: "IIncrementalGenerator"
 ---
 
 ## 학습 목표

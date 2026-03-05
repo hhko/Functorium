@@ -1,5 +1,5 @@
 ---
-title: "ApiGenerator.cs 분석"
+title: "ApiGenerator"
 ---
 
 > 이 절에서는 DLL에서 Public API를 추출하는 ApiGenerator.cs 스크립트를 분석합니다.

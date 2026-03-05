@@ -1,5 +1,5 @@
 ---
-title: "Fin<T> 직접 사용의 한계"
+title: "Fin 직접 사용의 한계"
 ---
 
 ## 개요
@@ -95,6 +95,3 @@ dotnet run --project FinDirectLimitation
 dotnet test --project FinDirectLimitation.Tests.Unit
 ```
 
----
-
-[← 이전: 5장 Mediator Pipeline Behavior 구조](../01-Mediator-Pipeline-Structure/) | [다음: 7장 IFinResponse 래퍼의 한계 →](../03-IFinResponse-Wrapper-Limitation/)

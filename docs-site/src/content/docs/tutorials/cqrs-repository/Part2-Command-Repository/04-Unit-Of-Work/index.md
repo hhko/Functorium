@@ -1,11 +1,6 @@
 ---
 title: "작업 단위"
 ---
-
-> **Part 2: Command 측 -- Repository 패턴** | [← 이전: 7장 EF Core Repository](../03-EfCore-Repository/) | [다음: 9장 QueryPort Interface →](../../Part3-Query-Patterns/01-QueryPort-Interface/)
-
----
-
 ## 개요
 
 Unit of Work 패턴은 **하나의 비즈니스 트랜잭션에서 발생하는 모든 변경을 추적하고, 한 번에 커밋하는 역할**을 합니다. Repository가 개별 Aggregate의 CRUD를 담당한다면, Unit of Work는 여러 Repository의 변경을 하나의 트랜잭션으로 묶습니다. 이 장에서는 `IUnitOfWork` 인터페이스와 InMemory 구현체를 통해 핵심 개념을 실습합니다.

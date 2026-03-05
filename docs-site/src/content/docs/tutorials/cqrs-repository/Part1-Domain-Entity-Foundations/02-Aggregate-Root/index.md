@@ -1,11 +1,6 @@
 ---
 title: "애그리거트 루트"
 ---
-
-> **Part 1: 도메인 엔티티 기초** | [← 이전: 1장 Entity와 Identity](../01-Entity-And-Identity/) | [다음: 3장 Domain Events →](../03-Domain-Events/)
-
----
-
 ## 개요
 
 Aggregate Root는 **관련된 Entity와 Value Object의 일관성 경계(Consistency Boundary)를 정의하는 루트 Entity**입니다. 외부에서는 반드시 Aggregate Root를 통해서만 내부 상태를 변경할 수 있으며, Aggregate Root가 비즈니스 불변 규칙(Invariant)을 보호합니다. 이 장에서는 주문(Order) Aggregate를 통해 상태 전이와 불변 규칙 보호를 실습합니다.

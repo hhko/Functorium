@@ -1,11 +1,6 @@
 ---
-title: "값 기반 크기 비교하기"
+title: "값 비교"
 ---
-
-> **Part 1: 값 객체 개념 이해** | [← 이전: 7장 값 기반 동등성](../../07-Value-Equality/ValueEquality/) | [목차](../../../) | [다음: 9장 생성/검증 분리 →](../../09-Create-Validate-Separation/CreateValidateSeparation/)
-
----
-
 ## 개요
 
 `ValueComparability` 프로젝트는 값 객체의 **비교 가능성(Comparability)을** 구현하는 방법을 학습하기 위한 프로젝트입니다. 이 프로젝트에서는 두 가지 핵심 비교 인터페이스인 `IComparable<T>`와 `IEqualityComparer<T>`를 통해 값 객체가 컬렉션에서 어떻게 정렬, 검색, 중복 제거 등의 작업을 수행할 수 있는지 실습합니다.

@@ -1,5 +1,5 @@
 ---
-title: "TypeSafeEnums - 타입 안전한 열거형과 복합 값 객체"
+title: "타입 안전 열거형"
 ---
 
 ## 개요

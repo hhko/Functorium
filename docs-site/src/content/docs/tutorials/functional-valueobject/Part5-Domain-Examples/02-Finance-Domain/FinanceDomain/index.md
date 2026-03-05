@@ -1,11 +1,6 @@
 ---
 title: "금융 도메인"
 ---
-
-> **Part 5: 도메인별 실전 예제** | [← 이전: 5.1 이커머스 도메인](../../01-Ecommerce-Domain/EcommerceDomain/) | [목차](../../../) | [다음: 5.3 사용자 관리 도메인 →](../../03-User-Management-Domain/UserManagementDomain/)
-
----
-
 ## 개요
 
 금융 도메인에서 자주 사용되는 값 객체를 구현합니다.

@@ -1,11 +1,6 @@
 ---
 title: "인메모리 리포지토리"
 ---
-
-> **Part 2: Command 측 -- Repository 패턴** | [← 이전: 5장 →](../01-Repository-Interface/) | [다음: 7장 →](../03-EfCore-Repository/)
-
----
-
 ## 개요
 
 `InMemoryRepositoryBase<TAggregate, TId>`는 `ConcurrentDictionary` 기반의 `IRepository` 구현체입니다.

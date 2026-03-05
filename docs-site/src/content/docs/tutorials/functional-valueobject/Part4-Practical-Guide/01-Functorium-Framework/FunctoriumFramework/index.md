@@ -1,11 +1,6 @@
 ---
 title: "Functorium 프레임워크 통합"
 ---
-
-> **Part 4: 실전 가이드** | [← 목차로](../../../) | [다음: 4.2 ORM 통합 패턴 →](../../02-ORM-Integration/OrmIntegration/)
-
----
-
 ## 개요
 
 Functorium 프레임워크의 값 객체 타입 계층 구조를 학습하고 실전에서 활용하는 방법을 다룹니다.

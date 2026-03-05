@@ -1,5 +1,5 @@
 ---
-title: "IFinResponseWithError 에러 접근"
+title: "IFinResponseWithError"
 ---
 
 ## 개요
@@ -102,6 +102,3 @@ dotnet run --project FinResponseWithError
 dotnet test --project FinResponseWithError.Tests.Unit
 ```
 
----
-
-[← 이전: 11장 IFinResponseFactory CRTP 팩토리](../03-IFinResponseFactory-CRTP/) | [다음: 13장 FinResponse<A> Discriminated Union →](../05-FinResponse-Discriminated-Union/)

@@ -1,5 +1,5 @@
 ---
-title: "유스케이스 파이프라인 아키텍처 개요"
+title: "아키텍처 개요"
 ---
 
 ## Mediator Pipeline이란?
@@ -109,6 +109,3 @@ Part 4: 제약 적용           각 Pipeline에 최소 제약 조건 적용
 Part 5: 실전 통합           Command/Query Usecase에서 전체 Pipeline 통합
 ```
 
----
-
-[← 이전: 0.2 환경 설정](02-prerequisites-and-setup.md) | [다음: Part 1 →](../Part1-Generic-Variance-Foundations/01-Covariance/)

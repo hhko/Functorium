@@ -1,5 +1,5 @@
 ---
-title: "Mediator Pipeline Behavior 구조"
+title: "Mediator Pipeline 구조"
 ---
 
 ## 개요
@@ -128,6 +128,3 @@ dotnet run --project MediatorPipelineStructure
 dotnet test --project MediatorPipelineStructure.Tests.Unit
 ```
 
----
-
-[← 이전: 4장 인터페이스 분리와 변성 조합](../../Part1-Generic-Variance-Foundations/04-Interface-Segregation-And-Variance/) | [다음: 6장 Fin<T> 직접 사용의 한계 →](../02-Fin-Direct-Limitation/)

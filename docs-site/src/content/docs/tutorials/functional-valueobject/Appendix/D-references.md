@@ -1,11 +1,6 @@
 ---
 title: "참고 자료"
 ---
-
-> **부록** | [← 이전: C. 용어집](C-glossary.md) | [목차](../) | [다음: E. FAQ →](E-faq.md)
-
----
-
 ## 공식 문서
 
 ### LanguageExt

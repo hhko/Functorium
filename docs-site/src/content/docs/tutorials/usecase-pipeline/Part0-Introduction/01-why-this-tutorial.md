@@ -1,5 +1,5 @@
 ---
-title: "왜 타입 안전한 파이프라인인가"
+title: "왜 타입 안전 파이프라인인가"
 ---
 
 ## Mediator Pipeline의 딜레마
@@ -58,6 +58,3 @@ where TResponse : Fin<T>  // 컴파일 에러! sealed struct는 제약 조건이
 4. **Part 4**: 각 Pipeline에 최소 제약 조건을 적용합니다
 5. **Part 5**: 실전 Command/Query Usecase에서 전체 흐름을 통합합니다
 
----
-
-[다음: 0.2 환경 설정 →](02-prerequisites-and-setup.md)

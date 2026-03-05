@@ -1,11 +1,6 @@
 ---
 title: "ORM 통합 패턴"
 ---
-
-> **Part 4: 실전 가이드** | [← 이전: 4.1 Functorium 프레임워크](../../01-Functorium-Framework/FunctoriumFramework/) | [목차](../../../) | [다음: 4.3 CQRS 통합 →](../../03-CQRS-Integration/CqrsIntegration/)
-
----
-
 ## 개요
 
 Entity Framework Core와 값 객체를 통합하는 패턴을 학습합니다. OwnsOne, OwnsMany, Value Converter 패턴을 다룹니다.

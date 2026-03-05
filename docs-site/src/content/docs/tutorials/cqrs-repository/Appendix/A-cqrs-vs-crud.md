@@ -1,11 +1,6 @@
 ---
 title: "CQRS vs 전통적 CRUD"
 ---
-
-> **부록** | [목차](../) | [다음: B. Repository vs Query 어댑터 선택 가이드 ->](B-repository-vs-query-adapter-guide.md)
-
----
-
 ## 개요
 
 CQRS와 전통적 CRUD 방식을 비교하여 각 접근법의 장단점을 이해합니다. 모든 프로젝트에 CQRS가 필요한 것은 아니며, 상황에 맞는 올바른 선택이 중요합니다.
@@ -210,5 +205,3 @@ Mediator 패턴으로 Command와 Query를 완전히 분리합니다.
 ## 다음 단계
 
 Repository와 Query 어댑터의 선택 가이드를 확인합니다.
-
--> [B. Repository vs Query 어댑터 선택 가이드](B-repository-vs-query-adapter-guide.md)

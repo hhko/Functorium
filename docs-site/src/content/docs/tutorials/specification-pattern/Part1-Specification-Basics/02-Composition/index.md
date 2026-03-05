@@ -1,11 +1,6 @@
 ---
 title: "명세 조합"
 ---
-
-> **Part 1: Specification 기초** | [← 이전: 1장 첫 번째 Specification](../01-First-Specification/) | [다음: 3장 연산자 →](../03-Operators/)
-
----
-
 ## 개요
 
 개별 Specification을 만드는 것만으로는 복잡한 비즈니스 조건을 표현할 수 없습니다. 이 장에서는 `And()`, `Or()`, `Not()` 메서드를 사용하여 여러 Specification을 **논리적으로 조합**하는 방법을 배웁니다.

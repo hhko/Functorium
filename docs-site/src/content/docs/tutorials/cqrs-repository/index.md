@@ -1,5 +1,5 @@
 ---
-title: "CQRS 패턴으로 Command와 Query 분리하기"
+title: "CQRS 리포지토리 패턴"
 ---
 
 **C# Functorium으로 Repository와 Query 어댑터를 구현하는 실전 가이드**

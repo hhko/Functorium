@@ -1,5 +1,5 @@
 ---
-title: "Command Usecase 완전 예제"
+title: "Command Usecase 예제"
 ---
 
 ## 개요
@@ -114,6 +114,3 @@ dotnet run --project CommandUsecaseExample
 dotnet test --project CommandUsecaseExample.Tests.Unit
 ```
 
----
-
-[← 이전: 17장 Fin → FinResponse 브릿지](../../Part4-Pipeline-Constraint-Patterns/04-Fin-To-FinResponse-Bridge/) | [다음: 19장 Query Usecase 완전 예제 →](../02-Query-Usecase-Example/)

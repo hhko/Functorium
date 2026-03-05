@@ -1,11 +1,6 @@
 ---
 title: "도메인 이벤트"
 ---
-
-> **Part 1: 도메인 엔티티 기초** | [← 이전: 2장 Aggregate Root](../02-Aggregate-Root/) | [다음: 4장 Entity Interfaces →](../04-Entity-Interfaces/)
-
----
-
 ## 개요
 
 Domain Event는 **도메인에서 발생한 의미 있는 사건을 나타내는 불변 객체**입니다. Aggregate Root는 상태가 변경될 때 도메인 이벤트를 발행하고, 인프라 계층에서 이를 수집하여 다른 Aggregate나 외부 시스템에 전달합니다. 이 장에서는 `IDomainEvent`, `DomainEvent` record, 그리고 `AggregateRoot<TId>`의 이벤트 관리 메커니즘을 실습합니다.

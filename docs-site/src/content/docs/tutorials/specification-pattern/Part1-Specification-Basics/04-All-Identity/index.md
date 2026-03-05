@@ -1,11 +1,6 @@
 ---
-title: "All 항등원과 동적 필터"
+title: "All 항등원"
 ---
-
-> **Part 1: Specification 기초** | [← 이전: 3장 연산자](../03-Operators/) | [다음: Part 2 →](../../Part2-Expression-Specification/)
-
----
-
 ## 개요
 
 `Specification<T>.All`은 **모든 엔터티를 만족하는 특별한 Specification**입니다. 이 장에서는 `All`이 AND 연산의 **항등원(identity element)으로서** 동적 필터 구성을 어떻게 간결하게 만드는지 배웁니다.

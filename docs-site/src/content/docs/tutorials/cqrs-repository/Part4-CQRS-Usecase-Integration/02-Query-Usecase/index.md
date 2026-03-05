@@ -1,11 +1,6 @@
 ---
 title: "쿼리 유스케이스"
 ---
-
-> **Part 4: CQRS Usecase 통합** | [← 이전: 14장 Command Usecase](../01-Command-Usecase/) | [다음: 16장 FinT to FinResponse →](../03-FinT-To-FinResponse/)
-
----
-
 ## 개요
 
 Query Usecase는 CQRS의 Query 측면에서 읽기 전용 비즈니스 로직을 실행하는 패턴입니다. Command가 상태를 변경하는 반면, Query는 데이터를 조회만 합니다. `IQueryRequest<TSuccess>`로 요청을 정의하고, `IQueryUsecase<TQuery, TSuccess>`로 처리 로직을 구현합니다.

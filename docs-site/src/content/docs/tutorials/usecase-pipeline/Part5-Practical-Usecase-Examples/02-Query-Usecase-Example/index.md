@@ -1,5 +1,5 @@
 ---
-title: "Query Usecase 완전 예제"
+title: "Query Usecase 예제"
 ---
 
 ## 개요
@@ -118,6 +118,3 @@ dotnet run --project QueryUsecaseExample
 dotnet test --project QueryUsecaseExample.Tests.Unit
 ```
 
----
-
-[← 이전: 18장 Command Usecase 완전 예제](../01-Command-Usecase-Example/) | [다음: 20장 Pipeline 전체 흐름 통합 →](../03-Full-Pipeline-Integration/)

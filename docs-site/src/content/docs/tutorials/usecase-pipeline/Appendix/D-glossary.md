@@ -122,6 +122,3 @@ Query 요청 인터페이스. `IQuery<FinResponse<TSuccess>>`를 상속합니다
 
 캐싱 가능한 요청을 나타내는 인터페이스. `CacheKey`와 `Duration` 속성을 정의합니다. Query Request가 구현하면 Caching Pipeline이 자동으로 캐시를 적용합니다.
 
----
-
-[← 이전: C. Railway Oriented Programming 참조](C-railway-oriented-programming.md) | [다음: E. 참고 자료 →](E-references.md)

@@ -1,11 +1,6 @@
 ---
 title: "CQRS 패턴 개요"
 ---
-
-> **Part 0: 서론** | [<- 이전: 0.2 환경 설정](02-prerequisites-and-setup.md) | [목차](../) | [다음: 1장 Entity와 Identity ->](../Part1-Domain-Entity-Foundations/01-Entity-And-Identity/)
-
----
-
 ## 개요
 
 CQRS(Command Query Responsibility Segregation)는 **데이터를 변경하는 Command와 데이터를 조회하는 Query의 책임을 분리**하는 아키텍처 패턴입니다. Greg Young이 Bertrand Meyer의 CQS(Command Query Separation) 원칙을 아키텍처 수준으로 확장한 개념으로, 읽기와 쓰기에 각각 최적화된 모델을 사용합니다.
@@ -311,5 +306,3 @@ Part 5: 도메인별 실전 예제
 ## 다음 단계
 
 CQRS 패턴의 개요를 이해했다면, Part 1의 첫 번째 장으로 이동하세요.
-
--> [1장: Entity와 Identity](../Part1-Domain-Entity-Foundations/01-Entity-And-Identity/)

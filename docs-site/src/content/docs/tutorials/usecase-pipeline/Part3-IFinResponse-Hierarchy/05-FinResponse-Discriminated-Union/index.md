@@ -1,5 +1,5 @@
 ---
-title: "FinResponse<A> Discriminated Union"
+title: "FinResponse DU"
 ---
 
 ## 개요
@@ -124,6 +124,3 @@ dotnet run --project FinResponseDiscriminatedUnion
 dotnet test --project FinResponseDiscriminatedUnion.Tests.Unit
 ```
 
----
-
-[← 이전: 12장 IFinResponseWithError 에러 접근](../04-IFinResponseWithError/) | [다음: Part 4 Pipeline 제약 패턴 적용 →](../../Part4-Pipeline-Constraint-Patterns/01-Create-Only-Constraint/)

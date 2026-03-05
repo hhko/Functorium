@@ -1,5 +1,5 @@
 ---
-title: "아키텍처 규칙 테스트로 설계 일관성 강제하기"
+title: "아키텍처 규칙 테스트"
 ---
 
 **Functorium ArchitectureRules 프레임워크를 활용한 아키텍처 테스트 실전 가이드**

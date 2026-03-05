@@ -1,5 +1,5 @@
 ---
-title: "Specification 패턴으로 도메인 규칙 구현하기"
+title: "명세 패턴"
 ---
 
 **C# Functorium으로 조합 가능한 비즈니스 규칙을 구현하는 실전 가이드**

@@ -1,5 +1,5 @@
 ---
-title: "Command 문법 및 구조"
+title: "Command 문법"
 ---
 
 > 이 절에서는 Claude Code 사용자 정의 Command의 상세 문법과 효과적인 구조화 방법을 알아봅니다.

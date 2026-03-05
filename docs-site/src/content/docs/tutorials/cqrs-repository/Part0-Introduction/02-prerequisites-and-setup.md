@@ -1,11 +1,6 @@
 ---
 title: "환경 설정"
 ---
-
-> **Part 0: 서론** | [<- 이전: 0.1 왜 CQRS인가](01-why-this-tutorial.md) | [목차](../) | [다음: 0.3 CQRS 패턴 개요 ->](03-cqrs-pattern-overview.md)
-
----
-
 ## 필수 요구사항
 
 ### 1. .NET 10.0 SDK
@@ -200,5 +195,3 @@ dotnet build
 ## 다음 단계
 
 환경 설정이 완료되었다면, CQRS 패턴의 개요를 살펴보세요.
-
--> [0.3 CQRS 패턴 개요](03-cqrs-pattern-overview.md)

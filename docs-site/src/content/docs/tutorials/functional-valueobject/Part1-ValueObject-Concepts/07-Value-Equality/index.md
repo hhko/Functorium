@@ -1,11 +1,6 @@
 ---
-title: "값 기반 동등성 비교하기"
+title: "값 동등성"
 ---
-
-> **Part 1: 값 객체 개념 이해** | [← 이전: 6장 LINQ 표현식](../../06-Linq-Expression/LinqExpression/) | [목차](../../../) | [다음: 8장 값 기반 크기 비교 →](../../08-Value-Comparability/ValueComparability/)
-
----
-
 ## 개요
 
 이 프로젝트는 값 객체의 핵심 특성인 **값 기반 동등성(Value Equality)을** 구현하고, 참조 동등성과의 차이점을 학습합니다. `IEquatable<T>` 인터페이스를 통해 타입 안전한 동등성 비교를 구현하고, 컬렉션에서의 올바른 동작을 보장합니다.

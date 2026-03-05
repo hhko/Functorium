@@ -1,11 +1,6 @@
 ---
 title: "CQRS와 값 객체 통합"
 ---
-
-> **Part 4: 실전 가이드** | [← 이전: 4.2 ORM 통합](../../02-ORM-Integration/OrmIntegration/) | [목차](../../../) | [다음: 4.4 테스트 전략 →](../../04-Testing-Strategies/TestingStrategies/)
-
----
-
 ## 개요
 
 CQRS(Command Query Responsibility Segregation) 패턴에서 값 객체를 활용하는 방법을 학습합니다.

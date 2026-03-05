@@ -1,11 +1,6 @@
 ---
-title: "값 객체 프리미티브 변환"
+title: "프리미티브 변환"
 ---
-
-> **Part 2: Expression Specification** | [← 목차로](../../../)
-
----
-
 ## 개요
 
 이 장에서는 DDD의 Value Object를 Expression Tree에서 사용할 때 발생하는 문제와 해결 방법을 학습합니다. Value Object는 도메인 모델에서 풍부한 타입을 제공하지만, Expression Tree에서는 ORM이 이를 SQL로 변환할 수 없어 별도의 변환 패턴이 필요합니다.

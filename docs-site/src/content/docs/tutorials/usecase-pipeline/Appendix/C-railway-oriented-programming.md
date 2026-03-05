@@ -1,5 +1,5 @@
 ---
-title: "Railway Oriented Programming 참조"
+title: "ROP 참조"
 ---
 
 ## 개요
@@ -154,6 +154,3 @@ Mediator Pipeline도 ROP와 유사한 구조를 가집니다:
 - [Railway Oriented Programming - Scott Wlaschin](https://fsharpforfunandprofit.com/rop/)
 - [LanguageExt - Fin\<T\>](https://github.com/louthy/language-ext)
 
----
-
-[← 이전: B. Pipeline 제약 조건 vs 대안 비교](B-constraint-vs-alternatives.md) | [다음: D. 용어집 →](D-glossary.md)

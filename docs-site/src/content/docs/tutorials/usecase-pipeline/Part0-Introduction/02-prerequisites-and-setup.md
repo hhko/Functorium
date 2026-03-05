@@ -80,6 +80,3 @@ dotnet build Functorium.All.slnx
 
 Part 1~3은 순서대로 학습하는 것을 권장합니다. Part 4~5는 Part 3 완료 후 자유롭게 선택하여 학습할 수 있습니다.
 
----
-
-[← 이전: 0.1 왜 타입 안전한 파이프라인인가](01-why-this-tutorial.md) | [다음: 0.3 Usecase Pipeline 아키텍처 개요 →](03-usecase-pipeline-overview.md)

@@ -1,5 +1,5 @@
 ---
-title: "Apply 병렬 검증 (Apply Parallel Validation)"
+title: "Apply 병렬 검증"
 ---
 
 ## 개요

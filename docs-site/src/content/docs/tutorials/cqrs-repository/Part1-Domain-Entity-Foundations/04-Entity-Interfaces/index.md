@@ -1,11 +1,6 @@
 ---
 title: "엔티티 인터페이스"
 ---
-
-> **Part 1: 도메인 엔티티 기초** | [← 이전: 3장 Domain Events](../03-Domain-Events/) | [다음: 5장 Repository Interface →](../../Part2-Command-Repository/01-Repository-Interface/)
-
----
-
 ## 개요
 
 Functorium은 Entity에 공통적으로 필요한 관심사(생성/수정 시각 추적, 소프트 삭제)를 **인터페이스로 분리**하여 제공합니다. `IAuditable`은 생성/수정 시각을, `ISoftDeletable`은 논리적 삭제를, `ISoftDeletableWithUser`는 삭제자 추적까지 지원합니다. 이 장에서는 이 인터페이스들을 구현하는 Product Entity를 만들어 각 인터페이스의 역할을 실습합니다.

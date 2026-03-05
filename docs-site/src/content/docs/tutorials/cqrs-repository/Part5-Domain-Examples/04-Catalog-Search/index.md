@@ -1,11 +1,6 @@
 ---
 title: "카탈로그 검색"
 ---
-
-> **Part 5: 도메인별 실전 예제** | [← 이전: 21장 Inventory Management →](../03-Inventory-Management) | [다음: 부록 →](../../../Appendix/)
-
----
-
 ## 개요
 
 카탈로그(Catalog) 검색 도메인을 통해 3가지 페이지네이션 방식을 비교합니다. 동일한 Specification으로 Offset, Cursor, Stream 조회를 수행하며, 각 방식의 특성과 적합한 사용 시나리오를 학습합니다.

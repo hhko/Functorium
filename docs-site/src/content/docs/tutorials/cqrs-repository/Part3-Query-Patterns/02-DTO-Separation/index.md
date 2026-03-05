@@ -1,11 +1,6 @@
 ---
 title: "DTO 분리"
 ---
-
-> **Part 3: Query 측 — 읽기 전용 패턴** | [← 이전: 9장 IQueryPort Interface →](../01-QueryPort-Interface/) | [다음: 11장 Pagination and Sorting →](../03-Pagination-And-Sorting/)
-
----
-
 ## 개요
 
 CQRS에서 Command 측과 Query 측은 서로 다른 DTO를 사용합니다. Command DTO는 쓰기 연산에 필요한 데이터를 운반하고, Query DTO는 읽기 연산에 최적화된 프로젝션을 제공합니다. 이 장에서는 같은 도메인 엔터티에 대해 용도별로 서로 다른 DTO를 설계하는 방법을 학습합니다.

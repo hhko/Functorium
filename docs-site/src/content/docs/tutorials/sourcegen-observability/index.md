@@ -1,5 +1,5 @@
 ---
-title: "Source Generator를 이용한 Observability 코드 자동화하기"
+title: "Source Generator Observability"
 ---
 
 **C# Roslyn API로 로깅, 추적, 메트릭 코드를 자동 생성하는 실전 가이드**

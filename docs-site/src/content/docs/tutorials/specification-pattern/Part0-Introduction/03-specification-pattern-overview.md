@@ -1,11 +1,6 @@
 ---
 title: "명세 패턴 개요"
 ---
-
-> **Part 0: 서론** | [← 이전: 0.2 사전 준비와 환경 설정](02-prerequisites-and-setup.md) | [목차](../) | [다음: 1장 첫 번째 Specification →](../Part1-Specification-Basics/01-First-Specification/)
-
----
-
 ## 개요
 
 Specification 패턴은 **비즈니스 규칙을 독립적인 객체로 캡슐화**하여 재사용, 조합, 테스트를 용이하게 하는 도메인 주도 설계(DDD) 패턴입니다. Eric Evans와 Martin Fowler가 정의한 이 패턴은 복잡한 조건 로직을 명확하게 표현하는 강력한 도구입니다.

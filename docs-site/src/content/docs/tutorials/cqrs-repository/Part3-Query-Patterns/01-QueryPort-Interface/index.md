@@ -1,11 +1,6 @@
 ---
 title: "IQueryPort 인터페이스"
 ---
-
-> **Part 3: Query 측 — 읽기 전용 패턴** | [← 이전: 8장 Unit of Work →](../../Part2-Command-Repository/04-Unit-Of-Work/) | [다음: 10장 DTO Separation →](../02-DTO-Separation/)
-
----
-
 ## 개요
 
 IQueryPort<TEntity, TDto>는 CQRS Query 측의 핵심 인터페이스입니다. Command 측이 Repository를 통해 쓰기를 수행하는 것과 대칭적으로, Query 측은 IQueryPort를 통해 읽기 전용 조회를 수행합니다. 이 인터페이스는 Specification 기반 필터링과 페이지네이션을 지원하며, 도메인 엔터티 대신 DTO를 반환합니다.
