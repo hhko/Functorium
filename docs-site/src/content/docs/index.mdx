@@ -41,6 +41,77 @@ import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
   </a>
 </div>
 
+<div class="story-section problems">
+  <h2>기존 .NET 아키텍처의 구조적 한계</h2>
+  <p class="story-subtitle">설계가 아닌 관습에 의존하면, 기능은 완성되지만 운영 안정성은 확보되지 않습니다.</p>
+  <div class="story-items">
+    <div class="story-item">
+      <span class="story-number">1</span>
+      <div>
+        <h3>예외가 곧 비즈니스 로직</h3>
+        <p>성공과 실패가 <code>try-catch</code>로 분기되어 흐름을 예측하기 어렵고, 도메인 규칙의 합성이 불가능합니다.</p>
+      </div>
+    </div>
+    <div class="story-item">
+      <span class="story-number">2</span>
+      <div>
+        <h3>개발 언어 ≠ 운영 언어</h3>
+        <p>기능 명세와 운영 요구사항이 서로 다른 체계로 관리되어, 통일된 언어 없이 해석 차이가 누적됩니다.</p>
+      </div>
+    </div>
+    <div class="story-item">
+      <span class="story-number">3</span>
+      <div>
+        <h3>Observability는 항상 사후 보완</h3>
+        <p>로그·메트릭·트레이싱이 구현 완료 후 부착되어, 장애 시 근본 원인 분석에 필요한 맥락이 유실됩니다.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="story-section solutions">
+  <h2>Functorium이 제안하는 구조</h2>
+  <p class="story-subtitle">함수형 타입 시스템 + 도메인 중심 통합 언어 + 설계 시점 Observability</p>
+  <div class="story-items">
+    <div class="story-item">
+      <span class="story-number">1</span>
+      <div>
+        <h3>예외 없는 순수 도메인</h3>
+        <p><code>Fin&lt;T&gt;</code>, <code>FinT&lt;IO, T&gt;</code>로 결과와 사이드 이펙트를 타입 수준에서 명시하고, LINQ 합성으로 도메인 흐름을 구성합니다.</p>
+      </div>
+    </div>
+    <div class="story-item">
+      <span class="story-number">2</span>
+      <div>
+        <h3>단일 도메인 언어로 통합</h3>
+        <p>Bounded Context를 명확히 정의하여 도메인 개념이 코드·문서·운영 메트릭에 일관되게 반영되는 구조를 만듭니다.</p>
+      </div>
+    </div>
+    <div class="story-item">
+      <span class="story-number">3</span>
+      <div>
+        <h3>설계에 내재된 Observability</h3>
+        <p>OpenTelemetry 기반 Logging, Metrics, Tracing이 유스케이스 파이프라인에 자동 적용되어, 도메인 흐름과 관측이 함께 설계됩니다.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<CardGrid>
+  <Card title="타입 안전한 함수형 도메인 모델링" icon="pencil">
+    Value Object, Entity, FinResponse DU, Monad Transformer로 도메인 불변식을 보장합니다.
+  </Card>
+  <Card title="자동 코드 생성" icon="setting">
+    Source Generator가 Observable wrapper와 EntityId 변환기를 컴파일 시점에 생성합니다.
+  </Card>
+  <Card title="아키텍처 품질 자동화" icon="approve-check">
+    Usecase Pipeline, CQRS 분리, 아키텍처 규칙 테스트로 설계 의도를 보존합니다.
+  </Card>
+  <Card title="Observability by Design" icon="open-book">
+    OpenTelemetry 기반 Logging, Metrics, Tracing이 설계 단계부터 내재화됩니다.
+  </Card>
+</CardGrid>
+
 ## Quick Example
 
 ### Domain: Always-valid Value Object
@@ -262,21 +333,6 @@ Usecase Pipeline(`IPipelineBehavior`)이 모든 Command/Query의 **외부 입출
 
 **에러 타입 분류**: `expected`(비즈니스 에러 → Warning), `exceptional`(시스템 에러 → Error), `aggregate`(복합 에러 → Error)
 :::
-
-<CardGrid>
-  <Card title="타입 안전한 함수형 도메인 모델링" icon="pencil">
-    Value Object, Entity, FinResponse DU, Monad Transformer로 도메인 불변식을 보장합니다.
-  </Card>
-  <Card title="자동 코드 생성" icon="setting">
-    Source Generator가 Observable wrapper와 EntityId 변환기를 컴파일 시점에 생성합니다.
-  </Card>
-  <Card title="아키텍처 품질 자동화" icon="approve-check">
-    Usecase Pipeline, CQRS 분리, 아키텍처 규칙 테스트로 설계 의도를 보존합니다.
-  </Card>
-  <Card title="Observability by Design" icon="open-book">
-    OpenTelemetry 기반 Logging, Metrics, Tracing이 설계 단계부터 내재화됩니다.
-  </Card>
-</CardGrid>
 
 <CardGrid>
   <LinkCard title="설계 동기" href="/Functorium/motivation/" description="도메인 로직, 공통 언어, Observability 관점의 구조적 문제와 해결 방향" />

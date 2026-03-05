@@ -1,69 +1,401 @@
-/* Functorium — .NET Purple accent theme */
+/* ================================================================
+   Functorium — "Structured Clarity" Design System
+   Tailwind-inspired · Bold typography · Before/After storytelling
+   ================================================================ */
+
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+/* ── 1. Custom Properties + Fonts ─────────────────────────────── */
 
 :root {
   --sl-color-accent-low: #1a0f3c;
   --sl-color-accent: #512bd4;
   --sl-color-accent-high: #c9b8f0;
+
+  --sl-font: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont,
+    system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --sl-font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Fira Code',
+    Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+
+  --fn-glow: rgba(81, 43, 212, 0.35);
+  --fn-surface: rgba(81, 43, 212, 0.06);
+  --fn-border: rgba(81, 43, 212, 0.12);
+  --fn-gradient: linear-gradient(135deg, #512bd4, #7c4dff);
+  --fn-danger: #ef4444;
+  --fn-danger-glow: rgba(239, 68, 68, 0.15);
 }
+
 :root[data-theme='light'] {
   --sl-color-accent-low: #e4d9f9;
   --sl-color-accent: #512bd4;
   --sl-color-accent-high: #2e1076;
+
+  --fn-glow: rgba(81, 43, 212, 0.15);
+  --fn-surface: rgba(81, 43, 212, 0.04);
+  --fn-border: rgba(81, 43, 212, 0.10);
+  --fn-danger-glow: rgba(239, 68, 68, 0.08);
 }
 
-/* Hero splash gradient */
+/* ── 2. Hero Section ──────────────────────────────────────────── */
+
 .hero {
-  background: radial-gradient(ellipse at 50% 0%, rgba(81, 43, 212, 0.15) 0%, transparent 70%);
-}
-[data-theme='light'] .hero {
-  background: radial-gradient(ellipse at 50% 0%, rgba(81, 43, 212, 0.1) 0%, transparent 70%);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(81, 43, 212, 0.22) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 50%, rgba(124, 77, 255, 0.08) 0%, transparent 40%),
+    radial-gradient(ellipse at 20% 80%, rgba(81, 43, 212, 0.06) 0%, transparent 40%);
+  position: relative;
+  padding-bottom: 2rem !important;
 }
 
-/* Card hover effect */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(81, 43, 212, 0.10) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse at 50% 30%, black 20%, transparent 65%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, black 20%, transparent 65%);
+}
+
+[data-theme='light'] .hero {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(81, 43, 212, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 50%, rgba(124, 77, 255, 0.05) 0%, transparent 40%);
+}
+
+[data-theme='light'] .hero::before {
+  background-image: radial-gradient(rgba(81, 43, 212, 0.06) 1px, transparent 1px);
+}
+
+.hero .tagline {
+  background: linear-gradient(135deg, #c9b8f0 0%, #fff 40%, #c9b8f0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 1.35rem !important;
+  line-height: 1.5 !important;
+}
+
+[data-theme='light'] .hero .tagline {
+  background: linear-gradient(135deg, #2e1076, #512bd4 60%, #7c4dff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* CTA buttons */
+.hero .action.primary > a {
+  background: var(--fn-gradient);
+  border: none;
+  font-weight: 600;
+  padding: 0.75rem 2rem;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+.hero .action.primary > a:hover {
+  box-shadow: 0 4px 30px var(--fn-glow), 0 0 60px rgba(81, 43, 212, 0.15);
+  transform: translateY(-2px);
+}
+
+.hero .action:not(.primary) > a {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.03);
+  transition: all 0.2s ease;
+}
+.hero .action:not(.primary) > a:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ── 3. Card System ───────────────────────────────────────────── */
+
 .card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: var(--fn-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--fn-border);
+  border-top: 2px solid var(--sl-color-accent);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(81, 43, 212, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px var(--fn-glow);
 }
 
-/* Code block rounded corners */
-pre {
-  border-radius: 0.5rem !important;
+.link-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.link-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px var(--fn-glow);
 }
 
-/* ── Topic navigation menu (home page) ────────────────── */
+/* ── 4. Story Sections — Tailwind-style bold layout ───────────── */
+
+/* Full-width section wrapper */
+.story-section {
+  margin-block: 3.5rem;
+  position: relative;
+}
+
+.story-section h2 {
+  font-weight: 800;
+  font-size: 2rem;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+  text-align: left;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.story-section .story-subtitle {
+  font-size: 1.05rem;
+  color: var(--sl-color-gray-3);
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  max-width: 40rem;
+}
+
+/* ── Problem Section: dramatic red accent + illustration ── */
+
+.story-section.problems h2 {
+  color: var(--fn-danger);
+}
+
+.story-section.problems {
+  padding: 2.5rem 2rem;
+  margin-inline: -2rem;
+  border-radius: 1rem;
+  background:
+    linear-gradient(135deg, rgba(239, 68, 68, 0.04) 0%, transparent 60%);
+  border: 1px solid rgba(239, 68, 68, 0.08);
+  overflow: hidden;
+}
+
+/* Problem illustration: scattered disconnected nodes */
+.story-section.problems::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  pointer-events: none;
+  opacity: 0.13;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320' fill='none'%3E%3C!-- scattered nodes --%3E%3Ccircle cx='60' cy='50' r='12' stroke='%23ef4444' stroke-width='2' stroke-dasharray='4 4'/%3E%3Ccircle cx='180' cy='30' r='8' stroke='%23ef4444' stroke-width='2' stroke-dasharray='4 4'/%3E%3Ccircle cx='260' cy='80' r='10' stroke='%23ef4444' stroke-width='2' stroke-dasharray='4 4'/%3E%3Ccircle cx='120' cy='130' r='14' stroke='%23ef4444' stroke-width='2' stroke-dasharray='4 4'/%3E%3Ccircle cx='220' cy='160' r='9' stroke='%23ef4444' stroke-width='2' stroke-dasharray='4 4'/%3E%3Ccircle cx='80' cy='220' r='11' stroke='%23ef4444' stroke-width='2' stroke-dasharray='4 4'/%3E%3Ccircle cx='280' cy='240' r='7' stroke='%23ef4444' stroke-width='2' stroke-dasharray='4 4'/%3E%3Ccircle cx='160' cy='270' r='13' stroke='%23ef4444' stroke-width='2' stroke-dasharray='4 4'/%3E%3C!-- broken lines --%3E%3Cline x1='72' y1='50' x2='110' y2='50' stroke='%23ef4444' stroke-width='1.5' stroke-dasharray='3 6'/%3E%3Cline x1='134' y1='130' x2='180' y2='100' stroke='%23ef4444' stroke-width='1.5' stroke-dasharray='3 6'/%3E%3Cline x1='188' y1='30' x2='250' y2='80' stroke='%23ef4444' stroke-width='1.5' stroke-dasharray='3 6'/%3E%3Cline x1='91' y1='220' x2='150' y2='270' stroke='%23ef4444' stroke-width='1.5' stroke-dasharray='3 6'/%3E%3Cline x1='229' y1='160' x2='273' y2='240' stroke='%23ef4444' stroke-width='1.5' stroke-dasharray='3 6'/%3E%3C!-- X marks for errors --%3E%3Cg stroke='%23ef4444' stroke-width='2'%3E%3Cline x1='140' y1='80' x2='155' y2='95'/%3E%3Cline x1='155' y1='80' x2='140' y2='95'/%3E%3C/g%3E%3Cg stroke='%23ef4444' stroke-width='2'%3E%3Cline x1='240' y1='190' x2='255' y2='205'/%3E%3Cline x1='255' y1='190' x2='240' y2='205'/%3E%3C/g%3E%3Cg stroke='%23ef4444' stroke-width='2'%3E%3Cline x1='50' y1='150' x2='65' y2='165'/%3E%3Cline x1='65' y1='150' x2='50' y2='165'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  mask-image: linear-gradient(to left, black 20%, transparent 90%);
+  -webkit-mask-image: linear-gradient(to left, black 20%, transparent 90%);
+}
+
+[data-theme='light'] .story-section.problems {
+  background:
+    linear-gradient(135deg, rgba(239, 68, 68, 0.03) 0%, transparent 60%);
+}
+
+[data-theme='light'] .story-section.problems::after {
+  opacity: 0.18;
+}
+
+/* ── Solution Section: purple gradient accent + illustration ── */
+
+.story-section.solutions h2 {
+  background: var(--fn-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.story-section.solutions {
+  padding: 2.5rem 2rem;
+  margin-inline: -2rem;
+  border-radius: 1rem;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(81, 43, 212, 0.05) 0%, transparent 60%);
+  border: 1px solid var(--fn-border);
+}
+
+/* Solution illustration: connected pipeline / structured flow */
+.story-section.solutions::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  pointer-events: none;
+  opacity: 0.12;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320' fill='none'%3E%3C!-- connected nodes --%3E%3Ccircle cx='80' cy='40' r='12' stroke='%23512bd4' stroke-width='2'/%3E%3Ccircle cx='200' cy='40' r='12' stroke='%23512bd4' stroke-width='2'/%3E%3Ccircle cx='140' cy='120' r='14' stroke='%23512bd4' stroke-width='2.5'/%3E%3Ccircle cx='60' cy='200' r='10' stroke='%23512bd4' stroke-width='2'/%3E%3Ccircle cx='220' cy='200' r='10' stroke='%23512bd4' stroke-width='2'/%3E%3Ccircle cx='140' cy='280' r='12' stroke='%23512bd4' stroke-width='2'/%3E%3C!-- solid connecting lines --%3E%3Cline x1='92' y1='40' x2='188' y2='40' stroke='%23512bd4' stroke-width='1.5'/%3E%3Cline x1='86' y1='50' x2='130' y2='110' stroke='%23512bd4' stroke-width='1.5'/%3E%3Cline x1='194' y1='50' x2='150' y2='110' stroke='%23512bd4' stroke-width='1.5'/%3E%3Cline x1='130' y1='132' x2='68' y2='192' stroke='%23512bd4' stroke-width='1.5'/%3E%3Cline x1='150' y1='132' x2='212' y2='192' stroke='%23512bd4' stroke-width='1.5'/%3E%3Cline x1='68' y1='208' x2='130' y2='272' stroke='%23512bd4' stroke-width='1.5'/%3E%3Cline x1='212' y1='208' x2='150' y2='272' stroke='%23512bd4' stroke-width='1.5'/%3E%3C!-- flow arrows on center line --%3E%3Cpath d='M140 56 L140 106' stroke='%237c4dff' stroke-width='2' marker-end='url(%23arrowhead)'/%3E%3Cpath d='M140 134 L140 184' stroke='%237c4dff' stroke-width='2' stroke-dasharray='6 4'/%3E%3Cpath d='M140 216 L140 266' stroke='%237c4dff' stroke-width='2' marker-end='url(%23arrowhead)'/%3E%3C!-- check marks --%3E%3Cpath d='M130 118 L138 126 L154 110' stroke='%237c4dff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M130 278 L138 286 L154 270' stroke='%237c4dff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C!-- small decorative dots --%3E%3Ccircle cx='140' cy='160' r='3' fill='%23512bd4'/%3E%3Ccircle cx='140' cy='240' r='3' fill='%23512bd4'/%3E%3Cdefs%3E%3Cmarker id='arrowhead' markerWidth='8' markerHeight='6' refX='8' refY='3' orient='auto'%3E%3Cpolygon points='0 0, 8 3, 0 6' fill='%237c4dff'/%3E%3C/marker%3E%3C/defs%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  mask-image: linear-gradient(to left, black 20%, transparent 90%);
+  -webkit-mask-image: linear-gradient(to left, black 20%, transparent 90%);
+}
+
+[data-theme='light'] .story-section.solutions::after {
+  opacity: 0.18;
+}
+
+/* ── Story items: numbered list with bold titles ── */
+
+.story-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.story-item {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr;
+  gap: 0 1rem;
+  align-items: start;
+}
+
+.story-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.story-section.problems .story-number {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--fn-danger);
+  border: 2px solid rgba(239, 68, 68, 0.2);
+}
+
+.story-section.solutions .story-number {
+  background: rgba(81, 43, 212, 0.1);
+  color: var(--sl-color-accent-high);
+  border: 2px solid var(--fn-border);
+}
+
+[data-theme='light'] .story-section.solutions .story-number {
+  color: var(--sl-color-accent);
+}
+
+.story-item h3 {
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.3;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.story-section.problems .story-item h3 {
+  color: var(--sl-color-white);
+}
+
+[data-theme='light'] .story-section.problems .story-item h3 {
+  color: var(--sl-color-black);
+}
+
+.story-item p {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--sl-color-gray-2);
+  margin: 0;
+  grid-column: 2;
+}
+
+[data-theme='light'] .story-item p {
+  color: var(--sl-color-gray-3);
+}
+
+/* ── Solution item: code-style type annotation ── */
+
+.story-item code {
+  font-family: var(--sl-font-mono);
+  font-size: 0.8rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.25rem;
+  background: rgba(81, 43, 212, 0.1);
+  color: var(--sl-color-accent-high);
+}
+
+[data-theme='light'] .story-item code {
+  background: rgba(81, 43, 212, 0.08);
+  color: var(--sl-color-accent);
+}
+
+/* ── 5. Section Divider ───────────────────────────────────────── */
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-block: 3rem 1.5rem;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--sl-color-gray-3);
+}
+
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--fn-border);
+}
+
+/* ── 6. Topic Navigation ──────────────────────────────────────── */
+
 .topic-nav {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
   justify-content: center;
-  margin-block: 1.5rem;
+  margin-block: 2rem;
 }
+
 .topic-nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.625rem 1.25rem;
-  border: 1px solid var(--sl-color-gray-5);
-  border-radius: 0.5rem;
+  gap: 0.3rem;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--fn-border);
+  border-radius: 0.75rem;
   text-decoration: none;
-  transition: border-color 0.2s, background 0.2s;
+  transition: all 0.2s ease;
+  background: var(--fn-surface);
 }
+
 .topic-nav-item:hover {
   border-color: var(--sl-color-accent);
-  background: var(--sl-color-accent-low);
+  background: rgba(81, 43, 212, 0.1);
+  box-shadow: 0 4px 20px var(--fn-glow);
+  transform: translateY(-2px);
 }
+
 .topic-nav-label {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.95rem;
   color: var(--sl-color-white);
 }
+
+[data-theme='light'] .topic-nav-label {
+  color: var(--sl-color-black);
+}
+
 .topic-nav-desc {
   font-size: 0.75rem;
   color: var(--sl-color-gray-3);
 }
+
 @media (max-width: 40rem) {
   .topic-nav {
     flex-direction: column;
@@ -71,3 +403,136 @@ pre {
   }
 }
 
+/* ── 7. Sidebar (doc pages) ───────────────────────────────────── */
+
+starlight-menu-button + nav .sidebar-content li.current > a,
+nav.sidebar li[aria-current='page'] > a {
+  border-left: 3px solid var(--sl-color-accent);
+  background: var(--fn-surface);
+  padding-left: 0.75rem;
+}
+
+nav.sidebar .top-level > li > details > summary,
+nav.sidebar .top-level > li > a {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+nav.sidebar ul {
+  padding-block: 0.15rem;
+}
+
+nav.sidebar li {
+  margin-block: 0.1rem;
+}
+
+/* ── 8. Code Blocks ───────────────────────────────────────────── */
+
+pre {
+  border-radius: 0.75rem !important;
+  font-size: 0.85rem !important;
+  position: relative;
+}
+
+pre::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--fn-gradient);
+  border-radius: 0.75rem 0.75rem 0 0;
+}
+
+/* ── 9. Aside (tip / note / caution) ──────────────────────────── */
+
+.starlight-aside {
+  border-radius: 0.75rem;
+  border-left-width: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.starlight-aside .starlight-aside__title {
+  font-weight: 600;
+}
+
+/* ── 10. Typography ───────────────────────────────────────────── */
+
+h1 {
+  font-weight: 800 !important;
+  letter-spacing: -0.03em;
+}
+
+h2 {
+  font-weight: 700 !important;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--fn-border);
+}
+
+.sl-markdown-content {
+  line-height: 1.8;
+}
+
+::selection {
+  background: rgba(81, 43, 212, 0.3);
+}
+
+/* ── 11. Scrollbar ────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(81, 43, 212, 0.25);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(81, 43, 212, 0.4);
+}
+
+[data-theme='light'] ::-webkit-scrollbar-thumb {
+  background: rgba(81, 43, 212, 0.15);
+}
+
+[data-theme='light'] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(81, 43, 212, 0.3);
+}
+
+/* ── 12. Responsive ───────────────────────────────────────────── */
+
+@media (max-width: 50rem) {
+  .story-section.problems,
+  .story-section.solutions {
+    padding: 1.5rem 1rem;
+    margin-inline: -1rem;
+  }
+
+  .story-section.problems::after,
+  .story-section.solutions::after {
+    display: none;
+  }
+
+  .story-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .story-item {
+    grid-template-columns: 2.5rem 1fr;
+  }
+
+  .story-number {
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 0.9rem;
+  }
+}
