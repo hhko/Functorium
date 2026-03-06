@@ -7,49 +7,118 @@ import { LinkCard, CardGrid } from '@astrojs/starlight/components';
 
 ## 타입 안전한 함수형 도메인 모델링
 
-Value Object와 Entity를 함수형 팩토리 패턴으로 생성하여 도메인 불변식을 생성 시점에 보장하고, 예외 대신 `FinResponse<T>` Discriminated Union으로 유스케이스 결과를 명시적으로 처리합니다. `FinT<IO, T>` Monad Transformer로 사이드 이펙트 경계를 타입 수준에서 추적하고, 구조화된 에러 코드와 Specification 합성, 함수형 검증을 통해 도메인 로직의 정확성과 합성 가능성을 동시에 확보합니다.
+도메인 객체가 유효하지 않은 상태로 생성될 수 있다면, 비즈니스 규칙 위반은 런타임 예외로만 드러납니다.
+검증 로직이 호출부마다 흩어지고, 어디서 유효성을 확인했는지 추적하기 어려워집니다.
+시간이 지나면 검증 누락이 버그로 이어지고, 방어적 코드가 곳곳에 중복됩니다.
+Functorium은 **도메인 객체의 유효성을 생성 시점에 강제하는** 함수형 팩토리 패턴으로 이 문제를 해결합니다.
 
 :::note[핵심 원칙]
 모든 도메인 객체는 생성 시점에 유효성이 보장됩니다(Always-valid). 유효하지 않은 상태의 객체는 존재할 수 없습니다.
 :::
 
-| 기능 | 설명 |
-|------|------|
-| Value Object 계층 | AbstractValueObject → SimpleValueObject\<T\> → ComparableValueObject. 값 기반 동등성, Always-valid 팩토리 |
-| Entity / AggregateRoot | Ulid 기반 타입 안전한 ID(IEntityId\<T\>). AggregateRoot에서 도메인 이벤트 수집·발행 |
-| FinResponse\<T\> Discriminated Union | sealed record 기반 Success/Failure. 모든 유스케이스의 명시적 결과 처리. LINQ 합성 지원 |
-| FinT\<IO, T\> Monad Transformer | 사이드 이펙트를 타입으로 추적. Repository 반환 타입으로 순수/비순수 경계 명시 |
-| 구조화된 에러 코드 시스템 | `DomainErrors.Email.Empty` 형태 자동 생성. 8가지 명명 규칙(R1–R8) |
-| Specification Pattern | &/\|/! 연산자 합성. Expression Tree → SQL 변환. PropertyMap 브릿지 |
-| 함수형 검증 (Bind + Apply) | 순차(Bind) vs 병렬(Apply) 검증. Always-valid Value Object |
+Value Object 계층(`AbstractValueObject` → `SimpleValueObject<T>` → `ComparableValueObject`)은
+값 기반 동등성과 Always-valid 팩토리를 제공합니다.
+생성자를 직접 노출하지 않고 팩토리 메서드를 통해서만 인스턴스를 만들 수 있으므로,
+유효성 검증을 우회하는 경로가 원천적으로 차단됩니다.
+Entity와 AggregateRoot는 Ulid 기반 타입 안전한 ID(`IEntityId<T>`)로 식별되며,
+AggregateRoot에서 도메인 이벤트를 수집하고 발행합니다.
+
+이 계층 구조 위에서 `FinResponse<T>` Discriminated Union이 모든 유스케이스의 결과를 명시적으로 표현합니다.
+sealed record 기반의 Success/Failure 구분은 예외에 의존하지 않는 흐름 제어를 가능하게 합니다.
+호출자는 반환 타입만 보고도 성공과 실패 경로를 모두 처리해야 한다는 사실을 인지할 수 있으며,
+LINQ 합성을 통해 여러 연산을 자연스럽게 조립할 수 있습니다.
+
+사이드 이펙트 경계는 `FinT<IO, T>` Monad Transformer가 타입 수준에서 추적합니다.
+Repository 반환 타입에 `FinT<IO, T>`를 사용하면 순수 함수와 비순수 함수의 경계가 시그니처에 명시되므로,
+호출자는 사이드 이펙트의 존재 여부를 컴파일 타임에 인지할 수 있습니다.
+이를 통해 도메인 로직의 순수한 부분과 인프라에 의존하는 부분이 타입으로 구분됩니다.
+
+에러 처리 역시 구조화되어 있습니다.
+`DomainErrors.Email.Empty`와 같은 형태의 에러 코드가 8가지 명명 규칙(R1-R8)에 따라 자동 생성되며,
+계층별로 `DomainError`, `ApplicationError`, `AdapterError`가 명확히 분리됩니다.
+Specification Pattern은 `&`/`|`/`!` 연산자 합성과 Expression Tree 기반 SQL 변환을 지원하고,
+PropertyMap 브릿지를 통해 도메인 속성과 영속성 컬럼 간의 매핑을 처리합니다.
+함수형 검증에서는 순차 검증(Bind)과 병렬 검증(Apply)을 조합하여,
+첫 번째 실패에서 멈추거나 모든 오류를 한꺼번에 수집하는 전략을 선택적으로 적용할 수 있습니다.
+
+이 설계의 실제 효과는 컴파일 타임에 더 많은 오류를 잡아낸다는 점입니다.
+유효하지 않은 객체가 존재할 수 없으므로 방어적 검증 코드가 줄어들고,
+LINQ 합성으로 도메인 흐름을 선언적으로 조립할 수 있습니다.
+결과적으로 도메인 로직의 정확성과 합성 가능성을 동시에 확보할 수 있습니다.
 
 ## 자동 코드 생성 (Source Generator)
 
-Source Generator가 컴파일 시점에 Domain과 Adapter 계층 간 브릿지 코드를 자동 생성합니다. 포트 구현체에 관측성 래퍼를 씌우고, 도메인 ID 타입에 영속성 변환기를 생성하여 계층 간 연결 보일러플레이트를 제거합니다.
+Domain 계층과 Adapter 계층 사이에는 반복적인 브릿지 코드가 필요합니다.
+포트 구현체마다 Observable wrapper를 작성하고, 도메인 ID 타입마다 EF Core 변환기를 만드는 작업은
+단순하지만 실수가 잦고 유지보수 부담이 큽니다.
+새로운 포트가 추가될 때마다 동일한 패턴의 코드를 반복 작성해야 하며,
+원본 인터페이스가 변경되면 wrapper도 함께 수정해야 합니다.
+Functorium의 Source Generator는 이 브릿지 코드를 컴파일 시점에 자동 생성하여 보일러플레이트를 제거합니다.
 
 :::tip[보일러플레이트 제거]
 어트리뷰트 하나로 Observable wrapper와 EntityId 변환기가 자동 생성되어, 반복 코드 없이 계층 간 연결이 완성됩니다.
 :::
 
-| 기능 | 설명 |
-|------|------|
-| \[GenerateObservablePort\] | Adapter 포트 구현체에 OpenTelemetry Tracing/Logging/Metrics Observable wrapper 자동 생성 |
-| \[GenerateEntityId\] | Ulid 기반 EntityId + EF Core ValueConverter/ValueComparer 자동 생성. Domain ↔ Adapter 영속성 브릿지 |
+`[GenerateObservablePort]` 어트리뷰트를 Adapter 포트 구현체에 선언하면,
+OpenTelemetry 기반의 Tracing, Logging, Metrics를 포함하는 Observable wrapper가 자동 생성됩니다.
+원본 구현체를 수정하지 않고도 모든 포트 호출에 관측성이 부여되므로,
+관측성 코드와 비즈니스 로직이 분리된 상태를 유지할 수 있습니다.
+생성된 wrapper는 메서드 진입/종료 시점의 트레이싱, 실행 시간 메트릭, 구조화된 로깅을 자동으로 처리합니다.
+
+`[GenerateEntityId]` 어트리뷰트는 Ulid 기반 EntityId 타입과 함께
+EF Core의 `ValueConverter`/`ValueComparer`를 자동 생성합니다.
+도메인 계층의 강타입 ID가 영속성 계층에서 변환 코드 없이 그대로 사용되므로,
+Domain과 Adapter 사이의 영속성 브릿지가 어트리뷰트 선언만으로 완성됩니다.
+타입 안전한 ID를 유지하면서도 데이터베이스 저장과 조회에 필요한 변환 로직을 직접 구현할 필요가 없습니다.
+
+결과적으로 개발자는 계층 간 연결에 필요한 반복 코드를 직접 작성하지 않으면서도,
+타입 안전성과 관측성을 확보할 수 있습니다.
+인터페이스가 변경되면 Source Generator가 wrapper를 자동으로 재생성하므로,
+수동 동기화로 인한 불일치 문제도 발생하지 않습니다.
 
 ## 아키텍처 품질 자동화
 
-모든 유스케이스에 횡단 관심사 Pipeline이 자동 적용되고, CQRS 기반으로 읽기/쓰기 경로가 분리됩니다. 타입 시스템과 단위 테스트가 Pipeline 제약 조건, 불변성·가시성·상속 규칙을 코드 수준에서 강제하여 설계 의도가 지속적으로 보존됩니다.
+아키텍처 규칙이 문서에만 존재하면, 시간이 지날수록 코드와의 괴리가 발생합니다.
+새로운 팀원이 합류하거나 일정이 촉박해지면 규칙은 쉽게 무시되고, 기술 부채가 누적됩니다.
+코드 리뷰에서 아키텍처 위반을 잡아내려 해도, 리뷰어의 주의력과 경험에 의존하게 됩니다.
+Functorium은 아키텍처 규칙을 타입 시스템과 자동화된 테스트로 코드에 내재화하여 이 문제를 해결합니다.
 
 :::note[설계 의도 보존]
 아키텍처 규칙이 코드에 내재화되어, 리뷰어 없이도 설계 원칙이 지속적으로 유지됩니다.
 :::
 
-| 기능 | 설명 |
-|------|------|
-| Usecase 횡단 관심사 Pipeline | Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction 순서로 자동 적용 |
-| 타입 안전한 Pipeline 제약 | IFinResponse 인터페이스 계층 + CRTP 팩토리. 리플렉션 없이 Pipeline별 최소 제약 |
-| CQRS 읽기/쓰기 분리 | Command(IRepository + EF Core) vs Query(IQueryPort + Dapper). Cursor 페이지네이션 |
-| 아키텍처 규칙 테스트 | ClassValidator/InterfaceValidator/MethodValidator. 불변성·가시성·상속 규칙을 단위 테스트로 강제 |
+모든 유스케이스는 횡단 관심사 Pipeline을 거칩니다.
+Metrics, Tracing, Logging, Validation, Caching, Exception, Transaction이
+정해진 순서로 자동 적용되므로, 개별 유스케이스가 횡단 관심사를 직접 처리할 필요가 없습니다.
+유스케이스 개발자는 비즈니스 로직에만 집중하면 되고,
+관측성과 트랜잭션 관리는 Pipeline이 일관되게 보장합니다.
+Pipeline 제약은 `IFinResponse` 인터페이스 계층과 CRTP 팩토리가 타입 수준에서 강제하며,
+리플렉션 없이 Pipeline별 최소 제약 조건을 보장합니다.
+
+읽기와 쓰기 경로는 CQRS 패턴으로 분리됩니다.
+Command 경로는 `ICommandRequest<T>`와 `IRepository`, EF Core를 사용하여
+도메인 모델의 상태 변경을 처리하고,
+Query 경로는 `IQueryRequest<T>`와 `IQueryPort`, Dapper를 사용하여
+읽기에 최적화된 경로로 데이터를 조회합니다.
+Cursor 페이지네이션을 기본 지원하여 대량 데이터 조회에서도 일관된 성능을 유지합니다.
+
+마지막으로, 아키텍처 규칙 테스트가 설계 의도를 코드 수준에서 검증합니다.
+`ClassValidator`, `InterfaceValidator`, `MethodValidator`가
+불변성, 가시성, 상속 규칙을 단위 테스트로 강제하므로,
+CI 파이프라인에서 규칙 위반이 자동으로 감지됩니다.
+예를 들어, Value Object가 sealed가 아니거나, Entity 생성자가 public으로 노출되면 테스트가 실패합니다.
+리뷰어가 매번 확인하지 않아도 설계 원칙이 지속적으로 보존됩니다.
+
+## 빠른 참조
+
+| 영역 | 핵심 타입/도구 | 역할 |
+|------|---------------|------|
+| 도메인 모델링 | `SimpleValueObject<T>`, `Fin<T>`, `FinT<IO, T>` | 타입 안전한 불변식 보장 |
+| 에러 시스템 | `DomainError`, `ApplicationError`, `AdapterError` | 구조화된 에러 코드 자동 생성 |
+| CQRS | `ICommandRequest<T>`, `IQueryRequest<T>` | 읽기/쓰기 경로 분리 |
+| 코드 생성 | `[GenerateObservablePort]`, `[GenerateEntityId]` | 컴파일 시점 브릿지 코드 생성 |
+| 품질 자동화 | `ClassValidator`, `InterfaceValidator` | 아키텍처 규칙 단위 테스트 |
+| Pipeline | Metrics → Tracing → Logging → ... → Transaction | 횡단 관심사 자동 적용 |
 
 <CardGrid>
   <LinkCard title="설계 철학" href="/Functorium/design-philosophy/" description="도메인 중심 설계, 함수형 아키텍처, Observability by Design" />

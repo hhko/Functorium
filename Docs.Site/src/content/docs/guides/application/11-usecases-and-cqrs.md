@@ -10,6 +10,12 @@ title: "Use Case와 CQRS"
 
 Application Layer는 도메인 객체를 조율하여 유스케이스를 수행하는 계층입니다. 도메인 로직 자체를 포함하지 않고, 도메인 객체에게 작업을 위임합니다.
 
+전통적인 Application Service에서는 하나의 서비스 클래스가 생성, 조회, 수정, 삭제를 모두 처리합니다. 처음에는 간결해 보이지만, 비즈니스가 성장하면서 문제가 드러납니다.
+
+조회 시에는 여러 테이블을 조인한 DTO가 필요하고, 생성 시에는 Aggregate Root를 통한 불변식 검증과 트랜잭션이 필요합니다. 하나의 모델로 두 가지를 모두 만족시키려 하면, 조회 성능을 위해 도메인 모델에 탐색용 프로퍼티를 추가하거나, 반대로 도메인 무결성을 위해 조회 쿼리가 불필요하게 복잡해집니다.
+
+CQRS는 이 문제를 읽기 경로(Query)와 쓰기 경로(Command)로 분리하여 해결합니다. Command는 EF Core로 Aggregate를 영속화하고, Query는 Dapper로 SQL을 직접 작성하여 각각 최적의 기술을 선택할 수 있습니다.
+
 ### Command/Query 분리의 이점
 
 | 관점 | 통합 모델 | CQRS |
@@ -1128,3 +1134,11 @@ public sealed record Response(
 **외부 참고:**
 - [Mediator](https://github.com/martinothamar/Mediator) - 기반 라이브러리
 - [LanguageExt](https://github.com/louthy/language-ext) - Fin 타입 제공 라이브러리
+
+---
+
+## 관련 문서
+
+- Usecase에서 사용하는 Port 인터페이스 정의: [Port 정의](../adapter/12-ports)
+- Port 구현체인 Adapter 작성: [Adapter 구현](../adapter/13-adapters)
+- Pipeline과 DI 등록: [Adapter 연결](../adapter/14a-adapter-pipeline-di)

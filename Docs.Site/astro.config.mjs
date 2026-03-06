@@ -95,19 +95,23 @@ export default defineConfig({
             icon: 'open-book',
             items: [
               {
-                label: '소개',
+                label: '왜 Functorium인가',
                 items: [
                   { label: '개요', slug: '' },
-                  { label: '주요 핵심 기능', slug: 'key-features', badge: { text: '핵심', variant: 'tip' } },
                   { label: '설계 동기', slug: 'motivation' },
                   { label: '설계 철학', slug: 'design-philosophy' },
                 ],
               },
               {
-                label: '가이드',
+                label: '무엇을 제공하는가',
                 items: [
+                  { label: '주요 핵심 기능', slug: 'key-features', badge: { text: '핵심', variant: 'tip' } },
                   { label: '구조 개요', slug: 'architecture' },
-                  { label: '품질 전략과 기대 효과', slug: 'quality-and-benefits' },
+                ],
+              },
+              {
+                label: '어떻게 시작하는가',
+                items: [
                   { label: '시작하기', slug: 'getting-started', badge: { text: '시작', variant: 'note' } },
                 ],
               },

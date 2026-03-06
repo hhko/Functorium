@@ -4,6 +4,8 @@ title: "Adapter 연결 -- Pipeline과 DI"
 
 이 문서는 Adapter의 Pipeline 생성, DI 등록, Options 패턴을 다루는 가이드입니다. Port 정의는 [12-ports.md](./12-ports), Adapter 구현은 [13-adapters.md](./13-adapters), 단위 테스트는 [14b-adapter-testing.md](./14b-adapter-testing)를 참조하세요.
 
+Pipeline은 횡단 관심사(cross-cutting concerns)를 처리하는 Functorium의 핵심 메커니즘입니다. 로깅, 메트릭, 트레이싱과 같은 관측성 코드를 각 Adapter에 직접 작성하면 코드가 반복되고, 누락되기 쉬우며, 형식이 일관되지 않습니다. Pipeline은 Source Generator가 생성한 Observable wrapper를 통해 이러한 관심사를 자동으로, 일관되게 적용합니다.
+
 ## 요약
 
 ### 주요 명령

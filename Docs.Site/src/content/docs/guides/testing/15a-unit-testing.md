@@ -84,6 +84,9 @@ dotnet test
 
 ## MTP 설정
 
+<details>
+<summary>MTP 설정 상세 (클릭하여 펼치기)</summary>
+
 ### Microsoft Testing Platform이란?
 
 MTP(Microsoft Testing Platform)는 VSTest를 대체하는 새로운 테스트 엔진입니다. xUnit v3는 MTP를 기본 지원합니다.
@@ -235,6 +238,8 @@ dotnet test -- --report-trx --report-trx-filename results.trx
 # 커버리지와 TRX 리포트 함께 생성 (Build-Local.ps1 방식)
 dotnet test -- --coverage --coverage-output-format cobertura --coverage-output coverage.xml --report-trx
 ```
+
+</details>
 
 
 

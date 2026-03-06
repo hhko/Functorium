@@ -15,11 +15,15 @@ Functorium은 .NET 8 이상을 지원합니다. 프로젝트의 `TargetFramework
 
 1. **핵심 라이브러리 설치**
 
+   도메인 모델링과 유스케이스 구현에 필요한 핵심 타입(Value Object, Entity, `Fin<T>`, CQRS 인터페이스)을 제공합니다. 모든 프로젝트에 필수입니다.
+
    ```bash
    dotnet add package Functorium
    ```
 
 2. **Source Generator 설치**
+
+   `[GenerateObservablePort]`와 `[GenerateEntityId]` 소스 생성기를 제공합니다. Adapter 프로젝트에 추가합니다.
 
    ```bash
    dotnet add package Functorium.SourceGenerators
@@ -27,25 +31,54 @@ Functorium은 .NET 8 이상을 지원합니다. 프로젝트의 `TargetFramework
 
 3. **테스트 유틸리티 설치**
 
+   아키텍처 규칙 검증, 구조화된 로그 테스트 등 테스트 유틸리티를 제공합니다. 테스트 프로젝트에 추가합니다.
+
    ```bash
    dotnet add package Functorium.Testing
    ```
 
 </Steps>
 
+## 첫 번째 값 객체 만들기
+
+Functorium 설치 후 가장 먼저 시도해볼 수 있는 것은 Always-valid 값 객체입니다. 다음은 이메일 주소를 표현하는 값 객체의 최소 구현입니다.
+
+```csharp
+public sealed partial class Email : SimpleValueObject<string>
+{
+    public const int MaxLength = 320;
+
+    private Email(string value) : base(value) { }
+
+    public static Fin<Email> Create(string? value) =>
+        CreateFromValidation(Validate(value), v => new Email(v));
+
+    public static Validation<Error, string> Validate(string? value) =>
+        ValidationRules<Email>
+            .NotNull(value)
+            .ThenNotEmpty()
+            .ThenMaxLength(MaxLength)
+            .ThenNormalize(v => v.Trim().ToLowerInvariant());
+}
+```
+
+`Create` 메서드는 `Fin<Email>`을 반환합니다. 유효한 입력이면 `Email` 인스턴스가, 유효하지 않으면 구조화된 에러 코드(`DomainErrors.Email.Empty` 등)가 반환됩니다. 예외는 발생하지 않습니다.
+
+값 객체의 상세한 구현 패턴은 [값 객체 가이드](/Functorium/guides/domain/05a-value-objects/)를 참고하세요.
+
 ## 튜토리얼
 
-- [Architecture](https://github.com/hhko/Functorium/blob/main/Docs/architecture-is/README.md)
+단계별 실습을 통해 Functorium의 핵심 개념을 학습할 수 있습니다.
 
 | 튜토리얼 | 주제 | 실습 |
 |----------|------|------|
-| [Implementing Functional ValueObject](https://github.com/hhko/Functorium/blob/main/Docs/tutorials/Implementing-Functional-ValueObject/README.md) | Value Object, 검증, 불변성 | 29개 |
-| [Implementing Specification Pattern](https://github.com/hhko/Functorium/blob/main/Docs/tutorials/Implementing-Specification-Pattern/README.md) | Specification, Expression Tree | 18개 |
-| [Implementing CQRS Repository And Query Patterns](https://github.com/hhko/Functorium/blob/main/Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/README.md) | CQRS, Repository, Query 어댑터 | 22개 |
-| [Designing TypeSafe Usecase Pipeline Constraints](https://github.com/hhko/Functorium/blob/main/Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/README.md) | 제네릭 변성, IFinResponse, Pipeline 제약 | 20개 |
-| [Enforcing Architecture Rules with Testing](https://github.com/hhko/Functorium/blob/main/Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/README.md) | 아키텍처 규칙, ClassValidator | 16개 |
-| [Automating ObservabilityCode with SourceGenerator](https://github.com/hhko/Functorium/blob/main/Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/README.md) | Source Generator, Observable wrapper | — |
-| [Automating ReleaseNotes with ClaudeCode and .NET 10](https://github.com/hhko/Functorium/blob/main/Docs/tutorials/Automating-ReleaseNotes-with-ClaudeCode-and-.NET10/README.md) | AI 자동화, 릴리스 노트 | — |
+| [함수형 값 객체 구현](/Functorium/tutorials/functional-valueobject/) | Value Object, 검증, 불변성 | 29개 |
+| [명세 패턴](/Functorium/tutorials/specification-pattern/) | Specification, Expression Tree | 18개 |
+| [CQRS 리포지토리 패턴](/Functorium/tutorials/cqrs-repository/) | CQRS, Repository, Query 어댑터 | 22개 |
+| [유스케이스 파이프라인 제약](/Functorium/tutorials/usecase-pipeline/) | 제네릭 변성, IFinResponse, Pipeline 제약 | 20개 |
+| [아키텍처 규칙 테스트](/Functorium/tutorials/architecture-rules/) | 아키텍처 규칙, ClassValidator | 16개 |
+| [소스 생성기 관측 가능성](/Functorium/tutorials/sourcegen-observability/) | Source Generator, Observable wrapper | — |
+| [릴리스 노트 자동화](/Functorium/tutorials/release-notes-claude/) | AI 자동화, 릴리스 노트 | — |
 
 ## Observability
 
@@ -55,8 +88,19 @@ Functorium은 OpenTelemetry 기반의 통합 관측성(Logging, Metrics, Tracing
 ![Functorium Observability](../../assets/Functorium.Observability.png)
 
 <CardGrid>
-  <LinkCard title="Observability Specification" href="https://github.com/hhko/Functorium/blob/main/Docs/guides/18a-observability-spec.md" description="Field/Tag 구조, Meter/Instrument 사양, 메시지 템플릿" />
-  <LinkCard title="Logging Guide" href="https://github.com/hhko/Functorium/blob/main/Docs/guides/19-observability-logging.md" description="구조화된 로깅 상세 가이드" />
-  <LinkCard title="Metrics Guide" href="https://github.com/hhko/Functorium/blob/main/Docs/guides/20-observability-metrics.md" description="메트릭 수집 및 분석 가이드" />
-  <LinkCard title="Tracing Guide" href="https://github.com/hhko/Functorium/blob/main/Docs/guides/21-observability-tracing.md" description="분산 추적 상세 가이드" />
+  <LinkCard title="Observability Specification" href="/Functorium/guides/observability/18a-observability-spec/" description="Field/Tag 구조, Meter/Instrument 사양, 메시지 템플릿" />
+  <LinkCard title="Logging Guide" href="/Functorium/guides/observability/19-observability-logging/" description="구조화된 로깅 상세 가이드" />
+  <LinkCard title="Metrics Guide" href="/Functorium/guides/observability/20-observability-metrics/" description="메트릭 수집 및 분석 가이드" />
+  <LinkCard title="Tracing Guide" href="/Functorium/guides/observability/21-observability-tracing/" description="분산 추적 상세 가이드" />
+</CardGrid>
+
+## 다음 단계
+
+Functorium을 본격적으로 활용하기 위한 학습 경로를 안내합니다.
+
+<CardGrid>
+  <LinkCard title="도메인 모델링" href="/Functorium/guides/domain/05a-value-objects/" description="값 객체, 엔티티, 애그리거트 설계와 구현 패턴" />
+  <LinkCard title="유스케이스 구현" href="/Functorium/guides/application/11-usecases-and-cqrs/" description="CQRS 기반 Command/Query 유스케이스 작성" />
+  <LinkCard title="Adapter 구현" href="/Functorium/guides/adapter/13-adapters/" description="Repository, External API, Query Adapter 구현" />
+  <LinkCard title="Observability 가이드" href="/Functorium/guides/observability/18a-observability-spec/" description="구조화된 로그, 메트릭, 분산 추적 설정" />
 </CardGrid>

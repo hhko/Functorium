@@ -7,6 +7,10 @@ title: "Observability Specification"
 
 > 모든 관측성 필드는 OpenTelemetry 시맨틱 규칙과의 일관성을 위해 `snake_case + dot` 표기법을 사용합니다.
 
+관측 가능성(Observability)은 시스템이 운영 환경에서 어떻게 동작하는지 이해하기 위한 핵심 역량입니다. 그러나 팀마다, 서비스마다 로그 형식이 다르고 메트릭 이름이 일관되지 않으면, 장애 발생 시 데이터가 있어도 활용할 수 없습니다.
+
+이 사양서는 Functorium의 **"Observability by Design"** 철학을 구체적인 규칙으로 정의합니다. 필드 이름, 에러 분류, Event ID, Meter 명명 규칙을 사전에 표준화하여, 모든 유스케이스와 Adapter가 동일한 형식으로 관측 데이터를 생성하도록 보장합니다. 개발자는 이 사양을 따르는 것만으로 운영팀이 즉시 활용할 수 있는 구조화된 관측 데이터를 자동으로 얻습니다.
+
 ![](../../../../assets/Functorium.Observability.png)
 
 ## 요약

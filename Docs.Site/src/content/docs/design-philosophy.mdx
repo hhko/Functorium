@@ -5,11 +5,19 @@ description: 도메인 중심 설계, 함수형 아키텍처, Observability by D
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
+Functorium의 설계는 세 가지 원칙에 기반합니다. 각 원칙이 왜 필요한지, 그리고 Functorium이 이를 어떻게 구현하는지 설명합니다.
+
 ## 도메인 중심 설계
 
-모든 핵심 비즈니스 로직은 도메인 모델 안에 위치하며, 엔티티와 값 객체, 애그리게이트, 도메인 서비스는 명확한 책임을 가집니다. 공통 언어는 단순한 용어 정리가 아니라, 코드와 문서, 운영 지표에까지 반영되어야 하는 일관된 개념 체계입니다.
+**원칙:** 모든 핵심 비즈니스 로직은 도메인 모델 안에 위치하며, 공통 언어(Ubiquitous Language)가 코드, 문서, 운영 지표에까지 일관되게 반영됩니다.
 
-**Value Object** — 값 기반 동등성과 불변성을 보장합니다:
+**왜 필요한가:** 비즈니스 규칙이 Controller나 Service에 흩어지면, 규칙 변경 시 여러 곳을 수정해야 하고 일관성이 깨집니다. 도메인 모델이 규칙의 단일 원천(Single Source of Truth)이 되면, 변경은 한 곳에서만 발생합니다.
+
+**Functorium 구현 방식:** Value Object(값 기반 동등성 + 불변성), Entity/AggregateRoot(Ulid ID + 이벤트), DomainError(구조화된 에러 코드), Domain Event(Mediator Pub/Sub)로 도메인 모델을 구성합니다.
+
+### Value Object — 값 기반 동등성과 불변성
+
+Value Object는 참조가 아닌 값으로 비교됩니다. `GetEqualityComponents()`가 반환하는 구성 요소가 동일하면 같은 객체로 취급됩니다.
 
 ```csharp
 public abstract class AbstractValueObject : IValueObject, IEquatable<AbstractValueObject>
@@ -20,11 +28,41 @@ public abstract class AbstractValueObject : IValueObject, IEquatable<AbstractVal
 }
 ```
 
-:::note[값 기반 동등성]
-Value Object는 참조가 아닌 값으로 비교됩니다. `GetEqualityComponents()`가 반환하는 구성 요소가 동일하면 같은 객체로 취급됩니다.
-:::
+검증 규칙은 Value Object 한 곳에서 정의하고, `ValidationRules<T>` 체이닝으로 조건별 에러 코드를 자동 생성합니다. 다음은 이메일 주소를 표현하는 값 객체입니다. `Create`가 반환하는 `Fin<Email>`은 유효한 입력이면 `Email` 인스턴스를, 유효하지 않으면 에러 코드를 담습니다. 예외는 발생하지 않으며, 검증 로직이 분산될 여지가 구조적으로 제거됩니다.
 
-**Entity / AggregateRoot** — Ulid 기반 ID와 도메인 이벤트 관리를 제공합니다:
+```csharp
+// 검증 실패 시 조건별 DomainError 자동 생성:
+//   "DomainErrors.Email.Null", "DomainErrors.Email.Empty",
+//   "DomainErrors.Email.TooLong", "DomainErrors.Email.InvalidFormat"
+public sealed partial class Email : SimpleValueObject<string>
+{
+    public const int MaxLength = 320;
+
+    private Email(string value) : base(value) { }
+
+    public static Fin<Email> Create(string? value) =>
+        CreateFromValidation(Validate(value), v => new Email(v));
+
+    // 각 검증 조건이 실패하면 조건에 대응하는 에러 코드가 자동 생성됩니다.
+    //   NotNull  → "DomainErrors.Email.Null"
+    //   NotEmpty → "DomainErrors.Email.Empty"
+    //   MaxLength→ "DomainErrors.Email.TooLong"
+    //   Matches  → "DomainErrors.Email.InvalidFormat"
+    // 복합 Value Object는 Apply 패턴으로 복수 필드를 병렬 검증하여
+    // 실패한 모든 에러를 한꺼번에 수집합니다.
+    public static Validation<Error, string> Validate(string? value) =>
+        ValidationRules<Email>
+            .NotNull(value)          // → "DomainErrors.Email.Null"
+            .ThenNotEmpty()          // → "DomainErrors.Email.Empty"
+            .ThenMaxLength(MaxLength) // → "DomainErrors.Email.TooLong"
+            .ThenMatches(EmailRegex(), "Invalid email format")  // → "DomainErrors.Email.InvalidFormat"
+            .ThenNormalize(v => v.Trim().ToLowerInvariant());
+}
+```
+
+### Entity / AggregateRoot — Ulid 기반 ID와 도메인 이벤트
+
+Entity는 Ulid 기반 ID로 식별되고, AggregateRoot는 도메인 이벤트를 관리합니다.
 
 ```csharp
 public interface IEntityId<T> : IEquatable<T>, IComparable<T>
@@ -44,21 +82,21 @@ public abstract class AggregateRoot<TId> : Entity<TId>, IDomainEventDrain
 }
 ```
 
-**DomainError** — 구조화된 에러 코드로 복구 가능성을 확보합니다:
+### DomainError — 구조화된 에러 코드
+
+에러 코드는 타입 이름에서 자동으로 생성됩니다. 이 구조 덕분에 에러 코드가 코드, 로그, 운영 대시보드에서 동일한 이름으로 나타납니다.
 
 ```csharp
-// 에러 코드 자동 생성: "DomainErrors.Email.Empty"
+// "DomainErrors.Email.Empty"
 DomainError.For<Email>(new Empty(), value, "Email cannot be empty");
 
-// 에러 코드 자동 생성: "DomainErrors.Password.TooShort"
+// "DomainErrors.Password.TooShort"
 DomainError.For<Password>(new TooShort(MinLength: 8), value, "Password too short");
 ```
 
-:::note[자동 생성]
-에러 코드는 타입 이름에서 자동으로 생성됩니다. `DomainError.For<Email>(new Empty(), ...)` → `"DomainErrors.Email.Empty"`.
-:::
+### Domain Event — Mediator 기반 Pub/Sub
 
-**Domain Event** — Mediator 기반 Pub/Sub과 이벤트 추적을 통합합니다:
+도메인 이벤트는 Mediator 기반 Pub/Sub과 이벤트 추적을 통합합니다. `CorrelationId`와 `CausationId`로 이벤트 인과 관계를 추적할 수 있습니다.
 
 ```csharp
 public interface IDomainEvent : INotification
@@ -72,12 +110,17 @@ public interface IDomainEvent : INotification
 
 ## 함수형 아키텍처 전환
 
-핵심 도메인 로직은 순수 함수로 구성됩니다. 입력이 동일하면 항상 동일한 출력을 반환하는 구조를 유지함으로써, 로직은 예측 가능하고 테스트하기 쉬운 형태가 됩니다. 사이드 이펙트(데이터베이스, 외부 API, 메시징, 파일 I/O)는 도메인 로직 바깥에서 처리됩니다.
+**원칙:** 핵심 도메인 로직은 순수 함수로 구성됩니다. 입력이 동일하면 항상 동일한 출력을 반환하고, 사이드 이펙트는 타입 수준에서 명시됩니다.
 
-**`Fin<T>`, `FinT<IO, T>`** — 예외 대신 명시적 결과 타입으로 오류를 처리합니다:
+**왜 필요한가:** 순수 함수는 입력이 같으면 항상 같은 출력을 반환합니다. 이는 테스트를 단순하게 만들고, 코드의 동작을 예측 가능하게 합니다. 예외 기반 흐름 제어는 암묵적 분기를 만들어 코드 경로를 추적하기 어렵게 합니다. `Fin<T>`와 `FinT<IO, T>`를 사용하면 모든 실패 경로가 타입에 드러나고, LINQ 합성으로 도메인 흐름을 구성할 수 있습니다.
+
+**Functorium 구현 방식:** `Fin<T>`로 예외 대신 명시적 결과 타입을 사용하고, `FinT<IO, T>`로 사이드 이펙트를 추적하며, CQRS로 Command/Query를 분리합니다.
+
+### `Fin<T>`, `FinT<IO, T>` — 명시적 결과 타입
+
+Repository는 `FinT<IO, T>`를 반환하여 사이드 이펙트를 타입 수준에서 표현합니다. `Fin<T>`는 순수한 성공/실패를, `FinT<IO, T>`는 IO 사이드 이펙트가 포함된 성공/실패를 나타냅니다.
 
 ```csharp
-// Repository는 FinT<IO, T>를 반환하여 사이드 이펙트를 명시적으로 표현
 public interface IRepository<TAggregate, TId> : IObservablePort
     where TAggregate : AggregateRoot<TId>
     where TId : struct, IEntityId<TId>
@@ -89,7 +132,9 @@ public interface IRepository<TAggregate, TId> : IObservablePort
 }
 ```
 
-**CQRS** — Command/Query를 명확히 분리하고, `FinResponse<T>`로 결과를 통합합니다:
+### CQRS — Command/Query 분리
+
+Command(쓰기)와 Query(읽기) 경로를 분리하고, `FinResponse<T>`로 결과를 통합합니다. Command는 `IRepository`(Domain 계층, EF Core, Aggregate Root 반환), Query는 `IQueryPort`(Application 계층, Dapper, DTO 직접 프로젝션)로 구현됩니다.
 
 <Tabs>
   <TabItem label="Command">
@@ -110,15 +155,32 @@ public interface IQueryUsecase<in TQuery, TSuccess>
   </TabItem>
 </Tabs>
 
-:::note[Pipeline 실행 순서]
-모든 유스케이스는 Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction 순서의 Pipeline을 자동으로 통과합니다.
-:::
+### Pipeline 실행 순서
+
+모든 유스케이스는 다음 순서의 Pipeline을 자동으로 통과합니다.
+
+> **Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction → Usecase**
+
+Pipeline은 Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction 순서로 실행됩니다. 이 순서에는 이유가 있습니다:
+
+1. **Metrics와 Tracing이** 가장 먼저 실행되어, 후속 Pipeline에서 발생하는 모든 활동을 포함한 전체 실행 시간을 측정합니다.
+2. **Logging은** Validation 전에 위치하여, 검증 실패를 포함한 모든 요청을 기록합니다.
+3. **Validation은** 비즈니스 로직 실행 전에 입력을 검증하여, 불필요한 데이터베이스 라운드트립을 방지합니다.
+4. **Caching은** Exception과 Transaction 전에 위치하여, 캐시 히트 시 트랜잭션 없이 즉시 반환합니다.
+5. **Exception은** Transaction 바로 앞에서 예외를 구조화된 에러로 변환하여, 트랜잭션 롤백을 깔끔하게 처리합니다.
+6. **Transaction이** 가장 안쪽에서 실행되어, 실제 비즈니스 로직만을 트랜잭션 경계로 감쌉니다.
 
 ## Observability by Design
 
-운영 안정성은 배포 이후에 보완하는 것이 아니라, 설계 단계에서부터 고려됩니다. 구조화된 로그, 핵심 비즈니스 메트릭, 분산 추적 정보가 도메인 흐름과 함께 정의됩니다.
+**원칙:** 운영 안정성은 배포 이후가 아니라 설계 단계에서 고려됩니다.
 
-**IObservablePort** — 모든 외부 의존성이 관측 가능한 포트로 추상화됩니다:
+**왜 필요한가:** 관측성을 사후에 추가하면 일관성이 깨지고 누락이 발생합니다. 장애 발생 시 "이 유스케이스에는 로그가 없다"는 상황을 피하려면, 모든 유스케이스에 자동으로 계측이 적용되어야 합니다.
+
+**Functorium 구현 방식:** `IObservablePort`로 관측 가능한 포트를 추상화하고, `[GenerateObservablePort]`로 Observable wrapper를 자동 생성하며, Usecase Pipeline으로 횡단 관심사를 처리합니다.
+
+### IObservablePort — 관측 가능한 포트 추상화
+
+모든 외부 의존성은 `IObservablePort`를 구현하여 관측 가능한 포트로 추상화됩니다.
 
 ```csharp
 public interface IObservablePort
@@ -127,21 +189,222 @@ public interface IObservablePort
 }
 ```
 
-**`[GenerateObservablePort]`** — Source Generator가 Adapter에 대한 Observable wrapper를 자동 생성하여, OpenTelemetry 기반의 Tracing/Logging/Metrics를 투명하게 제공합니다:
+### `[GenerateObservablePort]` — Source Generator 자동 생성
+
+Source Generator가 Adapter에 대한 Observable wrapper를 자동 생성하여, OpenTelemetry 기반의 Tracing/Logging/Metrics를 투명하게 제공합니다. 개발자가 관측 코드를 직접 작성할 필요가 없습니다.
 
 ```csharp
 [GenerateObservablePort]  // → Observable{ClassName} 자동 생성
 public class OrderRepository : IRepository<Order, OrderId> { ... }
 ```
 
-**Usecase Pipeline** — 모든 유스케이스는 파이프라인을 통해 횡단 관심사를 처리합니다:
+### Usecase Pipeline — 횡단 관심사 자동 처리
+
+Functorium은 두 가지 경로로 관측성을 자동화합니다.
+
+| 관측 경로 | 대상 | 메커니즘 |
+|----------|------|---------|
+| **외부 입출력** | 모든 Command/Query | Mediator `IPipelineBehavior` |
+| **내부 입출력** | Repository, QueryAdapter | `[GenerateObservablePort]` Source Generator |
 
 | Pipeline | 역할 |
 |----------|------|
-| `UsecaseExceptionPipeline` | 예외 → 구조화된 에러 변환 |
-| `UsecaseValidationPipeline` | FluentValidation 기반 입력 검증 |
-| `UsecaseCachingPipeline` | ICacheable 요청 캐싱. 캐시 히트 시 DB 라운드트립 없이 즉시 반환 |
-| `UsecaseLoggingPipeline` | 구조화된 로그 자동 기록 |
 | `UsecaseMetricsPipeline` | 유스케이스 메트릭 자동 수집 |
 | `UsecaseTracingPipeline` | 분산 추적 컨텍스트 전파 |
+| `UsecaseLoggingPipeline` | 구조화된 로그 자동 기록 |
+| `UsecaseValidationPipeline` | FluentValidation 기반 입력 검증 |
+| `UsecaseCachingPipeline` | ICacheable 요청 캐싱 |
+| `UsecaseExceptionPipeline` | 예외 → 구조화된 에러 변환 |
 | `UsecaseTransactionPipeline` | 트랜잭션 경계 관리 |
+
+## 통합 예제
+
+세 가지 설계 철학은 독립적으로 존재하는 것이 아니라, 하나의 유스케이스 안에서 자연스럽게 결합됩니다. 여기서는 "고객 생성"이라는 하나의 시나리오를 따라가면서, 도메인 중심 설계가 어떻게 값 객체를 보호하고, 함수형 아키텍처가 어떻게 유스케이스를 조립하며, Observability가 어떻게 자동으로 적용되는지 확인합니다.
+
+### 도메인 계층 — Always-valid Value Object
+
+고객을 생성하려면 먼저 이메일 주소가 유효해야 합니다. 앞서 살펴본 `Email` 값 객체는 생성 시점에 모든 검증을 완료하므로, 유효하지 않은 이메일이 시스템에 진입하는 경로 자체가 존재하지 않습니다. 각 검증 조건이 실패하면 `"DomainErrors.Email.Empty"`, `"DomainErrors.Email.TooLong"` 같은 에러 코드가 자동 생성되어, 로그에서 바로 원인을 식별할 수 있습니다.
+
+복합 Value Object(예: 고객 정보)는 Apply 패턴으로 여러 필드를 병렬 검증합니다. 이름이 비어 있고 이메일 형식이 잘못된 경우, 두 에러가 모두 수집되어 한 번의 응답으로 반환됩니다. 개별 필드를 순차적으로 검증하여 첫 번째 에러에서 멈추는 방식과 달리, 사용자는 모든 문제를 한꺼번에 확인하고 수정할 수 있습니다.
+
+### 애플리케이션 계층 — CQRS Usecase
+
+도메인 객체가 준비되면, 유스케이스가 이를 조립합니다. Command(쓰기) 경로에서는 `FinT<IO, T>`의 `from ... in ... select` 구문으로 사이드 이펙트를 합성합니다. 이메일 중복 확인, 고객 생성, 응답 변환이 하나의 선언적 파이프라인으로 표현됩니다. 비즈니스 규칙 위반 시에는 `ApplicationError`가 `"ApplicationErrors.CreateCustomerCommand.AlreadyExists"` 형식의 에러 코드를 자동 생성합니다.
+
+Query(읽기) 경로에서는 Aggregate를 재구성하지 않고 Dapper로 DTO를 직접 프로젝션합니다. 읽기와 쓰기가 각각 최적의 기술을 사용하면서도, 결과 타입은 `FinResponse<T>`로 통일됩니다.
+
+```csharp
+// ── Command 경로 ──────────────────────────────────────────────
+// ICustomerRepository : IRepository<Customer, CustomerId>
+//   → Domain 계층에 정의된 포트. Aggregate Root 단위로 영속화
+//   → 반환 타입: FinT<IO, Customer> (도메인 객체)
+//   → 구현: EF Core (변경 추적, 트랜잭션)
+
+using static Functorium.Applications.Errors.ApplicationErrorType;
+
+public sealed class CreateCustomerCommand
+{
+    public sealed record Request(string Name, string Email, decimal CreditLimit)
+        : ICommandRequest<Response>;
+    public sealed record Response(string CustomerId, string Name, string Email);
+
+    public sealed class Usecase(ICustomerRepository repository)
+        : ICommandUsecase<Request, Response>
+    {
+        public async ValueTask<FinResponse<Response>> Handle(
+            Request request, CancellationToken token)
+        {
+            FinT<IO, Response> usecase =
+                from exists  in repository.Exists(new CustomerEmailSpec(email))
+                from _       in guard(!exists, ApplicationError.For<CreateCustomerCommand>(
+                    new AlreadyExists(),                    // ApplicationErrorType sealed record
+                    request.Email,                          // 현재 값
+                    $"Email already exists: '{request.Email}'"))
+                from customer in repository.Create(newCustomer)
+                select new Response(
+                    customer.Id.ToString(), customer.Name, customer.Email);
+
+            Fin<Response> result = await usecase.Run().RunAsync();
+            return result.ToFinResponse();
+        }
+    }
+}
+
+// ── Query 경로 ────────────────────────────────────────────────
+// ICustomerDetailQuery : IQueryPort
+//   → Application 계층에 정의된 포트. Aggregate 재구성 없이 DTO로 직접 프로젝션
+//   → 반환 타입: FinT<IO, CustomerDetailDto> (읽기 전용 DTO)
+//   → 구현: Dapper (경량 SQL 매핑)
+
+public sealed class GetCustomerByIdQuery
+{
+    public sealed record Request(string CustomerId) : IQueryRequest<Response>;
+    public sealed record Response(string CustomerId, string Name, string Email);
+
+    public sealed class Usecase(ICustomerDetailQuery query)
+        : IQueryUsecase<Request, Response>
+    {
+        public async ValueTask<FinResponse<Response>> Handle(
+            Request request, CancellationToken token)
+        {
+            FinT<IO, Response> usecase =
+                from dto in query.GetById(CustomerId.Create(request.CustomerId))
+                select new Response(dto.CustomerId, dto.Name, dto.Email);
+
+            Fin<Response> result = await usecase.Run().RunAsync();
+            return result.ToFinResponse();
+        }
+    }
+}
+```
+
+:::tip[레이어별 구조적 에러]
+에러 코드는 계층별로 독립적인 체계를 가집니다. 도메인 검증 실패, 비즈니스 규칙 위반, 인프라 장애가 각각 다른 접두사로 구분되어, 로그를 확인할 때 에러의 출처와 성격을 즉시 파악할 수 있습니다.
+
+- **Domain:** `DomainError.For<Email>(new Empty(), ...)` → `"DomainErrors.Email.Empty"`
+- **Application:** `ApplicationError.For<CreateCustomerCommand>(new AlreadyExists(), ...)` → `"ApplicationErrors.CreateCustomerCommand.AlreadyExists"`
+- **Adapter:** `AdapterError.For<OrderRepository>(new NotFound(), ...)` → `"AdapterErrors.OrderRepository.NotFound"`
+
+이 에러들은 구조화된 로그로 출력됩니다. 단일 검증 실패는 `expected` 타입으로, Apply 패턴의 복합 실패는 `aggregate` 타입으로 분류되어, Seq 같은 로그 분석 도구에서 `error.code`나 `error.type`으로 필터링할 수 있습니다.
+
+```json
+// 단일 에러 — Domain 검증 실패
+{
+  "error.code": "DomainErrors.Email.Empty",
+  "error.type": "expected",
+  "@error": {
+    "ErrorCode": "DomainErrors.Email.Empty",
+    "ErrorCurrentValue": "",
+    "Message": "Email cannot be empty"
+  }
+}
+
+// 복합 에러 — Apply 패턴으로 여러 필드의 실패를 한꺼번에 수집
+{
+  "error.code": "DomainErrors.Email.Empty",
+  "error.type": "aggregate",
+  "@error": {
+    "Errors": [
+      { "ErrorCode": "DomainErrors.Email.Empty", "ErrorCurrentValue": "", "Message": "Email cannot be empty" },
+      { "ErrorCode": "DomainErrors.Password.TooShort", "ErrorCurrentValue": "ab", "Message": "Password too short" }
+    ]
+  }
+}
+```
+:::
+
+### Adapter 계층 — 두 가지 자동 관측 경로
+
+위 고객 생성 유스케이스를 실행하면, 개발자가 관측 코드를 한 줄도 작성하지 않았음에도 구조화된 로그가 자동으로 출력됩니다. 이것이 "Observability by Design"의 실체입니다.
+
+Usecase Pipeline(`IPipelineBehavior`)은 모든 Command/Query의 **외부 입출력을** 계측하고, Source Generator(`[GenerateObservablePort]`)는 Repository·QueryAdapter 등의 **내부 입출력을** 계측합니다. 두 경로가 결합되어 요청의 전체 흐름이 자동으로 추적됩니다.
+
+```json
+// ── 요청 (EventId: 1001 application.request) ──────────────────
+{
+  "Level": "Information",
+  "EventId": { "Id": 1001, "Name": "application.request" },
+  "MessageTemplate": "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} requesting with {@request.message}",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category.type": "command",
+  "request.handler": "CreateCustomerCommand",
+  "request.handler.method": "Handle",
+  "@request.message": {
+    "Name": "Alice",
+    "Email": "alice@example.com",
+    "CreditLimit": 1000.00
+  }
+}
+
+// ── 성공 응답 (EventId: 1002 application.response.success) ────
+{
+  "Level": "Information",
+  "EventId": { "Id": 1002, "Name": "application.response.success" },
+  "MessageTemplate": "... responded {response.status} in {response.elapsed:0.0000} s with {@response.message}",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category.type": "command",
+  "request.handler": "CreateCustomerCommand",
+  "request.handler.method": "Handle",
+  "response.status": "success",
+  "response.elapsed": 0.0234,
+  "@response.message": {
+    "CustomerId": "01JN...",
+    "Name": "Alice",
+    "Email": "alice@example.com"
+  }
+}
+
+// ── 실패 응답: 예상된 에러 (EventId: 1003 application.response.warning) ──
+{
+  "Level": "Warning",
+  "EventId": { "Id": 1003, "Name": "application.response.warning" },
+  "MessageTemplate": "... responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category.type": "command",
+  "request.handler": "CreateCustomerCommand",
+  "request.handler.method": "Handle",
+  "response.status": "failure",
+  "response.elapsed": 0.0012,
+  "error.type": "expected",
+  "error.code": "ApplicationErrors.CreateCustomerCommand.AlreadyExists",
+  "@error": {
+    "ErrorCode": "ApplicationErrors.CreateCustomerCommand.AlreadyExists",
+    "ErrorCurrentValue": "alice@example.com",
+    "Message": "Email already exists: 'alice@example.com'"
+  }
+}
+```
+
+:::tip[관측 자동화의 두 경로]
+**외부(유스케이스) 관측** — Mediator `IPipelineBehavior`가 모든 유스케이스에 자동 적용됩니다:
+- `UsecaseLoggingPipeline`: 요청·응답·에러를 구조화된 로그로 기록합니다 (EventId 1001–1004)
+- `UsecaseMetricsPipeline`: 요청 수, 응답 수, 처리 시간을 수집합니다
+- `UsecaseTracingPipeline`: Activity 기반 분산 추적을 생성합니다
+
+**내부(Adapter) 관측** — `[GenerateObservablePort]`가 Repository, QueryAdapter 등의 구현체에 Observable wrapper를 컴파일 시점에 생성합니다 (EventId 2001–2004).
+
+에러는 세 가지로 분류됩니다: `expected`(비즈니스 에러 → Warning 레벨), `exceptional`(시스템 에러 → Error 레벨), `aggregate`(복합 에러 → Error 레벨). 이 분류에 따라 로그 레벨이 자동 결정되므로, 운영팀은 Error 레벨만 모니터링해도 시스템 장애를 놓치지 않습니다.
+:::
