@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // 1회성 스크립트: guides/ 하위 폴더 구조화 후 상대 링크 업데이트
-// Usage: node docs-site/scripts/update-guide-links.mjs
+// Usage: node Docs.Site/scripts/update-guide-links.mjs
 
 import { readFileSync, writeFileSync, readdirSync } from 'fs';
 import { join, dirname, basename, relative, posix } from 'path';

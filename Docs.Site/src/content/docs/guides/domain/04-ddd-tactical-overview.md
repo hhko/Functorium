@@ -66,52 +66,27 @@ DDD는 도메인 전문가와 개발자가 동일한 언어를 사용할 것을 
 
 ### 빌딩블록 전체 맵
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                      Domain Layer                       │
-│                                                         │
-│  ┌──────────┐  ┌──────────┐  ┌─────────────────────┐    │
-│  │ Value    │  │ Entity   │  │ Aggregate           │    │
-│  │ Object   │  │          │  │ ┌─────────────────┐ │    │
-│  │          │  │          │  │ │ Aggregate Root  │ │    │
-│  │ Email    │  │ Tag      │  │ │ (Order)         │ │    │
-│  │ Money    │  │ OrderItem│  │ │  ├─ Child Entity│ │    │
-│  │ Quantity │  │          │  │ │  └─ Value Object│ │    │
-│  └──────────┘  └──────────┘  │ └─────────────────┘ │    │
-│                              └─────────────────────┘    │
-│                                                         │
-│  ┌──────────────┐  ┌──────────────────┐                 │
-│  │ Domain       │  │ Domain Error     │                 │
-│  │ Event        │  │ (DomainError)    │                 │
-│  └──────────────┘  └──────────────────┘                 │
-│  ┌──────────────────┐                                   │
-│  │ Domain Service   │                                   │
-│  │ (IDomainService) │                                   │
-│  └──────────────────┘                                   │
-│                                                         │
-├─────────────────────────────────────────────────────────┤
-│                    Application Layer                    │
-│                                                         │
-│  ┌──────────────┐  ┌──────────────┐                     │
-│  │ Command      │  │ Query        │                     │
-│  │ (Use Case)   │  │ (Use Case)   │                     │
-│  └──────────────┘  └──────────────┘                     │
-│  ┌──────────────┐  ┌──────────────────┐                 │
-│  │ Event Handler│  │ Application Error│                 │
-│  └──────────────┘  └──────────────────┘                 │
-│                                                         │
-├─────────────────────────────────────────────────────────┤
-│                      Adapter Layer                      │
-│                                                         │
-│  ┌──────────────┐  ┌──────────────┐                     │
-│  │ Port         │  │ Adapter      │                     │
-│  │ (Interface)  │  │ (구현체)      │                     │
-│  └──────────────┘  └──────────────┘                     │
-│  ┌──────────────────┐                                   │
-│  │ Adapter Error    │                                   │
-│  └──────────────────┘                                   │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+block-beta
+  columns 3
+
+  block:domain["Domain Layer"]:3
+    columns 3
+    vo["Value Object\nEmail · Money · Quantity"]
+    entity["Entity\nTag · OrderItem"]
+    agg["Aggregate\nAggregate Root (Order)\n├ Child Entity\n└ Value Object"]
+    event["Domain Event"] err["Domain Error\n(DomainError)"] svc["Domain Service\n(IDomainService)"]
+  end
+
+  block:app["Application Layer"]:3
+    columns 4
+    cmd["Command\n(Use Case)"] query["Query\n(Use Case)"] handler["Event Handler"] apperr["Application Error"]
+  end
+
+  block:adapter["Adapter Layer"]:3
+    columns 3
+    port["Port\n(Interface)"] impl["Adapter\n(구현체)"] adapterr["Adapter Error"]
+  end
 ```
 
 ### 각 빌딩블록의 역할과 관계

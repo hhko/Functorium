@@ -3,10 +3,14 @@ import starlight from '@astrojs/starlight';
 import starlightImageZoom from 'starlight-image-zoom';
 import starlightLinksValidator from 'starlight-links-validator';
 import starlightSidebarTopics from 'starlight-sidebar-topics';
+import rehypeMermaid from 'rehype-mermaid';
 
 export default defineConfig({
   site: 'https://hhko.github.io',
   base: '/Functorium',
+  markdown: {
+    rehypePlugins: [[rehypeMermaid, { strategy: 'img-svg' }]],
+  },
   integrations: [
     starlight({
       title: 'Functorium',
@@ -115,10 +119,9 @@ export default defineConfig({
           },
           {
             label: '튜토리얼',
-            link: '/tutorials/tutorial-writing-guide/',
+            link: '/tutorials/functional-valueobject/',
             icon: 'puzzle',
             items: [
-              { label: '튜토리얼 작성 가이드', slug: 'tutorials/tutorial-writing-guide' },
               {
                 label: '함수형 값 객체 구현',
                 collapsed: true,

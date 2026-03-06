@@ -5,18 +5,18 @@ on:
     branches: [ main ]
     paths-ignore:
       - '**.md'
-      - 'docs-site/src/content/docs/**'
+      - 'Docs.Site/src/content/docs/**'
       - '.claude/**'
       - '**.ps1'
-      - 'docs-site/**'
+      - 'Docs.Site/**'
   pull_request:
     branches: [ main ]
     paths-ignore:
       - '**.md'
-      - 'docs-site/src/content/docs/**'
+      - 'Docs.Site/src/content/docs/**'
       - '.claude/**'
       - '**.ps1'
-      - 'docs-site/**'
+      - 'Docs.Site/**'
   workflow_dispatch:
 
 env:

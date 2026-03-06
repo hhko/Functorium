@@ -213,32 +213,18 @@ public class InMemoryProductRepository : IProductRepository
 
 Adapter 구현은 5단계 활동으로 구성됩니다.
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    Adapter 구현 라이프사이클                         │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  Activity 1          Activity 2          Activity 3                 │
-│  ┌──────────┐        ┌──────────┐        ┌──────────┐              │
-│  │ Port     │───────▶│ Adapter  │───────▶│ Pipeline │              │
-│  │ 인터페이스│        │ 구현     │        │ 생성 확인│              │
-│  │ 정의     │        │          │        │ (자동)   │              │
-│  └──────────┘        └──────────┘        └──────────┘              │
-│       │                   │                   │                     │
-│       ▼                   ▼                   ▼                     │
-│  Domain Layer /      Adapter Layer       obj/GeneratedFiles/       │
-│  Application Layer                                                  │
-│                                                                     │
-│  Activity 4          Activity 5                                     │
-│  ┌──────────┐        ┌──────────┐                                  │
-│  │ DI 등록  │───────▶│ 단위     │                                  │
-│  │          │        │ 테스트   │                                  │
-│  └──────────┘        └──────────┘                                  │
-│       │                   │                                         │
-│       ▼                   ▼                                         │
-│  Registration /      Tests.Unit/                                    │
-│  Program.cs                                                         │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+  A1["Activity 1\nPort 인터페이스 정의"] --> A2["Activity 2\nAdapter 구현"]
+  A2 --> A3["Activity 3\nPipeline 생성 확인\n(자동)"]
+  A3 --> A4["Activity 4\nDI 등록"]
+  A4 --> A5["Activity 5\n단위 테스트"]
+
+  A1 -.- L1["Domain Layer /\nApplication Layer"]
+  A2 -.- L2["Adapter Layer"]
+  A3 -.- L3["obj/GeneratedFiles/"]
+  A4 -.- L4["Registration /\nProgram.cs"]
+  A5 -.- L5["Tests.Unit/"]
 ```
 
 ### 단계별 소속 레이어/프로젝트

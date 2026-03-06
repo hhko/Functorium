@@ -6,6 +6,28 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하도록 개선
 ```
 
+```
+  # 개발 서버 (HMR 지원)
+  npm run dev          # http://localhost:4321
+
+  # 프로덕션 빌드
+  npm run build
+
+  # 빌드 결과 미리보기
+  npm run preview
+
+  현재 npm에서 Segmentation fault가 발생하고 있어서 재시작이 필요하다면 기존 프로세스(PID 41720)를 종료 후 다시 npm run
+  dev를 실행해야 합니다. 지금은 이미 실행 중이니 브라우저에서 http://localhost:4321로 접속하시면 됩니다.
+
+npx astro dev
+powershell.exe -Command "cd C:\Workspace\Github\Functorium\Docs.Site; npm install"
+
+powershell.exe -Command "Get-Process -Name node -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 3; Get-NetTCPConnection -LocalPort 432…
+powershell.exe -Command "cd C:\Workspace\Github\Functorium\Docs.Site; npx astro dev --host 0.0.0.0"
+
+rm -rf .astro node_modules/.astro 2>/dev/null && timeout 60 npx astro dev 2>&1
+```
+
 - [ ] 1. 문서 내 상대 링크(.md 확장자)를 Starlight 슬러그 형식으로 변환 (현재 errorOnRelativeLinks: false로 우회)
 - [ ] 2. sourcegen-observability 중복 ID 해결 (폴더/index.md + standalone .md 공존)
 - [x] Book 폴더 전체 구성 동기화

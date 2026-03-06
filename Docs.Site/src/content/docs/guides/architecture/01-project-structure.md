@@ -100,19 +100,15 @@ dotnet test --solution {ServiceName}.slnx
 
 ### 프로젝트 의존성 방향
 
-```
-                    Host
-                   / | \
-                  /  |  \
-                 v   v   v
-  Presentation  Persistence  Infrastructure
-         \         |         /
-          \        |        /
-           v       v       v
-              Application
-                  |
-                  v
-               Domain
+```mermaid
+flowchart TB
+  Host --> Presentation
+  Host --> Persistence
+  Host --> Infrastructure
+  Presentation --> Application
+  Persistence --> Application
+  Infrastructure --> Application
+  Application --> Domain
 ```
 
 **csproj 참조 예시:**
@@ -161,14 +157,15 @@ dotnet test --solution {ServiceName}.slnx
 
 ### 테스트 프로젝트 의존성
 
-```
-Tests.Unit ──→ Domain
-           ──→ Application
-           ──→ Functorium.Testing
+```mermaid
+flowchart LR
+  TU["Tests.Unit"] --> Domain
+  TU --> Application
+  TU --> FT["Functorium.Testing"]
 
-Tests.Integration ──→ Host (ExcludeAssets=analyzers)
-                  ──→ Application
-                  ──→ Functorium.Testing
+  TI["Tests.Integration"] --> Host
+  TI --> Application
+  TI --> FT
 ```
 
 ## 프로젝트 공통 파일

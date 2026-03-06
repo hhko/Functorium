@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // 1회성 스크립트: 가이드 마크다운 링크에서 .md 확장자 제거
 // Starlight 정적 빌드에서 .md 확장자가 clean URL로 변환되지 않으므로 제거 필요
-// Usage: node docs-site/scripts/strip-md-extension.mjs
+// Usage: node Docs.Site/scripts/strip-md-extension.mjs
 
 import { readFileSync, writeFileSync, readdirSync } from 'fs';
 import { join, dirname, relative } from 'path';
