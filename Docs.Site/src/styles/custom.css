@@ -299,10 +299,6 @@
   color: var(--sl-color-white);
 }
 
-[data-theme='light'] .story-section.problems .story-item h3 {
-  color: var(--sl-color-black);
-}
-
 .story-item p {
   font-size: 0.95rem;
   line-height: 1.7;
@@ -385,10 +381,6 @@
   font-weight: 700;
   font-size: 0.95rem;
   color: var(--sl-color-white);
-}
-
-[data-theme='light'] .topic-nav-label {
-  color: var(--sl-color-black);
 }
 
 .topic-nav-desc {
