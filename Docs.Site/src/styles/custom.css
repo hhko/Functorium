@@ -174,31 +174,9 @@
   overflow: hidden;
 }
 
-/* Problem illustration: scattered disconnected nodes */
-.story-section.problems::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 40%;
-  pointer-events: none;
-  opacity: 0.13;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320' fill='none'%3E%3C!-- scattered nodes --%3E%3Ccircle cx='60' cy='50' r='12' stroke='%23ef4444' stroke-width='2' stroke-dasharray='4 4'/%3E%3Ccircle cx='180' cy='30' r='8' stroke='%23ef4444' stroke-width='2' stroke-dasharray='4 4'/%3E%3Ccircle cx='260' cy='80' r='10' stroke='%23ef4444' stroke-width='2' stroke-dasharray='4 4'/%3E%3Ccircle cx='120' cy='130' r='14' stroke='%23ef4444' stroke-width='2' stroke-dasharray='4 4'/%3E%3Ccircle cx='220' cy='160' r='9' stroke='%23ef4444' stroke-width='2' stroke-dasharray='4 4'/%3E%3Ccircle cx='80' cy='220' r='11' stroke='%23ef4444' stroke-width='2' stroke-dasharray='4 4'/%3E%3Ccircle cx='280' cy='240' r='7' stroke='%23ef4444' stroke-width='2' stroke-dasharray='4 4'/%3E%3Ccircle cx='160' cy='270' r='13' stroke='%23ef4444' stroke-width='2' stroke-dasharray='4 4'/%3E%3C!-- broken lines --%3E%3Cline x1='72' y1='50' x2='110' y2='50' stroke='%23ef4444' stroke-width='1.5' stroke-dasharray='3 6'/%3E%3Cline x1='134' y1='130' x2='180' y2='100' stroke='%23ef4444' stroke-width='1.5' stroke-dasharray='3 6'/%3E%3Cline x1='188' y1='30' x2='250' y2='80' stroke='%23ef4444' stroke-width='1.5' stroke-dasharray='3 6'/%3E%3Cline x1='91' y1='220' x2='150' y2='270' stroke='%23ef4444' stroke-width='1.5' stroke-dasharray='3 6'/%3E%3Cline x1='229' y1='160' x2='273' y2='240' stroke='%23ef4444' stroke-width='1.5' stroke-dasharray='3 6'/%3E%3C!-- X marks for errors --%3E%3Cg stroke='%23ef4444' stroke-width='2'%3E%3Cline x1='140' y1='80' x2='155' y2='95'/%3E%3Cline x1='155' y1='80' x2='140' y2='95'/%3E%3C/g%3E%3Cg stroke='%23ef4444' stroke-width='2'%3E%3Cline x1='240' y1='190' x2='255' y2='205'/%3E%3Cline x1='255' y1='190' x2='240' y2='205'/%3E%3C/g%3E%3Cg stroke='%23ef4444' stroke-width='2'%3E%3Cline x1='50' y1='150' x2='65' y2='165'/%3E%3Cline x1='65' y1='150' x2='50' y2='165'/%3E%3C/g%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  mask-image: linear-gradient(to left, black 20%, transparent 90%);
-  -webkit-mask-image: linear-gradient(to left, black 20%, transparent 90%);
-}
-
 [data-theme='light'] .story-section.problems {
   background:
     linear-gradient(135deg, rgba(239, 68, 68, 0.03) 0%, transparent 60%);
-}
-
-[data-theme='light'] .story-section.problems::after {
-  opacity: 0.18;
 }
 
 /* ── Solution Section: purple gradient accent + illustration ── */
@@ -218,28 +196,6 @@
   background:
     linear-gradient(135deg, rgba(81, 43, 212, 0.05) 0%, transparent 60%);
   border: 1px solid var(--fn-border);
-}
-
-/* Solution illustration: connected pipeline / structured flow */
-.story-section.solutions::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 40%;
-  pointer-events: none;
-  opacity: 0.12;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320' fill='none'%3E%3C!-- connected nodes --%3E%3Ccircle cx='80' cy='40' r='12' stroke='%23512bd4' stroke-width='2'/%3E%3Ccircle cx='200' cy='40' r='12' stroke='%23512bd4' stroke-width='2'/%3E%3Ccircle cx='140' cy='120' r='14' stroke='%23512bd4' stroke-width='2.5'/%3E%3Ccircle cx='60' cy='200' r='10' stroke='%23512bd4' stroke-width='2'/%3E%3Ccircle cx='220' cy='200' r='10' stroke='%23512bd4' stroke-width='2'/%3E%3Ccircle cx='140' cy='280' r='12' stroke='%23512bd4' stroke-width='2'/%3E%3C!-- solid connecting lines --%3E%3Cline x1='92' y1='40' x2='188' y2='40' stroke='%23512bd4' stroke-width='1.5'/%3E%3Cline x1='86' y1='50' x2='130' y2='110' stroke='%23512bd4' stroke-width='1.5'/%3E%3Cline x1='194' y1='50' x2='150' y2='110' stroke='%23512bd4' stroke-width='1.5'/%3E%3Cline x1='130' y1='132' x2='68' y2='192' stroke='%23512bd4' stroke-width='1.5'/%3E%3Cline x1='150' y1='132' x2='212' y2='192' stroke='%23512bd4' stroke-width='1.5'/%3E%3Cline x1='68' y1='208' x2='130' y2='272' stroke='%23512bd4' stroke-width='1.5'/%3E%3Cline x1='212' y1='208' x2='150' y2='272' stroke='%23512bd4' stroke-width='1.5'/%3E%3C!-- flow arrows on center line --%3E%3Cpath d='M140 56 L140 106' stroke='%237c4dff' stroke-width='2' marker-end='url(%23arrowhead)'/%3E%3Cpath d='M140 134 L140 184' stroke='%237c4dff' stroke-width='2' stroke-dasharray='6 4'/%3E%3Cpath d='M140 216 L140 266' stroke='%237c4dff' stroke-width='2' marker-end='url(%23arrowhead)'/%3E%3C!-- check marks --%3E%3Cpath d='M130 118 L138 126 L154 110' stroke='%237c4dff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M130 278 L138 286 L154 270' stroke='%237c4dff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C!-- small decorative dots --%3E%3Ccircle cx='140' cy='160' r='3' fill='%23512bd4'/%3E%3Ccircle cx='140' cy='240' r='3' fill='%23512bd4'/%3E%3Cdefs%3E%3Cmarker id='arrowhead' markerWidth='8' markerHeight='6' refX='8' refY='3' orient='auto'%3E%3Cpolygon points='0 0, 8 3, 0 6' fill='%237c4dff'/%3E%3C/marker%3E%3C/defs%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  mask-image: linear-gradient(to left, black 20%, transparent 90%);
-  -webkit-mask-image: linear-gradient(to left, black 20%, transparent 90%);
-}
-
-[data-theme='light'] .story-section.solutions::after {
-  opacity: 0.18;
 }
 
 /* ── Story items: numbered list with bold titles ── */
@@ -507,11 +463,6 @@ h2 {
   .story-section.solutions {
     padding: 1.5rem 1rem;
     margin-inline: -1rem;
-  }
-
-  .story-section.problems::after,
-  .story-section.solutions::after {
-    display: none;
   }
 
   .story-section h2 {
