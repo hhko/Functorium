@@ -9,7 +9,39 @@ export default defineConfig({
   site: 'https://hhko.github.io',
   base: '/Functorium',
   markdown: {
-    rehypePlugins: [[rehypeMermaid, { strategy: 'img-svg' }]],
+    rehypePlugins: [
+      [
+        rehypeMermaid,
+        {
+          strategy: 'img-svg',
+          mermaidConfig: {
+            theme: 'base',
+            themeVariables: {
+              primaryColor: '#e4d9f9',
+              primaryTextColor: '#1a1a2e',
+              primaryBorderColor: '#512bd4',
+              lineColor: '#512bd4',
+              secondaryColor: '#f0ebff',
+              tertiaryColor: '#faf8ff',
+              fontFamily: 'Pretendard Variable, sans-serif',
+            },
+          },
+          dark: {
+            theme: 'base',
+            themeVariables: {
+              primaryColor: '#2a1f4e',
+              primaryTextColor: '#e0d8f0',
+              primaryBorderColor: '#7c4dff',
+              lineColor: '#7c4dff',
+              secondaryColor: '#1f1835',
+              tertiaryColor: '#16112a',
+              background: '#16112a',
+              fontFamily: 'Pretendard Variable, sans-serif',
+            },
+          },
+        },
+      ],
+    ],
   },
   integrations: [
     starlight({
@@ -22,6 +54,34 @@ export default defineConfig({
         },
       },
       customCss: ['./src/styles/custom.css'],
+      head: [
+        {
+          tag: 'script',
+          content: `
+(function() {
+  function syncMermaidTheme() {
+    var theme = document.documentElement.dataset.theme;
+    document.querySelectorAll('picture > source[id^="mermaid-dark-"]').forEach(function(source) {
+      if (theme === 'light') {
+        source.media = 'not all';
+      } else if (theme === 'dark') {
+        source.media = 'all';
+      } else {
+        source.media = '(prefers-color-scheme: dark)';
+      }
+    });
+  }
+  var obs = new MutationObserver(function(mutations) {
+    mutations.forEach(function(m) {
+      if (m.attributeName === 'data-theme') syncMermaidTheme();
+    });
+  });
+  obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  syncMermaidTheme();
+})();
+          `,
+        },
+      ],
       plugins: [
         starlightImageZoom(),
         starlightLinksValidator({

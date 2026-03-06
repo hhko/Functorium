@@ -8,22 +8,17 @@ title: "워크플로우 전체 개요"
 
 ## 5-Phase 워크플로우
 
-```txt
-┌───────────────────────────────────────────────────────────────────────┐
-│                                                                       │
-│   /release-note v1.2.0                                                │
-│                                                                       │
-│   ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐│
-│   │ Phase 1 │──▶│ Phase 2 │──▶│ Phase 3 │──▶│ Phase 4 │──▶│ Phase 5 ││
-│   │  환경   │   │ 데이터  │   │  커밋   │   │  문서   │   │  검증   ││
-│   │  검증   │   │  수집   │   │  분석   │   │  작성   │   │         ││
-│   └─────────┘   └─────────┘   └─────────┘   └─────────┘   └─────────┘│
-│        │             │             │             │              │     │
-│        ▼             ▼             ▼             ▼              ▼     │
-│   Base/Target   .analysis-   phase3-*.md   RELEASE-*.md   검증보고서 │
-│     결정       output/*.md                                           │
-│                                                                       │
-└───────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+  subgraph Release["/release-note v1.2.0"]
+    P1["Phase 1<br/>환경 검증"] --> P2["Phase 2<br/>데이터 수집"] --> P3["Phase 3<br/>커밋 분석"] --> P4["Phase 4<br/>문서 작성"] --> P5["Phase 5<br/>검증"]
+
+    P1 -.-> O1["Base/Target<br/>결정"]
+    P2 -.-> O2[".analysis-<br/>output/*.md"]
+    P3 -.-> O3["phase3-*.md"]
+    P4 -.-> O4["RELEASE-*.md"]
+    P5 -.-> O5["검증보고서"]
+  end
 ```
 
 ---
@@ -42,103 +37,36 @@ title: "워크플로우 전체 개요"
 
 ## 데이터 흐름 상세
 
-```txt
-사용자 입력
-    │
-    │  /release-note v1.2.0
-    │
-    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ Phase 1: 환경 검증                                              │
-├─────────────────────────────────────────────────────────────────┤
-│ 입력: 버전 파라미터 (v1.2.0)                                    │
-│ 검증: Git 저장소, .NET SDK, 스크립트 디렉터리                   │
-│ 결정: Base Branch (origin/release/1.0 또는 초기 커밋)           │
-│ 출력: Base/Target 범위                                          │
-└─────────────────────────────────────────────────────────────────┘
-    │
-    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ Phase 2: 데이터 수집                                            │
-├─────────────────────────────────────────────────────────────────┤
-│ 입력: Base/Target 범위                                          │
-│                                                                 │
-│ 실행 스크립트:                                                  │
-│ ├── AnalyzeAllComponents.cs → 컴포넌트별 분석                   │
-│ └── ExtractApiChanges.cs   → API 추출 및 Uber 파일              │
-│                                                                 │
-│ 출력:                                                           │
-│ ├── .analysis-output/Functorium.md                              │
-│ ├── .analysis-output/Functorium.Testing.md                      │
-│ ├── .analysis-output/api-changes-build-current/                 │
-│ │   ├── all-api-changes.txt (Uber 파일)                         │
-│ │   └── api-changes-diff.txt (API 변경)                         │
-│ └── .analysis-output/analysis-summary.md                        │
-└─────────────────────────────────────────────────────────────────┘
-    │
-    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ Phase 3: 커밋 분석 및 기능 추출                                 │
-├─────────────────────────────────────────────────────────────────┤
-│ 입력:                                                           │
-│ ├── .analysis-output/Functorium.md                              │
-│ ├── .analysis-output/Functorium.Testing.md                      │
-│ └── api-changes-diff.txt                                        │
-│                                                                 │
-│ 분석 작업:                                                      │
-│ ├── Breaking Changes 식별 (Git Diff + 커밋 패턴)                │
-│ ├── Feature/Fix 커밋 분류                                       │
-│ └── 기능별 그룹화                                               │
-│                                                                 │
-│ 출력:                                                           │
-│ ├── .analysis-output/work/phase3-commit-analysis.md             │
-│ └── .analysis-output/work/phase3-feature-groups.md              │
-└─────────────────────────────────────────────────────────────────┘
-    │
-    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ Phase 4: 릴리스 노트 작성                                       │
-├─────────────────────────────────────────────────────────────────┤
-│ 입력:                                                           │
-│ ├── .release-notes/TEMPLATE.md                                  │
-│ ├── phase3-commit-analysis.md                                   │
-│ ├── phase3-feature-groups.md                                    │
-│ └── all-api-changes.txt (API 검증용)                            │
-│                                                                 │
-│ 작성 작업:                                                      │
-│ ├── 템플릿 복사 및 Placeholder 교체                             │
-│ ├── 각 섹션 채우기 (개요, Breaking Changes, 새로운 기능 등)     │
-│ ├── 코드 샘플 작성 및 API 검증                                  │
-│ └── "Why this matters" 섹션 작성                                 │
-│                                                                 │
-│ 출력:                                                           │
-│ ├── .release-notes/RELEASE-v1.2.0.md                            │
-│ └── .analysis-output/work/phase4-api-references.md              │
-└─────────────────────────────────────────────────────────────────┘
-    │
-    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ Phase 5: 검증                                                   │
-├─────────────────────────────────────────────────────────────────┤
-│ 입력:                                                           │
-│ ├── .release-notes/RELEASE-v1.2.0.md                            │
-│ ├── all-api-changes.txt                                         │
-│ └── api-changes-diff.txt                                        │
-│                                                                 │
-│ 검증 항목:                                                      │
-│ ├── 프론트매터 존재 확인                                        │
-│ ├── 필수 섹션 포함 확인                                         │
-│ ├── "Why this matters" 섹션 존재 확인                            │
-│ ├── API 정확성 검증 (Uber 파일 대조)                            │
-│ └── Breaking Changes 완전성 검증                                │
-│                                                                 │
-│ 출력:                                                           │
-│ ├── .analysis-output/work/phase5-validation-report.md           │
-│ └── .analysis-output/work/phase5-api-validation.md              │
-└─────────────────────────────────────────────────────────────────┘
-    │
-    ▼
-완료 메시지 출력
+```mermaid
+flowchart TB
+  Input["/release-note v1.2.0"]
+
+  subgraph Ph1["Phase 1: 환경 검증"]
+    Ph1_Work["입력: 버전 파라미터 (v1.2.0)<br/>검증: Git 저장소, .NET SDK, 스크립트 디렉터리<br/>결정: Base Branch"]
+  end
+  Ph1 -.-> Ph1_Out["Base/Target 범위"]
+
+  subgraph Ph2["Phase 2: 데이터 수집"]
+    Ph2_Work["AnalyzeAllComponents.cs → 컴포넌트별 분석<br/>ExtractApiChanges.cs → API 추출 및 Uber 파일"]
+  end
+  Ph2 -.-> Ph2_Out["Functorium.md<br/>Functorium.Testing.md<br/>all-api-changes.txt<br/>api-changes-diff.txt<br/>analysis-summary.md"]
+
+  subgraph Ph3["Phase 3: 커밋 분석 및 기능 추출"]
+    Ph3_Work["Breaking Changes 식별<br/>Feature/Fix 커밋 분류<br/>기능별 그룹화"]
+  end
+  Ph3 -.-> Ph3_Out["phase3-commit-analysis.md<br/>phase3-feature-groups.md"]
+
+  subgraph Ph4["Phase 4: 릴리스 노트 작성"]
+    Ph4_Work["템플릿 복사 및 Placeholder 교체<br/>각 섹션 채우기<br/>API 검증<br/>Why this matters 작성"]
+  end
+  Ph4 -.-> Ph4_Out["RELEASE-v1.2.0.md<br/>phase4-api-references.md"]
+
+  subgraph Ph5["Phase 5: 검증"]
+    Ph5_Work["프론트매터 확인<br/>필수 섹션 확인<br/>API 정확성 검증<br/>Breaking Changes 완전성"]
+  end
+  Ph5 -.-> Ph5_Out["phase5-validation-report.md<br/>phase5-api-validation.md"]
+
+  Input --> Ph1 --> Ph2 --> Ph3 --> Ph4 --> Ph5 --> Done["완료"]
 ```
 
 ---

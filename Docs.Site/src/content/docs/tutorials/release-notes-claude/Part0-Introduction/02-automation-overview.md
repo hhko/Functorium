@@ -10,33 +10,30 @@ title: "자동화 시스템 개요"
 
 릴리스 노트 자동화 시스템은 세 가지 핵심 구성요소로 이루어져 있습니다:
 
-```
-┌───────────────────────────────────────────────────────────┐
-│                        Claude Code                        │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │  사용자 정의 Command (.claude/commands/)            │  │
-│  │  ├── release-note.md (릴리스 노트 생성)             │  │
-│  │  └── commit.md (커밋 규칙)                          │  │
-│  └─────────────────────────────────────────────────────┘  │
-│                            │                              │
-│                            ▼                              │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │  5-Phase 워크플로우 (.release-notes/scripts/docs/)  │  │
-│  │  ├── phase1-setup.md (환경 검증)                    │  │
-│  │  ├── phase2-collection.md (데이터 수집)             │  │
-│  │  ├── phase3-analysis.md (커밋 분석)                 │  │
-│  │  ├── phase4-writing.md (문서 작성)                  │  │
-│  │  └── phase5-validation.md (검증)                    │  │
-│  └─────────────────────────────────────────────────────┘  │
-│                            │                              │
-│                            ▼                              │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │  C# 스크립트 (.release-notes/scripts/)              │  │
-│  │  ├── AnalyzeAllComponents.cs (컴포넌트 분석)        │  │
-│  │  ├── ExtractApiChanges.cs (API 추출)                │  │
-│  │  └── ApiGenerator.cs (Public API 생성)              │  │
-│  └─────────────────────────────────────────────────────┘  │
-└───────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+  subgraph ClaudeCode["Claude Code"]
+    subgraph Commands[".claude/commands/"]
+      CMD1["release-note.md<br/>(릴리스 노트 생성)"]
+      CMD2["commit.md<br/>(커밋 규칙)"]
+    end
+
+    subgraph Workflow[".release-notes/scripts/docs/<br/>5-Phase 워크플로우"]
+      P1["phase1-setup.md"]
+      P2["phase2-collection.md"]
+      P3["phase3-analysis.md"]
+      P4["phase4-writing.md"]
+      P5["phase5-validation.md"]
+    end
+
+    subgraph Scripts[".release-notes/scripts/<br/>C# 스크립트"]
+      S1["AnalyzeAllComponents.cs"]
+      S2["ExtractApiChanges.cs"]
+      S3["ApiGenerator.cs"]
+    end
+
+    Commands --> Workflow --> Scripts
+  end
 ```
 
 ---
@@ -85,16 +82,15 @@ Claude Code는 AI 기반 CLI 도구입니다. 사용자 정의 Command를 통해
 
 릴리스 노트 생성은 5단계로 진행됩니다. 각 단계는 명확한 입력/출력과 성공 기준을 가집니다.
 
-```
-┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
-│ Phase 1 │───▶│ Phase 2 │───▶│ Phase 3 │───▶│ Phase 4 │───▶│ Phase 5 │
-│  환경   │    │ 데이터  │    │  커밋   │    │  문서   │    │  검증   │
-│  검증   │    │  수집   │    │  분석   │    │  작성   │    │         │
-└─────────┘    └─────────┘    └─────────┘    └─────────┘    └─────────┘
-     │              │              │              │              │
-     ▼              ▼              ▼              ▼              ▼
-  Base/Target   .analysis-    phase3-*.md   RELEASE-*.md   검증 보고서
-   결정         output/*.md
+```mermaid
+flowchart LR
+  P1["Phase 1<br/>환경 검증"] --> P2["Phase 2<br/>데이터 수집"] --> P3["Phase 3<br/>커밋 분석"] --> P4["Phase 4<br/>문서 작성"] --> P5["Phase 5<br/>검증"]
+
+  P1 -.-> O1["Base/Target<br/>결정"]
+  P2 -.-> O2[".analysis-<br/>output/*.md"]
+  P3 -.-> O3["phase3-*.md"]
+  P4 -.-> O4["RELEASE-*.md"]
+  P5 -.-> O5["검증 보고서"]
 ```
 
 ### Phase 1: 환경 검증
@@ -248,43 +244,41 @@ namespace Functorium.Abstractions.Errors
 
 전체 시스템의 데이터 흐름을 시각화하면 다음과 같습니다:
 
-```
-Git Repository
-     │
-     ├──── Src/Functorium/*.cs (소스 코드)
-     │
-     └──── Git History (커밋 로그)
-              │
-              ▼
-     ┌────────────────────┐
-     │ Phase 2: 데이터 수집 │
-     │                    │
-     │ AnalyzeAllComponents│──▶ .analysis-output/*.md
-     │ ExtractApiChanges  │──▶ all-api-changes.txt
-     └────────────────────┘    api-changes-diff.txt
-              │
-              ▼
-     ┌────────────────────┐
-     │ Phase 3: 커밋 분석  │
-     │                    │
-     │ Breaking Changes   │──▶ phase3-commit-analysis.md
-     │ Feature 그룹화     │──▶ phase3-feature-groups.md
-     └────────────────────┘
-              │
-              ▼
-     ┌────────────────────┐
-     │ Phase 4: 문서 작성  │
-     │                    │
-     │ TEMPLATE.md 사용   │──▶ RELEASE-v1.2.0.md
-     │ API 검증           │
-     └────────────────────┘
-              │
-              ▼
-     ┌────────────────────┐
-     │ Phase 5: 검증      │
-     │                    │
-     │ 품질 체크          │──▶ phase5-validation-report.md
-     └────────────────────┘
+```mermaid
+flowchart TB
+  Git["Git Repository<br/>Src/Functorium/*.cs<br/>Git History"]
+
+  subgraph Ph2["Phase 2: 데이터 수집"]
+    Analyze["AnalyzeAllComponents"]
+    Extract["ExtractApiChanges"]
+  end
+
+  subgraph Ph3["Phase 3: 커밋 분석"]
+    BC["Breaking Changes"]
+    FG["Feature 그룹화"]
+  end
+
+  subgraph Ph4["Phase 4: 문서 작성"]
+    Template["TEMPLATE.md 사용<br/>API 검증"]
+  end
+
+  subgraph Ph5["Phase 5: 검증"]
+    QC["품질 체크"]
+  end
+
+  Git --> Ph2
+  Analyze -.-> O2A[".analysis-output/*.md"]
+  Extract -.-> O2B["all-api-changes.txt<br/>api-changes-diff.txt"]
+
+  Ph2 --> Ph3
+  BC -.-> O3A["phase3-commit-analysis.md"]
+  FG -.-> O3B["phase3-feature-groups.md"]
+
+  Ph3 --> Ph4
+  Template -.-> O4["RELEASE-v1.2.0.md"]
+
+  Ph4 --> Ph5
+  QC -.-> O5["phase5-validation-report.md"]
 ```
 
 ---

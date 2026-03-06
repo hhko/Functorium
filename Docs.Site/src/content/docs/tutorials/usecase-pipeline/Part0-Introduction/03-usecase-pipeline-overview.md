@@ -6,30 +6,17 @@ title: "아키텍처 개요"
 
 Mediator Pipeline은 요청(Request)이 핸들러(Handler)에 도달하기 전후로 **교차 관심사**를 처리하는 일련의 미들웨어입니다.
 
-```
-Request
-  │
-  ▼
-┌─────────────────────┐
-│ Exception Pipeline  │  ← 예외를 Error로 변환
-├─────────────────────┤
-│ Validation Pipeline │  ← 입력 유효성 검사
-├─────────────────────┤
-│ Logging Pipeline    │  ← 요청/응답 로깅
-├─────────────────────┤
-│ Tracing Pipeline    │  ← 분산 추적
-├─────────────────────┤
-│ Metrics Pipeline    │  ← 메트릭 수집
-├─────────────────────┤
-│ Caching Pipeline    │  ← 캐싱 (Query만)
-├─────────────────────┤
-│ Transaction Pipeline│  ← 트랜잭션 (Command만)
-├─────────────────────┤
-│     Handler         │  ← 비즈니스 로직
-└─────────────────────┘
-  │
-  ▼
-Response
+```mermaid
+flowchart TB
+  Request --> Exception["Exception Pipeline<br/>예외를 Error로 변환"]
+  Exception --> Validation["Validation Pipeline<br/>입력 유효성 검사"]
+  Validation --> Logging["Logging Pipeline<br/>요청/응답 로깅"]
+  Logging --> Tracing["Tracing Pipeline<br/>분산 추적"]
+  Tracing --> Metrics["Metrics Pipeline<br/>메트릭 수집"]
+  Metrics --> Caching["Caching Pipeline<br/>캐싱 (Query만)"]
+  Caching --> Transaction["Transaction Pipeline<br/>트랜잭션 (Command만)"]
+  Transaction --> Handler["Handler<br/>비즈니스 로직"]
+  Handler --> Response
 ```
 
 ## Pipeline이 응답에 대해 알아야 하는 것

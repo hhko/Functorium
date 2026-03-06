@@ -72,20 +72,20 @@ block-beta
 
   block:domain["Domain Layer"]:3
     columns 3
-    vo["Value Object\nEmail · Money · Quantity"]
-    entity["Entity\nTag · OrderItem"]
-    agg["Aggregate\nAggregate Root (Order)\n├ Child Entity\n└ Value Object"]
-    event["Domain Event"] err["Domain Error\n(DomainError)"] svc["Domain Service\n(IDomainService)"]
+    vo["Value Object<br/>Email · Money · Quantity"]
+    entity["Entity<br/>Tag · OrderItem"]
+    agg["Aggregate<br/>Aggregate Root (Order)<br/>├ Child Entity<br/>└ Value Object"]
+    event["Domain Event"] err["Domain Error<br/>(DomainError)"] svc["Domain Service<br/>(IDomainService)"]
   end
 
   block:app["Application Layer"]:3
     columns 4
-    cmd["Command\n(Use Case)"] query["Query\n(Use Case)"] handler["Event Handler"] apperr["Application Error"]
+    cmd["Command<br/>(Use Case)"] query["Query<br/>(Use Case)"] handler["Event Handler"] apperr["Application Error"]
   end
 
   block:adapter["Adapter Layer"]:3
     columns 3
-    port["Port\n(Interface)"] impl["Adapter\n(구현체)"] adapterr["Adapter Error"]
+    port["Port<br/>(Interface)"] impl["Adapter<br/>(구현체)"] adapterr["Adapter Error"]
   end
 ```
 

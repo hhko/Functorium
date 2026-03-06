@@ -14,17 +14,15 @@ title: "Roslyn 아키텍처"
 
 **Roslyn**은 .NET 컴파일러 플랫폼(NET Compiler Platform)의 코드명으로, C# 및 Visual Basic 컴파일러를 오픈 소스로 재작성한 프로젝트입니다.
 
-```
-기존 컴파일러 (csc.exe)
-======================
-소스 코드 → [블랙박스] → IL 코드
+```mermaid
+flowchart LR
+  subgraph Old["기존 컴파일러 (csc.exe)"]
+    O_Src["소스 코드"] --> O_BB["블랙박스"] --> O_IL["IL 코드"]
+  end
 
-Roslyn 컴파일러
-===============
-소스 코드 → [공개된 API] → IL 코드
-              ↑
-         개발자가 접근 가능한
-         Syntax Tree, Semantic Model 등
+  subgraph Roslyn["Roslyn 컴파일러"]
+    R_Src["소스 코드"] --> R_API["공개된 API<br/>(Syntax Tree,<br/>Semantic Model 등)"] --> R_IL["IL 코드"]
+  end
 ```
 
 ### 핵심 특징
@@ -41,57 +39,16 @@ Roslyn 컴파일러
 
 Roslyn 컴파일러는 소스 코드를 여러 단계를 거쳐 IL 코드로 변환합니다:
 
-```
-                    C# 소스 코드 (.cs)
-                           │
-                           ▼
-┌──────────────────────────────────────────────────────┐
-│  1단계: 어휘 분석 (Lexical Analysis)                 │
-│  ─────────────────────────────────────               │
-│  소스 텍스트 → 토큰(Token) 시퀀스                    │
-│                                                      │
-│  예: "int x = 5;" → [int] [x] [=] [5] [;]            │
-└────────────────────────┬─────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────┐
-│  2단계: 구문 분석 (Syntax Analysis)                  │
-│  ─────────────────────────────────                   │
-│  토큰 → Syntax Tree (구문 트리)                      │
-│                                                      │
-│  예: VariableDeclaration                             │
-│       ├── Type: "int"                                │
-│       └── Declarator: "x = 5"                        │
-└────────────────────────┬─────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────┐
-│  3단계: 의미 분석 (Semantic Analysis)                │
-│  ─────────────────────────────────                   │
-│  Syntax Tree + 타입 정보 → Semantic Model            │
-│                                                      │
-│  예: "x"는 int 타입, "5"는 int 리터럴                │
-│      할당 호환성 검증 통과                           │
-└────────────────────────┬─────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────┐
-│  4단계: 소스 생성기 실행 ★                           │
-│  ───────────────────────                             │
-│  Syntax Tree + Semantic Model을 분석하여             │
-│  새로운 소스 코드 생성                               │
-│                                                      │
-│  예: [GenerateObservablePort] → UserRepositoryObservable.g.cs│
-└────────────────────────┬─────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────┐
-│  5단계: IL 생성 (Emit)                               │
-│  ─────────────────────                               │
-│  Semantic Model → IL 바이트코드                      │
-│                                                      │
-│  결과: .dll 또는 .exe 파일                           │
-└──────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+  Src["C# 소스 코드 (.cs)"]
+  Step1["1단계: 어휘 분석<br/>(Lexical Analysis)<br/>소스 텍스트 → 토큰 시퀀스"]
+  Step2["2단계: 구문 분석<br/>(Syntax Analysis)<br/>토큰 → Syntax Tree"]
+  Step3["3단계: 의미 분석<br/>(Semantic Analysis)<br/>Syntax Tree + 타입 정보<br/>→ Semantic Model"]
+  Step4["⭐ 4단계: 소스 생성기 실행<br/>Syntax Tree + Semantic Model<br/>→ 새로운 소스 코드 생성"]
+  Step5["5단계: IL 생성 (Emit)<br/>Semantic Model<br/>→ IL 바이트코드 (.dll/.exe)"]
+
+  Src --> Step1 --> Step2 --> Step3 --> Step4 --> Step5
 ```
 
 ---

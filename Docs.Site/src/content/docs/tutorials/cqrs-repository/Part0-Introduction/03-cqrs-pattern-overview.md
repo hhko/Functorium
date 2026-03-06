@@ -32,19 +32,18 @@ public class ShoppingCart
 
 Greg Young이 CQS를 **아키텍처 수준**으로 확장한 패턴입니다. 메서드가 아닌 **모델 자체를 분리**합니다:
 
-```
-전통적인 CRUD          CQRS
-┌───────────┐         ┌───────────┐     ┌───────────┐
-│           │         │  Command  │     │   Query   │
-│  단일     │         │   Model   │     │   Model   │
-│  모델     │   -->   │ (Domain)  │     │  (DTO)    │
-│           │         │           │     │           │
-└─────┬─────┘         └─────┬─────┘     └─────┬─────┘
-      │                     │                 │
-┌─────┴─────┐         ┌─────┴─────┐     ┌─────┴─────┐
-│  단일 DB  │         │  쓰기 DB  │     │  읽기 DB  │
-└───────────┘         └───────────┘     └───────────┘
-                      (같은 DB도 가능)
+```mermaid
+flowchart LR
+  subgraph CRUD["전통적인 CRUD"]
+    M["단일<br/>모델"] --> DB["단일 DB"]
+  end
+
+  subgraph CqrsGroup["CQRS"]
+    CM["Command Model<br/>(Domain)"] --> WDB["쓰기 DB"]
+    QM["Query Model<br/>(DTO)"] --> RDB["읽기 DB<br/>(같은 DB도 가능)"]
+  end
+
+  CRUD -. "분리" .-> CqrsGroup
 ```
 
 ---
@@ -92,27 +91,35 @@ public class Order
 
 Functorium은 CQRS 패턴을 다음과 같은 타입 계층으로 구현합니다:
 
-```
-┌───────────────────────────────────────────────────────────┐
-│                    Presentation Layer                     │
-│                  (Controller / Endpoint)                  │
-├──────────────────────┬────────────────────────────────────┤
-│    Command 측        │         Query 측                   │
-│                      │                                    │
-│  ICommandRequest     │    IQueryRequest                   │
-│       │              │         │                          │
-│  ICommandUsecase     │    IQueryUsecase                   │
-│       │              │         │                          │
-│  IRepository         │    IQueryPort                      │
-│  <TAggregate, TId>   │    <TEntity, TDto>                 │
-│       │              │         │                          │
-│  AggregateRoot       │    DTO (프로젝션)                  │
-│       │              │         │                          │
-├───────┴──────────────┴─────────┴──────────────────────────┤
-│                 Infrastructure Layer                      │
-│  EfCoreRepositoryBase  │  InMemoryQueryBase / DapperQuery │
-│  IUnitOfWork           │                                  │
-└────────────────────────┴──────────────────────────────────┘
+```mermaid
+flowchart TB
+  subgraph Presentation["Presentation Layer (Controller / Endpoint)"]
+    direction LR
+    PR[" "]
+  end
+
+  subgraph Command["Command 측"]
+    ICommandRequest --> ICommandUsecase
+    ICommandUsecase --> IRepository["IRepository<br/>&lt;TAggregate, TId&gt;"]
+    IRepository --> AggregateRoot
+  end
+
+  subgraph Query["Query 측"]
+    IQueryRequest --> IQueryUsecase
+    IQueryUsecase --> IQueryPort["IQueryPort<br/>&lt;TEntity, TDto&gt;"]
+    IQueryPort --> DTO["DTO (프로젝션)"]
+  end
+
+  subgraph Infra["Infrastructure Layer"]
+    direction LR
+    EfCore["EfCoreRepositoryBase<br/>IUnitOfWork"]
+    QueryImpl["InMemoryQueryBase<br/>DapperQuery"]
+  end
+
+  Presentation --> Command
+  Presentation --> Query
+  Command --> Infra
+  Query --> Infra
 ```
 
 ### Command 측: IRepository
@@ -213,20 +220,14 @@ Client -> Controller -> Service -> Repository -> DB
 
 ### CQRS 아키텍처
 
-```
-Client -> Controller -> Mediator
-                           |
-              ┌────────────┴────────────┐
-              |                         |
-         Command Path              Query Path
-              |                         |
-         ICommandUsecase           IQueryUsecase
-              |                         |
-         IRepository               IQueryPort
-              |                         |
-         AggregateRoot             DTO Projection
-              |                         |
-         EF Core (쓰기)           Dapper/EF (읽기)
+```mermaid
+flowchart TB
+  Client --> Controller --> Mediator
+  Mediator --> CommandPath["Command Path"]
+  Mediator --> QueryPath["Query Path"]
+
+  CommandPath --> ICommandUsecase --> IRepository --> AggregateRoot --> EFCore["EF Core (쓰기)"]
+  QueryPath --> IQueryUsecase --> IQueryPort --> DTOProjection["DTO Projection"] --> DapperEF["Dapper/EF (읽기)"]
 ```
 
 ---

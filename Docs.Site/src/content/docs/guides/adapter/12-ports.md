@@ -215,15 +215,15 @@ Adapter 구현은 5단계 활동으로 구성됩니다.
 
 ```mermaid
 flowchart LR
-  A1["Activity 1\nPort 인터페이스 정의"] --> A2["Activity 2\nAdapter 구현"]
-  A2 --> A3["Activity 3\nPipeline 생성 확인\n(자동)"]
-  A3 --> A4["Activity 4\nDI 등록"]
-  A4 --> A5["Activity 5\n단위 테스트"]
+  A1["Activity 1<br/>Port 인터페이스 정의"] --> A2["Activity 2<br/>Adapter 구현"]
+  A2 --> A3["Activity 3<br/>Pipeline 생성 확인<br/>(자동)"]
+  A3 --> A4["Activity 4<br/>DI 등록"]
+  A4 --> A5["Activity 5<br/>단위 테스트"]
 
-  A1 -.- L1["Domain Layer /\nApplication Layer"]
+  A1 -.- L1["Domain Layer /<br/>Application Layer"]
   A2 -.- L2["Adapter Layer"]
   A3 -.- L3["obj/GeneratedFiles/"]
-  A4 -.- L4["Registration /\nProgram.cs"]
+  A4 -.- L4["Registration /<br/>Program.cs"]
   A5 -.- L5["Tests.Unit/"]
 ```
 
@@ -574,61 +574,32 @@ public interface IProductRepository : IObservablePort
 
 #### 데이터 변환 흐름 아키텍처
 
-```
-┌────────────────────────────────────────────────────────────────────────────────┐
-│                           PRESENTATION LAYER                                   │
-│  ┌──────────────────────────────────────────────────────────────────────────┐ │
-│  │ CreateProductEndpoint                                                     │ │
-│  │   Request { Name, Description, Price, StockQuantity }  ← JSON 직렬화    │ │
-│  │   Response { ProductId, Name, Description, ... }  ← Endpoint 자체 DTO   │ │
-│  │                                                                           │ │
-│  │   // [변환 책임 A] Endpoint Request → Usecase Request (수동 매핑)         │ │
-│  │   var usecaseRequest = new CreateProductCommand.Request(req.Name, ...);  │ │
-│  │   // [변환 책임 B] Usecase Response → Endpoint Response                   │ │
-│  │   result.Map(r => new Response(r.ProductId, r.Name, ...));               │ │
-│  └──────────────────────────────────────────────────────────────────────────┘ │
-│                              │                                                 │
-└──────────────────────────────┼─────────────────────────────────────────────────┘
-                               ▼
-┌────────────────────────────────────────────────────────────────────────────────┐
-│                           APPLICATION LAYER                                    │
-│  ┌──────────────────────────────────────────────────────────────────────────┐ │
-│  │ CreateProductCommand.Usecase                                              │ │
-│  │   Request { Name: string, Price: decimal } : ICommandRequest<Response>   │ │
-│  │                                                                           │ │
-│  │   // [변환 책임 1] Usecase 내부에서 값 객체 생성                           │ │
-│  │   var productId = ProductId.New();                                        │ │
-│  │   var productName = ProductName.Create(request.Name);                     │ │
-│  │   var money = Money.Create(request.Price, "KRW");                         │ │
-│  └──────────────────────────────────────────────────────────────────────────┘ │
-│                              │                                                 │
-│  ┌──────────────────────────────────────────────────────────────────────────┐ │
-│  │ IProductRepository : IObservablePort  (Port Interface)                             │ │
-│  │   Create(Product) → FinT<IO, Product>   ← 도메인 엔티티                  │ │
-│  │   GetById(ProductId) → FinT<IO, Product>                                 │ │
-│  └──────────────────────────────────────────────────────────────────────────┘ │
-└──────────────────────────────┼─────────────────────────────────────────────────┘
-                               ▼
-┌────────────────────────────────────────────────────────────────────────────────┐
-│                      INFRASTRUCTURE / PERSISTENCE LAYER                        │
-│  ┌──────────────────────────────────────────────────────────────────────────┐ │
-│  │ [GenerateObservablePort]                                                        │ │
-│  │ EfCoreProductRepository : IProductRepository                              │ │
-│  │   RequestCategory => "Repository"                                         │ │
-│  │                                                                           │ │
-│  │   // [변환 책임 2] Adapter 내부에서 Persistence Model 변환                │ │
-│  │   product.ToModel()   : Product → ProductModel (POCO)                    │ │
-│  │   model.ToDomain()    : ProductModel → Product                            │ │
-│  └──────────────────────────────────────────────────────────────────────────┘ │
-└──────────────────────────────┼─────────────────────────────────────────────────┘
-                               ▼
-┌────────────────────────────────────────────────────────────────────────────────┐
-│                            EXTERNAL SYSTEMS                                    │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐                │
-│  │ Database        │  │ Message Queue   │  │ External API    │                │
-│  │ (Oracle, MSSQL) │  │ (RabbitMQ)      │  │ (HTTP/REST)     │                │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘                │
-└────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+  subgraph Presentation["PRESENTATION LAYER"]
+    EP["CreateProductEndpoint<br/>변환 책임 A: Endpoint Request → Usecase Request<br/>변환 책임 B: Usecase Response → Endpoint Response"]
+  end
+
+  subgraph Application["APPLICATION LAYER"]
+    UC["CreateProductCommand.Usecase<br/>변환 책임 1: Primitive → 값 객체 생성"]
+    Port["IProductRepository : IObservablePort<br/>Create(Product) → FinT&lt;IO, Product&gt;<br/>GetById(ProductId) → FinT&lt;IO, Product&gt;"]
+    UC --> Port
+  end
+
+  subgraph Infra["INFRASTRUCTURE / PERSISTENCE LAYER"]
+    Repo["EfCoreProductRepository : IProductRepository<br/>변환 책임 2: Product ↔ ProductModel (POCO)"]
+  end
+
+  subgraph External["EXTERNAL SYSTEMS"]
+    direction LR
+    DB["Database<br/>(Oracle, MSSQL)"]
+    MQ["Message Queue<br/>(RabbitMQ)"]
+    API["External API<br/>(HTTP/REST)"]
+  end
+
+  Presentation -- "수동 매핑" --> Application
+  Application -- "도메인 엔티티" --> Infra
+  Infra -- "Persistence Model" --> External
 ```
 
 #### 각 경계에서의 변환 책임
