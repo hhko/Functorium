@@ -48,22 +48,22 @@ import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
     <div class="story-item">
       <span class="story-number">1</span>
       <div>
-        <h3>검증 로직이 코드 전체에 분산됩니다</h3>
-        <p>이메일 검증 로직이 Controller, Service, Repository 세 곳에 분산되어 있고, 각각 다른 방식으로 구현되어 있습니다. 한 곳에서 검증 조건을 변경하면 나머지는 여전히 이전 규칙을 적용합니다. 성공과 실패가 <code>try-catch</code>로 분기되어 도메인 규칙의 합성이 불가능합니다.</p>
+        <h3>예외가 곧 비즈니스 로직</h3>
+        <p>성공과 실패가 <code>try-catch</code>로 분기되어 흐름을 예측하기 어렵고, 도메인 규칙의 합성이 불가능합니다.</p>
       </div>
     </div>
     <div class="story-item">
       <span class="story-number">2</span>
       <div>
-        <h3>개발 언어와 운영 언어가 일치하지 않습니다</h3>
-        <p>개발팀은 '주문 상태'를 <code>OrderStatus</code> enum으로 관리하고, 운영팀은 '주문 상태 코드'라는 별도 문서로 관리합니다. 장애 발생 시 Seq에서 검색할 키워드가 일치하지 않아 원인 파악에 시간이 소요됩니다. 기능 명세와 운영 요구사항이 서로 다른 체계로 관리되면 해석 차이가 누적됩니다.</p>
+        <h3>개발 언어 ≠ 운영 언어</h3>
+        <p>기능 명세와 운영 요구사항이 서로 다른 체계로 관리되어, 통일된 언어 없이 해석 차이가 누적됩니다.</p>
       </div>
     </div>
     <div class="story-item">
       <span class="story-number">3</span>
       <div>
-        <h3>Observability는 항상 사후에 보완됩니다</h3>
-        <p>릴리스 후 성능 저하가 발생했지만, 어떤 유스케이스에서 병목이 생겼는지 확인할 방법이 없습니다. 급히 로그를 추가하고 재배포합니다. 로그, 메트릭, 트레이싱이 구현 완료 후 부착되면 장애 시 근본 원인 분석에 필요한 맥락이 유실됩니다.</p>
+        <h3>Observability는 항상 사후 보완</h3>
+        <p>로그·메트릭·트레이싱이 구현 완료 후 부착되어, 장애 시 근본 원인 분석에 필요한 맥락이 유실됩니다.</p>
       </div>
     </div>
   </div>
@@ -77,21 +77,21 @@ import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
       <span class="story-number">1</span>
       <div>
         <h3>예외 없는 순수 도메인</h3>
-        <p><code>Fin&lt;T&gt;</code>와 <code>FinT&lt;IO, T&gt;</code>로 결과와 사이드 이펙트를 타입 수준에서 명시합니다. 검증 규칙은 Value Object 한 곳에서 정의하고, <code>ValidationRules&lt;T&gt;</code> 체이닝으로 조건별 에러 코드를 자동 생성합니다. 검증 로직이 분산될 여지가 구조적으로 제거됩니다.</p>
+        <p><code>Fin&lt;T&gt;</code>, <code>FinT&lt;IO, T&gt;</code>로 결과와 사이드 이펙트를 타입 수준에서 명시하고, LINQ 합성으로 도메인 흐름을 구성합니다.</p>
       </div>
     </div>
     <div class="story-item">
       <span class="story-number">2</span>
       <div>
         <h3>단일 도메인 언어로 통합</h3>
-        <p>Bounded Context를 명확히 정의하여 도메인 개념이 코드, 로그, 운영 대시보드에 동일한 이름으로 나타납니다. <code>"ApplicationErrors.CreateCustomerCommand.AlreadyExists"</code>처럼 에러 코드가 유스케이스와 1:1로 대응되어, Seq 검색 한 번으로 장애 원인을 특정할 수 있습니다.</p>
+        <p>Bounded Context를 명확히 정의하여 도메인 개념이 코드·문서·운영 메트릭에 일관되게 반영되는 구조를 만듭니다.</p>
       </div>
     </div>
     <div class="story-item">
       <span class="story-number">3</span>
       <div>
         <h3>설계에 내재된 Observability</h3>
-        <p>OpenTelemetry 기반 Logging, Metrics, Tracing이 유스케이스 파이프라인에 자동 적용됩니다. 코드를 작성하는 시점에 관측 구조가 함께 완성되므로, 장애 시 재배포 없이 즉시 원인을 분석할 수 있습니다.</p>
+        <p>OpenTelemetry 기반 Logging, Metrics, Tracing이 유스케이스 파이프라인에 자동 적용되어, 도메인 흐름과 관측이 함께 설계됩니다.</p>
       </div>
     </div>
   </div>
