@@ -7,6 +7,19 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
 ```
 
 ```
+ Functorium 가이드 문서(37개 파일)는 기술적으로 정확하고 구조가 일관적이지만, 대부분 사양서(spec) 문체로 작성되어 있다. 단편적 사실을 나열하는
+ 방식이어서, 독자가 "왜 이것이 중요한가", "다음에 무엇을 알아야 하는가"를 스스로 파악해야 한다.
+```
+
+- [ ] 커스텀 유스케이스 관찰 가능성
+- [ ] IAduit 로그 출력?
+- [ ] CRTP 패턴 사례 개선 Book
+- [ ] Traverse, TraverseM 이해 LanaguageExt
+
+
+```
+node_modules/.astro
+
   # 개발 서버 (HMR 지원)
   npm run dev          # http://localhost:4321
 
@@ -31,8 +44,6 @@ rm -rf .astro node_modules/.astro 2>/dev/null && timeout 60 npx astro dev 2>&1
 - [ ] 1. 문서 내 상대 링크(.md 확장자)를 Starlight 슬러그 형식으로 변환 (현재 errorOnRelativeLinks: false로 우회)
 - [ ] 2. sourcegen-observability 중복 ID 해결 (폴더/index.md + standalone .md 공존)
 - [x] Book 폴더 전체 구성 동기화
-- [ ] CRTP 패턴 사례 개선 Book
-- [ ] Traverse, TraverseM 이해 LanaguageExt
 - [x] 아키텍처 테스트 개선
 - [ ] 아키텍처 대상 문서화(비교표)
 - [ ] 아키텍처 Book
