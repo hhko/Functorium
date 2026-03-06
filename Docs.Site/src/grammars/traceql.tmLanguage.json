@@ -1,0 +1,49 @@
+{
+  "name": "traceql",
+  "scopeName": "source.traceql",
+  "patterns": [
+    { "match": "#.*$", "name": "comment.line.number-sign.traceql" },
+    {
+      "match": "\\b(span|resource|parent|rootSpan|rootServiceName|traceDuration|status|kind|name|duration|childCount|nestedSetLeft|nestedSetRight|nestedSetParent)\\b",
+      "name": "support.type.attribute.traceql"
+    },
+    {
+      "match": "\\b(select|coalesce|concat|count|min|max|avg|sum|by)\\b",
+      "name": "entity.name.function.traceql"
+    },
+    {
+      "match": "\\b(true|false|nil|ok|error|unset|client|server|producer|consumer|internal)\\b",
+      "name": "constant.language.traceql"
+    },
+    {
+      "match": "[!=><]=?|~|&&|\\|\\||!~",
+      "name": "keyword.operator.comparison.traceql"
+    },
+    { "match": "[|&>><<]", "name": "keyword.operator.traceql" },
+    {
+      "begin": "\"",
+      "end": "\"",
+      "name": "string.quoted.double.traceql",
+      "patterns": [{ "match": "\\\\.", "name": "constant.character.escape.traceql" }]
+    },
+    { "match": "\\b\\d+(\\.\\d+)?(ms|s|m|h|d)?\\b", "name": "constant.numeric.traceql" },
+    {
+      "begin": "\\{",
+      "end": "\\}",
+      "name": "meta.spanset-filter.traceql",
+      "patterns": [
+        { "match": "\\.", "name": "punctuation.accessor.traceql" },
+        { "match": "[a-zA-Z_][a-zA-Z0-9_.]*", "name": "entity.other.attribute-name.traceql" },
+        { "match": "[!=><]=?|~|!~", "name": "keyword.operator.comparison.traceql" },
+        {
+          "begin": "\"",
+          "end": "\"",
+          "name": "string.quoted.double.traceql",
+          "patterns": [{ "match": "\\\\.", "name": "constant.character.escape.traceql" }]
+        },
+        { "match": "\\b\\d+(\\.\\d+)?(ms|s|m|h|d)?\\b", "name": "constant.numeric.traceql" },
+        { "match": "\\b(true|false|nil|ok|error|unset)\\b", "name": "constant.language.traceql" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "name": "promql",
+  "scopeName": "source.promql",
+  "patterns": [
+    { "match": "#.*$", "name": "comment.line.number-sign.promql" },
+    {
+      "match": "\\b(sum|avg|min|max|count|stddev|stdvar|topk|bottomk|quantile|rate|irate|increase|delta|idelta|histogram_quantile|label_replace|label_join|absent|absent_over_time|ceil|floor|round|clamp|clamp_min|clamp_max|changes|resets|deriv|predict_linear|time|vector|scalar|sort|sort_desc|count_over_time|sum_over_time|avg_over_time|min_over_time|max_over_time|stddev_over_time|stdvar_over_time|last_over_time|present_over_time|group)\\b",
+      "name": "entity.name.function.promql"
+    },
+    {
+      "match": "\\b(by|without|on|ignoring|group_left|group_right|bool|offset)\\b",
+      "name": "keyword.operator.word.promql"
+    },
+    {
+      "match": "\\b(and|or|unless)\\b",
+      "name": "keyword.operator.logical.promql"
+    },
+    { "match": "[!=~!><]=?|==", "name": "keyword.operator.comparison.promql" },
+    {
+      "begin": "\"",
+      "end": "\"",
+      "name": "string.quoted.double.promql",
+      "patterns": [{ "match": "\\\\.", "name": "constant.character.escape.promql" }]
+    },
+    {
+      "begin": "'",
+      "end": "'",
+      "name": "string.quoted.single.promql",
+      "patterns": [{ "match": "\\\\.", "name": "constant.character.escape.promql" }]
+    },
+    {
+      "begin": "`",
+      "end": "`",
+      "name": "string.quoted.backtick.promql"
+    },
+    { "match": "\\b\\d+(\\.\\d+)?([eE][+-]?\\d+)?\\b", "name": "constant.numeric.promql" },
+    {
+      "begin": "\\{",
+      "end": "\\}",
+      "name": "meta.label-selector.promql",
+      "patterns": [
+        { "match": "[a-zA-Z_][a-zA-Z0-9_]*", "name": "entity.other.attribute-name.promql" },
+        { "match": "[!=~!><]=?", "name": "keyword.operator.comparison.promql" },
+        {
+          "begin": "\"",
+          "end": "\"",
+          "name": "string.quoted.double.promql",
+          "patterns": [{ "match": "\\\\.", "name": "constant.character.escape.promql" }]
+        }
+      ]
+    }
+  ]
+}
