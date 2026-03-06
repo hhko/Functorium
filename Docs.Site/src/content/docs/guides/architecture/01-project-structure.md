@@ -43,6 +43,34 @@ dotnet test --solution {ServiceName}.slnx
 
 ---
 
+## 들어가며
+
+"이 코드는 Domain에 두어야 하는가, Application에 두어야 하는가?"
+"새 Adapter를 추가할 때 폴더 구조와 네이밍은 어떤 규칙을 따르는가?"
+"Port 인터페이스를 어느 레이어에 배치해야 하는가?"
+
+프로젝트가 성장하면 코드 배치에 대한 판단이 점점 어려워집니다. 명확한 프로젝트 구성 규칙이 없으면 레이어 간 의존성이 뒤엉키고, 새 기능을 어디에 추가해야 할지 매번 논의해야 합니다. 이 가이드는 "어디에 배치하는가(WHERE)"라는 질문에 대한 일관된 답을 제공합니다.
+
+### 이 문서에서 배우는 내용
+
+이 문서를 통해 다음을 학습합니다:
+
+1. **8개 프로젝트 구성과 의존성 방향** - Domain, Application, Adapter 3개, Host, Tests 2개의 역할과 참조 규칙
+2. **코드 배치 3단계 의사결정** - 레이어 결정 → 프로젝트/폴더 결정 → Port 배치 판단
+3. **주 목표와 부수 목표 개념** - 각 프로젝트의 핵심 코드와 보조 인프라 구분
+4. **Host의 Composition Root 역할** - 레이어 등록 순서와 미들웨어 파이프라인 구성
+5. **테스트 프로젝트 구성** - 단위 테스트와 통합 테스트의 폴더 구조 및 설정
+
+### 사전 지식
+
+이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
+
+- 헥사고날 아키텍처(Ports and Adapters)의 기본 개념
+- .NET 프로젝트 참조(`ProjectReference`)와 NuGet 패키지 참조
+- DI(Dependency Injection) 컨테이너의 기본 원리
+
+---
+
 ## 개요
 
 이 가이드는 서비스의 **프로젝트 구성** — 폴더 이름, 파일 배치, 의존성 방향 — 을 다룹니다.
@@ -59,6 +87,8 @@ dotnet test --solution {ServiceName}.slnx
 | WHY (모듈 매핑 근거) | [04-ddd-tactical-overview.md §6](../domain/04-ddd-tactical-overview) — Module과 프로젝트 구조 매핑 |
 
 ### 전체 프로젝트 구성 개요
+
+다음은 서비스를 구성하는 8개 프로젝트의 전체 구조와 각 프로젝트의 역할입니다.
 
 서비스는 `Src/`(소스)와 `Tests/`(테스트) 폴더로 구분되며, 총 8개 프로젝트로 구성됩니다.
 
@@ -131,6 +161,8 @@ flowchart TB
 
 ### 프로젝트 간 참조 규칙 매트릭스
 
+다음 매트릭스는 어떤 프로젝트가 어떤 프로젝트를 참조할 수 있는지를 정리한 것입니다.
+
 | From \ To | Domain | Application | Presentation | Persistence | Infrastructure | Host |
 |-----------|--------|-------------|--------------|-------------|----------------|------|
 | **Domain** | — | ✗ | ✗ | ✗ | ✗ | ✗ |
@@ -167,6 +199,8 @@ flowchart LR
   TI --> Application
   TI --> FT
 ```
+
+의존성 방향과 참조 규칙을 이해했으면, 다음으로 모든 프로젝트에 공통으로 배치하는 파일을 살펴봅니다.
 
 ## 프로젝트 공통 파일
 
@@ -303,6 +337,8 @@ Abstractions/
 | `Extensions/` | 공유 확장 메서드 | `FinResponseExtensions` |
 
 > **주의:** Domain과 Application에는 `Abstractions/` 폴더가 없습니다. [FAQ 참조](#faq)
+
+공통 파일이 프로젝트의 기반을 구성한다면, 코드 배치 가이드는 새 코드가 어디에 위치해야 하는지를 결정합니다.
 
 ## 코드 배치 의사결정 가이드
 
@@ -652,6 +688,8 @@ public static IApplicationBuilder UseAdapterInfrastructure(this IApplicationBuil
 ```
 
 > **참고**: `IConfiguration` 파라미터는 Options 패턴(`RegisterConfigureOptions`)을 사용하는 Adapter에서 필요합니다. Options 패턴 상세는 [14a-adapter-pipeline-di.md §4.6](../adapter/14a-adapter-pipeline-di#options-패턴-optionsconfigurator)을 참조하세요.
+
+각 레이어의 폴더 구조를 이해했으면, 이제 이 모든 레이어를 조합하는 Host 프로젝트를 살펴봅니다.
 
 ## Host 프로젝트
 

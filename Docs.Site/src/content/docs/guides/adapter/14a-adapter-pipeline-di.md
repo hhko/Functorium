@@ -42,6 +42,8 @@ ls {Project}/obj/GeneratedFiles/Functorium.SourceGenerators/.../*.g.cs
 
 > **참고**: `UsecaseCachingPipeline`은 `IMemoryCache`에 의존합니다. `UseAll()` 사용 시 `services.AddMemoryCache()`를 DI에 등록해야 합니다.
 
+먼저 Pipeline이 어떻게 생성되는지 확인한 뒤, DI 등록과 Options 패턴까지 순서대로 진행합니다.
+
 ---
 
 ## Activity 3: Pipeline 생성 확인
@@ -141,6 +143,8 @@ public class InMemoryProductRepositoryObservable : InMemoryProductRepository
 
 Pipeline은 다음 관찰성 기능을 **자동으로** 제공합니다. 모든 필드는 OpenTelemetry 시맨틱 규칙과의 일관성을 위해 `snake_case + dot` 표기법을 사용합니다.
 
+다음 표는 Pipeline이 자동 제공하는 4가지 관찰성 기능을 정리한 것입니다.
+
 | 기능 | 설명 | 주요 Tag/Field |
 |------|------|----------------|
 | **분산 트레이싱** | Span 자동 생성 (`{layer} {category} {handler}.{method}`) | `request.layer`, `request.category`, `request.handler`, `request.handler.method`, `response.status`, `response.elapsed` |
@@ -171,12 +175,16 @@ Pipeline은 다음 관찰성 기능을 **자동으로** 제공합니다. 모든 
 
 ### 빌드 에러 대응
 
+Pipeline 생성 과정에서 발생할 수 있는 빌드 에러와 해결 방법을 정리한 표입니다.
+
 | 에러 | 증상 | 원인 | 해결 |
 |------|------|------|------|
 | CS0506 | `cannot override because it is not virtual` | 메서드에 `virtual` 키워드 누락 | 모든 인터페이스 메서드에 `virtual` 추가 |
 | Pipeline 클래스 미생성 | `obj/GeneratedFiles/`에 파일 없음 | `[GenerateObservablePort]` 어트리뷰트 누락 | 클래스에 어트리뷰트 추가 |
 | 생성자 매개변수 충돌 | Source Generator 에러 | 생성자 매개변수 타입이 Observability 타입과 충돌 | 생성자 매개변수에 고유 타입 사용 |
 | 네임스페이스 누락 | `using` 에러 | Functorium 패키지 참조 누락 | `Functorium.SourceGenerators` NuGet 패키지 추가 |
+
+Pipeline이 정상적으로 생성되었다면, 이제 DI 컨테이너에 등록하여 런타임에서 사용할 수 있게 합니다.
 
 ---
 
@@ -189,6 +197,8 @@ Pipeline은 다음 관찰성 기능을 **자동으로** 제공합니다. 모든 
 **위치 규칙**: `{Project}.Adapters.{Layer}/Abstractions/Registrations/`
 
 **네이밍 규칙**: `Adapter{Layer}Registration`
+
+`RegisterScopedObservablePort`로 Pipeline Observable 클래스를 Port 인터페이스에 매핑하는 패턴을 주목하세요.
 
 ```csharp
 // 파일: {Adapters.Persistence}/Abstractions/Registrations/AdapterPersistenceRegistration.cs
@@ -310,6 +320,8 @@ services.RegisterScopedObservablePortFor<MyServiceObservable>(
 
 ### DI Lifetime 선택 가이드
 
+아래 표는 Lifetime 별 사용 시점과 주의사항을 정리한 것입니다.
+
 | Lifetime | 사용 시점 | 주의사항 |
 |----------|----------|---------|
 | **Scoped** (기본) | Repository, External API, Messaging | HTTP 요청 내 동일 인스턴스 공유 |
@@ -369,7 +381,7 @@ app.Run();
 
 ### Options 패턴 (OptionsConfigurator)
 
-Adapter에 구성 옵션이 필요한 경우 `OptionsConfigurator` 패턴을 사용합니다. `appsettings.json`에서 설정을 읽고, 시작 시 FluentValidation으로 검증하며, StartupLogger에 자동 출력합니다.
+DI 등록의 기본 패턴을 이해했다면, 이제 Adapter에 구성 옵션을 주입하는 방법을 알아봅니다. `OptionsConfigurator` 패턴을 사용합니다. `appsettings.json`에서 설정을 읽고, 시작 시 FluentValidation으로 검증하며, StartupLogger에 자동 출력합니다.
 
 #### Options 클래스 구조
 

@@ -28,6 +28,8 @@ var result = await Task.Run(() => adapter.GetById(id).Run().RunAsync());
 | 테스트 대상 | 원본 Adapter 클래스 (Pipeline 아님) |
 | Mock 전략 | Repository: 직접 인스턴스, External API: MockHttpMessageHandler, Messaging: NSubstitute |
 
+먼저 Adapter 단위 테스트의 원칙과 IO 실행 패턴을 살펴본 뒤, 유형별(Repository, External API, Messaging, Query) 테스트 예제를 확인합니다.
+
 ---
 
 ## Activity 5: 단위 테스트
@@ -115,6 +117,8 @@ public sealed class InMemoryProductRepositoryTests
 ### External API 테스트
 
 External API Adapter는 `HttpClient`를 Mock하여 테스트합니다.
+
+`MockHttpMessageHandler`로 HTTP 응답을 제어하고, 성공/실패 시나리오를 분리하여 테스트하는 패턴을 주목하세요.
 
 ```csharp
 // 파일: Tests/{Project}.Tests.Unit/LayerTests/Adapters/ExternalPricingApiServiceTests.cs
@@ -294,6 +298,8 @@ public async Task Search_ReturnsPagedResult_WhenProductsExist()
 > **참조**: `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Application/Products/SearchProductsQueryTests.cs`
 
 > **참고**: Dapper Query Adapter의 SQL 실행 테스트는 통합 테스트에서 수행합니다. 단위 테스트에서는 InMemory 구현을 사용하여 Query 로직을 검증합니다.
+
+유형별 테스트 패턴을 익혔다면, 이제 각 Adapter의 전체 구현 과정을 End-to-End로 확인합니다.
 
 ---
 

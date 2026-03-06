@@ -62,12 +62,16 @@ return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));  // List → Seq
 
 Hexagonal Architecture에서 각 레이어(Port/Adapter)는 자신만의 데이터 표현을 소유합니다. 이는 레이어 간 독립적 진화를 보장합니다.
 
+아래 표는 공유 DTO와 레이어별 DTO 사용 시 각 변경 시나리오에서의 영향 범위를 비교합니다.
+
 | 문제 상황 | 공유 DTO 사용 | 레이어별 DTO 사용 |
 |----------|-------------|-----------------|
 | API 필드 추가 | Application도 수정 | Presentation만 수정 |
 | DB 컬럼 변경 | Domain에 영향 | Persistence Adapter만 수정 |
 | 직렬화 포맷 변경 | 전 레이어 영향 | Adapter만 수정 |
 | 타입 시스템 차이 | 타협 필요 (`Seq` vs `List`) | 각 레이어 최적 타입 사용 |
+
+레이어별 DTO의 필요성을 이해했다면, 이제 각 레이어가 어떤 형태의 DTO를 소유하고, 데이터가 레이어를 통과하며 어떻게 변환되는지 살펴봅니다.
 
 ---
 
@@ -89,12 +93,16 @@ Database
           → HTTP Response
 ```
 
+아래 표는 레이어별 DTO의 형태, 타입 특성, 소유 위치를 정리한 것입니다.
+
 | 레이어 | DTO 형태 | 타입 특성 | 소유 위치 |
 |--------|----------|----------|----------|
 | Presentation | Endpoint nested record | primitive (JSON 직렬화) | Endpoint 클래스 내부 |
 | Application | Usecase nested record | primitive (직렬화 가능) | Usecase 클래스 내부 |
 | Application (공유) | 독립 record | primitive | Query Port 파일 또는 `Usecases/{Aggregate}/Dtos/` |
 | Persistence | Model (POCO) | primitive (DB 매핑) | `Repositories/EfCore/Models/` |
+
+소유권 구조를 이해했다면, 이제 각 레이어에서 DTO를 실제로 어떻게 구현하는지 코드로 확인합니다.
 
 ---
 
@@ -247,6 +255,8 @@ internal static class ProductMapper
 | `CreateFromValidated` | DB에서 복원 시 검증 스킵으로 성능 확보 |
 | `ClearDomainEvents()` | 복원 과정의 부산물 이벤트 제거 (DDD 원칙) |
 
+레이어별 구현 패턴을 확인했다면, 이제 레이어 간 데이터 전달 시 자주 발생하는 컬렉션 타입 변환 문제를 정리합니다.
+
 ---
 
 ## 컬렉션 타입 변환
@@ -276,7 +286,7 @@ return Fin.Succ(toSeq(models.Select(m => m.ToDomain())));
 
 ## Application DTO 재사용 허용 조건
 
-기본 원칙은 각 레이어가 자신의 DTO를 소유하는 것입니다. 그러나 다음 **4가지 조건을 모두** 충족하면 Presentation에서 Application DTO를 직접 재사용할 수 있습니다:
+기본 원칙은 각 레이어가 자신의 DTO를 소유하는 것입니다. 아래 4가지 조건은 이 원칙의 실용적 예외를 정의합니다. 그러나 다음 **4가지 조건을 모두** 충족하면 Presentation에서 Application DTO를 직접 재사용할 수 있습니다:
 
 | # | 조건 | 근거 |
 |---|------|------|

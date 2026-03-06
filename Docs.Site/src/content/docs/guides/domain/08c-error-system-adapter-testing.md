@@ -36,11 +36,15 @@ error.ShouldBeErrorCodeExceptional<InvalidOperationException>("AdapterErrors.Dat
 | Adapter | `AdapterError` | `AdapterErrors.` | 파이프라인, 외부 서비스, 데이터 |
 | Custom | 각 레이어별 | 레이어에 따름 | 표준 에러로 표현 불가능한 경우 |
 
+먼저 Adapter 에러의 생성 패턴을 살펴본 뒤, Custom 에러 정의, 테스트 모범 사례, 레이어별 체크리스트 순서로 진행합니다.
+
 ---
 
 ## Adapter 에러
 
 ### 에러 생성 및 반환
+
+파이프라인, 외부 서비스, 데이터 처리 과정에서 발생하는 에러를 `AdapterError.For`로 생성합니다. 예외를 래핑할 때는 `AdapterError.FromException`을 사용합니다.
 
 ```csharp
 using Functorium.Adapters.Errors;
@@ -65,6 +69,8 @@ return AdapterError.FromException<ExternalApiService>(
 ```
 
 ### AdapterErrorType 전체 목록
+
+아래 표는 Adapter 에러 타입을 범주별로 정리한 것입니다.
 
 #### 공통 에러 타입 - R1, R3, R4, R5, R7
 
@@ -109,6 +115,8 @@ return AdapterError.FromException<ExternalApiService>(
 | `Custom` | 어댑터 특화 에러 (abstract) | `sealed record RateLimited : AdapterErrorType.Custom;` → `new RateLimited()` |
 
 ### Repository 구현 예시
+
+`GetById`에서 `AdapterError.For`로 Not Found를 직접 반환하는 암시적 변환 패턴을 주목하세요.
 
 ```csharp
 [GenerateObservablePort]
@@ -169,6 +177,8 @@ public class InMemoryProductRepository : IProductRepository
 ```
 
 ### 외부 API 서비스 구현 예시
+
+HTTP 상태 코드별로 다른 에러 타입을 반환하는 `HandleHttpError` 패턴과, 예외 종류별 `FromException` 사용을 주목하세요.
 
 ```csharp
 [GenerateObservablePort]
@@ -287,7 +297,7 @@ public class ExternalPricingApiService : IExternalPricingService
 using Functorium.Testing.Assertions.Errors;
 ```
 
-어설션 메서드 요약:
+아래 표는 레이어별로 제공되는 어설션 메서드를 정리한 것입니다.
 
 | 레이어 | Error 검증 | Fin<T> 검증 | Validation<Error, T> 검증 |
 |--------|-----------|-------------|--------------------------|
@@ -447,6 +457,8 @@ public void Validation_ShouldHaveAdapterErrors()
 }
 ```
 
+Adapter 에러의 생성과 테스트 패턴을 확인했으니, 이제 표준 에러로 표현할 수 없는 상황을 위한 Custom 에러 정의 방법을 알아봅니다.
+
 ---
 
 ## Custom 에러
@@ -476,6 +488,8 @@ new StockDepleted()      // 재고 소진
 
 ### 레이어별 Custom 에러 예시
 
+다음 표는 각 레이어에서 흔히 정의되는 Custom 에러의 예시입니다.
+
 | 레이어 | Custom 에러 예시 | 설명 |
 |--------|-----------------|------|
 | Domain | `AlreadyShipped`, `NotVerified`, `Expired` | 도메인 규칙 위반 |
@@ -497,6 +511,8 @@ public sealed record Expired : DomainErrorType;
 public sealed record Suspended : ApplicationErrorType;
 public sealed record RateLimited : AdapterErrorType;
 ```
+
+Custom 에러의 정의와 승격 기준을 이해했다면, 이제 에러 테스트를 효과적으로 작성하는 모범 사례를 살펴봅니다.
 
 ---
 
@@ -730,6 +746,8 @@ public void Error_ShouldHave_ErrorCode_Property()
     error.ErrorCode.ShouldBe("DomainErrors.Email.Empty");
 }
 ```
+
+테스트 작성 패턴을 익혔다면, 마지막으로 전체 에러 시스템을 레이어별로 정리하고 체크리스트로 마무리합니다.
 
 ---
 

@@ -35,6 +35,8 @@ LogUsecaseRequest, LogUsecaseResponseSuccess, LogUsecaseResponseError
 | Logger 메서드 | `Log{Context}{Phase}{Status}` | `LogDomainEventHandlerResponseError` |
 | 내부 일관성 우선 | OpenTelemetry "Traces" 대신 `Tracing` 사용 | `TracingConfigurator` (not `TracesConfigurator`) |
 
+요약에서 Signal/Component 구분과 Logger 메서드 패턴의 핵심 규칙을 확인했습니다. 이제 각 규칙을 코드 수준에서 상세히 살펴봅니다.
+
 ---
 
 ## 코드 네이밍 규칙
@@ -646,6 +648,8 @@ services
 
 > 필드/태그 네이밍 규칙은 [18a-observability-spec.md](./18a-observability-spec)를 참조하세요.
 
+코드 네이밍 규칙에서 클래스, 인터페이스, 파이프라인 등의 명명 패턴을 정의했습니다. 이어서, LoggerExtensions 메서드에 적용되는 별도의 네이밍 패턴을 살펴봅니다.
+
 ## Logger 메서드 네이밍 규칙
 
 LoggerExtensions 클래스에서 로그 메서드 이름을 작성할 때 따라야 하는 규칙입니다.
@@ -739,6 +743,8 @@ LogDomainEventsPublisherResponsePartialFailure(...)
 2. 필요한 Phase 결정 (`Request`, `Response` 또는 둘 다)
 3. 필요한 Status 결정 (`Success`, `Warning`, `Error`)
 4. 패턴에 따라 메서드 이름 작성
+
+네이밍 규칙을 적용하면서 자주 발생하는 문제와 해결 방법을 정리합니다.
 
 ## 트러블슈팅
 

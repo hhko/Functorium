@@ -43,6 +43,33 @@ services.RegisterDomainEventHandlersFromAssembly(AssemblyReference.Assembly);
 
 ---
 
+## 들어가며
+
+"주문이 생성된 후 재고 차감과 이메일 발송은 어디에서 처리하는가?"
+"Aggregate 간 결합 없이 부수 효과를 어떻게 연결하는가?"
+"이벤트 핸들러가 실패하면 이미 커밋된 트랜잭션은 어떻게 되는가?"
+
+도메인 이벤트는 Aggregate 내부의 상태 변경을 외부 관심사와 연결하는 핵심 메커니즘입니다. 이 문서는 이벤트의 정의, 발행, 핸들러 구현부터 트랜잭션 통합까지 전체 흐름을 다룹니다.
+
+### 이 문서에서 배우는 내용
+
+이 문서를 통해 다음을 학습합니다:
+
+1. **도메인 이벤트의 역할과 특성** — Aggregate 간 최종 일관성과 관심사 분리
+2. **IDomainEvent / DomainEvent 타입 계층** — 이벤트 추적성(EventId, CorrelationId, CausationId)
+3. **중첩 클래스 이벤트 정의 패턴** — `Product.CreatedEvent` 형태의 소유권 명시
+4. **UsecaseTransactionPipeline 통합** — SaveChanges 후 자동 이벤트 발행 흐름
+5. **이벤트 핸들러 구현과 테스트** — `IDomainEventHandler<T>` 패턴과 단위 테스트
+
+### 사전 지식
+
+이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
+
+- [Entity/Aggregate 핵심 패턴](./06b-entity-aggregate-core) — AggregateRoot의 `AddDomainEvent()` 사용법
+- [에러 시스템: 기초와 네이밍](./08a-error-system) — `Fin<T>` 반환 패턴
+
+---
+
 ## 왜 도메인 이벤트인가
 
 도메인 이벤트는 DDD(Domain-Driven Design)에서 **"도메인에서 발생한 중요한 사건"**을 명시적으로 표현하는 전술 패턴입니다.
@@ -61,6 +88,8 @@ services.RegisterDomainEventHandlersFromAssembly(AssemblyReference.Assembly);
 **확장성**:
 새로운 부수 효과가 필요할 때 기존 코드를 수정하지 않고 새 이벤트 핸들러를 추가하면 됩니다 (Open-Closed Principle).
 
+도메인 이벤트가 해결하는 문제를 이해했으니, 이제 Functorium에서 이벤트를 어떤 타입으로 표현하는지 살펴보겠습니다.
+
 ---
 
 ## 도메인 이벤트란 무엇인가 (WHAT)
@@ -68,6 +97,8 @@ services.RegisterDomainEventHandlersFromAssembly(AssemblyReference.Assembly);
 도메인 이벤트는 도메인에서 발생한 중요한 사건을 표현합니다. AggregateRoot에서만 발행할 수 있습니다.
 
 ### 도메인 이벤트의 특성
+
+도메인 이벤트가 갖추어야 하는 핵심 특성을 정리하면 다음과 같습니다.
 
 | 특성 | 설명 | 예시 |
 |------|------|------|
@@ -81,6 +112,8 @@ services.RegisterDomainEventHandlersFromAssembly(AssemblyReference.Assembly);
 ### IDomainEvent / DomainEvent
 
 **위치**: `Functorium.Domains.Events`
+
+다음 코드에서 주목할 점은 `IDomainEvent`가 `INotification`을 확장하여 Mediator Pub/Sub과 자연스럽게 통합된다는 것입니다.
 
 ```csharp
 // 인터페이스 — Mediator.INotification 확장으로 Pub/Sub 통합
@@ -121,6 +154,8 @@ HTTP Request
       → Entity.AddDomainEvent(new CreatedEvent(...) { CorrelationId = correlationId })
         → Event Handler: 동일 CorrelationId로 이벤트 추적
 ```
+
+두 식별자의 역할은 다음과 같이 구분됩니다.
 
 | 식별자 | 수준 | 용도 |
 |--------|------|------|
@@ -183,6 +218,8 @@ internal interface IDomainEventDrain : IHasDomainEvents
 
 > **참고**: `IDomainEventDrain`은 `internal`이지만, `AggregateRoot<TId>.ClearDomainEvents()`는 `public`입니다. 이는 테스트 코드에서 `order.ClearDomainEvents()`를 직접 호출하여 이전 이벤트를 정리할 수 있도록 하기 위한 의도적인 설계입니다. 프로덕션 코드에서 `ClearDomainEvents()`는 인프라(Publisher)만 호출해야 합니다.
 
+이벤트의 구조와 특성을 이해했으니, 이제 실제로 이벤트를 정의하고 발행하는 방법을 살펴보겠습니다.
+
 ---
 
 ## 이벤트 정의 (HOW)
@@ -224,6 +261,8 @@ public void Handle(Order.CreatedEvent @event) { ... }
 ---
 
 ## 이벤트 발행 (HOW)
+
+이벤트 정의를 마쳤으므로, Aggregate 내부에서 이벤트를 수집하고 파이프라인이 자동으로 발행하는 흐름을 확인합니다.
 
 ### AggregateRoot에서 이벤트 수집
 
@@ -281,7 +320,9 @@ public class Order : AggregateRoot<OrderId>
 
 `IDomainEvent`는 Mediator의 `INotification`을 확장하여 Pub/Sub 통합을 지원합니다.
 
-**SaveChanges와 도메인 이벤트 발행은 `UsecaseTransactionPipeline`이 자동으로 처리합니다.** Usecase에서 `IUnitOfWork`나 `IDomainEventPublisher`를 직접 주입할 필요가 없습니다:
+**SaveChanges와 도메인 이벤트 발행은 `UsecaseTransactionPipeline`이 자동으로 처리합니다.** Usecase에서 `IUnitOfWork`나 `IDomainEventPublisher`를 직접 주입할 필요가 없습니다.
+
+다음 코드에서 주목할 점은 Usecase가 Repository만 주입받고, SaveChanges와 이벤트 발행을 직접 호출하지 않는다는 것입니다.
 
 ```csharp
 internal sealed class Usecase(
@@ -330,6 +371,8 @@ Usecase Handler 실행
 
 ### 트랜잭션 고려사항
 
+저장과 이벤트 발행의 성공/실패 조합에 따른 동작을 정리하면 다음과 같습니다.
+
 | 상황 | 동작 |
 |------|------|
 | 저장 성공, 이벤트 발행 성공 | 정상 처리 |
@@ -341,6 +384,8 @@ Usecase Handler 실행
 - 강한 일관성이 필요하면 Outbox 패턴을 고려하세요
 
 > **참조**: 파이프라인 상세는 [11-usecases-and-cqrs.md §트랜잭션과 이벤트 발행](../application/11-usecases-and-cqrs#트랜잭션과-이벤트-발행-usecasetransactionpipeline)을 참조하세요.
+
+이벤트 발행 흐름을 이해했으니, 이제 발행된 이벤트를 수신하여 부수 효과를 처리하는 핸들러 구현 방법을 살펴보겠습니다.
 
 ---
 
@@ -426,6 +471,8 @@ public sealed class On{EventName} : IDomainEventHandler<{Entity}.{Event}>
 ```
 
 ### 완전한 예제
+
+다음 코드에서 주목할 점은 `IDomainEventHandler<Product.CreatedEvent>`를 구현하여, 핸들러 선언만으로 어떤 Aggregate의 이벤트를 처리하는지 즉시 파악할 수 있다는 것입니다.
 
 ```csharp
 using Functorium.Applications.Events;

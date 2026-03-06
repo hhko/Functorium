@@ -198,6 +198,8 @@ Time -->
 2. **원인 조사**: 트레이싱에서 "PaymentGateway에서 1.8초 지연 발견"
 3. **상세 확인**: 로깅에서 "PaymentGateway 타임아웃 에러 메시지 확인"
 
+분산 추적의 기초에서 Trace, Span, Context의 관계를 이해했습니다. 이제 Functorium이 이 개념을 아키텍처 레이어별로 어떻게 자동화하는지 살펴봅니다.
+
 ---
 
 ## Functorium 트레이싱 아키텍처
@@ -834,6 +836,8 @@ Application Layer: CreateOrderCommand -> Error (due to child failure)
 ```
 
 단, 부모가 자식의 에러를 처리(fallback, retry 등)하면 부모는 Ok 상태일 수 있습니다.
+
+지금까지 에러 트레이싱의 Status와 `error.type` 태그의 관계를 이해했습니다. 이제 Jaeger와 Grafana Tempo에서 Trace를 검색하고 분석하는 실전 방법을 알아봅니다.
 
 ---
 

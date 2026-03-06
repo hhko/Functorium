@@ -2,7 +2,7 @@
 title: "Functorium 가이드"
 ---
 
-이 폴더는 Functorium 프레임워크 사용을 위한 Claude Code 가이드 문서를 포함합니다.
+DDD 전술적 설계와 함수형 프로그래밍을 결합한 Functorium 프레임워크의 아키텍처, 구현 패턴, 관측성까지 — 프로젝트에 필요한 모든 가이드를 제공합니다.
 
 ## DDD 전술적 설계와 Functorium
 

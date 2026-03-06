@@ -46,6 +46,8 @@ _productRepository.FindAll(spec);
 | `Specification<T>.All` | 항등원 (Null Object), 선택적 필터 조합의 초기값 |
 | `PropertyMap<TEntity, TModel>` | Entity Expression → Model Expression 자동 변환 |
 
+먼저 Specification 패턴이 해결하는 문제를 이해한 뒤, 정의와 구현을 거쳐 Repository 및 Usecase 통합까지 순서대로 진행합니다.
+
 ---
 
 ## 왜 Specification 패턴인가
@@ -124,7 +126,7 @@ var spec = priceRange & !lowStock;
 
 ### 내부 조합 클래스
 
-조합 클래스는 `internal sealed`로 프레임워크 내부에서만 사용됩니다:
+조합 클래스는 `internal sealed`로 프레임워크 내부에서만 사용됩니다. 아래 표는 각 조합 방식과 동작을 정리한 것입니다.
 
 | 클래스 | 생성 방법 | 동작 |
 |--------|----------|------|
@@ -193,6 +195,8 @@ Functorium.Domains.Specifications.Expressions
 └── PropertyMap<TEntity, TModel>     (Entity → Model Expression 변환)
 ```
 
+Specification의 개념과 조합 방식을 이해했다면, 이제 실제 구현 방법으로 넘어갑니다.
+
 ---
 
 ## Specification 구현 (HOW)
@@ -215,6 +219,8 @@ LayeredArch.Domain/
 **네임스페이스**: `{프로젝트}.Domain.AggregateRoots.{Aggregate}.Specifications`
 
 ### 기본 구조 (template)
+
+`ToExpression()` 내부에서 Value Object를 primitive로 변환한 뒤 클로저에 캡처하는 패턴을 주목하세요.
 
 ```csharp
 using System.Linq.Expressions;
@@ -333,6 +339,8 @@ return product => product.Id.ToString() != excludeIdStr;
 return product => product.Price >= MinPrice;
 ```
 
+Specification 구현을 완료했다면, 이제 Repository와 연동하여 실제 데이터 조회에 적용하는 방법을 확인합니다.
+
 ---
 
 ## Repository에서 사용 (HOW)
@@ -378,6 +386,8 @@ public virtual FinT<IO, Seq<Product>> FindAll(Specification<Product> spec)
 
 `PropertyMap`으로 Entity Expression → Model Expression 자동 변환 후 EF Core LINQ에 적용합니다. **switch 케이스 불필요**:
 
+`PropertyMap`에 Entity-Model 프로퍼티 매핑을 한 번만 구성하면, 새 Specification 추가 시 Adapter 코드를 수정할 필요가 없다는 점을 주목하세요.
+
 ```csharp
 // PropertyMap 구성 (static readonly, 한 번만)
 private static readonly PropertyMap<Product, ProductModel> _propertyMap =
@@ -409,6 +419,8 @@ private IQueryable<ProductModel> BuildQuery(Specification<Product> spec)
 - PropertyMap: 새 Entity 프로퍼티를 사용하는 Spec이면 매핑 추가
 
 > **설계 결정**: `ExpressionSpecification<T>`의 `ToExpression()`은 도메인 엔터티 기준으로 Expression을 정의하되, Value Object를 primitive로 캐스트합니다. `PropertyMap`의 `ExpressionVisitor`가 이 캐스트 패턴을 인식하여 Model 프로퍼티로 자동 변환합니다. And/Or/Not 조합도 `SpecificationExpressionResolver`가 자동 합성합니다.
+
+Repository 연동까지 완료했으니, 이제 Usecase에서 Specification을 단일 또는 복합으로 활용하는 패턴을 확인합니다.
 
 ---
 

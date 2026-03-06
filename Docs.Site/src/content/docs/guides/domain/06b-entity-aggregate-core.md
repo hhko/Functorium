@@ -45,6 +45,34 @@ AddDomainEvent(new CreatedEvent(Id, customerId, totalAmount));
 
 ---
 
+## 들어가며
+
+"Aggregate Root와 자식 Entity를 어떤 기반 클래스로 구현해야 하는가?"
+"Entity 생성 시 검증은 누가 담당하고, ORM 복원 시에는 어떻게 구분하는가?"
+"비즈니스 규칙 위반을 메서드 시그니처에서 어떻게 표현하는가?"
+
+Entity와 Aggregate 구현은 도메인 모델링의 핵심입니다. 이 문서는 Functorium 프레임워크가 제공하는 기반 클래스 계층부터 생성 패턴, 커맨드 메서드, 자식 Entity 관리까지 실제 구현에 필요한 패턴을 다룹니다.
+
+### 이 문서에서 배우는 내용
+
+이 문서를 통해 다음을 학습합니다:
+
+1. **Entity\<TId\>와 AggregateRoot\<TId\>의 클래스 계층** — 기반 클래스가 제공하는 기능과 역할
+2. **Ulid 기반 Entity ID 시스템** — 소스 생성기를 통한 타입 안전한 식별자 자동 생성
+3. **Create / CreateFromValidated 생성 패턴** — 새 Entity 생성과 ORM 복원의 분리
+4. **커맨드 메서드와 불변식 보호** — `Fin<T>` 반환으로 비즈니스 규칙 위반을 타입으로 표현
+5. **자식 Entity 구현과 이벤트 발행** — Aggregate Root를 통한 자식 관리와 도메인 이벤트
+
+### 사전 지식
+
+이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
+
+- [Aggregate 설계 원칙](./06a-aggregate-design) — Aggregate 경계와 설계 원칙 (WHY)
+- [값 객체 구현 가이드](./05a-value-objects) — Value Object 구현 패턴
+- [에러 시스템: 기초와 네이밍](./08a-error-system) — `Fin<T>`와 에러 반환 패턴
+
+---
+
 ## 클래스 계층
 
 ### 클래스 계층 구조
@@ -70,7 +98,7 @@ IEntity<TId> (인터페이스)
                 `-- ClearDomainEvents() (IDomainEventDrain)
 ```
 
-**계층 이해하기:**
+다음은 각 계층이 어떤 역할을 담당하는지 정리한 것입니다.
 
 - **IEntity\<TId\>**: Entity의 계약을 정의하는 인터페이스. `Create`, `CreateFromValidated` 메서드명 상수를 포함합니다.
 - **Entity\<TId\>**: ID 기반 동등성(`Equals`, `GetHashCode`, `==`, `!=`)을 자동 구현. ORM 프록시 타입도 처리합니다.
@@ -113,7 +141,7 @@ public abstract class Entity<TId> : IEntity<TId>, IEquatable<Entity<TId>>
 }
 ```
 
-**구현 필수 항목:**
+Entity를 구현할 때 반드시 포함해야 하는 항목을 정리하면 다음과 같습니다.
 
 | 항목 | 설명 |
 |------|------|
@@ -157,7 +185,7 @@ public abstract class AggregateRoot<TId> : Entity<TId>, IDomainEventDrain
 - `IDomainEventDrain` (internal): 이벤트 발행 후 정리를 위한 인프라 인터페이스
 - 도메인 이벤트는 불변의 사실(fact)이므로, 도메인 계약에서 개별 삭제 메서드를 제공하지 않습니다
 
-**예제:**
+다음 예제에서 주목할 점은 `AddDomainEvent()`로 이벤트를 발행하고, 커맨드 메서드가 `Fin<Unit>`을 반환하여 불변식 위반을 표현하는 구조입니다.
 
 ```csharp
 [GenerateEntityId]
@@ -206,6 +234,8 @@ public class Order : AggregateRoot<OrderId>
 }
 ```
 
+클래스 계층을 이해했으니, 이제 Entity를 고유하게 식별하는 ID 시스템을 살펴보겠습니다.
+
 ---
 
 ## Entity ID 시스템
@@ -236,6 +266,8 @@ public interface IEntityId<T> : IEquatable<T>, IComparable<T>
 
 **왜 Ulid인가요?**
 
+Functorium이 GUID 대신 Ulid를 선택한 이유를 비교하면 다음과 같습니다.
+
 | 특성 | GUID | Ulid |
 |------|------|------|
 | 크기 | 128bit | 128bit |
@@ -243,7 +275,7 @@ public interface IEntityId<T> : IEquatable<T>, IComparable<T>
 | 가독성 | 36자 (하이픈 포함) | 26자 |
 | 인덱스 성능 | 낮음 (무작위) | 높음 (순차) |
 
-Ulid는 시간 순서로 정렬되므로 데이터베이스 인덱스 성능이 좋고, 생성 시간을 추출할 수 있습니다.
+핵심 차이는 정렬과 인덱스 성능입니다. Ulid는 시간 순서로 정렬되므로 데이터베이스 인덱스 성능이 좋고, 생성 시간을 추출할 수 있습니다.
 
 ### EntityIdGenerator (소스 생성기)
 
@@ -263,7 +295,7 @@ public class Product : Entity<ProductId>
 
 ### 생성되는 코드
 
-`[GenerateEntityId]`는 다음 타입들을 자동 생성합니다:
+`[GenerateEntityId]`는 다음 타입들을 자동 생성합니다. ID 자체뿐 아니라 EF Core 통합과 직렬화에 필요한 보조 타입까지 모두 포함됩니다.
 
 | 생성 타입 | 용도 |
 |----------|------|
@@ -313,6 +345,8 @@ public readonly partial record struct ProductId :
 }
 ```
 
+ID 시스템이 Entity를 식별하는 방법을 제공한다면, 생성 패턴은 Entity를 안전하게 만드는 방법을 정의합니다.
+
 ---
 
 ## 생성 패턴
@@ -334,7 +368,7 @@ Entity 구현의 핵심은 **검증 책임 분리**입니다. Value Object와 En
 
 ### Create / CreateFromValidated 패턴
 
-Entity는 두 가지 생성 경로를 제공합니다:
+Entity는 두 가지 생성 경로를 제공합니다. 각 경로의 용도와 동작 차이를 확인하세요.
 
 | 메서드 | 용도 | 검증 | ID 생성 |
 |--------|------|------|---------|
@@ -473,6 +507,9 @@ public static Order Create(Money amount, CustomerId customerId)
 ```
 
 **필요한 경우** — Entity 레벨 비즈니스 규칙 (VO 간 관계):
+
+다음 예제에서 주목할 점은 `Validate`가 `Validation<Error, Unit>`을 반환하고, `Create`가 이를 호출한 뒤 `ToFin()`으로 변환하는 흐름입니다.
+
 ```csharp
 // 판매가 > 원가 규칙은 Entity 레벨의 검증
 [GenerateEntityId]
@@ -557,6 +594,8 @@ public class Subscription : Entity<SubscriptionId>
 - **이벤트 일관성**: 새 생성 시에만 도메인 이벤트 발행, 복원 시 이벤트 없음
 - **레이어 책임**: Aggregate는 자기 생성만 담당, 외부 조율은 Usecase 책임
 
+Entity를 생성하는 방법을 다루었으니, 이제 생성된 Entity의 상태를 안전하게 변경하는 커맨드 메서드를 살펴보겠습니다.
+
 ---
 
 ## 커맨드 메서드와 불변식 보호
@@ -564,6 +603,8 @@ public class Subscription : Entity<SubscriptionId>
 ### 불변식을 보호하는 커맨드 메서드
 
 상태 변경은 Aggregate Root의 메서드를 통해서만 가능합니다. 비즈니스 규칙 위반 시 `Fin<Unit>`으로 실패를 반환합니다.
+
+다음 코드에서 주목할 점은 불변식 검사 후 실패 시 `DomainError`를 반환하고, 성공 시 상태 변경과 이벤트 발행을 수행하는 패턴입니다.
 
 ```csharp
 // Inventory: 재고 차감 (불변식: 재고 ≥ 0)
@@ -655,6 +696,8 @@ public bool IsShippable() => Status == OrderStatus.Confirmed;
 
 ### 메서드 유형별 반환 타입
 
+메서드의 성격에 따라 적절한 반환 타입을 선택하세요.
+
 | 메서드 유형 | 반환 타입 | 설명 |
 |------------|----------|------|
 | 쿼리 (단순 확인) | `bool`, `int`, etc. | 부작용 없는 상태 확인 |
@@ -662,6 +705,8 @@ public bool IsShippable() => Status == OrderStatus.Confirmed;
 | 커맨드 (항상 성공) | `void` 또는 `this` | 검증 불필요한 상태 변경 |
 | 커맨드 (실패 가능) | `Fin<Unit>` | 비즈니스 규칙 위반 가능 |
 | 커맨드 (결과 반환) | `Fin<T>` | 실패 가능 + 계산 결과 반환 |
+
+Aggregate Root의 커맨드 메서드는 자기 자신의 상태만 변경합니다. 그렇다면 Aggregate 내부의 자식 Entity는 어떻게 관리할까요?
 
 ---
 

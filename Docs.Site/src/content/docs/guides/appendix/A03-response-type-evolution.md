@@ -76,6 +76,8 @@ return Error.New("상품을 찾을 수 없습니다");
 
 > **현재 구조**: 위 진화 과정을 거쳐 최종적으로 `FinResponse<A>` abstract record 기반으로 안정화되었습니다. 현재 API는 `IsSucc`/`IsFail` 속성, `ThrowIfFail()` 메서드, `FinResponse.Succ(value)`/`FinResponse.Fail<A>(error)` 정적 팩토리, `IFinResponseFactory<TSelf>` CRTP 패턴을 사용합니다.
 
+개요에서 문제 정의와 진화 요약을 확인했습니다. 이제 각 단계의 구체적인 구조와 한계를 순서대로 살펴봅니다.
+
 ---
 
 ## 1단계: IFinResponse
@@ -301,6 +303,8 @@ public static TResponse ToResponse<TSource, TResponse>(
 return createResult.ToResponse(product => new Response(
     product.Id, product.Name, product.Price));
 ```
+
+5단계에 걸친 진화를 통해 리플렉션을 완전히 제거하고 코드량을 대폭 줄였습니다. 이제 최종적으로 안정화된 현재 API를 정리합니다.
 
 ---
 

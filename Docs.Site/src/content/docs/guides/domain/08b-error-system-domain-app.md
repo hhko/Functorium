@@ -39,11 +39,15 @@ fin.ShouldBeApplicationError<GetProductQuery, Product>(new ApplicationErrorType.
 | Application | `ApplicationError` | `ApplicationErrors.` | Usecase 비즈니스 로직, 권한/인증 |
 | Event | `EventError` | `ApplicationErrors.` | 이벤트 발행/핸들러 실패 |
 
+먼저 Domain 에러의 생성과 테스트 패턴을 살펴본 뒤, Application 에러와 Event 에러로 넘어갑니다.
+
 ---
 
 ## Domain 에러
 
 ### 에러 생성 및 반환
+
+Value Object 검증이나 Entity 불변식 위반 시 `DomainError.For<T>()`로 에러를 생성합니다. 아래 예제에서 타입 파라미터 개수에 따른 오버로드 차이를 주목하세요.
 
 ```csharp
 using Functorium.Domains.Errors;
@@ -123,6 +127,8 @@ public sealed class Product : AggregateRoot<ProductId>
 ```
 
 ### DomainErrorType 범주 구조 및 전체 목록
+
+다음 표는 `DomainErrorType`의 범주별 분류와 각 에러 타입이 정의된 파일을 정리한 것입니다.
 
 | 범주 | 파일 | 설명 |
 |------|------|------|
@@ -230,6 +236,8 @@ using Functorium.Testing.Assertions.Errors;
 ```
 
 #### Error 검증
+
+`ShouldBeDomainError` 어설션의 타입 파라미터가 에러 소스 타입을 지정하는 방식을 주목하세요.
 
 ```csharp
 // 기본 에러 타입 검증
@@ -411,6 +419,8 @@ public void Validation_ShouldHaveDomainError_WithValue()
 }
 ```
 
+Domain 에러의 생성과 테스트 패턴을 확인했으니, 이제 Usecase 수준에서 사용하는 Application 에러로 넘어갑니다.
+
 ---
 
 ## Application 에러
@@ -444,6 +454,8 @@ return ApplicationError.For<TransferCommand, decimal, decimal>(
 ```
 
 ### ApplicationErrorType 전체 목록
+
+아래 표는 Application 에러 타입을 범주별로 정리한 것입니다.
 
 #### 공통 에러 타입 - R1, R3, R4, R5
 
@@ -481,6 +493,8 @@ return ApplicationError.For<TransferCommand, decimal, decimal>(
 | `Custom` | 애플리케이션 특화 에러 (abstract) | `sealed record PaymentDeclined : ApplicationErrorType.Custom;` → `new PaymentDeclined()` |
 
 ### Usecase 에러 사용 패턴
+
+LINQ 쿼리의 `guard` 구문에서 `ApplicationError.For`를 사용하는 패턴과, 직접 반환하는 패턴을 모두 보여줍니다.
 
 ```csharp
 using Functorium.Applications.Errors;
@@ -713,6 +727,8 @@ public void Validation_ShouldHaveApplicationErrors()
         new ApplicationErrorType.ValidationFailed("Name"));
 }
 ```
+
+Application 에러의 정의와 테스트를 살펴보았으니, 마지막으로 이벤트 시스템 내부 오류를 표현하는 Event 에러를 확인합니다.
 
 ---
 

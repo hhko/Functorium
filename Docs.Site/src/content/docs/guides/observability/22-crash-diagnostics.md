@@ -59,6 +59,23 @@ dotnet-dump analyze crash.dmp
 | `createdump` | Linux/macOS에서 .NET 덤프 생성 도구 |
 | Source Link | PDB 없이도 소스 코드 수준 디버깅을 가능하게 하는 기술 |
 
+## 들어가며
+
+프로덕션에서 프로세스가 예고 없이 종료되었는데, 로그에는 아무런 흔적이 없는 상황을 경험한 적이 있나요? `StackOverflowException`이나 `AccessViolationException`처럼 `try-catch`로 잡을 수 없는 예외는 Observability 파이프라인이 동작하기 전에 프로세스를 종료시킵니다.
+
+### 이 문서에서 배우는 내용
+
+1. **CrashDumpHandler의 역할과 초기화 방법** - CSE(Corrupted State Exception) 처리 원리
+2. **프로덕션 환경별 배포 설정** - Docker, Kubernetes, Windows 서비스
+3. **덤프 파일 분석 방법** - dotnet-dump, Visual Studio, WinDbg 활용
+4. **Observability와의 관계** - 로그/메트릭/트레이싱과 크래시 덤프의 역할 분담
+
+### 사전 지식
+
+- .NET 런타임 예외 처리의 기본 개념
+- Docker/Kubernetes 기본 사용법 (프로덕션 배포 시)
+- [18a-observability-spec.md](./18a-observability-spec) — Observability 3-Pillar 사양
+
 ---
 
 ## CrashDumpHandler 개요
@@ -145,6 +162,8 @@ crash_info_20240115_143052.txt
 
 프로세스 정보, 예외 상세, 스택 트레이스, Inner Exception을 텍스트로 저장합니다.
 
+로컬 개발 환경에서 CrashDumpHandler 설정을 완료했습니다. 이제 실제 프로덕션 환경(Docker, Kubernetes, Windows 서비스)에서 덤프를 안전하게 수집하기 위한 배포 설정을 알아봅니다.
+
 ## 프로덕션 배포
 
 ### Docker
@@ -204,6 +223,8 @@ Set-ItemProperty -Path $werKey -Name "DumpFolder" -Value "C:\Dumps\MyApp"
 Set-ItemProperty -Path $werKey -Name "DumpType" -Value 2  # Full dump
 Set-ItemProperty -Path $werKey -Name "DumpCount" -Value 10
 ```
+
+덤프 파일이 수집되면 다음 도구를 사용하여 크래시 원인을 분석할 수 있습니다.
 
 ## 덤프 분석 도구
 

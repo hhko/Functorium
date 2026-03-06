@@ -82,6 +82,34 @@ dotnet test
 
 
 
+## 들어가며
+
+"테스트 메서드 이름은 어떻게 지어야 일관성 있게 읽히는가?"
+"xUnit v3의 MTP 모드에서 기존 `--filter` 옵션이 왜 동작하지 않는가?"
+"여러 개발자가 동일한 AAA 패턴을 따르게 하려면 어떤 규칙이 필요한가?"
+
+단위 테스트의 일관성은 코드 품질만큼이나 중요합니다. 프로젝트 규모가 커질수록 명명 규칙, 변수 관례, 프레임워크 설정이 통일되지 않으면 테스트 코드 자체가 유지보수 부담이 됩니다.
+
+### 이 문서에서 배우는 내용
+
+이 문서를 통해 다음을 학습합니다:
+
+1. **T1_T2_T3 명명 규칙** - 테스트 대상, 예상 결과, 시나리오를 구조화하는 방법
+2. **AAA 패턴과 표준 변수명** - `sut`, `actual`, `expected` 등 일관된 변수 관례
+3. **MTP 모드 설정과 CLI 옵션** - xUnit v3에서의 테스트 실행 및 필터링
+4. **Shouldly 기반 Assertion** - 명확한 실패 메시지를 제공하는 검증 패턴
+5. **[Fact]와 [Theory] 선택 기준** - 단일 시나리오와 다중 입력 테스트 구분
+
+### 사전 지식
+
+이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
+
+- C# 비동기 프로그래밍 (`async/await`, `Task`)
+- xUnit 테스트 프레임워크의 기본 개념 (`[Fact]`, `[Theory]`)
+- .NET 프로젝트 빌드 및 실행 (`dotnet build`, `dotnet test`)
+
+---
+
 ## MTP 설정
 
 <details>
@@ -244,6 +272,8 @@ dotnet test -- --coverage --coverage-output-format cobertura --coverage-output c
 
 
 
+MTP 설정과 패키지가 준비되었으면, 다음으로 테스트 프로젝트에 필요한 패키지 구성을 살펴봅니다.
+
 ## 테스트 패키지
 
 | 패키지 | 용도 | 비고 |
@@ -282,9 +312,13 @@ dotnet add package NSubstitute
 
 
 
+패키지가 준비되었으면, 이제 테스트 프로젝트의 csproj 파일을 구성합니다.
+
 ## 테스트 프로젝트 설정
 
 ### 기본 csproj 구성
+
+다음 csproj 예시에서 MTP 필수 설정(`OutputType`, `UseMicrosoftTestingPlatformRunner`)과 패키지 참조 구성을 확인하세요.
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -367,6 +401,8 @@ using Xunit;
 
 
 
+프로젝트 설정이 완료되었으면, 이제 테스트 코드 작성의 핵심인 명명 규칙을 살펴봅니다.
+
 ## 테스트 명명 규칙
 
 테스트 메서드 이름은 **T1_T2_T3** 형식으로 작성합니다.
@@ -445,6 +481,8 @@ Handle_ReturnsTemperatureCEqualToTitleLength_WhenSuccessful
 
 
 
+명명 규칙이 테스트 메서드의 "이름"을 결정한다면, 변수 명명 규칙은 테스트 메서드 "본문"의 일관성을 결정합니다.
+
 ## 변수 명명 규칙
 
 ### 표준 변수명
@@ -482,6 +520,8 @@ public async Task Handle_ReturnsSuccess_WhenRequestIsValid()
 모든 테스트는 **Arrange-Act-Assert** 패턴을 따릅니다.
 
 ### 구조
+
+각 단계가 `// Arrange`, `// Act`, `// Assert` 주석으로 명확히 구분되는 점에 주목하세요.
 
 ```csharp
 [Fact]

@@ -77,6 +77,8 @@ Types().That().ResideInNamespace(DomainNamespace)
 
 
 
+요약에서 커버리지 통계와 API 구성을 확인했습니다. 이제 검증에 사용하는 API를 상세히 살펴본 뒤, 규칙별 커버리지 매트릭스를 검토합니다.
+
 ## 1. ArchitectureRules API 요약
 
 ### ClassValidator
@@ -138,6 +140,8 @@ Types().That().ResideInNamespace(DomainNamespace)
 
 
 
+
+API 요약에서 사용 가능한 검증 도구를 확인했습니다. 이제 가이드 문서에 정의된 97개 규칙 각각의 자동 검증 가능 여부를 매트릭스로 정리합니다.
 
 ## 2. 규칙 커버리지 매트릭스
 
@@ -370,6 +374,8 @@ Types().That().ResideInNamespace(DomainNamespace)
 
 
 
+
+커버리지 매트릭스에서 24%의 규칙이 자동 검증 불가로 분류되었습니다. 이 규칙들이 왜 검증 불가한지, 어떤 대안으로 보완할 수 있는지 분석합니다.
 
 ## 3. 검증 불가 규칙 분석
 

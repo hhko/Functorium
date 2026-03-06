@@ -56,6 +56,8 @@ services
 | Span Name | `{layer} {category}[.{cqrs}] {handler}.{method}` |
 | Pipeline 순서 | Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler |
 
+요약 섹션에서 사양 전체의 핵심 규칙을 확인했습니다. 이제 모든 Pillar에 공통으로 적용되는 서비스 식별과 에러 분류 규칙부터 살펴봅니다.
+
 ---
 
 ## 공통 사양
@@ -79,6 +81,8 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 
 #### Error Type Tag 값
 
+다음 표는 에러 원인에 따라 `error.type`과 `error.code` 태그 값이 어떻게 결정되는지 정리합니다.
+
 | Error Case | error.type | error.code | 설명 |
 |------------|------------|------------|------|
 | `IHasErrorCode` + `IsExpected` | `"expected"` | 오류 코드 | 오류 코드가 있는 예상 비즈니스 로직 오류 |
@@ -101,6 +105,8 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 
 - **`error.type`**: 로그 필터링/쿼리를 위한 표준화된 값(Metrics/Tracing과 일관됨)
 - **`@error.ErrorType`**: 상세한 오류 타입 식별을 위한 실제 클래스 이름
+
+공통 사양에서 에러 분류와 서비스 식별 규칙을 정의했습니다. 다음으로, 이 규칙이 3-Pillar(Logging, Metrics, Tracing) 각각에서 어떻게 일관되게 적용되는지 확인합니다.
 
 ## Field/Tag 일관성
 
@@ -184,6 +190,8 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 
 > **Note:** DomainEventHandler의 `response.elapsed`는 Tracing Span 태그에 설정되지 않습니다 (Logging 전용). Span은 자체적으로 시작/종료 시간(duration)을 가지므로 별도의 elapsed 필드는 중복입니다.
 > DomainEventHandler의 ErrorResponse는 Exception 객체가 직접 로깅됩니다 (`@error` 대신).
+
+Field/Tag 일관성 매트릭스에서 3-Pillar 간 동일한 태그 키를 사용함을 확인했습니다. 이어서 각 Pillar별 상세 사양을 정의합니다.
 
 ## Logging
 
@@ -357,6 +365,8 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | DomainEvent Publisher | Decorator | [DomainEventPublisherLoggingStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherLoggingStructureTests.cs) | Adapter 레이어 패턴 |
 | DomainEvent Handler | `INotificationPublisher` | [DomainEventHandlerLoggingStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerLoggingStructureTests.cs) | Application 레이어 패턴 |
 
+Logging 사양에서 필드 구조, Event ID, 메시지 템플릿을 정의했습니다. 다음은 집계 분석을 위한 Metrics 사양입니다.
+
 ## Metrics
 
 ### Meter Name
@@ -449,6 +459,8 @@ Functorium은 서비스 식별을 위해 [OpenTelemetry Service Attributes](http
 | Adapter | Source Generator | [ObservablePortMetricsStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortMetricsStructureTests.cs) | 자동 생성된 metrics instruments |
 | DomainEvent Publisher | Decorator + `IMeterFactory` | [DomainEventPublisherMetricsStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherMetricsStructureTests.cs) | Adapter 레이어 패턴 |
 | DomainEvent Handler | `INotificationPublisher` + `IMeterFactory` | [DomainEventHandlerMetricsStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerMetricsStructureTests.cs) | Application 레이어 패턴 |
+
+Metrics 사양에서 Meter 이름, Instrument 구조, 태그 구조를 정의했습니다. 마지막으로, 요청 흐름을 추적하는 Tracing 사양을 살펴봅니다.
 
 ## Tracing
 

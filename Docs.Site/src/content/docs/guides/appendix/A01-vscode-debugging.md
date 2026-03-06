@@ -47,6 +47,8 @@ Ctrl+Shift+P → "Tasks: Run Task"
 
 
 
+요약에서 디버깅과 태스크의 핵심 명령을 확인했습니다. 이제 VSCode 설정 파일의 구조와 각 파일의 역할을 상세히 살펴봅니다.
+
 ## 설정 파일
 
 ### 폴더 구조
@@ -144,6 +146,8 @@ Ctrl+Shift+P → "Tasks: Run Task"
 
 
 
+
+설정 파일의 구조를 이해했으니, 이제 실제 디버깅 워크플로우를 단계별로 살펴봅니다.
 
 ## 디버깅
 
@@ -258,6 +262,8 @@ Request received: {request.Method} {request.Path}
 
 
 
+
+기본 디버깅과 단축키를 익혔으니, 이제 Watch, 디버그 콘솔, Hot Reload 등 고급 디버깅 기법을 알아봅니다.
 
 ## 고급 디버깅
 

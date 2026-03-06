@@ -45,6 +45,8 @@ public static Fin<Email> Create(string? value) =>
 | `Apply` 병합 | 독립적 검증을 병렬 수행하여 모든 오류를 수집 |
 | `Bind`/`Then` 체이닝 | 의존적 검증을 순차 수행 (첫 오류에서 중단) |
 
+이제 열거형 패턴부터 살펴보고, 실전 예제를 거쳐 Application Layer에서 여러 검증을 병합하는 방법까지 순서대로 진행합니다.
+
 ---
 
 ## 열거형 구현 패턴
@@ -67,6 +69,8 @@ SmartEnum은 이를 해결합니다:
 `SmartEnum`은 `SimpleValueObject`를 상속받지 않으므로 Create 패턴이 약간 다릅니다.
 
 ### 기본 구조
+
+다음 예제에서 `Validate` → `Map(FromValue)` → `ToFin()` 체이닝이 SmartEnum 고유의 Create 패턴임을 주목하세요.
 
 ```csharp
 using Ardalis.SmartEnum;
@@ -133,12 +137,16 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
 
 ### Create 패턴 차이
 
+기반 클래스에 따라 Create 메서드의 조합 방식이 다릅니다. 아래 표로 한눈에 비교할 수 있습니다.
+
 | 기반 클래스 | Create 패턴 |
 |------------|-------------|
 | `SimpleValueObject<T>` | `CreateFromValidation(Validate(value), factory)` |
 | `ComparableSimpleValueObject<T>` | `CreateFromValidation(Validate(value), factory)` |
 | `ValueObject` | `CreateFromValidation(Validate(...), factory)` |
 | `SmartEnum<T, TValue>` | `Validate(value).Map(FromValue).ToFin()` |
+
+열거형과 Create 패턴의 차이를 이해했다면, 이제 실전 예제를 통해 다양한 기반 클래스별 구현을 확인해 보겠습니다.
 
 ---
 
@@ -223,6 +231,8 @@ public sealed class Quantity : ComparableSimpleValueObject<int>
 
 복합 속성(Amount + Currency)으로 구성된 값 객체의 예제입니다. Apply 패턴으로 두 속성을 **병렬 검증**하고, 도메인 연산(Add)에서 **비즈니스 규칙 위반**(다른 통화 더하기)을 `DomainError.For<T>()`로 처리합니다.
 
+`Validate` 메서드에서 튜플 + `Apply`로 두 속성을 병렬 검증하는 부분과, `Add` 메서드에서 통화 불일치를 `DomainError`로 처리하는 부분을 주목하세요.
+
 ```csharp
 using Functorium.Domains.ValueObjects;
 using Functorium.Domains.ValueObjects.Validations;
@@ -272,6 +282,8 @@ public sealed class Money : ValueObject
 }
 ```
 
+개별 값 객체의 구현을 살펴보았으니, 이제 Usecase에서 여러 값 객체의 검증 결과를 하나로 합치는 방법을 알아봅니다.
+
 ---
 
 ## Application Layer에서 VO 검증 병합
@@ -279,6 +291,8 @@ public sealed class Money : ValueObject
 Usecase에서 여러 ValueObject를 동시에 검증하고 Entity를 생성할 때 Apply 패턴을 사용합니다.
 
 ### Apply 병합 패턴 (Usecase 내부)
+
+각 필드의 `Validate()`를 개별 호출한 뒤, 튜플 + `Apply`로 모든 결과를 한꺼번에 합치는 흐름을 주목하세요.
 
 ```csharp
 private static Fin<Product> CreateProduct(Request request)
@@ -302,6 +316,8 @@ private static Fin<Product> CreateProduct(Request request)
 ```
 
 ### 패턴 설명
+
+아래 표는 위 코드의 각 단계가 수행하는 역할을 정리한 것입니다.
 
 | 단계 | 설명 |
 |------|------|
