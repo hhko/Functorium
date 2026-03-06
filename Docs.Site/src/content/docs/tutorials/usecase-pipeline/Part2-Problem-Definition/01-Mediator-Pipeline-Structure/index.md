@@ -80,16 +80,23 @@ TResponse에 `IResult` 제약을 추가하면, Pipeline 내부에서 `response.I
 
 여러 Pipeline이 등록되면 **체인**으로 연결됩니다:
 
-```
-Request
-  │
-  ▼
-Pipeline A (Before) ─→ next() ─→ Pipeline B (Before) ─→ next() ─→ Handler
-                    ←─ response ←─ Pipeline B (After) ←─ response ←─
-Pipeline A (After) ←─ response
-  │
-  ▼
-Response
+```mermaid
+sequenceDiagram
+  participant Caller
+  participant A as Pipeline A
+  participant B as Pipeline B
+  participant H as Handler
+
+  Caller->>A: Request
+  Note over A: Before
+  A->>B: next()
+  Note over B: Before
+  B->>H: next()
+  H-->>B: response
+  Note over B: After
+  B-->>A: response
+  Note over A: After
+  A-->>Caller: Response
 ```
 
 각 Pipeline은 `next()`를 호출하여 다음 Pipeline(또는 최종 Handler)에 요청을 전달합니다.
