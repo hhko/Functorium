@@ -2,6 +2,8 @@
 title: "API 레퍼런스"
 ---
 
+이 부록은 Functorium ArchitectureRules의 전체 API를 한눈에 참조할 수 있도록 정리한 레퍼런스입니다. 튜토리얼 학습 중 특정 메서드의 사용법이나 파라미터를 빠르게 확인할 때 활용하세요.
+
 ## ClassValidator
 
 `TypeValidator<Class, ClassValidator>`를 상속하며, 클래스 수준의 아키텍처 규칙을 검증합니다.

@@ -2,14 +2,31 @@
 title: "프로퍼티와 필드 검증"
 ---
 
-클래스의 프로퍼티와 필드에 대한 아키텍처 규칙을 검증하는 방법을 학습합니다. 도메인 클래스의 불변성을 보장하기 위해 **public setter** 금지, 인스턴스 필드 금지, 원시 타입만 허용하는 등의 규칙을 강제할 수 있습니다.
+## 개요
+
+도메인 클래스에 `public set`이 몰래 추가되면 불변성이 깨집니다. `Product.Price`에 setter를 넣어도 컴파일은 성공하고, 기존 테스트도 읽기만 하므로 통과합니다. 문제는 운영 환경에서 누군가 `product.Price = -100`을 호출할 때 드러나죠. 이 장에서는 클래스의 프로퍼티와 필드에 대한 아키텍처 규칙을 검증하여, **public setter** 금지, 인스턴스 필드 금지, 원시 타입만 허용하는 등의 규칙을 테스트로 강제하는 방법을 학습합니다.
+
+> **"불변성은 getter-only 프로퍼티와 private 생성자만으로는 부족합니다. 아키텍처 테스트로 지속적으로 검증해야 합니다."**
 
 ## 학습 목표
 
-- `RequireProperty`로 필수 프로퍼티의 존재를 검증하는 방법
-- `RequireNoPublicSetters()`로 불변 설계를 강제하는 방법
-- `RequireNoInstanceFields()`로 필드 사용을 제한하는 방법
-- `RequireOnlyPrimitiveProperties()`로 프로퍼티 타입을 제한하는 방법
+### 핵심 학습 목표
+1. **필수 프로퍼티 존재 검증**
+   - `RequireProperty(name)`으로 도메인 모델의 핵심 프로퍼티 보장
+   - 프로퍼티가 실수로 제거되거나 이름이 변경되면 즉시 감지
+
+2. **불변성 강제**
+   - `RequireNoPublicSetters()`로 도메인 클래스의 public setter 금지
+   - `RequireNoInstanceFields()`로 인스턴스 필드 사용 제한 (backing field 자동 제외)
+
+3. **프로퍼티 타입 제한**
+   - `RequireOnlyPrimitiveProperties()`로 원시 타입만 허용
+   - 추가 허용 타입을 지정하는 확장 옵션
+
+### 실습을 통해 확인할 내용
+- **Product**: `Name`, `Price` 프로퍼티 존재 및 public setter 금지 검증
+- **OrderLine**: 인스턴스 필드 금지 및 원시 타입 프로퍼티 검증
+- **ProductViewModel**: 도메인 규칙 적용 범위에서 제외되는 예시
 
 ## 도메인 코드
 
@@ -130,15 +147,45 @@ public void DomainClasses_ShouldHave_OnlyPrimitiveProperties()
 }
 ```
 
-## 핵심 개념
+## 한눈에 보는 정리
 
-| API | 설명 |
-|-----|------|
-| `RequireProperty(name)` | 지정된 이름의 프로퍼티가 반드시 존재해야 함 |
-| `RequireNoPublicSetters()` | public setter가 없어야 함 (불변성 강제) |
-| `RequireNoInstanceFields()` | 인스턴스 필드가 없어야 함 (backing field 제외) |
-| `RequireOnlyPrimitiveProperties(additionalAllowed)` | 원시 타입 프로퍼티만 허용 (추가 허용 타입 지정 가능) |
+다음 표는 프로퍼티/필드 검증 API와 각각이 보호하는 설계 원칙을 요약합니다.
+
+### 프로퍼티/필드 검증 API 요약
+| API | 보호하는 설계 원칙 | 위반 시 의미 |
+|-----|---------------------|--------------|
+| `RequireProperty(name)` | 도메인 모델 완전성 | 핵심 프로퍼티가 누락됨 |
+| `RequireNoPublicSetters()` | 불변성 (Immutability) | 외부에서 상태 변경 가능 |
+| `RequireNoInstanceFields()` | 캡슐화 | 프로퍼티 대신 필드로 상태 노출 |
+| `RequireOnlyPrimitiveProperties(additionalAllowed)` | 타입 안전성 | 복잡한 타입이 도메인에 침투 |
+
+### 도메인 vs 비도메인 규칙 적용
+| 구분 | 도메인 클래스 (`Domains` NS) | ViewModel (`ViewModels` NS) |
+|------|------------------------------|------------------------------|
+| **Public Setter** | 금지 | 허용 |
+| **인스턴스 필드** | 금지 | 제한 없음 |
+| **프로퍼티 타입** | 원시 타입만 | 제한 없음 |
+| **적용 방식** | 네임스페이스 필터로 자동 분리 | 규칙 적용 범위 밖 |
+
+## FAQ
+
+### Q1: RequireNoPublicSetters는 init setter도 금지하나요?
+**A**: `init` setter는 객체 초기화 시에만 값을 설정할 수 있으므로 불변성을 해치지 않습니다. `RequireNoPublicSetters()`는 `public set`만 검증하며, `init` setter는 허용합니다. 이는 C# record 타입이나 `required init` 패턴과 호환됩니다.
+
+### Q2: RequireNoInstanceFields에서 backing field가 자동 제외되는 원리는?
+**A**: C# 컴파일러는 auto-property(`public string Name { get; }`)에 대해 `<Name>k__BackingField` 같은 이름의 backing field를 자동 생성합니다. `RequireNoInstanceFields()`는 이런 컴파일러 생성 필드를 이름 패턴으로 감지하여 검증 대상에서 제외합니다. 개발자가 직접 선언한 인스턴스 필드만 위반으로 보고합니다.
+
+### Q3: RequireOnlyPrimitiveProperties에서 추가 허용 타입은 어떻게 지정하나요?
+**A**: `RequireOnlyPrimitiveProperties(typeof(DateTime), typeof(Guid))` 처럼 추가 허용할 타입을 매개변수로 전달합니다. 기본 원시 타입(`string`, `int`, `decimal`, `double`, `bool` 등)에 더해 지정한 타입도 허용됩니다.
+
+### Q4: ViewModel에는 왜 도메인 규칙을 적용하지 않나요?
+**A**: ViewModel은 UI 바인딩을 위한 데이터 전달 객체로, 양방향 바인딩에 `public set`이 필요합니다. 도메인 클래스의 불변성 규칙을 ViewModel에 적용하면 UI 프레임워크와의 호환성이 깨집니다. `ResideInNamespace("...Domains")` 필터로 도메인 네임스페이스만 대상으로 지정하면 자연스럽게 분리됩니다.
+
+### Q5: 여러 검증을 하나의 테스트에서 조합할 수 있나요?
+**A**: 네, `@class.RequireProperty("Name").RequireNoPublicSetters().RequireNoInstanceFields()`처럼 체이닝할 수 있습니다. 하지만 검증 목적이 다르면 테스트를 분리하는 것이 좋습니다. 테스트가 실패했을 때 어떤 규칙이 위반되었는지 바로 파악할 수 있기 때문입니다.
 
 ---
+
+프로퍼티와 필드 검증으로 도메인 클래스의 불변성을 지속적으로 보장할 수 있게 되었습니다. 다음 장에서는 Part 3로 넘어가, **불변성 규칙을** 보다 종합적으로 검증하는 고급 기법을 학습합니다.
 
 [이전: Chapter 7 - 파라미터 검증](../03-Parameter-Validation/) | [다음: Chapter 9 - 불변성 규칙](../../Part3-Advanced-Validation/01-Immutability-Rule/)

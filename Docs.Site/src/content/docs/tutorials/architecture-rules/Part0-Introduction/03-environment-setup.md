@@ -11,9 +11,11 @@ title: "환경 설정"
 
 ## 필요 패키지
 
-아키텍처 테스트 프로젝트에는 다음 NuGet 패키지가 필요합니다:
+아키텍처 테스트 프로젝트에는 다음 NuGet 패키지가 필요합니다.
 
 ### 테스트 프레임워크
+
+테스트 실행과 검증의 기반이 되는 패키지들입니다.
 
 | 패키지 | 용도 |
 |--------|------|
@@ -23,12 +25,16 @@ title: "환경 설정"
 
 ### 아키텍처 테스트
 
+어셈블리를 분석하고 규칙을 검증하기 위한 패키지들입니다.
+
 | 패키지 | 용도 |
 |--------|------|
 | `TngTech.ArchUnitNET.xUnitV3` | ArchUnitNET xUnit 통합 |
 | `Shouldly` | Assertion 라이브러리 |
 
 ### 프로젝트 참조
+
+Functorium의 Validator 패턴(`ClassValidator`, `InterfaceValidator` 등)을 사용하기 위한 참조입니다.
 
 | 프로젝트 | 용도 |
 |----------|------|
@@ -104,7 +110,7 @@ title: "환경 설정"
 
 ## Architecture 로딩 패턴
 
-모든 아키텍처 테스트의 기반이 되는 `ArchitectureTestBase` 클래스입니다:
+모든 아키텍처 테스트는 `ArchitectureTestBase` 클래스를 상속합니다. 이 클래스가 어셈블리를 로딩하고 네임스페이스 문자열을 제공하므로, 개별 테스트는 규칙 정의에만 집중할 수 있습니다.
 
 ```csharp
 using ArchUnitNET.Loader;
@@ -120,6 +126,8 @@ public abstract class ArchitectureTestBase
         typeof(SomeClassInTargetAssembly).Namespace!;
 }
 ```
+
+> **"ArchitectureTestBase는 '무엇을 분석할지'를 한 곳에서 정의합니다. 개별 테스트는 '어떤 규칙을 적용할지'에만 집중하면 됩니다."**
 
 **핵심 포인트:**
 
@@ -138,6 +146,21 @@ dotnet test --project Path/To/ProjectName.Tests.Unit
 dotnet test --solution Functorium.All.slnx
 ```
 
+## FAQ
+
+### Q1: `ArchLoader`로 여러 어셈블리를 동시에 로딩할 수 있나요?
+**A**: 네, `LoadAssemblies(assembly1, assembly2, ...)`처럼 여러 어셈블리를 전달할 수 있습니다. 레이어 간 의존성 규칙을 검증할 때는 도메인, 애플리케이션, 인프라 어셈블리를 함께 로딩해야 합니다.
+
+### Q2: `ArchitectureTestBase`를 꼭 추상 클래스로 만들어야 하나요?
+**A**: 필수는 아니지만, 추상 클래스로 만들면 테스트 프레임워크가 이 클래스 자체를 테스트로 인식하지 않습니다. 또한 각 테스트 클래스가 반드시 상속해야 한다는 의도를 명확히 전달합니다.
+
+### Q3: `static readonly`로 선언하는 이유는 무엇인가요?
+**A**: 어셈블리 로딩은 비용이 높은 작업입니다. `static readonly`로 선언하면 테스트 클래스당 한 번만 로딩되어 전체 테스트 실행 속도가 크게 향상됩니다.
+
+---
+
 ## 다음 단계
 
-환경 설정이 완료되었으면 [Part 1: ClassValidator 기초](../Part1-ClassValidator-Basics/01-First-Architecture-Test/)에서 첫 아키텍처 테스트를 작성해봅니다.
+환경 설정이 완료되었으니, 첫 번째 아키텍처 테스트를 작성해봅니다.
+
+→ [Part 1: ClassValidator 기초 - 1.1 첫 번째 아키텍처 테스트](../Part1-ClassValidator-Basics/01-First-Architecture-Test/)
