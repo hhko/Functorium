@@ -3,7 +3,9 @@ title: "인메모리 구현"
 ---
 ## 개요
 
-9장에서 설계한 `IProductRepository` 인터페이스를 실제로 구현합니다. InMemory 구현은 가장 단순한 형태의 Repository로, Specification의 `IsSatisfiedBy` 메서드를 직접 활용합니다. LINQ의 `Where`와 `Any`에 메서드 참조(`spec.IsSatisfiedBy`)를 전달하는 것만으로 구현이 완성됩니다.
+앞 장에서 설계한 Repository 인터페이스가 얼마나 간단하게 구현되는지 확인해보겠습니다. InMemory 어댑터는 테스트 환경에서 유용할 뿐 아니라, Repository 패턴의 핵심 동작을 가장 명확하게 보여주는 구현입니다.
+
+LINQ의 `Where`와 `Any`에 메서드 참조(`spec.IsSatisfiedBy`)를 전달하는 것만으로 구현이 완성됩니다.
 
 ## 학습 목표
 
@@ -98,3 +100,9 @@ InMemoryImpl.Tests.Unit/                 # 테스트 프로젝트
 
 ### Q3: 대용량 데이터에서는 어떻게 해야 하나요?
 **A**: 11장(PropertyMap)과 12장(EF Core 구현)에서 Expression Tree를 활용하여 DB 수준에서 필터링하는 방법을 학습합니다. InMemory 방식은 모든 데이터를 메모리에 로드한 후 필터링하므로 대용량에는 적합하지 않습니다.
+
+---
+
+InMemory 구현은 `IsSatisfiedBy`를 직접 호출하므로 도메인 모델만으로 충분했습니다. 하지만 EF Core처럼 Expression Tree를 SQL로 변환하는 환경에서는, 도메인 모델과 DB 모델의 프로퍼티 이름이 다를 때 문제가 발생합니다. 다음 장에서는 이 간극을 메우는 PropertyMap을 다룹니다.
+
+→ [11장: PropertyMap](../03-PropertyMap/)

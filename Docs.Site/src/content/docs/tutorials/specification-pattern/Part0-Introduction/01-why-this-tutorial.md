@@ -3,7 +3,9 @@ title: "왜 명세 패턴인가"
 ---
 ## 개요
 
-이 튜토리얼은 **Specification 패턴을 활용한 도메인 규칙 구현**을 단계별로 학습할 수 있도록 구성된 종합적인 교육 과정입니다. 기본적인 Specification 클래스에서 시작하여 Expression Tree 기반 Repository 통합까지, **18개의 실습 프로젝트**를 통해 Specification 패턴의 모든 측면을 체계적으로 학습할 수 있습니다.
+Repository에 메서드를 하나 더 추가해야 할 때마다 한숨이 나온 적이 있나요? `GetActiveProducts`, `GetActiveProductsByCategory`, `GetActiveProductsByCategoryAndPrice`... 조건 조합이 늘어날수록 Repository 인터페이스는 비대해지고, 같은 조건이 여러 메서드에 중복됩니다.
+
+이 튜토리얼은 이 문제를 **Specification 패턴으로 해결하는 전 과정을** 다룹니다. 기본적인 Specification 클래스에서 시작하여 Expression Tree 기반 Repository 통합까지, **18개의 실습 프로젝트**를 통해 Specification 패턴의 모든 측면을 체계적으로 학습할 수 있습니다.
 
 ---
 
@@ -38,7 +40,7 @@ title: "왜 명세 패턴인가"
 
 이 튜토리얼을 완료하면 다음을 할 수 있습니다:
 
-### 1. 비즈니스 규칙을 재사용 가능한 Specification으로 캡슐화
+### 1. 비즈니스 규칙을 재사용 가능한 Specification으로 캡슐화할 수 있습니다
 
 ```csharp
 // ❌ 조건이 서비스 로직에 흩어져 있는 방식
@@ -52,7 +54,7 @@ var spec = new ActiveProductSpec();
 var activeProducts = products.Where(spec.IsSatisfiedBy).ToList();
 ```
 
-### 2. And, Or, Not 조합으로 복합 규칙 표현
+### 2. And, Or, Not 조합으로 복합 규칙을 표현할 수 있습니다
 
 ```csharp
 // 개별 Specification 정의
@@ -65,7 +67,7 @@ var availablePremium = isActive & isInStock & isPremium;
 var discountTarget = isActive & (isPremium | !isInStock);
 ```
 
-### 3. Expression Tree를 활용한 ORM 호환 Specification 구현
+### 3. Expression Tree를 활용하여 ORM 호환 Specification을 구현할 수 있습니다
 
 ```csharp
 // Expression 기반 Specification → EF Core에서 SQL로 변환
@@ -79,7 +81,7 @@ public sealed class ActiveProductSpec : ExpressionSpecification<Product>
 var products = await repository.FindAsync(new ActiveProductSpec());
 ```
 
-### 4. Repository와 Specification 통합으로 유연한 데이터 조회
+### 4. Repository와 Specification을 통합하여 유연하게 데이터를 조회할 수 있습니다
 
 ```csharp
 // Specification을 받는 Repository 메서드
@@ -100,6 +102,8 @@ if (filter.MinPrice is not null)
 ---
 
 ## Tutorial과의 차이점
+
+다음 표는 빠른 실습 중심의 Tutorial과 이 심화 튜토리얼의 차이를 비교합니다.
 
 | 구분 | Tutorial | 이 튜토리얼 |
 |------|----------|-------|
@@ -136,6 +140,6 @@ if (filter.MinPrice is not null)
 
 ## 다음 단계
 
-환경 설정을 완료하고 프로젝트를 준비하세요.
+이 튜토리얼의 구성과 목표를 확인했으니, 먼저 실습 환경을 준비하겠습니다.
 
 → [0.2 사전 준비와 환경 설정](02-prerequisites-and-setup.md)

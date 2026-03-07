@@ -101,6 +101,9 @@ EfCoreImpl.Tests.Unit/                   # 테스트 프로젝트
 ## 한눈에 보는 정리
 
 ### InMemory vs EF Core 구현 비교
+
+두 구현 방식의 핵심 차이를 비교합니다.
+
 | 구분 | InMemory | EF Core (시뮬레이션) |
 |------|----------|---------------------|
 | **필터링 위치** | 애플리케이션 메모리 | DB (Queryable/SQL) |
@@ -110,6 +113,9 @@ EfCoreImpl.Tests.Unit/                   # 테스트 프로젝트
 | **인터페이스** | 동일 (`IProductRepository`) | 동일 |
 
 ### 파이프라인 단계
+
+Specification에서 SQL 실행까지 데이터가 흘러가는 각 단계입니다.
+
 | 단계 | 입력 | 출력 | 담당 |
 |------|------|------|------|
 | 1 | `Specification<Product>` | `Expression<Func<Product, bool>>` | `TryResolve` |
@@ -126,3 +132,9 @@ EfCoreImpl.Tests.Unit/                   # 테스트 프로젝트
 
 ### Q3: InMemory와 EF Core 구현을 동시에 사용할 수 있나요?
 **A**: 네. 둘 다 `IProductRepository`를 구현하므로 DI 컨테이너에서 환경에 따라 다른 구현을 주입할 수 있습니다. 테스트에서는 InMemory, 프로덕션에서는 EF Core 구현을 사용하는 것이 일반적입니다.
+
+---
+
+Part 3에서는 Repository 인터페이스 설계부터 InMemory, PropertyMap, EF Core 구현까지 — Specification과 데이터 계층의 통합을 완성했습니다. Part 4에서는 이 인프라 위에서 실전 패턴을 적용합니다: CQRS에서의 활용, 동적 필터 빌더, 테스트 전략, 그리고 아키텍처 규칙까지.
+
+→ [13장: Usecase 패턴](../../Part4-Real-World-Patterns/01-Usecase-Patterns/)

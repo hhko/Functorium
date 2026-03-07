@@ -3,24 +3,24 @@ title: "ExpressionSpecification 클래스"
 ---
 ## 개요
 
-이 장에서는 Functorium 프레임워크의 `ExpressionSpecification<T>` 추상 클래스를 학습합니다. 이 클래스는 `Specification<T>`을 상속하면서 `ToExpression()` 메서드를 통해 Expression Tree를 제공하고, `IsSatisfiedBy()`는 sealed로 자동 컴파일 + 캐싱을 수행합니다.
+Expression Tree를 활용하면 Specification을 ORM이 이해할 수 있는 형태로 만들 수 있습니다. 하지만 매번 Expression을 수동으로 컴파일하고 캐싱하는 것은 번거롭습니다. `ExpressionSpecification<T>`는 이 과정을 자동화합니다 — `ToExpression()`만 구현하면 `IsSatisfiedBy`는 컴파일된 델리게이트를 캐싱하여 자동으로 제공됩니다.
 
 > **ToExpression()만 구현하면 IsSatisfiedBy()가 자동으로 제공됩니다.**
 
 ## 학습 목표
 
 ### 핵심 학습 목표
-1. **ExpressionSpecification의 설계 의도 이해**
+1. **ExpressionSpecification의 설계 의도를** 설명할 수 있습니다
    - `ToExpression()`을 오버라이드하여 조건을 Expression Tree로 정의
    - `IsSatisfiedBy()`는 sealed로 하위 클래스에서 오버라이드 불가
    - Expression을 한 번 컴파일하여 캐싱하는 패턴
 
-2. **Specification과의 차이점**
+2. **Specification과의 차이점을** 구분할 수 있습니다
    - `Specification<T>`: `IsSatisfiedBy()`를 직접 구현
    - `ExpressionSpecification<T>`: `ToExpression()`을 구현하면 나머지는 자동
    - Expression 기반이므로 ORM에서 SQL 변환 가능
 
-3. **실제 Specification 정의 방법**
+3. **ExpressionSpecification을 상속하여** 구체 Specification을 정의할 수 있습니다
    - 파라미터 없는 Specification (ProductInStockSpec)
    - 생성자 파라미터를 가진 Specification (ProductPriceRangeSpec, ProductCategorySpec)
 
@@ -79,6 +79,8 @@ public sealed class ProductPriceRangeSpec(decimal min, decimal max)
 
 ## 프로젝트 설명
 
+이 개념을 코드로 확인해보겠습니다.
+
 ### 프로젝트 구조
 ```
 ExpressionSpec/                           # 메인 프로젝트
@@ -126,3 +128,7 @@ README.md                                 # 이 문서
 
 ### Q4: 언제 ExpressionSpecification 대신 일반 Specification을 사용해야 하나요?
 **A**: Expression Tree로 표현할 수 없는 복잡한 로직(예: 외부 서비스 호출, 복잡한 문자열 처리 등)은 일반 Specification을 사용합니다. Expression Tree는 SQL로 변환 가능한 단순한 조건식에 적합합니다.
+
+---
+
+ExpressionSpecification은 primitive 타입으로 조건을 표현합니다. 하지만 도메인 모델이 Value Object를 사용한다면 어떨까요? 다음 장에서는 Value Object를 Expression Tree에서 안전하게 사용하기 위한 primitive 변환 패턴을 다룹니다.

@@ -3,7 +3,7 @@ title: "프리미티브 변환"
 ---
 ## 개요
 
-이 장에서는 DDD의 Value Object를 Expression Tree에서 사용할 때 발생하는 문제와 해결 방법을 학습합니다. Value Object는 도메인 모델에서 풍부한 타입을 제공하지만, Expression Tree에서는 ORM이 이를 SQL로 변환할 수 없어 별도의 변환 패턴이 필요합니다.
+도메인 모델에서 가격을 `decimal`이 아닌 `Money` Value Object로 표현한다고 가정해보겠습니다. Expression Tree에서 `product.Price.Value > 1000`과 같은 표현은 EF Core가 SQL로 변환할 수 없습니다 — EF Core는 Value Object의 내부 구조를 모르기 때문입니다. 이 장에서는 Value Object를 primitive 타입으로 변환하는 패턴을 학습합니다.
 
 > **Expression Tree에서 Value Object를 사용하려면 primitive 타입으로 변환해야 합니다.**
 
@@ -148,3 +148,7 @@ public sealed class ProductPriceRangeSpec : ExpressionSpecification<Product>
 
 ### Q4: record 대신 class로 VO를 정의해도 되나요?
 **A**: 네, 가능합니다. 이 예제에서는 간결함을 위해 record를 사용했지만, 실제 프로젝트에서는 Functorium의 ValueObject 기반 클래스를 사용하여 유효성 검증과 동등성을 자동으로 처리합니다.
+
+---
+
+개별 ExpressionSpecification에서 Expression을 추출하는 방법을 배웠습니다. 하지만 `inStock & affordable` 같은 조합된 Specification에서는 어떻게 하나의 Expression을 얻을 수 있을까요? 다음 장에서는 이 문제를 해결하는 Expression Resolver를 다룹니다.

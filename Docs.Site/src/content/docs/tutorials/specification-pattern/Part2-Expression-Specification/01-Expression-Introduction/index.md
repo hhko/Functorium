@@ -3,24 +3,24 @@ title: "표현식 트리 기초"
 ---
 ## 개요
 
-이 장에서는 C#의 `Expression<Func<T, bool>>`과 일반 `Func<T, bool>`의 차이를 학습합니다. Expression Tree는 코드를 데이터로 표현하는 구조로, ORM(Entity Framework Core 등)이 C# 조건식을 SQL로 변환할 수 있게 해주는 핵심 기술입니다.
+Part 1에서 만든 Specification은 `IsSatisfiedBy` 메서드로 메모리 컬렉션을 필터링합니다. 하지만 실제 애플리케이션에서는 데이터가 데이터베이스에 있습니다. EF Core 같은 ORM은 C# 람다를 SQL로 변환하는데, 이를 위해서는 `bool`을 반환하는 메서드가 아니라 **Expression Tree가** 필요합니다. 이 장에서는 Expression Tree가 무엇이고, 왜 Specification에 필요한지 알아봅니다.
 
 > **Func는 실행 가능한 블랙박스이고, Expression은 검사 가능한 트리 구조입니다.**
 
 ## 학습 목표
 
 ### 핵심 학습 목표
-1. **Func vs Expression의 근본적 차이 이해**
+1. **Func vs Expression의 근본적 차이를** 설명할 수 있습니다
    - `Func<T, bool>`은 컴파일된 델리게이트로 내부 구조를 알 수 없음
    - `Expression<Func<T, bool>>`은 코드의 구조를 트리 형태로 보존함
    - Expression은 Body, Parameters, NodeType 등을 통해 검사 가능
 
-2. **Expression Tree가 ORM에 필요한 이유**
+2. **Expression Tree가 ORM에 필요한 이유를** 설명할 수 있습니다
    - EF Core는 LINQ 쿼리를 SQL로 번역해야 함
    - Func는 불투명하여 SQL로 변환할 수 없음
    - Expression은 트리를 순회하며 SQL 절로 변환 가능
 
-3. **Expression의 컴파일과 실행**
+3. **Expression을 컴파일하고 캐싱하여** 메모리에서 실행할 수 있습니다
    - `Expression.Compile()`로 Func로 변환하여 메모리에서 실행 가능
    - 컴파일된 결과는 캐싱하여 재사용하는 것이 효율적
 
@@ -141,3 +141,7 @@ Console.WriteLine($"Result: {compiled(product)}");
 
 ### Q4: AsQueryable()은 무엇인가요?
 **A**: `AsQueryable()`은 `IEnumerable<T>`을 `IQueryable<T>`로 변환합니다. `IQueryable`은 Expression 기반의 Where를 지원하므로, 메모리 내 컬렉션에서도 Expression 기반 필터링을 테스트할 수 있습니다. 실제 프로젝트에서는 EF Core의 `DbSet<T>`이 `IQueryable<T>`을 구현합니다.
+
+---
+
+Expression Tree의 개념을 이해했으니, 다음 장에서는 이를 Specification에 통합한 `ExpressionSpecification<T>` 클래스를 직접 구현합니다.

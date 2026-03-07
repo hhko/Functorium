@@ -3,26 +3,26 @@ title: "표현식 리졸버"
 ---
 ## 개요
 
-이 장에서는 `SpecificationExpressionResolver`를 학습합니다. 이 유틸리티는 단일 또는 복합(And/Or/Not) Specification에서 Expression Tree를 재귀적으로 추출하고 합성합니다. ORM 어댑터가 Specification을 SQL Where 절로 변환할 때 이 Resolver를 사용합니다.
+지금까지 개별 `ExpressionSpecification`에서 Expression을 추출하는 방법을 배웠습니다. 하지만 `inStock & affordable` 같은 조합된 Specification에서는 어떻게 하나의 Expression을 얻을 수 있을까요? `SpecificationExpressionResolver`는 And, Or, Not으로 조합된 Specification 트리를 재귀적으로 순회하며 하나의 합성된 Expression Tree를 만들어냅니다.
 
 > **TryResolve는 Specification에서 Expression을 추출합니다. 추출할 수 없으면 null을 반환합니다.**
 
 ## 학습 목표
 
 ### 핵심 학습 목표
-1. **SpecificationExpressionResolver.TryResolve의 동작 이해**
+1. **TryResolve가 Specification 타입별로 Expression을 추출하는 방식을** 설명할 수 있습니다
    - `IExpressionSpec<T>` → `ToExpression()` 직접 호출
    - `AndSpecification<T>` → 좌/우 Expression을 AndAlso로 합성
    - `OrSpecification<T>` → 좌/우 Expression을 OrElse로 합성
    - `NotSpecification<T>` → 내부 Expression을 Not으로 감싸기
    - 그 외 → null 반환 (graceful fallback)
 
-2. **ParameterReplacer의 역할 이해**
+2. **ParameterReplacer가 Expression 합성에 필수인 이유를** 설명할 수 있습니다
    - 서로 다른 Expression의 파라미터를 통일하는 ExpressionVisitor
    - 두 Expression을 합성할 때 동일한 파라미터를 참조하도록 교체
    - Expression Tree의 불변성을 유지하면서 트리를 변환
 
-3. **null 반환의 의미와 fallback 전략**
+3. **null 반환 시 fallback 전략을** 설계할 수 있습니다
    - Non-expression Specification은 SQL로 변환할 수 없음
    - null 반환 시 어댑터가 전체 로드 + 메모리 필터링으로 fallback
    - 혼합 복합(Expression + Non-expression)도 null 반환
@@ -63,6 +63,8 @@ public static Expression<Func<T, bool>>? TryResolve<T>(Specification<T> spec)
 ```
 
 ### null Fallback 전략
+
+부분 변환은 쿼리 의미를 변경할 위험이 있으므로, 전부 변환하거나 전부 메모리에서 처리하는 all-or-nothing 전략을 채택합니다. 예를 들어 And 복합에서 한쪽만 SQL로 변환하면, DB에서 충분히 필터링되지 않은 대량의 데이터가 메모리로 넘어올 수 있습니다.
 
 ```
 Repository.FindAll(spec) 호출
@@ -131,3 +133,9 @@ else
     return (await dbContext.Set<T>().ToListAsync()).Where(spec.IsSatisfiedBy).ToList();
 ```
 이 패턴은 Part 3(Repository Integration)에서 자세히 다룹니다.
+
+---
+
+Part 2에서는 Expression Tree의 개념부터 Resolver까지, Specification을 ORM과 연결하기 위한 모든 기반을 다졌습니다. Part 3에서는 이 기반 위에 Repository를 설계하고, InMemory와 EF Core 어댑터를 구현합니다.
+
+→ [9장: Repository와 Specification](../../Part3-Repository-Integration/01-Repository-With-Specification/)

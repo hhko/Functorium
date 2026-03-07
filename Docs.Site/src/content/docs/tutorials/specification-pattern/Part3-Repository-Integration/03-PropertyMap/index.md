@@ -3,7 +3,9 @@ title: "PropertyMap"
 ---
 ## 개요
 
-도메인 엔티티와 DB 모델의 프로퍼티 이름이 다른 경우가 실무에서 흔합니다. 예를 들어 도메인의 `Price`가 DB에서는 `UnitPrice`로, `Stock`이 `StockQuantity`로 저장될 수 있습니다. `PropertyMap`은 이런 이름 불일치를 해결하여, **도메인 기준으로 작성된 Expression을 DB 모델 기준 Expression으로 자동 변환**합니다.
+도메인 모델의 `Price` 속성이 데이터베이스 테이블에서는 `UnitPrice`라는 이름으로 저장된다면? 또는 도메인에서 `Money` Value Object로 표현한 가격이 DB에서는 단순한 `decimal`이라면? Specification의 Expression Tree를 그대로 EF Core에 전달하면 매핑 오류가 발생합니다. `PropertyMap`은 이 간극을 메우는 변환 계층입니다.
+
+`PropertyMap`은 이런 이름 불일치를 해결하여, **도메인 기준으로 작성된 Expression을 DB 모델 기준 Expression으로 자동 변환합니다.**
 
 ## 학습 목표
 
@@ -51,6 +53,8 @@ map.Map(p => p.Category, m => m.CategoryCode);
 3. 프로퍼티 접근(`p.Stock`)을 매핑된 모델 프로퍼티(`m.StockQuantity`)로 교체
 4. 결과: `p => p.Stock > 0` 이 `m => m.StockQuantity > 0`으로 변환
 
+핵심 개념을 이해했으니, 이제 실제 프로젝트에서 PropertyMap이 어떻게 구성되는지 살펴보겠습니다.
+
 ## 프로젝트 설명
 
 ### 프로젝트 구조
@@ -96,3 +100,9 @@ PropertyMapDemo.Tests.Unit/              # 테스트 프로젝트
 
 ### Q3: 복합 Expression (And/Or/Not)도 변환되나요?
 **A**: 네. `SpecificationExpressionResolver.TryResolve`가 복합 Specification을 단일 Expression으로 합성한 후, `PropertyMap.Translate`가 해당 Expression 전체를 변환합니다. TranslatingVisitor가 Expression Tree의 모든 노드를 재귀적으로 방문하므로 복합 Expression도 올바르게 변환됩니다.
+
+---
+
+PropertyMap으로 도메인과 DB 모델 간의 프로퍼티 매핑을 해결했습니다. 다음 장에서는 지금까지 배운 모든 것 — Expression 추출, PropertyMap 변환, Queryable 적용 — 을 조합하여 EF Core 어댑터를 구현합니다.
+
+→ [12장: EF Core 구현](../04-EfCore-Implementation/)

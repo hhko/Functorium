@@ -4,7 +4,7 @@ title: "아키텍처 규칙"
 
 ## 개요
 
-Specification의 네이밍 규칙과 폴더 배치 규칙을 정의하고, ArchUnitNET을 사용하여 이 규칙을 자동으로 검증하는 방법을 학습합니다. 아키텍처 테스트를 통해 팀 전체가 일관된 규칙을 따르도록 강제할 수 있습니다.
+팀이 커지면 Specification의 네이밍이 제각각이 됩니다. 누군가는 `ActiveProductSpec`으로, 다른 사람은 `IsActiveSpecification`으로 만듭니다. 폴더 위치도 제멋대로입니다. 이 장에서는 네이밍 규칙, 폴더 배치, 그리고 ArchUnitNET을 활용한 자동 검증으로 팀 전체의 일관성을 유지하는 방법을 다룹니다.
 
 ## 학습 목표
 
@@ -97,3 +97,9 @@ ArchitectureRules.Tests.Unit/
 
 ### Q3: 다른 Aggregate의 Specification도 같은 규칙을 적용할 수 있나요?
 **A**: 네, ArchUnitNET 규칙은 어셈블리 전체에 적용됩니다. `Customer` Aggregate에 `CustomerEmailUniqueSpec`을 추가해도 동일한 규칙이 자동으로 검증됩니다.
+
+---
+
+Part 4에서는 Specification 패턴의 실전 활용법을 살펴보았습니다 — CQRS 통합, 동적 필터 빌더, 테스트 전략, 아키텍처 규칙까지. Part 5에서는 이 모든 것을 종합하여 실제 도메인 시나리오에 적용합니다.
+
+→ [17장: 이커머스 상품 필터링](../../Part5-Domain-Examples/01-Ecommerce-Product-Filtering/)

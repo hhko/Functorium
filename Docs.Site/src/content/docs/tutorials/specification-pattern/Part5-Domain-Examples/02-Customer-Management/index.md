@@ -3,7 +3,7 @@ title: "고객 관리"
 ---
 ## 개요
 
-상품(Product)과는 다른 집합체(Aggregate)인 고객(Customer) 도메인에서 Specification 패턴을 적용합니다. 이 장에서는 ExpressionSpecification과 non-Expression Specification을 혼합하여 사용하는 방법을 학습합니다.
+이커머스 상품 필터링은 Specification 패턴의 대표적인 사용 사례입니다. 하지만 이 패턴은 Product 외의 다른 Aggregate에도 동일하게 적용됩니다. 이 장에서는 고객 관리 도메인에서 Specification을 활용하여, 패턴의 범용성을 확인합니다.
 
 > **Expression과 non-Expression Specification을 상황에 맞게 선택하여 사용합니다.**
 
@@ -118,3 +118,9 @@ CustomerManagement/
 
 ### Q3: Expression Tree에서 StringComparison을 사용할 수 없는 이유는?
 **A**: Expression Tree는 SQL 등으로 번역되어야 하므로, .NET 전용 API인 `StringComparison`은 번역할 수 없습니다. 대신 `.ToLower().Contains()` 패턴을 사용하면 SQL의 `LOWER()` 함수로 자연스럽게 번역됩니다.
+
+---
+
+이것으로 Specification 패턴 튜토리얼의 본문이 모두 끝났습니다. 기초부터 실전까지 — 조건 캡슐화, Expression Tree, Repository 통합, 그리고 다양한 도메인 적용까지 학습했습니다. 부록에서는 대안 패턴과의 비교, 안티패턴, 용어집, 참고 자료를 제공합니다.
+
+→ [부록 A: Specification vs 대안 비교](../../Appendix/A-specification-vs-alternatives.md)

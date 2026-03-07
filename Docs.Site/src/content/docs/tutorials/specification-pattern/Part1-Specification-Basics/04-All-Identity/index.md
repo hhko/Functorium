@@ -169,3 +169,9 @@ var results = SampleProducts.All.Where(p => spec.IsSatisfiedBy(p));
 
 ### Q5: 이 패턴은 실무에서 어떻게 활용되나요?
 **A**: 검색 API, 필터링 UI, 리포트 조건 등 사용자 입력에 따라 쿼리를 동적으로 구성해야 하는 모든 곳에서 활용됩니다. Part 3에서 EF Core와 결합하여 동적 SQL 쿼리를 생성하는 방법을 배웁니다.
+
+---
+
+Part 1에서는 Specification의 기초를 다졌습니다 — 조건 캡슐화, 조합, 연산자, 그리고 All 항등원까지. 하지만 지금까지의 Specification은 메모리 컬렉션에서만 동작합니다. Part 2에서는 Expression Tree를 도입하여 Specification을 EF Core 같은 ORM에서도 사용할 수 있게 만듭니다.
+
+→ [5장: Expression 소개](../../Part2-Expression-Specification/01-Expression-Introduction/)

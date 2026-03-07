@@ -105,6 +105,8 @@ public sealed class ProductPriceRangeSpec(decimal min, decimal max) : Specificat
 
 ## 한눈에 보는 정리
 
+다음 표는 `Specification<T>`의 설계를 요약합니다.
+
 ### Specification\<T\> 설계 요약
 | 구분 | 설명 |
 |------|------|
@@ -112,6 +114,8 @@ public sealed class ProductPriceRangeSpec(decimal min, decimal max) : Specificat
 | **핵심 메서드** | `IsSatisfiedBy(T entity)` — 조건 충족 여부 반환 |
 | **왜 추상 클래스인가** | 조합 메서드(`And`, `Or`, `Not`)와 연산자 오버로딩을 기반에서 제공 |
 | **구현 방법** | 상속 후 `IsSatisfiedBy` 오버라이드 |
+
+다음 표는 인라인 조건과 Specification 방식을 비교합니다.
 
 ### 인라인 조건 vs Specification
 | 구분 | 인라인 조건 | Specification |
@@ -137,3 +141,7 @@ public sealed class ProductPriceRangeSpec(decimal min, decimal max) : Specificat
 
 ### Q5: 다음 장에서는 무엇을 배우나요?
 **A**: 2장에서는 여러 Specification을 `And`, `Or`, `Not`으로 조합하는 방법을 배웁니다. 예를 들어 "재고가 있고 AND 가격이 범위 안에 있는" 복합 조건을 만들 수 있습니다.
+
+---
+
+다음 장에서는 여러 Specification을 `And`, `Or`, `Not`으로 조합하여 복합 비즈니스 규칙을 만드는 방법을 배웁니다.

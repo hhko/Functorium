@@ -8,6 +8,8 @@ title: "명세 패턴"
 
 ## 이 튜토리얼에 대하여
 
+Repository 메서드가 끝없이 늘어나고, 비즈니스 규칙이 서비스 코드 곳곳에 흩어져 있다면 — Specification 패턴이 해답일 수 있습니다.
+
 이 튜토리얼은 **Specification 패턴을 활용한 도메인 규칙 구현**을 단계별로 학습할 수 있도록 구성된 종합적인 교육 과정입니다. 기본적인 Specification 클래스에서 시작하여 Expression Tree 기반 Repository 통합까지, **18개의 실습 프로젝트**를 통해 Specification 패턴의 모든 측면을 체계적으로 학습할 수 있습니다.
 
 > **단순한 조건 분기에서 시작하여 조합 가능한 비즈니스 규칙으로 진화하는 과정을 함께 경험해보세요.**
@@ -119,6 +121,8 @@ Specification과 Repository를 통합하여 유연한 데이터 조회를 구현
 ---
 
 ## Functorium Specification 타입 계층
+
+이 튜토리얼에서 다루는 Functorium의 핵심 타입 계층은 다음과 같습니다.
 
 ```
 Specification<T> (추상 클래스)

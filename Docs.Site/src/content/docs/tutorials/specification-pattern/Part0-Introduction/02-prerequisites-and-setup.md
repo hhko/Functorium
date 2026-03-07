@@ -1,9 +1,13 @@
 ---
 title: "환경 설정"
 ---
+코드를 직접 실행하며 학습하기 위한 환경을 준비합니다. 각 단계는 몇 분이면 충분합니다.
+
 ## 필수 요구사항
 
 ### 1. .NET 10.0 SDK
+
+.NET SDK는 모든 프로젝트의 빌드와 실행에 필요합니다.
 
 ```bash
 # 버전 확인
@@ -138,6 +142,6 @@ echo $PATH
 
 ## 다음 단계
 
-환경 설정이 완료되었다면, Specification 패턴의 개요를 살펴보세요.
+환경 설정이 완료되었습니다. 이제 Specification 패턴이 어떤 문제를 해결하는지, 전체 그림을 살펴보겠습니다.
 
 → [0.3 Specification 패턴 개요](03-specification-pattern-overview.md)

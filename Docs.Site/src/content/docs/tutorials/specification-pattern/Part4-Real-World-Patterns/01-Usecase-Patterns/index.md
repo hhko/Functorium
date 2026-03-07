@@ -4,19 +4,19 @@ title: "유스케이스 패턴"
 
 ## 개요
 
-CQRS(Command Query Responsibility Segregation) 패턴에서 Specification을 활용하는 방법을 학습합니다. Command에서는 존재 검사(중복 확인)에, Query에서는 동적 검색 필터에 Specification을 사용하는 실전 패턴을 다룹니다.
+Specification을 정의하고, Expression으로 변환하고, Repository와 통합하는 방법까지 배웠습니다. 그렇다면 실제 애플리케이션에서 Specification은 어디에서, 어떻게 사용될까요? 이 장에서는 CQRS 패턴에서 Specification이 활용되는 두 가지 핵심 시나리오 — Command의 존재 검사와 Query의 동적 필터 — 를 살펴봅니다.
 
 ## 학습 목표
 
-1. **Command에서 Specification 활용** - `Exists(spec)`를 통한 중복 검사 패턴 이해
-2. **Query에서 Specification 활용** - `Specification<T>.All`을 초기값으로 사용하는 동적 필터 조합 패턴 이해
-3. **CQRS에서의 역할 분리** - Command(존재 검사)와 Query(검색 필터)의 Specification 사용 차이 이해
+1. **Command에서 Specification 활용** - `Exists(spec)`를 통한 중복 검사 패턴을 적용할 수 있습니다
+2. **Query에서 Specification 활용** - `Specification<T>.All`을 초기값으로 사용하는 동적 필터 조합을 구현할 수 있습니다
+3. **CQRS에서의 역할 분리** - Command(존재 검사)와 Query(검색 필터)에서 Specification의 역할 차이를 설명할 수 있습니다
 
 ## 핵심 개념
 
 ### Command: 존재 검사
 
-Command Usecase에서는 비즈니스 규칙 검증을 위해 Specification을 사용합니다. 예를 들어, 상품 생성 시 동일한 이름의 상품이 이미 존재하는지 확인합니다.
+먼저 Command 쪽부터 살펴보겠습니다. Command Usecase에서는 비즈니스 규칙 검증을 위해 Specification을 사용합니다. 예를 들어, 상품 생성 시 동일한 이름의 상품이 이미 존재하는지 확인합니다.
 
 ```csharp
 var uniqueSpec = new ProductNameUniqueSpec(command.Name);
@@ -26,7 +26,7 @@ if (_repository.Exists(uniqueSpec))
 
 ### Query: 검색 필터
 
-Query Usecase에서는 `Specification<T>.All`을 초기값으로 사용하여 선택적 필터를 점진적으로 조합합니다.
+이번에는 Query 쪽입니다. Query Usecase에서는 `Specification<T>.All`을 초기값으로 사용하여 선택적 필터를 점진적으로 조합합니다.
 
 ```csharp
 var spec = Specification<Product>.All;
@@ -61,6 +61,8 @@ UsecasePatterns/
 
 ## 한눈에 보는 정리
 
+Command와 Query에서 Specification이 활용되는 방식을 비교합니다.
+
 | 구분 | Command | Query |
 |------|---------|-------|
 | **목적** | 비즈니스 규칙 검증 | 데이터 검색/필터링 |
@@ -78,3 +80,9 @@ UsecasePatterns/
 
 ### Q3: Command와 Query에서 같은 Specification을 공유해도 되나요?
 **A**: 네, 동일한 도메인 조건이라면 공유할 수 있습니다. Specification은 도메인 레이어에 속하며, Command와 Query 모두 같은 도메인 조건을 참조합니다.
+
+---
+
+이 장에서 본 Query의 `All &= ...` 패턴은 간단한 경우에는 충분하지만, 필터 조건이 많아지면 Usecase 코드가 복잡해집니다. 다음 장에서는 이 패턴을 독립적인 빌더 클래스로 발전시켜, 필터 로직을 깔끔하게 캡슐화하는 방법을 다룹니다.
+
+→ [14장: 동적 필터 빌더](../02-Dynamic-Filter-Builder/)

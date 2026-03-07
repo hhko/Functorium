@@ -3,11 +3,13 @@ title: "안티패턴"
 ---
 ## 개요
 
-Specification 패턴을 사용할 때 흔히 발생하는 안티패턴과 그 해결 방법을 정리합니다.
+올바른 패턴을 배웠다고 해서 잘못된 적용이 사라지는 것은 아닙니다. 실무에서는 Specification 패턴을 과도하게 적용하거나, 잘못된 위치에서 사용하는 경우가 의외로 흔합니다. 이 부록에서는 자주 발생하는 안티패턴을 정리하고, 각각을 피하는 방법을 안내합니다.
 
 ---
 
 ## 1. non-Expression Spec + EF Core
+
+EF Core와 같은 ORM을 처음 사용할 때 가장 자주 발생하는 실수입니다. 인메모리 전용 Specification을 ORM 쿼리에 그대로 전달하면 런타임 에러가 발생합니다.
 
 ### 문제
 
@@ -47,6 +49,8 @@ public sealed class ActiveProductSpec : ExpressionSpecification<Product>
 ---
 
 ## 2. Value Object Closure 변환 누락
+
+Value Object를 적극적으로 사용하는 DDD 프로젝트에서 자주 발생합니다. Expression Tree 내부에서 Value Object를 직접 참조하면 ORM이 해석할 수 없습니다.
 
 ### 문제
 
@@ -89,6 +93,8 @@ public sealed class MinPriceSpec : ExpressionSpecification<Product>
 ---
 
 ## 3. Stateful Specification
+
+필터링과 동시에 집계를 하고 싶을 때 빠지기 쉬운 함정입니다. Specification에 카운터나 상태를 추가하면 순수 함수 원칙이 깨집니다.
 
 ### 문제
 
@@ -138,6 +144,8 @@ var matchCount = products.Count(spec.IsSatisfiedBy);
 ---
 
 ## 4. God Specification
+
+필터링 조건이 많아질수록 "하나의 클래스에 모두 넣자"는 유혹이 커집니다. 이렇게 만든 God Specification은 Specification 패턴의 핵심 가치인 조합과 재사용을 무력화합니다.
 
 ### 문제
 
@@ -209,6 +217,8 @@ var products = await repository.FindAsync(spec);
 ---
 
 ## 5. Specification in Presentation Layer
+
+Controller나 Razor Page에서 빠르게 결과를 얻고 싶을 때 Application 계층을 건너뛰고 Specification을 직접 사용하는 경우가 있습니다. 편리하지만 계층 경계가 무너집니다.
 
 ### 문제
 

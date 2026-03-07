@@ -3,7 +3,7 @@ title: "명세 패턴 개요"
 ---
 ## 개요
 
-Specification 패턴은 **비즈니스 규칙을 독립적인 객체로 캡슐화**하여 재사용, 조합, 테스트를 용이하게 하는 도메인 주도 설계(DDD) 패턴입니다. Eric Evans와 Martin Fowler가 정의한 이 패턴은 복잡한 조건 로직을 명확하게 표현하는 강력한 도구입니다.
+비즈니스 규칙이 서비스 코드 곳곳에 흩어져 있다면, 어떻게 하면 이를 체계적으로 관리할 수 있을까요? Specification 패턴은 **비즈니스 규칙을 독립적인 객체로 캡슐화**하여 재사용, 조합, 테스트를 용이하게 하는 도메인 주도 설계(DDD) 패턴입니다. Eric Evans와 Martin Fowler가 정의한 이 패턴은 복잡한 조건 로직을 명확하게 표현하는 강력한 도구입니다.
 
 ---
 
@@ -28,7 +28,7 @@ public interface IProductRepository
 }
 ```
 
-**문제점:**
+다음 표는 이 방식이 초래하는 문제를 정리합니다.
 
 | 문제 | 설명 |
 |------|------|
@@ -59,6 +59,8 @@ var products = await repository.FindAsync(spec);
 ---
 
 ## Specification이 해결하는 것
+
+다음 표는 앞서 제시한 각 문제를 Specification 패턴이 어떻게 해결하는지 보여줍니다.
 
 | 문제 | Specification 해결 방식 |
 |------|------------------------|
@@ -191,6 +193,6 @@ Part 5: 도메인별 실전 예제
 
 ## 다음 단계
 
-Specification 패턴의 개요를 이해했다면, Part 1의 첫 번째 장으로 이동하세요.
+Specification 패턴의 개요를 이해했으니, 이제 Part 1에서 직접 코드를 작성하며 첫 번째 Specification을 만들어보겠습니다.
 
 → [1장: 첫 번째 Specification](../Part1-Specification-Basics/01-First-Specification/)
