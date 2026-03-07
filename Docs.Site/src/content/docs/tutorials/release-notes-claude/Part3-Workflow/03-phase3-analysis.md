@@ -2,19 +2,11 @@
 title: "커밋 분석 및 기능 추출"
 ---
 
-> Phase 3에서는 수집된 데이터를 분석하여 릴리스 노트용 기능을 추출하고 Breaking Changes를 식별합니다.
-
----
-
-## 목표
-
-수집된 데이터를 분석하여 릴리스 노트용 기능을 추출하고 Breaking Changes를 식별합니다.
-
----
+원시 데이터만으로는 릴리스 노트를 쓸 수 없습니다. 수십 개의 커밋과 API 변경 목록은 "무엇이 바뀌었는가"를 알려주지만, "사용자에게 어떤 의미인가"는 알려주지 않습니다. Phase 3에서는 수집된 데이터를 분석하여 릴리스 노트에 담을 기능을 추출하고, Breaking Changes를 식별합니다.
 
 ## 입력 파일
 
-Phase 2에서 생성된 파일들을 분석합니다:
+Phase 2에서 생성된 다음 파일들을 분석합니다.
 
 ```txt
 .analysis-output/
@@ -24,13 +16,13 @@ Phase 2에서 생성된 파일들을 분석합니다:
     └── api-changes-diff.txt                # API 변경 Git Diff
 ```
 
----
-
 ## 커밋 분석 방법
+
+분석은 네 단계로 진행됩니다.
 
 ### 1단계: 커밋 메시지 읽기
 
-컴포넌트 분석 파일에서 커밋 목록을 확인합니다:
+컴포넌트 분석 파일에서 커밋 목록을 확인합니다.
 
 ```markdown
 # 분석 파일의 예시:
@@ -42,7 +34,7 @@ c5e604f Add OpenTelemetry integration support (#125)
 
 ### 2단계: GitHub 이슈/PR 조회
 
-커밋 메시지에 GitHub 참조 (`#123`, `(#124)`)가 있으면 **반드시 조회**합니다:
+커밋 메시지에 GitHub 참조(`#123`, `(#124)`)가 있으면 **반드시 조회합니다.** PR과 이슈에는 커밋 메시지만으로는 알 수 없는 맥락이 담겨 있습니다. 사용자가 겪은 구체적인 문제, 변경의 동기, 관련된 다른 이슈 등을 파악할 수 있어 릴리스 노트의 "Why this matters" 섹션을 작성할 때 핵심 자료가 됩니다.
 
 ```txt
 PR #106 설명:
@@ -60,7 +52,7 @@ PR #106 설명:
 
 ### 3단계: 기능 유형 식별
 
-커밋 메시지 패턴으로 기능 유형을 식별합니다:
+커밋 메시지의 패턴으로 기능 유형을 식별합니다.
 
 | 패턴 | 의미 | 우선순위 |
 |------|------|:--------:|
@@ -72,47 +64,34 @@ PR #106 설명:
 
 ### 4단계: 사용자 영향 추출
 
-각 중요한 커밋에 대해 다음을 결정합니다:
-
-- **이것이 가능하게 하는 기능은?** (새 기능)
-- **개발자에게 무엇이 변경되나?** (API 영향)
-- **어떤 문제를 해결하나?** (유스케이스)
-- **Breaking Change인가?** (마이그레이션 필요)
-
----
+각 중요한 커밋에 대해 네 가지 질문에 답합니다. 이것이 가능하게 하는 기능은 무엇인가(새 기능), 개발자에게 무엇이 변경되는가(API 영향), 어떤 문제를 해결하는가(유스케이스), Breaking Change인가(마이그레이션 필요 여부). 이 질문들에 대한 답이 릴리스 노트의 각 섹션을 구성하는 재료가 됩니다.
 
 ## Breaking Changes 감지
 
-Breaking Changes는 **두 가지 방법**으로 식별합니다.
+Breaking Changes는 **두 가지 방법으로** 식별하며, 두 방법을 함께 사용하여 누락을 최소화합니다.
 
 ### 방법 1: 커밋 메시지 패턴 (개발자 의도)
 
-커밋 메시지에서 다음 패턴을 찾습니다:
+개발자가 커밋 메시지에 명시적으로 표시한 Breaking Changes를 찾습니다. `breaking`, `BREAKING` 문자열이 포함되거나 타입 뒤에 `!`가 붙는 패턴(예: `feat!:`, `fix!:`)을 검색합니다.
 
-```txt
-검색 패턴:
-- breaking
-- BREAKING
-- !: (예: feat!:, fix!:)
-```
-
-**예시:**
 ```txt
 feat!: Change IErrorHandler to IErrorDestructurer
 fix!: Remove deprecated Create method
 BREAKING: Update authentication flow
 ```
 
+이 방법은 개발자의 의도를 직접 반영하지만, 표시를 누락하면 감지하지 못하는 한계가 있습니다.
+
 ### 방법 2: Git Diff 분석 (자동 감지, 권장)
 
-`.api` 폴더의 Git diff를 분석하여 실제 API 변경사항을 **객관적으로** 감지합니다.
+`.api` 폴더의 Git diff를 분석하여 실제 API 변경사항을 **객관적으로** 감지합니다. 커밋 메시지에 표시하지 않았더라도, 실제로 삭제되거나 변경된 API를 놓치지 않습니다.
 
 **Git Diff 파일 위치:**
 ```txt
 .analysis-output/api-changes-build-current/api-changes-diff.txt
 ```
 
-#### 자동 감지 패턴
+다음과 같은 패턴으로 Breaking Change 여부를 판단합니다.
 
 | Git Diff 패턴 | 의미 | Breaking? |
 |--------------|------|:---------:|
@@ -123,7 +102,7 @@ BREAKING: Update authentication flow
 | `+ public class Bar` | 새 클래스 추가 | No |
 | `+ public void NewMethod()` | 새 메서드 추가 | No |
 
-#### Git Diff 예시
+실제 Git Diff 예시를 살펴보겠습니다.
 
 ```diff
 diff --git a/Src/Functorium/.api/Functorium.cs b/Src/Functorium/.api/Functorium.cs
@@ -139,79 +118,37 @@ diff --git a/Src/Functorium/.api/Functorium.cs b/Src/Functorium/.api/Functorium.
  }
 ```
 
-위 예시에서 감지되는 Breaking Changes:
-- 인터페이스 이름 변경: `IErrorDestructurer` → `IErrorProcessor`
-- 메서드 이름 변경: `CanHandle` → `CanProcess`
+위 예시에서는 두 가지 Breaking Changes가 감지됩니다. 인터페이스 이름이 `IErrorDestructurer`에서 `IErrorProcessor`로 변경되었고, 메서드 이름이 `CanHandle`에서 `CanProcess`로 변경되었습니다.
 
-#### Git Diff vs 커밋 메시지 비교
-
-| 비교 | 커밋 메시지 패턴 | Git Diff 분석 |
-|-----|----------------|--------------|
-| 정확도 | 개발자 의도에 의존 | 실제 코드 변경 감지 |
-| 신뢰성 | 표시 누락 가능 | 객관적 증거 |
-| 커버리지 | 명시적 표시만 | 모든 변경 감지 |
-
-**결론:** Git Diff 분석이 더 정확하고 신뢰할 수 있습니다.
-
----
+두 방법을 비교하면, Git Diff 분석이 더 정확하고 신뢰할 수 있습니다. 커밋 메시지 패턴은 개발자 의도에 의존하고 표시 누락이 가능한 반면, Git Diff 분석은 실제 코드 변경을 감지하여 객관적 증거를 제공하고 모든 변경을 커버합니다.
 
 ## 커밋 우선순위
 
-### 높은 우선순위 (반드시 포함)
+모든 커밋이 릴리스 노트에 포함될 필요는 없습니다. 사용자에게 미치는 영향도에 따라 우선순위를 매깁니다.
 
-```txt
-- 새 타입 (Add.*Type, Add.*Factory)
-- 새 통합 지원 (Add.*support, Support for.*)
-- Breaking API 변경 (Rename.*, Remove.*, Change.*)
-- 주요 기능 (Add.*method, Implement.*)
-- 보안 개선 (security, validation)
-```
+**높은 우선순위로** 반드시 포함해야 하는 커밋은 새로운 타입(Add Type, Add Factory), 새로운 통합 지원(Add support, Support for), Breaking API 변경(Rename, Remove, Change), 주요 기능(Add method, Implement), 보안 개선(security, validation) 등입니다. 이것들은 개발자의 코드나 워크플로우에 직접적인 영향을 미칩니다.
 
-### 중간 우선순위 (포함 고려)
+**중간 우선순위로** 포함을 고려할 커밋은 성능 개선(Improve performance, Optimize), 향상된 구성(Add configuration, Support options), 더 나은 오류 처리(Improve error, Add validation), 개발자 경험 개선(Enhance, Better) 등입니다. 기존 기능을 개선하는 변경으로, 사용자에게 알릴 가치가 있지만 필수는 아닙니다.
 
-```txt
-- 성능 개선 (Improve.*performance, Optimize.*)
-- 향상된 구성 (Add.*configuration, Support.*options)
-- 더 나은 오류 처리 (Improve.*error, Add.*validation)
-- 개발자 경험 (Enhance.*, Better.*)
-```
-
-### 낮은 우선순위 (보통 건너뜀)
-
-```txt
-- 버그 수정 (Fix.*) - 중요하지 않으면
-- 사용자 영향 없는 내부 리팩토링
-- 문서 업데이트
-- 테스트 개선
-- 코드 정리
-```
-
----
+**낮은 우선순위로** 보통 건너뛰는 커밋은 중요하지 않은 버그 수정, 사용자 영향 없는 내부 리팩토링, 문서 업데이트, 테스트 개선, 코드 정리 등입니다. 릴리스 노트에 포함하면 오히려 중요한 변경이 묻힐 수 있습니다.
 
 ## 기능 그룹화
 
 ### 관련 커밋 통합
 
-여러 커밋이 단일 기능에 기여할 때 통합합니다:
+여러 커밋이 하나의 기능을 구성하는 경우가 많습니다. 예를 들어 다음 세 커밋은 각각 다른 작업이지만, 함께 "향상된 오류 로깅 시스템"이라는 하나의 기능을 이룹니다.
 
-**여러 관련 커밋:**
 ```txt
 853c918 Rename IErrorHandler to IErrorDestructurer
 d4eacc6 Improve error destructuring output formatting
 a1b2c3d Add structured logging for all error types
 ```
 
-**통합 기능:**
-```txt
-향상된 오류 로깅 시스템
-├── 구조화된 디스트럭처링
-├── 더 나은 오류 메시지
-└── 향상된 추적
-```
+이렇게 통합하면, 릴리스 노트에서 개별 커밋을 나열하는 대신 사용자가 이해할 수 있는 기능 단위로 설명할 수 있습니다. 구조화된 디스트럭처링, 더 나은 오류 메시지, 향상된 추적이라는 세 가지 측면으로 하나의 기능을 설명하는 것이 훨씬 효과적입니다.
 
 ### 멀티 컴포넌트 기능
 
-컴포넌트 간 관련 커밋을 찾습니다:
+하나의 기능이 여러 컴포넌트에 걸쳐 구현되는 경우도 있습니다. Functorium에서 핵심 오류 팩토리가 변경되고, Functorium.Testing에서 테스트 유틸리티가 업데이트되었다면, 이를 "오류 처리 시스템 개선"이라는 하나의 기능으로 통합합니다.
 
 ```txt
 Functorium.md:
@@ -223,11 +160,9 @@ Functorium.Testing.md:
 → 통합: "오류 처리 시스템 개선"
 ```
 
----
-
 ## 중간 결과 저장
 
-Phase 3의 분석 결과를 저장합니다:
+Phase 3의 분석 결과는 다음 파일들에 저장됩니다.
 
 ```txt
 .release-notes/scripts/.analysis-output/work/
@@ -278,8 +213,6 @@ Phase 3의 분석 결과를 저장합니다:
 분산 추적, 메트릭, 로깅 통합 지원
 ````
 
----
-
 ## 콘솔 출력 형식
 
 ### 분석 완료
@@ -311,54 +244,18 @@ Phase 3: 커밋 분석 및 기능 추출 완료
   .analysis-output/work/phase3-api-mapping.md
 ```
 
----
-
-## 성공 기준 체크리스트
-
-Phase 3 완료를 위해 다음을 모두 확인하세요:
-
-- [ ] Breaking Changes 식별됨
-- [ ] Feature Commits 분류됨 (높음/중간/낮음)
-- [ ] 기능 그룹화 완료됨
-- [ ] 중간 결과 파일 저장됨
-
----
-
 ## 검증 단계
 
-분석 완료 후 다음을 확인합니다:
+분석이 완료되면 결과의 품질을 확인합니다.
 
-### 1. 포함할 커밋 우선순위 확인
+먼저, 커밋 우선순위가 적절한지 검토합니다. 새 타입, 통합 지원, Breaking Changes, 주요 기능은 높은 우선순위에, 성능이나 구성 관련 변경은 중간 우선순위에, 문서나 리팩토링은 낮은 우선순위에 분류되어야 합니다.
 
-- 높음: 새 타입, 통합 지원, Breaking Changes, 주요 기능
-- 중간: 성능, 구성, 오류 처리, 개발자 경험
-- 낮음: 버그 수정 (중요하지 않으면), 리팩토링, 문서
+다음으로, Uber 파일로 모든 API 참조를 확인합니다.
 
-### 2. API 검증
-
-Uber 파일로 모든 API 참조 확인:
 ```bash
 grep "ErrorCodeFactory" .analysis-output/api-changes-build-current/all-api-changes.txt
 ```
 
-### 3. Breaking Changes 검증
+마지막으로, Breaking Changes가 빠짐없이 포함되었는지 확인합니다. `api-changes-diff.txt`의 모든 삭제/변경 API가 문서화되어야 하고, 커밋 메시지 패턴(`!:`, `breaking`)으로 표시된 커밋도 포함되어야 합니다.
 
-- `api-changes-diff.txt`의 모든 삭제/변경 API 문서화 확인
-- 커밋 메시지 패턴으로 표시된 커밋도 포함 확인
-
----
-
-## 요약
-
-| 항목 | 설명 |
-|------|------|
-| 목표 | 기능 추출 및 Breaking Changes 식별 |
-| 입력 | 컴포넌트 MD 파일, API Diff |
-| 분석 | 커밋 분류, 기능 그룹화 |
-| 출력 | phase3-*.md 파일 |
-
----
-
-## 다음 단계
-
-커밋 분석 완료 후 [4.4 Phase 4: 릴리스 노트 작성](04-phase4-writing.md)으로 진행합니다.
+분석이 완료되면, 추출된 기능 그룹을 바탕으로 실제 문서를 작성하는 [Phase 4: 릴리스 노트 작성](04-phase4-writing.md)으로 진행합니다.

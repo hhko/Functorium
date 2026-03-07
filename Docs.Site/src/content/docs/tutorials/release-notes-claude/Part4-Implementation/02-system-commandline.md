@@ -2,36 +2,19 @@
 title: "System.CommandLine 패키지"
 ---
 
-> 이 절에서는 CLI 애플리케이션의 인자 파싱을 위한 System.CommandLine 패키지 사용법을 알아봅니다.
-
----
-
-## System.CommandLine이란?
-
-System.CommandLine은 Microsoft에서 제공하는 **명령줄 인자 파싱 라이브러리**입니다.
-
-```txt
-명령어 구조:
-dotnet MyApp.cs --base origin/release/1.0 --target HEAD
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-                System.CommandLine이 파싱하는 부분
-```
-
----
+자동화 스크립트가 `args[0]`, `args[1]`을 직접 파싱하면 금방 한계에 부딪힙니다. 인자 순서가 바뀌거나, 기본값이 필요하거나, `--help`를 보여줘야 할 때마다 코드가 복잡해집니다. System.CommandLine은 이런 문제를 해결하는 Microsoft의 **명령줄 인자 파싱 라이브러리로**, 선언적으로 CLI를 정의하면 파싱, 검증, 도움말 생성까지 자동으로 처리해줍니다.
 
 ## 패키지 설치
 
-File-based App에서는 `#:package` 지시자로 설치합니다:
+File-based App에서는 `#:package` 지시자로 설치합니다.
 
 ```csharp
 #:package System.CommandLine@2.0.1
 ```
 
----
+## CLI를 구성하는 핵심 요소
 
-## 기본 개념
-
-### 주요 구성 요소
+System.CommandLine의 CLI는 네 가지 구성 요소로 이루어집니다.
 
 | 구성 요소 | 설명 | 예시 |
 |----------|------|------|
@@ -40,7 +23,7 @@ File-based App에서는 `#:package` 지시자로 설치합니다:
 | Argument | 위치 기반 인자 | `<file>` |
 | Command | 하위 명령어 | `add`, `remove` |
 
-### 예시 명령어 구조
+실제 명령어에서 이 요소들이 어떻게 대응되는지 보겠습니다.
 
 ```bash
 dotnet MyApp.cs add --name "Item" --priority 1 file.txt
@@ -49,11 +32,9 @@ dotnet MyApp.cs add --name "Item" --priority 1 file.txt
 #               Command
 ```
 
----
+## Option 정의하기
 
-## Option 정의
-
-### 기본 Option
+Option은 이름 붙은 인자입니다. 가장 기본적인 형태부터 살펴보겠습니다.
 
 ```csharp
 using System.CommandLine;
@@ -72,7 +53,7 @@ var countOption = new Option<int>("--count")
 countOption.DefaultValueFactory = (_) => 10;
 ```
 
-### 축약형 별칭
+축약형 별칭을 추가하면 긴 이름과 짧은 이름 모두 사용할 수 있습니다.
 
 ```csharp
 var verboseOption = new Option<bool>(new[] { "--verbose", "-v" })
@@ -81,7 +62,7 @@ var verboseOption = new Option<bool>(new[] { "--verbose", "-v" })
 };
 ```
 
-### 필수 Option
+필수 Option으로 만들려면 `IsRequired`를 설정합니다.
 
 ```csharp
 var requiredOption = new Option<string>("--required")
@@ -91,9 +72,9 @@ var requiredOption = new Option<string>("--required")
 };
 ```
 
----
+## Argument 정의하기
 
-## Argument 정의
+Argument는 이름 없이 위치로 구분되는 인자입니다.
 
 ```csharp
 // 단일 Argument
@@ -110,11 +91,9 @@ var filesArgument = new Argument<string[]>("files")
 };
 ```
 
----
+## RootCommand로 CLI 조립하기
 
-## RootCommand 구성
-
-### 기본 구조
+Option과 Argument를 정의했다면, RootCommand에 등록하고 핸들러를 설정합니다. 릴리스 노트 스크립트의 전형적인 패턴을 따라 하나씩 만들어보겠습니다.
 
 ```csharp
 #!/usr/bin/env dotnet
@@ -167,11 +146,7 @@ dotnet MyApp.cs --base origin/main --target HEAD
 # Target: HEAD
 ```
 
----
-
-## 비동기 핸들러
-
-비동기 작업을 수행하는 핸들러:
+핸들러에서 비동기 작업이 필요하다면 `async` 키워드를 추가하면 됩니다.
 
 ```csharp
 rootCommand.SetAction(async (parseResult, cancellationToken) =>
@@ -184,9 +159,9 @@ rootCommand.SetAction(async (parseResult, cancellationToken) =>
 });
 ```
 
----
+## 하위 Command 추가하기
 
-## 하위 Command
+여러 동작을 하나의 CLI에서 제공하려면 하위 Command를 사용합니다.
 
 ```csharp
 // add 하위 명령어
@@ -229,11 +204,9 @@ dotnet MyApp.cs add --name "Item1"
 dotnet MyApp.cs remove --name "Item1"
 ```
 
----
+## 실제 예시: AnalyzeAllComponents.cs의 CLI 구성
 
-## 실제 예시: AnalyzeAllComponents.cs
-
-릴리스 노트 자동화의 실제 코드:
+릴리스 노트 자동화의 실제 코드에서 System.CommandLine이 어떻게 사용되는지 살펴보겠습니다. `--base`와 `--target` 두 Option으로 비교 대상 브랜치를 받고, 비동기 핸들러에서 분석을 수행합니다.
 
 ```csharp
 #!/usr/bin/env dotnet
@@ -286,13 +259,11 @@ static async Task AnalyzeAllComponentsAsync(string baseBranch, string targetBran
 }
 ```
 
----
+## 자동으로 제공되는 기능
 
-## 자동 기능
+System.CommandLine을 사용하면 별도 코드 없이 세 가지 기능이 자동으로 제공됩니다.
 
-System.CommandLine이 자동으로 제공하는 기능:
-
-### 도움말 (--help)
+`--help`를 전달하면 Option 목록과 기본값이 포함된 도움말이 출력됩니다.
 
 ```bash
 $ dotnet MyApp.cs --help
@@ -310,25 +281,16 @@ Options:
   --version          Show version information
 ```
 
-### 버전 (--version)
-
-```bash
-$ dotnet MyApp.cs --version
-1.0.0
-```
-
-### 인자 검증
+`--version`으로 버전 정보를 확인할 수 있고, 알 수 없는 인자를 전달하면 오류 메시지와 함께 올바른 사용법을 안내합니다.
 
 ```bash
 $ dotnet MyApp.cs --unknown
 Unrecognized command or argument '--unknown'.
 ```
 
----
-
 ## 패턴 정리
 
-### Option 패턴
+릴리스 노트 스크립트에서 반복적으로 사용하는 패턴을 정리하면 다음과 같습니다.
 
 ```csharp
 // 1. 기본 Option
@@ -343,8 +305,6 @@ option.IsRequired = true;
 // 4. 축약형 별칭
 var option = new Option<string>(new[] { "--name", "-n" });
 ```
-
-### RootCommand 패턴
 
 ```csharp
 // 1. 생성 및 Option 추가
@@ -365,21 +325,4 @@ rootCommand.SetAction((parseResult, cancellationToken) =>
 return await rootCommand.Parse(args).InvokeAsync();
 ```
 
----
-
-## 요약
-
-| 항목 | 설명 |
-|------|------|
-| 패키지 | `System.CommandLine@2.0.1` |
-| Option | 이름 붙은 인자 (`--name`) |
-| Argument | 위치 기반 인자 |
-| RootCommand | 최상위 명령어 |
-| SetAction | 핸들러 설정 |
-| 자동 기능 | --help, --version, 검증 |
-
----
-
-## 다음 단계
-
-- [5.3 Spectre.Console 패키지](03-spectre-console.md)
+System.CommandLine이 인자 파싱과 검증을 맡아주면, 스크립트 코드는 **실제 로직에만 집중**할 수 있습니다. 다음 절에서는 이 스크립트들의 콘솔 출력을 풍부하게 만들어주는 Spectre.Console을 살펴보겠습니다.

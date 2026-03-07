@@ -2,26 +2,13 @@
 title: "component-priority.json"
 ---
 
-> 이 절에서는 분석 대상 컴포넌트를 설정하는 component-priority.json 파일을 알아봅니다.
+프로젝트에 소스 코드, 테스트, 문서 등 다양한 폴더가 있는데, 어떤 폴더를 분석 대상으로 삼아야 할까요? 모든 폴더를 분석하면 불필요한 노이즈가 섞이고, 핵심 라이브러리의 변경사항이 묻힐 수 있습니다. component-priority.json은 이 질문에 답하는 설정 파일입니다. **분석 대상 컴포넌트와 우선순위를** 정의하여, 릴리스 노트에 어떤 내용이 어떤 순서로 나타날지 결정합니다.
 
----
-
-## 개요
-
-component-priority.json은 **분석 대상 컴포넌트와 우선순위**를 정의하는 설정 파일입니다.
-
-```txt
-위치: .release-notes/scripts/config/component-priority.json
-
-역할:
-├── 분석할 폴더 목록 정의
-├── 분석 우선순위 결정
-└── 커스텀 컴포넌트 추가
-```
-
----
+이 파일은 `.release-notes/scripts/config/component-priority.json`에 위치합니다.
 
 ## 파일 구조
+
+파일 내용은 단순합니다. `analysis_priorities`라는 하나의 배열에 분석할 폴더 경로를 나열합니다.
 
 ```json
 {
@@ -34,29 +21,15 @@ component-priority.json은 **분석 대상 컴포넌트와 우선순위**를 정
 }
 ```
 
----
-
 ## 속성 설명
 
 ### analysis_priorities
 
-분석할 폴더 경로의 배열입니다.
-
-| 속성 | 타입 | 설명 |
-|------|------|------|
-| `analysis_priorities` | string[] | 분석할 폴더 경로 목록 |
-
-### 경로 형식
-
-- **상대 경로**: Git 저장소 루트 기준
-- **슬래시 사용**: `/` (Windows에서도 동일)
-- **대소문자 구분**: 실제 폴더명과 일치
-
----
+`analysis_priorities`는 분석할 폴더 경로의 배열입니다. 경로는 Git 저장소 루트를 기준으로 한 상대 경로이며, Windows에서도 슬래시(`/`)를 사용합니다. 대소문자는 실제 폴더명과 일치해야 합니다.
 
 ## 예시
 
-### 기본 설정
+가장 기본적인 설정은 핵심 라이브러리만 분석하는 것입니다.
 
 ```json
 {
@@ -67,7 +40,7 @@ component-priority.json은 **분석 대상 컴포넌트와 우선순위**를 정
 }
 ```
 
-### 문서 포함
+문서 변경사항도 릴리스 노트에 포함하고 싶다면 Docs 폴더를 추가합니다.
 
 ```json
 {
@@ -79,7 +52,7 @@ component-priority.json은 **분석 대상 컴포넌트와 우선순위**를 정
 }
 ```
 
-### 여러 프로젝트
+프로젝트 규모가 크다면 여러 프로젝트를 나열할 수도 있습니다.
 
 ```json
 {
@@ -98,7 +71,7 @@ component-priority.json은 **분석 대상 컴포넌트와 우선순위**를 정
 
 ## 우선순위 동작
 
-배열의 순서가 분석 및 출력 우선순위를 결정합니다:
+배열의 순서는 단순한 나열이 아닙니다. **순서가 곧 우선순위입니다.** 배열에서 앞에 위치한 컴포넌트가 먼저 분석되고, 출력 파일에서도 먼저 나타납니다.
 
 ```json
 {
@@ -110,7 +83,7 @@ component-priority.json은 **분석 대상 컴포넌트와 우선순위**를 정
 }
 ```
 
-### 출력 파일 순서
+이 순서는 분석 출력 파일의 나열 순서에 그대로 반영됩니다.
 
 ```txt
 .analysis-output/
@@ -120,9 +93,7 @@ component-priority.json은 **분석 대상 컴포넌트와 우선순위**를 정
 └── analysis-summary.md    # 요약 (우선순위 순으로 나열)
 ```
 
-### 릴리스 노트 순서
-
-릴리스 노트의 "새로운 기능" 섹션도 이 순서를 따릅니다:
+릴리스 노트의 "새로운 기능" 섹션도 같은 순서를 따릅니다. 핵심 라이브러리가 가장 먼저 나오고, 부가적인 내용은 뒤에 배치됩니다.
 
 ```markdown
 ## 새로운 기능
@@ -137,11 +108,9 @@ component-priority.json은 **분석 대상 컴포넌트와 우선순위**를 정
 ...
 ```
 
----
-
 ## 폴더 없는 경우 처리
 
-설정 파일이 없거나 빈 경우, 기본값이 적용됩니다:
+설정 파일이 없거나 비어 있으면 기본값이 적용됩니다.
 
 ```csharp
 // AnalyzeAllComponents.cs의 기본값
@@ -156,13 +125,15 @@ if (components.Count == 0)
 }
 ```
 
-존재하지 않는 폴더는 자동으로 건너뜁니다.
+존재하지 않는 폴더가 배열에 포함되어 있어도 문제없습니다. 자동으로 건너뜁니다.
 
 ---
 
 ## 새 프로젝트 추가
 
-### 1. 폴더 확인
+새 프로젝트를 분석 대상에 추가하는 과정은 세 단계입니다.
+
+먼저 추가할 프로젝트 폴더가 실제로 존재하는지 확인합니다.
 
 ```bash
 # 프로젝트 폴더 확인
@@ -174,7 +145,7 @@ ls Src/
 # Functorium.Web/       <- 새로 추가할 프로젝트
 ```
 
-### 2. 설정 파일 수정
+확인했으면 설정 파일에 해당 경로를 추가합니다.
 
 ```json
 {
@@ -186,14 +157,12 @@ ls Src/
 }
 ```
 
-### 3. 분석 실행
+그리고 분석을 실행하면 새 컴포넌트에 대한 결과 파일이 생성됩니다.
 
 ```bash
 cd .release-notes/scripts
 dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target HEAD
 ```
-
-### 4. 결과 확인
 
 ```txt
 .analysis-output/
@@ -203,11 +172,9 @@ dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target HEAD
 └── analysis-summary.md
 ```
 
----
-
 ## 고급 설정 예시
 
-### 모노레포 구조
+다양한 프로젝트 구조에 맞게 설정할 수 있습니다. 모노레포 구조라면 패키지와 앱을 구분하여 나열합니다.
 
 ```json
 {
@@ -222,7 +189,7 @@ dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target HEAD
 }
 ```
 
-### 마이크로서비스 구조
+마이크로서비스 구조라면 서비스별로 나열합니다.
 
 ```json
 {
@@ -237,9 +204,7 @@ dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target HEAD
 }
 ```
 
-### 특정 컴포넌트만 분석
-
-테스트 제외:
+특정 컴포넌트만 집중적으로 분석하고 싶다면, 필요한 폴더만 남기면 됩니다. 예를 들어 테스트를 제외하려면 다음과 같이 설정합니다.
 
 ```json
 {
@@ -250,11 +215,9 @@ dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target HEAD
 }
 ```
 
----
-
 ## 출력 파일명 규칙
 
-폴더 경로에서 출력 파일명이 생성됩니다:
+폴더 경로에서 출력 파일명이 자동으로 생성됩니다. 경로의 마지막 부분이 파일명이 되며, 슬래시는 하이픈으로 변환됩니다.
 
 | 폴더 경로 | 출력 파일명 |
 |-----------|------------|
@@ -263,22 +226,10 @@ dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target HEAD
 | `Docs` | `Docs.md` |
 | `packages/core` | `packages-core.md` |
 
-경로의 마지막 부분이 파일명이 됩니다. 슬래시는 하이픈으로 변환됩니다.
-
 ---
 
-## 요약
-
-| 항목 | 설명 |
-|------|------|
-| 파일 위치 | `.release-notes/scripts/config/component-priority.json` |
-| 형식 | JSON |
-| 주요 속성 | `analysis_priorities` (string[]) |
-| 순서 의미 | 분석 및 출력 우선순위 |
-| 기본값 | Functorium, Functorium.Testing, Docs |
-
----
+component-priority.json은 `analysis_priorities`라는 단일 배열로 분석 대상과 순서를 제어합니다. 파일 위치는 `.release-notes/scripts/config/component-priority.json`이고, 배열의 순서가 분석 및 출력 우선순위를 결정합니다. 설정이 없으면 Functorium, Functorium.Testing, Docs가 기본값으로 적용됩니다. 단순한 JSON 파일 하나지만, 릴리스 노트에 어떤 내용이 어떤 순서로 담길지를 결정하는 중요한 역할을 합니다.
 
 ## 다음 단계
 
-- [6.3 출력 파일 형식](03-output-formats.md)
+- [출력 파일 형식](09-output-formats.md)

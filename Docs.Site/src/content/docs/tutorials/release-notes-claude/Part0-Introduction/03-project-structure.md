@@ -2,7 +2,7 @@
 title: "프로젝트 구조 소개"
 ---
 
-> 이 절에서는 릴리스 노트 자동화 시스템의 전체 폴더 구조와 각 파일의 역할을 살펴봅니다.
+앞 절에서 자동화 시스템의 아키텍처와 데이터 흐름을 살펴보았습니다. 이제 실제 파일과 폴더가 어떻게 배치되어 있는지 안내합니다. 프로젝트 구조를 미리 파악해두면 이후 Part에서 각 파일을 분석할 때 "이 파일이 전체에서 어디에 위치하고, 다른 파일과 어떻게 연결되는지" 자연스럽게 이해할 수 있습니다.
 
 ---
 
@@ -61,17 +61,16 @@ Functorium/
         └── *.cs
 ```
 
+크게 세 영역으로 나뉩니다. `.claude/commands/`는 자동화의 진입점, `.release-notes/`는 자동화의 본체, `Src/`는 분석 대상입니다. 각 영역을 차례로 살펴봅시다.
+
 ---
 
-## .claude/commands/ 폴더
+## .claude/commands/ -- 자동화의 진입점
 
-Claude Code의 사용자 정의 Command가 저장되는 폴더입니다.
+이 폴더에는 Claude Code에서 슬래시 명령어로 실행할 수 있는 사용자 정의 Command가 저장됩니다.
 
-### release-note.md
+**release-note.md가** 핵심입니다. YAML 프론트매터에 제목, 설명, 인자 힌트를 정의하고, 본문에서 5-Phase 워크플로우 전체를 기술합니다. Claude Code는 이 문서를 읽고 각 Phase를 순서대로 실행합니다. 즉, release-note.md가 `.release-notes/scripts/docs/` 아래의 Phase 문서들을 참조하고, Phase 문서들이 `.release-notes/scripts/` 아래의 C# 스크립트 실행을 지시하는 연쇄 구조입니다.
 
-**역할**: 릴리스 노트 생성의 마스터 문서
-
-**구조:**
 ```yaml
 ---
 title: RELEASE-NOTES
@@ -80,41 +79,18 @@ argument-hint: "<version> 릴리스 버전 (예: v1.2.0)"
 ---
 ```
 
-**핵심 내용:**
-- 버전 파라미터 검증 규칙
-- 5-Phase 워크플로우 정의
-- 각 Phase별 성공 기준
-- 최종 출력 형식
-
-### commit.md
-
-**역할**: 커밋 메시지 규칙 정의
-
-**구조:**
-```yaml
----
-title: COMMIT
-description: Conventional Commits 규격에 따라 변경사항을 커밋합니다
-argument-hint: "[topic]을 전달하면 해당 topic 관련 파일만 선별하여 커밋합니다"
----
-```
-
-**핵심 내용:**
-- Conventional Commits 형식
-- 커밋 타입 (feat, fix, docs 등)
-- Topic 파라미터 활용법
+**commit.md는** 커밋 메시지 규칙을 정의합니다. Conventional Commits 형식을 따르며, `feat`, `fix`, `docs`, `refactor`, `test`, `chore` 등의 타입과 Topic 파라미터 활용법을 담고 있습니다. 이 규칙에 따라 작성된 일관된 커밋 히스토리가 있어야 Phase 3의 자동 분류가 정확하게 동작합니다.
 
 ---
 
-## .release-notes/ 폴더
+## .release-notes/ -- 자동화의 본체
 
-릴리스 노트 관련 모든 파일이 저장되는 폴더입니다.
+릴리스 노트 관련 모든 파일이 모여 있는 폴더입니다. 템플릿, 생성된 릴리스 노트, C# 스크립트, Phase 가이드, 분석 결과까지 모두 이 안에 있습니다.
 
-### TEMPLATE.md
+### TEMPLATE.md와 RELEASE-*.md
 
-**역할**: 릴리스 노트의 기본 구조 제공
+`TEMPLATE.md`는 릴리스 노트의 뼈대입니다. `{VERSION}`과 `{DATE}` 두 가지 Placeholder를 포함하며, 개요, Breaking Changes, 새로운 기능, 버그 수정, API 변경사항, 설치 방법의 표준 섹션 구조를 정의합니다.
 
-**구조:**
 ```markdown
 ---
 title: Functorium {VERSION} 새로운 기능
@@ -132,26 +108,11 @@ date: {DATE}
 ## 설치
 ```
 
-**Placeholder:**
-| Placeholder | 설명 | 예시 |
-|-------------|------|------|
-| `{VERSION}` | 버전 번호 | v1.2.0 |
-| `{DATE}` | 작성 날짜 | 2025-12-20 |
+Phase 4에서 이 템플릿을 복사하고, Placeholder를 실제 값으로 교체하고, 분석 결과로 각 섹션을 채우면 `RELEASE-v1.0.0.md`와 같은 최종 릴리스 노트가 만들어집니다. 정규 릴리스(`RELEASE-v1.0.0.md`), 알파(`RELEASE-v1.0.0-alpha.1.md`), 베타(`RELEASE-v1.0.0-beta.1.md`) 등 버전별로 별도 파일로 관리됩니다.
 
-### RELEASE-*.md
+### scripts/ -- C# 스크립트와 설정
 
-생성된 릴리스 노트 파일입니다. 버전별로 별도 파일로 관리됩니다:
-- `RELEASE-v1.0.0.md` - 정규 릴리스
-- `RELEASE-v1.0.0-alpha.1.md` - 알파 릴리스
-- `RELEASE-v1.0.0-beta.1.md` - 베타 릴리스
-
----
-
-## .release-notes/scripts/ 폴더
-
-C# 스크립트와 설정 파일이 저장되는 폴더입니다.
-
-### C# 스크립트 파일
+C# 스크립트 파일들은 각각 담당하는 Phase가 있습니다.
 
 | 파일 | 역할 | 사용 Phase |
 |------|------|-----------|
@@ -160,11 +121,7 @@ C# 스크립트와 설정 파일이 저장되는 폴더입니다.
 | ApiGenerator.cs | DLL에서 Public API 추출 | Phase 2 (보조) |
 | AnalyzeFolder.cs | 단일 폴더 분석 | 독립 실행 |
 
-### config/ 폴더
-
-**component-priority.json**
-
-분석 대상 컴포넌트를 정의합니다:
+`config/component-priority.json`은 어떤 컴포넌트를 어떤 순서로 분석할지 정의합니다. 배열 순서가 곧 분석 우선순위이며 Glob 패턴도 지원합니다.
 
 ```json
 {
@@ -177,65 +134,18 @@ C# 스크립트와 설정 파일이 저장되는 폴더입니다.
 }
 ```
 
-- 배열 순서대로 분석 우선순위 결정
-- Glob 패턴 지원 (`"Src/*/"`)
+`docs/` 폴더에는 5개 Phase 각각의 상세 가이드 문서(`phase1-setup.md`~`phase5-validation.md`)와 전체 프로세스 개요(`README.md`)가 들어 있습니다. Claude Code가 release-note.md를 실행할 때, 해당 Phase의 가이드 문서를 참조하여 구체적인 작업을 수행합니다.
 
-### docs/ 폴더
+### .analysis-output/ -- 분석 결과 (자동 생성)
 
-각 Phase의 상세 가이드 문서입니다:
-
-| 파일 | 내용 |
-|------|------|
-| README.md | 전체 프로세스 개요 |
-| phase1-setup.md | 환경 검증 및 준비 |
-| phase2-collection.md | 데이터 수집 |
-| phase3-analysis.md | 커밋 분석 및 기능 추출 |
-| phase4-writing.md | 릴리스 노트 작성 |
-| phase5-validation.md | 검증 |
-
-### .analysis-output/ 폴더 (자동 생성)
-
-스크립트 실행 결과가 저장됩니다:
-
-```
-.analysis-output/
-├── Functorium.md              # Src/Functorium 분석 결과
-├── Functorium.Testing.md      # Src/Functorium.Testing 분석 결과
-├── Docs.md                    # Docs 폴더 분석 결과
-├── analysis-summary.md        # 전체 요약
-│
-├── api-changes-build-current/
-│   ├── all-api-changes.txt    # Uber 파일 (모든 Public API)
-│   ├── api-changes-diff.txt   # API 변경사항 (Git diff)
-│   ├── api-changes-summary.md # API 요약
-│   └── projects.txt           # 분석된 프로젝트 목록
-│
-└── work/                      # 중간 결과물
-    ├── phase3-commit-analysis.md
-    ├── phase3-feature-groups.md
-    ├── phase4-draft.md
-    ├── phase4-api-references.md
-    ├── phase5-validation-report.md
-    └── phase5-api-validation.md
-```
+스크립트를 실행하면 이 폴더에 결과가 자동으로 생성됩니다. 루트에는 컴포넌트별 분석 결과(`Functorium.md`, `Functorium.Testing.md`)와 전체 요약(`analysis-summary.md`)이 놓입니다. `api-changes-build-current/` 하위에는 전체 Public API를 모은 Uber 파일(`all-api-changes.txt`), API 변경사항 diff(`api-changes-diff.txt`), API 요약, 분석된 프로젝트 목록이 있습니다. `work/` 하위에는 Phase 3~5의 중간 결과물(`phase3-commit-analysis.md`, `phase4-draft.md`, `phase5-validation-report.md` 등)이 저장됩니다.
 
 ---
 
 ## Src/ 폴더의 .api 서브폴더
 
-각 프로젝트 폴더 내에 `.api` 서브폴더가 있습니다. 이 폴더에는 PublicApiGenerator로 생성된 Public API 정의 파일이 저장됩니다.
+각 프로젝트 폴더 안에 `.api` 서브폴더가 있습니다. PublicApiGenerator로 생성된 Public API 정의 파일이 저장되는 곳입니다.
 
-```
-Src/Functorium/
-├── .api/
-│   └── Functorium.cs          # Public API 정의
-├── Abstractions/
-│   └── Errors/
-│       └── ErrorCodeFactory.cs
-└── Functorium.csproj
-```
-
-**Functorium.cs (Public API 정의):**
 ```csharp
 //------------------------------------------------------------------------------
 // <auto-generated>
@@ -255,14 +165,13 @@ namespace Functorium.Abstractions.Errors
 }
 ```
 
-**용도:**
-- Git으로 추적하여 API 변경 이력 관리
-- Breaking Changes 자동 감지 (Git diff)
-- 릴리스 노트 작성 시 API 검증
+이 파일이 Git으로 추적되기 때문에 세 가지 용도로 활용됩니다. 첫째, API 변경 이력을 Git 히스토리로 관리할 수 있습니다. 둘째, 이전 버전과 현재 버전의 `.api` 파일을 Git diff로 비교하여 Breaking Changes를 자동 감지합니다. 셋째, 릴리스 노트 작성 시 기재된 API가 실제로 존재하는지 검증하는 기준 자료가 됩니다.
 
 ---
 
 ## 파일 간 연관성
+
+지금까지 소개한 파일들이 실제 실행 시 어떤 순서로 연결되는지 정리해보겠습니다. 사용자가 `/release-note v1.2.0` 명령을 입력하면, 다음과 같은 흐름으로 데이터가 흘러갑니다.
 
 ```
 사용자 입력
@@ -311,22 +220,10 @@ namespace Functorium.Abstractions.Errors
 └───────────────────────────┘
 ```
 
----
-
-## 정리
-
-| 폴더/파일 | 역할 | 수정 빈도 |
-|----------|------|----------|
-| .claude/commands/ | Command 정의 | 낮음 (설정) |
-| .release-notes/scripts/docs/ | Phase 가이드 | 낮음 (설정) |
-| .release-notes/scripts/*.cs | C# 스크립트 | 중간 (개선) |
-| .release-notes/TEMPLATE.md | 템플릿 | 낮음 (설정) |
-| .release-notes/RELEASE-*.md | 릴리스 노트 | 높음 (매 릴리스) |
-| .analysis-output/ | 분석 결과 | 높음 (매 실행) |
-| Src/*/.api/ | Public API | 중간 (코드 변경 시) |
+Command가 Phase 문서를 참조하고, Phase 문서가 C# 스크립트를 실행하고, 스크립트가 분석 결과를 저장하고, 분석 결과와 템플릿을 조합하여 최종 릴리스 노트를 생성하는 일련의 흐름입니다. 각 폴더의 수정 빈도를 보면, Command와 Phase 가이드, 템플릿은 한 번 설정하면 거의 변경하지 않고, C# 스크립트는 필요에 따라 개선하며, 릴리스 노트와 분석 결과는 매 릴리스마다 새로 생성됩니다.
 
 ---
 
-## 다음 단계
+프로젝트 구조를 파악했으니, 다음 Part에서는 개발 환경을 설정하고 필요한 도구를 설치해보겠습니다.
 
-- [2.1 .NET 10 설치 및 환경 설정](../02-prerequisites/01-dotnet10-setup.md)
+[1.1 .NET 10 설치](../Part1-Setup/01-dotnet10-setup.md)

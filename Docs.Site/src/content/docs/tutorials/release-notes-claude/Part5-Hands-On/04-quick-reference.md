@@ -2,19 +2,17 @@
 title: "빠른 참조"
 ---
 
-> 릴리스 노트 자동화 명령어와 워크플로우를 빠르게 참조할 수 있는 가이드입니다.
-
----
+이 페이지는 릴리스 노트를 생성할 때 필요한 핵심 정보를 한곳에 모았습니다. 명령어 사용법, 워크플로우 요약, 출력 파일 경로, 트러블슈팅까지 빠르게 찾아볼 수 있도록 구성했습니다. 전체 맥락이 필요한 경우 해당 절의 본문을 참고하세요.
 
 ## 명령어 사용법
 
-### 기본 사용법
+기본 형식은 다음과 같습니다.
 
 ```bash
 /release-note <version>
 ```
 
-### 버전 파라미터 예시
+버전 파라미터는 SemVer 형식을 따르며, 프리릴리스 태그도 지원합니다.
 
 | 명령어 | 설명 |
 |--------|------|
@@ -24,9 +22,9 @@ title: "빠른 참조"
 | `/release-note v1.2.0-beta.1` | 베타 릴리스 |
 | `/release-note v1.2.0-rc.1` | 릴리스 후보 |
 
----
-
 ## 5-Phase 워크플로우 요약
+
+하나의 명령어가 다섯 개의 Phase를 순서대로 실행합니다. 각 Phase의 목표, 실행 내용, 출력물을 정리합니다.
 
 | Phase | 목표 | 핵심 명령/작업 | 출력 |
 |-------|------|---------------|------|
@@ -63,7 +61,8 @@ dotnet ExtractApiChanges.cs
 
 ### Phase 3: 커밋 분석
 
-**Breaking Changes 감지 방법:**
+Breaking Changes를 감지하는 두 가지 방법이 있으며, Git Diff 분석이 우선합니다.
+
 1. **Git Diff 분석 (권장)**: `api-changes-diff.txt`에서 삭제/변경된 API
 2. **커밋 메시지 패턴**: `타입!:`, `BREAKING CHANGE` 키워드
 
@@ -91,13 +90,15 @@ grep -c "**Why this matters (왜 중요한가):**" .release-notes/RELEASE-v1.2.0
 npx markdownlint-cli@0.45.0 .release-notes/RELEASE-v1.2.0.md --disable MD013
 ```
 
----
-
 ## 핵심 원칙 4가지
+
+릴리스 노트의 품질을 결정하는 네 가지 원칙입니다. 각 원칙이 존재하는 이유를 이해하면 검토 시 무엇을 확인해야 하는지 명확해집니다.
 
 ### 1. 정확성 우선
 
 > **Uber 파일에 없는 API는 절대 문서화하지 않습니다.**
+
+LLM이 API 시그니처를 "그럴듯하게" 생성할 수 있기 때문입니다. Uber 파일(`all-api-changes.txt`)은 실제 빌드된 DLL에서 추출한 것이므로, 이것을 진실의 원천으로 삼아야 합니다.
 
 ```bash
 # API 존재 확인
@@ -107,6 +108,8 @@ grep -n "MethodName" .analysis-output/api-changes-build-current/all-api-changes.
 ### 2. 가치 전달 필수
 
 > **모든 주요 기능에 "Why this matters (왜 중요한가):" 섹션을 포함합니다.**
+
+API 변경 목록만으로는 사용자가 업그레이드 여부를 판단하기 어렵습니다. 각 기능이 어떤 문제를 해결하고 어떤 이점을 제공하는지 설명해야 릴리스 노트가 실질적인 가치를 전달합니다.
 
 ```markdown
 ### 새로운 기능: TraverseSerial
@@ -122,6 +125,8 @@ grep -n "MethodName" .analysis-output/api-changes-build-current/all-api-changes.
 
 > **Git Diff 분석이 커밋 메시지 패턴보다 우선합니다.**
 
+커밋 메시지에 `BREAKING CHANGE`를 깜빡 표기하지 않을 수 있습니다. 반면 `.api` 폴더의 Git diff는 실제 API 변경을 객관적으로 보여주므로, 누락 없이 Breaking Changes를 감지할 수 있습니다.
+
 - `.api` 폴더의 Git diff 분석 (객관적)
 - 커밋 메시지 패턴은 보조 수단
 
@@ -129,14 +134,16 @@ grep -n "MethodName" .analysis-output/api-changes-build-current/all-api-changes.
 
 > **모든 기능을 실제 커밋으로 추적합니다.**
 
+릴리스 노트에 기술된 기능이 어떤 커밋에서 구현되었는지 추적할 수 있어야 합니다. 나중에 해당 기능의 구현 세부사항을 확인하거나 문제를 조사할 때 출발점이 됩니다.
+
 ```markdown
 <!-- 관련 커밋: abc1234 -->
 ### 새로운 기능: ErrorCodeFactory
 ```
 
----
-
 ## 주요 출력 파일
+
+워크플로우가 생성하는 파일들을 용도별로 정리합니다.
 
 ### 최종 결과물
 
@@ -161,6 +168,8 @@ grep -n "MethodName" .analysis-output/api-changes-build-current/all-api-changes.
 
 ### 중간 결과물
 
+각 Phase에서 생성되는 작업 파일입니다. 문제 발생 시 어느 Phase까지 정상 진행되었는지 확인하는 데 유용합니다.
+
 | 파일 | 설명 |
 |------|------|
 | `work/phase3-commit-analysis.md` | 커밋 분류 결과 |
@@ -168,11 +177,9 @@ grep -n "MethodName" .analysis-output/api-changes-build-current/all-api-changes.
 | `work/phase4-draft.md` | 릴리스 노트 초안 |
 | `work/phase5-validation-report.md` | 검증 결과 |
 
----
-
 ## 트러블슈팅
 
-### 일반적인 문제
+자주 발생하는 문제와 해결 방법을 표로 정리합니다. 상세한 설명은 [문제 해결 가이드](03-troubleshooting.md)를 참고하세요.
 
 | 문제 | 해결 방법 |
 |------|----------|
@@ -180,6 +187,8 @@ grep -n "MethodName" .analysis-output/api-changes-build-current/all-api-changes.
 | .NET SDK 버전 오류 | .NET 10.x 설치 필요 |
 | 파일 잠금 문제 | `taskkill /F /IM dotnet.exe` (Windows) |
 | API 검증 실패 | Uber 파일에서 올바른 API 이름 확인 |
+
+환경을 완전히 초기화해야 할 때는 다음 명령을 사용합니다.
 
 ### 전체 초기화 (Windows)
 
@@ -197,17 +206,17 @@ rm -rf .release-notes/scripts/.analysis-output
 dotnet nuget locals all --clear
 ```
 
----
-
 ## 체크리스트
 
-### 릴리스 노트 생성 전
+릴리스 노트 생성 전후로 확인할 항목입니다.
+
+### 생성 전
 
 - [ ] Git 저장소 확인됨
 - [ ] .NET 10.x SDK 설치됨
 - [ ] `.release-notes/scripts/` 디렉터리 존재
 
-### 릴리스 노트 생성 후
+### 생성 후
 
 - [ ] 프론트매터 포함됨
 - [ ] 모든 필수 섹션 포함됨
@@ -215,8 +224,6 @@ dotnet nuget locals all --clear
 - [ ] 모든 코드 샘플이 Uber 파일에서 검증됨
 - [ ] Breaking Changes 문서화됨 (있는 경우)
 - [ ] 마이그레이션 가이드 포함됨 (Breaking Changes 있는 경우)
-
----
 
 ## 참고 문서
 
@@ -230,8 +237,6 @@ dotnet nuget locals all --clear
 | [phase4-writing.md](/.release-notes/scripts/docs/phase4-writing.md) | Phase 4 상세 |
 | [phase5-validation.md](/.release-notes/scripts/docs/phase5-validation.md) | Phase 5 상세 |
 
----
-
-## 다음 단계
+이것으로 릴리스 노트 자동화의 실습 파트를 마칩니다. 이어지는 부록에서는 용어 사전과 추가 참고 자료를 제공합니다.
 
 - [부록 A: 용어사전](../Appendix/A-glossary.md)

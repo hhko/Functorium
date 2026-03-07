@@ -2,47 +2,24 @@
 title: "ExtractApiChanges"
 ---
 
-> 이 절에서는 Public API를 추출하고 변경사항을 감지하는 ExtractApiChanges.cs 스크립트를 분석합니다.
+릴리스 노트에 "ErrorCodeFactory 클래스가 추가되었습니다"라고 적었는데, 실제 코드에는 해당 클래스가 없다면 어떻게 될까요? API 정확성은 릴리스 노트의 신뢰를 좌우합니다. ExtractApiChanges.cs는 이 문제를 근본적으로 해결합니다. 소스 코드가 아니라 **컴파일된 DLL에서 직접 Public API를 추출하여**, 실제로 빌드된 결과물과 100% 일치하는 API 정보를 생성합니다. 모든 어셈블리의 API를 하나로 합친 Uber 파일은 이후 Claude가 릴리스 노트를 작성할 때 단일 진실 공급원(Single Source of Truth) 역할을 합니다.
 
----
-
-## 개요
-
-ExtractApiChanges.cs는 **Phase 2: 데이터 수집**에서 API 관련 데이터를 수집하는 스크립트입니다.
-
-```txt
-역할:
-├── 프로젝트 빌드 (dotnet publish)
-├── DLL에서 Public API 추출
-├── Uber 파일 (all-api-changes.txt) 생성
-├── API 변경 Git Diff 생성
-└── 개별 .api/*.cs 파일 생성
-```
-
----
-
-## 파일 위치
+## 파일 위치와 사용법
 
 ```txt
 .release-notes/scripts/ExtractApiChanges.cs
 ```
-
----
-
-## 사용법
 
 ```bash
 cd .release-notes/scripts
 dotnet ExtractApiChanges.cs
 ```
 
-인자가 필요 없습니다. 현재 디렉터리 기준으로 자동 탐색합니다.
-
----
+인자가 필요 없습니다. 현재 디렉터리를 기준으로 Git 루트와 프로젝트를 자동 탐색합니다.
 
 ## 스크립트 구조
 
-### 1. 패키지 참조 및 using
+패키지 참조와 CLI 정의는 AnalyzeAllComponents.cs와 동일한 패턴을 따르지만, 이 스크립트는 인자 없이 동작합니다.
 
 ```csharp
 #!/usr/bin/env dotnet
@@ -61,8 +38,6 @@ using System.Threading.Tasks;
 using Spectre.Console;
 ```
 
-### 2. CLI 정의 (인자 없음)
-
 ```csharp
 var rootCommand = new RootCommand("Extract API changes by building current branch");
 
@@ -75,13 +50,13 @@ rootCommand.SetAction(async (parseResult, cancellationToken) =>
 return await rootCommand.Parse(args).InvokeAsync();
 ```
 
----
+## 스크립트가 실행되면 일어나는 일
 
-## 주요 로직
+스크립트는 다섯 단계를 거쳐 API 데이터를 수집합니다. 각 단계의 결과가 다음 단계의 입력이 되는 파이프라인 구조입니다.
 
 ### Step 1: ApiGenerator 확인
 
-API 생성에 필요한 ApiGenerator.cs 존재 확인:
+API 추출의 핵심 도구인 ApiGenerator.cs가 존재하는지 먼저 확인합니다. 이 파일이 없으면 이후 단계를 진행할 수 없으므로 즉시 종료합니다.
 
 ```csharp
 AnsiConsole.MarkupLine("[bold]Step 1[/] [dim]Locating ApiGenerator...[/]");
@@ -97,7 +72,7 @@ AnsiConsole.MarkupLine($"   [green]Found[/] [dim]{apiGeneratorPath}[/]");
 
 ### Step 2: 프로젝트 탐색
 
-분석할 Functorium 프로젝트 파일 탐색:
+Src 디렉터리에서 Functorium으로 시작하는 `.csproj` 파일을 찾습니다. 테스트 프로젝트는 제외합니다.
 
 ```csharp
 AnsiConsole.MarkupLine("[bold]Step 2[/] [dim]Finding Functorium projects...[/]");
@@ -114,7 +89,7 @@ AnsiConsole.MarkupLine($"   [green]Found[/] [white]{projectFiles.Count}[/] proje
 
 ### Step 3: 프로젝트 빌드 및 API 생성
 
-각 프로젝트를 빌드하고 API를 추출합니다:
+이 단계가 스크립트의 핵심입니다. 각 프로젝트를 `dotnet publish`로 빌드한 뒤, 생성된 DLL을 ApiGenerator.cs에 전달하여 Public API를 추출합니다.
 
 ```csharp
 foreach (var projectFile in projectFiles)
@@ -164,7 +139,7 @@ foreach (var projectFile in projectFiles)
 
 ### Step 4: Uber 파일 생성
 
-모든 API를 하나의 파일로 합칩니다:
+모든 어셈블리의 API를 하나의 파일(`all-api-changes.txt`)로 합칩니다. 단일 파일로 합치는 이유는 검증을 단순화하기 위해서입니다. Phase 4에서 릴리스 노트를 작성할 때, 코드 샘플의 API가 정확한지 이 파일 하나만 확인하면 됩니다.
 
 ```csharp
 AnsiConsole.MarkupLine("[bold]Step 4[/] [dim]Creating Uber API file...[/]");
@@ -193,7 +168,7 @@ await File.WriteAllTextAsync(uberFilePath, uberContent.ToString());
 
 ### Step 5: Git Diff 생성
 
-API 변경사항의 Git diff를 생성합니다:
+마지막으로 `.api/*.cs` 파일의 Git diff를 생성합니다. 이 diff는 이전 릴리스 대비 API가 어떻게 변했는지를 보여주며, Breaking Change를 자동으로 감지하는 데 사용됩니다.
 
 ```csharp
 AnsiConsole.MarkupLine("[bold]Step 5[/] [dim]Generating API diff...[/]");
@@ -216,9 +191,9 @@ else
 }
 ```
 
----
-
 ## 출력 파일 구조
+
+스크립트가 생성하는 파일들은 두 곳에 위치합니다.
 
 ```txt
 .analysis-output/api-changes-build-current/
@@ -235,7 +210,7 @@ Src/
 
 ### Uber 파일 예시
 
-`all-api-changes.txt`:
+`all-api-changes.txt`는 모든 어셈블리의 Public API를 한 파일에 담고 있습니다.
 
 ```csharp
 // All API Changes - Uber File
@@ -271,7 +246,7 @@ namespace Functorium.Testing.Arrangements.Hosting
 
 ### API Diff 예시
 
-`api-changes-diff.txt`:
+`api-changes-diff.txt`에서는 추가된 API(`+`)와 삭제된 API(`-`)를 한눈에 볼 수 있습니다.
 
 ```diff
 diff --git a/Src/Functorium/.api/Functorium.cs b/Src/Functorium/.api/Functorium.cs
@@ -287,13 +262,11 @@ index abc1234..def5678 100644
  }
 ```
 
----
-
 ## 주요 함수
 
 ### RunProcessAsync
 
-외부 프로세스 실행:
+외부 프로세스를 실행하고 출력과 종료 코드를 반환합니다. Git 명령어와 `dotnet publish`, ApiGenerator 호출 모두 이 함수를 통합니다.
 
 ```csharp
 static async Task<ProcessResult> RunProcessAsync(string command, string arguments, bool quiet = false)
@@ -333,7 +306,7 @@ static async Task<ProcessResult> RunProcessAsync(string command, string argument
 
 ### GetCurrentBranchAsync
 
-현재 브랜치 이름 가져오기:
+현재 체크아웃된 브랜치 이름을 가져옵니다.
 
 ```csharp
 static async Task<string> GetCurrentBranchAsync()
@@ -343,9 +316,9 @@ static async Task<string> GetCurrentBranchAsync()
 }
 ```
 
----
-
 ## 콘솔 출력
+
+실행하면 다음과 같은 출력을 볼 수 있습니다.
 
 ```txt
 ━━━━━━━━━━━━ Extracting API Changes ━━━━━━━━━━━━
@@ -377,11 +350,9 @@ Step 5 Generating API diff...
 ━━━━━━━━━━━━ API Extraction Complete ━━━━━━━━━━━━
 ```
 
----
-
 ## ApiGenerator.cs 연동
 
-ExtractApiChanges.cs는 내부적으로 ApiGenerator.cs를 호출합니다:
+ExtractApiChanges.cs는 내부적으로 ApiGenerator.cs를 서브프로세스로 호출합니다. `dotnet publish`로 DLL을 생성하고, 그 DLL 경로를 ApiGenerator.cs에 전달하면, PublicApiGenerator 라이브러리가 Public API 텍스트를 표준 출력으로 반환합니다.
 
 ```txt
 ExtractApiChanges.cs
@@ -395,13 +366,9 @@ ExtractApiChanges.cs
                └─▶ Public API 텍스트 출력
 ```
 
-ApiGenerator.cs는 PublicApiGenerator 라이브러리를 사용하여 DLL에서 Public API를 추출합니다.
-
----
-
 ## 오류 처리
 
-### 빌드 실패
+빌드 실패나 DLL 미발견 같은 오류는 해당 컴포넌트만 건너뛰고 나머지를 계속 처리합니다. 하나의 프로젝트 실패가 전체 프로세스를 중단시키지 않도록 설계된 것입니다.
 
 ```csharp
 if (publishResult.ExitCode != 0)
@@ -410,8 +377,6 @@ if (publishResult.ExitCode != 0)
     return;
 }
 ```
-
-### DLL 없음
 
 ```csharp
 var dllPath = Path.Combine(publishDir, $"{assemblyName}.dll");
@@ -422,20 +387,8 @@ if (!File.Exists(dllPath))
 }
 ```
 
----
-
-## 요약
-
-| 항목 | 설명 |
-|------|------|
-| 목적 | Public API 추출 및 변경사항 감지 |
-| 입력 | 없음 (자동 탐색) |
-| 출력 | Uber 파일, API Diff, 개별 .api/*.cs |
-| 의존성 | ApiGenerator.cs |
-| 패키지 | System.CommandLine, Spectre.Console |
-
----
+ExtractApiChanges.cs가 Uber 파일을 통해 "현재 코드에 실제로 존재하는 API"를 기록하지만, DLL에서 Public API를 추출하는 실제 작업은 ApiGenerator.cs가 담당합니다. 다음 절에서는 이 ApiGenerator.cs가 어셈블리를 어떻게 로드하고, PublicApiGenerator 라이브러리로 API를 추출하는지 살펴보겠습니다.
 
 ## 다음 단계
 
-- [5.6 ApiGenerator.cs 분석](06-api-generator.md)
+- [ApiGenerator.cs 분석](06-apigenerator.md)

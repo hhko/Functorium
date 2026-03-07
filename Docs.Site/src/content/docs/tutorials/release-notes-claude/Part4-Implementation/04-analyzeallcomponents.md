@@ -2,33 +2,13 @@
 title: "AnalyzeAllComponents"
 ---
 
-> 이 절에서는 컴포넌트별 변경사항을 분석하는 AnalyzeAllComponents.cs 스크립트의 구조와 동작을 분석합니다.
+프로젝트에 수십 개의 커밋이 쌓였을 때, 어떤 컴포넌트가 얼마나 변경되었는지 수동으로 파악하는 것은 비효율적입니다. 컴포넌트마다 Git 로그를 일일이 뒤지고, 커밋을 분류하고, 변경 통계를 정리하는 과정에서 시간도 오래 걸리고 빠뜨리기도 쉽습니다. AnalyzeAllComponents.cs는 이 데이터 수집 작업을 자동화하는 스크립트입니다. **Phase 2: 데이터 수집의** 핵심으로, 모든 컴포넌트의 변경사항을 체계적으로 수집하여 Markdown 분석 파일로 생성합니다.
 
----
-
-## 개요
-
-AnalyzeAllComponents.cs는 **Phase 2: 데이터 수집**에서 사용되는 핵심 스크립트입니다.
-
-```txt
-역할:
-├── Git 커밋 히스토리 분석
-├── 컴포넌트별 변경 파일 추출
-├── 커밋 분류 (Feature, Bug Fix, Breaking Change)
-└── Markdown 분석 파일 생성
-```
-
----
-
-## 파일 위치
+## 파일 위치와 사용법
 
 ```txt
 .release-notes/scripts/AnalyzeAllComponents.cs
 ```
-
----
-
-## 사용법
 
 ```bash
 # 기본 실행
@@ -39,11 +19,13 @@ FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
 dotnet AnalyzeAllComponents.cs --base $FIRST_COMMIT --target HEAD
 ```
 
----
-
 ## 스크립트 구조
 
-### 1. 패키지 참조 및 using
+먼저 패키지를 설정하고, CLI 옵션을 정의한 뒤, 메인 로직이 실행되는 순서로 구성되어 있습니다.
+
+### 패키지 참조 및 CLI 옵션
+
+스크립트는 System.CommandLine과 Spectre.Console 두 패키지를 사용하며, `--base`와 `--target` 두 Option으로 비교 대상 브랜치를 받습니다.
 
 ```csharp
 #!/usr/bin/env dotnet
@@ -63,8 +45,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Spectre.Console;
 ```
-
-### 2. CLI 옵션 정의
 
 ```csharp
 var baseOption = new Option<string>("--base")
@@ -86,7 +66,7 @@ var rootCommand = new RootCommand("Automated analysis of all components")
 };
 ```
 
-### 3. 메인 핸들러
+핸들러는 비동기로 설정되어, 파싱된 브랜치 값을 메인 분석 함수에 전달합니다.
 
 ```csharp
 rootCommand.SetAction(async (parseResult, cancellationToken) =>
@@ -101,13 +81,13 @@ rootCommand.SetAction(async (parseResult, cancellationToken) =>
 return await rootCommand.Parse(args).InvokeAsync();
 ```
 
----
+## 스크립트가 실행되면 일어나는 일
 
-## 주요 로직
+CLI 파싱이 끝나면 스크립트는 네 단계를 순서대로 수행합니다. 컴포넌트 목록을 로드하고, 각 컴포넌트의 Git 변경사항을 분석하고, 커밋을 분류한 뒤, 최종 요약을 생성합니다.
 
-### Step 1: 컴포넌트 로드
+### Step 1: 컴포넌트 목록 로드
 
-설정 파일에서 분석할 컴포넌트 목록을 로드합니다:
+먼저 설정 파일에서 분석할 컴포넌트 목록을 읽어옵니다. 설정 파일이 없으면 기본값(Functorium, Functorium.Testing, Docs)을 사용합니다.
 
 ```csharp
 var configFile = Path.Combine(scriptsDir, "config", "component-priority.json");
@@ -125,9 +105,9 @@ if (components.Count == 0)
 }
 ```
 
-### Step 2: 각 컴포넌트 분석
+### Step 2: 각 컴포넌트 Git 분석
 
-각 컴포넌트에 대해 Git 명령어로 변경사항을 분석합니다:
+컴포넌트 목록이 준비되면, 각 컴포넌트에 대해 Git 명령어로 변경사항을 수집합니다. `git diff --stat`으로 변경 통계를, `git log --oneline`으로 전체 커밋 목록을 가져옵니다.
 
 ```csharp
 foreach (var component in components)
@@ -151,17 +131,15 @@ foreach (var component in components)
 
 ### Step 3: 커밋 분류
 
-Conventional Commits 규격에 맞게 커밋을 분류합니다:
+수집된 커밋은 Conventional Commits 규격에 따라 분류됩니다. Feature 커밋은 `^feat` 패턴으로, Bug Fix 커밋은 `^fix` 패턴으로 Git 로그를 검색합니다.
 
 ```csharp
 // Feature 커밋 - "^feat" 패턴으로 검색
-// git log --grep="^feat" 사용
 var featResult = await RunGitAsync(
     $"log --grep=\"^feat\" --oneline --no-merges \"{baseBranch}..{targetBranch}\" -- \"{componentPath}/\"",
     gitRoot);
 
 // Bug Fix 커밋 - "^fix" 패턴으로 검색
-// git log --grep="^fix" 사용
 var fixResult = await RunGitAsync(
     $"log --grep=\"^fix\" --oneline --no-merges \"{baseBranch}..{targetBranch}\" -- \"{componentPath}/\"",
     gitRoot);
@@ -182,9 +160,11 @@ var breakingCommits = allCommitsResult.Output
 > 이전 버전에서는 `feat|feature|add`, `fix|bug` 등 유사 키워드도 포함했으나,
 > 규격 준수를 위해 정확한 타입 접두사만 검색하도록 개선되었습니다.
 
+Breaking Change는 두 가지 방식으로 감지합니다. 타입 뒤에 느낌표가 붙는 경우(`feat!:`, `fix!:`)와 커밋 메시지에 `BREAKING CHANGE` 키워드가 포함된 경우입니다.
+
 ### Step 4: 분석 요약 생성
 
-모든 분석 결과를 요약 파일로 생성합니다:
+모든 컴포넌트 분석이 끝나면, 전체 결과를 하나의 요약 파일로 정리합니다.
 
 ```csharp
 var summaryContent = new StringBuilder();
@@ -205,13 +185,13 @@ foreach (var result in analysisResults)
 await File.WriteAllTextAsync(summaryPath, summaryContent.ToString());
 ```
 
----
+## 출력 파일
 
-## 출력 파일 구조
+스크립트는 두 종류의 파일을 생성합니다. 컴포넌트별 상세 분석 파일과 전체 요약 파일입니다.
 
 ### 컴포넌트 분석 파일
 
-`Functorium.md` 예시:
+각 컴포넌트에 대해 `Functorium.md`, `Functorium.Testing.md` 같은 파일이 생성됩니다. 변경 통계, 전체 커밋 목록, 기여자, 분류된 커밋 정보가 포함됩니다.
 
 ````markdown
 # Analysis for Src/Functorium
@@ -255,7 +235,7 @@ c5e604f fix(build): Fix NuGet package icon path
 
 ### 분석 요약 파일
 
-`analysis-summary.md`:
+`analysis-summary.md`에는 모든 컴포넌트의 분석 결과가 한곳에 모입니다.
 
 ````markdown
 # Analysis Summary
@@ -279,13 +259,13 @@ Comparing: origin/release/1.0 -> HEAD
 - Total Commits: 32
 ````
 
----
-
 ## 주요 함수
+
+출력 파일이 어떻게 생성되는지 살펴보았으니, 이제 스크립트를 구성하는 핵심 함수들을 살펴보겠습니다.
 
 ### LoadComponentsAsync
 
-설정 파일에서 컴포넌트 목록 로드:
+설정 파일에서 컴포넌트 목록을 로드합니다. JSON을 파싱하여 경로 목록을 반환합니다.
 
 ```csharp
 static async Task<List<string>> LoadComponentsAsync(string configFile, string gitRoot)
@@ -303,7 +283,7 @@ static async Task<List<string>> LoadComponentsAsync(string configFile, string gi
 
 ### RunGitAsync
 
-Git 명령어 실행:
+Git 명령어를 외부 프로세스로 실행하고 출력을 반환합니다.
 
 ```csharp
 static async Task<string> RunGitAsync(string arguments)
@@ -331,7 +311,7 @@ static async Task<string> RunGitAsync(string arguments)
 
 ### BranchExistsAsync
 
-브랜치 존재 여부 확인:
+분석 시작 전에 base 브랜치가 실제로 존재하는지 확인합니다.
 
 ```csharp
 static async Task<bool> BranchExistsAsync(string branch, string gitRoot)
@@ -341,11 +321,9 @@ static async Task<bool> BranchExistsAsync(string branch, string gitRoot)
 }
 ```
 
----
-
 ## 콘솔 출력
 
-### 진행 상황 표시
+스크립트는 Spectre.Console을 활용하여 실행 과정을 시각적으로 표시합니다. Rule로 헤더를 그리고, Table로 설정 정보를 보여주고, 각 단계마다 진행 상황을 출력합니다.
 
 ```csharp
 // 헤더
@@ -367,7 +345,7 @@ await AnsiConsole.Status()
     .StartAsync($"Analyzing {component}...", async ctx => { ... });
 ```
 
-### 결과 테이블
+결과 테이블에서는 각 컴포넌트의 파일 수와 커밋 수를 보여줍니다.
 
 ```csharp
 var resultTable = new Table()
@@ -384,11 +362,9 @@ foreach (var result in analysisResults)
 AnsiConsole.Write(resultTable);
 ```
 
----
-
 ## 오류 처리
 
-### Base Branch 없음
+base 브랜치가 존재하지 않으면 Panel로 안내 메시지를 표시하고, 첫 배포 시 사용할 명령어를 알려줍니다.
 
 ```csharp
 var baseBranchExists = await BranchExistsAsync(baseBranch, gitRoot);
@@ -408,20 +384,4 @@ if (!baseBranchExists)
 }
 ```
 
----
-
-## 요약
-
-| 항목 | 설명 |
-|------|------|
-| 목적 | 컴포넌트별 Git 변경사항 분석 |
-| 입력 | --base, --target 브랜치 |
-| 출력 | .analysis-output/*.md |
-| 분류 | Feature, Bug Fix, Breaking Change |
-| 패키지 | System.CommandLine, Spectre.Console |
-
----
-
-## 다음 단계
-
-- [5.5 ExtractApiChanges.cs 분석](05-extract-api-changes.md)
+AnalyzeAllComponents.cs가 수집한 데이터는 이후 Phase 3에서 커밋 분석과 기능 그룹화의 기초 자료로 사용됩니다. 그러나 커밋 로그만으로는 실제 API가 어떻게 변경되었는지 알 수 없습니다. 다음 절에서는 API 정확성을 보장하기 위해 코드에서 직접 Public API를 추출하는 ExtractApiChanges.cs를 살펴보겠습니다.

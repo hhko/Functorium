@@ -2,35 +2,7 @@
 title: "Spectre.Console 패키지"
 ---
 
-> 이 절에서는 풍부한 콘솔 UI를 제공하는 Spectre.Console 패키지 사용법을 알아봅니다.
-
----
-
-## Spectre.Console이란?
-
-Spectre.Console은 **콘솔 애플리케이션을 위한 풍부한 UI 라이브러리**입니다.
-
-```txt
-기존 Console.WriteLine:
-┌─────────────────────────────────┐
-│ Processing...                   │
-│ Done: 10 files                  │
-└─────────────────────────────────┘
-
-Spectre.Console:
-┌─────────────────────────────────────────────┐
-│ ━━━ Processing Files ━━━                    │
-│                                             │
-│ │ File        │ Status │ Time  │            │
-│ ├─────────────┼────────┼───────┤            │
-│ │ App.cs      │ ✓ Done │ 0.3s  │            │
-│ │ Config.cs   │ ✓ Done │ 0.1s  │            │
-│                                             │
-│ [████████████] 100% Complete                │
-└─────────────────────────────────────────────┘
-```
-
----
+자동화 스크립트가 `Console.WriteLine`으로 "Processing... Done: 10 files"만 출력한다면, 어떤 단계에서 무슨 일이 일어나는지 파악하기 어렵습니다. 컴포넌트가 여러 개이고 분석 시간이 길어질수록 이 문제는 심해집니다. Spectre.Console은 **개발자가 실제로 읽고 싶은 콘솔 출력을** 만들어주는 UI 라이브러리입니다. 테이블, 진행률 표시, 색상 강조 등을 통해 스크립트 실행 상황을 한눈에 파악할 수 있게 해줍니다.
 
 ## 패키지 설치
 
@@ -38,13 +10,9 @@ Spectre.Console:
 #:package Spectre.Console@0.54.0
 ```
 
----
+## 기본 출력: MarkupLine
 
-## 기본 출력
-
-### MarkupLine
-
-색상과 스타일이 적용된 텍스트 출력:
+가장 기본적인 기능은 색상과 스타일이 적용된 텍스트 출력입니다. 대괄호 안에 색상이나 스타일을 지정하고, `[/]`로 닫습니다.
 
 ```csharp
 using Spectre.Console;
@@ -66,24 +34,11 @@ AnsiConsole.MarkupLine("[bold red]Critical Error![/]");
 AnsiConsole.MarkupLine("[bold green]✓[/] [dim]Task completed[/]");
 ```
 
-### 색상 표
+사용 가능한 주요 색상은 `[red]`, `[green]`, `[yellow]`, `[blue]`, `[cyan]`, `[magenta]`, `[grey]`, `[white]` 등입니다.
 
-| 색상 | 마크업 |
-|------|--------|
-| 빨강 | `[red]` |
-| 녹색 | `[green]` |
-| 노랑 | `[yellow]` |
-| 파랑 | `[blue]` |
-| 청록 | `[cyan]` |
-| 자홍 | `[magenta]` |
-| 회색 | `[grey]` |
-| 흰색 | `[white]` |
+## Table: 분석 결과를 구조화할 때
 
----
-
-## Table (테이블)
-
-데이터를 표 형태로 출력:
+여러 컴포넌트의 분석 결과처럼 행과 열로 구조화된 데이터를 보여줘야 할 때 Table을 사용합니다. 각 컴포넌트의 파일 수, 커밋 수, 상태를 한눈에 비교할 수 있습니다.
 
 ```csharp
 using Spectre.Console;
@@ -119,11 +74,9 @@ AnsiConsole.Write(table);
 ╰───────────┴────────────┴──────╯
 ```
 
----
+## Rule: 섹션을 시각적으로 구분할 때
 
-## Rule (구분선)
-
-섹션을 구분하는 제목 줄:
+스크립트 출력이 여러 단계로 나뉠 때, Rule로 섹션 경계를 명확하게 표시합니다. "분석 시작"과 "분석 완료" 사이에 구분선을 두면 어디서부터 어디까지가 한 단계인지 바로 알 수 있습니다.
 
 ```csharp
 using Spectre.Console;
@@ -143,11 +96,9 @@ AnsiConsole.Write(new Rule("[yellow]Warning[/]").LeftJustified());
 ─────────────────── Analysis Results ───────────────────
 ```
 
----
+## Panel: 중요한 정보를 강조할 때
 
-## Panel (패널)
-
-박스 안에 내용 표시:
+오류 메시지나 설정 정보처럼 사용자가 반드시 확인해야 하는 내용을 박스 안에 넣어 눈에 띄게 만듭니다.
 
 ```csharp
 using Spectre.Console;
@@ -173,11 +124,9 @@ AnsiConsole.Write(panel);
 ╰───────────────────────────────────╯
 ```
 
----
+## Status: 장시간 작업의 진행 상태를 보여줄 때
 
-## Status (상태 표시)
-
-작업 진행 중 상태 표시:
+프로젝트 빌드나 Git 분석처럼 시간이 걸리는 작업에서는 스피너로 "지금 무슨 작업 중인지"를 표시합니다. 작업 단계가 바뀔 때마다 상태 메시지를 갱신할 수 있습니다.
 
 ```csharp
 using Spectre.Console;
@@ -203,20 +152,11 @@ await AnsiConsole.Status()
 AnsiConsole.MarkupLine("[green]Done![/]");
 ```
 
-### 스피너 종류
+스피너는 `Dots`(⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏), `Line`(-\\|/), `Star`(✶), `Arrow`(←↖↑↗→↘↓↙) 등 다양한 종류를 선택할 수 있습니다.
 
-| 스피너 | 모양 |
-|--------|------|
-| `Dots` | ⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏ |
-| `Line` | -\\|/ |
-| `Star` | ✶ |
-| `Arrow` | ←↖↑↗→↘↓↙ |
+## Progress: 여러 작업의 진행률을 동시에 추적할 때
 
----
-
-## Progress (진행률)
-
-진행률 표시:
+여러 컴포넌트를 병렬로 처리하면서 각각의 진행률을 보여주고 싶을 때 사용합니다.
 
 ```csharp
 using Spectre.Console;
@@ -242,11 +182,9 @@ Downloading [████████████████████] 100%
 Installing  [██████████──────────]  50%
 ```
 
----
+## 실제 예시: AnalyzeAllComponents.cs의 콘솔 출력
 
-## 실제 예시: AnalyzeAllComponents.cs
-
-릴리스 노트 자동화에서 사용하는 패턴:
+릴리스 노트 자동화에서 이 요소들이 어떻게 조합되는지 살펴보겠습니다. Rule로 섹션을 구분하고, Table로 설정 정보를 보여주고, MarkupLine으로 단계별 진행을 표시하고, Status로 분석 작업을 표시하고, 마지막에 결과 Table을 출력합니다.
 
 ```csharp
 #!/usr/bin/env dotnet
@@ -313,11 +251,11 @@ AnsiConsole.WriteLine();
 AnsiConsole.Write(new Rule("[bold green]Analysis Complete[/]").RuleStyle("green"));
 ```
 
----
-
 ## 자주 사용하는 패턴
 
-### 단계 표시
+릴리스 노트 스크립트 전반에서 반복적으로 쓰이는 패턴을 정리합니다.
+
+단계별 진행을 표시할 때:
 
 ```csharp
 AnsiConsole.MarkupLine("[bold]Step 1[/] [dim]Loading...[/]");
@@ -328,7 +266,7 @@ AnsiConsole.WriteLine();
 AnsiConsole.MarkupLine("[bold]Step 2[/] [dim]Processing...[/]");
 ```
 
-### 성공/실패 메시지
+성공, 실패, 경고 메시지:
 
 ```csharp
 // 성공
@@ -341,7 +279,7 @@ AnsiConsole.MarkupLine("[red]✗[/] Operation failed: {0}", errorMessage);
 AnsiConsole.MarkupLine("[yellow]⚠[/] Warning: {0}", warningMessage);
 ```
 
-### 정보 패널
+사용자 주의가 필요한 정보를 Panel로 강조:
 
 ```csharp
 var panel = new Panel($"[yellow]Base branch[/] [cyan]{baseBranch}[/] [yellow]does not exist.[/]")
@@ -353,21 +291,4 @@ var panel = new Panel($"[yellow]Base branch[/] [cyan]{baseBranch}[/] [yellow]doe
 AnsiConsole.Write(panel);
 ```
 
----
-
-## 요약
-
-| 기능 | 클래스/메서드 | 용도 |
-|------|--------------|------|
-| 색상 텍스트 | `MarkupLine` | 스타일 적용 출력 |
-| 테이블 | `Table` | 데이터 표 형식 |
-| 구분선 | `Rule` | 섹션 구분 |
-| 패널 | `Panel` | 박스 표시 |
-| 상태 | `Status` | 스피너 표시 |
-| 진행률 | `Progress` | 프로그레스 바 |
-
----
-
-## 다음 단계
-
-- [5.4 AnalyzeAllComponents.cs 분석](04-analyze-all-components.md)
+Spectre.Console 덕분에 자동화 스크립트의 실행 과정이 투명해집니다. 다음 절부터는 이 두 패키지를 활용한 실제 스크립트들을 하나씩 분석해보겠습니다.

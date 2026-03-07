@@ -2,25 +2,13 @@
 title: "나만의 스크립트 작성"
 ---
 
-> 이 절에서는 .NET 10 File-based App을 직접 작성해봅니다.
+앞 절에서 `/release-note` 명령어로 릴리스 노트 자동화를 직접 실행해봤습니다. 그 과정에서 `AnalyzeAllComponents.cs`, `ExtractApiChanges.cs` 같은 C# 스크립트가 핵심 역할을 한다는 것을 확인했습니다. 이 스크립트들은 모두 .NET 10의 File-based App 기능으로 만들어진 것입니다.
 
----
-
-## 실습 목표
-
-이 실습을 완료하면:
-
-- .NET 10 File-based App 작성법 이해
-- System.CommandLine으로 CLI 인자 처리
-- Spectre.Console로 콘솔 UI 구현
-
----
+이번 절에서는 .NET 10 File-based App을 직접 작성해봅니다. 단순한 Hello World부터 시작해서 CLI 인자 처리, 파일 시스템 분석, Git 커밋 분석까지 단계적으로 난이도를 높여가겠습니다. 이 과정을 마치면 릴리스 노트 자동화 스크립트의 코드를 읽고 수정할 수 있는 기반이 갖춰집니다.
 
 ## 실습 1: Hello World
 
-### 파일 생성
-
-`hello.cs` 파일을 생성합니다:
+모든 것의 시작은 가장 단순한 프로그램입니다. .NET 10 File-based App은 `.csproj` 파일 없이 `.cs` 파일 하나로 실행됩니다. 프로젝트 설정이나 빌드 구성 없이 바로 코드를 작성하고 실행할 수 있다는 점이 스크립트 작성에 적합합니다.
 
 ```csharp
 #!/usr/bin/env dotnet
@@ -29,20 +17,16 @@ title: "나만의 스크립트 작성"
 Console.WriteLine("Hello, World!");
 ```
 
-### 실행
+첫 줄의 `#!/usr/bin/env dotnet`은 Shebang 라인으로, Unix 환경에서 `./hello.cs`로 직접 실행할 수 있게 합니다. Windows에서는 `dotnet hello.cs`로 실행합니다.
 
 ```bash
 dotnet hello.cs
 # 출력: Hello, World!
 ```
 
----
-
 ## 실습 2: 인자 처리
 
-### 파일 생성
-
-`greet.cs` 파일을 생성합니다:
+실제 도구를 만들려면 사용자로부터 입력을 받아야 합니다. 이름을 받아서 인사하는 간단한 프로그램을 만들되, `System.CommandLine` 패키지로 체계적인 CLI 인터페이스를 구성해보겠습니다. 릴리스 노트 스크립트에서 `--base`, `--target` 같은 옵션을 처리하는 것도 바로 이 패턴입니다.
 
 ```csharp
 #!/usr/bin/env dotnet
@@ -86,7 +70,7 @@ rootCommand.SetAction((parseResult, cancellationToken) =>
 return rootCommand.Parse(args).Invoke();
 ```
 
-### 실행
+`#:package` 지시자는 File-based App에서 NuGet 패키지를 참조하는 방법입니다. `.csproj`의 `PackageReference` 역할을 합니다.
 
 ```bash
 # 기본 실행
@@ -101,13 +85,13 @@ dotnet greet.cs Alice --loud
 dotnet greet.cs --help
 ```
 
----
+`System.CommandLine`이 `--help` 옵션을 자동으로 생성해준다는 점을 확인해보세요. 인자와 옵션의 설명이 도움말에 그대로 표시됩니다.
 
 ## 실습 3: 파일 분석 도구
 
-### 파일 생성
+이제 실용적인 도구를 만들어봅시다. 디렉터리를 순회하며 확장자별 파일 통계를 보여주는 도구입니다. 릴리스 노트 자동화에서 "31 files, 19 commits"같은 통계를 산출하는 것과 비슷한 패턴으로, 파일 시스템을 탐색하고 결과를 정리해서 보여줍니다.
 
-`file-stats.cs` 파일을 생성합니다:
+여기서는 `Spectre.Console` 패키지를 추가로 사용합니다. 테이블, 색상, 구분선 같은 시각 요소를 콘솔에 쉽게 출력할 수 있는 라이브러리입니다.
 
 ```csharp
 #!/usr/bin/env dotnet
@@ -228,7 +212,7 @@ static string FormatSize(long bytes)
 }
 ```
 
-### 실행
+실행하면 확장자별로 파일 수와 크기를 정리한 테이블이 출력됩니다.
 
 ```bash
 # 현재 디렉터리 분석
@@ -241,7 +225,7 @@ dotnet file-stats.cs --path ./src
 dotnet file-stats.cs --path ./src --top 5
 ```
 
-### 출력 예시
+출력은 다음과 같은 형태입니다.
 
 ```txt
 ───────────────── File Statistics ─────────────────
@@ -259,13 +243,11 @@ dotnet file-stats.cs --path ./src --top 5
 Total: 73 files, 153.3 KB
 ```
 
----
-
 ## 실습 4: 커밋 분석 도구
 
-### 파일 생성
+마지막 실습은 릴리스 노트 자동화의 핵심과 가장 가까운 도구입니다. Git 커밋 메시지를 읽어서 Conventional Commits 타입별로 분류하고, 시각적인 막대 그래프로 표시합니다. Phase 3에서 Claude가 수행하는 커밋 분석의 축소판이라고 할 수 있습니다.
 
-`commit-analyzer.cs` 파일을 생성합니다:
+이 스크립트는 외부 프로세스(`git log`)를 실행하고 그 출력을 파싱하는 비동기 패턴도 포함하고 있어서, 실전에서 자주 쓰이는 기법을 익힐 수 있습니다.
 
 ```csharp
 #!/usr/bin/env dotnet
@@ -416,8 +398,6 @@ static string GetTypeColor(string type) => type switch
 };
 ```
 
-### 실행
-
 ```bash
 # 최근 50개 커밋 분석 (기본값)
 dotnet commit-analyzer.cs
@@ -426,7 +406,7 @@ dotnet commit-analyzer.cs
 dotnet commit-analyzer.cs --count 100
 ```
 
-### 출력 예시
+출력은 다음과 같은 형태입니다.
 
 ```txt
 ───────────────── Commit Analysis ─────────────────
@@ -446,11 +426,9 @@ dotnet commit-analyzer.cs --count 100
 Analyzed 50 commits
 ```
 
----
+## 핵심 패턴 정리
 
-## 실습 정리
-
-### 핵심 패턴
+네 개의 실습을 통해 .NET 10 File-based App의 공통 구조가 보이기 시작했을 것입니다. 릴리스 노트 자동화 스크립트들도 모두 이 패턴을 따릅니다.
 
 ```csharp
 #!/usr/bin/env dotnet              // 1. Shebang
@@ -473,7 +451,7 @@ rootCommand.SetAction((parseResult, ct) => {
 return rootCommand.Parse(args).Invoke();  // 6. 실행
 ```
 
-### 자주 사용하는 패키지
+자주 사용하는 패키지도 정리해두면 새 스크립트를 만들 때 편리합니다.
 
 | 패키지 | 용도 |
 |--------|------|
@@ -481,8 +459,6 @@ return rootCommand.Parse(args).Invoke();  // 6. 실행
 | `Spectre.Console@0.54.0` | 콘솔 UI |
 | `System.Text.Json` | JSON 처리 (기본 포함) |
 
----
+이제 릴리스 노트 자동화 스크립트의 코드를 읽을 때, 각 부분이 어떤 역할을 하는지 파악할 수 있을 것입니다. 다음 절에서는 실습 중 발생할 수 있는 문제와 해결 방법을 살펴봅니다.
 
-## 다음 단계
-
-- [7.3 문제 해결 가이드](03-troubleshooting.md)
+- [문제 해결 가이드](03-troubleshooting.md)

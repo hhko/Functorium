@@ -2,31 +2,15 @@
 title: "파일 기반 앱"
 ---
 
-> 이 절에서는 .NET 10에서 도입된 File-based App(파일 기반 앱)의 개념과 사용 방법을 알아봅니다.
-
----
+릴리스 노트 자동화 스크립트를 작성하려면 프로젝트 파일을 만들고, 솔루션에 추가하고, 빌드 구성을 잡아야 할까요? .NET 10의 File-based App을 사용하면 그런 번거로움 없이 **C# 파일 하나로 바로 실행할 수 있습니다.** 이 절에서는 File-based App이 자동화 스크립트에 왜 적합한지, 그리고 실제로 어떻게 활용하는지 살펴보겠습니다.
 
 ## File-based App이란?
 
-File-based App은 .NET 10에서 도입된 **단일 C# 파일로 실행 가능한 프로그램**입니다.
+File-based App은 .NET 10에서 도입된 실행 방식입니다. 기존에는 `.csproj` 프로젝트 파일, `Program.cs`, 필요한 클래스 파일 등 여러 파일을 만들어야 했지만, File-based App에서는 `MyApp.cs` **단일 파일 하나로 모든 것을 처리합니다.** 프로젝트 파일 없이 C# 파일만으로 프로그램을 실행할 수 있는 것입니다.
 
-```txt
-기존 방식:
-├── MyApp.csproj    # 프로젝트 파일 (필수)
-├── Program.cs      # 메인 코드
-└── Class1.cs       # 추가 코드
+## 자동화 스크립트에 File-based App이 적합한 이유
 
-File-based App:
-└── MyApp.cs        # 단일 파일로 모든 것 처리
-```
-
-프로젝트 파일(`.csproj`) 없이 **C# 파일 하나**로 프로그램을 실행할 수 있습니다.
-
----
-
-## 왜 File-based App을 사용하는가?
-
-### 1. 빠른 시작
+가장 큰 장점은 **빠른 시작입니다**. 기존 방식이라면 `dotnet new console`로 프로젝트를 생성하고, 디렉터리를 이동한 뒤 `dotnet run`을 실행해야 했습니다. File-based App에서는 `dotnet MyApp.cs` 한 줄이면 됩니다.
 
 ```bash
 # 기존 방식: 프로젝트 생성 필요
@@ -38,24 +22,13 @@ dotnet run
 dotnet MyApp.cs
 ```
 
-### 2. 스크립트처럼 사용
+릴리스 노트 자동화처럼 빌드 스크립트, 코드 생성기, 분석 도구 같은 **도구성 프로그램에** 특히 적합합니다. 단일 파일이므로 변경 이력 추적도 간단하고, 파일 하나만 복사하면 다른 환경에서도 바로 사용할 수 있습니다.
 
-릴리스 노트 자동화처럼 **도구성 프로그램**에 적합합니다:
-
-- 빌드 스크립트
-- 코드 생성기
-- 분석 도구
-- 유틸리티
-
-### 3. 버전 관리 용이
-
-단일 파일이므로 변경 이력 추적이 간단합니다.
-
----
+다만 여러 파일로 분할할 수 없고, 단위 테스트 작성이 어렵기 때문에 대규모 애플리케이션에는 부적합합니다. 복잡한 빌드 구성이 필요한 경우에도 전통적인 프로젝트 방식이 낫습니다.
 
 ## 기본 문법
 
-### 최소 예제
+가장 단순한 형태는 다음과 같습니다.
 
 ```csharp
 #!/usr/bin/env dotnet
@@ -69,28 +42,11 @@ Console.WriteLine("Hello, World!");
 dotnet hello.cs
 ```
 
-### Shebang 라인
+파일 첫 줄의 `#!/usr/bin/env dotnet`은 Shebang 라인입니다. Unix 계열에서 `chmod +x hello.cs` 후 `./hello.cs`로 직접 실행할 수 있게 해줍니다.
 
-파일 첫 줄에 `#!/usr/bin/env dotnet`을 추가하면 Unix 계열에서 직접 실행 가능:
+## 패키지 참조: `#:package` 지시자
 
-```bash
-chmod +x hello.cs
-./hello.cs
-```
-
----
-
-## 패키지 참조
-
-File-based App에서는 `#:package` 지시자로 NuGet 패키지를 참조합니다.
-
-### 문법
-
-```csharp
-#:package <패키지명>@<버전>
-```
-
-### 예시
+File-based App에서는 `.csproj`가 없으므로 NuGet 패키지를 참조할 별도의 방법이 필요합니다. 이를 위해 `#:package` 지시자가 도입되었습니다. 파일 안에서 직접 패키지와 버전을 선언하면, 런타임이 자동으로 패키지를 복원하고 참조합니다.
 
 ```csharp
 #!/usr/bin/env dotnet
@@ -105,9 +61,7 @@ using Spectre.Console;
 AnsiConsole.WriteLine("Hello!");
 ```
 
-### 패키지 지시자 위치
-
-**반드시** 파일 상단에 위치해야 합니다:
+이 지시자의 위치에는 규칙이 있습니다. **반드시 파일 상단에 위치해야 하며**, Shebang과 주석 뒤, using 문 앞에 와야 합니다.
 
 ```csharp
 #!/usr/bin/env dotnet        // 1. Shebang (선택)
@@ -122,34 +76,25 @@ using Spectre.Console;
 // 코드 시작                  // 5. 실제 코드
 ```
 
----
-
 ## 실행 방법
 
-### 기본 실행
+기본 실행은 `dotnet MyScript.cs`입니다. 인자를 전달하려면 파일명 뒤에 붙이면 됩니다.
 
 ```bash
+# 기본 실행
 dotnet MyScript.cs
-```
 
-### 인자 전달
-
-```bash
+# 인자 전달
 dotnet MyScript.cs --base origin/release/1.0 --target HEAD
-```
 
-### 작업 디렉터리에서 실행
-
-```bash
+# 작업 디렉터리에서 실행
 cd .release-notes/scripts
 dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target HEAD
 ```
 
----
-
 ## 릴리스 노트 자동화 스크립트
 
-Functorium 프로젝트의 File-based App들:
+Functorium 프로젝트에서는 세 개의 File-based App으로 릴리스 노트 자동화를 구현합니다.
 
 ```txt
 .release-notes/scripts/
@@ -158,18 +103,11 @@ Functorium 프로젝트의 File-based App들:
 └── ApiGenerator.cs            # Public API 생성
 ```
 
-### 공통 패키지
-
-모든 스크립트에서 사용하는 패키지:
-
-| 패키지 | 버전 | 용도 |
-|--------|------|------|
-| `System.CommandLine` | 2.0.1 | CLI 인자 파싱 |
-| `Spectre.Console` | 0.54.0 | 콘솔 UI |
-
----
+이 스크립트들은 모두 공통으로 두 가지 패키지를 사용합니다. CLI 인자를 파싱하는 `System.CommandLine@2.0.1`과 풍부한 콘솔 UI를 제공하는 `Spectre.Console@0.54.0`입니다.
 
 ## 실제 예시: 간단한 분석 스크립트
+
+File-based App의 실제 모습을 간단한 파일 분석 스크립트로 살펴보겠습니다. 디렉터리를 받아 확장자별 파일 수를 테이블로 보여주는 프로그램입니다.
 
 ```csharp
 #!/usr/bin/env dotnet
@@ -236,62 +174,6 @@ return 0;
 dotnet SimpleAnalyzer.cs ./src
 ```
 
----
+패키지 참조, 인자 처리, 콘솔 UI까지 파일 하나에 모두 담겨 있습니다. 이것이 File-based App의 핵심입니다. 프로젝트 구조의 오버헤드 없이 C#의 모든 기능을 활용할 수 있습니다.
 
-## 장점과 제한사항
-
-### 장점
-
-| 장점 | 설명 |
-|------|------|
-| 빠른 시작 | 프로젝트 생성 불필요 |
-| 단순함 | 단일 파일 관리 |
-| 이식성 | 파일 하나만 복사하면 됨 |
-| 버전 관리 | 변경 이력 추적 용이 |
-| 도구성 | 스크립트/유틸리티에 적합 |
-
-### 제한사항
-
-| 제한 | 설명 |
-|------|------|
-| 단일 파일 | 여러 파일 분할 불가 |
-| 복잡한 프로젝트 | 대규모 앱에는 부적합 |
-| 테스트 | 단위 테스트 작성 어려움 |
-| IDE 지원 | 일부 기능 제한 |
-
----
-
-## 언제 File-based App을 사용하는가?
-
-### 적합한 경우
-
-- 빌드/배포 스크립트
-- 코드 생성 도구
-- 분석/보고 도구
-- 일회성 데이터 처리
-- 프로토타입/실험
-
-### 부적합한 경우
-
-- 대규모 애플리케이션
-- 여러 파일이 필요한 경우
-- 단위 테스트가 필요한 경우
-- 복잡한 빌드 구성
-
----
-
-## 요약
-
-| 항목 | 설명 |
-|------|------|
-| 정의 | 단일 C# 파일로 실행 가능한 프로그램 |
-| 실행 | `dotnet MyScript.cs` |
-| 패키지 | `#:package <패키지>@<버전>` |
-| 용도 | 도구, 스크립트, 유틸리티 |
-| 장점 | 단순함, 빠른 시작, 이식성 |
-
----
-
-## 다음 단계
-
-- [5.2 System.CommandLine 패키지](02-system-commandline.md)
+이어지는 절에서는 이 스크립트들이 사용하는 두 핵심 패키지인 System.CommandLine과 Spectre.Console을 살펴보겠습니다.
