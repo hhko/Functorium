@@ -9,6 +9,8 @@ Functorium CQRS에서 사용하는 함수형 타입의 참조 문서입니다. R
 
 ## 타입 계층
 
+Functorium의 함수형 타입은 LanguageExt 위에 구축됩니다. 아래 계층도에서 각 타입의 소속을 확인하세요.
+
 ```
 LanguageExt (라이브러리)
 ├── Fin<T>              성공(T) 또는 실패(Error)를 표현
@@ -60,7 +62,7 @@ Fin<Order> fin = await result.RunAsync();
 
 ### LINQ 모나딕 합성
 
-FinT는 LINQ의 `from...select` 구문으로 합성할 수 있습니다:
+FinT는 LINQ의 `from...select` 구문으로 합성할 수 있습니다.
 
 ```csharp
 // 여러 Repository 작업을 순차적으로 합성
@@ -76,7 +78,7 @@ Fin<OrderId> fin = await pipeline.RunAsync();
 
 ### guard 함수
 
-조건이 충족되지 않으면 파이프라인을 실패시킵니다:
+조건이 충족되지 않으면 파이프라인을 실패시킵니다.
 
 ```csharp
 // guard(조건, 실패 시 에러)
@@ -112,6 +114,8 @@ if (response.IsFail) { /* 실패 */ }
 
 ### FinResponse vs Fin 차이점
 
+두 타입이 사용되는 계층과 용도가 다릅니다.
+
 | 특성 | Fin\<T\> | FinResponse\<T\> |
 |------|---------|-----------------|
 | **계층** | Repository/도메인 | Usecase/Application |
@@ -123,9 +127,11 @@ if (response.IsFail) { /* 실패 */ }
 
 ## ToFinResponse() 변환
 
-Repository 계층(Fin)에서 Usecase 계층(FinResponse)으로 변환하는 확장 메서드입니다.
+Repository 계층(Fin)에서 Usecase 계층(FinResponse)으로 변환하는 확장 메서드입니다. 용도에 따라 네 가지 오버로드를 제공합니다.
 
 ### 기본 변환
+
+성공 값을 그대로 전달합니다.
 
 ```csharp
 // Fin<A> -> FinResponse<A>
@@ -135,6 +141,8 @@ FinResponse<Order> response = fin.ToFinResponse();
 
 ### 매핑 변환
 
+성공 값을 다른 타입으로 변환합니다.
+
 ```csharp
 // Fin<A> -> FinResponse<B> (성공 값 변환)
 Fin<Order> fin = await repository.Create(order).RunAsync();
@@ -143,6 +151,8 @@ FinResponse<OrderId> response = fin.ToFinResponse(order => order.Id);
 
 ### 팩토리 변환
 
+성공 값을 무시하고 새 인스턴스를 생성합니다.
+
 ```csharp
 // Fin<A> -> FinResponse<B> (성공 값 무시, 새 인스턴스 생성)
 Fin<int> fin = await repository.Delete(orderId).RunAsync();
@@ -150,6 +160,8 @@ FinResponse<DeleteResult> response = fin.ToFinResponse(() => new DeleteResult(or
 ```
 
 ### 커스텀 변환
+
+성공과 실패 모두 커스텀 로직으로 처리합니다.
 
 ```csharp
 // Fin<A> -> FinResponse<B> (성공/실패 모두 커스텀 처리)
@@ -222,7 +234,7 @@ Error.New(exception)
 
 ### 파이프라인에서 에러 전파
 
-FinT 파이프라인에서 어느 단계든 실패하면 이후 단계는 실행되지 않고 에러가 전파됩니다:
+FinT 파이프라인에서 어느 단계든 실패하면 이후 단계는 실행되지 않고 에러가 전파됩니다.
 
 ```csharp
 var pipeline =

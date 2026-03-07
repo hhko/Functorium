@@ -3,22 +3,26 @@ title: "커맨드 유스케이스"
 ---
 ## 개요
 
-Command Usecase는 CQRS의 Command 측면에서 비즈니스 로직을 실행하는 핵심 패턴입니다. `ICommandRequest<TSuccess>`로 요청을 정의하고, `ICommandUsecase<TCommand, TSuccess>`로 처리 로직을 구현합니다. 결과는 `FinResponse<T>`로 감싸서 성공/실패를 명확하게 전달합니다.
+Repository가 반환한 `FinT<IO, T>`를 어떻게 실행하고 API에 전달할까요? Part 3에서 Repository는 lazy한 `FinT`를 반환하도록 설계했습니다. 하지만 실제 Usecase에서는 이 `FinT`를 실행하고, 결과를 HTTP 응답에 적합한 `FinResponse<T>`로 변환해야 합니다. 이 장에서는 Command Usecase의 구조를 잡고, Repository 호출부터 응답 반환까지의 전체 흐름을 만들어봅시다.
 
 ---
 
 ## 학습 목표
 
-- **ICommandRequest / ICommandUsecase** 인터페이스의 역할 이해
-- **FinT<IO, T> LINQ 구문**으로 Repository 호출을 합성하는 방법
-- **FinResponse<T>**로 Usecase 결과를 HTTP-friendly하게 변환하는 패턴
-- **Nested class 패턴**: Request, Response, Usecase를 하나의 Command 클래스에 응집
+이 장을 완료하면 다음을 할 수 있습니다:
+
+1. **ICommandRequest / ICommandUsecase** 인터페이스로 Command 요청과 핸들러를 정의할 수 있습니다
+2. **FinT\<IO, T\> LINQ 구문으로** Repository 호출을 합성할 수 있습니다
+3. **FinResponse\<T\>로** Usecase 결과를 HTTP-friendly하게 변환할 수 있습니다
+4. **Nested class 패턴으로** Request, Response, Usecase를 하나의 Command 클래스에 응집시킬 수 있습니다
 
 ---
 
 ## 핵심 개념
 
 ### Command Usecase 구조
+
+Command Usecase는 Request(입력), Response(출력), Usecase(로직) 세 가지를 하나의 봉투 클래스에 묶습니다. 파일 하나만 열면 Command의 전체 계약을 파악할 수 있습니다.
 
 ```
 CreateProductCommand (봉투)
@@ -28,6 +32,8 @@ CreateProductCommand (봉투)
 ```
 
 ### 실행 흐름
+
+Request가 들어오면 Usecase는 도메인 객체를 생성하고, Repository에 저장한 뒤, 결과를 Response로 변환합니다. 각 단계가 어떤 타입을 다루는지 살펴보세요.
 
 ```
 Request → Usecase.Handle()
@@ -39,6 +45,8 @@ Request → Usecase.Handle()
 ```
 
 ### FinT LINQ 합성
+
+Repository가 반환한 `FinT<IO, T>`는 LINQ 구문으로 자연스럽게 합성할 수 있습니다.
 
 ```csharp
 FinT<IO, Response> usecase =
@@ -52,6 +60,8 @@ FinT<IO, Response> usecase =
 
 ## 프로젝트 설명
 
+아래 파일들이 Command Usecase의 전체 구조를 구성합니다.
+
 | 파일 | 설명 |
 |------|------|
 | `ProductId.cs` | Ulid 기반 Product 식별자 |
@@ -64,6 +74,8 @@ FinT<IO, Response> usecase =
 ---
 
 ## 한눈에 보는 정리
+
+각 개념이 Command Usecase에서 어떤 역할을 하는지 정리합니다.
 
 | 개념 | 설명 |
 |------|------|
@@ -85,3 +97,7 @@ A: `FinT<IO, T>`는 IO 효과를 포함한 lazy 연산입니다. `.Run().RunAsyn
 
 **Q: ToFinResponse()는 왜 필요한가요?**
 A: `Fin<T>`는 LanguageExt의 내부 타입이고, `FinResponse<T>`는 Functorium이 Pipeline/API 레이어에서 사용하는 HTTP-friendly 래퍼입니다. 계층 간 변환을 명시적으로 수행합니다.
+
+---
+
+Command Usecase 구조를 만들었습니다. 그런데 목록 조회에는 Repository가 아닌 IQueryPort가 필요한데, Usecase 구조는 어떻게 달라질까요? 다음 장에서는 Query Usecase의 설계를 살펴봅니다.
