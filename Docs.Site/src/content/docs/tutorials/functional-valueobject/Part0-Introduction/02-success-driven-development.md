@@ -144,42 +144,6 @@ var result = (ValidateEmail(email), ValidateAge(age), ValidateName(name))
 
 ---
 
-## Bind vs Apply 비교
-
-| 구분 | Bind (순차 검증) | Apply (병렬 검증) |
-|------|------------------|-------------------|
-| **실행 방식** | 순차 실행 | 병렬 실행 |
-| **에러 처리** | 첫 번째 에러에서 중단 | 모든 에러 수집 |
-| **사용 시기** | 의존성 있는 검증 | 독립적인 검증 |
-| **성능** | 조기 중단으로 효율적 | 모든 검증 실행 |
-| **UX** | 하나씩 오류 표시 | 모든 오류 한 번에 표시 |
-
-### Bind 패턴 예시
-
-```csharp
-// 순차 검증: 도로명 → 도시 → 우편번호 → 국가 일치
-public static Validation<Error, Address> Validate(
-    string street, string city, string postalCode, string country) =>
-    ValidateStreetFormat(street)
-        .Bind(_ => ValidateCityFormat(city))
-        .Bind(_ => ValidatePostalCodeFormat(postalCode))
-        .Bind(_ => ValidateCountryAndPostalCodeMatch(country, postalCode))
-        .Map(_ => new Address(street, city, postalCode, country));
-```
-
-### Apply 패턴 예시
-
-```csharp
-// 병렬 검증: 모든 에러 수집
-public static Validation<Error, User> Validate(
-    string email, string password, string name) =>
-    (ValidateEmail(email), ValidatePassword(password), ValidateName(name))
-        .Apply((e, p, n) => new User(e, p, n))
-        .As();
-```
-
----
-
 ## 예외를 사용해야 하는 경우 vs 결과 타입을 사용해야 하는 경우
 
 ### 결과 타입 사용 (예상 가능한 실패)
@@ -198,6 +162,6 @@ public static Validation<Error, User> Validate(
 
 ## 다음 단계
 
-환경 설정을 완료하고 첫 번째 예제를 실행해보세요.
+성공 주도 개발의 개념을 이해했으니, 이제 실습 환경을 준비합니다. 다음 장에서 .NET SDK 설치와 LanguageExt 패키지 설정을 진행합니다.
 
 → [0.3 환경 설정](03-environment-setup.md)

@@ -4,42 +4,28 @@ title: "DomainError 헬퍼"
 
 ## 개요
 
-이 프로젝트는 Functorium 프레임워크의 `DomainError` 헬퍼와 `DomainErrorType` 레코드를 활용하여 값 객체의 에러 처리 코드를 대폭 간소화하는 패턴을 시연합니다. 기존의 `DomainErrors` 중첩 클래스와 `ErrorCodeFactory.Create()` 호출을 `DomainError.For<T>()` 한 줄로 대체하여 **코드량을 약 60% 감소**시키고, **타입 안전한 에러 코드**를 보장합니다.
+값 객체마다 `DomainErrors` 중첩 클래스를 반복 정의하고, `ErrorCodeFactory.Create()`로 에러 코드를 수동 조합하는 작업이 번거롭지 않았나요? 이 장에서는 `DomainError.For<T>()` 한 줄로 에러 생성을 대체하여 코드량을 약 60% 줄이고, `DomainErrorType` 레코드로 타입 안전한 에러 코드를 보장하는 패턴을 다룹니다.
 
 ## 학습 목표
 
-### **핵심 학습 목표**
-1. **DomainError 헬퍼 활용**: `DomainError.For<T>()` 메서드를 사용하여 간결하게 에러를 생성할 수 있다
-2. **DomainErrorType 활용**: 타입 안전한 에러 유형을 사용하여 오타와 불일치를 컴파일 타임에 방지할 수 있다
-3. **보일러플레이트 제거**: `DomainErrors` 중첩 클래스 없이 인라인으로 에러를 정의할 수 있다
-4. **자동 에러 코드 생성**: `DomainErrors.{ValueObjectName}.{ErrorType}` 형식의 에러 코드가 자동으로 생성됨을 이해한다
+이 장을 완료하면 다음을 할 수 있습니다.
 
-### **실습을 통해 확인할 내용**
-- **에러 생성 간소화**: `DomainErrors.Zero(value)` → `DomainError.For<Denominator, int>(new Zero(), value, "message")` (커스텀 에러는 `sealed record Zero : DomainErrorType.Custom;`으로 정의)
-- **표준 에러 타입 활용**: `Empty`, `TooShort`, `OutOfRange` 등 표준화된 에러 타입 사용
-- **타입별 오버로딩**: 문자열용 `For<T>()`, 제네릭용 `For<T, TValue>()`, 다중 값용 `For<T, T1, T2>()`
+1. `DomainError.For<T>()` 메서드를 사용하여 간결하게 에러를 생성할 수 있습니다
+2. `DomainErrorType` 레코드로 오타와 불일치를 컴파일 타임에 방지할 수 있습니다
+3. `DomainErrors` 중첩 클래스 없이 인라인으로 에러를 정의할 수 있습니다
+4. 타입별 오버로딩(`For<T>()`, `For<T, TValue>()`, `For<T, T1, T2>()`)을 상황에 맞게 선택할 수 있습니다
 
 ## 왜 필요한가?
 
-이전 `13-Error-Code` 프로젝트에서는 구조화된 에러 코드 시스템을 도입했지만, 각 값 객체마다 `DomainErrors` 중첩 클래스를 정의해야 하는 보일러플레이트 코드가 발생했습니다.
+이전 `13-Error-Code` 프로젝트에서 구조화된 에러 코드 시스템을 도입했지만, 각 값 객체마다 `DomainErrors` 중첩 클래스를 정의해야 하는 보일러플레이트가 남아 있었습니다. 모든 값 객체에서 동일한 패턴의 `internal static class DomainErrors`를 반복 정의해야 했고, `$"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}"` 형태로 에러 코드를 수동 조합해야 했습니다. 게다가 `"Empty"`, `"IsEmpty"`, `"EmptyValue"`처럼 동일한 개념에 대해 개발자마다 다른 이름을 사용할 수 있어 일관성이 깨지기 쉬웠습니다.
 
-**첫 번째 문제는 반복적인 에러 클래스 정의입니다.** 모든 값 객체에서 동일한 패턴의 `internal static class DomainErrors`를 반복 정의해야 했습니다. 이는 코드 중복을 야기하고 유지보수 비용을 증가시킵니다.
-
-**두 번째 문제는 에러 코드의 수동 조합입니다.** `$"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}"` 형태로 매번 수동으로 에러 코드를 조합해야 했습니다. 이는 실수의 여지가 있고 일관성을 해칩니다.
-
-**세 번째 문제는 문자열 기반 에러 이름입니다.** `"Empty"`, `"IsEmpty"`, `"EmptyValue"` 처럼 동일한 개념에 대해 개발자마다 다른 이름을 사용할 수 있습니다. 이는 에러 코드의 일관성을 해칩니다.
-
-이러한 문제들을 해결하기 위해 **DomainError 헬퍼**와 **DomainErrorType 레코드**를 도입했습니다. 타입 안전한 에러 유형과 자동 에러 코드 생성으로 코드량이 대폭 감소하고 일관성이 보장됩니다.
+**DomainError 헬퍼와 DomainErrorType 레코드는** 타입 안전한 에러 유형과 자동 에러 코드 생성으로 이 문제들을 해결합니다.
 
 ## 핵심 개념
 
-이 프로젝트의 핵심은 크게 3가지 개념으로 나눌 수 있습니다.
+### DomainErrorType 레코드
 
-### 첫 번째 개념: DomainErrorType 레코드
-
-`DomainErrorType`은 표준화된 에러 유형을 정의하는 추상 레코드입니다. 문자열 대신 타입을 사용하여 컴파일 타임 안전성을 보장합니다.
-
-**핵심 아이디어는 "표준 에러는 enum처럼, 커스텀 에러는 명시적으로"입니다.**
+`DomainErrorType`은 표준화된 에러 유형을 정의하는 추상 레코드입니다. 문자열 대신 타입을 사용하여 컴파일 타임 안전성을 보장합니다. 표준 에러는 미리 정의된 타입을 사용하고, 도메인 특화 에러는 `DomainErrorType.Custom`을 상속하여 명시적으로 정의합니다.
 
 ```csharp
 // 표준 에러 타입들 (타입 안전)
@@ -66,11 +52,9 @@ new DomainErrorType.Mismatch()        // 불일치
 new Unsupported()    // 도메인 특화 에러
 ```
 
-### 두 번째 개념: DomainError 헬퍼
+### DomainError 헬퍼
 
-DomainError 헬퍼는 Functorium 프레임워크에서 제공하는 에러 생성 유틸리티입니다. 타입 정보와 에러 유형을 조합하여 에러 코드를 자동으로 생성합니다.
-
-**핵심 아이디어는 "타입 기반 에러 코드 자동 생성"입니다.** `typeof(T).Name`과 `DomainErrorType`을 조합하여 일관된 에러 코드를 자동으로 생성합니다.
+DomainError 헬퍼는 `typeof(T).Name`과 `DomainErrorType`을 조합하여 `DomainErrors.{ValueObjectName}.{ErrorType}` 형식의 에러 코드를 자동으로 생성합니다.
 
 ```csharp
 // DomainError 헬퍼 사용법
@@ -91,11 +75,9 @@ DomainError.For<Coordinate, int>(new DomainErrorType.OutOfRange("0", "1000"), x,
 // 생성되는 에러 코드: "DomainErrors.Coordinate.OutOfRange"
 ```
 
-### 세 번째 개념: 인라인 에러 정의
+### 인라인 에러 정의
 
-DomainError 헬퍼를 사용하면 검증 로직과 에러 정의를 한 곳에 작성할 수 있습니다. 별도의 `DomainErrors` 중첩 클래스가 불필요합니다.
-
-**핵심 아이디어는 "검증과 에러의 동시 정의"입니다.** 검증 실패 시점에서 바로 에러를 생성하여 코드 응집도를 높입니다.
+DomainError 헬퍼를 사용하면 검증 실패 시점에서 바로 에러를 생성할 수 있어, 별도의 `DomainErrors` 중첩 클래스가 불필요합니다. 검증과 에러 정의가 한 곳에 위치하므로 코드 응집도가 높아집니다.
 
 ```csharp
 // 인라인 에러 정의 예시 (커스텀 에러: sealed record Zero : DomainErrorType.Custom;)
@@ -234,11 +216,8 @@ null 바이너리 데이터: [DomainErrors.BinaryData.Empty] Binary data cannot 
 ```
 
 ### 핵심 구현 포인트
-1. **DomainErrorType 활용**: 표준 에러는 `new DomainErrorType.Empty()` 등 미리 정의된 타입 사용
-2. **DomainError.For<T>() 활용**: 타입 정보에서 에러 코드 자동 생성
-3. **인라인 에러 정의**: 검증 로직 내에서 직접 에러 정의
-4. **Custom 에러 타입**: 표준 에러로 표현하기 어려운 도메인 특화 에러는 `sealed record` 파생 정의 후 사용
-5. **LanguageExt 완전 호환**: 기존 `Validation<Error, T>`, `Fin<T>` 타입과 완벽 호환
+
+표준 에러는 `new DomainErrorType.Empty()` 등 미리 정의된 타입을 사용하고, 표준 에러로 표현하기 어려운 도메인 특화 에러는 `sealed record` 파생 정의 후 사용합니다. `DomainError.For<T>()`가 타입 정보에서 에러 코드를 자동 생성하므로, 검증 로직 내에서 직접 에러를 인라인 정의할 수 있습니다. 기존 `Validation<Error, T>`, `Fin<T>` 타입과 완벽 호환됩니다.
 
 ## 프로젝트 설명
 
@@ -510,6 +489,8 @@ public sealed class Coordinate : ValueObject
 
 ## 한눈에 보는 정리
 
+이전 방식과 DomainError 헬퍼 방식의 차이를 비교합니다.
+
 ### 비교 표
 | 구분 | 이전 방식 (DomainErrors 중첩 클래스) | 현재 방식 (DomainError + DomainErrorType) |
 |------|--------------------------------------|-------------------------------------------|
@@ -517,11 +498,12 @@ public sealed class Coordinate : ValueObject
 | **에러 코드 생성** | 수동 조합 (nameof 사용) | 자동 생성 (타입 정보 + DomainErrorType) |
 | **에러 이름 안전성** | 문자열 기반 (오타 가능) | 타입 기반 (컴파일 타임 체크) |
 | **코드량** | 약 40줄 | 약 15줄 |
-| **유지보수** | 여러 위치에서 수정 필요 | 한 곳에서 관리 |
 | **일관성** | 개발자마다 다른 이름 가능 | 표준 에러 타입으로 강제 |
-| **LanguageExt 호환성** | 완전 호환 | 완전 호환 |
 
 ### DomainErrorType 선택 가이드
+
+검증 조건에 따라 적절한 DomainErrorType을 선택합니다.
+
 | 검증 조건 | DomainErrorType | 생성되는 에러 코드 |
 |-----------|-----------------|-------------------|
 | 빈 값 | `new DomainErrorType.Empty()` | `DomainErrors.{Type}.Empty` |
@@ -539,45 +521,15 @@ public sealed class Coordinate : ValueObject
 |------|------|
 | **코드량 60% 감소** | Functorium 프레임워크 의존성 |
 | **타입 안전한 에러 타입** | - |
-| **인라인 에러 정의** | - |
+| **인라인 에러 정의로 높은 응집도** | - |
 | **자동 에러 코드 생성** | - |
-| **높은 코드 응집도** | - |
 | **표준화된 에러 이름** | - |
-| **빠른 개발 속도** | - |
-
-### 핵심 개선사항
-- **DomainErrors 중첩 클래스 제거**: 모든 에러 정의가 검증 로직 내에 인라인으로 위치
-- **DomainErrorType 도입**: 타입 안전한 표준 에러 유형으로 일관성 보장
-- **자동 에러 코드 생성**: `DomainErrors.{ValueObjectName}.{ErrorType}` 형식 자동 생성
-- **타입 기반 오버로딩**: 문자열, 단일 제네릭, 다중 제네릭 값 지원
-- **코드 응집도 향상**: 검증과 에러 정의가 같은 위치에 존재
-- **개발 생산성 향상**: 새 값 객체 생성 시 에러 처리 코드 최소화
 
 ## FAQ
 
-### Q1: DomainErrorType이 왜 필요한가요?
-**A**: 기존 문자열 기반 에러 이름은 오타와 불일치 문제가 있었습니다.
+### Q1: 언제 Custom을 사용해야 하나요?
 
-문자열 기반 문제:
-```csharp
-// 개발자 A
-DomainError.For<Email>("Empty", value, message);
-// 개발자 B
-DomainError.For<UserName>("IsEmpty", value, message);
-// 개발자 C
-DomainError.For<PostalCode>("EmptyValue", value, message);
-```
-
-DomainErrorType으로 해결:
-```csharp
-// 모든 개발자가 동일한 타입 사용
-DomainError.For<Email>(new DomainErrorType.Empty(), value, message);
-DomainError.For<UserName>(new DomainErrorType.Empty(), value, message);
-DomainError.For<PostalCode>(new DomainErrorType.Empty(), value, message);
-```
-
-### Q2: 언제 Custom을 사용해야 하나요?
-**A**: 표준 DomainErrorType으로 표현하기 어려운 도메인 특화 에러에 사용합니다. `sealed record`를 파생 정의하여 타입 안전하게 사용합니다.
+표준 DomainErrorType으로 표현할 수 있으면 표준 타입을 사용하고, 도메인 특화 에러만 `sealed record`를 파생 정의합니다.
 
 ```csharp
 // 표준 타입으로 표현 가능 → 표준 타입 사용
@@ -593,8 +545,9 @@ DomainError.For<Currency>(new Unsupported(), value, "...");
 DomainError.For<DateRange>(new StartAfterEnd(), start, "...");
 ```
 
-### Q3: 언제 어떤 DomainError.For 오버로딩을 사용해야 하나요?
-**A**: 검증 실패 시 저장할 값의 타입에 따라 선택합니다.
+### Q2: 어떤 DomainError.For 오버로딩을 사용해야 하나요?
+
+검증 실패 시 저장할 값의 타입에 따라 선택합니다.
 
 1. **문자열 값** → `DomainError.For<T>(errorType, stringValue, message)`
    ```csharp
@@ -614,35 +567,9 @@ DomainError.For<DateRange>(new StartAfterEnd(), start, "...");
    DomainError.For<DateRange, DateTime, DateTime>(new StartAfterEnd(), start, end, "...")
    ```
 
-### Q4: 기존 코드를 마이그레이션하는 방법은?
-**A**: 3단계로 마이그레이션합니다.
+### Q3: 단위 테스트에서 에러를 어떻게 검증하나요?
 
-1. **DomainErrors 호출을 DomainError.For로 교체**:
-   ```csharp
-   // Before
-   return DomainErrors.Zero(value);
-
-   // After (sealed record Zero : DomainErrorType.Custom;)
-   return DomainError.For<Denominator, int>(new Zero(), value,
-       $"Denominator cannot be zero. Current value: '{value}'");
-   ```
-
-2. **표준 에러 타입으로 변환 (가능한 경우)**:
-   ```csharp
-   // Before (문자열 기반 Custom - 구버전)
-   new DomainErrorType.Custom("Empty")
-
-   // After (표준 타입)
-   new DomainErrorType.Empty()
-   ```
-
-3. **DomainErrors 중첩 클래스 삭제**: 더 이상 필요하지 않음
-
-### Q5: 성능에 영향이 있나요?
-**A**: 런타임 성능 차이는 미미합니다. `typeof(T).Name`과 `DomainErrorType` 패턴 매칭은 JIT 컴파일 시 최적화됩니다. 에러 코드 문자열이 실패 시점에만 생성되므로 성공 경로의 성능은 완전히 동일합니다.
-
-### Q6: 단위 테스트에서 에러를 어떻게 검증하나요?
-**A**: `Functorium.Testing.Assertions`의 타입 안전 확장 메서드를 사용합니다. `DomainError.For<T>()`로 생성한 에러를 `ShouldBeDomainError<T>()`로 검증하여 일관성 있는 패턴을 유지합니다.
+`Functorium.Testing.Assertions`의 타입 안전 확장 메서드를 사용합니다. `DomainError.For<T>()`로 생성한 에러를 `ShouldBeDomainError<T>()`로 검증합니다.
 
 ```csharp
 // Before (문자열 기반) - 오타 가능, 리팩토링 위험
@@ -660,6 +587,8 @@ result.ShouldBeDomainError<Denominator, int>(new Zero());
 Functorium 프레임워크는 `DomainError` 생성 패턴과 대칭되는 타입 안전 테스트 Assertion을 제공합니다.
 
 ### 설계 원칙
+
+에러 생성과 검증이 대칭 구조를 이루도록 설계되어 있습니다.
 
 | 에러 생성 | 에러 검증 |
 |-----------|-----------|
@@ -712,39 +641,9 @@ validation.ShouldHaveDomainError<Denominator, int, int>(
     expectedCurrentValue: 0);
 ```
 
-### Before/After 비교 (테스트 코드)
-
-#### Before (문자열 기반)
-```csharp
-[Fact]
-public void Create_ShouldFail_WhenEmpty()
-{
-    // Act
-    var actual = Street.Create("");
-
-    // Assert - 문자열 기반, 오타 가능
-    actual.IsFail.ShouldBeTrue();
-    actual.IfFail(error =>
-    {
-        error.Message.ShouldContain("DomainErrors.Street.Empty");
-    });
-}
-```
-
-#### After (타입 안전)
-```csharp
-[Fact]
-public void Create_ShouldReturnDomainError_WhenEmpty()
-{
-    // Act
-    var actual = Street.Create("");
-
-    // Assert - 타입 안전, 컴파일 타임 검증
-    actual.ShouldBeDomainError<Street, string>(new DomainErrorType.Empty());
-}
-```
-
 ### Assertion 메서드 선택 가이드
+
+시나리오별로 적절한 Assertion 메서드를 선택합니다.
 
 | 시나리오 | Assertion 메서드 |
 |----------|------------------|
@@ -755,12 +654,4 @@ public void Create_ShouldReturnDomainError_WhenEmpty()
 | Validation 여러 에러 확인 | `validation.ShouldHaveDomainErrors<TVO, T>(types...)` |
 | Validation 에러 + 값 확인 | `validation.ShouldHaveDomainError<TVO, T, TValue>(errorType, value)` |
 
-### 타입 안전 테스트의 장점
-
-| 장점 | 설명 |
-|------|------|
-| **컴파일 타임 안전성** | 값 객체 이름 변경 시 테스트 자동 갱신 |
-| **IntelliSense 지원** | `DomainErrorType` 자동 완성 |
-| **일관된 패턴** | 생성 (`DomainError.For<T>()`) ↔ 검증 (`ShouldBeDomainError<T>()`) |
-| **간결한 코드** | 기존 4-6줄 → 1줄로 축약 |
-| **오타 방지** | 문자열 대신 타입 사용 |
+에러 처리 코드가 간결해졌지만, 검증 로직 자체는 여전히 삼항 연산자나 Bind 체인으로 작성해야 합니다. 다음 장에서는 `Validate<T>` Fluent API를 도입하여 검증 흐름까지 선형적으로 개선합니다.

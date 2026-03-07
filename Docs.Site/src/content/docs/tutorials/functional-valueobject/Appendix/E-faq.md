@@ -5,7 +5,7 @@ title: "FAQ"
 
 ### Q: 값 객체와 엔티티의 차이점은 무엇인가요?
 
-**A:** 핵심 차이는 **식별자**입니다.
+**A:** 값 객체는 값으로 식별하고, 엔티티는 고유 ID로 식별합니다.
 
 | 특성 | 값 객체 | 엔티티 |
 |------|---------|--------|
@@ -30,7 +30,7 @@ var user2 = new User(id: 1, name: "Bob");
 
 ### Q: Fin<T>와 Validation<Error, T>는 언제 사용하나요?
 
-**A:** 검증 방식에 따라 선택합니다.
+**A:** 검증 간 의존성 여부에 따라 선택합니다.
 
 | 타입 | 실행 방식 | 오류 처리 | 사용 시기 |
 |------|----------|----------|----------|
@@ -75,7 +75,7 @@ public sealed class Money : ComparableValueObject
 
 ### Q: private 생성자와 Create 팩토리 메서드를 사용하는 이유는?
 
-**A:** **항상 유효한 상태**를 보장하기 위해서입니다.
+**A:** **항상 유효한 상태를** 보장하기 위해서입니다. private 생성자는 검증을 우회한 객체 생성을 차단하고, Create 팩토리 메서드는 검증을 통과한 경우에만 인스턴스를 반환합니다.
 
 ```csharp
 // ❌ public 생성자: 유효하지 않은 객체 생성 가능
@@ -159,7 +159,7 @@ public class EmailJsonConverter : JsonConverter<Email>
 
 ### Q: 값 객체 생성 시 예외를 던져도 되나요?
 
-**A:** 가능하면 피하고, `Fin<T>`나 `Validation`을 반환하세요.
+**A:** 예외 대신 `Fin<T>`나 `Validation`을 반환합니다. 예외는 검증된 값에서만 내부용으로 허용합니다.
 
 ```csharp
 // ❌ 예외 사용
@@ -208,11 +208,7 @@ public sealed class Email : SimpleValueObject<string>
 
 ### Q: 값 객체를 많이 생성하면 성능 문제가 있나요?
 
-**A:** 일반적으로 걱정할 필요 없습니다.
-
-- 값 객체는 대부분 작은 객체입니다
-- .NET의 GC는 작은 객체를 효율적으로 처리합니다
-- 필요시 `record struct`로 스택 할당 가능
+**A:** 대부분의 경우 문제가 되지 않습니다. 값 객체는 작은 객체이고 .NET GC가 효율적으로 처리합니다. 고성능이 필요하면 `record struct`로 스택 할당을 고려할 수 있습니다.
 
 ```csharp
 // 힙 할당 (class 기반)
@@ -226,7 +222,7 @@ public readonly record struct EmailStruct(string Value);
 
 ### Q: GetHashCode()가 자주 호출되면 문제가 되나요?
 
-**A:** 해시 코드를 캐싱할 수 있습니다.
+**A:** 불변 객체이므로 해시 코드를 필드에 캐싱하면 됩니다.
 
 ```csharp
 public abstract class ValueObject
@@ -253,23 +249,7 @@ public abstract class ValueObject
 
 ### Q: 값 객체 테스트에서 무엇을 검증해야 하나요?
 
-**A:** 다음 항목을 검증하세요.
-
-1. **생성 검증**
-   - 유효한 입력 → 성공
-   - 유효하지 않은 입력 → 실패 + 적절한 오류
-
-2. **동등성**
-   - 같은 값 → 동등
-   - 다른 값 → 비동등
-   - 해시코드 일관성
-
-3. **불변성**
-   - 연산 후 원본 변경 없음
-
-4. **비교 (해당시)**
-   - 정렬 순서
-   - 비교 연산자
+**A:** 생성 검증(유효/무효 입력), 값 동등성(같은 값 동등, 다른 값 비동등, 해시코드 일관성), 불변성(연산 후 원본 변경 없음), 그리고 해당 시 비교/정렬 순서를 검증합니다.
 
 ```csharp
 [Fact]
@@ -320,7 +300,7 @@ public void ValueObjects_ShouldNotHavePublicConstructors()
 
 ### Q: ValidationRules<T>와 raw Validation<Error, T>는 언제 사용하나요?
 
-**A:** 검증의 복잡도에 따라 선택합니다.
+**A:** 단일 필드 순차 검증에는 `ValidationRules<T>`를, 복합 필드 병렬 검증에는 raw `Validation`을 사용합니다.
 
 | 방식 | 특징 | 사용 시기 |
 |------|------|----------|
@@ -344,22 +324,13 @@ public static Fin<Money> Create(decimal amount, string currency) =>
         t => new Money(t.a, t.c));
 ```
 
-**권장**: 단일 필드 값 객체에는 `ValidationRules<T>`를 사용하고, 복합 값 객체에서 여러 필드를 병렬 검증할 때는 raw `Validation`과 Apply를 조합합니다.
-
 ---
 
 ## 설계 질문
 
 ### Q: 값 객체가 너무 많아지면 복잡해지지 않나요?
 
-**A:** 적절한 수준에서 사용하세요.
-
-**값 객체로 만들면 좋은 경우:**
-- 검증 규칙이 있는 값
-- 여러 곳에서 재사용되는 값
-- 비즈니스 의미가 있는 값
-
-**과도한 경우:**
+**A:** 검증 규칙이 있거나, 여러 곳에서 재사용되거나, 비즈니스 의미가 있는 값에만 적용합니다. 단순 문자열을 개별 타입으로 분리하는 것은 과도합니다.
 ```csharp
 // ❌ 과도함: 단순 문자열에 별도 타입
 public sealed class FirstName : SimpleValueObject<string> { }
@@ -379,7 +350,7 @@ public sealed class FullName : ValueObject
 
 ### Q: 값 객체 간의 의존성은 어떻게 처리하나요?
 
-**A:** 합성을 사용합니다.
+**A:** 이미 검증된 값 객체를 속성으로 포함하는 합성 방식을 사용합니다.
 
 ```csharp
 public sealed class Order : ValueObject

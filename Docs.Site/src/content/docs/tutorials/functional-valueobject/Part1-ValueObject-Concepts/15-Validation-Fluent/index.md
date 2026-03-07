@@ -4,27 +4,22 @@ title: "Validate Fluent API"
 
 ## 개요
 
-이 프로젝트는 Functorium 프레임워크의 `Validate<T>` Fluent API를 활용하여 값 객체의 검증 코드를 대폭 간소화하는 패턴을 시연합니다. 기존의 `DomainError.For<T>()` 직접 호출과 중첩된 삼항 연산자를 `Validate<T>.NotEmpty()` 체이닝으로 대체하여 **코드량을 약 70% 감소**시키고, **선형적이고 읽기 쉬운 검증 흐름**을 제공합니다.
+`DomainError.For<T>()`로 에러 생성은 간결해졌지만, 여러 검증 규칙을 적용할 때 삼항 연산자가 중첩되고 타입을 반복 지정해야 하는 불편함이 남아 있지 않았나요? 이 장에서는 `Validate<T>` Fluent API를 도입하여 검증 코드를 선형적인 체이닝으로 작성하고, 코드량을 약 70% 줄이는 패턴을 다룹니다.
 
 ## 학습 목표
 
-### **핵심 학습 목표**
-1. **Validate&lt;T&gt; 진입점 활용**: 단일 진입점에서 타입 파라미터를 한 번만 지정하여 검증을 시작할 수 있다
-2. **Fluent 체이닝 활용**: `Then*()` 메서드로 여러 검증 규칙을 선형적으로 연결할 수 있다
-3. **자동 에러 코드 생성**: 에러 타입과 메시지가 자동으로 생성됨을 이해한다
-4. **ThenNormalize 활용**: 검증 후 값 변환(정규화)을 체인에 포함시킬 수 있다
-5. **ThenMust 활용**: 커스텀 검증 조건을 Fluent 체인에 추가할 수 있다
+이 장을 완료하면 다음을 할 수 있습니다.
 
-### **실습을 통해 확인할 내용**
-- **검증 시작**: `Validate<Currency>.NotEmpty(value)` → 타입 안전한 검증 시작점
-- **체이닝**: `.ThenExactLength(3).ThenNormalize(v => v.ToUpperInvariant())` → 선형적 흐름
-- **자동 변환**: `TypedValidation<TValueObject, T>` → `Validation<Error, T>` 암시적 변환
+1. `Validate<T>` 단일 진입점에서 타입 파라미터를 한 번만 지정하여 검증을 시작할 수 있습니다
+2. `Then*()` 메서드로 여러 검증 규칙을 선형적으로 연결할 수 있습니다
+3. `ThenNormalize()`로 검증 후 값 변환(정규화)을 체인에 포함시킬 수 있습니다
+4. `ThenMust()`로 커스텀 검증 조건을 Fluent 체인에 추가할 수 있습니다
 
 ## 왜 필요한가?
 
-이전 `14-Error-Code-Fluent` 프로젝트에서는 `DomainError.For<T>()` 헬퍼로 에러 처리를 간소화했지만, 여전히 개선의 여지가 있었습니다.
+이전 `14-Error-Code-Fluent` 프로젝트에서 `DomainError.For<T>()` 헬퍼로 에러 처리를 간소화했지만, 여전히 개선의 여지가 있었습니다.
 
-**첫 번째 문제는 중첩된 조건문입니다.** 여러 검증 규칙을 적용할 때 삼항 연산자가 중첩되어 가독성이 떨어집니다.
+여러 검증 규칙을 적용할 때 삼항 연산자가 중첩되어 가독성이 떨어집니다.
 
 ```csharp
 // 이전 방식: 중첩된 삼항 연산자
@@ -36,21 +31,15 @@ public static Validation<Error, string> Validate(string currencyCode) =>
             : currencyCode.ToUpperInvariant();
 ```
 
-**두 번째 문제는 반복적인 타입 지정입니다.** 매번 `DomainError.For<Currency>(...)` 형태로 타입을 반복 지정해야 합니다.
+매번 `DomainError.For<Currency>(...)` 형태로 타입을 반복 지정해야 하고, 값 변환(`ToUpperInvariant()`)이 검증 로직 사이에 묻혀 의도가 명확하지 않습니다.
 
-**세 번째 문제는 검증과 변환의 혼재입니다.** 값 변환(`ToUpperInvariant()`)이 검증 로직 사이에 묻혀 의도가 명확하지 않습니다.
-
-이러한 문제들을 해결하기 위해 **Validate&lt;T&gt; Fluent API**를 도입했습니다. 선형적인 체이닝으로 가독성이 향상되고, 타입을 한 번만 지정하며, 변환은 `ThenNormalize()`로 명시적으로 표현합니다.
+**Validate&lt;T&gt; Fluent API는** 선형적인 체이닝으로 가독성을 높이고, 타입을 한 번만 지정하며, 변환은 `ThenNormalize()`로 명시적으로 표현합니다.
 
 ## 핵심 개념
 
-이 프로젝트의 핵심은 크게 4가지 개념으로 나눌 수 있습니다.
+### Validate&lt;T&gt; 정적 클래스
 
-### 첫 번째 개념: Validate&lt;T&gt; 정적 클래스
-
-`Validate<T>`는 모든 검증의 **단일 진입점**입니다. 타입 파라미터를 한 번만 지정하면 이후 체인에서 자동으로 전달됩니다.
-
-**핵심 아이디어는 "한 번 타입 지정, 전체 체인 적용"입니다.**
+`Validate<T>`는 모든 검증의 단일 진입점입니다. 타입 파라미터를 한 번만 지정하면 이후 체인에서 자동으로 전달됩니다.
 
 ```csharp
 // 문자열 검증 메서드
@@ -71,11 +60,9 @@ Validate<MoneyAmount>.AtLeast(value, 0)          // 최소값 검증
 Validate<Denominator>.Must(value, v => v != 0, new Zero(), "message")  // sealed record Zero : DomainErrorType.Custom;
 ```
 
-### 두 번째 개념: TypedValidation&lt;TValueObject, T&gt; 래퍼
+### TypedValidation&lt;TValueObject, T&gt; 래퍼
 
-`TypedValidation<TValueObject, T>`는 `Validation<Error, T>`를 감싸는 **readonly struct**입니다. 이 래퍼의 목적은 **타입 정보를 체인 전체에 전달**하는 것입니다.
-
-**핵심 아이디어는 "타입 정보 전달을 위한 투명한 래퍼"입니다.**
+`TypedValidation<TValueObject, T>`는 `Validation<Error, T>`를 감싸는 `readonly struct`입니다. 타입 정보를 체인 전체에 전달하면서도, 암시적 변환 덕분에 기존 코드와 완벽 호환됩니다.
 
 ```csharp
 public readonly struct TypedValidation<TValueObject, T>
@@ -88,7 +75,7 @@ public readonly struct TypedValidation<TValueObject, T>
 }
 ```
 
-암시적 변환 덕분에 기존 코드와 완벽하게 호환됩니다:
+반환 타입이 `Validation<Error, string>`인 메서드에서 TypedValidation을 그대로 반환할 수 있습니다.
 
 ```csharp
 // 반환 타입이 Validation<Error, string>이지만 TypedValidation을 반환해도 됨
@@ -97,11 +84,9 @@ public static Validation<Error, string> Validate(string value) =>
         .ThenExactLength(3);            // 암시적으로 Validation<Error, string>으로 변환
 ```
 
-### 세 번째 개념: Fluent 체이닝 확장 메서드
+### Fluent 체이닝 확장 메서드
 
-`TypedValidationExtensions` 클래스는 `TypedValidation`에 체이닝 메서드를 제공합니다.
-
-**핵심 아이디어는 "선형적이고 읽기 쉬운 검증 흐름"입니다.**
+`TypedValidationExtensions` 클래스는 `TypedValidation`에 선형적인 체이닝 메서드를 제공합니다.
 
 ```csharp
 // 문자열 체이닝 메서드
@@ -125,8 +110,7 @@ public static Validation<Error, string> Validate(string value) =>
 
 #### ThenNormalize vs ThenMust
 
-- **`ThenNormalize`**: 값을 **변환**합니다. 내부적으로 `Map`을 사용하여 항상 성공합니다.
-- **`ThenMust`**: 값을 **검증**합니다. 내부적으로 `Bind`를 사용하여 조건 실패 시 에러를 반환합니다.
+`ThenNormalize`는 값을 **변환**합니다(내부적으로 `Map` 사용, 항상 성공). `ThenMust`는 값을 **검증**합니다(내부적으로 `Bind` 사용, 조건 실패 시 에러 반환).
 
 ```csharp
 // ThenNormalize: 값 변환 (항상 성공)
@@ -138,11 +122,9 @@ public static Validation<Error, string> Validate(string value) =>
     v => $"Currency '{v}' is not supported")
 ```
 
-### 네 번째 개념: 자동 에러 코드 생성
+### 자동 에러 코드 생성
 
-`Validate<T>`는 에러 코드를 자동으로 생성합니다. 패턴은 `DomainErrors.{ValueObjectName}.{ErrorTypeName}` 형식입니다.
-
-**핵심 아이디어는 "타입 기반 일관된 에러 코드"입니다.**
+`Validate<T>`는 `DomainErrors.{ValueObjectName}.{ErrorTypeName}` 형식의 에러 코드를 자동으로 생성합니다.
 
 ```csharp
 // 검증 코드 → 생성되는 에러 코드
@@ -276,11 +258,8 @@ null 바이너리 데이터: [DomainErrors.BinaryData.Empty] BinaryData cannot b
 ```
 
 ### 핵심 구현 포인트
-1. **Validate&lt;T&gt;로 시작**: 모든 검증은 `Validate<ValueObjectType>.메서드()`로 시작
-2. **체이닝으로 연결**: `Then*()` 메서드로 추가 검증 규칙 연결
-3. **ThenNormalize로 변환**: 값 변환은 검증 체인 마지막에 `ThenNormalize()` 사용
-4. **ThenMust로 커스텀 검증**: 표준 메서드로 표현하기 어려운 검증은 `ThenMust()` 사용
-5. **암시적 변환 활용**: `TypedValidation` → `Validation<Error, T>` 자동 변환
+
+모든 검증은 `Validate<ValueObjectType>.메서드()`로 시작하고, `Then*()` 메서드로 추가 규칙을 연결합니다. 값 변환은 `ThenNormalize()`로 명시적으로 표현하고, 표준 메서드로 표현하기 어려운 검증은 `ThenMust()`를 사용합니다. `TypedValidation`에서 `Validation<Error, T>`로의 암시적 변환 덕분에 기존 코드와 호환됩니다.
 
 ## 프로젝트 설명
 
@@ -481,6 +460,8 @@ public sealed class Coordinate : ValueObject
 
 ## 한눈에 보는 정리
 
+이전 DomainError.For 직접 사용 방식과 Validate&lt;T&gt; Fluent 방식의 차이를 비교합니다.
+
 ### 비교 표
 | 구분 | 이전 방식 (DomainError.For 직접 사용) | 현재 방식 (Validate&lt;T&gt; Fluent) |
 |------|---------------------------------------|--------------------------------------|
@@ -489,9 +470,11 @@ public sealed class Coordinate : ValueObject
 | **값 변환** | 검증 로직에 묻혀 있음 | `ThenNormalize()`로 명시적 |
 | **에러 메시지** | 매번 수동 작성 | 자동 생성 (커스텀 가능) |
 | **코드량** | 검증 메서드당 5-10줄 | 검증 메서드당 1-3줄 |
-| **가독성** | 중첩 구조로 파악 어려움 | 선형 구조로 한눈에 파악 |
 
 ### Validate&lt;T&gt; 메서드 선택 가이드
+
+검증 조건에 따라 시작 메서드와 체이닝 메서드를 선택합니다.
+
 | 검증 조건 | 시작 메서드 | 체이닝 메서드 |
 |-----------|-------------|---------------|
 | 빈 값 | `Validate<T>.NotEmpty(value)` | `.ThenNotEmpty()` |
@@ -510,24 +493,17 @@ public sealed class Coordinate : ValueObject
 | 장점 | 단점 |
 |------|------|
 | **코드량 70% 감소** | Functorium 프레임워크 의존성 |
-| **선형적이고 읽기 쉬운 흐름** | 학습 곡선 (새로운 API) |
+| **선형적이고 읽기 쉬운 흐름** | 새로운 API 학습 필요 |
 | **타입 한 번 지정** | - |
 | **자동 에러 메시지 생성** | - |
 | **명시적 값 변환 (ThenNormalize)** | - |
 | **기존 코드 완벽 호환** | - |
 
-### 핵심 개선사항
-- **단일 진입점**: `Validate<T>`로 모든 검증 시작
-- **Fluent 체이닝**: `Then*()` 메서드로 선형적 검증 흐름
-- **타입 정보 자동 전달**: `TypedValidation` 래퍼로 체인 전체에 타입 전달
-- **명시적 변환**: `ThenNormalize()`로 값 변환 의도 명확화
-- **커스텀 검증 통합**: `ThenMust()`로 표준 체인에 커스텀 로직 추가
-- **암시적 변환**: 기존 `Validation<Error, T>` 반환 타입과 호환
-
 ## FAQ
 
 ### Q1: 언제 Validate&lt;T&gt;를 사용하고 언제 DomainError.For&lt;T&gt;를 사용하나요?
-**A**: 대부분의 경우 `Validate<T>` Fluent API를 사용하면 됩니다. `DomainError.For<T>()`는 다음 경우에만 사용합니다:
+
+대부분의 경우 `Validate<T>` Fluent API를 사용합니다. `DomainError.For<T>()`는 복잡한 비즈니스 로직처럼 표준 체이닝으로 표현하기 어려운 경우에만 사용합니다.
 
 ```csharp
 // Validate<T> 사용 (권장) - 표준 검증 패턴
@@ -546,7 +522,8 @@ private static Validation<Error, (Price Min, Price Max)> ValidatePriceRange(Pric
 ```
 
 ### Q2: ThenNormalize는 언제 사용하나요?
-**A**: 검증 후 값을 변환(정규화)할 때 사용합니다. 항상 검증 체인의 마지막에 배치합니다:
+
+검증 후 값을 변환(정규화)할 때 사용합니다. 검증을 먼저 수행한 뒤 변환하는 순서를 지키세요.
 
 ```csharp
 // Good: 검증 후 변환
@@ -560,23 +537,9 @@ Validate<Currency>.NotEmpty(value)
     .ThenExactLength(3);  // 이미 대문자로 변환된 값을 검증
 ```
 
-### Q3: ThenMust의 messageFactory 오버로드는 언제 사용하나요?
-**A**: 에러 메시지에 현재 값을 포함시키고 싶을 때 사용합니다:
+### Q3: 여러 필드를 동시에 검증하려면?
 
-```csharp
-// 정적 메시지 (값 정보 없음)
-.ThenMust(v => SupportedCodes.Contains(v),
-    new Unsupported(),  // sealed record Unsupported : DomainErrorType.Custom;
-    "Currency is not supported")
-
-// 동적 메시지 (값 정보 포함) - 권장
-.ThenMust(v => SupportedCodes.Contains(v),
-    new Unsupported(),  // sealed record Unsupported : DomainErrorType.Custom;
-    v => $"Currency '{v}' is not supported")
-```
-
-### Q4: 여러 필드를 동시에 검증하려면?
-**A**: 개별 필드를 `Validate<T>`로 검증하고, LINQ 쿼리 구문이나 `Apply`로 결합합니다:
+개별 필드를 `Validate<T>`로 검증한 뒤, LINQ 쿼리 구문이나 `Apply`로 결합합니다.
 
 ```csharp
 // LINQ 쿼리 구문 (권장)
@@ -591,34 +554,4 @@ public static Validation<Error, (string Street, string City)> Validate(string st
         .Apply((s, c) => (Street: s, City: c));
 ```
 
-### Q5: 기존 14-Error-Code-Fluent 코드를 마이그레이션하는 방법은?
-**A**: 3단계로 마이그레이션합니다.
-
-1. **단일 검증을 Validate&lt;T&gt;로 변경**:
-   ```csharp
-   // Before
-   public static Validation<Error, string> Validate(string value) =>
-       string.IsNullOrWhiteSpace(value)
-           ? DomainError.For<Street>(new DomainErrorType.Empty(), value ?? "", "...")
-           : value;
-
-   // After
-   public static Validation<Error, string> Validate(string value) =>
-       Validate<Street>.NotEmpty(value ?? "");
-   ```
-
-2. **다단계 검증을 체이닝으로 변경**:
-   ```csharp
-   // Before
-   ValidateNotEmpty(value).Bind(ValidateFormat)
-
-   // After
-   Validate<PostalCode>.NotEmpty(value ?? "")
-       .ThenExactLength(5)
-       .ThenMatches(DigitsPattern)
-   ```
-
-3. **불필요한 private 메서드 제거**: `ValidateNotEmpty`, `ValidateFormat` 등 분리된 검증 메서드 제거
-
-### Q6: 성능에 영향이 있나요?
-**A**: 런타임 성능 차이는 미미합니다. `TypedValidation`은 `readonly struct`로 힙 할당이 없고, 체이닝 메서드는 JIT 컴파일 시 인라인됩니다. 검증 실패 시에만 에러 객체가 생성되므로 성공 경로의 성능은 기존과 동일합니다.
+검증 코드가 Fluent API로 간결해졌지만, 이 값 객체들이 설계 규칙을 일관되게 따르고 있는지는 어떻게 보장할까요? 다음 장에서는 ArchUnitNET 기반 아키텍처 테스트로 값 객체의 구조적 규칙을 자동 검증합니다.

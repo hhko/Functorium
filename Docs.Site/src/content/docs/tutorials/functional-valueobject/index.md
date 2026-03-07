@@ -2,17 +2,15 @@
 title: "함수형으로 성공 주도 값 객체 구현하기"
 ---
 
-**C# LanguageExt로 타입 안전한 값 객체를 구현하는 실전 가이드**
+`string email`에 `"not-an-email"`을 넣어도 컴파일러는 아무 말 하지 않습니다. `int age`에 `-1`을 넣어도 마찬가지입니다. 런타임이 되어서야 `ArgumentException`이 터지고, 그제야 "아, 여기서도 검증이 필요했구나"를 깨닫게 됩니다.
+
+이 튜토리얼은 그 문제를 **타입 시스템으로** 해결합니다. `string` 대신 `Email`을, `int` 대신 `Age`를 쓰면 잘못된 값은 애초에 만들어지지 않습니다. 기본적인 나눗셈 함수에서 시작해 완성된 값 객체 프레임워크까지, **29개의 실습 프로젝트**를 통해 이 과정을 직접 경험합니다.
 
 ---
 
-## 이 튜토리얼에 대하여
-
-이 튜토리얼은 **함수형 프로그래밍 원칙을 적용한 값 객체(Value Object) 구현**을 단계별로 학습할 수 있도록 구성된 종합적인 교육 과정입니다. 기본적인 나눗셈 함수에서 시작하여 완성된 패턴까지, **29개의 실습 프로젝트**를 통해 함수형 값 객체의 모든 측면을 체계적으로 학습할 수 있습니다.
-
-> **단순한 예외 기반 함수에서 시작하여 타입 안전한 함수형 값 객체로 진화하는 과정을 함께 경험해보세요.**
-
 ### 대상 독자
+
+다음 표는 경험 수준에 따른 권장 학습 범위를 안내합니다.
 
 | 수준 | 대상 | 권장 학습 범위 |
 |------|------|----------------|
@@ -24,16 +22,16 @@ title: "함수형으로 성공 주도 값 객체 구현하기"
 
 이 튜토리얼을 완료하면 다음을 할 수 있습니다:
 
-1. **예외 대신 명시적 결과 타입**으로 안전한 코드 작성
-2. **도메인 규칙을 타입으로 표현**하여 컴파일 타임 검증
-3. **Bind/Apply 패턴**을 활용한 유연한 검증 로직 구현
-4. **Functorium 프레임워크**를 활용한 실전 값 객체 개발
+1. **예외 대신 명시적 결과 타입**으로 안전한 코드를 작성할 수 있습니다
+2. **도메인 규칙을 타입으로 표현**하여 컴파일 타임에 검증할 수 있습니다
+3. **Bind/Apply 패턴**을 활용해 유연한 검증 로직을 구현할 수 있습니다
+4. **Functorium 프레임워크**를 활용해 실전 값 객체를 개발할 수 있습니다
 
 ---
 
 ### Part 0: 서론
 
-서론에서는 성공 주도 개발의 개념과 환경 설정을 다룹니다.
+예외 기반 코드가 왜 문제인지, 성공 주도 개발이 어떤 대안을 제시하는지 살펴봅니다.
 
 - [0.1 이 튜토리얼을 읽어야 하는 이유](Part0-Introduction/01-why-this-tutorial.md)
 - [0.2 성공 주도 개발이란?](Part0-Introduction/02-success-driven-development.md)
@@ -41,7 +39,7 @@ title: "함수형으로 성공 주도 값 객체 구현하기"
 
 ### Part 1: 값 객체 개념 이해
 
-기본 개념부터 프레임워크까지 체계적으로 학습합니다.
+`10 / 0`이 터지는 단순한 예제에서 출발해, 예외 → 방어적 프로그래밍 → 함수형 결과 타입 → 항상 유효한 값 객체로 한 단계씩 진화합니다. 왜 각 단계가 필요한지를 코드로 직접 확인합니다.
 
 | 장 | 주제 | 핵심 학습 내용 |
 |:---:|------|----------------|
@@ -64,7 +62,7 @@ title: "함수형으로 성공 주도 값 객체 구현하기"
 
 ### Part 2: 검증 패턴 마스터
 
-함수형 검증 패턴을 심화 학습합니다.
+값 객체 하나를 검증하는 것은 어렵지 않습니다. 하지만 여러 필드를 동시에 검증하면서 모든 오류를 한번에 수집하려면 Bind와 Apply의 차이를 이해해야 합니다.
 
 | 장 | 주제 | 핵심 학습 내용 |
 |:---:|------|----------------|
@@ -76,7 +74,7 @@ title: "함수형으로 성공 주도 값 객체 구현하기"
 
 ### Part 3: 값 객체 패턴 완성
 
-완성된 값 객체 패턴을 실전 프로젝트로 적용합니다.
+Part 1~2에서 익힌 개념을 Functorium 프레임워크의 기본 클래스로 조립합니다. 단일 값 래퍼부터 복합 값 객체, 타입 안전 열거형까지 실전에서 바로 쓸 수 있는 패턴을 완성합니다.
 
 | 장 | 주제 | 프레임워크 타입 |
 |:---:|------|----------------|
@@ -91,7 +89,7 @@ title: "함수형으로 성공 주도 값 객체 구현하기"
 
 ### Part 4: 실전 가이드
 
-실전 프로젝트에서 값 객체를 적용하는 방법을 학습합니다.
+값 객체를 EF Core, CQRS 같은 인프라와 통합할 때 발생하는 실전 문제를 다룹니다.
 
 | 장 | 주제 | 핵심 학습 내용 |
 |:---:|------|----------------|
@@ -102,7 +100,7 @@ title: "함수형으로 성공 주도 값 객체 구현하기"
 
 ### Part 5: 도메인별 실전 예제
 
-다양한 도메인에서 값 객체를 구현하는 실전 예제입니다.
+이커머스, 금융, 사용자 관리, 일정 예약 등 실제 도메인에서 값 객체가 어떻게 쓰이는지 확인합니다.
 
 | 장 | 주제 | 값 객체 예제 |
 |:---:|------|-------------|
@@ -123,6 +121,8 @@ title: "함수형으로 성공 주도 값 객체 구현하기"
 
 ## 핵심 진화 과정
 
+다음 다이어그램은 1장부터 16장까지의 개념이 어떤 순서로 쌓이는지를 보여줍니다.
+
 ```
 1장: 예외 발생 함수     →  2장: 방어적 프로그래밍  →  3장: Fin<T> 도입
      ↓
@@ -139,214 +139,8 @@ title: "함수형으로 성공 주도 값 객체 구현하기"
 
 ---
 
-## Bind vs Apply 비교
-
-| 구분 | Bind (순차 검증) | Apply (병렬 검증) |
-|------|------------------|-------------------|
-| **실행 방식** | 순차 실행 | 병렬 실행 |
-| **에러 처리** | 첫 번째 에러에서 중단 | 모든 에러 수집 |
-| **사용 시기** | 의존성 있는 검증 | 독립적인 검증 |
-| **성능** | 조기 중단으로 효율적 | 모든 검증 실행 |
-| **UX** | 하나씩 오류 표시 | 모든 오류 한 번에 표시 |
-
----
-
-## 프레임워크 타입 계층 구조
-
-```
-IValueObject (인터페이스 — 명명 규칙 상수)
-    │
-    └── AbstractValueObject (기본 클래스 — 동등성, 해시코드, ORM 프록시 처리)
-        │
-        ├── ValueObject (CreateFromValidation<TVO, TValue> 헬퍼)
-        │   ├── SimpleValueObject<T> (단일 값 래퍼, CreateFromValidation<TVO> 헬퍼)
-        │   │
-        │   └── ComparableValueObject (IComparable, 비교 연산자)
-        │       └── ComparableSimpleValueObject<T> (단일 비교 가능 값 래퍼)
-        │
-        └── SmartEnum<TValue, TKey> + IValueObject (열거형)
-```
-
----
-
 ## 필수 준비물
 
 - .NET 10.0 SDK 이상
 - VS Code + C# Dev Kit 확장
 - C# 기초 문법 지식
-
----
-
-## 프로젝트 구조
-
-```
-Implementing-Functional-ValueObject/
-├── Part0-Introduction/        # Part 0: 서론
-├── Part1-ValueObject-Concepts/  # Part 1: 값 객체 개념 이해 (16개)
-│   ├── 01-Basic-Divide/
-│   ├── 02-Defensive-Programming/
-│   ├── ...
-│   ├── 14-Error-Code-Fluent/
-│   ├── 15-Validation-Fluent/
-│   └── 16-Architecture-Test/
-├── Part2-Validation-Patterns/   # Part 2: 검증 패턴 마스터 (5개)
-│   ├── 01-Bind-Sequential-Validation/
-│   ├── ...
-│   └── 05-Bind-Internal-Apply-Validation/
-├── Part3-ValueObject-Patterns/  # Part 3: 값 객체 패턴 완성 (8개)
-│   ├── 01-SimpleValueObject/
-│   ├── ...
-│   └── 08-Architecture-Test/
-├── Part4-Practical-Guide/       # Part 4: 실전 가이드
-│   ├── 01-Functorium-Framework/
-│   │   ├── FunctoriumFramework/
-│   │   └── FunctoriumFramework.Tests.Unit/
-│   ├── 02-ORM-Integration/
-│   │   ├── OrmIntegration/
-│   │   └── OrmIntegration.Tests.Unit/
-│   ├── 03-CQRS-Integration/
-│   │   ├── CqrsIntegration/
-│   │   └── CqrsIntegration.Tests.Unit/
-│   └── 04-Testing-Strategies/
-│       ├── TestingStrategies/
-│       └── TestingStrategies.Tests.Unit/
-├── Part5-Domain-Examples/       # Part 5: 도메인별 실전 예제
-│   ├── 01-Ecommerce-Domain/
-│   │   ├── EcommerceDomain/
-│   │   └── EcommerceDomain.Tests.Unit/
-│   ├── 02-Finance-Domain/
-│   │   ├── FinanceDomain/
-│   │   └── FinanceDomain.Tests.Unit/
-│   ├── 03-User-Management-Domain/
-│   │   ├── UserManagementDomain/
-│   │   └── UserManagementDomain.Tests.Unit/
-│   └── 04-Scheduling-Domain/
-│       ├── SchedulingDomain/
-│       └── SchedulingDomain.Tests.Unit/
-├── Appendix/                    # 부록
-└── README.md                    # 이 문서
-```
-
----
-
-## 테스트
-
-모든 Part의 예제 프로젝트에는 단위 테스트가 포함되어 있습니다. 테스트는 [15a-unit-testing.md](../../Docs/guides/15a-unit-testing.md) 가이드를 따릅니다.
-
-### 테스트 실행 방법
-
-```bash
-# Part 1 테스트 실행
-cd Docs/tutorials/Implementing-Functional-ValueObject/Part1-ValueObject-Concepts/01-Basic-Divide/BasicDivide.Tests.Unit
-dotnet test
-
-# Part 2 테스트 실행
-cd Docs/tutorials/Implementing-Functional-ValueObject/Part2-Validation-Patterns/01-Bind-Sequential-Validation/BindSequentialValidation.Tests.Unit
-dotnet test
-
-# Part 3 테스트 실행
-cd Docs/tutorials/Implementing-Functional-ValueObject/Part3-ValueObject-Patterns/01-SimpleValueObject/SimpleValueObject.Tests.Unit
-dotnet test
-
-# Part 4 테스트 실행
-cd Docs/tutorials/Implementing-Functional-ValueObject/Part4-Practical-Guide/01-Functorium-Framework/FunctoriumFramework.Tests.Unit
-dotnet test
-
-# Part 5 테스트 실행
-cd Docs/tutorials/Implementing-Functional-ValueObject/Part5-Domain-Examples/01-Ecommerce-Domain/EcommerceDomain.Tests.Unit
-dotnet test
-```
-
-### 테스트 프로젝트 구조
-
-**Part 1: 값 객체 개념 이해** (16개)
-
-| 장 | 테스트 프로젝트 | 주요 테스트 내용 |
-|:---:|----------------|-----------------|
-| 1 | `BasicDivide.Tests.Unit` | 나눗셈 예외 vs 결과 타입 |
-| 2 | `DefensiveProgramming.Tests.Unit` | 방어적 프로그래밍 검증 |
-| 3 | `FunctionalResult.Tests.Unit` | Fin/Validation 타입 테스트 |
-| 4 | `AlwaysValid.Tests.Unit` | 항상 유효한 값 객체 |
-| 5 | `OperatorOverloading.Tests.Unit` | 연산자 오버로딩 |
-| 6 | `LinqExpression.Tests.Unit` | LINQ 표현식 |
-| 7 | `ValueEquality.Tests.Unit` | 값 동등성 |
-| 8 | `ValueComparability.Tests.Unit` | 비교 가능성 |
-| 9 | `CreateValidateSeparation.Tests.Unit` | 생성/검증 분리 |
-| 10 | `ValidatedValueCreation.Tests.Unit` | 검증된 값 생성 |
-| 11 | `ValueObjectFramework.Tests.Unit` | 프레임워크 타입 |
-| 12 | `TypeSafeEnums.Tests.Unit` | 타입 안전 열거형 |
-| 13 | `ErrorCode.Tests.Unit` | 에러 코드 |
-| 14 | `ErrorCodeFluent.Tests.Unit` | DomainError 헬퍼 |
-| 15 | `ValidationFluent.Tests.Unit` | FluentValidation 검증 패턴 |
-| 16 | `ArchitectureTest.Tests.Unit` | 아키텍처 테스트 |
-
-**Part 2: 검증 패턴 마스터** (5개)
-
-| 장 | 테스트 프로젝트 | 주요 테스트 내용 |
-|:---:|----------------|-----------------:|
-| 17 | `BindSequentialValidation.Tests.Unit` | Bind 순차 검증 |
-| 18 | `ApplyParallelValidation.Tests.Unit` | Apply 병렬 검증 |
-| 19 | `ApplyBindCombinedValidation.Tests.Unit` | Apply와 Bind 조합 |
-| 20 | `ApplyInternalBindValidation.Tests.Unit` | 내부 Bind 외부 Apply |
-| 21 | `BindInternalApplyValidation.Tests.Unit` | 내부 Apply 외부 Bind |
-
-**Part 3: 값 객체 패턴 완성** (8개)
-
-| 장 | 테스트 프로젝트 | 주요 테스트 내용 |
-|:---:|----------------|-----------------:|
-| 22 | `SimpleValueObject.Tests.Unit` | 단일 값 래퍼 테스트 |
-| 23 | `ComparableSimpleValueObject.Tests.Unit` | 비교 가능 단일 값 테스트 |
-| 24 | `ValueObjectPrimitive.Tests.Unit` | 기본 타입 값 객체 |
-| 25 | `ComparableValueObjectPrimitive.Tests.Unit` | 비교 가능 기본 타입 |
-| 26 | `ValueObjectComposite.Tests.Unit` | 복합 값 객체 |
-| 27 | `ComparableValueObjectComposite.Tests.Unit` | 비교 가능 복합 값 객체 |
-| 28 | `TypeSafeEnum.Tests.Unit` | 타입 안전 열거형 |
-| 29 | `ArchitectureTest` | 아키텍처 테스트 |
-
-**Part 4: 실전 가이드** (4개)
-
-| 장 | 테스트 프로젝트 | 주요 테스트 내용 |
-|:---:|----------------|-----------------|
-| 30 | `FunctoriumFramework.Tests.Unit` | 프레임워크 타입 통합 테스트 |
-| 31 | `OrmIntegration.Tests.Unit` | EF Core ORM 패턴 테스트 |
-| 32 | `CqrsIntegration.Tests.Unit` | CQRS 핸들러 테스트 |
-| 33 | `TestingStrategies.Tests.Unit` | 테스트 패턴 메타 테스트 |
-
-**Part 5: 도메인별 실전 예제** (4개)
-
-| 장 | 테스트 프로젝트 | 주요 테스트 내용 |
-|:---:|----------------|-----------------|
-| 34 | `EcommerceDomain.Tests.Unit` | 이커머스 값 객체 테스트 |
-| 35 | `FinanceDomain.Tests.Unit` | 금융 값 객체 테스트 |
-| 36 | `UserManagementDomain.Tests.Unit` | 사용자 관리 값 객체 테스트 |
-| 37 | `SchedulingDomain.Tests.Unit` | 일정 관리 값 객체 테스트 |
-
-### 테스트 명명 규칙
-
-T1_T2_T3 명명 규칙을 따릅니다:
-
-```csharp
-// Method_ExpectedResult_Scenario
-[Fact]
-public void Create_ReturnsSuccess_WhenInputIsValid()
-{
-    // Arrange
-    // Act
-    var actual = Money.Create(10000, "KRW");
-    // Assert
-    actual.IsSucc.ShouldBeTrue();
-}
-```
-
----
-
-## 소스 코드
-
-이 튜토리얼의 모든 예제 코드는 Functorium 프로젝트에서 확인할 수 있습니다:
-
-- 프레임워크 타입: `Src/Functorium/Domains/ValueObjects/`
-- 튜토리얼 프로젝트: `Docs/tutorials/Implementing-Functional-ValueObject/`
-
----
-
-이 튜토리얼은 Functorium 프로젝트의 실제 값 객체 프레임워크 개발 경험을 바탕으로 작성되었습니다.

@@ -365,6 +365,8 @@ var result = Pure<Validation<Error>, Output>(
     .Apply(ValidateField3(input.Field3));
 ```
 
+두 가지 Apply 방식의 차이를 비교합니다.
+
 | 방법 | 특징 | 사용 시기 |
 |------|------|----------|
 | 튜플 Apply | 간결하고 직관적 | 대부분의 경우 권장 |

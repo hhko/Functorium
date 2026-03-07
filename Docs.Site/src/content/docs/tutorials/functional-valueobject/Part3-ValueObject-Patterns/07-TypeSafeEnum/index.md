@@ -4,26 +4,20 @@ title: "유형 값 객체"
 
 ## 개요
 
-이 프로젝트는 **SmartEnum을 사용한 Type Safe Enum 구현** 방법을 학습합니다. 기존 C# enum의 한계를 극복하고, 타입 안전성과 도메인 로직을 강화한 열거형을 구현하는 방법을 다룹니다.
+C#의 기존 `enum`에 `(Currency)999` 같은 유효하지 않은 값을 대입하면 컴파일 타임에 잡히지 않습니다. 통화별 기호나 한글 이름을 별도의 `Dictionary`로 관리해야 하고, 메서드나 속성을 추가할 수도 없습니다. SmartEnum은 이러한 한계를 극복하여 타입 안전성과 도메인 로직을 열거형 자체에 내장합니다.
 
 ## 학습 목표
 
-### **핵심 학습 목표**
-1. **SmartEnum 이해**: Ardalis.SmartEnum 라이브러리를 활용한 강력한 열거형 구현
-2. **Type Safety 확보**: 컴파일 타임에 타입 안전성을 보장하는 열거형 설계
-3. **도메인 로직 내장**: 열거형 값에 비즈니스 로직과 속성을 직접 포함하는 방법
-
-### **실습을 통해 확인할 내용**
-- **SmartEnum 기본 사용법**: 정적 인스턴스, FromValue, FromName 메서드 활용
-- **검증 기능**: LanguageExt를 활용한 함수형 검증 패턴 적용
-- **비즈니스 로직**: 통화별 포맷팅, 기호, 한글 이름 등 도메인 특화 기능
-- **에러 처리**: 구조화된 에러 메시지와 예외 처리
+1. Ardalis.SmartEnum 라이브러리를 활용하여 타입 안전한 열거형을 구현할 수 있습니다.
+2. 열거형 값에 비즈니스 로직과 도메인 속성을 직접 포함시킬 수 있습니다.
+3. LanguageExt의 `Validation<Error, T>`를 사용하여 함수형 검증 패턴을 적용할 수 있습니다.
 
 ## 왜 필요한가?
 
-기존 C# enum은 다음과 같은 한계가 있습니다:
+기존 C# enum은 세 가지 근본적인 한계가 있습니다.
 
-### **1. 타입 안전성 부족**
+유효하지 않은 값을 컴파일 타임에 방지할 수 없습니다.
+
 ```csharp
 // 기존 enum의 문제점
 public enum Currency { KRW, USD, EUR }
@@ -32,7 +26,8 @@ public enum Currency { KRW, USD, EUR }
 Currency currency = (Currency)999; // 유효하지 않은 값
 ```
 
-### **2. 도메인 로직 표현 제약**
+통화별 기호나 이름 같은 도메인 로직을 enum 자체에 표현할 수 없어 별도로 관리해야 합니다.
+
 ```csharp
 // 기존 enum으로는 복잡한 로직 표현이 어려움
 public enum Currency { KRW, USD, EUR }
@@ -46,7 +41,8 @@ private static readonly Dictionary<Currency, string> Symbols = new()
 };
 ```
 
-### **3. 확장성 문제**
+메서드나 속성 추가, 상속이 불가능하여 확장성이 제한됩니다.
+
 ```csharp
 // 새로운 속성 추가 시 기존 코드 수정 필요
 // 메서드 추가 불가능
@@ -55,17 +51,20 @@ private static readonly Dictionary<Currency, string> Symbols = new()
 
 ## 핵심 개념
 
-### **1. SmartEnum 기본 구조**
+### SmartEnum 기본 구조
+
+SmartEnum은 정적 인스턴스(`public static readonly`)로 각 열거형 값을 정의하고, private 생성자로 외부 생성을 방지합니다. 도메인에 필요한 속성들을 생성자에서 함께 초기화합니다.
+
 ```csharp
 public sealed class Currency : SmartEnum<Currency, string>
 {
     public static readonly Currency KRW = new(nameof(KRW), "KRW", "한국 원화", "₩");
     public static readonly Currency USD = new(nameof(USD), "USD", "미국 달러", "$");
-    
+
     public string KoreanName { get; }
     public string Symbol { get; }
-    
-    private Currency(string name, string value, string koreanName, string symbol) 
+
+    private Currency(string name, string value, string koreanName, string symbol)
         : base(name, value)
     {
         KoreanName = koreanName;
@@ -74,7 +73,10 @@ public sealed class Currency : SmartEnum<Currency, string>
 }
 ```
 
-### **2. 함수형 검증 패턴**
+### 함수형 검증 패턴
+
+`Bind`를 사용한 체이닝으로 의존성이 있는 검증 단계들을 순차적으로 실행합니다. 각 단계에서 실패하면 이후 단계는 실행되지 않습니다.
+
 ```csharp
 public static Validation<Error, string> Validate(string currencyCode) =>
     ValidateNotEmpty(currencyCode)
@@ -82,7 +84,10 @@ public static Validation<Error, string> Validate(string currencyCode) =>
         .Bind(ValidateSupported);
 ```
 
-### **3. 도메인 로직 내장**
+### 도메인 로직 내장
+
+SmartEnum의 가장 큰 장점은 열거형 값에 비즈니스 로직을 직접 포함할 수 있다는 점입니다. 포맷팅, 계산, 검증 같은 도메인 특화 기능을 열거형 클래스 안에 정의합니다.
+
 ```csharp
 public string FormatAmount(decimal amount) => $"{Symbol}{amount:N2}";
 public string FormatAmountWithoutDecimals(decimal amount) => $"{Symbol}{amount:N0}";
@@ -90,20 +95,15 @@ public string FormatAmountWithoutDecimals(decimal amount) => $"{Symbol}{amount:N
 
 ## 실전 지침
 
-### **1. SmartEnum 구현 패턴**
-- **정적 인스턴스**: `public static readonly`로 각 열거형 값 정의
-- **Private 생성자**: 외부에서 직접 생성 방지
-- **추가 속성**: 도메인에 필요한 속성들을 생성자에서 초기화
+### SmartEnum 구현 패턴
 
-### **2. 검증 로직 설계**
-- **순차 검증**: `Bind`를 사용한 체이닝 패턴
-- **구체적 에러**: 각 검증 단계별 명확한 에러 메시지
-- **예외 처리**: `SmartEnumNotFoundException` 등 라이브러리 예외 처리
+SmartEnum 구현 시 다음 세 가지 영역을 구분합니다.
 
-### **3. 비즈니스 로직 통합**
-- **포맷팅 메서드**: 도메인별 데이터 포맷팅 로직
-- **계산 메서드**: 열거형 값에 따른 계산 로직
-- **검증 메서드**: 도메인 규칙에 따른 검증 로직
+| 영역 | 패턴 | 설명 |
+|------|------|------|
+| **인스턴스 정의** | `public static readonly` | 각 열거형 값 정의 |
+| **검증 로직** | `Bind` 체이닝 | 순차 검증 + 구체적 에러 메시지 |
+| **비즈니스 로직** | 인스턴스 메서드 | 포맷팅, 계산 등 도메인 로직 |
 
 ## 프로젝트 구조
 
@@ -119,7 +119,10 @@ public string FormatAmountWithoutDecimals(decimal amount) => $"{Symbol}{amount:N
 
 ## 핵심 코드
 
-### **1. Currency SmartEnum 구현**
+### Currency SmartEnum 구현
+
+`Currency`는 SmartEnum을 상속하고 `IValueObject`를 구현하여, 프레임워크의 값 객체 규칙(`Create`, `Validate`, `DomainError.For<T>()`)을 준수합니다.
+
 ```csharp
 public sealed class Currency : SmartEnum<Currency, string>, IValueObject
 {
@@ -169,7 +172,7 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
 }
 ```
 
-### **2. 대안: SimpleValueObject\<string> + HashMap 패턴**
+### 대안: SimpleValueObject\<string> + HashMap 패턴
 
 SmartEnum 외에도 프레임워크의 `SimpleValueObject<string>`과 LanguageExt의 `HashMap`을 조합하여 타입 안전한 열거형을 구현할 수 있습니다. 이 패턴은 외부 라이브러리 의존성 없이 프레임워크만으로 구현 가능합니다.
 
@@ -211,6 +214,8 @@ public sealed class OrderStatus : SimpleValueObject<string>
 }
 ```
 
+두 접근 방식의 차이를 정리합니다.
+
 **SmartEnum vs SimpleValueObject+HashMap 비교:**
 | 특징 | SmartEnum | SimpleValueObject+HashMap |
 |------|-----------|---------------------------|
@@ -219,7 +224,7 @@ public sealed class OrderStatus : SimpleValueObject<string>
 | **ValueObject 호환** | IValueObject 수동 구현 | 자동 상속 |
 | **HashMap 조회** | 내장 FromValue/FromName | LanguageExt HashMap 사용 |
 
-### **3. 데모 프로그램**
+### 데모 프로그램
 ```csharp
 // 기본 사용법
 var krw = Currency.KRW;
@@ -254,7 +259,7 @@ GBP from name: GBP (영국 파운드) £
 ✅ 유효한 통화: USD (미국 달러) $
 ❌ 에러: 통화 코드는 3자리 영문자여야 합니다: US
 ❌ 에러: 지원하지 않는 통화 코드입니다: XYZ
-❌ 에러: 통화 코드는 비어있을 수 없습니다: 
+❌ 에러: 통화 코드는 비어있을 수 없습니다:
 
 3. 비교 기능
 =============
@@ -303,6 +308,8 @@ JPY: ¥1,000
 
 ## 한눈에 보는 정리
 
+기존 enum과 SmartEnum의 기능 차이를 비교합니다.
+
 ### SmartEnum vs 기존 Enum 비교
 | 특징 | 기존 Enum | SmartEnum |
 |------|-----------|-----------|
@@ -313,7 +320,6 @@ JPY: ¥1,000
 | **상속** | 불가능 | 가능 |
 | **검증** | 수동 구현 필요 | 자동 제공 + 커스텀 가능 |
 | **비교 기능** | 기본 제공 | 고급 비교 기능 제공 |
-| **확장성** | 제한적 | 높은 확장성 |
 
 ### 장단점 표
 | 장점 | 단점 |
@@ -322,60 +328,17 @@ JPY: ¥1,000
 | **도메인 로직 내장** | **기존 enum 대비 복잡성** |
 | **강력한 검증 기능** | **성능 오버헤드 (미미)** |
 | **확장성과 유연성** | **학습 곡선** |
-| **비즈니스 규칙 표현** | **메모리 사용량 증가** |
 
 ## FAQ
 
 ### Q1. SmartEnum과 기존 enum의 가장 큰 차이점은 무엇인가요?
-**A1.** SmartEnum은 **도메인 로직을 직접 내장**할 수 있다는 점이 가장 큰 차이입니다. 기존 enum은 단순한 정수/문자열 값만 저장할 수 있지만, SmartEnum은 속성, 메서드, 비즈니스 로직을 포함할 수 있습니다.
+**A1.** SmartEnum은 도메인 로직을 직접 내장할 수 있습니다. 기존 enum은 단순한 정수/문자열 값만 저장할 수 있지만, SmartEnum은 속성, 메서드, 비즈니스 로직을 포함할 수 있습니다.
 
 ### Q2. 언제 SmartEnum을 사용해야 하나요?
-**A2.** 다음 상황에서 SmartEnum 사용을 권장합니다:
-- **도메인 로직이 필요한 열거형**: 포맷팅, 계산, 검증 등
-- **타입 안전성이 중요한 경우**: 잘못된 값 입력 방지
-- **확장 가능한 열거형**: 새로운 속성이나 메서드 추가 예정
-- **복잡한 비즈니스 규칙**: 단순한 값 이상의 로직 필요
+**A2.** 포맷팅, 계산, 검증 같은 도메인 로직이 필요하거나, 잘못된 값 입력을 타입 수준에서 방지해야 하거나, 새로운 속성이나 메서드 추가가 예상되는 열거형에 적합합니다.
 
-### Q3. SmartEnum의 성능은 어떤가요?
-**A3.** SmartEnum은 기존 enum 대비 **미미한 성능 오버헤드**가 있습니다:
-- **메모리**: 각 인스턴스가 객체이므로 약간 더 많은 메모리 사용
-- **속도**: 메서드 호출 오버헤드가 있지만 실용적으로 무시할 수준
-- **장점**: 타입 안전성과 도메인 로직으로 인한 **전체적인 코드 품질 향상**
-
-### Q4. SmartEnum에서 검증 로직을 어떻게 구현하나요?
-**A4.** LanguageExt의 `Validation<Error, T>` 타입을 사용하여 **함수형 검증 패턴**을 구현합니다:
-```csharp
-public static Validation<Error, string> Validate(string currencyCode) =>
-    ValidateNotEmpty(currencyCode)
-        .Bind(ValidateFormat)
-        .Bind(ValidateSupported);
-```
-
-### Q5. SmartEnum을 상속받아 확장할 수 있나요?
-**A5.** 네, SmartEnum은 **상속을 지원**합니다. 하지만 일반적으로는 **컴포지션 패턴**을 권장합니다:
-```csharp
-// 상속보다는 컴포지션 권장
-public class ExtendedCurrency : Currency
-{
-    public string Region { get; }
-    // ...
-}
-```
-
-### Q6. 기존 enum에서 SmartEnum으로 마이그레이션하는 방법은?
-**A6.** 단계적 마이그레이션을 권장합니다:
-1. **새로운 SmartEnum 클래스 생성**
-2. **기존 enum과 호환되는 정적 인스턴스 제공**
-3. **점진적으로 기존 코드 교체**
-4. **도메인 로직 점진적 추가**
-
-### Q7. SmartEnum에서 ValueObject 규칙을 어떻게 준수하나요?
-**A7.** SmartEnum도 ValueObject 규칙을 준수해야 합니다:
-- **IValueObject 인터페이스 구현**: Framework의 IValueObject 사용
-- **DomainError.For\<T>() 패턴**: 구조화된 에러 처리
-- **DomainErrorType 레코드**: 커스텀 에러 타입 정의 (예: `sealed record Unsupported : DomainErrorType.Custom`)
-- **삼항 연산자 패턴**: `조건 ? 성공값 : 실패에러` 형식
-- **Bind 순차 검증**: 의존성이 있는 검증 단계들을 순차적으로 실행
+### Q3. SmartEnum에서 ValueObject 규칙을 어떻게 준수하나요?
+**A3.** `IValueObject` 인터페이스를 구현하고, `DomainError.For<T>()` 패턴으로 구조화된 에러를 처리합니다. 커스텀 에러 타입은 `sealed record Unsupported : DomainErrorType.Custom` 형식으로 정의합니다.
 
 ```csharp
 // ValueObject 규칙 준수 예시
@@ -387,10 +350,4 @@ private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =
             $"Currency code cannot be empty. Current value: '{currencyCode}'");
 ```
 
-### Q8. DomainError.For\<T>()를 사용하는 이유는 무엇인가요?
-**A8.** `DomainError.For<T>()`를 사용하는 이유는 다음과 같습니다:
-- **구조화된 에러 코드**: 타입 이름 기반 자동 에러 코드 생성 (`DomainErrors.Currency.Empty`)
-- **DomainErrorType 활용**: 내장 타입(`Empty`, `WrongLength`, `InvalidFormat`) + 커스텀 타입(`sealed record Unsupported : DomainErrorType.Custom`)
-- **보일러플레이트 제거**: 내부 `DomainErrors` 중첩 클래스를 직접 구현할 필요 없음
-- **디버깅 효율성**: 에러 코드만으로도 어떤 ValueObject의 어떤 에러인지 즉시 파악
-- **프로젝트 간 일관성**: 모든 프로젝트에서 동일한 에러 처리 방식 적용
+다음 장에서는 ArchUnitNET을 활용하여 지금까지 구현한 모든 값 객체가 아키텍처 규칙을 올바르게 준수하는지 자동으로 검증하는 방법을 다룹니다.

@@ -3,9 +3,10 @@ title: "금융 도메인"
 ---
 ## 개요
 
-이 프로젝트는 금융 도메인에서 자주 사용되는 4가지 핵심 값 객체를 구현합니다. 계좌번호, 이자율, 환율, 거래 유형 등 금융 비즈니스의 핵심 개념을 타입 안전하게 표현합니다.
+이자율 5%와 0.05를 혼동하면 금액이 100배 달라집니다. "USD/KRW = 1350"이 1달러당 1350원인지 1원당 1350달러인지 모호하면 환전 오류가 발생합니다. 계좌번호가 로그에 평문으로 출력되면 보안 사고로 이어집니다. 금융 시스템에서 원시 타입은 이런 위험을 그대로 노출합니다.
 
-구현되는 값 객체:
+이 장에서는 금융 도메인의 핵심 개념 4가지를 값 객체로 구현하여, 계산 오류와 보안 위험을 타입 시스템으로 방지합니다.
+
 - **AccountNumber**: 은행 코드와 계좌번호를 파싱하고 마스킹하는 값 객체
 - **InterestRate**: 이자율을 표현하며 단리/복리 계산 기능을 제공
 - **ExchangeRate**: 통화 쌍과 환율을 관리하며 변환/역변환 기능 제공
@@ -14,10 +15,10 @@ title: "금융 도메인"
 ## 학습 목표
 
 ### **핵심 학습 목표**
-1. **도메인 계산 로직 캡슐화**: InterestRate에서 단리/복리 이자 계산을 값 객체 내부에 구현합니다.
-2. **역연산 제공**: ExchangeRate에서 Invert() 메서드로 역환율을 계산합니다.
-3. **민감 정보 마스킹**: AccountNumber에서 계좌번호를 마스킹하여 보안을 강화합니다.
-4. **타입 안전 열거형 확장**: TransactionType에서 입금/출금 구분 속성을 제공합니다.
+- InterestRate에서 단리/복리 이자 계산을 값 객체 내부에 **캡슐화할 수** 있습니다.
+- ExchangeRate에서 Invert() 메서드로 **역환율을 계산할 수** 있습니다.
+- AccountNumber에서 계좌번호를 **마스킹하여 보안을 강화할 수** 있습니다.
+- TransactionType에서 입금/출금 구분 속성을 가진 **타입 안전 열거형을 구현할 수** 있습니다.
 
 ### **실습을 통해 확인할 내용**
 - AccountNumber의 은행 코드 파싱과 마스킹
@@ -29,15 +30,11 @@ title: "금융 도메인"
 
 금융 시스템은 정확성과 보안이 특히 중요합니다. 원시 타입으로 금융 데이터를 다루면 여러 위험이 발생합니다.
 
-**첫 번째 위험은 계산 오류입니다.** 이자율 계산에서 백분율(5%)과 소수(0.05)를 혼동하면 금액 오류가 발생합니다. InterestRate 값 객체는 Percentage와 Decimal 속성을 명확히 구분하여 제공합니다.
-
-**두 번째 위험은 환율 방향 혼동입니다.** "USD/KRW = 1350"이 1달러당 1350원인지, 1원당 1350달러인지 혼동될 수 있습니다. ExchangeRate는 BaseCurrency와 QuoteCurrency를 명시적으로 관리합니다.
-
-**세 번째 위험은 민감 정보 노출입니다.** 계좌번호를 로그에 그대로 출력하면 보안 문제가 발생합니다. AccountNumber는 Masked 속성을 제공하여 안전한 표시를 지원합니다.
+이자율 계산에서 백분율(5%)과 소수(0.05)를 혼동하면 금액 오류가 발생하는데, InterestRate 값 객체는 Percentage와 Decimal 속성을 명확히 구분하여 제공합니다. ExchangeRate는 BaseCurrency와 QuoteCurrency를 명시적으로 관리하여 환율 방향 혼동을 원천 차단합니다. 계좌번호를 로그에 그대로 출력하는 보안 문제도, AccountNumber의 Masked 속성으로 안전한 표시를 지원하여 해결합니다.
 
 ## 핵심 개념
 
-### 첫 번째 개념: AccountNumber (계좌번호)
+### AccountNumber (계좌번호)
 
 AccountNumber는 은행 계좌번호를 검증하고 파싱합니다. 은행 코드 추출과 마스킹 기능을 제공합니다.
 
@@ -66,9 +63,9 @@ public sealed class AccountNumber : SimpleValueObject<string>
 }
 ```
 
-**핵심 아이디어는 "민감 정보의 안전한 표시"입니다.** `ToString()`은 전체 계좌번호를 반환하지만, `Masked`는 중간 부분을 가려서 로그나 화면 표시에 사용할 수 있습니다.
+`ToString()`은 전체 계좌번호를 반환하지만, `Masked`는 중간 부분을 가려서 로그나 화면 표시에 사용할 수 있습니다. 민감 정보의 안전한 표시 패턴입니다.
 
-### 두 번째 개념: InterestRate (이자율)
+### InterestRate (이자율)
 
 InterestRate는 이자율을 백분율로 저장하고, 단리/복리 이자 계산 기능을 제공합니다.
 
@@ -99,9 +96,9 @@ public sealed class InterestRate : ComparableSimpleValueObject<decimal>
 }
 ```
 
-**핵심 아이디어는 "도메인 계산의 캡슐화"입니다.** 이자 계산 공식이 값 객체 내부에 있으므로 어디서든 일관된 계산을 보장합니다.
+이자 계산 공식이 값 객체 내부에 있으므로 어디서든 일관된 계산을 보장합니다. Percentage와 Decimal 속성을 분리하여 백분율/소수 혼동을 방지합니다.
 
-### 세 번째 개념: ExchangeRate (환율)
+### ExchangeRate (환율)
 
 ExchangeRate는 통화 쌍(USD/KRW)과 환율을 관리합니다. 변환과 역환율 계산 기능을 제공합니다.
 
@@ -147,9 +144,9 @@ public sealed class ExchangeRate : ValueObject
 }
 ```
 
-**핵심 아이디어는 "양방향 변환의 명시적 표현"입니다.** `Convert()`는 기준 통화에서 견적 통화로, `ConvertBack()`은 반대 방향으로, `Invert()`는 역환율 객체를 반환합니다.
+`Convert()`는 기준 통화에서 견적 통화로, `ConvertBack()`은 반대 방향으로, `Invert()`는 역환율 객체를 반환합니다. 양방향 변환이 명시적으로 표현됩니다.
 
-### 네 번째 개념: TransactionType (거래 유형)
+### TransactionType (거래 유형)
 
 TransactionType은 SmartEnum을 사용하여 입금/출금을 구분합니다.
 
@@ -168,7 +165,7 @@ public sealed class TransactionType : SmartEnum<TransactionType, string>
 }
 ```
 
-**핵심 아이디어는 "분류 속성의 캡슐화"입니다.** `IsCredit` 속성으로 잔액 계산 시 더하기/빼기를 결정할 수 있습니다.
+`IsCredit` 속성으로 잔액 계산 시 더하기/빼기를 결정할 수 있습니다. 다음 코드는 이 분류 속성을 활용한 잔액 갱신 예시입니다.
 
 ```csharp
 decimal UpdateBalance(decimal balance, TransactionType type, decimal amount) =>
@@ -235,6 +232,8 @@ decimal UpdateBalance(decimal balance, TransactionType type, decimal amount) =>
 
 ### 값 객체별 프레임워크 타입
 
+각 값 객체가 상속하는 프레임워크 타입과 주요 특징을 정리한 것입니다.
+
 | 값 객체 | 프레임워크 타입 | 특징 |
 |--------|---------------|------|
 | AccountNumber | SimpleValueObject\<string\> | ValidationRules 체인, 파싱, 마스킹 |
@@ -246,6 +245,8 @@ decimal UpdateBalance(decimal balance, TransactionType type, decimal amount) =>
 
 ### 금융 값 객체 요약
 
+각 값 객체의 속성, 검증 규칙, 도메인 연산을 한눈에 비교할 수 있습니다.
+
 | 값 객체 | 주요 속성 | 검증 규칙 | 도메인 연산 |
 |--------|----------|----------|------------|
 | AccountNumber | Value | NNN-NNNNNNNNNN 형식 | BankCode, Masked |
@@ -254,6 +255,8 @@ decimal UpdateBalance(decimal balance, TransactionType type, decimal amount) =>
 | TransactionType | Value, IsCredit | 정의된 유형만 | 없음 |
 
 ### 금융 도메인 패턴
+
+금융 도메인에서 활용된 설계 패턴을 유형별로 분류하면 다음과 같습니다.
 
 | 패턴 | 값 객체 | 설명 |
 |------|--------|------|
@@ -265,7 +268,8 @@ decimal UpdateBalance(decimal balance, TransactionType type, decimal amount) =>
 ## FAQ
 
 ### Q1: InterestRate에서 월복리나 일복리를 계산하려면?
-**A**: 복리 기간을 매개변수로 추가하거나 별도 메서드를 제공합니다.
+
+복리 기간을 매개변수로 추가하거나 별도 메서드를 제공합니다.
 
 ```csharp
 public decimal CalculateCompoundInterest(
@@ -288,7 +292,8 @@ public decimal CalculateCompoundInterest(
 ```
 
 ### Q2: ExchangeRate에서 여러 통화 간 체인 환전을 하려면?
-**A**: 별도의 ExchangeRateService를 만들어 환율 체인을 관리합니다.
+
+별도의 ExchangeRateService를 만들어 환율 체인을 관리합니다.
 
 ```csharp
 public class ExchangeRateService
@@ -309,7 +314,8 @@ public class ExchangeRateService
 ```
 
 ### Q3: AccountNumber에서 국가별 다른 형식을 지원하려면?
-**A**: 국가 코드를 매개변수로 받아 다른 검증 패턴을 적용합니다.
+
+국가 코드를 매개변수로 받아 다른 검증 패턴을 적용합니다.
 
 ```csharp
 public static Fin<AccountNumber> Create(string value, string countryCode = "KR")
@@ -326,38 +332,7 @@ public static Fin<AccountNumber> Create(string value, string countryCode = "KR")
 }
 ```
 
-### Q4: TransactionType에 새로운 유형을 추가하면 기존 코드에 영향이 있나요?
-**A**: SmartEnum을 사용하면 새 유형 추가가 안전합니다. 다만 switch 표현식에서 exhaustive 검사를 받으려면 `_ =>` default 케이스를 추가해야 합니다.
-
-```csharp
-// 새 유형 추가
-public static readonly TransactionType Refund = new("REFUND", "환불", isCredit: true);
-
-// 기존 코드에서 IsCredit/IsDebit을 사용했다면 자동으로 올바르게 동작
-decimal adjustment = type.IsCredit ? amount : -amount;
-```
-
-### Q5: 금융 도메인에서 정밀도(소수점) 처리는 어떻게 하나요?
-**A**: `decimal` 타입을 사용하고, 필요에 따라 반올림 정책을 값 객체에 캡슐화합니다.
-
-```csharp
-public sealed class Money
-{
-    public decimal Amount { get; }
-
-    // 반올림 정책 적용
-    public Money RoundToMinorUnit(int decimalPlaces = 2, MidpointRounding rounding = MidpointRounding.ToEven)
-    {
-        return new Money(Math.Round(Amount, decimalPlaces, rounding), Currency);
-    }
-
-    // 은행 반올림 (Banker's Rounding)
-    public Money RoundBankers() =>
-        RoundToMinorUnit(2, MidpointRounding.ToEven);
-}
-```
-
-금융 계산에서는 일반적으로 은행 반올림(MidpointRounding.ToEven)을 사용하여 편향을 방지합니다.
+금융 도메인의 값 객체 구현을 살펴보았습니다. 다음 장에서는 이메일, 비밀번호, 전화번호 등 보안과 데이터 품질이 특히 중요한 사용자 관리 도메인의 값 객체를 구현합니다.
 
 ---
 

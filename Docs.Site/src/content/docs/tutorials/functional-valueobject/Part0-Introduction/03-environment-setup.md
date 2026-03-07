@@ -173,6 +173,6 @@ dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org
 
 ## 다음 단계
 
-환경 설정이 완료되었다면, Part 1의 첫 번째 장으로 이동하세요.
+환경 설정이 완료되었습니다. 이제 Part 1에서 기본 나눗셈 함수의 문제점을 직접 확인하고, 값 객체로 진화하는 첫 걸음을 내딛습니다.
 
-→ [1장: 기본 나눗셈에서 시작하기](../01-Concept/01-Basic-Divide/BasicDivide/)
+→ [1장: 기본 나눗셈에서 시작하기](../Part1-ValueObject-Concepts/01-Basic-Divide/)

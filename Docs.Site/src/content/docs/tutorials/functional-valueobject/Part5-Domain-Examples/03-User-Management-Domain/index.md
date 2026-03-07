@@ -3,9 +3,10 @@ title: "사용자 관리 도메인"
 ---
 ## 개요
 
-이 프로젝트는 사용자 관리 도메인에서 자주 사용되는 4가지 핵심 값 객체를 구현합니다. 이메일, 비밀번호, 전화번호, 사용자명 등 사용자 인증과 프로필에 필요한 개념을 타입 안전하게 표현합니다.
+"User@Example.COM"과 "user@example.com"을 다른 이메일로 취급하면 같은 사용자가 중복 가입합니다. 비밀번호를 `string`으로 다루면 로그나 디버거에 평문이 노출됩니다. 전화번호 "010-1234-5678"과 "+82-10-1234-5678"이 다르게 저장되면 검색이 불가능합니다. 사용자 관리 도메인에서 원시 타입은 보안과 데이터 품질 모두를 위협합니다.
 
-구현되는 값 객체:
+이 장에서는 사용자 인증과 프로필에 필요한 4가지 핵심 개념을 값 객체로 구현하여, 정규화/마스킹/해시를 타입 수준에서 보장합니다.
+
 - **Email**: 이메일 형식 검증과 정규화, 마스킹 기능 제공
 - **Password**: 비밀번호 강도 검증과 해시 저장, 검증 기능 제공
 - **PhoneNumber**: 전화번호 정규화와 포맷팅, 마스킹 기능 제공
@@ -14,10 +15,10 @@ title: "사용자 관리 도메인"
 ## 학습 목표
 
 ### **핵심 학습 목표**
-1. **보안 중심 설계**: Password에서 평문을 저장하지 않고 해시만 유지하는 패턴을 학습합니다.
-2. **정규화와 포맷팅**: Email과 PhoneNumber에서 입력값 정규화와 표시용 포맷팅을 분리합니다.
-3. **예약어 차단**: Username에서 시스템 예약어를 차단하는 패턴을 구현합니다.
-4. **민감 정보 보호**: 모든 값 객체에서 Masked 속성이나 안전한 ToString()을 제공합니다.
+- Password에서 평문을 저장하지 않고 해시만 유지하는 **보안 중심 설계를 구현할 수** 있습니다.
+- Email과 PhoneNumber에서 입력값 정규화와 표시용 포맷팅을 **분리할 수** 있습니다.
+- Username에서 시스템 예약어를 **차단하는 패턴을 구현할 수** 있습니다.
+- 모든 값 객체에서 Masked 속성이나 안전한 ToString()으로 **민감 정보를 보호할 수** 있습니다.
 
 ### **실습을 통해 확인할 내용**
 - Email의 정규화(소문자 변환)와 LocalPart/Domain 파싱
@@ -29,15 +30,11 @@ title: "사용자 관리 도메인"
 
 사용자 관리는 보안과 데이터 품질이 특히 중요한 도메인입니다. 원시 타입으로 사용자 데이터를 다루면 여러 문제가 발생합니다.
 
-**첫 번째 문제는 보안 위험입니다.** 비밀번호를 `string`으로 다루면 로그나 디버거에 평문이 노출될 수 있습니다. Password 값 객체는 생성 시 해시하고, `ToString()`은 항상 "********"를 반환합니다.
-
-**두 번째 문제는 데이터 중복입니다.** "User@Example.COM"과 "user@example.com"이 다른 이메일로 취급되면 같은 사용자가 중복 가입할 수 있습니다. Email 값 객체는 항상 소문자로 정규화합니다.
-
-**세 번째 문제는 형식 불일치입니다.** 전화번호 "010-1234-5678", "01012345678", "+82-10-1234-5678"이 모두 같은 번호인데 다르게 저장되면 검색이 어렵습니다. PhoneNumber는 내부적으로 정규화된 형식을 유지합니다.
+비밀번호를 `string`으로 다루면 로그나 디버거에 평문이 노출될 수 있는데, Password 값 객체는 생성 시 해시하고 `ToString()`은 항상 "********"를 반환합니다. "User@Example.COM"과 "user@example.com"이 다른 이메일로 취급되면 중복 가입이 가능한데, Email 값 객체는 항상 소문자로 정규화하여 이를 방지합니다. 전화번호의 다양한 입력 형식("010-1234-5678", "+82-10-1234-5678" 등)도 PhoneNumber가 내부적으로 정규화된 형식을 유지하여 일관된 검색을 보장합니다.
 
 ## 핵심 개념
 
-### 첫 번째 개념: Email (이메일)
+### Email (이메일)
 
 Email은 이메일 주소를 검증하고 정규화합니다. LocalPart, Domain 파싱과 마스킹 기능을 제공합니다.
 
@@ -85,9 +82,9 @@ public sealed class Email : SimpleValueObject<string>
 }
 ```
 
-**핵심 아이디어는 "정규화와 파싱의 결합"입니다.** 항상 소문자로 저장하므로 동등성 비교가 단순해지고, `LocalPart`와 `Domain` 속성으로 구성 요소에 쉽게 접근할 수 있습니다.
+항상 소문자로 저장하므로 동등성 비교가 단순해지고, `LocalPart`와 `Domain` 속성으로 구성 요소에 쉽게 접근할 수 있습니다. 정규화와 파싱이 결합된 패턴입니다.
 
-### 두 번째 개념: Password (비밀번호)
+### Password (비밀번호)
 
 Password는 비밀번호 강도를 검증하고 해시하여 저장합니다. 평문은 절대 저장하지 않습니다.
 
@@ -129,9 +126,9 @@ public sealed class Password : IEquatable<Password>
 }
 ```
 
-**핵심 아이디어는 "평문의 즉시 해시화"입니다.** `Create()` 시점에 평문을 해시하고, 값 객체에는 해시만 저장합니다. `Verify()`로 검증하고, `ToString()`은 항상 마스킹된 값을 반환합니다.
+`Create()` 시점에 평문을 해시하고, 값 객체에는 해시만 저장합니다. `Verify()`로 검증하고, `ToString()`은 항상 마스킹된 값을 반환하여 평문 노출을 원천 차단합니다.
 
-### 세 번째 개념: PhoneNumber (전화번호)
+### PhoneNumber (전화번호)
 
 PhoneNumber는 전화번호를 국제 형식으로 정규화합니다. 국가별 포맷팅과 마스킹 기능을 제공합니다.
 
@@ -175,9 +172,9 @@ public sealed class PhoneNumber : ValueObject
 }
 ```
 
-**핵심 아이디어는 "입력 형식과 저장 형식의 분리"입니다.** 다양한 입력 형식(010-1234-5678, +82-10-1234-5678 등)을 정규화된 국제 형식으로 저장하고, `Formatted`로 표시용 형식을 제공합니다.
+다양한 입력 형식(010-1234-5678, +82-10-1234-5678 등)을 정규화된 국제 형식으로 저장하고, `Formatted`로 표시용 형식을 제공합니다. 입력 형식과 저장 형식의 분리 패턴입니다.
 
-### 네 번째 개념: Username (사용자명)
+### Username (사용자명)
 
 Username은 사용자명 규칙을 검증하고 예약어를 차단합니다.
 
@@ -223,7 +220,7 @@ public sealed class Username : SimpleValueObject<string>
 }
 ```
 
-**핵심 아이디어는 "비즈니스 규칙의 캡슐화"입니다.** 사용자명 규칙(영문자 시작, 길이 제한)과 예약어 목록이 값 객체 내부에 정의되어 일관되게 적용됩니다.
+사용자명 규칙(영문자 시작, 길이 제한)과 예약어 목록이 값 객체 내부에 정의되어 일관되게 적용됩니다.
 
 ## 실전 지침
 
@@ -281,6 +278,8 @@ public sealed class Username : SimpleValueObject<string>
 
 ### 값 객체별 프레임워크 타입
 
+각 값 객체가 상속하는 프레임워크 타입과 주요 특징을 정리한 것입니다.
+
 | 값 객체 | 프레임워크 타입 | 특징 |
 |--------|---------------|------|
 | Email | SimpleValueObject\<string\> | 순차 검증, 정규화, 파싱 |
@@ -292,6 +291,8 @@ public sealed class Username : SimpleValueObject<string>
 
 ### 사용자 관리 값 객체 요약
 
+각 값 객체의 속성, 검증 규칙, 보안 기능을 한눈에 비교할 수 있습니다.
+
 | 값 객체 | 주요 속성 | 검증 규칙 | 보안 기능 |
 |--------|----------|----------|----------|
 | Email | Value | 이메일 형식, 254자 이하 | Masked |
@@ -300,6 +301,8 @@ public sealed class Username : SimpleValueObject<string>
 | Username | Value | 3~30자, 영문 시작, 예약어 금지 | 없음 |
 
 ### 보안 패턴
+
+사용자 관리 도메인에서 활용된 보안 패턴을 유형별로 분류하면 다음과 같습니다.
 
 | 패턴 | 값 객체 | 설명 |
 |------|--------|------|
@@ -311,7 +314,8 @@ public sealed class Username : SimpleValueObject<string>
 ## FAQ
 
 ### Q1: Password에서 더 강력한 해시 알고리즘을 사용하려면?
-**A**: 실제 프로덕션에서는 SHA256 대신 bcrypt나 Argon2를 사용해야 합니다.
+
+실제 프로덕션에서는 SHA256 대신 bcrypt나 Argon2를 사용해야 합니다. bcrypt는 솔트를 자동으로 생성하고, work factor로 계산 시간을 조절할 수 있어 브루트포스 공격에 더 강합니다.
 
 ```csharp
 // BCrypt 사용 예시 (BCrypt.Net-Next 패키지)
@@ -326,10 +330,9 @@ public bool Verify(string plainText)
 }
 ```
 
-bcrypt는 솔트를 자동으로 생성하고, work factor로 계산 시간을 조절할 수 있어 브루트포스 공격에 더 강합니다.
-
 ### Q2: Email에서 도메인별로 추가 검증을 하려면?
-**A**: 도메인 기반 검증 로직을 추가할 수 있습니다.
+
+도메인 기반 검증 로직을 추가하여 특정 도메인을 차단하거나 허용 목록만 통과시킬 수 있습니다.
 
 ```csharp
 public static Fin<Email> Create(string? value, EmailValidationOptions? options = null)
@@ -349,7 +352,8 @@ public static Fin<Email> Create(string? value, EmailValidationOptions? options =
 ```
 
 ### Q3: PhoneNumber에서 여러 국가 형식을 지원하려면?
-**A**: 국가별 포맷터를 별도로 정의합니다.
+
+국가별 포맷터를 별도로 정의합니다.
 
 ```csharp
 private static readonly Dictionary<string, Func<string, string>> Formatters = new()
@@ -374,50 +378,7 @@ private static string FormatUS(string number)
 }
 ```
 
-### Q4: Username 예약어 목록을 동적으로 관리하려면?
-**A**: 데이터베이스나 설정 파일에서 로드하는 방식을 사용합니다.
-
-```csharp
-public sealed class Username
-{
-    private static HashSet<string>? _reservedNames;
-
-    private static HashSet<string> GetReservedNames()
-    {
-        return _reservedNames ??= LoadReservedNamesFromConfig();
-    }
-
-    private static HashSet<string> LoadReservedNamesFromConfig()
-    {
-        // 설정 파일이나 데이터베이스에서 로드
-        var names = ConfigurationManager.GetSection("ReservedUsernames") as string[];
-        return new HashSet<string>(names ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
-    }
-
-    public static void RefreshReservedNames()
-    {
-        _reservedNames = null;  // 다음 호출 시 재로드
-    }
-}
-```
-
-### Q5: 값 객체에서 국제화(i18n) 에러 메시지를 지원하려면?
-**A**: `DomainError.For<T>()` 가 생성하는 에러 코드(`DomainErrors.Email.Empty` 등)를 리소스 키로 사용합니다.
-
-```csharp
-// DomainError.For<Email>(new DomainErrorType.Empty(), ...) 가 생성하는 에러 코드:
-// "DomainErrors.Email.Empty"
-
-// 클라이언트에서 에러 코드 기반 국제화:
-string GetLocalizedMessage(Error error)
-{
-    var errorCode = error.Code.ToString();  // "DomainErrors.Email.Empty"
-    return ResourceManager.GetString(errorCode, CultureInfo.CurrentCulture)
-        ?? error.Message;  // 리소스가 없으면 기본 메시지 사용
-}
-```
-
-`DomainError.For<T>()` 가 자동으로 생성하는 에러 코드는 `DomainErrors.{TypeName}.{ErrorType}` 형식이므로, 이를 리소스 키로 활용하면 에러 메시지의 국제화를 체계적으로 관리할 수 있습니다.
+사용자 관리 도메인의 값 객체 구현을 살펴보았습니다. 다음 장에서는 날짜 범위, 시간 슬롯, 반복 규칙 등 시간 관련 로직이 복잡한 일정/예약 도메인의 값 객체를 구현합니다.
 
 ---
 

@@ -234,6 +234,8 @@ public sealed class OrderStatus : SmartEnum<OrderStatus, string>, IValueObject
 
 ## 빠른 선택 표
 
+각 타입이 지원하는 기능을 한눈에 비교합니다.
+
 | 특성 | SimpleValueObject | ComparableSimple | ValueObject | ComparableValue | SmartEnum |
 |------|:-----------------:|:----------------:|:-----------:|:---------------:|:---------:|
 | 단일 값 | ✅ | ✅ | ❌ | ❌ | ✅ |

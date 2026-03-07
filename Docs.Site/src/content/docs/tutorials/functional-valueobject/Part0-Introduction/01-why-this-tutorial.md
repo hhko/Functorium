@@ -3,11 +3,15 @@ title: "이 튜토리얼을 읽어야 하는 이유"
 ---
 ## 개요
 
-이 튜토리얼은 **함수형 프로그래밍 원칙을 적용한 값 객체(Value Object) 구현**을 단계별로 학습할 수 있도록 구성된 종합적인 교육 과정입니다. 기본적인 나눗셈 함수에서 시작하여 완성된 패턴까지, **27개의 실습 프로젝트**를 통해 함수형 값 객체의 모든 측면을 체계적으로 학습할 수 있습니다.
+`string email`이 빈 문자열인지, `int denominator`가 0인지를 매번 호출 측에서 검사하고 계신가요? 그 검증을 깜빡하면 런타임에 예외가 터지고, 깜빡하지 않더라도 같은 if 문이 코드 곳곳에 퍼져 나갑니다.
+
+이 튜토리얼은 **타입 자체가 유효성을 보장하는 값 객체**를 함수형 프로그래밍 원칙으로 구현하는 방법을 다룹니다. 기본 나눗셈 함수에서 시작해 완성된 프레임워크 패턴까지, **29개의 실습 프로젝트**를 단계별로 진행합니다.
 
 ---
 
 ## 대상 독자
+
+다음 표는 경험 수준에 따른 권장 학습 범위를 안내합니다.
 
 | 수준 | 대상 | 권장 학습 범위 |
 |------|------|----------------|
@@ -37,7 +41,7 @@ title: "이 튜토리얼을 읽어야 하는 이유"
 
 이 튜토리얼을 완료하면 다음을 할 수 있습니다:
 
-### 1. 예외 대신 명시적 결과 타입으로 안전한 코드 작성
+### 1. 예외 대신 명시적 결과 타입으로 안전한 코드를 작성할 수 있습니다
 
 ```csharp
 // ❌ 예외 기반 - 문제가 있는 방식
@@ -58,7 +62,7 @@ public Fin<User> CreateUser(string email, int age)
 }
 ```
 
-### 2. 도메인 규칙을 타입으로 표현하여 컴파일 타임 검증
+### 2. 도메인 규칙을 타입으로 표현하여 컴파일 타임에 검증할 수 있습니다
 
 ```csharp
 // ❌ 런타임 검증 - 늦은 발견
@@ -76,7 +80,7 @@ public int Divide(int numerator, Denominator denominator)
 }
 ```
 
-### 3. Bind/Apply 패턴을 활용한 유연한 검증 로직 구현
+### 3. Bind/Apply 패턴을 활용해 유연한 검증 로직을 구현할 수 있습니다
 
 ```csharp
 // Bind 패턴 - 순차 검증
@@ -89,7 +93,7 @@ var result = (ValidateEmail(email), ValidatePassword(password), ValidateName(nam
     .Apply((e, p, n) => new User(e, p, n));
 ```
 
-### 4. Functorium 프레임워크를 활용한 실전 값 객체 개발
+### 4. Functorium 프레임워크를 활용해 실전 값 객체를 개발할 수 있습니다
 
 ```csharp
 public sealed class Email : SimpleValueObject<string>
@@ -112,7 +116,7 @@ public sealed class Email : SimpleValueObject<string>
 
 ## 세 가지 핵심 관점
 
-이 튜토리얼은 세 가지 관점을 통합하여 설명합니다:
+이 튜토리얼은 성공 주도 개발, 함수형 프로그래밍, DDD 값 객체라는 세 관점을 통합합니다.
 
 | 관점 | 핵심 원칙 | 이 튜토리얼에서의 적용 |
 |------|----------|------------------|
@@ -123,6 +127,8 @@ public sealed class Email : SimpleValueObject<string>
 ---
 
 ## 학습 경로
+
+다음 다이어그램은 수준별 권장 학습 범위를 보여줍니다.
 
 ```
 초급 (Part 1: 1~6장)
@@ -146,6 +152,6 @@ public sealed class Email : SimpleValueObject<string>
 
 ## 다음 단계
 
-환경 설정을 완료하고 첫 번째 예제를 실행해보세요.
+이런 코드를 가능하게 하는 핵심 개념인 **성공 주도 개발(Success-Driven Development)을** 다음 장에서 자세히 살펴봅니다. 예외 중심 접근과 성공 중심 접근이 어떻게 다른지 비교합니다.
 
 → [0.2 성공 주도 개발이란?](02-success-driven-development.md)
