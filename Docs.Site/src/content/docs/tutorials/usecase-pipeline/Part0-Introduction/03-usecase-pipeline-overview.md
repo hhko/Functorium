@@ -2,6 +2,8 @@
 title: "아키텍처 개요"
 ---
 
+모든 Usecase에 로깅, 검증, 트랜잭션 같은 교차 관심사를 반복 작성하고 있지 않나요? Mediator Pipeline은 이 반복을 제거하지만, 응답 타입을 다루는 순간 새로운 문제가 시작됩니다.
+
 ## Mediator Pipeline이란?
 
 Mediator Pipeline은 요청(Request)이 핸들러(Handler)에 도달하기 전후로 **교차 관심사**를 처리하는 일련의 미들웨어입니다.
@@ -22,6 +24,8 @@ flowchart TB
 ## Pipeline이 응답에 대해 알아야 하는 것
 
 각 Pipeline은 서로 다른 수준의 응답 정보가 필요합니다:
+
+각 Pipeline이 응답에 대해 어떤 수준의 정보를 필요로 하는지 정리하면 다음과 같습니다:
 
 | Pipeline | 필요한 능력 | 설명 |
 |----------|------------|------|
@@ -81,6 +85,8 @@ where TResponse : IFinResponseFactory<TResponse>
 // Read + Create: Logging, Tracing, Metrics, Transaction, Caching
 where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 ```
+
+이제 이 아키텍처를 구현하기 위해 어떤 순서로 학습할지 살펴봅니다.
 
 ## 이 튜토리얼에서 다루는 흐름
 

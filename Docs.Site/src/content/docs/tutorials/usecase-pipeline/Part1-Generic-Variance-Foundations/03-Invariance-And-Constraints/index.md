@@ -4,6 +4,8 @@ title: "불변성과 제약"
 
 ## 개요
 
+공변성과 반공변성을 학습했으니 질문이 생깁니다: 모든 제네릭 타입에 변성을 선언할 수 있는가? 답은 "아니오"입니다.
+
 **불변성(Invariance)은** 제네릭 타입 파라미터가 상속 관계를 **유지하지 않는** 성질입니다. `out`이나 `in` 키워드 없이 선언된 제네릭 타입은 불변입니다.
 
 ```
@@ -30,6 +32,8 @@ IEnumerable<Animal> animals = dogs;  // OK
 ### 2. sealed struct의 제약 한계
 
 LanguageExt의 `Fin<T>`는 **sealed struct**입니다. C#에서 sealed struct는 `where` 제약 조건으로 사용할 수 없습니다.
+
+다음 코드에서 주목할 점은 `where TResponse : Fin<T>` 제약이 컴파일 에러를 발생시킨다는 것입니다:
 
 ```csharp
 // 이것은 불가능합니다!

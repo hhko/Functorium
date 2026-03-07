@@ -4,7 +4,7 @@ title: "IFinResponseWithError"
 
 ## 개요
 
-지금까지 `IFinResponse`로 성공/실패를 확인하고, `IFinResponseFactory`로 실패 응답을 생성할 수 있게 되었습니다. 하지만 Pipeline에서 **에러 정보에 접근**하려면 어떻게 해야 할까요? 이 장에서는 `IFinResponseWithError` 인터페이스를 도입하여, **Fail 케이스에서만** 에러에 접근할 수 있는 타입 안전한 패턴을 설계합니다.
+**요구사항 R3**: Pipeline이 실패 시 에러 정보에 접근할 수 있어야 합니다. 지금까지 `IFinResponse`로 성공/실패를 확인하고, `IFinResponseFactory`로 실패 응답을 생성할 수 있게 되었지만, Pipeline에서 **에러 정보에 접근**하려면 어떻게 해야 할까요? 이 장에서는 `IFinResponseWithError` 인터페이스를 도입하여, **Fail 케이스에서만** 에러에 접근할 수 있는 타입 안전한 패턴을 설계합니다.
 
 ```
 IFinResponseWithError           ← 에러 접근 인터페이스 (이번 장)
@@ -65,6 +65,8 @@ public static string LogResponse<TResponse>(TResponse response)
 ### 4. 왜 별도 인터페이스인가?
 
 `Error` 속성을 `IFinResponse`에 직접 추가하면, Succ 케이스에서도 `Error`에 접근할 수 있게 되어 **런타임 예외** 위험이 생깁니다. 별도 인터페이스로 분리하면 **컴파일 타임에 안전성**을 보장할 수 있습니다.
+
+에러 접근까지 해결했지만, 아직 각 인터페이스가 분리되어 있습니다. 다음 장에서는 **요구사항 R4**까지 포함하여 모든 인터페이스를 하나의 타입으로 통합합니다.
 
 ## 학습 목표
 

@@ -4,7 +4,7 @@ title: "Mediator Pipeline 구조"
 
 ## 개요
 
-Mediator Pipeline은 요청(Request)이 핸들러(Handler)에 도달하기 전후로 **교차 관심사**를 처리하는 미들웨어입니다. 이 장에서는 Pipeline의 핵심 구성 요소인 `IPipelineBehavior<TRequest, TResponse>`의 구조와 제네릭 제약이 Pipeline의 적용 범위를 어떻게 결정하는지 학습합니다.
+Mediator Pipeline은 어떤 구조로 동작하며, 응답 타입에 어떤 제약이 필요할까요? Pipeline은 요청(Request)이 핸들러(Handler)에 도달하기 전후로 **교차 관심사를** 처리하는 미들웨어입니다. 이 장에서는 Pipeline의 핵심 구성 요소인 `IPipelineBehavior<TRequest, TResponse>`의 구조와 제네릭 제약이 Pipeline의 적용 범위를 어떻게 결정하는지 학습합니다.
 
 ## 핵심 개념
 
@@ -67,6 +67,8 @@ public class LoggingPipeline<TRequest, TResponse>
 
 #### TResponse에 제약 추가 (특정 응답만)
 
+주목할 점은 `where TResponse : IResult` 제약이 추가되면, Pipeline 내부에서 응답 타입의 멤버에 컴파일 타임에 안전하게 접근할 수 있다는 것입니다.
+
 ```csharp
 public class ValidationPipeline<TRequest, TResponse>
     : IPipelineBehavior<TRequest, TResponse>
@@ -100,6 +102,8 @@ sequenceDiagram
 ```
 
 각 Pipeline은 `next()`를 호출하여 다음 Pipeline(또는 최종 Handler)에 요청을 전달합니다.
+
+이제 Pipeline의 구조와 제약 메커니즘을 이해했으니, 다음 장에서는 LanguageExt의 `Fin<T>`를 응답 타입으로 직접 사용했을 때 이 제약 구조가 어떤 한계를 만들어내는지 살펴봅니다.
 
 ## 학습 목표
 

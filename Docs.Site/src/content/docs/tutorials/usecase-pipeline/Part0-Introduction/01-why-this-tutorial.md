@@ -58,3 +58,5 @@ where TResponse : Fin<T>  // 컴파일 에러! sealed struct는 제약 조건이
 4. **Part 4**: 각 Pipeline에 최소 제약 조건을 적용합니다
 5. **Part 5**: 실전 Command/Query Usecase에서 전체 흐름을 통합합니다
 
+먼저, 다음 장에서 튜토리얼을 따라가기 위한 사전 준비를 확인합니다.
+

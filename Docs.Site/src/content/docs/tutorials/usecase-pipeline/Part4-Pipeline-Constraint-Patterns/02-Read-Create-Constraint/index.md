@@ -4,7 +4,7 @@ title: "Read+Create 제약"
 
 ## 개요
 
-Logging, Tracing, Metrics Pipeline은 핸들러 실행 **후** 응답의 성공/실패 상태를 **읽어야** 합니다. 또한 예외 발생 시 실패 응답을 **생성**할 수도 있어야 합니다. 이 장에서는 Read와 Create를 모두 요구하는 이중 제약 패턴을 학습합니다.
+앞 장에서 Create 전용 제약을 적용했습니다. 이번에는 응답 상태를 읽는 능력까지 함께 요구하는 패턴을 살펴봅니다. Logging, Tracing, Metrics Pipeline은 핸들러 실행 **후** 응답의 성공/실패 상태를 **읽어야** 합니다. 또한 예외 발생 시 실패 응답을 **생성**할 수도 있어야 합니다. 이 장에서는 Read와 Create를 모두 요구하는 이중 제약 패턴을 학습합니다.
 
 ```
 Pipeline 동작 흐름:
@@ -30,6 +30,8 @@ Pipeline이 응답의 상태를 읽고(Read), 필요 시 실패 응답을 생성
 ```csharp
 where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 ```
+
+이중 제약이 부여하는 능력을 정리하면 다음과 같습니다.
 
 | 능력 | 인터페이스 | 용도 |
 |------|-----------|------|
@@ -109,6 +111,8 @@ if (response is IFinResponseWithError fail)
 - `IFinResponseWithError`는 `FinResponse<A>.Fail`에서만 구현됨
 - 성공 응답(`Succ`)은 이 인터페이스를 구현하지 않음
 - 제약에 추가하면 성공 응답이 Pipeline을 통과할 수 없음
+
+Read+Create 이중 제약이 Observability Pipeline에서 어떻게 동작하는지 확인했습니다. 다음 장에서는 동일한 이중 제약을 사용하면서 Command/Query에 따라 조건부로 실행되는 Transaction과 Caching Pipeline을 살펴봅니다.
 
 ## 학습 목표
 

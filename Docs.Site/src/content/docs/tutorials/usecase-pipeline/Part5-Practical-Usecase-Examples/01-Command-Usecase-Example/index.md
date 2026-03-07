@@ -4,7 +4,7 @@ title: "Command Usecase 예제"
 
 ## 개요
 
-이 장에서는 Functorium의 `ICommandRequest<TSuccess>` 인터페이스를 활용하여 **Command Usecase의 완전한 구현 예제**를 작성합니다. Nested class 패턴을 사용하여 Request, Response, Validator, Handler를 하나의 클래스 안에 응집력 있게 구성하고, `FinResponse<T>`를 통해 성공/실패를 타입 안전하게 처리합니다.
+실제 Command Usecase에서 Pipeline과 FinResponse는 어떻게 동작할까요? 이 장에서는 Functorium의 `ICommandRequest<TSuccess>` 인터페이스를 활용하여 **Command Usecase의 완전한 구현 예제**를 작성합니다. Nested class 패턴을 사용하여 Request, Response, Validator, Handler를 하나의 클래스 안에 응집력 있게 구성하고, `FinResponse<T>`를 통해 성공/실패를 타입 안전하게 처리합니다.
 
 ```
 Command Usecase 구조:
@@ -52,6 +52,8 @@ public sealed class CreateProductCommand
 
 Handler는 `FinResponse<Response>`를 반환합니다. 성공 시 암시적 변환으로 Response를 직접 반환하고, 실패 시 `Error`를 반환합니다.
 
+주목할 점은 `return` 문에서 명시적 변환 없이 값을 직접 반환한다는 것입니다. `FinResponse<T>`의 암시적 변환 연산자가 이를 가능하게 합니다.
+
 ```csharp
 // 성공: 암시적 변환 (Response → FinResponse<Response>)
 return new Response(productId, request.Name, request.Price);
@@ -88,6 +90,8 @@ public static class Validator
 2. Nested class 패턴으로 Request/Response/Validator/Handler를 응집력 있게 구성할 수 있다
 3. `FinResponse<T>`의 암시적 변환을 활용하여 성공/실패를 간결하게 반환할 수 있다
 4. Validator를 Handler에서 분리하여 독립적으로 테스트할 수 있다
+
+Command Usecase의 구조를 확인했으니, 다음 장에서는 읽기 전용인 Query Usecase가 어떻게 다르게 구성되는지 살펴봅니다.
 
 ## 프로젝트 구조
 

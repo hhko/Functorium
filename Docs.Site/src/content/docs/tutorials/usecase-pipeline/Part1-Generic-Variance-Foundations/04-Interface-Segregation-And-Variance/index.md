@@ -4,7 +4,9 @@ title: "인터페이스 분리와 변성"
 
 ## 개요
 
-**인터페이스 분리 원칙(ISP, Interface Segregation Principle)을** 변성과 결합하면, 각 인터페이스에 적절한 변성을 부여할 수 있습니다. 읽기 인터페이스에는 `out`(공변), 쓰기 인터페이스에는 `in`(반공변), 팩토리 인터페이스에는 CRTP(Curiously Recurring Template Pattern)를 적용합니다.
+3장에서 sealed struct의 한계를 인터페이스로 우회할 수 있다는 것을 확인했습니다. 그런데 하나의 인터페이스가 읽기와 쓰기를 모두 포함하면 변성을 선언할 수 없습니다. 해결책은 **인터페이스 분리 원칙(ISP)입니다.**
+
+ISP를 변성과 결합하면, 각 인터페이스에 적절한 변성을 부여할 수 있습니다. 읽기 인터페이스에는 `out`(공변), 쓰기 인터페이스에는 `in`(반공변), 팩토리 인터페이스에는 CRTP(Curiously Recurring Template Pattern)를 적용합니다.
 
 ```
 IReadable<out T>     → 공변 (읽기 전용)
@@ -60,7 +62,7 @@ public interface IReadWrite<T> : IReadable<T>, IWritable<T>;
 
 ### 5. 이 패턴이 중요한 이유
 
-이 패턴은 이후 장에서 설계할 **IFinResponse 계층**의 기초입니다:
+이 패턴은 이후 장에서 설계할 **IFinResponse 계층**의 기초입니다. 각 인터페이스가 어떻게 매핑되는지 확인하세요:
 
 | 이 장의 인터페이스 | IFinResponse 계층 | 역할 |
 |-------------------|-------------------|------|
@@ -76,6 +78,8 @@ public interface IReadWrite<T> : IReadable<T>, IWritable<T>;
 3. CRTP 패턴으로 `static abstract` 팩토리를 구현할 수 있다
 4. `where T : IFactory<T>` 제약을 활용하여 제네릭 팩토리 메서드를 작성할 수 있다
 5. 이 패턴이 IFinResponse 계층 설계와 어떻게 연결되는지 이해할 수 있다
+
+Part 1에서 제네릭 변성의 기초를 다졌습니다. Part 2에서는 이 지식을 Mediator Pipeline에 적용했을 때 만나는 구체적인 문제를 정의합니다.
 
 ## 프로젝트 구조
 

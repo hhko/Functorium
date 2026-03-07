@@ -4,7 +4,7 @@ title: "Fin→FinResponse 브릿지"
 
 ## 개요
 
-Repository 계층은 `Fin<T>`를 반환하고, Usecase 계층은 `FinResponse<T>`를 반환합니다. 이 두 계층을 연결하는 **브릿지**가 `ToFinResponse()` 확장 메서드입니다. 이 장에서는 다양한 변환 오버로드와 사용 시나리오를 학습합니다.
+기존 `Fin<T>` 기반 코드와 새로운 `FinResponse<T>`를 어떻게 연결할까요? Repository 계층은 `Fin<T>`를 반환하고, Usecase 계층은 `FinResponse<T>`를 반환합니다. 이 두 계층을 연결하는 **브릿지**가 `ToFinResponse()` 확장 메서드입니다. 이 장에서는 다양한 변환 오버로드와 사용 시나리오를 학습합니다.
 
 ```
 계층 간 타입 흐름:
@@ -65,6 +65,8 @@ FinResponse<string> response = fin.ToFinResponse();
 
 ### 6. 변환 오버로드 정리
 
+`ToFinResponse()`가 제공하는 변환 오버로드를 정리하면 다음과 같습니다.
+
 | 오버로드 | 시그니처 | 용도 |
 |----------|---------|------|
 | 직접 변환 | `Fin<A>.ToFinResponse()` | 동일 타입 변환 |
@@ -79,6 +81,8 @@ FinResponse<string> response = fin.ToFinResponse();
 1. Repository(`Fin<T>`)와 Usecase(`FinResponse<T>`) 계층 간 변환이 필요한 이유를 설명할 수 있다
 2. 상황에 맞는 `ToFinResponse()` 오버로드를 선택할 수 있다
 3. 실패 상태가 변환 시 자동으로 전파되는 메커니즘을 이해할 수 있다
+
+Part 4에서 Pipeline별 타입 제약 패턴을 완성했습니다. Part 5에서는 실제 Usecase에 이 패턴을 적용합니다.
 
 ## 프로젝트 구조
 

@@ -136,6 +136,8 @@ Mediator Pipeline도 ROP와 유사한 구조를 가집니다:
 
 ## Fin\<T\> vs FinResponse\<A\>
 
+두 타입은 모두 ROP를 지원하지만, Pipeline 제약 가능 여부에서 결정적으로 다릅니다.
+
 | 항목 | Fin\<T\> (LanguageExt) | FinResponse\<A\> (Functorium) |
 |------|----------------------|-------------------------------|
 | **타입** | sealed struct | abstract record |

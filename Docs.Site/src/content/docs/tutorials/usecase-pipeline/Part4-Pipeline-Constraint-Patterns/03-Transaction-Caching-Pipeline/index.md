@@ -4,7 +4,7 @@ title: "Transaction/Caching"
 
 ## 개요
 
-Transaction Pipeline은 **Command에만** 적용되고, Caching Pipeline은 **Query에만** 적용됩니다. 두 Pipeline 모두 응답의 성공/실패 상태를 읽어야 하므로 Read+Create 제약을 사용하며, 추가로 요청 타입에 따라 **조건부 실행**이 필요합니다.
+앞 장에서 Read+Create 이중 제약을 적용했습니다. 이번에는 동일한 이중 제약을 사용하면서 요청 타입에 따라 조건부로 실행되는 Pipeline을 다룹니다. Transaction Pipeline은 **Command에만** 적용되고, Caching Pipeline은 **Query에만** 적용됩니다. 두 Pipeline 모두 응답의 성공/실패 상태를 읽어야 하므로 Read+Create 제약을 사용하며, 추가로 요청 타입에 따라 **조건부 실행**이 필요합니다.
 
 ```
 Transaction Pipeline:
@@ -81,6 +81,8 @@ public sealed class SimpleCachingPipeline<TResponse>
 
 ### 3. 왜 Read+Create 제약인가?
 
+두 Pipeline이 Read와 Create 능력을 각각 어떻게 사용하는지 정리하면 다음과 같습니다.
+
 | Pipeline | Read (IsSucc/IsFail) | Create (CreateFail) |
 |----------|:--------------------:|:-------------------:|
 | Transaction | Commit/Rollback 결정 | 예외 시 실패 응답 생성 |
@@ -107,6 +109,8 @@ if (request is ICacheable cacheable)
     // ...
 }
 ```
+
+Pipeline별 타입 제약 패턴을 모두 확인했습니다. 다음 장에서는 Repository 계층의 `Fin<T>`와 Usecase 계층의 `FinResponse<T>`를 연결하는 브릿지 패턴을 살펴봅니다.
 
 ## 학습 목표
 

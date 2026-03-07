@@ -4,7 +4,7 @@ title: "IFinResponseFactory CRTP"
 
 ## 개요
 
-9장과 10장에서 Pipeline이 응답을 **읽을 수** 있게 되었습니다. 하지만 Validation Pipeline처럼 **실패 응답을 생성**해야 하는 경우는 어떻게 할까요? 이 장에서는 **CRTP(Curiously Recurring Template Pattern)와** C# 11의 **static abstract** 메서드를 사용하여, Pipeline에서 리플렉션 없이 `TResponse.CreateFail(error)`을 호출할 수 있는 팩토리 인터페이스를 설계합니다.
+**요구사항 R2**: Pipeline이 실패 응답을 직접 생성할 수 있어야 합니다. 9장과 10장에서 Pipeline이 응답을 **읽을 수** 있게 되었지만, Validation Pipeline처럼 **실패 응답을 생성**해야 하는 경우는 어떻게 할까요? 이 장에서는 **CRTP(Curiously Recurring Template Pattern)와** C# 11의 **static abstract** 메서드를 사용하여, Pipeline에서 리플렉션 없이 `TResponse.CreateFail(error)`을 호출할 수 있는 팩토리 인터페이스를 설계합니다.
 
 ```
 IFinResponseFactory<TSelf>      ← CRTP 팩토리 (이번 장)
@@ -41,6 +41,8 @@ public record FactoryResponse<A> : IFinResponseFactory<FactoryResponse<A>>
 
 `where TResponse : IFinResponseFactory<TResponse>` 제약을 사용하면, Pipeline에서 `TResponse.CreateFail(error)`을 **직접 호출**할 수 있습니다. 리플렉션이 필요 없습니다.
 
+주목할 점은 CRTP 제약 덕분에 `TResponse.CreateFail`이 정확한 구현 타입을 반환한다는 것입니다.
+
 ```csharp
 public static TResponse ValidateAndCreate<TResponse>(
     bool isValid,
@@ -75,6 +77,8 @@ public interface IFinResponseFactory<TSelf>
     static abstract TSelf CreateFail(Error error);  // TSelf = 구현 타입
 }
 ```
+
+실패 응답을 생성할 수 있게 되었지만, 에러의 내용은 아직 알 수 없습니다. 다음 장에서는 **요구사항 R3**(에러 접근)을 해결합니다.
 
 ## 학습 목표
 

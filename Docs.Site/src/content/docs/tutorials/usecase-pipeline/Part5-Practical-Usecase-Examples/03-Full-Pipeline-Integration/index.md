@@ -4,7 +4,7 @@ title: "전체 흐름 통합"
 
 ## 개요
 
-이 장에서는 Part 4에서 학습한 **7개의 Pipeline을 모두 연결**하여 전체 요청 처리 흐름을 시뮬레이션합니다. 실제 Mediator Pipeline은 DI(의존성 주입)를 통해 자동으로 등록되지만, 여기서는 학습 목적으로 수동 호출하여 각 Pipeline의 역할과 실행 순서를 명확하게 이해합니다.
+이 튜토리얼의 최종 목표는 7개 Pipeline이 리플렉션 없이 타입 안전하게 동작하는 것이었습니다. 이 장에서는 Part 4에서 학습한 **7개의 Pipeline을 모두 연결**하여 전체 요청 처리 흐름을 시뮬레이션합니다. 실제 Mediator Pipeline은 DI(의존성 주입)를 통해 자동으로 등록되지만, 여기서는 학습 목적으로 수동 호출하여 각 Pipeline의 역할과 실행 순서를 명확하게 이해합니다.
 
 ```
 Pipeline 실행 순서 (Command 성공 시):
@@ -35,6 +35,8 @@ Exception ← Validation ← Logging ← Tracing ← Metrics ← Transaction ←
 ```
 
 ### 2. Pipeline별 제약 조건 요약
+
+Part 4에서 개별적으로 학습한 제약 조건을 한눈에 정리하면 다음과 같습니다.
 
 | Pipeline | 제약 조건 | 필요 능력 |
 |----------|-----------|-----------|
@@ -118,4 +120,8 @@ dotnet run --project FullPipelineIntegration
 # 테스트 실행
 dotnet test --project FullPipelineIntegration.Tests.Unit
 ```
+
+---
+
+인터페이스 계층 설계부터 Pipeline 제약, 실전 Usecase 적용, 그리고 전체 통합까지 — `FinResponse<T>`가 리플렉션 없이 타입 안전한 Pipeline을 가능하게 하는 여정을 마칩니다.
 

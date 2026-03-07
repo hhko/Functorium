@@ -4,7 +4,7 @@ title: "Create-Only 제약"
 
 ## 개요
 
-Validation Pipeline과 Exception Pipeline은 요청 처리 중 실패가 발생했을 때 **실패 응답을 생성만** 하면 됩니다. 기존 응답을 읽거나 검사할 필요가 없습니다. 이 장에서는 이러한 "생성만 하면 되는" Pipeline에 최소 제약 조건인 `IFinResponseFactory<TResponse>`만 적용하는 패턴을 학습합니다.
+Part 3에서 설계한 IFinResponse 계층을 이제 실전 Pipeline에 적용합니다. Validation Pipeline과 Exception Pipeline은 요청 처리 중 실패가 발생했을 때 **실패 응답을 생성만** 하면 됩니다. 기존 응답을 읽거나 검사할 필요가 없습니다. 이 장에서는 이러한 "생성만 하면 되는" Pipeline에 최소 제약 조건인 `IFinResponseFactory<TResponse>`만 적용하는 패턴을 학습합니다.
 
 ```
 Pipeline 동작 흐름:
@@ -81,6 +81,8 @@ public sealed class SimpleExceptionPipeline<TResponse>
 
 ### 4. 왜 IFinResponse(Read)가 필요 없는가?
 
+두 Pipeline이 실제로 어떤 능력을 사용하는지 정리하면 다음과 같습니다.
+
 | 동작 | 필요한 인터페이스 | Validation | Exception |
 |------|-------------------|:----------:|:---------:|
 | IsSucc/IsFail 읽기 | IFinResponse | - | - |
@@ -88,6 +90,8 @@ public sealed class SimpleExceptionPipeline<TResponse>
 | Error 접근 | IFinResponseWithError | - | - |
 
 Validation/Exception Pipeline은 기존 응답을 **검사하지 않습니다**. 실패 조건(유효성 검사 실패, 예외 발생)을 직접 판단하고, 실패 시 새로운 응답을 **생성만** 합니다.
+
+Create-Only 제약으로 충분한 경우를 확인했으니, 다음 장에서는 응답의 성공/실패 상태를 읽어야 하는 Read+Create 이중 제약 패턴을 살펴봅니다.
 
 ## 학습 목표
 

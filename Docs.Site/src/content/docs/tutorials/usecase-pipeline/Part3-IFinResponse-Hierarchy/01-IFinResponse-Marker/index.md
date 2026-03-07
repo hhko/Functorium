@@ -4,7 +4,7 @@ title: "IFinResponse 비제네릭 마커"
 
 ## 개요
 
-**비제네릭 마커 인터페이스(Non-Generic Marker Interface)는** 제네릭 타입 파라미터 없이도 공통 속성에 접근할 수 있게 하는 패턴입니다. `IFinResponse`에 `IsSucc`과 `IsFail` 속성을 정의하면, Pipeline에서 응답의 제네릭 타입 `T`를 몰라도 성공/실패를 확인할 수 있습니다.
+8장에서 정의한 **요구사항 R1**: Pipeline에서 성공/실패 상태를 리플렉션 없이 읽을 수 있어야 합니다. 이 요구사항을 해결하는 첫 번째 인터페이스가 비제네릭 마커 `IFinResponse`입니다. `IsSucc`과 `IsFail` 속성을 정의하면, Pipeline에서 응답의 제네릭 타입 `T`를 몰라도 성공/실패를 확인할 수 있습니다.
 
 ```
 IFinResponse          ← 비제네릭 마커
@@ -36,7 +36,7 @@ var isSuccProp = response.GetType().GetProperty("IsSucc");
 var isSucc = (bool)isSuccProp!.GetValue(response)!;
 ```
 
-마커 인터페이스를 사용하면 **직접 접근**이 가능합니다:
+주목할 점은 `where TResponse : IFinResponse` 제약 한 줄로 리플렉션이 사라진다는 것입니다. 마커 인터페이스를 사용하면 **직접 접근**이 가능합니다:
 
 ```csharp
 // 직접 접근 (마커 있을 때)
@@ -63,6 +63,8 @@ public class LoggingPipeline<TRequest, TResponse>
     }
 }
 ```
+
+이제 성공/실패를 읽을 수 있지만, 값의 타입 정보는 아직 없습니다. 다음 장에서는 `out A` 키워드를 사용한 **공변 인터페이스**로 타입 안전한 값 접근을 추가합니다.
 
 ## 학습 목표
 

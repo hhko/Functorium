@@ -4,7 +4,7 @@ title: "Query Usecase 예제"
 
 ## 개요
 
-이 장에서는 Functorium의 `IQueryRequest<TSuccess>` 인터페이스를 활용하여 **Query Usecase의 완전한 구현 예제**를 작성합니다. Query는 Command와 달리 **데이터를 읽기만** 하므로 Transaction Pipeline이 적용되지 않으며, `ICacheable`을 구현하여 캐싱 최적화를 적용할 수 있습니다.
+앞 장에서 Command Usecase를 구현했습니다. 이번에는 Query Usecase를 다룹니다. 이 장에서는 Functorium의 `IQueryRequest<TSuccess>` 인터페이스를 활용하여 **Query Usecase의 완전한 구현 예제**를 작성합니다. Query는 Command와 달리 **데이터를 읽기만** 하므로 Transaction Pipeline이 적용되지 않으며, `ICacheable`을 구현하여 캐싱 최적화를 적용할 수 있습니다.
 
 ```
 Query Usecase 구조:
@@ -31,6 +31,8 @@ Command와 Query를 인터페이스로 구분하면, Pipeline이 **타입 수준
 - `IQueryRequest` → Transaction Pipeline 미적용, Caching Pipeline 적용 가능
 
 ### 2. Command vs Query 차이점
+
+두 패턴의 핵심 차이를 정리하면 다음과 같습니다.
 
 | 항목 | Command | Query |
 |------|---------|-------|
@@ -92,6 +94,8 @@ public sealed class Handler
 2. `ICacheable` 인터페이스를 구현하여 Query에 캐싱 최적화를 적용할 수 있다
 3. Query Handler가 읽기 전용으로 동작하는 패턴을 이해할 수 있다
 4. Pipeline이 Command/Query를 타입 수준에서 구분하는 방식을 설명할 수 있다
+
+Command와 Query Usecase를 각각 구현했으니, 다음 장에서는 7개 Pipeline을 모두 연결하여 전체 흐름을 통합합니다.
 
 ## 프로젝트 구조
 

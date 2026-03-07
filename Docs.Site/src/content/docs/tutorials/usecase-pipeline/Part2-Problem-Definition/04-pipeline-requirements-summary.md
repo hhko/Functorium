@@ -4,7 +4,7 @@ title: "파이프라인 요구사항 정리"
 
 ## 개요
 
-5장에서 7장까지 Mediator Pipeline의 구조, `Fin<T>` 직접 사용의 한계, 래퍼 접근 방식의 한계를 분석했습니다. 이 장에서는 분석 결과를 바탕으로 **응답 타입 시스템의 4가지 요구사항**을 정리하고, 각 접근 방식이 이를 얼마나 충족하는지 비교합니다.
+세 가지 접근을 시도한 결과, 각각의 한계가 드러났습니다. Pipeline 구조를 분석하여 `where` 제약의 역할을 확인했고(5장), `Fin<T>`를 직접 사용하면 리플렉션 3곳이 필요하다는 것을 발견했으며(6장), 래퍼 인터페이스로 1곳까지 줄였지만 `CreateFail`은 여전히 해결하지 못했습니다(7장). 이 장에서는 이 분석 결과를 바탕으로 **응답 타입 시스템의 4가지 요구사항을** 정리하고, 각 접근 방식이 이를 얼마나 충족하는지 비교합니다.
 
 ---
 
@@ -57,7 +57,7 @@ FinResponse<string> fail = FinResponse.Fail<string>(Error.New("error"));
 
 ## 2. Pipeline별 필요 능력 매트릭스
 
-각 Pipeline이 응답 타입에 대해 필요로 하는 능력은 다릅니다:
+각 Pipeline이 응답 타입에 대해 필요로 하는 능력은 다릅니다. 다음 매트릭스는 Pipeline마다 R1-R4 중 어떤 능력이 필요한지를 보여주며, Part 3에서 설계할 인터페이스 계층의 분리 근거가 됩니다.
 
 | Pipeline | 읽기 (R1) | 생성 (R2) | 에러 접근 (R3) | 직접 표현 (R4) |
 |----------|:---------:|:---------:|:--------------:|:--------------:|
@@ -125,4 +125,6 @@ where TResponse : IFinResponseFactory<TResponse>
 // Read + Create: Logging, Tracing, Metrics, Transaction, Caching
 where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 ```
+
+Part 2에서 문제를 명확히 정의했습니다. Part 3에서는 이 4가지 요구사항을 하나씩 해결하는 IFinResponse 인터페이스 계층을 설계합니다.
 

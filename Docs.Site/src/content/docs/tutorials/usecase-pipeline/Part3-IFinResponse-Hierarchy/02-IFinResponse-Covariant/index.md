@@ -4,7 +4,7 @@ title: "IFinResponse 공변 인터페이스"
 
 ## 개요
 
-9장에서 만든 비제네릭 `IFinResponse` 마커는 성공/실패를 확인할 수 있지만, **값의 타입 정보**는 제공하지 않습니다. 이 장에서는 `out A` 키워드를 사용한 **공변 인터페이스** `IFinResponse<out A>`를 추가하여, 파생 타입에서 기본 타입으로의 안전한 대입을 가능하게 합니다.
+9장에서 만든 비제네릭 `IFinResponse` 마커는 성공/실패를 확인할 수 있지만, **값의 타입 정보**는 제공하지 않습니다. Part 1에서 학습한 공변성을 적용하여, 이 장에서는 `out A` 키워드를 사용한 **공변 인터페이스** `IFinResponse<out A>`를 추가합니다. 파생 타입에서 기본 타입으로의 안전한 대입을 가능하게 합니다.
 
 ```
 IFinResponse                    ← 비제네릭 마커 (9장)
@@ -56,6 +56,8 @@ public void LogAnyResponse(IFinResponse<object> response)
     Console.WriteLine(response.IsSucc ? "Success" : "Fail");
 }
 ```
+
+이제 Pipeline이 응답을 읽고 타입 안전하게 접근할 수 있습니다. 다음 장에서는 **요구사항 R2**에 도전합니다 -- Pipeline이 실패 응답을 직접 생성하는 방법을 설계합니다.
 
 ## 학습 목표
 
