@@ -2,11 +2,18 @@
 title: "INamedTypeSymbol"
 ---
 
+## 개요
+
+앞 장에서 `ForAttributeWithMetadataName`의 `transform` 콜백에서 `ctx.TargetSymbol`을 통해 심볼에 접근했습니다. 이 심볼이 바로 `INamedTypeSymbol`입니다. ObservablePortGenerator는 이 심볼 하나에서 클래스 이름, 네임스페이스, 구현 인터페이스, 그리고 메서드 목록까지 코드 생성에 필요한 모든 정보를 추출합니다. 이번 장에서는 이 API 각각이 **왜** 필요하고, 우리 프로젝트에서 **어떻게** 사용되는지를 함께 살펴봅니다.
+
 ## 학습 목표
 
-- INamedTypeSymbol로 클래스/인터페이스 정보 추출
-- AllInterfaces, GetMembers() 활용법 습득
-- 실제 ObservablePortGenerator에서의 활용 패턴 학습
+### 핵심 학습 목표
+1. **INamedTypeSymbol의** 기본 정보 추출 API를 이해한다
+   - Name, ContainingNamespace, TypeKind의 역할과 사용법
+2. **AllInterfaces와 GetMembers()를** 활용한 심층 분석을 습득한다
+   - 인터페이스 계층 탐색과 멤버 필터링
+3. **ObservablePortGenerator의** `MapToObservableClassInfo`에서 이 API들이 어떻게 조합되는지 학습한다
 
 ---
 
@@ -27,6 +34,8 @@ if (ctx.TargetSymbol is INamedTypeSymbol classSymbol)
 ---
 
 ## 기본 정보 추출
+
+소스 생성기가 코드를 생성하려면 먼저 대상 클래스의 이름과 네임스페이스를 알아야 합니다. 생성되는 `UserRepositoryObservable` 클래스의 이름과 `namespace` 선언이 모두 여기서 나옵니다.
 
 ### 이름과 네임스페이스
 
@@ -90,6 +99,8 @@ bool isGeneric = classSymbol.IsGenericType;
 
 ## 인터페이스 분석
 
+ObservablePortGenerator가 래핑할 메서드를 찾으려면, 대상 클래스가 `IObservablePort`를 구현하는지, 그리고 어떤 인터페이스 계층을 통해 구현하는지를 알아야 합니다. 여기서 `AllInterfaces`와 `Interfaces`의 차이가 중요해집니다.
+
 ### AllInterfaces vs Interfaces
 
 ```csharp
@@ -132,6 +143,8 @@ var adapterInterfaces = classSymbol.AllInterfaces
 
 ## 멤버 분석
 
+인터페이스를 찾았다면, 그 안의 메서드를 추출해야 합니다. `GetMembers()`는 타입의 모든 멤버(메서드, 프로퍼티, 필드 등)를 반환하며, `OfType<T>()`으로 원하는 종류만 필터링할 수 있습니다. 아래 "인터페이스에서 메서드 추출" 코드가 우리 프로젝트의 핵심 로직입니다.
+
 ### GetMembers()
 
 ```csharp
@@ -173,6 +186,8 @@ var methods = classSymbol.AllInterfaces
 ---
 
 ## 생성자 분석
+
+생성된 `Observable` 클래스는 원본 클래스를 상속하므로, 부모의 생성자 파라미터를 그대로 전달해야 합니다. `Constructors` 프로퍼티로 생성자 목록에 접근하고, 각 생성자의 파라미터를 분석하여 생성 코드에 반영합니다.
 
 ### Constructors 프로퍼티
 
@@ -284,6 +299,8 @@ if (classSymbol.IsGenericType)
 
 ## 실제 활용: ObservableClassInfo 생성
 
+지금까지 개별 API를 살펴보았습니다. 이제 이 API들이 `MapToObservableClassInfo` 메서드에서 어떻게 조합되어 하나의 `ObservableClassInfo`를 만들어내는지 전체 흐름을 확인합니다. 이 메서드가 `ForAttributeWithMetadataName`의 `transform` 콜백으로 사용됩니다.
+
 ```csharp
 private static ObservableClassInfo MapToObservableClassInfo(
     GeneratorAttributeSyntaxContext context,
@@ -331,6 +348,8 @@ private static ObservableClassInfo MapToObservableClassInfo(
 
 ## 요약
 
+`INamedTypeSymbol`은 소스 생성기에서 타입 정보를 추출하는 핵심 도구입니다. 우리 프로젝트에서는 `Name`과 `ContainingNamespace`로 생성 클래스의 이름과 네임스페이스를 결정하고, `AllInterfaces`로 `IObservablePort` 구현 여부를 확인한 뒤, `GetMembers()`로 래핑할 메서드를 추출하며, `Constructors`로 부모 생성자 파라미터를 전달합니다.
+
 | 속성/메서드 | 용도 | 반환 |
 |-------------|------|------|
 | `Name` | 짧은 이름 | string |
@@ -346,6 +365,6 @@ private static ObservableClassInfo MapToObservableClassInfo(
 
 ## 다음 단계
 
-다음 섹션에서는 IMethodSymbol을 상세히 학습합니다.
+`INamedTypeSymbol`로 클래스와 인터페이스 수준의 정보를 추출하는 방법을 이해했습니다. 다음 장에서는 한 단계 더 들어가서, 각 메서드의 시그니처(이름, 파라미터, 반환 타입)를 분석하는 `IMethodSymbol`을 살펴봅니다. 이 정보가 로깅 코드와 파이프라인 래퍼의 생성 근거가 됩니다.
 
-➡️ [02. IMethodSymbol](../06-IMethodSymbol/)
+→ [06. IMethodSymbol](../06-IMethodSymbol/)

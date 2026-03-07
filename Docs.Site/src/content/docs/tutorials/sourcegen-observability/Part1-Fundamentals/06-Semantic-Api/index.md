@@ -2,11 +2,21 @@
 title: "Semantic API"
 ---
 
+## 개요
+
+앞 장에서 Syntax API의 한계를 확인했습니다. `User`라는 파라미터 타입이 클래스인지 인터페이스인지, 어떤 네임스페이스에 속하는지를 구문 분석만으로는 알 수 없었습니다. Semantic API는 바로 이 지점에서 시작합니다.
+
+Semantic API는 Syntax Tree에 **타입 정보와 의미론적 분석 결과**를 결합하여, 코드의 "의미"를 프로그래밍적으로 조회할 수 있게 합니다. 우리 프로젝트의 ObservablePortGenerator가 `transform` 단계에서 `ctx.TargetSymbol`을 통해 클래스의 인터페이스 목록, 메서드 시그니처, 반환 타입의 전체 이름을 추출하는 것이 모두 Semantic API 덕분입니다.
+
 ## 학습 목표
 
-- Semantic Model의 역할 이해
-- 타입 정보 조회 방법 습득
-- Syntax API와 Semantic API의 연계 학습
+### 핵심 학습 목표
+1. **Semantic Model의 역할 이해**
+   - Syntax Tree에 타입 정보를 더하는 의미 분석 계층
+2. **타입 정보 조회 방법 습득**
+   - `GetSymbolInfo`, `GetTypeInfo`, `GetDeclaredSymbol`의 사용 시점
+3. **Syntax API와 Semantic API의 연계 학습**
+   - `predicate`(Syntax)에서 `transform`(Semantic)으로 이어지는 2단계 분석 패턴
 
 ---
 
@@ -160,6 +170,8 @@ Console.WriteLine($"인터페이스: {string.Join(", ", classSymbol?.AllInterfac
 ---
 
 ## 소스 생성기에서의 활용
+
+실제 소스 생성기에서는 `SemanticModel`을 직접 생성할 필요 없이, `GeneratorAttributeSyntaxContext`가 이미 준비된 `SemanticModel`과 `TargetSymbol`을 제공합니다. 우리 프로젝트의 `MapToObservableClassInfo` 메서드가 이를 활용하는 대표적인 예입니다.
 
 ### GeneratorAttributeSyntaxContext 활용
 
@@ -316,6 +328,8 @@ var methods = classSymbol.AllInterfaces
 
 ## 요약
 
+Semantic API는 Syntax API가 제공하지 못하는 타입 정보, 네임스페이스, 인터페이스 구현 관계를 조회하는 핵심 도구입니다. 소스 생성기에서는 `GeneratorAttributeSyntaxContext`를 통해 준비된 `SemanticModel`과 `TargetSymbol`에 접근하므로, 직접 `Compilation`에서 모델을 생성할 필요가 없습니다.
+
 | 메서드 | 용도 | 입력 | 출력 |
 |--------|------|------|------|
 | `GetSymbolInfo` | 참조 해석 | 표현식 노드 | SymbolInfo |
@@ -326,12 +340,12 @@ var methods = classSymbol.AllInterfaces
 |------|------------|--------------|
 | 정보 | 구조 | 구조 + 타입 |
 | 속도 | 빠름 | 상대적으로 느림 |
-| 용도 | 필터링 | 상세 분석 |
+| 용도 | 필터링 (`predicate`) | 상세 분석 (`transform`) |
 
 ---
 
 ## 다음 단계
 
-다음 섹션에서는 심볼의 상세 타입들을 학습합니다.
+Semantic API를 통해 심볼에 접근하는 방법을 배웠습니다. 다음 장에서는 `INamedTypeSymbol`, `IMethodSymbol`, `IParameterSymbol` 등 심볼 타입의 계층 구조와 각 타입에서 추출할 수 있는 상세 정보를 학습합니다.
 
-➡️ [04. 심볼 타입](../07-Symbol-Types/)
+→ [04. 심볼 타입](../07-Symbol-Types/)

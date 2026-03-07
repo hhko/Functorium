@@ -2,11 +2,21 @@
 title: "프로젝트 구조"
 ---
 
+## 개요
+
+앞 장에서 .NET SDK와 IDE를 설정했습니다. 이제 소스 생성기 프로젝트의 내부 구조를 살펴볼 차례입니다.
+
+소스 생성기의 csproj 파일에는 일반 라이브러리와 다른 고유한 속성들이 필요합니다. `IsRoslynComponent`, `PrivateAssets="all"`, `OutputItemType="Analyzer"` 같은 설정이 각각 어떤 역할을 하는지 이해하지 못하면, 빌드는 성공하지만 생성기가 전혀 동작하지 않는 상황에 빠질 수 있습니다. 이 장에서는 이러한 설정들의 의미를 하나씩 짚어보고, 실제 ObservablePortGenerator 프로젝트의 구조와 데이터 모델을 분석합니다.
+
 ## 학습 목표
 
-- 소스 생성기 프로젝트의 csproj 설정 이해
-- IsRoslynComponent와 관련 속성의 역할 파악
-- 실제 Functorium 프로젝트 구조 분석
+### 핵심 학습 목표
+1. **소스 생성기 프로젝트의 csproj 설정 이해**
+   - `IsRoslynComponent`, `EnforceExtendedAnalyzerRules` 등 필수 속성의 역할
+2. **`IsRoslynComponent`와 관련 속성의 역할 파악**
+   - IDE 인식, 빌드 출력, NuGet 패키징에 미치는 영향
+3. **실제 Functorium 프로젝트 구조 분석**
+   - ObservablePortGenerator의 파일 구조와 데이터 모델 설계
 
 ---
 
@@ -41,6 +51,8 @@ title: "프로젝트 구조"
 ```
 
 ### 속성 상세 설명
+
+각 속성이 왜 필요한지 이해하는 것이 중요합니다. 특히 `IsRoslynComponent`와 `EnforceExtendedAnalyzerRules`는 소스 생성기 프로젝트에서만 사용되는 고유한 설정입니다.
 
 | 속성 | 값 | 설명 |
 |------|-----|------|
@@ -185,6 +197,8 @@ Functorium.SourceGenerators/
 ---
 
 ## 데이터 모델 (레코드)
+
+소스 생성기는 Roslyn API에서 추출한 정보를 코드 생성 단계까지 전달해야 합니다. 이를 위해 컴파일 타임에 수집한 클래스, 메서드, 파라미터 정보를 담는 불변 데이터 모델이 필요합니다. ObservablePortGenerator는 세 가지 핵심 레코드를 사용합니다.
 
 ### ObservableClassInfo
 
@@ -354,6 +368,8 @@ ls bin/Debug/netstandard2.0/
 
 ## 요약
 
+소스 생성기 프로젝트는 csproj 설정과 프로젝트 참조 방식에서 일반 라이브러리와 근본적으로 다릅니다. `IsRoslynComponent`는 IDE 인식을, `PrivateAssets="all"`은 Roslyn 패키지의 전이적 의존성 차단을, `OutputItemType="Analyzer"`는 컴파일 타임 전용 참조를 각각 담당합니다. 데이터 모델은 `ObservableClassInfo`, `MethodInfo`, `ParameterInfo`의 불변 타입으로 설계하여 증분 빌드 파이프라인에서 안전하게 전달됩니다.
+
 | 항목 | 설명 |
 |------|------|
 | `IsRoslynComponent` | IDE가 소스 생성기로 인식 |
@@ -365,6 +381,6 @@ ls bin/Debug/netstandard2.0/
 
 ## 다음 단계
 
-다음 섹션에서는 소스 생성기 디버깅 환경을 설정합니다.
+프로젝트 구조와 데이터 모델을 이해했으니, 다음 장에서는 소스 생성기 개발에서 가장 까다로운 부분 중 하나인 디버깅 환경 설정을 다룹니다.
 
-➡️ [03. 디버깅 설정](../03-Debugging-Setup/)
+→ [03. 디버깅 설정](../03-Debugging-Setup/)

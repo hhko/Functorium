@@ -2,11 +2,19 @@
 title: "Value Converter Generator"
 ---
 
+## 개요
+
+강타입 Value Object와 Entity Id를 도메인 모델에 도입하면 타입 안전성은 높아지지만, EF Core가 이들을 데이터베이스에 저장하는 방법을 모른다는 새로운 문제가 생깁니다. 매번 `ValueConverter<TModel, TProvider>`를 수작업으로 작성하는 것은 반복적이고 실수하기 쉬운 작업입니다. 이 절에서는 생성자 파라미터를 분석하여 변환 로직을 자동으로 추론하고, ValueConverter 코드를 생성하는 소스 생성기를 구현합니다.
+
 ## 학습 목표
 
-- EF Core ValueConverter의 역할 이해
-- Value Object와 Entity Id를 DB에 저장하는 방법 습득
-- 생성자 파라미터 분석을 통한 변환 로직 자동 생성
+### 핵심 학습 목표
+1. **EF Core ValueConverter의 역할 이해**
+   - 도메인 타입과 데이터베이스 저장 타입 간의 변환 메커니즘
+2. **Value Object와 Entity Id를 DB에 저장하는 방법 습득**
+   - 단일 파라미터, 다중 파라미터, Ulid 기반 Entity Id 각각의 저장 전략
+3. **생성자 파라미터 분석을 통한 변환 로직 자동 생성**
+   - Roslyn 심볼 API로 생성자를 분석하고 변환 표현식을 추론하는 기법
 
 ---
 
@@ -48,6 +56,8 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
         .HasConversion<EmailValueConverter>();
 }
 ```
+
+ValueConverter가 해결하는 문제를 이해했으니, 생성기가 만들어야 할 코드의 모습을 Value Object와 Entity Id 두 가지 경우로 나누어 정의합니다.
 
 ---
 
@@ -154,6 +164,8 @@ public class ProductIdStringValueConverter : ValueConverter<ProductId, string>
     { }
 }
 ```
+
+저장 형식이 결정되었으니, 이전 절의 Entity Id 생성기와 동일한 7단계 워크플로우에 따라 ValueConverter 생성기를 구현합니다. 이 생성기의 핵심은 생성자 파라미터를 분석하여 변환 표현식을 자동으로 추론하는 것입니다.
 
 ---
 
@@ -395,6 +407,8 @@ public sealed class ValueConverterGenerator : IIncrementalGenerator
 }
 ```
 
+개별 ValueConverter를 생성하는 것만으로는 DbContext에서 하나하나 등록해야 하는 번거로움이 남습니다. 프로젝트 내 모든 ValueConverter를 자동으로 등록하는 확장 메서드를 함께 생성하면 이 문제도 해결됩니다.
+
 ---
 
 ## DbContext 설정 헬퍼 생성
@@ -438,6 +452,8 @@ public class AppDbContext : DbContext
     }
 }
 ```
+
+생성기 구현이 완료되었으니, Value Object, Entity Id, 복합 타입 세 가지 경우에 대해 생성 결과를 검증합니다.
 
 ---
 
@@ -633,10 +649,12 @@ public sealed class ProductIdTypeHandler : SqlMapper.TypeHandler<ProductId>
 | **저장 형식** | 단일 파라미터 → 해당 타입, 다중 → JSON |
 | **Entity Id** | Ulid → byte[] (16 bytes) |
 
+ValueConverter 생성기는 Entity Id 생성기보다 한 단계 복잡한 심볼 분석을 수행합니다. 생성자 파라미터의 개수와 타입을 분석하여 변환 전략을 자동으로 결정하는 패턴은 다양한 생성기에 응용할 수 있습니다.
+
 ---
 
 ## 다음 단계
 
-다음 섹션에서는 FluentValidation 규칙을 자동 생성하는 Validation 생성기를 구현합니다.
+도메인 모델의 저장 문제를 해결했으니, 이제 애플리케이션 계층의 검증 문제로 넘어갑니다. 다음 절에서는 DataAnnotations를 분석하여 FluentValidation 규칙을 자동으로 생성하는 Validation 생성기를 구현합니다.
 
-➡️ [04. Validation 생성기](../04-Validation-Generator/)
+→ [04. Validation 생성기](../04-Validation-Generator/)

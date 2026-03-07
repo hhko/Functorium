@@ -2,11 +2,18 @@
 title: "SymbolDisplayFormat"
 ---
 
+## 개요
+
+앞 장에서 `IMethodSymbol`의 `ReturnType`과 `Parameters`에서 타입 문자열을 추출할 때 `ToDisplayString`을 사용했습니다. 그런데 같은 `User` 타입이 컨텍스트에 따라 `"User"`, `"MyApp.User"`, `"global::MyApp.User"` 등 서로 다른 문자열로 표현될 수 있다는 점이 문제입니다. 증분 캐싱에서 이 차이는 곧 캐시 미스를 의미합니다. **SymbolDisplayFormat은** 타입을 문자열로 변환하는 규칙을 정의하여, 동일한 타입이 항상 동일한 문자열로 표현되도록 보장합니다. Functorium 프로젝트는 이 문제를 해결하기 위해 `SymbolDisplayFormats.GlobalQualifiedFormat`이라는 커스텀 포맷을 정의하고, 모든 타입 변환에 일관되게 사용합니다.
+
 ## 학습 목표
 
-- SymbolDisplayFormat의 역할 이해
-- 결정적(Deterministic) 타입 문자열 생성 방법 습득
-- 커스텀 포맷 구성 학습
+### 핵심 학습 목표
+1. **SymbolDisplayFormat의** 역할과 결정적 출력과의 관계를 이해한다
+   - 왜 기본 `ToDisplayString()`으로는 부족한지
+2. **Functorium의 GlobalQualifiedFormat이** 각 옵션을 왜 선택했는지 파악한다
+   - `UseSpecialTypes`, `EscapeKeywordIdentifiers`, `IncludeNullableReferenceTypeModifier`의 이유
+3. **프로젝트 전체에서** 일관된 포맷을 사용하는 패턴을 습득한다
 
 ---
 
@@ -100,6 +107,8 @@ SymbolDisplayFormat.CSharpErrorMessageFormat
 
 ## 커스텀 포맷 구성
 
+기본 제공 포맷이 프로젝트의 요구사항과 정확히 일치하지 않을 때, 옵션을 조합하여 커스텀 포맷을 만들 수 있습니다. Functorium의 `GlobalQualifiedFormat`도 이렇게 만들어졌습니다. 아래에서 각 옵션 범주를 살펴본 뒤, 프로젝트의 실제 선택 이유를 확인합니다.
+
 ### SymbolDisplayFormat 생성자
 
 ```csharp
@@ -170,6 +179,8 @@ SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
 ---
 
 ## Functorium의 GlobalQualifiedFormat
+
+이제 위 옵션들이 우리 프로젝트에서 어떻게 조합되었는지 살펴봅니다. 각 옵션의 선택 이유를 코드 주석에 명시한 것이 핵심입니다. `global::` 접두사로 네임스페이스 충돌을 방지하고, `UseSpecialTypes`로 `int`, `string` 같은 C# 키워드를 사용하여 생성 코드의 가독성을 높이며, `IncludeNullableReferenceTypeModifier`로 nullable 정보를 보존합니다.
 
 ### SymbolDisplayFormats.cs
 
@@ -292,6 +303,8 @@ public void TypeDisplayString_Should_Be_Deterministic()
 
 ## 주의사항
 
+가장 흔한 실수는 코드의 서로 다른 지점에서 서로 다른 포맷을 혼용하는 것입니다. 파라미터 타입은 기본 포맷으로, 반환 타입은 `FullyQualifiedFormat`으로 변환하면 동일한 타입이 다르게 표현되어 캐싱이 무효화될 수 있습니다.
+
 ### 1. 일관된 포맷 사용
 
 ```csharp
@@ -330,6 +343,8 @@ type.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat);
 
 ## 요약
 
+`SymbolDisplayFormat`은 결정적 코드 생성의 기반 도구입니다. Functorium 프로젝트에서는 `global::` 접두사로 네임스페이스 충돌을 방지하고, `UseSpecialTypes`로 가독성을 확보하며, `IncludeNullableReferenceTypeModifier`로 nullable 정보를 보존하는 커스텀 포맷을 정의했습니다. 가장 중요한 원칙은 프로젝트 전체에서 이 포맷을 일관되게 사용하는 것입니다.
+
 | 포맷 | 결과 예시 | 용도 |
 |------|-----------|------|
 | 기본 | "User" | 표시용 (비권장) |
@@ -348,6 +363,6 @@ type.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat);
 
 ## 다음 단계
 
-다음 섹션에서는 제네릭 타입 추출 기법을 학습합니다.
+`SymbolDisplayFormat`으로 타입을 일관된 문자열로 변환하는 방법을 이해했습니다. 그런데 `FinT<IO, User>`라는 반환 타입에서 실제로 필요한 것은 두 번째 타입 파라미터인 `User`뿐입니다. 다음 장에서는 이 제네릭 타입에서 특정 타입 파라미터를 추출하는 기법을 살펴봅니다.
 
-➡️ [04. 타입 추출](../08-Type-Extraction/)
+→ [08. 타입 추출](../08-Type-Extraction/)

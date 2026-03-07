@@ -2,11 +2,19 @@
 title: "LoggerMessage.Define 제한"
 ---
 
+## 개요
+
+고성능 로깅과 유연성 사이에는 트레이드오프가 존재합니다. .NET의 `LoggerMessage.Define`은 제로 할당(zero-allocation) 로깅을 제공하지만, 최대 6개의 타입 파라미터만 지원합니다. ObservablePortGenerator는 기본 필드 4개(layer, category, handler, method)에 메서드 파라미터와 컬렉션 Count 필드를 더한 총합이 6개 이하이면 고성능 경로를 사용하고, 초과하면 `logger.LogDebug()`로 자동 폴백합니다. 이 분기 로직 덕분에 개발자는 파라미터 수를 의식하지 않아도 최적의 로깅 전략이 적용됩니다.
+
 ## 학습 목표
 
-- LoggerMessage.Define의 6개 파라미터 제한 이해
-- 고성능 로깅 vs 폴백 전략
-- 파라미터 수 계산 로직
+### 핵심 학습 목표
+1. **LoggerMessage.Define의 6개 파라미터 제한 이해**
+   - .NET 런타임이 부과하는 제네릭 타입 파라미터 상한
+2. **고성능 로깅 vs 폴백 전략**
+   - 제로 할당 경로와 일반 로깅 경로의 성능 차이
+3. **파라미터 수 계산 로직**
+   - 기본 필드, 메서드 파라미터, 컬렉션 Count를 합산하는 방식
 
 ---
 
@@ -14,7 +22,7 @@ title: "LoggerMessage.Define 제한"
 
 ### 고성능 로깅
 
-.NET의 `LoggerMessage.Define`은 **제로 할당** 로깅을 제공합니다.
+.NET의 `LoggerMessage.Define`은 제로 할당 로깅을 제공합니다.
 
 ```csharp
 // LoggerMessage.Define 사용 (고성능)
@@ -327,22 +335,12 @@ public Task Should_Generate_LoggerMessageDefine_WithZeroParameters()
 
 ## 요약
 
-| 개념 | 설명 |
-|------|------|
-| 6개 제한 | .NET LoggerMessage.Define 최대 파라미터 수 |
-| 기본 필드 | requestLayer, requestCategory, requestHandler, requestHandlerMethod (4개) |
-| 컬렉션 추가 | 각 컬렉션 파라미터당 Count 필드 +1 |
-| 폴백 | 6개 초과 시 logger.LogDebug() 사용 |
-
-| 경로 | 성능 | 할당 |
-|------|------|------|
-| LoggerMessage.Define | 최적화 | 제로 |
-| logger.LogDebug() | 일반 | 있음 |
+ObservablePortGenerator는 로깅 파라미터의 총합을 자동으로 계산하여 최적의 경로를 선택합니다. 기본 필드 4개에 메서드 파라미터와 컬렉션 Count 필드를 합산한 값이 6 이하이면 `LoggerMessage.Define`의 제로 할당 경로를, 초과하면 `logger.LogDebug()` 폴백 경로를 사용합니다. Response 로깅도 동일한 원리로 기본 6개 필드에 컬렉션 반환의 Count 필드가 추가되면 폴백이 발생합니다.
 
 ---
 
 ## 다음 단계
 
-다음 장에서는 테스트 전략을 학습합니다.
+지금까지 ObservablePortGenerator의 핵심 코드 생성 로직을 모두 살펴보았습니다. 다음 섹션에서는 이 생성기를 검증하기 위한 단위 테스트 환경 구축 방법을 학습합니다.
 
-➡️ [08장. 테스트 전략](../08-testing-strategies/)
+→ [05. Unit Test 설정](../05-Unit-Testing-Setup/)

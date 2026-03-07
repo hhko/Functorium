@@ -2,11 +2,19 @@
 title: "ForAttributeWithMetadataName"
 ---
 
+## 개요
+
+앞 장에서 Provider 파이프라인의 시작점으로 `SyntaxProvider`를 사용한다고 언급했습니다. 실제로 속성 기반 소스 생성기에서는 거의 항상 `ForAttributeWithMetadataName`이 그 시작점이 됩니다. 이 API는 컴파일러의 내부 속성 인덱스를 직접 활용하기 때문에, 모든 노드를 순회하며 속성을 확인하는 수동 구현보다 10~100배 빠릅니다. ObservablePortGenerator 역시 `[GenerateObservablePort]` 속성을 기반으로 동작하므로 이 API가 파이프라인의 핵심 진입점입니다.
+
 ## 학습 목표
 
-- ForAttributeWithMetadataName API의 역할 이해
-- predicate와 transform 콜백 활용법 습득
-- GeneratorAttributeSyntaxContext 구조 파악
+### 핵심 학습 목표
+1. **ForAttributeWithMetadataName API의** 역할과 성능 이점을 이해한다
+   - 컴파일러 내부 인덱스를 활용한 최적화 원리
+2. **predicate와 transform 콜백의** 활용법을 습득한다
+   - Syntax 수준 필터와 Semantic 수준 변환의 분리
+3. **GeneratorAttributeSyntaxContext의** 구조를 파악한다
+   - TargetSymbol, SemanticModel, Attributes 접근 방법
 
 ---
 
@@ -165,6 +173,8 @@ public readonly struct GeneratorAttributeSyntaxContext
 
 ## 실제 코드: ObservablePortGenerator
 
+지금까지 API의 각 구성 요소를 살펴보았습니다. 이제 우리 프로젝트에서 이 요소들이 어떻게 조합되는지 전체 흐름을 확인합니다.
+
 ```csharp
 [Generator(LanguageNames.CSharp)]
 public sealed class ObservablePortGenerator()
@@ -317,6 +327,8 @@ transform: (ctx, cancellationToken) =>
 
 ## 요약
 
+`ForAttributeWithMetadataName`은 속성 기반 소스 생성기의 핵심 진입점입니다. `predicate`에서 Syntax 수준의 빠른 필터링을, `transform`에서 Semantic 수준의 데이터 추출을 담당하는 두 단계 분리가 성능의 핵심입니다. 속성 이름에는 반드시 네임스페이스와 `Attribute` 접미사를 포함해야 합니다.
+
 | 구성 요소 | 역할 | 주의사항 |
 |-----------|------|----------|
 | `fullyQualifiedMetadataName` | 속성 전체 이름 | 네임스페이스 포함, `Attribute` 접미사 포함 |
@@ -328,6 +340,6 @@ transform: (ctx, cancellationToken) =>
 
 ## 다음 단계
 
-다음 섹션에서는 증분 캐싱의 원리와 최적화를 학습합니다.
+`ForAttributeWithMetadataName`으로 데이터를 효율적으로 추출하는 방법을 이해했습니다. 하지만 이 효율성이 제대로 발휘되려면 파이프라인의 각 단계에서 캐싱이 올바르게 작동해야 합니다. 다음 장에서는 증분 캐싱의 원리와, 캐시를 무효화시키는 흔한 실수들을 살펴봅니다.
 
-➡️ [04. 증분 캐싱](../04-Incremental-Caching/)
+→ [04. 증분 캐싱](../04-Incremental-Caching/)

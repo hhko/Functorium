@@ -2,17 +2,25 @@
 title: "IIncrementalGenerator"
 ---
 
+## 개요
+
+소스 생성기를 만들 때 가장 먼저 마주치는 질문은 "어떤 인터페이스를 구현해야 하는가"입니다. .NET 6 이전에는 `ISourceGenerator`가 유일한 선택이었지만, 매 키 입력마다 모든 소스 파일을 다시 처리하는 구조 탓에 IDE 성능이 심각하게 저하되었습니다. **IIncrementalGenerator는** 이 문제를 해결하기 위해 도입된 현재 표준 인터페이스로, 변경된 파일만 처리하는 증분 파이프라인을 선언적으로 구성할 수 있게 해줍니다.
+
 ## 학습 목표
 
-- IIncrementalGenerator 인터페이스 구조 이해
-- Initialize 메서드의 역할 파악
-- IncrementalGeneratorInitializationContext 활용법 학습
+### 핵심 학습 목표
+1. **IIncrementalGenerator 인터페이스 구조를** 이해한다
+   - Initialize 메서드 하나로 전체 파이프라인을 구성하는 방식
+2. **IncrementalGeneratorInitializationContext의** 주요 멤버를 파악한다
+   - 고정 코드 등록, 소스 분석, 출력 등록의 역할 구분
+3. **ObservablePortGenerator에서의** 실제 적용 패턴을 학습한다
+   - IncrementalGeneratorBase를 통한 템플릿 메서드 패턴
 
 ---
 
 ## IIncrementalGenerator란?
 
-**IIncrementalGenerator**는 .NET 6부터 도입된 **증분 소스 생성기**의 핵심 인터페이스입니다. 기존 ISourceGenerator보다 성능이 크게 향상되었습니다.
+**IIncrementalGenerator는** .NET 6부터 도입된 **증분 소스 생성기의** 핵심 인터페이스입니다. 기존 `ISourceGenerator`가 모든 파일을 매번 처리했다면, `IIncrementalGenerator`는 변경된 파일만 선별적으로 처리하여 빌드 성능을 크게 향상시킵니다.
 
 ```
 ISourceGenerator (레거시)
@@ -72,7 +80,7 @@ public class MyGenerator : IIncrementalGenerator
 
 ## IncrementalGeneratorInitializationContext
 
-Initialize 메서드의 파라미터로, 소스 생성기를 구성하는 데 필요한 모든 것을 제공합니다.
+Initialize 메서드의 파라미터인 `IncrementalGeneratorInitializationContext`는 소스 생성기 파이프라인을 구성하는 데 필요한 모든 것을 제공합니다. 이 구조체의 멤버들은 크게 세 가지 역할로 나뉩니다. **고정 코드 등록**(Attribute 정의 등 항상 동일한 코드), **소스 분석**(SyntaxProvider를 통한 데이터 추출), **출력 등록**(분석 결과를 바탕으로 실제 코드 생성)입니다.
 
 ### 주요 멤버
 
@@ -308,6 +316,8 @@ ctx.AddSource("Repositories.UserRepositoryObservable.g.cs", code);
 
 ## 요약
 
+`IIncrementalGenerator`는 `Initialize` 메서드 하나만 구현하면 되는 단순한 인터페이스이지만, 그 안에서 선언적 파이프라인을 통해 강력한 증분 빌드를 지원합니다. `RegisterPostInitializationOutput`으로 Attribute 같은 고정 코드를 등록하고, `SyntaxProvider`로 관심 있는 노드를 필터링한 뒤, `RegisterSourceOutput`으로 실제 코드를 생성하는 세 단계 구조를 기억하면 됩니다.
+
 | 구성 요소 | 역할 |
 |-----------|------|
 | `IIncrementalGenerator` | 소스 생성기 인터페이스 |
@@ -321,6 +331,6 @@ ctx.AddSource("Repositories.UserRepositoryObservable.g.cs", code);
 
 ## 다음 단계
 
-다음 섹션에서는 Provider 패턴을 자세히 학습합니다.
+`IIncrementalGenerator`의 전체 구조를 이해했으니, 다음으로는 파이프라인의 핵심 구성 요소인 Provider 패턴을 살펴봅니다. LINQ와 유사한 선언적 연산자들이 어떻게 데이터를 변환하고 필터링하는지 학습합니다.
 
-➡️ [02. Provider 패턴](../02-Provider-Pattern/)
+→ [02. Provider 패턴](../02-Provider-Pattern/)

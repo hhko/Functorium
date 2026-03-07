@@ -2,17 +2,27 @@
 title: "Symbol Type"
 ---
 
+## 개요
+
+앞 장에서 Semantic API를 통해 심볼에 접근하는 방법을 배웠습니다. `GetDeclaredSymbol`이나 `ctx.TargetSymbol`로 얻은 `ISymbol`을 실제로 활용하려면, 심볼 타입의 계층 구조를 이해하고 상황에 맞는 타입으로 캐스팅할 수 있어야 합니다.
+
+우리 프로젝트의 ObservablePortGenerator는 `INamedTypeSymbol`에서 클래스와 인터페이스 정보를 추출하고, `IMethodSymbol`에서 메서드 시그니처를 분석하며, `IParameterSymbol`에서 파라미터 타입과 `RefKind`를 읽어옵니다. 이 장에서는 이러한 심볼 타입들의 속성과 실제 사용 패턴을 체계적으로 학습합니다.
+
 ## 학습 목표
 
-- ISymbol 계층 구조 이해
-- INamedTypeSymbol, IMethodSymbol 상세 학습
-- 소스 생성기에서 활용하는 심볼 API 습득
+### 핵심 학습 목표
+1. **ISymbol 계층 구조 이해**
+   - 심볼 타입 간의 상속 관계와 용도별 선택 기준
+2. **INamedTypeSymbol, IMethodSymbol 상세 학습**
+   - 클래스/인터페이스 분석과 메서드 시그니처 추출에 필요한 핵심 속성
+3. **소스 생성기에서 활용하는 심볼 API 습득**
+   - ObservablePortGenerator의 실제 코드를 통한 패턴 학습
 
 ---
 
 ## ISymbol 계층 구조
 
-모든 심볼은 `ISymbol` 인터페이스를 기반으로 합니다:
+모든 심볼은 `ISymbol` 인터페이스를 기반으로 합니다. 소스 생성기에서는 주로 `INamedTypeSymbol`(클래스/인터페이스 분석), `IMethodSymbol`(메서드 시그니처), `IParameterSymbol`(파라미터 정보)을 사용합니다:
 
 ```
 ISymbol (기본 인터페이스)
@@ -67,7 +77,7 @@ symbol.DeclaringSyntaxReferences // 선언 Syntax 참조
 
 ## INamedTypeSymbol
 
-**클래스, 인터페이스, 구조체, 열거형**을 나타냅니다.
+소스 생성기에서 가장 많이 사용하는 심볼 타입입니다. **클래스, 인터페이스, 구조체, 열거형**을 나타내며, ObservablePortGenerator에서는 `ctx.TargetSymbol`을 `INamedTypeSymbol`로 캐스팅하여 클래스의 인터페이스 목록과 멤버를 분석합니다.
 
 ### 기본 속성
 
@@ -131,7 +141,7 @@ typeSymbol.OriginalDefinition // List<> (unbounded)
 
 ## IMethodSymbol
 
-**메서드, 생성자, 소멸자, 연산자**를 나타냅니다.
+**메서드, 생성자, 소멸자, 연산자**를 나타냅니다. 우리 프로젝트에서는 인터페이스의 메서드 목록을 `GetMembers().OfType<IMethodSymbol>()`로 추출한 뒤, `MethodKind.Ordinary`로 필터링하여 프로퍼티 getter/setter와 생성자를 제외합니다.
 
 ### 기본 속성
 
@@ -334,6 +344,8 @@ public enum RefKind
 
 ## SymbolDisplayFormat 활용
 
+소스 생성기가 코드를 생성할 때, 타입 이름은 반드시 `global::` 접두사를 포함하는 완전한 형태로 출력해야 합니다. 그래야 생성된 코드가 using 선언이나 네임스페이스 충돌에 영향받지 않습니다. 우리 프로젝트의 `SymbolDisplayFormats.GlobalQualifiedFormat`이 이를 위한 커스텀 포맷입니다.
+
 심볼을 문자열로 변환할 때 포맷을 지정할 수 있습니다:
 
 ```csharp
@@ -364,6 +376,8 @@ type.ToDisplayString(format)
 
 ## 요약
 
+심볼 타입의 계층 구조를 이해하면, Semantic API에서 얻은 `ISymbol`을 적절한 타입으로 캐스팅하여 필요한 정보를 추출할 수 있습니다. ObservablePortGenerator의 파이프라인에서 각 심볼 타입이 맡는 역할은 다음과 같습니다: `INamedTypeSymbol`로 클래스와 인터페이스 관계를 분석하고, `IMethodSymbol`로 메서드 시그니처를 추출하며, `IParameterSymbol`로 파라미터의 타입과 전달 방식을 확인합니다.
+
 | 심볼 타입 | 대표 멤버 | 용도 |
 |-----------|-----------|------|
 | `INamedTypeSymbol` | Name, AllInterfaces, GetMembers() | 클래스 분석 |
@@ -382,6 +396,6 @@ type.ToDisplayString(format)
 
 ## 다음 단계
 
-다음 장에서는 IIncrementalGenerator 패턴을 학습합니다.
+Roslyn의 세 가지 핵심 계층 - Syntax Tree, Semantic Model, Symbol - 을 모두 학습했습니다. 다음 장에서는 이 세 계층을 조합하여 실제 소스 생성기를 구현하는 `IIncrementalGenerator` 패턴을 학습합니다.
 
-➡️ [04장. IIncrementalGenerator 패턴](../04-incremental-generator-pattern/)
+→ [04장. IIncrementalGenerator 패턴](../04-incremental-generator-pattern/)

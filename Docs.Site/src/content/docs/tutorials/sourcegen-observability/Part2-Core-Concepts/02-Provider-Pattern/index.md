@@ -2,17 +2,25 @@
 title: "Provider Pattern"
 ---
 
+## 개요
+
+앞 장에서 `Initialize` 메서드 안에서 파이프라인을 구성한다는 것을 확인했습니다. 그렇다면 이 파이프라인은 구체적으로 어떻게 만들어질까요? LINQ를 사용해 본 적이 있다면 `Select`, `Where`, `Collect` 같은 연산자가 익숙할 것입니다. **Provider 패턴은** 바로 이 LINQ 스타일의 선언적 연산자를 사용하여 소스 코드에서 필요한 정보를 추출하고 변환하는 데이터 파이프라인을 구성합니다. 우리 프로젝트의 ObservablePortGenerator도 이 패턴으로 `[GenerateObservablePort]` 속성이 붙은 클래스를 찾아 `ObservableClassInfo`로 변환합니다.
+
 ## 학습 목표
 
-- IncrementalValuesProvider와 IncrementalValueProvider 이해
-- LINQ 스타일 파이프라인 구성 방법 습득
-- Select, Where, Collect 등 연산자 활용
+### 핵심 학습 목표
+1. **IncrementalValuesProvider와 IncrementalValueProvider의** 차이를 이해한다
+   - 복수 값(0..N)과 단일 값(정확히 1개)의 구분
+2. **LINQ 스타일 연산자를** 활용한 파이프라인 구성 방법을 습득한다
+   - Select, Where, Collect, Combine의 역할과 사용 시점
+3. **ObservablePortGenerator의** 실제 파이프라인 구조를 분석한다
+   - ForAttributeWithMetadataName → Where → Collect 흐름
 
 ---
 
 ## Provider란?
 
-**Provider**는 소스 생성기의 **데이터 파이프라인**을 구성하는 핵심 요소입니다. 소스 코드에서 필요한 정보를 추출하고 변환하는 과정을 선언적으로 표현합니다.
+**Provider는** 소스 생성기의 **데이터 파이프라인을** 구성하는 핵심 요소입니다. LINQ에서 `IEnumerable<T>`에 `Select`와 `Where`를 체이닝하듯, Provider에도 동일한 이름의 연산자를 체이닝하여 소스 코드에서 필요한 정보를 추출하고 변환하는 과정을 선언적으로 표현합니다.
 
 ```
 Provider 파이프라인 흐름
@@ -85,6 +93,8 @@ IncrementalValueProvider<ImmutableArray<ObservableClassInfo>> collected =
 
 ## 주요 연산자
 
+각 연산자는 LINQ의 대응 연산자와 동일한 의미를 가집니다. 차이점은 이 연산자들이 컴파일러의 증분 캐싱 시스템과 통합되어, 입력이 변경되지 않으면 이전 결과를 재사용한다는 것입니다.
+
 ### Select - 데이터 변환
 
 ```csharp
@@ -143,6 +153,8 @@ context.RegisterSourceOutput(combined, (ctx, pair) =>
 ---
 
 ## 실제 코드: ObservablePortGenerator
+
+지금까지 개별 연산자를 살펴보았으니, 우리 프로젝트에서 이 연산자들이 어떻게 조합되는지 확인해 봅니다.
 
 ```csharp
 private static IncrementalValuesProvider<ObservableClassInfo> RegisterSourceProvider(
@@ -248,7 +260,7 @@ context.RegisterSourceOutput(withOptions, (ctx, pair) =>
 
 ## 캐싱과 성능
 
-Provider 패턴의 핵심 장점은 **자동 캐싱**입니다:
+Provider 패턴을 사용해야 하는 가장 중요한 이유는 **자동 캐싱**입니다. 파이프라인의 각 단계에서 입력이 이전과 동일하면 컴파일러가 해당 단계의 결과를 캐시에서 가져와 처리를 건너뜁니다.
 
 ```
 증분 빌드 시 동작
@@ -286,7 +298,7 @@ Provider 패턴의 핵심 장점은 **자동 캐싱**입니다:
 
 ## 데이터 모델 설계
 
-캐싱이 올바르게 작동하려면 데이터 모델이 **값 의미론**을 가져야 합니다:
+캐싱이 올바르게 작동하려면 데이터 모델이 **값 의미론을** 가져야 합니다. 내용이 같은 두 객체가 `Equals`로 동일하게 판정되어야 컴파일러가 "변경 없음"을 인식하고 캐시를 활용할 수 있기 때문입니다. 우리 프로젝트의 `ObservableClassInfo`가 `readonly record struct`로 정의된 것도 이 이유입니다.
 
 ```csharp
 // ✅ readonly record struct 사용 (값 의미론 + 자동 Equals/GetHashCode)
@@ -354,6 +366,8 @@ public class ParameterInfo
 
 ## 요약
 
+Provider 패턴은 LINQ와 동일한 선언적 스타일로 소스 생성 파이프라인을 구성하되, 각 단계에 자동 캐싱을 제공하여 증분 빌드 성능을 보장합니다. 데이터 모델에 값 의미론을 적용하는 것이 캐싱의 핵심 전제 조건입니다.
+
 | Provider 타입 | 값 개수 | 용도 |
 |---------------|---------|------|
 | `IncrementalValuesProvider<T>` | 0..N개 | 여러 항목 처리 |
@@ -370,6 +384,6 @@ public class ParameterInfo
 
 ## 다음 단계
 
-다음 섹션에서는 속성 기반 필터링의 핵심 API를 학습합니다.
+Provider 파이프라인의 전체 흐름을 이해했으니, 다음으로는 파이프라인의 시작점에서 가장 자주 사용되는 API인 `ForAttributeWithMetadataName`을 살펴봅니다. 이 API가 속성 기반 필터링을 어떻게 최적화하는지, 그리고 직접 구현과 비교했을 때 왜 10~100배 빠른지 확인합니다.
 
-➡️ [03. ForAttributeWithMetadataName](../03-ForAttribute/)
+→ [03. ForAttributeWithMetadataName](../03-ForAttribute/)

@@ -2,11 +2,19 @@
 title: "Validation Generator"
 ---
 
+## 개요
+
+DTO에 `[Required]`, `[MaxLength]` 같은 DataAnnotations를 붙여 놓고, FluentValidation으로 동일한 규칙을 다시 작성하는 것은 비용이 높은 중복입니다. 규칙이 변경되면 두 곳을 동시에 수정해야 하고, 하나라도 놓치면 검증 동작이 불일치합니다. 이 절에서는 DataAnnotations 속성을 분석하여 FluentValidation Validator를 자동으로 생성하는 소스 생성기를 구현하고, 검증 로직의 단일 진실 공급원(Single Source of Truth)을 확보합니다.
+
 ## 학습 목표
 
-- DataAnnotations와 FluentValidation의 관계 이해
-- Primary Constructor 파라미터의 속성 추출 방법
-- 검증 규칙 매핑 및 코드 생성
+### 핵심 학습 목표
+1. **DataAnnotations와 FluentValidation의 관계 이해**
+   - 두 검증 체계의 매핑 규칙과 자동 변환 전략
+2. **Primary Constructor 파라미터의 속성 추출 방법**
+   - record의 생성자 파라미터에서 어트리뷰트를 읽어내는 Roslyn 심볼 분석 기법
+3. **검증 규칙 매핑 및 코드 생성**
+   - 속성별 FluentValidation 메서드 매핑과 nullable 타입 처리
 
 ---
 
@@ -46,6 +54,8 @@ public record CreateUserRequest(
 
 // Validator가 자동 생성됨!
 ```
+
+중복 문제를 인식했으니, 생성기가 만들어야 할 코드의 목표를 정의합니다.
 
 ---
 
@@ -126,6 +136,8 @@ public sealed class CreateUserRequestValidator : AbstractValidator<CreateUserReq
 | `[Url]` | `.Must(Uri.IsWellFormedUriString)` | URL 형식 |
 | `[RegularExpression(pattern)]` | `.Matches(pattern)` | 정규식 |
 | `[Compare(otherProperty)]` | `.Equal(x => x.OtherProperty)` | 값 비교 |
+
+매핑 규칙이 정의되었으니 생성기를 구현합니다. 이 생성기의 핵심 난이도는 Primary Constructor 파라미터에 붙은 어트리뷰트를 정확히 추출하는 것입니다.
 
 ---
 
@@ -448,6 +460,8 @@ private static string GenerateRule(ValidationRule rule, PropertyValidation prope
 }
 ```
 
+기본 검증 규칙 생성이 완성되면, 중첩 객체와 커스텀 규칙 같은 고급 시나리오로 확장할 수 있습니다.
+
 ---
 
 ## 고급 기능
@@ -521,6 +535,8 @@ public sealed class CreateEventRequestValidator : AbstractValidator<CreateEventR
     }
 }
 ```
+
+기본 속성, Range 속성, nullable 처리 세 가지 시나리오에 대한 스냅샷 테스트로 생성 결과를 검증합니다.
 
 ---
 
@@ -676,10 +692,12 @@ public sealed class ValidationBehavior<TRequest, TResponse>
 | **지원 속성** | Required, MaxLength, MinLength, Range, EmailAddress, Phone, Url, RegularExpression, Compare |
 | **고급 기능** | 중첩 객체, 컬렉션, 커스텀 규칙 |
 
+Validation 생성기는 이 장에서 다룬 세 가지 생성기 중 가장 복잡한 심볼 분석을 수행합니다. 어트리뷰트의 생성자 인자와 명명된 인자를 모두 추출하고, 타입별로 다른 FluentValidation 메서드에 매핑하는 패턴은 다양한 메타프로그래밍 시나리오에 응용할 수 있습니다.
+
 ---
 
 ## 다음 단계
 
-다음 섹션에서는 새로운 소스 생성기 프로젝트를 시작하기 위한 템플릿을 제공합니다.
+Entity Id, ValueConverter, Validation까지 세 가지 실전 생성기를 구현했습니다. 다음 절에서는 이 경험을 바탕으로, 새로운 소스 생성기를 빠르게 시작할 수 있는 프로젝트 템플릿을 제공합니다.
 
-➡️ [05. 커스텀 생성기 템플릿](../05-Custom-Generator-Template/)
+→ [05. 커스텀 생성기 템플릿](../05-Custom-Generator-Template/)

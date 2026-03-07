@@ -2,17 +2,25 @@
 title: "Constructor 처리"
 ---
 
+## 개요
+
+소스 생성기가 Observable 클래스를 만들 때, 원본 클래스를 상속하므로 부모의 생성자를 올바르게 호출해야 합니다. 그런데 C# 12의 Primary Constructor, 다중 생성자 중 최적 선택, 그리고 `logger`처럼 Observable 자체 파라미터와 이름이 충돌하는 경우까지 고려하면, 생성자 처리는 단순한 코드 복사 이상의 분석이 필요합니다. ObservablePortGenerator는 `ConstructorParameterExtractor`와 `ParameterNameResolver` 두 유틸리티를 통해 이 문제를 체계적으로 해결합니다.
+
 ## 학습 목표
 
-- Primary Constructor 지원 (C# 12+)
-- 부모 클래스 생성자 파라미터 추출
-- 파라미터 이름 충돌 해결
+### 핵심 학습 목표
+1. **Primary Constructor 지원 (C# 12+)**
+   - Roslyn에서 Primary Constructor를 식별하고 파라미터를 추출하는 방법
+2. **부모 클래스 생성자 파라미터 추출**
+   - 타겟 클래스와 부모 클래스의 생성자 탐색 우선순위
+3. **파라미터 이름 충돌 해결**
+   - Observable이 사용하는 예약 이름과 부모 파라미터가 겹칠 때의 자동 리네이밍
 
 ---
 
 ## 생성자 처리의 필요성
 
-Observable 클래스는 원본 클래스를 **상속**합니다. 부모 클래스에 생성자 파라미터가 있으면 이를 전달해야 합니다.
+Observable 클래스는 원본 클래스를 상속합니다. 부모 클래스에 생성자 파라미터가 있으면 이를 전달해야 합니다.
 
 ```csharp
 // 원본 클래스 (Primary Constructor)
@@ -401,12 +409,7 @@ public Task Should_Resolve_Parameter_Name_Conflict()
 
 ## 요약
 
-| 상황 | 처리 방법 |
-|------|-----------|
-| Primary Constructor | Constructors에서 추출 |
-| 다중 생성자 | 파라미터 많은 것 선택 |
-| 부모 클래스 | 재귀적으로 탐색 |
-| 이름 충돌 | `base` 접두사 추가 |
+생성자 처리는 크게 두 단계로 이루어집니다. 먼저 `ConstructorParameterExtractor`가 타겟 클래스 또는 부모 클래스에서 최적의 생성자를 선택하고 파라미터를 추출합니다. 그 다음 `ParameterNameResolver`가 Observable의 예약 이름과 충돌하는 파라미터에 `base` 접두사를 붙여 이름을 해결합니다.
 
 | 충돌 이름 | 해결 이름 |
 |-----------|-----------|
@@ -420,6 +423,6 @@ public Task Should_Resolve_Parameter_Name_Conflict()
 
 ## 다음 단계
 
-다음 섹션에서는 제네릭 타입 처리를 학습합니다.
+생성자 처리를 통해 Observable 클래스가 부모의 의존성을 올바르게 전달할 수 있게 되었습니다. 다음 섹션에서는 `FinT<IO, T>`에서 내부 타입 `T`를 추출하는 제네릭 타입 처리를 학습합니다.
 
-➡️ [02. 제네릭 타입](../02-Generic-Types/)
+→ [02. 제네릭 타입](../02-Generic-Types/)

@@ -2,11 +2,21 @@
 title: "Syntax API"
 ---
 
+## 개요
+
+앞 장에서 Roslyn 아키텍처의 전체 그림을 살펴보았습니다. 이제 그 첫 번째 계층인 Syntax API를 깊이 있게 다룹니다.
+
+Syntax API는 소스 코드의 **구조적 표현**을 제공합니다. 소스 생성기에서 "어떤 클래스에 특정 어트리뷰트가 붙어 있는가?"를 빠르게 필터링하는 `predicate` 단계가 바로 Syntax API의 영역입니다. 우리 프로젝트의 `Selectors.IsClass`가 대표적인 예입니다. 다만 Syntax API만으로는 타입의 전체 이름이나 인터페이스 구현 여부를 알 수 없다는 한계가 있으며, 이 한계를 인식하는 것이 다음 장의 Semantic API를 이해하는 출발점이 됩니다.
+
 ## 학습 목표
 
-- SyntaxNode, SyntaxToken, SyntaxTrivia의 차이 이해
-- Syntax Tree 탐색 방법 습득
-- 소스 생성기에서 Syntax API 활용법 학습
+### 핵심 학습 목표
+1. **SyntaxNode, SyntaxToken, SyntaxTrivia의 차이 이해**
+   - Syntax Tree를 구성하는 세 가지 요소의 역할과 관계
+2. **Syntax Tree 탐색 방법 습득**
+   - `DescendantNodes()`, `ChildNodes()`, `Ancestors()` 등 탐색 API
+3. **소스 생성기에서 Syntax API 활용법 학습**
+   - `ForAttributeWithMetadataName`의 `predicate`에서 구문 수준 필터링 구현
 
 ---
 
@@ -62,15 +72,15 @@ ClassDeclarationSyntax (노드)
 
 ## SyntaxNode 주요 타입
 
-C#의 문법 요소마다 대응하는 SyntaxNode가 있습니다:
+C#의 문법 요소마다 대응하는 SyntaxNode가 있습니다. 소스 생성기 개발에서 가장 자주 사용하는 것은 선언 관련 노드입니다. 우리 프로젝트에서는 `ClassDeclarationSyntax`와 `InterfaceDeclarationSyntax`를 주로 다룹니다.
 
 ```
-선언 관련
+선언 관련 (소스 생성기에서 가장 자주 사용)
 =========
 CompilationUnitSyntax       전체 파일
 NamespaceDeclarationSyntax  네임스페이스
-ClassDeclarationSyntax      클래스
-InterfaceDeclarationSyntax  인터페이스
+ClassDeclarationSyntax      클래스         ← Selectors.IsClass에서 사용
+InterfaceDeclarationSyntax  인터페이스     ← Selectors.IsInterface에서 사용
 MethodDeclarationSyntax     메서드
 PropertyDeclarationSyntax   프로퍼티
 FieldDeclarationSyntax      필드
@@ -317,7 +327,7 @@ void AnalyzeMethod(SyntaxNode node)
 
 ## Syntax API의 한계
 
-Syntax API만으로는 **타입 정보**를 알 수 없습니다:
+이 한계를 명확히 인식하는 것이 Syntax API 학습의 핵심입니다. Syntax API만으로는 **타입 정보**를 알 수 없습니다. 우리 프로젝트의 ObservablePortGenerator가 `predicate`에서 `ClassDeclarationSyntax`로 1차 필터링한 뒤, `transform`에서 반드시 Semantic API(`ctx.TargetSymbol`)를 사용하는 이유가 바로 여기에 있습니다:
 
 ```csharp
 string code = """
@@ -349,6 +359,8 @@ Console.WriteLine(parameter.Identifier.Text);   // "user"
 
 ## 요약
 
+Syntax API는 소스 코드의 구조를 빠르게 탐색하는 도구입니다. 소스 생성기에서는 주로 `predicate` 단계의 1차 필터링에 활용하며, 타입 해석이 필요한 상세 분석은 Semantic API에 위임합니다.
+
 | 구성 요소 | 역할 | 예시 |
 |-----------|------|------|
 | SyntaxNode | 문법 구조 | ClassDeclarationSyntax |
@@ -367,6 +379,6 @@ Console.WriteLine(parameter.Identifier.Text);   // "user"
 
 ## 다음 단계
 
-다음 섹션에서는 타입 정보를 제공하는 Semantic API를 학습합니다.
+Syntax API의 한계에서 보았듯이, 타입의 전체 이름이나 인터페이스 구현 여부 같은 의미론적 정보는 구문 분석만으로 얻을 수 없습니다. 다음 장에서는 이 한계를 넘어서는 Semantic API를 학습합니다.
 
-➡️ [03. Semantic API](../06-Semantic-Api/)
+→ [03. Semantic API](../06-Semantic-Api/)

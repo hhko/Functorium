@@ -2,17 +2,25 @@
 title: "Unit Test 설정"
 ---
 
+## 개요
+
+일반적인 단위 테스트는 메서드를 호출하고 반환값을 검증합니다. 하지만 소스 생성기는 컴파일 타임에 실행되므로, 테스트하려면 Roslyn 컴파일 파이프라인을 직접 구성해야 합니다. 입력 소스 코드를 `CSharpCompilation`으로 컴파일하고, `CSharpGeneratorDriver`로 소스 생성기를 실행한 뒤, 생성된 코드를 문자열로 추출하는 과정이 필요합니다. Functorium은 이 과정을 `SourceGeneratorTestRunner`라는 유틸리티로 추상화하여, 테스트 코드에서는 `_sut.Generate(input)` 한 줄로 생성 결과를 얻을 수 있습니다.
+
 ## 학습 목표
 
-- CSharpCompilation을 이용한 테스트 환경 구축
-- SourceGeneratorTestRunner 유틸리티 이해
-- 테스트 프로젝트 구성
+### 핵심 학습 목표
+1. **CSharpCompilation을 이용한 테스트 환경 구축**
+   - Roslyn 컴파일러 API로 소스 생성기를 실행하는 방법
+2. **SourceGeneratorTestRunner 유틸리티 이해**
+   - 어셈블리 참조 관리와 생성 결과 추출 과정
+3. **테스트 프로젝트 구성**
+   - 필요한 NuGet 패키지와 프로젝트 참조 설정
 
 ---
 
 ## 소스 생성기 테스트의 특수성
 
-소스 생성기는 **컴파일 타임**에 실행되므로 일반 단위 테스트와 다른 접근이 필요합니다.
+소스 생성기는 컴파일 타임에 실행되므로 일반 단위 테스트와 다른 접근이 필요합니다.
 
 ```
 일반 단위 테스트
@@ -332,26 +340,12 @@ dotnet test --filter "FullyQualifiedName~ObservablePortGeneratorTests"
 
 ## 요약
 
-| 구성 요소 | 역할 |
-|----------|------|
-| `SourceGeneratorTestRunner` | 테스트 실행 유틸리티 |
-| `CSharpCompilation` | 컴파일 컨텍스트 생성 |
-| `CSharpGeneratorDriver` | 소스 생성기 실행 |
-| `Verify` | 스냅샷 테스트 |
-
-| 단계 | 설명 |
-|------|------|
-| 1 | 입력 소스 코드 준비 |
-| 2 | Syntax Tree 생성 |
-| 3 | 어셈블리 참조 추가 |
-| 4 | Compilation 생성 |
-| 5 | 소스 생성기 실행 |
-| 6 | 결과 검증 |
+소스 생성기 테스트의 핵심은 Roslyn 컴파일 파이프라인을 테스트 환경에서 재현하는 것입니다. `SourceGeneratorTestRunner`가 Syntax Tree 생성, 어셈블리 참조 수집, Compilation 생성, Generator 실행의 전 과정을 캡슐화하므로, 테스트 코드는 입력과 출력에만 집중할 수 있습니다. 생성된 코드의 검증에는 `Verify` 스냅샷 테스트와 `Shouldly` assertion을 함께 사용합니다.
 
 ---
 
 ## 다음 단계
 
-다음 섹션에서는 Verify 스냅샷 테스트를 학습합니다.
+테스트 환경이 갖추어졌으니, 생성된 코드 전체를 파일로 저장하고 비교하는 Verify 스냅샷 테스트 방식을 알아봅니다.
 
-➡️ [02. Verify 스냅샷 테스트](../06-Verify-Snapshot-Testing/)
+→ [06. Verify 스냅샷 테스트](../06-Verify-Snapshot-Testing/)

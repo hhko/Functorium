@@ -2,11 +2,19 @@
 title: "다음 단계"
 ---
 
+## 개요
+
+소스 생성기의 기초를 익히고 ObservablePortGenerator를 완성했다면, 이제 그 경험을 토대로 더 넓은 Roslyn 생태계를 탐험할 준비가 되었습니다. 이 섹션에서는 고급 Roslyn API, 실전에서 도전해볼 만한 프로젝트 아이디어, 그리고 지속적인 학습을 위한 커뮤니티 리소스를 소개합니다.
+
 ## 학습 목표
 
-- 추가 학습 주제 파악
-- 실전 프로젝트 아이디어
-- 커뮤니티 리소스
+### 핵심 학습 목표
+1. **추가 학습 주제 파악**
+   - 소스 생성기 너머의 Roslyn API(Analyzer, Code Fix Provider)로 역량을 확장합니다
+2. **실전 프로젝트 아이디어**
+   - 난이도 순으로 정리된 프로젝트를 통해 소스 생성기 구현 감각을 키웁니다
+3. **커뮤니티 리소스 활용**
+   - 공식 문서, 오픈소스 프로젝트, 학습 자료를 활용하여 지속적으로 성장합니다
 
 ---
 
@@ -14,9 +22,11 @@ title: "다음 단계"
 
 ### 1. 고급 Roslyn API
 
+소스 생성기가 "새 코드를 추가"하는 도구라면, Roslyn은 그 외에도 기존 코드를 분석하고 변환하는 풍부한 API를 제공합니다.
+
 #### Syntax Rewriter
 
-기존 코드를 변환하는 패턴입니다.
+기존 코드의 Syntax Tree를 탐색하면서 특정 노드를 변환하는 패턴입니다. 예를 들어 메서드 이름 규칙을 일괄 변경하거나, 특정 패턴의 코드를 자동으로 리팩터링할 수 있습니다.
 
 ```csharp
 public class MyRewriter : CSharpSyntaxRewriter
@@ -31,7 +41,7 @@ public class MyRewriter : CSharpSyntaxRewriter
 
 #### Code Fix Provider
 
-컴파일러 경고/오류에 대한 자동 수정을 제공합니다.
+Analyzer가 문제를 감지했을 때, 개발자에게 자동 수정을 제안하는 도구입니다. IDE에서 "전구 아이콘"으로 나타나는 Quick Fix가 바로 이 메커니즘입니다.
 
 ```csharp
 [ExportCodeFixProvider(LanguageNames.CSharp)]
@@ -46,7 +56,7 @@ public class MyCodeFixProvider : CodeFixProvider
 
 #### Analyzer
 
-코드 분석 규칙을 정의합니다.
+프로젝트 전체에 적용되는 커스텀 코드 분석 규칙을 정의합니다. ObservablePortGenerator에서 `[GenerateObservablePort]` 속성의 올바른 사용을 강제하는 Analyzer를 만들면, 소스 생성기와 시너지를 낼 수 있습니다.
 
 ```csharp
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
@@ -60,6 +70,8 @@ public class MyAnalyzer : DiagnosticAnalyzer
 ```
 
 ### 2. 다른 소스 생성기 패턴
+
+.NET 생태계에는 이미 다양한 소스 생성기가 활용되고 있습니다. 이들의 설계를 분석하면 ObservablePortGenerator에서 배운 패턴이 어떻게 변형·확장되는지 확인할 수 있습니다.
 
 #### JSON 직렬화 생성기
 
@@ -86,6 +98,8 @@ public class User { }
 
 ### 3. 성능 최적화
 
+대규모 프로젝트에서 소스 생성기가 수백 개의 클래스를 처리할 때, 증분 캐싱과 병렬 처리는 빌드 시간에 직접적인 영향을 미칩니다.
+
 #### 증분 캐싱 심화
 
 ```csharp
@@ -108,9 +122,11 @@ Parallel.ForEach(symbols, symbol => {
 
 ## 실전 프로젝트 아이디어
 
+다음 프로젝트들은 난이도 순으로 정리되어 있습니다. DTO 매퍼와 Builder 패턴 생성기로 기본기를 다진 뒤, Enum 확장과 API 클라이언트 생성기로 복잡한 시나리오를 경험하고, 검증 규칙 생성기에서 Analyzer와의 통합까지 시도해보십시오.
+
 ### 1. DTO 매퍼 생성기
 
-**목표**: 엔티티 → DTO 매핑 코드 자동 생성
+**목표**: 엔티티 → DTO 매핑 코드 자동 생성. 프로퍼티 이름과 타입을 비교하는 로직은 ObservablePortGenerator에서 심볼을 분석했던 경험을 직접 활용할 수 있어, 첫 번째 프로젝트로 적합합니다.
 
 ```csharp
 // 입력
@@ -131,7 +147,7 @@ public static class UserMapper
 
 ### 2. Builder 패턴 생성기
 
-**목표**: 불변 객체용 Builder 클래스 자동 생성
+**목표**: 불변 객체용 Builder 클래스 자동 생성. record의 생성자 파라미터를 분석하여 Fluent API를 생성하는 과정은 ConstructorParameterExtractor에서 다뤘던 패턴의 확장입니다.
 
 ```csharp
 // 입력
@@ -153,7 +169,7 @@ public class UserBuilder
 
 ### 3. Enum 확장 생성기
 
-**목표**: Enum에 대한 유틸리티 메서드 생성
+**목표**: Enum에 대한 유틸리티 메서드 생성. Enum 멤버를 순회하며 switch 표현식을 생성하는 과정에서, CollectionTypeHelper와 유사한 타입별 분기 로직을 설계하게 됩니다.
 
 ```csharp
 // 입력
@@ -178,7 +194,7 @@ public static class OrderStatusExtensions
 
 ### 4. API 클라이언트 생성기
 
-**목표**: 인터페이스에서 HTTP 클라이언트 구현 생성
+**목표**: 인터페이스에서 HTTP 클라이언트 구현 생성. 속성에서 URL 패턴을 추출하고, 메서드 시그니처에서 HTTP 메서드와 파라미터 바인딩을 결정하는 과정은 ObservablePortGenerator의 메서드 분석 로직을 한 단계 더 복잡하게 확장합니다.
 
 ```csharp
 // 입력
@@ -207,7 +223,7 @@ public class UserApiClient : IUserApi
 
 ### 5. 검증 규칙 생성기
 
-**목표**: 데이터 검증 코드 자동 생성
+**목표**: 데이터 검증 코드 자동 생성. 가장 도전적인 프로젝트로, 속성 기반 규칙 해석과 함께 Analyzer를 결합하여 컴파일 타임에 잘못된 검증 규칙을 경고할 수도 있습니다.
 
 ```csharp
 // 입력
@@ -248,6 +264,8 @@ public class CreateUserRequestValidator
 
 ## 커뮤니티 리소스
 
+소스 생성기를 깊이 있게 학습하려면 공식 문서와 실전 오픈소스 프로젝트를 병행하는 것이 효과적입니다.
+
 ### 공식 문서
 
 | 리소스 | URL |
@@ -267,15 +285,13 @@ public class CreateUserRequestValidator
 
 ### 학습 자료
 
-| 유형 | 추천 |
-|------|------|
-| 책 | "Roslyn Cookbook" |
-| 블로그 | Andrew Lock's .NET Blog |
-| YouTube | Nick Chapsas 채널 |
+서적으로는 "Roslyn Cookbook"이 Roslyn API 전반을 체계적으로 다루고 있어 참고하기 좋습니다. 블로그로는 Andrew Lock의 .NET Blog가 소스 생성기를 포함한 .NET 심층 주제를 꾸준히 다루며, YouTube에서는 Nick Chapsas 채널이 소스 생성기 실전 활용 사례를 영상으로 제공합니다.
 
 ---
 
 ## 디버깅 팁 복습
+
+소스 생성기 개발에서 가장 까다로운 부분 중 하나는 디버깅입니다. 생성기는 컴파일러 내부에서 실행되므로 일반적인 브레이크포인트 방식으로는 접근하기 어렵습니다. 다음 두 가지 기법을 기억해두십시오.
 
 ### Debugger.Launch()
 
@@ -312,30 +328,22 @@ context.ReportDiagnostic(Diagnostic.Create(
 
 ### 배운 내용
 
-1. **Roslyn 기초**: Syntax Tree, Semantic Model, Symbol
-2. **IIncrementalGenerator**: 증분 소스 생성 패턴
-3. **ForAttributeWithMetadataName**: 속성 기반 필터링
-4. **코드 생성**: StringBuilder, 결정적 출력
-5. **고급 시나리오**: 생성자, 제네릭, 컬렉션
-6. **테스트**: CSharpCompilation, Verify 스냅샷
+이 튜토리얼은 Roslyn의 기초 개념(Syntax Tree, Semantic Model, Symbol)에서 출발하여 `IIncrementalGenerator`로 증분 소스 생성 패턴을 구현하고, `ForAttributeWithMetadataName`으로 속성 기반 필터링을 적용하는 과정을 거쳤습니다. StringBuilder와 결정적 출력 원칙으로 코드 생성의 신뢰성을 확보하고, 생성자·제네릭·컬렉션 등 고급 시나리오를 처리하며, CSharpCompilation과 Verify 스냅샷으로 모든 결과를 검증했습니다.
 
 ### 핵심 교훈
 
-> **컴파일 타임 코드 생성**은 런타임 오버헤드 없이
+> **컴파일 타임 코드 생성은** 런타임 오버헤드 없이
 > 반복적인 보일러플레이트를 제거하는 강력한 도구입니다.
 
 ### 다음 목표
 
-1. 직접 소스 생성기 프로젝트 시작하기
-2. 팀 프로젝트에 소스 생성기 도입 제안
-3. 오픈소스 소스 생성기 코드 분석
-4. 고급 Roslyn API 학습
+이 튜토리얼에서 익힌 패턴을 실전으로 확장할 차례입니다. DTO 매퍼 생성기 같은 작은 프로젝트로 시작하여 감각을 다지고, 팀 프로젝트에 도입을 제안하여 실무 적용 경험을 쌓아보십시오. 오픈소스 소스 생성기의 코드를 분석하면 실전 수준의 설계 판단을 배울 수 있고, Analyzer와 Code Fix Provider까지 영역을 넓히면 개발 도구 전반을 아우르는 Roslyn 전문가로 성장할 수 있습니다.
 
 ---
 
 ## 부록 참조
 
-더 자세한 정보는 부록을 참조하세요.
+튜토리얼 본문에서 다루지 못한 세부 사항은 부록에서 확인할 수 있습니다.
 
 - [A. 개발 환경](../Appendix/A-development-environment.md)
 - [B. API 레퍼런스](../Appendix/B-api-reference.md)
@@ -344,6 +352,4 @@ context.ReportDiagnostic(Diagnostic.Create(
 
 ---
 
-**축하합니다!** 소스 생성기를 이용한 관찰 가능성 코드 자동화 학습을 완료했습니다.
-
-이제 직접 소스 생성기를 구현해보세요!
+소스 생성기를 이용한 관찰 가능성 코드 자동화 학습을 완료했습니다. 이제 직접 소스 생성기를 구현하여, 컴파일 타임의 힘을 프로젝트에 적용해보십시오.

@@ -8,6 +8,8 @@ title: "Source Generator Observability"
 
 ## 이 튜토리얼에 대하여
 
+모든 Repository 메서드마다 로깅, 추적, 메트릭 코드를 손으로 복붙하고 있다면 — 소스 생성기가 그 반복 작업을 끝내줄 수 있습니다.
+
 이 튜토리얼은 **C# 소스 생성기(Source Generator)를** 처음부터 배워 실전에서 활용할 수 있도록 안내합니다. Roslyn 컴파일러 플랫폼의 기초부터 시작하여, **IIncrementalGenerator 패턴**을 활용한 고성능 소스 생성기 개발까지 단계별로 학습합니다.
 
 > **반복적인 보일러플레이트 코드를 자동화하고, 100% 일관된 관찰 가능성을 보장하는 소스 생성기를 직접 구현해보세요.**
@@ -119,6 +121,8 @@ Incremental Source Generator 구현과 코드 생성 기법을 학습합니다.
 
 ## 핵심 진화 과정
 
+가장 단순한 Hello World 생성기에서 출발하여, 점진적으로 복잡성을 높여가며 실전 수준의 소스 생성기를 완성합니다. 각 Phase는 이전 단계의 결과물 위에 쌓이므로, 순서대로 진행하는 것을 권장합니다.
+
 ```
 Phase 1: Hello World (Part 0~1)
 ├── 가장 단순한 Source Generator 만들기
@@ -146,6 +150,8 @@ Phase 5: 고급 처리 (Part 3)
 ## 실습 프로젝트: ObservablePortGenerator
 
 이 튜토리얼에서는 **ObservablePortGenerator**라는 실제 Source Generator를 단계별로 구현합니다.
+
+어댑터 메서드 하나를 추가할 때마다 로깅 호출, Activity 생성, 메트릭 카운터 업데이트를 빠짐없이 작성해야 한다면, 팀원 간 구현 편차가 생기고 실수가 발생하는 것은 시간 문제입니다. 이 프로젝트는 바로 그 고통에서 출발합니다 — 관찰 가능성 보일러플레이트를 컴파일 타임에 자동 생성하여, 개발자가 비즈니스 로직에만 집중할 수 있도록 하는 것이 목표입니다.
 
 ### ObservablePortGenerator란?
 

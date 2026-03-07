@@ -2,11 +2,19 @@
 title: "IMethodSymbol"
 ---
 
+## 개요
+
+앞 장에서 `INamedTypeSymbol`을 통해 인터페이스의 멤버 목록을 가져왔습니다. 그 멤버 중 `IMethodSymbol`로 캐스팅되는 것들이 바로 코드 생성의 직접적인 대상입니다. ObservablePortGenerator는 각 메서드의 이름으로 로깅 메서드명을 결정하고, 파라미터 목록으로 `LoggerMessage.Define`의 타입 인수를 구성하며, 반환 타입에서 `FinT<IO, T>`의 `T`를 추출하여 성공 로깅 시그니처를 생성합니다. 이번 장에서는 이 모든 과정의 토대가 되는 `IMethodSymbol` API를 살펴봅니다.
+
 ## 학습 목표
 
-- IMethodSymbol로 메서드 시그니처 분석
-- Parameters, ReturnType, MethodKind 활용
-- 관찰 가능성 코드 생성에 필요한 정보 추출
+### 핵심 학습 목표
+1. **IMethodSymbol의** 기본 속성으로 메서드 시그니처를 분석한다
+   - Name, ReturnType, Parameters의 역할
+2. **MethodKind를** 활용하여 일반 메서드만 필터링하는 이유를 이해한다
+   - getter, setter, 생성자 등을 제외해야 하는 이유
+3. **파라미터 정보를** 로깅 코드 생성에 활용하는 패턴을 학습한다
+   - LoggerMessage.Define의 파라미터 슬롯 제한과 대응 전략
 
 ---
 
@@ -42,19 +50,11 @@ MethodKind kind = method.MethodKind;
 // 등등
 ```
 
-### MethodKind 주요 값
+### MethodKind로 일반 메서드만 필터링하기
+
+인터페이스의 `GetMembers()`는 프로퍼티의 getter/setter, 이벤트의 add/remove 접근자까지 포함한 모든 멤버를 반환합니다. 소스 생성기에서는 실제 비즈니스 로직을 담는 **일반 메서드(Ordinary)만** 필요하므로 `MethodKind`로 필터링합니다. 주요 값은 `Ordinary`(일반 메서드), `Constructor`(생성자), `PropertyGet`/`PropertySet`(프로퍼티 접근자), `EventAdd`/`EventRemove`(이벤트 접근자) 등이 있습니다.
 
 ```csharp
-MethodKind.Ordinary              // 일반 메서드
-MethodKind.Constructor           // 생성자
-MethodKind.StaticConstructor     // 정적 생성자
-MethodKind.Destructor            // 소멸자 (Finalizer)
-MethodKind.PropertyGet           // 프로퍼티 getter
-MethodKind.PropertySet           // 프로퍼티 setter
-MethodKind.EventAdd              // 이벤트 add
-MethodKind.EventRemove           // 이벤트 remove
-MethodKind.ExplicitInterfaceImplementation  // 명시적 인터페이스 구현
-
 // 소스 생성기에서 일반 메서드만 필터링
 .Where(m => m.MethodKind == MethodKind.Ordinary)
 ```
@@ -140,6 +140,8 @@ string actualType = TypeExtractor.ExtractSecondTypeParameter(returnType);
 
 ## 파라미터 분석
 
+메서드의 파라미터 정보는 두 가지 용도로 사용됩니다. 첫째, 생성되는 래퍼 메서드의 시그니처를 구성합니다. 둘째, 로깅 메시지 템플릿에 파라미터 값을 포함할지 결정합니다. 특히 `LoggerMessage.Define`의 최대 6개 파라미터 제한 때문에, 메서드 파라미터 개수에 따라 고성능 로깅과 폴백 로깅 중 하나를 선택해야 합니다.
+
 ### Parameters
 
 ```csharp
@@ -187,6 +189,8 @@ bool isThis = param.IsThis;          // 확장 메서드의 this
 ---
 
 ## 실제 활용: MethodInfo 생성
+
+앞에서 살펴본 Name, Parameters, ReturnType이 하나로 조합되는 지점입니다. 아래 코드는 `IMethodSymbol`에서 `MethodInfo` 데이터 모델을 생성하는 우리 프로젝트의 실제 코드입니다.
 
 ```csharp
 // ObservablePortGenerator.cs에서 메서드 정보 추출
@@ -249,6 +253,8 @@ public class ParameterInfo
 ---
 
 ## 로깅 코드 생성 시 파라미터 활용
+
+파라미터 분석이 실제로 어떤 영향을 미치는지 구체적으로 살펴봅니다. `LoggerMessage.Define`은 최대 6개의 타입 파라미터만 지원하는데, 관찰 가능성 로깅에서 기본적으로 4개 슬롯(핸들러명, 메서드명, 레이어, 상태 정보)을 사용합니다. 따라서 메서드 파라미터에 할당할 수 있는 슬롯은 2개뿐이며, 이 제한에 따라 코드 생성 전략이 달라집니다.
 
 ### 파라미터 개수에 따른 처리
 
@@ -347,6 +353,8 @@ public new FinT<IO, User> GetUserAsync(int userId)
 
 ## 요약
 
+`IMethodSymbol`은 메서드 단위의 코드 생성에 필요한 모든 정보를 제공합니다. 우리 프로젝트에서는 `Name`으로 로깅 메서드명을, `Parameters`로 시그니처와 로깅 템플릿을, `ReturnType`에서 `FinT<IO, T>`의 `T`를 추출하여 성공 응답 타입을 결정합니다. `MethodKind == Ordinary` 필터링은 getter/setter 등의 접근자를 제외하기 위해 반드시 필요합니다.
+
 | 속성/메서드 | 용도 | 반환 |
 |-------------|------|------|
 | `Name` | 메서드 이름 | string |
@@ -368,6 +376,6 @@ public new FinT<IO, User> GetUserAsync(int userId)
 
 ## 다음 단계
 
-다음 섹션에서는 결정적 코드 생성을 위한 SymbolDisplayFormat을 학습합니다.
+`IMethodSymbol`에서 파라미터 타입과 반환 타입을 추출할 때 `ToDisplayString`을 사용했습니다. 그런데 같은 타입이라도 포맷에 따라 `"User"`, `"MyApp.User"`, `"global::MyApp.User"` 등 다르게 표현될 수 있습니다. 다음 장에서는 이 표현을 일관되게 유지하기 위한 `SymbolDisplayFormat`을 살펴봅니다.
 
-➡️ [03. SymbolDisplayFormat](../07-SymbolDisplayFormat/)
+→ [07. SymbolDisplayFormat](../07-SymbolDisplayFormat/)

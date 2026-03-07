@@ -2,17 +2,25 @@
 title: "Collection Type 처리"
 ---
 
+## 개요
+
+관찰 가능성(Observability)에서 "사용자 목록을 조회했다"는 것만으로는 충분하지 않습니다. 실제 운영 환경에서는 "몇 건을 반환했는가"가 성능 분석과 이상 탐지의 핵심 지표가 됩니다. ObservablePortGenerator는 반환 타입이나 파라미터가 컬렉션인 경우 `Count` 또는 `Length` 태그를 자동으로 추가합니다. 다만 튜플 내부에 컬렉션이 포함된 경우는 튜플 자체에 Count 속성이 없으므로 예외로 처리해야 합니다.
+
 ## 학습 목표
 
-- 컬렉션 타입 감지 방법
-- Count/Length 필드 자동 생성
-- 튜플 내 컬렉션 예외 처리
+### 핵심 학습 목표
+1. **컬렉션 타입 감지 방법**
+   - 패턴 매칭으로 `List<T>`, `Dictionary<K,V>`, 배열 등을 식별
+2. **Count/Length 필드 자동 생성**
+   - 컬렉션 종류에 따라 적절한 크기 접근 표현식 생성
+3. **튜플 내 컬렉션 예외 처리**
+   - 튜플 반환 타입에서 내부 컬렉션을 무시하는 이유와 구현
 
 ---
 
 ## 컬렉션 타입 처리의 필요성
 
-관찰 가능성 코드에서 컬렉션의 **크기 정보**는 중요한 메트릭입니다.
+관찰 가능성 코드에서 컬렉션의 크기 정보는 중요한 메트릭입니다.
 
 ```csharp
 // 원본 메서드
@@ -445,18 +453,12 @@ public Task Should_Not_Generate_Length_ForTupleContainingArray()
 
 ## 요약
 
-| 기능 | 구현 |
-|------|------|
-| 컬렉션 감지 | 패턴 매칭 |
-| 튜플 제외 | `IsTupleType()` 체크 |
-| Count 생성 | `GetCountExpression()` |
-| Length 생성 | 배열 타입 전용 |
-| 필드명 규칙 | `request.params.*`, `response.result*` |
+`CollectionTypeHelper`는 컬렉션 감지, 튜플 예외 처리, Count/Length 표현식 생성을 하나의 유틸리티로 통합합니다. 패턴 매칭 방식으로 `global::` 접두사를 포함한 Fully Qualified Name도 올바르게 인식하며, 필드명은 `request.params.{name}.count`와 `response.result.count` 규칙을 따릅니다.
 
 ---
 
 ## 다음 단계
 
-다음 섹션에서는 LoggerMessage.Define 파라미터 제한을 학습합니다.
+컬렉션 Count 필드가 추가되면 로깅에 필요한 총 파라미터 수가 늘어납니다. 다음 섹션에서는 .NET `LoggerMessage.Define`의 6개 파라미터 제한과 이를 초과할 때의 폴백 전략을 학습합니다.
 
-➡️ [04. LoggerMessage.Define 제한](../04-LoggerMessage-Limits/)
+→ [04. LoggerMessage.Define 제한](../04-LoggerMessage-Limits/)

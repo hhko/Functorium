@@ -2,11 +2,19 @@
 title: "Incremental Caching"
 ---
 
+## 개요
+
+개발자가 파일 하나를 수정할 때마다 소스 생성기가 프로젝트 전체를 다시 처리한다면 어떤 일이 벌어질까요? 수백 개의 Repository 클래스가 있는 대규모 프로젝트에서는 키 입력 한 번에 수 초씩 IDE가 멈추게 됩니다. 앞 장에서 배운 `ForAttributeWithMetadataName`이 대상 탐색을 최적화한다면, 이번 장의 증분 캐싱은 **이미 처리된 결과를 재사용하여** 불필요한 재처리를 완전히 건너뛰는 메커니즘입니다. 캐싱이 올바르게 작동하려면 데이터 모델과 출력 모두 결정적(Deterministic)이어야 하며, 이를 깨뜨리는 실수를 이해하는 것이 이번 장의 핵심입니다.
+
 ## 학습 목표
 
-- 증분 빌드의 동작 원리 이해
-- 캐싱이 작동하는 조건 파악
-- 결정적(Deterministic) 코드 생성의 중요성 이해
+### 핵심 학습 목표
+1. **증분 빌드의** 동작 원리를 이해한다
+   - 입력 변경 감지, 중간 결과 캐싱, 출력 캐싱의 세 단계
+2. **캐싱이 작동하는 조건을** 파악한다
+   - 값 동등성, 불변 컬렉션, 결정적 출력
+3. **캐시를 무효화시키는** 흔한 실수를 식별한다
+   - 타임스탬프, 순서 비결정성, 외부 상태 의존
 
 ---
 
@@ -175,6 +183,8 @@ string typeName = type.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedForma
 
 ## 캐시 무효화 원인
 
+캐싱이 정상적으로 작동하지 않는 경우 대부분 다음 세 가지 원인 중 하나에 해당합니다. 실수로 빠지기 쉬운 함정이므로 각각의 패턴을 기억해 두는 것이 좋습니다.
+
 ### 1. 비결정적 데이터
 
 ```csharp
@@ -315,6 +325,8 @@ context.RegisterSourceOutput(provider, (ctx, item) =>
 
 ## 요약
 
+증분 캐싱은 소스 생성기 성능의 핵심입니다. 캐싱이 올바르게 작동하려면 데이터 모델에 값 동등성을 보장하고, 출력에서 비결정적 요소를 제거해야 합니다. 우리 프로젝트에서는 `ObservableClassInfo`를 `readonly record struct`로 정의하고, `SymbolDisplayFormats.GlobalQualifiedFormat`으로 타입 이름을 일관되게 표현하여 이 조건을 충족합니다.
+
 | 항목 | 권장 사항 |
 |------|-----------|
 | 데이터 모델 | 레코드(record) 사용 |
@@ -327,6 +339,6 @@ context.RegisterSourceOutput(provider, (ctx, item) =>
 
 ## 다음 단계
 
-다음 장에서는 심볼 분석 기법을 상세히 학습합니다.
+증분 캐싱의 원리를 이해했으니, 이제 파이프라인에서 실제로 데이터를 추출하는 핵심 도구인 심볼 API로 넘어갑니다. 다음 장에서는 `INamedTypeSymbol`을 통해 클래스와 인터페이스의 정보를 어떻게 분석하는지 살펴봅니다.
 
-➡️ [05장. 심볼 분석](../05-symbol-analysis/)
+→ [05. INamedTypeSymbol](../05-INamedTypeSymbol/)

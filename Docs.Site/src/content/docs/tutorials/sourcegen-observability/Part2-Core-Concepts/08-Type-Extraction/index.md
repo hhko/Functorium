@@ -2,11 +2,18 @@
 title: "Type 추출"
 ---
 
+## 개요
+
+앞 장에서 `SymbolDisplayFormat`으로 반환 타입을 `"global::LanguageExt.FinT<global::LanguageExt.IO, global::MyApp.User>"` 같은 일관된 문자열로 변환했습니다. 그런데 로깅 메서드의 성공 콜백에 필요한 것은 이 전체 문자열이 아니라 두 번째 타입 파라미터인 `User`뿐입니다. `FinT<IO, T>` 패턴은 Functorium의 모든 어댑터 메서드가 따르는 반환 타입 규약이므로, 이 타입 추출은 코드 생성의 필수 단계입니다.
+
 ## 학습 목표
 
-- 제네릭 타입에서 타입 파라미터 추출
-- TypeExtractor 유틸리티 이해
-- FinT<IO, T>에서 T 추출하는 방법 학습
+### 핵심 학습 목표
+1. **TypeExtractor의** 문자열 파싱 로직을 이해한다
+   - 첫 번째 쉼표와 마지막 꺾쇠괄호를 기준으로 한 추출 방법
+2. **다양한 타입 형태에** 대한 처리를 학습한다
+   - 단순 타입, 컬렉션, 튜플, 중첩 제네릭, 비제네릭
+3. **문자열 파싱 vs 심볼 API** 접근법의 트레이드오프를 이해한다
 
 ---
 
@@ -278,6 +285,8 @@ public class TypeExtractorTests
 
 ## 요약
 
+`TypeExtractor.ExtractSecondTypeParameter`는 `FinT<IO, T>` 패턴에서 실제 값 타입 `T`를 추출하는 유틸리티입니다. 문자열의 첫 번째 쉼표와 마지막 꺾쇠괄호를 기준으로 파싱하는 단순한 접근이지만, 중첩 제네릭과 튜플까지 올바르게 처리합니다.
+
 | 상황 | 입력 | 출력 |
 |------|------|------|
 | 단순 값 타입 | `FinT<IO, int>` | `int` |
@@ -290,6 +299,6 @@ public class TypeExtractorTests
 
 ## 다음 단계
 
-다음 장에서는 코드 생성 기법을 학습합니다.
+심볼 분석과 타입 추출로 코드 생성에 필요한 모든 데이터를 확보했습니다. 다음 장에서는 이 데이터를 실제 C# 코드 문자열로 조립하는 도구인 `StringBuilder`의 활용 패턴을 살펴봅니다.
 
-➡️ [06장. 코드 생성](../06-code-generation/)
+→ [09. StringBuilder Pattern](../09-StringBuilder-Pattern/)

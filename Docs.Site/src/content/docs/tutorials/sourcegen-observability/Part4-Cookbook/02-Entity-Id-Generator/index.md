@@ -2,11 +2,19 @@
 title: "Entity ID Generator"
 ---
 
+## 개요
+
+도메인 주도 설계에서 `Guid orderId`와 `Guid userId`를 혼동하는 실수는 컴파일러가 잡아주지 않습니다. 강타입 Entity Id는 이 문제를 타입 시스템으로 해결하지만, 매번 동일한 보일러플레이트를 수작업으로 작성해야 합니다. 이 절에서는 Part 2에서 배운 소스 생성기 패턴을 활용하여, `[EntityId]` 속성 하나로 Ulid 기반 강타입 Id를 자동 생성하는 생성기를 구현합니다.
+
 ## 학습 목표
 
-- 도메인 주도 설계에서 강타입 Entity Id의 필요성 이해
-- Ulid 기반 Entity Id 생성기 구현
-- partial record struct 처리 방법 습득
+### 핵심 학습 목표
+1. **도메인 주도 설계에서 강타입 Entity Id의 필요성 이해**
+   - 원시 타입 Id가 초래하는 런타임 버그와 타입 안전성 확보 전략
+2. **Ulid 기반 Entity Id 생성기 구현**
+   - 마커 속성, 메타데이터 추출, 코드 생성까지의 전체 파이프라인
+3. **partial record struct 처리 방법 습득**
+   - 구문 노드 필터링과 심볼 분석에서의 partial 키워드 검증
 
 ---
 
@@ -39,6 +47,8 @@ public class OrderService
 // 컴파일 에러!
 var user = orderService.GetUser(orderId);  // CS1503: Cannot convert 'OrderId' to 'UserId'
 ```
+
+강타입 Id가 왜 필요한지 확인했으니, 이제 소스 생성기가 만들어야 할 코드의 모습을 정의합니다.
 
 ---
 
@@ -101,6 +111,8 @@ public readonly partial record struct ProductId : IEntityId<ProductId>, ICompara
 }
 ```
 
+Entity Id의 내부 타입으로 `Guid` 대신 `Ulid`를 선택한 이유를 살펴봅니다.
+
 ---
 
 ## Ulid의 장점
@@ -133,6 +145,8 @@ public readonly partial record struct ProductId : IEntityId<ProductId>, ICompara
 ```xml
 <PackageReference Include="Ulid" Version="1.3.4" />
 ```
+
+목표 코드와 Ulid 기반 설계가 확정되었으니, 이전 절에서 정리한 7단계 워크플로우에 따라 생성기를 구현합니다.
 
 ---
 
@@ -395,6 +409,8 @@ public sealed class EntityIdGenerator : IIncrementalGenerator
 }
 ```
 
+생성기 구현이 완료되었으니, Verify 스냅샷 테스트로 생성 결과를 검증합니다.
+
 ---
 
 ## 테스트
@@ -470,6 +486,8 @@ public Task EntityIdGenerator_ShouldGenerate_WithDeepNamespace()
     return Verify(actual);
 }
 ```
+
+테스트가 통과하면 실제 도메인 모델에서 생성된 Entity Id를 사용해 봅니다.
 
 ---
 
@@ -585,10 +603,12 @@ public readonly partial record struct SequentialId : IEntityId<SequentialId>
 | **생성 항목** | Value, New(), Create(), Empty, 비교 연산자 |
 | **장점** | 컴파일 타임 타입 안전성, DB 인덱스 최적화 |
 
+Entity Id 생성기는 ObservablePortGenerator와 동일한 파이프라인 구조를 따르면서, `partial record struct` 필터링이라는 새로운 구문 분석 기법을 추가한 사례입니다.
+
 ---
 
 ## 다음 단계
 
-다음 섹션에서는 EF Core에서 Entity Id를 저장하기 위한 ValueConverter 생성기를 구현합니다.
+강타입 Entity Id를 만들었지만, 이것만으로는 EF Core가 데이터베이스에 저장하는 방법을 알지 못합니다. 다음 절에서는 Entity Id와 Value Object를 DB에 투명하게 저장하기 위한 ValueConverter 생성기를 구현합니다.
 
-➡️ [03. EF Core 값 변환기 생성기](../03-EfCore-Value-Converter/)
+→ [03. EF Core 값 변환기 생성기](../03-EfCore-Value-Converter/)
