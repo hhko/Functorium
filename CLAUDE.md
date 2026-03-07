@@ -67,17 +67,17 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ## Functorium 프로젝트 가이드
 ### 솔루션 파일
 
-이 프로젝트는 `.slnx` 확장자를 사용하며, 두 개의 솔루션 파일이 있습니다.
+이 프로젝트는 `.slnx` 확장자를 사용합니다.
 
 | 솔루션 파일 | 포함 프로젝트 | 용도 |
 |-------------|---------------|------|
 | `Functorium.slnx` | Src/, Tests/ | 핵심 라이브러리 개발 (기본) |
-| `Functorium.All.slnx` | 전체 프로젝트 | Tutorials, Books 포함 전체 빌드 |
+| `Docs.Site/.../tutorials/<name>/<name>.slnx` | 튜토리얼별 개별 솔루션 (6개) | 문서 내 실습 코드 빌드 |
 
 - 빌드: `dotnet build Functorium.slnx`
 - 테스트: `dotnet test --solution Functorium.slnx`
-- 전체 빌드: `dotnet build Functorium.All.slnx`
-- 전체 테스트: `dotnet test --solution Functorium.All.slnx`
+- 튜토리얼 빌드: `dotnet build Docs.Site/src/content/docs/tutorials/<name>/<name>.slnx`
+- 튜토리얼 테스트: `dotnet test --solution Docs.Site/src/content/docs/tutorials/<name>/<name>.slnx`
 
 > 'dotnet test'에 대한 솔루션을 지정하려면 '--solution'을 통해 지정해야 합니다.
 
@@ -96,8 +96,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 # 기본 솔루션 빌드 (Functorium.slnx)
 ./Build-Local.ps1
 
-# 전체 솔루션 빌드
-./Build-Local.ps1 -s Functorium.All.slnx
+# 특정 튜토리얼 빌드
+./Build-Local.ps1 -s Docs.Site/src/content/docs/tutorials/functional-valueobject/functional-valueobject.slnx
 
 # NuGet 패키지 생성 건너뛰기
 ./Build-Local.ps1 -SkipPack

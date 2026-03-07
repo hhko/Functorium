@@ -1,0 +1,83 @@
+<Solution>
+  <Folder Name="/Part1-Generic-Variance-Foundations/" />
+  <Folder Name="/Part1-Generic-Variance-Foundations/01-Covariance/">
+    <Project Path="Part1-Generic-Variance-Foundations/01-Covariance/Covariance.Tests.Unit/Covariance.Tests.Unit.csproj" />
+    <Project Path="Part1-Generic-Variance-Foundations/01-Covariance/Covariance/Covariance.csproj" />
+  </Folder>
+  <Folder Name="/Part1-Generic-Variance-Foundations/02-Contravariance/">
+    <Project Path="Part1-Generic-Variance-Foundations/02-Contravariance/Contravariance.Tests.Unit/Contravariance.Tests.Unit.csproj" />
+    <Project Path="Part1-Generic-Variance-Foundations/02-Contravariance/Contravariance/Contravariance.csproj" />
+  </Folder>
+  <Folder Name="/Part1-Generic-Variance-Foundations/03-Invariance-And-Constraints/">
+    <Project Path="Part1-Generic-Variance-Foundations/03-Invariance-And-Constraints/InvarianceAndConstraints.Tests.Unit/InvarianceAndConstraints.Tests.Unit.csproj" />
+    <Project Path="Part1-Generic-Variance-Foundations/03-Invariance-And-Constraints/InvarianceAndConstraints/InvarianceAndConstraints.csproj" />
+  </Folder>
+  <Folder Name="/Part1-Generic-Variance-Foundations/04-Interface-Segregation-And-Variance/">
+    <Project Path="Part1-Generic-Variance-Foundations/04-Interface-Segregation-And-Variance/InterfaceSegregationAndVariance.Tests.Unit/InterfaceSegregationAndVariance.Tests.Unit.csproj" />
+    <Project Path="Part1-Generic-Variance-Foundations/04-Interface-Segregation-And-Variance/InterfaceSegregationAndVariance/InterfaceSegregationAndVariance.csproj" />
+  </Folder>
+  <Folder Name="/Part2-Problem-Definition/" />
+  <Folder Name="/Part2-Problem-Definition/01-Mediator-Pipeline-Structure/">
+    <Project Path="Part2-Problem-Definition/01-Mediator-Pipeline-Structure/MediatorPipelineStructure.Tests.Unit/MediatorPipelineStructure.Tests.Unit.csproj" />
+    <Project Path="Part2-Problem-Definition/01-Mediator-Pipeline-Structure/MediatorPipelineStructure/MediatorPipelineStructure.csproj" />
+  </Folder>
+  <Folder Name="/Part2-Problem-Definition/02-Fin-Direct-Limitation/">
+    <Project Path="Part2-Problem-Definition/02-Fin-Direct-Limitation/FinDirectLimitation.Tests.Unit/FinDirectLimitation.Tests.Unit.csproj" />
+    <Project Path="Part2-Problem-Definition/02-Fin-Direct-Limitation/FinDirectLimitation/FinDirectLimitation.csproj" />
+  </Folder>
+  <Folder Name="/Part2-Problem-Definition/03-IFinResponse-Wrapper-Limitation/">
+    <Project Path="Part2-Problem-Definition/03-IFinResponse-Wrapper-Limitation/FinResponseWrapperLimitation.Tests.Unit/FinResponseWrapperLimitation.Tests.Unit.csproj" />
+    <Project Path="Part2-Problem-Definition/03-IFinResponse-Wrapper-Limitation/FinResponseWrapperLimitation/FinResponseWrapperLimitation.csproj" />
+  </Folder>
+  <Folder Name="/Part3-IFinResponse-Hierarchy/" />
+  <Folder Name="/Part3-IFinResponse-Hierarchy/01-IFinResponse-Marker/">
+    <Project Path="Part3-IFinResponse-Hierarchy/01-IFinResponse-Marker/FinResponseMarker.Tests.Unit/FinResponseMarker.Tests.Unit.csproj" />
+    <Project Path="Part3-IFinResponse-Hierarchy/01-IFinResponse-Marker/FinResponseMarker/FinResponseMarker.csproj" />
+  </Folder>
+  <Folder Name="/Part3-IFinResponse-Hierarchy/02-IFinResponse-Covariant/">
+    <Project Path="Part3-IFinResponse-Hierarchy/02-IFinResponse-Covariant/FinResponseCovariant.Tests.Unit/FinResponseCovariant.Tests.Unit.csproj" />
+    <Project Path="Part3-IFinResponse-Hierarchy/02-IFinResponse-Covariant/FinResponseCovariant/FinResponseCovariant.csproj" />
+  </Folder>
+  <Folder Name="/Part3-IFinResponse-Hierarchy/03-IFinResponseFactory-CRTP/">
+    <Project Path="Part3-IFinResponse-Hierarchy/03-IFinResponseFactory-CRTP/FinResponseFactoryCrtp.Tests.Unit/FinResponseFactoryCrtp.Tests.Unit.csproj" />
+    <Project Path="Part3-IFinResponse-Hierarchy/03-IFinResponseFactory-CRTP/FinResponseFactoryCrtp/FinResponseFactoryCrtp.csproj" />
+  </Folder>
+  <Folder Name="/Part3-IFinResponse-Hierarchy/04-IFinResponseWithError/">
+    <Project Path="Part3-IFinResponse-Hierarchy/04-IFinResponseWithError/FinResponseWithError.Tests.Unit/FinResponseWithError.Tests.Unit.csproj" />
+    <Project Path="Part3-IFinResponse-Hierarchy/04-IFinResponseWithError/FinResponseWithError/FinResponseWithError.csproj" />
+  </Folder>
+  <Folder Name="/Part3-IFinResponse-Hierarchy/05-FinResponse-Discriminated-Union/">
+    <Project Path="Part3-IFinResponse-Hierarchy/05-FinResponse-Discriminated-Union/FinResponseDiscriminatedUnion.Tests.Unit/FinResponseDiscriminatedUnion.Tests.Unit.csproj" />
+    <Project Path="Part3-IFinResponse-Hierarchy/05-FinResponse-Discriminated-Union/FinResponseDiscriminatedUnion/FinResponseDiscriminatedUnion.csproj" />
+  </Folder>
+  <Folder Name="/Part4-Pipeline-Constraint-Patterns/" />
+  <Folder Name="/Part4-Pipeline-Constraint-Patterns/01-Create-Only-Constraint/">
+    <Project Path="Part4-Pipeline-Constraint-Patterns/01-Create-Only-Constraint/CreateOnlyConstraint.Tests.Unit/CreateOnlyConstraint.Tests.Unit.csproj" />
+    <Project Path="Part4-Pipeline-Constraint-Patterns/01-Create-Only-Constraint/CreateOnlyConstraint/CreateOnlyConstraint.csproj" />
+  </Folder>
+  <Folder Name="/Part4-Pipeline-Constraint-Patterns/02-Read-Create-Constraint/">
+    <Project Path="Part4-Pipeline-Constraint-Patterns/02-Read-Create-Constraint/ReadCreateConstraint.Tests.Unit/ReadCreateConstraint.Tests.Unit.csproj" />
+    <Project Path="Part4-Pipeline-Constraint-Patterns/02-Read-Create-Constraint/ReadCreateConstraint/ReadCreateConstraint.csproj" />
+  </Folder>
+  <Folder Name="/Part4-Pipeline-Constraint-Patterns/03-Transaction-Caching-Pipeline/">
+    <Project Path="Part4-Pipeline-Constraint-Patterns/03-Transaction-Caching-Pipeline/TransactionCachingPipeline.Tests.Unit/TransactionCachingPipeline.Tests.Unit.csproj" />
+    <Project Path="Part4-Pipeline-Constraint-Patterns/03-Transaction-Caching-Pipeline/TransactionCachingPipeline/TransactionCachingPipeline.csproj" />
+  </Folder>
+  <Folder Name="/Part4-Pipeline-Constraint-Patterns/04-Fin-To-FinResponse-Bridge/">
+    <Project Path="Part4-Pipeline-Constraint-Patterns/04-Fin-To-FinResponse-Bridge/FinToFinResponseBridge.Tests.Unit/FinToFinResponseBridge.Tests.Unit.csproj" />
+    <Project Path="Part4-Pipeline-Constraint-Patterns/04-Fin-To-FinResponse-Bridge/FinToFinResponseBridge/FinToFinResponseBridge.csproj" />
+  </Folder>
+  <Folder Name="/Part5-Practical-Usecase-Examples/" />
+  <Folder Name="/Part5-Practical-Usecase-Examples/01-Command-Usecase-Example/">
+    <Project Path="Part5-Practical-Usecase-Examples/01-Command-Usecase-Example/CommandUsecaseExample.Tests.Unit/CommandUsecaseExample.Tests.Unit.csproj" />
+    <Project Path="Part5-Practical-Usecase-Examples/01-Command-Usecase-Example/CommandUsecaseExample/CommandUsecaseExample.csproj" />
+  </Folder>
+  <Folder Name="/Part5-Practical-Usecase-Examples/02-Query-Usecase-Example/">
+    <Project Path="Part5-Practical-Usecase-Examples/02-Query-Usecase-Example/QueryUsecaseExample.Tests.Unit/QueryUsecaseExample.Tests.Unit.csproj" />
+    <Project Path="Part5-Practical-Usecase-Examples/02-Query-Usecase-Example/QueryUsecaseExample/QueryUsecaseExample.csproj" />
+  </Folder>
+  <Folder Name="/Part5-Practical-Usecase-Examples/03-Full-Pipeline-Integration/">
+    <Project Path="Part5-Practical-Usecase-Examples/03-Full-Pipeline-Integration/FullPipelineIntegration.Tests.Unit/FullPipelineIntegration.Tests.Unit.csproj" />
+    <Project Path="Part5-Practical-Usecase-Examples/03-Full-Pipeline-Integration/FullPipelineIntegration/FullPipelineIntegration.csproj" />
+  </Folder>
+</Solution>
