@@ -92,58 +92,75 @@ Architecture
 
 ## 빠른 참조 (작업별 가이드 바로가기)
 
+### 프로젝트 시작하기
+
+새 서비스를 시작할 때 프로젝트 구조, 빌드 구성, CI/CD를 어떻게 잡을지 안내합니다.
+
 | 하고 싶은 작업 | 참조 문서 |
 |---------------|----------|
-| **프로젝트 구성/폴더 구조** | [01-project-structure.md](./architecture/01-project-structure) |
 | **아키텍처 설계 원칙 이해하기** | [00-architecture-design-principles.md](./architecture/00-architecture-design-principles) |
+| **프로젝트 구성/폴더 구조** | [01-project-structure.md](./architecture/01-project-structure) |
 | **솔루션 구성 파일/빌드 스크립트** | [02-solution-configuration.md](./architecture/02-solution-configuration) |
+| **CI/CD 워크플로우 및 버전 관리** | [02b-ci-cd-and-versioning.md](./architecture/02b-ci-cd-and-versioning) |
 | **도구 사용법 (커버리지/스냅샷/ER 다이어그램)** | [03-dotnet-tools.md](./architecture/03-dotnet-tools) |
-| **값 객체 만들기** | [05a-value-objects.md](./domain/05a-value-objects) |
-| **검증 메서드 확인** | [05a-value-objects.md — 검증 시스템](./domain/05a-value-objects) |
-| **열거형(SmartEnum) 패턴** | [05b-value-objects-validation.md — 열거형 구현 패턴](./domain/05b-value-objects-validation) |
+
+### 도메인 모델 구축
+
+비즈니스 개념을 코드로 옮기는 과정 — 값 객체로 시작해 Aggregate로 묶고, 이벤트와 에러로 상호작용을 표현합니다.
+
+| 하고 싶은 작업 | 참조 문서 |
+|---------------|----------|
+| **DDD 빌딩블록 개요/네이밍/용어집** | [04-ddd-tactical-overview.md](./domain/04-ddd-tactical-overview) |
+| **값 객체 만들기 (검증, 동등성)** | [05a-value-objects.md](./domain/05a-value-objects) |
+| **열거형(SmartEnum) 패턴** | [05b-value-objects-validation.md](./domain/05b-value-objects-validation) |
 | **Aggregate 경계 설계하기** | [06a-aggregate-design.md](./domain/06a-aggregate-design) |
-| **Entity/Aggregate 구현하기** | [06b-entity-aggregate-core.md](./domain/06b-entity-aggregate-core) |
-| **생성 패턴 (Create/CreateFromValidated)** | [06b-entity-aggregate-core.md — 생성 패턴](./domain/06b-entity-aggregate-core) |
+| **Entity/Aggregate 구현 (생성 패턴 포함)** | [06b-entity-aggregate-core.md](./domain/06b-entity-aggregate-core) |
 | **Cross-Aggregate 관계, 부가 인터페이스** | [06c-entity-aggregate-advanced.md](./domain/06c-entity-aggregate-advanced) |
-| **도메인 이벤트 정의/발행** | [07-domain-events.md](./domain/07-domain-events) |
-| **Event Handler 만들기** | [07-domain-events.md — 5. Event Handler](./domain/07-domain-events) |
-| **에러 타입 정의하기** | [08a-error-system.md](./domain/08a-error-system), [08b-error-system-domain-app.md](./domain/08b-error-system-domain-app), [08c-error-system-adapter-testing.md](./domain/08c-error-system-adapter-testing) |
-| **에러 테스트 작성하기** | [08b-error-system-domain-app.md](./domain/08b-error-system-domain-app), [08c-error-system-adapter-testing.md — 테스트 모범 사례](./domain/08c-error-system-adapter-testing) |
-| **범용 에러 Assertion (ErrorCode, Exceptional)** | [08c-error-system-adapter-testing.md — 범용 에러 Assertion 유틸리티](./domain/08c-error-system-adapter-testing) |
+| **도메인 이벤트 정의/발행/핸들러** | [07-domain-events.md](./domain/07-domain-events) |
+| **에러 타입 정의 및 테스트** | [08a](./domain/08a-error-system) → [08b](./domain/08b-error-system-domain-app) → [08c](./domain/08c-error-system-adapter-testing) |
 | **도메인 서비스 만들기** | [09-domain-services.md](./domain/09-domain-services) |
 | **Specification 만들기** | [10-specifications.md](./domain/10-specifications) |
-| **Usecase 만들기** | [11-usecases-and-cqrs.md](./application/11-usecases-and-cqrs) |
-| **Port 인터페이스 정의하기** | [12-ports.md](./adapter/12-ports) |
-| **Adapter 구현하기** | [13-adapters.md](./adapter/13-adapters) |
-| **EF Core Repository 만들기** | [13-adapters.md — §2.3 Repository Adapter](./adapter/13-adapters) |
-| **Persistence Model/Mapper 만들기** | [13-adapters.md — §2.2 공통 패턴](./adapter/13-adapters) |
-| **Endpoint Response DTO 만들기** | [13-adapters.md — §2.2 공통 패턴](./adapter/13-adapters) |
-| **Options 패턴 (OptionsConfigurator)** | [14a-adapter-pipeline-di.md — §4.6 Options 패턴](./adapter/14a-adapter-pipeline-di) |
-| **Pipeline/DI 등록** | [14a-adapter-pipeline-di.md](./adapter/14a-adapter-pipeline-di) |
+
+### Application 계층
+
+도메인 모델을 외부에 노출하는 유스케이스를 정의하고, Command/Query 책임을 분리합니다.
+
+| 하고 싶은 작업 | 참조 문서 |
+|---------------|----------|
+| **Usecase 만들기 (CQRS)** | [11-usecases-and-cqrs.md](./application/11-usecases-and-cqrs) |
 | **DTO 전략/재사용 규칙** | [17-dto-strategy.md](./application/17-dto-strategy) |
-| **크래시 덤프 설정/분석** | [22-crash-diagnostics.md](./observability/22-crash-diagnostics) |
-| **Observability 사양** | [18a-observability-spec.md](./observability/18a-observability-spec) |
-| **구조화된 로그 테스트** | [16-testing-library.md — 구조화된 로그 테스트](./testing/16-testing-library) |
-| **아키텍처 규칙 검증** | [16-testing-library.md — 아키텍처 규칙 검증](./testing/16-testing-library) |
-| **아키텍처 규칙 커버리지 매트릭스** | [A04-architecture-rules-coverage.md](./appendix/A04-architecture-rules-coverage) |
-| **소스 생성기 테스트** | [16-testing-library.md — 소스 생성기 테스트](./testing/16-testing-library) |
-| **스케줄 Job 테스트** | [16-testing-library.md — 스케줄 Job 통합 테스트](./testing/16-testing-library) |
-| **모듈과 프로젝트 구조 매핑** | [04-ddd-tactical-overview.md — §6](./domain/04-ddd-tactical-overview) |
-| **네이밍 규칙/용어집** | [04-ddd-tactical-overview.md — §7](./domain/04-ddd-tactical-overview) |
-| **Bounded Context/Context Map** | [04-ddd-tactical-overview.md — §8](./domain/04-ddd-tactical-overview) |
-| **DTO 전략 리뷰 확인** | [dto-strategy-review.md](../../.claude/dto-strategy-review.md) |
-| **CI/CD 워크플로우 및 버전 관리** | [02b-ci-cd-and-versioning.md](./architecture/02b-ci-cd-and-versioning) |
-| **FinResponse 타입 진화** | [A03-response-type-evolution.md](./appendix/A03-response-type-evolution) |
-| **새 Repository 구현** | [14c-repository-query-implementation-guide.md](./adapter/14c-repository-query-implementation-guide) |
-| **새 Query Adapter 구현** | [14c-repository-query-implementation-guide.md](./adapter/14c-repository-query-implementation-guide) |
-| **CRUD 대칭성 확인** | [14c-repository-query-implementation-guide.md — §2.7](./adapter/14c-repository-query-implementation-guide) |
+
+### Adapter 계층
+
+도메인이 외부 세계와 만나는 경계 — Port로 계약을 정의하고 Adapter로 구현합니다.
+
+| 하고 싶은 작업 | 참조 문서 |
+|---------------|----------|
+| **Port 인터페이스 정의하기** | [12-ports.md](./adapter/12-ports) |
+| **Adapter 구현 (Repository, API, Messaging)** | [13-adapters.md](./adapter/13-adapters) |
+| **Pipeline/DI 등록, Options 패턴, 캐싱** | [14a-adapter-pipeline-di.md](./adapter/14a-adapter-pipeline-di) |
+| **Adapter 단위 테스트** | [14b-adapter-testing.md](./adapter/14b-adapter-testing) |
+| **Repository & Query 구현 (페이지네이션, Dapper)** | [14c-repository-query-implementation-guide.md](./adapter/14c-repository-query-implementation-guide) |
+
+### 테스트
+
+도메인 순수성이 테스트를 단순하게 만듭니다. 단위 테스트부터 통합 테스트까지의 전략입니다.
+
+| 하고 싶은 작업 | 참조 문서 |
+|---------------|----------|
+| **단위 테스트 (명명, AAA, MTP)** | [15a-unit-testing.md](./testing/15a-unit-testing) |
 | **통합 테스트 (HostTestFixture)** | [15b-integration-testing.md](./testing/15b-integration-testing) |
-| **VSCode 디버깅/개발 환경 설정** | [A01-vscode-debugging.md](./appendix/A01-vscode-debugging) |
-| **Git 명령어/Hooks** | [A02-git-reference.md](./appendix/A02-git-reference) |
-| **캐싱 파이프라인 설정** | [14a-adapter-pipeline-di.md](./adapter/14a-adapter-pipeline-di) |
-| **Cursor 페이지네이션 구현** | [14c-repository-query-implementation-guide.md](./adapter/14c-repository-query-implementation-guide) |
-| **DapperSpecTranslator 사용** | [14c-repository-query-implementation-guide.md](./adapter/14c-repository-query-implementation-guide) |
-| **문서 작성 가이드** | [00-writing-guide.md](./architecture/00-writing-guide) |
+| **테스트 라이브러리 (로그/아키텍처/소스생성기/Job)** | [16-testing-library.md](./testing/16-testing-library) |
+| **아키텍처 규칙 커버리지 매트릭스** | [A04-architecture-rules-coverage.md](./appendix/A04-architecture-rules-coverage) |
+
+### 관측성과 운영
+
+개발과 운영의 언어를 통일합니다. 구조화된 로깅, 메트릭, 트레이싱 사양과 크래시 진단입니다.
+
+| 하고 싶은 작업 | 참조 문서 |
+|---------------|----------|
+| **Observability 사양** | [18a-observability-spec.md](./observability/18a-observability-spec) |
+| **크래시 덤프 설정/분석** | [22-crash-diagnostics.md](./observability/22-crash-diagnostics) |
 
 ## 코드 예시 규칙
 
@@ -155,7 +172,21 @@ Architecture
 
 ## 문서 전체 목록
 
+### 아키텍처
+
+관심사 분리, 레이어 구조, 의존성 방향의 근거를 먼저 이해하고, 프로젝트 폴더 구성과 빌드 구성으로 구체화합니다. 새 서비스를 만들 때 가장 먼저 참조하는 영역입니다.
+
+| 문서 | 설명 |
+|------|------|
+| [00-architecture-design-principles.md](./architecture/00-architecture-design-principles) | 내부 아키텍처 설계 원칙 (관심사 분리, 레이어 구조, 의존성 방향) |
+| [01-project-structure.md](./architecture/01-project-structure) | 서비스 프로젝트 구성 (폴더, 네이밍, 의존성) |
+| [02-solution-configuration.md](./architecture/02-solution-configuration) | 솔루션 루트 구성 파일 및 빌드 스크립트 |
+| [02b-ci-cd-and-versioning.md](./architecture/02b-ci-cd-and-versioning) | CI/CD 워크플로우 및 버전 관리 (GitHub Actions, NuGet 패키지, MinVer, 버전 제안 커맨드) |
+| [03-dotnet-tools.md](./architecture/03-dotnet-tools) | .NET 도구 가이드 (CLI 도구, 소스 생성기, 파일 기반 스크립트) |
+
 ### DDD 전술적 설계 (번호순 학습 경로)
+
+비즈니스 규칙이 인프라에 의존하지 않도록 순수한 도메인 모델을 구축합니다. 값 객체로 불변 검증을 보장하고, Aggregate로 트랜잭션 경계를 설정하며, 도메인 이벤트로 느슨한 결합을 실현합니다.
 
 | 번호 | 문서 | 설명 |
 |------|------|------|
@@ -171,25 +202,31 @@ Architecture
 | 08c | [08c-error-system-adapter-testing.md](./domain/08c-error-system-adapter-testing) | 에러 시스템: Adapter 에러와 테스트 (Adapter 에러, Custom 에러, 테스트 모범 사례, 체크리스트) |
 | 09 | [09-domain-services.md](./domain/09-domain-services) | 도메인 서비스 (교차 Aggregate 순수 로직, IDomainService) |
 | 10 | [10-specifications.md](./domain/10-specifications) | Specification 패턴 (비즈니스 규칙 캡슐화, 조합, Repository 통합) |
+
+### Application 계층
+
+도메인 모델을 애플리케이션 경계에 노출하는 유스케이스를 정의합니다. CQRS로 쓰기와 읽기 책임을 분리하고, DTO로 레이어 간 데이터 전달 규칙을 명확히 합니다.
+
+| 번호 | 문서 | 설명 |
+|------|------|------|
 | 11 | [11-usecases-and-cqrs.md](./application/11-usecases-and-cqrs) | Use Case 구현 (CQRS Command/Query) |
+| 17 | [17-dto-strategy.md](./application/17-dto-strategy) | DTO 전략 (레이어별 소유권, 재사용 규칙, 변환 패턴) |
+
+### Adapter 계층
+
+도메인이 외부 세계와 만나는 경계입니다. Port로 계약을 정의하고 Adapter로 구현하며, Pipeline과 DI로 조립합니다. Repository, 외부 API, 메시징 등 구체적인 인프라 구현이 이 영역에 위치합니다.
+
+| 번호 | 문서 | 설명 |
+|------|------|------|
 | 12 | [12-ports.md](./adapter/12-ports) | Port 아키텍처, IObservablePort 계층, Port 정의 규칙 |
 | 13 | [13-adapters.md](./adapter/13-adapters) | Adapter 구현 (Repository, External API, Messaging, Query) |
 | 14a | [14a-adapter-pipeline-di.md](./adapter/14a-adapter-pipeline-di) | Pipeline 생성, DI 등록, Options 패턴 |
 | 14b | [14b-adapter-testing.md](./adapter/14b-adapter-testing) | Adapter 단위 테스트, E2E Walkthrough |
 | 14c | [14c-repository-query-implementation-guide.md](./adapter/14c-repository-query-implementation-guide) | Repository & Query 구현 가이드 |
-| 17 | [17-dto-strategy.md](./application/17-dto-strategy) | DTO 전략 (레이어별 소유권, 재사용 규칙, 변환 패턴) |
-
-### 아키텍처
-
-| 문서 | 설명 |
-|------|------|
-| [00-architecture-design-principles.md](./architecture/00-architecture-design-principles) | 내부 아키텍처 설계 원칙 (관심사 분리, 레이어 구조, 의존성 방향) |
-| [01-project-structure.md](./architecture/01-project-structure) | 서비스 프로젝트 구성 (폴더, 네이밍, 의존성) |
-| [02-solution-configuration.md](./architecture/02-solution-configuration) | 솔루션 루트 구성 파일 및 빌드 스크립트 |
-| [02b-ci-cd-and-versioning.md](./architecture/02b-ci-cd-and-versioning) | CI/CD 워크플로우 및 버전 관리 (GitHub Actions, NuGet 패키지, MinVer, 버전 제안 커맨드) |
-| [03-dotnet-tools.md](./architecture/03-dotnet-tools) | .NET 도구 가이드 (CLI 도구, 소스 생성기, 파일 기반 스크립트) |
 
 ### 테스트
+
+도메인 레이어의 순수성이 단위 테스트를 단순하게 만들고, Adapter 분리가 통합 테스트의 경계를 명확하게 합니다. Functorium.Testing 라이브러리는 아키텍처 규칙 검증, 구조화된 로그 테스트, 소스 생성기 테스트를 위한 도구를 제공합니다.
 
 | 문서 | 설명 |
 |------|------|
@@ -198,6 +235,8 @@ Architecture
 | [16-testing-library.md](./testing/16-testing-library) | Functorium.Testing 라이브러리 (로그/아키텍처/소스생성기/Job 테스트) |
 
 ### Observability
+
+개발과 운영이 같은 언어로 소통할 수 있도록 관측성 사양을 정의합니다. Field/Tag 네이밍부터 구조화된 로깅, 메트릭, 분산 트레이싱까지 일관된 관측성 체계를 구축합니다.
 
 | 문서 | 설명 |
 |------|------|
@@ -208,6 +247,8 @@ Architecture
 | [21-observability-tracing.md](./observability/21-observability-tracing) | Observability 트레이싱 상세 |
 
 ### 진단
+
+프로덕션 환경의 비정상 종료를 사후 분석하기 위한 크래시 덤프 수집과 분석 가이드입니다.
 
 | 문서 | 설명 |
 |------|------|
