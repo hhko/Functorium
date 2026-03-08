@@ -115,10 +115,6 @@ export default defineConfig({
                   { label: '시작하기', slug: 'getting-started', badge: { text: '시작', variant: 'note' } },
                 ],
               },
-              {
-                label: '아키텍처',
-                autogenerate: { directory: 'architecture-is' },
-              },
             ],
           },
           {
