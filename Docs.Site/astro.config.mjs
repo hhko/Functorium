@@ -179,9 +179,10 @@ export default defineConfig({
           },
           {
             label: '튜토리얼',
-            link: '/tutorials/functional-valueobject/',
+            link: '/tutorials/',
             icon: 'puzzle',
             items: [
+              { label: 'Functorium 튜토리얼', slug: 'tutorials' },
               {
                 label: '함수형 값 객체 구현',
                 collapsed: true,
