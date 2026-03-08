@@ -2,10 +2,26 @@
 title: "크래시 덤프 핸들러 가이드"
 ---
 
-프로덕션 환경의 크래시는 로그와 메트릭만으로 원인을 파악하기 어려운 경우가 있습니다. 특히 `AccessViolationException`이나 `StackOverflowException`처럼 `try-catch`로 잡을 수 없는 예외는 일반적인 Observability 도구로는 진단이 불가능합니다.
-크래시 덤프는 프로세스 종료 시점의 메모리 스냅샷으로, 스택 트레이스와 힙 상태 등을 사후에 분석할 수 있게 해주는 최후 수단의 진단 도구입니다.
+프로덕션 환경의 크래시는 로그와 메트릭만으로 원인을 파악하기 어려운 경우가 있습니다. 이 가이드는 `Functorium.Abstractions.Diagnostics.CrashDumpHandler`를 사용하여 .NET 애플리케이션의 크래시 덤프를 생성하고 분석하는 방법을 설명합니다.
 
-이 가이드는 `Functorium.Abstractions.Diagnostics.CrashDumpHandler`를 사용하여 .NET 애플리케이션의 크래시 덤프를 생성하고 분석하는 방법을 설명합니다.
+## 들어가며
+
+프로덕션에서 프로세스가 예고 없이 종료되었는데, 로그에는 아무런 흔적이 없는 상황을 경험한 적이 있나요? `StackOverflowException`이나 `AccessViolationException`처럼 `try-catch`로 잡을 수 없는 예외는 Observability 파이프라인이 동작하기 전에 프로세스를 종료시킵니다.
+
+### 이 문서에서 배우는 내용
+
+1. **CrashDumpHandler의 역할과 초기화 방법** - CSE(Corrupted State Exception) 처리 원리
+2. **프로덕션 환경별 배포 설정** - Docker, Kubernetes, Windows 서비스
+3. **덤프 파일 분석 방법** - dotnet-dump, Visual Studio, WinDbg 활용
+4. **Observability와의 관계** - 로그/메트릭/트레이싱과 크래시 덤프의 역할 분담
+
+### 사전 지식
+
+- .NET 런타임 예외 처리의 기본 개념
+- Docker/Kubernetes 기본 사용법 (프로덕션 배포 시)
+- [18a-observability-spec.md](./18a-observability-spec) — Observability 3-Pillar 사양
+
+> **핵심 원칙:** 크래시 덤프는 Observability 3-Pillar(Logging, Metrics, Tracing)로 진단할 수 없는 CSE(Corrupted State Exception)를 사후 분석하는 최후 수단입니다. `CrashDumpHandler.Initialize()`를 `Program.cs` 첫 줄에서 호출하여 모든 시점의 크래시를 캡처합니다.
 
 ## 요약
 
@@ -58,23 +74,6 @@ dotnet-dump analyze crash.dmp
 | `MiniDumpWriteDump` | Windows에서 덤프 생성에 사용하는 API |
 | `createdump` | Linux/macOS에서 .NET 덤프 생성 도구 |
 | Source Link | PDB 없이도 소스 코드 수준 디버깅을 가능하게 하는 기술 |
-
-## 들어가며
-
-프로덕션에서 프로세스가 예고 없이 종료되었는데, 로그에는 아무런 흔적이 없는 상황을 경험한 적이 있나요? `StackOverflowException`이나 `AccessViolationException`처럼 `try-catch`로 잡을 수 없는 예외는 Observability 파이프라인이 동작하기 전에 프로세스를 종료시킵니다.
-
-### 이 문서에서 배우는 내용
-
-1. **CrashDumpHandler의 역할과 초기화 방법** - CSE(Corrupted State Exception) 처리 원리
-2. **프로덕션 환경별 배포 설정** - Docker, Kubernetes, Windows 서비스
-3. **덤프 파일 분석 방법** - dotnet-dump, Visual Studio, WinDbg 활용
-4. **Observability와의 관계** - 로그/메트릭/트레이싱과 크래시 덤프의 역할 분담
-
-### 사전 지식
-
-- .NET 런타임 예외 처리의 기본 개념
-- Docker/Kubernetes 기본 사용법 (프로덕션 배포 시)
-- [18a-observability-spec.md](./18a-observability-spec) — Observability 3-Pillar 사양
 
 ---
 

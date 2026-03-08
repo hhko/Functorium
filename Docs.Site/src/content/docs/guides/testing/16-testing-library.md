@@ -5,6 +5,34 @@ title: "Functorium.Testing 라이브러리 가이드"
 테스트 코드는 프로덕션 코드와 동일한 수준의 일관성이 필요합니다. 프로젝트가 성장하면 로그 캡처, 아키텍처 규칙 검증, 소스 생성기 테스트 등 반복적인 테스트 인프라 코드가 각 프로젝트에 중복됩니다.
 `Functorium.Testing`은 이러한 반복을 제거하고, 프레임워크에 특화된 테스트 유틸리티를 단일 라이브러리로 제공하여 테스트 코드의 일관성과 유지보수성을 확보합니다.
 
+## 들어가며
+
+"Pipeline이 출력하는 구조화된 로그 필드가 정확한지 어떻게 검증하는가?"
+"ValueObject의 불변성 규칙을 모든 클래스에 일괄 적용하려면 어떻게 해야 하는가?"
+"소스 생성기가 올바른 코드를 생성하는지 어떻게 테스트하는가?"
+
+이러한 테스트 인프라를 프로젝트마다 직접 구현하면 중복 코드가 쌓이고, 프레임워크 업데이트 시 동기화가 어려워집니다. `Functorium.Testing`은 이러한 반복 패턴을 단일 라이브러리로 통합하여 일관된 테스트 기반을 제공합니다.
+
+### 이 문서에서 배우는 내용
+
+이 문서를 통해 다음을 학습합니다:
+
+1. **`LogTestContext` 기반 구조화된 로그 테스트** - Serilog 인메모리 캡처와 Verify 스냅샷 연동
+2. **`FinTFactory`를 활용한 Mock 반환값 설정** - Port/Adapter의 `FinT<IO, T>` 반환값 생성
+3. **아키텍처 규칙 검증 Fluent API** - ArchUnitNET 기반 클래스/메서드 수준 규칙 적용
+4. **`SourceGeneratorTestRunner`로 소스 생성기 테스트** - 입력 코드 → 생성 코드 검증
+5. **`QuartzTestFixture`로 스케줄 Job 통합 테스트** - DI 통합 환경에서 Job 1회 실행 검증
+
+### 사전 지식
+
+이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
+
+- [단위 테스트 가이드](./15a-unit-testing) - AAA 패턴, MTP 설정, Verify 스냅샷 테스트
+- LanguageExt의 `Fin<T>`, `FinT<IO, T>` 타입 기본 개념
+- Serilog 구조화된 로깅의 기본 원리
+
+> **핵심 원칙:** `Functorium.Testing`은 구조화된 로그 캡처, 아키텍처 규칙 검증, 소스 생성기 테스트, Mock 반환값 생성 등 반복적인 테스트 인프라를 단일 라이브러리로 통합하여 프로젝트 간 일관성을 보장합니다.
+
 ## 요약
 
 ### 주요 명령
@@ -54,34 +82,6 @@ _repository.GetById(Arg.Any<ProductId>())
 | `ClassValidator` | 클래스 수준 아키텍처 규칙 Fluent API |
 | `SourceGeneratorTestRunner` | `IIncrementalGenerator` 테스트 실행기 |
 | `QuartzTestFixture` | Quartz.NET Job 통합 테스트 Fixture |
-
----
-
-## 들어가며
-
-"Pipeline이 출력하는 구조화된 로그 필드가 정확한지 어떻게 검증하는가?"
-"ValueObject의 불변성 규칙을 모든 클래스에 일괄 적용하려면 어떻게 해야 하는가?"
-"소스 생성기가 올바른 코드를 생성하는지 어떻게 테스트하는가?"
-
-이러한 테스트 인프라를 프로젝트마다 직접 구현하면 중복 코드가 쌓이고, 프레임워크 업데이트 시 동기화가 어려워집니다. `Functorium.Testing`은 이러한 반복 패턴을 단일 라이브러리로 통합하여 일관된 테스트 기반을 제공합니다.
-
-### 이 문서에서 배우는 내용
-
-이 문서를 통해 다음을 학습합니다:
-
-1. **`LogTestContext` 기반 구조화된 로그 테스트** - Serilog 인메모리 캡처와 Verify 스냅샷 연동
-2. **`FinTFactory`를 활용한 Mock 반환값 설정** - Port/Adapter의 `FinT<IO, T>` 반환값 생성
-3. **아키텍처 규칙 검증 Fluent API** - ArchUnitNET 기반 클래스/메서드 수준 규칙 적용
-4. **`SourceGeneratorTestRunner`로 소스 생성기 테스트** - 입력 코드 → 생성 코드 검증
-5. **`QuartzTestFixture`로 스케줄 Job 통합 테스트** - DI 통합 환경에서 Job 1회 실행 검증
-
-### 사전 지식
-
-이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
-
-- [단위 테스트 가이드](./15a-unit-testing) - AAA 패턴, MTP 설정, Verify 스냅샷 테스트
-- LanguageExt의 `Fin<T>`, `FinT<IO, T>` 타입 기본 개념
-- Serilog 구조화된 로깅의 기본 원리
 
 ---
 

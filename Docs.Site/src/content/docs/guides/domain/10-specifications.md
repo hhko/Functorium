@@ -4,6 +4,28 @@ title: "Specification 패턴"
 
 이 문서는 Functorium 프레임워크에서 Specification 패턴을 정의하고 사용하는 방법을 설명합니다.
 
+## 들어가며
+
+"새로운 필터 조건이 필요할 때마다 Repository에 메서드를 추가해야 하는가?"
+"'가격이 100~200원이고 재고가 5개 이상'이라는 비즈니스 규칙을 어디에 캡슐화하는가?"
+"InMemory 테스트와 EF Core 운영 환경에서 동일한 비즈니스 조건을 어떻게 재사용하는가?"
+
+이러한 문제는 비즈니스 규칙이 Repository 구현에 흩어지거나, 조건 조합이 늘어날 때마다 인터페이스가 비대해지는 현상으로 나타납니다. Specification 패턴은 비즈니스 규칙을 독립적인 도메인 객체로 캡슐화하고, `And`/`Or`/`Not` 조합으로 복잡한 조건을 구성합니다.
+
+### 이 문서에서 배우는 내용
+
+1. **Specification 패턴이 해결하는 문제** — Repository 메서드 폭발 방지와 비즈니스 규칙 캡슐화
+2. **`ExpressionSpecification<T>` 구현 패턴** — `ToExpression()` 정의와 SQL 자동 번역
+3. **조합과 항등원** — `&`/`|`/`!` 연산자와 `Specification<T>.All`
+4. **Repository/Usecase 통합** — InMemory, EF Core, Dapper 환경에서의 사용법
+
+### 사전 지식
+
+- [Entity/Aggregate 핵심 패턴](./06b-entity-aggregate-core) — Entity와 Aggregate의 기본 구조
+- [Adapter 구현 가이드](../adapter/13-adapters) — Repository 구현 패턴
+
+> Specification 패턴의 핵심 가치는 **비즈니스 규칙을 도메인 객체로 캡슐화하여 재사용하고, 조합 연산자로 복잡한 조건을 단순한 조건의 합성으로 표현하는 것입니다.**
+
 ## 요약
 
 ### 주요 명령
@@ -676,7 +698,7 @@ return product => product.Price >= MinPrice;  // Value Object 직접 비교
 
 ### Q1. Specification과 Entity 메서드의 선택 기준은?
 
-Specification은 **조회 조건의 캡슐화와 조합**이 목적입니다. Entity 메서드는 상태 변경 로직에 사용합니다. "이 조건을 Repository 쿼리에서 재사용해야 하는가?"가 판단 기준입니다.
+Specification은 **조회 조건의 캡슐화와 조합이** 목적입니다. Entity 메서드는 상태 변경 로직에 사용합니다. "이 조건을 Repository 쿼리에서 재사용해야 하는가?"가 판단 기준입니다.
 
 ### Q2. Specification<T>.All은 언제 사용하나요?
 

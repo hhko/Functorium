@@ -73,7 +73,7 @@ Functorium에서 각 유스케이스는 하나의 클래스로 표현됩니다. 
 - [값 객체(Value Object)](../domain/05a-value-objects)의 Create/Validate 패턴
 - LanguageExt의 `Fin<T>`, `FinT<IO, T>` 기본 개념
 
----
+> **CQRS의 핵심은** 읽기와 쓰기를 분리하여 각각 최적의 기술을 선택하는 것이고, Functorium의 파이프라인은 트랜잭션과 이벤트 발행을 자동 처리하여 Usecase가 비즈니스 로직에만 집중할 수 있게 합니다.
 
 ## 요약
 
@@ -614,7 +614,7 @@ public sealed class CreateProductCommand
 
 ## Query 구현
 
-> **핵심 원칙**: Query는 `IRepository`를 사용하지 않습니다. `IQueryPort` 기반 Read Adapter를 통해 **Aggregate 재구성 없이 SQL → DTO 직접 매핑**합니다. 이 규칙은 `CqrsArchitectureRuleTests`로 강제됩니다.
+> **핵심 원칙**: Query는 `IRepository`를 사용하지 않습니다. `IQueryPort` 기반 Read Adapter를 통해 **Aggregate 재구성 없이 SQL → DTO 직접 매핑합니다.** 이 규칙은 `CqrsArchitectureRuleTests`로 강제됩니다.
 
 ### Query Port 정의 패턴
 
@@ -915,7 +915,7 @@ services
 
 | 원칙 | 설명 |
 |------|------|
-| SaveChanges 호출 위치 | **파이프라인**이 자동 처리 (Usecase에서 호출하지 않음) |
+| SaveChanges 호출 위치 | **파이프라인이** 자동 처리 (Usecase에서 호출하지 않음) |
 | Repository 역할 | 엔티티 변경 + `IDomainEventCollector.Track()` 호출 |
 | 여러 Repository 호출 | 하나의 `SaveChanges()`로 트랜잭션에 묶임 (파이프라인 보장) |
 | 이벤트 발행 시점 | `SaveChanges()` 성공 후에만 발행 (파이프라인 보장) |

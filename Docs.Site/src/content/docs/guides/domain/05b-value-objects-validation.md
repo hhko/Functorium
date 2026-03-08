@@ -4,6 +4,12 @@ title: "값 객체: 열거형·검증·실전 패턴"
 
 이 문서는 값 객체의 열거형 패턴, 실전 예제, Application Layer 검증 병합, FAQ를 다룹니다. 핵심 개념과 기반 클래스는 [05a-value-objects.md](./05a-value-objects)을 참고하세요.
 
+## 들어가며
+
+[05a-value-objects.md](./05a-value-objects)에서 값 객체의 핵심 개념과 구현 패턴을 살펴봤습니다. 이 문서에서는 열거형 패턴(`SmartEnum`), 기반 클래스별 실전 예제, Application Layer에서 여러 검증을 병합하는 `Apply` 패턴을 다룹니다.
+
+> 값 객체 구현의 실전 포인트는 **기반 클래스별 Create 패턴의 차이를 이해하고, Usecase에서 Apply 병합으로 모든 검증 오류를 한 번에 수집하는 것입니다.**
+
 ## 요약
 
 ### 주요 명령
@@ -229,7 +235,7 @@ public sealed class Quantity : ComparableSimpleValueObject<int>
 
 ### Money (ValueObject with Apply)
 
-복합 속성(Amount + Currency)으로 구성된 값 객체의 예제입니다. Apply 패턴으로 두 속성을 **병렬 검증**하고, 도메인 연산(Add)에서 **비즈니스 규칙 위반**(다른 통화 더하기)을 `DomainError.For<T>()`로 처리합니다.
+복합 속성(Amount + Currency)으로 구성된 값 객체의 예제입니다. Apply 패턴으로 두 속성을 **병렬 검증하고,** 도메인 연산(Add)에서 **비즈니스 규칙 위반**(다른 통화 더하기)을 `DomainError.For<T>()`로 처리합니다.
 
 `Validate` 메서드에서 튜플 + `Apply`로 두 속성을 병렬 검증하는 부분과, `Add` 메서드에서 통화 불일치를 `DomainError`로 처리하는 부분을 주목하세요.
 
@@ -406,9 +412,9 @@ private static Validation<Error, string> ValidateSupported(string currencyCode)
 값 객체를 만들 때 어떤 기반 클래스를 상속받을지 결정해야 합니다. 핵심 질문 두 가지로 쉽게 선택할 수 있습니다.
 
 **첫 번째 질문: 값이 하나인가, 여러 개인가?**
-- **하나의 값**만 감싸는 경우 → `SimpleValueObject<T>` 계열
+- **하나의 값만** 감싸는 경우 → `SimpleValueObject<T>` 계열
   - 예: 이메일 주소(string 하나), 가격(decimal 하나), 사용자 ID(int 하나)
-- **여러 속성**으로 구성된 경우 → `ValueObject` 계열
+- **여러 속성으로** 구성된 경우 → `ValueObject` 계열
   - 예: 금액(amount + currency), 주소(city + street + postalCode), 좌표(x + y)
 
 **두 번째 질문: 크기 비교가 필요한가?**
@@ -461,7 +467,7 @@ return Currency == other.Currency
 
 ### Q3. Bind(Then)와 Apply 사용 기준은?
 
-검증이 여러 개일 때, **오류를 어떻게 보여줄지**에 따라 선택합니다.
+검증이 여러 개일 때, **오류를 어떻게 보여줄지에** 따라 선택합니다.
 
 **Bind/Then은 "순차 검증"입니다. 첫 오류에서 멈춥니다.**
 
@@ -559,7 +565,7 @@ public sealed class Currency : SmartEnum<Currency, string>
 
 ### Q6. ValidationRules\<T\>와 ValidationRules.For() 차이점은?
 
-둘 다 같은 검증 메서드(`NotEmpty`, `Positive` 등)를 제공하지만, **타입 정보를 어디서 가져오는지**가 다릅니다.
+둘 다 같은 검증 메서드(`NotEmpty`, `Positive` 등)를 제공하지만, **타입 정보를 어디서 가져오는지가** 다릅니다.
 
 **ValidationRules\<T\>는 "타입"에서 컨텍스트를 가져옵니다.**
 

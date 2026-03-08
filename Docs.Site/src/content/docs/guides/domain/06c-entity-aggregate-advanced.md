@@ -4,23 +4,6 @@ title: "Entity와 Aggregate 구현 — 고급 패턴"
 
 이 문서는 Entity/Aggregate의 고급 구현 패턴을 다룹니다. 핵심 패턴(클래스 계층, ID 시스템, 생성 패턴, 커맨드 메서드, 도메인 이벤트)은 [06b-entity-aggregate-core.md](./06b-entity-aggregate-core)를 참조하세요.
 
-## 요약
-
-### 주요 개념
-
-| 개념 | 설명 |
-|------|------|
-| Cross-Aggregate 참조 | EntityId로만 참조, 도메인 이벤트로 Aggregate 간 통신 |
-| IAuditable | 생성/수정 시각 추적, 도메인이 직접 관리 |
-| ISoftDeletable | 소프트 삭제 지원, `Option<DateTime>` 기반 단일 진실 원천 |
-| IConcurrencyAware | 낙관적 동시성 제어, RowVersion 기반 Lost Update 방지 |
-
-### 주요 절차
-
-1. Cross-Aggregate 참조는 EntityId만 사용, Domain Port로 외부 Aggregate 조회
-2. 필요 시 부가 인터페이스 적용 (`IAuditable`, `ISoftDeletable`, `IConcurrencyAware`)
-3. 각 인터페이스의 체크리스트에 따라 도메인 모델 + 인프라 구현
-
 ## 들어가며
 
 Aggregate의 기본 구조를 잡았다면, 실무에서는 곧바로 다음과 같은 질문이 이어집니다:
@@ -40,13 +23,32 @@ Aggregate의 기본 구조를 잡았다면, 실무에서는 곧바로 다음과 
 - [Entity/Aggregate 핵심 패턴](./06b-entity-aggregate-core) — 클래스 계층, ID 시스템, 생성 패턴, 커맨드 메서드, 도메인 이벤트
 - [Aggregate 설계 원칙](./06a-aggregate-design) — 불변식과 경계 설정 개념
 
+> Aggregate 간 참조는 항상 EntityId만 사용하고, 감사(Audit), 소프트 삭제, 동시성 제어 같은 공통 관심사는 부가 인터페이스로 선언하여 도메인이 명시적으로 필요성을 표현합니다. 인프라 구현은 각 인터페이스의 체크리스트를 따릅니다.
+
+## 요약
+
+### 주요 개념
+
+| 개념 | 설명 |
+|------|------|
+| Cross-Aggregate 참조 | EntityId로만 참조, 도메인 이벤트로 Aggregate 간 통신 |
+| IAuditable | 생성/수정 시각 추적, 도메인이 직접 관리 |
+| ISoftDeletable | 소프트 삭제 지원, `Option<DateTime>` 기반 단일 진실 원천 |
+| IConcurrencyAware | 낙관적 동시성 제어, RowVersion 기반 Lost Update 방지 |
+
+### 주요 절차
+
+1. Cross-Aggregate 참조는 EntityId만 사용, Domain Port로 외부 Aggregate 조회
+2. 필요 시 부가 인터페이스 적용 (`IAuditable`, `ISoftDeletable`, `IConcurrencyAware`)
+3. 각 인터페이스의 체크리스트에 따라 도메인 모델 + 인프라 구현
+
 ---
 
 ## Cross-Aggregate 관계
 
 ### ID 참조 패턴
 
-다른 Aggregate를 참조할 때는 **EntityId만 저장**합니다.
+다른 Aggregate를 참조할 때는 **EntityId만 저장합니다.**
 
 아래 코드에서 `ProductId`는 Product Aggregate 자체가 아닌 ID 값만 보유한다는 점을 주목하세요.
 
@@ -79,7 +81,7 @@ public interface IProductCatalog : IObservablePort
 }
 ```
 
-Port는 **도메인이 필요한 것**을 표현합니다:
+Port는 **도메인이 필요한 것을** 표현합니다:
 - `IProductCatalog`는 Product Aggregate 전체를 노출하지 않음
 - 배치 API로 필요한 정보(가격)를 효율적으로 제공 (N+1 문제 방지)
 - 구현은 Application/Adapter Layer에서 담당
@@ -100,7 +102,7 @@ Order Aggregate                     Inventory Aggregate
 
 ### 다른 Entity를 참조하는 Entity
 
-Entity가 다른 Entity를 참조할 때는 **EntityId만 참조**합니다 (외래 키 패턴).
+Entity가 다른 Entity를 참조할 때는 **EntityId만 참조합니다** (외래 키 패턴).
 
 ```csharp
 [GenerateEntityId]
@@ -456,7 +458,7 @@ Inventory의 `DeductStock` 예시로 동시성 문제를 설명합니다:
 기대 결과: B는 거부되어야 함 (A 반영 후 실제 재고 = 3, 7개 차감 불가)
 ```
 
-핵심: `DeductStock()`의 `if (quantity > StockQuantity)` 가드는 **읽은 시점의 값**으로만 판단합니다. 트랜잭션 B는 A가 저장하기 전의 값(10)을 읽었기 때문에 검증을 통과하지만, 실제로는 재고가 이미 3개로 줄어든 상태입니다. 이것이 **Lost Update** 문제이며, 도메인 로직만으로는 방지할 수 없습니다.
+핵심: `DeductStock()`의 `if (quantity > StockQuantity)` 가드는 **읽은 시점의 값으로만** 판단합니다. 트랜잭션 B는 A가 저장하기 전의 값(10)을 읽었기 때문에 검증을 통과하지만, 실제로는 재고가 이미 3개로 줄어든 상태입니다. 이것이 **Lost Update** 문제이며, 도메인 로직만으로는 방지할 수 없습니다.
 
 #### 왜 도메인 레이어에 두는가
 

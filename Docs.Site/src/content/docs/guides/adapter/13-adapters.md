@@ -4,6 +4,34 @@ title: "Adapter 구현"
 
 이 문서는 Port 인터페이스의 구현체인 Adapter를 유형별로 구현하는 가이드입니다. Port 정의는 [12-ports.md](./12-ports), Pipeline 생성과 DI 등록은 [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di)을 참조하세요.
 
+## 들어가며
+
+"InMemory 구현에서 EF Core 구현으로 전환할 때 Usecase 코드를 수정해야 하는가?"
+"외부 HTTP API 호출의 예외를 어떻게 `Fin<T>` 에러로 변환하는가?"
+"`[GenerateObservablePort]`를 적용하면 로깅과 메트릭이 자동으로 생성된다는데, 어떤 구조인가?"
+
+Adapter는 Port 인터페이스의 구현체로, 실제 인프라 기술과 도메인 로직 사이의 다리 역할을 합니다. 이 문서는 Repository, External API, Messaging, Query Adapter의 유형별 구현 패턴과 에러 처리 전략을 다룹니다.
+
+### 이 문서에서 배우는 내용
+
+이 문서를 통해 다음을 학습합니다:
+
+1. **Adapter 공통 패턴** — `IO.lift`/`IO.liftAsync` 선택과 Mapper 패턴
+2. **Repository Adapter** — InMemory와 EF Core 구현의 비교
+3. **External API Adapter** — HTTP 상태 코드별 에러 매핑과 예외 처리
+4. **Messaging Adapter** — Request/Reply와 Fire-and-Forget 패턴
+5. **Query Adapter (CQRS Read)** — Dapper 기반 DTO 직접 반환
+
+### 사전 지식
+
+이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
+
+- [Port 아키텍처와 정의](./12-ports) — Port 인터페이스 정의 방법
+- [에러 시스템: 기초와 네이밍](../domain/08a-error-system) — `Fin<T>`, `FinT<IO, T>` 반환 패턴
+- [Entity/Aggregate 핵심 패턴](../domain/06b-entity-aggregate-core) — `CreateFromValidated()` ORM 복원 패턴
+
+> **Adapter는 "순수한 비즈니스 로직"과 "인프라 기술 세부사항"을 분리하는 경계입니다.** `IO.lift`로 래핑하고 `[GenerateObservablePort]`를 적용하면, 관측성은 자동으로 따라옵니다.
+
 ## 요약
 
 ### 주요 명령
@@ -51,34 +79,6 @@ return Fin.Fail<T>(AdapterError.For<TAdapter>(errorType, context, message));
 | `RequestCategory` | Observability 로그에서 사용할 카테고리 (`"Repository"`, `"ExternalApi"` 등) |
 | Mapper 패턴 | 도메인 모델과 기술 모델(POCO, DTO) 간 변환을 담당하는 `internal` 클래스 |
 | `AdapterError` | Adapter 레이어 전용 에러 타입 (`For<T>`, `FromException<T>`) |
-
----
-
-## 들어가며
-
-"InMemory 구현에서 EF Core 구현으로 전환할 때 Usecase 코드를 수정해야 하는가?"
-"외부 HTTP API 호출의 예외를 어떻게 `Fin<T>` 에러로 변환하는가?"
-"`[GenerateObservablePort]`를 적용하면 로깅과 메트릭이 자동으로 생성된다는데, 어떤 구조인가?"
-
-Adapter는 Port 인터페이스의 구현체로, 실제 인프라 기술과 도메인 로직 사이의 다리 역할을 합니다. 이 문서는 Repository, External API, Messaging, Query Adapter의 유형별 구현 패턴과 에러 처리 전략을 다룹니다.
-
-### 이 문서에서 배우는 내용
-
-이 문서를 통해 다음을 학습합니다:
-
-1. **Adapter 공통 패턴** — `IO.lift`/`IO.liftAsync` 선택과 Mapper 패턴
-2. **Repository Adapter** — InMemory와 EF Core 구현의 비교
-3. **External API Adapter** — HTTP 상태 코드별 에러 매핑과 예외 처리
-4. **Messaging Adapter** — Request/Reply와 Fire-and-Forget 패턴
-5. **Query Adapter (CQRS Read)** — Dapper 기반 DTO 직접 반환
-
-### 사전 지식
-
-이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
-
-- [Port 아키텍처와 정의](./12-ports) — Port 인터페이스 정의 방법
-- [에러 시스템: 기초와 네이밍](../domain/08a-error-system) — `Fin<T>`, `FinT<IO, T>` 반환 패턴
-- [Entity/Aggregate 핵심 패턴](../domain/06b-entity-aggregate-core) — `CreateFromValidated()` ORM 복원 패턴
 
 ---
 

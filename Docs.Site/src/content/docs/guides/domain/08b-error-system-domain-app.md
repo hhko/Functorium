@@ -4,6 +4,12 @@ title: "에러 시스템 — Domain/Application 에러"
 
 이 문서는 Domain/Application/Event 레이어별 에러 정의와 테스트 패턴을 다룹니다. 에러 처리의 기본 원칙과 네이밍 규칙은 [08a-error-system.md](./08a-error-system)을 참고하세요. Adapter 에러, Custom 에러, 테스트 모범 사례, 레이어별 체크리스트는 [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing)을 참고하세요.
 
+## 들어가며
+
+[08a-error-system.md](./08a-error-system)에서 에러 시스템의 기초와 네이밍 규칙을 다뤘습니다. 이 문서에서는 Domain과 Application 레이어의 에러 정의, 팩토리 메서드 사용법, 테스트 어설션 패턴을 구체적으로 살펴봅니다.
+
+> 각 레이어의 에러 팩토리(`DomainError.For`, `ApplicationError.For`, `EventError.For`)는 에러 출처를 타입 시스템에 명시하여, 에러 코드만으로 어느 레이어에서 발생한 문제인지 즉시 파악할 수 있게 합니다.
+
 ## 요약
 
 ### 주요 명령

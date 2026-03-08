@@ -4,6 +4,12 @@ title: "에러 시스템 — Adapter 에러와 테스트"
 
 이 문서는 Adapter 에러, Custom 에러 정의, 테스트 모범 사례, 레이어별 체크리스트를 다룹니다. 에러 처리의 기본 원칙과 네이밍 규칙은 [08a-error-system.md](./08a-error-system)을 참고하세요. Domain/Application/Event 에러는 [08b-error-system-domain-app.md](./08b-error-system-domain-app)을 참고하세요.
 
+## 들어가며
+
+[08b-error-system-domain-app.md](./08b-error-system-domain-app)에서 Domain/Application 에러를 다뤘습니다. 이 문서에서는 Adapter 에러, Custom 에러 정의 패턴, 테스트 모범 사례, 레이어별 체크리스트를 다룹니다.
+
+> Adapter 에러는 파이프라인, 외부 서비스, 데이터 처리 과정의 실패를 표현합니다. 예외를 `AdapterError.FromException`으로 래핑하여 에러 추적성을 유지하고, `Functorium.Testing.Assertions.Errors`의 어설션으로 에러 타입과 코드를 정확히 검증합니다.
+
 ## 요약
 
 ### 주요 명령
@@ -500,7 +506,7 @@ new StockDepleted()      // 재고 소진
 
 자주 사용되는 Custom 에러는 표준 에러 타입으로 승격을 고려합니다 ([08a 승격 기준](./08a-error-system#custom--표준-에러-승격-기준) 참조):
 
-> 1. **3개 이상의 서로 다른 위치**에서 동일 Custom 에러 사용
+> 1. **3개 이상의 서로 다른 위치에서** 동일 Custom 에러 사용
 > 2. **재사용 의미가 명확** (도메인 개념으로 자리잡음)
 > 3. 기존 네이밍 규칙(R1-R8)에 **자연스럽게 매핑** 가능
 > 4. **안정성 확인** (더 이상 의미가 변하지 않음)

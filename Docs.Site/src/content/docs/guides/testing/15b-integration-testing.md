@@ -4,6 +4,34 @@ title: "통합 테스트"
 
 이 문서는 Functorium 프로젝트의 통합 테스트 작성을 위한 `HostTestFixture<TProgram>` 클래스를 설명합니다.
 
+## 들어가며
+
+"DI 컨테이너에 등록된 서비스가 실제로 올바르게 해석되는지 어떻게 검증하는가?"
+"Options 바인딩이 `appsettings.json`과 정확히 일치하는지 어떻게 확인하는가?"
+"테스트 환경에서 Host 프로젝트의 전체 파이프라인을 재현하려면 무엇이 필요한가?"
+
+단위 테스트는 개별 클래스의 동작을 검증하지만, DI 등록, 설정 바인딩, HTTP 파이프라인처럼 여러 레이어가 조합되는 영역은 통합 테스트로만 확인할 수 있습니다. `HostTestFixture<TProgram>`은 `WebApplicationFactory`를 래핑하여 이러한 통합 테스트를 간결하게 작성할 수 있도록 합니다.
+
+### 이 문서에서 배우는 내용
+
+이 문서를 통해 다음을 학습합니다:
+
+1. **`HostTestFixture<TProgram>`의 구조와 생명주기** - 초기화부터 정리까지의 흐름
+2. **서비스 등록 검증 패턴** - DI 컨테이너와 Options 바인딩 확인 방법
+3. **환경별 설정 파일 구성** - `appsettings.{환경}.json` 로드 순서와 오버라이드
+4. **HTTP API 통합 테스트** - `HttpClient`를 통한 엔드포인트 검증
+5. **확장 포인트 활용** - `ConfigureHost`, `InitializeAsync` 오버라이드
+
+### 사전 지식
+
+이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
+
+- [단위 테스트 가이드](./15a-unit-testing) - 테스트 명명 규칙, AAA 패턴
+- ASP.NET Core의 DI(Dependency Injection) 개념
+- `IClassFixture`와 xUnit 생명주기
+
+> **핵심 원칙:** `HostTestFixture<TProgram>`은 실제 Host 프로젝트의 DI 컨테이너와 설정 파이프라인을 테스트 환경에서 그대로 재현합니다. 서비스 등록, Options 바인딩, HTTP 엔드포인트를 단일 Fixture로 검증할 수 있습니다.
+
 ## 요약
 
 ### 주요 코드
@@ -56,35 +84,6 @@ public class MyIntegrationTests : IClassFixture<MyTestFixture>
 | 테스트 명명 (T1_T2_T3) | [테스트 명명 규칙](./15a-unit-testing#테스트-명명-규칙) |
 | 변수 명명 (`sut`, `actual` 등) | [변수 명명 규칙](./15a-unit-testing#변수-명명-규칙) |
 | AAA 패턴 | [AAA 패턴](./15a-unit-testing#aaa-패턴) |
-
-
-
-
-## 들어가며
-
-"DI 컨테이너에 등록된 서비스가 실제로 올바르게 해석되는지 어떻게 검증하는가?"
-"Options 바인딩이 `appsettings.json`과 정확히 일치하는지 어떻게 확인하는가?"
-"테스트 환경에서 Host 프로젝트의 전체 파이프라인을 재현하려면 무엇이 필요한가?"
-
-단위 테스트는 개별 클래스의 동작을 검증하지만, DI 등록, 설정 바인딩, HTTP 파이프라인처럼 여러 레이어가 조합되는 영역은 통합 테스트로만 확인할 수 있습니다. `HostTestFixture<TProgram>`은 `WebApplicationFactory`를 래핑하여 이러한 통합 테스트를 간결하게 작성할 수 있도록 합니다.
-
-### 이 문서에서 배우는 내용
-
-이 문서를 통해 다음을 학습합니다:
-
-1. **`HostTestFixture<TProgram>`의 구조와 생명주기** - 초기화부터 정리까지의 흐름
-2. **서비스 등록 검증 패턴** - DI 컨테이너와 Options 바인딩 확인 방법
-3. **환경별 설정 파일 구성** - `appsettings.{환경}.json` 로드 순서와 오버라이드
-4. **HTTP API 통합 테스트** - `HttpClient`를 통한 엔드포인트 검증
-5. **확장 포인트 활용** - `ConfigureHost`, `InitializeAsync` 오버라이드
-
-### 사전 지식
-
-이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
-
-- [단위 테스트 가이드](./15a-unit-testing) - 테스트 명명 규칙, AAA 패턴
-- ASP.NET Core의 DI(Dependency Injection) 개념
-- `IClassFixture`와 xUnit 생명주기
 
 ---
 

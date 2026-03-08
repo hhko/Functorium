@@ -2,6 +2,8 @@
 title: "Repository & Query Adapter 구현 가이드"
 ---
 
+이 문서는 새 Aggregate에 대한 Repository(Write Side)와 Query Adapter(Read Side)의 구현 절차를 단계별로 안내하는 실전 가이드입니다.
+
 ## 들어가며
 
 새 Aggregate를 추가할 때마다 Repository와 Query Adapter를 처음부터 작성하는 것은 반복적이고 실수가 발생하기 쉽습니다:
@@ -9,6 +11,8 @@ title: "Repository & Query Adapter 구현 가이드"
 - EF Core Repository의 생성자 3인자 패턴은 어떻게 구성하는가?
 - Dapper Query Adapter에서 페이지네이션과 정렬은 어떻게 처리하는가?
 - InMemory 구현과 EF Core 구현의 DI 등록은 어떻게 분기하는가?
+
+이 문서는 베이스 클래스와 체크리스트 기반의 구현 패턴으로 이러한 반복과 실수를 줄이는 방법을 제시합니다.
 
 ### 이 문서에서 배우는 내용
 
@@ -21,6 +25,8 @@ title: "Repository & Query Adapter 구현 가이드"
 - [Port 정의 가이드](./12-ports) — Port 인터페이스 설계 원칙
 - [Adapter 구현 가이드](./13-adapters) — Adapter 구현 기본 패턴
 - [Pipeline과 DI](./14a-adapter-pipeline-di) — Pipeline 생성 및 DI 등록
+
+> **Write는 Aggregate 단위로, Read는 DTO 프로젝션으로.** 이 CQRS 분리 원칙이 Repository와 Query Adapter 구현의 모든 설계 결정을 이끕니다.
 
 ---
 
@@ -229,7 +235,7 @@ public class InMemoryTagRepository
 ```
 
 핵심 규칙:
-- `ConcurrentDictionary`는 반드시 **`static`**으로 선언합니다 (DI Scope 간 데이터 공유)
+- `ConcurrentDictionary`는 반드시 **`static`으로** 선언합니다 (DI Scope 간 데이터 공유)
 - `internal static`으로 선언하여 같은 어셈블리의 Query Adapter에서 접근 가능하게 합니다
 - 베이스 클래스가 8개 CRUD를 모두 구현하므로, 추가 메서드만 오버라이드합니다
 
@@ -1293,7 +1299,7 @@ public DapperProductWithStockQuery(IDbConnection connection)
     : base(connection, ProductSpecTranslator.Instance, "p") { }
 ```
 
-> **기존 Pattern Matching 방식**도 `BuildWhereClause`를 직접 오버라이드하여 여전히 사용 가능합니다. Translator가 없는 생성자(`base(connection)`)를 사용하면 서브클래스에서 오버라이드가 필수입니다.
+> **기존 Pattern Matching 방식도** `BuildWhereClause`를 직접 오버라이드하여 여전히 사용 가능합니다. Translator가 없는 생성자(`base(connection)`)를 사용하면 서브클래스에서 오버라이드가 필수입니다.
 
 ### 5.3 복합 JOIN Query (QueryBase 미사용)
 

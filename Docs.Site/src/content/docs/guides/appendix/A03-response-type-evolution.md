@@ -2,7 +2,7 @@
 title: "FinResponse 타입 진화 기록"
 ---
 
-이 문서는 Functorium의 응답 타입 시스템이 `IFinResponse`에서 `FinResponse<A>` abstract record로 진화한 과정과 기술적 이슈 해결 과정을 기록합니다.
+이 문서는 FinResponse 타입이 어떤 설계 결정을 거쳐 현재 형태에 도달했는지 기록합니다. 응답 타입의 설계 의도를 이해하거나, 향후 변경 시 과거 결정을 참고할 때 유용합니다.
 
 ## 요약
 

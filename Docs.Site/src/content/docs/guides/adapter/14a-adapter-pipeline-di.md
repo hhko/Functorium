@@ -4,7 +4,31 @@ title: "Adapter 연결 -- Pipeline과 DI"
 
 이 문서는 Adapter의 Pipeline 생성, DI 등록, Options 패턴을 다루는 가이드입니다. Port 정의는 [12-ports.md](./12-ports), Adapter 구현은 [13-adapters.md](./13-adapters), 단위 테스트는 [14b-adapter-testing.md](./14b-adapter-testing)를 참조하세요.
 
-Pipeline은 횡단 관심사(cross-cutting concerns)를 처리하는 Functorium의 핵심 메커니즘입니다. 로깅, 메트릭, 트레이싱과 같은 관측성 코드를 각 Adapter에 직접 작성하면 코드가 반복되고, 누락되기 쉬우며, 형식이 일관되지 않습니다. Pipeline은 Source Generator가 생성한 Observable wrapper를 통해 이러한 관심사를 자동으로, 일관되게 적용합니다.
+## 들어가며
+
+"Use Case, 검증, 트랜잭션 등 횡단 관심사를 어떻게 일관되게 조합할 것인가?"
+"각 Adapter마다 로깅·메트릭·트레이싱 코드를 반복 작성해야 하는가?"
+"Pipeline Observable 클래스를 DI에 어떻게 등록하고, Options 패턴으로 구성 값을 주입하는가?"
+
+Pipeline은 횡단 관심사(cross-cutting concerns)를 처리하는 Functorium의 핵심 메커니즘입니다. Source Generator가 생성한 Observable wrapper를 통해 로깅, 메트릭, 트레이싱을 자동으로, 일관되게 적용합니다. 이 문서는 Pipeline 생성 확인부터 DI 등록, Options 패턴 활용까지 Adapter 연결의 전체 과정을 다룹니다.
+
+### 이 문서에서 배우는 내용
+
+이 문서를 통해 다음을 학습합니다:
+
+1. **Mediator Pipeline 구성** — Source Generator가 생성하는 Observable 래퍼의 구조와 자동 제공 기능
+2. **DI 등록 패턴** — `RegisterScopedObservablePort`로 Pipeline을 Port 인터페이스에 매핑하는 방법
+3. **Options 패턴 활용** — `OptionsConfigurator`를 사용한 강타입 설정 바인딩과 시작 시 검증
+
+### 사전 지식
+
+이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
+
+- [Port 아키텍처와 정의](./12-ports) — Port 인터페이스 설계 원칙
+- [Adapter 구현](./13-adapters) — `[GenerateObservablePort]` 어트리뷰트와 `virtual` 키워드
+- [에러 시스템: 기초와 네이밍](../domain/08a-error-system) — `FinT<IO, T>` 반환 패턴
+
+> **Adapter에 관측성 코드를 직접 작성하지 마십시오.** `[GenerateObservablePort]` + DI 등록 한 줄이면 로깅, 메트릭, 트레이싱이 자동으로 일관되게 적용됩니다.
 
 ## 요약
 
@@ -328,7 +352,7 @@ services.RegisterScopedObservablePortFor<MyServiceObservable>(
 | **Transient** | 상태 없는 가벼운 Adapter | 매번 새 인스턴스 생성 (메모리 주의) |
 | **Singleton** | 스레드 안전한 읽기 전용 Adapter | 상태 변경 불가, 스레드 안전성 보장 필요 |
 
-> **권장**: 특별한 이유가 없으면 **Scoped**를 사용하세요.
+> **권장**: 특별한 이유가 없으면 **Scoped를** 사용하세요.
 
 **등록 API 요약:**
 

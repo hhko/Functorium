@@ -2,14 +2,32 @@
 title: "Observability Specification"
 ---
 
-> 이 문서는 Functorium 프레임워크의 관측성(Observability) 사양입니다.
-> 각 Pillar별 상세 매뉴얼은 별도 문서를 참조하세요.
+관측 가능성(Observability)은 시스템이 운영 환경에서 어떻게 동작하는지 이해하기 위한 핵심 역량입니다. 이 사양서는 Functorium의 **"Observability by Design"** 철학을 구체적인 규칙으로 정의합니다.
 
-> 모든 관측성 필드는 OpenTelemetry 시맨틱 규칙과의 일관성을 위해 `snake_case + dot` 표기법을 사용합니다.
+## 들어가며
 
-관측 가능성(Observability)은 시스템이 운영 환경에서 어떻게 동작하는지 이해하기 위한 핵심 역량입니다. 그러나 팀마다, 서비스마다 로그 형식이 다르고 메트릭 이름이 일관되지 않으면, 장애 발생 시 데이터가 있어도 활용할 수 없습니다.
+- "관측 데이터(로그, 메트릭, 트레이스)의 필드와 태그가 팀마다 다르면 대시보드와 알림 규칙이 깨지기 쉬운데, 어떻게 일관성을 보장하는가?"
+- "새 Usecase나 Adapter를 추가할 때마다 관측성 코드를 직접 작성해야 하는가?"
+- "에러 분류, Event ID, Meter 이름을 어떤 규칙으로 표준화해야 하는가?"
 
-이 사양서는 Functorium의 **"Observability by Design"** 철학을 구체적인 규칙으로 정의합니다. 필드 이름, 에러 분류, Event ID, Meter 명명 규칙을 사전에 표준화하여, 모든 유스케이스와 Adapter가 동일한 형식으로 관측 데이터를 생성하도록 보장합니다. 개발자는 이 사양을 따르는 것만으로 운영팀이 즉시 활용할 수 있는 구조화된 관측 데이터를 자동으로 얻습니다.
+팀마다, 서비스마다 로그 형식이 다르고 메트릭 이름이 일관되지 않으면, 장애 발생 시 데이터가 있어도 활용할 수 없습니다. 필드 이름, 에러 분류, Event ID, Meter 명명 규칙을 사전에 표준화하여, 모든 유스케이스와 Adapter가 동일한 형식으로 관측 데이터를 생성하도록 보장합니다. 개발자는 이 사양을 따르는 것만으로 운영팀이 즉시 활용할 수 있는 구조화된 관측 데이터를 자동으로 얻습니다.
+
+### 이 문서에서 배우는 내용
+
+이 문서를 통해 다음을 학습합니다:
+
+1. **관측 가능성 필드/태그 사양** - `request.*`, `response.*`, `error.*` 필드의 표준 정의와 3-Pillar 일관성
+2. **Meter 정의 규칙** - Application/Adapter Layer별 Meter Name, Instrument Name 패턴
+3. **메시지 템플릿 패턴** - Layer별 로그 메시지 형식과 Event ID 체계
+
+### 사전 지식
+
+이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
+
+- OpenTelemetry의 기본 개념 (Logging, Metrics, Tracing)
+- Functorium의 아키텍처 레이어 (Application Layer, Adapter Layer)
+
+> **핵심 원칙:** 모든 관측성 필드는 OpenTelemetry 시맨틱 규칙과의 일관성을 위해 `snake_case + dot` 표기법을 사용합니다. `request.*`, `response.*`, `error.*` 필드가 Logging, Metrics, Tracing 3-Pillar에서 동일하게 사용되어 도구 간 상관관계 분석이 가능합니다.
 
 ![](../../../../assets/Functorium.Observability.png)
 

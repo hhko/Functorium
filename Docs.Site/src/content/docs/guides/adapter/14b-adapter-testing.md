@@ -4,6 +4,32 @@ title: "Adapter 연결 -- 단위 테스트"
 
 이 문서는 Adapter의 단위 테스트 작성, End-to-End Walkthrough, 아키텍처 부록을 다루는 가이드입니다. Pipeline 생성과 DI 등록은 [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di), Port 정의는 [12-ports.md](./12-ports), Adapter 구현은 [13-adapters.md](./13-adapters)을 참조하세요.
 
+## 들어가며
+
+"Adapter 레이어의 단위 테스트를 어떻게 구성하고, Port 의존성을 어떻게 격리할 것인가?"
+"Pipeline이 아닌 원본 Adapter를 직접 테스트해야 하는 이유는 무엇인가?"
+"`FinT<IO, T>` 반환값을 테스트에서 어떻게 실행하고 검증하는가?"
+
+Adapter 단위 테스트는 비즈니스 로직의 정확성을 검증하는 마지막 관문입니다. Pipeline(Observable)이 아닌 원본 Adapter 클래스를 직접 테스트하여, 관측성 래핑 없이 순수한 로직을 검증합니다. 이 문서는 유형별 테스트 전략과 End-to-End Walkthrough를 다룹니다.
+
+### 이 문서에서 배우는 내용
+
+이 문서를 통해 다음을 학습합니다:
+
+1. **Adapter 단위 테스트 구조** — 원본 Adapter 직접 테스트, AAA 패턴, IO 실행 패턴
+2. **Mock/Stub 전략** — Repository(직접 인스턴스), External API(MockHttpMessageHandler), Messaging(NSubstitute)
+3. **E2E 워크스루** — Repository, External API, Messaging, Query Adapter의 전체 구현 과정 요약
+
+### 사전 지식
+
+이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
+
+- [Adapter 구현](./13-adapters) — Adapter 유형별 구현 패턴
+- [Pipeline과 DI](./14a-adapter-pipeline-di) — Pipeline 생성과 DI 등록
+- [단위 테스트 작성 가이드](../testing/15a-unit-testing) — 테스트 네이밍, AAA 패턴, Shouldly
+
+> **테스트 대상은 Pipeline이 아닌 원본 Adapter입니다.** Pipeline은 관측성만 추가하므로, 비즈니스 로직 검증은 원본 클래스에서 수행합니다.
+
 ## 요약
 
 ### 주요 명령

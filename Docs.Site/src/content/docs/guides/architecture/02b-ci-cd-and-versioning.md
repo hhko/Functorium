@@ -4,6 +4,34 @@ title: "CI/CD 워크플로우 및 버전 관리"
 
 이 문서는 GitHub Actions를 사용한 CI/CD 워크플로우 설정, NuGet 패키지 배포 방법, 그리고 MinVer를 사용한 Git 태그 기반 자동 버전 관리와 다음 버전 제안 명령을 설명합니다.
 
+## 들어가며
+
+"태그를 푸시하면 자동으로 NuGet 패키지가 배포되도록 하려면 어떻게 구성하는가?"
+"빌드 번호와 패키지 버전을 수동으로 관리하지 않으려면 어떤 도구를 사용하는가?"
+"Pre-release에서 정식 릴리스까지의 버전 진행은 어떤 절차를 따르는가?"
+
+수동 버전 관리와 배포는 오류가 발생하기 쉽고 재현성이 떨어집니다. Git 태그 기반 자동 버전 관리와 GitHub Actions CI/CD 파이프라인을 조합하면, 코드 품질 검증부터 패키지 배포까지의 전 과정을 자동화할 수 있습니다.
+
+### 이 문서에서 배우는 내용
+
+이 문서를 통해 다음을 학습합니다:
+
+1. **Build/Publish 워크플로우 구성** - Push/PR 시 CI, 태그 푸시 시 Release 자동화
+2. **NuGet 패키지 설정** - `Directory.Build.props` 공통 메타데이터와 SourceLink/심볼 패키지
+3. **MinVer 기반 자동 버전 관리** - Git 태그에서 SemVer 버전 자동 계산
+4. **버전 진행 시나리오** - Alpha → Beta → RC → Stable 릴리스 흐름
+5. **Conventional Commits 기반 버전 제안** - 커밋 타입으로 다음 버전 자동 결정
+
+### 사전 지식
+
+이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
+
+- [솔루션 구성 가이드](./02-solution-configuration) - `Directory.Build.props`, `Directory.Packages.props` 구조
+- GitHub Actions 워크플로우의 기본 개념 (trigger, jobs, steps)
+- Semantic Versioning (SemVer 2.0) 규칙
+
+> **CI/CD와 버전 관리의 핵심은** Git 태그 하나로 버전 계산부터 패키지 배포까지 전 과정을 자동화하여, 수동 관리의 오류를 원천적으로 제거하는 것입니다.
+
 ## 요약
 
 ### CI/CD 워크플로우
@@ -82,34 +110,6 @@ git push origin v1.0.0
 | MinVerAutoIncrement | RTM 태그 후 자동 증가 단위 (patch/minor/major) |
 | AssemblyVersion 전략 | `Major.Minor.0.0` (Patch 미포함 — 재컴파일 방지) |
 | Conventional Commits | 커밋 타입(feat/fix/feat!)으로 버전 증가 결정 |
-
----
-
-## 들어가며
-
-"태그를 푸시하면 자동으로 NuGet 패키지가 배포되도록 하려면 어떻게 구성하는가?"
-"빌드 번호와 패키지 버전을 수동으로 관리하지 않으려면 어떤 도구를 사용하는가?"
-"Pre-release에서 정식 릴리스까지의 버전 진행은 어떤 절차를 따르는가?"
-
-수동 버전 관리와 배포는 오류가 발생하기 쉽고 재현성이 떨어집니다. Git 태그 기반 자동 버전 관리와 GitHub Actions CI/CD 파이프라인을 조합하면, 코드 품질 검증부터 패키지 배포까지의 전 과정을 자동화할 수 있습니다.
-
-### 이 문서에서 배우는 내용
-
-이 문서를 통해 다음을 학습합니다:
-
-1. **Build/Publish 워크플로우 구성** - Push/PR 시 CI, 태그 푸시 시 Release 자동화
-2. **NuGet 패키지 설정** - `Directory.Build.props` 공통 메타데이터와 SourceLink/심볼 패키지
-3. **MinVer 기반 자동 버전 관리** - Git 태그에서 SemVer 버전 자동 계산
-4. **버전 진행 시나리오** - Alpha → Beta → RC → Stable 릴리스 흐름
-5. **Conventional Commits 기반 버전 제안** - 커밋 타입으로 다음 버전 자동 결정
-
-### 사전 지식
-
-이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
-
-- [솔루션 구성 가이드](./02-solution-configuration) - `Directory.Build.props`, `Directory.Packages.props` 구조
-- GitHub Actions 워크플로우의 기본 개념 (trigger, jobs, steps)
-- Semantic Versioning (SemVer 2.0) 규칙
 
 ---
 

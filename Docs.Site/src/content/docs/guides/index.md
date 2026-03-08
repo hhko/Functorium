@@ -2,7 +2,27 @@
 title: "Functorium 가이드"
 ---
 
-DDD 전술적 설계와 함수형 프로그래밍을 결합한 Functorium 프레임워크의 아키텍처, 구현 패턴, 관측성까지 — 프로젝트에 필요한 모든 가이드를 제공합니다.
+비즈니스 로직과 기술 코드가 뒤섞여 변경이 어렵고, 테스트하기 힘든 경험을 해본 적이 있나요? Functorium은 DDD 전술적 설계와 함수형 프로그래밍을 결합하여 관심사를 명확히 분리하고, 프로젝트에 필요한 아키텍처·구현 패턴·관측성까지 모든 가이드를 제공합니다.
+
+## 들어가며
+
+개발 현장에서 이런 고민을 마주한 적이 있을 것입니다.
+
+- **비즈니스 규칙이 인프라 코드 사이에 흩어져** 변경할 때마다 어디를 수정해야 할지 파악하기 어렵지 않았나요?
+- **도메인 로직을 단위 테스트하려면** 데이터베이스나 외부 서비스를 함께 준비해야 하는 부담을 느낀 적이 없나요?
+- **프로젝트가 커질수록 레이어 간 의존성이 꼬여** 한 곳을 고치면 다른 곳이 깨지는 악순환을 경험하지 않았나요?
+
+Functorium은 이러한 문제를 **DDD 전술적 설계 패턴으로 관심사를 분리하고, 함수형 프로그래밍으로 부수효과를 통제하여** 해결합니다.
+
+### 이 가이드에서 다루는 내용
+
+1. **내부 아키텍처 설계 원칙** — 관심사 분리, 레이어 구조, 의존성 방향의 근거
+2. **DDD 전술적 설계 빌딩블록** — Value Object, Entity, Aggregate, Domain Event, Specification
+3. **Application/Adapter 계층 구현** — Use Case, Port, Adapter, Pipeline, DI
+4. **테스트 전략** — 단위 테스트, 통합 테스트, 테스트 라이브러리
+5. **관측성(Observability)** — 로깅, 메트릭, 트레이싱 사양과 구현
+
+> **Functorium 가이드는** WHY → WHAT → HOW 순서로 구성되어, 각 개념이 왜 필요한지 이해한 후 구현으로 나아갈 수 있도록 안내합니다.
 
 ## DDD 전술적 설계와 Functorium
 
@@ -14,6 +34,7 @@ Functorium은 DDD 전술적 설계 패턴과 함수형 프로그래밍을 결합
 [00] 00-writing-guide.md ─── 문서 작성 가이드
 
 Architecture
+├── [00] 00-architecture-design-principles.md ─── 내부 아키텍처 설계 원칙
 ├── [01] 01-project-structure.md ─── 프로젝트 구조
 ├── [02] 02-solution-configuration.md ─── 솔루션 구성
 ├── [02b] 02b-ci-cd-and-versioning.md ─── CI/CD 워크플로우 및 버전 관리
@@ -74,6 +95,7 @@ Architecture
 | 하고 싶은 작업 | 참조 문서 |
 |---------------|----------|
 | **프로젝트 구성/폴더 구조** | [01-project-structure.md](./architecture/01-project-structure) |
+| **아키텍처 설계 원칙 이해하기** | [00-architecture-design-principles.md](./architecture/00-architecture-design-principles) |
 | **솔루션 구성 파일/빌드 스크립트** | [02-solution-configuration.md](./architecture/02-solution-configuration) |
 | **도구 사용법 (커버리지/스냅샷/ER 다이어그램)** | [03-dotnet-tools.md](./architecture/03-dotnet-tools) |
 | **값 객체 만들기** | [05a-value-objects.md](./domain/05a-value-objects) |
@@ -161,6 +183,7 @@ Architecture
 
 | 문서 | 설명 |
 |------|------|
+| [00-architecture-design-principles.md](./architecture/00-architecture-design-principles) | 내부 아키텍처 설계 원칙 (관심사 분리, 레이어 구조, 의존성 방향) |
 | [01-project-structure.md](./architecture/01-project-structure) | 서비스 프로젝트 구성 (폴더, 네이밍, 의존성) |
 | [02-solution-configuration.md](./architecture/02-solution-configuration) | 솔루션 루트 구성 파일 및 빌드 스크립트 |
 | [02b-ci-cd-and-versioning.md](./architecture/02b-ci-cd-and-versioning) | CI/CD 워크플로우 및 버전 관리 (GitHub Actions, NuGet 패키지, MinVer, 버전 제안 커맨드) |

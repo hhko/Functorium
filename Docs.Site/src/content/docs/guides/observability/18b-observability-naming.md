@@ -2,6 +2,26 @@
 title: "Observability 네이밍 가이드"
 ---
 
+이 문서는 Functorium 프로젝트의 Observability 관련 코드 작성 시 따라야 할 명명 규칙을 정의합니다.
+
+## 들어가며
+
+- "관측 가능성 코드의 네이밍이 일관되지 않으면 검색과 필터링이 어려워지는데, Signal과 Component를 어떻게 구분하는가?"
+- "Logger 메서드 이름을 팀 전체가 동일한 패턴으로 작성하려면 어떤 규칙이 필요한가?"
+- "Configurator, Pipeline, Options 등 클래스 유형마다 네이밍 패턴이 다른 이유는 무엇인가?"
+
+OpenTelemetry 표준 용어를 기반으로 하되 .NET 생태계와 실용성을 고려한 네이밍 규칙을 수립하면, 코드베이스의 가독성과 검색 효율성을 동시에 확보할 수 있습니다.
+
+### 이 문서에서 배우는 내용
+
+이 문서를 통해 다음을 학습합니다:
+
+1. **코드 네이밍 규칙** - Signal 접두사와 Component 접미사의 역할 구분
+2. **Logger 메서드 네이밍** - `Log{Context}{Phase}{Status}` 패턴과 적용 예시
+3. **일관된 계측 식별자** - Configurator, Pipeline, Options, Extensions 등 클래스 유형별 명명 패턴
+
+> **핵심 원칙:** Signal 이름(`Logging`, `Tracing`, `Metrics`)은 설정/활동 대상에 접두사로, Component 유형(`Logger`, `Span`, `Metric`)은 구체적 객체에 접미사로 사용합니다. 내부 일관성이 외부 표준 준수보다 우선합니다.
+
 ## 요약
 
 ### 주요 명령
