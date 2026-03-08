@@ -206,7 +206,9 @@ public class DomainErrorTests
         { new DomainErrorType.AlreadyExists(), "AlreadyExists" },
         { new DomainErrorType.Duplicate(), "Duplicate" },
         { new DomainErrorType.Mismatch(), "Mismatch" },
-        { new CustomError(), "CustomError" }
+        { new CustomError(), "CustomError" },
+        { new DomainErrorType.InvalidTransition(), "InvalidTransition" },
+        { new DomainErrorType.InvalidTransition(FromState: "Paid", ToState: "Active"), "InvalidTransition" }
     };
 
     #endregion
@@ -302,6 +304,28 @@ public class DomainErrorTests
 
         // Assert
         errorType.ErrorName.ShouldBe("MyCustomError");
+    }
+
+    [Fact]
+    public void DomainErrorType_InvalidTransition_ContainsStateContext()
+    {
+        // Arrange
+        var errorType = new DomainErrorType.InvalidTransition(FromState: "Paid", ToState: "Active");
+
+        // Assert
+        errorType.FromState.ShouldBe("Paid");
+        errorType.ToState.ShouldBe("Active");
+    }
+
+    [Fact]
+    public void DomainErrorType_InvalidTransition_DefaultsToNull()
+    {
+        // Arrange
+        var errorType = new DomainErrorType.InvalidTransition();
+
+        // Assert
+        errorType.FromState.ShouldBeNull();
+        errorType.ToState.ShouldBeNull();
     }
 
     #endregion
