@@ -263,6 +263,43 @@ export default defineConfig({
                 ],
               },
               {
+                label: '타입으로 도메인 설계하기',
+                collapsed: true,
+                items: [
+                  { slug: 'tutorials/designing-with-types' },
+                  { label: '소개', autogenerate: { directory: 'tutorials/designing-with-types/Part0-Introduction' } },
+                  {
+                    label: '시맨틱 타입',
+                    items: [
+                      { slug: 'tutorials/designing-with-types/part1-semantic-types/01-naive-contact' },
+                      { slug: 'tutorials/designing-with-types/part1-semantic-types/02-wrapped-primitives' },
+                      { slug: 'tutorials/designing-with-types/part1-semantic-types/03-constrained-types' },
+                      { slug: 'tutorials/designing-with-types/part1-semantic-types/04-composite-types' },
+                    ],
+                  },
+                  {
+                    label: '불가능한 상태 표현 불가',
+                    items: [
+                      { slug: 'tutorials/designing-with-types/part2-making-illegal-states-unrepresentable/01-boolean-blindness' },
+                      { slug: 'tutorials/designing-with-types/part2-making-illegal-states-unrepresentable/02-union-types' },
+                      { slug: 'tutorials/designing-with-types/part2-making-illegal-states-unrepresentable/03-domain-discovery' },
+                      { slug: 'tutorials/designing-with-types/part2-making-illegal-states-unrepresentable/04-verified-contact' },
+                    ],
+                  },
+                  {
+                    label: '상태 기계',
+                    items: [
+                      { slug: 'tutorials/designing-with-types/part3-state-machines/01-state-as-enum' },
+                      { slug: 'tutorials/designing-with-types/part3-state-machines/02-state-as-union' },
+                      { slug: 'tutorials/designing-with-types/part3-state-machines/03-state-transitions' },
+                      { slug: 'tutorials/designing-with-types/part3-state-machines/04-shopping-cart-lifecycle' },
+                    ],
+                  },
+                  { label: '결론', autogenerate: { directory: 'tutorials/designing-with-types/Part4-Conclusion' } },
+                  { label: '부록', collapsed: true, autogenerate: { directory: 'tutorials/designing-with-types/Appendix' } },
+                ],
+              },
+              {
                 label: '소스 생성기 관측 가능성',
                 collapsed: true,
                 items: [
