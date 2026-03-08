@@ -732,4 +732,4 @@ dotnet nuget push ./packages/MyCompany.SourceGenerator.1.0.0.nupkg \
 
 Part 4 Cookbook의 모든 내용을 다루었습니다. 개발 워크플로우부터 세 가지 실전 생성기, 그리고 재사용 가능한 템플릿까지 소스 생성기를 독립적으로 만들기 위한 도구가 갖추어졌습니다. 다음 장에서는 이 튜토리얼 전체를 돌아보며 핵심 내용을 정리합니다.
 
-→ [11장: 결론으로 돌아가기](../../Part5-Conclusion/01-summary.md)
+→ [Part 5의 1장: 정리](../../Part5-Conclusion/01-summary.md)

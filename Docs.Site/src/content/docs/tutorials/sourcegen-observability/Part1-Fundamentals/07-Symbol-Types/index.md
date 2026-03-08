@@ -411,4 +411,4 @@ type.ToDisplayString(format)
 
 Roslyn의 세 가지 핵심 계층 - Syntax Tree, Semantic Model, Symbol - 을 모두 학습했습니다. 다음 장에서는 이 세 계층을 조합하여 실제 소스 생성기를 구현하는 `IIncrementalGenerator` 패턴을 학습합니다.
 
-→ [04장. IIncrementalGenerator 패턴](../04-incremental-generator-pattern/)
+→ [Part 2의 1장. IIncrementalGenerator 인터페이스](../../Part2-Core-Concepts/01-IIncrementalGenerator/)

@@ -540,6 +540,6 @@ public Task Should_Generate_PipelineClass_WithDeepNamespace()
 
 ## 다음 단계
 
-Part 3에서 다룬 고급 주제들(생성자, 제네릭, 컬렉션, LoggerMessage 제한, 테스트)을 모두 학습했습니다. 다음 장에서는 지금까지의 학습 내용을 요약합니다.
+Part 3에서 다룬 고급 주제들(생성자, 제네릭, 컬렉션, LoggerMessage 제한, 테스트)을 모두 학습했습니다. 다음 Part에서는 다양한 실용적 예제를 통해 Source Generator 개발 절차를 학습합니다.
 
-→ [09장. 결론](../09-conclusion/)
+→ [Part 4. 개발 절차서](../../Part4-Cookbook/01-Development-Workflow/)

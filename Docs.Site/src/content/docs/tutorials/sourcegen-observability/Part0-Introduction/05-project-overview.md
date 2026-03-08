@@ -548,4 +548,4 @@ Chapter 08: 테스트 전략
 
 프로젝트의 전체 그림을 파악했으니, 이제 실제로 소스 생성기를 개발하기 위한 환경을 설정할 차례입니다.
 
-→ [02장. 사전 준비](../02-prerequisites/)
+→ [Part 1의 1장. 개발 환경](../../Part1-Fundamentals/01-development-environment.md)

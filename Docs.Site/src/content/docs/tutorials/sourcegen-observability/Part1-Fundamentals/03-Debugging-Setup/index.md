@@ -433,4 +433,4 @@ dotnet build
 
 디버깅 환경까지 갖추었으니, 이제 소스 생성기가 활용하는 Roslyn 컴파일러 플랫폼의 아키텍처를 이해할 차례입니다. Syntax Tree, Semantic Model, Symbol이 각각 무엇이고 어떻게 연결되는지 살펴봅니다.
 
-→ [03장. Roslyn 기초](../03-roslyn-fundamentals/)
+→ [4장. Roslyn 아키텍처](../04-Roslyn-Architecture/)
