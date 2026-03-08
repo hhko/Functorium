@@ -15,8 +15,8 @@ flowchart TB
   Validation --> Logging["Logging Pipeline<br/>요청/응답 로깅"]
   Logging --> Tracing["Tracing Pipeline<br/>분산 추적"]
   Tracing --> Metrics["Metrics Pipeline<br/>메트릭 수집"]
-  Metrics --> Caching["Caching Pipeline<br/>캐싱 (Query만)"]
-  Caching --> Transaction["Transaction Pipeline<br/>트랜잭션 (Command만)"]
+  Metrics --> Caching["Caching Pipeline<br/>캐싱 (Query만, where IQuery)"]
+  Caching --> Transaction["Transaction Pipeline<br/>트랜잭션 (Command만, where ICommand)"]
   Transaction --> Handler["Handler<br/>비즈니스 로직"]
   Handler --> Response
 ```

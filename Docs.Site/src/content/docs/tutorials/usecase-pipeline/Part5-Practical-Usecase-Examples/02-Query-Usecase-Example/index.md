@@ -26,9 +26,9 @@ GetProductQuery (최상위 클래스)
 public interface IQueryRequest<TSuccess> : IQuery<FinResponse<TSuccess>> { }
 ```
 
-Command와 Query를 인터페이스로 구분하면, Pipeline이 **타입 수준에서** 동작을 분기할 수 있습니다:
-- `ICommandRequest` → Transaction Pipeline 적용
-- `IQueryRequest` → Transaction Pipeline 미적용, Caching Pipeline 적용 가능
+Command와 Query를 인터페이스로 구분하면, Pipeline의 `where` 제약 조건을 통해 **컴파일 타임에** 적용 대상이 결정됩니다:
+- `ICommandRequest` → `ICommand<TResponse>`를 상속 → Transaction Pipeline(`where TRequest : ICommand<TResponse>`) 적용
+- `IQueryRequest` → `IQuery<TResponse>`를 상속 → Caching Pipeline(`where TRequest : IQuery<TResponse>`) 적용 가능
 
 ### 2. Command vs Query 차이점
 
@@ -101,7 +101,7 @@ public sealed class Handler
 **A**: 이 예제에서는 간결성을 위해 Validator를 생략했습니다. 실제 프로젝트에서는 Query에도 Validator를 추가할 수 있습니다. 예를 들어 `ProductId`가 빈 문자열인지 검사하는 것은 유효한 검증입니다. Validator 추가 여부는 비즈니스 요구사항에 따라 결정합니다.
 
 ### Q2: `IQueryRequest`와 `ICommandRequest`를 분리하면 Pipeline에서 어떤 이점이 있나요?
-**A**: Pipeline이 **타입 수준에서** 요청의 성격을 파악할 수 있습니다. Transaction Pipeline은 `request is ICommandRequest`일 때만 트랜잭션을 시작하고, Caching Pipeline은 `request is ICacheable`일 때만 캐싱합니다. 문자열 비교나 설정 파일 없이 **인터페이스만으로** 분기 로직이 결정됩니다.
+**A**: Pipeline의 `where` 제약 조건을 통해 **컴파일 타임에** 적용 대상이 결정됩니다. Transaction Pipeline은 `where TRequest : ICommand<TResponse>` 제약으로 Command에만, Caching Pipeline은 `where TRequest : IQuery<TResponse>` 제약으로 Query에만 등록됩니다. Mediator 소스 제너레이터가 이 제약을 확인하여 해당 타입에만 Pipeline을 적용하므로, 런타임 타입 검사 없이 **인터페이스 제약만으로** 분기가 결정됩니다.
 
 ### Q3: `ICacheable`의 `Duration`이 `null`이면 어떻게 되나요?
 **A**: `Duration`이 `null`이면 Caching Pipeline이 **기본 캐시 만료 시간**을 적용합니다. 이를 통해 대부분의 Query에는 기본값을 사용하고, 특정 Query에만 커스텀 만료 시간을 설정할 수 있습니다.

@@ -38,22 +38,23 @@ Exception ← Validation ← Logging ← Tracing ← Metrics ← Transaction ←
 
 Part 4에서 개별적으로 학습한 제약 조건을 한눈에 정리하면 다음과 같습니다.
 
-| Pipeline | 제약 조건 | 필요 능력 |
-|----------|-----------|-----------|
-| Exception | `IFinResponseFactory<TResponse>` | CreateFail |
-| Validation | `IFinResponseFactory<TResponse>` | CreateFail |
-| Logging | `IFinResponse, IFinResponseFactory<TResponse>` | Read + Create |
-| Tracing | `IFinResponse, IFinResponseFactory<TResponse>` | Read + Create |
-| Metrics | `IFinResponse, IFinResponseFactory<TResponse>` | Read + Create |
-| Transaction | `IFinResponse, IFinResponseFactory<TResponse>` | Read + Create |
-| Caching | `IFinResponse, IFinResponseFactory<TResponse>` | Read + Create |
+| Pipeline | 제약 조건 | 요청 제약 | 필요 능력 |
+|----------|-----------|-----------|-----------|
+| Exception | `IFinResponseFactory<TResponse>` | `IMessage` | CreateFail |
+| Validation | `IFinResponseFactory<TResponse>` | `IMessage` | CreateFail |
+| Logging | `IFinResponse, IFinResponseFactory<TResponse>` | `IMessage` | Read + Create |
+| Tracing | `IFinResponse, IFinResponseFactory<TResponse>` | `IMessage` | Read + Create |
+| Metrics | `IFinResponse, IFinResponseFactory<TResponse>` | `IMessage` | Read + Create |
+| Transaction | `IFinResponse, IFinResponseFactory<TResponse>` | `ICommand<TResponse>` | Read + Create |
+| Caching | `IFinResponse, IFinResponseFactory<TResponse>` | `IQuery<TResponse>` | Read + Create |
 
 ### 3. Command vs Query 분기
 
-Transaction Pipeline은 `ICommandRequest`인 경우에만 활성화됩니다. Query 요청은 Transaction을 건너뜁니다.
+실제 Functorium에서는 `where TRequest : ICommand<TResponse>` / `where TRequest : IQuery<TResponse>` 제약 조건으로 Transaction은 Command에만, Caching은 Query에만 **컴파일 타임에** 적용됩니다. 이 교육용 코드에서는 학습 목적으로 `isCommand` 불리언으로 분기를 시뮬레이션합니다:
 
 ```csharp
-// Transaction Pipeline (Command only)
+// 교육용 코드: isCommand 불리언으로 분기 시뮬레이션
+// 실제 Functorium: where TRequest : ICommand<TResponse> 제약으로 컴파일 타임 필터링
 if (isCommand)
     ExecutionLog.Add("Transaction: BEGIN");
 
