@@ -7,13 +7,16 @@ using Microsoft.Extensions.Caching.Memory;
 namespace Functorium.Adapters.Observabilities.Pipelines;
 
 /// <summary>
-/// ICacheable 요청에 대한 캐싱 Pipeline.
+/// ICacheable을 구현한 Query 요청에 대한 캐싱 Pipeline.
 /// Validation 후, Transaction 전 위치에서 실행됩니다.
 /// 캐시 히트 시 DB 라운드트립 없이 즉시 반환합니다.
 /// </summary>
+/// <remarks>
+/// <para>where TRequest : IQuery&lt;TResponse&gt; 제약 조건으로 Query에만 적용됩니다.</para>
+/// </remarks>
 internal sealed class UsecaseCachingPipeline<TRequest, TResponse>
     : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IMessage
+    where TRequest : IQuery<TResponse>
     where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 {
     private readonly IMemoryCache _cache;

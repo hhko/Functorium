@@ -1,4 +1,3 @@
-using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Applications.Usecases;
 using Functorium.Applications.Events;
 using Functorium.Applications.Persistence;
@@ -11,9 +10,9 @@ namespace Functorium.Adapters.Observabilities.Pipelines;
 
 /// <summary>
 /// Command Usecase에 대해 명시적 트랜잭션 + UoW.SaveChanges + 도메인 이벤트 발행을 자동으로 처리하는 Pipeline.
-/// Query는 바이패스합니다.
 /// </summary>
 /// <remarks>
+/// <para>where TRequest : ICommand&lt;TResponse&gt; 제약 조건으로 Command에만 적용됩니다.</para>
 /// 실행 순서:
 /// 1. 명시적 트랜잭션 시작 (ExecuteDeleteAsync/ExecuteUpdateAsync도 이 트랜잭션에 참여)
 /// 2. Handler 실행 (next)
@@ -26,7 +25,7 @@ namespace Functorium.Adapters.Observabilities.Pipelines;
 internal sealed class UsecaseTransactionPipeline<TRequest, TResponse>
     : UsecasePipelineBase<TRequest>
     , IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IMessage
+    where TRequest : ICommand<TResponse>
     where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -46,10 +45,6 @@ internal sealed class UsecaseTransactionPipeline<TRequest, TResponse>
     public async ValueTask<TResponse> Handle(
         TRequest request, MessageHandlerDelegate<TRequest, TResponse> next, CancellationToken cancellationToken)
     {
-        // Query → 바이패스
-        if (GetRequestCategoryType(request) != ObservabilityNaming.CategoryTypes.Command)
-            return await next(request, cancellationToken);
-
         string handler = GetRequestHandler();
 
         // 명시적 트랜잭션 시작 → ExecuteDeleteAsync/ExecuteUpdateAsync도 이 트랜잭션에 참여

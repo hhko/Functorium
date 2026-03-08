@@ -110,7 +110,7 @@ public class PipelineConfigurator
     /// <summary>
     /// Transaction Pipeline을 활성화합니다.
     /// Command Usecase에 대해 UoW.SaveChanges + 도메인 이벤트 발행을 자동 처리합니다.
-    /// Query는 바이패스됩니다.
+    /// Command에만 적용됩니다 (where 제약 조건).
     /// </summary>
     /// <remarks>
     /// IUnitOfWork, IDomainEventPublisher, IDomainEventCollector가 DI에 등록되어 있어야 합니다.

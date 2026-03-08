@@ -1,6 +1,7 @@
 using Functorium.Adapters.Observabilities.Pipelines;
 using Functorium.Applications.Events;
 using Functorium.Applications.Persistence;
+using Functorium.Applications.Usecases;
 using Functorium.Domains.Events;
 using Functorium.Testing.Arrangements.Effects;
 using Mediator;
@@ -19,10 +20,10 @@ public sealed class UsecaseTransactionPipelineTests
 {
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly IDomainEventPublisher _eventPublisher = Substitute.For<IDomainEventPublisher>();
-    private readonly ILogger<UsecaseTransactionPipeline<TestCommandRequest, TestResponse>> _logger =
-        NullLogger<UsecaseTransactionPipeline<TestCommandRequest, TestResponse>>.Instance;
+    private readonly ILogger<UsecaseTransactionPipeline<TestCommandRequest, FinResponse<TestSuccessResponse>>> _logger =
+        NullLogger<UsecaseTransactionPipeline<TestCommandRequest, FinResponse<TestSuccessResponse>>>.Instance;
 
-    private UsecaseTransactionPipeline<TestCommandRequest, TestResponse> CreateCommandPipeline()
+    private UsecaseTransactionPipeline<TestCommandRequest, FinResponse<TestSuccessResponse>> CreateCommandPipeline()
         => new(_unitOfWork, _eventPublisher, _logger);
 
     [Fact]
@@ -31,14 +32,14 @@ public sealed class UsecaseTransactionPipelineTests
         // Arrange
         var pipeline = CreateCommandPipeline();
         var request = new TestCommandRequest("Test");
-        var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
+        var expectedResponse = FinResponse.Succ(new TestSuccessResponse(Guid.NewGuid(), "Test"));
 
         _unitOfWork.SaveChanges(Arg.Any<CancellationToken>())
             .Returns(FinTFactory.Succ(unit));
         _eventPublisher.PublishTrackedEvents(Arg.Any<CancellationToken>())
             .Returns(FinTFactory.Succ(new Seq<PublishResult>()));
 
-        MessageHandlerDelegate<TestCommandRequest, TestResponse> next =
+        MessageHandlerDelegate<TestCommandRequest, FinResponse<TestSuccessResponse>> next =
             (_, _) => ValueTask.FromResult(expectedResponse);
 
         // Act
@@ -55,9 +56,9 @@ public sealed class UsecaseTransactionPipelineTests
         // Arrange
         var pipeline = CreateCommandPipeline();
         var request = new TestCommandRequest("Test");
-        var failResponse = TestResponse.CreateFail(Error.New("Handler failed"));
+        var failResponse = FinResponse.Fail<TestSuccessResponse>(Error.New("Handler failed"));
 
-        MessageHandlerDelegate<TestCommandRequest, TestResponse> next =
+        MessageHandlerDelegate<TestCommandRequest, FinResponse<TestSuccessResponse>> next =
             (_, _) => ValueTask.FromResult(failResponse);
 
         // Act
@@ -74,13 +75,13 @@ public sealed class UsecaseTransactionPipelineTests
         // Arrange
         var pipeline = CreateCommandPipeline();
         var request = new TestCommandRequest("Test");
-        var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
+        var expectedResponse = FinResponse.Succ(new TestSuccessResponse(Guid.NewGuid(), "Test"));
         var saveError = Error.New("SaveChanges failed");
 
         _unitOfWork.SaveChanges(Arg.Any<CancellationToken>())
             .Returns(FinTFactory.Fail<LanguageExt.Unit>(saveError));
 
-        MessageHandlerDelegate<TestCommandRequest, TestResponse> next =
+        MessageHandlerDelegate<TestCommandRequest, FinResponse<TestSuccessResponse>> next =
             (_, _) => ValueTask.FromResult(expectedResponse);
 
         // Act
@@ -96,14 +97,14 @@ public sealed class UsecaseTransactionPipelineTests
         // Arrange
         var pipeline = CreateCommandPipeline();
         var request = new TestCommandRequest("Test");
-        var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
+        var expectedResponse = FinResponse.Succ(new TestSuccessResponse(Guid.NewGuid(), "Test"));
 
         _unitOfWork.SaveChanges(Arg.Any<CancellationToken>())
             .Returns(FinTFactory.Succ(unit));
         _eventPublisher.PublishTrackedEvents(Arg.Any<CancellationToken>())
             .Returns(FinTFactory.Succ(new Seq<PublishResult>()));
 
-        MessageHandlerDelegate<TestCommandRequest, TestResponse> next =
+        MessageHandlerDelegate<TestCommandRequest, FinResponse<TestSuccessResponse>> next =
             (_, _) => ValueTask.FromResult(expectedResponse);
 
         // Act
@@ -120,14 +121,14 @@ public sealed class UsecaseTransactionPipelineTests
         // Arrange — 이벤트 발행 실패 시에도 데이터는 이미 커밋됨, 성공 응답 유지
         var pipeline = CreateCommandPipeline();
         var request = new TestCommandRequest("Test");
-        var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
+        var expectedResponse = FinResponse.Succ(new TestSuccessResponse(Guid.NewGuid(), "Test"));
 
         _unitOfWork.SaveChanges(Arg.Any<CancellationToken>())
             .Returns(FinTFactory.Succ(unit));
         _eventPublisher.PublishTrackedEvents(Arg.Any<CancellationToken>())
             .Returns(FinTFactory.Fail<Seq<PublishResult>>(Error.New("Publish failed")));
 
-        MessageHandlerDelegate<TestCommandRequest, TestResponse> next =
+        MessageHandlerDelegate<TestCommandRequest, FinResponse<TestSuccessResponse>> next =
             (_, _) => ValueTask.FromResult(expectedResponse);
 
         // Act
@@ -138,40 +139,19 @@ public sealed class UsecaseTransactionPipelineTests
     }
 
     [Fact]
-    public async Task Handle_Query_ShouldBypass_WithoutCallingSaveChanges()
-    {
-        // Arrange
-        var queryPipeline = new UsecaseTransactionPipeline<TestQueryRequest, TestResponse>(
-            _unitOfWork, _eventPublisher,
-            NullLogger<UsecaseTransactionPipeline<TestQueryRequest, TestResponse>>.Instance);
-        var request = new TestQueryRequest(Guid.NewGuid());
-        var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
-
-        MessageHandlerDelegate<TestQueryRequest, TestResponse> next =
-            (_, _) => ValueTask.FromResult(expectedResponse);
-
-        // Act
-        var result = await queryPipeline.Handle(request, next, CancellationToken.None);
-
-        // Assert
-        result.IsSucc.ShouldBeTrue();
-        _unitOfWork.DidNotReceive().SaveChanges(Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
     public async Task Handle_Command_ShouldSucceed_WhenNoEventsToPublish()
     {
         // Arrange — 추적된 Aggregate 없이 SaveChanges만 성공하는 경우
         var pipeline = CreateCommandPipeline();
         var request = new TestCommandRequest("Test");
-        var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
+        var expectedResponse = FinResponse.Succ(new TestSuccessResponse(Guid.NewGuid(), "Test"));
 
         _unitOfWork.SaveChanges(Arg.Any<CancellationToken>())
             .Returns(FinTFactory.Succ(unit));
         _eventPublisher.PublishTrackedEvents(Arg.Any<CancellationToken>())
             .Returns(FinTFactory.Succ(new Seq<PublishResult>()));
 
-        MessageHandlerDelegate<TestCommandRequest, TestResponse> next =
+        MessageHandlerDelegate<TestCommandRequest, FinResponse<TestSuccessResponse>> next =
             (_, _) => ValueTask.FromResult(expectedResponse);
 
         // Act

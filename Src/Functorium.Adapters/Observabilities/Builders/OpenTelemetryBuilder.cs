@@ -30,6 +30,14 @@ public partial class OpenTelemetryBuilder
     private const int AspireDashboardOtlpPort = 18889;
     private const int AspireDashboardOtlpSecondaryPort = 18890;
 
+    // Command 전용 파이프라인 (where TRequest : ICommand<TResponse> 제약)
+    // → Query 파이프라인 목록에서 제외됨
+    private static readonly string[] CommandOnlyPipelines = ["Transaction"];
+
+    // Query 전용 파이프라인 (where TRequest : IQuery<TResponse> 제약)
+    // → Command 파이프라인 목록에서 제외됨
+    private static readonly string[] QueryOnlyPipelines = ["Caching"];
+
     private readonly IServiceCollection _services;
     private readonly IConfiguration _configuration;
     private readonly Assembly _projectAssembly;
@@ -519,12 +527,14 @@ public partial class OpenTelemetryBuilder
     {
         var allPipelineNames = configurator.GetRegisteredPipelineNames();
 
-        // Command 파이프라인 = 전체 등록된 파이프라인 이름 그대로
-        var commandPipelineNames = allPipelineNames;
+        // Command 파이프라인 = Query 전용 파이프라인 제외
+        var commandPipelineNames = allPipelineNames
+            .Where(name => !QueryOnlyPipelines.Contains(name))
+            .ToList();
 
-        // Query 파이프라인 = Transaction 제외
+        // Query 파이프라인 = Command 전용 파이프라인 제외
         var queryPipelineNames = allPipelineNames
-            .Where(name => name != "Transaction")
+            .Where(name => !CommandOnlyPipelines.Contains(name))
             .ToList();
 
         _services.AddSingleton<IStartupOptionsLogger>(
