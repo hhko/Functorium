@@ -158,7 +158,7 @@ Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/
 
 ### 초급자 (패턴 입문)
 1. Eric Evans DDD 책의 Repository 챕터
-2. 본 튜토리얼 Part 1 (1~4장)
+2. 본 튜토리얼 Part 1
 3. Functorium Repository/Entity 소스 코드 읽기
 
 ### 중급자 (실전 적용)

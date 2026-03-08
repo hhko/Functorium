@@ -18,8 +18,8 @@ title: "CQRS 리포지토리 패턴"
 
 | 수준 | 대상 | 권장 학습 범위 |
 |------|------|----------------|
-| **초급** | C# 기본 문법을 알고 CQRS 패턴에 입문하려는 개발자 | Part 1 (1장~4장) |
-| **중급** | 패턴을 이해하고 실전 적용을 원하는 개발자 | Part 1~3 (1장~13장) |
+| **초급** | C# 기본 문법을 알고 CQRS 패턴에 입문하려는 개발자 | Part 1 |
+| **중급** | 패턴을 이해하고 실전 적용을 원하는 개발자 | Part 1~3 |
 | **고급** | 아키텍처 설계와 도메인 모델링에 관심 있는 개발자 | Part 4~5 + 부록 |
 
 ### 학습 목표
@@ -59,10 +59,10 @@ CQRS가 왜 필요한지, 어떤 문제를 해결하는지부터 시작합니다
 
 | 장 | 주제 | 핵심 학습 내용 |
 |:---:|------|----------------|
-| 5 | [Repository 인터페이스](Part2-Command-Repository/01-Repository-Interface/) | IRepository\<TAggregate, TId\>, 8개 CRUD, FinT\<IO, T\> |
-| 6 | [InMemory Repository](Part2-Command-Repository/02-InMemory-Repository/) | InMemoryRepositoryBase, ConcurrentDictionary |
-| 7 | [EF Core Repository](Part2-Command-Repository/03-EfCore-Repository/) | EfCoreRepositoryBase, ToDomain/ToModel |
-| 8 | [Unit of Work](Part2-Command-Repository/04-Unit-Of-Work/) | IUnitOfWork, SaveChanges, IUnitOfWorkTransaction |
+| 1 | [Repository 인터페이스](Part2-Command-Repository/01-Repository-Interface/) | IRepository\<TAggregate, TId\>, 8개 CRUD, FinT\<IO, T\> |
+| 2 | [InMemory Repository](Part2-Command-Repository/02-InMemory-Repository/) | InMemoryRepositoryBase, ConcurrentDictionary |
+| 3 | [EF Core Repository](Part2-Command-Repository/03-EfCore-Repository/) | EfCoreRepositoryBase, ToDomain/ToModel |
+| 4 | [Unit of Work](Part2-Command-Repository/04-Unit-Of-Work/) | IUnitOfWork, SaveChanges, IUnitOfWorkTransaction |
 
 ### Part 3: Query 측 -- 읽기 전용 패턴
 
@@ -70,11 +70,11 @@ CQRS가 왜 필요한지, 어떤 문제를 해결하는지부터 시작합니다
 
 | 장 | 주제 | 핵심 학습 내용 |
 |:---:|------|----------------|
-| 9 | [IQueryPort 인터페이스](Part3-Query-Patterns/01-QueryPort-Interface/) | IQueryPort\<TEntity, TDto\>, Search/SearchByCursor/Stream |
-| 10 | [DTO 분리](Part3-Query-Patterns/02-DTO-Separation/) | Command DTO vs Query DTO, 프로젝션 |
-| 11 | [페이지네이션과 정렬](Part3-Query-Patterns/03-Pagination-And-Sorting/) | PageRequest, CursorPageRequest, SortExpression |
-| 12 | [InMemory Query 어댑터](Part3-Query-Patterns/04-InMemory-Query-Adapter/) | InMemoryQueryBase, GetProjectedItems |
-| 13 | [Dapper Query 어댑터](Part3-Query-Patterns/05-Dapper-Query-Adapter/) | DapperQueryBase, SQL 생성 |
+| 1 | [IQueryPort 인터페이스](Part3-Query-Patterns/01-QueryPort-Interface/) | IQueryPort\<TEntity, TDto\>, Search/SearchByCursor/Stream |
+| 2 | [DTO 분리](Part3-Query-Patterns/02-DTO-Separation/) | Command DTO vs Query DTO, 프로젝션 |
+| 3 | [페이지네이션과 정렬](Part3-Query-Patterns/03-Pagination-And-Sorting/) | PageRequest, CursorPageRequest, SortExpression |
+| 4 | [InMemory Query 어댑터](Part3-Query-Patterns/04-InMemory-Query-Adapter/) | InMemoryQueryBase, GetProjectedItems |
+| 5 | [Dapper Query 어댑터](Part3-Query-Patterns/05-Dapper-Query-Adapter/) | DapperQueryBase, SQL 생성 |
 
 ### Part 4: CQRS Usecase 통합
 
@@ -82,11 +82,11 @@ Repository와 Query 어댑터가 준비되었으니, 이제 이들을 Usecase로
 
 | 장 | 주제 | 핵심 학습 내용 |
 |:---:|------|----------------|
-| 14 | [Command Usecase](Part4-CQRS-Usecase-Integration/01-Command-Usecase/) | ICommandRequest, ICommandUsecase, FinResponse |
-| 15 | [Query Usecase](Part4-CQRS-Usecase-Integration/02-Query-Usecase/) | IQueryRequest, IQueryUsecase, IQueryPort 연동 |
-| 16 | [FinT -> FinResponse](Part4-CQRS-Usecase-Integration/03-FinT-To-FinResponse/) | ToFinResponse(), LINQ 모나딕 합성 |
-| 17 | [도메인 이벤트 흐름](Part4-CQRS-Usecase-Integration/04-Domain-Event-Flow/) | IDomainEventCollector, Track, 발행 |
-| 18 | [트랜잭션 파이프라인](Part4-CQRS-Usecase-Integration/05-Transaction-Pipeline/) | 트랜잭션 파이프라인, Command 자동커밋 |
+| 1 | [Command Usecase](Part4-CQRS-Usecase-Integration/01-Command-Usecase/) | ICommandRequest, ICommandUsecase, FinResponse |
+| 2 | [Query Usecase](Part4-CQRS-Usecase-Integration/02-Query-Usecase/) | IQueryRequest, IQueryUsecase, IQueryPort 연동 |
+| 3 | [FinT -> FinResponse](Part4-CQRS-Usecase-Integration/03-FinT-To-FinResponse/) | ToFinResponse(), LINQ 모나딕 합성 |
+| 4 | [도메인 이벤트 흐름](Part4-CQRS-Usecase-Integration/04-Domain-Event-Flow/) | IDomainEventCollector, Track, 발행 |
+| 5 | [트랜잭션 파이프라인](Part4-CQRS-Usecase-Integration/05-Transaction-Pipeline/) | 트랜잭션 파이프라인, Command 자동커밋 |
 
 ### Part 5: 도메인별 실전 예제
 
@@ -94,10 +94,10 @@ Repository와 Query 어댑터가 준비되었으니, 이제 이들을 Usecase로
 
 | 장 | 주제 | 핵심 학습 내용 |
 |:---:|------|----------------|
-| 19 | [주문 관리](Part5-Domain-Examples/01-Ecommerce-Order-Management/) | 주문 CQRS 완전 예제 |
-| 20 | [고객 관리](Part5-Domain-Examples/02-Customer-Management/) | 고객 관리 + Specification 검색 |
-| 21 | [재고 관리](Part5-Domain-Examples/03-Inventory-Management/) | 재고 + Soft Delete + Cursor 페이징 |
-| 22 | [카탈로그 검색](Part5-Domain-Examples/04-Catalog-Search/) | 3가지 페이지네이션 비교 |
+| 1 | [주문 관리](Part5-Domain-Examples/01-Ecommerce-Order-Management/) | 주문 CQRS 완전 예제 |
+| 2 | [고객 관리](Part5-Domain-Examples/02-Customer-Management/) | 고객 관리 + Specification 검색 |
+| 3 | [재고 관리](Part5-Domain-Examples/03-Inventory-Management/) | 재고 + Soft Delete + Cursor 페이징 |
+| 4 | [카탈로그 검색](Part5-Domain-Examples/04-Catalog-Search/) | 3가지 페이지네이션 비교 |
 
 ### [부록](Appendix/)
 
@@ -113,23 +113,24 @@ Repository와 Query 어댑터가 준비되었으니, 이제 이들을 Usecase로
 ## 핵심 진화 과정
 
 ```
-1장: Entity/Identity       ->  2장: Aggregate Root      ->  3장: 도메인 이벤트
+Part 1: 도메인 엔티티 기초
+  1장: Entity/Identity     ->  2장: Aggregate Root    ->  3장: 도메인 이벤트  ->  4장: 엔티티 인터페이스
      |
-4장: 엔티티 인터페이스     ->  5장: Repository 인터페이스 ->  6장: InMemory Repository
+Part 2: Command 측 Repository
+  1장: Repository 인터페이스 ->  2장: InMemory Repository ->  3장: EF Core Repository ->  4장: Unit of Work
      |
-7장: EF Core Repository    ->  8장: Unit of Work
+Part 3: Query 측 읽기 전용
+  1장: IQueryPort          ->  2장: DTO 분리          ->  3장: 페이지네이션/정렬
      |
-9장: IQueryPort            ->  10장: DTO 분리            ->  11장: 페이지네이션/정렬
+  4장: InMemory Query      ->  5장: Dapper Query
      |
-12장: InMemory Query       ->  13장: Dapper Query
+Part 4: CQRS Usecase 통합
+  1장: Command Usecase     ->  2장: Query Usecase     ->  3장: FinT -> FinResponse
      |
-14장: Command Usecase      ->  15장: Query Usecase       ->  16장: FinT -> FinResponse
+  4장: 도메인 이벤트 흐름  ->  5장: 트랜잭션 파이프라인
      |
-17장: 도메인 이벤트 흐름   ->  18장: 트랜잭션 파이프라인
-     |
-19장: 주문 관리            ->  20장: 고객 관리           ->  21장: 재고 관리
-     |
-22장: 카탈로그 검색
+Part 5: 도메인별 실전 예제
+  1장: 주문 관리           ->  2장: 고객 관리         ->  3장: 재고 관리  ->  4장: 카탈로그 검색
 ```
 
 ---
@@ -266,39 +267,39 @@ dotnet test
 
 | 장 | 테스트 프로젝트 | 주요 테스트 내용 |
 |:---:|----------------|-----------------|
-| 5 | `RepositoryInterface.Tests.Unit` | IRepository 8개 CRUD 검증 |
-| 6 | `InMemoryRepository.Tests.Unit` | InMemory 구현체 검증 |
-| 7 | `EfCoreRepository.Tests.Unit` | EF Core 구현체 검증 |
-| 8 | `UnitOfWork.Tests.Unit` | SaveChanges, 트랜잭션 검증 |
+| 1 | `RepositoryInterface.Tests.Unit` | IRepository 8개 CRUD 검증 |
+| 2 | `InMemoryRepository.Tests.Unit` | InMemory 구현체 검증 |
+| 3 | `EfCoreRepository.Tests.Unit` | EF Core 구현체 검증 |
+| 4 | `UnitOfWork.Tests.Unit` | SaveChanges, 트랜잭션 검증 |
 
 **Part 3: Query 측 -- 읽기 전용 패턴** (5개)
 
 | 장 | 테스트 프로젝트 | 주요 테스트 내용 |
 |:---:|----------------|-----------------|
-| 9 | `QueryPortInterface.Tests.Unit` | IQueryPort Search/Stream 검증 |
-| 10 | `DtoSeparation.Tests.Unit` | Command/Query DTO 분리 검증 |
-| 11 | `PaginationAndSorting.Tests.Unit` | 페이지네이션, 정렬 검증 |
-| 12 | `InMemoryQueryAdapter.Tests.Unit` | InMemory Query 어댑터 검증 |
-| 13 | `DapperQueryAdapter.Tests.Unit` | Dapper SQL 생성 검증 |
+| 1 | `QueryPortInterface.Tests.Unit` | IQueryPort Search/Stream 검증 |
+| 2 | `DtoSeparation.Tests.Unit` | Command/Query DTO 분리 검증 |
+| 3 | `PaginationAndSorting.Tests.Unit` | 페이지네이션, 정렬 검증 |
+| 4 | `InMemoryQueryAdapter.Tests.Unit` | InMemory Query 어댑터 검증 |
+| 5 | `DapperQueryAdapter.Tests.Unit` | Dapper SQL 생성 검증 |
 
 **Part 4: CQRS Usecase 통합** (5개)
 
 | 장 | 테스트 프로젝트 | 주요 테스트 내용 |
 |:---:|----------------|-----------------|
-| 14 | `CommandUsecase.Tests.Unit` | Command 핸들러 검증 |
-| 15 | `QueryUsecase.Tests.Unit` | Query 핸들러 검증 |
-| 16 | `FinTToFinResponse.Tests.Unit` | ToFinResponse 변환 검증 |
-| 17 | `DomainEventFlow.Tests.Unit` | 이벤트 수집/발행 검증 |
-| 18 | `TransactionPipeline.Tests.Unit` | 트랜잭션 파이프라인 검증 |
+| 1 | `CommandUsecase.Tests.Unit` | Command 핸들러 검증 |
+| 2 | `QueryUsecase.Tests.Unit` | Query 핸들러 검증 |
+| 3 | `FinTToFinResponse.Tests.Unit` | ToFinResponse 변환 검증 |
+| 4 | `DomainEventFlow.Tests.Unit` | 이벤트 수집/발행 검증 |
+| 5 | `TransactionPipeline.Tests.Unit` | 트랜잭션 파이프라인 검증 |
 
 **Part 5: 도메인별 실전 예제** (4개)
 
 | 장 | 테스트 프로젝트 | 주요 테스트 내용 |
 |:---:|----------------|-----------------|
-| 19 | `EcommerceOrderManagement.Tests.Unit` | 주문 CQRS 검증 |
-| 20 | `CustomerManagement.Tests.Unit` | 고객 관리 검증 |
-| 21 | `InventoryManagement.Tests.Unit` | 재고 관리 검증 |
-| 22 | `CatalogSearch.Tests.Unit` | 페이지네이션 비교 검증 |
+| 1 | `EcommerceOrderManagement.Tests.Unit` | 주문 CQRS 검증 |
+| 2 | `CustomerManagement.Tests.Unit` | 고객 관리 검증 |
+| 3 | `InventoryManagement.Tests.Unit` | 재고 관리 검증 |
+| 4 | `CatalogSearch.Tests.Unit` | 페이지네이션 비교 검증 |
 
 ### 테스트 명명 규칙
 
