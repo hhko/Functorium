@@ -49,8 +49,8 @@ dotnet build Functorium.All.slnx
 
 | 유형 | Part | 참조 | 설명 |
 |------|------|------|------|
-| Standalone | Part 1, 2(6~7장), 3 | LanguageExt.Core만 | 개념 학습용, 독립 실행 가능 |
-| Functorium 참조 | Part 2(5장), 4, 5 | Functorium.csproj | 실전 적용, Pipeline/Usecase 사용 |
+| Standalone | Part 1, 2(2~3장), 3 | LanguageExt.Core만 | 개념 학습용, 독립 실행 가능 |
+| Functorium 참조 | Part 2(1장), 4, 5 | Functorium.csproj | 실전 적용, Pipeline/Usecase 사용 |
 
 ### Standalone 프로젝트
 

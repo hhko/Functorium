@@ -4,7 +4,7 @@ title: "IFinResponseFactory CRTP"
 
 ## 개요
 
-**요구사항 R2**: Pipeline이 실패 응답을 직접 생성할 수 있어야 합니다. 9장과 10장에서 Pipeline이 응답을 **읽을 수** 있게 되었지만, Validation Pipeline처럼 **실패 응답을 생성**해야 하는 경우는 어떻게 할까요? 이 장에서는 **CRTP(Curiously Recurring Template Pattern)와** C# 11의 **static abstract** 메서드를 사용하여, Pipeline에서 리플렉션 없이 `TResponse.CreateFail(error)`을 호출할 수 있는 팩토리 인터페이스를 설계합니다.
+**요구사항 R2**: Pipeline이 실패 응답을 직접 생성할 수 있어야 합니다. 1장과 2장에서 Pipeline이 응답을 **읽을 수** 있게 되었지만, Validation Pipeline처럼 **실패 응답을 생성**해야 하는 경우는 어떻게 할까요? 이 장에서는 **CRTP(Curiously Recurring Template Pattern)와** C# 11의 **static abstract** 메서드를 사용하여, Pipeline에서 리플렉션 없이 `TResponse.CreateFail(error)`을 호출할 수 있는 팩토리 인터페이스를 설계합니다.
 
 ```
 IFinResponseFactory<TSelf>      ← CRTP 팩토리 (이번 장)
