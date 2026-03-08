@@ -1,2 +1,2 @@
-// Architecture Test Tutorial - Chapter 6: Return Type Validation
+// Architecture Test Tutorial - Part 2, Chapter 2: Return Type Validation
 return;

@@ -1,2 +1,2 @@
-// Architecture Test Tutorial - Chapter 5: Method Validation
+// Architecture Test Tutorial - Part 2, Chapter 1: Method Validation
 return;

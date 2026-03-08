@@ -182,4 +182,4 @@ public void Temperature_ShouldBe_SealedAndImmutable()
 
 불변성은 도메인 객체의 가장 기본적인 안전장치입니다. 다음 장에서는 한 단계 더 나아가, Command/Query 패턴에서 중첩 클래스의 존재와 구조를 검증하는 방법을 살펴봅니다.
 
-> [다음: Chapter 10 - Nested Class Validation](../02-Nested-Class-Validation/)
+> [다음: 2장 - Nested Class Validation](../02-Nested-Class-Validation/)

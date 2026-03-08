@@ -35,10 +35,10 @@ title: "실전 패턴"
 
 | 챕터 | 제목 | 주요 내용 |
 |-------|------|-----------|
-| [Chapter 13](01-Domain-Layer-Rules/) | 도메인 레이어 규칙 | Entity, Value Object, Domain Event, Domain Service |
-| [Chapter 14](02-Application-Layer-Rules/) | 애플리케이션 레이어 규칙 | Command/Query 패턴, 중첩 클래스, DTO |
-| [Chapter 15](03-Adapter-Layer-Rules/) | 어댑터 레이어 규칙 | 포트 인터페이스, 어댑터 구현체, 의존성 검증 |
-| [Chapter 16](04-Layer-Dependency-Rules/) | 레이어 의존성 규칙 | 다중 레이어 의존성, ArchUnitNET + Functorium 결합 |
+| [Chapter 1](01-Domain-Layer-Rules/) | 도메인 레이어 규칙 | Entity, Value Object, Domain Event, Domain Service |
+| [Chapter 2](02-Application-Layer-Rules/) | 애플리케이션 레이어 규칙 | Command/Query 패턴, 중첩 클래스, DTO |
+| [Chapter 3](03-Adapter-Layer-Rules/) | 어댑터 레이어 규칙 | 포트 인터페이스, 어댑터 구현체, 의존성 검증 |
+| [Chapter 4](04-Layer-Dependency-Rules/) | 레이어 의존성 규칙 | 다중 레이어 의존성, ArchUnitNET + Functorium 결합 |
 
 ---
 

@@ -124,4 +124,4 @@ Types()
 
 포트와 어댑터의 관계를 테스트로 강제하면, Hexagonal Architecture의 의존성 역전 원칙이 코드 수준에서 보장됩니다. 다음 장에서는 모든 레이어 간 의존성 방향을 종합적으로 검증하는 방법을 살펴봅니다.
 
-> [다음: Chapter 16 - Layer Dependency Rules](../04-Layer-Dependency-Rules/)
+> [다음: 4장 - Layer Dependency Rules](../04-Layer-Dependency-Rules/)

@@ -178,4 +178,4 @@ public void ExtensionMethods_ShouldBe_ExtensionMethods()
 
 메서드의 존재와 정적 여부를 검증할 수 있게 되었습니다. 다음 장에서는 메서드의 **반환 타입을** 검증하여, 팩토리 메서드가 `Fin<T>` 같은 함수형 결과 타입을 반드시 사용하도록 강제하는 방법을 학습합니다.
 
-[이전: Chapter 4 - 상속과 인터페이스 검증](../../Part1-ClassValidator-Basics/04-Inheritance-And-Interface/) | [다음: Chapter 6 - 반환 타입 검증](../02-Return-Type-Validation/)
+[이전: Part 1의 4장 - 상속과 인터페이스 검증](../../Part1-ClassValidator-Basics/04-Inheritance-And-Interface/) | [다음: 2장 - 반환 타입 검증](../02-Return-Type-Validation/)

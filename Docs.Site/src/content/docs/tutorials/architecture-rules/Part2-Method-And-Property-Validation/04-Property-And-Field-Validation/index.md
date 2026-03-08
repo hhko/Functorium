@@ -188,4 +188,4 @@ public void DomainClasses_ShouldHave_OnlyPrimitiveProperties()
 
 프로퍼티와 필드 검증으로 도메인 클래스의 불변성을 지속적으로 보장할 수 있게 되었습니다. 다음 장에서는 Part 3로 넘어가, **불변성 규칙을** 보다 종합적으로 검증하는 고급 기법을 학습합니다.
 
-[이전: Chapter 7 - 파라미터 검증](../03-Parameter-Validation/) | [다음: Chapter 9 - 불변성 규칙](../../Part3-Advanced-Validation/01-Immutability-Rule/)
+[이전: 3장 - 파라미터 검증](../03-Parameter-Validation/) | [다음: Part 3의 1장 - 불변성 규칙](../../Part3-Advanced-Validation/01-Immutability-Rule/)

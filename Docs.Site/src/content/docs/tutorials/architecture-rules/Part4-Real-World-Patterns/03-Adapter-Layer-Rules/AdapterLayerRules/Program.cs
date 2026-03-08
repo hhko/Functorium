@@ -1,1 +1,1 @@
-// Architecture Test Tutorial - Chapter 15: Adapter Layer Rules
+// Architecture Test Tutorial - Part 4, Chapter 3: Adapter Layer Rules

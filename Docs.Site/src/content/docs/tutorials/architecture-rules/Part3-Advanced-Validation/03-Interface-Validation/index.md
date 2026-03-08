@@ -163,4 +163,4 @@ public void BaseRepositoryInterface_ShouldHave_GetByIdAsyncReturningTask()
 
 인터페이스의 네이밍 규칙과 메서드 시그니처를 자동으로 검증하면, 팀 컨벤션이 코드 리뷰 없이도 일관되게 유지됩니다. 다음 장에서는 프레임워크가 제공하지 않는 팀 고유의 규칙을 직접 만드는 방법을 살펴봅니다.
 
-> [다음: Chapter 12 - Custom Rules](../04-Custom-Rules/)
+> [다음: 4장 - Custom Rules](../04-Custom-Rules/)

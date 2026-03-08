@@ -215,4 +215,4 @@ public void CommandClasses_ShouldOptionallyHave_Validator()
 
 중첩 클래스의 존재와 구조를 자동으로 검증하면, 런타임 실패 대신 테스트 실패로 구조적 누락을 조기에 발견할 수 있습니다. 다음 장에서는 인터페이스의 네이밍 규칙과 메서드 시그니처를 검증하는 방법을 살펴봅니다.
 
-> [다음: Chapter 11 - Interface Validation](../03-Interface-Validation/)
+> [다음: 3장 - Interface Validation](../03-Interface-Validation/)

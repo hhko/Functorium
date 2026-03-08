@@ -1,2 +1,2 @@
-// Architecture Test Tutorial - Chapter 10: Nested Class Validation
+// Architecture Test Tutorial - Part 3, Chapter 2: Nested Class Validation
 return;

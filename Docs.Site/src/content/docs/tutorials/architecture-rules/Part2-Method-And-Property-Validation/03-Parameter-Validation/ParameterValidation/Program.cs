@@ -1,2 +1,2 @@
-// Architecture Test Tutorial - Chapter 7: Parameter Validation
+// Architecture Test Tutorial - Part 2, Chapter 3: Parameter Validation
 return;

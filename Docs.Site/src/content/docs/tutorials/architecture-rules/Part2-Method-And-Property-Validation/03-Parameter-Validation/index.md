@@ -191,4 +191,4 @@ public void CoordinateCreate_ShouldHave_DoubleParameter()
 
 파라미터 시그니처까지 검증할 수 있게 되었습니다. 다음 장에서는 클래스의 **프로퍼티와 필드를** 검증하여, 도메인 클래스의 불변성이 깨지지 않도록 `public setter` 금지와 인스턴스 필드 금지 규칙을 강제하는 방법을 학습합니다.
 
-[이전: Chapter 6 - 반환 타입 검증](../02-Return-Type-Validation/) | [다음: Chapter 8 - 프로퍼티와 필드 검증](../04-Property-And-Field-Validation/)
+[이전: 2장 - 반환 타입 검증](../02-Return-Type-Validation/) | [다음: 4장 - 프로퍼티와 필드 검증](../04-Property-And-Field-Validation/)

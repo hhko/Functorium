@@ -65,10 +65,10 @@ MethodValidator를 통한 메서드 시그니처 검증을 학습합니다.
 
 | 장 | 주제 | 핵심 학습 내용 |
 |:---:|------|----------------|
-| 5 | [메서드 검증](Part2-Method-And-Property-Validation/01-Method-Validation/) | RequireMethod, RequireAllMethods, RequireVisibility, RequireExtensionMethod |
-| 6 | [반환 타입 검증](Part2-Method-And-Property-Validation/02-Return-Type-Validation/) | RequireReturnType, RequireReturnTypeOfDeclaringClass, RequireReturnTypeContaining |
-| 7 | [파라미터 검증](Part2-Method-And-Property-Validation/03-Parameter-Validation/) | RequireParameterCount, RequireFirstParameterTypeContaining |
-| 8 | [속성과 필드 검증](Part2-Method-And-Property-Validation/04-Property-And-Field-Validation/) | RequireProperty, RequireNoPublicSetters, RequireNoInstanceFields |
+| 1 | [메서드 검증](Part2-Method-And-Property-Validation/01-Method-Validation/) | RequireMethod, RequireAllMethods, RequireVisibility, RequireExtensionMethod |
+| 2 | [반환 타입 검증](Part2-Method-And-Property-Validation/02-Return-Type-Validation/) | RequireReturnType, RequireReturnTypeOfDeclaringClass, RequireReturnTypeContaining |
+| 3 | [파라미터 검증](Part2-Method-And-Property-Validation/03-Parameter-Validation/) | RequireParameterCount, RequireFirstParameterTypeContaining |
+| 4 | [속성과 필드 검증](Part2-Method-And-Property-Validation/04-Property-And-Field-Validation/) | RequireProperty, RequireNoPublicSetters, RequireNoInstanceFields |
 
 ### Part 3: 고급 검증
 
@@ -76,10 +76,10 @@ MethodValidator를 통한 메서드 시그니처 검증을 학습합니다.
 
 | 장 | 주제 | 핵심 학습 내용 |
 |:---:|------|----------------|
-| 9 | [불변성 규칙](Part3-Advanced-Validation/01-Immutability-Rule/) | RequireImmutable, ImmutabilityRule 6차원 검증 |
-| 10 | [중첩 클래스 검증](Part3-Advanced-Validation/02-Nested-Class-Validation/) | RequireNestedClass, RequireNestedClassIfExists |
-| 11 | [인터페이스 검증](Part3-Advanced-Validation/03-Interface-Validation/) | ValidateAllInterfaces, InterfaceValidator |
-| 12 | [커스텀 규칙](Part3-Advanced-Validation/04-Custom-Rules/) | DelegateArchRule, CompositeArchRule, Apply |
+| 1 | [불변성 규칙](Part3-Advanced-Validation/01-Immutability-Rule/) | RequireImmutable, ImmutabilityRule 6차원 검증 |
+| 2 | [중첩 클래스 검증](Part3-Advanced-Validation/02-Nested-Class-Validation/) | RequireNestedClass, RequireNestedClassIfExists |
+| 3 | [인터페이스 검증](Part3-Advanced-Validation/03-Interface-Validation/) | ValidateAllInterfaces, InterfaceValidator |
+| 4 | [커스텀 규칙](Part3-Advanced-Validation/04-Custom-Rules/) | DelegateArchRule, CompositeArchRule, Apply |
 
 ### Part 4: 실전 패턴
 
@@ -87,10 +87,10 @@ DDD 레이어 아키텍처에 아키텍처 테스트를 적용합니다.
 
 | 장 | 주제 | 핵심 학습 내용 |
 |:---:|------|----------------|
-| 13 | [도메인 레이어 규칙](Part4-Real-World-Patterns/01-Domain-Layer-Rules/) | Entity, ValueObject, DomainEvent, DomainService 종합 검증 |
-| 14 | [애플리케이션 레이어 규칙](Part4-Real-World-Patterns/02-Application-Layer-Rules/) | Command/Query, Usecase, DTO 규칙 |
-| 15 | [어댑터 레이어 규칙](Part4-Real-World-Patterns/03-Adapter-Layer-Rules/) | Port Interface, Adapter Implementation 규칙 |
-| 16 | [레이어 의존성 규칙](Part4-Real-World-Patterns/04-Layer-Dependency-Rules/) | ArchUnitNET 의존성 규칙 + Functorium 규칙 통합 |
+| 1 | [도메인 레이어 규칙](Part4-Real-World-Patterns/01-Domain-Layer-Rules/) | Entity, ValueObject, DomainEvent, DomainService 종합 검증 |
+| 2 | [애플리케이션 레이어 규칙](Part4-Real-World-Patterns/02-Application-Layer-Rules/) | Command/Query, Usecase, DTO 규칙 |
+| 3 | [어댑터 레이어 규칙](Part4-Real-World-Patterns/03-Adapter-Layer-Rules/) | Port Interface, Adapter Implementation 규칙 |
+| 4 | [레이어 의존성 규칙](Part4-Real-World-Patterns/04-Layer-Dependency-Rules/) | ArchUnitNET 의존성 규칙 + Functorium 규칙 통합 |
 
 ### Part 5: 결론
 
@@ -110,17 +110,17 @@ DDD 레이어 아키텍처에 아키텍처 테스트를 적용합니다.
 ## 핵심 진화 과정
 
 ```
-1장: 첫 아키텍처 테스트    →  2장: 가시성과 한정자     →  3장: 네이밍 규칙
-     ↓
-4장: 상속과 인터페이스     →  5장: 메서드 검증          →  6장: 반환 타입 검증
-     ↓
-7장: 파라미터 검증         →  8장: 속성과 필드 검증
-     ↓
-9장: 불변성 규칙           →  10장: 중첩 클래스         →  11장: 인터페이스 검증
-     ↓
-12장: 커스텀 규칙          →  13장: 도메인 레이어       →  14장: 애플리케이션 레이어
-     ↓
-15장: 어댑터 레이어        →  16장: 레이어 의존성
+[Part 1] ClassValidator 기초
+1장: 첫 아키텍처 테스트  →  2장: 가시성과 한정자  →  3장: 네이밍 규칙  →  4장: 상속과 인터페이스
+
+[Part 2] 메서드와 속성 검증
+1장: 메서드 검증  →  2장: 반환 타입 검증  →  3장: 파라미터 검증  →  4장: 속성과 필드 검증
+
+[Part 3] 고급 검증
+1장: 불변성 규칙  →  2장: 중첩 클래스  →  3장: 인터페이스 검증  →  4장: 커스텀 규칙
+
+[Part 4] 실전 패턴
+1장: 도메인 레이어  →  2장: 애플리케이션 레이어  →  3장: 어댑터 레이어  →  4장: 레이어 의존성
 ```
 
 ---
@@ -181,18 +181,18 @@ dotnet test --solution Functorium.All.slnx
 | 1 | 2 | `VisibilityAndModifiers.Tests.Unit` |
 | 1 | 3 | `NamingRules.Tests.Unit` |
 | 1 | 4 | `InheritanceAndInterface.Tests.Unit` |
-| 2 | 5 | `MethodValidation.Tests.Unit` |
-| 2 | 6 | `ReturnTypeValidation.Tests.Unit` |
-| 2 | 7 | `ParameterValidation.Tests.Unit` |
-| 2 | 8 | `PropertyAndFieldValidation.Tests.Unit` |
-| 3 | 9 | `ImmutabilityRule.Tests.Unit` |
-| 3 | 10 | `NestedClassValidation.Tests.Unit` |
-| 3 | 11 | `InterfaceValidation.Tests.Unit` |
-| 3 | 12 | `CustomRules.Tests.Unit` |
-| 4 | 13 | `DomainLayerRules.Tests.Unit` |
-| 4 | 14 | `ApplicationLayerRules.Tests.Unit` |
-| 4 | 15 | `AdapterLayerRules.Tests.Unit` |
-| 4 | 16 | `LayerDependencyRules.Tests.Unit` |
+| 2 | 1 | `MethodValidation.Tests.Unit` |
+| 2 | 2 | `ReturnTypeValidation.Tests.Unit` |
+| 2 | 3 | `ParameterValidation.Tests.Unit` |
+| 2 | 4 | `PropertyAndFieldValidation.Tests.Unit` |
+| 3 | 1 | `ImmutabilityRule.Tests.Unit` |
+| 3 | 2 | `NestedClassValidation.Tests.Unit` |
+| 3 | 3 | `InterfaceValidation.Tests.Unit` |
+| 3 | 4 | `CustomRules.Tests.Unit` |
+| 4 | 1 | `DomainLayerRules.Tests.Unit` |
+| 4 | 2 | `ApplicationLayerRules.Tests.Unit` |
+| 4 | 3 | `AdapterLayerRules.Tests.Unit` |
+| 4 | 4 | `LayerDependencyRules.Tests.Unit` |
 
 ## 테스트 네이밍 규칙
 
