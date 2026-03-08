@@ -384,4 +384,15 @@ if (!baseBranchExists)
 }
 ```
 
+## FAQ
+
+### Q1: `component-priority.json` 설정 파일이 없으면 어떻게 되나요?
+**A**: 설정 파일이 없으면 기본값으로 `Src/Functorium`, `Src/Functorium.Testing`, `Docs` 세 가지 컴포넌트를 분석합니다. 프로젝트에 다른 컴포넌트가 있거나 분석 대상을 커스터마이즈하고 싶다면 설정 파일을 생성해야 합니다.
+
+### Q2: Breaking Change 감지에서 Conventional Commits의 `feat!:` 패턴과 `BREAKING CHANGE` 키워드는 어떻게 다른가요?
+**A**: 두 가지 모두 Breaking Change를 표시하는 Conventional Commits 규격의 일부입니다. `feat!:`은 타입 뒤에 느낌표를 붙이는 **축약 표기이고,** `BREAKING CHANGE`는 커밋 본문이나 메시지에 키워드를 포함하는 **명시적 표기입니다.** 스크립트는 두 패턴을 모두 검색하여 누락 없이 감지합니다.
+
+### Q3: `RunGitAsync` 함수가 외부 프로세스를 사용하는 이유는 무엇인가요?
+**A**: .NET에는 Git을 직접 조작하는 기본 내장 라이브러리가 없으므로, `git` 명령어를 외부 프로세스(`Process` 클래스)로 실행하고 표준 출력을 캡처합니다. `libgit2sharp` 같은 라이브러리도 있지만, File-based App의 단순성을 유지하면서 Git CLI의 모든 기능을 활용하기 위해 외부 프로세스 방식을 선택한 것입니다.
+
 AnalyzeAllComponents.cs가 수집한 데이터는 이후 Phase 3에서 커밋 분석과 기능 그룹화의 기초 자료로 사용됩니다. 그러나 커밋 로그만으로는 실제 API가 어떻게 변경되었는지 알 수 없습니다. 다음 절에서는 API 정확성을 보장하기 위해 코드에서 직접 Public API를 추출하는 ExtractApiChanges.cs를 살펴보겠습니다.

@@ -230,6 +230,20 @@ dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target HEAD
 
 component-priority.json은 `analysis_priorities`라는 단일 배열로 분석 대상과 순서를 제어합니다. 파일 위치는 `.release-notes/scripts/config/component-priority.json`이고, 배열의 순서가 분석 및 출력 우선순위를 결정합니다. 설정이 없으면 Functorium, Functorium.Testing, Docs가 기본값으로 적용됩니다. 단순한 JSON 파일 하나지만, 릴리스 노트에 어떤 내용이 어떤 순서로 담길지를 결정하는 중요한 역할을 합니다.
 
+## FAQ
+
+### Q1: `analysis_priorities` 배열의 순서가 릴리스 노트의 기능 나열 순서에 직접 영향을 주나요?
+**A**: 네. 배열에서 앞에 위치한 컴포넌트가 **분석 출력 파일에서도, 릴리스 노트의 "새로운 기능" 섹션에서도 먼저** 나타납니다. 핵심 라이브러리를 앞에 두면 사용자가 가장 중요한 변경사항을 먼저 확인할 수 있습니다.
+
+### Q2: 존재하지 않는 폴더를 배열에 포함하면 오류가 발생하나요?
+**A**: 아닙니다. `AnalyzeAllComponents.cs`는 존재하지 않는 폴더를 **자동으로 건너뜁니다.** 해당 컴포넌트에 대한 Git diff와 커밋이 비어 있으므로 분석 파일이 생성되지 않을 뿐, 나머지 컴포넌트의 분석은 정상적으로 진행됩니다.
+
+### Q3: 설정 파일의 경로에서 Windows 백슬래시(`\`)를 사용해도 되나요?
+**A**: 아닙니다. 경로는 반드시 **슬래시(`/`)를** 사용해야 합니다. Git 명령어가 경로를 해석할 때 슬래시를 기준으로 하며, Windows에서도 Git은 슬래시 경로를 올바르게 처리합니다. 백슬래시를 사용하면 Git diff나 log 명령에서 해당 경로를 찾지 못할 수 있습니다.
+
+### Q4: Tests 폴더를 `analysis_priorities`에 포함해야 하나요?
+**A**: 일반적으로는 포함하지 않습니다. 릴리스 노트는 **사용자에게 제공되는 라이브러리의 변경사항을** 전달하는 문서이므로, 테스트 코드의 변경은 대부분 불필요한 노이즈가 됩니다. 다만 테스트 라이브러리(`Functorium.Testing`)처럼 사용자에게 제공되는 테스트 도구는 포함하는 것이 적절합니다.
+
 ## 다음 단계
 
 - [출력 파일 형식](09-output-formats.md)

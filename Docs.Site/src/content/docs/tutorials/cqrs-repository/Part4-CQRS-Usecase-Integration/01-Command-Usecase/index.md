@@ -89,14 +89,14 @@ FinT<IO, Response> usecase =
 
 ## FAQ
 
-**Q: 왜 Usecase를 nested class로 구성하나요?**
-A: Request, Response, Usecase가 하나의 Command에 응집되어 코드 네비게이션이 쉽고, 파일 하나에 Command의 전체 계약을 파악할 수 있습니다.
+### Q1: 왜 Usecase를 nested class로 구성하나요?
+**A**: Request, Response, Usecase가 하나의 Command에 응집되어 코드 네비게이션이 쉽고, 파일 하나에 Command의 전체 계약을 파악할 수 있습니다.
 
-**Q: FinT와 Fin의 차이는 무엇인가요?**
-A: `FinT<IO, T>`는 IO 효과를 포함한 lazy 연산입니다. `.Run().RunAsync()`로 실행하면 `Fin<T>`(즉시 값)가 됩니다.
+### Q2: FinT와 Fin의 차이는 무엇인가요?
+**A**: `FinT<IO, T>`는 IO 효과를 포함한 lazy 연산입니다. `.Run().RunAsync()`로 실행하면 `Fin<T>`(즉시 값)가 됩니다.
 
-**Q: ToFinResponse()는 왜 필요한가요?**
-A: `Fin<T>`는 LanguageExt의 내부 타입이고, `FinResponse<T>`는 Functorium이 Pipeline/API 레이어에서 사용하는 HTTP-friendly 래퍼입니다. 계층 간 변환을 명시적으로 수행합니다.
+### Q3: ToFinResponse()는 왜 필요한가요?
+**A**: `Fin<T>`는 LanguageExt의 내부 타입이고, `FinResponse<T>`는 Functorium이 Pipeline/API 레이어에서 사용하는 HTTP-friendly 래퍼입니다. 계층 간 변환을 명시적으로 수행합니다.
 
 ---
 

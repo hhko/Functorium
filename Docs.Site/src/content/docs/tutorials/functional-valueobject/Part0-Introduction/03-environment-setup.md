@@ -169,6 +169,17 @@ dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org
 2. `dotnet restore` 실행
 3. `.vs` 또는 `.vscode` 폴더 삭제 후 재시작
 
+## FAQ
+
+### Q1: .NET 10이 아닌 다른 버전에서도 실행할 수 있나요?
+**A**: 이 튜토리얼의 프로젝트들은 .NET 10.0 SDK를 기준으로 작성되었습니다. 일부 코드는 하위 버전에서도 동작할 수 있지만, 파일 기반 프로그램 실행 등 .NET 10 전용 기능을 사용하는 부분이 있으므로 .NET 10.0 이상을 권장합니다.
+
+### Q2: `GlobalUsings.cs`는 반드시 만들어야 하나요?
+**A**: 아닙니다. 선택사항입니다. 각 파일에서 `using LanguageExt;` 등을 직접 선언해도 동일하게 동작합니다. 프로젝트 전체에서 반복되는 using 문을 줄이고 싶을 때 사용하면 편리합니다.
+
+### Q3: LanguageExt 패키지 버전은 어떤 것을 설치해야 하나요?
+**A**: `dotnet add package LanguageExt.Core` 명령을 실행하면 최신 안정 버전이 설치됩니다. 이 튜토리얼의 각 프로젝트에는 검증된 버전이 `.csproj` 파일에 명시되어 있으므로, 솔루션을 빌드하면 올바른 버전이 자동으로 복원됩니다.
+
 ---
 
 ## 다음 단계

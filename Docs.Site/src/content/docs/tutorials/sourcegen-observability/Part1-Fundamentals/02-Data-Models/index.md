@@ -379,6 +379,19 @@ ls bin/Debug/netstandard2.0/
 
 ---
 
+## FAQ
+
+### Q1: 데이터 모델을 왜 `record`나 `readonly record struct`로 정의해야 하나요?
+**A**: Roslyn의 증분 파이프라인은 이전 실행 결과와 현재 결과를 `Equals`/`GetHashCode`로 비교하여 변경 여부를 판단합니다. `record`는 값 기반 동등성 비교를 자동 생성하므로, 데이터가 같으면 불필요한 코드 재생성을 건너뛸 수 있습니다.
+
+### Q2: `IsRoslynComponent`와 `EnforceExtendedAnalyzerRules`는 각각 어떤 역할을 하나요?
+**A**: `IsRoslynComponent`는 IDE(특히 Visual Studio)가 해당 프로젝트를 소스 생성기/분석기로 인식하여 실시간 피드백을 제공하도록 합니다. `EnforceExtendedAnalyzerRules`는 소스 생성기에서 허용되지 않는 API 사용(파일 시스템 접근 등)을 컴파일 오류로 잡아줍니다.
+
+### Q3: `ObservableClassInfo`에 `Location?` 필드가 포함된 이유는 무엇인가요?
+**A**: `Location`은 소스 생성기가 진단 메시지(경고, 오류)를 보고할 때 사용자에게 정확한 코드 위치를 알려주기 위해 필요합니다. 예를 들어 잘못된 사용 패턴을 감지했을 때, 해당 클래스 선언 위치에 경고를 표시할 수 있습니다.
+
+---
+
 ## 다음 단계
 
 프로젝트 구조와 데이터 모델을 이해했으니, 다음 장에서는 소스 생성기 개발에서 가장 까다로운 부분 중 하나인 디버깅 환경 설정을 다룹니다.

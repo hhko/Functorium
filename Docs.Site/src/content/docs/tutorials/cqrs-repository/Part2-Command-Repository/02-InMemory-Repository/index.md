@@ -143,14 +143,14 @@ result.IsSucc.ShouldBeTrue();
 
 ## FAQ
 
-**Q: static ConcurrentDictionary를 사용하는 이유는 무엇인가요?**
-A: InMemory Repository는 프로세스 수명 동안 데이터를 유지해야 하므로 `static`으로 선언합니다. DI 컨테이너에서 Scoped로 등록해도 저장소는 공유됩니다.
+### Q1: static ConcurrentDictionary를 사용하는 이유는 무엇인가요?
+**A**: InMemory Repository는 프로세스 수명 동안 데이터를 유지해야 하므로 `static`으로 선언합니다. DI 컨테이너에서 Scoped로 등록해도 저장소는 공유됩니다.
 
-**Q: Create에서 이미 존재하는 ID로 생성하면 어떻게 되나요?**
-A: `InMemoryRepositoryBase`의 기본 구현은 `Store[id] = aggregate`로 덮어씁니다. 중복 체크가 필요하면 `Create` 메서드를 override할 수 있습니다.
+### Q2: Create에서 이미 존재하는 ID로 생성하면 어떻게 되나요?
+**A**: `InMemoryRepositoryBase`의 기본 구현은 `Store[id] = aggregate`로 덮어씁니다. 중복 체크가 필요하면 `Create` 메서드를 override할 수 있습니다.
 
-**Q: NoOpDomainEventCollector는 실제 운영에서도 사용하나요?**
-A: 아닙니다. 운영 환경에서는 `DomainEventCollector` 구현체가 DI로 주입됩니다. `NoOpDomainEventCollector`는 순수하게 테스트 목적입니다.
+### Q3: NoOpDomainEventCollector는 실제 운영에서도 사용하나요?
+**A**: 아닙니다. 운영 환경에서는 `DomainEventCollector` 구현체가 DI로 주입됩니다. `NoOpDomainEventCollector`는 순수하게 테스트 목적입니다.
 
 ---
 

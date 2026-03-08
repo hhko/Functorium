@@ -95,14 +95,14 @@ if (page1.HasMore)
 
 ## FAQ
 
-**Q: Soft Delete와 Hard Delete 중 어떤 것을 선택해야 하나요?**
-A: 비즈니스 요구에 따라 다릅니다. 감사 추적이 필요하거나 실수로 삭제한 데이터를 복구해야 하면 Soft Delete, 개인정보 보호법(GDPR 등)에 의해 완전 삭제가 필요하면 Hard Delete를 사용합니다.
+### Q1: Soft Delete와 Hard Delete 중 어떤 것을 선택해야 하나요?
+**A**: 비즈니스 요구에 따라 다릅니다. 감사 추적이 필요하거나 실수로 삭제한 데이터를 복구해야 하면 Soft Delete, 개인정보 보호법(GDPR 등)에 의해 완전 삭제가 필요하면 Hard Delete를 사용합니다.
 
-**Q: Cursor 페이지네이션이 Offset보다 좋은 이유는?**
-A: Offset은 `SKIP N`으로 N개를 건너뛰므로 deep page에서 O(N) 비용이 발생합니다. Cursor는 WHERE 조건으로 시작 지점을 직접 지정하므로 페이지 깊이와 무관하게 O(1) 성능입니다.
+### Q2: Cursor 페이지네이션이 Offset보다 좋은 이유는?
+**A**: Offset은 `SKIP N`으로 N개를 건너뛰므로 deep page에서 O(N) 비용이 발생합니다. Cursor는 WHERE 조건으로 시작 지점을 직접 지정하므로 페이지 깊이와 무관하게 O(1) 성능입니다.
 
-**Q: ActiveProductSpec을 Repository가 아닌 Query에서 사용하는 이유는?**
-A: Repository는 Aggregate 단위 CRUD에 집중하고, 필터링/검색은 Query 측의 역할입니다. CQRS에서 Command와 Query의 관심사를 분리하는 핵심 원칙입니다.
+### Q3: ActiveProductSpec을 Repository가 아닌 Query에서 사용하는 이유는?
+**A**: Repository는 Aggregate 단위 CRUD에 집중하고, 필터링/검색은 Query 측의 역할입니다. CQRS에서 Command와 Query의 관심사를 분리하는 핵심 원칙입니다.
 
 ---
 

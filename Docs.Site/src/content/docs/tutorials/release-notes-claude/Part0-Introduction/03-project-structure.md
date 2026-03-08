@@ -222,6 +222,20 @@ namespace Functorium.Abstractions.Errors
 
 Command가 Phase 문서를 참조하고, Phase 문서가 C# 스크립트를 실행하고, 스크립트가 분석 결과를 저장하고, 분석 결과와 템플릿을 조합하여 최종 릴리스 노트를 생성하는 일련의 흐름입니다. 각 폴더의 수정 빈도를 보면, Command와 Phase 가이드, 템플릿은 한 번 설정하면 거의 변경하지 않고, C# 스크립트는 필요에 따라 개선하며, 릴리스 노트와 분석 결과는 매 릴리스마다 새로 생성됩니다.
 
+## FAQ
+
+### Q1: `.api` 서브폴더의 파일은 누가 생성하고 관리하나요?
+**A**: `Src/Functorium/.api/Functorium.cs` 같은 파일은 `ApiGenerator.cs` 스크립트가 PublicApiGenerator 라이브러리를 사용해 DLL에서 자동 생성합니다. 이 파일을 Git으로 추적하여 API 변경 이력을 관리하고, Git diff로 Breaking Changes를 자동 감지하는 데 활용합니다.
+
+### Q2: `.analysis-output/` 폴더는 Git에 커밋해야 하나요?
+**A**: 선택사항입니다. 릴리스 노트 파일(`.release-notes/RELEASE-*.md`)은 반드시 커밋하지만, `.analysis-output/`은 재생성 가능한 중간 결과물이므로 프로젝트 정책에 따라 결정합니다. 분석 결과를 히스토리로 남기고 싶다면 함께 커밋할 수 있습니다.
+
+### Q3: Command 파일과 Phase 가이드 문서, C# 스크립트가 모두 다른 폴더에 있는 이유는 무엇인가요?
+**A**: **관심사 분리 원칙을** 따른 것입니다. `.claude/commands/`는 Claude Code의 진입점, `.release-notes/scripts/docs/`는 Phase별 상세 지침, `.release-notes/scripts/*.cs`는 실행 코드입니다. 이렇게 분리하면 Command는 전체 흐름만 정의하고, 상세 지침과 코드는 독립적으로 수정할 수 있습니다.
+
+### Q4: 이 프로젝트 구조를 다른 프로젝트에 복사할 때 어떤 파일이 필수인가요?
+**A**: 최소한 `.claude/commands/release-note.md`, `.release-notes/TEMPLATE.md`, `.release-notes/scripts/` 폴더(C# 스크립트, Phase 가이드, 설정 파일)가 필요합니다. `Src/` 폴더의 `.api` 서브폴더는 첫 API 추출 시 자동으로 생성됩니다.
+
 ---
 
 프로젝트 구조를 파악했으니, 다음 Part에서는 개발 환경을 설정하고 필요한 도구를 설치해보겠습니다.

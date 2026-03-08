@@ -82,6 +82,17 @@ FinResponse<string> response = fin.ToFinResponse();
 2. 상황에 맞는 `ToFinResponse()` 오버로드를 선택할 수 있다
 3. 실패 상태가 변환 시 자동으로 전파되는 메커니즘을 이해할 수 있다
 
+## FAQ
+
+### Q1: Repository가 `Fin<T>`를 반환하고 Usecase가 `FinResponse<T>`를 반환하는 이유는 무엇인가요?
+**A**: Repository는 LanguageExt의 순수 함수형 타입인 `Fin<T>`를 사용하여 **외부 라이브러리 의존 없이** 성공/실패를 표현합니다. Usecase는 Pipeline 제약에 사용 가능한 `FinResponse<T>`를 반환해야 합니다. `ToFinResponse()`가 이 두 계층을 연결합니다.
+
+### Q2: 매퍼 변환과 팩토리 변환은 각각 어떤 상황에서 사용하나요?
+**A**: **매퍼 변환**(`Func<A, B>`)은 Entity를 DTO로 변환할 때 사용합니다. 예: `fin.ToFinResponse(product => new ProductDto(product))`. **팩토리 변환**(`Func<B>`)은 원본 값을 무시하고 새로운 값을 생성할 때 사용합니다. 예: `Fin<Unit>` 반환을 `FinResponse<string>`의 "삭제 성공" 메시지로 변환.
+
+### Q3: `ToFinResponse()`에서 실패가 자동 전파되는 원리는 무엇인가요?
+**A**: `ToFinResponse()`는 내부적으로 `Fin<T>`의 `Match`를 호출합니다. Succ이면 변환 함수를 적용하고, **Fail이면 변환 함수를 호출하지 않고** `Error`를 그대로 `FinResponse.Fail`로 전달합니다. 어떤 오버로드를 사용하든 실패 시 동일하게 동작합니다.
+
 Part 4에서 Pipeline별 타입 제약 패턴을 완성했습니다. Part 5에서는 실제 Usecase에 이 패턴을 적용합니다.
 
 ## 프로젝트 구조

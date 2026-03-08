@@ -389,6 +389,20 @@ if (!File.Exists(dllPath))
 
 ExtractApiChanges.cs가 Uber 파일을 통해 "현재 코드에 실제로 존재하는 API"를 기록하지만, DLL에서 Public API를 추출하는 실제 작업은 ApiGenerator.cs가 담당합니다. 다음 절에서는 이 ApiGenerator.cs가 어셈블리를 어떻게 로드하고, PublicApiGenerator 라이브러리로 API를 추출하는지 살펴보겠습니다.
 
+## FAQ
+
+### Q1: ExtractApiChanges.cs가 소스 코드가 아닌 DLL에서 API를 추출하는 이유는 무엇인가요?
+**A**: 소스 코드를 파싱하면 `#if` 전처리기 지시문, `partial class`, Source Generator 등으로 인해 실제 빌드 결과와 다른 API를 추출할 수 있습니다. **컴파일된 DLL은** 이 모든 과정이 반영된 최종 결과물이므로, 실제 사용자가 접하게 될 Public API와 100% 일치하는 정보를 보장합니다.
+
+### Q2: Uber 파일(`all-api-changes.txt`)을 어셈블리별로 분리하지 않고 하나로 합치는 이유는 무엇인가요?
+**A**: Phase 4에서 릴리스 노트를 작성하고 Phase 5에서 검증할 때, 여러 파일을 교차 참조하면 누락이 발생하기 쉽습니다. **단일 파일로 통합하면** 검색 한 번으로 모든 어셈블리의 API를 확인할 수 있어, 검증 과정이 단순하고 정확해집니다.
+
+### Q3: 하나의 프로젝트 빌드가 실패해도 나머지가 계속 진행되는 이유는 무엇인가요?
+**A**: 릴리스 노트에는 성공적으로 빌드된 컴포넌트의 정보만 포함하면 됩니다. 빌드 실패 시 해당 컴포넌트를 건너뛰고(`WARN` 로그 출력) 나머지를 계속 처리하는 **부분 실패 허용(Partial Failure) 전략을** 사용하여, 하나의 문제가 전체 워크플로우를 중단시키지 않도록 설계되었습니다.
+
+### Q4: `api-changes-diff.txt`는 언제 빈 파일이 되나요?
+**A**: 첫 배포이거나, `.api` 폴더에 이전 버전의 API 파일이 커밋되어 있지 않으면 Git diff가 비어 있습니다. 이 경우 Breaking Change 감지는 커밋 메시지 패턴(`feat!:`, `BREAKING CHANGE`)에만 의존하게 됩니다. **`.api` 폴더의 파일을 매 릴리스마다 커밋해두면** 다음 릴리스에서 정확한 diff를 얻을 수 있습니다.
+
 ## 다음 단계
 
 - [ApiGenerator.cs 분석](06-apigenerator.md)

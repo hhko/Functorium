@@ -64,6 +64,17 @@ public static string ProcessResult<T>(T result) where T : IResult
 }
 ```
 
+## FAQ
+
+### Q1: `List<T>`를 `IEnumerable<T>`로 대입하면 공변이 되는데, 이것으로 충분하지 않나요?
+**A**: 읽기만 필요한 경우에는 `IEnumerable<out T>`로 충분합니다. 하지만 Pipeline에서는 응답 타입을 통해 **팩토리 메서드 호출**(CreateFail)이나 **상태 읽기**(IsSucc)가 필요합니다. 이를 위해서는 전용 인터페이스를 설계하여 `where` 제약으로 사용해야 합니다.
+
+### Q2: sealed struct가 `where` 제약으로 사용 불가능한 것은 C# 언어의 제한인가요?
+**A**: 네. C#에서 struct는 상속이 불가능하므로 `where T : SomeStruct` 형태의 제약을 허용하지 않습니다. sealed 여부와 무관하게 모든 struct가 이 제한을 받습니다. 이것이 `Fin<T>`를 직접 제약으로 사용할 수 없는 근본적인 이유입니다.
+
+### Q3: 인터페이스 제약으로 우회하면 성능 오버헤드가 있나요?
+**A**: 인터페이스를 구현하는 record나 class의 경우 가상 메서드 호출(virtual dispatch) 비용이 발생하지만, 리플렉션에 비하면 **무시할 수 있는 수준**입니다. 또한 JIT 컴파일러의 최적화(devirtualization)로 인해 실제 성능 차이는 거의 없습니다.
+
 이 패턴은 이후 장에서 `IFinResponse` 인터페이스 계층을 설계할 때의 핵심 아이디어가 됩니다.
 
 ## 학습 목표

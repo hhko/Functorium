@@ -363,6 +363,19 @@ private static ObservableClassInfo MapToObservableClassInfo(
 
 ---
 
+## FAQ
+
+### Q1: `AllInterfaces`에서 `IObservablePort`를 직접 이름으로 비교하는 것이 안전한가요?
+**A**: 이름 기반 비교는 동일한 이름의 인터페이스가 다른 네임스페이스에 존재할 경우 잘못된 매칭이 발생할 수 있습니다. 더 안전한 방법은 `SymbolEqualityComparer.Default`로 비교하거나, 전체 메타데이터 이름(`ContainingNamespace` 포함)으로 확인하는 것입니다. Functorium에서는 프로젝트 내 이름 충돌이 없으므로 간결한 이름 비교를 사용합니다.
+
+### Q2: `ObservableClassInfo.None` 패턴은 왜 `null` 반환 대신 사용하나요?
+**A**: `transform` 콜백의 반환 타입이 `ObservableClassInfo`(값 타입)이므로 `null`을 반환할 수 없습니다. 빈 객체 패턴으로 유효하지 않은 결과를 표현하고, 이후 `.Where(x => x != ObservableClassInfo.None)` 필터로 제거합니다. 이 패턴은 값 타입에서의 null 처리를 깔끔하게 해결합니다.
+
+### Q3: `ContainingNamespace.IsGlobalNamespace`를 확인하는 이유는 무엇인가요?
+**A**: `namespace` 선언 없이 정의된 타입은 글로벌 네임스페이스에 속합니다. 이 경우 `ContainingNamespace.ToString()`이 `"<global namespace>"`를 반환하는데, 이를 생성 코드의 `namespace` 선언에 그대로 사용하면 컴파일 오류가 발생합니다. 글로벌 네임스페이스일 때는 빈 문자열로 처리하여 `namespace` 선언을 생략합니다.
+
+---
+
 ## 다음 단계
 
 `INamedTypeSymbol`로 클래스와 인터페이스 수준의 정보를 추출하는 방법을 이해했습니다. 다음 장에서는 한 단계 더 들어가서, 각 메서드의 시그니처(이름, 파라미터, 반환 타입)를 분석하는 `IMethodSymbol`을 살펴봅니다. 이 정보가 로깅 코드와 파이프라인 래퍼의 생성 근거가 됩니다.

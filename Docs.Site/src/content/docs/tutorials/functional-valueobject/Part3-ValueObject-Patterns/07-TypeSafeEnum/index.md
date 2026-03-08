@@ -331,14 +331,14 @@ JPY: ¥1,000
 
 ## FAQ
 
-### Q1. SmartEnum과 기존 enum의 가장 큰 차이점은 무엇인가요?
-**A1.** SmartEnum은 도메인 로직을 직접 내장할 수 있습니다. 기존 enum은 단순한 정수/문자열 값만 저장할 수 있지만, SmartEnum은 속성, 메서드, 비즈니스 로직을 포함할 수 있습니다.
+### Q1: SmartEnum과 기존 enum의 가장 큰 차이점은 무엇인가요?
+**A**: SmartEnum은 도메인 로직을 직접 내장할 수 있습니다. 기존 enum은 단순한 정수/문자열 값만 저장할 수 있지만, SmartEnum은 속성, 메서드, 비즈니스 로직을 포함할 수 있습니다.
 
-### Q2. 언제 SmartEnum을 사용해야 하나요?
-**A2.** 포맷팅, 계산, 검증 같은 도메인 로직이 필요하거나, 잘못된 값 입력을 타입 수준에서 방지해야 하거나, 새로운 속성이나 메서드 추가가 예상되는 열거형에 적합합니다.
+### Q2: 언제 SmartEnum을 사용해야 하나요?
+**A**: 포맷팅, 계산, 검증 같은 도메인 로직이 필요하거나, 잘못된 값 입력을 타입 수준에서 방지해야 하거나, 새로운 속성이나 메서드 추가가 예상되는 열거형에 적합합니다.
 
-### Q3. SmartEnum에서 ValueObject 규칙을 어떻게 준수하나요?
-**A3.** `IValueObject` 인터페이스를 구현하고, `DomainError.For<T>()` 패턴으로 구조화된 에러를 처리합니다. 커스텀 에러 타입은 `sealed record Unsupported : DomainErrorType.Custom` 형식으로 정의합니다.
+### Q3: SmartEnum에서 ValueObject 규칙을 어떻게 준수하나요?
+**A**: `IValueObject` 인터페이스를 구현하고, `DomainError.For<T>()` 패턴으로 구조화된 에러를 처리합니다. 커스텀 에러 타입은 `sealed record Unsupported : DomainErrorType.Custom` 형식으로 정의합니다.
 
 ```csharp
 // ValueObject 규칙 준수 예시

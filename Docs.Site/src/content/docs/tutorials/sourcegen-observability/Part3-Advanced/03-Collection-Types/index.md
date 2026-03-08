@@ -457,6 +457,19 @@ public Task Should_Not_Generate_Length_ForTupleContainingArray()
 
 ---
 
+## FAQ
+
+### Q1: `IEnumerable<T>`도 컬렉션으로 인식하는데, `Count()` 호출 시 전체 열거가 발생하지 않나요?
+**A**: `CollectionTypeHelper`는 패턴 매칭으로 타입을 감지하지만, 실제 생성 코드에서는 `?.Count ?? 0` 표현식을 사용합니다. 이는 `ICollection<T>.Count` 속성(O(1))을 호출하는 것이지 LINQ의 `Count()` 확장 메서드(O(n))가 아닙니다. 다만 순수한 `IEnumerable<T>`만 구현한 타입에서는 `Count` 속성이 없어 컴파일 오류가 발생할 수 있으므로, 실무에서는 구체적인 컬렉션 타입 사용을 권장합니다.
+
+### Q2: 튜플 내부에 컬렉션이 있을 때 Count를 생성하지 않는 이유는 무엇인가요?
+**A**: 튜플 자체에는 `Count` 속성이 없으므로, `result?.Count`와 같은 표현식이 컴파일 오류를 발생시킵니다. 튜플 내부의 개별 요소에 접근하려면 `result.Item2?.Count`처럼 요소별로 분해해야 하는데, 이는 생성기의 복잡도를 크게 높이는 반면 관찰 가능성 측면에서의 가치는 제한적입니다.
+
+### Q3: `CollectionTypePatterns` 배열에 `global::` 접두사 버전을 별도로 추가하는 이유는 무엇인가요?
+**A**: Roslyn의 `SymbolDisplayFormat`에 따라 타입 문자열이 `List<T>` 또는 `global::System.Collections.Generic.List<T>` 두 가지 형태로 나올 수 있기 때문입니다. `Contains()` 패턴 매칭이 두 경우 모두 올바르게 동작하려면 양쪽 패턴을 모두 포함해야 합니다.
+
+---
+
 ## 다음 단계
 
 컬렉션 Count 필드가 추가되면 로깅에 필요한 총 파라미터 수가 늘어납니다. 다음 섹션에서는 .NET `LoggerMessage.Define`의 6개 파라미터 제한과 이를 초과할 때의 폴백 전략을 학습합니다.

@@ -82,5 +82,16 @@ dotnet build Functorium.All.slnx
 
 Part 1~3은 순서대로 학습하는 것을 권장합니다. Part 4~5는 Part 3 완료 후 자유롭게 선택하여 학습할 수 있습니다.
 
+## FAQ
+
+### Q1: Part 1은 Mediator 패턴 지식 없이도 학습 가능한가요?
+**A**: 네. Part 1은 C# 제네릭 변성(공변/반공변/불변)만 다루므로 Mediator 패턴 지식이 필요하지 않습니다. Part 2부터 `IPipelineBehavior`가 등장하므로, 그때까지 Mediator 패턴의 기본 개념을 알아두면 충분합니다.
+
+### Q2: Standalone 프로젝트와 Functorium 참조 프로젝트의 차이는 무엇인가요?
+**A**: Standalone 프로젝트는 `LanguageExt.Core`만 참조하며, 개념 학습용으로 독립 실행이 가능합니다. Functorium 참조 프로젝트는 `Functorium.csproj`를 참조하며, 실전 Pipeline과 Usecase 구현에 사용됩니다. Part 1~3은 주로 Standalone, Part 4~5는 Functorium 참조 프로젝트입니다.
+
+### Q3: .NET SDK 10.0 이전 버전으로도 튜토리얼을 따라갈 수 있나요?
+**A**: 이 튜토리얼은 C# 11의 `static abstract` 멤버와 최신 record 구문을 사용합니다. .NET 7 이상이면 `static abstract`를 지원하지만, 프로젝트 빌드 설정이 .NET 10을 기준으로 되어 있으므로 .NET SDK 10.0 이상을 권장합니다.
+
 다음 장에서는 이 튜토리얼이 해결하려는 Pipeline 아키텍처의 전체 그림을 먼저 살펴봅니다.
 

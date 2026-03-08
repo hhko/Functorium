@@ -230,4 +230,18 @@ NuGet 패키지 버전을 중앙에서 관리하려면 `Directory.Packages.props
 #r "nuget: Spectre.Console"  // 버전 생략 가능
 ```
 
+## FAQ
+
+### Q1: .NET 10 이전 버전의 SDK로는 File-based App을 실행할 수 없나요?
+**A**: 실행할 수 없습니다. File-based App(`dotnet MyScript.cs`)은 .NET 10에서 처음 도입된 기능이므로, 반드시 .NET 10.x 이상의 SDK가 필요합니다. 이전 버전에서는 `dotnet new console`로 프로젝트를 생성해야 합니다.
+
+### Q2: `Directory.Build.props`와 `Directory.Packages.props`를 함께 사용하면 어떤 장점이 있나요?
+**A**: `Directory.Build.props`는 `TargetFramework`, `Nullable` 같은 공통 빌드 설정을 적용하고, `Directory.Packages.props`는 NuGet 패키지 버전을 중앙에서 관리합니다. 두 파일을 함께 사용하면 여러 File-based App에서 **일관된 빌드 환경과 패키지 버전을** 유지할 수 있어, 스크립트 간 버전 충돌을 방지합니다.
+
+### Q3: File-based App에서 NuGet 패키지를 참조하는 `#r` 지시자와 `#:package` 지시자는 어떻게 다른가요?
+**A**: `#r "nuget: PackageName, Version"`은 초기 프리뷰에서 사용되던 형식이고, `#:package PackageName@Version`은 .NET 10 정식 출시 시점의 새로운 형식입니다. 두 형식 모두 동작하지만, `#:package`가 공식 권장 형식입니다. 이 튜토리얼의 실제 스크립트에서는 `#:package` 형식을 사용합니다.
+
+### Q4: 다음 절에서는 무엇을 다루나요?
+**A**: .NET 10 스크립트를 실행하는 AI 도구인 Claude Code를 소개합니다. 설치 방법, 기본 사용법, 사용자 정의 Command의 개념과 `/release-note` 명령어의 구조를 살펴봅니다.
+
 이제 .NET 10 환경이 준비되었으니, 다음으로 이 스크립트들을 실행할 AI 도구인 Claude Code를 살펴보겠습니다.

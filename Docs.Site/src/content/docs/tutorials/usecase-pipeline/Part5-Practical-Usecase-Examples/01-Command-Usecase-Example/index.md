@@ -91,6 +91,20 @@ public static class Validator
 3. `FinResponse<T>`의 암시적 변환을 활용하여 성공/실패를 간결하게 반환할 수 있다
 4. Validator를 Handler에서 분리하여 독립적으로 테스트할 수 있다
 
+## FAQ
+
+### Q1: Nested class 패턴에서 Request, Response, Validator, Handler를 분리된 파일로 나눌 수 있나요?
+**A**: `partial class`를 사용하면 각 중첩 타입을 별도 파일에 정의할 수 있습니다. 하지만 하나의 Usecase가 한 파일에 모여 있으면 **탐색과 이해가 쉬워**지므로, 중첩 타입의 크기가 작은 경우에는 한 파일에 두는 것을 권장합니다.
+
+### Q2: `ICommandRequest<TSuccess>`에서 `TSuccess`가 `Response`인데, 왜 `FinResponse<Response>`를 직접 사용하지 않나요?
+**A**: `ICommandRequest<TSuccess>`가 내부적으로 `ICommand<FinResponse<TSuccess>>`를 상속하므로, `TSuccess`만 지정하면 `FinResponse<Response>`가 **자동으로 결정**됩니다. 이를 통해 Usecase 코드에서 `FinResponse` 래핑을 명시적으로 작성하지 않아도 됩니다.
+
+### Q3: Validator가 `FinResponse<Request>`를 반환하는 이유는 무엇인가요?
+**A**: Validator가 `FinResponse<Request>`를 반환하면, 검증 성공 시 원본 Request를 그대로 전달하고, 실패 시 `Error`를 포함한 실패 응답을 반환합니다. 이를 통해 **Railway-Oriented Programming** 방식으로 검증 결과를 Handler에 자연스럽게 체이닝할 수 있습니다.
+
+### Q4: 암시적 변환으로 `return Error.New("...")` 형태가 가능한 원리는 무엇인가요?
+**A**: `FinResponse<A>`에 `implicit operator`가 정의되어 있어 `Error` 타입의 값이 자동으로 `FinResponse<A>.Fail(error)`로 변환됩니다. 마찬가지로 `A` 타입의 값은 `FinResponse<A>.Succ(value)`로 변환됩니다. 이 암시적 변환이 보일러플레이트를 크게 줄입니다.
+
 Command Usecase의 구조를 확인했으니, 다음 장에서는 읽기 전용인 Query Usecase가 어떻게 다르게 구성되는지 살펴봅니다.
 
 ## 프로젝트 구조

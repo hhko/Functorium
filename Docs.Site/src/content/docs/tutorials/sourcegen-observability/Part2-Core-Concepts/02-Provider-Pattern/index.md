@@ -382,6 +382,19 @@ Provider 패턴은 LINQ와 동일한 선언적 스타일로 소스 생성 파이
 
 ---
 
+## FAQ
+
+### Q1: `IncrementalValuesProvider<T>`와 `IncrementalValueProvider<T>`는 어떻게 다른가요?
+**A**: `IncrementalValuesProvider<T>`는 0개 이상의 값을 스트림으로 제공하며, `Select`, `Where` 등의 연산자를 지원합니다. `IncrementalValueProvider<T>`는 정확히 1개의 값을 제공하며, `Collect()`의 결과나 `Combine()`의 결과가 이 타입입니다. 코드 생성 등록 시 두 타입 모두 `RegisterSourceOutput`에 전달할 수 있습니다.
+
+### Q2: 데이터 모델에 `readonly record struct`를 사용하면 캐싱 성능이 향상되는 이유는 무엇인가요?
+**A**: `record struct`는 값 기반 `Equals`/`GetHashCode`를 자동 생성합니다. Roslyn은 파이프라인 단계마다 이전 결과와 현재 결과를 비교하여 동일하면 다음 단계를 건너뜁니다. 정확한 값 비교가 보장되어야 캐시 적중률이 높아지고, 불필요한 코드 재생성이 줄어듭니다.
+
+### Q3: `Combine` 연산자는 어떤 상황에서 사용하나요?
+**A**: 소스 코드에서 추출한 데이터와 컴파일 옵션 같은 외부 정보를 결합해야 할 때 사용합니다. 예를 들어 Debug/Release 모드에 따라 생성 코드를 다르게 하려면, `provider.Combine(context.CompilationProvider)`로 두 데이터를 합쳐 코드 생성 시 참조할 수 있습니다.
+
+---
+
 ## 다음 단계
 
 Provider 파이프라인의 전체 흐름을 이해했으니, 다음으로는 파이프라인의 시작점에서 가장 자주 사용되는 API인 `ForAttributeWithMetadataName`을 살펴봅니다. 이 API가 속성 기반 필터링을 어떻게 최적화하는지, 그리고 직접 구현과 비교했을 때 왜 10~100배 빠른지 확인합니다.

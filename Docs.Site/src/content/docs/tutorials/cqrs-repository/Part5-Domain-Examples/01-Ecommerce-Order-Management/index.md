@@ -106,14 +106,14 @@ order.Cancel()        → OrderCancelledEvent
 
 ## FAQ
 
-**Q: OrderLine을 별도 Aggregate로 만들지 않는 이유는?**
-A: OrderLine은 Order 없이는 존재 의미가 없는 자식 Entity입니다. Aggregate 경계는 "함께 변경되어야 하는 단위"로 결정하며, OrderLine은 항상 Order와 함께 생성/변경됩니다.
+### Q1: OrderLine을 별도 Aggregate로 만들지 않는 이유는?
+**A**: OrderLine은 Order 없이는 존재 의미가 없는 자식 Entity입니다. Aggregate 경계는 "함께 변경되어야 하는 단위"로 결정하며, OrderLine은 항상 Order와 함께 생성/변경됩니다.
 
-**Q: TotalAmount를 매번 계산하는 대신 캐싱하면 안 되나요?**
-A: 이 예제에서는 생성 시점에 계산하여 저장합니다. 실무에서는 OrderLine 변경 시 재계산 로직이 필요하며, 이는 Aggregate Root가 불변식을 보호하는 좋은 예입니다.
+### Q2: TotalAmount를 매번 계산하는 대신 캐싱하면 안 되나요?
+**A**: 이 예제에서는 생성 시점에 계산하여 저장합니다. 실무에서는 OrderLine 변경 시 재계산 로직이 필요하며, 이는 Aggregate Root가 불변식을 보호하는 좋은 예입니다.
 
-**Q: Cancel()이 Shipped 상태에서는 불가능한 이유는?**
-A: 이 예제에서는 Confirmed까지만 취소를 허용합니다. 실무에서는 Shipped 상태에서도 반품 프로세스를 통한 취소가 가능할 수 있으며, 이는 별도의 도메인 이벤트(ReturnRequestedEvent)로 처리합니다.
+### Q3: Cancel()이 Shipped 상태에서는 불가능한 이유는?
+**A**: 이 예제에서는 Confirmed까지만 취소를 허용합니다. 실무에서는 Shipped 상태에서도 반품 프로세스를 통한 취소가 가능할 수 있으며, 이는 별도의 도메인 이벤트(ReturnRequestedEvent)로 처리합니다.
 
 ---
 

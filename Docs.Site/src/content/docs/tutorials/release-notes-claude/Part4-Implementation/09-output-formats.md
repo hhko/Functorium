@@ -329,6 +329,20 @@ Phase 1은 환경만 검증하므로 파일을 생성하지 않습니다. Phase 
 
 이상으로 6장에서 다룬 템플릿 및 설정 파일을 모두 살펴보았습니다. TEMPLATE.md가 릴리스 노트의 표준 형식을 정의하고, component-priority.json이 분석 대상과 우선순위를 결정하며, 각 Phase의 출력 파일들이 워크플로우를 연결하는 매개체 역할을 합니다. 이 세 가지를 이해하면 자동화 시스템이 어떻게 일관된 릴리스 노트를 만들어내는지 전체 그림이 보일 것입니다.
 
+## FAQ
+
+### Q1: `.analysis-output/work/` 디렉터리의 중간 산출물을 Git에 커밋해야 하나요?
+**A**: 선택사항입니다. 중간 산출물은 **디버깅과 감사(Audit) 목적으로** 유용하므로 커밋해두면 나중에 릴리스 노트가 어떤 데이터를 기반으로 작성되었는지 추적할 수 있습니다. 다만 매번 재생성 가능한 파일이므로, `.gitignore`에 추가하고 필요할 때만 커밋하는 것도 합리적인 선택입니다.
+
+### Q2: Phase 간 출력 파일이 누락되면 어떻게 감지할 수 있나요?
+**A**: 각 Phase는 이전 Phase의 출력 파일을 입력으로 사용하므로, **파일이 없으면 해당 Phase에서 즉시 오류가 발생합니다.** 예를 들어 Phase 3은 `.analysis-output/*.md` 파일이 없으면 "분석 파일을 찾을 수 없습니다" 오류를, Phase 4는 Uber 파일이 없으면 "all-api-changes.txt가 없습니다" 오류를 출력합니다.
+
+### Q3: Uber 파일과 API Diff 파일의 차이는 무엇인가요?
+**A**: **Uber 파일(`all-api-changes.txt`)은** 현재 브랜치의 전체 Public API를 담고 있는 스냅샷이고, **API Diff 파일(`api-changes-diff.txt`)은** 이전 버전과 현재 버전 사이에 추가/삭제/변경된 API만 보여주는 차이 정보입니다. Uber 파일은 API 정확성 검증에, Diff 파일은 Breaking Change 감지에 사용됩니다.
+
+### Q4: `phase3-feature-groups.md`에서 기능 그룹화는 어떤 기준으로 이루어지나요?
+**A**: Phase 3에서 Claude가 커밋 메시지의 스코프(`feat(errors)`, `feat(logging)`)와 변경된 파일 경로를 분석하여, **동일한 사용자 가치를 제공하는 커밋들을** 하나의 기능 그룹으로 묶습니다. 예를 들어 `ErrorCodeFactory.Create`과 `ErrorCodeFactory.CreateFromException` 관련 커밋은 "함수형 오류 처리" 그룹으로 합쳐집니다.
+
 ## 다음 단계
 
 - [첫 번째 릴리스 노트 생성](../Part5-Hands-On/01-first-release-note.md)

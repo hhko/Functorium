@@ -329,6 +329,19 @@ ctx.AddSource("Repositories.UserRepositoryObservable.g.cs", code);
 
 ---
 
+## FAQ
+
+### Q1: `RegisterPostInitializationOutput`으로 생성한 속성 코드는 언제 컴파일에 추가되나요?
+**A**: 파이프라인 실행 이전의 Post-Initialization 단계에서 즉시 추가됩니다. 이 코드는 사용자 소스 코드와 함께 컴파일되므로, `ForAttributeWithMetadataName`에서 해당 속성을 참조할 수 있습니다. 소스 변경과 무관하게 항상 동일한 결과를 생성하는 고정 코드에 적합합니다.
+
+### Q2: `IncrementalGeneratorBase<TValue>`의 `Collect()`는 왜 필요한가요?
+**A**: `Collect()`는 여러 개의 `IncrementalValuesProvider<T>` 항목을 하나의 `ImmutableArray<T>`로 모읍니다. Functorium에서는 모든 대상 클래스를 한 번에 받아 `StringBuilder`를 재사용하며 순차적으로 코드를 생성하기 위해 이 패턴을 사용합니다. 다만 개별 항목 캐싱이 필요한 경우에는 `Collect` 없이 개별 처리가 더 효율적입니다.
+
+### Q3: `AddSource`의 `hintName`은 어떤 규칙으로 정해야 하나요?
+**A**: `hintName`은 프로젝트 내에서 고유해야 하며, 확장자를 `.g.cs`로 지정하는 것이 관례입니다. 서로 다른 네임스페이스에 같은 이름의 클래스가 있을 수 있으므로, 네임스페이스 접미사를 포함하여 `Repositories.UserRepositoryObservable.g.cs` 형태로 지정하면 충돌을 방지할 수 있습니다.
+
+---
+
 ## 다음 단계
 
 `IIncrementalGenerator`의 전체 구조를 이해했으니, 다음으로는 파이프라인의 핵심 구성 요소인 Provider 패턴을 살펴봅니다. LINQ와 유사한 선언적 연산자들이 어떻게 데이터를 변환하고 필터링하는지 학습합니다.

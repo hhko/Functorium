@@ -86,6 +86,17 @@ where TResponse : IFinResponseFactory<TResponse>
 where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 ```
 
+## FAQ
+
+### Q1: Pipeline마다 왜 서로 다른 제약 조건이 필요한가요?
+**A**: 각 Pipeline은 응답에 대해 서로 다른 능력이 필요하기 때문입니다. Validation Pipeline은 실패 응답을 **생성만** 하면 되지만, Logging Pipeline은 응답의 성공/실패를 **읽어야** 합니다. 불필요한 제약을 부여하지 않는 것이 인터페이스 분리 원칙(ISP)의 핵심입니다.
+
+### Q2: Create-Only 제약과 Read+Create 제약의 실질적 차이는 무엇인가요?
+**A**: Create-Only 제약(`IFinResponseFactory<TResponse>`)은 `TResponse.CreateFail(error)` 호출만 가능하고, 기존 응답의 `IsSucc`/`IsFail`에는 접근할 수 없습니다. Read+Create 제약은 `IFinResponse`를 추가하여 응답 상태 읽기와 실패 응답 생성을 모두 할 수 있습니다.
+
+### Q3: Transaction Pipeline과 Caching Pipeline이 모두 Read+Create 제약인 이유는 무엇인가요?
+**A**: 두 Pipeline 모두 응답의 성공/실패 상태를 **읽어야** 합니다. Transaction은 성공 시 커밋, 실패 시 롤백을 결정하고, Caching은 성공 응답만 캐싱합니다. 또한 예외 발생 시 실패 응답을 생성해야 하므로 Create 능력도 필요합니다.
+
 이제 이 아키텍처를 구현하기 위해 어떤 순서로 학습할지 살펴봅니다.
 
 ## 이 튜토리얼에서 다루는 흐름

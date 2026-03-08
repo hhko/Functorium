@@ -112,6 +112,17 @@ if (response is IFinResponseWithError fail)
 - 성공 응답(`Succ`)은 이 인터페이스를 구현하지 않음
 - 제약에 추가하면 성공 응답이 Pipeline을 통과할 수 없음
 
+## FAQ
+
+### Q1: `IFinResponseWithError`를 제약 조건에 추가하지 않고 패턴 매칭으로 접근하는 이유는 무엇인가요?
+**A**: `IFinResponseWithError`는 **Fail 케이스에서만** 구현됩니다. 이를 제약에 추가하면 성공 응답(`Succ`)은 이 인터페이스를 구현하지 않으므로 Pipeline을 통과할 수 없게 됩니다. 패턴 매칭(`is IFinResponseWithError`)으로 런타임에 확인하면 성공/실패 응답 모두 처리할 수 있습니다.
+
+### Q2: Logging Pipeline과 Tracing Pipeline은 같은 이중 제약을 사용하는데, 어떤 차이가 있나요?
+**A**: 제약 조건은 동일하지만 **사용 목적**이 다릅니다. Logging Pipeline은 텍스트 로그를 기록하고, Tracing Pipeline은 분산 추적(OpenTelemetry) 태그를 설정합니다. 제약이 같다는 것은 응답에 대한 **필요 능력**이 동일하다는 의미이지, Pipeline의 동작이 같다는 의미는 아닙니다.
+
+### Q3: Read+Create 이중 제약에서 Create 능력은 언제 사용되나요?
+**A**: Logging이나 Tracing Pipeline 자체에서 `CreateFail`을 직접 호출하는 경우는 드뭅니다. 하지만 `next()` 호출 시 예외가 발생하면 catch 블록에서 `TResponse.CreateFail(Error.New(ex))`로 실패 응답을 생성해야 합니다. 이 **예외 대응**을 위해 Create 능력이 필요합니다.
+
 Read+Create 이중 제약이 Observability Pipeline에서 어떻게 동작하는지 확인했습니다. 다음 장에서는 동일한 이중 제약을 사용하면서 Command/Query에 따라 조건부로 실행되는 Transaction과 Caching Pipeline을 살펴봅니다.
 
 ## 학습 목표

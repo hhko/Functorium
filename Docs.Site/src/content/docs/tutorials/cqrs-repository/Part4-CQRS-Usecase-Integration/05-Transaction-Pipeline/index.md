@@ -135,14 +135,14 @@ Transaction Pipeline의 핵심 구성 요소를 정리합니다.
 
 ## FAQ
 
-**Q: 왜 이벤트 발행이 트랜잭션 커밋 이후인가요?**
-A: 커밋 전에 이벤트를 발행하면, 이벤트 핸들러가 아직 커밋되지 않은 데이터를 조회할 수 있습니다. 또한 커밋이 실패하면 이미 발행된 이벤트를 취소할 수 없습니다.
+### Q1: 왜 이벤트 발행이 트랜잭션 커밋 이후인가요?
+**A**: 커밋 전에 이벤트를 발행하면, 이벤트 핸들러가 아직 커밋되지 않은 데이터를 조회할 수 있습니다. 또한 커밋이 실패하면 이미 발행된 이벤트를 취소할 수 없습니다.
 
-**Q: Usecase에서 직접 SaveChanges를 호출해야 하나요?**
-A: 아닙니다. Pipeline이 자동으로 호출합니다. Usecase는 Repository의 Create/Update만 호출하면 됩니다.
+### Q2: Usecase에서 직접 SaveChanges를 호출해야 하나요?
+**A**: 아닙니다. Pipeline이 자동으로 호출합니다. Usecase는 Repository의 Create/Update만 호출하면 됩니다.
 
-**Q: 명시적 트랜잭션이 필요한 경우는?**
-A: Pipeline이 자동으로 트랜잭션을 관리하므로, 일반적으로 Usecase에서 직접 트랜잭션을 다룰 필요가 없습니다. Pipeline의 `BeginTransactionAsync`가 ExecuteDeleteAsync 등 즉시 실행 SQL도 동일 트랜잭션에 포함시킵니다.
+### Q3: 명시적 트랜잭션이 필요한 경우는?
+**A**: Pipeline이 자동으로 트랜잭션을 관리하므로, 일반적으로 Usecase에서 직접 트랜잭션을 다룰 필요가 없습니다. Pipeline의 `BeginTransactionAsync`가 ExecuteDeleteAsync 등 즉시 실행 SQL도 동일 트랜잭션에 포함시킵니다.
 
 ---
 

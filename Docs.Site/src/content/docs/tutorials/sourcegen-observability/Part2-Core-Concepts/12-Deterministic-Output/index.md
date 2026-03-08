@@ -309,6 +309,19 @@ public Task Generated_Code_Should_Match_Snapshot()
 
 ---
 
+## FAQ
+
+### Q1: 결정적 출력이 깨지면 어떤 문제가 발생하나요?
+**A**: 세 가지 문제가 연쇄적으로 발생합니다. 첫째, 증분 빌드에서 캐시가 무효화되어 매번 전체 재빌드가 발생합니다. 둘째, 소스 제어에서 의미 없는 diff가 생겨 불필요한 커밋이 발생합니다. 셋째, CI/CD에서 동일한 코드가 다른 결과를 내어 빌드 재현성이 깨집니다.
+
+### Q2: `.OrderBy()`로 정렬하면 성능에 영향이 있나요?
+**A**: 소스 생성기는 컴파일 타임에 실행되므로, 정렬 비용은 빌드 시간에 포함됩니다. 대부분의 클래스에서 메서드 수는 수십 개 이하이므로 정렬 비용은 무시할 수 있는 수준입니다. 오히려 정렬하지 않아 비결정적 출력이 발생하면 증분 빌드 캐시가 무효화되어 훨씬 큰 성능 손실을 초래합니다.
+
+### Q3: `SymbolDisplayFormat`과 직접 `global::` 접두사를 붙이는 것의 차이는 무엇인가요?
+**A**: `SymbolDisplayFormat.FullyQualifiedFormat`을 사용하면 Roslyn이 타입의 전체 경로를 `global::` 접두사 포함하여 자동으로 생성합니다. 직접 문자열로 `"global::System.Int32"` 같이 하드코딩하면 타입 변경 시 누락될 위험이 있습니다. Functorium은 커스텀 `SymbolDisplayFormats.GlobalQualifiedFormat`을 정의하여 일관성을 보장합니다.
+
+---
+
 ## 다음 단계
 
 Part 2에서 소스 생성기의 핵심 개념을 모두 다뤘습니다. 다음 Part에서는 Primary Constructor, 제네릭 타입, 컬렉션 타입처럼 실전에서 마주치는 복잡한 케이스를 처리하는 방법을 학습합니다.

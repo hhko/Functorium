@@ -525,6 +525,19 @@ public Task Should_Generate_PipelineClass_WithDeepNamespace()
 
 ---
 
+## FAQ
+
+### Q1: 27개 테스트 시나리오에서 가장 빠뜨리기 쉬운 케이스는 무엇인가요?
+**A**: 튜플 내부에 컬렉션이 포함된 경우(`FinT<IO, (int Id, List<string> Tags)>`)와 `LoggerMessage.Define`의 경계값(파라미터 2개 vs 3개)이 가장 빠뜨리기 쉽습니다. 전자는 Count를 생성하면 컴파일 오류가 발생하고, 후자는 한 개 차이로 고성능 경로와 폴백 경로가 달라지므로 양쪽 모두 테스트해야 합니다.
+
+### Q2: `ShouldNotContain` assertion은 언제 사용하나요?
+**A**: "생성하지 않아야 하는" 코드를 검증할 때 사용합니다. 예를 들어 튜플 반환 타입에서 `response.result.count` 필드가 생성되지 않아야 하거나, 메서드가 없는 어댑터에서 메서드 오버라이드가 생성되지 않아야 할 때 `actual.ShouldNotContain("response.result.count")`로 명시적으로 검증합니다. 스냅샷 테스트만으로는 "없어야 할 것이 없다"를 확인하기 어렵기 때문입니다.
+
+### Q3: 테스트 이름에 `Should_{Action}_{Condition}` 패턴을 사용하는 이유는 무엇인가요?
+**A**: 테스트가 실패했을 때 이름만으로 "무엇이 어떤 조건에서 실패했는지"를 즉시 파악할 수 있기 때문입니다. `Should_Generate_LogDebugFallback_WithThreeParameters`라는 이름은 "3개 파라미터일 때 LogDebug 폴백이 생성되어야 한다"를 명확히 전달하므로, 실패 원인 추적이 빠릅니다.
+
+---
+
 ## 다음 단계
 
 Part 3에서 다룬 고급 주제들(생성자, 제네릭, 컬렉션, LoggerMessage 제한, 테스트)을 모두 학습했습니다. 다음 장에서는 지금까지의 학습 내용을 요약합니다.

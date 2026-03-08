@@ -325,4 +325,15 @@ rootCommand.SetAction((parseResult, cancellationToken) =>
 return await rootCommand.Parse(args).InvokeAsync();
 ```
 
+## FAQ
+
+### Q1: `args[0]` 직접 파싱 대신 System.CommandLine을 사용하는 이유는 무엇인가요?
+**A**: `args[]` 직접 파싱은 인자가 2~3개만 되어도 순서 관리, 기본값 처리, 오류 메시지 생성 코드가 급격히 복잡해집니다. System.CommandLine은 선언적으로 Option과 Argument를 정의하면 **파싱, 검증, `--help` 생성까지 자동으로** 처리해주므로, 스크립트 코드가 실제 비즈니스 로직에만 집중할 수 있습니다.
+
+### Q2: `SetAction` 핸들러에서 반환하는 `0`은 무엇을 의미하나요?
+**A**: 프로세스 종료 코드(exit code)입니다. `0`은 정상 종료를, `0`이 아닌 값은 오류를 의미합니다. 이 종료 코드는 CI/CD 파이프라인이나 셸 스크립트에서 명령 성공 여부를 판단하는 데 사용되므로, 오류 상황에서는 `1` 등 다른 값을 반환해야 합니다.
+
+### Q3: `DefaultValueFactory`와 생성자에서 기본값을 직접 설정하는 것의 차이는 무엇인가요?
+**A**: `DefaultValueFactory`는 **람다를 통해 기본값을 지연 생성합니다.** 즉, 사용자가 해당 Option을 지정하지 않았을 때만 팩토리가 호출됩니다. 기본값이 단순 상수가 아니라 환경 변수나 설정 파일에서 읽어야 하는 경우 특히 유용합니다.
+
 System.CommandLine이 인자 파싱과 검증을 맡아주면, 스크립트 코드는 **실제 로직에만 집중**할 수 있습니다. 다음 절에서는 이 스크립트들의 콘솔 출력을 풍부하게 만들어주는 Spectre.Console을 살펴보겠습니다.

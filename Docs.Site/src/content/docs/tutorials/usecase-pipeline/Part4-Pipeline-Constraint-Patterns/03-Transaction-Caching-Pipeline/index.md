@@ -110,6 +110,20 @@ if (request is ICacheable cacheable)
 }
 ```
 
+## FAQ
+
+### Q1: Transaction Pipeline이 Query를 건너뛰는 것은 어떻게 구현되나요?
+**A**: 실제 Mediator Pipeline에서는 `request is ICommandRequest` 타입 검사로 Command/Query를 분기합니다. `ICommandRequest`가 아닌 요청은 트랜잭션 시작/커밋/롤백 없이 `next()`를 직접 호출하여 통과시킵니다.
+
+### Q2: Caching Pipeline이 실패 응답을 캐싱하지 않는 이유는 무엇인가요?
+**A**: 실패 응답은 일시적 오류(네트워크 타임아웃, 일시적 DB 장애 등)인 경우가 많습니다. 실패를 캐싱하면 재시도 시에도 캐시된 실패가 반환되어 **복구 불가능한 상태**가 됩니다. 따라서 `response.IsSucc`으로 성공 응답만 캐싱합니다.
+
+### Q3: Transaction과 Caching이 같은 이중 제약을 사용하지만 적용 대상이 다른 이유는 무엇인가요?
+**A**: 두 Pipeline 모두 응답의 성공/실패를 읽는 능력(Read)과 예외 시 실패 응답을 생성하는 능력(Create)이 필요하므로 **제약 조건은 동일**합니다. 하지만 Transaction은 데이터 변경이 있는 **Command에만**, Caching은 읽기 전용인 **Query에만** 적용되는 것이 비즈니스 요구사항입니다.
+
+### Q4: `ICacheable` 인터페이스를 구현하지 않은 Query는 어떻게 되나요?
+**A**: Caching Pipeline은 `request is ICacheable`로 캐싱 가능 여부를 확인합니다. `ICacheable`을 구현하지 않은 Query는 캐싱을 건너뛰고 매번 Handler를 실행합니다. 모든 Query에 캐싱을 강제하지 않아 **선택적 최적화**가 가능합니다.
+
 Pipeline별 타입 제약 패턴을 모두 확인했습니다. 다음 장에서는 Repository 계층의 `Fin<T>`와 Usecase 계층의 `FinResponse<T>`를 연결하는 브릿지 패턴을 살펴봅니다.
 
 ## 학습 목표

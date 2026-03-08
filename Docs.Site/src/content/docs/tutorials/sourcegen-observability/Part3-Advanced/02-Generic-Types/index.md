@@ -480,6 +480,19 @@ TypeExtractor의 핵심은 브래킷 카운팅 알고리즘입니다. `<`를 만
 
 ---
 
+## FAQ
+
+### Q1: 브래킷 카운팅 알고리즘이 실패하는 경우가 있나요?
+**A**: `FinT<IO, T>` 형태가 아닌 반환 타입(예: 일반 `string`)에서는 `FinT<` 패턴을 찾지 못해 원본 문자열을 그대로 반환합니다. 이는 의도된 동작으로, ObservablePortGenerator가 처리하는 메서드는 모두 `FinT<IO, T>` 형태이므로 실제로 문제가 발생하지 않습니다.
+
+### Q2: Fully Qualified Name(`global::` 접두사 포함)에서도 타입 추출이 정상 작동하나요?
+**A**: 네. `TypeExtractor`는 문자열 내에서 `FinT<` 패턴의 위치를 `IndexOf`로 찾고, 그 이후부터 브래킷 카운팅을 수행합니다. `global::LanguageExt.FinT<global::LanguageExt.IO, global::System.Collections.Generic.List<DataResult>>`처럼 긴 Fully Qualified Name에서도 두 번째 타입 파라미터를 정확히 추출합니다.
+
+### Q3: `TypeExtractor`를 `IMethodSymbol.ReturnType`의 `TypeArguments`로 대체할 수 없나요?
+**A**: Roslyn의 `INamedTypeSymbol.TypeArguments`를 사용하면 심볼 수준에서 타입 파라미터를 직접 접근할 수 있습니다. 그러나 ObservablePortGenerator는 이미 `SymbolDisplayFormat`으로 변환된 문자열을 기반으로 코드를 생성하므로, 문자열 파싱 방식이 파이프라인의 나머지 부분과 일관성을 유지합니다.
+
+---
+
 ## 다음 단계
 
 타입 추출이 가능해졌으니, 추출된 타입이 컬렉션인지 판별하여 Count/Length 태그를 자동으로 생성하는 방법을 알아봅니다.

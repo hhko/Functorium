@@ -78,11 +78,11 @@ Query Usecase를 구성하는 핵심 개념을 정리합니다.
 
 ## FAQ
 
-**Q: 왜 Repository 대신 별도의 Query Port를 사용하나요?**
-A: Repository는 Aggregate Root 단위의 CRUD에 초점을 맞추지만, Query는 여러 테이블을 조인하거나 집계하는 등 읽기에 최적화된 별도의 경로가 필요합니다. CQRS의 핵심은 이 읽기/쓰기 경로의 분리입니다.
+### Q1: 왜 Repository 대신 별도의 Query Port를 사용하나요?
+**A**: Repository는 Aggregate Root 단위의 CRUD에 초점을 맞추지만, Query는 여러 테이블을 조인하거나 집계하는 등 읽기에 최적화된 별도의 경로가 필요합니다. CQRS의 핵심은 이 읽기/쓰기 경로의 분리입니다.
 
-**Q: Query Usecase에서도 FinT를 사용하는 이유는?**
-A: 데이터 조회도 실패할 수 있기 때문입니다 (not found, DB 연결 오류 등). FinT를 사용하면 Command와 동일한 합성 패턴으로 에러를 처리할 수 있습니다.
+### Q2: Query Usecase에서도 FinT를 사용하는 이유는?
+**A**: 데이터 조회도 실패할 수 있기 때문입니다 (not found, DB 연결 오류 등). FinT를 사용하면 Command와 동일한 합성 패턴으로 에러를 처리할 수 있습니다.
 
 ---
 

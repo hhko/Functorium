@@ -98,14 +98,14 @@ public interface IDomainEventCollector
 
 ## FAQ
 
-**Q: 이벤트는 언제 발행되나요?**
-A: UsecaseTransactionPipeline에서 SaveChanges 성공 후, 트랜잭션 커밋 후에 `IDomainEventPublisher.PublishTrackedEvents()`가 호출되어 이벤트가 발행됩니다.
+### Q1: 이벤트는 언제 발행되나요?
+**A**: UsecaseTransactionPipeline에서 SaveChanges 성공 후, 트랜잭션 커밋 후에 `IDomainEventPublisher.PublishTrackedEvents()`가 호출되어 이벤트가 발행됩니다.
 
-**Q: ClearDomainEvents()는 누가 호출하나요?**
-A: `DomainEventPublisher`가 이벤트 발행 후 자동으로 호출합니다. Usecase에서 직접 호출할 필요가 없습니다.
+### Q2: ClearDomainEvents()는 누가 호출하나요?
+**A**: `DomainEventPublisher`가 이벤트 발행 후 자동으로 호출합니다. Usecase에서 직접 호출할 필요가 없습니다.
 
-**Q: 같은 Aggregate를 여러 번 Track하면 어떻게 되나요?**
-A: `ReferenceEqualityComparer`를 사용하므로 동일 인스턴스는 한 번만 추적됩니다. 중복 Track은 무시됩니다.
+### Q3: 같은 Aggregate를 여러 번 Track하면 어떻게 되나요?
+**A**: `ReferenceEqualityComparer`를 사용하므로 동일 인스턴스는 한 번만 추적됩니다. 중복 Track은 무시됩니다.
 
 ---
 

@@ -276,4 +276,15 @@ $ARGUMENTS 클래스에 대한 단위 테스트를 생성해주세요.
 > /test UserService
 ```
 
+## FAQ
+
+### Q1: Command 파일명에 규칙이 있나요?
+**A**: 파일명이 곧 명령어 이름이 됩니다. 확장자는 `.md`를 사용하고, 공백 대신 하이픈(`-`)을 씁니다. 예를 들어 `release-note.md`는 `/release-note`로, `code-review.md`는 `/code-review`로 실행됩니다. 대소문자는 구분하지 않습니다.
+
+### Q2: 하나의 Command에서 여러 파일의 지침을 참조할 수 있나요?
+**A**: 가능합니다. Command 본문에서 다른 Markdown 파일을 링크로 참조하면 Claude가 필요에 따라 해당 문서를 읽고 지침을 따릅니다. `release-note.md`가 Phase별 상세 문서(`.release-notes/scripts/docs/phase*.md`)를 참조하는 것이 이 패턴의 대표적인 예입니다.
+
+### Q3: Command 파일을 팀에서 공유하려면 어떻게 하나요?
+**A**: `.claude/commands/` 폴더를 Git에 커밋하면 됩니다. `git add .claude/commands/release-note.md && git push`를 실행하면 팀원이 `git pull` 후 바로 `/release-note` 명령어를 사용할 수 있습니다. Command 개선 이력도 Git 히스토리로 추적됩니다.
+
 이제 Command의 기본 개념을 이해했으니, 다음 절에서 Command 파일의 상세 문법과 효과적인 프롬프트 작성 기법을 살펴보겠습니다.

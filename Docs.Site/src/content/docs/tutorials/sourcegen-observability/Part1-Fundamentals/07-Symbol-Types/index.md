@@ -394,6 +394,19 @@ type.ToDisplayString(format)
 
 ---
 
+## FAQ
+
+### Q1: `INamedTypeSymbol.AllInterfaces`와 `INamedTypeSymbol.Interfaces`의 차이는 무엇인가요?
+**A**: `Interfaces`는 해당 타입이 직접 선언한 인터페이스만 반환합니다. `AllInterfaces`는 상속 체인을 따라 올라가며 모든 인터페이스를 포함합니다. ObservablePortGenerator에서 `IObservablePort` 구현 여부를 확인할 때 `AllInterfaces`를 사용하는 이유는, 직접 구현하지 않고 상위 인터페이스를 통해 간접적으로 구현하는 경우도 포함해야 하기 때문입니다.
+
+### Q2: `IMethodSymbol.MethodKind`로 `Ordinary`만 필터링하는 이유는 무엇인가요?
+**A**: `GetMembers()`는 생성자(`Constructor`), 프로퍼티 접근자(`PropertyGet`/`PropertySet`), 연산자(`UserDefinedOperator`) 등 모든 메서드류 멤버를 반환합니다. 소스 생성기가 래퍼 코드를 생성할 대상은 일반 메서드뿐이므로, `MethodKind.Ordinary` 필터로 불필요한 멤버를 제외합니다.
+
+### Q3: `SymbolDisplayFormat`을 커스텀으로 정의하는 이유는 무엇인가요?
+**A**: 기본 제공 포맷인 `FullyQualifiedFormat`은 `int` 대신 `System.Int32`로 출력하는 등 C# 특수 타입 별칭을 사용하지 않습니다. Functorium의 `GlobalQualifiedFormat`은 `UseSpecialTypes`와 `IncludeNullableReferenceTypeModifier` 옵션을 추가하여, 생성된 코드가 자연스러운 C# 문법을 따르도록 합니다.
+
+---
+
 ## 다음 단계
 
 Roslyn의 세 가지 핵심 계층 - Syntax Tree, Semantic Model, Symbol - 을 모두 학습했습니다. 다음 장에서는 이 세 계층을 조합하여 실제 소스 생성기를 구현하는 `IIncrementalGenerator` 패턴을 학습합니다.

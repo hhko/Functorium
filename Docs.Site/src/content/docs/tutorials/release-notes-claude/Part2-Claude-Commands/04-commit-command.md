@@ -208,4 +208,15 @@ commit.md                            release-note.md
 
 이 다이어그램이 두 Command의 관계를 잘 보여줍니다. `commit.md`가 생성하는 일관된 커밋 메시지는 `release-note.md`의 자동 분류 엔진이 소비하는 데이터입니다. Conventional Commits 형식을 따르는 커밋 히스토리가 쌓여야 비로소 `release-note.md`가 커밋을 "새로운 기능", "버그 수정", "Breaking Changes"로 정확하게 분류할 수 있습니다. 두 Command는 독립적으로 존재하지만, 함께 사용할 때 자동화 시스템의 전체 가치가 실현됩니다.
 
+## FAQ
+
+### Q1: `/commit`을 Topic 없이 실행하면 모든 변경사항이 하나의 커밋에 담기나요?
+**A**: 아닙니다. Topic 없이 `/commit`을 실행하면 Claude가 모든 변경사항을 분석하여 **논리적 단위로 분리한 뒤 여러 커밋을 생성합니다.** 예를 들어 기능 변경, 테스트, 문서, 설정 파일을 각각 별도의 커밋으로 만듭니다.
+
+### Q2: `commit.md`와 `release-note.md`는 왜 함께 사용해야 하나요?
+**A**: `commit.md`가 생성하는 일관된 Conventional Commits 형식의 커밋 메시지가 `release-note.md`의 자동 분류 엔진이 소비하는 데이터입니다. `feat(api):` 같은 형식이 지켜져야 Phase 3에서 커밋을 "새로운 기능", "버그 수정", "Breaking Changes"로 정확하게 분류할 수 있습니다. 두 Command는 **생산자-소비자 관계입니다.**
+
+### Q3: 커밋 메시지에 `Co-Authored-By: Claude` 같은 AI 생성 관련 메시지를 포함하면 안 되는 이유는 무엇인가요?
+**A**: 릴리스 노트 자동화에서 커밋 메시지를 파싱할 때 노이즈가 됩니다. Conventional Commits 형식의 `type(scope): description`만으로 커밋을 분류해야 하는데, 불필요한 메타데이터가 포함되면 파싱 정확도가 떨어지고 커밋 히스토리가 지저분해집니다.
+
 Part 2에서 살펴본 네 가지 주제(Command 개념, 문법, release-note.md 구조, commit.md 구조)를 바탕으로, 다음 Part에서는 5단계 워크플로우의 실제 동작을 하나씩 살펴보겠습니다.

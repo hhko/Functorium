@@ -213,3 +213,17 @@ private static readonly HashSet<string> ReservedNames = new(StringComparer.Ordin
     "admin", "administrator", "root", "system"
 };
 ```
+
+## FAQ
+
+### Q1: `Email`에서 소문자로 정규화하는 이유는 무엇인가요?
+**A**: RFC 표준상 이메일의 로컬 파트는 대소문자를 구분할 수 있지만, 대부분의 메일 서버는 대소문자를 구분하지 않습니다. 소문자로 정규화하면 `User@Example.com`과 `user@example.com`이 동일한 값 객체로 인식되어 동등성 비교가 정확해집니다.
+
+### Q2: `Password` 값 객체가 해시값을 저장하는 이유는 무엇인가요?
+**A**: 평문 비밀번호를 메모리에 유지하면 로그 출력이나 직렬화 시 노출될 위험이 있습니다. 값 객체가 생성 시점에 해시로 변환하여 저장하면, `ToString()`이나 디버거에서도 원본 비밀번호가 노출되지 않습니다.
+
+### Q3: `Username`에서 예약어 목록을 `HashSet`으로 관리하는 이유는 무엇인가요?
+**A**: 예약어 검증은 사용자 등록 시마다 실행됩니다. `List`의 `Contains`는 O(n)이지만 `HashSet`의 `Contains`는 O(1)이므로, 예약어가 많아져도 성능이 일정합니다. `StringComparer.OrdinalIgnoreCase`를 사용하여 대소문자 구분 없이 비교합니다.
+
+### Q4: 마스킹 기능은 모든 값 객체에 필요한가요?
+**A**: 아닙니다. 개인정보가 포함된 값 객체(`Email`, `PhoneNumber`, `AccountNumber` 등)에만 필요합니다. `ProductCode`나 `OrderStatus` 같은 비민감 데이터에는 마스킹이 불필요합니다.

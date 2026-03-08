@@ -337,6 +337,19 @@ context.RegisterSourceOutput(provider, (ctx, item) =>
 
 ---
 
+## FAQ
+
+### Q1: 증분 캐싱이 무효화되는 가장 흔한 원인은 무엇인가요?
+**A**: `DateTime.Now`, `Guid.NewGuid()` 같은 비결정적 값을 데이터 모델에 포함하거나, 컬렉션의 정렬 순서를 보장하지 않는 것이 가장 흔한 원인입니다. 매 빌드마다 데이터 모델의 `Equals` 비교가 `false`를 반환하여, 실제 변경이 없어도 코드가 재생성됩니다.
+
+### Q2: `predicate`에서 최대한 필터링해야 하는 이유는 무엇인가요?
+**A**: `predicate`는 Syntax 수준에서 동작하여 비용이 매우 낮습니다. 반면 `transform`은 Semantic Model 접근이 필요하여 비용이 높습니다. `predicate`에서 후보를 최대한 줄이면 `transform`의 실행 횟수가 감소하고, 결과적으로 전체 파이프라인 성능이 향상됩니다.
+
+### Q3: `ObservableClassInfo`에서 `List<MethodInfo>` 대신 `ImmutableArray<MethodInfo>`를 사용하면 더 좋지 않나요?
+**A**: 이론적으로는 `ImmutableArray`가 불변성을 보장하여 더 안전합니다. 다만 Functorium에서는 `readonly record struct`의 값 동등성과 `MethodInfo`의 내용 기반 비교로 캐싱이 올바르게 작동하며, 구현 단순성을 위해 `List`를 사용하고 있습니다.
+
+---
+
 ## 다음 단계
 
 증분 캐싱의 원리를 이해했으니, 이제 파이프라인에서 실제로 데이터를 추출하는 핵심 도구인 심볼 API로 넘어갑니다. 다음 장에서는 `INamedTypeSymbol`을 통해 클래스와 인터페이스의 정보를 어떻게 분석하는지 살펴봅니다.

@@ -258,4 +258,15 @@ grep "ErrorCodeFactory" .analysis-output/api-changes-build-current/all-api-chang
 
 마지막으로, Breaking Changes가 빠짐없이 포함되었는지 확인합니다. `api-changes-diff.txt`의 모든 삭제/변경 API가 문서화되어야 하고, 커밋 메시지 패턴(`!:`, `breaking`)으로 표시된 커밋도 포함되어야 합니다.
 
+## FAQ
+
+### Q1: 여러 커밋이 하나의 기능으로 그룹화되는 기준은 무엇인가요?
+**A**: 관련된 API나 모듈을 다루는 커밋, 동일한 GitHub 이슈/PR에 연결된 커밋, 유사한 주제(예: 오류 처리, 로깅)를 다루는 커밋이 하나의 기능 그룹으로 통합됩니다. 멀티 컴포넌트 기능(예: Functorium에서 핵심 변경, Functorium.Testing에서 테스트 추가)도 하나의 그룹으로 묶입니다.
+
+### Q2: GitHub 이슈/PR 조회가 "반드시" 필요한 이유는 무엇인가요?
+**A**: 커밋 메시지만으로는 **변경의 동기와 맥락을** 파악하기 어렵습니다. PR과 이슈에는 사용자가 겪은 구체적인 문제, 대안 검토 내용, 관련 이슈 등이 담겨 있어 "Why this matters" 섹션을 작성할 때 핵심 자료가 됩니다. 이 정보 없이는 단순한 기능 나열에 그치게 됩니다.
+
+### Q3: 중간 결과를 파일로 저장하는 이유는 무엇인가요?
+**A**: **추적성과 디버깅을** 위한 설계입니다. `phase3-commit-analysis.md`와 `phase3-feature-groups.md`를 파일로 저장하면, Phase 4에서 이 파일들을 입력으로 사용하고, 문제가 발생했을 때 Phase 3의 분석 결과를 직접 확인하여 원인을 파악할 수 있습니다.
+
 분석이 완료되면, 추출된 기능 그룹을 바탕으로 실제 문서를 작성하는 [Phase 4: 릴리스 노트 작성](04-phase4-writing.md)으로 진행합니다.

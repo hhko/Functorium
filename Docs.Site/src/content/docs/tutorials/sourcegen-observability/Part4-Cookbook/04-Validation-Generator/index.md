@@ -696,6 +696,19 @@ Validation 생성기는 이 장에서 다룬 세 가지 생성기 중 가장 복
 
 ---
 
+## FAQ
+
+### Q1: Primary Constructor의 파라미터에 붙은 속성과 프로퍼티에 붙은 속성은 어떻게 구분하나요?
+**A**: C# record의 Primary Constructor 파라미터는 자동으로 프로퍼티를 생성하므로, `[Required]` 같은 속성이 파라미터와 프로퍼티 양쪽에 모두 나타날 수 있습니다. 생성기는 먼저 Primary Constructor의 `IParameterSymbol.GetAttributes()`에서 규칙을 추출하고, 이미 처리된 프로퍼티는 건너뛰어 중복을 방지합니다.
+
+### Q2: 지원하지 않는 DataAnnotations 속성(예: `[CreditCard]`)이 있으면 어떻게 되나요?
+**A**: `ExtractValidationRules()` 메서드의 `switch` 표현식에서 매칭되지 않는 속성은 `null`을 반환하여 무시됩니다. 해당 프로퍼티에 다른 지원 속성이 없으면 `RuleFor` 자체가 생성되지 않습니다. 새로운 속성을 지원하려면 `switch`에 케이스를 추가하고 FluentValidation 메서드를 매핑하면 됩니다.
+
+### Q3: nullable 프로퍼티에서 `.When(x => x.Property is not null)` 조건이 자동으로 추가되는 기준은 무엇인가요?
+**A**: 프로퍼티의 `NullableAnnotation`이 `Annotated`(즉, `string?`처럼 `?` 접미사가 붙은 경우)이면서 `[Required]` 속성이 없는 경우에 `.When()` 조건이 추가됩니다. `[Required]`가 있으면 `null`이 허용되지 않으므로 `.NotEmpty()`가 `null` 검사를 대신합니다.
+
+---
+
 ## 다음 단계
 
 Entity Id, ValueConverter, Validation까지 세 가지 실전 생성기를 구현했습니다. 다음 절에서는 이 경험을 바탕으로, 새로운 소스 생성기를 빠르게 시작할 수 있는 프로젝트 템플릿을 제공합니다.

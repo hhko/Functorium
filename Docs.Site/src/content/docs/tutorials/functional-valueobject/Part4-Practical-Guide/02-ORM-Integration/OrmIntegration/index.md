@@ -118,6 +118,17 @@ Orders                  OrderLineItems
 | OwnsMany | 컬렉션 값 객체 | 정규화된 구조 | 별도 테이블 필요 |
 | ValueConverter | 단일 값 객체 | 간단한 변환 | 복합 타입 불가 |
 
+## FAQ
+
+### Q1: `OwnsOne`과 `ValueConverter` 중 어떤 것을 사용해야 하나요?
+**A**: 단일 값을 가진 값 객체(`Email`, `ProductCode` 등)에는 `ValueConverter`가 간단합니다. 여러 속성으로 구성된 복합 값 객체(`Address`, `Money` 등)에는 `OwnsOne`을 사용하여 각 속성을 별도 컬럼에 매핑합니다.
+
+### Q2: `ValueConverter`에서 로드 시 `CreateFromValidated`를 사용하는 이유는 무엇인가요?
+**A**: 데이터베이스에 저장된 값은 이미 검증을 통과한 값이므로, 다시 검증할 필요가 없습니다. `Create` 메서드를 사용하면 불필요한 검증 비용이 발생하고 `Fin<T>` 언래핑도 필요합니다. `CreateFromValidated`는 검증을 건너뛰고 바로 인스턴스를 생성합니다.
+
+### Q3: `OwnsMany`를 사용하면 별도 테이블이 생기는데, 성능 문제는 없나요?
+**A**: JOIN이 필요하므로 단일 테이블보다 조회 성능이 약간 떨어질 수 있습니다. 하지만 EF Core가 자동으로 관계를 관리해주고, 컬렉션 크기가 크지 않다면 실무에서 문제가 되는 경우는 드뭅니다. 성능이 중요한 조회에는 별도의 읽기 모델을 사용하는 것이 일반적입니다.
+
 ---
 
 ## 다음 단계

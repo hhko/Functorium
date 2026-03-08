@@ -130,6 +130,17 @@ DomainError.For<Email>(new Empty(), value, "Email cannot be empty");
 DomainError.For<Password>(new TooShort(MinLength: 8), value, "Password too short");
 ```
 
+## FAQ
+
+### Q1: `SimpleValueObject<T>`와 `ComparableSimpleValueObject<T>`는 어떤 기준으로 선택하나요?
+**A**: 값의 대소 비교나 정렬이 필요하면 `ComparableSimpleValueObject<T>`를, 동등성 비교만 필요하면 `SimpleValueObject<T>`를 사용합니다. 예를 들어 `Email`은 정렬이 불필요하므로 `SimpleValueObject<string>`을, `Age`는 비교가 필요하므로 `ComparableSimpleValueObject<int>`를 상속합니다.
+
+### Q2: `Value` 속성이 `protected`인 이유는 무엇인가요?
+**A**: 외부에서 내부 값을 직접 접근하면 값 객체의 캡슐화가 깨질 수 있기 때문입니다. 외부에서 값이 필요한 경우 `explicit operator T` 변환 연산자를 사용하거나, 도메인에 맞는 public 속성을 별도로 정의합니다.
+
+### Q3: `ValidationRules<T>` 시스템은 반드시 사용해야 하나요?
+**A**: 아닙니다. `if` 문과 `DomainError.For<T>()` 패턴으로 직접 검증해도 됩니다. `ValidationRules<T>`는 `NotNull`, `ThenNotEmpty`, `ThenMaxLength` 같은 공통 검증을 체이닝으로 간결하게 표현하고 싶을 때 사용하는 편의 시스템입니다.
+
 ---
 
 ## 다음 단계

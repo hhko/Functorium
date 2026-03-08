@@ -143,14 +143,14 @@ public interface IProductRepository : IRepository<Product, ProductId>
 
 ## FAQ
 
-**Q: 왜 Repository는 Aggregate Root만 다루나요?**
-A: DDD에서 Aggregate Root는 일관성 경계(Consistency Boundary)입니다. 내부 Entity는 Aggregate Root를 통해서만 접근해야 하므로, Repository도 Aggregate Root 단위로 동작합니다.
+### Q1: 왜 Repository는 Aggregate Root만 다루나요?
+**A**: DDD에서 Aggregate Root는 일관성 경계(Consistency Boundary)입니다. 내부 Entity는 Aggregate Root를 통해서만 접근해야 하므로, Repository도 Aggregate Root 단위로 동작합니다.
 
-**Q: FinT\<IO, T\>가 Task\<T\>보다 나은 점은 무엇인가요?**
-A: `Task<T>`는 예외를 던지지만, `FinT<IO, T>`는 실패를 값으로 표현합니다. 이를 통해 오류 처리를 합성(compose)할 수 있고, 예외 기반 제어 흐름을 피할 수 있습니다.
+### Q2: FinT\<IO, T\>가 Task\<T\>보다 나은 점은 무엇인가요?
+**A**: `Task<T>`는 예외를 던지지만, `FinT<IO, T>`는 실패를 값으로 표현합니다. 이를 통해 오류 처리를 합성(compose)할 수 있고, 예외 기반 제어 흐름을 피할 수 있습니다.
 
-**Q: IReadOnlyList를 매개변수로 쓰는 이유는 무엇인가요?**
-A: `IReadOnlyList<T>`는 인덱스 접근과 Count를 제공하면서도 변경을 허용하지 않아, 안전하고 유연한 컬렉션 인터페이스입니다. `List<T>`, 배열, `Seq<T>` 등 다양한 타입을 받을 수 있습니다.
+### Q3: IReadOnlyList를 매개변수로 쓰는 이유는 무엇인가요?
+**A**: `IReadOnlyList<T>`는 인덱스 접근과 Count를 제공하면서도 변경을 허용하지 않아, 안전하고 유연한 컬렉션 인터페이스입니다. `List<T>`, 배열, `Seq<T>` 등 다양한 타입을 받을 수 있습니다.
 
 ---
 

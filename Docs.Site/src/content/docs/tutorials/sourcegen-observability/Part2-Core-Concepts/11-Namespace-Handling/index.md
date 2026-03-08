@@ -306,6 +306,19 @@ public class NamespaceTests
 
 ---
 
+## FAQ
+
+### Q1: 글로벌 네임스페이스에 정의된 클래스는 어떻게 처리하나요?
+**A**: `IsGlobalNamespace` 속성으로 확인한 뒤, `true`이면 `namespace` 선언을 생략하고 바로 클래스를 정의합니다. 파일명에도 네임스페이스 접미사가 없으므로 `{ClassName}Observable.g.cs` 형태가 됩니다.
+
+### Q2: `LastIndexOf('.')`로 마지막 세그먼트만 추출하면 충돌이 완전히 해결되나요?
+**A**: 마지막 세그먼트까지 동일한 경우(예: `A.Repositories.UserRepository`와 `B.Repositories.UserRepository`)는 여전히 충돌할 수 있습니다. 실무에서는 이런 경우가 드물지만, 더 안전하게 하려면 전체 네임스페이스를 파일명에 포함시키는 방법을 고려할 수 있습니다. ObservablePortGenerator는 마지막 세그먼트 방식이 가독성과 안전성의 적절한 균형점이라 판단하여 이 전략을 채택했습니다.
+
+### Q3: 생성된 코드에서 `global::` 접두사를 사용하는 이유는 무엇인가요?
+**A**: 사용자 코드에 `System`이라는 이름의 클래스가 존재할 경우, `System.ArgumentNullException`이 사용자의 `System` 클래스를 참조하여 컴파일 오류가 발생합니다. `global::System.ArgumentNullException`으로 작성하면 항상 전역 `System` 네임스페이스를 정확히 참조하므로 이러한 충돌을 원천적으로 방지합니다.
+
+---
+
 ## 다음 단계
 
 네임스페이스 처리까지 마쳤으니 이제 코드 생성의 마지막 원칙을 다룰 차례입니다. 동일한 입력에 대해 항상 동일한 출력을 보장하는 결정적 출력은 증분 빌드, 소스 제어, CI/CD 모두에 영향을 미치는 핵심 요소입니다.

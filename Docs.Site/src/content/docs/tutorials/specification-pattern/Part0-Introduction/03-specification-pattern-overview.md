@@ -191,6 +191,22 @@ Part 5: 도메인별 실전 예제
 
 ---
 
+## FAQ
+
+### Q1: Specification 패턴과 Strategy 패턴의 차이는 무엇인가요?
+**A**: Strategy 패턴은 알고리즘 전체를 교체하는 데 초점을 맞추지만, Specification 패턴은 **조건(predicate)을 객체로 캡슐화**하는 데 초점을 맞춥니다. Specification은 `And`, `Or`, `Not`으로 조합할 수 있고, Expression Tree를 통해 ORM 쿼리로 변환할 수 있다는 점이 핵심 차이입니다.
+
+### Q2: `Specification<T>.All` 항등원은 왜 필요한가요?
+**A**: 동적 필터 빌더에서 시드 값으로 사용됩니다. `All & X = X`이므로, 조건이 하나도 추가되지 않으면 모든 데이터를 반환합니다. nullable 필터 매개변수를 `if`문으로 조건부 추가할 때 깔끔한 코드를 작성할 수 있습니다.
+
+### Q3: `SpecificationExpressionResolver`는 언제 사용하나요?
+**A**: `And`, `Or`, `Not`으로 조합된 복합 Specification의 Expression Tree를 하나의 Expression으로 병합할 때 사용합니다. EF Core의 `Where` 절에 전달하기 위해 여러 Expression을 재귀적으로 합성하는 유틸리티입니다.
+
+### Q4: Specification은 DDD 아키텍처의 어느 계층에 위치하나요?
+**A**: Specification은 **도메인 계층**에 정의합니다. 비즈니스 규칙을 표현하는 도메인 객체이기 때문입니다. Repository 인터페이스(Port)도 도메인 계층에 있고, Repository 구현체(Adapter)와 Specification의 Expression 변환은 인프라 계층에서 처리합니다.
+
+---
+
 ## 다음 단계
 
 Specification 패턴의 개요를 이해했으니, 이제 Part 1에서 직접 코드를 작성하며 첫 번째 Specification을 만들어보겠습니다.

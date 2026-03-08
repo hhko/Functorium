@@ -97,14 +97,14 @@ var exists = await repository
 
 ## FAQ
 
-**Q: Specification을 ExpressionSpecification으로 구현하지 않는 이유는?**
-A: 이 예제는 InMemory 환경이므로 `IsSatisfiedBy()`만 필요합니다. EF Core/Dapper와 연동할 때는 `ExpressionSpecification<T>`을 사용하여 SQL 자동 번역을 지원합니다.
+### Q1: Specification을 ExpressionSpecification으로 구현하지 않는 이유는?
+**A**: 이 예제는 InMemory 환경이므로 `IsSatisfiedBy()`만 필요합니다. EF Core/Dapper와 연동할 때는 `ExpressionSpecification<T>`을 사용하여 SQL 자동 번역을 지원합니다.
 
-**Q: 동적 필터에서 All을 시드로 사용하는 이유는?**
-A: `Specification<T>.All`은 And 연산의 항등원입니다. `All & X = X`이므로 조건이 하나도 추가되지 않으면 모든 데이터를 반환합니다. 이 패턴은 nullable 필터 매개변수를 깔끔하게 처리합니다.
+### Q2: 동적 필터에서 All을 시드로 사용하는 이유는?
+**A**: `Specification<T>.All`은 And 연산의 항등원입니다. `All & X = X`이므로 조건이 하나도 추가되지 않으면 모든 데이터를 반환합니다. 이 패턴은 nullable 필터 매개변수를 깔끔하게 처리합니다.
 
-**Q: Exists()를 별도 메서드로 제공하는 이유는?**
-A: `GetById()` 후 null 체크보다 의도가 명확하고, 전체 Aggregate를 로드하지 않아 성능상 유리합니다. 실제 DB 환경에서는 `SELECT COUNT(1)` 같은 경량 쿼리로 변환됩니다.
+### Q3: Exists()를 별도 메서드로 제공하는 이유는?
+**A**: `GetById()` 후 null 체크보다 의도가 명확하고, 전체 Aggregate를 로드하지 않아 성능상 유리합니다. 실제 DB 환경에서는 `SELECT COUNT(1)` 같은 경량 쿼리로 변환됩니다.
 
 ---
 

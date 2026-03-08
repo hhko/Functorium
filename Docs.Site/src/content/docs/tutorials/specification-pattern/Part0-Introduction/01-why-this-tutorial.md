@@ -138,6 +138,22 @@ if (filter.MinPrice is not null)
 
 ---
 
+## FAQ
+
+### Q1: Specification 패턴은 모든 프로젝트에 필요한가요?
+**A**: 아닙니다. 조회 조건이 1~2개로 고정된 단순 CRUD 애플리케이션에서는 오히려 과도한 추상화가 될 수 있습니다. 조건 조합이 다양하고, 동적 필터링이 필요하며, 검색 로직의 재사용이 중요한 도메인에서 가치를 발휘합니다.
+
+### Q2: Specification과 LINQ Where의 차이는 무엇인가요?
+**A**: LINQ `Where`에 직접 람다를 전달하면 조건이 호출 지점에 흩어져 재사용이 어렵습니다. Specification은 조건을 독립적인 클래스로 캡슐화하여 이름으로 의도를 전달하고, `And`, `Or`, `Not`으로 조합할 수 있으며, 개별 단위 테스트가 가능합니다.
+
+### Q3: `ExpressionSpecification<T>`은 왜 별도로 존재하나요?
+**A**: `Specification<T>`의 `IsSatisfiedBy`는 C# 메모리 내에서만 평가할 수 있습니다. `ExpressionSpecification<T>`은 `Expression<Func<T, bool>>`을 제공하여 EF Core 같은 ORM이 SQL로 변환할 수 있게 합니다. 이를 통해 데이터베이스 수준에서 필터링이 가능합니다.
+
+### Q4: 이 튜토리얼은 어떤 순서로 학습하면 좋을까요?
+**A**: 초급자는 Part 1(Specification 기초)부터 순서대로 진행하세요. `IsSatisfiedBy`, `And`/`Or`/`Not` 조합, 연산자 오버로딩을 익힌 뒤 Part 2(Expression Specification)로 넘어가면 자연스럽습니다. Repository 통합 경험이 있다면 Part 3부터 시작해도 됩니다.
+
+---
+
 ## 다음 단계
 
 이 튜토리얼의 구성과 목표를 확인했으니, 먼저 실습 환경을 준비하겠습니다.

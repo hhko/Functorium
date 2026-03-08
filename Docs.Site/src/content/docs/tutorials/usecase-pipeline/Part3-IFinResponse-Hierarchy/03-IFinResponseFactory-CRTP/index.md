@@ -78,6 +78,20 @@ public interface IFinResponseFactory<TSelf>
 }
 ```
 
+## FAQ
+
+### Q1: CRTP 없이 일반 인터페이스로 팩토리를 정의할 수 없나요?
+**A**: 일반 인터페이스에서 `static abstract` 메서드의 반환 타입을 자기 자신으로 지정할 방법이 없습니다. `IFactory.CreateFail(Error)` 형태로 정의하면 반환 타입이 `IFactory`이므로, 구현 타입으로의 다운캐스팅이 필요합니다. CRTP의 `TSelf` 제약이 있어야 `CreateFail`이 **정확한 구현 타입**을 반환합니다.
+
+### Q2: `static abstract`는 C# 11 이전에는 어떻게 대체했나요?
+**A**: C# 11 이전에는 `static abstract`가 없었으므로, 팩토리 패턴을 구현하려면 **별도의 팩토리 클래스**를 DI로 주입하거나, 리플렉션으로 정적 메서드를 호출해야 했습니다. `static abstract`의 등장으로 인터페이스 수준에서 팩토리 계약을 정의할 수 있게 되었고, 이것이 리플렉션 제거의 핵심 기술입니다.
+
+### Q3: `TResponse.CreateFail(error)` 호출이 리플렉션 없이 가능한 원리는 무엇인가요?
+**A**: `where TResponse : IFinResponseFactory<TResponse>` 제약 덕분에 컴파일러가 `TResponse`에 `CreateFail` 정적 메서드가 존재함을 **컴파일 타임에 확인**합니다. JIT 컴파일러는 구체 타입에 따라 직접 호출 코드를 생성하므로, 리플렉션이나 가상 디스패치 없이 실행됩니다.
+
+### Q4: `CreateFail`만 정의하고 `CreateSucc`는 왜 팩토리에 포함하지 않나요?
+**A**: Pipeline에서 응답을 **생성**하는 경우는 대부분 **실패 응답**입니다(Validation 실패, 예외 발생). 성공 응답은 Handler가 직접 반환하므로 Pipeline에서 생성할 필요가 없습니다. 최소 인터페이스 원칙에 따라 실제로 필요한 `CreateFail`만 정의합니다.
+
 실패 응답을 생성할 수 있게 되었지만, 에러의 내용은 아직 알 수 없습니다. 다음 장에서는 **요구사항 R3**(에러 접근)을 해결합니다.
 
 ## 학습 목표

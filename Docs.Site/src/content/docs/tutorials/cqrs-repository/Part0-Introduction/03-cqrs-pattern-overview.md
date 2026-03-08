@@ -305,6 +305,22 @@ Part 5: 도메인별 실전 예제
 
 ---
 
+## FAQ
+
+### Q1: CQS와 CQRS의 차이는 무엇인가요?
+**A**: CQS(Command Query Separation)는 **메서드 수준**에서 상태 변경과 값 반환을 분리하는 원칙입니다. CQRS(Command Query Responsibility Segregation)는 이를 **아키텍처 수준**으로 확장하여, 쓰기 모델(도메인 모델)과 읽기 모델(DTO)을 분리합니다.
+
+### Q2: CQRS에서 Command와 Query가 같은 데이터베이스를 사용해도 되나요?
+**A**: 네. CQRS는 **모델의 분리**이지 물리적 DB 분리를 강제하지 않습니다. 같은 DB에서 `IRepository`는 도메인 모델을, `IQueryPort`는 DTO 프로젝션을 사용하면 됩니다. 성능 요구에 따라 나중에 읽기 전용 DB를 분리할 수도 있습니다.
+
+### Q3: Mediator 패턴은 왜 필요한가요?
+**A**: Mediator는 Controller가 Command인지 Query인지 구분하지 않고 요청을 디스패치할 수 있게 합니다. 또한 `UsecaseTransactionPipeline`처럼 횡단 관심사(트랜잭션, 로깅 등)를 Pipeline으로 자동 적용할 수 있는 확장점을 제공합니다.
+
+### Q4: `FinResponse<T>`와 `FinT<IO, T>`는 어떻게 다른가요?
+**A**: `FinT<IO, T>`는 Repository 계층에서 사용하는 lazy 모나딕 타입으로, `Run().RunAsync()`로 실행해야 결과를 얻습니다. `FinResponse<T>`는 Usecase 계층에서 API에 전달하는 HTTP-friendly 래퍼입니다. `ToFinResponse()` 확장 메서드가 둘 사이의 변환을 담당합니다.
+
+---
+
 ## 다음 단계
 
 이 장에서 CQRS 패턴의 전체 구조를 살펴보았습니다. IRepository로 쓰기를, IQueryPort로 읽기를 분리하고, Mediator가 둘을 연결하는 아키텍처를 이해했습니다. 그러나 이 아키텍처의 기반이 되는 도메인 모델은 아직 다루지 않았습니다. 같은 이름의 상품 두 개는 같은 상품일까요? Part 1의 첫 번째 장에서는 Entity의 정체성(Identity)부터 시작하여 CQRS의 기반이 되는 도메인 엔티티를 구현합니다.

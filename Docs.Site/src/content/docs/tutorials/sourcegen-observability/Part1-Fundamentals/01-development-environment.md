@@ -272,6 +272,19 @@ MySolution/
 
 ---
 
+## FAQ
+
+### Q1: 왜 소스 생성기 프로젝트는 `netstandard2.0`을 타겟으로 해야 하나요?
+**A**: Roslyn 컴파일러는 Visual Studio, VS Code, dotnet CLI, JetBrains Rider 등 다양한 런타임에서 실행됩니다. 이들이 공통으로 지원하는 유일한 타겟이 `netstandard2.0`이므로, 모든 환경에서 소스 생성기가 동작하려면 이 타겟이 필수입니다.
+
+### Q2: `Microsoft.CodeAnalysis.CSharp` 패키지에 `PrivateAssets="all"`을 지정하는 이유는 무엇인가요?
+**A**: 소스 생성기가 NuGet 패키지로 배포될 때 Roslyn 패키지가 함께 전이되면, 소비자 프로젝트의 Roslyn 버전과 충돌할 수 있습니다. `PrivateAssets="all"`은 이 의존성이 외부로 노출되지 않도록 차단합니다.
+
+### Q3: 생성기 프로젝트는 `netstandard2.0`인데 생성하는 코드에 C# 최신 문법을 쓸 수 있나요?
+**A**: 생성기 **자체**의 코드만 `netstandard2.0` 호환이면 됩니다. 생성기가 **출력하는** 코드는 단순 문자열이므로 소비자 프로젝트의 `LangVersion`에 맞는 어떤 C# 문법이든 사용할 수 있습니다.
+
+---
+
 ## 다음 단계
 
 개발 환경이 준비되었으니, 다음 장에서는 소스 생성기 프로젝트의 csproj 설정과 데이터 모델 구조를 상세히 살펴봅니다.

@@ -64,6 +64,17 @@ public class LoggingPipeline<TRequest, TResponse>
 }
 ```
 
+## FAQ
+
+### Q1: 비제네릭 마커 인터페이스가 제네릭 인터페이스보다 먼저 필요한 이유는 무엇인가요?
+**A**: Pipeline에서 응답의 성공/실패를 확인할 때 **값의 타입 `T`를 알 필요가 없습니다**. `IsSucc`/`IsFail`은 타입 `T`와 무관한 정보이므로, 비제네릭 인터페이스로 충분합니다. 제네릭 파라미터가 없으면 Pipeline의 `where` 제약이 더 단순해지고, 모든 응답 타입에 일관되게 적용됩니다.
+
+### Q2: `IFinResponse` 마커 인터페이스만으로 어떤 Pipeline을 구현할 수 있나요?
+**A**: 응답의 성공/실패 상태만 확인하면 되는 Pipeline에 사용할 수 있습니다. 예를 들어 Transaction Pipeline은 `response.IsSucc`으로 커밋/롤백을 결정하고, Metrics Pipeline은 성공/실패 카운트를 수집합니다. 하지만 실패 응답을 **생성**해야 하는 Validation Pipeline에는 `IFinResponseFactory`가 추가로 필요합니다.
+
+### Q3: `where TResponse : IFinResponse` 제약을 추가하면 기존 응답 타입에 영향이 있나요?
+**A**: `IFinResponse`를 구현하지 않는 기존 응답 타입은 이 제약이 있는 Pipeline을 통과할 수 없습니다. 하지만 이는 의도된 동작입니다. 모든 응답 타입이 `IFinResponse`를 구현하도록 하거나, 최종적으로 `FinResponse<A>` Discriminated Union을 사용하면 자동으로 해결됩니다.
+
 이제 성공/실패를 읽을 수 있지만, 값의 타입 정보는 아직 없습니다. 다음 장에서는 `out A` 키워드를 사용한 **공변 인터페이스**로 타입 안전한 값 접근을 추가합니다.
 
 ## 학습 목표

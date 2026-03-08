@@ -95,6 +95,20 @@ public sealed class Handler
 3. Query Handler가 읽기 전용으로 동작하는 패턴을 이해할 수 있다
 4. Pipeline이 Command/Query를 타입 수준에서 구분하는 방식을 설명할 수 있다
 
+## FAQ
+
+### Q1: Query Usecase에 Validator가 없는 이유는 무엇인가요?
+**A**: 이 예제에서는 간결성을 위해 Validator를 생략했습니다. 실제 프로젝트에서는 Query에도 Validator를 추가할 수 있습니다. 예를 들어 `ProductId`가 빈 문자열인지 검사하는 것은 유효한 검증입니다. Validator 추가 여부는 비즈니스 요구사항에 따라 결정합니다.
+
+### Q2: `IQueryRequest`와 `ICommandRequest`를 분리하면 Pipeline에서 어떤 이점이 있나요?
+**A**: Pipeline이 **타입 수준에서** 요청의 성격을 파악할 수 있습니다. Transaction Pipeline은 `request is ICommandRequest`일 때만 트랜잭션을 시작하고, Caching Pipeline은 `request is ICacheable`일 때만 캐싱합니다. 문자열 비교나 설정 파일 없이 **인터페이스만으로** 분기 로직이 결정됩니다.
+
+### Q3: `ICacheable`의 `Duration`이 `null`이면 어떻게 되나요?
+**A**: `Duration`이 `null`이면 Caching Pipeline이 **기본 캐시 만료 시간**을 적용합니다. 이를 통해 대부분의 Query에는 기본값을 사용하고, 특정 Query에만 커스텀 만료 시간을 설정할 수 있습니다.
+
+### Q4: Query Handler가 `Dictionary`를 사용하는 것은 실전에서도 동일한가요?
+**A**: 아닙니다. 예제에서는 학습 목적으로 `Dictionary`를 인메모리 저장소로 사용했습니다. 실전에서는 Repository 인터페이스를 DI로 주입받아 데이터베이스에서 조회하며, Repository가 반환하는 `Fin<T>`를 `ToFinResponse()`로 변환하여 `FinResponse<T>`를 반환합니다.
+
 Command와 Query Usecase를 각각 구현했으니, 다음 장에서는 7개 Pipeline을 모두 연결하여 전체 흐름을 통합합니다.
 
 ## 프로젝트 구조

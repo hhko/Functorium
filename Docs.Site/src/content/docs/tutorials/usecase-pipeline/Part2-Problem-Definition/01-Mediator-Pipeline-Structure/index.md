@@ -103,6 +103,17 @@ sequenceDiagram
 
 각 Pipeline은 `next()`를 호출하여 다음 Pipeline(또는 최종 Handler)에 요청을 전달합니다.
 
+## FAQ
+
+### Q1: `IPipelineBehavior`의 `TRequest`에 `IMessage` 제약이 있는 이유는 무엇인가요?
+**A**: `IMessage`는 Mediator 프레임워크가 요청 메시지를 식별하기 위한 **마커 인터페이스**입니다. 이 제약이 있어야 Mediator가 해당 타입을 요청으로 인식하고 Pipeline 체인에 연결할 수 있습니다.
+
+### Q2: `TResponse`에 제약이 없으면 Pipeline 내부에서 응답을 어떻게 처리하나요?
+**A**: 제약이 없으면 `TResponse`는 `object`처럼 취급되어 `IsSucc`나 `IsFail` 같은 멤버에 접근할 수 없습니다. 이 경우 리플렉션을 사용하거나, `is` 캐스팅으로 런타임에 타입을 확인해야 합니다. 이것이 바로 `TResponse`에 적절한 제약이 필요한 이유입니다.
+
+### Q3: Pipeline 체인에서 `next()`를 호출하지 않으면 어떻게 되나요?
+**A**: `next()`를 호출하지 않으면 다음 Pipeline이나 Handler에 요청이 전달되지 않습니다. 이를 **단축 평가(Short-Circuit)라고** 합니다. Validation Pipeline이 검증 실패 시 `next()`를 호출하지 않고 실패 응답을 직접 반환하는 것이 대표적인 예입니다.
+
 이제 Pipeline의 구조와 제약 메커니즘을 이해했으니, 다음 장에서는 LanguageExt의 `Fin<T>`를 응답 타입으로 직접 사용했을 때 이 제약 구조가 어떤 한계를 만들어내는지 살펴봅니다.
 
 ## 학습 목표

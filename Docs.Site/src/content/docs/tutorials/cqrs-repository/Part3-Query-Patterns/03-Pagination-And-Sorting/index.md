@@ -107,14 +107,14 @@ PagedResult과 CursorPagedResult를 생성하는 헬퍼 메서드와 SortExpress
 
 ## FAQ
 
-**Q: Offset과 Cursor 중 어떤 것을 사용해야 하나요?**
-A: 대부분의 관리자 페이지(게시판, 상품 목록)에서는 Offset이 적합합니다. 무한 스크롤, 실시간 피드, 대규모 데이터셋에서는 Cursor가 적합합니다. Functorium의 IQueryPort는 두 가지를 모두 지원합니다.
+### Q1: Offset과 Cursor 중 어떤 것을 사용해야 하나요?
+**A**: 대부분의 관리자 페이지(게시판, 상품 목록)에서는 Offset이 적합합니다. 무한 스크롤, 실시간 피드, 대규모 데이터셋에서는 Cursor가 적합합니다. Functorium의 IQueryPort는 두 가지를 모두 지원합니다.
 
-**Q: PageRequest에서 PageSize의 최대값이 있나요?**
-A: MaxPageSize(10,000)로 제한됩니다. 이보다 큰 값을 요청하면 자동으로 MaxPageSize로 조정됩니다.
+### Q2: PageRequest에서 PageSize의 최대값이 있나요?
+**A**: MaxPageSize(10,000)로 제한됩니다. 이보다 큰 값을 요청하면 자동으로 MaxPageSize로 조정됩니다.
 
-**Q: SortExpression.Empty는 언제 사용하나요?**
-A: 클라이언트가 정렬을 지정하지 않은 경우 Empty를 전달하면, Query Adapter의 DefaultSortField가 적용됩니다.
+### Q3: SortExpression.Empty는 언제 사용하나요?
+**A**: 클라이언트가 정렬을 지정하지 않은 경우 Empty를 전달하면, Query Adapter의 DefaultSortField가 적용됩니다.
 
 ---
 

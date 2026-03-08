@@ -237,6 +237,20 @@ dotnet nuget locals all --clear
 | [phase4-writing.md](/.release-notes/scripts/docs/phase4-writing.md) | Phase 4 상세 |
 | [phase5-validation.md](/.release-notes/scripts/docs/phase5-validation.md) | Phase 5 상세 |
 
+## FAQ
+
+### Q1: "정확성 우선" 원칙에서 Uber 파일에 없는 API를 문서화하지 않는다면, 아직 빌드되지 않은 새 기능은 어떻게 처리하나요?
+**A**: 릴리스 노트는 **이미 구현이 완료된 기능만** 문서화합니다. Phase 2에서 `dotnet publish`로 빌드한 뒤 DLL에서 API를 추출하므로, 코드가 컴파일되지 않는 기능은 Uber 파일에 포함되지 않습니다. 아직 개발 중인 기능은 다음 릴리스에서 문서화해야 합니다.
+
+### Q2: 체크리스트의 "모든 코드 샘플이 Uber 파일에서 검증됨" 항목은 구체적으로 무엇을 확인하나요?
+**A**: 릴리스 노트의 코드 샘플에 등장하는 **클래스명, 메서드명, 파라미터 타입이 Uber 파일의 API 시그니처와 정확히 일치하는지** 확인합니다. 예를 들어 코드 샘플에서 `ErrorCodeFactory.Create()`를 사용했다면, Uber 파일에 해당 메서드가 동일한 시그니처로 존재해야 합니다.
+
+### Q3: 전체 초기화 명령에서 dotnet 프로세스를 강제 종료하는 것이 안전한가요?
+**A**: 릴리스 노트 스크립트 실행과 관련된 dotnet 프로세스만 종료하는 것이 이상적이지만, 다른 dotnet 애플리케이션이 동시에 실행 중이 아니라면 **`taskkill /F /IM dotnet.exe`(Windows) 또는 `pkill -f dotnet`(macOS/Linux)으로** 전체 종료해도 문제없습니다. 실행 중인 다른 .NET 서비스가 있다면 해당 프로세스의 PID를 확인하여 선택적으로 종료하세요.
+
+### Q4: 이 빠른 참조 가이드는 버전이 올라갈 때마다 업데이트해야 하나요?
+**A**: 워크플로우 구조나 명령어가 변경될 때만 업데이트하면 됩니다. `/release-note` 명령어의 사용법, 5-Phase 구조, 출력 파일 경로 등은 **버전과 무관한 시스템 구조 정보이므로,** 릴리스 노트 자동화 시스템 자체를 개선하지 않는 한 그대로 사용할 수 있습니다.
+
 이것으로 릴리스 노트 자동화의 실습 파트를 마칩니다. 이어지는 부록에서는 용어 사전과 추가 참고 자료를 제공합니다.
 
 - [부록 A: 용어사전](../Appendix/A-glossary.md)

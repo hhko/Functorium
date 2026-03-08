@@ -344,6 +344,19 @@ dotnet test --filter "FullyQualifiedName~ObservablePortGeneratorTests"
 
 ---
 
+## FAQ
+
+### Q1: `SourceGeneratorTestRunner`에서 `RequiredTypes`에 타입을 추가해야 하는 기준은 무엇인가요?
+**A**: 입력 소스 코드에서 사용하는 외부 타입의 어셈블리가 컴파일에 참조되어야 합니다. `LanguageExt.IO`, `FinT<,>`, `ILogger` 등 ObservablePortGenerator가 분석하는 코드에 등장하는 타입들의 어셈블리를 `RequiredTypes`에 등록하면, `MetadataReference.CreateFromFile()`로 자동 수집됩니다. 테스트 입력에 새로운 외부 타입이 추가되면 이 배열도 업데이트해야 합니다.
+
+### Q2: `outputCompilation.SyntaxTrees.Skip(1)`에서 첫 번째 트리를 건너뛰는 이유는 무엇인가요?
+**A**: `SyntaxTrees`의 첫 번째 항목은 테스트에서 입력한 원본 소스 코드입니다. 소스 생성기가 추가한 코드는 그 이후에 위치하므로, `Skip(1).LastOrDefault()`로 마지막 생성 파일(일반적으로 Observable 클래스 코드)을 가져옵니다. 마커 Attribute도 생성 파일에 포함되므로, 마지막 파일이 실제 생성 코드가 됩니다.
+
+### Q3: 소스 생성기 테스트에서 컴파일 오류가 발생하면 어떻게 디버깅하나요?
+**A**: `diagnostics`에서 `DiagnosticSeverity.Error`를 필터링하면 오류 메시지를 확인할 수 있습니다. 흔한 원인은 입력 소스 코드에서 사용하는 타입의 어셈블리가 `RequiredTypes`에 누락된 경우, 또는 입력 코드 자체에 구문 오류가 있는 경우입니다. `outputCompilation.GetDiagnostics()`로 전체 진단 목록을 출력하면 원인을 특정할 수 있습니다.
+
+---
+
 ## 다음 단계
 
 테스트 환경이 갖추어졌으니, 생성된 코드 전체를 파일로 저장하고 비교하는 Verify 스냅샷 테스트 방식을 알아봅니다.

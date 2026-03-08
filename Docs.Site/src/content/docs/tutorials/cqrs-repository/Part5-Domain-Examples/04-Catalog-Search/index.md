@@ -103,14 +103,14 @@ await foreach (var item in query.Stream(spec, sort, ct))
 
 ## FAQ
 
-**Q: Offset과 Cursor를 동시에 제공하는 이유는?**
-A: UI 요구사항에 따라 다릅니다. 관리자 목록(페이지 번호 필요)에는 Offset, 모바일 무한 스크롤에는 Cursor가 적합합니다. `InMemoryQueryBase`가 두 방식을 모두 구현하므로 UseCase에서 선택하면 됩니다.
+### Q1: Offset과 Cursor를 동시에 제공하는 이유는?
+**A**: UI 요구사항에 따라 다릅니다. 관리자 목록(페이지 번호 필요)에는 Offset, 모바일 무한 스크롤에는 Cursor가 적합합니다. `InMemoryQueryBase`가 두 방식을 모두 구현하므로 UseCase에서 선택하면 됩니다.
 
-**Q: Stream은 언제 사용하나요?**
-A: CSV 내보내기, 데이터 마이그레이션, 통계 집계 등 전체 데이터를 순회해야 하는 배치 작업에 적합합니다. `IAsyncEnumerable<T>`로 한 건씩 yield하므로 메모리에 전체를 올리지 않습니다.
+### Q2: Stream은 언제 사용하나요?
+**A**: CSV 내보내기, 데이터 마이그레이션, 통계 집계 등 전체 데이터를 순회해야 하는 배치 작업에 적합합니다. `IAsyncEnumerable<T>`로 한 건씩 yield하므로 메모리에 전체를 올리지 않습니다.
 
-**Q: 같은 Specification이 세 방식 모두에서 동작하는 이유는?**
-A: Specification은 "무엇을 필터링할 것인가"의 관심사이고, 페이지네이션은 "어떻게 결과를 나눌 것인가"의 관심사입니다. 두 관심사를 분리했기 때문에 동일한 조건을 다른 방식으로 자유롭게 조합할 수 있습니다.
+### Q3: 같은 Specification이 세 방식 모두에서 동작하는 이유는?
+**A**: Specification은 "무엇을 필터링할 것인가"의 관심사이고, 페이지네이션은 "어떻게 결과를 나눌 것인가"의 관심사입니다. 두 관심사를 분리했기 때문에 동일한 조건을 다른 방식으로 자유롭게 조합할 수 있습니다.
 
 ---
 

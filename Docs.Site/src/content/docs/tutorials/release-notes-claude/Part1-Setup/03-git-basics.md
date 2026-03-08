@@ -256,4 +256,15 @@ git diff --stat $(git rev-list --max-parents=0 HEAD)..HEAD -- Src/Functorium/
 git diff HEAD~10..HEAD -- 'Src/*/.api/*.cs'
 ```
 
+## FAQ
+
+### Q1: Conventional Commits를 따르지 않는 기존 커밋 히스토리가 있어도 자동화를 사용할 수 있나요?
+**A**: 사용할 수 있지만 자동 분류의 정확도가 낮아집니다. `feat`, `fix` 같은 타입 접두사가 없는 커밋은 "other"로 분류되어 Phase 3에서 수동 판단이 필요합니다. 향후 커밋부터 Conventional Commits를 적용하면, 새로운 릴리스의 자동 분류 정확도가 점진적으로 개선됩니다.
+
+### Q2: Breaking Changes 감지에서 `.api` 폴더의 Git diff가 커밋 메시지보다 정확한 이유는 무엇인가요?
+**A**: 커밋 메시지에 `!` 표기를 누락하면 커밋 메시지 기반 감지는 실패합니다. 반면 `.api` 폴더에는 PublicApiGenerator가 생성한 Public API 정의가 Git으로 추적되므로, `git diff`로 **삭제된 클래스, 변경된 메서드 시그니처를** 객관적으로 감지할 수 있습니다. 표기 실수와 무관하게 실제 API 변경을 잡아냅니다.
+
+### Q3: `git log --oneline`과 `git diff --stat`은 릴리스 노트 자동화에서 각각 어떤 역할을 하나요?
+**A**: `git log --oneline`은 커밋 메시지를 수집하여 `feat`, `fix` 등의 타입별 분류에 사용됩니다. `git diff --stat`은 변경된 파일 수와 추가/삭제 라인 수를 요약하여, 릴리스 노트의 통계 섹션과 컴포넌트별 변경 규모를 파악하는 데 사용됩니다.
+
 Git이 제공하는 커밋 히스토리와 diff 정보를 이해했으니, 이제 이 데이터를 활용하는 Claude Code의 사용자 정의 Command를 본격적으로 살펴보겠습니다.

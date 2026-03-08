@@ -121,6 +121,20 @@ dotnet run --project FullPipelineIntegration
 dotnet test --project FullPipelineIntegration.Tests.Unit
 ```
 
+## FAQ
+
+### Q1: Pipeline 실행 순서를 변경하면 동작에 영향이 있나요?
+**A**: 네. 실행 순서는 중요합니다. Exception Pipeline이 가장 바깥에 있어야 모든 예외를 포착하고, Validation Pipeline이 Handler보다 앞에 있어야 유효하지 않은 요청이 Handler에 도달하지 않습니다. 순서를 변경하면 트랜잭션이 시작되기 전에 예외가 발생하거나, 캐시된 응답에 로깅이 누락되는 등의 문제가 발생할 수 있습니다.
+
+### Q2: 7개 Pipeline이 모두 `FinResponse<T>`를 통해 동작하는데, Pipeline마다 다른 제약을 사용하는 이유는 무엇인가요?
+**A**: 인터페이스 분리 원칙(ISP)에 따라 각 Pipeline은 **자신이 필요한 최소한의 능력만** 제약합니다. Validation은 `IFinResponseFactory`만, Logging은 `IFinResponse` + `IFinResponseFactory`를 제약합니다. `FinResponse<T>`가 모든 인터페이스를 구현하므로 실제로는 모든 Pipeline을 통과할 수 있지만, **코드의 의도가 제약으로 명확히 표현**됩니다.
+
+### Q3: Validation 실패 시 Transaction Pipeline은 어떻게 되나요?
+**A**: Validation Pipeline이 실패하면 `next()`를 호출하지 않고 즉시 실패 응답을 반환합니다(**단축 평가**). 이후의 Transaction Pipeline과 Handler는 실행되지 않으므로, **불필요한 트랜잭션 시작이 방지**됩니다. 응답은 외부 Pipeline(Logging, Tracing 등)을 거치며 결과가 기록됩니다.
+
+### Q4: 실전에서 이 수동 오케스트레이션 대신 어떻게 Pipeline을 등록하나요?
+**A**: Mediator 프레임워크(Mediator, MediatR 등)의 **DI(의존성 주입) 등록**을 사용합니다. `services.AddMediator()` 호출 시 Pipeline을 등록 순서대로 체인에 연결합니다. 이 장의 수동 호출은 학습 목적으로 각 Pipeline의 역할과 실행 순서를 명확히 이해하기 위한 것입니다.
+
 ---
 
 인터페이스 계층 설계부터 Pipeline 제약, 실전 Usecase 적용, 그리고 전체 통합까지 — `FinResponse<T>`가 리플렉션 없이 타입 안전한 Pipeline을 가능하게 하는 여정을 마칩니다.

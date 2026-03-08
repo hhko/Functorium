@@ -238,4 +238,15 @@ Phase 1: 환경 검증 중...
   Target: HEAD
 ```
 
+## FAQ
+
+### Q1: 첫 배포와 후속 배포에서 Base Branch가 달라지면 분석 범위는 어떻게 달라지나요?
+**A**: 첫 배포에서는 초기 커밋(`git rev-list --max-parents=0 HEAD`)부터 현재(`HEAD`)까지 **전체 히스토리를** 분석합니다. 후속 배포에서는 이전 릴리스 브랜치(`origin/release/1.0`)부터 현재까지 **변경분만** 분석합니다. 첫 배포는 프로젝트의 모든 기능을 문서화하고, 후속 배포는 새로 추가된 변경사항만 다룹니다.
+
+### Q2: 환경 검증에서 실패하면 왜 즉시 중단하나요?
+**A**: **"실패를 빨리 발견하라"는 원칙을** 따른 것입니다. Git 저장소가 아니거나, .NET SDK가 없거나, 스크립트 디렉터리가 없으면 이후 Phase 2~5가 모두 실패합니다. 수분간 스크립트를 실행한 뒤 실패하는 것보다, 10초 안에 문제를 발견하고 해결하는 것이 훨씬 효율적입니다.
+
+### Q3: release 브랜치 이름이 `origin/release/1.0`이 아닌 다른 형식이면 어떻게 하나요?
+**A**: `release-note.md` Command의 Phase 1 가이드(`phase1-setup.md`)에서 Base Branch 결정 로직을 수정하면 됩니다. 또는 스크립트를 수동으로 실행할 때 `--base` 옵션으로 원하는 브랜치를 직접 지정할 수 있습니다: `dotnet AnalyzeAllComponents.cs --base origin/main --target HEAD`.
+
 환경 검증이 완료되면, 결정된 Base/Target 범위를 가지고 [Phase 2: 데이터 수집](02-phase2-collection.md)으로 진행합니다.

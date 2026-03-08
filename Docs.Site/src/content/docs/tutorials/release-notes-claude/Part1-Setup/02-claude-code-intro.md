@@ -233,4 +233,15 @@ git commit -m "feat(claude): 릴리스 노트 자동화 Command 추가"
 - nullable reference types 활성화
 ```
 
+## FAQ
+
+### Q1: Claude Code의 사용자 정의 Command와 일반 대화의 차이는 무엇인가요?
+**A**: 일반 대화에서는 매번 같은 지시를 반복 입력해야 하지만, **사용자 정의 Command는** 복잡한 작업 지침을 Markdown 파일로 저장하여 `/release-note v1.2.0`처럼 한 줄로 실행합니다. Command 파일에 규칙과 검증 기준이 명시되어 있어 누가 실행하든 일관된 품질의 결과물을 얻을 수 있습니다.
+
+### Q2: `$ARGUMENTS` 변수는 여러 개의 인자를 받을 수 있나요?
+**A**: `$ARGUMENTS`는 Command에 전달된 모든 인자를 하나의 문자열로 받습니다. `/release-note v1.2.0`을 실행하면 `$ARGUMENTS`는 `v1.2.0`이 됩니다. 여러 값을 전달하면 공백으로 구분된 하나의 문자열이 되므로, Command 본문에서 파싱 방법을 안내해야 합니다.
+
+### Q3: Command 파일을 수정하면 즉시 반영되나요?
+**A**: 반영됩니다. Command 파일은 실행 시점에 읽히므로, `.claude/commands/release-note.md`를 수정하면 다음 `/release-note` 실행부터 변경사항이 적용됩니다. Git에 커밋하면 팀 전체가 동일한 업데이트를 공유하게 됩니다.
+
 이제 Claude Code가 무엇이고 어떻게 동작하는지 파악했으니, 다음으로 자동화의 데이터 소스인 Git의 기초를 살펴보겠습니다.

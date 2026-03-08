@@ -91,6 +91,17 @@ public sealed class SimpleExceptionPipeline<TResponse>
 
 Validation/Exception Pipeline은 기존 응답을 **검사하지 않습니다**. 실패 조건(유효성 검사 실패, 예외 발생)을 직접 판단하고, 실패 시 새로운 응답을 **생성만** 합니다.
 
+## FAQ
+
+### Q1: Validation Pipeline이 응답을 읽지 않아도 되는 이유는 무엇인가요?
+**A**: Validation Pipeline은 **Handler 실행 전에** 요청의 유효성을 검사합니다. 아직 응답이 생성되지 않았으므로 읽을 응답이 없습니다. 유효하지 않으면 `TResponse.CreateFail(error)`로 실패 응답을 직접 생성하여 반환하고, 유효하면 `next()`로 다음 단계에 위임합니다.
+
+### Q2: `TResponse.CreateFail(error)` 호출이 `new TResponse(error)` 생성자 호출과 다른 점은 무엇인가요?
+**A**: 생성자 호출(`new TResponse()`)은 제네릭 제약에서 `new()` 제약만 가능하며, 파라미터가 있는 생성자를 호출할 수 없습니다. `static abstract` 메서드인 `CreateFail`은 `Error` 파라미터를 받아 정확한 타입의 실패 인스턴스를 생성할 수 있습니다.
+
+### Q3: Exception Pipeline에서 예외를 `Error`로 변환하는 이유는 무엇인가요?
+**A**: 예외(Exception)를 `Error.New(ex)` 형태로 변환하면, Pipeline 외부에서는 예외가 아닌 `FinResponse.Fail`로 일관되게 처리됩니다. 이를 통해 상위 레이어에서 try-catch 없이 `IsSucc`/`IsFail`로 모든 실패를 **동일한 방식으로** 처리할 수 있습니다.
+
 Create-Only 제약으로 충분한 경우를 확인했으니, 다음 장에서는 응답의 성공/실패 상태를 읽어야 하는 Read+Create 이중 제약 패턴을 살펴봅니다.
 
 ## 학습 목표

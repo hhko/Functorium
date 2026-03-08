@@ -361,6 +361,19 @@ type.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat);
 
 ---
 
+## FAQ
+
+### Q1: `FullyQualifiedFormat`과 Functorium의 `GlobalQualifiedFormat`은 무엇이 다른가요?
+**A**: `FullyQualifiedFormat`은 `int`를 `System.Int32`로 표시하지만, Functorium의 `GlobalQualifiedFormat`은 `UseSpecialTypes` 옵션으로 `int`를 그대로 유지합니다. 또한 `IncludeNullableReferenceTypeModifier`를 추가하여 `string?` 같은 nullable 정보를 보존합니다. 결과적으로 생성 코드가 더 자연스러운 C# 문법을 따릅니다.
+
+### Q2: 프로젝트 전체에서 하나의 `SymbolDisplayFormat`을 공유해야 하는 이유는 무엇인가요?
+**A**: 동일한 타입을 서로 다른 포맷으로 변환하면 `"int"`와 `"global::System.Int32"` 같은 불일치가 생깁니다. 이 불일치가 데이터 모델에 들어가면 `Equals` 비교가 달라져 증분 캐싱이 무효화되고, 생성 코드 내에서도 동일 타입이 다르게 표현되는 일관성 문제가 발생합니다.
+
+### Q3: `EscapeKeywordIdentifiers` 옵션은 어떤 상황에서 필요한가요?
+**A**: C# 키워드와 동일한 이름의 식별자(예: `@class`, `@event`)를 타입 이름이나 네임스페이스에서 사용하는 경우, 이 옵션이 `@` 접두사를 자동으로 추가하여 컴파일 가능한 코드를 생성합니다. 이 옵션 없이는 생성된 코드가 키워드와 충돌하여 컴파일 오류가 발생할 수 있습니다.
+
+---
+
 ## 다음 단계
 
 `SymbolDisplayFormat`으로 타입을 일관된 문자열로 변환하는 방법을 이해했습니다. 그런데 `FinT<IO, User>`라는 반환 타입에서 실제로 필요한 것은 두 번째 타입 파라미터인 `User`뿐입니다. 다음 장에서는 이 제네릭 타입에서 특정 타입 파라미터를 추출하는 기법을 살펴봅니다.

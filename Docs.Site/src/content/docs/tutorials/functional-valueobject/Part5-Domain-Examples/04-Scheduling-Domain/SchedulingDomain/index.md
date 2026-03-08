@@ -239,3 +239,14 @@ public IEnumerable<DateOnly> GetOccurrences(DateOnly from, int count)
     return results;
 }
 ```
+
+## FAQ
+
+### Q1: `DateRange`와 `TimeSlot`을 별도 값 객체로 분리하는 이유는 무엇인가요?
+**A**: `DateRange`는 날짜 수준의 범위(휴가 기간, 프로젝트 일정)를, `TimeSlot`은 하루 내 시간 범위(회의 시간, 진료 시간)를 표현합니다. 관심사가 다르므로 각각의 불변식과 연산을 독립적으로 관리하는 것이 도메인 모델링에 적합합니다.
+
+### Q2: `Duration`에서 최대 기간을 1년(525,600분)으로 제한하는 이유는 무엇인가요?
+**A**: 일정/예약 도메인에서 1년을 초과하는 기간은 실무적으로 거의 사용되지 않습니다. 상한을 설정하면 실수로 과도한 값이 입력되는 것을 방지합니다. 도메인 요구사항에 따라 이 제한은 조정할 수 있습니다.
+
+### Q3: `RecurrenceRule`에서 팩토리 메서드(`Daily`, `Weekly`, `Monthly`)를 분리한 이유는 무엇인가요?
+**A**: 생성자 하나로 모든 반복 유형을 처리하면 매개변수 조합이 복잡해지고 유효하지 않은 조합이 생길 수 있습니다. `Weekly(DayOfWeek.Monday, DayOfWeek.Wednesday)`처럼 용도별 팩토리 메서드를 제공하면 호출 측에서 의도가 명확해지고, 각 메서드가 해당 유형에 맞는 검증만 수행합니다.

@@ -344,6 +344,19 @@ Semantic API는 Syntax API가 제공하지 못하는 타입 정보, 네임스페
 
 ---
 
+## FAQ
+
+### Q1: `GetSymbolInfo`와 `GetDeclaredSymbol`은 어떻게 구분하여 사용하나요?
+**A**: `GetDeclaredSymbol`은 클래스, 메서드, 변수 등의 **선언** 노드에서 심볼을 얻을 때 사용합니다. `GetSymbolInfo`는 타입 참조나 메서드 호출 같은 **사용** 지점에서 해당 심볼을 해석할 때 사용합니다. 소스 생성기에서는 주로 선언을 분석하므로 `GetDeclaredSymbol`을 더 자주 사용합니다.
+
+### Q2: 소스 생성기에서 `SemanticModel`을 직접 생성하지 않아도 되는 이유는 무엇인가요?
+**A**: `ForAttributeWithMetadataName`의 `transform` 콜백에 전달되는 `GeneratorAttributeSyntaxContext`에 이미 `SemanticModel`과 `TargetSymbol`이 준비되어 있습니다. Roslyn 파이프라인이 컴파일 과정에서 자동으로 제공하므로, 직접 `Compilation.GetSemanticModel()`을 호출할 필요가 없습니다.
+
+### Q3: `ForAttributeWithMetadataName`이 직접 Syntax Tree를 순회하는 것보다 효율적인 이유는 무엇인가요?
+**A**: Roslyn이 내부적으로 속성 메타데이터 인덱스를 활용하여 대상 노드를 빠르게 찾아줍니다. 또한 증분 빌드 시 변경되지 않은 파일은 건너뛰므로, 수동 순회 대비 불필요한 분석을 크게 줄입니다.
+
+---
+
 ## 다음 단계
 
 Semantic API를 통해 심볼에 접근하는 방법을 배웠습니다. 다음 장에서는 `INamedTypeSymbol`, `IMethodSymbol`, `IParameterSymbol` 등 심볼 타입의 계층 구조와 각 타입에서 추출할 수 있는 상세 정보를 학습합니다.

@@ -282,6 +282,20 @@ cat Src/Functorium/.api/Functorium.cs
 
 지금까지 Phase 2 데이터 수집에 사용되는 세 가지 스크립트를 모두 살펴보았습니다. AnalyzeAllComponents.cs가 Git 변경사항을 수집하고, ExtractApiChanges.cs가 API 추출을 오케스트레이션하며, ApiGenerator.cs가 DLL에서 실제 API를 읽어냅니다. 이 데이터들이 준비되면 다음 단계는 릴리스 노트의 구조를 결정하는 템플릿과 설정 파일입니다.
 
+## FAQ
+
+### Q1: `PublicApiGenerator` 대신 리플렉션으로 직접 API를 추출하면 안 되나요?
+**A**: 리플렉션으로 타입과 메서드를 열거하는 것은 가능하지만, 제네릭 제약 조건(`where T : notnull`), 확장 메서드의 `this` 키워드, 네임스페이스별 정렬, 속성(Attribute) 표시 등을 C# 형식으로 깔끔하게 출력하려면 상당한 코드가 필요합니다. **`PublicApiGenerator`는** 이 모든 것을 처리하는 검증된 라이브러리이므로, 직접 구현 대비 유지보수 부담이 크게 줄어듭니다.
+
+### Q2: `CustomAssemblyLoadContext`에서 `isCollectible: true`로 설정하는 이유는 무엇인가요?
+**A**: `isCollectible: true`로 생성하면 사용이 끝난 후 해당 컨텍스트와 로드된 어셈블리를 **가비지 컬렉션으로 메모리에서 해제할 수** 있습니다. 여러 DLL을 순차적으로 분석하는 ExtractApiChanges.cs에서 메모리 누적을 방지하는 데 유용합니다.
+
+### Q3: 종속성을 찾지 못하면 `null`을 반환하는 것이 안전한가요?
+**A**: PublicApiGenerator가 Public API를 추출할 때 반드시 모든 종속 어셈블리가 필요한 것은 아닙니다. 예를 들어 메서드 본문에서만 사용되는 타입의 어셈블리는 Public API 추출에 영향을 주지 않습니다. `null`을 반환하면 .NET 런타임이 **해당 어셈블리가 실제로 필요해질 때만** 예외를 발생시키므로, 불필요한 오류를 방지합니다.
+
+### Q4: 출력 형식에서 메서드 본문이 `{ }`로 표시되는 이유는 무엇인가요?
+**A**: PublicApiGenerator는 **API 계약(Contract)만** 추출합니다. 메서드의 구현 세부사항은 Public API의 일부가 아니므로 본문을 비워둡니다. 릴리스 노트에서 중요한 것은 "어떤 메서드가 어떤 시그니처로 존재하는가"이지, 내부 구현이 아니기 때문입니다.
+
 ## 다음 단계
 
 - [TEMPLATE.md 구조](07-template-structure.md)

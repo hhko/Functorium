@@ -200,14 +200,14 @@ public static ProductModel ToModel(Product aggregate)
 
 ## FAQ
 
-**Q: 왜 Domain Model과 Persistence Model을 분리하나요?**
-A: DB 스키마 변경(컬럼 추가, 타입 변경)이 도메인 로직에 영향을 주지 않도록 합니다. 또한 도메인 모델에 ORM 어노테이션이 침투하는 것을 방지합니다.
+### Q1: 왜 Domain Model과 Persistence Model을 분리하나요?
+**A**: DB 스키마 변경(컬럼 추가, 타입 변경)이 도메인 로직에 영향을 주지 않도록 합니다. 또한 도메인 모델에 ORM 어노테이션이 침투하는 것을 방지합니다.
 
-**Q: PropertyMap이 없으면 Specification을 사용할 수 없나요?**
-A: `PropertyMap` 없이도 `IRepository`의 기본 CRUD는 동작합니다. 하지만 `BuildQuery(spec)`이나 `ExistsBySpec(spec)`처럼 Specification 기반 쿼리를 사용하려면 `PropertyMap`이 필수입니다.
+### Q2: PropertyMap이 없으면 Specification을 사용할 수 없나요?
+**A**: `PropertyMap` 없이도 `IRepository`의 기본 CRUD는 동작합니다. 하지만 `BuildQuery(spec)`이나 `ExistsBySpec(spec)`처럼 Specification 기반 쿼리를 사용하려면 `PropertyMap`이 필수입니다.
 
-**Q: IHasStringId는 무엇인가요?**
-A: `EfCoreRepositoryBase`에서 `ByIdPredicate`/`ByIdsPredicate`의 기본 구현을 제공하기 위한 인터페이스입니다. Persistence Model이 `string Id` 프로퍼티를 가지도록 강제합니다.
+### Q3: IHasStringId는 무엇인가요?
+**A**: `EfCoreRepositoryBase`에서 `ByIdPredicate`/`ByIdsPredicate`의 기본 구현을 제공하기 위한 인터페이스입니다. Persistence Model이 `string Id` 프로퍼티를 가지도록 강제합니다.
 
 ---
 

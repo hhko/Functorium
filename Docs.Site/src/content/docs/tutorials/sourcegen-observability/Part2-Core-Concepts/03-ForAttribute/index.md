@@ -338,6 +338,19 @@ transform: (ctx, cancellationToken) =>
 
 ---
 
+## FAQ
+
+### Q1: `fullyQualifiedMetadataName`에 `Attribute` 접미사를 반드시 포함해야 하는 이유는 무엇인가요?
+**A**: C# 문법에서는 `[GenerateObservablePort]`처럼 접미사를 생략할 수 있지만, Roslyn의 메타데이터 이름은 실제 클래스 이름 그대로를 사용합니다. 따라서 `Functorium.Adapters.SourceGenerators.GenerateObservablePortAttribute`처럼 전체 이름과 `Attribute` 접미사를 모두 포함해야 올바르게 매칭됩니다.
+
+### Q2: `predicate`에서 Semantic API를 사용할 수 없는 이유는 무엇인가요?
+**A**: `predicate`는 빠른 1차 필터링을 목적으로 모든 구문 노드에 대해 호출되므로, 비용이 높은 Semantic 분석을 허용하면 성능이 크게 저하됩니다. 대신 `SyntaxNode`의 타입만으로 필터링(`node is ClassDeclarationSyntax`)하고, 상세 분석은 `transform`에서 수행합니다.
+
+### Q3: `transform`에서 `CancellationToken`을 확인해야 하는 이유는 무엇인가요?
+**A**: IDE에서 사용자가 타이핑할 때마다 컴파일이 반복적으로 트리거될 수 있습니다. 이전 분석이 아직 완료되지 않았을 때 새로운 분석이 시작되면, 이전 작업은 취소됩니다. `ThrowIfCancellationRequested()`를 호출하지 않으면 불필요한 작업이 계속 진행되어 IDE 응답성이 저하됩니다.
+
+---
+
 ## 다음 단계
 
 `ForAttributeWithMetadataName`으로 데이터를 효율적으로 추출하는 방법을 이해했습니다. 하지만 이 효율성이 제대로 발휘되려면 파이프라인의 각 단계에서 캐싱이 올바르게 작동해야 합니다. 다음 장에서는 증분 캐싱의 원리와, 캐시를 무효화시키는 흔한 실수들을 살펴봅니다.

@@ -374,6 +374,19 @@ public new FinT<IO, User> GetUserAsync(int userId)
 
 ---
 
+## FAQ
+
+### Q1: `LoggerMessage.Define`의 6개 파라미터 제한이 코드 생성에 미치는 영향은 무엇인가요?
+**A**: ObservablePortGenerator는 기본적으로 4개 슬롯(핸들러명, 메서드명, 레이어, 상태 정보)을 사용하므로, 메서드 파라미터에 할당할 수 있는 슬롯은 2개뿐입니다. 파라미터가 2개를 초과하면 고성능 `LoggerMessage.Define` 대신 일반 로깅 코드로 폴백하는 분기가 필요하며, 이 판단이 `IMethodSymbol.Parameters.Length`에 기반합니다.
+
+### Q2: `MethodKind.Ordinary` 외에 어떤 `MethodKind` 값이 존재하나요?
+**A**: `Constructor`, `PropertyGet`, `PropertySet`, `EventAdd`, `EventRemove`, `UserDefinedOperator`, `Conversion`, `Destructor` 등이 있습니다. `GetMembers().OfType<IMethodSymbol>()`은 이 모든 종류를 반환하므로, 소스 생성기에서 래핑 대상인 일반 메서드만 선별하려면 `MethodKind.Ordinary` 필터가 필수입니다.
+
+### Q3: `RefKind`가 `None`이 아닌 파라미터는 코드 생성에서 어떻게 처리되나요?
+**A**: `ref`, `out`, `in` 파라미터는 메서드 시그니처와 호출부 모두에 해당 키워드를 포함해야 합니다. 코드 생성 시 `GetRefKindKeyword(p.RefKind)`로 키워드 문자열을 얻어 타입 앞에 접두사로 붙여야 컴파일 가능한 코드가 됩니다.
+
+---
+
 ## 다음 단계
 
 `IMethodSymbol`에서 파라미터 타입과 반환 타입을 추출할 때 `ToDisplayString`을 사용했습니다. 그런데 같은 타입이라도 포맷에 따라 `"User"`, `"MyApp.User"`, `"global::MyApp.User"` 등 다르게 표현될 수 있습니다. 다음 장에서는 이 표현을 일관되게 유지하기 위한 `SymbolDisplayFormat`을 살펴봅니다.

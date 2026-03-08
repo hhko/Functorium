@@ -54,6 +54,17 @@ IEnumerable<Animal> animals = dogs;  // IEnumerable<out T>이므로 OK
 
 공변성은 **읽기 전용** 접근을 보장합니다. `out T`로 선언하면 T 타입의 값을 **꺼내기만** 할 수 있으므로, 하위 타입의 컬렉션을 상위 타입으로 안전하게 참조할 수 있습니다.
 
+## FAQ
+
+### Q1: `out` 키워드를 붙이면 왜 입력 위치에서 `T`를 사용할 수 없나요?
+**A**: `out T`는 "이 타입 파라미터로 값을 꺼내기만 한다"는 약속입니다. 만약 `void Add(T animal)` 같은 입력 위치를 허용하면, `IAnimalShelter<Animal>` 참조를 통해 `Cat`을 `DogShelter`에 추가하는 타입 안전성 위반이 발생할 수 있습니다. 컴파일러가 이를 원천적으로 차단합니다.
+
+### Q2: `IEnumerable<out T>`가 공변인데, `List<T>`는 왜 공변이 아닌가요?
+**A**: `List<T>`는 `Add(T item)` 메서드로 T를 입력 위치에서도 사용하기 때문입니다. 입력과 출력 양쪽에서 T를 사용하면 `out`도 `in`도 선언할 수 없어 **불변(Invariant)** 타입이 됩니다. `IEnumerable<T>`는 읽기 전용이므로 `out`을 선언할 수 있습니다.
+
+### Q3: 공변성은 이 튜토리얼의 Pipeline 설계에서 어떻게 활용되나요?
+**A**: Part 3에서 설계하는 `IFinResponse<out A>` 인터페이스가 공변성을 활용합니다. `out A` 덕분에 `IFinResponse<string>`을 `IFinResponse<object>`에 대입할 수 있어, Pipeline에서 다양한 응답 타입을 유연하게 처리할 수 있습니다.
+
 공변성이 "꺼내기 전용"이라면, 반대로 "받기 전용"인 경우에는 어떤 변성이 적용될까요? 다음 장에서는 반대 방향인 **반공변성**을 학습합니다.
 
 ## 학습 목표

@@ -459,6 +459,20 @@ return rootCommand.Parse(args).Invoke();  // 6. 실행
 | `Spectre.Console@0.54.0` | 콘솔 UI |
 | `System.Text.Json` | JSON 처리 (기본 포함) |
 
+## FAQ
+
+### Q1: File-based App에서 `#:package` 지시자로 참조할 수 있는 패키지에 제한이 있나요?
+**A**: NuGet에 공개된 모든 패키지를 참조할 수 있습니다. 다만 **네이티브 종속성이 있는 패키지(예: SQLite)나** 빌드 시 추가 설정이 필요한 패키지는 File-based App 환경에서 정상 동작하지 않을 수 있습니다. `System.CommandLine`, `Spectre.Console`, `System.Text.Json` 같은 순수 .NET 패키지는 문제없이 사용할 수 있습니다.
+
+### Q2: `System.CommandLine`의 `SetAction`과 `SetHandler`는 어떻게 다른가요?
+**A**: `SetHandler`는 이전 버전의 API이고, **`SetAction`은 `System.CommandLine` 2.0.1에서** 도입된 새로운 핸들러 등록 방식입니다. `SetAction`은 `ParseResult`를 직접 받아 더 유연하게 인자를 처리할 수 있으며, 이 튜토리얼의 모든 스크립트는 `SetAction` 패턴을 사용합니다.
+
+### Q3: `Spectre.Console` 없이 기본 `Console.WriteLine`만으로 스크립트를 작성해도 되나요?
+**A**: 가능합니다. `Spectre.Console`은 테이블, 색상, 스피너 같은 **시각적 요소를 쉽게 추가하기 위한** 선택적 패키지입니다. 기본 `Console.WriteLine`으로도 동일한 기능을 구현할 수 있으며, 출력을 파이프라인으로 전달하거나 로그 파일로 리다이렉트할 때는 오히려 기본 콘솔이 더 적합할 수 있습니다.
+
+### Q4: File-based App의 `.cs` 파일과 일반 C# 프로젝트의 `.cs` 파일은 어떤 차이가 있나요?
+**A**: File-based App의 `.cs` 파일은 **Shebang 라인(`#!/usr/bin/env dotnet`)과 `#:package` 지시자를** 포함할 수 있으며, `.csproj` 파일 없이 `dotnet <파일명>.cs`로 직접 실행됩니다. 일반 프로젝트의 `.cs` 파일은 반드시 `.csproj`와 함께 `dotnet run`으로 실행해야 합니다. File-based App은 스크립트성 작업에, 일반 프로젝트는 라이브러리나 대규모 애플리케이션에 적합합니다.
+
 이제 릴리스 노트 자동화 스크립트의 코드를 읽을 때, 각 부분이 어떤 역할을 하는지 파악할 수 있을 것입니다. 다음 절에서는 실습 중 발생할 수 있는 문제와 해결 방법을 살펴봅니다.
 
 - [문제 해결 가이드](03-troubleshooting.md)

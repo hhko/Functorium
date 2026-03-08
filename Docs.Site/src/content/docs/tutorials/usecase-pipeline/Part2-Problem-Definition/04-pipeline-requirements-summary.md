@@ -126,5 +126,19 @@ where TResponse : IFinResponseFactory<TResponse>
 where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 ```
 
+## FAQ
+
+### Q1: 4가지 요구사항(R1~R4)을 모두 충족하지 않으면 어떤 문제가 생기나요?
+**A**: R1이 없으면 성공/실패 확인에 리플렉션이 필요하고, R2가 없으면 실패 응답 생성에 리플렉션이 필요합니다. R3이 없으면 에러 정보에 접근할 수 없고, R4가 없으면 이중 인터페이스로 설계가 복잡해집니다. 4가지를 모두 충족해야 리플렉션 0곳의 타입 안전한 Pipeline이 가능합니다.
+
+### Q2: R1(읽기)과 R2(생성)를 하나의 인터페이스로 합치면 안 되나요?
+**A**: 합칠 수는 있지만, **인터페이스 분리 원칙(ISP)에** 위배됩니다. Validation Pipeline은 생성만 필요하고, Transaction Pipeline은 읽기만 필요합니다. 하나로 합치면 불필요한 능력까지 제약하게 되어, Pipeline의 의도가 코드에 드러나지 않습니다.
+
+### Q3: 래퍼 방식의 R1이 왜 △(삼각형)인가요?
+**A**: 래퍼 방식에서 `is IFinResponseWrapper` 캐스팅으로 성공/실패에 접근할 수 있지만, 이는 **런타임 타입 검사**입니다. `where` 제약처럼 컴파일 타임에 접근을 보장하는 것이 아니므로, 완전한 충족(O)이 아닌 부분 충족(△)으로 평가됩니다.
+
+### Q4: Part 3에서 설계할 인터페이스 계층은 몇 개의 인터페이스로 구성되나요?
+**A**: 5개입니다. `IFinResponse`(비제네릭 마커), `IFinResponse<out A>`(공변 인터페이스), `IFinResponseFactory<TSelf>`(CRTP 팩토리), `IFinResponseWithError`(에러 접근), `FinResponse<A>`(Discriminated Union)로, 각각 하나의 요구사항을 해결합니다.
+
 Part 2에서 문제를 명확히 정의했습니다. Part 3에서는 이 4가지 요구사항을 하나씩 해결하는 IFinResponse 인터페이스 계층을 설계합니다.
 

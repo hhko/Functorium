@@ -715,6 +715,19 @@ dotnet nuget push ./packages/MyCompany.SourceGenerator.1.0.0.nupkg \
 
 ---
 
+## FAQ
+
+### Q1: 템플릿의 `MyGenerator`에서 `IsTargetNode`의 `TypeDeclarationSyntax` 필터링을 더 구체적으로 바꿔야 하나요?
+**A**: 네. `TypeDeclarationSyntax`는 `class`, `struct`, `record`, `interface`를 모두 포함하므로, 대상 노드를 정확히 필터링하지 않으면 불필요한 심볼 분석이 발생합니다. Entity Id 생성기처럼 `RecordDeclarationSyntax`와 `StructKeyword`를 조합하거나, 필요에 따라 `ClassDeclarationSyntax`만 허용하도록 구체화하면 증분 캐싱 효율이 높아집니다.
+
+### Q2: 메타데이터 클래스를 `record`가 아닌 `class`로 정의하면 어떤 문제가 생기나요?
+**A**: Roslyn의 증분 파이프라인은 이전 실행 결과와 현재 결과를 `Equals()`로 비교하여 변경 여부를 판단합니다. `class`는 기본적으로 참조 동등성을 사용하므로, 내용이 동일해도 매번 다른 객체로 인식되어 코드가 매 빌드마다 재생성됩니다. `record`는 값 동등성을 자동 제공하므로 증분 캐싱이 올바르게 작동합니다.
+
+### Q3: `GenerateAll()` 메서드와 `Generate()` 메서드는 언제 각각 사용하나요?
+**A**: `Generate()`는 마지막 생성 파일(일반적으로 메인 생성 코드)만 반환하므로 대부분의 스냅샷 테스트에 적합합니다. `GenerateAll()`은 마커 속성, 인터페이스, 메인 코드 등 모든 생성 파일을 파일명과 함께 반환하므로, 속성 코드가 올바르게 생성되는지 검증하거나 생성 파일 목록을 확인할 때 사용합니다.
+
+---
+
 ## 다음 단계
 
 Part 4 Cookbook의 모든 내용을 다루었습니다. 개발 워크플로우부터 세 가지 실전 생성기, 그리고 재사용 가능한 템플릿까지 소스 생성기를 독립적으로 만들기 위한 도구가 갖추어졌습니다. 다음 장에서는 이 튜토리얼 전체를 돌아보며 핵심 내용을 정리합니다.

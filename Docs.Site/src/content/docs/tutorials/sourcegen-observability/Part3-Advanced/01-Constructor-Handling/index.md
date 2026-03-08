@@ -421,6 +421,19 @@ public Task Should_Resolve_Parameter_Name_Conflict()
 
 ---
 
+## FAQ
+
+### Q1: Primary Constructor와 일반 생성자가 동시에 있으면 어느 것이 선택되나요?
+**A**: `ConstructorParameterExtractor`는 Primary Constructor를 1순위로 선택합니다. Primary Constructor가 없는 경우에만 파라미터가 가장 많은 일반 생성자를 선택합니다. Roslyn에서 Primary Constructor는 `DeclaringSyntaxReferences`의 구문 노드가 `TypeDeclarationSyntax`이고 `ParameterList`가 `null`이 아닌 것으로 식별합니다.
+
+### Q2: `ParameterNameResolver`가 `base` 접두사를 붙이는 예약 이름의 범위는 어디까지인가요?
+**A**: Observable 클래스가 자체적으로 사용하는 파라미터 이름(`activitySource`, `logger`, `meterFactory`, `openTelemetryOptions`)이 예약 이름입니다. 부모 클래스의 생성자 파라미터가 이 이름과 동일하면 `baseLogger`, `baseMeterFactory` 등으로 자동 변환됩니다. 언더스코어로 시작하는 파라미터(`_logger`)도 언더스코어를 제거한 뒤 동일한 접두사 규칙을 적용합니다.
+
+### Q3: 타겟 클래스와 부모 클래스 모두에 생성자가 없으면 어떻게 되나요?
+**A**: `ConstructorParameterExtractor.ExtractParameters()`가 빈 리스트를 반환하고, 생성된 Observable 클래스의 생성자에는 Observable 자체 파라미터(`ActivitySource`, `ILogger`, `IMeterFactory`, `IOptions<OpenTelemetryOptions>`)만 포함됩니다. `: base(...)` 호출도 생략됩니다.
+
+---
+
 ## 다음 단계
 
 생성자 처리를 통해 Observable 클래스가 부모의 의존성을 올바르게 전달할 수 있게 되었습니다. 다음 섹션에서는 `FinT<IO, T>`에서 내부 타입 `T`를 추출하는 제네릭 타입 처리를 학습합니다.

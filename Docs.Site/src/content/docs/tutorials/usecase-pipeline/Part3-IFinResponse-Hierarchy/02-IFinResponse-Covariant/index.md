@@ -57,6 +57,17 @@ public void LogAnyResponse(IFinResponse<object> response)
 }
 ```
 
+## FAQ
+
+### Q1: `IFinResponse<out A>`에 값을 반환하는 멤버가 없는데, 공변 인터페이스의 의미가 있나요?
+**A**: 현재 `IFinResponse<out A>`에는 값 접근 멤버가 명시적으로 없지만, 타입 파라미터 `A`를 통해 **타입 정보를 전달**합니다. 공변 선언(`out`)은 `IFinResponse<string>`을 `IFinResponse<object>`에 대입할 수 있게 하여, Pipeline에서 다양한 응답 타입을 일반적으로 처리할 수 있는 기반을 제공합니다.
+
+### Q2: `IFinResponse`(비제네릭)와 `IFinResponse<out A>`(공변)를 왜 분리하나요?
+**A**: Pipeline에서 **성공/실패 상태만** 필요한 경우 비제네릭 `IFinResponse`로 충분합니다. 타입 파라미터 `A`를 도입하면 불필요한 제네릭 전파가 발생합니다. 분리함으로써 각 Pipeline이 자신에게 필요한 **최소한의 타입 정보만** 요구할 수 있습니다.
+
+### Q3: 공변성이 실제 Pipeline 코드에서 어떤 차이를 만드나요?
+**A**: `IFinResponse<out A>`의 공변성 덕분에, `IFinResponse<ProductDto>`를 반환하는 Handler의 응답을 `IFinResponse<object>`를 받는 로깅 유틸리티에서 그대로 사용할 수 있습니다. 공변성이 없으면 매번 명시적 캐스팅이 필요하여 코드가 복잡해집니다.
+
 이제 Pipeline이 응답을 읽고 타입 안전하게 접근할 수 있습니다. 다음 장에서는 **요구사항 R2**에 도전합니다 -- Pipeline이 실패 응답을 직접 생성하는 방법을 설계합니다.
 
 ## 학습 목표

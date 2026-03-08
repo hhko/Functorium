@@ -291,4 +291,15 @@ var panel = new Panel($"[yellow]Base branch[/] [cyan]{baseBranch}[/] [yellow]doe
 AnsiConsole.Write(panel);
 ```
 
+## FAQ
+
+### Q1: `Console.WriteLine` 대신 Spectre.Console을 사용하는 이유는 무엇인가요?
+**A**: `Console.WriteLine`은 단순 텍스트만 출력하므로, 여러 컴포넌트의 분석 결과를 한눈에 비교하기 어렵습니다. Spectre.Console은 테이블, 색상 강조, 진행률 표시, 구분선 등을 제공하여 **스크립트 실행 상황을 시각적으로 투명하게** 보여줍니다. 특히 장시간 작업에서 현재 어떤 단계인지 파악하는 데 큰 차이가 납니다.
+
+### Q2: `Status`와 `Progress`는 어떤 상황에서 각각 사용하나요?
+**A**: `Status`는 하나의 작업이 진행 중일 때 스피너와 상태 메시지를 표시하는 데 적합하며, 단계가 바뀔 때마다 메시지를 갱신합니다. `Progress`는 **여러 작업의 진행률을 동시에 추적할 때** 사용하며, 각 작업의 백분율 진행 막대를 보여줍니다. 릴리스 노트 스크립트에서는 단일 컴포넌트 분석에 `Status`를, 여러 컴포넌트 병렬 처리에 `Progress`를 사용합니다.
+
+### Q3: Spectre.Console의 마크업 문법에서 대괄호를 리터럴로 출력하려면 어떻게 하나요?
+**A**: Spectre.Console은 `[`와 `]`를 마크업 태그로 해석하므로, 리터럴 대괄호를 출력하려면 `[[`와 `]]`로 이스케이프해야 합니다. 예를 들어 `AnsiConsole.MarkupLine("배열: [[0]]")`은 `배열: [0]`으로 출력됩니다.
+
 Spectre.Console 덕분에 자동화 스크립트의 실행 과정이 투명해집니다. 다음 절부터는 이 두 패키지를 활용한 실제 스크립트들을 하나씩 분석해보겠습니다.
