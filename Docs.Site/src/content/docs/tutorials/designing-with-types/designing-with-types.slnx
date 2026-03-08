@@ -55,4 +55,8 @@
     <Project Path="Part4-Conclusion/03-Final-Contact/FinalContact.Tests.Unit/FinalContact.Tests.Unit.csproj" />
     <Project Path="Part4-Conclusion/03-Final-Contact/FinalContact/FinalContact.csproj" />
   </Folder>
+  <Folder Name="/Part4-Conclusion/04-DDD-Contact/">
+    <Project Path="Part4-Conclusion/04-DDD-Contact/DDDContact.Tests.Unit/DDDContact.Tests.Unit.csproj" />
+    <Project Path="Part4-Conclusion/04-DDD-Contact/DDDContact/DDDContact.csproj" />
+  </Folder>
 </Solution>
