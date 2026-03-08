@@ -102,4 +102,4 @@ ArchitectureRules.Tests.Unit/
 
 Part 4에서는 Specification 패턴의 실전 활용법을 살펴보았습니다 — CQRS 통합, 동적 필터 빌더, 테스트 전략, 아키텍처 규칙까지. Part 5에서는 이 모든 것을 종합하여 실제 도메인 시나리오에 적용합니다.
 
-→ [17장: 이커머스 상품 필터링](../../Part5-Domain-Examples/01-Ecommerce-Product-Filtering/)
+→ [Part 5의 1장: 이커머스 상품 필터링](../../Part5-Domain-Examples/01-Ecommerce-Product-Filtering/)

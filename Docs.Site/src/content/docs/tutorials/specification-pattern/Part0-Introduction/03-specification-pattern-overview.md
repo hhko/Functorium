@@ -211,4 +211,4 @@ Part 5: 도메인별 실전 예제
 
 Specification 패턴의 개요를 이해했으니, 이제 Part 1에서 직접 코드를 작성하며 첫 번째 Specification을 만들어보겠습니다.
 
-→ [1장: 첫 번째 Specification](../Part1-Specification-Basics/01-First-Specification/)
+→ [Part 1의 1장: 첫 번째 Specification](../Part1-Specification-Basics/01-First-Specification/)

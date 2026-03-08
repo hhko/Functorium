@@ -85,4 +85,4 @@ Command와 Query에서 Specification이 활용되는 방식을 비교합니다.
 
 이 장에서 본 Query의 `All &= ...` 패턴은 간단한 경우에는 충분하지만, 필터 조건이 많아지면 Usecase 코드가 복잡해집니다. 다음 장에서는 이 패턴을 독립적인 빌더 클래스로 발전시켜, 필터 로직을 깔끔하게 캡슐화하는 방법을 다룹니다.
 
-→ [14장: 동적 필터 빌더](../02-Dynamic-Filter-Builder/)
+→ [2장: 동적 필터 빌더](../02-Dynamic-Filter-Builder/)

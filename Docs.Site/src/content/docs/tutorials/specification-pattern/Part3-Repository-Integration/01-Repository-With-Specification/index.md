@@ -122,4 +122,4 @@ Repository와 Specification이 각각 담당하는 역할을 정리합니다.
 
 Repository 인터페이스가 완성되었으니, 다음 장에서는 이 인터페이스를 가장 단순한 형태로 구현합니다. InMemory 어댑터를 통해 Specification이 Repository에서 실제로 어떻게 동작하는지 확인해보겠습니다.
 
-→ [10장: 인메모리 구현](../02-InMemory-Implementation/)
+→ [2장: 인메모리 구현](../02-InMemory-Implementation/)

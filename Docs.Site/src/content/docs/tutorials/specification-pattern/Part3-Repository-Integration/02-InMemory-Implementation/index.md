@@ -99,10 +99,10 @@ InMemoryImpl.Tests.Unit/                 # 테스트 프로젝트
 **A**: 기능적으로 동일합니다. 메서드 참조가 더 간결하므로 일반적으로 `spec.IsSatisfiedBy` 형태를 선호합니다.
 
 ### Q3: 대용량 데이터에서는 어떻게 해야 하나요?
-**A**: 11장(PropertyMap)과 12장(EF Core 구현)에서 Expression Tree를 활용하여 DB 수준에서 필터링하는 방법을 학습합니다. InMemory 방식은 모든 데이터를 메모리에 로드한 후 필터링하므로 대용량에는 적합하지 않습니다.
+**A**: 3장(PropertyMap)과 4장(EF Core 구현)에서 Expression Tree를 활용하여 DB 수준에서 필터링하는 방법을 학습합니다. InMemory 방식은 모든 데이터를 메모리에 로드한 후 필터링하므로 대용량에는 적합하지 않습니다.
 
 ---
 
 InMemory 구현은 `IsSatisfiedBy`를 직접 호출하므로 도메인 모델만으로 충분했습니다. 하지만 EF Core처럼 Expression Tree를 SQL로 변환하는 환경에서는, 도메인 모델과 DB 모델의 프로퍼티 이름이 다를 때 문제가 발생합니다. 다음 장에서는 이 간극을 메우는 PropertyMap을 다룹니다.
 
-→ [11장: PropertyMap](../03-PropertyMap/)
+→ [3장: PropertyMap](../03-PropertyMap/)

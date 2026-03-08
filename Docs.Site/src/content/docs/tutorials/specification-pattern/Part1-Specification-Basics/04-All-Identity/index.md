@@ -174,4 +174,4 @@ var results = SampleProducts.All.Where(p => spec.IsSatisfiedBy(p));
 
 Part 1에서는 Specification의 기초를 다졌습니다 — 조건 캡슐화, 조합, 연산자, 그리고 All 항등원까지. 하지만 지금까지의 Specification은 메모리 컬렉션에서만 동작합니다. Part 2에서는 Expression Tree를 도입하여 Specification을 EF Core 같은 ORM에서도 사용할 수 있게 만듭니다.
 
-→ [5장: Expression 소개](../../Part2-Expression-Specification/01-Expression-Introduction/)
+→ [Part 2의 1장: Expression 소개](../../Part2-Expression-Specification/01-Expression-Introduction/)

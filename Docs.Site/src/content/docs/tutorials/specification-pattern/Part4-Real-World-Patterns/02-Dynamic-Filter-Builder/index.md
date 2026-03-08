@@ -94,4 +94,4 @@ DynamicFilter/
 
 빌더로 필터 조합 로직을 깔끔하게 분리했습니다. 하지만 이 Specification들이 정확한 비즈니스 규칙을 표현하는지 어떻게 보장할 수 있을까요? 다음 장에서는 Specification의 체계적인 테스트 전략을 다룹니다.
 
-→ [15장: 테스트 전략](../03-Testing-Strategies/)
+→ [3장: 테스트 전략](../03-Testing-Strategies/)

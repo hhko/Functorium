@@ -105,4 +105,4 @@ PropertyMapDemo.Tests.Unit/              # 테스트 프로젝트
 
 PropertyMap으로 도메인과 DB 모델 간의 프로퍼티 매핑을 해결했습니다. 다음 장에서는 지금까지 배운 모든 것 — Expression 추출, PropertyMap 변환, Queryable 적용 — 을 조합하여 EF Core 어댑터를 구현합니다.
 
-→ [12장: EF Core 구현](../04-EfCore-Implementation/)
+→ [4장: EF Core 구현](../04-EfCore-Implementation/)

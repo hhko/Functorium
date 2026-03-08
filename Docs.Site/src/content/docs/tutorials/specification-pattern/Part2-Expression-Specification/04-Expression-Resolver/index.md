@@ -138,4 +138,4 @@ else
 
 Part 2에서는 Expression Tree의 개념부터 Resolver까지, Specification을 ORM과 연결하기 위한 모든 기반을 다졌습니다. Part 3에서는 이 기반 위에 Repository를 설계하고, InMemory와 EF Core 어댑터를 구현합니다.
 
-→ [9장: Repository와 Specification](../../Part3-Repository-Integration/01-Repository-With-Specification/)
+→ [Part 3의 1장: Repository와 Specification](../../Part3-Repository-Integration/01-Repository-With-Specification/)

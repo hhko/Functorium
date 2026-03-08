@@ -18,8 +18,8 @@ Repository 메서드가 끝없이 늘어나고, 비즈니스 규칙이 서비스
 
 | 수준 | 대상 | 권장 학습 범위 |
 |------|------|----------------|
-| **초급** | C# 기본 문법을 알고 Specification 패턴에 입문하려는 개발자 | Part 1 (1장~4장) |
-| **중급** | 패턴을 이해하고 실전 적용을 원하는 개발자 | Part 1~3 (1장~12장) |
+| **초급** | C# 기본 문법을 알고 Specification 패턴에 입문하려는 개발자 | Part 1 |
+| **중급** | 패턴을 이해하고 실전 적용을 원하는 개발자 | Part 1~3 |
 | **고급** | 아키텍처 설계와 도메인 모델링에 관심 있는 개발자 | Part 4~5 + 부록 |
 
 ### 학습 목표
@@ -59,10 +59,10 @@ Expression Tree 기반 Specification으로 ORM 통합을 준비합니다.
 
 | 장 | 주제 | 핵심 학습 내용 |
 |:---:|------|----------------|
-| 5 | [Expression 소개](Part2-Expression-Specification/01-Expression-Introduction/) | Expression Tree 개념과 필요성 |
-| 6 | [ExpressionSpecification 클래스](Part2-Expression-Specification/02-ExpressionSpecification-Class/) | sealed IsSatisfiedBy, 델리게이트 캐싱 |
-| 7 | [Value Object 변환 패턴](Part2-Expression-Specification/03-ValueObject-Primitive-Conversion/) | Value Object→primitive 변환 |
-| 8 | [Expression Resolver](Part2-Expression-Specification/04-Expression-Resolver/) | TryResolve, 재귀 합성 |
+| 1 | [Expression 소개](Part2-Expression-Specification/01-Expression-Introduction/) | Expression Tree 개념과 필요성 |
+| 2 | [ExpressionSpecification 클래스](Part2-Expression-Specification/02-ExpressionSpecification-Class/) | sealed IsSatisfiedBy, 델리게이트 캐싱 |
+| 3 | [Value Object 변환 패턴](Part2-Expression-Specification/03-ValueObject-Primitive-Conversion/) | Value Object→primitive 변환 |
+| 4 | [Expression Resolver](Part2-Expression-Specification/04-Expression-Resolver/) | TryResolve, 재귀 합성 |
 
 ### Part 3: Repository 통합
 
@@ -70,10 +70,10 @@ Specification과 Repository를 통합하여 유연한 데이터 조회를 구현
 
 | 장 | 주제 | 핵심 학습 내용 |
 |:---:|------|----------------|
-| 9 | [Repository와 Specification](Part3-Repository-Integration/01-Repository-With-Specification/) | Repository 메서드 폭발 방지 |
-| 10 | [InMemory 구현](Part3-Repository-Integration/02-InMemory-Implementation/) | InMemory 어댑터 |
-| 11 | [PropertyMap](Part3-Repository-Integration/03-PropertyMap/) | PropertyMap, TranslatingVisitor |
-| 12 | [EF Core 구현](Part3-Repository-Integration/04-EfCore-Implementation/) | TryResolve + Translate 조합 |
+| 1 | [Repository와 Specification](Part3-Repository-Integration/01-Repository-With-Specification/) | Repository 메서드 폭발 방지 |
+| 2 | [InMemory 구현](Part3-Repository-Integration/02-InMemory-Implementation/) | InMemory 어댑터 |
+| 3 | [PropertyMap](Part3-Repository-Integration/03-PropertyMap/) | PropertyMap, TranslatingVisitor |
+| 4 | [EF Core 구현](Part3-Repository-Integration/04-EfCore-Implementation/) | TryResolve + Translate 조합 |
 
 ### Part 4: 실전 패턴
 
@@ -81,10 +81,10 @@ Specification과 Repository를 통합하여 유연한 데이터 조회를 구현
 
 | 장 | 주제 | 핵심 학습 내용 |
 |:---:|------|----------------|
-| 13 | [Usecase 패턴](Part4-Real-World-Patterns/01-Usecase-Patterns/) | CQRS에서 Spec 활용 |
-| 14 | [동적 필터 빌더](Part4-Real-World-Patterns/02-Dynamic-Filter-Builder/) | All 시드 조건부 체이닝 |
-| 15 | [테스트 전략](Part4-Real-World-Patterns/03-Testing-Strategies/) | Spec/조합/Usecase 테스트 |
-| 16 | [아키텍처 규칙](Part4-Real-World-Patterns/04-Architecture-Rules/) | 네이밍, 폴더 배치, ArchUnitNET |
+| 1 | [Usecase 패턴](Part4-Real-World-Patterns/01-Usecase-Patterns/) | CQRS에서 Spec 활용 |
+| 2 | [동적 필터 빌더](Part4-Real-World-Patterns/02-Dynamic-Filter-Builder/) | All 시드 조건부 체이닝 |
+| 3 | [테스트 전략](Part4-Real-World-Patterns/03-Testing-Strategies/) | Spec/조합/Usecase 테스트 |
+| 4 | [아키텍처 규칙](Part4-Real-World-Patterns/04-Architecture-Rules/) | 네이밍, 폴더 배치, ArchUnitNET |
 
 ### Part 5: 도메인별 실전 예제
 
@@ -105,17 +105,17 @@ Specification과 Repository를 통합하여 유연한 데이터 조회를 구현
 ## 핵심 진화 과정
 
 ```
-1장: 첫 번째 Spec       →  2장: And/Or/Not 조합   →  3장: 연산자 오버로딩
+Part 1
+  1장: 첫 번째 Spec     →  2장: And/Or/Not 조합   →  3장: 연산자 오버로딩  →  4장: All 항등원
      ↓
-4장: All 항등원         →  5장: Expression 소개    →  6장: ExpressionSpec
+Part 2
+  1장: Expression 소개  →  2장: ExpressionSpec     →  3장: VO 변환 패턴     →  4장: Expression Resolver
      ↓
-7장: VO 변환 패턴       →  8장: Expression Resolver
+Part 3
+  1장: Repository 통합  →  2장: InMemory 구현      →  3장: PropertyMap      →  4장: EF Core 구현
      ↓
-9장: Repository 통합    →  10장: InMemory 구현     →  11장: PropertyMap
-     ↓
-12장: EF Core 구현      →  13장: Usecase 패턴      →  14장: 동적 필터
-     ↓
-15장: 테스트 전략       →  16장: 아키텍처 규칙
+Part 4
+  1장: Usecase 패턴     →  2장: 동적 필터          →  3장: 테스트 전략      →  4장: 아키텍처 규칙
 ```
 
 ---
@@ -226,35 +226,35 @@ dotnet test
 
 | 장 | 테스트 프로젝트 | 주요 테스트 내용 |
 |:---:|----------------|-----------------|
-| 5 | `ExpressionIntroduction.Tests.Unit` | Expression Tree 기본 |
-| 6 | `ExpressionSpecificationClass.Tests.Unit` | sealed IsSatisfiedBy, 캐싱 |
-| 7 | `ValueObjectPrimitiveConversion.Tests.Unit` | VO→primitive 변환 |
-| 8 | `ExpressionResolver.Tests.Unit` | TryResolve, 재귀 합성 |
+| 1 | `ExpressionIntroduction.Tests.Unit` | Expression Tree 기본 |
+| 2 | `ExpressionSpecificationClass.Tests.Unit` | sealed IsSatisfiedBy, 캐싱 |
+| 3 | `ValueObjectPrimitiveConversion.Tests.Unit` | VO→primitive 변환 |
+| 4 | `ExpressionResolver.Tests.Unit` | TryResolve, 재귀 합성 |
 
 **Part 3: Repository 통합** (4개)
 
 | 장 | 테스트 프로젝트 | 주요 테스트 내용 |
 |:---:|----------------|-----------------|
-| 9 | `RepositoryWithSpecification.Tests.Unit` | Repository + Spec 통합 |
-| 10 | `InMemoryImplementation.Tests.Unit` | InMemory 어댑터 |
-| 11 | `PropertyMap.Tests.Unit` | PropertyMap, TranslatingVisitor |
-| 12 | `EfCoreImplementation.Tests.Unit` | EF Core TryResolve + Translate |
+| 1 | `RepositoryWithSpecification.Tests.Unit` | Repository + Spec 통합 |
+| 2 | `InMemoryImplementation.Tests.Unit` | InMemory 어댑터 |
+| 3 | `PropertyMap.Tests.Unit` | PropertyMap, TranslatingVisitor |
+| 4 | `EfCoreImplementation.Tests.Unit` | EF Core TryResolve + Translate |
 
 **Part 4: 실전 패턴** (4개)
 
 | 장 | 테스트 프로젝트 | 주요 테스트 내용 |
 |:---:|----------------|-----------------|
-| 13 | `UsecasePatterns.Tests.Unit` | CQRS + Spec 활용 |
-| 14 | `DynamicFilterBuilder.Tests.Unit` | 동적 필터 체이닝 |
-| 15 | `TestingStrategies.Tests.Unit` | Spec 테스트 패턴 |
-| 16 | `ArchitectureRules.Tests.Unit` | 아키텍처 규칙 검증 |
+| 1 | `UsecasePatterns.Tests.Unit` | CQRS + Spec 활용 |
+| 2 | `DynamicFilterBuilder.Tests.Unit` | 동적 필터 체이닝 |
+| 3 | `TestingStrategies.Tests.Unit` | Spec 테스트 패턴 |
+| 4 | `ArchitectureRules.Tests.Unit` | 아키텍처 규칙 검증 |
 
 **Part 5: 도메인별 실전 예제** (2개)
 
 | 장 | 테스트 프로젝트 | 주요 테스트 내용 |
 |:---:|----------------|-----------------|
-| 17 | `EcommerceProductFiltering.Tests.Unit` | 상품 필터링 Spec |
-| 18 | `CustomerManagement.Tests.Unit` | 고객 관리 Spec |
+| 1 | `EcommerceProductFiltering.Tests.Unit` | 상품 필터링 Spec |
+| 2 | `CustomerManagement.Tests.Unit` | 고객 관리 Spec |
 
 ### 테스트 명명 규칙
 
