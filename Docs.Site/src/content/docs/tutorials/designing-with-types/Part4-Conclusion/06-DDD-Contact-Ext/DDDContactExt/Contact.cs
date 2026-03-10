@@ -12,7 +12,6 @@ public sealed class Contact : AggregateRoot<ContactId>, IAuditable, ISoftDeletab
 {
     #region Error Types
 
-    public sealed record AlreadyVerified : DomainErrorType.Custom;
     public sealed record NoEmailToVerify : DomainErrorType.Custom;
     public sealed record AlreadyDeleted : DomainErrorType.Custom;
 
@@ -55,7 +54,18 @@ public sealed class Contact : AggregateRoot<ContactId>, IAuditable, ISoftDeletab
 
     // Value Object 속성
     public PersonalName Name { get; private set; }
-    public ContactInfo ContactInfo { get; private set; }
+
+    // ContactInfo 설정 시 EmailValue 자동 동기화
+    private ContactInfo _contactInfo = null!;
+    public ContactInfo ContactInfo
+    {
+        get => _contactInfo;
+        private set
+        {
+            _contactInfo = value;
+            EmailValue = ExtractEmail(value);
+        }
+    }
 
     // 이메일 투영 속성 (Specification 지원용)
     public string? EmailValue { get; private set; }
@@ -76,23 +86,23 @@ public sealed class Contact : AggregateRoot<ContactId>, IAuditable, ISoftDeletab
     private Contact(
         ContactId id,
         PersonalName name,
-        ContactInfo contactInfo)
+        ContactInfo contactInfo,
+        DateTime createdAt)
         : base(id)
     {
         Name = name;
         ContactInfo = contactInfo;
-        EmailValue = ExtractEmail(contactInfo);
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = createdAt;
     }
 
     /// <summary>
     /// Create: 이메일만 있는 Contact (초기 상태: Unverified)
     /// </summary>
-    public static Contact Create(PersonalName name, EmailAddress email)
+    public static Contact Create(PersonalName name, EmailAddress email, DateTime createdAt)
     {
         var contactInfo = new ContactInfo.EmailOnly(
             new EmailVerificationState.Unverified(email));
-        var contact = new Contact(ContactId.New(), name, contactInfo);
+        var contact = new Contact(ContactId.New(), name, contactInfo, createdAt);
         contact.AddDomainEvent(new CreatedEvent(contact.Id, name, contactInfo));
         return contact;
     }
@@ -100,10 +110,10 @@ public sealed class Contact : AggregateRoot<ContactId>, IAuditable, ISoftDeletab
     /// <summary>
     /// Create: 우편 주소만 있는 Contact
     /// </summary>
-    public static Contact Create(PersonalName name, PostalAddress postal)
+    public static Contact Create(PersonalName name, PostalAddress postal, DateTime createdAt)
     {
         var contactInfo = new ContactInfo.PostalOnly(postal);
-        var contact = new Contact(ContactId.New(), name, contactInfo);
+        var contact = new Contact(ContactId.New(), name, contactInfo, createdAt);
         contact.AddDomainEvent(new CreatedEvent(contact.Id, name, contactInfo));
         return contact;
     }
@@ -111,11 +121,11 @@ public sealed class Contact : AggregateRoot<ContactId>, IAuditable, ISoftDeletab
     /// <summary>
     /// Create: 이메일 + 우편 주소 모두 있는 Contact (이메일 초기 상태: Unverified)
     /// </summary>
-    public static Contact Create(PersonalName name, EmailAddress email, PostalAddress postal)
+    public static Contact Create(PersonalName name, EmailAddress email, PostalAddress postal, DateTime createdAt)
     {
         var contactInfo = new ContactInfo.EmailAndPostal(
             new EmailVerificationState.Unverified(email), postal);
-        var contact = new Contact(ContactId.New(), name, contactInfo);
+        var contact = new Contact(ContactId.New(), name, contactInfo, createdAt);
         contact.AddDomainEvent(new CreatedEvent(contact.Id, name, contactInfo));
         return contact;
     }
@@ -133,9 +143,8 @@ public sealed class Contact : AggregateRoot<ContactId>, IAuditable, ISoftDeletab
         Option<DateTime> deletedAt,
         Option<string> deletedBy)
     {
-        var contact = new Contact(id, name, contactInfo)
+        var contact = new Contact(id, name, contactInfo, createdAt)
         {
-            CreatedAt = createdAt,
             UpdatedAt = updatedAt,
             DeletedAt = deletedAt,
             DeletedBy = deletedBy
@@ -147,24 +156,24 @@ public sealed class Contact : AggregateRoot<ContactId>, IAuditable, ISoftDeletab
     /// <summary>
     /// 이름을 변경합니다.
     /// </summary>
-    public Fin<Unit> UpdateName(PersonalName newName)
+    public Fin<Unit> UpdateName(PersonalName newName, DateTime now)
     {
         if (DeletedAt.IsSome)
             return DomainError.For<Contact>(
                 new AlreadyDeleted(),
                 Id.ToString(),
-                "Cannot update a deleted contact");
+                "삭제된 연락처는 수정할 수 없습니다");
 
         var oldName = Name;
         Name = newName;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         AddDomainEvent(new NameUpdatedEvent(Id, oldName, newName));
         return unit;
     }
 
     /// <summary>
     /// 이메일 인증: Unverified → Verified 전이
-    /// Aggregate가 상태 전이를 소유
+    /// Aggregate가 가드 후 상태 전이를 EmailVerificationState에 위임
     /// </summary>
     public Fin<Unit> VerifyEmail(DateTime verifiedAt)
     {
@@ -172,7 +181,7 @@ public sealed class Contact : AggregateRoot<ContactId>, IAuditable, ISoftDeletab
             return DomainError.For<Contact>(
                 new AlreadyDeleted(),
                 Id.ToString(),
-                "Cannot verify email of a deleted contact");
+                "삭제된 연락처의 이메일을 인증할 수 없습니다");
 
         // ContactInfo에서 EmailState 추출
         var emailState = ContactInfo switch
@@ -188,41 +197,35 @@ public sealed class Contact : AggregateRoot<ContactId>, IAuditable, ISoftDeletab
                 Id.ToString(),
                 "이메일이 없는 연락처입니다");
 
-        if (emailState is EmailVerificationState.Verified)
-            return DomainError.For<Contact>(
-                new AlreadyVerified(),
-                Id.ToString(),
-                "이미 인증된 이메일입니다");
-
-        var unverified = (EmailVerificationState.Unverified)emailState;
-        var verified = new EmailVerificationState.Verified(unverified.Email, verifiedAt);
-
-        ContactInfo = ContactInfo switch
+        // 상태 전이를 EmailVerificationState에 위임
+        return emailState.Verify(verifiedAt).Map(verified =>
         {
-            ContactInfo.EmailOnly => new ContactInfo.EmailOnly(verified),
-            ContactInfo.EmailAndPostal ep => new ContactInfo.EmailAndPostal(verified, ep.Address),
-            _ => throw new InvalidOperationException()
-        };
-
-        UpdatedAt = DateTime.UtcNow;
-        AddDomainEvent(new EmailVerifiedEvent(Id, unverified.Email, verifiedAt));
-        return unit;
+            ContactInfo = ContactInfo switch
+            {
+                ContactInfo.EmailOnly => new ContactInfo.EmailOnly(verified),
+                ContactInfo.EmailAndPostal ep => new ContactInfo.EmailAndPostal(verified, ep.Address),
+                _ => throw new InvalidOperationException()
+            };
+            UpdatedAt = verifiedAt;
+            AddDomainEvent(new EmailVerifiedEvent(Id, verified.Email, verifiedAt));
+            return unit;
+        });
     }
 
     /// <summary>
     /// 메모를 추가합니다.
     /// </summary>
-    public Fin<Unit> AddNote(NoteContent content)
+    public Fin<Unit> AddNote(NoteContent content, DateTime now)
     {
         if (DeletedAt.IsSome)
             return DomainError.For<Contact>(
                 new AlreadyDeleted(),
                 Id.ToString(),
-                "Cannot add note to a deleted contact");
+                "삭제된 연락처에 메모를 추가할 수 없습니다");
 
-        var note = ContactNote.Create(content);
+        var note = ContactNote.Create(content, now);
         _notes.Add(note);
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         AddDomainEvent(new NoteAddedEvent(Id, note.Id, content));
         return unit;
     }
@@ -230,20 +233,20 @@ public sealed class Contact : AggregateRoot<ContactId>, IAuditable, ISoftDeletab
     /// <summary>
     /// 메모를 제거합니다. (삭제된 Contact 차단, 존재하지 않는 Note는 멱등)
     /// </summary>
-    public Fin<Unit> RemoveNote(ContactNoteId noteId)
+    public Fin<Unit> RemoveNote(ContactNoteId noteId, DateTime now)
     {
         if (DeletedAt.IsSome)
             return DomainError.For<Contact>(
                 new AlreadyDeleted(),
                 Id.ToString(),
-                "Cannot remove note from a deleted contact");
+                "삭제된 연락처에서 메모를 제거할 수 없습니다");
 
         var note = _notes.FirstOrDefault(n => n.Id == noteId);
         if (note is null)
             return unit;
 
         _notes.Remove(note);
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
         AddDomainEvent(new NoteRemovedEvent(Id, noteId));
         return unit;
     }
@@ -251,12 +254,12 @@ public sealed class Contact : AggregateRoot<ContactId>, IAuditable, ISoftDeletab
     /// <summary>
     /// 연락처를 삭제합니다. (멱등성 보장)
     /// </summary>
-    public Contact Delete(string deletedBy)
+    public Contact Delete(string deletedBy, DateTime now)
     {
         if (DeletedAt.IsSome)
             return this;
 
-        DeletedAt = DateTime.UtcNow;
+        DeletedAt = now;
         DeletedBy = deletedBy;
         AddDomainEvent(new DeletedEvent(Id, deletedBy));
         return this;

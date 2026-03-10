@@ -8,6 +8,8 @@ namespace DDDContactExt.Tests.Unit;
 [Trait("Part4-Conclusion", "05-DDDContactExt")]
 public class ContactNoteTests
 {
+    private static readonly DateTime Now = new(2024, 1, 1);
+
     [Fact]
     public void Create_ReturnsNoteWithContent()
     {
@@ -15,10 +17,11 @@ public class ContactNoteTests
         var content = NoteContent.Create("메모 내용").ThrowIfFail();
 
         // Act
-        var actual = ContactNote.Create(content);
+        var actual = ContactNote.Create(content, Now);
 
         // Assert
         actual.Content.ShouldBe(content);
+        actual.CreatedAt.ShouldBe(Now);
     }
 
     [Fact]
@@ -28,8 +31,8 @@ public class ContactNoteTests
         var content = NoteContent.Create("메모").ThrowIfFail();
 
         // Act
-        var note1 = ContactNote.Create(content);
-        var note2 = ContactNote.Create(content);
+        var note1 = ContactNote.Create(content, Now);
+        var note2 = ContactNote.Create(content, Now);
 
         // Assert
         note1.Id.ShouldNotBe(note2.Id);

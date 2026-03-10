@@ -11,6 +11,8 @@ namespace DDDContactExt.Tests.Unit;
 [Trait("Part4-Conclusion", "05-DDDContactExt")]
 public class ContactTests
 {
+    private static readonly DateTime Now = new(2024, 1, 1);
+
     private static PersonalName CreateName() =>
         PersonalName.Create("HyungHo", "Ko").ThrowIfFail();
 
@@ -29,7 +31,7 @@ public class ContactTests
     public void Create_ReturnsContact_WithEmailOnly()
     {
         // Act
-        var actual = Contact.Create(CreateName(), CreateEmail());
+        var actual = Contact.Create(CreateName(), CreateEmail(), Now);
 
         // Assert
         actual.ContactInfo.ShouldBeOfType<ContactInfo.EmailOnly>();
@@ -39,7 +41,7 @@ public class ContactTests
     public void Create_PublishesCreatedEvent_WithEmailOnly()
     {
         // Act
-        var actual = Contact.Create(CreateName(), CreateEmail());
+        var actual = Contact.Create(CreateName(), CreateEmail(), Now);
 
         // Assert
         actual.DomainEvents.Count.ShouldBe(1);
@@ -50,7 +52,7 @@ public class ContactTests
     public void Create_SetsInitialEmailState_ToUnverified()
     {
         // Act
-        var actual = Contact.Create(CreateName(), CreateEmail());
+        var actual = Contact.Create(CreateName(), CreateEmail(), Now);
 
         // Assert
         var emailOnly = (ContactInfo.EmailOnly)actual.ContactInfo;
@@ -61,10 +63,20 @@ public class ContactTests
     public void Create_SetsEmailValue()
     {
         // Act
-        var actual = Contact.Create(CreateName(), CreateEmail());
+        var actual = Contact.Create(CreateName(), CreateEmail(), Now);
 
         // Assert
         actual.EmailValue.ShouldBe("user@example.com");
+    }
+
+    [Fact]
+    public void Create_SetsCreatedAt()
+    {
+        // Act
+        var actual = Contact.Create(CreateName(), CreateEmail(), Now);
+
+        // Assert
+        actual.CreatedAt.ShouldBe(Now);
     }
 
     #endregion
@@ -75,7 +87,7 @@ public class ContactTests
     public void Create_ReturnsContact_WithPostalOnly()
     {
         // Act
-        var actual = Contact.Create(CreateName(), CreatePostal());
+        var actual = Contact.Create(CreateName(), CreatePostal(), Now);
 
         // Assert
         actual.ContactInfo.ShouldBeOfType<ContactInfo.PostalOnly>();
@@ -85,7 +97,7 @@ public class ContactTests
     public void Create_SetsEmailValueNull_WithPostalOnly()
     {
         // Act
-        var actual = Contact.Create(CreateName(), CreatePostal());
+        var actual = Contact.Create(CreateName(), CreatePostal(), Now);
 
         // Assert
         actual.EmailValue.ShouldBeNull();
@@ -99,7 +111,7 @@ public class ContactTests
     public void Create_ReturnsContact_WithEmailAndPostal()
     {
         // Act
-        var actual = Contact.Create(CreateName(), CreateEmail(), CreatePostal());
+        var actual = Contact.Create(CreateName(), CreateEmail(), CreatePostal(), Now);
 
         // Assert
         actual.ContactInfo.ShouldBeOfType<ContactInfo.EmailAndPostal>();
@@ -109,7 +121,7 @@ public class ContactTests
     public void Create_PublishesCreatedEvent_WithEmailAndPostal()
     {
         // Act
-        var actual = Contact.Create(CreateName(), CreateEmail(), CreatePostal());
+        var actual = Contact.Create(CreateName(), CreateEmail(), CreatePostal(), Now);
 
         // Assert
         actual.DomainEvents.Count.ShouldBe(1);
@@ -124,7 +136,7 @@ public class ContactTests
     public void CreateFromValidated_DoesNotPublishEvents()
     {
         // Arrange
-        var note = ContactNote.Create(CreateNoteContent());
+        var note = ContactNote.Create(CreateNoteContent(), Now);
 
         // Act
         var actual = Contact.CreateFromValidated(
@@ -132,7 +144,7 @@ public class ContactTests
             CreateName(),
             new ContactInfo.EmailOnly(new EmailVerificationState.Unverified(CreateEmail())),
             [note],
-            DateTime.UtcNow,
+            Now,
             Option<DateTime>.None,
             Option<DateTime>.None,
             Option<string>.None);
@@ -145,7 +157,7 @@ public class ContactTests
     public void CreateFromValidated_RestoresNotesAndSoftDelete()
     {
         // Arrange
-        var note = ContactNote.Create(CreateNoteContent());
+        var note = ContactNote.Create(CreateNoteContent(), Now);
         var deletedAt = new DateTime(2024, 6, 1);
 
         // Act
@@ -173,11 +185,11 @@ public class ContactTests
     public void UpdateName_ReturnsSuccess_WhenNotDeleted()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
         var newName = PersonalName.Create("Gildong", "Hong").ThrowIfFail();
 
         // Act
-        var actual = sut.UpdateName(newName);
+        var actual = sut.UpdateName(newName, Now);
 
         // Assert
         actual.IsSucc.ShouldBeTrue();
@@ -189,11 +201,11 @@ public class ContactTests
     {
         // Arrange
         var oldName = CreateName();
-        var sut = Contact.Create(oldName, CreateEmail());
+        var sut = Contact.Create(oldName, CreateEmail(), Now);
         var newName = PersonalName.Create("Gildong", "Hong").ThrowIfFail();
 
         // Act
-        sut.UpdateName(newName);
+        sut.UpdateName(newName, Now);
 
         // Assert
         sut.DomainEvents.Count.ShouldBe(2); // CreatedEvent + NameUpdatedEvent
@@ -206,11 +218,11 @@ public class ContactTests
     public void UpdateName_ReturnsFail_WhenDeleted()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
-        sut.Delete("admin");
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
+        sut.Delete("admin", Now);
 
         // Act
-        var actual = sut.UpdateName(PersonalName.Create("Gildong", "Hong").ThrowIfFail());
+        var actual = sut.UpdateName(PersonalName.Create("Gildong", "Hong").ThrowIfFail(), Now);
 
         // Assert
         actual.IsFail.ShouldBeTrue();
@@ -220,13 +232,15 @@ public class ContactTests
     public void UpdateName_SetsUpdatedAt()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
+        var updateTime = new DateTime(2024, 2, 1);
 
         // Act
-        sut.UpdateName(PersonalName.Create("Gildong", "Hong").ThrowIfFail());
+        sut.UpdateName(PersonalName.Create("Gildong", "Hong").ThrowIfFail(), updateTime);
 
         // Assert
         sut.UpdatedAt.IsSome.ShouldBeTrue();
+        sut.UpdatedAt.IfNone(DateTime.MinValue).ShouldBe(updateTime);
     }
 
     #endregion
@@ -237,7 +251,7 @@ public class ContactTests
     public void VerifyEmail_ReturnsSuccess_WhenUnverified()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
 
         // Act
         var actual = sut.VerifyEmail(new DateTime(2024, 1, 15));
@@ -250,7 +264,7 @@ public class ContactTests
     public void VerifyEmail_TransitionsToVerified()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
 
         // Act
         sut.VerifyEmail(new DateTime(2024, 1, 15));
@@ -265,7 +279,7 @@ public class ContactTests
     public void VerifyEmail_PublishesEmailVerifiedEvent()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
 
         // Act
         sut.VerifyEmail(new DateTime(2024, 1, 15));
@@ -279,11 +293,11 @@ public class ContactTests
     public void VerifyEmail_ReturnsFail_WhenAlreadyVerified()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
-        sut.VerifyEmail(DateTime.UtcNow);
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
+        sut.VerifyEmail(new DateTime(2024, 1, 15));
 
         // Act
-        var actual = sut.VerifyEmail(DateTime.UtcNow);
+        var actual = sut.VerifyEmail(new DateTime(2024, 2, 1));
 
         // Assert
         actual.IsFail.ShouldBeTrue();
@@ -293,10 +307,10 @@ public class ContactTests
     public void VerifyEmail_ReturnsFail_WhenNoEmail()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreatePostal());
+        var sut = Contact.Create(CreateName(), CreatePostal(), Now);
 
         // Act
-        var actual = sut.VerifyEmail(DateTime.UtcNow);
+        var actual = sut.VerifyEmail(new DateTime(2024, 1, 15));
 
         // Assert
         actual.IsFail.ShouldBeTrue();
@@ -306,11 +320,11 @@ public class ContactTests
     public void VerifyEmail_ReturnsFail_WhenDeleted()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
-        sut.Delete("admin");
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
+        sut.Delete("admin", Now);
 
         // Act
-        var actual = sut.VerifyEmail(DateTime.UtcNow);
+        var actual = sut.VerifyEmail(new DateTime(2024, 1, 15));
 
         // Assert
         actual.IsFail.ShouldBeTrue();
@@ -320,20 +334,22 @@ public class ContactTests
     public void VerifyEmail_SetsUpdatedAt()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
+        var verifiedAt = new DateTime(2024, 1, 15);
 
         // Act
-        sut.VerifyEmail(new DateTime(2024, 1, 15));
+        sut.VerifyEmail(verifiedAt);
 
         // Assert
         sut.UpdatedAt.IsSome.ShouldBeTrue();
+        sut.UpdatedAt.IfNone(DateTime.MinValue).ShouldBe(verifiedAt);
     }
 
     [Fact]
     public void VerifyEmail_WorksWithEmailAndPostal()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail(), CreatePostal());
+        var sut = Contact.Create(CreateName(), CreateEmail(), CreatePostal(), Now);
 
         // Act
         var actual = sut.VerifyEmail(new DateTime(2024, 1, 15));
@@ -352,10 +368,10 @@ public class ContactTests
     public void AddNote_ReturnsSuccess_WhenNotDeleted()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
 
         // Act
-        var actual = sut.AddNote(CreateNoteContent());
+        var actual = sut.AddNote(CreateNoteContent(), Now);
 
         // Assert
         actual.IsSucc.ShouldBeTrue();
@@ -366,10 +382,10 @@ public class ContactTests
     public void AddNote_PublishesNoteAddedEvent()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
 
         // Act
-        sut.AddNote(CreateNoteContent());
+        sut.AddNote(CreateNoteContent(), Now);
 
         // Assert
         sut.DomainEvents.Count.ShouldBe(2); // CreatedEvent + NoteAddedEvent
@@ -380,11 +396,11 @@ public class ContactTests
     public void AddNote_ReturnsFail_WhenDeleted()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
-        sut.Delete("admin");
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
+        sut.Delete("admin", Now);
 
         // Act
-        var actual = sut.AddNote(CreateNoteContent());
+        var actual = sut.AddNote(CreateNoteContent(), Now);
 
         // Assert
         actual.IsFail.ShouldBeTrue();
@@ -394,10 +410,10 @@ public class ContactTests
     public void AddNote_SetsUpdatedAt()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
 
         // Act
-        sut.AddNote(CreateNoteContent());
+        sut.AddNote(CreateNoteContent(), Now);
 
         // Assert
         sut.UpdatedAt.IsSome.ShouldBeTrue();
@@ -411,12 +427,12 @@ public class ContactTests
     public void RemoveNote_RemovesExistingNote()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
-        sut.AddNote(CreateNoteContent());
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
+        sut.AddNote(CreateNoteContent(), Now);
         var noteId = sut.Notes[0].Id;
 
         // Act
-        sut.RemoveNote(noteId);
+        sut.RemoveNote(noteId, Now);
 
         // Assert
         sut.Notes.Count.ShouldBe(0);
@@ -426,12 +442,12 @@ public class ContactTests
     public void RemoveNote_PublishesNoteRemovedEvent()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
-        sut.AddNote(CreateNoteContent());
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
+        sut.AddNote(CreateNoteContent(), Now);
         var noteId = sut.Notes[0].Id;
 
         // Act
-        sut.RemoveNote(noteId);
+        sut.RemoveNote(noteId, Now);
 
         // Assert
         sut.DomainEvents.Last().ShouldBeOfType<Contact.NoteRemovedEvent>();
@@ -441,14 +457,14 @@ public class ContactTests
     public void RemoveNote_IsIdempotent()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
-        sut.AddNote(CreateNoteContent());
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
+        sut.AddNote(CreateNoteContent(), Now);
         var noteId = sut.Notes[0].Id;
-        sut.RemoveNote(noteId);
+        sut.RemoveNote(noteId, Now);
         var eventCount = sut.DomainEvents.Count;
 
         // Act
-        sut.RemoveNote(noteId);
+        sut.RemoveNote(noteId, Now);
 
         // Assert
         sut.DomainEvents.Count.ShouldBe(eventCount);
@@ -458,13 +474,13 @@ public class ContactTests
     public void RemoveNote_ReturnsFail_WhenDeleted()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
-        sut.AddNote(CreateNoteContent());
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
+        sut.AddNote(CreateNoteContent(), Now);
         var noteId = sut.Notes[0].Id;
-        sut.Delete("admin");
+        sut.Delete("admin", Now);
 
         // Act
-        var actual = sut.RemoveNote(noteId);
+        var actual = sut.RemoveNote(noteId, Now);
 
         // Assert
         actual.IsFail.ShouldBeTrue();
@@ -474,12 +490,12 @@ public class ContactTests
     public void RemoveNote_SetsUpdatedAt()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
-        sut.AddNote(CreateNoteContent());
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
+        sut.AddNote(CreateNoteContent(), Now);
         var noteId = sut.Notes[0].Id;
 
         // Act
-        sut.RemoveNote(noteId);
+        sut.RemoveNote(noteId, Now);
 
         // Assert
         sut.UpdatedAt.IsSome.ShouldBeTrue();
@@ -493,13 +509,15 @@ public class ContactTests
     public void Delete_SetsSoftDeleteProperties()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
+        var deleteTime = new DateTime(2024, 6, 1);
 
         // Act
-        sut.Delete("admin");
+        sut.Delete("admin", deleteTime);
 
         // Assert
         sut.DeletedAt.IsSome.ShouldBeTrue();
+        sut.DeletedAt.IfNone(DateTime.MinValue).ShouldBe(deleteTime);
         sut.DeletedBy.IsSome.ShouldBeTrue();
     }
 
@@ -507,10 +525,10 @@ public class ContactTests
     public void Delete_PublishesDeletedEvent()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
 
         // Act
-        sut.Delete("admin");
+        sut.Delete("admin", Now);
 
         // Assert
         sut.DomainEvents.Last().ShouldBeOfType<Contact.DeletedEvent>();
@@ -520,12 +538,12 @@ public class ContactTests
     public void Delete_IsIdempotent()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
-        sut.Delete("admin");
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
+        sut.Delete("admin", Now);
         var eventCount = sut.DomainEvents.Count;
 
         // Act
-        sut.Delete("admin");
+        sut.Delete("admin", Now);
 
         // Assert
         sut.DomainEvents.Count.ShouldBe(eventCount);
@@ -539,8 +557,8 @@ public class ContactTests
     public void Restore_ClearsSoftDeleteProperties()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
-        sut.Delete("admin");
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
+        sut.Delete("admin", Now);
 
         // Act
         sut.Restore();
@@ -554,8 +572,8 @@ public class ContactTests
     public void Restore_PublishesRestoredEvent()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
-        sut.Delete("admin");
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
+        sut.Delete("admin", Now);
 
         // Act
         sut.Restore();
@@ -568,8 +586,8 @@ public class ContactTests
     public void Restore_IsIdempotent()
     {
         // Arrange
-        var sut = Contact.Create(CreateName(), CreateEmail());
-        sut.Delete("admin");
+        var sut = Contact.Create(CreateName(), CreateEmail(), Now);
+        sut.Delete("admin", Now);
         sut.Restore();
         var eventCount = sut.DomainEvents.Count;
 
@@ -588,8 +606,8 @@ public class ContactTests
     public void Create_AssignsUniqueId()
     {
         // Act
-        var contact1 = Contact.Create(CreateName(), CreateEmail());
-        var contact2 = Contact.Create(CreateName(), CreateEmail());
+        var contact1 = Contact.Create(CreateName(), CreateEmail(), Now);
+        var contact2 = Contact.Create(CreateName(), CreateEmail(), Now);
 
         // Assert
         contact1.Id.ShouldNotBe(contact2.Id);

@@ -42,10 +42,42 @@ public class EmailVerificationStateTests
         // Arrange
         var email = EmailAddress.Create("user@example.com").ThrowIfFail();
         EmailVerificationState unverified = new EmailVerificationState.Unverified(email);
-        EmailVerificationState verified = new EmailVerificationState.Verified(email, DateTime.UtcNow);
+        EmailVerificationState verified = new EmailVerificationState.Verified(email, new DateTime(2024, 1, 15));
 
         // Act & Assert
         unverified.ShouldBeOfType<EmailVerificationState.Unverified>();
         verified.ShouldBeOfType<EmailVerificationState.Verified>();
+    }
+
+    [Fact]
+    public void Verify_ReturnsVerified_WhenUnverified()
+    {
+        // Arrange
+        var email = EmailAddress.Create("user@example.com").ThrowIfFail();
+        EmailVerificationState sut = new EmailVerificationState.Unverified(email);
+        var verifiedAt = new DateTime(2024, 1, 15);
+
+        // Act
+        var actual = sut.Verify(verifiedAt);
+
+        // Assert
+        actual.IsSucc.ShouldBeTrue();
+        var verified = actual.ThrowIfFail();
+        verified.Email.ShouldBe(email);
+        verified.VerifiedAt.ShouldBe(verifiedAt);
+    }
+
+    [Fact]
+    public void Verify_ReturnsFail_WhenAlreadyVerified()
+    {
+        // Arrange
+        var email = EmailAddress.Create("user@example.com").ThrowIfFail();
+        EmailVerificationState sut = new EmailVerificationState.Verified(email, new DateTime(2024, 1, 15));
+
+        // Act
+        var actual = sut.Verify(new DateTime(2024, 2, 1));
+
+        // Assert
+        actual.IsFail.ShouldBeTrue();
     }
 }

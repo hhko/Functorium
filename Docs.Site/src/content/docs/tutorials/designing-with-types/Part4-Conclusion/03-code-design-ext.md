@@ -14,11 +14,13 @@ title: "코드 설계 (확장)"
 | Aggregate 내 자식 엔티티 | `Entity<TId>` + private 컬렉션 관리 | ContactNote |
 | 논리 삭제 + 복원 | `ISoftDeletableWithUser` + 멱등 Delete/Restore | Contact |
 | 실패 가능 vs 멱등 행위 | `Fin<Unit>` vs `Contact` 반환 | Aggregate 메서드 |
-| Aggregate가 상태 전이 소유 | VerifyEmail 메서드 내 전이 로직 | Contact.VerifyEmail |
+| Aggregate 가드 + 상태 전이 위임 | Aggregate가 가드 후 `EmailVerificationState.Verify`에 위임 | Contact.VerifyEmail |
+| 시간 주입 | 모든 행위 메서드가 `DateTime`을 매개변수로 수신 | Create, UpdateName, Delete 등 |
 | 쿼리 가능한 도메인 상태 | 투영 속성 (projection property) | EmailValue |
 | 도메인 쿼리 사양 | `ExpressionSpecification<T>` | ContactEmailSpec, ContactEmailUniqueSpec |
 | 교차 Aggregate 검증 | `IDomainService` + 인메모리 검증 | ContactEmailCheckService |
 | 영속성 추상화 | `IRepository<T, TId>` + 커스텀 메서드 | IContactRepository |
+| 투영 속성 동기화 | `ContactInfo` setter에서 `EmailValue` 자동 갱신 | Contact.ContactInfo |
 | ORM 복원 | `CreateFromValidated` (검증/이벤트 없음) | Contact, PersonalName, PostalAddress |
 
 ## 향상된 VO 검증
@@ -109,11 +111,13 @@ public sealed class Contact : AggregateRoot<ContactId>, IAuditable, ISoftDeletab
 
 도메인 이벤트는 Aggregate 상태 변경마다 발행됩니다: `CreatedEvent`, `NameUpdatedEvent`, `EmailVerifiedEvent`, `NoteAddedEvent`, `NoteRemovedEvent`, `DeletedEvent`, `RestoredEvent`.
 
+모든 행위 메서드는 `DateTime`을 매개변수로 받아 도메인 내부에서 `DateTime.UtcNow`를 직접 호출하지 않습니다. 이를 통해 테스트에서 시간을 결정적으로 제어할 수 있고, 같은 트랜잭션 내 일관된 타임스탬프를 보장합니다.
+
 **이중 팩토리 패턴으로** 도메인 생성과 ORM 복원을 분리합니다.
 
 | 팩토리 | 용도 | 검증 | 이벤트 |
 |---|---|---|---|
-| `Create(name, email)` | 도메인 생성 | 이미 검증된 VO 수신 | `CreatedEvent` 발행 |
+| `Create(name, email, createdAt)` | 도메인 생성 | 이미 검증된 VO 수신 | `CreatedEvent` 발행 |
 | `CreateFromValidated(id, name, ...)` | ORM 복원 | 없음 (DB 데이터 신뢰) | 없음 |
 
 ## 자식 엔티티 + 컬렉션 관리
@@ -121,20 +125,22 @@ public sealed class Contact : AggregateRoot<ContactId>, IAuditable, ISoftDeletab
 `ContactNote`는 `Entity<ContactNoteId>`를 상속하는 자식 엔티티입니다. 독립적 ID를 가지지만 Aggregate 경계를 벗어나지 않습니다.
 
 ```csharp
+/// 생성 후 변경 불가(immutable)한 엔티티로, 식별자 기반 삭제(RemoveNote)를
+/// 지원하기 위해 Entity로 모델링합니다.
 [GenerateEntityId]
 public sealed class ContactNote : Entity<ContactNoteId>
 {
     public NoteContent Content { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
-    private ContactNote(ContactNoteId id, NoteContent content) : base(id)
+    private ContactNote(ContactNoteId id, NoteContent content, DateTime createdAt) : base(id)
     {
         Content = content;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = createdAt;
     }
 
-    public static ContactNote Create(NoteContent content) =>
-        new(ContactNoteId.New(), content);
+    public static ContactNote Create(NoteContent content, DateTime createdAt) =>
+        new(ContactNoteId.New(), content, createdAt);
 }
 ```
 
@@ -156,11 +162,11 @@ public IReadOnlyList<ContactNote> Notes => _notes.AsReadOnly();
 public Option<DateTime> DeletedAt { get; private set; }
 public Option<string> DeletedBy { get; private set; }
 
-public Contact Delete(string deletedBy)
+public Contact Delete(string deletedBy, DateTime now)
 {
     if (DeletedAt.IsSome) return this;  // 멱등
 
-    DeletedAt = DateTime.UtcNow;
+    DeletedAt = now;
     DeletedBy = deletedBy;
     AddDomainEvent(new DeletedEvent(Id, deletedBy));
     return this;
@@ -188,11 +194,25 @@ public Contact Restore()
 
 **설계 원칙**: 실패 가능한 행위는 `Fin<Unit>`으로 실패를 명시하고, 항상 멱등인 행위는 `Contact`를 반환하여 체이닝을 지원합니다.
 
-## 상태 전이를 Aggregate가 소유
+## Aggregate 가드 + 상태 전이 위임
 
-02-code-design에서 `EmailVerificationState.Verify`는 독립적인 전이 함수입니다. 05에서는 `Contact.VerifyEmail`이 전이를 소유합니다. Aggregate 불변식(삭제 상태 가드, 이메일 존재 여부)을 전이 전에 검증해야 하기 때문입니다.
+02-code-design에서 `EmailVerificationState.Verify`는 독립적인 전이 함수였습니다. 05에서는 `EmailVerificationState`가 자신의 전이 규칙(`Unverified → Verified`)을 소유하고, `Contact.VerifyEmail`은 Aggregate 수준 가드(삭제 상태, 이메일 존재 여부) 후 전이를 위임합니다.
 
 ```csharp
+// EmailVerificationState — 자신의 전이 규칙을 소유
+public Fin<Verified> Verify(DateTime verifiedAt) => this switch
+{
+    Unverified u => new Verified(u.Email, verifiedAt),
+    Verified => Fin.Fail<Verified>(
+        DomainError.For<EmailVerificationState>(
+            new DomainErrorType.InvalidTransition(
+                FromState: "Verified", ToState: "Verified"),
+            ToString()!,
+            "이미 인증된 이메일입니다")),
+    _ => throw new InvalidOperationException()
+};
+
+// Contact.VerifyEmail — Aggregate 가드 후 전이 위임
 public Fin<Unit> VerifyEmail(DateTime verifiedAt)
 {
     if (DeletedAt.IsSome)
@@ -208,40 +228,44 @@ public Fin<Unit> VerifyEmail(DateTime verifiedAt)
     if (emailState is null)
         return DomainError.For<Contact>(new NoEmailToVerify(), ...);
 
-    if (emailState is EmailVerificationState.Verified)
-        return DomainError.For<Contact>(new AlreadyVerified(), ...);
-
-    var unverified = (EmailVerificationState.Unverified)emailState;
-    var verified = new EmailVerificationState.Verified(unverified.Email, verifiedAt);
-
-    ContactInfo = ContactInfo switch
+    // 상태 전이를 EmailVerificationState에 위임
+    return emailState.Verify(verifiedAt).Map(verified =>
     {
-        ContactInfo.EmailOnly => new ContactInfo.EmailOnly(verified),
-        ContactInfo.EmailAndPostal ep => new ContactInfo.EmailAndPostal(verified, ep.Address),
-        _ => throw new InvalidOperationException()
-    };
-
-    UpdatedAt = DateTime.UtcNow;
-    AddDomainEvent(new EmailVerifiedEvent(Id, unverified.Email, verifiedAt));
-    return unit;
+        ContactInfo = ContactInfo switch
+        {
+            ContactInfo.EmailOnly => new ContactInfo.EmailOnly(verified),
+            ContactInfo.EmailAndPostal ep => new ContactInfo.EmailAndPostal(verified, ep.Address),
+            _ => throw new InvalidOperationException()
+        };
+        UpdatedAt = verifiedAt;
+        AddDomainEvent(new EmailVerifiedEvent(Id, verified.Email, verifiedAt));
+        return unit;
+    });
 }
 ```
 
-Aggregate가 전이를 소유하면 삭제 가드, 이메일 존재 확인, 이벤트 발행을 하나의 트랜잭션 단위로 보장할 수 있습니다.
+이 구조로 상태 객체는 자신의 전이 규칙을 캡슐화하고, Aggregate는 불변식 가드와 이벤트 발행을 담당합니다.
 
-## 투영 속성
+## 투영 속성 + 동기화
 
 `ContactInfo` union 내부의 이메일을 Specification의 Expression Tree에서 직접 쿼리할 수 없습니다. `string? EmailValue` 투영 속성으로 flat하게 노출하여 이 문제를 해결합니다.
 
-```csharp
-public string? EmailValue { get; private set; }
+`ContactInfo` 속성의 setter에서 `EmailValue`를 자동 동기화하여, `ContactInfo`를 변경하는 모든 지점에서 투영 속성이 일관되게 유지됩니다.
 
-private static string? ExtractEmail(ContactInfo contactInfo) => contactInfo switch
+```csharp
+// ContactInfo 설정 시 EmailValue 자동 동기화
+private ContactInfo _contactInfo = null!;
+public ContactInfo ContactInfo
 {
-    ContactInfo.EmailOnly eo => GetEmailString(eo.EmailState),
-    ContactInfo.EmailAndPostal ep => GetEmailString(ep.EmailState),
-    _ => null
-};
+    get => _contactInfo;
+    private set
+    {
+        _contactInfo = value;
+        EmailValue = ExtractEmail(value);
+    }
+}
+
+public string? EmailValue { get; private set; }
 ```
 
 `PostalOnly`인 경우 `null`을 반환합니다. 이 속성은 Specification이 `contact.EmailValue == emailStr` 형태로 Expression Tree에서 사용할 수 있게 합니다.
@@ -269,7 +293,7 @@ public sealed class ContactEmailSpec : ExpressionSpecification<Contact>
 
 ## Domain Service
 
-`ContactEmailCheckService`는 상태 없는 이메일 고유성 검증 서비스입니다. Application Layer가 Repository로 기존 Contact 목록을 조회한 뒤, Domain Service에 전달합니다.
+`ContactEmailCheckService`는 상태 없는 이메일 고유성 검증 서비스입니다. Application Layer가 Repository로 기존 Contact 정보를 조회한 뒤, 필요한 최소 데이터만 Domain Service에 전달합니다. Aggregate 전체를 수신하지 않으므로 불필요한 메모리 로딩을 방지합니다.
 
 ```csharp
 public sealed class ContactEmailCheckService : IDomainService
@@ -278,7 +302,7 @@ public sealed class ContactEmailCheckService : IDomainService
 
     public Fin<Unit> ValidateEmailUnique(
         EmailAddress email,
-        Seq<Contact> existingContacts,
+        Seq<(ContactId Id, string? EmailValue)> existingContacts,
         Option<ContactId> excludeId = default)
     {
         var isDuplicate = existingContacts
@@ -288,7 +312,7 @@ public sealed class ContactEmailCheckService : IDomainService
         if (isDuplicate)
             return DomainError.For<ContactEmailCheckService>(
                 new EmailAlreadyInUse(), (string)email,
-                "Email is already in use by another contact");
+                "이미 다른 연락처에서 사용 중인 이메일입니다");
 
         return unit;
     }
@@ -314,7 +338,8 @@ public interface IContactRepository : IRepository<Contact, ContactId>
 |---|---|---|
 | `string` 입력 | `string?` + NotNull + ThenNormalize | null 안전성, 정규화 |
 | `sealed record` 복합 VO | `sealed class : ValueObject` | VO 계층 일관성, ORM 호환 |
-| 독립 전이 함수 | Aggregate 소유 전이 | Aggregate 불변식 보호 |
+| `DateTime.UtcNow` 직접 호출 | `DateTime` 매개변수 주입 | 테스트 결정성, 트랜잭션 일관성 |
+| 독립 전이 함수 | Aggregate 가드 + 상태 전이 위임 | 각 객체가 자기 규칙 소유 |
 | 없음 | 자식 엔티티 + 컬렉션 관리 | Aggregate 경계 내 엔티티 |
 | 없음 | `IAuditable` + `ISoftDeletableWithUser` | 수명 관리 |
 | 없음 | 투영 속성 (`EmailValue`) | Specification 지원 |

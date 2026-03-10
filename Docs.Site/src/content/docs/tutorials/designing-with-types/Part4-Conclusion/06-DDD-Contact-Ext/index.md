@@ -112,20 +112,22 @@ public static Validation<Error, string> Validate(string? value) =>
 `ContactNote`는 `Contact` Aggregate 내부의 자식 엔티티입니다. 독립적 ID를 가지지만 Aggregate 경계를 벗어나지 않습니다.
 
 ```csharp
+/// 생성 후 변경 불가(immutable)한 엔티티로, 식별자 기반 삭제(RemoveNote)를
+/// 지원하기 위해 Entity로 모델링합니다.
 [GenerateEntityId]
 public sealed class ContactNote : Entity<ContactNoteId>
 {
     public NoteContent Content { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
-    private ContactNote(ContactNoteId id, NoteContent content) : base(id)
+    private ContactNote(ContactNoteId id, NoteContent content, DateTime createdAt) : base(id)
     {
         Content = content;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = createdAt;
     }
 
-    public static ContactNote Create(NoteContent content) =>
-        new(ContactNoteId.New(), content);
+    public static ContactNote Create(NoteContent content, DateTime createdAt) =>
+        new(ContactNoteId.New(), content, createdAt);
 }
 ```
 
@@ -141,20 +143,20 @@ private readonly List<ContactNote> _notes = [];
 public IReadOnlyList<ContactNote> Notes => _notes.AsReadOnly();
 
 // 추가: 삭제된 Contact에는 추가 불가
-public Fin<Unit> AddNote(NoteContent content)
+public Fin<Unit> AddNote(NoteContent content, DateTime now)
 {
     if (DeletedAt.IsSome)
         return DomainError.For<Contact>(new AlreadyDeleted(), ...);
 
-    var note = ContactNote.Create(content);
+    var note = ContactNote.Create(content, now);
     _notes.Add(note);
-    UpdatedAt = DateTime.UtcNow;
+    UpdatedAt = now;
     AddDomainEvent(new NoteAddedEvent(Id, note.Id, content));
     return unit;
 }
 
 // 제거: 삭제된 Contact에서는 불가, 존재하지 않는 ID는 멱등
-public Fin<Unit> RemoveNote(ContactNoteId noteId)
+public Fin<Unit> RemoveNote(ContactNoteId noteId, DateTime now)
 {
     if (DeletedAt.IsSome)
         return DomainError.For<Contact>(new AlreadyDeleted(), ...);
@@ -163,7 +165,7 @@ public Fin<Unit> RemoveNote(ContactNoteId noteId)
     if (note is null) return unit;
 
     _notes.Remove(note);
-    UpdatedAt = DateTime.UtcNow;
+    UpdatedAt = now;
     AddDomainEvent(new NoteRemovedEvent(Id, noteId));
     return unit;
 }
@@ -178,11 +180,11 @@ public Option<DateTime> DeletedAt { get; private set; }
 public Option<string> DeletedBy { get; private set; }
 
 // 삭제 (멱등: 이미 삭제된 경우 이벤트 없음)
-public Contact Delete(string deletedBy)
+public Contact Delete(string deletedBy, DateTime now)
 {
     if (DeletedAt.IsSome) return this;
 
-    DeletedAt = DateTime.UtcNow;
+    DeletedAt = now;
     DeletedBy = deletedBy;
     AddDomainEvent(new DeletedEvent(Id, deletedBy));
     return this;
@@ -247,7 +249,7 @@ public sealed class ContactEmailCheckService : IDomainService
 {
     public Fin<Unit> ValidateEmailUnique(
         EmailAddress email,
-        Seq<Contact> existingContacts,
+        Seq<(ContactId Id, string? EmailValue)> existingContacts,
         Option<ContactId> excludeId = default)
     {
         var isDuplicate = existingContacts
@@ -257,7 +259,7 @@ public sealed class ContactEmailCheckService : IDomainService
         if (isDuplicate)
             return DomainError.For<ContactEmailCheckService>(
                 new EmailAlreadyInUse(), (string)email,
-                "Email is already in use by another contact");
+                "이미 다른 연락처에서 사용 중인 이메일입니다");
 
         return unit;
     }
@@ -287,14 +289,14 @@ classDiagram
         +IReadOnlyList~ContactNote~ Notes
         +Option~DateTime~ DeletedAt
         +Option~string~ DeletedBy
-        +Create(name, email) Contact
-        +Create(name, postal) Contact
-        +Create(name, email, postal) Contact
-        +UpdateName(newName) Fin~Unit~
+        +Create(name, email, createdAt) Contact
+        +Create(name, postal, createdAt) Contact
+        +Create(name, email, postal, createdAt) Contact
+        +UpdateName(newName, now) Fin~Unit~
         +VerifyEmail(verifiedAt) Fin~Unit~
-        +AddNote(content) Fin~Unit~
-        +RemoveNote(noteId) Fin~Unit~
-        +Delete(deletedBy) Contact
+        +AddNote(content, now) Fin~Unit~
+        +RemoveNote(noteId, now) Fin~Unit~
+        +Delete(deletedBy, now) Contact
         +Restore() Contact
     }
 
@@ -331,6 +333,7 @@ classDiagram
 
     class EmailVerificationState {
         <<abstract record>>
+        +Verify(verifiedAt) Fin~Verified~
     }
     class Unverified {
         +EmailAddress Email

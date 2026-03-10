@@ -9,6 +9,8 @@ namespace DDDContactExt.Tests.Unit;
 [Trait("Part4-Conclusion", "05-DDDContactExt")]
 public class ContactSpecificationTests
 {
+    private static readonly DateTime Now = new(2024, 1, 1);
+
     private static PersonalName CreateName() =>
         PersonalName.Create("HyungHo", "Ko").ThrowIfFail();
 
@@ -22,7 +24,7 @@ public class ContactSpecificationTests
     {
         // Arrange
         var email = CreateEmail();
-        var contact = Contact.Create(CreateName(), email);
+        var contact = Contact.Create(CreateName(), email, Now);
         var spec = new ContactEmailSpec(email);
 
         // Act
@@ -36,7 +38,7 @@ public class ContactSpecificationTests
     public void ContactEmailSpec_IsSatisfiedBy_ReturnsFalse_WhenEmailDiffers()
     {
         // Arrange
-        var contact = Contact.Create(CreateName(), CreateEmail());
+        var contact = Contact.Create(CreateName(), CreateEmail(), Now);
         var spec = new ContactEmailSpec(CreateEmail("other@example.com"));
 
         // Act
@@ -51,7 +53,8 @@ public class ContactSpecificationTests
     {
         // Arrange
         var contact = Contact.Create(CreateName(),
-            PostalAddress.Create("456 Oak Ave", "Chicago", "IL", "60601").ThrowIfFail());
+            PostalAddress.Create("456 Oak Ave", "Chicago", "IL", "60601").ThrowIfFail(),
+            Now);
         var spec = new ContactEmailSpec(CreateEmail());
 
         // Act
@@ -70,7 +73,7 @@ public class ContactSpecificationTests
     {
         // Arrange
         var email = CreateEmail();
-        var contact = Contact.Create(CreateName(), email);
+        var contact = Contact.Create(CreateName(), email, Now);
         var spec = new ContactEmailUniqueSpec(email);
 
         // Act
@@ -85,7 +88,7 @@ public class ContactSpecificationTests
     {
         // Arrange
         var email = CreateEmail();
-        var contact = Contact.Create(CreateName(), email);
+        var contact = Contact.Create(CreateName(), email, Now);
         var spec = new ContactEmailUniqueSpec(email, contact.Id);
 
         // Act
@@ -100,7 +103,7 @@ public class ContactSpecificationTests
     {
         // Arrange
         var email = CreateEmail();
-        var contact = Contact.Create(CreateName(), email);
+        var contact = Contact.Create(CreateName(), email, Now);
         var otherId = ContactId.New();
         var spec = new ContactEmailUniqueSpec(email, otherId);
 

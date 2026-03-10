@@ -20,8 +20,14 @@ public sealed class ContactEmailUniqueSpec : ExpressionSpecification<Contact>
     public override Expression<Func<Contact, bool>> ToExpression()
     {
         string emailStr = Email;
-        string? excludeIdStr = ExcludeId.Match<string?>(id => id.ToString(), () => null);
-        return contact => contact.EmailValue == emailStr &&
-                          (excludeIdStr == null || contact.Id.ToString() != excludeIdStr);
+
+        return ExcludeId.Match(
+            Some: excludeId =>
+            {
+                var id = excludeId;
+                return (Expression<Func<Contact, bool>>)(
+                    contact => contact.EmailValue == emailStr && contact.Id != id);
+            },
+            None: () => contact => contact.EmailValue == emailStr);
     }
 }
