@@ -133,6 +133,7 @@ export default defineConfig({
                     items: [
                       { slug: 'guides/domain/05a-value-objects' },
                       { slug: 'guides/domain/05b-value-objects-validation' },
+                      { slug: 'guides/domain/05c-union-value-objects' },
                     ],
                   },
                   { slug: 'guides/domain/06a-aggregate-design' },

@@ -2,7 +2,7 @@
 title: "값 객체: 열거형·검증·실전 패턴"
 ---
 
-이 문서는 값 객체의 열거형 패턴, 실전 예제, Application Layer 검증 병합, FAQ를 다룹니다. 핵심 개념과 기반 클래스는 [05a-value-objects.md](./05a-value-objects)을 참고하세요.
+이 문서는 값 객체의 열거형 패턴, 실전 예제, Application Layer 검증 병합, FAQ를 다룹니다. 핵심 개념과 기반 클래스는 [05a-value-objects](./05a-value-objects), Union 타입(Discriminated Union)은 [05c-union-value-objects](./05c-union-value-objects)를 참고하세요.
 
 ## 들어가며
 
@@ -363,6 +363,53 @@ private static Fin<Product> CreateProduct(Request request)
 
 ---
 
+## Application Layer에서 Fin\<T\> 합성 (FinApplyExtensions)
+
+위의 `Validation<Error, T>` Apply 패턴은 **VO 내부**에서 여러 검증 규칙을 병렬 합성할 때 사용합니다. 반면, **Application Layer**에서는 이미 생성된 여러 VO의 `Create()` 결과(`Fin<T>`)를 합성해야 합니다. 이때 `FinApplyExtensions`를 사용합니다.
+
+### 동기
+
+- `VO.Create()` → `Fin<T>` 반환 (성공 또는 실패)
+- Application Layer에서 여러 `Fin<T>` 결과를 하나로 합성할 때, 개별 `ThrowIfFail()`은 첫 에러에서 중단됨
+- `FinApplyExtensions`는 모든 `Fin<T>`를 내부적으로 `Validation<Error, T>`로 변환하여 **모든 에러를 누적**
+
+### 사용 예시
+
+```csharp
+// Application Layer: 여러 VO Create 결과를 applicative로 합성
+var contact = (
+    PersonalName.Create(cmd.FirstName, cmd.LastName),
+    EmailAddress.Create(cmd.Email)
+).Apply((name, email) => Contact.Create(name, email, now));
+// → Fin<Contact>, 모든 VO 검증 에러 누적
+```
+
+### Validation Apply vs Fin Apply 비교
+
+| 특성 | Validation Apply | Fin Apply |
+|------|-----------------|-----------|
+| 입력 타입 | `Validation<Error, T>` 튜플 | `Fin<T>` 튜플 |
+| 사용 위치 | VO 내부 `Validate` 합성 | Application Layer VO `Create` 합성 |
+| 에러 누적 | 모든 에러 수집 | 모든 에러 수집 (내부적으로 Validation 변환) |
+| 오버로드 | 2~5 튜플 | 2~5 튜플 |
+
+---
+
+## 검증 합성의 레이어별 역할
+
+raw 입력(문자열 등)을 VO로 변환하는 검증 책임은 레이어별로 명확히 분리됩니다:
+
+| 레이어 | 검증 경계 | `Validate` | `Create` | `CreateFromValidated` |
+|--------|----------|-----------|----------|----------------------|
+| Simple VO | raw → VO | `ValidationRules` 체인 | `string?` → `Fin<T>` | `string` → T |
+| Composite VO | raw → VO | 자식 `Validate` applicative 합성 | `string?` → `Fin<T>` | 자식 VO → T |
+| Entity/Aggregate | VO → Entity | — | VO → Entity | VO + ID → Entity (ORM 복원) |
+| Application Layer | — | — | `FinApply`로 N개 `Fin<T>` applicative 합성 | — |
+
+Entity/Aggregate는 `Validate` 없이 이미 검증된 VO만 수신합니다. Application Layer에서 여러 VO의 `Create` 결과(`Fin<T>`)를 합성할 때는 `FinApplyExtensions`의 튜플 `.Apply()`를 사용합니다.
+
+---
+
 ## 트러블슈팅
 
 ### SmartEnum의 Create에서 `SmartEnumNotFoundException` 발생
@@ -626,6 +673,7 @@ public class CreateProductValidator : AbstractValidator<CreateProductRequest>
 
 ## 참고 문서
 
+- [값 객체: Union 타입](./05c-union-value-objects) - Discriminated Union 패턴과 상태 전이
 - [에러 시스템: 기초와 네이밍](./08a-error-system) - 에러 처리 기본 원칙과 네이밍 규칙
 - [에러 시스템: Domain/Application 에러](./08b-error-system-domain-app) - Domain/Application 에러 정의 및 테스트 패턴
 - [단위 테스트 가이드](../testing/15a-unit-testing)

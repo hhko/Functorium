@@ -2,7 +2,7 @@
 title: "값 객체 (Value Object)"
 ---
 
-이 문서는 원시 타입의 한계를 넘어, 도메인 개념을 타입으로 표현하는 값 객체의 설계와 구현을 다룹니다. 열거형 패턴, Application 검증, FAQ는 [05b-value-objects-validation.md](./05b-value-objects-validation)을 참고하세요.
+이 문서는 원시 타입의 한계를 넘어, 도메인 개념을 타입으로 표현하는 값 객체의 설계와 구현을 다룹니다. 열거형 패턴, Application 검증, FAQ는 [05b-value-objects-validation](./05b-value-objects-validation), Union 타입(Discriminated Union)은 [05c-union-value-objects](./05c-union-value-objects)를 참고하세요.
 
 ## 들어가며
 
@@ -1392,3 +1392,4 @@ public static Validation<Error, (string BaseCurrency, string QuoteCurrency, deci
 ## 참고 문서
 
 - [값 객체: 열거형·검증·실전 패턴](./05b-value-objects-validation)
+- [값 객체: Union 타입](./05c-union-value-objects) - Discriminated Union 패턴과 상태 전이
