@@ -450,21 +450,21 @@ Functorium은 OpenTelemetry 기반의 통합 관측성(Logging, Metrics, Tracing
 
 ### 상세 가이드
 
-- **사양**: [Observability Specification](./Docs/guides/18a-observability-spec.md) — Field/Tag 구조, Meter/Instrument 사양, 메시지 템플릿
-- **Logging 매뉴얼**: [Logging Guide](./Docs/guides/19-observability-logging.md) — 구조화된 로깅 상세 가이드
-- **Metrics 매뉴얼**: [Metrics Guide](./Docs/guides/20-observability-metrics.md) — 메트릭 수집 및 분석 가이드
-- **Tracing 매뉴얼**: [Tracing Guide](./Docs/guides/21-observability-tracing.md) — 분산 추적 상세 가이드
+- **사양**: [Observability Specification](./Docs.Site/src/content/docs/guides/observability/18a-observability-spec.md) — Field/Tag 구조, Meter/Instrument 사양, 메시지 템플릿
+- **Logging 매뉴얼**: [Logging Guide](./Docs.Site/src/content/docs/guides/observability/19-observability-logging.md) — 구조화된 로깅 상세 가이드
+- **Metrics 매뉴얼**: [Metrics Guide](./Docs.Site/src/content/docs/guides/observability/20-observability-metrics.md) — 메트릭 수집 및 분석 가이드
+- **Tracing 매뉴얼**: [Tracing Guide](./Docs.Site/src/content/docs/guides/observability/21-observability-tracing.md) — 분산 추적 상세 가이드
 
 ## 튜토리얼
 
-- [Architecture](./Docs/architecture-is/README.md)
+- [Architecture](./Docs.Site/src/content/docs/guides/architecture/00-architecture-design-principles.md)
 
 | 튜토리얼 | 주제 | 실습 |
 |----------|------|------|
-| [Implementing Functional ValueObject](./Docs/tutorials/Implementing-Functional-ValueObject/README.md) | Value Object, 검증, 불변성 | 29개 |
-| [Implementing Specification Pattern](./Docs/tutorials/Implementing-Specification-Pattern/README.md) | Specification, Expression Tree | 18개 |
-| [Implementing CQRS Repository And Query Patterns](./Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/README.md) | CQRS, Repository, Query 어댑터 | 22개 |
-| [Designing TypeSafe Usecase Pipeline Constraints](./Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/README.md) | 제네릭 변성, IFinResponse, Pipeline 제약 | 20개 |
-| [Enforcing Architecture Rules with Testing](./Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/README.md) | 아키텍처 규칙, ClassValidator | 16개 |
-| [Automating ObservabilityCode with SourceGenerator](./Docs/tutorials/Automating-ObservabilityCode-with-SourceGenerator/README.md) | Source Generator, Observable wrapper | — |
-| [Automating ReleaseNotes with ClaudeCode and .NET 10](./Docs/tutorials/Automating-ReleaseNotes-with-ClaudeCode-and-.NET10/README.md) | AI 자동화, 릴리스 노트 | — |
+| [Implementing Functional ValueObject](./Docs.Site/src/content/docs/tutorials/functional-valueobject/index.md) | Value Object, 검증, 불변성 | 29개 |
+| [Implementing Specification Pattern](./Docs.Site/src/content/docs/tutorials/specification-pattern/index.md) | Specification, Expression Tree | 18개 |
+| [Implementing CQRS Repository And Query Patterns](./Docs.Site/src/content/docs/tutorials/cqrs-repository/index.md) | CQRS, Repository, Query 어댑터 | 22개 |
+| [Designing TypeSafe Usecase Pipeline Constraints](./Docs.Site/src/content/docs/tutorials/usecase-pipeline/index.md) | 제네릭 변성, IFinResponse, Pipeline 제약 | 20개 |
+| [Enforcing Architecture Rules with Testing](./Docs.Site/src/content/docs/tutorials/architecture-rules/index.md) | 아키텍처 규칙, ClassValidator | 16개 |
+| [Automating ObservabilityCode with SourceGenerator](./Docs.Site/src/content/docs/tutorials/sourcegen-observability/index.md) | Source Generator, Observable wrapper | — |
+| [Automating ReleaseNotes with ClaudeCode and .NET 10](./Docs.Site/src/content/docs/tutorials/release-notes-claude/index.md) | AI 자동화, 릴리스 노트 | — |
