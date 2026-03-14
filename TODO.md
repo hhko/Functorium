@@ -6,6 +6,23 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하도록 개선
 ```
 
+- [ ] release note 스킬
+- [ ] release note 스킬 문서화
+- [ ] domain 예제 추가(Tests.Hosts)
+- [ ] domain skill 보강
+  - 문서 생성 4개
+  - 요구사항 분석 방법?
+  - 트랜잭션?
+  - 에러 코드
+  - 프로젝트 이름
+  - Aggregates 루트 폴더 구성
+---
+- [x] union 타입 제공
+- [x] union 타입 가이드
+- [x] Domain 폴더 구성
+- [x] Domain skill 초안 개발
+- [x] Domain skill 문서화
+---
 - [x] `아키텍처 -> 가이드`
 - [x] `9장 -> 1장`
 - [x] 튜토리얼 idnex.md
