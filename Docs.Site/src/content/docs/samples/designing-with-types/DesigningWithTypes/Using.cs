@@ -7,6 +7,7 @@ global using Functorium.Domains.Repositories;
 global using Functorium.Domains.Services;
 global using Functorium.Domains.Specifications;
 global using Functorium.Domains.ValueObjects;
+global using Functorium.Domains.ValueObjects.Unions;
 global using Functorium.Domains.ValueObjects.Validations;
 global using Functorium.Domains.ValueObjects.Validations.Typed;
 
