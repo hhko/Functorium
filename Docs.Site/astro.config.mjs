@@ -578,6 +578,15 @@ export default defineConfig({
               },
             ],
           },
+          {
+            label: 'AI 자동화',
+            link: '/ai-automation/',
+            icon: 'star',
+            items: [
+              { label: 'AI 자동화', slug: 'ai-automation' },
+              { slug: 'ai-automation/domain-develop-skill' },
+            ],
+          },
         ]),
       ],
       social: [
