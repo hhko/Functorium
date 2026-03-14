@@ -7,19 +7,10 @@ var now = DateTime.UtcNow;
 
 Console.WriteLine("=== DesigningWithTypes: DDD 고급 패턴 적용 ===\n");
 
-// 1. 향상된 VO 생성 (null 처리, 정규화)
-Console.WriteLine("--- 향상된 VO 생성 ---");
-var nullResult = String50.Create(null);
-Console.WriteLine($"String50.Create(null): IsFail={nullResult.IsFail}");
+// === 정상 시나리오 ===
 
-var trimResult = String50.Create("  Hello  ").ThrowIfFail();
-Console.WriteLine($"String50.Create(\"  Hello  \"): \"{(string)trimResult}\" (Trim 정규화)");
-
-var emailNorm = EmailAddress.Create("User@Example.COM").ThrowIfFail();
-Console.WriteLine($"EmailAddress.Create(\"User@Example.COM\"): \"{(string)emailNorm}\" (소문자 정규화)");
-
-// 2. Aggregate 생성 → CreatedEvent
-Console.WriteLine("\n--- Contact 생성 ---");
+// 시나리오 1. 이메일만 등록 후 인증
+Console.WriteLine("--- 시나리오 1. 이메일만 등록 후 인증 ---");
 var name = PersonalName.Create("HyungHo", "Ko", "J").ThrowIfFail();
 var email = EmailAddress.Create("user@example.com").ThrowIfFail();
 var contact = Contact.Create(name, email, now);
@@ -28,14 +19,26 @@ Console.WriteLine($"ID: {contact.Id}");
 Console.WriteLine($"EmailValue: {contact.EmailValue}");
 Console.WriteLine($"이벤트: {contact.DomainEvents[0].GetType().Name}");
 
-// 3. VerifyEmail → EmailVerifiedEvent
-Console.WriteLine("\n--- 이메일 인증 ---");
 contact.VerifyEmail(now).ThrowIfFail();
 Console.WriteLine($"이벤트 수: {contact.DomainEvents.Count}");
 Console.WriteLine($"이벤트: {contact.DomainEvents[1].GetType().Name}");
 
-// 4. UpdateName → NameUpdatedEvent
-Console.WriteLine("\n--- 이름 변경 ---");
+// 시나리오 2. 우편 주소만 등록
+Console.WriteLine("\n--- 시나리오 2. 우편 주소만 등록 ---");
+var postal = PostalAddress.Create("123 Main St", "Springfield", "IL", "62704").ThrowIfFail();
+var postalContact = Contact.Create(name, postal, now);
+Console.WriteLine($"ContactInfo 타입: {postalContact.ContactInfo.GetType().Name}");
+Console.WriteLine($"이벤트: {postalContact.DomainEvents[0].GetType().Name}");
+
+// 시나리오 3. 이메일과 우편 주소 모두 등록
+Console.WriteLine("\n--- 시나리오 3. 이메일과 우편 주소 모두 등록 ---");
+var bothEmail = EmailAddress.Create("both@example.com").ThrowIfFail();
+var bothContact = Contact.Create(name, bothEmail, postal, now);
+Console.WriteLine($"ContactInfo 타입: {bothContact.ContactInfo.GetType().Name}");
+Console.WriteLine($"이벤트: {bothContact.DomainEvents[0].GetType().Name}");
+
+// 시나리오 4. 이름 변경
+Console.WriteLine("\n--- 시나리오 4. 이름 변경 ---");
 var newName = PersonalName.Create("Gildong", "Hong").ThrowIfFail();
 contact.UpdateName(newName, now).ThrowIfFail();
 Console.WriteLine($"변경 후: {contact.Name}");
@@ -43,16 +46,14 @@ Console.WriteLine($"이벤트: {contact.DomainEvents[2].GetType().Name}");
 var nameEvent = (Contact.NameUpdatedEvent)contact.DomainEvents[2];
 Console.WriteLine($"Old: {nameEvent.OldName}, New: {nameEvent.NewName}");
 
-// 5. AddNote (자식 엔티티)
-Console.WriteLine("\n--- 메모 추가 ---");
+// 시나리오 5. 메모 추가/제거
+Console.WriteLine("\n--- 시나리오 5. 메모 추가/제거 ---");
 var noteContent = NoteContent.Create("첫 번째 메모입니다").ThrowIfFail();
 contact.AddNote(noteContent, now).ThrowIfFail();
 Console.WriteLine($"메모 수: {contact.Notes.Count}");
 Console.WriteLine($"메모 내용: {(string)contact.Notes[0].Content}");
 Console.WriteLine($"이벤트: {contact.DomainEvents[3].GetType().Name}");
 
-// 6. RemoveNote (멱등)
-Console.WriteLine("\n--- 메모 제거 ---");
 var noteId = contact.Notes[0].Id;
 contact.RemoveNote(noteId, now);
 Console.WriteLine($"메모 수: {contact.Notes.Count}");
@@ -62,37 +63,8 @@ Console.WriteLine($"이벤트: {contact.DomainEvents[4].GetType().Name}");
 contact.RemoveNote(noteId, now);
 Console.WriteLine($"중복 제거 후 이벤트 수: {contact.DomainEvents.Count} (변화 없음)");
 
-// 7. Specification 사용
-Console.WriteLine("\n--- Specification ---");
-var emailSpec = new ContactEmailSpec(email);
-Console.WriteLine($"ContactEmailSpec.IsSatisfiedBy: {emailSpec.IsSatisfiedBy(contact)}");
-
-var otherEmail = EmailAddress.Create("other@example.com").ThrowIfFail();
-var otherSpec = new ContactEmailSpec(otherEmail);
-Console.WriteLine($"다른 이메일 Spec: {otherSpec.IsSatisfiedBy(contact)}");
-
-var uniqueSpec = new ContactEmailUniqueSpec(email);
-Console.WriteLine($"ContactEmailUniqueSpec (전체): {uniqueSpec.IsSatisfiedBy(contact)}");
-
-var uniqueSpecExclude = new ContactEmailUniqueSpec(email, contact.Id);
-Console.WriteLine($"ContactEmailUniqueSpec (자기 제외): {uniqueSpecExclude.IsSatisfiedBy(contact)}");
-
-// 8. Domain Service 사용
-Console.WriteLine("\n--- Domain Service ---");
-var service = new ContactEmailCheckService();
-var contacts = Seq.create((contact.Id, contact.EmailValue));
-
-var uniqueResult = service.ValidateEmailUnique(otherEmail, contacts);
-Console.WriteLine($"고유 이메일 검증: IsSucc={uniqueResult.IsSucc}");
-
-var dupResult = service.ValidateEmailUnique(email, contacts);
-Console.WriteLine($"중복 이메일 검증: IsFail={dupResult.IsFail}");
-
-var selfExcludeResult = service.ValidateEmailUnique(email, contacts, contact.Id);
-Console.WriteLine($"자기 제외 검증: IsSucc={selfExcludeResult.IsSucc}");
-
-// 9. Soft Delete → DeletedEvent (멱등)
-Console.WriteLine("\n--- Soft Delete ---");
+// 시나리오 6. 논리 삭제 후 복원
+Console.WriteLine("\n--- 시나리오 6. 논리 삭제 ---");
 contact.Delete("admin", now);
 Console.WriteLine($"DeletedAt: {contact.DeletedAt}");
 Console.WriteLine($"DeletedBy: {contact.DeletedBy}");
@@ -102,8 +74,22 @@ var eventCountBefore = contact.DomainEvents.Count;
 contact.Delete("admin", now);
 Console.WriteLine($"멱등 삭제: 이벤트 수 변화 없음 = {contact.DomainEvents.Count == eventCountBefore}");
 
-// 10. 삭제된 Contact에 행위 시도 → AlreadyDeleted 에러
-Console.WriteLine("\n--- 삭제된 Contact에 행위 시도 ---");
+// === 거부 시나리오 ===
+
+// 시나리오 7. 연락 수단 없이 등록 (거부)
+// Contact.Create()는 EmailAddress 또는 PostalAddress를 필수로 요구하므로
+// 연락 수단 없는 Contact는 타입 시스템에 의해 생성 자체가 불가능합니다.
+Console.WriteLine("\n--- 시나리오 7. 연락 수단 없이 등록 (거부) ---");
+Console.WriteLine("Contact.Create()는 EmailAddress 또는 PostalAddress를 필수로 요구");
+Console.WriteLine("→ 타입 시스템에 의해 컴파일 타임에 방지됩니다.");
+
+// 시나리오 8. 인증된 이메일 재인증 (거부)
+Console.WriteLine("\n--- 시나리오 8. 인증된 이메일 재인증 (거부) ---");
+var reVerifyResult = contact.VerifyEmail(now);
+Console.WriteLine($"재인증 시도: IsFail={reVerifyResult.IsFail}");
+
+// 시나리오 9. 삭제된 연락처 수정 (거부)
+Console.WriteLine("\n--- 시나리오 9. 삭제된 연락처 수정 (거부) ---");
 var updateResult = contact.UpdateName(name, now);
 Console.WriteLine($"UpdateName: IsFail={updateResult.IsFail}");
 
@@ -113,8 +99,8 @@ Console.WriteLine($"AddNote: IsFail={addNoteResult.IsFail}");
 var verifyResult = contact.VerifyEmail(now);
 Console.WriteLine($"VerifyEmail: IsFail={verifyResult.IsFail}");
 
-// 11. Restore → RestoredEvent (멱등)
-Console.WriteLine("\n--- Restore ---");
+// 시나리오 6. 복원
+Console.WriteLine("\n--- 시나리오 6. 복원 ---");
 contact.Restore();
 Console.WriteLine($"DeletedAt: {contact.DeletedAt}");
 
@@ -123,18 +109,58 @@ var eventCountBeforeRestore = contact.DomainEvents.Count;
 contact.Restore();
 Console.WriteLine($"멱등 복원: 이벤트 수 변화 없음 = {contact.DomainEvents.Count == eventCountBeforeRestore}");
 
-// 12. CreateFromValidated (이벤트 없음)
-Console.WriteLine("\n--- CreateFromValidated ---");
+// === 거부 시나리오 (계속) ===
+
+// 시나리오 10. 중복 이메일 등록 (거부)
+Console.WriteLine("\n--- 시나리오 10. 중복 이메일 등록 (거부) ---");
+var service = new ContactEmailCheckService();
+var contacts = Seq.create((contact.Id, contact.EmailValue));
+
+var otherEmail = EmailAddress.Create("other@example.com").ThrowIfFail();
+var uniqueResult = service.ValidateEmailUnique(otherEmail, contacts);
+Console.WriteLine($"고유 이메일 검증: IsSucc={uniqueResult.IsSucc}");
+
+var dupResult = service.ValidateEmailUnique(email, contacts);
+Console.WriteLine($"중복 이메일 검증: IsFail={dupResult.IsFail}");
+
+var selfExcludeResult = service.ValidateEmailUnique(email, contacts, contact.Id);
+Console.WriteLine($"자기 제외 검증: IsSucc={selfExcludeResult.IsSucc}");
+
+// === API 데모 ===
+
+// VO 생성 (null 처리, 정규화)
+Console.WriteLine("\n--- API 데모: VO 생성 ---");
+var nullResult = String50.Create(null);
+Console.WriteLine($"String50.Create(null): IsFail={nullResult.IsFail}");
+
+var trimResult = String50.Create("  Hello  ").ThrowIfFail();
+Console.WriteLine($"String50.Create(\"  Hello  \"): \"{(string)trimResult}\" (Trim 정규화)");
+
+var emailNorm = EmailAddress.Create("User@Example.COM").ThrowIfFail();
+Console.WriteLine($"EmailAddress.Create(\"User@Example.COM\"): \"{(string)emailNorm}\" (소문자 정규화)");
+
+// Specification
+Console.WriteLine("\n--- API 데모: Specification ---");
+var emailSpec = new ContactEmailSpec(email);
+Console.WriteLine($"ContactEmailSpec.IsSatisfiedBy: {emailSpec.IsSatisfiedBy(contact)}");
+
+var otherSpec = new ContactEmailSpec(otherEmail);
+Console.WriteLine($"다른 이메일 Spec: {otherSpec.IsSatisfiedBy(contact)}");
+
+var uniqueSpec = new ContactEmailUniqueSpec(email);
+Console.WriteLine($"ContactEmailUniqueSpec (전체): {uniqueSpec.IsSatisfiedBy(contact)}");
+
+var uniqueSpecExclude = new ContactEmailUniqueSpec(email, contact.Id);
+Console.WriteLine($"ContactEmailUniqueSpec (자기 제외): {uniqueSpecExclude.IsSatisfiedBy(contact)}");
+
+// CreateFromValidated (이벤트 없음)
+Console.WriteLine("\n--- API 데모: CreateFromValidated ---");
 var note = ContactNote.Create(NoteContent.Create("복원 메모").ThrowIfFail(), now);
 var restored = Contact.CreateFromValidated(
-    contact.Id,
-    name,
+    contact.Id, name,
     new ContactInfo.EmailOnly(new EmailVerificationState.Unverified(email)),
-    [note],
-    now,
-    Option<DateTime>.None,
-    Option<DateTime>.None,
-    Option<string>.None);
+    [note], now,
+    Option<DateTime>.None, Option<DateTime>.None, Option<string>.None);
 Console.WriteLine($"복원된 Contact: {restored}");
 Console.WriteLine($"메모 수: {restored.Notes.Count}");
 Console.WriteLine($"이벤트 수: {restored.DomainEvents.Count} (이벤트 없음)");
