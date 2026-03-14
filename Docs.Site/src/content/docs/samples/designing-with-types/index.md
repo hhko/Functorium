@@ -23,12 +23,23 @@ public class Contact
 }
 ```
 
-이 구현이 허용하는 문제:
+이 구현은 컴파일되고 실행됩니다. 하지만 다음과 같은 잘못된 상태를 허용합니다:
 - 100자 이름, 숫자가 아닌 우편번호 — 유효성 검증이 없습니다
 - 이메일도 주소도 없는 연락처 — 연락 수단 없는 상태가 가능합니다
 - `IsEmailVerified = true`인데 `EmailAddress = null` — 모순 상태입니다
 - 인증된 이메일을 `false`로 되돌림 — 단방향 전이가 보장되지 않습니다
 - 이름과 이메일이 같은 `string` — 실수로 바꿔 넣어도 컴파일러가 침묵합니다
+
+## 목표
+
+위 문제들을 런타임 검증이 아닌 **타입 시스템**으로 원천 차단합니다:
+
+- **잘못된 값은 생성할 수 없다** — 제약된 값 객체가 생성 시점에 검증을 완료합니다
+- **잘못된 상태는 표현할 수 없다** — union type이 허용된 조합만 열거합니다
+- **잘못된 전이는 실행할 수 없다** — 타입 안전 상태 머신이 규칙을 강제합니다
+- **실패는 무시할 수 없다** — `Fin<T>` 반환이 호출자에게 처리를 강제합니다
+
+DDD 전술적 패턴이 규칙 경계를 정의하고, Functorium의 함수형 타입이 이를 컴파일러 수준에서 강제합니다.
 
 ## 5단계 여정
 
@@ -39,7 +50,7 @@ public class Contact
 | 1. 요구사항 | 무엇을 해야 하는가? | 도메인 전문가 | 비즈니스 규칙 + 시나리오 | [비즈니스 요구사항](./00-business-requirements/) |
 | 2. 설계 의사결정 | 어떤 불변식을 어떻게 보장하는가? | 비즈니스 규칙 | 불변식 유형별 타입 전략 | [타입 설계 의사결정](./01-type-design-decisions/) |
 | 3. 코드 설계 | 어떤 C#/Functorium 패턴인가? | 타입 전략 | 구현 패턴 매핑 | [코드 설계](./02-code-design/) |
-| 4. 구현 | 코드로 어떻게 실현하는가? | 패턴 매핑 | 도메인 모델 소스 | `DesigningWithTypes/` |
+| 4. 구현 | 코드로 어떻게 실현하는가? | 패턴 매핑 | 도메인 모델 소스 | [구현 결과](./03-implementation-results/) |
 | 5. 검증 | 규칙이 보장되는가? | 비즈니스 규칙 + 코드 | 단위 테스트 (114개) | `DesigningWithTypes.Tests.Unit/` |
 
 ## 적용된 DDD 빌딩 블록
@@ -54,109 +65,6 @@ public class Contact
 | Specification | `ExpressionSpecification<T>` | ContactEmailSpec, ContactEmailUniqueSpec |
 | Domain Service | `IDomainService` | ContactEmailCheckService |
 | Repository | `IRepository<T, TId>` | IContactRepository |
-
-## 최종 도메인 모델 구조
-
-```mermaid
-classDiagram
-    class Contact {
-        <<AggregateRoot>>
-        +ContactId Id
-        +PersonalName Name
-        +ContactInfo ContactInfo
-        +string? EmailValue
-        +IReadOnlyList~ContactNote~ Notes
-        +DateTime CreatedAt
-        +Option~DateTime~ UpdatedAt
-        +Option~DateTime~ DeletedAt
-        +Option~string~ DeletedBy
-    }
-
-    class PersonalName {
-        <<ValueObject>>
-        +String50 FirstName
-        +String50 LastName
-        +string? MiddleInitial
-    }
-
-    class ContactInfo {
-        <<UnionValueObject>>
-        +Match~TResult~(emailOnly, postalOnly, emailAndPostal)
-        +Switch(emailOnly, postalOnly, emailAndPostal)
-    }
-    class EmailOnly {
-        +EmailVerificationState EmailState
-    }
-    class PostalOnly {
-        +PostalAddress Address
-    }
-    class EmailAndPostal {
-        +EmailVerificationState EmailState
-        +PostalAddress Address
-    }
-
-    class EmailVerificationState {
-        <<UnionValueObject~TSelf~>>
-        +Verify(verifiedAt) Fin~Verified~
-        +Match~TResult~(unverified, verified)
-        +Switch(unverified, verified)
-    }
-    class Unverified {
-        +EmailAddress Email
-    }
-    class Verified {
-        +EmailAddress Email
-        +DateTime VerifiedAt
-    }
-
-    class PostalAddress {
-        <<ValueObject>>
-        +String50 Address1
-        +String50 City
-        +StateCode State
-        +ZipCode Zip
-    }
-
-    class ContactNote {
-        <<Entity>>
-        +ContactNoteId Id
-        +NoteContent Content
-        +DateTime CreatedAt
-    }
-
-    class ContactEmailSpec {
-        <<Specification>>
-    }
-    class ContactEmailUniqueSpec {
-        <<Specification>>
-    }
-    class ContactEmailCheckService {
-        <<DomainService>>
-    }
-
-    Contact --> PersonalName
-    Contact --> ContactInfo
-    Contact *-- ContactNote
-
-    ContactInfo <|-- EmailOnly
-    ContactInfo <|-- PostalOnly
-    ContactInfo <|-- EmailAndPostal
-
-    EmailOnly --> EmailVerificationState
-    EmailAndPostal --> EmailVerificationState
-    EmailAndPostal --> PostalAddress
-    PostalOnly --> PostalAddress
-
-    EmailVerificationState <|-- Unverified
-    EmailVerificationState <|-- Verified
-
-    ContactEmailSpec ..> Contact
-    ContactEmailUniqueSpec ..> Contact
-    ContactEmailCheckService ..> Contact
-
-    style ContactInfo fill:#e1f5fe
-    style EmailVerificationState fill:#fff3e0
-```
 
 ## 프로젝트 구조
 

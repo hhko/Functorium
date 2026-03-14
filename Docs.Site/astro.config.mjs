@@ -572,6 +572,7 @@ export default defineConfig({
                   { slug: 'samples/designing-with-types/00-business-requirements' },
                   { slug: 'samples/designing-with-types/01-type-design-decisions' },
                   { slug: 'samples/designing-with-types/02-code-design' },
+                  { slug: 'samples/designing-with-types/03-implementation-results' },
                 ],
               },
             ],

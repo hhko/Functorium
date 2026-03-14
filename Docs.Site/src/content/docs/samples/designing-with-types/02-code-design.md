@@ -4,7 +4,7 @@ title: "코드 설계"
 
 ## 설계 의사결정에서 C# 구현으로
 
-앞서 도출한 불변식 기반 설계 의사결정을 Functorium DDD 빌딩 블록과 C# 14 언어 기능으로 매핑합니다.
+[타입 설계 의사결정](./01-type-design-decisions/)에서 도출한 불변식 기반 설계 의사결정을 Functorium DDD 빌딩 블록과 C# 14 언어 기능으로 매핑합니다.
 
 | 설계 의사결정 | C# 구현 패턴 | 적용 |
 |---|---|---|
@@ -13,6 +13,7 @@ title: "코드 설계"
 | 허용 조합만 표현 | `UnionValueObject` + `[UnionType]` (Match/Switch 자동 생성) | ContactInfo |
 | 상태 분리 + 전이 함수 | `UnionValueObject<TSelf>` + `TransitionFrom` 헬퍼 + `[UnionType]` | EmailVerificationState |
 | Aggregate 식별 + 수명 관리 | `AggregateRoot<TId>` + `IAuditable` + `ISoftDeletableWithUser` | Contact |
+| 검증 합성의 레이어 분리 | Entity는 VO만 수신, Application Layer에서 `FinApplyExtensions`로 합성 | Contact 팩토리 |
 | 자식 엔티티 + 컬렉션 관리 | `Entity<TId>` + private 컬렉션 + `IReadOnlyList` 노출 | ContactNote |
 | 실패 가능 vs 멱등 행위 | `Fin<Unit>` vs `Contact` 반환 | Aggregate 메서드 |
 | Aggregate 가드 + 상태 전이 위임 | Aggregate가 가드 후 상태 객체에 위임 | Contact.VerifyEmail |
@@ -185,6 +186,30 @@ public abstract partial record EmailVerificationState : UnionValueObject<EmailVe
 |---|---|---|---|
 | `Create(name, email, createdAt)` | 도메인 생성 | 이미 검증된 VO 수신 | `CreatedEvent` 발행 |
 | `CreateFromValidated(id, name, ...)` | ORM 복원 | 없음 (DB 데이터 신뢰) | 없음 |
+
+### 검증 합성의 레이어별 역할
+
+raw 입력(문자열 등)을 VO로 변환하는 검증 책임은 레이어별로 명확히 분리됩니다:
+
+| 레이어 | 검증 경계 | `Validate` | `Create` | `CreateFromValidated` |
+|--------|----------|-----------|----------|----------------------|
+| Simple VO | raw → VO | `ValidationRules` 체인 | `string?` → `Fin<T>` | `string` → T |
+| Composite VO | raw → VO | 자식 `Validate` applicative 합성 | `string?` → `Fin<T>` | 자식 VO → T |
+| Entity/Aggregate | VO → Entity | — | VO → Entity | VO + ID → Entity (ORM 복원) |
+| Application Layer | — | — | `FinApply`로 N개 `Fin<T>` applicative 합성 | — |
+
+Entity/Aggregate는 `Validate` 없이 이미 검증된 VO만 수신합니다. Application Layer에서 여러 VO의 `Create` 결과(`Fin<T>`)를 합성할 때는 `FinApplyExtensions`의 튜플 `.Apply()`를 사용합니다:
+
+```csharp
+// Application Layer: 여러 VO Create 결과를 applicative로 합성
+var contact = (
+    PersonalName.Create(cmd.FirstName, cmd.LastName),
+    EmailAddress.Create(cmd.Email)
+).Apply((name, email) => Contact.Create(name, email, now));
+// → Fin<Contact>, 모든 VO 검증 에러 누적
+```
+
+`FinApplyExtensions`는 각 `Fin<T>`를 `Validation<Error, T>`로 변환한 뒤 `ValidationApplyExtensions`의 applicative 합성을 사용하고, 결과를 다시 `Fin<R>`로 변환합니다. 중첩된 에러(예: `PersonalName` 내부의 firstName+lastName 에러)도 모두 보존됩니다.
 
 ### 도메인 이벤트
 
@@ -469,3 +494,5 @@ classDiagram
 | (없음) | NoteContent | — | — | ContactNote | `Contact.Notes[].Content` |
 | (없음) | — | — | — | IAuditable | `Contact.CreatedAt`, `Contact.UpdatedAt` |
 | (없음) | — | — | — | ISoftDeletable | `Contact.DeletedAt`, `Contact.DeletedBy` |
+
+[구현 결과](./03-implementation-results/)에서 이 타입 구조가 10개 비즈니스 시나리오를 어떻게 보장하는지 확인합니다.

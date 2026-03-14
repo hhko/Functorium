@@ -4,7 +4,7 @@ title: "타입 설계 의사결정"
 
 ## 개요
 
-비즈니스 규칙을 소프트웨어로 보장하려면, 규칙을 **불변식(invariant)으로** 분류하고 각 유형에 맞는 타입 전략을 선택해야 합니다. 불변식은 "시스템이 어떤 시점에서든 반드시 참이어야 하는 조건"이며, 이를 타입으로 인코딩하면 컴파일러가 규칙 위반을 방지합니다.
+[비즈니스 요구사항](./00-business-requirements/)에서 6개 규칙과 10개 시나리오를 정의했습니다. 이 규칙을 소프트웨어로 보장하려면, 규칙을 **불변식(invariant)으로** 분류하고 각 유형에 맞는 타입 전략을 선택해야 합니다. 불변식은 "시스템이 어떤 시점에서든 반드시 참이어야 하는 조건"이며, 이를 타입으로 인코딩하면 컴파일러가 규칙 위반을 방지합니다.
 
 ## 단일 값 불변식
 
@@ -232,3 +232,5 @@ classDiagram
 | 수명 | Aggregate 전체 | Aggregate Root + 삭제 가드 + 이중 팩토리 | Contact |
 | 소유 | 자식 엔티티 | private 컬렉션 + Aggregate 진입점 | ContactNote |
 | 교차 Aggregate | 이메일 고유성 | Domain Service + Specification | ContactEmailCheckService, ContactEmailSpec |
+
+이 전략들을 C# 14와 Functorium DDD 빌딩 블록으로 어떻게 구현하는지 [코드 설계](./02-code-design/)에서 다룹니다.
