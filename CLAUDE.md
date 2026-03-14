@@ -139,12 +139,14 @@ Verify.Xunit 스냅샷 테스트 결과를 승인하는 스크립트입니다.
 
 ### Markdown 볼드 작성 규칙
 
-`**텍스트(English))**` 뒤에 한글 조사가 바로 오면 CommonMark의 right-flanking delimiter 규칙에 의해 GitHub에서 볼드가 렌더링되지 않습니다. 한글 조사를 볼드 안에 포함시키십시오.
+`**텍스트(...)**` 뒤에 한글 조사가 바로 오면 CommonMark의 right-flanking delimiter 규칙에 의해 GitHub에서 볼드가 렌더링되지 않습니다. `)` 앞의 내용이 영어든 숫자든 상관없이 동일합니다. 한글 조사를 볼드 안에 포함시키십시오.
 
 ```markdown
 # Bad  - GitHub에서 볼드 렌더링 실패
 **공변성(Covariance)**은
+**불변식 가드(1, 2)**와
 
 # Good - 한글 조사를 볼드 안으로
 **공변성(Covariance)은**
+**불변식 가드(1, 2)와**
 ```
