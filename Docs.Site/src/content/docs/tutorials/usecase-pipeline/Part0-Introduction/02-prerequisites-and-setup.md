@@ -27,7 +27,7 @@ title: "환경 설정"
 
 ```bash
 # 저장소 클론
-git clone https://github.com/your-repo/Functorium.git
+git clone https://github.com/hhko/Functorium.git
 cd Functorium
 
 # Part 1 빌드 (standalone)

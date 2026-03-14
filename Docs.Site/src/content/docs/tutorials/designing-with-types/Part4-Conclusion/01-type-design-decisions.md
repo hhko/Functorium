@@ -83,66 +83,66 @@ stateDiagram-v2
 
 ```mermaid
 classDiagram
-    class 연락처 {
+    class Contact["연락처"] {
         이름 : 개인 이름
         연락 수단 : 연락처 정보
     }
 
-    class 개인_이름 {
+    class PersonalName["개인_이름"] {
         이름 : 50자 제한 문자열
         성 : 50자 제한 문자열
         중간_이니셜 : 문자열(선택)
     }
 
-    class 연락처_정보 {
+    class ContactInfo["연락처_정보"] {
         <<union>>
     }
-    class 이메일만 {
+    class EmailOnly["이메일만"] {
         인증 상태 : 이메일 인증
     }
-    class 우편만 {
+    class PostalOnly["우편만"] {
         주소 : 우편 주소
     }
-    class 이메일_우편 {
+    class EmailAndPostal["이메일_우편"] {
         인증 상태 : 이메일 인증
         주소 : 우편 주소
     }
 
-    class 이메일_인증 {
+    class EmailVerification["이메일_인증"] {
         <<union>>
     }
-    class 미인증 {
+    class Unverified["미인증"] {
         이메일 : 이메일 주소
     }
-    class 인증됨 {
+    class Verified["인증됨"] {
         이메일 : 이메일 주소
         인증 시점 : 날짜시간
     }
 
-    class 우편_주소 {
+    class PostalAddress["우편_주소"] {
         주소 : 50자 제한 문자열
         도시 : 50자 제한 문자열
         주 : 주 코드
         우편번호 : 우편번호
     }
 
-    연락처 --> 개인_이름
-    연락처 --> 연락처_정보
+    Contact --> PersonalName
+    Contact --> ContactInfo
 
-    연락처_정보 <|-- 이메일만
-    연락처_정보 <|-- 우편만
-    연락처_정보 <|-- 이메일_우편
+    ContactInfo <|-- EmailOnly
+    ContactInfo <|-- PostalOnly
+    ContactInfo <|-- EmailAndPostal
 
-    이메일만 --> 이메일_인증
-    이메일_우편 --> 이메일_인증
-    이메일_우편 --> 우편_주소
-    우편만 --> 우편_주소
+    EmailOnly --> EmailVerification
+    EmailAndPostal --> EmailVerification
+    EmailAndPostal --> PostalAddress
+    PostalOnly --> PostalAddress
 
-    이메일_인증 <|-- 미인증
-    이메일_인증 <|-- 인증됨
+    EmailVerification <|-- Unverified
+    EmailVerification <|-- Verified
 
-    style 연락처_정보 fill:#e1f5fe
-    style 이메일_인증 fill:#fff3e0
+    style ContactInfo fill:#e1f5fe
+    style EmailVerification fill:#fff3e0
 ```
 
 | 불변식 유형 | 경계 | 전략 |

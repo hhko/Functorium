@@ -596,6 +596,23 @@ export default defineConfig({
               },
             ],
           },
+          {
+            label: '샘플',
+            link: '/samples/',
+            icon: 'rocket',
+            items: [
+              { label: 'Functorium 샘플', slug: 'samples' },
+              {
+                label: '타입으로 도메인 설계하기',
+                items: [
+                  { slug: 'samples/designing-with-types' },
+                  { slug: 'samples/designing-with-types/00-business-requirements' },
+                  { slug: 'samples/designing-with-types/01-type-design-decisions' },
+                  { slug: 'samples/designing-with-types/02-code-design' },
+                ],
+              },
+            ],
+          },
         ]),
       ],
       social: [

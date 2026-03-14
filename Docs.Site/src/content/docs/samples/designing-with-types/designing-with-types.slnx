@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="DesigningWithTypes/DesigningWithTypes.csproj" />
+  <Project Path="DesigningWithTypes.Tests.Unit/DesigningWithTypes.Tests.Unit.csproj" />
+</Solution>

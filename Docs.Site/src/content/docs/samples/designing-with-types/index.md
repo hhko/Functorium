@@ -1,0 +1,221 @@
+---
+title: "타입으로 도메인 설계하기"
+---
+
+## 배경
+
+연락처 관리는 단순해 보이지만, 데이터 유효성, 연락 수단 조합, 이메일 인증 생명주기, 수명 관리 등 실제 비즈니스 규칙이 얽히면 naive한 구현으로는 잘못된 상태를 허용하게 됩니다. 이 샘플은 Eric Evans의 DDD 전술적 패턴과 Functorium의 타입 시스템을 결합하여, 비즈니스 규칙을 도메인 모델의 구조 자체에 녹여 넣는 과정을 보여줍니다.
+
+## Naive 출발점
+
+```csharp
+public class Contact
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string? MiddleInitial { get; set; }
+    public string? EmailAddress { get; set; }
+    public bool IsEmailVerified { get; set; }
+    public string? Address1 { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
+    public string? Zip { get; set; }
+}
+```
+
+이 구현이 허용하는 문제:
+- 100자 이름, 숫자가 아닌 우편번호 — 유효성 검증이 없습니다
+- 이메일도 주소도 없는 연락처 — 연락 수단 없는 상태가 가능합니다
+- `IsEmailVerified = true`인데 `EmailAddress = null` — 모순 상태입니다
+- 인증된 이메일을 `false`로 되돌림 — 단방향 전이가 보장되지 않습니다
+- 이름과 이메일이 같은 `string` — 실수로 바꿔 넣어도 컴파일러가 침묵합니다
+
+## 5단계 여정
+
+이 샘플은 naive한 코드에서 완성된 DDD 도메인 모델까지 5단계를 거칩니다. 각 단계가 이전 단계의 산출물을 입력으로 받아 다음 의사결정을 도출합니다.
+
+| 단계 | 핵심 질문 | 입력 | 산출물 | 문서 |
+|------|----------|------|--------|------|
+| 1. 요구사항 | 무엇을 해야 하는가? | 도메인 전문가 | 비즈니스 규칙 + 시나리오 | [비즈니스 요구사항](./00-business-requirements/) |
+| 2. 설계 의사결정 | 어떤 불변식을 어떻게 보장하는가? | 비즈니스 규칙 | 불변식 유형별 타입 전략 | [타입 설계 의사결정](./01-type-design-decisions/) |
+| 3. 코드 설계 | 어떤 C#/Functorium 패턴인가? | 타입 전략 | 구현 패턴 매핑 | [코드 설계](./02-code-design/) |
+| 4. 구현 | 코드로 어떻게 실현하는가? | 패턴 매핑 | 도메인 모델 소스 | `DesigningWithTypes/` |
+| 5. 검증 | 규칙이 보장되는가? | 비즈니스 규칙 + 코드 | 단위 테스트 (114개) | `DesigningWithTypes.Tests.Unit/` |
+
+## 적용된 DDD 빌딩 블록
+
+| DDD 개념 | Functorium 타입 | 적용 |
+|----------|----------------|------|
+| Value Object | `SimpleValueObject<T>`, `ValueObject` | String50, EmailAddress, StateCode, ZipCode, PersonalName, PostalAddress, NoteContent |
+| Discriminated Union | `UnionValueObject` + `[UnionType]` (Match/Switch 자동 생성) | ContactInfo, EmailVerificationState |
+| Entity | `Entity<TId>` | ContactNote |
+| Aggregate Root | `AggregateRoot<TId>` | Contact |
+| Domain Event | `DomainEvent` | CreatedEvent, NameUpdatedEvent, EmailVerifiedEvent 등 7종 |
+| Specification | `ExpressionSpecification<T>` | ContactEmailSpec, ContactEmailUniqueSpec |
+| Domain Service | `IDomainService` | ContactEmailCheckService |
+| Repository | `IRepository<T, TId>` | IContactRepository |
+
+## 최종 도메인 모델 구조
+
+```mermaid
+classDiagram
+    class Contact {
+        <<AggregateRoot>>
+        +ContactId Id
+        +PersonalName Name
+        +ContactInfo ContactInfo
+        +string? EmailValue
+        +IReadOnlyList~ContactNote~ Notes
+        +DateTime CreatedAt
+        +Option~DateTime~ UpdatedAt
+        +Option~DateTime~ DeletedAt
+        +Option~string~ DeletedBy
+    }
+
+    class PersonalName {
+        <<ValueObject>>
+        +String50 FirstName
+        +String50 LastName
+        +string? MiddleInitial
+    }
+
+    class ContactInfo {
+        <<UnionValueObject>>
+        +Match~TResult~(emailOnly, postalOnly, emailAndPostal)
+        +Switch(emailOnly, postalOnly, emailAndPostal)
+    }
+    class EmailOnly {
+        +EmailVerificationState EmailState
+    }
+    class PostalOnly {
+        +PostalAddress Address
+    }
+    class EmailAndPostal {
+        +EmailVerificationState EmailState
+        +PostalAddress Address
+    }
+
+    class EmailVerificationState {
+        <<UnionValueObject~TSelf~>>
+        +Verify(verifiedAt) Fin~Verified~
+        +Match~TResult~(unverified, verified)
+        +Switch(unverified, verified)
+    }
+    class Unverified {
+        +EmailAddress Email
+    }
+    class Verified {
+        +EmailAddress Email
+        +DateTime VerifiedAt
+    }
+
+    class PostalAddress {
+        <<ValueObject>>
+        +String50 Address1
+        +String50 City
+        +StateCode State
+        +ZipCode Zip
+    }
+
+    class ContactNote {
+        <<Entity>>
+        +ContactNoteId Id
+        +NoteContent Content
+        +DateTime CreatedAt
+    }
+
+    class ContactEmailSpec {
+        <<Specification>>
+    }
+    class ContactEmailUniqueSpec {
+        <<Specification>>
+    }
+    class ContactEmailCheckService {
+        <<DomainService>>
+    }
+
+    Contact --> PersonalName
+    Contact --> ContactInfo
+    Contact *-- ContactNote
+
+    ContactInfo <|-- EmailOnly
+    ContactInfo <|-- PostalOnly
+    ContactInfo <|-- EmailAndPostal
+
+    EmailOnly --> EmailVerificationState
+    EmailAndPostal --> EmailVerificationState
+    EmailAndPostal --> PostalAddress
+    PostalOnly --> PostalAddress
+
+    EmailVerificationState <|-- Unverified
+    EmailVerificationState <|-- Verified
+
+    ContactEmailSpec ..> Contact
+    ContactEmailUniqueSpec ..> Contact
+    ContactEmailCheckService ..> Contact
+
+    style ContactInfo fill:#e1f5fe
+    style EmailVerificationState fill:#fff3e0
+```
+
+## 프로젝트 구조
+
+```
+samples/designing-with-types/
+├── Directory.Build.props              # 빌드 설정 (net10.0, C# 14)
+├── Directory.Build.targets            # 루트 상속 차단
+├── designing-with-types.slnx          # 솔루션 파일
+├── 00-business-requirements.md        # 1단계: 비즈니스 요구사항
+├── 01-type-design-decisions.md        # 2단계: 타입 설계 의사결정
+├── 02-code-design.md                  # 3단계: 코드 설계
+├── DesigningWithTypes/                # 4단계: 구현
+│   ├── Primitives/                    # 공유 도메인 요소
+│   │   └── ValueObjects/
+│   │       └── String50.cs            # 최대 50자 문자열 VO (공유 원시 타입)
+│   ├── Contacts/                      # Contact Aggregate 경계
+│   │   ├── Contact.cs                 # Aggregate Root
+│   │   ├── ContactNote.cs             # 자식 엔티티
+│   │   ├── IContactRepository.cs      # Repository 인터페이스
+│   │   ├── ValueObjects/
+│   │   │   ├── Simples/               # 원시 타입 래퍼
+│   │   │   │   ├── EmailAddress.cs
+│   │   │   │   ├── StateCode.cs
+│   │   │   │   ├── ZipCode.cs
+│   │   │   │   └── NoteContent.cs
+│   │   │   ├── Composites/            # 여러 VO 조합
+│   │   │   │   ├── PersonalName.cs
+│   │   │   │   └── PostalAddress.cs
+│   │   │   └── Unions/                # Discriminated Union
+│   │   │       ├── ContactInfo.cs
+│   │   │       └── EmailVerificationState.cs
+│   │   ├── Specifications/            # 쿼리 사양
+│   │   │   ├── ContactEmailSpec.cs
+│   │   │   └── ContactEmailUniqueSpec.cs
+│   │   └── Services/                  # 도메인 서비스
+│   │       └── ContactEmailCheckService.cs
+│   └── Program.cs                     # 데모
+└── DesigningWithTypes.Tests.Unit/     # 5단계: 검증 (114개 테스트)
+    ├── ValueObjectTests.cs
+    ├── PersonalNameTests.cs
+    ├── PostalAddressTests.cs
+    ├── ContactInfoTests.cs
+    ├── EmailVerificationStateTests.cs
+    ├── NoteContentTests.cs
+    ├── ContactNoteTests.cs
+    ├── ContactTests.cs
+    ├── ContactSpecificationTests.cs
+    └── ContactEmailCheckServiceTests.cs
+```
+
+## 실행 방법
+
+```bash
+# 빌드
+dotnet build Docs.Site/src/content/docs/samples/designing-with-types/designing-with-types.slnx
+
+# 테스트
+dotnet test --solution Docs.Site/src/content/docs/samples/designing-with-types/designing-with-types.slnx
+
+# 데모 실행
+dotnet run --project Docs.Site/src/content/docs/samples/designing-with-types/DesigningWithTypes/DesigningWithTypes.csproj
+```

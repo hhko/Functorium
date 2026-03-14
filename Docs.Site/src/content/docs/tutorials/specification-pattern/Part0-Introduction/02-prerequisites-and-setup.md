@@ -38,7 +38,7 @@ sudo apt-get update && sudo apt-get install -y dotnet-sdk-10.0
 
 ```bash
 # Functorium 프로젝트 클론
-git clone https://github.com/your-org/functorium.git
+git clone https://github.com/hhko/Functorium.git
 cd functorium
 ```
 
