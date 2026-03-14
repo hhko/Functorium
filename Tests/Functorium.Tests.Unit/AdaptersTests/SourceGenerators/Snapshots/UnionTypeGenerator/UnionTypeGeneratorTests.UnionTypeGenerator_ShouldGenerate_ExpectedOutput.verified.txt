@@ -20,7 +20,7 @@ public abstract partial record Shape
         {
             Circle __case => circle(__case),
             Rectangle __case => rectangle(__case),
-            _ => throw new global::Functorium.Domains.ValueObjects.UnreachableCaseException(this)
+            _ => throw new global::Functorium.Domains.ValueObjects.Unions.UnreachableCaseException(this)
         };
     }
 
@@ -32,7 +32,7 @@ public abstract partial record Shape
         {
             case Circle __case: circle(__case); break;
             case Rectangle __case: rectangle(__case); break;
-            default: throw new global::Functorium.Domains.ValueObjects.UnreachableCaseException(this);
+            default: throw new global::Functorium.Domains.ValueObjects.Unions.UnreachableCaseException(this);
         }
     }
 

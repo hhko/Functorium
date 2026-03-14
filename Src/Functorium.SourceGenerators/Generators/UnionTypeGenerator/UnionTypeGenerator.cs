@@ -21,7 +21,7 @@ public sealed class UnionTypeGenerator()
         AttachDebugger: false)
 {
     private const string AttributeName = "UnionType";
-    private const string AttributeNamespace = "Functorium.Domains.ValueObjects";
+    private const string AttributeNamespace = "Functorium.Domains.ValueObjects.Unions";
     private const string FullyQualifiedAttributeName = $"{AttributeNamespace}.{AttributeName}Attribute";
 
     private static IncrementalValuesProvider<UnionTypeInfo> RegisterSourceProvider(
@@ -167,7 +167,7 @@ public sealed class UnionTypeGenerator()
             sb.AppendLine($"            {caseName} __case => {paramName}(__case),");
         }
 
-        sb.AppendLine($"            _ => throw new global::Functorium.Domains.ValueObjects.UnreachableCaseException(this)");
+        sb.AppendLine($"            _ => throw new global::Functorium.Domains.ValueObjects.Unions.UnreachableCaseException(this)");
         sb.AppendLine("        };");
         sb.AppendLine("    }");
     }
@@ -194,7 +194,7 @@ public sealed class UnionTypeGenerator()
             sb.AppendLine($"            case {caseName} __case: {paramName}(__case); break;");
         }
 
-        sb.AppendLine($"            default: throw new global::Functorium.Domains.ValueObjects.UnreachableCaseException(this);");
+        sb.AppendLine($"            default: throw new global::Functorium.Domains.ValueObjects.Unions.UnreachableCaseException(this);");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
     }

@@ -47,7 +47,7 @@ public sealed class UnionTypeGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.ValueObjects;
+            using Functorium.Domains.ValueObjects.Unions;
 
             namespace TestNamespace;
 
@@ -78,7 +78,7 @@ public sealed class UnionTypeGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.ValueObjects;
+            using Functorium.Domains.ValueObjects.Unions;
 
             namespace TestNamespace;
 
@@ -113,7 +113,7 @@ public sealed class UnionTypeGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.ValueObjects;
+            using Functorium.Domains.ValueObjects.Unions;
 
             namespace TestNamespace;
 
@@ -144,7 +144,7 @@ public sealed class UnionTypeGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.ValueObjects;
+            using Functorium.Domains.ValueObjects.Unions;
 
             namespace TestNamespace;
 
@@ -178,7 +178,7 @@ public sealed class UnionTypeGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.ValueObjects;
+            using Functorium.Domains.ValueObjects.Unions;
 
             namespace TestNamespace;
 
@@ -214,7 +214,7 @@ public sealed class UnionTypeGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.ValueObjects;
+            using Functorium.Domains.ValueObjects.Unions;
 
             namespace TestNamespace;
 
@@ -231,7 +231,7 @@ public sealed class UnionTypeGeneratorTests
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("global::Functorium.Domains.ValueObjects.UnreachableCaseException");
+        actual.ShouldContain("global::Functorium.Domains.ValueObjects.Unions.UnreachableCaseException");
     }
 
     #endregion
@@ -246,7 +246,7 @@ public sealed class UnionTypeGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.ValueObjects;
+            using Functorium.Domains.ValueObjects.Unions;
 
             namespace MyApp.Domain.ValueObjects;
 
@@ -279,7 +279,7 @@ public sealed class UnionTypeGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.ValueObjects;
+            using Functorium.Domains.ValueObjects.Unions;
 
             namespace TestNamespace;
 
@@ -318,7 +318,7 @@ public sealed class UnionTypeGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.ValueObjects;
+            using Functorium.Domains.ValueObjects.Unions;
 
             namespace TestNamespace;
 
@@ -352,7 +352,7 @@ public sealed class UnionTypeGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.ValueObjects;
+            using Functorium.Domains.ValueObjects.Unions;
 
             namespace TestNamespace;
 
@@ -386,7 +386,7 @@ public sealed class UnionTypeGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Domains.ValueObjects;
+            using Functorium.Domains.ValueObjects.Unions;
 
             namespace TestNamespace;
 

@@ -1,4 +1,4 @@
-namespace Functorium.Domains.ValueObjects;
+namespace Functorium.Domains.ValueObjects.Unions;
 
 /// <summary>
 /// Discriminated Union 값 객체에 Match/Switch 메서드를 자동 생성합니다.

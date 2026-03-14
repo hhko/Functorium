@@ -1,5 +1,6 @@
 using Functorium.Domains.Errors;
 using Functorium.Domains.ValueObjects;
+using Functorium.Domains.ValueObjects.Unions;
 
 using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 

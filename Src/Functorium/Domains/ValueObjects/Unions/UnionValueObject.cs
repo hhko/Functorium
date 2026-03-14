@@ -1,4 +1,4 @@
-namespace Functorium.Domains.ValueObjects;
+namespace Functorium.Domains.ValueObjects.Unions;
 
 /// <summary>
 /// Discriminated Union 값 객체의 기본 abstract record.

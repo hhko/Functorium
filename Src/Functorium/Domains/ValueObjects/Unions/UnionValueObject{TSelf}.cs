@@ -1,7 +1,7 @@
 using Functorium.Domains.Errors;
 using LanguageExt;
 
-namespace Functorium.Domains.ValueObjects;
+namespace Functorium.Domains.ValueObjects.Unions;
 
 /// <summary>
 /// 상태 전이를 지원하는 Discriminated Union 값 객체.
