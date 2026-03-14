@@ -19,7 +19,7 @@ public sealed class ContactNote : Entity<ContactNoteId>
     }
 
     /// <summary>
-    /// Create: 검증된 VO를 받으므로 직접 반환 (Fin 불필요)
+    /// Create: 검증된 VO를 받으므로 직접 반환 (도메인 내부용)
     /// </summary>
     public static ContactNote Create(NoteContent content, DateTime createdAt)
     {

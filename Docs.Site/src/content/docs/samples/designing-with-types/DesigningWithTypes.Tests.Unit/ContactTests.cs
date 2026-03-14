@@ -1,5 +1,3 @@
-using LanguageExt;
-
 namespace DesigningWithTypes.Tests.Unit;
 
 /// <summary>
@@ -610,6 +608,88 @@ public class ContactTests
 
         // Assert
         contact1.Id.ShouldNotBe(contact2.Id);
+    }
+
+    #endregion
+
+    #region FinApply — Email Only
+
+    [Fact]
+    public void FinApply_EmailOnly_ReturnsSuccess_WhenAllValid()
+    {
+        // Act
+        var actual = (
+            PersonalName.Create("HyungHo", "Ko"),
+            EmailAddress.Create("user@example.com")
+        ).Apply((name, email) => Contact.Create(name, email, Now));
+
+        // Assert
+        actual.IsSucc.ShouldBeTrue();
+        actual.ThrowIfFail().ContactInfo.ShouldBeOfType<ContactInfo.EmailOnly>();
+    }
+
+    [Fact]
+    public void FinApply_EmailOnly_AccumulatesErrors_WhenMultipleInvalid()
+    {
+        // Act
+        var actual = (
+            PersonalName.Create(null, null),
+            EmailAddress.Create("invalid-email")
+        ).Apply((name, email) => Contact.Create(name, email, Now));
+
+        // Assert
+        actual.IsFail.ShouldBeTrue();
+    }
+
+    #endregion
+
+    #region FinApply — Postal Only
+
+    [Fact]
+    public void FinApply_PostalOnly_ReturnsSuccess_WhenAllValid()
+    {
+        // Act
+        var actual = (
+            PersonalName.Create("HyungHo", "Ko"),
+            PostalAddress.Create("456 Oak Ave", "Chicago", "IL", "60601")
+        ).Apply((name, postal) => Contact.Create(name, postal, Now));
+
+        // Assert
+        actual.IsSucc.ShouldBeTrue();
+        actual.ThrowIfFail().ContactInfo.ShouldBeOfType<ContactInfo.PostalOnly>();
+    }
+
+    #endregion
+
+    #region FinApply — Email And Postal
+
+    [Fact]
+    public void FinApply_EmailAndPostal_ReturnsSuccess_WhenAllValid()
+    {
+        // Act
+        var actual = (
+            PersonalName.Create("HyungHo", "Ko"),
+            EmailAddress.Create("user@example.com"),
+            PostalAddress.Create("456 Oak Ave", "Chicago", "IL", "60601")
+        ).Apply((name, email, postal) => Contact.Create(name, email, postal, Now));
+
+        // Assert
+        actual.IsSucc.ShouldBeTrue();
+        actual.ThrowIfFail().ContactInfo.ShouldBeOfType<ContactInfo.EmailAndPostal>();
+    }
+
+    [Fact]
+    public void FinApply_EmailAndPostal_AccumulatesAllErrors()
+    {
+        // Act
+        var actual = (
+            PersonalName.Create(null, null),
+            EmailAddress.Create("invalid-email"),
+            PostalAddress.Create(null, null, "XX", "bad")
+        ).Apply((name, email, postal) => Contact.Create(name, email, postal, Now));
+
+        // Assert
+        actual.IsFail.ShouldBeTrue();
     }
 
     #endregion

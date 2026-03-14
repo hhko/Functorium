@@ -5,6 +5,8 @@ global using Shouldly;
 
 global using Xunit;
 
+global using Functorium.Domains.ValueObjects.Validations;
+
 global using DesigningWithTypes.Primitives.ValueObjects;
 global using DesigningWithTypes.Contacts;
 global using DesigningWithTypes.Contacts.ValueObjects;

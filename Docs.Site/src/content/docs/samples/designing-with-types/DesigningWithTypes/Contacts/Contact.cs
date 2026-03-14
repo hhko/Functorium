@@ -95,6 +95,8 @@ public sealed class Contact : AggregateRoot<ContactId>, IAuditable, ISoftDeletab
         CreatedAt = createdAt;
     }
 
+    #region Create — VO input (도메인 내부용)
+
     /// <summary>
     /// Create: 이메일만 있는 Contact (초기 상태: Unverified)
     /// </summary>
@@ -129,6 +131,8 @@ public sealed class Contact : AggregateRoot<ContactId>, IAuditable, ISoftDeletab
         contact.AddDomainEvent(new CreatedEvent(contact.Id, name, contactInfo));
         return contact;
     }
+
+    #endregion
 
     /// <summary>
     /// CreateFromValidated: ORM/Repository 복원용 (검증 없음, 이벤트 없음)
