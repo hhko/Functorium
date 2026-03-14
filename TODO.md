@@ -10,9 +10,9 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
 - [x] `9장 -> 1장`
 - [x] 튜토리얼 idnex.md
 - [x] 튜토리얼 가이드 문서
-- [x] designing-with-types 튜토리얼
-- [ ] designing-with-types 문서화: `요구사항 -> ddd 관점 분석 -> 클래스 설계`
-- [ ] designing-with-types 리팩토링
+- [x] designing-with-types 튜토리얼 (삭제 → samples로 통합)
+- [x] designing-with-types 문서화: `요구사항 -> ddd 관점 분석 -> 클래스 설계`
+- [x] designing-with-types 리팩토링
 ---
 ```
  Plan: Part4-Conclusion 문서 3단계 구조화

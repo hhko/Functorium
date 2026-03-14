@@ -72,7 +72,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 | 솔루션 파일 | 포함 프로젝트 | 용도 |
 |-------------|---------------|------|
 | `Functorium.slnx` | Src/, Tests/ | 핵심 라이브러리 개발 (기본) |
-| `Docs.Site/.../tutorials/<name>/<name>.slnx` | 튜토리얼별 개별 솔루션 (6개) | 문서 내 실습 코드 빌드 |
+| `Docs.Site/.../tutorials/<name>/<name>.slnx` | 튜토리얼별 개별 솔루션 (5개) | 문서 내 실습 코드 빌드 |
 
 - 빌드: `dotnet build Functorium.slnx`
 - 테스트: `dotnet test --solution Functorium.slnx`
