@@ -614,3 +614,15 @@ Functorium의 함수형 타입은 "어떻게 컴파일러에게 규칙 검증을
 | `DomainError.For<T>()` | 모든 에러 생성 | `DomainErrors.{타입명}.{에러명}` 형식의 에러 코드 자동 생성, 패턴 매칭으로 정확한 분기 처리 |
 | Value Object 팩토리 | `Money.Create`, `Quantity.Create`, `OrderStatus.Create` | 생성 시점에 검증 완료, 이후 도메인 로직에서 유효성 재확인 불필요 |
 | `CreateFromValidated` | 모든 Aggregate의 ORM 복원 | 검증과 이벤트 발행 생략, 이미 영속화된 데이터를 신뢰하여 도메인 생성과 ORM 복원을 분리 |
+
+## 아키텍처 테스트
+
+도메인 모델의 구조적 규칙을 Functorium의 `ArchitectureRules` 프레임워크로 자동 검증합니다. 6개 테스트 클래스가 DDD 빌딩 블록의 구조적 일관성을 보장합니다.
+
+| 테스트 클래스 | 검증 대상 | 핵심 규칙 |
+|-------------|----------|----------|
+| `ValueObjectArchitectureRuleTests` | Value Object (Money, Quantity, CustomerName, Email 등) | public sealed, 불변성, `Create`/`Validate` 팩토리 |
+| `EntityArchitectureRuleTests` | 5개 AggregateRoot + OrderLine (Entity) | public sealed, `Create`/`CreateFromValidated`, `[GenerateEntityId]`, private 생성자 |
+| `DomainEventArchitectureRuleTests` | 19개 Domain Event | sealed record, `Event` 접미사 |
+| `DomainServiceArchitectureRuleTests` | OrderCreditCheckService | public sealed, stateless, `Fin` 반환, IObservablePort 미의존, record 아님 |
+| `SpecificationArchitectureRuleTests` | 6개 Specification | public sealed, `Specification<>` 상속, 도메인 레이어 거주 |

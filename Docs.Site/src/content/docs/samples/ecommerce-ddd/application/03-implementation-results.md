@@ -450,3 +450,12 @@ public async Task Handle_ReturnsFail_WhenCreditLimitExceeded()
 **`FinT<IO, T>`로 안전한 에러 전파.** Repository 실패, `guard` 실패, Domain Service 에러 모두 `FinT<IO, T>` 모나드 바인딩에 의해 자동으로 전파됩니다. `try-catch` 없이 LINQ 합성만으로 에러 흐름이 제어되며, 실패 시 후속 IO 효과가 실행되지 않는 것이 타입 시스템에 의해 보장됩니다.
 
 **Port/Adapter로 테스트 용이성.** 모든 외부 의존성이 Port 인터페이스(`IProductRepository`, `IProductCatalog`, `IProductQuery`)로 추상화되어 있으므로, NSubstitute로 Mock을 생성하고 `FinTFactory.Succ/Fail`로 성공/실패를 시뮬레이션할 수 있습니다. Domain Service(`OrderCreditCheckService`)는 순수 로직이므로 Mock 없이 실제 인스턴스를 사용합니다.
+
+## 아키텍처 테스트
+
+Application 레이어의 구조적 규칙을 Functorium의 `ArchitectureRules` 프레임워크로 자동 검증합니다.
+
+| 테스트 클래스 | 검증 대상 | 핵심 규칙 |
+|-------------|----------|----------|
+| `UsecaseArchitectureRuleTests` | 10 Commands + 9 Queries | 중첩 `Usecase` 클래스 (sealed, `ICommandUsecase`/`IQueryUsecase`), 선택적 `Validator` 클래스 (sealed, `AbstractValidator`) |
+| `LayerDependencyArchitectureRuleTests` | Domain ↛ Application | Domain 레이어가 Application 레이어에 의존하지 않음 |

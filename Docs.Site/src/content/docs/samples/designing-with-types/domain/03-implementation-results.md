@@ -522,3 +522,17 @@ DDD가 정의한 규칙 경계를 함수형 타입이 컴파일러 수준에서 
 - **"실패 원인은 구조적으로 식별된다"** — `InvalidTransition`, `AlreadyDeleted`, `EmailAlreadyInUse` 같은 `sealed record` 에러 타입이 실패 원인을 문자열이 아닌 타입으로 표현하므로, 호출자가 패턴 매칭으로 정확한 분기 처리를 할 수 있습니다.
 
 이 네 가지 보장은 테스트가 아닌 타입 시스템에서 비롯됩니다. 테스트는 이 보장이 의도대로 작동하는지 확인하는 이중 안전장치입니다.
+
+## 아키텍처 테스트
+
+도메인 모델의 구조적 규칙을 Functorium의 `ArchitectureRules` 프레임워크로 자동 검증합니다. 6개 테스트 클래스(24개 테스트)가 DDD 빌딩 블록의 구조적 일관성을 보장합니다.
+
+| 테스트 클래스 | 검증 대상 | 핵심 규칙 |
+|-------------|----------|----------|
+| `ValueObjectArchitectureRuleTests` | 11개 Value Object | public sealed, 불변성, `Create`/`Validate` 팩토리 (Union 타입 제외) |
+| `EntityArchitectureRuleTests` | Contact (AR) + ContactNote (Entity) | public sealed, `Create`/`CreateFromValidated`, `[GenerateEntityId]`, private 생성자 |
+| `DomainEventArchitectureRuleTests` | 7개 Domain Event | sealed record, `Event` 접미사 |
+| `DomainServiceArchitectureRuleTests` | ContactEmailCheckService | public sealed, `Fin` 반환, IObservablePort 미의존, record 아님 |
+| `SpecificationArchitectureRuleTests` | 2개 Specification | public sealed, `Specification<>` 상속, 도메인 레이어 거주 |
+
+**Evans Ch.9 패턴 주의점:** `ContactEmailCheckService`는 `IContactRepository` 인스턴스 필드를 보유하는 Evans의 Repository 협력 패턴을 따릅니다. 따라서 `RequireNoInstanceFields()` (Stateless) 규칙은 적용하지 않습니다. `Create`/`Validate` 팩토리 규칙은 `UnionValueObject` 하위 타입(`ContactInfo`, `EmailVerificationState`)을 제외합니다 — Union 타입은 `[UnionType]` 속성에 의해 `Match`/`Switch`가 자동 생성되는 별도의 생성 패턴을 따릅니다.

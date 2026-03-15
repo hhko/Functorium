@@ -116,7 +116,8 @@ samples/ecommerce-ddd/
 │           ├── Orders/ (Commands, Queries, Ports)
 │           └── Inventories/ (Queries, Ports)
 └── Tests/
-    └── ECommerce.Tests.Unit/ (275개 테스트)
+    └── ECommerce.Tests.Unit/ (301개 테스트)
+        ├── Architecture/          # 아키텍처 규칙 검증 (26개 테스트)
         ├── Domain/
         └── Application/
 ```
