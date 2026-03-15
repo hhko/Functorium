@@ -59,7 +59,7 @@ private readonly OrderCreditCheckService _creditCheckService = new();
 2. **Entity/Aggregate 정의**: `AggregateRoot<TId>` 상속, `[GenerateEntityId]` 어트리뷰트 적용
 3. **도메인 이벤트 정의**: Aggregate 내 중첩 `sealed record`로 `DomainEvent` 상속
 4. **Specification 정의**: `ExpressionSpecification<T>` 상속, `ToExpression()` 구현
-5. **Domain Service 정의**: `IDomainService` 마커 인터페이스 구현, 순수 함수로 작성
+5. **Domain Service 정의**: `IDomainService` 마커 인터페이스 구현, 순수 함수(기본) 또는 Repository 사용(Evans Ch.9)으로 작성
 6. **Usecase 구현**: `ICommandUsecase<T,R>` / `IQueryUsecase<T,R>` 상속, `FinT<IO, T>` LINQ 체인으로 조율
 
 ### 주요 개념
@@ -69,7 +69,7 @@ private readonly OrderCreditCheckService _creditCheckService = new();
 | Value Object | 불변, 값 동등성, 자기 검증 | `SimpleValueObject<T>`, `ValueObject` |
 | Entity / Aggregate | ID 동등성, 일관성 경계 | `Entity<TId>`, `AggregateRoot<TId>` |
 | Domain Event | 과거형, 불변, Aggregate 간 통신 | `IDomainEvent`, `DomainEvent` |
-| Domain Service | 교차 Aggregate 순수 로직 | `IDomainService` |
+| Domain Service | 교차 Aggregate 도메인 로직 | `IDomainService` |
 | Specification | 비즈니스 규칙 캡슐화, 조합 | `Specification<T>`, `ExpressionSpecification<T>` |
 | Error 처리 | Railway Oriented Programming | `Fin<T>`, `Validation<Error, T>` |
 | Layer 구조 | Domain → Application → Adapter | 의존성 규칙: 안쪽 → 바깥 참조 금지 |
@@ -133,7 +133,7 @@ block-beta
 | **Entity** | 식별자를 가진 도메인 객체 | ID 동등성, 가변, 생명주기 |
 | **Aggregate** | 일관성 경계를 가진 객체 그룹 | 트랜잭션 단위, 불변식 보호 |
 | **Domain Event** | 도메인에서 발생한 중요한 사건 | 과거형, 불변, Aggregate 간 통신 |
-| **Domain Service** | 교차 Aggregate 순수 도메인 로직 | 상태 없음, I/O 없음, IDomainService 마커 |
+| **Domain Service** | 교차 Aggregate 도메인 로직 (순수 또는 Repository 사용) | Stateless, IDomainService 마커 |
 | **Factory** | Aggregate 생성/복원 | 정적 `Create()`, `CreateFromValidated()` 메서드 |
 | **Repository** | Aggregate의 영속화 | Aggregate 단위로 저장/조회 |
 | **Application Service** | 유스케이스 조율 | Command/Query, 도메인 객체 위임 |

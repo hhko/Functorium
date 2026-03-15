@@ -70,8 +70,10 @@
 ├── NO → Aggregate 메서드 내부 (단일 Aggregate 불변 조건)
 └── YES
     ├── 외부 I/O 없이 검증 가능한가?
-    │   ├── YES → Domain Service
-    │   └── NO → Usecase에서 조율
+    │   ├── YES → 순수 Domain Service
+    │   └── NO → Usecase가 데이터를 로드할 수 있는 규모인가?
+    │       ├── YES → 순수 Domain Service (Usecase가 데이터 전달)
+    │       └── NO → Repository 사용 Domain Service (Evans Ch.9)
     └── 상태 변경이 여러 Aggregate에 걸치는가?
         ├── YES → Domain Event + 최종 일관성
         └── NO → Domain Service
@@ -84,8 +86,10 @@
 ├── YES → Entity 메서드 또는 Value Object
 └── NO
     ├── 외부 I/O가 필요한가?
-    │   ├── YES → Usecase에서 조율
-    │   └── NO → Domain Service
+    │   ├── Usecase가 데이터를 로드할 수 있는 규모인가?
+    │   │   ├── YES → 순수 Domain Service (Usecase가 데이터 전달)
+    │   │   └── NO → Repository 사용 Domain Service (Evans Ch.9)
+    │   └── I/O 불필요 → 순수 Domain Service
     └── 여러 Aggregate의 상태를 변경하는가?
         ├── YES → Domain Event + 별도 Handler
         └── NO → Domain Service
@@ -95,7 +99,8 @@
 |----------|------|------|
 | **Entity 메서드** | 단일 Aggregate 내부 상태 변경 | `Inventory.DeductStock()` |
 | **Value Object** | 값의 검증, 변환, 연산 | `Money.Add()` |
-| **Domain Service** | 여러 Aggregate 참조, 순수 로직 | `OrderCreditCheckService.ValidateCreditLimit()` |
+| **Domain Service (순수)** | 여러 Aggregate 참조, Usecase가 데이터 로드 가능 | `OrderCreditCheckService.ValidateCreditLimit()` |
+| **Domain Service (Repository)** | 여러 Aggregate 참조, 대규모 교차 데이터 (Evans Ch.9) | `ContactEmailCheckService.ValidateEmailUnique()` |
 | **Usecase** | 조율, I/O 위임 | Repository 호출, Event 발행 |
 
 **안티패턴 3종**:
