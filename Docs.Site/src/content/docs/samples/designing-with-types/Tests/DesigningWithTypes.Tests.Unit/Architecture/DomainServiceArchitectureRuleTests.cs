@@ -52,6 +52,19 @@ public sealed class DomainServiceArchitectureRuleTests : ArchitectureTestBase
     }
 
     [Fact]
+    public void DomainService_ShouldBe_Stateless()
+    {
+        ArchRuleDefinition.Classes()
+            .That()
+            .ImplementInterface(typeof(IDomainService))
+            .And().AreNotAbstract()
+            .ValidateAllClasses(Architecture, @class => @class
+                .RequireNoInstanceFields("Repository"),
+                verbose: true)
+            .ThrowIfAnyFailures("DomainService Stateless Rule");
+    }
+
+    [Fact]
     public void DomainService_ShouldNotBe_Record()
     {
         ArchRuleDefinition.Classes()

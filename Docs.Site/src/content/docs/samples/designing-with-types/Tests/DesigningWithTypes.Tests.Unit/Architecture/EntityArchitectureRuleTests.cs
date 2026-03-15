@@ -32,11 +32,11 @@ public sealed class EntityArchitectureRuleTests : ArchitectureTestBase
             .And().AreAssignableTo(typeof(AggregateRoot<>))
             .And().AreNotAbstract()
             .ValidateAllClasses(Architecture, @class => @class
-                .RequireMethod("Create", m => m
+                .RequireMethod(IEntity.CreateMethodName, m => m
                     .RequireVisibility(Visibility.Public)
                     .RequireStatic()
                     .RequireReturnTypeOfDeclaringClass())
-                .RequireMethod("CreateFromValidated", m => m
+                .RequireMethod(IEntity.CreateFromValidatedMethodName, m => m
                     .RequireVisibility(Visibility.Public)
                     .RequireStatic()
                     .RequireReturnTypeOfDeclaringClass()),
@@ -99,11 +99,11 @@ public sealed class EntityArchitectureRuleTests : ArchitectureTestBase
             .And().AreNotAbstract()
             .And().AreNotAssignableTo(typeof(AggregateRoot<>))
             .ValidateAllClasses(Architecture, @class => @class
-                .RequireMethod("Create", m => m
+                .RequireMethod(IEntity.CreateMethodName, m => m
                     .RequireVisibility(Visibility.Public)
                     .RequireStatic()
                     .RequireReturnTypeOfDeclaringClass())
-                .RequireMethod("CreateFromValidated", m => m
+                .RequireMethod(IEntity.CreateFromValidatedMethodName, m => m
                     .RequireVisibility(Visibility.Public)
                     .RequireStatic()
                     .RequireReturnTypeOfDeclaringClass()),

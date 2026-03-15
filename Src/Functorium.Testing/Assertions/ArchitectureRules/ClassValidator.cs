@@ -203,12 +203,14 @@ public sealed class ClassValidator : TypeValidator<Class, ClassValidator>
 
     // --- Fields ---
 
-    public ClassValidator RequireNoInstanceFields()
+    public ClassValidator RequireNoInstanceFields(params string[] excludeFieldTypeContaining)
     {
         var instanceFields = _target.Members
             .OfType<FieldMember>()
             .Where(f => f.IsStatic != true)
             .Where(f => !f.Name.StartsWith("<") && !f.Name.Contains("k__BackingField"))
+            .Where(f => !excludeFieldTypeContaining.Any(exc =>
+                (f.Type.FullName ?? f.Type.Name).Contains(exc)))
             .ToList();
 
         if (instanceFields.Any())

@@ -50,7 +50,7 @@ public sealed class ValueObjectArchitectureRuleTests : ArchitectureTestBase
             .And().AreNotAbstract()
             .And().AreNotAssignableTo(typeof(UnionValueObject))
             .ValidateAllClasses(Architecture, @class => @class
-                .RequireMethod("Create", m => m
+                .RequireMethod(IValueObject.CreateMethodName, m => m
                     .RequireVisibility(Visibility.Public)
                     .RequireStatic()
                     .RequireReturnType(typeof(Fin<>))),
@@ -68,7 +68,7 @@ public sealed class ValueObjectArchitectureRuleTests : ArchitectureTestBase
             .And().AreNotAbstract()
             .And().AreNotAssignableTo(typeof(UnionValueObject))
             .ValidateAllClasses(Architecture, @class => @class
-                .RequireMethod("Validate", m => m
+                .RequireMethod(IValueObject.ValidateMethodName, m => m
                     .RequireVisibility(Visibility.Public)
                     .RequireStatic()
                     .RequireReturnType(typeof(Validation<,>))),
