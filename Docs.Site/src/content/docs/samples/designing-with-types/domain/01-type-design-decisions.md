@@ -4,7 +4,45 @@ title: "타입 설계 의사결정"
 
 ## 개요
 
-[비즈니스 요구사항](./00-business-requirements/)에서 6개 규칙과 10개 시나리오를 정의했습니다. 이 규칙을 소프트웨어로 보장하려면, 규칙을 **불변식(invariant)으로** 분류하고 각 유형에 맞는 타입 전략을 선택해야 합니다. 불변식은 "시스템이 어떤 시점에서든 반드시 참이어야 하는 조건"이며, 이를 타입으로 인코딩하면 컴파일러가 규칙 위반을 방지합니다.
+[비즈니스 요구사항](./00-business-requirements/)에서 자연어로 정의한 규칙을 DDD 관점에서 분석합니다. 첫 번째 단계는 독립적인 일관성 경계(Aggregate)를 식별하고, 두 번째 단계는 비즈니스 용어를 DDD 전술적 패턴으로 매핑하며, 세 번째 단계는 각 경계 내의 규칙을 불변식으로 분류하는 것입니다.
+
+## Aggregate 식별
+
+ecommerce-ddd 샘플처럼 여러 Aggregate로 분리되는 도메인과 달리, 연락처 관리 도메인은 **모든 비즈니스 규칙이 하나의 일관성 경계(Contact)에 집중**됩니다.
+
+개인 이름, 연락 수단, 이메일 인증, 메모는 모두 연락처에 종속되며, 연락처 없이 독립적으로 존재할 수 없습니다. 따라서 별도의 Aggregate로 분리할 이유가 없고, 하나의 Aggregate Root(Contact)가 모든 상태 변경의 단일 진입점 역할을 합니다.
+
+유일한 예외는 **이메일 고유성 검증**입니다. 이 규칙은 여러 Contact 인스턴스에 걸치므로 단일 Aggregate 내부에서 보장할 수 없습니다. 이를 Domain Service + Specification으로 Aggregate 외부에서 해결합니다.
+
+| 업무 주제 | Aggregate 내 위치 | 도출 근거 |
+|----------|------------------|----------|
+| 데이터 유효성 | Contact 내 Value Object | 개별 필드 제약 → 생성 시 검증 |
+| 연락 수단 | Contact 내 ContactInfo | 연락처의 핵심 구성 → Contact에 종속 |
+| 이메일 인증 | Contact 내 EmailVerificationState | 이메일 상태는 연락처에 종속 |
+| 연락처 수명 관리 | Contact (AggregateRoot) | 생성·수정·삭제의 일관성 경계 |
+| 메모 관리 | Contact 내 ContactNote (자식 엔티티) | Aggregate 경계 내부에서만 관리 |
+| 이메일 고유성 | Domain Service + Specification | 교차 Aggregate 검증 → Contact 외부 |
+
+## 도메인 용어 매핑
+
+비즈니스 용어를 DDD 전술적 패턴으로 매핑합니다. 이 매핑이 이후 불변식 분류와 코드 설계의 기반이 됩니다.
+
+| 비즈니스 용어 | DDD 패턴 | 타입 | 역할 |
+|-------------|---------|------|------|
+| 연락처 | Aggregate Root | Contact | 모든 상태 변경의 단일 진입점 |
+| 개인 이름 | Value Object | PersonalName | 이름·성·중간 이니셜 원자적 그룹화 |
+| 이메일 주소 | Value Object | EmailAddress | 형식 검증 + 소문자 정규화 |
+| 우편 주소 | Value Object | PostalAddress | 주소 구성요소 원자적 그룹화 |
+| 연락 수단 | Union Value Object | ContactInfo | 허용된 3가지 조합만 표현 |
+| 이메일 인증 | Union Value Object | EmailVerificationState | 미인증→인증 단방향 전이 |
+| 메모 | Entity (자식) | ContactNote | Contact에 종속, 독립 식별자 |
+| 메모 내용 | Value Object | NoteContent | 500자 이하 검증 |
+| 이름/성 | Value Object | String50 | 50자 이하 문자열 |
+| 주 코드 | Value Object | StateCode | 2자리 대문자 알파벳 |
+| 우편번호 | Value Object | ZipCode | 5자리 숫자 |
+| 이메일 고유성 검증 | Domain Service | ContactEmailCheckService | 교차 Aggregate 이메일 중복 검증 |
+| 이메일 조회 | Specification | ContactEmailSpec | 이메일 일치 쿼리 사양 |
+| 이메일 고유성 조회 | Specification | ContactEmailUniqueSpec | 자기 제외 고유성 쿼리 사양 |
 
 ## 단일 값 불변식
 

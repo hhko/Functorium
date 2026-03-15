@@ -4,7 +4,7 @@ title: "코드 설계"
 
 ## 설계 의사결정에서 C# 구현으로
 
-[타입 설계 의사결정](./01-type-design-decisions/)에서 도출한 불변식 기반 설계 의사결정을 Functorium DDD 빌딩 블록과 C# 14 언어 기능으로 매핑합니다.
+[비즈니스 요구사항](./00-business-requirements/)에서 자연어로 정의한 규칙을, [타입 설계 의사결정](./01-type-design-decisions/)에서 Aggregate로 식별하고 불변식으로 분류했습니다. 이 문서에서는 그 설계를 Functorium DDD 빌딩 블록과 C# 14 언어 기능으로 구현합니다.
 
 | 설계 의사결정 | C# 구현 패턴 | 적용 |
 |---|---|---|
