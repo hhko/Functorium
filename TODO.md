@@ -6,6 +6,27 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하도록 개선
 ```
 
+- [ ] md와 사이트 링크 표시법 동기화
+---
+- [ ] LayeredArch 예제 작성
+- [ ] 도메인 폴더 구성 규칙 통일
+- [ ] 애플리케이션 폴더 구성 규칙
+- [ ] 코어 레이어(도메인, 애플리케이션) 문서화 규칙
+- [ ] domain with types에서 사용하지 않는 클래스 개선
+- [ ] domain with types 문서 반영
+- [ ] domain with types 폴더 구성 개선
+- [ ] domain with types 테스트 폴더 재구성
+---
+- [ ] public
+- [ ] 문서 사이트 오픈?
+- [ ] nuget 배포
+---
+- [ ] application 스킬
+- [ ] application 스킬 -> domain skill
+- [ ] functorium plugin
+  - functorium:application-develop
+  - functorium:domain-develop
+---
 - [ ] release note 스킬
 - [ ] release note 스킬 문서화
 - [ ] domain 예제 추가(Tests.Hosts)
@@ -17,6 +38,7 @@ DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하
   - 프로젝트 이름
   - Aggregates 루트 폴더 구성
 ---
+- [x] domain 유효성 검사 설계 원칙 정립
 - [x] union 타입 제공
 - [x] union 타입 가이드
 - [x] Domain 폴더 구성
