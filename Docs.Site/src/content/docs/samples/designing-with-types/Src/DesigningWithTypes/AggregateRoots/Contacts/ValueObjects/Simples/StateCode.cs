@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace DesigningWithTypes.Contacts.ValueObjects;
+namespace DesigningWithTypes.AggregateRoots.Contacts.ValueObjects;
 
 /// <summary>
 /// 미국 주 코드 값 객체 (2자리 대문자, 향상: string? 입력)

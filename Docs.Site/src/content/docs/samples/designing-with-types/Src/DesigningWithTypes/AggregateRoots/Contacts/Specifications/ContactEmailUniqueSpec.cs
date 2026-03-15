@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace DesigningWithTypes.Contacts.Specifications;
+namespace DesigningWithTypes.AggregateRoots.Contacts.Specifications;
 
 /// <summary>
 /// 이메일 고유성 확인 Specification

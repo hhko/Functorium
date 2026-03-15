@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace DesigningWithTypes.Contacts.Specifications;
+namespace DesigningWithTypes.AggregateRoots.Contacts.Specifications;
 
 /// <summary>
 /// 이메일로 Contact를 검색하는 Specification

@@ -1,4 +1,4 @@
-namespace DesigningWithTypes.Contacts.ValueObjects;
+namespace DesigningWithTypes.AggregateRoots.Contacts.ValueObjects;
 
 /// <summary>
 /// 메모 내용 값 객체

@@ -1,4 +1,4 @@
-namespace DesigningWithTypes.Contacts.ValueObjects;
+namespace DesigningWithTypes.AggregateRoots.Contacts.ValueObjects;
 
 /// <summary>
 /// 이메일 인증 상태 (Part 3 상태 기계 통합)

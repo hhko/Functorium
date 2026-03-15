@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DesigningWithTypes\DesigningWithTypes.csproj" />
+    <ProjectReference Include="..\..\Src\DesigningWithTypes\DesigningWithTypes.csproj" />
   </ItemGroup>
 
 </Project>

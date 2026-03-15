@@ -1,7 +1,7 @@
-using DesigningWithTypes.Contacts;
-using DesigningWithTypes.Contacts.ValueObjects;
-using DesigningWithTypes.Contacts.Specifications;
-using DesigningWithTypes.Contacts.Services;
+using DesigningWithTypes.AggregateRoots.Contacts;
+using DesigningWithTypes.AggregateRoots.Contacts.ValueObjects;
+using DesigningWithTypes.AggregateRoots.Contacts.Specifications;
+using DesigningWithTypes.AggregateRoots.Contacts.Services;
 
 var now = DateTime.UtcNow;
 

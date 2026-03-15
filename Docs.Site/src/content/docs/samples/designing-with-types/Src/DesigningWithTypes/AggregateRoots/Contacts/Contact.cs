@@ -1,6 +1,6 @@
 using static LanguageExt.Prelude;
 
-namespace DesigningWithTypes.Contacts;
+namespace DesigningWithTypes.AggregateRoots.Contacts;
 
 /// <summary>
 /// DDD 패턴이 적용된 Contact Aggregate Root (확장)

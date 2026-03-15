@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace DesigningWithTypes.Contacts.ValueObjects;
+namespace DesigningWithTypes.AggregateRoots.Contacts.ValueObjects;
 
 /// <summary>
 /// 이메일 주소 값 객체 (향상: string? 입력, NotNull, ThenNormalize 소문자)

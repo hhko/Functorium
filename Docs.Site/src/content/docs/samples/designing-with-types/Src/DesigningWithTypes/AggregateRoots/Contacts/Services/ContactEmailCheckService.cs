@@ -1,6 +1,6 @@
 using static LanguageExt.Prelude;
 
-namespace DesigningWithTypes.Contacts.Services;
+namespace DesigningWithTypes.AggregateRoots.Contacts.Services;
 
 /// <summary>
 /// 이메일 고유성 검증 도메인 서비스

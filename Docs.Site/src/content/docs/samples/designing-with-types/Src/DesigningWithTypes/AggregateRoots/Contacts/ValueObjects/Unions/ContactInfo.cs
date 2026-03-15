@@ -1,4 +1,4 @@
-namespace DesigningWithTypes.Contacts.ValueObjects;
+namespace DesigningWithTypes.AggregateRoots.Contacts.ValueObjects;
 
 /// <summary>
 /// 연락처 정보 union (Part 2 + Part 3 통합)

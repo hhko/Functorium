@@ -1,4 +1,4 @@
-namespace DesigningWithTypes.Contacts.ValueObjects;
+namespace DesigningWithTypes.AggregateRoots.Contacts.ValueObjects;
 
 /// <summary>
 /// 개인 이름 복합 값 객체 (향상: ValueObject 상속, string? 입력)

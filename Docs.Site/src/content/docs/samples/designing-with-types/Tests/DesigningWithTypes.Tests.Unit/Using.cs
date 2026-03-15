@@ -7,8 +7,8 @@ global using Xunit;
 
 global using Functorium.Domains.ValueObjects.Validations;
 
-global using DesigningWithTypes.Primitives.ValueObjects;
-global using DesigningWithTypes.Contacts;
-global using DesigningWithTypes.Contacts.ValueObjects;
-global using DesigningWithTypes.Contacts.Specifications;
-global using DesigningWithTypes.Contacts.Services;
+global using DesigningWithTypes.SharedModels.ValueObjects;
+global using DesigningWithTypes.AggregateRoots.Contacts;
+global using DesigningWithTypes.AggregateRoots.Contacts.ValueObjects;
+global using DesigningWithTypes.AggregateRoots.Contacts.Specifications;
+global using DesigningWithTypes.AggregateRoots.Contacts.Services;

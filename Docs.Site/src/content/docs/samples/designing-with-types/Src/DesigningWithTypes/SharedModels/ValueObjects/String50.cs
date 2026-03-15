@@ -1,4 +1,4 @@
-namespace DesigningWithTypes.Primitives.ValueObjects;
+namespace DesigningWithTypes.SharedModels.ValueObjects;
 
 /// <summary>
 /// 최대 50자 문자열 값 객체 (향상: string? 입력, NotNull, ThenNormalize)

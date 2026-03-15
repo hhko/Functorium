@@ -1,4 +1,4 @@
-namespace DesigningWithTypes.Contacts;
+namespace DesigningWithTypes.AggregateRoots.Contacts;
 
 /// <summary>
 /// Contact Aggregate Root 리포지토리 인터페이스

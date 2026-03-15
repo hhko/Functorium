@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace DesigningWithTypes.Contacts.ValueObjects;
+namespace DesigningWithTypes.AggregateRoots.Contacts.ValueObjects;
 
 /// <summary>
 /// 우편번호 값 객체 (5자리 숫자, 향상: string? 입력)

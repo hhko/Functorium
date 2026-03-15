@@ -1,4 +1,4 @@
-namespace DesigningWithTypes.Contacts;
+namespace DesigningWithTypes.AggregateRoots.Contacts;
 
 /// <summary>
 /// 연락처 메모 자식 엔티티
