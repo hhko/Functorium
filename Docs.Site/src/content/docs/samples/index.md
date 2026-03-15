@@ -36,3 +36,4 @@ title: "Functorium 샘플"
 | 샘플 | 도메인 | 핵심 패턴 |
 |------|--------|----------|
 | [타입으로 도메인 설계하기](./designing-with-types/) | 연락처 관리 | Value Object, Discriminated Union, 상태 기계, Aggregate Root, Domain Service, Specification |
+| [전자상거래 DDD 레이어드 아키텍처](./ecommerce-ddd/) | 전자상거래 주문 처리 | Domain Layer: Aggregate Root, Entity, Value Object, Specification, Domain Service, Domain Event / Application Layer: CQRS, Apply Pattern, Port/Adapter, FinT LINQ |

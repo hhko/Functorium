@@ -570,10 +570,39 @@ export default defineConfig({
                 label: '타입으로 도메인 설계하기',
                 items: [
                   { slug: 'samples/designing-with-types' },
-                  { slug: 'samples/designing-with-types/00-business-requirements' },
-                  { slug: 'samples/designing-with-types/01-type-design-decisions' },
-                  { slug: 'samples/designing-with-types/02-code-design' },
-                  { slug: 'samples/designing-with-types/03-implementation-results' },
+                  {
+                    label: '도메인 레이어',
+                    items: [
+                      { slug: 'samples/designing-with-types/domain/00-business-requirements' },
+                      { slug: 'samples/designing-with-types/domain/01-type-design-decisions' },
+                      { slug: 'samples/designing-with-types/domain/02-code-design' },
+                      { slug: 'samples/designing-with-types/domain/03-implementation-results' },
+                    ],
+                  },
+                ],
+              },
+              {
+                label: '전자상거래 DDD',
+                items: [
+                  { slug: 'samples/ecommerce-ddd' },
+                  {
+                    label: '도메인 레이어',
+                    items: [
+                      { slug: 'samples/ecommerce-ddd/domain/00-business-requirements' },
+                      { slug: 'samples/ecommerce-ddd/domain/01-type-design-decisions' },
+                      { slug: 'samples/ecommerce-ddd/domain/02-code-design' },
+                      { slug: 'samples/ecommerce-ddd/domain/03-implementation-results' },
+                    ],
+                  },
+                  {
+                    label: '애플리케이션 레이어',
+                    items: [
+                      { slug: 'samples/ecommerce-ddd/application/00-business-requirements' },
+                      { slug: 'samples/ecommerce-ddd/application/01-type-design-decisions' },
+                      { slug: 'samples/ecommerce-ddd/application/02-code-design' },
+                      { slug: 'samples/ecommerce-ddd/application/03-implementation-results' },
+                    ],
+                  },
                 ],
               },
             ],
