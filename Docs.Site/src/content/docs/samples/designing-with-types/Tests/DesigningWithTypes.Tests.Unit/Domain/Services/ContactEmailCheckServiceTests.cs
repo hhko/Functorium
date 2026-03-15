@@ -1,4 +1,6 @@
-using LanguageExt;
+using Functorium.Domains.Repositories;
+using Functorium.Domains.Specifications;
+using Functorium.Testing.Arrangements.Effects;
 
 namespace DesigningWithTypes.Tests.Unit;
 
@@ -8,65 +10,51 @@ namespace DesigningWithTypes.Tests.Unit;
 [Trait("Sample", "DesigningWithTypes")]
 public class ContactEmailCheckServiceTests
 {
-    private static readonly DateTime Now = new(2024, 1, 1);
-
-    private static EmailAddress CreateEmail(string email = "user@example.com") =>
-        EmailAddress.Create(email).ThrowIfFail();
-
-    private readonly ContactEmailCheckService _sut = new();
-
-    private static (ContactId Id, string? EmailValue) CreateContactData(
-        string email = "user@example.com")
-    {
-        var contact = Contact.Create(
-            PersonalName.Create("HyungHo", "Ko").ThrowIfFail(),
-            CreateEmail(email),
-            Now);
-        return (contact.Id, contact.EmailValue);
-    }
-
     [Fact]
-    public void ValidateEmailUnique_ReturnsSuccess_WhenUnique()
+    public async Task ValidateEmailUnique_ReturnsSuccess_WhenNotExists()
     {
         // Arrange
-        var data = CreateContactData();
-        var contacts = Seq.create(data);
-        var newEmail = CreateEmail("new@example.com");
+        var sut = CreateSut(existsResult: false);
+        var email = EmailAddress.Create("test@example.com").ThrowIfFail();
 
         // Act
-        var actual = _sut.ValidateEmailUnique(newEmail, contacts);
+        var actual = await sut.ValidateEmailUnique(email).Run().RunAsync();
 
         // Assert
         actual.IsSucc.ShouldBeTrue();
     }
 
     [Fact]
-    public void ValidateEmailUnique_ReturnsFail_WhenDuplicate()
+    public async Task ValidateEmailUnique_ReturnsFail_WhenExists()
     {
         // Arrange
-        var email = CreateEmail();
-        var data = CreateContactData();
-        var contacts = Seq.create(data);
+        var sut = CreateSut(existsResult: true);
+        var email = EmailAddress.Create("test@example.com").ThrowIfFail();
 
         // Act
-        var actual = _sut.ValidateEmailUnique(email, contacts);
+        var actual = await sut.ValidateEmailUnique(email).Run().RunAsync();
 
         // Assert
         actual.IsFail.ShouldBeTrue();
     }
 
-    [Fact]
-    public void ValidateEmailUnique_ExcludesSelf()
+    private static ContactEmailCheckService CreateSut(bool existsResult) =>
+        new(new StubContactRepository(existsResult));
+
+    private sealed class StubContactRepository(bool existsResult) : IContactRepository
     {
-        // Arrange
-        var email = CreateEmail();
-        var data = CreateContactData();
-        var contacts = Seq.create(data);
+        public string RequestCategory => "Test";
 
-        // Act
-        var actual = _sut.ValidateEmailUnique(email, contacts, data.Id);
+        public FinT<IO, bool> Exists(Specification<Contact> spec) =>
+            FinTFactory.Succ(existsResult);
 
-        // Assert
-        actual.IsSucc.ShouldBeTrue();
+        public FinT<IO, Contact> Create(Contact aggregate) => throw new NotImplementedException();
+        public FinT<IO, Contact> GetById(ContactId id) => throw new NotImplementedException();
+        public FinT<IO, Contact> Update(Contact aggregate) => throw new NotImplementedException();
+        public FinT<IO, int> Delete(ContactId id) => throw new NotImplementedException();
+        public FinT<IO, Seq<Contact>> CreateRange(IReadOnlyList<Contact> aggregates) => throw new NotImplementedException();
+        public FinT<IO, Seq<Contact>> GetByIds(IReadOnlyList<ContactId> ids) => throw new NotImplementedException();
+        public FinT<IO, Seq<Contact>> UpdateRange(IReadOnlyList<Contact> aggregates) => throw new NotImplementedException();
+        public FinT<IO, int> DeleteRange(IReadOnlyList<ContactId> ids) => throw new NotImplementedException();
     }
 }

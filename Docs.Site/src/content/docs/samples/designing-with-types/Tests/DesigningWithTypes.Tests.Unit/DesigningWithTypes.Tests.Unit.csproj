@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Src\DesigningWithTypes\DesigningWithTypes.csproj" />
+    <ProjectReference Include="..\..\..\..\..\..\..\..\Src\Functorium.Testing\Functorium.Testing.csproj" />
   </ItemGroup>
 
 </Project>

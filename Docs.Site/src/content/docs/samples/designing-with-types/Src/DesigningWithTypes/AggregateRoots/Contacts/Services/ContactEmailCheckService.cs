@@ -1,13 +1,19 @@
+using Functorium.Applications.Linq;
 using static LanguageExt.Prelude;
 
 namespace DesigningWithTypes.AggregateRoots.Contacts.Services;
 
 /// <summary>
 /// 이메일 고유성 검증 도메인 서비스
-/// Application Layer에서 기존 Contact 정보를 조회 후 호출합니다.
+/// Specification 생성 → Repository DB 쿼리 → 결과 해석을 응집적으로 수행합니다.
 /// </summary>
 public sealed class ContactEmailCheckService : IDomainService
 {
+    private readonly IContactRepository _repository;
+
+    public ContactEmailCheckService(IContactRepository repository)
+        => _repository = repository;
+
     #region Error Types
 
     public sealed record EmailAlreadyInUse : DomainErrorType.Custom;
@@ -15,19 +21,22 @@ public sealed class ContactEmailCheckService : IDomainService
     #endregion
 
     /// <summary>
-    /// 이메일이 다른 Contact에서 사용 중인지 검증합니다.
-    /// Aggregate 전체가 아닌 필요한 최소 정보만 수신합니다.
+    /// 이메일 고유성을 검증합니다.
+    /// Specification 생성 → Repository DB 쿼리 → 결과 해석을 응집적으로 수행합니다.
     /// </summary>
-    public Fin<Unit> ValidateEmailUnique(
+    public FinT<IO, Unit> ValidateEmailUnique(
         EmailAddress email,
-        Seq<(ContactId Id, string? EmailValue)> existingContacts,
         Option<ContactId> excludeId = default)
     {
-        var isDuplicate = existingContacts
-            .Filter(c => excludeId.Match(id => c.Id != id, () => true))
-            .Any(c => c.EmailValue == (string)email);
+        var spec = new ContactEmailUniqueSpec(email, excludeId);
+        return from exists in _repository.Exists(spec)
+               from _ in CheckNotExists(email, exists)
+               select unit;
+    }
 
-        if (isDuplicate)
+    private static Fin<Unit> CheckNotExists(EmailAddress email, bool exists)
+    {
+        if (exists)
             return DomainError.For<ContactEmailCheckService>(
                 new EmailAlreadyInUse(),
                 (string)email,

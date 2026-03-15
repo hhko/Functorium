@@ -113,18 +113,20 @@ Console.WriteLine($"멱등 복원: 이벤트 수 변화 없음 = {contact.Domain
 
 // 시나리오 10. 중복 이메일 등록 (거부)
 Console.WriteLine("\n--- 시나리오 10. 중복 이메일 등록 (거부) ---");
-var service = new ContactEmailCheckService();
-var contacts = Seq.create((contact.Id, contact.EmailValue));
+var repo = new DemoContactRepository([contact]);
+var service = new ContactEmailCheckService(repo);
 
-var otherEmail = EmailAddress.Create("other@example.com").ThrowIfFail();
-var uniqueResult = service.ValidateEmailUnique(otherEmail, contacts);
-Console.WriteLine($"고유 이메일 검증: IsSucc={uniqueResult.IsSucc}");
-
-var dupResult = service.ValidateEmailUnique(email, contacts);
+// Service가 내부에서 ContactEmailUniqueSpec 생성 → Repository.Exists 호출 → 결과 해석
+var dupResult = await service.ValidateEmailUnique(email).Run().RunAsync();
 Console.WriteLine($"중복 이메일 검증: IsFail={dupResult.IsFail}");
 
-var selfExcludeResult = service.ValidateEmailUnique(email, contacts, contact.Id);
-Console.WriteLine($"자기 제외 검증: IsSucc={selfExcludeResult.IsSucc}");
+var otherEmail = EmailAddress.Create("other@example.com").ThrowIfFail();
+var uniqueResult = await service.ValidateEmailUnique(otherEmail).Run().RunAsync();
+Console.WriteLine($"고유 이메일 검증: IsSucc={uniqueResult.IsSucc}");
+
+// 자기 제외: Service가 ContactEmailUniqueSpec(email, contact.Id)를 내부 생성
+var selfResult = await service.ValidateEmailUnique(email, contact.Id).Run().RunAsync();
+Console.WriteLine($"자기 제외 검증: IsSucc={selfResult.IsSucc}");
 
 // === API 데모 ===
 
@@ -139,19 +141,20 @@ Console.WriteLine($"String50.Create(\"  Hello  \"): \"{(string)trimResult}\" (Tr
 var emailNorm = EmailAddress.Create("User@Example.COM").ThrowIfFail();
 Console.WriteLine($"EmailAddress.Create(\"User@Example.COM\"): \"{(string)emailNorm}\" (소문자 정규화)");
 
-// Specification
+// Specification: 쿼리 가능한 도메인 규칙
 Console.WriteLine("\n--- API 데모: Specification ---");
 var emailSpec = new ContactEmailSpec(email);
-Console.WriteLine($"ContactEmailSpec.IsSatisfiedBy: {emailSpec.IsSatisfiedBy(contact)}");
+Console.WriteLine($"ContactEmailSpec.IsSatisfiedBy(동일 이메일): {emailSpec.IsSatisfiedBy(contact)}");
 
 var otherSpec = new ContactEmailSpec(otherEmail);
-Console.WriteLine($"다른 이메일 Spec: {otherSpec.IsSatisfiedBy(contact)}");
+Console.WriteLine($"ContactEmailSpec.IsSatisfiedBy(다른 이메일): {otherSpec.IsSatisfiedBy(contact)}");
 
+// ContactEmailUniqueSpec: 자기 제외 로직은 Specification이 단일 소유
 var uniqueSpec = new ContactEmailUniqueSpec(email);
-Console.WriteLine($"ContactEmailUniqueSpec (전체): {uniqueSpec.IsSatisfiedBy(contact)}");
+Console.WriteLine($"ContactEmailUniqueSpec(제외 없음): {uniqueSpec.IsSatisfiedBy(contact)}");
 
 var uniqueSpecExclude = new ContactEmailUniqueSpec(email, contact.Id);
-Console.WriteLine($"ContactEmailUniqueSpec (자기 제외): {uniqueSpecExclude.IsSatisfiedBy(contact)}");
+Console.WriteLine($"ContactEmailUniqueSpec(자기 제외): {uniqueSpecExclude.IsSatisfiedBy(contact)}");
 
 // CreateFromValidated (이벤트 없음)
 Console.WriteLine("\n--- API 데모: CreateFromValidated ---");
@@ -164,3 +167,22 @@ var restored = Contact.CreateFromValidated(
 Console.WriteLine($"복원된 Contact: {restored}");
 Console.WriteLine($"메모 수: {restored.Notes.Count}");
 Console.WriteLine($"이벤트 수: {restored.DomainEvents.Count} (이벤트 없음)");
+
+// === file-scoped 스텁 Repository ===
+
+file sealed class DemoContactRepository(IReadOnlyList<Contact> contacts) : IContactRepository
+{
+    public string RequestCategory => "Demo";
+
+    public FinT<IO, bool> Exists(Specification<Contact> spec) =>
+        FinT.lift(IO.pure(Fin.Succ(contacts.Any(spec.IsSatisfiedBy))));
+
+    public FinT<IO, Contact> Create(Contact aggregate) => throw new NotImplementedException();
+    public FinT<IO, Contact> GetById(ContactId id) => throw new NotImplementedException();
+    public FinT<IO, Contact> Update(Contact aggregate) => throw new NotImplementedException();
+    public FinT<IO, int> Delete(ContactId id) => throw new NotImplementedException();
+    public FinT<IO, Seq<Contact>> CreateRange(IReadOnlyList<Contact> aggregates) => throw new NotImplementedException();
+    public FinT<IO, Seq<Contact>> GetByIds(IReadOnlyList<ContactId> ids) => throw new NotImplementedException();
+    public FinT<IO, Seq<Contact>> UpdateRange(IReadOnlyList<Contact> aggregates) => throw new NotImplementedException();
+    public FinT<IO, int> DeleteRange(IReadOnlyList<ContactId> ids) => throw new NotImplementedException();
+}
