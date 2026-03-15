@@ -20,7 +20,7 @@ title: "코드 설계"
 | 시간 주입 | 모든 행위 메서드가 `DateTime` 매개변수 수신 | Create, UpdateName, Delete 등 |
 | 쿼리 가능한 도메인 상태 | 투영 속성 (projection property) | EmailValue |
 | 도메인 쿼리 사양 | `ExpressionSpecification<T>` | ContactEmailSpec, ContactEmailUniqueSpec |
-| 교차 Aggregate 검증 | `IDomainService` + 최소 데이터 수신 | ContactEmailCheckService |
+| 교차 Aggregate 검증 | `IDomainService` + Repository + Specification 응집 | ContactEmailCheckService |
 | 영속성 추상화 | `IRepository<T, TId>` + 커스텀 메서드 | IContactRepository |
 | ORM 복원 | `CreateFromValidated` (검증/이벤트 없음) | Contact, PersonalName, PostalAddress, ContactNote |
 
@@ -340,24 +340,80 @@ public sealed class ContactEmailSpec : ExpressionSpecification<Contact>
 }
 ```
 
-`ContactEmailUniqueSpec`은 `Option<ContactId> ExcludeId`를 받아 자기 자신을 제외한 이메일 고유성 검사를 지원합니다.
+`ContactEmailUniqueSpec`은 `Option<ContactId> ExcludeId`를 받아 자기 자신을 제외한 이메일 고유성 검사를 지원합니다. **자기 제외 로직은 이 Specification이 단일 소유**하며, Service나 Usecase에 중복되지 않습니다:
+
+```csharp
+public sealed class ContactEmailUniqueSpec : ExpressionSpecification<Contact>
+{
+    public EmailAddress Email { get; }
+    public Option<ContactId> ExcludeId { get; }
+
+    public ContactEmailUniqueSpec(EmailAddress email, Option<ContactId> excludeId = default)
+    {
+        Email = email;
+        ExcludeId = excludeId;
+    }
+
+    public override Expression<Func<Contact, bool>> ToExpression()
+    {
+        string emailStr = Email;
+
+        return ExcludeId.Match(
+            Some: excludeId =>
+            {
+                var id = excludeId;
+                return (Expression<Func<Contact, bool>>)(
+                    contact => contact.EmailValue == emailStr && contact.Id != id);
+            },
+            None: () => contact => contact.EmailValue == emailStr);
+    }
+}
+```
 
 ## Domain Service
 
-`ContactEmailCheckService`는 상태 없는 이메일 고유성 검증 서비스입니다. Application Layer가 Repository로 기존 Contact 정보를 조회한 뒤, 필요한 최소 데이터만 Domain Service에 전달합니다.
+Eric Evans는 Blue Book Chapter 9에서 Domain Service가 Repository를 사용하여 Specification 기반 쿼리를 수행하는 패턴을 제시합니다. Evans가 요구하는 **Stateless**(호출 간 가변 상태 없음)는 **Pure**(I/O 없음)와 다릅니다. Repository 인터페이스는 도메인 레이어에 정의되므로, Domain Service가 이를 사용하는 것은 Evans DDD에서 정당합니다.
+
+`ContactEmailCheckService`는 `IContactRepository`를 생성자로 수신하고, 내부에서 Specification 생성 → Repository DB 쿼리 → 결과 해석을 응집적으로 수행합니다:
 
 ```csharp
 public sealed class ContactEmailCheckService : IDomainService
 {
-    public Fin<Unit> ValidateEmailUnique(
+    private readonly IContactRepository _repository;
+
+    public ContactEmailCheckService(IContactRepository repository)
+        => _repository = repository;
+
+    public sealed record EmailAlreadyInUse : DomainErrorType.Custom;
+
+    public FinT<IO, Unit> ValidateEmailUnique(
         EmailAddress email,
-        Seq<(ContactId Id, string? EmailValue)> existingContacts,
         Option<ContactId> excludeId = default)
-    { ... }
+    {
+        var spec = new ContactEmailUniqueSpec(email, excludeId);
+        return from exists in _repository.Exists(spec)
+               from _ in CheckNotExists(email, exists)
+               select unit;
+    }
+
+    private static Fin<Unit> CheckNotExists(EmailAddress email, bool exists)
+    {
+        if (exists)
+            return DomainError.For<ContactEmailCheckService>(
+                new EmailAlreadyInUse(),
+                (string)email,
+                "Email is already in use by another contact");
+        return unit;
+    }
 }
 ```
 
-도메인 로직(고유성 판별)은 Domain Service에, 데이터 조회는 Application Layer에 분리합니다.
+- `_repository` 필드는 가변 상태가 아닌 **의존성 참조**입니다 — Evans의 Stateless 요구를 충족합니다
+- `FinT<IO, Unit>` 반환으로 Repository I/O를 포함하는 효과 체인을 표현합니다
+- `CheckNotExists`는 **순수 함수**입니다 — I/O와 도메인 판단을 분리합니다
+- LINQ `from ... in`으로 `FinT<IO, bool>`과 `Fin<Unit>`을 자연스럽게 합성합니다 (`FinTLinqExtensions.Fin`이 `FinT → Fin` SelectMany를 제공)
+
+> **Functorium 기본 패턴과의 차이:** Functorium의 `IDomainService`는 순수 함수(외부 I/O 없음)를 기본으로 합니다. ecommerce-ddd 샘플의 `OrderCreditCheckService`는 소규모 교차 데이터(주문 ↔ 고객)를 Usecase가 로드하여 순수 Service에 전달합니다. 반면 이메일 고유성 검증은 전체 연락처에 대한 DB 쿼리가 필수이므로, Evans 원칙에 따라 Service가 Repository를 직접 사용합니다.
 
 ## Repository Interface
 
@@ -369,6 +425,35 @@ public interface IContactRepository : IRepository<Contact, ContactId>
 ```
 
 `IRepository<T, TId>` 기본 CRUD에 `Exists` 메서드를 추가하여 Specification 기반 존재 여부 확인을 지원합니다.
+
+## 교차 Aggregate 검증 흐름
+
+Specification, Domain Service, Repository 세 컴포넌트가 연결되어 교차 Aggregate 검증을 수행합니다:
+
+```
+Usecase → service.ValidateEmailUnique(email, excludeId)
+           └→ Service 내부:
+              1. ContactEmailUniqueSpec(email, excludeId) 생성  — 쿼리 규칙 정의
+              2. _repository.Exists(spec)                       — DB 수준 실행
+              3. CheckNotExists(email, exists)                  — 결과 해석
+```
+
+Application Layer에서의 사용 패턴:
+
+```csharp
+// Usecase — Service가 모든 것을 캡슐화
+FinT<IO, Response> usecase =
+    from _ in _emailCheckService.ValidateEmailUnique(email, excludeId)
+    from saved in _repository.Create(contact)
+    select new Response(saved.Id);
+```
+
+교차 데이터 규모에 따른 패턴 선택:
+
+| 시나리오 | 교차 데이터 규모 | 패턴 | 예시 |
+|----------|-----------------|------|------|
+| 소규모 | 1~수건 | 순수 Domain Service (Usecase가 데이터 로드) | `OrderCreditCheckService` (주문 ↔ 고객) |
+| 대규모 | 전체 테이블 | Repository 사용 Domain Service (Evans Ch.9) | `ContactEmailCheckService` (이메일 ↔ 전체 연락처) |
 
 ## 최종 타입 구조
 
@@ -451,9 +536,12 @@ classDiagram
     }
     class ContactEmailCheckService {
         <<DomainService>>
+        -IContactRepository _repository
+        +ValidateEmailUnique(email, excludeId) FinT~IO, Unit~
     }
     class IContactRepository {
         <<Repository>>
+        +Exists(spec) FinT~IO, bool~
     }
 
     Contact --> PersonalName
@@ -474,7 +562,8 @@ classDiagram
 
     ContactEmailSpec ..> Contact
     ContactEmailUniqueSpec ..> Contact
-    ContactEmailCheckService ..> Contact
+    ContactEmailCheckService --> IContactRepository
+    ContactEmailCheckService ..> ContactEmailUniqueSpec
     IContactRepository ..> Contact
 ```
 

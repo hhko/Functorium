@@ -161,14 +161,32 @@ Aggregate 내부의 자식 엔티티가 경계를 벗어나지 않아야 하는 
 - "동일 이메일 중복 등록 방지"
 - "업데이트 시 자기 자신 제외"
 
-**Naive 구현의 문제:** 단일 Aggregate 내부에서 다른 Aggregate의 상태를 직접 조회하면 Aggregate 경계가 무너집니다. Repository를 직접 호출하면 도메인 레이어가 인프라에 의존합니다.
+**Naive 구현의 문제:**
+- **경계 위반:** Aggregate 내부에서 다른 Aggregate를 직접 조회하면 경계가 무너집니다.
+- **인프라 의존:** Aggregate가 Repository를 직접 호출하면 도메인이 인프라에 의존합니다.
+- **성능 병목:** 모든 연락처를 메모리에 로드하여 필터링하면 대량 데이터에서 병목이 발생합니다.
 
-**설계 의사결정: Domain Service와 Specification을 분리합니다.** `ContactEmailCheckService`는 Application Layer가 조회한 최소 데이터만 수신하여 도메인 로직(고유성 판별)을 수행합니다. `ContactEmailSpec`과 `ContactEmailUniqueSpec`은 `ExpressionSpecification<Contact>`으로 ORM에서 SQL로 변환 가능합니다.
+**설계 의사결정: Domain Service가 Specification과 Repository를 조합합니다.**
+
+Eric Evans는 Blue Book Chapter 9에서 Domain Service가 Repository를 사용하여 Specification 기반 쿼리를 수행하는 패턴을 제시합니다. Domain Service는 Stateless(호출 간 가변 상태 없음)이지만, Repository 인터페이스(도메인 레이어 정의)를 통한 데이터 접근은 허용됩니다.
+
+`ContactEmailCheckService`가 이메일 고유성 검증의 **완전한 소유자**입니다:
+
+| 단계 | 수행자 | 역할 |
+|------|--------|------|
+| Specification 생성 | Service 내부 | `ContactEmailUniqueSpec(email, excludeId)` — 쿼리 규칙 + 자기 제외 |
+| DB 수준 실행 | Service → Repository | `IContactRepository.Exists(spec)` — SQL 변환, 전체 로드 불필요 |
+| 결과 해석 | Service 내부 | `bool → Fin<Unit>` — 도메인 에러 or 성공 |
+
+Application Layer(Usecase)는 Service 하나만 호출합니다:
+```
+Usecase → service.ValidateEmailUnique(email, excludeId) → 성공 or EmailAlreadyInUse
+```
 
 **결과:**
-- ContactEmailCheckService: `IDomainService`
-- ContactEmailSpec, ContactEmailUniqueSpec: `ExpressionSpecification<Contact>`
-- IContactRepository: `IRepository<Contact, ContactId>` + `Exists`
+- ContactEmailCheckService: `IDomainService` — Specification 생성 + Repository 조회 + 결과 해석
+- ContactEmailUniqueSpec, ContactEmailSpec: `ExpressionSpecification<Contact>` — 쿼리 규칙
+- IContactRepository: `IRepository<Contact, ContactId>` + `Exists` — DB 실행
 
 ## 도메인 모델 구조
 
