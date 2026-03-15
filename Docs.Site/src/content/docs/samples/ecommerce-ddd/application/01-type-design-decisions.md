@@ -2,7 +2,107 @@
 title: "애플리케이션 타입 설계 의사결정"
 ---
 
-도메인 레이어에서 불변식을 타입으로 보장했다면, Application 레이어에서는 이 타입들을 조합하여 Use Case를 구성하는 전략을 설계합니다. 이 문서에서는 Apply 패턴(병렬 검증), CQRS 분리, 포트 인터페이스, DTO 전략, 에러 타입의 설계 의사결정을 다룹니다.
+[비즈니스 요구사항](../00-business-requirements/)에서 자연어로 정의한 워크플로우를 Application 아키텍처 관점에서 분석합니다. 첫 번째 단계는 워크플로우에서 Use Case(Command/Query)를 식별하고, 두 번째 단계는 각 Use Case가 필요로 하는 포트를 도출하는 것입니다. 그 뒤에 Apply 패턴(병렬 검증), CQRS 분리, 포트 인터페이스, DTO 전략, 에러 타입의 설계 의사결정을 다룹니다.
+
+## 워크플로우 → Use Case 식별
+
+[비즈니스 요구사항](../00-business-requirements/)의 워크플로우를 분석하면, 크게 두 가지 유형의 요청이 있습니다.
+
+- **상태를 변경하는 요청:** 상품 등록·수정·삭제·복원, 재고 차감, 고객 생성, 주문 생성
+- **데이터를 조회하는 요청:** 상품 조회·검색, 고객 조회, 주문 조회, 재고 검색
+
+이 분리의 근거는 비즈니스 요구사항의 교차 워크플로우 규칙에서 찾을 수 있습니다: "상태를 변경하는 요청과 데이터를 조회하는 요청은 별도의 경로로 처리한다." 읽기 경로는 도메인 객체를 재구성하지 않고 필요한 형태로 직접 가져오므로, 쓰기 경로와 독립적으로 최적화할 수 있습니다.
+
+상태를 변경하는 요청은 Command로, 데이터를 조회하는 요청은 Query로 분류합니다. 각 Use Case는 하나의 워크플로우 단위를 담당합니다.
+
+### Use Case 카탈로그
+
+#### Products
+
+| Use Case | 유형 | 워크플로우 |
+|----------|------|-----------|
+| `CreateProductCommand` | Command | 상품 등록 + 재고 초기화 |
+| `UpdateProductCommand` | Command | 상품 수정 (삭제 가드, 상품명 고유성 검사) |
+| `DeleteProductCommand` | Command | 상품 논리 삭제 |
+| `RestoreProductCommand` | Command | 삭제된 상품 복원 |
+| `DeductStockCommand` | Command | 재고 차감 |
+| `GetProductByIdQuery` | Query | 상품 상세 조회 |
+| `GetAllProductsQuery` | Query | 전체 상품 조회 |
+| `SearchProductsQuery` | Query | 상품 검색 — 이름, 가격 범위, 페이지네이션/정렬 |
+| `SearchProductsWithStockQuery` | Query | 상품+재고 조회 (재고 없는 상품 미포함) |
+| `SearchProductsWithOptionalStockQuery` | Query | 상품+재고 조회 (재고 없는 상품 포함) |
+
+#### Customers
+
+| Use Case | 유형 | 워크플로우 |
+|----------|------|-----------|
+| `CreateCustomerCommand` | Command | 고객 생성 (이메일 고유성 검사) |
+| `GetCustomerByIdQuery` | Query | 고객 상세 조회 |
+| `GetCustomerOrdersQuery` | Query | 고객 주문 내역 + 상품명 조회 |
+| `SearchCustomerOrderSummaryQuery` | Query | 고객별 주문 요약 검색 |
+
+#### Orders
+
+| Use Case | 유형 | 워크플로우 |
+|----------|------|-----------|
+| `CreateOrderCommand` | Command | 주문 생성 — 상품 가격 일괄 조회 |
+| `CreateOrderWithCreditCheckCommand` | Command | 주문 생성 + 신용한도 검증 |
+| `GetOrderByIdQuery` | Query | 주문 상세 조회 |
+| `GetOrderWithProductsQuery` | Query | 주문 + 상품명 조회 |
+
+#### Inventories
+
+| Use Case | 유형 | 워크플로우 |
+|----------|------|-----------|
+| `SearchInventoryQuery` | Query | 재고 검색 — 저재고 필터, 페이지네이션/정렬 |
+
+9개 Command와 10개 Query, 총 19개 Use Case가 도출됩니다. Command는 도메인 모델을 거쳐 상태를 변경하고, Query는 데이터베이스에서 필요한 형태로 직접 가져옵니다.
+
+## Use Case → 포트 식별
+
+각 Use Case가 외부 세계(데이터베이스, 외부 API)와 소통하려면 인터페이스(포트)가 필요합니다. Command/Query 분리에 따라 포트도 세 유형으로 나뉩니다.
+
+- **Write Port (Repository):** Command Use Case가 도메인 객체를 저장하고 조회하는 데 사용합니다. 도메인 레이어에서 정의합니다.
+- **Read Port (Query Port):** Query Use Case가 데이터를 원하는 형태로 가져오는 데 사용합니다. Application 레이어에서 정의합니다.
+- **Special Port:** 교차 워크플로우 전용 포트입니다. 주문 생성 시 여러 상품의 가격을 일괄 조회하는 것처럼, 단일 Use Case 내에서 다른 Aggregate의 데이터가 필요할 때 사용합니다.
+
+Write Port가 도메인 모델의 무결성을 보장하는 반면, Read Port는 조회 성능에 초점을 맞춥니다. 조회 경로는 도메인 객체를 재구성하지 않으므로, 복잡한 JOIN이나 집계 쿼리를 도메인 모델의 제약 없이 최적화할 수 있습니다.
+
+### 포트 카탈로그
+
+#### Write Ports (도메인 레이어 정의)
+
+| 포트 | Aggregate | 용도 |
+|------|-----------|------|
+| `IProductRepository` | Product | 상품 CRUD + 고유성 검사 + 삭제 포함 조회 |
+| `ICustomerRepository` | Customer | 고객 CRUD + 고유성 검사 |
+| `IOrderRepository` | Order | 주문 CRUD |
+| `IInventoryRepository` | Inventory | 재고 CRUD + 상품별 조회 |
+| `ITagRepository` | Tag | 태그 CRUD |
+
+#### Read Ports (Application 레이어 정의)
+
+| 포트 | 용도 |
+|------|------|
+| `IProductQuery` | 상품 검색 + 페이지네이션 |
+| `IProductDetailQuery` | 상품 단건 상세 조회 |
+| `IProductWithStockQuery` | 상품+재고 조회 (재고 있는 상품만) |
+| `IProductWithOptionalStockQuery` | 상품+재고 조회 (모든 상품) |
+| `ICustomerDetailQuery` | 고객 단건 상세 조회 |
+| `ICustomerOrdersQuery` | 고객 주문 내역 + 상품명 조회 |
+| `ICustomerOrderSummaryQuery` | 고객별 주문 요약 집계 |
+| `IOrderDetailQuery` | 주문 단건 상세 조회 |
+| `IOrderWithProductsQuery` | 주문 + 상품명 조회 |
+| `IInventoryQuery` | 재고 검색 + 페이지네이션 |
+
+#### Special Ports (교차 워크플로우 전용)
+
+| 포트 | 용도 |
+|------|------|
+| `IProductCatalog` | 복수 상품의 가격을 일괄 조회 (상품별 개별 조회 방지) |
+| `IExternalPricingService` | 외부 API에서 상품 가격 조회 |
+
+5개 Write Port, 10개 Read Port, 2개 Special Port가 도출됩니다. 각 포트의 상세 인터페이스 설계는 [포트 인터페이스 설계](#포트-인터페이스-설계)에서 다룹니다.
 
 ## Apply 패턴
 

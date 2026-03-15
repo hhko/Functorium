@@ -2,10 +2,7 @@
 title: "애플리케이션 구현 결과"
 ---
 
-이 문서는 Application 레이어의 주요 Use Case 구현을 테스트 시나리오를 통해 검증합니다.
-각 테스트는 NSubstitute로 Port를 Mock하고, `FinTFactory`로 IO 효과를 시뮬레이션합니다.
-
-[비즈니스 요구사항](../00-business-requirements/)에서 정의한 시나리오를, [코드 설계](../02-code-design/)의 패턴으로 실행합니다. 정상 시나리오는 Apply 패턴, 배치 조회, CQRS 분리가 올바르게 동작하는지, 거부 시나리오는 검증 실패와 에러 전파가 제대로 이루어지는지 확인합니다.
+[비즈니스 요구사항](../00-business-requirements/)에서 정의한 워크플로우 시나리오가, [타입 설계 의사결정](../01-type-design-decisions/)과 [코드 설계](../02-code-design/)의 패턴으로 실제 동작함을 증명합니다. 각 테스트는 NSubstitute로 Port를 Mock하고, `FinTFactory`로 IO 효과를 시뮬레이션합니다. 정상 시나리오는 병렬 검증, 배치 조회, 읽기/쓰기 분리가 올바르게 동작하는지, 거부 시나리오는 검증 실패와 에러 전파가 제대로 이루어지는지 확인합니다.
 
 ## 정상 시나리오
 
