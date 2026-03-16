@@ -724,19 +724,22 @@ public sealed class GetCustomerByIdQuery
 `IQueryPort<TEntity, TDto>`의 `Search()` 메서드와 Specification 패턴을 사용합니다:
 
 ```csharp
-// 참조: Tests.Hosts/01-SingleHost/.../SearchProductsQuery.cs
+// 참조: samples/ecommerce-ddd/.../SearchProductsQuery.cs
 using Functorium.Applications.Queries;
 using Functorium.Domains.Specifications;
-using LayeredArch.Application.Usecases.Products.Ports;
-using LayeredArch.Domain.AggregateRoots.Products;
-using LayeredArch.Domain.AggregateRoots.Products.Specifications;
+using ECommerce.Application.Usecases.Products.Ports;
+using ECommerce.Domain.AggregateRoots.Products;
+using ECommerce.Domain.AggregateRoots.Products.Specifications;
 
 public sealed class SearchProductsQuery
 {
+    private static readonly string[] AllowedSortFields = ["Name", "Price"];
+
+    // Option<T>: 선택적 필터 필드. default(Option<T>) = None → 필터 미적용
     public sealed record Request(
-        string Name = "",
-        decimal MinPrice = 0,
-        decimal MaxPrice = 0,
+        Option<string> Name = default,
+        Option<decimal> MinPrice = default,
+        Option<decimal> MaxPrice = default,
         int Page = 1,
         int PageSize = PageRequest.DefaultPageSize,
         string SortBy = "",
@@ -751,6 +754,27 @@ public sealed class SearchProductsQuery
         bool HasNextPage,
         bool HasPreviousPage);
 
+    // Validator: Option<T> 전용 검증 확장 메서드 활용
+    public sealed class Validator : AbstractValidator<Request>
+    {
+        public Validator()
+        {
+            RuleFor(x => x.Name)
+                .MustSatisfyValidation(ProductName.Validate);
+
+            this.MustBePairedRange(
+                x => x.MinPrice,
+                x => x.MaxPrice,
+                Money.Validate,
+                inclusive: true);
+
+            RuleFor(x => x.SortBy).MustBeOneOf(AllowedSortFields);
+
+            RuleFor(x => x.SortDirection)
+                .MustBeEnumValue<Request, SortDirection>();
+        }
+    }
+
     public sealed class Usecase(IProductQuery productQuery)
         : IQueryUsecase<Request, Response>
     {
@@ -760,7 +784,7 @@ public sealed class SearchProductsQuery
         {
             var spec = BuildSpecification(request);
             var pageRequest = new PageRequest(request.Page, request.PageSize);
-            var sortExpression = BuildSortExpression(request);
+            var sortExpression = SortExpression.By(request.SortBy, SortDirection.Parse(request.SortDirection));
 
             FinT<IO, Response> usecase =
                 from result in _productQuery.Search(spec, pageRequest, sortExpression)
@@ -781,24 +805,18 @@ public sealed class SearchProductsQuery
         {
             var spec = Specification<Product>.All;
 
-            if (request.Name.Length > 0)
+            // Option<T>.Iter(): Some이면 필터 추가, None이면 무시
+            request.Name.Iter(name =>
                 spec &= new ProductNameSpec(
-                    ProductName.Create(request.Name).ThrowIfFail());
+                    ProductName.Create(name).ThrowIfFail()));
 
-            if (request.MinPrice > 0 && request.MaxPrice > 0)
-                spec &= new ProductPriceRangeSpec(
-                    Money.Create(request.MinPrice).ThrowIfFail(),
-                    Money.Create(request.MaxPrice).ThrowIfFail());
+            // Bind().Map().Iter(): 두 Option이 모두 Some일 때만 범위 필터 추가
+            request.MinPrice.Bind(min => request.MaxPrice.Map(max => (min, max)))
+                .Iter(t => spec &= new ProductPriceRangeSpec(
+                    Money.Create(t.min).ThrowIfFail(),
+                    Money.Create(t.max).ThrowIfFail()));
 
             return spec;
-        }
-
-        private static SortExpression BuildSortExpression(Request request)
-        {
-            if (request.SortBy.Length == 0)
-                return SortExpression.Empty;
-
-            return SortExpression.By(request.SortBy, SortDirection.Parse(request.SortDirection));
         }
     }
 }

@@ -175,17 +175,21 @@ private static Specification<Product> BuildSpecification(Request request)
 {
     var spec = Specification<Product>.All;  // null 대신 All로 시작
 
-    if (request.Name.Length > 0)
-        spec &= new ProductNameSpec(ProductName.Create(request.Name).ThrowIfFail());
+    // Option<T>.Iter(): Some이면 필터 추가, None이면 무시
+    request.Name.Iter(name =>
+        spec &= new ProductNameSpec(ProductName.Create(name).ThrowIfFail()));
 
-    if (request.MinPrice > 0 && request.MaxPrice > 0)
-        spec &= new ProductPriceRangeSpec(
-            Money.Create(request.MinPrice).ThrowIfFail(),
-            Money.Create(request.MaxPrice).ThrowIfFail());
+    // Bind().Map().Iter(): 두 Option이 모두 Some일 때만 범위 필터 추가
+    request.MinPrice.Bind(min => request.MaxPrice.Map(max => (min, max)))
+        .Iter(t => spec &= new ProductPriceRangeSpec(
+            Money.Create(t.min).ThrowIfFail(),
+            Money.Create(t.max).ThrowIfFail()));
 
     return spec;  // 필터 없으면 All 그대로 반환 → 전체 조회
 }
 ```
+
+`Option<T>`와 `Iter()` 조합이 핵심입니다. `if (value.Length > 0)` 같은 원시 타입 기반 존재 여부 체크 대신, `Option<T>`로 **값의 유무를 타입 수준에서 표현**합니다. `Iter()`는 `Some`일 때만 액션을 실행하므로 필터 조합 코드가 선언적으로 바뀝니다. 두 필터가 쌍으로 존재해야 하는 경우 `Bind().Map().Iter()` 체인으로 **두 Option이 모두 Some일 때만** 실행하는 패턴을 사용합니다.
 
 `AllSpecification<T>`는 `ExpressionSpecification<T>`을 상속하므로 EfCore `PropertyMap` 번역도 정상 동작합니다 (`_ => true`).
 
@@ -476,49 +480,45 @@ public sealed class Usecase(IProductRepository productRepository)
 ### 복합 Spec 조합 — 검색 필터 (SearchProductsQuery)
 
 ```csharp
-public sealed class Usecase(IProductRepository productRepository)
+// 참조: samples/ecommerce-ddd/.../SearchProductsQuery.cs
+public sealed class Usecase(IProductQuery productQuery)
     : IQueryUsecase<Request, Response>
 {
-    private readonly IProductRepository _productRepository = productRepository;
+    private readonly IProductQuery _productQuery = productQuery;
 
     public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
     {
         var spec = BuildSpecification(request);
+        var pageRequest = new PageRequest(request.Page, request.PageSize);
+        var sortExpression = SortExpression.By(request.SortBy, SortDirection.Parse(request.SortDirection));
 
-        // spec이 null이면 필터 없음 → GetAll() 폴백
-        // (Specification<T>을 상속한 폴백 클래스는 ExpressionSpecification<T>이 아니므로
-        //  EfCore에서 NotSupportedException이 발생합니다)
         FinT<IO, Response> usecase =
-            from products in spec is not null
-                ? _productRepository.FindAll(spec)
-                : _productRepository.GetAll()
+            from result in _productQuery.Search(spec, pageRequest, sortExpression)
             select new Response(
-                products
-                    .Select(p => new ProductDto(p.Id.ToString(), p.Name, p.Price, p.StockQuantity))
-                    .ToSeq());
+                result.Items,
+                result.TotalCount,
+                result.Page,
+                result.PageSize,
+                result.TotalPages,
+                result.HasNextPage,
+                result.HasPreviousPage);
 
         Fin<Response> response = await usecase.Run().RunAsync();
         return response.ToFinResponse();
     }
 
-    private static Specification<Product>? BuildSpecification(Request request)
+    private static Specification<Product> BuildSpecification(Request request)
     {
-        Specification<Product>? spec = null;
+        var spec = Specification<Product>.All;
 
-        if (request.MinPrice.HasValue && request.MaxPrice.HasValue)
-        {
-            spec = new ProductPriceRangeSpec(
-                Money.Create(request.MinPrice.Value).ThrowIfFail(),
-                Money.Create(request.MaxPrice.Value).ThrowIfFail());
-        }
+        request.Name.Iter(name =>
+            spec &= new ProductNameSpec(
+                ProductName.Create(name).ThrowIfFail()));
 
-        if (request.LowStockThreshold.HasValue)
-        {
-            var lowStockSpec = new ProductLowStockSpec(
-                Quantity.Create(request.LowStockThreshold.Value).ThrowIfFail());
-
-            spec = spec is not null ? spec & lowStockSpec : lowStockSpec;
-        }
+        request.MinPrice.Bind(min => request.MaxPrice.Map(max => (min, max)))
+            .Iter(t => spec &= new ProductPriceRangeSpec(
+                Money.Create(t.min).ThrowIfFail(),
+                Money.Create(t.max).ThrowIfFail()));
 
         return spec;
     }
@@ -526,11 +526,10 @@ public sealed class Usecase(IProductRepository productRepository)
 ```
 
 **포인트:**
-- `BuildSpecification`에서 선택적 필터를 `&` 연산자로 점진적 조합
-- 필터가 없으면 `null` 반환 → Usecase에서 `GetAll()` 폴백
-- `AllProductsSpec` 같은 비-Expression 폴백 클래스는 EfCore에서 `NotSupportedException`이 발생하므로 사용 금지
-
-> **권장**: `null` 폴백 대신 `Specification<T>.All`을 초기값으로 사용하면 null 체크 없이 코드가 단순해집니다. `All`은 `ExpressionSpecification<T>`을 상속하므로 EfCore에서도 정상 동작합니다. 상세는 [§`Specification<T>.All` (항등원)](#specificationtall-항등원)을 참조하세요.
+- `Specification<T>.All`을 초기값으로 사용하여 null 체크 없이 `&` 연산자로 점진적 조합
+- `Option<T>.Iter()`: Some일 때만 필터 추가, None이면 무시 — 원시 타입 기반 `if` 체크 불필요
+- `Bind().Map().Iter()`: 두 Option이 모두 Some일 때만 범위 필터 추가
+- 필터가 없으면 `All` 그대로 반환 → 전체 조회. `All`은 `ExpressionSpecification<T>`을 상속하므로 EfCore에서도 정상 동작합니다
 
 ---
 

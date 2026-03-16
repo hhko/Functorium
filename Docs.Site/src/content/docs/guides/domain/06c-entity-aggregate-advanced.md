@@ -631,18 +631,59 @@ catch (DbUpdateConcurrencyException ex)
 Value Object 속성, Entity 참조, 도메인 이벤트를 모두 포함하는 완전한 예제입니다.
 
 ```csharp
+// 참조: samples/ecommerce-ddd/.../OrderStatus.cs, Order.cs
 using Functorium.Domains.Entities;
 using Functorium.Domains.Events;
+using Functorium.Domains.Errors;
 using static Functorium.Domains.Errors.DomainErrorType;
+using static LanguageExt.Prelude;
 
-// Order Aggregate Root
+// OrderStatus: SimpleValueObject<string> 기반 Smart Enum + 상태 전이 규칙
+public sealed class OrderStatus : SimpleValueObject<string>
+{
+    public sealed record InvalidValue : DomainErrorType.Custom;
+
+    public static readonly OrderStatus Pending = new("Pending");
+    public static readonly OrderStatus Confirmed = new("Confirmed");
+    public static readonly OrderStatus Shipped = new("Shipped");
+    public static readonly OrderStatus Delivered = new("Delivered");
+    public static readonly OrderStatus Cancelled = new("Cancelled");
+
+    private static readonly HashMap<string, OrderStatus> All = HashMap(
+        ("Pending", Pending), ("Confirmed", Confirmed), ("Shipped", Shipped),
+        ("Delivered", Delivered), ("Cancelled", Cancelled));
+
+    // 허용된 전이를 데이터로 선언 — 메서드별 하드코딩 제거
+    private static readonly HashMap<string, Seq<string>> AllowedTransitions = HashMap(
+        ("Pending", Seq("Confirmed", "Cancelled")),
+        ("Confirmed", Seq("Shipped", "Cancelled")),
+        ("Shipped", Seq("Delivered")));
+
+    private OrderStatus(string value) : base(value) { }
+
+    public static Fin<OrderStatus> Create(string value) =>
+        Validate(value).ToFin();
+
+    public static Validation<Error, OrderStatus> Validate(string value) =>
+        All.Find(value)
+            .ToValidation(DomainError.For<OrderStatus>(
+                new InvalidValue(),
+                currentValue: value,
+                message: $"Invalid order status: '{value}'"));
+
+    public bool CanTransitionTo(OrderStatus target) =>
+        AllowedTransitions.Find(Value)
+            .Map(allowed => allowed.Any(v => v == target.Value))
+            .IfNone(false);
+}
+
+// Order Aggregate Root — 중앙화된 TransitionTo() 패턴
 [GenerateEntityId]
 public class Order : AggregateRoot<OrderId>, IAuditableWithUser
 {
     #region Error Types
 
-    public sealed record InvalidStatus : DomainErrorType.Custom;
-    public sealed record CannotCancel : DomainErrorType.Custom;
+    public sealed record InvalidOrderStatusTransition : DomainErrorType.Custom;
 
     #endregion
 
@@ -650,7 +691,7 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
 
     public sealed record CreatedEvent(OrderId OrderId, CustomerId CustomerId, Money TotalAmount) : DomainEvent;
     public sealed record ConfirmedEvent(OrderId OrderId) : DomainEvent;
-    public sealed record CancelledEvent(OrderId OrderId, string Reason) : DomainEvent;
+    public sealed record CancelledEvent(OrderId OrderId) : DomainEvent;
 
     #endregion
 
@@ -663,7 +704,7 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
     // 다른 Entity 참조 (EntityId)
     public CustomerId CustomerId { get; private set; }
 
-    // 상태
+    // 상태 — OrderStatus는 SimpleValueObject<string> 기반 Smart Enum
     public OrderStatus Status { get; private set; }
 
     // 감사 정보
@@ -735,50 +776,43 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
         };
     }
 
-    // 도메인 연산: 주문 확정
-    public Fin<Unit> Confirm(string updatedBy)
-    {
-        if (Status != OrderStatus.Pending)
-            return DomainError.For<Order>(
-                new InvalidStatus(),
-                Status.ToString(),
-                "Order can only be confirmed when pending");
+    // 도메인 연산: 각 메서드가 TransitionTo()에 위임
+    public Fin<Unit> Confirm(string updatedBy) =>
+        TransitionTo(OrderStatus.Confirmed, new ConfirmedEvent(Id), updatedBy);
 
-        Status = OrderStatus.Confirmed;
-        UpdatedAt = DateTime.UtcNow;
-        UpdatedBy = updatedBy;
-        AddDomainEvent(new ConfirmedEvent(Id));
-        return unit;
-    }
+    public Fin<Unit> Cancel(string updatedBy) =>
+        TransitionTo(OrderStatus.Cancelled, new CancelledEvent(Id), updatedBy);
 
-    // 도메인 연산: 주문 취소
-    public Fin<Unit> Cancel(string reason, string updatedBy)
-    {
-        if (Status == OrderStatus.Shipped || Status == OrderStatus.Delivered)
-            return DomainError.For<Order>(
-                new CannotCancel(),
-                Status.ToString(),
-                "Cannot cancel shipped or delivered orders");
-
-        Status = OrderStatus.Cancelled;
-        UpdatedAt = DateTime.UtcNow;
-        UpdatedBy = updatedBy;
-        AddDomainEvent(new CancelledEvent(Id, reason));
-        return unit;
-    }
-
-    // 도메인 연산: 배송지 변경 - Value Object를 직접 받음
+    // 배송지 변경 — 상태 전이가 아닌 불변식 체크는 CanTransitionTo()와 별개
     public Fin<Unit> UpdateShippingAddress(Address newAddress, string updatedBy)
     {
         if (Status != OrderStatus.Pending)
-            return DomainError.For<Order>(
-                new InvalidStatus(),
-                Status.ToString(),
-                "Shipping address can only be changed for pending orders");
+            return DomainError.For<Order, string, string>(
+                new InvalidOrderStatusTransition(),
+                value1: Status,
+                value2: "UpdateShippingAddress",
+                message: "Shipping address can only be changed for pending orders");
 
         ShippingAddress = newAddress;
         UpdatedAt = DateTime.UtcNow;
         UpdatedBy = updatedBy;
+        return unit;
+    }
+
+    // 중앙화된 상태 전이 — 전이 규칙은 OrderStatus.CanTransitionTo()에 위임
+    private Fin<Unit> TransitionTo(OrderStatus target, DomainEvent domainEvent, string updatedBy)
+    {
+        if (!Status.CanTransitionTo(target))
+            return DomainError.For<Order, string, string>(
+                new InvalidOrderStatusTransition(),
+                value1: Status,
+                value2: target,
+                message: $"Cannot transition from '{Status}' to '{target}'");
+
+        Status = target;
+        UpdatedAt = DateTime.UtcNow;
+        UpdatedBy = updatedBy;
+        AddDomainEvent(domainEvent);
         return unit;
     }
 
@@ -794,16 +828,6 @@ public class Order : AggregateRoot<OrderId>, IAuditableWithUser
         var total = _items.Sum(i => (decimal)i.UnitPrice * (int)i.Quantity);
         TotalAmount = Money.CreateFromValidated(total, TotalAmount.Currency);
     }
-}
-
-// 주문 상태
-public enum OrderStatus
-{
-    Pending,
-    Confirmed,
-    Shipped,
-    Delivered,
-    Cancelled
 }
 ```
 

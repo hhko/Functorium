@@ -193,11 +193,13 @@ public class Order : AggregateRoot<OrderId>
 {
     #region Error Types
 
-    public sealed record InvalidStatus : DomainErrorType.Custom;
+    // 상태 전이 위반 에러 타입
+    public sealed record InvalidOrderStatusTransition : DomainErrorType.Custom;
 
     #endregion
 
     public Money TotalAmount { get; private set; }
+    // OrderStatus: SimpleValueObject<string> 기반 Smart Enum (상세: §6c 실전 예제)
     public OrderStatus Status { get; private set; }
 
 #pragma warning disable CS8618
@@ -219,16 +221,20 @@ public class Order : AggregateRoot<OrderId>
         return order;
     }
 
-    public Fin<Unit> Confirm()
-    {
-        if (Status != OrderStatus.Pending)
-            return DomainError.For<Order>(
-                new InvalidStatus(),
-                Status.ToString(),
-                "Order can only be confirmed when pending");
+    // 상태 전이 — TransitionTo()에 위임하여 전이 규칙을 중앙화
+    public Fin<Unit> Confirm() => TransitionTo(OrderStatus.Confirmed, new OrderConfirmedEvent(Id));
 
-        Status = OrderStatus.Confirmed;
-        AddDomainEvent(new OrderConfirmedEvent(Id));
+    private Fin<Unit> TransitionTo(OrderStatus target, DomainEvent domainEvent)
+    {
+        if (!Status.CanTransitionTo(target))
+            return DomainError.For<Order, string, string>(
+                new InvalidOrderStatusTransition(),
+                value1: Status,
+                value2: target,
+                message: $"Cannot transition from '{Status}' to '{target}'");
+
+        Status = target;
+        AddDomainEvent(domainEvent);
         return unit;
     }
 }

@@ -572,13 +572,88 @@ public static ValidationResultSummary ValidateAllClasses(
 
 `DomainArchitectureTestSuite`와 `ApplicationArchitectureTestSuite`는 도메인/Application 레이어의 아키텍처 규칙을 사전 정의된 테스트 집합으로 제공합니다. 상속하여 `Architecture`와 네임스페이스만 지정하면 21+4개의 아키텍처 테스트가 자동 적용됩니다.
 
+#### ArchitectureTestBase 설정
+
+`ArchLoader`로 검사 대상 어셈블리를 로드하고, 공유 상수로 네임스페이스를 정의합니다:
+
 ```csharp
-public class MyDomainArchTests : DomainArchitectureTestSuite
+// 참조: samples/ecommerce-ddd/.../ArchitectureTestBase.cs
+using ArchUnitNET.Loader;
+
+internal static class ArchitectureTestBase
 {
-    protected override Architecture Architecture => /* ... */;
-    protected override string DomainNamespace => "MyApp.Domain";
+    internal static readonly ArchUnitNET.Domain.Architecture Architecture =
+        new ArchLoader()
+            .LoadAssemblies(
+                typeof(Functorium.Domains.Specifications.Specification<>).Assembly,
+                ECommerce.Domain.AssemblyReference.Assembly,
+                ECommerce.Application.AssemblyReference.Assembly)
+            .Build();
+
+    internal static readonly string DomainNamespace =
+        typeof(ECommerce.Domain.AssemblyReference).Namespace!;
+    internal static readonly string ApplicationNamespace =
+        typeof(ECommerce.Application.AssemblyReference).Namespace!;
 }
 ```
+
+#### DomainArchitectureRuleTests
+
+```csharp
+// 참조: samples/ecommerce-ddd/.../DomainArchitectureRuleTests.cs
+using Functorium.Testing.Assertions.ArchitectureRules.Suites;
+
+public sealed class DomainArchitectureRuleTests : DomainArchitectureTestSuite
+{
+    protected override ArchUnitNET.Domain.Architecture Architecture => ArchitectureTestBase.Architecture;
+    protected override string DomainNamespace => ArchitectureTestBase.DomainNamespace;
+}
+```
+
+#### ApplicationArchitectureRuleTests
+
+```csharp
+// 참조: samples/ecommerce-ddd/.../ApplicationArchitectureRuleTests.cs
+using Functorium.Testing.Assertions.ArchitectureRules.Suites;
+
+public sealed class ApplicationArchitectureRuleTests : ApplicationArchitectureTestSuite
+{
+    protected override ArchUnitNET.Domain.Architecture Architecture => ArchitectureTestBase.Architecture;
+    protected override string ApplicationNamespace => ArchitectureTestBase.ApplicationNamespace;
+}
+```
+
+#### 커스터마이징: override 가능 속성
+
+특정 도메인 구조에 맞게 테스트 스위트를 조정할 수 있습니다:
+
+```csharp
+// 참조: samples/designing-with-types/.../DomainArchitectureRuleTests.cs
+public sealed class DomainArchitectureRuleTests : DomainArchitectureTestSuite
+{
+    private static readonly ArchUnitNET.Domain.Architecture s_architecture = new ArchLoader()
+        .LoadAssemblies(
+            typeof(Functorium.Domains.Specifications.Specification<>).Assembly,
+            DesigningWithTypes.AssemblyReference.Assembly)
+        .Build();
+
+    protected override ArchUnitNET.Domain.Architecture Architecture => s_architecture;
+    protected override string DomainNamespace =>
+        typeof(DesigningWithTypes.AssemblyReference).Namespace!;
+
+    // Union VO는 Create/Validate 팩토리 패턴 불필요 → 검사에서 제외
+    protected override IReadOnlyList<Type> ValueObjectExcludeFromFactoryMethods =>
+        [typeof(UnionValueObject)];
+
+    // DomainService가 Repository 필드를 가질 수 있도록 허용
+    protected override string[] DomainServiceAllowedFieldTypes => ["Repository"];
+}
+```
+
+| override 속성 | 기본값 | 용도 |
+|---|---|---|
+| `ValueObjectExcludeFromFactoryMethods` | `[]` | Create/Validate 팩토리 검사에서 제외할 VO 타입. Union VO처럼 팩토리 없이 직접 생성하는 타입에 사용 |
+| `DomainServiceAllowedFieldTypes` | `[]` | DomainService 필드 타입 허용 목록. Repository를 주입받는 DomainService에 사용 |
 
 **DomainArchitectureTestSuite (21개 테스트):**
 AggregateRoot, Entity, ValueObject, DomainEvent, Specification, DomainService에 대한 아키텍처 규칙을 자동 검증합니다.
