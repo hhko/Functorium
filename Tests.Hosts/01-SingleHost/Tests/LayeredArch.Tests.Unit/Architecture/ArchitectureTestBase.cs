@@ -2,9 +2,9 @@ using ArchUnitNET.Loader;
 
 namespace LayeredArch.Tests.Unit.Architecture;
 
-public abstract class ArchitectureTestBase
+internal static class ArchitectureTestBase
 {
-    protected static readonly ArchUnitNET.Domain.Architecture Architecture =
+    internal static readonly ArchUnitNET.Domain.Architecture Architecture =
         new ArchLoader()
             .LoadAssemblies(
                 typeof(Functorium.Domains.Specifications.Specification<>).Assembly,
@@ -16,14 +16,14 @@ public abstract class ArchitectureTestBase
                 LayeredArch.Adapters.Infrastructure.AssemblyReference.Assembly)
             .Build();
 
-    protected static readonly string DomainNamespace =
+    internal static readonly string DomainNamespace =
         typeof(LayeredArch.Domain.AssemblyReference).Namespace!;
-    protected static readonly string ApplicationNamespace =
+    internal static readonly string ApplicationNamespace =
         typeof(LayeredArch.Application.AssemblyReference).Namespace!;
-    protected static readonly string PersistenceNamespace =
+    internal static readonly string PersistenceNamespace =
         typeof(LayeredArch.Adapters.Persistence.AssemblyReference).Namespace!;
-    protected static readonly string PresentationNamespace =
+    internal static readonly string PresentationNamespace =
         typeof(LayeredArch.Adapters.Presentation.AssemblyReference).Namespace!;
-    protected static readonly string InfrastructureNamespace =
+    internal static readonly string InfrastructureNamespace =
         typeof(LayeredArch.Adapters.Infrastructure.AssemblyReference).Namespace!;
 }

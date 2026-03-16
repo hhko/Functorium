@@ -6,7 +6,7 @@ namespace LayeredArch.Tests.Unit.Architecture;
 /// <summary>
 /// CQRS 패턴 준수 검증: Query 유스케이스가 IRepository에 의존하지 않도록 강제.
 /// </summary>
-public sealed class CqrsArchitectureRuleTests : ArchitectureTestBase
+public sealed class CqrsArchitectureRuleTests
 {
     [Fact]
     public void QueryUsecase_ShouldNotDependOn_IRepository()
@@ -18,6 +18,6 @@ public sealed class CqrsArchitectureRuleTests : ArchitectureTestBase
             .HaveFullNameContaining("Query+Usecase")
             .Should().NotDependOnAnyTypesThat()
             .HaveNameEndingWith("Repository")
-            .Check(Architecture);
+            .Check(ArchitectureTestBase.Architecture);
     }
 }

@@ -3,16 +3,16 @@ using Functorium.Testing.Assertions.ArchitectureRules;
 
 namespace LayeredArch.Tests.Unit.Architecture;
 
-public sealed class DtoArchitectureRuleTests : ArchitectureTestBase
+public sealed class DtoArchitectureRuleTests
 {
     [Fact]
     public void PersistenceMapper_ShouldBe_InternalStaticWithMethods()
     {
         ArchRuleDefinition.Classes()
             .That()
-            .ResideInNamespace(PersistenceNamespace)
+            .ResideInNamespace(ArchitectureTestBase.PersistenceNamespace)
             .And().HaveNameContaining("Mapper")
-            .ValidateAllClasses(Architecture, @class => @class
+            .ValidateAllClasses(ArchitectureTestBase.Architecture, @class => @class
                 .RequireInternal()
                 .RequireStatic()
                 .RequireMethod("ToModel", m => m.RequireStatic().RequireExtensionMethod())
@@ -26,9 +26,9 @@ public sealed class DtoArchitectureRuleTests : ArchitectureTestBase
     {
         ArchRuleDefinition.Classes()
             .That()
-            .ResideInNamespace(PersistenceNamespace)
+            .ResideInNamespace(ArchitectureTestBase.PersistenceNamespace)
             .And().HaveNameEndingWith("Model")
-            .ValidateAllClasses(Architecture, @class => @class
+            .ValidateAllClasses(ArchitectureTestBase.Architecture, @class => @class
                 .RequirePublic()
                 .RequireNotSealed()
                 .RequireOnlyPrimitiveProperties(),
@@ -61,16 +61,16 @@ public sealed class DtoArchitectureRuleTests : ArchitectureTestBase
 
         ArchRuleDefinition.Classes()
             .That()
-            .ResideInNamespace($"{ApplicationNamespace}.Usecases")
+            .ResideInNamespace($"{ArchitectureTestBase.ApplicationNamespace}.Usecases")
             .And().HaveNameEndingWith("Command")
-            .ValidateAllClasses(Architecture, commandRule, verbose: true)
+            .ValidateAllClasses(ArchitectureTestBase.Architecture, commandRule, verbose: true)
             .ThrowIfAnyFailures("Application Command DTO Rule");
 
         ArchRuleDefinition.Classes()
             .That()
-            .ResideInNamespace($"{ApplicationNamespace}.Usecases")
+            .ResideInNamespace($"{ArchitectureTestBase.ApplicationNamespace}.Usecases")
             .And().HaveNameEndingWith("Query")
-            .ValidateAllClasses(Architecture, queryRule, verbose: true)
+            .ValidateAllClasses(ArchitectureTestBase.Architecture, queryRule, verbose: true)
             .ThrowIfAnyFailures("Application Query DTO Rule");
     }
 
@@ -79,9 +79,9 @@ public sealed class DtoArchitectureRuleTests : ArchitectureTestBase
     {
         ArchRuleDefinition.Classes()
             .That()
-            .ResideInNamespace(ApplicationNamespace)
+            .ResideInNamespace(ArchitectureTestBase.ApplicationNamespace)
             .And().HaveFullNameContaining(".Dtos.")
-            .ValidateAllClasses(Architecture, @class => @class
+            .ValidateAllClasses(ArchitectureTestBase.Architecture, @class => @class
                 .RequireSealed()
                 .RequireRecord()
                 .RequireOnlyPrimitiveProperties(),
@@ -94,9 +94,9 @@ public sealed class DtoArchitectureRuleTests : ArchitectureTestBase
     {
         ArchRuleDefinition.Classes()
             .That()
-            .ResideInNamespace($"{PresentationNamespace}.Endpoints")
+            .ResideInNamespace($"{ArchitectureTestBase.PresentationNamespace}.Endpoints")
             .And().HaveNameEndingWith("Endpoint")
-            .ValidateAllClasses(Architecture, @class => @class
+            .ValidateAllClasses(ArchitectureTestBase.Architecture, @class => @class
                 .RequireSealed()
                 .RequireNestedClassIfExists("Request", nested => nested
                     .RequireSealed().RequireRecord()

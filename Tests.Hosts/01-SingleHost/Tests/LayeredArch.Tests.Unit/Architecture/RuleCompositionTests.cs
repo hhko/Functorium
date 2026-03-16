@@ -10,7 +10,7 @@ namespace LayeredArch.Tests.Unit.Architecture;
 /// <summary>
 /// DelegateArchRule과 CompositeArchRule을 활용한 커스텀 규칙 합성 테스트입니다.
 /// </summary>
-public sealed class RuleCompositionTests : ArchitectureTestBase
+public sealed class RuleCompositionTests
 {
     // --- DelegateArchRule: 람다 기반 커스텀 규칙 ---
 
@@ -69,10 +69,10 @@ public sealed class RuleCompositionTests : ArchitectureTestBase
     {
         ArchRuleDefinition.Classes()
             .That()
-            .ResideInNamespace(DomainNamespace)
+            .ResideInNamespace(ArchitectureTestBase.DomainNamespace)
             .And().AreAssignableTo(typeof(Entity<>))
             .And().AreNotAbstract()
-            .ValidateAllClasses(Architecture, @class => @class
+            .ValidateAllClasses(ArchitectureTestBase.Architecture, @class => @class
                 .Apply(s_domainNamingRule),
                 verbose: true)
             .ThrowIfAnyFailures("Entity Domain Naming Convention Rule");
@@ -83,10 +83,10 @@ public sealed class RuleCompositionTests : ArchitectureTestBase
     {
         ArchRuleDefinition.Classes()
             .That()
-            .ResideInNamespace(DomainNamespace)
+            .ResideInNamespace(ArchitectureTestBase.DomainNamespace)
             .And().AreAssignableTo(typeof(Entity<>))
             .And().AreNotAbstract()
-            .ValidateAllClasses(Architecture, @class => @class
+            .ValidateAllClasses(ArchitectureTestBase.Architecture, @class => @class
                 .Apply(s_noInfrastructureDependencyRule),
                 verbose: true)
             .ThrowIfAnyFailures("Entity No Infrastructure Dependency Rule");
@@ -97,10 +97,10 @@ public sealed class RuleCompositionTests : ArchitectureTestBase
     {
         ArchRuleDefinition.Classes()
             .That()
-            .ResideInNamespace(DomainNamespace)
+            .ResideInNamespace(ArchitectureTestBase.DomainNamespace)
             .And().ImplementInterface(typeof(IValueObject))
             .And().AreNotAbstract()
-            .ValidateAllClasses(Architecture, @class => @class
+            .ValidateAllClasses(ArchitectureTestBase.Architecture, @class => @class
                 .Apply(s_valueObjectCoreRule),
                 verbose: true)
             .ThrowIfAnyFailures("ValueObject Composite Core Rule");

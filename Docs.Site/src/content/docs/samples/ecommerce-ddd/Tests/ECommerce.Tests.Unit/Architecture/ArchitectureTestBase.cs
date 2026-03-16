@@ -2,9 +2,9 @@ using ArchUnitNET.Loader;
 
 namespace ECommerce.Tests.Unit.Architecture;
 
-public abstract class ArchitectureTestBase
+internal static class ArchitectureTestBase
 {
-    protected static readonly ArchUnitNET.Domain.Architecture Architecture =
+    internal static readonly ArchUnitNET.Domain.Architecture Architecture =
         new ArchLoader()
             .LoadAssemblies(
                 typeof(Functorium.Domains.Specifications.Specification<>).Assembly,
@@ -12,8 +12,8 @@ public abstract class ArchitectureTestBase
                 ECommerce.Application.AssemblyReference.Assembly)
             .Build();
 
-    protected static readonly string DomainNamespace =
+    internal static readonly string DomainNamespace =
         typeof(ECommerce.Domain.AssemblyReference).Namespace!;
-    protected static readonly string ApplicationNamespace =
+    internal static readonly string ApplicationNamespace =
         typeof(ECommerce.Application.AssemblyReference).Namespace!;
 }

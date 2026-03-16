@@ -4,7 +4,7 @@ using Functorium.Testing.Assertions.ArchitectureRules;
 
 namespace LayeredArch.Tests.Unit.Architecture;
 
-public sealed class AdapterArchitectureRuleTests : ArchitectureTestBase
+public sealed class AdapterArchitectureRuleTests
 {
     [Fact]
     public void Adapter_ShouldHave_VirtualMethods()
@@ -14,7 +14,7 @@ public sealed class AdapterArchitectureRuleTests : ArchitectureTestBase
             .ImplementInterface(typeof(IObservablePort))
             .And().AreNotAbstract()
             .And().DoNotHaveNameEndingWith("Observable")
-            .ValidateAllClasses(Architecture, @class => @class
+            .ValidateAllClasses(ArchitectureTestBase.Architecture, @class => @class
                 .RequireAllMethods(method => method
                     .RequireVirtual()),
                 verbose: true)
@@ -29,7 +29,7 @@ public sealed class AdapterArchitectureRuleTests : ArchitectureTestBase
             .ImplementInterface(typeof(IObservablePort))
             .And().AreNotAbstract()
             .And().DoNotHaveNameEndingWith("Observable")
-            .ValidateAllClasses(Architecture, @class => @class
+            .ValidateAllClasses(ArchitectureTestBase.Architecture, @class => @class
                 .RequireProperty("RequestCategory"),
                 verbose: true)
             .ThrowIfAnyFailures("Adapter RequestCategory Property Rule");
@@ -43,7 +43,7 @@ public sealed class AdapterArchitectureRuleTests : ArchitectureTestBase
             .ImplementInterface(typeof(IObservablePort))
             .And().AreNotAbstract()
             .And().DoNotHaveNameEndingWith("Observable")
-            .ValidateAllClasses(Architecture, @class => @class
+            .ValidateAllClasses(ArchitectureTestBase.Architecture, @class => @class
                 .RequireAttribute("GenerateObservablePort"),
                 verbose: true)
             .ThrowIfAnyFailures("Adapter GenerateObservablePort Attribute Rule");
@@ -57,7 +57,7 @@ public sealed class AdapterArchitectureRuleTests : ArchitectureTestBase
             .ImplementInterface(typeof(IObservablePort))
             .And().AreNotAbstract()
             .And().DoNotHaveNameEndingWith("Observable")
-            .ValidateAllClasses(Architecture, @class => @class
+            .ValidateAllClasses(ArchitectureTestBase.Architecture, @class => @class
                 .RequireNotSealed(),
                 verbose: true)
             .ThrowIfAnyFailures("Adapter Not Sealed Rule");

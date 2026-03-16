@@ -4,16 +4,16 @@ using static ArchUnitNET.Fluent.ArchRuleDefinition;
 
 namespace ECommerce.Tests.Unit.Architecture;
 
-public sealed class LayerDependencyArchitectureRuleTests : ArchitectureTestBase
+public sealed class LayerDependencyArchitectureRuleTests
 {
     [Fact]
     public void DomainLayer_ShouldNotDependOn_ApplicationLayer()
     {
         Types()
             .That()
-            .ResideInNamespace(DomainNamespace)
+            .ResideInNamespace(ArchitectureTestBase.DomainNamespace)
             .Should().NotDependOnAnyTypesThat()
-            .ResideInNamespace(ApplicationNamespace)
-            .Check(Architecture);
+            .ResideInNamespace(ArchitectureTestBase.ApplicationNamespace)
+            .Check(ArchitectureTestBase.Architecture);
     }
 }

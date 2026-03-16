@@ -4,17 +4,17 @@ using static ArchUnitNET.Fluent.ArchRuleDefinition;
 
 namespace LayeredArch.Tests.Unit.Architecture;
 
-public sealed class LayerDependencyArchitectureRuleTests : ArchitectureTestBase
+public sealed class LayerDependencyArchitectureRuleTests
 {
     [Fact]
     public void DomainLayer_ShouldNotDependOn_ApplicationLayer()
     {
         Types()
             .That()
-            .ResideInNamespace(DomainNamespace)
+            .ResideInNamespace(ArchitectureTestBase.DomainNamespace)
             .Should().NotDependOnAnyTypesThat()
-            .ResideInNamespace(ApplicationNamespace)
-            .Check(Architecture);
+            .ResideInNamespace(ArchitectureTestBase.ApplicationNamespace)
+            .Check(ArchitectureTestBase.Architecture);
     }
 
     [Fact]
@@ -22,14 +22,14 @@ public sealed class LayerDependencyArchitectureRuleTests : ArchitectureTestBase
     {
         Types()
             .That()
-            .ResideInNamespace(DomainNamespace)
+            .ResideInNamespace(ArchitectureTestBase.DomainNamespace)
             .Should().NotDependOnAnyTypesThat()
-            .ResideInNamespace(PersistenceNamespace)
+            .ResideInNamespace(ArchitectureTestBase.PersistenceNamespace)
             .OrShould().NotDependOnAnyTypesThat()
-            .ResideInNamespace(InfrastructureNamespace)
+            .ResideInNamespace(ArchitectureTestBase.InfrastructureNamespace)
             .OrShould().NotDependOnAnyTypesThat()
-            .ResideInNamespace(PresentationNamespace)
-            .Check(Architecture);
+            .ResideInNamespace(ArchitectureTestBase.PresentationNamespace)
+            .Check(ArchitectureTestBase.Architecture);
     }
 
     [Fact]
@@ -37,14 +37,14 @@ public sealed class LayerDependencyArchitectureRuleTests : ArchitectureTestBase
     {
         Types()
             .That()
-            .ResideInNamespace(ApplicationNamespace)
+            .ResideInNamespace(ArchitectureTestBase.ApplicationNamespace)
             .Should().NotDependOnAnyTypesThat()
-            .ResideInNamespace(PersistenceNamespace)
+            .ResideInNamespace(ArchitectureTestBase.PersistenceNamespace)
             .OrShould().NotDependOnAnyTypesThat()
-            .ResideInNamespace(InfrastructureNamespace)
+            .ResideInNamespace(ArchitectureTestBase.InfrastructureNamespace)
             .OrShould().NotDependOnAnyTypesThat()
-            .ResideInNamespace(PresentationNamespace)
-            .Check(Architecture);
+            .ResideInNamespace(ArchitectureTestBase.PresentationNamespace)
+            .Check(ArchitectureTestBase.Architecture);
     }
 
     [Fact]
@@ -52,12 +52,12 @@ public sealed class LayerDependencyArchitectureRuleTests : ArchitectureTestBase
     {
         Types()
             .That()
-            .ResideInNamespace(PresentationNamespace)
+            .ResideInNamespace(ArchitectureTestBase.PresentationNamespace)
             .Should().NotDependOnAnyTypesThat()
-            .ResideInNamespace(PersistenceNamespace)
+            .ResideInNamespace(ArchitectureTestBase.PersistenceNamespace)
             .OrShould().NotDependOnAnyTypesThat()
-            .ResideInNamespace(InfrastructureNamespace)
-            .Check(Architecture);
+            .ResideInNamespace(ArchitectureTestBase.InfrastructureNamespace)
+            .Check(ArchitectureTestBase.Architecture);
     }
 
     [Fact]
@@ -65,12 +65,12 @@ public sealed class LayerDependencyArchitectureRuleTests : ArchitectureTestBase
     {
         Types()
             .That()
-            .ResideInNamespace(PersistenceNamespace)
+            .ResideInNamespace(ArchitectureTestBase.PersistenceNamespace)
             .Should().NotDependOnAnyTypesThat()
-            .ResideInNamespace(PresentationNamespace)
+            .ResideInNamespace(ArchitectureTestBase.PresentationNamespace)
             .OrShould().NotDependOnAnyTypesThat()
-            .ResideInNamespace(InfrastructureNamespace)
-            .Check(Architecture);
+            .ResideInNamespace(ArchitectureTestBase.InfrastructureNamespace)
+            .Check(ArchitectureTestBase.Architecture);
     }
 
     [Fact]
@@ -78,11 +78,11 @@ public sealed class LayerDependencyArchitectureRuleTests : ArchitectureTestBase
     {
         Types()
             .That()
-            .ResideInNamespace(InfrastructureNamespace)
+            .ResideInNamespace(ArchitectureTestBase.InfrastructureNamespace)
             .Should().NotDependOnAnyTypesThat()
-            .ResideInNamespace(PresentationNamespace)
+            .ResideInNamespace(ArchitectureTestBase.PresentationNamespace)
             .OrShould().NotDependOnAnyTypesThat()
-            .ResideInNamespace(PersistenceNamespace)
-            .Check(Architecture);
+            .ResideInNamespace(ArchitectureTestBase.PersistenceNamespace)
+            .Check(ArchitectureTestBase.Architecture);
     }
 }

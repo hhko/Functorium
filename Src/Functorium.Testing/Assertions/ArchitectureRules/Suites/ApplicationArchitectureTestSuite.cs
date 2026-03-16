@@ -1,10 +1,13 @@
+using ArchUnitNET.Domain;
 using ArchUnitNET.Fluent;
-using Functorium.Testing.Assertions.ArchitectureRules;
 
-namespace LayeredArch.Tests.Unit.Architecture;
+namespace Functorium.Testing.Assertions.ArchitectureRules.Suites;
 
-public sealed class UsecaseArchitectureRuleTests : ArchitectureTestBase
+public abstract class ApplicationArchitectureTestSuite
 {
+    protected abstract Architecture Architecture { get; }
+    protected abstract string ApplicationNamespace { get; }
+
     [Fact]
     public void Command_ShouldHave_ValidatorNestedClass()
     {
