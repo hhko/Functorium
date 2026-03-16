@@ -69,9 +69,7 @@ public sealed class CreateOrderWithCreditCheckCommand
                     .GreaterThan(0).WithMessage("Order quantity must be greater than 0");
             });
 
-            RuleFor(x => x.ShippingAddress)
-                .NotEmpty().WithMessage("Shipping address is required")
-                .MaximumLength(ShippingAddress.MaxLength).WithMessage($"Shipping address must not exceed {ShippingAddress.MaxLength} characters");
+            RuleFor(x => x.ShippingAddress).MustSatisfyValidation(ShippingAddress.Validate);
         }
     }
 

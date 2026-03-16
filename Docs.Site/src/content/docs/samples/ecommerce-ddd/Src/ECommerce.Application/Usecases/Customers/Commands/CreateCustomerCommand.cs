@@ -38,16 +38,9 @@ public sealed class CreateCustomerCommand
     {
         public Validator()
         {
-            RuleFor(x => x.Name)
-                .NotEmpty().WithMessage("Customer name is required")
-                .MaximumLength(CustomerName.MaxLength).WithMessage($"Customer name must not exceed {CustomerName.MaxLength} characters");
-
-            RuleFor(x => x.Email)
-                .NotEmpty().WithMessage("Email is required")
-                .MaximumLength(Email.MaxLength).WithMessage($"Email must not exceed {Email.MaxLength} characters");
-
-            RuleFor(x => x.CreditLimit)
-                .GreaterThan(0).WithMessage("Credit limit must be greater than 0");
+            RuleFor(x => x.Name).MustSatisfyValidation(CustomerName.Validate);
+            RuleFor(x => x.Email).MustSatisfyValidation(Email.Validate);
+            RuleFor(x => x.CreditLimit).MustSatisfyValidation(Money.Validate);
         }
     }
 
