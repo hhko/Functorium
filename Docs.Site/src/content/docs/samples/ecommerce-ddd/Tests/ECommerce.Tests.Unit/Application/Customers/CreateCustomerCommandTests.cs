@@ -5,6 +5,52 @@ using ECommerce.Domain.AggregateRoots.Customers.ValueObjects;
 
 namespace ECommerce.Tests.Unit.Application.Customers;
 
+public class CreateCustomerCommandValidatorTests
+{
+    private readonly CreateCustomerCommand.Validator _sut = new();
+
+    [Fact]
+    public void Validate_ReturnsNoError_WhenRequestIsValid()
+    {
+        // Arrange
+        var request = new CreateCustomerCommand.Request("John", "john@example.com", 5000m);
+
+        // Act
+        var actual = _sut.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Validate_ReturnsValidationError_WhenNameIsEmpty()
+    {
+        // Arrange
+        var request = new CreateCustomerCommand.Request("", "john@example.com", 5000m);
+
+        // Act
+        var actual = _sut.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeFalse();
+        actual.Errors.ShouldContain(e => e.PropertyName == "Name");
+    }
+
+    [Fact]
+    public void Validate_ReturnsValidationError_WhenEmailIsInvalid()
+    {
+        // Arrange
+        var request = new CreateCustomerCommand.Request("John", "invalid-email", 5000m);
+
+        // Act
+        var actual = _sut.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeFalse();
+        actual.Errors.ShouldContain(e => e.PropertyName == "Email");
+    }
+}
+
 public class CreateCustomerCommandTests
 {
     private readonly ICustomerRepository _customerRepository = Substitute.For<ICustomerRepository>();
@@ -33,32 +79,6 @@ public class CreateCustomerCommandTests
         actual.IsSucc.ShouldBeTrue();
         actual.ThrowIfFail().Name.ShouldBe("John");
         actual.ThrowIfFail().Email.ShouldBe("john@example.com");
-    }
-
-    [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenNameIsEmpty()
-    {
-        // Arrange
-        var request = new CreateCustomerCommand.Request("", "john@example.com", 5000m);
-
-        // Act
-        var actual = await _sut.Handle(request, CancellationToken.None);
-
-        // Assert
-        actual.IsSucc.ShouldBeFalse();
-    }
-
-    [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenEmailIsInvalid()
-    {
-        // Arrange
-        var request = new CreateCustomerCommand.Request("John", "invalid-email", 5000m);
-
-        // Act
-        var actual = await _sut.Handle(request, CancellationToken.None);
-
-        // Assert
-        actual.IsSucc.ShouldBeFalse();
     }
 
     [Fact]

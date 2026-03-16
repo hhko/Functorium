@@ -7,6 +7,44 @@ using ECommerce.Domain.SharedModels.ValueObjects;
 
 namespace ECommerce.Tests.Unit.Application.Orders;
 
+public class CreateOrderCommandValidatorTests
+{
+    private readonly CreateOrderCommand.Validator _sut = new();
+
+    [Fact]
+    public void Validate_ReturnsNoError_WhenRequestIsValid()
+    {
+        // Arrange
+        var request = new CreateOrderCommand.Request(
+            CustomerId.New().ToString(),
+            Seq(new CreateOrderCommand.OrderLineRequest(ProductId.New().ToString(), 2)),
+            "Seoul, Korea");
+
+        // Act
+        var actual = _sut.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Validate_ReturnsValidationError_WhenShippingAddressIsEmpty()
+    {
+        // Arrange
+        var request = new CreateOrderCommand.Request(
+            CustomerId.New().ToString(),
+            Seq(new CreateOrderCommand.OrderLineRequest(ProductId.New().ToString(), 2)),
+            "");
+
+        // Act
+        var actual = _sut.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeFalse();
+        actual.Errors.ShouldContain(e => e.PropertyName == "ShippingAddress");
+    }
+}
+
 public class CreateOrderCommandTests
 {
     private readonly IOrderRepository _orderRepository = Substitute.For<IOrderRepository>();
@@ -59,22 +97,6 @@ public class CreateOrderCommandTests
 
         _productCatalog.GetPricesForProducts(Arg.Any<IReadOnlyList<ProductId>>())
             .Returns(FinTFactory.Succ(LanguageExt.Seq<(ProductId Id, Money Price)>.Empty));
-
-        // Act
-        var actual = await _sut.Handle(request, CancellationToken.None);
-
-        // Assert
-        actual.IsSucc.ShouldBeFalse();
-    }
-
-    [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenShippingAddressIsEmpty()
-    {
-        // Arrange
-        var request = new CreateOrderCommand.Request(
-            CustomerId.New().ToString(),
-            Seq(new CreateOrderCommand.OrderLineRequest(ProductId.New().ToString(), 2)),
-            "");
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

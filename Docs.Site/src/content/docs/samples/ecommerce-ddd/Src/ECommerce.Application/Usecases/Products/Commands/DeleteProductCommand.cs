@@ -30,10 +30,7 @@ public sealed class DeleteProductCommand
     {
         public Validator()
         {
-            RuleFor(x => x.ProductId)
-                .NotEmpty()
-                .Must(id => ProductId.TryParse(id, null, out _))
-                .WithMessage("Invalid product ID format");
+            RuleFor(x => x.ProductId).MustBeEntityId<Request, ProductId>();
 
             RuleFor(x => x.DeletedBy)
                 .NotEmpty()

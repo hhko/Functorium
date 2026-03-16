@@ -5,6 +5,38 @@ using ECommerce.Domain.SharedModels.ValueObjects;
 
 namespace ECommerce.Tests.Unit.Application.Products;
 
+public class DeductStockCommandValidatorTests
+{
+    private readonly DeductStockCommand.Validator _sut = new();
+
+    [Fact]
+    public void Validate_ReturnsNoError_WhenRequestIsValid()
+    {
+        // Arrange
+        var request = new DeductStockCommand.Request(ProductId.New().ToString(), 3);
+
+        // Act
+        var actual = _sut.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Validate_ReturnsValidationError_WhenQuantityIsInvalid()
+    {
+        // Arrange
+        var request = new DeductStockCommand.Request(ProductId.New().ToString(), -1);
+
+        // Act
+        var actual = _sut.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeFalse();
+        actual.Errors.ShouldContain(e => e.PropertyName == "Quantity");
+    }
+}
+
 public class DeductStockCommandTests
 {
     private readonly IInventoryRepository _inventoryRepository = Substitute.For<IInventoryRepository>();
@@ -67,19 +99,6 @@ public class DeductStockCommandTests
 
         _inventoryRepository.GetByProductId(Arg.Any<ProductId>())
             .Returns(FinTFactory.Fail<Inventory>(Error.New("Inventory not found")));
-
-        // Act
-        var actual = await _sut.Handle(request, CancellationToken.None);
-
-        // Assert
-        actual.IsSucc.ShouldBeFalse();
-    }
-
-    [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenQuantityIsInvalid()
-    {
-        // Arrange -- 수량 -1은 VO 생성에 실패하여 조기 반환됨
-        var request = new DeductStockCommand.Request(ProductId.New().ToString(), -1);
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

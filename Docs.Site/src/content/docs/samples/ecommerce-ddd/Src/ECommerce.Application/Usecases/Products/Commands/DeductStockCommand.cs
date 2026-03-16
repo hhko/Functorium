@@ -31,10 +31,7 @@ public sealed class DeductStockCommand
     {
         public Validator()
         {
-            RuleFor(x => x.ProductId)
-                .NotEmpty()
-                .Must(id => ProductId.TryParse(id, null, out _))
-                .WithMessage("Invalid product ID format");
+            RuleFor(x => x.ProductId).MustBeEntityId<Request, ProductId>();
 
             RuleFor(x => x.Quantity)
                 .GreaterThan(0).WithMessage("Deduction quantity must be greater than 0");
@@ -53,16 +50,7 @@ public sealed class DeductStockCommand
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var productId = ProductId.Create(request.ProductId);
-            var quantityResult = Quantity.Create(request.Quantity);
-
-            if (quantityResult.IsFail)
-            {
-                return quantityResult.Match(
-                    Succ: _ => throw new InvalidOperationException(),
-                    Fail: error => FinResponse.Fail<Response>(error));
-            }
-
-            var quantity = (Quantity)quantityResult;
+            var quantity = Quantity.Create(request.Quantity).ThrowIfFail();
 
             FinT<IO, Response> usecase =
                 from inventory in _inventoryRepository.GetByProductId(productId)

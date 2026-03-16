@@ -5,6 +5,40 @@ using ECommerce.Domain.SharedModels.ValueObjects;
 
 namespace ECommerce.Tests.Unit.Application.Products;
 
+public class UpdateProductCommandValidatorTests
+{
+    private readonly UpdateProductCommand.Validator _sut = new();
+
+    [Fact]
+    public void Validate_ReturnsNoError_WhenRequestIsValid()
+    {
+        // Arrange
+        var request = new UpdateProductCommand.Request(
+            ProductId.New().ToString(), "Updated Product", "Desc", 200m);
+
+        // Act
+        var actual = _sut.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Validate_ReturnsValidationError_WhenNameIsEmpty()
+    {
+        // Arrange
+        var request = new UpdateProductCommand.Request(
+            ProductId.New().ToString(), "", "Desc", 200m);
+
+        // Act
+        var actual = _sut.Validate(request);
+
+        // Assert
+        actual.IsValid.ShouldBeFalse();
+        actual.Errors.ShouldContain(e => e.PropertyName == "Name");
+    }
+}
+
 public class UpdateProductCommandTests
 {
     private readonly IProductRepository _productRepository = Substitute.For<IProductRepository>();
@@ -76,20 +110,6 @@ public class UpdateProductCommandTests
             .Returns(FinTFactory.Succ(existingProduct));
         _productRepository.Exists(Arg.Any<Specification<Product>>())
             .Returns(FinTFactory.Succ(true));
-
-        // Act
-        var actual = await _sut.Handle(request, CancellationToken.None);
-
-        // Assert
-        actual.IsSucc.ShouldBeFalse();
-    }
-
-    [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenVOIsInvalid()
-    {
-        // Arrange
-        var request = new UpdateProductCommand.Request(
-            ProductId.New().ToString(), "", "Desc", 200m);
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);
