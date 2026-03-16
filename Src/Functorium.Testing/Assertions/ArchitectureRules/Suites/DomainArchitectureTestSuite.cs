@@ -22,6 +22,11 @@ public abstract class DomainArchitectureTestSuite
 
     // --- Entity (7) ---
 
+    /// <summary>
+    /// AggregateRoot는 public sealed 클래스여야 합니다.
+    /// sealed로 강제하여 상속을 통한 불변식 우회를 방지하고,
+    /// public으로 노출하여 Application 레이어에서 접근 가능하게 합니다.
+    /// </summary>
     [Fact]
     public void AggregateRoot_ShouldBe_PublicSealedClass()
     {
@@ -38,6 +43,10 @@ public abstract class DomainArchitectureTestSuite
             .ThrowIfAnyFailures("AggregateRoot Visibility Rule");
     }
 
+    /// <summary>
+    /// AggregateRoot는 Create/CreateFromValidated 정적 팩토리 메서드를 가져야 합니다.
+    /// 생성자 직접 호출을 차단하고 유효성 검증을 거친 생성만 허용합니다.
+    /// </summary>
     [Fact]
     public void AggregateRoot_ShouldHave_CreateAndCreateFromValidated()
     {
@@ -59,6 +68,10 @@ public abstract class DomainArchitectureTestSuite
             .ThrowIfAnyFailures("AggregateRoot Factory Method Rule");
     }
 
+    /// <summary>
+    /// AggregateRoot는 [GenerateEntityId] 어트리뷰트를 가져야 합니다.
+    /// Source Generator가 강타입 ID를 자동 생성하도록 보장합니다.
+    /// </summary>
     [Fact]
     public void AggregateRoot_ShouldHave_GenerateEntityIdAttribute()
     {
@@ -73,6 +86,10 @@ public abstract class DomainArchitectureTestSuite
             .ThrowIfAnyFailures("AggregateRoot GenerateEntityId Attribute Rule");
     }
 
+    /// <summary>
+    /// AggregateRoot의 모든 생성자는 private이어야 합니다.
+    /// 팩토리 메서드를 통한 생성만 허용하여 불변식을 보장합니다.
+    /// </summary>
     [Fact]
     public void AggregateRoot_ShouldHave_AllPrivateConstructors()
     {
@@ -87,6 +104,11 @@ public abstract class DomainArchitectureTestSuite
             .ThrowIfAnyFailures("AggregateRoot Private Constructors Rule");
     }
 
+    /// <summary>
+    /// AggregateRoot가 아닌 Entity도 public sealed 클래스여야 합니다.
+    /// sealed로 상속을 통한 불변식 우회를 방지하고,
+    /// public으로 Application 레이어에서 접근 가능하게 합니다.
+    /// </summary>
     [Fact]
     public void Entity_ShouldBe_PublicSealedClass()
     {
@@ -104,6 +126,10 @@ public abstract class DomainArchitectureTestSuite
             .ThrowIfAnyFailures("Entity Visibility Rule");
     }
 
+    /// <summary>
+    /// Entity는 Create/CreateFromValidated 정적 팩토리 메서드를 가져야 합니다.
+    /// 생성자 직접 호출을 차단하고 유효성 검증을 거친 생성만 허용합니다.
+    /// </summary>
     [Fact]
     public void Entity_ShouldHave_CreateAndCreateFromValidated()
     {
@@ -126,6 +152,10 @@ public abstract class DomainArchitectureTestSuite
             .ThrowIfAnyFailures("Entity Factory Method Rule");
     }
 
+    /// <summary>
+    /// Entity의 모든 생성자는 private이어야 합니다.
+    /// 팩토리 메서드를 통한 생성만 허용하여 불변식을 보장합니다.
+    /// </summary>
     [Fact]
     public void Entity_ShouldHave_AllPrivateConstructors()
     {
@@ -143,6 +173,10 @@ public abstract class DomainArchitectureTestSuite
 
     // --- ValueObject (4) ---
 
+    /// <summary>
+    /// ValueObject는 public sealed 클래스이고 모든 생성자가 private이어야 합니다.
+    /// 동등성 의미론을 보호하고 팩토리 메서드를 통한 생성만 허용합니다.
+    /// </summary>
     [Fact]
     public void ValueObject_ShouldBe_PublicSealedWithPrivateConstructors()
     {
@@ -159,6 +193,10 @@ public abstract class DomainArchitectureTestSuite
             .ThrowIfAnyFailures("ValueObject Visibility Rule");
     }
 
+    /// <summary>
+    /// ValueObject는 불변이어야 합니다.
+    /// 값의 동등성이 생성 후 변경되지 않도록 보장합니다.
+    /// </summary>
     [Fact]
     public void ValueObject_ShouldBe_Immutable()
     {
@@ -173,6 +211,10 @@ public abstract class DomainArchitectureTestSuite
             .ThrowIfAnyFailures("ValueObject Immutability Rule");
     }
 
+    /// <summary>
+    /// ValueObject는 Create 정적 팩토리 메서드가 Fin&lt;T&gt;를 반환해야 합니다.
+    /// 실패 가능한 생성을 타입으로 표현합니다.
+    /// </summary>
     [Fact]
     public void ValueObject_ShouldHave_CreateFactoryMethod()
     {
@@ -195,6 +237,10 @@ public abstract class DomainArchitectureTestSuite
             .ThrowIfAnyFailures("ValueObject Create Method Rule");
     }
 
+    /// <summary>
+    /// ValueObject는 Validate 정적 메서드가 Validation&lt;Error, T&gt;를 반환해야 합니다.
+    /// 여러 유효성 오류를 누적 수집할 수 있게 합니다.
+    /// </summary>
     [Fact]
     public void ValueObject_ShouldHave_ValidateMethod()
     {
@@ -219,6 +265,11 @@ public abstract class DomainArchitectureTestSuite
 
     // --- DomainEvent (2) ---
 
+    /// <summary>
+    /// DomainEvent는 sealed record여야 합니다.
+    /// 값 의미론과 불변성을 record로 보장하고,
+    /// sealed로 이벤트 계약 변경을 방지합니다.
+    /// </summary>
     [Fact]
     public void DomainEvent_ShouldBe_SealedRecord()
     {
@@ -233,6 +284,10 @@ public abstract class DomainArchitectureTestSuite
             .ThrowIfAnyFailures("DomainEvent Sealed Record Rule");
     }
 
+    /// <summary>
+    /// DomainEvent 클래스명은 "Event" 접미사를 가져야 합니다.
+    /// 유비쿼터스 언어에서 이벤트임을 명확히 식별합니다.
+    /// </summary>
     [Fact]
     public void DomainEvent_ShouldHave_EventSuffix()
     {
@@ -248,6 +303,10 @@ public abstract class DomainArchitectureTestSuite
 
     // --- Specification (3) ---
 
+    /// <summary>
+    /// Specification은 public sealed 클래스여야 합니다.
+    /// 비즈니스 규칙의 캡슐화를 보장합니다.
+    /// </summary>
     [Fact]
     public void Specification_ShouldBe_PublicSealed()
     {
@@ -263,6 +322,10 @@ public abstract class DomainArchitectureTestSuite
             .ThrowIfAnyFailures("Specification Visibility Rule");
     }
 
+    /// <summary>
+    /// Specification은 Specification&lt;T&gt; 베이스 클래스를 상속해야 합니다.
+    /// And/Or/Not 합성 연산 지원을 보장합니다.
+    /// </summary>
     [Fact]
     public void Specification_ShouldInherit_SpecificationBase()
     {
@@ -277,6 +340,10 @@ public abstract class DomainArchitectureTestSuite
             .ThrowIfAnyFailures("Specification Inheritance Rule");
     }
 
+    /// <summary>
+    /// Specification은 도메인 레이어에만 위치해야 합니다.
+    /// 비즈니스 규칙이 도메인 외부로 유출되지 않도록 강제합니다.
+    /// </summary>
     [Fact]
     public void Specification_ShouldResideIn_DomainLayer()
     {
@@ -291,6 +358,9 @@ public abstract class DomainArchitectureTestSuite
 
     // --- DomainService (5) ---
 
+    /// <summary>
+    /// DomainService는 public sealed 클래스여야 합니다.
+    /// </summary>
     [Fact]
     public void DomainService_ShouldBe_PublicSealed()
     {
@@ -305,6 +375,10 @@ public abstract class DomainArchitectureTestSuite
             .ThrowIfAnyFailures("DomainService Visibility Rule");
     }
 
+    /// <summary>
+    /// DomainService는 인스턴스 필드를 갖지 않아야 합니다(허용 타입 제외).
+    /// 상태 없는 순수 도메인 로직만 포함하도록 강제합니다.
+    /// </summary>
     [Fact]
     public void DomainService_ShouldBe_Stateless()
     {
@@ -318,6 +392,10 @@ public abstract class DomainArchitectureTestSuite
             .ThrowIfAnyFailures("DomainService Stateless Rule");
     }
 
+    /// <summary>
+    /// DomainService는 IObservablePort에 의존하면 안 됩니다.
+    /// 관측 관심사를 도메인 로직에서 분리합니다.
+    /// </summary>
     [Fact]
     public void DomainService_ShouldNotDependOn_IObservablePort()
     {
@@ -331,6 +409,10 @@ public abstract class DomainArchitectureTestSuite
             .ThrowIfAnyFailures("DomainService No IObservablePort Dependency Rule");
     }
 
+    /// <summary>
+    /// DomainService의 public 인스턴스 메서드는 Fin&lt;T&gt;를 반환해야 합니다.
+    /// 실패 가능성을 타입으로 명시합니다.
+    /// </summary>
     [Fact]
     public void DomainService_PublicMethods_ShouldReturn_Fin()
     {
@@ -348,6 +430,10 @@ public abstract class DomainArchitectureTestSuite
             .ThrowIfAnyFailures("DomainService Public Methods Return Fin Rule");
     }
 
+    /// <summary>
+    /// DomainService는 record가 아니어야 합니다.
+    /// 값 의미론이 아닌 행위 중심 객체임을 명확히 구분합니다.
+    /// </summary>
     [Fact]
     public void DomainService_ShouldNotBe_Record()
     {
