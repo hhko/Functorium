@@ -1,4 +1,3 @@
-using ECommerce.Application.Usecases.Orders.Ports;
 using ECommerce.Domain.AggregateRoots.Orders;
 
 namespace ECommerce.Application.Usecases.Orders.Queries;

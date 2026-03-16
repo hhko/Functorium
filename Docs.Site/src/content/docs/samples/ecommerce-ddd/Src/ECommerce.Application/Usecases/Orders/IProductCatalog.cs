@@ -1,7 +1,7 @@
 using Functorium.Domains.Observabilities;
 using ECommerce.Domain.AggregateRoots.Products;
 
-namespace ECommerce.Application.Usecases.Orders.Ports;
+namespace ECommerce.Application.Usecases.Orders;
 
 /// <summary>
 /// 교차 Aggregate 상품 카탈로그 Port

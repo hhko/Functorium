@@ -1,5 +1,4 @@
 using Functorium.Applications.Queries;
-using ECommerce.Application.Usecases.Orders.Ports;
 using ECommerce.Domain.AggregateRoots.Orders;
 
 namespace ECommerce.Application.Usecases.Orders.Queries;

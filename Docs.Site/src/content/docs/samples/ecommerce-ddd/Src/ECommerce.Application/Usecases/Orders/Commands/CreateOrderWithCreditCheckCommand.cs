@@ -6,7 +6,6 @@ using Functorium.Applications.Linq;
 using Functorium.Applications.Errors;
 using static Functorium.Applications.Errors.ApplicationErrorType;
 using ECommerce.Domain.SharedModels.Services;
-using ECommerce.Application.Usecases.Orders.Ports;
 
 namespace ECommerce.Application.Usecases.Orders.Commands;
 

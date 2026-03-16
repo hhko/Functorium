@@ -5,7 +5,6 @@ using ECommerce.Domain.AggregateRoots.Products;
 using Functorium.Applications.Errors;
 using Functorium.Applications.Linq;
 using static Functorium.Applications.Errors.ApplicationErrorType;
-using ECommerce.Application.Usecases.Orders.Ports;
 
 namespace ECommerce.Application.Usecases.Orders.Commands;
 

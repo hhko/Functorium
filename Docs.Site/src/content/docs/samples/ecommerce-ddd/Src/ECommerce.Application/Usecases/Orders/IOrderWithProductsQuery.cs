@@ -1,7 +1,7 @@
 using Functorium.Applications.Queries;
 using ECommerce.Domain.AggregateRoots.Orders;
 
-namespace ECommerce.Application.Usecases.Orders.Ports;
+namespace ECommerce.Application.Usecases.Orders;
 
 /// <summary>
 /// Order + OrderLine + Product 3-table JOIN 읽기 전용 어댑터 포트.
