@@ -136,9 +136,9 @@ public sealed class GetProductByIdQuery
 public sealed class SearchProductsQuery
 {
     public sealed record Request(
-        string Name = "",
-        decimal MinPrice = 0,
-        decimal MaxPrice = 0,
+        Option<string> Name = default,
+        Option<decimal> MinPrice = default,
+        Option<decimal> MaxPrice = default,
         int Page = 1,
         int PageSize = PageRequest.DefaultPageSize,
         string SortBy = "",
@@ -417,7 +417,7 @@ public sealed class Validator : AbstractValidator<Request>
 }
 ```
 
-**SearchProductsQuery.Validator** -- 조건부 검증:
+**SearchProductsQuery.Validator** -- Option&lt;T&gt; 선택적 필드 검증:
 
 ```csharp
 public sealed class Validator : AbstractValidator<Request>
@@ -425,22 +425,18 @@ public sealed class Validator : AbstractValidator<Request>
     public Validator()
     {
         RuleFor(x => x.Name)
-            .MustSatisfyValidation(ProductName.Validate)
-            .When(x => x.Name.Length > 0);
+            .MustSatisfyValidation(ProductName.Validate);
 
-        RuleFor(x => x.MinPrice)
-            .MustSatisfyValidation(Money.Validate)
-            .When(x => x.MinPrice > 0);
+        this.MustBePairedRange(
+            x => x.MinPrice,
+            x => x.MaxPrice,
+            Money.Validate,
+            inclusive: true);
 
-        RuleFor(x => x.MaxPrice)
-            .GreaterThanOrEqualTo(x => x.MinPrice)
-            .When(x => x.MinPrice > 0 && x.MaxPrice > 0)
-            .WithMessage("MaxPrice must be greater than or equal to MinPrice");
+        RuleFor(x => x.SortBy).MustBeOneOf(AllowedSortFields);
 
-        RuleFor(x => x.SortBy)
-            .Must(sortBy => AllowedSortFields.Contains(sortBy, StringComparer.OrdinalIgnoreCase))
-            .When(x => x.SortBy.Length > 0)
-            .WithMessage($"SortBy must be one of: {string.Join(", ", AllowedSortFields)}");
+        RuleFor(x => x.SortDirection)
+            .MustBeEnumValue<Request, SortDirection>();
     }
 }
 ```
@@ -450,8 +446,9 @@ Validator 검증 전략 요약:
 | 검증 방식 | 사용 시점 | 예 |
 |---|---|---|
 | `MustSatisfyValidation(VO.Validate)` | VO 검증 규칙을 그대로 재사용 | ProductName, Money, Quantity |
+| `MustSatisfyValidation` (Option 오버로드) | Option&lt;T&gt; 선택적 필드 (None → 스킵) | SearchProductsQuery의 Name |
+| `MustBePairedRange` | 반드시 함께 제공되는 쌍 범위 필터 | MinPrice/MaxPrice |
 | `Must(id => XxxId.TryParse(...))` | ID 형식 검증 | ProductId, CustomerId |
-| `.When(x => x.Field.Length > 0)` | 선택적 필드 조건부 검증 | SearchProductsQuery의 Name, MinPrice |
 | `RuleForEach(...).ChildRules(...)` | 컬렉션 항목별 검증 | OrderLines의 ProductId, Quantity |
 | `MustBeEnumValue<T, TEnum>()` | 문자열 → Enum 변환 검증 | SortDirection |
 
