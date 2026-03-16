@@ -157,13 +157,13 @@ FinResponse<A>                            Discriminated Union
 ```
 Pipeline                    TResponse 제약 조건                      능력
 ──────────────────────────  ─────────────────────────────────────    ────────────
-Validation Pipeline         IFinResponseFactory<TResponse>           CreateFail
-Exception Pipeline          IFinResponseFactory<TResponse>           CreateFail
-Logging Pipeline            IFinResponse, IFinResponseFactory<...>   Read + Create
-Tracing Pipeline            IFinResponse, IFinResponseFactory<...>   Read + Create
 Metrics Pipeline            IFinResponse, IFinResponseFactory<...>   Read + Create
-Transaction Pipeline        IFinResponse, IFinResponseFactory<...>   Read + Create
+Tracing Pipeline            IFinResponse, IFinResponseFactory<...>   Read + Create
+Logging Pipeline            IFinResponse, IFinResponseFactory<...>   Read + Create
+Validation Pipeline         IFinResponseFactory<TResponse>           CreateFail
 Caching Pipeline            IFinResponse, IFinResponseFactory<...>   Read + Create
+Exception Pipeline          IFinResponseFactory<TResponse>           CreateFail
+Transaction Pipeline        IFinResponse, IFinResponseFactory<...>   Read + Create
 ```
 
 ---
@@ -180,7 +180,7 @@ Caching Pipeline            IFinResponse, IFinResponseFactory<...>   Read + Crea
 ## 프로젝트 구조
 
 ```
-Designing-TypeSafe-Usecase-Pipeline-Constraints/
+usecase-pipeline/
 ├── Part0-Introduction/                        # Part 0: 서론 (3개)
 ├── Part1-Generic-Variance-Foundations/         # Part 1: 제네릭 변성 기초 (4개)
 │   ├── 01-Covariance/
@@ -215,22 +215,13 @@ Designing-TypeSafe-Usecase-Pipeline-Constraints/
 
 ## 테스트
 
-모든 Part의 예제 프로젝트에는 단위 테스트가 포함되어 있습니다. 테스트는 [15a-unit-testing.md](../../Docs/guides/15a-unit-testing.md) 가이드를 따릅니다.
+모든 Part의 예제 프로젝트에는 단위 테스트가 포함되어 있습니다. 테스트는 [단위 테스트 가이드](../../guides/testing/15a-unit-testing.md)를 따릅니다.
 
 ### 테스트 실행 방법
 
 ```bash
-# Part 1 테스트 실행
-cd Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part1-Generic-Variance-Foundations/01-Covariance/Covariance.Tests.Unit
-dotnet test
-
-# Part 3 테스트 실행
-cd Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part3-IFinResponse-Hierarchy/01-IFinResponse-Marker/FinResponseMarker.Tests.Unit
-dotnet test
-
-# Part 4 테스트 실행
-cd Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part4-Pipeline-Constraint-Patterns/01-Create-Only-Constraint/CreateOnlyConstraint.Tests.Unit
-dotnet test
+# 전체 튜토리얼 테스트
+dotnet test --solution usecase-pipeline.slnx
 ```
 
 ### 테스트 명명 규칙
@@ -264,13 +255,13 @@ public void Assign_Succeeds_WhenCovarianceApplies()
 - 정적 팩토리: `Src/Functorium/Applications/Usecases/IFinResponse.Factory.cs`
 - Fin→FinResponse 변환: `Src/Functorium/Applications/Usecases/IFinResponse.FinConversions.cs`
 - Command/Query 인터페이스: `Src/Functorium/Applications/Usecases/ICommandRequest.cs`, `IQueryRequest.cs`
-- Pipeline 구현: `Src/Functorium/Adapters/Observabilities/Pipelines/`
+- Pipeline 구현: `Src/Functorium.Adapters/Observabilities/Pipelines/`
 
 ### 관련 튜토리얼
 
 이 튜토리얼은 다음 튜토리얼과 함께 학습하면 더 효과적입니다:
 
-- **[CQRS 패턴으로 Command와 Query 분리하기](../Implementing-CQRS-Repository-And-Query-Patterns/)**: CQRS 패턴 기초부터 Usecase 통합까지. 이 튜토리얼의 Pipeline 제약이 적용되는 CQRS 아키텍처를 학습합니다.
+- **[CQRS 패턴으로 Command와 Query 분리하기](../cqrs-repository/)**: CQRS 패턴 기초부터 Usecase 통합까지. 이 튜토리얼의 Pipeline 제약이 적용되는 CQRS 아키텍처를 학습합니다.
 
 ---
 

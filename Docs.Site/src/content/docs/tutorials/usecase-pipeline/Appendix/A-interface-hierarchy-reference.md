@@ -134,12 +134,20 @@ public sealed record Fail(Error Error) : FinResponse<A>, IFinResponseWithError
 | 메서드 | 시그니처 | 설명 |
 |--------|----------|------|
 | `Match` | `B Match<B>(Func<A, B> Succ, Func<Error, B> Fail)` | 성공/실패 분기 처리 |
+| `Match` (void) | `void Match(Action<A> Succ, Action<Error> Fail)` | 성공/실패 분기 실행 (반환 없음) |
 | `Map` | `FinResponse<B> Map<B>(Func<A, B> f)` | 성공 값 변환 |
+| `MapFail` | `FinResponse<A> MapFail(Func<Error, Error> f)` | 실패 에러 변환 |
+| `BiMap` | `FinResponse<B> BiMap<B>(Func<A, B> Succ, Func<Error, Error> Fail)` | 성공/실패 모두 변환 |
 | `Bind` | `FinResponse<B> Bind<B>(Func<A, FinResponse<B>> f)` | 모나딕 바인드 |
+| `BiBind` | `FinResponse<B> BiBind<B>(Func<A, FinResponse<B>> Succ, Func<Error, FinResponse<B>> Fail)` | 양방향 모나딕 바인드 |
+| `BindFail` | `FinResponse<A> BindFail(Func<Error, FinResponse<A>> Fail)` | 실패 트랙 바인드 |
 | `Select` | `FinResponse<B> Select<B>(Func<A, B> f)` | LINQ select 지원 |
 | `SelectMany` | `FinResponse<C> SelectMany<B, C>(...)` | LINQ from/select 지원 |
 | `ThrowIfFail` | `A ThrowIfFail()` | 실패 시 예외, 성공 시 값 반환 |
-| `IfFail` | `A IfFail(A alternative)` | 실패 시 대체 값 반환 |
+| `IfFail` (값) | `A IfFail(A alternative)` | 실패 시 대체 값 반환 |
+| `IfFail` (Func) | `A IfFail(Func<Error, A> Fail)` | 실패 시 함수로 대체 값 생성 |
+| `IfFail` (Action) | `void IfFail(Action<Error> Fail)` | 실패 시 부수 효과 실행 |
+| `IfSucc` | `void IfSucc(Action<A> Succ)` | 성공 시 부수 효과 실행 |
 | `CreateFail` | `static FinResponse<A> CreateFail(Error error)` | CRTP 팩토리 구현 |
 
 ### 암시적 변환 연산자
@@ -152,12 +160,25 @@ public static implicit operator FinResponse<A>(A value) => new Succ(value);
 public static implicit operator FinResponse<A>(Error error) => new Fail(error);
 ```
 
+### Boolean 및 Choice 연산자
+
+```csharp
+// Boolean operators — if/else 패턴 매칭 지원
+public static bool operator true(FinResponse<A> ma) => ma.IsSucc;
+public static bool operator false(FinResponse<A> ma) => ma.IsFail;
+
+// Choice operator — 첫 번째 성공 값 선택
+public static FinResponse<A> operator |(FinResponse<A> lhs, FinResponse<A> rhs) =>
+    lhs.IsSucc ? lhs : rhs;
+```
+
 ### 정적 팩토리 (FinResponse 클래스)
 
 ```csharp
 public static class FinResponse
 {
     public static FinResponse<A> Succ<A>(A value) => new FinResponse<A>.Succ(value);
+    public static FinResponse<A> Succ<A>() where A : new() => new FinResponse<A>.Succ(new A());
     public static FinResponse<A> Fail<A>(Error error) => new FinResponse<A>.Fail(error);
 }
 ```
@@ -169,12 +190,12 @@ public static class FinResponse
 ```
 Pipeline                    TResponse 제약 조건                              능력
 ──────────────────────────  ───────────────────────────────────────────────  ────────────
-Validation Pipeline         IFinResponseFactory<TResponse>                   CreateFail
-Exception Pipeline          IFinResponseFactory<TResponse>                   CreateFail
-Logging Pipeline            IFinResponse, IFinResponseFactory<TResponse>     Read + Create
-Tracing Pipeline            IFinResponse, IFinResponseFactory<TResponse>     Read + Create
 Metrics Pipeline            IFinResponse, IFinResponseFactory<TResponse>     Read + Create
-Transaction Pipeline        IFinResponse, IFinResponseFactory<TResponse>     Read + Create
+Tracing Pipeline            IFinResponse, IFinResponseFactory<TResponse>     Read + Create
+Logging Pipeline            IFinResponse, IFinResponseFactory<TResponse>     Read + Create
+Validation Pipeline         IFinResponseFactory<TResponse>                   CreateFail
 Caching Pipeline            IFinResponse, IFinResponseFactory<TResponse>     Read + Create
+Exception Pipeline          IFinResponseFactory<TResponse>                   CreateFail
+Transaction Pipeline        IFinResponse, IFinResponseFactory<TResponse>     Read + Create
 ```
 

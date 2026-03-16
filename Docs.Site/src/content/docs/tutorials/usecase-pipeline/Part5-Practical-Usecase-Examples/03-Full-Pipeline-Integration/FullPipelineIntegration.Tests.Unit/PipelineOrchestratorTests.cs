@@ -73,6 +73,11 @@ public class PipelineOrchestratorTests
         actual.IsFail.ShouldBeTrue();
         sut.ExecutionLog.ShouldContain("Validation: FAIL");
         sut.ExecutionLog.ShouldNotContain("Handler: executed (IsSucc=True)");
+
+        // 외부 Pipeline(Metrics, Tracing, Logging)은 Validation 실패에도 기록됨
+        sut.ExecutionLog.ShouldContain("Metrics: Request count++");
+        sut.ExecutionLog.ShouldContain("Tracing: Activity started");
+        sut.ExecutionLog.ShouldContain("Logging: Request received");
     }
 
     [Fact]
@@ -105,9 +110,12 @@ public class PipelineOrchestratorTests
             handler: () => FinResponse.Succ("OK"));
 
         // Assert
-        sut.ExecutionLog.ShouldContain("Validation: PASS");
-        sut.ExecutionLog.ShouldContain("Logging: Request received");
+        sut.ExecutionLog.ShouldContain("Metrics: Request count++");
         sut.ExecutionLog.ShouldContain("Tracing: Activity started");
+        sut.ExecutionLog.ShouldContain("Logging: Request received");
+        sut.ExecutionLog.ShouldContain("Validation: PASS");
         sut.ExecutionLog.ShouldContain("Logging: Success");
+        sut.ExecutionLog.ShouldContain("Tracing: Activity completed (status=OK)");
+        sut.ExecutionLog.ShouldContain("Metrics: Response count++ (success=True)");
     }
 }

@@ -31,11 +31,11 @@ public abstract record FinResponse<A> : IFinResponse<A>, IFinResponseFactory<Fin
 
     [Pure] public FinResponse<B> Map<B>(Func<A, B> f) =>
         Match(
-            Succ: value => FinResponseFactory.Succ(f(value)),
-            Fail: FinResponseFactory.Fail<B>);
+            Succ: value => FinResponse.Succ(f(value)),
+            Fail: FinResponse.Fail<B>);
 
     [Pure] public FinResponse<B> Bind<B>(Func<A, FinResponse<B>> f) =>
-        Match(Succ: f, Fail: FinResponseFactory.Fail<B>);
+        Match(Succ: f, Fail: FinResponse.Fail<B>);
 
     // LINQ support
     [Pure] public FinResponse<B> Select<B>(Func<A, B> f) => Map(f);
@@ -55,7 +55,7 @@ public abstract record FinResponse<A> : IFinResponse<A>, IFinResponseFactory<Fin
 /// <summary>
 /// 정적 팩토리
 /// </summary>
-public static class FinResponseFactory
+public static class FinResponse
 {
     [Pure] public static FinResponse<A> Succ<A>(A value) => new FinResponse<A>.Succ(value);
     [Pure] public static FinResponse<A> Fail<A>(Error error) => new FinResponse<A>.Fail(error);

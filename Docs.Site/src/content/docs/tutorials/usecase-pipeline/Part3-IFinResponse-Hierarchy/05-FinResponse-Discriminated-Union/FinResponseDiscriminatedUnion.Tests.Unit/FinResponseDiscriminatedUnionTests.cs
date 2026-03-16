@@ -9,7 +9,7 @@ public class FinResponseDiscriminatedUnionTests
     public void Succ_ReturnsSucc_WhenValueProvided()
     {
         // Arrange & Act
-        FinResponse<string> actual = FinResponseFactory.Succ("Hello");
+        FinResponse<string> actual = FinResponse.Succ("Hello");
 
         // Assert
         actual.IsSucc.ShouldBeTrue();
@@ -20,7 +20,7 @@ public class FinResponseDiscriminatedUnionTests
     public void Fail_ReturnsFail_WhenErrorProvided()
     {
         // Arrange & Act
-        FinResponse<string> actual = FinResponseFactory.Fail<string>(Error.New("error"));
+        FinResponse<string> actual = FinResponse.Fail<string>(Error.New("error"));
 
         // Assert
         actual.IsFail.ShouldBeTrue();
@@ -31,7 +31,7 @@ public class FinResponseDiscriminatedUnionTests
     public void Match_ReturnsSuccValue_WhenSucc()
     {
         // Arrange
-        FinResponse<int> sut = FinResponseFactory.Succ(42);
+        FinResponse<int> sut = FinResponse.Succ(42);
 
         // Act
         var actual = sut.Match(Succ: v => v * 2, Fail: _ => 0);
@@ -44,7 +44,7 @@ public class FinResponseDiscriminatedUnionTests
     public void Map_TransformsValue_WhenSucc()
     {
         // Arrange
-        FinResponse<int> sut = FinResponseFactory.Succ(10);
+        FinResponse<int> sut = FinResponse.Succ(10);
 
         // Act
         var actual = sut.Map(v => v.ToString());
@@ -58,7 +58,7 @@ public class FinResponseDiscriminatedUnionTests
     public void Map_PropagatesFail_WhenFail()
     {
         // Arrange
-        FinResponse<int> sut = FinResponseFactory.Fail<int>(Error.New("error"));
+        FinResponse<int> sut = FinResponse.Fail<int>(Error.New("error"));
 
         // Act
         var actual = sut.Map(v => v.ToString());
@@ -71,11 +71,11 @@ public class FinResponseDiscriminatedUnionTests
     public void Bind_ChainsOperations_WhenSucc()
     {
         // Arrange
-        FinResponse<int> sut = FinResponseFactory.Succ(5);
+        FinResponse<int> sut = FinResponse.Succ(5);
 
         // Act
         var actual = sut.Bind(v =>
-            v > 0 ? FinResponseFactory.Succ(v * 2) : FinResponseFactory.Fail<int>(Error.New("negative")));
+            v > 0 ? FinResponse.Succ(v * 2) : FinResponse.Fail<int>(Error.New("negative")));
 
         // Assert
         actual.IsSucc.ShouldBeTrue();
@@ -116,7 +116,7 @@ public class FinResponseDiscriminatedUnionTests
     public void LinqSelect_TransformsValue_WhenSucc()
     {
         // Arrange
-        FinResponse<int> sut = FinResponseFactory.Succ(5);
+        FinResponse<int> sut = FinResponse.Succ(5);
 
         // Act
         var actual = from v in sut select v * 2;
@@ -129,8 +129,8 @@ public class FinResponseDiscriminatedUnionTests
     public void LinqSelectMany_ChainsOperations_WhenAllSucc()
     {
         // Arrange
-        FinResponse<int> a = FinResponseFactory.Succ(3);
-        FinResponse<int> b = FinResponseFactory.Succ(4);
+        FinResponse<int> a = FinResponse.Succ(3);
+        FinResponse<int> b = FinResponse.Succ(4);
 
         // Act
         var actual = from x in a
@@ -145,7 +145,7 @@ public class FinResponseDiscriminatedUnionTests
     public void FailImplementsIFinResponseWithError_WhenFail()
     {
         // Arrange
-        FinResponse<string> sut = FinResponseFactory.Fail<string>(Error.New("test error"));
+        FinResponse<string> sut = FinResponse.Fail<string>(Error.New("test error"));
 
         // Act & Assert
         (sut is IFinResponseWithError).ShouldBeTrue();
@@ -155,7 +155,7 @@ public class FinResponseDiscriminatedUnionTests
     public void SuccDoesNotImplementIFinResponseWithError_WhenSucc()
     {
         // Arrange
-        FinResponse<string> sut = FinResponseFactory.Succ("Hello");
+        FinResponse<string> sut = FinResponse.Succ("Hello");
 
         // Act & Assert
         (sut is IFinResponseWithError).ShouldBeFalse();

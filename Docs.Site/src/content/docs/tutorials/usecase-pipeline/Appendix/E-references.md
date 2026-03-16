@@ -102,7 +102,7 @@ C#을 위한 함수형 프로그래밍 라이브러리. `Fin<T>`, `Option<T>`, `
 
 | 파일 | 설명 |
 |------|------|
-| `Src/Functorium/Adapters/Observabilities/Pipelines/` | 7개 Pipeline 구현 디렉토리 |
+| `Src/Functorium.Adapters/Observabilities/Pipelines/` | 7개 기본 Pipeline + Custom Pipeline Base 구현 디렉토리 |
 
 ---
 
@@ -110,5 +110,5 @@ C#을 위한 함수형 프로그래밍 라이브러리. `Fin<T>`, `Option<T>`, `
 
 | 튜토리얼 | 위치 | 설명 |
 |------|------|------|
-| CQRS 패턴으로 Command와 Query 분리하기 | `Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/` | CQRS 패턴 기초부터 Usecase 통합까지 |
+| CQRS 패턴으로 Command와 Query 분리하기 | `Docs.Site/src/content/docs/tutorials/cqrs-repository/` | CQRS 패턴 기초부터 Usecase 통합까지 |
 

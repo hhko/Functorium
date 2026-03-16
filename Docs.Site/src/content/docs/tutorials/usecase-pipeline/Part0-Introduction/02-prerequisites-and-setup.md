@@ -30,17 +30,14 @@ title: "환경 설정"
 git clone https://github.com/hhko/Functorium.git
 cd Functorium
 
-# Part 1 빌드 (standalone)
-cd Docs/tutorials/Designing-TypeSafe-Usecase-Pipeline-Constraints/Part1-Generic-Variance-Foundations/01-Covariance/Covariance
-dotnet build
+# 튜토리얼 빌드
+dotnet build Docs.Site/src/content/docs/tutorials/usecase-pipeline/usecase-pipeline.slnx
 
-# Part 1 테스트
-cd ../Covariance.Tests.Unit
-dotnet test
+# 튜토리얼 테스트
+dotnet test --solution Docs.Site/src/content/docs/tutorials/usecase-pipeline/usecase-pipeline.slnx
 
 # 전체 솔루션 빌드
-cd /path/to/Functorium
-dotnet build Functorium.All.slnx
+dotnet build Functorium.slnx
 ```
 
 ## 프로젝트 구분
