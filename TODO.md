@@ -41,6 +41,8 @@ Functorium 프레임워크 제약
 - [x] application 레이어 도메인 유효성 반영
 - [x] application 레이어 도메인 유효성 entity id
 - [ ] ddd 예제 usecase 리뷰
+- [ ] 예제에 ddd 출처 명시
+- [ ] 예제에 hosts 출처 제거
 - [x] 아키텍처 테스트 가이드 개선
 ---
 - [ ] vo 복합 객체도 entity와 동일하게 외부에서 유효성 검사해야하는거 아닐까?
