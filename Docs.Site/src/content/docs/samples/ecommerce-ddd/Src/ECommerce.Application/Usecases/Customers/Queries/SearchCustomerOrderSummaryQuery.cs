@@ -35,8 +35,7 @@ public sealed class SearchCustomerOrderSummaryQuery
             RuleFor(x => x.SortBy).MustBeOneOf(AllowedSortFields);
 
             RuleFor(x => x.SortDirection)
-                .MustBeEnumValue<Request, Functorium.Applications.Queries.SortDirection>()
-                .When(x => x.SortDirection.Length > 0);
+                .MustBeEnumValue<Request, Functorium.Applications.Queries.SortDirection>();
         }
     }
 

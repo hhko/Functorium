@@ -125,16 +125,17 @@ public class SearchProductsQueryValidatorTests
     }
 
     [Fact]
-    public void Validate_ReturnsNoError_WhenNameIsEmpty()
+    public void Validate_ReturnsValidationError_WhenNameIsEmpty()
     {
-        // Arrange — empty name means "no filter", should be valid
+        // Arrange — Some("") is explicitly provided but invalid
         var request = new SearchProductsQuery.Request(Name: "");
 
         // Act
         var actual = _sut.Validate(request);
 
         // Assert
-        actual.IsValid.ShouldBeTrue();
+        actual.IsValid.ShouldBeFalse();
+        actual.Errors.ShouldContain(e => e.PropertyName == "Name");
     }
 }
 

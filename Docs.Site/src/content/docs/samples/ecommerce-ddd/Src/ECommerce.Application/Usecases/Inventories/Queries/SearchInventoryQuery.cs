@@ -18,7 +18,7 @@ public sealed class SearchInventoryQuery
     /// Query Request - 선택적 검색 필터 + 페이지네이션/정렬
     /// </summary>
     public sealed record Request(
-        int LowStockThreshold = 0,
+        Option<int> LowStockThreshold = default,
         int Page = 1,
         int PageSize = PageRequest.DefaultPageSize,
         string SortBy = "",
@@ -44,14 +44,12 @@ public sealed class SearchInventoryQuery
         public Validator()
         {
             RuleFor(x => x.LowStockThreshold)
-                .GreaterThan(0).When(x => x.LowStockThreshold != 0)
-                .WithMessage("Low stock threshold must be greater than 0");
+                .MustSatisfyValidation(Quantity.Validate);
 
             RuleFor(x => x.SortBy).MustBeOneOf(AllowedSortFields);
 
             RuleFor(x => x.SortDirection)
-                .MustBeEnumValue<Request, Functorium.Applications.Queries.SortDirection>()
-                .When(x => x.SortDirection.Length > 0);
+                .MustBeEnumValue<Request, Functorium.Applications.Queries.SortDirection>();
         }
     }
 
@@ -87,13 +85,13 @@ public sealed class SearchInventoryQuery
 
         private static Specification<Inventory> BuildSpecification(Request request)
         {
-            if (request.LowStockThreshold > 0)
-            {
-                return new InventoryLowStockSpec(
-                    Quantity.Create(request.LowStockThreshold).ThrowIfFail());
-            }
+            var spec = Specification<Inventory>.All;
 
-            return Specification<Inventory>.All;
+            request.LowStockThreshold.Iter(threshold =>
+                spec = new InventoryLowStockSpec(
+                    Quantity.Create(threshold).ThrowIfFail()));
+
+            return spec;
         }
     }
 }

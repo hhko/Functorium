@@ -41,7 +41,7 @@ public class SearchInventoryQueryValidatorTests
     [Fact]
     public void Validate_ReturnsNoError_WhenLowStockThresholdIsZero()
     {
-        // Arrange — 0은 "필터 없음"이므로 유효
+        // Arrange — Some(0)은 Quantity(NonNegative)로 유효
         var request = new SearchInventoryQuery.Request(LowStockThreshold: 0);
 
         // Act
