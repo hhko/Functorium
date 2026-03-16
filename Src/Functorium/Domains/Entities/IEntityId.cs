@@ -5,7 +5,7 @@ namespace Functorium.Domains.Entities;
 /// Ulid 기반으로 시간 순서 정렬이 가능합니다.
 /// </summary>
 /// <typeparam name="T">EntityId 구현 타입</typeparam>
-public interface IEntityId<T> : IEquatable<T>, IComparable<T>
+public interface IEntityId<T> : IEquatable<T>, IComparable<T>, IParsable<T>
     where T : struct, IEntityId<T>
 {
     /// <summary>

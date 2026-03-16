@@ -18,6 +18,18 @@ public readonly struct TestEntityId : IEntityId<TestEntityId>
     public static TestEntityId Create(Ulid id) => new(id);
     public static TestEntityId Create(string id) => new(Ulid.Parse(id));
 
+    public static TestEntityId Parse(string s, IFormatProvider? provider) => new(Ulid.Parse(s));
+    public static bool TryParse(string? s, IFormatProvider? provider, out TestEntityId result)
+    {
+        if (Ulid.TryParse(s, out var ulid))
+        {
+            result = new(ulid);
+            return true;
+        }
+        result = default;
+        return false;
+    }
+
     public bool Equals(TestEntityId other) => Value.Equals(other.Value);
     public int CompareTo(TestEntityId other) => Value.CompareTo(other.Value);
     public override bool Equals(object? obj) => obj is TestEntityId other && Equals(other);
