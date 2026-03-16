@@ -1,6 +1,6 @@
 using Functorium.Domains.Observabilities;
 
-namespace ECommerce.Application.Ports;
+namespace ECommerce.Application.Usecases;
 
 /// <summary>
 /// 외부 가격 조회 서비스 Port 인터페이스
