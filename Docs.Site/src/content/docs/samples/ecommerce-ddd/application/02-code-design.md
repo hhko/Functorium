@@ -163,7 +163,7 @@ public sealed class SearchProductsQuery
         {
             var spec = BuildSpecification(request);
             var pageRequest = new PageRequest(request.Page, request.PageSize);
-            var sortExpression = BuildSortExpression(request);
+            var sortExpression = SortExpression.By(request.SortBy, SortDirection.Parse(request.SortDirection));
 
             FinT<IO, Response> usecase =
                 from result in _productQuery.Search(spec, pageRequest, sortExpression)
