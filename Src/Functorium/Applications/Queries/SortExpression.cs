@@ -20,7 +20,7 @@ public sealed class SortExpression
         => By(fieldName, SortDirection.Ascending);
 
     public static SortExpression By(string fieldName, SortDirection direction)
-        => new(Seq([new SortField(fieldName, direction)]));
+        => string.IsNullOrEmpty(fieldName) ? Empty : new(Seq([new SortField(fieldName, direction)]));
 
     public SortExpression ThenBy(string fieldName)
         => ThenBy(fieldName, SortDirection.Ascending);

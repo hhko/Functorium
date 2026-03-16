@@ -15,6 +15,18 @@ public class SortExpressionTests
         actual.Fields.Count.ShouldBe(0);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData(null)]
+    public void By_ReturnsEmpty_WhenFieldNameIsNullOrEmpty(string? fieldName)
+    {
+        // Act
+        var actual = SortExpression.By(fieldName!, Functorium.Applications.Queries.SortDirection.Descending);
+
+        // Assert
+        actual.IsEmpty.ShouldBeTrue();
+    }
+
     [Fact]
     public void By_ReturnsSingleFieldExpression_WhenFieldNameProvided()
     {
