@@ -36,7 +36,10 @@ Functorium 프레임워크 제약
 - [x] 메일 고유성 개선
 - [x] 도메인 서비스 설계 원칙 개선(`순수 -> Stateless (I/O 허용)`)
 - [x] 아키텍처 테스트 샘플 추가
-- [ ] application 레이어 도메인 유효성 반영
+- [x] 아키텍처 테스트 재사용 개선: domain, application
+- [ ] 아키텍처 테스트 재사용 개선: adapter
+- [x] application 레이어 도메인 유효성 반영
+- [ ] application 레이어 도메인 유효성 entity id
 ---
 - [ ] vo 복합 객체도 entity와 동일하게 외부에서 유효성 검사해야하는거 아닐까?
 ---
