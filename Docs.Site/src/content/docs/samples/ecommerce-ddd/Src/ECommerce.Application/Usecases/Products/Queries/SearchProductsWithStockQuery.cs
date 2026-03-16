@@ -66,10 +66,7 @@ public sealed class SearchProductsWithStockQuery
                 .When(x => x.MinPrice > 0 && x.MaxPrice > 0)
                 .WithMessage("MaxPrice must be greater than or equal to MinPrice");
 
-            RuleFor(x => x.SortBy)
-                .Must(sortBy => AllowedSortFields.Contains(sortBy, StringComparer.OrdinalIgnoreCase))
-                .When(x => x.SortBy.Length > 0)
-                .WithMessage($"SortBy must be one of: {string.Join(", ", AllowedSortFields)}");
+            RuleFor(x => x.SortBy).MustBeOneOf(AllowedSortFields);
 
             RuleFor(x => x.SortDirection)
                 .MustBeEnumValue<Request, Functorium.Applications.Queries.SortDirection>()
@@ -89,7 +86,7 @@ public sealed class SearchProductsWithStockQuery
         {
             var spec = BuildSpecification(request);
             var pageRequest = new PageRequest(request.Page, request.PageSize);
-            var sortExpression = BuildSortExpression(request);
+            var sortExpression = SortExpression.By(request.SortBy, Functorium.Applications.Queries.SortDirection.Parse(request.SortDirection));
 
             FinT<IO, Response> usecase =
                 from result in _productWithStockQuery.Search(spec, pageRequest, sortExpression)
@@ -117,14 +114,6 @@ public sealed class SearchProductsWithStockQuery
             }
 
             return Specification<Product>.All;
-        }
-
-        private static SortExpression BuildSortExpression(Request request)
-        {
-            if (request.SortBy.Length == 0)
-                return SortExpression.Empty;
-
-            return SortExpression.By(request.SortBy, Functorium.Applications.Queries.SortDirection.Parse(request.SortDirection));
         }
     }
 }

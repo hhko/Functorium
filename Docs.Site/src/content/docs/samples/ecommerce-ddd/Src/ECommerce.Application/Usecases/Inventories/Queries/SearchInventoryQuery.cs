@@ -47,10 +47,7 @@ public sealed class SearchInventoryQuery
                 .GreaterThan(0).When(x => x.LowStockThreshold != 0)
                 .WithMessage("Low stock threshold must be greater than 0");
 
-            RuleFor(x => x.SortBy)
-                .Must(sortBy => AllowedSortFields.Contains(sortBy, StringComparer.OrdinalIgnoreCase))
-                .When(x => x.SortBy.Length > 0)
-                .WithMessage($"Sort field must be one of: {string.Join(", ", AllowedSortFields)}");
+            RuleFor(x => x.SortBy).MustBeOneOf(AllowedSortFields);
 
             RuleFor(x => x.SortDirection)
                 .MustBeEnumValue<Request, Functorium.Applications.Queries.SortDirection>()
@@ -70,7 +67,7 @@ public sealed class SearchInventoryQuery
         {
             var spec = BuildSpecification(request);
             var pageRequest = new PageRequest(request.Page, request.PageSize);
-            var sortExpression = BuildSortExpression(request);
+            var sortExpression = SortExpression.By(request.SortBy, Functorium.Applications.Queries.SortDirection.Parse(request.SortDirection));
 
             FinT<IO, Response> usecase =
                 from result in _readAdapter.Search(spec, pageRequest, sortExpression)
@@ -97,14 +94,6 @@ public sealed class SearchInventoryQuery
             }
 
             return Specification<Inventory>.All;
-        }
-
-        private static SortExpression BuildSortExpression(Request request)
-        {
-            if (request.SortBy.Length == 0)
-                return SortExpression.Empty;
-
-            return SortExpression.By(request.SortBy, Functorium.Applications.Queries.SortDirection.Parse(request.SortDirection));
         }
     }
 }

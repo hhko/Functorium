@@ -32,10 +32,7 @@ public sealed class SearchCustomerOrderSummaryQuery
     {
         public Validator()
         {
-            RuleFor(x => x.SortBy)
-                .Must(sortBy => AllowedSortFields.Contains(sortBy, StringComparer.OrdinalIgnoreCase))
-                .When(x => x.SortBy.Length > 0)
-                .WithMessage($"SortBy must be one of: {string.Join(", ", AllowedSortFields)}");
+            RuleFor(x => x.SortBy).MustBeOneOf(AllowedSortFields);
 
             RuleFor(x => x.SortDirection)
                 .MustBeEnumValue<Request, Functorium.Applications.Queries.SortDirection>()
@@ -52,7 +49,7 @@ public sealed class SearchCustomerOrderSummaryQuery
         {
             var spec = Specification<Customer>.All;
             var pageRequest = new PageRequest(request.Page, request.PageSize);
-            var sortExpression = BuildSortExpression(request);
+            var sortExpression = SortExpression.By(request.SortBy, Functorium.Applications.Queries.SortDirection.Parse(request.SortDirection));
 
             FinT<IO, Response> usecase =
                 from result in _readAdapter.Search(spec, pageRequest, sortExpression)
@@ -68,14 +65,6 @@ public sealed class SearchCustomerOrderSummaryQuery
             Fin<Response> response = await usecase.Run().RunAsync();
 
             return response.ToFinResponse();
-        }
-
-        private static SortExpression BuildSortExpression(Request request)
-        {
-            if (request.SortBy.Length == 0)
-                return SortExpression.Empty;
-
-            return SortExpression.By(request.SortBy, Functorium.Applications.Queries.SortDirection.Parse(request.SortDirection));
         }
     }
 }
