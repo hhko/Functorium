@@ -464,6 +464,7 @@ Functorium.Adapters.Observabilities/
 │   │   ├── LoggingConfigurator.cs         // Logging 설정
 │   │   ├── TracingConfigurator.cs         // Tracing 설정
 │   │   └── MetricsConfigurator.cs         // Metrics 설정
+│   ├── PipelineConfigurator.cs          // Pipeline 선택적 등록 (UseAll, UseMetrics 등)
 │   └── OpenTelemetryBuilder.cs
 ├── Loggers/
 │   ├── IStartupOptionsLogger.cs           // Logger 인터페이스
@@ -475,9 +476,15 @@ Functorium.Adapters.Observabilities/
     └── OpenTelemetrySpanFactory.cs        // SpanFactory 구현
 
 Functorium.Adapters.Observabilities.Pipelines/
+├── UsecasePipelineBase.cs                 // Pipeline 공통 베이스 클래스
 ├── UsecaseLoggingPipeline.cs              // Logging Pipeline
 ├── UsecaseTracingPipeline.cs              // Tracing Pipeline
-└── UsecaseMetricsPipeline.cs              // Metrics Pipeline
+├── UsecaseMetricsPipeline.cs              // Metrics Pipeline
+├── UsecaseMetricCustomPipelineBase.cs     // 커스텀 Metrics Pipeline 베이스
+├── UsecaseValidationPipeline.cs           // FluentValidation Pipeline
+├── UsecaseExceptionPipeline.cs            // Exception → Fin.Fail 변환 Pipeline
+├── UsecaseTransactionPipeline.cs          // Transaction + SaveChanges + 이벤트 발행 Pipeline
+└── UsecaseCachingPipeline.cs              // IMemoryCache 기반 캐싱 Pipeline
 ```
 
 ### ObservabilityNaming 상수

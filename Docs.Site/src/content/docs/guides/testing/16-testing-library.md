@@ -101,8 +101,10 @@ _repository.GetById(Arg.Any<ProductId>())
 | `Functorium.Testing.Arrangements.Hosting` | HTTP 통합 테스트 Fixture (HostTestFixture) |
 | `Functorium.Testing.Arrangements.ScheduledJobs` | 스케줄 Job 테스트 Fixture (QuartzTestFixture) |
 | `Functorium.Testing.Actions.SourceGenerators` | 소스 생성기 테스트 Runner |
-| `Functorium.Testing.Assertions.ArchitectureRules` | 아키텍처 규칙 검증 |
-| `Functorium.Testing.Assertions.Logging` | 로그 데이터 추출/변환 유틸리티 |
+| `Functorium.Testing.Assertions.ArchitectureRules` | 아키텍처 규칙 검증 (ClassValidator, MethodValidator, InterfaceValidator) |
+| `Functorium.Testing.Assertions.ArchitectureRules.Rules` | 재사용 가능 규칙 (ImmutabilityRule 등) |
+| `Functorium.Testing.Assertions.ArchitectureRules.Suites` | 도메인/Application 아키텍처 테스트 스위트 (DomainArchitectureTestSuite, ApplicationArchitectureTestSuite) |
+| `Functorium.Testing.Assertions.Logging` | 로그 데이터 추출/변환 유틸리티 (SerilogTestPropertyValueFactory 포함) |
 | `Functorium.Testing.Assertions.Errors` | 에러 타입 Assertion (Domain/Application/Adapter별 + 범용 ErrorCode/Exceptional) |
 
 ### 다른 가이드에 문서화된 기능
@@ -329,6 +331,17 @@ using Functorium.Testing.Assertions.Logging;
 | `ExtractLogData(LogEvent)` | 단일 LogEvent → `{ Information, Properties }` 익명 객체 |
 | `ExtractLogData(IEnumerable<LogEvent>)` | 여러 LogEvent → 익명 객체 목록 |
 
+### SerilogTestPropertyValueFactory
+
+테스트 환경에서 `LogEvent`를 수동 생성할 때 프로퍼티 값을 Serilog `LogEventPropertyValue`로 변환하는 팩토리입니다. `ILogEventPropertyValueFactory` 구현체로, string, int, long, double, bool, Exception, ValueTuple 등 주요 타입을 지원합니다.
+
+```csharp
+using Functorium.Testing.Assertions.Logging;
+
+var factory = new SerilogTestPropertyValueFactory();
+var value = factory.CreatePropertyValue("test-value");
+```
+
 ### LogEventPropertyValueConverter
 
 `LogEventPropertyValue`를 Verify 스냅샷용 익명 객체로 변환합니다.
@@ -454,17 +467,46 @@ public static ValidationResultSummary ValidateAllClasses(
 
 ### ClassValidator Fluent API
 
+**가시성:**
+
 | 메서드 | 설명 |
 |---|---|
 | `RequirePublic()` | public 클래스여야 함 |
 | `RequireInternal()` | internal 클래스여야 함 |
-| `RequireSealed()` | sealed 클래스여야 함 |
-| `RequireImmutable()` | 불변성 종합 검증 (6가지 차원) |
+
+**한정자:**
+
+| 메서드 | 설명 |
+|---|---|
+| `RequireSealed()` / `RequireNotSealed()` | sealed 여부 |
+| `RequireStatic()` / `RequireNotStatic()` | static 여부 |
+| `RequireAbstract()` / `RequireNotAbstract()` | abstract 여부 |
+
+**타입/상속:**
+
+| 메서드 | 설명 |
+|---|---|
+| `RequireRecord()` / `RequireNotRecord()` | record 타입 여부 |
+| `RequireAttribute(string)` | 특정 어트리뷰트 적용 필수 |
+| `RequireInherits(Type)` | 특정 기본 클래스 상속 필수 |
 | `RequireImplements(Type)` | 특정 인터페이스 구현 필수 |
 | `RequireImplementsGenericInterface(string)` | 제네릭 인터페이스 구현 필수 |
-| `RequireInherits(Type)` | 특정 기본 클래스 상속 필수 |
+
+**생성자/프로퍼티/필드:**
+
+| 메서드 | 설명 |
+|---|---|
 | `RequireAllPrivateConstructors()` | 모든 생성자가 private이어야 함 |
 | `RequirePrivateAnyParameterlessConstructor()` | 매개변수 없는 private 생성자 필수 |
+| `RequireNoPublicSetters()` | public setter 금지 (get-only만 허용) |
+| `RequireOnlyPrimitiveProperties(params string[])` | 원시 타입 프로퍼티만 허용 (추가 허용 타입 지정 가능) |
+| `RequireNoInstanceFields(params string[])` | 인스턴스 필드 금지 (제외할 필드 타입 지정 가능) |
+| `RequireImmutable()` | 불변성 종합 검증 (6가지 차원) |
+
+**메서드/중첩 클래스:**
+
+| 메서드 | 설명 |
+|---|---|
 | `RequireMethod(string, Action<MethodValidator>)` | 특정 이름의 메서드 검증 |
 | `RequireAllMethods(Action<MethodValidator>)` | 모든 메서드에 대해 검증 |
 | `RequireNestedClass(string, Action<ClassValidator>?)` | 중첩 클래스 필수 + 검증 |
@@ -484,12 +526,65 @@ public static ValidationResultSummary ValidateAllClasses(
 
 ### MethodValidator Fluent API
 
+**가시성/한정자:**
+
 | 메서드 | 설명 |
 |---|---|
 | `RequireVisibility(Visibility)` | 특정 가시성 필수 |
-| `RequireStatic()` | static 메서드여야 함 |
+| `RequireStatic()` / `RequireNotStatic()` | static 여부 |
+| `RequireVirtual()` / `RequireNotVirtual()` | virtual 여부 |
+| `RequireExtensionMethod()` | 확장 메서드여야 함 |
+
+**반환 타입:**
+
+| 메서드 | 설명 |
+|---|---|
 | `RequireReturnType(Type)` | 반환 타입 검증 (제네릭 타입 매칭 지원) |
 | `RequireReturnTypeOfDeclaringClass()` | 선언 클래스를 반환해야 함 |
+| `RequireReturnTypeOfDeclaringTopLevelClass()` | 최상위 선언 클래스를 반환해야 함 |
+| `RequireReturnTypeContaining(string)` | 반환 타입 이름에 특정 문자열 포함 |
+
+**매개변수:**
+
+| 메서드 | 설명 |
+|---|---|
+| `RequireParameterCount(int)` | 정확한 매개변수 개수 |
+| `RequireParameterCountAtLeast(int)` | 최소 매개변수 개수 |
+| `RequireFirstParameterTypeContaining(string)` | 첫 번째 매개변수 타입에 특정 문자열 포함 |
+| `RequireAnyParameterTypeContaining(string)` | 임의 매개변수 타입에 특정 문자열 포함 |
+
+### InterfaceValidator
+
+`InterfaceValidator`는 `TypeValidator<Interface, InterfaceValidator>`를 상속하며, `ClassValidator`와 동일한 Fluent API 패턴을 인터페이스에 적용합니다.
+
+### IArchRule\<T\> 인터페이스
+
+재사용 가능한 아키텍처 규칙을 정의하는 인터페이스입니다.
+
+| 타입 | 설명 |
+|---|---|
+| `IArchRule<TType>` | 규칙 인터페이스. `Description`과 `Validate()` 메서드 제공 |
+| `DelegateArchRule<TType>` | 람다 기반 규칙 구현 |
+| `CompositeArchRule<TType>` | 여러 규칙을 AND로 합성 |
+| `ImmutabilityRule` | 클래스 불변성 검증 규칙 (14개 가변 컬렉션 타입 감지) |
+
+### 아키텍처 테스트 스위트
+
+`DomainArchitectureTestSuite`와 `ApplicationArchitectureTestSuite`는 도메인/Application 레이어의 아키텍처 규칙을 사전 정의된 테스트 집합으로 제공합니다. 상속하여 `Architecture`와 네임스페이스만 지정하면 21+4개의 아키텍처 테스트가 자동 적용됩니다.
+
+```csharp
+public class MyDomainArchTests : DomainArchitectureTestSuite
+{
+    protected override Architecture Architecture => /* ... */;
+    protected override string DomainNamespace => "MyApp.Domain";
+}
+```
+
+**DomainArchitectureTestSuite (21개 테스트):**
+AggregateRoot, Entity, ValueObject, DomainEvent, Specification, DomainService에 대한 아키텍처 규칙을 자동 검증합니다.
+
+**ApplicationArchitectureTestSuite (4개 테스트):**
+Command/Query의 Validator, Usecase 중첩 클래스 존재를 자동 검증합니다.
 
 ### ValidationResultSummary.ThrowIfAnyFailures()
 
@@ -582,7 +677,7 @@ public void ValueObject_ShouldSatisfy_ImmutabilityRules()
 
 ## 소스 생성기 테스트
 
-`SourceGeneratorTestRunner`는 `IIncrementalGenerator`를 테스트 환경에서 실행하고 생성된 코드를 반환합니다.
+`SourceGeneratorTestRunner`는 `IIncrementalGenerator`를 테스트 환경에서 실행하고 생성된 코드를 반환합니다. `EntityIdGenerator`, `ObservablePortGenerator`, `UnionTypeGenerator` 모두 동일한 패턴으로 테스트할 수 있습니다.
 
 ```csharp
 // 네임스페이스

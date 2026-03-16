@@ -274,48 +274,40 @@ internal static class ProductMapper
 ```
 
 ```csharp
-// Repository — Mapper 확장 메서드 사용
+// Repository — EfCoreRepositoryBase 상속 + Mapper 확장 메서드 사용
 // 파일: {Adapters.Persistence}/Repositories/EfCore/EfCoreProductRepository.cs
 [GenerateObservablePort]
-public class EfCoreProductRepository : IProductRepository
+public class EfCoreProductRepository
+    : EfCoreRepositoryBase<Product, ProductId, ProductModel>, IProductRepository
 {
     private readonly LayeredArchDbContext _dbContext;
-    private readonly IDomainEventCollector _eventCollector;
 
-    public string RequestCategory => "Repository";
-
-    public virtual FinT<IO, Product> GetById(ProductId id)
+    public EfCoreProductRepository(
+        LayeredArchDbContext dbContext,
+        IDomainEventCollector eventCollector,
+        Func<IQueryable<ProductModel>, IQueryable<ProductModel>>? applyIncludes = null,
+        PropertyMap<Product, ProductModel>? propertyMap = null)
+        : base(eventCollector, applyIncludes, propertyMap)
     {
-        return IO.liftAsync(async () =>
-        {
-            var model = await _dbContext.Products
-                .AsNoTracking()
-                .Include(p => p.ProductTags)
-                .FirstOrDefaultAsync(p => p.Id == id.ToString());
-
-            if (model is not null)
-            {
-                return Fin.Succ(model.ToDomain());   // 확장 메서드로 도메인 복원
-            }
-
-            return AdapterError.For<EfCoreProductRepository>(
-                new NotFound(),
-                id.ToString(),
-                $"상품 ID '{id}'을(를) 찾을 수 없습니다");
-        });
+        _dbContext = dbContext;
     }
 
-    public virtual FinT<IO, Product> Create(Product product)
+    protected override DbContext DbContext => _dbContext;
+    protected override DbSet<ProductModel> DbSet => _dbContext.Products;
+    protected override Product ToDomain(ProductModel model) => model.ToDomain();
+    protected override ProductModel ToModel(Product aggregate) => aggregate.ToModel();
+
+    // CRUD (Create, GetById, Update, Delete 등)는 EfCoreRepositoryBase가 기본 구현 제공
+    // 도메인 전용 메서드만 오버라이드 또는 추가
+
+    public virtual FinT<IO, bool> Exists(Specification<Product> spec)
     {
-        return IO.liftAsync(async () =>
-        {
-            _dbContext.Products.Add(product.ToModel());  // 확장 메서드로 Model 변환
-            _eventCollector.Track(product);
-            return Fin.Succ(product);
-        });
+        return ExistsBySpec(spec);  // 베이스 클래스의 BuildQuery 활용
     }
 }
 ```
+
+> **핵심**: `EfCoreRepositoryBase`가 CRUD 8개 메서드(`Create`, `GetById`, `Update`, `Delete`, `CreateRange`, `GetByIds`, `UpdateRange`, `DeleteRange`)를 기본 구현하므로, 서브클래스는 `ToDomain()`/`ToModel()` 변환과 도메인 전용 메서드만 구현합니다. `IHasStringId` 인터페이스를 통해 모든 Model의 `Id` 속성이 `string` 타입임을 보장하며, `ReadQuery()`가 Include를 자동 적용하여 N+1 문제를 구조적으로 방지합니다.
 
 #### 에러 처리 통합
 
@@ -646,60 +638,58 @@ public class ProductConfiguration : IEntityTypeConfiguration<ProductModel>
 
 ##### EF Core Repository 구현
 
-기존 InMemory Repository와 동일한 Port를 구현하되, `IO.liftAsync`로 EF Core 비동기 API를 래핑합니다. DbContext는 **Persistence Model** 을 다루므로, Mapper 확장 메서드(`ToModel()` / `ToDomain()`)로 도메인 엔티티와 변환합니다.
+`EfCoreRepositoryBase<TAggregate, TId, TModel>`를 상속하여 CRUD 기본 구현을 받고, 도메인 전용 메서드만 추가합니다. DbContext는 **Persistence Model** 을 다루므로, Mapper 확장 메서드(`ToModel()` / `ToDomain()`)로 도메인 엔티티와 변환합니다.
+
+**`EfCoreRepositoryBase` 주요 기능:**
+
+| 기능 | 설명 |
+|------|------|
+| `ReadQuery()` | Include가 자동 적용된 읽기 전용 쿼리. N+1 문제를 구조적으로 방지 |
+| `BuildQuery(spec)` | Specification → Model Expression 쿼리 빌더. `PropertyMap` 필수 |
+| `ExistsBySpec(spec)` | Specification 기반 존재 여부 확인. `PropertyMap` 필수 |
+| `PropertyMap` | Aggregate → Model 프로퍼티 매핑. Specification SQL 변환에 사용 |
+| `IdBatchSize` | SQL IN 절 파라미터 한계 방지를 위한 배치 크기 (기본값: 500) |
+| `IHasStringId` | 모든 Model이 구현해야 하는 인터페이스. `string Id` 속성 보장 |
 
 ```csharp
 // 파일: {Adapters.Persistence}/Repositories/EfCore/EfCoreProductRepository.cs
 
 using Functorium.Adapters.Errors;
+using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
 [GenerateObservablePort]
-public class EfCoreProductRepository : IProductRepository
+public class EfCoreProductRepository
+    : EfCoreRepositoryBase<Product, ProductId, ProductModel>, IProductRepository
 {
     private readonly LayeredArchDbContext _dbContext;
-    private readonly IDomainEventCollector _eventCollector;
 
-    public string RequestCategory => "Repository";
-
-    public EfCoreProductRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
+    public EfCoreProductRepository(
+        LayeredArchDbContext dbContext,
+        IDomainEventCollector eventCollector)
+        : base(
+            eventCollector,
+            applyIncludes: q => q.Include(p => p.ProductTags),  // N+1 방지
+            propertyMap: ProductPropertyMap.Instance)             // Specification SQL 변환
     {
         _dbContext = dbContext;
-        _eventCollector = eventCollector;
     }
 
-    public virtual FinT<IO, Product> Create(Product product)
+    // --- 필수 추상 멤버 구현 ---
+    protected override DbContext DbContext => _dbContext;
+    protected override DbSet<ProductModel> DbSet => _dbContext.Products;
+    protected override Product ToDomain(ProductModel model) => model.ToDomain();
+    protected override ProductModel ToModel(Product aggregate) => aggregate.ToModel();
+
+    // CRUD 8개 메서드는 EfCoreRepositoryBase가 기본 구현 제공
+
+    // --- 도메인 전용 메서드 ---
+    public virtual FinT<IO, bool> Exists(Specification<Product> spec)
     {
-        return IO.liftAsync(async () =>
-        {
-            _dbContext.Products.Add(product.ToModel());  // 도메인 → Model
-            _eventCollector.Track(product);
-            return Fin.Succ(product);
-        });
-    }
-
-    public virtual FinT<IO, Product> GetById(ProductId id)
-    {
-        return IO.liftAsync(async () =>
-        {
-            var model = await _dbContext.Products
-                .AsNoTracking()
-                .Include(p => p.ProductTags)
-                .FirstOrDefaultAsync(p => p.Id == id.ToString());  // string 비교
-
-            if (model is not null)
-            {
-                return Fin.Succ(model.ToDomain());  // Model → 도메인
-            }
-
-            return AdapterError.For<EfCoreProductRepository>(
-                new NotFound(),
-                id.ToString(),
-                $"상품 ID '{id}'을(를) 찾을 수 없습니다");
-        });
+        return ExistsBySpec(spec);
     }
 
     public virtual FinT<IO, int> Delete(ProductId id)

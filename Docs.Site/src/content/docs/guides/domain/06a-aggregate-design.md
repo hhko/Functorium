@@ -231,7 +231,6 @@ order1 == order2;  // true (같은 ID)
 
 ```csharp
 using Functorium.Domains.Entities;
-using Functorium.Domains.SourceGenerator;
 
 [GenerateEntityId]  // OrderId 자동 생성
 public class Order : AggregateRoot<OrderId>

@@ -317,7 +317,8 @@ IObservablePort (인터페이스)
 │       └── (CRUD는 IRepository에서 상속)
 │
 ├── IUnitOfWork : IObservablePort   ← Application Layer의 트랜잭션 커밋 Port
-│   └── FinT<IO, Unit> SaveChanges(CancellationToken)
+│   ├── FinT<IO, Unit> SaveChanges(CancellationToken)
+│   └── Task<IUnitOfWorkTransaction> BeginTransactionAsync(CancellationToken)
 │
 ├── IOrderMessaging : IObservablePort
 │   ├── FinT<IO, Unit> PublishOrderCreated(OrderCreatedEvent @event)
@@ -440,7 +441,7 @@ public interface IExternalPricingService : IObservablePort
 }
 ```
 
-> **참조**: `Tests.Hosts/01-SingleHost/LayeredArch.Application/Ports/IExternalPricingService.cs`
+> **참조**: `Tests.Hosts/01-SingleHost/Src/LayeredArch.Application/Ports/IExternalPricingService.cs`
 
 **핵심 포인트**:
 - 비동기 작업이므로 `CancellationToken` 매개변수 포함
@@ -510,7 +511,7 @@ public interface IQueryPort<TEntity, TDto> : IQueryPort
 | 파라미터 | 타입 | 설명 |
 |----------|------|------|
 | `spec` | `Specification<TEntity>` | 도메인 Specification 패턴으로 필터 조건 표현. 전체 조회 시 `Specification<TEntity>.All` 사용. 상세는 [10-specifications.md](../domain/10-specifications) 참조 |
-| `page` | `PageRequest` | Offset 기반 페이지네이션 (`Page`, `PageSize`). 기본값 page=1, pageSize=20, 최대 100 |
+| `page` | `PageRequest` | Offset 기반 페이지네이션 (`Page`, `PageSize`). 기본값 page=1, pageSize=20, 최대 10,000 |
 | `sort` | `SortExpression` | 다중 필드 정렬 표현. `SortExpression.Empty`이면 Adapter의 `DefaultOrderBy` 사용 |
 
 **SearchByCursor 파라미터 설명:**

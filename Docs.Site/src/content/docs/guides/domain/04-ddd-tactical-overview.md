@@ -332,7 +332,7 @@ IEntity<TId> (인터페이스)
                 ├── AddDomainEvent() (protected)
                 └── ClearDomainEvents() (IDomainEventDrain)
 
-IEntityId<T> (인터페이스) - Ulid 기반
+IEntityId<T> : IParsable<T> (인터페이스) - Ulid 기반
 ├── Ulid Value
 ├── static T New()
 ├── static T Create(Ulid)
@@ -358,7 +358,7 @@ IHasDomainEvents (읽기 전용 이벤트 조회)
 Error (LanguageExt)
 │
 ├── DomainError
-│   └── DomainErrorType (Presence, Length, Format, DateTime, Numeric, Range, Existence, Custom)
+│   └── DomainErrorType (Presence, Length, Format, DateTime, Numeric, Range, Existence, Transition, Custom)
 │
 ├── ApplicationError
 │   └── ApplicationErrorType (공통, 권한, 검증, 비즈니스 규칙, 커스텀)
@@ -378,8 +378,8 @@ Specification<T> (추상 클래스)
 ├── AndSpecification<T> (internal sealed)
 ├── OrSpecification<T>  (internal sealed)
 ├── NotSpecification<T> (internal sealed)
-├── ExpressionSpecification<T> (public sealed)
-└── AllSpecification<T> (public sealed)
+├── ExpressionSpecification<T> (public abstract)
+└── AllSpecification<T> (internal sealed)
 ```
 
 ### 관계도

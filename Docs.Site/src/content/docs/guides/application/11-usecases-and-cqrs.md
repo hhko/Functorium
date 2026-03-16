@@ -855,11 +855,13 @@ Command의 트랜잭션 커밋(`SaveChanges`)과 도메인 이벤트 발행은 `
   ↓ return FinResponse.Succ(response)
   ↓
 [UsecaseTransactionPipeline]
-  1. response = await next()           ← Handler 실행
-  2. if (response.IsFail) return       ← 실패 시 커밋 안함
-  3. UoW.SaveChanges()                 ← 트랜잭션 커밋
-  4. PublishTrackedEvents()            ← 이벤트 수집·발행·클리어
-  5. return response                   ← 원래 성공 응답 반환
+  1. BeginTransactionAsync()           ← 명시적 트랜잭션 시작
+  2. response = await next()           ← Handler 실행
+  3. if (response.IsFail) return       ← 실패 시 트랜잭션 Dispose로 롤백
+  4. UoW.SaveChanges()                 ← 변경사항 저장
+  5. transaction.CommitAsync()         ← 트랜잭션 커밋
+  6. PublishTrackedEvents()            ← 이벤트 수집·발행·클리어
+  7. return response                   ← 원래 성공 응답 반환
 ```
 
 ### Usecase 생성자 패턴
@@ -901,7 +903,8 @@ Request → Metrics → Tracing → Logging → Validation → Caching → Excep
 services
     .RegisterOpenTelemetry(configuration, AssemblyReference.Assembly)
     .ConfigurePipelines(pipelines => pipelines
-        .UseAll())   // Metrics, Tracing, Logging, Validation, Exception, Transaction 모두 포함
+        .UseAll()    // Metrics, Tracing, Logging, Validation, Exception, Transaction 포함
+        .UseCaching())  // Caching은 별도 활성화 필요
     .Build();
 ```
 
@@ -930,11 +933,32 @@ services
 public interface IUnitOfWork : IObservablePort
 {
     FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// 명시적 트랜잭션을 시작합니다.
+    /// ExecuteDeleteAsync/ExecuteUpdateAsync 등 즉시 실행 SQL과 SaveChanges를
+    /// 동일 트랜잭션으로 묶어야 할 때 사용합니다.
+    /// </summary>
+    Task<IUnitOfWorkTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
+}
+```
+
+**IUnitOfWorkTransaction 인터페이스:**
+
+```csharp
+/// <summary>
+/// 명시적 트랜잭션 스코프.
+/// Dispose 시 미커밋 트랜잭션은 자동 롤백됩니다.
+/// </summary>
+public interface IUnitOfWorkTransaction : IAsyncDisposable
+{
+    Task CommitAsync(CancellationToken cancellationToken = default);
 }
 ```
 
 - `IObservablePort`를 상속하므로 Pipeline 자동 생성 및 관찰성을 지원합니다.
 - EF Core 환경에서는 `DbContext.SaveChangesAsync()`를 호출하고, InMemory 환경에서는 no-op입니다.
+- `BeginTransactionAsync()`는 `UsecaseTransactionPipeline`이 자동 호출하므로 Usecase에서 직접 사용할 필요가 없습니다.
 
 > **참조**: UoW Adapter 구현(EfCoreUnitOfWork, InMemoryUnitOfWork)은 [13-adapters.md](../adapter/13-adapters)를 참조하세요.
 
@@ -1010,7 +1034,7 @@ public sealed class Validator : AbstractValidator<Request>
 services
     .AddValidatorsFromAssembly(typeof(Program).Assembly)
     .ConfigurePipelines(pipelines => pipelines
-        .UseAll());   // Validation 파이프라인 포함
+        .UseAll());   // Metrics, Tracing, Logging, Validation, Exception, Transaction 포함 (Caching은 UseCaching()으로 별도 활성화)
 ```
 
 ### FluentValidation 실패와 에러 타입 매핑
@@ -1051,16 +1075,48 @@ public sealed class Validator : AbstractValidator<Request>
 
 > **참고**: `MustSatisfyValidationOf`는 C#14 extension members의 타입 추론 제한으로 `IRuleBuilderInitial`에서 추가 제네릭 파라미터 해결이 안 되는 경우, 전통적인 확장 메서드 오버로드(`MustSatisfyValidationOf<TRequest, TProperty, TValueObject>`)도 제공됩니다.
 
+### EntityId / OneOf / PairedRange 검증 확장 메서드
+
+Functorium은 자주 사용되는 검증 패턴을 위한 확장 메서드를 추가로 제공합니다:
+
+| 메서드 | 용도 | 예시 |
+|--------|------|------|
+| `MustBeEntityId<TRequest, TEntityId>` | 문자열이 유효한 EntityId 형식인지 검증 (NotEmpty + TryParse 통합) | `RuleFor(x => x.ProductId).MustBeEntityId<Request, ProductId>()` |
+| `MustBeOneOf<TRequest>` | 허용된 문자열 목록 중 하나인지 검증 (대소문자 무시, null/빈 문자열 건너뜀) | `RuleFor(x => x.SortBy).MustBeOneOf<Request>(["Name", "Price"])` |
+| `MustBePairedRange<TRequest, T>` | `Option<T>` 쌍 범위 필터 검증 (둘 다 None → 통과, 하나만 Some → 실패, 둘 다 Some → 범위 검증) | 아래 예제 참조 |
+
+```csharp
+public sealed class Validator : AbstractValidator<Request>
+{
+    public Validator()
+    {
+        // EntityId 형식 검증
+        RuleFor(x => x.ProductId)
+            .MustBeEntityId<Request, ProductId>();
+
+        // 허용 값 목록 검증
+        RuleFor(x => x.SortBy)
+            .MustBeOneOf<Request>(["Name", "Price", "CreatedAt"]);
+
+        // Option<T> 쌍 범위 필터 검증
+        this.MustBePairedRange(
+            x => x.MinPrice,
+            x => x.MaxPrice,
+            Money.Validate);
+    }
+}
+```
+
 ### SmartEnum 검증 확장 메서드
 
 Ardalis.SmartEnum에 대한 FluentValidation 확장 메서드도 제공됩니다:
 
 | 메서드 | 용도 |
 |--------|------|
-| `MustBeEnum<TSmartEnum, TValue>` | SmartEnum Value로 검증 |
-| `MustBeEnum<TSmartEnum>` | int 기반 SmartEnum 간소화 오버로드 |
-| `MustBeEnumName<TSmartEnum, TValue>` | SmartEnum Name으로 검증 |
-| `MustBeEnumValue<TSmartEnum>` | string Value SmartEnum (대소문자 무시) |
+| `MustBeEnum<TRequest, TSmartEnum, TValue>` | SmartEnum Value로 검증 |
+| `MustBeEnum<TRequest, TSmartEnum>` | int 기반 SmartEnum 간소화 오버로드 |
+| `MustBeEnumName<TRequest, TSmartEnum, TValue>` | SmartEnum Name으로 검증 |
+| `MustBeEnumValue<TRequest, TSmartEnum>` | string Value SmartEnum (대소문자 무시) |
 
 ### ICacheable 인터페이스
 

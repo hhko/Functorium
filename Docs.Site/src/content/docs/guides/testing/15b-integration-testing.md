@@ -268,6 +268,7 @@ Tests/MyProject.Tests.Integration/
 {
   "OpenTelemetry": {
     "ServiceName": "MyProject.Tests.Integration",
+    "ServiceNamespace": "MyProject",
     "CollectorEndpoint": "http://127.0.0.1:18889",
     "CollectorProtocol": "Grpc",
     "SamplingRate": 1.0,

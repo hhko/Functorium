@@ -102,9 +102,9 @@ public sealed class InMemoryProductRepositoryTests
         // Arrange
         var repository = new InMemoryProductRepository();
         var product = Product.Create(
-            ProductId.Create(Guid.NewGuid()),
-            ProductName.Create("테스트 상품"),
-            Money.Create(10000m));
+            ProductName.Create("테스트 상품").ThrowIfFail(),
+            ProductDescription.Create("설명").ThrowIfFail(),
+            Money.Create(10000m).ThrowIfFail());
 
         // Act
         var ioFin = repository.Create(product);
@@ -127,7 +127,7 @@ public sealed class InMemoryProductRepositoryTests
     {
         // Arrange
         var repository = new InMemoryProductRepository();
-        var nonExistentId = ProductId.Create(Guid.NewGuid());
+        var nonExistentId = ProductId.New();
 
         // Act
         var ioFin = repository.GetById(nonExistentId);
@@ -312,7 +312,7 @@ public async Task Search_ReturnsPagedResult_WhenProductsExist()
     var queryAdapter = new InMemoryProductQuery(repository);
 
     // Act
-    var ioFin = queryAdapter.Search(spec: null, new PageRequest(), SortExpression.Empty);
+    var ioFin = queryAdapter.Search(Specification<Product>.All, new PageRequest(), SortExpression.Empty);
     var ioResult = ioFin.Run();
     var result = await Task.Run(() => ioResult.Run());
 
@@ -395,8 +395,8 @@ public async Task Search_ReturnsPagedResult_WhenProductsExist()
 |  │   - 비즈니스 로직 구현                                       │  |
 |  └─────────────────────────────────────────────────────────────┘  |
 |  ┌─────────────────────────────────────────────────────────────┐  |
-|  │ IProductRepository : IObservablePort (Port Interface)              │  |
-|  │   - FinT<IO, Product> GetById(Guid id)                      │  |
+|  │ IProductRepository : IRepository<Product, ProductId> (Port Interface) │  |
+|  │   - FinT<IO, Product> GetById(ProductId id)                  │  |
 |  │   - FinT<IO, Product> Create(Product product)               │  |
 |  └─────────────────────────────────────────────────────────────┘  |
 +-------------------------------------------------------------------+
@@ -429,21 +429,20 @@ public sealed class GetProductByIdQuery
     public sealed record Request(string ProductId) : IQueryRequest<Response>;
     public sealed record Response(string ProductId, string Name, decimal Price);
 
-    internal sealed class Usecase(IProductRepository repository)
+    internal sealed class Usecase(IProductDetailQuery productDetailQuery)
         : IQueryUsecase<Request, Response>
     {
         public async ValueTask<FinResponse<Response>> Handle(
             Request request, CancellationToken cancellationToken)
         {
-            if (!ProductId.TryParse(request.ProductId, null, out var productId))
-                return FinResponse.Fail<Response>(Error.New("Invalid ProductId"));
+            var productId = ProductId.Create(request.ProductId);
 
             FinT<IO, Response> usecase =
-                from product in repository.GetById(productId)
+                from dto in productDetailQuery.GetById(productId)
                 select new Response(
-                    product.Id.ToString(),
-                    (string)product.Name,
-                    (decimal)product.Price);
+                    dto.ProductId,
+                    dto.Name,
+                    dto.Price);
 
             Fin<Response> result = await usecase.Run().RunAsync();
             return result.ToFinResponse();
