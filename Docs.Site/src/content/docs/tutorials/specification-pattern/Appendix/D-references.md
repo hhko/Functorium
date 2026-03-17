@@ -6,7 +6,7 @@ title: "참고 자료"
 ## 공식 문서
 
 ### Functorium
-- **GitHub**: https://github.com/your-org/functorium
+- **GitHub**: https://github.com/hhko/Functorium
 - **Specification 타입**: `Src/Functorium/Domains/Specifications/`
 
 ### .NET Expression Trees
@@ -106,16 +106,22 @@ title: "참고 자료"
 
 ```
 Src/Functorium/Domains/Specifications/
-├── Specification.cs                       # 기본 추상 클래스
+├── Specification.cs                       # 추상 기반 클래스
+├── IExpressionSpec.cs                     # Expression 인터페이스
 ├── ExpressionSpecification.cs             # Expression Tree 지원
-├── SpecificationExpressionResolver.cs     # Expression 합성
-└── PropertyMap.cs                         # Entity→Model 변환
+├── AllSpecification.cs                    # 항등원 (internal sealed)
+├── AndSpecification.cs                    # AND 조합 (internal sealed)
+├── OrSpecification.cs                     # OR 조합 (internal sealed)
+├── NotSpecification.cs                    # NOT 부정 (internal sealed)
+└── Expressions/
+    ├── SpecificationExpressionResolver.cs # Expression 합성 유틸리티
+    └── PropertyMap.cs                     # Entity→Model 변환
 ```
 
 ### 튜토리얼 프로젝트
 
 ```
-Docs/tutorials/Implementing-Specification-Pattern/
+Docs.Site/src/content/docs/tutorials/specification-pattern/
 ├── Part1-Specification-Basics/            # 기초 (4개)
 ├── Part2-Expression-Specification/        # Expression (4개)
 ├── Part3-Repository-Integration/          # Repository 통합 (4개)

@@ -40,7 +40,7 @@ Expression Tree를 활용하면 Specification을 ORM이 이해할 수 있는 형
 3. **실수 방지**: 하위 클래스에서 조건을 두 곳에 중복 정의하는 것을 방지
 
 ```csharp
-public abstract class ExpressionSpecification<T> : Specification<T>
+public abstract class ExpressionSpecification<T> : Specification<T>, IExpressionSpec<T>
 {
     private Func<T, bool>? _compiled;
 
@@ -51,6 +51,17 @@ public abstract class ExpressionSpecification<T> : Specification<T>
         _compiled ??= ToExpression().Compile();
         return _compiled(entity);
     }
+}
+```
+
+### IExpressionSpec<T> 인터페이스
+
+`ExpressionSpecification<T>`는 `IExpressionSpec<T>` 인터페이스를 구현합니다. 이 인터페이스는 `ToExpression()` 메서드만 정의하며, 4장에서 다룰 `SpecificationExpressionResolver`가 패턴 매칭(`spec is IExpressionSpec<T>`)으로 Expression을 추출하는 핵심 열쇠입니다.
+
+```csharp
+public interface IExpressionSpec<T>
+{
+    Expression<Func<T, bool>> ToExpression();
 }
 ```
 

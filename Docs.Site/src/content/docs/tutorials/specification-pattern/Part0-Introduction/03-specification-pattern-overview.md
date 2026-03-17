@@ -115,9 +115,13 @@ Specification<T> (추상 클래스)
 ├── & / | / ! 연산자
 └── All (항등원)
 
-ExpressionSpecification<T> (Expression Tree 지원)
-├── ToExpression() : Expression<Func<T, bool>>
-└── sealed IsSatisfiedBy (컴파일 + 캐싱)
+IExpressionSpec<T> (인터페이스)
+└── ToExpression() : Expression<Func<T, bool>>
+
+ExpressionSpecification<T> : Specification<T>, IExpressionSpec<T>
+├── abstract ToExpression()
+├── sealed IsSatisfiedBy (컴파일 + 캐싱)
+└── AllSpecification<T> (internal, 항등원: _ => true)
 
 SpecificationExpressionResolver (Expression 합성)
 PropertyMap<TEntity, TModel> (Entity→Model 변환)

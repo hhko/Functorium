@@ -53,6 +53,23 @@ map.Map(p => p.Category, m => m.CategoryCode);
 3. 프로퍼티 접근(`p.Stock`)을 매핑된 모델 프로퍼티(`m.StockQuantity`)로 교체
 4. 결과: `p => p.Stock > 0` 이 `m => m.StockQuantity > 0`으로 변환
 
+### Value Object 캐스트 패턴 지원
+
+Part 2의 3장에서 `(decimal)product.Price` 캐스트 패턴을 배웠습니다. PropertyMap의 `Map` 메서드는 이 패턴을 직접 지원합니다:
+
+```csharp
+// 직접 접근: p => p.Name
+map.Map(p => p.Name, m => m.ProductName);
+
+// VO 캐스트: p => (decimal)p.Price
+map.Map(p => (decimal)p.Price, m => m.UnitPrice);
+
+// ToString 변환: p => p.Id.ToString()
+map.Map(p => p.Id.ToString(), m => m.ProductId);
+```
+
+`TranslatingVisitor`는 Expression Tree를 순회하며 `Convert` 노드(캐스트)와 `ToString()` 호출을 인식하여 매핑된 모델 프로퍼티로 자동 교체합니다. 이것이 Part 2.3의 VO 변환 패턴과 PropertyMap이 연결되는 지점입니다.
+
 핵심 개념을 이해했으니, 이제 실제 프로젝트에서 PropertyMap이 어떻게 구성되는지 살펴보겠습니다.
 
 ## 프로젝트 설명

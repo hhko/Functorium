@@ -131,9 +131,13 @@ Specification<T> (추상 클래스)
 ├── & / | / ! 연산자
 └── All (항등원)
 
-ExpressionSpecification<T> (Expression Tree 지원)
-├── ToExpression() : Expression<Func<T, bool>>
-└── sealed IsSatisfiedBy (컴파일 + 캐싱)
+IExpressionSpec<T> (인터페이스)
+└── ToExpression() : Expression<Func<T, bool>>
+
+ExpressionSpecification<T> : Specification<T>, IExpressionSpec<T>
+├── abstract ToExpression()
+├── sealed IsSatisfiedBy (컴파일 + 캐싱)
+└── AllSpecification<T> (internal, 항등원: _ => true)
 
 SpecificationExpressionResolver (Expression 합성)
 PropertyMap<TEntity, TModel> (Entity→Model 변환)
@@ -152,7 +156,7 @@ PropertyMap<TEntity, TModel> (Entity→Model 변환)
 ## 프로젝트 구조
 
 ```
-Implementing-Specification-Pattern/
+specification-pattern/
 ├── Part0-Introduction/              # Part 0: 서론
 ├── Part1-Specification-Basics/      # Part 1: Specification 기초 (4개)
 │   ├── 01-First-Specification/
@@ -178,37 +182,23 @@ Implementing-Specification-Pattern/
 │   ├── 01-Ecommerce-Product-Filtering/
 │   └── 02-Customer-Management/
 ├── Appendix/                        # 부록
-└── README.md                        # 이 문서
+└── index.md                         # 이 문서
 ```
 
 ---
 
 ## 테스트
 
-모든 Part의 예제 프로젝트에는 단위 테스트가 포함되어 있습니다. 테스트는 [15a-unit-testing.md](../../Docs/guides/15a-unit-testing.md) 가이드를 따릅니다.
+모든 Part의 예제 프로젝트에는 단위 테스트가 포함되어 있습니다. 테스트는 [단위 테스트 가이드](../../guides/testing/15a-unit-testing.md)를 따릅니다.
 
 ### 테스트 실행 방법
 
 ```bash
-# Part 1 테스트 실행
-cd Docs/tutorials/Implementing-Specification-Pattern/Part1-Specification-Basics/01-First-Specification/FirstSpecification.Tests.Unit
-dotnet test
+# 튜토리얼 전체 빌드
+dotnet build specification-pattern.slnx
 
-# Part 2 테스트 실행
-cd Docs/tutorials/Implementing-Specification-Pattern/Part2-Expression-Specification/01-Expression-Introduction/ExpressionIntroduction.Tests.Unit
-dotnet test
-
-# Part 3 테스트 실행
-cd Docs/tutorials/Implementing-Specification-Pattern/Part3-Repository-Integration/01-Repository-With-Specification/RepositoryWithSpecification.Tests.Unit
-dotnet test
-
-# Part 4 테스트 실행
-cd Docs/tutorials/Implementing-Specification-Pattern/Part4-Real-World-Patterns/01-Usecase-Patterns/UsecasePatterns.Tests.Unit
-dotnet test
-
-# Part 5 테스트 실행
-cd Docs/tutorials/Implementing-Specification-Pattern/Part5-Domain-Examples/01-Ecommerce-Product-Filtering/EcommerceProductFiltering.Tests.Unit
-dotnet test
+# 튜토리얼 전체 테스트
+dotnet test --solution specification-pattern.slnx
 ```
 
 ### 테스트 프로젝트 구조
@@ -282,7 +272,7 @@ public void IsSatisfiedBy_ReturnsTrue_WhenProductIsActive()
 이 튜토리얼의 모든 예제 코드는 Functorium 프로젝트에서 확인할 수 있습니다:
 
 - 프레임워크 타입: `Src/Functorium/Domains/Specifications/`
-- 튜토리얼 프로젝트: `Docs/tutorials/Implementing-Specification-Pattern/`
+- 튜토리얼 프로젝트: `Docs.Site/src/content/docs/tutorials/specification-pattern/`
 
 ---
 

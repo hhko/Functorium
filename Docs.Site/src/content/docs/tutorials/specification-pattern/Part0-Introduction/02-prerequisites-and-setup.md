@@ -46,18 +46,20 @@ cd functorium
 
 ```bash
 # 전체 솔루션 빌드
-dotnet build Functorium.All.slnx
+dotnet build Functorium.slnx
 
 # 전체 테스트 실행
-dotnet test --solution Functorium.All.slnx
+dotnet test --solution Functorium.slnx
 ```
 
 ### 개별 프로젝트 실행
 
 ```bash
-# Part 1 첫 번째 장 테스트 실행
-cd Docs/tutorials/Implementing-Specification-Pattern/Part1-Specification-Basics/01-First-Specification/FirstSpecification.Tests.Unit
-dotnet test
+# 튜토리얼 전체 빌드
+dotnet build specification-pattern.slnx
+
+# 튜토리얼 전체 테스트
+dotnet test --solution specification-pattern.slnx
 ```
 
 ---
@@ -84,19 +86,18 @@ using Functorium.Domains.Specifications;
 ### 테스트 실행
 
 ```bash
-# 특정 프로젝트 테스트 실행
-cd Docs/tutorials/Implementing-Specification-Pattern/Part1-Specification-Basics/01-First-Specification/FirstSpecification.Tests.Unit
-dotnet test
+# 튜토리얼 전체 테스트
+dotnet test --solution specification-pattern.slnx
 
 # 특정 테스트만 실행
-dotnet test --filter "IsSatisfiedBy_ReturnsTrue_WhenProductIsActive"
+dotnet test --solution specification-pattern.slnx --filter "IsSatisfiedBy_ReturnsTrue_WhenProductIsActive"
 ```
 
 ### 전체 솔루션 테스트
 
 ```bash
 # 솔루션 루트에서
-dotnet test --solution Functorium.All.slnx
+dotnet test --solution specification-pattern.slnx
 ```
 
 ---
@@ -146,7 +147,7 @@ echo $PATH
 **A**: 네. 이 튜토리얼의 모든 프로젝트는 .NET 10.0을 대상으로 빌드됩니다. Functorium 라이브러리의 일부 API가 .NET 10.0 이상을 필요로 하므로, 이전 버전에서는 빌드가 실패할 수 있습니다.
 
 ### Q2: 개별 프로젝트만 빌드/테스트할 수 있나요?
-**A**: 네, 각 장의 프로젝트 폴더에서 `dotnet test`를 실행하면 해당 프로젝트만 독립적으로 테스트할 수 있습니다. 전체 솔루션 빌드는 `dotnet build Functorium.All.slnx`로 수행합니다.
+**A**: 네, 각 장의 프로젝트 폴더에서 `dotnet test`를 실행하면 해당 프로젝트만 독립적으로 테스트할 수 있습니다. 전체 솔루션 빌드는 `dotnet build Functorium.slnx`로 수행합니다.
 
 ### Q3: IDE는 어떤 것을 사용해야 하나요?
 **A**: VS Code + C# Dev Kit, JetBrains Rider, Visual Studio 2022 중 편한 것을 사용하면 됩니다. C# 개발 환경이 설정되어 있고 .NET 10.0 SDK가 설치되어 있다면 어떤 IDE든 동작합니다.

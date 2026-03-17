@@ -50,7 +50,7 @@ public static Expression<Func<T, bool>>? TryResolve<T>(Specification<T> spec)
 }
 ```
 
-패턴 매칭으로 Specification의 타입에 따라 적절한 처리를 수행합니다. `IExpressionSpec<T>`는 가장 먼저 검사되어 직접 Expression을 추출합니다.
+패턴 매칭으로 Specification의 타입에 따라 적절한 처리를 수행합니다. `IExpressionSpec<T>`는 가장 먼저 검사되어 직접 Expression을 추출합니다. `AndSpecification`과 `OrSpecification`은 `Left`/`Right` 프로퍼티로, `NotSpecification`은 `Inner` 프로퍼티로 내부 Specification에 접근하여 재귀적으로 Expression을 합성합니다.
 
 ### ParameterReplacer
 

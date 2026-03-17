@@ -13,6 +13,9 @@ var spec = Specification<Product>.All;
 spec &= new ActiveProductSpec();
 ```
 
+### AllSpecification<T> (internal)
+모든 후보를 만족하는 Specification. `ExpressionSpecification<T>`를 상속하여 `ToExpression() => _ => true`를 제공하므로, `SpecificationExpressionResolver.TryResolve()`로 Expression 추출이 가능합니다. `Specification<T>.All` 프로퍼티를 통해 접근하며, 싱글턴 패턴으로 구현된 내부(internal) 클래스입니다.
+
 ### And (논리곱)
 두 Specification을 결합하여 둘 다 만족하는 후보만 통과시키는 조합 연산.
 
@@ -48,6 +51,9 @@ Expression<Func<Product, bool>> expr = p => p.IsActive;
 
 ### ExpressionSpecification<T>
 Expression Tree를 지원하는 Specification 추상 클래스. `ToExpression`을 구현하면 `IsSatisfiedBy`는 컴파일된 델리게이트를 자동 캐싱합니다.
+
+### IExpressionSpec<T>
+Expression Tree를 제공할 수 있음을 나타내는 인터페이스. `ExpressionSpecification<T>`가 이를 구현하며, `SpecificationExpressionResolver.TryResolve()`가 패턴 매칭으로 이 인터페이스를 확인합니다.
 
 ---
 

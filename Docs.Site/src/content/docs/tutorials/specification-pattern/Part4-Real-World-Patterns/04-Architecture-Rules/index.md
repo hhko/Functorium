@@ -98,6 +98,17 @@ ArchitectureRules.Tests.Unit/
 ### Q3: 다른 Aggregate의 Specification도 같은 규칙을 적용할 수 있나요?
 **A**: 네, ArchUnitNET 규칙은 어셈블리 전체에 적용됩니다. `Customer` Aggregate에 `CustomerEmailUniqueSpec`을 추가해도 동일한 규칙이 자동으로 검증됩니다.
 
+### Q4: Functorium에 기본 제공되는 아키텍처 규칙이 있나요?
+**A**: 네. `Functorium.Testing`의 `DomainArchitectureTestSuite`를 상속하면 Specification 전용 규칙 3개가 기본 제공됩니다:
+
+| 규칙 | 검증 내용 |
+|------|----------|
+| `Specification_ShouldBe_PublicSealed()` | public sealed class 강제 |
+| `Specification_ShouldInherit_SpecificationBase()` | `Specification<T>` 상속 강제 |
+| `Specification_ShouldResideIn_DomainLayer()` | 도메인 네임스페이스 배치 강제 |
+
+실제 프로젝트에서는 이 suite를 상속하여 추가 규칙만 정의하면 됩니다. 이 장에서 직접 작성한 규칙은 ArchUnitNET의 원리를 이해하기 위한 것입니다.
+
 ---
 
 Part 4에서는 Specification 패턴의 실전 활용법을 살펴보았습니다 — CQRS 통합, 동적 필터 빌더, 테스트 전략, 아키텍처 규칙까지. Part 5에서는 이 모든 것을 종합하여 실제 도메인 시나리오에 적용합니다.
