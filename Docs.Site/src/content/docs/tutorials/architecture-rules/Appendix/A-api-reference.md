@@ -214,3 +214,71 @@ public sealed record RuleViolation(
 | **메서드** | public 비정적 메서드는 허용 목록만 가능 |
 
 허용되는 메서드: `Equals`, `GetHashCode`, `ToString`, `Create`, `Validate`, 연산자, Getter 메서드
+
+## Architecture Test Suites
+
+사전 구축된 테스트 스위트로, 상속만으로 검증된 아키텍처 규칙을 즉시 적용합니다.
+
+### DomainArchitectureTestSuite
+
+도메인 레이어의 DDD 전술 패턴을 검증하는 21개 테스트를 제공합니다.
+
+#### 추상 프로퍼티 (필수 오버라이드)
+
+| 프로퍼티 | 타입 | 설명 |
+|----------|------|------|
+| `Architecture` | `Architecture` | ArchLoader로 로딩한 어셈블리 아키텍처 |
+| `DomainNamespace` | `string` | 도메인 타입이 위치하는 루트 네임스페이스 |
+
+#### 가상 프로퍼티 (선택적 오버라이드)
+
+| 프로퍼티 | 기본값 | 설명 |
+|----------|--------|------|
+| `ValueObjectExcludeFromFactoryMethods` | `[]` | Create/Validate 팩토리 메서드 검증에서 제외할 ValueObject 타입 |
+| `DomainServiceAllowedFieldTypes` | `[]` | DomainService의 `RequireNoInstanceFields`에서 허용할 필드 타입 |
+
+#### 테스트 목록 (21개)
+
+| 카테고리 | 테스트 | 검증 내용 |
+|----------|--------|-----------|
+| **Entity** | `AggregateRoot_ShouldBe_PublicSealedClass` | public sealed, not static |
+| **Entity** | `AggregateRoot_ShouldHave_CreateAndCreateFromValidated` | Create/CreateFromValidated 정적 팩토리 메서드 |
+| **Entity** | `AggregateRoot_ShouldHave_GenerateEntityIdAttribute` | `[GenerateEntityId]` 어트리뷰트 |
+| **Entity** | `AggregateRoot_ShouldHave_AllPrivateConstructors` | 모든 생성자 private |
+| **Entity** | `Entity_ShouldBe_PublicSealedClass` | public sealed, not static (AggregateRoot 제외) |
+| **Entity** | `Entity_ShouldHave_CreateAndCreateFromValidated` | Create/CreateFromValidated 정적 팩토리 메서드 |
+| **Entity** | `Entity_ShouldHave_AllPrivateConstructors` | 모든 생성자 private |
+| **ValueObject** | `ValueObject_ShouldBe_PublicSealedWithPrivateConstructors` | public sealed + private 생성자 |
+| **ValueObject** | `ValueObject_ShouldBe_Immutable` | ImmutabilityRule 6차원 불변성 |
+| **ValueObject** | `ValueObject_ShouldHave_CreateFactoryMethod` | Create → `Fin<T>` 반환 |
+| **ValueObject** | `ValueObject_ShouldHave_ValidateMethod` | Validate → `Validation<Error, T>` 반환 |
+| **DomainEvent** | `DomainEvent_ShouldBe_SealedRecord` | sealed record |
+| **DomainEvent** | `DomainEvent_ShouldHave_EventSuffix` | "Event" 접미사 |
+| **Specification** | `Specification_ShouldBe_PublicSealed` | public sealed |
+| **Specification** | `Specification_ShouldInherit_SpecificationBase` | `Specification<T>` 상속 |
+| **Specification** | `Specification_ShouldResideIn_DomainLayer` | 도메인 네임스페이스 내 위치 |
+| **DomainService** | `DomainService_ShouldBe_PublicSealed` | public sealed |
+| **DomainService** | `DomainService_ShouldBe_Stateless` | 인스턴스 필드 없음 (허용 타입 제외) |
+| **DomainService** | `DomainService_ShouldNotDependOn_IObservablePort` | IObservablePort 의존 금지 |
+| **DomainService** | `DomainService_PublicMethods_ShouldReturn_Fin` | public 인스턴스 메서드 `Fin<T>` 반환 |
+| **DomainService** | `DomainService_ShouldNotBe_Record` | record 타입 아님 |
+
+### ApplicationArchitectureTestSuite
+
+애플리케이션 레이어의 Command/Query 구조를 검증하는 4개 테스트를 제공합니다.
+
+#### 추상 프로퍼티 (필수 오버라이드)
+
+| 프로퍼티 | 타입 | 설명 |
+|----------|------|------|
+| `Architecture` | `Architecture` | ArchLoader로 로딩한 어셈블리 아키텍처 |
+| `ApplicationNamespace` | `string` | 애플리케이션 타입이 위치하는 루트 네임스페이스 |
+
+#### 테스트 목록 (4개)
+
+| 테스트 | 검증 내용 |
+|--------|-----------|
+| `Command_ShouldHave_ValidatorNestedClass` | Command에 Validator가 있으면 sealed + `AbstractValidator` 구현 |
+| `Command_ShouldHave_UsecaseNestedClass` | Command에 Usecase 필수, sealed + `ICommandUsecase` 구현 |
+| `Query_ShouldHave_ValidatorNestedClass` | Query에 Validator가 있으면 sealed + `AbstractValidator` 구현 |
+| `Query_ShouldHave_UsecaseNestedClass` | Query에 Usecase 필수, sealed + `IQueryUsecase` 구현 |
