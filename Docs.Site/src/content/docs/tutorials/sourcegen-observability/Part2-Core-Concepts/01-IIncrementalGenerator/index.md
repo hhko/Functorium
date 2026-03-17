@@ -226,10 +226,15 @@ public abstract class IncrementalGeneratorBase<TValue>(
     Func<IncrementalGeneratorInitializationContext,
          IncrementalValuesProvider<TValue>> registerSourceProvider,
     Action<SourceProductionContext, ImmutableArray<TValue>> generate,
+    //Action<IncrementalGeneratorPostInitializationContext>? registerPostInitializationSourceOutput = null,
     bool AttachDebugger = false)
     : IIncrementalGenerator
 {
+    protected const string ClassEntityName = "class";
+
     private readonly bool _attachDebugger = AttachDebugger;
+    private readonly Func<IncrementalGeneratorInitializationContext, IncrementalValuesProvider<TValue>> _registerSourceProvider = registerSourceProvider;
+    private readonly Action<SourceProductionContext, ImmutableArray<TValue>> _generate = generate;
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -242,16 +247,16 @@ public abstract class IncrementalGeneratorBase<TValue>(
 #endif
 
         // 1단계: 소스 제공자 등록 (구현체에서 정의) + null 필터링
-        IncrementalValuesProvider<TValue> provider = registerSourceProvider(context)
+        IncrementalValuesProvider<TValue> provider = _registerSourceProvider(context)
             .Where(static m => m is not null);
 
         // 2단계: 코드 생성 등록 (구현체에서 정의)
         context.RegisterSourceOutput(provider.Collect(), Execute);
     }
 
-    private void Execute(SourceProductionContext context, ImmutableArray<TValue> values)
+    private void Execute(SourceProductionContext context, ImmutableArray<TValue> displayValues)
     {
-        generate(context, values);
+        _generate(context, displayValues);
     }
 }
 ```

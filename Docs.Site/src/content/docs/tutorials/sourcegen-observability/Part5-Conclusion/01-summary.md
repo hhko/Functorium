@@ -77,8 +77,8 @@ public abstract class IncrementalGeneratorBase<TValue> : IIncrementalGenerator
     // 템플릿 메서드
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var provider = registerSourceProvider(context);
-        context.RegisterSourceOutput(provider.Collect(), generate);
+        var provider = _registerSourceProvider(context);
+        context.RegisterSourceOutput(provider.Collect(), _generate);
     }
 }
 ```
@@ -231,6 +231,7 @@ public Task Should_Generate_ObservableClass()
 | 생성자 | 4개 |
 | 인터페이스 | 3개 |
 | 네임스페이스 | 2개 |
+| 진단 | 4개 |
 
 ---
 

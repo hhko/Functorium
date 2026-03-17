@@ -104,34 +104,51 @@ analyzers/dotnet/cs/MyGenerator.dll
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- NuGet 패키지 설정 -->
-  <PropertyGroup>
-    <PackageId>Functorium.SourceGenerators</PackageId>
-    <Description>Source generator for Functorium adapter pipeline</Description>
-    <PackageTags>source-generator;roslyn;observability</PackageTags>
-  </PropertyGroup>
-
-  <!-- 소스 생성기 핵심 설정 -->
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
-    <IsRoslynComponent>true</IsRoslynComponent>
-    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-    <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+
+    <!-- Source Generator 필수 설정 -->
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IsPackable>true</IsPackable>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
   </PropertyGroup>
 
-  <!-- NuGet 패키지 참조 -->
+  <PropertyGroup>
+    <!-- Analyzer 패키징 필수 설정 -->
+    <IncludeSymbols>false</IncludeSymbols>
+    <NoWarn>$(NoWarn);NU5128;RS2008</NoWarn>
+  </PropertyGroup>
+
+  <!-- NuGet Package Settings -->
+  <PropertyGroup>
+    <PackageId>Functorium.SourceGenerators</PackageId>
+    <Description>Functorium Source Generator for Adapter Pipeline generation</Description>
+    <PackageTags>$(PackageTags);source-generator;roslyn;analyzer</PackageTags>
+  </PropertyGroup>
+
+  <!-- Package Files -->
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\Functorium.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp"
                       PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers"
-                      PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
-  <!-- 분석기로 패키징 -->
+  <!-- Analyzer DLL을 NuGet 패키지에 포함 -->
   <ItemGroup>
-    <None Include="$(OutputPath)\$(AssemblyName).dll"
+    <None Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).dll"
           Pack="true"
           PackagePath="analyzers/dotnet/cs"
           Visible="false" />
@@ -181,17 +198,25 @@ Functorium.SourceGenerators/
 └── Generators/
     ├── IncrementalGeneratorBase.cs      # 템플릿 메서드 패턴 기반 클래스
     │
-    └── ObservablePortGenerator/        # 생성기별 클래스
-        ├── ObservablePortGenerator.cs   # 메인 소스 생성기
-        ├── ObservableGeneratorConstants.cs  # 생성기 전용 상수
-        ├── ObservableClassInfo.cs       # 클래스 정보 레코드
-        ├── MethodInfo.cs                # 메서드 정보
-        ├── ParameterInfo.cs             # 파라미터 정보
-        ├── TypeExtractor.cs             # 타입 추출 유틸리티
-        ├── CollectionTypeHelper.cs      # 컬렉션 타입 판별
-        ├── SymbolDisplayFormats.cs      # 타입 문자열 포맷
-        ├── ConstructorParameterExtractor.cs  # 생성자 분석
-        └── ParameterNameResolver.cs     # 이름 충돌 해결
+    ├── ObservablePortGenerator/        # Observability 코드 생성기
+    │   ├── ObservablePortGenerator.cs   # 메인 소스 생성기
+    │   ├── ObservableGeneratorConstants.cs  # 생성기 전용 상수
+    │   ├── ObservableClassInfo.cs       # 클래스 정보 레코드
+    │   ├── MethodInfo.cs                # 메서드 정보
+    │   ├── ParameterInfo.cs             # 파라미터 정보
+    │   ├── TypeExtractor.cs             # 타입 추출 유틸리티
+    │   ├── CollectionTypeHelper.cs      # 컬렉션 타입 판별
+    │   ├── SymbolDisplayFormats.cs      # 타입 문자열 포맷
+    │   ├── ConstructorParameterExtractor.cs  # 생성자 분석
+    │   └── ParameterNameResolver.cs     # 이름 충돌 해결
+    │
+    ├── EntityIdGenerator/              # Entity ID 자동 생성기
+    │   ├── EntityIdGenerator.cs         # Ulid 기반 ID 구조체 생성
+    │   └── EntityIdInfo.cs              # Entity 정보 레코드
+    │
+    └── UnionTypeGenerator/             # Union Type 생성기
+        ├── UnionTypeGenerator.cs        # Match/Switch 메서드 생성
+        └── UnionTypeInfo.cs             # Union 정보 레코드
 ```
 
 ---

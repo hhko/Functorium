@@ -201,9 +201,14 @@ public abstract class IncrementalGeneratorBase<TValue>(
     Func<IncrementalGeneratorInitializationContext,
          IncrementalValuesProvider<TValue>> registerSourceProvider,  // 1단계: 소스 제공자 등록
     Action<SourceProductionContext, ImmutableArray<TValue>> generate, // 2단계: 코드 생성
+    //Action<IncrementalGeneratorPostInitializationContext>? registerPostInitializationSourceOutput = null,
     bool AttachDebugger = false) : IIncrementalGenerator
 {
+    protected const string ClassEntityName = "class";
+
     private readonly bool _attachDebugger = AttachDebugger;
+    private readonly Func<IncrementalGeneratorInitializationContext, IncrementalValuesProvider<TValue>> _registerSourceProvider = registerSourceProvider;
+    private readonly Action<SourceProductionContext, ImmutableArray<TValue>> _generate = generate;
 
     // 템플릿 메서드 - 고정된 알고리즘 흐름
     public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -216,16 +221,16 @@ public abstract class IncrementalGeneratorBase<TValue>(
 #endif
 
         // 1단계: 소스 코드에서 관심 대상 추출
-        IncrementalValuesProvider<TValue> provider = registerSourceProvider(context)
+        IncrementalValuesProvider<TValue> provider = _registerSourceProvider(context)
             .Where(static m => m is not null);
 
         // 2단계: 추출된 정보로 코드 생성
         context.RegisterSourceOutput(provider.Collect(), Execute);
     }
 
-    private void Execute(SourceProductionContext context, ImmutableArray<TValue> values)
+    private void Execute(SourceProductionContext context, ImmutableArray<TValue> displayValues)
     {
-        generate(context, values);
+        _generate(context, displayValues);
     }
 }
 ```
@@ -385,36 +390,57 @@ ProductRepository.cs     : 60줄 (순수 비즈니스 로직)
 Functorium/
 ├── Src/
 │   ├── Functorium.SourceGenerators/            # 소스 생성기
-│   │   ├── ObservablePortGenerator.cs                 # 메인 생성기
+│   │   ├── Abstractions/
+│   │   │   ├── Constants.cs                           # 공통 상수 (헤더 등)
+│   │   │   └── Selectors.cs                           # 공통 선택자
+│   │   │
 │   │   └── Generators/
-│   │       ├── IncrementalGeneratorBase.cs             # 기본 패턴
-│   │       └── ObservablePortGenerator/
-│   │           ├── ObservableClassInfo.cs                # 클래스 정보 모델
-│   │           ├── MethodInfo.cs                       # 메서드 정보 모델
-│   │           ├── ParameterInfo.cs                    # 파라미터 정보 모델
-│   │           ├── TypeExtractor.cs                    # 타입 추출 유틸리티
-│   │           ├── CollectionTypeHelper.cs             # 컬렉션 타입 처리
-│   │           ├── SymbolDisplayFormats.cs             # 타입 포맷팅
-│   │           ├── ConstructorParameterExtractor.cs    # 생성자 분석
-│   │           └── ParameterNameResolver.cs            # 이름 충돌 해결
+│   │       ├── IncrementalGeneratorBase.cs             # 템플릿 메서드 패턴 기반 클래스
+│   │       │
+│   │       ├── ObservablePortGenerator/               # Observability 코드 생성기
+│   │       │   ├── ObservablePortGenerator.cs          # 메인 소스 생성기
+│   │       │   ├── ObservableGeneratorConstants.cs     # 생성기 전용 상수
+│   │       │   ├── ObservableClassInfo.cs              # 클래스 정보 레코드
+│   │       │   ├── MethodInfo.cs                       # 메서드 정보
+│   │       │   ├── ParameterInfo.cs                    # 파라미터 정보
+│   │       │   ├── TypeExtractor.cs                    # 타입 추출 유틸리티
+│   │       │   ├── CollectionTypeHelper.cs             # 컬렉션 타입 판별
+│   │       │   ├── SymbolDisplayFormats.cs             # 타입 문자열 포맷
+│   │       │   ├── ConstructorParameterExtractor.cs    # 생성자 분석
+│   │       │   └── ParameterNameResolver.cs            # 이름 충돌 해결
+│   │       │
+│   │       ├── EntityIdGenerator/                     # Entity ID 자동 생성기
+│   │       │   ├── EntityIdGenerator.cs                # Ulid 기반 ID 구조체 생성
+│   │       │   └── EntityIdInfo.cs                     # Entity 정보 레코드
+│   │       │
+│   │       └── UnionTypeGenerator/                    # Union Type 생성기
+│   │           ├── UnionTypeGenerator.cs               # Match/Switch 메서드 생성
+│   │           └── UnionTypeInfo.cs                    # Union 정보 레코드
 │   │
-│   ├── Functorium/                                     # 핵심 라이브러리
-│   │   └── Adapters/
+│   ├── Functorium/                                    # 핵심 도메인 라이브러리
+│   │   └── Domains/
 │   │       └── Observabilities/
-│   │           └── Naming/
-│   │               ├── ObservabilityNaming.cs           # 관측 가능성 네이밍 규칙
-│   │               ├── ObservabilityNaming.Events.cs    # 이벤트 ID 정의
-│   │               └── ObservabilityNaming.Attributes.cs # 속성 키 정의
+│   │           └── IObservablePort.cs                  # 관측 가능성 마커 인터페이스
 │   │
-│   └── Functorium.Testing/                             # 테스트 유틸리티
-│       └── SourceGenerators/
-│           └── SourceGeneratorTestRunner.cs            # 테스트 러너
+│   ├── Functorium.Adapters/                           # 어댑터 라이브러리
+│   │   ├── SourceGenerators/
+│   │   │   └── GenerateObservablePortAttribute.cs     # [GenerateObservablePort] 속성
+│   │   └── Observabilities/
+│   │       └── Naming/
+│   │           ├── ObservabilityNaming.cs              # 관측 가능성 네이밍 규칙
+│   │           ├── ObservabilityNaming.Events.cs       # 이벤트 ID 정의
+│   │           └── ObservabilityNaming.Attributes.cs   # 속성 키 정의
+│   │
+│   └── Functorium.Testing/                            # 테스트 유틸리티
+│       └── Actions/
+│           └── SourceGenerators/
+│               └── SourceGeneratorTestRunner.cs        # 테스트 러너
 │
 └── Tests/
     └── Functorium.Tests.Unit/
         └── AdaptersTests/
             └── SourceGenerators/
-                ├── ObservablePortGeneratorTests.cs    # 27개 테스트
+                ├── ObservablePortGeneratorTests.cs     # 31개 테스트
                 └── *.verified.txt                      # 스냅샷 파일
 ```
 
@@ -448,9 +474,14 @@ public abstract class IncrementalGeneratorBase<TValue>(
     Func<IncrementalGeneratorInitializationContext,
          IncrementalValuesProvider<TValue>> registerSourceProvider,
     Action<SourceProductionContext, ImmutableArray<TValue>> generate,
+    //Action<IncrementalGeneratorPostInitializationContext>? registerPostInitializationSourceOutput = null,
     bool AttachDebugger = false) : IIncrementalGenerator
 {
+    protected const string ClassEntityName = "class";
+
     private readonly bool _attachDebugger = AttachDebugger;
+    private readonly Func<IncrementalGeneratorInitializationContext, IncrementalValuesProvider<TValue>> _registerSourceProvider = registerSourceProvider;
+    private readonly Action<SourceProductionContext, ImmutableArray<TValue>> _generate = generate;
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -461,15 +492,15 @@ public abstract class IncrementalGeneratorBase<TValue>(
         }
 #endif
 
-        IncrementalValuesProvider<TValue> provider = registerSourceProvider(context)
+        IncrementalValuesProvider<TValue> provider = _registerSourceProvider(context)
             .Where(static m => m is not null);
 
         context.RegisterSourceOutput(provider.Collect(), Execute);
     }
 
-    private void Execute(SourceProductionContext context, ImmutableArray<TValue> values)
+    private void Execute(SourceProductionContext context, ImmutableArray<TValue> displayValues)
     {
-        generate(context, values);
+        _generate(context, displayValues);
     }
 }
 ```
@@ -517,7 +548,7 @@ Chapter 08: 테스트 전략
 ======================
 - SourceGeneratorTestRunner 활용
 - Verify 스냅샷 테스트
-- 27개 테스트 시나리오 작성
+- 31개 테스트 시나리오 작성
 ```
 
 ---

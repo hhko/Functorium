@@ -235,8 +235,9 @@ sourcegen-observability/
 이 튜토리얼의 모든 예제 코드는 Functorium 프로젝트에서 확인할 수 있습니다:
 
 - 소스 생성기: `Src/Functorium.SourceGenerators/`
+- 어댑터 (속성, 네이밍): `Src/Functorium.Adapters/`
 - 테스트: `Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/`
-- 테스트 유틸리티: `Src/Functorium.Testing/SourceGenerators/`
+- 테스트 유틸리티: `Src/Functorium.Testing/Actions/SourceGenerators/`
 
 ---
 

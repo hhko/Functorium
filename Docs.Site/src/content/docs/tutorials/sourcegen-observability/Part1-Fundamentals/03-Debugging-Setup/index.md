@@ -62,10 +62,15 @@ public abstract class IncrementalGeneratorBase<TValue>(
     Func<IncrementalGeneratorInitializationContext,
          IncrementalValuesProvider<TValue>> registerSourceProvider,
     Action<SourceProductionContext, ImmutableArray<TValue>> generate,
+    //Action<IncrementalGeneratorPostInitializationContext>? registerPostInitializationSourceOutput = null,
     bool AttachDebugger = false)  // ← 디버깅 플래그
     : IIncrementalGenerator
 {
+    protected const string ClassEntityName = "class";
+
     private readonly bool _attachDebugger = AttachDebugger;
+    private readonly Func<IncrementalGeneratorInitializationContext, IncrementalValuesProvider<TValue>> _registerSourceProvider = registerSourceProvider;
+    private readonly Action<SourceProductionContext, ImmutableArray<TValue>> _generate = generate;
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -78,15 +83,15 @@ public abstract class IncrementalGeneratorBase<TValue>(
         }
 #endif
 
-        IncrementalValuesProvider<TValue> provider = registerSourceProvider(context)
+        IncrementalValuesProvider<TValue> provider = _registerSourceProvider(context)
             .Where(static m => m is not null);
 
         context.RegisterSourceOutput(provider.Collect(), Execute);
     }
 
-    private void Execute(SourceProductionContext context, ImmutableArray<TValue> values)
+    private void Execute(SourceProductionContext context, ImmutableArray<TValue> displayValues)
     {
-        generate(context, values);
+        _generate(context, displayValues);
     }
 }
 ```

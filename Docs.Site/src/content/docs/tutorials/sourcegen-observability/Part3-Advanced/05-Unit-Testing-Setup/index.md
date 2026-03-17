@@ -39,7 +39,7 @@ title: "Unit Test 설정"
 ### 전체 구조
 
 ```csharp
-// Functorium.Testing/SourceGenerators/SourceGeneratorTestRunner.cs
+// Functorium.Testing/Actions/SourceGenerators/SourceGeneratorTestRunner.cs
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Shouldly;

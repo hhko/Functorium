@@ -120,6 +120,12 @@ Parallel.ForEach(symbols, symbol => {
 
 ---
 
+## Functorium의 다른 소스 생성기
+
+ObservablePortGenerator에서 배운 `IncrementalGeneratorBase` 패턴은 이미 Functorium 프로젝트 내에서 다른 도메인에도 적용되고 있습니다. **UnionTypeGenerator는** 판별 합집합(Discriminated Union) 타입에 대해 `Match`/`Switch` 메서드를 자동 생성하는 소스 생성기로, `IncrementalGeneratorBase<UnionTypeInfo>`를 상속하여 동일한 2단계 파이프라인(소스 제공자 등록 → 코드 생성)을 따릅니다. 튜토리얼에서 학습한 템플릿 메서드 패턴이 관찰 가능성이 아닌 완전히 다른 도메인에서도 재사용되는 실제 사례이므로, 소스 코드(`Src/Functorium.SourceGenerators/Generators/UnionTypeGenerator/`)를 참고하면 패턴 확장에 대한 감각을 얻을 수 있습니다.
+
+---
+
 ## 실전 프로젝트 아이디어
 
 다음 프로젝트들은 난이도 순으로 정리되어 있습니다. DTO 매퍼와 Builder 패턴 생성기로 기본기를 다진 뒤, Enum 확장과 API 클라이언트 생성기로 복잡한 시나리오를 경험하고, 검증 규칙 생성기에서 Analyzer와의 통합까지 시도해보십시오.
