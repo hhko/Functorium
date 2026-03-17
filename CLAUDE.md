@@ -129,6 +129,14 @@ Verify.Xunit 스냅샷 테스트 결과를 승인하는 스크립트입니다.
 ./Build-VerifyAccept.ps1
 ```
 
+### Git Hooks
+
+이 프로젝트는 `.githooks/` 디렉토리에 커밋 메시지 정리 hook을 관리합니다.
+
+- **커밋 전 필수 확인**: `git config core.hooksPath`가 `.githooks`를 가리키는지 확인하십시오.
+- 설정되지 않았거나 다른 경로를 가리키면: `git config core.hooksPath .githooks`로 설정하십시오.
+- `.githooks/commit-msg`: Claude/AI 관련 텍스트를 커밋 메시지에서 자동 제거합니다.
+
 ### 커밋 규칙
 
 커밋 시 `.claude/commands/commit.md`의 규칙을 준수하십시오.
