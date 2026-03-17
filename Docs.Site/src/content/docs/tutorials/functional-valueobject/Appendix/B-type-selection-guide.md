@@ -13,39 +13,49 @@ title: "프레임워크 타입 선택 가이드"
 값 객체 구현 시작
        │
        ▼
-┌─────────────────┐
-│ 값이 하나인가?   │
-│ (단일 값 래퍼)   │
-└────────┬────────┘
-         │
-    ┌────┴────┐
-    │         │
-   Yes        No
-    │         │
-    ▼         ▼
-┌────────┐  ┌─────────────────┐
-│비교 필요?│  │ 열거형인가?      │
-└────┬───┘  └────────┬────────┘
-     │               │
- ┌───┴───┐      ┌────┴────┐
- │       │      │         │
-Yes      No    Yes        No
- │       │      │         │
- ▼       ▼      ▼         ▼
-┌────────────┐ ┌──────────┐ ┌──────────┐ ┌───────────┐
-│Comparable  │ │Simple    │ │SmartEnum │ │ 비교 필요?  │
-│SimpleValue │ │ValueObject│ │+IValueObj│ │           │
-│Object<T>   │ │<T>       │ │          │ └─────┬─────┘
-└────────────┘ └──────────┘ └──────────┘       │
-                                          ┌────┴────┐
-                                          │         │
-                                         Yes        No
-                                          │         │
-                                          ▼         ▼
-                                    ┌──────────┐ ┌──────────┐
-                                    │Comparable│ │ValueObject│
-                                    │ValueObj  │ │          │
-                                    └──────────┘ └──────────┘
+┌──────────────────────┐
+│ 여러 변형 중 하나인가? │
+│ (Discriminated Union) │
+└──────────┬───────────┘
+           │
+      ┌────┴────┐
+      │         │
+     Yes        No
+      │         │
+      ▼         ▼
+┌──────────┐  ┌─────────────────┐
+│Union     │  │ 값이 하나인가?   │
+│ValueObj  │  │ (단일 값 래퍼)   │
+└──────────┘  └────────┬────────┘
+                       │
+                  ┌────┴────┐
+                  │         │
+                 Yes        No
+                  │         │
+                  ▼         ▼
+            ┌────────┐  ┌─────────────────┐
+            │비교 필요?│  │ 열거형인가?      │
+            └────┬───┘  └────────┬────────┘
+                 │               │
+             ┌───┴───┐      ┌────┴────┐
+             │       │      │         │
+            Yes      No    Yes        No
+             │       │      │         │
+             ▼       ▼      ▼         ▼
+       ┌────────────┐ ┌──────────┐ ┌──────────┐ ┌───────────┐
+       │Comparable  │ │Simple    │ │SmartEnum │ │ 비교 필요?  │
+       │SimpleValue │ │ValueObject│ │+IValueObj│ │           │
+       │Object<T>   │ │<T>       │ │          │ └─────┬─────┘
+       └────────────┘ └──────────┘ └──────────┘       │
+                                                 ┌────┴────┐
+                                                 │         │
+                                                Yes        No
+                                                 │         │
+                                                 ▼         ▼
+                                           ┌──────────┐ ┌──────────┐
+                                           │Comparable│ │ValueObject│
+                                           │ValueObj  │ │          │
+                                           └──────────┘ └──────────┘
 ```
 
 ---
@@ -230,20 +240,51 @@ public sealed class OrderStatus : SmartEnum<OrderStatus, string>, IValueObject
 }
 ```
 
+### 6. UnionValueObject (Discriminated Union)
+
+**언제 사용?**
+- 여러 변형(케이스) 중 정확히 하나일 때
+- 패턴 매칭으로 빠짐없는 분기 처리가 필요할 때
+- 닫힌 타입 계층이 필요할 때
+
+**예시**
+```
+- Shape (Circle | Rectangle | Triangle)
+- PaymentMethod (CreditCard | BankTransfer | Cash)
+- OrderStatus (Pending | Confirmed | Shipped | Delivered)
+- Result (Success | Failure)
+```
+
+**구현 예시**
+```csharp
+public abstract record Shape : UnionValueObject
+{
+    public sealed record Circle(double Radius) : Shape;
+    public sealed record Rectangle(double Width, double Height) : Shape;
+    public sealed record Triangle(double Base, double Height) : Shape;
+
+    public double Area => Match(
+        circle: c => Math.PI * c.Radius * c.Radius,
+        rectangle: r => r.Width * r.Height,
+        triangle: t => 0.5 * t.Base * t.Height);
+}
+```
+
 ---
 
 ## 빠른 선택 표
 
 각 타입이 지원하는 기능을 한눈에 비교합니다.
 
-| 특성 | SimpleValueObject | ComparableSimple | ValueObject | ComparableValue | SmartEnum |
-|------|:-----------------:|:----------------:|:-----------:|:---------------:|:---------:|
-| 단일 값 | ✅ | ✅ | ❌ | ❌ | ✅ |
-| 복합 값 | ❌ | ❌ | ✅ | ✅ | ❌ |
-| 비교 가능 | ❌ | ✅ | ❌ | ✅ | ❌ |
-| 정렬 가능 | ❌ | ✅ | ❌ | ✅ | ❌ |
-| 열거형 | ❌ | ❌ | ❌ | ❌ | ✅ |
-| 상태 전이 | ❌ | ❌ | ❌ | ❌ | ✅ |
+| 특성 | SimpleValueObject | ComparableSimple | ValueObject | ComparableValue | SmartEnum | UnionValueObj |
+|------|:-----------------:|:----------------:|:-----------:|:---------------:|:---------:|:-------------:|
+| 단일 값 | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ |
+| 복합 값 | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
+| DU (변형 중 하나) | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| 비교 가능 | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ |
+| 정렬 가능 | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ |
+| 열거형 | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| 상태 전이 | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
 
 ---
 

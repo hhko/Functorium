@@ -94,6 +94,10 @@
     <Project Path="Part2-Validation-Patterns/05-Bind-Internal-Apply-Validation/BindInternalApplyValidation.Tests.Unit/BindInternalApplyValidation.Tests.Unit.csproj" />
     <Project Path="Part2-Validation-Patterns/05-Bind-Internal-Apply-Validation/BindInternalApplyValidation/BindInternalApplyValidation.csproj" />
   </Folder>
+  <Folder Name="/Part2-Validation-Patterns/06-Contextual-Validation/">
+    <Project Path="Part2-Validation-Patterns/06-Contextual-Validation/ContextualValidation.Tests.Unit/ContextualValidation.Tests.Unit.csproj" />
+    <Project Path="Part2-Validation-Patterns/06-Contextual-Validation/ContextualValidation/ContextualValidation.csproj" />
+  </Folder>
   <Folder Name="/Part3-ValueObject-Patterns/" />
   <Folder Name="/Part3-ValueObject-Patterns/01-SimpleValueObject/">
     <Project Path="Part3-ValueObject-Patterns/01-SimpleValueObject/SimpleValueObject.Tests.Unit/SimpleValueObject.Tests.Unit.csproj" />
@@ -125,6 +129,10 @@
   </Folder>
   <Folder Name="/Part3-ValueObject-Patterns/08-Architecture-Test/">
     <Project Path="Part3-ValueObject-Patterns/08-Architecture-Test/ArchitectureTest/ArchitectureTest.csproj" />
+  </Folder>
+  <Folder Name="/Part3-ValueObject-Patterns/09-UnionValueObject/">
+    <Project Path="Part3-ValueObject-Patterns/09-UnionValueObject/UnionValueObject.Tests.Unit/UnionValueObject.Tests.Unit.csproj" />
+    <Project Path="Part3-ValueObject-Patterns/09-UnionValueObject/UnionValueObject/UnionValueObject.csproj" />
   </Folder>
   <Folder Name="/Part4-Practical-Guide/" />
   <Folder Name="/Part4-Practical-Guide/01-Functorium-Framework/">
