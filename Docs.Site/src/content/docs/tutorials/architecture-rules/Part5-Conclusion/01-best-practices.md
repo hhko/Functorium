@@ -8,6 +8,21 @@ title: "베스트 프랙티스"
 
 > **"좋은 아키텍처 규칙은 위반 메시지만 읽어도 무엇이 잘못되었는지 알 수 있습니다."**
 
+## Suite 상속부터 시작하세요
+
+새 프로젝트에서 아키텍처 테스트를 도입할 때는 `DomainArchitectureTestSuite`와 `ApplicationArchitectureTestSuite`를 상속하는 것부터 시작하세요. 두 개의 프로퍼티만 오버라이드하면 25개의 검증된 규칙이 즉시 적용됩니다. 프로젝트 고유 규칙은 Suite 위에 `[Fact]` 메서드로 추가합니다.
+
+```csharp
+// 1. Suite 상속으로 25개 규칙 즉시 확보
+public sealed class DomainArchTests : DomainArchitectureTestSuite { ... }
+public sealed class AppArchTests : ApplicationArchitectureTestSuite { ... }
+
+// 2. 프로젝트 고유 규칙 추가
+// 3. ArchUnitNET 네이티브 API로 레이어 의존성 규칙 추가
+```
+
+자세한 사용법은 [Part 4-05 아키텍처 테스트 스위트](../Part4-Real-World-Patterns/05-Architecture-Test-Suites/)를 참조하세요.
+
 ## 규칙 설계 원칙
 
 ### 규칙은 명확한 이름을 가져야 합니다

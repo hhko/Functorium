@@ -92,6 +92,7 @@ public static class TeamArchRules
 | 자료 | 경로 |
 |------|------|
 | ArchitectureRules 소스 코드 | `Src/Functorium.Testing/Assertions/ArchitectureRules/` |
+| 사전 구축 테스트 스위트 | [Part 4-05 아키텍처 테스트 스위트](../Part4-Real-World-Patterns/05-Architecture-Test-Suites/) |
 | 실전 아키텍처 테스트 예제 (42개) | `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Architecture/` |
 | API 레퍼런스 | [부록 A](../Appendix/A-api-reference.md) |
 

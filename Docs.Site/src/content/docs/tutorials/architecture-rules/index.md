@@ -37,6 +37,8 @@ title: "아키텍처 규칙 테스트"
 4. **DDD 레이어 아키텍처 설계 일관성 자동화**
    - 도메인/애플리케이션/어댑터 레이어별 규칙 적용
    - ArchUnitNET과 Functorium을 결합한 의존성 방향 검증
+5. **사전 구축 테스트 스위트 활용**
+   - DomainArchitectureTestSuite / ApplicationArchitectureTestSuite 상속으로 프로젝트에 즉시 적용
 
 ---
 
@@ -89,8 +91,9 @@ DDD 레이어 아키텍처에 아키텍처 테스트를 적용합니다.
 |:---:|------|----------------|
 | 1 | [도메인 레이어 규칙](Part4-Real-World-Patterns/01-Domain-Layer-Rules/) | Entity, ValueObject, DomainEvent, DomainService 종합 검증 |
 | 2 | [애플리케이션 레이어 규칙](Part4-Real-World-Patterns/02-Application-Layer-Rules/) | Command/Query, Usecase, DTO 규칙 |
-| 3 | [어댑터 레이어 규칙](Part4-Real-World-Patterns/03-Adapter-Layer-Rules/) | Port Interface, Adapter Implementation 규칙 |
+| 3 | [어댑터 레이어 규칙](Part4-Real-World-Patterns/03-Adapter-Layer-Rules/) | Port Interface, Adapter Implementation, RequireVirtual 규칙 |
 | 4 | [레이어 의존성 규칙](Part4-Real-World-Patterns/04-Layer-Dependency-Rules/) | ArchUnitNET 의존성 규칙 + Functorium 규칙 통합 |
+| 5 | [아키텍처 테스트 스위트](Part4-Real-World-Patterns/05-Architecture-Test-Suites/) | DomainArchitectureTestSuite, ApplicationArchitectureTestSuite 상속 |
 
 ### Part 5: 결론
 
@@ -120,7 +123,7 @@ DDD 레이어 아키텍처에 아키텍처 테스트를 적용합니다.
 1장: 불변성 규칙  →  2장: 중첩 클래스  →  3장: 인터페이스 검증  →  4장: 커스텀 규칙
 
 [Part 4] 실전 패턴
-1장: 도메인 레이어  →  2장: 애플리케이션 레이어  →  3장: 어댑터 레이어  →  4장: 레이어 의존성
+1장: 도메인 레이어  →  2장: 애플리케이션 레이어  →  3장: 어댑터 레이어  →  4장: 레이어 의존성  →  5장: 테스트 스위트
 ```
 
 ---
@@ -128,8 +131,8 @@ DDD 레이어 아키텍처에 아키텍처 테스트를 적용합니다.
 ## 프로젝트 구조
 
 ```txt
-Enforcing-Architecture-Rules-with-Testing/
-├── README.md
+architecture-rules/
+├── index.md
 ├── Part0-Introduction/
 │   ├── 01-why-architecture-testing.md
 │   ├── 02-archunitnet-and-functorium.md
@@ -153,7 +156,8 @@ Enforcing-Architecture-Rules-with-Testing/
 │   ├── 01-Domain-Layer-Rules/
 │   ├── 02-Application-Layer-Rules/
 │   ├── 03-Adapter-Layer-Rules/
-│   └── 04-Layer-Dependency-Rules/
+│   ├── 04-Layer-Dependency-Rules/
+│   └── 05-Architecture-Test-Suites/
 ├── Part5-Conclusion/
 │   ├── 01-best-practices.md
 │   └── 02-next-steps.md
@@ -193,6 +197,7 @@ dotnet test --solution architecture-rules.slnx
 | 4 | 2 | `ApplicationLayerRules.Tests.Unit` |
 | 4 | 3 | `AdapterLayerRules.Tests.Unit` |
 | 4 | 4 | `LayerDependencyRules.Tests.Unit` |
+| 4 | 5 | `ArchitectureTestSuites.Tests.Unit` |
 
 ## 테스트 네이밍 규칙
 
