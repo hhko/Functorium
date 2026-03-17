@@ -57,16 +57,30 @@ public sealed class PortArchitectureTests : ArchitectureTestBase
 public sealed class AdapterArchitectureTests : ArchitectureTestBase
 {
     [Fact]
-    public void Adapters_ShouldBe_PublicAndSealed()
+    public void Adapters_ShouldBe_Public()
     {
         ArchRuleDefinition.Classes()
             .That()
             .ResideInNamespace(AdapterNamespace)
             .ValidateAllClasses(Architecture, @class => @class
-                .RequirePublic()
-                .RequireSealed(),
+                .RequirePublic(),
                 verbose: true)
-            .ThrowIfAnyFailures("Adapter Public Sealed Rule");
+            .ThrowIfAnyFailures("Adapter Public Rule");
+    }
+
+    [Fact]
+    public void ObservablePortAdapters_ShouldHave_VirtualMethods()
+    {
+        ArchRuleDefinition.Classes()
+            .That()
+            .ImplementInterface(typeof(AdapterLayerRules.Domains.Ports.IObservablePort))
+            .And().AreNotAbstract()
+            .ValidateAllClasses(Architecture, @class => @class
+                .RequireNotSealed()
+                .RequireAllMethods(method => method
+                    .RequireVirtual()),
+                verbose: true)
+            .ThrowIfAnyFailures("Observable Port Adapter Virtual Methods Rule");
     }
 
     [Fact]

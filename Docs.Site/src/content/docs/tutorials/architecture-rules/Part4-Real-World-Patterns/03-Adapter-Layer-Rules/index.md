@@ -22,13 +22,17 @@ title: "어댑터 레이어 규칙"
    - 도메인이 어댑터에 의존하지 않음을 자동으로 검증
    - `.Check(Architecture)`로 규칙 위반 시 테스트 실패
 
-3. **Functorium API와 ArchUnitNET 네이티브 API의 역할 분담**
+3. **`RequireVirtual()`로 Port 구현체의 확장성 보장**
+   - 데코레이터 패턴 지원을 위해 `IObservablePort` 구현체에 virtual 메서드 강제
+   - `RequireNotSealed()`과 `RequireVirtual()` 조합
+
+4. **Functorium API와 ArchUnitNET 네이티브 API의 역할 분담**
    - Functorium: 타입 내부 구조 검증 (네이밍, 멤버, 불변성)
    - ArchUnitNET: 타입 간 관계 검증 (의존성, 상속)
 
 ### 실습을 통해 확인할 내용
 - **IOrderRepository, INotificationService**: 포트 인터페이스의 `I` 접두사 검증
-- **OrderRepository, EmailNotificationService**: 어댑터 구현체의 public, sealed 검증
+- **OrderRepository**: `IObservablePort` 구현체의 virtual 메서드, not sealed 검증
 - **레이어 의존성**: Domain -> Adapter 의존 금지 검증
 
 ## 도메인 코드 구조
@@ -37,13 +41,14 @@ title: "어댑터 레이어 규칙"
 Domains/
 ├── Order.cs
 └── Ports/
+    ├── IObservablePort.cs        # 관측성 마커 인터페이스
     ├── IOrderRepository.cs       # 포트 인터페이스
     └── INotificationService.cs   # 포트 인터페이스
 Adapters/
 ├── Persistence/
-│   └── OrderRepository.cs        # 어댑터 구현체
+│   └── OrderRepository.cs        # IObservablePort 구현 (non-sealed, virtual)
 └── Infrastructure/
-    └── EmailNotificationService.cs  # 어댑터 구현체
+    └── EmailNotificationService.cs  # 어댑터 구현체 (sealed)
 ```
 
 **포트(Port)는** 도메인이 외부와 소통하는 인터페이스입니다. `Domains.Ports` 네임스페이스에 위치합니다.
@@ -84,6 +89,46 @@ Types()
 
 `.Check(Architecture)`는 ArchUnitNET xUnitV3 패키지가 제공하는 확장 메서드로, 규칙 위반 시 xUnit 테스트를 실패시킵니다.
 
+## Port 구현체의 확장성 보장
+
+### 왜 virtual 메서드가 필요한가?
+
+Observability(관측성) 패턴에서는 어댑터를 **데코레이터(Decorator)로 감싸** 로깅, 메트릭, 트레이싱을 투명하게 추가합니다. 이때 원본 어댑터의 메서드가 `virtual`이어야 데코레이터가 오버라이드할 수 있습니다.
+
+`IObservablePort` 마커 인터페이스를 구현하는 어댑터는 sealed가 아니고, 모든 메서드가 virtual이어야 합니다:
+
+```csharp
+// IObservablePort를 구현하는 어댑터는 데코레이터 패턴을 지원
+public class OrderRepository : IOrderRepository, IObservablePort
+{
+    public virtual Task<Order?> GetByIdAsync(string id) => ...;
+    public virtual Task SaveAsync(Order order) => ...;
+}
+```
+
+### RequireVirtual 테스트
+
+`RequireNotSealed()`과 `RequireVirtual()`을 조합하여 데코레이터 패턴 지원을 강제합니다:
+
+```csharp
+[Fact]
+public void ObservablePortAdapters_ShouldHave_VirtualMethods()
+{
+    ArchRuleDefinition.Classes()
+        .That()
+        .ImplementInterface(typeof(IObservablePort))
+        .And().AreNotAbstract()
+        .ValidateAllClasses(Architecture, @class => @class
+            .RequireNotSealed()
+            .RequireAllMethods(method => method
+                .RequireVirtual()),
+            verbose: true)
+        .ThrowIfAnyFailures("Observable Port Adapter Virtual Methods Rule");
+}
+```
+
+`IObservablePort`를 구현하지 않는 단순 어댑터(`EmailNotificationService`)는 여전히 sealed로 유지됩니다. sealed/non-sealed 구분은 데코레이터 패턴 지원 여부에 의해 결정됩니다.
+
 ## 한눈에 보는 정리
 
 다음 표는 어댑터 레이어 검증의 대상별 도구와 규칙을 비교합니다.
@@ -93,7 +138,8 @@ Types()
 | 대상 | 검증 도구 | 검증 규칙 | 핵심 의도 |
 |------|-----------|-----------|-----------|
 | **Port Interface** | Functorium `ValidateAllInterfaces` | `I` 접두사 네이밍 | 네이밍 컨벤션 통일 |
-| **Adapter** | Functorium `ValidateAllClasses` | public, sealed | 구현체 구조 통일 |
+| **Adapter** | Functorium `ValidateAllClasses` | public | 구현체 구조 통일 |
+| **Observable Port Adapter** | Functorium `ValidateAllClasses` | not sealed, virtual 메서드 | 데코레이터 패턴 지원 |
 | **레이어 의존성** | ArchUnitNET `.Check()` | Domain -> Adapter 의존 금지 | 의존성 역전 보장 |
 
 다음 표는 두 도구의 역할 분담을 정리합니다.
@@ -117,7 +163,10 @@ Types()
 ### Q3: 포트 인터페이스에 `I` 접두사 외에 다른 네이밍 규칙도 적용할 수 있나요?
 **A**: 네, `RequireNameEndsWith("Repository")`나 `RequireNameContains("Service")` 등을 추가로 체이닝할 수 있습니다. 포트의 역할에 따라 접미사 규칙을 더 세분화할 수 있습니다.
 
-### Q4: 어댑터가 다른 어댑터에 의존해도 되나요?
+### Q4: 왜 IObservablePort 구현체는 sealed가 아닌가요?
+**A**: 데코레이터 패턴을 지원하기 위해서입니다. Observability(관측성) 레이어가 원본 어댑터를 감싸 로깅, 메트릭, 트레이싱을 투명하게 추가하려면, 원본 메서드를 오버라이드할 수 있어야 합니다. sealed 클래스는 상속이 불가능하고, virtual이 아닌 메서드는 오버라이드할 수 없으므로, IObservablePort 구현체는 `RequireNotSealed()`과 `RequireVirtual()`로 확장성을 강제합니다.
+
+### Q5: 어댑터가 다른 어댑터에 의존해도 되나요?
 **A**: 일반적으로 어댑터 간 직접 의존은 권장하지 않습니다. 하지만 기술적으로 같은 레이어이므로 ArchUnitNET 규칙에서 금지하지 않습니다. 필요하다면 `Types().That().ResideInNamespace(AdapterNamespace).Should().NotDependOnAnyTypesThat().ResideInNamespace(OtherAdapterNamespace)`로 제한할 수 있습니다.
 
 ---
