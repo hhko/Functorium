@@ -19,4 +19,12 @@ public readonly record struct ProductId : IEntityId<ProductId>
     public int CompareTo(ProductId other) => Value.CompareTo(other.Value);
     public override int GetHashCode() => Value.GetHashCode();
     public override string ToString() => Value.ToString();
+
+    public static ProductId Parse(string s, IFormatProvider? provider) => Create(s);
+    public static bool TryParse(string? s, IFormatProvider? provider, out ProductId result)
+    {
+        if (s is null || !Ulid.TryParse(s, out var ulid)) { result = default; return false; }
+        result = Create(ulid);
+        return true;
+    }
 }

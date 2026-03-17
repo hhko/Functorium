@@ -3,6 +3,7 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\Src\Functorium\Functorium.csproj" />
+    <ProjectReference Include="..\..\..\..\..\..\..\..\..\Src\Functorium\Functorium.csproj" />
+    <ProjectReference Include="..\..\..\..\..\..\..\..\..\Src\Functorium.Adapters\Functorium.Adapters.csproj" />
   </ItemGroup>
 </Project>

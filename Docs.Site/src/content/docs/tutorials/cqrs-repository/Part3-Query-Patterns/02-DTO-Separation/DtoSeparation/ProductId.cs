@@ -18,6 +18,14 @@ public readonly struct ProductId : IEntityId<ProductId>
     public override int GetHashCode() => Value.GetHashCode();
     public override string ToString() => Value.ToString();
 
+    public static ProductId Parse(string s, IFormatProvider? provider) => Create(s);
+    public static bool TryParse(string? s, IFormatProvider? provider, out ProductId result)
+    {
+        if (s is null || !Ulid.TryParse(s, out var ulid)) { result = default; return false; }
+        result = Create(ulid);
+        return true;
+    }
+
     public static bool operator ==(ProductId left, ProductId right) => left.Equals(right);
     public static bool operator !=(ProductId left, ProductId right) => !left.Equals(right);
 }
