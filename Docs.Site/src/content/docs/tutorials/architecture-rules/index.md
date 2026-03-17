@@ -167,10 +167,10 @@ Enforcing-Architecture-Rules-with-Testing/
 
 ```bash
 # 개별 챕터 테스트
-dotnet test --project Docs/tutorials/Enforcing-Architecture-Rules-with-Testing/Part1-ClassValidator-Basics/01-First-Architecture-Test/FirstArchitectureTest.Tests.Unit
+dotnet test --project Docs.Site/src/content/docs/tutorials/architecture-rules/Part1-ClassValidator-Basics/01-First-Architecture-Test/FirstArchitectureTest.Tests.Unit
 
 # 전체 솔루션 테스트
-dotnet test --solution Functorium.All.slnx
+dotnet test --solution architecture-rules.slnx
 ```
 
 ## 테스트 프로젝트 목록

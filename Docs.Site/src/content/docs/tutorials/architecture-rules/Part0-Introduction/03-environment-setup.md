@@ -143,7 +143,7 @@ public abstract class ArchitectureTestBase
 dotnet test --project Path/To/ProjectName.Tests.Unit
 
 # 전체 솔루션 테스트
-dotnet test --solution Functorium.All.slnx
+dotnet test --solution architecture-rules.slnx
 ```
 
 ## FAQ

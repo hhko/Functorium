@@ -176,7 +176,7 @@ public void DomainClasses_ShouldHave_OnlyPrimitiveProperties()
 **A**: C# 컴파일러는 auto-property(`public string Name { get; }`)에 대해 `<Name>k__BackingField` 같은 이름의 backing field를 자동 생성합니다. `RequireNoInstanceFields()`는 이런 컴파일러 생성 필드를 이름 패턴으로 감지하여 검증 대상에서 제외합니다. 개발자가 직접 선언한 인스턴스 필드만 위반으로 보고합니다.
 
 ### Q3: RequireOnlyPrimitiveProperties에서 추가 허용 타입은 어떻게 지정하나요?
-**A**: `RequireOnlyPrimitiveProperties(typeof(DateTime), typeof(Guid))` 처럼 추가 허용할 타입을 매개변수로 전달합니다. 기본 원시 타입(`string`, `int`, `decimal`, `double`, `bool` 등)에 더해 지정한 타입도 허용됩니다.
+**A**: `RequireOnlyPrimitiveProperties("System.DateTime", "System.Guid")` 처럼 추가 허용할 타입의 전체 이름을 문자열로 전달합니다. 기본 원시 타입(`string`, `int`, `decimal`, `double`, `bool` 등)에 더해 지정한 타입도 허용됩니다.
 
 ### Q4: ViewModel에는 왜 도메인 규칙을 적용하지 않나요?
 **A**: ViewModel은 UI 바인딩을 위한 데이터 전달 객체로, 양방향 바인딩에 `public set`이 필요합니다. 도메인 클래스의 불변성 규칙을 ViewModel에 적용하면 UI 프레임워크와의 호환성이 깨집니다. `ResideInNamespace("...Domains")` 필터로 도메인 네임스페이스만 대상으로 지정하면 자연스럽게 분리됩니다.

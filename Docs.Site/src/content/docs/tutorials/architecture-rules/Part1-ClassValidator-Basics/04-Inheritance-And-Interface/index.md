@@ -164,7 +164,7 @@ ArchUnitNET의 필터링 메서드(`.AreNotAbstract()`, `.HaveNameEndingWith()` 
 **A**: `Entity<TId>` 추상 클래스 자체도 검증 대상에 포함됩니다. `Entity<TId>`는 자기 자신을 상속하지 않으므로 `RequireInherits(typeof(Entity<>))` 검증에 실패합니다. 추상 기본 클래스를 필터에서 제외하는 것이 일반적인 패턴입니다.
 
 ### Q5: 다음 Part에서는 무엇을 배우나요?
-**A**: Part 2에서는 클래스의 **속성(Property)과 필드(Field)를** 검증합니다. `RequireNoPublicSetters()`로 불변성을 강제하고, `RequireNoMutableFields()`로 필드 수준의 불변성을 검증합니다.
+**A**: Part 2에서는 클래스의 **속성(Property)과 필드(Field)를** 검증합니다. `RequireNoPublicSetters()`로 불변성을 강제하고, `RequireNoInstanceFields()`로 필드 수준의 불변성을 검증합니다.
 
 ---
 
