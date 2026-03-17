@@ -22,7 +22,7 @@ public sealed class CreateProductCommandTests : IDisposable
         var request = new CreateProductCommand.Request("노트북", 1_500_000m);
 
         // Act
-        var result = await _sut.Handle(request);
+        var result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
         result.IsSucc.ShouldBeTrue();
@@ -35,7 +35,7 @@ public sealed class CreateProductCommandTests : IDisposable
         var request = new CreateProductCommand.Request("마우스", 25_000m);
 
         // Act
-        var result = await _sut.Handle(request);
+        var result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
         result.IsSucc.ShouldBeTrue();

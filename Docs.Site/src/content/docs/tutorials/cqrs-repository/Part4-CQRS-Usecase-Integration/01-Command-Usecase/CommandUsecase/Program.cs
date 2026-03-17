@@ -9,7 +9,7 @@ var usecase = new CreateProductCommand.Usecase(repository);
 
 // 2. Command 실행
 var request = new CreateProductCommand.Request("노트북", 1_500_000m);
-var response = await usecase.Handle(request);
+var response = await usecase.Handle(request, CancellationToken.None);
 
 // 3. 결과 확인
 response.Match(

@@ -5,12 +5,13 @@ namespace CommandUsecase;
 
 public sealed class CreateProductCommand
 {
-    public sealed record Request(string Name, decimal Price);
+    public sealed record Request(string Name, decimal Price) : ICommandRequest<Response>;
     public sealed record Response(string ProductId, string Name, decimal Price, DateTime CreatedAt);
 
     public sealed class Usecase(IProductRepository productRepository)
+        : ICommandUsecase<Request, Response>
     {
-        public async Task<FinResponse<Response>> Handle(Request request)
+        public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken ct)
         {
             var product = Product.Create(request.Name, request.Price);
 

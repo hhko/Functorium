@@ -1,42 +1,37 @@
-using LanguageExt;
-using LanguageExt.Common;
+using System.Collections.Concurrent;
+using Functorium.Adapters.Repositories;
+using Functorium.Domains.Specifications;
 
 namespace QueryUsecase;
 
-public sealed class InMemoryProductQuery : IProductQuery
+/// <summary>
+/// InMemoryQueryBase + IProductQuery 동시 구현.
+/// InMemoryQueryBase는 IQueryPort를 자체 구현하지 않으므로 IProductQuery도 명시적으로 구현합니다.
+/// </summary>
+public sealed class InMemoryProductQuery : InMemoryQueryBase<Product, ProductDto>, IProductQuery
 {
-    private readonly List<Product> _products;
+    private readonly ConcurrentDictionary<ProductId, Product> _store = new();
 
-    public InMemoryProductQuery(List<Product> products)
-    {
-        _products = products;
-    }
+    public string RequestCategory => "Query";
 
-    public FinT<IO, ProductDto> GetById(ProductId id)
-    {
-        return IO.lift(() =>
+    protected override string DefaultSortField => "Name";
+
+    public void Add(Product product) => _store[product.Id] = product;
+
+    protected override IEnumerable<ProductDto> GetProjectedItems(Specification<Product> spec) =>
+        _store.Values
+            .Where(p => spec.IsSatisfiedBy(p))
+            .Select(p => new ProductDto(
+                p.Id.ToString(),
+                p.Name,
+                p.Price,
+                p.IsActive));
+
+    protected override Func<ProductDto, object> SortSelector(string fieldName) =>
+        fieldName switch
         {
-            var product = _products.FirstOrDefault(p => p.Id.Equals(id));
-            if (product is null)
-                return Fin.Fail<ProductDto>(Error.New($"Product not found: {id}"));
-
-            return Fin.Succ(ToDto(product));
-        });
-    }
-
-    public FinT<IO, List<ProductDto>> SearchByName(string keyword)
-    {
-        return IO.lift(() =>
-        {
-            var results = _products
-                .Where(p => p.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase))
-                .Select(ToDto)
-                .ToList();
-
-            return Fin.Succ(results);
-        });
-    }
-
-    private static ProductDto ToDto(Product p)
-        => new(p.Id.ToString(), p.Name, p.Price, p.IsActive);
+            "Name" => dto => dto.Name,
+            "Price" => dto => dto.Price,
+            _ => dto => dto.Name
+        };
 }

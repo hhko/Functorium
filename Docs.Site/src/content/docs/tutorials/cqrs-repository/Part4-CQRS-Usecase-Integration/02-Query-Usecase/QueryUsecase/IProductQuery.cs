@@ -1,9 +1,7 @@
-using LanguageExt;
+using Functorium.Applications.Queries;
 
 namespace QueryUsecase;
 
-public interface IProductQuery
+public interface IProductQuery : IQueryPort<Product, ProductDto>
 {
-    FinT<IO, List<ProductDto>> SearchByName(string keyword);
-    FinT<IO, ProductDto> GetById(ProductId id);
 }
