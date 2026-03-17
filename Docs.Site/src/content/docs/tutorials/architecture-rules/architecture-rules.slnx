@@ -67,4 +67,7 @@
     <Project Path="Part4-Real-World-Patterns/04-Layer-Dependency-Rules/LayerDependencyRules.Tests.Unit/LayerDependencyRules.Tests.Unit.csproj" />
     <Project Path="Part4-Real-World-Patterns/04-Layer-Dependency-Rules/LayerDependencyRules/LayerDependencyRules.csproj" />
   </Folder>
+  <Folder Name="/Part4-Real-World-Patterns/05-Architecture-Test-Suites/">
+    <Project Path="Part4-Real-World-Patterns/05-Architecture-Test-Suites/ArchitectureTestSuites.Tests.Unit/ArchitectureTestSuites.Tests.Unit.csproj" />
+  </Folder>
 </Solution>

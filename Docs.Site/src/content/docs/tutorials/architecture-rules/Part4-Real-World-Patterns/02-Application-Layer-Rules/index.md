@@ -169,6 +169,8 @@ public sealed class ApplicationArchTests : ApplicationArchitectureTestSuite
 
 `RequireImplementsGenericInterface("ICommandUsecase")` / `RequireImplementsGenericInterface("IQueryUsecase")`로 제네릭 인터페이스 구현을 검증합니다. `RequireNestedClassIfExists`는 Validator처럼 선택적 중첩 클래스에, `RequireNestedClass`는 Usecase처럼 필수 중첩 클래스에 사용합니다.
 
+Suite의 상세한 사용법, virtual 프로퍼티 커스터마이징, 수동 규칙과의 비교는 [4-05 아키텍처 테스트 스위트](../05-Architecture-Test-Suites/)에서 실습합니다.
+
 ### 커스텀 규칙 추가
 
 Suite를 상속한 후 프로젝트별 추가 규칙을 자유롭게 정의할 수 있습니다:
