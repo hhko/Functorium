@@ -1,3 +1,7 @@
+using LanguageExt;
+using LanguageExt.Common;
+using static LanguageExt.Prelude;
+
 namespace DomainLayerRules.Domains;
 
 public sealed class Money : IValueObject
@@ -11,8 +15,15 @@ public sealed class Money : IValueObject
         Currency = currency;
     }
 
-    public static Money Create(decimal amount, string currency)
-        => new(amount, currency);
+    public static Fin<Money> Create(decimal amount, string currency)
+        => amount < 0
+            ? Fin<Money>.Fail("Amount cannot be negative")
+            : new Money(amount, currency);
+
+    public static Validation<Error, Money> Validate(decimal amount, string currency)
+        => amount < 0
+            ? Fail<Error, Money>(Error.New("Amount cannot be negative"))
+            : Success<Error, Money>(new Money(amount, currency));
 
     public override string ToString() => $"{Amount} {Currency}";
 }

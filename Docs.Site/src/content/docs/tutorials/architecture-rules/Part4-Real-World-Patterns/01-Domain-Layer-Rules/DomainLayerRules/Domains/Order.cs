@@ -1,13 +1,13 @@
 namespace DomainLayerRules.Domains;
 
-public sealed class Order : Entity<Guid>
+[GenerateEntityId]
+public sealed class Order : AggregateRoot<Guid>
 {
     public string CustomerName { get; }
     public IReadOnlyList<string> Items { get; }
 
-    private Order(Guid id, string customerName, IReadOnlyList<string> items)
+    private Order(Guid id, string customerName, IReadOnlyList<string> items) : base(id)
     {
-        Id = id;
         CustomerName = customerName;
         Items = items;
     }

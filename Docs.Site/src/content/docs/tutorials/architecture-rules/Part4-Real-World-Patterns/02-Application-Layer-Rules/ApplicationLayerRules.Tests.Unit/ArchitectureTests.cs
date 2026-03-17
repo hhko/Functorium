@@ -50,7 +50,8 @@ public sealed class CommandArchitectureTests : ArchitectureTestBase
                     .RequireSealed()
                     .RequireRecord())
                 .RequireNestedClass("Usecase", nested => nested
-                    .RequireSealed()),
+                    .RequireSealed()
+                    .RequireImplementsGenericInterface("ICommandUsecase")),
                 verbose: true)
             .ThrowIfAnyFailures("Command Structure Rule");
     }
@@ -86,7 +87,8 @@ public sealed class QueryArchitectureTests : ArchitectureTestBase
                     .RequireSealed()
                     .RequireRecord())
                 .RequireNestedClass("Usecase", nested => nested
-                    .RequireSealed()),
+                    .RequireSealed()
+                    .RequireImplementsGenericInterface("IQueryUsecase")),
                 verbose: true)
             .ThrowIfAnyFailures("Query Structure Rule");
     }

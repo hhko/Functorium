@@ -1,7 +1,10 @@
 using ArchUnitNET.Domain;
 using ArchUnitNET.Fluent;
 using ArchUnitNET.Loader;
+using ArchUnitNET.xUnitV3;
 using Functorium.Testing.Assertions.ArchitectureRules;
+using LanguageExt;
+using LanguageExt.Common;
 using Xunit;
 
 namespace DomainLayerRules.Tests.Unit;
@@ -17,53 +20,130 @@ public abstract class ArchitectureTestBase
         typeof(DomainLayerRules.Domains.Order).Namespace!;
 }
 
+// --- AggregateRoot (4) ---
+
+[Trait("Part4-Real-World-Patterns", "DomainLayerRules")]
+public sealed class AggregateRootArchitectureTests : ArchitectureTestBase
+{
+    [Fact]
+    public void AggregateRoot_ShouldBe_PublicSealedClass()
+    {
+        ArchRuleDefinition.Classes()
+            .That()
+            .ResideInNamespace(DomainNamespace)
+            .And().AreAssignableTo(typeof(DomainLayerRules.Domains.AggregateRoot<>))
+            .And().AreNotAbstract()
+            .ValidateAllClasses(Architecture, @class => @class
+                .RequirePublic()
+                .RequireSealed()
+                .RequireNotStatic(),
+                verbose: true)
+            .ThrowIfAnyFailures("AggregateRoot Visibility Rule");
+    }
+
+    [Fact]
+    public void AggregateRoot_ShouldHave_CreateAndCreateFromValidated()
+    {
+        ArchRuleDefinition.Classes()
+            .That()
+            .ResideInNamespace(DomainNamespace)
+            .And().AreAssignableTo(typeof(DomainLayerRules.Domains.AggregateRoot<>))
+            .And().AreNotAbstract()
+            .ValidateAllClasses(Architecture, @class => @class
+                .RequireMethod("Create", m => m
+                    .RequireVisibility(Visibility.Public)
+                    .RequireStatic()
+                    .RequireReturnTypeOfDeclaringClass())
+                .RequireMethod("CreateFromValidated", m => m
+                    .RequireVisibility(Visibility.Public)
+                    .RequireStatic()
+                    .RequireReturnTypeOfDeclaringClass()),
+                verbose: true)
+            .ThrowIfAnyFailures("AggregateRoot Factory Method Rule");
+    }
+
+    [Fact]
+    public void AggregateRoot_ShouldHave_GenerateEntityIdAttribute()
+    {
+        ArchRuleDefinition.Classes()
+            .That()
+            .ResideInNamespace(DomainNamespace)
+            .And().AreAssignableTo(typeof(DomainLayerRules.Domains.AggregateRoot<>))
+            .And().AreNotAbstract()
+            .ValidateAllClasses(Architecture, @class => @class
+                .RequireAttribute("GenerateEntityId"),
+                verbose: true)
+            .ThrowIfAnyFailures("AggregateRoot GenerateEntityId Attribute Rule");
+    }
+
+    [Fact]
+    public void AggregateRoot_ShouldHave_AllPrivateConstructors()
+    {
+        ArchRuleDefinition.Classes()
+            .That()
+            .ResideInNamespace(DomainNamespace)
+            .And().AreAssignableTo(typeof(DomainLayerRules.Domains.AggregateRoot<>))
+            .And().AreNotAbstract()
+            .ValidateAllClasses(Architecture, @class => @class
+                .RequireAllPrivateConstructors(),
+                verbose: true)
+            .ThrowIfAnyFailures("AggregateRoot Private Constructors Rule");
+    }
+}
+
+// --- Entity (3) ---
+
 [Trait("Part4-Real-World-Patterns", "DomainLayerRules")]
 public sealed class EntityArchitectureTests : ArchitectureTestBase
 {
     [Fact]
-    public void Entities_ShouldBe_PublicAndSealed()
+    public void Entity_ShouldBe_PublicSealedClass()
     {
         ArchRuleDefinition.Classes()
             .That()
             .ResideInNamespace(DomainNamespace)
-            .And()
-            .AreAssignableTo(typeof(DomainLayerRules.Domains.Entity<>))
-            .And()
-            .AreNotAbstract()
+            .And().AreAssignableTo(typeof(DomainLayerRules.Domains.Entity<>))
+            .And().AreNotAbstract()
+            .And().AreNotAssignableTo(typeof(DomainLayerRules.Domains.AggregateRoot<>))
             .ValidateAllClasses(Architecture, @class => @class
                 .RequirePublic()
-                .RequireSealed(),
+                .RequireSealed()
+                .RequireNotStatic(),
                 verbose: true)
-            .ThrowIfAnyFailures("Entity Public Sealed Rule");
+            .ThrowIfAnyFailures("Entity Visibility Rule");
     }
 
     [Fact]
-    public void Entities_ShouldHave_CreateFactory()
+    public void Entity_ShouldHave_CreateAndCreateFromValidated()
     {
         ArchRuleDefinition.Classes()
             .That()
             .ResideInNamespace(DomainNamespace)
-            .And()
-            .AreAssignableTo(typeof(DomainLayerRules.Domains.Entity<>))
-            .And()
-            .AreNotAbstract()
+            .And().AreAssignableTo(typeof(DomainLayerRules.Domains.Entity<>))
+            .And().AreNotAbstract()
+            .And().AreNotAssignableTo(typeof(DomainLayerRules.Domains.AggregateRoot<>))
             .ValidateAllClasses(Architecture, @class => @class
-                .RequireMethod("Create", m => m.RequireStatic())
-                .RequireMethod("CreateFromValidated", m => m.RequireStatic()),
+                .RequireMethod("Create", m => m
+                    .RequireVisibility(Visibility.Public)
+                    .RequireStatic()
+                    .RequireReturnTypeOfDeclaringClass())
+                .RequireMethod("CreateFromValidated", m => m
+                    .RequireVisibility(Visibility.Public)
+                    .RequireStatic()
+                    .RequireReturnTypeOfDeclaringClass()),
                 verbose: true)
             .ThrowIfAnyFailures("Entity Factory Method Rule");
     }
 
     [Fact]
-    public void Entities_ShouldHave_AllPrivateConstructors()
+    public void Entity_ShouldHave_AllPrivateConstructors()
     {
         ArchRuleDefinition.Classes()
             .That()
             .ResideInNamespace(DomainNamespace)
-            .And()
-            .AreAssignableTo(typeof(DomainLayerRules.Domains.Entity<>))
-            .And()
-            .AreNotAbstract()
+            .And().AreAssignableTo(typeof(DomainLayerRules.Domains.Entity<>))
+            .And().AreNotAbstract()
+            .And().AreNotAssignableTo(typeof(DomainLayerRules.Domains.AggregateRoot<>))
             .ValidateAllClasses(Architecture, @class => @class
                 .RequireAllPrivateConstructors(),
                 verbose: true)
@@ -71,135 +151,228 @@ public sealed class EntityArchitectureTests : ArchitectureTestBase
     }
 }
 
+// --- ValueObject (4) ---
+
 [Trait("Part4-Real-World-Patterns", "DomainLayerRules")]
 public sealed class ValueObjectArchitectureTests : ArchitectureTestBase
 {
     [Fact]
-    public void ValueObjects_ShouldBe_PublicAndSealed()
+    public void ValueObject_ShouldBe_PublicSealedWithPrivateConstructors()
     {
         ArchRuleDefinition.Classes()
             .That()
             .ResideInNamespace(DomainNamespace)
-            .And()
-            .AreAssignableTo(typeof(DomainLayerRules.Domains.IValueObject))
+            .And().ImplementInterface(typeof(DomainLayerRules.Domains.IValueObject))
+            .And().AreNotAbstract()
             .ValidateAllClasses(Architecture, @class => @class
                 .RequirePublic()
-                .RequireSealed(),
+                .RequireSealed()
+                .RequireAllPrivateConstructors(),
                 verbose: true)
-            .ThrowIfAnyFailures("Value Object Public Sealed Rule");
+            .ThrowIfAnyFailures("ValueObject Visibility Rule");
     }
 
     [Fact]
-    public void ValueObjects_ShouldBe_Immutable()
+    public void ValueObject_ShouldBe_Immutable()
     {
         ArchRuleDefinition.Classes()
             .That()
             .ResideInNamespace(DomainNamespace)
-            .And()
-            .AreAssignableTo(typeof(DomainLayerRules.Domains.IValueObject))
+            .And().ImplementInterface(typeof(DomainLayerRules.Domains.IValueObject))
+            .And().AreNotAbstract()
             .ValidateAllClasses(Architecture, @class => @class
                 .RequireImmutable(),
                 verbose: true)
-            .ThrowIfAnyFailures("Value Object Immutability Rule");
+            .ThrowIfAnyFailures("ValueObject Immutability Rule");
     }
 
     [Fact]
-    public void ValueObjects_ShouldImplement_IValueObject()
+    public void ValueObject_ShouldHave_CreateFactoryMethod()
     {
         ArchRuleDefinition.Classes()
             .That()
             .ResideInNamespace(DomainNamespace)
-            .And()
-            .AreAssignableTo(typeof(DomainLayerRules.Domains.IValueObject))
+            .And().ImplementInterface(typeof(DomainLayerRules.Domains.IValueObject))
+            .And().AreNotAbstract()
             .ValidateAllClasses(Architecture, @class => @class
-                .RequireImplements(typeof(DomainLayerRules.Domains.IValueObject)),
+                .RequireMethod("Create", m => m
+                    .RequireVisibility(Visibility.Public)
+                    .RequireStatic()
+                    .RequireReturnType(typeof(Fin<>))),
                 verbose: true)
-            .ThrowIfAnyFailures("Value Object Interface Rule");
+            .ThrowIfAnyFailures("ValueObject Create Method Rule");
     }
 
     [Fact]
-    public void ValueObjects_ShouldHave_CreateFactory()
+    public void ValueObject_ShouldHave_ValidateMethod()
     {
         ArchRuleDefinition.Classes()
             .That()
             .ResideInNamespace(DomainNamespace)
-            .And()
-            .AreAssignableTo(typeof(DomainLayerRules.Domains.IValueObject))
+            .And().ImplementInterface(typeof(DomainLayerRules.Domains.IValueObject))
+            .And().AreNotAbstract()
             .ValidateAllClasses(Architecture, @class => @class
-                .RequireMethod("Create", m => m.RequireStatic()),
+                .RequireMethod("Validate", m => m
+                    .RequireVisibility(Visibility.Public)
+                    .RequireStatic()
+                    .RequireReturnType(typeof(Validation<,>))),
                 verbose: true)
-            .ThrowIfAnyFailures("Value Object Factory Method Rule");
+            .ThrowIfAnyFailures("ValueObject Validate Method Rule");
     }
 }
+
+// --- DomainEvent (2) ---
 
 [Trait("Part4-Real-World-Patterns", "DomainLayerRules")]
 public sealed class DomainEventArchitectureTests : ArchitectureTestBase
 {
     [Fact]
-    public void DomainEvents_ShouldBe_PublicAndSealed()
+    public void DomainEvent_ShouldBe_SealedRecord()
     {
         ArchRuleDefinition.Classes()
             .That()
-            .ResideInNamespace(DomainNamespace)
-            .And()
             .AreAssignableTo(typeof(DomainLayerRules.Domains.DomainEvent))
-            .And()
-            .AreNotAbstract()
+            .And().AreNotAbstract()
+            .ValidateAllClasses(Architecture, @class => @class
+                .RequireSealed()
+                .RequireRecord(),
+                verbose: true)
+            .ThrowIfAnyFailures("DomainEvent Sealed Record Rule");
+    }
+
+    [Fact]
+    public void DomainEvent_ShouldHave_EventSuffix()
+    {
+        ArchRuleDefinition.Classes()
+            .That()
+            .AreAssignableTo(typeof(DomainLayerRules.Domains.DomainEvent))
+            .And().AreNotAbstract()
+            .ValidateAllClasses(Architecture, @class => @class
+                .RequireNameEndsWith("Event"),
+                verbose: true)
+            .ThrowIfAnyFailures("DomainEvent Naming Rule");
+    }
+}
+
+// --- Specification (3) ---
+
+[Trait("Part4-Real-World-Patterns", "DomainLayerRules")]
+public sealed class SpecificationArchitectureTests : ArchitectureTestBase
+{
+    [Fact]
+    public void Specification_ShouldBe_PublicSealed()
+    {
+        ArchRuleDefinition.Classes()
+            .That()
+            .AreAssignableTo(typeof(DomainLayerRules.Domains.Specification<>))
+            .And().AreNotAbstract()
+            .And().ResideInNamespace(DomainNamespace)
             .ValidateAllClasses(Architecture, @class => @class
                 .RequirePublic()
                 .RequireSealed(),
                 verbose: true)
-            .ThrowIfAnyFailures("Domain Event Public Sealed Rule");
+            .ThrowIfAnyFailures("Specification Visibility Rule");
     }
 
     [Fact]
-    public void DomainEvents_ShouldHave_CreateFactory()
+    public void Specification_ShouldInherit_SpecificationBase()
     {
         ArchRuleDefinition.Classes()
             .That()
-            .ResideInNamespace(DomainNamespace)
-            .And()
-            .AreAssignableTo(typeof(DomainLayerRules.Domains.DomainEvent))
-            .And()
-            .AreNotAbstract()
+            .AreAssignableTo(typeof(DomainLayerRules.Domains.Specification<>))
+            .And().AreNotAbstract()
+            .And().ResideInNamespace(DomainNamespace)
             .ValidateAllClasses(Architecture, @class => @class
-                .RequireMethod("Create", m => m.RequireStatic()),
+                .RequireInherits(typeof(DomainLayerRules.Domains.Specification<>)),
                 verbose: true)
-            .ThrowIfAnyFailures("Domain Event Factory Method Rule");
+            .ThrowIfAnyFailures("Specification Inheritance Rule");
     }
 
     [Fact]
-    public void DomainEvents_ShouldInherit_DomainEvent()
+    public void Specification_ShouldResideIn_DomainLayer()
     {
         ArchRuleDefinition.Classes()
             .That()
-            .ResideInNamespace(DomainNamespace)
-            .And()
-            .AreAssignableTo(typeof(DomainLayerRules.Domains.DomainEvent))
-            .And()
-            .AreNotAbstract()
-            .ValidateAllClasses(Architecture, @class => @class
-                .RequireInherits(typeof(DomainLayerRules.Domains.DomainEvent)),
-                verbose: true)
-            .ThrowIfAnyFailures("Domain Event Inheritance Rule");
+            .AreAssignableTo(typeof(DomainLayerRules.Domains.Specification<>))
+            .And().AreNotAbstract()
+            .And().ResideInNamespace(DomainNamespace)
+            .Should().ResideInNamespace(DomainNamespace)
+            .Check(Architecture);
     }
 }
+
+// --- DomainService (5) ---
 
 [Trait("Part4-Real-World-Patterns", "DomainLayerRules")]
 public sealed class DomainServiceArchitectureTests : ArchitectureTestBase
 {
     [Fact]
-    public void DomainServices_ShouldBe_PublicAndStatic()
+    public void DomainService_ShouldBe_PublicSealed()
     {
         ArchRuleDefinition.Classes()
             .That()
-            .ResideInNamespace(DomainNamespace)
-            .And()
-            .HaveNameEndingWith("Service")
+            .ImplementInterface(typeof(DomainLayerRules.Domains.IDomainService))
+            .And().AreNotAbstract()
             .ValidateAllClasses(Architecture, @class => @class
                 .RequirePublic()
-                .RequireStatic(),
+                .RequireSealed(),
                 verbose: true)
-            .ThrowIfAnyFailures("Domain Service Public Static Rule");
+            .ThrowIfAnyFailures("DomainService Visibility Rule");
+    }
+
+    [Fact]
+    public void DomainService_ShouldBe_Stateless()
+    {
+        ArchRuleDefinition.Classes()
+            .That()
+            .ImplementInterface(typeof(DomainLayerRules.Domains.IDomainService))
+            .And().AreNotAbstract()
+            .ValidateAllClasses(Architecture, @class => @class
+                .RequireNoInstanceFields(),
+                verbose: true)
+            .ThrowIfAnyFailures("DomainService Stateless Rule");
+    }
+
+    [Fact]
+    public void DomainService_ShouldNotDependOn_IObservablePort()
+    {
+        ArchRuleDefinition.Classes()
+            .That()
+            .ImplementInterface(typeof(DomainLayerRules.Domains.IDomainService))
+            .And().AreNotAbstract()
+            .ValidateAllClasses(Architecture, @class => @class
+                .RequireNoDependencyOn("IObservablePort"),
+                verbose: true)
+            .ThrowIfAnyFailures("DomainService No IObservablePort Dependency Rule");
+    }
+
+    [Fact]
+    public void DomainService_PublicMethods_ShouldReturn_Fin()
+    {
+        ArchRuleDefinition.Classes()
+            .That()
+            .ImplementInterface(typeof(DomainLayerRules.Domains.IDomainService))
+            .And().AreNotAbstract()
+            .ValidateAllClasses(Architecture, @class => @class
+                .RequireAllMethods(
+                    m => m.Visibility == Visibility.Public
+                         && m.IsStatic != true
+                         && m.MethodForm == MethodForm.Normal,
+                    method => method.RequireReturnTypeContaining("Fin")),
+                verbose: true)
+            .ThrowIfAnyFailures("DomainService Public Methods Return Fin Rule");
+    }
+
+    [Fact]
+    public void DomainService_ShouldNotBe_Record()
+    {
+        ArchRuleDefinition.Classes()
+            .That()
+            .ImplementInterface(typeof(DomainLayerRules.Domains.IDomainService))
+            .And().AreNotAbstract()
+            .ValidateAllClasses(Architecture, @class => @class
+                .RequireNotRecord(),
+                verbose: true)
+            .ThrowIfAnyFailures("DomainService Not Record Rule");
     }
 }

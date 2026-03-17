@@ -125,6 +125,75 @@ ArchRuleDefinition.Classes()
 | **`RequireRecord()`** | C# record 타입 여부 | Request, Response (간결한 DTO) |
 | **`RequireImmutable()`** | 6가지 차원의 불변성 | 도메인 객체 (복잡한 불변 클래스) |
 
+## Functorium 사전 구축 테스트 스위트
+
+Functorium은 도메인/애플리케이션 레이어의 아키텍처 규칙을 **abstract class로 사전 구축**하여 제공합니다. 프로젝트에서 상속만 하면 규칙이 자동 적용됩니다.
+
+| 스위트 | 테스트 수 | 검증 대상 |
+|--------|-----------|-----------|
+| `DomainArchitectureTestSuite` | 21 | AggregateRoot, Entity, ValueObject, DomainEvent, Specification, DomainService |
+| `ApplicationArchitectureTestSuite` | 4 | Command/Query의 Validator, Usecase 중첩 클래스 |
+
+### 사용 방법
+
+두 Suite 모두 `Architecture`와 네임스페이스만 오버라이드하면 됩니다:
+
+```csharp
+public sealed class DomainArchTests : DomainArchitectureTestSuite
+{
+    protected override Architecture Architecture { get; } =
+        new ArchLoader().LoadAssemblies(typeof(Order).Assembly).Build();
+
+    protected override string DomainNamespace { get; } =
+        typeof(Order).Namespace!;
+}
+
+public sealed class ApplicationArchTests : ApplicationArchitectureTestSuite
+{
+    protected override Architecture Architecture { get; } =
+        new ArchLoader().LoadAssemblies(typeof(CreateOrderCommand).Assembly).Build();
+
+    protected override string ApplicationNamespace { get; } =
+        "MyApp.Application";
+}
+```
+
+### ApplicationArchitectureTestSuite (4 tests)
+
+`ApplicationArchitectureTestSuite`는 Command/Query 패턴의 구조를 자동 검증합니다:
+
+1. **Command_ShouldHave_ValidatorNestedClass** — Command에 Validator가 있으면 sealed + `AbstractValidator` 구현
+2. **Command_ShouldHave_UsecaseNestedClass** — Command에 Usecase 필수, sealed + `ICommandUsecase` 구현
+3. **Query_ShouldHave_ValidatorNestedClass** — Query에 Validator가 있으면 sealed + `AbstractValidator` 구현
+4. **Query_ShouldHave_UsecaseNestedClass** — Query에 Usecase 필수, sealed + `IQueryUsecase` 구현
+
+`RequireImplementsGenericInterface("ICommandUsecase")` / `RequireImplementsGenericInterface("IQueryUsecase")`로 제네릭 인터페이스 구현을 검증합니다. `RequireNestedClassIfExists`는 Validator처럼 선택적 중첩 클래스에, `RequireNestedClass`는 Usecase처럼 필수 중첩 클래스에 사용합니다.
+
+### 커스텀 규칙 추가
+
+Suite를 상속한 후 프로젝트별 추가 규칙을 자유롭게 정의할 수 있습니다:
+
+```csharp
+public sealed class DomainArchTests : DomainArchitectureTestSuite
+{
+    // Suite의 21개 규칙 자동 상속
+
+    // 프로젝트별 추가 규칙
+    [Fact]
+    public void Entity_ShouldNotDependOn_ExternalHttpClient()
+    {
+        ArchRuleDefinition.Classes()
+            .That()
+            .ResideInNamespace(DomainNamespace)
+            .And().AreAssignableTo(typeof(Entity<>))
+            .ValidateAllClasses(Architecture, @class => @class
+                .RequireNoDependencyOn("HttpClient"),
+                verbose: true)
+            .ThrowIfAnyFailures("Entity No HttpClient Rule");
+    }
+}
+```
+
 ## FAQ
 
 ### Q1: Request/Response를 record로 강제하는 이유는 무엇인가요?
