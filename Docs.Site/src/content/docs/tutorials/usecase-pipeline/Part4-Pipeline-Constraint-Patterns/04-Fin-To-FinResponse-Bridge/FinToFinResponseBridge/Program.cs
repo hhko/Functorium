@@ -15,3 +15,7 @@ Console.WriteLine($"Factory: {factory}");
 // 4. 실패 변환
 var fail = BridgeExamples.FailConversion();
 Console.WriteLine($"Fail: {fail}");
+
+// 5. 커스텀 변환
+var custom = BridgeExamples.CustomConversion();
+Console.WriteLine($"Custom: {custom}");

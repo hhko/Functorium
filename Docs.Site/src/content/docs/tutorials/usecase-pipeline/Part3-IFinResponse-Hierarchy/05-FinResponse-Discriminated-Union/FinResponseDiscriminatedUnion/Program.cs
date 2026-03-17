@@ -26,3 +26,25 @@ var linq = from x in FinResponse.Succ(3)
            from y in FinResponse.Succ(4)
            select x + y;
 Console.WriteLine(linq);
+
+// ThrowIfFail
+var value = succ.ThrowIfFail();
+Console.WriteLine($"ThrowIfFail: {value}");
+
+// IfFail
+var withFallback = fail.IfFail(-1);
+Console.WriteLine($"IfFail(value): {withFallback}");
+
+var withFunc = fail.IfFail(err => 0);
+Console.WriteLine($"IfFail(func): {withFunc}");
+
+// Boolean operator
+if (succ)
+    Console.WriteLine("succ is true");
+
+if (fail) { }
+else Console.WriteLine("fail is false");
+
+// Choice operator
+var choice = fail | FinResponse.Succ(99);
+Console.WriteLine($"Choice: {choice}");

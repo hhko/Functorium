@@ -43,18 +43,18 @@ public sealed class CreateProductCommand
     /// <summary>
     /// Command Handler
     /// </summary>
-    public sealed class Handler
+    public sealed class Handler : ICommandUsecase<Request, Response>
     {
-        public FinResponse<Response> Handle(Request request)
+        public ValueTask<FinResponse<Response>> Handle(Request command, CancellationToken cancellationToken)
         {
-            // Validation
-            var validated = Validator.Validate(request);
-            if (validated.IsFail)
-                return validated.Match<FinResponse<Response>>(_ => throw new InvalidOperationException(), FinResponse.Fail<Response>);
+            var result = Validator.Validate(command)
+                .Bind(req =>
+                {
+                    var productId = Guid.NewGuid().ToString("N")[..8];
+                    return FinResponse.Succ(new Response(productId, req.Name, req.Price));
+                });
 
-            // Business logic - create product
-            var productId = Guid.NewGuid().ToString("N")[..8];
-            return new Response(productId, request.Name, request.Price);
+            return new ValueTask<FinResponse<Response>>(result);
         }
     }
 }

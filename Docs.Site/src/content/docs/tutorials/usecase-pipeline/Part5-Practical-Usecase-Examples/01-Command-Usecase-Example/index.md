@@ -10,10 +10,10 @@ title: "Command Usecase 예제"
 Command Usecase 구조:
 
 CreateProductCommand (최상위 클래스)
-├── Request   : ICommandRequest<Response>   ← 요청 정의
-├── Response                                ← 응답 정의
-├── Validator                               ← 유효성 검사
-└── Handler                                 ← 비즈니스 로직
+├── Request   : ICommandRequest<Response>           ← 요청 정의
+├── Response                                        ← 응답 정의
+├── Validator                                       ← 유효성 검사
+└── Handler   : ICommandUsecase<Request, Response>  ← 비즈니스 로직
 ```
 
 ## 핵심 개념
@@ -29,6 +29,15 @@ public interface ICommandRequest<TSuccess> : ICommand<FinResponse<TSuccess>> { }
 
 Request record가 `ICommandRequest<Response>`를 구현하면, Mediator Pipeline이 이 요청을 Command로 인식하고 Transaction Pipeline 등을 적용합니다.
 
+Handler는 `ICommandUsecase<TCommand, TSuccess>`를 구현합니다. 이 인터페이스는 `ICommandHandler<TCommand, FinResponse<TSuccess>>`를 상속하므로, Handler가 이를 구현하면 Mediator가 자동으로 Pipeline 체인에 등록합니다:
+
+```csharp
+// Functorium 정의
+public interface ICommandUsecase<in TCommand, TSuccess>
+    : ICommandHandler<TCommand, FinResponse<TSuccess>>
+    where TCommand : ICommandRequest<TSuccess> { }
+```
+
 ### 2. Nested Class 패턴
 
 하나의 Usecase와 관련된 모든 타입을 최상위 클래스 안에 중첩하여 정의합니다.
@@ -39,7 +48,7 @@ public sealed class CreateProductCommand
     public sealed record Request(...) : ICommandRequest<Response>;
     public sealed record Response(...);
     public static class Validator { ... }
-    public sealed class Handler { ... }
+    public sealed class Handler : ICommandUsecase<Request, Response> { ... }
 }
 ```
 
@@ -50,17 +59,23 @@ public sealed class CreateProductCommand
 
 ### 3. FinResponse를 통한 결과 처리
 
-Handler는 `FinResponse<Response>`를 반환합니다. 성공 시 암시적 변환으로 Response를 직접 반환하고, 실패 시 `Error`를 반환합니다.
-
-주목할 점은 `return` 문에서 명시적 변환 없이 값을 직접 반환한다는 것입니다. `FinResponse<T>`의 암시적 변환 연산자가 이를 가능하게 합니다.
+Handler는 `ValueTask<FinResponse<Response>>`를 반환합니다. `ICommandUsecase`가 비동기 시그니처를 요구하기 때문입니다. Validator의 결과를 `Bind`로 체이닝하여 검증-비즈니스 로직을 Railway 방식으로 연결합니다:
 
 ```csharp
-// 성공: 암시적 변환 (Response → FinResponse<Response>)
-return new Response(productId, request.Name, request.Price);
+public ValueTask<FinResponse<Response>> Handle(Request command, CancellationToken cancellationToken)
+{
+    var result = Validator.Validate(command)
+        .Bind(req =>
+        {
+            var productId = Guid.NewGuid().ToString("N")[..8];
+            return FinResponse.Succ(new Response(productId, req.Name, req.Price));
+        });
 
-// 실패: 암시적 변환 (Error → FinResponse<Response>)
-return Error.New("Name is required");
+    return new ValueTask<FinResponse<Response>>(result);
+}
 ```
+
+`Bind`를 사용하면 `if (validated.IsFail)` 분기 없이 검증 실패가 자동으로 전파됩니다.
 
 ### 4. Validator 분리
 
@@ -86,7 +101,7 @@ public static class Validator
 
 이 장을 완료하면 다음을 할 수 있습니다:
 
-1. `ICommandRequest<TSuccess>` 인터페이스의 역할과 Pipeline 연결 방식을 이해할 수 있다
+1. `ICommandRequest<TSuccess>`와 `ICommandUsecase<TCommand, TSuccess>` 인터페이스의 역할과 Pipeline 연결 방식을 이해할 수 있다
 2. Nested class 패턴으로 Request/Response/Validator/Handler를 응집력 있게 구성할 수 있다
 3. `FinResponse<T>`의 암시적 변환을 활용하여 성공/실패를 간결하게 반환할 수 있다
 4. Validator를 Handler에서 분리하여 독립적으로 테스트할 수 있다

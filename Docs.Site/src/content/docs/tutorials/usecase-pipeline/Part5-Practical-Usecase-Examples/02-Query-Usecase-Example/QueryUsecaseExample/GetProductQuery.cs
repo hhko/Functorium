@@ -8,7 +8,11 @@ namespace QueryUsecaseExample;
 /// </summary>
 public sealed class GetProductQuery
 {
-    public sealed record Request(string ProductId) : IQueryRequest<Response>;
+    public sealed record Request(string ProductId) : IQueryRequest<Response>, ICacheable
+    {
+        public string CacheKey => $"product:{ProductId}";
+        public TimeSpan? Duration => TimeSpan.FromMinutes(5);
+    }
 
     public sealed record Response(
         string ProductId,
@@ -18,7 +22,7 @@ public sealed class GetProductQuery
     /// <summary>
     /// 간단한 인메모리 Query Handler
     /// </summary>
-    public sealed class Handler
+    public sealed class Handler : IQueryUsecase<Request, Response>
     {
         private readonly Dictionary<string, Response> _products = new()
         {
@@ -26,12 +30,13 @@ public sealed class GetProductQuery
             ["prod-002"] = new Response("prod-002", "Gadget", 19.99m),
         };
 
-        public FinResponse<Response> Handle(Request request)
+        public ValueTask<FinResponse<Response>> Handle(Request query, CancellationToken cancellationToken)
         {
-            if (_products.TryGetValue(request.ProductId, out var product))
-                return product;
+            FinResponse<Response> result = _products.TryGetValue(query.ProductId, out var product)
+                ? product
+                : Error.New($"Product not found: {query.ProductId}");
 
-            return Error.New($"Product not found: {request.ProductId}");
+            return new ValueTask<FinResponse<Response>>(result);
         }
     }
 }

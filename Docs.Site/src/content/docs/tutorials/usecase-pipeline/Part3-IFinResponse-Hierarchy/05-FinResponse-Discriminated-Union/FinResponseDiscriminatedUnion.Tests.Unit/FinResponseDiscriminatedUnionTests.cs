@@ -160,4 +160,339 @@ public class FinResponseDiscriminatedUnionTests
         // Act & Assert
         (sut is IFinResponseWithError).ShouldBeFalse();
     }
+
+    // --- 값 추출 패턴 ---
+
+    [Fact]
+    public void ThrowIfFail_ReturnsValue_WhenSucc()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Succ(42);
+
+        // Act
+        var actual = sut.ThrowIfFail();
+
+        // Assert
+        actual.ShouldBe(42);
+    }
+
+    [Fact]
+    public void ThrowIfFail_Throws_WhenFail()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Fail<int>(Error.New("error"));
+
+        // Act & Assert
+        Should.Throw<ErrorException>(() => sut.ThrowIfFail());
+    }
+
+    [Fact]
+    public void IfFail_ReturnsSuccValue_WhenSuccWithFunc()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Succ(42);
+
+        // Act
+        var actual = sut.IfFail(err => -1);
+
+        // Assert
+        actual.ShouldBe(42);
+    }
+
+    [Fact]
+    public void IfFail_ReturnsFallback_WhenFailWithFunc()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Fail<int>(Error.New("error"));
+
+        // Act
+        var actual = sut.IfFail(err => -1);
+
+        // Assert
+        actual.ShouldBe(-1);
+    }
+
+    [Fact]
+    public void IfFail_ReturnsSuccValue_WhenSuccWithValue()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Succ(42);
+
+        // Act
+        var actual = sut.IfFail(-1);
+
+        // Assert
+        actual.ShouldBe(42);
+    }
+
+    [Fact]
+    public void IfFail_ReturnsFallback_WhenFailWithValue()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Fail<int>(Error.New("error"));
+
+        // Act
+        var actual = sut.IfFail(-1);
+
+        // Assert
+        actual.ShouldBe(-1);
+    }
+
+    [Fact]
+    public void IfFail_InvokesAction_WhenFail()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Fail<int>(Error.New("error"));
+        var invoked = false;
+
+        // Act
+        sut.IfFail(_ => invoked = true);
+
+        // Assert
+        invoked.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IfFail_DoesNotInvokeAction_WhenSucc()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Succ(42);
+        var invoked = false;
+
+        // Act
+        sut.IfFail(_ => invoked = true);
+
+        // Assert
+        invoked.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IfSucc_InvokesAction_WhenSucc()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Succ(42);
+        var captured = 0;
+
+        // Act
+        sut.IfSucc(v => captured = v);
+
+        // Assert
+        captured.ShouldBe(42);
+    }
+
+    [Fact]
+    public void IfSucc_DoesNotInvokeAction_WhenFail()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Fail<int>(Error.New("error"));
+        var invoked = false;
+
+        // Act
+        sut.IfSucc(_ => invoked = true);
+
+        // Assert
+        invoked.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void MatchVoid_InvokesSuccAction_WhenSucc()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Succ(42);
+        var captured = 0;
+
+        // Act
+        sut.Match(Succ: v => captured = v, Fail: _ => { });
+
+        // Assert
+        captured.ShouldBe(42);
+    }
+
+    [Fact]
+    public void MatchVoid_InvokesFailAction_WhenFail()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Fail<int>(Error.New("test"));
+        var invoked = false;
+
+        // Act
+        sut.Match(Succ: _ => { }, Fail: _ => invoked = true);
+
+        // Assert
+        invoked.ShouldBeTrue();
+    }
+
+    // --- 에러 트랙 연산 ---
+
+    [Fact]
+    public void MapFail_TransformsError_WhenFail()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Fail<int>(Error.New("original"));
+
+        // Act
+        var actual = sut.MapFail(e => Error.New("mapped"));
+
+        // Assert
+        actual.IsFail.ShouldBeTrue();
+        actual.Match(_ => "", e => e.Message).ShouldBe("mapped");
+    }
+
+    [Fact]
+    public void MapFail_PreservesValue_WhenSucc()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Succ(42);
+
+        // Act
+        var actual = sut.MapFail(e => Error.New("mapped"));
+
+        // Assert
+        actual.IsSucc.ShouldBeTrue();
+        actual.ThrowIfFail().ShouldBe(42);
+    }
+
+    [Fact]
+    public void BiMap_TransformsSuccValue_WhenSucc()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Succ(10);
+
+        // Act
+        var actual = sut.BiMap(v => v.ToString(), e => Error.New("mapped"));
+
+        // Assert
+        actual.IsSucc.ShouldBeTrue();
+        actual.ThrowIfFail().ShouldBe("10");
+    }
+
+    [Fact]
+    public void BiMap_TransformsError_WhenFail()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Fail<int>(Error.New("original"));
+
+        // Act
+        var actual = sut.BiMap(v => v.ToString(), e => Error.New("mapped"));
+
+        // Assert
+        actual.IsFail.ShouldBeTrue();
+        actual.Match(_ => "", e => e.Message).ShouldBe("mapped");
+    }
+
+    [Fact]
+    public void BiBind_InvokesSuccFunc_WhenSucc()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Succ(10);
+
+        // Act
+        var actual = sut.BiBind(
+            v => FinResponse.Succ(v.ToString()),
+            e => FinResponse.Fail<string>(e));
+
+        // Assert
+        actual.IsSucc.ShouldBeTrue();
+        actual.ThrowIfFail().ShouldBe("10");
+    }
+
+    [Fact]
+    public void BiBind_InvokesFailFunc_WhenFail()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Fail<int>(Error.New("error"));
+
+        // Act
+        var actual = sut.BiBind(
+            v => FinResponse.Succ(v.ToString()),
+            _ => FinResponse.Succ("recovered"));
+
+        // Assert
+        actual.IsSucc.ShouldBeTrue();
+        actual.ThrowIfFail().ShouldBe("recovered");
+    }
+
+    [Fact]
+    public void BindFail_PreservesSucc_WhenSucc()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Succ(42);
+
+        // Act
+        var actual = sut.BindFail(_ => FinResponse.Succ(0));
+
+        // Assert
+        actual.IsSucc.ShouldBeTrue();
+        actual.ThrowIfFail().ShouldBe(42);
+    }
+
+    [Fact]
+    public void BindFail_AppliesRecovery_WhenFail()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Fail<int>(Error.New("error"));
+
+        // Act
+        var actual = sut.BindFail(_ => FinResponse.Succ(0));
+
+        // Assert
+        actual.IsSucc.ShouldBeTrue();
+        actual.ThrowIfFail().ShouldBe(0);
+    }
+
+    // --- Boolean 및 Choice 연산자 ---
+
+    [Fact]
+    public void BooleanOperator_SupportsIfPattern_WhenSucc()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Succ(42);
+
+        // Act & Assert
+        if (sut)
+            true.ShouldBeTrue(); // Succ → true 분기
+        else
+            true.ShouldBeFalse(); // 도달하지 않아야 함
+    }
+
+    [Fact]
+    public void BooleanOperator_SupportsIfPattern_WhenFail()
+    {
+        // Arrange
+        FinResponse<int> sut = FinResponse.Fail<int>(Error.New("error"));
+
+        // Act & Assert
+        if (sut)
+            true.ShouldBeFalse(); // 도달하지 않아야 함
+        else
+            true.ShouldBeTrue(); // Fail → false 분기
+    }
+
+    [Fact]
+    public void ChoiceOperator_ReturnsLhs_WhenLhsIsSucc()
+    {
+        // Arrange
+        FinResponse<int> lhs = FinResponse.Succ(1);
+        FinResponse<int> rhs = FinResponse.Succ(2);
+
+        // Act
+        var actual = lhs | rhs;
+
+        // Assert
+        actual.ThrowIfFail().ShouldBe(1);
+    }
+
+    [Fact]
+    public void ChoiceOperator_ReturnsRhs_WhenLhsIsFail()
+    {
+        // Arrange
+        FinResponse<int> lhs = FinResponse.Fail<int>(Error.New("error"));
+        FinResponse<int> rhs = FinResponse.Succ(2);
+
+        // Act
+        var actual = lhs | rhs;
+
+        // Assert
+        actual.ThrowIfFail().ShouldBe(2);
+    }
 }

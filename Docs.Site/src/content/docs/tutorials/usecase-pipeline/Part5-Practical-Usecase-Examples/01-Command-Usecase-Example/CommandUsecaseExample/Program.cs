@@ -2,8 +2,8 @@ using CommandUsecaseExample;
 
 var handler = new CreateProductCommand.Handler();
 
-var success = handler.Handle(new CreateProductCommand.Request("Widget", 9.99m));
+var success = await handler.Handle(new CreateProductCommand.Request("Widget", 9.99m), CancellationToken.None);
 Console.WriteLine(success);
 
-var fail = handler.Handle(new CreateProductCommand.Request("", 9.99m));
+var fail = await handler.Handle(new CreateProductCommand.Request("", 9.99m), CancellationToken.None);
 Console.WriteLine(fail);

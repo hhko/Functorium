@@ -43,4 +43,15 @@ public class FinToFinResponseBridgeTests
         // Assert
         actual.IsFail.ShouldBeTrue();
     }
+
+    [Fact]
+    public void CustomConversion_ReturnsTransformedSucc_WhenFinIsSucc()
+    {
+        // Act
+        var actual = BridgeExamples.CustomConversion();
+
+        // Assert
+        actual.IsSucc.ShouldBeTrue();
+        actual.ThrowIfFail().ShouldBe("Value is 42");
+    }
 }

@@ -2,8 +2,8 @@ using QueryUsecaseExample;
 
 var handler = new GetProductQuery.Handler();
 
-var success = handler.Handle(new GetProductQuery.Request("prod-001"));
+var success = await handler.Handle(new GetProductQuery.Request("prod-001"), CancellationToken.None);
 Console.WriteLine(success);
 
-var fail = handler.Handle(new GetProductQuery.Request("nonexistent"));
+var fail = await handler.Handle(new GetProductQuery.Request("nonexistent"), CancellationToken.None);
 Console.WriteLine(fail);

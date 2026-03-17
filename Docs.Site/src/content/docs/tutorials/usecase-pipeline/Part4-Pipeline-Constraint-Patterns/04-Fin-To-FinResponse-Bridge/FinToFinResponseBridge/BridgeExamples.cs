@@ -44,4 +44,15 @@ public static class BridgeExamples
         Fin<string> fin = Fin.Fail<string>(Error.New("not found"));
         return fin.ToFinResponse();
     }
+
+    /// <summary>
+    /// 5. 커스텀 변환: Fin<A> -> FinResponse<B> (onSucc/onFail)
+    /// </summary>
+    public static FinResponse<string> CustomConversion()
+    {
+        Fin<int> fin = Fin.Succ(42);
+        return fin.ToFinResponse(
+            onSucc: value => FinResponse.Succ($"Value is {value}"),
+            onFail: error => FinResponse.Fail<string>(error));
+    }
 }

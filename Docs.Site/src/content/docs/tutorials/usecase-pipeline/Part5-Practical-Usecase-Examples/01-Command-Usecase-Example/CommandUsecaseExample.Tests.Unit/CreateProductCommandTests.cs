@@ -6,14 +6,14 @@ namespace CommandUsecaseExample.Tests.Unit;
 public class CreateProductCommandTests
 {
     [Fact]
-    public void Handle_ReturnsSuccess_WhenRequestIsValid()
+    public async Task Handle_ReturnsSuccess_WhenRequestIsValid()
     {
         // Arrange
         var sut = new CreateProductCommand.Handler();
         var request = new CreateProductCommand.Request("Widget", 9.99m);
 
         // Act
-        var actual = sut.Handle(request);
+        var actual = await sut.Handle(request, CancellationToken.None);
 
         // Assert
         actual.IsSucc.ShouldBeTrue();
@@ -21,28 +21,28 @@ public class CreateProductCommandTests
     }
 
     [Fact]
-    public void Handle_ReturnsFail_WhenNameIsEmpty()
+    public async Task Handle_ReturnsFail_WhenNameIsEmpty()
     {
         // Arrange
         var sut = new CreateProductCommand.Handler();
         var request = new CreateProductCommand.Request("", 9.99m);
 
         // Act
-        var actual = sut.Handle(request);
+        var actual = await sut.Handle(request, CancellationToken.None);
 
         // Assert
         actual.IsFail.ShouldBeTrue();
     }
 
     [Fact]
-    public void Handle_ReturnsFail_WhenPriceIsZero()
+    public async Task Handle_ReturnsFail_WhenPriceIsZero()
     {
         // Arrange
         var sut = new CreateProductCommand.Handler();
         var request = new CreateProductCommand.Request("Widget", 0m);
 
         // Act
-        var actual = sut.Handle(request);
+        var actual = await sut.Handle(request, CancellationToken.None);
 
         // Assert
         actual.IsFail.ShouldBeTrue();

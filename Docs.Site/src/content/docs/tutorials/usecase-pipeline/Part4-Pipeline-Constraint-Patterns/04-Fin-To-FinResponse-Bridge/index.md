@@ -15,6 +15,7 @@ Fin<Product>       ──→   FinResponse<Product>        직접 변환
 Fin<Product>       ──→   FinResponse<ProductDto>     매퍼 변환
 Fin<Unit>          ──→   FinResponse<string>         팩토리 변환
 Fin<T> (Fail)      ──→   FinResponse<T> (Fail)       실패 전파
+Fin<int>           ──→   FinResponse<string>         커스텀 변환
 ```
 
 ## 핵심 개념
@@ -63,7 +64,20 @@ FinResponse<string> response = fin.ToFinResponse();
 // response.IsFail == true
 ```
 
-### 6. 변환 오버로드 정리
+### 6. 커스텀 변환: Fin\<A\> -> FinResponse\<B\> (onSucc/onFail)
+
+성공과 실패 모두에 대해 커스텀 처리가 필요한 경우 사용합니다. 예: 성공 값을 다른 타입으로 변환하면서, 실패 시에도 별도 에러 처리를 적용하는 경우.
+
+```csharp
+Fin<int> fin = Fin.Succ(42);
+FinResponse<string> response = fin.ToFinResponse(
+    onSucc: value => FinResponse.Succ($"Value is {value}"),
+    onFail: error => FinResponse.Fail<string>(error));
+```
+
+이 오버로드는 `Fin`의 `Match`와 동일한 구조이므로 가장 유연하지만, 대부분의 경우 직접/매퍼/팩토리 변환으로 충분합니다.
+
+### 7. 변환 오버로드 정리
 
 `ToFinResponse()`가 제공하는 변환 오버로드를 정리하면 다음과 같습니다.
 
