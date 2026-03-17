@@ -52,18 +52,21 @@ cd functorium
 
 ```bash
 # 전체 솔루션 빌드
-dotnet build Functorium.All.slnx
+dotnet build Functorium.slnx
 
 # 전체 테스트 실행
-dotnet test --solution Functorium.All.slnx
+dotnet test --solution Functorium.slnx
 ```
 
 ### 개별 프로젝트 실행
 
 ```bash
 # Part 1 첫 번째 장 테스트 실행
-cd Docs.Site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity.Tests.Unit
-dotnet test
+dotnet test --project Docs.Site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity.Tests.Unit
+
+# 튜토리얼 전체 빌드/테스트
+dotnet build Docs.Site/src/content/docs/tutorials/cqrs-repository/cqrs-repository.slnx
+dotnet test --solution Docs.Site/src/content/docs/tutorials/cqrs-repository/cqrs-repository.slnx
 ```
 
 ---
@@ -105,8 +108,7 @@ using static LanguageExt.Prelude;
 
 ```bash
 # 특정 프로젝트 테스트 실행
-cd Docs.Site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity.Tests.Unit
-dotnet test
+dotnet test --project Docs.Site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity.Tests.Unit
 
 # 특정 테스트만 실행
 dotnet test --filter "Create_ReturnsAggregate_WhenValid"
@@ -116,7 +118,7 @@ dotnet test --filter "Create_ReturnsAggregate_WhenValid"
 
 ```bash
 # 솔루션 루트에서
-dotnet test --solution Functorium.All.slnx
+dotnet test --solution Functorium.slnx
 ```
 
 ---
@@ -147,7 +149,7 @@ dotnet test --solution Functorium.All.slnx
 
 ```xml
 <ItemGroup>
-    <ProjectReference Include="../../../../../Src/Functorium/Functorium.csproj" />
+    <ProjectReference Include="../../../../../../../../../Src/Functorium/Functorium.csproj" />
 </ItemGroup>
 ```
 

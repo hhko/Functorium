@@ -4,6 +4,8 @@ title: "CQRS 리포지토리 패턴"
 
 **C# Functorium으로 Repository와 Query 어댑터를 구현하는 실전 가이드**
 
+> **"조회 조건이 하나 추가될 때마다 Repository 메서드를 하나 추가하고 있다면, 그것은 설계가 아니라 관성입니다."**
+
 ---
 
 ## 이 튜토리얼에 대하여
@@ -12,25 +14,13 @@ title: "CQRS 리포지토리 패턴"
 
 이 튜토리얼은 그 문제를 **Command와 Query의 책임 분리(CQRS)로** 해결합니다. 도메인 엔티티 기초에서 시작하여 Repository 패턴, Query 어댑터, Usecase 통합까지, **22개의 실습 프로젝트**를 통해 CQRS 패턴의 모든 측면을 단계별로 학습합니다.
 
-### 대상 독자
-
-여러분의 경험 수준에 따라 학습 범위를 선택할 수 있습니다.
-
-| 수준 | 대상 | 권장 학습 범위 |
-|------|------|----------------|
-| **초급** | C# 기본 문법을 알고 CQRS 패턴에 입문하려는 개발자 | Part 1 |
-| **중급** | 패턴을 이해하고 실전 적용을 원하는 개발자 | Part 1~3 |
-| **고급** | 아키텍처 설계와 도메인 모델링에 관심 있는 개발자 | Part 4~5 + 부록 |
-
 ### 학습 목표
 
 이 튜토리얼을 완료하면 다음을 할 수 있습니다:
 
-1. CQRS 패턴의 개념과 필요성을 이해하고 Command/Query 분리 설계를 적용할 수 있습니다
-2. IRepository 기반 Repository 패턴으로 Aggregate Root 단위 영속화를 구현할 수 있습니다
-3. IQueryPort 기반 Query 어댑터로 읽기 전용 최적화 조회를 구현할 수 있습니다
-4. FinT 모나드 합성과 ToFinResponse 변환으로 함수형 파이프라인을 구성할 수 있습니다
-5. 트랜잭션 파이프라인과 도메인 이벤트 흐름으로 완성도 높은 CQRS 아키텍처를 구축할 수 있습니다
+1. CQRS 패턴으로 Command(IRepository)와 Query(IQueryPort)를 분리 설계할 수 있습니다
+2. FinT 모나드 합성과 Specification 기반 동적 검색으로 함수형 CQRS 파이프라인을 구성할 수 있습니다
+3. 트랜잭션 파이프라인과 도메인 이벤트 흐름으로 완성도 높은 CQRS 아키텍처를 구축할 수 있습니다
 
 ---
 
@@ -110,31 +100,6 @@ Repository와 Query 어댑터가 준비되었으니, 이제 이들을 Usecase로
 
 ---
 
-## 핵심 진화 과정
-
-```
-Part 1: 도메인 엔티티 기초
-  1장: Entity/Identity     ->  2장: Aggregate Root    ->  3장: 도메인 이벤트  ->  4장: 엔티티 인터페이스
-     |
-Part 2: Command 측 Repository
-  1장: Repository 인터페이스 ->  2장: InMemory Repository ->  3장: EF Core Repository ->  4장: Unit of Work
-     |
-Part 3: Query 측 읽기 전용
-  1장: IQueryPort          ->  2장: DTO 분리          ->  3장: 페이지네이션/정렬
-     |
-  4장: InMemory Query      ->  5장: Dapper Query
-     |
-Part 4: CQRS Usecase 통합
-  1장: Command Usecase     ->  2장: Query Usecase     ->  3장: FinT -> FinResponse
-     |
-  4장: 도메인 이벤트 흐름  ->  5장: 트랜잭션 파이프라인
-     |
-Part 5: 도메인별 실전 예제
-  1장: 주문 관리           ->  2장: 고객 관리         ->  3장: 재고 관리  ->  4장: 카탈로그 검색
-```
-
----
-
 ## Functorium CQRS 타입 계층
 
 ```
@@ -174,15 +139,6 @@ Specification (검색 조건)
     ├── ToExpression() → Expression<Func<T, bool>>
     └── sealed IsSatisfiedBy (컴파일 + 캐싱)
 ```
-
----
-
-## 필수 준비물
-
-- .NET 10.0 SDK 이상
-- VS Code + C# Dev Kit 확장
-- C# 기초 문법 지식
-- DDD 기초 개념 (Entity, Aggregate Root)
 
 ---
 
@@ -226,30 +182,16 @@ cqrs-repository/
 
 ## 테스트
 
-모든 Part의 예제 프로젝트에는 단위 테스트가 포함되어 있습니다. 테스트는 [15a-unit-testing.md](../../Docs/guides/15a-unit-testing.md) 가이드를 따릅니다.
+모든 Part의 예제 프로젝트에는 단위 테스트가 포함되어 있습니다. 테스트는 [단위 테스트 가이드](../../guides/testing/15a-unit-testing) 규칙을 따릅니다.
 
 ### 테스트 실행 방법
 
 ```bash
-# Part 1 테스트 실행
-cd Docs.Site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity.Tests.Unit
-dotnet test
+# 튜토리얼 전체 테스트
+dotnet test --solution Docs.Site/src/content/docs/tutorials/cqrs-repository/cqrs-repository.slnx
 
-# Part 2 테스트 실행
-cd Docs.Site/src/content/docs/tutorials/cqrs-repository/Part2-Command-Repository/01-Repository-Interface/RepositoryInterface.Tests.Unit
-dotnet test
-
-# Part 3 테스트 실행
-cd Docs.Site/src/content/docs/tutorials/cqrs-repository/Part3-Query-Patterns/01-QueryPort-Interface/QueryPortInterface.Tests.Unit
-dotnet test
-
-# Part 4 테스트 실행
-cd Docs.Site/src/content/docs/tutorials/cqrs-repository/Part4-CQRS-Usecase-Integration/01-Command-Usecase/CommandUsecase.Tests.Unit
-dotnet test
-
-# Part 5 테스트 실행
-cd Docs.Site/src/content/docs/tutorials/cqrs-repository/Part5-Domain-Examples/01-Ecommerce-Order-Management/EcommerceOrderManagement.Tests.Unit
-dotnet test
+# 개별 프로젝트 테스트
+dotnet test --project Docs.Site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity.Tests.Unit
 ```
 
 ### 테스트 프로젝트 구조
@@ -326,7 +268,7 @@ public void Create_ReturnsAggregate_WhenValid()
 이 튜토리얼의 모든 예제 코드는 Functorium 프로젝트에서 확인할 수 있습니다:
 
 - Repository 인터페이스: `Src/Functorium/Domains/Repositories/`
-- Repository 구현체: `Src/Functorium/Adapters/Repositories/`
+- Repository 구현체: `Src/Functorium.Adapters/Repositories/`
 - Query 어댑터: `Src/Functorium/Applications/Queries/`
 - Usecase 인터페이스: `Src/Functorium/Applications/Usecases/`
 - 트랜잭션 파이프라인: `Src/Functorium/Adapters/Observabilities/Pipelines/`

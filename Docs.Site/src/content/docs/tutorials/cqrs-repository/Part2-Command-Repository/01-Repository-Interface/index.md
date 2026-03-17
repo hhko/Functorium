@@ -88,6 +88,10 @@ public interface IRepository<TAggregate, TId>
 - `AggregateRoot<TId>` 제약: Entity나 Value Object를 직접 영속화하려고 하면 컴파일 에러가 발생합니다.
 - `IEntityId<TId>` 제약: Ulid 기반 식별자를 강제하여 ID 생성 전략을 통일합니다.
 
+### IObservablePort
+
+IRepository는 `IObservablePort`를 상속합니다. `IObservablePort`는 `RequestCategory` 속성 하나를 가지며, Observability 파이프라인이 Command/Query를 구분하여 메트릭과 로그를 수집하는 데 사용됩니다. Repository 구현체는 `RequestCategory => "Command"`를 반환합니다.
+
 ---
 
 ## 프로젝트 설명

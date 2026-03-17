@@ -31,12 +31,29 @@ CreateProductCommand (봉투)
 └── Usecase   - 비즈니스 로직 (ICommandUsecase<Request, Response>)
 ```
 
+### Mediator 인터페이스
+
+Request는 `ICommandRequest<Response>`를, Usecase는 `ICommandUsecase<Request, Response>`를 구현합니다. Handle 시그니처는 `ValueTask<FinResponse<Response>>`를 반환하고 `CancellationToken`을 받습니다.
+
+```csharp
+public sealed record Request(string Name, decimal Price) : ICommandRequest<Response>;
+
+public sealed class Usecase(IProductRepository productRepository)
+    : ICommandUsecase<Request, Response>
+{
+    public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken ct)
+    {
+        // ...
+    }
+}
+```
+
 ### 실행 흐름
 
 Request가 들어오면 Usecase는 도메인 객체를 생성하고, Repository에 저장한 뒤, 결과를 Response로 변환합니다. 각 단계가 어떤 타입을 다루는지 살펴보세요.
 
 ```
-Request → Usecase.Handle()
+Request → Usecase.Handle(request, ct)
            ├── Product.Create()        (도메인 객체 생성)
            ├── repository.Create()     (FinT<IO, Product>)
            ├── LINQ select             (Product → Response 변환)

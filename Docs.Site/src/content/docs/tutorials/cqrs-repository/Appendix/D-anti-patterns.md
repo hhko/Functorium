@@ -126,7 +126,7 @@ public record OrderDto(
 var allOrders = await query.Search(
     Specification<Order>.All,
     new PageRequest(1, int.MaxValue),  // 전체 조회
-    SortExpression.Default).RunAsync();
+    SortExpression.Empty).RunAsync();
 ```
 
 **문제점:**
@@ -141,7 +141,7 @@ var allOrders = await query.Search(
 var pagedOrders = await query.Search(
     spec,
     new PageRequest(page: 1, size: 20),
-    new SortExpression("CreatedAt", SortDirection.Desc)).RunAsync();
+    SortExpression.By("CreatedAt", SortDirection.Descending)).RunAsync();
 
 // 대량 데이터는 Stream 사용
 await foreach (var dto in query.Stream(spec, sort, ct))

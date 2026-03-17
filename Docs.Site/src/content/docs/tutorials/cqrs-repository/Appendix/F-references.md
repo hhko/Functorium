@@ -4,7 +4,7 @@ title: "참고 자료"
 ## 공식 문서
 
 ### Functorium
-- **GitHub**: https://github.com/your-org/functorium
+- **GitHub**: https://github.com/hhko/Functorium
 - **Repository 타입**: `Src/Functorium/Domains/Repositories/`
 - **Query 어댑터**: `Src/Functorium/Applications/Queries/`
 - **Usecase 인터페이스**: `Src/Functorium/Applications/Usecases/`
@@ -127,10 +127,10 @@ Src/Functorium/
 │   ├── Queries/                   # IQueryPort<TEntity, TDto>
 │   ├── Usecases/                  # ICommandRequest, IQueryRequest, FinResponse
 │   └── Persistence/               # IUnitOfWork, IUnitOfWorkTransaction
-└── Adapters/
-    ├── Repositories/              # InMemoryRepositoryBase, EfCoreRepositoryBase
-    ├── Events/                    # DomainEventCollector
-    └── Observabilities/Pipelines/ # UsecaseTransactionPipeline
+Src/Functorium.Adapters/
+├── Repositories/                  # InMemoryRepositoryBase, EfCoreRepositoryBase
+├── Events/                        # DomainEventCollector
+└── Observabilities/Pipelines/     # UsecaseTransactionPipeline
 ```
 
 ### 튜토리얼 프로젝트

@@ -246,6 +246,27 @@ var pipeline =
 
 ---
 
+## 구조화된 에러 타입
+
+Functorium은 `Error.New("message")` 외에 구조화된 에러 타입을 제공합니다. Pipeline 레이어에서 에러 종류에 따라 HTTP 상태 코드를 자동 매핑합니다.
+
+| 에러 타입 | 용도 | HTTP 매핑 |
+|-----------|------|-----------|
+| `DomainError` | 도메인 규칙 위반 | 422 Unprocessable Entity |
+| `ApplicationError` | 애플리케이션 레벨 오류 | 400 Bad Request |
+| `NotFoundError` | 리소스 미존재 | 404 Not Found |
+
+```csharp
+// DomainError 생성 예시
+DomainError.ForContext<Order>("주문 상태가 취소 가능하지 않습니다")
+
+// Guard와 조합
+from _ in guard(order.CanCancel(),
+    DomainError.ForContext<Order>("취소 불가 상태입니다"))
+```
+
+---
+
 ## 다음 단계
 
 CQRS 안티패턴을 확인합니다.

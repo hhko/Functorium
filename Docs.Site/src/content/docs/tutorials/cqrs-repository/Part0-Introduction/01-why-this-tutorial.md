@@ -3,9 +3,13 @@ title: "왜 CQRS인가"
 ---
 ## 개요
 
-주문 목록 API에 새 필터가 필요할 때마다 Repository에 메서드를 추가하고 있나요? `GetByCustomer`, `GetRecent`, `GetSummaries`, `Search`... 조회 조건이 늘어날수록 메서드도 끝없이 불어나고, 읽기 전용 필드가 도메인 모델에 스며들어 쓰기 로직을 오염시킵니다.
+금요일 오후, 기획자가 슬랙 메시지를 보냅니다: "고객별 주문 이력 필터를 추가해주세요."
 
-이 튜토리얼은 그 문제를 **Command와 Query의 책임 분리(CQRS)로** 해결합니다. 도메인 엔티티 기초에서 시작하여 Repository 패턴, Query 어댑터, Usecase 통합까지, **22개의 실습 프로젝트**를 통해 CQRS 패턴의 모든 측면을 단계별로 학습합니다.
+`OrderRepository`를 열어봅니다. 이미 `GetByCustomer`, `GetRecent`, `GetSummaries`, `SearchByKeyword`가 있습니다. 하나 더 추가하면 되겠지? 그런데 돌아보면 3개월 전에도 같은 작업을 했고, 그때도 "하나만 추가"했습니다. 지금 Repository 메서드는 15개. 다음 분기엔 25개가 될 겁니다.
+
+**"이게 정말 Repository인가?"** 라는 질문이 떠오르는 순간, 이 튜토리얼이 시작됩니다.
+
+이 튜토리얼은 **Command와 Query의 책임 분리(CQRS)로** 그 문제를 해결합니다. 도메인 엔티티 기초에서 시작하여 Repository 패턴, Query 어댑터, Usecase 통합까지, **22개의 실습 프로젝트**를 통해 CQRS 패턴의 모든 측면을 단계별로 학습합니다.
 
 ---
 
@@ -16,7 +20,7 @@ title: "왜 CQRS인가"
 대부분의 애플리케이션은 하나의 모델로 읽기와 쓰기를 모두 처리합니다. 다음 코드를 보세요.
 
 ```csharp
-// 하나의 Repository가 모든 책임을 짊어짐
+// ❌ 하나의 Repository가 모든 책임을 짊어짐
 public interface IOrderRepository
 {
     // 쓰기 (Command)
@@ -51,7 +55,7 @@ public interface IOrderRepository
 CQRS(Command Query Responsibility Segregation)는 **쓰기 모델과 읽기 모델을 분리**하여 각각의 요구사항에 맞게 최적화합니다. 쓰기는 Aggregate Root 단위로, 읽기는 Specification 기반 동적 검색으로 접근하면 위 문제가 모두 해소됩니다.
 
 ```csharp
-// Command 측: Aggregate Root 단위 영속화
+// ✅ Command 측: Aggregate Root 단위 영속화
 public interface IRepository<TAggregate, TId>
 {
     FinT<IO, TAggregate> Create(TAggregate aggregate);
@@ -60,7 +64,7 @@ public interface IRepository<TAggregate, TId>
     FinT<IO, int> Delete(TId id);
 }
 
-// Query 측: DTO 프로젝션 + 페이지네이션
+// ✅ Query 측: DTO 프로젝션 + 페이지네이션
 public interface IQueryPort<TEntity, TDto>
 {
     FinT<IO, PagedResult<TDto>> Search(
