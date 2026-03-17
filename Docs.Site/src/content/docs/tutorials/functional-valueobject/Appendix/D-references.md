@@ -146,10 +146,10 @@ Src/Functorium/Applications/Cqrs/
 ### 튜토리얼 프로젝트
 
 ```
-Docs/tutorials/Implementing-Functional-ValueObject/
+Docs.Site/src/content/docs/tutorials/functional-valueobject/
 ├── Part1-ValueObject-Concepts/        # Part 1: 개념 이해 (16개)
-├── Part2-Validation-Patterns/         # Part 2: 검증 패턴 (5개)
-├── Part3-ValueObject-Patterns/        # Part 3: 값 객체 패턴 (8개)
+├── Part2-Validation-Patterns/         # Part 2: 검증 패턴 (6개)
+├── Part3-ValueObject-Patterns/        # Part 3: 값 객체 패턴 (9개)
 ├── Part4-Practical-Guide/             # Part 4: 실전 가이드 (4개)
 └── Part5-Domain-Examples/             # Part 5: 도메인 예제 (4개)
 ```

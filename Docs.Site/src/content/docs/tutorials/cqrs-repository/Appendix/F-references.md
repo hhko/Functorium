@@ -136,7 +136,7 @@ Src/Functorium/
 ### 튜토리얼 프로젝트
 
 ```
-Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/
+Docs.Site/src/content/docs/tutorials/cqrs-repository/
 ├── Part1-Domain-Entity-Foundations/   # 도메인 엔티티 (4개)
 ├── Part2-Command-Repository/          # Repository 패턴 (4개)
 ├── Part3-Query-Patterns/              # Query 패턴 (5개)
@@ -150,7 +150,7 @@ Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/
 
 이 튜토리얼은 다음 튜토리얼과 함께 학습하면 더 효과적입니다:
 
-- **[Specification 패턴으로 도메인 규칙 구현하기](../Implementing-Specification-Pattern/)**: Specification 패턴 기초부터 Repository 통합까지. 이 튜토리얼의 IQueryPort, IRepository에서 Specification을 매개변수로 사용합니다.
+- **[Specification 패턴으로 도메인 규칙 구현하기](../specification-pattern/)**: Specification 패턴 기초부터 Repository 통합까지. 이 튜토리얼의 IQueryPort, IRepository에서 Specification을 매개변수로 사용합니다.
 
 ---
 

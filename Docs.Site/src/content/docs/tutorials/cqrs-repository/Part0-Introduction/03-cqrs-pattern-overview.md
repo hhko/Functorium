@@ -173,7 +173,7 @@ public interface IQueryPort<TEntity, TDto>
 Specification으로 검색 조건을 조합하고, Offset/Cursor/Stream 3가지 페이지네이션을 지원하며, DTO 프로젝션으로 읽기 성능을 최적화합니다.
 
 IQueryPort\<TEntity, TDto\>의 Search, SearchByCursor, Stream 메서드는 모두 `Specification<TEntity>`를 매개변수로 받습니다.
-Specification 패턴의 상세 학습은 [Specification 패턴으로 도메인 규칙 구현하기](../../Implementing-Specification-Pattern/)를 참조하세요.
+Specification 패턴의 상세 학습은 [Specification 패턴으로 도메인 규칙 구현하기](../../specification-pattern/)를 참조하세요.
 
 ### Usecase 통합: Mediator 패턴
 

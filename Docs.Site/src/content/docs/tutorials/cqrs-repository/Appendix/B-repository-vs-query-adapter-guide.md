@@ -26,7 +26,7 @@ Functorium CQRS에서 데이터 접근은 **IRepository**(Command 측)와 **IQue
 
 `Specification<T>`는 IQueryPort의 핵심 검색 매개변수입니다. Search, SearchByCursor, Stream 메서드는 모두 `Specification<TEntity>`를 첫 번째 매개변수로 받아 동적 필터링을 수행합니다. Specification의 And, Or, Not 조합은 Query 측에서 복합 검색 조건을 구성하는 데 사용됩니다.
 
-Specification 패턴의 상세 학습은 [Specification 패턴으로 도메인 규칙 구현하기](../../Implementing-Specification-Pattern/)를 참조하세요.
+Specification 패턴의 상세 학습은 [Specification 패턴으로 도메인 규칙 구현하기](../../specification-pattern/)를 참조하세요.
 
 ---
 

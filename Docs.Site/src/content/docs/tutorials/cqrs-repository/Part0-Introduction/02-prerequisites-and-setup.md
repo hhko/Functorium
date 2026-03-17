@@ -62,7 +62,7 @@ dotnet test --solution Functorium.All.slnx
 
 ```bash
 # Part 1 첫 번째 장 테스트 실행
-cd Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity.Tests.Unit
+cd Docs.Site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity.Tests.Unit
 dotnet test
 ```
 
@@ -105,7 +105,7 @@ using static LanguageExt.Prelude;
 
 ```bash
 # 특정 프로젝트 테스트 실행
-cd Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity.Tests.Unit
+cd Docs.Site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity.Tests.Unit
 dotnet test
 
 # 특정 테스트만 실행

@@ -189,7 +189,7 @@ Specification (검색 조건)
 ## 프로젝트 구조
 
 ```
-Implementing-CQRS-Repository-And-Query-Patterns/
+cqrs-repository/
 ├── Part0-Introduction/                     # Part 0: 서론
 ├── Part1-Domain-Entity-Foundations/         # Part 1: 도메인 엔티티 기초 (4개)
 │   ├── 01-Entity-And-Identity/
@@ -232,23 +232,23 @@ Implementing-CQRS-Repository-And-Query-Patterns/
 
 ```bash
 # Part 1 테스트 실행
-cd Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity.Tests.Unit
+cd Docs.Site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity.Tests.Unit
 dotnet test
 
 # Part 2 테스트 실행
-cd Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part2-Command-Repository/01-Repository-Interface/RepositoryInterface.Tests.Unit
+cd Docs.Site/src/content/docs/tutorials/cqrs-repository/Part2-Command-Repository/01-Repository-Interface/RepositoryInterface.Tests.Unit
 dotnet test
 
 # Part 3 테스트 실행
-cd Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part3-Query-Patterns/01-QueryPort-Interface/QueryPortInterface.Tests.Unit
+cd Docs.Site/src/content/docs/tutorials/cqrs-repository/Part3-Query-Patterns/01-QueryPort-Interface/QueryPortInterface.Tests.Unit
 dotnet test
 
 # Part 4 테스트 실행
-cd Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part4-CQRS-Usecase-Integration/01-Command-Usecase/CommandUsecase.Tests.Unit
+cd Docs.Site/src/content/docs/tutorials/cqrs-repository/Part4-CQRS-Usecase-Integration/01-Command-Usecase/CommandUsecase.Tests.Unit
 dotnet test
 
 # Part 5 테스트 실행
-cd Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/Part5-Domain-Examples/01-Ecommerce-Order-Management/EcommerceOrderManagement.Tests.Unit
+cd Docs.Site/src/content/docs/tutorials/cqrs-repository/Part5-Domain-Examples/01-Ecommerce-Order-Management/EcommerceOrderManagement.Tests.Unit
 dotnet test
 ```
 
@@ -330,13 +330,13 @@ public void Create_ReturnsAggregate_WhenValid()
 - Query 어댑터: `Src/Functorium/Applications/Queries/`
 - Usecase 인터페이스: `Src/Functorium/Applications/Usecases/`
 - 트랜잭션 파이프라인: `Src/Functorium/Adapters/Observabilities/Pipelines/`
-- 튜토리얼 프로젝트: `Docs/tutorials/Implementing-CQRS-Repository-And-Query-Patterns/`
+- 튜토리얼 프로젝트: `Docs.Site/src/content/docs/tutorials/cqrs-repository/`
 
 ### 관련 튜토리얼
 
 이 튜토리얼은 다음 튜토리얼과 함께 학습하면 더 효과적입니다:
 
-- **[Specification 패턴으로 도메인 규칙 구현하기](../Implementing-Specification-Pattern/)**: Specification 패턴 기초부터 Repository 통합까지. 이 튜토리얼의 IQueryPort, IRepository에서 Specification을 매개변수로 사용합니다.
+- **[Specification 패턴으로 도메인 규칙 구현하기](../specification-pattern/)**: Specification 패턴 기초부터 Repository 통합까지. 이 튜토리얼의 IQueryPort, IRepository에서 Specification을 매개변수로 사용합니다.
 
 ---
 
