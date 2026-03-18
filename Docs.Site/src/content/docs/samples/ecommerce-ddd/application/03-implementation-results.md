@@ -463,7 +463,7 @@ public async Task Handle_ReturnsFail_WhenCreditLimitExceeded()
 
 단가 1000원 x 수량 2 = 총액 2000원인데 신용한도가 1000원이므로, Domain Service에서 `CreditLimitExceeded` 에러를 반환합니다. 이 에러는 `FinT<IO, T>` LINQ 합성 내부의 `_creditCheckService.ValidateCreditLimit(customer, newOrder.TotalAmount)`에서 발생하여, `_orderRepository.Create()`가 실행되지 않고 에러가 상위로 전파됩니다.
 
-`PlaceOrderCommand`에서도 동일한 도메인 에러 전파가 이루어집니다. 재고 부족 시 `Inventory.DeductStock()`이 `InsufficientStock` 에러를 반환하고, 신용 한도 초과 시 `OrderCreditCheckService`가 `CreditLimitExceeded` 에러를 반환합니다. 두 경우 모두 명령형 조기 반환으로 후속 쓰기가 실행되지 않습니다.
+`PlaceOrderCommand`에서도 동일한 도메인 에러 전파가 이루어집니다. 재고 부족 시 `Inventory.DeductStock()`이 `InsufficientStock` 에러를 반환하고, 신용 한도 초과 시 `OrderCreditCheckService`가 `CreditLimitExceeded` 에러를 반환합니다. 두 경우 모두 FinT LINQ 체인의 모나드 바인딩에 의해 후속 단계가 실행되지 않고 에러가 전파됩니다.
 
 ```csharp
 [Fact]
@@ -495,7 +495,7 @@ public async Task Handle_ReturnsFail_WhenInsufficientStock()
 }
 ```
 
-재고가 1개인데 2개를 주문하면 `DeductStock`이 `InsufficientStock` 도메인 에러를 반환합니다. 이 시점에서 Customer 조회, 신용 검증, Order 생성, Inventory 저장이 모두 실행되지 않습니다. `_customerRepository`와 `_orderRepository`를 Mock 설정하지 않아도 테스트가 통과하는 것이, Phase 2의 조기 반환이 정확히 동작함을 증명합니다.
+재고가 1개인데 2개를 주문하면 `DeductStock`이 `InsufficientStock` 도메인 에러를 반환합니다. 이 시점에서 Customer 조회, 신용 검증, Order 생성, Inventory 저장이 모두 실행되지 않습니다. `_customerRepository`와 `_orderRepository`를 Mock 설정하지 않아도 테스트가 통과하는 것이, FinT 체인의 단락(short-circuit)이 정확히 동작함을 증명합니다.
 
 에러는 발생 지점에서 FinT 체인을 따라 최종 `FinResponse`까지 자동으로 전파됩니다. 중간에 try-catch가 없어도 타입 시스템이 에러 흐름을 보장합니다. 다음 표는 각 에러 유형별 발생 원천과 전파 경로를 정리합니다.
 
@@ -507,7 +507,7 @@ public async Task Handle_ReturnsFail_WhenInsufficientStock()
 | 고유성 검사 (`Exists` + `guard`) | `ApplicationError` (`AlreadyExists`) | `FinT<IO, T>` LINQ 합성 내 `guard` | `ApplicationError.For<T>(new AlreadyExists(), ...)` |
 | 엔티티 조회 (`GetById`) | `Error` (Repository 반환) | `FinT<IO, T>` LINQ 합성 모나드 바인딩 | `FinTFactory.Fail<T>(Error.New(...))` |
 | 도메인 서비스 (`OrderCreditCheckService`) | `DomainError` (`CreditLimitExceeded`) | `FinT<IO, T>` LINQ 합성 -> `Fin.ToFinResponse()` | `DomainError.For<T>(new CreditLimitExceeded(), ...)` |
-| 도메인 메서드 (`Inventory.DeductStock`) | `DomainError` (`InsufficientStock`) | 명령형 조기 반환 | `DomainError.For<T>(new InsufficientStock(), ...)` |
+| 도메인 메서드 (`Inventory.DeductStock`) | `DomainError` (`InsufficientStock`) | `FinT<IO, T>` LINQ 합성 모나드 바인딩 | `DomainError.For<T>(new InsufficientStock(), ...)` |
 | 배치 조회 후 존재 검증 | `ApplicationError` (`NotFound`) | 명시적 반환 | `ApplicationError.For<T>(new NotFound(), ...)` |
 
 ## 시나리오 커버리지 매트릭스
@@ -518,7 +518,7 @@ public async Task Handle_ReturnsFail_WhenInsufficientStock()
 | `CreateCustomerCommand` | 고객 생성 | VO 검증 실패, 중복 이메일 | Apply 패턴 에러 누적, `guard` + `AlreadyExists` |
 | `CreateOrderCommand` | 주문 생성 | 상품 미존재, 배송지 빈값 | 배치 조회 후 `NotFound`, VO 조기 반환 |
 | `CreateOrderWithCreditCheckCommand` | 주문 + 신용 검증 | 신용한도 초과, 상품 미존재, 고객 미존재 | Domain Service 에러 전파, `NotFound`, Repository `Fail` |
-| `PlaceOrderCommand` | 주문 생성 + 재고 차감 (다중 Aggregate 쓰기) | 신용한도 초과, 재고 부족, 상품 미존재, 고객 미존재, 재고 미존재 | Bind/Map UoW, 명령형 조기 반환, Domain 에러 전파 |
+| `PlaceOrderCommand` | 주문 생성 + 재고 차감 (다중 Aggregate 쓰기) | 신용한도 초과, 재고 부족, 상품 미존재, 고객 미존재, 재고 미존재 | FinT LINQ 체인 + Traverse + Bind/Map UoW, Domain 에러 전파 |
 | `UpdateProductCommand` | 상품 업데이트 | 상품 미존재, 중복 이름, VO 검증 실패 | Repository `Fail`, `guard` + `AlreadyExists`, Apply 패턴 |
 | `DeleteProductCommand` | Soft Delete (이미 삭제 포함) | 상품 미존재 | Repository `Fail` |
 | `SearchProductsQuery` | 필터 없음, 이름, 가격 범위, 복합 필터, 페이지네이션 | Validator 에러 (가격 범위 불완전, 잘못된 정렬) | Specification 합성, `PagedResult` 메타데이터 |

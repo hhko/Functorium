@@ -593,39 +593,89 @@ Application Layer는 Domain Service를 **직접 인스턴스화**(`new()`)합니
 
 `CreateProductCommand`는 Product와 Inventory를 함께 생성하지만, 그것은 단순한 쌍 생성입니다. `PlaceOrderCommand`는 **읽기 → 검증 → 다중 Aggregate 쓰기**라는 실제 비즈니스 트랜잭션을 구현합니다. 상품 가격 조회, 재고 가용성 검증 및 차감, 고객 신용 검증을 거친 뒤, 주문 생성과 재고 업데이트를 하나의 트랜잭션으로 원자 처리합니다.
 
-Usecase는 세 단계로 구성됩니다.
+**FinT LINQ 체인 — 비즈니스 흐름이 한눈에 보이는 구조:**
 
-**Phase 1 — 명령형 전처리:** VO 파싱, 배치 가격 조회, OrderLine 생성, Order 생성. `CreateOrderWithCreditCheckCommand`와 동일한 패턴입니다.
-
-**Phase 2 — 명령형 검증:** 재고 조회 + 차감, 고객 조회 + 신용 검증. `GetByProductId`는 `FinT<IO>`(async)이지만 `DeductStock`은 `Fin<Unit>`(sync 도메인 로직)이므로, 두 타입을 명령형 흐름에서 각각 실행하고 실패 시 조기 반환합니다.
+VO 파싱 후, 전체 비즈니스 흐름을 하나의 `FinT<IO, T>` LINQ 체인으로 합성합니다. `from` 절의 변수명이 곧 비즈니스 단계입니다.
 
 ```csharp
-// Phase 2: 재고 검증 + 차감 (명령형)
-var deductedInventories = new List<Inventory>();
-foreach (var (productId, quantity) in lineRequests)
+// 비즈니스 흐름: 가격 조회 → 주문 조립 → 재고 차감 → 신용 검증
+FinT<IO, (Order order, DeductionResult deducted)> validated =
+    from prices   in _productCatalog.GetPricesForProducts(productIds)
+    from order    in BuildOrder(customerId, lineRequests, prices, shippingAddress)
+    from deducted in DeductInventories(lineRequests)
+    from customer in _customerRepository.GetById(customerId)
+    from _1       in _creditCheckService.ValidateCreditLimit(customer, order.TotalAmount)
+    select (order, deducted);
+```
+
+5개 `from` 절은 서로 다른 타입을 반환하지만, FinT의 SelectMany 오버로드가 자동으로 리프팅합니다.
+
+| from 절 | 반환 타입 | 역할 |
+|---|---|---|
+| `prices` | `FinT<IO, Seq<(ProductId, Money)>>` | Port 호출 (배치 가격 조회) |
+| `order` | `Fin<Order>` → 자동 리프팅 | 순수 함수 (Side-Effect-Free Function) |
+| `deducted` | `FinT<IO, DeductionResult>` | Traverse + 도메인 로직 |
+| `customer` | `FinT<IO, Customer>` | Repository 호출 |
+| `_1` | `Fin<Unit>` → 자동 리프팅 | Domain Service 검증 |
+
+**BuildOrder — 순수 함수(Side-Effect-Free Function):** 가격 검증, OrderLine 생성, Order 생성을 IO 없이 `Fin<Order>`로 합성합니다. 가격 Dictionary에 없는 상품은 `NotFound` 에러를 반환합니다.
+
+```csharp
+private static Fin<Order> BuildOrder(
+    CustomerId customerId,
+    List<(ProductId ProductId, Quantity Quantity)> lineRequests,
+    Seq<(ProductId Id, Money Price)> prices,
+    ShippingAddress shippingAddress)
 {
-    var inventoryResult = await _inventoryRepository.GetByProductId(productId).Run().RunAsync();
-    if (inventoryResult.IsFail)
-        return FinResponse.Fail<Response>(inventoryResult.Match(
-            Succ: _ => throw new InvalidOperationException(), Fail: e => e));
+    var priceLookup = prices.ToDictionary(p => p.Id, p => p.Price);
+    var orderLines = new List<OrderLine>();
 
-    var inventory = inventoryResult.ThrowIfFail();
-    var deductResult = inventory.DeductStock(quantity);
-    if (deductResult.IsFail)
-        return FinResponse.Fail<Response>(deductResult.Match(
-            Succ: _ => throw new InvalidOperationException(), Fail: e => e));
+    foreach (var (productId, quantity) in lineRequests)
+    {
+        if (!priceLookup.TryGetValue(productId, out var unitPrice))
+            return Fin.Fail<Order>(ApplicationError.For<PlaceOrderCommand>(
+                new NotFound(),
+                productId.ToString(),
+                $"Product not found: '{productId}'"));
 
-    deductedInventories.Add(inventory);
+        orderLines.Add(OrderLine.Create(productId, quantity, unitPrice).ThrowIfFail());
+    }
+
+    return Order.Create(customerId, orderLines, shippingAddress);
 }
 ```
 
-**Phase 3 — FinT 체인 (다중 Aggregate 쓰기):** 사전 검증을 모두 통과한 뒤, Order 저장과 Inventory 일괄 업데이트만 FinT로 합성합니다. `Bind`/`Map`을 사용하여 두 쓰기 연산을 하나의 IO 효과로 묶습니다.
+**DeductInventories — Traverse로 컬렉션 순차 처리:** LanguageExt의 `Traversable.Traverse`를 사용하여 주문 라인별 재고 차감을 `FinT<IO>` 컨텍스트에서 순차 실행합니다. `DeductionResult` 래퍼 레코드는 `Seq<Inventory>`가 LINQ transparent identifier에서 HKT 타입 추론 충돌을 일으키는 것을 방지합니다.
 
 ```csharp
-// Phase 3: FinT 체인 — 다중 Aggregate 쓰기 (Order + Inventory)
-FinT<IO, Response> usecase =
-    _orderRepository.Create(order).Bind(saved =>
-    _inventoryRepository.UpdateRange(deductedInventories).Map(updatedInventories =>
+private sealed record DeductionResult(Seq<Inventory> Inventories);
+
+private FinT<IO, DeductionResult> DeductInventories(
+    List<(ProductId ProductId, Quantity Quantity)> lineRequests)
+{
+    return toSeq(lineRequests)
+        .Traverse(DeductSingleInventory)
+        .As()
+        .Map(k => new DeductionResult(k.As()));
+}
+
+private FinT<IO, Inventory> DeductSingleInventory(
+    (ProductId ProductId, Quantity Quantity) req)
+{
+    return
+        from inventory in _inventoryRepository.GetByProductId(req.ProductId)
+        from _1 in inventory.DeductStock(req.Quantity)
+        select inventory;
+}
+```
+
+**다중 Aggregate 저장:** 검증을 모두 통과한 뒤, Order 저장과 Inventory 일괄 업데이트를 `Bind`/`Map`으로 합성합니다. Response에 `DeductedStocks`를 포함하여 "주문이 생성되었고, 재고가 이만큼 차감되었다"는 사실을 하나의 응답에서 확인할 수 있습니다.
+
+```csharp
+// 다중 Aggregate 저장 (Order + Inventory)
+FinT<IO, Response> usecase = validated.Bind(ctx =>
+    _orderRepository.Create(ctx.order).Bind(saved =>
+    _inventoryRepository.UpdateRange(ctx.deducted.Inventories.ToList()).Map(updatedInventories =>
         new Response(
             saved.Id.ToString(),
             Seq(saved.OrderLines.Select(l => new OrderLineResponse(
@@ -634,12 +684,10 @@ FinT<IO, Response> usecase =
             saved.ShippingAddress,
             updatedInventories.Select(inv => new DeductedStockInfo(
                 inv.ProductId.ToString(), inv.StockQuantity)),
-            saved.CreatedAt)));
+            saved.CreatedAt))));
 ```
 
-Response에 `DeductedStocks`를 포함하여 Inventory 변경 결과를 호출자에게 노출합니다. 이로써 "주문이 생성되었고, 재고가 이만큼 차감되었다"는 사실을 하나의 응답에서 확인할 수 있습니다.
-
-**Bind/Map vs LINQ `from...in`:** `CreateProductCommand`는 LINQ 쿼리 표현식으로 Product와 Inventory 생성을 합성합니다. `PlaceOrderCommand`는 `Bind`/`Map`을 직접 사용합니다. FinT 체인에 `Seq<T>` 반환 타입(`UpdateRange`)이 포함될 때 C# 컴파일러의 SelectMany 오버로드 해석이 모호해지기 때문입니다. `Bind`/`Map`은 동일한 모나드 합성을 명시적으로 수행하므로, 의미 차이는 없습니다.
+**Bind/Map vs LINQ `from...in`:** `CreateProductCommand`는 LINQ 쿼리 표현식으로 Product와 Inventory 생성을 합성합니다. `PlaceOrderCommand`의 저장 단계는 `Bind`/`Map`을 직접 사용합니다. FinT 체인에 `Seq<T>` 반환 타입(`UpdateRange`)이 포함될 때 C# 컴파일러의 SelectMany 오버로드 해석이 모호해지기 때문입니다. `Bind`/`Map`은 동일한 모나드 합성을 명시적으로 수행하므로, 의미 차이는 없습니다.
 
 ## CreateOrderWithCreditCheck 흐름
 
@@ -696,15 +744,14 @@ sequenceDiagram
     Validator->>Validator: FluentValidation 규칙 검증
     Validator->>Usecase: 검증 통과된 Request
 
-    Note over Usecase: Phase 1: 명령형 전처리
-    Usecase->>Usecase: Value Object 생성<br/>(ShippingAddress, Quantity)
+    Usecase->>Usecase: VO 파싱<br/>(ShippingAddress, Quantity)
+
+    Note over Usecase: FinT<IO, T> LINQ 체인 시작
+
     Usecase->>ProductCatalog: GetPricesForProducts(productIds)
     ProductCatalog-->>Usecase: Seq<(ProductId, Money)>
-    Usecase->>Usecase: 존재 검증 + OrderLine 생성
-    Usecase->>Usecase: Order.Create(...)
-
-    Note over Usecase: Phase 2: 명령형 검증
-    loop 각 주문 라인
+    Usecase->>Usecase: BuildOrder (순수 함수)<br/>가격 검증 + OrderLine + Order 생성
+    loop DeductInventories (Traverse)
         Usecase->>InventoryRepo: GetByProductId(productId)
         InventoryRepo-->>Usecase: Inventory
         Usecase->>Usecase: inventory.DeductStock(quantity)
@@ -714,7 +761,7 @@ sequenceDiagram
     Usecase->>CreditCheck: ValidateCreditLimit(customer, totalAmount)
     CreditCheck-->>Usecase: Fin<Unit>
 
-    Note over Usecase: Phase 3: 다중 Aggregate 쓰기
+    Note over Usecase: 다중 Aggregate 저장 (Bind/Map)
     Usecase->>OrderRepo: Create(order)
     OrderRepo-->>Usecase: Order
     Usecase->>InventoryRepo: UpdateRange(deductedInventories)
