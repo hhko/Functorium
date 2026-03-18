@@ -6,10 +6,14 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
  @Src 코드 기준으로 Docs.Site\src\content\docs\tutorials\functional-valueobject 튜토리얼 구성에 맞게 문서와 코드를 최신의 상태로 개선하고 누락된 내용이 있으면 반영해줘. narrative 품질을 개선해줘.
 ```
-- [ ] release-notes-claude
-- [ ] sourcegen-observability
-- [ ] specification-pattern
+- [x] sourcegen-observability
+- [x] specification-pattern
 - [ ] usecase-pipeline
+- [ ] release-notes-claude
+- [ ] 전체 튜토리얼 통일성
+---
+- [ ] CRTP 패턴?
+- [ ] usecase 관찰 가능성 커스텀
 ---
 - [ ] domain with types 테스트 폴더 재구성
 - [ ] 아키텍처 테스트 재사용 개선: adapter
