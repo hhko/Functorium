@@ -5,7 +5,6 @@ title: "전자상거래 DDD 레이어드 아키텍처"
 ## 배경
 
 전자상거래 도메인: 5개 Aggregate (Customer, Product, Order, Inventory, Tag) + Domain Service + Application Layer CQRS.
-이 샘플은 Tests.Hosts/01-SingleHost의 Domain + Application 레이어를 추출하여 DDD 빌딩 블록과 Application 패턴을 문서화한 것입니다.
 
 ## Naive 출발점
 

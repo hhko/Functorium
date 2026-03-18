@@ -6,6 +6,8 @@ title: "타입으로 도메인 설계하기"
 
 연락처 관리는 단순해 보이지만, 데이터 유효성, 연락 수단 조합, 이메일 인증 생명주기, 수명 관리 등 실제 비즈니스 규칙이 얽히면 naive한 구현으로는 잘못된 상태를 허용하게 됩니다. 이 샘플은 Eric Evans의 DDD 전술적 패턴과 Functorium의 타입 시스템을 결합하여, 비즈니스 규칙을 도메인 모델의 구조 자체에 녹여 넣는 과정을 보여줍니다.
 
+> 이 샘플은 Scott Wlaschin의 [Designing with Types](https://fsharpforfunandprofit.com/series/designing-with-types/) 시리즈를 기반으로 합니다. 원본은 F#으로 작성되었으며, C#과 Functorium 프레임워크로 재구현했습니다.
+
 ## Naive 출발점
 
 ```csharp
