@@ -3,7 +3,7 @@ title: "값 비교"
 ---
 ## 개요
 
-두 `Denominator` 객체가 같은지는 판단할 수 있게 되었다. 그런데 어떤 분모가 더 큰지, 분모 목록을 오름차순으로 정렬하려면 어떻게 해야 할까? 이 장에서는 `IComparable<T>`를 통해 값 객체에 순서 비교 기능을 부여하고, `IEqualityComparer<T>`를 통해 대소문자 무시 같은 커스텀 비교 전략을 구현한다.
+두 `Denominator` 객체가 같은지는 판단할 수 있게 되었습니다. 그런데 어떤 분모가 더 큰지, 분모 목록을 오름차순으로 정렬하려면 어떻게 해야 할까요? 이 장에서는 `IComparable<T>`를 통해 값 객체에 순서 비교 기능을 부여하고, `IEqualityComparer<T>`를 통해 대소문자 무시 같은 커스텀 비교 전략을 구현합니다.
 
 ## 학습 목표
 
@@ -13,17 +13,17 @@ title: "값 비교"
 
 ## 왜 필요한가?
 
-이전 단계인 `ValueEquality`에서는 값 객체의 동등성을 구현하여 두 객체가 같은지 다른지만 판단할 수 있었다. 하지만 실제 애플리케이션에서는 순서 비교와 컬렉션 최적화가 함께 필요하다.
+이전 단계인 `ValueEquality`에서는 값 객체의 동등성을 구현하여 두 객체가 같은지 다른지만 판단할 수 있었습니다. 하지만 실제 애플리케이션에서는 순서 비교와 컬렉션 최적화가 함께 필요합니다.
 
-`IComparable<T>`를 구현하지 않으면 `List<T>.Sort()`나 `Array.BinarySearch()` 같은 정렬/검색 API를 사용할 수 없다. 또한 기본 동등성 비교만으로는 대소문자 무시, 특수 규칙 등 다양한 비교 요구사항을 충족할 수 없다. `IEqualityComparer<T>`를 도입하면 값 객체 자체를 수정하지 않고 비교 전략을 외부에서 주입할 수 있다.
+`IComparable<T>`를 구현하지 않으면 `List<T>.Sort()`나 `Array.BinarySearch()` 같은 정렬/검색 API를 사용할 수 없습니다. 또한 기본 동등성 비교만으로는 대소문자 무시, 특수 규칙 등 다양한 비교 요구사항을 충족할 수 없습니다. `IEqualityComparer<T>`를 도입하면 값 객체 자체를 수정하지 않고 비교 전략을 외부에서 주입할 수 있습니다.
 
 ## 핵심 개념
 
 ### `IComparable<T>` 인터페이스
 
-`IComparable<T>`는 값 객체에 순서 비교(Ordering Comparison) 기능을 제공한다. `CompareTo` 메서드는 두 값을 비교하여 -1(작음), 0(같음), 1(큼) 중 하나를 반환한다.
+`IComparable<T>`는 값 객체에 순서 비교(Ordering Comparison) 기능을 제공합니다. `CompareTo` 메서드는 두 값을 비교하여 -1(작음), 0(같음), 1(큼) 중 하나를 반환합니다.
 
-이전에는 두 분모가 같은지만 확인할 수 있었지만, `IComparable<T>`를 구현하면 크기 비교와 컬렉션 정렬이 가능해진다.
+이전에는 두 분모가 같은지만 확인할 수 있었지만, `IComparable<T>`를 구현하면 크기 비교와 컬렉션 정렬이 가능해집니다.
 
 ```csharp
 // 이전 방식 (순서 비교 불가능)
@@ -43,11 +43,11 @@ Console.WriteLine($"a < b: {a < b}"); // True
 Console.WriteLine($"a.CompareTo(b): {a.CompareTo(b)}"); // -1
 ```
 
-`List<T>.Sort()`, `Array.BinarySearch()`, `Min()`, `Max()` 등의 메서드들이 자동으로 `CompareTo`를 사용한다.
+`List<T>.Sort()`, `Array.BinarySearch()`, `Min()`, `Max()` 등의 메서드들이 자동으로 `CompareTo`를 사용합니다.
 
 ### 비교 연산자 오버로딩
 
-`CompareTo` 메서드를 기반으로 `<`, `>`, `<=`, `>=` 연산자를 구현하면 `a < b` 같은 수학적 표현을 자연스럽게 사용할 수 있다.
+`CompareTo` 메서드를 기반으로 `<`, `>`, `<=`, `>=` 연산자를 구현하면 `a < b` 같은 수학적 표현을 자연스럽게 사용할 수 있습니다.
 
 ```csharp
 // CompareTo 기반 연산자 구현
@@ -66,7 +66,7 @@ if (denominator1 < denominator2)
 
 ### `IEqualityComparer<T>` 인터페이스
 
-`IEqualityComparer<T>`는 값 객체의 기본 `Equals` 메서드를 변경하지 않고 커스텀 비교 전략을 제공한다. 예를 들어 `EmailAddress`에서 대소문자를 무시한 비교가 필요할 때 별도의 비교자 클래스로 분리할 수 있다.
+`IEqualityComparer<T>`는 값 객체의 기본 `Equals` 메서드를 변경하지 않고 커스텀 비교 전략을 제공합니다. 예를 들어 `EmailAddress`에서 대소문자를 무시한 비교가 필요할 때 별도의 비교자 클래스로 분리할 수 있습니다.
 
 ```csharp
 // 기본 동등성 비교 (대소문자 구분)
@@ -93,7 +93,7 @@ var emails = new[] { email1, email2 };
 var uniqueEmails = emails.Distinct(new EmailAddressCaseInsensitiveComparer());
 ```
 
-하나의 값 객체에 대해 여러 비교 전략을 동시에 제공할 수 있어, 다양한 비즈니스 요구사항에 대응할 수 있다.
+하나의 값 객체에 대해 여러 비교 전략을 동시에 제공할 수 있어, 다양한 비즈니스 요구사항에 대응할 수 있습니다.
 
 ## 실전 지침
 
@@ -325,7 +325,7 @@ result.Match(
 
 ## 한눈에 보는 정리
 
-다음 표는 두 비교 인터페이스의 목적과 사용 시나리오를 비교한다.
+다음 표는 두 비교 인터페이스의 목적과 사용 시나리오를 비교합니다.
 
 | 구분 | `IComparable<T>` | `IEqualityComparer<T>` |
 |------|----------------|---------------------|
@@ -336,7 +336,7 @@ result.Match(
 | **사용 시나리오** | 정렬, Min/Max, BinarySearch | Distinct, HashSet, Dictionary |
 | **유연성** | 고정된 비교 로직 | 동적 비교 전략 교체 |
 
-모든 값 객체에 두 인터페이스가 다 필요한 것은 아니다. 도메인에 의미 있는 비교만 구현한다.
+모든 값 객체에 두 인터페이스가 다 필요한 것은 아닙니다. 도메인에 의미 있는 비교만 구현합니다.
 
 | 값 객체 | `IEquatable<T>` | `IComparable<T>` | `IEqualityComparer<T>` |
 |---------|---------------|----------------|---------------------|
@@ -393,4 +393,4 @@ var comparer = new EmailAddressCaseInsensitiveComparer();
 var distinct2 = emails.Distinct(comparer).ToList(); // 2개 (중복 제거)
 ```
 
-동등성과 비교 가능성을 모두 갖춘 값 객체가 완성되었다. 다음 장에서는 값 객체의 생성(Create)과 검증(Validate) 책임을 분리하여 단일 책임 원칙을 적용하는 방법을 다룬다.
+동등성과 비교 가능성을 모두 갖춘 값 객체가 완성되었습니다. 다음 장에서는 값 객체의 생성(Create)과 검증(Validate) 책임을 분리하여 단일 책임 원칙을 적용하는 방법을 다룹니다.
