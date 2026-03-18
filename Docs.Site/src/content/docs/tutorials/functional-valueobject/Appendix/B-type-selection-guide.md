@@ -10,9 +10,9 @@ title: "프레임워크 타입 선택 가이드"
 ## 의사결정 트리
 
 ```
-여러 변형 중 하나인가? ─── Yes ──→ UnionValueObject
-       │
-       No
+여러 변형 중 하나인가? ─── Yes ──→ 상태 전이 필요? ─── Yes ──→ UnionValueObject<TSelf>
+       │                                    │
+       No                                   No ──→ UnionValueObject
        │
 값이 하나인가? ─── Yes ──→ 비교 필요? ─── Yes ──→ ComparableSimpleValueObject<T>
        │                          │
@@ -209,18 +209,18 @@ public sealed class OrderStatus : SmartEnum<OrderStatus, string>, IValueObject
 }
 ```
 
-### 6. UnionValueObject (Discriminated Union)
+### 6. UnionValueObject (순수 데이터 Union)
 
 **언제 사용?**
 - 여러 변형(케이스) 중 정확히 하나일 때
 - 패턴 매칭으로 빠짐없는 분기 처리가 필요할 때
 - 닫힌 타입 계층이 필요할 때
+- **상태 전이가 없는** 순수 데이터 유니온
 
 **예시**
 ```
 - Shape (Circle | Rectangle | Triangle)
 - PaymentMethod (CreditCard | BankTransfer | Cash)
-- OrderStatus (Pending | Confirmed | Shipped | Delivered)
 - Result (Success | Failure)
 ```
 
@@ -239,21 +239,49 @@ public abstract record Shape : UnionValueObject
 }
 ```
 
+### 7. UnionValueObject&lt;TSelf&gt; (상태 전이 Union)
+
+**언제 사용?**
+- 여러 변형 중 정확히 하나이면서 **상태 전이가 필요할 때**
+- `TransitionFrom`으로 유효한 전이만 허용하고 잘못된 전이는 `Fin<T>` 실패로 처리할 때
+- CRTP로 `DomainError`에 정확한 타입 정보를 전달해야 할 때
+
+**예시**
+```
+- OrderStatus (Pending → Confirmed → Shipped → Delivered)
+- PaymentState (Initiated → Authorized → Captured → Refunded)
+- ApprovalStatus (Draft → Submitted → Approved | Rejected)
+```
+
+**구현 예시**
+```csharp
+public abstract record OrderStatus : UnionValueObject<OrderStatus>
+{
+    public sealed record Pending(string OrderId) : OrderStatus;
+    public sealed record Confirmed(string OrderId, DateTime ConfirmedAt) : OrderStatus;
+    private OrderStatus() { }
+
+    public Fin<Confirmed> Confirm(DateTime confirmedAt) =>
+        TransitionFrom<Pending, Confirmed>(
+            p => new Confirmed(p.OrderId, confirmedAt));
+}
+```
+
 ---
 
 ## 빠른 선택 표
 
 각 타입이 지원하는 기능을 한눈에 비교합니다.
 
-| 특성 | SimpleValueObject | ComparableSimple | ValueObject | ComparableValue | SmartEnum | UnionValueObj |
-|------|:-----------------:|:----------------:|:-----------:|:---------------:|:---------:|:-------------:|
-| 단일 값 | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ |
-| 복합 값 | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
-| DU (변형 중 하나) | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| 비교 가능 | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ |
-| 정렬 가능 | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ |
-| 열거형 | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| 상태 전이 | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| 특성 | SimpleValueObject | ComparableSimple | ValueObject | ComparableValue | SmartEnum | UnionValueObj | UnionValueObj&lt;TSelf&gt; |
+|------|:-----------------:|:----------------:|:-----------:|:---------------:|:---------:|:-------------:|:---------------------:|
+| 단일 값 | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| 복합 값 | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| DU (변형 중 하나) | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| 비교 가능 | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| 정렬 가능 | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| 열거형 | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| 상태 전이 | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
 
 ---
 
