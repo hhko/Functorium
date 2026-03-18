@@ -1,3 +1,4 @@
+using LanguageExt;
 using UnionValueObject.ValueObjects;
 
 // Shape 예제
@@ -18,3 +19,19 @@ decimal orderAmount = 50000m;
 Console.WriteLine($"{card.DisplayName}: 수수료 {card.CalculateFee(orderAmount):N0}원");
 Console.WriteLine($"{transfer.DisplayName}: 수수료 {transfer.CalculateFee(orderAmount):N0}원");
 Console.WriteLine($"{cash.DisplayName}: 수수료 {cash.CalculateFee(orderAmount):N0}원");
+
+// OrderStatus 예제 (Functorium UnionValueObject<TSelf> 상태 전이)
+OrderStatus order = new OrderStatus.Pending("ORD-001");
+Console.WriteLine($"현재 상태: {order}");
+
+var confirmResult = order.Confirm(DateTime.Now);
+confirmResult.Match(
+    Succ: confirmed => Console.WriteLine($"전이 성공: {confirmed}"),
+    Fail: error => Console.WriteLine($"전이 실패: {error}"));
+
+// 이미 Confirmed 상태에서 다시 Confirm 시도 → 실패
+OrderStatus alreadyConfirmed = new OrderStatus.Confirmed("ORD-002", DateTime.Now);
+var failResult = alreadyConfirmed.Confirm(DateTime.Now);
+failResult.Match(
+    Succ: confirmed => Console.WriteLine($"전이 성공: {confirmed}"),
+    Fail: error => Console.WriteLine($"전이 실패: {error}"));

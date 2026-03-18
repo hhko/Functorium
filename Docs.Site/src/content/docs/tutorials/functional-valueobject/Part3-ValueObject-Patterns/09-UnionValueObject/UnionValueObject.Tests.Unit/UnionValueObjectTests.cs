@@ -1,6 +1,8 @@
+using LanguageExt;
 using Shouldly;
 using UnionValueObject.ValueObjects;
 using Xunit;
+using Unions = Functorium.Domains.ValueObjects.Unions;
 
 namespace UnionValueObject.Tests.Unit;
 
@@ -103,5 +105,63 @@ public sealed class PaymentMethodTests
     {
         PaymentMethod method = new PaymentMethod.CreditCard("1234-5678-9012-3456", "12/25");
         method.DisplayName.ShouldContain("3456");
+    }
+}
+
+public sealed class OrderStatusTests
+{
+    [Fact]
+    public void TransitionFrom_ReturnsSuccess_WhenSourceMatches()
+    {
+        // Arrange
+        OrderStatus sut = new OrderStatus.Pending("ORD-001");
+        var confirmedAt = new DateTime(2024, 1, 15);
+
+        // Act
+        var actual = sut.Confirm(confirmedAt);
+
+        // Assert
+        actual.IsSucc.ShouldBeTrue();
+        var confirmed = actual.ThrowIfFail();
+        confirmed.OrderId.ShouldBe("ORD-001");
+        confirmed.ConfirmedAt.ShouldBe(confirmedAt);
+    }
+
+    [Fact]
+    public void TransitionFrom_ReturnsFail_WhenSourceDoesNotMatch()
+    {
+        // Arrange
+        OrderStatus sut = new OrderStatus.Confirmed("ORD-001", new DateTime(2024, 1, 15));
+
+        // Act
+        var actual = sut.Confirm(new DateTime(2024, 2, 1));
+
+        // Assert
+        actual.IsFail.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void TransitionFrom_FailError_ContainsInvalidTransition()
+    {
+        // Arrange
+        OrderStatus sut = new OrderStatus.Confirmed("ORD-001", new DateTime(2024, 1, 15));
+
+        // Act
+        var actual = sut.Confirm(new DateTime(2024, 2, 1));
+
+        // Assert
+        actual.IsFail.ShouldBeTrue();
+        var error = (Error)actual;
+        error.Message.ShouldContain("Invalid transition from Confirmed to Confirmed");
+    }
+
+    [Fact]
+    public void OrderStatus_Implements_IUnionValueObject()
+    {
+        // Arrange
+        OrderStatus sut = new OrderStatus.Pending("ORD-001");
+
+        // Assert
+        sut.ShouldBeAssignableTo<Unions.IUnionValueObject>();
     }
 }
