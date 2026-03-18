@@ -64,6 +64,34 @@ await tx.CommitAsync();
 
 `CommitAsync()`를 호출하지 않고 블록을 벗어나면 트랜잭션이 자동 롤백되므로, 실패 시 부분 커밋이 발생하지 않습니다.
 
+### 다중 Aggregate 트랜잭션
+
+개요에서 던진 질문으로 돌아갑시다. "주문은 생성됐는데 재고 차감이 실패하면?" — 각 Repository가 개별적으로 저장하면 이런 불일치가 발생합니다.
+
+```csharp
+var productStore = new Dictionary<ProductId, Product>();
+var orderStore = new Dictionary<OrderId, Order>();
+
+var laptop = Product.Create("노트북", 1_500_000m, stock: 10);
+productStore[laptop.Id] = laptop;
+
+var uow = new InMemoryUnitOfWork();
+
+// 두 Aggregate의 변경을 하나의 UoW에 등록
+var order = Order.Create(laptop.Id, quantity: 2, unitPrice: laptop.Price);
+uow.AddPendingAction(() => orderStore[order.Id] = order);
+uow.AddPendingAction(() => laptop.DeductStock(2));
+
+// SaveChanges 전: 주문 0건, 재고 10
+await uow.SaveChanges().Run().RunAsync();
+// SaveChanges 후: 주문 1건, 재고 8
+```
+
+두 Aggregate의 변경이 `SaveChanges()` 한 번으로 원자적으로 반영됩니다.
+개별 Repository가 각자 SaveChanges를 호출했다면 주문은 생성되었지만 재고는 차감되지 않는 불일치가 발생할 수 있습니다.
+
+> **참고**: InMemory 구현에서는 pending action이 순차 실행되므로, 중간에 예외가 발생하면 이미 실행된 action의 부수 효과가 남습니다. 실제 EF Core에서는 Change Tracker가 DB 레벨에서 all-or-nothing을 보장합니다.
+
 ---
 
 ## 프로젝트 설명
@@ -74,9 +102,11 @@ await tx.CommitAsync();
 04-Unit-Of-Work/
 ├── UnitOfWork/
 │   ├── UnitOfWork.csproj
-│   ├── Program.cs                 # SaveChanges, 트랜잭션 데모
+│   ├── Program.cs                 # SaveChanges, 트랜잭션, 다중 Aggregate 데모
 │   ├── ProductId.cs               # Ulid 기반 식별자
-│   ├── Product.cs                 # 데모용 Aggregate
+│   ├── Product.cs                 # 데모용 Aggregate (재고 관리 포함)
+│   ├── OrderId.cs                 # Ulid 기반 주문 식별자
+│   ├── Order.cs                   # 주문 Aggregate (다중 Aggregate 데모용)
 │   └── InMemoryUnitOfWork.cs      # IUnitOfWork InMemory 구현
 ├── UnitOfWork.Tests.Unit/
 │   ├── UnitOfWork.Tests.Unit.csproj

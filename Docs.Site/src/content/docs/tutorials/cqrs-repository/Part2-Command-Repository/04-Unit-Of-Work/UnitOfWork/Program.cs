@@ -35,3 +35,26 @@ await using (var tx = await uow.BeginTransactionAsync())
     Console.WriteLine($"  트랜잭션 커밋 완료 - Store 개수: {store.Count}");
 }
 Console.WriteLine("트랜잭션 Dispose 완료");
+
+// 5. 다중 Aggregate 트랜잭션: 주문 생성 + 재고 차감
+Console.WriteLine("\n=== 다중 Aggregate 트랜잭션 ===\n");
+
+var productStore = new Dictionary<ProductId, Product>();
+var orderStore = new Dictionary<OrderId, Order>();
+
+var laptop = Product.Create("노트북", 1_500_000m, stock: 10);
+productStore[laptop.Id] = laptop;
+
+var uow2 = new InMemoryUnitOfWork();
+
+// 두 Aggregate의 변경을 하나의 UoW에 등록
+var order = Order.Create(laptop.Id, quantity: 2, unitPrice: laptop.Price);
+uow2.AddPendingAction(() => orderStore[order.Id] = order);
+uow2.AddPendingAction(() => laptop.DeductStock(2));
+
+Console.WriteLine($"SaveChanges 전 - 주문: {orderStore.Count}건, 재고: {laptop.Stock}");
+
+var result2 = await uow2.SaveChanges().Run().RunAsync();
+
+Console.WriteLine($"SaveChanges 후 - 주문: {orderStore.Count}건, 재고: {laptop.Stock}");
+Console.WriteLine($"  주문 금액: {order.TotalAmount:N0}원");
