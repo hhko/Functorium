@@ -13,7 +13,7 @@ public static class AddressValidation
     /// </summary>
     public static Validation<Error, AddressDto> Validate(string? city, string? street, string? postalCode)
         => (ValidateCity(city), ValidateStreet(street), ValidatePostalCode(postalCode))
-            .Apply((c, s, p) => new AddressDto(c, s, p));
+            .Apply((c, s, p) => new AddressDto(c, s, p)).As();
 
     private static Validation<Error, string> ValidateCity(string? value)
         => ValidationRules.For("City")
