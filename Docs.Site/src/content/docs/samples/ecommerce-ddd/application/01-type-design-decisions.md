@@ -47,6 +47,7 @@ title: "애플리케이션 타입 설계 의사결정"
 |----------|------|-----------|
 | `CreateOrderCommand` | Command | 주문 생성 — 상품 가격 일괄 조회 |
 | `CreateOrderWithCreditCheckCommand` | Command | 주문 생성 + 신용한도 검증 |
+| `PlaceOrderCommand` | Command | 주문 접수 — 신용 검증 + 주문 생성 + 재고 차감 (다중 Aggregate 쓰기) |
 | `GetOrderByIdQuery` | Query | 주문 상세 조회 |
 | `GetOrderWithProductsQuery` | Query | 주문 + 상품명 조회 |
 
@@ -56,7 +57,7 @@ title: "애플리케이션 타입 설계 의사결정"
 |----------|------|-----------|
 | `SearchInventoryQuery` | Query | 재고 검색 — 저재고 필터, 페이지네이션/정렬 |
 
-9개 Command와 10개 Query, 총 19개 Use Case가 도출됩니다. Command는 도메인 모델을 거쳐 상태를 변경하고, Query는 데이터베이스에서 필요한 형태로 직접 가져옵니다.
+10개 Command와 10개 Query, 총 20개 Use Case가 도출됩니다. Command는 도메인 모델을 거쳐 상태를 변경하고, Query는 데이터베이스에서 필요한 형태로 직접 가져옵니다.
 
 ## Use Case → 포트 식별
 
@@ -272,7 +273,7 @@ public interface IProductCatalog : IObservablePort
 }
 ```
 
-**사용 위치:** `CreateOrderCommand`와 `CreateOrderWithCreditCheckCommand` 모두에서 사용합니다.
+**사용 위치:** `CreateOrderCommand`, `CreateOrderWithCreditCheckCommand`, `PlaceOrderCommand` 모두에서 사용합니다.
 
 ```csharp
 // CreateOrderCommand.Usecase — 배치 가격 조회 후 딕셔너리로 변환
@@ -368,6 +369,26 @@ FinT<IO, Response> usecase =
 ```
 
 Repository 호출(`_customerRepository.GetById`)과 Domain Service 호출(`_creditCheckService.ValidateCreditLimit`)이 동일한 `from...in` 체인에서 자연스럽게 합성됩니다. Domain Service가 `Fin<Unit>`을 반환하므로 검증 실패 시 체인이 자동으로 단락됩니다.
+
+### 다중 Aggregate 쓰기 (Bind/Map)
+
+여러 Aggregate를 하나의 트랜잭션에서 원자적으로 저장해야 할 때, `Bind`와 `Map`으로 FinT 체인을 직접 합성합니다. `PlaceOrderCommand`는 Order 생성과 Inventory 업데이트를 하나의 IO 효과로 묶어 UoW(Unit of Work) 패턴을 구현합니다.
+
+```csharp
+// PlaceOrderCommand.Usecase — 다중 Aggregate 쓰기
+FinT<IO, Response> usecase =
+    _orderRepository.Create(order).Bind(saved =>
+    _inventoryRepository.UpdateRange(deductedInventories).Map(updatedInventories =>
+        new Response(
+            saved.Id.ToString(),
+            ...,
+            updatedInventories.Select(inv => new DeductedStockInfo(
+                inv.ProductId.ToString(),
+                inv.StockQuantity)),
+            saved.CreatedAt)));
+```
+
+`CreateProductCommand`도 Product와 Inventory를 함께 생성하지만, 그것은 단순한 쌍 생성입니다. `PlaceOrderCommand`는 **읽기 → 검증 → 다중 쓰기** 형태의 비즈니스 트랜잭션이라는 점에서 구별됩니다. 사전 검증(재고 차감, 신용 확인)을 명령형으로 수행한 뒤, 최종 쓰기만 FinT 체인에 남겨 UoW 경계를 명확히 합니다.
 
 ## Mermaid 플로우차트
 

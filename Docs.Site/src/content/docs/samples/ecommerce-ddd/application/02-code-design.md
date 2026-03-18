@@ -17,7 +17,8 @@ title: "애플리케이션 코드 설계"
 | guard() 조건부 실패 | `guard(!exists, ApplicationError.For<T>(...))` | 중복 검사, 존재 검증 | 불리언 조건을 FinT 체인에 삽입 |
 | FluentValidation + VO 검증 연동 | `MustSatisfyValidation(VO.Validate)` | CreateProductCommand.Validator | Presentation 계층 검증과 도메인 VO 검증 규칙 단일 소스 |
 | 배치 쿼리 Port | `IProductCatalog.GetPricesForProducts()` | CreateOrderCommand | N+1 라운드트립 방지, 단일 WHERE IN 쿼리 |
-| Domain Service 통합 | Usecase에서 `OrderCreditCheckService` 호출 | CreateOrderWithCreditCheckCommand | 교차 Aggregate 규칙을 Application에서 오케스트레이션 |
+| Domain Service 통합 | Usecase에서 `OrderCreditCheckService` 호출 | CreateOrderWithCreditCheckCommand, PlaceOrderCommand | 교차 Aggregate 규칙을 Application에서 오케스트레이션 |
+| 다중 Aggregate 쓰기 | `Bind`/`Map`으로 FinT 체인 합성, `UpdateRange` 사용 | PlaceOrderCommand | 주문 생성 + 재고 차감을 하나의 UoW로 원자 처리 |
 | 타입화된 에러 | `ApplicationError.For<T>(new AlreadyExists(), ...)` | 모든 Command Usecase | 에러에 출처 타입 + 분류 + 메시지 포함 |
 
 ## 패턴별 코드
@@ -588,6 +589,58 @@ public sealed class Usecase(
 
 Application Layer는 Domain Service를 **직접 인스턴스화**(`new()`)합니다. Domain Service는 상태가 없는 순수 로직이므로 DI 컨테이너가 불필요합니다. 필요한 데이터(Customer, TotalAmount)는 Application Layer가 Repository를 통해 조회한 뒤 최소 인자로 전달합니다.
 
+### 10. 다중 Aggregate 쓰기 (PlaceOrderCommand)
+
+`CreateProductCommand`는 Product와 Inventory를 함께 생성하지만, 그것은 단순한 쌍 생성입니다. `PlaceOrderCommand`는 **읽기 → 검증 → 다중 Aggregate 쓰기**라는 실제 비즈니스 트랜잭션을 구현합니다. 상품 가격 조회, 재고 가용성 검증 및 차감, 고객 신용 검증을 거친 뒤, 주문 생성과 재고 업데이트를 하나의 트랜잭션으로 원자 처리합니다.
+
+Usecase는 세 단계로 구성됩니다.
+
+**Phase 1 — 명령형 전처리:** VO 파싱, 배치 가격 조회, OrderLine 생성, Order 생성. `CreateOrderWithCreditCheckCommand`와 동일한 패턴입니다.
+
+**Phase 2 — 명령형 검증:** 재고 조회 + 차감, 고객 조회 + 신용 검증. `GetByProductId`는 `FinT<IO>`(async)이지만 `DeductStock`은 `Fin<Unit>`(sync 도메인 로직)이므로, 두 타입을 명령형 흐름에서 각각 실행하고 실패 시 조기 반환합니다.
+
+```csharp
+// Phase 2: 재고 검증 + 차감 (명령형)
+var deductedInventories = new List<Inventory>();
+foreach (var (productId, quantity) in lineRequests)
+{
+    var inventoryResult = await _inventoryRepository.GetByProductId(productId).Run().RunAsync();
+    if (inventoryResult.IsFail)
+        return FinResponse.Fail<Response>(inventoryResult.Match(
+            Succ: _ => throw new InvalidOperationException(), Fail: e => e));
+
+    var inventory = inventoryResult.ThrowIfFail();
+    var deductResult = inventory.DeductStock(quantity);
+    if (deductResult.IsFail)
+        return FinResponse.Fail<Response>(deductResult.Match(
+            Succ: _ => throw new InvalidOperationException(), Fail: e => e));
+
+    deductedInventories.Add(inventory);
+}
+```
+
+**Phase 3 — FinT 체인 (다중 Aggregate 쓰기):** 사전 검증을 모두 통과한 뒤, Order 저장과 Inventory 일괄 업데이트만 FinT로 합성합니다. `Bind`/`Map`을 사용하여 두 쓰기 연산을 하나의 IO 효과로 묶습니다.
+
+```csharp
+// Phase 3: FinT 체인 — 다중 Aggregate 쓰기 (Order + Inventory)
+FinT<IO, Response> usecase =
+    _orderRepository.Create(order).Bind(saved =>
+    _inventoryRepository.UpdateRange(deductedInventories).Map(updatedInventories =>
+        new Response(
+            saved.Id.ToString(),
+            Seq(saved.OrderLines.Select(l => new OrderLineResponse(
+                l.ProductId.ToString(), l.Quantity, l.UnitPrice, l.LineTotal))),
+            saved.TotalAmount,
+            saved.ShippingAddress,
+            updatedInventories.Select(inv => new DeductedStockInfo(
+                inv.ProductId.ToString(), inv.StockQuantity)),
+            saved.CreatedAt)));
+```
+
+Response에 `DeductedStocks`를 포함하여 Inventory 변경 결과를 호출자에게 노출합니다. 이로써 "주문이 생성되었고, 재고가 이만큼 차감되었다"는 사실을 하나의 응답에서 확인할 수 있습니다.
+
+**Bind/Map vs LINQ `from...in`:** `CreateProductCommand`는 LINQ 쿼리 표현식으로 Product와 Inventory 생성을 합성합니다. `PlaceOrderCommand`는 `Bind`/`Map`을 직접 사용합니다. FinT 체인에 `Seq<T>` 반환 타입(`UpdateRange`)이 포함될 때 C# 컴파일러의 SelectMany 오버로드 해석이 모호해지기 때문입니다. `Bind`/`Map`은 동일한 모나드 합성을 명시적으로 수행하므로, 의미 차이는 없습니다.
+
 ## CreateOrderWithCreditCheck 흐름
 
 다음 시퀀스 다이어그램은 `CreateOrderWithCreditCheckCommand`의 전체 흐름을 보여줍니다. FluentValidation 검증 → Value Object 생성 → 배치 가격 조회 → 고객 조회 → 신용한도 검증 → 주문 저장의 6단계를 거칩니다.
@@ -620,6 +673,52 @@ sequenceDiagram
     CreditCheck-->>Usecase: Fin<Unit> (성공 또는 CreditLimitExceeded)
     Usecase->>OrderRepo: Create(order)
     OrderRepo-->>Usecase: Order
+
+    Usecase-->>Client: FinResponse<Response>
+```
+
+## PlaceOrder 흐름
+
+다음 시퀀스 다이어그램은 `PlaceOrderCommand`의 전체 흐름을 보여줍니다. `CreateOrderWithCreditCheckCommand`와 달리, 재고 검증·차감 단계가 추가되고, 최종 쓰기에서 Order와 Inventory 두 Aggregate를 원자적으로 저장합니다.
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Validator
+    participant Usecase
+    participant ProductCatalog as IProductCatalog
+    participant InventoryRepo as IInventoryRepository
+    participant CreditCheck as OrderCreditCheckService
+    participant CustomerRepo as ICustomerRepository
+    participant OrderRepo as IOrderRepository
+
+    Client->>Validator: Request
+    Validator->>Validator: FluentValidation 규칙 검증
+    Validator->>Usecase: 검증 통과된 Request
+
+    Note over Usecase: Phase 1: 명령형 전처리
+    Usecase->>Usecase: Value Object 생성<br/>(ShippingAddress, Quantity)
+    Usecase->>ProductCatalog: GetPricesForProducts(productIds)
+    ProductCatalog-->>Usecase: Seq<(ProductId, Money)>
+    Usecase->>Usecase: 존재 검증 + OrderLine 생성
+    Usecase->>Usecase: Order.Create(...)
+
+    Note over Usecase: Phase 2: 명령형 검증
+    loop 각 주문 라인
+        Usecase->>InventoryRepo: GetByProductId(productId)
+        InventoryRepo-->>Usecase: Inventory
+        Usecase->>Usecase: inventory.DeductStock(quantity)
+    end
+    Usecase->>CustomerRepo: GetById(customerId)
+    CustomerRepo-->>Usecase: Customer
+    Usecase->>CreditCheck: ValidateCreditLimit(customer, totalAmount)
+    CreditCheck-->>Usecase: Fin<Unit>
+
+    Note over Usecase: Phase 3: 다중 Aggregate 쓰기
+    Usecase->>OrderRepo: Create(order)
+    OrderRepo-->>Usecase: Order
+    Usecase->>InventoryRepo: UpdateRange(deductedInventories)
+    InventoryRepo-->>Usecase: Seq<Inventory>
 
     Usecase-->>Client: FinResponse<Response>
 ```
