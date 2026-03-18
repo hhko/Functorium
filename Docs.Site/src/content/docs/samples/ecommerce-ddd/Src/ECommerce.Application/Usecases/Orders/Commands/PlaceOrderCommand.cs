@@ -3,6 +3,7 @@ using ECommerce.Domain.AggregateRoots.Inventories;
 using ECommerce.Domain.AggregateRoots.Orders;
 using ECommerce.Domain.AggregateRoots.Orders.ValueObjects;
 using ECommerce.Domain.AggregateRoots.Products;
+using LanguageExt.Traits;
 using Functorium.Applications.Linq;
 using Functorium.Applications.Errors;
 using static Functorium.Applications.Errors.ApplicationErrorType;
@@ -93,31 +94,59 @@ public sealed class PlaceOrderCommand
         private readonly IProductCatalog _productCatalog = productCatalog;
         private readonly OrderCreditCheckService _creditCheckService = new();
 
+        private sealed record DeductionResult(Seq<Inventory> Inventories);
+
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            // Phase 1: VO 파싱 → 배치 가격 조회 → OrderLine 생성 → Order 생성
             var customerId = CustomerId.Create(request.CustomerId);
             var shippingAddress = ShippingAddress.Create(request.ShippingAddress).ThrowIfFail();
-
             var lineRequests = request.OrderLines
                 .Select(lineReq => (
                     ProductId: ProductId.Create(lineReq.ProductId),
                     Quantity: Quantity.Create(lineReq.Quantity).ThrowIfFail()))
                 .ToList();
-
             var productIds = lineRequests.Select(l => l.ProductId).Distinct().ToList();
-            var pricesResult = await _productCatalog.GetPricesForProducts(productIds).Run().RunAsync();
-            if (pricesResult.IsFail)
-                return FinResponse.Fail<Response>(pricesResult.Match(
-                    Succ: _ => throw new InvalidOperationException(), Fail: e => e));
 
-            var priceLookup = pricesResult.ThrowIfFail().ToDictionary(p => p.Id, p => p.Price);
+            // 비즈니스 흐름: 가격 조회 → 주문 조립 → 재고 차감 → 신용 검증
+            FinT<IO, (Order order, DeductionResult deducted)> validated =
+                from prices   in _productCatalog.GetPricesForProducts(productIds)
+                from order    in BuildOrder(customerId, lineRequests, prices, shippingAddress)
+                from deducted in DeductInventories(lineRequests)
+                from customer in _customerRepository.GetById(customerId)
+                from _1       in _creditCheckService.ValidateCreditLimit(customer, order.TotalAmount)
+                select (order, deducted);
 
+            // 다중 Aggregate 저장 (Order + Inventory)
+            FinT<IO, Response> usecase = validated.Bind(ctx =>
+                _orderRepository.Create(ctx.order).Bind(saved =>
+                _inventoryRepository.UpdateRange(ctx.deducted.Inventories.ToList()).Map(updatedInventories =>
+                    new Response(
+                        saved.Id.ToString(),
+                        Seq(saved.OrderLines.Select(l => new OrderLineResponse(
+                            l.ProductId.ToString(), l.Quantity, l.UnitPrice, l.LineTotal))),
+                        saved.TotalAmount,
+                        saved.ShippingAddress,
+                        updatedInventories.Select(inv => new DeductedStockInfo(
+                            inv.ProductId.ToString(), inv.StockQuantity)),
+                        saved.CreatedAt))));
+
+            Fin<Response> response = await usecase.Run().RunAsync();
+            return response.ToFinResponse();
+        }
+
+        private static Fin<Order> BuildOrder(
+            CustomerId customerId,
+            List<(ProductId ProductId, Quantity Quantity)> lineRequests,
+            Seq<(ProductId Id, Money Price)> prices,
+            ShippingAddress shippingAddress)
+        {
+            var priceLookup = prices.ToDictionary(p => p.Id, p => p.Price);
             var orderLines = new List<OrderLine>();
+
             foreach (var (productId, quantity) in lineRequests)
             {
                 if (!priceLookup.TryGetValue(productId, out var unitPrice))
-                    return FinResponse.Fail<Response>(ApplicationError.For<PlaceOrderCommand>(
+                    return Fin.Fail<Order>(ApplicationError.For<PlaceOrderCommand>(
                         new NotFound(),
                         productId.ToString(),
                         $"Product not found: '{productId}'"));
@@ -125,58 +154,25 @@ public sealed class PlaceOrderCommand
                 orderLines.Add(OrderLine.Create(productId, quantity, unitPrice).ThrowIfFail());
             }
 
-            var order = Order.Create(customerId, orderLines, shippingAddress).ThrowIfFail();
+            return Order.Create(customerId, orderLines, shippingAddress);
+        }
 
-            // Phase 2: 재고 검증 + 차감 (명령형)
-            var deductedInventories = new List<Inventory>();
-            foreach (var (productId, quantity) in lineRequests)
-            {
-                var inventoryResult = await _inventoryRepository.GetByProductId(productId).Run().RunAsync();
-                if (inventoryResult.IsFail)
-                    return FinResponse.Fail<Response>(inventoryResult.Match(
-                        Succ: _ => throw new InvalidOperationException(), Fail: e => e));
+        private FinT<IO, DeductionResult> DeductInventories(
+            List<(ProductId ProductId, Quantity Quantity)> lineRequests)
+        {
+            return toSeq(lineRequests)
+                .Traverse(DeductSingleInventory)
+                .As()
+                .Map(k => new DeductionResult(k.As()));
+        }
 
-                var inventory = inventoryResult.ThrowIfFail();
-                var deductResult = inventory.DeductStock(quantity);
-                if (deductResult.IsFail)
-                    return FinResponse.Fail<Response>(deductResult.Match(
-                        Succ: _ => throw new InvalidOperationException(), Fail: e => e));
-
-                deductedInventories.Add(inventory);
-            }
-
-            // Phase 2 continued: 고객 신용 검증
-            var customerResult = await _customerRepository.GetById(customerId).Run().RunAsync();
-            if (customerResult.IsFail)
-                return FinResponse.Fail<Response>(customerResult.Match(
-                    Succ: _ => throw new InvalidOperationException(), Fail: e => e));
-
-            var customer = customerResult.ThrowIfFail();
-            var creditResult = _creditCheckService.ValidateCreditLimit(customer, order.TotalAmount);
-            if (creditResult.IsFail)
-                return FinResponse.Fail<Response>(creditResult.Match(
-                    Succ: _ => throw new InvalidOperationException(), Fail: e => e));
-
-            // Phase 3: FinT 체인 — 다중 Aggregate 쓰기 (Order + Inventory)
-            FinT<IO, Response> usecase =
-                _orderRepository.Create(order).Bind(saved =>
-                _inventoryRepository.UpdateRange(deductedInventories).Map(updatedInventories =>
-                    new Response(
-                        saved.Id.ToString(),
-                        Seq(saved.OrderLines.Select(l => new OrderLineResponse(
-                            l.ProductId.ToString(),
-                            l.Quantity,
-                            l.UnitPrice,
-                            l.LineTotal))),
-                        saved.TotalAmount,
-                        saved.ShippingAddress,
-                        updatedInventories.Select(inv => new DeductedStockInfo(
-                            inv.ProductId.ToString(),
-                            inv.StockQuantity)),
-                        saved.CreatedAt)));
-
-            Fin<Response> response = await usecase.Run().RunAsync();
-            return response.ToFinResponse();
+        private FinT<IO, Inventory> DeductSingleInventory(
+            (ProductId ProductId, Quantity Quantity) req)
+        {
+            return
+                from inventory in _inventoryRepository.GetByProductId(req.ProductId)
+                from _1 in inventory.DeductStock(req.Quantity)
+                select inventory;
         }
     }
 }
