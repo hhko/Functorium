@@ -107,7 +107,7 @@ ExpressionSpec.Tests.Unit/                # 테스트 프로젝트
 ├── Using.cs                              # 글로벌 using
 ├── xunit.runner.json                     # xUnit 설정
 ├── ExpressionSpec.Tests.Unit.csproj      # 테스트 프로젝트 파일
-README.md                                 # 이 문서
+index.md                                  # 이 문서
 ```
 
 ## 한눈에 보는 정리
@@ -135,10 +135,14 @@ README.md                                 # 이 문서
 **A**: `??=` 연산자 자체는 원자적이지 않지만, Compile() 결과가 항상 동일하므로 여러 스레드에서 동시에 초기화해도 실질적인 문제가 발생하지 않습니다. 최악의 경우 Compile()이 여러 번 호출될 수 있지만, 결과는 동일합니다.
 
 ### Q3: ExpressionSpecification에서 And/Or/Not 조합은 어떻게 동작하나요?
-**A**: Specification의 `&`, `|`, `!` 연산자로 조합할 수 있습니다. 조합된 Specification에서 Expression을 추출하려면 `SpecificationExpressionResolver`가 필요합니다. 이는 4장(Expression Resolver)에서 다룹니다.
+**A**: Specification의 `&`, `|`, `!` 연산자로 조합할 수 있습니다. 조합된 Specification에서 Expression을 추출하려면 `SpecificationExpressionResolver`가 필요합니다. 이는 [4장: Expression Resolver](../04-Expression-Resolver/)에서 다룹니다.
 
 ### Q4: 언제 ExpressionSpecification 대신 일반 Specification을 사용해야 하나요?
 **A**: Expression Tree로 표현할 수 없는 복잡한 로직(예: 외부 서비스 호출, 복잡한 문자열 처리 등)은 일반 Specification을 사용합니다. Expression Tree는 SQL로 변환 가능한 단순한 조건식에 적합합니다.
+
+### Q5: Compile() 캐싱은 인스턴스별인가요, 타입별인가요?
+
+**A**: `_compiled` 필드는 **인스턴스별**입니다. `new ProductInStockSpec()`을 호출할 때마다 새 인스턴스가 생성되고, 첫 `IsSatisfiedBy` 호출 시 `Compile()`이 실행됩니다. `Compile()` 자체는 마이크로초 수준이므로 대부분의 시나리오에서 성능 문제가 되지 않습니다. 고빈도 경로에서는 Specification 인스턴스를 재사용(static 필드, 캐싱)하면 불필요한 재컴파일을 피할 수 있습니다.
 
 ---
 

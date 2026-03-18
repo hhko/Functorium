@@ -70,6 +70,8 @@ map.Map(p => p.Id.ToString(), m => m.ProductId);
 
 `TranslatingVisitor`는 Expression Tree를 순회하며 `Convert` 노드(캐스트)와 `ToString()` 호출을 인식하여 매핑된 모델 프로퍼티로 자동 교체합니다. 이것이 Part 2.3의 VO 변환 패턴과 PropertyMap이 연결되는 지점입니다.
 
+> TranslatingVisitor의 전체 구현(VisitMember, VisitUnary, VisitMethodCall)은 `Src/Functorium/Domains/Specifications/Expressions/PropertyMap.cs`에서 확인할 수 있습니다.
+
 핵심 개념을 이해했으니, 이제 실제 프로젝트에서 PropertyMap이 어떻게 구성되는지 살펴보겠습니다.
 
 ## 프로젝트 설명

@@ -96,7 +96,7 @@ ValueObjectConversion.Tests.Unit/                # 테스트 프로젝트
 ├── Using.cs                                     # 글로벌 using
 ├── xunit.runner.json                            # xUnit 설정
 ├── ValueObjectConversion.Tests.Unit.csproj      # 테스트 프로젝트 파일
-README.md                                        # 이 문서
+index.md                                         # 이 문서
 ```
 
 ### 핵심 코드

@@ -93,7 +93,7 @@ ExpressionResolver.Tests.Unit/               # 테스트 프로젝트
 ├── Using.cs                                 # 글로벌 using
 ├── xunit.runner.json                        # xUnit 설정
 ├── ExpressionResolver.Tests.Unit.csproj     # 테스트 프로젝트 파일
-README.md                                    # 이 문서
+index.md                                     # 이 문서
 ```
 
 ## 한눈에 보는 정리
@@ -132,7 +132,7 @@ if (expr is not null)
 else
     return (await dbContext.Set<T>().ToListAsync()).Where(spec.IsSatisfiedBy).ToList();
 ```
-이 패턴은 Part 3(Repository Integration)에서 자세히 다룹니다.
+이 패턴은 [Part 3: Repository 통합](../../Part3-Repository-Integration/01-Repository-With-Specification/)에서 자세히 다룹니다.
 
 ---
 

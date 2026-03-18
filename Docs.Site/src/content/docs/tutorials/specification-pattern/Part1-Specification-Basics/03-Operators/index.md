@@ -60,7 +60,7 @@ left.IsAll ? right : right.IsAll ? left : new AndSpecification<T>(left, right)
 new AndSpecification<T>(this, other)
 ```
 
-이 최적화는 4장에서 자세히 다룹니다.
+이 최적화는 [4장: All 항등원](../04-All-Identity/)에서 자세히 다룹니다.
 
 ## 프로젝트 설명
 

@@ -216,26 +216,26 @@ dotnet test --solution specification-pattern.slnx
 
 | 장 | 테스트 프로젝트 | 주요 테스트 내용 |
 |:---:|----------------|-----------------|
-| 1 | `ExpressionIntroduction.Tests.Unit` | Expression Tree 기본 |
-| 2 | `ExpressionSpecificationClass.Tests.Unit` | sealed IsSatisfiedBy, 캐싱 |
-| 3 | `ValueObjectPrimitiveConversion.Tests.Unit` | VO→primitive 변환 |
+| 1 | `ExpressionIntro.Tests.Unit` | Expression Tree 기본 |
+| 2 | `ExpressionSpec.Tests.Unit` | sealed IsSatisfiedBy, 캐싱 |
+| 3 | `ValueObjectConversion.Tests.Unit` | VO→primitive 변환 |
 | 4 | `ExpressionResolver.Tests.Unit` | TryResolve, 재귀 합성 |
 
 **Part 3: Repository 통합** (4개)
 
 | 장 | 테스트 프로젝트 | 주요 테스트 내용 |
 |:---:|----------------|-----------------|
-| 1 | `RepositoryWithSpecification.Tests.Unit` | Repository + Spec 통합 |
-| 2 | `InMemoryImplementation.Tests.Unit` | InMemory 어댑터 |
-| 3 | `PropertyMap.Tests.Unit` | PropertyMap, TranslatingVisitor |
-| 4 | `EfCoreImplementation.Tests.Unit` | EF Core TryResolve + Translate |
+| 1 | `RepositorySpec.Tests.Unit` | Repository + Spec 통합 |
+| 2 | `InMemoryImpl.Tests.Unit` | InMemory 어댑터 |
+| 3 | `PropertyMapDemo.Tests.Unit` | PropertyMap, TranslatingVisitor |
+| 4 | `EfCoreImpl.Tests.Unit` | EF Core TryResolve + Translate |
 
 **Part 4: 실전 패턴** (4개)
 
 | 장 | 테스트 프로젝트 | 주요 테스트 내용 |
 |:---:|----------------|-----------------|
 | 1 | `UsecasePatterns.Tests.Unit` | CQRS + Spec 활용 |
-| 2 | `DynamicFilterBuilder.Tests.Unit` | 동적 필터 체이닝 |
+| 2 | `DynamicFilter.Tests.Unit` | 동적 필터 체이닝 |
 | 3 | `TestingStrategies.Tests.Unit` | Spec 테스트 패턴 |
 | 4 | `ArchitectureRules.Tests.Unit` | 아키텍처 규칙 검증 |
 
@@ -243,7 +243,7 @@ dotnet test --solution specification-pattern.slnx
 
 | 장 | 테스트 프로젝트 | 주요 테스트 내용 |
 |:---:|----------------|-----------------|
-| 1 | `EcommerceProductFiltering.Tests.Unit` | 상품 필터링 Spec |
+| 1 | `EcommerceFiltering.Tests.Unit` | 상품 필터링 Spec |
 | 2 | `CustomerManagement.Tests.Unit` | 고객 관리 Spec |
 
 ### 테스트 명명 규칙
@@ -273,6 +273,12 @@ public void IsSatisfiedBy_ReturnsTrue_WhenProductIsActive()
 
 - 프레임워크 타입: `Src/Functorium/Domains/Specifications/`
 - 튜토리얼 프로젝트: `Docs.Site/src/content/docs/tutorials/specification-pattern/`
+
+### 관련 튜토리얼
+
+이 튜토리얼은 다음 튜토리얼과 함께 학습하면 더 효과적입니다:
+
+- **[CQRS 패턴으로 Command와 Query 분리하기](../cqrs-repository/)**: CQRS 패턴의 IQueryPort, IRepository에서 Specification을 매개변수로 사용합니다.
 
 ---
 
