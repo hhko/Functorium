@@ -96,19 +96,22 @@ var result = (ValidateEmail(email), ValidatePassword(password), ValidateName(nam
 ### 4. Functorium 프레임워크를 활용해 실전 값 객체를 개발할 수 있습니다
 
 ```csharp
-public sealed class Email : SimpleValueObject<string>
+public sealed partial class Email : SimpleValueObject<string>
 {
     private Email(string value) : base(value) { }
 
-    public static Fin<Email> Create(string value) =>
-        CreateFromValidation(Validate(value), val => new Email(val));
+    public static Fin<Email> Create(string? value) =>
+        CreateFromValidation(Validate(value), v => new Email(v));
 
-    public static Validation<Error, string> Validate(string value) =>
-        string.IsNullOrWhiteSpace(value)
-            ? DomainErrors.Empty(value)
-            : !value.Contains("@")
-                ? DomainErrors.InvalidFormat(value)
-                : value;
+    public static Validation<Error, string> Validate(string? value) =>
+        ValidationRules<Email>
+            .NotNull(value)
+            .ThenNotEmpty()
+            .ThenMaxLength(320)
+            .ThenMatches(EmailRegex(), "Invalid email format");
+
+    [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$")]
+    private static partial Regex EmailRegex();
 }
 ```
 
