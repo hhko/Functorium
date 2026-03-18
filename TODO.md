@@ -2,6 +2,48 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
+
+```
+ @Src 코드 기준으로 Docs.Site\src\content\docs\tutorials\functional-valueobject 튜토리얼 구성에 맞게 문서와 코드를 최신의 상태로 개선하고 누락된 내용이 있으면 반영해줘. narrative 품질을 개선해줘.
+```
+- [ ] release-notes-claude
+- [ ] sourcegen-observability
+- [ ] specification-pattern
+- [ ] usecase-pipeline
+---
+- [ ] domain with types 테스트 폴더 재구성
+- [ ] 아키텍처 테스트 재사용 개선: adapter
+- [ ] vo 복합 객체도 entity와 동일하게 외부에서 유효성 검사해야하는거 아닐까?
+- [ ] md와 사이트 링크 표시법 동기화
+---
+- [ ] release note 스킬
+- [ ] release note 스킬 문서화
+- [ ] domain 예제 추가(Tests.Hosts)
+- [ ] domain skill 보강
+  - 문서 생성 4개
+  - 요구사항 분석 방법?
+  - 트랜잭션?
+  - 에러 코드
+  - 프로젝트 이름
+  - Aggregates 루트 폴더 구성
+---
+- [ ] application 스킬
+- [ ] application 스킬 -> domain skill
+- [ ] functorium plugin
+  - functorium:application-develop
+  - functorium:domain-develop
+---
+- [ ] Language-Ext Traverse
+- [ ] Language-Ext 홈페이지
+---
+- [ ] 저장소 public
+- [ ] 문서 사이트 오픈?
+- [ ] nuget 배포
+
+
+
+
+
 ```
 DDD/Hexagonal Architecture 관점에서 각 레이어가 자체 DTO를 소유하도록 개선
 ```
@@ -33,51 +75,29 @@ Functorium 프레임워크 제약
   │ 테스트 용이성      │ Mock 필요                              │ Mock 불필요                     │
   └────────────────────┴────────────────────────────────────────┴─────────────────────────────────┘
 ```
+
+
+
+---
+- [x] 샘플에 하나의 트랜잭션에 복수개 aggregate roots 추가
+- [x] 하나의 트랜잭션에 복수개 aggregate roots cqrs 튜토리얼
+- [x] 하나의 query에 복수개 aggregate roots cqrs 튜토리얼
 - [x] 메일 고유성 개선
 - [x] 도메인 서비스 설계 원칙 개선(`순수 -> Stateless (I/O 허용)`)
 - [x] 아키텍처 테스트 샘플 추가
 - [x] 아키텍처 테스트 재사용 개선: domain, application
-- [ ] 아키텍처 테스트 재사용 개선: adapter
 - [x] application 레이어 도메인 유효성 반영
 - [x] application 레이어 도메인 유효성 entity id
-- [ ] ddd 예제 usecase 리뷰
-- [ ] 예제에 ddd 출처 명시
-- [ ] 예제에 hosts 출처 제거
+- [x] 예제에 ddd 출처 명시
+- [x] 예제에 hosts 출처 제거
 - [x] 아키텍처 테스트 가이드 개선
----
-- [ ] vo 복합 객체도 entity와 동일하게 외부에서 유효성 검사해야하는거 아닐까?
----
-- [ ] md와 사이트 링크 표시법 동기화
----
 - [x] LayeredArch 예제 작성
-- [ ] 도메인 폴더 구성 규칙 통일
-- [ ] 애플리케이션 폴더 구성 규칙
-- [ ] 코어 레이어(도메인, 애플리케이션) 문서화 규칙
-- [ ] domain with types에서 사용하지 않는 클래스 개선
-- [ ] domain with types 문서 반영
-- [ ] domain with types 폴더 구성 개선
-- [ ] domain with types 테스트 폴더 재구성
----
-- [ ] public
-- [ ] 문서 사이트 오픈?
-- [ ] nuget 배포
----
-- [ ] application 스킬
-- [ ] application 스킬 -> domain skill
-- [ ] functorium plugin
-  - functorium:application-develop
-  - functorium:domain-develop
----
-- [ ] release note 스킬
-- [ ] release note 스킬 문서화
-- [ ] domain 예제 추가(Tests.Hosts)
-- [ ] domain skill 보강
-  - 문서 생성 4개
-  - 요구사항 분석 방법?
-  - 트랜잭션?
-  - 에러 코드
-  - 프로젝트 이름
-  - Aggregates 루트 폴더 구성
+- [x] 도메인 폴더 구성 규칙 통일
+- [x] 애플리케이션 폴더 구성 규칙
+- [x] 코어 레이어(도메인, 애플리케이션) 문서화 규칙
+- [x] domain with types에서 사용하지 않는 클래스 개선
+- [x] domain with types 문서 반영
+- [x] domain with types 폴더 구성 개선
 ---
 - [x] domain 유효성 검사 설계 원칙 정립
 - [x] union 타입 제공
