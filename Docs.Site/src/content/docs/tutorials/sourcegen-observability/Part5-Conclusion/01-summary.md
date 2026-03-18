@@ -233,6 +233,8 @@ public Task Should_Generate_ObservableClass()
 | 네임스페이스 | 2개 |
 | 진단 | 4개 |
 
+> **참고**: 위 31개는 `ObservablePortGeneratorTests`의 생성기 스냅샷 테스트입니다. 이와 별도로 런타임 Observability 구조 검증 테스트(`ObservablePortObservabilityTests`, `ObservablePortLoggingStructureTests`, `ObservablePortMetricsStructureTests`, `ObservablePortTracingStructureTests`)가 태그 구조, 로깅 필드, 메트릭 태그, Tracing 태그의 규격 준수를 검증합니다.
+
 ---
 
 ## 구현 체크리스트

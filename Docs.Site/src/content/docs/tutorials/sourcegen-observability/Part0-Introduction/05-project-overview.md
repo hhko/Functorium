@@ -440,8 +440,16 @@ Functorium/
     └── Functorium.Tests.Unit/
         └── AdaptersTests/
             └── SourceGenerators/
-                ├── ObservablePortGeneratorTests.cs     # 31개 테스트
-                └── *.verified.txt                      # 스냅샷 파일
+                ├── ObservablePortGeneratorTests.cs              # 31개 스냅샷 테스트
+                ├── ObservablePortObservabilityTests.cs          # 태그 구조 규격 검증
+                ├── ObservablePortLoggingStructureTests.cs       # 로깅 필드 구조 검증
+                ├── ObservablePortMetricsStructureTests.cs       # 메트릭 태그 구조 검증
+                ├── ObservablePortTracingStructureTests.cs       # Tracing 태그 구조 검증
+                └── Snapshots/                                   # 스냅샷 파일
+                    ├── ObservablePortGenerator/
+                    ├── ObservablePortLoggingStructure/
+                    ├── ObservablePortMetricsStructure/
+                    └── ObservablePortTracingStructure/
 ```
 
 ---
@@ -467,43 +475,7 @@ IObservablePort를 구현한 클래스만 선택
 
 ### 2. IncrementalGeneratorBase
 
-증분 소스 생성기의 **템플릿 패턴**을 제공합니다:
-
-```csharp
-public abstract class IncrementalGeneratorBase<TValue>(
-    Func<IncrementalGeneratorInitializationContext,
-         IncrementalValuesProvider<TValue>> registerSourceProvider,
-    Action<SourceProductionContext, ImmutableArray<TValue>> generate,
-    //Action<IncrementalGeneratorPostInitializationContext>? registerPostInitializationSourceOutput = null,
-    bool AttachDebugger = false) : IIncrementalGenerator
-{
-    protected const string ClassEntityName = "class";
-
-    private readonly bool _attachDebugger = AttachDebugger;
-    private readonly Func<IncrementalGeneratorInitializationContext, IncrementalValuesProvider<TValue>> _registerSourceProvider = registerSourceProvider;
-    private readonly Action<SourceProductionContext, ImmutableArray<TValue>> _generate = generate;
-
-    public void Initialize(IncrementalGeneratorInitializationContext context)
-    {
-#if DEBUG
-        if (_attachDebugger && Debugger.IsAttached is false)
-        {
-            Debugger.Launch();
-        }
-#endif
-
-        IncrementalValuesProvider<TValue> provider = _registerSourceProvider(context)
-            .Where(static m => m is not null);
-
-        context.RegisterSourceOutput(provider.Collect(), Execute);
-    }
-
-    private void Execute(SourceProductionContext context, ImmutableArray<TValue> displayValues)
-    {
-        _generate(context, displayValues);
-    }
-}
-```
+증분 소스 생성기의 **템플릿 패턴**을 제공합니다. 구현 코드는 [핵심 설계 패턴 > 템플릿 메서드 패턴](#템플릿-메서드-패턴-template-method-pattern) 섹션을 참고하세요.
 
 ### 3. 헬퍼 클래스들
 
@@ -520,35 +492,31 @@ public abstract class IncrementalGeneratorBase<TValue>(
 ## 학습 로드맵
 
 ```
-Chapter 01-02: 기초
-==================
-- 소스 생성기 개념 이해
+Part 0: 서론
+============
+- Source Generator 개념, Hello World, 프로젝트 개요
+
+Part 1: 기초
+============
 - 개발 환경 설정
-- Hello World 생성기 만들기
+- Roslyn 아키텍처 (Syntax API, Semantic API, Symbol)
 
-Chapter 03-04: 핵심 API
-======================
-- Roslyn 기초 (Syntax API, Semantic API)
-- IIncrementalGenerator 패턴
-- ForAttributeWithMetadataName 사용법
+Part 2: 핵심 개념
+=================
+- IIncrementalGenerator, Provider Pattern
+- ForAttributeWithMetadataName, 심볼 분석
+- StringBuilder 코드 생성, 결정적 출력
 
-Chapter 05-06: 심볼 분석 & 코드 생성
-===================================
-- INamedTypeSymbol, IMethodSymbol 활용
-- SymbolDisplayFormat으로 결정적 출력
-- StringBuilder로 코드 생성
-
-Chapter 07: 고급 시나리오
-========================
-- 제네릭 타입 처리 (FinT<IO, T>)
-- 컬렉션 타입 감지
+Part 3: 고급
+============
+- Constructor, Generic, Collection 처리
 - LoggerMessage.Define 6개 파라미터 제한
+- 스냅샷 테스트, 31개 테스트 시나리오
 
-Chapter 08: 테스트 전략
-======================
-- SourceGeneratorTestRunner 활용
-- Verify 스냅샷 테스트
-- 31개 테스트 시나리오 작성
+Part 4: 개발 절차서
+===================
+- Entity ID, EF Core Value Converter, Validation 생성기
+- 커스텀 Generator 템플릿
 ```
 
 ---
@@ -579,4 +547,4 @@ Chapter 08: 테스트 전략
 
 프로젝트의 전체 그림을 파악했으니, 이제 실제로 소스 생성기를 개발하기 위한 환경을 설정할 차례입니다.
 
-→ [Part 1의 1장. 개발 환경](../../Part1-Fundamentals/01-development-environment.md)
+→ [Part 1의 1장. 개발 환경](../Part1-Fundamentals/01-development-environment.md)

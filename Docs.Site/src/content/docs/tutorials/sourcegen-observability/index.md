@@ -124,24 +124,24 @@ Incremental Source Generator 구현과 코드 생성 기법을 학습합니다.
 가장 단순한 Hello World 생성기에서 출발하여, 점진적으로 복잡성을 높여가며 실전 수준의 소스 생성기를 완성합니다. 각 Phase는 이전 단계의 결과물 위에 쌓이므로, 순서대로 진행하는 것을 권장합니다.
 
 ```
-Phase 1: Hello World (Part 0~1)
-├── 가장 단순한 Source Generator 만들기
+Phase 1: 개념과 프로젝트 이해 (Part 0)
+├── Source Generator 개념, Hello World, 프로젝트 개요
 └── 난이도: ★☆☆☆☆
 
-Phase 2: 속성 기반 필터링 (Part 2: 1~4장)
-├── [GenerateObservablePort] 속성이 붙은 클래스만 처리
+Phase 2: 기초 (Part 1)
+├── 개발 환경, 프로젝트 구조, Roslyn 아키텍처, Symbol API
 └── 난이도: ★★☆☆☆
 
-Phase 3: 메서드 분석 (Part 2: 5~8장)
-├── 인터페이스의 메서드 시그니처 추출
+Phase 3: 핵심 개념 (Part 2)
+├── IIncrementalGenerator, Provider Pattern, 심볼 분석, 코드 생성
 └── 난이도: ★★★☆☆
 
-Phase 4: 코드 생성 (Part 2: 9~12장)
-├── 추출된 정보로 Observable 클래스 생성
+Phase 4: 고급 (Part 3)
+├── Constructor, Generic, Collection, 테스트 전략
 └── 난이도: ★★★★☆
 
-Phase 5: 고급 처리 (Part 3)
-├── Constructor, Generic, Collection 등 복잡한 케이스 처리
+Phase 5: 개발 절차서 (Part 4)
+├── 실전 예제 — Entity ID, EF Core, Validation, 커스텀 템플릿
 └── 난이도: ★★★★★
 ```
 
@@ -149,19 +149,7 @@ Phase 5: 고급 처리 (Part 3)
 
 ## 실습 프로젝트: ObservablePortGenerator
 
-이 튜토리얼에서는 **ObservablePortGenerator**라는 실제 Source Generator를 단계별로 구현합니다.
-
-어댑터 메서드 하나를 추가할 때마다 로깅 호출, Activity 생성, 메트릭 카운터 업데이트를 빠짐없이 작성해야 한다면, 팀원 간 구현 편차가 생기고 실수가 발생하는 것은 시간 문제입니다. 이 프로젝트는 바로 그 고통에서 출발합니다 — 관찰 가능성 보일러플레이트를 컴파일 타임에 자동 생성하여, 개발자가 비즈니스 로직에만 집중할 수 있도록 하는 것이 목표입니다.
-
-### ObservablePortGenerator란?
-
-어댑터 클래스에 **관찰 가능성(Observability)** 코드를 자동으로 생성하는 Source Generator입니다:
-
-| 기능 | 설명 |
-|------|------|
-| **로깅(Logging)** | 요청/응답 자동 기록, 고성능 LoggerMessage.Define 사용 |
-| **추적(Tracing)** | 분산 추적 Activity 자동 생성 및 컨텍스트 전파 |
-| **메트릭(Metrics)** | 응답 시간, 성공/실패 카운터 자동 측정 |
+이 튜토리얼에서는 **ObservablePortGenerator**라는 실제 Source Generator를 단계별로 구현합니다. 프로젝트의 설계 목표, 구조, 기대 효과에 대한 자세한 내용은 [Part 0-05. 프로젝트 개요](Part0-Introduction/05-project-overview.md)를 참고하세요.
 
 ```csharp
 // 개발자가 작성하는 코드 - 비즈니스 로직만 집중
@@ -178,15 +166,13 @@ public class UserRepositoryObservable : UserRepository
 }
 ```
 
-**기대 효과**: 보일러플레이트 코드 75% 감소, 100% 일관된 관찰 가능성 보장
-
 ---
 
 ## 필수 준비물
 
 - .NET 10.0 SDK (Preview 또는 정식 버전)
 - Visual Studio 2022 (17.12 이상) 또는 VS Code (C# Dev Kit 확장)
-- C# 13 기초 문법 지식
+- C# 14 기초 문법 지식
 
 ---
 
@@ -226,6 +212,40 @@ sourcegen-observability/
     ├── B-api-reference.md
     ├── C-test-scenario-catalog.md
     └── D-troubleshooting.md
+```
+
+---
+
+## 테스트
+
+모든 Part의 예제 프로젝트에는 단위 테스트가 포함되어 있습니다. 테스트는 [단위 테스트 가이드](../../guides/testing/15a-unit-testing.md)를 따릅니다.
+
+### 테스트 실행 방법
+
+```bash
+# 튜토리얼 전체 빌드
+dotnet build sourcegen-observability.slnx
+
+# 튜토리얼 전체 테스트
+dotnet test --solution sourcegen-observability.slnx
+```
+
+### 테스트 명명 규칙
+
+T1_T2_T3 명명 규칙을 따릅니다:
+
+```csharp
+// Method_ExpectedResult_Scenario
+[Fact]
+public void Generate_ProducesExpectedOutput_WhenClassHasObservablePortAttribute()
+{
+    // Arrange
+    var source = /* 입력 소스 코드 */;
+    // Act
+    var actual = GeneratorTestHelper.RunGenerator(source);
+    // Assert
+    actual.ShouldMatchExpected();
+}
 ```
 
 ---

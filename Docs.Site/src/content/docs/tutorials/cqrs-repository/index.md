@@ -4,8 +4,6 @@ title: "CQRS 리포지토리 패턴"
 
 **C# Functorium으로 Repository와 Query 어댑터를 구현하는 실전 가이드**
 
-> **"조회 조건이 하나 추가될 때마다 Repository 메서드를 하나 추가하고 있다면, 그것은 설계가 아니라 관성입니다."**
-
 ---
 
 ## 이 튜토리얼에 대하여
@@ -13,6 +11,16 @@ title: "CQRS 리포지토리 패턴"
 주문 목록 API에 새 필터가 추가될 때마다 `GetByCustomer`, `GetRecent`, `SearchByKeyword`... Repository 메서드가 끝없이 늘어나고 있나요? 읽기용 프로퍼티가 도메인 모델에 스며들어 쓰기 로직을 오염시키고, 하나를 고치면 다른 쪽이 깨지는 악순환이 반복됩니다.
 
 이 튜토리얼은 그 문제를 **Command와 Query의 책임 분리(CQRS)로** 해결합니다. 도메인 엔티티 기초에서 시작하여 Repository 패턴, Query 어댑터, Usecase 통합까지, **22개의 실습 프로젝트**를 통해 CQRS 패턴의 모든 측면을 단계별로 학습합니다.
+
+> **"조회 조건이 하나 추가될 때마다 Repository 메서드를 하나 추가하고 있다면, 그것은 설계가 아니라 관성입니다."**
+
+### 대상 독자
+
+| 수준 | 대상 | 권장 학습 범위 |
+|------|------|----------------|
+| **초급** | CRUD와 Entity 기본 경험이 있는 개발자 | Part 0~1 |
+| **중급** | Repository 패턴을 이해하고 심화 학습을 원하는 개발자 | Part 2~3 |
+| **고급** | CQRS 아키텍처 설계와 Usecase 통합에 관심 있는 개발자 | Part 4~5 + 부록 |
 
 ### 학습 목표
 
@@ -100,6 +108,27 @@ Repository와 Query 어댑터가 준비되었으니, 이제 이들을 Usecase로
 
 ---
 
+## 핵심 진화 과정
+
+```
+[Part 1] 도메인 엔티티 기초
+  1장: Entity와 Identity    →  2장: Aggregate Root      →  3장: 도메인 이벤트      →  4장: 엔티티 인터페이스
+       |
+[Part 2] Command 측 — Repository 패턴
+  1장: Repository 인터페이스 →  2장: InMemory Repository →  3장: EF Core Repository →  4장: Unit of Work
+       |
+[Part 3] Query 측 — 읽기 전용 패턴
+  1장: IQueryPort 인터페이스 →  2장: DTO 분리            →  3장: 페이지네이션       →  4장: InMemory Query   →  5장: Dapper Query
+       |
+[Part 4] CQRS Usecase 통합
+  1장: Command Usecase      →  2장: Query Usecase       →  3장: FinT→FinResponse   →  4장: 도메인 이벤트    →  5장: 트랜잭션
+       |
+[Part 5] 도메인별 실전 예제
+  1장: 주문 관리            →  2장: 고객 관리            →  3장: 재고 관리           →  4장: 카탈로그 검색
+```
+
+---
+
 ## Functorium CQRS 타입 계층
 
 ```
@@ -139,6 +168,15 @@ Specification (검색 조건)
     ├── ToExpression() → Expression<Func<T, bool>>
     └── sealed IsSatisfiedBy (컴파일 + 캐싱)
 ```
+
+---
+
+## 필수 준비물
+
+- .NET 10.0 SDK 이상
+- VS Code + C# Dev Kit 확장
+- C# 기초 문법 지식
+- Entity와 CRUD 기본 개념
 
 ---
 

@@ -128,6 +128,14 @@ DDD 레이어 아키텍처에 아키텍처 테스트를 적용합니다.
 
 ---
 
+## 필수 준비물
+
+- .NET 10.0 SDK 이상
+- VS Code + C# Dev Kit 확장
+- C# 단위 테스트 기초 경험
+
+---
+
 ## 프로젝트 구조
 
 ```txt
@@ -167,7 +175,13 @@ architecture-rules/
     └── C-faq.md
 ```
 
-## 테스트 실행
+---
+
+## 테스트
+
+모든 Part의 예제 프로젝트에는 단위 테스트가 포함되어 있습니다. 테스트는 [단위 테스트 가이드](../../guides/testing/15a-unit-testing.md)를 따릅니다.
+
+### 테스트 실행 방법
 
 ```bash
 # 개별 챕터 테스트
@@ -177,7 +191,7 @@ dotnet test --project Docs.Site/src/content/docs/tutorials/architecture-rules/Pa
 dotnet test --solution architecture-rules.slnx
 ```
 
-## 테스트 프로젝트 목록
+### 테스트 프로젝트 구조
 
 | Part | 장 | 테스트 프로젝트 |
 |:----:|:---:|----------------|
@@ -199,7 +213,7 @@ dotnet test --solution architecture-rules.slnx
 | 4 | 4 | `LayerDependencyRules.Tests.Unit` |
 | 4 | 5 | `ArchitectureTestSuites.Tests.Unit` |
 
-## 테스트 네이밍 규칙
+### 테스트 명명 규칙
 
 ```txt
 T1_T2_T3
@@ -209,3 +223,16 @@ T1_T2_T3
 
 예시: DomainClasses_ShouldBe_PublicAndSealed
 ```
+
+---
+
+## 소스 코드
+
+이 튜토리얼의 모든 예제 코드는 Functorium 프로젝트에서 확인할 수 있습니다:
+
+- 프레임워크 타입: `Src/Functorium.Testing/Assertions/ArchitectureRules/`
+- 튜토리얼 프로젝트: `Docs.Site/src/content/docs/tutorials/architecture-rules/`
+
+---
+
+이 튜토리얼은 Functorium 프로젝트의 실제 아키텍처 테스트 프레임워크 개발 경험을 바탕으로 작성되었습니다.
