@@ -17,7 +17,7 @@ public sealed class Address : IValueObject
 
     public static Fin<Address> Create(string city, string street)
         => string.IsNullOrWhiteSpace(city)
-            ? Fin<Address>.Fail("City cannot be empty")
+            ? Fin.Fail<Address>("City cannot be empty")
             : new Address(city, street);
 
     public static Validation<Error, Address> Validate(string city, string street)

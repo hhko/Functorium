@@ -17,7 +17,7 @@ public sealed class Money : IValueObject
 
     public static Fin<Money> Create(decimal amount, string currency)
         => amount < 0
-            ? Fin<Money>.Fail("Amount cannot be negative")
+            ? Fin.Fail<Money>("Amount cannot be negative")
             : new Money(amount, currency);
 
     public static Validation<Error, Money> Validate(decimal amount, string currency)
