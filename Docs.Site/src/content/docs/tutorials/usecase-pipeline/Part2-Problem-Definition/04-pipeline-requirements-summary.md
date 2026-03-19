@@ -142,5 +142,9 @@ where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 ### Q4: Part 3에서 설계할 인터페이스 계층은 몇 개의 인터페이스로 구성되나요?
 **A**: 5개입니다. `IFinResponse`(비제네릭 마커), `IFinResponse<out A>`(공변 인터페이스), `IFinResponseFactory<TSelf>`(CRTP 팩토리), `IFinResponseWithError`(에러 접근), `FinResponse<A>`(Discriminated Union)로, 각각 하나의 요구사항을 해결합니다.
 
-Part 2에서 문제를 명확히 정의했습니다. Part 3에서는 이 4가지 요구사항을 하나씩 해결하는 IFinResponse 인터페이스 계층을 설계합니다.
+---
+
+Part 3의 첫 번째 단계로, 요구사항 R1(성공/실패 읽기)을 해결하는 비제네릭 마커 인터페이스 `IFinResponse`를 설계합니다.
+
+→ [3.1장: IFinResponse 비제네릭 마커](../Part3-IFinResponse-Hierarchy/01-IFinResponse-Marker/)
 

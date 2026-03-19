@@ -25,6 +25,15 @@ Pipeline 실행 순서 (Command 성공 시):
 1. Metrics Pipeline        ─ 응답 카운트 증가
 ```
 
+## 학습 목표
+
+이 장을 완료하면 다음을 할 수 있습니다:
+
+1. 8개 Pipeline 슬롯(7개 기본 + Custom)의 실행 순서와 중첩 구조를 설명할 수 있습니다
+2. Command와 Query에 따른 Pipeline 분기를 이해할 수 있습니다
+3. 각 Pipeline의 제약 조건이 어떤 능력을 제공하는지 설명할 수 있습니다
+4. 실패 시 Pipeline 흐름이 어떻게 단축(short-circuit)되는지 설명할 수 있습니다
+
 ## 핵심 개념
 
 ### 1. Pipeline 실행 순서
@@ -92,15 +101,6 @@ sut.ExecutionLog.ShouldContain("Validation: PASS");
 sut.ExecutionLog.ShouldContain("Transaction: COMMIT");
 ```
 
-## 학습 목표
-
-이 장을 완료하면 다음을 할 수 있습니다:
-
-1. 8개 Pipeline 슬롯(7개 기본 + Custom)의 실행 순서와 중첩 구조를 설명할 수 있다
-2. Command와 Query에 따른 Pipeline 분기를 이해할 수 있다
-3. 각 Pipeline의 제약 조건이 어떤 능력을 제공하는지 설명할 수 있다
-4. 실패 시 Pipeline 흐름이 어떻게 단축(short-circuit)되는지 설명할 수 있다
-
 ## 프로젝트 구조
 
 ```
@@ -145,5 +145,11 @@ dotnet test --project FullPipelineIntegration.Tests.Unit
 
 ---
 
-인터페이스 계층 설계부터 Pipeline 제약, 실전 Usecase 적용, 그리고 전체 통합까지 — `FinResponse<T>`가 리플렉션 없이 타입 안전한 Pipeline을 가능하게 하는 여정을 마칩니다.
+인터페이스 계층 설계부터 Pipeline 제약, 실전 Usecase 적용, 그리고 전체 통합까지 -- `FinResponse<T>`가 리플렉션 없이 타입 안전한 Pipeline을 가능하게 하는 여정을 마칩니다.
+
+---
+
+부록에서는 IFinResponse 인터페이스 계층의 전체 참조, Pipeline 제약 매트릭스, 각 인터페이스의 상세 구현을 한눈에 정리합니다.
+
+→ [부록 A: IFinResponse 인터페이스 계층 전체 참조](../../Appendix/A-interface-hierarchy-reference.md)
 

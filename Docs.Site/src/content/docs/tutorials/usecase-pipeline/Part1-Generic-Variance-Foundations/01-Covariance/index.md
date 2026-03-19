@@ -14,6 +14,15 @@ Dog : Animal  (Dog은 Animal의 하위 타입)
 IAnimalShelter<Dog> → IAnimalShelter<Animal>  (대입 가능)
 ```
 
+## 학습 목표
+
+이 장을 완료하면 다음을 할 수 있습니다:
+
+1. `out` 키워드를 사용하여 공변 인터페이스를 선언할 수 있습니다
+2. 공변 대입이 가능한 이유(출력 위치 제한)를 설명할 수 있습니다
+3. `IEnumerable<out T>`가 공변인 이유를 이해할 수 있습니다
+4. 공변성이 읽기 전용 접근과 어떻게 연결되는지 설명할 수 있습니다
+
 ## 핵심 개념
 
 ### 1. `out` 키워드
@@ -65,17 +74,6 @@ IEnumerable<Animal> animals = dogs;  // IEnumerable<out T>이므로 OK
 ### Q3: 공변성은 이 튜토리얼의 Pipeline 설계에서 어떻게 활용되나요?
 **A**: Part 3에서 설계하는 `IFinResponse<out A>` 인터페이스가 공변성을 활용합니다. `out A` 덕분에 `IFinResponse<string>`을 `IFinResponse<object>`에 대입할 수 있어, Pipeline에서 다양한 응답 타입을 유연하게 처리할 수 있습니다.
 
-공변성이 "꺼내기 전용"이라면, 반대로 "받기 전용"인 경우에는 어떤 변성이 적용될까요? 다음 장에서는 반대 방향인 **반공변성**을 학습합니다.
-
-## 학습 목표
-
-이 장을 완료하면 다음을 할 수 있습니다:
-
-1. `out` 키워드를 사용하여 공변 인터페이스를 선언할 수 있다
-2. 공변 대입이 가능한 이유(출력 위치 제한)를 설명할 수 있다
-3. `IEnumerable<out T>`가 공변인 이유를 이해할 수 있다
-4. 공변성이 읽기 전용 접근과 어떻게 연결되는지 설명할 수 있다
-
 ## 프로젝트 구조
 
 ```
@@ -101,4 +99,10 @@ dotnet run --project Covariance
 # 테스트 실행
 dotnet test --project Covariance.Tests.Unit
 ```
+
+---
+
+공변성이 "꺼내기 전용"이라면, 반대로 "받기 전용"인 경우에는 어떤 변성이 적용될까요? `in` 키워드와 반공변성을 학습합니다.
+
+→ [1.2장: 반공변성 (in)](../02-Contravariance/)
 

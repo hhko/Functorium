@@ -16,6 +16,15 @@ CreateProductCommand (최상위 클래스)
 └── Handler   : ICommandUsecase<Request, Response>  ← 비즈니스 로직
 ```
 
+## 학습 목표
+
+이 장을 완료하면 다음을 할 수 있습니다:
+
+1. `ICommandRequest<TSuccess>`와 `ICommandUsecase<TCommand, TSuccess>` 인터페이스의 역할과 Pipeline 연결 방식을 이해할 수 있습니다
+2. Nested class 패턴으로 Request/Response/Validator/Handler를 응집력 있게 구성할 수 있습니다
+3. `FinResponse<T>`의 암시적 변환을 활용하여 성공/실패를 간결하게 반환할 수 있습니다
+4. Validator를 Handler에서 분리하여 독립적으로 테스트할 수 있습니다
+
 ## 핵심 개념
 
 ### 1. ICommandRequest 인터페이스
@@ -97,15 +106,6 @@ public static class Validator
 }
 ```
 
-## 학습 목표
-
-이 장을 완료하면 다음을 할 수 있습니다:
-
-1. `ICommandRequest<TSuccess>`와 `ICommandUsecase<TCommand, TSuccess>` 인터페이스의 역할과 Pipeline 연결 방식을 이해할 수 있다
-2. Nested class 패턴으로 Request/Response/Validator/Handler를 응집력 있게 구성할 수 있다
-3. `FinResponse<T>`의 암시적 변환을 활용하여 성공/실패를 간결하게 반환할 수 있다
-4. Validator를 Handler에서 분리하여 독립적으로 테스트할 수 있다
-
 ## FAQ
 
 ### Q1: Nested class 패턴에서 Request, Response, Validator, Handler를 분리된 파일로 나눌 수 있나요?
@@ -119,8 +119,6 @@ public static class Validator
 
 ### Q4: 암시적 변환으로 `return Error.New("...")` 형태가 가능한 원리는 무엇인가요?
 **A**: `FinResponse<A>`에 `implicit operator`가 정의되어 있어 `Error` 타입의 값이 자동으로 `FinResponse<A>.Fail(error)`로 변환됩니다. 마찬가지로 `A` 타입의 값은 `FinResponse<A>.Succ(value)`로 변환됩니다. 이 암시적 변환이 보일러플레이트를 크게 줄입니다.
-
-Command Usecase의 구조를 확인했으니, 다음 장에서는 읽기 전용인 Query Usecase가 어떻게 다르게 구성되는지 살펴봅니다.
 
 ## 프로젝트 구조
 
@@ -146,4 +144,10 @@ dotnet run --project CommandUsecaseExample
 # 테스트 실행
 dotnet test --project CommandUsecaseExample.Tests.Unit
 ```
+
+---
+
+읽기 전용인 Query Usecase는 Command와 어떻게 다를까요? `IQueryRequest`와 `ICacheable`을 활용한 캐싱 최적화까지 포함한 Query Usecase를 구현합니다.
+
+→ [5.2장: Query Usecase 완전 예제](../02-Query-Usecase-Example/)
 

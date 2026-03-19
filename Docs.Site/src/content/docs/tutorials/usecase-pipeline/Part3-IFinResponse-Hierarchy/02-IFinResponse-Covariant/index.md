@@ -11,6 +11,15 @@ IFinResponse                    ← 비제네릭 마커 (1장)
 └── IFinResponse<out A>         ← 공변 인터페이스 (이번 장)
 ```
 
+## 학습 목표
+
+이 장을 완료하면 다음을 할 수 있습니다:
+
+1. `out A` 키워드를 사용하여 공변 인터페이스를 선언할 수 있습니다
+2. 공변성에 의해 `IFinResponse<string>`을 `IFinResponse<object>`에 대입할 수 있는 이유를 설명할 수 있습니다
+3. 비제네릭 마커와 제네릭 공변 인터페이스의 상속 관계를 이해할 수 있습니다
+4. Pipeline에서 공변성이 제공하는 유연성을 설명할 수 있습니다
+
 ## 핵심 개념
 
 ### 1. 공변 인터페이스: `out A`
@@ -70,17 +79,6 @@ public void LogAnyResponse(IFinResponse<object> response)
 ### Q3: 공변성이 실제 Pipeline 코드에서 어떤 차이를 만드나요?
 **A**: `IFinResponse<out A>`의 공변성 덕분에, `IFinResponse<ProductDto>`를 반환하는 Handler의 응답을 `IFinResponse<object>`를 받는 로깅 유틸리티에서 그대로 사용할 수 있습니다. 공변성이 없으면 매번 명시적 캐스팅이 필요하여 코드가 복잡해집니다.
 
-이제 Pipeline이 응답을 읽고 타입 안전하게 접근할 수 있습니다. 다음 장에서는 **요구사항 R2**에 도전합니다 -- Pipeline이 실패 응답을 직접 생성하는 방법을 설계합니다.
-
-## 학습 목표
-
-이 장을 완료하면 다음을 할 수 있습니다:
-
-1. `out A` 키워드를 사용하여 공변 인터페이스를 선언할 수 있다
-2. 공변성에 의해 `IFinResponse<string>`을 `IFinResponse<object>`에 대입할 수 있는 이유를 설명할 수 있다
-3. 비제네릭 마커와 제네릭 공변 인터페이스의 상속 관계를 이해할 수 있다
-4. Pipeline에서 공변성이 제공하는 유연성을 설명할 수 있다
-
 ## 프로젝트 구조
 
 ```
@@ -106,4 +104,10 @@ dotnet run --project FinResponseCovariant
 # 테스트 실행
 dotnet test --project FinResponseCovariant.Tests.Unit
 ```
+
+---
+
+Pipeline이 응답을 읽을 수 있게 되었으니, 이제 요구사항 R2에 도전합니다. CRTP와 `static abstract`를 사용하여 리플렉션 없이 실패 응답을 생성하는 팩토리 인터페이스를 설계합니다.
+
+→ [3.3장: IFinResponseFactory CRTP 팩토리](../03-IFinResponseFactory-CRTP/)
 

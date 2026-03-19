@@ -6,6 +6,15 @@ title: "Mediator Pipeline 구조"
 
 Mediator Pipeline은 어떤 구조로 동작하며, 응답 타입에 어떤 제약이 필요할까요? Pipeline은 요청(Request)이 핸들러(Handler)에 도달하기 전후로 **교차 관심사를** 처리하는 미들웨어입니다. 이 장에서는 Pipeline의 핵심 구성 요소인 `IPipelineBehavior<TRequest, TResponse>`의 구조와 제네릭 제약이 Pipeline의 적용 범위를 어떻게 결정하는지 학습합니다.
 
+## 학습 목표
+
+이 장을 완료하면 다음을 할 수 있습니다:
+
+1. `IPipelineBehavior<TRequest, TResponse>`의 구조를 설명할 수 있습니다
+2. `MessageHandlerDelegate`가 Pipeline 체인에서 하는 역할을 이해할 수 있습니다
+3. `where` 제약이 Pipeline의 적용 범위와 접근 가능한 멤버를 어떻게 결정하는지 설명할 수 있습니다
+4. TResponse 제약이 없으면 응답 타입의 멤버에 접근할 수 없는 이유를 이해할 수 있습니다
+
 ## 핵심 개념
 
 ### 1. IPipelineBehavior<TRequest, TResponse>
@@ -114,17 +123,6 @@ sequenceDiagram
 ### Q3: Pipeline 체인에서 `next()`를 호출하지 않으면 어떻게 되나요?
 **A**: `next()`를 호출하지 않으면 다음 Pipeline이나 Handler에 요청이 전달되지 않습니다. 이를 **단축 평가(Short-Circuit)라고** 합니다. Validation Pipeline이 검증 실패 시 `next()`를 호출하지 않고 실패 응답을 직접 반환하는 것이 대표적인 예입니다.
 
-이제 Pipeline의 구조와 제약 메커니즘을 이해했으니, 다음 장에서는 LanguageExt의 `Fin<T>`를 응답 타입으로 직접 사용했을 때 이 제약 구조가 어떤 한계를 만들어내는지 살펴봅니다.
-
-## 학습 목표
-
-이 장을 완료하면 다음을 할 수 있습니다:
-
-1. `IPipelineBehavior<TRequest, TResponse>`의 구조를 설명할 수 있다
-2. `MessageHandlerDelegate`가 Pipeline 체인에서 하는 역할을 이해할 수 있다
-3. `where` 제약이 Pipeline의 적용 범위와 접근 가능한 멤버를 어떻게 결정하는지 설명할 수 있다
-4. TResponse 제약이 없으면 응답 타입의 멤버에 접근할 수 없는 이유를 이해할 수 있다
-
 ## 프로젝트 구조
 
 ```
@@ -149,4 +147,10 @@ dotnet run --project MediatorPipelineStructure
 # 테스트 실행
 dotnet test --project MediatorPipelineStructure.Tests.Unit
 ```
+
+---
+
+LanguageExt의 `Fin<T>`를 응답 타입으로 직접 사용하면, sealed struct라는 제약 때문에 리플렉션이 3곳에서 필요해집니다.
+
+→ [2.2장: Fin\<T\> 직접 사용의 한계](../02-Fin-Direct-Limitation/)
 

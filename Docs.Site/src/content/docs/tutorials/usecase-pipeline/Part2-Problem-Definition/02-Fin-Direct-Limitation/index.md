@@ -8,6 +8,14 @@ title: "Fin 직접 사용의 한계"
 
 LanguageExt의 `Fin<T>`는 성공/실패를 표현하는 모나드로, Usecase의 응답 타입으로 이상적입니다. 하지만 `Fin<T>`는 **sealed struct**이기 때문에 Pipeline의 `where` 제약 조건으로 사용할 수 없습니다. 이 장에서는 `Fin<T>`를 Pipeline에서 직접 사용하려 할 때 발생하는 리플렉션 문제를 분석합니다.
 
+## 학습 목표
+
+이 장을 완료하면 다음을 할 수 있습니다:
+
+1. `Fin<T>`가 sealed struct인 이유로 Pipeline 제약에 사용할 수 없음을 이해할 수 있습니다
+2. Pipeline에서 `Fin<T>`를 직접 사용하면 리플렉션이 3곳에서 필요한 이유를 설명할 수 있습니다
+3. 리플렉션 기반 접근의 구체적인 문제점을 나열할 수 있습니다
+
 ## 핵심 개념
 
 ### 1. sealed struct는 제약 조건이 될 수 없다
@@ -77,16 +85,6 @@ return (TResponse)failMethod.Invoke(null, new object[] { error })!;
 ### Q3: 리플렉션으로 `Fin<T>.Fail`을 호출하는 것이 왜 특히 위험한가요?
 **A**: `MakeGenericType`과 `GetMethod`를 조합하여 호출하므로, LanguageExt의 내부 API가 변경되면 **런타임에 `MissingMethodException`이** 발생합니다. 컴파일은 성공하지만 실행 시 실패하는 가장 위험한 형태의 오류입니다.
 
-리플렉션 3곳이라는 비용은 분명히 과도합니다. 다음 장에서는 래퍼 인터페이스를 도입하여 이 리플렉션을 줄일 수 있는지, 그리고 그 접근이 어디까지 유효한지 검토합니다.
-
-## 학습 목표
-
-이 장을 완료하면 다음을 할 수 있습니다:
-
-1. `Fin<T>`가 sealed struct인 이유로 Pipeline 제약에 사용할 수 없음을 이해할 수 있다
-2. Pipeline에서 `Fin<T>`를 직접 사용하면 리플렉션이 3곳에서 필요한 이유를 설명할 수 있다
-3. 리플렉션 기반 접근의 구체적인 문제점을 나열할 수 있다
-
 ## 프로젝트 구조
 
 ```
@@ -111,4 +109,10 @@ dotnet run --project FinDirectLimitation
 # 테스트 실행
 dotnet test --project FinDirectLimitation.Tests.Unit
 ```
+
+---
+
+래퍼 인터페이스를 도입하면 리플렉션을 3곳에서 1곳으로 줄일 수 있습니다. 하지만 `CreateFail`은 여전히 해결할 수 없는 한계가 남습니다.
+
+→ [2.3장: IFinResponse 래퍼의 한계](../03-IFinResponse-Wrapper-Limitation/)
 

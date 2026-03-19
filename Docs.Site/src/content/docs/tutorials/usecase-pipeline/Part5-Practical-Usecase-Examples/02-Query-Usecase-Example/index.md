@@ -15,6 +15,15 @@ GetProductQuery (최상위 클래스)
 └── Handler   : IQueryUsecase<Request, Response>      ← 조회 로직
 ```
 
+## 학습 목표
+
+이 장을 완료하면 다음을 할 수 있습니다:
+
+1. `IQueryRequest<TSuccess>`와 `IQueryUsecase<TQuery, TSuccess>` 인터페이스의 역할과 Command와의 차이를 설명할 수 있습니다
+2. `ICacheable` 인터페이스를 구현하여 Query에 캐싱 최적화를 적용할 수 있습니다
+3. Query Handler가 읽기 전용으로 동작하는 패턴을 이해할 수 있습니다
+4. Pipeline이 Command/Query를 타입 수준에서 구분하는 방식을 설명할 수 있습니다
+
 ## 핵심 개념
 
 ### 1. IQueryRequest 인터페이스
@@ -97,15 +106,6 @@ public sealed class Handler : IQueryUsecase<Request, Response>
 }
 ```
 
-## 학습 목표
-
-이 장을 완료하면 다음을 할 수 있습니다:
-
-1. `IQueryRequest<TSuccess>`와 `IQueryUsecase<TQuery, TSuccess>` 인터페이스의 역할과 Command와의 차이를 설명할 수 있다
-2. `ICacheable` 인터페이스를 구현하여 Query에 캐싱 최적화를 적용할 수 있다
-3. Query Handler가 읽기 전용으로 동작하는 패턴을 이해할 수 있다
-4. Pipeline이 Command/Query를 타입 수준에서 구분하는 방식을 설명할 수 있다
-
 ## FAQ
 
 ### Q1: Query Usecase에 Validator가 없는 이유는 무엇인가요?
@@ -119,8 +119,6 @@ public sealed class Handler : IQueryUsecase<Request, Response>
 
 ### Q4: Query Handler가 `Dictionary`를 사용하는 것은 실전에서도 동일한가요?
 **A**: 아닙니다. 예제에서는 학습 목적으로 `Dictionary`를 인메모리 저장소로 사용했습니다. 실전에서는 Repository 인터페이스를 DI로 주입받아 데이터베이스에서 조회하며, Repository가 반환하는 `Fin<T>`를 `ToFinResponse()`로 변환하여 `FinResponse<T>`를 반환합니다.
-
-Command와 Query Usecase를 각각 구현했으니, 다음 장에서는 기본 Pipeline과 Custom Pipeline 슬롯을 포함한 전체 흐름을 통합합니다.
 
 ## 프로젝트 구조
 
@@ -146,4 +144,10 @@ dotnet run --project QueryUsecaseExample
 # 테스트 실행
 dotnet test --project QueryUsecaseExample.Tests.Unit
 ```
+
+---
+
+7개 기본 Pipeline과 Custom Pipeline 슬롯(총 8개)을 모두 연결하여, Command/Query의 전체 요청 처리 흐름을 시뮬레이션합니다.
+
+→ [5.3장: Pipeline 전체 흐름 통합](../03-Full-Pipeline-Integration/)
 

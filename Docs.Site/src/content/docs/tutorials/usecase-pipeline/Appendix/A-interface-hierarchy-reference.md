@@ -200,3 +200,9 @@ Transaction Pipeline        IFinResponse, IFinResponseFactory<TResponse>     Rea
 Custom Pipeline             (사용자 정의)                                          Varies
 ```
 
+---
+
+인터페이스 제약 조건 방식과 리플렉션, dynamic, Source Generator 등 대안 접근 방식의 장단점을 비교 분석합니다.
+
+→ [부록 B: Pipeline 제약 조건 vs 대안 비교](B-constraint-vs-alternatives.md)
+

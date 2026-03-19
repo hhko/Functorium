@@ -115,3 +115,9 @@ Part 4: 제약 적용           각 Pipeline에 최소 제약 조건 적용
 Part 5: 실전 통합           Command/Query Usecase에서 전체 Pipeline 통합
 ```
 
+---
+
+Pipeline 아키텍처의 기반이 되는 C# 제네릭 변성의 첫 번째 개념, 공변성(`out`)을 학습합니다.
+
+→ [1.1장: 공변성 (out)](../Part1-Generic-Variance-Foundations/01-Covariance/)
+

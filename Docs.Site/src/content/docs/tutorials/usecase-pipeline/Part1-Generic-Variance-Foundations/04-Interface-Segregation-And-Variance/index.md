@@ -14,6 +14,16 @@ IWritable<in T>      → 반공변 (쓰기 전용)
 IFactory<TSelf>      → CRTP (static abstract 팩토리)
 ```
 
+## 학습 목표
+
+이 장을 완료하면 다음을 할 수 있습니다:
+
+1. ISP를 적용하여 인터페이스를 읽기/쓰기/팩토리로 분리할 수 있습니다
+2. 분리된 인터페이스에 적절한 변성(out/in)을 부여할 수 있습니다
+3. CRTP 패턴으로 `static abstract` 팩토리를 구현할 수 있습니다
+4. `where T : IFactory<T>` 제약을 활용하여 제네릭 팩토리 메서드를 작성할 수 있습니다
+5. 이 패턴이 IFinResponse 계층 설계와 어떻게 연결되는지 이해할 수 있습니다
+
 ## 핵심 개념
 
 ### 1. 읽기 인터페이스 - 공변(out)
@@ -69,16 +79,6 @@ public interface IReadWrite<T> : IReadable<T>, IWritable<T>;
 | `IReadable<out T>` | `IFinResponse<out A>` | 공변적 읽기 접근 |
 | `IFactory<TSelf>` | `IFinResponseFactory<TSelf>` | CRTP 팩토리 (CreateFail) |
 
-## 학습 목표
-
-이 장을 완료하면 다음을 할 수 있습니다:
-
-1. ISP를 적용하여 인터페이스를 읽기/쓰기/팩토리로 분리할 수 있다
-2. 분리된 인터페이스에 적절한 변성(out/in)을 부여할 수 있다
-3. CRTP 패턴으로 `static abstract` 팩토리를 구현할 수 있다
-4. `where T : IFactory<T>` 제약을 활용하여 제네릭 팩토리 메서드를 작성할 수 있다
-5. 이 패턴이 IFinResponse 계층 설계와 어떻게 연결되는지 이해할 수 있다
-
 ## FAQ
 
 ### Q1: 인터페이스를 왜 하나로 합치지 않고 읽기/쓰기/팩토리로 분리하나요?
@@ -92,8 +92,6 @@ public interface IReadWrite<T> : IReadable<T>, IWritable<T>;
 
 ### Q4: `IReadWrite<T>`처럼 분리된 인터페이스를 조합할 때 변성은 어떻게 되나요?
 **A**: `IReadWrite<T>`가 `IReadable<T>`와 `IWritable<T>`를 동시에 상속하면, T가 입력과 출력 양쪽에서 사용되므로 **불변**이 됩니다. 조합 인터페이스는 변성을 잃지만, Pipeline에서는 필요한 능력의 인터페이스만 개별적으로 제약하므로 변성을 유지할 수 있습니다.
-
-Part 1에서 제네릭 변성의 기초를 다졌습니다. Part 2에서는 이 지식을 Mediator Pipeline에 적용했을 때 만나는 구체적인 문제를 정의합니다.
 
 ## 프로젝트 구조
 
@@ -120,3 +118,8 @@ dotnet run --project InterfaceSegregationAndVariance
 dotnet test --project InterfaceSegregationAndVariance.Tests.Unit
 ```
 
+---
+
+Part 1에서 다진 변성 기초를 Mediator Pipeline에 적용합니다. `IPipelineBehavior`의 구조와 `where` 제약이 Pipeline 적용 범위를 결정하는 방식을 살펴봅니다.
+
+→ [2.1장: Mediator Pipeline Behavior 구조](../../Part2-Problem-Definition/01-Mediator-Pipeline-Structure/)

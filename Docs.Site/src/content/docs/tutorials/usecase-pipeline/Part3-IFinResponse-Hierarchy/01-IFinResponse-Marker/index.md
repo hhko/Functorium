@@ -12,6 +12,15 @@ IFinResponse          ← 비제네릭 마커
 └── IsFail: bool
 ```
 
+## 학습 목표
+
+이 장을 완료하면 다음을 할 수 있습니다:
+
+1. 비제네릭 마커 인터페이스의 역할을 설명할 수 있습니다
+2. 마커 인터페이스가 리플렉션을 제거하는 원리를 이해할 수 있습니다
+3. Pipeline에서 `where TResponse : IFinResponse` 제약의 의미를 설명할 수 있습니다
+4. 성공/실패 읽기가 IFinResponse 계층의 첫 번째 요구사항임을 이해할 수 있습니다
+
 ## 핵심 개념
 
 ### 1. 비제네릭 마커 인터페이스
@@ -75,17 +84,6 @@ public class LoggingPipeline<TRequest, TResponse>
 ### Q3: `where TResponse : IFinResponse` 제약을 추가하면 기존 응답 타입에 영향이 있나요?
 **A**: `IFinResponse`를 구현하지 않는 기존 응답 타입은 이 제약이 있는 Pipeline을 통과할 수 없습니다. 하지만 이는 의도된 동작입니다. 모든 응답 타입이 `IFinResponse`를 구현하도록 하거나, 최종적으로 `FinResponse<A>` Discriminated Union을 사용하면 자동으로 해결됩니다.
 
-이제 성공/실패를 읽을 수 있지만, 값의 타입 정보는 아직 없습니다. 다음 장에서는 `out A` 키워드를 사용한 **공변 인터페이스**로 타입 안전한 값 접근을 추가합니다.
-
-## 학습 목표
-
-이 장을 완료하면 다음을 할 수 있습니다:
-
-1. 비제네릭 마커 인터페이스의 역할을 설명할 수 있다
-2. 마커 인터페이스가 리플렉션을 제거하는 원리를 이해할 수 있다
-3. Pipeline에서 `where TResponse : IFinResponse` 제약의 의미를 설명할 수 있다
-4. 성공/실패 읽기가 IFinResponse 계층의 첫 번째 요구사항임을 이해할 수 있다
-
 ## 프로젝트 구조
 
 ```
@@ -112,4 +110,10 @@ dotnet run --project FinResponseMarker
 # 테스트 실행
 dotnet test --project FinResponseMarker.Tests.Unit
 ```
+
+---
+
+성공/실패를 읽을 수 있지만, 값의 타입 정보는 아직 없습니다. `out A` 키워드를 사용한 공변 인터페이스로 타입 안전한 값 접근을 추가합니다.
+
+→ [3.2장: IFinResponse\<out A\> 공변 인터페이스](../02-IFinResponse-Covariant/)
 

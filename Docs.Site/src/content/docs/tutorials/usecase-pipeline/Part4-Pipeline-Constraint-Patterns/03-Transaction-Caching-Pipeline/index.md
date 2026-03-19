@@ -20,6 +20,15 @@ Caching Pipeline:
                                  No → handler() → IsSucc? → 캐시 저장
 ```
 
+## 학습 목표
+
+이 장을 완료하면 다음을 할 수 있습니다:
+
+1. Transaction Pipeline이 Command에만 적용되는 이유를 설명할 수 있습니다
+2. Caching Pipeline이 성공 응답만 캐싱하는 이유를 설명할 수 있습니다
+3. 두 Pipeline 모두 Read+Create 제약이 필요한 이유를 이해할 수 있습니다
+4. Command/Query 분기가 `where` 제약 조건으로 이루어지는 방식을 이해할 수 있습니다
+
 ## 핵심 개념
 
 ### 1. Transaction Pipeline
@@ -126,17 +135,6 @@ Mediator 소스 제너레이터가 `where` 제약을 확인하여, `ICommand<TRe
 ### Q4: `ICacheable` 인터페이스를 구현하지 않은 Query는 어떻게 되나요?
 **A**: Caching Pipeline은 `request is ICacheable`로 캐싱 가능 여부를 확인합니다. `ICacheable`을 구현하지 않은 Query는 캐싱을 건너뛰고 매번 Handler를 실행합니다. 모든 Query에 캐싱을 강제하지 않아 **선택적 최적화**가 가능합니다.
 
-Pipeline별 타입 제약 패턴을 모두 확인했습니다. 다음 장에서는 Repository 계층의 `Fin<T>`와 Usecase 계층의 `FinResponse<T>`를 연결하는 브릿지 패턴을 살펴봅니다.
-
-## 학습 목표
-
-이 장을 완료하면 다음을 할 수 있습니다:
-
-1. Transaction Pipeline이 Command에만 적용되는 이유를 설명할 수 있다
-2. Caching Pipeline이 성공 응답만 캐싱하는 이유를 설명할 수 있다
-3. 두 Pipeline 모두 Read+Create 제약이 필요한 이유를 이해할 수 있다
-4. Command/Query 분기가 `where` 제약 조건으로 이루어지는 방식을 이해할 수 있다
-
 ## 프로젝트 구조
 
 ```
@@ -161,4 +159,10 @@ dotnet run --project TransactionCachingPipeline
 # 테스트 실행
 dotnet test --project TransactionCachingPipeline.Tests.Unit
 ```
+
+---
+
+Repository 계층의 `Fin<T>`와 Usecase 계층의 `FinResponse<T>`를 `ToFinResponse()` 확장 메서드로 연결하는 브릿지 패턴을 학습합니다.
+
+→ [4.4장: Fin → FinResponse 브릿지](../04-Fin-To-FinResponse-Bridge/)
 

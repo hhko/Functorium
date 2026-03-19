@@ -18,6 +18,14 @@ Exception Pipeline:
   try { next() } catch (ex) → TResponse.CreateFail(error)  ← 생성만 필요
 ```
 
+## 학습 목표
+
+이 장을 완료하면 다음을 할 수 있습니다:
+
+1. Create-Only 제약(`IFinResponseFactory<TResponse>`)이 적용되는 Pipeline을 식별할 수 있습니다
+2. `TResponse.CreateFail(error)`가 static abstract 호출임을 이해하고, 리플렉션이 불필요한 이유를 설명할 수 있습니다
+3. Validation Pipeline과 Exception Pipeline이 응답 읽기(IFinResponse)를 필요로 하지 않는 이유를 설명할 수 있습니다
+
 ## 핵심 개념
 
 ### 1. Create-Only 제약이란?
@@ -102,16 +110,6 @@ Validation/Exception Pipeline은 기존 응답을 **검사하지 않습니다**.
 ### Q3: Exception Pipeline에서 예외를 `Error`로 변환하는 이유는 무엇인가요?
 **A**: 예외(Exception)를 `Error.New(ex)` 형태로 변환하면, Pipeline 외부에서는 예외가 아닌 `FinResponse.Fail`로 일관되게 처리됩니다. 이를 통해 상위 레이어에서 try-catch 없이 `IsSucc`/`IsFail`로 모든 실패를 **동일한 방식으로** 처리할 수 있습니다.
 
-Create-Only 제약으로 충분한 경우를 확인했으니, 다음 장에서는 응답의 성공/실패 상태를 읽어야 하는 Read+Create 이중 제약 패턴을 살펴봅니다.
-
-## 학습 목표
-
-이 장을 완료하면 다음을 할 수 있습니다:
-
-1. Create-Only 제약(`IFinResponseFactory<TResponse>`)이 적용되는 Pipeline을 식별할 수 있다
-2. `TResponse.CreateFail(error)`가 static abstract 호출임을 이해하고, 리플렉션이 불필요한 이유를 설명할 수 있다
-3. Validation Pipeline과 Exception Pipeline이 응답 읽기(IFinResponse)를 필요로 하지 않는 이유를 설명할 수 있다
-
 ## 프로젝트 구조
 
 ```
@@ -136,4 +134,10 @@ dotnet run --project CreateOnlyConstraint
 # 테스트 실행
 dotnet test --project CreateOnlyConstraint.Tests.Unit
 ```
+
+---
+
+응답의 성공/실패 상태를 읽으면서 실패 응답도 생성해야 하는 Logging, Tracing, Metrics Pipeline에 Read+Create 이중 제약을 적용합니다.
+
+→ [4.2장: Read+Create 제약](../02-Read-Create-Constraint/)
 

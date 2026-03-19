@@ -90,5 +90,9 @@ Part 1~3은 순서대로 학습하는 것을 권장합니다. Part 4~5는 Part 3
 ### Q3: .NET SDK 10.0 이전 버전으로도 튜토리얼을 따라갈 수 있나요?
 **A**: 이 튜토리얼은 C# 11의 `static abstract` 멤버와 최신 record 구문을 사용합니다. .NET 7 이상이면 `static abstract`를 지원하지만, 프로젝트 빌드 설정이 .NET 10을 기준으로 되어 있으므로 .NET SDK 10.0 이상을 권장합니다.
 
-다음 장에서는 이 튜토리얼이 해결하려는 Pipeline 아키텍처의 전체 그림을 먼저 살펴봅니다.
+---
+
+Mediator Pipeline의 전체 구조와, 각 Pipeline이 응답 타입에 대해 필요로 하는 능력을 살펴봅니다.
+
+→ [0.3장: Usecase Pipeline 아키텍처 개요](03-usecase-pipeline-overview.md)
 

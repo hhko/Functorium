@@ -18,6 +18,14 @@ Fin<T> (Fail)      ──→   FinResponse<T> (Fail)       실패 전파
 Fin<int>           ──→   FinResponse<string>         커스텀 변환
 ```
 
+## 학습 목표
+
+이 장을 완료하면 다음을 할 수 있습니다:
+
+1. Repository(`Fin<T>`)와 Usecase(`FinResponse<T>`) 계층 간 변환이 필요한 이유를 설명할 수 있습니다
+2. 상황에 맞는 `ToFinResponse()` 오버로드를 선택할 수 있습니다
+3. 실패 상태가 변환 시 자동으로 전파되는 메커니즘을 이해할 수 있습니다
+
 ## 핵심 개념
 
 ### 1. 왜 브릿지가 필요한가?
@@ -88,14 +96,6 @@ FinResponse<string> response = fin.ToFinResponse(
 | 팩토리 변환 | `Fin<A>.ToFinResponse(Func<B>)` | Unit -> Response |
 | 커스텀 변환 | `Fin<A>.ToFinResponse(Func<A, FinResponse<B>>, Func<Error, FinResponse<B>>)` | 완전 제어 |
 
-## 학습 목표
-
-이 장을 완료하면 다음을 할 수 있습니다:
-
-1. Repository(`Fin<T>`)와 Usecase(`FinResponse<T>`) 계층 간 변환이 필요한 이유를 설명할 수 있다
-2. 상황에 맞는 `ToFinResponse()` 오버로드를 선택할 수 있다
-3. 실패 상태가 변환 시 자동으로 전파되는 메커니즘을 이해할 수 있다
-
 ## FAQ
 
 ### Q1: Repository가 `Fin<T>`를 반환하고 Usecase가 `FinResponse<T>`를 반환하는 이유는 무엇인가요?
@@ -106,8 +106,6 @@ FinResponse<string> response = fin.ToFinResponse(
 
 ### Q3: `ToFinResponse()`에서 실패가 자동 전파되는 원리는 무엇인가요?
 **A**: `ToFinResponse()`는 내부적으로 `Fin<T>`의 `Match`를 호출합니다. Succ이면 변환 함수를 적용하고, **Fail이면 변환 함수를 호출하지 않고** `Error`를 그대로 `FinResponse.Fail`로 전달합니다. 어떤 오버로드를 사용하든 실패 시 동일하게 동작합니다.
-
-Part 4에서 Pipeline별 타입 제약 패턴을 완성했습니다. Part 5에서는 실제 Usecase에 이 패턴을 적용합니다.
 
 ## 프로젝트 구조
 
@@ -133,4 +131,10 @@ dotnet run --project FinToFinResponseBridge
 # 테스트 실행
 dotnet test --project FinToFinResponseBridge.Tests.Unit
 ```
+
+---
+
+Pipeline 제약 패턴이 완성되었습니다. Nested class 패턴으로 Request/Response/Validator/Handler를 구성하는 Command Usecase의 완전한 구현 예제를 작성합니다.
+
+→ [5.1장: Command Usecase 완전 예제](../../Part5-Practical-Usecase-Examples/01-Command-Usecase-Example/)
 

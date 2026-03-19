@@ -156,3 +156,9 @@ Mediator Pipeline도 ROP와 유사한 구조를 가집니다:
 - [Railway Oriented Programming - Scott Wlaschin](https://fsharpforfunandprofit.com/rop/)
 - [LanguageExt - Fin\<T\>](https://github.com/louthy/language-ext)
 
+---
+
+이 튜토리얼에서 사용하는 제네릭 변성, 타입 시스템, 함수형 프로그래밍, 아키텍처 관련 핵심 용어를 정리합니다.
+
+→ [부록 D: 용어집](D-glossary.md)
+

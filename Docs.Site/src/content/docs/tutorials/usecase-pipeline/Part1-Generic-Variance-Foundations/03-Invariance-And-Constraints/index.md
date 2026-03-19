@@ -14,6 +14,15 @@ Dog : Animal  (Dog은 Animal의 하위 타입)
 List<Dog> → List<Animal>  (컴파일 에러!)
 ```
 
+## 학습 목표
+
+이 장을 완료하면 다음을 할 수 있습니다:
+
+1. `List<T>`가 불변인 이유를 설명할 수 있습니다
+2. sealed struct가 `where` 제약으로 사용 불가능한 이유를 이해할 수 있습니다
+3. 인터페이스 제약으로 sealed struct의 한계를 우회하는 방법을 알 수 있습니다
+4. 공변/반공변/불변의 차이를 종합적으로 비교할 수 있습니다
+
 ## 핵심 개념
 
 ### 1. List\<T\>는 불변
@@ -75,17 +84,6 @@ public static string ProcessResult<T>(T result) where T : IResult
 ### Q3: 인터페이스 제약으로 우회하면 성능 오버헤드가 있나요?
 **A**: 인터페이스를 구현하는 record나 class의 경우 가상 메서드 호출(virtual dispatch) 비용이 발생하지만, 리플렉션에 비하면 **무시할 수 있는 수준**입니다. 또한 JIT 컴파일러의 최적화(devirtualization)로 인해 실제 성능 차이는 거의 없습니다.
 
-이 패턴은 이후 장에서 `IFinResponse` 인터페이스 계층을 설계할 때의 핵심 아이디어가 됩니다.
-
-## 학습 목표
-
-이 장을 완료하면 다음을 할 수 있습니다:
-
-1. `List<T>`가 불변인 이유를 설명할 수 있다
-2. sealed struct가 `where` 제약으로 사용 불가능한 이유를 이해할 수 있다
-3. 인터페이스 제약으로 sealed struct의 한계를 우회하는 방법을 알 수 있다
-4. 공변/반공변/불변의 차이를 종합적으로 비교할 수 있다
-
 ## 프로젝트 구조
 
 ```
@@ -110,4 +108,10 @@ dotnet run --project InvarianceAndConstraints
 # 테스트 실행
 dotnet test --project InvarianceAndConstraints.Tests.Unit
 ```
+
+---
+
+인터페이스를 읽기/쓰기/팩토리로 분리하면 각각에 적절한 변성을 부여할 수 있습니다. ISP와 변성의 결합, 그리고 CRTP 팩토리 패턴을 학습합니다.
+
+→ [1.4장: 인터페이스 분리와 변성 조합](../04-Interface-Segregation-And-Variance/)
 

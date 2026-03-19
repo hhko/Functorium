@@ -21,6 +21,14 @@ Tracing Pipeline:
   response is IFinResponseWithError?           ← Error 접근 (패턴 매칭)
 ```
 
+## 학습 목표
+
+이 장을 완료하면 다음을 할 수 있습니다:
+
+1. Read+Create 이중 제약이 필요한 Pipeline을 식별할 수 있습니다
+2. `IFinResponse`(읽기)와 `IFinResponseFactory<TResponse>`(생성)의 역할 차이를 설명할 수 있습니다
+3. Error 접근에 패턴 매칭(`is IFinResponseWithError`)을 사용하는 이유를 설명할 수 있습니다
+
 ## 핵심 개념
 
 ### 1. Read+Create 이중 제약
@@ -123,16 +131,6 @@ if (response is IFinResponseWithError fail)
 ### Q3: Read+Create 이중 제약에서 Create 능력은 언제 사용되나요?
 **A**: Logging이나 Tracing Pipeline 자체에서 `CreateFail`을 직접 호출하는 경우는 드뭅니다. 하지만 `next()` 호출 시 예외가 발생하면 catch 블록에서 `TResponse.CreateFail(Error.New(ex))`로 실패 응답을 생성해야 합니다. 이 **예외 대응**을 위해 Create 능력이 필요합니다.
 
-Read+Create 이중 제약이 Observability Pipeline에서 어떻게 동작하는지 확인했습니다. 다음 장에서는 동일한 이중 제약을 사용하면서 Command/Query에 따라 조건부로 실행되는 Transaction과 Caching Pipeline을 살펴봅니다.
-
-## 학습 목표
-
-이 장을 완료하면 다음을 할 수 있습니다:
-
-1. Read+Create 이중 제약이 필요한 Pipeline을 식별할 수 있다
-2. `IFinResponse`(읽기)와 `IFinResponseFactory<TResponse>`(생성)의 역할 차이를 설명할 수 있다
-3. Error 접근에 패턴 매칭(`is IFinResponseWithError`)을 사용하는 이유를 설명할 수 있다
-
 ## 프로젝트 구조
 
 ```
@@ -157,4 +155,10 @@ dotnet run --project ReadCreateConstraint
 # 테스트 실행
 dotnet test --project ReadCreateConstraint.Tests.Unit
 ```
+
+---
+
+동일한 이중 제약을 사용하면서 `where` 제약 조건으로 Command/Query를 컴파일 타임에 분기하는 Transaction과 Caching Pipeline을 살펴봅니다.
+
+→ [4.3장: Transaction/Caching Pipeline](../03-Transaction-Caching-Pipeline/)
 

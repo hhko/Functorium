@@ -11,6 +11,15 @@ IFinResponseFactory<TSelf>      ← CRTP 팩토리 (이번 장)
 ├── static abstract CreateFail(Error error) → TSelf
 ```
 
+## 학습 목표
+
+이 장을 완료하면 다음을 할 수 있습니다:
+
+1. CRTP 패턴이 무엇이며 왜 필요한지 설명할 수 있습니다
+2. C# 11 `static abstract` 메서드를 인터페이스에 정의하고 구현할 수 있습니다
+3. Pipeline에서 `TResponse.CreateFail(error)`을 호출하는 제약 조건을 작성할 수 있습니다
+4. CRTP 팩토리가 리플렉션을 제거하는 원리를 이해할 수 있습니다
+
 ## 핵심 개념
 
 ### 1. CRTP (Curiously Recurring Template Pattern)
@@ -92,17 +101,6 @@ public interface IFinResponseFactory<TSelf>
 ### Q4: `CreateFail`만 정의하고 `CreateSucc`는 왜 팩토리에 포함하지 않나요?
 **A**: Pipeline에서 응답을 **생성**하는 경우는 대부분 **실패 응답**입니다(Validation 실패, 예외 발생). 성공 응답은 Handler가 직접 반환하므로 Pipeline에서 생성할 필요가 없습니다. 최소 인터페이스 원칙에 따라 실제로 필요한 `CreateFail`만 정의합니다.
 
-실패 응답을 생성할 수 있게 되었지만, 에러의 내용은 아직 알 수 없습니다. 다음 장에서는 **요구사항 R3**(에러 접근)을 해결합니다.
-
-## 학습 목표
-
-이 장을 완료하면 다음을 할 수 있습니다:
-
-1. CRTP 패턴이 무엇이며 왜 필요한지 설명할 수 있다
-2. C# 11 `static abstract` 메서드를 인터페이스에 정의하고 구현할 수 있다
-3. Pipeline에서 `TResponse.CreateFail(error)`을 호출하는 제약 조건을 작성할 수 있다
-4. CRTP 팩토리가 리플렉션을 제거하는 원리를 이해할 수 있다
-
 ## 프로젝트 구조
 
 ```
@@ -129,4 +127,10 @@ dotnet run --project FinResponseFactoryCrtp
 # 테스트 실행
 dotnet test --project FinResponseFactoryCrtp.Tests.Unit
 ```
+
+---
+
+실패 응답을 생성할 수 있게 되었지만, 에러의 내용은 아직 알 수 없습니다. Fail 케이스에서만 에러에 접근할 수 있는 `IFinResponseWithError` 인터페이스를 설계합니다.
+
+→ [3.4장: IFinResponseWithError 에러 접근](../04-IFinResponseWithError/)
 

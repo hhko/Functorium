@@ -11,6 +11,15 @@ IFinResponseWithError           ← 에러 접근 인터페이스 (이번 장)
 ├── Error: Error                  Fail에서만 구현
 ```
 
+## 학습 목표
+
+이 장을 완료하면 다음을 할 수 있습니다:
+
+1. `IFinResponseWithError`가 Fail에서만 구현되는 이유를 설명할 수 있습니다
+2. 패턴 매칭으로 에러에 안전하게 접근하는 코드를 작성할 수 있습니다
+3. Succ에서 에러 접근이 타입 시스템에 의해 방지되는 원리를 이해할 수 있습니다
+4. 인터페이스 분리가 타입 안전성을 강화하는 방식을 설명할 수 있습니다
+
 ## 핵심 개념
 
 ### 1. IFinResponseWithError 인터페이스
@@ -77,17 +86,6 @@ public static string LogResponse<TResponse>(TResponse response)
 ### Q3: Fail에서만 `IFinResponseWithError`를 구현하는 패턴은 다른 곳에서도 사용되나요?
 **A**: 네. 이 패턴은 **케이스별 인터페이스 구현**이라는 일반적인 설계 기법입니다. 예를 들어 HTTP 응답에서 에러 본문은 4xx/5xx 응답에만 존재하므로, 에러 본문 인터페이스를 에러 응답 케이스에서만 구현하는 것과 동일한 원리입니다.
 
-에러 접근까지 해결했지만, 아직 각 인터페이스가 분리되어 있습니다. 다음 장에서는 **요구사항 R4**까지 포함하여 모든 인터페이스를 하나의 타입으로 통합합니다.
-
-## 학습 목표
-
-이 장을 완료하면 다음을 할 수 있습니다:
-
-1. `IFinResponseWithError`가 Fail에서만 구현되는 이유를 설명할 수 있다
-2. 패턴 매칭으로 에러에 안전하게 접근하는 코드를 작성할 수 있다
-3. Succ에서 에러 접근이 타입 시스템에 의해 방지되는 원리를 이해할 수 있다
-4. 인터페이스 분리가 타입 안전성을 강화하는 방식을 설명할 수 있다
-
 ## 프로젝트 구조
 
 ```
@@ -114,4 +112,10 @@ dotnet run --project FinResponseWithError
 # 테스트 실행
 dotnet test --project FinResponseWithError.Tests.Unit
 ```
+
+---
+
+에러 접근까지 해결했으니, 이제 R1~R4 모든 요구사항을 하나의 타입으로 통합합니다. `FinResponse<A>` Discriminated Union으로 Match, Map, Bind, 암시적 변환까지 구현합니다.
+
+→ [3.5장: FinResponse\<A\> Discriminated Union](../05-FinResponse-Discriminated-Union/)
 

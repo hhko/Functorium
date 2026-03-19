@@ -17,6 +17,19 @@ FinResponse<A>                            Discriminated Union
     └── : IFinResponseWithError           Fail에서만 에러 접근
 ```
 
+## 학습 목표
+
+이 장을 완료하면 다음을 할 수 있습니다:
+
+1. Discriminated Union을 abstract record + sealed record로 구현할 수 있습니다
+2. Match, Map, Bind 메서드의 동작 원리를 설명할 수 있습니다
+3. LINQ 지원을 위한 Select, SelectMany를 구현할 수 있습니다
+4. 암시적 변환으로 간결한 API를 제공하는 방법을 이해할 수 있습니다
+5. 1장~4장의 모든 인터페이스가 하나의 타입으로 통합되는 과정을 설명할 수 있습니다
+6. ThrowIfFail, IfFail, IfSucc로 값을 추출하고 사이드 이펙트를 실행할 수 있습니다
+7. MapFail, BiMap, BiBind, BindFail로 에러 트랙을 조작할 수 있습니다
+8. Boolean 및 Choice 연산자를 활용하여 간결한 조건 분기를 작성할 수 있습니다
+
 ## 핵심 개념
 
 ### 1. Discriminated Union
@@ -206,21 +219,6 @@ var result = primaryLookup | fallbackLookup;
 ### Q4: LINQ `from ... select` 구문은 실전에서 자주 사용되나요?
 **A**: 여러 `FinResponse`를 **연쇄적으로 조합**할 때 유용합니다. 중첩된 `Bind` 호출보다 LINQ 구문이 읽기 쉬운 경우가 많습니다. 다만 단일 변환에는 `Map`이나 `Bind`를 직접 사용하는 것이 더 간결합니다.
 
-Part 3에서 R1~R4 요구사항을 모두 충족하는 IFinResponse 계층을 완성했습니다. Part 4에서는 이 계층을 활용하여 실제 Pipeline에 타입 제약을 적용합니다.
-
-## 학습 목표
-
-이 장을 완료하면 다음을 할 수 있습니다:
-
-1. Discriminated Union을 abstract record + sealed record로 구현할 수 있다
-2. Match, Map, Bind 메서드의 동작 원리를 설명할 수 있다
-3. LINQ 지원을 위한 Select, SelectMany를 구현할 수 있다
-4. 암시적 변환으로 간결한 API를 제공하는 방법을 이해할 수 있다
-5. 1장~4장의 모든 인터페이스가 하나의 타입으로 통합되는 과정을 설명할 수 있다
-6. ThrowIfFail, IfFail, IfSucc로 값을 추출하고 사이드 이펙트를 실행할 수 있다
-7. MapFail, BiMap, BiBind, BindFail로 에러 트랙을 조작할 수 있다
-8. Boolean 및 Choice 연산자를 활용하여 간결한 조건 분기를 작성할 수 있다
-
 ## 프로젝트 구조
 
 ```
@@ -247,3 +245,8 @@ dotnet run --project FinResponseDiscriminatedUnion
 dotnet test --project FinResponseDiscriminatedUnion.Tests.Unit
 ```
 
+---
+
+IFinResponse 계층이 완성되었습니다. Validation과 Exception Pipeline에 `IFinResponseFactory<TResponse>`만 적용하는 Create-Only 제약 패턴을 학습합니다.
+
+→ [4.1장: Create-Only 제약](../../Part4-Pipeline-Constraint-Patterns/01-Create-Only-Constraint/)

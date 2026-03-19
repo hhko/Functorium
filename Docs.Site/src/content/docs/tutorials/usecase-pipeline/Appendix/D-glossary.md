@@ -122,3 +122,9 @@ Query 요청 인터페이스. `IQuery<FinResponse<TSuccess>>`를 상속합니다
 
 캐싱 가능한 요청을 나타내는 인터페이스. `CacheKey`와 `Duration` 속성을 정의합니다. Query Request가 구현하면 Caching Pipeline이 자동으로 캐시를 적용합니다.
 
+---
+
+C# 제네릭 변성, static abstract, LanguageExt, Mediator, ROP, CQRS 등 이 튜토리얼의 학습에 도움이 되는 참고 자료를 정리합니다.
+
+→ [부록 E: 참고 자료](E-references.md)
+
