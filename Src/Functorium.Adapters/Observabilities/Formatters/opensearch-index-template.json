@@ -1,0 +1,150 @@
+{
+  "_meta": {
+    "description": "Functorium OpenSearchJsonFormatter 로그 인덱스 매핑",
+    "version": "1.0.0",
+    "apply": "PUT _index_template/functorium-logs"
+  },
+  "index_patterns": [
+    "ss4o_logs-app-*"
+  ],
+  "priority": 200,
+  "template": {
+    "settings": {
+      "index": {
+        "number_of_shards": 1,
+        "number_of_replicas": 0
+      }
+    },
+    "mappings": {
+      "dynamic": false,
+      "dynamic_templates": [
+        {
+          "ctx_strings_as_keyword": {
+            "path_match": "ctx.*",
+            "match_mapping_type": "string",
+            "mapping": {
+              "type": "keyword"
+            }
+          }
+        }
+      ],
+      "properties": {
+        "@timestamp": {
+          "type": "date",
+          "format": "strict_date_optional_time"
+        },
+        "log": {
+          "properties": {
+            "level": {
+              "type": "keyword"
+            },
+            "logger": {
+              "type": "keyword"
+            }
+          }
+        },
+        "message": {
+          "type": "text",
+          "properties": {
+            "template": {
+              "type": "keyword",
+              "ignore_above": 1024
+            }
+          }
+        },
+        "event": {
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "name": {
+              "type": "keyword"
+            }
+          }
+        },
+        "request": {
+          "properties": {
+            "layer": {
+              "type": "keyword"
+            },
+            "category": {
+              "type": "keyword"
+            },
+            "category_type": {
+              "type": "keyword"
+            },
+            "handler": {
+              "type": "keyword"
+            },
+            "handler_method": {
+              "type": "keyword"
+            },
+            "message": {
+              "type": "text",
+              "index": false
+            },
+            "event": {
+              "properties": {
+                "type": {
+                  "type": "keyword"
+                },
+                "id": {
+                  "type": "keyword"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "response": {
+          "properties": {
+            "status": {
+              "type": "keyword"
+            },
+            "elapsed": {
+              "type": "double"
+            },
+            "message": {
+              "type": "text",
+              "index": false
+            },
+            "event": {
+              "properties": {
+                "success_count": {
+                  "type": "integer"
+                },
+                "failure_count": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "error": {
+          "properties": {
+            "type": {
+              "type": "keyword"
+            },
+            "code": {
+              "type": "keyword"
+            },
+            "stack_trace": {
+              "type": "text",
+              "index": false
+            },
+            "detail": {
+              "type": "text",
+              "index": false
+            }
+          }
+        },
+        "ctx": {
+          "type": "object",
+          "dynamic": true
+        }
+      }
+    }
+  }
+}
