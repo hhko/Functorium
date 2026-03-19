@@ -460,3 +460,9 @@ EcommerceDomain.Tests.Unit/
 | QuantityTests | 범위 검증, +/- 연산, 비교 연산자 |
 | OrderStatusTests | 상태 전이 규칙, 취소 가능 여부 |
 | ShippingAddressTests | 필수 필드 검증, 동등성 |
+
+---
+
+이커머스 도메인의 값 객체를 구현했습니다. 다음 장에서는 금융 도메인에서 계좌번호, 이자율, 환율 등 정밀한 계산이 필요한 값 객체를 다룹니다.
+
+→ [2장: 금융 도메인](../02-Finance-Domain/)

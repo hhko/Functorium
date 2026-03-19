@@ -347,3 +347,7 @@ OrmIntegration.Tests.Unit/
 | OwnsManyPatternTests | OrderLineItem 컬렉션 영속화 |
 
 값 객체를 데이터베이스에 저장하는 패턴을 익혔으니, 다음 장에서는 CQRS 아키텍처에서 값 객체를 Command/Query와 통합하는 방법을 다룹니다.
+
+---
+
+→ [3장: CQRS와 값 객체](../03-CQRS-Integration/)

@@ -319,3 +319,5 @@ public static int Divide(int numerator, Denominator denominator)
 ---
 
 값 객체를 통해 컴파일 타임 유효성을 확보했지만, `denominator.Value`처럼 내부 값을 꺼내야 하는 불편함이 남아 있습니다. 다음 장에서는 **연산자 오버로딩**을 도입하여 `15 / denominator`와 같은 자연스러운 수학적 표현을 구현합니다.
+
+→ [5장: 연산자 오버로딩](../05-Operator-Overloading/)

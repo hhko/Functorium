@@ -205,3 +205,7 @@ public sealed class PhoneNumber : ValueObject
 **A:** 전제 조건이 되는 검증을 Bind로 먼저 실행하고, 그 결과가 성공하면 구성 요소들을 Apply로 병렬 검증합니다. 전제 조건을 먼저 수행하고 그 결과를 바탕으로 구성 요소 검증을 병렬로 수행하면 불필요한 연산을 피할 수 있습니다.
 
 Part 2에서 Bind와 Apply의 조합 패턴을 모두 학습했습니다. Part 3에서는 이 개념들을 Functorium 프레임워크의 기본 클래스로 조립하여, 실전에서 바로 사용할 수 있는 값 객체 패턴을 완성합니다.
+
+---
+
+→ [6장: 컨텍스트 기반 검증](../06-Contextual-Validation/)

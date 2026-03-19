@@ -238,3 +238,7 @@ var sortedAddresses = addresses.OrderBy(a => a).ToArray();
 **A**: 아닙니다. 정렬이나 크기 비교가 필요하지 않은 복합 데이터에는 `ValueObject`로 충분합니다. 불필요한 비교 기능은 코드의 복잡도만 증가시키므로, 실제로 정렬이 필요한 경우에만 `ComparableValueObject`를 선택하세요.
 
 지금까지 프레임워크 기본 클래스를 활용한 값 객체 패턴을 모두 살펴보았습니다. 다음 장에서는 SmartEnum을 사용하여 도메인 로직을 내장한 타입 안전 열거형을 구현하는 방법을 다룹니다.
+
+---
+
+→ [7장: TypeSafeEnum](../07-TypeSafeEnum/)

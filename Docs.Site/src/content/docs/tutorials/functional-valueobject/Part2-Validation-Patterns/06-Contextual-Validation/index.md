@@ -136,3 +136,7 @@ private static Validation<Error, string> ValidateCity(string? value)
 ---
 
 ContextualValidation은 Application Layer에서 DTO 필드를 검증할 때, **TypedValidation과 동일한 함수형 합성**을 필드 이름 기반으로 제공합니다.
+
+Part 2에서 검증 패턴을 모두 학습했습니다. Part 3에서는 이 개념들을 Functorium 프레임워크의 기본 클래스로 조립하여, 실전에서 바로 사용할 수 있는 값 객체 패턴을 완성합니다.
+
+→ [Part 3의 1장: SimpleValueObject](../../Part3-ValueObject-Patterns/01-SimpleValueObject/)

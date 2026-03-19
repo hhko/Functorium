@@ -362,3 +362,7 @@ FunctoriumFramework.Tests.Unit/
 | AddressTests | 다중 필드 검증, 복합 동등성 |
 
 다음 장에서는 이렇게 구현한 값 객체를 Entity Framework Core와 통합하여 데이터베이스에 영속화하는 패턴을 다룹니다.
+
+---
+
+→ [2장: ORM 통합 패턴](../02-ORM-Integration/)

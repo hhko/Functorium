@@ -226,3 +226,7 @@ foreach (var userId in userIds)
 **A**: `ComparableSimpleValueObject<T>`는 기본 타입의 자연 순서만 지원합니다. 버전 번호에서 "1.10" > "1.2" 같은 커스텀 비교가 필요하면 `ValueObject`를 직접 상속하여 `IComparable<T>`를 수동 구현해야 합니다.
 
 다음 장에서는 단일 값이 아닌 여러 primitive 타입을 조합하는 `ValueObject` 패턴을 학습합니다. 2D 좌표처럼 복합 데이터를 하나의 값 객체로 표현하는 방법을 살펴봅니다.
+
+---
+
+→ [3장: ValueObject (Primitive)](../03-ValueObject-Primitive/)

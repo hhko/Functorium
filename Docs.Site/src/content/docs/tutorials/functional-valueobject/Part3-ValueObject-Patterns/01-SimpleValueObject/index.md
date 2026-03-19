@@ -205,3 +205,7 @@ var bytes = (byte[])binaryData;
 **A**: 이진 데이터에서 "더 크다/작다"는 의미가 도메인마다 다르게 해석될 수 있어, 오히려 혼란을 유발합니다. 비교가 필요한 경우 `ComparableSimpleValueObject<T>`를 사용합니다.
 
 다음 장에서는 `SimpleValueObject<T>`에 비교 기능을 추가한 `ComparableSimpleValueObject<T>`를 학습합니다. 값 객체에 자연스러운 순서가 있을 때 정렬과 비교 연산을 어떻게 지원하는지 살펴봅니다.
+
+---
+
+→ [2장: ComparableSimpleValueObject](../02-ComparableSimpleValueObject/)

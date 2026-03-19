@@ -555,3 +555,5 @@ public static Validation<Error, (string Street, string City)> Validate(string st
 ```
 
 검증 코드가 Fluent API로 간결해졌지만, 이 값 객체들이 설계 규칙을 일관되게 따르고 있는지는 어떻게 보장할까요? 다음 장에서는 ArchUnitNET 기반 아키텍처 테스트로 값 객체의 구조적 규칙을 자동 검증합니다.
+
+→ [16장: 아키텍처 테스트](../16-Architecture-Test/)

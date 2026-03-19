@@ -400,3 +400,9 @@ public sealed class PriceRange : ComparableValueObject
 
 ### Q3: LanguageExt와의 호환성은 어떻게 보장되나요?
 **A**: `ErrorCodeExpected`, `ErrorCodeExpected<T>` 등이 모두 LanguageExt의 `Error` 클래스를 상속받아 구현됩니다. `Match`, `Map`, `Bind` 등의 함수형 연산자와 완전히 호환되므로, 기존 코드를 수정하지 않고도 새 에러 처리 시스템을 도입할 수 있습니다.
+
+---
+
+에러 코드 구조가 갖춰졌지만, 매번 `ErrorCodeFactory.Create`를 직접 호출하면 코드가 장황해집니다. 다음 장에서는 `DomainError` 헬퍼와 `DomainErrorType`을 도입하여 에러 생성을 간결하게 만듭니다.
+
+→ [14장: 에러 코드 Fluent](../14-Error-Code-Fluent/)

@@ -241,3 +241,7 @@ public sealed class UserRegistration : ValueObject
 **A:** ManyErrors를 통해 모든 실패를 수집하여 사용자에게 완전한 피드백을 제공합니다. 각 에러를 명확하게 구분하여 표시하면 사용자가 모든 문제점을 한 번에 파악하고 수정할 수 있습니다.
 
 지금까지 Bind(순차)와 Apply(병렬)를 각각 독립적으로 살펴보았습니다. 하지만 실제 도메인에서는 독립적인 필드와 의존적인 필드가 하나의 객체에 공존합니다. 다음 장에서는 Apply와 Bind를 조합하여 이런 복합적인 검증 요구사항을 해결합니다.
+
+---
+
+→ [3장: Apply와 Bind 조합](../03-Apply-Bind-Combined-Validation/)

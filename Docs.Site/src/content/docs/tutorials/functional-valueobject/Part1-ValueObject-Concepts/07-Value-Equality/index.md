@@ -271,3 +271,7 @@ public static bool operator ==(Denominator? left, Denominator? right)
 ```
 
 값 동등성이 확보되면, 다음 장에서는 값 객체의 순서 비교를 구현하여 정렬과 범위 검증이 가능한 비교 가능성(Comparability)을 다룹니다.
+
+---
+
+→ [8장: 비교 가능성](../08-Value-Comparability/)

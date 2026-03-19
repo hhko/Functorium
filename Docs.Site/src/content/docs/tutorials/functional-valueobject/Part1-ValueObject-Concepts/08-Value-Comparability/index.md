@@ -394,3 +394,7 @@ var distinct2 = emails.Distinct(comparer).ToList(); // 2개 (중복 제거)
 ```
 
 동등성과 비교 가능성을 모두 갖춘 값 객체가 완성되었습니다. 다음 장에서는 값 객체의 생성(Create)과 검증(Validate) 책임을 분리하여 단일 책임 원칙을 적용하는 방법을 다룹니다.
+
+---
+
+→ [9장: 생성과 검증 분리](../09-Create-Validate-Separation/)

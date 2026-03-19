@@ -241,3 +241,7 @@ var ranges = new[] { ... }
 **A**: 아닙니다. 정렬이나 크기 비교가 필요 없는 복합 데이터에는 `ValueObject`가 적합합니다. 불필요한 비교 기능은 `GetComparableEqualityComponents()` 구현 부담만 추가하므로, 정렬이 필요한 경우에만 `ComparableValueObject`를 선택합니다.
 
 다음 장에서는 primitive 타입이 아닌 다른 값 객체를 조합하는 복합 값 객체 패턴을 학습합니다. 값 객체 안에 값 객체를 포함하여 더 풍부한 도메인 모델을 구성하는 방법을 살펴봅니다.
+
+---
+
+→ [5장: ValueObject (Composite)](../05-ValueObject-Composite/)

@@ -250,3 +250,9 @@ public IEnumerable<DateOnly> GetOccurrences(DateOnly from, int count)
 
 ### Q3: `RecurrenceRule`에서 팩토리 메서드(`Daily`, `Weekly`, `Monthly`)를 분리한 이유는 무엇인가요?
 **A**: 생성자 하나로 모든 반복 유형을 처리하면 매개변수 조합이 복잡해지고 유효하지 않은 조합이 생길 수 있습니다. `Weekly(DayOfWeek.Monday, DayOfWeek.Wednesday)`처럼 용도별 팩토리 메서드를 제공하면 호출 측에서 의도가 명확해지고, 각 메서드가 해당 유형에 맞는 검증만 수행합니다.
+
+---
+
+Part 5에서 다양한 도메인의 값 객체 적용 사례를 모두 살펴보았습니다. 부록에서는 LanguageExt 주요 타입 참조, 프레임워크 타입 선택 가이드, 용어집 등을 확인할 수 있습니다.
+
+→ [부록 A: LanguageExt 주요 타입 참조](../../../Appendix/A-languageext-reference.md)

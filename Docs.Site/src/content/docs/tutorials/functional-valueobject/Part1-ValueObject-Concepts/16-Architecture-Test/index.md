@@ -270,3 +270,5 @@ DomainRuleTests.cs에서 `RequireMethod`나 `RequireImplements` 등의 호출을
 ---
 
 Part 1에서 값 객체의 기초부터 아키텍처 테스트까지 다루었습니다. Part 2에서는 여러 값 객체를 동시에 검증하는 Bind/Apply 패턴을 학습합니다.
+
+→ [Part 2의 1장: 순차 검증 (Bind)](../../Part2-Validation-Patterns/01-Bind-Sequential-Validation/)

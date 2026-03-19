@@ -655,3 +655,5 @@ validation.ShouldHaveDomainError<Denominator, int, int>(
 | Validation 에러 + 값 확인 | `validation.ShouldHaveDomainError<TVO, T, TValue>(errorType, value)` |
 
 에러 처리 코드가 간결해졌지만, 검증 로직 자체는 여전히 삼항 연산자나 Bind 체인으로 작성해야 합니다. 다음 장에서는 `Validate<T>` Fluent API를 도입하여 검증 흐름까지 선형적으로 개선합니다.
+
+→ [15장: FluentValidation 검증](../15-Validation-Fluent/)

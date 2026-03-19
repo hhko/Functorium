@@ -351,3 +351,7 @@ private static Validation<Error, string> ValidateNotEmpty(string currencyCode) =
 ```
 
 다음 장에서는 ArchUnitNET을 활용하여 지금까지 구현한 모든 값 객체가 아키텍처 규칙을 올바르게 준수하는지 자동으로 검증하는 방법을 다룹니다.
+
+---
+
+→ [8장: 아키텍처 테스트](../08-Architecture-Test/)

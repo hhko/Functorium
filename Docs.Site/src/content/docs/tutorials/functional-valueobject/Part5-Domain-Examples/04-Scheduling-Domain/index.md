@@ -393,3 +393,9 @@ SchedulingDomain.Tests.Unit/
 | TimeSlotTests | 시간 검증, Contains, Conflicts |
 | DurationTests | 단위 변환, Add/Subtract 연산 |
 | RecurrenceRuleTests | Daily/Weekly/Monthly 발생일 계산 |
+
+---
+
+Part 5에서 다양한 도메인의 값 객체 적용 사례를 모두 살펴보았습니다. 부록에서는 LanguageExt 주요 타입 참조, 프레임워크 타입 선택 가이드, 용어집 등을 확인할 수 있습니다.
+
+→ [부록 A: LanguageExt 주요 타입 참조](../../Appendix/A-languageext-reference.md)

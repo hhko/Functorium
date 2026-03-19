@@ -242,3 +242,5 @@ public int Divide(double a) => (int)(a / _value);
 ---
 
 연산자 오버로딩으로 자연스러운 수학적 표현을 얻었지만, 여러 `Fin<T>` 값을 조합하는 복합 연산에서는 `Match` 메서드를 중첩해야 하는 불편함이 남아 있습니다. 다음 장에서는 **LINQ 표현식**을 도입하여 `from`/`select` 구문으로 복합 연산과 에러 전파를 간결하게 처리합니다.
+
+→ [6장: LINQ 표현식](../06-Linq-Expression/)

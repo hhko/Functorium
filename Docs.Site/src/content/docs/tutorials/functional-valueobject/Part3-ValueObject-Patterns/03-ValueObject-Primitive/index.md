@@ -219,3 +219,7 @@ Console.WriteLine($"   {c2}.GetHashCode() = {c2.GetHashCode()}");
 **A**: 값이 변경되어야 하거나 참조 동등성이 필요한 경우입니다. 은행 계좌 잔고처럼 자주 변경되는 데이터는 일반 클래스가 적합합니다. 이벤트, 설정값처럼 생성 후 변경되지 않는 값에 `ValueObject`를 사용합니다.
 
 다음 장에서는 `ValueObject`에 비교 기능을 추가한 `ComparableValueObject`를 학습합니다. 날짜 범위처럼 복합 데이터에도 자연스러운 순서가 필요한 경우를 다룹니다.
+
+---
+
+→ [4장: ComparableValueObject (Primitive)](../04-ComparableValueObject-Primitive/)

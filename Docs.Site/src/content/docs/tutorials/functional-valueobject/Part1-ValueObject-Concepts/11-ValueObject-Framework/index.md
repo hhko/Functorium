@@ -445,3 +445,9 @@ public static Fin<TValueObject> CreateFromValidation<TValueObject, TValue>(
         .ToFin();           // Validation을 Fin으로 변환
 }
 ```
+
+---
+
+프레임워크 타입으로 보일러플레이트를 제거했지만, 비즈니스 도메인에는 고정된 선택지 집합을 표현해야 하는 경우도 있습니다. 다음 장에서는 SmartEnum을 활용한 타입 안전 열거형을 구현합니다.
+
+→ [12장: 타입 안전한 열거형](../12-Type-Safe-Enums/)

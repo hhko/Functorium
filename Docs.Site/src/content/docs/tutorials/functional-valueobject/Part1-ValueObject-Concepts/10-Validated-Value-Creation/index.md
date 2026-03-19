@@ -238,3 +238,7 @@ public static Validation<Error, (Street Street, City City, PostalCode PostalCode
 ```
 
 3가지 메서드 패턴으로 복합 값 객체의 성능과 안전성을 모두 확보했습니다. 다음 장에서는 이 패턴들을 재사용 가능한 프레임워크 타입으로 추상화하는 방법을 다룹니다.
+
+---
+
+→ [11장: 프레임워크 타입](../11-ValueObject-Framework/)

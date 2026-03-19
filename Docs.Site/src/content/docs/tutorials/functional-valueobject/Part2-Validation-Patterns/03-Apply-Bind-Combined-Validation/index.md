@@ -180,3 +180,7 @@ public sealed class OrderInfo : ValueObject
 **A:** Apply 단계에서는 ManyErrors 타입으로 여러 에러를 수집하고, Bind 단계에서는 단일 Error 타입으로 조기 중단합니다. 사용자에게는 어떤 단계에서 실패했는지 명확하게 알려주는 것이 중요합니다.
 
 지금까지 Apply와 Bind를 하나의 흐름에서 순서대로 조합했습니다. 하지만 각 필드 내부에서도 복잡한 다단계 검증이 필요하다면 어떻게 해야 할까요? 다음 장에서는 Apply 내부에 Bind를 중첩하여 필드별 세밀한 검증을 구현합니다.
+
+---
+
+→ [4장: 내부 Bind 외부 Apply](../04-Apply-Internal-Bind-Validation/)

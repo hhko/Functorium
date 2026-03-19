@@ -218,3 +218,7 @@ public static Fin<Denominator> Create(int value) =>
 ```
 
 Create와 Validate를 분리하여 단일 값 객체의 검증 재사용성을 확보했습니다. 다음 장에서는 여러 값 객체를 조합한 복합 객체에서 검증된 값으로 직접 생성하는 CreateFromValidated 패턴을 다룹니다.
+
+---
+
+→ [10장: 검증된 값 생성](../10-Validated-Value-Creation/)

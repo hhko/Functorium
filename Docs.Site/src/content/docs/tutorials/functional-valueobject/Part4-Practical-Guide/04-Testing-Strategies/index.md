@@ -413,3 +413,7 @@ TestingStrategies.Tests.Unit/
 | FinTestExtensionsTests | ShouldBeSuccess, ShouldBeFail 확장 |
 
 Part 4에서 값 객체의 실전 통합과 테스트 전략을 다루었습니다. Part 5에서는 이커머스, 금융, 사용자 관리, 일정 예약 등 구체적인 도메인에서 값 객체가 어떻게 활용되는지 확인합니다.
+
+---
+
+→ [Part 5의 1장: 이커머스 도메인](../../Part5-Domain-Examples/01-Ecommerce-Domain/)

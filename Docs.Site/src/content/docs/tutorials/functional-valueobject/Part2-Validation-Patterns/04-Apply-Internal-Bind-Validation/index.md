@@ -196,3 +196,7 @@ public sealed class MemberRegistration : ValueObject
 **A:** ManyErrors 타입을 통해 여러 필드에서 동시에 발생하는 에러를 수집합니다. 형식 오류와 비즈니스 규칙 위반을 구분하여 사용자에게 명확한 피드백을 제공하는 것이 중요합니다.
 
 이 장에서는 외부 Apply, 내부 Bind 구조를 다뤘습니다. 그렇다면 반대 방향 -- 외부 Bind로 전제 조건을 먼저 검증하고, 내부 Apply로 구성 요소를 병렬 검증하는 구조는 어떤 상황에서 유용할까요? 다음 장에서 이 역방향 중첩 패턴을 살펴봅니다.
+
+---
+
+→ [5장: 내부 Apply 외부 Bind](../05-Bind-Internal-Apply-Validation/)

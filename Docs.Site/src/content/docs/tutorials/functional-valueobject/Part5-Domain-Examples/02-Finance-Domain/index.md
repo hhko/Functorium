@@ -363,3 +363,9 @@ FinanceDomain.Tests.Unit/
 | InterestRateTests | 범위 검증, 소수점 변환, 비교 연산 |
 | ExchangeRateTests | 환율 검증, 통화 변환 계산 |
 | TransactionTypeTests | 입금/출금 분류, IsCredit/IsDebit |
+
+---
+
+금융 도메인의 값 객체를 구현했습니다. 다음 장에서는 사용자 관리 도메인에서 이메일, 비밀번호, 전화번호 등 개인정보 보호가 중요한 값 객체를 다룹니다.
+
+→ [3장: 사용자 관리 도메인](../03-User-Management-Domain/)

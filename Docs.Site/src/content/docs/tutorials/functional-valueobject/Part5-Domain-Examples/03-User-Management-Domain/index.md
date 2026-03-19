@@ -409,3 +409,9 @@ UserManagementDomain.Tests.Unit/
 | PasswordTests | 강도 규칙, HashedValue, 문자 요구사항 |
 | PhoneNumberTests | 형식 검증, 국가 코드, 마스킹 |
 | UsernameTests | 길이 제한, 예약어 검사, 정규화 |
+
+---
+
+사용자 관리 도메인의 값 객체를 구현했습니다. 다음 장에서는 일정/예약 도메인에서 날짜 범위, 시간 슬롯, 반복 규칙 등 시간 기반 값 객체를 다룹니다.
+
+→ [4장: 일정/예약 도메인](../04-Scheduling-Domain/)

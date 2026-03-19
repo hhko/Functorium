@@ -395,3 +395,7 @@ CqrsIntegration.Tests.Unit/
 | FinExtensionsTests | ToApiResponse 변환, Success/Failure 매핑 |
 
 CQRS 통합으로 값 객체가 API 계층에서 도메인 계층까지 자연스럽게 흐르는 구조를 갖추었습니다. 다음 장에서는 이 모든 패턴을 효과적으로 검증하기 위한 테스트 전략을 다룹니다.
+
+---
+
+→ [4장: 테스트 전략](../04-Testing-Strategies/)

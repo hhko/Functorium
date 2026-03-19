@@ -227,3 +227,9 @@ private static readonly HashSet<string> ReservedNames = new(StringComparer.Ordin
 
 ### Q4: 마스킹 기능은 모든 값 객체에 필요한가요?
 **A**: 아닙니다. 개인정보가 포함된 값 객체(`Email`, `PhoneNumber`, `AccountNumber` 등)에만 필요합니다. `ProductCode`나 `OrderStatus` 같은 비민감 데이터에는 마스킹이 불필요합니다.
+
+---
+
+다음 장에서는 일정/예약 도메인의 값 객체를 학습합니다.
+
+→ [5.4 일정/예약 도메인](../../04-Scheduling-Domain/SchedulingDomain/)
