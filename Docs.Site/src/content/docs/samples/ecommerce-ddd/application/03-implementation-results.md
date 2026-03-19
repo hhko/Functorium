@@ -1201,22 +1201,22 @@ classDiagram
 **시나리오 1: `CreateProductCommand`** — Product, Inventory
 
 - **유효성 검사:** Apply 패턴으로 ProductName, ProductDescription, Money, Quantity 4개 VO를 병렬 검증합니다. 이후 `ProductNameUniqueSpec`으로 이름 고유성을 검사합니다.
-- **성공:** 상품과 Inventory가 함께 생성됩니다. `IsSucc == true`, `ThrowIfFail().Name/Price` 확인.
+- **성공:** 상품과 Inventory가 함께 생성됩니다.
 - **실패:** VO 검증 실패 시 에러 누적(→ #10), 이름 중복 시 `AlreadyExists`(→ #11).
-- **검증 방법:** Apply 패턴 에러 누적, `guard` + `AlreadyExists`, Repository Mock 후 FinT 파이프라인 검증.
+- **검증 방법:** Repository Mock 후 FinT 파이프라인 전체 경로를 검증합니다. Apply 에러 누적과 `guard` 단락을 각각 독립 테스트합니다.
 
 **`UpdateProductCommand`** — Product
 
-- **유효성 검사:** Apply 패턴 + 자기 자신 제외 고유성 검사(`ProductNameUniqueExceptSelfSpec`).
-- **성공:** 상품 정보 업데이트.
-- **실패:** 상품 미존재(→ #12), 이름 중복(→ #11), VO 검증 실패(→ #10), 삭제된 상품 수정 거부.
-- **검증 방법:** Repository `Fail`, `guard` + `AlreadyExists`, Apply 패턴.
+- **유효성 검사:** Apply 패턴으로 VO를 병렬 검증한 뒤, 자기 자신을 제외한 고유성 검사(`ProductNameUniqueExceptSelfSpec`)를 수행합니다.
+- **성공:** 상품 정보가 업데이트됩니다.
+- **실패:** 상품 미존재(→ #12), 이름 중복(→ #11), VO 검증 실패(→ #10), 삭제된 상품은 도메인 규칙에 의해 수정 거부.
+- **검증 방법:** `GetById` 실패, `guard` 단락, Apply 에러 누적을 각각 독립 테스트합니다.
 
 **`DeleteProductCommand`** — Product
 
-- **성공:** Soft Delete (이미 삭제된 상품 포함).
+- **성공:** Soft Delete를 수행합니다. 이미 삭제된 상품도 멱등하게 처리됩니다.
 - **실패:** 상품 미존재(→ #12).
-- **검증 방법:** Repository `Fail`.
+- **검증 방법:** `GetByIdIncludingDeleted` 실패 시 FinT 즉시 단락을 검증합니다.
 
 ### #2 고객 생성
 
@@ -1225,9 +1225,9 @@ classDiagram
 **시나리오 2: `CreateCustomerCommand`** — Customer
 
 - **유효성 검사:** Apply 패턴으로 CustomerName, Email, Money(CreditLimit) 3개 VO를 병렬 검증합니다. 이후 `CustomerEmailSpec`으로 이메일 고유성을 검사합니다.
-- **성공:** 고객이 생성됩니다. `IsSucc == true`, `ThrowIfFail().Name/Email` 확인.
+- **성공:** 고객이 생성됩니다.
 - **실패:** VO 검증 실패 시 에러 누적(→ #10), 이메일 중복 시 `AlreadyExists`(→ #11).
-- **검증 방법:** Apply 패턴 에러 누적, `guard` + `AlreadyExists`, Repository Mock 후 FinT 파이프라인 검증.
+- **검증 방법:** #1 CreateProduct와 동일한 구조 — Apply 에러 누적, `guard` 단락, FinT 파이프라인 전체 경로를 검증합니다.
 
 ### #3 주문 생성 (신용한도)
 
@@ -1235,17 +1235,17 @@ classDiagram
 
 **시나리오 3: `CreateOrderWithCreditCheckCommand`** — Order, Customer, Product
 
-- **유효성 검사:** ShippingAddress, Quantity VO 검증 후 `IProductCatalog.GetPricesForProducts()`로 상품 가격을 일괄 조회합니다. 조회 결과에 없는 상품은 `NotFound`로 거부합니다. `OrderCreditCheckService`로 신용한도를 검증합니다.
-- **성공:** 주문라인 조립 → 신용한도 통과 → 주문 생성. `IsSucc == true`.
+- **유효성 검사:** ShippingAddress, Quantity VO를 검증한 뒤, `IProductCatalog.GetPricesForProducts()`로 상품 가격을 일괄 조회합니다. 조회 결과에 없는 상품은 `NotFound`로 거부합니다.
+- **성공:** 주문라인 조립 → `OrderCreditCheckService` 신용한도 통과 → 주문 생성.
 - **실패:** 신용한도 초과(→ #13), 상품 미존재 시 `NotFound`, VO 검증 실패 시 조기 반환.
-- **검증 방법:** Domain Service 에러 전파, 배치 조회 Mock, Repository Mock 후 FinT 파이프라인 검증.
+- **검증 방법:** Domain Service 에러 전파와 배치 조회 누락을 각각 독립 테스트합니다.
 
 **`CreateOrderCommand`** — Order, Product
 
-- **유효성 검사:** ShippingAddress, Quantity VO 검증 후 상품 가격을 일괄 조회합니다. 신용한도 검증 없이 주문을 생성합니다.
-- **성공:** 주문라인 조립 → 주문 생성.
+- **유효성 검사:** ShippingAddress, Quantity VO를 검증한 뒤 상품 가격을 일괄 조회합니다.
+- **성공:** 신용한도 검증 없이 주문라인 조립 → 주문 생성.
 - **실패:** 상품 미존재 시 `NotFound`, VO 검증 실패 시 조기 반환.
-- **검증 방법:** 배치 조회 Mock, Repository Mock.
+- **검증 방법:** 배치 조회 누락 시 `NotFound` 반환을 검증합니다.
 
 ### #4 주문 접수
 
@@ -1253,10 +1253,10 @@ classDiagram
 
 **시나리오 4: `PlaceOrderCommand`** — Order, Customer, Product, Inventory
 
-- **유효성 검사:** 상품 가격 일괄 조회 → 재고 가용성 검증 및 차감(`Inventory.DeductStock`) → 신용한도 검증(`OrderCreditCheckService`) → 주문 생성 + 재고 저장. 5개 Port를 사용하는 다중 Aggregate 원자적 쓰기입니다.
-- **성공:** FinT LINQ 체인으로 Traverse + Bind/Map을 합성하여 UoW 트랜잭션 내에서 처리합니다.
-- **실패:** 재고 부족(→ #14), 신용한도 초과(→ #13), 상품/고객/재고 미존재 시 `NotFound`.
-- **검증 방법:** FinT LINQ 체인 + Traverse + Bind/Map UoW, Domain 에러 전파 검증.
+- **유효성 검사:** 상품 존재 여부(배치 조회), 재고 가용성(`Inventory.DeductStock`), 신용한도(`OrderCreditCheckService`)를 순서대로 검증합니다. `IProductCatalog`, `IInventoryRepository`, `ICustomerRepository`, `IOrderRepository` 5개 Port를 조율하는 다중 Aggregate 원자적 쓰기입니다.
+- **성공:** 재고 차감 + 주문 생성 + 재고 저장이 FinT LINQ 체인(Traverse + Bind/Map)으로 합성되어 UoW 트랜잭션 내에서 원자적으로 처리됩니다.
+- **실패:** 재고 부족(→ #14), 신용한도 초과(→ #13), 상품/고객/재고 미존재 시 `NotFound`. 실패 시 트랜잭션 전체가 롤백됩니다.
+- **검증 방법:** 각 실패 지점에서 후속 연산이 실행되지 않음을 Mock 호출 횟수로 검증합니다.
 
 ### #5 상품 검색
 
@@ -1265,9 +1265,9 @@ classDiagram
 **시나리오 5: `SearchProductsQuery`** — Product
 
 - **유효성 검사:** `SearchProductsQueryValidator`로 쌍 범위(MinPrice ↔ MaxPrice), 허용 목록(SortBy), 정렬 방향(SortDirection), 빈 문자열(Name)을 형식 검증합니다(→ #15).
-- **성공:** `Specification<Product>.All`에 `ProductNameSpec`, `ProductPriceRangeSpec`을 `&=` 연산자로 합성합니다. `PageRequest`와 `SortExpression`으로 페이지네이션과 정렬을 지원합니다. `IProductQuery` Read Adapter로 Aggregate 재구성 없이 DTO 프로젝션합니다.
+- **성공:** `Specification<Product>.All`에 `ProductNameSpec`, `ProductPriceRangeSpec`을 `&=` 연산자로 합성합니다. `PageRequest`와 `SortExpression`으로 페이지네이션과 정렬을 지원합니다. `IProductQuery` Read Adapter로 Aggregate 재구성 없이 DTO로 프로젝션합니다.
 - **실패:** Validator 에러 시 Usecase 미실행(→ #15).
-- **검증 방법:** Specification 합성, `PagedResult` 메타데이터, Validator 동기 테스트.
+- **검증 방법:** 필터 없음, 이름 필터, 가격 범위, 복합 필터, 페이지네이션 등 조합별로 `PagedResult` 메타데이터를 검증합니다.
 
 ### #6 고객 주문 내역 조회
 
@@ -1278,7 +1278,7 @@ classDiagram
 - **유효성 검사:** `GetCustomerOrdersQueryValidator`로 CustomerId EntityId 형식을 검증합니다(→ #15).
 - **성공:** `ICustomerOrdersQuery` Read Adapter가 Customer → Order → OrderLine → Product 4-table JOIN을 수행하여 `CustomerOrdersDto` 계층 구조로 프로젝션합니다. Aggregate 재구성 없이 단일 조회로 처리합니다.
 - **실패:** 고객 미존재 시 `NotFound`, Validator 에러 시 Usecase 미실행(→ #15).
-- **검증 방법:** 4-table JOIN DTO 프로젝션, EntityId 형식 Validator 테스트.
+- **검증 방법:** 다중 주문/다중 라인 데이터에서 계층 구조가 올바르게 프로젝션되는지 검증합니다.
 
 ### #7 고객 주문 요약 검색
 
@@ -1289,7 +1289,7 @@ classDiagram
 - **유효성 검사:** `SearchCustomerOrderSummaryQueryValidator`로 허용 목록(SortBy), 정렬 방향(SortDirection)을 형식 검증합니다(→ #15).
 - **성공:** `Specification<Customer>.All` 기반 LEFT JOIN + GROUP BY 집계로 총 주문 수, 총 지출, 마지막 주문일을 조회합니다. 주문이 없는 고객도 포함되며 페이지네이션을 지원합니다.
 - **실패:** Validator 에러 시 Usecase 미실행(→ #15).
-- **검증 방법:** LEFT JOIN + GROUP BY, `PagedResult`, Validator 동기 테스트.
+- **검증 방법:** 주문이 있는 고객과 없는 고객이 모두 포함되는지, 집계 값과 페이지네이션이 올바른지 검증합니다.
 
 ### #8 주문 취소 + 재고 복원
 
@@ -1300,7 +1300,7 @@ classDiagram
 - **유효성 검사:** 도메인 상태 머신이 `Order.Cancel()`에서 현재 상태를 검증합니다.
 - **성공:** Pending 또는 Confirmed 상태의 주문이 Cancelled로 전환됩니다. `CancelledEvent`가 OrderLines를 포함하여 발생합니다.
 - **실패:** Shipped/Delivered 상태 취소 시 `InvalidOrderStatusTransition`(→ #16), 주문 미존재 시 Repository `Fail`.
-- **검증 방법:** `Cancel()` 도메인 에러, Repository `Fail`.
+- **검증 방법:** 상태 전이 성공 시 이벤트 발생과, 상태 전이 거부 시 `Update` 미실행을 각각 검증합니다.
 
 **시나리오 9: `RestoreInventoryOnOrderCancelledHandler`** — Inventory
 
@@ -1308,7 +1308,7 @@ classDiagram
 
 - **성공:** 각 OrderLine의 ProductId로 Inventory를 조회하고 `AddStock(quantity)`로 재고를 복원합니다. 개별 주문 라인 단위로 독립 처리합니다.
 - **실패:** 개별 재고 미존재 시 해당 라인만 실패하고 나머지는 계속 처리합니다(부분 실패 허용).
-- **검증 방법:** `foreach` 개별 FinT 실행, 부분 실패 허용 검증.
+- **검증 방법:** 복수 라인 중 일부가 실패해도 나머지 라인의 재고가 복원되는지 검증합니다.
 
 ### #9 저재고 감지
 
@@ -1318,9 +1318,8 @@ classDiagram
 
 `StockDeductedEvent`에 의해 트리거되는 도메인 이벤트 핸들러입니다.
 
-- **성공:** 현재 Inventory를 조회하고 `CheckLowStock(threshold: 10)`을 호출합니다. 재고가 임계값 미만이면 `LowStockDetectedEvent`를 발생시킵니다.
-- **실패:** 재고가 임계값 이상이면 이벤트가 발생하지 않습니다(정상 동작).
-- **검증 방법:** `CheckLowStock()` 도메인 위임, 이벤트 발생 여부 확인.
+- **성공:** 현재 Inventory를 조회하고 `CheckLowStock(threshold: 10)`을 호출합니다. 재고가 임계값 미만이면 `LowStockDetectedEvent`가 발생하고, 이상이면 이벤트 없이 종료됩니다.
+- **검증 방법:** 임계값 미만/이상 두 경우에서 `LowStockDetectedEvent` 발생 여부가 달라지는지 검증합니다.
 
 ### #10 다중 검증 실패
 
@@ -1328,11 +1327,11 @@ classDiagram
 
 **시나리오 12: Apply 패턴 에러 누적** — Product, Customer
 
-`CreateProductCommand`와 `CreateCustomerCommand`에서 여러 VO가 동시에 잘못되었을 때 모든 에러를 한번에 반환합니다.
+`CreateProductCommand`와 `CreateCustomerCommand`에서 Apply 패턴이 다중 VO 검증 실패를 병렬로 감지합니다.
 
 - **성공 경로 없음**(거부 시나리오).
-- **실패:** Apply 패턴이 빈 이름 + 0원 가격 등 다중 VO 검증 실패를 병렬로 감지하여 에러를 누적합니다. 첫 번째 에러에서 중단하지 않습니다.
-- **검증 방법:** `IsFail == true` 후 에러 개수 확인. Repository Mock 불필요 — Apply 패턴이 IO 이전에 실패합니다.
+- **실패:** 빈 이름 + 0원 가격 등 복수 필드가 동시에 잘못되면 모든 에러를 누적하여 반환합니다. Bind 기반이었다면 첫 번째 에러에서 중단되었을 것입니다.
+- **검증 방법:** 에러 개수가 잘못된 필드 수와 일치하는지 확인합니다. Repository Mock 불필요 — Apply 패턴이 IO 이전 단계에서 실패합니다.
 
 ### #11 중복 거부
 
@@ -1340,11 +1339,11 @@ classDiagram
 
 **시나리오 13: `guard` + `AlreadyExists`** — Product, Customer
 
-`CreateProductCommand`에서 이미 존재하는 상품명, `CreateCustomerCommand`에서 이미 존재하는 이메일로 생성을 시도하면 거부됩니다.
+`CreateProductCommand`(상품명)와 `CreateCustomerCommand`(이메일)에서 고유성 위반 시 생성이 거부됩니다.
 
 - **성공 경로 없음**(거부 시나리오).
 - **실패:** `Exists()` → `true` → `guard(!exists, ...)` 실패 → `ApplicationError.For<T>(new AlreadyExists(), ...)`. FinT 모나드 바인딩에 의해 `Create()`가 실행되지 않습니다.
-- **검증 방법:** `Exists` Mock → `true`, `Create` Mock 미설정 — guard 실패가 후속 IO를 차단함을 증명.
+- **검증 방법:** `Exists` Mock → `true` 설정 후 `Create` Mock 미설정 — guard 실패가 후속 IO를 차단함을 증명합니다.
 
 ### #12 존재하지 않는 엔티티
 
@@ -1356,7 +1355,7 @@ classDiagram
 
 - **성공 경로 없음**(거부 시나리오).
 - **실패:** `GetById()` 또는 `GetByIdIncludingDeleted()`가 `Fail`을 반환하면 FinT LINQ 합성의 첫 `from`에서 즉시 단락됩니다. 후속 연산이 실행되지 않습니다.
-- **검증 방법:** `GetById` Mock → `FinTFactory.Fail<T>(Error.New(...))`, 후속 Mock 미설정.
+- **검증 방법:** `GetById` Mock → `FinTFactory.Fail` 설정 후 후속 Mock 미설정 — 첫 `from` 단락이 나머지 체인을 차단함을 증명합니다.
 
 ### #13 신용한도 초과
 
@@ -1368,7 +1367,7 @@ classDiagram
 
 - **성공 경로 없음**(거부 시나리오).
 - **실패:** `OrderCreditCheckService`가 `CreditLimitExceeded` 도메인 에러를 반환합니다. FinT 체인에서 주문 `Create()`가 실행되지 않습니다.
-- **검증 방법:** 총액(2000) > 신용한도(1000) 설정 후 Domain Service 에러 전파 확인.
+- **검증 방법:** 총액 > 신용한도 조건에서 Domain Service 에러가 호출자까지 전파되는지 검증합니다.
 
 ### #14 재고 부족
 
@@ -1380,7 +1379,7 @@ classDiagram
 
 - **성공 경로 없음**(거부 시나리오).
 - **실패:** `Inventory.DeductStock()`이 `InsufficientStock` 도메인 에러를 반환합니다. FinT 체인에서 주문 생성과 재고 저장이 실행되지 않습니다.
-- **검증 방법:** 요청 수량(2) > 가용 재고(1) 설정 후 Domain 에러 전파 확인. 미실행 분기의 Mock 미설정.
+- **검증 방법:** 요청 수량 > 가용 재고 조건에서 Domain 에러가 전파되고, 미실행 분기의 Mock이 호출되지 않음을 검증합니다.
 
 ### #15 형식 검증 거부
 
@@ -1388,11 +1387,11 @@ classDiagram
 
 **시나리오 16: FluentValidation**
 
-`SearchProductsQueryValidator`, `GetCustomerOrdersQueryValidator`, `SearchCustomerOrderSummaryQueryValidator`가 형식이 잘못된 요청을 워크플로우 진입 전에 거부합니다.
+`SearchProductsQueryValidator`, `GetCustomerOrdersQueryValidator`, `SearchCustomerOrderSummaryQueryValidator`가 형식 오류를 감지합니다.
 
 - **성공 경로 없음**(거부 시나리오).
 - **실패:** 쌍 범위 불완전(MinPrice만 존재), 허용 목록 외 정렬 필드, 잘못된 정렬 방향, 빈 EntityId 형식 등을 `Validate()`가 감지합니다. `IsValid == false` 시 파이프라인이 Usecase를 호출하지 않습니다.
-- **검증 방법:** `_sut.Validate(request)` 동기 테스트 → `IsValid` / `Errors` 확인. Usecase Mock 불필요.
+- **검증 방법:** `_sut.Validate(request)` 동기 호출로 `IsValid`와 `Errors`를 확인합니다. Usecase Mock 불필요 — 파이프라인이 Validator 단계에서 차단됩니다.
 
 ### #16 배송 후 취소 거부
 
@@ -1402,7 +1401,7 @@ classDiagram
 
 - **성공 경로 없음**(거부 시나리오).
 - **실패:** `Order.Cancel()`이 `InvalidOrderStatusTransition` 도메인 에러를 반환합니다. FinT 모나드 바인딩에 의해 `Update()`가 실행되지 않습니다.
-- **검증 방법:** Shipped/Delivered Order → `Cancel()` 도메인 에러, `Update` Mock 미설정.
+- **검증 방법:** Shipped/Delivered 상태 Order에서 `Cancel()` 도메인 에러 발생과 `Update` 미실행을 검증합니다.
 
 지금까지 개별 시나리오를 통해 Application 레이어의 동작을 검증했습니다. 이제 CQRS, Apply 패턴, FinT 모나드, Port/Adapter가 함께 작동하여 어떤 가치를 제공하는지 종합적으로 정리합니다.
 
