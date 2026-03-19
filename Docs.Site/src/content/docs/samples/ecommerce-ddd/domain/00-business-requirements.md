@@ -93,6 +93,7 @@ stateDiagram-v2
 - Confirmed에서 Shipped 또는 Cancelled로 전이할 수 있다
 - Shipped에서 Delivered로만 전이할 수 있다
 - Delivered와 Cancelled는 최종 상태이다 — 더 이상 전이할 수 없다
+- 주문을 취소하면 주문에 포함된 주문 라인 정보(상품, 수량, 단가, 소계)가 취소 이벤트에 포함된다
 
 ### 4. 재고 관리
 
@@ -105,6 +106,7 @@ stateDiagram-v2
 - 차감 시 재고 수량을 초과할 수 없다 (초과 인출 금지)
 - 재고 수량을 추가할 수 있다
 - 여러 주문이 동시에 같은 상품의 재고를 차감할 수 있다 — 동시성 제어가 필요하다
+- 재고 수량이 임계값 이하인지 확인할 수 있다 — 저재고 감지 시 이벤트가 발생한다
 
 ### 5. 상품 분류 (태그)
 
@@ -143,6 +145,7 @@ flowchart LR
     Inventory -. "추적" .-> Product
 
     Customer -. "신용한도 검증" .-> Order
+    Order -. "CancelledEvent" .-> Inventory
 ```
 
 - 고객은 주문을 소유한다
@@ -150,6 +153,31 @@ flowchart LR
 - 상품은 태그로 분류된다
 - 재고는 상품별 수량을 추적한다
 - 주문 생성 시 고객의 신용한도를 검증한다
+- 주문 취소 시 도메인 이벤트를 통해 재고가 복원된다 — Order는 Inventory를 직접 참조하지 않는다
+
+### 도메인 이벤트 기반 Aggregate 간 조율
+
+Order와 Inventory는 별도 Aggregate입니다. 주문 취소 시 재고 복원은 도메인 이벤트를 통해 느슨하게 연결됩니다.
+
+```mermaid
+flowchart TB
+    subgraph Order_Aggregate["Order Aggregate"]
+        Cancel["Cancel()"]
+        CancelledEvent["CancelledEvent\n(OrderId, OrderLines)"]
+        Cancel --> CancelledEvent
+    end
+
+    subgraph Inventory_Aggregate["Inventory Aggregate"]
+        AddStock["AddStock(qty)"]
+        StockDeductedEvent["StockDeductedEvent"]
+        CheckLowStock["CheckLowStock(threshold)"]
+        LowStockDetectedEvent["LowStockDetectedEvent"]
+        CheckLowStock -.-> |"stock < threshold"| LowStockDetectedEvent
+    end
+
+    CancelledEvent -.-> |"이벤트 핸들러\n(주문 라인별 독립 처리)"| AddStock
+    StockDeductedEvent -.-> |"이벤트 핸들러"| CheckLowStock
+```
 
 ## 시나리오
 
@@ -163,6 +191,8 @@ flowchart LR
 4. **주문 상태 전이** — Pending → Confirmed → Shipped → Delivered 순서로 상태를 전이한다.
 5. **상품 논리 삭제와 복원** — 상품을 논리 삭제하면 삭제 시점과 삭제자가 기록된다. 이후 복원하면 삭제 정보가 초기화된다.
 6. **재고 차감과 추가** — 재고를 생성하고, 주문에 따라 수량을 차감한다. 이후 입고 시 수량을 추가한다.
+6-1. **주문 취소** — Pending 또는 Confirmed 상태의 주문을 취소한다. 취소 이벤트에는 주문 라인 정보가 포함된다.
+6-2. **저재고 감지** — 재고 차감 후 남은 수량이 임계값 이하이면 저재고 감지 이벤트가 발생한다.
 7. **태그 생성과 이름 변경** — 태그를 생성하고, 태그명을 변경한다.
 8. **신용한도 검증 통과** — 주문 총액이 고객의 신용한도 이내이면 주문이 정상 생성된다.
 
@@ -170,6 +200,7 @@ flowchart LR
 
 9. **주문라인 없는 주문** — 주문라인 없이 주문을 생성하면 거부된다.
 10. **유효하지 않은 상태 전이** — Pending에서 Shipped로 직접 전이를 시도하면 거부된다.
+10-1. **배송 후 취소 거부** — Shipped 또는 Delivered 상태의 주문을 취소하면 거부된다.
 11. **삭제된 상품 수정** — 논리 삭제된 상품의 이름이나 가격을 수정하면 거부된다.
 12. **재고 초과 차감** — 재고 수량보다 많은 양을 차감하면 거부된다.
 13. **신용한도 초과** — 주문 총액이 고객의 신용한도를 초과하면 거부된다.
