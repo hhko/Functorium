@@ -8,7 +8,7 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 - [x] sourcegen-observability
 - [x] specification-pattern
-- [ ] usecase-pipeline
+- [x] usecase-pipeline
 - [ ] release-notes-claude
 - [ ] 전체 튜토리얼 통일성
 ---
