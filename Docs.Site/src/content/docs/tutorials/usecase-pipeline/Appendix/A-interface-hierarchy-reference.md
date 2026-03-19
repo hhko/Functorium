@@ -197,5 +197,6 @@ Validation Pipeline         IFinResponseFactory<TResponse>                   Cre
 Caching Pipeline            IFinResponse, IFinResponseFactory<TResponse>     Read + Create
 Exception Pipeline          IFinResponseFactory<TResponse>                   CreateFail
 Transaction Pipeline        IFinResponse, IFinResponseFactory<TResponse>     Read + Create
+Custom Pipeline             (사용자 정의)                                          Varies
 ```
 

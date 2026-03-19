@@ -17,7 +17,8 @@ flowchart TB
   Validation --> Caching["Caching Pipeline<br/>캐싱 (Query만, where IQuery)"]
   Caching --> Exception["Exception Pipeline<br/>예외를 Error로 변환"]
   Exception --> Transaction["Transaction Pipeline<br/>트랜잭션 (Command만, where ICommand)"]
-  Transaction --> Handler["Handler<br/>비즈니스 로직"]
+  Transaction --> Custom["Custom Pipeline<br/>사용자 정의 (선택)"]
+  Custom --> Handler["Handler<br/>비즈니스 로직"]
   Handler --> Response
 ```
 
@@ -34,6 +35,7 @@ flowchart TB
 | Caching | **읽기** + 생성 | 성공 응답만 캐싱 |
 | Exception | **생성** | 예외 발생 시 실패 응답을 직접 생성 |
 | Transaction | **읽기** + 생성 | 성공 시 커밋, 실패 시 롤백 |
+| Custom | **(사용자 정의)** | 사용자 정의 Pipeline 슬롯 (선택적) |
 
 ## 두 가지 핵심 능력
 
@@ -82,6 +84,8 @@ where TResponse : IFinResponseFactory<TResponse>
 
 // Read + Create: Logging, Tracing, Metrics, Transaction, Caching
 where TResponse : IFinResponse, IFinResponseFactory<TResponse>
+
+// Custom: 사용자 정의 (Pipeline마다 제약이 다름)
 ```
 
 ## FAQ

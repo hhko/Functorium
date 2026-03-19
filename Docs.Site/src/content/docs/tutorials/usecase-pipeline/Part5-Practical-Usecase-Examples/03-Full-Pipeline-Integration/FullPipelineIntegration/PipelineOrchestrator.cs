@@ -4,7 +4,7 @@ using LanguageExt.Common;
 namespace FullPipelineIntegration;
 
 /// <summary>
-/// 7개 Pipeline의 전체 흐름을 시뮬레이션합니다.
+/// 8개 슬롯(7개 기본 + Custom)의 전체 흐름을 시뮬레이션합니다.
 /// 실제 Mediator Pipeline은 DI로 자동 등록되지만,
 /// 여기서는 학습 목적으로 수동 호출합니다.
 /// </summary>
@@ -16,7 +16,8 @@ public sealed class PipelineOrchestrator<TResponse>
     public TResponse Execute(
         bool isValid,
         bool isCommand,
-        Func<TResponse> handler)
+        Func<TResponse> handler,
+        Func<TResponse, TResponse>? customPipeline = null)
     {
         // 1. Metrics Pipeline (outer — 항상 실행)
         ExecutionLog.Add("Metrics: Request count++");
@@ -45,11 +46,22 @@ public sealed class PipelineOrchestrator<TResponse>
             if (isCommand)
                 ExecutionLog.Add("Transaction: BEGIN");
 
-            // 7. Handler
+            // 7. Custom Pipeline (optional, before handler)
+            if (customPipeline is not null)
+                ExecutionLog.Add("Custom: before handler");
+
+            // 8. Handler
             response = handler();
             ExecutionLog.Add($"Handler: executed (IsSucc={response.IsSucc})");
 
-            // 6. Transaction Pipeline (after)
+            // 7. Custom Pipeline (after handler)
+            if (customPipeline is not null)
+            {
+                response = customPipeline(response);
+                ExecutionLog.Add("Custom: after handler");
+            }
+
+            // 6. Transaction Pipeline (after handler)
             if (isCommand)
             {
                 if (response.IsSucc)

@@ -76,6 +76,8 @@ FinResponse<string> fail = FinResponse.Fail<string>(Error.New("error"));
 
 이 차이가 Part 3에서 설계할 인터페이스 계층의 근거가 됩니다.
 
+> 실제 Functorium에서는 Custom Pipeline 슬롯도 제공합니다. Custom Pipeline의 필요 능력(R1-R4)은 구현에 따라 다르며, IFinResponse 계층의 인터페이스를 조합하여 원하는 제약을 적용합니다.
+
 ---
 
 ## 3. 접근 방식 비교

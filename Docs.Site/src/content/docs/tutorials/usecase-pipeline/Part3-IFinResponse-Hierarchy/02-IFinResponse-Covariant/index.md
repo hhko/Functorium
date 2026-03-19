@@ -23,6 +23,8 @@ public interface IFinResponse<out A> : IFinResponse
 }
 ```
 
+`IFinResponse<out A>`의 본문이 비어 있는 것은 의도적입니다. 이 인터페이스의 역할은 값 멤버를 노출하는 것이 아니라, **제네릭 타입 파라미터 `A`의 공변성을 선언하는 것**입니다. Pipeline에서 필요한 `IsSucc`/`IsFail`은 부모 인터페이스 `IFinResponse`가 이미 제공하고, 값 접근 멤버(`Value`, `Match`, `Map` 등)는 구현체인 `FinResponse<A>`에서 제공됩니다. 인터페이스를 역할별로 분리하여 각 계층이 하나의 책임만 갖도록 설계한 결과입니다.
+
 ### 2. 공변 대입
 
 `string`은 `object`의 하위 타입이므로, 공변성에 의해 다음 대입이 가능합니다:

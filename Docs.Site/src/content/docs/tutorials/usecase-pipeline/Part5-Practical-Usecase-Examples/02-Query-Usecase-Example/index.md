@@ -120,7 +120,7 @@ public sealed class Handler : IQueryUsecase<Request, Response>
 ### Q4: Query Handler가 `Dictionary`를 사용하는 것은 실전에서도 동일한가요?
 **A**: 아닙니다. 예제에서는 학습 목적으로 `Dictionary`를 인메모리 저장소로 사용했습니다. 실전에서는 Repository 인터페이스를 DI로 주입받아 데이터베이스에서 조회하며, Repository가 반환하는 `Fin<T>`를 `ToFinResponse()`로 변환하여 `FinResponse<T>`를 반환합니다.
 
-Command와 Query Usecase를 각각 구현했으니, 다음 장에서는 7개 기본 Pipeline을 모두 연결하여 전체 흐름을 통합합니다.
+Command와 Query Usecase를 각각 구현했으니, 다음 장에서는 기본 Pipeline과 Custom Pipeline 슬롯을 포함한 전체 흐름을 통합합니다.
 
 ## 프로젝트 구조
 

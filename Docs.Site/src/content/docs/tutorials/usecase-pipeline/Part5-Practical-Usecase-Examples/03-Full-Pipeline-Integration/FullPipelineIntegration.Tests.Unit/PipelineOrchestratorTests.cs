@@ -98,6 +98,41 @@ public class PipelineOrchestratorTests
     }
 
     [Fact]
+    public void Execute_LogsCustomPipeline_WhenCustomPipelineProvided()
+    {
+        // Arrange
+        var sut = new PipelineOrchestrator<FinResponse<string>>();
+
+        // Act
+        sut.Execute(
+            isValid: true,
+            isCommand: false,
+            handler: () => FinResponse.Succ("OK"),
+            customPipeline: response => response);
+
+        // Assert
+        sut.ExecutionLog.ShouldContain("Custom: before handler");
+        sut.ExecutionLog.ShouldContain("Custom: after handler");
+    }
+
+    [Fact]
+    public void Execute_SkipsCustomPipeline_WhenNull()
+    {
+        // Arrange
+        var sut = new PipelineOrchestrator<FinResponse<string>>();
+
+        // Act
+        sut.Execute(
+            isValid: true,
+            isCommand: false,
+            handler: () => FinResponse.Succ("OK"));
+
+        // Assert
+        sut.ExecutionLog.ShouldNotContain("Custom: before handler");
+        sut.ExecutionLog.ShouldNotContain("Custom: after handler");
+    }
+
+    [Fact]
     public void Execute_LogsAllStages_WhenCommandSucceeds()
     {
         // Arrange

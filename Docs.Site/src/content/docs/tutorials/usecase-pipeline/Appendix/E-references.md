@@ -100,9 +100,22 @@ C#을 위한 함수형 프로그래밍 라이브러리. `Fin<T>`, `Option<T>`, `
 
 ### Pipeline 구현
 
+모든 파일은 `Src/Functorium.Adapters/Observabilities/Pipelines/` 디렉토리에 위치합니다.
+
 | 파일 | 설명 |
 |------|------|
-| `Src/Functorium.Adapters/Observabilities/Pipelines/` | 7개 기본 Pipeline + Custom Pipeline Base 구현 디렉토리 |
+| `UsecasePipelineBase.cs` | 공통 헬퍼 베이스 클래스 (CQRS 타입 식별, 핸들러명 추출) |
+| `UsecaseMetricsPipeline.cs` | Metrics Pipeline (Read + Create) |
+| `UsecaseTracingPipeline.cs` | Tracing Pipeline (Read + Create) |
+| `UsecaseLoggingPipeline.cs` | Logging Pipeline (Read + Create) |
+| `UsecaseValidationPipeline.cs` | Validation Pipeline (CreateFail) |
+| `UsecaseCachingPipeline.cs` | Caching Pipeline (Read + Create, Query 전용) |
+| `UsecaseExceptionPipeline.cs` | Exception Pipeline (CreateFail) |
+| `UsecaseTransactionPipeline.cs` | Transaction Pipeline (Read + Create, Command 전용) |
+| `ICustomUsecasePipeline.cs` | Custom Pipeline 마커 인터페이스 (Scrutor 자동 검색용) |
+| `UsecaseMetricCustomPipelineBase.cs` | Custom Metric Pipeline 베이스 클래스 |
+| `UsecaseTracingCustomPipelineBase.cs` | Custom Tracing Pipeline 베이스 클래스 |
+| `IUsecaseLogEnricher.cs` | 로그 커스텀 속성 Enricher 인터페이스 |
 
 ---
 

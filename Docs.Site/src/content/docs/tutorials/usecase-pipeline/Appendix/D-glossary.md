@@ -72,7 +72,7 @@ Discriminated Union의 각 케이스에 대해 서로 다른 함수를 실행하
 
 ### Pipeline (파이프라인)
 
-요청이 Handler에 도달하기 전/후에 실행되는 미들웨어 체인. Metrics, Tracing, Logging, Validation, Caching, Exception, Transaction의 7가지 기본 Pipeline이 있으며, Custom Pipeline 슬롯을 통해 사용자 정의 Pipeline을 추가할 수 있습니다.
+요청이 Handler에 도달하기 전/후에 실행되는 미들웨어 체인. Metrics, Tracing, Logging, Validation, Caching, Exception, Transaction의 7가지 기본 Pipeline과 Custom Pipeline 슬롯(총 8개 슬롯)이 있으며, Custom Pipeline 슬롯을 통해 사용자 정의 Pipeline을 추가할 수 있습니다.
 
 ### Mediator (미디에이터)
 
