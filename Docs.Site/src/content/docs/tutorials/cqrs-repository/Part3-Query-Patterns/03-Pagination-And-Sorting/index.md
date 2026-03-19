@@ -119,3 +119,5 @@ PagedResult과 CursorPagedResult를 생성하는 헬퍼 메서드와 SortExpress
 ---
 
 페이지네이션과 정렬을 정의했습니다. 이제 이 인터페이스를 실제로 구현해야 합니다. Dapper 연동 전에 먼저 테스트할 수 있을까요? 다음 장에서는 InMemory Query Adapter로 DB 없이 빠르게 검증하는 방법을 살펴봅니다.
+
+→ [4장: InMemory Query 어댑터](../04-InMemory-Query-Adapter/)

@@ -175,6 +175,6 @@ public class CreateOrderUsecase(
 
 ---
 
-## 다음 단계
+Repository와 Usecase 계층에서 사용하는 FinT, FinResponse 함수형 타입의 전체 API를 확인합니다.
 
-FinT와 FinResponse 타입 참조를 확인합니다.
+→ [부록 C: FinT / FinResponse 타입 참조](../C-fint-finresponse-reference/)

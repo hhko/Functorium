@@ -122,3 +122,5 @@ Query Usecase를 구성하는 핵심 개념을 정리합니다.
 ---
 
 Query Usecase를 만들었습니다. 그런데 여러 Repository 호출을 순차 연결하면서 중간에 조건 검증도 끼워야 한다면? 다음 장에서는 FinT 모나딕 합성의 다양한 패턴을 살펴봅니다.
+
+→ [3장: FinT -> FinResponse](../03-FinT-To-FinResponse/)

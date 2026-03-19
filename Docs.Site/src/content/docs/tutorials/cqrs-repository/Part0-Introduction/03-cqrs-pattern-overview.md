@@ -321,6 +321,6 @@ Part 5: 도메인별 실전 예제
 
 ---
 
-## 다음 단계
+이 장에서 CQRS 패턴의 전체 구조를 살펴보았습니다. 그러나 이 아키텍처의 기반이 되는 도메인 모델은 아직 다루지 않았습니다. 같은 이름의 상품 두 개는 같은 상품일까요? Part 1에서는 Entity의 정체성(Identity)부터 시작하여 CQRS의 기반이 되는 도메인 엔티티를 구현합니다.
 
-이 장에서 CQRS 패턴의 전체 구조를 살펴보았습니다. IRepository로 쓰기를, IQueryPort로 읽기를 분리하고, Mediator가 둘을 연결하는 아키텍처를 이해했습니다. 그러나 이 아키텍처의 기반이 되는 도메인 모델은 아직 다루지 않았습니다. 같은 이름의 상품 두 개는 같은 상품일까요? Part 1의 첫 번째 장에서는 Entity의 정체성(Identity)부터 시작하여 CQRS의 기반이 되는 도메인 엔티티를 구현합니다.
+→ [1장: Entity와 Identity](../Part1-Domain-Entity-Foundations/01-Entity-And-Identity/)

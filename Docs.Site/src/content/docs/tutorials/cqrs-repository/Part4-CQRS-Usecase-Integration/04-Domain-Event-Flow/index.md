@@ -110,3 +110,5 @@ public interface IDomainEventCollector
 ---
 
 도메인 이벤트 수집과 발행 흐름을 만들었습니다. 그런데 모든 Usecase에서 SaveChanges와 이벤트 발행을 반복해야 한다면? 다음 장에서는 트랜잭션 파이프라인으로 이 횡단 관심사를 자동화하는 방법을 살펴봅니다.
+
+→ [5장: 트랜잭션 파이프라인](../05-Transaction-Pipeline/)

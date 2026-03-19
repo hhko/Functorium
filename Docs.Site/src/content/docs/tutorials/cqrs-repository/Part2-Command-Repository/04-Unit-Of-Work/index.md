@@ -187,4 +187,6 @@ Repository와 Unit of Work는 어떻게 다를까요? 다음 테이블에서 관
 
 ---
 
-Command 측 영속화를 완성했습니다. Repository로 개별 Aggregate를 저장하고, Unit of Work로 트랜잭션 원자성을 보장합니다. 그런데 Repository의 `GetById`로 주문 목록을 조회하면 어떤 한계가 있을까요? 전체 Aggregate를 로드한 뒤 필요한 필드만 추출해야 하므로 비효율적입니다. Part 3에서는 읽기에 최적화된 Query 패턴을 살펴봅니다.
+Command 측 영속화를 완성했습니다. Repository로 개별 Aggregate를 저장하고, Unit of Work로 트랜잭션 원자성을 보장합니다. 그런데 Repository의 GetById로 주문 목록을 조회하면 어떤 한계가 있을까요? 전체 Aggregate를 로드한 뒤 필요한 필드만 추출해야 하므로 비효율적입니다. Part 3에서는 읽기에 최적화된 Query 패턴을 살펴봅니다.
+
+→ [1장: IQueryPort 인터페이스](../../Part3-Query-Patterns/01-QueryPort-Interface/)

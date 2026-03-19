@@ -138,3 +138,5 @@ WHERE ...
 ---
 
 InMemory 구현으로 DB 없이 빠른 테스트가 가능해졌습니다. 프로덕션에서 SQL을 직접 제어하려면 어떻게 해야 할까요? 다음 장에서는 Dapper Query Adapter를 통해 SQL 기반 조회를 구현하는 방법을 살펴봅니다.
+
+→ [5장: Dapper Query 어댑터](../05-Dapper-Query-Adapter/)

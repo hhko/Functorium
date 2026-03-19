@@ -110,22 +110,20 @@ Repository와 Query 어댑터가 준비되었으니, 이제 이들을 Usecase로
 
 ## 핵심 진화 과정
 
-```
 [Part 1] 도메인 엔티티 기초
-  1장: Entity와 Identity    →  2장: Aggregate Root      →  3장: 도메인 이벤트      →  4장: 엔티티 인터페이스
-       |
-[Part 2] Command 측 — Repository 패턴
-  1장: Repository 인터페이스 →  2장: InMemory Repository →  3장: EF Core Repository →  4장: Unit of Work
-       |
-[Part 3] Query 측 — 읽기 전용 패턴
-  1장: IQueryPort 인터페이스 →  2장: DTO 분리            →  3장: 페이지네이션       →  4장: InMemory Query   →  5장: Dapper Query
-       |
+1장: Entity와 Identity  →  2장: Aggregate Root  →  3장: 도메인 이벤트  →  4장: 엔티티 인터페이스
+
+[Part 2] Command 측 -- Repository 패턴
+1장: Repository 인터페이스  →  2장: InMemory Repository  →  3장: EF Core Repository  →  4장: Unit of Work
+
+[Part 3] Query 측 -- 읽기 전용 패턴
+1장: IQueryPort 인터페이스  →  2장: DTO 분리  →  3장: 페이지네이션과 정렬  →  4장: InMemory Query 어댑터  →  5장: Dapper Query 어댑터
+
 [Part 4] CQRS Usecase 통합
-  1장: Command Usecase      →  2장: Query Usecase       →  3장: FinT→FinResponse   →  4장: 도메인 이벤트    →  5장: 트랜잭션
-       |
+1장: Command Usecase  →  2장: Query Usecase  →  3장: FinT -> FinResponse  →  4장: 도메인 이벤트 흐름  →  5장: 트랜잭션 파이프라인
+
 [Part 5] 도메인별 실전 예제
-  1장: 주문 관리            →  2장: 고객 관리            →  3장: 재고 관리           →  4장: 카탈로그 검색
-```
+1장: 주문 관리  →  2장: 고객 관리  →  3장: 재고 관리  →  4장: 카탈로그 검색
 
 ---
 

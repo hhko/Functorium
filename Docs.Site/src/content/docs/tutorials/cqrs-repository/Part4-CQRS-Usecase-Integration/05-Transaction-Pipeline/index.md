@@ -147,3 +147,5 @@ Transaction Pipeline의 핵심 구성 요소를 정리합니다.
 ---
 
 CQRS 아키텍처의 모든 계층을 완성했습니다. 이제 실제 도메인에서 이 패턴들을 통합하는 모습을 확인해봅시다. Part 5에서는 주문, 고객, 재고, 카탈로그 네 가지 도메인 예제를 통해 전체 CQRS 흐름을 실전에 적용합니다.
+
+→ [1장: 주문 관리](../../Part5-Domain-Examples/01-Ecommerce-Order-Management/)

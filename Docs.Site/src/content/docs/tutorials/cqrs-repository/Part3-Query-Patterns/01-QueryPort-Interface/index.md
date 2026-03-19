@@ -117,4 +117,6 @@ Product 도메인 전용 Query Port입니다. IQueryPort<Product, ProductDto>를
 
 ---
 
-읽기 전용 인터페이스를 정의했습니다. 그런데 Command에서 쓰는 `Order`와 Query에서 반환하는 `OrderDto`가 같은 클래스여야 할까요? 다음 장에서는 Command DTO와 Query DTO를 분리하는 설계 기준을 살펴봅니다.
+읽기 전용 인터페이스를 정의했습니다. 그런데 Command에서 쓰는 Order와 Query에서 반환하는 OrderDto가 같은 클래스여야 할까요? 다음 장에서는 Command DTO와 Query DTO를 분리하는 설계 기준을 살펴봅니다.
+
+→ [2장: DTO 분리](../02-DTO-Separation/)

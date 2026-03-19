@@ -158,4 +158,6 @@ public interface IProductRepository : IRepository<Product, ProductId>
 
 ---
 
-공통 Repository 인터페이스를 정의했습니다. 그런데 DB 없이 이 인터페이스를 테스트하려면 어떻게 해야 할까요? 다음 장에서는 `ConcurrentDictionary` 기반 InMemory Repository를 구현하여, 실제 DB 연결 없이 빠르게 동작을 검증하는 방법을 살펴봅니다.
+공통 Repository 인터페이스를 정의했습니다. 그런데 DB 없이 이 인터페이스를 테스트하려면 어떻게 해야 할까요? 다음 장에서는 ConcurrentDictionary 기반 InMemory Repository를 구현하여, 실제 DB 연결 없이 빠르게 동작을 검증하는 방법을 살펴봅니다.
+
+→ [2장: InMemory Repository](../02-InMemory-Repository/)

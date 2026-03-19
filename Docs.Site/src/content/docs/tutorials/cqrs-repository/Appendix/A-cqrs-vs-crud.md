@@ -208,6 +208,6 @@ Mediator 패턴으로 Command와 Query를 완전히 분리합니다.
 
 ---
 
-## 다음 단계
+상황에 따라 IRepository와 IQueryPort 중 어떤 경로를 선택해야 하는지, 구체적인 의사결정 기준을 살펴봅니다.
 
-Repository와 Query 어댑터의 선택 가이드를 확인합니다.
+→ [부록 B: Repository vs Query 어댑터 선택 가이드](../B-repository-vs-query-adapter-guide/)

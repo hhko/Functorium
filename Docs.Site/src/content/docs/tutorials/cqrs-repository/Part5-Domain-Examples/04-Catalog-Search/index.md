@@ -114,4 +114,6 @@ await foreach (var item in query.Stream(spec, sort, ct))
 
 ---
 
-네 가지 도메인 예제를 통해 CQRS 패턴의 실전 적용을 완성했습니다. 주문 관리에서 Aggregate Root와 상태 전이를, 고객 관리에서 Specification 패턴을, 재고 관리에서 소프트 삭제를, 카탈로그 검색에서 페이지네이션 전략을 다뤘습니다. 부록에서는 CQRS vs CRUD 비교, 안티패턴 등 추가 참고 자료를 제공합니다.
+네 가지 도메인 예제를 통해 CQRS 패턴의 실전 적용을 완성했습니다. 부록에서는 CQRS vs CRUD 비교, Repository vs Query 어댑터 선택 가이드, 안티패턴 등 추가 참고 자료를 제공합니다.
+
+→ [부록 A: CQRS vs 전통적 CRUD](../../Appendix/A-cqrs-vs-crud/)

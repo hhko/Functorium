@@ -267,6 +267,6 @@ from _ in guard(order.CanCancel(),
 
 ---
 
-## 다음 단계
+CQRS 적용 시 흔히 발생하는 설계 실수와 올바른 대안을 확인합니다.
 
-CQRS 안티패턴을 확인합니다.
+→ [부록 D: CQRS 안티패턴](../D-anti-patterns/)

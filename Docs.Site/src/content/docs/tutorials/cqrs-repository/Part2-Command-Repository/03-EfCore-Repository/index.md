@@ -212,3 +212,5 @@ public static ProductModel ToModel(Product aggregate)
 ---
 
 EF Core Repository를 통해 도메인과 영속성을 분리했습니다. 그런데 주문 생성과 재고 차감이 하나의 트랜잭션으로 묶여야 한다면 어떻게 해야 할까요? 다음 장에서는 여러 Repository의 변경을 원자적으로 커밋하는 Unit of Work 패턴을 살펴봅니다.
+
+→ [4장: Unit of Work](../04-Unit-Of-Work/)

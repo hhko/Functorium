@@ -118,3 +118,5 @@ FinT<IO, Response> usecase =
 ---
 
 Command Usecase 구조를 만들었습니다. 그런데 목록 조회에는 Repository가 아닌 IQueryPort가 필요한데, Usecase 구조는 어떻게 달라질까요? 다음 장에서는 Query Usecase의 설계를 살펴봅니다.
+
+→ [2장: Query Usecase](../02-Query-Usecase/)

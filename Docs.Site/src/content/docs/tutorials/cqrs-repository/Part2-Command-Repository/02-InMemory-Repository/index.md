@@ -154,4 +154,6 @@ result.IsSucc.ShouldBeTrue();
 
 ---
 
-InMemory 구현으로 DB 없이도 빠르게 Repository를 테스트할 수 있게 되었습니다. 그런데 프로덕션에서는 EF Core를 사용해야 합니다. 도메인 모델을 그대로 `DbSet`에 매핑하면 어떤 문제가 생길까요? 다음 장에서는 Domain Model과 Persistence Model을 분리하는 EF Core Repository를 구현합니다.
+InMemory 구현으로 DB 없이도 빠르게 Repository를 테스트할 수 있게 되었습니다. 그런데 프로덕션에서는 EF Core를 사용해야 합니다. 도메인 모델을 그대로 DbSet에 매핑하면 어떤 문제가 생길까요? 다음 장에서는 Domain Model과 Persistence Model을 분리하는 EF Core Repository를 구현합니다.
+
+→ [3장: EF Core Repository](../03-EfCore-Repository/)
