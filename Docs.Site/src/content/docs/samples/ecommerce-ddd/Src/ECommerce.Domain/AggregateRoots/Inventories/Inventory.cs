@@ -38,6 +38,15 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
     /// </summary>
     public sealed record StockAddedEvent(InventoryId InventoryId, ProductId ProductId, Quantity Quantity) : DomainEvent;
 
+    /// <summary>
+    /// 저재고 감지 이벤트
+    /// </summary>
+    public sealed record LowStockDetectedEvent(
+        InventoryId InventoryId,
+        ProductId ProductId,
+        Quantity CurrentStock,
+        Quantity Threshold) : DomainEvent;
+
     #endregion
 
     // 참조 ID (Product Aggregate와의 연결)
@@ -112,6 +121,15 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
         UpdatedAt = DateTime.UtcNow;
         AddDomainEvent(new StockDeductedEvent(Id, ProductId, quantity));
         return unit;
+    }
+
+    /// <summary>
+    /// 저재고 여부를 확인하고, 임계값 이하이면 LowStockDetectedEvent를 발생시킵니다.
+    /// </summary>
+    public void CheckLowStock(Quantity threshold)
+    {
+        if ((int)StockQuantity < (int)threshold)
+            AddDomainEvent(new LowStockDetectedEvent(Id, ProductId, StockQuantity, threshold));
     }
 
     /// <summary>

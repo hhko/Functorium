@@ -262,6 +262,24 @@ public class OrderTests
     }
 
     [Fact]
+    public void Cancel_RaisesCancelledEventWithOrderLines()
+    {
+        // Arrange
+        var sut = CreateSampleOrder();
+        sut.ClearDomainEvents();
+
+        // Act
+        sut.Cancel();
+
+        // Assert
+        var cancelledEvent = sut.DomainEvents.OfType<Order.CancelledEvent>().ShouldHaveSingleItem();
+        cancelledEvent.OrderId.ShouldBe(sut.Id);
+        cancelledEvent.OrderLines.Count.ShouldBe(1);
+        cancelledEvent.OrderLines[0].Quantity.ShouldBe(sut.OrderLines[0].Quantity);
+        cancelledEvent.OrderLines[0].ProductId.ShouldBe(sut.OrderLines[0].ProductId);
+    }
+
+    [Fact]
     public void Cancel_ShouldFail_WhenDelivered()
     {
         // Arrange

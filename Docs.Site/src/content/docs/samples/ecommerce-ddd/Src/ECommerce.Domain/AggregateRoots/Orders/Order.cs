@@ -60,7 +60,9 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditable
     /// <summary>
     /// 주문 취소 이벤트
     /// </summary>
-    public sealed record CancelledEvent(OrderId OrderId) : DomainEvent;
+    public sealed record CancelledEvent(
+        OrderId OrderId,
+        Seq<OrderLineInfo> OrderLines) : DomainEvent;
 
     #endregion
 
@@ -161,7 +163,12 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditable
     /// <summary>
     /// 주문을 취소합니다. (Pending/Confirmed → Cancelled)
     /// </summary>
-    public Fin<Unit> Cancel() => TransitionTo(OrderStatus.Cancelled, new CancelledEvent(Id));
+    public Fin<Unit> Cancel()
+    {
+        var lineInfos = Seq(_orderLines.Select(l =>
+            new OrderLineInfo(l.ProductId, l.Quantity, l.UnitPrice, l.LineTotal)));
+        return TransitionTo(OrderStatus.Cancelled, new CancelledEvent(Id, lineInfos));
+    }
 
     private Fin<Unit> TransitionTo(OrderStatus target, DomainEvent domainEvent)
     {
