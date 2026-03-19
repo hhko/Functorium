@@ -1,10 +1,10 @@
 ﻿{
   Information: ,
   Properties: {
-    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {response.result},
+    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {response.result},
     request.category: repository,
     request.handler: TestObservabilityAdapter,
-    request.handler.method: GetById,
+    request.handler_method: GetById,
     request.layer: adapter,
     response.elapsed: {Scrubbed},
     response.result: Guid_1,

@@ -10,11 +10,11 @@
         Message: No error
       }
     },
-    OriginalFormat: {request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message},
+    OriginalFormat: {request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message},
     request.category: usecase,
-    request.category.type: command,
+    request.category_type: command,
     request.handler: TestFixtures,
-    request.handler.method: Handle,
+    request.handler_method: Handle,
     request.layer: application,
     response.elapsed: {Scrubbed},
     response.status: success

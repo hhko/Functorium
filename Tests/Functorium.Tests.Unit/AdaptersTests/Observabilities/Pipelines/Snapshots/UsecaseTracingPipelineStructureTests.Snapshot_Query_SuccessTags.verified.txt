@@ -1,8 +1,8 @@
 ﻿{
   request.category: usecase,
-  request.category.type: query,
+  request.category_type: query,
   request.handler: UsecaseTracingPipelineStructureTests,
-  request.handler.method: Handle,
+  request.handler_method: Handle,
   request.layer: application,
   response.elapsed: {Scrubbed},
   response.status: success

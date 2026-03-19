@@ -33,7 +33,7 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Events;
 /// | request.layer            | "adapter"         | "adapter"         | "adapter"         |
 /// | request.category         | "event"           | "event"           | "event"           |
 /// | request.handler          | event type name   | event type name   | event type name   |
-/// | request.handler.method   | "Publish"         | "Publish"         | "Publish"         |
+/// | request.handler_method   | "Publish"         | "Publish"         | "Publish"         |
 /// | @request.message         | event object      | (none)            | (none)            |
 /// | response.status          | (none)            | "success"         | "failure"         |
 /// | response.elapsed         | (none)            | elapsed (s)       | elapsed (s)       |

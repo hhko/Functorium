@@ -1,10 +1,10 @@
 ﻿{
   Information: ,
   Properties: {
-    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.params.id},
+    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler_method} requesting with {request.params.id},
     request.category: repository,
     request.handler: TestObservabilityAdapter,
-    request.handler.method: GetById,
+    request.handler_method: GetById,
     request.layer: adapter,
     request.params.id: Guid_1
   }

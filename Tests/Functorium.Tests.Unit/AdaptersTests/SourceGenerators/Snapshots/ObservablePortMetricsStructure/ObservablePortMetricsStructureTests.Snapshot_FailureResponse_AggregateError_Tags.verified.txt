@@ -3,7 +3,7 @@
   error.type: aggregate,
   request.category: repository,
   request.handler: TestObservabilityAdapter,
-  request.handler.method: GetById,
+  request.handler_method: GetById,
   request.layer: adapter,
   response.status: failure
 }

@@ -39,7 +39,7 @@ public static class UsecaseLoggerExtensions
 
         logger.LogInformation(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationRequest,
-            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} requesting with {@request.message}",
+            message: "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} requesting with {@request.message}",
             requestLayer,
             requestCategory,
             requestCategoryType,
@@ -72,7 +72,7 @@ public static class UsecaseLoggerExtensions
 
         logger.LogInformation(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseSuccess,
-            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message}",
+            message: "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message}",
             requestLayer,
             requestCategory,
             requestCategoryType,
@@ -111,7 +111,7 @@ public static class UsecaseLoggerExtensions
         // Error 객체를 포함하여 로깅 (LoggerMessage.Define 파라미터 제한으로 직접 호출)
         logger.LogWarning(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseWarning,
-            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            message: "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestCategoryType,
@@ -152,7 +152,7 @@ public static class UsecaseLoggerExtensions
         // Error 객체를 포함하여 로깅 (LoggerMessage.Define 파라미터 제한으로 직접 호출)
         logger.LogError(
             eventId: ObservabilityNaming.EventIds.Application.ApplicationResponseError,
-            message: "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            message: "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestCategoryType,

@@ -500,19 +500,19 @@ internal static class UserRepositoryObservableLoggers
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler_method} requesting");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, int, global::System.Exception?> _logAdapterRequestDebug_UserRepository_GetUserById =
         LoggerMessage.Define<string, string, string, string, int>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.params.id}");
+            "{request.layer} {request.category} {request.handler}.{request.handler_method} requesting with {request.params.id}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_UserRepository_GetUserById =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
+            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
     public static void LogAdapterRequestDebug_UserRepository_GetUserById(
@@ -557,7 +557,7 @@ internal static class UserRepositoryObservableLoggers
 
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
+            message: "{request.layer} {request.category} {request.handler}.{request.handler_method} " +
                      "responded {response.status} in {response.elapsed:0.0000} s with {response.result}",
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, result);
     }
@@ -594,7 +594,7 @@ internal static class UserRepositoryObservableLoggers
 
         logger.LogWarning(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
@@ -623,7 +623,7 @@ internal static class UserRepositoryObservableLoggers
 
         logger.LogError(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
@@ -640,19 +640,19 @@ internal static class UserRepositoryObservableLoggers
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler_method} requesting");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, int, string, global::System.Exception?> _logAdapterRequestDebug_UserRepository_UpdateUser =
         LoggerMessage.Define<string, string, string, string, int, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.params.id} {request.params.name}");
+            "{request.layer} {request.category} {request.handler}.{request.handler_method} requesting with {request.params.id} {request.params.name}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_UserRepository_UpdateUser =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
+            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
     public static void LogAdapterRequestDebug_UserRepository_UpdateUser(
@@ -698,7 +698,7 @@ internal static class UserRepositoryObservableLoggers
 
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
+            message: "{request.layer} {request.category} {request.handler}.{request.handler_method} " +
                      "responded {response.status} in {response.elapsed:0.0000} s with {response.result}",
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, result);
     }
@@ -735,7 +735,7 @@ internal static class UserRepositoryObservableLoggers
 
         logger.LogWarning(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
@@ -764,7 +764,7 @@ internal static class UserRepositoryObservableLoggers
 
         logger.LogError(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,

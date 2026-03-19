@@ -34,9 +34,9 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Events;
 /// +--------------------------+-------------------+-------------------+
 /// | request.layer            | "application"     | "application"     |
 /// | request.category         | "usecase"         | "usecase"         |
-/// | request.category.type    | "event"           | "event"           |
+/// | request.category_type    | "event"           | "event"           |
 /// | request.handler          | handler name      | handler name      |
-/// | request.handler.method   | "Handle"          | "Handle"          |
+/// | request.handler_method   | "Handle"          | "Handle"          |
 /// | request.event.type       | event type name   | event type name   |
 /// | request.event.id         | event id          | event id          |
 /// | response.status          | "success"         | "failure"         |

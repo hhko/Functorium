@@ -464,7 +464,7 @@ namespace Functorium.Applications.Observabilities
             public const string RequestCategory = "request.category";
             public const string RequestHandler = "request.handler";
             public const string RequestHandlerCqrs = "request.handler.cqrs";
-            public const string RequestHandlerMethod = "request.handler.method";
+            public const string RequestHandlerMethod = "request.handler_method";
             public const string RequestLayer = "request.layer";
             public const string ResponseElapsed = "response.elapsed";
             public const string ResponseStatus = "response.status";

@@ -1,11 +1,11 @@
 ﻿{
   Information: ,
   Properties: {
-    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {request.event.count} events,
+    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler_method} requesting with {request.event.count} events,
     request.category: event,
     request.event.count: 2,
     request.handler: TestAggregateRootWithoutEvents,
-    request.handler.method: PublishEvents,
+    request.handler_method: PublishEvents,
     request.layer: adapter
   }
 }

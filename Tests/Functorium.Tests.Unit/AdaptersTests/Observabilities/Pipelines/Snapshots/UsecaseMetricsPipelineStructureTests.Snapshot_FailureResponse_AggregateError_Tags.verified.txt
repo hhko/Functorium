@@ -2,9 +2,9 @@
   error.code: Test.Error1,
   error.type: aggregate,
   request.category: usecase,
-  request.category.type: command,
+  request.category_type: command,
   request.handler: UsecaseMetricsPipelineStructureTests,
-  request.handler.method: Handle,
+  request.handler_method: Handle,
   request.layer: application,
   response.status: failure
 }

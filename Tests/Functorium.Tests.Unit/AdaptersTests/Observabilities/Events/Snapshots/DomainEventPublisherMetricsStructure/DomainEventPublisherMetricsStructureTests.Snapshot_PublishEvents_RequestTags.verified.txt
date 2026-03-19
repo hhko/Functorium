@@ -1,6 +1,6 @@
 ﻿{
   request.category: event,
   request.handler: TestAggregateRootWithoutEvents,
-  request.handler.method: PublishEvents,
+  request.handler_method: PublishEvents,
   request.layer: adapter
 }

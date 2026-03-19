@@ -1,11 +1,11 @@
 ﻿{
   Information: ,
   Properties: {
-    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {request.event.count} events,
+    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {request.event.count} events,
     request.category: event,
     request.event.count: 3,
     request.handler: TestAggregateRootWithoutEvents,
-    request.handler.method: PublishEvents,
+    request.handler_method: PublishEvents,
     request.layer: adapter,
     response.elapsed: {Scrubbed},
     response.status: success

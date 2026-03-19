@@ -6,10 +6,10 @@
       OccurredAt: DateTimeOffset_1,
       EventId: 01H00000000000000000000001
     },
-    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} requesting with {@request.message},
+    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler_method} requesting with {@request.message},
     request.category: event,
     request.handler: TestDomainEvent,
-    request.handler.method: Publish,
+    request.handler_method: Publish,
     request.layer: adapter
   }
 }

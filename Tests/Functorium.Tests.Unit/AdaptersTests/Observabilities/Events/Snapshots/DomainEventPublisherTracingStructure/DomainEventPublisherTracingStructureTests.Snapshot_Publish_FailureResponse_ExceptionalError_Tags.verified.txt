@@ -3,7 +3,7 @@
   error.type: exceptional,
   request.category: event,
   request.handler: TestDomainEvent,
-  request.handler.method: Publish,
+  request.handler_method: Publish,
   request.layer: adapter,
   response.elapsed: {Scrubbed},
   response.status: failure

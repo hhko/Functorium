@@ -24,10 +24,10 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines;
 /// +--------------------------+---------------+---------------+---------------+
 /// | request.layer            | "application" | "application" | "application" |
 /// | request.category         | "usecase"     | "usecase"     | "usecase"     |
-/// | request.category.type     | "command"/    | "command"/    | "command"/    |
+/// | request.category_type     | "command"/    | "command"/    | "command"/    |
 /// |                          | "query"       | "query"       | "query"       |
 /// | request.handler          | handler name  | handler name  | handler name  |
-/// | request.handler.method   | "Handle"      | "Handle"      | "Handle"      |
+/// | request.handler_method   | "Handle"      | "Handle"      | "Handle"      |
 /// | @request.message         | request obj   | (none)        | (none)        |
 /// | response.status          | (none)        | "success"     | "failure"     |
 /// | response.elapsed         | (none)        | elapsed (s)   | elapsed (s)   |

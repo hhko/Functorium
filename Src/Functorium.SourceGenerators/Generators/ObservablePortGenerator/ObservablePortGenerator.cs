@@ -751,7 +751,7 @@ public sealed class ObservablePortGenerator()
             sb.Append("        logger.LogDebug(")
                 .AppendLine()
                 .AppendLine("            eventId: ObservabilityNaming.EventIds.Adapter.AdapterRequest,")
-                .Append("            message: \"{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with \" +");
+                .Append("            message: \"{request.layer} {request.category} {request.handler}.{request.handler_method} requesting with \" +");
 
             // 두 번째 줄: 동적 파라미터 필드들
             sb.AppendLine();
@@ -868,7 +868,7 @@ public sealed class ObservablePortGenerator()
             sb.Append("        logger.LogDebug(")
                 .AppendLine()
                 .AppendLine("            eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,")
-                .Append("            message: \"{request.layer} {request.category} {request.handler}.{request.handler.method} \" +");
+                .Append("            message: \"{request.layer} {request.category} {request.handler}.{request.handler_method} \" +");
 
             // 두 번째 줄: responded status elapsed
             sb.AppendLine();
@@ -940,7 +940,7 @@ public sealed class ObservablePortGenerator()
             .AppendLine()
             .AppendLine("        logger.LogWarning(")
             .AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,")
-            .AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}\",")
+            .AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}\",")
             .AppendLine("            requestLayer,")
             .AppendLine("            requestCategory,")
             .AppendLine("            requestHandler,")
@@ -971,7 +971,7 @@ public sealed class ObservablePortGenerator()
             .AppendLine()
             .AppendLine("        logger.LogError(")
             .AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,")
-            .AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}\",")
+            .AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}\",")
             .AppendLine("            requestLayer,")
             .AppendLine("            requestCategory,")
             .AppendLine("            requestHandler,")
@@ -1015,7 +1015,7 @@ public sealed class ObservablePortGenerator()
         sb.AppendLine("        LoggerMessage.Define<string, string, string, string>(");
         sb.AppendLine("            LogLevel.Information,");
         sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterRequest,");
-        sb.AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler.method} requesting\");");
+        sb.AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler_method} requesting\");");
         sb.AppendLine();
     }
 
@@ -1054,7 +1054,7 @@ public sealed class ObservablePortGenerator()
         }
 
         // 메시지 템플릿 생성
-        var messageFields = new List<string> { "{request.layer}", "{request.category}", "{request.handler}.{request.handler.method}", "requesting", "with" };
+        var messageFields = new List<string> { "{request.layer}", "{request.category}", "{request.handler}.{request.handler_method}", "requesting", "with" };
         foreach (var param in method.Parameters)
         {
             string requestFieldName = CollectionTypeHelper.GetRequestFieldName(param.Name);
@@ -1085,7 +1085,7 @@ public sealed class ObservablePortGenerator()
         sb.AppendLine("        LoggerMessage.Define<string, string, string, string, string, double>(");
         sb.AppendLine("            LogLevel.Information,");
         sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,");
-        sb.AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s\");");
+        sb.AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s\");");
         sb.AppendLine();
     }
 
@@ -1129,13 +1129,13 @@ public sealed class ObservablePortGenerator()
             typeParams.Add("int"); // count
             string responseFieldName = CollectionTypeHelper.GetResponseFieldName();
             string countFieldName = CollectionTypeHelper.GetResponseCountFieldName();
-            messageTemplate = $"{{request.layer}} {{request.category}} {{request.handler}}.{{request.handler.method}} responded {{response.status}} in {{response.elapsed:0.0000}} s with {{{responseFieldName}}} {{{countFieldName}}}";
+            messageTemplate = $"{{request.layer}} {{request.category}} {{request.handler}}.{{request.handler_method}} responded {{response.status}} in {{response.elapsed:0.0000}} s with {{{responseFieldName}}} {{{countFieldName}}}";
         }
         else
         {
             typeParams.Add(actualReturnType); // result
             string responseFieldName = CollectionTypeHelper.GetResponseFieldName();
-            messageTemplate = $"{{request.layer}} {{request.category}} {{request.handler}}.{{request.handler.method}} responded {{response.status}} in {{response.elapsed:0.0000}} s with {{{responseFieldName}}}";
+            messageTemplate = $"{{request.layer}} {{request.category}} {{request.handler}}.{{request.handler_method}} responded {{response.status}} in {{response.elapsed:0.0000}} s with {{{responseFieldName}}}";
         }
 
         sb.AppendLine($"    private static readonly global::System.Action<ILogger, {string.Join(", ", typeParams)}, global::System.Exception?> _logAdapterResponseSuccessDebug_{classInfo.ClassName}_{method.Name} =");

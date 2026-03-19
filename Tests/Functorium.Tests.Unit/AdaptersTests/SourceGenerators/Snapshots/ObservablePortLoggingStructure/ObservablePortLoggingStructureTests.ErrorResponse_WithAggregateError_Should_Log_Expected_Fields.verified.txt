@@ -19,10 +19,10 @@
     },
     error.code: Test.Error1,
     error.type: aggregate,
-    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error},
+    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error},
     request.category: repository,
     request.handler: TestObservabilityAdapter,
-    request.handler.method: GetById,
+    request.handler_method: GetById,
     request.layer: adapter,
     response.elapsed: {Scrubbed},
     response.status: failure

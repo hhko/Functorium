@@ -2,9 +2,9 @@
   error.code: Test.GenericError,
   error.type: expected,
   request.category: usecase,
-  request.category.type: command,
+  request.category_type: command,
   request.handler: UsecaseTracingPipelineStructureTests,
-  request.handler.method: Handle,
+  request.handler_method: Handle,
   request.layer: application,
   response.elapsed: {Scrubbed},
   response.status: failure

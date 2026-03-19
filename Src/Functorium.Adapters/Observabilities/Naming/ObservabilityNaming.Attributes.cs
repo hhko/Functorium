@@ -31,8 +31,8 @@ public static partial class ObservabilityNaming
         public const string RequestLayer = "request.layer";
         public const string RequestCategory = "request.category";
         public const string RequestHandler = "request.handler";
-        public const string RequestCategoryType = "request.category.type";
-        public const string RequestHandlerMethod = "request.handler.method";
+        public const string RequestCategoryType = "request.category_type";
+        public const string RequestHandlerMethod = "request.handler_method";
 
         // Response 속성
         public const string ResponseMessage = "response.message";

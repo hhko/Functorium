@@ -1,11 +1,11 @@
 ﻿{
   Information: ,
   Properties: {
-    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {request.event.count} events partial failure: {response.event.success_count} succeeded, {response.event.failure_count} failed,
+    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {request.event.count} events partial failure: {response.event.success_count} succeeded, {response.event.failure_count} failed,
     request.category: event,
     request.event.count: 3,
     request.handler: TestAggregateRootWithoutEvents,
-    request.handler.method: PublishEventsWithResult,
+    request.handler_method: PublishEventsWithResult,
     request.layer: adapter,
     response.elapsed: {Scrubbed},
     response.event.failure_count: 1,

@@ -394,19 +394,19 @@ internal static class MultiCtorAdapterObservableLoggers
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting");
+            "{request.layer} {request.category} {request.handler}.{request.handler_method} requesting");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_MultiCtorAdapter_GetInfo =
         LoggerMessage.Define<string, string, string, string>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} requesting with");
+            "{request.layer} {request.category} {request.handler}.{request.handler_method} requesting with");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_MultiCtorAdapter_GetInfo =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
+            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
     public static void LogAdapterRequestDebug_MultiCtorAdapter_GetInfo(
@@ -450,7 +450,7 @@ internal static class MultiCtorAdapterObservableLoggers
 
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            message: "{request.layer} {request.category} {request.handler}.{request.handler.method} " +
+            message: "{request.layer} {request.category} {request.handler}.{request.handler_method} " +
                      "responded {response.status} in {response.elapsed:0.0000} s with {response.result}",
             requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, result);
     }
@@ -487,7 +487,7 @@ internal static class MultiCtorAdapterObservableLoggers
 
         logger.LogWarning(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
@@ -516,7 +516,7 @@ internal static class MultiCtorAdapterObservableLoggers
 
         logger.LogError(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
