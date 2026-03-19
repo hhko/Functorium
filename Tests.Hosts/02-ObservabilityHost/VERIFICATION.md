@@ -1,6 +1,6 @@
 # 02-ObservabilityHost 검증 결과
 
-**검증 일시**: 2026-03-19 13:42 KST
+**검증 일시**: 2026-03-19 23:22 KST
 **실행 명령**: `dotnet run --project Tests.Hosts/02-ObservabilityHost/Src/ObservabilityHost`
 
 ---
@@ -24,132 +24,26 @@ dotnet build Functorium.slnx
 
 ```
 === PlaceOrderCommand (Custom Observability) ===
-[13:42:22 INF] application usecase.command PlaceOrderCommand.Handle requesting with {"CustomerId": "CUST-001", "Lines": [{"ProductId": "PROD-A", "Quantity": 2, "UnitPrice": 100.00, "$type": "OrderLine"}, {"ProductId": "PROD-B", "Quantity": 1, "UnitPrice": 250.00, "$type": "OrderLine"}], "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "OrderLineCount": 2, "CustomerId": "CUST-001"}
-[13:42:22 INF] application usecase.command PlaceOrderCommand.Handle responded success in 0.0079 s with {"Value": {"OrderId": "03111b26-a065-485f-ab9a-9ac0e2cb69e6", "LineCount": 2, "TotalAmount": 450.00, "$type": "Response"}, "IsSucc": true, "IsFail": false, "$type": "Succ"} {"EventId": {"Id": 1002, "Name": "application.response.success"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "OrderTotalAmount": 450.00, "CustomerId": "CUST-001"}
-PlaceOrder Result: Succ(Response { OrderId = 03111b26-a065-485f-ab9a-9ac0e2cb69e6, LineCount = 2, TotalAmount = 450.00 })
+[23:22:06 INF] application usecase.command PlaceOrderCommand.Handle requesting with {"CustomerId": "CUST-001", "Lines": [{"ProductId": "PROD-A", "Quantity": 2, "UnitPrice": 100.00, "$type": "OrderLine"}, {"ProductId": "PROD-B", "Quantity": 1, "UnitPrice": 250.00, "$type": "OrderLine"}], "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "ctx.order_line_count": 2, "ctx.customer_id": "CUST-001"}
+[23:22:06 INF] application usecase.command PlaceOrderCommand.Handle responded success in 0.0127 s with {"Value": {"OrderId": "d7f7b93f-...", "LineCount": 2, "TotalAmount": 450.00, "$type": "Response"}, "IsSucc": true, "IsFail": false, "$type": "Succ"} {"EventId": {"Id": 1002, "Name": "application.response.success"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "ctx.order_total_amount": 450.00, "ctx.customer_id": "CUST-001"}
+PlaceOrder Result: Succ(Response { OrderId = d7f7b93f-..., LineCount = 2, TotalAmount = 450.00 })
 
 === GetOrderSummaryQuery (Baseline) ===
-[13:42:22 INF] application usecase.query GetOrderSummaryQuery.Handle requesting with {"OrderId": "ORD-123", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
-[13:42:22 INF] application usecase.query GetOrderSummaryQuery.Handle responded success in 0.0003 s with {"Value": {"OrderId": "ORD-123", "Status": "Completed", "$type": "Response"}, "IsSucc": true, "IsFail": false, "$type": "Succ"} {"EventId": {"Id": 1002, "Name": "application.response.success"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+[23:22:06 INF] application usecase.query GetOrderSummaryQuery.Handle requesting with {"OrderId": "ORD-123", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+[23:22:06 INF] application usecase.query GetOrderSummaryQuery.Handle responded success in 0.0004 s with {"Value": {"OrderId": "ORD-123", "Status": "Completed", "$type": "Response"}, "IsSucc": true, "IsFail": false, "$type": "Succ"} {"EventId": {"Id": 1002, "Name": "application.response.success"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
 GetOrderSummary Result: Succ(Response { OrderId = ORD-123, Status = Completed })
 
+=== FailExpectedCommand (Expected Error) ===
+[23:22:06 INF] application usecase.command FailExpectedCommand.Handle requesting with {"OrderId": "ORD-NOT-EXIST", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+[23:22:06 WRN] application usecase.command FailExpectedCommand.Handle responded failure in 0.0019 s with expected:Order.NotFound {"ErrorType": "ErrorCodeExpected", ...} {"EventId": {"Id": 1003, "Name": "application.response.warning"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+FailExpected Result: Fail(주문을 찾을 수 없습니다)
+
+=== FailExceptionalCommand (Exceptional Error) ===
+[23:22:06 INF] application usecase.command FailExceptionalCommand.Handle requesting with {"OrderId": "ORD-DB-FAIL", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+[23:22:06 ERR] application usecase.command FailExceptionalCommand.Handle responded failure in 0.0212 s with exceptional:Database.ConnectionFailed {"ErrorType": "ErrorCodeExceptional", ...} {"EventId": {"Id": 1004, "Name": "application.response.error"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+FailExceptional Result: Fail(데이터베이스 연결이 끊어졌습니다)
+
 === Done ===
-```
-
-### 2.2 PlaceOrderCommand Request 로그 (JSON 구조 분석)
-
-**outputTemplate**: `[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}`
-
-| 영역 | 내용 |
-|------|------|
-| Timestamp | `13:42:22` |
-| Level | `INF` |
-| **Message** (`{Message:lj}`) | `application usecase.command PlaceOrderCommand.Handle requesting with {...}` |
-| **Properties** (`{Properties:j}`) | 아래 JSON 참조 |
-
-**Message 내 Request 구조화 데이터:**
-
-```json
-{
-  "CustomerId": "CUST-001",
-  "Lines": [
-    { "ProductId": "PROD-A", "Quantity": 2, "UnitPrice": 100.00, "$type": "OrderLine" },
-    { "ProductId": "PROD-B", "Quantity": 1, "UnitPrice": 250.00, "$type": "OrderLine" }
-  ],
-  "$type": "Request"
-}
-```
-
-**Properties (Enricher 필드 포함):**
-
-```json
-{
-  "EventId": { "Id": 1001, "Name": "application.request" },
-  "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline",
-  "OrderLineCount": 2,
-  "CustomerId": "CUST-001"
-}
-```
-
-> `OrderLineCount`과 `CustomerId`는 `PlaceOrderLogEnricher.EnrichRequestLog`에서 `LogContext.PushProperty`로 Push한 커스텀 필드입니다.
-
-### 2.3 PlaceOrderCommand Response 로그 (JSON 구조 분석)
-
-**Message 내 Response 구조화 데이터:**
-
-```json
-{
-  "Value": {
-    "OrderId": "03111b26-a065-485f-ab9a-9ac0e2cb69e6",
-    "LineCount": 2,
-    "TotalAmount": 450.00,
-    "$type": "Response"
-  },
-  "IsSucc": true,
-  "IsFail": false,
-  "$type": "Succ"
-}
-```
-
-**Properties (Enricher 필드 포함):**
-
-```json
-{
-  "EventId": { "Id": 1002, "Name": "application.response.success" },
-  "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline",
-  "OrderTotalAmount": 450.00,
-  "CustomerId": "CUST-001"
-}
-```
-
-> `OrderTotalAmount`은 `PlaceOrderLogEnricher.EnrichResponseLog`에서 Push한 커스텀 필드입니다.
-
-### 2.4 GetOrderSummaryQuery Request 로그 (JSON 구조 분석)
-
-**Message 내 Request 구조화 데이터:**
-
-```json
-{
-  "OrderId": "ORD-123",
-  "$type": "Request"
-}
-```
-
-**Properties (커스텀 필드 없음):**
-
-```json
-{
-  "EventId": { "Id": 1001, "Name": "application.request" },
-  "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
-}
-```
-
-> Enricher가 등록되지 않아 프레임워크 표준 필드만 표시됩니다.
-
-### 2.5 GetOrderSummaryQuery Response 로그 (JSON 구조 분석)
-
-**Message 내 Response 구조화 데이터:**
-
-```json
-{
-  "Value": {
-    "OrderId": "ORD-123",
-    "Status": "Completed",
-    "$type": "Response"
-  },
-  "IsSucc": true,
-  "IsFail": false,
-  "$type": "Succ"
-}
-```
-
-**Properties (커스텀 필드 없음):**
-
-```json
-{
-  "EventId": { "Id": 1002, "Name": "application.response.success" },
-  "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
-}
 ```
 
 ---
@@ -163,163 +57,162 @@ GetOrderSummary Result: Succ(Response { OrderId = ORD-123, Status = Completed })
 | Plain text | `logs/log-20260319.txt` | 생성됨 | PASS |
 | JSON | `logs/log-20260319.json` | 생성됨 | PASS |
 
-### 3.2 Plain text 로그 파일 전문 (`logs/log-20260319.txt`)
+### 3.2 JSON 로그 파일 전문 (`logs/log-20260319.json`)
 
-```
-[20:51:43 INF] application usecase.command PlaceOrderCommand.Handle requesting with {"CustomerId":"CUST-001","Lines":[{"ProductId":"PROD-A","Quantity":2,"UnitPrice":100.00,"$type":"OrderLine"},{"ProductId":"PROD-B","Quantity":1,"UnitPrice":250.00,"$type":"OrderLine"}],"$type":"Request"} {"EventId":{"Id":1001,"Name":"application.request"},"SourceContext":"Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline","OrderLineCount":2,"CustomerId":"CUST-001"}
-[20:51:43 INF] application usecase.command PlaceOrderCommand.Handle responded success in 0.0072 s with {"Value":{"OrderId":"b1aeac6f-d500-4a54-9eee-0bc9d6ad7082","LineCount":2,"TotalAmount":450.00,"$type":"Response"},"IsSucc":true,"IsFail":false,"$type":"Succ"} {"EventId":{"Id":1002,"Name":"application.response.success"},"SourceContext":"Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline","OrderTotalAmount":450.00,"CustomerId":"CUST-001"}
-[20:51:43 INF] application usecase.query GetOrderSummaryQuery.Handle requesting with {"OrderId":"ORD-123","$type":"Request"} {"EventId":{"Id":1001,"Name":"application.request"},"SourceContext":"Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
-[20:51:43 INF] application usecase.query GetOrderSummaryQuery.Handle responded success in 0.0002 s with {"Value":{"OrderId":"ORD-123","Status":"Completed","$type":"Response"},"IsSucc":true,"IsFail":false,"$type":"Succ"} {"EventId":{"Id":1002,"Name":"application.response.success"},"SourceContext":"Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
-```
-
-> Console 출력과 동일한 `outputTemplate` 적용. `{Properties:j}` 포맷으로 Enricher 커스텀 필드가 JSON 표시됩니다.
-
-### 3.3 JSON 로그 파일 전문 (`logs/log-20260319.json`)
+**Formatter**: `OpenSearchJsonFormatter` (ECS 호환 + `ctx.*` 네임스페이스)
 
 #### PlaceOrderCommand Request
 
 ```json
 {
-  "Timestamp": "2026-03-19T20:51:43.0264035+09:00",
-  "Level": "Information",
-  "MessageTemplate": "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} requesting with {@request.message}",
-  "Properties": {
-    "request.layer": "application",
-    "request.category": "usecase",
-    "request.category.type": "command",
-    "request.handler": "PlaceOrderCommand",
-    "request.handler.method": "Handle",
-    "request.message": {
-      "CustomerId": "CUST-001",
-      "Lines": [
-        { "ProductId": "PROD-A", "Quantity": 2, "UnitPrice": 100.00, "_typeTag": "OrderLine" },
-        { "ProductId": "PROD-B", "Quantity": 1, "UnitPrice": 250.00, "_typeTag": "OrderLine" }
-      ],
-      "_typeTag": "Request"
-    },
-    "EventId": { "Id": 1001, "Name": "application.request" },
-    "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline",
-    "OrderLineCount": 2,
-    "CustomerId": "CUST-001"
-  }
+  "@timestamp": "2026-03-19T14:22:06.6958763Z",
+  "log.level": "Information",
+  "message": "application usecase.command PlaceOrderCommand.Handle requesting with Request { CustomerId: \"CUST-001\", Lines: [...] }",
+  "message.template": "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} requesting with {@request.message}",
+  "event.id": 1001,
+  "event.name": "application.request",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category_type": "command",
+  "request.handler": "PlaceOrderCommand",
+  "request.handler_method": "Handle",
+  "request.message": "{\"CustomerId\":\"CUST-001\",\"Lines\":[{\"ProductId\":\"PROD-A\",\"Quantity\":2,\"UnitPrice\":100.00},{\"ProductId\":\"PROD-B\",\"Quantity\":1,\"UnitPrice\":250.00}]}",
+  "ctx.order_line_count": 2,
+  "ctx.customer_id": "CUST-001",
+  "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
 }
 ```
 
-#### PlaceOrderCommand Response
+#### PlaceOrderCommand Response (성공)
 
 ```json
 {
-  "Timestamp": "2026-03-19T20:51:43.1276700+09:00",
-  "Level": "Information",
-  "MessageTemplate": "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message}",
-  "Properties": {
-    "request.layer": "application",
-    "request.category": "usecase",
-    "request.category.type": "command",
-    "request.handler": "PlaceOrderCommand",
-    "request.handler.method": "Handle",
-    "response.status": "success",
-    "response.elapsed": 0.0072466,
-    "response.message": {
-      "Value": {
-        "OrderId": "b1aeac6f-d500-4a54-9eee-0bc9d6ad7082",
-        "LineCount": 2,
-        "TotalAmount": 450.00,
-        "_typeTag": "Response"
-      },
-      "IsSucc": true,
-      "IsFail": false,
-      "_typeTag": "Succ"
-    },
-    "EventId": { "Id": 1002, "Name": "application.response.success" },
-    "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline",
-    "OrderTotalAmount": 450.00,
-    "CustomerId": "CUST-001"
-  },
-  "Renderings": {
-    "response.elapsed": [{ "Format": "0.0000", "Rendering": "0.0072" }]
-  }
+  "@timestamp": "2026-03-19T14:22:06.8346266Z",
+  "log.level": "Information",
+  "message": "application usecase.command PlaceOrderCommand.Handle responded success in 0.0127 s with Succ { Value: Response { ... }, IsSucc: True, IsFail: False }",
+  "message.template": "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message}",
+  "event.id": 1002,
+  "event.name": "application.response.success",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category_type": "command",
+  "request.handler": "PlaceOrderCommand",
+  "request.handler_method": "Handle",
+  "response.status": "success",
+  "response.elapsed": 0.0127208,
+  "response.message": "{\"Value\":{\"OrderId\":\"d7f7b93f-...\",\"LineCount\":2,\"TotalAmount\":450.00},\"IsSucc\":true,\"IsFail\":false}",
+  "ctx.order_total_amount": 450.00,
+  "ctx.customer_id": "CUST-001",
+  "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
 }
 ```
 
-#### GetOrderSummaryQuery Request
+#### GetOrderSummaryQuery Request (Enricher 미적용)
 
 ```json
 {
-  "Timestamp": "2026-03-19T20:51:43.1341973+09:00",
-  "Level": "Information",
-  "MessageTemplate": "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} requesting with {@request.message}",
-  "Properties": {
-    "request.layer": "application",
-    "request.category": "usecase",
-    "request.category.type": "query",
-    "request.handler": "GetOrderSummaryQuery",
-    "request.handler.method": "Handle",
-    "request.message": {
-      "OrderId": "ORD-123",
-      "_typeTag": "Request"
-    },
-    "EventId": { "Id": 1001, "Name": "application.request" },
-    "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
-  }
+  "@timestamp": "2026-03-19T14:22:06.8483074Z",
+  "log.level": "Information",
+  "message": "application usecase.query GetOrderSummaryQuery.Handle requesting with Request { OrderId: \"ORD-123\" }",
+  "message.template": "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} requesting with {@request.message}",
+  "event.id": 1001,
+  "event.name": "application.request",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category_type": "query",
+  "request.handler": "GetOrderSummaryQuery",
+  "request.handler_method": "Handle",
+  "request.message": "{\"OrderId\":\"ORD-123\"}",
+  "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
 }
 ```
 
-#### GetOrderSummaryQuery Response
+#### FailExpectedCommand Response (Expected 에러 — Warning)
 
 ```json
 {
-  "Timestamp": "2026-03-19T20:51:43.1348754+09:00",
-  "Level": "Information",
-  "MessageTemplate": "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message}",
-  "Properties": {
-    "request.layer": "application",
-    "request.category": "usecase",
-    "request.category.type": "query",
-    "request.handler": "GetOrderSummaryQuery",
-    "request.handler.method": "Handle",
-    "response.status": "success",
-    "response.elapsed": 0.0002389,
-    "response.message": {
-      "Value": {
-        "OrderId": "ORD-123",
-        "Status": "Completed",
-        "_typeTag": "Response"
-      },
-      "IsSucc": true,
-      "IsFail": false,
-      "_typeTag": "Succ"
-    },
-    "EventId": { "Id": 1002, "Name": "application.response.success" },
-    "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
-  },
-  "Renderings": {
-    "response.elapsed": [{ "Format": "0.0000", "Rendering": "0.0002" }]
-  }
+  "@timestamp": "2026-03-19T14:22:06.8566836Z",
+  "log.level": "Warning",
+  "message": "application usecase.command FailExpectedCommand.Handle responded failure in 0.0019 s with expected:Order.NotFound { ErrorType: \"ErrorCodeExpected\", ErrorCode: \"Order.NotFound\", ... }",
+  "message.template": "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+  "event.id": 1003,
+  "event.name": "application.response.warning",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category_type": "command",
+  "request.handler": "FailExpectedCommand",
+  "request.handler_method": "Handle",
+  "response.status": "failure",
+  "response.elapsed": 0.001863,
+  "error.type": "expected",
+  "error.code": "Order.NotFound",
+  "error.detail": "{\"ErrorType\":\"ErrorCodeExpected\",\"ErrorCode\":\"Order.NotFound\",\"ErrorCodeId\":-1000,\"ErrorCurrentValue\":\"ORD-NOT-EXIST\",\"Message\":\"주문을 찾을 수 없습니다\"}",
+  "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
 }
 ```
 
-### 3.4 JSON 구조 분석
+#### FailExceptionalCommand Response (Exceptional 에러 — Error)
 
-#### Console vs JSON 차이점
+```json
+{
+  "@timestamp": "2026-03-19T14:22:06.8869311Z",
+  "log.level": "Error",
+  "message": "application usecase.command FailExceptionalCommand.Handle responded failure in 0.0212 s with exceptional:Database.ConnectionFailed { ErrorType: \"ErrorCodeExceptional\", ... }",
+  "message.template": "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+  "event.id": 1004,
+  "event.name": "application.response.error",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category_type": "command",
+  "request.handler": "FailExceptionalCommand",
+  "request.handler_method": "Handle",
+  "response.status": "failure",
+  "response.elapsed": 0.0211916,
+  "error.type": "exceptional",
+  "error.code": "Database.ConnectionFailed",
+  "error.detail": "{\"ErrorType\":\"ErrorCodeExceptional\",\"ErrorCode\":\"Database.ConnectionFailed\",\"ErrorCodeId\":-2146233079,\"Message\":\"데이터베이스 연결이 끊어졌습니다\",\"ExceptionDetails\":{\"TargetSite\":null,\"Message\":\"데이터베이스 연결이 끊어졌습니다\",\"Data\":[],\"InnerException\":null,\"HelpLink\":null,\"Source\":null,\"HResult\":-2146233079,\"StackTrace\":null}}",
+  "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
+}
+```
 
-| 항목 | Console (`{Properties:j}`) | JSON (`JsonFormatter`) |
-|------|---------------------------|------------------------|
-| 포맷 | 렌더링된 메시지 + Properties JSON | 구조화된 전체 JSON |
-| `$type` → `_typeTag` | `$type` (렌더링 시 원본) | `_typeTag` (Serilog 직렬화) |
-| MessageTemplate | 렌더링 후 소멸 | 원본 템플릿 보존 |
-| Renderings | 없음 | 포맷 렌더링 결과 포함 |
-| Timestamp | `HH:mm:ss` (outputTemplate) | ISO 8601 전체 (`+09:00` 포함) |
+### 3.3 JSON 구조 분석
+
+#### OpenSearchJsonFormatter vs 기존 JsonFormatter 차이점
+
+| 항목 | 기존 `JsonFormatter` | `OpenSearchJsonFormatter` |
+|------|---------------------|--------------------------|
+| 포맷 | `Properties` 래퍼로 중첩 | 플랫 JSON (래퍼 제거) |
+| Timestamp | ISO 8601 (`+09:00` 포함) | `@timestamp` UTC ISO 8601 |
+| Level | `"Level": "Information"` | `"log.level": "Information"` (ECS 호환) |
+| 렌더링 메시지 | 없음 | `"message"` (literal + JSON 렌더링) |
+| MessageTemplate | `"MessageTemplate"` | `"message.template"` |
+| EventId | 중첩 객체 | `event.id` + `event.name` (플랫) |
+| SourceContext | PascalCase 키 | `log.logger` (ECS 호환) |
+| request/response.message | 구조화 객체 (매핑 폭발) | JSON 문자열 (매핑 안전) |
+| error 객체 | 구조화 객체 (매핑 폭발) | `error.detail` JSON 문자열 |
+| `_typeTag`, `$type` | 포함 (노이즈) | 제거 |
+| `Renderings` | 포함 (노이즈) | 제거 |
+| Enricher 필드 | PascalCase (`CustomerId`) | `ctx.*` snake_case (`ctx.customer_id`) |
+
+#### error 필드 구조 검증
+
+| 필드 | OpenSearch 타입 | FailExpectedCommand | FailExceptionalCommand |
+|------|----------------|---------------------|------------------------|
+| `error.type` | `keyword` | `"expected"` | `"exceptional"` |
+| `error.code` | `keyword` | `"Order.NotFound"` | `"Database.ConnectionFailed"` |
+| `error.detail` | `text` (JSON 문자열) | `"{\"ErrorType\":\"ErrorCodeExpected\",...}"` | `"{\"ErrorType\":\"ErrorCodeExceptional\",...}"` |
+
+> `error` 객체가 `error.detail`로 이름 변경 + JSON 문자열화되어 `error.type`, `error.code`와 동일한 네임스페이스 하위 keyword/text 필드로 정리됩니다.
 
 #### Enricher 커스텀 필드 포함 검증
 
 | 필드 | PlaceOrderCommand Request | PlaceOrderCommand Response | GetOrderSummaryQuery |
 |------|--------------------------|---------------------------|---------------------|
-| `CustomerId` | `"CUST-001"` | `"CUST-001"` | - |
-| `OrderLineCount` | `2` | - | - |
-| `OrderTotalAmount` | - | `450.00` | - |
+| `ctx.customer_id` | `"CUST-001"` | `"CUST-001"` | - |
+| `ctx.order_line_count` | `2` | - | - |
+| `ctx.order_total_amount` | - | `450.00` | - |
 
-> JSON 로그에서도 `LogContext.PushProperty`로 Push한 Enricher 커스텀 필드가 `Properties` 객체 내에 정상 포함됩니다.
+> Enricher 커스텀 필드가 `ctx.*` 네임스페이스로 플랫 JSON에 정상 포함됩니다.
 
 ---
 
@@ -333,137 +226,143 @@ GetOrderSummary Result: Succ(Response { OrderId = ORD-123, Status = Completed })
 
 | Enricher 필드 | 예상값 | 실제값 | 결과 |
 |---------------|--------|--------|------|
-| `CustomerId` | `"CUST-001"` | `"CUST-001"` | PASS |
-| `OrderLineCount` | `2` | `2` | PASS |
+| `ctx.customer_id` | `"CUST-001"` | `"CUST-001"` | PASS |
+| `ctx.order_line_count` | `2` | `2` | PASS |
 
-`EnrichRequestLog`에서 Push한 두 필드 모두 Properties JSON에 정상 표시됩니다.
+`EnrichRequestLog`에서 Push한 두 필드 모두 `ctx.*` 네임스페이스로 정상 표시됩니다.
 
 #### Response 로그
 
 | Enricher 필드 | 예상값 | 실제값 | 결과 |
 |---------------|--------|--------|------|
-| `OrderTotalAmount` | `450.00` | `450.00` | PASS |
+| `ctx.order_total_amount` | `450.00` | `450.00` | PASS |
 
-`EnrichResponseLog`에서 Push한 `OrderTotalAmount` 필드가 Properties JSON에 정상 표시됩니다.
+`EnrichResponseLog`에서 Push한 `ctx.order_total_amount` 필드가 정상 표시됩니다.
 
 ### 4.2 GetOrderSummaryQuery — Enricher 미적용 (기준선)
 
 Enricher가 등록되지 않은 Query에서는 커스텀 필드가 없어야 합니다.
 
-#### Request 로그
-
-| Properties 필드 | 값 | 비고 |
-|-----------------|------|------|
-| `EventId` | `{"Id": 1001, "Name": "application.request"}` | 프레임워크 표준 |
-| `SourceContext` | `"...UsecaseLoggingPipeline"` | 프레임워크 표준 |
-| 커스텀 필드 | **(없음)** | PASS |
-
-#### Response 로그
-
-| Properties 필드 | 값 | 비고 |
-|-----------------|------|------|
-| `EventId` | `{"Id": 1002, "Name": "application.response.success"}` | 프레임워크 표준 |
-| `SourceContext` | `"...UsecaseLoggingPipeline"` | 프레임워크 표준 |
-| 커스텀 필드 | **(없음)** | PASS |
+| Properties 필드 | Request | Response | 비고 |
+|-----------------|---------|----------|------|
+| `EventId` | 1001 | 1002 | 프레임워크 표준 |
+| `SourceContext` | `"...UsecaseLoggingPipeline"` | `"...UsecaseLoggingPipeline"` | 프레임워크 표준 |
+| 커스텀 필드 | **(없음)** | **(없음)** | PASS |
 
 ### 4.3 Enricher 대비 분석
 
 | 구분 | PlaceOrderCommand | GetOrderSummaryQuery |
 |------|-------------------|---------------------|
-| `CustomerId` | CUST-001 | - |
-| `OrderLineCount` | 2 | - |
-| `OrderTotalAmount` | 450.00 | - |
+| `ctx.customer_id` | CUST-001 | - |
+| `ctx.order_line_count` | 2 | - |
+| `ctx.order_total_amount` | 450.00 | - |
 
 Enricher가 등록된 Command에만 커스텀 필드가 표시되고, 등록되지 않은 Query에는 표시되지 않습니다.
 
 ---
 
-## 5. 표준 로깅 파이프라인 검증
+## 5. 에러 응답 검증
 
-### 5.1 로그 메시지 포맷
+### 5.1 FailExpectedCommand — Expected 에러 (Warning 레벨)
 
-| 항목 | PlaceOrderCommand | GetOrderSummaryQuery |
-|------|-------------------|---------------------|
-| Layer | `application` | `application` |
-| Category | `usecase.command` | `usecase.query` |
-| Handler | `PlaceOrderCommand` | `GetOrderSummaryQuery` |
-| Method | `Handle` | `Handle` |
-| Status | `success` | `success` |
+| 항목 | 예상 | 실제 | 결과 |
+|------|------|------|------|
+| `log.level` | `Warning` | `Warning` | PASS |
+| `event.id` | `1003` | `1003` | PASS |
+| `event.name` | `application.response.warning` | `application.response.warning` | PASS |
+| `response.status` | `failure` | `failure` | PASS |
+| `error.type` | `expected` | `expected` | PASS |
+| `error.code` | `Order.NotFound` | `Order.NotFound` | PASS |
+| `error.detail` | JSON 문자열 | `"{\"ErrorType\":\"ErrorCodeExpected\",...}"` | PASS |
 
-CQRS 타입이 `ICommandRequest<>` / `IQueryRequest<>` 인터페이스 기반으로 자동 식별됩니다.
+> `error.detail`에 `ErrorType`, `ErrorCode`, `ErrorCodeId`, `ErrorCurrentValue`, `Message` 필드가 JSON 문자열로 포함됩니다.
 
-### 5.2 응답 결과
+### 5.2 FailExceptionalCommand — Exceptional 에러 (Error 레벨)
 
-| 항목 | PlaceOrderCommand | GetOrderSummaryQuery |
-|------|-------------------|---------------------|
-| IsSucc | `true` | `true` |
-| Elapsed | `0.0079 s` | `0.0003 s` |
-| 결과 타입 | `Succ` | `Succ` |
+| 항목 | 예상 | 실제 | 결과 |
+|------|------|------|------|
+| `log.level` | `Error` | `Error` | PASS |
+| `event.id` | `1004` | `1004` | PASS |
+| `event.name` | `application.response.error` | `application.response.error` | PASS |
+| `response.status` | `failure` | `failure` | PASS |
+| `error.type` | `exceptional` | `exceptional` | PASS |
+| `error.code` | `Database.ConnectionFailed` | `Database.ConnectionFailed` | PASS |
+| `error.detail` | JSON 문자열 | `"{\"ErrorType\":\"ErrorCodeExceptional\",...}"` | PASS |
+
+> `error.detail`에 `ErrorType`, `ErrorCode`, `ErrorCodeId`, `Message`, `ExceptionDetails` 필드가 JSON 문자열로 포함됩니다.
+> `ExceptionDetails`에는 Exception의 `TargetSite`, `Message`, `HResult`, `StackTrace` 등이 중첩됩니다.
+
+### 5.3 에러 레벨 분류
+
+| 에러 유형 | Log Level | EventId | error.type | 비고 |
+|-----------|-----------|---------|------------|------|
+| Expected (비즈니스) | `Warning` | 1003 | `expected` | `ErrorCodeExpected` |
+| Exceptional (시스템) | `Error` | 1004 | `exceptional` | `ErrorCodeExceptional` |
 
 ---
 
-## 6. Serilog 설정 검증
+## 6. 표준 로깅 파이프라인 검증
+
+### 6.1 로그 메시지 포맷
+
+| 항목 | PlaceOrderCommand | GetOrderSummaryQuery | FailExpectedCommand | FailExceptionalCommand |
+|------|-------------------|---------------------|---------------------|------------------------|
+| Layer | `application` | `application` | `application` | `application` |
+| Category | `usecase.command` | `usecase.query` | `usecase.command` | `usecase.command` |
+| Handler | `PlaceOrderCommand` | `GetOrderSummaryQuery` | `FailExpectedCommand` | `FailExceptionalCommand` |
+| Method | `Handle` | `Handle` | `Handle` | `Handle` |
+| Status | `success` | `success` | `failure` | `failure` |
+
+CQRS 타입이 `ICommandRequest<>` / `IQueryRequest<>` 인터페이스 기반으로 자동 식별됩니다.
+
+---
+
+## 7. Serilog 설정 검증
 
 | 설정 항목 | 예상 | 실제 | 결과 |
 |-----------|------|------|------|
 | `Enrich: FromLogContext` | Enricher 속성이 Properties에 병합 | 병합됨 | PASS |
 | `{Properties:j}` in outputTemplate | 커스텀 필드가 JSON으로 표시 | JSON 표시 | PASS |
+| `OpenSearchJsonFormatter` | JSON 파일 싱크에 적용 | 적용됨 | PASS |
 | `AnsiConsoleTheme::Code` | 컬러 콘솔 출력 | 적용됨 | PASS |
-| `{Timestamp:HH:mm:ss}` | 시:분:초 포맷 | `13:42:22` | PASS |
 
 ---
 
-## 7. OpenTelemetry Console Exporter 검증
+## 8. OpenTelemetry Console Exporter 검증
 
-### 7.1 Metrics Console Export
-
-| 항목 | 결과 | 비고 |
-|------|------|------|
-| 콘솔 출력 | 미출력 | 아래 참조 |
-
-**미출력 원인**: `PeriodicExportingMetricReader`의 기본 Export 주기가 60초이며, 콘솔 앱이 그 전에 종료됩니다. `ServiceCollection` 기반 구성에서는 `IHost`의 Graceful Shutdown이 동작하지 않아 MeterProvider의 최종 Flush가 실행되지 않습니다.
-
-**커스텀 메트릭 등록은 정상**: `PlaceOrderMetricsPipeline`이 DI에 등록되고 파이프라인 실행 중 `Histogram.Record()`가 호출됩니다. 장기 실행 호스트(`IHost` 기반)에서는 정상 Export됩니다.
-
-### 7.2 Tracing Console Export
+### 8.1 Metrics/Tracing Console Export
 
 | 항목 | 결과 | 비고 |
 |------|------|------|
-| 콘솔 출력 | 미출력 | 아래 참조 |
+| 콘솔 출력 | 미출력 | `ServiceCollection` 기반 단기 실행 앱 제약 |
 
-**미출력 원인**: Metrics와 동일하게 TracerProvider의 최종 Flush가 `IHost` Graceful Shutdown 없이는 실행되지 않습니다.
-
-**커스텀 트레이싱 등록은 정상**: `PlaceOrderTracingPipeline`이 DI에 등록되고 `StartCustomActivity("ValidateOrder")`가 호출됩니다.
-
-### 7.3 개선 방안 (필요 시)
-
-Metrics/Tracing 콘솔 출력이 필요하면 `IHost` 기반으로 전환합니다:
-
-```csharp
-var builder = Host.CreateApplicationBuilder(args);
-// ... DI 등록 ...
-var host = builder.Build();
-// ... mediator.Send() ...
-await host.StopAsync();  // Graceful Shutdown → OTel Flush
-```
+**미출력 원인**: `PeriodicExportingMetricReader`의 기본 Export 주기가 60초이며, 콘솔 앱이 그 전에 종료됩니다. `IHost` 기반 전환 시 검증 가능합니다.
 
 ---
 
-## 8. 검증 요약
+## 9. 검증 요약
 
 | # | 검증 항목 | 결과 |
 |---|----------|------|
 | 1 | `dotnet build Functorium.slnx` 빌드 성공 | PASS |
-| 2 | `dotnet run` 실행 성공 | PASS |
+| 2 | `dotnet run` 실행 성공 (4개 시나리오) | PASS |
 | 3 | `logs/log-YYYYMMDD.txt` Plain text 로그 파일 생성 | PASS |
-| 4 | `logs/log-YYYYMMDD.json` JSON 로그 파일 생성 | PASS |
-| 5 | JSON 로그에 Enricher 커스텀 필드 (`CustomerId`, `OrderLineCount`, `OrderTotalAmount`) 포함 | PASS |
-| 6 | PlaceOrderCommand Request 로그에 `CustomerId`, `OrderLineCount` 표시 | PASS |
-| 7 | PlaceOrderCommand Response 로그에 `OrderTotalAmount` 표시 | PASS |
+| 4 | `logs/log-YYYYMMDD.json` OpenSearch 최적화 JSON 로그 파일 생성 | PASS |
+| 5 | JSON 로그에 `ctx.*` Enricher 커스텀 필드 포함 | PASS |
+| 6 | PlaceOrderCommand Request 로그에 `ctx.customer_id`, `ctx.order_line_count` 표시 | PASS |
+| 7 | PlaceOrderCommand Response 로그에 `ctx.order_total_amount` 표시 | PASS |
 | 8 | GetOrderSummaryQuery 로그에 커스텀 필드 없음 (기준선) | PASS |
 | 9 | CQRS 타입 자동 식별 (`command` / `query`) | PASS |
 | 10 | 기존 테스트 회귀 없음 (1446 passed, 0 failed) | PASS |
-| 11 | Metrics Console Export | NOT TESTED (*) |
-| 12 | Tracing Console Export | NOT TESTED (*) |
+| 11 | `request.message`가 JSON 문자열(객체 아님)인지 확인 | PASS |
+| 12 | `_typeTag`, `Renderings` 제거 확인 | PASS |
+| 13 | dot 충돌 해소 (`request.category_type`, `request.handler_method`) | PASS |
+| 14 | Expected 에러 → Warning 레벨, `error.type: "expected"` | PASS |
+| 15 | Exceptional 에러 → Error 레벨, `error.type: "exceptional"` | PASS |
+| 16 | `error` 객체 → `error.detail` JSON 문자열 변환 | PASS |
+| 17 | `error.type`, `error.code` 스칼라 필드 보존 | PASS |
+| 18 | `message` 렌더링 (literal string + JSON structure) | PASS |
+| 19 | Metrics Console Export | NOT TESTED (*) |
+| 20 | Tracing Console Export | NOT TESTED (*) |
 
 (*) `ServiceCollection` 기반 단기 실행 콘솔 앱에서는 OTel SDK의 Graceful Shutdown Flush가 동작하지 않아 미출력. `IHost` 기반 전환 시 검증 가능.
