@@ -890,7 +890,7 @@ internal sealed class Usecase(
     IProductRepository productRepository)
     : ICommandUsecase<Request, Response>
 
-// Query: IQueryPort 기반 Read Adapter 주입 (파이프라인은 자동 바이패스)
+// Query: IQueryPort 기반 Read Adapter 주입 (Transaction은 where ICommand 제약으로 컴파일 타임 제외)
 internal sealed class Usecase(IProductQuery productQuery)
     : IQueryUsecase<Request, Response>
 ```
@@ -907,11 +907,16 @@ FinT<IO, Response> usecase =
 ### 파이프라인 실행 순서
 
 ```
-Request → Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction → Custom → Handler
+[Command] Request → Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler
+[Query]   Request → Metrics → Tracing → Logging → Validation → Caching → Exception → Custom → Handler
 ```
 
+- **Transaction**은 `where TRequest : ICommand<TResponse>` 제약으로 Command에만 적용 (컴파일 타임 필터링)
+- **Caching**은 `where TRequest : IQuery<TResponse>` 제약으로 Query에만 적용 (컴파일 타임 필터링)
+
 - Transaction은 Exception 뒤에 위치 → `SaveChanges` 예외 발생 시 Exception 파이프라인이 처리
-- Command만 활성화, Query는 바이패스
+- Transaction은 `where ICommand<TResponse>` 제약으로 Command에만 적용 (컴파일 타임)
+- Caching은 `where IQuery<TResponse>` 제약으로 Query에만 적용 (컴파일 타임)
 
 ### 파이프라인 등록
 
@@ -941,7 +946,7 @@ services
 | 여러 Repository 호출 | 하나의 `SaveChanges()`로 트랜잭션에 묶임 (파이프라인 보장) |
 | 이벤트 발행 시점 | `SaveChanges()` 성공 후에만 발행 (파이프라인 보장) |
 | 이벤트 발행 실패 시 | 성공 응답 유지 (데이터는 이미 커밋됨, 경고 로그만 기록) |
-| Query에서의 동작 | 파이프라인이 자동 바이패스 |
+| Query에서의 동작 | `where ICommand<TResponse>` 제약으로 컴파일 타임 제외 |
 
 ### IUnitOfWork 인터페이스
 
@@ -1148,7 +1153,7 @@ public sealed record Request(string ProductId) : IQueryRequest<Response>, ICache
 }
 ```
 
-`UsecaseCachingPipeline`이 `ICacheable`을 구현한 Query Request를 자동으로 캐싱합니다:
+`UsecaseCachingPipeline`은 `where TRequest : IQuery<TResponse>` 제약으로 Query에만 적용되며, `ICacheable`을 구현한 Query Request를 자동으로 캐싱합니다:
 - `IMemoryCache`를 사용하여 `CacheKey` 기반으로 캐시 히트/미스 처리
 - 캐시 히트 시 Handler를 호출하지 않고 캐싱된 응답을 즉시 반환
 - `response.IsSucc`인 경우에만 캐싱 (실패 응답은 캐싱하지 않음)

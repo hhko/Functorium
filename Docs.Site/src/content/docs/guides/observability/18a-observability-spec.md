@@ -72,7 +72,8 @@ services
 | Meter Name | `{service.namespace}.{layer}[.{category}]` 패턴 |
 | Instrument | `requests` (Counter), `responses` (Counter), `duration` (Histogram) |
 | Span Name | `{layer} {category}[.{cqrs}] {handler}.{method}` |
-| Pipeline 순서 | Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler |
+| Pipeline 순서 | `[Command]` Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler |
+| | `[Query]` Metrics → Tracing → Logging → Validation → Caching → Exception → Custom → Handler |
 
 요약 섹션에서 사양 전체의 핵심 규칙을 확인했습니다. 이제 모든 Pillar에 공통으로 적용되는 서비스 식별과 에러 분류 규칙부터 살펴봅니다.
 
@@ -705,10 +706,131 @@ public sealed class OtlpCollectorProtocol : SmartEnum<OtlpCollectorProtocol>
 `ConfigurePipelines(p => p.UseAll())` 호출 시 다음 순서로 파이프라인이 등록됩니다:
 
 ```
-Request → Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler
+[Command] Request → Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler
+[Query]   Request → Metrics → Tracing → Logging → Validation → Caching → Exception → Custom → Handler
 ```
 
+- **Transaction**은 `where TRequest : ICommand<TResponse>` 제약으로 Command에만 적용됩니다 (컴파일 타임 필터링).
+- **Caching**은 `where TRequest : IQuery<TResponse>` 제약으로 Query에만 적용됩니다 (컴파일 타임 필터링).
+- 런타임 바이패스가 아닌 **컴파일 타임 제약 조건**으로 적용 대상이 결정됩니다.
+
 > **참조**: `Src/Functorium.Adapters/Observabilities/Builders/Configurators/PipelineConfigurator.cs`
+
+### 커스텀 파이프라인 확장 포인트
+
+기본 파이프라인이 자동으로 제공하는 관측성 외에, Usecase별로 비즈니스 맥락에 맞는 커스텀 관측성을 추가할 수 있습니다.
+
+#### ICustomUsecasePipeline 마커 인터페이스
+
+커스텀 유스케이스 파이프라인을 식별하기 위한 마커 인터페이스입니다. `AddCustomPipelinesFromAssembly()`에서 Scrutor 자동 검색 등록에 사용됩니다.
+
+```csharp
+public interface ICustomUsecasePipeline { }
+```
+
+#### IUsecaseLogEnricher\<TRequest\>
+
+내장 `UsecaseLoggingPipeline`이 Request/Response 로그 출력 시 Serilog `LogContext`에 커스텀 속성을 자동으로 Push합니다.
+
+```csharp
+public interface IUsecaseLogEnricher<in TRequest>
+{
+    IDisposable? EnrichRequestLog(TRequest request);
+    IDisposable? EnrichResponseLog(TRequest request);
+}
+```
+
+- `EnrichRequestLog`: Request 로그 출력 전에 호출됩니다. `LogContext.PushProperty`로 속성을 Push하고 `IDisposable`을 반환합니다.
+- `EnrichResponseLog`: Response 로그 출력 전에 호출됩니다.
+- DI에 등록되지 않으면 null-safe로 동작하여 기본 로깅만 수행됩니다.
+
+#### UsecaseTracingCustomPipelineBase\<TRequest\>
+
+Usecase별 커스텀 Tracing을 생성하기 위한 베이스 클래스입니다. `ICustomUsecasePipeline`을 구현합니다.
+
+```csharp
+public abstract class UsecaseTracingCustomPipelineBase<TRequest>
+    : UsecasePipelineBase<TRequest>, ICustomUsecasePipeline
+{
+    protected Activity? StartCustomActivity(string operationName, ActivityKind kind = ActivityKind.Internal);
+    protected static void SetStandardRequestTags(Activity activity, string method);
+}
+```
+
+- `StartCustomActivity`: 커스텀 Activity(Span)를 생성합니다. 부모 `Activity.Current`가 존재하면 자식 span으로 생성됩니다.
+- `SetStandardRequestTags`: 5개 표준 태그(`request.layer`, `request.category`, `request.category.type`, `request.handler`, `request.handler.method`)를 자동 설정합니다.
+
+#### UsecaseMetricCustomPipelineBase\<TRequest\>
+
+Usecase별 개별 Metric을 생성하기 위한 베이스 클래스입니다. `ICustomUsecasePipeline`을 구현합니다.
+
+```csharp
+public abstract class UsecaseMetricCustomPipelineBase<TRequest>
+    : UsecasePipelineBase<TRequest>, ICustomUsecasePipeline
+{
+    protected string GetMetricName(string metricName);
+    protected string GetMetricNameWithoutHandler(string metricName);
+}
+```
+
+- `GetMetricName`: Handler를 포함하는 Metric 이름을 생성합니다. 형식: `application.usecase.{cqrs}.{handler}.{metricName}`
+- `GetMetricNameWithoutHandler`: Handler를 제외한 CQRS 레벨의 Metric 이름을 생성합니다.
+- `RequestDuration`: 요청 처리 시간 측정 헬퍼 (Histogram 기록, `using` 구문 사용).
+
+#### PipelineConfigurator API
+
+`PipelineConfigurator`에서 커스텀 파이프라인을 등록하는 두 가지 방법을 제공합니다:
+
+| API | 설명 |
+|-----|------|
+| `AddCustomPipelinesFromAssembly(Assembly)` | 어셈블리에서 `ICustomUsecasePipeline` 구현체를 자동 검색하여 등록 (Scrutor) |
+| `AddCustomPipeline<T>()` | 개별 커스텀 파이프라인을 명시적으로 등록 |
+
+#### Quick Start 예제 (02-ObservabilityHost)
+
+```csharp
+// Program.cs — 커스텀 파이프라인 등록
+services
+    .RegisterOpenTelemetry(configuration, AssemblyReference.Assembly)
+    .ConfigureTracing(t => t.Configure(b => b.AddConsoleExporter()))
+    .ConfigureMetrics(m => m.Configure(b => b.AddConsoleExporter()))
+    .ConfigurePipelines(p => p
+        .UseMetrics()
+        .UseTracing()
+        .UseLogging()
+        .UseException()
+        .AddCustomPipelinesFromAssembly(AssemblyReference.Assembly))
+    .Build();
+
+// Log Enricher 별도 등록 (ICustomUsecasePipeline이 아니므로 Scrutor 스캔 대상 아님)
+services.AddScoped<IUsecaseLogEnricher<PlaceOrderCommand.Request>, PlaceOrderLogEnricher>();
+```
+
+```csharp
+// PlaceOrderCommand.TracingPipeline — 커스텀 Tracing
+public sealed class PlaceOrderTracingPipeline
+    : UsecaseTracingCustomPipelineBase<PlaceOrderCommand.Request>
+    , IPipelineBehavior<PlaceOrderCommand.Request, FinResponse<PlaceOrderCommand.Response>>
+{
+    public PlaceOrderTracingPipeline(ActivitySource activitySource) : base(activitySource) { }
+
+    public async ValueTask<FinResponse<PlaceOrderCommand.Response>> Handle(
+        PlaceOrderCommand.Request request,
+        MessageHandlerDelegate<PlaceOrderCommand.Request, FinResponse<PlaceOrderCommand.Response>> next,
+        CancellationToken ct)
+    {
+        using Activity? activity = StartCustomActivity("ValidateOrder");
+        if (activity != null)
+        {
+            SetStandardRequestTags(activity, "ValidateOrder");
+            activity.SetTag("order.line_count", request.Lines.Count);
+            activity.SetTag("order.customer_id", request.CustomerId);
+        }
+
+        return await next(request, ct);
+    }
+}
+```
 
 ---
 
@@ -992,6 +1114,11 @@ response.event.failure_count     # 조합 count는 _count
 | Application Metrics | `Src/Functorium.Adapters/Observabilities/Pipelines/UsecaseMetricsPipeline.cs` |
 | Application Tracing | `Src/Functorium.Adapters/Observabilities/Pipelines/UsecaseTracingPipeline.cs` |
 | DomainEvent Publisher | `Src/Functorium.Adapters/Observabilities/Events/ObservableDomainEventPublisher.cs` |
+| Custom Pipeline 마커 | `Src/Functorium.Adapters/Observabilities/Pipelines/ICustomUsecasePipeline.cs` |
+| Log Enricher 인터페이스 | `Src/Functorium.Adapters/Observabilities/Pipelines/IUsecaseLogEnricher.cs` |
+| Tracing Custom Base | `Src/Functorium.Adapters/Observabilities/Pipelines/UsecaseTracingCustomPipelineBase.cs` |
+| Metric Custom Base | `Src/Functorium.Adapters/Observabilities/Pipelines/UsecaseMetricCustomPipelineBase.cs` |
+| Pipeline 설정 | `Src/Functorium.Adapters/Observabilities/Builders/Configurators/PipelineConfigurator.cs` |
 
 ### 관련 테스트
 
@@ -1005,6 +1132,9 @@ response.event.failure_count     # 조합 count는 _count
 | Adapter Tracing 구조 | `Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortTracingStructureTests.cs` |
 | DomainEvent Publisher Logging | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherLoggingStructureTests.cs` |
 | DomainEvent Handler Logging | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerLoggingStructureTests.cs` |
+| Log Enricher 통합 | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseLoggingPipelineEnricherTests.cs` |
+| Tracing Custom Base | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseTracingCustomPipelineBaseTests.cs` |
+| Pipeline 설정 | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Configurators/PipelineConfiguratorTests.cs` |
 
 ## 트러블슈팅
 
@@ -1073,11 +1203,19 @@ Publisher는 이벤트 발행이라는 인프라 관심사를 담당하므로 Ad
 
 ### Q4. Pipeline 실행 순서가 중요한 이유는?
 
-`Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler` 순서로 실행됩니다. Metrics/Tracing/Logging이 가장 바깥에 있으므로 Validation이나 Exception에서 발생한 오류까지 모두 관측할 수 있습니다.
+Command는 `Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler`, Query는 `Metrics → Tracing → Logging → Validation → Caching → Exception → Custom → Handler` 순서로 실행됩니다. Metrics/Tracing/Logging이 가장 바깥에 있으므로 Validation이나 Exception에서 발생한 오류까지 모두 관측할 수 있습니다.
 
 ### Q5. 새 Adapter를 추가할 때 관측성 코드를 직접 작성해야 하나요?
 
 아닙니다. Port 인터페이스에 `[GenerateObservablePort]` 속성을 적용하면 Source Generator가 Logging, Metrics, Tracing 코드를 자동으로 생성합니다. Usecase도 `UseAll()` Pipeline이 자동 처리합니다.
+
+### Q6. 커스텀 파이프라인은 어떤 순서로 실행되나요?
+
+커스텀 파이프라인은 기본 파이프라인 뒤, Handler 바로 앞에서 실행됩니다. `PipelineConfigurator`에서 `AddCustomPipeline<T>()` 또는 `AddCustomPipelinesFromAssembly()`로 등록하면 `... → Transaction → Custom → Handler` 순서로 실행됩니다.
+
+### Q7. IUsecaseLogEnricher를 등록하지 않으면 어떻게 되나요?
+
+`UsecaseLoggingPipeline`은 `IUsecaseLogEnricher<TRequest>?`를 optional 의존성(`= null`)으로 주입받습니다. 등록하지 않으면 null-safe로 동작하여 기본 로깅만 수행됩니다. 별도의 설정이나 fallback이 필요하지 않습니다.
 
 ## 참고 문서
 

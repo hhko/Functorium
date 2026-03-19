@@ -614,6 +614,58 @@ Application Layer에서는 요청과 응답 객체 전체가 로그에 포함됩
 | `error.code` | - | - | 에러 코드 |
 | `@error` | - | - | 에러 객체 |
 
+### Log Enricher를 통한 커스텀 로깅
+
+기본 `UsecaseLoggingPipeline`이 자동으로 생성하는 표준 필드 외에, 비즈니스 맥락에 맞는 커스텀 필드를 추가할 수 있습니다. `IUsecaseLogEnricher<TRequest>`를 구현하면 Request/Response 로그 출력 시 Serilog `LogContext`에 커스텀 속성을 자동으로 Push합니다.
+
+#### IUsecaseLogEnricher\<TRequest\> 인터페이스
+
+```csharp
+public interface IUsecaseLogEnricher<in TRequest>
+{
+    IDisposable? EnrichRequestLog(TRequest request);
+    IDisposable? EnrichResponseLog(TRequest request);
+}
+```
+
+- `EnrichRequestLog`: Request 로그 출력 전에 호출됩니다. `LogContext.PushProperty`로 추가 속성을 Push하고 `IDisposable`을 반환합니다.
+- `EnrichResponseLog`: Response 로그 출력 전에 호출됩니다.
+- 반환된 `IDisposable`은 로그 출력 후 자동으로 Dispose되어 스코프가 정리됩니다.
+
+#### 구현 예시 (PlaceOrderCommand.LogEnricher)
+
+```csharp
+public sealed class PlaceOrderLogEnricher : IUsecaseLogEnricher<PlaceOrderCommand.Request>
+{
+    public IDisposable? EnrichRequestLog(PlaceOrderCommand.Request request)
+    {
+        var d1 = LogContext.PushProperty("CustomerId", request.CustomerId);
+        var d2 = LogContext.PushProperty("OrderLineCount", request.Lines.Count);
+        return new CompositeDisposable(d1, d2);
+    }
+
+    public IDisposable? EnrichResponseLog(PlaceOrderCommand.Request request)
+    {
+        decimal total = request.Lines.Sum(l => l.Quantity * l.UnitPrice);
+        return LogContext.PushProperty("OrderTotalAmount", total);
+    }
+}
+```
+
+#### 등록 방법
+
+Log Enricher는 `ICustomUsecasePipeline`이 아니므로 `AddCustomPipelinesFromAssembly()`의 Scrutor 스캔 대상이 아닙니다. 별도로 DI에 등록합니다:
+
+```csharp
+services.AddScoped<IUsecaseLogEnricher<PlaceOrderCommand.Request>, PlaceOrderLogEnricher>();
+```
+
+#### null-safe 동작
+
+`UsecaseLoggingPipeline`은 `IUsecaseLogEnricher<TRequest>?`를 optional 의존성(`= null`)으로 주입받습니다. Enricher가 등록되지 않은 Usecase에서는 기본 표준 로깅만 수행됩니다.
+
+> **참조**: [커스텀 파이프라인 확장 포인트](./18a-observability-spec#커스텀-파이프라인-확장-포인트)
+
 ---
 
 ## Adapter Layer 로깅

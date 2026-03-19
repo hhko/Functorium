@@ -227,7 +227,7 @@ Pipeline이 정상적으로 생성되었다면, 이제 DI 컨테이너에 등록
 ```csharp
 // 파일: {Adapters.Persistence}/Abstractions/Registrations/AdapterPersistenceRegistration.cs
 
-using Functorium.Abstractions.Registrations;
+using Functorium.Adapters.Abstractions.Registrations;
 
 public static class AdapterPersistenceRegistration
 {

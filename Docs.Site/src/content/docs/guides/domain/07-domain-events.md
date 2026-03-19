@@ -352,7 +352,7 @@ internal sealed class Usecase(
 
 ### 파이프라인 발행 흐름
 
-`UsecaseTransactionPipeline`은 Command Usecase에 대해 UoW 커밋과 도메인 이벤트 발행을 자동 처리합니다 (Query는 바이패스).
+`UsecaseTransactionPipeline`은 Command Usecase에 대해 UoW 커밋과 도메인 이벤트 발행을 자동 처리합니다 (Query는 `where ICommand<TResponse>` 제약으로 컴파일 타임 제외).
 
 **이벤트 수집 시점**: Usecase 실행 중 Repository의 `Create`/`Update` 메서드가 `IDomainEventCollector.Track(aggregate)`를 호출하여 변경된 Aggregate를 추적 대상으로 등록합니다. (`IDomainEventCollector`는 `Functorium.Applications.Events` 네임스페이스에 정의되며, Adapter Layer의 `DomainEventCollector`가 구현합니다.) Aggregate 내부에서는 `AddDomainEvent()`로 이벤트를 수집합니다.
 

@@ -599,6 +599,75 @@ rate(application_usecase_command_duration_sum[5m])
 rate(application_usecase_command_duration_count[5m])
 ```
 
+### 커스텀 메트릭 확장 (UsecaseMetricCustomPipelineBase)
+
+기본 `UsecaseMetricsPipeline`이 자동으로 수집하는 `requests`, `responses`, `duration` 외에, Usecase별 비즈니스 메트릭을 추가할 수 있습니다. `UsecaseMetricCustomPipelineBase<TRequest>`를 상속하여 커스텀 Instrument를 생성합니다.
+
+#### 베이스 클래스 API
+
+```csharp
+public abstract class UsecaseMetricCustomPipelineBase<TRequest>
+    : UsecasePipelineBase<TRequest>, ICustomUsecasePipeline
+{
+    protected readonly Meter _meter;
+    protected string GetMetricName(string metricName);
+    protected string GetMetricNameWithoutHandler(string metricName);
+}
+```
+
+- `GetMetricName(metricName)`: Handler를 포함하는 Metric 이름을 생성합니다. 형식: `application.usecase.{cqrs}.{handler}.{metricName}`
+- `GetMetricNameWithoutHandler(metricName)`: Handler를 제외한 CQRS 레벨의 Metric 이름을 생성합니다. 형식: `application.usecase.{cqrs}.{metricName}`
+- `RequestDuration`: 요청 처리 시간을 측정하기 위한 헬퍼 클래스. `using` 구문과 함께 사용하여 Histogram에 자동 기록합니다.
+
+#### 구현 예시 (PlaceOrderCommand.MetricsPipeline)
+
+```csharp
+public sealed class PlaceOrderMetricsPipeline
+    : UsecaseMetricCustomPipelineBase<PlaceOrderCommand.Request>
+    , IPipelineBehavior<PlaceOrderCommand.Request, FinResponse<PlaceOrderCommand.Response>>
+{
+    private readonly Histogram<int> _orderLineCount;
+    private readonly Histogram<double> _orderTotalAmount;
+
+    public PlaceOrderMetricsPipeline(
+        IOptions<OpenTelemetryOptions> options, IMeterFactory meterFactory)
+        : base(options.Value.ServiceNamespace, meterFactory)
+    {
+        _orderLineCount = _meter.CreateHistogram<int>(
+            name: GetMetricName("order_line_count"),
+            unit: "{lines}",
+            description: "Number of order lines per PlaceOrder");
+
+        _orderTotalAmount = _meter.CreateHistogram<double>(
+            name: GetMetricName("order_total_amount"),
+            unit: "{currency}",
+            description: "Total amount per PlaceOrder");
+    }
+
+    public async ValueTask<FinResponse<PlaceOrderCommand.Response>> Handle(
+        PlaceOrderCommand.Request request,
+        MessageHandlerDelegate<PlaceOrderCommand.Request, FinResponse<PlaceOrderCommand.Response>> next,
+        CancellationToken ct)
+    {
+        _orderLineCount.Record(request.Lines.Count);
+        _orderTotalAmount.Record((double)request.Lines.Sum(l => l.Quantity * l.UnitPrice));
+        return await next(request, ct);
+    }
+}
+```
+
+#### 등록 방법
+
+`UsecaseMetricCustomPipelineBase<TRequest>`는 `ICustomUsecasePipeline`을 구현하므로, `AddCustomPipelinesFromAssembly()`로 자동 등록됩니다:
+
+```csharp
+.ConfigurePipelines(p => p
+    .UseMetrics()
+    .AddCustomPipelinesFromAssembly(AssemblyReference.Assembly))
+```
+
+> **참조**: [커스텀 파이프라인 확장 포인트](./18a-observability-spec#커스텀-파이프라인-확장-포인트)
+
 ---
 
 ## Adapter Layer 메트릭

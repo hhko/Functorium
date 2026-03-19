@@ -526,6 +526,70 @@ var spanName = $"application usecase.{cqrsType} {handlerName}.Handle";
 | `CreateOrderCommandRequest` | `application usecase.command CreateOrderCommandHandler.Handle` |
 | `GetOrderQueryRequest` | `application usecase.query GetOrderQueryHandler.Handle` |
 
+### 커스텀 트레이싱 확장 (UsecaseTracingCustomPipelineBase)
+
+기본 `UsecaseTracingPipeline`이 자동으로 생성하는 Span 외에, Usecase별 커스텀 Activity(Span)를 추가할 수 있습니다. `UsecaseTracingCustomPipelineBase<TRequest>`를 상속하여 비즈니스 맥락에 맞는 세밀한 추적을 구현합니다.
+
+#### 베이스 클래스 API
+
+```csharp
+public abstract class UsecaseTracingCustomPipelineBase<TRequest>
+    : UsecasePipelineBase<TRequest>, ICustomUsecasePipeline
+{
+    protected Activity? StartCustomActivity(string operationName, ActivityKind kind = ActivityKind.Internal);
+    protected string GetActivityName(string operationName);
+    protected static void SetStandardRequestTags(Activity activity, string method);
+}
+```
+
+- `StartCustomActivity(operationName, kind)`: 커스텀 Activity(Span)를 생성합니다. 부모 `Activity.Current`가 존재하면 자식 span으로 생성됩니다. Activity 이름 형식: `{layer} {category}.{cqrs} {handler}.{operationName}`
+- `GetActivityName(operationName)`: Activity 이름을 조회합니다.
+- `SetStandardRequestTags(activity, method)`: 5개 표준 요청 태그를 자동 설정합니다:
+  - `request.layer` (application)
+  - `request.category` (usecase)
+  - `request.category.type` (command/query)
+  - `request.handler` (Handler 이름)
+  - `request.handler.method` (메서드 이름)
+
+#### 구현 예시 (PlaceOrderCommand.TracingPipeline)
+
+```csharp
+public sealed class PlaceOrderTracingPipeline
+    : UsecaseTracingCustomPipelineBase<PlaceOrderCommand.Request>
+    , IPipelineBehavior<PlaceOrderCommand.Request, FinResponse<PlaceOrderCommand.Response>>
+{
+    public PlaceOrderTracingPipeline(ActivitySource activitySource) : base(activitySource) { }
+
+    public async ValueTask<FinResponse<PlaceOrderCommand.Response>> Handle(
+        PlaceOrderCommand.Request request,
+        MessageHandlerDelegate<PlaceOrderCommand.Request, FinResponse<PlaceOrderCommand.Response>> next,
+        CancellationToken ct)
+    {
+        using Activity? activity = StartCustomActivity("ValidateOrder");
+        if (activity != null)
+        {
+            SetStandardRequestTags(activity, "ValidateOrder");
+            activity.SetTag("order.line_count", request.Lines.Count);
+            activity.SetTag("order.customer_id", request.CustomerId);
+        }
+
+        return await next(request, ct);
+    }
+}
+```
+
+#### 등록 방법
+
+`UsecaseTracingCustomPipelineBase<TRequest>`는 `ICustomUsecasePipeline`을 구현하므로, `AddCustomPipelinesFromAssembly()`로 자동 등록됩니다:
+
+```csharp
+.ConfigurePipelines(p => p
+    .UseTracing()
+    .AddCustomPipelinesFromAssembly(AssemblyReference.Assembly))
+```
+
+> **참조**: [커스텀 파이프라인 확장 포인트](./18a-observability-spec#커스텀-파이프라인-확장-포인트)
+
 ---
 
 ## Adapter Layer 트레이싱
