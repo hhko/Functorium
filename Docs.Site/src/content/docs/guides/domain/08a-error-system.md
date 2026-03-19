@@ -550,6 +550,8 @@ Error (LanguageExt.Common)
 | `ErrorCodeExpected<T>` | `true` | `false` | internal |
 | `ErrorCodeExpected<T1, T2>` | `true` | `false` | internal |
 | `ErrorCodeExpected<T1, T2, T3>` | `true` | `false` | internal |
+
+> **참고**: `DomainError.For<TDomain, T1, T2, T3>()` 3-값 오버로드도 지원됩니다. 상세 시그니처와 사용 예제는 [에러 시스템: Domain/Application 에러](./08b-error-system-domain-app)를 참조하세요.
 | `ErrorCodeExceptional` | `false` | `true` | internal |
 
 ### ErrorCodeFactory API

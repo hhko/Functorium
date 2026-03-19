@@ -300,14 +300,9 @@ IObservablePort (인터페이스)
 ├── string RequestCategory - 관찰성 로그용 카테고리
 │
 ├── IRepository<TAggregate, TId> : IObservablePort   ← Aggregate Root 단위 Repository
-│   ├── FinT<IO, TAggregate> Create(TAggregate aggregate)
-│   ├── FinT<IO, TAggregate> GetById(TId id)
-│   ├── FinT<IO, TAggregate> Update(TAggregate aggregate)
-│   ├── FinT<IO, int> Delete(TId id)
-│   ├── FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates)
-│   ├── FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids)
-│   ├── FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates)
-│   └── FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids)
+│   ├── Create / GetById / Update / Delete            ← 단건 CRUD
+│   └── CreateRange / GetByIds / UpdateRange / DeleteRange  ← 일괄 CRUD
+│       (전체 시그니처는 §Repository 인터페이스 설계 원칙 참조)
 │   │
 │   ├── IProductRepository : IRepository<Product, ProductId>
 │   │   ├── FinT<IO, bool> Exists(Specification<Product> spec)  ← 도메인 전용

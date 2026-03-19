@@ -128,6 +128,15 @@ Domain Service(도메인 로직)와 Application Service(Usecase, I/O 조율)의 
         └── NO → Domain Service
 ```
 
+**요약:**
+
+| 조건 | 배치 |
+|------|------|
+| 단일 Aggregate 내 로직 | Entity 메서드 또는 Value Object |
+| 다수 Aggregate 읽기 + 순수 로직 | Domain Service (순수 패턴) |
+| 다수 Aggregate + 대규모 교차 데이터 | Domain Service (Repository 패턴) |
+| 다수 Aggregate 쓰기 또는 외부 I/O 조율 | Usecase |
+
 다음 표는 위 트리의 결과를 요약한 것입니다.
 
 | 배치 위치 | 기준 | 예시 |

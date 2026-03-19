@@ -4,6 +4,34 @@ title: "Use Case와 CQRS"
 
 이 문서는 읽기와 쓰기를 분리하여 각각 최적화하는 CQRS 패턴으로 유스케이스를 구현하는 방법을 설명합니다.
 
+## 들어가며
+
+"조회 성능을 위해 도메인 모델에 탐색용 프로퍼티를 추가해야 하나?"
+"Application Service에 비즈니스 로직이 점점 비대해지는데, 어떻게 분리하나?"
+"SaveChanges는 어디서 호출해야 하고, 도메인 이벤트 발행은 누가 담당하나?"
+
+이러한 질문들은 Application Layer를 설계할 때 반복적으로 마주치는 문제입니다. CQRS는 읽기와 쓰기를 분리하여 각각 최적의 기술을 선택할 수 있게 하고, Functorium의 파이프라인 시스템은 트랜잭션과 이벤트 발행을 자동으로 처리하여 Usecase가 비즈니스 로직에만 집중할 수 있게 합니다.
+
+### 이 문서에서 배우는 내용
+
+이 문서를 통해 다음을 학습합니다:
+
+1. **CQRS 패턴의 이점과 Command/Query 분리 기준** - 읽기/쓰기 경로 분리의 실질적 효과
+2. **중첩 클래스 패턴으로 유스케이스 구현** - Request, Response, Validator, Usecase를 하나의 파일에 응집
+3. **Apply 병합 패턴과 LINQ 기반 함수형 구현** - Value Object 검증과 함수형 체이닝
+4. **UsecaseTransactionPipeline의 자동 처리** - SaveChanges와 도메인 이벤트 발행 자동화
+5. **Application 에러와 FluentValidation 통합** - 이중 검증 전략
+
+### 사전 지식
+
+이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
+
+- [DDD 전술적 설계 개요](../domain/04-ddd-tactical-overview)의 레이어 아키텍처
+- [값 객체(Value Object)](../domain/05a-value-objects)의 Create/Validate 패턴
+- LanguageExt의 `Fin<T>`, `FinT<IO, T>` 기본 개념
+
+> **CQRS의 핵심은** 읽기와 쓰기를 분리하여 각각 최적의 기술을 선택하는 것이고, Functorium의 파이프라인은 트랜잭션과 이벤트 발행을 자동 처리하여 Usecase가 비즈니스 로직에만 집중할 수 있게 합니다.
+
 ## 왜 CQRS인가
 
 ### DDD에서 Application Service의 역할
@@ -44,36 +72,6 @@ CQRS의 이점을 Adapter 계층에서 실현합니다:
 ### 유스케이스 = 비즈니스 의도의 명시적 표현
 
 Functorium에서 각 유스케이스는 하나의 클래스로 표현됩니다. `CreateProductCommand`, `GetProductByIdQuery`처럼 비즈니스 의도가 클래스 이름에 드러납니다.
-
----
-
-## 들어가며
-
-"조회 성능을 위해 도메인 모델에 탐색용 프로퍼티를 추가해야 하나?"
-"Application Service에 비즈니스 로직이 점점 비대해지는데, 어떻게 분리하나?"
-"SaveChanges는 어디서 호출해야 하고, 도메인 이벤트 발행은 누가 담당하나?"
-
-이러한 질문들은 Application Layer를 설계할 때 반복적으로 마주치는 문제입니다. CQRS는 읽기와 쓰기를 분리하여 각각 최적의 기술을 선택할 수 있게 하고, Functorium의 파이프라인 시스템은 트랜잭션과 이벤트 발행을 자동으로 처리하여 Usecase가 비즈니스 로직에만 집중할 수 있게 합니다.
-
-### 이 문서에서 배우는 내용
-
-이 문서를 통해 다음을 학습합니다:
-
-1. **CQRS 패턴의 이점과 Command/Query 분리 기준** - 읽기/쓰기 경로 분리의 실질적 효과
-2. **중첩 클래스 패턴으로 유스케이스 구현** - Request, Response, Validator, Usecase를 하나의 파일에 응집
-3. **Apply 병합 패턴과 LINQ 기반 함수형 구현** - Value Object 검증과 함수형 체이닝
-4. **UsecaseTransactionPipeline의 자동 처리** - SaveChanges와 도메인 이벤트 발행 자동화
-5. **Application 에러와 FluentValidation 통합** - 이중 검증 전략
-
-### 사전 지식
-
-이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
-
-- [DDD 전술적 설계 개요](../domain/04-ddd-tactical-overview)의 레이어 아키텍처
-- [값 객체(Value Object)](../domain/05a-value-objects)의 Create/Validate 패턴
-- LanguageExt의 `Fin<T>`, `FinT<IO, T>` 기본 개념
-
-> **CQRS의 핵심은** 읽기와 쓰기를 분리하여 각각 최적의 기술을 선택하는 것이고, Functorium의 파이프라인은 트랜잭션과 이벤트 발행을 자동 처리하여 Usecase가 비즈니스 로직에만 집중할 수 있게 합니다.
 
 ## 요약
 
@@ -821,6 +819,8 @@ public sealed class SearchProductsQuery
     }
 }
 ```
+
+> **참고**: Specification 패턴의 정의, 조합, Repository 통합에 대한 상세는 [10-specifications.md](../domain/10-specifications)를 참조하세요.
 
 ### 전체 조회 (필터 없음)
 

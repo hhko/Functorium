@@ -926,9 +926,9 @@ public abstract class IntegrationTestBase : IClassFixture<{ServiceName}Fixture>
     "ServiceNamespace": "{ServiceName}",
     "CollectorEndpoint": "http://localhost:18889",
     "CollectorProtocol": "Grpc",
-    "TracingCollectorEndpoint": "",
-    "MetricsCollectorEndpoint": "",
-    "LoggingCollectorEndpoint": "",
+    "TracingEndpoint": "",
+    "MetricsEndpoint": "",
+    "LoggingEndpoint": "",
     "SamplingRate": 1.0,
     "EnablePrometheusExporter": false
   }

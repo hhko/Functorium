@@ -4,6 +4,17 @@ title: "Repository & Query Adapter 구현 가이드"
 
 이 문서는 새 Aggregate에 대한 Repository(Write Side)와 Query Adapter(Read Side)의 구현 절차를 단계별로 안내하는 실전 가이드입니다.
 
+## 빠른 탐색
+
+| 작업 | 섹션 |
+|------|------|
+| Repository 구현 체크리스트 | [§2. Repository 구현 가이드 (Write Side)](#2-repository-구현-가이드-write-side) |
+| EfCore Repository 베이스 클래스 | [§2.3 EfCoreRepositoryBase 구현 패턴](#23-efcorerepositorybase-구현-패턴) |
+| InMemory Repository 구현 | [§2.4 InMemoryRepositoryBase 구현 패턴](#24-inmemoryrepositorybase-구현-패턴) |
+| Query Adapter (Dapper) 구현 | [§3. Query Adapter 구현 가이드 (Read Side)](#3-query-adapter-구현-가이드-read-side) |
+| Cursor 페이지네이션 | [§3.5 Cursor 페이지네이션](#35-cursor-페이지네이션) |
+| DI 등록 | [§6. DI Registration 패턴](#6-di-registration-패턴) |
+
 ## 들어가며
 
 새 Aggregate를 추가할 때마다 Repository와 Query Adapter를 처음부터 작성하는 것은 반복적이고 실수가 발생하기 쉽습니다:

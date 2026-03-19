@@ -94,7 +94,7 @@ public class MyIntegrationTests : IClassFixture<MyTestFixture>
 소스 위치: `Src/Functorium.Testing/Arrangements/Hosting/HostTestFixture.cs`
 
 ```csharp
-public class HostTestFixture<TProgram> : IAsyncLifetime where TProgram : class
+public class HostTestFixture<TProgram> : IAsyncDisposable, IAsyncLifetime where TProgram : class
 {
     private WebApplicationFactory<TProgram>? _factory;
 
@@ -273,9 +273,9 @@ Tests/MyProject.Tests.Integration/
     "CollectorProtocol": "Grpc",
     "SamplingRate": 1.0,
     "EnablePrometheusExporter": false,
-    "TracingCollectorEndpoint": "",
-    "MetricsCollectorEndpoint": "",
-    "LoggingCollectorEndpoint": ""
+    "TracingEndpoint": "",
+    "MetricsEndpoint": "",
+    "LoggingEndpoint": ""
   },
   "AllowedHosts": "*"
 }
@@ -481,9 +481,9 @@ Grpc.Core.RpcException: Error starting gRPC call
 ```json
 {
   "OpenTelemetry": {
-    "TracingCollectorEndpoint": "",
-    "MetricsCollectorEndpoint": "",
-    "LoggingCollectorEndpoint": ""
+    "TracingEndpoint": "",
+    "MetricsEndpoint": "",
+    "LoggingEndpoint": ""
   }
 }
 ```

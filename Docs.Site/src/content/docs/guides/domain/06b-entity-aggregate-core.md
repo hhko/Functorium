@@ -240,6 +240,18 @@ public class Order : AggregateRoot<OrderId>
 }
 ```
 
+### 부가 인터페이스 요약
+
+Aggregate/Entity에 혼합하여 사용하는 부가 인터페이스입니다. 상세 구현과 사용 예제는 [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced)를 참조하세요.
+
+| 인터페이스 | 속성 | 용도 |
+|-----------|------|------|
+| `IAuditable` | `DateTime CreatedAt`, `Option<DateTime> UpdatedAt` | 생성/수정 시각 추적 |
+| `IAuditableWithUser` | + `Option<string> CreatedBy/UpdatedBy` | + 사용자 추적 |
+| `ISoftDeletable` | `Option<DateTime> DeletedAt`, `bool IsDeleted` | 소프트 삭제 |
+| `ISoftDeletableWithUser` | + `Option<string> DeletedBy` | + 삭제자 추적 |
+| `IConcurrencyAware` | `byte[] RowVersion` | 낙관적 동시성 제어 |
+
 클래스 계층을 이해했으니, 이제 Entity를 고유하게 식별하는 ID 시스템을 살펴보겠습니다.
 
 ---
@@ -407,7 +419,7 @@ public static Product CreateFromValidated(
     ProductDescription description,
     Money price,
     DateTime createdAt,
-    DateTime? updatedAt)
+    Option<DateTime> updatedAt)
 {
     return new Product(id, name, description, price)
     {
@@ -480,7 +492,7 @@ public static Product CreateFromValidated(
     ProductDescription description,
     Money price,
     DateTime createdAt,
-    DateTime? updatedAt)
+    Option<DateTime> updatedAt)
 {
     return new Product(id, name, description, price)
     {

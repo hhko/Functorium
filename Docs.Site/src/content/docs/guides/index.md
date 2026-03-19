@@ -45,6 +45,7 @@ Architecture
 ├── Domain Layer
 │   ├── [05a] 05a-value-objects.md ─── 값 객체 (핵심 개념·검증·구현 패턴)
 │   ├── [05b] 05b-value-objects-validation.md ─── 값 객체 (열거형·실전·FAQ)
+│   ├── [05c] 05c-union-value-objects.md ─── 값 객체: Union 타입
 │   │   └── [06a] 06a-aggregate-design.md ─── Aggregate 설계 (WHY + WHAT)
 │   │       ├── [06b] 06b-entity-aggregate-core.md ─── Entity/Aggregate 핵심 패턴 (HOW)
 │   │       └── [06c] 06c-entity-aggregate-advanced.md ─── Entity/Aggregate 고급 패턴
@@ -113,6 +114,7 @@ Architecture
 | **DDD 빌딩블록 개요/네이밍/용어집** | [04-ddd-tactical-overview.md](./domain/04-ddd-tactical-overview) |
 | **값 객체 만들기 (검증, 동등성)** | [05a-value-objects.md](./domain/05a-value-objects) |
 | **열거형(SmartEnum) 패턴** | [05b-value-objects-validation.md](./domain/05b-value-objects-validation) |
+| **Union 값 객체 (Discriminated Union)** | [05c-union-value-objects.md](./domain/05c-union-value-objects) |
 | **Aggregate 경계 설계하기** | [06a-aggregate-design.md](./domain/06a-aggregate-design) |
 | **Entity/Aggregate 구현 (생성 패턴 포함)** | [06b-entity-aggregate-core.md](./domain/06b-entity-aggregate-core) |
 | **Cross-Aggregate 관계, 부가 인터페이스** | [06c-entity-aggregate-advanced.md](./domain/06c-entity-aggregate-advanced) |
@@ -193,6 +195,7 @@ Architecture
 | 04 | [04-ddd-tactical-overview.md](./domain/04-ddd-tactical-overview) | DDD 전술적 설계 개요, 빌딩블록 맵, Functorium 타입 매핑 |
 | 05a | [05a-value-objects.md](./domain/05a-value-objects) | 값 객체 (핵심 개념, 기반 클래스, 검증 시스템, 구현 패턴) |
 | 05b | [05b-value-objects-validation.md](./domain/05b-value-objects-validation) | 값 객체 (열거형 패턴, 실전 예제, Application 검증, FAQ) |
+| 05c | [05c-union-value-objects.md](./domain/05c-union-value-objects) | 값 객체: Union 타입 (Discriminated Union, 상태 전이, Match/Switch) |
 | 06a | [06a-aggregate-design.md](./domain/06a-aggregate-design) | Aggregate 설계 (WHY + WHAT: 설계 규칙, 경계 설정, 안티패턴) |
 | 06b | [06b-entity-aggregate-core.md](./domain/06b-entity-aggregate-core) | Entity/Aggregate 핵심 패턴 (HOW: 클래스 계층, ID, 생성 패턴, 이벤트) |
 | 06c | [06c-entity-aggregate-advanced.md](./domain/06c-entity-aggregate-advanced) | Entity/Aggregate 고급 패턴 (Cross-Aggregate 관계, 부가 인터페이스, 실전 예제) |

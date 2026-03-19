@@ -111,7 +111,7 @@ _repository.GetById(Arg.Any<ProductId>())
 
 | 기능 | 참조 가이드 |
 |---|---|
-| `HostTestFixture<TProgram>` — HTTP 엔드포인트 통합 테스트 | [01-project-structure.md](../architecture/01-project-structure) |
+| `HostTestFixture<TProgram>` — HTTP 엔드포인트 통합 테스트 | [15b-integration-testing.md](./15b-integration-testing), [01-project-structure.md](../architecture/01-project-structure) |
 | `ShouldBeDomainError`, `ShouldBeApplicationError` 등 에러 Assertion | [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app), [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) |
 
 ---
@@ -482,6 +482,14 @@ public static ValidationResultSummary ValidateAllClasses(
 | `RequireStatic()` / `RequireNotStatic()` | static 여부 |
 | `RequireAbstract()` / `RequireNotAbstract()` | abstract 여부 |
 
+**네이밍 (TypeValidator에서 상속):**
+
+| 메서드 | 설명 |
+|---|---|
+| `RequireNameStartsWith(string)` | 이름이 특정 접두사로 시작해야 함 |
+| `RequireNameEndsWith(string)` | 이름이 특정 접미사로 끝나야 함 |
+| `RequireNameMatching(string)` | 이름이 정규식 패턴과 일치해야 함 |
+
 **타입/상속:**
 
 | 메서드 | 설명 |
@@ -491,6 +499,7 @@ public static ValidationResultSummary ValidateAllClasses(
 | `RequireInherits(Type)` | 특정 기본 클래스 상속 필수 |
 | `RequireImplements(Type)` | 특정 인터페이스 구현 필수 |
 | `RequireImplementsGenericInterface(string)` | 제네릭 인터페이스 구현 필수 |
+| `RequireNoDependencyOn(string)` | 특정 타입에 대한 의존 금지 |
 
 **생성자/프로퍼티/필드:**
 
@@ -508,7 +517,9 @@ public static ValidationResultSummary ValidateAllClasses(
 | 메서드 | 설명 |
 |---|---|
 | `RequireMethod(string, Action<MethodValidator>)` | 특정 이름의 메서드 검증 |
+| `RequireMethodIfExists(string, Action<MethodValidator>)` | 메서드가 있으면 검증 |
 | `RequireAllMethods(Action<MethodValidator>)` | 모든 메서드에 대해 검증 |
+| `RequireProperty(string)` | 특정 이름의 프로퍼티 필수 |
 | `RequireNestedClass(string, Action<ClassValidator>?)` | 중첩 클래스 필수 + 검증 |
 | `RequireNestedClassIfExists(string, Action<ClassValidator>?)` | 중첩 클래스가 있으면 검증 |
 | `ValidateAndThrow()` | 단일 클래스 검증 후 즉시 예외 |

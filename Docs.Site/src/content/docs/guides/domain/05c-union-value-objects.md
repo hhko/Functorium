@@ -170,6 +170,25 @@ protected Fin<TTarget> TransitionFrom<TSource, TTarget>(
 
 `DomainError`에는 CRTP로 전달된 `TSelf` 타입 정보와 `FromState`/`ToState` 정보가 포함됩니다.
 
+**InvalidTransition 에러 타입:**
+
+```csharp
+// DomainErrorType.Transition.cs에 정의
+public sealed record InvalidTransition(string? FromState = null, string? ToState = null) : DomainErrorType;
+```
+
+전이 실패 시 생성되는 에러 JSON 구조 예시:
+
+```json
+{
+  "ErrorCode": "DomainErrors.EmailVerificationState.InvalidTransition",
+  "ErrorCurrentValue": "Verified { Email = user@example.com, VerifiedAt = 2026-01-15 }",
+  "Message": "Invalid transition from Verified to Verified"
+}
+```
+
+> **참고**: `InvalidTransition` 에러 타입은 [에러 시스템: Domain/Application 에러](./08b-error-system-domain-app)의 Transition 범주를 참조하세요.
+
 ### 예제: EmailVerificationState
 
 이메일 인증은 `Unverified → Verified` 단방향 전이만 허용합니다.
@@ -269,6 +288,10 @@ public sealed class UnreachableCaseException(object value)
 Aggregate는 전이 자체를 수행하지 않고, **가드 조건 검증 후 Union 객체에 위임**합니다.
 
 ```csharp
+// Error type definitions
+public sealed record AlreadyDeleted : DomainErrorType.Custom;
+public sealed record NoEmailToVerify : DomainErrorType.Custom;
+
 // Contact Aggregate의 VerifyEmail 메서드
 public Fin<Unit> VerifyEmail(DateTime verifiedAt)
 {

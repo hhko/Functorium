@@ -138,6 +138,8 @@ public abstract record DomainEvent(
 }
 ```
 
+모든 convenience 생성자는 `protected`입니다. `DomainEvent`를 직접 생성하지 않고, `sealed record`로 상속하여 사용합니다.
+
 **이벤트 추적성 (Traceability)**:
 - `EventId`: 이벤트 고유 식별자. 중복 처리 방지(멱등성) 및 이벤트 추적에 사용됩니다.
 - `CorrelationId`: 동일한 요청에서 발생한 이벤트를 그룹으로 추적합니다.
@@ -352,7 +354,7 @@ internal sealed class Usecase(
 
 `UsecaseTransactionPipeline`은 Command Usecase에 대해 UoW 커밋과 도메인 이벤트 발행을 자동 처리합니다 (Query는 바이패스).
 
-**이벤트 수집 시점**: Usecase 실행 중 Repository의 `Create`/`Update` 메서드가 `IDomainEventCollector.Track(aggregate)`를 호출하여 변경된 Aggregate를 추적 대상으로 등록합니다. Aggregate 내부에서는 `AddDomainEvent()`로 이벤트를 수집합니다.
+**이벤트 수집 시점**: Usecase 실행 중 Repository의 `Create`/`Update` 메서드가 `IDomainEventCollector.Track(aggregate)`를 호출하여 변경된 Aggregate를 추적 대상으로 등록합니다. (`IDomainEventCollector`는 `Functorium.Applications.Events` 네임스페이스에 정의되며, Adapter Layer의 `DomainEventCollector`가 구현합니다.) Aggregate 내부에서는 `AddDomainEvent()`로 이벤트를 수집합니다.
 
 **파이프라인 실행 순서**:
 

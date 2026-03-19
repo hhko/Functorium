@@ -446,6 +446,8 @@ private IQueryable<ProductModel> BuildQuery(Specification<Product> spec)
 
 > **설계 결정**: `ExpressionSpecification<T>`의 `ToExpression()`은 도메인 엔터티 기준으로 Expression을 정의하되, Value Object를 primitive로 캐스트합니다. `PropertyMap`의 `ExpressionVisitor`가 이 캐스트 패턴을 인식하여 Model 프로퍼티로 자동 변환합니다. And/Or/Not 조합도 `SpecificationExpressionResolver`가 자동 합성합니다.
 
+> **참고**: 전체 Repository 구현 절차는 [Repository & Query 구현 가이드](../adapter/14c-repository-query-implementation-guide)를 참조하세요.
+
 Repository 연동까지 완료했으니, 이제 Usecase에서 Specification을 단일 또는 복합으로 활용하는 패턴을 확인합니다.
 
 ---
