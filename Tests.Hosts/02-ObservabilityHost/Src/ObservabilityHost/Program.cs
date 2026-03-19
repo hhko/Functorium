@@ -59,4 +59,16 @@ var getOrderResponse = await mediator.Send(new GetOrderSummaryQuery.Request("ORD
 Console.WriteLine($"GetOrderSummary Result: {getOrderResponse}");
 Console.WriteLine();
 
+// Scenario 3: FailExpectedCommand (Expected 비즈니스 에러 → Warning 레벨)
+Console.WriteLine("=== FailExpectedCommand (Expected Error) ===");
+var failExpectedResponse = await mediator.Send(new FailExpectedCommand.Request("ORD-NOT-EXIST"));
+Console.WriteLine($"FailExpected Result: {failExpectedResponse}");
+Console.WriteLine();
+
+// Scenario 4: FailExceptionalCommand (Exceptional 시스템 에러 → Error 레벨)
+Console.WriteLine("=== FailExceptionalCommand (Exceptional Error) ===");
+var failExceptionalResponse = await mediator.Send(new FailExceptionalCommand.Request("ORD-DB-FAIL"));
+Console.WriteLine($"FailExceptional Result: {failExceptionalResponse}");
+Console.WriteLine();
+
 Console.WriteLine("=== Done ===");
