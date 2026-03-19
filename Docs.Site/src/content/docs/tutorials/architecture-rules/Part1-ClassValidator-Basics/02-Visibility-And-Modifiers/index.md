@@ -182,9 +182,8 @@ public void RecordTypes_ShouldBe_Record()
 ### Q3: `RequireRecord()`는 `record class`와 `record struct` 모두를 검증하나요?
 **A**: `ValidateAllClasses`에서 사용하는 `RequireRecord()`는 `record class`만 검증합니다. `record struct`는 값 타입이므로 ArchUnitNET의 클래스 필터에 포함되지 않습니다.
 
-### Q4: 다음 장에서는 무엇을 배우나요?
-**A**: 3장에서는 클래스와 인터페이스의 **네이밍 규칙을** 검증합니다. `RequireNameEndsWith("Service")`, `RequireNameStartsWith("I")`, `RequireNameMatching(regex)` 등을 사용하여 일관된 명명 규칙을 강제합니다.
-
 ---
 
 다음 장에서는 접미사, 접두사, 정규식 패턴을 사용하여 클래스와 인터페이스의 네이밍 규칙을 검증하는 방법을 배웁니다.
+
+→ [3장: 네이밍 규칙](../03-Naming-Rules/)

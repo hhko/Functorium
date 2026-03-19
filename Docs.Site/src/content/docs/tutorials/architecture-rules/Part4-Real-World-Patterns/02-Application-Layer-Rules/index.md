@@ -214,4 +214,4 @@ public sealed class DomainArchTests : DomainArchitectureTestSuite
 
 애플리케이션 레이어의 Command/Query 구조를 테스트로 강제하면, 새로운 유스케이스를 추가할 때마다 동일한 패턴이 자동으로 보장됩니다. 다음 장에서는 포트 인터페이스와 어댑터 구현체의 관계를 검증하는 방법을 살펴봅니다.
 
-> [다음: 3장 - Adapter Layer Rules](../03-Adapter-Layer-Rules/)
+→ [3장: 어댑터 레이어 규칙](../03-Adapter-Layer-Rules/)

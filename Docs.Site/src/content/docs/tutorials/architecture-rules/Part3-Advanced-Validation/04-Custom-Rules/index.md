@@ -184,4 +184,4 @@ public void DomainClasses_ShouldSatisfy_CompositeRuleWithBuiltIn()
 
 커스텀 규칙을 작성할 수 있다는 것은, 프레임워크의 한계가 곧 프로젝트의 한계가 되지 않는다는 뜻입니다. Part 3의 고급 검증 기법을 모두 배웠으니, 다음 Part 4에서는 이 모든 기법을 실전 레이어별 아키텍처 규칙에 적용합니다.
 
-> [다음: Part 4 - Real-World Patterns](../../Part4-Real-World-Patterns/)
+→ [Part 4: 실전 패턴](../../Part4-Real-World-Patterns/)

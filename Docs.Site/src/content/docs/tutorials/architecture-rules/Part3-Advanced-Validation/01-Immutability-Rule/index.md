@@ -175,11 +175,8 @@ public void Temperature_ShouldBe_SealedAndImmutable()
 ### Q4: `ToCelsius()` 같은 변환 메서드는 왜 허용되나요?
 **A**: `RequireImmutable()`의 상태 변경 메서드 검증은 허용 목록(팩토리 메서드, getter, `ToString`, `Equals`, `GetHashCode` 등) 기반으로 동작합니다. 반환 타입이 자기 자신(`Temperature`)인 메서드는 새 인스턴스를 반환하는 변환 메서드로 간주되어 허용됩니다.
 
-### Q5: 다음 장에서는 무엇을 배우나요?
-**A**: 다음 장에서는 Command/Query 패턴에서 `Request`와 `Response` 중첩 클래스의 존재와 구조를 검증하는 방법을 배웁니다. `RequireNestedClass()`와 `RequireNestedClassIfExists()`를 사용합니다.
-
 ---
 
 불변성은 도메인 객체의 가장 기본적인 안전장치입니다. 다음 장에서는 한 단계 더 나아가, Command/Query 패턴에서 중첩 클래스의 존재와 구조를 검증하는 방법을 살펴봅니다.
 
-> [다음: 2장 - Nested Class Validation](../02-Nested-Class-Validation/)
+→ [2장: 중첩 클래스 검증](../02-Nested-Class-Validation/)

@@ -282,3 +282,9 @@ public sealed record RuleViolation(
 | `Command_ShouldHave_UsecaseNestedClass` | Command에 Usecase 필수, sealed + `ICommandUsecase` 구현 |
 | `Query_ShouldHave_ValidatorNestedClass` | Query에 Validator가 있으면 sealed + `AbstractValidator` 구현 |
 | `Query_ShouldHave_UsecaseNestedClass` | Query에 Usecase 필수, sealed + `IQueryUsecase` 구현 |
+
+---
+
+다음 부록에서는 ArchUnitNET의 핵심 API를 빠르게 참조할 수 있는 치트시트를 제공합니다.
+
+→ [부록 B: ArchUnitNET 치트시트](B-archunitnet-cheatsheet.md)

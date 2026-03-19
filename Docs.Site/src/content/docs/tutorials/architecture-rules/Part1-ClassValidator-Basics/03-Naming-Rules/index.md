@@ -158,9 +158,8 @@ public void RepositoryInterfaces_ShouldMatch_RepositoryPattern()
 ### Q3: 네이밍 규칙과 가시성 규칙을 하나의 체인으로 결합할 수 있나요?
 **A**: 네, 가능합니다. `@class.RequirePublic().RequireNameEndsWith("Service")`처럼 가시성과 네이밍 규칙을 하나의 Validator 체인에서 결합할 수 있습니다. 관련된 규칙을 하나로 묶으면 규칙의 의도가 더 명확해집니다.
 
-### Q4: 다음 장에서는 무엇을 배우나요?
-**A**: 4장에서는 클래스의 **상속 관계와 인터페이스 구현을** 검증합니다. `RequireInherits(typeof(Entity<>))`로 기본 클래스 상속을 강제하고, `RequireImplements`로 필수 인터페이스 구현을 검증합니다.
-
 ---
 
 다음 장에서는 클래스의 상속 관계와 인터페이스 구현을 아키텍처 테스트로 검증하는 방법을 배웁니다.
+
+→ [4장: 상속과 인터페이스](../04-Inheritance-And-Interface/)

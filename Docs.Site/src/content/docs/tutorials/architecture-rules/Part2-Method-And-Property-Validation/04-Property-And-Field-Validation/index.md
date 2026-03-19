@@ -186,6 +186,6 @@ public void DomainClasses_ShouldHave_OnlyPrimitiveProperties()
 
 ---
 
-프로퍼티와 필드 검증으로 도메인 클래스의 불변성을 지속적으로 보장할 수 있게 되었습니다. 다음 장에서는 Part 3로 넘어가, **불변성 규칙을** 보다 종합적으로 검증하는 고급 기법을 학습합니다.
+프로퍼티와 필드 검증으로 도메인 클래스의 불변성을 지속적으로 보장할 수 있게 되었습니다. 다음 Part에서는 `RequireImmutable()`의 6차원 불변성 검증, 중첩 클래스, 인터페이스 검증, 커스텀 규칙 합성 등 고급 기법을 학습합니다.
 
-[이전: 3장 - 파라미터 검증](../03-Parameter-Validation/) | [다음: Part 3의 1장 - 불변성 규칙](../../Part3-Advanced-Validation/01-Immutability-Rule/)
+→ [Part 3의 1장: 불변성 규칙](../../Part3-Advanced-Validation/01-Immutability-Rule/)

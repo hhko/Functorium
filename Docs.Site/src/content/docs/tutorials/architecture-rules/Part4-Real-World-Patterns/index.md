@@ -42,6 +42,6 @@ title: "실전 패턴"
 
 ---
 
-Part 4를 마치면, Part 5에서 지금까지 학습한 내용을 **베스트 프랙티스로 정리**하고 다음 단계를 안내합니다.
+첫 번째 장에서 Entity, Value Object, Domain Event, Specification, Domain Service의 21개 규칙을 6개 카테고리로 나누어 구현합니다.
 
-[이전: Part 3 - 고급 검증](../Part3-Advanced-Validation/) | [다음: Part 5 - 결론](../Part5-Conclusion/)
+→ [1장: 도메인 레이어 규칙](01-Domain-Layer-Rules/)

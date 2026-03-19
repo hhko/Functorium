@@ -39,6 +39,6 @@ title: "ClassValidator 기초"
 
 ---
 
-클래스 수준의 규칙을 익힌 후에는, Part 2에서 메서드와 프로퍼티 같은 **멤버 수준의 검증으로** 범위를 확장합니다.
+첫 번째 장에서 `ArchLoader`로 어셈블리를 로드하고, `RequirePublic`과 `RequireSealed`로 첫 아키텍처 테스트를 작성합니다.
 
-[다음: Part 2 - 메서드와 프로퍼티 검증](../Part2-Method-And-Property-Validation/)
+→ [1장: 첫 번째 아키텍처 테스트](01-First-Architecture-Test/)

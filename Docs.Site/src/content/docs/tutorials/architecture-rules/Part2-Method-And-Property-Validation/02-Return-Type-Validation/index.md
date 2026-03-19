@@ -173,4 +173,4 @@ public void CreateMethods_ShouldReturn_TypeContainingFin()
 
 반환 타입 검증으로 함수형 결과 패턴의 일관성을 보장할 수 있게 되었습니다. 다음 장에서는 메서드의 **파라미터 개수와 타입을** 검증하여, 팩토리 메서드의 시그니처가 임의로 변경되는 것을 방지하는 방법을 학습합니다.
 
-[이전: 1장 - 메서드 검증](../01-Method-Validation/) | [다음: 3장 - 파라미터 검증](../03-Parameter-Validation/)
+→ [3장: 파라미터 검증](../03-Parameter-Validation/)

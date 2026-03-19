@@ -219,4 +219,4 @@ ArchRuleDefinition.Classes()
 
 도메인 레이어의 6개 카테고리 21개 규칙을 테스트로 강제하면, 새로운 도메인 객체가 추가될 때마다 자동으로 규칙 준수가 검증됩니다. 다음 장에서는 Command/Query 기반의 애플리케이션 레이어 규칙을 살펴봅니다.
 
-> [다음: 2장 - Application Layer Rules](../02-Application-Layer-Rules/)
+→ [2장: 애플리케이션 레이어 규칙](../02-Application-Layer-Rules/)

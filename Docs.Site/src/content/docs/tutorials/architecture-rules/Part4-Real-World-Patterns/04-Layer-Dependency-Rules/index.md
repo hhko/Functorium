@@ -173,6 +173,6 @@ public void DomainClasses_ShouldBe_PublicAndSealed()
 
 레이어 의존성 규칙은 아키텍처의 가장 기본적인 보호장치입니다. ArchUnitNET으로 의존성 방향을, Functorium으로 내부 구조를 동시에 검증하면, 아키텍처 다이어그램과 실제 코드가 항상 일치하게 됩니다.
 
-다음 Part 5에서는 이 튜토리얼에서 배운 모든 내용을 정리하고, 실전 프로젝트에 적용하는 전략을 다룹니다.
+다음 장에서는 `DomainArchitectureTestSuite`와 `ApplicationArchitectureTestSuite`를 상속하여 검증된 규칙을 즉시 적용하는 방법을 학습합니다.
 
-> [다음: Part 5 - Conclusion](../../Part5-Conclusion/)
+→ [5장: 아키텍처 테스트 스위트](../05-Architecture-Test-Suites/)

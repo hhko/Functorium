@@ -171,3 +171,9 @@ ArchRuleDefinition.Classes()
     .ResideInNamespace(DomainNamespace)
     .And().DoNotResideInNamespace(DomainNamespace + ".Ports")
 ```
+
+---
+
+아키텍처 테스트 도입 시 자주 등장하는 질문과 트러블슈팅 가이드를 정리합니다.
+
+→ [부록 C: FAQ](C-faq.md)

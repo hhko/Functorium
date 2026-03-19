@@ -156,9 +156,8 @@ public void DomainClasses_ShouldBe_PublicAndSealed()
 ### Q4: `@class`에서 `@`는 왜 필요한가요?
 **A**: `class`는 C#의 예약어입니다. 변수명으로 사용하려면 `@` 접두사를 붙여 컴파일러에게 "이것은 예약어가 아니라 식별자"라는 것을 알려줘야 합니다. `@class` 대신 `c`나 `cls` 같은 이름을 써도 되지만, `@class`가 의도를 더 명확하게 전달합니다.
 
-### Q5: 다음 장에서는 무엇을 배우나요?
-**A**: 2장에서는 `RequirePublic`/`RequireSealed` 외에 `RequireInternal`, `RequireAbstract`, `RequireStatic`, `RequireRecord` 등 다양한 가시성과 한정자 검증 메서드를 배웁니다.
-
 ---
 
 다음 장에서는 `public`/`internal` 가시성, `sealed`/`abstract`/`static` 한정자, `record` 타입까지 다양한 클래스 속성을 검증하는 방법을 배웁니다.
+
+→ [2장: 가시성과 한정자](../02-Visibility-And-Modifiers/)

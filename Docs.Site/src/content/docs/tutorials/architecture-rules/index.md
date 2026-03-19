@@ -112,7 +112,6 @@ DDD 레이어 아키텍처에 아키텍처 테스트를 적용합니다.
 
 ## 핵심 진화 과정
 
-```
 [Part 1] ClassValidator 기초
 1장: 첫 아키텍처 테스트  →  2장: 가시성과 한정자  →  3장: 네이밍 규칙  →  4장: 상속과 인터페이스
 
@@ -124,7 +123,6 @@ DDD 레이어 아키텍처에 아키텍처 테스트를 적용합니다.
 
 [Part 4] 실전 패턴
 1장: 도메인 레이어  →  2장: 애플리케이션 레이어  →  3장: 어댑터 레이어  →  4장: 레이어 의존성  →  5장: 테스트 스위트
-```
 
 ---
 
@@ -232,6 +230,10 @@ T1_T2_T3
 
 - 프레임워크 타입: `Src/Functorium.Testing/Assertions/ArchitectureRules/`
 - 튜토리얼 프로젝트: `Docs.Site/src/content/docs/tutorials/architecture-rules/`
+
+### 관련 튜토리얼
+
+- **[함수형으로 성공 주도 값 객체 구현하기](../functional-valueobject/)**: 아키텍처 규칙으로 검증하는 ValueObject 구현 패턴을 학습합니다.
 
 ---
 
