@@ -2,7 +2,6 @@ using ArchUnitNET.Domain;
 using ArchUnitNET.Fluent;
 using ArchUnitNET.Loader;
 using Functorium.Testing.Assertions.ArchitectureRules;
-using Functorium.Testing.Assertions.ArchitectureRules.Suites;
 using Xunit;
 
 namespace ArchitectureTestSuites.Tests.Unit;
