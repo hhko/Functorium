@@ -296,8 +296,6 @@ public Task Should_Generate_ObservableClass()
 
 ---
 
-## 다음 단계
-
 핵심 개념과 설계 패턴을 되짚었으니, 이제 이 지식을 어떤 방향으로 확장할 수 있는지 살펴볼 차례입니다.
 
 → [02. 다음 단계](02-next-steps.md)

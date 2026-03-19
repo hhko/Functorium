@@ -326,7 +326,7 @@ var methods = classSymbol.AllInterfaces
 
 ---
 
-## 요약
+## 한눈에 보는 정리
 
 Semantic API는 Syntax API가 제공하지 못하는 타입 정보, 네임스페이스, 인터페이스 구현 관계를 조회하는 핵심 도구입니다. 소스 생성기에서는 `GeneratorAttributeSyntaxContext`를 통해 준비된 `SemanticModel`과 `TargetSymbol`에 접근하므로, 직접 `Compilation`에서 모델을 생성할 필요가 없습니다.
 
@@ -356,8 +356,6 @@ Semantic API는 Syntax API가 제공하지 못하는 타입 정보, 네임스페
 **A**: Roslyn이 내부적으로 속성 메타데이터 인덱스를 활용하여 대상 노드를 빠르게 찾아줍니다. 또한 증분 빌드 시 변경되지 않은 파일은 건너뛰므로, 수동 순회 대비 불필요한 분석을 크게 줄입니다.
 
 ---
-
-## 다음 단계
 
 Semantic API를 통해 심볼에 접근하는 방법을 배웠습니다. 다음 장에서는 `INamedTypeSymbol`, `IMethodSymbol`, `IParameterSymbol` 등 심볼 타입의 계층 구조와 각 타입에서 추출할 수 있는 상세 정보를 학습합니다.
 

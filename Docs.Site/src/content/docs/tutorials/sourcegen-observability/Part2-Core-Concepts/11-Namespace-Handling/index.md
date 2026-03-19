@@ -288,7 +288,9 @@ public class NamespaceTests
 
 ---
 
-## 요약
+## 한눈에 보는 정리
+
+네임스페이스 처리의 핵심 전략을 정리합니다.
 
 | 상황 | 처리 방법 |
 |------|-----------|
@@ -318,8 +320,6 @@ public class NamespaceTests
 **A**: 사용자 코드에 `System`이라는 이름의 클래스가 존재할 경우, `System.ArgumentNullException`이 사용자의 `System` 클래스를 참조하여 컴파일 오류가 발생합니다. `global::System.ArgumentNullException`으로 작성하면 항상 전역 `System` 네임스페이스를 정확히 참조하므로 이러한 충돌을 원천적으로 방지합니다.
 
 ---
-
-## 다음 단계
 
 네임스페이스 처리까지 마쳤으니 이제 코드 생성의 마지막 원칙을 다룰 차례입니다. 동일한 입력에 대해 항상 동일한 출력을 보장하는 결정적 출력은 증분 빌드, 소스 제어, CI/CD 모두에 영향을 미치는 핵심 요소입니다.
 

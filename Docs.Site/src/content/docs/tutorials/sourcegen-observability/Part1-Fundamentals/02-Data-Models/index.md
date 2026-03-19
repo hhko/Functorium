@@ -391,7 +391,7 @@ ls bin/Debug/netstandard2.0/
 
 ---
 
-## 요약
+## 한눈에 보는 정리
 
 소스 생성기 프로젝트는 csproj 설정과 프로젝트 참조 방식에서 일반 라이브러리와 근본적으로 다릅니다. `IsRoslynComponent`는 IDE 인식을, `PrivateAssets="all"`은 Roslyn 패키지의 전이적 의존성 차단을, `OutputItemType="Analyzer"`는 컴파일 타임 전용 참조를 각각 담당합니다. 데이터 모델은 `ObservableClassInfo`, `MethodInfo`, `ParameterInfo`의 불변 타입으로 설계하여 증분 빌드 파이프라인에서 안전하게 전달됩니다.
 
@@ -416,8 +416,6 @@ ls bin/Debug/netstandard2.0/
 **A**: `Location`은 소스 생성기가 진단 메시지(경고, 오류)를 보고할 때 사용자에게 정확한 코드 위치를 알려주기 위해 필요합니다. 예를 들어 잘못된 사용 패턴을 감지했을 때, 해당 클래스 선언 위치에 경고를 표시할 수 있습니다.
 
 ---
-
-## 다음 단계
 
 프로젝트 구조와 데이터 모델을 이해했으니, 다음 장에서는 소스 생성기 개발에서 가장 까다로운 부분 중 하나인 디버깅 환경 설정을 다룹니다.
 

@@ -451,7 +451,7 @@ public Task Should_Not_Generate_Length_ForTupleContainingArray()
 
 ---
 
-## 요약
+## 한눈에 보는 정리
 
 `CollectionTypeHelper`는 컬렉션 감지, 튜플 예외 처리, Count/Length 표현식 생성을 하나의 유틸리티로 통합합니다. 패턴 매칭 방식으로 `global::` 접두사를 포함한 Fully Qualified Name도 올바르게 인식하며, 필드명은 `request.params.{name}.count`와 `response.result.count` 규칙을 따릅니다.
 
@@ -469,8 +469,6 @@ public Task Should_Not_Generate_Length_ForTupleContainingArray()
 **A**: Roslyn의 `SymbolDisplayFormat`에 따라 타입 문자열이 `List<T>` 또는 `global::System.Collections.Generic.List<T>` 두 가지 형태로 나올 수 있기 때문입니다. `Contains()` 패턴 매칭이 두 경우 모두 올바르게 동작하려면 양쪽 패턴을 모두 포함해야 합니다.
 
 ---
-
-## 다음 단계
 
 컬렉션 Count 필드가 추가되면 로깅에 필요한 총 파라미터 수가 늘어납니다. 다음 섹션에서는 .NET `LoggerMessage.Define`의 6개 파라미터 제한과 이를 초과할 때의 폴백 전략을 학습합니다.
 

@@ -357,7 +357,7 @@ Console.WriteLine(parameter.Identifier.Text);   // "user"
 
 ---
 
-## 요약
+## 한눈에 보는 정리
 
 Syntax API는 소스 코드의 구조를 빠르게 탐색하는 도구입니다. 소스 생성기에서는 주로 `predicate` 단계의 1차 필터링에 활용하며, 타입 해석이 필요한 상세 분석은 Semantic API에 위임합니다.
 
@@ -389,8 +389,6 @@ Syntax API는 소스 코드의 구조를 빠르게 탐색하는 도구입니다.
 **A**: `ChildNodes()`는 직접 자식만 반환하므로 범위가 좁고 빠릅니다. `DescendantNodes()`는 모든 하위 노드를 재귀적으로 탐색합니다. 중첩된 구조에서 특정 노드를 찾을 때는 `DescendantNodes()`를, 한 단계 아래만 볼 때는 `ChildNodes()`를 사용합니다.
 
 ---
-
-## 다음 단계
 
 Syntax API의 한계에서 보았듯이, 타입의 전체 이름이나 인터페이스 구현 여부 같은 의미론적 정보는 구문 분석만으로 얻을 수 없습니다. 다음 장에서는 이 한계를 넘어서는 Semantic API를 학습합니다.
 

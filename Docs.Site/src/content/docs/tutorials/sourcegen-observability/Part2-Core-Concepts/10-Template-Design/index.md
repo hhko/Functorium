@@ -428,7 +428,7 @@ internal static class UserRepositoryObservableLoggers
 
 ---
 
-## 요약
+## 한눈에 보는 정리
 
 템플릿 설계의 핵심은 "무엇이 고정이고 무엇이 동적인가"를 명확히 구분하는 것입니다. 고정 부분은 상수나 Raw String Literals로, 패턴 부분은 독립된 생성 메서드로, 완전 동적 부분은 `ObservableClassInfo`와 `MethodInfo`에서 추출한 데이터로 채웁니다. 이 분리 덕분에 새로운 관찰 가능성 필드나 로깅 패턴이 추가되더라도 해당 메서드만 수정하면 됩니다.
 
@@ -460,8 +460,6 @@ internal static class UserRepositoryObservableLoggers
 **A**: 생성할 코드의 구조적 단위를 기준으로 분리합니다. `GenerateFields()`는 필드 선언, `GenerateConstructor()`는 생성자, `GenerateMethod()`는 개별 메서드 오버라이드, `GenerateLoggingMethods()`는 로깅 delegate와 확장 메서드를 각각 담당합니다. 이렇게 하면 특정 부분의 생성 로직만 독립적으로 수정하거나 테스트할 수 있습니다.
 
 ---
-
-## 다음 단계
 
 템플릿의 전체 구조를 이해했습니다. 그런데 템플릿에서 동적으로 채워지는 요소 중 하나가 네임스페이스입니다. 생성된 코드가 원본 클래스와 같은 네임스페이스에 위치해야 상속이 올바르게 작동하고, 서로 다른 네임스페이스에 같은 이름의 클래스가 있을 때 파일명 충돌도 방지해야 합니다. 다음 장에서 이 처리 기법을 살펴봅니다.
 

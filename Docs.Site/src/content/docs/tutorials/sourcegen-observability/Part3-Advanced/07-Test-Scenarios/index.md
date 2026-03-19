@@ -572,7 +572,7 @@ public void Should_NotReportDiagnostic_WhenNoParameterDuplication()
 
 ---
 
-## 요약
+## 한눈에 보는 정리
 
 31개 테스트 시나리오는 ObservablePortGenerator의 모든 코드 생성 경로를 체계적으로 검증합니다. 각 카테고리는 독립적인 관심사를 다루며, 정상 경로뿐만 아니라 메서드 없는 어댑터, 튜플 내 컬렉션 같은 예외 경로도 포함합니다. 앞서 정의한 네 가지 설계 원칙(단일 시나리오, 경계값, 예외 상황, 명확한 명명)이 모든 테스트에 일관되게 적용되어, 소스 생성기의 변경이 기존 동작에 미치는 영향을 즉시 파악할 수 있습니다.
 
@@ -590,8 +590,6 @@ public void Should_NotReportDiagnostic_WhenNoParameterDuplication()
 **A**: 테스트가 실패했을 때 이름만으로 "무엇이 어떤 조건에서 실패했는지"를 즉시 파악할 수 있기 때문입니다. `Should_Generate_LogDebugFallback_WithThreeParameters`라는 이름은 "3개 파라미터일 때 LogDebug 폴백이 생성되어야 한다"를 명확히 전달하므로, 실패 원인 추적이 빠릅니다.
 
 ---
-
-## 다음 단계
 
 Part 3에서 다룬 고급 주제들(생성자, 제네릭, 컬렉션, LoggerMessage 제한, 테스트)을 모두 학습했습니다. 다음 Part에서는 다양한 실용적 예제를 통해 Source Generator 개발 절차를 학습합니다.
 

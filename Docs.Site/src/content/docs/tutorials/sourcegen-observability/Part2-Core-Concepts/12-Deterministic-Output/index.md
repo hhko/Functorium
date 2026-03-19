@@ -297,7 +297,9 @@ public Task Generated_Code_Should_Match_Snapshot()
 
 ---
 
-## 요약
+## 한눈에 보는 정리
+
+결정적 출력을 위한 핵심 원칙을 정리합니다.
 
 | 요소 | 비결정적 | 결정적 |
 |------|----------|--------|
@@ -321,8 +323,6 @@ public Task Generated_Code_Should_Match_Snapshot()
 **A**: `SymbolDisplayFormat.FullyQualifiedFormat`을 사용하면 Roslyn이 타입의 전체 경로를 `global::` 접두사 포함하여 자동으로 생성합니다. 직접 문자열로 `"global::System.Int32"` 같이 하드코딩하면 타입 변경 시 누락될 위험이 있습니다. Functorium은 커스텀 `SymbolDisplayFormats.GlobalQualifiedFormat`을 정의하여 일관성을 보장합니다.
 
 ---
-
-## 다음 단계
 
 Part 2에서 소스 생성기의 핵심 개념을 모두 다뤘습니다. 다음 Part에서는 Primary Constructor, 제네릭 타입, 컬렉션 타입처럼 실전에서 마주치는 복잡한 케이스를 처리하는 방법을 학습합니다.
 

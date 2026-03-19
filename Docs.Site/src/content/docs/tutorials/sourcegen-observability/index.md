@@ -121,29 +121,17 @@ Incremental Source Generator 구현과 코드 생성 기법을 학습합니다.
 
 ## 핵심 진화 과정
 
-가장 단순한 Hello World 생성기에서 출발하여, 점진적으로 복잡성을 높여가며 실전 수준의 소스 생성기를 완성합니다. 각 Phase는 이전 단계의 결과물 위에 쌓이므로, 순서대로 진행하는 것을 권장합니다.
+[Part 1] 기초
+1장: 개발 환경  →  2장: 프로젝트 구조  →  3장: Debugging 설정  →  4장: Roslyn 아키텍처  →  5장: Syntax API  →  6장: Semantic API  →  7장: Symbol Type
 
-```
-Phase 1: 개념과 프로젝트 이해 (Part 0)
-├── Source Generator 개념, Hello World, 프로젝트 개요
-└── 난이도: ★☆☆☆☆
+[Part 2] 핵심 개념
+1장: IIncrementalGenerator 인터페이스  →  2장: Provider Pattern  →  3장: ForAttributeWithMetadataName  →  4장: Incremental Caching  →  5장: INamedTypeSymbol  →  6장: IMethodSymbol  →  7장: SymbolDisplayFormat  →  8장: Type 추출  →  9장: StringBuilder Pattern  →  10장: Template 설계  →  11장: Namespace 처리  →  12장: Deterministic Output
 
-Phase 2: 기초 (Part 1)
-├── 개발 환경, 프로젝트 구조, Roslyn 아키텍처, Symbol API
-└── 난이도: ★★☆☆☆
+[Part 3] 고급
+1장: Constructor 처리  →  2장: Generic Type  →  3장: Collection Type  →  4장: LoggerMessage.Define 제한  →  5장: Unit Test 설정  →  6장: Verify Snapshot Test  →  7장: Test Scenario
 
-Phase 3: 핵심 개념 (Part 2)
-├── IIncrementalGenerator, Provider Pattern, 심볼 분석, 코드 생성
-└── 난이도: ★★★☆☆
-
-Phase 4: 고급 (Part 3)
-├── Constructor, Generic, Collection, 테스트 전략
-└── 난이도: ★★★★☆
-
-Phase 5: 개발 절차서 (Part 4)
-├── 실전 예제 — Entity ID, EF Core, Validation, 커스텀 템플릿
-└── 난이도: ★★★★★
-```
+[Part 4] 개발 절차서
+1장: Source Generator 개발 절차  →  2장: Entity ID Generator  →  3장: EF Core Value Converter  →  4장: Validation 생성기  →  5장: Custom Generator Template
 
 ---
 
@@ -229,6 +217,18 @@ dotnet build sourcegen-observability.slnx
 # 튜토리얼 전체 테스트
 dotnet test --solution sourcegen-observability.slnx
 ```
+
+### 테스트 프로젝트 구조
+
+**Part 4: 개발 절차서** (5개)
+
+| 장 | 테스트 프로젝트 | 주요 테스트 내용 |
+|:---:|----------------|-----------------|
+| 1 | `DevelopmentWorkflow.Tests.Unit` | Source Generator 개발 절차 검증 |
+| 2 | `EntityIdGenerator.Tests.Unit` | DDD 강타입 Id (Ulid 기반) 생성 |
+| 3 | `EfCoreValueConverter.Tests.Unit` | ValueConverter 자동 생성 검증 |
+| 4 | `ValidationGenerator.Tests.Unit` | FluentValidation 규칙 생성 검증 |
+| 5 | `CustomGeneratorTemplate.Tests.Unit` | 커스텀 Generator 템플릿 검증 |
 
 ### 테스트 명명 규칙
 

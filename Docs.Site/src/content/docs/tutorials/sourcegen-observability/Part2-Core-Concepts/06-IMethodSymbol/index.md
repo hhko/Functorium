@@ -351,7 +351,7 @@ public new FinT<IO, User> GetUserAsync(int userId)
 
 ---
 
-## 요약
+## 한눈에 보는 정리
 
 `IMethodSymbol`은 메서드 단위의 코드 생성에 필요한 모든 정보를 제공합니다. 우리 프로젝트에서는 `Name`으로 로깅 메서드명을, `Parameters`로 시그니처와 로깅 템플릿을, `ReturnType`에서 `FinT<IO, T>`의 `T`를 추출하여 성공 응답 타입을 결정합니다. `MethodKind == Ordinary` 필터링은 getter/setter 등의 접근자를 제외하기 위해 반드시 필요합니다.
 
@@ -386,8 +386,6 @@ public new FinT<IO, User> GetUserAsync(int userId)
 **A**: `ref`, `out`, `in` 파라미터는 메서드 시그니처와 호출부 모두에 해당 키워드를 포함해야 합니다. 코드 생성 시 `GetRefKindKeyword(p.RefKind)`로 키워드 문자열을 얻어 타입 앞에 접두사로 붙여야 컴파일 가능한 코드가 됩니다.
 
 ---
-
-## 다음 단계
 
 `IMethodSymbol`에서 파라미터 타입과 반환 타입을 추출할 때 `ToDisplayString`을 사용했습니다. 그런데 같은 타입이라도 포맷에 따라 `"User"`, `"MyApp.User"`, `"global::MyApp.User"` 등 다르게 표현될 수 있습니다. 다음 장에서는 이 표현을 일관되게 유지하기 위한 `SymbolDisplayFormat`을 살펴봅니다.
 

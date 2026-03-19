@@ -325,7 +325,7 @@ transform: (ctx, cancellationToken) =>
 
 ---
 
-## 요약
+## 한눈에 보는 정리
 
 `ForAttributeWithMetadataName`은 속성 기반 소스 생성기의 핵심 진입점입니다. `predicate`에서 Syntax 수준의 빠른 필터링을, `transform`에서 Semantic 수준의 데이터 추출을 담당하는 두 단계 분리가 성능의 핵심입니다. 속성 이름에는 반드시 네임스페이스와 `Attribute` 접미사를 포함해야 합니다.
 
@@ -350,8 +350,6 @@ transform: (ctx, cancellationToken) =>
 **A**: IDE에서 사용자가 타이핑할 때마다 컴파일이 반복적으로 트리거될 수 있습니다. 이전 분석이 아직 완료되지 않았을 때 새로운 분석이 시작되면, 이전 작업은 취소됩니다. `ThrowIfCancellationRequested()`를 호출하지 않으면 불필요한 작업이 계속 진행되어 IDE 응답성이 저하됩니다.
 
 ---
-
-## 다음 단계
 
 `ForAttributeWithMetadataName`으로 데이터를 효율적으로 추출하는 방법을 이해했습니다. 하지만 이 효율성이 제대로 발휘되려면 파이프라인의 각 단계에서 캐싱이 올바르게 작동해야 합니다. 다음 장에서는 증분 캐싱의 원리와, 캐시를 무효화시키는 흔한 실수들을 살펴봅니다.
 

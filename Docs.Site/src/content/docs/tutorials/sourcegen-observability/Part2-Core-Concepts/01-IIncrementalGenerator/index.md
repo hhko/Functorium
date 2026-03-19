@@ -319,7 +319,7 @@ ctx.AddSource("Repositories.UserRepositoryObservable.g.cs", code);
 
 ---
 
-## 요약
+## 한눈에 보는 정리
 
 `IIncrementalGenerator`는 `Initialize` 메서드 하나만 구현하면 되는 단순한 인터페이스이지만, 그 안에서 선언적 파이프라인을 통해 강력한 증분 빌드를 지원합니다. `RegisterPostInitializationOutput`으로 Attribute 같은 고정 코드를 등록하고, `SyntaxProvider`로 관심 있는 노드를 필터링한 뒤, `RegisterSourceOutput`으로 실제 코드를 생성하는 세 단계 구조를 기억하면 됩니다.
 
@@ -346,8 +346,6 @@ ctx.AddSource("Repositories.UserRepositoryObservable.g.cs", code);
 **A**: `hintName`은 프로젝트 내에서 고유해야 하며, 확장자를 `.g.cs`로 지정하는 것이 관례입니다. 서로 다른 네임스페이스에 같은 이름의 클래스가 있을 수 있으므로, 네임스페이스 접미사를 포함하여 `Repositories.UserRepositoryObservable.g.cs` 형태로 지정하면 충돌을 방지할 수 있습니다.
 
 ---
-
-## 다음 단계
 
 `IIncrementalGenerator`의 전체 구조를 이해했으니, 다음으로는 파이프라인의 핵심 구성 요소인 Provider 패턴을 살펴봅니다. LINQ와 유사한 선언적 연산자들이 어떻게 데이터를 변환하고 필터링하는지 학습합니다.
 

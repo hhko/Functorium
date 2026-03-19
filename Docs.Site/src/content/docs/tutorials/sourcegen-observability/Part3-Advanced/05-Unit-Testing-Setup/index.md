@@ -338,7 +338,7 @@ dotnet test --filter "FullyQualifiedName~ObservablePortGeneratorTests"
 
 ---
 
-## 요약
+## 한눈에 보는 정리
 
 소스 생성기 테스트의 핵심은 Roslyn 컴파일 파이프라인을 테스트 환경에서 재현하는 것입니다. `SourceGeneratorTestRunner`가 Syntax Tree 생성, 어셈블리 참조 수집, Compilation 생성, Generator 실행의 전 과정을 캡슐화하므로, 테스트 코드는 입력과 출력에만 집중할 수 있습니다. 생성된 코드의 검증에는 `Verify` 스냅샷 테스트와 `Shouldly` assertion을 함께 사용합니다.
 
@@ -356,8 +356,6 @@ dotnet test --filter "FullyQualifiedName~ObservablePortGeneratorTests"
 **A**: `diagnostics`에서 `DiagnosticSeverity.Error`를 필터링하면 오류 메시지를 확인할 수 있습니다. 흔한 원인은 입력 소스 코드에서 사용하는 타입의 어셈블리가 `RequiredTypes`에 누락된 경우, 또는 입력 코드 자체에 구문 오류가 있는 경우입니다. `outputCompilation.GetDiagnostics()`로 전체 진단 목록을 출력하면 원인을 특정할 수 있습니다.
 
 ---
-
-## 다음 단계
 
 테스트 환경이 갖추어졌으니, 생성된 코드 전체를 파일로 저장하고 비교하는 Verify 스냅샷 테스트 방식을 알아봅니다.
 

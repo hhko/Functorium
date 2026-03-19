@@ -408,7 +408,7 @@ dotnet build
 
 ---
 
-## 요약
+## 한눈에 보는 정리
 
 세 가지 디버깅 방법 중 테스트 프로젝트 기반 디버깅이 안정성과 반복성 면에서 가장 실용적입니다. `Debugger.Launch()`는 긴급 상황에서만 사용하고, Watch 창의 `ToDisplayString()` 표현식은 심볼 상태를 파악하는 데 핵심적인 도구입니다.
 
@@ -433,8 +433,6 @@ dotnet build
 **A**: Roslyn의 캐싱 메커니즘 때문에 발생합니다. `bin`/`obj` 폴더를 모두 삭제하고, Visual Studio를 완전히 종료한 뒤 다시 열어 Clean Build를 수행하면 해결됩니다.
 
 ---
-
-## 다음 단계
 
 디버깅 환경까지 갖추었으니, 이제 소스 생성기가 활용하는 Roslyn 컴파일러 플랫폼의 아키텍처를 이해할 차례입니다. Syntax Tree, Semantic Model, Symbol이 각각 무엇이고 어떻게 연결되는지 살펴봅니다.
 

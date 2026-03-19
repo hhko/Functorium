@@ -346,7 +346,7 @@ private static ObservableClassInfo MapToObservableClassInfo(
 
 ---
 
-## 요약
+## 한눈에 보는 정리
 
 `INamedTypeSymbol`은 소스 생성기에서 타입 정보를 추출하는 핵심 도구입니다. 우리 프로젝트에서는 `Name`과 `ContainingNamespace`로 생성 클래스의 이름과 네임스페이스를 결정하고, `AllInterfaces`로 `IObservablePort` 구현 여부를 확인한 뒤, `GetMembers()`로 래핑할 메서드를 추출하며, `Constructors`로 부모 생성자 파라미터를 전달합니다.
 
@@ -375,8 +375,6 @@ private static ObservableClassInfo MapToObservableClassInfo(
 **A**: `namespace` 선언 없이 정의된 타입은 글로벌 네임스페이스에 속합니다. 이 경우 `ContainingNamespace.ToString()`이 `"<global namespace>"`를 반환하는데, 이를 생성 코드의 `namespace` 선언에 그대로 사용하면 컴파일 오류가 발생합니다. 글로벌 네임스페이스일 때는 빈 문자열로 처리하여 `namespace` 선언을 생략합니다.
 
 ---
-
-## 다음 단계
 
 `INamedTypeSymbol`로 클래스와 인터페이스 수준의 정보를 추출하는 방법을 이해했습니다. 다음 장에서는 한 단계 더 들어가서, 각 메서드의 시그니처(이름, 파라미터, 반환 타입)를 분석하는 `IMethodSymbol`을 살펴봅니다. 이 정보가 로깅 코드와 파이프라인 래퍼의 생성 근거가 됩니다.
 

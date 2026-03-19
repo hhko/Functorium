@@ -323,7 +323,7 @@ context.RegisterSourceOutput(provider, (ctx, item) =>
 
 ---
 
-## 요약
+## 한눈에 보는 정리
 
 증분 캐싱은 소스 생성기 성능의 핵심입니다. 캐싱이 올바르게 작동하려면 데이터 모델에 값 동등성을 보장하고, 출력에서 비결정적 요소를 제거해야 합니다. 우리 프로젝트에서는 `ObservableClassInfo`를 `readonly record struct`로 정의하고, `SymbolDisplayFormats.GlobalQualifiedFormat`으로 타입 이름을 일관되게 표현하여 이 조건을 충족합니다.
 
@@ -349,8 +349,6 @@ context.RegisterSourceOutput(provider, (ctx, item) =>
 **A**: 이론적으로는 `ImmutableArray`가 불변성을 보장하여 더 안전합니다. 다만 Functorium에서는 `readonly record struct`의 값 동등성과 `MethodInfo`의 내용 기반 비교로 캐싱이 올바르게 작동하며, 구현 단순성을 위해 `List`를 사용하고 있습니다.
 
 ---
-
-## 다음 단계
 
 증분 캐싱의 원리를 이해했으니, 이제 파이프라인에서 실제로 데이터를 추출하는 핵심 도구인 심볼 API로 넘어갑니다. 다음 장에서는 `INamedTypeSymbol`을 통해 클래스와 인터페이스의 정보를 어떻게 분석하는지 살펴봅니다.
 

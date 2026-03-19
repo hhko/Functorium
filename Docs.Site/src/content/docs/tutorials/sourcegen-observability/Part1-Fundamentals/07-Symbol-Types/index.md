@@ -374,7 +374,7 @@ type.ToDisplayString(format)
 
 ---
 
-## 요약
+## 한눈에 보는 정리
 
 심볼 타입의 계층 구조를 이해하면, Semantic API에서 얻은 `ISymbol`을 적절한 타입으로 캐스팅하여 필요한 정보를 추출할 수 있습니다. ObservablePortGenerator의 파이프라인에서 각 심볼 타입이 맡는 역할은 다음과 같습니다: `INamedTypeSymbol`로 클래스와 인터페이스 관계를 분석하고, `IMethodSymbol`로 메서드 시그니처를 추출하며, `IParameterSymbol`로 파라미터의 타입과 전달 방식을 확인합니다.
 
@@ -406,8 +406,6 @@ type.ToDisplayString(format)
 **A**: 기본 제공 포맷인 `FullyQualifiedFormat`은 `int` 대신 `System.Int32`로 출력하는 등 C# 특수 타입 별칭을 사용하지 않습니다. Functorium의 `GlobalQualifiedFormat`은 `UseSpecialTypes`와 `IncludeNullableReferenceTypeModifier` 옵션을 추가하여, 생성된 코드가 자연스러운 C# 문법을 따르도록 합니다.
 
 ---
-
-## 다음 단계
 
 Roslyn의 세 가지 핵심 계층 - Syntax Tree, Semantic Model, Symbol - 을 모두 학습했습니다. 다음 장에서는 이 세 계층을 조합하여 실제 소스 생성기를 구현하는 `IIncrementalGenerator` 패턴을 학습합니다.
 

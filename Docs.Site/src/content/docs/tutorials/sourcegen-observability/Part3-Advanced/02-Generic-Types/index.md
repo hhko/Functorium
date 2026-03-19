@@ -465,7 +465,7 @@ public Task Should_Extract_TupleType()
 
 ---
 
-## 요약
+## 한눈에 보는 정리
 
 TypeExtractor의 핵심은 브래킷 카운팅 알고리즘입니다. `<`를 만나면 카운트를 증가시키고 `>`를 만나면 감소시켜서, 카운트가 1인 지점의 콤마에서 첫 번째와 두 번째 타입 파라미터를 분리합니다. 이 방식은 중첩 깊이에 관계없이 정확하게 동작합니다.
 
@@ -492,8 +492,6 @@ TypeExtractor의 핵심은 브래킷 카운팅 알고리즘입니다. `<`를 만
 **A**: Roslyn의 `INamedTypeSymbol.TypeArguments`를 사용하면 심볼 수준에서 타입 파라미터를 직접 접근할 수 있습니다. 그러나 ObservablePortGenerator는 이미 `SymbolDisplayFormat`으로 변환된 문자열을 기반으로 코드를 생성하므로, 문자열 파싱 방식이 파이프라인의 나머지 부분과 일관성을 유지합니다.
 
 ---
-
-## 다음 단계
 
 타입 추출이 가능해졌으니, 추출된 타입이 컬렉션인지 판별하여 Count/Length 태그를 자동으로 생성하는 방법을 알아봅니다.
 

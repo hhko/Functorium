@@ -283,7 +283,7 @@ public class TypeExtractorTests
 
 ---
 
-## 요약
+## 한눈에 보는 정리
 
 `TypeExtractor.ExtractSecondTypeParameter`는 `FinT<IO, T>` 패턴에서 실제 값 타입 `T`를 추출하는 유틸리티입니다. 문자열의 첫 번째 쉼표와 마지막 꺾쇠괄호를 기준으로 파싱하는 단순한 접근이지만, 중첩 제네릭과 튜플까지 올바르게 처리합니다.
 
@@ -309,8 +309,6 @@ public class TypeExtractorTests
 **A**: `IndexOf(',')` 결과가 `-1`이면 쉼표가 없으므로 제네릭이 아닌 것으로 판단하여 원본 문자열을 그대로 반환합니다. 이는 `FinT<IO, T>` 패턴을 따르지 않는 메서드에 대한 안전한 폴백 처리입니다.
 
 ---
-
-## 다음 단계
 
 심볼 분석과 타입 추출로 코드 생성에 필요한 모든 데이터를 확보했습니다. 다음 장에서는 이 데이터를 실제 C# 코드 문자열로 조립하는 도구인 `StringBuilder`의 활용 패턴을 살펴봅니다.
 

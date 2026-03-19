@@ -341,7 +341,7 @@ type.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat);
 
 ---
 
-## 요약
+## 한눈에 보는 정리
 
 `SymbolDisplayFormat`은 결정적 코드 생성의 기반 도구입니다. Functorium 프로젝트에서는 `global::` 접두사로 네임스페이스 충돌을 방지하고, `UseSpecialTypes`로 가독성을 확보하며, `IncludeNullableReferenceTypeModifier`로 nullable 정보를 보존하는 커스텀 포맷을 정의했습니다. 가장 중요한 원칙은 프로젝트 전체에서 이 포맷을 일관되게 사용하는 것입니다.
 
@@ -373,8 +373,6 @@ type.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat);
 **A**: C# 키워드와 동일한 이름의 식별자(예: `@class`, `@event`)를 타입 이름이나 네임스페이스에서 사용하는 경우, 이 옵션이 `@` 접두사를 자동으로 추가하여 컴파일 가능한 코드를 생성합니다. 이 옵션 없이는 생성된 코드가 키워드와 충돌하여 컴파일 오류가 발생할 수 있습니다.
 
 ---
-
-## 다음 단계
 
 `SymbolDisplayFormat`으로 타입을 일관된 문자열로 변환하는 방법을 이해했습니다. 그런데 `FinT<IO, User>`라는 반환 타입에서 실제로 필요한 것은 두 번째 타입 파라미터인 `User`뿐입니다. 다음 장에서는 이 제네릭 타입에서 특정 타입 파라미터를 추출하는 기법을 살펴봅니다.
 
