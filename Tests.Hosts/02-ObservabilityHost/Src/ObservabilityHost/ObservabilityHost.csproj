@@ -13,6 +13,7 @@
     <PackageReference Include="LanguageExt.Core" />
     <PackageReference Include="OpenTelemetry.Exporter.Console" />
     <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.File" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
   </ItemGroup>
 
