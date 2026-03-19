@@ -15,7 +15,8 @@ namespace Functorium.Adapters.Observabilities.Pipelines;
 /// <para>where TRequest : IQuery&lt;TResponse&gt; 제약 조건으로 Query에만 적용됩니다.</para>
 /// </remarks>
 internal sealed class UsecaseCachingPipeline<TRequest, TResponse>
-    : IPipelineBehavior<TRequest, TResponse>
+    : UsecasePipelineBase<TRequest>
+    , IPipelineBehavior<TRequest, TResponse>
     where TRequest : IQuery<TResponse>
     where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 {

@@ -7,6 +7,10 @@
   </Folder>
   <Folder Name="/Tests.Hosts/" />
   <Folder Name="/Tests.Hosts/01-SingleHost/" />
+  <Folder Name="/Tests.Hosts/02-ObservabilityHost/" />
+  <Folder Name="/Tests.Hosts/02-ObservabilityHost/Src/">
+    <Project Path="Tests.Hosts/02-ObservabilityHost/Src/ObservabilityHost/ObservabilityHost.csproj" />
+  </Folder>
   <Folder Name="/Tests.Hosts/01-SingleHost/Src/">
     <Project Path="Tests.Hosts/01-SingleHost/Src/LayeredArch/LayeredArch.csproj" />
     <Project Path="Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/LayeredArch.Domain.csproj" />

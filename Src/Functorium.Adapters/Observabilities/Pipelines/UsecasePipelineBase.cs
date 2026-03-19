@@ -146,6 +146,15 @@ public abstract partial class UsecasePipelineBase<TRequest>
     }
 
     /// <summary>
+    /// GetRequestHandler()의 소문자 버전.
+    /// 메트릭 네이밍 등 소문자가 필요한 경우 사용합니다.
+    /// </summary>
+    protected static string GetRequestHandlerLower()
+    {
+        return GetRequestHandler().ToLower();
+    }
+
+    /// <summary>
     /// 에러에서 타입과 코드 정보를 추출합니다.
     /// </summary>
     protected static (string ErrorType, string ErrorCode) GetErrorInfo(Error error)

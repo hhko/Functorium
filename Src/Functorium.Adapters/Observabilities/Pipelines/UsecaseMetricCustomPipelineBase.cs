@@ -1,8 +1,6 @@
 using System.Diagnostics.Metrics;
-using System.Text.RegularExpressions;
 
 using Functorium.Adapters.Observabilities.Naming;
-using Functorium.Applications.Usecases;
 
 namespace Functorium.Adapters.Observabilities.Pipelines;
 
@@ -12,18 +10,9 @@ namespace Functorium.Adapters.Observabilities.Pipelines;
 /// TRequest 타입으로부터 CQRS 타입(Query/Command)을 자동으로 식별합니다.
 /// </summary>
 /// <typeparam name="TRequest">Request 타입 (IQueryRequest 또는 ICommandRequest 구현)</typeparam>
-public abstract partial class UsecaseMetricCustomPipelineBase<TRequest>
+public abstract class UsecaseMetricCustomPipelineBase<TRequest>
+    : UsecasePipelineBase<TRequest>, ICustomUsecasePipeline
 {
-    // GeneratedRegex for AOT-compiled regex patterns (same as UsecasePipelineBase)
-    [GeneratedRegex(@"\.([^.+]+)\+", RegexOptions.Compiled)]
-    private static partial Regex PlusPattern();
-
-    [GeneratedRegex(@"^([^+]+)\+", RegexOptions.Compiled)]
-    private static partial Regex BeforePlusPattern();
-
-    [GeneratedRegex(@"\.([^.+]+)$", RegexOptions.Compiled)]
-    private static partial Regex AfterLastDotPattern();
-
     protected const string DurationUnit = "s";
     protected const string CountUnit = "requests";
     protected readonly Meter _meter;
@@ -36,62 +25,10 @@ public abstract partial class UsecaseMetricCustomPipelineBase<TRequest>
         _meter = meterFactory.Create(meterName);
 
         // Request 타입으로부터 카테고리 타입 자동 식별
-        string categoryType = GetRequestCategoryType();
+        string categoryType = GetRequestCategoryType(typeof(TRequest));
 
         // Metric 접두사: application.usecase.{categoryType} (query 또는 command)
         _metricPrefix = $"{ObservabilityNaming.Layers.Application}.{ObservabilityNaming.Categories.Usecase}.{categoryType}";
-    }
-
-    /// <summary>
-    /// Request 타입의 인터페이스를 분석하여 카테고리 타입을 식별합니다.
-    /// UsecasePipelineBase.GetRequestCategoryType와 동일한 로직을 사용합니다.
-    /// </summary>
-    private static string GetRequestCategoryType()
-    {
-        Type[] interfaces = typeof(TRequest).GetInterfaces();
-
-        if (interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandRequest<>)))
-            return ObservabilityNaming.CategoryTypes.Command;
-
-        if (interfaces.Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryRequest<>)))
-            return ObservabilityNaming.CategoryTypes.Query;
-
-        return ObservabilityNaming.CategoryTypes.Unknown;
-    }
-
-    /// <summary>
-    /// Request 타입의 FullName에서 클래스 이름을 추출합니다.
-    /// UsecasePipelineBase.GetRequestHandler와 동일한 로직을 사용합니다.
-    /// </summary>
-    private static string GetRequestHandler()
-    {
-        string input = typeof(TRequest).FullName!;
-
-        if (string.IsNullOrEmpty(input))
-            return string.Empty;
-
-        // "+"가 있는 경우: ".xxx+"
-        var plusMatch = PlusPattern().Match(input);
-        if (plusMatch.Success)
-        {
-            return plusMatch.Groups[1].Value.ToLower();
-        }
-
-        // "+"가 있으나 "."이 없는 경우: "^([^+]+)\+"
-        var beforePlusMatch = BeforePlusPattern().Match(input);
-        if (beforePlusMatch.Success)
-        {
-            return beforePlusMatch.Groups[1].Value.ToLower();
-        }
-
-        // "+"가 없는 경우: ".xxx$"
-        var afterLastDotMatch = AfterLastDotPattern().Match(input);
-        if (afterLastDotMatch.Success)
-        {
-            return afterLastDotMatch.Groups[1].Value.ToLower();
-        }
-
-        return string.Empty;
     }
 
     /// <summary>
@@ -107,7 +44,7 @@ public abstract partial class UsecaseMetricCustomPipelineBase<TRequest>
     /// </example>
     protected string GetMetricName(string metricName)
     {
-        string handler = GetRequestHandler();
+        string handler = GetRequestHandlerLower();
         return $"{_metricPrefix}.{handler}.{metricName}";
     }
 

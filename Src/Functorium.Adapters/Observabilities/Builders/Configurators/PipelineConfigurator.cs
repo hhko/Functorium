@@ -1,3 +1,4 @@
+using System.Reflection;
 using Functorium.Adapters.Observabilities.Pipelines;
 using Functorium.Applications.Events;
 using Functorium.Applications.Persistence;
@@ -25,6 +26,7 @@ public class PipelineConfigurator
     private bool _useTransaction;
     private ServiceLifetime _lifetime = ServiceLifetime.Scoped;
     private readonly List<Type> _customPipelines = new();
+    private readonly List<Assembly> _customPipelineAssemblies = new();
     private readonly List<string> _registeredPipelineNames = new();
 
     internal PipelineConfigurator()
@@ -146,6 +148,16 @@ public class PipelineConfigurator
     }
 
     /// <summary>
+    /// 지정된 어셈블리에서 ICustomUsecasePipeline을 구현한 커스텀 파이프라인을 자동 검색하여 등록합니다.
+    /// </summary>
+    /// <param name="assembly">스캔할 어셈블리</param>
+    public PipelineConfigurator AddCustomPipelinesFromAssembly(Assembly assembly)
+    {
+        _customPipelineAssemblies.Add(assembly);
+        return this;
+    }
+
+    /// <summary>
     /// 설정을 IServiceCollection에 적용합니다.
     /// </summary>
     /// <param name="services">IServiceCollection 인스턴스</param>
@@ -198,11 +210,21 @@ public class PipelineConfigurator
             _registeredPipelineNames.Add("Transaction");
         }
 
-        // 커스텀 파이프라인 등록
+        // 커스텀 파이프라인 개별 등록
         foreach (Type customPipeline in _customPipelines)
         {
             RegisterPipeline(services, customPipeline);
             _registeredPipelineNames.Add(ExtractPipelineName(customPipeline));
+        }
+
+        // 어셈블리 자동 검색 등록
+        foreach (Assembly assembly in _customPipelineAssemblies)
+        {
+            services.Scan(scan => scan
+                .FromAssemblies(assembly)
+                .AddClasses(classes => classes.AssignableTo(typeof(ICustomUsecasePipeline)))
+                .AsImplementedInterfaces()
+                .WithLifetime(_lifetime));
         }
 
         _registeredPipelineNames.Add("Handler");

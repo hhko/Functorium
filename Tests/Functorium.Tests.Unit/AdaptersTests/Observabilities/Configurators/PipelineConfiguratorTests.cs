@@ -466,6 +466,52 @@ public sealed class PipelineConfiguratorTests
         services.AddScoped(_ => Substitute.For<IDomainEventCollector>());
     }
 
+    [Fact]
+    public void AddCustomPipelinesFromAssembly_RegistersCustomPipelines()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configurator = CreateConfigurator();
+
+        // Act
+        configurator.AddCustomPipelinesFromAssembly(typeof(PipelineConfiguratorTests).Assembly);
+        configurator.Apply(services);
+
+        // Assert — 현재 어셈블리에 ICustomUsecasePipeline 구현체가 있으면 등록됨
+        var customServices = services
+            .Where(s => s.ServiceType.IsGenericType
+                && s.ServiceType.GetGenericTypeDefinition() == typeof(IPipelineBehavior<,>)
+                && s.ImplementationType != null
+                && typeof(ICustomUsecasePipeline).IsAssignableFrom(s.ImplementationType))
+            .ToList();
+        customServices.Count.ShouldBe(1); // MarkerCustomPipeline
+    }
+
+    [Fact]
+    public void AddCustomPipelinesFromAssembly_IgnoresBuiltInPipelines()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configurator = CreateConfigurator();
+
+        // Act — Functorium.Adapters 어셈블리 스캔
+        configurator.AddCustomPipelinesFromAssembly(typeof(UsecaseMetricsPipeline<,>).Assembly);
+        configurator.Apply(services);
+
+        // Assert — 내장 파이프라인은 ICustomUsecasePipeline 미구현이므로 IPipelineBehavior로 등록되지 않음
+        var pipelineBehaviors = services
+            .Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)
+                && s.ImplementationType != null
+                && (s.ImplementationType == typeof(UsecaseMetricsPipeline<,>)
+                    || s.ImplementationType == typeof(UsecaseTracingPipeline<,>)
+                    || s.ImplementationType == typeof(UsecaseLoggingPipeline<,>)
+                    || s.ImplementationType == typeof(UsecaseValidationPipeline<,>)
+                    || s.ImplementationType == typeof(UsecaseExceptionPipeline<,>)
+                    || s.ImplementationType == typeof(UsecaseTransactionPipeline<,>)))
+            .ToList();
+        pipelineBehaviors.Count.ShouldBe(0);
+    }
+
     #region Test Fixtures
 
     public sealed record class TestMessage(string Name) : IMessage;
@@ -484,6 +530,18 @@ public sealed class PipelineConfiguratorTests
         where TMessage : IMessage
     {
         public ValueTask<TResponse> Handle(TMessage message, MessageHandlerDelegate<TMessage, TResponse> next, CancellationToken cancellationToken)
+        {
+            return next(message, cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// ICustomUsecasePipeline 마커를 구현한 테스트용 커스텀 파이프라인.
+    /// AddCustomPipelinesFromAssembly 테스트에서 Scrutor 자동 검색 대상으로 사용됩니다.
+    /// </summary>
+    public sealed class MarkerCustomPipeline : ICustomUsecasePipeline, IPipelineBehavior<TestMessage, TestResponse>
+    {
+        public ValueTask<TestResponse> Handle(TestMessage message, MessageHandlerDelegate<TestMessage, TestResponse> next, CancellationToken cancellationToken)
         {
             return next(message, cancellationToken);
         }
