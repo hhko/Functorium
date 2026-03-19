@@ -106,3 +106,9 @@ TestingStrategies.Tests.Unit/
 
 ### Q3: Specification 테스트에서 가장 흔한 실수는 무엇인가요?
 **A**: 경계값 누락입니다. 예를 들어 `ProductPriceRangeSpec(1000, 10000)`에서 정확히 1000과 10000인 경우를 테스트하지 않으면, `>=`와 `>`의 차이로 인한 버그를 놓칠 수 있습니다.
+
+---
+
+테스트로 Specification의 정확성을 보장했습니다. 다음 장에서는 ArchUnitNET을 활용하여 Specification 클래스의 네이밍, 폴더 배치, 상속 규칙을 자동으로 검증하는 아키텍처 규칙을 다룹니다.
+
+→ [4장: 아키텍처 규칙](../04-Architecture-Rules/)

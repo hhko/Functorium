@@ -147,3 +147,5 @@ index.md                                  # 이 문서
 ---
 
 ExpressionSpecification은 primitive 타입으로 조건을 표현합니다. 하지만 도메인 모델이 Value Object를 사용한다면 어떨까요? 다음 장에서는 Value Object를 Expression Tree에서 안전하게 사용하기 위한 primitive 변환 패턴을 다룹니다.
+
+→ [3장: Value Object 변환 패턴](../03-ValueObject-Primitive-Conversion/)

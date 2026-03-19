@@ -145,3 +145,5 @@ Console.WriteLine($"Result: {compiled(product)}");
 ---
 
 Expression Tree의 개념을 이해했으니, 다음 장에서는 이를 Specification에 통합한 `ExpressionSpecification<T>` 클래스를 직접 구현합니다.
+
+→ [2장: ExpressionSpecification 클래스](../02-ExpressionSpecification-Class/)

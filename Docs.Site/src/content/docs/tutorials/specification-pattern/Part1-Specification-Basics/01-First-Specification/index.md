@@ -139,9 +139,8 @@ public sealed class ProductPriceRangeSpec(decimal min, decimal max) : Specificat
 ### Q4: 경계값 테스트가 왜 중요한가요?
 **A**: `ProductPriceRangeSpec(100, 500)`에서 가격이 정확히 100이거나 500일 때의 동작은 `>=`인지 `>`인지에 따라 달라집니다. 경계값 테스트는 이런 미묘한 차이를 명확히 검증하여 Specification의 정확한 의미를 보장합니다.
 
-### Q5: 다음 장에서는 무엇을 배우나요?
-**A**: 2장에서는 여러 Specification을 `And`, `Or`, `Not`으로 조합하는 방법을 배웁니다. 예를 들어 "재고가 있고 AND 가격이 범위 안에 있는" 복합 조건을 만들 수 있습니다.
-
 ---
 
 다음 장에서는 여러 Specification을 `And`, `Or`, `Not`으로 조합하여 복합 비즈니스 규칙을 만드는 방법을 배웁니다.
+
+→ [2장: 조합](../02-Composition/)

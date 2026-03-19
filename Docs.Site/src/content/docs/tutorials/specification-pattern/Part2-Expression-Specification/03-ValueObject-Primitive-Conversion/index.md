@@ -152,3 +152,5 @@ public sealed class ProductPriceRangeSpec : ExpressionSpecification<Product>
 ---
 
 개별 ExpressionSpecification에서 Expression을 추출하는 방법을 배웠습니다. 하지만 `inStock & affordable` 같은 조합된 Specification에서는 어떻게 하나의 Expression을 얻을 수 있을까요? 다음 장에서는 이 문제를 해결하는 Expression Resolver를 다룹니다.
+
+→ [4장: Expression Resolver](../04-Expression-Resolver/)

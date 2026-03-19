@@ -131,3 +131,5 @@ var op = inStock & affordable & !electronics;
 ---
 
 다음 장에서는 `Specification<T>.All` 항등원을 소개합니다. 이 특별한 Specification은 동적 필터 체이닝의 시작점이 됩니다.
+
+→ [4장: All 항등원](../04-All-Identity/)
