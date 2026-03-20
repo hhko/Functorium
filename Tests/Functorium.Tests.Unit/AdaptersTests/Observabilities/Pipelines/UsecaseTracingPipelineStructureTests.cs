@@ -387,8 +387,10 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
 
     #region Test Types
 
+    [LogEnricherIgnore]
     private sealed record TestCommandRequest : ICommandRequest<TestSuccessData>;
 
+    [LogEnricherIgnore]
     private sealed record TestQueryRequest : IQueryRequest<TestSuccessData>;
 
     private sealed record TestSuccessData(Guid Id, string Name);

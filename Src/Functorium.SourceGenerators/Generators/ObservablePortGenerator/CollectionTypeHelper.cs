@@ -30,6 +30,8 @@ public static class CollectionTypeHelper
         "global::System.Collections.Generic.IReadOnlyDictionary<",
         "global::System.Collections.Generic.Queue<",
         "global::System.Collections.Generic.Stack<",
+        "LanguageExt.Seq<",
+        "global::LanguageExt.Seq<",
     ];
 
     /// <summary>
@@ -90,6 +92,10 @@ public static class CollectionTypeHelper
         if (typeFullName.Contains("[]"))
             return $"{variableName}?.Length ?? 0";
 
+        // LanguageExt.Seq<T>는 struct이므로 null-conditional 불필요
+        if (IsSeqType(typeFullName))
+            return $"{variableName}.Count";
+
         // 나머지 컬렉션은 Count 사용
         return $"{variableName}?.Count ?? 0";
     }
@@ -139,5 +145,18 @@ public static class CollectionTypeHelper
     public static string GetResponseCountFieldName()
     {
         return "response.result.count";
+    }
+
+    /// <summary>
+    /// LanguageExt.Seq&lt;T&gt; 타입인지 확인합니다.
+    /// Seq는 struct이므로 null-conditional 연산자를 사용할 수 없습니다.
+    /// </summary>
+    public static bool IsSeqType(string typeFullName)
+    {
+        if (string.IsNullOrEmpty(typeFullName))
+            return false;
+
+        return typeFullName.Contains("LanguageExt.Seq<")
+            || typeFullName.Contains("global::LanguageExt.Seq<");
     }
 }

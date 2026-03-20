@@ -474,8 +474,10 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
         }
     }
 
+    [LogEnricherIgnore]
     private sealed record TestCommandRequest : ICommandRequest<TestSuccessData>;
 
+    [LogEnricherIgnore]
     private sealed record TestQueryRequest : IQueryRequest<TestSuccessData>;
 
     private sealed record TestSuccessData(Guid Id, string Name);
