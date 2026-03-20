@@ -76,9 +76,9 @@
 
 ```json
 {
-  "ctx.customer_id": "CUST-001",
-  "ctx.order_line_count": 3,
-  "ctx.order_total_amount": 150.00
+  "ctx.place_order_command.request.customer_id": "CUST-001",
+  "ctx.place_order_command.request.lines_count": 2,
+  "ctx.place_order_command.request.order_total_amount": 150.00
 }
 ```
 
@@ -95,25 +95,25 @@ OrderLineCount  → ctx.order_line_count
 
 ```
 Serilog LogEvent
-├── Timestamp          → @timestamp (UTC)
-├── Level              → log.level
-├── MessageTemplate    → message.template
-├── (렌더링)           → message
-├── Exception          → error.stack_trace
+├── Timestamp           → @timestamp (UTC)
+├── Level               → log.level
+├── MessageTemplate     → message.template
+├── (렌더링)              → message
+├── Exception           → error.stack_trace
 └── Properties
     ├── EventId (구조체)
-    │   ├── Id         → event.id
-    │   └── Name       → event.name
+    │   ├── Id          → event.id
+    │   └── Name        → event.name
     ├── SourceContext   → log.logger
-    ├── request.*      → request.* (그대로)
-    ├── response.*     → response.* (그대로)
-    ├── error.type     → error.type (그대로)
-    ├── error.code     → error.code (그대로)
-    ├── error (객체)   → error.detail (JSON 문자열화)
-    ├── ctx.*          → ctx.* (그대로)
-    ├── PascalCase     → ctx.snake_case (안전망)
-    ├── _typeTag       → (제거)
-    └── $type          → (제거)
+    ├── request.*       → request.* (그대로)
+    ├── response.*      → response.* (그대로)
+    ├── error.type      → error.type (그대로)
+    ├── error.code      → error.code (그대로)
+    ├── error (객체)     → error.detail (JSON 문자열화)
+    ├── ctx.*           → ctx.* (그대로)
+    ├── PascalCase      → ctx.snake_case (안전망)
+    ├── _typeTag        → (제거)
+    └── $type           → (제거)
 ```
 
 ## 매핑 정책
