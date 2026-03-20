@@ -25,6 +25,7 @@ public sealed class LogEnricherGenerator()
         AttachDebugger: false)
 {
     private const string IgnoreAttributeFullName = "Functorium.Applications.Usecases.LogEnricherIgnoreAttribute";
+    private const string RootAttributeFullName = "Functorium.Applications.Usecases.LogEnricherRootAttribute";
 
     private static readonly DiagnosticDescriptor InaccessibleRequestDiagnostic = new(
         id: "FUNCTORIUM003",
@@ -223,15 +224,22 @@ public sealed class LogEnricherGenerator()
             string? countExpression = null;
             string openSearchTypeGroup = GetOpenSearchTypeGroup(property.Type, isCollection);
 
+            bool isRoot = HasRootAttribute(property)
+                || IsFromRootInterface(typeSymbol, property);
+
             if (isCollection)
             {
-                ctxFieldName = $"ctx.{ctxSegmentPrefix}.{snakeName}_count";
+                ctxFieldName = isRoot
+                    ? $"ctx.{snakeName}_count"
+                    : $"ctx.{ctxSegmentPrefix}.{snakeName}_count";
                 countExpression = CollectionTypeHelper.GetCountExpression(
                     $"{variablePrefix}.{property.Name}", typeFullName);
             }
             else
             {
-                ctxFieldName = $"ctx.{ctxSegmentPrefix}.{snakeName}";
+                ctxFieldName = isRoot
+                    ? $"ctx.{snakeName}"
+                    : $"ctx.{ctxSegmentPrefix}.{snakeName}";
             }
 
             properties.Add(new LogEnricherPropertyInfo(
@@ -240,7 +248,8 @@ public sealed class LogEnricherGenerator()
                 typeFullName,
                 isCollection,
                 countExpression,
-                openSearchTypeGroup));
+                openSearchTypeGroup,
+                isRoot));
         }
 
         return properties.ToArray();
@@ -287,6 +296,53 @@ public sealed class LogEnricherGenerator()
                             a.AttributeClass?.ToDisplayString() == IgnoreAttributeFullName))
                         return true;
                 }
+            }
+        }
+
+        return false;
+    }
+
+    private static bool HasRootAttribute(IPropertySymbol property)
+    {
+        // 프로퍼티 자체의 어트리뷰트 확인
+        if (property.GetAttributes().Any(a =>
+            a.AttributeClass?.ToDisplayString() == RootAttributeFullName))
+            return true;
+
+        // record 생성자 파라미터의 어트리뷰트 확인
+        if (property.DeclaringSyntaxReferences.Length > 0)
+        {
+            var containingType = property.ContainingType;
+            foreach (var ctor in containingType.Constructors)
+            {
+                foreach (var param in ctor.Parameters)
+                {
+                    if (param.Name == property.Name
+                        && param.GetAttributes().Any(a =>
+                            a.AttributeClass?.ToDisplayString() == RootAttributeFullName))
+                        return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsFromRootInterface(INamedTypeSymbol typeSymbol, IPropertySymbol property)
+    {
+        foreach (var iface in typeSymbol.AllInterfaces)
+        {
+            // [LogEnricherRoot] 어트리뷰트가 있는 인터페이스만 필터
+            if (!iface.GetAttributes().Any(a =>
+                a.AttributeClass?.ToDisplayString() == RootAttributeFullName))
+                continue;
+
+            // 해당 인터페이스에 동일한 이름의 프로퍼티가 있으면 root
+            foreach (var member in iface.GetMembers())
+            {
+                if (member is IPropertySymbol interfaceProperty
+                    && interfaceProperty.Name == property.Name)
+                    return true;
             }
         }
 
@@ -584,6 +640,23 @@ public sealed class LogEnricherGenerator()
         sb.AppendLine($"            \"ctx.{ctxTypePrefix}.response.\" + fieldName, value));");
         sb.AppendLine("    }");
         sb.AppendLine();
+
+        // Helper: PushRootCtx (root 속성이 있을 때만 생성)
+        bool hasRootProperties = info.RequestProperties.Any(p => p.IsRoot)
+            || info.ResponseProperties.Any(p => p.IsRoot);
+
+        if (hasRootProperties)
+        {
+            sb.AppendLine($"    private static void PushRootCtx(");
+            sb.AppendLine($"        global::System.Collections.Generic.List<global::System.IDisposable> disposables,");
+            sb.AppendLine($"        string fieldName,");
+            sb.AppendLine($"        object? value)");
+            sb.AppendLine("    {");
+            sb.AppendLine($"        disposables.Add(global::Serilog.Context.LogContext.PushProperty(");
+            sb.AppendLine($"            \"ctx.\" + fieldName, value));");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+        }
 
         // GeneratedCompositeDisposable
         sb.AppendLine("    private sealed class GeneratedCompositeDisposable(global::System.Collections.Generic.List<global::System.IDisposable> disposables) : global::System.IDisposable");

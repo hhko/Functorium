@@ -26,6 +26,12 @@ namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 // ### 9a. PushRequestCtx/PushResponseCtx 헬퍼 메서드 테스트
 // ### 14. [LogEnricherIgnore] 클래스 레벨 옵트아웃 테스트
 // ### 15. 접근 불가능한 타입 진단 경고 테스트 (FUNCTORIUM003)
+// ### 17. [LogEnricherRoot] 인터페이스 root context 테스트
+// ### 18. [LogEnricherRoot] 프로퍼티 직접 적용 테스트
+// ### 19. [LogEnricherRoot] PushRootCtx 헬퍼 생성/미생성 테스트
+// ### 20. [LogEnricherRoot] 컬렉션 root 테스트
+// ### 21. [LogEnricherRoot] FUNCTORIUM002 충돌 테스트
+// ### 22. [LogEnricherRoot] 스냅샷 테스트
 //
 
 [Trait(nameof(UnitTest), UnitTest.Functorium_SourceGenerator)]
@@ -558,6 +564,294 @@ public sealed class LogEnricherGeneratorTests
     {
         // Act
         string? actual = _sut.Generate(CommonInput);
+
+        // Assert
+        return Verify(actual).UseDirectory("Snapshots/LogEnricherGenerator");
+    }
+
+    #endregion
+
+    #region 17. [LogEnricherRoot] 인터페이스 root context 테스트
+
+    private const string RootInterfaceInput = """
+        using System.Collections.Generic;
+        using Functorium.Applications.Usecases;
+
+        namespace TestNamespace;
+
+        [LogEnricherRoot]
+        public interface ICustomerRequest { string CustomerId { get; } }
+
+        public sealed class PlaceOrderCommand
+        {
+            public sealed record OrderLine(string ProductId, int Quantity, decimal UnitPrice);
+
+            public sealed record Request(string CustomerId, List<OrderLine> Lines)
+                : ICommandRequest<Response>, ICustomerRequest;
+
+            public sealed record Response(string OrderId, int LineCount, decimal TotalAmount);
+        }
+        """;
+
+    /// <summary>
+    /// 시나리오: [LogEnricherRoot] 인터페이스의 속성이 ctx.{field} 루트 레벨로 승격되는지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void LogEnricherGenerator_ShouldGenerate_RootCtxField_WhenInterfaceHasRootAttribute()
+    {
+        // Act
+        string? actual = _sut.Generate(RootInterfaceInput);
+
+        // Assert
+        actual.ShouldNotBeNull();
+        actual.ShouldContain("PushProperty(\"ctx.customer_id\", request.CustomerId)");
+    }
+
+    /// <summary>
+    /// 시나리오: [LogEnricherRoot] 인터페이스 속성이 root로 승격되어도
+    /// root가 아닌 속성은 기존 ctx.{usecase}.request.{field} 형식을 유지하는지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void LogEnricherGenerator_ShouldKeep_NormalCtxField_WhenNotRoot()
+    {
+        // Act
+        string? actual = _sut.Generate(RootInterfaceInput);
+
+        // Assert
+        actual.ShouldNotBeNull();
+        actual.ShouldContain("PushProperty(\"ctx.place_order_command.request.lines_count\"");
+    }
+
+    /// <summary>
+    /// 시나리오: [LogEnricherRoot] 어트리뷰트가 없는 인터페이스의 속성은
+    /// root로 승격되지 않는지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void LogEnricherGenerator_ShouldNotPromote_WhenInterfaceHasNoRootAttribute()
+    {
+        // Arrange
+        string input = """
+            using System.Collections.Generic;
+            using Functorium.Applications.Usecases;
+
+            namespace TestNamespace;
+
+            public interface ICustomerRequest { string CustomerId { get; } }
+
+            public sealed class PlaceOrderCommand
+            {
+                public sealed record Request(string CustomerId, int Amount)
+                    : ICommandRequest<Response>, ICustomerRequest;
+
+                public sealed record Response(string OrderId);
+            }
+            """;
+
+        // Act
+        string? actual = _sut.Generate(input);
+
+        // Assert
+        actual.ShouldNotBeNull();
+        actual.ShouldContain("ctx.place_order_command.request.customer_id");
+        actual.ShouldNotContain("\"ctx.customer_id\"");
+    }
+
+    #endregion
+
+    #region 18. [LogEnricherRoot] 프로퍼티 직접 적용 테스트
+
+    /// <summary>
+    /// 시나리오: record 생성자 파라미터에 [LogEnricherRoot]를 직접 적용하면
+    /// 해당 속성만 ctx.{field} 루트 레벨로 승격되는지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void LogEnricherGenerator_ShouldGenerate_RootCtxField_WhenPropertyHasRootAttribute()
+    {
+        // Arrange
+        string input = """
+            using Functorium.Applications.Usecases;
+
+            namespace TestNamespace;
+
+            public sealed class SomeCommand
+            {
+                public sealed record Request(
+                    [LogEnricherRoot] string TraceId,
+                    string OrderId) : ICommandRequest<Response>;
+
+                public sealed record Response(string Result);
+            }
+            """;
+
+        // Act
+        string? actual = _sut.Generate(input);
+
+        // Assert
+        actual.ShouldNotBeNull();
+        actual.ShouldContain("PushProperty(\"ctx.trace_id\", request.TraceId)");
+        actual.ShouldContain("PushProperty(\"ctx.some_command.request.order_id\", request.OrderId)");
+    }
+
+    /// <summary>
+    /// 시나리오: Response의 record 생성자 파라미터에 [LogEnricherRoot]를 적용하면
+    /// 해당 Response 속성이 ctx.{field} 루트 레벨로 승격되는지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void LogEnricherGenerator_ShouldGenerate_RootCtxField_ForResponseProperty()
+    {
+        // Arrange
+        string input = """
+            using Functorium.Applications.Usecases;
+
+            namespace TestNamespace;
+
+            public sealed class SomeCommand
+            {
+                public sealed record Request(string OrderId) : ICommandRequest<Response>;
+
+                public sealed record Response(
+                    [LogEnricherRoot] string CorrelationId,
+                    string Result);
+            }
+            """;
+
+        // Act
+        string? actual = _sut.Generate(input);
+
+        // Assert
+        actual.ShouldNotBeNull();
+        actual.ShouldContain("PushProperty(\"ctx.correlation_id\", r.CorrelationId)");
+        actual.ShouldContain("PushProperty(\"ctx.some_command.response.result\", r.Result)");
+    }
+
+    #endregion
+
+    #region 19. [LogEnricherRoot] PushRootCtx 헬퍼 생성/미생성 테스트
+
+    /// <summary>
+    /// 시나리오: root 속성이 있을 때 PushRootCtx 헬퍼 메서드가 생성되는지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void LogEnricherGenerator_ShouldGenerate_PushRootCtxHelper_WhenRootPropertyExists()
+    {
+        // Act
+        string? actual = _sut.Generate(RootInterfaceInput);
+
+        // Assert
+        actual.ShouldNotBeNull();
+        actual.ShouldContain("private static void PushRootCtx(");
+        actual.ShouldContain("\"ctx.\" + fieldName, value)");
+    }
+
+    /// <summary>
+    /// 시나리오: root 속성이 없을 때 PushRootCtx 헬퍼 메서드가 생성되지 않는지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void LogEnricherGenerator_ShouldNotGenerate_PushRootCtxHelper_WhenNoRootProperty()
+    {
+        // Act
+        string? actual = _sut.Generate(CommonInput);
+
+        // Assert
+        actual.ShouldNotBeNull();
+        actual.ShouldNotContain("PushRootCtx");
+    }
+
+    #endregion
+
+    #region 20. [LogEnricherRoot] 컬렉션 root 테스트
+
+    /// <summary>
+    /// 시나리오: root 컬렉션 속성이 ctx.{name}_count 형식으로 출력되는지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void LogEnricherGenerator_ShouldGenerate_RootCollectionCount()
+    {
+        // Arrange
+        string input = """
+            using System.Collections.Generic;
+            using Functorium.Applications.Usecases;
+
+            namespace TestNamespace;
+
+            [LogEnricherRoot]
+            public interface IItemsRequest { List<string> Items { get; } }
+
+            public sealed class TestCommand
+            {
+                public sealed record Request(List<string> Items, string Name)
+                    : ICommandRequest<Response>, IItemsRequest;
+
+                public sealed record Response(string Result);
+            }
+            """;
+
+        // Act
+        string? actual = _sut.Generate(input);
+
+        // Assert
+        actual.ShouldNotBeNull();
+        actual.ShouldContain("PushProperty(\"ctx.items_count\"");
+        actual.ShouldNotContain("ctx.test_command.request.items_count");
+    }
+
+    #endregion
+
+    #region 21. [LogEnricherRoot] FUNCTORIUM002 충돌 테스트
+
+    /// <summary>
+    /// 시나리오: 같은 root 필드명에 서로 다른 OpenSearch 매핑 타입 그룹이 할당되면
+    /// FUNCTORIUM002 Warning이 발생하는지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void LogEnricherGenerator_ShouldReportDiagnostic_WhenRootFieldTypeConflicts()
+    {
+        // Arrange
+        string input = """
+            using Functorium.Applications.Usecases;
+
+            namespace TestNamespace;
+
+            [LogEnricherRoot]
+            public interface IRequestWithId { string ItemId { get; } }
+
+            [LogEnricherRoot]
+            public interface IRequestWithNumericId { int ItemId { get; } }
+
+            public sealed class CommandA
+            {
+                public sealed record Request(string ItemId)
+                    : ICommandRequest<Response>, IRequestWithId;
+                public sealed record Response(string Result);
+            }
+
+            public sealed class CommandB
+            {
+                public sealed record Request(int ItemId)
+                    : ICommandRequest<Response>, IRequestWithNumericId;
+                public sealed record Response(string Result);
+            }
+            """;
+
+        // Act
+        var (_, diagnostics) = _sut.GenerateWithDiagnostics(input);
+
+        // Assert
+        diagnostics.ShouldContain(d => d.Id == "FUNCTORIUM002");
+    }
+
+    #endregion
+
+    #region 22. [LogEnricherRoot] 스냅샷 테스트
+
+    /// <summary>
+    /// 시나리오: root context가 포함된 생성 코드의 전체 형태를 스냅샷으로 검증합니다.
+    /// </summary>
+    [Fact]
+    public Task LogEnricherGenerator_ShouldGenerate_RootContext_ExpectedOutput()
+    {
+        // Act
+        string? actual = _sut.Generate(RootInterfaceInput);
 
         // Assert
         return Verify(actual).UseDirectory("Snapshots/LogEnricherGenerator");

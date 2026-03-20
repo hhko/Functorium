@@ -36,13 +36,20 @@ public readonly record struct LogEnricherPropertyInfo
     /// </summary>
     public readonly string OpenSearchTypeGroup;
 
+    /// <summary>
+    /// [LogEnricherRoot] 어트리뷰트 또는 루트 인터페이스로 인해
+    /// ctx 루트 레벨(ctx.{field})로 승격된 속성 여부.
+    /// </summary>
+    public readonly bool IsRoot;
+
     public LogEnricherPropertyInfo(
         string propertyName,
         string ctxFieldName,
         string typeFullName,
         bool isCollection,
         string? countExpression,
-        string openSearchTypeGroup)
+        string openSearchTypeGroup,
+        bool isRoot = false)
     {
         PropertyName = propertyName;
         CtxFieldName = ctxFieldName;
@@ -50,5 +57,6 @@ public readonly record struct LogEnricherPropertyInfo
         IsCollection = isCollection;
         CountExpression = countExpression;
         OpenSearchTypeGroup = openSearchTypeGroup;
+        IsRoot = isRoot;
     }
 }
