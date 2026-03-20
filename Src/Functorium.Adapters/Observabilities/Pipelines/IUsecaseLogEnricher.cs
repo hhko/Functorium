@@ -1,3 +1,5 @@
+using Functorium.Applications.Usecases;
+
 namespace Functorium.Adapters.Observabilities.Pipelines;
 
 /// <summary>
@@ -6,7 +8,9 @@ namespace Functorium.Adapters.Observabilities.Pipelines;
 /// Serilog LogContext에 커스텀 속성을 자동으로 Push합니다.
 /// </summary>
 /// <typeparam name="TRequest">대상 Request 타입</typeparam>
-public interface IUsecaseLogEnricher<in TRequest>
+/// <typeparam name="TResponse">대상 Response 타입 (IFinResponse 구현)</typeparam>
+public interface IUsecaseLogEnricher<in TRequest, in TResponse>
+    where TResponse : IFinResponse
 {
     /// <summary>
     /// Request 로그 출력 전에 호출됩니다.
@@ -18,5 +22,5 @@ public interface IUsecaseLogEnricher<in TRequest>
     /// Response 로그 출력 전에 호출됩니다.
     /// LogContext.PushProperty로 추가 속성을 Push하고 IDisposable을 반환하세요.
     /// </summary>
-    IDisposable? EnrichResponseLog(TRequest request);
+    IDisposable? EnrichResponseLog(TRequest request, TResponse response);
 }

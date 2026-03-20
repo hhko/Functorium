@@ -22,11 +22,11 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
         where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 {
     private readonly ILogger<UsecaseLoggingPipeline<TRequest, TResponse>> _logger;
-    private readonly IUsecaseLogEnricher<TRequest>? _enricher;
+    private readonly IUsecaseLogEnricher<TRequest, TResponse>? _enricher;
 
     public UsecaseLoggingPipeline(
         ILogger<UsecaseLoggingPipeline<TRequest, TResponse>> logger,
-        IUsecaseLogEnricher<TRequest>? enricher = null)
+        IUsecaseLogEnricher<TRequest, TResponse>? enricher = null)
     {
         _logger = logger;
         _enricher = enricher;
@@ -62,7 +62,7 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
         double elapsed = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);
 
         // 응답 로그 (Enricher가 있으면 LogContext에 커스텀 속성 Push 후 표준 로그 출력)
-        using IDisposable? responseEnrichment = _enricher?.EnrichResponseLog(request);
+        using IDisposable? responseEnrichment = _enricher?.EnrichResponseLog(request, response);
         LogResponse(response, requestCategoryType, requestHandler, requestHandlerMethod, elapsed);
 
         return response;

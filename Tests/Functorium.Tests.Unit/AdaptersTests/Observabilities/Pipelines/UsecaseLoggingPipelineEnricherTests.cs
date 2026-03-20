@@ -22,7 +22,7 @@ public sealed class UsecaseLoggingPipelineEnricherTests
     {
         // Arrange
         var logger = NullLoggerFactory.Instance.CreateLogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>();
-        var enricher = Substitute.For<IUsecaseLogEnricher<TestCommandRequest>>();
+        var enricher = Substitute.For<IUsecaseLogEnricher<TestCommandRequest, TestResponse>>();
 
         var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger, enricher);
         var request = new TestCommandRequest("Test");
@@ -43,7 +43,7 @@ public sealed class UsecaseLoggingPipelineEnricherTests
     {
         // Arrange
         var logger = NullLoggerFactory.Instance.CreateLogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>();
-        var enricher = Substitute.For<IUsecaseLogEnricher<TestCommandRequest>>();
+        var enricher = Substitute.For<IUsecaseLogEnricher<TestCommandRequest, TestResponse>>();
 
         var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger, enricher);
         var request = new TestCommandRequest("Test");
@@ -56,7 +56,7 @@ public sealed class UsecaseLoggingPipelineEnricherTests
         await pipeline.Handle(request, next, CancellationToken.None);
 
         // Assert
-        enricher.Received(1).EnrichResponseLog(request);
+        enricher.Received(1).EnrichResponseLog(request, expectedResponse);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public sealed class UsecaseLoggingPipelineEnricherTests
     {
         // Arrange
         var logger = NullLoggerFactory.Instance.CreateLogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>();
-        var enricher = Substitute.For<IUsecaseLogEnricher<TestCommandRequest>>();
+        var enricher = Substitute.For<IUsecaseLogEnricher<TestCommandRequest, TestResponse>>();
         var disposable = Substitute.For<IDisposable>();
         enricher.EnrichRequestLog(Arg.Any<TestCommandRequest>()).Returns(disposable);
 
@@ -87,9 +87,9 @@ public sealed class UsecaseLoggingPipelineEnricherTests
     {
         // Arrange
         var logger = NullLoggerFactory.Instance.CreateLogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>();
-        var enricher = Substitute.For<IUsecaseLogEnricher<TestCommandRequest>>();
+        var enricher = Substitute.For<IUsecaseLogEnricher<TestCommandRequest, TestResponse>>();
         var disposable = Substitute.For<IDisposable>();
-        enricher.EnrichResponseLog(Arg.Any<TestCommandRequest>()).Returns(disposable);
+        enricher.EnrichResponseLog(Arg.Any<TestCommandRequest>(), Arg.Any<TestResponse>()).Returns(disposable);
 
         var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger, enricher);
         var request = new TestCommandRequest("Test");
@@ -131,9 +131,9 @@ public sealed class UsecaseLoggingPipelineEnricherTests
     {
         // Arrange
         var logger = NullLoggerFactory.Instance.CreateLogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>();
-        var enricher = Substitute.For<IUsecaseLogEnricher<TestCommandRequest>>();
+        var enricher = Substitute.For<IUsecaseLogEnricher<TestCommandRequest, TestResponse>>();
         enricher.EnrichRequestLog(Arg.Any<TestCommandRequest>()).Returns((IDisposable?)null);
-        enricher.EnrichResponseLog(Arg.Any<TestCommandRequest>()).Returns((IDisposable?)null);
+        enricher.EnrichResponseLog(Arg.Any<TestCommandRequest>(), Arg.Any<TestResponse>()).Returns((IDisposable?)null);
 
         var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger, enricher);
         var request = new TestCommandRequest("Test");
@@ -154,7 +154,7 @@ public sealed class UsecaseLoggingPipelineEnricherTests
     {
         // Arrange
         var logger = NullLoggerFactory.Instance.CreateLogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>();
-        var enricher = Substitute.For<IUsecaseLogEnricher<TestCommandRequest>>();
+        var enricher = Substitute.For<IUsecaseLogEnricher<TestCommandRequest, TestResponse>>();
 
         var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger, enricher);
         var request = new TestCommandRequest("Test");
