@@ -2,6 +2,22 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
+- [x] 유스케이스 Request, Response 메시지 코드 생성기를 이용한 로그 자동화
+- [x] 유스케이스 ctx.{클래스}.{request | response}.{필드}[_count]
+- [ ] 유스케이스 ctx.{필드}[_count]
+- [ ] 도메인 이벤트 로그 자동화 이해?
+- [ ] Adapter 코드 자동화 이해?
+---
+- [ ] 가이드 문서 업데이트
+- [ ] 가이드 문서 사례 추가
+- [ ] Functorium 제거한 가이드 문서
+---
+- [ ] 도메인 develop 스킬 업데이트
+- [ ] 도메인 스킬 plugin화?
+---
+- [ ] 컨테이너 기반 통합 테스트
+- [ ] EFCore
+- [ ] DTO 이해
 
 ```
  @Src 코드 기준으로 Docs.Site\src\content\docs\tutorials\functional-valueobject 튜토리얼 구성에 맞게 문서와 코드를 최신의 상태로 개선하고 누락된 내용이 있으면 반영해줘. narrative 품질을 개선해줘.
