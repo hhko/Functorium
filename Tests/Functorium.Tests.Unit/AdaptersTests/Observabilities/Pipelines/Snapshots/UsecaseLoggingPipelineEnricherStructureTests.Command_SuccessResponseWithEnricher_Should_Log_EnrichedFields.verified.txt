@@ -1,0 +1,26 @@
+﻿{
+  Information: ,
+  Properties: {
+    @response.message: {
+      IsSucc: true,
+      IsFail: false,
+      Id: Guid_1,
+      Name: ResponseName,
+      Error: {
+        Message: No error
+      }
+    },
+    ctx.customer_id: CUST-001,
+    ctx.items_count: 3,
+    ctx.test_fixtures.response.id: Guid_1,
+    ctx.test_fixtures.response.tags_count: 5,
+    OriginalFormat: {request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message},
+    request.category: usecase,
+    request.category_type: command,
+    request.handler: TestFixtures,
+    request.handler_method: Handle,
+    request.layer: application,
+    response.elapsed: {Scrubbed},
+    response.status: success
+  }
+}

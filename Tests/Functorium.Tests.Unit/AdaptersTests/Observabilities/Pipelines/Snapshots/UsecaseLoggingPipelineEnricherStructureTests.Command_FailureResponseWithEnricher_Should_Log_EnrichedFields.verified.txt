@@ -1,0 +1,25 @@
+﻿{
+  Information: ,
+  Properties: {
+    @error: {
+      ErrorCode: Order.NotFound,
+      ErrorCurrentValue: order-999,
+      Message: 주문을 찾을 수 없습니다,
+      Code: -1000
+    },
+    ctx.customer_id: CUST-001,
+    ctx.items_count: 3,
+    ctx.test_fixtures.response.id: Guid_Empty,
+    ctx.test_fixtures.response.tags_count: 5,
+    error.code: Order.NotFound,
+    error.type: expected,
+    OriginalFormat: {request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error},
+    request.category: usecase,
+    request.category_type: command,
+    request.handler: TestFixtures,
+    request.handler_method: Handle,
+    request.layer: application,
+    response.elapsed: {Scrubbed},
+    response.status: failure
+  }
+}

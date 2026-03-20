@@ -39,13 +39,29 @@ public sealed class LogTestContext : IDisposable
     /// 지정된 최소 로그 레벨로 LogTestContext를 초기화합니다.
     /// </summary>
     /// <param name="minimumLevel">캡처할 최소 로그 레벨</param>
-    public LogTestContext(LogEventLevel minimumLevel)
+    public LogTestContext(LogEventLevel minimumLevel) : this(minimumLevel, false)
+    {
+    }
+
+    /// <summary>
+    /// 지정된 최소 로그 레벨과 LogContext enrichment 옵션으로 LogTestContext를 초기화합니다.
+    /// </summary>
+    /// <param name="minimumLevel">캡처할 최소 로그 레벨</param>
+    /// <param name="enrichFromLogContext">
+    /// true이면 Serilog LogContext에서 Push된 속성을 로그 이벤트에 포함합니다.
+    /// IUsecaseLogEnricher가 Push하는 ctx.* 필드를 캡처하려면 true로 설정하세요.
+    /// </param>
+    public LogTestContext(LogEventLevel minimumLevel, bool enrichFromLogContext)
     {
         var sink = new TestSink(_logEvents);
-        _serilogLogger = new LoggerConfiguration()
+        var config = new LoggerConfiguration()
             .MinimumLevel.Is(minimumLevel)
-            .WriteTo.Sink(sink)
-            .CreateLogger();
+            .WriteTo.Sink(sink);
+
+        if (enrichFromLogContext)
+            config = config.Enrich.FromLogContext();
+
+        _serilogLogger = config.CreateLogger();
     }
 
     /// <summary>

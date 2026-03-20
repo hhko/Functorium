@@ -1,8 +1,10 @@
 using FluentValidation;
 using Functorium.Abstractions.Errors;
+using Functorium.Adapters.Observabilities.Pipelines;
 using Functorium.Applications.Usecases;
 using LanguageExt.Common;
 using Mediator;
+using Serilog.Context;
 
 namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines;
 
@@ -72,6 +74,52 @@ public static class TestFixtures
             RuleFor(x => x.Name)
                 .MinimumLength(3)
                 .WithMessage("Name must be at least 3 characters");
+        }
+    }
+
+    /// <summary>
+    /// LogEnricher 런타임 구조 테스트를 위한 핸드라이트 Enricher.
+    /// 소스 제너레이터가 생성하는 6가지 ctx 필드 패턴을 모두 포함합니다:
+    /// Root 스칼라/컬렉션 + Usecase Request 스칼라/컬렉션 + Usecase Response 스칼라/컬렉션
+    /// </summary>
+    internal sealed class TestCommandLogEnricher
+        : IUsecaseLogEnricher<TestCommandRequest, TestResponse>
+    {
+        public IDisposable? EnrichRequestLog(TestCommandRequest request)
+        {
+            var disposables = new List<IDisposable>(4);
+            // Pattern 1: Root scalar (simulates [LogEnricherRoot] interface)
+            disposables.Add(LogContext.PushProperty("ctx.customer_id", "CUST-001"));
+            // Pattern 2: Root collection (simulates [LogEnricherRoot] interface + collection)
+            disposables.Add(LogContext.PushProperty("ctx.items_count", 3));
+            // Pattern 3: Usecase request scalar
+            disposables.Add(LogContext.PushProperty("ctx.test_fixtures.request.name", request.Name));
+            // Pattern 4: Usecase request collection
+            disposables.Add(LogContext.PushProperty("ctx.test_fixtures.request.lines_count", 2));
+            return new CompositeDisposable(disposables);
+        }
+
+        public IDisposable? EnrichResponseLog(TestCommandRequest request, TestResponse response)
+        {
+            var disposables = new List<IDisposable>(4);
+            // Pattern 1: Root scalar
+            disposables.Add(LogContext.PushProperty("ctx.customer_id", "CUST-001"));
+            // Pattern 2: Root collection
+            disposables.Add(LogContext.PushProperty("ctx.items_count", 3));
+            // Pattern 5: Usecase response scalar
+            disposables.Add(LogContext.PushProperty("ctx.test_fixtures.response.id", response.Id));
+            // Pattern 6: Usecase response collection
+            disposables.Add(LogContext.PushProperty("ctx.test_fixtures.response.tags_count", 5));
+            return new CompositeDisposable(disposables);
+        }
+
+        private sealed class CompositeDisposable(List<IDisposable> disposables) : IDisposable
+        {
+            public void Dispose()
+            {
+                for (int i = disposables.Count - 1; i >= 0; i--)
+                    disposables[i].Dispose();
+            }
         }
     }
 }

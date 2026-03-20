@@ -1,0 +1,18 @@
+﻿{
+  Information: ,
+  Properties: {
+    @request.message: {
+      Name: TestName
+    },
+    ctx.customer_id: CUST-001,
+    ctx.items_count: 3,
+    ctx.test_fixtures.request.lines_count: 2,
+    ctx.test_fixtures.request.name: TestName,
+    OriginalFormat: {request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} requesting with {@request.message},
+    request.category: usecase,
+    request.category_type: command,
+    request.handler: TestFixtures,
+    request.handler_method: Handle,
+    request.layer: application
+  }
+}
