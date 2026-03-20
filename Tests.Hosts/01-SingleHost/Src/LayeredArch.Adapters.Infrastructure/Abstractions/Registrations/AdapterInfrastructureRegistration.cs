@@ -1,5 +1,8 @@
 using Functorium.Adapters.Abstractions.Registrations;
 using Functorium.Adapters.Observabilities.Events;
+using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Applications.Usecases;
+using LayeredArch.Application.Usecases.Orders.Commands;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,8 +41,14 @@ public static class AdapterInfrastructureRegistration
             .ConfigureTracing(tracing => tracing.Configure(b => b.AddConsoleExporter()))
             .ConfigureMetrics(metrics => metrics.Configure(b => b.AddConsoleExporter()))
             .ConfigurePipelines(pipelines => pipelines
-                .UseAll())
+                .UseAll()
+                .AddCustomPipelinesFromAssembly(AssemblyReference.Assembly))
             .Build();
+
+        // Log Enricher (별도 등록 — ICustomUsecasePipeline이 아니므로 Scrutor 스캔 대상 아님)
+        services.AddScoped<
+            IUsecaseLogEnricher<CreateOrderCommand.Request, FinResponse<CreateOrderCommand.Response>>,
+            CreateOrderCommandRequestLogEnricher>();
 
         return services;
     }

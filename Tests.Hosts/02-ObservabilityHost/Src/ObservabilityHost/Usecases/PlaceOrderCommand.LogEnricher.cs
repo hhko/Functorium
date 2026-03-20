@@ -1,30 +1,31 @@
-using Functorium.Adapters.Observabilities.Pipelines;
-
-using Serilog.Context;
+using Functorium.Applications.Usecases;
 
 namespace ObservabilityHost.Usecases;
 
-public sealed class PlaceOrderLogEnricher : IUsecaseLogEnricher<PlaceOrderCommand.Request>
+/// <summary>
+/// PlaceOrderCommand의 커스텀 LogEnricher 확장.
+/// 자동 생성된 코드에 computed 속성(order_total_amount, average_line_amount)을 추가합니다.
+/// </summary>
+public partial class PlaceOrderCommandRequestLogEnricher
 {
-    public IDisposable? EnrichRequestLog(PlaceOrderCommand.Request request)
-    {
-        var d1 = LogContext.PushProperty("ctx.customer_id", request.CustomerId);
-        var d2 = LogContext.PushProperty("ctx.order_line_count", request.Lines.Count);
-        return new CompositeDisposable(d1, d2);
-    }
-
-    public IDisposable? EnrichResponseLog(PlaceOrderCommand.Request request)
+    partial void OnEnrichRequestLog(
+        PlaceOrderCommand.Request request,
+        List<IDisposable> disposables)
     {
         decimal total = request.Lines.Sum(l => l.Quantity * l.UnitPrice);
-        return LogContext.PushProperty("ctx.order_total_amount", total);
+        // → ctx.place_order_command.request.order_total_amount
+        PushRequestCtx(disposables, "order_total_amount", total);
     }
 
-    private sealed class CompositeDisposable(params IDisposable[] disposables) : IDisposable
+    partial void OnEnrichResponseLog(
+        PlaceOrderCommand.Request request,
+        FinResponse<PlaceOrderCommand.Response> response,
+        List<IDisposable> disposables)
     {
-        public void Dispose()
+        if (response is FinResponse<PlaceOrderCommand.Response>.Succ { Value: var r } && r.LineCount > 0)
         {
-            foreach (var d in disposables)
-                d.Dispose();
+            // → ctx.place_order_command.response.average_line_amount
+            PushResponseCtx(disposables, "average_line_amount", r.TotalAmount / r.LineCount);
         }
     }
 }

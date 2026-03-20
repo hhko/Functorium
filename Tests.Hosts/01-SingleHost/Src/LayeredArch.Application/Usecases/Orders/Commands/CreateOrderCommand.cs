@@ -1,11 +1,12 @@
+using Functorium.Applications.Errors;
+using Functorium.Applications.Linq;
+using Functorium.Applications.Usecases;
+using LayeredArch.Application.Usecases.Orders.Ports;
 using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Orders;
 using LayeredArch.Domain.AggregateRoots.Orders.ValueObjects;
 using LayeredArch.Domain.AggregateRoots.Products;
-using Functorium.Applications.Errors;
-using Functorium.Applications.Linq;
 using static Functorium.Applications.Errors.ApplicationErrorType;
-using LayeredArch.Application.Usecases.Orders.Ports;
 
 namespace LayeredArch.Application.Usecases.Orders.Commands;
 

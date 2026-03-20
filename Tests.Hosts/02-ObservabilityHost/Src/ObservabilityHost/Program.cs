@@ -37,7 +37,9 @@ services
     .Build();
 
 // Log Enricher (별도 등록 — ICustomUsecasePipeline이 아니므로 Scrutor 스캔 대상 아님)
-services.AddScoped<IUsecaseLogEnricher<PlaceOrderCommand.Request>, PlaceOrderLogEnricher>();
+services.AddScoped<
+    IUsecaseLogEnricher<PlaceOrderCommand.Request, FinResponse<PlaceOrderCommand.Response>>,
+    PlaceOrderCommandRequestLogEnricher>();
 
 await using var sp = services.BuildServiceProvider();
 using var scope = sp.CreateScope();
