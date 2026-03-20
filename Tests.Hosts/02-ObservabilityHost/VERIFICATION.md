@@ -1,6 +1,6 @@
 # 02-ObservabilityHost 검증 결과
 
-**검증 일시**: 2026-03-19 23:22 KST
+**검증 일시**: 2026-03-20 21:07 KST
 **실행 명령**: `dotnet run --project Tests.Hosts/02-ObservabilityHost/Src/ObservabilityHost`
 
 ---
@@ -14,7 +14,7 @@ dotnet build Functorium.slnx
 | 항목 | 결과 |
 |------|------|
 | 빌드 | PASS (0 errors, 0 warnings) |
-| 기존 테스트 | PASS (1446 passed, 0 failed, 25 skipped) |
+| 기존 테스트 | PASS (1477 passed, 0 failed, 25 skipped) |
 
 ---
 
@@ -24,23 +24,23 @@ dotnet build Functorium.slnx
 
 ```
 === PlaceOrderCommand (Custom Observability) ===
-[23:22:06 INF] application usecase.command PlaceOrderCommand.Handle requesting with {"CustomerId": "CUST-001", "Lines": [{"ProductId": "PROD-A", "Quantity": 2, "UnitPrice": 100.00, "$type": "OrderLine"}, {"ProductId": "PROD-B", "Quantity": 1, "UnitPrice": 250.00, "$type": "OrderLine"}], "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "ctx.order_line_count": 2, "ctx.customer_id": "CUST-001"}
-[23:22:06 INF] application usecase.command PlaceOrderCommand.Handle responded success in 0.0127 s with {"Value": {"OrderId": "d7f7b93f-...", "LineCount": 2, "TotalAmount": 450.00, "$type": "Response"}, "IsSucc": true, "IsFail": false, "$type": "Succ"} {"EventId": {"Id": 1002, "Name": "application.response.success"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "ctx.order_total_amount": 450.00, "ctx.customer_id": "CUST-001"}
-PlaceOrder Result: Succ(Response { OrderId = d7f7b93f-..., LineCount = 2, TotalAmount = 450.00 })
+[21:07:32 INF] application usecase.command PlaceOrderCommand.Handle requesting with {"CustomerId": "CUST-001", "Lines": [{"ProductId": "PROD-A", "Quantity": 2, "UnitPrice": 100.00, "$type": "OrderLine"}, {"ProductId": "PROD-B", "Quantity": 1, "UnitPrice": 250.00, "$type": "OrderLine"}], "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "ctx.place_order_command.request.order_total_amount": 450.00, "ctx.place_order_command.request.lines_count": 2, "ctx.customer_id": "CUST-001"}
+[21:07:32 INF] application usecase.command PlaceOrderCommand.Handle responded success in 0.0059 s with {"Value": {"OrderId": "1abd3222-...", "LineCount": 2, "TotalAmount": 450.00, "$type": "Response"}, "IsSucc": true, "IsFail": false, "$type": "Succ"} {"EventId": {"Id": 1002, "Name": "application.response.success"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "ctx.place_order_command.response.average_line_amount": 225.00, "ctx.place_order_command.response.total_amount": 450.00, "ctx.place_order_command.response.line_count": 2, "ctx.place_order_command.response.order_id": "1abd3222-..."}
+PlaceOrder Result: Succ(Response { OrderId = 1abd3222-..., LineCount = 2, TotalAmount = 450.00 })
 
 === GetOrderSummaryQuery (Baseline) ===
-[23:22:06 INF] application usecase.query GetOrderSummaryQuery.Handle requesting with {"OrderId": "ORD-123", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
-[23:22:06 INF] application usecase.query GetOrderSummaryQuery.Handle responded success in 0.0004 s with {"Value": {"OrderId": "ORD-123", "Status": "Completed", "$type": "Response"}, "IsSucc": true, "IsFail": false, "$type": "Succ"} {"EventId": {"Id": 1002, "Name": "application.response.success"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+[21:07:32 INF] application usecase.query GetOrderSummaryQuery.Handle requesting with {"OrderId": "ORD-123", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+[21:07:32 INF] application usecase.query GetOrderSummaryQuery.Handle responded success in 0.0003 s with {"Value": {"OrderId": "ORD-123", "Status": "Completed", "$type": "Response"}, "IsSucc": true, "IsFail": false, "$type": "Succ"} {"EventId": {"Id": 1002, "Name": "application.response.success"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
 GetOrderSummary Result: Succ(Response { OrderId = ORD-123, Status = Completed })
 
 === FailExpectedCommand (Expected Error) ===
-[23:22:06 INF] application usecase.command FailExpectedCommand.Handle requesting with {"OrderId": "ORD-NOT-EXIST", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
-[23:22:06 WRN] application usecase.command FailExpectedCommand.Handle responded failure in 0.0019 s with expected:Order.NotFound {"ErrorType": "ErrorCodeExpected", ...} {"EventId": {"Id": 1003, "Name": "application.response.warning"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+[21:07:32 INF] application usecase.command FailExpectedCommand.Handle requesting with {"OrderId": "ORD-NOT-EXIST", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+[21:07:32 WRN] application usecase.command FailExpectedCommand.Handle responded failure in 0.0041 s with expected:Order.NotFound {"ErrorType": "ErrorCodeExpected", ...} {"EventId": {"Id": 1003, "Name": "application.response.warning"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
 FailExpected Result: Fail(주문을 찾을 수 없습니다)
 
 === FailExceptionalCommand (Exceptional Error) ===
-[23:22:06 INF] application usecase.command FailExceptionalCommand.Handle requesting with {"OrderId": "ORD-DB-FAIL", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
-[23:22:06 ERR] application usecase.command FailExceptionalCommand.Handle responded failure in 0.0212 s with exceptional:Database.ConnectionFailed {"ErrorType": "ErrorCodeExceptional", ...} {"EventId": {"Id": 1004, "Name": "application.response.error"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+[21:07:32 INF] application usecase.command FailExceptionalCommand.Handle requesting with {"OrderId": "ORD-DB-FAIL", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+[21:07:33 ERR] application usecase.command FailExceptionalCommand.Handle responded failure in 0.0399 s with exceptional:Database.ConnectionFailed {"ErrorType": "ErrorCodeExceptional", ...} {"EventId": {"Id": 1004, "Name": "application.response.error"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
 FailExceptional Result: Fail(데이터베이스 연결이 끊어졌습니다)
 
 === Done ===
@@ -54,10 +54,10 @@ FailExceptional Result: Fail(데이터베이스 연결이 끊어졌습니다)
 
 | 파일 | 경로 | 생성 | 결과 |
 |------|------|------|------|
-| Plain text | `logs/log-20260319.txt` | 생성됨 | PASS |
-| JSON | `logs/log-20260319.json` | 생성됨 | PASS |
+| Plain text | `logs/log-20260320.txt` | 생성됨 | PASS |
+| JSON | `logs/log-20260320.json` | 생성됨 | PASS |
 
-### 3.2 JSON 로그 파일 전문 (`logs/log-20260319.json`)
+### 3.2 JSON 로그 파일 전문 (`logs/log-20260320.json`)
 
 **Formatter**: `OpenSearchJsonFormatter` (ECS 호환 + `ctx.*` 네임스페이스)
 
@@ -65,7 +65,7 @@ FailExceptional Result: Fail(데이터베이스 연결이 끊어졌습니다)
 
 ```json
 {
-  "@timestamp": "2026-03-19T14:22:06.6958763Z",
+  "@timestamp": "2026-03-20T12:07:32.8677305Z",
   "log.level": "Information",
   "message": "application usecase.command PlaceOrderCommand.Handle requesting with Request { CustomerId: \"CUST-001\", Lines: [...] }",
   "message.template": "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} requesting with {@request.message}",
@@ -77,7 +77,8 @@ FailExceptional Result: Fail(데이터베이스 연결이 끊어졌습니다)
   "request.handler": "PlaceOrderCommand",
   "request.handler_method": "Handle",
   "request.message": "{\"CustomerId\":\"CUST-001\",\"Lines\":[{\"ProductId\":\"PROD-A\",\"Quantity\":2,\"UnitPrice\":100.00},{\"ProductId\":\"PROD-B\",\"Quantity\":1,\"UnitPrice\":250.00}]}",
-  "ctx.order_line_count": 2,
+  "ctx.place_order_command.request.order_total_amount": 450.00,
+  "ctx.place_order_command.request.lines_count": 2,
   "ctx.customer_id": "CUST-001",
   "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
 }
@@ -87,9 +88,9 @@ FailExceptional Result: Fail(데이터베이스 연결이 끊어졌습니다)
 
 ```json
 {
-  "@timestamp": "2026-03-19T14:22:06.8346266Z",
+  "@timestamp": "2026-03-20T12:07:32.9441926Z",
   "log.level": "Information",
-  "message": "application usecase.command PlaceOrderCommand.Handle responded success in 0.0127 s with Succ { Value: Response { ... }, IsSucc: True, IsFail: False }",
+  "message": "application usecase.command PlaceOrderCommand.Handle responded success in 0.0059 s with Succ { Value: Response { ... }, IsSucc: True, IsFail: False }",
   "message.template": "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message}",
   "event.id": 1002,
   "event.name": "application.response.success",
@@ -99,10 +100,12 @@ FailExceptional Result: Fail(데이터베이스 연결이 끊어졌습니다)
   "request.handler": "PlaceOrderCommand",
   "request.handler_method": "Handle",
   "response.status": "success",
-  "response.elapsed": 0.0127208,
-  "response.message": "{\"Value\":{\"OrderId\":\"d7f7b93f-...\",\"LineCount\":2,\"TotalAmount\":450.00},\"IsSucc\":true,\"IsFail\":false}",
-  "ctx.order_total_amount": 450.00,
-  "ctx.customer_id": "CUST-001",
+  "response.elapsed": 0.005901,
+  "response.message": "{\"Value\":{\"OrderId\":\"1abd3222-...\",\"LineCount\":2,\"TotalAmount\":450.00},\"IsSucc\":true,\"IsFail\":false}",
+  "ctx.place_order_command.response.average_line_amount": 225.00,
+  "ctx.place_order_command.response.total_amount": 450.00,
+  "ctx.place_order_command.response.line_count": 2,
+  "ctx.place_order_command.response.order_id": "1abd3222-...",
   "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
 }
 ```
@@ -111,7 +114,7 @@ FailExceptional Result: Fail(데이터베이스 연결이 끊어졌습니다)
 
 ```json
 {
-  "@timestamp": "2026-03-19T14:22:06.8483074Z",
+  "@timestamp": "2026-03-20T12:07:32.9519421Z",
   "log.level": "Information",
   "message": "application usecase.query GetOrderSummaryQuery.Handle requesting with Request { OrderId: \"ORD-123\" }",
   "message.template": "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} requesting with {@request.message}",
@@ -131,9 +134,9 @@ FailExceptional Result: Fail(데이터베이스 연결이 끊어졌습니다)
 
 ```json
 {
-  "@timestamp": "2026-03-19T14:22:06.8566836Z",
+  "@timestamp": "2026-03-20T12:07:32.9628646Z",
   "log.level": "Warning",
-  "message": "application usecase.command FailExpectedCommand.Handle responded failure in 0.0019 s with expected:Order.NotFound { ErrorType: \"ErrorCodeExpected\", ErrorCode: \"Order.NotFound\", ... }",
+  "message": "application usecase.command FailExpectedCommand.Handle responded failure in 0.0041 s with expected:Order.NotFound { ErrorType: \"ErrorCodeExpected\", ErrorCode: \"Order.NotFound\", ... }",
   "message.template": "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
   "event.id": 1003,
   "event.name": "application.response.warning",
@@ -143,7 +146,7 @@ FailExceptional Result: Fail(데이터베이스 연결이 끊어졌습니다)
   "request.handler": "FailExpectedCommand",
   "request.handler_method": "Handle",
   "response.status": "failure",
-  "response.elapsed": 0.001863,
+  "response.elapsed": 0.0041438,
   "error.type": "expected",
   "error.code": "Order.NotFound",
   "error.detail": "{\"ErrorType\":\"ErrorCodeExpected\",\"ErrorCode\":\"Order.NotFound\",\"ErrorCodeId\":-1000,\"ErrorCurrentValue\":\"ORD-NOT-EXIST\",\"Message\":\"주문을 찾을 수 없습니다\"}",
@@ -155,9 +158,9 @@ FailExceptional Result: Fail(데이터베이스 연결이 끊어졌습니다)
 
 ```json
 {
-  "@timestamp": "2026-03-19T14:22:06.8869311Z",
+  "@timestamp": "2026-03-20T12:07:33.0095604Z",
   "log.level": "Error",
-  "message": "application usecase.command FailExceptionalCommand.Handle responded failure in 0.0212 s with exceptional:Database.ConnectionFailed { ErrorType: \"ErrorCodeExceptional\", ... }",
+  "message": "application usecase.command FailExceptionalCommand.Handle responded failure in 0.0399 s with exceptional:Database.ConnectionFailed { ErrorType: \"ErrorCodeExceptional\", ... }",
   "message.template": "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
   "event.id": 1004,
   "event.name": "application.response.error",
@@ -167,7 +170,7 @@ FailExceptional Result: Fail(데이터베이스 연결이 끊어졌습니다)
   "request.handler": "FailExceptionalCommand",
   "request.handler_method": "Handle",
   "response.status": "failure",
-  "response.elapsed": 0.0211916,
+  "response.elapsed": 0.0398662,
   "error.type": "exceptional",
   "error.code": "Database.ConnectionFailed",
   "error.detail": "{\"ErrorType\":\"ErrorCodeExceptional\",\"ErrorCode\":\"Database.ConnectionFailed\",\"ErrorCodeId\":-2146233079,\"Message\":\"데이터베이스 연결이 끊어졌습니다\",\"ExceptionDetails\":{\"TargetSite\":null,\"Message\":\"데이터베이스 연결이 끊어졌습니다\",\"Data\":[],\"InnerException\":null,\"HelpLink\":null,\"Source\":null,\"HResult\":-2146233079,\"StackTrace\":null}}",
@@ -206,13 +209,28 @@ FailExceptional Result: Fail(데이터베이스 연결이 끊어졌습니다)
 
 #### Enricher 커스텀 필드 포함 검증
 
+ctx 필드는 **Root Context**와 **Usecase Context** 두 레벨로 구분됩니다.
+
+##### Root Context (`ctx.{field}`) — `[LogEnricherRoot]` 인터페이스
+
+`[LogEnricherRoot] ICustomerRequest`를 구현하는 모든 유스케이스에서 `ctx.customer_id`가 루트 레벨로 출력됩니다. OpenSearch에서 교차 유스케이스 쿼리(`ctx.customer_id: "CUST-001"`)가 가능합니다.
+
 | 필드 | PlaceOrderCommand Request | PlaceOrderCommand Response | GetOrderSummaryQuery |
 |------|--------------------------|---------------------------|---------------------|
-| `ctx.customer_id` | `"CUST-001"` | `"CUST-001"` | - |
-| `ctx.order_line_count` | `2` | - | - |
-| `ctx.order_total_amount` | - | `450.00` | - |
+| `ctx.customer_id` | `"CUST-001"` | - | - |
 
-> Enricher 커스텀 필드가 `ctx.*` 네임스페이스로 플랫 JSON에 정상 포함됩니다.
+##### Usecase Context (`ctx.{usecase}.{request|response}.{field}`) — 자동 생성 + 커스텀
+
+| 필드 | PlaceOrderCommand Request | PlaceOrderCommand Response | GetOrderSummaryQuery |
+|------|--------------------------|---------------------------|---------------------|
+| `ctx.place_order_command.request.lines_count` | `2` | - | - |
+| `ctx.place_order_command.request.order_total_amount` | `450.00` | - | - |
+| `ctx.place_order_command.response.order_id` | - | `"1abd3222-..."` | - |
+| `ctx.place_order_command.response.line_count` | - | `2` | - |
+| `ctx.place_order_command.response.total_amount` | - | `450.00` | - |
+| `ctx.place_order_command.response.average_line_amount` | - | `225.00` | - |
+
+> Root Context 필드(`ctx.customer_id`)는 유스케이스 접두사 없이 출력되어 교차 쿼리를 가능하게 하고, Usecase Context 필드(`ctx.place_order_command.*`)는 유스케이스별로 격리됩니다.
 
 ---
 
@@ -220,24 +238,28 @@ FailExceptional Result: Fail(데이터베이스 연결이 끊어졌습니다)
 
 ### 4.1 PlaceOrderCommand — Enricher 적용
 
-`PlaceOrderLogEnricher`가 `LogContext.PushProperty`로 Push한 커스텀 필드가 `{Properties:j}`에 표시되는지 검증합니다.
+`PlaceOrderCommandRequestLogEnricher`가 `LogContext.PushProperty`로 Push한 커스텀 필드가 `{Properties:j}`에 표시되는지 검증합니다.
 
 #### Request 로그
 
-| Enricher 필드 | 예상값 | 실제값 | 결과 |
-|---------------|--------|--------|------|
-| `ctx.customer_id` | `"CUST-001"` | `"CUST-001"` | PASS |
-| `ctx.order_line_count` | `2` | `2` | PASS |
+| Enricher 필드 | 레벨 | 출처 | 예상값 | 실제값 | 결과 |
+|---------------|------|------|--------|--------|------|
+| `ctx.customer_id` | Root | 자동 (`[LogEnricherRoot] ICustomerRequest`) | `"CUST-001"` | `"CUST-001"` | PASS |
+| `ctx.place_order_command.request.lines_count` | Usecase | 자동 (컬렉션 `List<OrderLine>`) | `2` | `2` | PASS |
+| `ctx.place_order_command.request.order_total_amount` | Usecase | 커스텀 (`OnEnrichRequestLog` + `PushRequestCtx`) | `450.00` | `450.00` | PASS |
 
-`EnrichRequestLog`에서 Push한 두 필드 모두 `ctx.*` 네임스페이스로 정상 표시됩니다.
+`EnrichRequestLog`에서 Push한 세 필드 모두 `ctx.*` 네임스페이스로 정상 표시됩니다. `ctx.customer_id`는 `[LogEnricherRoot]`에 의해 루트 레벨로 승격되었습니다.
 
 #### Response 로그
 
-| Enricher 필드 | 예상값 | 실제값 | 결과 |
-|---------------|--------|--------|------|
-| `ctx.order_total_amount` | `450.00` | `450.00` | PASS |
+| Enricher 필드 | 레벨 | 출처 | 예상값 | 실제값 | 결과 |
+|---------------|------|------|--------|--------|------|
+| `ctx.place_order_command.response.order_id` | Usecase | 자동 (`string`) | `"1abd3222-..."` | `"1abd3222-..."` | PASS |
+| `ctx.place_order_command.response.line_count` | Usecase | 자동 (`int`) | `2` | `2` | PASS |
+| `ctx.place_order_command.response.total_amount` | Usecase | 자동 (`decimal`) | `450.00` | `450.00` | PASS |
+| `ctx.place_order_command.response.average_line_amount` | Usecase | 커스텀 (`OnEnrichResponseLog` + `PushResponseCtx`) | `225.00` | `225.00` | PASS |
 
-`EnrichResponseLog`에서 Push한 `ctx.order_total_amount` 필드가 정상 표시됩니다.
+`EnrichResponseLog`에서 Push한 네 필드 모두 `ctx.place_order_command.response.*` 네임스페이스로 정상 표시됩니다.
 
 ### 4.2 GetOrderSummaryQuery — Enricher 미적용 (기준선)
 
@@ -251,11 +273,15 @@ Enricher가 등록되지 않은 Query에서는 커스텀 필드가 없어야 합
 
 ### 4.3 Enricher 대비 분석
 
-| 구분 | PlaceOrderCommand | GetOrderSummaryQuery |
-|------|-------------------|---------------------|
-| `ctx.customer_id` | CUST-001 | - |
-| `ctx.order_line_count` | 2 | - |
-| `ctx.order_total_amount` | 450.00 | - |
+| 구분 | 레벨 | PlaceOrderCommand | GetOrderSummaryQuery |
+|------|------|-------------------|---------------------|
+| `ctx.customer_id` | Root | CUST-001 | - |
+| `ctx.place_order_command.request.lines_count` | Usecase | 2 | - |
+| `ctx.place_order_command.request.order_total_amount` | Usecase | 450.00 | - |
+| `ctx.place_order_command.response.order_id` | Usecase | 1abd3222-... | - |
+| `ctx.place_order_command.response.line_count` | Usecase | 2 | - |
+| `ctx.place_order_command.response.total_amount` | Usecase | 450.00 | - |
+| `ctx.place_order_command.response.average_line_amount` | Usecase | 225.00 | - |
 
 Enricher가 등록된 Command에만 커스텀 필드가 표시되고, 등록되지 않은 Query에는 표시되지 않습니다.
 
@@ -328,9 +354,57 @@ CQRS 타입이 `ICommandRequest<>` / `IQueryRequest<>` 인터페이스 기반으
 
 ---
 
-## 8. OpenTelemetry Console Exporter 검증
+## 8. [LogEnricherRoot] Root Context 검증
 
-### 8.1 Metrics/Tracing Console Export
+### 8.1 Root Context 구성
+
+`[LogEnricherRoot] ICustomerRequest` 인터페이스를 `PlaceOrderCommand.Request`가 구현하여 `CustomerId`가 루트 레벨로 승격됩니다.
+
+```csharp
+// ICustomerRequest.cs
+[LogEnricherRoot]
+public interface ICustomerRequest { string CustomerId { get; } }
+
+// PlaceOrderCommand.cs
+public sealed record Request(string CustomerId, List<OrderLine> Lines)
+    : ICommandRequest<Response>, ICustomerRequest;
+```
+
+### 8.2 Root vs Usecase Context 필드 매핑
+
+| 속성 | 소스 | ctx 필드 | 레벨 |
+|------|------|----------|------|
+| `CustomerId` | `[LogEnricherRoot] ICustomerRequest` | `ctx.customer_id` | **Root** |
+| `Lines` (컬렉션) | 자동 생성 | `ctx.place_order_command.request.lines_count` | Usecase |
+| `OrderId` | 자동 생성 | `ctx.place_order_command.response.order_id` | Usecase |
+| `LineCount` | 자동 생성 | `ctx.place_order_command.response.line_count` | Usecase |
+| `TotalAmount` | 자동 생성 | `ctx.place_order_command.response.total_amount` | Usecase |
+| *(computed)* | `OnEnrichRequestLog` | `ctx.place_order_command.request.order_total_amount` | Usecase |
+| *(computed)* | `OnEnrichResponseLog` | `ctx.place_order_command.response.average_line_amount` | Usecase |
+
+### 8.3 OpenSearch 교차 쿼리 시나리오
+
+Root Context 필드는 유스케이스 접두사 없이 출력되므로, `ICustomerRequest`를 구현하는 모든 유스케이스에서 동일한 필드명(`ctx.customer_id`)으로 쿼리할 수 있습니다.
+
+```
+# OpenSearch 교차 유스케이스 쿼리 예시
+ctx.customer_id: "CUST-001" AND request.handler: PlaceOrderCommand
+ctx.customer_id: "CUST-001"  ← 모든 유스케이스에서 해당 고객 활동 조회
+```
+
+### 8.4 PushRootCtx 헬퍼 생성 검증
+
+| 항목 | 예상 | 결과 |
+|------|------|------|
+| `PushRootCtx` 헬퍼 메서드 생성 | Root 속성 존재 시 생성 | PASS |
+| `PushRequestCtx` 헬퍼 유지 | 항상 생성 | PASS |
+| `PushResponseCtx` 헬퍼 유지 | 항상 생성 | PASS |
+
+---
+
+## 9. OpenTelemetry Console Exporter 검증
+
+### 9.1 Metrics/Tracing Console Export
 
 | 항목 | 결과 | 비고 |
 |------|------|------|
@@ -340,7 +414,7 @@ CQRS 타입이 `ICommandRequest<>` / `IQueryRequest<>` 인터페이스 기반으
 
 ---
 
-## 9. 검증 요약
+## 10. 검증 요약
 
 | # | 검증 항목 | 결과 |
 |---|----------|------|
@@ -349,20 +423,23 @@ CQRS 타입이 `ICommandRequest<>` / `IQueryRequest<>` 인터페이스 기반으
 | 3 | `logs/log-YYYYMMDD.txt` Plain text 로그 파일 생성 | PASS |
 | 4 | `logs/log-YYYYMMDD.json` OpenSearch 최적화 JSON 로그 파일 생성 | PASS |
 | 5 | JSON 로그에 `ctx.*` Enricher 커스텀 필드 포함 | PASS |
-| 6 | PlaceOrderCommand Request 로그에 `ctx.customer_id`, `ctx.order_line_count` 표시 | PASS |
-| 7 | PlaceOrderCommand Response 로그에 `ctx.order_total_amount` 표시 | PASS |
-| 8 | GetOrderSummaryQuery 로그에 커스텀 필드 없음 (기준선) | PASS |
-| 9 | CQRS 타입 자동 식별 (`command` / `query`) | PASS |
-| 10 | 기존 테스트 회귀 없음 (1446 passed, 0 failed) | PASS |
-| 11 | `request.message`가 JSON 문자열(객체 아님)인지 확인 | PASS |
-| 12 | `_typeTag`, `Renderings` 제거 확인 | PASS |
-| 13 | dot 충돌 해소 (`request.category_type`, `request.handler_method`) | PASS |
-| 14 | Expected 에러 → Warning 레벨, `error.type: "expected"` | PASS |
-| 15 | Exceptional 에러 → Error 레벨, `error.type: "exceptional"` | PASS |
-| 16 | `error` 객체 → `error.detail` JSON 문자열 변환 | PASS |
-| 17 | `error.type`, `error.code` 스칼라 필드 보존 | PASS |
-| 18 | `message` 렌더링 (literal string + JSON structure) | PASS |
-| 19 | Metrics Console Export | NOT TESTED (*) |
-| 20 | Tracing Console Export | NOT TESTED (*) |
+| 6 | `[LogEnricherRoot]` Root Context: `ctx.customer_id` 루트 레벨 출력 | PASS |
+| 7 | Usecase Context: `ctx.place_order_command.request.lines_count` 유스케이스 레벨 출력 | PASS |
+| 8 | Custom Enricher: `ctx.place_order_command.request.order_total_amount` 커스텀 필드 출력 | PASS |
+| 9 | PlaceOrderCommand Response 로그에 `ctx.place_order_command.response.*` 4개 필드 표시 | PASS |
+| 10 | GetOrderSummaryQuery 로그에 커스텀 필드 없음 (기준선) | PASS |
+| 11 | CQRS 타입 자동 식별 (`command` / `query`) | PASS |
+| 12 | 기존 테스트 회귀 없음 (1477 passed, 0 failed) | PASS |
+| 13 | `request.message`가 JSON 문자열(객체 아님)인지 확인 | PASS |
+| 14 | `_typeTag`, `Renderings` 제거 확인 | PASS |
+| 15 | dot 충돌 해소 (`request.category_type`, `request.handler_method`) | PASS |
+| 16 | Expected 에러 → Warning 레벨, `error.type: "expected"` | PASS |
+| 17 | Exceptional 에러 → Error 레벨, `error.type: "exceptional"` | PASS |
+| 18 | `error` 객체 → `error.detail` JSON 문자열 변환 | PASS |
+| 19 | `error.type`, `error.code` 스칼라 필드 보존 | PASS |
+| 20 | `message` 렌더링 (literal string + JSON structure) | PASS |
+| 21 | `PushRootCtx` 헬퍼 메서드 생성 (Root 속성 존재 시) | PASS |
+| 22 | Metrics Console Export | NOT TESTED (*) |
+| 23 | Tracing Console Export | NOT TESTED (*) |
 
 (*) `ServiceCollection` 기반 단기 실행 콘솔 앱에서는 OTel SDK의 Graceful Shutdown Flush가 동작하지 않아 미출력. `IHost` 기반 전환 시 검증 가능.

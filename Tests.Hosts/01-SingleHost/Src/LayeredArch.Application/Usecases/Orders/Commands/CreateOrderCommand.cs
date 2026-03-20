@@ -2,6 +2,7 @@ using Functorium.Applications.Errors;
 using Functorium.Applications.Linq;
 using Functorium.Applications.Usecases;
 using LayeredArch.Application.Usecases.Orders.Ports;
+using LayeredArch.Application.Usecases.RootContexts;
 using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Orders;
 using LayeredArch.Domain.AggregateRoots.Orders.ValueObjects;
@@ -36,7 +37,7 @@ public sealed class CreateOrderCommand
     public sealed record Request(
         string CustomerId,
         Seq<OrderLineRequest> OrderLines,
-        string ShippingAddress) : ICommandRequest<Response>;
+        string ShippingAddress) : ICommandRequest<Response>, ICustomerRequest;
 
     /// <summary>
     /// Command Response
