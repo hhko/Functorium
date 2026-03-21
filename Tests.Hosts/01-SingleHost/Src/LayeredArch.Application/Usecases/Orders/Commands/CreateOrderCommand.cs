@@ -37,7 +37,8 @@ public sealed class CreateOrderCommand
     public sealed record Request(
         string CustomerId,
         Seq<OrderLineRequest> OrderLines,
-        string ShippingAddress) : ICommandRequest<Response>, ICustomerRequest;
+        string ShippingAddress,
+        string OperatorId) : ICommandRequest<Response>, ICustomerRequest, IAuditable;
 
     /// <summary>
     /// Command Response

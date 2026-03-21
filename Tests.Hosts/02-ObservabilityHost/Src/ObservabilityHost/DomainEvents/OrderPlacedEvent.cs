@@ -1,4 +1,4 @@
-using Functorium.Applications.Usecases;
+using Functorium.Applications.Observabilities;
 using Functorium.Domains.Events;
 
 namespace ObservabilityHost.DomainEvents;

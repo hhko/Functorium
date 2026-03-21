@@ -27,7 +27,8 @@ public class CreateOrderCommandTests
         var request = new CreateOrderCommand.Request(
             customerId.ToString(),
             Seq(new CreateOrderCommand.OrderLineRequest(productId.ToString(), 2)),
-            "Seoul, Korea");
+            "Seoul, Korea",
+            "admin@example.com");
 
         _productCatalog.GetPricesForProducts(Arg.Any<IReadOnlyList<ProductId>>())
             .Returns(call =>
@@ -55,7 +56,8 @@ public class CreateOrderCommandTests
         var request = new CreateOrderCommand.Request(
             CustomerId.New().ToString(),
             Seq(new CreateOrderCommand.OrderLineRequest(ProductId.New().ToString(), 2)),
-            "Seoul, Korea");
+            "Seoul, Korea",
+            "admin@example.com");
 
         _productCatalog.GetPricesForProducts(Arg.Any<IReadOnlyList<ProductId>>())
             .Returns(FinTFactory.Succ(LanguageExt.Seq<(ProductId Id, Money Price)>.Empty));
@@ -74,7 +76,8 @@ public class CreateOrderCommandTests
         var request = new CreateOrderCommand.Request(
             CustomerId.New().ToString(),
             Seq(new CreateOrderCommand.OrderLineRequest(ProductId.New().ToString(), 2)),
-            "");
+            "",
+            "admin@example.com");
 
         // Act
         var actual = await _sut.Handle(request, CancellationToken.None);

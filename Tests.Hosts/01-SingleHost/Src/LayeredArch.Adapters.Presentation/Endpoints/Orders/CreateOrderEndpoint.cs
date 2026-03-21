@@ -33,7 +33,8 @@ public sealed class CreateOrderEndpoint
         var usecaseRequest = new CreateOrderCommand.Request(
             req.CustomerId,
             LanguageExt.Prelude.Seq(req.OrderLines.Select(l => new CreateOrderCommand.OrderLineRequest(l.ProductId, l.Quantity))),
-            req.ShippingAddress);
+            req.ShippingAddress,
+            req.OperatorId);
 
         var result = await _mediator.Send(usecaseRequest, ct);
         var mapped = result.Map(r => new Response(
@@ -50,7 +51,8 @@ public sealed class CreateOrderEndpoint
     public sealed record Request(
         string CustomerId,
         List<OrderLineRequest> OrderLines,
-        string ShippingAddress);
+        string ShippingAddress,
+        string OperatorId = "system");
 
     public sealed record OrderLineResponse(
         string ProductId,

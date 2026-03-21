@@ -1,4 +1,4 @@
-namespace Functorium.Applications.Usecases;
+namespace Functorium.Applications.Observabilities;
 
 /// <summary>
 /// 이 속성이 적용된 인터페이스, 프로퍼티 또는 record 생성자 파라미터의 값은

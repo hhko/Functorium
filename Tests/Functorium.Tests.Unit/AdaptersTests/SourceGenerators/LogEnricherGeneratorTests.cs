@@ -575,6 +575,7 @@ public sealed class LogEnricherGeneratorTests
 
     private const string RootInterfaceInput = """
         using System.Collections.Generic;
+        using Functorium.Applications.Observabilities;
         using Functorium.Applications.Usecases;
 
         namespace TestNamespace;
@@ -624,7 +625,7 @@ public sealed class LogEnricherGeneratorTests
 
     /// <summary>
     /// 시나리오: [LogEnricherRoot] 어트리뷰트가 없는 인터페이스의 속성은
-    /// root로 승격되지 않는지 확인합니다.
+    /// root로 승격되지 않고, 인터페이스 스코프(ctx.{interface}.{field})로 출력되는지 확인합니다.
     /// </summary>
     [Fact]
     public void LogEnricherGenerator_ShouldNotPromote_WhenInterfaceHasNoRootAttribute()
@@ -652,8 +653,153 @@ public sealed class LogEnricherGeneratorTests
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("ctx.place_order_command.request.customer_id");
+        actual.ShouldContain("ctx.customer_request.customer_id");
+        actual.ShouldContain("ctx.place_order_command.request.amount");
         actual.ShouldNotContain("\"ctx.customer_id\"");
+    }
+
+    #endregion
+
+    #region 17a. 인터페이스 스코프 — 상속 체인 + Root/비-Root 혼합
+
+    private const string InterfaceScopedInput = """
+        using System.Collections.Generic;
+        using Functorium.Applications.Observabilities;
+        using Functorium.Applications.Usecases;
+
+        namespace TestNamespace;
+
+        public interface IAuditable { string OperatorId { get; } }
+        public interface IRegional { string RegionCode { get; } }
+        public interface IPartnerContext : IRegional { string PartnerId { get; } }
+
+        [LogEnricherRoot]
+        public interface ICustomerRequest { string CustomerId { get; } }
+
+        public sealed class PlaceOrderCommand
+        {
+            public sealed record OrderLine(string ProductId, int Quantity, decimal UnitPrice);
+
+            public sealed record Request(
+                string CustomerId,
+                List<OrderLine> Lines,
+                string OperatorId,
+                string RegionCode,
+                string PartnerId)
+                : ICommandRequest<Response>, ICustomerRequest, IAuditable, IPartnerContext;
+
+            public sealed record Response(string OrderId, int LineCount, decimal TotalAmount);
+        }
+        """;
+
+    /// <summary>
+    /// 시나리오: [LogEnricherRoot] 인터페이스의 속성이 ctx.{field} 루트로 승격되는지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void LogEnricherGenerator_InterfaceScope_ShouldPromote_RootInterfaceProperty()
+    {
+        string? actual = _sut.Generate(InterfaceScopedInput);
+
+        actual.ShouldNotBeNull();
+        actual.ShouldContain("\"ctx.customer_id\"");
+    }
+
+    /// <summary>
+    /// 시나리오: 인터페이스 없는 직접 프로퍼티가 ctx.{usecase}.request.{field} 형식인지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void LogEnricherGenerator_InterfaceScope_ShouldKeep_DirectPropertyInUsecaseScope()
+    {
+        string? actual = _sut.Generate(InterfaceScopedInput);
+
+        actual.ShouldNotBeNull();
+        actual.ShouldContain("\"ctx.place_order_command.request.lines_count\"");
+    }
+
+    /// <summary>
+    /// 시나리오: 비-root 인터페이스 IAuditable의 속성이 ctx.{interface}.{field} 형식인지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void LogEnricherGenerator_InterfaceScope_ShouldUse_InterfacePrefix_ForAuditable()
+    {
+        string? actual = _sut.Generate(InterfaceScopedInput);
+
+        actual.ShouldNotBeNull();
+        actual.ShouldContain("\"ctx.auditable.operator_id\"");
+    }
+
+    /// <summary>
+    /// 시나리오: IPartnerContext : IRegional 상속 체인에서 RegionCode가 IRegional(선언 인터페이스)의
+    /// 스코프로 출력되는지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void LogEnricherGenerator_InterfaceScope_ShouldUse_DeclaringInterface_ForInheritedProperty()
+    {
+        string? actual = _sut.Generate(InterfaceScopedInput);
+
+        actual.ShouldNotBeNull();
+        actual.ShouldContain("\"ctx.regional.region_code\"");
+    }
+
+    /// <summary>
+    /// 시나리오: IPartnerContext에 직접 선언된 PartnerId가 ctx.partner_context.partner_id 형식인지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void LogEnricherGenerator_InterfaceScope_ShouldUse_InterfacePrefix_ForPartnerContext()
+    {
+        string? actual = _sut.Generate(InterfaceScopedInput);
+
+        actual.ShouldNotBeNull();
+        actual.ShouldContain("\"ctx.partner_context.partner_id\"");
+    }
+
+    /// <summary>
+    /// 시나리오: 인터페이스 스코프가 포함된 생성 코드의 전체 형태를 스냅샷으로 검증합니다.
+    /// </summary>
+    [Fact]
+    public Task LogEnricherGenerator_InterfaceScope_ShouldGenerate_ExpectedOutput()
+    {
+        string? actual = _sut.Generate(InterfaceScopedInput);
+
+        return Verify(actual).UseDirectory("Snapshots/LogEnricherGenerator");
+    }
+
+    #endregion
+
+    #region 17b. 인터페이스 스코프 — 컬렉션 프로퍼티
+
+    /// <summary>
+    /// 시나리오: 비-root 인터페이스에서 유래한 컬렉션 프로퍼티가
+    /// ctx.{interface}.{field}_count 형식인지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void LogEnricherGenerator_InterfaceScope_ShouldUse_InterfacePrefix_ForCollection()
+    {
+        // Arrange
+        string input = """
+            using System.Collections.Generic;
+            using Functorium.Applications.Usecases;
+
+            namespace TestNamespace;
+
+            public interface ITaggable { List<string> Tags { get; } }
+
+            public sealed class TestCommand
+            {
+                public sealed record Request(List<string> Tags, string Name)
+                    : ICommandRequest<Response>, ITaggable;
+
+                public sealed record Response(string Result);
+            }
+            """;
+
+        // Act
+        string? actual = _sut.Generate(input);
+
+        // Assert
+        actual.ShouldNotBeNull();
+        actual.ShouldContain("\"ctx.taggable.tags_count\"");
+        actual.ShouldNotContain("ctx.test_command.request.tags_count");
     }
 
     #endregion
@@ -669,6 +815,7 @@ public sealed class LogEnricherGeneratorTests
     {
         // Arrange
         string input = """
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -701,6 +848,7 @@ public sealed class LogEnricherGeneratorTests
     {
         // Arrange
         string input = """
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -770,6 +918,7 @@ public sealed class LogEnricherGeneratorTests
         // Arrange
         string input = """
             using System.Collections.Generic;
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -808,6 +957,7 @@ public sealed class LogEnricherGeneratorTests
     {
         // Arrange
         string input = """
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;

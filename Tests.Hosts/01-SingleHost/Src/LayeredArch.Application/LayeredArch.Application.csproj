@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LayeredArch.Domain\LayeredArch.Domain.csproj" />
-    <!-- <ProjectReference Include="..\..\..\..\Src\Functorium.Adapters\Functorium.Adapters.csproj" /> -->
     <ProjectReference Include="..\..\..\..\Src\Functorium.SourceGenerators\Functorium.SourceGenerators.csproj"
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false" />

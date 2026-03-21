@@ -631,6 +631,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
             using System.Threading;
             using System.Threading.Tasks;
             using Functorium.Applications.Events;
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
             using Functorium.Domains.Events;
 
@@ -677,7 +678,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
         using System.Threading;
         using System.Threading.Tasks;
         using Functorium.Applications.Events;
-        using Functorium.Applications.Usecases;
+        using Functorium.Applications.Observabilities;
         using Functorium.Domains.Events;
 
         namespace TestNamespace;
@@ -728,6 +729,113 @@ public sealed class DomainEventLogEnricherGeneratorTests
 
     #endregion
 
+    #region 16a. 인터페이스 스코프 — 비-root 인터페이스 + 상속 체인
+
+    private const string InterfaceScopedEventInput = """
+        using System.Collections.Generic;
+        using System.Threading;
+        using System.Threading.Tasks;
+        using Functorium.Applications.Events;
+        using Functorium.Applications.Observabilities;
+        using Functorium.Domains.Events;
+
+        namespace TestNamespace;
+
+        public interface IAuditable { string OperatorId { get; } }
+        public interface IRegional { string RegionCode { get; } }
+        public interface IPartnerContext : IRegional { string PartnerId { get; } }
+
+        [LogEnricherRoot]
+        public interface IOrderEvent { string OrderId { get; } }
+
+        public sealed record OrderPlacedEvent(
+            string OrderId,
+            string OperatorId,
+            string RegionCode,
+            string PartnerId,
+            List<string> OrderLines) : DomainEvent, IOrderEvent, IAuditable, IPartnerContext;
+
+        public sealed class OrderPlacedEventHandler : IDomainEventHandler<OrderPlacedEvent>
+        {
+            public ValueTask Handle(OrderPlacedEvent notification, CancellationToken ct)
+                => ValueTask.CompletedTask;
+        }
+        """;
+
+    /// <summary>
+    /// 시나리오: [LogEnricherRoot] 인터페이스의 속성이 ctx.{field} 루트로 승격되는지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void DomainEventLogEnricherGenerator_InterfaceScope_ShouldPromote_RootInterfaceProperty()
+    {
+        string? actual = _sut.Generate(InterfaceScopedEventInput);
+
+        actual.ShouldNotBeNull();
+        actual.ShouldContain("\"ctx.order_id\"");
+    }
+
+    /// <summary>
+    /// 시나리오: 비-root 인터페이스 IAuditable의 속성이 ctx.{interface}.{field} 형식인지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void DomainEventLogEnricherGenerator_InterfaceScope_ShouldUse_InterfacePrefix_ForAuditable()
+    {
+        string? actual = _sut.Generate(InterfaceScopedEventInput);
+
+        actual.ShouldNotBeNull();
+        actual.ShouldContain("\"ctx.auditable.operator_id\"");
+    }
+
+    /// <summary>
+    /// 시나리오: IPartnerContext : IRegional 상속 체인에서 RegionCode가
+    /// IRegional(선언 인터페이스)의 스코프로 출력되는지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void DomainEventLogEnricherGenerator_InterfaceScope_ShouldUse_DeclaringInterface_ForInheritedProperty()
+    {
+        string? actual = _sut.Generate(InterfaceScopedEventInput);
+
+        actual.ShouldNotBeNull();
+        actual.ShouldContain("\"ctx.regional.region_code\"");
+    }
+
+    /// <summary>
+    /// 시나리오: IPartnerContext에 직접 선언된 PartnerId가 ctx.partner_context.partner_id 형식인지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void DomainEventLogEnricherGenerator_InterfaceScope_ShouldUse_InterfacePrefix_ForPartnerContext()
+    {
+        string? actual = _sut.Generate(InterfaceScopedEventInput);
+
+        actual.ShouldNotBeNull();
+        actual.ShouldContain("\"ctx.partner_context.partner_id\"");
+    }
+
+    /// <summary>
+    /// 시나리오: 인터페이스 없는 컬렉션 프로퍼티가 기존 ctx.{event}.{field}_count 형식을 유지하는지 확인합니다.
+    /// </summary>
+    [Fact]
+    public void DomainEventLogEnricherGenerator_InterfaceScope_ShouldKeep_DirectCollectionInEventScope()
+    {
+        string? actual = _sut.Generate(InterfaceScopedEventInput);
+
+        actual.ShouldNotBeNull();
+        actual.ShouldContain("\"ctx.order_placed_event.order_lines_count\"");
+    }
+
+    /// <summary>
+    /// 시나리오: 인터페이스 스코프가 포함된 생성 코드의 전체 형태를 스냅샷으로 검증합니다.
+    /// </summary>
+    [Fact]
+    public Task DomainEventLogEnricherGenerator_InterfaceScope_ShouldGenerate_ExpectedOutput()
+    {
+        string? actual = _sut.Generate(InterfaceScopedEventInput);
+
+        return Verify(actual).UseDirectory("Snapshots/DomainEventLogEnricherGenerator");
+    }
+
+    #endregion
+
     #region 17. [LogEnricherRoot] 속성 직접 적용 테스트
 
     /// <summary>
@@ -742,6 +850,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
             using System.Threading;
             using System.Threading.Tasks;
             using Functorium.Applications.Events;
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
             using Functorium.Domains.Events;
 

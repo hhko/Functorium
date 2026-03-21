@@ -1,4 +1,4 @@
-using Functorium.Applications.Usecases;
+using Functorium.Applications.Observabilities;
 
 namespace ObservabilityHost.Usecases;
 

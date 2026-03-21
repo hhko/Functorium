@@ -62,7 +62,7 @@ var placeOrderResponse = await mediator.Send(new PlaceOrderCommand.Request("CUST
 [
     new PlaceOrderCommand.OrderLine("PROD-A", 2, 100.00m),
     new PlaceOrderCommand.OrderLine("PROD-B", 1, 250.00m)
-]));
+], "admin@example.com"));
 Console.WriteLine($"PlaceOrder Result: {placeOrderResponse}");
 Console.WriteLine();
 

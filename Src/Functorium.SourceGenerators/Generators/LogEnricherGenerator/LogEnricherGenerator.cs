@@ -25,7 +25,7 @@ public sealed class LogEnricherGenerator()
         AttachDebugger: false)
 {
     private const string IgnoreAttributeFullName = "Functorium.Applications.Usecases.LogEnricherIgnoreAttribute";
-    private const string RootAttributeFullName = "Functorium.Applications.Usecases.LogEnricherRootAttribute";
+    private const string RootAttributeFullName = "Functorium.Applications.Observabilities.LogEnricherRootAttribute";
 
     private static readonly DiagnosticDescriptor InaccessibleRequestDiagnostic = new(
         id: "FUNCTORIUM003",
@@ -224,22 +224,29 @@ public sealed class LogEnricherGenerator()
             string? countExpression = null;
             string openSearchTypeGroup = GetOpenSearchTypeGroup(property.Type, isCollection);
 
-            bool isRoot = HasRootAttribute(property)
-                || IsFromRootInterface(typeSymbol, property);
+            bool hasDirectRootAttribute = HasRootAttribute(property);
+            var (declaringInterface, isRootFromInterface) = FindPropertyInterface(typeSymbol, property);
+            bool isRoot = hasDirectRootAttribute || isRootFromInterface;
 
             if (isCollection)
             {
-                ctxFieldName = isRoot
-                    ? $"ctx.{snakeName}_count"
-                    : $"ctx.{ctxSegmentPrefix}.{snakeName}_count";
+                if (isRoot)
+                    ctxFieldName = $"ctx.{snakeName}_count";
+                else if (declaringInterface != null)
+                    ctxFieldName = $"ctx.{GetInterfaceCtxPrefix(declaringInterface)}.{snakeName}_count";
+                else
+                    ctxFieldName = $"ctx.{ctxSegmentPrefix}.{snakeName}_count";
                 countExpression = CollectionTypeHelper.GetCountExpression(
                     $"{variablePrefix}.{property.Name}", typeFullName);
             }
             else
             {
-                ctxFieldName = isRoot
-                    ? $"ctx.{snakeName}"
-                    : $"ctx.{ctxSegmentPrefix}.{snakeName}";
+                if (isRoot)
+                    ctxFieldName = $"ctx.{snakeName}";
+                else if (declaringInterface != null)
+                    ctxFieldName = $"ctx.{GetInterfaceCtxPrefix(declaringInterface)}.{snakeName}";
+                else
+                    ctxFieldName = $"ctx.{ctxSegmentPrefix}.{snakeName}";
             }
 
             properties.Add(new LogEnricherPropertyInfo(
@@ -328,25 +335,46 @@ public sealed class LogEnricherGenerator()
         return false;
     }
 
-    private static bool IsFromRootInterface(INamedTypeSymbol typeSymbol, IPropertySymbol property)
+    /// <summary>
+    /// 프로퍼티가 선언된 인터페이스를 찾는다.
+    /// [LogEnricherRoot] 인터페이스를 우선 반환한다.
+    /// </summary>
+    private static (INamedTypeSymbol? declaringInterface, bool isRoot) FindPropertyInterface(
+        INamedTypeSymbol typeSymbol, IPropertySymbol property)
     {
+        INamedTypeSymbol? firstNonRoot = null;
+
         foreach (var iface in typeSymbol.AllInterfaces)
         {
-            // [LogEnricherRoot] 어트리뷰트가 있는 인터페이스만 필터
-            if (!iface.GetAttributes().Any(a =>
-                a.AttributeClass?.ToDisplayString() == RootAttributeFullName))
-                continue;
-
-            // 해당 인터페이스에 동일한 이름의 프로퍼티가 있으면 root
             foreach (var member in iface.GetMembers())
             {
                 if (member is IPropertySymbol interfaceProperty
                     && interfaceProperty.Name == property.Name)
-                    return true;
+                {
+                    bool isRoot = iface.GetAttributes().Any(a =>
+                        a.AttributeClass?.ToDisplayString() == RootAttributeFullName);
+
+                    if (isRoot) return (iface, true);
+                    firstNonRoot ??= iface;
+                    break;
+                }
             }
         }
 
-        return false;
+        return firstNonRoot != null ? (firstNonRoot, false) : (null, false);
+    }
+
+    /// <summary>
+    /// 인터페이스 이름에서 ctx prefix를 계산한다.
+    /// 규칙: 'I' prefix 제거(표준 네이밍) → snake_case
+    /// IX → x, ICustomerRequest → customer_request
+    /// </summary>
+    private static string GetInterfaceCtxPrefix(INamedTypeSymbol interfaceSymbol)
+    {
+        string name = interfaceSymbol.Name;
+        if (name.Length >= 2 && name[0] == 'I' && char.IsUpper(name[1]))
+            name = name.Substring(1);
+        return SnakeCaseConverter.ToSnakeCase(name);
     }
 
     private static bool IsComplexType(ITypeSymbol typeSymbol)
