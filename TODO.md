@@ -3,21 +3,21 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
 - [x] 유스케이스 인터페이스 이름 기반 로그
+- [x] 도메인 이벤트 로그 자동화 이해?
+- [ ] 벌크 도메인 이벤트 처리 방법 이해?
 - [ ] 도메인 이벤트 로그 결과값 테스트? skip 테스트?
 - [ ] `<InternalsVisibleTo Include="LayeredArch.Adapters.Infrastructure" />` 제거
-
+- [x] adapter 로그 개선
 ---
 - [x] 유스케이스 Request, Response 메시지 코드 생성기를 이용한 로그 자동화
 - [x] 유스케이스 ctx.{클래스}.{request | response}.{필드}[_count]
 - [x] 유스케이스 ctx.{필드}[_count]
 - [ ] error.stack_trace
 - [ ] error.current_value?
-- [ ] 도메인 이벤트 로그 자동화 이해?
-- [ ] Adapter 코드 자동화 이해?
 ---
-- [ ] 가이드 문서 업데이트
-- [ ] 가이드 문서 사례 추가
-- [ ] Functorium 제거한 가이드 문서
+- [x] 가이드 문서 업데이트
+- [ ] 관찰 가능성 스펙 문서(Functorium: O)
+- [ ] 관찰 가능성 스펙 문서(Functorium: X)
 ---
 - [ ] 도메인 develop 스킬 업데이트
 - [ ] 도메인 스킬 plugin화?
