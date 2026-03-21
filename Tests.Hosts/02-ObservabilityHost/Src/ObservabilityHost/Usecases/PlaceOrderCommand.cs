@@ -5,7 +5,7 @@ namespace ObservabilityHost.Usecases;
 public sealed class PlaceOrderCommand
 {
     public sealed record OrderLine(string ProductId, int Quantity, decimal UnitPrice);
-    public sealed record Request(string CustomerId, List<OrderLine> Lines, string OperatorId) : ICommandRequest<Response>, ICustomerRequest, IAuditable;
+    public sealed record Request(string CustomerId, List<OrderLine> Lines, string OperatorId) : ICommandRequest<Response>, ICustomerRequest, IOperatorContext;
     public sealed record Response(string OrderId, int LineCount, decimal TotalAmount);
 
     public sealed class Usecase : ICommandUsecase<Request, Response>

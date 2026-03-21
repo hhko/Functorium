@@ -1,5 +1,6 @@
 using Functorium.Applications.Observabilities;
 using Functorium.Domains.Events;
+using ObservabilityHost.Usecases;
 
 namespace ObservabilityHost.DomainEvents;
 
@@ -11,4 +12,5 @@ public sealed record OrderPlacedEvent(
     [LogEnricherRoot] string CustomerId,
     string OrderId,
     int LineCount,
-    decimal TotalAmount) : DomainEvent;
+    decimal TotalAmount,
+    string OperatorId) : DomainEvent, IOperatorContext;

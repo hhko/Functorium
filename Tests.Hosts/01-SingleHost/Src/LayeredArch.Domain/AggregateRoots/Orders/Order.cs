@@ -40,7 +40,7 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditable
         OrderId OrderId,
         CustomerId CustomerId,
         Seq<OrderLineInfo> OrderLines,
-        Money TotalAmount) : DomainEvent;
+        Money TotalAmount) : DomainEvent, ICustomerEvent;
 
     /// <summary>
     /// 주문 확인 이벤트

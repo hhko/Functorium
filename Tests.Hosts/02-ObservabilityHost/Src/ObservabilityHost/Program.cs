@@ -75,7 +75,8 @@ if (placeOrderResponse.IsSucc)
         CustomerId: "CUST-001",
         OrderId: response.OrderId,
         LineCount: response.LineCount,
-        TotalAmount: response.TotalAmount);
+        TotalAmount: response.TotalAmount,
+        OperatorId: "admin@example.com");
     await mediator.Publish(orderPlacedEvent);
 }
 Console.WriteLine();
