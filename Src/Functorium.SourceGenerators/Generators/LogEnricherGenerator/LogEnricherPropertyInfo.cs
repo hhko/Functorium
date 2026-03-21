@@ -42,6 +42,12 @@ public readonly record struct LogEnricherPropertyInfo
     /// </summary>
     public readonly bool IsRoot;
 
+    /// <summary>
+    /// 값 객체 등 복합 타입에서 .ToString() 호출이 필요한지 여부.
+    /// DomainEventLogEnricher에서 값 객체를 keyword로 변환할 때 사용됩니다.
+    /// </summary>
+    public readonly bool NeedsToString;
+
     public LogEnricherPropertyInfo(
         string propertyName,
         string ctxFieldName,
@@ -49,7 +55,8 @@ public readonly record struct LogEnricherPropertyInfo
         bool isCollection,
         string? countExpression,
         string openSearchTypeGroup,
-        bool isRoot = false)
+        bool isRoot = false,
+        bool needsToString = false)
     {
         PropertyName = propertyName;
         CtxFieldName = ctxFieldName;
@@ -58,5 +65,6 @@ public readonly record struct LogEnricherPropertyInfo
         CountExpression = countExpression;
         OpenSearchTypeGroup = openSearchTypeGroup;
         IsRoot = isRoot;
+        NeedsToString = needsToString;
     }
 }

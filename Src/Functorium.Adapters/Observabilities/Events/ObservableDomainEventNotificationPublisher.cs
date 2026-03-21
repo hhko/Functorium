@@ -3,6 +3,7 @@ using System.Diagnostics.Metrics;
 using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Loggers;
 using Functorium.Adapters.Observabilities.Naming;
+using Functorium.Applications.Observabilities;
 using Functorium.Domains.Events;
 using Mediator;
 using Microsoft.Extensions.Logging;
@@ -39,6 +40,8 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
     private readonly Counter<long> _responseCounter;
     private readonly Histogram<double> _durationHistogram;
 
+    private readonly IServiceProvider _serviceProvider;
+
     /// <summary>
     /// ObservableDomainEventNotificationPublisher를 생성합니다.
     /// </summary>
@@ -46,14 +49,17 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
     /// <param name="loggerFactory">로거 팩토리</param>
     /// <param name="meterFactory">Meter 팩토리</param>
     /// <param name="openTelemetryOptions">OpenTelemetry 옵션</param>
+    /// <param name="serviceProvider">DI 서비스 프로바이더 (IDomainEventLogEnricher 해석용)</param>
     public ObservableDomainEventNotificationPublisher(
         ActivitySource activitySource,
         ILoggerFactory loggerFactory,
         IMeterFactory meterFactory,
-        IOptions<OpenTelemetryOptions> openTelemetryOptions)
+        IOptions<OpenTelemetryOptions> openTelemetryOptions,
+        IServiceProvider serviceProvider)
     {
         _activitySource = activitySource;
         _loggerFactory = loggerFactory;
+        _serviceProvider = serviceProvider;
 
         string meterName = $"{openTelemetryOptions.Value.ServiceNamespace}.{ObservabilityNaming.Layers.Application}";
         _meter = meterFactory.Create(meterName);
@@ -184,6 +190,9 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
 
         var logger = _loggerFactory.CreateLogger(handlerType);
 
+        // Enricher가 등록되어 있으면 LogContext에 커스텀 속성 Push
+        using var enrichment = ResolveEnrichment(domainEvent);
+
         string requestCategoryType = ObservabilityNaming.CategoryTypes.Event;
         string requestHandlerMethod = ObservabilityNaming.Methods.Handle;
         using var activity = _activitySource.StartActivity(
@@ -255,5 +264,15 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
 
             throw;
         }
+    }
+
+    /// <summary>
+    /// 도메인 이벤트 타입에 해당하는 IDomainEventLogEnricher를 DI에서 해석하여 EnrichLog를 호출합니다.
+    /// 등록되지 않은 경우 null을 반환합니다.
+    /// </summary>
+    private IDisposable? ResolveEnrichment(IDomainEvent domainEvent)
+    {
+        var enricherServiceType = typeof(IDomainEventLogEnricher<>).MakeGenericType(domainEvent.GetType());
+        return (_serviceProvider.GetService(enricherServiceType) as IDomainEventLogEnricher)?.EnrichLog(domainEvent);
     }
 }

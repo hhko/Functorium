@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 
+using Functorium.SourceGenerators.Generators.LogEnricherGenerator;
 using Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 using Microsoft.CodeAnalysis;
@@ -10,27 +12,34 @@ using Microsoft.CodeAnalysis.Text;
 
 using static Functorium.SourceGenerators.Abstractions.Constants;
 
-namespace Functorium.SourceGenerators.Generators.LogEnricherGenerator;
+namespace Functorium.SourceGenerators.Generators.DomainEventLogEnricherGenerator;
 
 /// <summary>
-/// ICommandRequest&lt;T&gt; 또는 IQueryRequest&lt;T&gt;를 구현하는 Request record를 자동 감지하여
-/// IUsecaseLogEnricher 구현체를 생성하는 소스 생성기.
-/// [LogEnricherIgnore]를 Request record에 적용하면 생성을 제외합니다.
+/// IDomainEventHandler&lt;T&gt; 구현 클래스를 감지하여 T(이벤트 타입)에 대한
+/// IDomainEventLogEnricher 구현체를 생성하는 소스 생성기.
+/// [LogEnricherIgnore]를 이벤트 record에 적용하면 생성을 제외합니다.
 /// </summary>
 [Generator(LanguageNames.CSharp)]
-public sealed class LogEnricherGenerator()
-    : IncrementalGeneratorBase<LogEnricherInfo>(
+public sealed class DomainEventLogEnricherGenerator()
+    : IncrementalGeneratorBase<DomainEventLogEnricherInfo>(
         RegisterSourceProvider,
         Generate,
         AttachDebugger: false)
 {
+    private const string DomainEventHandlerInterfaceFullName =
+        "Functorium.Applications.Events.IDomainEventHandler<TEvent>";
     private const string IgnoreAttributeFullName = "Functorium.Applications.Usecases.LogEnricherIgnoreAttribute";
     private const string RootAttributeFullName = "Functorium.Applications.Usecases.LogEnricherRootAttribute";
+    private const string ValueObjectInterfaceFullName = "Functorium.Domains.ValueObjects.IValueObject";
+    private const string EntityIdInterfacePrefix = "Functorium.Domains.Entities.IEntityId<";
 
-    private static readonly DiagnosticDescriptor InaccessibleRequestDiagnostic = new(
-        id: "FUNCTORIUM003",
-        title: "Request type is not accessible for LogEnricher generation",
-        messageFormat: "'{0}' implements ICommandRequest/IQueryRequest but LogEnricher cannot be generated because '{1}' is {2}. Apply [LogEnricherIgnore] to the Request record to suppress this warning.",
+    private static readonly HashSet<string> DomainEventBasePropertyNames =
+        ["OccurredAt", "EventId", "CorrelationId", "CausationId"];
+
+    private static readonly DiagnosticDescriptor InaccessibleEventDiagnostic = new(
+        id: "FUNCTORIUM004",
+        title: "Event type is not accessible for DomainEventLogEnricher generation",
+        messageFormat: "'{0}' implements IDomainEvent but DomainEventLogEnricher cannot be generated because '{1}' is {2}. Apply [LogEnricherIgnore] to the event record to suppress this warning.",
         category: "Design",
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -43,44 +52,49 @@ public sealed class LogEnricherGenerator()
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
-    private static IncrementalValuesProvider<LogEnricherInfo> RegisterSourceProvider(
+    private static IncrementalValuesProvider<DomainEventLogEnricherInfo> RegisterSourceProvider(
         IncrementalGeneratorInitializationContext context)
     {
         return context
             .SyntaxProvider
             .CreateSyntaxProvider(
-                predicate: IsRecordDeclaration,
-                transform: MapToLogEnricherInfo)
-            .Where(x => x.RequestTypeName.Length > 0);
+                predicate: IsClassDeclaration,
+                transform: MapToDomainEventLogEnricherInfo)
+            .Where(x => x.EventTypeName.Length > 0);
     }
 
-    private static bool IsRecordDeclaration(SyntaxNode syntaxNode, CancellationToken cancellationToken)
+    private static bool IsClassDeclaration(SyntaxNode syntaxNode, CancellationToken cancellationToken)
     {
-        return syntaxNode is RecordDeclarationSyntax;
+        return syntaxNode is ClassDeclarationSyntax;
     }
 
-    private static LogEnricherInfo MapToLogEnricherInfo(
+    private static DomainEventLogEnricherInfo MapToDomainEventLogEnricherInfo(
         GeneratorSyntaxContext context,
         CancellationToken cancellationToken)
     {
         if (context.SemanticModel.GetDeclaredSymbol(context.Node, cancellationToken)
-            is not INamedTypeSymbol requestSymbol)
-            return LogEnricherInfo.None;
+            is not INamedTypeSymbol handlerSymbol)
+            return DomainEventLogEnricherInfo.None;
 
-        // ICommandRequest<T> 또는 IQueryRequest<T> 구현 여부 확인
-        if (FindResponseType(requestSymbol) is null)
-            return LogEnricherInfo.None;
+        // IDomainEventHandler<T> 구현에서 T (이벤트 타입) 추출
+        INamedTypeSymbol? eventSymbol = FindDomainEventType(handlerSymbol);
+        if (eventSymbol is null)
+            return DomainEventLogEnricherInfo.None;
+
+        // abstract record는 건너뜀 (DomainEvent 베이스 클래스 등)
+        if (eventSymbol.IsAbstract)
+            return DomainEventLogEnricherInfo.None;
 
         // [LogEnricherIgnore] 클래스 레벨 옵트아웃 확인
-        if (HasClassLevelIgnoreAttribute(requestSymbol))
-            return LogEnricherInfo.None;
+        if (HasClassLevelIgnoreAttribute(eventSymbol))
+            return DomainEventLogEnricherInfo.None;
 
-        // 네임스페이스 레벨에서 접근 불가능한 타입은 진단 경고 후 건너뜀
-        var inaccessibleType = FindInaccessibleType(requestSymbol);
+        // 접근 불가능한 타입 확인 → FUNCTORIUM004
+        var inaccessibleType = FindInaccessibleType(eventSymbol);
         if (inaccessibleType != null)
         {
-            return LogEnricherInfo.Inaccessible(
-                requestSymbol.ToDisplayString(),
+            return DomainEventLogEnricherInfo.Inaccessible(
+                eventSymbol.ToDisplayString(),
                 inaccessibleType.Name,
                 inaccessibleType.DeclaredAccessibility.ToString().ToLowerInvariant(),
                 context.Node.GetLocation());
@@ -88,61 +102,87 @@ public sealed class LogEnricherGenerator()
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        // 네임스페이스
-        string @namespace = requestSymbol.ContainingNamespace.IsGlobalNamespace
+        // Handler의 네임스페이스 사용 (Enricher 생성 위치)
+        string @namespace = handlerSymbol.ContainingNamespace.IsGlobalNamespace
             ? string.Empty
-            : requestSymbol.ContainingNamespace.ToString();
+            : handlerSymbol.ContainingNamespace.ToString();
 
-        // 포함 타입 이름 목록 (바깥 → 안쪽)
-        var containingTypeNames = GetContainingTypeNames(requestSymbol);
+        // 이벤트 타입의 포함 타입 이름 목록 (바깥 → 안쪽)
+        var containingTypeNames = GetContainingTypeNames(eventSymbol);
 
-        // ctx 타입 접두사 계산
-        string ctxTypePrefix = string.Join(".",
-            containingTypeNames.Select(n => SnakeCaseConverter.ToSnakeCase(n)));
-
-        string requestTypeName = requestSymbol.Name;
-
-        // Request 전체 한정 이름
-        string requestTypeFullName = GetGlobalFullName(requestSymbol);
-
-        // Request 속성 수집
-        var requestProperties = CollectProperties(requestSymbol, "request", $"{ctxTypePrefix}.request");
-
-        // ICommandRequest<TSuccess> 또는 IQueryRequest<TSuccess>에서 TSuccess 타입 발견
-        INamedTypeSymbol? responseSymbol = FindResponseType(requestSymbol);
-        string responseTypeName = string.Empty;
-        string responseTypeFullName = string.Empty;
-        LogEnricherPropertyInfo[] responseProperties = [];
-
-        if (responseSymbol != null)
+        // ctx 접두사 계산
+        string ctxPrefix;
+        if (containingTypeNames.Length > 0)
         {
-            responseTypeName = GetMinimalName(responseSymbol, requestSymbol);
-            responseTypeFullName = GetGlobalFullName(responseSymbol);
-            responseProperties = CollectProperties(responseSymbol, "r", $"{ctxTypePrefix}.response");
+            // 중첩: "order.created_event"
+            string containingPart = string.Join(".",
+                containingTypeNames.Select(n => SnakeCaseConverter.ToSnakeCase(n)));
+            ctxPrefix = $"{containingPart}.{SnakeCaseConverter.ToSnakeCase(eventSymbol.Name)}";
+        }
+        else
+        {
+            // 최상위: "order_placed_event"
+            ctxPrefix = SnakeCaseConverter.ToSnakeCase(eventSymbol.Name);
         }
 
-        // Enricher 클래스 이름: {ContainingTypes}{RequestTypeName}LogEnricher
+        string eventTypeName = eventSymbol.Name;
+        string eventTypeFullName = GetGlobalFullName(eventSymbol);
+
+        // 이벤트 속성 수집 (IDomainEvent 기본 속성 제외)
+        var eventProperties = CollectProperties(eventSymbol, "domainEvent", ctxPrefix);
+
+        // Enricher 클래스 이름: {ContainingTypes}{EventTypeName}LogEnricher
         string enricherClassName = string.Concat(containingTypeNames.Select(n => n))
-            + requestTypeName + "LogEnricher";
+            + eventTypeName + "LogEnricher";
 
         Location? location = context.Node.GetLocation();
 
-        return new LogEnricherInfo(
+        return new DomainEventLogEnricherInfo(
             @namespace,
             containingTypeNames,
-            requestTypeName,
-            requestProperties,
-            responseTypeName,
-            responseTypeFullName,
-            responseProperties,
+            eventTypeName,
+            eventTypeFullName,
+            eventProperties,
             enricherClassName,
-            requestTypeFullName,
             location);
+    }
+
+    private static INamedTypeSymbol? FindDomainEventType(INamedTypeSymbol handlerSymbol)
+    {
+        foreach (var iface in handlerSymbol.AllInterfaces)
+        {
+            if (iface.IsGenericType && iface.TypeArguments.Length == 1)
+            {
+                string ifaceName = iface.OriginalDefinition.ToDisplayString();
+                if (ifaceName == DomainEventHandlerInterfaceFullName)
+                {
+                    return iface.TypeArguments[0] as INamedTypeSymbol;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static bool ImplementsValueObjectOrEntityId(ITypeSymbol typeSymbol)
+    {
+        if (typeSymbol is not INamedTypeSymbol namedType)
+            return false;
+
+        foreach (var iface in namedType.AllInterfaces)
+        {
+            string ifaceFullName = iface.ToDisplayString();
+            if (ifaceFullName == ValueObjectInterfaceFullName)
+                return true;
+            if (ifaceFullName.StartsWith(EntityIdInterfacePrefix))
+                return true;
+        }
+
+        return false;
     }
 
     private static string[] GetContainingTypeNames(INamedTypeSymbol symbol)
     {
-        var names = new System.Collections.Generic.List<string>();
+        var names = new List<string>();
         var current = symbol.ContainingType;
         while (current != null)
         {
@@ -159,43 +199,12 @@ public sealed class LogEnricherGenerator()
             .Replace("global::", "");
     }
 
-    private static string GetMinimalName(INamedTypeSymbol symbol, INamedTypeSymbol contextSymbol)
-    {
-        // 같은 네임스페이스 + 같은 containing type이면 짧은 이름 사용
-        if (SymbolEqualityComparer.Default.Equals(symbol.ContainingType, contextSymbol.ContainingType)
-            && SymbolEqualityComparer.Default.Equals(symbol.ContainingNamespace, contextSymbol.ContainingNamespace))
-        {
-            if (symbol.ContainingType != null)
-                return symbol.ContainingType.Name + "." + symbol.Name;
-            return symbol.Name;
-        }
-
-        return symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-    }
-
-    private static INamedTypeSymbol? FindResponseType(INamedTypeSymbol requestSymbol)
-    {
-        foreach (var iface in requestSymbol.AllInterfaces)
-        {
-            if (iface.IsGenericType && iface.TypeArguments.Length == 1)
-            {
-                string ifaceName = iface.OriginalDefinition.ToDisplayString();
-                if (ifaceName == "Functorium.Applications.Usecases.ICommandRequest<TSuccess>"
-                    || ifaceName == "Functorium.Applications.Usecases.IQueryRequest<TSuccess>")
-                {
-                    return iface.TypeArguments[0] as INamedTypeSymbol;
-                }
-            }
-        }
-        return null;
-    }
-
     private static LogEnricherPropertyInfo[] CollectProperties(
         INamedTypeSymbol typeSymbol,
         string variablePrefix,
         string ctxSegmentPrefix)
     {
-        var properties = new System.Collections.Generic.List<LogEnricherPropertyInfo>();
+        var properties = new List<LogEnricherPropertyInfo>();
 
         foreach (var member in typeSymbol.GetMembers())
         {
@@ -208,6 +217,10 @@ public sealed class LogEnricherGenerator()
             if (property.IsStatic || property.IsIndexer)
                 continue;
 
+            // IDomainEvent 기본 속성 제외
+            if (DomainEventBasePropertyNames.Contains(property.Name))
+                continue;
+
             // [LogEnricherIgnore] 제외
             if (HasIgnoreAttribute(property))
                 continue;
@@ -215,14 +228,19 @@ public sealed class LogEnricherGenerator()
             string typeFullName = property.Type.ToDisplayString();
             bool isCollection = CollectionTypeHelper.IsCollectionType(typeFullName);
 
-            // 복합 타입(클래스/레코드) 건너뜀 — 스칼라와 컬렉션만 처리
-            if (!isCollection && IsComplexType(property.Type))
+            // IValueObject 또는 IEntityId<T> 구현체는 .ToString() 호출 대상
+            bool needsToString = !isCollection && ImplementsValueObjectOrEntityId(property.Type);
+
+            // 값 객체/EntityId가 아닌 복합 타입은 건너뜀 (스칼라와 컬렉션만 처리)
+            if (!isCollection && !needsToString && IsComplexType(property.Type))
                 continue;
 
             string snakeName = SnakeCaseConverter.ToSnakeCase(property.Name);
             string ctxFieldName;
             string? countExpression = null;
-            string openSearchTypeGroup = GetOpenSearchTypeGroup(property.Type, isCollection);
+            string openSearchTypeGroup = needsToString
+                ? "keyword"
+                : GetOpenSearchTypeGroup(property.Type, isCollection);
 
             bool isRoot = HasRootAttribute(property)
                 || IsFromRootInterface(typeSymbol, property);
@@ -249,7 +267,8 @@ public sealed class LogEnricherGenerator()
                 isCollection,
                 countExpression,
                 openSearchTypeGroup,
-                isRoot));
+                isRoot,
+                needsToString));
         }
 
         return properties.ToArray();
@@ -285,7 +304,6 @@ public sealed class LogEnricherGenerator()
         // record 생성자 파라미터의 어트리뷰트 확인
         if (property.DeclaringSyntaxReferences.Length > 0)
         {
-            // record의 primary constructor parameter에서도 확인
             var containingType = property.ContainingType;
             foreach (var ctor in containingType.Constructors)
             {
@@ -332,12 +350,10 @@ public sealed class LogEnricherGenerator()
     {
         foreach (var iface in typeSymbol.AllInterfaces)
         {
-            // [LogEnricherRoot] 어트리뷰트가 있는 인터페이스만 필터
             if (!iface.GetAttributes().Any(a =>
                 a.AttributeClass?.ToDisplayString() == RootAttributeFullName))
                 continue;
 
-            // 해당 인터페이스에 동일한 이름의 프로퍼티가 있으면 root
             foreach (var member in iface.GetMembers())
             {
                 if (member is IPropertySymbol interfaceProperty
@@ -351,16 +367,14 @@ public sealed class LogEnricherGenerator()
 
     private static bool IsComplexType(ITypeSymbol typeSymbol)
     {
-        // 스칼라 타입: primitive, string, decimal, DateTime, Guid, enum, Option<T> 등
         if (typeSymbol.SpecialType != SpecialType.None)
-            return false; // string, int, bool, etc.
+            return false;
 
         if (typeSymbol.TypeKind == TypeKind.Enum)
             return false;
 
         string fullName = typeSymbol.ToDisplayString();
 
-        // 잘 알려진 스칼라 타입들
         if (fullName == "System.Guid" || fullName == "System.DateTime"
             || fullName == "System.DateTimeOffset" || fullName == "System.TimeSpan"
             || fullName == "System.DateOnly" || fullName == "System.TimeOnly"
@@ -368,7 +382,6 @@ public sealed class LogEnricherGenerator()
             || fullName == "System.Uri")
             return false;
 
-        // Nullable<T>는 내부 T에 위임
         if (typeSymbol is INamedTypeSymbol namedType
             && namedType.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T
             && namedType.TypeArguments.Length == 1)
@@ -376,15 +389,12 @@ public sealed class LogEnricherGenerator()
             return IsComplexType(namedType.TypeArguments[0]);
         }
 
-        // LanguageExt Option<T>는 스칼라로 처리
         if (fullName.Contains("LanguageExt.Option<"))
             return false;
 
-        // 컬렉션은 이미 별도 처리되므로 여기서는 복합 타입이 아님
         if (CollectionTypeHelper.IsCollectionType(fullName))
             return false;
 
-        // 그 외 class/record/struct(커스텀)는 복합 타입
         if (typeSymbol.TypeKind == TypeKind.Class
             || typeSymbol.TypeKind == TypeKind.Struct
             || typeSymbol.TypeKind == TypeKind.Interface)
@@ -395,9 +405,8 @@ public sealed class LogEnricherGenerator()
 
     private static string GetOpenSearchTypeGroup(ITypeSymbol typeSymbol, bool isCollection)
     {
-        if (isCollection) return "long"; // count는 항상 정수
+        if (isCollection) return "long";
 
-        // Nullable<T>는 내부 T에 위임
         if (typeSymbol is INamedTypeSymbol namedType
             && namedType.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T
             && namedType.TypeArguments.Length == 1)
@@ -405,7 +414,6 @@ public sealed class LogEnricherGenerator()
             return GetOpenSearchTypeGroup(namedType.TypeArguments[0], false);
         }
 
-        // SpecialType 기반 분류
         switch (typeSymbol.SpecialType)
         {
             case SpecialType.System_Boolean:
@@ -427,41 +435,43 @@ public sealed class LogEnricherGenerator()
                 return "keyword";
         }
 
-        // enum → keyword
         if (typeSymbol.TypeKind == TypeKind.Enum)
             return "keyword";
 
-        // 잘 알려진 스칼라 타입 → keyword
         string fullName = typeSymbol.ToDisplayString();
         if (fullName is "System.Guid" or "System.DateTime" or "System.DateTimeOffset"
             or "System.TimeSpan" or "System.DateOnly" or "System.TimeOnly" or "System.Uri")
             return "keyword";
 
-        // LanguageExt Option<T> → keyword
         if (fullName.Contains("LanguageExt.Option<"))
             return "keyword";
 
-        // 기본값: keyword (CollectProperties에서 스칼라/컬렉션만 남으므로)
         return "keyword";
     }
 
     private static void Generate(
         SourceProductionContext context,
-        ImmutableArray<LogEnricherInfo> enricherInfos)
+        ImmutableArray<DomainEventLogEnricherInfo> enricherInfos)
     {
-        // ctx 필드 타입 충돌 감지
-        DetectCtxFieldTypeConflicts(context, enricherInfos);
+        // 이벤트 타입별 중복 제거 (같은 이벤트에 여러 Handler가 있을 수 있음)
+        var uniqueInfos = enricherInfos
+            .GroupBy(x => x.EventTypeFullName)
+            .Select(g => g.First())
+            .ToImmutableArray();
 
-        foreach (var info in enricherInfos)
+        // ctx 필드 타입 충돌 감지
+        DetectCtxFieldTypeConflicts(context, uniqueInfos);
+
+        foreach (var info in uniqueInfos)
         {
             // 접근 불가능한 타입: 진단 경고만 출력하고 코드 생성 건너뜀
             if (info.SkipReason.Length > 0)
             {
                 context.ReportDiagnostic(Diagnostic.Create(
-                    InaccessibleRequestDiagnostic,
+                    InaccessibleEventDiagnostic,
                     info.Location,
-                    info.RequestTypeFullName,
-                    info.ResponseTypeFullName,
+                    info.EventTypeFullName,
+                    info.EventTypeName == "SKIP" ? info.EventTypeFullName : info.EventTypeName,
                     info.SkipReason));
                 continue;
             }
@@ -488,16 +498,14 @@ public sealed class LogEnricherGenerator()
 
     private static void DetectCtxFieldTypeConflicts(
         SourceProductionContext context,
-        ImmutableArray<LogEnricherInfo> enricherInfos)
+        ImmutableArray<DomainEventLogEnricherInfo> enricherInfos)
     {
-        var ctxFieldMap = new System.Collections.Generic.Dictionary<string,
+        var ctxFieldMap = new Dictionary<string,
             (string OpenSearchTypeGroup, string TypeFullName, string EnricherClassName, Location? Location)>();
 
         foreach (var info in enricherInfos)
         {
-            var allProperties = info.RequestProperties.Concat(info.ResponseProperties);
-
-            foreach (var prop in allProperties)
+            foreach (var prop in info.EventProperties)
             {
                 if (ctxFieldMap.TryGetValue(prop.CtxFieldName, out var existing))
                 {
@@ -521,7 +529,7 @@ public sealed class LogEnricherGenerator()
         }
     }
 
-    private static string GenerateEnricherSource(LogEnricherInfo info, StringBuilder sb)
+    private static string GenerateEnricherSource(DomainEventLogEnricherInfo info, StringBuilder sb)
     {
         sb.Append(Header)
             .AppendLine();
@@ -532,118 +540,78 @@ public sealed class LogEnricherGenerator()
                 .AppendLine();
         }
 
-        // Request의 display 형식: ContainingTypes.RequestTypeName
-        string requestDisplayType = string.Concat(info.ContainingTypeNames.Select(n => n + "."))
-            + info.RequestTypeName;
+        string eventFullType = info.EventTypeFullName;
+        int eventCount = info.EventProperties.Length;
 
-        // ctx 타입 접두사 계산 (PushRequestCtx/PushResponseCtx 헬퍼용)
-        string ctxTypePrefix = string.Join(".",
-            info.ContainingTypeNames.Select(n => SnakeCaseConverter.ToSnakeCase(n)));
-
-        // FinResponse<Response> 형식
-        string finResponseType = $"global::Functorium.Applications.Usecases.FinResponse<{info.ResponseTypeFullName}>";
-
-        // Request의 전체 한정 형식 (using 없이도 동작하도록)
-        string requestFullType = info.RequestTypeFullName;
-
-        int requestCount = info.RequestProperties.Length;
-        int responseCount = info.ResponseProperties.Length;
+        // ctx 접두사 계산 (PushEventCtx 헬퍼용)
+        string ctxPrefix;
+        if (info.ContainingTypeNames.Length > 0)
+        {
+            string containingPart = string.Join(".",
+                info.ContainingTypeNames.Select(n => SnakeCaseConverter.ToSnakeCase(n)));
+            ctxPrefix = $"{containingPart}.{SnakeCaseConverter.ToSnakeCase(info.EventTypeName)}";
+        }
+        else
+        {
+            ctxPrefix = SnakeCaseConverter.ToSnakeCase(info.EventTypeName);
+        }
 
         sb.AppendLine($"public partial class {info.EnricherClassName}");
-        sb.AppendLine($"    : global::Functorium.Applications.Observabilities.IUsecaseLogEnricher<{requestFullType}, {finResponseType}>");
+        sb.AppendLine($"    : global::Functorium.Applications.Observabilities.IDomainEventLogEnricher<{eventFullType}>");
         sb.AppendLine("{");
 
-        // EnrichRequestLog
-        sb.AppendLine($"    public global::System.IDisposable? EnrichRequestLog({requestFullType} request)");
+        // EnrichLog
+        sb.AppendLine($"    public global::System.IDisposable? EnrichLog({eventFullType} domainEvent)");
         sb.AppendLine("    {");
-        if (requestCount > 0)
+        if (eventCount > 0)
         {
-            sb.AppendLine($"        var disposables = new global::System.Collections.Generic.List<global::System.IDisposable>({requestCount});");
-            foreach (var prop in info.RequestProperties)
+            sb.AppendLine($"        var disposables = new global::System.Collections.Generic.List<global::System.IDisposable>({eventCount});");
+            foreach (var prop in info.EventProperties)
             {
                 if (prop.IsCollection)
                 {
                     sb.AppendLine($"        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty(\"{prop.CtxFieldName}\", {prop.CountExpression}));");
                 }
+                else if (prop.NeedsToString)
+                {
+                    sb.AppendLine($"        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty(\"{prop.CtxFieldName}\", domainEvent.{prop.PropertyName}.ToString()));");
+                }
                 else
                 {
-                    sb.AppendLine($"        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty(\"{prop.CtxFieldName}\", request.{prop.PropertyName}));");
+                    sb.AppendLine($"        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty(\"{prop.CtxFieldName}\", domainEvent.{prop.PropertyName}));");
                 }
             }
-            sb.AppendLine("        OnEnrichRequestLog(request, disposables);");
+            sb.AppendLine("        OnEnrichLog(domainEvent, disposables);");
             sb.AppendLine("        return new GeneratedCompositeDisposable(disposables);");
         }
         else
         {
             sb.AppendLine("        var disposables = new global::System.Collections.Generic.List<global::System.IDisposable>();");
-            sb.AppendLine("        OnEnrichRequestLog(request, disposables);");
+            sb.AppendLine("        OnEnrichLog(domainEvent, disposables);");
             sb.AppendLine("        return disposables.Count > 0 ? new GeneratedCompositeDisposable(disposables) : null;");
         }
         sb.AppendLine("    }");
         sb.AppendLine();
 
-        // EnrichResponseLog
-        sb.AppendLine($"    public global::System.IDisposable? EnrichResponseLog(");
-        sb.AppendLine($"        {requestFullType} request,");
-        sb.AppendLine($"        {finResponseType} response)");
-        sb.AppendLine("    {");
-        sb.AppendLine($"        var disposables = new global::System.Collections.Generic.List<global::System.IDisposable>({responseCount});");
-        if (responseCount > 0)
-        {
-            sb.AppendLine($"        if (response is {finResponseType}.Succ {{ Value: var r }})");
-            sb.AppendLine("        {");
-            foreach (var prop in info.ResponseProperties)
-            {
-                if (prop.IsCollection)
-                {
-                    sb.AppendLine($"            disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty(\"{prop.CtxFieldName}\", {prop.CountExpression}));");
-                }
-                else
-                {
-                    sb.AppendLine($"            disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty(\"{prop.CtxFieldName}\", r.{prop.PropertyName}));");
-                }
-            }
-            sb.AppendLine("        }");
-        }
-        sb.AppendLine("        OnEnrichResponseLog(request, response, disposables);");
-        sb.AppendLine("        return disposables.Count > 0 ? new GeneratedCompositeDisposable(disposables) : null;");
-        sb.AppendLine("    }");
-        sb.AppendLine();
-
-        // partial void extension points
-        sb.AppendLine($"    partial void OnEnrichRequestLog(");
-        sb.AppendLine($"        {requestFullType} request,");
-        sb.AppendLine($"        global::System.Collections.Generic.List<global::System.IDisposable> disposables);");
-        sb.AppendLine();
-        sb.AppendLine($"    partial void OnEnrichResponseLog(");
-        sb.AppendLine($"        {requestFullType} request,");
-        sb.AppendLine($"        {finResponseType} response,");
+        // partial void extension point
+        sb.AppendLine($"    partial void OnEnrichLog(");
+        sb.AppendLine($"        {eventFullType} domainEvent,");
         sb.AppendLine($"        global::System.Collections.Generic.List<global::System.IDisposable> disposables);");
         sb.AppendLine();
 
-        // Helper: PushRequestCtx / PushResponseCtx
-        sb.AppendLine($"    private static void PushRequestCtx(");
+        // Helper: PushEventCtx
+        sb.AppendLine($"    private static void PushEventCtx(");
         sb.AppendLine($"        global::System.Collections.Generic.List<global::System.IDisposable> disposables,");
         sb.AppendLine($"        string fieldName,");
         sb.AppendLine($"        object? value)");
         sb.AppendLine("    {");
         sb.AppendLine($"        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty(");
-        sb.AppendLine($"            \"ctx.{ctxTypePrefix}.request.\" + fieldName, value));");
-        sb.AppendLine("    }");
-        sb.AppendLine();
-        sb.AppendLine($"    private static void PushResponseCtx(");
-        sb.AppendLine($"        global::System.Collections.Generic.List<global::System.IDisposable> disposables,");
-        sb.AppendLine($"        string fieldName,");
-        sb.AppendLine($"        object? value)");
-        sb.AppendLine("    {");
-        sb.AppendLine($"        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty(");
-        sb.AppendLine($"            \"ctx.{ctxTypePrefix}.response.\" + fieldName, value));");
+        sb.AppendLine($"            \"ctx.{ctxPrefix}.\" + fieldName, value));");
         sb.AppendLine("    }");
         sb.AppendLine();
 
         // Helper: PushRootCtx (root 속성이 있을 때만 생성)
-        bool hasRootProperties = info.RequestProperties.Any(p => p.IsRoot)
-            || info.ResponseProperties.Any(p => p.IsRoot);
+        bool hasRootProperties = info.EventProperties.Any(p => p.IsRoot);
 
         if (hasRootProperties)
         {

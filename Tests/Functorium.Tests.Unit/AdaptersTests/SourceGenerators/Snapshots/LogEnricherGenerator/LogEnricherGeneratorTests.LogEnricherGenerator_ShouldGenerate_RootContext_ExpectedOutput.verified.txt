@@ -11,13 +11,13 @@
 namespace TestNamespace;
 
 public partial class PlaceOrderCommandRequestLogEnricher
-    : global::Functorium.Adapters.Observabilities.Pipelines.IUsecaseLogEnricher<global::TestNamespace.PlaceOrderCommand.Request, global::Functorium.Applications.Usecases.FinResponse<global::TestNamespace.PlaceOrderCommand.Response>>
+    : global::Functorium.Applications.Observabilities.IUsecaseLogEnricher<global::TestNamespace.PlaceOrderCommand.Request, global::Functorium.Applications.Usecases.FinResponse<global::TestNamespace.PlaceOrderCommand.Response>>
 {
     public global::System.IDisposable? EnrichRequestLog(global::TestNamespace.PlaceOrderCommand.Request request)
     {
         var disposables = new global::System.Collections.Generic.List<global::System.IDisposable>(2);
-        disposables.Add(global::Serilog.Context.LogContext.PushProperty("ctx.customer_id", request.CustomerId));
-        disposables.Add(global::Serilog.Context.LogContext.PushProperty("ctx.place_order_command.request.lines_count", request.Lines?.Count ?? 0));
+        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty("ctx.customer_id", request.CustomerId));
+        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty("ctx.place_order_command.request.lines_count", request.Lines?.Count ?? 0));
         OnEnrichRequestLog(request, disposables);
         return new GeneratedCompositeDisposable(disposables);
     }
@@ -29,9 +29,9 @@ public partial class PlaceOrderCommandRequestLogEnricher
         var disposables = new global::System.Collections.Generic.List<global::System.IDisposable>(3);
         if (response is global::Functorium.Applications.Usecases.FinResponse<global::TestNamespace.PlaceOrderCommand.Response>.Succ { Value: var r })
         {
-            disposables.Add(global::Serilog.Context.LogContext.PushProperty("ctx.place_order_command.response.order_id", r.OrderId));
-            disposables.Add(global::Serilog.Context.LogContext.PushProperty("ctx.place_order_command.response.line_count", r.LineCount));
-            disposables.Add(global::Serilog.Context.LogContext.PushProperty("ctx.place_order_command.response.total_amount", r.TotalAmount));
+            disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty("ctx.place_order_command.response.order_id", r.OrderId));
+            disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty("ctx.place_order_command.response.line_count", r.LineCount));
+            disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty("ctx.place_order_command.response.total_amount", r.TotalAmount));
         }
         OnEnrichResponseLog(request, response, disposables);
         return disposables.Count > 0 ? new GeneratedCompositeDisposable(disposables) : null;
@@ -51,7 +51,7 @@ public partial class PlaceOrderCommandRequestLogEnricher
         string fieldName,
         object? value)
     {
-        disposables.Add(global::Serilog.Context.LogContext.PushProperty(
+        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty(
             "ctx.place_order_command.request." + fieldName, value));
     }
 
@@ -60,7 +60,7 @@ public partial class PlaceOrderCommandRequestLogEnricher
         string fieldName,
         object? value)
     {
-        disposables.Add(global::Serilog.Context.LogContext.PushProperty(
+        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty(
             "ctx.place_order_command.response." + fieldName, value));
     }
 
@@ -69,7 +69,7 @@ public partial class PlaceOrderCommandRequestLogEnricher
         string fieldName,
         object? value)
     {
-        disposables.Add(global::Serilog.Context.LogContext.PushProperty(
+        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty(
             "ctx." + fieldName, value));
     }
 

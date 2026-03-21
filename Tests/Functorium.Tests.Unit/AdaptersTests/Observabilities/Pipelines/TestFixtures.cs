@@ -1,6 +1,6 @@
 using FluentValidation;
 using Functorium.Abstractions.Errors;
-using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Applications.Observabilities;
 using Functorium.Applications.Usecases;
 using LanguageExt.Common;
 using Mediator;

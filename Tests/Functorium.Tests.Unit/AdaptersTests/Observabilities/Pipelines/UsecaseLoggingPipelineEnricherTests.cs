@@ -1,4 +1,5 @@
 using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Applications.Observabilities;
 
 using Mediator;
 

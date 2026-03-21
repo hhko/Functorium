@@ -1,11 +1,11 @@
 using Functorium.Applications.Usecases;
 
-namespace Functorium.Adapters.Observabilities.Pipelines;
+namespace Functorium.Applications.Observabilities;
 
 /// <summary>
 /// Usecase 로그에 비즈니스 컨텍스트 필드를 추가하는 Enricher 인터페이스.
 /// 내장 UsecaseLoggingPipeline이 Request/Response 로그 출력 시
-/// Serilog LogContext에 커스텀 속성을 자동으로 Push합니다.
+/// LogContext에 커스텀 속성을 자동으로 Push합니다.
 /// </summary>
 /// <typeparam name="TRequest">대상 Request 타입</typeparam>
 /// <typeparam name="TResponse">대상 Response 타입 (IFinResponse 구현)</typeparam>

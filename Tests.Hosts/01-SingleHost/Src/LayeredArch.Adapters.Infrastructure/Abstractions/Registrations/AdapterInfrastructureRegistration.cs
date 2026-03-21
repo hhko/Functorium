@@ -1,8 +1,12 @@
 using Functorium.Adapters.Abstractions.Registrations;
 using Functorium.Adapters.Observabilities.Events;
-using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Applications.Observabilities;
 using Functorium.Applications.Usecases;
+using LayeredArch.Application.Usecases.Customers.Events;
 using LayeredArch.Application.Usecases.Orders.Commands;
+using LayeredArch.Application.Usecases.Orders.Events;
+using LayeredArch.Domain.AggregateRoots.Customers;
+using LayeredArch.Domain.AggregateRoots.Orders;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,6 +53,14 @@ public static class AdapterInfrastructureRegistration
         services.AddScoped<
             IUsecaseLogEnricher<CreateOrderCommand.Request, FinResponse<CreateOrderCommand.Response>>,
             CreateOrderCommandRequestLogEnricher>();
+
+        // Domain Event Log Enrichers
+        services.AddScoped<
+            IDomainEventLogEnricher<Order.CreatedEvent>,
+            OrderCreatedEventLogEnricher>();
+        services.AddScoped<
+            IDomainEventLogEnricher<Customer.CreatedEvent>,
+            CustomerCreatedEventLogEnricher>();
 
         return services;
     }

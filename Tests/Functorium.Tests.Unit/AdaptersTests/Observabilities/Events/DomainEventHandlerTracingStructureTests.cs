@@ -60,6 +60,11 @@ public sealed class DomainEventHandlerTracingStructureTests : IDisposable
     private readonly IOptions<OpenTelemetryOptions> _openTelemetryOptions;
     private Activity? _capturedActivity;
 
+    private sealed class NullServiceProvider : IServiceProvider
+    {
+        public object? GetService(Type serviceType) => null;
+    }
+
     public DomainEventHandlerTracingStructureTests()
     {
         _activitySource = new ActivitySource("Test.DomainEventHandlerTracing");
@@ -95,7 +100,7 @@ public sealed class DomainEventHandlerTracingStructureTests : IDisposable
         using var context = new LogTestContext();
         using var loggerFactory = new TestLoggerFactory(context);
         var sut = new ObservableDomainEventNotificationPublisher(
-            _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions);
+            _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions, new NullServiceProvider());
 
         var domainEvent = new TestDomainEvent("Test");
         var handler = new TestTracingDomainEventHandler();
@@ -127,7 +132,7 @@ public sealed class DomainEventHandlerTracingStructureTests : IDisposable
         using var context = new LogTestContext();
         using var loggerFactory = new TestLoggerFactory(context);
         var sut = new ObservableDomainEventNotificationPublisher(
-            _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions);
+            _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions, new NullServiceProvider());
 
         var domainEvent = new TestDomainEvent("Test");
         var handler = new TestTracingDomainEventHandler();
@@ -154,7 +159,7 @@ public sealed class DomainEventHandlerTracingStructureTests : IDisposable
         using var context = new LogTestContext();
         using var loggerFactory = new TestLoggerFactory(context);
         var sut = new ObservableDomainEventNotificationPublisher(
-            _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions);
+            _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions, new NullServiceProvider());
 
         var domainEvent = new TestDomainEvent("Test");
         var handler = new TestTracingDomainEventHandler
@@ -194,7 +199,7 @@ public sealed class DomainEventHandlerTracingStructureTests : IDisposable
         using var context = new LogTestContext();
         using var loggerFactory = new TestLoggerFactory(context);
         var sut = new ObservableDomainEventNotificationPublisher(
-            _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions);
+            _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions, new NullServiceProvider());
 
         var domainEvent = new TestDomainEvent("Test");
         var handler = new TestTracingDomainEventHandler();
@@ -220,7 +225,7 @@ public sealed class DomainEventHandlerTracingStructureTests : IDisposable
         using var context = new LogTestContext();
         using var loggerFactory = new TestLoggerFactory(context);
         var sut = new ObservableDomainEventNotificationPublisher(
-            _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions);
+            _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions, new NullServiceProvider());
 
         var domainEvent = new TestDomainEvent("Test");
         var handler = new TestTracingDomainEventHandler
@@ -260,7 +265,7 @@ public sealed class DomainEventHandlerTracingStructureTests : IDisposable
         using var context = new LogTestContext();
         using var loggerFactory = new TestLoggerFactory(context);
         var sut = new ObservableDomainEventNotificationPublisher(
-            _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions);
+            _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions, new NullServiceProvider());
 
         var domainEvent = new TestDomainEvent("Test");
         var handler = new TestTracingDomainEventHandler();
@@ -288,7 +293,7 @@ public sealed class DomainEventHandlerTracingStructureTests : IDisposable
         using var context = new LogTestContext();
         using var loggerFactory = new TestLoggerFactory(context);
         var sut = new ObservableDomainEventNotificationPublisher(
-            _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions);
+            _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions, new NullServiceProvider());
 
         var domainEvent = new TestDomainEvent("Test");
         var handler = new TestTracingDomainEventHandler
@@ -326,7 +331,7 @@ public sealed class DomainEventHandlerTracingStructureTests : IDisposable
         using var context = new LogTestContext();
         using var loggerFactory = new TestLoggerFactory(context);
         var sut = new ObservableDomainEventNotificationPublisher(
-            _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions);
+            _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions, new NullServiceProvider());
 
         var domainEvent = new TestDomainEvent("Test");
         var handler = new TestTracingDomainEventHandler

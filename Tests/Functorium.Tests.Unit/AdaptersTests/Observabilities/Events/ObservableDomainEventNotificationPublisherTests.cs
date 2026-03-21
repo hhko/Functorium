@@ -22,7 +22,12 @@ public class ObservableDomainEventNotificationPublisherTests
     {
         var meterFactory = new TestMeterFactory();
         var openTelemetryOptions = MsOptions.Create(new OpenTelemetryOptions { ServiceNamespace = "TestHandler" });
-        _sut = new ObservableDomainEventNotificationPublisher(TestActivitySource, NullLoggerFactory.Instance, meterFactory, openTelemetryOptions);
+        _sut = new ObservableDomainEventNotificationPublisher(TestActivitySource, NullLoggerFactory.Instance, meterFactory, openTelemetryOptions, new NullServiceProvider());
+    }
+
+    private sealed class NullServiceProvider : IServiceProvider
+    {
+        public object? GetService(Type serviceType) => null;
     }
 
     private sealed class TestMeterFactory : IMeterFactory

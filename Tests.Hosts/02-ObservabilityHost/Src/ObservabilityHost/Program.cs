@@ -1,5 +1,6 @@
 using Functorium.Adapters.Abstractions.Registrations;
-using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Adapters.Observabilities.Events;
+using Functorium.Applications.Observabilities;
 using Functorium.Applications.Usecases;
 
 using Mediator;
@@ -7,6 +8,7 @@ using Mediator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using ObservabilityHost.DomainEvents;
 using ObservabilityHost.Usecases;
 
 using OpenTelemetry.Metrics;
@@ -21,7 +23,11 @@ var configuration = new ConfigurationBuilder()
 services.AddSingleton<IConfiguration>(configuration);
 
 // Mediator
-services.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);
+services.AddMediator(options =>
+{
+    options.ServiceLifetime = ServiceLifetime.Scoped;
+    options.NotificationPublisherType = typeof(ObservableDomainEventNotificationPublisher);
+});
 
 // OpenTelemetry + Pipelines
 services
@@ -41,6 +47,11 @@ services.AddScoped<
     IUsecaseLogEnricher<PlaceOrderCommand.Request, FinResponse<PlaceOrderCommand.Response>>,
     PlaceOrderCommandRequestLogEnricher>();
 
+// Domain Event Log Enricher
+services.AddScoped<
+    IDomainEventLogEnricher<OrderPlacedEvent>,
+    OrderPlacedEventLogEnricher>();
+
 await using var sp = services.BuildServiceProvider();
 using var scope = sp.CreateScope();
 var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
@@ -53,6 +64,20 @@ var placeOrderResponse = await mediator.Send(new PlaceOrderCommand.Request("CUST
     new PlaceOrderCommand.OrderLine("PROD-B", 1, 250.00m)
 ]));
 Console.WriteLine($"PlaceOrder Result: {placeOrderResponse}");
+Console.WriteLine();
+
+// Scenario 5: DomainEvent Enricher (PlaceOrderCommand 성공 후 도메인 이벤트 발행)
+Console.WriteLine("=== OrderPlacedEvent (DomainEvent Enricher) ===");
+if (placeOrderResponse.IsSucc)
+{
+    var response = placeOrderResponse.ThrowIfFail();
+    var orderPlacedEvent = new OrderPlacedEvent(
+        CustomerId: "CUST-001",
+        OrderId: response.OrderId,
+        LineCount: response.LineCount,
+        TotalAmount: response.TotalAmount);
+    await mediator.Publish(orderPlacedEvent);
+}
 Console.WriteLine();
 
 // Scenario 2: GetOrderSummaryQuery (기준선 — 커스텀 관찰 가능성 없음)

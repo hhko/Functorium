@@ -4,6 +4,7 @@ using System.Reflection;
 using Functorium.Adapters.Abstractions.Errors.DestructuringPolicies;
 using Functorium.Adapters.Observabilities.Builders.Configurators;
 using Functorium.Adapters.Observabilities.Loggers;
+using Functorium.Applications.Observabilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -242,6 +243,10 @@ public partial class OpenTelemetryBuilder
 
         // Serilog 설정 적용
         ConfigureSerilogInternal(resourceAttributes, options);
+
+        // LogEnricher Source Generator 생성 코드의 PushProperty 팩토리 설정
+        LogEnricherContext.SetPushPropertyFactory(
+            (name, value) => Serilog.Context.LogContext.PushProperty(name, value));
 
         // OpenTelemetry 설정 적용
         ConfigureOpenTelemetryInternal(resourceAttributes, options);

@@ -61,6 +61,11 @@ public sealed class DomainEventHandlerLoggingStructureTests : IDisposable
         _openTelemetryOptions = MsOptions.Create(new OpenTelemetryOptions { ServiceNamespace = "TestHandlerLogging" });
     }
 
+    private sealed class NullServiceProvider : IServiceProvider
+    {
+        public object? GetService(Type serviceType) => null;
+    }
+
     public void Dispose()
     {
         _activitySource.Dispose();
@@ -81,7 +86,7 @@ public sealed class DomainEventHandlerLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         using var loggerFactory = new TestLoggerFactory(context);
-        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory, _meterFactory, _openTelemetryOptions);
+        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory, _meterFactory, _openTelemetryOptions, new NullServiceProvider());
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
@@ -109,7 +114,7 @@ public sealed class DomainEventHandlerLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         using var loggerFactory = new TestLoggerFactory(context);
-        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory, _meterFactory, _openTelemetryOptions);
+        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory, _meterFactory, _openTelemetryOptions, new NullServiceProvider());
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
@@ -142,7 +147,7 @@ public sealed class DomainEventHandlerLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         using var loggerFactory = new TestLoggerFactory(context);
-        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory, _meterFactory, _openTelemetryOptions);
+        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory, _meterFactory, _openTelemetryOptions, new NullServiceProvider());
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
@@ -183,7 +188,7 @@ public sealed class DomainEventHandlerLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         using var loggerFactory = new TestLoggerFactory(context);
-        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory, _meterFactory, _openTelemetryOptions);
+        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory, _meterFactory, _openTelemetryOptions, new NullServiceProvider());
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
@@ -223,7 +228,7 @@ public sealed class DomainEventHandlerLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         using var loggerFactory = new TestLoggerFactory(context);
-        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory, _meterFactory, _openTelemetryOptions);
+        var sut = new ObservableDomainEventNotificationPublisher(_activitySource, loggerFactory, _meterFactory, _openTelemetryOptions, new NullServiceProvider());
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
