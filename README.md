@@ -26,7 +26,7 @@
 
 이는 단순히 프로세스의 문제가 아니라, **설계 철학과 구조의 문제**입니다.
 
-MediatR, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다. 하지만 이들을 일관된 DDD 아키텍처로 통합하려면 에러 전파, 파이프라인 순서, 관측성 경계, 타입 제약에 대한 수백 가지 결정이 필요합니다. Functorium은 이 결정을 한 번, 일관되게 내립니다.
+Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다. 하지만 이들을 일관된 DDD 아키텍처로 통합하려면 에러 전파, 파이프라인 순서, 관측성 경계, 타입 제약에 대한 수백 가지 결정이 필요합니다. Functorium은 이 결정을 한 번, 일관되게 내립니다.
 
 ### 문제 해결 방향
 
@@ -184,10 +184,10 @@ public sealed partial class Email : SimpleValueObject<string>
         CreateFromValidation(Validate(value), v => new Email(v));
 
     // 각 검증 조건이 실패하면 조건에 대응하는 에러 코드가 자동 생성됩니다.
-    //   NotNull  → "DomainErrors.Email.Null"
-    //   NotEmpty → "DomainErrors.Email.Empty"
-    //   MaxLength→ "DomainErrors.Email.TooLong"
-    //   Matches  → "DomainErrors.Email.InvalidFormat"
+    //   NotNull    → "DomainErrors.Email.Null"
+    //   NotEmpty   → "DomainErrors.Email.Empty"
+    //   MaxLength  → "DomainErrors.Email.TooLong"
+    //   Matches    → "DomainErrors.Email.InvalidFormat"
     // 복합 Value Object는 Apply 패턴으로 복수 필드를 병렬 검증하여
     // 실패한 모든 에러를 한꺼번에 수집합니다.
     public static Validation<Error, string> Validate(string? value) =>
