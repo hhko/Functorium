@@ -152,8 +152,8 @@ public class TestAdapterObservable : TestAdapter
             TagList tags = new()
             {
                 { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-                { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
-                { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },
+                { ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase },
+                { ObservabilityNaming.CustomAttributes.RequestHandlerName, requestHandler },
                 { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod }
             };
 
@@ -169,8 +169,8 @@ public class TestAdapterObservable : TestAdapter
             TagList metricTags = new()
             {
                 { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-                { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
-                { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },
+                { ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase },
+                { ObservabilityNaming.CustomAttributes.RequestHandlerName, requestHandler },
                 { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod }
             };
             _requestCounter.Add(1, metricTags);
@@ -183,8 +183,8 @@ public class TestAdapterObservable : TestAdapter
         TagList metricTags = new()
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-            { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
-            { ObservabilityNaming.CustomAttributes.RequestHandler, RequestHandler },
+            { ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerName, RequestHandler },
             { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod },
             { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success }
         };
@@ -203,8 +203,8 @@ public class TestAdapterObservable : TestAdapter
         TagList metricTags = new()
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-            { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
-            { ObservabilityNaming.CustomAttributes.RequestHandler, RequestHandler },
+            { ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerName, RequestHandler },
             { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod },
             { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure },
             { ObservabilityNaming.OTelAttributes.ErrorType, errorType },
@@ -300,19 +300,25 @@ public class TestAdapterObservable : TestAdapter
         {
             if (_isDebugEnabled)
             {
+                var requestParams = new {  };
+                var requestMessage = new {  };
                 _logger.LogAdapterRequestDebug_TestAdapter_GetValue(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod);
+                    requestHandlerMethod,
+                    requestParams,
+                    requestMessage);
             }
             else if (_isInformationEnabled)
             {
+                var requestParams = new {  };
                 _logger.LogAdapterRequest_TestAdapter_GetValue(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod);
+                    requestHandlerMethod,
+                    requestParams);
             }
             return global::LanguageExt.Unit.Default;
         });
@@ -387,23 +393,23 @@ internal static class TestAdapterObservableLoggers
 {
 
     // ===== LoggerMessage.Define delegates for GetValue =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_TestAdapter_GetValue =
-        LoggerMessage.Define<string, string, string, string>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, object, global::System.Exception?> _logAdapterRequest_TestAdapter_GetValue =
+        LoggerMessage.Define<string, string, string, string, object>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} requesting");
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} requesting with {@request.params}");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_TestAdapter_GetValue =
-        LoggerMessage.Define<string, string, string, string>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, object, object, global::System.Exception?> _logAdapterRequestDebug_TestAdapter_GetValue =
+        LoggerMessage.Define<string, string, string, string, object, object>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} requesting with");
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} requesting with {@request.params} {@request.message}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_TestAdapter_GetValue =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s");
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
     public static void LogAdapterRequestDebug_TestAdapter_GetValue(
@@ -411,12 +417,14 @@ internal static class TestAdapterObservableLoggers
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod)
+        string requestHandlerMethod,
+        object requestParams,
+        object requestMessage)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logAdapterRequestDebug_TestAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequestDebug_TestAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, requestParams, requestMessage, null);
     }
 
     public static void LogAdapterRequest_TestAdapter_GetValue(
@@ -424,12 +432,13 @@ internal static class TestAdapterObservableLoggers
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod)
+        string requestHandlerMethod,
+        object requestParams)
     {
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logAdapterRequest_TestAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_TestAdapter_GetValue(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, requestParams, null);
     }
 
     public static void LogAdapterResponseSuccessDebug_TestAdapter_GetValue(
@@ -439,7 +448,7 @@ internal static class TestAdapterObservableLoggers
         string requestHandler,
         string requestHandlerMethod,
         string status,
-        int result,
+        int responseMessage,
         double elapsed)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -447,9 +456,14 @@ internal static class TestAdapterObservableLoggers
 
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            message: "{request.layer} {request.category} {request.handler}.{request.handler_method} " +
-                     "responded {response.status} in {response.elapsed:0.0000} s with {response.result}",
-            requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, result);
+            message: "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            status,
+            elapsed,
+            responseMessage);
     }
 
     public static void LogAdapterResponseSuccess_TestAdapter_GetValue(
@@ -484,7 +498,7 @@ internal static class TestAdapterObservableLoggers
 
         logger.LogWarning(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
@@ -513,7 +527,7 @@ internal static class TestAdapterObservableLoggers
 
         logger.LogError(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,

@@ -68,18 +68,30 @@
               "type": "keyword"
             },
             "category": {
-              "type": "keyword"
-            },
-            "category_type": {
-              "type": "keyword"
+              "properties": {
+                "name": {
+                  "type": "keyword"
+                },
+                "type": {
+                  "type": "keyword"
+                }
+              }
             },
             "handler": {
-              "type": "keyword"
-            },
-            "handler_method": {
-              "type": "keyword"
+              "properties": {
+                "name": {
+                  "type": "keyword"
+                },
+                "method": {
+                  "type": "keyword"
+                }
+              }
             },
             "message": {
+              "type": "text",
+              "index": false
+            },
+            "params": {
               "type": "text",
               "index": false
             },

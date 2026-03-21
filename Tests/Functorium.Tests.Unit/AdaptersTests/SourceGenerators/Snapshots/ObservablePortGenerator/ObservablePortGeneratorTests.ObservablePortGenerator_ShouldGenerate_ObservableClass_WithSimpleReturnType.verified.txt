@@ -152,8 +152,8 @@ public class SimpleReturnAdapterObservable : SimpleReturnAdapter
             TagList tags = new()
             {
                 { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-                { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
-                { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },
+                { ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase },
+                { ObservabilityNaming.CustomAttributes.RequestHandlerName, requestHandler },
                 { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod }
             };
 
@@ -169,8 +169,8 @@ public class SimpleReturnAdapterObservable : SimpleReturnAdapter
             TagList metricTags = new()
             {
                 { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-                { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
-                { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },
+                { ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase },
+                { ObservabilityNaming.CustomAttributes.RequestHandlerName, requestHandler },
                 { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod }
             };
             _requestCounter.Add(1, metricTags);
@@ -183,8 +183,8 @@ public class SimpleReturnAdapterObservable : SimpleReturnAdapter
         TagList metricTags = new()
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-            { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
-            { ObservabilityNaming.CustomAttributes.RequestHandler, RequestHandler },
+            { ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerName, RequestHandler },
             { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod },
             { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success }
         };
@@ -203,8 +203,8 @@ public class SimpleReturnAdapterObservable : SimpleReturnAdapter
         TagList metricTags = new()
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-            { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
-            { ObservabilityNaming.CustomAttributes.RequestHandler, RequestHandler },
+            { ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerName, RequestHandler },
             { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod },
             { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure },
             { ObservabilityNaming.OTelAttributes.ErrorType, errorType },
@@ -300,19 +300,25 @@ public class SimpleReturnAdapterObservable : SimpleReturnAdapter
         {
             if (_isDebugEnabled)
             {
+                var requestParams = new {  };
+                var requestMessage = new {  };
                 _logger.LogAdapterRequestDebug_SimpleReturnAdapter_GetNumber(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod);
+                    requestHandlerMethod,
+                    requestParams,
+                    requestMessage);
             }
             else if (_isInformationEnabled)
             {
+                var requestParams = new {  };
                 _logger.LogAdapterRequest_SimpleReturnAdapter_GetNumber(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod);
+                    requestHandlerMethod,
+                    requestParams);
             }
             return global::LanguageExt.Unit.Default;
         });
@@ -401,19 +407,25 @@ public class SimpleReturnAdapterObservable : SimpleReturnAdapter
         {
             if (_isDebugEnabled)
             {
+                var requestParams = new {  };
+                var requestMessage = new {  };
                 _logger.LogAdapterRequestDebug_SimpleReturnAdapter_GetText(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod);
+                    requestHandlerMethod,
+                    requestParams,
+                    requestMessage);
             }
             else if (_isInformationEnabled)
             {
+                var requestParams = new {  };
                 _logger.LogAdapterRequest_SimpleReturnAdapter_GetText(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod);
+                    requestHandlerMethod,
+                    requestParams);
             }
             return global::LanguageExt.Unit.Default;
         });
@@ -502,19 +514,25 @@ public class SimpleReturnAdapterObservable : SimpleReturnAdapter
         {
             if (_isDebugEnabled)
             {
+                var requestParams = new {  };
+                var requestMessage = new {  };
                 _logger.LogAdapterRequestDebug_SimpleReturnAdapter_GetFlag(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod);
+                    requestHandlerMethod,
+                    requestParams,
+                    requestMessage);
             }
             else if (_isInformationEnabled)
             {
+                var requestParams = new {  };
                 _logger.LogAdapterRequest_SimpleReturnAdapter_GetFlag(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod);
+                    requestHandlerMethod,
+                    requestParams);
             }
             return global::LanguageExt.Unit.Default;
         });
@@ -589,23 +607,23 @@ internal static class SimpleReturnAdapterObservableLoggers
 {
 
     // ===== LoggerMessage.Define delegates for GetNumber =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_SimpleReturnAdapter_GetNumber =
-        LoggerMessage.Define<string, string, string, string>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, object, global::System.Exception?> _logAdapterRequest_SimpleReturnAdapter_GetNumber =
+        LoggerMessage.Define<string, string, string, string, object>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} requesting");
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} requesting with {@request.params}");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_SimpleReturnAdapter_GetNumber =
-        LoggerMessage.Define<string, string, string, string>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, object, object, global::System.Exception?> _logAdapterRequestDebug_SimpleReturnAdapter_GetNumber =
+        LoggerMessage.Define<string, string, string, string, object, object>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} requesting with");
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} requesting with {@request.params} {@request.message}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_SimpleReturnAdapter_GetNumber =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s");
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
     public static void LogAdapterRequestDebug_SimpleReturnAdapter_GetNumber(
@@ -613,12 +631,14 @@ internal static class SimpleReturnAdapterObservableLoggers
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod)
+        string requestHandlerMethod,
+        object requestParams,
+        object requestMessage)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logAdapterRequestDebug_SimpleReturnAdapter_GetNumber(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequestDebug_SimpleReturnAdapter_GetNumber(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, requestParams, requestMessage, null);
     }
 
     public static void LogAdapterRequest_SimpleReturnAdapter_GetNumber(
@@ -626,12 +646,13 @@ internal static class SimpleReturnAdapterObservableLoggers
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod)
+        string requestHandlerMethod,
+        object requestParams)
     {
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logAdapterRequest_SimpleReturnAdapter_GetNumber(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_SimpleReturnAdapter_GetNumber(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, requestParams, null);
     }
 
     public static void LogAdapterResponseSuccessDebug_SimpleReturnAdapter_GetNumber(
@@ -641,7 +662,7 @@ internal static class SimpleReturnAdapterObservableLoggers
         string requestHandler,
         string requestHandlerMethod,
         string status,
-        int result,
+        int responseMessage,
         double elapsed)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -649,9 +670,14 @@ internal static class SimpleReturnAdapterObservableLoggers
 
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            message: "{request.layer} {request.category} {request.handler}.{request.handler_method} " +
-                     "responded {response.status} in {response.elapsed:0.0000} s with {response.result}",
-            requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, result);
+            message: "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            status,
+            elapsed,
+            responseMessage);
     }
 
     public static void LogAdapterResponseSuccess_SimpleReturnAdapter_GetNumber(
@@ -686,7 +712,7 @@ internal static class SimpleReturnAdapterObservableLoggers
 
         logger.LogWarning(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
@@ -715,7 +741,7 @@ internal static class SimpleReturnAdapterObservableLoggers
 
         logger.LogError(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
@@ -728,23 +754,23 @@ internal static class SimpleReturnAdapterObservableLoggers
     }
 
     // ===== LoggerMessage.Define delegates for GetText =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_SimpleReturnAdapter_GetText =
-        LoggerMessage.Define<string, string, string, string>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, object, global::System.Exception?> _logAdapterRequest_SimpleReturnAdapter_GetText =
+        LoggerMessage.Define<string, string, string, string, object>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} requesting");
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} requesting with {@request.params}");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_SimpleReturnAdapter_GetText =
-        LoggerMessage.Define<string, string, string, string>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, object, object, global::System.Exception?> _logAdapterRequestDebug_SimpleReturnAdapter_GetText =
+        LoggerMessage.Define<string, string, string, string, object, object>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} requesting with");
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} requesting with {@request.params} {@request.message}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_SimpleReturnAdapter_GetText =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s");
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
     public static void LogAdapterRequestDebug_SimpleReturnAdapter_GetText(
@@ -752,12 +778,14 @@ internal static class SimpleReturnAdapterObservableLoggers
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod)
+        string requestHandlerMethod,
+        object requestParams,
+        object requestMessage)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logAdapterRequestDebug_SimpleReturnAdapter_GetText(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequestDebug_SimpleReturnAdapter_GetText(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, requestParams, requestMessage, null);
     }
 
     public static void LogAdapterRequest_SimpleReturnAdapter_GetText(
@@ -765,12 +793,13 @@ internal static class SimpleReturnAdapterObservableLoggers
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod)
+        string requestHandlerMethod,
+        object requestParams)
     {
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logAdapterRequest_SimpleReturnAdapter_GetText(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_SimpleReturnAdapter_GetText(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, requestParams, null);
     }
 
     public static void LogAdapterResponseSuccessDebug_SimpleReturnAdapter_GetText(
@@ -780,7 +809,7 @@ internal static class SimpleReturnAdapterObservableLoggers
         string requestHandler,
         string requestHandlerMethod,
         string status,
-        string result,
+        string responseMessage,
         double elapsed)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -788,9 +817,14 @@ internal static class SimpleReturnAdapterObservableLoggers
 
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            message: "{request.layer} {request.category} {request.handler}.{request.handler_method} " +
-                     "responded {response.status} in {response.elapsed:0.0000} s with {response.result}",
-            requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, result);
+            message: "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            status,
+            elapsed,
+            responseMessage);
     }
 
     public static void LogAdapterResponseSuccess_SimpleReturnAdapter_GetText(
@@ -825,7 +859,7 @@ internal static class SimpleReturnAdapterObservableLoggers
 
         logger.LogWarning(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
@@ -854,7 +888,7 @@ internal static class SimpleReturnAdapterObservableLoggers
 
         logger.LogError(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
@@ -867,23 +901,23 @@ internal static class SimpleReturnAdapterObservableLoggers
     }
 
     // ===== LoggerMessage.Define delegates for GetFlag =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_SimpleReturnAdapter_GetFlag =
-        LoggerMessage.Define<string, string, string, string>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, object, global::System.Exception?> _logAdapterRequest_SimpleReturnAdapter_GetFlag =
+        LoggerMessage.Define<string, string, string, string, object>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} requesting");
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} requesting with {@request.params}");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_SimpleReturnAdapter_GetFlag =
-        LoggerMessage.Define<string, string, string, string>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, object, object, global::System.Exception?> _logAdapterRequestDebug_SimpleReturnAdapter_GetFlag =
+        LoggerMessage.Define<string, string, string, string, object, object>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} requesting with");
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} requesting with {@request.params} {@request.message}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_SimpleReturnAdapter_GetFlag =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s");
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
     public static void LogAdapterRequestDebug_SimpleReturnAdapter_GetFlag(
@@ -891,12 +925,14 @@ internal static class SimpleReturnAdapterObservableLoggers
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod)
+        string requestHandlerMethod,
+        object requestParams,
+        object requestMessage)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logAdapterRequestDebug_SimpleReturnAdapter_GetFlag(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequestDebug_SimpleReturnAdapter_GetFlag(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, requestParams, requestMessage, null);
     }
 
     public static void LogAdapterRequest_SimpleReturnAdapter_GetFlag(
@@ -904,12 +940,13 @@ internal static class SimpleReturnAdapterObservableLoggers
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod)
+        string requestHandlerMethod,
+        object requestParams)
     {
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logAdapterRequest_SimpleReturnAdapter_GetFlag(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_SimpleReturnAdapter_GetFlag(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, requestParams, null);
     }
 
     public static void LogAdapterResponseSuccessDebug_SimpleReturnAdapter_GetFlag(
@@ -919,7 +956,7 @@ internal static class SimpleReturnAdapterObservableLoggers
         string requestHandler,
         string requestHandlerMethod,
         string status,
-        bool result,
+        bool responseMessage,
         double elapsed)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -927,9 +964,14 @@ internal static class SimpleReturnAdapterObservableLoggers
 
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            message: "{request.layer} {request.category} {request.handler}.{request.handler_method} " +
-                     "responded {response.status} in {response.elapsed:0.0000} s with {response.result}",
-            requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, result);
+            message: "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            status,
+            elapsed,
+            responseMessage);
     }
 
     public static void LogAdapterResponseSuccess_SimpleReturnAdapter_GetFlag(
@@ -964,7 +1006,7 @@ internal static class SimpleReturnAdapterObservableLoggers
 
         logger.LogWarning(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
@@ -993,7 +1035,7 @@ internal static class SimpleReturnAdapterObservableLoggers
 
         logger.LogError(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,

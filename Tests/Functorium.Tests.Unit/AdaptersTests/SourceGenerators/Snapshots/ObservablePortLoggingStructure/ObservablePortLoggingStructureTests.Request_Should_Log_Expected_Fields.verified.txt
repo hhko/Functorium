@@ -1,11 +1,16 @@
 ﻿{
   Information: ,
   Properties: {
-    OriginalFormat: {request.layer} {request.category} {request.handler}.{request.handler_method} requesting with {request.params.id},
-    request.category: repository,
-    request.handler: TestObservabilityAdapter,
-    request.handler_method: GetById,
-    request.layer: adapter,
-    request.params.id: Guid_1
+    @request.message: {
+      id: Guid_1
+    },
+    @request.params: {
+      id: Guid_1
+    },
+    OriginalFormat: {request.layer} {request.category.name} {request.handler.name}.{request.handler.method} requesting with {@request.params} {@request.message},
+    request.category.name: repository,
+    request.handler.method: GetById,
+    request.handler.name: TestObservabilityAdapter,
+    request.layer: adapter
   }
 }

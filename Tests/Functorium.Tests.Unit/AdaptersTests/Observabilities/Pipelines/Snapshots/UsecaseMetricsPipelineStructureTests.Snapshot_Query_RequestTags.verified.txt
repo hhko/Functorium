@@ -1,7 +1,7 @@
 ﻿{
-  request.category: usecase,
-  request.category_type: query,
-  request.handler: UsecaseMetricsPipelineStructureTests,
-  request.handler_method: Handle,
+  request.category.name: usecase,
+  request.category.type: query,
+  request.handler.method: Handle,
+  request.handler.name: UsecaseMetricsPipelineStructureTests,
   request.layer: application
 }

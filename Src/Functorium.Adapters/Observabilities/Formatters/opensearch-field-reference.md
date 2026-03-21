@@ -30,11 +30,12 @@
 | 필드 | 타입 | 인덱스 | 출처 | 설명 | 예시 |
 |------|------|--------|------|------|------|
 | `request.layer` | `keyword` | O | Custom | 레이어 | `application`, `adapter` |
-| `request.category` | `keyword` | O | Custom | 카테고리 | `usecase`, `event`, `repository` |
-| `request.category_type` | `keyword` | O | Custom | 카테고리 세부 타입 | `command`, `query` |
-| `request.handler` | `keyword` | O | Custom | 핸들러 이름 | `PlaceOrderCommand`, `OrderRepository` |
-| `request.handler_method` | `keyword` | O | Custom | 핸들러 메서드 | `Handle`, `GetById` |
+| `request.category.name` | `keyword` | O | Custom | 카테고리 | `usecase`, `event`, `repository` |
+| `request.category.type` | `keyword` | O | Custom | 카테고리 세부 타입 | `command`, `query` |
+| `request.handler.name` | `keyword` | O | Custom | 핸들러 이름 | `PlaceOrderCommand`, `OrderRepository` |
+| `request.handler.method` | `keyword` | O | Custom | 핸들러 메서드 | `Handle`, `GetById` |
 | `request.message` | `text` | X | Custom | 요청 객체 (JSON 문자열, 저장 전용) | `{"Name":"TestName","Quantity":5}` |
+| `request.params` | `text` | X | Custom | 타입 필터링된 파라미터 (JSON 문자열, 저장 전용) | `{"customer_id":"01KM834T..."}` |
 
 ## Response 필드
 

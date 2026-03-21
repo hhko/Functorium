@@ -65,11 +65,12 @@ public sealed class OpenSearchJsonFormatter : ITextFormatter
     [
         // Request
         Attrs.RequestLayer,
-        Attrs.RequestCategory,
+        Attrs.RequestCategoryName,
         Attrs.RequestCategoryType,
-        Attrs.RequestHandler,
+        Attrs.RequestHandlerName,
         Attrs.RequestHandlerMethod,
         Attrs.RequestMessage,
+        Attrs.RequestParams,
 
         // Response
         Attrs.ResponseStatus,
@@ -109,6 +110,7 @@ public sealed class OpenSearchJsonFormatter : ITextFormatter
     private static readonly System.Collections.Generic.HashSet<string> JsonStringifyFields =
     [
         Attrs.RequestMessage,
+        Attrs.RequestParams,
         Attrs.ResponseMessage
     ];
 

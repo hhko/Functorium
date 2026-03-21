@@ -152,8 +152,8 @@ public class ThreeParamAdapterObservable : ThreeParamAdapter
             TagList tags = new()
             {
                 { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-                { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
-                { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },
+                { ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase },
+                { ObservabilityNaming.CustomAttributes.RequestHandlerName, requestHandler },
                 { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod }
             };
 
@@ -169,8 +169,8 @@ public class ThreeParamAdapterObservable : ThreeParamAdapter
             TagList metricTags = new()
             {
                 { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-                { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
-                { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },
+                { ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase },
+                { ObservabilityNaming.CustomAttributes.RequestHandlerName, requestHandler },
                 { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod }
             };
             _requestCounter.Add(1, metricTags);
@@ -183,8 +183,8 @@ public class ThreeParamAdapterObservable : ThreeParamAdapter
         TagList metricTags = new()
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-            { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
-            { ObservabilityNaming.CustomAttributes.RequestHandler, RequestHandler },
+            { ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerName, RequestHandler },
             { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod },
             { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success }
         };
@@ -203,8 +203,8 @@ public class ThreeParamAdapterObservable : ThreeParamAdapter
         TagList metricTags = new()
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-            { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
-            { ObservabilityNaming.CustomAttributes.RequestHandler, RequestHandler },
+            { ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerName, RequestHandler },
             { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod },
             { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure },
             { ObservabilityNaming.OTelAttributes.ErrorType, errorType },
@@ -306,20 +306,25 @@ public class ThreeParamAdapterObservable : ThreeParamAdapter
         {
             if (_isDebugEnabled)
             {
+                var requestParams = new { id = id, name = name, is_active = isActive };
+                var requestMessage = new { id, name, isActive };
                 _logger.LogAdapterRequestDebug_ThreeParamAdapter_GetData(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
                     requestHandlerMethod,
-                    id, name, isActive);
+                    requestParams,
+                    requestMessage);
             }
             else if (_isInformationEnabled)
             {
+                var requestParams = new { id = id, name = name, is_active = isActive };
                 _logger.LogAdapterRequest_ThreeParamAdapter_GetData(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod);
+                    requestHandlerMethod,
+                    requestParams);
             }
             return global::LanguageExt.Unit.Default;
         });
@@ -394,17 +399,23 @@ internal static class ThreeParamAdapterObservableLoggers
 {
 
     // ===== LoggerMessage.Define delegates for GetData =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_ThreeParamAdapter_GetData =
-        LoggerMessage.Define<string, string, string, string>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, object, global::System.Exception?> _logAdapterRequest_ThreeParamAdapter_GetData =
+        LoggerMessage.Define<string, string, string, string, object>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} requesting");
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} requesting with {@request.params}");
+
+    private static readonly global::System.Action<ILogger, string, string, string, string, object, object, global::System.Exception?> _logAdapterRequestDebug_ThreeParamAdapter_GetData =
+        LoggerMessage.Define<string, string, string, string, object, object>(
+            LogLevel.Debug,
+            ObservabilityNaming.EventIds.Adapter.AdapterRequest,
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} requesting with {@request.params} {@request.message}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_ThreeParamAdapter_GetData =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s");
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
     public static void LogAdapterRequestDebug_ThreeParamAdapter_GetData(
@@ -413,19 +424,13 @@ internal static class ThreeParamAdapterObservableLoggers
         string requestCategory,
         string requestHandler,
         string requestHandlerMethod,
-        int id,
-        string name,
-        bool isActive)
+        object requestParams,
+        object requestMessage)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        logger.LogDebug(
-            eventId: ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            message: "{request.layer} {request.category} {request.handler}.{request.handler_method} requesting with " +
-                     "{request.params.id} {request.params.name} {request.params.isactive}",
-            requestLayer, requestCategory, requestHandler, requestHandlerMethod,
-            id, name, isActive);
+        _logAdapterRequestDebug_ThreeParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, requestParams, requestMessage, null);
     }
 
     public static void LogAdapterRequest_ThreeParamAdapter_GetData(
@@ -433,12 +438,13 @@ internal static class ThreeParamAdapterObservableLoggers
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod)
+        string requestHandlerMethod,
+        object requestParams)
     {
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logAdapterRequest_ThreeParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_ThreeParamAdapter_GetData(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, requestParams, null);
     }
 
     public static void LogAdapterResponseSuccessDebug_ThreeParamAdapter_GetData(
@@ -448,7 +454,7 @@ internal static class ThreeParamAdapterObservableLoggers
         string requestHandler,
         string requestHandlerMethod,
         string status,
-        string result,
+        string responseMessage,
         double elapsed)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -456,9 +462,14 @@ internal static class ThreeParamAdapterObservableLoggers
 
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            message: "{request.layer} {request.category} {request.handler}.{request.handler_method} " +
-                     "responded {response.status} in {response.elapsed:0.0000} s with {response.result}",
-            requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, result);
+            message: "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            status,
+            elapsed,
+            responseMessage);
     }
 
     public static void LogAdapterResponseSuccess_ThreeParamAdapter_GetData(
@@ -493,7 +504,7 @@ internal static class ThreeParamAdapterObservableLoggers
 
         logger.LogWarning(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
@@ -522,7 +533,7 @@ internal static class ThreeParamAdapterObservableLoggers
 
         logger.LogError(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,

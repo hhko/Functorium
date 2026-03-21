@@ -1,7 +1,7 @@
 ﻿{
-  request.category: repository,
-  request.handler: TestObservabilityAdapter,
-  request.handler_method: GetById,
+  request.category.name: repository,
+  request.handler.method: GetById,
+  request.handler.name: TestObservabilityAdapter,
   request.layer: adapter,
   response.status: success
 }

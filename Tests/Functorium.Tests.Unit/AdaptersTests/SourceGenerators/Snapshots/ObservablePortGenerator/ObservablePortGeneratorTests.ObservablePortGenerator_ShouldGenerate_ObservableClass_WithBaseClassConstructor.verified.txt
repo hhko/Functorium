@@ -153,8 +153,8 @@ public class DerivedAdapterObservable : DerivedAdapter
             TagList tags = new()
             {
                 { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-                { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
-                { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },
+                { ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase },
+                { ObservabilityNaming.CustomAttributes.RequestHandlerName, requestHandler },
                 { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod }
             };
 
@@ -170,8 +170,8 @@ public class DerivedAdapterObservable : DerivedAdapter
             TagList metricTags = new()
             {
                 { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-                { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
-                { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },
+                { ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase },
+                { ObservabilityNaming.CustomAttributes.RequestHandlerName, requestHandler },
                 { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod }
             };
             _requestCounter.Add(1, metricTags);
@@ -184,8 +184,8 @@ public class DerivedAdapterObservable : DerivedAdapter
         TagList metricTags = new()
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-            { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
-            { ObservabilityNaming.CustomAttributes.RequestHandler, RequestHandler },
+            { ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerName, RequestHandler },
             { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod },
             { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success }
         };
@@ -204,8 +204,8 @@ public class DerivedAdapterObservable : DerivedAdapter
         TagList metricTags = new()
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-            { ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase },
-            { ObservabilityNaming.CustomAttributes.RequestHandler, RequestHandler },
+            { ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerName, RequestHandler },
             { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod },
             { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure },
             { ObservabilityNaming.OTelAttributes.ErrorType, errorType },
@@ -301,19 +301,25 @@ public class DerivedAdapterObservable : DerivedAdapter
         {
             if (_isDebugEnabled)
             {
+                var requestParams = new {  };
+                var requestMessage = new {  };
                 _logger.LogAdapterRequestDebug_DerivedAdapter_GetConnection(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod);
+                    requestHandlerMethod,
+                    requestParams,
+                    requestMessage);
             }
             else if (_isInformationEnabled)
             {
+                var requestParams = new {  };
                 _logger.LogAdapterRequest_DerivedAdapter_GetConnection(
                     ObservabilityNaming.Layers.Adapter,
                     _requestCategoryLowerCase,
                     requestHandler,
-                    requestHandlerMethod);
+                    requestHandlerMethod,
+                    requestParams);
             }
             return global::LanguageExt.Unit.Default;
         });
@@ -388,23 +394,23 @@ internal static class DerivedAdapterObservableLoggers
 {
 
     // ===== LoggerMessage.Define delegates for GetConnection =====
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_DerivedAdapter_GetConnection =
-        LoggerMessage.Define<string, string, string, string>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, object, global::System.Exception?> _logAdapterRequest_DerivedAdapter_GetConnection =
+        LoggerMessage.Define<string, string, string, string, object>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} requesting");
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} requesting with {@request.params}");
 
-    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequestDebug_DerivedAdapter_GetConnection =
-        LoggerMessage.Define<string, string, string, string>(
+    private static readonly global::System.Action<ILogger, string, string, string, string, object, object, global::System.Exception?> _logAdapterRequestDebug_DerivedAdapter_GetConnection =
+        LoggerMessage.Define<string, string, string, string, object, object>(
             LogLevel.Debug,
             ObservabilityNaming.EventIds.Adapter.AdapterRequest,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} requesting with");
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} requesting with {@request.params} {@request.message}");
 
     private static readonly global::System.Action<ILogger, string, string, string, string, string, double, global::System.Exception?> _logAdapterResponseSuccess_DerivedAdapter_GetConnection =
         LoggerMessage.Define<string, string, string, string, string, double>(
             LogLevel.Information,
             ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s");
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s");
 
 
     public static void LogAdapterRequestDebug_DerivedAdapter_GetConnection(
@@ -412,12 +418,14 @@ internal static class DerivedAdapterObservableLoggers
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod)
+        string requestHandlerMethod,
+        object requestParams,
+        object requestMessage)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
             return;
 
-        _logAdapterRequestDebug_DerivedAdapter_GetConnection(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequestDebug_DerivedAdapter_GetConnection(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, requestParams, requestMessage, null);
     }
 
     public static void LogAdapterRequest_DerivedAdapter_GetConnection(
@@ -425,12 +433,13 @@ internal static class DerivedAdapterObservableLoggers
         string requestLayer,
         string requestCategory,
         string requestHandler,
-        string requestHandlerMethod)
+        string requestHandlerMethod,
+        object requestParams)
     {
         if (!logger.IsEnabled(LogLevel.Information))
             return;
 
-        _logAdapterRequest_DerivedAdapter_GetConnection(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);
+        _logAdapterRequest_DerivedAdapter_GetConnection(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, requestParams, null);
     }
 
     public static void LogAdapterResponseSuccessDebug_DerivedAdapter_GetConnection(
@@ -440,7 +449,7 @@ internal static class DerivedAdapterObservableLoggers
         string requestHandler,
         string requestHandlerMethod,
         string status,
-        string result,
+        string responseMessage,
         double elapsed)
     {
         if (!logger.IsEnabled(LogLevel.Debug))
@@ -448,9 +457,14 @@ internal static class DerivedAdapterObservableLoggers
 
         logger.LogDebug(
             eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,
-            message: "{request.layer} {request.category} {request.handler}.{request.handler_method} " +
-                     "responded {response.status} in {response.elapsed:0.0000} s with {response.result}",
-            requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, result);
+            message: "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message}",
+            requestLayer,
+            requestCategory,
+            requestHandler,
+            requestHandlerMethod,
+            status,
+            elapsed,
+            responseMessage);
     }
 
     public static void LogAdapterResponseSuccess_DerivedAdapter_GetConnection(
@@ -485,7 +499,7 @@ internal static class DerivedAdapterObservableLoggers
 
         logger.LogWarning(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,
@@ -514,7 +528,7 @@ internal static class DerivedAdapterObservableLoggers
 
         logger.LogError(
             ObservabilityNaming.EventIds.Adapter.AdapterResponseError,
-            "{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+            "{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
             requestLayer,
             requestCategory,
             requestHandler,

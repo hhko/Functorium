@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 
+using Functorium.SourceGenerators.Abstractions;
 using Functorium.SourceGenerators.Generators.LogEnricherGenerator;
 using Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 

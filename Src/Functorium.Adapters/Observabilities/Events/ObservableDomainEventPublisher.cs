@@ -78,8 +78,8 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
                     ObservabilityNaming.Methods.Publish));
 
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter);
-            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Event);
-            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, eventType);
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestCategoryName, ObservabilityNaming.Categories.Event);
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerName, eventType);
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.Publish);
 
             _logger.LogDomainEventPublisherRequest(domainEvent);
@@ -87,8 +87,8 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
             TagList requestTags = new TagList
             {
                 { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-                { ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Event },
-                { ObservabilityNaming.CustomAttributes.RequestHandler, eventType },
+                { ObservabilityNaming.CustomAttributes.RequestCategoryName, ObservabilityNaming.Categories.Event },
+                { ObservabilityNaming.CustomAttributes.RequestHandlerName, eventType },
                 { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.Publish }
             };
             _requestCounter.Add(1, requestTags);
@@ -152,8 +152,8 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
                     ObservabilityNaming.Methods.PublishTrackedEvents));
 
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter);
-            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Event);
-            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, nameof(PublishTrackedEvents));
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestCategoryName, ObservabilityNaming.Categories.Event);
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerName, nameof(PublishTrackedEvents));
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.PublishTrackedEvents);
 
             _logger.LogDomainEventsPublisherRequest(nameof(PublishTrackedEvents), ObservabilityNaming.Methods.PublishTrackedEvents, 0);
@@ -161,8 +161,8 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
             TagList requestTags = new TagList
             {
                 { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },
-                { ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Event },
-                { ObservabilityNaming.CustomAttributes.RequestHandler, nameof(PublishTrackedEvents) },
+                { ObservabilityNaming.CustomAttributes.RequestCategoryName, ObservabilityNaming.Categories.Event },
+                { ObservabilityNaming.CustomAttributes.RequestHandlerName, nameof(PublishTrackedEvents) },
                 { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.PublishTrackedEvents }
             };
             _requestCounter.Add(1, requestTags);

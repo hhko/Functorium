@@ -199,9 +199,9 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
             $"{ObservabilityNaming.Layers.Application} {ObservabilityNaming.Categories.Usecase}.{requestCategoryType} {handlerName}.{requestHandlerMethod}");
 
         activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application);
-        activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase);
+        activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestCategoryName, ObservabilityNaming.Categories.Usecase);
         activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestCategoryType, requestCategoryType);
-        activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, handlerName);
+        activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerName, handlerName);
         activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod);
         string eventTypeName = domainEvent.GetType().Name;
         string eventId = domainEvent.EventId.ToString();
@@ -213,9 +213,9 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
         TagList requestTags = new TagList
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application },
-            { ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase },
+            { ObservabilityNaming.CustomAttributes.RequestCategoryName, ObservabilityNaming.Categories.Usecase },
             { ObservabilityNaming.CustomAttributes.RequestCategoryType, requestCategoryType },
-            { ObservabilityNaming.CustomAttributes.RequestHandler, handlerName },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerName, handlerName },
             { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod }
         };
         _requestCounter.Add(1, requestTags);

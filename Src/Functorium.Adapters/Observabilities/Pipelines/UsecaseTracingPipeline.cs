@@ -59,9 +59,9 @@ internal sealed class UsecaseTracingPipeline<TRequest, TResponse>
     private static void SetRequestTags(Activity activity, string requestCategoryType, string requestHandler)
     {
         activity.SetTag(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application);
-        activity.SetTag(ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.RequestCategoryName, ObservabilityNaming.Categories.Usecase);
         activity.SetTag(ObservabilityNaming.CustomAttributes.RequestCategoryType, requestCategoryType);
-        activity.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerName, requestHandler);
         activity.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.Handle);
     }
 

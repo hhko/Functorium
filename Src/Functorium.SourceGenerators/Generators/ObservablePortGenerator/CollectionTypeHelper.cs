@@ -1,3 +1,7 @@
+using Functorium.SourceGenerators.Abstractions;
+
+using Microsoft.CodeAnalysis;
+
 namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 
 /// <summary>
@@ -33,6 +37,9 @@ public static class CollectionTypeHelper
         "LanguageExt.Seq<",
         "global::LanguageExt.Seq<",
     ];
+
+    private const string ValueObjectInterfaceFullName = "Functorium.Domains.ValueObjects.IValueObject";
+    private const string EntityIdInterfacePrefix = "Functorium.Domains.Entities.IEntityId<";
 
     /// <summary>
     /// 타입이 Count 속성을 가진 컬렉션인지 확인합니다.
@@ -102,21 +109,19 @@ public static class CollectionTypeHelper
 
     /// <summary>
     /// Request 파라미터에 대한 필드 이름을 생성합니다.
-    /// 예: "ms" -> "request.params.ms", "name" -> "request.params.name"
-    /// 동적 필드는 request.params.{name} 형식으로 정적 필드와 구분됩니다.
+    /// 예: "customerId" -> "request.params.customer_id"
     /// </summary>
     public static string GetRequestFieldName(string parameterName)
     {
         if (string.IsNullOrEmpty(parameterName))
             return parameterName;
 
-        // 소문자로 변환하여 snake_case + dot 형식 사용
-        return $"request.params.{parameterName.ToLowerInvariant()}";
+        return $"request.params.{SnakeCaseConverter.ToSnakeCase(parameterName)}";
     }
 
     /// <summary>
     /// Request 파라미터에 대한 Count 필드 이름을 생성합니다.
-    /// 예: "orders" -> "request.params.orders.count"
+    /// 예: "orderLines" -> "request.params.order_lines_count"
     /// </summary>
     /// <returns>Count 필드 이름. parameterName이 비어있으면 null</returns>
     public static string? GetRequestCountFieldName(string parameterName)
@@ -124,14 +129,12 @@ public static class CollectionTypeHelper
         if (string.IsNullOrEmpty(parameterName))
             return null;
 
-        // 소문자로 변환하여 snake_case + dot 형식 사용
-        return $"request.params.{parameterName.ToLowerInvariant()}.count";
+        return $"request.params.{SnakeCaseConverter.ToSnakeCase(parameterName)}_count";
     }
 
     /// <summary>
     /// Response 결과에 대한 필드 이름을 생성합니다.
     /// 반환값: "response.result"
-    /// Usecase Observable의 @response.message와 구분되는 개별 반환값 필드입니다.
     /// </summary>
     public static string GetResponseFieldName()
     {
@@ -140,11 +143,11 @@ public static class CollectionTypeHelper
 
     /// <summary>
     /// Response 결과에 대한 Count 필드 이름을 생성합니다.
-    /// 반환값: "response.result.count"
+    /// 반환값: "response.result_count"
     /// </summary>
     public static string GetResponseCountFieldName()
     {
-        return "response.result.count";
+        return "response.result_count";
     }
 
     /// <summary>
@@ -158,5 +161,67 @@ public static class CollectionTypeHelper
 
         return typeFullName.Contains("LanguageExt.Seq<")
             || typeFullName.Contains("global::LanguageExt.Seq<");
+    }
+
+    /// <summary>
+    /// 타입이 IValueObject 또는 IEntityId&lt;T&gt;를 구현하는지 확인합니다.
+    /// </summary>
+    public static bool ImplementsValueObjectOrEntityId(ITypeSymbol typeSymbol)
+    {
+        if (typeSymbol is not INamedTypeSymbol namedType)
+            return false;
+
+        foreach (var iface in namedType.AllInterfaces)
+        {
+            string ifaceFullName = iface.ToDisplayString();
+            if (ifaceFullName == ValueObjectInterfaceFullName)
+                return true;
+            if (ifaceFullName.StartsWith(EntityIdInterfacePrefix))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// 타입이 복합 타입(class, record 등)인지 확인합니다.
+    /// 스칼라, 열거형, 컬렉션, 널러블, Option 등은 복합 타입이 아닙니다.
+    /// </summary>
+    public static bool IsComplexType(ITypeSymbol typeSymbol)
+    {
+        if (typeSymbol.SpecialType != SpecialType.None)
+            return false;
+
+        if (typeSymbol.TypeKind == TypeKind.Enum)
+            return false;
+
+        string fullName = typeSymbol.ToDisplayString();
+
+        if (fullName == "System.Guid" || fullName == "System.DateTime"
+            || fullName == "System.DateTimeOffset" || fullName == "System.TimeSpan"
+            || fullName == "System.DateOnly" || fullName == "System.TimeOnly"
+            || fullName == "decimal" || fullName == "System.Decimal"
+            || fullName == "System.Uri")
+            return false;
+
+        if (typeSymbol is INamedTypeSymbol namedType
+            && namedType.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T
+            && namedType.TypeArguments.Length == 1)
+        {
+            return IsComplexType(namedType.TypeArguments[0]);
+        }
+
+        if (fullName.Contains("LanguageExt.Option<"))
+            return false;
+
+        if (IsCollectionType(fullName))
+            return false;
+
+        if (typeSymbol.TypeKind == TypeKind.Class
+            || typeSymbol.TypeKind == TypeKind.Struct
+            || typeSymbol.TypeKind == TypeKind.Interface)
+            return true;
+
+        return false;
     }
 }

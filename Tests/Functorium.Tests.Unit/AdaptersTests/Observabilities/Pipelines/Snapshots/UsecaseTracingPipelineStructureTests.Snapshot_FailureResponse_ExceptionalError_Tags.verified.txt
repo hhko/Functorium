@@ -1,10 +1,10 @@
 ﻿{
   error.code: Test.ExceptionalError,
   error.type: exceptional,
-  request.category: usecase,
-  request.category_type: command,
-  request.handler: UsecaseTracingPipelineStructureTests,
-  request.handler_method: Handle,
+  request.category.name: usecase,
+  request.category.type: command,
+  request.handler.method: Handle,
+  request.handler.name: UsecaseTracingPipelineStructureTests,
   request.layer: application,
   response.elapsed: {Scrubbed},
   response.status: failure

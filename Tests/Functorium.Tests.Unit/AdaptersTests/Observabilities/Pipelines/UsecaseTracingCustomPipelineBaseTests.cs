@@ -75,9 +75,9 @@ public sealed class UsecaseTracingCustomPipelineBaseTests : IDisposable
 
         // Assert
         activity.GetTagItem(ObservabilityNaming.CustomAttributes.RequestLayer).ShouldBe(ObservabilityNaming.Layers.Application);
-        activity.GetTagItem(ObservabilityNaming.CustomAttributes.RequestCategory).ShouldBe(ObservabilityNaming.Categories.Usecase);
+        activity.GetTagItem(ObservabilityNaming.CustomAttributes.RequestCategoryName).ShouldBe(ObservabilityNaming.Categories.Usecase);
         activity.GetTagItem(ObservabilityNaming.CustomAttributes.RequestCategoryType).ShouldBe(ObservabilityNaming.CategoryTypes.Command);
-        activity.GetTagItem(ObservabilityNaming.CustomAttributes.RequestHandler).ShouldNotBeNull();
+        activity.GetTagItem(ObservabilityNaming.CustomAttributes.RequestHandlerName).ShouldNotBeNull();
         activity.GetTagItem(ObservabilityNaming.CustomAttributes.RequestHandlerMethod).ShouldBe("Handle");
     }
 

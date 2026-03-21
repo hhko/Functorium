@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Functorium.SourceGenerators.Generators.LogEnricherGenerator;
+namespace Functorium.SourceGenerators.Abstractions;
 
 /// <summary>
 /// PascalCase를 snake_case로 변환합니다.

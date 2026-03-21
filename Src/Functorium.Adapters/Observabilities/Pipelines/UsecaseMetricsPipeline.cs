@@ -72,9 +72,9 @@ internal sealed class UsecaseMetricsPipeline<TRequest, TResponse>
         TagList requestTags = new TagList
         {
             { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application },
-            { ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase },
+            { ObservabilityNaming.CustomAttributes.RequestCategoryName, ObservabilityNaming.Categories.Usecase },
             { ObservabilityNaming.CustomAttributes.RequestCategoryType, _requestCategoryType },
-            { ObservabilityNaming.CustomAttributes.RequestHandler, _requestHandler },
+            { ObservabilityNaming.CustomAttributes.RequestHandlerName, _requestHandler },
             { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.Handle }
         };
 

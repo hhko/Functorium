@@ -64,9 +64,9 @@ public abstract class UsecaseTracingCustomPipelineBase<TRequest>
         string handler = GetRequestHandler();
 
         activity.SetTag(ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Application);
-        activity.SetTag(ObservabilityNaming.CustomAttributes.RequestCategory, ObservabilityNaming.Categories.Usecase);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.RequestCategoryName, ObservabilityNaming.Categories.Usecase);
         activity.SetTag(ObservabilityNaming.CustomAttributes.RequestCategoryType, categoryType);
-        activity.SetTag(ObservabilityNaming.CustomAttributes.RequestHandler, handler);
+        activity.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerName, handler);
         activity.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, method);
     }
 }

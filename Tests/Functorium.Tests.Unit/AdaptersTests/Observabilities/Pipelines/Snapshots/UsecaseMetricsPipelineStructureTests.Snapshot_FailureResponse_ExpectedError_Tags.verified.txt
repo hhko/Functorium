@@ -1,10 +1,10 @@
 ﻿{
   error.code: Test.GenericError,
   error.type: expected,
-  request.category: usecase,
-  request.category_type: command,
-  request.handler: UsecaseMetricsPipelineStructureTests,
-  request.handler_method: Handle,
+  request.category.name: usecase,
+  request.category.type: command,
+  request.handler.method: Handle,
+  request.handler.name: UsecaseMetricsPipelineStructureTests,
   request.layer: application,
   response.status: failure
 }

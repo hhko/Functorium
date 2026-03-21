@@ -109,8 +109,8 @@ public sealed class ObservablePortObservabilityTests
 
         // Request Counter 태그 구조 검증 (AcquireActivity 메서드 내)
         generatedCode.ShouldContain($"{{ {nameof(ObservabilityNaming)}.CustomAttributes.RequestLayer, {nameof(ObservabilityNaming)}.Layers.Adapter }}");
-        generatedCode.ShouldContain($"{{ {nameof(ObservabilityNaming)}.CustomAttributes.RequestCategory, _requestCategoryLowerCase }}");
-        generatedCode.ShouldContain($"{{ {nameof(ObservabilityNaming)}.CustomAttributes.RequestHandler, requestHandler }}");
+        generatedCode.ShouldContain($"{{ {nameof(ObservabilityNaming)}.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase }}");
+        generatedCode.ShouldContain($"{{ {nameof(ObservabilityNaming)}.CustomAttributes.RequestHandlerName, requestHandler }}");
         generatedCode.ShouldContain($"{{ {nameof(ObservabilityNaming)}.CustomAttributes.RequestHandlerMethod, requestHandlerMethod }}");
     }
 

@@ -2,6 +2,8 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 
+using Functorium.SourceGenerators.Abstractions;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
@@ -20,6 +22,7 @@ public sealed class ObservablePortGenerator()
     private const string AttributeName = "GenerateObservablePort";
     private const string AttributeNamespace = "Functorium.Adapters.SourceGenerators";
     private const string FullyQualifiedAttributeName = $"{AttributeNamespace}.{AttributeName}Attribute";
+    private const string ObservablePortIgnoreAttributeFullName = "Functorium.Adapters.SourceGenerators.ObservablePortIgnoreAttribute";
 
     // Diagnostic descriptors
     private static readonly DiagnosticDescriptor DuplicateParameterTypeDiagnostic = new(
@@ -70,14 +73,21 @@ public sealed class ObservablePortGenerator()
             .Where(ImplementsIObservablePort)
             .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
             .Where(m => m.MethodKind == MethodKind.Ordinary)
+            .Where(m => !m.GetAttributes().Any(a =>
+                a.AttributeClass?.ToDisplayString() == ObservablePortIgnoreAttributeFullName))
             .Where(m => m.ReturnType.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat)
                 .Contains("FinT<", StringComparison.Ordinal))
             .Select(m => new MethodInfo(
                 m.Name,
-                m.Parameters.Select(p => new ParameterInfo(
-                    p.Name,
-                    p.Type.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat),
-                    p.RefKind)).ToList(),
+                m.Parameters.Select(p =>
+                {
+                    string typeFullName = p.Type.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat);
+                    bool isCollection = CollectionTypeHelper.IsCollectionType(typeFullName);
+                    bool isComplex = !isCollection && CollectionTypeHelper.IsComplexType(p.Type);
+                    bool needsToString = !isCollection && !isComplex
+                        && CollectionTypeHelper.ImplementsValueObjectOrEntityId(p.Type);
+                    return new ParameterInfo(p.Name, typeFullName, p.RefKind, isComplex, needsToString);
+                }).ToList(),
                 m.ReturnType.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat)))
             .ToList();
 
@@ -412,8 +422,8 @@ public sealed class ObservablePortGenerator()
             .AppendLine("            TagList tags = new()")
             .AppendLine("            {")
             .AppendLine("                { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },")
-            .AppendLine($"                {{ ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase }},")
-            .AppendLine("                { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },")
+            .AppendLine($"                {{ ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase }},")
+            .AppendLine("                { ObservabilityNaming.CustomAttributes.RequestHandlerName, requestHandler },")
             .AppendLine("                { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod }")
             .AppendLine("            };")
             .AppendLine()
@@ -429,8 +439,8 @@ public sealed class ObservablePortGenerator()
             .AppendLine("            TagList metricTags = new()")
             .AppendLine("            {")
             .AppendLine("                { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },")
-            .AppendLine($"                {{ ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase }},")
-            .AppendLine("                { ObservabilityNaming.CustomAttributes.RequestHandler, requestHandler },")
+            .AppendLine($"                {{ ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase }},")
+            .AppendLine("                { ObservabilityNaming.CustomAttributes.RequestHandlerName, requestHandler },")
             .AppendLine("                { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod }")
             .AppendLine("            };")
             .AppendLine("            _requestCounter.Add(1, metricTags);")
@@ -443,8 +453,8 @@ public sealed class ObservablePortGenerator()
             .AppendLine("        TagList metricTags = new()")
             .AppendLine("        {")
             .AppendLine("            { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },")
-            .AppendLine($"            {{ ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase }},")
-            .AppendLine("            { ObservabilityNaming.CustomAttributes.RequestHandler, RequestHandler },")
+            .AppendLine($"            {{ ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase }},")
+            .AppendLine("            { ObservabilityNaming.CustomAttributes.RequestHandlerName, RequestHandler },")
             .AppendLine("            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod },")
             .AppendLine("            { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Success }")
             .AppendLine("        };")
@@ -463,8 +473,8 @@ public sealed class ObservablePortGenerator()
             .AppendLine("        TagList metricTags = new()")
             .AppendLine("        {")
             .AppendLine("            { ObservabilityNaming.CustomAttributes.RequestLayer, ObservabilityNaming.Layers.Adapter },")
-            .AppendLine($"            {{ ObservabilityNaming.CustomAttributes.RequestCategory, _requestCategoryLowerCase }},")
-            .AppendLine("            { ObservabilityNaming.CustomAttributes.RequestHandler, RequestHandler },")
+            .AppendLine($"            {{ ObservabilityNaming.CustomAttributes.RequestCategoryName, _requestCategoryLowerCase }},")
+            .AppendLine("            { ObservabilityNaming.CustomAttributes.RequestHandlerName, RequestHandler },")
             .AppendLine("            { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, requestHandlerMethod },")
             .AppendLine("            { ObservabilityNaming.CustomAttributes.ResponseStatus, ObservabilityNaming.Status.Failure },")
             .AppendLine("            { ObservabilityNaming.OTelAttributes.ErrorType, errorType },")
@@ -545,10 +555,7 @@ public sealed class ObservablePortGenerator()
     private static void GenerateMethod(StringBuilder sb, ObservableClassInfo classInfo, MethodInfo method)
     {
         // 파라미터에서 반환 타입 추출 (FinT<IO, ReturnType>에서 ReturnType 추출)
-        // global::LanguageExt.FinT<global::LanguageExt.IO, global::Observability.Application.Usecases.GenResult> 형태 처리
         string actualReturnType = ExtractActualReturnType(method.ReturnType);
-
-        // 글로벌 네임스페이스 접두사는 유지 (global::Namespace.Type 형태 유지)
 
         // 메서드 시그니처
         sb.AppendLine($"    public override {method.ReturnType} {method.Name}(");
@@ -558,8 +565,6 @@ public sealed class ObservablePortGenerator()
             var comma = i < method.Parameters.Count - 1 ? "," : "";
             sb.AppendLine($"        {param.Type} {param.Name}{comma}");
         }
-        // method.ReturnType은 global::LanguageExt.FinT<global::LanguageExt.IO, ActualType> 형태
-        // actualReturnType은 ActualType 부분만 추출한 것
         var actualReturnTypeForMethod = ExtractActualReturnType(method.ReturnType);
         sb.AppendLine("    ) =>")
             .AppendLine($"        global::LanguageExt.FinT.lift<global::LanguageExt.IO, {actualReturnTypeForMethod}>(")
@@ -578,6 +583,10 @@ public sealed class ObservablePortGenerator()
         var parameterDeclarations = method.Parameters.Count > 0
             ? ",\n        " + string.Join(",\n        ", method.Parameters.Select(p => $"{p.Type} {p.Name}"))
             : "";
+
+        string requestParamsExpr = BuildRequestParamsExpression(method.Parameters);
+        string requestMessageExpr = BuildRequestMessageExpression(method.Parameters);
+
         sb.AppendLine($"    private global::LanguageExt.IO<global::LanguageExt.Unit> AdapterRequestLog_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("        string requestHandler,")
             .Append("        string requestHandlerMethod")
@@ -586,20 +595,25 @@ public sealed class ObservablePortGenerator()
             .AppendLine("        {")
             .AppendLine("            if (_isDebugEnabled)")
             .AppendLine("            {")
+            .AppendLine($"                var requestParams = {requestParamsExpr};")
+            .AppendLine($"                var requestMessage = {requestMessageExpr};")
             .AppendLine($"                _logger.LogAdapterRequestDebug_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("                    ObservabilityNaming.Layers.Adapter,")
             .AppendLine($"                    _requestCategoryLowerCase,")
             .AppendLine("                    requestHandler,")
-            .Append("                    requestHandlerMethod")
-            .AppendLine($"{(method.Parameters.Count > 0 ? ",\n                    " + string.Join(", ", method.Parameters.Select(p => p.Name)) : "")});")
+            .AppendLine("                    requestHandlerMethod,")
+            .AppendLine("                    requestParams,")
+            .AppendLine("                    requestMessage);")
             .AppendLine("            }")
             .AppendLine("            else if (_isInformationEnabled)")
             .AppendLine("            {")
+            .AppendLine($"                var requestParams = {requestParamsExpr};")
             .AppendLine($"                _logger.LogAdapterRequest_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("                    ObservabilityNaming.Layers.Adapter,")
             .AppendLine($"                    _requestCategoryLowerCase,")
             .AppendLine("                    requestHandler,")
-            .AppendLine("                    requestHandlerMethod);")
+            .AppendLine("                    requestHandlerMethod,")
+            .AppendLine("                    requestParams);")
             .AppendLine("            }")
             .AppendLine("            return global::LanguageExt.Unit.Default;")
             .AppendLine("        });")
@@ -674,147 +688,94 @@ public sealed class ObservablePortGenerator()
             .AppendLine("    }");
     }
 
+    /// <summary>
+    /// @request.params 익명 객체 생성 코드를 만듭니다.
+    /// 타입 필터링: 스칼라 → 값, 컬렉션 → count, IValueObject/IEntityId → .ToString(), 복합 타입 → 제외
+    /// </summary>
+    private static string BuildRequestParamsExpression(List<ParameterInfo> parameters)
+    {
+        var fields = new List<string>();
+        foreach (var param in parameters)
+        {
+            if (param.IsComplexType && !param.NeedsToString)
+                continue;
+
+            string snakeName = SnakeCaseConverter.ToSnakeCase(param.Name);
+
+            if (param.IsCollection)
+            {
+                string countExpr = CollectionTypeHelper.GetCountExpression(param.Name, param.Type) ?? "0";
+                fields.Add($"{snakeName}_count = {countExpr}");
+            }
+            else if (param.NeedsToString)
+            {
+                fields.Add($"{snakeName} = {param.Name}.ToString()");
+            }
+            else
+            {
+                fields.Add($"{snakeName} = {param.Name}");
+            }
+        }
+
+        if (fields.Count == 0)
+            return ObservableGeneratorConstants.EmptyRequestObjectLiteral;
+
+        return $"new {{ {string.Join(", ", fields)} }}";
+    }
+
+    /// <summary>
+    /// @request.message 익명 객체 생성 코드를 만듭니다.
+    /// 모든 파라미터를 포함합니다 (필터링 없음).
+    /// </summary>
+    private static string BuildRequestMessageExpression(List<ParameterInfo> parameters)
+    {
+        if (parameters.Count == 0)
+            return ObservableGeneratorConstants.EmptyRequestObjectLiteral;
+
+        return $"new {{ {string.Join(", ", parameters.Select(p => p.Name))} }}";
+    }
+
     private static void GenerateLoggingMethods(StringBuilder sb, ObservableClassInfo classInfo, MethodInfo method)
     {
-        // 파라미터에서 반환 타입 추출
-        // global::LanguageExt.FinT<global::LanguageExt.IO, global::Observability.Application.Usecases.GenResult> 형태 처리
         string actualReturnType = ExtractActualReturnType(method.ReturnType);
 
-        // 글로벌 네임스페이스 접두사는 유지 (global::Namespace.Type 형태 유지)
-
         // ===== Static delegate fields for LoggerMessage.Define =====
-        GenerateLoggerMessageDefineFields(sb, classInfo, method, actualReturnType);
+        GenerateLoggerMessageDefineFields(sb, classInfo, method);
 
-        // ===== LogRequestDebug (파라미터 포함) =====
-        var logRequestDebugParams = method.Parameters.Count > 0
-            ? ",\n        " + string.Join(",\n        ", method.Parameters.Select(p => $"{p.Type} {p.Name}"))
-            : "";
+        // ===== LogRequestDebug (@request.params + @request.message, 6 params → 항상 LoggerMessage.Define) =====
         sb.AppendLine($"    public static void LogAdapterRequestDebug_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("        this ILogger logger,")
             .AppendLine("        string requestLayer,")
             .AppendLine("        string requestCategory,")
             .AppendLine("        string requestHandler,")
-            .Append("        string requestHandlerMethod")
-            .AppendLine($"{logRequestDebugParams})")
+            .AppendLine("        string requestHandlerMethod,")
+            .AppendLine("        object requestParams,")
+            .AppendLine("        object requestMessage)")
             .AppendLine("    {")
             .AppendLine("        if (!logger.IsEnabled(LogLevel.Debug))")
             .AppendLine("            return;")
+            .AppendLine()
+            .AppendLine($"        _logAdapterRequestDebug_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, requestParams, requestMessage, null);")
+            .AppendLine("    }")
             .AppendLine();
 
-        // ===== LoggerMessage.Define vs logger.LogDebug() 선택 로직 =====
-        //
-        // .NET의 LoggerMessage.Define은 제네릭 타입 파라미터가 최대 6개까지만 지원됩니다.
-        // 이는 .NET Framework의 API 설계 제약 사항으로, 7개 이상의 오버로드는 제공되지 않습니다.
-        //
-        // 파라미터 개수 = 기본 4개 (requestLayer, requestCategory, requestHandler, requestHandlerMethod)
-        //               + 메서드 파라미터 개수
-        //               + 컬렉션 타입 파라미터의 Count 필드 개수
-        //
-        // 예시:
-        //   - GetFile(int ms)                                    → 5개 (4 + 1)        ✅ LoggerMessage.Define
-        //   - GetData(int id, string name)                       → 6개 (4 + 2)        ✅ LoggerMessage.Define
-        //   - GetResult(int ms, string[] arr, List<T> list)      → 9개 (4 + 1 + 2 + 2) ❌ logger.LogDebug()
-        //
-        // 성능 차이:
-        //   - LoggerMessage.Define: 제로 할당, 미리 컴파일된 delegate, 박싱 없음
-        //   - logger.LogDebug():    params 배열 할당, 값 타입 박싱, 매 호출마다 템플릿 파싱
-        //
-        int totalDebugRequestParams = 4 + method.Parameters.Count + method.Parameters.Count(p => p.IsCollection);
-
-        if (totalDebugRequestParams <= 6)
-        {
-            // ✅ 고성능 경로: LoggerMessage.Define 사용 (파라미터 ≤ 6개)
-            sb.Append($"        _logAdapterRequestDebug_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod");
-
-            foreach (var param in method.Parameters)
-            {
-                sb.Append($", {param.Name}");
-                if (param.IsCollection)
-                {
-                    if (CollectionTypeHelper.GetCountExpression(param.Name, param.Type) is { } countExpression)
-                    {
-                        sb.Append($", {countExpression}");
-                    }
-                }
-            }
-
-            sb.AppendLine(", null);");
-        }
-        else
-        {
-            // ⚠️ 폴백 경로: logger.LogDebug() 직접 사용 (파라미터 > 6개)
-            //
-            // LoggerMessage.Define의 제약으로 인해 일반 로깅 메서드 사용
-            // 이 경우 약간의 성능 오버헤드가 발생하지만, 기능상 문제는 없습니다.
-            //
-            // 메시지 템플릿 구성: 첫 번째 줄
-            sb.Append("        logger.LogDebug(")
-                .AppendLine()
-                .AppendLine("            eventId: ObservabilityNaming.EventIds.Adapter.AdapterRequest,")
-                .Append("            message: \"{request.layer} {request.category} {request.handler}.{request.handler_method} requesting with \" +");
-
-            // 두 번째 줄: 동적 파라미터 필드들
-            sb.AppendLine();
-            sb.Append("                     \"");
-
-            var messageTemplateFields = new List<string>();
-            foreach (var param in method.Parameters)
-            {
-                string requestFieldName = CollectionTypeHelper.GetRequestFieldName(param.Name);
-                messageTemplateFields.Add($"{{{requestFieldName}}}");
-
-                if (param.IsCollection)
-                {
-                    if (CollectionTypeHelper.GetRequestCountFieldName(param.Name) is { } countFieldName)
-                    {
-                        messageTemplateFields.Add($"{{{countFieldName}}}");
-                    }
-                }
-            }
-
-            sb.Append(string.Join(" ", messageTemplateFields));
-            sb.AppendLine("\",");
-
-            // 파라미터 전달
-            sb.AppendLine("            requestLayer, requestCategory, requestHandler, requestHandlerMethod,");
-
-            // 모든 파라미터와 Count 값 전달
-            var logParameters = new List<string>();
-            foreach (var param in method.Parameters)
-            {
-                logParameters.Add(param.Name);
-
-                if (param.IsCollection)
-                {
-                    if (CollectionTypeHelper.GetCountExpression(param.Name, param.Type) is { } countExpression)
-                    {
-                        logParameters.Add(countExpression);
-                    }
-                }
-            }
-
-            sb.AppendLine($"            {string.Join(", ", logParameters)});");
-        }
-
-        sb.AppendLine("    }")
-            .AppendLine();
-
-        // ===== LogRequest (파라미터 제외) =====
+        // ===== LogRequest (@request.params, 5 params → LoggerMessage.Define) =====
         sb.AppendLine($"    public static void LogAdapterRequest_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("        this ILogger logger,")
             .AppendLine("        string requestLayer,")
             .AppendLine("        string requestCategory,")
             .AppendLine("        string requestHandler,")
-            .AppendLine("        string requestHandlerMethod)")
+            .AppendLine("        string requestHandlerMethod,")
+            .AppendLine("        object requestParams)")
             .AppendLine("    {")
             .AppendLine("        if (!logger.IsEnabled(LogLevel.Information))")
             .AppendLine("            return;")
             .AppendLine()
-            .AppendLine($"        _logAdapterRequest_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, null);")
+            .AppendLine($"        _logAdapterRequest_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, requestParams, null);")
             .AppendLine("    }")
             .AppendLine();
 
-        // ===== LogResponseDebug (result 포함) =====
+        // ===== LogResponseDebug (@response.message, 7 params → fallback) =====
         sb.AppendLine($"    public static void LogAdapterResponseSuccessDebug_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("        this ILogger logger,")
             .AppendLine("        string requestLayer,")
@@ -822,90 +783,26 @@ public sealed class ObservablePortGenerator()
             .AppendLine("        string requestHandler,")
             .AppendLine("        string requestHandlerMethod,")
             .AppendLine("        string status,")
-            .AppendLine($"        {actualReturnType} result,")
+            .AppendLine($"        {actualReturnType} responseMessage,")
             .AppendLine("        double elapsed)")
             .AppendLine("    {")
             .AppendLine("        if (!logger.IsEnabled(LogLevel.Debug))")
             .AppendLine("            return;")
+            .AppendLine()
+            .AppendLine("        logger.LogDebug(")
+            .AppendLine("            eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,")
+            .AppendLine("            message: \"{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message}\",")
+            .AppendLine("            requestLayer,")
+            .AppendLine("            requestCategory,")
+            .AppendLine("            requestHandler,")
+            .AppendLine("            requestHandlerMethod,")
+            .AppendLine("            status,")
+            .AppendLine("            elapsed,")
+            .AppendLine("            responseMessage);")
+            .AppendLine("    }")
             .AppendLine();
 
-        // 파라미터 개수 계산
-        int debugResponseParams = 6; // layer, category, handler, method, status, elapsed
-        if (CollectionTypeHelper.IsCollectionType(actualReturnType))
-        {
-            debugResponseParams += 2; // result + count
-        }
-        else
-        {
-            debugResponseParams += 1; // result only
-        }
-
-        if (debugResponseParams <= 6)
-        {
-            // LoggerMessage.Define 사용
-            sb.Append($"        _logAdapterResponseSuccessDebug_{classInfo.ClassName}_{method.Name}(logger, requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed");
-
-            if (CollectionTypeHelper.IsCollectionType(actualReturnType))
-            {
-                if (CollectionTypeHelper.GetCountExpression("result", actualReturnType) is { } countExpression)
-                {
-                    sb.AppendLine($", result, {countExpression}, null);");
-                }
-                else
-                {
-                    sb.AppendLine(", result, null);");
-                }
-            }
-            else
-            {
-                sb.AppendLine(", result, null);");
-            }
-        }
-        else
-        {
-            // 기존 방식 유지 (6개 초과 - 컬렉션 + result인 경우)
-            // 메시지 템플릿 구성: 첫 번째 줄
-            sb.Append("        logger.LogDebug(")
-                .AppendLine()
-                .AppendLine("            eventId: ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,")
-                .Append("            message: \"{request.layer} {request.category} {request.handler}.{request.handler_method} \" +");
-
-            // 두 번째 줄: responded status elapsed
-            sb.AppendLine();
-            sb.Append("                     \"responded {response.status} in {response.elapsed:0.0000} s with ");
-
-            string responseFieldName = CollectionTypeHelper.GetResponseFieldName();
-            sb.Append($"{{{responseFieldName}}}");
-
-            // 반환 타입이 컬렉션이면 Count도 추가
-            if (CollectionTypeHelper.IsCollectionType(actualReturnType))
-            {
-                string countFieldName = CollectionTypeHelper.GetResponseCountFieldName();
-                sb.Append($" {{{countFieldName}}}");
-            }
-
-            sb.AppendLine("\",");
-
-            // 파라미터 전달
-            sb.Append("            requestLayer, requestCategory, requestHandler, requestHandlerMethod, status, elapsed, ");
-            sb.Append("result");
-
-            // Count 값 추가
-            if (CollectionTypeHelper.IsCollectionType(actualReturnType))
-            {
-                if (CollectionTypeHelper.GetCountExpression("result", actualReturnType) is { } countExpression)
-                {
-                    sb.Append($", {countExpression}");
-                }
-            }
-
-            sb.AppendLine(");");
-        }
-
-        sb.AppendLine("    }")
-            .AppendLine();
-
-        // ===== LogResponse (result 제외) =====
+        // ===== LogResponse (result 제외, 6 params → LoggerMessage.Define) =====
         sb.AppendLine($"    public static void LogAdapterResponseSuccess_{classInfo.ClassName}_{method.Name}(")
             .AppendLine("        this ILogger logger,")
             .AppendLine("        string requestLayer,")
@@ -940,7 +837,7 @@ public sealed class ObservablePortGenerator()
             .AppendLine()
             .AppendLine("        logger.LogWarning(")
             .AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseWarning,")
-            .AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}\",")
+            .AppendLine("            \"{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}\",")
             .AppendLine("            requestLayer,")
             .AppendLine("            requestCategory,")
             .AppendLine("            requestHandler,")
@@ -971,7 +868,7 @@ public sealed class ObservablePortGenerator()
             .AppendLine()
             .AppendLine("        logger.LogError(")
             .AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseError,")
-            .AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}\",")
+            .AppendLine("            \"{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}\",")
             .AppendLine("            requestLayer,")
             .AppendLine("            requestCategory,")
             .AppendLine("            requestHandler,")
@@ -987,95 +884,46 @@ public sealed class ObservablePortGenerator()
     /// <summary>
     /// LoggerMessage.Define을 사용한 정적 delegate 필드들을 생성합니다.
     /// </summary>
-    private static void GenerateLoggerMessageDefineFields(StringBuilder sb, ObservableClassInfo classInfo, MethodInfo method, string actualReturnType)
+    private static void GenerateLoggerMessageDefineFields(StringBuilder sb, ObservableClassInfo classInfo, MethodInfo method)
     {
         sb.AppendLine();
         sb.AppendLine($"    // ===== LoggerMessage.Define delegates for {method.Name} =====");
 
-        // 1. LogRequest (4 params)
+        // 1. LogRequest (5 params: layer, category, handler, method, @request.params)
         GenerateLogRequestDelegate(sb, classInfo, method);
 
-        // 2. LogRequestDebug (4+ params, dynamic)
+        // 2. LogRequestDebug (6 params: layer, category, handler, method, @request.params, @request.message)
         GenerateLogRequestDebugDelegate(sb, classInfo, method);
 
-        // 3. LogResponse (6 params without status hardcoding, 7 with status)
+        // 3. LogResponse (6 params: layer, category, handler, method, status, elapsed)
         GenerateLogResponseDelegate(sb, classInfo, method);
 
-        // 4. LogResponseDebug (depends on collection type)
-        GenerateLogResponseDebugDelegate(sb, classInfo, method, actualReturnType);
-
-        // Note: LogResponseWarning/Error는 직접 호출 방식으로 변경되어 delegate가 필요 없음
+        // Note: LogResponseDebug는 항상 7 params → fallback (delegate 없음)
+        // Note: LogResponseWarning/Error는 직접 호출 방식으로 delegate가 필요 없음
 
         sb.AppendLine();
     }
 
     private static void GenerateLogRequestDelegate(StringBuilder sb, ObservableClassInfo classInfo, MethodInfo method)
     {
-        sb.AppendLine($"    private static readonly global::System.Action<ILogger, string, string, string, string, global::System.Exception?> _logAdapterRequest_{classInfo.ClassName}_{method.Name} =");
-        sb.AppendLine("        LoggerMessage.Define<string, string, string, string>(");
+        // 5 params: string (layer), string (category), string (handler), string (method), object (@request.params)
+        sb.AppendLine($"    private static readonly global::System.Action<ILogger, string, string, string, string, object, global::System.Exception?> _logAdapterRequest_{classInfo.ClassName}_{method.Name} =");
+        sb.AppendLine("        LoggerMessage.Define<string, string, string, string, object>(");
         sb.AppendLine("            LogLevel.Information,");
         sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterRequest,");
-        sb.AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler_method} requesting\");");
+        sb.AppendLine("            \"{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} requesting with {@request.params}\");");
         sb.AppendLine();
     }
 
     private static void GenerateLogRequestDebugDelegate(StringBuilder sb, ObservableClassInfo classInfo, MethodInfo method)
     {
-        // ===== LoggerMessage.Define 제약 검사 =====
-        //
-        // .NET의 LoggerMessage.Define<T1, T2, ..., T6>은 최대 6개의 타입 파라미터만 지원합니다.
-        // 이는 .NET Functorium/Core의 API 설계 제약으로, Microsoft가 의도적으로 6개까지만 오버로드를 제공합니다.
-        //
-        // 이유:
-        //   1. 제네릭 타입 폭발 방지 (바이너리 크기 증가)
-        //   2. API 복잡도 제한
-        //   3. 실용적 균형점 (대부분 6개 이하로 충분)
-        //
-        // 6개 초과 시 LoggerMessage.Define을 사용할 수 없으므로 delegate를 생성하지 않고,
-        // 호출 측에서 logger.LogDebug()를 직접 사용하도록 폴백합니다.
-        //
-        int totalParams = 4 + method.Parameters.Count + method.Parameters.Count(p => p.IsCollection);
-
-        if (totalParams > 6)
-        {
-            // 6개 초과 시 delegate 생성하지 않음 (호출 측에서 logger.LogDebug() 직접 사용)
-            return;
-        }
-
-        // 타입 파라미터 목록 생성
-        var typeParams = new List<string> { "string", "string", "string", "string" };
-        foreach (var param in method.Parameters)
-        {
-            typeParams.Add(param.Type);
-            if (param.IsCollection)
-            {
-                typeParams.Add("int"); // count
-            }
-        }
-
-        // 메시지 템플릿 생성
-        var messageFields = new List<string> { "{request.layer}", "{request.category}", "{request.handler}.{request.handler_method}", "requesting", "with" };
-        foreach (var param in method.Parameters)
-        {
-            string requestFieldName = CollectionTypeHelper.GetRequestFieldName(param.Name);
-            messageFields.Add($"{{{requestFieldName}}}");
-
-            if (param.IsCollection)
-            {
-                if (CollectionTypeHelper.GetRequestCountFieldName(param.Name) is { } countFieldName)
-                {
-                    messageFields.Add($"{{{countFieldName}}}");
-                }
-            }
-        }
-
-        string messageTemplate = string.Join(" ", messageFields);
-
-        sb.AppendLine($"    private static readonly global::System.Action<ILogger, {string.Join(", ", typeParams)}, global::System.Exception?> _logAdapterRequestDebug_{classInfo.ClassName}_{method.Name} =");
-        sb.AppendLine($"        LoggerMessage.Define<{string.Join(", ", typeParams)}>(");
+        // 6 params: string (layer), string (category), string (handler), string (method), object (@request.params), object (@request.message)
+        // → 항상 LoggerMessage.Define 가능 (6개 이하)
+        sb.AppendLine($"    private static readonly global::System.Action<ILogger, string, string, string, string, object, object, global::System.Exception?> _logAdapterRequestDebug_{classInfo.ClassName}_{method.Name} =");
+        sb.AppendLine("        LoggerMessage.Define<string, string, string, string, object, object>(");
         sb.AppendLine("            LogLevel.Debug,");
         sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterRequest,");
-        sb.AppendLine($"            \"{messageTemplate}\");");
+        sb.AppendLine("            \"{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} requesting with {@request.params} {@request.message}\");");
         sb.AppendLine();
     }
 
@@ -1085,64 +933,7 @@ public sealed class ObservablePortGenerator()
         sb.AppendLine("        LoggerMessage.Define<string, string, string, string, string, double>(");
         sb.AppendLine("            LogLevel.Information,");
         sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,");
-        sb.AppendLine("            \"{request.layer} {request.category} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s\");");
-        sb.AppendLine();
-    }
-
-    private static void GenerateLogResponseDebugDelegate(StringBuilder sb, ObservableClassInfo classInfo, MethodInfo method, string actualReturnType)
-    {
-        // ===== LoggerMessage.Define 제약 검사 (Response용) =====
-        //
-        // Response 로그의 경우:
-        //   - 기본: layer, category, handler, method, status, elapsed (6개)
-        //   - result (일반 타입): +1개 → 총 7개 ✅ (status를 하드코딩하여 6개로 줄임)
-        //   - result (컬렉션): +2개 (result + count) → 총 8개 ❌
-        //
-        // 컬렉션 반환 타입의 경우 8개가 되어 LoggerMessage.Define 사용 불가
-        //
-        int debugResponseParams = 6; // layer, category, handler, method, status, elapsed
-        bool isCollection = CollectionTypeHelper.IsCollectionType(actualReturnType);
-
-        if (isCollection)
-        {
-            debugResponseParams += 2; // result + count
-        }
-        else
-        {
-            debugResponseParams += 1; // result only
-        }
-
-        if (debugResponseParams > 6)
-        {
-            // 6개 초과 시 delegate 생성하지 않음 (호출 측에서 logger.LogDebug() 직접 사용)
-            return;
-        }
-
-        // 타입 파라미터 목록
-        // 순서: layer, category, handler, method, status, elapsed, result[, count]
-        var typeParams = new List<string> { "string", "string", "string", "string", "string", "double" };
-        string messageTemplate;
-
-        if (isCollection)
-        {
-            typeParams.Add(actualReturnType); // result
-            typeParams.Add("int"); // count
-            string responseFieldName = CollectionTypeHelper.GetResponseFieldName();
-            string countFieldName = CollectionTypeHelper.GetResponseCountFieldName();
-            messageTemplate = $"{{request.layer}} {{request.category}} {{request.handler}}.{{request.handler_method}} responded {{response.status}} in {{response.elapsed:0.0000}} s with {{{responseFieldName}}} {{{countFieldName}}}";
-        }
-        else
-        {
-            typeParams.Add(actualReturnType); // result
-            string responseFieldName = CollectionTypeHelper.GetResponseFieldName();
-            messageTemplate = $"{{request.layer}} {{request.category}} {{request.handler}}.{{request.handler_method}} responded {{response.status}} in {{response.elapsed:0.0000}} s with {{{responseFieldName}}}";
-        }
-
-        sb.AppendLine($"    private static readonly global::System.Action<ILogger, {string.Join(", ", typeParams)}, global::System.Exception?> _logAdapterResponseSuccessDebug_{classInfo.ClassName}_{method.Name} =");
-        sb.AppendLine($"        LoggerMessage.Define<{string.Join(", ", typeParams)}>(");
-        sb.AppendLine("            LogLevel.Debug,");
-        sb.AppendLine("            ObservabilityNaming.EventIds.Adapter.AdapterResponseSuccess,");
-        sb.AppendLine($"            \"{messageTemplate}\");");
+        sb.AppendLine("            \"{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} responded {response.status} in {response.elapsed:0.0000} s\");");
         sb.AppendLine();
     }
 

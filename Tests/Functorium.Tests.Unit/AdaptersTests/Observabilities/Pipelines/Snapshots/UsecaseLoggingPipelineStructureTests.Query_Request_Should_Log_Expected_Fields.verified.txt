@@ -4,11 +4,11 @@
     @request.message: {
       Id: Guid_1
     },
-    OriginalFormat: {request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} requesting with {@request.message},
-    request.category: usecase,
-    request.category_type: query,
-    request.handler: TestFixtures,
-    request.handler_method: Handle,
+    OriginalFormat: {request.layer} {request.category.name}.{request.category.type} {request.handler.name}.{request.handler.method} requesting with {@request.message},
+    request.category.name: usecase,
+    request.category.type: query,
+    request.handler.method: Handle,
+    request.handler.name: TestFixtures,
     request.layer: application
   }
 }

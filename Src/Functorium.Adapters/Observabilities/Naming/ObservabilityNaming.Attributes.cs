@@ -28,11 +28,12 @@ public static partial class ObservabilityNaming
     {
         // Request 속성
         public const string RequestMessage = "request.message";
+        public const string RequestParams = "request.params";
         public const string RequestLayer = "request.layer";
-        public const string RequestCategory = "request.category";
-        public const string RequestHandler = "request.handler";
-        public const string RequestCategoryType = "request.category_type";
-        public const string RequestHandlerMethod = "request.handler_method";
+        public const string RequestCategoryName = "request.category.name";
+        public const string RequestCategoryType = "request.category.type";
+        public const string RequestHandlerName = "request.handler.name";
+        public const string RequestHandlerMethod = "request.handler.method";
 
         // Response 속성
         public const string ResponseMessage = "response.message";
