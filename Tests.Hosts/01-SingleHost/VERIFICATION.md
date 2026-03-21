@@ -560,20 +560,20 @@
 
 ---
 
-## 인터페이스 스코프 ctx 필드 검증
+## Usecase 인터페이스 스코프 ctx 필드 검증
 
 ### 변경 사항
 
-`CreateOrderCommand.Request`에 비-root 인터페이스 `IAuditable`을 추가하여 세 가지 ctx 필드 스코프를 검증합니다.
+`CreateOrderCommand.Request`에 비-root 인터페이스 `IOperatorContext`를 추가하여 세 가지 ctx 필드 스코프를 검증합니다.
 
 ```csharp
-public interface IAuditable { string OperatorId { get; } }              // 비-root
+public interface IOperatorContext { string OperatorId { get; } }              // 비-root
 [LogEnricherRoot] public interface ICustomerRequest { string CustomerId { get; } }  // root
 
 public sealed record Request(
     string CustomerId, Seq<OrderLineRequest> OrderLines,
     string ShippingAddress, string OperatorId)
-    : ICommandRequest<Response>, ICustomerRequest, IAuditable;
+    : ICommandRequest<Response>, ICustomerRequest, IOperatorContext;
 ```
 
 ### 기대 ctx 필드
@@ -581,9 +581,36 @@ public sealed record Request(
 | 프로퍼티 | 소속 인터페이스 | 기대 ctx 필드 | 스코프 |
 |---------|---------------|-------------|--------|
 | `CustomerId` | `[LogEnricherRoot] ICustomerRequest` | `ctx.customer_id` | Root |
-| `OperatorId` | `IAuditable` | `ctx.auditable.operator_id` | Interface |
+| `OperatorId` | `IOperatorContext` | `ctx.operator_context.operator_id` | Interface |
 | `OrderLines` | 없음 (직접 프로퍼티) | `ctx.create_order_command.request.order_lines_count` | Usecase |
 | `ShippingAddress` | 없음 (직접 프로퍼티) | `ctx.create_order_command.request.shipping_address` | Usecase |
+
+---
+
+## DomainEvent 인터페이스 스코프 ctx 필드 검증
+
+### 변경 사항
+
+`Order.CreatedEvent`에 비-root 인터페이스 `ICustomerEvent`를 추가하여 DomainEvent에서도 인터페이스 스코프 ctx 필드를 검증합니다.
+
+```csharp
+public interface ICustomerEvent { CustomerId CustomerId { get; } }
+
+public sealed record CreatedEvent(
+    OrderId OrderId,
+    CustomerId CustomerId,
+    Seq<OrderLineInfo> OrderLines,
+    Money TotalAmount) : DomainEvent, ICustomerEvent;
+```
+
+### 기대 ctx 필드
+
+| 프로퍼티 | 스코프 | ctx 필드 |
+|---------|--------|---------|
+| `CustomerId` | **Interface** (`ICustomerEvent`) | `ctx.customer_event.customer_id` |
+| `OrderId` | Event | `ctx.order.created_event.order_id` |
+| `OrderLines` | Event | `ctx.order.created_event.order_lines_count` |
+| `TotalAmount` | Event | `ctx.order.created_event.total_amount` |
 
 ---
 
@@ -596,8 +623,9 @@ public sealed record Request(
 | 3 | CreateOrderCommand Request Enricher (`ctx.create_order_command.request.*`) | **Pass** |
 | 4 | CreateOrderCommand Response Enricher (`ctx.create_order_command.response.*`) | **Pass** |
 | 5 | CreateOrderCommand Root 필드 (`ctx.customer_id`) | **Pass** |
-| 6 | CreateOrderCommand Interface 스코프 (`ctx.auditable.operator_id`) | **TODO** |
+| 6 | CreateOrderCommand Interface 스코프 (`ctx.operator_context.operator_id`) | **TODO** |
 | 7 | Order.CreatedEvent Domain Event Enricher (`ctx.order.created_event.*`) | **Pass** |
+| 7a | Order.CreatedEvent Interface 스코프 (`ctx.customer_event.customer_id`) | **TODO** |
 | 8 | Order.CreatedEvent Handler 내부 로그에 `ctx.*` 포함 | **Pass** |
 | 9 | GetAllProductsQuery Request/Response 로그 정상 출력 | **Pass** |
 | 10 | Validation 실패 → `log.level: Warning` + `event.id: 1003` | **Pass** |

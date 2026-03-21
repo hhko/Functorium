@@ -2,8 +2,8 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
-- [ ] 유스케이스 인터페이스 이름 기반 로그
-- [ ] 도메인 이벤트 로그 결과값 테스트?
+- [x] 유스케이스 인터페이스 이름 기반 로그
+- [ ] 도메인 이벤트 로그 결과값 테스트? skip 테스트?
 - [ ] `<InternalsVisibleTo Include="LayeredArch.Adapters.Infrastructure" />` 제거
 
 ---

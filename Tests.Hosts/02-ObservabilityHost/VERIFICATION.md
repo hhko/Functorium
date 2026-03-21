@@ -351,18 +351,18 @@
 
 ---
 
-## 인터페이스 스코프 ctx 필드 검증
+## Usecase 인터페이스 스코프 ctx 필드 검증
 
 ### 변경 사항
 
-`PlaceOrderCommand.Request`에 비-root 인터페이스 `IAuditable`을 추가하여 세 가지 ctx 필드 스코프를 검증합니다.
+`PlaceOrderCommand.Request`에 비-root 인터페이스 `IOperatorContext`를 추가하여 세 가지 ctx 필드 스코프를 검증합니다.
 
 ```csharp
-public interface IAuditable { string OperatorId { get; } }              // 비-root
+public interface IOperatorContext { string OperatorId { get; } }              // 비-root
 [LogEnricherRoot] public interface ICustomerRequest { string CustomerId { get; } }  // root
 
 public sealed record Request(string CustomerId, List<OrderLine> Lines, string OperatorId)
-    : ICommandRequest<Response>, ICustomerRequest, IAuditable;
+    : ICommandRequest<Response>, ICustomerRequest, IOperatorContext;
 ```
 
 ### 기대 ctx 필드
@@ -370,8 +370,35 @@ public sealed record Request(string CustomerId, List<OrderLine> Lines, string Op
 | 프로퍼티 | 소속 인터페이스 | 기대 ctx 필드 | 스코프 |
 |---------|---------------|-------------|--------|
 | `CustomerId` | `[LogEnricherRoot] ICustomerRequest` | `ctx.customer_id` | Root |
-| `OperatorId` | `IAuditable` | `ctx.auditable.operator_id` | Interface |
+| `OperatorId` | `IOperatorContext` | `ctx.operator_context.operator_id` | Interface |
 | `Lines` | 없음 (직접 프로퍼티) | `ctx.place_order_command.request.lines_count` | Usecase |
+
+---
+
+## DomainEvent 인터페이스 스코프 ctx 필드 검증
+
+### 변경 사항
+
+`OrderPlacedEvent`에 비-root 인터페이스 `IOperatorContext`를 추가하여 DomainEvent에서도 인터페이스 스코프 ctx 필드를 검증합니다.
+
+```csharp
+public sealed record OrderPlacedEvent(
+    [LogEnricherRoot] string CustomerId,
+    string OrderId,
+    int LineCount,
+    decimal TotalAmount,
+    string OperatorId) : DomainEvent, IOperatorContext;
+```
+
+### 기대 ctx 필드
+
+| 프로퍼티 | 스코프 | ctx 필드 |
+|---------|--------|---------|
+| `CustomerId` | Root | `ctx.customer_id` |
+| `OperatorId` | **Interface** (`IOperatorContext`) | `ctx.operator_context.operator_id` |
+| `OrderId` | Event | `ctx.order_placed_event.order_id` |
+| `LineCount` | Event | `ctx.order_placed_event.line_count` |
+| `TotalAmount` | Event | `ctx.order_placed_event.total_amount` |
 
 ---
 
@@ -382,9 +409,10 @@ public sealed record Request(string CustomerId, List<OrderLine> Lines, string Op
 | 1 | PlaceOrderCommand Request Enricher (`ctx.place_order_command.request.*`) | **Pass** |
 | 2 | PlaceOrderCommand Response Enricher (`ctx.place_order_command.response.*`) | **Pass** |
 | 3 | PlaceOrderCommand Root 필드 (`ctx.customer_id`) | **Pass** |
-| 4 | PlaceOrderCommand Interface 스코프 (`ctx.auditable.operator_id`) | **TODO** |
+| 4 | PlaceOrderCommand Interface 스코프 (`ctx.operator_context.operator_id`) | **TODO** |
 | 5 | OrderPlacedEvent Domain Event Enricher (`ctx.order_placed_event.*`) | **Pass** |
 | 6 | OrderPlacedEvent Root 필드 (`ctx.customer_id`) Handler 전체 범위 포함 | **Pass** |
+| 6a | OrderPlacedEvent Interface 스코프 (`ctx.operator_context.operator_id`) | **TODO** |
 | 7 | GetOrderSummaryQuery 기준선 — `ctx.*` 필드 없음 | **Pass** |
 | 8 | FailExpectedCommand → `log.level: Warning` + `event.id: 1003` | **Pass** |
 | 9 | FailExceptionalCommand → `log.level: Error` + `event.id: 1004` + `ExceptionDetails` | **Pass** |
