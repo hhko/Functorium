@@ -729,7 +729,7 @@ public partial class PlaceOrderCommandRequestLogEnricher
 
 #### `[LogEnricherRoot]` 어트리뷰트 — Root Context 필드
 
-**위치**: `Functorium.Applications.Usecases.LogEnricherRootAttribute`
+**위치**: `Functorium.Applications.Observabilities.LogEnricherRootAttribute`
 
 `[LogEnricherRoot]`를 인터페이스 또는 속성에 적용하면, 해당 속성이 Usecase prefix 없이 `ctx.{field}`로 승격됩니다.
 
@@ -1102,15 +1102,39 @@ services.AddScoped<
     OrderPlacedEventLogEnricher>();
 ```
 
-### ctx.* 필드 3-Level 체계
+### ctx.* 필드 4-Level 체계
 
-OpenSearch에서 "고객 CUST-001의 모든 활동을 추적하려면?" — 이 질문에 답하기 위해 Functorium은 `ctx.*` 필드를 3개 레벨로 체계화합니다:
+OpenSearch에서 "고객 CUST-001의 모든 활동을 추적하려면?" — 이 질문에 답하기 위해 Functorium은 `ctx.*` 필드를 4개 레벨로 체계화합니다:
 
-| Level | 필드 패턴 | 생성 방식 | 용도 |
-|-------|----------|----------|------|
-| **Root Context** | `ctx.{field}` | `[LogEnricherRoot]` 인터페이스/속성 | 교차 Usecase 검색 (예: `ctx.customer_id`) |
-| **Usecase Context** | `ctx.{usecase}.{request\|response}.{field}` | Source Generator 자동 생성 | Usecase별 상세 필드 |
-| **Event Context** | `ctx.{event_name}.{field}` | `DomainEventLogEnricherGenerator` 자동 생성 | Domain Event 핸들러 필드 |
+| 우선순위 | Level | 필드 패턴 | 생성 방식 | 용도 |
+|---------|-------|----------|----------|------|
+| 1 | **Root Context** | `ctx.{field}` | `[LogEnricherRoot]` 인터페이스/속성 | 교차 Usecase 검색 (예: `ctx.customer_id`) |
+| 2 | **Interface Context** | `ctx.{interface}.{field}` | 비-root 인터페이스에서 유래한 속성 | 의미적 그룹핑 (예: `ctx.auditable.operator_id`) |
+| 3 | **Usecase Context** | `ctx.{usecase}.{request\|response}.{field}` | 인터페이스 없는 직접 속성 | Usecase별 상세 필드 |
+| 4 | **Event Context** | `ctx.{event_name}.{field}` | `DomainEventLogEnricherGenerator` 자동 생성 | Domain Event 핸들러 필드 |
+
+**Interface Context 규칙:**
+
+- Request/Response가 비-root 인터페이스를 구현하면, 해당 인터페이스에서 유래한 속성은 `ctx.{interface}.{field}` 형식으로 출력됩니다.
+- 인터페이스 이름 변환: `I` prefix 제거 → snake_case (`IAuditable` → `auditable`, `IPartnerContext` → `partner_context`)
+- 상속 체인에서는 **선언 인터페이스** 기준으로 결정됩니다. `IPartnerContext : IRegional`에서 `RegionCode`는 `IRegional`에 선언되었으므로 `ctx.regional.region_code`가 됩니다.
+
+```csharp
+public interface IAuditable { string OperatorId { get; } }
+public interface IRegional { string RegionCode { get; } }
+public interface IPartnerContext : IRegional { string PartnerId { get; } }
+
+[LogEnricherRoot]
+public interface ICustomerRequest { string CustomerId { get; } }
+
+public sealed record Request(
+    string CustomerId,      // → ctx.customer_id          (Root)
+    List<OrderLine> Lines,  // → ctx.{usecase}.request.lines_count  (Usecase)
+    string OperatorId,      // → ctx.auditable.operator_id          (Interface)
+    string RegionCode,      // → ctx.regional.region_code           (Interface)
+    string PartnerId)       // → ctx.partner_context.partner_id     (Interface)
+    : ICommandRequest<Response>, ICustomerRequest, IAuditable, IPartnerContext;
+```
 
 **OpenSearch 활용 쿼리 예시:**
 
@@ -1118,14 +1142,17 @@ OpenSearch에서 "고객 CUST-001의 모든 활동을 추적하려면?" — 이 
 # 고객별 모든 활동 추적 (Root Context)
 ctx.customer_id: "CUST-001"
 
+# 특정 운영자의 모든 활동 (Interface Context)
+ctx.auditable.operator_id: "admin@example.com"
+
 # 특정 Usecase의 요청 상세 (Usecase Context)
 ctx.place_order_command.request.lines_count: [3 TO *]
 
 # 특정 이벤트의 상세 (Event Context)
 ctx.order_placed_event.total_amount: [100000 TO *]
 
-# Root + Usecase 조합: 특정 고객의 대량 주문
-ctx.customer_id: "CUST-001" AND ctx.place_order_command.request.lines_count: [10 TO *]
+# Root + Interface 조합: 특정 고객의 특정 운영자 활동
+ctx.customer_id: "CUST-001" AND ctx.auditable.operator_id: "admin@example.com"
 ```
 
 #### OpenSearchJsonFormatter 변환 규칙
@@ -1135,6 +1162,7 @@ ctx.customer_id: "CUST-001" AND ctx.place_order_command.request.lines_count: [10
 | Serilog LogContext 속성 | OpenSearch 필드 | 비고 |
 |------------------------|----------------|------|
 | `ctx.customer_id` | `ctx.customer_id` | Root — 교차 검색 |
+| `ctx.auditable.operator_id` | `ctx.auditable.operator_id` | Interface — 의미적 그룹핑 |
 | `ctx.place_order_command.request.lines_count` | `ctx.place_order_command.request.lines_count` | Usecase — 상세 |
 | `ctx.order_placed_event.order_id` | `ctx.order_placed_event.order_id` | Event — 상세 |
 | PascalCase 미인식 속성 | `ctx.snake_case` | Safety net 변환 |

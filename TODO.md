@@ -2,6 +2,11 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
+- [ ] 유스케이스 인터페이스 이름 기반 로그
+- [ ] 도메인 이벤트 로그 결과값 테스트?
+- [ ] `<InternalsVisibleTo Include="LayeredArch.Adapters.Infrastructure" />` 제거
+
+---
 - [x] 유스케이스 Request, Response 메시지 코드 생성기를 이용한 로그 자동화
 - [x] 유스케이스 ctx.{클래스}.{request | response}.{필드}[_count]
 - [x] 유스케이스 ctx.{필드}[_count]

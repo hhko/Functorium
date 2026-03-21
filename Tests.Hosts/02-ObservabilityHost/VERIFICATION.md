@@ -1,135 +1,183 @@
-# 02-ObservabilityHost 검증 결과
+# 02-ObservabilityHost — 관찰 가능성 로그 검증 결과
 
-**검증 일시**: 2026-03-21
-**실행 명령**: `dotnet run --project Tests.Hosts/02-ObservabilityHost/Src/ObservabilityHost`
-
----
-
-## 1. 빌드 검증
-
-```
-dotnet build Functorium.slnx
-```
-
-| 항목 | 결과 |
-|------|------|
-| 빌드 | PASS (0 errors) |
-| 기존 테스트 | PASS (1480 passed, 0 failed, 28 skipped) |
+> **검증 일시:** 2026-03-21
+> **실행 명령:** `dotnet run --project Tests.Hosts/02-ObservabilityHost/Src/ObservabilityHost`
+> **Serilog OutputTemplate:** `[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}`
 
 ---
 
-## 2. 콘솔 출력 전문
+## 시나리오 개요
 
-### 2.1 원본 출력 (Raw)
-
-```
-=== PlaceOrderCommand (Custom Observability) ===
-[23:51:16 INF] application usecase.command PlaceOrderCommand.Handle requesting with {"CustomerId": "CUST-001", "Lines": [{"ProductId": "PROD-A", "Quantity": 2, "UnitPrice": 100.00, "$type": "OrderLine"}, {"ProductId": "PROD-B", "Quantity": 1, "UnitPrice": 250.00, "$type": "OrderLine"}], "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "ctx.place_order_command.request.order_total_amount": 450.00, "ctx.place_order_command.request.lines_count": 2, "ctx.customer_id": "CUST-001"}
-[23:51:16 INF] application usecase.command PlaceOrderCommand.Handle responded success in 0.0069 s with {"Value": {"OrderId": "c8e0e473-e0ea-4bb2-bda3-25e86eaa6625", "LineCount": 2, "TotalAmount": 450.00, "$type": "Response"}, "IsSucc": true, "IsFail": false, "$type": "Succ"} {"EventId": {"Id": 1002, "Name": "application.response.success"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "ctx.place_order_command.response.average_line_amount": 225.00, "ctx.place_order_command.response.total_amount": 450.00, "ctx.place_order_command.response.line_count": 2, "ctx.place_order_command.response.order_id": "c8e0e473-e0ea-4bb2-bda3-25e86eaa6625"}
-PlaceOrder Result: Succ(Response { OrderId = c8e0e473-e0ea-4bb2-bda3-25e86eaa6625, LineCount = 2, TotalAmount = 450.00 })
-
-=== OrderPlacedEvent (DomainEvent Enricher) ===
-[23:51:16 INF] application usecase.event OrderPlacedEventHandler.Handle OrderPlacedEvent 01KM5VNB39GRJZACVBQ3X6K2PT requesting with {"CustomerId": "CUST-001", "OrderId": "c8e0e473-e0ea-4bb2-bda3-25e86eaa6625", "LineCount": 2, "TotalAmount": 450.00, "OccurredAt": "2026-03-20T14:51:16.4575054+00:00", "EventId": {...}, "CorrelationId": null, "CausationId": null, "$type": "OrderPlacedEvent"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "ObservabilityHost.DomainEvents.OrderPlacedEventHandler", "ctx.order_placed_event.total_amount": 450.00, "ctx.order_placed_event.line_count": 2, "ctx.order_placed_event.order_id": "c8e0e473-e0ea-4bb2-bda3-25e86eaa6625", "ctx.customer_id": "CUST-001"}
-[23:51:16 INF] [DomainEvent] Order placed: c8e0e473-e0ea-4bb2-bda3-25e86eaa6625, Customer: CUST-001, Lines: 2, Total: 450.00 {"SourceContext": "ObservabilityHost.DomainEvents.OrderPlacedEventHandler", "ctx.order_placed_event.total_amount": 450.00, "ctx.order_placed_event.line_count": 2, "ctx.order_placed_event.order_id": "c8e0e473-e0ea-4bb2-bda3-25e86eaa6625", "ctx.customer_id": "CUST-001"}
-[23:51:16 INF] application usecase.event OrderPlacedEventHandler.Handle OrderPlacedEvent 01KM5VNB39GRJZACVBQ3X6K2PT responded success in 0.0021 s {"EventId": {"Id": 1002, "Name": "application.response.success"}, "SourceContext": "ObservabilityHost.DomainEvents.OrderPlacedEventHandler", "ctx.order_placed_event.total_amount": 450.00, "ctx.order_placed_event.line_count": 2, "ctx.order_placed_event.order_id": "c8e0e473-e0ea-4bb2-bda3-25e86eaa6625", "ctx.customer_id": "CUST-001"}
-
-=== GetOrderSummaryQuery (Baseline) ===
-[23:51:16 INF] application usecase.query GetOrderSummaryQuery.Handle requesting with {"OrderId": "ORD-123", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
-[23:51:16 INF] application usecase.query GetOrderSummaryQuery.Handle responded success in 0.0055 s with {"Value": {"OrderId": "ORD-123", "Status": "Completed", "$type": "Response"}, "IsSucc": true, "IsFail": false, "$type": "Succ"} {"EventId": {"Id": 1002, "Name": "application.response.success"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
-GetOrderSummary Result: Succ(Response { OrderId = ORD-123, Status = Completed })
-
-=== FailExpectedCommand (Expected Error) ===
-[23:51:16 INF] application usecase.command FailExpectedCommand.Handle requesting with {"OrderId": "ORD-NOT-EXIST", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
-[23:51:16 WRN] application usecase.command FailExpectedCommand.Handle responded failure in 0.0019 s with expected:Order.NotFound {"ErrorType": "ErrorCodeExpected", "ErrorCode": "Order.NotFound", "ErrorCodeId": -1000, "ErrorCurrentValue": "ORD-NOT-EXIST", "Message": "주문을 찾을 수 없습니다"} {"EventId": {"Id": 1003, "Name": "application.response.warning"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
-FailExpected Result: Fail(주문을 찾을 수 없습니다)
-
-=== FailExceptionalCommand (Exceptional Error) ===
-[23:51:16 INF] application usecase.command FailExceptionalCommand.Handle requesting with {"OrderId": "ORD-DB-FAIL", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
-[23:51:16 ERR] application usecase.command FailExceptionalCommand.Handle responded failure in 0.0161 s with exceptional:Database.ConnectionFailed {"ErrorType": "ErrorCodeExceptional", "ErrorCode": "Database.ConnectionFailed", "ErrorCodeId": -2146233079, "Message": "데이터베이스 연결이 끊어졌습니다", "ExceptionDetails": {...}} {"EventId": {"Id": 1004, "Name": "application.response.error"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
-FailExceptional Result: Fail(데이터베이스 연결이 끊어졌습니다)
-
-=== Done ===
-```
+| # | 시나리오 | Usecase 유형 | 로그 레벨 | 핵심 관찰 가능성 |
+|---|----------|-------------|-----------|-----------------|
+| 1 | PlaceOrderCommand | Command | INF | Usecase Log Enricher (Request + Response) |
+| 2 | OrderPlacedEvent | Domain Event | INF | Domain Event Log Enricher + Root 필드 |
+| 3 | GetOrderSummaryQuery | Query | INF | 기준선 (커스텀 Enricher 없음) |
+| 4 | FailExpectedCommand | Command | WRN | Expected 비즈니스 에러 |
+| 5 | FailExceptionalCommand | Command | ERR | Exceptional 시스템 에러 |
 
 ---
 
-## 3. Scenario 5: OrderPlacedEvent — Domain Event Log Enricher 검증
+## 1. PlaceOrderCommand — Command 성공 + Log Enricher
 
-### 3.1 Enricher 필드
+### Console 로그 (Raw)
+
+```
+[20:36:05 INF] application usecase.command PlaceOrderCommand.Handle requesting with {"CustomerId": "CUST-001", "Lines": [{"ProductId": "PROD-A", "Quantity": 2, "UnitPrice": 100.00, "$type": "OrderLine"}, {"ProductId": "PROD-B", "Quantity": 1, "UnitPrice": 250.00, "$type": "OrderLine"}], "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "ctx.place_order_command.request.order_total_amount": 450.00, "ctx.place_order_command.request.lines_count": 2, "ctx.customer_id": "CUST-001"}
+[20:36:05 INF] application usecase.command PlaceOrderCommand.Handle responded success in 0.0092 s with {"Value": {"OrderId": "4d467449-b85a-43e3-9fde-fc89ab72eb81", "LineCount": 2, "TotalAmount": 450.00, "$type": "Response"}, "IsSucc": true, "IsFail": false, "$type": "Succ"} {"EventId": {"Id": 1002, "Name": "application.response.success"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline", "ctx.place_order_command.response.average_line_amount": 225.00, "ctx.place_order_command.response.total_amount": 450.00, "ctx.place_order_command.response.line_count": 2, "ctx.place_order_command.response.order_id": "4d467449-b85a-43e3-9fde-fc89ab72eb81"}
+```
+
+### OpenSearch JSON 로그
+
+**Request:**
+```json
+{
+  "@timestamp": "2026-03-21T11:36:05.3009604Z",
+  "log.level": "Information",
+  "message": "application usecase.command PlaceOrderCommand.Handle requesting with ...",
+  "message.template": "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} requesting with {@request.message}",
+  "event.id": 1001,
+  "event.name": "application.request",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category_type": "command",
+  "request.handler": "PlaceOrderCommand",
+  "request.handler_method": "Handle",
+  "ctx.place_order_command.request.order_total_amount": 450.00,
+  "ctx.place_order_command.request.lines_count": 2,
+  "ctx.customer_id": "CUST-001",
+  "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
+}
+```
+
+**Response:**
+```json
+{
+  "@timestamp": "2026-03-21T11:36:05.426725Z",
+  "log.level": "Information",
+  "message": "application usecase.command PlaceOrderCommand.Handle responded success in 0.0092 s with ...",
+  "message.template": "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message}",
+  "event.id": 1002,
+  "event.name": "application.response.success",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category_type": "command",
+  "request.handler": "PlaceOrderCommand",
+  "request.handler_method": "Handle",
+  "response.status": "success",
+  "response.elapsed": 0.0091929,
+  "ctx.place_order_command.response.average_line_amount": 225.00,
+  "ctx.place_order_command.response.total_amount": 450.00,
+  "ctx.place_order_command.response.line_count": 2,
+  "ctx.place_order_command.response.order_id": "4d467449-b85a-43e3-9fde-fc89ab72eb81",
+  "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
+}
+```
+
+### Enricher 필드 요약
+
+| ctx 필드 | 값 | Enricher 위치 |
+|----------|-----|--------------|
+| `ctx.customer_id` | `CUST-001` | **Root** (Request) |
+| `ctx.place_order_command.request.order_total_amount` | `450.00` | Request Enricher |
+| `ctx.place_order_command.request.lines_count` | `2` | Request Enricher |
+| `ctx.place_order_command.response.order_id` | `4d467449-...` | Response Enricher |
+| `ctx.place_order_command.response.total_amount` | `450.00` | Response Enricher |
+| `ctx.place_order_command.response.line_count` | `2` | Response Enricher |
+| `ctx.place_order_command.response.average_line_amount` | `225.00` | Response Enricher |
+
+---
+
+## 2. OrderPlacedEvent — Domain Event Enricher
+
+### Console 로그 (Raw)
+
+```
+[20:36:05 INF] application usecase.event OrderPlacedEventHandler.Handle OrderPlacedEvent 01KM82WNHP7TTEPZSSX7DYFACT requesting with {"CustomerId": "CUST-001", "OrderId": "4d467449-b85a-43e3-9fde-fc89ab72eb81", "LineCount": 2, "TotalAmount": 450.00, "OccurredAt": "2026-03-21T11:36:05.4307454+00:00", "EventId": {"Random": "3EB4EB7F39E9DBE7A99A", "Time": "2026-03-21T11:36:05.4300000+00:00", "$type": "Ulid"}, "CorrelationId": null, "CausationId": null, "$type": "OrderPlacedEvent"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "ObservabilityHost.DomainEvents.OrderPlacedEventHandler", "ctx.order_placed_event.total_amount": 450.00, "ctx.order_placed_event.line_count": 2, "ctx.order_placed_event.order_id": "4d467449-b85a-43e3-9fde-fc89ab72eb81", "ctx.customer_id": "CUST-001"}
+[20:36:05 INF] [DomainEvent] Order placed: 4d467449-b85a-43e3-9fde-fc89ab72eb81, Customer: CUST-001, Lines: 2, Total: 450.00 {"SourceContext": "ObservabilityHost.DomainEvents.OrderPlacedEventHandler", "ctx.order_placed_event.total_amount": 450.00, "ctx.order_placed_event.line_count": 2, "ctx.order_placed_event.order_id": "4d467449-b85a-43e3-9fde-fc89ab72eb81", "ctx.customer_id": "CUST-001"}
+[20:36:05 INF] application usecase.event OrderPlacedEventHandler.Handle OrderPlacedEvent 01KM82WNHP7TTEPZSSX7DYFACT responded success in 0.0049 s {"EventId": {"Id": 1002, "Name": "application.response.success"}, "SourceContext": "ObservabilityHost.DomainEvents.OrderPlacedEventHandler", "ctx.order_placed_event.total_amount": 450.00, "ctx.order_placed_event.line_count": 2, "ctx.order_placed_event.order_id": "4d467449-b85a-43e3-9fde-fc89ab72eb81", "ctx.customer_id": "CUST-001"}
+```
+
+### OpenSearch JSON 로그
+
+**Request:**
+```json
+{
+  "@timestamp": "2026-03-21T11:36:05.4541422Z",
+  "log.level": "Information",
+  "message": "application usecase.event OrderPlacedEventHandler.Handle OrderPlacedEvent 01KM82WNHP7TTEPZSSX7DYFACT requesting with ...",
+  "message.template": "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} {request.event.type} {request.event.id} requesting with {@request.message}",
+  "event.id": 1001,
+  "event.name": "application.request",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category_type": "event",
+  "request.handler": "OrderPlacedEventHandler",
+  "request.handler_method": "Handle",
+  "request.event.type": "OrderPlacedEvent",
+  "request.event.id": "01KM82WNHP7TTEPZSSX7DYFACT",
+  "ctx.order_placed_event.total_amount": 450.00,
+  "ctx.order_placed_event.line_count": 2,
+  "ctx.order_placed_event.order_id": "4d467449-b85a-43e3-9fde-fc89ab72eb81",
+  "ctx.customer_id": "CUST-001",
+  "log.logger": "ObservabilityHost.DomainEvents.OrderPlacedEventHandler"
+}
+```
+
+**Handler 내부:**
+```json
+{
+  "@timestamp": "2026-03-21T11:36:05.4565411Z",
+  "log.level": "Information",
+  "message": "[DomainEvent] Order placed: 4d467449-b85a-43e3-9fde-fc89ab72eb81, Customer: CUST-001, Lines: 2, Total: 450.00",
+  "message.template": "[DomainEvent] Order placed: {OrderId}, Customer: {CustomerId}, Lines: {LineCount}, Total: {TotalAmount}",
+  "ctx.order_id": "4d467449-b85a-43e3-9fde-fc89ab72eb81",
+  "ctx.customer_id": "CUST-001",
+  "ctx.line_count": 2,
+  "ctx.total_amount": 450.00,
+  "ctx.order_placed_event.total_amount": 450.00,
+  "ctx.order_placed_event.line_count": 2,
+  "ctx.order_placed_event.order_id": "4d467449-b85a-43e3-9fde-fc89ab72eb81",
+  "log.logger": "ObservabilityHost.DomainEvents.OrderPlacedEventHandler"
+}
+```
+
+**Response:**
+```json
+{
+  "@timestamp": "2026-03-21T11:36:05.4615482Z",
+  "log.level": "Information",
+  "message": "application usecase.event OrderPlacedEventHandler.Handle OrderPlacedEvent 01KM82WNHP7TTEPZSSX7DYFACT responded success in 0.0049 s",
+  "message.template": "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} {request.event.type} {request.event.id} responded {response.status} in {response.elapsed:0.0000} s",
+  "event.id": 1002,
+  "event.name": "application.response.success",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category_type": "event",
+  "request.handler": "OrderPlacedEventHandler",
+  "request.handler_method": "Handle",
+  "request.event.type": "OrderPlacedEvent",
+  "request.event.id": "01KM82WNHP7TTEPZSSX7DYFACT",
+  "response.status": "success",
+  "response.elapsed": 0.0049272,
+  "ctx.order_placed_event.total_amount": 450.00,
+  "ctx.order_placed_event.line_count": 2,
+  "ctx.order_placed_event.order_id": "4d467449-b85a-43e3-9fde-fc89ab72eb81",
+  "ctx.customer_id": "CUST-001",
+  "log.logger": "ObservabilityHost.DomainEvents.OrderPlacedEventHandler"
+}
+```
+
+### Enricher 필드 요약
 
 | ctx 필드 | 값 | 설명 |
 |----------|-----|------|
 | `ctx.customer_id` | `CUST-001` | **Root 필드** — CustomerId |
-| `ctx.order_placed_event.order_id` | `c8e0e473-e0ea-4bb2-bda3-25e86eaa6625` | 주문 ID |
+| `ctx.order_placed_event.order_id` | `4d467449-...` | 주문 ID |
 | `ctx.order_placed_event.line_count` | `2` | 주문 라인 수 |
 | `ctx.order_placed_event.total_amount` | `450.00` | 총 주문 금액 |
 
-### 3.2 시나리오 흐름
-
-```
-PlaceOrderCommand 성공 → FinResponse<Response>.IsSucc = true
-  → OrderPlacedEvent 생성 (CustomerId, OrderId, LineCount, TotalAmount)
-  → mediator.Publish(orderPlacedEvent)
-  → ObservableDomainEventNotificationPublisher
-    → IDomainEventLogEnricher<OrderPlacedEvent>.EnrichLog() → LogContext Push
-    → OrderPlacedEventHandler.Handle() 실행
-    → Enrichment Dispose
-```
-
-### 3.3 Request 로그
-
-```
-[23:51:16 INF] application usecase.event OrderPlacedEventHandler.Handle OrderPlacedEvent 01KM5VNB39GRJZACVBQ3X6K2PT requesting with {..}
-  {"EventId":{"Id":1001,"Name":"application.request"},
-   "SourceContext":"ObservabilityHost.DomainEvents.OrderPlacedEventHandler",
-   "ctx.order_placed_event.total_amount":450.00,
-   "ctx.order_placed_event.line_count":2,
-   "ctx.order_placed_event.order_id":"c8e0e473-e0ea-4bb2-bda3-25e86eaa6625",
-   "ctx.customer_id":"CUST-001"}
-```
-
-### 3.4 Handler 내부 로그
-
-```
-[23:51:16 INF] [DomainEvent] Order placed: c8e0e473-e0ea-4bb2-bda3-25e86eaa6625, Customer: CUST-001, Lines: 2, Total: 450.00
-  {"SourceContext":"ObservabilityHost.DomainEvents.OrderPlacedEventHandler",
-   "ctx.order_placed_event.total_amount":450.00,
-   "ctx.order_placed_event.line_count":2,
-   "ctx.order_placed_event.order_id":"c8e0e473-e0ea-4bb2-bda3-25e86eaa6625",
-   "ctx.customer_id":"CUST-001"}
-```
-
-### 3.5 Response 로그
-
-```
-[23:51:16 INF] application usecase.event OrderPlacedEventHandler.Handle OrderPlacedEvent 01KM5VNB39GRJZACVBQ3X6K2PT responded success in 0.0021 s
-  {"EventId":{"Id":1002,"Name":"application.response.success"},
-   "SourceContext":"ObservabilityHost.DomainEvents.OrderPlacedEventHandler",
-   "ctx.order_placed_event.total_amount":450.00,
-   "ctx.order_placed_event.line_count":2,
-   "ctx.order_placed_event.order_id":"c8e0e473-e0ea-4bb2-bda3-25e86eaa6625",
-   "ctx.customer_id":"CUST-001"}
-```
-
-### 3.6 Enricher 스코프 검증
-
-`using var enrichment = ResolveEnrichment(domainEvent)` 패턴으로 인해 `ctx.*` 필드는 핸들러 전체 실행 범위에 적용됩니다.
-
-```
-ObservableDomainEventNotificationPublisher.HandleWithObservability()
-│
-├─ using var enrichment = ResolveEnrichment(domainEvent)  ← LogContext.Push 시작
-│   ├─ ctx.customer_id = "CUST-001"
-│   ├─ ctx.order_placed_event.order_id = "c8e0e473-..."
-│   ├─ ctx.order_placed_event.line_count = 2
-│   └─ ctx.order_placed_event.total_amount = 450.00
-│
-├─ logger.LogDomainEventHandlerRequest(...)          ← Request 로그 (ctx.* 포함)
-├─ handler.Handle(notification, ct)                  ← Handler 내부 로그 (ctx.* 포함)
-├─ logger.LogDomainEventHandlerResponseSuccess(...)  ← Response 로그 (ctx.* 포함)
-│
-└─ enrichment.Dispose()                              ← LogContext.Pop 복원
-```
+### Enricher 스코프 검증
 
 | 로그 위치 | ctx.customer_id | ctx.order_placed_event.* | 결과 |
 |-----------|----------------|--------------------------|------|
@@ -139,43 +187,206 @@ ObservableDomainEventNotificationPublisher.HandleWithObservability()
 
 ---
 
-## 4. Usecase Enricher vs Domain Event Enricher 비교
+## 3. GetOrderSummaryQuery — Query 기준선
 
-| 구분 | Usecase Log Enricher | Domain Event Log Enricher |
-|------|---------------------|--------------------------|
-| 인터페이스 | `IUsecaseLogEnricher<TReq, TResp>` | `IDomainEventLogEnricher<TEvent>` |
-| 적용 위치 | `UsecaseLoggingPipeline` | `ObservableDomainEventNotificationPublisher` |
-| 소스 생성 | Source Generator 자동 생성 | **수동 구현** |
-| Root 필드 | `[LogEnricherRoot]` 어트리뷰트 | 수동 `ctx.customer_id` Push |
-| 스코프 | Request/Response 파이프라인 | Handler 전체 (Request → Handler → Response) |
+### Console 로그 (Raw)
+
+```
+[20:36:05 INF] application usecase.query GetOrderSummaryQuery.Handle requesting with {"OrderId": "ORD-123", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+[20:36:05 INF] application usecase.query GetOrderSummaryQuery.Handle responded success in 0.0007 s with {"Value": {"OrderId": "ORD-123", "Status": "Completed", "$type": "Response"}, "IsSucc": true, "IsFail": false, "$type": "Succ"} {"EventId": {"Id": 1002, "Name": "application.response.success"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+```
+
+### OpenSearch JSON 로그
+
+**Request:**
+```json
+{
+  "@timestamp": "2026-03-21T11:36:05.4685706Z",
+  "log.level": "Information",
+  "message": "application usecase.query GetOrderSummaryQuery.Handle requesting with ...",
+  "message.template": "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} requesting with {@request.message}",
+  "event.id": 1001,
+  "event.name": "application.request",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category_type": "query",
+  "request.handler": "GetOrderSummaryQuery",
+  "request.handler_method": "Handle",
+  "request.message": "{\"OrderId\":\"ORD-123\"}",
+  "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
+}
+```
+
+**Response:**
+```json
+{
+  "@timestamp": "2026-03-21T11:36:05.4706802Z",
+  "log.level": "Information",
+  "message": "application usecase.query GetOrderSummaryQuery.Handle responded success in 0.0007 s with ...",
+  "message.template": "{request.layer} {request.category}.{request.category_type} {request.handler}.{request.handler_method} responded {response.status} in {response.elapsed:0.0000} s with {@response.message}",
+  "event.id": 1002,
+  "event.name": "application.response.success",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category_type": "query",
+  "request.handler": "GetOrderSummaryQuery",
+  "request.handler_method": "Handle",
+  "response.status": "success",
+  "response.elapsed": 0.0006544,
+  "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
+}
+```
+
+> 기준선 시나리오: 커스텀 Enricher가 없으므로 `ctx.*` 필드 없음
 
 ---
 
-## 5. 전체 시나리오 목록
+## 4. FailExpectedCommand — Expected 비즈니스 에러
 
-| # | 시나리오 | 관찰 가능성 | 로그 레벨 |
-|---|----------|------------|-----------|
-| 1 | PlaceOrderCommand | Usecase Metrics + Tracing + **Log Enricher** | INF |
-| 2 | GetOrderSummaryQuery | 기준선 (커스텀 없음) | INF |
-| 3 | FailExpectedCommand | Expected 비즈니스 에러 | WRN |
-| 4 | FailExceptionalCommand | Exceptional 시스템 에러 | ERR |
-| **5** | **OrderPlacedEvent** | **Domain Event Log Enricher** | **INF** |
+### Console 로그 (Raw)
+
+```
+[20:36:05 INF] application usecase.command FailExpectedCommand.Handle requesting with {"OrderId": "ORD-NOT-EXIST", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+[20:36:05 WRN] application usecase.command FailExpectedCommand.Handle responded failure in 0.0031 s with expected:Order.NotFound {"ErrorType": "ErrorCodeExpected", "ErrorCode": "Order.NotFound", "ErrorCodeId": -1000, "ErrorCurrentValue": "ORD-NOT-EXIST", "Message": "주문을 찾을 수 없습니다"} {"EventId": {"Id": 1003, "Name": "application.response.warning"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+```
+
+### OpenSearch JSON 로그
+
+**Request:**
+```json
+{
+  "@timestamp": "2026-03-21T11:36:05.4765911Z",
+  "log.level": "Information",
+  "message": "application usecase.command FailExpectedCommand.Handle requesting with ...",
+  "event.id": 1001,
+  "event.name": "application.request",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category_type": "command",
+  "request.handler": "FailExpectedCommand",
+  "request.handler_method": "Handle",
+  "request.message": "{\"OrderId\":\"ORD-NOT-EXIST\"}",
+  "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
+}
+```
+
+**Response (Warning):**
+```json
+{
+  "@timestamp": "2026-03-21T11:36:05.4841045Z",
+  "log.level": "Warning",
+  "message": "application usecase.command FailExpectedCommand.Handle responded failure in 0.0031 s with expected:Order.NotFound ...",
+  "event.id": 1003,
+  "event.name": "application.response.warning",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category_type": "command",
+  "request.handler": "FailExpectedCommand",
+  "request.handler_method": "Handle",
+  "response.status": "failure",
+  "response.elapsed": 0.0030533,
+  "error.type": "expected",
+  "error.code": "Order.NotFound",
+  "error.detail": "{\"ErrorType\":\"ErrorCodeExpected\",\"ErrorCode\":\"Order.NotFound\",\"ErrorCodeId\":-1000,\"ErrorCurrentValue\":\"ORD-NOT-EXIST\",\"Message\":\"주문을 찾을 수 없습니다\"}",
+  "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
+}
+```
+
+> Expected 에러는 `log.level: Warning` + `event.id: 1003` 으로 출력
 
 ---
 
-## 6. 검증 요약
+## 5. FailExceptionalCommand — Exceptional 시스템 에러
+
+### Console 로그 (Raw)
+
+```
+[20:36:05 INF] application usecase.command FailExceptionalCommand.Handle requesting with {"OrderId": "ORD-DB-FAIL", "$type": "Request"} {"EventId": {"Id": 1001, "Name": "application.request"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+[20:36:05 ERR] application usecase.command FailExceptionalCommand.Handle responded failure in 0.0292 s with exceptional:Database.ConnectionFailed {"ErrorType": "ErrorCodeExceptional", "ErrorCode": "Database.ConnectionFailed", "ErrorCodeId": -2146233079, "Message": "데이터베이스 연결이 끊어졌습니다", "ExceptionDetails": {"TargetSite": null, "Message": "데이터베이스 연결이 끊어졌습니다", "Data": [], "InnerException": null, "HelpLink": null, "Source": null, "HResult": -2146233079, "StackTrace": null, "$type": "InvalidOperationException"}} {"EventId": {"Id": 1004, "Name": "application.response.error"}, "SourceContext": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"}
+```
+
+### OpenSearch JSON 로그
+
+**Request:**
+```json
+{
+  "@timestamp": "2026-03-21T11:36:05.486642Z",
+  "log.level": "Information",
+  "message": "application usecase.command FailExceptionalCommand.Handle requesting with ...",
+  "event.id": 1001,
+  "event.name": "application.request",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category_type": "command",
+  "request.handler": "FailExceptionalCommand",
+  "request.handler_method": "Handle",
+  "request.message": "{\"OrderId\":\"ORD-DB-FAIL\"}",
+  "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
+}
+```
+
+**Response (Error):**
+```json
+{
+  "@timestamp": "2026-03-21T11:36:05.5208343Z",
+  "log.level": "Error",
+  "message": "application usecase.command FailExceptionalCommand.Handle responded failure in 0.0292 s with exceptional:Database.ConnectionFailed ...",
+  "event.id": 1004,
+  "event.name": "application.response.error",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category_type": "command",
+  "request.handler": "FailExceptionalCommand",
+  "request.handler_method": "Handle",
+  "response.status": "failure",
+  "response.elapsed": 0.0291804,
+  "error.type": "exceptional",
+  "error.code": "Database.ConnectionFailed",
+  "error.detail": "{\"ErrorType\":\"ErrorCodeExceptional\",\"ErrorCode\":\"Database.ConnectionFailed\",\"ErrorCodeId\":-2146233079,\"Message\":\"데이터베이스 연결이 끊어졌습니다\",\"ExceptionDetails\":{\"TargetSite\":null,\"Message\":\"데이터베이스 연결이 끊어졌습니다\",\"Data\":[],\"InnerException\":null,\"HelpLink\":null,\"Source\":null,\"HResult\":-2146233079,\"StackTrace\":null}}",
+  "log.logger": "Functorium.Adapters.Observabilities.Pipelines.UsecaseLoggingPipeline"
+}
+```
+
+> Exceptional 에러는 `log.level: Error` + `event.id: 1004` + `ExceptionDetails` 포함
+
+---
+
+## 인터페이스 스코프 ctx 필드 검증
+
+### 변경 사항
+
+`PlaceOrderCommand.Request`에 비-root 인터페이스 `IAuditable`을 추가하여 세 가지 ctx 필드 스코프를 검증합니다.
+
+```csharp
+public interface IAuditable { string OperatorId { get; } }              // 비-root
+[LogEnricherRoot] public interface ICustomerRequest { string CustomerId { get; } }  // root
+
+public sealed record Request(string CustomerId, List<OrderLine> Lines, string OperatorId)
+    : ICommandRequest<Response>, ICustomerRequest, IAuditable;
+```
+
+### 기대 ctx 필드
+
+| 프로퍼티 | 소속 인터페이스 | 기대 ctx 필드 | 스코프 |
+|---------|---------------|-------------|--------|
+| `CustomerId` | `[LogEnricherRoot] ICustomerRequest` | `ctx.customer_id` | Root |
+| `OperatorId` | `IAuditable` | `ctx.auditable.operator_id` | Interface |
+| `Lines` | 없음 (직접 프로퍼티) | `ctx.place_order_command.request.lines_count` | Usecase |
+
+---
+
+## 검증 결과 요약
 
 | # | 검증 항목 | 결과 |
 |---|----------|------|
-| 1 | `dotnet build Functorium.slnx` 빌드 성공 | PASS |
-| 2 | `NotificationPublisherType` 설정 → `ObservableDomainEventNotificationPublisher` | PASS |
-| 3 | `OrderPlacedEvent` → `DomainEvent` 파생 확인 | PASS |
-| 4 | `OrderPlacedEventHandler` → `IDomainEventHandler<OrderPlacedEvent>` 정상 호출 | PASS |
-| 5 | `OrderPlacedEventLogEnricher` DI 등록 및 자동 해석 | PASS |
-| 6 | `ctx.*` 필드가 Request 로그에 포함 | PASS |
-| 7 | `ctx.*` 필드가 Handler 내부 로그에 포함 | PASS |
-| 8 | `ctx.*` 필드가 Response 로그에 포함 | PASS |
-| 9 | Root 필드 `ctx.customer_id` 출력 | PASS |
-| 10 | 기존 Scenario 1~4 회귀 없음 | PASS |
-| 11 | PlaceOrderCommand Usecase Enricher 정상 유지 | PASS |
-| 12 | 전체 테스트 1480 passed, 0 failed | PASS |
+| 1 | PlaceOrderCommand Request Enricher (`ctx.place_order_command.request.*`) | **Pass** |
+| 2 | PlaceOrderCommand Response Enricher (`ctx.place_order_command.response.*`) | **Pass** |
+| 3 | PlaceOrderCommand Root 필드 (`ctx.customer_id`) | **Pass** |
+| 4 | PlaceOrderCommand Interface 스코프 (`ctx.auditable.operator_id`) | **TODO** |
+| 5 | OrderPlacedEvent Domain Event Enricher (`ctx.order_placed_event.*`) | **Pass** |
+| 6 | OrderPlacedEvent Root 필드 (`ctx.customer_id`) Handler 전체 범위 포함 | **Pass** |
+| 7 | GetOrderSummaryQuery 기준선 — `ctx.*` 필드 없음 | **Pass** |
+| 8 | FailExpectedCommand → `log.level: Warning` + `event.id: 1003` | **Pass** |
+| 9 | FailExceptionalCommand → `log.level: Error` + `event.id: 1004` + `ExceptionDetails` | **Pass** |
+| 10 | OpenSearch JSON 포맷 정상 출력 (모든 시나리오) | **Pass** |
+| 11 | Console Raw 출력과 JSON 필드 일치 | **Pass** |
