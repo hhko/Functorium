@@ -4,7 +4,9 @@ Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 
 - [x] 유스케이스 Request, Response 메시지 코드 생성기를 이용한 로그 자동화
 - [x] 유스케이스 ctx.{클래스}.{request | response}.{필드}[_count]
-- [ ] 유스케이스 ctx.{필드}[_count]
+- [x] 유스케이스 ctx.{필드}[_count]
+- [ ] error.stack_trace
+- [ ] error.current_value?
 - [ ] 도메인 이벤트 로그 자동화 이해?
 - [ ] Adapter 코드 자동화 이해?
 ---

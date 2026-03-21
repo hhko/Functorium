@@ -616,40 +616,151 @@ Application Layer에서는 요청과 응답 객체 전체가 로그에 포함됩
 
 ### Log Enricher를 통한 커스텀 로깅
 
-기본 `UsecaseLoggingPipeline`이 자동으로 생성하는 표준 필드 외에, 비즈니스 맥락에 맞는 커스텀 필드를 추가할 수 있습니다. `IUsecaseLogEnricher<TRequest>`를 구현하면 Request/Response 로그 출력 시 Serilog `LogContext`에 커스텀 속성을 자동으로 Push합니다.
+기본 `UsecaseLoggingPipeline`이 자동으로 생성하는 표준 필드 외에, 비즈니스 맥락에 맞는 커스텀 필드를 추가할 수 있습니다. `IUsecaseLogEnricher<TRequest, TResponse>`를 구현하면 Request/Response 로그 출력 시 Serilog `LogContext`에 커스텀 속성을 자동으로 Push합니다.
 
-#### IUsecaseLogEnricher\<TRequest\> 인터페이스
+#### IUsecaseLogEnricher\<TRequest, TResponse\> 인터페이스
 
 ```csharp
-public interface IUsecaseLogEnricher<in TRequest>
+public interface IUsecaseLogEnricher<in TRequest, in TResponse>
+    where TResponse : IFinResponse
 {
     IDisposable? EnrichRequestLog(TRequest request);
-    IDisposable? EnrichResponseLog(TRequest request);
+    IDisposable? EnrichResponseLog(TRequest request, TResponse response);
 }
 ```
 
 - `EnrichRequestLog`: Request 로그 출력 전에 호출됩니다. `LogContext.PushProperty`로 추가 속성을 Push하고 `IDisposable`을 반환합니다.
-- `EnrichResponseLog`: Response 로그 출력 전에 호출됩니다.
+- `EnrichResponseLog`: Response 로그 출력 전에 호출됩니다. Request와 Response 모두 파라미터로 전달되어 응답 기반 필드 추가가 가능합니다.
 - 반환된 `IDisposable`은 로그 출력 후 자동으로 Dispose되어 스코프가 정리됩니다.
 
-#### 구현 예시 (PlaceOrderCommand.LogEnricher)
+#### Source Generator 자동 생성 (LogEnricherGenerator)
+
+`ICommandRequest<T>` 또는 `IQueryRequest<T>`를 구현하는 Request record가 있으면, `LogEnricherGenerator`가 `IUsecaseLogEnricher<TRequest, TResponse>` 구현 코드를 **자동으로 생성**합니다. 개발자가 직접 Enricher를 작성할 필요가 없습니다.
+
+**자동 생성 규칙:**
+
+| Request/Response 속성 타입 | 생성되는 ctx 필드 | 예시 |
+|---------------------------|------------------|------|
+| 스칼라 (string, int, decimal 등) | `ctx.{usecase}.request.{field}` | `ctx.place_order_command.request.customer_id` |
+| 컬렉션 (List, Seq 등) | `ctx.{usecase}.request.{field}_count` | `ctx.place_order_command.request.lines_count` |
+| Response 스칼라 | `ctx.{usecase}.response.{field}` | `ctx.place_order_command.response.order_id` |
+| Response 컬렉션 | `ctx.{usecase}.response.{field}_count` | `ctx.place_order_command.response.items_count` |
+
+**생성 코드 예시 (PlaceOrderCommand):**
+
+Source Generator가 `PlaceOrderCommand.Request`와 `Response`의 속성을 분석하여 다음과 같은 Enricher를 자동 생성합니다:
 
 ```csharp
-public sealed class PlaceOrderLogEnricher : IUsecaseLogEnricher<PlaceOrderCommand.Request>
+// 자동 생성된 코드 (PlaceOrderCommandRequestLogEnricher.g.cs)
+public partial class PlaceOrderCommandRequestLogEnricher
+    : IUsecaseLogEnricher<PlaceOrderCommand.Request, FinResponse<PlaceOrderCommand.Response>>
 {
     public IDisposable? EnrichRequestLog(PlaceOrderCommand.Request request)
     {
-        var d1 = LogContext.PushProperty("CustomerId", request.CustomerId);
-        var d2 = LogContext.PushProperty("OrderLineCount", request.Lines.Count);
-        return new CompositeDisposable(d1, d2);
+        var disposables = new List<IDisposable>(2);
+        // [LogEnricherRoot] 인터페이스의 속성 → Root Context
+        disposables.Add(LogContext.PushProperty("ctx.customer_id", request.CustomerId));
+        // 컬렉션 → _count 자동 변환
+        disposables.Add(LogContext.PushProperty("ctx.place_order_command.request.lines_count", request.Lines?.Count ?? 0));
+        OnEnrichRequestLog(request, disposables);  // partial 확장 포인트
+        return new GeneratedCompositeDisposable(disposables);
     }
 
-    public IDisposable? EnrichResponseLog(PlaceOrderCommand.Request request)
+    public IDisposable? EnrichResponseLog(
+        PlaceOrderCommand.Request request,
+        FinResponse<PlaceOrderCommand.Response> response)
+    {
+        var disposables = new List<IDisposable>(3);
+        if (response is FinResponse<PlaceOrderCommand.Response>.Succ { Value: var r })
+        {
+            disposables.Add(LogContext.PushProperty("ctx.place_order_command.response.order_id", r.OrderId));
+            disposables.Add(LogContext.PushProperty("ctx.place_order_command.response.line_count", r.LineCount));
+            disposables.Add(LogContext.PushProperty("ctx.place_order_command.response.total_amount", r.TotalAmount));
+        }
+        OnEnrichResponseLog(request, response, disposables);  // partial 확장 포인트
+        return disposables.Count > 0 ? new GeneratedCompositeDisposable(disposables) : null;
+    }
+
+    // 확장 포인트: 커스텀 computed 필드 추가 가능
+    partial void OnEnrichRequestLog(PlaceOrderCommand.Request request, List<IDisposable> disposables);
+    partial void OnEnrichResponseLog(PlaceOrderCommand.Request request,
+        FinResponse<PlaceOrderCommand.Response> response, List<IDisposable> disposables);
+
+    // 헬퍼 메서드
+    private static void PushRequestCtx(List<IDisposable> disposables, string fieldName, object? value)
+        => disposables.Add(LogContext.PushProperty("ctx.place_order_command.request." + fieldName, value));
+    private static void PushResponseCtx(List<IDisposable> disposables, string fieldName, object? value)
+        => disposables.Add(LogContext.PushProperty("ctx.place_order_command.response." + fieldName, value));
+    private static void PushRootCtx(List<IDisposable> disposables, string fieldName, object? value)
+        => disposables.Add(LogContext.PushProperty("ctx." + fieldName, value));
+}
+```
+
+#### partial 확장 포인트
+
+Source Generator가 `partial void OnEnrichRequestLog()`와 `partial void OnEnrichResponseLog()`를 생성합니다. 자동 생성된 필드 외에 **computed 필드**(계산된 값)를 추가할 때 사용합니다:
+
+```csharp
+// PlaceOrderCommand.LogEnricher.cs — 수동 partial 확장
+public partial class PlaceOrderCommandRequestLogEnricher
+{
+    partial void OnEnrichRequestLog(
+        PlaceOrderCommand.Request request,
+        List<IDisposable> disposables)
     {
         decimal total = request.Lines.Sum(l => l.Quantity * l.UnitPrice);
-        return LogContext.PushProperty("OrderTotalAmount", total);
+        // → ctx.place_order_command.request.order_total_amount
+        PushRequestCtx(disposables, "order_total_amount", total);
+    }
+
+    partial void OnEnrichResponseLog(
+        PlaceOrderCommand.Request request,
+        FinResponse<PlaceOrderCommand.Response> response,
+        List<IDisposable> disposables)
+    {
+        if (response is FinResponse<PlaceOrderCommand.Response>.Succ { Value: var r } && r.LineCount > 0)
+        {
+            // → ctx.place_order_command.response.average_line_amount
+            PushResponseCtx(disposables, "average_line_amount", r.TotalAmount / r.LineCount);
+        }
     }
 }
+```
+
+#### `[LogEnricherRoot]` 어트리뷰트 — Root Context 필드
+
+**위치**: `Functorium.Applications.Usecases.LogEnricherRootAttribute`
+
+`[LogEnricherRoot]`를 인터페이스 또는 속성에 적용하면, 해당 속성이 Usecase prefix 없이 `ctx.{field}`로 승격됩니다.
+
+```csharp
+[LogEnricherRoot]
+public interface ICustomerRequest { string CustomerId { get; } }
+
+public sealed record Request(string CustomerId, List<OrderLine> Lines)
+    : ICommandRequest<Response>, ICustomerRequest;
+// CustomerId → ctx.customer_id  (Root Level, usecase prefix 없음)
+// Lines      → ctx.place_order_command.request.lines_count  (Usecase Level)
+```
+
+**Root Context의 가치:** OpenSearch에서 `ctx.customer_id: "CUST-001"` 하나로 해당 고객의 **모든 Usecase 활동**을 교차 검색할 수 있습니다. Usecase마다 `ctx.place_order_command.request.customer_id`, `ctx.get_order_summary_query.request.customer_id`를 각각 검색할 필요가 없습니다.
+
+#### `[LogEnricherIgnore]` 어트리뷰트 — 생성 제외
+
+**위치**: `Functorium.Applications.Usecases.LogEnricherIgnoreAttribute`
+
+`[LogEnricherIgnore]`를 클래스 또는 속성에 적용하면 LogEnricher 자동 생성에서 제외됩니다.
+
+```csharp
+// 클래스 레벨: 해당 Request의 Enricher 전체를 생성하지 않음
+[LogEnricherIgnore]
+public sealed record Request(string Id) : IQueryRequest<Response>;
+
+// 속성 레벨: 특정 속성만 제외
+public sealed record Request(
+    string CustomerId,
+    [property: LogEnricherIgnore] string InternalToken  // Enricher에서 제외
+) : ICommandRequest<Response>;
 ```
 
 #### 등록 방법
@@ -657,12 +768,15 @@ public sealed class PlaceOrderLogEnricher : IUsecaseLogEnricher<PlaceOrderComman
 Log Enricher는 `ICustomUsecasePipeline`이 아니므로 `AddCustomPipelinesFromAssembly()`의 Scrutor 스캔 대상이 아닙니다. 별도로 DI에 등록합니다:
 
 ```csharp
-services.AddScoped<IUsecaseLogEnricher<PlaceOrderCommand.Request>, PlaceOrderLogEnricher>();
+// Source Generator가 생성한 Enricher 등록
+services.AddScoped<
+    IUsecaseLogEnricher<PlaceOrderCommand.Request, FinResponse<PlaceOrderCommand.Response>>,
+    PlaceOrderCommandRequestLogEnricher>();
 ```
 
 #### null-safe 동작
 
-`UsecaseLoggingPipeline`은 `IUsecaseLogEnricher<TRequest>?`를 optional 의존성(`= null`)으로 주입받습니다. Enricher가 등록되지 않은 Usecase에서는 기본 표준 로깅만 수행됩니다.
+`UsecaseLoggingPipeline`은 `IUsecaseLogEnricher<TRequest, TResponse>?`를 optional 의존성(`= null`)으로 주입받습니다. Enricher가 등록되지 않은 Usecase에서는 기본 표준 로깅만 수행됩니다.
 
 > **참조**: [커스텀 파이프라인 확장 포인트](./18a-observability-spec#커스텀-파이프라인-확장-포인트)
 
@@ -899,6 +1013,131 @@ fail: adapter event PublishTrackedEvents.PublishTrackedEvents responded failure 
 fail: adapter repository InMemoryProductRepository.Create responded failure in 0.0005 s with exceptional:Exceptional {@error}
 fail: application usecase.command CreateProductCommand.Handle responded failure in 0.0031 s with exceptional:AdapterErrors.UsecaseExceptionPipeline`2.PipelineException {@error}
 ```
+
+### IDomainEventLogEnricher\<TEvent\> — 이벤트 핸들러 로그 Enrichment
+
+Usecase에 `IUsecaseLogEnricher`가 있듯이, DomainEvent Handler에는 `IDomainEventLogEnricher<TEvent>`가 있습니다. Handler의 Request/내부 로그/Response 모두에 비즈니스 컨텍스트 필드를 추가합니다.
+
+#### 인터페이스 정의
+
+**위치**: `Functorium.Adapters.Observabilities.Events`
+
+```csharp
+public interface IDomainEventLogEnricher<in TEvent> : IDomainEventLogEnricher
+    where TEvent : IDomainEvent
+{
+    IDisposable? EnrichLog(TEvent domainEvent);
+}
+
+// 비제네릭 베이스 (런타임 해석용)
+public interface IDomainEventLogEnricher
+{
+    IDisposable? EnrichLog(IDomainEvent domainEvent);
+}
+```
+
+#### ObservableDomainEventNotificationPublisher 통합
+
+`ObservableDomainEventNotificationPublisher`는 Handler를 호출하기 전에 `ResolveEnrichment()`로 DI에서 해당 이벤트의 Enricher를 해석합니다:
+
+```csharp
+// ObservableDomainEventNotificationPublisher 내부
+private IDisposable? ResolveEnrichment(IDomainEvent domainEvent)
+{
+    var enricherServiceType = typeof(IDomainEventLogEnricher<>).MakeGenericType(domainEvent.GetType());
+    return (_serviceProvider.GetService(enricherServiceType) as IDomainEventLogEnricher)?.EnrichLog(domainEvent);
+}
+```
+
+반환된 `IDisposable`은 `using` 스코프로 Handler 전체 실행에 적용됩니다. 따라서 Handler의 Request 로그, Handler 내부 로그, Response 로그 **모두에** 동일한 `ctx.*` 필드가 포함됩니다.
+
+#### Source Generator 자동 생성
+
+`DomainEventLogEnricherGenerator`가 `IDomainEventHandler<T>` 구현 클래스를 감지하여 `T`(이벤트 타입)에 대한 `IDomainEventLogEnricher<T>` 구현체를 자동 생성합니다. Layered Architecture에서는 Application 프로젝트의 Handler를 감지하고, 참조 어셈블리의 이벤트 타입 속성을 SemanticModel로 수집합니다.
+
+```csharp
+// 이벤트 정의 (Domain 프로젝트)
+public sealed record OrderPlacedEvent(
+    [LogEnricherRoot] string CustomerId,
+    string OrderId,
+    int LineCount,
+    decimal TotalAmount) : DomainEvent;
+
+// Handler 정의 (Application 프로젝트) — 이 클래스를 감지하여 Enricher 자동 생성
+public sealed class OrderPlacedEventHandler : IDomainEventHandler<OrderPlacedEvent>
+{
+    public ValueTask Handle(OrderPlacedEvent notification, CancellationToken ct) { ... }
+}
+
+// ↓ DomainEventLogEnricherGenerator가 자동 생성하는 코드
+public partial class OrderPlacedEventLogEnricher
+    : IDomainEventLogEnricher<OrderPlacedEvent>
+{
+    public IDisposable? EnrichLog(OrderPlacedEvent domainEvent)
+    {
+        var disposables = new List<IDisposable>(4);
+        disposables.Add(LogContext.PushProperty("ctx.customer_id", domainEvent.CustomerId));
+        disposables.Add(LogContext.PushProperty("ctx.order_placed_event.order_id", domainEvent.OrderId));
+        disposables.Add(LogContext.PushProperty("ctx.order_placed_event.line_count", domainEvent.LineCount));
+        disposables.Add(LogContext.PushProperty("ctx.order_placed_event.total_amount", domainEvent.TotalAmount));
+        OnEnrichLog(domainEvent, disposables);
+        return new GeneratedCompositeDisposable(disposables);
+    }
+
+    partial void OnEnrichLog(OrderPlacedEvent domainEvent, List<IDisposable> disposables);
+    // ...
+}
+```
+
+- `[LogEnricherRoot]` 속성은 `ctx.{field}` Root Level로 승격됩니다.
+- `[LogEnricherIgnore]` 속성/클래스에 적용하면 생성에서 제외됩니다.
+- `partial void OnEnrichLog()`를 구현하면 computed 필드를 추가할 수 있습니다.
+- 같은 이벤트에 여러 Handler가 있어도 Enricher는 1개만 생성됩니다.
+
+#### DI 등록
+
+```csharp
+services.AddScoped<
+    IDomainEventLogEnricher<OrderPlacedEvent>,
+    OrderPlacedEventLogEnricher>();
+```
+
+### ctx.* 필드 3-Level 체계
+
+OpenSearch에서 "고객 CUST-001의 모든 활동을 추적하려면?" — 이 질문에 답하기 위해 Functorium은 `ctx.*` 필드를 3개 레벨로 체계화합니다:
+
+| Level | 필드 패턴 | 생성 방식 | 용도 |
+|-------|----------|----------|------|
+| **Root Context** | `ctx.{field}` | `[LogEnricherRoot]` 인터페이스/속성 | 교차 Usecase 검색 (예: `ctx.customer_id`) |
+| **Usecase Context** | `ctx.{usecase}.{request\|response}.{field}` | Source Generator 자동 생성 | Usecase별 상세 필드 |
+| **Event Context** | `ctx.{event_name}.{field}` | `DomainEventLogEnricherGenerator` 자동 생성 | Domain Event 핸들러 필드 |
+
+**OpenSearch 활용 쿼리 예시:**
+
+```
+# 고객별 모든 활동 추적 (Root Context)
+ctx.customer_id: "CUST-001"
+
+# 특정 Usecase의 요청 상세 (Usecase Context)
+ctx.place_order_command.request.lines_count: [3 TO *]
+
+# 특정 이벤트의 상세 (Event Context)
+ctx.order_placed_event.total_amount: [100000 TO *]
+
+# Root + Usecase 조합: 특정 고객의 대량 주문
+ctx.customer_id: "CUST-001" AND ctx.place_order_command.request.lines_count: [10 TO *]
+```
+
+#### OpenSearchJsonFormatter 변환 규칙
+
+`OpenSearchJsonFormatter`는 `ctx.*` 필드를 **플랫 필드**로 보존합니다. Serilog의 `LogContext.PushProperty`로 추가된 `ctx.` 접두사 속성은 OpenSearch에서 그대로 필드명이 됩니다.
+
+| Serilog LogContext 속성 | OpenSearch 필드 | 비고 |
+|------------------------|----------------|------|
+| `ctx.customer_id` | `ctx.customer_id` | Root — 교차 검색 |
+| `ctx.place_order_command.request.lines_count` | `ctx.place_order_command.request.lines_count` | Usecase — 상세 |
+| `ctx.order_placed_event.order_id` | `ctx.order_placed_event.order_id` | Event — 상세 |
+| PascalCase 미인식 속성 | `ctx.snake_case` | Safety net 변환 |
 
 ---
 
@@ -1231,19 +1470,17 @@ public record CreateUserCommand(
 
 ### Q: 커스텀 필드를 추가하려면?
 
-A: Functorium의 자동 로깅은 표준 필드를 생성합니다. 커스텀 필드가 필요한 경우 핸들러 내에서 직접 로그를 추가할 수 있습니다:
+A: Functorium은 세 가지 방법으로 커스텀 로그 필드를 지원합니다:
 
-```csharp
-public async Task<Fin<OrderId>> Handle(CreateOrderCommand command, CancellationToken ct)
-{
-    _logger.LogInformation(
-        "Processing order for customer {CustomerId} with {ItemCount} items",
-        command.CustomerId,
-        command.Items.Count);
+1. **Source Generator 자동 생성 (권장):** `ICommandRequest<T>` 또는 `IQueryRequest<T>`를 구현하면 `LogEnricherGenerator`가 Request/Response의 스칼라 속성을 `ctx.{usecase}.{request|response}.{field}` 형태로 자동 생성합니다. 별도 코드 작성 불필요.
 
-    // 비즈니스 로직...
-}
-```
+2. **partial 확장 포인트:** 자동 생성된 Enricher의 `OnEnrichRequestLog()` / `OnEnrichResponseLog()`를 partial 구현하여 computed 필드(계산된 값)를 추가합니다.
+
+3. **Domain Event Enricher:** `IDomainEventHandler<TEvent>`를 구현하면 `DomainEventLogEnricherGenerator`가 이벤트 핸들러에 `ctx.{event_name}.{field}` 형태의 필드를 자동 생성합니다.
+
+`[LogEnricherRoot]` 어트리뷰트를 사용하면 교차 Usecase 검색이 가능한 Root Context 필드(`ctx.{field}`)를 생성할 수 있습니다.
+
+> **상세**: [Log Enricher를 통한 커스텀 로깅](#log-enricher를-통한-커스텀-로깅) 섹션 참조.
 
 ### Q: Adapter Layer에서 Debug 로그는 언제 활성화해야 하나요?
 
@@ -1287,3 +1524,4 @@ A: 로그 시스템에 따라 다릅니다:
 - [18b-observability-naming.md](./18b-observability-naming) — Observability 네이밍 가이드
 - [20-observability-metrics.md](./20-observability-metrics) — Observability 메트릭 상세
 - [21-observability-tracing.md](./21-observability-tracing) — Observability 트레이싱 상세
+- [07-domain-events.md](../domain/07-domain-events) — 도메인 이벤트와 핸들러 Observability

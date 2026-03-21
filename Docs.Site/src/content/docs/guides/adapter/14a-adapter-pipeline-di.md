@@ -324,6 +324,44 @@ services.RegisterScopedObservablePort<
 
 > **참고**: Query Adapter는 Repository와 동일한 `RegisterScopedObservablePort` API를 사용합니다. Provider 분기 패턴([4.6](#options-패턴-optionsconfigurator))에서 InMemory는 InMemory Query Adapter를, Sqlite는 Dapper Query Adapter를 등록합니다.
 
+#### Log Enricher 등록
+
+Log Enricher는 `ICustomUsecasePipeline`이 아니므로 `AddCustomPipelinesFromAssembly()`의 Scrutor 스캔에 포함되지 않습니다. 별도로 DI에 등록합니다.
+
+**Usecase Log Enricher** — Source Generator가 자동 생성한 Enricher:
+
+```csharp
+services.AddScoped<
+    IUsecaseLogEnricher<CreateOrderCommand.Request, FinResponse<CreateOrderCommand.Response>>,
+    CreateOrderCommandRequestLogEnricher>();
+```
+
+**Domain Event Log Enricher** — `DomainEventLogEnricherGenerator`가 `IDomainEventHandler<T>` 감지로 자동 생성한 Enricher:
+
+```csharp
+services.AddScoped<
+    IDomainEventLogEnricher<Order.CreatedEvent>,
+    OrderCreatedEventLogEnricher>();
+services.AddScoped<
+    IDomainEventLogEnricher<Customer.CreatedEvent>,
+    CustomerCreatedEventLogEnricher>();
+```
+
+#### DomainEvent Publisher 등록
+
+`RegisterDomainEventPublisher()`는 `IDomainEventPublisher`, `IDomainEventCollector`, `ObservableDomainEventNotificationPublisher` 3개를 DI에 등록합니다. Handler 관점 관찰 가능성을 활성화하려면 `NotificationPublisherType`도 설정해야 합니다:
+
+```csharp
+services.AddMediator(options =>
+{
+    options.ServiceLifetime = ServiceLifetime.Scoped;
+    options.NotificationPublisherType = typeof(ObservableDomainEventNotificationPublisher);
+});
+services.RegisterDomainEventPublisher();
+```
+
+> **참조**: [도메인 이벤트 §핸들러 등록](../domain/07-domain-events#핸들러-등록), [Logging 매뉴얼 §IDomainEventLogEnricher](../observability/19-observability-logging#idomaineventlogenrichertvent--이벤트-핸들러-로그-enrichment)
+
 ### 다중 인터페이스 등록
 
 하나의 구현 클래스가 여러 인터페이스를 구현하는 경우:
