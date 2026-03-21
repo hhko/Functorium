@@ -778,7 +778,7 @@ services.AddScoped<
 
 `UsecaseLoggingPipeline`은 `IUsecaseLogEnricher<TRequest, TResponse>?`를 optional 의존성(`= null`)으로 주입받습니다. Enricher가 등록되지 않은 Usecase에서는 기본 표준 로깅만 수행됩니다.
 
-> **참조**: [커스텀 파이프라인 확장 포인트](../../spec/08-observability#커스텀-파이프라인-확장-포인트)
+> **참조**: [커스텀 확장](../../spec/07-pipeline#커스텀-확장)
 
 ---
 

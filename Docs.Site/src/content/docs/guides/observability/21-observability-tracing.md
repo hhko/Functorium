@@ -588,7 +588,7 @@ public sealed class PlaceOrderTracingPipeline
     .AddCustomPipelinesFromAssembly(AssemblyReference.Assembly))
 ```
 
-> **참조**: [커스텀 파이프라인 확장 포인트](../../spec/08-observability#커스텀-파이프라인-확장-포인트)
+> **참조**: [커스텀 확장](../../spec/07-pipeline#커스텀-확장)
 
 ---
 
