@@ -1127,6 +1127,6 @@ Host 프로젝트가 Mediator SourceGenerator를 사용하는 경우, 테스트 
 - [08a-error-system.md](../domain/08a-error-system) — 에러 시스템: 기초와 네이밍
 - [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) — 에러 시스템: Domain/Application 에러
 - [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) — 에러 시스템: Adapter 에러와 테스트
-- [18a-observability-spec.md](../observability/18a-observability-spec) — Observability 사양
+- [08-observability.md](../../spec/08-observability) — Observability 사양
 - [15a-unit-testing.md](../testing/15a-unit-testing) — 테스트 작성 방법론 (명명 규칙, AAA 패턴, MTP 설정)
 - [16-testing-library.md](../testing/16-testing-library) — Functorium.Testing 라이브러리 (LogTestContext, ArchitectureRules, QuartzTestFixture 등)

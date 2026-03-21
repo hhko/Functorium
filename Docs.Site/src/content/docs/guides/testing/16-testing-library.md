@@ -404,8 +404,8 @@ public async Task Pipeline_Should_Log_RequestLayer_And_Handler()
     // Properties에서 특정 필드 검증
     var properties = (IDictionary<string, object?>)data.Properties;
     properties["request.layer"].ShouldBe("application");
-    properties["request.category"].ShouldBe("usecase");
-    properties["request.handler"].ShouldNotBeNull();
+    properties["request.category.name"].ShouldBe("usecase");
+    properties["request.handler.name"].ShouldNotBeNull();
 }
 ```
 
@@ -1039,4 +1039,4 @@ public async Task Job_ShouldThrow_WhenTimeout()
 - [08b-error-system-domain-app.md](../domain/08b-error-system-domain-app) — Domain/Application 에러 Assertion 패턴
 - [08c-error-system-adapter-testing.md](../domain/08c-error-system-adapter-testing) — Adapter 에러 Assertion 및 범용 에러 Assertion
 - [01-project-structure.md](../architecture/01-project-structure) — 프로젝트 구성 (HostTestFixture, 통합 테스트)
-- [18a-observability-spec.md](../observability/18a-observability-spec) — Observability 사양 (로그 필드 정의)
+- [08-observability.md](../../spec/08-observability) — Observability 사양 (로그 필드 정의)

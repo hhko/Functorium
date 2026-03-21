@@ -608,6 +608,45 @@ export default defineConfig({
             ],
           },
           {
+            label: 'API 사양',
+            link: '/spec/',
+            icon: 'setting',
+            items: [
+              { label: 'API 사양 레퍼런스', slug: 'spec' },
+              {
+                label: '도메인 핵심',
+                items: [
+                  { slug: 'spec/01-entity-aggregate' },
+                  { slug: 'spec/02-value-object' },
+                  { slug: 'spec/04-error-system' },
+                ],
+              },
+              {
+                label: '애플리케이션 계층',
+                items: [
+                  { slug: 'spec/03-validation' },
+                  { slug: 'spec/05-usecase-cqrs' },
+                  { slug: 'spec/09-domain-events' },
+                ],
+              },
+              {
+                label: '어댑터/인프라',
+                items: [
+                  { slug: 'spec/06-port-adapter' },
+                  { slug: 'spec/07-pipeline' },
+                ],
+              },
+              {
+                label: '횡단 관심사',
+                items: [
+                  { slug: 'spec/08-observability' },
+                  { slug: 'spec/10-source-generators' },
+                  { slug: 'spec/11-testing' },
+                ],
+              },
+            ],
+          },
+          {
             label: 'AI 자동화',
             link: '/ai-automation/',
             icon: 'star',

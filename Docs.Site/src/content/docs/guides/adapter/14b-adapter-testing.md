@@ -490,7 +490,7 @@ public sealed class GetProductByIdQuery
 
 ### E. Observability 상세 사양 요약
 
-Pipeline이 자동 제공하는 Observability 기능의 요약입니다. 상세 사양은 [18a-observability-spec.md](../observability/18a-observability-spec)를 참조하세요.
+Pipeline이 자동 제공하는 Observability 기능의 요약입니다. 상세 사양은 [08-observability.md](../../spec/08-observability)를 참조하세요.
 
 **Span 이름 패턴**: `{layer} {category} {handler}.{method}`
 
@@ -499,8 +499,8 @@ Pipeline이 자동 제공하는 Observability 기능의 요약입니다. 상세 
 | Tag Key | Success | Failure |
 |---------|---------|---------|
 | `request.layer` | "adapter" | "adapter" |
-| `request.category` | 카테고리명 | 카테고리명 |
-| `request.handler` | 핸들러명 | 핸들러명 |
+| `request.category.name` | 카테고리명 | 카테고리명 |
+| `request.handler.name` | 핸들러명 | 핸들러명 |
 | `request.handler.method` | 메서드명 | 메서드명 |
 | `response.status` | "success" | "failure" |
 | `response.elapsed` | 초(s) | 초(s) |
@@ -576,7 +576,7 @@ var result = await Task.Run(() => ioResult.Run());  // Fin<T> 실행
 | [13-adapters.md](./13-adapters) | Adapter 구현 가이드 |
 | [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di) | Pipeline 생성, DI 등록, Options 패턴 |
 | [15a-unit-testing.md](../testing/15a-unit-testing) | 단위 테스트 작성 가이드 |
-| [18a-observability-spec.md](../observability/18a-observability-spec) | Observability 사양 (트레이싱, 로깅, 메트릭 상세) |
+| [08-observability.md](../../spec/08-observability) | Observability 사양 (트레이싱, 로깅, 메트릭 상세) |
 | [01-project-structure.md](../architecture/01-project-structure) | 서비스 프로젝트 구조 가이드 |
 
 **외부 참고:**

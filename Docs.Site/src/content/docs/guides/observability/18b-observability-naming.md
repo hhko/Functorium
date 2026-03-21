@@ -539,9 +539,9 @@ public static partial class ObservabilityNaming
     public static class CustomAttributes
     {
         public const string RequestLayer = "request.layer";
-        public const string RequestCategory = "request.category";
+        public const string RequestCategoryName = "request.category.name";
         public const string RequestCategoryType = "request.category.type";
-        public const string RequestHandler = "request.handler";
+        public const string RequestHandlerName = "request.handler.name";
         public const string RequestHandlerMethod = "request.handler.method";
         public const string ResponseStatus = "response.status";
         public const string ResponseElapsed = "response.elapsed";
@@ -676,7 +676,7 @@ services
 
 ---
 
-> 필드/태그 네이밍 규칙은 [18a-observability-spec.md](./18a-observability-spec)를 참조하세요.
+> 필드/태그 네이밍 규칙은 [08-observability.md](../../spec/08-observability)를 참조하세요.
 
 코드 네이밍 규칙에서 클래스, 인터페이스, 파이프라인 등의 명명 패턴을 정의했습니다. 이어서, LoggerExtensions 메서드에 적용되는 별도의 네이밍 패턴을 살펴봅니다.
 
@@ -788,7 +788,7 @@ LogDomainEventsPublisherResponsePartialFailure(...)
 
 **원인:** 단독 count와 형용사 조합 count의 규칙을 구분하지 않았습니다.
 
-**해결:** 단독 사용 시 `.count`(`request.event.count`, `response.result.count`), 형용사/명사 조합 시 `_count`(`response.event.success_count`, `response.event.failure_count`)를 사용합니다.
+**해결:** 엔티티 수준 count는 `.count`(`request.event.count`, `request.aggregate.count`), 동적 필드 count는 `_count` 접미사(`request.params.{name}_count`, `response.event.success_count`, `response.event.failure_count`)를 사용합니다.
 
 ## FAQ
 
@@ -814,7 +814,7 @@ Functorium은 **내부 일관성 우선 원칙**을 따릅니다. `LoggingConfig
 
 ## 참고 문서
 
-- [18a-observability-spec.md](./18a-observability-spec) — Observability 사양 (Field/Tag, Meter, 메시지 템플릿)
+- [08-observability.md](../../spec/08-observability) — Observability 사양 (Field/Tag, Meter, 메시지 템플릿)
 - [19-observability-logging.md](./19-observability-logging) — Observability 로깅 상세
 - [20-observability-metrics.md](./20-observability-metrics) — Observability 메트릭 상세
 - [21-observability-tracing.md](./21-observability-tracing) — Observability 트레이싱 상세

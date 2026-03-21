@@ -171,7 +171,7 @@ Pipeline은 다음 관찰성 기능을 **자동으로** 제공합니다. 모든 
 
 | 기능 | 설명 | 주요 Tag/Field |
 |------|------|----------------|
-| **분산 트레이싱** | Span 자동 생성 (`{layer} {category} {handler}.{method}`) | `request.layer`, `request.category`, `request.handler`, `request.handler.method`, `response.status`, `response.elapsed` |
+| **분산 트레이싱** | Span 자동 생성 (`{layer} {category} {handler}.{method}`) | `request.layer`, `request.category.name`, `request.handler.name`, `request.handler.method`, `response.status`, `response.elapsed` |
 | **구조화된 로깅** | 요청/응답/에러 자동 로깅 (EventId 2001-2004) | Request(Info/Debug), Success(Info/Debug), Warning(Expected), Error(Exceptional) |
 | **메트릭 수집** | Counter + Histogram 자동 기록 | `adapter.{category}.requests`, `adapter.{category}.responses`, `adapter.{category}.duration` |
 | **에러 분류** | Expected/Exceptional/Aggregate 자동 분류 | `error.type`, `error.code` |
@@ -195,7 +195,7 @@ Pipeline은 다음 관찰성 기능을 **자동으로** 제공합니다. 모든 
 | `Expected` (LanguageExt) | `"expected"` | 타입 이름 | Warning |
 | `Exceptional` (LanguageExt) | `"exceptional"` | 타입 이름 | Error |
 
-> **상세 사양**: 트레이싱 Tag 구조, 로그 Message Template, 메트릭 Instrument 정의 등 상세 내용은 [18a-observability-spec.md](../observability/18a-observability-spec)를 참조하세요.
+> **상세 사양**: 트레이싱 Tag 구조, 로그 Message Template, 메트릭 Instrument 정의 등 상세 내용은 [08-observability.md](../../spec/08-observability)를 참조하세요.
 
 ### 빌드 에러 대응
 
@@ -775,11 +775,22 @@ public InMemoryProductRepository(
 
 ### Q5. 특정 메서드만 Pipeline에서 제외할 수 있나요?
 
-**아니요, 특정 메서드만 제외하는 기능은 지원되지 않습니다.**
+**네, `[ObservablePortIgnore]` 어트리뷰트를 사용하면 특정 메서드를 Pipeline 래퍼 생성에서 제외할 수 있습니다.**
 
-`[GenerateObservablePort]` 어트리뷰트는 **클래스 단위로만 적용**되며, `IObservablePort` 인터페이스의 모든 메서드에 대해 Pipeline 래퍼가 생성됩니다. `virtual` 키워드가 없으면 빌드 에러(`CS0506`)가 발생합니다.
+```csharp
+[GenerateObservablePort]
+public class MyAdapter : IMyPort
+{
+    public virtual FinT<IO, Product> GetById(ProductId id) { ... }  // Pipeline 래핑됨
 
-**대안**: 특정 메서드에 대해 Observability를 적용하고 싶지 않다면, 해당 메서드를 별도의 클래스로 분리하고 `[GenerateObservablePort]` 어트리뷰트를 적용하지 마세요.
+    [ObservablePortIgnore]
+    public virtual FinT<IO, Unit> InternalCleanup() { ... }  // Pipeline에서 제외
+}
+```
+
+- `[ObservablePortIgnore]`가 적용된 메서드는 Source Generator가 `override` 래퍼를 생성하지 않습니다.
+- 해당 메서드 호출 시 로깅, 메트릭, 트레이싱이 기록되지 않습니다.
+- 내부 유틸리티 메서드나 Observability가 불필요한 메서드에 사용합니다.
 
 ### Q7. RequestCategory 값은 어떻게 정하나요?
 
@@ -810,7 +821,7 @@ public InMemoryProductRepository(
 | [13-adapters.md](./13-adapters) | Adapter 구현 가이드 |
 | [14b-adapter-testing.md](./14b-adapter-testing) | Adapter 단위 테스트 가이드 |
 | [15a-unit-testing.md](../testing/15a-unit-testing) | 단위 테스트 작성 가이드 |
-| [18a-observability-spec.md](../observability/18a-observability-spec) | Observability 사양 (트레이싱, 로깅, 메트릭 상세) |
+| [08-observability.md](../../spec/08-observability) | Observability 사양 (트레이싱, 로깅, 메트릭 상세) |
 | [01-project-structure.md](../architecture/01-project-structure) | 서비스 프로젝트 구조 가이드 |
 
 **외부 참고:**

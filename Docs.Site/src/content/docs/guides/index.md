@@ -75,7 +75,7 @@ Architecture
 │   └── [17] 17-dto-strategy.md ─── DTO 전략
 │
 ├── Observability
-│   ├── [18a] 18a-observability-spec.md ─── 사양
+│   ├── [18a] → spec/08-observability.md ─── 사양 (spec으로 이동)
 │   ├── [18b] 18b-observability-naming.md ─── 네이밍
 │   ├── [19] 19-observability-logging.md ─── 로깅
 │   ├── [20] 20-observability-metrics.md ─── 메트릭
@@ -161,7 +161,7 @@ Architecture
 
 | 하고 싶은 작업 | 참조 문서 |
 |---------------|----------|
-| **Observability 사양** | [18a-observability-spec.md](./observability/18a-observability-spec) |
+| **Observability 사양** | [08-observability.md](../spec/08-observability) |
 | **크래시 덤프 설정/분석** | [22-crash-diagnostics.md](./observability/22-crash-diagnostics) |
 
 ## 코드 예시 규칙
@@ -243,7 +243,7 @@ Architecture
 
 | 문서 | 설명 |
 |------|------|
-| [18a-observability-spec.md](./observability/18a-observability-spec) | Observability 사양 (Field/Tag, Meter, 메시지 템플릿) |
+| [08-observability.md](../spec/08-observability) | Observability 사양 (Field/Tag, Meter, 메시지 템플릿) |
 | [18b-observability-naming.md](./observability/18b-observability-naming) | Observability 네이밍 가이드 (코드, Logger 메서드) |
 | [19-observability-logging.md](./observability/19-observability-logging) | Observability 로깅 상세 |
 | [20-observability-metrics.md](./observability/20-observability-metrics) | Observability 메트릭 상세 |
