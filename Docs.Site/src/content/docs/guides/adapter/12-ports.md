@@ -223,6 +223,29 @@ public class InMemoryProductRepository : IProductRepository
 }
 ```
 
+#### `[ObservablePortIgnore]` — 메서드 제외
+
+`[GenerateObservablePort]`가 적용된 클래스에서 특정 메서드를 Pipeline 래퍼 생성에서 제외하려면 `[ObservablePortIgnore]` 어트리뷰트를 사용합니다.
+
+**위치**: `Functorium.Adapters.SourceGenerators.ObservablePortIgnoreAttribute`
+
+```csharp
+[GenerateObservablePort]
+public class InMemoryProductRepository : IProductRepository
+{
+    public string RequestCategory => "Repository";
+
+    public virtual FinT<IO, Product> GetById(ProductId id) { ... }  // Pipeline 래핑됨
+
+    [ObservablePortIgnore]
+    public virtual FinT<IO, Unit> InternalCleanup() { ... }  // Pipeline에서 제외
+}
+```
+
+- Source Generator가 해당 메서드의 `override` 래퍼를 생성하지 않습니다.
+- 로깅, 메트릭, 트레이싱이 기록되지 않는 메서드가 됩니다.
+- 내부 유틸리티 메서드나 Observability가 불필요한 메서드에 사용합니다.
+
 ### 핵심 특징
 
 | 특성 | 설명 |
