@@ -97,10 +97,10 @@ public interface IDomainEvent : INotification
 
 핵심 도메인 로직은 순수 함수로 구성됩니다. 입력이 동일하면 항상 동일한 출력을 반환하는 구조를 유지함으로써, 로직은 예측 가능하고 테스트하기 쉬운 형태가 됩니다. 사이드 이펙트(데이터베이스, 외부 API, 메시징, 파일 I/O)는 도메인 로직 바깥에서 처리됩니다.
 
-**`Fin<T>`, `FinT<IO, T>`** — 예외 대신 명시적 결과 타입으로 오류를 처리합니다:
+**`Fin<T>`, `FinT<IO, T>`** — 예외 대신 명시적 결과 타입으로 오류를 처리합니다. Command 경로의 Repository는 `FinT<IO, T>`를 반환하여 사이드 이펙트를 명시적으로 표현합니다:
 
 ```csharp
-// Repository는 FinT<IO, T>를 반환하여 사이드 이펙트를 명시적으로 표현
+// Command: IRepository — Aggregate Root 단위 CRUD, EF Core로 변경 추적과 트랜잭션 관리
 public interface IRepository<TAggregate, TId> : IObservablePort
     where TAggregate : AggregateRoot<TId>
     where TId : struct, IEntityId<TId>
@@ -112,7 +112,7 @@ public interface IRepository<TAggregate, TId> : IObservablePort
 }
 ```
 
-**CQRS** — Command/Query를 명확히 분리하고, `FinResponse<T>`로 결과를 통합합니다:
+**CQRS** — 쓰기와 읽기를 구조적으로 분리하여 각 경로에 최적화된 데이터 접근 전략을 적용합니다. Command는 `IRepository` + EF Core로 Aggregate 일관성과 트랜잭션을 보장하고, Query는 `IQueryPort` + Dapper로 Aggregate 재구성 없이 DTO를 직접 프로젝션합니다. 두 경로 모두 `FinResponse<T>`로 결과를 통합합니다:
 
 ```csharp
 // Command
@@ -127,6 +127,29 @@ public interface IQueryUsecase<in TQuery, TSuccess>
     : IQueryHandler<TQuery, FinResponse<TSuccess>>
     where TQuery : IQueryRequest<TSuccess> { }
 ```
+
+```csharp
+// Query: IQueryPort — Aggregate 재구성 없이 DTO 직접 프로젝션, Dapper로 경량 SQL 매핑
+public interface IQueryPort<TEntity, TDto> : IQueryPort
+{
+    FinT<IO, PagedResult<TDto>> Search(
+        Specification<TEntity> spec, PageRequest page, SortExpression sort);
+
+    FinT<IO, CursorPagedResult<TDto>> SearchByCursor(
+        Specification<TEntity> spec, CursorPageRequest cursor, SortExpression sort);
+
+    IAsyncEnumerable<TDto> Stream(
+        Specification<TEntity> spec, SortExpression sort,
+        CancellationToken cancellationToken = default);
+}
+```
+
+| | Command (IRepository) | Query (IQueryPort) |
+|------|----------------------|-------------------|
+| **목적** | Aggregate Root 생명주기 관리 | 읽기 전용 DTO 프로젝션 |
+| **구현** | EF Core — 변경 추적, 트랜잭션, 도메인 이벤트 | Dapper — 순수 SQL, 경량 매핑 |
+| **Specification** | `PropertyMap` → EF Core LINQ 변환 | `DapperSpecTranslator` → SQL WHERE 변환 |
+| **페이지네이션** | — | Offset/Limit, Cursor (keyset), Streaming |
 
 ### Observability by Design
 
@@ -165,7 +188,7 @@ public class OrderRepository : IRepository<Order, OrderId> { ... }
 | 가치 | 제공 기능 |
 |------|----------|
 | **도메인 안전성** | Value Object 계층, Entity/AggregateRoot, Specification Pattern, 구조화된 에러 코드 |
-| **함수형 합성** | `Fin<T>`/`FinT<IO,T>` Discriminated Union, LINQ 합성, Bind/Apply 검증 |
+| **함수형 합성** | `Fin<T>`/`FinT<IO,T>` Discriminated Union, LINQ 합성, Bind/Apply 검증, CQRS 경로별 최적화 |
 | **자동화** | Source Generator (Observable Port, EntityId), Usecase Pipeline (7단계), 아키텍처 규칙 테스트 |
 | **관측성** | OpenTelemetry Logging/Metrics/Tracing 자동 적용, 구조화된 로그, 도메인-운영 언어 통합 |
 
