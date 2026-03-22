@@ -1,6 +1,7 @@
 using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
+using Functorium.Domains.Events;
 using Functorium.Domains.Specifications;
 using Functorium.Domains.Specifications.Expressions;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
@@ -63,8 +64,7 @@ public class EfCoreProductRepository
 
     /// <summary>
     /// Soft Delete 벌크 처리. ExecuteUpdateAsync로 직접 SQL을 실행하여 성능을 최적화합니다.
-    /// 도메인 객체를 생성하지 않으므로 도메인 이벤트가 발행되지 않습니다.
-    /// 이벤트가 필요한 경우 단건 Delete()를 사용하세요.
+    /// BulkDeletedEvent를 통해 벌크(Bulk) 삭제 사실을 알립니다.
     /// </summary>
     public override FinT<IO, int> DeleteRange(IReadOnlyList<ProductId> ids)
     {
@@ -78,6 +78,13 @@ public class EfCoreProductRepository
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(p => p.DeletedAt, DateTime.UtcNow)
                     .SetProperty(p => p.DeletedBy, "system"));
+
+            if (affected > 0)
+            {
+                EventCollector.TrackEvent(
+                    BulkDeletedEvent.From(ids, affected));
+            }
+
             return Fin.Succ(affected);
         });
     }

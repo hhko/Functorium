@@ -1,6 +1,7 @@
 using Functorium.Abstractions.Errors;
 using Functorium.Adapters.Events;
 using Functorium.Applications.Events;
+using Functorium.Domains.Events;
 using Functorium.Tests.Unit.DomainsTests.Entities;
 using Mediator;
 using NSubstitute;
@@ -19,6 +20,8 @@ public class DomainEventPublisherTests
     {
         _mockPublisher = Substitute.For<IPublisher>();
         _mockCollector = Substitute.For<IDomainEventCollector>();
+        _mockCollector.GetTrackedAggregates().Returns(new List<IHasDomainEvents>());
+        _mockCollector.GetDirectlyTrackedEvents().Returns(new List<IDomainEvent>());
         _sut = new DomainEventPublisher(_mockPublisher, _mockCollector);
     }
 
@@ -119,4 +122,138 @@ public class DomainEventPublisherTests
     }
 
     #endregion
+
+    #region PublishTrackedEvents Tests
+
+    [Fact]
+    public async Task PublishTrackedEvents_GroupsEventsByType_PublishesAsBulk()
+    {
+        // Arrange
+        var aggregate1 = new TestAggregate();
+        aggregate1.AddEvent(new TestDomainEvent("e1"));
+        var aggregate2 = new TestAggregate();
+        aggregate2.AddEvent(new TestDomainEvent("e2"));
+
+        _mockCollector.GetTrackedAggregates().Returns(
+            new List<IHasDomainEvents> { aggregate1, aggregate2 });
+
+        // Act
+        var actual = await _sut.PublishTrackedEvents().Run().RunAsync();
+
+        // Assert — 동일 타입 이벤트는 1회 벌크(Bulk) 발행
+        actual.IsSucc.ShouldBeTrue();
+        await _mockPublisher.Received(1).Publish(
+            Arg.Any<IDomainEvent>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task PublishTrackedEvents_GroupsMultipleTypes_PublishesPerType()
+    {
+        // Arrange
+        var aggregate = new TestAggregate();
+        aggregate.AddEvent(new TestDomainEvent("e1"));
+        aggregate.AddEvent(new AnotherTestEvent());
+
+        _mockCollector.GetTrackedAggregates().Returns(
+            new List<IHasDomainEvents> { aggregate });
+
+        // Act
+        var actual = await _sut.PublishTrackedEvents().Run().RunAsync();
+
+        // Assert — 2가지 이벤트 타입 → 2회 발행
+        actual.IsSucc.ShouldBeTrue();
+        await _mockPublisher.Received(2).Publish(
+            Arg.Any<IDomainEvent>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task PublishTrackedEvents_ReturnsEmpty_WhenNoEvents()
+    {
+        // Act
+        var actual = await _sut.PublishTrackedEvents().Run().RunAsync();
+
+        // Assert
+        actual.IsSucc.ShouldBeTrue();
+        await _mockPublisher.DidNotReceive().Publish(
+            Arg.Any<IDomainEvent>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task PublishTrackedEvents_ClearsAggregateEvents()
+    {
+        // Arrange
+        var aggregate = new TestAggregate();
+        aggregate.AddEvent(new TestDomainEvent("e1"));
+
+        _mockCollector.GetTrackedAggregates().Returns(
+            new List<IHasDomainEvents> { aggregate });
+
+        // Act
+        await _sut.PublishTrackedEvents().Run().RunAsync();
+
+        // Assert — Aggregate 이벤트는 발행 후 클리어
+        aggregate.DomainEvents.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task PublishTrackedEvents_IncludesDirectlyTrackedEvents()
+    {
+        // Arrange
+        var directEvent = new TestDomainEvent("direct");
+        _mockCollector.GetDirectlyTrackedEvents().Returns(
+            new List<IDomainEvent> { directEvent });
+
+        // Act
+        var actual = await _sut.PublishTrackedEvents().Run().RunAsync();
+
+        // Assert
+        actual.IsSucc.ShouldBeTrue();
+        await _mockPublisher.Received(1).Publish(
+            Arg.Any<IDomainEvent>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task PublishTrackedEvents_ReturnsFail_WhenPublishThrows()
+    {
+        // Arrange
+        var aggregate = new TestAggregate();
+        aggregate.AddEvent(new TestDomainEvent("e1"));
+
+        _mockCollector.GetTrackedAggregates().Returns(
+            new List<IHasDomainEvents> { aggregate });
+
+        _mockPublisher
+            .Publish(Arg.Any<IDomainEvent>(), Arg.Any<CancellationToken>())
+            .Returns(x => throw new InvalidOperationException("Handler failed"));
+
+        // Act
+        var actual = await _sut.PublishTrackedEvents().Run().RunAsync();
+
+        // Assert — 실패해도 Succ(PublishResult with failures)를 반환
+        actual.IsSucc.ShouldBeTrue();
+        actual.Match(
+            Succ: results =>
+            {
+                results.Count.ShouldBe(1);
+                results[0].HasFailures.ShouldBeTrue();
+            },
+            Fail: _ => throw new Exception("Expected success"));
+    }
+
+    #endregion
+
+    // ─── 테스트 헬퍼 ───────────────────────────────────
+
+    private sealed class TestAggregate : IDomainEventDrain
+    {
+        private readonly List<IDomainEvent> _events = [];
+        public IReadOnlyList<IDomainEvent> DomainEvents => _events;
+        public void ClearDomainEvents() => _events.Clear();
+        public void AddEvent(IDomainEvent e) => _events.Add(e);
+    }
+
+    private sealed record AnotherTestEvent : DomainEvent
+    {
+        public AnotherTestEvent() : base() { }
+    }
 }

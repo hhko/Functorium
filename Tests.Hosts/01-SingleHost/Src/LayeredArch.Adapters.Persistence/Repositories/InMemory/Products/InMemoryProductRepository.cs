@@ -128,6 +128,7 @@ public class InMemoryProductRepository
                 if (Products.TryGetValue(id, out var product))
                 {
                     product.Delete("system");
+                    EventCollector.Track(product);
                     affected++;
                 }
             }

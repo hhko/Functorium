@@ -24,4 +24,20 @@ public interface IDomainEventCollector
     /// 추적 중인 Aggregate 중 도메인 이벤트가 있는 것들을 반환합니다.
     /// </summary>
     IReadOnlyList<IHasDomainEvents> GetTrackedAggregates();
+
+    /// <summary>
+    /// Aggregate 없이 직접 도메인 이벤트를 추적합니다.
+    /// Aggregate를 로드하지 않는 벌크(Bulk) 삭제(DeleteRange) 등에서 사용합니다.
+    /// </summary>
+    void TrackEvent(IDomainEvent domainEvent);
+
+    /// <summary>
+    /// Aggregate 없이 직접 여러 도메인 이벤트를 추적합니다.
+    /// </summary>
+    void TrackEvents(IEnumerable<IDomainEvent> domainEvents);
+
+    /// <summary>
+    /// 직접 추적된 도메인 이벤트를 반환합니다.
+    /// </summary>
+    IReadOnlyList<IDomainEvent> GetDirectlyTrackedEvents();
 }

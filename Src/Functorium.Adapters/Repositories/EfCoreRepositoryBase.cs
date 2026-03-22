@@ -3,6 +3,7 @@ using System.Reflection;
 using Functorium.Adapters.Errors;
 using Functorium.Applications.Events;
 using Functorium.Domains.Entities;
+using Functorium.Domains.Events;
 using Functorium.Domains.Observabilities;
 using Functorium.Domains.Repositories;
 using Functorium.Domains.Specifications;
@@ -280,23 +281,31 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
                 return Fin.Succ(0);
 
             var distinctIds = ids.Distinct().ToList();
+            int totalAffected;
 
             if (distinctIds.Count <= IdBatchSize)
             {
-                int affected = await DbSet.Where(ByIdsPredicate(distinctIds))
+                totalAffected = await DbSet.Where(ByIdsPredicate(distinctIds))
                     .ExecuteDeleteAsync();
-                return Fin.Succ(affected);
             }
             else
             {
-                int totalAffected = 0;
+                totalAffected = 0;
                 foreach (var batch in distinctIds.Chunk(IdBatchSize))
                 {
                     totalAffected += await DbSet.Where(ByIdsPredicate(batch))
                         .ExecuteDeleteAsync();
                 }
-                return Fin.Succ(totalAffected);
             }
+
+            // 벌크(Bulk) 삭제 이벤트 직접 추적 (Aggregate 로드 없음)
+            if (totalAffected > 0)
+            {
+                EventCollector.TrackEvent(
+                    BulkDeletedEvent.From(distinctIds, totalAffected));
+            }
+
+            return Fin.Succ(totalAffected);
         });
     }
 

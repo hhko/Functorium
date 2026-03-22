@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using Functorium.Adapters.Errors;
 using Functorium.Applications.Events;
 using Functorium.Domains.Entities;
+using Functorium.Domains.Events;
 using Functorium.Domains.Observabilities;
 using Functorium.Domains.Repositories;
 using static Functorium.Adapters.Errors.AdapterErrorType;
@@ -143,6 +144,13 @@ public abstract class InMemoryRepositoryBase<TAggregate, TId>
                 if (Store.TryRemove(id, out _))
                     affected++;
             }
+
+            if (affected > 0)
+            {
+                EventCollector.TrackEvent(
+                    BulkDeletedEvent.From(ids, affected));
+            }
+
             return Fin.Succ(affected);
         });
     }

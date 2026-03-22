@@ -208,6 +208,16 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
         activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestEventType, eventTypeName);
         activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestEventId, eventId);
 
+        // BulkDomainEvent인 경우 벌크(Bulk) 메타데이터를 Activity/로그에 추가
+        if (domainEvent is IBulkEventInfo bulkInfo)
+        {
+            activity?.SetTag("bulk.event_count", bulkInfo.Count);
+            activity?.SetTag("bulk.event_type", bulkInfo.InnerEventTypeName);
+            logger.LogInformation(
+                "[DomainEvent] Bulk handler invoked: {HandlerName}, EventType: {EventType}, Count: {Count}",
+                handlerName, bulkInfo.InnerEventTypeName, bulkInfo.Count);
+        }
+
         logger.LogDomainEventHandlerRequest(handlerName, domainEvent);
 
         TagList requestTags = new TagList

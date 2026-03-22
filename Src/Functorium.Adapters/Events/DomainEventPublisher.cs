@@ -57,15 +57,29 @@ public sealed class DomainEventPublisher : IDomainEventPublisher
     {
         return IO.liftAsync(async () =>
         {
-            var trackedAggregates = _collector.GetTrackedAggregates();
-            var results = new List<PublishResult>();
+            // 1. 모든 이벤트 수집 (Aggregate + 직접 추적)
+            var allEvents = new List<IDomainEvent>();
 
+            var trackedAggregates = _collector.GetTrackedAggregates();
             foreach (var aggregate in trackedAggregates)
             {
-                var events = aggregate.DomainEvents.ToList();
+                allEvents.AddRange(aggregate.DomainEvents);
                 (aggregate as IDomainEventDrain)?.ClearDomainEvents();
+            }
 
-                var result = await PublishEventsCore(events, cancellationToken);
+            allEvents.AddRange(_collector.GetDirectlyTrackedEvents());
+
+            if (allEvents.Count == 0)
+                return Fin.Succ(LanguageExt.Seq<PublishResult>.Empty);
+
+            // 2. 타입별 그룹화 → BulkDomainEvent로 발행
+            var grouped = allEvents.GroupBy(e => e.GetType());
+            var results = new List<PublishResult>();
+
+            foreach (var group in grouped)
+            {
+                var result = await PublishBulkEventGroup(
+                    group.Key, group.ToList(), cancellationToken);
                 results.Add(result);
             }
 
@@ -73,39 +87,38 @@ public sealed class DomainEventPublisher : IDomainEventPublisher
         });
     }
 
-    private async Task<PublishResult> PublishEventsCore(
+    /// <summary>
+    /// 동일 타입 이벤트 그룹을 BulkDomainEvent로 래핑하여 발행합니다.
+    /// </summary>
+    private async Task<PublishResult> PublishBulkEventGroup(
+        Type eventType,
         List<IDomainEvent> events,
         CancellationToken cancellationToken)
     {
-        var successfulEvents = new List<IDomainEvent>();
-        var failedEvents = new List<(IDomainEvent Event, LanguageExt.Common.Error Error)>();
-
-        foreach (var domainEvent in events)
+        try
         {
-            try
-            {
-                await _publisher.Publish(domainEvent, cancellationToken);
-                successfulEvents.Add(domainEvent);
-            }
-            catch (OperationCanceledException)
-            {
-                var error = EventError.For<DomainEventPublisher>(
-                    new EventErrorType.PublishCancelled(),
-                    domainEvent.GetType().Name,
-                    "Event publishing was cancelled");
-                failedEvents.Add((domainEvent, error));
-            }
-            catch (Exception ex)
-            {
-                var error = EventError.FromException<DomainEventPublisher>(
-                    new EventErrorType.PublishFailed(),
-                    ex);
-                failedEvents.Add((domainEvent, error));
-            }
+            var bulkEvent = new BulkDomainEvent(events, eventType);
+            await _publisher.Publish(bulkEvent, cancellationToken);
+            return PublishResult.Success(new Seq<IDomainEvent>(events));
         }
-
-        return new PublishResult(
-            new Seq<IDomainEvent>(successfulEvents),
-            new Seq<(IDomainEvent Event, LanguageExt.Common.Error Error)>(failedEvents));
+        catch (OperationCanceledException)
+        {
+            var error = EventError.For<DomainEventPublisher>(
+                new EventErrorType.PublishCancelled(),
+                eventType.Name,
+                $"Bulk event publishing was cancelled ({events.Count} events)");
+            return PublishResult.Failure(
+                new Seq<(IDomainEvent, LanguageExt.Common.Error)>(
+                    events.Select(e => (e, (LanguageExt.Common.Error)error))));
+        }
+        catch (Exception ex)
+        {
+            var error = EventError.FromException<DomainEventPublisher>(
+                new EventErrorType.PublishFailed(),
+                ex);
+            return PublishResult.Failure(
+                new Seq<(IDomainEvent, LanguageExt.Common.Error)>(
+                    events.Select(e => (e, (LanguageExt.Common.Error)error))));
+        }
     }
 }
