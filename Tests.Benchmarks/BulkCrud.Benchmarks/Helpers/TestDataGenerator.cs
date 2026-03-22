@@ -1,6 +1,6 @@
 using Functorium.Adapters.Events;
 using Functorium.Applications.Events;
-using LayeredArch.Adapters.Persistence.Repositories.InMemory;
+using LayeredArch.Adapters.Persistence.Repositories.InMemory.Products;
 using LayeredArch.Domain.AggregateRoots.Products;
 using LayeredArch.Domain.SharedModels.ValueObjects;
 
