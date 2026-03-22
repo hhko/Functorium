@@ -2,9 +2,14 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
+- [ ] 벌크 도메인 이벤트 처리 개선
+- [ ] 벌크 도메인 이벤트 적용 예제
+- [ ] 벌크 도메인 이벤트 문서 업데이트
+- [ ] Metrics 개선
+- [ ] Tracing 개선
+---
 - [x] 유스케이스 인터페이스 이름 기반 로그
 - [x] 도메인 이벤트 로그 자동화 이해?
-- [ ] 벌크 도메인 이벤트 처리 방법 이해?
 - [ ] 도메인 이벤트 로그 결과값 테스트? skip 테스트?
 - [ ] `<InternalsVisibleTo Include="LayeredArch.Adapters.Infrastructure" />` 제거
 - [x] adapter 로그 개선
@@ -2220,3 +2225,16 @@ configurator.AddTrigger(t => t
  │ _typeTag                          │ (제거)                        │ Serilog 내부 태그, 노이즈                                      │
  └───────────────────────────────────┴───────────────────────────────┴────────────────────────────────────────────────────────────────┘
  ```
+
+ ```
+     측면     │     Command (IRepository)     │                              Query (IQueryPort)                              │
+──────────────┼───────────────────────────────┼──────────────────────────────────────────────────────────────────────────────┤
+ 초점         │ Aggregate Root 생명주기       │ DTO 직접 프로젝션                                                            │
+ 구현         │ EF Core (변경 추적, 트랜잭션) │ Dapper (순수 SQL, 경량 매핑)                                                 │
+ 반환 타입    │ FinT<IO, TAggregate>          │ FinT<IO, PagedResult<TDto>>, CursorPagedResult<TDto>, IAsyncEnumerable<TDto> │
+ Spec 변환    │ PropertyMap → EF Core LINQ    │ DapperSpecTranslator → SQL WHERE                                             │
+ 이벤트       │ DomainEvent 수집/발행         │ 없음 (읽기 전용)                                                             │
+ 페이지네이션 │ 없음                          │ Offset/Limit + Cursor (keyset) + Streaming                                   │
+```
+
+- ~\.claude\plans\frolicking-frolicking-ladybug.md
