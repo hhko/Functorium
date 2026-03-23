@@ -112,6 +112,7 @@ export default defineConfig({
               {
                 label: '어떻게 시작하는가',
                 items: [
+                  { label: '5분 빠른시작', slug: 'quickstart', badge: { text: '5분', variant: 'tip' } },
                   { label: '시작하기', slug: 'getting-started', badge: { text: '시작', variant: 'note' } },
                 ],
               },

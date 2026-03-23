@@ -1,0 +1,10 @@
+global using LanguageExt;
+global using LanguageExt.Common;
+global using Functorium.Domains.Entities;
+global using Functorium.Domains.Events;
+global using Functorium.Domains.Repositories;
+global using Functorium.Domains.ValueObjects;
+global using Functorium.Domains.ValueObjects.Validations.Typed;
+global using Functorium.Applications.Usecases;
+global using MyShop.Domain.AggregateRoots.Products;
+global using MyShop.Domain.AggregateRoots.Products.ValueObjects;
