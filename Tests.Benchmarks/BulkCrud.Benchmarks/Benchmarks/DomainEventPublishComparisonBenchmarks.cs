@@ -1,7 +1,6 @@
 using BenchmarkDotNet.Attributes;
 using BulkCrud.Benchmarks.Helpers;
 using Functorium.Adapters.Events;
-using Functorium.Applications.Events;
 using Functorium.Domains.Events;
 using LanguageExt;
 using LayeredArch.Domain.AggregateRoots.Products;
@@ -10,10 +9,9 @@ using Mediator;
 namespace BulkCrud.Benchmarks.Benchmarks;
 
 /// <summary>
-/// 도메인 이벤트 발행 성능 비교: 개별 발행 방식 vs 배치 핸들러 방식
+/// 도메인 이벤트 발행 성능 비교: 개별 발행 방식
 /// - Old Bulk: GroupBy → 그룹당 1회 Mediator.Publish
 /// - New Individual: GroupBy → N회 Mediator.Publish(event) per event
-/// - New Individual + BatchHandler: 위 + opt-in IDomainEventBatchHandler 직접 호출
 /// </summary>
 [MemoryDiagnoser]
 [ShortRunJob]
@@ -70,31 +68,6 @@ public class DomainEventPublishComparisonBenchmarks
     }
 
     /// <summary>
-    /// 개선된 방식 + 배치 핸들러: 배치 핸들러 직접 호출 + 개별 Publish
-    /// </summary>
-    [Benchmark(Description = "New: BatchHandler + N Publish (Individual+Batch)")]
-    public async Task New_BatchHandlerPlusIndividualPublish()
-    {
-        var allEvents = new List<IDomainEvent>(_products.Count);
-        foreach (var product in _products)
-            allEvents.AddRange(product.DomainEvents);
-
-        foreach (var group in allEvents.GroupBy(e => e.GetType()))
-        {
-            var events = group.ToList();
-
-            // 배치 핸들러 직접 호출 시뮬레이션
-            await NoOpBatchProcess(events);
-
-            // 개별 Publish
-            foreach (var evt in events)
-            {
-                await _noOpPublisher.Publish(evt);
-            }
-        }
-    }
-
-    /// <summary>
     /// 순수 개별 발행 (GroupBy 없이): 최적화 없는 단순 반복
     /// </summary>
     [Benchmark(Description = "Baseline: N Publish (No GroupBy)")]
@@ -117,15 +90,9 @@ public class DomainEventPublishComparisonBenchmarks
     {
         var collector = new DomainEventCollector();
         collector.TrackRange(_products);
-        var publisher = new DomainEventPublisher(_noOpPublisher, collector, NoOpServiceProvider.Instance);
+        var publisher = new DomainEventPublisher(_noOpPublisher, collector);
 
         await publisher.PublishTrackedEvents().Run().RunAsync();
-    }
-
-    private static ValueTask NoOpBatchProcess(List<IDomainEvent> events)
-    {
-        // 배치 핸들러 시뮬레이션 (실제로는 검색 인덱스 벌크 업데이트 등)
-        return ValueTask.CompletedTask;
     }
 
     internal sealed class NoOpPublisher : IPublisher
@@ -140,11 +107,5 @@ public class DomainEventPublishComparisonBenchmarks
             object notification,
             CancellationToken cancellationToken = default)
             => ValueTask.CompletedTask;
-    }
-
-    private sealed class NoOpServiceProvider : IServiceProvider
-    {
-        public static readonly NoOpServiceProvider Instance = new();
-        public object? GetService(Type serviceType) => null;
     }
 }

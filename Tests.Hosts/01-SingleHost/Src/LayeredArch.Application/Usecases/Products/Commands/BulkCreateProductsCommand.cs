@@ -1,10 +1,11 @@
+using Functorium.Applications.Events;
 using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Products;
 
 namespace LayeredArch.Application.Usecases.Products.Commands;
 
 /// <summary>
-/// 상품 벌크 생성 Command - CreateRange + IDomainEventBatchHandler 데모
+/// 상품 벌크 생성 Command - ProductBulkOperations Domain Service 데모
 /// </summary>
 public sealed class BulkCreateProductsCommand
 {
@@ -31,33 +32,30 @@ public sealed class BulkCreateProductsCommand
 
     public sealed class Usecase(
         IProductRepository productRepository,
-        IInventoryRepository inventoryRepository)
+        IDomainEventCollector eventCollector)
         : ICommandUsecase<Request, Response>
     {
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            // 1. 각 항목에서 Product + Quantity 생성
+            // 1. 각 항목에서 Product 생성
             var products = new List<Product>();
-            var quantities = new List<Quantity>();
 
             foreach (var item in request.Products)
             {
                 var name = ProductName.Create(item.Name).ThrowIfFail();
                 var description = ProductDescription.Create(item.Description).ThrowIfFail();
                 var price = Money.Create(item.Price).ThrowIfFail();
-                var quantity = Quantity.Create(item.StockQuantity).ThrowIfFail();
 
                 products.Add(Product.Create(name, description, price));
-                quantities.Add(quantity);
             }
 
-            // 2. 벌크 저장 (CreateRange → N개 CreatedEvent 발생 → BatchHandler 1회 호출)
-            var inventories = products.Select((p, i) =>
-                Inventory.Create(p.Id, quantities[i])).ToList();
+            // 2. Domain Service로 벌크 이벤트 생성 + 개별 이벤트 정리
+            var bulkResult = ProductBulkOperations.BulkCreate(products);
+            eventCollector.TrackEvent(bulkResult.Event);
 
+            // 3. 벌크 저장
             FinT<IO, Response> usecase =
-                from createdProducts in productRepository.CreateRange(products)
-                //from createdInventories in inventoryRepository.CreateRange(inventories)
+                from createdProducts in productRepository.CreateRange(bulkResult.Created.ToList())
                 select new Response(
                     createdProducts.Count,
                     createdProducts.Select(p => p.Id.ToString()).ToList());

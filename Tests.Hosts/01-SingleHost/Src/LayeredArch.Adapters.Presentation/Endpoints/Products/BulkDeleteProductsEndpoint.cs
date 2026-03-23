@@ -21,7 +21,7 @@ public sealed class BulkDeleteProductsEndpoint
         Summary(s =>
         {
             s.Summary = "상품 벌크 삭제";
-            s.Description = "여러 상품을 한 번에 삭제합니다 (N * DeletedEvent + IDomainEventBatchHandler 데모)";
+            s.Description = "여러 상품을 한 번에 삭제합니다 (Domain Service 벌크 이벤트 패턴 데모)";
         });
     }
 

@@ -641,7 +641,7 @@ public sealed record CreatedEvent(
 
 > **검증 일시:** 2026-03-23 (이벤트 건수 로그 버그 수정 후 재검증)
 > **검증 방법:** 서버 실행 후 curl 호출
-> **관련 기능:** `IRepository.CreateRange`, `IRepository.DeleteRange`, `IDomainEventBatchHandler<T>`
+> **관련 기능:** `IRepository.CreateRange`, `IRepository.DeleteRange`, Domain Service 벌크 이벤트 패턴
 
 ### 벌크 상품 생성 (POST /api/products/bulk)
 
@@ -697,15 +697,7 @@ public sealed record CreatedEvent(
 [14:51:15 INF] adapter event PublishTrackedEvents.PublishTrackedEvents
   requesting with 10 events
 
-# ★ 6. 배치 핸들러 1회 호출 — 5개 CreatedEvent를 한 번에 처리
-[14:51:15 INF] application usecase.event ProductCreatedBatchHandler.HandleBatch CreatedEvent
-  requesting with 5 events
-[14:51:15 INF] [DomainEvent:Batch] 5 products created in bulk:
-  [01KMCKYP0D..., 01KMCKYP0G..., 01KMCKYP0G..., 01KMCKYP0G..., 01KMCKYP0G...]
-[14:51:15 INF] application usecase.event ProductCreatedBatchHandler.HandleBatch CreatedEvent
-  responded success in 0.0022 s with 5 events
-
-# ★ 7. 개별 핸들러 5회 호출 — 이벤트마다 개별 처리
+# ★ 6. 개별 핸들러 5회 호출 — 이벤트마다 개별 처리
 [14:51:15 INF] application usecase.event ProductCreatedEvent.Handle CreatedEvent {EventId}
   requesting with {...}
 [14:51:15 INF] [DomainEvent] Product created: 01KMCKYP0D..., Name: 벌크-키보드, Price: 150000
@@ -737,7 +729,6 @@ public sealed record CreatedEvent(
 CreateRange(5 products)
   → 5개 Product.CreatedEvent + 5개 Inventory.CreatedEvent = 10개 이벤트 발생
   → PublishTrackedEvents requesting with 10 events ★ (이벤트 건수 정확)
-  → IDomainEventBatchHandler<CreatedEvent>.HandleBatch(5 events) — 1회 호출 ★
   → IDomainEventHandler<CreatedEvent>.Handle(event) — 5회 호출 ★
 ```
 
@@ -810,9 +801,8 @@ DeleteRange(3 ids)
 | # | 시나리오 | 결과 |
 |---|---------|------|
 | 1 | 벌크 생성 (5개) → 201 Created + 5개 ProductIds | **Pass** |
-| 2 | IDomainEventBatchHandler 1회 호출 (5 events 벌크 로깅) | **Pass** |
-| 3 | IDomainEventHandler 5회 호출 (개별 로깅) | **Pass** |
-| 4 | PublishTrackedEvents request 로그에 이벤트 건수 정확 (10 events) | **Pass** |
-| 5 | 벌크 삭제 (3개) → 200 OK + AffectedCount=3 | **Pass** |
-| 6 | 삭제 후 PublishTrackedEvents request 로그에 이벤트 건수 정확 (3 events) | **Pass** |
-| 7 | 전체 조회 → 2개 상품만 남음 | **Pass** |
+| 2 | IDomainEventHandler 5회 호출 (개별 로깅) | **Pass** |
+| 3 | PublishTrackedEvents request 로그에 이벤트 건수 정확 (10 events) | **Pass** |
+| 4 | 벌크 삭제 (3개) → 200 OK + AffectedCount=3 | **Pass** |
+| 5 | 삭제 후 PublishTrackedEvents request 로그에 이벤트 건수 정확 (3 events) | **Pass** |
+| 6 | 전체 조회 → 2개 상품만 남음 | **Pass** |

@@ -62,8 +62,10 @@ public class EfCoreProductRepository
     }
 
     /// <summary>
-    /// Soft Delete 벌크 처리. Aggregate를 로드하여 도메인 메서드를 호출합니다.
-    /// 각 Aggregate가 DeletedEvent를 발행하며, BatchHandler가 등록되면 1회로 일괄 처리됩니다.
+    /// Soft Delete 벌크 처리.
+    /// 벌크 삭제 Use Case는 Domain Service(ProductBulkOperations)를 통해
+    /// GetByIds → BulkDelete → UpdateRange 패턴을 사용합니다.
+    /// 이 메서드는 IRepository 인터페이스 계약 유지용입니다.
     /// </summary>
     public override FinT<IO, int> DeleteRange(IReadOnlyList<ProductId> ids)
     {
@@ -79,7 +81,6 @@ public class EfCoreProductRepository
             if (models.Count == 0)
                 return Fin.Succ(0);
 
-            int affected = 0;
             foreach (var model in models)
             {
                 var product = ToDomain(model);
@@ -91,10 +92,9 @@ public class EfCoreProductRepository
                 _dbContext.Entry(updatedModel).Property(p => p.DeletedBy).IsModified = true;
 
                 EventCollector.Track(product);
-                affected++;
             }
 
-            return Fin.Succ(affected);
+            return Fin.Succ(models.Count);
         });
     }
 

@@ -19,8 +19,7 @@ public sealed class DomainEventPublishPerfTests
         var products = TestDataGenerator.GenerateProducts(1_000);
         var collector = new DomainEventCollector();
         var noOpPublisher = new NoOpPublisher();
-        var noOpServiceProvider = new NoOpServiceProvider();
-        var publisher = new DomainEventPublisher(noOpPublisher, collector, noOpServiceProvider);
+        var publisher = new DomainEventPublisher(noOpPublisher, collector);
 
         collector.TrackRange(products);
 
@@ -41,8 +40,7 @@ public sealed class DomainEventPublishPerfTests
         var products = TestDataGenerator.GenerateProducts(10_000);
         var collector = new DomainEventCollector();
         var noOpPublisher = new NoOpPublisher();
-        var noOpServiceProvider = new NoOpServiceProvider();
-        var publisher = new DomainEventPublisher(noOpPublisher, collector, noOpServiceProvider);
+        var publisher = new DomainEventPublisher(noOpPublisher, collector);
 
         collector.TrackRange(products);
 
@@ -95,8 +93,4 @@ public sealed class DomainEventPublishPerfTests
             => ValueTask.CompletedTask;
     }
 
-    private sealed class NoOpServiceProvider : IServiceProvider
-    {
-        public object? GetService(Type serviceType) => null;
-    }
 }

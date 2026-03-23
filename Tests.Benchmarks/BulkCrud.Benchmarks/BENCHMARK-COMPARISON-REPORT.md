@@ -6,137 +6,13 @@
 
 ---
 
-## 0. IDomainEventBatchHandler 개별 vs 벌크 핸들러 성능 비교
-
-> **핵심 벤치마크.** 실제 핸들러 구현체(작업 포함)를 사용한 개별 vs 배치 성능 비교.
-
-### Section A: 경량 핸들러 (리스트 수집만)
-
-| 방식 | 100개 (μs) | 1K (μs) | 10K (μs) | 10K Ratio |
-|------|----------:|--------:|---------:|----------:|
-| **Individual: N회 호출** | 3.45 | 48.68 | **1,501.60** | 1.00 (기준) |
-| **Batch: 1회 호출** | 4.13 | 43.19 | **1,106.98** | **0.75** |
-
-### Section B: 현실적 핸들러 (SHA256 해시 + Dictionary 저장)
-
-| 방식 | 100개 (μs) | 1K (μs) | 10K (μs) | 10K Ratio |
-|------|----------:|--------:|---------:|----------:|
-| **Individual: N회 호출** | 3.78 | 40.63 | **1,505.75** | 1.00 (기준) |
-| **Batch: 1회 호출** | 3.91 | 44.15 | **1,178.04** | **0.78** |
-| **Both: batch + N individual** | 3.69 | 44.31 | **1,063.51** | **0.71** |
-
-### 분석
-
-| 규모 | 배치 핸들러 성능 향상 | 설명 |
-|------|------------------:|------|
-| **100개** | ±10% | 파이프라인 오버헤드가 지배, 핸들러 비용 무시 가능 |
-| **1,000개** | ±10% | 아직 파이프라인 오버헤드가 우세 |
-| **10,000개** | **22~29% 빠름** | 배치 핸들러의 1회 호출이 N회 반복 대비 유의미한 차이 |
-
-**결론:**
-- **100~1K 규모 (일반 트랜잭션):** 개별 핸들러와 배치 핸들러 성능 차이 없음. `IDomainEventHandler<T>` 사용 권장.
-- **10K+ 규모 (대량 벌크):** 배치 핸들러가 **22~29% 빠름**. `IDomainEventBatchHandler<T>` 사용 권장.
-- **Both (공존):** 배치 + 개별 핸들러 공존 시 29% 개선. 배치 핸들러에서 벌크 I/O, 개별 핸들러에서 알림 등 관심사 분리 가능.
-
-> **참고:** 위 벤치마크는 Observability 오버헤드(Activity span, Counter, Histogram, 로그)를 포함하지 않습니다.
-> 아래 Section C에서 관찰 가능성 호출 건수 비교를 통해 실제 시스템 영향을 확인할 수 있습니다.
-
-### Section C: 관찰 가능성(Observability) 호출 건수 비교
-
-> **관찰 가능성 비용 구성 (핸들러 호출 1회당):**
->
-> `ObservableDomainEventNotificationPublisher`는 Mediator를 통과하는 **개별 Publish 1회당** 다음을 생성합니다:
-> - Activity span 1건 (핸들러별, 전/후 태그 포함)
-> - 로그 2건 (request 1 + response 1)
-> - Counter.Add 2회 (request 1 + response 1)
-> - Histogram.Record 1회 (duration)
-> - LogEnricher resolve 1회 (MakeGenericType + DI lookup)
->
-> `IDomainEventBatchHandler<T>`도 호출 시 **배치 단위 1회**의 관찰 가능성을 적용해야 합니다:
-> - Activity span 1건 (배치 호출 전/후)
-> - 로그 2건 (request 1 + response 1)
-> - Counter.Add 2회 (request 1 + response 1)
-> - Histogram.Record 1회 (duration)
-
-#### N=1,000 (벌크 CRUD 규모, 이벤트 타입 K=1)
-
-| 관찰 가능성 항목 | Individual Only | Batch Only | Both (Batch + Individual) |
-|-----------------|----------------:|-----------:|--------------------------:|
-| **Mediator.Publish 호출** | 1,000회 | 1,000회 (핸들러 없음) | 1,000회 |
-| **Activity span 생성** | 1,000개 | **1개** | 1,001개 |
-| **로그 출력** | 2,000건 | **2건** | 2,002건 |
-| **Counter.Add** | 2,000회 | **2회** | 2,002회 |
-| **Histogram.Record** | 1,000회 | **1회** | 1,001회 |
-| **LogEnricher resolve** | 1,000회 | 0회 | 1,000회 |
-| **BatchHandler 직접 호출** | 0회 | **1회** | **1회** |
-| **핸들러 비즈니스 로직 호출** | 1,000회 | **1회** | 1,001회 (1 batch + 1,000 individual) |
-
-#### N=10,000 (대량 벌크 규모, 이벤트 타입 K=1)
-
-| 관찰 가능성 항목 | Individual Only | Batch Only | Both | 감소 배율 (Individual→Batch) |
-|-----------------|----------------:|-----------:|-----:|----------------------------:|
-| **Mediator.Publish 호출** | 10,000회 | 10,000회 (핸들러 없음) | 10,000회 | — |
-| **Activity span 생성** | 10,000개 | **1개** | 10,001개 | **10,000x ↓** |
-| **로그 출력** | 20,000건 | **2건** | 20,002건 | **10,000x ↓** |
-| **Counter.Add** | 20,000회 | **2회** | 20,002회 | **10,000x ↓** |
-| **Histogram.Record** | 10,000회 | **1회** | 10,001회 | **10,000x ↓** |
-| **LogEnricher resolve** | 10,000회 | **0회** | 10,000회 | **10,000x ↓** |
-| **BatchHandler 직접 호출** | 0회 | **1회** | **1회** | — |
-| **핸들러 비즈니스 로직 호출** | 10,000회 | **1회** | 10,001회 | **10,000x ↓** |
-
-#### 관찰 가능성 비용 추정 (N=10,000)
-
-| 오버헤드 구성요소 | Individual Only | Batch Only | 비고 |
-|------------------|---------------:|-----------:|------|
-| Activity span 생성 (×~5μs) | **~50ms** | **~5μs** (1건) | 10,000x 감소 |
-| Counter.Add (×~3μs) | **~60ms** | **~6μs** (2회) | 10,000x 감소 |
-| Histogram.Record (×~3μs) | **~30ms** | **~3μs** (1회) | 10,000x 감소 |
-| 로그 출력 (×~5μs) | **~100ms** | **~10μs** (2건) | 10,000x 감소 |
-| LogEnricher resolve (×~2μs) | **~20ms** | **0ms** | 배치는 LogEnricher 불요 |
-| **관찰 가능성 총 추정 비용** | **~260ms** | **~24μs** | **~10,800x 감소** |
-| 파이프라인 비용 (벤치마크 측정) | ~1,506μs | ~1,178μs | NoOp 기준 |
-| **실제 시스템 총 추정 비용** | **~262ms** | **~1.2ms** | **~218x 개선** |
-
-#### 핵심 인사이트
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Individual (N=10K)                                         │
-│  Mediator.Publish × 10,000                                  │
-│    → ObservableDomainEventNotificationPublisher × 10,000    │
-│      → Activity span    × 10,000 = ~50ms                   │
-│      → Log (req+resp)   × 20,000 = ~100ms                  │
-│      → Counter.Add      × 20,000 = ~60ms                   │
-│      → Histogram.Record × 10,000 = ~30ms                   │
-│      → LogEnricher      × 10,000 = ~20ms                   │
-│                                    ─────────                │
-│                             합계:  ~260ms 관찰 가능성 오버헤드  │
-├─────────────────────────────────────────────────────────────┤
-│  Batch Only (N=10K)                                         │
-│  BatchHandler.HandleBatch × 1 (직접 호출, Mediator 우회)      │
-│    → Activity span    × 1 = ~5μs                            │
-│    → Log (req+resp)   × 2 = ~10μs                           │
-│    → Counter.Add      × 2 = ~6μs                            │
-│    → Histogram.Record × 1 = ~3μs                            │
-│    → LogEnricher      × 0                                   │
-│                                    ─────────                │
-│                             합계:  ~24μs 관찰 가능성 오버헤드  │
-└─────────────────────────────────────────────────────────────┘
-```
-
-> **TODO:** 현재 `DomainEventPublisher.InvokeBatchHandlerIfRegistered`는 배치 핸들러를 관찰 가능성 없이
-> 직접 호출합니다. 배치 호출에도 Activity span 1건 + 로그 2건 + Counter 2회 + Histogram 1회를
-> 적용하는 개선이 필요합니다.
-
----
-
 ## 1. 변경 요약
 
-| 항목 | 기존 (Bulk) | 개선 (Individual + opt-in Batch) |
-|------|------------|-------------------------------|
-| **발행 방식** | GroupBy → `BulkDomainEvent` 래핑 → 타입당 1회 Publish | GroupBy → 이벤트마다 개별 Publish |
-| **IDomainEventHandler\<T\>** | ❌ 호출 안 됨 (버그) | ✅ 항상 호출됨 |
-| **배치 최적화** | IBulkDomainEventHandler (구현 0개) | IDomainEventBatchHandler (opt-in) |
+| 항목 | 기존 (Bulk) | 개선 (Individual) |
+|------|------------|------------------|
+| **발행 방식** | GroupBy → `BulkDomainEvent` 래핑 → 타입당 1회 Publish | 이벤트마다 개별 Publish |
+| **IDomainEventHandler\<T\>** | 호출 안 됨 (버그) | 항상 호출됨 |
+| **벌크 이벤트** | BulkDomainEvent, BulkDeletedEvent, IBulkEventInfo | Domain Service + TrackEvent 패턴 |
 | **Domain 계층** | BulkDomainEvent, BulkDeletedEvent, IBulkEventInfo 포함 | 순수 도메인 타입만 (DDD 준수) |
 
 ---
@@ -151,7 +27,6 @@
 |------|----------:|------:|----------:|
 | **Old: 1 Publish/Type (Bulk)** | 5.54 | 1.00 | 5.65 KB |
 | **New: N Publish/Event (Individual)** | 5.94 | 1.07 | 5.68 KB |
-| New: BatchHandler + Individual | 5.78 | 1.04 | 6.48 KB |
 | New: Full Pipeline | 5.15 | 0.93 | 10.67 KB |
 
 **→ 100개 규모: 차이 없음 (±7%)**
@@ -162,7 +37,6 @@
 |------|----------:|------:|----------:|
 | **Old: 1 Publish/Type (Bulk)** | 56.21 | 1.00 | 47.84 KB |
 | **New: N Publish/Event (Individual)** | 57.63 | 1.03 | 47.88 KB |
-| New: BatchHandler + Individual | 59.21 | 1.06 | 55.71 KB |
 | New: Full Pipeline | 45.40 | 0.81 | 96.00 KB |
 
 **→ 1K 규모: 차이 없음 (±6%), Full Pipeline은 오히려 19% 빠름**
@@ -173,7 +47,6 @@
 |------|----------:|------:|----------:|
 | **Old: 1 Publish/Type (Bulk)** | 973.99 | 1.00 | 569.22 KB |
 | **New: N Publish/Event (Individual)** | 1,005.93 | 1.04 | 569.29 KB |
-| New: BatchHandler + Individual | 863.48 | 0.89 | 647.45 KB |
 | New: Full Pipeline | 1,151.41 | 1.19 | 892.99 KB |
 
 **→ 10K 규모: 개별 발행은 ±4% (사실상 동일), Full Pipeline은 +19% (메모리 할당 차이)**
@@ -225,9 +98,9 @@
 ### 대량 처리 (1,000개 이상)
 Observability 오버헤드가 우려되는 경우 다음 전략 적용 가능:
 
-1. **`IDomainEventBatchHandler<T>` 사용**: 배치 핸들러에서 핵심 로직 처리, 개별 핸들러는 등록하지 않음
+1. **Domain Service 패턴 사용**: 벌크 연산을 Domain Service에서 처리하고 `TrackEvent`로 이벤트 직접 등록
 2. **Observability 샘플링**: OpenTelemetry의 Sampler를 사용하여 대량 이벤트 시 Activity 생성 비율 조절
-3. **이벤트 핸들러 경량화**: 대량 이벤트의 개별 핸들러를 등록하지 않고 배치 핸들러만 사용
+3. **이벤트 핸들러 경량화**: 대량 이벤트의 핸들러를 최소한의 로직만 포함하도록 설계
 
 ---
 

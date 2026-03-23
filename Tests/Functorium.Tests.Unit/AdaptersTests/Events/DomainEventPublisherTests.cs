@@ -14,16 +14,15 @@ public class DomainEventPublisherTests
 {
     private readonly IPublisher _mockPublisher;
     private readonly IDomainEventCollector _mockCollector;
-    private readonly IServiceProvider _mockServiceProvider;
     private readonly DomainEventPublisher _sut;
 
     public DomainEventPublisherTests()
     {
         _mockPublisher = Substitute.For<IPublisher>();
         _mockCollector = Substitute.For<IDomainEventCollector>();
-        _mockServiceProvider = Substitute.For<IServiceProvider>();
         _mockCollector.GetTrackedAggregates().Returns(new List<IHasDomainEvents>());
-        _sut = new DomainEventPublisher(_mockPublisher, _mockCollector, _mockServiceProvider);
+        _mockCollector.GetDirectlyTrackedEvents().Returns(new List<IDomainEvent>());
+        _sut = new DomainEventPublisher(_mockPublisher, _mockCollector);
     }
 
     #region Publish Tests
