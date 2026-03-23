@@ -6,6 +6,7 @@ using Functorium.Domains.Specifications;
 using Functorium.Domains.Specifications.Expressions;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
+using static LanguageExt.Prelude;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 
@@ -64,7 +65,6 @@ public class EfCoreProductRepository
 
     /// <summary>
     /// Soft Delete 벌크 처리. ExecuteUpdateAsync로 직접 SQL을 실행하여 성능을 최적화합니다.
-    /// BulkDeletedEvent를 통해 벌크(Bulk) 삭제 사실을 알립니다.
     /// </summary>
     public override FinT<IO, int> DeleteRange(IReadOnlyList<ProductId> ids)
     {
@@ -81,13 +81,17 @@ public class EfCoreProductRepository
 
             if (affected > 0)
             {
-                EventCollector.TrackEvent(
-                    BulkDeletedEvent.From(ids, affected));
+                var deleteEvent = CreateDeleteRangeEvent(ids, affected);
+                if (deleteEvent is not null)
+                    EventCollector.TrackEvent(deleteEvent);
             }
 
             return Fin.Succ(affected);
         });
     }
+
+    protected override IDomainEvent? CreateDeleteRangeEvent(IReadOnlyList<ProductId> ids, int affectedCount)
+        => new Product.BulkDeletedEvent(toSeq(ids), affectedCount);
 
     // ─── Compiled Query (opt-in 성능 최적화) ──────────
     // EF.CompileAsyncQuery를 사용하면 LINQ → SQL 컴파일을 1회만 수행합니다.

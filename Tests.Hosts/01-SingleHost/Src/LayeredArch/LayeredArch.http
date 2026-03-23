@@ -40,6 +40,97 @@ Content-Type: application/json
 }
 
 ###############################################################################
+# 1-B. 상품 (Product) - 벌크 CRUD (Bulk Operations)
+###############################################################################
+#
+# CreateRange + IDomainEventBatchHandler 활용 예제.
+# 벌크 생성 시:
+#   - IRepository.CreateRange()으로 N개 상품 한 번에 저장
+#   - N개 Product.CreatedEvent 발생
+#   - IDomainEventBatchHandler<CreatedEvent> 1회 호출 (벌크 로깅)
+#   - IDomainEventHandler<CreatedEvent> N회 호출 (개별 로깅)
+#
+# 벌크 삭제 시:
+#   - IRepository.DeleteRange()으로 N개 상품 한 번에 삭제
+#   - Product.BulkDeletedEvent 1건 발생
+#
+###############################################################################
+
+### 벌크 상품 생성 (5개 동시 생성)
+# 서버 로그에서 확인:
+#   - adapter repository CreateRange requesting with {"aggregates_count": 5}
+#   - adapter event PublishTrackedEvents requesting with 10 events
+#   - application usecase.event ProductCreatedBatchHandler.HandleBatch requesting with 5 events ← 배치 1회
+#   - [DomainEvent] Product created: ... (×5) ← 개별 5회
+POST {{baseUrl}}/api/products/bulk
+Content-Type: application/json
+
+{
+  "Products": [
+    { "Name": "벌크-키보드", "Description": "A-1", "Price": 150000, "StockQuantity": 50 },
+    { "Name": "벌크-마우스", "Description": "A-2", "Price": 80000, "StockQuantity": 100 },
+    { "Name": "벌크-모니터", "Description": "A-3", "Price": 450000, "StockQuantity": 30 },
+    { "Name": "벌크-헤드셋", "Description": "A-4", "Price": 250000, "StockQuantity": 40 },
+    { "Name": "벌크-웹캠", "Description": "A-5", "Price": 120000, "StockQuantity": 60 }
+  ]
+}
+
+### 벌크 상품 생성 (10개 대량 생성)
+POST {{baseUrl}}/api/products/bulk
+Content-Type: application/json
+
+{
+  "Products": [
+    { "Name": "대량-SSD-256GB", "Description": "NVMe SSD 256GB", "Price": 45000, "StockQuantity": 200 },
+    { "Name": "대량-SSD-512GB", "Description": "NVMe SSD 512GB", "Price": 75000, "StockQuantity": 150 },
+    { "Name": "대량-SSD-1TB", "Description": "NVMe SSD 1TB", "Price": 120000, "StockQuantity": 100 },
+    { "Name": "대량-RAM-8GB", "Description": "DDR5 8GB", "Price": 35000, "StockQuantity": 300 },
+    { "Name": "대량-RAM-16GB", "Description": "DDR5 16GB", "Price": 65000, "StockQuantity": 250 },
+    { "Name": "대량-RAM-32GB", "Description": "DDR5 32GB", "Price": 120000, "StockQuantity": 100 },
+    { "Name": "대량-CPU-i5", "Description": "Intel Core i5-14600K", "Price": 350000, "StockQuantity": 50 },
+    { "Name": "대량-CPU-i7", "Description": "Intel Core i7-14700K", "Price": 520000, "StockQuantity": 40 },
+    { "Name": "대량-CPU-i9", "Description": "Intel Core i9-14900K", "Price": 750000, "StockQuantity": 20 },
+    { "Name": "대량-GPU-4060", "Description": "GeForce RTX 4060", "Price": 450000, "StockQuantity": 30 }
+  ]
+}
+
+### 벌크 생성 확인 - 전체 조회
+GET {{baseUrl}}/api/products
+
+### 벌크 생성 확인 - 가격 범위 검색
+GET {{baseUrl}}/api/products/search?MinPrice=100000&MaxPrice=500000&SortBy=Price&SortDirection=asc
+
+### 벌크 상품 삭제 (벌크 생성 응답의 ProductIds를 사용)
+# 서버 로그에서 확인:
+#   - adapter repository DeleteRange requesting with {"ids_count": 3}
+#   - adapter event PublishTrackedEvents requesting with 3 events ← 이벤트 건수 정확
+POST {{baseUrl}}/api/products/bulk-delete
+Content-Type: application/json
+
+{
+  "ProductIds": ["{{bulkProductId1}}", "{{bulkProductId2}}", "{{bulkProductId3}}"]
+}
+
+### 벌크 삭제 확인 - 전체 조회
+GET {{baseUrl}}/api/products
+
+### 벌크 삭제 - 빈 배열 → 실패
+POST {{baseUrl}}/api/products/bulk-delete
+Content-Type: application/json
+
+{
+  "ProductIds": []
+}
+
+### 벌크 생성 - 빈 배열 → 실패
+POST {{baseUrl}}/api/products/bulk
+Content-Type: application/json
+
+{
+  "Products": []
+}
+
+###############################################################################
 # 2. 상품 (Product) - 검색
 ###############################################################################
 

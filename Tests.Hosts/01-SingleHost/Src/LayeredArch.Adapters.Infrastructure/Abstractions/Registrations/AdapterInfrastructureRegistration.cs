@@ -30,6 +30,7 @@ public static class AdapterInfrastructureRegistration
             options.NotificationPublisherType = typeof(ObservableDomainEventNotificationPublisher);
         });
         services.RegisterDomainEventPublisher();
+        services.RegisterDomainEventBatchHandlersFromAssembly(LayeredArch.Application.AssemblyReference.Assembly);
 
         // =================================================================
         // FluentValidation 등록 - 어셈블리에서 모든 Validator 자동 등록
@@ -42,8 +43,8 @@ public static class AdapterInfrastructureRegistration
         // =================================================================
         services
             .RegisterOpenTelemetry(configuration, AssemblyReference.Assembly)
-            .ConfigureTracing(tracing => tracing.Configure(b => b.AddConsoleExporter()))
-            .ConfigureMetrics(metrics => metrics.Configure(b => b.AddConsoleExporter()))
+            //.ConfigureTracing(tracing => tracing.Configure(b => b.AddConsoleExporter()))
+            //.ConfigureMetrics(metrics => metrics.Configure(b => b.AddConsoleExporter()))
             .ConfigurePipelines(pipelines => pipelines
                 .UseAll()
                 .AddCustomPipelinesFromAssembly(AssemblyReference.Assembly))
