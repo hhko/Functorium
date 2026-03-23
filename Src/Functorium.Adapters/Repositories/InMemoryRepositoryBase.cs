@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using Functorium.Adapters.Errors;
 using Functorium.Applications.Events;
 using Functorium.Domains.Entities;
-using Functorium.Domains.Events;
 using Functorium.Domains.Observabilities;
 using Functorium.Domains.Repositories;
 using static Functorium.Adapters.Errors.AdapterErrorType;
@@ -145,25 +144,9 @@ public abstract class InMemoryRepositoryBase<TAggregate, TId>
                     affected++;
             }
 
-            if (affected > 0)
-            {
-                var deleteEvent = CreateDeleteRangeEvent(ids, affected);
-                if (deleteEvent is not null)
-                    EventCollector.TrackEvent(deleteEvent);
-            }
-
             return Fin.Succ(affected);
         });
     }
-
-    // ─── 이벤트 훅 ───────────────────────────────────
-
-    /// <summary>
-    /// DeleteRange 완료 후 도메인 이벤트를 생성합니다.
-    /// 기본값: null (이벤트 없음). 하위 클래스에서 Aggregate별 삭제 이벤트를 재정의하십시오.
-    /// </summary>
-    protected virtual IDomainEvent? CreateDeleteRangeEvent(IReadOnlyList<TId> ids, int affectedCount)
-        => null;
 
     // ─── 에러 헬퍼 ───────────────────────────────────
 

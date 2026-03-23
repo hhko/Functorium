@@ -98,7 +98,7 @@ public sealed class DomainEventPublisher : IDomainEventPublisher
     {
         return IO.liftAsync(async () =>
         {
-            // 1. 모든 이벤트 수집 (Aggregate + 직접 추적)
+            // 1. Aggregate에서 이벤트 수집
             var allEvents = new List<IDomainEvent>();
 
             var trackedAggregates = _collector.GetTrackedAggregates();
@@ -107,8 +107,6 @@ public sealed class DomainEventPublisher : IDomainEventPublisher
                 allEvents.AddRange(aggregate.DomainEvents);
                 (aggregate as IDomainEventDrain)?.ClearDomainEvents();
             }
-
-            allEvents.AddRange(_collector.GetDirectlyTrackedEvents());
 
             if (allEvents.Count == 0)
                 return Fin.Succ(LanguageExt.Seq<PublishResult>.Empty);

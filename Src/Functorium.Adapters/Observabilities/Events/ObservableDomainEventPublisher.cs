@@ -160,8 +160,7 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.PublishTrackedEvents);
 
             // Collector에서 추적 중인 이벤트 건수 계산
-            int trackedEventCount = _collector.GetTrackedAggregates().Sum(a => a.DomainEvents.Count)
-                                  + _collector.GetDirectlyTrackedEvents().Count;
+            int trackedEventCount = _collector.GetTrackedAggregates().Sum(a => a.DomainEvents.Count);
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestEventCount, trackedEventCount);
 
             _logger.LogDomainEventsPublisherRequest(nameof(PublishTrackedEvents), ObservabilityNaming.Methods.PublishTrackedEvents, trackedEventCount);

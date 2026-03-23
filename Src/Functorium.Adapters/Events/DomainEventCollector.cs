@@ -13,7 +13,6 @@ namespace Functorium.Adapters.Events;
 internal sealed class DomainEventCollector : IDomainEventCollector
 {
     private readonly System.Collections.Generic.HashSet<IHasDomainEvents> _tracked = new(ReferenceEqualityComparer.Instance);
-    private readonly List<IDomainEvent> _directEvents = [];
 
     public void Track(IHasDomainEvents aggregate) => _tracked.Add(aggregate);
 
@@ -25,10 +24,4 @@ internal sealed class DomainEventCollector : IDomainEventCollector
 
     public IReadOnlyList<IHasDomainEvents> GetTrackedAggregates()
         => _tracked.Where(a => a.DomainEvents.Count > 0).ToList();
-
-    public void TrackEvent(IDomainEvent domainEvent) => _directEvents.Add(domainEvent);
-
-    public void TrackEvents(IEnumerable<IDomainEvent> domainEvents) => _directEvents.AddRange(domainEvents);
-
-    public IReadOnlyList<IDomainEvent> GetDirectlyTrackedEvents() => _directEvents;
 }
