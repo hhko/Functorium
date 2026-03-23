@@ -65,7 +65,7 @@ public static class DomainEventRegistration
     }
 
     /// <summary>
-    /// 지정된 어셈블리에서 IDomainEventHandler 및 IDomainEventBatchHandler 구현체를
+    /// 지정된 어셈블리에서 IDomainEventHandler 구현체를
     /// Scrutor로 스캔하여 등록합니다.
     /// </summary>
     /// <param name="services">서비스 컬렉션</param>
@@ -80,12 +80,6 @@ public static class DomainEventRegistration
         services.Scan(scan => scan
             .FromAssemblies(assembly)
             .AddClasses(classes => classes.AssignableTo(typeof(IDomainEventHandler<>)))
-            .AsImplementedInterfaces()
-            .WithLifetime(lifetime));
-
-        services.Scan(scan => scan
-            .FromAssemblies(assembly)
-            .AddClasses(classes => classes.AssignableTo(typeof(IDomainEventBatchHandler<>)))
             .AsImplementedInterfaces()
             .WithLifetime(lifetime));
 

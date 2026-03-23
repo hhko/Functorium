@@ -24,4 +24,15 @@ public interface IDomainEventCollector
     /// 추적 중인 Aggregate 중 도메인 이벤트가 있는 것들을 반환합니다.
     /// </summary>
     IReadOnlyList<IHasDomainEvents> GetTrackedAggregates();
+
+    /// <summary>
+    /// Domain Service가 생성한 도메인 이벤트를 직접 추적합니다.
+    /// 여러 Aggregate를 조율하는 Domain Service의 벌크 이벤트에 사용합니다.
+    /// </summary>
+    void TrackEvent(IDomainEvent domainEvent);
+
+    /// <summary>
+    /// 직접 추적된 도메인 이벤트를 반환합니다.
+    /// </summary>
+    IReadOnlyList<IDomainEvent> GetDirectlyTrackedEvents();
 }

@@ -71,7 +71,6 @@ public static partial class ObservabilityNaming
     public static class Methods
     {
         public const string Handle = "Handle";
-        public const string HandleBatch = "HandleBatch";
         public const string Publish = "Publish";
         public const string PublishTrackedEvents = "PublishTrackedEvents";
     }
