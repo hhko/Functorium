@@ -8,7 +8,7 @@ using Mediator;
 namespace BulkCrud.Benchmarks.Benchmarks;
 
 /// <summary>
-/// 도메인 이벤트 발행 성능: Per-Event Sequential vs BulkDomainEvent GroupBy
+/// 도메인 이벤트 발행 성능: 개별 이벤트 발행 벤치마크
 /// </summary>
 [MemoryDiagnoser]
 [ShortRunJob]
@@ -27,8 +27,8 @@ public class DomainEventPublishBenchmarks
         _noOpPublisher = new NoOpPublisher();
     }
 
-    [Benchmark(Baseline = true, Description = "Per-Event Sequential Publish")]
-    public async Task PerEvent_Sequential()
+    [Benchmark(Baseline = true, Description = "Individual Event Publish")]
+    public async Task IndividualEvent_Publish()
     {
         foreach (var product in _products)
         {
@@ -39,8 +39,8 @@ public class DomainEventPublishBenchmarks
         }
     }
 
-    [Benchmark(Description = "BulkDomainEvent GroupBy Publish")]
-    public async Task BulkEvent_GroupBy()
+    [Benchmark(Description = "Individual Event Publish with GroupBy")]
+    public async Task IndividualEvent_GroupBy_Publish()
     {
         var allEvents = new List<IDomainEvent>(_products.Count);
         foreach (var product in _products)
@@ -48,8 +48,10 @@ public class DomainEventPublishBenchmarks
 
         foreach (var group in allEvents.GroupBy(e => e.GetType()))
         {
-            var bulkEvent = new BulkDomainEvent(group.ToList(), group.Key);
-            await _noOpPublisher.Publish(bulkEvent);
+            foreach (var evt in group)
+            {
+                await _noOpPublisher.Publish(evt);
+            }
         }
     }
 
