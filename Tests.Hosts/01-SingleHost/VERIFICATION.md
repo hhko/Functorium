@@ -634,3 +634,185 @@ public sealed record CreatedEvent(
 | 13 | OpenSearch JSON 포맷 정상 출력 (모든 시나리오) | **Pass** |
 | 14 | Console Raw 출력과 JSON 필드 일치 | **Pass** |
 | 15 | ASP.NET Core HTTP Context 필드 (`ctx.request_id`, `ctx.request_path`) 포함 | **Pass** |
+
+---
+
+## 벌크 CRUD 검증 결과
+
+> **검증 일시:** 2026-03-23 (이벤트 건수 로그 버그 수정 후 재검증)
+> **검증 방법:** 서버 실행 후 curl 호출
+> **관련 기능:** `IRepository.CreateRange`, `IRepository.DeleteRange`, `IDomainEventBatchHandler<T>`
+
+### 벌크 상품 생성 (POST /api/products/bulk)
+
+**요청:**
+```json
+{
+  "Products": [
+    { "Name": "벌크-키보드", "Description": "기계식 키보드", "Price": 150000, "StockQuantity": 50 },
+    { "Name": "벌크-마우스", "Description": "무선 마우스", "Price": 80000, "StockQuantity": 100 },
+    { "Name": "벌크-모니터", "Description": "27인치 4K 모니터", "Price": 450000, "StockQuantity": 30 },
+    { "Name": "벌크-헤드셋", "Description": "노이즈캔슬링 헤드셋", "Price": 250000, "StockQuantity": 40 },
+    { "Name": "벌크-웹캠", "Description": "FHD 웹캠", "Price": 120000, "StockQuantity": 60 }
+  ]
+}
+```
+
+**응답 (201 Created):**
+```json
+{
+  "CreatedCount": 5,
+  "ProductIds": [
+    "01KMCKYP0DTQE8XD3EX6K5KJSH",
+    "01KMCKYP0GPDDB5F435GVD9B77",
+    "01KMCKYP0GZR0C3GEE0JV4YP97",
+    "01KMCKYP0GCZ3XVCXBJ3E3XHS3",
+    "01KMCKYP0GHG4YQ90JHSB8M3ZE"
+  ]
+}
+```
+
+**서버 로그 (관찰 가능성 확인):**
+
+```log
+# 1. 유스케이스 파이프라인 — Command 요청 로깅
+[14:51:14 INF] application usecase.command BulkCreateProductsCommand.Handle requesting with
+  {"Products": [{"Name": "벌크-키보드", ...}, {"Name": "벌크-마우스", ...},
+   {"Name": "벌크-모니터", ...}, {"Name": "벌크-헤드셋", ...}, {"Name": "벌크-웹캠", ...}]}
+
+# 2. Adapter 계층 — CreateRange 1회 호출 (5개 일괄)
+[14:51:15 INF] adapter repository InMemoryProductRepository.CreateRange requesting
+  with {"aggregates_count": 5}
+[14:51:15 INF] adapter repository InMemoryProductRepository.CreateRange
+  responded success in 0.0599 s
+
+# 3. Adapter 계층 — Inventory 개별 생성 (5회)
+[14:51:15 INF] adapter repository InMemoryInventoryRepository.Create
+  requesting / responded success (×5)
+
+# 4. 트랜잭션 커밋
+[14:51:15 INF] adapter unitofwork InMemoryUnitOfWork.SaveChanges responded success in 0.0466 s
+
+# ★ 5. 이벤트 발행 시작 — 이벤트 건수가 정확하게 출력됨 (10 = CreatedEvent 5 + Inventory.CreatedEvent 5)
+[14:51:15 INF] adapter event PublishTrackedEvents.PublishTrackedEvents
+  requesting with 10 events
+
+# ★ 6. 배치 핸들러 1회 호출 — 5개 CreatedEvent를 한 번에 처리
+[14:51:15 INF] application usecase.event ProductCreatedBatchHandler.HandleBatch CreatedEvent
+  requesting with 5 events
+[14:51:15 INF] [DomainEvent:Batch] 5 products created in bulk:
+  [01KMCKYP0D..., 01KMCKYP0G..., 01KMCKYP0G..., 01KMCKYP0G..., 01KMCKYP0G...]
+[14:51:15 INF] application usecase.event ProductCreatedBatchHandler.HandleBatch CreatedEvent
+  responded success in 0.0022 s with 5 events
+
+# ★ 7. 개별 핸들러 5회 호출 — 이벤트마다 개별 처리
+[14:51:15 INF] application usecase.event ProductCreatedEvent.Handle CreatedEvent {EventId}
+  requesting with {...}
+[14:51:15 INF] [DomainEvent] Product created: 01KMCKYP0D..., Name: 벌크-키보드, Price: 150000
+[14:51:15 INF] ... responded success in 0.0011 s
+
+[14:51:15 INF] [DomainEvent] Product created: 01KMCKYP0G..., Name: 벌크-마우스, Price: 80000
+[14:51:15 INF] ... responded success in 0.0002 s
+
+[14:51:15 INF] [DomainEvent] Product created: 01KMCKYP0G..., Name: 벌크-모니터, Price: 450000
+[14:51:15 INF] ... responded success in 0.0001 s
+
+[14:51:15 INF] [DomainEvent] Product created: 01KMCKYP0G..., Name: 벌크-헤드셋, Price: 250000
+[14:51:15 INF] ... responded success in 0.0001 s
+
+[14:51:15 INF] [DomainEvent] Product created: 01KMCKYP0G..., Name: 벌크-웹캠, Price: 120000
+[14:51:15 INF] ... responded success in 0.0002 s
+
+# 8. 이벤트 발행 완료 (5 CreatedEvent + 5 Inventory.CreatedEvent = 10 events)
+[14:51:15 INF] adapter event PublishTrackedEvents.PublishTrackedEvents
+  responded success in 0.0471 s with 10 events
+
+# 9. 유스케이스 응답 완료
+[14:51:15 INF] application usecase.command BulkCreateProductsCommand.Handle
+  responded success in 0.3943 s
+```
+
+**이벤트 처리 흐름:**
+```
+CreateRange(5 products)
+  → 5개 Product.CreatedEvent + 5개 Inventory.CreatedEvent = 10개 이벤트 발생
+  → PublishTrackedEvents requesting with 10 events ★ (이벤트 건수 정확)
+  → IDomainEventBatchHandler<CreatedEvent>.HandleBatch(5 events) — 1회 호출 ★
+  → IDomainEventHandler<CreatedEvent>.Handle(event) — 5회 호출 ★
+```
+
+### 벌크 상품 삭제 (POST /api/products/bulk-delete)
+
+**요청:**
+```json
+{
+  "ProductIds": [
+    "01KMCKYP0DTQE8XD3EX6K5KJSH",
+    "01KMCKYP0GPDDB5F435GVD9B77",
+    "01KMCKYP0GZR0C3GEE0JV4YP97"
+  ]
+}
+```
+
+**응답 (200 OK):**
+```json
+{ "AffectedCount": 3 }
+```
+
+**서버 로그 (관찰 가능성 확인):**
+
+```log
+# 1. 유스케이스 파이프라인 — Command 요청 로깅
+[14:51:37 INF] application usecase.command BulkDeleteProductsCommand.Handle requesting with
+  {"ProductIds": ["01KMCKYP0D...", "01KMCKYP0G...", "01KMCKYP0G..."]}
+
+# 2. Adapter 계층 — DeleteRange 1회 호출
+[14:51:37 INF] adapter repository InMemoryProductRepository.DeleteRange
+  requesting with {"ids_count": 3}
+[14:51:37 INF] adapter repository InMemoryProductRepository.DeleteRange
+  responded success in 0.0473 s
+
+# 3. 트랜잭션 커밋
+[14:51:37 INF] adapter unitofwork InMemoryUnitOfWork.SaveChanges responded success in 0.0005 s
+
+# ★ 4. 이벤트 발행 — 이벤트 건수 정확 (3 = DeletedEvent 3건)
+[14:51:37 INF] adapter event PublishTrackedEvents.PublishTrackedEvents
+  requesting with 3 events
+[14:51:37 INF] adapter event PublishTrackedEvents.PublishTrackedEvents
+  responded success in 0.0002 s with 3 events
+
+# 5. 유스케이스 응답 완료
+[14:51:37 INF] application usecase.command BulkDeleteProductsCommand.Handle
+  responded success in 0.0694 s with {"AffectedCount": 3}
+```
+
+**이벤트 처리 흐름:**
+```
+DeleteRange(3 ids)
+  → 3개 Product.DeletedEvent 발생 (InMemory: 개별 Delete → DomainEvent)
+  → PublishTrackedEvents requesting with 3 events ★ (이벤트 건수 정확)
+  → Mediator.Publish(DeletedEvent) × 3
+```
+
+### 벌크 삭제 확인 (GET /api/products)
+
+```json
+{
+  "Products": [
+    { "ProductId": "01KMCKYP0GHG4YQ90JHSB8M3ZE", "Name": "벌크-웹캠", "Price": 120000 },
+    { "ProductId": "01KMCKYP0GCZ3XVCXBJ3E3XHS3", "Name": "벌크-헤드셋", "Price": 250000 }
+  ]
+}
+```
+
+### 검증 요약
+
+| # | 시나리오 | 결과 |
+|---|---------|------|
+| 1 | 벌크 생성 (5개) → 201 Created + 5개 ProductIds | **Pass** |
+| 2 | IDomainEventBatchHandler 1회 호출 (5 events 벌크 로깅) | **Pass** |
+| 3 | IDomainEventHandler 5회 호출 (개별 로깅) | **Pass** |
+| 4 | PublishTrackedEvents request 로그에 이벤트 건수 정확 (10 events) | **Pass** |
+| 5 | 벌크 삭제 (3개) → 200 OK + AffectedCount=3 | **Pass** |
+| 6 | 삭제 후 PublishTrackedEvents request 로그에 이벤트 건수 정확 (3 events) | **Pass** |
+| 7 | 전체 조회 → 2개 상품만 남음 | **Pass** |
