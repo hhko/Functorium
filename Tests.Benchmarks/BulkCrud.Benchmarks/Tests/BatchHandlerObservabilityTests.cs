@@ -203,10 +203,10 @@ public sealed class BatchHandlerObservabilityTests : IDisposable
         // Act
         await publisher.PublishTrackedEvents().Run().RunAsync();
 
-        // Assert — 배치 + 개별 모두 호출됨
+        // Assert — 배치 핸들러가 처리하면 개별 발행은 스킵됨 (continue)
         batchHandler.CallCount.ShouldBe(1);
         batchHandler.ReceivedEventCount.ShouldBe(5);
-        individualHandler.CallCount.ShouldBe(5);
+        individualHandler.CallCount.ShouldBe(0);
     }
 
     // ─── 테스트 핸들러 ──────────────────────────────

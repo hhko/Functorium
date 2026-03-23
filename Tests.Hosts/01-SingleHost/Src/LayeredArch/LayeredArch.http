@@ -52,7 +52,8 @@ Content-Type: application/json
 #
 # 벌크 삭제 시:
 #   - IRepository.DeleteRange()으로 N개 상품 한 번에 삭제
-#   - Product.BulkDeletedEvent 1건 발생
+#   - N * Product.DeletedEvent 발생
+#   - IDomainEventBatchHandler<DeletedEvent> 1회 호출 (벌크 로깅)
 #
 ###############################################################################
 

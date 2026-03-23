@@ -23,7 +23,6 @@ public class DomainEventPublisherTests
         _mockCollector = Substitute.For<IDomainEventCollector>();
         _mockServiceProvider = Substitute.For<IServiceProvider>();
         _mockCollector.GetTrackedAggregates().Returns(new List<IHasDomainEvents>());
-        _mockCollector.GetDirectlyTrackedEvents().Returns(new List<IDomainEvent>());
         _sut = new DomainEventPublisher(_mockPublisher, _mockCollector, _mockServiceProvider);
     }
 
@@ -195,23 +194,6 @@ public class DomainEventPublisherTests
 
         // Assert — Aggregate 이벤트는 발행 후 클리어
         aggregate.DomainEvents.Count.ShouldBe(0);
-    }
-
-    [Fact]
-    public async Task PublishTrackedEvents_IncludesDirectlyTrackedEvents()
-    {
-        // Arrange
-        var directEvent = new TestDomainEvent("direct");
-        _mockCollector.GetDirectlyTrackedEvents().Returns(
-            new List<IDomainEvent> { directEvent });
-
-        // Act
-        var actual = await _sut.PublishTrackedEvents().Run().RunAsync();
-
-        // Assert
-        actual.IsSucc.ShouldBeTrue();
-        await _mockPublisher.Received(1).Publish(
-            Arg.Any<IDomainEvent>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]

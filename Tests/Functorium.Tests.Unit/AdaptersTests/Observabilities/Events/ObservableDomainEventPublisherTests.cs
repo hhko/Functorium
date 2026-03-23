@@ -30,7 +30,6 @@ public class ObservableDomainEventPublisherTests
         _mockInner = Substitute.For<IDomainEventPublisher>();
         _mockCollector = Substitute.For<IDomainEventCollector>();
         _mockCollector.GetTrackedAggregates().Returns(new List<IHasDomainEvents>());
-        _mockCollector.GetDirectlyTrackedEvents().Returns(new List<IDomainEvent>());
         _mockLogger = Substitute.For<ILogger<ObservableDomainEventPublisher>>();
         var meterFactory = new TestMeterFactory();
         var openTelemetryOptions = MsOptions.Create(new OpenTelemetryOptions { ServiceNamespace = "TestPublisher" });

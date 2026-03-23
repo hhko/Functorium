@@ -57,7 +57,7 @@ public sealed class BulkCreateProductsCommand
 
             FinT<IO, Response> usecase =
                 from createdProducts in productRepository.CreateRange(products)
-                from createdInventories in inventoryRepository.CreateRange(inventories)
+                //from createdInventories in inventoryRepository.CreateRange(inventories)
                 select new Response(
                     createdProducts.Count,
                     createdProducts.Select(p => p.Id.ToString()).ToList());

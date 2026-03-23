@@ -60,7 +60,6 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
         _mockInner = Substitute.For<IDomainEventPublisher>();
         _mockCollector = Substitute.For<IDomainEventCollector>();
         _mockCollector.GetTrackedAggregates().Returns(new List<IHasDomainEvents>());
-        _mockCollector.GetDirectlyTrackedEvents().Returns(new List<IDomainEvent>());
         _meterFactory = new TestMeterFactory();
         _openTelemetryOptions = MsOptions.Create(new OpenTelemetryOptions { ServiceNamespace = "TestLogging" });
     }

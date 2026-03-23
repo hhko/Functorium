@@ -1,12 +1,10 @@
 using Functorium.Adapters.Repositories;
 using Functorium.Adapters.SourceGenerators;
 using Functorium.Applications.Events;
-using Functorium.Domains.Events;
 using Functorium.Domains.Specifications;
 using Functorium.Domains.Specifications.Expressions;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
 using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
-using static LanguageExt.Prelude;
 
 namespace LayeredArch.Adapters.Persistence.Repositories.EfCore;
 
@@ -64,7 +62,8 @@ public class EfCoreProductRepository
     }
 
     /// <summary>
-    /// Soft Delete 벌크 처리. ExecuteUpdateAsync로 직접 SQL을 실행하여 성능을 최적화합니다.
+    /// Soft Delete 벌크 처리. Aggregate를 로드하여 도메인 메서드를 호출합니다.
+    /// 각 Aggregate가 DeletedEvent를 발행하며, BatchHandler가 등록되면 1회로 일괄 처리됩니다.
     /// </summary>
     public override FinT<IO, int> DeleteRange(IReadOnlyList<ProductId> ids)
     {
@@ -73,25 +72,31 @@ public class EfCoreProductRepository
             if (ids.Count == 0)
                 return Fin.Succ(0);
 
-            int affected = await DbSet
+            var models = await ReadQueryIgnoringFilters()
                 .Where(ByIdsPredicate(ids))
-                .ExecuteUpdateAsync(s => s
-                    .SetProperty(p => p.DeletedAt, DateTime.UtcNow)
-                    .SetProperty(p => p.DeletedBy, "system"));
+                .ToListAsync();
 
-            if (affected > 0)
+            if (models.Count == 0)
+                return Fin.Succ(0);
+
+            int affected = 0;
+            foreach (var model in models)
             {
-                var deleteEvent = CreateDeleteRangeEvent(ids, affected);
-                if (deleteEvent is not null)
-                    EventCollector.TrackEvent(deleteEvent);
+                var product = ToDomain(model);
+                product.Delete("system");
+
+                var updatedModel = ToModel(product);
+                DbSet.Attach(updatedModel);
+                _dbContext.Entry(updatedModel).Property(p => p.DeletedAt).IsModified = true;
+                _dbContext.Entry(updatedModel).Property(p => p.DeletedBy).IsModified = true;
+
+                EventCollector.Track(product);
+                affected++;
             }
 
             return Fin.Succ(affected);
         });
     }
-
-    protected override IDomainEvent? CreateDeleteRangeEvent(IReadOnlyList<ProductId> ids, int affectedCount)
-        => new Product.BulkDeletedEvent(toSeq(ids), affectedCount);
 
     // ─── Compiled Query (opt-in 성능 최적화) ──────────
     // EF.CompileAsyncQuery를 사용하면 LINQ → SQL 컴파일을 1회만 수행합니다.

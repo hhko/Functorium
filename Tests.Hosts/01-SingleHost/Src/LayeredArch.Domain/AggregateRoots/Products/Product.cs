@@ -49,11 +49,6 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable, ISoftDeletab
     /// </summary>
     public sealed record RestoredEvent(ProductId ProductId) : DomainEvent;
 
-    /// <summary>
-    /// 상품 벌크 삭제 이벤트 (Aggregate 로드 없는 ExecuteDeleteAsync 시나리오)
-    /// </summary>
-    public sealed record BulkDeletedEvent(Seq<ProductId> DeletedIds, int AffectedCount) : DomainEvent;
-
     #endregion
 
     // Value Object 속성

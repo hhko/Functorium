@@ -7,7 +7,6 @@ using LayeredArch.Domain.AggregateRoots.Products;
 using Mediator;
 using Shouldly;
 using Xunit;
-using static LanguageExt.Prelude;
 
 namespace BulkCrud.Benchmarks.Tests;
 
@@ -58,23 +57,28 @@ public sealed class DomainEventPublishPerfTests
     }
 
     [Fact]
-    public void DeleteRange_Raises_ProductBulkDeletedEvent()
+    public void DeleteRange_EachAggregate_Raises_DeletedEvent()
     {
         // Arrange
         var collector = new DomainEventCollector();
-        var ids = Enumerable.Range(0, 100)
-            .Select(_ => ProductId.New())
+        var products = TestDataGenerator.GenerateProducts(100);
+
+        // Act — DeleteRange 시나리오: 각 Aggregate가 DeletedEvent 발행
+        foreach (var product in products)
+        {
+            product.Delete("system");
+            collector.Track(product);
+        }
+
+        // Assert — 각 Aggregate에서 개별 DeletedEvent 발생
+        var trackedAggregates = collector.GetTrackedAggregates();
+        trackedAggregates.Count.ShouldBe(100);
+
+        var allEvents = trackedAggregates
+            .SelectMany(a => a.DomainEvents)
+            .OfType<Product.DeletedEvent>()
             .ToList();
-
-        // Act — DeleteRange 시나리오 시뮬레이션 (Aggregate별 이벤트)
-        collector.TrackEvent(new Product.BulkDeletedEvent(toSeq(ids), ids.Count));
-
-        // Assert
-        var directEvents = collector.GetDirectlyTrackedEvents();
-        directEvents.Count.ShouldBe(1);
-        var bulkDeleted = directEvents[0].ShouldBeOfType<Product.BulkDeletedEvent>();
-        bulkDeleted.DeletedIds.Count.ShouldBe(100);
-        bulkDeleted.AffectedCount.ShouldBe(100);
+        allEvents.Count.ShouldBe(100);
     }
 
     private sealed class NoOpPublisher : IPublisher

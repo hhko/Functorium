@@ -70,7 +70,6 @@ public sealed class DomainEventPublisherMetricsStructureTests : IDisposable
         _mockInner = Substitute.For<IDomainEventPublisher>();
         _mockCollector = Substitute.For<IDomainEventCollector>();
         _mockCollector.GetTrackedAggregates().Returns(new List<IHasDomainEvents>());
-        _mockCollector.GetDirectlyTrackedEvents().Returns(new List<IDomainEvent>());
         _mockLogger = Substitute.For<ILogger<ObservableDomainEventPublisher>>();
 
         _capturedMeasurements = [];

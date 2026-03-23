@@ -3,7 +3,7 @@ using LayeredArch.Domain.AggregateRoots.Products;
 namespace LayeredArch.Application.Usecases.Products.Commands;
 
 /// <summary>
-/// 상품 벌크 삭제 Command - DeleteRange + Product.BulkDeletedEvent 데모
+/// 상품 벌크 삭제 Command - N * DeletedEvent + IDomainEventBatchHandler 데모
 /// </summary>
 public sealed class BulkDeleteProductsCommand
 {

@@ -10,10 +10,10 @@ using Mediator;
 namespace BulkCrud.Benchmarks.Benchmarks;
 
 /// <summary>
-/// 도메인 이벤트 발행 성능 비교: 기존 벌크 방식 vs 개선된 개별 발행 방식
-/// - Old Bulk: GroupBy → 1회 Mediator.Publish(BulkDomainEvent) per type
+/// 도메인 이벤트 발행 성능 비교: 개별 발행 방식 vs 배치 핸들러 방식
+/// - Old Bulk: GroupBy → 그룹당 1회 Mediator.Publish
 /// - New Individual: GroupBy → N회 Mediator.Publish(event) per event
-/// - New Individual + BatchHandler: 위 + opt-in 배치 핸들러 직접 호출
+/// - New Individual + BatchHandler: 위 + opt-in IDomainEventBatchHandler 직접 호출
 /// </summary>
 [MemoryDiagnoser]
 [ShortRunJob]
@@ -45,7 +45,7 @@ public class DomainEventPublishComparisonBenchmarks
 
         foreach (var group in allEvents.GroupBy(e => e.GetType()))
         {
-            // 기존: 그룹당 1회 Publish (BulkDomainEvent 래핑)
+            // 기존: 그룹당 1회 Publish
             await _noOpPublisher.Publish(group.First());
         }
     }
