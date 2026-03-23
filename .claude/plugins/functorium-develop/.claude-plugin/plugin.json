@@ -1,0 +1,8 @@
+{
+  "name": "functorium-develop",
+  "description": "Functorium 프레임워크 기반 DDD 개발 가이드 플러그인. Domain → Application → Adapter → Testing 전체 레이어를 Q&A 기반으로 설계 문서 생성 및 구현까지 안내합니다.",
+  "version": "0.1.0",
+  "author": {
+    "name": "hhko"
+  }
+}

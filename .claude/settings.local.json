@@ -1,4 +1,15 @@
 {
+  "extraKnownMarketplaces": {
+    "functorium-develop": {
+      "source": {
+        "source": "directory",
+        "path": "./.claude/plugins/functorium-develop"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "functorium-develop": true
+  },
   "permissions": {
     "allow": [
       "Bash(dotnet build:*)",
