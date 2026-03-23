@@ -17,6 +17,7 @@ Functorium 프레임워크가 제공하는 도메인 이벤트 관련 공개 타
 | `IDomainEventCollector` | `Functorium.Applications.Events` | Scoped 범위에서 Aggregate를 추적하여 이벤트를 수집 |
 | `IDomainEventPublisher` | `Functorium.Applications.Events` | 도메인 이벤트 발행자 인터페이스 (`FinT` 반환) |
 | `IDomainEventHandler<TEvent>` | `Functorium.Applications.Events` | 도메인 이벤트 핸들러 인터페이스 (`INotificationHandler` 확장) |
+| `IDomainEventBatchHandler<TEvent>` | `Functorium.Applications.Events` | 동일 타입 이벤트의 배치 처리를 위한 선택적(opt-in) 핸들러 |
 | `PublishResult` | `Functorium.Applications.Events` | 다중 이벤트 발행 결과 (부분 성공/실패 추적) |
 | `ObservableDomainEventPublisher` | `Functorium.Adapters.Observabilities.Events` | `IDomainEventPublisher` 관찰성 데코레이터 |
 | `ObservableDomainEventNotificationPublisher` | `Functorium.Adapters.Observabilities.Events` | Handler 관점 관찰성을 제공하는 `INotificationPublisher` 구현체 |
@@ -271,6 +272,77 @@ public sealed class OnOrderCreated : IDomainEventHandler<Order.CreatedEvent>
 
 ---
 
+## 이벤트 배치 핸들러 (IDomainEventBatchHandler\<TEvent\>)
+
+동일 타입 도메인 이벤트의 배치 처리를 위한 선택적(opt-in) 핸들러입니다. Publisher에서 직접 호출되며 Mediator 라우팅을 사용하지 않습니다. 개별 `IDomainEventHandler<TEvent>`와 독립적으로 공존합니다.
+
+```csharp
+namespace Functorium.Applications.Events;
+
+public interface IDomainEventBatchHandler<TEvent> where TEvent : IDomainEvent
+{
+    ValueTask HandleBatch(Seq<TEvent> events, CancellationToken cancellationToken);
+}
+```
+
+| 메서드 | 반환 타입 | 설명 |
+|--------|----------|------|
+| `HandleBatch(Seq<TEvent> events, CancellationToken cancellationToken)` | `ValueTask` | 동일 타입 이벤트 시퀀스를 배치로 처리 |
+
+**제네릭 제약 조건:** `TEvent`는 `IDomainEvent`를 구현해야 합니다.
+
+### Publisher의 배치 처리 흐름
+
+`DomainEventPublisher.PublishTrackedEvents()`는 수집된 이벤트를 타입별로 그룹핑한 뒤 배치 핸들러를 확인합니다:
+
+1. Aggregate에서 이벤트 수집 → 타입별 그룹화 (`GroupBy(e => e.GetType())`)
+2. 동일 타입 이벤트가 2개 이상이고 `IDomainEventBatchHandler<T>`가 DI에 등록됨 → **배치 핸들러 1회 호출, 개별 발행 스킵**
+3. 위 조건 미충족 → 이벤트마다 개별 Mediator.Publish (기존 동작)
+
+| 조건 | 이벤트 처리 방식 |
+|------|-----------------|
+| 동일 타입 2개 이상 + BatchHandler 등록 | `HandleBatch(Seq<TEvent>)` **1회** 호출 |
+| 동일 타입 2개 이상 + BatchHandler 미등록 | Mediator.Publish **N회** 개별 발행 |
+| 동일 타입 1개 | Mediator.Publish **1회** 개별 발행 |
+
+### 사용 예제
+
+```csharp
+public sealed class ProductDeletedBatchHandler : IDomainEventBatchHandler<Product.DeletedEvent>
+{
+    private readonly ILogger<ProductDeletedBatchHandler> _logger;
+
+    public ProductDeletedBatchHandler(ILogger<ProductDeletedBatchHandler> logger)
+        => _logger = logger;
+
+    public ValueTask HandleBatch(Seq<Product.DeletedEvent> events, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation(
+            "[DomainEvent:Batch] {Count} products deleted in bulk: [{ProductIds}]",
+            events.Count,
+            string.Join(", ", events.Select(e => e.ProductId.ToString())));
+
+        return ValueTask.CompletedTask;
+    }
+}
+```
+
+### DI 등록
+
+`RegisterDomainEventHandlersFromAssembly`가 `IDomainEventHandler<T>`와 `IDomainEventBatchHandler<T>`를 함께 스캔합니다. 별도 등록은 불필요합니다.
+
+### 배치 핸들러 관찰 가능성
+
+배치 핸들러 호출 시 `DomainEventPublisher`가 배치 단위로 관찰 가능성을 자동 적용합니다:
+
+| 항목 | 이름 패턴 | 설명 |
+|------|----------|------|
+| Counter (Request) | `application.event.batch.requests` | 배치 핸들러 요청 수 |
+| Counter (Response) | `application.event.batch.responses` | 배치 핸들러 응답 수 |
+| Histogram (Duration) | `application.event.batch.duration` | 배치 핸들러 처리 시간 (초) |
+
+---
+
 ## Observable 발행자
 
 ### ObservableDomainEventPublisher
@@ -285,6 +357,7 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
     public ObservableDomainEventPublisher(
         ActivitySource activitySource,
         IDomainEventPublisher inner,
+        IDomainEventCollector collector,
         ILogger<ObservableDomainEventPublisher> logger,
         IMeterFactory meterFactory,
         IOptions<OpenTelemetryOptions> openTelemetryOptions);
@@ -305,6 +378,7 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
 |----------------|------|------|
 | `activitySource` | `ActivitySource` | 분산 추적용 ActivitySource (DI 주입) |
 | `inner` | `IDomainEventPublisher` | 데코레이트할 실제 발행자 |
+| `collector` | `IDomainEventCollector` | 추적 이벤트 건수 계산용 수집기 |
 | `logger` | `ILogger<ObservableDomainEventPublisher>` | 로거 |
 | `meterFactory` | `IMeterFactory` | Meter 팩토리 |
 | `openTelemetryOptions` | `IOptions<OpenTelemetryOptions>` | OpenTelemetry 설정 |
@@ -375,6 +449,8 @@ services.AddMediator(options =>
 {
     options.NotificationPublisherType = typeof(ObservableDomainEventNotificationPublisher);
 });
+
+// RegisterDomainEventHandlersFromAssembly가 개별 핸들러와 배치 핸들러를 함께 스캔합니다.
 ```
 
 ---
