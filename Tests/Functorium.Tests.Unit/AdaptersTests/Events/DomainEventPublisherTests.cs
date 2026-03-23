@@ -14,15 +14,17 @@ public class DomainEventPublisherTests
 {
     private readonly IPublisher _mockPublisher;
     private readonly IDomainEventCollector _mockCollector;
+    private readonly IServiceProvider _mockServiceProvider;
     private readonly DomainEventPublisher _sut;
 
     public DomainEventPublisherTests()
     {
         _mockPublisher = Substitute.For<IPublisher>();
         _mockCollector = Substitute.For<IDomainEventCollector>();
+        _mockServiceProvider = Substitute.For<IServiceProvider>();
         _mockCollector.GetTrackedAggregates().Returns(new List<IHasDomainEvents>());
         _mockCollector.GetDirectlyTrackedEvents().Returns(new List<IDomainEvent>());
-        _sut = new DomainEventPublisher(_mockPublisher, _mockCollector);
+        _sut = new DomainEventPublisher(_mockPublisher, _mockCollector, _mockServiceProvider);
     }
 
     #region Publish Tests
@@ -126,7 +128,7 @@ public class DomainEventPublisherTests
     #region PublishTrackedEvents Tests
 
     [Fact]
-    public async Task PublishTrackedEvents_GroupsEventsByType_PublishesAsBulk()
+    public async Task PublishTrackedEvents_PublishesEachEventIndividually()
     {
         // Arrange
         var aggregate1 = new TestAggregate();
@@ -140,14 +142,14 @@ public class DomainEventPublisherTests
         // Act
         var actual = await _sut.PublishTrackedEvents().Run().RunAsync();
 
-        // Assert — 동일 타입 이벤트는 1회 벌크(Bulk) 발행
+        // Assert — 동일 타입 2개 이벤트 → 2회 개별 발행
         actual.IsSucc.ShouldBeTrue();
-        await _mockPublisher.Received(1).Publish(
+        await _mockPublisher.Received(2).Publish(
             Arg.Any<IDomainEvent>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task PublishTrackedEvents_GroupsMultipleTypes_PublishesPerType()
+    public async Task PublishTrackedEvents_GroupsMultipleTypes_PublishesPerEvent()
     {
         // Arrange
         var aggregate = new TestAggregate();
@@ -160,7 +162,7 @@ public class DomainEventPublisherTests
         // Act
         var actual = await _sut.PublishTrackedEvents().Run().RunAsync();
 
-        // Assert — 2가지 이벤트 타입 → 2회 발행
+        // Assert — 2가지 이벤트 타입 각 1개 → 2회 개별 발행
         actual.IsSucc.ShouldBeTrue();
         await _mockPublisher.Received(2).Publish(
             Arg.Any<IDomainEvent>(), Arg.Any<CancellationToken>());
@@ -213,7 +215,7 @@ public class DomainEventPublisherTests
     }
 
     [Fact]
-    public async Task PublishTrackedEvents_ReturnsFail_WhenPublishThrows()
+    public async Task PublishTrackedEvents_ReturnsPublishResultWithFailures_WhenPublishThrows()
     {
         // Arrange
         var aggregate = new TestAggregate();

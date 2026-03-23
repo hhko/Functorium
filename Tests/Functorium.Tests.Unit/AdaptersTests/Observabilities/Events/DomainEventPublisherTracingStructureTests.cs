@@ -6,6 +6,7 @@ using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Events;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Applications.Events;
+using Functorium.Domains.Events;
 using Functorium.Tests.Unit.DomainsTests.Entities;
 
 using LanguageExt;
@@ -57,6 +58,7 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
     private readonly IMeterFactory _meterFactory;
     private readonly IOptions<OpenTelemetryOptions> _openTelemetryOptions;
     private readonly IDomainEventPublisher _mockInner;
+    private readonly IDomainEventCollector _mockCollector;
     private readonly ILogger<ObservableDomainEventPublisher> _mockLogger;
     private Activity? _capturedActivity;
 
@@ -74,6 +76,9 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
         _meterFactory = new TestMeterFactory();
         _openTelemetryOptions = MsOptions.Create(new OpenTelemetryOptions { ServiceNamespace = "TestPublisherTracing" });
         _mockInner = Substitute.For<IDomainEventPublisher>();
+        _mockCollector = Substitute.For<IDomainEventCollector>();
+        _mockCollector.GetTrackedAggregates().Returns(new List<IHasDomainEvents>());
+        _mockCollector.GetDirectlyTrackedEvents().Returns(new List<IDomainEvent>());
         _mockLogger = Substitute.For<ILogger<ObservableDomainEventPublisher>>();
     }
 
@@ -287,7 +292,7 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
     private ObservableDomainEventPublisher CreateSut()
     {
         return new ObservableDomainEventPublisher(
-            _activitySource, _mockInner, _mockLogger, _meterFactory, _openTelemetryOptions);
+            _activitySource, _mockInner, _mockCollector, _mockLogger, _meterFactory, _openTelemetryOptions);
     }
 
     private Dictionary<string, string?> ExtractActivityTags()

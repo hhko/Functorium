@@ -5,6 +5,7 @@ using Functorium.Abstractions.Errors;
 using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Events;
 using Functorium.Applications.Events;
+using Functorium.Domains.Events;
 using Functorium.Tests.Unit.DomainsTests.Entities;
 
 using LanguageExt;
@@ -58,6 +59,7 @@ public sealed class DomainEventPublisherMetricsStructureTests : IDisposable
     private readonly MeterListener _listener;
     private readonly List<CapturedMeasurement> _capturedMeasurements;
     private readonly IDomainEventPublisher _mockInner;
+    private readonly IDomainEventCollector _mockCollector;
     private readonly ILogger<ObservableDomainEventPublisher> _mockLogger;
 
     public DomainEventPublisherMetricsStructureTests()
@@ -66,6 +68,9 @@ public sealed class DomainEventPublisherMetricsStructureTests : IDisposable
         _meterFactory = new TestMeterFactory();
         _openTelemetryOptions = MsOptions.Create(new OpenTelemetryOptions { ServiceNamespace = "TestPublisherMetrics" });
         _mockInner = Substitute.For<IDomainEventPublisher>();
+        _mockCollector = Substitute.For<IDomainEventCollector>();
+        _mockCollector.GetTrackedAggregates().Returns(new List<IHasDomainEvents>());
+        _mockCollector.GetDirectlyTrackedEvents().Returns(new List<IDomainEvent>());
         _mockLogger = Substitute.For<ILogger<ObservableDomainEventPublisher>>();
 
         _capturedMeasurements = [];
@@ -124,7 +129,7 @@ public sealed class DomainEventPublisherMetricsStructureTests : IDisposable
         // Arrange
         _capturedMeasurements.Clear();
         var sut = new ObservableDomainEventPublisher(
-            _activitySource, _mockInner, _mockLogger, _meterFactory, _openTelemetryOptions);
+            _activitySource, _mockInner, _mockCollector, _mockLogger, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("Test");
         _mockInner
@@ -166,7 +171,7 @@ public sealed class DomainEventPublisherMetricsStructureTests : IDisposable
         // Arrange
         _capturedMeasurements.Clear();
         var sut = new ObservableDomainEventPublisher(
-            _activitySource, _mockInner, _mockLogger, _meterFactory, _openTelemetryOptions);
+            _activitySource, _mockInner, _mockCollector, _mockLogger, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("Test");
         _mockInner
@@ -190,7 +195,7 @@ public sealed class DomainEventPublisherMetricsStructureTests : IDisposable
         // Arrange
         _capturedMeasurements.Clear();
         var sut = new ObservableDomainEventPublisher(
-            _activitySource, _mockInner, _mockLogger, _meterFactory, _openTelemetryOptions);
+            _activitySource, _mockInner, _mockCollector, _mockLogger, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("Test");
         _mockInner
@@ -214,7 +219,7 @@ public sealed class DomainEventPublisherMetricsStructureTests : IDisposable
         // Arrange
         _capturedMeasurements.Clear();
         var sut = new ObservableDomainEventPublisher(
-            _activitySource, _mockInner, _mockLogger, _meterFactory, _openTelemetryOptions);
+            _activitySource, _mockInner, _mockCollector, _mockLogger, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("Test");
         var error = new ErrorCodeExpected("Event.NotFound", "testValue", "Event not found");
@@ -239,7 +244,7 @@ public sealed class DomainEventPublisherMetricsStructureTests : IDisposable
         // Arrange
         _capturedMeasurements.Clear();
         var sut = new ObservableDomainEventPublisher(
-            _activitySource, _mockInner, _mockLogger, _meterFactory, _openTelemetryOptions);
+            _activitySource, _mockInner, _mockCollector, _mockLogger, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("Test");
         var exception = new InvalidOperationException("Connection failed");
@@ -265,7 +270,7 @@ public sealed class DomainEventPublisherMetricsStructureTests : IDisposable
         // Arrange
         _capturedMeasurements.Clear();
         var sut = new ObservableDomainEventPublisher(
-            _activitySource, _mockInner, _mockLogger, _meterFactory, _openTelemetryOptions);
+            _activitySource, _mockInner, _mockCollector, _mockLogger, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("Test");
         _mockInner

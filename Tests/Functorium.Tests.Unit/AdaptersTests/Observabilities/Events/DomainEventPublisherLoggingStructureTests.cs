@@ -3,6 +3,7 @@ using System.Diagnostics.Metrics;
 using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Events;
 using Functorium.Applications.Events;
+using Functorium.Domains.Events;
 using Functorium.Testing.Arrangements.Logging;
 using Functorium.Tests.Unit.DomainsTests.Entities;
 using LanguageExt;
@@ -49,6 +50,7 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
 {
     private readonly ActivitySource _activitySource;
     private readonly IDomainEventPublisher _mockInner;
+    private readonly IDomainEventCollector _mockCollector;
     private readonly IMeterFactory _meterFactory;
     private readonly IOptions<OpenTelemetryOptions> _openTelemetryOptions;
 
@@ -56,6 +58,9 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
     {
         _activitySource = new ActivitySource("Test.DomainEventPublisherLogging");
         _mockInner = Substitute.For<IDomainEventPublisher>();
+        _mockCollector = Substitute.For<IDomainEventCollector>();
+        _mockCollector.GetTrackedAggregates().Returns(new List<IHasDomainEvents>());
+        _mockCollector.GetDirectlyTrackedEvents().Returns(new List<IDomainEvent>());
         _meterFactory = new TestMeterFactory();
         _openTelemetryOptions = MsOptions.Create(new OpenTelemetryOptions { ServiceNamespace = "TestLogging" });
     }
@@ -80,7 +85,7 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         var logger = context.CreateLogger<ObservableDomainEventPublisher>();
-        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger, _meterFactory, _openTelemetryOptions);
+        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, _mockCollector, logger, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
@@ -107,7 +112,7 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         var logger = context.CreateLogger<ObservableDomainEventPublisher>();
-        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger, _meterFactory, _openTelemetryOptions);
+        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, _mockCollector, logger, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
@@ -136,7 +141,7 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         var logger = context.CreateLogger<ObservableDomainEventPublisher>();
-        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger, _meterFactory, _openTelemetryOptions);
+        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, _mockCollector, logger, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {
@@ -167,7 +172,7 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
         // Arrange
         using var context = new LogTestContext();
         var logger = context.CreateLogger<ObservableDomainEventPublisher>();
-        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, logger, _meterFactory, _openTelemetryOptions);
+        var sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, _mockCollector, logger, _meterFactory, _openTelemetryOptions);
 
         var domainEvent = new TestDomainEvent("TestMessage") with
         {

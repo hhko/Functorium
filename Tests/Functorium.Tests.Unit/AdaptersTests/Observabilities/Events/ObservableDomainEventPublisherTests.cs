@@ -3,6 +3,7 @@ using System.Diagnostics.Metrics;
 using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Events;
 using Functorium.Applications.Events;
+using Functorium.Domains.Events;
 using Functorium.Tests.Unit.DomainsTests.Entities;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
@@ -19,6 +20,7 @@ public class ObservableDomainEventPublisherTests
 {
     private readonly ActivitySource _activitySource;
     private readonly IDomainEventPublisher _mockInner;
+    private readonly IDomainEventCollector _mockCollector;
     private readonly ILogger<ObservableDomainEventPublisher> _mockLogger;
     private readonly ObservableDomainEventPublisher _sut;
 
@@ -26,10 +28,13 @@ public class ObservableDomainEventPublisherTests
     {
         _activitySource = new ActivitySource("TestActivitySource");
         _mockInner = Substitute.For<IDomainEventPublisher>();
+        _mockCollector = Substitute.For<IDomainEventCollector>();
+        _mockCollector.GetTrackedAggregates().Returns(new List<IHasDomainEvents>());
+        _mockCollector.GetDirectlyTrackedEvents().Returns(new List<IDomainEvent>());
         _mockLogger = Substitute.For<ILogger<ObservableDomainEventPublisher>>();
         var meterFactory = new TestMeterFactory();
         var openTelemetryOptions = MsOptions.Create(new OpenTelemetryOptions { ServiceNamespace = "TestPublisher" });
-        _sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, _mockLogger, meterFactory, openTelemetryOptions);
+        _sut = new ObservableDomainEventPublisher(_activitySource, _mockInner, _mockCollector, _mockLogger, meterFactory, openTelemetryOptions);
     }
 
     private sealed class TestMeterFactory : IMeterFactory
