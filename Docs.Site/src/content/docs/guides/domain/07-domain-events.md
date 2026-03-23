@@ -65,7 +65,6 @@ services.RegisterDomainEventHandlersFromAssembly(AssemblyReference.Assembly);
 | `DomainEvent` | 기반 abstract record, 시각/ID 자동 설정 |
 | `IHasDomainEvents` | 읽기 전용 이벤트 조회 (public) |
 | `IDomainEventDrain` | 이벤트 정리 인터페이스 (internal, 인프라 전용) |
-| `IDomainEventBatchHandler<TEvent>` | 동일 타입 이벤트의 배치 처리 (opt-in, Publisher 직접 호출) |
 | `UsecaseTransactionPipeline` | SaveChanges → 이벤트 발행 자동 처리 |
 | 중첩 클래스 이벤트 | `Product.CreatedEvent` 형태로 소유권 명시 |
 
@@ -600,80 +599,38 @@ services.RegisterDomainEventHandlersFromAssembly(
 
 - `NotificationPublisherType = typeof(ObservableDomainEventNotificationPublisher)`: Handler 실행 시 Logging, Metrics, Tracing을 자동으로 적용합니다. 이 설정이 없으면 Handler 관점 관찰 가능성이 비활성화됩니다.
 - `RegisterDomainEventPublisher()`: `IDomainEventPublisher`(발행), `IDomainEventCollector`(수집), `ObservableDomainEventNotificationPublisher`(관찰 가능성) 3개를 DI에 등록합니다.
-- `RegisterDomainEventHandlersFromAssembly()`: Scrutor의 `Scan()` API를 사용하여 지정된 어셈블리에서 `IDomainEventHandler<T>`와 `IDomainEventBatchHandler<T>` 구현체를 함께 스캔하여 등록합니다.
+- `RegisterDomainEventHandlersFromAssembly()`: Scrutor의 `Scan()` API를 사용하여 지정된 어셈블리에서 `IDomainEventHandler<T>` 구현체를 스캔하여 등록합니다.
 
 ---
 
-## 배치 핸들러 (Batch Handler)
+## 벌크 이벤트 처리 (Domain Service 패턴)
 
-### 왜 배치 핸들러인가
-
-벌크 연산(`CreateRange`, `DeleteRange`)에서 N개의 동일 타입 이벤트가 발생할 때, 핸들러를 N회 호출하는 대신 **1회로 일괄 처리**할 수 있습니다.
-
-```
-CreateRange(5개 Product)
-  → 5개의 Product.CreatedEvent 발생
-  → Publisher가 타입별 그룹핑
-  → IDomainEventBatchHandler<Product.CreatedEvent> 등록 시 → HandleBatch 1회 호출
-  → 미등록 시 → Mediator.Publish 5회 개별 발행
-```
-
-### IDomainEventBatchHandler\<TEvent\>
-
-**위치**: `Functorium.Applications.Events`
+벌크 연산(`CreateRange`, `DeleteRange`)에서 N개의 이벤트가 발생할 때, **Domain Service**에서 `IDomainEventCollector.TrackEvent()`를 사용하여 이벤트를 직접 등록할 수 있습니다. 이벤트는 `UsecaseTransactionPipeline`이 SaveChanges 후 자동으로 발행합니다.
 
 ```csharp
-public interface IDomainEventBatchHandler<TEvent> where TEvent : IDomainEvent
+// Domain Service에서 벌크 생성 + 이벤트 직접 등록
+public class ProductBulkOperations
 {
-    ValueTask HandleBatch(Seq<TEvent> events, CancellationToken cancellationToken);
-}
-```
+    private readonly IDomainEventCollector _collector;
 
-**핵심 특성:**
-- **Opt-in**: 등록하지 않으면 기존 개별 발행 동작 유지
-- **Publisher 직접 호출**: Mediator 라우팅을 거치지 않음
-- **배치 처리 시 개별 발행 스킵**: BatchHandler가 처리하면 동일 타입의 Mediator.Publish는 호출되지 않음
+    public ProductBulkOperations(IDomainEventCollector collector)
+        => _collector = collector;
 
-### Publisher 동작
-
-| 조건 | 이벤트 처리 방식 |
-|------|-----------------|
-| 동일 타입 2개 이상 + BatchHandler 등록 | `HandleBatch(Seq<TEvent>)` **1회** 호출 |
-| 동일 타입 2개 이상 + BatchHandler 미등록 | Mediator.Publish **N회** 개별 발행 |
-| 동일 타입 1개 | Mediator.Publish **1회** 개별 발행 |
-
-### 구현 예제
-
-다음 코드에서 주목할 점은 `IDomainEventBatchHandler<Product.DeletedEvent>`를 구현하여, 벌크 삭제 시 N개의 삭제 이벤트를 1회로 처리한다는 것입니다.
-
-```csharp
-public sealed class ProductDeletedBatchHandler : IDomainEventBatchHandler<Product.DeletedEvent>
-{
-    private readonly ILogger<ProductDeletedBatchHandler> _logger;
-
-    public ProductDeletedBatchHandler(ILogger<ProductDeletedBatchHandler> logger)
-        => _logger = logger;
-
-    public ValueTask HandleBatch(Seq<Product.DeletedEvent> events, CancellationToken cancellationToken)
+    public List<Product> CreateBulk(IEnumerable<CreateProductRequest> requests)
     {
-        _logger.LogInformation(
-            "[DomainEvent:Batch] {Count} products deleted in bulk: [{ProductIds}]",
-            events.Count,
-            string.Join(", ", events.Select(e => e.ProductId.ToString())));
-
-        return ValueTask.CompletedTask;
+        var products = new List<Product>();
+        foreach (var request in requests)
+        {
+            var product = Product.Create(request.Name, request.Price);
+            _collector.TrackEvent(new Product.CreatedEvent(product.Id, product.Name, product.Price));
+            products.Add(product);
+        }
+        return products;
     }
 }
 ```
 
-### 사용 시나리오
-
-| 시나리오 | 설명 |
-|----------|------|
-| 검색 인덱스 벌크 업데이트 | Elasticsearch 등에 N건을 한 번에 인덱싱 |
-| 벌크 로깅 | N건의 이벤트를 하나의 로그 엔트리로 기록 |
-| 캐시 일괄 무효화 | 관련 캐시 키를 한 번에 정리 |
-| 외부 시스템 벌크 알림 | N건의 변경을 하나의 API 호출로 전달 |
+Use Case에서 Domain Service를 호출하면, `UsecaseTransactionPipeline`이 추적된 이벤트를 자동 발행합니다.
 
 ---
 
@@ -777,12 +734,6 @@ public async Task Handle_ShouldLogProductCreation()
 - [ ] `RegisterDomainEventHandlersFromAssembly`로 핸들러가 등록되어 있는가?
 - [ ] `NotificationPublisherType = typeof(ObservableDomainEventNotificationPublisher)` 설정이 되어 있는가?
 - [ ] `DomainEventLogEnricherGenerator`가 자동 생성한 `IDomainEventLogEnricher<TEvent>`의 DI 등록을 확인했는가?
-
-### 배치 핸들러 (선택)
-
-- [ ] 벌크 연산에서 동일 타입 이벤트가 다수 발생하는가?
-- [ ] `IDomainEventBatchHandler<T>`를 구현했는가?
-- [ ] `RegisterDomainEventHandlersFromAssembly`로 등록했는가? (개별/배치 핸들러 모두 포함)
 
 ---
 
