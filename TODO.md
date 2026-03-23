@@ -2,6 +2,13 @@
 Remove-Item -LiteralPath '\\?\C:\ ... \nul'
 ```
 
+```
+  - EfCoreRepositoryBase 352줄, ObservableDomainEventPublisher 288줄 — 기반 클래스가 이 정도 크기면 상속받는 쪽에서 이해해야 할 암묵적 계약이 너무 많다.
+  - DomainEventPublisher.InvokeBatchHandlerIfRegistered가 100줄짜리 리플렉션 코드인 것은 설계 냄새다. 핫 패스에서 MakeGenericType + GetMethod + Invoke를 매번 호출한다.
+
+5분 quickstart와 마이그레이션 가이드
+```
+
 - [ ] 벌크 도메인 이벤트 처리 개선
 - [ ] 벌크 도메인 이벤트 적용 예제
 - [ ] 벌크 도메인 이벤트 문서 업데이트
