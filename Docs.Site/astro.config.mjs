@@ -653,7 +653,18 @@ export default defineConfig({
             icon: 'star',
             items: [
               { label: 'AI 자동화', slug: 'ai-automation' },
-              { slug: 'ai-automation/domain-develop-skill' },
+              { slug: 'ai-automation/installation' },
+              {
+                label: '스킬',
+                items: [
+                  { slug: 'ai-automation/skills/domain-develop' },
+                  { slug: 'ai-automation/skills/application-develop' },
+                  { slug: 'ai-automation/skills/adapter-develop' },
+                  { slug: 'ai-automation/skills/test-develop' },
+                  { slug: 'ai-automation/skills/domain-review' },
+                ],
+              },
+              { slug: 'ai-automation/agents' },
             ],
           },
         ]),
