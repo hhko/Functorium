@@ -19,6 +19,7 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
 {
     private readonly ActivitySource _activitySource;
     private readonly IDomainEventPublisher _inner;
+    private readonly IDomainEventCollector _collector;
     private readonly ILogger<ObservableDomainEventPublisher> _logger;
     private readonly Meter _meter;
     private readonly Counter<long> _requestCounter;
@@ -28,12 +29,14 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
     public ObservableDomainEventPublisher(
         ActivitySource activitySource,
         IDomainEventPublisher inner,
+        IDomainEventCollector collector,
         ILogger<ObservableDomainEventPublisher> logger,
         IMeterFactory meterFactory,
         IOptions<OpenTelemetryOptions> openTelemetryOptions)
     {
         _activitySource = activitySource;
         _inner = inner;
+        _collector = collector;
         _logger = logger;
 
         string meterName = $"{openTelemetryOptions.Value.ServiceNamespace}.{ObservabilityNaming.Layers.Adapter}.{ObservabilityNaming.Categories.Event}";
@@ -156,7 +159,12 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerName, nameof(PublishTrackedEvents));
             activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.PublishTrackedEvents);
 
-            _logger.LogDomainEventsPublisherRequest(nameof(PublishTrackedEvents), ObservabilityNaming.Methods.PublishTrackedEvents, 0);
+            // Collector에서 추적 중인 이벤트 건수 계산
+            int trackedEventCount = _collector.GetTrackedAggregates().Sum(a => a.DomainEvents.Count)
+                                  + _collector.GetDirectlyTrackedEvents().Count;
+            activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestEventCount, trackedEventCount);
+
+            _logger.LogDomainEventsPublisherRequest(nameof(PublishTrackedEvents), ObservabilityNaming.Methods.PublishTrackedEvents, trackedEventCount);
 
             TagList requestTags = new TagList
             {
@@ -177,10 +185,10 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
                 Succ: publishResults =>
                 {
                     int totalEvents = publishResults.Sum(r => r.TotalCount);
-                    int aggregateCount = publishResults.Count;
+                    int eventTypeCount = publishResults.Count;
 
-                    activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestAggregateCount, aggregateCount);
                     activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestEventCount, totalEvents);
+                    activity?.SetTag("request.event.type_count", eventTypeCount);
                     activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsed);
 
                     bool allSuccessful = publishResults.ForAll(r => r.IsAllSuccessful);

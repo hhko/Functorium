@@ -298,16 +298,29 @@ public abstract class EfCoreRepositoryBase<TAggregate, TId, TModel>
                 }
             }
 
-            // 벌크(Bulk) 삭제 이벤트 직접 추적 (Aggregate 로드 없음)
+            // 하위 클래스에서 Aggregate별 삭제 이벤트를 정의할 수 있음
             if (totalAffected > 0)
             {
-                EventCollector.TrackEvent(
-                    BulkDeletedEvent.From(distinctIds, totalAffected));
+                var deleteEvent = CreateDeleteRangeEvent(distinctIds, totalAffected);
+                if (deleteEvent is not null)
+                    EventCollector.TrackEvent(deleteEvent);
             }
 
             return Fin.Succ(totalAffected);
         });
     }
+
+    // ─── 이벤트 훅 ───────────────────────────────────
+
+    /// <summary>
+    /// DeleteRange 완료 후 도메인 이벤트를 생성합니다.
+    /// 기본값: null (이벤트 없음). 하위 클래스에서 Aggregate별 삭제 이벤트를 재정의하십시오.
+    /// </summary>
+    /// <param name="ids">삭제된 엔티티 ID 목록</param>
+    /// <param name="affectedCount">실제 삭제된 행 수</param>
+    /// <returns>도메인 이벤트 또는 null</returns>
+    protected virtual IDomainEvent? CreateDeleteRangeEvent(IReadOnlyList<TId> ids, int affectedCount)
+        => null;
 
     // ─── 에러 헬퍼 ───────────────────────────────────
 

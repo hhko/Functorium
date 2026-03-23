@@ -54,10 +54,11 @@ public static class DomainEventRegistration
         {
             var activitySource = sp.GetRequiredService<ActivitySource>();
             var inner = sp.GetRequiredService<DomainEventPublisher>();
+            var collector = sp.GetRequiredService<IDomainEventCollector>();
             var logger = sp.GetRequiredService<ILogger<ObservableDomainEventPublisher>>();
             var meterFactory = sp.GetRequiredService<IMeterFactory>();
             var openTelemetryOptions = sp.GetRequiredService<IOptions<OpenTelemetryOptions>>();
-            return new ObservableDomainEventPublisher(activitySource, inner, logger, meterFactory, openTelemetryOptions);
+            return new ObservableDomainEventPublisher(activitySource, inner, collector, logger, meterFactory, openTelemetryOptions);
         });
 
         return services;
@@ -78,6 +79,28 @@ public static class DomainEventRegistration
         services.Scan(scan => scan
             .FromAssemblies(assembly)
             .AddClasses(classes => classes.AssignableTo(typeof(IDomainEventHandler<>)))
+            .AsImplementedInterfaces()
+            .WithLifetime(lifetime));
+
+        return services;
+    }
+
+    /// <summary>
+    /// 지정된 어셈블리에서 IDomainEventBatchHandler 구현체를 Scrutor로 스캔하여 등록합니다.
+    /// 배치 핸들러는 Publisher에서 직접 호출되며 Mediator 라우팅을 사용하지 않습니다.
+    /// </summary>
+    /// <param name="services">서비스 컬렉션</param>
+    /// <param name="assembly">스캔할 어셈블리</param>
+    /// <param name="lifetime">서비스 생명주기 (기본값: Scoped)</param>
+    /// <returns>서비스 컬렉션</returns>
+    public static IServiceCollection RegisterDomainEventBatchHandlersFromAssembly(
+        this IServiceCollection services,
+        Assembly assembly,
+        ServiceLifetime lifetime = ServiceLifetime.Scoped)
+    {
+        services.Scan(scan => scan
+            .FromAssemblies(assembly)
+            .AddClasses(classes => classes.AssignableTo(typeof(IDomainEventBatchHandler<>)))
             .AsImplementedInterfaces()
             .WithLifetime(lifetime));
 
