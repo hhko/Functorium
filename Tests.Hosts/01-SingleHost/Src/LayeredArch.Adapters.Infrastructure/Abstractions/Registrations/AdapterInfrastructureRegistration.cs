@@ -30,7 +30,7 @@ public static class AdapterInfrastructureRegistration
             options.NotificationPublisherType = typeof(ObservableDomainEventNotificationPublisher);
         });
         services.RegisterDomainEventPublisher();
-        services.RegisterDomainEventBatchHandlersFromAssembly(LayeredArch.Application.AssemblyReference.Assembly);
+        services.RegisterDomainEventHandlersFromAssembly(LayeredArch.Application.AssemblyReference.Assembly);
 
         // =================================================================
         // FluentValidation 등록 - 어셈블리에서 모든 Validator 자동 등록
