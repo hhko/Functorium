@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Functorium.Abstractions.Errors;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Applications.Observabilities;
 using Functorium.Applications.Usecases;
 
 using LanguageExt.Common;
@@ -387,10 +388,10 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
 
     #region Test Types
 
-    [LogEnricherIgnore]
+    [CtxIgnore]
     private sealed record TestCommandRequest : ICommandRequest<TestSuccessData>;
 
-    [LogEnricherIgnore]
+    [CtxIgnore]
     private sealed record TestQueryRequest : IQueryRequest<TestSuccessData>;
 
     private sealed record TestSuccessData(Guid Id, string Name);

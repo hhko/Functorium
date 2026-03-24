@@ -1,8 +1,8 @@
 namespace LayeredArch.Application.Usecases.Orders.Commands;
 
-public partial class CreateOrderCommandRequestLogEnricher
+public partial class CreateOrderCommandRequestCtxEnricher
 {
-    partial void OnEnrichRequestLog(
+    partial void OnEnrichRequest(
         CreateOrderCommand.Request request,
         List<IDisposable> disposables)
     {

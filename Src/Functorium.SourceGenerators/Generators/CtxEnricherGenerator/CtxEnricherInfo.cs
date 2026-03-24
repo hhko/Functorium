@@ -1,12 +1,12 @@
 using Microsoft.CodeAnalysis;
 
-namespace Functorium.SourceGenerators.Generators.LogEnricherGenerator;
+namespace Functorium.SourceGenerators.Generators.CtxEnricherGenerator;
 
 /// <summary>
-/// LogEnricher 생성에 필요한 메타데이터.
+/// CtxEnricher 생성에 필요한 메타데이터.
 /// Request + Response 타입 정보와 양쪽 속성 목록을 포함합니다.
 /// </summary>
-public readonly record struct LogEnricherInfo
+public readonly record struct CtxEnricherInfo
 {
     /// <summary>
     /// Request 타입의 네임스페이스. 예: "ObservabilityHost.Usecases"
@@ -26,7 +26,7 @@ public readonly record struct LogEnricherInfo
     /// <summary>
     /// Request 속성 목록.
     /// </summary>
-    public readonly LogEnricherPropertyInfo[] RequestProperties;
+    public readonly CtxPropertyInfo[] RequestProperties;
 
     /// <summary>
     /// Response(TSuccess) 타입의 전체 이름. 예: "PlaceOrderCommand.Response"
@@ -35,23 +35,21 @@ public readonly record struct LogEnricherInfo
 
     /// <summary>
     /// Response(TSuccess) 타입의 전체 한정 이름 (네임스페이스 포함).
-    /// 예: "global::ObservabilityHost.Usecases.PlaceOrderCommand.Response"
     /// </summary>
     public readonly string ResponseTypeFullName;
 
     /// <summary>
     /// Response 속성 목록.
     /// </summary>
-    public readonly LogEnricherPropertyInfo[] ResponseProperties;
+    public readonly CtxPropertyInfo[] ResponseProperties;
 
     /// <summary>
-    /// 생성될 Enricher 클래스 이름. 예: "PlaceOrderCommandRequestLogEnricher"
+    /// 생성될 Enricher 클래스 이름. 예: "PlaceOrderCommandRequestCtxEnricher"
     /// </summary>
     public readonly string EnricherClassName;
 
     /// <summary>
     /// Request의 전체 한정 타입 이름 (네임스페이스 포함).
-    /// 예: "global::ObservabilityHost.Usecases.PlaceOrderCommand.Request"
     /// </summary>
     public readonly string RequestTypeFullName;
 
@@ -62,25 +60,21 @@ public readonly record struct LogEnricherInfo
 
     /// <summary>
     /// 코드 생성을 건너뛰는 이유. 비어 있으면 정상 생성 대상.
-    /// 비어 있지 않으면 진단 전용 엔트리 (예: "TestCommandRequest is private").
     /// </summary>
     public readonly string SkipReason;
 
-    /// <summary>
-    /// 빈 값을 나타내는 상수.
-    /// </summary>
-    public static readonly LogEnricherInfo None = new(
+    public static readonly CtxEnricherInfo None = new(
         string.Empty, [], string.Empty, [], string.Empty,
         string.Empty, [], string.Empty, string.Empty, null, string.Empty);
 
-    public LogEnricherInfo(
+    public CtxEnricherInfo(
         string @namespace,
         string[] containingTypeNames,
         string requestTypeName,
-        LogEnricherPropertyInfo[] requestProperties,
+        CtxPropertyInfo[] requestProperties,
         string responseTypeName,
         string responseTypeFullName,
-        LogEnricherPropertyInfo[] responseProperties,
+        CtxPropertyInfo[] responseProperties,
         string enricherClassName,
         string requestTypeFullName,
         Location? location,
@@ -99,16 +93,13 @@ public readonly record struct LogEnricherInfo
         SkipReason = skipReason;
     }
 
-    /// <summary>
-    /// 접근 불가능한 타입에 대한 진단 전용 엔트리를 생성합니다.
-    /// </summary>
-    public static LogEnricherInfo Inaccessible(
+    public static CtxEnricherInfo Inaccessible(
         string requestTypeDisplayName,
         string inaccessibleTypeName,
         string accessibility,
         Location? location)
     {
-        return new LogEnricherInfo(
+        return new CtxEnricherInfo(
             @namespace: string.Empty,
             containingTypeNames: [],
             requestTypeName: "SKIP",

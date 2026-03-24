@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
 using Functorium.Abstractions.Errors;
+using Functorium.Adapters.Observabilities.Contexts;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Applications.Usecases;
 
@@ -77,6 +78,14 @@ internal sealed class UsecaseMetricsPipeline<TRequest, TResponse>
             { ObservabilityNaming.CustomAttributes.RequestHandlerName, _requestHandler },
             { ObservabilityNaming.CustomAttributes.RequestHandlerMethod, ObservabilityNaming.Methods.Handle }
         };
+
+        // ctx.* MetricsTag 병합 (CtxEnricherPipeline에서 Push된 태그)
+        var ctxTags = MetricsTagContext.CurrentTags;
+        if (ctxTags is { Count: > 0 })
+        {
+            foreach (var tag in ctxTags)
+                requestTags.Add(tag);
+        }
 
         // 요청 수 증가 (캐시된 Counter 사용)
         _requestCounter.Add(1, requestTags);

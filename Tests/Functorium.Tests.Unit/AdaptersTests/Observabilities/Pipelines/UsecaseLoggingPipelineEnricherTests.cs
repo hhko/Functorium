@@ -3,9 +3,6 @@ using Functorium.Applications.Observabilities;
 
 using Mediator;
 
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-
 using NSubstitute;
 
 using static Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines.TestFixtures;
@@ -13,19 +10,18 @@ using static Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines.TestF
 namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines;
 
 /// <summary>
-/// UsecaseLoggingPipeline의 Enricher 통합 테스트
-/// IUsecaseLogEnricher를 통한 LogContext 속성 추가 검증
+/// CtxEnricherPipeline의 Enricher 통합 테스트
+/// IUsecaseCtxEnricher를 통한 3-Pillar ctx.* 속성 추가 검증
 /// </summary>
 public sealed class UsecaseLoggingPipelineEnricherTests
 {
     [Fact]
-    public async Task Handle_WithEnricher_CallsEnrichRequestLog()
+    public async Task Handle_WithEnricher_CallsEnrichRequest()
     {
         // Arrange
-        var logger = NullLoggerFactory.Instance.CreateLogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>();
-        var enricher = Substitute.For<IUsecaseLogEnricher<TestCommandRequest, TestResponse>>();
+        var enricher = Substitute.For<IUsecaseCtxEnricher<TestCommandRequest, TestResponse>>();
 
-        var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger, enricher);
+        var pipeline = new CtxEnricherPipeline<TestCommandRequest, TestResponse>(enricher);
         var request = new TestCommandRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -36,17 +32,16 @@ public sealed class UsecaseLoggingPipelineEnricherTests
         await pipeline.Handle(request, next, CancellationToken.None);
 
         // Assert
-        enricher.Received(1).EnrichRequestLog(request);
+        enricher.Received(1).EnrichRequest(request);
     }
 
     [Fact]
-    public async Task Handle_WithEnricher_CallsEnrichResponseLog()
+    public async Task Handle_WithEnricher_CallsEnrichResponse()
     {
         // Arrange
-        var logger = NullLoggerFactory.Instance.CreateLogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>();
-        var enricher = Substitute.For<IUsecaseLogEnricher<TestCommandRequest, TestResponse>>();
+        var enricher = Substitute.For<IUsecaseCtxEnricher<TestCommandRequest, TestResponse>>();
 
-        var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger, enricher);
+        var pipeline = new CtxEnricherPipeline<TestCommandRequest, TestResponse>(enricher);
         var request = new TestCommandRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -57,19 +52,18 @@ public sealed class UsecaseLoggingPipelineEnricherTests
         await pipeline.Handle(request, next, CancellationToken.None);
 
         // Assert
-        enricher.Received(1).EnrichResponseLog(request, expectedResponse);
+        enricher.Received(1).EnrichResponse(request, expectedResponse);
     }
 
     [Fact]
     public async Task Handle_WithEnricher_DisposesRequestEnrichment()
     {
         // Arrange
-        var logger = NullLoggerFactory.Instance.CreateLogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>();
-        var enricher = Substitute.For<IUsecaseLogEnricher<TestCommandRequest, TestResponse>>();
+        var enricher = Substitute.For<IUsecaseCtxEnricher<TestCommandRequest, TestResponse>>();
         var disposable = Substitute.For<IDisposable>();
-        enricher.EnrichRequestLog(Arg.Any<TestCommandRequest>()).Returns(disposable);
+        enricher.EnrichRequest(Arg.Any<TestCommandRequest>()).Returns(disposable);
 
-        var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger, enricher);
+        var pipeline = new CtxEnricherPipeline<TestCommandRequest, TestResponse>(enricher);
         var request = new TestCommandRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -87,12 +81,11 @@ public sealed class UsecaseLoggingPipelineEnricherTests
     public async Task Handle_WithEnricher_DisposesResponseEnrichment()
     {
         // Arrange
-        var logger = NullLoggerFactory.Instance.CreateLogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>();
-        var enricher = Substitute.For<IUsecaseLogEnricher<TestCommandRequest, TestResponse>>();
+        var enricher = Substitute.For<IUsecaseCtxEnricher<TestCommandRequest, TestResponse>>();
         var disposable = Substitute.For<IDisposable>();
-        enricher.EnrichResponseLog(Arg.Any<TestCommandRequest>(), Arg.Any<TestResponse>()).Returns(disposable);
+        enricher.EnrichResponse(Arg.Any<TestCommandRequest>(), Arg.Any<TestResponse>()).Returns(disposable);
 
-        var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger, enricher);
+        var pipeline = new CtxEnricherPipeline<TestCommandRequest, TestResponse>(enricher);
         var request = new TestCommandRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -109,11 +102,8 @@ public sealed class UsecaseLoggingPipelineEnricherTests
     [Fact]
     public async Task Handle_WithoutEnricher_BehavesIdentically()
     {
-        // Arrange
-        var logger = NullLoggerFactory.Instance.CreateLogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>();
-
-        // enricher = null (기본값)
-        var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger);
+        // Arrange: enricher = null (기본값)
+        var pipeline = new CtxEnricherPipeline<TestCommandRequest, TestResponse>();
         var request = new TestCommandRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -131,12 +121,11 @@ public sealed class UsecaseLoggingPipelineEnricherTests
     public async Task Handle_EnricherReturnsNull_NoException()
     {
         // Arrange
-        var logger = NullLoggerFactory.Instance.CreateLogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>();
-        var enricher = Substitute.For<IUsecaseLogEnricher<TestCommandRequest, TestResponse>>();
-        enricher.EnrichRequestLog(Arg.Any<TestCommandRequest>()).Returns((IDisposable?)null);
-        enricher.EnrichResponseLog(Arg.Any<TestCommandRequest>(), Arg.Any<TestResponse>()).Returns((IDisposable?)null);
+        var enricher = Substitute.For<IUsecaseCtxEnricher<TestCommandRequest, TestResponse>>();
+        enricher.EnrichRequest(Arg.Any<TestCommandRequest>()).Returns((IDisposable?)null);
+        enricher.EnrichResponse(Arg.Any<TestCommandRequest>(), Arg.Any<TestResponse>()).Returns((IDisposable?)null);
 
-        var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger, enricher);
+        var pipeline = new CtxEnricherPipeline<TestCommandRequest, TestResponse>(enricher);
         var request = new TestCommandRequest("Test");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
@@ -154,10 +143,9 @@ public sealed class UsecaseLoggingPipelineEnricherTests
     public async Task Handle_WithEnricher_PreservesResponse()
     {
         // Arrange
-        var logger = NullLoggerFactory.Instance.CreateLogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>();
-        var enricher = Substitute.For<IUsecaseLogEnricher<TestCommandRequest, TestResponse>>();
+        var enricher = Substitute.For<IUsecaseCtxEnricher<TestCommandRequest, TestResponse>>();
 
-        var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger, enricher);
+        var pipeline = new CtxEnricherPipeline<TestCommandRequest, TestResponse>(enricher);
         var request = new TestCommandRequest("Test");
         var expectedId = Guid.NewGuid();
         var expectedResponse = TestResponse.CreateSuccess(expectedId);

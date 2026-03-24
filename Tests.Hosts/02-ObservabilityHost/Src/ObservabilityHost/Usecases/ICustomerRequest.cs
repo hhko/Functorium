@@ -2,5 +2,5 @@ using Functorium.Applications.Observabilities;
 
 namespace ObservabilityHost.Usecases;
 
-[LogEnricherRoot]
+[CtxRoot]
 public interface ICustomerRequest { string CustomerId { get; } }

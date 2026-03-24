@@ -244,9 +244,30 @@ public partial class OpenTelemetryBuilder
         // Serilog 설정 적용
         ConfigureSerilogInternal(resourceAttributes, options);
 
-        // LogEnricher Source Generator 생성 코드의 PushProperty 팩토리 설정
-        LogEnricherContext.SetPushPropertyFactory(
-            (name, value) => Serilog.Context.LogContext.PushProperty(name, value));
+        // CtxEnricher Source Generator 생성 코드의 Multi-target Push 팩토리 설정
+        CtxEnricherContext.SetPushFactory((name, value, pillars) =>
+        {
+            var disposables = new List<IDisposable>();
+
+            // Logging: Serilog LogContext에 Push
+            if (pillars.HasFlag(CtxPillar.Logging))
+                disposables.Add(Serilog.Context.LogContext.PushProperty(name, value));
+
+            // Tracing: Activity.Current에 SetTag
+            if (pillars.HasFlag(CtxPillar.Tracing))
+                System.Diagnostics.Activity.Current?.SetTag(name, value);
+
+            // MetricsTag: AsyncLocal 기반 MetricsTagContext에 저장
+            if (pillars.HasFlag(CtxPillar.MetricsTag))
+                disposables.Add(Contexts.MetricsTagContext.Push(name, value));
+
+            return disposables.Count switch
+            {
+                0 => NullDisposable.Instance,
+                1 => disposables[0],
+                _ => new CompositeDisposable(disposables)
+            };
+        });
 
         // OpenTelemetry 설정 적용
         ConfigureOpenTelemetryInternal(resourceAttributes, options);
@@ -546,6 +567,21 @@ public partial class OpenTelemetryBuilder
             new UsecasePipelineStartupLogger(
                 commandPipelineNames,
                 queryPipelineNames));
+    }
+
+    private sealed class NullDisposable : IDisposable
+    {
+        public static readonly NullDisposable Instance = new();
+        public void Dispose() { }
+    }
+
+    private sealed class CompositeDisposable(List<IDisposable> disposables) : IDisposable
+    {
+        public void Dispose()
+        {
+            for (int i = disposables.Count - 1; i >= 0; i--)
+                disposables[i].Dispose();
+        }
     }
 }
 

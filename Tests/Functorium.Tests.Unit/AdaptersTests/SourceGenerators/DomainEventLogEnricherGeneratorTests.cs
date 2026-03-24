@@ -1,4 +1,4 @@
-using Functorium.SourceGenerators.Generators.DomainEventLogEnricherGenerator;
+using Functorium.SourceGenerators.Generators.DomainEventCtxEnricherGenerator;
 using Functorium.Testing.Actions.SourceGenerators;
 
 using Microsoft.CodeAnalysis;
@@ -7,30 +7,30 @@ using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 
 namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 
-// # DomainEventLogEnricherGenerator 소스 생성기 테스트
+// # DomainEventCtxEnricherGenerator 소스 생성기 테스트
 //
 // IDomainEventHandler<T> 구현 클래스를 감지하여 T(이벤트 타입)에 대한
-// IDomainEventLogEnricher 구현체가 올바르게 생성되는지 검증합니다.
+// IDomainEventCtxEnricher 구현체가 올바르게 생성되는지 검증합니다.
 //
 // ## 테스트 시나리오
 //
 // ### 1. 최상위 이벤트 스칼라 속성 PushProperty 테스트
 // ### 2. 중첩 이벤트 스칼라 속성 PushProperty 테스트
 // ### 3. 컬렉션 Count 테스트
-// ### 4. [LogEnricherIgnore] 속성 제외 테스트
+// ### 4. [CtxIgnore] 속성 제외 테스트
 // ### 5. 값 객체 .ToString() 변환 테스트
-// ### 6. partial void OnEnrichLog 확장 포인트 테스트
+// ### 6. partial void OnEnrich 확장 포인트 테스트
 // ### 7. 클래스 이름 (중첩) 테스트
 // ### 8. 클래스 이름 (최상위) 테스트
-// ### 9. IDomainEventLogEnricher<T> 인터페이스 구현 테스트
+// ### 9. IDomainEventCtxEnricher<T> 인터페이스 구현 테스트
 // ### 10. GeneratedCompositeDisposable 테스트
 // ### 11. PushEventCtx 헬퍼 메서드 테스트
 // ### 12. IDomainEvent 기본 속성 제외 테스트
-// ### 13. [LogEnricherIgnore] 클래스 레벨 옵트아웃 테스트
+// ### 13. [CtxIgnore] 클래스 레벨 옵트아웃 테스트
 // ### 14. FUNCTORIUM004 접근 불가능 타입 진단 경고 테스트
 // ### 15. FUNCTORIUM002 ctx 필드 충돌 테스트
-// ### 16. [LogEnricherRoot] 인터페이스 root context 테스트
-// ### 17. [LogEnricherRoot] 속성 직접 적용 테스트
+// ### 16. [CtxRoot] 인터페이스 root context 테스트
+// ### 17. [CtxRoot] 속성 직접 적용 테스트
 // ### 18. PushRootCtx 조건부 생성 테스트
 // ### 19. 스냅샷 — 최상위 이벤트
 // ### 20. 스냅샷 — 중첩 이벤트
@@ -42,13 +42,13 @@ namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 //
 
 [Trait(nameof(UnitTest), UnitTest.Functorium_SourceGenerator)]
-public sealed class DomainEventLogEnricherGeneratorTests
+public sealed class DomainEventCtxEnricherGeneratorTests
 {
-    private readonly DomainEventLogEnricherGenerator _sut;
+    private readonly DomainEventCtxEnricherGenerator _sut;
 
-    public DomainEventLogEnricherGeneratorTests()
+    public DomainEventCtxEnricherGeneratorTests()
     {
-        _sut = new DomainEventLogEnricherGenerator();
+        _sut = new DomainEventCtxEnricherGenerator();
     }
 
     private const string TopLevelEventInput = """
@@ -101,17 +101,17 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: 최상위 이벤트의 스칼라 속성이 ctx.{event_snake}.{field} 로 PushProperty되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldGenerate_TopLevelEventScalarProperty()
+    public void DomainEventCtxEnricherGenerator_ShouldGenerate_TopLevelEventScalarProperty()
     {
         // Act
         string? actual = _sut.Generate(TopLevelEventInput);
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("PushProperty(\"ctx.order_placed_event.customer_id\", domainEvent.CustomerId)");
-        actual.ShouldContain("PushProperty(\"ctx.order_placed_event.order_id\", domainEvent.OrderId)");
-        actual.ShouldContain("PushProperty(\"ctx.order_placed_event.line_count\", domainEvent.LineCount)");
-        actual.ShouldContain("PushProperty(\"ctx.order_placed_event.total_amount\", domainEvent.TotalAmount)");
+        actual.ShouldContain("Push(\"ctx.order_placed_event.customer_id\", domainEvent.CustomerId)");
+        actual.ShouldContain("Push(\"ctx.order_placed_event.order_id\", domainEvent.OrderId)");
+        actual.ShouldContain("Push(\"ctx.order_placed_event.line_count\", domainEvent.LineCount)");
+        actual.ShouldContain("Push(\"ctx.order_placed_event.total_amount\", domainEvent.TotalAmount)");
     }
 
     #endregion
@@ -122,16 +122,16 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: 중첩 이벤트의 스칼라 속성이 ctx.{containing}.{event_snake}.{field} 로 PushProperty되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldGenerate_NestedEventScalarProperty()
+    public void DomainEventCtxEnricherGenerator_ShouldGenerate_NestedEventScalarProperty()
     {
         // Act
         string? actual = _sut.Generate(NestedEventInput);
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("PushProperty(\"ctx.order.created_event.customer_id\", domainEvent.CustomerId)");
-        actual.ShouldContain("PushProperty(\"ctx.order.created_event.order_id\", domainEvent.OrderId)");
-        actual.ShouldContain("PushProperty(\"ctx.order.created_event.line_count\", domainEvent.LineCount)");
+        actual.ShouldContain("Push(\"ctx.order.created_event.customer_id\", domainEvent.CustomerId)");
+        actual.ShouldContain("Push(\"ctx.order.created_event.order_id\", domainEvent.OrderId)");
+        actual.ShouldContain("Push(\"ctx.order.created_event.line_count\", domainEvent.LineCount)");
     }
 
     #endregion
@@ -142,7 +142,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: 컬렉션 속성에 대해 _count 접미사와 .Count 표현식이 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldGenerate_CollectionCountProperty()
+    public void DomainEventCtxEnricherGenerator_ShouldGenerate_CollectionCountProperty()
     {
         // Arrange
         string input = """
@@ -170,24 +170,25 @@ public sealed class DomainEventLogEnricherGeneratorTests
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("PushProperty(\"ctx.order_placed_event.order_lines_count\", domainEvent.OrderLines?.Count ?? 0)");
+        actual.ShouldContain("Push(\"ctx.order_placed_event.order_lines_count\", domainEvent.OrderLines?.Count ?? 0)");
     }
 
     #endregion
 
-    #region 4. [LogEnricherIgnore] 속성 제외 테스트
+    #region 4. [CtxIgnore] 속성 제외 테스트
 
     /// <summary>
-    /// 시나리오: [LogEnricherIgnore] 속성이 붙은 프로퍼티는 생성에서 제외되는지 확인합니다.
+    /// 시나리오: [CtxIgnore] 속성이 붙은 프로퍼티는 생성에서 제외되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldExclude_IgnoredProperties()
+    public void DomainEventCtxEnricherGenerator_ShouldExclude_IgnoredProperties()
     {
         // Arrange
         string input = """
             using System.Threading;
             using System.Threading.Tasks;
             using Functorium.Applications.Events;
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
             using Functorium.Domains.Events;
 
@@ -195,7 +196,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
 
             public sealed record OrderPlacedEvent(
                 string OrderId,
-                [LogEnricherIgnore] string InternalToken,
+                [CtxIgnore] string InternalToken,
                 int Amount) : DomainEvent;
 
             public sealed class OrderPlacedEventHandler : IDomainEventHandler<OrderPlacedEvent>
@@ -224,7 +225,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: IValueObject 구현 값 객체 속성에 .ToString() 호출이 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldGenerate_ToStringForValueObjects()
+    public void DomainEventCtxEnricherGenerator_ShouldGenerate_ToStringForValueObjects()
     {
         // Arrange
         string input = """
@@ -268,7 +269,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: IEntityId&lt;T&gt; 구현 EntityId 속성에 .ToString() 호출이 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldGenerate_ToStringForEntityId()
+    public void DomainEventCtxEnricherGenerator_ShouldGenerate_ToStringForEntityId()
     {
         // Arrange
         string input = """
@@ -319,7 +320,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: IValueObject/IEntityId를 구현하지 않는 복합 타입은 건너뛰는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldSkip_NonValueObjectComplexType()
+    public void DomainEventCtxEnricherGenerator_ShouldSkip_NonValueObjectComplexType()
     {
         // Arrange
         string input = """
@@ -355,20 +356,20 @@ public sealed class DomainEventLogEnricherGeneratorTests
 
     #endregion
 
-    #region 6. partial void OnEnrichLog 확장 포인트 테스트
+    #region 6. partial void OnEnrich 확장 포인트 테스트
 
     /// <summary>
-    /// 시나리오: partial void OnEnrichLog 메서드가 생성되는지 확인합니다.
+    /// 시나리오: partial void OnEnrich 메서드가 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldGenerate_PartialVoidExtensionPoint()
+    public void DomainEventCtxEnricherGenerator_ShouldGenerate_PartialVoidExtensionPoint()
     {
         // Act
         string? actual = _sut.Generate(TopLevelEventInput);
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("partial void OnEnrichLog(");
+        actual.ShouldContain("partial void OnEnrich(");
     }
 
     #endregion
@@ -379,14 +380,14 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: 중첩 이벤트의 Enricher 클래스 이름이 {ContainingTypes}{EventTypeName}LogEnricher 형식인지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldGenerate_NestedClassName()
+    public void DomainEventCtxEnricherGenerator_ShouldGenerate_NestedClassName()
     {
         // Act
         string? actual = _sut.Generate(NestedEventInput);
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("public partial class OrderCreatedEventLogEnricher");
+        actual.ShouldContain("public partial class OrderCreatedEventCtxEnricher");
     }
 
     #endregion
@@ -397,32 +398,32 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: 최상위 이벤트의 Enricher 클래스 이름이 {EventTypeName}LogEnricher 형식인지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldGenerate_TopLevelClassName()
+    public void DomainEventCtxEnricherGenerator_ShouldGenerate_TopLevelClassName()
     {
         // Act
         string? actual = _sut.Generate(TopLevelEventInput);
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("public partial class OrderPlacedEventLogEnricher");
+        actual.ShouldContain("public partial class OrderPlacedEventCtxEnricher");
     }
 
     #endregion
 
-    #region 9. IDomainEventLogEnricher<T> 인터페이스 구현 테스트
+    #region 9. IDomainEventCtxEnricher<T> 인터페이스 구현 테스트
 
     /// <summary>
-    /// 시나리오: 생성된 클래스가 IDomainEventLogEnricher&lt;TEvent&gt;를 구현하는지 확인합니다.
+    /// 시나리오: 생성된 클래스가 IDomainEventCtxEnricher&lt;TEvent&gt;를 구현하는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldImplement_IDomainEventLogEnricherInterface()
+    public void DomainEventCtxEnricherGenerator_ShouldImplement_IDomainEventCtxEnricherInterface()
     {
         // Act
         string? actual = _sut.Generate(TopLevelEventInput);
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("IDomainEventLogEnricher<");
+        actual.ShouldContain("IDomainEventCtxEnricher<");
         actual.ShouldContain("global::TestNamespace.OrderPlacedEvent");
     }
 
@@ -434,7 +435,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: GeneratedCompositeDisposable 내부 클래스가 LIFO 역순 Dispose로 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldGenerate_CompositeDisposable()
+    public void DomainEventCtxEnricherGenerator_ShouldGenerate_CompositeDisposable()
     {
         // Act
         string? actual = _sut.Generate(TopLevelEventInput);
@@ -454,7 +455,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: PushEventCtx 헬퍼 메서드가 올바른 ctx prefix로 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldGenerate_PushEventCtxHelper_TopLevel()
+    public void DomainEventCtxEnricherGenerator_ShouldGenerate_PushEventCtxHelper_TopLevel()
     {
         // Act
         string? actual = _sut.Generate(TopLevelEventInput);
@@ -462,11 +463,11 @@ public sealed class DomainEventLogEnricherGeneratorTests
         // Assert
         actual.ShouldNotBeNull();
         actual.ShouldContain("private static void PushEventCtx(");
-        actual.ShouldContain("\"ctx.order_placed_event.\" + fieldName, value)");
+        actual.ShouldContain("\"ctx.order_placed_event.\" + fieldName, value, pillars)");
     }
 
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldGenerate_PushEventCtxHelper_Nested()
+    public void DomainEventCtxEnricherGenerator_ShouldGenerate_PushEventCtxHelper_Nested()
     {
         // Act
         string? actual = _sut.Generate(NestedEventInput);
@@ -474,7 +475,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
         // Assert
         actual.ShouldNotBeNull();
         actual.ShouldContain("private static void PushEventCtx(");
-        actual.ShouldContain("\"ctx.order.created_event.\" + fieldName, value)");
+        actual.ShouldContain("\"ctx.order.created_event.\" + fieldName, value, pillars)");
     }
 
     #endregion
@@ -485,7 +486,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: IDomainEvent의 기본 속성(OccurredAt, EventId, CorrelationId, CausationId)이 생성에서 제외되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldExclude_DomainEventBaseProperties()
+    public void DomainEventCtxEnricherGenerator_ShouldExclude_DomainEventBaseProperties()
     {
         // Act
         string? actual = _sut.Generate(TopLevelEventInput);
@@ -504,25 +505,26 @@ public sealed class DomainEventLogEnricherGeneratorTests
 
     #endregion
 
-    #region 13. [LogEnricherIgnore] 클래스 레벨 옵트아웃 테스트
+    #region 13. [CtxIgnore] 클래스 레벨 옵트아웃 테스트
 
     /// <summary>
-    /// 시나리오: [LogEnricherIgnore]가 이벤트 record에 적용되면 생성하지 않는지 확인합니다.
+    /// 시나리오: [CtxIgnore]가 이벤트 record에 적용되면 생성하지 않는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldNotGenerate_WhenClassLevelIgnoreApplied()
+    public void DomainEventCtxEnricherGenerator_ShouldNotGenerate_WhenClassLevelIgnoreApplied()
     {
         // Arrange
         string input = """
             using System.Threading;
             using System.Threading.Tasks;
             using Functorium.Applications.Events;
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
             using Functorium.Domains.Events;
 
             namespace TestNamespace;
 
-            [LogEnricherIgnore]
+            [CtxIgnore]
             public sealed record InternalEvent(string Secret) : DomainEvent;
 
             public sealed class InternalEventHandler : IDomainEventHandler<InternalEvent>
@@ -548,7 +550,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// FUNCTORIUM004 경고가 발생하는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldReportDiagnostic_WhenEventTypeIsInaccessible()
+    public void DomainEventCtxEnricherGenerator_ShouldReportDiagnostic_WhenEventTypeIsInaccessible()
     {
         // Arrange
         string input = """
@@ -579,17 +581,18 @@ public sealed class DomainEventLogEnricherGeneratorTests
     }
 
     /// <summary>
-    /// 시나리오: [LogEnricherIgnore]가 적용된 private 이벤트에 대해서는
+    /// 시나리오: [CtxIgnore]가 적용된 private 이벤트에 대해서는
     /// FUNCTORIUM004 경고가 발생하지 않는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldNotReportDiagnostic_WhenInaccessibleButIgnored()
+    public void DomainEventCtxEnricherGenerator_ShouldNotReportDiagnostic_WhenInaccessibleButIgnored()
     {
         // Arrange
         string input = """
             using System.Threading;
             using System.Threading.Tasks;
             using Functorium.Applications.Events;
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
             using Functorium.Domains.Events;
 
@@ -597,7 +600,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
 
             public sealed class OuterClass
             {
-                [LogEnricherIgnore]
+                [CtxIgnore]
                 private sealed record InternalEvent(string Value) : DomainEvent;
 
                 public sealed class InternalEventHandler : IDomainEventHandler<InternalEvent>
@@ -624,7 +627,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// FUNCTORIUM002 Warning이 발생하는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldReportDiagnostic_WhenRootFieldTypeConflicts()
+    public void DomainEventCtxEnricherGenerator_ShouldReportDiagnostic_WhenRootFieldTypeConflicts()
     {
         // Arrange
         string input = """
@@ -637,10 +640,10 @@ public sealed class DomainEventLogEnricherGeneratorTests
 
             namespace TestNamespace;
 
-            [LogEnricherRoot]
+            [CtxRoot]
             public interface IOrderEvent { string OrderId { get; } }
 
-            [LogEnricherRoot]
+            [CtxRoot]
             public interface INumericOrderEvent { int OrderId { get; } }
 
             public sealed record OrderPlacedEvent(string OrderId)
@@ -671,7 +674,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
 
     #endregion
 
-    #region 16. [LogEnricherRoot] 인터페이스 root context 테스트
+    #region 16. [CtxRoot] 인터페이스 root context 테스트
 
     private const string RootInterfaceInput = """
         using System.Collections.Generic;
@@ -683,7 +686,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
 
         namespace TestNamespace;
 
-        [LogEnricherRoot]
+        [CtxRoot]
         public interface IOrderEvent { string OrderId { get; } }
 
         public sealed record OrderPlacedEvent(
@@ -699,32 +702,32 @@ public sealed class DomainEventLogEnricherGeneratorTests
         """;
 
     /// <summary>
-    /// 시나리오: [LogEnricherRoot] 인터페이스의 속성이 ctx.{field} 루트 레벨로 승격되는지 확인합니다.
+    /// 시나리오: [CtxRoot] 인터페이스의 속성이 ctx.{field} 루트 레벨로 승격되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldGenerate_RootCtxField_WhenInterfaceHasRootAttribute()
+    public void DomainEventCtxEnricherGenerator_ShouldGenerate_RootCtxField_WhenInterfaceHasRootAttribute()
     {
         // Act
         string? actual = _sut.Generate(RootInterfaceInput);
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("PushProperty(\"ctx.order_id\", domainEvent.OrderId)");
+        actual.ShouldContain("Push(\"ctx.order_id\", domainEvent.OrderId)");
     }
 
     /// <summary>
-    /// 시나리오: [LogEnricherRoot] 인터페이스 속성이 root로 승격되어도
+    /// 시나리오: [CtxRoot] 인터페이스 속성이 root로 승격되어도
     /// root가 아닌 속성은 기존 ctx.{event}.{field} 형식을 유지하는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldKeep_NormalCtxField_WhenNotRoot()
+    public void DomainEventCtxEnricherGenerator_ShouldKeep_NormalCtxField_WhenNotRoot()
     {
         // Act
         string? actual = _sut.Generate(RootInterfaceInput);
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("PushProperty(\"ctx.order_placed_event.customer_id\"");
+        actual.ShouldContain("Push(\"ctx.order_placed_event.customer_id\"");
     }
 
     #endregion
@@ -745,7 +748,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
         public interface IRegional { string RegionCode { get; } }
         public interface IPartnerContext : IRegional { string PartnerId { get; } }
 
-        [LogEnricherRoot]
+        [CtxRoot]
         public interface IOrderEvent { string OrderId { get; } }
 
         public sealed record OrderPlacedEvent(
@@ -763,10 +766,10 @@ public sealed class DomainEventLogEnricherGeneratorTests
         """;
 
     /// <summary>
-    /// 시나리오: [LogEnricherRoot] 인터페이스의 속성이 ctx.{field} 루트로 승격되는지 확인합니다.
+    /// 시나리오: [CtxRoot] 인터페이스의 속성이 ctx.{field} 루트로 승격되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_InterfaceScope_ShouldPromote_RootInterfaceProperty()
+    public void DomainEventCtxEnricherGenerator_InterfaceScope_ShouldPromote_RootInterfaceProperty()
     {
         string? actual = _sut.Generate(InterfaceScopedEventInput);
 
@@ -778,7 +781,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: 비-root 인터페이스 IAuditable의 속성이 ctx.{interface}.{field} 형식인지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_InterfaceScope_ShouldUse_InterfacePrefix_ForAuditable()
+    public void DomainEventCtxEnricherGenerator_InterfaceScope_ShouldUse_InterfacePrefix_ForAuditable()
     {
         string? actual = _sut.Generate(InterfaceScopedEventInput);
 
@@ -791,7 +794,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// IRegional(선언 인터페이스)의 스코프로 출력되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_InterfaceScope_ShouldUse_DeclaringInterface_ForInheritedProperty()
+    public void DomainEventCtxEnricherGenerator_InterfaceScope_ShouldUse_DeclaringInterface_ForInheritedProperty()
     {
         string? actual = _sut.Generate(InterfaceScopedEventInput);
 
@@ -803,7 +806,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: IPartnerContext에 직접 선언된 PartnerId가 ctx.partner_context.partner_id 형식인지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_InterfaceScope_ShouldUse_InterfacePrefix_ForPartnerContext()
+    public void DomainEventCtxEnricherGenerator_InterfaceScope_ShouldUse_InterfacePrefix_ForPartnerContext()
     {
         string? actual = _sut.Generate(InterfaceScopedEventInput);
 
@@ -815,7 +818,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: 인터페이스 없는 컬렉션 프로퍼티가 기존 ctx.{event}.{field}_count 형식을 유지하는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_InterfaceScope_ShouldKeep_DirectCollectionInEventScope()
+    public void DomainEventCtxEnricherGenerator_InterfaceScope_ShouldKeep_DirectCollectionInEventScope()
     {
         string? actual = _sut.Generate(InterfaceScopedEventInput);
 
@@ -827,23 +830,23 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: 인터페이스 스코프가 포함된 생성 코드의 전체 형태를 스냅샷으로 검증합니다.
     /// </summary>
     [Fact]
-    public Task DomainEventLogEnricherGenerator_InterfaceScope_ShouldGenerate_ExpectedOutput()
+    public Task DomainEventCtxEnricherGenerator_InterfaceScope_ShouldGenerate_ExpectedOutput()
     {
         string? actual = _sut.Generate(InterfaceScopedEventInput);
 
-        return Verify(actual).UseDirectory("Snapshots/DomainEventLogEnricherGenerator");
+        return Verify(actual).UseDirectory("Snapshots/DomainEventCtxEnricherGenerator");
     }
 
     #endregion
 
-    #region 17. [LogEnricherRoot] 속성 직접 적용 테스트
+    #region 17. [CtxRoot] 속성 직접 적용 테스트
 
     /// <summary>
-    /// 시나리오: record 생성자 파라미터에 [LogEnricherRoot]를 직접 적용하면
+    /// 시나리오: record 생성자 파라미터에 [CtxRoot]를 직접 적용하면
     /// 해당 속성만 ctx.{field} 루트 레벨로 승격되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldGenerate_RootCtxField_WhenPropertyHasRootAttribute()
+    public void DomainEventCtxEnricherGenerator_ShouldGenerate_RootCtxField_WhenPropertyHasRootAttribute()
     {
         // Arrange
         string input = """
@@ -857,7 +860,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
             namespace TestNamespace;
 
             public sealed record OrderPlacedEvent(
-                [LogEnricherRoot] string OrderId,
+                [CtxRoot] string OrderId,
                 string CustomerId) : DomainEvent;
 
             public sealed class OrderPlacedEventHandler : IDomainEventHandler<OrderPlacedEvent>
@@ -872,8 +875,8 @@ public sealed class DomainEventLogEnricherGeneratorTests
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("PushProperty(\"ctx.order_id\", domainEvent.OrderId)");
-        actual.ShouldContain("PushProperty(\"ctx.order_placed_event.customer_id\", domainEvent.CustomerId)");
+        actual.ShouldContain("Push(\"ctx.order_id\", domainEvent.OrderId)");
+        actual.ShouldContain("Push(\"ctx.order_placed_event.customer_id\", domainEvent.CustomerId)");
     }
 
     #endregion
@@ -884,7 +887,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: root 속성이 있을 때 PushRootCtx 헬퍼 메서드가 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldGenerate_PushRootCtxHelper_WhenRootPropertyExists()
+    public void DomainEventCtxEnricherGenerator_ShouldGenerate_PushRootCtxHelper_WhenRootPropertyExists()
     {
         // Act
         string? actual = _sut.Generate(RootInterfaceInput);
@@ -892,14 +895,14 @@ public sealed class DomainEventLogEnricherGeneratorTests
         // Assert
         actual.ShouldNotBeNull();
         actual.ShouldContain("private static void PushRootCtx(");
-        actual.ShouldContain("\"ctx.\" + fieldName, value)");
+        actual.ShouldContain("\"ctx.\" + fieldName, value, pillars)");
     }
 
     /// <summary>
     /// 시나리오: root 속성이 없을 때 PushRootCtx 헬퍼 메서드가 생성되지 않는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldNotGenerate_PushRootCtxHelper_WhenNoRootProperty()
+    public void DomainEventCtxEnricherGenerator_ShouldNotGenerate_PushRootCtxHelper_WhenNoRootProperty()
     {
         // Act
         string? actual = _sut.Generate(TopLevelEventInput);
@@ -917,13 +920,13 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: 최상위 이벤트의 생성 코드 전체 형태를 스냅샷으로 검증합니다.
     /// </summary>
     [Fact]
-    public Task DomainEventLogEnricherGenerator_ShouldGenerate_TopLevelEvent_ExpectedOutput()
+    public Task DomainEventCtxEnricherGenerator_ShouldGenerate_TopLevelEvent_ExpectedOutput()
     {
         // Act
         string? actual = _sut.Generate(TopLevelEventInput);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/DomainEventLogEnricherGenerator");
+        return Verify(actual).UseDirectory("Snapshots/DomainEventCtxEnricherGenerator");
     }
 
     #endregion
@@ -934,13 +937,13 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: 중첩 이벤트의 생성 코드 전체 형태를 스냅샷으로 검증합니다.
     /// </summary>
     [Fact]
-    public Task DomainEventLogEnricherGenerator_ShouldGenerate_NestedEvent_ExpectedOutput()
+    public Task DomainEventCtxEnricherGenerator_ShouldGenerate_NestedEvent_ExpectedOutput()
     {
         // Act
         string? actual = _sut.Generate(NestedEventInput);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/DomainEventLogEnricherGenerator");
+        return Verify(actual).UseDirectory("Snapshots/DomainEventCtxEnricherGenerator");
     }
 
     #endregion
@@ -951,13 +954,13 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: root context가 포함된 생성 코드의 전체 형태를 스냅샷으로 검증합니다.
     /// </summary>
     [Fact]
-    public Task DomainEventLogEnricherGenerator_ShouldGenerate_RootContext_ExpectedOutput()
+    public Task DomainEventCtxEnricherGenerator_ShouldGenerate_RootContext_ExpectedOutput()
     {
         // Act
         string? actual = _sut.Generate(RootInterfaceInput);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/DomainEventLogEnricherGenerator");
+        return Verify(actual).UseDirectory("Snapshots/DomainEventCtxEnricherGenerator");
     }
 
     #endregion
@@ -968,7 +971,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: 올바른 네임스페이스가 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldGenerate_CorrectNamespace()
+    public void DomainEventCtxEnricherGenerator_ShouldGenerate_CorrectNamespace()
     {
         // Act
         string? actual = _sut.Generate(TopLevelEventInput);
@@ -986,7 +989,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: 같은 이벤트에 대해 여러 Handler가 존재해도 Enricher는 1개만 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldGenerate_SingleEnricher_WhenMultipleHandlersForSameEvent()
+    public void DomainEventCtxEnricherGenerator_ShouldGenerate_SingleEnricher_WhenMultipleHandlersForSameEvent()
     {
         // Arrange
         string input = """
@@ -1021,7 +1024,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
         actual.ShouldNotBeNull();
 
         // Enricher 클래스는 정확히 1번만 선언되어야 함
-        int classCount = actual.Split("public partial class OrderPlacedEventLogEnricher").Length - 1;
+        int classCount = actual.Split("public partial class OrderPlacedEventCtxEnricher").Length - 1;
         classCount.ShouldBe(1);
     }
 
@@ -1033,7 +1036,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: Handler가 없는 이벤트에 대해서는 Enricher가 생성되지 않는지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldNotGenerate_WhenNoHandler()
+    public void DomainEventCtxEnricherGenerator_ShouldNotGenerate_WhenNoHandler()
     {
         // Arrange
         string input = """
@@ -1061,7 +1064,7 @@ public sealed class DomainEventLogEnricherGeneratorTests
     /// 시나리오: 생성된 Enricher의 네임스페이스가 이벤트가 아닌 Handler의 네임스페이스인지 확인합니다.
     /// </summary>
     [Fact]
-    public void DomainEventLogEnricherGenerator_ShouldUse_HandlerNamespace()
+    public void DomainEventCtxEnricherGenerator_ShouldUse_HandlerNamespace()
     {
         // Arrange
         string input = """

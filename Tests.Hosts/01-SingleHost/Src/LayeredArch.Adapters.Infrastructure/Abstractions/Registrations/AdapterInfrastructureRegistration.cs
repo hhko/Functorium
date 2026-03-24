@@ -50,18 +50,18 @@ public static class AdapterInfrastructureRegistration
                 .AddCustomPipelinesFromAssembly(AssemblyReference.Assembly))
             .Build();
 
-        // Log Enricher (별도 등록 — ICustomUsecasePipeline이 아니므로 Scrutor 스캔 대상 아님)
+        // Ctx Enricher (별도 등록 — ICustomUsecasePipeline이 아니므로 Scrutor 스캔 대상 아님)
         services.AddScoped<
-            IUsecaseLogEnricher<CreateOrderCommand.Request, FinResponse<CreateOrderCommand.Response>>,
-            CreateOrderCommandRequestLogEnricher>();
+            IUsecaseCtxEnricher<CreateOrderCommand.Request, FinResponse<CreateOrderCommand.Response>>,
+            CreateOrderCommandRequestCtxEnricher>();
 
-        // Domain Event Log Enrichers
+        // Domain Event Ctx Enrichers
         services.AddScoped<
-            IDomainEventLogEnricher<Order.CreatedEvent>,
-            OrderCreatedEventLogEnricher>();
+            IDomainEventCtxEnricher<Order.CreatedEvent>,
+            OrderCreatedEventCtxEnricher>();
         services.AddScoped<
-            IDomainEventLogEnricher<Customer.CreatedEvent>,
-            CustomerCreatedEventLogEnricher>();
+            IDomainEventCtxEnricher<Customer.CreatedEvent>,
+            CustomerCreatedEventCtxEnricher>();
 
         return services;
     }

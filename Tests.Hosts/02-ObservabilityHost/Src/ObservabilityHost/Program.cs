@@ -37,20 +37,21 @@ services
     .ConfigurePipelines(p => p
         .UseMetrics()
         .UseTracing()
+        .UseCtxEnricher()
         .UseLogging()
         .UseException()
         .AddCustomPipelinesFromAssembly(ObservabilityHost.AssemblyReference.Assembly))
     .Build();
 
-// Log Enricher (별도 등록 — ICustomUsecasePipeline이 아니므로 Scrutor 스캔 대상 아님)
+// Ctx Enricher (별도 등록 — ICustomUsecasePipeline이 아니므로 Scrutor 스캔 대상 아님)
 services.AddScoped<
-    IUsecaseLogEnricher<PlaceOrderCommand.Request, FinResponse<PlaceOrderCommand.Response>>,
-    PlaceOrderCommandRequestLogEnricher>();
+    IUsecaseCtxEnricher<PlaceOrderCommand.Request, FinResponse<PlaceOrderCommand.Response>>,
+    PlaceOrderCommandRequestCtxEnricher>();
 
-// Domain Event Log Enricher
+// Domain Event Ctx Enricher
 services.AddScoped<
-    IDomainEventLogEnricher<OrderPlacedEvent>,
-    OrderPlacedEventLogEnricher>();
+    IDomainEventCtxEnricher<OrderPlacedEvent>,
+    OrderPlacedEventCtxEnricher>();
 
 await using var sp = services.BuildServiceProvider();
 using var scope = sp.CreateScope();

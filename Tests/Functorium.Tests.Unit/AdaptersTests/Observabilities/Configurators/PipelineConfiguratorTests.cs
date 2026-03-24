@@ -28,7 +28,7 @@ public sealed class PipelineConfiguratorTests
 
         // Assert
         var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
-        pipelineBehaviors.Count.ShouldBe(6); // Metrics, Tracing, Logging, Validation, Exception, Transaction
+        pipelineBehaviors.Count.ShouldBe(7); // CtxEnricher, Metrics, Tracing, Logging, Validation, Exception, Transaction
     }
 
     [Fact]
@@ -234,14 +234,15 @@ public sealed class PipelineConfiguratorTests
         configurator.UseAll();
         configurator.Apply(services);
 
-        // Assert - 등록 순서 확인
+        // Assert - 등록 순서 확인: CtxEnricher → Metrics → Tracing → Logging → Validation → Exception → Transaction
         var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
-        pipelineBehaviors[0].ImplementationType.ShouldBe(typeof(UsecaseMetricsPipeline<,>));
-        pipelineBehaviors[1].ImplementationType.ShouldBe(typeof(UsecaseTracingPipeline<,>));
-        pipelineBehaviors[2].ImplementationType.ShouldBe(typeof(UsecaseLoggingPipeline<,>));
-        pipelineBehaviors[3].ImplementationType.ShouldBe(typeof(UsecaseValidationPipeline<,>));
-        pipelineBehaviors[4].ImplementationType.ShouldBe(typeof(UsecaseExceptionPipeline<,>));
-        pipelineBehaviors[5].ImplementationType.ShouldBe(typeof(UsecaseTransactionPipeline<,>));
+        pipelineBehaviors[0].ImplementationType.ShouldBe(typeof(CtxEnricherPipeline<,>));
+        pipelineBehaviors[1].ImplementationType.ShouldBe(typeof(UsecaseMetricsPipeline<,>));
+        pipelineBehaviors[2].ImplementationType.ShouldBe(typeof(UsecaseTracingPipeline<,>));
+        pipelineBehaviors[3].ImplementationType.ShouldBe(typeof(UsecaseLoggingPipeline<,>));
+        pipelineBehaviors[4].ImplementationType.ShouldBe(typeof(UsecaseValidationPipeline<,>));
+        pipelineBehaviors[5].ImplementationType.ShouldBe(typeof(UsecaseExceptionPipeline<,>));
+        pipelineBehaviors[6].ImplementationType.ShouldBe(typeof(UsecaseTransactionPipeline<,>));
     }
 
     [Fact]
@@ -325,9 +326,9 @@ public sealed class PipelineConfiguratorTests
         configurator.UseAll();
         configurator.Apply(services);
 
-        // Assert — Transaction 제외한 5개만 등록
+        // Assert — Transaction 제외한 6개만 등록
         var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
-        pipelineBehaviors.Count.ShouldBe(5);
+        pipelineBehaviors.Count.ShouldBe(6);
         pipelineBehaviors.ShouldNotContain(s => s.ImplementationType == typeof(UsecaseTransactionPipeline<,>));
     }
 
@@ -381,7 +382,7 @@ public sealed class PipelineConfiguratorTests
         var actual = GetRegisteredPipelineNames(configurator);
 
         // Assert
-        actual.ShouldBe(new[] { "Metrics", "Tracing", "Logging", "Validation", "Exception", "Transaction", "Handler" });
+        actual.ShouldBe(new[] { "CtxEnricher", "Metrics", "Tracing", "Logging", "Validation", "Exception", "Transaction", "Handler" });
     }
 
     [Fact]
@@ -397,7 +398,7 @@ public sealed class PipelineConfiguratorTests
         var actual = GetRegisteredPipelineNames(configurator);
 
         // Assert
-        actual.ShouldBe(new[] { "Metrics", "Tracing", "Logging", "Validation", "Exception", "Handler" });
+        actual.ShouldBe(new[] { "CtxEnricher", "Metrics", "Tracing", "Logging", "Validation", "Exception", "Handler" });
         actual.ShouldNotContain("Transaction");
     }
 

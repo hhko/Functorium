@@ -190,7 +190,7 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
 
         var logger = _loggerFactory.CreateLogger(handlerType);
 
-        // Enricher가 등록되어 있으면 LogContext에 커스텀 속성 Push
+        // Enricher가 등록되어 있으면 ctx.* 필드를 3-Pillar에 동시 전파
         using var enrichment = ResolveEnrichment(domainEvent);
 
         string requestCategoryType = ObservabilityNaming.CategoryTypes.Event;
@@ -267,12 +267,12 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
     }
 
     /// <summary>
-    /// 도메인 이벤트 타입에 해당하는 IDomainEventLogEnricher를 DI에서 해석하여 EnrichLog를 호출합니다.
+    /// 도메인 이벤트 타입에 해당하는 IDomainEventCtxEnricher를 DI에서 해석하여 Enrich를 호출합니다.
     /// 등록되지 않은 경우 null을 반환합니다.
     /// </summary>
     private IDisposable? ResolveEnrichment(IDomainEvent domainEvent)
     {
-        var enricherServiceType = typeof(IDomainEventLogEnricher<>).MakeGenericType(domainEvent.GetType());
-        return (_serviceProvider.GetService(enricherServiceType) as IDomainEventLogEnricher)?.EnrichLog(domainEvent);
+        var enricherServiceType = typeof(IDomainEventCtxEnricher<>).MakeGenericType(domainEvent.GetType());
+        return (_serviceProvider.GetService(enricherServiceType) as IDomainEventCtxEnricher)?.Enrich(domainEvent);
     }
 }

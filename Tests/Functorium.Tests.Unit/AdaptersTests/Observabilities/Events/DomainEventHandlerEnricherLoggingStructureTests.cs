@@ -15,7 +15,7 @@ using MsOptions = Microsoft.Extensions.Options.Options;
 namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Events;
 
 /// <summary>
-/// ObservableDomainEventNotificationPublisher + IDomainEventLogEnricher 통합 로그 필드 구조 검증 테스트.
+/// ObservableDomainEventNotificationPublisher + IDomainEventCtxEnricher 통합 로그 필드 구조 검증 테스트.
 /// Enricher가 LogContext.PushProperty로 Push한 ctx.* 필드가
 /// 실제 Handler Request/Response 로그 이벤트에 정확히 출력되는지 스냅샷으로 고정합니다.
 /// </summary>
@@ -53,7 +53,7 @@ public sealed class DomainEventHandlerEnricherLoggingStructureTests : IDisposabl
         // Arrange
         using var context = new LogTestContext(LogEventLevel.Debug, enrichFromLogContext: true);
         using var loggerFactory = new TestLoggerFactory(context);
-        var enricher = new TestDomainEventLogEnricher();
+        var enricher = new TestDomainEventCtxEnricher();
         var serviceProvider = new EnricherServiceProvider(enricher);
         var sut = new ObservableDomainEventNotificationPublisher(
             _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions, serviceProvider);
@@ -85,7 +85,7 @@ public sealed class DomainEventHandlerEnricherLoggingStructureTests : IDisposabl
         // Arrange
         using var context = new LogTestContext(LogEventLevel.Debug, enrichFromLogContext: true);
         using var loggerFactory = new TestLoggerFactory(context);
-        var enricher = new TestDomainEventLogEnricher();
+        var enricher = new TestDomainEventCtxEnricher();
         var serviceProvider = new EnricherServiceProvider(enricher);
         var sut = new ObservableDomainEventNotificationPublisher(
             _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions, serviceProvider);
@@ -118,7 +118,7 @@ public sealed class DomainEventHandlerEnricherLoggingStructureTests : IDisposabl
         // Arrange
         using var context = new LogTestContext(LogEventLevel.Debug, enrichFromLogContext: true);
         using var loggerFactory = new TestLoggerFactory(context);
-        var enricher = new TestDomainEventLogEnricher();
+        var enricher = new TestDomainEventCtxEnricher();
         var serviceProvider = new EnricherServiceProvider(enricher);
         var sut = new ObservableDomainEventNotificationPublisher(
             _activitySource, loggerFactory, _meterFactory, _openTelemetryOptions, serviceProvider);
@@ -156,12 +156,12 @@ public sealed class DomainEventHandlerEnricherLoggingStructureTests : IDisposabl
     #region Test Helpers
 
     /// <summary>
-    /// TestDomainEvent용 IDomainEventLogEnricher 구현.
+    /// TestDomainEvent용 IDomainEventCtxEnricher 구현.
     /// ctx.customer_id와 ctx.test_domain_event.message 필드를 Push합니다.
     /// </summary>
-    internal sealed class TestDomainEventLogEnricher : IDomainEventLogEnricher<TestDomainEvent>
+    internal sealed class TestDomainEventCtxEnricher : IDomainEventCtxEnricher<TestDomainEvent>
     {
-        public IDisposable? EnrichLog(TestDomainEvent domainEvent)
+        public IDisposable? Enrich(TestDomainEvent domainEvent)
         {
             var disposables = new List<IDisposable>(2);
             disposables.Add(LogContext.PushProperty("ctx.customer_id", "CUST-001"));
@@ -180,13 +180,13 @@ public sealed class DomainEventHandlerEnricherLoggingStructureTests : IDisposabl
     }
 
     /// <summary>
-    /// TestDomainEventLogEnricher를 반환하는 테스트용 ServiceProvider.
+    /// TestDomainEventCtxEnricher를 반환하는 테스트용 ServiceProvider.
     /// </summary>
-    private sealed class EnricherServiceProvider(TestDomainEventLogEnricher enricher) : IServiceProvider
+    private sealed class EnricherServiceProvider(TestDomainEventCtxEnricher enricher) : IServiceProvider
     {
         public object? GetService(Type serviceType)
         {
-            if (serviceType == typeof(IDomainEventLogEnricher<TestDomainEvent>))
+            if (serviceType == typeof(IDomainEventCtxEnricher<TestDomainEvent>))
                 return enricher;
             return null;
         }

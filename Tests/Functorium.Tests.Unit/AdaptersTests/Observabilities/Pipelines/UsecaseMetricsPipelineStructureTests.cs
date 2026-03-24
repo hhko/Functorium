@@ -4,6 +4,7 @@ using Functorium.Abstractions.Errors;
 using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Applications.Observabilities;
 using Functorium.Applications.Usecases;
 
 using LanguageExt.Common;
@@ -474,10 +475,10 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
         }
     }
 
-    [LogEnricherIgnore]
+    [CtxIgnore]
     private sealed record TestCommandRequest : ICommandRequest<TestSuccessData>;
 
-    [LogEnricherIgnore]
+    [CtxIgnore]
     private sealed record TestQueryRequest : IQueryRequest<TestSuccessData>;
 
     private sealed record TestSuccessData(Guid Id, string Name);

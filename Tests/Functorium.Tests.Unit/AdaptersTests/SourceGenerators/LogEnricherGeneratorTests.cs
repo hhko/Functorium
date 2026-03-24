@@ -1,4 +1,4 @@
-using Functorium.SourceGenerators.Generators.LogEnricherGenerator;
+using Functorium.SourceGenerators.Generators.CtxEnricherGenerator;
 using Functorium.Testing.Actions.SourceGenerators;
 
 using Microsoft.CodeAnalysis;
@@ -10,42 +10,43 @@ namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 // # LogEnricherGenerator 소스 생성기 테스트
 //
 // ICommandRequest<T> / IQueryRequest<T> 구현체를 자동 감지하여
-// IUsecaseLogEnricher 구현체가 올바르게 생성되는지 검증합니다.
-// [LogEnricherIgnore]를 Request record에 적용하면 생성을 제외합니다.
+// IUsecaseCtxEnricher 구현체가 올바르게 생성되는지 검증합니다.
+// [CtxIgnore]를 Request record에 적용하면 생성을 제외합니다.
 //
 // ## 테스트 시나리오
 //
 // ### 1. Request 스칼라 속성 PushProperty 테스트
 // ### 2. Response 스칼라 속성 PushProperty 테스트 (FinResponse.Succ 패턴 매칭)
 // ### 3. 컬렉션 .Count 테스트
-// ### 4. [LogEnricherIgnore] 제외 테스트
+// ### 4. [CtxIgnore] 제외 테스트
 // ### 5. 복합 타입 건너뜀 테스트
 // ### 6. partial void 확장 포인트 존재 테스트
 // ### 7. 스냅샷 테스트
 // ### 8. ctx 필드 타입 충돌 감지 테스트 (FUNCTORIUM002)
 // ### 9a. PushRequestCtx/PushResponseCtx 헬퍼 메서드 테스트
-// ### 14. [LogEnricherIgnore] 클래스 레벨 옵트아웃 테스트
+// ### 14. [CtxIgnore] 클래스 레벨 옵트아웃 테스트
 // ### 15. 접근 불가능한 타입 진단 경고 테스트 (FUNCTORIUM003)
-// ### 17. [LogEnricherRoot] 인터페이스 root context 테스트
-// ### 18. [LogEnricherRoot] 프로퍼티 직접 적용 테스트
-// ### 19. [LogEnricherRoot] PushRootCtx 헬퍼 생성/미생성 테스트
-// ### 20. [LogEnricherRoot] 컬렉션 root 테스트
-// ### 21. [LogEnricherRoot] FUNCTORIUM002 충돌 테스트
-// ### 22. [LogEnricherRoot] 스냅샷 테스트
+// ### 17. [CtxRoot] 인터페이스 root context 테스트
+// ### 18. [CtxRoot] 프로퍼티 직접 적용 테스트
+// ### 19. [CtxRoot] PushRootCtx 헬퍼 생성/미생성 테스트
+// ### 20. [CtxRoot] 컬렉션 root 테스트
+// ### 21. [CtxRoot] FUNCTORIUM002 충돌 테스트
+// ### 22. [CtxRoot] 스냅샷 테스트
 //
 
 [Trait(nameof(UnitTest), UnitTest.Functorium_SourceGenerator)]
 public sealed class LogEnricherGeneratorTests
 {
-    private readonly LogEnricherGenerator _sut;
+    private readonly CtxEnricherGenerator _sut;
 
     public LogEnricherGeneratorTests()
     {
-        _sut = new LogEnricherGenerator();
+        _sut = new CtxEnricherGenerator();
     }
 
     private const string CommonInput = """
         using System.Collections.Generic;
+        using Functorium.Applications.Observabilities;
         using Functorium.Applications.Usecases;
 
         namespace TestNamespace;
@@ -73,7 +74,7 @@ public sealed class LogEnricherGeneratorTests
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("PushProperty(\"ctx.place_order_command.request.customer_id\", request.CustomerId)");
+        actual.ShouldContain("Push(\"ctx.place_order_command.request.customer_id\", request.CustomerId)");
     }
 
     #endregion
@@ -91,9 +92,9 @@ public sealed class LogEnricherGeneratorTests
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("PushProperty(\"ctx.place_order_command.response.order_id\", r.OrderId)");
-        actual.ShouldContain("PushProperty(\"ctx.place_order_command.response.line_count\", r.LineCount)");
-        actual.ShouldContain("PushProperty(\"ctx.place_order_command.response.total_amount\", r.TotalAmount)");
+        actual.ShouldContain("Push(\"ctx.place_order_command.response.order_id\", r.OrderId)");
+        actual.ShouldContain("Push(\"ctx.place_order_command.response.line_count\", r.LineCount)");
+        actual.ShouldContain("Push(\"ctx.place_order_command.response.total_amount\", r.TotalAmount)");
     }
 
     /// <summary>
@@ -125,15 +126,15 @@ public sealed class LogEnricherGeneratorTests
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("PushProperty(\"ctx.place_order_command.request.lines_count\", request.Lines?.Count ?? 0)");
+        actual.ShouldContain("Push(\"ctx.place_order_command.request.lines_count\", request.Lines?.Count ?? 0)");
     }
 
     #endregion
 
-    #region 4. [LogEnricherIgnore] 제외 테스트
+    #region 4. [CtxIgnore] 제외 테스트
 
     /// <summary>
-    /// 시나리오: [LogEnricherIgnore] 속성이 붙은 프로퍼티는 생성에서 제외되는지 확인합니다.
+    /// 시나리오: [CtxIgnore] 속성이 붙은 프로퍼티는 생성에서 제외되는지 확인합니다.
     /// </summary>
     [Fact]
     public void LogEnricherGenerator_ShouldExclude_IgnoredProperties()
@@ -141,6 +142,7 @@ public sealed class LogEnricherGeneratorTests
         // Arrange
         string input = """
             using System.Collections.Generic;
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -149,7 +151,7 @@ public sealed class LogEnricherGeneratorTests
             {
                 public sealed record Request(
                     string CustomerId,
-                    [LogEnricherIgnore] string InternalCorrelationId,
+                    [CtxIgnore] string InternalCorrelationId,
                     int Amount) : ICommandRequest<Response>;
 
                 public sealed record Response(string OrderId);
@@ -180,6 +182,7 @@ public sealed class LogEnricherGeneratorTests
         // Arrange
         string input = """
             using System.Collections.Generic;
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -211,7 +214,7 @@ public sealed class LogEnricherGeneratorTests
     #region 6. partial void 확장 포인트 존재 테스트
 
     /// <summary>
-    /// 시나리오: OnEnrichRequestLog/OnEnrichResponseLog partial void 메서드가 생성되는지 확인합니다.
+    /// 시나리오: OnEnrichRequest/OnEnrichResponse partial void 메서드가 생성되는지 확인합니다.
     /// </summary>
     [Fact]
     public void LogEnricherGenerator_ShouldGenerate_PartialVoidExtensionPoints()
@@ -221,8 +224,8 @@ public sealed class LogEnricherGeneratorTests
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("partial void OnEnrichRequestLog(");
-        actual.ShouldContain("partial void OnEnrichResponseLog(");
+        actual.ShouldContain("partial void OnEnrichRequest(");
+        actual.ShouldContain("partial void OnEnrichResponse(");
     }
 
     #endregion
@@ -240,25 +243,25 @@ public sealed class LogEnricherGeneratorTests
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("public partial class PlaceOrderCommandRequestLogEnricher");
+        actual.ShouldContain("public partial class PlaceOrderCommandRequestCtxEnricher");
     }
 
     #endregion
 
-    #region 8. IUsecaseLogEnricher 인터페이스 구현 테스트
+    #region 8. IUsecaseCtxEnricher 인터페이스 구현 테스트
 
     /// <summary>
-    /// 시나리오: 생성된 클래스가 IUsecaseLogEnricher&lt;Request, FinResponse&lt;Response&gt;&gt;를 구현하는지 확인합니다.
+    /// 시나리오: 생성된 클래스가 IUsecaseCtxEnricher&lt;Request, FinResponse&lt;Response&gt;&gt;를 구현하는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldImplement_IUsecaseLogEnricherInterface()
+    public void LogEnricherGenerator_ShouldImplement_IUsecaseCtxEnricherInterface()
     {
         // Act
         string? actual = _sut.Generate(CommonInput);
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("IUsecaseLogEnricher<");
+        actual.ShouldContain("IUsecaseCtxEnricher<");
         actual.ShouldContain("FinResponse<");
     }
 
@@ -292,7 +295,7 @@ public sealed class LogEnricherGeneratorTests
 
         actual.ShouldNotBeNull();
         actual.ShouldContain("private static void PushRequestCtx(");
-        actual.ShouldContain("\"ctx.place_order_command.request.\" + fieldName, value)");
+        actual.ShouldContain("\"ctx.place_order_command.request.\" + fieldName, value, pillars)");
     }
 
     [Fact]
@@ -302,7 +305,7 @@ public sealed class LogEnricherGeneratorTests
 
         actual.ShouldNotBeNull();
         actual.ShouldContain("private static void PushResponseCtx(");
-        actual.ShouldContain("\"ctx.place_order_command.response.\" + fieldName, value)");
+        actual.ShouldContain("\"ctx.place_order_command.response.\" + fieldName, value, pillars)");
     }
 
     #endregion
@@ -335,6 +338,7 @@ public sealed class LogEnricherGeneratorTests
     {
         // Arrange
         string input = """
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -355,7 +359,7 @@ public sealed class LogEnricherGeneratorTests
         actual.ShouldContain("ctx.get_order_query.request.order_id");
         actual.ShouldContain("ctx.get_order_query.response.customer_name");
         actual.ShouldContain("ctx.get_order_query.response.total");
-        actual.ShouldContain("GetOrderQueryRequestLogEnricher");
+        actual.ShouldContain("GetOrderQueryRequestCtxEnricher");
     }
 
     #endregion
@@ -373,6 +377,7 @@ public sealed class LogEnricherGeneratorTests
     {
         // Arrange
         string input = """
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -408,6 +413,7 @@ public sealed class LogEnricherGeneratorTests
     {
         // Arrange
         string input = """
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -441,6 +447,7 @@ public sealed class LogEnricherGeneratorTests
     {
         // Arrange
         string input = """
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -467,22 +474,23 @@ public sealed class LogEnricherGeneratorTests
 
     #endregion
 
-    #region 14. [LogEnricherIgnore] 클래스 레벨 옵트아웃 테스트
+    #region 14. [CtxIgnore] 클래스 레벨 옵트아웃 테스트
 
     /// <summary>
-    /// 시나리오: [LogEnricherIgnore]가 Request record에 적용되면 생성하지 않는지 확인합니다.
+    /// 시나리오: [CtxIgnore]가 Request record에 적용되면 생성하지 않는지 확인합니다.
     /// </summary>
     [Fact]
     public void LogEnricherGenerator_ShouldNotGenerate_WhenClassLevelIgnoreApplied()
     {
         string input = """
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
 
             public sealed class InternalCommand
             {
-                [LogEnricherIgnore]
+                [CtxIgnore]
                 public sealed record Request(string Secret) : ICommandRequest<Response>;
                 public sealed record Response(string Result);
             }
@@ -506,6 +514,7 @@ public sealed class LogEnricherGeneratorTests
     {
         // Arrange
         string input = """
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -525,7 +534,7 @@ public sealed class LogEnricherGeneratorTests
     }
 
     /// <summary>
-    /// 시나리오: [LogEnricherIgnore]가 적용된 private Request record에 대해서는
+    /// 시나리오: [CtxIgnore]가 적용된 private Request record에 대해서는
     /// FUNCTORIUM003 경고가 발생하지 않는지 확인합니다.
     /// </summary>
     [Fact]
@@ -533,13 +542,14 @@ public sealed class LogEnricherGeneratorTests
     {
         // Arrange
         string input = """
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
 
             public sealed class OuterClass
             {
-                [LogEnricherIgnore]
+                [CtxIgnore]
                 private sealed record Request(string Value) : ICommandRequest<Response>;
                 public sealed record Response(string Result);
             }
@@ -571,7 +581,7 @@ public sealed class LogEnricherGeneratorTests
 
     #endregion
 
-    #region 17. [LogEnricherRoot] 인터페이스 root context 테스트
+    #region 17. [CtxRoot] 인터페이스 root context 테스트
 
     private const string RootInterfaceInput = """
         using System.Collections.Generic;
@@ -580,7 +590,7 @@ public sealed class LogEnricherGeneratorTests
 
         namespace TestNamespace;
 
-        [LogEnricherRoot]
+        [CtxRoot]
         public interface ICustomerRequest { string CustomerId { get; } }
 
         public sealed class PlaceOrderCommand
@@ -595,7 +605,7 @@ public sealed class LogEnricherGeneratorTests
         """;
 
     /// <summary>
-    /// 시나리오: [LogEnricherRoot] 인터페이스의 속성이 ctx.{field} 루트 레벨로 승격되는지 확인합니다.
+    /// 시나리오: [CtxRoot] 인터페이스의 속성이 ctx.{field} 루트 레벨로 승격되는지 확인합니다.
     /// </summary>
     [Fact]
     public void LogEnricherGenerator_ShouldGenerate_RootCtxField_WhenInterfaceHasRootAttribute()
@@ -605,11 +615,11 @@ public sealed class LogEnricherGeneratorTests
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("PushProperty(\"ctx.customer_id\", request.CustomerId)");
+        actual.ShouldContain("Push(\"ctx.customer_id\", request.CustomerId)");
     }
 
     /// <summary>
-    /// 시나리오: [LogEnricherRoot] 인터페이스 속성이 root로 승격되어도
+    /// 시나리오: [CtxRoot] 인터페이스 속성이 root로 승격되어도
     /// root가 아닌 속성은 기존 ctx.{usecase}.request.{field} 형식을 유지하는지 확인합니다.
     /// </summary>
     [Fact]
@@ -620,11 +630,11 @@ public sealed class LogEnricherGeneratorTests
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("PushProperty(\"ctx.place_order_command.request.lines_count\"");
+        actual.ShouldContain("Push(\"ctx.place_order_command.request.lines_count\"");
     }
 
     /// <summary>
-    /// 시나리오: [LogEnricherRoot] 어트리뷰트가 없는 인터페이스의 속성은
+    /// 시나리오: [CtxRoot] 어트리뷰트가 없는 인터페이스의 속성은
     /// root로 승격되지 않고, 인터페이스 스코프(ctx.{interface}.{field})로 출력되는지 확인합니다.
     /// </summary>
     [Fact]
@@ -633,6 +643,7 @@ public sealed class LogEnricherGeneratorTests
         // Arrange
         string input = """
             using System.Collections.Generic;
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -673,7 +684,7 @@ public sealed class LogEnricherGeneratorTests
         public interface IRegional { string RegionCode { get; } }
         public interface IPartnerContext : IRegional { string PartnerId { get; } }
 
-        [LogEnricherRoot]
+        [CtxRoot]
         public interface ICustomerRequest { string CustomerId { get; } }
 
         public sealed class PlaceOrderCommand
@@ -693,7 +704,7 @@ public sealed class LogEnricherGeneratorTests
         """;
 
     /// <summary>
-    /// 시나리오: [LogEnricherRoot] 인터페이스의 속성이 ctx.{field} 루트로 승격되는지 확인합니다.
+    /// 시나리오: [CtxRoot] 인터페이스의 속성이 ctx.{field} 루트로 승격되는지 확인합니다.
     /// </summary>
     [Fact]
     public void LogEnricherGenerator_InterfaceScope_ShouldPromote_RootInterfaceProperty()
@@ -778,6 +789,7 @@ public sealed class LogEnricherGeneratorTests
         // Arrange
         string input = """
             using System.Collections.Generic;
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -804,10 +816,10 @@ public sealed class LogEnricherGeneratorTests
 
     #endregion
 
-    #region 18. [LogEnricherRoot] 프로퍼티 직접 적용 테스트
+    #region 18. [CtxRoot] 프로퍼티 직접 적용 테스트
 
     /// <summary>
-    /// 시나리오: record 생성자 파라미터에 [LogEnricherRoot]를 직접 적용하면
+    /// 시나리오: record 생성자 파라미터에 [CtxRoot]를 직접 적용하면
     /// 해당 속성만 ctx.{field} 루트 레벨로 승격되는지 확인합니다.
     /// </summary>
     [Fact]
@@ -816,6 +828,7 @@ public sealed class LogEnricherGeneratorTests
         // Arrange
         string input = """
             using Functorium.Applications.Observabilities;
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -823,7 +836,7 @@ public sealed class LogEnricherGeneratorTests
             public sealed class SomeCommand
             {
                 public sealed record Request(
-                    [LogEnricherRoot] string TraceId,
+                    [CtxRoot] string TraceId,
                     string OrderId) : ICommandRequest<Response>;
 
                 public sealed record Response(string Result);
@@ -835,12 +848,12 @@ public sealed class LogEnricherGeneratorTests
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("PushProperty(\"ctx.trace_id\", request.TraceId)");
-        actual.ShouldContain("PushProperty(\"ctx.some_command.request.order_id\", request.OrderId)");
+        actual.ShouldContain("Push(\"ctx.trace_id\", request.TraceId)");
+        actual.ShouldContain("Push(\"ctx.some_command.request.order_id\", request.OrderId)");
     }
 
     /// <summary>
-    /// 시나리오: Response의 record 생성자 파라미터에 [LogEnricherRoot]를 적용하면
+    /// 시나리오: Response의 record 생성자 파라미터에 [CtxRoot]를 적용하면
     /// 해당 Response 속성이 ctx.{field} 루트 레벨로 승격되는지 확인합니다.
     /// </summary>
     [Fact]
@@ -848,6 +861,7 @@ public sealed class LogEnricherGeneratorTests
     {
         // Arrange
         string input = """
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
@@ -858,7 +872,7 @@ public sealed class LogEnricherGeneratorTests
                 public sealed record Request(string OrderId) : ICommandRequest<Response>;
 
                 public sealed record Response(
-                    [LogEnricherRoot] string CorrelationId,
+                    [CtxRoot] string CorrelationId,
                     string Result);
             }
             """;
@@ -868,13 +882,13 @@ public sealed class LogEnricherGeneratorTests
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("PushProperty(\"ctx.correlation_id\", r.CorrelationId)");
-        actual.ShouldContain("PushProperty(\"ctx.some_command.response.result\", r.Result)");
+        actual.ShouldContain("Push(\"ctx.correlation_id\", r.CorrelationId)");
+        actual.ShouldContain("Push(\"ctx.some_command.response.result\", r.Result)");
     }
 
     #endregion
 
-    #region 19. [LogEnricherRoot] PushRootCtx 헬퍼 생성/미생성 테스트
+    #region 19. [CtxRoot] PushRootCtx 헬퍼 생성/미생성 테스트
 
     /// <summary>
     /// 시나리오: root 속성이 있을 때 PushRootCtx 헬퍼 메서드가 생성되는지 확인합니다.
@@ -888,7 +902,7 @@ public sealed class LogEnricherGeneratorTests
         // Assert
         actual.ShouldNotBeNull();
         actual.ShouldContain("private static void PushRootCtx(");
-        actual.ShouldContain("\"ctx.\" + fieldName, value)");
+        actual.ShouldContain("\"ctx.\" + fieldName, value, pillars)");
     }
 
     /// <summary>
@@ -907,7 +921,7 @@ public sealed class LogEnricherGeneratorTests
 
     #endregion
 
-    #region 20. [LogEnricherRoot] 컬렉션 root 테스트
+    #region 20. [CtxRoot] 컬렉션 root 테스트
 
     /// <summary>
     /// 시나리오: root 컬렉션 속성이 ctx.{name}_count 형식으로 출력되는지 확인합니다.
@@ -919,11 +933,12 @@ public sealed class LogEnricherGeneratorTests
         string input = """
             using System.Collections.Generic;
             using Functorium.Applications.Observabilities;
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
 
-            [LogEnricherRoot]
+            [CtxRoot]
             public interface IItemsRequest { List<string> Items { get; } }
 
             public sealed class TestCommand
@@ -940,13 +955,13 @@ public sealed class LogEnricherGeneratorTests
 
         // Assert
         actual.ShouldNotBeNull();
-        actual.ShouldContain("PushProperty(\"ctx.items_count\"");
+        actual.ShouldContain("Push(\"ctx.items_count\"");
         actual.ShouldNotContain("ctx.test_command.request.items_count");
     }
 
     #endregion
 
-    #region 21. [LogEnricherRoot] FUNCTORIUM002 충돌 테스트
+    #region 21. [CtxRoot] FUNCTORIUM002 충돌 테스트
 
     /// <summary>
     /// 시나리오: 같은 root 필드명에 서로 다른 OpenSearch 매핑 타입 그룹이 할당되면
@@ -958,14 +973,15 @@ public sealed class LogEnricherGeneratorTests
         // Arrange
         string input = """
             using Functorium.Applications.Observabilities;
+            using Functorium.Applications.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
 
-            [LogEnricherRoot]
+            [CtxRoot]
             public interface IRequestWithId { string ItemId { get; } }
 
-            [LogEnricherRoot]
+            [CtxRoot]
             public interface IRequestWithNumericId { int ItemId { get; } }
 
             public sealed class CommandA
@@ -992,7 +1008,7 @@ public sealed class LogEnricherGeneratorTests
 
     #endregion
 
-    #region 22. [LogEnricherRoot] 스냅샷 테스트
+    #region 22. [CtxRoot] 스냅샷 테스트
 
     /// <summary>
     /// 시나리오: root context가 포함된 생성 코드의 전체 형태를 스냅샷으로 검증합니다.

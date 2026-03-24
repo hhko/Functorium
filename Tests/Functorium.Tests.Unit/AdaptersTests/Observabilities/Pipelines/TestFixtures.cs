@@ -78,19 +78,19 @@ public static class TestFixtures
     }
 
     /// <summary>
-    /// LogEnricher 런타임 구조 테스트를 위한 핸드라이트 Enricher.
+    /// CtxEnricher 런타임 구조 테스트를 위한 핸드라이트 Enricher.
     /// 소스 제너레이터가 생성하는 6가지 ctx 필드 패턴을 모두 포함합니다:
     /// Root 스칼라/컬렉션 + Usecase Request 스칼라/컬렉션 + Usecase Response 스칼라/컬렉션
     /// </summary>
-    internal sealed class TestCommandLogEnricher
-        : IUsecaseLogEnricher<TestCommandRequest, TestResponse>
+    internal sealed class TestCommandCtxEnricher
+        : IUsecaseCtxEnricher<TestCommandRequest, TestResponse>
     {
-        public IDisposable? EnrichRequestLog(TestCommandRequest request)
+        public IDisposable? EnrichRequest(TestCommandRequest request)
         {
             var disposables = new List<IDisposable>(4);
-            // Pattern 1: Root scalar (simulates [LogEnricherRoot] interface)
+            // Pattern 1: Root scalar (simulates [CtxRoot] interface)
             disposables.Add(LogContext.PushProperty("ctx.customer_id", "CUST-001"));
-            // Pattern 2: Root collection (simulates [LogEnricherRoot] interface + collection)
+            // Pattern 2: Root collection (simulates [CtxRoot] interface + collection)
             disposables.Add(LogContext.PushProperty("ctx.items_count", 3));
             // Pattern 3: Usecase request scalar
             disposables.Add(LogContext.PushProperty("ctx.test_fixtures.request.name", request.Name));
@@ -99,7 +99,7 @@ public static class TestFixtures
             return new CompositeDisposable(disposables);
         }
 
-        public IDisposable? EnrichResponseLog(TestCommandRequest request, TestResponse response)
+        public IDisposable? EnrichResponse(TestCommandRequest request, TestResponse response)
         {
             var disposables = new List<IDisposable>(4);
             // Pattern 1: Root scalar

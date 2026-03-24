@@ -3,12 +3,12 @@ using Functorium.Applications.Usecases;
 namespace ObservabilityHost.Usecases;
 
 /// <summary>
-/// PlaceOrderCommand의 커스텀 LogEnricher 확장.
+/// PlaceOrderCommand의 커스텀 CtxEnricher 확장.
 /// 자동 생성된 코드에 computed 속성(order_total_amount, average_line_amount)을 추가합니다.
 /// </summary>
-public partial class PlaceOrderCommandRequestLogEnricher
+public partial class PlaceOrderCommandRequestCtxEnricher
 {
-    partial void OnEnrichRequestLog(
+    partial void OnEnrichRequest(
         PlaceOrderCommand.Request request,
         List<IDisposable> disposables)
     {
@@ -17,7 +17,7 @@ public partial class PlaceOrderCommandRequestLogEnricher
         PushRequestCtx(disposables, "order_total_amount", total);
     }
 
-    partial void OnEnrichResponseLog(
+    partial void OnEnrichResponse(
         PlaceOrderCommand.Request request,
         FinResponse<PlaceOrderCommand.Response> response,
         List<IDisposable> disposables)

@@ -2,5 +2,5 @@ using Functorium.Applications.Observabilities;
 
 namespace LayeredArch.Application.Usecases.RootContexts;
 
-[LogEnricherRoot]
+[CtxRoot]
 public interface ICustomerRequest { string CustomerId { get; } }

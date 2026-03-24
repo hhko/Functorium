@@ -10,7 +10,7 @@
 | OTel | [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/) | 관찰가능성 표준 속성 |
 | Custom | `ObservabilityNaming.CustomAttributes` | Functorium 3-Pillar 공통 속성 |
 | Formatter | `OpenSearchJsonFormatter` | 포맷터 변환 규칙에 의한 파생 필드 |
-| Dynamic | `IUsecaseLogEnricher` | 사용자 정의 컨텍스트 필드 |
+| Dynamic | `IUsecaseCtxEnricher` | 사용자 정의 컨텍스트 필드 |
 
 ## ECS 표준 필드
 
@@ -66,7 +66,7 @@
 
 ## Context 필드 (ctx.*)
 
-`IUsecaseLogEnricher`를 통해 주입되는 사용자 정의 컨텍스트 필드입니다.
+`IUsecaseCtxEnricher`를 통해 주입되는 사용자 정의 컨텍스트 필드입니다.
 
 | 필드 | 타입 | 인덱스 | 출처 | 설명 |
 |------|------|--------|------|------|

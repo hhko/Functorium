@@ -13,10 +13,11 @@ namespace Functorium.Adapters.Observabilities.Builders.Configurators;
 /// </summary>
 /// <remarks>
 /// 파이프라인 실행 순서 (등록 순서):
-/// Request → Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction → Custom → Handler
+/// Request → CtxEnricher → Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction → Custom → Handler
 /// </remarks>
 public class PipelineConfigurator
 {
+    private bool _useCtxEnricher;
     private bool _useMetrics;
     private bool _useTracing;
     private bool _useLogging;
@@ -39,12 +40,24 @@ public class PipelineConfigurator
     /// </summary>
     public PipelineConfigurator UseAll()
     {
+        _useCtxEnricher = true;
         _useMetrics = true;
         _useTracing = true;
         _useLogging = true;
         _useValidation = true;
         _useException = true;
         _useTransaction = true;
+        return this;
+    }
+
+    /// <summary>
+    /// CtxEnricher Pipeline을 활성화합니다.
+    /// ctx.* 사용자 정의 컨텍스트 필드를 3-Pillar(Logging, Tracing, Metrics)에 동시 전파합니다.
+    /// 최선두 Pipeline으로 등록되어 후속 Pipeline이 ctx.* 데이터에 접근 가능합니다.
+    /// </summary>
+    public PipelineConfigurator UseCtxEnricher()
+    {
+        _useCtxEnricher = true;
         return this;
     }
 
@@ -164,9 +177,15 @@ public class PipelineConfigurator
     internal void Apply(IServiceCollection services)
     {
         // 파이프라인 등록 순서:
-        // Request → Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction → Custom → Handler
+        // Request → CtxEnricher → Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction → Custom → Handler
 
         _registeredPipelineNames.Clear();
+
+        if (_useCtxEnricher)
+        {
+            RegisterPipeline(services, typeof(CtxEnricherPipeline<,>));
+            _registeredPipelineNames.Add("CtxEnricher");
+        }
 
         if (_useMetrics)
         {

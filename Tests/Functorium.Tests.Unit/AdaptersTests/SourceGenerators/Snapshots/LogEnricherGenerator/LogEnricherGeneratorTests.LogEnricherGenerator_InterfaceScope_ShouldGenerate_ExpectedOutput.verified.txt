@@ -10,41 +10,41 @@
 
 namespace TestNamespace;
 
-public partial class PlaceOrderCommandRequestLogEnricher
-    : global::Functorium.Applications.Observabilities.IUsecaseLogEnricher<global::TestNamespace.PlaceOrderCommand.Request, global::Functorium.Applications.Usecases.FinResponse<global::TestNamespace.PlaceOrderCommand.Response>>
+public partial class PlaceOrderCommandRequestCtxEnricher
+    : global::Functorium.Applications.Observabilities.IUsecaseCtxEnricher<global::TestNamespace.PlaceOrderCommand.Request, global::Functorium.Applications.Usecases.FinResponse<global::TestNamespace.PlaceOrderCommand.Response>>
 {
-    public global::System.IDisposable? EnrichRequestLog(global::TestNamespace.PlaceOrderCommand.Request request)
+    public global::System.IDisposable? EnrichRequest(global::TestNamespace.PlaceOrderCommand.Request request)
     {
         var disposables = new global::System.Collections.Generic.List<global::System.IDisposable>(5);
-        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty("ctx.customer_id", request.CustomerId));
-        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty("ctx.place_order_command.request.lines_count", request.Lines?.Count ?? 0));
-        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty("ctx.auditable.operator_id", request.OperatorId));
-        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty("ctx.regional.region_code", request.RegionCode));
-        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty("ctx.partner_context.partner_id", request.PartnerId));
-        OnEnrichRequestLog(request, disposables);
+        disposables.Add(global::Functorium.Applications.Observabilities.CtxEnricherContext.Push("ctx.customer_id", request.CustomerId));
+        disposables.Add(global::Functorium.Applications.Observabilities.CtxEnricherContext.Push("ctx.place_order_command.request.lines_count", request.Lines?.Count ?? 0));
+        disposables.Add(global::Functorium.Applications.Observabilities.CtxEnricherContext.Push("ctx.auditable.operator_id", request.OperatorId));
+        disposables.Add(global::Functorium.Applications.Observabilities.CtxEnricherContext.Push("ctx.regional.region_code", request.RegionCode));
+        disposables.Add(global::Functorium.Applications.Observabilities.CtxEnricherContext.Push("ctx.partner_context.partner_id", request.PartnerId));
+        OnEnrichRequest(request, disposables);
         return new GeneratedCompositeDisposable(disposables);
     }
 
-    public global::System.IDisposable? EnrichResponseLog(
+    public global::System.IDisposable? EnrichResponse(
         global::TestNamespace.PlaceOrderCommand.Request request,
         global::Functorium.Applications.Usecases.FinResponse<global::TestNamespace.PlaceOrderCommand.Response> response)
     {
         var disposables = new global::System.Collections.Generic.List<global::System.IDisposable>(3);
         if (response is global::Functorium.Applications.Usecases.FinResponse<global::TestNamespace.PlaceOrderCommand.Response>.Succ { Value: var r })
         {
-            disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty("ctx.place_order_command.response.order_id", r.OrderId));
-            disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty("ctx.place_order_command.response.line_count", r.LineCount));
-            disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty("ctx.place_order_command.response.total_amount", r.TotalAmount));
+            disposables.Add(global::Functorium.Applications.Observabilities.CtxEnricherContext.Push("ctx.place_order_command.response.order_id", r.OrderId));
+            disposables.Add(global::Functorium.Applications.Observabilities.CtxEnricherContext.Push("ctx.place_order_command.response.line_count", r.LineCount));
+            disposables.Add(global::Functorium.Applications.Observabilities.CtxEnricherContext.Push("ctx.place_order_command.response.total_amount", r.TotalAmount));
         }
-        OnEnrichResponseLog(request, response, disposables);
+        OnEnrichResponse(request, response, disposables);
         return disposables.Count > 0 ? new GeneratedCompositeDisposable(disposables) : null;
     }
 
-    partial void OnEnrichRequestLog(
+    partial void OnEnrichRequest(
         global::TestNamespace.PlaceOrderCommand.Request request,
         global::System.Collections.Generic.List<global::System.IDisposable> disposables);
 
-    partial void OnEnrichResponseLog(
+    partial void OnEnrichResponse(
         global::TestNamespace.PlaceOrderCommand.Request request,
         global::Functorium.Applications.Usecases.FinResponse<global::TestNamespace.PlaceOrderCommand.Response> response,
         global::System.Collections.Generic.List<global::System.IDisposable> disposables);
@@ -52,28 +52,31 @@ public partial class PlaceOrderCommandRequestLogEnricher
     private static void PushRequestCtx(
         global::System.Collections.Generic.List<global::System.IDisposable> disposables,
         string fieldName,
-        object? value)
+        object? value,
+        global::Functorium.Applications.Observabilities.CtxPillar pillars = global::Functorium.Applications.Observabilities.CtxPillar.Default)
     {
-        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty(
-            "ctx.place_order_command.request." + fieldName, value));
+        disposables.Add(global::Functorium.Applications.Observabilities.CtxEnricherContext.Push(
+            "ctx.place_order_command.request." + fieldName, value, pillars));
     }
 
     private static void PushResponseCtx(
         global::System.Collections.Generic.List<global::System.IDisposable> disposables,
         string fieldName,
-        object? value)
+        object? value,
+        global::Functorium.Applications.Observabilities.CtxPillar pillars = global::Functorium.Applications.Observabilities.CtxPillar.Default)
     {
-        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty(
-            "ctx.place_order_command.response." + fieldName, value));
+        disposables.Add(global::Functorium.Applications.Observabilities.CtxEnricherContext.Push(
+            "ctx.place_order_command.response." + fieldName, value, pillars));
     }
 
     private static void PushRootCtx(
         global::System.Collections.Generic.List<global::System.IDisposable> disposables,
         string fieldName,
-        object? value)
+        object? value,
+        global::Functorium.Applications.Observabilities.CtxPillar pillars = global::Functorium.Applications.Observabilities.CtxPillar.Default)
     {
-        disposables.Add(global::Functorium.Applications.Observabilities.LogEnricherContext.PushProperty(
-            "ctx." + fieldName, value));
+        disposables.Add(global::Functorium.Applications.Observabilities.CtxEnricherContext.Push(
+            "ctx." + fieldName, value, pillars));
     }
 
     private sealed class GeneratedCompositeDisposable(global::System.Collections.Generic.List<global::System.IDisposable> disposables) : global::System.IDisposable

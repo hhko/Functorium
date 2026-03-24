@@ -1,6 +1,5 @@
 using Functorium.Adapters.Observabilities.Loggers;
 using Functorium.Adapters.Observabilities.Naming;
-using Functorium.Applications.Observabilities;
 using Functorium.Applications.Usecases;
 
 using LanguageExt.Common;
@@ -14,7 +13,8 @@ namespace Functorium.Adapters.Observabilities.Pipelines;
 /// <summary>
 /// Result 패턴을 위한 로깅 Pipeline.
 /// IsSucc/IsFail 패턴을 사용하여 안전하게 응답을 로깅합니다.
-/// IUsecaseLogEnricher가 DI에 등록되어 있으면 LogContext에 커스텀 속성을 자동으로 Push합니다.
+/// ctx.* Enrichment는 CtxEnricherPipeline이 최선두에서 처리하므로,
+/// LoggingPipeline에서는 Enricher를 직접 주입받지 않습니다.
 /// </summary>
 internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
     : UsecasePipelineBase<TRequest>
@@ -23,14 +23,11 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
         where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 {
     private readonly ILogger<UsecaseLoggingPipeline<TRequest, TResponse>> _logger;
-    private readonly IUsecaseLogEnricher<TRequest, TResponse>? _enricher;
 
     public UsecaseLoggingPipeline(
-        ILogger<UsecaseLoggingPipeline<TRequest, TResponse>> logger,
-        IUsecaseLogEnricher<TRequest, TResponse>? enricher = null)
+        ILogger<UsecaseLoggingPipeline<TRequest, TResponse>> logger)
     {
         _logger = logger;
-        _enricher = enricher;
     }
 
     public async ValueTask<TResponse> Handle(TRequest request, MessageHandlerDelegate<TRequest, TResponse> next, CancellationToken cancellationToken)
@@ -39,22 +36,14 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
         string requestHandler = GetRequestHandler();
         string requestHandlerMethod = ObservabilityNaming.Methods.Handle;
 
-        // 요청 로그 (Enricher가 있으면 LogContext에 커스텀 속성 Push 후 표준 로그 출력)
-        IDisposable? requestEnrichment = _enricher?.EnrichRequestLog(request);
-        try
-        {
-            _logger.LogUsecaseRequest(
-                ObservabilityNaming.Layers.Application,
-                ObservabilityNaming.Categories.Usecase,
-                requestCategoryType,
-                requestHandler,
-                requestHandlerMethod,
-                request);
-        }
-        finally
-        {
-            requestEnrichment?.Dispose();
-        }
+        // 요청 로그 (ctx.* Enrichment는 CtxEnricherPipeline이 최선두에서 이미 처리됨)
+        _logger.LogUsecaseRequest(
+            ObservabilityNaming.Layers.Application,
+            ObservabilityNaming.Categories.Usecase,
+            requestCategoryType,
+            requestHandler,
+            requestHandlerMethod,
+            request);
 
         long startTimestamp = ElapsedTimeCalculator.GetCurrentTimestamp();
 
@@ -62,8 +51,7 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
 
         double elapsed = ElapsedTimeCalculator.CalculateElapsedSeconds(startTimestamp);
 
-        // 응답 로그 (Enricher가 있으면 LogContext에 커스텀 속성 Push 후 표준 로그 출력)
-        using IDisposable? responseEnrichment = _enricher?.EnrichResponseLog(request, response);
+        // 응답 로그 (ctx.* Enrichment는 CtxEnricherPipeline이 최선두에서 이미 처리됨)
         LogResponse(response, requestCategoryType, requestHandler, requestHandlerMethod, elapsed);
 
         return response;

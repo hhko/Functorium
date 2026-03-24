@@ -38,15 +38,16 @@ public sealed class UsecaseLoggingPipelineEnricherStructureTests
         // Arrange
         using var context = new LogTestContext(LogEventLevel.Debug, enrichFromLogContext: true);
         var logger = context.CreateLogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>();
-        var enricher = new TestCommandLogEnricher();
-        var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger, enricher);
+        var enricher = new TestCommandCtxEnricher();
+        var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger);
         var request = new TestCommandRequest("TestName");
         var expectedResponse = TestResponse.CreateSuccess(Guid.NewGuid());
 
         MessageHandlerDelegate<TestCommandRequest, TestResponse> next =
             (_, _) => ValueTask.FromResult(expectedResponse);
 
-        // Act
+        // Act — Enricher로 LogContext에 Push한 뒤 Pipeline 실행 (CtxEnricherPipeline 시뮬레이션)
+        using var enrichment = enricher.EnrichRequest(request);
         await pipeline.Handle(request, next, CancellationToken.None);
 
         // Assert
@@ -59,8 +60,8 @@ public sealed class UsecaseLoggingPipelineEnricherStructureTests
         // Arrange
         using var context = new LogTestContext(LogEventLevel.Debug, enrichFromLogContext: true);
         var logger = context.CreateLogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>();
-        var enricher = new TestCommandLogEnricher();
-        var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger, enricher);
+        var enricher = new TestCommandCtxEnricher();
+        var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger);
         var request = new TestCommandRequest("TestName");
         var expectedResponse = TestResponse.CreateSuccess(
             Guid.Parse("22222222-2222-2222-2222-222222222222"),
@@ -69,8 +70,10 @@ public sealed class UsecaseLoggingPipelineEnricherStructureTests
         MessageHandlerDelegate<TestCommandRequest, TestResponse> next =
             (_, _) => ValueTask.FromResult(expectedResponse);
 
-        // Act
+        // Act — Enricher로 LogContext에 Push한 뒤 Pipeline 실행
+        using var reqEnrichment = enricher.EnrichRequest(request);
         await pipeline.Handle(request, next, CancellationToken.None);
+        using var resEnrichment = enricher.EnrichResponse(request, expectedResponse);
 
         // Assert
         await Verify(context.ExtractSecondLogData())
@@ -84,8 +87,8 @@ public sealed class UsecaseLoggingPipelineEnricherStructureTests
         // Arrange
         using var context = new LogTestContext(LogEventLevel.Debug, enrichFromLogContext: true);
         var logger = context.CreateLogger<UsecaseLoggingPipeline<TestCommandRequest, TestResponse>>();
-        var enricher = new TestCommandLogEnricher();
-        var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger, enricher);
+        var enricher = new TestCommandCtxEnricher();
+        var pipeline = new UsecaseLoggingPipeline<TestCommandRequest, TestResponse>(logger);
         var request = new TestCommandRequest("TestName");
 
         var error = ErrorCodeFactory.Create(
@@ -97,7 +100,8 @@ public sealed class UsecaseLoggingPipelineEnricherStructureTests
         MessageHandlerDelegate<TestCommandRequest, TestResponse> next =
             (_, _) => ValueTask.FromResult(errorResponse);
 
-        // Act
+        // Act — Enricher로 LogContext에 Push한 뒤 Pipeline 실행
+        using var enrichment = enricher.EnrichRequest(request);
         await pipeline.Handle(request, next, CancellationToken.None);
 
         // Assert
