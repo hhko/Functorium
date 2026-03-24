@@ -108,7 +108,13 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     FinT<IO, TAggregate> Create(TAggregate aggregate);
     FinT<IO, TAggregate> GetById(TId id);
     FinT<IO, TAggregate> Update(TAggregate aggregate);
-    FinT<IO, Unit> Delete(TId id);
+    FinT<IO, int> Delete(TId id);
+
+    // 벌크 연산
+    FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
+    FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);
 }
 ```
 
@@ -164,6 +170,8 @@ public interface IObservablePort
 }
 ```
 
+**ctx.* 3-Pillar Enrichment** — Source Generator가 Request/Response/DomainEvent의 프로퍼티를 `ctx.{snake_case}` 필드로 자동 변환하여, Logging/Tracing/Metrics에 비즈니스 컨텍스트를 동시 전파합니다. `[CtxTarget(CtxPillar.All)]`로 Metrics 태그를 opt-in할 수 있습니다.
+
 **`[GenerateObservablePort]`** — Source Generator가 Adapter에 대한 Observable wrapper를 자동 생성하여, OpenTelemetry 기반의 Tracing/Logging/Metrics를 투명하게 제공합니다:
 
 ```csharp
@@ -175,6 +183,7 @@ public class OrderRepository : IRepository<Order, OrderId> { ... }
 
 | Pipeline | 역할 |
 |----------|------|
+| `CtxEnricherPipeline` | 비즈니스 컨텍스트(ctx.*)를 Logging/Tracing/Metrics에 동시 전파 |
 | `UsecaseExceptionPipeline` | 예외 → 구조화된 에러 변환 |
 | `UsecaseValidationPipeline` | FluentValidation 기반 입력 검증 |
 | `UsecaseCachingPipeline` | ICacheable 요청 캐싱. 캐시 히트 시 DB 라운드트립 없이 즉시 반환 |
@@ -189,7 +198,7 @@ public class OrderRepository : IRepository<Order, OrderId> { ... }
 |------|----------|
 | **도메인 안전성** | Value Object 계층, Entity/AggregateRoot, Specification Pattern, 구조화된 에러 코드 |
 | **함수형 합성** | `Fin<T>`/`FinT<IO,T>` Discriminated Union, LINQ 합성, Bind/Apply 검증, CQRS 경로별 최적화 |
-| **자동화** | Source Generator (Observable Port, EntityId), Usecase Pipeline (7단계), 아키텍처 규칙 테스트 |
+| **자동화** | Source Generator (Observable Port, EntityId, CtxEnricher), Usecase Pipeline (8단계), 아키텍처 규칙 테스트 |
 | **관측성** | OpenTelemetry Logging/Metrics/Tracing 자동 적용, 구조화된 로그, 도메인-운영 언어 통합 |
 
 ## Quick Example
@@ -234,14 +243,16 @@ dotnet add package Functorium
 # 인프라 어댑터 — OpenTelemetry, Serilog, EF Core, Dapper, Pipeline
 dotnet add package Functorium.Adapters
 
-# 코드 자동 생성 — [GenerateObservablePort], [GenerateEntityId]
+# 코드 자동 생성 — [GenerateObservablePort], [GenerateEntityId], CtxEnricher
 dotnet add package Functorium.SourceGenerators
 
 # 테스트 유틸리티 — ArchUnitNET, xUnit 확장, 통합 테스트 픽스처
 dotnet add package Functorium.Testing
 ```
 
-**첫 번째 단계:** [Functional ValueObject 튜토리얼](./Docs.Site/src/content/docs/tutorials/functional-valueobject/index.md)에서 Value Object를 만들어 보세요.
+**5분 빠른시작:** [Quickstart](./Docs.Site/src/content/docs/quickstart.mdx)에서 Value Object → AggregateRoot → Command Usecase를 5분 안에 만들어 보세요.
+
+**첫 번째 튜토리얼:** [Functional ValueObject 튜토리얼](./Docs.Site/src/content/docs/tutorials/functional-valueobject/index.md)에서 Value Object를 깊이 학습하세요.
 
 **전체 문서:** [https://hhko.github.io/Functorium](https://hhko.github.io/Functorium)
 
@@ -253,7 +264,7 @@ dotnet add package Functorium.Testing
 
 - **Domain Layer** — 순수 비즈니스 로직. Entity, AggregateRoot, Value Object, Specification, DomainError, Domain Event, Repository 포트(IRepository), IObservablePort. 외부 의존성 없이 순수 함수 기반으로 비즈니스 규칙을 표현합니다.
 - **Application Layer** — 유스케이스 조립. CQRS(ICommandRequest, IQueryRequest), FinResponse, FluentValidation 확장, FinT LINQ 합성, Domain Event 발행, IUnitOfWork. 도메인 로직과 인프라를 연결하고 사이드 이펙트의 경계를 관리합니다.
-- **Adapter Layer** — 인프라 구현. OpenTelemetry 구성, Usecase Pipeline (7단계), Observable 도메인 이벤트 발행, 구조화된 로거, DapperQueryAdapterBase, AdapterError, Source Generator. 도메인에 의존하지만, 도메인은 인프라에 의존하지 않습니다.
+- **Adapter Layer** — 인프라 구현. OpenTelemetry 구성, Usecase Pipeline (8단계, CtxEnricher 포함), Observable 도메인 이벤트 발행, 구조화된 로거, DapperQueryAdapterBase, AdapterError, Source Generator. 도메인에 의존하지만, 도메인은 인프라에 의존하지 않습니다.
 
 ## Observability
 
@@ -267,11 +278,11 @@ Functorium은 OpenTelemetry 기반의 통합 관측성(Logging, Metrics, Tracing
 |------|-------------------------------|------------------------------|
 | **적용 대상** | 모든 Command / Query 유스케이스 | Repository, QueryAdapter 등 IObservablePort 구현체 |
 | **적용 방식** | Mediator `IPipelineBehavior` 자동 래핑 | `[GenerateObservablePort]` Source Generator 자동 생성 |
-| **구성 요소** | `UsecaseLoggingPipeline`, `UsecaseMetricsPipeline`, `UsecaseTracingPipeline` | 메서드별 Logging / Metrics / Tracing wrapper |
+| **구성 요소** | `CtxEnricherPipeline`, `UsecaseLoggingPipeline`, `UsecaseMetricsPipeline`, `UsecaseTracingPipeline` | 메서드별 Logging / Metrics / Tracing wrapper |
 | **EventId 범위** | Application 1001–1004 | Adapter 2001–2004 |
 
 상세 사양과 가이드는 문서 사이트에서 확인할 수 있습니다:
-- [Observability Specification](./Docs.Site/src/content/docs/spec/08-observability.md) — Field/Tag 구조, Meter/Instrument 사양, 메시지 템플릿
+- [Observability Specification](./Docs.Site/src/content/docs/spec/08-observability.md) — Field/Tag 구조, ctx.* 3-Pillar Enrichment, Meter/Instrument 사양
 - [Logging Guide](./Docs.Site/src/content/docs/guides/observability/19-observability-logging.md) — 구조화된 로깅 상세 가이드
 - [Metrics Guide](./Docs.Site/src/content/docs/guides/observability/20-observability-metrics.md) — 메트릭 수집 및 분석 가이드
 - [Tracing Guide](./Docs.Site/src/content/docs/guides/observability/21-observability-tracing.md) — 분산 추적 상세 가이드
@@ -315,7 +326,7 @@ Functorium은 OpenTelemetry 기반의 통합 관측성(Logging, Metrics, Tracing
 |--------|------|
 | `Functorium` | 핵심 도메인 모델링 — Value Object, Entity, AggregateRoot, Specification, 에러 체계 |
 | `Functorium.Adapters` | 인프라 어댑터 — OpenTelemetry, Serilog, EF Core, Dapper, Pipeline |
-| `Functorium.SourceGenerators` | 코드 자동 생성 — `[GenerateObservablePort]`, `[GenerateEntityId]` |
+| `Functorium.SourceGenerators` | 코드 자동 생성 — `[GenerateObservablePort]`, `[GenerateEntityId]`, `CtxEnricherGenerator` |
 | `Functorium.Testing` | 테스트 유틸리티 — ArchUnitNET, xUnit 확장, 통합 테스트 픽스처 |
 
 ## 기술 스택
