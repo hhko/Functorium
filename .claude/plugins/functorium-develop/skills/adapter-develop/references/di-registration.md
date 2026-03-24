@@ -196,3 +196,25 @@ private static void RegisterDapperQueries(IServiceCollection services, string co
 6. Query Adapter 등록 : RegisterScopedObservablePort<IQuery, QueryObservable>()
 7. Log Enricher 등록  : AddScoped<IUsecaseCtxEnricher<...>, Enricher>()
 ```
+
+## CtxEnricher 등록
+
+```csharp
+// CtxEnricher 파이프라인은 UseAll()에 포함됩니다.
+services.RegisterOpenTelemetry(configuration, AssemblyReference.Assembly)
+    .ConfigurePipelines(pipelines => pipelines.UseAll())
+    .Build();
+```
+
+파이프라인 실행 순서:
+
+| 순서 | Pipeline | 역할 |
+|------|----------|------|
+| 1 | `CtxEnricherPipeline` | ctx.* 3-Pillar 전파 |
+| 2 | `UsecaseMetricsPipeline` | 메트릭 수집 (ctx MetricsTag 병합) |
+| 3 | `UsecaseTracingPipeline` | 분산 추적 |
+| 4 | `UsecaseLoggingPipeline` | 구조화된 로깅 |
+| 5 | `UsecaseValidationPipeline` | FluentValidation |
+| 6 | `UsecaseExceptionPipeline` | 예외 변환 |
+| 7 | `UsecaseTransactionPipeline` | 트랜잭션 |
+| 8 | Custom Pipelines | 사용자 정의 |

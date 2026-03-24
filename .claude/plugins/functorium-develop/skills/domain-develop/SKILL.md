@@ -58,6 +58,13 @@ Functorium 프레임워크 기반 도메인 레이어 개발 가이드입니다.
 
 **출력:** `{context}/domain/02-code-design.md`
 
+### 관찰 가능성 어트리뷰트
+Request/Response/DomainEvent 프로퍼티에 Ctx Enricher 어트리뷰트를 적용하여
+Logging/Tracing/Metrics에 비즈니스 컨텍스트를 자동 전파합니다:
+- `[CtxRoot]` — 필드를 ctx.{field} 루트 레벨로 승격
+- `[CtxTarget(CtxPillar.All)]` — 모든 Pillar(Logging+Tracing+MetricsTag)에 전파
+- `[CtxIgnore]` — 모든 Pillar에서 제외
+
 ### Phase 4: 구현
 
 실제 .cs 파일 생성 + 단위 테스트:
@@ -70,6 +77,18 @@ Functorium 프레임워크 기반 도메인 레이어 개발 가이드입니다.
 단위 테스트 규칙은 `Docs.Site/src/content/docs/guides/testing/15a-unit-testing.md`를 준수합니다.
 
 **출력:** `{context}/domain/03-implementation-results.md` + 소스 코드
+
+### Domain Service 벌크 패턴
+여러 Aggregate를 조율하는 벌크 연산은 Domain Service에서 처리합니다:
+- Domain Service가 각 Aggregate의 상태를 변경하고 개별 이벤트를 클리어
+- 단일 벌크 이벤트를 생성하여 반환
+- Use Case에서 `IDomainEventCollector.TrackEvent(bulkEvent)` 호출
+
+IRepository 벌크 메서드:
+- `CreateRange(IReadOnlyList<TAggregate>)` → `FinT<IO, Seq<TAggregate>>`
+- `GetByIds(IReadOnlyList<TId>)` → `FinT<IO, Seq<TAggregate>>`
+- `UpdateRange(IReadOnlyList<TAggregate>)` → `FinT<IO, Seq<TAggregate>>`
+- `DeleteRange(IReadOnlyList<TId>)` → `FinT<IO, int>`
 
 ## 핵심 원칙
 

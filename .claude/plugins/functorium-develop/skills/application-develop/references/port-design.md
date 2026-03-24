@@ -272,3 +272,45 @@ Event 흐름:
 | 이벤트 발행 | O (Aggregate에서) | X |
 | SQL 최적화 | 불필요 (전체 로드) | 중요 (필요 컬럼만) |
 | Specification | 존재 확인, 유니크 검증 | 검색 필터 |
+
+---
+
+## 6. IDomainEventCollector
+
+도메인 이벤트를 수집하는 인터페이스입니다. Repository의 Create/Update에서 Aggregate를 추적하고,
+Domain Service의 벌크 이벤트를 직접 추적합니다.
+
+```csharp
+public interface IDomainEventCollector
+{
+    // Aggregate 추적 (Repository에서 호출)
+    void Track(IHasDomainEvents aggregate);
+    void TrackRange(IEnumerable<IHasDomainEvents> aggregates);
+    IReadOnlyList<IHasDomainEvents> GetTrackedAggregates();
+
+    // Domain Service 벌크 이벤트 직접 추적
+    void TrackEvent(IDomainEvent domainEvent);
+    IReadOnlyList<IDomainEvent> GetDirectlyTrackedEvents();
+}
+```
+
+### 사용 패턴
+
+| 메서드 | 호출자 | 용도 |
+|--------|--------|------|
+| `Track(aggregate)` | Repository (Create/Update) | Aggregate 내부 이벤트 수집 |
+| `TrackRange(aggregates)` | Repository (CreateRange/UpdateRange) | 벌크 Aggregate 이벤트 수집 |
+| `TrackEvent(domainEvent)` | Use Case (Domain Service 결과) | 벌크 이벤트 직접 추적 |
+| `GetTrackedAggregates()` | Publisher | Aggregate 이벤트 수집 + ClearDomainEvents |
+| `GetDirectlyTrackedEvents()` | Publisher | Domain Service 이벤트 수집 |
+
+### Domain Service 벌크 이벤트 흐름
+
+```
+Use Case
+  → productRepository.GetByIds(ids)         // Aggregate 로드
+  → ProductBulkOperations.BulkDelete(...)    // Domain Service: 상태 변경 + 벌크 이벤트 생성
+  → eventCollector.TrackEvent(bulkEvent)     // 벌크 이벤트 직접 추적
+  → productRepository.UpdateRange(...)       // 영속화
+  → Publisher.PublishTrackedEvents()          // Aggregate + 직접 추적 이벤트 모두 발행
+```

@@ -490,3 +490,59 @@ ApplicationError.For<MyCommand>(new CannotProcess(), value, "message");
 ```csharp
 public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
 ```
+
+---
+
+## Domain Service 벌크 패턴 예제
+
+```csharp
+public sealed class BulkDeleteProductsCommand
+{
+    public sealed record Request(List<string> ProductIds) : ICommandRequest<Response>;
+    public sealed record Response(int AffectedCount);
+
+    public sealed class Usecase(
+        IProductRepository productRepository,
+        IDomainEventCollector eventCollector)
+        : ICommandUsecase<Request, Response>
+    {
+        public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken ct)
+        {
+            var ids = request.ProductIds.Select(id => ProductId.Parse(id, null)).ToList();
+
+            FinT<IO, Response> usecase =
+                from products in productRepository.GetByIds(ids)
+                let bulkResult = BulkDeleteAndTrack(products)
+                from saved in productRepository.UpdateRange(bulkResult.Deleted.ToList())
+                select new Response(bulkResult.Deleted.Count);
+
+            return (await usecase.Run().RunAsync()).ToFinResponse();
+        }
+
+        private (Seq<Product> Deleted, ProductBulkOperations.BulkDeletedEvent Event)
+            BulkDeleteAndTrack(Seq<Product> products)
+        {
+            var result = ProductBulkOperations.BulkDelete(products.ToList(), "system");
+            eventCollector.TrackEvent(result.Event);
+            return result;
+        }
+    }
+}
+```
+
+---
+
+## IUsecaseCtxEnricher 구현 예제
+
+```csharp
+public interface IUsecaseCtxEnricher<in TRequest, in TResponse>
+    where TResponse : IFinResponse
+{
+    IDisposable? EnrichRequest(TRequest request);
+    IDisposable? EnrichResponse(TRequest request, TResponse response);
+}
+```
+
+Source Generator가 Request/Response record의 공개 프로퍼티를 자동 감지하여
+`IUsecaseCtxEnricher` 구현체를 생성합니다.
+`[CtxRoot]`로 루트 승격, `[CtxTarget]`으로 Pillar 타겟팅, `[CtxIgnore]`로 제외합니다.

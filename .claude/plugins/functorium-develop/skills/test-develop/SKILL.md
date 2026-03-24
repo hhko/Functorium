@@ -30,6 +30,29 @@ Functorium 프레임워크 기반 테스트를 작성하는 스킬입니다.
 
 상세 패턴은 references 파일을 읽으세요.
 
+### CtxEnricher 3-Pillar 스냅샷 테스트
+`CtxEnricherContext.Push`로 전파된 ctx.* 필드가 각 Pillar에 올바르게 도달하는지 검증:
+
+- **Logging**: `LogTestContext(enrichFromLogContext: true)`로 LogEvent에서 ctx.* 필드 캡처
+- **Metrics**: `MetricsTagContext.CurrentTags`에서 MetricsTag ctx.* 필드 읽기
+- **Tracing**: `Activity.Current?.Tags`에서 Activity Tag ctx.* 필드 읽기
+
+테스트 설정:
+```csharp
+// CtxEnricherContext 팩토리 설정 (Adapter 초기화와 동일)
+CtxEnricherContext.SetPushFactory((name, value, pillars) =>
+{
+    var disposables = new List<IDisposable>();
+    if (pillars.HasFlag(CtxPillar.Logging))
+        disposables.Add(LogContext.PushProperty(name, value));
+    if (pillars.HasFlag(CtxPillar.Tracing))
+        Activity.Current?.SetTag(name, value?.ToString());
+    if (pillars.HasFlag(CtxPillar.MetricsTag))
+        disposables.Add(MetricsTagContext.Push(name, value));
+    return new CompositeDisposable(disposables);
+});
+```
+
 ### Phase 3: 통합 테스트
 
 - `HostTestFixture<Program>` 기반

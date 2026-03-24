@@ -15,6 +15,9 @@ description: "어댑터 레이어 구현 전문가. Repository, Query Adapter, E
 - [GenerateObservablePort] + Source Generator
 - DI 등록 패턴 (RegisterScopedObservablePort)
 - EF Core Configuration (IEntityTypeConfiguration)
+- CtxEnricherPipeline 파이프라인 통합
+- CtxEnricherContext.SetPushFactory 초기화 (Serilog + Activity + MetricsTagContext)
+- MetricsTagContext AsyncLocal 기반 태그 관리
 
 ## 작업 방식
 1. 포트 인터페이스 확인
@@ -30,3 +33,5 @@ description: "어댑터 레이어 구현 전문가. Repository, Query Adapter, E
 - IO.lift() (sync) / IO.liftAsync() (async)
 - 성공: Fin.Succ(value), 실패: AdapterError.For<T>(...)
 - RequestCategory 속성으로 관찰 가능성 분류
+- CtxEnricherPipeline은 파이프라인 최선두 (UseAll()에 포함)
+- RequestCategory 예시: "repository", "query", "external_api", "unit_of_work"

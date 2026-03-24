@@ -616,3 +616,55 @@ public interface IRepository<TAggregate, TId> : IObservablePort
 - `FinT<IO, T>` 반환으로 모나드 합성 지원 (LINQ 쿼리 표현식)
 - `IObservablePort` 상속으로 OpenTelemetry 관측 자동 지원
 - 확장 메서드는 도메인별 Repository 인터페이스에 추가
+
+---
+
+## 9. Domain Service 벌크 패턴
+
+여러 Aggregate를 조율하는 벌크 연산은 Domain Service가 소유합니다.
+
+```csharp
+public static class ProductBulkOperations
+{
+    public sealed record BulkDeletedEvent(Seq<ProductId> DeletedIds, string DeletedBy) : DomainEvent;
+
+    public static (Seq<Product> Deleted, BulkDeletedEvent Event) BulkDelete(
+        IReadOnlyList<Product> products, string deletedBy)
+    {
+        foreach (var product in products)
+        {
+            product.Delete(deletedBy);
+            product.ClearDomainEvents();  // 개별 이벤트 정리
+        }
+        var ids = toSeq(products.Select(p => p.Id));
+        return (toSeq(products), new BulkDeletedEvent(ids, deletedBy));
+    }
+}
+```
+
+**핵심 원칙:**
+- 각 Aggregate의 상태 변경은 도메인 메서드로 수행 (Delete, Create 등)
+- 개별 이벤트는 `ClearDomainEvents()`로 정리
+- Domain Service가 단일 벌크 이벤트를 생성
+- Use Case에서 `eventCollector.TrackEvent(bulkResult.Event)` 호출
+
+---
+
+## 10. IRepository 벌크 메서드
+
+```csharp
+public interface IRepository<TAggregate, TId> : IObservablePort
+{
+    // 단건
+    FinT<IO, TAggregate> Create(TAggregate aggregate);
+    FinT<IO, TAggregate> GetById(TId id);
+    FinT<IO, TAggregate> Update(TAggregate aggregate);
+    FinT<IO, int> Delete(TId id);
+
+    // 벌크
+    FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
+    FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);
+}
+```

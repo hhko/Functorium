@@ -335,3 +335,50 @@ public class ExternalPricingApiService : IExternalPricingService
 3. **`RequestCategory` 프로퍼티** - 관찰 가능성 로그 카테고리 (`"Repository"`, `"QueryAdapter"`, `"ExternalApi"`)
 4. **에러 처리** - 예외 대신 `Fin.Fail` 반환 (`AdapterError.For`, `AdapterError.FromException`)
 5. **EntityId는 Ulid 기반** - `string Id`로 저장, `TId.Create(string)`으로 복원
+
+---
+
+## IRepository 벌크 메서드
+
+IRepository는 단건 CRUD 외에 벌크 연산을 제공합니다:
+
+```csharp
+public interface IRepository<TAggregate, TId> : IObservablePort
+    where TAggregate : AggregateRoot<TId>
+    where TId : struct, IEntityId<TId>
+{
+    // 단건
+    FinT<IO, TAggregate> Create(TAggregate aggregate);
+    FinT<IO, TAggregate> GetById(TId id);
+    FinT<IO, TAggregate> Update(TAggregate aggregate);
+    FinT<IO, int> Delete(TId id);
+
+    // 벌크
+    FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
+    FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates);
+    FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);
+}
+```
+
+### 벌크 연산과 Domain Service
+
+벌크 삭제/생성에서 도메인 이벤트가 필요한 경우, **Domain Service 패턴**을 사용합니다:
+
+```csharp
+// Use Case에서:
+from products in productRepository.GetByIds(ids)
+let bulkResult = ProductBulkOperations.BulkDelete(products.ToList(), "system")
+let _ = eventCollector.TrackEvent(bulkResult.Event)  // 벌크 이벤트 직접 추적
+from saved in productRepository.UpdateRange(bulkResult.Deleted.ToList())
+select new Response(bulkResult.Deleted.Count)
+```
+
+### EfCoreRepositoryBase 벌크 구현
+
+- `CreateRange`: `DbSet.AddRange()` + `EventCollector.TrackRange()`
+- `GetByIds`: `WHERE ... IN` (IdBatchSize=500 단위 분할)
+- `UpdateRange`: `DbSet.UpdateRange()` + `EventCollector.TrackRange()`
+- `DeleteRange`: `ExecuteDeleteAsync()` (hard delete, 이벤트 없음)
+
+벌크 Soft Delete는 서브클래스에서 override하여 Domain Service 패턴으로 처리합니다.

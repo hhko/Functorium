@@ -72,6 +72,40 @@ return response.ToFinResponse();
 
 **출력:** `{context}/application/02-code-design.md`
 
+### Domain Service 벌크 이벤트 추적
+벌크 연산 Use Case에서 Domain Service가 생성한 벌크 이벤트를 `IDomainEventCollector.TrackEvent()`로 직접 추적합니다:
+
+```csharp
+public sealed class Usecase(
+    IProductRepository productRepository,
+    IDomainEventCollector eventCollector)
+    : ICommandUsecase<Request, Response>
+{
+    FinT<IO, Response> usecase =
+        from products in productRepository.GetByIds(ids)
+        let bulkResult = ProductBulkOperations.BulkDelete(products.ToList(), "system")
+        let _ = eventCollector.TrackEvent(bulkResult.Event)
+        from saved in productRepository.UpdateRange(bulkResult.Deleted.ToList())
+        select new Response(bulkResult.Deleted.Count);
+}
+```
+
+### Ctx Enricher 파이프라인 통합
+파이프라인 실행 순서:
+`CtxEnricher → Metrics → Tracing → Logging → Validation → Exception → Transaction → Handler`
+
+`IUsecaseCtxEnricher<TRequest, TResponse>`를 구현하면 Request/Response의 비즈니스 필드가
+Logging, Tracing, Metrics에 `ctx.*` 필드로 자동 전파됩니다:
+
+```csharp
+// Source Generator가 자동 생성. [CtxTarget]으로 Pillar 타겟팅
+public sealed record Request(
+    string CustomerId,                           // 기본 (Logging + Tracing)
+    [CtxTarget(CtxPillar.All)] bool IsExpress,   // 3-Pillar Tag
+    [CtxIgnore] string DebugInfo                 // 제외
+) : ICommandRequest<Response>;
+```
+
 ### Phase 4: 구현
 
 실제 .cs 파일 생성 + 단위 테스트:

@@ -152,3 +152,36 @@ public async Task CreateProduct_ShouldReturn400BadRequest_WhenDuplicateName()
 | `PutAsJsonAsync` | 수정 | 200 |
 | `DeleteAsync` | 삭제 | 200 |
 | `GetAsync` + Query | 검색 | 200 |
+
+---
+
+## 스냅샷 테스트 폴더 구조
+
+Verify.Xunit 스냅샷 테스트는 범주별 서브폴더로 구성합니다:
+
+```
+Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/
+├── Pipelines/Snapshots/
+│   ├── Logging/       ← UsecaseLoggingPipelineStructureTests
+│   ├── Metrics/       ← UsecaseMetricsPipelineStructureTests
+│   ├── Tracing/       ← UsecaseTracingPipelineStructureTests
+│   └── CtxEnricher/   ← Enricher 통합 (Logging+Metrics+Tracing)
+└── Events/Snapshots/
+    ├── Logging/       ← DomainEventPublisherLoggingStructureTests
+    ├── Metrics/       ← DomainEventPublisherMetricsStructureTests
+    └── Tracing/       ← DomainEventPublisherTracingStructureTests
+```
+
+Verify 호출 시 `.UseDirectory("Snapshots/Logging")` 등으로 범주 지정:
+
+```csharp
+await Verify(tags).UseDirectory("Snapshots/CtxEnricher");
+await Verify(logData).UseDirectory("Snapshots/Logging").ScrubMember("response.elapsed");
+```
+
+### 스냅샷 승인
+
+```bash
+# 새 스냅샷 또는 변경된 스냅샷 일괄 승인
+pwsh -File Build-VerifyAccept.ps1
+```

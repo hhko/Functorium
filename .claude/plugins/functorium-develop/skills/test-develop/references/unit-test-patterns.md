@@ -346,3 +346,87 @@ dotnet test -- --filter-method "Handle_ShouldReturnSuccess"
 # 클래스 필터
 dotnet test -- --filter-class "MyNamespace.ProductNameTests"
 ```
+
+---
+
+## CtxEnricher 3-Pillar 테스트 패턴
+
+### CtxEnricherContext.SetPushFactory 테스트 설정
+
+테스트에서 3-Pillar 전파를 검증하려면 Adapter 초기화와 동일한 팩토리를 설정합니다:
+
+```csharp
+CtxEnricherContext.SetPushFactory((name, value, pillars) =>
+{
+    var disposables = new List<IDisposable>();
+
+    if (pillars.HasFlag(CtxPillar.Logging))
+        disposables.Add(LogContext.PushProperty(name, value));
+
+    if (pillars.HasFlag(CtxPillar.Tracing))
+        Activity.Current?.SetTag(name, value);
+
+    if (pillars.HasFlag(CtxPillar.MetricsTag))
+        disposables.Add(MetricsTagContext.Push(name, value));
+
+    return disposables.Count switch
+    {
+        0 => NullDisposable.Instance,
+        1 => disposables[0],
+        _ => new CompositeDisposable(disposables)
+    };
+});
+```
+
+### Logging ctx.* 필드 캡처
+
+```csharp
+using var context = new LogTestContext(LogEventLevel.Debug, enrichFromLogContext: true);
+var logger = context.CreateLogger<TPipeline>();
+// ... pipeline 실행 ...
+await Verify(context.ExtractFirstLogData()).UseDirectory("Snapshots/CtxEnricher");
+```
+
+### Metrics MetricsTagContext 검증
+
+```csharp
+// MetricsTagContext LIFO 패턴
+var disposableA = MetricsTagContext.Push("ctx.tag_a", "valueA");
+var disposableB = MetricsTagContext.Push("ctx.tag_b", "valueB");
+
+MetricsTagContext.HasTags.ShouldBeTrue();
+MetricsTagContext.CurrentTags!.Count.ShouldBe(2);
+
+disposableB.Dispose();  // LIFO: B 먼저 제거
+MetricsTagContext.CurrentTags!.Count.ShouldBe(1);
+```
+
+### Tracing Activity.Tags 캡처
+
+```csharp
+private Activity? _capturedActivity;
+_activityListener = new ActivityListener
+{
+    ShouldListenTo = source => source.Name == _activitySource.Name,
+    Sample = (ref ActivityCreationOptions<ActivityContext> _) =>
+        ActivitySamplingResult.AllDataAndRecorded,
+    ActivityStopped = activity => _capturedActivity = activity
+};
+ActivitySource.AddActivityListener(_activityListener);
+
+// ... pipeline 실행 후 ...
+var tags = _capturedActivity!.TagObjects
+    .OrderBy(t => t.Key)
+    .ToDictionary(t => t.Key, t => t.Value?.ToString());
+await Verify(tags).UseDirectory("Snapshots/CtxEnricher");
+```
+
+### 스냅샷 폴더 구조
+
+```
+Snapshots/
+├── Logging/       ← 기본 파이프라인 로깅 구조 검증
+├── Metrics/       ← 기본 파이프라인 메트릭 태그 검증
+├── Tracing/       ← 기본 파이프라인 트레이싱 태그 검증
+└── CtxEnricher/   ← Enricher 통합 3-Pillar 검증
+```
