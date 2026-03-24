@@ -14,10 +14,9 @@ public static class MetricsTagContext
     /// </summary>
     public static IDisposable Push(string name, object? value)
     {
-        var tags = _tags.Value ??= [];
-        var entry = new KeyValuePair<string, object?>(name, value);
-        tags.Add(entry);
-        return new MetricsTagDisposable(tags, entry);
+        var tags = _tags.Value ??= new(4);
+        tags.Add(new KeyValuePair<string, object?>(name, value));
+        return new MetricsTagDisposable(tags);
     }
 
     /// <summary>
@@ -32,9 +31,8 @@ public static class MetricsTagContext
     public static bool HasTags => _tags.Value is { Count: > 0 };
 
     private sealed class MetricsTagDisposable(
-        List<KeyValuePair<string, object?>> tags,
-        KeyValuePair<string, object?> entry) : IDisposable
+        List<KeyValuePair<string, object?>> tags) : IDisposable
     {
-        public void Dispose() => tags.Remove(entry);
+        public void Dispose() => tags.RemoveAt(tags.Count - 1);
     }
 }
