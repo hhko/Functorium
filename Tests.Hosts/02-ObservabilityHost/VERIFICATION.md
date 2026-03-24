@@ -359,7 +359,7 @@
 
 ```csharp
 public interface IOperatorContext { string OperatorId { get; } }              // 비-root
-[LogEnricherRoot] public interface ICustomerRequest { string CustomerId { get; } }  // root
+[CtxEnricherRoot] public interface ICustomerRequest { string CustomerId { get; } }  // root
 
 public sealed record Request(string CustomerId, List<OrderLine> Lines, string OperatorId)
     : ICommandRequest<Response>, ICustomerRequest, IOperatorContext;
@@ -369,7 +369,7 @@ public sealed record Request(string CustomerId, List<OrderLine> Lines, string Op
 
 | 프로퍼티 | 소속 인터페이스 | 기대 ctx 필드 | 스코프 |
 |---------|---------------|-------------|--------|
-| `CustomerId` | `[LogEnricherRoot] ICustomerRequest` | `ctx.customer_id` | Root |
+| `CustomerId` | `[CtxEnricherRoot] ICustomerRequest` | `ctx.customer_id` | Root |
 | `OperatorId` | `IOperatorContext` | `ctx.operator_context.operator_id` | Interface |
 | `Lines` | 없음 (직접 프로퍼티) | `ctx.place_order_command.request.lines_count` | Usecase |
 
@@ -383,7 +383,7 @@ public sealed record Request(string CustomerId, List<OrderLine> Lines, string Op
 
 ```csharp
 public sealed record OrderPlacedEvent(
-    [LogEnricherRoot] string CustomerId,
+    [CtxEnricherRoot] string CustomerId,
     string OrderId,
     int LineCount,
     decimal TotalAmount,

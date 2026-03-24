@@ -93,7 +93,7 @@
 ### 일반 트랜잭션 (1~100개 이벤트)
 - **개선된 방식 그대로 사용**: Observability 포함해도 수 밀리초 수준
 - 개별 핸들러가 정확한 타입으로 호출됨 ✅
-- LogEnricher가 정확한 이벤트 타입으로 동작 ✅
+- CtxEnricher가 정확한 이벤트 타입으로 동작 ✅
 
 ### 대량 처리 (1,000개 이상)
 Observability 오버헤드가 우려되는 경우 다음 전략 적용 가능:
@@ -111,7 +111,7 @@ Observability 오버헤드가 우려되는 경우 다음 전략 적용 가능:
 | `request.event.type` 정확성 | `"BulkDomainEvent"` ❌ | `"CreatedEvent"` ✅ |
 | `request.event.id` 정확성 | 래퍼 EventId ❌ | 실제 EventId ✅ |
 | IDomainEventHandler 호출 | 호출 안 됨 ❌ | 항상 호출 ✅ |
-| IDomainEventLogEnricher 동작 | BulkDomainEvent 타입으로 resolve ❌ | 실제 이벤트 타입으로 resolve ✅ |
+| IDomainEventCtxEnricher 동작 | BulkDomainEvent 타입으로 resolve ❌ | 실제 이벤트 타입으로 resolve ✅ |
 | Domain 계층 순수성 | BulkDomainEvent, BulkDeletedEvent, IBulkEventInfo 혼재 | 순수 도메인 타입만 ✅ |
 | 핸들러 Activity Span | N이벤트 → 1 span | N이벤트 → N span ✅ |
 

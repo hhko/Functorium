@@ -830,8 +830,8 @@ OrderLineCount  → ctx.order_line_count
 | Adapter Tracing 구조 | `Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortTracingStructureTests.cs` |
 | DomainEvent Publisher Logging | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventPublisherLoggingStructureTests.cs` |
 | DomainEvent Handler Logging | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerLoggingStructureTests.cs` |
-| CtxEnricher Source Generator | `Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/LogEnricherGeneratorTests.cs` |
-| DomainEvent CtxEnricher Source Generator | `Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/DomainEventLogEnricherGeneratorTests.cs` |
+| CtxEnricher Source Generator | `Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/CtxEnricherGeneratorTests.cs` |
+| DomainEvent CtxEnricher Source Generator | `Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/DomainEventCtxEnricherGeneratorTests.cs` |
 | Ctx Enricher 통합 | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseLoggingPipelineEnricherTests.cs` |
 | DomainEvent Handler Enricher Logging | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerEnricherLoggingStructureTests.cs` |
 | DomainEvent Handler Enricher Metrics | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerMetricsStructureTests.cs` |

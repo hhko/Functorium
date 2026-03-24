@@ -568,7 +568,7 @@
 
 ```csharp
 public interface IOperatorContext { string OperatorId { get; } }              // 비-root
-[LogEnricherRoot] public interface ICustomerRequest { string CustomerId { get; } }  // root
+[CtxEnricherRoot] public interface ICustomerRequest { string CustomerId { get; } }  // root
 
 public sealed record Request(
     string CustomerId, Seq<OrderLineRequest> OrderLines,
@@ -580,7 +580,7 @@ public sealed record Request(
 
 | 프로퍼티 | 소속 인터페이스 | 기대 ctx 필드 | 스코프 |
 |---------|---------------|-------------|--------|
-| `CustomerId` | `[LogEnricherRoot] ICustomerRequest` | `ctx.customer_id` | Root |
+| `CustomerId` | `[CtxEnricherRoot] ICustomerRequest` | `ctx.customer_id` | Root |
 | `OperatorId` | `IOperatorContext` | `ctx.operator_context.operator_id` | Interface |
 | `OrderLines` | 없음 (직접 프로퍼티) | `ctx.create_order_command.request.order_lines_count` | Usecase |
 | `ShippingAddress` | 없음 (직접 프로퍼티) | `ctx.create_order_command.request.shipping_address` | Usecase |

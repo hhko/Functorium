@@ -108,13 +108,13 @@ services
 ```csharp
 // Usecase Log Enricher (수동 등록 — ICustomUsecasePipeline이 아니므로 Scrutor 스캔 대상 아님)
 services.AddScoped<
-    IUsecaseLogEnricher<CreateOrderCommand.Request, FinResponse<CreateOrderCommand.Response>>,
-    CreateOrderCommandRequestLogEnricher>();
+    IUsecaseCtxEnricher<CreateOrderCommand.Request, FinResponse<CreateOrderCommand.Response>>,
+    CreateOrderCommandRequestCtxEnricher>();
 
 // Domain Event Log Enricher
 services.AddScoped<
-    IDomainEventLogEnricher<Order.CreatedEvent>,
-    OrderCreatedEventLogEnricher>();
+    IDomainEventCtxEnricher<Order.CreatedEvent>,
+    OrderCreatedEventCtxEnricher>();
 ```
 
 ## Provider 분기 패턴 (InMemory / Sqlite)
@@ -194,5 +194,5 @@ private static void RegisterDapperQueries(IServiceCollection services, string co
 4. OpenTelemetry      : RegisterOpenTelemetry() → ConfigurePipelines() → Build()
 5. Repository 등록    : RegisterScopedObservablePort<IRepo, RepoObservable>()
 6. Query Adapter 등록 : RegisterScopedObservablePort<IQuery, QueryObservable>()
-7. Log Enricher 등록  : AddScoped<IUsecaseLogEnricher<...>, Enricher>()
+7. Log Enricher 등록  : AddScoped<IUsecaseCtxEnricher<...>, Enricher>()
 ```

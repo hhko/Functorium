@@ -1,7 +1,7 @@
-# DomainEventLogEnricherGenerator — Layered Architecture 지원 검증
+# DomainEventCtxEnricherGenerator — Layered Architecture 지원 검증
 
 **검증 일시**: 2026-03-21
-**변경 사항**: `DomainEventLogEnricherGenerator`가 `IDomainEventHandler<T>` 기반 감지로 전환되어 Layered Architecture에서도 자동 생성 동작
+**변경 사항**: `DomainEventCtxEnricherGenerator`가 `IDomainEventHandler<T>` 기반 감지로 전환되어 Layered Architecture에서도 자동 생성 동작
 
 ---
 
@@ -101,20 +101,20 @@ FailExceptional Result: Fail(데이터베이스 연결이 끊어졌습니다)
 **실행 명령**: `dotnet run --project Tests.Hosts/01-SingleHost/Src/LayeredArch`
 **검증 방법**: `POST /api/customers` → `POST /api/products` → `POST /api/orders`
 
-> 이전에는 수동 LogEnricher 파일(`CustomerCreatedEvent.LogEnricher.cs`, `OrderCreatedEvent.LogEnricher.cs`)이 Application 프로젝트에 필요했으나,
-> 이제 `DomainEventLogEnricherGenerator`가 Handler 감지를 통해 자동 생성한다.
+> 이전에는 수동 CtxEnricher 파일(`CustomerCreatedEvent.CtxEnricher.cs`, `OrderCreatedEvent.CtxEnricher.cs`)이 Application 프로젝트에 필요했으나,
+> 이제 `DomainEventCtxEnricherGenerator`가 Handler 감지를 통해 자동 생성한다.
 
 ### 3.1 자동 생성된 Enricher 목록
 
 | # | 생성된 파일 | 감지 Handler |
 |---|------------|-------------|
-| 1 | `CustomerCreatedEventLogEnricher.g.cs` | `CustomerCreatedEvent` |
-| 2 | `OrderCreatedEventLogEnricher.g.cs` | `OrderCreatedEvent` |
-| 3 | `ProductCreatedEventLogEnricher.g.cs` | `ProductCreatedEvent` |
-| 4 | `ProductUpdatedEventLogEnricher.g.cs` | `ProductUpdatedEvent` |
-| 5 | `ProductTagAssignedEventLogEnricher.g.cs` | `ProductTagAssignedEvent` |
-| 6 | `ProductTagUnassignedEventLogEnricher.g.cs` | `ProductTagUnassignedEvent` |
-| 7 | `InventoryStockDeductedEventLogEnricher.g.cs` | `InventoryStockDeductedEvent` |
+| 1 | `CustomerCreatedEventCtxEnricher.g.cs` | `CustomerCreatedEvent` |
+| 2 | `OrderCreatedEventCtxEnricher.g.cs` | `OrderCreatedEvent` |
+| 3 | `ProductCreatedEventCtxEnricher.g.cs` | `ProductCreatedEvent` |
+| 4 | `ProductUpdatedEventCtxEnricher.g.cs` | `ProductUpdatedEvent` |
+| 5 | `ProductTagAssignedEventCtxEnricher.g.cs` | `ProductTagAssignedEvent` |
+| 6 | `ProductTagUnassignedEventCtxEnricher.g.cs` | `ProductTagUnassignedEvent` |
+| 7 | `InventoryStockDeductedEventCtxEnricher.g.cs` | `InventoryStockDeductedEvent` |
 
 ### 3.2 Customer.CreatedEvent — Enricher 로그
 
@@ -228,11 +228,11 @@ LayeredArch.Domain (이벤트 정의)
 
 LayeredArch.Application (Handler + 자동 생성 Enricher)
 ├─ CustomerCreatedEvent : IDomainEventHandler<Customer.CreatedEvent>  ← 감지
-│   └─ [Generated] CustomerCreatedEventLogEnricher.g.cs
+│   └─ [Generated] CustomerCreatedEventCtxEnricher.g.cs
 ├─ OrderCreatedEvent : IDomainEventHandler<Order.CreatedEvent>        ← 감지
-│   └─ [Generated] OrderCreatedEventLogEnricher.g.cs
+│   └─ [Generated] OrderCreatedEventCtxEnricher.g.cs
 └─ ProductCreatedEvent : IDomainEventHandler<Product.CreatedEvent>    ← 감지
-    └─ [Generated] ProductCreatedEventLogEnricher.g.cs
+    └─ [Generated] ProductCreatedEventCtxEnricher.g.cs
 ```
 
 ---
@@ -251,5 +251,5 @@ LayeredArch.Application (Handler + 자동 생성 Enricher)
 | 8 | SingleHost — EntityId `.ToString()` 변환 정상 | **PASS** |
 | 9 | SingleHost — ValueObject `.ToString()` 변환 정상 | **PASS** |
 | 10 | SingleHost — 컬렉션 `_count` 접미사 정상 | **PASS** |
-| 11 | 수동 LogEnricher 파일 제거 후 자동 생성 대체 | **PASS** |
+| 11 | 수동 CtxEnricher 파일 제거 후 자동 생성 대체 | **PASS** |
 | 12 | 기존 테스트 회귀 없음 (1155 passed, 0 failed) | **PASS** |
