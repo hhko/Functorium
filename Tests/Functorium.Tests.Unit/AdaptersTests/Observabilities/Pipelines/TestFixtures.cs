@@ -122,4 +122,41 @@ public static class TestFixtures
             }
         }
     }
+
+    /// <summary>
+    /// 3-Pillar (Logging + Tracing + MetricsTag) 전파를 테스트하기 위한 Enricher.
+    /// CtxEnricherContext.Push를 사용하여 모든 Pillar에 동시 전파합니다.
+    /// </summary>
+    internal sealed class TestCommandCtx3PillarEnricher
+        : IUsecaseCtxEnricher<TestCommandRequest, TestResponse>
+    {
+        public IDisposable? EnrichRequest(TestCommandRequest request)
+        {
+            var disposables = new List<IDisposable>(3);
+            // Default (Logging + Tracing)
+            disposables.Add(CtxEnricherContext.Push("ctx.customer_id", "CUST-001"));
+            // All (Logging + Tracing + MetricsTag)
+            disposables.Add(CtxEnricherContext.Push("ctx.is_express", true, CtxPillar.All));
+            // MetricsValue (수치 기록)
+            disposables.Add(CtxEnricherContext.Push("ctx.item_count", 5, CtxPillar.Default | CtxPillar.MetricsValue));
+            return new CompositeDisposable(disposables);
+        }
+
+        public IDisposable? EnrichResponse(TestCommandRequest request, TestResponse response)
+        {
+            var disposables = new List<IDisposable>(2);
+            disposables.Add(CtxEnricherContext.Push("ctx.customer_id", "CUST-001"));
+            disposables.Add(CtxEnricherContext.Push("ctx.is_express", true, CtxPillar.All));
+            return new CompositeDisposable(disposables);
+        }
+
+        private sealed class CompositeDisposable(List<IDisposable> disposables) : IDisposable
+        {
+            public void Dispose()
+            {
+                for (int i = disposables.Count - 1; i >= 0; i--)
+                    disposables[i].Dispose();
+            }
+        }
+    }
 }

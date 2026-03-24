@@ -101,7 +101,7 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
         await sut.Publish(domainEvent).Run().RunAsync();
 
         // Assert
-        await Verify(context.ExtractFirstLogData()).UseDirectory("Snapshots/DomainEventPublisherLoggingStructure");
+        await Verify(context.ExtractFirstLogData()).UseDirectory("Snapshots/Logging");
     }
 
     // ===== Single Event - Success Response 로그 필드 검증 =====
@@ -129,7 +129,7 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots/DomainEventPublisherLoggingStructure")
+            .UseDirectory("Snapshots/Logging")
             .ScrubMember("response.elapsed");
     }
 
@@ -160,7 +160,7 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots/DomainEventPublisherLoggingStructure")
+            .UseDirectory("Snapshots/Logging")
             .ScrubMember("response.elapsed");
     }
 
@@ -192,7 +192,7 @@ public sealed class DomainEventPublisherLoggingStructureTests : IDisposable
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots/DomainEventPublisherLoggingStructure")
+            .UseDirectory("Snapshots/Logging")
             .ScrubMember("response.elapsed");
     }
 }

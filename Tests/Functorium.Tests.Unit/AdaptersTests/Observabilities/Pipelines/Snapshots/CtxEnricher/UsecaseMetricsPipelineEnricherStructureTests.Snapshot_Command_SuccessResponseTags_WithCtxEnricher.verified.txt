@@ -1,0 +1,9 @@
+﻿{
+  ctx.is_express: True,
+  request.category.name: usecase,
+  request.category.type: command,
+  request.handler.method: Handle,
+  request.handler.name: TestFixtures,
+  request.layer: application,
+  response.status: success
+}

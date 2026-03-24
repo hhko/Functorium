@@ -205,7 +205,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
 
         // Assert
         var tags = ExtractAndOrderTags("requests");
-        await Verify(tags).UseDirectory("Snapshots");
+        await Verify(tags).UseDirectory("Snapshots/Metrics");
     }
 
     /// <summary>
@@ -226,7 +226,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
 
         // Assert
         var tags = ExtractAndOrderTags("requests");
-        await Verify(tags).UseDirectory("Snapshots");
+        await Verify(tags).UseDirectory("Snapshots/Metrics");
     }
 
     /// <summary>
@@ -247,7 +247,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
 
         // Assert
         var tags = ExtractAndOrderTags("responses", "requests");
-        await Verify(tags).UseDirectory("Snapshots");
+        await Verify(tags).UseDirectory("Snapshots/Metrics");
     }
 
     /// <summary>
@@ -268,7 +268,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
 
         // Assert
         var tags = ExtractAndOrderTags("responses", "requests");
-        await Verify(tags).UseDirectory("Snapshots");
+        await Verify(tags).UseDirectory("Snapshots/Metrics");
     }
 
     /// <summary>
@@ -289,7 +289,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
 
         // Assert
         var tags = ExtractAndOrderTags("responses", "requests");
-        await Verify(tags).UseDirectory("Snapshots");
+        await Verify(tags).UseDirectory("Snapshots/Metrics");
     }
 
     /// <summary>
@@ -310,7 +310,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
 
         // Assert
         var tags = ExtractAndOrderTags("responses", "requests");
-        await Verify(tags).UseDirectory("Snapshots");
+        await Verify(tags).UseDirectory("Snapshots/Metrics");
     }
 
     /// <summary>
@@ -331,7 +331,7 @@ public class UsecaseMetricsPipelineStructureTests : IDisposable
 
         // Assert
         var tags = ExtractAndOrderTags("duration");
-        await Verify(tags).UseDirectory("Snapshots");
+        await Verify(tags).UseDirectory("Snapshots/Metrics");
     }
 
     #endregion

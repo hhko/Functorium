@@ -61,7 +61,7 @@ public sealed class UsecaseLoggingPipelineStructureTests
         await pipeline.Handle(request, next, CancellationToken.None);
 
         // Assert
-        await Verify(context.ExtractFirstLogData()).UseDirectory("Snapshots");
+        await Verify(context.ExtractFirstLogData()).UseDirectory("Snapshots/Logging");
     }
 
     [Fact]
@@ -81,7 +81,7 @@ public sealed class UsecaseLoggingPipelineStructureTests
         await pipeline.Handle(request, next, CancellationToken.None);
 
         // Assert
-        await Verify(context.ExtractFirstLogData()).UseDirectory("Snapshots");
+        await Verify(context.ExtractFirstLogData()).UseDirectory("Snapshots/Logging");
     }
 
     // ===== Success Response 로그 필드 검증 =====
@@ -106,7 +106,7 @@ public sealed class UsecaseLoggingPipelineStructureTests
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/Logging")
             .ScrubMember("response.elapsed");
     }
 
@@ -130,7 +130,7 @@ public sealed class UsecaseLoggingPipelineStructureTests
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/Logging")
             .ScrubMember("response.elapsed");
     }
 
@@ -159,7 +159,7 @@ public sealed class UsecaseLoggingPipelineStructureTests
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/Logging")
             .ScrubMember("response.elapsed");
     }
 
@@ -186,7 +186,7 @@ public sealed class UsecaseLoggingPipelineStructureTests
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/Logging")
             .ScrubMember("response.elapsed");
     }
 
@@ -215,7 +215,7 @@ public sealed class UsecaseLoggingPipelineStructureTests
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/Logging")
             .ScrubMember("response.elapsed");
     }
 
@@ -243,7 +243,7 @@ public sealed class UsecaseLoggingPipelineStructureTests
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/Logging")
             .ScrubMember("response.elapsed");
     }
 
@@ -278,7 +278,7 @@ public sealed class UsecaseLoggingPipelineStructureTests
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/Logging")
             .ScrubMember("response.elapsed");
     }
 }

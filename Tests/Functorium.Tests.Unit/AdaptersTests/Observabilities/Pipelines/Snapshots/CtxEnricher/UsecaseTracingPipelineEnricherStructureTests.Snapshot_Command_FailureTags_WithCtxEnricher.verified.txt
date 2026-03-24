@@ -1,0 +1,14 @@
+﻿{
+  ctx.customer_id: CUST-001,
+  ctx.is_express: True,
+  ctx.item_count: 5,
+  error.code: Test.ExpectedError,
+  error.type: expected,
+  request.category.name: usecase,
+  request.category.type: command,
+  request.handler.method: Handle,
+  request.handler.name: TestFixtures,
+  request.layer: application,
+  response.elapsed: {Scrubbed},
+  response.status: failure
+}

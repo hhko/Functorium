@@ -213,7 +213,7 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
         // Assert
         var tags = ExtractActivityTags();
         await Verify(tags)
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/Tracing")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
@@ -233,7 +233,7 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
         // Assert
         var tags = ExtractActivityTags();
         await Verify(tags)
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/Tracing")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
@@ -253,7 +253,7 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
         // Assert
         var tags = ExtractActivityTags();
         await Verify(tags)
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/Tracing")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
@@ -273,7 +273,7 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
         // Assert
         var tags = ExtractActivityTags();
         await Verify(tags)
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/Tracing")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
@@ -293,7 +293,7 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
         // Assert
         var tags = ExtractActivityTags();
         await Verify(tags)
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/Tracing")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
@@ -313,7 +313,7 @@ public sealed class UsecaseTracingPipelineStructureTests : IDisposable
         // Assert
         var tags = ExtractActivityTags();
         await Verify(tags)
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/Tracing")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 

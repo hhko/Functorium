@@ -183,7 +183,7 @@ public sealed class DomainEventPublisherMetricsStructureTests : IDisposable
 
         // Assert
         var tags = ExtractAndOrderTags("requests");
-        await Verify(tags).UseDirectory("Snapshots/DomainEventPublisherMetricsStructure");
+        await Verify(tags).UseDirectory("Snapshots/Metrics");
     }
 
     /// <summary>
@@ -207,7 +207,7 @@ public sealed class DomainEventPublisherMetricsStructureTests : IDisposable
 
         // Assert
         var tags = ExtractAndOrderTags("responses", "requests");
-        await Verify(tags).UseDirectory("Snapshots/DomainEventPublisherMetricsStructure");
+        await Verify(tags).UseDirectory("Snapshots/Metrics");
     }
 
     /// <summary>
@@ -232,7 +232,7 @@ public sealed class DomainEventPublisherMetricsStructureTests : IDisposable
 
         // Assert
         var tags = ExtractAndOrderTags("responses", "requests");
-        await Verify(tags).UseDirectory("Snapshots/DomainEventPublisherMetricsStructure");
+        await Verify(tags).UseDirectory("Snapshots/Metrics");
     }
 
     /// <summary>
@@ -258,7 +258,7 @@ public sealed class DomainEventPublisherMetricsStructureTests : IDisposable
 
         // Assert
         var tags = ExtractAndOrderTags("responses", "requests");
-        await Verify(tags).UseDirectory("Snapshots/DomainEventPublisherMetricsStructure");
+        await Verify(tags).UseDirectory("Snapshots/Metrics");
     }
 
     /// <summary>
@@ -282,7 +282,7 @@ public sealed class DomainEventPublisherMetricsStructureTests : IDisposable
 
         // Assert
         var tags = ExtractAndOrderTags("duration");
-        await Verify(tags).UseDirectory("Snapshots/DomainEventPublisherMetricsStructure");
+        await Verify(tags).UseDirectory("Snapshots/Metrics");
     }
 
     #endregion

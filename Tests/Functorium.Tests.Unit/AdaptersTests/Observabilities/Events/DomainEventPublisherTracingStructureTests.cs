@@ -232,7 +232,7 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
         // Assert
         var tags = ExtractActivityTags();
         await Verify(tags)
-            .UseDirectory("Snapshots/DomainEventPublisherTracingStructure")
+            .UseDirectory("Snapshots/Tracing")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
@@ -256,7 +256,7 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
         // Assert
         var tags = ExtractActivityTags();
         await Verify(tags)
-            .UseDirectory("Snapshots/DomainEventPublisherTracingStructure")
+            .UseDirectory("Snapshots/Tracing")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 
@@ -281,7 +281,7 @@ public sealed class DomainEventPublisherTracingStructureTests : IDisposable
         // Assert
         var tags = ExtractActivityTags();
         await Verify(tags)
-            .UseDirectory("Snapshots/DomainEventPublisherTracingStructure")
+            .UseDirectory("Snapshots/Tracing")
             .ScrubMember(ObservabilityNaming.CustomAttributes.ResponseElapsed);
     }
 

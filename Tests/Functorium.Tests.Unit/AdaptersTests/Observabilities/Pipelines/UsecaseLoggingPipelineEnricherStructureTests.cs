@@ -51,7 +51,7 @@ public sealed class UsecaseLoggingPipelineEnricherStructureTests
         await pipeline.Handle(request, next, CancellationToken.None);
 
         // Assert
-        await Verify(context.ExtractFirstLogData()).UseDirectory("Snapshots");
+        await Verify(context.ExtractFirstLogData()).UseDirectory("Snapshots/CtxEnricher");
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public sealed class UsecaseLoggingPipelineEnricherStructureTests
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/CtxEnricher")
             .ScrubMember("response.elapsed");
     }
 
@@ -106,7 +106,7 @@ public sealed class UsecaseLoggingPipelineEnricherStructureTests
 
         // Assert
         await Verify(context.ExtractSecondLogData())
-            .UseDirectory("Snapshots")
+            .UseDirectory("Snapshots/CtxEnricher")
             .ScrubMember("response.elapsed");
     }
 }
