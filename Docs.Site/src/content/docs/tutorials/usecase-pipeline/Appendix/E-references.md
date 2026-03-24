@@ -115,7 +115,7 @@ C#을 위한 함수형 프로그래밍 라이브러리. `Fin<T>`, `Option<T>`, `
 | `ICustomUsecasePipeline.cs` | Custom Pipeline 마커 인터페이스 (Scrutor 자동 검색용) |
 | `UsecaseMetricCustomPipelineBase.cs` | Custom Metric Pipeline 베이스 클래스 |
 | `UsecaseTracingCustomPipelineBase.cs` | Custom Tracing Pipeline 베이스 클래스 |
-| `IUsecaseLogEnricher.cs` | 로그 커스텀 속성 Enricher 인터페이스 |
+| `IUsecaseCtxEnricher.cs` | 로그 커스텀 속성 Enricher 인터페이스 |
 
 ---
 

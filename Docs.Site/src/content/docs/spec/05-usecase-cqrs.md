@@ -25,7 +25,7 @@ title: "유스케이스 CQRS 사양"
 | `ICacheable` | `Functorium.Applications.Usecases` | 캐싱 계약 인터페이스 |
 | `IUnitOfWork` | `Functorium.Applications.Persistence` | 영속성 트랜잭션 계약 |
 | `IUnitOfWorkTransaction` | `Functorium.Applications.Persistence` | 명시적 트랜잭션 스코프 |
-| `LogEnricherIgnoreAttribute` | `Functorium.Applications.Usecases` | LogEnricher 자동 생성 제외 속성 |
+| `CtxIgnoreAttribute` | `Functorium.Applications.Usecases` | CtxEnricher 자동 생성 제외 속성 |
 
 ### 핵심 규칙
 
@@ -446,23 +446,23 @@ await tx.CommitAsync(ct);
 
 ---
 
-## LogEnricherIgnoreAttribute
+## CtxIgnoreAttribute
 
 ```csharp
 [AttributeUsage(
     AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Parameter,
     AllowMultiple = false,
     Inherited = false)]
-public sealed class LogEnricherIgnoreAttribute : Attribute;
+public sealed class CtxIgnoreAttribute : Attribute;
 ```
 
-이 속성이 적용된 Request record, 프로퍼티, 또는 record 생성자 파라미터는 LogEnricher 소스 생성기에서 자동 생성 대상에서 제외됩니다.
+이 속성이 적용된 Request record, 프로퍼티, 또는 record 생성자 파라미터는 CtxEnricher 소스 생성기에서 자동 생성 대상에서 제외됩니다.
 
 | 대상 | 효과 |
 |------|------|
-| `Class` | record 전체를 LogEnricher 생성에서 제외 |
-| `Property` | 해당 프로퍼티만 LogEnricher에서 제외 |
-| `Parameter` | 해당 record 생성자 파라미터만 LogEnricher에서 제외 |
+| `Class` | record 전체를 CtxEnricher 생성에서 제외 |
+| `Property` | 해당 프로퍼티만 CtxEnricher에서 제외 |
+| `Parameter` | 해당 record 생성자 파라미터만 CtxEnricher에서 제외 |
 
 ---
 

@@ -127,7 +127,7 @@ internal sealed class UsecaseValidationPipeline<TRequest, TResponse>
 
 ### UsecaseLoggingPipeline
 
-요청/응답 정보를 구조화 로깅으로 기록합니다. `IUsecaseLogEnricher`가 DI에 등록되어 있으면 커스텀 속성을 자동 Push합니다.
+요청/응답 정보를 구조화 로깅으로 기록합니다. `IUsecaseCtxEnricher`가 DI에 등록되어 있으면 커스텀 속성을 자동 Push합니다.
 
 ```csharp
 internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
@@ -138,7 +138,7 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
 
 | 항목 | 설명 |
 |------|------|
-| DI 의존성 | `ILogger<UsecaseLoggingPipeline<TRequest, TResponse>>`, `IUsecaseLogEnricher<TRequest, TResponse>?` (선택) |
+| DI 의존성 | `ILogger<UsecaseLoggingPipeline<TRequest, TResponse>>`, `IUsecaseCtxEnricher<TRequest, TResponse>?` (선택) |
 | 요청 로그 | Information 레벨, `{Layer} {Category} {CategoryType} {Handler} {Method} requesting` |
 | 응답 로그 (성공) | Information 레벨, `responded success in {Elapsed:0.0000} ms` |
 | 응답 로그 (Expected 에러) | Warning 레벨, `responded failure ... with {@Error}` |
@@ -424,7 +424,7 @@ public static OpenTelemetryBuilder RegisterOpenTelemetry(
 1. `OpenTelemetryOptions` 읽기 (`IOptions<OpenTelemetryOptions>`)
 2. Resource Attributes 생성
 3. Serilog 설정 (ReadFrom.Configuration + WriteTo.OpenTelemetry + ErrorsDestructuringPolicy)
-4. LogEnricherContext PushProperty 팩토리 설정
+4. CtxEnricherContext PushProperty 팩토리 설정
 5. OpenTelemetry 설정 (Metrics + Tracing + OTLP Exporter)
 6. Adapter Observability 등록 (`ActivitySource`, `IMeterFactory`)
 7. Usecase Pipeline 등록

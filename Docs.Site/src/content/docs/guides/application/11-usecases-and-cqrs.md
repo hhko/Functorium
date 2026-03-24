@@ -860,18 +860,18 @@ public sealed class GetAllProductsQuery
 
 ---
 
-## Source Generator LogEnricher
+## Source Generator CtxEnricher
 
 ### 자동 생성
 
-`ICommandRequest<T>` 또는 `IQueryRequest<T>`를 구현하는 Request record를 정의하면, `LogEnricherGenerator`가 해당 Request/Response의 스칼라 속성을 `ctx.*` 필드로 자동 변환하는 `IUsecaseLogEnricher<TRequest, TResponse>` 구현 코드를 생성합니다.
+`ICommandRequest<T>` 또는 `IQueryRequest<T>`를 구현하는 Request record를 정의하면, `CtxEnricherGenerator`가 해당 Request/Response의 스칼라 속성을 `ctx.*` 필드로 자동 변환하는 `IUsecaseCtxEnricher<TRequest, TResponse>` 구현 코드를 생성합니다.
 
 ```csharp
 public sealed class PlaceOrderCommand
 {
     public sealed record Request(string CustomerId, List<OrderLine> Lines)
         : ICommandRequest<Response>, ICustomerRequest;
-    //   CustomerId → ctx.customer_id  (Root: ICustomerRequest에 [LogEnricherRoot])
+    //   CustomerId → ctx.customer_id  (Root: ICustomerRequest에 [CtxRoot])
     //   Lines      → ctx.place_order_command.request.lines_count  (컬렉션 → _count)
 
     public sealed record Response(string OrderId, int LineCount, decimal TotalAmount);
@@ -881,27 +881,27 @@ public sealed class PlaceOrderCommand
 }
 ```
 
-### `[LogEnricherRoot]` — 교차 Usecase 검색
+### `[CtxRoot]` — 교차 Usecase 검색
 
-`[LogEnricherRoot]`를 인터페이스에 적용하면, 해당 인터페이스의 속성이 Usecase prefix 없이 `ctx.{field}`로 승격됩니다. 여러 Usecase가 같은 인터페이스를 구현하면 OpenSearch에서 `ctx.customer_id: "CUST-001"` 하나로 모든 활동을 검색할 수 있습니다:
+`[CtxRoot]`를 인터페이스에 적용하면, 해당 인터페이스의 속성이 Usecase prefix 없이 `ctx.{field}`로 승격됩니다. 여러 Usecase가 같은 인터페이스를 구현하면 OpenSearch에서 `ctx.customer_id: "CUST-001"` 하나로 모든 활동을 검색할 수 있습니다:
 
 ```csharp
-[LogEnricherRoot]
+[CtxRoot]
 public interface ICustomerRequest { string CustomerId { get; } }
 ```
 
-### `[LogEnricherIgnore]` — 생성 제외
+### `[CtxIgnore]` — 생성 제외
 
 민감 정보나 불필요한 속성을 Enricher 생성에서 제외합니다:
 
 ```csharp
 public sealed record Request(
     string CustomerId,
-    [property: LogEnricherIgnore] string InternalToken  // ctx 필드 생성 안 함
+    [property: CtxIgnore] string InternalToken  // ctx 필드 생성 안 함
 ) : ICommandRequest<Response>;
 ```
 
-> **상세**: [Logging 매뉴얼 §Source Generator LogEnricher](../observability/19-observability-logging#source-generator-자동-생성-logenrichergenerator) 참조.
+> **상세**: [Logging 매뉴얼 §Source Generator CtxEnricher](../observability/19-observability-logging#source-generator-자동-생성-ctxenrichergenerator) 참조.
 
 ---
 

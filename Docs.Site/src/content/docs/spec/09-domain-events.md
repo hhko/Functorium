@@ -20,11 +20,11 @@ Functorium 프레임워크가 제공하는 도메인 이벤트 관련 공개 타
 | `PublishResult` | `Functorium.Applications.Events` | 다중 이벤트 발행 결과 (부분 성공/실패 추적) |
 | `ObservableDomainEventPublisher` | `Functorium.Adapters.Observabilities.Events` | `IDomainEventPublisher` 관찰성 데코레이터 |
 | `ObservableDomainEventNotificationPublisher` | `Functorium.Adapters.Observabilities.Events` | Handler 관점 관찰성을 제공하는 `INotificationPublisher` 구현체 |
-| `IUsecaseLogEnricher<TRequest, TResponse>` | `Functorium.Applications.Observabilities` | Usecase 로그에 비즈니스 컨텍스트 필드를 추가하는 Enricher |
-| `IDomainEventLogEnricher<TEvent>` | `Functorium.Applications.Observabilities` | 도메인 이벤트 핸들러 로그에 비즈니스 컨텍스트 필드를 추가하는 Enricher |
-| `LogEnricherContext` | `Functorium.Applications.Observabilities` | LogContext Push 팩토리를 관리하는 정적 유틸리티 |
-| `LogEnricherRootAttribute` | `Functorium.Applications.Observabilities` | 소스 생성기에서 ctx 루트 레벨로 승격할 필드를 지정 |
-| `LogEnricherIgnoreAttribute` | `Functorium.Applications.Usecases` | 소스 생성기에서 LogEnricher 자동 생성 대상에서 제외 |
+| `IUsecaseCtxEnricher<TRequest, TResponse>` | `Functorium.Applications.Observabilities` | Usecase 로그에 비즈니스 컨텍스트 필드를 추가하는 Enricher |
+| `IDomainEventCtxEnricher<TEvent>` | `Functorium.Applications.Observabilities` | 도메인 이벤트 핸들러 로그에 비즈니스 컨텍스트 필드를 추가하는 Enricher |
+| `CtxEnricherContext` | `Functorium.Applications.Observabilities` | LogContext Push 팩토리를 관리하는 정적 유틸리티 |
+| `CtxRootAttribute` | `Functorium.Applications.Observabilities` | 소스 생성기에서 ctx 루트 레벨로 승격할 필드를 지정 |
+| `CtxIgnoreAttribute` | `Functorium.Applications.Usecases` | 소스 생성기에서 CtxEnricher 자동 생성 대상에서 제외 |
 
 ---
 
@@ -152,6 +152,8 @@ public interface IDomainEventCollector
     void Track(IHasDomainEvents aggregate);
     void TrackRange(IEnumerable<IHasDomainEvents> aggregates);
     IReadOnlyList<IHasDomainEvents> GetTrackedAggregates();
+    void TrackEvent(IDomainEvent domainEvent);
+    IReadOnlyList<IDomainEvent> GetDirectlyTrackedEvents();
 }
 ```
 
@@ -160,6 +162,8 @@ public interface IDomainEventCollector
 | `Track(IHasDomainEvents aggregate)` | `void` | Aggregate를 추적 대상으로 등록 (이미 등록된 경우 무시) |
 | `TrackRange(IEnumerable<IHasDomainEvents> aggregates)` | `void` | 여러 Aggregate를 추적 대상으로 일괄 등록 |
 | `GetTrackedAggregates()` | `IReadOnlyList<IHasDomainEvents>` | 추적 중인 Aggregate 중 도메인 이벤트가 있는 것들을 반환 |
+| `TrackEvent(IDomainEvent domainEvent)` | `void` | Domain Service가 생성한 벌크 이벤트를 직접 추적합니다 |
+| `GetDirectlyTrackedEvents()` | `IReadOnlyList<IDomainEvent>` | Domain Service가 생성한 벌크 이벤트를 직접 추적합니다 |
 
 ### 사용 흐름
 
@@ -352,12 +356,12 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
 | `loggerFactory` | `ILoggerFactory` | 핸들러별 로거 생성용 팩토리 |
 | `meterFactory` | `IMeterFactory` | Meter 팩토리 |
 | `openTelemetryOptions` | `IOptions<OpenTelemetryOptions>` | OpenTelemetry 설정 |
-| `serviceProvider` | `IServiceProvider` | `IDomainEventLogEnricher` 해석용 DI 컨테이너 |
+| `serviceProvider` | `IServiceProvider` | `IDomainEventCtxEnricher` 해석용 DI 컨테이너 |
 
 **동작 방식:**
 - `IDomainEvent`인 Notification에만 관찰성을 적용합니다.
 - `IDomainEvent`가 아닌 Notification은 관찰성 없이 기본 ForeachAwait 방식으로 발행합니다.
-- 핸들러 처리 전 `IDomainEventLogEnricher<TEvent>`를 DI에서 해석하여 LogContext에 커스텀 속성을 자동 Push합니다.
+- 핸들러 처리 전 `IDomainEventCtxEnricher<TEvent>`를 DI에서 해석하여 LogContext에 커스텀 속성을 자동 Push합니다.
 
 **관찰성 항목:**
 
@@ -383,16 +387,16 @@ services.AddMediator(options =>
 
 ---
 
-## Log Enricher (IUsecaseLogEnricher, IDomainEventLogEnricher)
+## Ctx Enricher (IUsecaseCtxEnricher, IDomainEventCtxEnricher)
 
-### IUsecaseLogEnricher\<TRequest, TResponse\>
+### IUsecaseCtxEnricher\<TRequest, TResponse\>
 
 Usecase 로그에 비즈니스 컨텍스트 필드를 추가하는 Enricher 인터페이스입니다. 내장 `UsecaseLoggingPipeline`이 Request/Response 로그 출력 시 `LogContext`에 커스텀 속성을 자동으로 Push합니다.
 
 ```csharp
 namespace Functorium.Applications.Observabilities;
 
-public interface IUsecaseLogEnricher<in TRequest, in TResponse>
+public interface IUsecaseCtxEnricher<in TRequest, in TResponse>
     where TResponse : IFinResponse
 {
     IDisposable? EnrichRequestLog(TRequest request);
@@ -407,20 +411,20 @@ public interface IUsecaseLogEnricher<in TRequest, in TResponse>
 
 **제네릭 제약 조건:** `TResponse`는 `IFinResponse`를 구현해야 합니다.
 
-### IDomainEventLogEnricher\<TEvent\>
+### IDomainEventCtxEnricher\<TEvent\>
 
 도메인 이벤트 핸들러 로그에 비즈니스 컨텍스트 필드를 추가하는 Enricher 인터페이스입니다. `ObservableDomainEventNotificationPublisher`가 Handler 처리 시 `LogContext`에 커스텀 속성을 자동으로 Push합니다.
 
 ```csharp
 namespace Functorium.Applications.Observabilities;
 
-public interface IDomainEventLogEnricher<in TEvent> : IDomainEventLogEnricher
+public interface IDomainEventCtxEnricher<in TEvent> : IDomainEventCtxEnricher
     where TEvent : IDomainEvent
 {
     IDisposable? EnrichLog(TEvent domainEvent);
 }
 
-public interface IDomainEventLogEnricher
+public interface IDomainEventCtxEnricher
 {
     IDisposable? EnrichLog(IDomainEvent domainEvent);
 }
@@ -428,21 +432,21 @@ public interface IDomainEventLogEnricher
 
 | 인터페이스 | 메서드 | 설명 |
 |-----------|--------|------|
-| `IDomainEventLogEnricher<TEvent>` | `EnrichLog(TEvent domainEvent)` | 타입 안전한 이벤트 로그 Enrichment |
-| `IDomainEventLogEnricher` (비제네릭) | `EnrichLog(IDomainEvent domainEvent)` | 런타임 타입 해석 후 호출에 사용하는 브릿지 인터페이스 |
+| `IDomainEventCtxEnricher<TEvent>` | `EnrichLog(TEvent domainEvent)` | 타입 안전한 이벤트 로그 Enrichment |
+| `IDomainEventCtxEnricher` (비제네릭) | `EnrichLog(IDomainEvent domainEvent)` | 런타임 타입 해석 후 호출에 사용하는 브릿지 인터페이스 |
 
-> **구현 규칙:** `IDomainEventLogEnricher`(비제네릭)를 직접 구현하지 마십시오. `IDomainEventLogEnricher<TEvent>`를 구현하면 Default Interface Method로 비제네릭 브릿지가 자동 제공됩니다.
+> **구현 규칙:** `IDomainEventCtxEnricher`(비제네릭)를 직접 구현하지 마십시오. `IDomainEventCtxEnricher<TEvent>`를 구현하면 Default Interface Method로 비제네릭 브릿지가 자동 제공됩니다.
 
 **제네릭 제약 조건:** `TEvent`는 `IDomainEvent`를 구현해야 합니다.
 
-### LogEnricherContext
+### CtxEnricherContext
 
 LogContext Push 팩토리를 관리하는 정적 유틸리티 클래스입니다. Serilog 등 로깅 프레임워크의 `LogContext.PushProperty`를 프레임워크와 연결하는 브릿지 역할을 합니다.
 
 ```csharp
 namespace Functorium.Applications.Observabilities;
 
-public static class LogEnricherContext
+public static class CtxEnricherContext
 {
     public static void SetPushPropertyFactory(Func<string, object?, IDisposable> factory);
     public static IDisposable PushProperty(string name, object? value);
@@ -458,11 +462,11 @@ public static class LogEnricherContext
 
 ---
 
-## 소스 생성기 어트리뷰트 (\[LogEnricherRoot\], \[LogEnricherIgnore\])
+## 소스 생성기 어트리뷰트 (\[CtxRoot\], \[CtxIgnore\])
 
-### LogEnricherRootAttribute
+### CtxRootAttribute
 
-소스 생성기에서 LogEnricher 생성 시 해당 필드를 `ctx` 루트 레벨(`ctx.{field}`)로 승격할 것을 지시하는 어트리뷰트입니다.
+소스 생성기에서 CtxEnricher 생성 시 해당 필드를 `ctx` 루트 레벨(`ctx.{field}`)로 승격할 것을 지시하는 어트리뷰트입니다.
 
 ```csharp
 namespace Functorium.Applications.Observabilities;
@@ -471,7 +475,7 @@ namespace Functorium.Applications.Observabilities;
     AttributeTargets.Interface | AttributeTargets.Property | AttributeTargets.Parameter,
     AllowMultiple = false,
     Inherited = false)]
-public sealed class LogEnricherRootAttribute : Attribute;
+public sealed class CtxRootAttribute : Attribute;
 ```
 
 | 대상 | 동작 |
@@ -480,9 +484,9 @@ public sealed class LogEnricherRootAttribute : Attribute;
 | `Property` | 해당 프로퍼티가 `ctx.{field}`로 승격 |
 | `Parameter` | record 생성자 파라미터가 `ctx.{field}`로 승격 |
 
-### LogEnricherIgnoreAttribute
+### CtxIgnoreAttribute
 
-소스 생성기에서 LogEnricher 자동 생성 대상에서 제외할 것을 지시하는 어트리뷰트입니다.
+소스 생성기에서 CtxEnricher 자동 생성 대상에서 제외할 것을 지시하는 어트리뷰트입니다.
 
 ```csharp
 namespace Functorium.Applications.Usecases;
@@ -491,20 +495,20 @@ namespace Functorium.Applications.Usecases;
     AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Parameter,
     AllowMultiple = false,
     Inherited = false)]
-public sealed class LogEnricherIgnoreAttribute : Attribute;
+public sealed class CtxIgnoreAttribute : Attribute;
 ```
 
 | 대상 | 동작 |
 |------|------|
-| `Class` | 해당 Request record 전체가 LogEnricher 자동 생성에서 제외 |
-| `Property` | 해당 프로퍼티가 LogEnricher 자동 생성에서 제외 |
-| `Parameter` | record 생성자 파라미터가 LogEnricher 자동 생성에서 제외 |
+| `Class` | 해당 Request record 전체가 CtxEnricher 자동 생성에서 제외 |
+| `Property` | 해당 프로퍼티가 CtxEnricher 자동 생성에서 제외 |
+| `Parameter` | record 생성자 파라미터가 CtxEnricher 자동 생성에서 제외 |
 
 ### 어트리뷰트 사용 예제
 
 ```csharp
-// 인터페이스에 [LogEnricherRoot] 적용 — 구현하는 모든 Request에서 승격
-[LogEnricherRoot]
+// 인터페이스에 [CtxRoot] 적용 — 구현하는 모든 Request에서 승격
+[CtxRoot]
 public interface IHasOrderId
 {
     OrderId OrderId { get; }
@@ -512,8 +516,8 @@ public interface IHasOrderId
 
 // 개별 프로퍼티에 적용
 public sealed record CreateOrderCommand(
-    [property: LogEnricherRoot] OrderId OrderId,    // ctx.OrderId로 승격
-    [property: LogEnricherIgnore] string Payload,    // Enricher에서 제외
+    [property: CtxRoot] OrderId OrderId,    // ctx.OrderId로 승격
+    [property: CtxIgnore] string Payload,    // Enricher에서 제외
     Money TotalAmount) : ICommandRequest<CreateOrderResponse>;
 ```
 
