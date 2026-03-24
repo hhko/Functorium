@@ -501,6 +501,36 @@ Application Layer:
 
 60,000 시계열은 대부분의 메트릭 시스템에서 충분히 처리 가능한 수준입니다.
 
+### ctx.* MetricsTag — 사용자 정의 메트릭 차원
+
+`CtxEnricherPipeline`이 최선두에서 실행되어, `[CtxTarget(CtxPillar.MetricsTag)]`로 지정된 저카디널리티 ctx.* 필드를 `MetricsTagContext`에 저장합니다. 이후 `UsecaseMetricsPipeline`이 표준 태그 생성 후 `MetricsTagContext`에서 ctx.* 태그를 읽어 `TagList`에 병합합니다.
+
+```
+파이프라인 실행 순서:
+CtxEnricher → Metrics → Tracing → Logging → ... → Handler
+
+CtxEnricherPipeline:
+  ctx.is_express = true  → MetricsTagContext에 저장 (CtxPillar.MetricsTag)
+  ctx.customer_id = "C1" → MetricsTagContext에 저장 안 함 (CtxPillar.Default → Logging + Tracing만)
+
+UsecaseMetricsPipeline:
+  TagList = { request.layer, request.handler.name, ..., ctx.is_express }
+                                                        ↑ MetricsTagContext에서 병합
+```
+
+**사용 예시:**
+
+```csharp
+public sealed record Request(
+    string CustomerId,                                    // 기본(Logging + Tracing)
+    [CtxTarget(CtxPillar.All)] bool IsExpress,            // MetricsTag 포함 → Counter 차원
+    [CtxTarget(CtxPillar.Default | CtxPillar.MetricsValue)]
+    decimal TotalAmount                                   // MetricsValue → 별도 Histogram 기록
+) : ICommandRequest<Response>;
+```
+
+> **카디널리티 주의**: MetricsTag로 지정된 필드의 고유 값 수가 기존 태그 차원에 곱해집니다. `boolean` (2값), `enum` (제한된 값), 제한된 문자열만 MetricsTag로 지정하세요. 고카디널리티 타입 지정 시 컴파일 타임 경고 `FUNCTORIUM005`가 발생합니다.
+
 ---
 
 ## Application Layer 메트릭

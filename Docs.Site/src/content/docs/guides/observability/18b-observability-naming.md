@@ -478,7 +478,7 @@ Functorium.Adapters.Observabilities/
 Functorium.Adapters.Observabilities.Pipelines/
 ├── UsecasePipelineBase.cs                 // Pipeline 공통 베이스 클래스
 ├── ICustomUsecasePipeline.cs              // 커스텀 파이프라인 마커 인터페이스
-├── IUsecaseLogEnricher.cs                 // 로그 Enrichment 인터페이스
+├── CtxEnricherPipeline.cs                 // ctx.* 3-Pillar Enrichment Pipeline (최선두)
 ├── UsecaseLoggingPipeline.cs              // Logging Pipeline
 ├── UsecaseTracingPipeline.cs              // Tracing Pipeline
 ├── UsecaseTracingCustomPipelineBase.cs    // 커스텀 Tracing Pipeline 베이스
