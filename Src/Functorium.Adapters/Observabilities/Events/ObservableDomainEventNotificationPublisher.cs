@@ -49,7 +49,7 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
     /// <param name="loggerFactory">로거 팩토리</param>
     /// <param name="meterFactory">Meter 팩토리</param>
     /// <param name="openTelemetryOptions">OpenTelemetry 옵션</param>
-    /// <param name="serviceProvider">DI 서비스 프로바이더 (IDomainEventLogEnricher 해석용)</param>
+    /// <param name="serviceProvider">DI 서비스 프로바이더 (IDomainEventCtxEnricher 해석용)</param>
     public ObservableDomainEventNotificationPublisher(
         ActivitySource activitySource,
         ILoggerFactory loggerFactory,

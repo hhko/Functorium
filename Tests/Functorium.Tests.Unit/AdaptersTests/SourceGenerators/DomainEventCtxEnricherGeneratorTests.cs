@@ -377,7 +377,7 @@ public sealed class DomainEventCtxEnricherGeneratorTests
     #region 7. 클래스 이름 (중첩) 테스트
 
     /// <summary>
-    /// 시나리오: 중첩 이벤트의 Enricher 클래스 이름이 {ContainingTypes}{EventTypeName}LogEnricher 형식인지 확인합니다.
+    /// 시나리오: 중첩 이벤트의 Enricher 클래스 이름이 {ContainingTypes}{EventTypeName}CtxEnricher 형식인지 확인합니다.
     /// </summary>
     [Fact]
     public void DomainEventCtxEnricherGenerator_ShouldGenerate_NestedClassName()
@@ -395,7 +395,7 @@ public sealed class DomainEventCtxEnricherGeneratorTests
     #region 8. 클래스 이름 (최상위) 테스트
 
     /// <summary>
-    /// 시나리오: 최상위 이벤트의 Enricher 클래스 이름이 {EventTypeName}LogEnricher 형식인지 확인합니다.
+    /// 시나리오: 최상위 이벤트의 Enricher 클래스 이름이 {EventTypeName}CtxEnricher 형식인지 확인합니다.
     /// </summary>
     [Fact]
     public void DomainEventCtxEnricherGenerator_ShouldGenerate_TopLevelClassName()

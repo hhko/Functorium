@@ -49,7 +49,7 @@ public sealed class LogTestContext : IDisposable
     /// <param name="minimumLevel">캡처할 최소 로그 레벨</param>
     /// <param name="enrichFromLogContext">
     /// true이면 Serilog LogContext에서 Push된 속성을 로그 이벤트에 포함합니다.
-    /// IUsecaseLogEnricher가 Push하는 ctx.* 필드를 캡처하려면 true로 설정하세요.
+    /// IUsecaseCtxEnricher가 Push하는 ctx.* 필드를 캡처하려면 true로 설정하세요.
     /// </param>
     public LogTestContext(LogEventLevel minimumLevel, bool enrichFromLogContext)
     {

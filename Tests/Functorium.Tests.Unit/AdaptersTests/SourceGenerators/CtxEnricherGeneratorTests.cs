@@ -7,7 +7,7 @@ using static Functorium.Tests.Unit.Abstractions.Constants.Constants;
 
 namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 
-// # LogEnricherGenerator 소스 생성기 테스트
+// # CtxEnricherGenerator 소스 생성기 테스트
 //
 // ICommandRequest<T> / IQueryRequest<T> 구현체를 자동 감지하여
 // IUsecaseCtxEnricher 구현체가 올바르게 생성되는지 검증합니다.
@@ -35,11 +35,11 @@ namespace Functorium.Tests.Unit.AdaptersTests.SourceGenerators;
 //
 
 [Trait(nameof(UnitTest), UnitTest.Functorium_SourceGenerator)]
-public sealed class LogEnricherGeneratorTests
+public sealed class CtxEnricherGeneratorTests
 {
     private readonly CtxEnricherGenerator _sut;
 
-    public LogEnricherGeneratorTests()
+    public CtxEnricherGeneratorTests()
     {
         _sut = new CtxEnricherGenerator();
     }
@@ -67,7 +67,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: Request의 스칼라 속성(string)이 ctx.snake_case로 PushProperty되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldGenerate_RequestScalarProperty()
+    public void CtxEnricherGenerator_ShouldGenerate_RequestScalarProperty()
     {
         // Act
         string? actual = _sut.Generate(CommonInput);
@@ -85,7 +85,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: Response의 스칼라 속성이 FinResponse.Succ 패턴 매칭으로 PushProperty되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldGenerate_ResponseScalarProperties()
+    public void CtxEnricherGenerator_ShouldGenerate_ResponseScalarProperties()
     {
         // Act
         string? actual = _sut.Generate(CommonInput);
@@ -101,7 +101,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: Response 추출 시 FinResponse.Succ 패턴 매칭이 사용되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldUse_FinResponseSuccPatternMatching()
+    public void CtxEnricherGenerator_ShouldUse_FinResponseSuccPatternMatching()
     {
         // Act
         string? actual = _sut.Generate(CommonInput);
@@ -119,7 +119,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: 컬렉션 속성에 대해 _count 접미사와 .Count 표현식이 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldGenerate_CollectionCountProperty()
+    public void CtxEnricherGenerator_ShouldGenerate_CollectionCountProperty()
     {
         // Act
         string? actual = _sut.Generate(CommonInput);
@@ -137,7 +137,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: [CtxIgnore] 속성이 붙은 프로퍼티는 생성에서 제외되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldExclude_IgnoredProperties()
+    public void CtxEnricherGenerator_ShouldExclude_IgnoredProperties()
     {
         // Arrange
         string input = """
@@ -177,7 +177,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: 복합 타입(클래스/레코드) 속성은 자동 생성에서 건너뛰는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldSkip_ComplexTypeProperties()
+    public void CtxEnricherGenerator_ShouldSkip_ComplexTypeProperties()
     {
         // Arrange
         string input = """
@@ -217,7 +217,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: OnEnrichRequest/OnEnrichResponse partial void 메서드가 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldGenerate_PartialVoidExtensionPoints()
+    public void CtxEnricherGenerator_ShouldGenerate_PartialVoidExtensionPoints()
     {
         // Act
         string? actual = _sut.Generate(CommonInput);
@@ -233,10 +233,10 @@ public sealed class LogEnricherGeneratorTests
     #region 7. Enricher 클래스 이름 테스트
 
     /// <summary>
-    /// 시나리오: Enricher 클래스 이름이 {ContainingTypes}{RequestTypeName}LogEnricher 형식인지 확인합니다.
+    /// 시나리오: Enricher 클래스 이름이 {ContainingTypes}{RequestTypeName}CtxEnricher 형식인지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldGenerate_CorrectClassName()
+    public void CtxEnricherGenerator_ShouldGenerate_CorrectClassName()
     {
         // Act
         string? actual = _sut.Generate(CommonInput);
@@ -254,7 +254,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: 생성된 클래스가 IUsecaseCtxEnricher&lt;Request, FinResponse&lt;Response&gt;&gt;를 구현하는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldImplement_IUsecaseCtxEnricherInterface()
+    public void CtxEnricherGenerator_ShouldImplement_IUsecaseCtxEnricherInterface()
     {
         // Act
         string? actual = _sut.Generate(CommonInput);
@@ -273,7 +273,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: GeneratedCompositeDisposable 내부 클래스가 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldGenerate_CompositeDisposable()
+    public void CtxEnricherGenerator_ShouldGenerate_CompositeDisposable()
     {
         // Act
         string? actual = _sut.Generate(CommonInput);
@@ -289,7 +289,7 @@ public sealed class LogEnricherGeneratorTests
     #region 9a. PushRequestCtx / PushResponseCtx 헬퍼 메서드 테스트
 
     [Fact]
-    public void LogEnricherGenerator_ShouldGenerate_PushRequestCtxHelper()
+    public void CtxEnricherGenerator_ShouldGenerate_PushRequestCtxHelper()
     {
         string? actual = _sut.Generate(CommonInput);
 
@@ -299,7 +299,7 @@ public sealed class LogEnricherGeneratorTests
     }
 
     [Fact]
-    public void LogEnricherGenerator_ShouldGenerate_PushResponseCtxHelper()
+    public void CtxEnricherGenerator_ShouldGenerate_PushResponseCtxHelper()
     {
         string? actual = _sut.Generate(CommonInput);
 
@@ -316,7 +316,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: 올바른 네임스페이스가 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldGenerate_CorrectNamespace()
+    public void CtxEnricherGenerator_ShouldGenerate_CorrectNamespace()
     {
         // Act
         string? actual = _sut.Generate(CommonInput);
@@ -334,7 +334,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: IQueryRequest를 구현하는 Request에 대해서도 올바르게 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldHandle_QueryRequest()
+    public void CtxEnricherGenerator_ShouldHandle_QueryRequest()
     {
         // Arrange
         string input = """
@@ -373,7 +373,7 @@ public sealed class LogEnricherGeneratorTests
     /// 서로 다른 ctx 필드명이므로 FUNCTORIUM002가 발생하지 않습니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldNotReportDiagnostic_WhenNamespaceIsolatesFields()
+    public void CtxEnricherGenerator_ShouldNotReportDiagnostic_WhenNamespaceIsolatesFields()
     {
         // Arrange
         string input = """
@@ -409,7 +409,7 @@ public sealed class LogEnricherGeneratorTests
     /// CommandB.Request.OrderId (string) → ctx.order_id (keyword)
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldNotReportDiagnostic_WhenSameTypeGroup()
+    public void CtxEnricherGenerator_ShouldNotReportDiagnostic_WhenSameTypeGroup()
     {
         // Arrange
         string input = """
@@ -443,7 +443,7 @@ public sealed class LogEnricherGeneratorTests
     /// 충돌로 판정하지 않는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldNotReportDiagnostic_WhenDifferentCSharpTypes_SameOpenSearchGroup()
+    public void CtxEnricherGenerator_ShouldNotReportDiagnostic_WhenDifferentCSharpTypes_SameOpenSearchGroup()
     {
         // Arrange
         string input = """
@@ -480,7 +480,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: [CtxIgnore]가 Request record에 적용되면 생성하지 않는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldNotGenerate_WhenClassLevelIgnoreApplied()
+    public void CtxEnricherGenerator_ShouldNotGenerate_WhenClassLevelIgnoreApplied()
     {
         string input = """
             using Functorium.Applications.Observabilities;
@@ -510,7 +510,7 @@ public sealed class LogEnricherGeneratorTests
     /// FUNCTORIUM003 경고가 발생하는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldReportDiagnostic_WhenRequestTypeIsInaccessible()
+    public void CtxEnricherGenerator_ShouldReportDiagnostic_WhenRequestTypeIsInaccessible()
     {
         // Arrange
         string input = """
@@ -538,7 +538,7 @@ public sealed class LogEnricherGeneratorTests
     /// FUNCTORIUM003 경고가 발생하지 않는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldNotReportDiagnostic_WhenInaccessibleButIgnored()
+    public void CtxEnricherGenerator_ShouldNotReportDiagnostic_WhenInaccessibleButIgnored()
     {
         // Arrange
         string input = """
@@ -570,13 +570,13 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: 생성된 코드의 전체 형태를 스냅샷으로 검증합니다.
     /// </summary>
     [Fact]
-    public Task LogEnricherGenerator_ShouldGenerate_ExpectedOutput()
+    public Task CtxEnricherGenerator_ShouldGenerate_ExpectedOutput()
     {
         // Act
         string? actual = _sut.Generate(CommonInput);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/LogEnricherGenerator");
+        return Verify(actual).UseDirectory("Snapshots/CtxEnricherGenerator");
     }
 
     #endregion
@@ -608,7 +608,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: [CtxRoot] 인터페이스의 속성이 ctx.{field} 루트 레벨로 승격되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldGenerate_RootCtxField_WhenInterfaceHasRootAttribute()
+    public void CtxEnricherGenerator_ShouldGenerate_RootCtxField_WhenInterfaceHasRootAttribute()
     {
         // Act
         string? actual = _sut.Generate(RootInterfaceInput);
@@ -623,7 +623,7 @@ public sealed class LogEnricherGeneratorTests
     /// root가 아닌 속성은 기존 ctx.{usecase}.request.{field} 형식을 유지하는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldKeep_NormalCtxField_WhenNotRoot()
+    public void CtxEnricherGenerator_ShouldKeep_NormalCtxField_WhenNotRoot()
     {
         // Act
         string? actual = _sut.Generate(RootInterfaceInput);
@@ -638,7 +638,7 @@ public sealed class LogEnricherGeneratorTests
     /// root로 승격되지 않고, 인터페이스 스코프(ctx.{interface}.{field})로 출력되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldNotPromote_WhenInterfaceHasNoRootAttribute()
+    public void CtxEnricherGenerator_ShouldNotPromote_WhenInterfaceHasNoRootAttribute()
     {
         // Arrange
         string input = """
@@ -707,7 +707,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: [CtxRoot] 인터페이스의 속성이 ctx.{field} 루트로 승격되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_InterfaceScope_ShouldPromote_RootInterfaceProperty()
+    public void CtxEnricherGenerator_InterfaceScope_ShouldPromote_RootInterfaceProperty()
     {
         string? actual = _sut.Generate(InterfaceScopedInput);
 
@@ -719,7 +719,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: 인터페이스 없는 직접 프로퍼티가 ctx.{usecase}.request.{field} 형식인지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_InterfaceScope_ShouldKeep_DirectPropertyInUsecaseScope()
+    public void CtxEnricherGenerator_InterfaceScope_ShouldKeep_DirectPropertyInUsecaseScope()
     {
         string? actual = _sut.Generate(InterfaceScopedInput);
 
@@ -731,7 +731,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: 비-root 인터페이스 IAuditable의 속성이 ctx.{interface}.{field} 형식인지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_InterfaceScope_ShouldUse_InterfacePrefix_ForAuditable()
+    public void CtxEnricherGenerator_InterfaceScope_ShouldUse_InterfacePrefix_ForAuditable()
     {
         string? actual = _sut.Generate(InterfaceScopedInput);
 
@@ -744,7 +744,7 @@ public sealed class LogEnricherGeneratorTests
     /// 스코프로 출력되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_InterfaceScope_ShouldUse_DeclaringInterface_ForInheritedProperty()
+    public void CtxEnricherGenerator_InterfaceScope_ShouldUse_DeclaringInterface_ForInheritedProperty()
     {
         string? actual = _sut.Generate(InterfaceScopedInput);
 
@@ -756,7 +756,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: IPartnerContext에 직접 선언된 PartnerId가 ctx.partner_context.partner_id 형식인지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_InterfaceScope_ShouldUse_InterfacePrefix_ForPartnerContext()
+    public void CtxEnricherGenerator_InterfaceScope_ShouldUse_InterfacePrefix_ForPartnerContext()
     {
         string? actual = _sut.Generate(InterfaceScopedInput);
 
@@ -768,11 +768,11 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: 인터페이스 스코프가 포함된 생성 코드의 전체 형태를 스냅샷으로 검증합니다.
     /// </summary>
     [Fact]
-    public Task LogEnricherGenerator_InterfaceScope_ShouldGenerate_ExpectedOutput()
+    public Task CtxEnricherGenerator_InterfaceScope_ShouldGenerate_ExpectedOutput()
     {
         string? actual = _sut.Generate(InterfaceScopedInput);
 
-        return Verify(actual).UseDirectory("Snapshots/LogEnricherGenerator");
+        return Verify(actual).UseDirectory("Snapshots/CtxEnricherGenerator");
     }
 
     #endregion
@@ -784,7 +784,7 @@ public sealed class LogEnricherGeneratorTests
     /// ctx.{interface}.{field}_count 형식인지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_InterfaceScope_ShouldUse_InterfacePrefix_ForCollection()
+    public void CtxEnricherGenerator_InterfaceScope_ShouldUse_InterfacePrefix_ForCollection()
     {
         // Arrange
         string input = """
@@ -823,7 +823,7 @@ public sealed class LogEnricherGeneratorTests
     /// 해당 속성만 ctx.{field} 루트 레벨로 승격되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldGenerate_RootCtxField_WhenPropertyHasRootAttribute()
+    public void CtxEnricherGenerator_ShouldGenerate_RootCtxField_WhenPropertyHasRootAttribute()
     {
         // Arrange
         string input = """
@@ -857,7 +857,7 @@ public sealed class LogEnricherGeneratorTests
     /// 해당 Response 속성이 ctx.{field} 루트 레벨로 승격되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldGenerate_RootCtxField_ForResponseProperty()
+    public void CtxEnricherGenerator_ShouldGenerate_RootCtxField_ForResponseProperty()
     {
         // Arrange
         string input = """
@@ -894,7 +894,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: root 속성이 있을 때 PushRootCtx 헬퍼 메서드가 생성되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldGenerate_PushRootCtxHelper_WhenRootPropertyExists()
+    public void CtxEnricherGenerator_ShouldGenerate_PushRootCtxHelper_WhenRootPropertyExists()
     {
         // Act
         string? actual = _sut.Generate(RootInterfaceInput);
@@ -909,7 +909,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: root 속성이 없을 때 PushRootCtx 헬퍼 메서드가 생성되지 않는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldNotGenerate_PushRootCtxHelper_WhenNoRootProperty()
+    public void CtxEnricherGenerator_ShouldNotGenerate_PushRootCtxHelper_WhenNoRootProperty()
     {
         // Act
         string? actual = _sut.Generate(CommonInput);
@@ -927,7 +927,7 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: root 컬렉션 속성이 ctx.{name}_count 형식으로 출력되는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldGenerate_RootCollectionCount()
+    public void CtxEnricherGenerator_ShouldGenerate_RootCollectionCount()
     {
         // Arrange
         string input = """
@@ -968,7 +968,7 @@ public sealed class LogEnricherGeneratorTests
     /// FUNCTORIUM002 Warning이 발생하는지 확인합니다.
     /// </summary>
     [Fact]
-    public void LogEnricherGenerator_ShouldReportDiagnostic_WhenRootFieldTypeConflicts()
+    public void CtxEnricherGenerator_ShouldReportDiagnostic_WhenRootFieldTypeConflicts()
     {
         // Arrange
         string input = """
@@ -1014,13 +1014,13 @@ public sealed class LogEnricherGeneratorTests
     /// 시나리오: root context가 포함된 생성 코드의 전체 형태를 스냅샷으로 검증합니다.
     /// </summary>
     [Fact]
-    public Task LogEnricherGenerator_ShouldGenerate_RootContext_ExpectedOutput()
+    public Task CtxEnricherGenerator_ShouldGenerate_RootContext_ExpectedOutput()
     {
         // Act
         string? actual = _sut.Generate(RootInterfaceInput);
 
         // Assert
-        return Verify(actual).UseDirectory("Snapshots/LogEnricherGenerator");
+        return Verify(actual).UseDirectory("Snapshots/CtxEnricherGenerator");
     }
 
     #endregion
