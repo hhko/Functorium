@@ -24,6 +24,17 @@ public sealed class GetCustomerByIdQuery
         DateTime CreatedAt);
 
     /// <summary>
+    /// Request Validator
+    /// </summary>
+    public sealed class Validator : AbstractValidator<Request>
+    {
+        public Validator()
+        {
+            RuleFor(x => x.CustomerId).MustBeEntityId<Request, CustomerId>();
+        }
+    }
+
+    /// <summary>
     /// Query Handler
     /// </summary>
     public sealed class Usecase(ICustomerDetailQuery customerDetailQuery)

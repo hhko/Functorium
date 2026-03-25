@@ -62,7 +62,7 @@ public sealed class CreateOrderCommand
             {
                 line.RuleFor(l => l.ProductId).MustBeEntityId<OrderLineRequest, ProductId>();
                 line.RuleFor(l => l.Quantity)
-                    .GreaterThan(0).WithMessage("Order quantity must be greater than 0");
+                    .MustSatisfyValidation(Quantity.Validate);
             });
 
             RuleFor(x => x.ShippingAddress).MustSatisfyValidation(ShippingAddress.Validate);

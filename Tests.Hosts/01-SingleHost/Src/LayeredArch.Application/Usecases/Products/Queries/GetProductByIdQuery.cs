@@ -15,6 +15,17 @@ public sealed class GetProductByIdQuery
     public sealed record Request(string ProductId) : IQueryRequest<Response>;
 
     /// <summary>
+    /// Request Validator
+    /// </summary>
+    public sealed class Validator : AbstractValidator<Request>
+    {
+        public Validator()
+        {
+            RuleFor(x => x.ProductId).MustBeEntityId<Request, ProductId>();
+        }
+    }
+
+    /// <summary>
     /// Query Response - 조회된 상품 정보
     /// </summary>
     public sealed record Response(

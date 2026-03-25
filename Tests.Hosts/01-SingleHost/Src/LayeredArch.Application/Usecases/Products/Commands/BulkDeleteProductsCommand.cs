@@ -17,6 +17,8 @@ public sealed class BulkDeleteProductsCommand
         public Validator()
         {
             RuleFor(x => x.ProductIds).NotEmpty().WithMessage("최소 1개 이상의 상품 ID가 필요합니다");
+            RuleForEach(x => x.ProductIds)
+                .Must(id => ProductId.TryParse(id, null, out _)).WithMessage("Invalid ProductId format");
         }
     }
 

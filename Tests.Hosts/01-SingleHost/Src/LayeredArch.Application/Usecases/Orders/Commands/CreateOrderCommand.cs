@@ -57,23 +57,18 @@ public sealed class CreateOrderCommand
     {
         public Validator()
         {
-            RuleFor(x => x.CustomerId)
-                .NotEmpty().WithMessage("Customer ID is required");
+            RuleFor(x => x.CustomerId).MustBeEntityId<Request, CustomerId>();
 
             RuleFor(x => x.OrderLines)
                 .Must(lines => !lines.IsEmpty).WithMessage("At least one order line is required");
 
             RuleForEach(x => x.OrderLines).ChildRules(line =>
             {
-                line.RuleFor(l => l.ProductId)
-                    .NotEmpty().WithMessage("Product ID is required");
-                line.RuleFor(l => l.Quantity)
-                    .GreaterThan(0).WithMessage("Order quantity must be greater than 0");
+                line.RuleFor(l => l.ProductId).MustBeEntityId<OrderLineRequest, ProductId>();
+                line.RuleFor(l => l.Quantity).MustSatisfyValidation(Quantity.Validate);
             });
 
-            RuleFor(x => x.ShippingAddress)
-                .NotEmpty().WithMessage("Shipping address is required")
-                .MaximumLength(ShippingAddress.MaxLength).WithMessage($"Shipping address must not exceed {ShippingAddress.MaxLength} characters");
+            RuleFor(x => x.ShippingAddress).MustSatisfyValidation(ShippingAddress.Validate);
         }
     }
 

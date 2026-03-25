@@ -34,7 +34,7 @@ public sealed class DeductStockCommand
             RuleFor(x => x.ProductId).MustBeEntityId<Request, ProductId>();
 
             RuleFor(x => x.Quantity)
-                .GreaterThan(0).WithMessage("Deduction quantity must be greater than 0");
+                .MustSatisfyValidation(Quantity.Validate);
         }
     }
 

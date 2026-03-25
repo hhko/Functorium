@@ -26,6 +26,17 @@ public sealed class GetProductByIdQuery
         Option<DateTime> UpdatedAt);
 
     /// <summary>
+    /// Request Validator
+    /// </summary>
+    public sealed class Validator : AbstractValidator<Request>
+    {
+        public Validator()
+        {
+            RuleFor(x => x.ProductId).MustBeEntityId<Request, ProductId>();
+        }
+    }
+
+    /// <summary>
     /// Query Handler - 상품 조회 로직
     /// </summary>
     public sealed class Usecase(IProductDetailQuery productDetailQuery)

@@ -14,6 +14,17 @@ public sealed class GetCustomerByIdQuery
     public sealed record Request(string CustomerId) : IQueryRequest<Response>;
 
     /// <summary>
+    /// Request Validator
+    /// </summary>
+    public sealed class Validator : AbstractValidator<Request>
+    {
+        public Validator()
+        {
+            RuleFor(x => x.CustomerId).MustBeEntityId<Request, CustomerId>();
+        }
+    }
+
+    /// <summary>
     /// Query Response
     /// </summary>
     public sealed record Response(

@@ -31,13 +31,9 @@ public sealed class DeductStockCommand
     {
         public Validator()
         {
-            RuleFor(x => x.ProductId)
-                .NotEmpty()
-                .Must(id => ProductId.TryParse(id, null, out _))
-                .WithMessage("Invalid product ID format");
+            RuleFor(x => x.ProductId).MustBeEntityId<Request, ProductId>();
 
-            RuleFor(x => x.Quantity)
-                .GreaterThan(0).WithMessage("Deduction quantity must be greater than 0");
+            RuleFor(x => x.Quantity).MustSatisfyValidation(Quantity.Validate);
         }
     }
 

@@ -92,7 +92,7 @@ public sealed class Usecase(
         }
 
         // 3. 중복 검사용 VO 준비
-        var productName = ProductName.Create(request.Name).ThrowIfFail();
+        var productName = ProductName.Create(request.Name).Unwrap();
 
         // 4. FinT LINQ 합성: 중복 검사 -> 저장 -> 응답 변환
         var (product, stockQuantity) = (ProductData)createData;
@@ -131,10 +131,10 @@ public sealed class Usecase(
             .Apply((n, d, p, s) =>
                 new ProductData(
                     Product.Create(
-                        ProductName.Create(n).ThrowIfFail(),
-                        ProductDescription.Create(d).ThrowIfFail(),
-                        Money.Create(p).ThrowIfFail()),
-                    Quantity.Create(s).ThrowIfFail()))
+                        ProductName.Create(n).Unwrap(),
+                        ProductDescription.Create(d).Unwrap(),
+                        Money.Create(p).Unwrap()),
+                    Quantity.Create(s).Unwrap()))
             .As()
             .ToFin();
     }
@@ -262,12 +262,12 @@ public sealed class SearchProductsQuery
             var spec = Specification<Product>.All;
 
             if (request.Name.Length > 0)
-                spec &= new ProductNameSpec(ProductName.Create(request.Name).ThrowIfFail());
+                spec &= new ProductNameSpec(ProductName.Create(request.Name).Unwrap());
 
             if (request.MinPrice > 0 && request.MaxPrice > 0)
                 spec &= new ProductPriceRangeSpec(
-                    Money.Create(request.MinPrice).ThrowIfFail(),
-                    Money.Create(request.MaxPrice).ThrowIfFail());
+                    Money.Create(request.MinPrice).Unwrap(),
+                    Money.Create(request.MaxPrice).Unwrap());
 
             return spec;
         }
@@ -338,9 +338,9 @@ private static Fin<UpdateData> CreateUpdateData(Request request)
     return (name, description, price)
         .Apply((n, d, p) =>
             new UpdateData(
-                ProductName.Create(n).ThrowIfFail(),
-                ProductDescription.Create(d).ThrowIfFail(),
-                Money.Create(p).ThrowIfFail()))
+                ProductName.Create(n).Unwrap(),
+                ProductDescription.Create(d).Unwrap(),
+                Money.Create(p).Unwrap()))
         .As()
         .ToFin();
 }
@@ -351,7 +351,7 @@ private static Fin<UpdateData> CreateUpdateData(Request request)
 1. `Validate()` -> `Validation<Error, T>` (검증만, 객체 생성 안 함)
 2. `.Apply()` -> 모든 검증을 병렬로 수행, 에러 누적
 3. `.As().ToFin()` -> `Validation` -> `Fin` 변환
-4. Apply 콜백 내에서 `Create().ThrowIfFail()` -> 이미 검증된 값이므로 안전
+4. Apply 콜백 내에서 `Create().Unwrap()` -> 이미 검증된 값이므로 안전
 
 ---
 

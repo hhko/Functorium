@@ -23,6 +23,17 @@ public sealed class GetOrderByIdQuery
     public sealed record Request(string OrderId) : IQueryRequest<Response>;
 
     /// <summary>
+    /// Request Validator
+    /// </summary>
+    public sealed class Validator : AbstractValidator<Request>
+    {
+        public Validator()
+        {
+            RuleFor(x => x.OrderId).MustBeEntityId<Request, OrderId>();
+        }
+    }
+
+    /// <summary>
     /// Query Response
     /// </summary>
     public sealed record Response(

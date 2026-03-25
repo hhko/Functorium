@@ -18,9 +18,7 @@ public sealed class GetOrderWithProductsQuery
     {
         public Validator()
         {
-            RuleFor(x => x.OrderId)
-                .NotEmpty()
-                .WithMessage("OrderId is required");
+            RuleFor(x => x.OrderId).MustBeEntityId<Request, OrderId>();
         }
     }
 

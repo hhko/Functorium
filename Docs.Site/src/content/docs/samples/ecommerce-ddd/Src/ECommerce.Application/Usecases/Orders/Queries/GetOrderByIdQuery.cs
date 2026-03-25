@@ -32,6 +32,17 @@ public sealed class GetOrderByIdQuery
         DateTime CreatedAt);
 
     /// <summary>
+    /// Request Validator
+    /// </summary>
+    public sealed class Validator : AbstractValidator<Request>
+    {
+        public Validator()
+        {
+            RuleFor(x => x.OrderId).MustBeEntityId<Request, OrderId>();
+        }
+    }
+
+    /// <summary>
     /// Query Handler
     /// </summary>
     public sealed class Usecase(IOrderDetailQuery orderDetailQuery)
