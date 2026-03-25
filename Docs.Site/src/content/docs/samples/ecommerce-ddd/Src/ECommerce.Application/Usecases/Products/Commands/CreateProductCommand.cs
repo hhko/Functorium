@@ -61,10 +61,10 @@ public sealed class CreateProductCommand
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            var name = ProductName.Create(request.Name).ThrowIfFail();
-            var description = ProductDescription.Create(request.Description).ThrowIfFail();
-            var price = Money.Create(request.Price).ThrowIfFail();
-            var stockQuantity = Quantity.Create(request.StockQuantity).ThrowIfFail();
+            var name = ProductName.Create(request.Name).Unwrap();
+            var description = ProductDescription.Create(request.Description).Unwrap();
+            var price = Money.Create(request.Price).Unwrap();
+            var stockQuantity = Quantity.Create(request.StockQuantity).Unwrap();
 
             FinT<IO, Response> usecase =
                 from exists in _productRepository.Exists(new ProductNameUniqueSpec(name))

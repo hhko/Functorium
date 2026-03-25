@@ -12,7 +12,7 @@ public sealed class DetectLowStockOnStockDeductedHandler(
     IInventoryRepository inventoryRepository)
     : IDomainEventHandler<Inventory.StockDeductedEvent>
 {
-    private static readonly Quantity DefaultThreshold = Quantity.Create(10).ThrowIfFail();
+    private static readonly Quantity DefaultThreshold = Quantity.Create(10).Unwrap();
     private readonly IInventoryRepository _inventoryRepository = inventoryRepository;
 
     public async ValueTask Handle(Inventory.StockDeductedEvent notification, CancellationToken cancellationToken)

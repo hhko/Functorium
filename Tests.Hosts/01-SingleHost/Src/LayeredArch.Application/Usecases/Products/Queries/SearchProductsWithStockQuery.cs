@@ -112,8 +112,8 @@ public sealed class SearchProductsWithStockQuery
             if (request.MinPrice > 0 && request.MaxPrice > 0)
             {
                 return new ProductPriceRangeSpec(
-                    Money.Create(request.MinPrice).ThrowIfFail(),
-                    Money.Create(request.MaxPrice).ThrowIfFail());
+                    Money.Create(request.MinPrice).Unwrap(),
+                    Money.Create(request.MaxPrice).Unwrap());
             }
 
             return Specification<Product>.All;

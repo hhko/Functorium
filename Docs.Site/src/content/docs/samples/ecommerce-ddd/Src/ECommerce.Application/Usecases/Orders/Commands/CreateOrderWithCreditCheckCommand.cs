@@ -87,12 +87,12 @@ public sealed class CreateOrderWithCreditCheckCommand
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var customerId = CustomerId.Create(request.CustomerId);
-            var shippingAddress = ShippingAddress.Create(request.ShippingAddress).ThrowIfFail();
+            var shippingAddress = ShippingAddress.Create(request.ShippingAddress).Unwrap();
 
             var lineRequests = request.OrderLines
                 .Select(lineReq => (
                     ProductId: ProductId.Create(lineReq.ProductId),
-                    Quantity: Quantity.Create(lineReq.Quantity).ThrowIfFail()))
+                    Quantity: Quantity.Create(lineReq.Quantity).Unwrap()))
                 .ToList();
 
             // 배치 가격 조회 (단일 라운드트립)
@@ -102,7 +102,7 @@ public sealed class CreateOrderWithCreditCheckCommand
                 return FinResponse.Fail<Response>(pricesResult.Match(
                     Succ: _ => throw new InvalidOperationException(), Fail: e => e));
 
-            var priceLookup = pricesResult.ThrowIfFail().ToDictionary(p => p.Id, p => p.Price);
+            var priceLookup = pricesResult.Unwrap().ToDictionary(p => p.Id, p => p.Price);
 
             // 존재 검증 + OrderLine 생성
             var orderLines = new List<OrderLine>();
@@ -114,10 +114,10 @@ public sealed class CreateOrderWithCreditCheckCommand
                         productId.ToString(),
                         $"Product not found: '{productId}'"));
 
-                orderLines.Add(OrderLine.Create(productId, quantity, unitPrice).ThrowIfFail());
+                orderLines.Add(OrderLine.Create(productId, quantity, unitPrice).Unwrap());
             }
 
-            var order = Order.Create(customerId, orderLines, shippingAddress).ThrowIfFail();
+            var order = Order.Create(customerId, orderLines, shippingAddress).Unwrap();
 
             // 고객 조회 → 신용 검증 → 저장
             FinT<IO, Response> usecase =

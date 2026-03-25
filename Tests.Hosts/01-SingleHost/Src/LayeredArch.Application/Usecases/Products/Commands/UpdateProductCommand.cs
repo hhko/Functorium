@@ -7,7 +7,7 @@ using static Functorium.Applications.Errors.ApplicationErrorType;
 namespace LayeredArch.Application.Usecases.Products.Commands;
 
 /// <summary>
-/// 상품 업데이트 Command - Entity Guide의 Apply 패턴 + Exception Pipeline 데모
+/// 상품 업데이트 Command
 /// 재고(StockQuantity)는 Inventory Aggregate 관할이므로 제외됩니다.
 /// </summary>
 public sealed class UpdateProductCommand
@@ -51,7 +51,7 @@ public sealed class UpdateProductCommand
     }
 
     /// <summary>
-    /// Command Handler - Entity Guide의 Apply 패턴 적용
+    /// Command Handler
     /// </summary>
     public sealed class Usecase(
         IProductRepository productRepository)
@@ -67,20 +67,12 @@ public sealed class UpdateProductCommand
                 throw new InvalidOperationException("Simulated exception: raised for demo purposes");
             }
 
-            // 1. Value Object 생성 (Apply 패턴)
-            var updateData = CreateUpdateData(request);
-            if (updateData.IsFail)
-            {
-                return updateData.Match(
-                    Succ: _ => throw new InvalidOperationException(),
-                    Fail: error => FinResponse.Fail<Response>(error));
-            }
-
-            // 2. 조회 및 업데이트
+            // 파이프라인 Validator가 검증 완료. Create()는 정규화 목적.
             var productId = ProductId.Create(request.ProductId);
-            var (name, description, price) = (UpdateData)updateData;
+            var name = ProductName.Create(request.Name).Unwrap();
+            var description = ProductDescription.Create(request.Description).Unwrap();
+            var price = Money.Create(request.Price).Unwrap();
 
-            // 3. 중복 검사 및 업데이트
             FinT<IO, Response> usecase =
                 from existingProduct in _productRepository.GetById(productId)
                 from exists in _productRepository.Exists(new ProductNameUniqueSpec(name, productId))
@@ -100,31 +92,5 @@ public sealed class UpdateProductCommand
             Fin<Response> response = await usecase.Run().RunAsync();
             return response.ToFinResponse();
         }
-
-        /// <summary>
-        /// Entity Guide 패턴: VO Validate() + Apply 병합
-        /// </summary>
-        private static Fin<UpdateData> CreateUpdateData(Request request)
-        {
-            // 모든 필드: VO Validate() 사용 (Validation<Error, T> 반환)
-            var name = ProductName.Validate(request.Name);
-            var description = ProductDescription.Validate(request.Description);
-            var price = Money.Validate(request.Price);
-
-            // 모두 튜플로 병합 - Apply로 병렬 검증
-            return (name, description, price)
-                .Apply((n, d, p) =>
-                    new UpdateData(
-                        ProductName.Create(n).ThrowIfFail(),
-                        ProductDescription.Create(d).ThrowIfFail(),
-                        Money.Create(p).ThrowIfFail()))
-                .As()
-                .ToFin();
-        }
-
-        private sealed record UpdateData(
-            ProductName Name,
-            ProductDescription Description,
-            Money Price);
     }
 }

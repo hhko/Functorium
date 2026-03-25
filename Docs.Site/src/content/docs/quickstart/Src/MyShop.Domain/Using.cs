@@ -8,3 +8,4 @@ global using Functorium.Domains.ValueObjects.Validations.Typed;
 global using Functorium.Applications.Usecases;
 global using MyShop.Domain.AggregateRoots.Products;
 global using MyShop.Domain.AggregateRoots.Products.ValueObjects;
+global using Functorium.Applications.Linq;

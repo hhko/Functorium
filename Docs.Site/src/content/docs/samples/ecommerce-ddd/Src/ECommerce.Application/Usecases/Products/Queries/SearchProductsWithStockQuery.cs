@@ -94,8 +94,8 @@ public sealed class SearchProductsWithStockQuery
 
             request.MinPrice.Bind(min => request.MaxPrice.Map(max => (min, max)))
                 .Iter(t => spec = new ProductPriceRangeSpec(
-                    Money.Create(t.min).ThrowIfFail(),
-                    Money.Create(t.max).ThrowIfFail()));
+                    Money.Create(t.min).Unwrap(),
+                    Money.Create(t.max).Unwrap()));
 
             return spec;
         }

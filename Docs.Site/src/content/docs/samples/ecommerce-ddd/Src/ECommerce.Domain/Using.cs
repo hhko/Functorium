@@ -6,4 +6,4 @@ global using Functorium.Domains.ValueObjects;
 global using Functorium.Domains.ValueObjects.Validations.Typed;
 global using Functorium.Domains.Services;
 global using Functorium.Domains.Specifications;
-global using ECommerce.Domain.SharedModels.ValueObjects;
+global using ECommerce.Domain.SharedModels.ValueObjects;global using Functorium.Applications.Linq;

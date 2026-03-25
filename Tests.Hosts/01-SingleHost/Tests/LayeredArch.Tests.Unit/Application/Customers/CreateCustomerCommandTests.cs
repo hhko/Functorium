@@ -36,29 +36,25 @@ public class CreateCustomerCommandTests
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenNameIsEmpty()
+    public async Task Handle_ShouldThrow_WhenNameIsEmpty()
     {
-        // Arrange
+        // Arrange — 파이프라인 없이 직접 호출하면 Unwrap()에서 예외 발생
         var request = new CreateCustomerCommand.Request("", "john@example.com", 5000m);
 
-        // Act
-        var actual = await _sut.Handle(request, CancellationToken.None);
-
-        // Assert
-        actual.IsSucc.ShouldBeFalse();
+        // Act & Assert
+        await Should.ThrowAsync<Exception>(
+            () => _sut.Handle(request, CancellationToken.None).AsTask());
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenEmailIsInvalid()
+    public async Task Handle_ShouldThrow_WhenEmailIsInvalid()
     {
-        // Arrange
+        // Arrange — 파이프라인 없이 직접 호출하면 Unwrap()에서 예외 발생
         var request = new CreateCustomerCommand.Request("John", "invalid-email", 5000m);
 
-        // Act
-        var actual = await _sut.Handle(request, CancellationToken.None);
-
-        // Assert
-        actual.IsSucc.ShouldBeFalse();
+        // Act & Assert
+        await Should.ThrowAsync<Exception>(
+            () => _sut.Handle(request, CancellationToken.None).AsTask());
     }
 
     [Fact]

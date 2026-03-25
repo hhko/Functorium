@@ -260,9 +260,9 @@ public sealed class CreateProductCommand
         public async ValueTask<FinResponse<Response>> Handle(
             Request request, CancellationToken cancellationToken)
         {
-            // 1. Value Object 생성 (검증 포함)
-            var name = ProductName.Create(request.Name).ThrowIfFail();
-            var price = Money.Create(request.Price).ThrowIfFail();
+            // 파이프라인 Validator가 검증 완료. Create()는 정규화 목적.
+            var name = ProductName.Create(request.Name).Unwrap();
+            var price = Money.Create(request.Price).Unwrap();
 
             // 2. Aggregate 생성
             var product = Product.Create(name, price);

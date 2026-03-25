@@ -50,7 +50,7 @@ public sealed class DeductStockCommand
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var productId = ProductId.Create(request.ProductId);
-            var quantity = Quantity.Create(request.Quantity).ThrowIfFail();
+            var quantity = Quantity.Create(request.Quantity).Unwrap();
 
             FinT<IO, Response> usecase =
                 from inventory in _inventoryRepository.GetByProductId(productId)

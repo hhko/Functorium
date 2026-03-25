@@ -89,7 +89,7 @@ public sealed class SearchInventoryQuery
 
             request.LowStockThreshold.Iter(threshold =>
                 spec = new InventoryLowStockSpec(
-                    Quantity.Create(threshold).ThrowIfFail()));
+                    Quantity.Create(threshold).Unwrap()));
 
             return spec;
         }

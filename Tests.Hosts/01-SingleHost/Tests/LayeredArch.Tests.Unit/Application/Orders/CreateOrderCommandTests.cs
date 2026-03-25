@@ -70,19 +70,17 @@ public class CreateOrderCommandTests
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenShippingAddressIsEmpty()
+    public async Task Handle_ShouldThrow_WhenShippingAddressIsEmpty()
     {
-        // Arrange
+        // Arrange — 파이프라인 없이 직접 호출하면 Unwrap()에서 예외 발생
         var request = new CreateOrderCommand.Request(
             CustomerId.New().ToString(),
             Seq(new CreateOrderCommand.OrderLineRequest(ProductId.New().ToString(), 2)),
             "",
             "admin@example.com");
 
-        // Act
-        var actual = await _sut.Handle(request, CancellationToken.None);
-
-        // Assert
-        actual.IsSucc.ShouldBeFalse();
+        // Act & Assert
+        await Should.ThrowAsync<Exception>(
+            () => _sut.Handle(request, CancellationToken.None).AsTask());
     }
 }

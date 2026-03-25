@@ -58,9 +58,9 @@ public sealed class UpdateProductCommand
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var productId = ProductId.Create(request.ProductId);
-            var name = ProductName.Create(request.Name).ThrowIfFail();
-            var description = ProductDescription.Create(request.Description).ThrowIfFail();
-            var price = Money.Create(request.Price).ThrowIfFail();
+            var name = ProductName.Create(request.Name).Unwrap();
+            var description = ProductDescription.Create(request.Description).Unwrap();
+            var price = Money.Create(request.Price).Unwrap();
 
             FinT<IO, Response> usecase =
                 from existingProduct in _productRepository.GetById(productId)

@@ -118,12 +118,12 @@ public sealed class SearchProductsQuery
 
             if (request.Name.Length > 0)
                 spec &= new ProductNameSpec(
-                    ProductName.Create(request.Name).ThrowIfFail());
+                    ProductName.Create(request.Name).Unwrap());
 
             if (request.MinPrice > 0 && request.MaxPrice > 0)
                 spec &= new ProductPriceRangeSpec(
-                    Money.Create(request.MinPrice).ThrowIfFail(),
-                    Money.Create(request.MaxPrice).ThrowIfFail());
+                    Money.Create(request.MinPrice).Unwrap(),
+                    Money.Create(request.MaxPrice).Unwrap());
 
             return spec;
         }

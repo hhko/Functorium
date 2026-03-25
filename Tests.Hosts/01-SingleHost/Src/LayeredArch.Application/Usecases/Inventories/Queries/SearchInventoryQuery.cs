@@ -93,7 +93,7 @@ public sealed class SearchInventoryQuery
             if (request.LowStockThreshold > 0)
             {
                 return new InventoryLowStockSpec(
-                    Quantity.Create(request.LowStockThreshold).ThrowIfFail());
+                    Quantity.Create(request.LowStockThreshold).Unwrap());
             }
 
             return Specification<Inventory>.All;

@@ -8,6 +8,29 @@ namespace Functorium.Applications.Linq;
 public static partial class FinTLinqExtensions
 {
     // =========================================================================
+    // Fin Unwrap — 파이프라인 검증 후 안전하게 값 꺼내기
+    // =========================================================================
+
+    /// <summary>
+    /// 파이프라인 Validator가 검증을 완료한 후 안전하게 값을 꺼냅니다.
+    /// <c>Create()</c>가 반드시 성공하는 컨텍스트(핸들러 내부)에서 사용합니다.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <c>UsecaseValidationPipeline</c>이 <c>MustSatisfyValidation(VO.Validate)</c>으로
+    /// 검증을 완료한 후 핸들러가 실행됩니다. 이 시점에서 <c>Create()</c>는 정규화(Trim 등)
+    /// 목적으로만 호출되며, 검증은 반드시 성공합니다.
+    /// </para>
+    /// <code>
+    /// // 파이프라인이 검증 완료. Create()는 정규화 목적.
+    /// var name = ProductName.Create(request.Name).Unwrap();
+    /// var price = Money.Create(request.Price).Unwrap();
+    /// var product = Product.Create(name, price);
+    /// </code>
+    /// </remarks>
+    public static A Unwrap<A>(this Fin<A> fin) => fin.ThrowIfFail();
+
+    // =========================================================================
     // Fin → FinT SelectMany
     // =========================================================================
 

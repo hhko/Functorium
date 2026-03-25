@@ -91,36 +91,26 @@ public sealed class CreateOrderWithCreditCheckCommand
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            // 1. Value Object 생성
-            var shippingAddressResult = ShippingAddress.Create(request.ShippingAddress);
-
-            if (shippingAddressResult.IsFail)
-                return FinResponse.Fail<Response>(shippingAddressResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
-
+            // 파이프라인 Validator가 검증 완료. Create()는 정규화 목적.
             var customerId = CustomerId.Create(request.CustomerId);
-            var shippingAddress = (ShippingAddress)shippingAddressResult;
+            var shippingAddress = ShippingAddress.Create(request.ShippingAddress).Unwrap();
 
-            // 2. 라인별 Quantity 검증 + ProductId 수집
-            var lineRequests = new List<(ProductId ProductId, Quantity Quantity)>();
-            foreach (var lineReq in request.OrderLines)
-            {
-                var productId = ProductId.Create(lineReq.ProductId);
-                var quantityResult = Quantity.Create(lineReq.Quantity);
-                if (quantityResult.IsFail)
-                    return FinResponse.Fail<Response>(quantityResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
+            var lineRequests = request.OrderLines
+                .Select(lineReq => (
+                    ProductId: ProductId.Create(lineReq.ProductId),
+                    Quantity: Quantity.Create(lineReq.Quantity).Unwrap()))
+                .ToList();
 
-                lineRequests.Add((productId, (Quantity)quantityResult));
-            }
-
-            // 3. 배치 가격 조회 (단일 라운드트립)
+            // 배치 가격 조회 (단일 라운드트립)
             var productIds = lineRequests.Select(l => l.ProductId).Distinct().ToList();
             var pricesResult = await _productCatalog.GetPricesForProducts(productIds).Run().RunAsync();
             if (pricesResult.IsFail)
-                return FinResponse.Fail<Response>(pricesResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
+                return FinResponse.Fail<Response>(pricesResult.Match(
+                    Succ: _ => throw new InvalidOperationException(), Fail: e => e));
 
-            var priceLookup = pricesResult.ThrowIfFail().ToDictionary(p => p.Id, p => p.Price);
+            var priceLookup = pricesResult.Unwrap().ToDictionary(p => p.Id, p => p.Price);
 
-            // 4. 존재 검증 + OrderLine 생성
+            // 존재 검증 + OrderLine 생성
             var orderLines = new List<OrderLine>();
             foreach (var (productId, quantity) in lineRequests)
             {
@@ -130,25 +120,16 @@ public sealed class CreateOrderWithCreditCheckCommand
                         productId.ToString(),
                         $"Product not found: '{productId}'"));
 
-                var orderLineResult = OrderLine.Create(productId, quantity, unitPrice);
-                if (orderLineResult.IsFail)
-                    return FinResponse.Fail<Response>(orderLineResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
-
-                orderLines.Add(orderLineResult.ThrowIfFail());
+                orderLines.Add(OrderLine.Create(productId, quantity, unitPrice).Unwrap());
             }
 
-            // 5. Order 생성
-            var orderResult = Order.Create(customerId, orderLines, shippingAddress);
-            if (orderResult.IsFail)
-                return FinResponse.Fail<Response>(orderResult.Match(Succ: _ => throw new InvalidOperationException(), Fail: e => e));
+            var order = Order.Create(customerId, orderLines, shippingAddress).Unwrap();
 
-            var newOrder = orderResult.ThrowIfFail();
-
-            // 6. 고객 조회 → 신용 검증 → 저장
+            // 고객 조회 → 신용 검증 → 저장
             FinT<IO, Response> usecase =
                 from customer in _customerRepository.GetById(customerId)
-                from _ in _creditCheckService.ValidateCreditLimit(customer, newOrder.TotalAmount)
-                from saved in _orderRepository.Create(newOrder)
+                from _ in _creditCheckService.ValidateCreditLimit(customer, order.TotalAmount)
+                from saved in _orderRepository.Create(order)
                 select new Response(
                     saved.Id.ToString(),
                     Seq(saved.OrderLines.Select(l => new OrderLineResponse(

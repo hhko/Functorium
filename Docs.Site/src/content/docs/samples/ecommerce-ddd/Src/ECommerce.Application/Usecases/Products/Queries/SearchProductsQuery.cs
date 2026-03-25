@@ -98,12 +98,12 @@ public sealed class SearchProductsQuery
 
             request.Name.Iter(name =>
                 spec &= new ProductNameSpec(
-                    ProductName.Create(name).ThrowIfFail()));
+                    ProductName.Create(name).Unwrap()));
 
             request.MinPrice.Bind(min => request.MaxPrice.Map(max => (min, max)))
                 .Iter(t => spec &= new ProductPriceRangeSpec(
-                    Money.Create(t.min).ThrowIfFail(),
-                    Money.Create(t.max).ThrowIfFail()));
+                    Money.Create(t.min).Unwrap(),
+                    Money.Create(t.max).Unwrap()));
 
             return spec;
         }

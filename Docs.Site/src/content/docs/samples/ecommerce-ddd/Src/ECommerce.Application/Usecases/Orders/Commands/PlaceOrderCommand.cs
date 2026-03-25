@@ -99,11 +99,11 @@ public sealed class PlaceOrderCommand
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var customerId = CustomerId.Create(request.CustomerId);
-            var shippingAddress = ShippingAddress.Create(request.ShippingAddress).ThrowIfFail();
+            var shippingAddress = ShippingAddress.Create(request.ShippingAddress).Unwrap();
             var lineRequests = request.OrderLines
                 .Select(lineReq => (
                     ProductId: ProductId.Create(lineReq.ProductId),
-                    Quantity: Quantity.Create(lineReq.Quantity).ThrowIfFail()))
+                    Quantity: Quantity.Create(lineReq.Quantity).Unwrap()))
                 .ToList();
             var productIds = lineRequests.Select(l => l.ProductId).Distinct().ToList();
 
@@ -151,7 +151,7 @@ public sealed class PlaceOrderCommand
                         productId.ToString(),
                         $"Product not found: '{productId}'"));
 
-                orderLines.Add(OrderLine.Create(productId, quantity, unitPrice).ThrowIfFail());
+                orderLines.Add(OrderLine.Create(productId, quantity, unitPrice).Unwrap());
             }
 
             return Order.Create(customerId, orderLines, shippingAddress);

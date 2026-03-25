@@ -7,3 +7,4 @@ global using Functorium.Domains.ValueObjects.Validations.Contextual;
 global using FluentValidation;
 global using Functorium.Applications.Validations;
 global using ECommerce.Domain.SharedModels.ValueObjects;
+global using Functorium.Applications.Linq;

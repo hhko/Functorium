@@ -55,9 +55,9 @@ public sealed class CreateCustomerCommand
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            var name = CustomerName.Create(request.Name).ThrowIfFail();
-            var email = Email.Create(request.Email).ThrowIfFail();
-            var creditLimit = Money.Create(request.CreditLimit).ThrowIfFail();
+            var name = CustomerName.Create(request.Name).Unwrap();
+            var email = Email.Create(request.Email).Unwrap();
+            var creditLimit = Money.Create(request.CreditLimit).Unwrap();
 
             FinT<IO, Response> usecase =
                 from exists in _customerRepository.Exists(new CustomerEmailSpec(email))

@@ -12,8 +12,8 @@ public sealed class CreateProductCommand
         public async ValueTask<FinResponse<Response>> Handle(
             Request request, CancellationToken cancellationToken)
         {
-            var name = ProductName.Create(request.Name).ThrowIfFail();
-            var price = Money.Create(request.Price).ThrowIfFail();
+            var name = ProductName.Create(request.Name).Unwrap();
+            var price = Money.Create(request.Price).Unwrap();
 
             var product = Product.Create(name, price);
 

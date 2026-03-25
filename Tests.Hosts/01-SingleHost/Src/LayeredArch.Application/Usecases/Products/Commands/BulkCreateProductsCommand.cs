@@ -42,9 +42,9 @@ public sealed class BulkCreateProductsCommand
 
             foreach (var item in request.Products)
             {
-                var name = ProductName.Create(item.Name).ThrowIfFail();
-                var description = ProductDescription.Create(item.Description).ThrowIfFail();
-                var price = Money.Create(item.Price).ThrowIfFail();
+                var name = ProductName.Create(item.Name).Unwrap();
+                var description = ProductDescription.Create(item.Description).Unwrap();
+                var price = Money.Create(item.Price).Unwrap();
 
                 products.Add(Product.Create(name, description, price));
             }

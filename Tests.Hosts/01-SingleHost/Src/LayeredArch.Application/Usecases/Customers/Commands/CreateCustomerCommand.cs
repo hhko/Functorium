@@ -8,7 +8,7 @@ using static Functorium.Applications.Errors.ApplicationErrorType;
 namespace LayeredArch.Application.Usecases.Customers.Commands;
 
 /// <summary>
-/// 고객 생성 Command - Apply 패턴 데모
+/// 고객 생성 Command
 /// Email 중복 검사 + 공유 VO(Money) 사용
 /// </summary>
 public sealed class CreateCustomerCommand
@@ -52,7 +52,7 @@ public sealed class CreateCustomerCommand
     }
 
     /// <summary>
-    /// Command Handler - Apply 패턴 적용
+    /// Command Handler
     /// </summary>
     public sealed class Usecase(
         ICustomerRepository customerRepository)
@@ -62,56 +62,29 @@ public sealed class CreateCustomerCommand
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            // 1. Value Object 생성 (Apply 패턴)
-            var customerResult = CreateCustomer(request);
+            // 파이프라인 Validator가 검증 완료. Create()는 정규화 목적.
+            var name = CustomerName.Create(request.Name).Unwrap();
+            var email = Email.Create(request.Email).Unwrap();
+            var creditLimit = Money.Create(request.CreditLimit).Unwrap();
 
-            // 2. 검증 실패 시 조기 반환
-            if (customerResult.IsFail)
-            {
-                return customerResult.Match(
-                    Succ: _ => throw new InvalidOperationException(),
-                    Fail: error => FinResponse.Fail<Response>(error));
-            }
+            var customer = Customer.Create(name, email, creditLimit);
 
-            // 3. Email 생성 (중복 검사용)
-            var email = Email.Create(request.Email).ThrowIfFail();
-
-            // 4. 중복 검사 및 저장
             FinT<IO, Response> usecase =
                 from exists in _customerRepository.Exists(new CustomerEmailSpec(email))
                 from _ in guard(!exists, ApplicationError.For<CreateCustomerCommand>(
                     new AlreadyExists(),
                     request.Email,
                     $"Email already exists: '{request.Email}'"))
-                from customer in _customerRepository.Create((Customer)customerResult)
+                from created in _customerRepository.Create(customer)
                 select new Response(
-                    customer.Id.ToString(),
-                    customer.Name,
-                    customer.Email,
-                    customer.CreditLimit,
-                    customer.CreatedAt);
+                    created.Id.ToString(),
+                    created.Name,
+                    created.Email,
+                    created.CreditLimit,
+                    created.CreatedAt);
 
             Fin<Response> response = await usecase.Run().RunAsync();
             return response.ToFinResponse();
-        }
-
-        /// <summary>
-        /// Apply 패턴: VO Validate() + Apply 병합
-        /// </summary>
-        private static Fin<Customer> CreateCustomer(Request request)
-        {
-            var name = CustomerName.Validate(request.Name);
-            var email = Email.Validate(request.Email);
-            var creditLimit = Money.Validate(request.CreditLimit);
-
-            return (name, email, creditLimit)
-                .Apply((n, e, c) =>
-                    Customer.Create(
-                        CustomerName.Create(n).ThrowIfFail(),
-                        Email.Create(e).ThrowIfFail(),
-                        Money.Create(c).ThrowIfFail()))
-                .As()
-                .ToFin();
         }
     }
 }

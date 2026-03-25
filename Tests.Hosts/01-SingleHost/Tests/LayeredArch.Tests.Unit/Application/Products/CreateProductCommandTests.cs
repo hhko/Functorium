@@ -39,29 +39,25 @@ public class CreateProductCommandTests
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenNameIsEmpty()
+    public async Task Handle_ShouldThrow_WhenNameIsEmpty()
     {
-        // Arrange
+        // Arrange — 파이프라인 없이 직접 호출하면 Unwrap()에서 예외 발생
         var request = new CreateProductCommand.Request("", "Description", 100m, 10);
 
-        // Act
-        var actual = await _sut.Handle(request, CancellationToken.None);
-
-        // Assert
-        actual.IsSucc.ShouldBeFalse();
+        // Act & Assert
+        await Should.ThrowAsync<Exception>(
+            () => _sut.Handle(request, CancellationToken.None).AsTask());
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenPriceIsZero()
+    public async Task Handle_ShouldThrow_WhenPriceIsZero()
     {
-        // Arrange
+        // Arrange — 파이프라인 없이 직접 호출하면 Unwrap()에서 예외 발생
         var request = new CreateProductCommand.Request("Test Product", "Description", 0m, 10);
 
-        // Act
-        var actual = await _sut.Handle(request, CancellationToken.None);
-
-        // Assert
-        actual.IsSucc.ShouldBeFalse();
+        // Act & Assert
+        await Should.ThrowAsync<Exception>(
+            () => _sut.Handle(request, CancellationToken.None).AsTask());
     }
 
     [Fact]
