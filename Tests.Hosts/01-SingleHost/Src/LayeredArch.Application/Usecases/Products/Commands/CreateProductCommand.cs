@@ -69,13 +69,13 @@ public sealed class CreateProductCommand
                     Money.Create(request.Price),
                     Quantity.Create(request.StockQuantity)
                 ).ApplyT((name, desc, price, qty) => (Name: name, Desc: desc, Price: price, Qty: qty))
+                let product = Product.Create(vos.Name, vos.Desc, vos.Price)
                 from exists in _productRepository.Exists(new ProductNameUniqueSpec(vos.Name))
                 from _ in guard(!exists, ApplicationError.For<CreateProductCommand>(
                     new AlreadyExists(),
                     request.Name,
                     $"Product name already exists: '{request.Name}'"))
-                from createdProduct in _productRepository.Create(
-                    Product.Create(vos.Name, vos.Desc, vos.Price))
+                from createdProduct in _productRepository.Create(product)
                 from createdInventory in _inventoryRepository.Create(
                     Inventory.Create(createdProduct.Id, vos.Qty))
                 select new Response(
