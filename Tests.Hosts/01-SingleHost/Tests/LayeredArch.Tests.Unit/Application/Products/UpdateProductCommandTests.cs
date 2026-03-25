@@ -85,14 +85,16 @@ public class UpdateProductCommandTests
     }
 
     [Fact]
-    public async Task Handle_ShouldThrow_WhenVOIsInvalid()
+    public async Task Handle_ShouldReturnFailure_WhenVOIsInvalid()
     {
-        // Arrange — 파이프라인 없이 직접 호출하면 Unwrap()에서 예외 발생
+        // Arrange — ApplyT가 VO 생성 실패를 Fin.Fail로 수집
         var request = new UpdateProductCommand.Request(
             ProductId.New().ToString(), "", "Desc", 200m);
 
-        // Act & Assert
-        await Should.ThrowAsync<Exception>(
-            () => _sut.Handle(request, CancellationToken.None).AsTask());
+        // Act
+        var actual = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        actual.IsSucc.ShouldBeFalse();
     }
 }

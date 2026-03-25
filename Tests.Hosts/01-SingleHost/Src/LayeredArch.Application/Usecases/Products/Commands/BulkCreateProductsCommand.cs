@@ -37,16 +37,18 @@ public sealed class BulkCreateProductsCommand
     {
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            // 1. 각 항목에서 Product 생성
+            // 1. 각 항목에서 VO 합성 + Product 생성
             var products = new List<Product>();
 
             foreach (var item in request.Products)
             {
-                var name = ProductName.Create(item.Name).Unwrap();
-                var description = ProductDescription.Create(item.Description).Unwrap();
-                var price = Money.Create(item.Price).Unwrap();
+                var vos = ApplyExtensions.Apply(
+                    (ProductName.Create(item.Name),
+                     ProductDescription.Create(item.Description),
+                     Money.Create(item.Price)),
+                    (name, desc, price) => (Name: name, Desc: desc, Price: price)).Unwrap();
 
-                products.Add(Product.Create(name, description, price));
+                products.Add(Product.Create(vos.Name, vos.Desc, vos.Price));
             }
 
             // 2. Domain Service로 벌크 이벤트 생성 + 개별 이벤트 정리

@@ -12,12 +12,13 @@ public sealed class CreateProductCommand
         public async ValueTask<FinResponse<Response>> Handle(
             Request request, CancellationToken cancellationToken)
         {
-            var name = ProductName.Create(request.Name).Unwrap();
-            var price = Money.Create(request.Price).Unwrap();
-
-            var product = Product.Create(name, price);
-
+            // ApplyT: VO 합성 + 에러 수집 → FinT<IO, R> LINQ from 첫 구문
             FinT<IO, Response> usecase =
+                from vos in (
+                    ProductName.Create(request.Name),
+                    Money.Create(request.Price)
+                ).ApplyT((name, price) => (Name: name, Price: price))
+                let product = Product.Create(vos.Name, vos.Price)
                 from created in productRepository.Create(product)
                 select new Response(
                     created.Id.ToString(),

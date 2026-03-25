@@ -50,9 +50,10 @@ public sealed class DeductStockCommand
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var productId = ProductId.Create(request.ProductId);
-            var quantity = Quantity.Create(request.Quantity).Unwrap();
 
+            // VO 1개: FinT.lift로 리프팅
             FinT<IO, Response> usecase =
+                from quantity in FinT.lift<IO, Quantity>(Quantity.Create(request.Quantity))
                 from inventory in _inventoryRepository.GetByProductId(productId)
                 from _1 in inventory.DeductStock(quantity)
                 from updated in _inventoryRepository.Update(inventory)

@@ -55,15 +55,15 @@ public sealed class CreateCustomerCommand
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            // 파이프라인 Validator가 검증 완료. Create()는 정규화 목적.
-            var name = CustomerName.Create(request.Name).Unwrap();
-            var email = Email.Create(request.Email).Unwrap();
-            var creditLimit = Money.Create(request.CreditLimit).Unwrap();
-
-            var customer = Customer.Create(name, email, creditLimit);
-
+            // ApplyT: VO 합성 + 에러 수집 → FinT<IO, R> LINQ from 첫 구문
             FinT<IO, Response> usecase =
-                from exists in _customerRepository.Exists(new CustomerEmailSpec(email))
+                from vos in (
+                    CustomerName.Create(request.Name),
+                    Email.Create(request.Email),
+                    Money.Create(request.CreditLimit)
+                ).ApplyT((name, email, creditLimit) => (Name: name, Email: email, CreditLimit: creditLimit))
+                let customer = Customer.Create(vos.Name, vos.Email, vos.CreditLimit)
+                from exists in _customerRepository.Exists(new CustomerEmailSpec(vos.Email))
                 from _ in guard(!exists, ApplicationError.For<CreateCustomerCommand>(
                     new AlreadyExists(),
                     request.Email,

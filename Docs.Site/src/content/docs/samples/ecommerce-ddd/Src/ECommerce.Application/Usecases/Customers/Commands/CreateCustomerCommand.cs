@@ -55,24 +55,26 @@ public sealed class CreateCustomerCommand
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            var name = CustomerName.Create(request.Name).Unwrap();
-            var email = Email.Create(request.Email).Unwrap();
-            var creditLimit = Money.Create(request.CreditLimit).Unwrap();
-
+            // ApplyT: VO 합성 + 에러 수집 → FinT<IO, R> LINQ from 첫 구문
             FinT<IO, Response> usecase =
-                from exists in _customerRepository.Exists(new CustomerEmailSpec(email))
+                from vos in (
+                    CustomerName.Create(request.Name),
+                    Email.Create(request.Email),
+                    Money.Create(request.CreditLimit)
+                ).ApplyT((name, email, creditLimit) => (Name: name, Email: email, CreditLimit: creditLimit))
+                let customer = Customer.Create(vos.Name, vos.Email, vos.CreditLimit)
+                from exists in _customerRepository.Exists(new CustomerEmailSpec(vos.Email))
                 from _ in guard(!exists, ApplicationError.For<CreateCustomerCommand>(
                     new AlreadyExists(),
                     request.Email,
                     $"Email already exists: '{request.Email}'"))
-                from customer in _customerRepository.Create(
-                    Customer.Create(name, email, creditLimit))
+                from created in _customerRepository.Create(customer)
                 select new Response(
-                    customer.Id.ToString(),
-                    customer.Name,
-                    customer.Email,
-                    customer.CreditLimit,
-                    customer.CreatedAt);
+                    created.Id.ToString(),
+                    created.Name,
+                    created.Email,
+                    created.CreditLimit,
+                    created.CreatedAt);
 
             Fin<Response> response = await usecase.Run().RunAsync();
             return response.ToFinResponse();

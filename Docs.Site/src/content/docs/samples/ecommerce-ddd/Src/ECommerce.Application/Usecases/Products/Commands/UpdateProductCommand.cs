@@ -58,18 +58,21 @@ public sealed class UpdateProductCommand
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var productId = ProductId.Create(request.ProductId);
-            var name = ProductName.Create(request.Name).Unwrap();
-            var description = ProductDescription.Create(request.Description).Unwrap();
-            var price = Money.Create(request.Price).Unwrap();
 
+            // ApplyT: VO 합성 + 에러 수집 → FinT<IO, R> LINQ from 첫 구문
             FinT<IO, Response> usecase =
+                from vos in (
+                    ProductName.Create(request.Name),
+                    ProductDescription.Create(request.Description),
+                    Money.Create(request.Price)
+                ).ApplyT((name, desc, price) => (Name: name, Desc: desc, Price: price))
                 from existingProduct in _productRepository.GetById(productId)
-                from exists in _productRepository.Exists(new ProductNameUniqueSpec(name, productId))
+                from exists in _productRepository.Exists(new ProductNameUniqueSpec(vos.Name, productId))
                 from _ in guard(!exists, ApplicationError.For<UpdateProductCommand>(
                     new AlreadyExists(),
                     request.Name,
                     $"Product name already exists: '{request.Name}'"))
-                from updated in existingProduct.Update(name, description, price)
+                from updated in existingProduct.Update(vos.Name, vos.Desc, vos.Price)
                 from updatedProduct in _productRepository.Update(updated)
                 select new Response(
                     updatedProduct.Id.ToString(),
