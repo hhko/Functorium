@@ -61,23 +61,23 @@ public sealed class CreateProductCommand
 
         public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            // 파이프라인 Validator가 검증 완료. Create()는 정규화 목적.
-            var productName = ProductName.Create(request.Name).Unwrap();
-            var description = ProductDescription.Create(request.Description).Unwrap();
-            var price = Money.Create(request.Price).Unwrap();
-            var stockQuantity = Quantity.Create(request.StockQuantity).Unwrap();
-
-            var product = Product.Create(productName, description, price);
-
+            // ApplyT: VO 합성 + 에러 수집 → FinT<IO, R> LINQ from 첫 구문
             FinT<IO, Response> usecase =
-                from exists in _productRepository.Exists(new ProductNameUniqueSpec(productName))
+                from vos in (
+                    ProductName.Create(request.Name),
+                    ProductDescription.Create(request.Description),
+                    Money.Create(request.Price),
+                    Quantity.Create(request.StockQuantity)
+                ).ApplyT((name, desc, price, qty) => (Name: name, Desc: desc, Price: price, Qty: qty))
+                from exists in _productRepository.Exists(new ProductNameUniqueSpec(vos.Name))
                 from _ in guard(!exists, ApplicationError.For<CreateProductCommand>(
                     new AlreadyExists(),
                     request.Name,
                     $"Product name already exists: '{request.Name}'"))
-                from createdProduct in _productRepository.Create(product)
+                from createdProduct in _productRepository.Create(
+                    Product.Create(vos.Name, vos.Desc, vos.Price))
                 from createdInventory in _inventoryRepository.Create(
-                    Inventory.Create(createdProduct.Id, stockQuantity))
+                    Inventory.Create(createdProduct.Id, vos.Qty))
                 select new Response(
                     createdProduct.Id.ToString(),
                     createdProduct.Name,

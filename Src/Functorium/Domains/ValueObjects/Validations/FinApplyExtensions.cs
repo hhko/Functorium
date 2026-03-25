@@ -79,4 +79,54 @@ public static class FinApplyExtensions
          tuple.v3.ToValidation(), tuple.v4.ToValidation(),
          tuple.v5.ToValidation())
             .Apply(f).ToFin();
+
+    // =========================================================================
+    // FinT<IO, R> 반환 — LINQ from 구문에서 직접 사용
+    // =========================================================================
+
+    /// <summary>
+    /// 2-tuple ApplyT: Fin 합성 결과를 FinT&lt;IO, R&gt;로 리프팅합니다.
+    /// LINQ from 첫 구문에서 직접 사용할 수 있습니다.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// FinT&lt;IO, Response&gt; usecase =
+    ///     from vos in (Name.Create(req.Name), Price.Create(req.Price))
+    ///         .ApplyT((name, price) =&gt; (Name: name, Price: price))
+    ///     from product in repo.Create(Product.Create(vos.Name, vos.Price))
+    ///     select new Response(...);
+    /// </code>
+    /// </example>
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static FinT<IO, R> ApplyT<T1, T2, R>(
+        this (Fin<T1> v1, Fin<T2> v2) tuple,
+        Func<T1, T2, R> f) =>
+        FinT.lift<IO, R>(tuple.Apply(f));
+
+    /// <summary>
+    /// 3-tuple ApplyT: FinT&lt;IO, R&gt; 반환
+    /// </summary>
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static FinT<IO, R> ApplyT<T1, T2, T3, R>(
+        this (Fin<T1> v1, Fin<T2> v2, Fin<T3> v3) tuple,
+        Func<T1, T2, T3, R> f) =>
+        FinT.lift<IO, R>(tuple.Apply(f));
+
+    /// <summary>
+    /// 4-tuple ApplyT: FinT&lt;IO, R&gt; 반환
+    /// </summary>
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static FinT<IO, R> ApplyT<T1, T2, T3, T4, R>(
+        this (Fin<T1> v1, Fin<T2> v2, Fin<T3> v3, Fin<T4> v4) tuple,
+        Func<T1, T2, T3, T4, R> f) =>
+        FinT.lift<IO, R>(tuple.Apply(f));
+
+    /// <summary>
+    /// 5-tuple ApplyT: FinT&lt;IO, R&gt; 반환
+    /// </summary>
+    [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static FinT<IO, R> ApplyT<T1, T2, T3, T4, T5, R>(
+        this (Fin<T1> v1, Fin<T2> v2, Fin<T3> v3, Fin<T4> v4, Fin<T5> v5) tuple,
+        Func<T1, T2, T3, T4, T5, R> f) =>
+        FinT.lift<IO, R>(tuple.Apply(f));
 }
