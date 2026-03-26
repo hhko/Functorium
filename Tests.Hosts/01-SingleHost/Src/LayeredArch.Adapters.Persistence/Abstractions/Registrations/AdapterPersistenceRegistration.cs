@@ -1,13 +1,15 @@
 using System.Data;
 using LayeredArch.Adapters.Persistence.Abstractions.Options;
-using LayeredArch.Adapters.Persistence.Repositories.Dapper;
-using LayeredArch.Adapters.Persistence.Repositories.EfCore;
-using LayeredArch.Adapters.Persistence.Repositories.InMemory;
-using LayeredArch.Adapters.Persistence.Repositories.InMemory.Customers;
-using LayeredArch.Adapters.Persistence.Repositories.InMemory.Inventories;
-using LayeredArch.Adapters.Persistence.Repositories.InMemory.Orders;
-using LayeredArch.Adapters.Persistence.Repositories.InMemory.Products;
-using LayeredArch.Adapters.Persistence.Repositories.InMemory.Tags;
+using LayeredArch.Adapters.Persistence.Repositories;
+using LayeredArch.Adapters.Persistence.Repositories.Customers.Queries;
+using LayeredArch.Adapters.Persistence.Repositories.Customers.Repositories;
+using LayeredArch.Adapters.Persistence.Repositories.Inventories.Queries;
+using LayeredArch.Adapters.Persistence.Repositories.Inventories.Repositories;
+using LayeredArch.Adapters.Persistence.Repositories.Orders.Queries;
+using LayeredArch.Adapters.Persistence.Repositories.Orders.Repositories;
+using LayeredArch.Adapters.Persistence.Repositories.Products.Queries;
+using LayeredArch.Adapters.Persistence.Repositories.Products.Repositories;
+using LayeredArch.Adapters.Persistence.Repositories.Tags.Repositories;
 using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Orders;
@@ -78,47 +80,47 @@ public static class AdapterPersistenceRegistration
     private static void RegisterInMemoryRepositories(IServiceCollection services)
     {
         // Repository 등록 (Source Generator가 생성한 Pipeline 버전 사용)
-        services.RegisterScopedObservablePort<IProductRepository, InMemoryProductRepositoryObservable>();
-        services.RegisterScopedObservablePort<IInventoryRepository, InMemoryInventoryRepositoryObservable>();
-        services.RegisterScopedObservablePort<IOrderRepository, InMemoryOrderRepositoryObservable>();
-        services.RegisterScopedObservablePort<ICustomerRepository, InMemoryCustomerRepositoryObservable>();
-        services.RegisterScopedObservablePort<ITagRepository, InMemoryTagRepositoryObservable>();
+        services.RegisterScopedObservablePort<IProductRepository, ProductRepositoryInMemoryObservable>();
+        services.RegisterScopedObservablePort<IInventoryRepository, InventoryRepositoryInMemoryObservable>();
+        services.RegisterScopedObservablePort<IOrderRepository, OrderRepositoryInMemoryObservable>();
+        services.RegisterScopedObservablePort<ICustomerRepository, CustomerRepositoryInMemoryObservable>();
+        services.RegisterScopedObservablePort<ITagRepository, TagRepositoryInMemoryObservable>();
 
         // UnitOfWork 등록
-        services.RegisterScopedObservablePort<IUnitOfWork, InMemoryUnitOfWorkObservable>();
+        services.RegisterScopedObservablePort<IUnitOfWork, UnitOfWorkInMemoryObservable>();
 
         // 공유 Port 등록
-        services.AddScoped<InMemoryProductRepository>();
-        services.RegisterScopedObservablePort<IProductCatalog, InMemoryProductCatalogObservable>();
+        services.AddScoped<ProductRepositoryInMemory>();
+        services.RegisterScopedObservablePort<IProductCatalog, ProductCatalogInMemoryObservable>();
 
         // Read Adapter 등록
-        services.RegisterScopedObservablePort<IProductQuery, InMemoryProductQueryObservable>();
-        services.RegisterScopedObservablePort<IProductDetailQuery, InMemoryProductDetailQueryObservable>();
-        services.AddScoped<InMemoryInventoryRepository>();
-        services.RegisterScopedObservablePort<IInventoryQuery, InMemoryInventoryQueryObservable>();
-        services.RegisterScopedObservablePort<IProductWithStockQuery, InMemoryProductWithStockQueryObservable>();
-        services.RegisterScopedObservablePort<IProductWithOptionalStockQuery, InMemoryProductWithOptionalStockQueryObservable>();
-        services.RegisterScopedObservablePort<ICustomerDetailQuery, InMemoryCustomerDetailQueryObservable>();
-        services.RegisterScopedObservablePort<ICustomerOrderSummaryQuery, InMemoryCustomerOrderSummaryQueryObservable>();
-        services.RegisterScopedObservablePort<ICustomerOrdersQuery, InMemoryCustomerOrdersQueryObservable>();
-        services.RegisterScopedObservablePort<IOrderDetailQuery, InMemoryOrderDetailQueryObservable>();
-        services.RegisterScopedObservablePort<IOrderWithProductsQuery, InMemoryOrderWithProductsQueryObservable>();
+        services.RegisterScopedObservablePort<IProductQuery, ProductQueryInMemoryObservable>();
+        services.RegisterScopedObservablePort<IProductDetailQuery, ProductDetailQueryInMemoryObservable>();
+        services.AddScoped<InventoryRepositoryInMemory>();
+        services.RegisterScopedObservablePort<IInventoryQuery, InventoryQueryInMemoryObservable>();
+        services.RegisterScopedObservablePort<IProductWithStockQuery, ProductWithStockQueryInMemoryObservable>();
+        services.RegisterScopedObservablePort<IProductWithOptionalStockQuery, ProductWithOptionalStockQueryInMemoryObservable>();
+        services.RegisterScopedObservablePort<ICustomerDetailQuery, CustomerDetailQueryInMemoryObservable>();
+        services.RegisterScopedObservablePort<ICustomerOrderSummaryQuery, CustomerOrderSummaryQueryInMemoryObservable>();
+        services.RegisterScopedObservablePort<ICustomerOrdersQuery, CustomerOrdersQueryInMemoryObservable>();
+        services.RegisterScopedObservablePort<IOrderDetailQuery, OrderDetailQueryInMemoryObservable>();
+        services.RegisterScopedObservablePort<IOrderWithProductsQuery, OrderWithProductsQueryInMemoryObservable>();
     }
 
     private static void RegisterSqliteRepositories(IServiceCollection services)
     {
         // Repository 등록 (Source Generator가 생성한 Pipeline 버전 사용)
-        services.RegisterScopedObservablePort<IProductRepository, EfCoreProductRepositoryObservable>();
-        services.RegisterScopedObservablePort<IInventoryRepository, EfCoreInventoryRepositoryObservable>();
-        services.RegisterScopedObservablePort<IOrderRepository, EfCoreOrderRepositoryObservable>();
-        services.RegisterScopedObservablePort<ICustomerRepository, EfCoreCustomerRepositoryObservable>();
-        services.RegisterScopedObservablePort<ITagRepository, EfCoreTagRepositoryObservable>();
+        services.RegisterScopedObservablePort<IProductRepository, ProductRepositoryEfCoreObservable>();
+        services.RegisterScopedObservablePort<IInventoryRepository, InventoryRepositoryEfCoreObservable>();
+        services.RegisterScopedObservablePort<IOrderRepository, OrderRepositoryEfCoreObservable>();
+        services.RegisterScopedObservablePort<ICustomerRepository, CustomerRepositoryEfCoreObservable>();
+        services.RegisterScopedObservablePort<ITagRepository, TagRepositoryEfCoreObservable>();
 
         // UnitOfWork 등록
-        services.RegisterScopedObservablePort<IUnitOfWork, EfCoreUnitOfWorkObservable>();
+        services.RegisterScopedObservablePort<IUnitOfWork, UnitOfWorkEfCoreObservable>();
 
         // 공유 Port 등록
-        services.RegisterScopedObservablePort<IProductCatalog, EfCoreProductCatalogObservable>();
+        services.RegisterScopedObservablePort<IProductCatalog, ProductCatalogEfCoreObservable>();
     }
 
     private static void RegisterDapperQueries(
@@ -131,12 +133,12 @@ public static class AdapterPersistenceRegistration
             return conn;
         });
 
-        services.RegisterScopedObservablePort<IProductQuery, DapperProductQueryObservable>();
-        services.RegisterScopedObservablePort<IProductWithStockQuery, DapperProductWithStockQueryObservable>();
-        services.RegisterScopedObservablePort<IProductWithOptionalStockQuery, DapperProductWithOptionalStockQueryObservable>();
-        services.RegisterScopedObservablePort<IInventoryQuery, DapperInventoryQueryObservable>();
-        services.RegisterScopedObservablePort<ICustomerOrderSummaryQuery, DapperCustomerOrderSummaryQueryObservable>();
-        services.RegisterScopedObservablePort<ICustomerOrdersQuery, DapperCustomerOrdersQueryObservable>();
-        services.RegisterScopedObservablePort<IOrderWithProductsQuery, DapperOrderWithProductsQueryObservable>();
+        services.RegisterScopedObservablePort<IProductQuery, ProductQueryDapperObservable>();
+        services.RegisterScopedObservablePort<IProductWithStockQuery, ProductWithStockQueryDapperObservable>();
+        services.RegisterScopedObservablePort<IProductWithOptionalStockQuery, ProductWithOptionalStockQueryDapperObservable>();
+        services.RegisterScopedObservablePort<IInventoryQuery, InventoryQueryDapperObservable>();
+        services.RegisterScopedObservablePort<ICustomerOrderSummaryQuery, CustomerOrderSummaryQueryDapperObservable>();
+        services.RegisterScopedObservablePort<ICustomerOrdersQuery, CustomerOrdersQueryDapperObservable>();
+        services.RegisterScopedObservablePort<IOrderWithProductsQuery, OrderWithProductsQueryDapperObservable>();
     }
 }

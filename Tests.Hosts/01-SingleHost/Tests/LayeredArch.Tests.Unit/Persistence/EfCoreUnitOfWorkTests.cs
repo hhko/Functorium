@@ -1,6 +1,6 @@
 using Functorium.Testing.Assertions.Errors;
-using LayeredArch.Adapters.Persistence.Repositories.EfCore;
-using LayeredArch.Adapters.Persistence.Repositories.EfCore.Models;
+using LayeredArch.Adapters.Persistence.Repositories;
+using LayeredArch.Adapters.Persistence.Repositories.Inventories;
 using LayeredArch.Domain.AggregateRoots.Inventories;
 using LayeredArch.Domain.AggregateRoots.Products;
 using Microsoft.Data.Sqlite;
@@ -47,12 +47,12 @@ public class EfCoreUnitOfWorkTests : IDisposable
         // Act: 트랙킹된 엔티티를 수정하여 UPDATE를 유발
         model.StockQuantity = 50;
 
-        var sut = new EfCoreUnitOfWork(_dbContext);
+        var sut = new UnitOfWorkEfCore(_dbContext);
         var actual = await sut.SaveChanges().Run().RunAsync();
 
         // Assert: ConcurrencyConflict 에러로 변환되어야 함
-        actual.ShouldBeAdapterExceptionalError<EfCoreUnitOfWork, LanguageExt.Unit>(
-            new EfCoreUnitOfWork.ConcurrencyConflict());
+        actual.ShouldBeAdapterExceptionalError<UnitOfWorkEfCore, LanguageExt.Unit>(
+            new UnitOfWorkEfCore.ConcurrencyConflict());
     }
 
     [Fact]
@@ -74,12 +74,12 @@ public class EfCoreUnitOfWorkTests : IDisposable
             CreatedAt = DateTime.UtcNow
         });
 
-        var sut = new EfCoreUnitOfWork(_dbContext);
+        var sut = new UnitOfWorkEfCore(_dbContext);
         var actual = await sut.SaveChanges().Run().RunAsync();
 
         // Assert: DatabaseUpdateFailed 에러로 변환되어야 함
-        actual.ShouldBeAdapterExceptionalError<EfCoreUnitOfWork, LanguageExt.Unit>(
-            new EfCoreUnitOfWork.DatabaseUpdateFailed());
+        actual.ShouldBeAdapterExceptionalError<UnitOfWorkEfCore, LanguageExt.Unit>(
+            new UnitOfWorkEfCore.DatabaseUpdateFailed());
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public class EfCoreUnitOfWorkTests : IDisposable
         // Act: 값 수정 후 SaveChanges
         model.StockQuantity = 80;
 
-        var sut = new EfCoreUnitOfWork(_dbContext);
+        var sut = new UnitOfWorkEfCore(_dbContext);
         var actual = await sut.SaveChanges().Run().RunAsync();
 
         // Assert: 성공 및 변경사항 영속화 확인

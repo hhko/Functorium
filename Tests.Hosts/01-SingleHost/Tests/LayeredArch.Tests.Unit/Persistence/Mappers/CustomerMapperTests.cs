@@ -1,4 +1,4 @@
-using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
+using LayeredArch.Adapters.Persistence.Repositories.Customers;
 using LayeredArch.Domain.AggregateRoots.Customers;
 using LayeredArch.Domain.AggregateRoots.Customers.ValueObjects;
 using LayeredArch.Domain.SharedModels.ValueObjects;

@@ -1,4 +1,4 @@
-using LayeredArch.Adapters.Persistence.Repositories.EfCore.Mappers;
+using LayeredArch.Adapters.Persistence.Repositories.Tags;
 using LayeredArch.Domain.AggregateRoots.Tags;
 
 namespace LayeredArch.Tests.Unit.Persistence.Mappers;
