@@ -12,12 +12,12 @@ using Functorium.Domains.Specifications;
 using Functorium.Domains.Specifications.Expressions;
 
 [GenerateObservablePort]
-public class EfCoreProductRepository
+public class ProductRepositoryEfCore
     : EfCoreRepositoryBase<Product, ProductId, ProductModel>, IProductRepository
 {
     private readonly LayeredArchDbContext _dbContext;
 
-    public EfCoreProductRepository(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
+    public ProductRepositoryEfCore(LayeredArchDbContext dbContext, IDomainEventCollector eventCollector)
         : base(eventCollector,
                q => q.Include(p => p.ProductTags),        // applyIncludes: N+1 방지
                new PropertyMap<Product, ProductModel>()     // Specification 매핑
@@ -137,13 +137,13 @@ public virtual FinT<IO, bool> Exists(Specification<Product> spec)
 
 ```csharp
 [GenerateObservablePort]
-public class InMemoryProductRepository
+public class ProductRepositoryInMemory
     : InMemoryRepositoryBase<Product, ProductId>, IProductRepository
 {
     internal static readonly ConcurrentDictionary<ProductId, Product> Products = new();
     protected override ConcurrentDictionary<ProductId, Product> Store => Products;
 
-    public InMemoryProductRepository(IDomainEventCollector eventCollector)
+    public ProductRepositoryInMemory(IDomainEventCollector eventCollector)
         : base(eventCollector) { }
 
     // Soft Delete: GetById에서 DeletedAt.IsNone 필터링
@@ -211,7 +211,7 @@ new PropertyMap<Product, ProductModel>()
 
 ```csharp
 [GenerateObservablePort]
-public class DapperProductQuery
+public class ProductQueryDapper
     : DapperQueryBase<Product, ProductSummaryDto>, IProductQuery
 {
     public string RequestCategory => "QueryAdapter";
@@ -222,7 +222,7 @@ public class DapperProductQuery
     protected override Dictionary<string, string> AllowedSortColumns { get; } =
         new(StringComparer.OrdinalIgnoreCase) { ["Name"] = "Name", ["Price"] = "Price" };
 
-    public DapperProductQuery(IDbConnection connection)
+    public ProductQueryDapper(IDbConnection connection)
         : base(connection, ProductSpecTranslator.Instance) { }
 }
 ```
@@ -253,7 +253,7 @@ internal static class ProductSpecTranslator
 
 ```csharp
 [GenerateObservablePort]
-public class InMemoryProductQuery
+public class ProductQueryInMemory
     : InMemoryQueryBase<Product, ProductSummaryDto>, IProductQuery
 {
     public string RequestCategory => "QueryAdapter";
@@ -262,7 +262,7 @@ public class InMemoryProductQuery
 
     protected override IEnumerable<ProductSummaryDto> GetProjectedItems(Specification<Product> spec)
     {
-        return InMemoryProductRepository.Products.Values
+        return ProductRepositoryInMemory.Products.Values
             .Where(p => p.DeletedAt.IsNone && spec.IsSatisfiedBy(p))
             .Select(p => new ProductSummaryDto(p.Id.ToString(), p.Name, p.Price));
     }

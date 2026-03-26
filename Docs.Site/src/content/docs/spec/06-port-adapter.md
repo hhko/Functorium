@@ -803,12 +803,12 @@ public sealed class GenerateObservablePortAttribute : Attribute;
 ```csharp
 // 사용 예시
 [GenerateObservablePort]
-public class InMemoryProductRepository
+public class ProductRepositoryInMemory
     : InMemoryRepositoryBase<Product, ProductId>, IProductRepository
 {
     // virtual 메서드들...
 }
-// → InMemoryProductRepositoryObservable 클래스가 자동 생성됨
+// → ProductRepositoryInMemoryObservable 클래스가 자동 생성됨
 ```
 
 ### \[ObservablePortIgnore\]

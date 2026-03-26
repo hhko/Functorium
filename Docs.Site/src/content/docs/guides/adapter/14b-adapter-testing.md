@@ -92,15 +92,15 @@ result.IsSucc.ShouldBeTrue();
 Repository Adapter는 외부 의존성이 없으므로 (In-Memory 구현의 경우) 직접 인스턴스를 생성하여 테스트합니다.
 
 ```csharp
-// 파일: Tests/{Project}.Tests.Unit/LayerTests/Adapters/InMemoryProductRepositoryTests.cs
+// 파일: Tests/{Project}.Tests.Unit/LayerTests/Adapters/ProductRepositoryInMemoryTests.cs
 
-public sealed class InMemoryProductRepositoryTests
+public sealed class ProductRepositoryInMemoryTests
 {
     [Fact]
     public async Task Create_ReturnsProduct_WhenProductIsValid()
     {
         // Arrange
-        var repository = new InMemoryProductRepository();
+        var repository = new ProductRepositoryInMemory();
         var product = Product.Create(
             ProductName.Create("테스트 상품").ThrowIfFail(),
             ProductDescription.Create("설명").ThrowIfFail(),
@@ -126,7 +126,7 @@ public sealed class InMemoryProductRepositoryTests
     public async Task GetById_ReturnsFail_WhenProductNotFound()
     {
         // Arrange
-        var repository = new InMemoryProductRepository();
+        var repository = new ProductRepositoryInMemory();
         var nonExistentId = ProductId.New();
 
         // Act
@@ -309,7 +309,7 @@ Query Adapter는 InMemory 구현을 직접 인스턴스화하여 테스트합니
 public async Task Search_ReturnsPagedResult_WhenProductsExist()
 {
     // Arrange
-    var queryAdapter = new InMemoryProductQuery(repository);
+    var queryAdapter = new ProductQueryInMemory(repository);
 
     // Act
     var ioFin = queryAdapter.Search(Specification<Product>.All, new PageRequest(), SortExpression.Empty);
@@ -338,10 +338,10 @@ public async Task Search_ReturnsPagedResult_WhenProductsExist()
 | Step | Activity | 파일 | 핵심 작업 |
 |------|----------|------|----------|
 | 1 | Port 정의 | `LayeredArch.Domain/Repositories/IProductRepository.cs` | `: IObservablePort`, `FinT<IO, T>` 반환, 도메인 VO 매개변수 |
-| 2 | Adapter 구현 | `LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryProductRepository.cs` | `[GenerateObservablePort]`, `virtual`, `IO.lift`, `AdapterError.For<T>` |
-| 3 | Pipeline 확인 | `obj/GeneratedFiles/.../Repositories.InMemoryProductRepositoryObservable.g.cs` | 빌드 후 자동 생성 |
+| 2 | Adapter 구현 | `LayeredArch.Adapters.Persistence/Repositories/Products/ProductRepositoryInMemory.cs` | `[GenerateObservablePort]`, `virtual`, `IO.lift`, `AdapterError.For<T>` |
+| 3 | Pipeline 확인 | `obj/GeneratedFiles/.../Repositories.ProductRepositoryInMemoryObservable.g.cs` | 빌드 후 자동 생성 |
 | 4 | DI 등록 | `AdapterPersistenceRegistration.cs` -> `Program.cs` | `RegisterScopedObservablePort<IProductRepository, ...Observable>()` |
-| 5 | 테스트 | `InMemoryProductRepositoryTests.cs` | 원본 클래스 직접 테스트, [Repository 테스트](#repository-테스트) 참조 |
+| 5 | 테스트 | `ProductRepositoryInMemoryTests.cs` | 원본 클래스 직접 테스트, [Repository 테스트](#repository-테스트) 참조 |
 
 ### External API (01-SingleHost IExternalPricingService)
 
@@ -368,9 +368,9 @@ public async Task Search_ReturnsPagedResult_WhenProductsExist()
 | Step | Activity | 파일 | 핵심 작업 |
 |------|----------|------|----------|
 | 1 | Port 정의 | `LayeredArch.Application/Usecases/Products/Ports/IProductQuery.cs` | `: IQueryPort<Product, ProductSummaryDto>` |
-| 2a | Dapper 구현 | `LayeredArch.Adapters.Persistence/Repositories/Dapper/DapperProductQuery.cs` | `DapperQueryBase` 상속, `[GenerateObservablePort]`, SQL 선언만 담당 |
-| 2b | InMemory 구현 | `LayeredArch.Adapters.Persistence/Repositories/InMemory/InMemoryProductQuery.cs` | `[GenerateObservablePort]`, Repository 위임 |
-| 3 | Pipeline 확인 | `obj/GeneratedFiles/.../Repositories.Dapper.DapperProductQueryObservable.g.cs` | 빌드 후 자동 생성 |
+| 2a | Dapper 구현 | `LayeredArch.Adapters.Persistence/Repositories/Products/Queries/ProductQueryDapper.cs` | `DapperQueryBase` 상속, `[GenerateObservablePort]`, SQL 선언만 담당 |
+| 2b | InMemory 구현 | `LayeredArch.Adapters.Persistence/Repositories/Products/Queries/ProductQueryInMemory.cs` | `[GenerateObservablePort]`, Repository 위임 |
+| 3 | Pipeline 확인 | `obj/GeneratedFiles/.../Repositories.ProductQueryDapperObservable.g.cs` | 빌드 후 자동 생성 |
 | 4 | DI 등록 | `AdapterPersistenceRegistration.cs` -> `Program.cs` | Sqlite: Dapper Observable, InMemory: InMemory Observable |
 | 5 | 테스트 | `SearchProductsQueryTests.cs` | InMemory Query Adapter 직접 테스트, [Query Adapter 테스트](#query-adapter-테스트) 참조 |
 
@@ -406,14 +406,14 @@ public async Task Search_ReturnsPagedResult_WhenProductsExist()
 |                      Infrastructure Layer                         |
 |  ┌─────────────────────────────────────────────────────────────┐  |
 |  │ [GenerateObservablePort]                                          │  |
-|  │ InMemoryProductRepository : IProductRepository              │  |
+|  │ ProductRepositoryInMemory : IProductRepository              │  |
 |  │   - RequestCategory => "Repository"                         │  |
 |  │   - 실제 데이터 접근 구현                                    │  |
 |  └─────────────────────────────────────────────────────────────┘  |
 |                              |                                    |
 |                              v (Source Generator)                 |
 |  ┌─────────────────────────────────────────────────────────────┐  |
-|  │ InMemoryProductRepositoryObservable (자동 생성)               │  |
+|  │ ProductRepositoryInMemoryObservable (자동 생성)               │  |
 |  │   - 트레이싱, 로깅, 메트릭 자동 추가                         │  |
 |  │   - DI에서 IProductRepository로 등록                        │  |
 |  └─────────────────────────────────────────────────────────────┘  |

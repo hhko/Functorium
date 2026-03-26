@@ -7,18 +7,18 @@ Source Generator가 생성한 Observable 래퍼를 DI에 등록합니다.
 
 ```csharp
 // Repository 등록 (Observable Pipeline 래퍼 사용)
-services.RegisterScopedObservablePort<IProductRepository, InMemoryProductRepositoryObservable>();
-services.RegisterScopedObservablePort<IProductRepository, EfCoreProductRepositoryObservable>();
+services.RegisterScopedObservablePort<IProductRepository, ProductRepositoryInMemoryObservable>();
+services.RegisterScopedObservablePort<IProductRepository, ProductRepositoryEfCoreObservable>();
 
 // Query Adapter 등록
-services.RegisterScopedObservablePort<IProductQuery, DapperProductQueryObservable>();
-services.RegisterScopedObservablePort<IProductQuery, InMemoryProductQueryObservable>();
+services.RegisterScopedObservablePort<IProductQuery, ProductQueryDapperObservable>();
+services.RegisterScopedObservablePort<IProductQuery, ProductQueryInMemoryObservable>();
 
 // UnitOfWork 등록
-services.RegisterScopedObservablePort<IUnitOfWork, InMemoryUnitOfWorkObservable>();
+services.RegisterScopedObservablePort<IUnitOfWork, UnitOfWorkInMemoryObservable>();
 
 // 공유 Port 등록
-services.RegisterScopedObservablePort<IProductCatalog, EfCoreProductCatalogObservable>();
+services.RegisterScopedObservablePort<IProductCatalog, ProductCatalogEfCoreObservable>();
 ```
 
 ## RegisterConfigureOptions 패턴
@@ -191,7 +191,7 @@ private static void RegisterDapperQueries(IServiceCollection services, string co
         return conn;
     });
 
-    services.RegisterScopedObservablePort<IProductQuery, DapperProductQueryObservable>();
+    services.RegisterScopedObservablePort<IProductQuery, ProductQueryDapperObservable>();
     // ... 추가 Query Adapter 등록
 }
 ```
