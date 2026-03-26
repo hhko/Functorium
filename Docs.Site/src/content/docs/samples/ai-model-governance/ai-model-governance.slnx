@@ -1,0 +1,10 @@
+<Solution>
+  <Project Path="Src/AiGovernance.Domain/AiGovernance.Domain.csproj" />
+  <Project Path="Src/AiGovernance.Application/AiGovernance.Application.csproj" />
+  <Project Path="Src/AiGovernance.Adapters.Infrastructure/AiGovernance.Adapters.Infrastructure.csproj" />
+  <Project Path="Src/AiGovernance.Adapters.Persistence/AiGovernance.Adapters.Persistence.csproj" />
+  <Project Path="Src/AiGovernance.Adapters.Presentation/AiGovernance.Adapters.Presentation.csproj" />
+  <Project Path="Src/AiGovernance/AiGovernance.csproj" />
+  <Project Path="Tests/AiGovernance.Tests.Unit/AiGovernance.Tests.Unit.csproj" />
+  <Project Path="Tests/AiGovernance.Tests.Integration/AiGovernance.Tests.Integration.csproj" />
+</Solution>
