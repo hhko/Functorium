@@ -723,9 +723,9 @@ public sealed class Email : SimpleValueObject<string>
     // 검증 메서드 (원시 타입 반환)
     public static Validation<Error, string> Validate(string? value) =>
         ValidationRules<Email>.NotEmpty(value ?? "")
+            .ThenNormalize(v => v.ToLowerInvariant())
             .ThenMatches(EmailPattern)
-            .ThenMaxLength(MaxLength)
-            .ThenNormalize(v => v.ToLowerInvariant());
+            .ThenMaxLength(MaxLength);
 
     // 암시적 변환 (선택적)
     public static implicit operator string(Email email) => email.Value;

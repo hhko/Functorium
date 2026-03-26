@@ -67,6 +67,22 @@ Fin<Response> response = await usecase.Run().RunAsync();
 return response.ToFinResponse();
 ```
 
+**ApplyT 패턴** — 다중 VO 생성이 필요한 Command에서 사용:
+```csharp
+FinT<IO, Response> usecase =
+    from vos in (
+        ProductName.Create(request.Name),
+        Money.Create(request.Price)
+    ).ApplyT((name, price) => (Name: name, Price: price))
+    let product = Product.Create(vos.Name, vos.Price)
+    from created in productRepository.Create(product)
+    select new Response(...);
+```
+
+- `ApplyT`: 2~5개 `Fin<T>` 튜플의 에러를 applicative하게 수집 + `FinT<IO, R>` 리프팅
+- LINQ `from` 첫 구문에서 사용 → 이후 체인에서 정규화된 VO를 바로 활용
+- Presentation Validator가 이미 검증했더라도, Handler의 `Create()` 호출이 **도메인 검증의 권위적 지점이다**
+
 상세 패턴은 `references/usecase-patterns.md`를 읽으세요.
 포트 설계는 `references/port-design.md`를 읽으세요.
 

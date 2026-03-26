@@ -103,6 +103,17 @@ services
     .Build();
 ```
 
+### ObservableSignal 팩토리 등록
+
+`ObservableSignal.SetFactory()`는 `OpenTelemetryBuilder.Build()` 내에서 자동으로 호출됩니다.
+별도의 수동 등록이 필요하지 않습니다.
+
+```csharp
+// OpenTelemetryBuilder 내부에서 자동 등록됨:
+// ObservableSignal.SetFactory(new ObservableSignalFactory());
+// CtxEnricherContext.SetPushFactory((name, value, pillars) => ...);
+```
+
 ### Log Enricher 등록
 
 ```csharp

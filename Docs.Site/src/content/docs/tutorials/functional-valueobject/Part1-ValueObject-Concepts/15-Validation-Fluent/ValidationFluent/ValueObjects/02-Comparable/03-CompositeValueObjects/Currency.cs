@@ -49,8 +49,8 @@ public sealed class Currency
 
     public static Validation<Error, string> Validate(string currencyCode) =>
         ValidationRules<Currency>.NotEmpty(currencyCode ?? "")
-            .ThenExactLength(3)
             .ThenNormalize(v => v.ToUpperInvariant())
+            .ThenExactLength(3)
             .ThenMust(
                 v => SupportedCodes.Contains(v),
                 new Unsupported(),

@@ -400,8 +400,8 @@ public sealed class Currency
 
     public static Validation<Error, string> Validate(string currencyCode) =>
         Validate<Currency>.NotEmpty(currencyCode ?? "")
-            .ThenExactLength(3)
             .ThenNormalize(v => v.ToUpperInvariant())
+            .ThenExactLength(3)
             .ThenMust(
                 v => SupportedCodes.Contains(v),
                 new Unsupported(),  // sealed record Unsupported : DomainErrorType.Custom;
@@ -523,18 +523,18 @@ private static Validation<Error, (Price Min, Price Max)> ValidatePriceRange(Pric
 
 ### Q2: ThenNormalize는 언제 사용하나요?
 
-검증 후 값을 변환(정규화)할 때 사용합니다. 검증을 먼저 수행한 뒤 변환하는 순서를 지키세요.
+존재성 검증(NotEmpty) 후, 구조적 검증(ExactLength, Matches 등) 전에 값을 변환(정규화)할 때 사용합니다. 정규화된 값을 기준으로 구조적 검증을 수행하는 순서를 지키세요.
 
 ```csharp
-// Good: 검증 후 변환
+// Good: 존재성 검증 → 정규화 → 구조적 검증
 Validate<Currency>.NotEmpty(value)
-    .ThenExactLength(3)               // 먼저 검증
-    .ThenNormalize(v => v.ToUpperInvariant());  // 마지막에 변환
+    .ThenNormalize(v => v.ToUpperInvariant())  // 먼저 정규화
+    .ThenExactLength(3);                       // 정규화된 값을 검증
 
-// Bad: 변환 후 검증 (의도치 않은 결과 가능)
+// Bad: 구조적 검증 후 정규화 (검증 시점의 값과 최종 값이 다를 수 있음)
 Validate<Currency>.NotEmpty(value)
-    .ThenNormalize(v => v.ToUpperInvariant())
-    .ThenExactLength(3);  // 이미 대문자로 변환된 값을 검증
+    .ThenExactLength(3)                        // 정규화 전 값을 검증
+    .ThenNormalize(v => v.ToUpperInvariant());  // 뒤늦게 변환
 ```
 
 ### Q3: 여러 필드를 동시에 검증하려면?

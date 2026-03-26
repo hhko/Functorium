@@ -137,7 +137,7 @@ request.params.orders.count      # 동적 필드에 .count 사용 금지
 | `error.code` | ✅ | ✅ | ✅ | 도메인 특화 오류 코드 |
 | `@error` | ✅ | - | - | 구조화된 오류 객체(상세) |
 
-**Adapter 레이어:** (단위 테스트: [Logging](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortLoggingStructureTests.cs), [Metrics](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortMetricsStructureTests.cs), [Tracing](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortTracingStructureTests.cs))
+**Adapter 레이어:** (단위 테스트: [Logging](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservableObservableSignalgingStructureTests.cs), [Metrics](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortMetricsStructureTests.cs), [Tracing](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortTracingStructureTests.cs))
 
 | Field/Tag | Logging | Metrics | Tracing | 설명 |
 |-----------|---------|---------|---------|------|
@@ -486,7 +486,7 @@ OrderLineCount  → ctx.order_line_count
 | 레이어 | 방식 | 테스트 | 참고 |
 |-------|------|--------|------|
 | Application | 직접 `ILogger.LogXxx()` 호출 | [UsecaseLoggingPipelineStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseLoggingPipelineStructureTests.cs) | 7개 이상의 파라미터가 `LoggerMessage.Define`의 6개 제한을 초과 |
-| Adapter | `LoggerMessage.Define` 델리게이트 | [ObservablePortLoggingStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortLoggingStructureTests.cs) | 제로 할당, 고성능 |
+| Adapter | `LoggerMessage.Define` 델리게이트 | [ObservableObservableSignalgingStructureTests](../../Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservableObservableSignalgingStructureTests.cs) | 제로 할당, 고성능 |
 
 ### DomainEvent Logging
 
@@ -823,7 +823,7 @@ OrderLineCount  → ctx.order_line_count
 | 테스트 | 파일 경로 |
 |--------|----------|
 | Application Logging 구조 | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseLoggingPipelineStructureTests.cs` |
-| Adapter Logging 구조 | `Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortLoggingStructureTests.cs` |
+| Adapter Logging 구조 | `Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservableObservableSignalgingStructureTests.cs` |
 | Application Metrics 구조 | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseMetricsPipelineStructureTests.cs` |
 | Adapter Metrics 구조 | `Tests/Functorium.Tests.Unit/AdaptersTests/SourceGenerators/ObservablePortMetricsStructureTests.cs` |
 | Application Tracing 구조 | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseTracingPipelineStructureTests.cs` |
@@ -838,6 +838,78 @@ OrderLineCount  → ctx.order_line_count
 | DomainEvent Handler Enricher Tracing | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Events/DomainEventHandlerTracingStructureTests.cs` |
 | Tracing Custom Base | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Pipelines/UsecaseTracingCustomPipelineBaseTests.cs` |
 | Pipeline 설정 | `Tests/Functorium.Tests.Unit/AdaptersTests/Observabilities/Configurators/PipelineConfiguratorTests.cs` |
+
+---
+
+## ObservableSignal — Adapter 구현 내부 개발자 로깅 API
+
+### 개요
+
+`ObservableSignal`은 Adapter 구현 코드 내부에서 개발자가 직접 운영 목적의 로그를 출력하는 정적 API입니다. Observable 래퍼가 설정한 공통 컨텍스트(`request.layer`, `request.category.name`, `request.handler.name`, `request.handler.method`)를 자동으로 포함합니다.
+
+### Pillar 범위
+
+| Level | Logging | Tracing (Activity Event) | Metrics |
+|-------|---------|--------------------------|---------|
+| Debug | O | X (고빈도 → 노이즈) | X |
+| Warning | O | O (span 내 열화 원인 추적) | X |
+| Error | O | O (span 내 실패 원인 추적) | X |
+
+- **Metrics 제외**: Observable 래퍼가 request/response/duration 메트릭을 이미 자동 생성. 커스텀 메트릭은 `IMeterFactory` 직접 사용.
+- **Debug에서 Tracing 제외**: 캐시 미스 등 고빈도 이벤트를 span에 넣으면 trace 노이즈.
+
+### EventId
+
+| EventId | Name | Level | 설명 |
+|---------|------|-------|------|
+| 2021 | `adapter.signal.debug` | Debug | 정상 흐름 상세 (캐시 미스, 쿼리 상세) |
+| 2022 | `adapter.signal.warning` | Warning | 자동 복구 열화 (재시도, 폴백, rate limit) |
+| 2023 | `adapter.signal.error` | Error | 복구 불가 실패 (재시도 소진, 서킷 오픈) |
+
+### 메시지 템플릿
+
+```
+{request.layer} {request.category.name} {request.handler.name}.{request.handler.method} — {adapter.log.message} {@adapter.log.context}
+```
+
+### 부가 필드 네이밍: `adapter.*`
+
+| 프리픽스 | 용도 | 예시 |
+|----------|------|------|
+| `adapter.retry.*` | 재시도 관련 | `adapter.retry.attempt`, `adapter.retry.delay_ms` |
+| `adapter.http.*` | HTTP 관련 | `adapter.http.status_code`, `adapter.http.retry_after_seconds` |
+| `adapter.message.*` | 메시지 브로커 관련 | `adapter.message.id`, `adapter.message.queue` |
+| `adapter.db.*` | 데이터베이스 관련 | `adapter.db.elapsed_ms`, `adapter.db.operation` |
+| `adapter.cache.*` | 캐시 관련 | `adapter.cache.key`, `adapter.cache.provider` |
+
+### 사용 예시
+
+```csharp
+// Polly 재시도 시 Warning
+ObservableSignal.Warning("Retry attempt {Attempt}/{MaxRetry} after {Delay}s delay",
+    ("adapter.retry.attempt", attempt),
+    ("adapter.retry.delay_ms", delay.TotalMilliseconds));
+
+// 캐시 미스 시 Debug (고빈도)
+ObservableSignal.Debug("Cache miss", ("adapter.cache.key", cacheKey));
+
+// 재시도 소진 시 Error
+ObservableSignal.Error(ex, "Database operation failed after exhausting retries",
+    ("adapter.db.retry.attempt", maxRetries));
+```
+
+### 동작 원리
+
+1. `[GenerateObservablePort]` Source Generator가 `ExecuteWithSpan` 내에서 `ObservableSignalScope.Begin()`을 호출
+2. `ObservableSignalScope`가 `AsyncLocal`로 현재 컨텍스트(logger, layer, category, handler, method)를 설정
+3. Adapter 코드에서 `ObservableSignal.Debug/Warning/Error` 호출 시 `ObservableSignalScope.Current`에서 공통 필드 획득
+4. `ObservableSignalFactory`가 ILogger + Activity Event로 출력
+
+### 테스트 참조
+
+| 테스트 | 파일 |
+|--------|------|
+| ObservableSignal API + Scope | `Tests/Functorium.Tests.Unit/DomainsTests/Observabilities/ObservableSignalTests.cs` |
 
 ---
 

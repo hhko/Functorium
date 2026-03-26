@@ -110,9 +110,9 @@ public static Validation<Error, string> Validate(string? value) =>
     ValidationRules<Email>
         .NotNull(value)
         .ThenNotEmpty()
+        .ThenNormalize(v => v.Trim().ToLowerInvariant())
         .ThenMaxLength(MaxLength)
-        .ThenMatches(EmailRegex(), "Invalid email format")
-        .ThenNormalize(v => v.Trim().ToLowerInvariant());
+        .ThenMatches(EmailRegex(), "Invalid email format");
 ```
 
 `Then*` 메서드들이 순차적으로 실행되며, 실패 시 즉시 단락됩니다. 검증 로직을 선언적으로 표현할 수 있습니다.
@@ -173,9 +173,9 @@ public sealed class Email : SimpleValueObject<string>
         ValidationRules<Email>
             .NotNull(value)
             .ThenNotEmpty()
+            .ThenNormalize(v => v.Trim().ToLowerInvariant())
             .ThenMaxLength(MaxLength)
-            .ThenMatches(EmailRegex(), "Invalid email format")
-            .ThenNormalize(v => v.Trim().ToLowerInvariant());
+            .ThenMatches(EmailRegex(), "Invalid email format");
 
     // 5. 암시적 타입 변환 (선택적)
     public static implicit operator string(Email email) => email.Value;

@@ -131,10 +131,10 @@ public sealed partial class {Name} : SimpleValueObject<{PrimitiveType}>
     public static Validation<Error, {PrimitiveType}> Validate({PrimitiveType}? value) =>
         ValidationRules<{Name}>
             .NotNull(value)
-            .ThenNotEmpty()          // string인 경우
-            .ThenMaxLength(MaxLength) // string인 경우
-            .ThenMatches({Pattern}()) // 정규식이 필요한 경우
-            .ThenNormalize(v => v.Trim()); // 정규화가 필요한 경우
+            .ThenNotEmpty()           // string인 경우: 존재성 검사
+            .ThenNormalize(v => v.Trim()) // 정규화 (존재성 검사 직후, 구조적 검사 이전)
+            .ThenMaxLength(MaxLength) // string인 경우: 구조적 검사 (정규화된 값 기준)
+            .ThenMatches({Pattern}()) // 정규식이 필요한 경우 (정규화된 값 기준)
 
     public static {Name} CreateFromValidated({PrimitiveType} value) => new(value);
 

@@ -43,8 +43,8 @@ public sealed class CustomerName : SimpleValueObject<string>
         ValidationRules<CustomerName>
             .NotNull(value)
             .ThenNotEmpty()
-            .ThenMaxLength(MaxLength)
-            .ThenNormalize(v => v.Trim());
+            .ThenNormalize(v => v.Trim())
+            .ThenMaxLength(MaxLength);
 
     public static CustomerName CreateFromValidated(string value) => new(value);
 
@@ -68,9 +68,9 @@ public sealed partial class Email : SimpleValueObject<string>
         ValidationRules<Email>
             .NotNull(value)
             .ThenNotEmpty()
+            .ThenNormalize(v => v.Trim().ToLowerInvariant())
             .ThenMaxLength(MaxLength)
-            .ThenMatches(EmailRegex(), "Invalid email format")
-            .ThenNormalize(v => v.Trim().ToLowerInvariant());
+            .ThenMatches(EmailRegex(), "Invalid email format");
 
     public static Email CreateFromValidated(string value) => new(value);
 

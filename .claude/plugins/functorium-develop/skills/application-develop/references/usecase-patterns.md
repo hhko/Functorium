@@ -67,7 +67,7 @@ RuleFor(x => x.Price).MustSatisfyValidation(Money.Validate);
 RuleFor(x => x.Name).MustSatisfyValidation(ProductName.Validate);
 ```
 
-### Usecase — Apply 패턴 + FinT LINQ 합성
+### Usecase — ApplyT 패턴 + FinT LINQ 합성
 
 ```csharp
 public sealed class Usecase(
@@ -80,32 +80,23 @@ public sealed class Usecase(
 
     public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
     {
-        // 1. Value Object 생성 (Apply 패턴으로 병렬 검증)
-        var createData = CreateProductData(request);
-
-        // 2. 검증 실패 시 조기 반환
-        if (createData.IsFail)
-        {
-            return createData.Match(
-                Succ: _ => throw new InvalidOperationException(),
-                Fail: error => FinResponse.Fail<Response>(error));
-        }
-
-        // 3. 중복 검사용 VO 준비
-        var productName = ProductName.Create(request.Name).Unwrap();
-
-        // 4. FinT LINQ 합성: 중복 검사 -> 저장 -> 응답 변환
-        var (product, stockQuantity) = (ProductData)createData;
-
+        // ApplyT: VO 합성 + 에러 수집 → FinT<IO, R> LINQ from 첫 구문
         FinT<IO, Response> usecase =
-            from exists in _productRepository.Exists(new ProductNameUniqueSpec(productName))
+            from vos in (
+                ProductName.Create(request.Name),
+                ProductDescription.Create(request.Description),
+                Money.Create(request.Price),
+                Quantity.Create(request.StockQuantity)
+            ).ApplyT((name, desc, price, qty) => (Name: name, Desc: desc, Price: price, Qty: qty))
+            let product = Product.Create(vos.Name, vos.Desc, vos.Price)
+            from exists in _productRepository.Exists(new ProductNameUniqueSpec(vos.Name))
             from _ in guard(!exists, ApplicationError.For<CreateProductCommand>(
                 new AlreadyExists(),
                 request.Name,
                 $"Product name already exists: '{request.Name}'"))
             from createdProduct in _productRepository.Create(product)
             from createdInventory in _inventoryRepository.Create(
-                Inventory.Create(createdProduct.Id, stockQuantity))
+                Inventory.Create(createdProduct.Id, vos.Qty))
             select new Response(
                 createdProduct.Id.ToString(),
                 createdProduct.Name,
@@ -114,34 +105,17 @@ public sealed class Usecase(
                 createdInventory.StockQuantity,
                 createdProduct.CreatedAt);
 
-        // 5. 실행 + FinResponse 변환
         Fin<Response> response = await usecase.Run().RunAsync();
         return response.ToFinResponse();
     }
-
-    /// Apply 패턴: VO Validate() + 병렬 검증 병합
-    private static Fin<ProductData> CreateProductData(Request request)
-    {
-        var name = ProductName.Validate(request.Name);
-        var description = ProductDescription.Validate(request.Description);
-        var price = Money.Validate(request.Price);
-        var stockQuantity = Quantity.Validate(request.StockQuantity);
-
-        return (name, description, price, stockQuantity)
-            .Apply((n, d, p, s) =>
-                new ProductData(
-                    Product.Create(
-                        ProductName.Create(n).Unwrap(),
-                        ProductDescription.Create(d).Unwrap(),
-                        Money.Create(p).Unwrap()),
-                    Quantity.Create(s).Unwrap()))
-            .As()
-            .ToFin();
-    }
-
-    private sealed record ProductData(Product Product, Quantity StockQuantity);
 }
 ```
+
+**ApplyT 패턴의 이점:**
+- `Create()` 호출이 VO 생성 + 도메인 검증 + 정규화를 한번에 처리
+- applicative 합성으로 모든 VO 에러를 병렬 수집
+- `FinT<IO, R>` 리프팅이 자동 — 별도의 `Unwrap()`, 조기 반환, 임시 레코드 불필요
+- Presentation Validator가 이미 검증했더라도, Handler의 `Create()` 호출이 **도메인 검증의 권위적 지점이다**
 
 ---
 

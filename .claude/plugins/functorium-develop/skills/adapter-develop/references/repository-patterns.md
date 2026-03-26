@@ -335,6 +335,7 @@ public class ExternalPricingApiService : IExternalPricingService
 3. **`RequestCategory` 프로퍼티** - 관찰 가능성 로그 카테고리 (`"Repository"`, `"QueryAdapter"`, `"ExternalApi"`)
 4. **에러 처리** - 예외 대신 `Fin.Fail` 반환 (`AdapterError.For`, `AdapterError.FromException`)
 5. **EntityId는 Ulid 기반** - `string Id`로 저장, `TId.Create(string)`으로 복원
+6. **`ObservableSignal`** - Adapter 구현 내부에서 운영 목적 로그 출력 (`ObservableSignal.Debug/Warning/Error`). 공통 컨텍스트 자동 포함, 부가 필드는 `adapter.*` 프리픽스 사용
 
 ---
 

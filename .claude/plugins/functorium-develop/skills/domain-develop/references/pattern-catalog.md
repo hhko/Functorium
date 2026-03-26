@@ -25,8 +25,8 @@ public sealed class ProductName : SimpleValueObject<string>
         ValidationRules<ProductName>
             .NotNull(value)
             .ThenNotEmpty()
-            .ThenMaxLength(MaxLength)
-            .ThenNormalize(v => v.Trim());
+            .ThenNormalize(v => v.Trim())
+            .ThenMaxLength(MaxLength);
 
     public static ProductName CreateFromValidated(string value) => new(value);
 
@@ -50,9 +50,9 @@ public sealed partial class Email : SimpleValueObject<string>
         ValidationRules<Email>
             .NotNull(value)
             .ThenNotEmpty()
+            .ThenNormalize(v => v.Trim().ToLowerInvariant())
             .ThenMaxLength(MaxLength)
-            .ThenMatches(EmailRegex(), "Invalid email format")
-            .ThenNormalize(v => v.Trim().ToLowerInvariant());
+            .ThenMatches(EmailRegex(), "Invalid email format");
 
     public static Email CreateFromValidated(string value) => new(value);
 
@@ -668,3 +668,79 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     FinT<IO, int> DeleteRange(IReadOnlyList<TId> ids);
 }
 ```
+
+---
+
+## 11. Application Layer — ApplyT 패턴 + Validator 역할
+
+### 검증 파이프라인의 4가지 역할
+
+| 역할 | 책임 | DDD 근거 |
+|------|------|----------|
+| `Validate()` | 도메인 지식 컨테이너 (정규화 + 구조적 검증) | Evans: 불변식은 값 객체가 캡슐화 |
+| `Create()` | 권위적 팩토리 (Always-Valid 보증) | Khorikov: always-valid는 가장 기본적인 원칙 |
+| Handler + ApplyT | 도메인 검증(=VO 생성) + 유스케이스 오케스트레이션 | Khorikov: 핸들러가 VO를 생성하는 것이 THE 검증 |
+| Presentation Validator | 선택적 UX 편의 기능 | Microsoft: UI 검증은 UX, 도메인 검증은 정확성 |
+
+### Presentation Validator (선택적 UX 편의)
+
+```csharp
+public sealed class Validator : AbstractValidator<Request>
+{
+    public Validator()
+    {
+        // Validate()를 재사용하여 통과/실패만 확인 — 정규화된 결과는 폐기
+        RuleFor(x => x.Name).MustSatisfyValidation(ProductName.Validate);
+        RuleFor(x => x.Description).MustSatisfyValidation(ProductDescription.Validate);
+        RuleFor(x => x.Price).MustSatisfyValidation(Money.Validate);
+        RuleFor(x => x.StockQuantity).MustSatisfyValidation(Quantity.Validate);
+    }
+}
+```
+
+### Handler + ApplyT (도메인 검증의 권위적 지점)
+
+```csharp
+public sealed class Usecase(
+    IProductRepository productRepository,
+    IInventoryRepository inventoryRepository)
+    : ICommandUsecase<Request, Response>
+{
+    public async ValueTask<FinResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
+    {
+        // ApplyT: VO 합성 + 에러 수집 → FinT<IO, R> LINQ from 첫 구문
+        FinT<IO, Response> usecase =
+            from vos in (
+                ProductName.Create(request.Name),
+                ProductDescription.Create(request.Description),
+                Money.Create(request.Price),
+                Quantity.Create(request.StockQuantity)
+            ).ApplyT((name, desc, price, qty) => (Name: name, Desc: desc, Price: price, Qty: qty))
+            let product = Product.Create(vos.Name, vos.Desc, vos.Price)
+            from exists in productRepository.Exists(new ProductNameUniqueSpec(vos.Name))
+            from _ in guard(!exists, ApplicationError.For<CreateProductCommand>(
+                new AlreadyExists(), request.Name,
+                $"Product name already exists: '{request.Name}'"))
+            from createdProduct in productRepository.Create(product)
+            from createdInventory in inventoryRepository.Create(
+                Inventory.Create(createdProduct.Id, vos.Qty))
+            select new Response(
+                createdProduct.Id.ToString(),
+                createdProduct.Name,
+                createdProduct.Description,
+                createdProduct.Price,
+                createdInventory.StockQuantity,
+                createdProduct.CreatedAt);
+
+        Fin<Response> response = await usecase.Run().RunAsync();
+        return response.ToFinResponse();
+    }
+}
+```
+
+### ApplyT가 필요한 이유
+
+- Presentation Validator가 `Validate()` 호출 → **통과/실패만 확인, 정규화된 데이터는 폐기**
+- Handler는 정규화된 VO가 필요 → `Create()` 호출로 **VO 생성 + 정규화 + 도메인 검증**
+- **이것은 "재검증"이 아니다** — 핸들러가 VO를 생성하는 것 자체가 도메인 검증이다 (Khorikov)
+- ApplyT는 다중 `Create()` 결과를 applicative하게 합성하여 모든 에러를 병렬 수집 + FinT 리프팅

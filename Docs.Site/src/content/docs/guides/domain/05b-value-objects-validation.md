@@ -191,9 +191,9 @@ public sealed class Email : SimpleValueObject<string>
 
     public static Validation<Error, string> Validate(string? value) =>
         ValidationRules<Email>.NotEmpty(value ?? "")
+            .ThenNormalize(v => v.ToLowerInvariant())
             .ThenMatches(EmailPattern)
-            .ThenMaxLength(MaxLength)
-            .ThenNormalize(v => v.ToLowerInvariant());
+            .ThenMaxLength(MaxLength);
 
     public static implicit operator string(Email email) => email.Value;
 }
@@ -270,8 +270,8 @@ public sealed class Money : ValueObject
 
     private static Validation<Error, string> ValidateCurrency(string currency) =>
         ValidationRules<Money>.NotEmpty(currency)
-            .ThenExactLength(3)
-            .ThenNormalize(v => v.ToUpperInvariant());
+            .ThenNormalize(v => v.ToUpperInvariant())
+            .ThenExactLength(3);
 
     public Fin<Money> Add(Money other) =>
         Currency == other.Currency
@@ -668,6 +668,84 @@ public class CreateProductValidator : AbstractValidator<CreateProductRequest>
 **권장 사항:**
 - Domain Layer에서는 항상 `ValidationRules<T>` 사용 (타입 안전성)
 - DTO나 API 입력 검증에서는 `ValidationRules.For()` 사용 가능
+
+---
+
+## 검증 파이프라인의 역할과 책임
+
+값 객체 검증은 4개의 역할로 분담된다. 각 역할은 독립적이며, DDD의 Always-Valid 원칙을 서로 다른 수준에서 보장한다.
+
+### Role 1: `Validate()` — 도메인 지식 컨테이너
+
+- **책임**: "유효한 값이란 무엇인가"에 대한 **도메인 지식을 캡슐화한다**
+- **포함 내용**: 정규화(Trim, ToLower) + 구조적 검증(MaxLength, Matches)
+- **정규화 배치 규칙**: 존재성 검사(NotNull, NotEmpty) 직후, 구조적 검사 이전
+- **반환**: `Validation<Error, T>` (정규화된 원시값)
+- **사용처**: `Create()` 내부, Presentation Validator의 `MustSatisfyValidation`
+
+```csharp
+public static Validation<Error, string> Validate(string? value) =>
+    ValidationRules<ProductName>
+        .NotNull(value)
+        .ThenNotEmpty()              // 존재성 검사
+        .ThenNormalize(v => v.Trim()) // 정규화 (존재성 검사 직후)
+        .ThenMaxLength(MaxLength);    // 구조적 검사 (정규화된 값 기준)
+```
+
+### Role 2: `Create()` — 권위적 팩토리 (Always-Valid 보증)
+
+- **책임**: 유효하고 정규화된 값 객체를 생성하는 **유일한 진입점이다**
+- **내부**: `Validate()` 호출 → 성공 시 값 객체 구성
+- **반환**: `Fin<VO>` — 유효한 값 객체 또는 에러
+- **근거**: "Always-valid 도메인 모델은 가장 기본적인 원칙이다" (Vladimir Khorikov)
+
+### Role 3: Handler + ApplyT — 도메인 검증 + 유스케이스 오케스트레이션
+
+- **책임**: 값 객체 생성(= 도메인 검증) + 비즈니스 로직 실행
+- **ApplyT**: 다중 `Create()` 결과를 applicative하게 합성 → FinT LINQ 체인 시작
+- **핵심**: 이것은 "재검증"이 아니다 — 핸들러가 값 객체를 생성하는 것 자체가 **도메인 검증이다**
+- **근거**: "커맨드는 원시값을 운반하고, 핸들러가 값 객체를 생성한다" (Vladimir Khorikov)
+
+```csharp
+FinT<IO, Response> usecase =
+    from vos in (
+        ProductName.Create(request.Name),
+        Money.Create(request.Price)
+    ).ApplyT((name, price) => (Name: name, Price: price))
+    let product = Product.Create(vos.Name, vos.Price)
+    from created in productRepository.Create(product)
+    select new Response(...);
+```
+
+### Role 4: Presentation Validator — 선택적 UX 편의 기능
+
+- **책임**: API 사용자에게 빠른 검증 피드백을 제공한다 (FluentValidation 포맷)
+- **한계**: 정규화된 결과를 폐기한다 (통과/실패만 확인)
+- **원칙**: 제거해도 도메인 정확성에 영향 없다
+- **근거**: "UI 검증은 UX를 위한 것이고, 도메인 검증은 정확성을 위한 것이다" (Microsoft .NET Architecture)
+
+```csharp
+public sealed class Validator : AbstractValidator<Request>
+{
+    public Validator()
+    {
+        // Validate()를 재사용하여 통과/실패만 확인 — 정규화된 결과는 폐기
+        RuleFor(x => x.Name).MustSatisfyValidation(ProductName.Validate);
+        RuleFor(x => x.Price).MustSatisfyValidation(Money.Validate);
+    }
+}
+```
+
+### 흐름 요약
+
+```
+Request(원시값) → [Presentation Validator: UX 피드백] → Handler
+                                                         ↓
+                                              Create() via ApplyT
+                                              (도메인 검증 + 정규화 + VO 생성)
+                                                         ↓
+                                              비즈니스 로직 + 영속화
+```
 
 ---
 

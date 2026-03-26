@@ -57,6 +57,7 @@ public static partial class TypedValidationExtensions
 
     /// <summary>
     /// 문자열을 변환(정규화)합니다.
+    /// 배치 규칙: 존재성 검증(NotNull, NotEmpty) 이후, 구조적 검증(MinLength, MaxLength, ExactLength, Matches) 이전에 호출합니다.
     /// </summary>
     /// <typeparam name="TValueObject">값 객체 타입</typeparam>
     /// <param name="validation">이전 검증 결과</param>

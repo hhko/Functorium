@@ -26,15 +26,15 @@ title: "코드 설계"
 
 ## 단일 값 불변식 → SimpleValueObject + Validate 체인
 
-각 값 객체는 `SimpleValueObject<T>`를 상속하고, `Validate` 메서드에서 검증 규칙을 체이닝합니다. `string?`을 입력받아 `NotNull`부터 시작하고, `ThenNormalize`로 정규화를 적용합니다.
+각 값 객체는 `SimpleValueObject<T>`를 상속하고, `Validate` 메서드에서 검증 규칙을 체이닝합니다. `string?`을 입력받아 `NotNull`부터 시작하고, `ThenNormalize`로 정규화를 적용합니다. **정규화는 존재성 검사(NotNull, NotEmpty) 직후, 구조적 검사(MaxLength, Matches) 이전에 배치합니다.** 이는 구조적 검증이 정규화된 값에 대해 수행되도록 하기 위함입니다.
 
 | 타입 | 검증 규칙 | 정규화 |
 |------|----------|--------|
-| `String50` | `NotNull` → `ThenNotEmpty` → `ThenMaxLength(50)` | `Trim` |
-| `EmailAddress` | `NotNull` → `ThenNotEmpty` → `ThenMaxLength(320)` → `ThenMatches(이메일 정규식)` | `Trim` + `ToLowerInvariant` |
+| `String50` | `NotNull` → `ThenNotEmpty` → `ThenNormalize(Trim)` → `ThenMaxLength(50)` | `Trim` |
+| `EmailAddress` | `NotNull` → `ThenNotEmpty` → `ThenNormalize(Trim+ToLower)` → `ThenMaxLength(320)` → `ThenMatches(이메일 정규식)` | `Trim` + `ToLowerInvariant` |
 | `StateCode` | `NotNull` → `ThenNotEmpty` → `ThenMatches(^[A-Z]{2}$)` | — |
 | `ZipCode` | `NotNull` → `ThenNotEmpty` → `ThenMatches(^\d{5}$)` | — |
-| `NoteContent` | `NotNull` → `ThenNotEmpty` → `ThenMaxLength(500)` | `Trim` |
+| `NoteContent` | `NotNull` → `ThenNotEmpty` → `ThenNormalize(Trim)` → `ThenMaxLength(500)` | `Trim` |
 
 ```csharp
 public sealed class String50 : SimpleValueObject<string>
@@ -49,8 +49,8 @@ public sealed class String50 : SimpleValueObject<string>
         ValidationRules<String50>
             .NotNull(value)
             .ThenNotEmpty()
-            .ThenMaxLength(MaxLength)
-            .ThenNormalize(v => v.Trim());
+            .ThenNormalize(v => v.Trim())
+            .ThenMaxLength(MaxLength);
 
     public static String50 CreateFromValidated(string value) => new(value);
     public static implicit operator string(String50 vo) => vo.Value;

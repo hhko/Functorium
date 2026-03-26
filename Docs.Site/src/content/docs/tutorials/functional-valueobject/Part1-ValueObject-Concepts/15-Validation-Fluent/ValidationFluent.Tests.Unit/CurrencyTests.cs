@@ -6,7 +6,7 @@ using ValidationFluent.ValueObjects.Comparable.CompositeValueObjects;
 /// 테스트 목적:
 /// 1. 유효한 통화 코드로 Currency 생성 검증
 /// 2. Fluent API를 사용한 다단계 검증 테스트
-///    (NotEmpty → ThenExactLength → ThenNormalize → ThenMust)
+///    (NotEmpty → ThenNormalize → ThenExactLength → ThenMust)
 /// 3. ThenNormalize를 통한 대문자 정규화 검증
 /// 4. ThenMust를 통한 지원 통화 검증
 /// </summary>

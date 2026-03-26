@@ -185,9 +185,9 @@ public sealed class Email : SimpleValueObject<string>
     // Validate: 원시 타입 반환, 타입 파라미터 한 번만 지정
     public static Validation<Error, string> Validate(string? value) =>
         ValidationRules<Email>.NotEmpty(value ?? "")
+            .ThenNormalize(v => v.ToLowerInvariant())
             .ThenMatches(EmailPattern)
-            .ThenMaxLength(254)
-            .ThenNormalize(v => v.ToLowerInvariant());
+            .ThenMaxLength(254);
 
     public static implicit operator string(Email email) => email.Value;
 }

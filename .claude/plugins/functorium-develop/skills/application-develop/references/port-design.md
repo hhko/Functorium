@@ -229,6 +229,7 @@ public interface IObservablePort
 ```
 
 OpenTelemetry 관측 데코레이터가 이 인터페이스를 감지하여 자동으로 로깅/메트릭/트레이싱을 추가합니다.
+Adapter 구현 내부에서 개발자가 직접 로그를 출력하려면 `ObservableSignal.Debug/Warning/Error`를 사용합니다. Observable 래퍼가 설정한 공통 컨텍스트(layer, category, handler, method)가 자동으로 포함됩니다.
 
 ---
 
