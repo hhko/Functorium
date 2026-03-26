@@ -244,6 +244,9 @@ public partial class OpenTelemetryBuilder
         // Serilog 설정 적용
         ConfigureSerilogInternal(resourceAttributes, options);
 
+        // ObservableSignal 팩토리 설정 — Adapter 구현 내부에서 개발자가 직접 로그를 출력할 수 있도록 함
+        Domains.Observabilities.ObservableSignal.SetFactory(new ObservableSignalFactory());
+
         // CtxEnricher Source Generator 생성 코드의 Multi-target Push 팩토리 설정
         CtxEnricherContext.SetPushFactory((name, value, pillars) =>
         {

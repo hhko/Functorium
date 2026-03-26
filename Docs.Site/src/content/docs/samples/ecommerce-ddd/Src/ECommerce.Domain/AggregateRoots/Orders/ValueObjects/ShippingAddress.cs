@@ -16,8 +16,8 @@ public sealed class ShippingAddress : SimpleValueObject<string>
         ValidationRules<ShippingAddress>
             .NotNull(value)
             .ThenNotEmpty()
-            .ThenMaxLength(MaxLength)
-            .ThenNormalize(v => v.Trim());
+            .ThenNormalize(v => v.Trim())
+            .ThenMaxLength(MaxLength);
 
     public static ShippingAddress CreateFromValidated(string value) => new(value);
 

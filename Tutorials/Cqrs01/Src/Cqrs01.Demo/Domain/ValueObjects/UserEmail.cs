@@ -22,8 +22,8 @@ public sealed partial class UserEmail : SimpleValueObject<string>
 
     public static Validation<Error, string> Validate(string? value) =>
         ValidationRules<UserEmail>.NotEmpty(value ?? "")
-            .ThenMatches(EmailPattern)
-            .ThenNormalize(v => v.ToLowerInvariant());
+            .ThenNormalize(v => v.ToLowerInvariant())
+            .ThenMatches(EmailPattern);
 
     public static implicit operator string(UserEmail email) => email.ToString();
 

@@ -57,10 +57,23 @@ public static partial class ContextualValidationExtensions
 
     /// <summary>
     /// 문자열을 변환(정규화)합니다.
+    /// <para>
+    /// <b>배치 규칙</b>: 존재성 검사(NotNull, NotEmpty) 직후, 구조적 검사(MinLength, MaxLength, Matches) 이전에
+    /// 배치하십시오. 구조적 검증이 정규화된 값에 대해 수행되도록 하기 위함입니다.
+    /// </para>
     /// </summary>
     /// <param name="validation">이전 검증 결과</param>
     /// <param name="normalize">변환 함수</param>
     /// <returns>변환된 문자열을 포함하는 검증 결과</returns>
+    /// <example>
+    /// <code>
+    /// ContextualValidationRules
+    ///     .NotNull(value, "FieldName")
+    ///     .ThenNotEmpty()
+    ///     .ThenNormalize(v =&gt; v.Trim())    // 존재성 검사 직후
+    ///     .ThenMaxLength(100);                // 정규화된 값으로 검증
+    /// </code>
+    /// </example>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ContextualValidation<string> ThenNormalize(
         this ContextualValidation<string> validation,

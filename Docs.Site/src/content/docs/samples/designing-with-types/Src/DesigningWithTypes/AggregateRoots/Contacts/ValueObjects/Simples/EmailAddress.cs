@@ -18,9 +18,9 @@ public sealed partial class EmailAddress : SimpleValueObject<string>
         ValidationRules<EmailAddress>
             .NotNull(value)
             .ThenNotEmpty()
+            .ThenNormalize(v => v.Trim().ToLowerInvariant())
             .ThenMaxLength(MaxLength)
-            .ThenMatches(EmailPattern(), "Invalid email format")
-            .ThenNormalize(v => v.Trim().ToLowerInvariant());
+            .ThenMatches(EmailPattern(), "Invalid email format");
 
     public static EmailAddress CreateFromValidated(string value) => new(value);
 

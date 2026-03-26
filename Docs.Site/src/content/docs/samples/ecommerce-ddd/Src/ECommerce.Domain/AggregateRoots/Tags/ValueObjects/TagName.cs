@@ -16,8 +16,8 @@ public sealed class TagName : SimpleValueObject<string>
         ValidationRules<TagName>
             .NotNull(value)
             .ThenNotEmpty()
-            .ThenMaxLength(MaxLength)
-            .ThenNormalize(v => v.Trim());
+            .ThenNormalize(v => v.Trim())
+            .ThenMaxLength(MaxLength);
 
     public static TagName CreateFromValidated(string value) => new(value);
 

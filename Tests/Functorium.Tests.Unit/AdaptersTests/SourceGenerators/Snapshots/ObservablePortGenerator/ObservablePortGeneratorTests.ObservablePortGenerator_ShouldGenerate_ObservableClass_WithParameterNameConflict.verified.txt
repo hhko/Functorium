@@ -85,11 +85,20 @@ public class ConflictParamAdapterObservable : ConflictParamAdapter
             global::System.Func<global::LanguageExt.IO<global::LanguageExt.Unit>> requestLog,
             global::System.Action<string, string, A, double> responseLogSuccess,
             global::System.Action<string, string, global::LanguageExt.Common.Error, double> responseLogFailure,
-            long startTimestamp) =>
-        AcquireActivity(requestHandler, requestHandlerMethod)
+            long startTimestamp)
+    {
+        global::Functorium.Adapters.Observabilities.ObservableSignalScope? observableSignalScope = null;
+        return AcquireActivity(requestHandler, requestHandlerMethod)
             .Bracket(
                 Use: activity =>
                     from _logged in requestLog()
+                    from _scope in global::LanguageExt.IO.lift(() =>
+                    {
+                        observableSignalScope = global::Functorium.Adapters.Observabilities.ObservableSignalScope.Begin(
+                            _logger, ObservabilityNaming.Layers.Adapter, _requestCategoryLowerCase,
+                            requestHandler, requestHandlerMethod);
+                        return global::LanguageExt.Unit.Default;
+                    })
                     from result in ExecuteOperationWithErrorHandling(
                         requestHandler,
                         requestHandlerMethod,
@@ -101,9 +110,11 @@ public class ConflictParamAdapterObservable : ConflictParamAdapter
                     select result,
                 Fin: activity => global::LanguageExt.IO.lift(() =>
                 {
+                    observableSignalScope?.Dispose();
                     activity?.Dispose();
                     return global::LanguageExt.Unit.Default;
                 }));
+    }
 
     private global::LanguageExt.IO<A> ExecuteOperationWithErrorHandling<A>(
         string requestHandler,

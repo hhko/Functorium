@@ -36,8 +36,8 @@ public sealed class Money : ValueObject
 
     private static Validation<Error, string> ValidateCurrency(string currency) =>
         ValidationRules<Money>.NotEmpty(currency)
-            .ThenExactLength(3)
-            .ThenNormalize(v => v.ToUpperInvariant());
+            .ThenNormalize(v => v.ToUpperInvariant())
+            .ThenExactLength(3);
 
     public override string ToString() => $"{Amount:N2} {Currency}";
 }

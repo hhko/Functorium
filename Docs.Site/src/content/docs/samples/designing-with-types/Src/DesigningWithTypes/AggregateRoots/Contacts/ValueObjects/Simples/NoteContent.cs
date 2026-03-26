@@ -16,8 +16,8 @@ public sealed class NoteContent : SimpleValueObject<string>
         ValidationRules<NoteContent>
             .NotNull(value)
             .ThenNotEmpty()
-            .ThenMaxLength(MaxLength)
-            .ThenNormalize(v => v.Trim());
+            .ThenNormalize(v => v.Trim())
+            .ThenMaxLength(MaxLength);
 
     public static NoteContent CreateFromValidated(string value) => new(value);
 

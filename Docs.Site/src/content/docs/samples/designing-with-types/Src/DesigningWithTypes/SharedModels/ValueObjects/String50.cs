@@ -16,8 +16,8 @@ public sealed class String50 : SimpleValueObject<string>
         ValidationRules<String50>
             .NotNull(value)
             .ThenNotEmpty()
-            .ThenMaxLength(MaxLength)
-            .ThenNormalize(v => v.Trim());
+            .ThenNormalize(v => v.Trim())
+            .ThenMaxLength(MaxLength);
 
     public static String50 CreateFromValidated(string value) => new(value);
 

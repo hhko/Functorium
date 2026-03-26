@@ -617,8 +617,8 @@ public sealed class Money : ValueObject
     /// </summary>
     public static Validation<Error, string> ValidateCurrency(string currency) =>
         Validate<Money>.NotEmpty(currency ?? "")
-            .ThenExactLength(3)
-            .ThenNormalize(v => v.ToUpperInvariant());
+            .ThenNormalize(v => v.ToUpperInvariant())
+            .ThenExactLength(3);
 }
 ```
 

@@ -20,8 +20,8 @@ public sealed class UserName : SimpleValueObject<string>
 
     public static Validation<Error, string> Validate(string? value) =>
         ValidationRules<UserName>.NotEmpty(value ?? "")
-            .ThenMaxLength(MaxLength)
-            .ThenNormalize(v => v.Trim());
+            .ThenNormalize(v => v.Trim())
+            .ThenMaxLength(MaxLength);
 
     public static implicit operator string(UserName name) => name.ToString();
 }

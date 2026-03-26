@@ -25,6 +25,11 @@ public static partial class ObservabilityNaming
             public static readonly EventId AdapterResponseSuccess = new(2002, "adapter.response.success");
             public static readonly EventId AdapterResponseWarning = new(2003, "adapter.response.warning");
             public static readonly EventId AdapterResponseError = new(2004, "adapter.response.error");
+
+            // ObservableSignal: 개발자가 Adapter 구현 내부에서 직접 출력하는 로그
+            public static readonly EventId ObservableSignalDebug = new(2021, "adapter.signal.debug");
+            public static readonly EventId ObservableSignalWarning = new(2022, "adapter.signal.warning");
+            public static readonly EventId ObservableSignalError = new(2023, "adapter.signal.error");
         }
     }
 }

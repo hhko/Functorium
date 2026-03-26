@@ -60,8 +60,8 @@ public sealed class Money : ValueObject
     /// </example>
     public static Validation<Error, string> ValidateCurrency(string currency) =>
         ValidationRules<Money>.NotEmpty(currency ?? "")
-            .ThenExactLength(3)
-            .ThenNormalize(v => v.ToUpperInvariant());
+            .ThenNormalize(v => v.ToUpperInvariant())
+            .ThenExactLength(3);
 
     /// <summary>
     /// 검증 없이 Money 생성 (복원 시 사용)

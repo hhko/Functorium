@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
+using Functorium.Domains.Observabilities;
 using LayeredArch.Application.Ports;
 using LanguageExt;
 using static Functorium.Adapters.Errors.AdapterErrorType;
@@ -195,6 +196,7 @@ public class ExternalPricingApiService : IExternalPricingService
 
     /// <summary>
     /// HTTP 오류 응답을 AdapterError로 변환합니다.
+    /// Rate Limit(429) 시 ObservableSignal.Warning으로 Retry-After 정보를 기록합니다.
     /// </summary>
     protected virtual Fin<T> HandleHttpError<T>(HttpResponseMessage response, string context) =>
         response.StatusCode switch
@@ -214,10 +216,7 @@ public class ExternalPricingApiService : IExternalPricingService
                 context,
                 "외부 API 접근이 금지되었습니다"),
 
-            HttpStatusCode.TooManyRequests => AdapterError.For<ExternalPricingApiService>(
-                new RateLimited(),
-                context,
-                "외부 API 요청 제한에 도달했습니다"),
+            HttpStatusCode.TooManyRequests => RateLimitedError<T>(response, context),
 
             HttpStatusCode.ServiceUnavailable => AdapterError.For<ExternalPricingApiService>(
                 new ExternalServiceUnavailable("ExternalPricingApi"),
@@ -229,4 +228,21 @@ public class ExternalPricingApiService : IExternalPricingService
                 response.StatusCode,
                 $"외부 API 호출 실패. Status: {response.StatusCode}")
         };
+
+    /// <summary>
+    /// Rate Limit(429) 응답 시 ObservableSignal.Warning으로 Retry-After 정보를 기록한 후 에러를 반환합니다.
+    /// ObservableSignal 사용 예시: Observable 래퍼가 설정한 공통 컨텍스트를 자동으로 포함합니다.
+    /// </summary>
+    protected virtual Fin<T> RateLimitedError<T>(HttpResponseMessage response, string context)
+    {
+        var retryAfter = response.Headers.RetryAfter?.Delta?.TotalSeconds;
+        ObservableSignal.Warning("Rate limited by external API",
+            ("adapter.http.status_code", (int)response.StatusCode),
+            ("adapter.http.retry_after_seconds", retryAfter));
+
+        return AdapterError.For<ExternalPricingApiService>(
+            new RateLimited(),
+            context,
+            "외부 API 요청 제한에 도달했습니다");
+    }
 }

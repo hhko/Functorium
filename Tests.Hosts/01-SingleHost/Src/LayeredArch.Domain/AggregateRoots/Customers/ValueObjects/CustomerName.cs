@@ -16,8 +16,8 @@ public sealed class CustomerName : SimpleValueObject<string>
         ValidationRules<CustomerName>
             .NotNull(value)
             .ThenNotEmpty()
-            .ThenMaxLength(MaxLength)
-            .ThenNormalize(v => v.Trim());
+            .ThenNormalize(v => v.Trim())
+            .ThenMaxLength(MaxLength);
 
     public static CustomerName CreateFromValidated(string value) => new(value);
 

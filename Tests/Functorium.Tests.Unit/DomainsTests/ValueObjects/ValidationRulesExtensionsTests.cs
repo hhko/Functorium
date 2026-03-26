@@ -252,6 +252,73 @@ public class ValidationRulesExtensionsTests
         actual.Value.IsSuccess.ShouldBeTrue();
     }
 
+    [Fact]
+    public void ThenNormalize_BeforeMaxLength_ValidatesNormalizedValue()
+    {
+        // Arrange: "  ab  " → Trim → "ab"(2자) → MaxLength(5) 통과
+        var actual = ValidationRules<SampleValueObject>.NotEmpty("  ab  ")
+            .ThenNormalize(v => v.Trim())
+            .ThenMaxLength(5);
+
+        // Assert
+        actual.Value.IsSuccess.ShouldBeTrue();
+        actual.Value.Match(
+            Succ: v => v.ShouldBe("ab"),
+            Fail: _ => Assert.Fail("Should succeed"));
+    }
+
+    [Fact]
+    public void ThenNormalize_BeforeMaxLength_FailsOnNormalizedValueExceedingLimit()
+    {
+        // Arrange: "abc" → Trim → "abc"(3자) → MaxLength(2) 실패
+        var actual = ValidationRules<SampleValueObject>.NotEmpty("abc")
+            .ThenNormalize(v => v.Trim())
+            .ThenMaxLength(2);
+
+        // Assert
+        actual.Value.IsFail.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ThenNormalize_AfterMaxLength_ValidatesRawValue()
+    {
+        // Arrange: "  ab  "(6자) → MaxLength(3) 실패 (원시 입력 기준)
+        var actual = ValidationRules<SampleValueObject>.NotEmpty("  ab  ")
+            .ThenMaxLength(3)
+            .ThenNormalize(v => v.Trim());
+
+        // Assert: 원시 입력 6자가 MaxLength(3) 초과하므로 실패
+        actual.Value.IsFail.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ThenNormalize_BeforeMinLength_ValidatesNormalizedValue()
+    {
+        // Arrange: "  a  " → Trim → "a"(1자) → MinLength(3) 실패
+        var actual = ValidationRules<SampleValueObject>.NotEmpty("  a  ")
+            .ThenNormalize(v => v.Trim())
+            .ThenMinLength(3);
+
+        // Assert: 정규화된 값 "a"(1자)가 MinLength(3) 미달
+        actual.Value.IsFail.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ThenNormalize_AfterMinLength_ValidatesRawValue_AllowsInvalidNormalizedResult()
+    {
+        // Arrange: "  a  "(5자) → MinLength(3) 통과 → Trim → "a"(1자)
+        // 이것이 정규화 순서 버그: 원시 값은 통과하지만 정규화된 값은 MinLength 위반
+        var actual = ValidationRules<SampleValueObject>.NotEmpty("  a  ")
+            .ThenMinLength(3)
+            .ThenNormalize(v => v.Trim());
+
+        // Assert: 원시 입력 5자가 MinLength(3) 통과하므로 성공 — 하지만 결과는 "a"(1자)
+        actual.Value.IsSuccess.ShouldBeTrue();
+        actual.Value.Match(
+            Succ: v => v.ShouldBe("a"),  // 1자 — MinLength(3) 의도 위반
+            Fail: _ => Assert.Fail("Should succeed (but result violates intent)"));
+    }
+
     #endregion
 
     #region Implicit Conversion Tests
