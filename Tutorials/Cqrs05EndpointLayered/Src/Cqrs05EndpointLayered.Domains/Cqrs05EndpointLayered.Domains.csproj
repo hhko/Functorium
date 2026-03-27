@@ -1,11 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <PackageReference Include="LanguageExt.Core" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Src\Functorium\Functorium.csproj" />
+    <ProjectReference Include="$(FunctoriumSrcRoot)\Functorium\Functorium.csproj" />
   </ItemGroup>
 
   <ItemGroup>

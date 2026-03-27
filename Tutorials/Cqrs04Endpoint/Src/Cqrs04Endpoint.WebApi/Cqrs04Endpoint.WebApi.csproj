@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -31,13 +31,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Src\Functorium\Functorium.csproj" />
-    <ProjectReference Include="..\..\..\..\Src\Functorium.Adapters\Functorium.Adapters.csproj" />
+    <ProjectReference Include="$(FunctoriumSrcRoot)\Functorium\Functorium.csproj" />
+    <ProjectReference Include="$(FunctoriumSrcRoot)\Functorium.Adapters\Functorium.Adapters.csproj" />
   </ItemGroup>
 
   <!-- Source Generator 참조 (Analyzer로 참조) -->
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Src\Functorium.SourceGenerators\Functorium.SourceGenerators.csproj"
+    <ProjectReference Include="$(FunctoriumSrcRoot)\Functorium.SourceGenerators\Functorium.SourceGenerators.csproj"
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false" />
   </ItemGroup>

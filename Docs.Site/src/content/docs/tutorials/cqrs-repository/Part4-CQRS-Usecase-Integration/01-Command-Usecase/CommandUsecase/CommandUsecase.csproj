@@ -1,12 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\..\..\..\Src\Functorium\Functorium.csproj" />
-    <ProjectReference Include="..\..\..\..\..\..\..\..\..\Src\Functorium.Adapters\Functorium.Adapters.csproj" />
+    <ProjectReference Include="$(FunctoriumSrcRoot)\Functorium\Functorium.csproj" />
+    <ProjectReference Include="$(FunctoriumSrcRoot)\Functorium.Adapters\Functorium.Adapters.csproj" />
   </ItemGroup>
 
 </Project>

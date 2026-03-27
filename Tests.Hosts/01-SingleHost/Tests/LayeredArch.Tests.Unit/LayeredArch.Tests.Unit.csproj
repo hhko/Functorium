@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
@@ -26,7 +26,7 @@
     <ProjectReference Include="..\..\Src\LayeredArch.Adapters.Infrastructure\LayeredArch.Adapters.Infrastructure.csproj" ExcludeAssets="analyzers" />
     <ProjectReference Include="..\..\Src\LayeredArch.Adapters.Persistence\LayeredArch.Adapters.Persistence.csproj" />
     <ProjectReference Include="..\..\Src\LayeredArch.Adapters.Presentation\LayeredArch.Adapters.Presentation.csproj" />
-    <ProjectReference Include="..\..\..\..\Src\Functorium.Testing\Functorium.Testing.csproj" />
+    <ProjectReference Include="$(FunctoriumSrcRoot)\Functorium.Testing\Functorium.Testing.csproj" />
   </ItemGroup>
 
 </Project>

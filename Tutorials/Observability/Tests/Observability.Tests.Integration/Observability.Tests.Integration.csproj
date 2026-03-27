@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <IsTestProject>true</IsTestProject>
@@ -22,9 +22,9 @@
     <ProjectReference Include="..\..\Src\Observability.Adapters.Presentation\Observability.Adapters.Presentation.csproj" />
     <ProjectReference Include="..\..\Src\Observability.Applications\Observability.Applications.csproj" />
     <ProjectReference Include="..\..\Src\Observability.Domains\Observability.Domains.csproj" />
-    <ProjectReference Include="..\..\..\..\Src\Functorium\Functorium.csproj" />
-    <ProjectReference Include="..\..\..\..\Src\Functorium.Adapters\Functorium.Adapters.csproj" />
-    <ProjectReference Include="..\..\..\..\Src\Functorium.Testing\Functorium.Testing.csproj" />
+    <ProjectReference Include="$(FunctoriumSrcRoot)\Functorium\Functorium.csproj" />
+    <ProjectReference Include="$(FunctoriumSrcRoot)\Functorium.Adapters\Functorium.Adapters.csproj" />
+    <ProjectReference Include="$(FunctoriumSrcRoot)\Functorium.Testing\Functorium.Testing.csproj" />
   </ItemGroup>
 
   <ItemGroup>

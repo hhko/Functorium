@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -28,7 +28,7 @@
     <ProjectReference Include="..\..\Src\Cqrs04Endpoint.WebApi\Cqrs04Endpoint.WebApi.csproj">
       <ExcludeAssets>analyzers</ExcludeAssets>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\Src\Functorium.Testing\Functorium.Testing.csproj" />
+    <ProjectReference Include="$(FunctoriumSrcRoot)\Functorium.Testing\Functorium.Testing.csproj" />
   </ItemGroup>
 
 </Project>

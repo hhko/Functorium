@@ -11,6 +11,9 @@
 
     <!-- Code Quality -->
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!-- Functorium Source Root -->
+    <FunctoriumSrcRoot>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'Src'))</FunctoriumSrcRoot>
   </PropertyGroup>
 
   <!-- NuGet Package Common Settings -->

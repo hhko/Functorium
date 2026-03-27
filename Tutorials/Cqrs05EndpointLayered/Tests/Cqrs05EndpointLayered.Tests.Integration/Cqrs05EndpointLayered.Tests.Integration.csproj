@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
@@ -23,7 +23,7 @@
     <ProjectReference Include="..\..\Src\Cqrs05EndpointLayered\Cqrs05EndpointLayered.csproj">
       <ExcludeAssets>analyzers</ExcludeAssets>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\Src\Functorium.Testing\Functorium.Testing.csproj" />
+    <ProjectReference Include="$(FunctoriumSrcRoot)\Functorium.Testing\Functorium.Testing.csproj" />
   </ItemGroup>
 
 </Project>

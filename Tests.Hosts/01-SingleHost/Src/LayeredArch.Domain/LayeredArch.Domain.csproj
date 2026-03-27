@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <PackageReference Include="LanguageExt.Core" />
@@ -6,12 +6,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Src\Functorium\Functorium.csproj" />
+    <ProjectReference Include="$(FunctoriumSrcRoot)\Functorium\Functorium.csproj" />
   </ItemGroup>
 
   <!-- Source Generator 참조 (EntityId 생성용) -->
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Src\Functorium.SourceGenerators\Functorium.SourceGenerators.csproj"
+    <ProjectReference Include="$(FunctoriumSrcRoot)\Functorium.SourceGenerators\Functorium.SourceGenerators.csproj"
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false" />
   </ItemGroup>

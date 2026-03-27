@@ -1,5 +1,6 @@
 <Project>
   <PropertyGroup>
+    <FunctoriumSrcRoot>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', '..', '..', '..', '..', '..', 'Src'))</FunctoriumSrcRoot>
     <TargetFramework>net10.0</TargetFramework>
     <LangVersion>14</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>

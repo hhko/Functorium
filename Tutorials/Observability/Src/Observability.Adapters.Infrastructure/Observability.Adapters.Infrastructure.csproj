@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
@@ -9,8 +9,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Src\Functorium\Functorium.csproj" />
-    <ProjectReference Include="..\..\..\..\Src\Functorium.Adapters\Functorium.Adapters.csproj" />
+    <ProjectReference Include="$(FunctoriumSrcRoot)\Functorium\Functorium.csproj" />
+    <ProjectReference Include="$(FunctoriumSrcRoot)\Functorium.Adapters\Functorium.Adapters.csproj" />
     <ProjectReference Include="..\Observability.Adapters.Presentation\Observability.Adapters.Presentation.csproj" />
   </ItemGroup>
 

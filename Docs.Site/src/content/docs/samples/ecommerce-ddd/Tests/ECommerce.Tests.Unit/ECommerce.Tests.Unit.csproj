@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
@@ -24,7 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Src\ECommerce.Domain\ECommerce.Domain.csproj" />
     <ProjectReference Include="..\..\Src\ECommerce.Application\ECommerce.Application.csproj" />
-    <ProjectReference Include="..\..\..\..\..\..\..\..\Src\Functorium.Testing\Functorium.Testing.csproj" />
+    <ProjectReference Include="$(FunctoriumSrcRoot)\Functorium.Testing\Functorium.Testing.csproj" />
   </ItemGroup>
 
 </Project>
