@@ -1,6 +1,15 @@
 ---
-title: "DDD 코드 리뷰 스킬"
+title: "Domain Review"
+description: "에릭 에반스 DDD 관점의 코드 리뷰와 개선 제안"
 ---
+
+> 워크플로 어느 시점에서든 실행 가능한 리뷰 스킬입니다.
+
+## 선행 조건
+
+- 리뷰 대상 소스 코드가 존재해야 합니다.
+- 특정 Aggregate, 레이어, 또는 전체 코드베이스를 지정할 수 있습니다.
+- 선행 문서가 없어도 기존 코드에서 직접 리뷰를 수행합니다.
 
 ## 배경
 
@@ -211,6 +220,11 @@ Aggregate를 넘어 레이어 간 의존성을 검토합니다. 도메인 레이
 
 ## 참고 자료
 
+### 워크플로
+
+- [워크플로](../workflow/) -- 6단계 전체 흐름
+- [Test Develop 스킬](./test-develop/) -- 아키텍처 규칙 테스트로 리뷰 항목 자동화
+
 ### 프레임워크 가이드
 
 - [DDD 전술적 설계 개요](../guides/domain/04-ddd-tactical-overview/)
@@ -224,6 +238,6 @@ Aggregate를 넘어 레이어 간 의존성을 검토합니다. 도메인 레이
 
 ### 관련 스킬
 
-- [도메인 개발 스킬](./domain-develop/) — 리뷰에서 발견된 개선 사항을 코드로 구현
-- [Application 레이어 개발 스킬](./application-develop/) — Domain Service 추출 후 Usecase 재구성
-- [테스트 개발 스킬](./test-develop/) — 아키텍처 규칙 테스트로 위반 자동 감지
+- [도메인 개발 스킬](./domain-develop/) -- 리뷰에서 발견된 개선 사항을 코드로 구현
+- [Application 레이어 개발 스킬](./application-develop/) -- Domain Service 추출 후 Usecase 재구성
+- [테스트 개발 스킬](./test-develop/) -- 아키텍처 규칙 테스트로 위반 자동 감지

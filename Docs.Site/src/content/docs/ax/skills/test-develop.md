@@ -1,6 +1,15 @@
 ---
-title: "테스트 개발 스킬"
+title: "Test Develop"
+description: "단위 테스트, 통합 테스트, 아키텍처 규칙 테스트 작성"
 ---
+
+> project-spec -> architecture-design -> domain-develop -> application-develop -> adapter-develop -> **test-develop**
+
+## 선행 조건
+
+- 구현된 소스 코드를 읽어 테스트 대상을 확인합니다.
+- `domain/`, `application/`, `adapter/`의 `03-implementation-results.md`를 참고하면 구현 현황을 빠르게 파악할 수 있습니다.
+- 선행 문서가 없어도 기존 코드에서 직접 테스트 대상을 식별합니다.
 
 ## 배경
 
@@ -370,6 +379,12 @@ public sealed class DomainArchitectureRuleTests : DomainArchitectureTestSuite
 
 ## 참고 자료
 
+### 워크플로
+
+- [워크플로](../workflow/) -- 6단계 전체 흐름
+- [Adapter Develop 스킬](./adapter-develop/) -- 이전 단계: Repository, Endpoint, DI 구현
+- [Domain Review 스킬](./domain-review/) -- 코드 리뷰로 품질 점검
+
 ### 프레임워크 가이드
 
 - [단위 테스트 가이드](../guides/testing/15a-unit-testing/)
@@ -379,6 +394,6 @@ public sealed class DomainArchitectureRuleTests : DomainArchitectureTestSuite
 
 ### 관련 스킬
 
-- [도메인 개발 스킬](./domain-develop/) — Aggregate, Value Object, Event 등 도메인 빌딩블록 생성
-- [Application 레이어 개발 스킬](./application-develop/) — Command/Query/EventHandler 유스케이스 생성
-- [Adapter 레이어 개발 스킬](./adapter-develop/) — Repository, Query Adapter, Endpoint, DI 등록 생성
+- [도메인 개발 스킬](./domain-develop/) -- Aggregate, Value Object, Event 등 도메인 빌딩블록 생성
+- [Application 레이어 개발 스킬](./application-develop/) -- Command/Query/EventHandler 유스케이스 생성
+- [Adapter 레이어 개발 스킬](./adapter-develop/) -- Repository, Query Adapter, Endpoint, DI 등록 생성

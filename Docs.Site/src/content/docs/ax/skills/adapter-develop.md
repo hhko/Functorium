@@ -1,6 +1,15 @@
 ---
-title: "Adapter 레이어 개발 스킬"
+title: "Adapter Develop"
+description: "Repository, Query Adapter, Endpoint, DI 등록 구현"
 ---
+
+> project-spec -> architecture-design -> domain-develop -> application-develop -> **adapter-develop** -> test-develop
+
+## 선행 조건
+
+- `application-develop` 스킬에서 생성한 `application/03-implementation-results.md`를 읽어 Port 목록(IRepository, IQueryPort, External Service)을 확인합니다.
+- `architecture-design` 스킬에서 생성한 `01-architecture-design.md`가 있으면 읽어 폴더 구조와 영속성 전략을 확인합니다.
+- 선행 문서가 없으면 사용자에게 직접 질문합니다.
 
 ## 배경
 
@@ -327,6 +336,12 @@ services.RegisterScopedObservablePort<IProductQuery, DapperProductQueryObservabl
 
 ## 참고 자료
 
+### 워크플로
+
+- [워크플로](../workflow/) -- 6단계 전체 흐름
+- [Application Develop 스킬](./application-develop/) -- 이전 단계: 유스케이스 구현
+- [Test Develop 스킬](./test-develop/) -- 다음 단계: 테스트 작성
+
 ### 프레임워크 가이드
 
 - [Port 정의](../guides/adapter/12-ports/)
@@ -338,6 +353,6 @@ services.RegisterScopedObservablePort<IProductQuery, DapperProductQueryObservabl
 
 ### 관련 스킬
 
-- [도메인 개발 스킬](./domain-develop/) — Aggregate, Value Object, Event 등 도메인 빌딩블록 생성
-- [Application 레이어 개발 스킬](./application-develop/) — Command/Query/EventHandler 유스케이스 생성
-- [테스트 개발 스킬](./test-develop/) — 단위/통합/아키텍처 테스트 생성
+- [도메인 개발 스킬](./domain-develop/) -- Aggregate, Value Object, Event 등 도메인 빌딩블록 생성
+- [Application 레이어 개발 스킬](./application-develop/) -- Command/Query/EventHandler 유스케이스 생성
+- [테스트 개발 스킬](./test-develop/) -- 단위/통합/아키텍처 테스트 생성

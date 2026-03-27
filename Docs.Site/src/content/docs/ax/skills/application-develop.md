@@ -1,6 +1,14 @@
 ---
-title: "Application 레이어 개발 스킬"
+title: "Application Develop"
+description: "CQRS 유스케이스 설계와 구현 (Command, Query, EventHandler, Validator)"
 ---
+
+> project-spec -> architecture-design -> domain-develop -> **application-develop** -> adapter-develop -> test-develop
+
+## 선행 조건
+
+- `domain-develop` 스킬에서 생성한 `domain/03-implementation-results.md`를 읽어 도메인 모델(Aggregate, VO, Event, Specification)을 확인합니다.
+- 선행 문서가 없으면 사용자에게 직접 질문합니다.
 
 ## 배경
 
@@ -294,6 +302,12 @@ public sealed class OnOrderCreated : IDomainEventHandler<Order.CreatedEvent>
 
 ## 참고 자료
 
+### 워크플로
+
+- [워크플로](../workflow/) -- 6단계 전체 흐름
+- [Domain Develop 스킬](./domain-develop/) -- 이전 단계: 도메인 모델 구현
+- [Adapter Develop 스킬](./adapter-develop/) -- 다음 단계: Repository, Endpoint, DI 구현
+
 ### 프레임워크 가이드
 
 - [Use Case와 CQRS](../guides/application/11-usecases-and-cqrs/)
@@ -306,6 +320,6 @@ public sealed class OnOrderCreated : IDomainEventHandler<Order.CreatedEvent>
 
 ### 관련 스킬
 
-- [도메인 개발 스킬](./domain-develop/) — Aggregate, Value Object, Event 등 도메인 빌딩블록 생성
-- [Adapter 레이어 개발 스킬](./adapter-develop/) — Repository, Query Adapter, Endpoint, DI 등록 생성
-- [테스트 개발 스킬](./test-develop/) — 단위/통합/아키텍처 테스트 생성
+- [도메인 개발 스킬](./domain-develop/) -- Aggregate, Value Object, Event 등 도메인 빌딩블록 생성
+- [Adapter 레이어 개발 스킬](./adapter-develop/) -- Repository, Query Adapter, Endpoint, DI 등록 생성
+- [테스트 개발 스킬](./test-develop/) -- 단위/통합/아키텍처 테스트 생성

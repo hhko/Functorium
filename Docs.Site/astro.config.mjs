@@ -606,6 +606,39 @@ export default defineConfig({
                   },
                 ],
               },
+              {
+                label: 'AI 모델 거버넌스',
+                items: [
+                  { slug: 'samples/ai-model-governance' },
+                  {
+                    label: '도메인 레이어',
+                    items: [
+                      { slug: 'samples/ai-model-governance/domain/00-business-requirements' },
+                      { slug: 'samples/ai-model-governance/domain/01-type-design-decisions' },
+                      { slug: 'samples/ai-model-governance/domain/02-code-design' },
+                      { slug: 'samples/ai-model-governance/domain/03-implementation-results' },
+                    ],
+                  },
+                  {
+                    label: '애플리케이션 레이어',
+                    items: [
+                      { slug: 'samples/ai-model-governance/application/00-business-requirements' },
+                      { slug: 'samples/ai-model-governance/application/01-type-design-decisions' },
+                      { slug: 'samples/ai-model-governance/application/02-code-design' },
+                      { slug: 'samples/ai-model-governance/application/03-implementation-results' },
+                    ],
+                  },
+                  {
+                    label: '어댑터 레이어',
+                    items: [
+                      { slug: 'samples/ai-model-governance/adapter/00-business-requirements' },
+                      { slug: 'samples/ai-model-governance/adapter/01-type-design-decisions' },
+                      { slug: 'samples/ai-model-governance/adapter/02-code-design' },
+                      { slug: 'samples/ai-model-governance/adapter/03-implementation-results' },
+                    ],
+                  },
+                ],
+              },
             ],
           },
           {
@@ -648,23 +681,26 @@ export default defineConfig({
             ],
           },
           {
-            label: 'AI 자동화',
-            link: '/ai-automation/',
+            label: 'AX',
+            link: '/ax/',
             icon: 'star',
             items: [
-              { label: 'AI 자동화', slug: 'ai-automation' },
-              { slug: 'ai-automation/installation' },
+              { label: 'AX (AI Transformation)', slug: 'ax' },
+              { slug: 'ax/installation' },
+              { slug: 'ax/workflow' },
               {
                 label: '스킬',
                 items: [
-                  { slug: 'ai-automation/skills/domain-develop' },
-                  { slug: 'ai-automation/skills/application-develop' },
-                  { slug: 'ai-automation/skills/adapter-develop' },
-                  { slug: 'ai-automation/skills/test-develop' },
-                  { slug: 'ai-automation/skills/domain-review' },
+                  { slug: 'ax/skills/project-spec' },
+                  { slug: 'ax/skills/architecture-design' },
+                  { slug: 'ax/skills/domain-develop' },
+                  { slug: 'ax/skills/application-develop' },
+                  { slug: 'ax/skills/adapter-develop' },
+                  { slug: 'ax/skills/test-develop' },
+                  { slug: 'ax/skills/domain-review' },
                 ],
               },
-              { slug: 'ai-automation/agents' },
+              { slug: 'ax/agents' },
             ],
           },
         ]),

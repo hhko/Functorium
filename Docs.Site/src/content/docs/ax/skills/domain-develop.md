@@ -1,6 +1,15 @@
 ---
-title: "Claude Code 도메인 개발 스킬"
+title: "Domain Develop"
+description: "도메인 모델 설계와 구현 (VO, Aggregate, Event, Spec, Service)"
 ---
+
+> project-spec -> architecture-design -> **domain-develop** -> application-develop -> adapter-develop -> test-develop
+
+## 선행 조건
+
+- `project-spec` 스킬에서 생성한 `00-project-spec.md`가 있으면 자동으로 읽어 Aggregate 후보와 비즈니스 규칙을 확인합니다.
+- `architecture-design` 스킬에서 생성한 `01-architecture-design.md`가 있으면 읽어 폴더 구조와 네이밍 규칙을 확인합니다.
+- 선행 문서가 없으면 사용자에게 직접 질문합니다.
 
 ## 배경
 
@@ -356,6 +365,13 @@ public sealed class InventoryTransferService : IDomainService
 
 ## 참고 자료
 
+### 워크플로
+
+- [워크플로](../workflow/) -- 6단계 전체 흐름
+- [Project Spec 스킬](./project-spec/) -- 이전 단계: PRD 작성
+- [Architecture Design 스킬](./architecture-design/) -- 이전 단계: 프로젝트 구조 설계
+- [Application Develop 스킬](./application-develop/) -- 다음 단계: 유스케이스 구현
+
 ### 프레임워크 가이드
 
 - [DDD 전술적 설계 개요](../guides/domain/04-ddd-tactical-overview/)
@@ -372,4 +388,4 @@ public sealed class InventoryTransferService : IDomainService
 
 ### 실전 샘플
 
-- [타입으로 도메인 설계하기](../samples/designing-with-types/) — 연락처 도메인 전체 설계/구현 과정
+- [타입으로 도메인 설계하기](../samples/designing-with-types/) -- 연락처 도메인 전체 설계/구현 과정
