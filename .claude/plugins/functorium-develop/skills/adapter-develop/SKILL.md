@@ -3,6 +3,17 @@ name: adapter-develop
 description: "Functorium 프레임워크 기반 어댑터 레이어(Repository, Query Adapter, Endpoint, DI 등록)를 구현합니다. 'Repository 구현', '어댑터 추가', '엔드포인트 만들어줘', 'DI 등록', 'EF Core 설정', 'Dapper 쿼리' 등의 요청에 반응합니다."
 ---
 
+## 선행 조건
+
+`application-develop` 스킬에서 생성한 `application/03-implementation-results.md`를 읽어 Port 목록(IRepository, IQueryPort, External Service)을 확인합니다.
+`architecture-design` 스킬에서 생성한 `01-architecture-design.md`가 있으면 읽어 폴더 구조와 영속성 전략을 확인합니다.
+
+## 후속 스킬
+
+```
+project-spec → architecture-design → domain-develop → application-develop → **adapter-develop** → test-develop
+```
+
 # Adapter Develop Skill
 
 Functorium 프레임워크 기반 어댑터 레이어를 구현하는 스킬입니다.

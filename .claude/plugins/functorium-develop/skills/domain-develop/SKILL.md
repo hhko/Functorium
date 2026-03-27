@@ -3,6 +3,18 @@ name: domain-develop
 description: "에릭 에반스 DDD 관점에서 Functorium 프레임워크 기반 도메인 레이어 코드, 단위 테스트, 문서를 생성합니다. 도메인 모델링, Value Object, Entity, Aggregate, Union 타입, Specification, Domain Service 구현이 필요할 때 사용합니다. '도메인 구현', 'Aggregate 만들어줘', 'Value Object 추가', '엔티티 설계', '도메인 모델링' 등의 요청에 반응합니다."
 ---
 
+## 선행 조건
+
+`project-spec` 스킬에서 생성한 `00-project-spec.md`가 있으면 읽어 Aggregate 후보와 비즈니스 규칙을 확인합니다.
+`architecture-design` 스킬에서 생성한 `01-architecture-design.md`가 있으면 읽어 폴더 구조와 네이밍 규칙을 확인합니다.
+없으면 사용자에게 직접 질문합니다.
+
+## 후속 스킬
+
+```
+project-spec → architecture-design → **domain-develop** → application-develop → adapter-develop → test-develop
+```
+
 ## 개요
 
 Functorium 프레임워크 기반 도메인 레이어 개발 가이드입니다.

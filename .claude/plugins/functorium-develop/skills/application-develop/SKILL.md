@@ -3,6 +3,16 @@ name: application-develop
 description: "Functorium 프레임워크 기반 애플리케이션 레이어(CQRS, Usecase, Port)를 설계하고 구현합니다. '유스케이스 구현', 'Command 만들어줘', 'Query 추가', 'CQRS 설계', '이벤트 핸들러 추가' 등의 요청에 반응합니다."
 ---
 
+## 선행 조건
+
+`domain-develop` 스킬에서 생성한 `domain/03-implementation-results.md`를 읽어 도메인 모델(Aggregate, VO, Event, Specification)을 확인합니다.
+
+## 후속 스킬
+
+```
+project-spec → architecture-design → domain-develop → **application-develop** → adapter-develop → test-develop
+```
+
 ## 개요
 
 Functorium 프레임워크 기반 애플리케이션 레이어 개발 가이드입니다.

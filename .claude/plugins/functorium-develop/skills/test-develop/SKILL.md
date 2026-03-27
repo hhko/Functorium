@@ -3,6 +3,17 @@ name: test-develop
 description: "Functorium 프레임워크 기반 단위 테스트, 통합 테스트, 아키텍처 규칙 테스트를 작성합니다. '테스트 작성', '단위 테스트 추가', '통합 테스트', '아키텍처 규칙 테스트' 등의 요청에 반응합니다."
 ---
 
+## 선행 조건
+
+구현된 소스 코드를 읽어 테스트 대상을 확인합니다.
+`domain/`, `application/`, `adapter/`의 `03-implementation-results.md`를 참고하면 구현 현황을 빠르게 파악할 수 있습니다.
+
+## 후속 스킬
+
+```
+project-spec → architecture-design → domain-develop → application-develop → adapter-develop → **test-develop**
+```
+
 # Test Develop Skill
 
 Functorium 프레임워크 기반 테스트를 작성하는 스킬입니다.
