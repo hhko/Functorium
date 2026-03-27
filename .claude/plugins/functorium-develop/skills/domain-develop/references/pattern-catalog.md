@@ -575,7 +575,111 @@ public sealed class OrderCreditCheckService : IDomainService
 
 ---
 
-## 8. Repository Port — Aggregate 단위 영속화
+## 8. UnionValueObject — 배타적 상태 조합
+
+구조적으로 무효 상태를 제거하는 Discriminated Union 패턴입니다.
+enum/SmartEnum은 모든 케이스가 같은 데이터를 가지지만, Union은 **케이스별로 다른 데이터**를 가집니다.
+
+### 선택 기준: enum vs SmartEnum vs UnionValueObject
+
+| 기준 | enum / SmartEnum | UnionValueObject |
+|------|-----------------|-----------------|
+| 케이스별 데이터 | 동일 (없거나 공통) | **케이스별 다름** |
+| 예시 | OrderStatus(Pending, Confirmed) | ContactInfo(EmailOnly, PostalOnly, EmailAndPostal) |
+| 무효 상태 | 런타임 검증으로 방지 | **컴파일 타임에 제거** |
+| 상태 전이 | AllowedTransitions HashMap | `TransitionFrom<TSource, TTarget>()` |
+
+### 8-1. 순수 데이터 Union: ContactInfo
+
+케이스별로 다른 데이터를 가지며, 상태 전이가 없는 패턴입니다.
+
+```csharp
+[UnionType]
+public abstract partial record ContactInfo : UnionValueObject
+{
+    public sealed record EmailOnly(EmailVerificationState EmailState) : ContactInfo;
+    public sealed record PostalOnly(PostalAddress Address) : ContactInfo;
+    public sealed record EmailAndPostal(EmailVerificationState EmailState, PostalAddress Address) : ContactInfo;
+
+    private ContactInfo() { }
+}
+```
+
+**핵심:**
+- `abstract partial record` + `[UnionType]` 어트리뷰트
+- `: UnionValueObject` (순수 데이터, 상태 전이 없음)
+- `private` 생성자로 외부 확장 차단
+- `sealed record` 케이스들만 허용
+- Source Generator가 `Match`, `Switch`, `IsEmailOnly`, `AsEmailOnly()` 등 자동 생성
+
+### 8-2. 상태 전이 Union: EmailVerificationState
+
+단방향/양방향 상태 전이를 타입 안전하게 강제하는 패턴입니다.
+
+```csharp
+[UnionType]
+public abstract partial record EmailVerificationState : UnionValueObject<EmailVerificationState>
+{
+    public sealed record Unverified(EmailAddress Email) : EmailVerificationState;
+    public sealed record Verified(EmailAddress Email, DateTime VerifiedAt) : EmailVerificationState;
+
+    private EmailVerificationState() { }
+
+    /// Unverified → Verified 전이. Verified 상태에서는 실패를 반환합니다.
+    public Fin<Verified> Verify(DateTime verifiedAt) =>
+        TransitionFrom<Unverified, Verified>(
+            u => new Verified(u.Email, verifiedAt));
+}
+```
+
+**핵심:**
+- `: UnionValueObject<EmailVerificationState>` (CRTP — 상태 전이 지원)
+- `TransitionFrom<TSource, TTarget>(converter)` — 현재 상태가 `TSource`면 변환, 아니면 `Fin.Fail(InvalidTransition)` 반환
+- 전이 실패 시 자동으로 `DomainErrorType.InvalidTransition(FromState, ToState)` 에러 생성
+
+### 8-3. Aggregate에서 Union 사용
+
+```csharp
+public sealed class Contact : AggregateRoot<ContactId>
+{
+    public ContactInfo ContactInfo { get; private set; }
+
+    // 프로젝션 속성: Specification 쿼리를 위해 union 내부 값을 평탄화
+    public string? EmailValue { get; private set; }
+
+    public Fin<Contact> UpdateContactInfo(ContactInfo newInfo)
+    {
+        ContactInfo = newInfo;
+        // 프로젝션 속성 동기화
+        EmailValue = newInfo.Match(
+            email => email.EmailState.Match(u => (string)u.Email, v => (string)v.Email),
+            postal => null,
+            both => both.EmailState.Match(u => (string)u.Email, v => (string)v.Email));
+        AddDomainEvent(new ContactInfoUpdatedEvent(Id, newInfo));
+        return this;
+    }
+}
+```
+
+**프로젝션 속성 패턴:**
+- Union 내부 값을 Aggregate 루트 레벨로 평탄화
+- EF Core/Dapper Specification 쿼리에서 직접 필터링 가능
+- Union 변경 시 반드시 동기화
+
+### 8-4. Implementation Checklist
+
+- [ ] `abstract partial record` 선언
+- [ ] `[UnionType]` 어트리뷰트 추가
+- [ ] 베이스 클래스 선택: `UnionValueObject` (순수 데이터) 또는 `UnionValueObject<TSelf>` (상태 전이)
+- [ ] `private` 생성자로 외부 확장 차단
+- [ ] 모든 케이스를 `sealed record`로 정의
+- [ ] 상태 전이가 있으면 `TransitionFrom<TSource, TTarget>()` 사용
+- [ ] Aggregate에서 사용 시 프로젝션 속성 검토 (쿼리 필요 여부)
+- [ ] Match/Switch 호출 시 모든 케이스 처리 (exhaustive)
+
+---
+
+## 9. Repository Port — Aggregate 단위 영속화
 
 Domain Layer에 위치하는 Repository 인터페이스(Port)입니다.
 
@@ -619,7 +723,7 @@ public interface IRepository<TAggregate, TId> : IObservablePort
 
 ---
 
-## 9. Domain Service 벌크 패턴
+## 10. Domain Service 벌크 패턴
 
 여러 Aggregate를 조율하는 벌크 연산은 Domain Service가 소유합니다.
 
@@ -650,7 +754,7 @@ public static class ProductBulkOperations
 
 ---
 
-## 10. IRepository 벌크 메서드
+## 11. IRepository 벌크 메서드
 
 ```csharp
 public interface IRepository<TAggregate, TId> : IObservablePort
@@ -671,7 +775,7 @@ public interface IRepository<TAggregate, TId> : IObservablePort
 
 ---
 
-## 11. Application Layer — ApplyT 패턴 + Validator 역할
+## 12. Application Layer — ApplyT 패턴 + Validator 역할
 
 ### 검증 파이프라인의 4가지 역할
 

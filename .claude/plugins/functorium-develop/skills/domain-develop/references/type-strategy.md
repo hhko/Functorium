@@ -17,11 +17,80 @@
 | 식별 가능 + 부모 종속 | `Entity<TId>` | OrderLine, CartItem |
 | 조건부 필터/쿼리 | `ExpressionSpecification<T>` | ProductNameUniqueSpec, PriceRangeSpec |
 | 교차 Aggregate 규칙 | `IDomainService` | OrderCreditCheckService |
-| 배타적 상태 타입 | `UnionValueObject` | PaymentInfo = CreditCard \| BankTransfer \| PayPal |
+| 배타적 상태 조합 | `UnionValueObject` + `[UnionType]` | ContactInfo = EmailOnly \| PostalOnly \| EmailAndPostal |
+| 배타적 상태 전이 | `UnionValueObject<TSelf>` + `TransitionFrom` | EmailVerificationState = Unverified \| Verified |
 
 ---
 
-## 2. Naive 데이터 모델 -> Always-valid 모델 변환
+## 2. 배타적 상태 타입: enum vs SmartEnum vs UnionValueObject
+
+### 2-1. 선택 결정 트리
+
+```
+케이스별로 다른 데이터를 가지는가?
+├── No → 상태 전이 규칙이 있는가?
+│   ├── No → SmartEnum (HashMap 기반)
+│   └── Yes → SmartEnum + AllowedTransitions
+└── Yes → 상태 전이가 필요한가?
+    ├── No → UnionValueObject + [UnionType]
+    └── Yes → UnionValueObject<TSelf> + TransitionFrom
+```
+
+### 2-2. 비교표
+
+| 기준 | SmartEnum | UnionValueObject | UnionValueObject\<TSelf\> |
+|------|----------|-----------------|-------------------------|
+| 케이스별 데이터 | 동일 (없거나 공통 속성) | **케이스별 다름** | **케이스별 다름** |
+| 상태 전이 | AllowedTransitions HashMap | 없음 | TransitionFrom 메서드 |
+| 무효 상태 방지 | 런타임 검증 | **컴파일 타임** | **컴파일 타임** |
+| 패턴 매칭 | switch/if | **Match/Switch (exhaustive)** | **Match/Switch (exhaustive)** |
+| EF Core 저장 | int/string 직렬화 | 프로젝션 속성 필요 | 프로젝션 속성 필요 |
+| 예시 | OrderStatus, Genre | ContactInfo, PaymentInfo | EmailVerificationState |
+
+### 2-3. 코드 예시
+
+**SmartEnum (공통 데이터):**
+```csharp
+// 모든 케이스가 같은 구조 (Value, Name)
+public sealed class OrderStatus : SimpleValueObject<string>
+{
+    public static readonly OrderStatus Pending = new("Pending");
+    public static readonly OrderStatus Confirmed = new("Confirmed");
+    // AllowedTransitions으로 전이 규칙
+}
+```
+
+**UnionValueObject (케이스별 다른 데이터):**
+```csharp
+// EmailOnly는 EmailState만, PostalOnly는 Address만
+[UnionType]
+public abstract partial record ContactInfo : UnionValueObject
+{
+    public sealed record EmailOnly(EmailVerificationState EmailState) : ContactInfo;
+    public sealed record PostalOnly(PostalAddress Address) : ContactInfo;
+    public sealed record EmailAndPostal(EmailVerificationState EmailState, PostalAddress Address) : ContactInfo;
+    private ContactInfo() { }
+}
+```
+
+**UnionValueObject\<TSelf\> (타입 안전 전이):**
+```csharp
+// Unverified → Verified 단방향 전이
+[UnionType]
+public abstract partial record EmailVerificationState : UnionValueObject<EmailVerificationState>
+{
+    public sealed record Unverified(EmailAddress Email) : EmailVerificationState;
+    public sealed record Verified(EmailAddress Email, DateTime VerifiedAt) : EmailVerificationState;
+    private EmailVerificationState() { }
+
+    public Fin<Verified> Verify(DateTime verifiedAt) =>
+        TransitionFrom<Unverified, Verified>(u => new Verified(u.Email, verifiedAt));
+}
+```
+
+---
+
+## 3. Naive 데이터 모델 -> Always-valid 모델 변환
 
 ### Before: Naive 모델 (원시 타입)
 
@@ -87,7 +156,7 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
 
 ---
 
-## 3. 결정 트리
+## 4. 결정 트리
 
 비즈니스 개념을 Functorium 타입으로 매핑할 때 다음 순서로 판단합니다:
 
@@ -130,10 +199,13 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     │       │   └── NO → SmartEnum (HashMap만)
     │       │       예: PaymentMethod, Currency
     │       │
-    │       └── 배타적 타입 분기인가?
+    │       └── 케이스별로 다른 데이터를 가지는가?
     │           │
-    │           └── YES → UnionValueObject
-    │               예: PaymentInfo = CreditCard | BankTransfer
+    │           ├── YES + 상태 전이 필요 → UnionValueObject<TSelf> + TransitionFrom
+    │           │   예: EmailVerificationState = Unverified | Verified
+    │           │
+    │           └── YES + 전이 불필요 → UnionValueObject + [UnionType]
+    │               예: ContactInfo = EmailOnly | PostalOnly | EmailAndPostal
     │
     ├── 복합 값 (2개 이상 필드)인가?
     │   │
@@ -153,7 +225,7 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
 
 ---
 
-## 4. 타입별 체크리스트
+## 5. 타입별 체크리스트
 
 ### SimpleValueObject 체크리스트
 
@@ -187,6 +259,17 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
 - [ ] `Create()` -> `Fin<TSelf>` 팩토리
 - [ ] `CreateFromValidated()` ORM 복원용 팩토리
 - [ ] 이벤트 직접 발행 금지 (부모 Aggregate에서만 발행)
+
+### UnionValueObject 체크리스트
+
+- [ ] `abstract partial record` 선언
+- [ ] `[UnionType]` 어트리뷰트 추가
+- [ ] 베이스 클래스 선택: `UnionValueObject` (순수 데이터) 또는 `UnionValueObject<TSelf>` (상태 전이)
+- [ ] `private` 생성자로 외부 확장 차단
+- [ ] 모든 케이스를 `sealed record`로 정의
+- [ ] 상태 전이 시 `TransitionFrom<TSource, TTarget>(converter)` 사용
+- [ ] Aggregate 연동 시 프로젝션 속성 검토 (Spec 쿼리용 평탄화)
+- [ ] Match/Switch 사용 시 모든 케이스 exhaustive 처리
 
 ### ExpressionSpecification 체크리스트
 

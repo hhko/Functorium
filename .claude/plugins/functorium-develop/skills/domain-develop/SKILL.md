@@ -37,6 +37,8 @@ Functorium 프레임워크 기반 도메인 레이어 개발 가이드입니다.
 | 비교/연산 불변식 | `ComparableSimpleValueObject<T>` |
 | 열거형 상태 | SmartEnum (`SimpleValueObject<string>` + `HashMap`) |
 | 상태 전이 | SmartEnum + `AllowedTransitions` |
+| 배타적 상태 조합 (케이스별 다른 데이터) | `UnionValueObject` + `[UnionType]` |
+| 배타적 상태 전이 (타입 안전 전이) | `UnionValueObject<TSelf>` + `TransitionFrom` |
 | 생명주기 관리 | `AggregateRoot<TId>` |
 | 자식 엔티티 | `Entity<TId>` |
 | 조건부 쿼리 | `ExpressionSpecification<T>` |
@@ -52,6 +54,8 @@ Functorium 프레임워크 기반 도메인 레이어 개발 가이드입니다.
 타입 결정을 C#/Functorium 패턴으로 변환합니다:
 
 - **VO**: private 생성자, `Create()` + `Validate()` 팩토리, `CreateFromValidated()`, `implicit operator`
+- **Union VO**: `abstract partial record : UnionValueObject` + `[UnionType]` + `sealed record` 케이스들
+- **Stateful Union VO**: `abstract partial record : UnionValueObject<TSelf>` + `TransitionFrom<TSource, TTarget>()`
 - **AggregateRoot**: `[GenerateEntityId]`, 중첩 DomainEvent/DomainError record, `Create()` + `AddDomainEvent()`
 - **Specification**: `ExpressionSpecification<T>`의 `ToExpression()` 구현
 - **DomainService**: `IDomainService` 구현, `Fin<T>` 반환, 상태 비보유
