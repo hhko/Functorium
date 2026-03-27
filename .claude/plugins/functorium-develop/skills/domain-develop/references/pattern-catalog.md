@@ -419,7 +419,21 @@ DomainError.For<Order, string, string>(
 
 Aggregate 내부의 자식 엔티티입니다. 독립적으로 영속화되지 않으며 부모 Aggregate를 통해서만 접근합니다.
 
-### OrderLine
+### 선택 기준: Entity vs VO vs Aggregate
+
+| 기준 | Value Object | Entity | Aggregate Root |
+|------|-------------|--------|---------------|
+| 식별자 | 없음 (값으로 비교) | **있음 (ID로 구별)** | 있음 + 트랜잭션 경계 |
+| 생명주기 | 부모에 종속, 교체 방식 | **부모에 종속, 개별 추가/삭제** | 독립적 |
+| 영속화 | 부모와 함께 | **부모를 통해서만** | Repository 통해 독립적 |
+| 이벤트 발행 | 불가 | **불가 (부모만 발행)** | 가능 |
+| 사용 시점 | 개별 추적 불필요 | **개별 항목 추가/삭제/조회 필요** | 독립적 CRUD 필요 |
+
+**Entity를 선택하는 핵심 조건:** 컬렉션 내 개별 항목을 ID로 식별하여 추가/삭제/수정해야 할 때.
+
+### 5-1. 검증 + 계산 Entity: OrderLine
+
+컨텍스트별 추가 검증과 파생 값(LineTotal)을 가지는 패턴입니다.
 
 ```csharp
 [GenerateEntityId]
@@ -462,11 +476,129 @@ public sealed class OrderLine : Entity<OrderLineId>
 }
 ```
 
+### 5-2. 행위 Entity: AssessmentCriterion
+
+자체 상태 변경 메서드를 가지는 패턴입니다. 이벤트는 발행하지 않고, 부모 Aggregate가 대신 발행합니다.
+
+```csharp
+[GenerateEntityId]
+public sealed class AssessmentCriterion : Entity<AssessmentCriterionId>
+{
+    public string Name { get; private set; }
+    public string Description { get; private set; }
+    public Option<CriterionResult> Result { get; private set; }
+    public Option<string> Notes { get; private set; }
+    public Option<DateTime> EvaluatedAt { get; private set; }
+
+    private AssessmentCriterion(AssessmentCriterionId id, string name, string description)
+        : base(id)
+    {
+        Name = name;
+        Description = description;
+    }
+
+    public static AssessmentCriterion Create(string name, string description) =>
+        new(AssessmentCriterionId.New(), name, description);
+
+    public static AssessmentCriterion CreateFromValidated(
+        AssessmentCriterionId id, string name, string description,
+        Option<CriterionResult> result, Option<string> notes, Option<DateTime> evaluatedAt)
+        => new(id, name, description) { Result = result, Notes = notes, EvaluatedAt = evaluatedAt };
+
+    /// Entity 자체 행위: 이벤트 발행 없이 상태만 변경
+    public AssessmentCriterion Evaluate(CriterionResult result, Option<string> notes)
+    {
+        Result = result;
+        Notes = notes;
+        EvaluatedAt = DateTime.UtcNow;
+        return this;
+    }
+}
+```
+
+### 5-3. 불변 Entity: ContactNote
+
+생성 후 변경 불가한 Entity입니다. 삭제만 가능하므로 ID가 필요합니다 (VO와의 차이).
+
+```csharp
+[GenerateEntityId]
+public sealed class ContactNote : Entity<ContactNoteId>
+{
+    public NoteContent Content { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+
+    private ContactNote(ContactNoteId id, NoteContent content, DateTime createdAt) : base(id)
+    {
+        Content = content;
+        CreatedAt = createdAt;
+    }
+
+    public static ContactNote Create(NoteContent content, DateTime createdAt)
+        => new(ContactNoteId.New(), content, createdAt);
+
+    public static ContactNote CreateFromValidated(
+        ContactNoteId id, NoteContent content, DateTime createdAt)
+        => new(id, content, createdAt);
+}
+```
+
+### 5-4. Aggregate 내 컬렉션 관리 패턴
+
+부모 Aggregate에서 자식 Entity 컬렉션을 관리하는 표준 패턴입니다.
+
+```csharp
+public sealed class Order : AggregateRoot<OrderId>
+{
+    // 1. private 가변 컬렉션
+    private readonly List<OrderLine> _orderLines = [];
+
+    // 2. IReadOnlyList로 외부 노출 (불변 보장)
+    public IReadOnlyList<OrderLine> OrderLines => _orderLines;
+
+    // 3. 추가: Aggregate가 검증 후 컬렉션에 추가
+    public Fin<Order> AddOrderLine(ProductId productId, Quantity quantity, Money unitPrice)
+    {
+        return OrderLine.Create(productId, quantity, unitPrice)
+            .Map(line =>
+            {
+                _orderLines.Add(line);
+                AddDomainEvent(new OrderLineAddedEvent(Id, line.Id));
+                return this;
+            });
+    }
+
+    // 4. 삭제: ID로 개별 항목 제거
+    public Fin<Order> RemoveOrderLine(OrderLineId lineId)
+    {
+        var line = _orderLines.Find(l => l.Id == lineId);
+        if (line is null)
+            return DomainError.For<Order, string>(
+                new OrderLineNotFound(), lineId.ToString(), "Order line not found");
+
+        _orderLines.Remove(line);
+        AddDomainEvent(new OrderLineRemovedEvent(Id, lineId));
+        return this;
+    }
+
+    // 5. ORM 복원: CreateFromValidated에서 컬렉션 재구성
+    public static Order CreateFromValidated(
+        OrderId id, ..., IReadOnlyList<OrderLine> orderLines)
+    {
+        var order = new Order(id, ...);
+        order._orderLines.AddRange(orderLines);
+        return order;
+    }
+}
+```
+
 ### 핵심 포인트
 
-- 자식 Entity도 `[GenerateEntityId]`로 ID 자동 생성
-- VO의 불변식(`Quantity >= 0`)과 컨텍스트 불변식(`OrderLine은 quantity > 0`) 분리
-- 이벤트를 직접 발행하지 않음 (부모 Aggregate Root만 발행)
+- `private List<T>` + `IReadOnlyList<T>` — 외부에서 컬렉션 직접 수정 불가
+- Entity 추가/삭제는 **반드시 부모 Aggregate 메서드를 통해** 수행
+- 이벤트는 **부모 Aggregate만 발행** (Entity는 `AddDomainEvent` 없음)
+- Entity 자체 행위 메서드는 `TSelf` 또는 `void` 반환 (이벤트 발행 없이 상태만 변경)
+- ORM 복원 시 `CreateFromValidated`에서 부모가 컬렉션을 재구성
+- VO의 불변식(예: `Quantity >= 0`)과 Entity 컨텍스트 불변식(예: `OrderLine은 quantity > 0`)은 분리
 
 ---
 

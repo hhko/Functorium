@@ -255,10 +255,15 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
 
 - [ ] `[GenerateEntityId]` 속성 적용
 - [ ] `sealed class` 선언
-- [ ] 컨텍스트별 추가 검증 (VO 검증과 별도)
-- [ ] `Create()` -> `Fin<TSelf>` 팩토리
+- [ ] `private` 생성자로 외부 생성 차단
+- [ ] `Create()` → `Fin<TSelf>` 또는 `TSelf` 팩토리 (컨텍스트별 검증 포함)
 - [ ] `CreateFromValidated()` ORM 복원용 팩토리
-- [ ] 이벤트 직접 발행 금지 (부모 Aggregate에서만 발행)
+- [ ] 컨텍스트별 추가 검증은 VO 검증과 분리 (예: VO는 `Quantity >= 0`, Entity는 `quantity > 0`)
+- [ ] 이벤트 직접 발행 금지 (부모 Aggregate에서만 `AddDomainEvent`)
+- [ ] 부모 Aggregate에 `private List<T>` + `IReadOnlyList<T>` 노출
+- [ ] 부모 Aggregate에 `Add/Remove` 메서드 정의 (Entity 직접 추가/삭제 금지)
+- [ ] Entity 자체 행위 메서드는 `TSelf` 또는 `void` 반환 (이벤트 없이 상태만 변경)
+- [ ] ORM 복원 시 부모 `CreateFromValidated`에서 컬렉션 재구성
 
 ### UnionValueObject 체크리스트
 
