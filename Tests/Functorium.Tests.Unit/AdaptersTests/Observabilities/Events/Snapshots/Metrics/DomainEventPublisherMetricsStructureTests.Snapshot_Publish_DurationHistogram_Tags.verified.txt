@@ -2,6 +2,5 @@
   request.category.name: event,
   request.handler.method: Publish,
   request.handler.name: TestDomainEvent,
-  request.layer: adapter,
-  response.status: success
+  request.layer: adapter
 }

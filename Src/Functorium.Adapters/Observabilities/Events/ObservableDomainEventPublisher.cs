@@ -111,7 +111,7 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
                     _logger.LogDomainEventPublisherResponseSuccess(domainEvent, elapsed);
 
                     TagList successTags = CreateSuccessTags(requestTags);
-                    _durationHistogram.Record(elapsed, successTags);
+                    _durationHistogram.Record(elapsed, requestTags);
                     _responseCounter.Add(1, successTags);
                 },
                 Fail: error =>
@@ -133,7 +133,7 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
                     }
 
                     TagList failureTags = CreateFailureTags(requestTags, errorType, errorCode);
-                    _durationHistogram.Record(elapsed, failureTags);
+                    _durationHistogram.Record(elapsed, requestTags);
                     _responseCounter.Add(1, failureTags);
                 });
 
@@ -188,7 +188,7 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
                     int eventTypeCount = publishResults.Count;
 
                     activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestEventCount, totalEvents);
-                    activity?.SetTag("request.event.type_count", eventTypeCount);
+                    activity?.SetTag(ObservabilityNaming.CustomAttributes.RequestAggregateCount, eventTypeCount);
                     activity?.SetTag(ObservabilityNaming.CustomAttributes.ResponseElapsed, elapsed);
 
                     bool allSuccessful = publishResults.ForAll(r => r.IsAllSuccessful);
@@ -199,7 +199,7 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
                         _logger.LogDomainEventsPublisherResponseSuccess(nameof(PublishTrackedEvents), ObservabilityNaming.Methods.PublishTrackedEvents, totalEvents, elapsed);
 
                         TagList successTags = CreateSuccessTags(requestTags);
-                        _durationHistogram.Record(elapsed, successTags);
+                        _durationHistogram.Record(elapsed, requestTags);
                         _responseCounter.Add(1, successTags);
                     }
                     else
@@ -221,7 +221,7 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
                             elapsed);
 
                         TagList partialFailureTags = CreatePartialFailureTags(requestTags);
-                        _durationHistogram.Record(elapsed, partialFailureTags);
+                        _durationHistogram.Record(elapsed, requestTags);
                         _responseCounter.Add(1, partialFailureTags);
                     }
                 },
@@ -244,7 +244,7 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
                     }
 
                     TagList failureTags = CreateFailureTags(requestTags, errorType, errorCode);
-                    _durationHistogram.Record(elapsed, failureTags);
+                    _durationHistogram.Record(elapsed, requestTags);
                     _responseCounter.Add(1, failureTags);
                 });
 
