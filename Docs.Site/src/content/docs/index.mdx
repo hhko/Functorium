@@ -62,14 +62,7 @@ Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다
 
 <Steps>
 
-1. **패키지 설치**
-
-   ```bash
-   dotnet add package Functorium
-   dotnet add package Functorium.SourceGenerators
-   ```
-
-2. **Naive 코드 — 우리가 흔히 작성하는 코드**
+1. **Naive 코드 — 우리가 흔히 작성하는 코드**
 
    온라인 상점에서 상품을 관리한다고 가정합니다. 가장 직관적인 코드는 이렇습니다:
 
@@ -77,7 +70,7 @@ Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다
    public class Product
    {
        public string Name { get; set; } = "";     // 빈 문자열? null?
-       public decimal Price { get; set; }          // 음수? 0?
+       public decimal Price { get; set; }         // 음수? 0?
    }
    ```
 
@@ -104,10 +97,10 @@ Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다
 
        public static Validation<Error, string> Validate(string? value) =>
            ValidationRules<ProductName>
-               .NotNull(value)           // 실패 시 "DomainErrors.ProductName.Null"
-               .ThenNotEmpty()           // 실패 시 "DomainErrors.ProductName.Empty"
-               .ThenMaxLength(MaxLength) // 실패 시 "DomainErrors.ProductName.TooLong"
-               .ThenNormalize(v => v.Trim());
+               .NotNull(value)              // 실패 시 에러 코드 "DomainErrors.ProductName.Null"
+               .ThenNotEmpty()              // 실패 시 에러 코드 "DomainErrors.ProductName.Empty"
+               .ThenNormalize(v => v.Trim())
+               .ThenMaxLength(MaxLength);   // 실패 시 에러 코드 "DomainErrors.ProductName.TooLong";
    }
    ```
 
@@ -231,9 +224,3 @@ Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다
   </Card>
 </CardGrid>
 
-<CardGrid>
-  <LinkCard title="설계 동기" href="/Functorium/motivation/" description="기존 .NET 아키텍처에서 반복되는 세 가지 구조적 문제" />
-  <LinkCard title="설계 철학" href="/Functorium/design-philosophy/" description="도메인 중심 설계, 함수형 아키텍처, Observability by Design" />
-  <LinkCard title="주요 핵심 기능" href="/Functorium/key-features/" description="타입 안전 모델링, 코드 생성, 아키텍처 품질 자동화" />
-  <LinkCard title="시작하기" href="/Functorium/getting-started/" description="NuGet 설치와 첫 번째 값 객체 만들기" />
-</CardGrid>
