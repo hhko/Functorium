@@ -93,6 +93,19 @@ FinT<IO, Response> usecase =
 - LINQ `from` 첫 구문에서 사용 → 이후 체인에서 정규화된 VO를 바로 활용
 - Presentation Validator가 이미 검증했더라도, Handler의 `Create()` 호출이 **도메인 검증의 권위적 지점이다**
 
+**ApplyT vs Unwrap 선택 기준:**
+
+| 기준 | Unwrap | ApplyT |
+|------|--------|--------|
+| VO 개수 | 1~2개 | 3개 이상 |
+| 에러 처리 | 첫 에러에서 즉시 반환 | 모든 에러를 병렬 수집 |
+| 코드 스타일 | 명령형 (`var x = ...`) | 선언형 (LINQ `from`) |
+| 학습 곡선 | 낮음 | 높음 (모나드 트랜스포머) |
+| 적합한 상황 | 간단한 Command, 내부 서비스 | 사용자 입력 폼, 복잡한 검증 |
+
+**판단 기준:** VO가 1~2개이고 에러를 병렬 수집할 필요가 없으면 Unwrap이 더 간결합니다.
+VO가 3개 이상이거나 사용자에게 모든 검증 오류를 한 번에 보여줘야 하면 ApplyT를 사용합니다.
+
 상세 패턴은 `references/usecase-patterns.md`를 읽으세요.
 포트 설계는 `references/port-design.md`를 읽으세요.
 
