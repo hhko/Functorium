@@ -226,9 +226,9 @@ public sealed partial class Email : SimpleValueObject<string>
         ValidationRules<Email>
             .NotNull(value)
             .ThenNotEmpty()
+            .ThenNormalize(v => v.Trim().ToLowerInvariant())
             .ThenMaxLength(MaxLength)
-            .ThenMatches(EmailRegex(), "Invalid email format")
-            .ThenNormalize(v => v.Trim().ToLowerInvariant());
+            .ThenMatches(EmailRegex(), "Invalid email format");
 }
 ```
 
@@ -250,7 +250,7 @@ dotnet add package Functorium.SourceGenerators
 dotnet add package Functorium.Testing
 ```
 
-**5분 빠른시작:** [Quickstart](./Docs.Site/src/content/docs/quickstart.mdx)에서 Value Object → AggregateRoot → Command Usecase를 5분 안에 만들어 보세요.
+**5분 빠른시작:** [Quickstart](./Docs.Site/src/content/docs/quickstart/index.mdx)에서 Value Object → AggregateRoot → Command Usecase를 5분 안에 만들어 보세요.
 
 **첫 번째 튜토리얼:** [Functional ValueObject 튜토리얼](./Docs.Site/src/content/docs/tutorials/functional-valueobject/index.md)에서 Value Object를 깊이 학습하세요.
 
@@ -315,8 +315,12 @@ Functorium은 OpenTelemetry 기반의 통합 관측성(Logging, Metrics, Tracing
 
 ### 샘플 & Host 예제
 
-- [Designing with Types](./Docs.Site/src/content/docs/samples/designing-with-types/index.md) — 타입 기반 도메인 모델링 예제
-- [E-Commerce DDD](./Docs.Site/src/content/docs/samples/ecommerce-ddd/index.md) — E-Commerce 도메인 DDD 예제
+| 샘플 | 범위 | Aggregates | 핵심 패턴 |
+|------|------|------------|-----------|
+| [Designing with Types](./Docs.Site/src/content/docs/samples/designing-with-types/index.md) | Domain | 1 | VO, Union, Composite, Specification |
+| [E-Commerce DDD](./Docs.Site/src/content/docs/samples/ecommerce-ddd/index.md) | Domain + Application | 5 | CQRS, EventHandler, DomainService, ApplyT |
+| [AI Model Governance](./Docs.Site/src/content/docs/samples/ai-model-governance/index.md) | Domain + Application + Adapter | 4 | EfCore/Dapper/InMemory, FastEndpoints, IO.Retry/Timeout/Fork/Bracket |
+
 - [01-SingleHost](./Tests.Hosts/01-SingleHost) — 단일 호스트 통합 테스트
 - [02-ObservabilityHost](./Tests.Hosts/02-ObservabilityHost) — Observability 통합 테스트
 
@@ -328,6 +332,27 @@ Functorium은 OpenTelemetry 기반의 통합 관측성(Logging, Metrics, Tracing
 | `Functorium.Adapters` | 인프라 어댑터 — OpenTelemetry, Serilog, EF Core, Dapper, Pipeline |
 | `Functorium.SourceGenerators` | 코드 자동 생성 — `[GenerateObservablePort]`, `[GenerateEntityId]`, `CtxEnricherGenerator` |
 | `Functorium.Testing` | 테스트 유틸리티 — ArchUnitNET, xUnit 확장, 통합 테스트 픽스처 |
+
+## AX (AI Transformation)
+
+**functorium-develop** 플러그인(v0.4.0)으로 PRD 작성부터 테스트까지, DDD 개발 전 과정을 AI가 안내합니다:
+
+```
+project-spec → architecture-design → domain-develop → application-develop → adapter-develop → observability-develop → test-develop
+```
+
+| 스킬 | 역할 |
+|------|------|
+| `project-spec` | 프로젝트 요구사항 명세 (PRD, User Stories, 우선순위, 수락 기준) |
+| `architecture-design` | 프로젝트 구조, 네이밍 규칙, 인프라 설계 |
+| `domain-develop` | Domain Layer (VO, Aggregate, Spec, DomainService) |
+| `application-develop` | Application Layer (CQRS, Usecase, Port) |
+| `adapter-develop` | Adapter Layer (Repository, Endpoint, DI) |
+| `observability-develop` | 관측성 전략 (KPI→메트릭 매핑, 대시보드, 알림, ctx.* 전파) |
+| `test-develop` | 단위/통합/아키텍처/관측성 검증 테스트 |
+| `domain-review` | DDD 코드 리뷰 |
+
+상세 문서: [AX (AI Transformation)](https://hhko.github.io/Functorium/ax/)
 
 ## 기술 스택
 

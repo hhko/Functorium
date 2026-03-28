@@ -696,6 +696,7 @@ export default defineConfig({
                   { slug: 'ax/skills/domain-develop' },
                   { slug: 'ax/skills/application-develop' },
                   { slug: 'ax/skills/adapter-develop' },
+                  { slug: 'ax/skills/observability-develop' },
                   { slug: 'ax/skills/test-develop' },
                   { slug: 'ax/skills/domain-review' },
                 ],

@@ -1,6 +1,6 @@
 ---
 title: "전문 에이전트"
-description: "4개 레이어별 전문가 에이전트의 역할과 활용법"
+description: "6개 전문 에이전트의 역할과 활용법"
 ---
 
 ## 스킬 vs 에이전트
@@ -21,10 +21,12 @@ functorium-develop 플러그인은 스킬과 에이전트, 두 가지 도구를 
 
 | 에이전트 | 전문 영역 | 활용 장면 |
 |---------|-----------|----------|
+| `product-analyst` | PRD 작성, 요구사항 분석, 사용자 스토리, Aggregate 경계 | 프로젝트 기획, 요구사항 정의 |
 | `domain-architect` | 유비쿼터스 언어, Aggregate 경계, 타입 전략 | 도메인 모델 설계 결정 |
 | `application-architect` | CQRS 분리, 포트 식별, FinT 합성, CtxEnricher 3-Pillar | 유스케이스 아키텍처 결정 |
 | `adapter-engineer` | Repository, Endpoint, DI, Observable Port, CtxEnricherPipeline | 어댑터 구현 전략 |
-| `test-engineer` | 단위/통합/아키텍처 테스트, CtxEnricher 3-Pillar 스냅샷 | 테스트 전략 수립 |
+| `observability-engineer` | KPI→메트릭 매핑, 대시보드, 알림, ctx.* 전파, 분산 추적 | 관측성 전략 수립 |
+| `test-engineer` | 단위/통합/아키텍처 테스트, ctx 3-Pillar 스냅샷, 관측성 검증 | 테스트 전략 수립 |
 
 ## domain-architect -- 도메인 설계 전문가
 
