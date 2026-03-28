@@ -257,7 +257,9 @@ public class Order : AggregateRoot<OrderId>
         return new Order(id, amount, customerId);
     }
 
-    // CreateFromValidated: ORM/Repository 복원용 (검증 없음)
+    // CreateFromValidated: 이미 검증/정규화된 데이터를 직접 pass-through
+    // DB에서 읽어온 데이터로 Aggregate를 복원합니다.
+    // 저장 시점에 이미 검증을 통과한 데이터이므로 검증/정규화를 생략합니다.
     public static Order CreateFromValidated(OrderId id, Money amount, CustomerId customerId)
         => new(id, amount, customerId);
 

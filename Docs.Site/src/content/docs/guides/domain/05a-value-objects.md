@@ -1301,6 +1301,56 @@ public Fin<Money> Add(Money other) =>
 
 > **참고**: Entity도 동일한 Create/Validate 분리 패턴을 따릅니다. 자세한 내용은 [Entity 구현 가이드 - 생성 패턴](./06b-entity-aggregate-core#생성-패턴)을 참고하세요.
 
+### CreateFromValidated: ORM/Repository 복원용 팩토리
+
+`Create`와 `Validate`는 **외부 입력**을 검증하여 값 객체를 생성합니다. 반면 `CreateFromValidated`는 **이미 검증되고 정규화된 데이터**를 직접 받아 값 객체를 복원합니다. 검증도 정규화도 수행하지 않습니다.
+
+**계약:** `CreateFromValidated`는 이미 유효하고 정규화된 데이터만 받는다 — 직접 pass-through, 검증/정규화 없음.
+
+**용도:**
+- **ORM/Repository 복원** — DB에서 읽은 값은 저장 시점에 이미 검증/정규화를 통과했으므로 다시 검증할 필요가 없습니다.
+- **파이프라인 검증 후 핸들러에서 직접 사용** — FluentValidation이 `Validate()`로 이미 검증을 완료한 후, 핸들러에서 `CreateFromValidated(request.Name)`으로 VO를 생성합니다.
+
+**Create vs CreateFromValidated 비교:**
+
+| 구분 | `Create(string? value)` | `CreateFromValidated(string value)` |
+|------|------------------------|-------------------------------------|
+| 입력 | 외부 원시 값 (신뢰 불가) | 이미 검증/정규화된 값 (신뢰) |
+| 반환 | `Fin<T>` (실패 가능) | `T` (직접 반환) |
+| 검증 | Validate() 호출 | 없음 |
+| 정규화 | Validate() 내 ThenNormalize | 없음 |
+| 사용처 | 외부 API, 사용자 입력 | ORM 복원, 핸들러 |
+
+**코드 예시:**
+
+```csharp
+public sealed partial class Email : SimpleValueObject<string>
+{
+    public const int MaxLength = 320;
+    private Email(string value) : base(value) { }
+
+    // Create: 외부 입력 검증 + 정규화 + 객체 생성
+    public static Fin<Email> Create(string? value) =>
+        CreateFromValidation(Validate(value), v => new Email(v));
+
+    // Validate: 검증 + 정규화 (원시 타입 반환)
+    public static Validation<Error, string> Validate(string? value) =>
+        ValidationRules<Email>
+            .NotNull(value)
+            .ThenNotEmpty()
+            .ThenNormalize(v => v.Trim().ToLowerInvariant())
+            .ThenMaxLength(MaxLength)
+            .ThenMatches(EmailRegex());
+
+    // CreateFromValidated: 이미 정규화된 값을 직접 pass-through
+    public static Email CreateFromValidated(string value) => new(value);
+
+    public static implicit operator string(Email email) => email.Value;
+}
+```
+
+`CreateFromValidated`에 `.Trim()`, `.ToLowerInvariant()` 등의 정규화 로직을 넣지 마세요. DB에서 읽은 값은 저장 시점에 이미 정규화되었고, 핸들러에서 받는 값은 파이프라인 검증 시 이미 정규화되었습니다.
+
 ### Create/Validate 패턴
 
 | 기반 클래스 | Create 패턴 | Validate 반환 |

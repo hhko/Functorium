@@ -175,7 +175,7 @@ public interface IObservablePort
 **`[GenerateObservablePort]`** — Source Generator가 Adapter에 대한 Observable wrapper를 자동 생성하여, OpenTelemetry 기반의 Tracing/Logging/Metrics를 투명하게 제공합니다:
 
 ```csharp
-[GenerateObservablePort]  // → Observable{ClassName} 자동 생성
+[GenerateObservablePort]  // → {ClassName}Observable 자동 생성 (예: OrderRepositoryObservable)
 public class OrderRepository : IRepository<Order, OrderId> { ... }
 ```
 
@@ -229,6 +229,11 @@ public sealed partial class Email : SimpleValueObject<string>
             .ThenNormalize(v => v.Trim().ToLowerInvariant())
             .ThenMaxLength(MaxLength)
             .ThenMatches(EmailRegex(), "Invalid email format");
+
+    // ORM/Repository 복원용 — 이미 정규화된 데이터만 받는다
+    public static Email CreateFromValidated(string value) => new(value);
+
+    public static implicit operator string(Email email) => email.Value;
 }
 ```
 
