@@ -272,6 +272,56 @@ public class ModelRegistryService : IModelRegistryService
 - `session.Dispose()`: IDisposable 리소스 해제
 - Bracket 외부의 `.Catch`: 전체 Bracket 실패 시 오류 변환
 
+## Persistence 폴더 구조: Aggregate 중심 + CQRS Role
+
+Persistence 프로젝트는 Aggregate를 1차 폴더로, CQRS Role(Repository/Query)을 2차 폴더로 구성합니다.
+
+```
+AiGovernance.Adapters.Persistence/
+├── Models/
+│   ├── AIModel.Model.cs                    # DB 모델
+│   ├── AIModel.Configuration.cs            # EF 설정
+│   ├── Repositories/
+│   │   ├── AIModelRepositoryInMemory.cs
+│   │   └── AIModelRepositoryEfCore.cs
+│   └── Queries/
+│       ├── AIModelQueryInMemory.cs
+│       └── AIModelDetailQueryInMemory.cs
+├── Deployments/
+│   ├── Deployment.Model.cs
+│   ├── Deployment.Configuration.cs
+│   ├── Repositories/
+│   │   ├── DeploymentRepositoryInMemory.cs
+│   │   └── DeploymentRepositoryEfCore.cs
+│   └── Queries/
+│       ├── DeploymentQueryInMemory.cs
+│       └── DeploymentDetailQueryInMemory.cs
+├── Assessments/
+│   ├── Assessment.Model.cs / Criterion.Model.cs
+│   ├── Assessment.Configuration.cs / Criterion.Configuration.cs
+│   └── Repositories/
+│       ├── AssessmentRepositoryInMemory.cs
+│       └── AssessmentRepositoryEfCore.cs
+├── Incidents/
+│   ├── Incident.Model.cs
+│   ├── Incident.Configuration.cs
+│   ├── Repositories/
+│   │   ├── IncidentRepositoryInMemory.cs
+│   │   └── IncidentRepositoryEfCore.cs
+│   └── Queries/
+│       └── IncidentQueryInMemory.cs
+├── GovernanceDbContext.cs
+├── UnitOfWorkInMemory.cs / UnitOfWorkEfCore.cs
+└── Registrations/
+    ├── AdapterPersistenceRegistration.cs
+    └── PersistenceOptions.cs
+```
+
+이 구조의 장점:
+- Aggregate별로 관련 파일이 응집되어 탐색이 용이하다
+- InMemory/EfCore 변형이 같은 폴더에 있어 비교가 쉽다
+- 새 Aggregate 추가 시 폴더 하나만 추가하면 된다
+
 ## DI 등록 패턴
 
 ### AdapterInfrastructureRegistration

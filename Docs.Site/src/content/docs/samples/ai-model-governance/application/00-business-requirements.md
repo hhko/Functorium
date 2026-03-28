@@ -178,6 +178,43 @@ sequenceDiagram
 10. **미해결 인시던트** -- 미해결 인시던트가 있는 모델은 배포 검토 제출이 거부된다.
 11. **잘못된 상태 전이** -- Draft에서 Active로 직접 전이를 시도하면 거부된다.
 
+### 핵심 수락 기준
+
+#### 모델 등록 (RegisterModelCommand)
+
+**정상:**
+```
+Given: 유효한 모델명("GPT-Classifier"), SemVer 버전("1.0.0"), 목적("hiring decision support")
+When:  AI 거버넌스 관리자가 모델을 등록한다
+Then:  모델이 생성되고 위험 등급이 High로 자동 분류되며 ModelId가 반환된다
+```
+
+**거부:**
+```
+Given: 빈 모델명(""), 잘못된 버전("abc")
+When:  AI 거버넌스 관리자가 모델을 등록한다
+Then:  두 오류(ModelName 빈 문자열, ModelVersion SemVer 위반)가 동시에 반환된다
+```
+
+#### 배포 검토 제출 (SubmitDeploymentForReviewCommand)
+
+**거부 (금지 등급):**
+```
+Given: Unacceptable 위험 등급 모델을 참조하는 Draft 배포가 존재한다
+When:  AI 거버넌스 관리자가 검토를 제출한다
+Then:  ProhibitedModel 오류가 반환되고 배포 상태는 Draft를 유지한다
+```
+
+#### 인시던트 보고 + 자동 격리 (ReportIncidentCommand + EventHandler)
+
+**정상:**
+```
+Given: Active 상태의 배포가 존재한다
+When:  컴플라이언스 담당자가 Critical 심각도 인시던트를 보고한다
+Then:  인시던트가 Reported 상태로 생성되고, QuarantineDeploymentOnCriticalIncidentHandler가
+       배포를 자동 격리하여 Quarantined 상태로 전이한다
+```
+
 ## 존재해서는 안 되는 상태
 
 - 도메인 검증을 거치지 않고 생성된 도메인 객체

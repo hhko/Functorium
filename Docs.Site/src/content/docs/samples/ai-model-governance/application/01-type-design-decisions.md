@@ -41,6 +41,10 @@ description: "AI 모델 거버넌스 플랫폼의 포트 설계, ApplyT 패턴, 
 
 ## 포트 설계
 
+포트는 Application Layer가 외부 세계와 소통하는 인터페이스입니다. Command 포트(Repository)는 상태 변경과 조회를 위한 쓰기 전용 인터페이스이고, Query 포트(Read Adapter)는 읽기 전용 인터페이스입니다. 이 분리는 CQRS 원칙에 따라 쓰기와 읽기의 최적화 경로를 독립적으로 관리할 수 있게 합니다.
+
+외부 서비스 포트는 LanguageExt IO 고급 기능(Timeout, Retry, Fork, Bracket)을 반환 타입 `FinT<IO, T>`으로 표현하여, Application Layer의 FinT LINQ 체인에 자연스럽게 합성됩니다.
+
 ### Command 포트 (Repository)
 
 | 포트 | 기본 CRUD | 커스텀 메서드 |

@@ -125,4 +125,6 @@ AiGovernance.Application/
 | IDomainEventHandler | 2 | QuarantineDeployment, InitiateAssessment |
 | Nested Class | 15 | 모든 Command/Query |
 
+전체 솔루션 기준 **268개 테스트가** 2개 어셈블리에서 실행됩니다. Application 레이어 코드는 단위 테스트(Architecture 규칙)와 통합 테스트(Endpoint E2E)에서 함께 검증됩니다.
+
 다음 단계에서는 [어댑터 기술 요구사항](../adapter/00-business-requirements/)에서 이 포트를 구현하는 Adapter 레이어를 정의합니다.

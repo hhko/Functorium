@@ -161,6 +161,10 @@ description: "AI 모델 거버넌스 도메인의 불변식 분류와 Functorium
 | RiskClassificationService | AIModel (목적) | 키워드 -> 위험 등급 매핑 |
 | DeploymentEligibilityService | AIModel, ComplianceAssessment, ModelIncident | 금지 등급, 평가 통과, 인시던트 부재 |
 
+### UnionValueObject 미사용 결정
+
+이 도메인의 Smart Enum은 모두 단일 차원(하나의 문자열 값)입니다. `RiskTier`, `DeploymentStatus` 등은 값마다 다른 필드 구조를 가지지 않으므로 UnionValueObject(discriminated union) 대신 `SimpleValueObject<string>` + `HashMap` 패턴을 선택했습니다. 도메인 속성(`RequiresComplianceAssessment`, `IsProhibited` 등)은 Smart Enum의 인스턴스 메서드/프로퍼티로 충분히 표현됩니다.
+
 ## 설계 의사결정 요약표
 
 | 설계 의사결정 | Functorium 타입 | 적용 예 | 보장 효과 |

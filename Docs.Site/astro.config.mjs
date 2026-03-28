@@ -610,6 +610,8 @@ export default defineConfig({
                 label: 'AI 모델 거버넌스',
                 items: [
                   { slug: 'samples/ai-model-governance' },
+                  { slug: 'samples/ai-model-governance/00-project-spec' },
+                  { slug: 'samples/ai-model-governance/01-architecture-design' },
                   {
                     label: '도메인 레이어',
                     items: [
@@ -635,6 +637,15 @@ export default defineConfig({
                       { slug: 'samples/ai-model-governance/adapter/01-type-design-decisions' },
                       { slug: 'samples/ai-model-governance/adapter/02-code-design' },
                       { slug: 'samples/ai-model-governance/adapter/03-implementation-results' },
+                    ],
+                  },
+                  {
+                    label: '관측성',
+                    items: [
+                      { slug: 'samples/ai-model-governance/observability/00-business-requirements' },
+                      { slug: 'samples/ai-model-governance/observability/01-type-design-decisions' },
+                      { slug: 'samples/ai-model-governance/observability/02-code-design' },
+                      { slug: 'samples/ai-model-governance/observability/03-implementation-results' },
                     ],
                   },
                 ],

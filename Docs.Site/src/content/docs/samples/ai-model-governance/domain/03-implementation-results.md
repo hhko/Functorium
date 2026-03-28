@@ -130,14 +130,16 @@ AiGovernance.Domain/
 
 ## 테스트 현황
 
-단위 테스트는 Value Object, Aggregate, Domain Service 세 범주로 구성됩니다.
+단위 테스트는 Value Object, Aggregate, Domain Service, Architecture 네 범주로 구성됩니다. 전체 솔루션 기준 **268개 테스트가** 2개 어셈블리에서 실행됩니다.
 
 | 범주 | 테스트 파일 수 | 테스트 대상 |
 |------|-------------|-----------|
 | Value Objects | 15 | 16종 VO의 생성, 검증, Smart Enum 전이 규칙 |
-| Aggregates | 4 | 4종 Aggregate의 Create, 상태 전이, 가드 |
+| Aggregates | 4 | 4종 Aggregate의 Create, 상태 전이, 가드, CreateFromValidated |
 | Domain Services | 1 | RiskClassificationService 키워드 분류 |
 | Architecture | 3 | 도메인/애플리케이션 아키텍처 규칙, 레이어 의존성 |
 | **합계** | **23** | |
+
+> 268개 테스트에는 단위 테스트(AiGovernance.Tests.Unit)와 통합 테스트(AiGovernance.Tests.Integration) 모두 포함됩니다.
 
 다음 단계에서는 [애플리케이션 비즈니스 요구사항](../application/00-business-requirements/)에서 이 도메인 규칙을 유스케이스로 조율하는 방법을 정의합니다.

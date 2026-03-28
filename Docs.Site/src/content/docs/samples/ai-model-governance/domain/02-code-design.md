@@ -227,6 +227,13 @@ public sealed class DeploymentStatus : SimpleValueObject<string>
 
 ### 5. AggregateRoot 이중 팩토리 + 가드
 
+Functorium Aggregate Root는 두 개의 팩토리 메서드를 가집니다:
+
+- **`Create()`** -- Application Layer에서 이미 검증된 Value Object를 받아 새 Aggregate를 생성하고 DomainEvent를 발행합니다
+- **`CreateFromValidated()`** -- ORM/Repository 복원 전용입니다. 이미 검증/정규화된 데이터를 직접 pass-through하며, 검증 로직을 실행하지 않고 DomainEvent도 발행하지 않습니다. 영속성 레이어에서만 호출해야 합니다
+
+이 계약은 생성 경로와 복원 경로를 명확히 분리하여, "이미 유효한 데이터를 중복 검증하는 비용"과 "복원 시 이벤트가 재발행되는 부작용"을 방지합니다.
+
 **AIModel.Create()** -- VO를 받아 생성 + 이벤트 발행:
 
 ```csharp

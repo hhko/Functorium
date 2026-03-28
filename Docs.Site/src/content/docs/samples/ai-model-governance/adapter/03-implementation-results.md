@@ -81,6 +81,20 @@ InMemory 구현으로 Repository와 Query를 제공합니다.
 
 설정에 따라 Sqlite(EfCore) 구현으로 전환 가능하도록 `PersistenceOptions.Provider`로 분기합니다.
 
+### EfCore 구현 현황
+
+| 구현체 | 포트 | Observable 래퍼 |
+|--------|------|----------------|
+| AIModelRepositoryEfCore | IAIModelRepository | AIModelRepositoryEfCoreObservable |
+| DeploymentRepositoryEfCore | IDeploymentRepository | DeploymentRepositoryEfCoreObservable |
+| AssessmentRepositoryEfCore | IAssessmentRepository | AssessmentRepositoryEfCoreObservable |
+| IncidentRepositoryEfCore | IIncidentRepository | IncidentRepositoryEfCoreObservable |
+| UnitOfWorkEfCore | IUnitOfWork | UnitOfWorkEfCoreObservable |
+
+**EfCore 합계: 5개 구현체** (Repository 4, UnitOfWork 1)
+
+EfCore 구현에서 Query는 InMemory 쿼리를 재사용합니다 (향후 Dapper 쿼리로 교체 가능).
+
 ### AiGovernance.Adapters.Infrastructure
 
 외부 서비스(IO 고급 기능)와 파이프라인을 제공합니다.
@@ -123,7 +137,7 @@ InMemory 구현으로 Repository와 Query를 제공합니다.
 | Incidents | 1 | Report 엔드포인트 |
 | **합계** | **7** | |
 
-**전체 테스트 파일: 30개**
+**전체 테스트 파일: 30개** (전체 솔루션 기준 **268개 테스트가** 2개 어셈블리에서 실행됩니다)
 
 ## 전체 프로젝트 구조
 
@@ -180,6 +194,8 @@ samples/ai-model-governance/
 | HTTP Endpoint | 15 |
 | InMemory 구현체 | 10 |
 | IO 고급 패턴 | 4 (Timeout, Retry, Fork, Bracket) |
+| Observable Port | 19 (InMemory 5, EfCore 5, Query 5, ExternalService 4) |
 | 단위 테스트 파일 | 23 |
 | 통합 테스트 파일 | 7 |
 | **총 테스트 파일** | **30** |
+| **총 테스트 수** | **268** |

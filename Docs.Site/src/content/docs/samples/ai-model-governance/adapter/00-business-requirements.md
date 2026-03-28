@@ -7,7 +7,16 @@ description: "AI 모델 거버넌스 플랫폼의 영속성, 외부 서비스, H
 
 [애플리케이션 비즈니스 요구사항](../application/00-business-requirements/)에서 정의한 포트(Port)를 실제 기술 구현으로 연결하는 Adapter 레이어의 기술 요구사항을 정의합니다. 이 레이어는 도메인/애플리케이션 레이어가 정의한 인터페이스를 구현하며, 외부 시스템과의 통합을 담당합니다.
 
-이 샘플의 핵심 차별점은 **LanguageExt IO 고급 기능(Retry, Timeout, Fork, Bracket)의** 실전 적용입니다. 외부 서비스와의 통합에서 발생하는 네트워크 지연, 간헐적 실패, 타임아웃, 리소스 관리 문제를 함수형 방식으로 해결합니다.
+이 샘플의 핵심 차별점은 **LanguageExt IO 고급 기능(Timeout, Retry, Fork, Bracket)의** 실전 적용입니다. 외부 서비스와의 통합에서 발생하는 네트워크 지연, 간헐적 실패, 타임아웃, 리소스 관리 문제를 함수형 방식으로 해결합니다.
+
+4가지 IO 고급 기능의 핵심 특성:
+
+| IO 패턴 | 문제 상황 | 보장 | Functorium 통합 |
+|---------|----------|------|----------------|
+| **Timeout + Catch** | 응답 지연이 시스템 전체를 느리게 만듦 | 최대 대기 시간 제한 + 타임아웃을 폴백으로 변환 | `IO.Timeout()` -> `.Catch(TimedOut)` -> `.Catch(Exceptional)` |
+| **Retry + Schedule** | 간헐적 503/네트워크 오류 | 지수 백오프 + 지터로 자동 복구 | `IO.Retry(exponential \| jitter \| recurs \| maxDelay)` |
+| **Fork + awaitAll** | 독립적인 N개 작업의 순차 실행 병목 | 병렬 실행으로 최악 소요 시간 = max(개별 시간) | `forks.Map(io => io.Fork())` -> `awaitAll(forks)` |
+| **Bracket** | 예외 시 리소스(세션, 연결) 누수 | Acquire-Use-Release 수명 보장 | `acquire.Bracket(Use: ..., Fin: ...)` |
 
 ## 기술 영역
 

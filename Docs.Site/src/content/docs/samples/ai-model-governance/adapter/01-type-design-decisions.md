@@ -92,6 +92,28 @@ Fin(Release): 세션 해제 (성공/실패 무관 보장)
 - Release가 IO 효과를 가질 수 있음 (비동기 해제)
 - FinT LINQ 체인에 투명하게 합성 가능
 
+## 네이밍 규칙: `{Subject}{Role}{Variant}`
+
+Adapter 레이어의 파일명은 3차원 네이밍 규칙을 따릅니다:
+
+| 차원 | 표현 수단 | 예시 |
+|------|-----------|------|
+| Subject (무엇) | Aggregate 이름 | `AIModel`, `Deployment`, `Assessment`, `Incident` |
+| Role (역할) | CQRS 역할 | `Repository`, `Query`, `DetailQuery` |
+| Variant (어떻게) | 기술 접미사 | `InMemory`, `EfCore`, `Dapper` |
+
+적용 예:
+
+| 파일명 | Subject | Role | Variant |
+|--------|---------|------|---------|
+| `AIModelRepositoryInMemory.cs` | AIModel | Repository | InMemory |
+| `AIModelRepositoryEfCore.cs` | AIModel | Repository | EfCore |
+| `AIModelQueryInMemory.cs` | AIModel | Query | InMemory |
+| `DeploymentDetailQueryInMemory.cs` | Deployment | DetailQuery | InMemory |
+| `UnitOfWorkInMemory.cs` | (공통) | UnitOfWork | InMemory |
+
+이 규칙은 Observable 래퍼에도 동일하게 적용됩니다: `{Subject}{Role}{Variant}Observable` (예: `AIModelRepositoryInMemoryObservable`).
+
 ## 관측성 설계
 
 ### GenerateObservablePort
