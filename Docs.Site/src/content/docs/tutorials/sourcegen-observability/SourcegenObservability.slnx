@@ -1,0 +1,128 @@
+<Solution>
+  <Folder Name="/part0-introduction/" />
+  <Folder Name="/part0-introduction/02-hello-world-generator/">
+    <Project Path="part0-introduction/02-hello-world-generator/HelloWorldGenerator.Generator/HelloWorldGenerator.Generator.csproj" />
+    <Project Path="part0-introduction/02-hello-world-generator/HelloWorldGenerator.Usage/HelloWorldGenerator.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part0-introduction/04-reflection-vs-sourcegen/">
+    <Project Path="part0-introduction/04-reflection-vs-sourcegen/ReflectionVsSourceGen/ReflectionVsSourceGen.csproj" />
+  </Folder>
+  <Folder Name="/part1-fundamentals/" />
+  <Folder Name="/part1-fundamentals/02-data-models/">
+    <Project Path="part1-fundamentals/02-data-models/DataModels/DataModels.csproj" />
+  </Folder>
+  <Folder Name="/part1-fundamentals/03-debugging-setup/">
+    <Project Path="part1-fundamentals/03-debugging-setup/DebuggingSetup.Generator/DebuggingSetup.Generator.csproj" />
+    <Project Path="part1-fundamentals/03-debugging-setup/DebuggingSetup.Usage/DebuggingSetup.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part1-fundamentals/04-roslyn-architecture/">
+    <Project Path="part1-fundamentals/04-roslyn-architecture/RoslynArchitecture/RoslynArchitecture.csproj" />
+  </Folder>
+  <Folder Name="/part1-fundamentals/05-syntax-api/">
+    <Project Path="part1-fundamentals/05-syntax-api/SyntaxApi/SyntaxApi.csproj" />
+  </Folder>
+  <Folder Name="/part1-fundamentals/06-semantic-api/">
+    <Project Path="part1-fundamentals/06-semantic-api/SemanticApi/SemanticApi.csproj" />
+  </Folder>
+  <Folder Name="/part1-fundamentals/07-symbol-types/">
+    <Project Path="part1-fundamentals/07-symbol-types/SymbolTypes/SymbolTypes.csproj" />
+  </Folder>
+  <Folder Name="/part2-core-concepts/" />
+  <Folder Name="/part2-core-concepts/01-iincrementalgenerator/">
+    <Project Path="part2-core-concepts/01-iincrementalgenerator/IncrementalGenerator.Generator/IncrementalGenerator.Generator.csproj" />
+    <Project Path="part2-core-concepts/01-iincrementalgenerator/IncrementalGenerator.Usage/IncrementalGenerator.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part2-core-concepts/02-provider-pattern/">
+    <Project Path="part2-core-concepts/02-provider-pattern/ProviderPattern.Generator/ProviderPattern.Generator.csproj" />
+    <Project Path="part2-core-concepts/02-provider-pattern/ProviderPattern.Usage/ProviderPattern.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part2-core-concepts/03-forattribute/">
+    <Project Path="part2-core-concepts/03-forattribute/ForAttribute.Generator/ForAttribute.Generator.csproj" />
+    <Project Path="part2-core-concepts/03-forattribute/ForAttribute.Usage/ForAttribute.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part2-core-concepts/04-incremental-caching/">
+    <Project Path="part2-core-concepts/04-incremental-caching/IncrementalCaching.Generator/IncrementalCaching.Generator.csproj" />
+    <Project Path="part2-core-concepts/04-incremental-caching/IncrementalCaching.Usage/IncrementalCaching.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part2-core-concepts/05-inamedtypesymbol/">
+    <Project Path="part2-core-concepts/05-inamedtypesymbol/NamedTypeSymbol/NamedTypeSymbol.csproj" />
+  </Folder>
+  <Folder Name="/part2-core-concepts/06-imethodsymbol/">
+    <Project Path="part2-core-concepts/06-imethodsymbol/MethodSymbol/MethodSymbol.csproj" />
+  </Folder>
+  <Folder Name="/part2-core-concepts/07-symboldisplayformat/">
+    <Project Path="part2-core-concepts/07-symboldisplayformat/SymbolDisplayFormat/SymbolDisplayFormat.csproj" />
+  </Folder>
+  <Folder Name="/part2-core-concepts/08-type-extraction/">
+    <Project Path="part2-core-concepts/08-type-extraction/TypeExtraction/TypeExtraction.csproj" />
+  </Folder>
+  <Folder Name="/part2-core-concepts/09-stringbuilder-pattern/">
+    <Project Path="part2-core-concepts/09-stringbuilder-pattern/StringBuilderPattern/StringBuilderPattern.csproj" />
+  </Folder>
+  <Folder Name="/part2-core-concepts/10-template-design/">
+    <Project Path="part2-core-concepts/10-template-design/TemplateDesign.Generator/TemplateDesign.Generator.csproj" />
+    <Project Path="part2-core-concepts/10-template-design/TemplateDesign.Usage/TemplateDesign.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part2-core-concepts/11-namespace-handling/">
+    <Project Path="part2-core-concepts/11-namespace-handling/NamespaceHandling.Generator/NamespaceHandling.Generator.csproj" />
+    <Project Path="part2-core-concepts/11-namespace-handling/NamespaceHandling.Usage/NamespaceHandling.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part2-core-concepts/12-deterministic-output/">
+    <Project Path="part2-core-concepts/12-deterministic-output/DeterministicOutput.Generator/DeterministicOutput.Generator.csproj" />
+    <Project Path="part2-core-concepts/12-deterministic-output/DeterministicOutput.Usage/DeterministicOutput.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part3-advanced/" />
+  <Folder Name="/part3-advanced/01-constructor-handling/">
+    <Project Path="part3-advanced/01-constructor-handling/ConstructorHandling.Generator/ConstructorHandling.Generator.csproj" />
+    <Project Path="part3-advanced/01-constructor-handling/ConstructorHandling.Usage/ConstructorHandling.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part3-advanced/02-generic-types/">
+    <Project Path="part3-advanced/02-generic-types/GenericTypes.Generator/GenericTypes.Generator.csproj" />
+    <Project Path="part3-advanced/02-generic-types/GenericTypes.Usage/GenericTypes.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part3-advanced/03-collection-types/">
+    <Project Path="part3-advanced/03-collection-types/CollectionTypes/CollectionTypes.csproj" />
+  </Folder>
+  <Folder Name="/part3-advanced/04-loggermessage-limits/">
+    <Project Path="part3-advanced/04-loggermessage-limits/LoggerMessageLimits.Generator/LoggerMessageLimits.Generator.csproj" />
+    <Project Path="part3-advanced/04-loggermessage-limits/LoggerMessageLimits.Usage/LoggerMessageLimits.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part3-advanced/05-unit-testing-setup/">
+    <Project Path="part3-advanced/05-unit-testing-setup/UnitTestingSetup.Generator/UnitTestingSetup.Generator.csproj" />
+    <Project Path="part3-advanced/05-unit-testing-setup/UnitTestingSetup.Usage/UnitTestingSetup.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part3-advanced/06-verify-snapshot-testing/">
+    <Project Path="part3-advanced/06-verify-snapshot-testing/VerifySnapshotTesting.Generator/VerifySnapshotTesting.Generator.csproj" />
+    <Project Path="part3-advanced/06-verify-snapshot-testing/VerifySnapshotTesting.Usage/VerifySnapshotTesting.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part3-advanced/07-test-scenarios/">
+    <Project Path="part3-advanced/07-test-scenarios/TestScenarios.Generator/TestScenarios.Generator.csproj" />
+    <Project Path="part3-advanced/07-test-scenarios/TestScenarios.Usage/TestScenarios.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part4-cookbook/" />
+  <Folder Name="/part4-cookbook/01-development-workflow/">
+    <Project Path="part4-cookbook/01-development-workflow/DevelopmentWorkflow.Generator/DevelopmentWorkflow.Generator.csproj" />
+    <Project Path="part4-cookbook/01-development-workflow/DevelopmentWorkflow.Tests.Unit/DevelopmentWorkflow.Tests.Unit.csproj" />
+    <Project Path="part4-cookbook/01-development-workflow/DevelopmentWorkflow.Usage/DevelopmentWorkflow.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part4-cookbook/02-entity-id-generator/">
+    <Project Path="part4-cookbook/02-entity-id-generator/EntityIdGenerator.Generator/EntityIdGenerator.Generator.csproj" />
+    <Project Path="part4-cookbook/02-entity-id-generator/EntityIdGenerator.Tests.Unit/EntityIdGenerator.Tests.Unit.csproj" />
+    <Project Path="part4-cookbook/02-entity-id-generator/EntityIdGenerator.Usage/EntityIdGenerator.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part4-cookbook/03-efcore-value-converter/">
+    <Project Path="part4-cookbook/03-efcore-value-converter/EfCoreValueConverter.Generator/EfCoreValueConverter.Generator.csproj" />
+    <Project Path="part4-cookbook/03-efcore-value-converter/EfCoreValueConverter.Tests.Unit/EfCoreValueConverter.Tests.Unit.csproj" />
+    <Project Path="part4-cookbook/03-efcore-value-converter/EfCoreValueConverter.Usage/EfCoreValueConverter.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part4-cookbook/04-validation-generator/">
+    <Project Path="part4-cookbook/04-validation-generator/ValidationGenerator.Generator/ValidationGenerator.Generator.csproj" />
+    <Project Path="part4-cookbook/04-validation-generator/ValidationGenerator.Tests.Unit/ValidationGenerator.Tests.Unit.csproj" />
+    <Project Path="part4-cookbook/04-validation-generator/ValidationGenerator.Usage/ValidationGenerator.Usage.csproj" />
+  </Folder>
+  <Folder Name="/part4-cookbook/05-custom-generator-template/">
+    <Project Path="part4-cookbook/05-custom-generator-template/CustomGeneratorTemplate.Generator/CustomGeneratorTemplate.Generator.csproj" />
+    <Project Path="part4-cookbook/05-custom-generator-template/CustomGeneratorTemplate.Tests.Unit/CustomGeneratorTemplate.Tests.Unit.csproj" />
+    <Project Path="part4-cookbook/05-custom-generator-template/CustomGeneratorTemplate.Usage/CustomGeneratorTemplate.Usage.csproj" />
+  </Folder>
+</Solution>

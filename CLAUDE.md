@@ -8,12 +8,14 @@
 | 솔루션 파일 | 포함 프로젝트 | 용도 |
 |-------------|---------------|------|
 | `Functorium.slnx` | Src/, Tests/ | 핵심 라이브러리 개발 (기본) |
-| `Docs.Site/.../tutorials/<name>/<name>.slnx` | 튜토리얼별 개별 솔루션 (5개) | 문서 내 실습 코드 빌드 |
+| `Docs.Site/.../tutorials/<name>/<PascalName>.slnx` | 튜토리얼별 개별 솔루션 (6개) | 문서 내 실습 코드 빌드 |
+| `Docs.Site/.../samples/<name>/<PascalName>.slnx` | 샘플별 개별 솔루션 (3개) | 문서 내 실습 코드 빌드 |
+| `Docs.Site/.../quickstart/Quickstart.slnx` | 퀵스타트 솔루션 (1개) | 문서 내 실습 코드 빌드 |
 
 - 빌드: `dotnet build Functorium.slnx`
 - 테스트: `dotnet test --solution Functorium.slnx`
-- 튜토리얼 빌드: `dotnet build Docs.Site/src/content/docs/tutorials/<name>/<name>.slnx`
-- 튜토리얼 테스트: `dotnet test --solution Docs.Site/src/content/docs/tutorials/<name>/<name>.slnx`
+- 튜토리얼 빌드: `dotnet build Docs.Site/src/content/docs/tutorials/<name>/<PascalName>.slnx`
+- 튜토리얼 테스트: `dotnet test --solution Docs.Site/src/content/docs/tutorials/<name>/<PascalName>.slnx`
 
 > 'dotnet test'에 대한 솔루션을 지정하려면 '--solution'을 통해 지정해야 합니다.
 
@@ -33,7 +35,7 @@
 ./Build-Local.ps1
 
 # 특정 튜토리얼 빌드
-./Build-Local.ps1 -s Docs.Site/src/content/docs/tutorials/functional-valueobject/functional-valueobject.slnx
+./Build-Local.ps1 -s Docs.Site/src/content/docs/tutorials/functional-valueobject/FunctionalValueObject.slnx
 
 # NuGet 패키지 생성 건너뛰기
 ./Build-Local.ps1 -SkipPack

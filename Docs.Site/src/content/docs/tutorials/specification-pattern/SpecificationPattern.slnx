@@ -1,0 +1,79 @@
+<Solution>
+  <Folder Name="/part1-specification-basics/" />
+  <Folder Name="/part1-specification-basics/01-first-specification/">
+    <Project Path="part1-specification-basics/01-first-specification/FirstSpecification.Tests.Unit/FirstSpecification.Tests.Unit.csproj" />
+    <Project Path="part1-specification-basics/01-first-specification/FirstSpecification/FirstSpecification.csproj" />
+  </Folder>
+  <Folder Name="/part1-specification-basics/02-composition/">
+    <Project Path="part1-specification-basics/02-composition/Composition.Tests.Unit/Composition.Tests.Unit.csproj" />
+    <Project Path="part1-specification-basics/02-composition/Composition/Composition.csproj" />
+  </Folder>
+  <Folder Name="/part1-specification-basics/03-operators/">
+    <Project Path="part1-specification-basics/03-operators/Operators.Tests.Unit/Operators.Tests.Unit.csproj" />
+    <Project Path="part1-specification-basics/03-operators/Operators/Operators.csproj" />
+  </Folder>
+  <Folder Name="/part1-specification-basics/04-all-identity/">
+    <Project Path="part1-specification-basics/04-all-identity/AllIdentity.Tests.Unit/AllIdentity.Tests.Unit.csproj" />
+    <Project Path="part1-specification-basics/04-all-identity/AllIdentity/AllIdentity.csproj" />
+  </Folder>
+  <Folder Name="/part2-expression-specification/" />
+  <Folder Name="/part2-expression-specification/01-expression-introduction/">
+    <Project Path="part2-expression-specification/01-expression-introduction/ExpressionIntro.Tests.Unit/ExpressionIntro.Tests.Unit.csproj" />
+    <Project Path="part2-expression-specification/01-expression-introduction/ExpressionIntro/ExpressionIntro.csproj" />
+  </Folder>
+  <Folder Name="/part2-expression-specification/02-expressionspecification-class/">
+    <Project Path="part2-expression-specification/02-expressionspecification-class/ExpressionSpec.Tests.Unit/ExpressionSpec.Tests.Unit.csproj" />
+    <Project Path="part2-expression-specification/02-expressionspecification-class/ExpressionSpec/ExpressionSpec.csproj" />
+  </Folder>
+  <Folder Name="/part2-expression-specification/03-valueobject-primitive-conversion/">
+    <Project Path="part2-expression-specification/03-valueobject-primitive-conversion/ValueObjectConversion.Tests.Unit/ValueObjectConversion.Tests.Unit.csproj" />
+    <Project Path="part2-expression-specification/03-valueobject-primitive-conversion/ValueObjectConversion/ValueObjectConversion.csproj" />
+  </Folder>
+  <Folder Name="/part2-expression-specification/04-expression-resolver/">
+    <Project Path="part2-expression-specification/04-expression-resolver/ExpressionResolver.Tests.Unit/ExpressionResolver.Tests.Unit.csproj" />
+    <Project Path="part2-expression-specification/04-expression-resolver/ExpressionResolver/ExpressionResolver.csproj" />
+  </Folder>
+  <Folder Name="/part3-repository-integration/" />
+  <Folder Name="/part3-repository-integration/01-repository-with-specification/">
+    <Project Path="part3-repository-integration/01-repository-with-specification/RepositorySpec.Tests.Unit/RepositorySpec.Tests.Unit.csproj" />
+    <Project Path="part3-repository-integration/01-repository-with-specification/RepositorySpec/RepositorySpec.csproj" />
+  </Folder>
+  <Folder Name="/part3-repository-integration/02-inmemory-implementation/">
+    <Project Path="part3-repository-integration/02-inmemory-implementation/InMemoryImpl.Tests.Unit/InMemoryImpl.Tests.Unit.csproj" />
+    <Project Path="part3-repository-integration/02-inmemory-implementation/InMemoryImpl/InMemoryImpl.csproj" />
+  </Folder>
+  <Folder Name="/part3-repository-integration/03-propertymap/">
+    <Project Path="part3-repository-integration/03-propertymap/PropertyMapDemo.Tests.Unit/PropertyMapDemo.Tests.Unit.csproj" />
+    <Project Path="part3-repository-integration/03-propertymap/PropertyMapDemo/PropertyMapDemo.csproj" />
+  </Folder>
+  <Folder Name="/part3-repository-integration/04-efcore-implementation/">
+    <Project Path="part3-repository-integration/04-efcore-implementation/EfCoreImpl.Tests.Unit/EfCoreImpl.Tests.Unit.csproj" />
+    <Project Path="part3-repository-integration/04-efcore-implementation/EfCoreImpl/EfCoreImpl.csproj" />
+  </Folder>
+  <Folder Name="/part4-real-world-patterns/" />
+  <Folder Name="/part4-real-world-patterns/01-usecase-patterns/">
+    <Project Path="part4-real-world-patterns/01-usecase-patterns/UsecasePatterns.Tests.Unit/UsecasePatterns.Tests.Unit.csproj" />
+    <Project Path="part4-real-world-patterns/01-usecase-patterns/UsecasePatterns/UsecasePatterns.csproj" />
+  </Folder>
+  <Folder Name="/part4-real-world-patterns/02-dynamic-filter-builder/">
+    <Project Path="part4-real-world-patterns/02-dynamic-filter-builder/DynamicFilter.Tests.Unit/DynamicFilter.Tests.Unit.csproj" />
+    <Project Path="part4-real-world-patterns/02-dynamic-filter-builder/DynamicFilter/DynamicFilter.csproj" />
+  </Folder>
+  <Folder Name="/part4-real-world-patterns/03-testing-strategies/">
+    <Project Path="part4-real-world-patterns/03-testing-strategies/TestingStrategies.Tests.Unit/TestingStrategies.Tests.Unit.csproj" />
+    <Project Path="part4-real-world-patterns/03-testing-strategies/TestingStrategies/TestingStrategies.csproj" />
+  </Folder>
+  <Folder Name="/part4-real-world-patterns/04-architecture-rules/">
+    <Project Path="part4-real-world-patterns/04-architecture-rules/ArchitectureRules.Tests.Unit/ArchitectureRules.Tests.Unit.csproj" />
+    <Project Path="part4-real-world-patterns/04-architecture-rules/ArchitectureRules/ArchitectureRules.csproj" />
+  </Folder>
+  <Folder Name="/part5-domain-examples/" />
+  <Folder Name="/part5-domain-examples/01-ecommerce-product-filtering/">
+    <Project Path="part5-domain-examples/01-ecommerce-product-filtering/EcommerceFiltering.Tests.Unit/EcommerceFiltering.Tests.Unit.csproj" />
+    <Project Path="part5-domain-examples/01-ecommerce-product-filtering/EcommerceFiltering/EcommerceFiltering.csproj" />
+  </Folder>
+  <Folder Name="/part5-domain-examples/02-customer-management/">
+    <Project Path="part5-domain-examples/02-customer-management/CustomerManagement.Tests.Unit/CustomerManagement.Tests.Unit.csproj" />
+    <Project Path="part5-domain-examples/02-customer-management/CustomerManagement/CustomerManagement.csproj" />
+  </Folder>
+</Solution>

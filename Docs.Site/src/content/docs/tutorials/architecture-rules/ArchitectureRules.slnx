@@ -1,0 +1,73 @@
+<Solution>
+  <Folder Name="/part1-classvalidator-basics/" />
+  <Folder Name="/part1-classvalidator-basics/01-first-architecture-test/">
+    <Project Path="part1-classvalidator-basics/01-first-architecture-test/FirstArchitectureTest.Tests.Unit/FirstArchitectureTest.Tests.Unit.csproj" />
+    <Project Path="part1-classvalidator-basics/01-first-architecture-test/FirstArchitectureTest/FirstArchitectureTest.csproj" />
+  </Folder>
+  <Folder Name="/part1-classvalidator-basics/02-visibility-and-modifiers/">
+    <Project Path="part1-classvalidator-basics/02-visibility-and-modifiers/VisibilityAndModifiers.Tests.Unit/VisibilityAndModifiers.Tests.Unit.csproj" />
+    <Project Path="part1-classvalidator-basics/02-visibility-and-modifiers/VisibilityAndModifiers/VisibilityAndModifiers.csproj" />
+  </Folder>
+  <Folder Name="/part1-classvalidator-basics/03-naming-rules/">
+    <Project Path="part1-classvalidator-basics/03-naming-rules/NamingRules.Tests.Unit/NamingRules.Tests.Unit.csproj" />
+    <Project Path="part1-classvalidator-basics/03-naming-rules/NamingRules/NamingRules.csproj" />
+  </Folder>
+  <Folder Name="/part1-classvalidator-basics/04-inheritance-and-interface/">
+    <Project Path="part1-classvalidator-basics/04-inheritance-and-interface/InheritanceAndInterface.Tests.Unit/InheritanceAndInterface.Tests.Unit.csproj" />
+    <Project Path="part1-classvalidator-basics/04-inheritance-and-interface/InheritanceAndInterface/InheritanceAndInterface.csproj" />
+  </Folder>
+  <Folder Name="/part2-method-and-property-validation/" />
+  <Folder Name="/part2-method-and-property-validation/01-method-validation/">
+    <Project Path="part2-method-and-property-validation/01-method-validation/MethodValidation.Tests.Unit/MethodValidation.Tests.Unit.csproj" />
+    <Project Path="part2-method-and-property-validation/01-method-validation/MethodValidation/MethodValidation.csproj" />
+  </Folder>
+  <Folder Name="/part2-method-and-property-validation/02-return-type-validation/">
+    <Project Path="part2-method-and-property-validation/02-return-type-validation/ReturnTypeValidation.Tests.Unit/ReturnTypeValidation.Tests.Unit.csproj" />
+    <Project Path="part2-method-and-property-validation/02-return-type-validation/ReturnTypeValidation/ReturnTypeValidation.csproj" />
+  </Folder>
+  <Folder Name="/part2-method-and-property-validation/03-parameter-validation/">
+    <Project Path="part2-method-and-property-validation/03-parameter-validation/ParameterValidation.Tests.Unit/ParameterValidation.Tests.Unit.csproj" />
+    <Project Path="part2-method-and-property-validation/03-parameter-validation/ParameterValidation/ParameterValidation.csproj" />
+  </Folder>
+  <Folder Name="/part2-method-and-property-validation/04-property-and-field-validation/">
+    <Project Path="part2-method-and-property-validation/04-property-and-field-validation/PropertyAndFieldValidation.Tests.Unit/PropertyAndFieldValidation.Tests.Unit.csproj" />
+    <Project Path="part2-method-and-property-validation/04-property-and-field-validation/PropertyAndFieldValidation/PropertyAndFieldValidation.csproj" />
+  </Folder>
+  <Folder Name="/part3-advanced-validation/" />
+  <Folder Name="/part3-advanced-validation/01-immutability-rule/">
+    <Project Path="part3-advanced-validation/01-immutability-rule/ImmutabilityRule.Tests.Unit/ImmutabilityRule.Tests.Unit.csproj" />
+    <Project Path="part3-advanced-validation/01-immutability-rule/ImmutabilityRule/ImmutabilityRule.csproj" />
+  </Folder>
+  <Folder Name="/part3-advanced-validation/02-nested-class-validation/">
+    <Project Path="part3-advanced-validation/02-nested-class-validation/NestedClassValidation.Tests.Unit/NestedClassValidation.Tests.Unit.csproj" />
+    <Project Path="part3-advanced-validation/02-nested-class-validation/NestedClassValidation/NestedClassValidation.csproj" />
+  </Folder>
+  <Folder Name="/part3-advanced-validation/03-interface-validation/">
+    <Project Path="part3-advanced-validation/03-interface-validation/InterfaceValidation.Tests.Unit/InterfaceValidation.Tests.Unit.csproj" />
+    <Project Path="part3-advanced-validation/03-interface-validation/InterfaceValidation/InterfaceValidation.csproj" />
+  </Folder>
+  <Folder Name="/part3-advanced-validation/04-custom-rules/">
+    <Project Path="part3-advanced-validation/04-custom-rules/CustomRules.Tests.Unit/CustomRules.Tests.Unit.csproj" />
+    <Project Path="part3-advanced-validation/04-custom-rules/CustomRules/CustomRules.csproj" />
+  </Folder>
+  <Folder Name="/part4-real-world-patterns/" />
+  <Folder Name="/part4-real-world-patterns/01-domain-layer-rules/">
+    <Project Path="part4-real-world-patterns/01-domain-layer-rules/DomainLayerRules.Tests.Unit/DomainLayerRules.Tests.Unit.csproj" />
+    <Project Path="part4-real-world-patterns/01-domain-layer-rules/DomainLayerRules/DomainLayerRules.csproj" />
+  </Folder>
+  <Folder Name="/part4-real-world-patterns/02-application-layer-rules/">
+    <Project Path="part4-real-world-patterns/02-application-layer-rules/ApplicationLayerRules.Tests.Unit/ApplicationLayerRules.Tests.Unit.csproj" />
+    <Project Path="part4-real-world-patterns/02-application-layer-rules/ApplicationLayerRules/ApplicationLayerRules.csproj" />
+  </Folder>
+  <Folder Name="/part4-real-world-patterns/03-adapter-layer-rules/">
+    <Project Path="part4-real-world-patterns/03-adapter-layer-rules/AdapterLayerRules.Tests.Unit/AdapterLayerRules.Tests.Unit.csproj" />
+    <Project Path="part4-real-world-patterns/03-adapter-layer-rules/AdapterLayerRules/AdapterLayerRules.csproj" />
+  </Folder>
+  <Folder Name="/part4-real-world-patterns/04-layer-dependency-rules/">
+    <Project Path="part4-real-world-patterns/04-layer-dependency-rules/LayerDependencyRules.Tests.Unit/LayerDependencyRules.Tests.Unit.csproj" />
+    <Project Path="part4-real-world-patterns/04-layer-dependency-rules/LayerDependencyRules/LayerDependencyRules.csproj" />
+  </Folder>
+  <Folder Name="/part4-real-world-patterns/05-architecture-test-suites/">
+    <Project Path="part4-real-world-patterns/05-architecture-test-suites/ArchitectureTestSuites.Tests.Unit/ArchitectureTestSuites.Tests.Unit.csproj" />
+  </Folder>
+</Solution>

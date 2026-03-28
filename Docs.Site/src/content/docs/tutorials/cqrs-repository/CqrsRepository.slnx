@@ -1,0 +1,95 @@
+<Solution>
+  <Folder Name="/part1-domain-entity-foundations/" />
+  <Folder Name="/part1-domain-entity-foundations/01-entity-and-identity/">
+    <Project Path="part1-domain-entity-foundations/01-entity-and-identity/EntityAndIdentity.Tests.Unit/EntityAndIdentity.Tests.Unit.csproj" />
+    <Project Path="part1-domain-entity-foundations/01-entity-and-identity/EntityAndIdentity/EntityAndIdentity.csproj" />
+  </Folder>
+  <Folder Name="/part1-domain-entity-foundations/02-aggregate-root/">
+    <Project Path="part1-domain-entity-foundations/02-aggregate-root/AggregateRoot.Tests.Unit/AggregateRoot.Tests.Unit.csproj" />
+    <Project Path="part1-domain-entity-foundations/02-aggregate-root/AggregateRoot/AggregateRoot.csproj" />
+  </Folder>
+  <Folder Name="/part1-domain-entity-foundations/03-domain-events/">
+    <Project Path="part1-domain-entity-foundations/03-domain-events/DomainEvents.Tests.Unit/DomainEvents.Tests.Unit.csproj" />
+    <Project Path="part1-domain-entity-foundations/03-domain-events/DomainEvents/DomainEvents.csproj" />
+  </Folder>
+  <Folder Name="/part1-domain-entity-foundations/04-entity-interfaces/">
+    <Project Path="part1-domain-entity-foundations/04-entity-interfaces/EntityInterfaces.Tests.Unit/EntityInterfaces.Tests.Unit.csproj" />
+    <Project Path="part1-domain-entity-foundations/04-entity-interfaces/EntityInterfaces/EntityInterfaces.csproj" />
+  </Folder>
+  <Folder Name="/part2-command-repository/" />
+  <Folder Name="/part2-command-repository/01-repository-interface/">
+    <Project Path="part2-command-repository/01-repository-interface/RepositoryInterface.Tests.Unit/RepositoryInterface.Tests.Unit.csproj" />
+    <Project Path="part2-command-repository/01-repository-interface/RepositoryInterface/RepositoryInterface.csproj" />
+  </Folder>
+  <Folder Name="/part2-command-repository/02-inmemory-repository/">
+    <Project Path="part2-command-repository/02-inmemory-repository/InMemoryRepository.Tests.Unit/InMemoryRepository.Tests.Unit.csproj" />
+    <Project Path="part2-command-repository/02-inmemory-repository/InMemoryRepository/InMemoryRepository.csproj" />
+  </Folder>
+  <Folder Name="/part2-command-repository/03-efcore-repository/">
+    <Project Path="part2-command-repository/03-efcore-repository/EfCoreRepository.Tests.Unit/EfCoreRepository.Tests.Unit.csproj" />
+    <Project Path="part2-command-repository/03-efcore-repository/EfCoreRepository/EfCoreRepository.csproj" />
+  </Folder>
+  <Folder Name="/part2-command-repository/04-unit-of-work/">
+    <Project Path="part2-command-repository/04-unit-of-work/UnitOfWork.Tests.Unit/UnitOfWork.Tests.Unit.csproj" />
+    <Project Path="part2-command-repository/04-unit-of-work/UnitOfWork/UnitOfWork.csproj" />
+  </Folder>
+  <Folder Name="/part3-query-patterns/" />
+  <Folder Name="/part3-query-patterns/01-queryport-interface/">
+    <Project Path="part3-query-patterns/01-queryport-interface/QueryPortInterface.Tests.Unit/QueryPortInterface.Tests.Unit.csproj" />
+    <Project Path="part3-query-patterns/01-queryport-interface/QueryPortInterface/QueryPortInterface.csproj" />
+  </Folder>
+  <Folder Name="/part3-query-patterns/02-dto-separation/">
+    <Project Path="part3-query-patterns/02-dto-separation/DtoSeparation.Tests.Unit/DtoSeparation.Tests.Unit.csproj" />
+    <Project Path="part3-query-patterns/02-dto-separation/DtoSeparation/DtoSeparation.csproj" />
+  </Folder>
+  <Folder Name="/part3-query-patterns/03-pagination-and-sorting/">
+    <Project Path="part3-query-patterns/03-pagination-and-sorting/PaginationAndSorting.Tests.Unit/PaginationAndSorting.Tests.Unit.csproj" />
+    <Project Path="part3-query-patterns/03-pagination-and-sorting/PaginationAndSorting/PaginationAndSorting.csproj" />
+  </Folder>
+  <Folder Name="/part3-query-patterns/04-inmemory-query-adapter/">
+    <Project Path="part3-query-patterns/04-inmemory-query-adapter/InMemoryQueryAdapter.Tests.Unit/InMemoryQueryAdapter.Tests.Unit.csproj" />
+    <Project Path="part3-query-patterns/04-inmemory-query-adapter/InMemoryQueryAdapter/InMemoryQueryAdapter.csproj" />
+  </Folder>
+  <Folder Name="/part3-query-patterns/05-dapper-query-adapter/">
+    <Project Path="part3-query-patterns/05-dapper-query-adapter/DapperQueryAdapter.Tests.Unit/DapperQueryAdapter.Tests.Unit.csproj" />
+    <Project Path="part3-query-patterns/05-dapper-query-adapter/DapperQueryAdapter/DapperQueryAdapter.csproj" />
+  </Folder>
+  <Folder Name="/part4-cqrs-usecase-integration/" />
+  <Folder Name="/part4-cqrs-usecase-integration/01-command-usecase/">
+    <Project Path="part4-cqrs-usecase-integration/01-command-usecase/CommandUsecase.Tests.Unit/CommandUsecase.Tests.Unit.csproj" />
+    <Project Path="part4-cqrs-usecase-integration/01-command-usecase/CommandUsecase/CommandUsecase.csproj" />
+  </Folder>
+  <Folder Name="/part4-cqrs-usecase-integration/02-query-usecase/">
+    <Project Path="part4-cqrs-usecase-integration/02-query-usecase/QueryUsecase.Tests.Unit/QueryUsecase.Tests.Unit.csproj" />
+    <Project Path="part4-cqrs-usecase-integration/02-query-usecase/QueryUsecase/QueryUsecase.csproj" />
+  </Folder>
+  <Folder Name="/part4-cqrs-usecase-integration/03-fint-to-finresponse/">
+    <Project Path="part4-cqrs-usecase-integration/03-fint-to-finresponse/FinTToFinResponse.Tests.Unit/FinTToFinResponse.Tests.Unit.csproj" />
+    <Project Path="part4-cqrs-usecase-integration/03-fint-to-finresponse/FinTToFinResponse/FinTToFinResponse.csproj" />
+  </Folder>
+  <Folder Name="/part4-cqrs-usecase-integration/04-domain-event-flow/">
+    <Project Path="part4-cqrs-usecase-integration/04-domain-event-flow/DomainEventFlow.Tests.Unit/DomainEventFlow.Tests.Unit.csproj" />
+    <Project Path="part4-cqrs-usecase-integration/04-domain-event-flow/DomainEventFlow/DomainEventFlow.csproj" />
+  </Folder>
+  <Folder Name="/part4-cqrs-usecase-integration/05-transaction-pipeline/">
+    <Project Path="part4-cqrs-usecase-integration/05-transaction-pipeline/TransactionPipeline.Tests.Unit/TransactionPipeline.Tests.Unit.csproj" />
+    <Project Path="part4-cqrs-usecase-integration/05-transaction-pipeline/TransactionPipeline/TransactionPipeline.csproj" />
+  </Folder>
+  <Folder Name="/part5-domain-examples/" />
+  <Folder Name="/part5-domain-examples/01-ecommerce-order-management/">
+    <Project Path="part5-domain-examples/01-ecommerce-order-management/EcommerceOrderManagement.Tests.Unit/EcommerceOrderManagement.Tests.Unit.csproj" />
+    <Project Path="part5-domain-examples/01-ecommerce-order-management/EcommerceOrderManagement/EcommerceOrderManagement.csproj" />
+  </Folder>
+  <Folder Name="/part5-domain-examples/02-customer-management/">
+    <Project Path="part5-domain-examples/02-customer-management/CustomerManagement.Tests.Unit/CustomerManagement.Tests.Unit.csproj" />
+    <Project Path="part5-domain-examples/02-customer-management/CustomerManagement/CustomerManagement.csproj" />
+  </Folder>
+  <Folder Name="/part5-domain-examples/03-inventory-management/">
+    <Project Path="part5-domain-examples/03-inventory-management/InventoryManagement.Tests.Unit/InventoryManagement.Tests.Unit.csproj" />
+    <Project Path="part5-domain-examples/03-inventory-management/InventoryManagement/InventoryManagement.csproj" />
+  </Folder>
+  <Folder Name="/part5-domain-examples/04-catalog-search/">
+    <Project Path="part5-domain-examples/04-catalog-search/CatalogSearch.Tests.Unit/CatalogSearch.Tests.Unit.csproj" />
+    <Project Path="part5-domain-examples/04-catalog-search/CatalogSearch/CatalogSearch.csproj" />
+  </Folder>
+</Solution>

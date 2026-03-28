@@ -1,0 +1,171 @@
+<Solution>
+  <Folder Name="/part1-valueobject-concepts/" />
+  <Folder Name="/part1-valueobject-concepts/01-basic-divide/">
+    <Project Path="part1-valueobject-concepts/01-basic-divide/BasicDivide.Tests.Unit/BasicDivide.Tests.Unit.csproj" />
+    <Project Path="part1-valueobject-concepts/01-basic-divide/BasicDivide/BasicDivide.csproj" />
+  </Folder>
+  <Folder Name="/part1-valueobject-concepts/02-defensive-programming/">
+    <Project Path="part1-valueobject-concepts/02-defensive-programming/DefensiveProgramming.Tests.Unit/DefensiveProgramming.Tests.Unit.csproj" />
+    <Project Path="part1-valueobject-concepts/02-defensive-programming/DefensiveProgramming/DefensiveProgramming.csproj" />
+  </Folder>
+  <Folder Name="/part1-valueobject-concepts/03-functional-result/">
+    <Project Path="part1-valueobject-concepts/03-functional-result/FunctionalResult.Tests.Unit/FunctionalResult.Tests.Unit.csproj" />
+    <Project Path="part1-valueobject-concepts/03-functional-result/FunctionalResult/FunctionalResult.csproj" />
+  </Folder>
+  <Folder Name="/part1-valueobject-concepts/04-always-valid/">
+    <Project Path="part1-valueobject-concepts/04-always-valid/AlwaysValid.Tests.Unit/AlwaysValid.Tests.Unit.csproj" />
+    <Project Path="part1-valueobject-concepts/04-always-valid/AlwaysValid/AlwaysValid.csproj" />
+  </Folder>
+  <Folder Name="/part1-valueobject-concepts/05-operator-overloading/">
+    <Project Path="part1-valueobject-concepts/05-operator-overloading/OperatorOverloading.Tests.Unit/OperatorOverloading.Tests.Unit.csproj" />
+    <Project Path="part1-valueobject-concepts/05-operator-overloading/OperatorOverloading/OperatorOverloading.csproj" />
+  </Folder>
+  <Folder Name="/part1-valueobject-concepts/06-linq-expression/">
+    <Project Path="part1-valueobject-concepts/06-linq-expression/LinqExpression.Tests.Unit/LinqExpression.Tests.Unit.csproj" />
+    <Project Path="part1-valueobject-concepts/06-linq-expression/LinqExpression/LinqExpression.csproj" />
+  </Folder>
+  <Folder Name="/part1-valueobject-concepts/07-value-equality/">
+    <Project Path="part1-valueobject-concepts/07-value-equality/ValueEquality.Tests.Unit/ValueEquality.Tests.Unit.csproj" />
+    <Project Path="part1-valueobject-concepts/07-value-equality/ValueEquality/ValueEquality.csproj" />
+  </Folder>
+  <Folder Name="/part1-valueobject-concepts/08-value-comparability/">
+    <Project Path="part1-valueobject-concepts/08-value-comparability/ValueComparability.Tests.Unit/ValueComparability.Tests.Unit.csproj" />
+    <Project Path="part1-valueobject-concepts/08-value-comparability/ValueComparability/ValueComparability.csproj" />
+  </Folder>
+  <Folder Name="/part1-valueobject-concepts/09-create-validate-separation/">
+    <Project Path="part1-valueobject-concepts/09-create-validate-separation/CreateValidateSeparation.Tests.Unit/CreateValidateSeparation.Tests.Unit.csproj" />
+    <Project Path="part1-valueobject-concepts/09-create-validate-separation/CreateValidateSeparation/CreateValidateSeparation.csproj" />
+  </Folder>
+  <Folder Name="/part1-valueobject-concepts/10-validated-value-creation/">
+    <Project Path="part1-valueobject-concepts/10-validated-value-creation/ValidatedValueCreation.Tests.Unit/ValidatedValueCreation.Tests.Unit.csproj" />
+    <Project Path="part1-valueobject-concepts/10-validated-value-creation/ValidatedValueCreation/ValidatedValueCreation.csproj" />
+  </Folder>
+  <Folder Name="/part1-valueobject-concepts/11-valueobject-framework/">
+    <Project Path="part1-valueobject-concepts/11-valueobject-framework/Framework/Framework.csproj" />
+    <Project Path="part1-valueobject-concepts/11-valueobject-framework/ValueObjectFramework.Tests.Unit/ValueObjectFramework.Tests.Unit.csproj" />
+    <Project Path="part1-valueobject-concepts/11-valueobject-framework/ValueObjectFramework/ValueObjectFramework.csproj" />
+  </Folder>
+  <Folder Name="/part1-valueobject-concepts/12-type-safe-enums/">
+    <Project Path="part1-valueobject-concepts/12-type-safe-enums/Framework/Framework.csproj" />
+    <Project Path="part1-valueobject-concepts/12-type-safe-enums/TypeSafeEnums.Tests.Unit/TypeSafeEnums.Tests.Unit.csproj" />
+    <Project Path="part1-valueobject-concepts/12-type-safe-enums/TypeSafeEnums/TypeSafeEnums.csproj" />
+  </Folder>
+  <Folder Name="/part1-valueobject-concepts/13-error-code/">
+    <Project Path="part1-valueobject-concepts/13-error-code/ErrorCode.Tests.Unit/ErrorCode.Tests.Unit.csproj" />
+    <Project Path="part1-valueobject-concepts/13-error-code/ErrorCode/ErrorCode.csproj" />
+    <Project Path="part1-valueobject-concepts/13-error-code/Framework/Framework.csproj" />
+  </Folder>
+  <Folder Name="/part1-valueobject-concepts/14-error-code-fluent/">
+    <Project Path="part1-valueobject-concepts/14-error-code-fluent/ErrorCodeFluent.Tests.Unit/ErrorCodeFluent.Tests.Unit.csproj" />
+    <Project Path="part1-valueobject-concepts/14-error-code-fluent/ErrorCodeFluent/ErrorCodeFluent.csproj" />
+    <Project Path="part1-valueobject-concepts/14-error-code-fluent/Framework.Testing/Framework.Testing.csproj" />
+    <Project Path="part1-valueobject-concepts/14-error-code-fluent/Framework/Framework.csproj" />
+  </Folder>
+  <Folder Name="/part1-valueobject-concepts/15-validation-fluent/">
+    <Project Path="part1-valueobject-concepts/15-validation-fluent/Framework.Testing/Framework.Testing.csproj" />
+    <Project Path="part1-valueobject-concepts/15-validation-fluent/Framework/Framework.csproj" />
+    <Project Path="part1-valueobject-concepts/15-validation-fluent/ValidationFluent.Tests.Unit/ValidationFluent.Tests.Unit.csproj" />
+    <Project Path="part1-valueobject-concepts/15-validation-fluent/ValidationFluent/ValidationFluent.csproj" />
+  </Folder>
+  <Folder Name="/part1-valueobject-concepts/16-architecture-test/">
+    <Project Path="part1-valueobject-concepts/16-architecture-test/ArchitectureTest.Tests.Unit/ArchitectureTest.Tests.Unit.csproj" />
+    <Project Path="part1-valueobject-concepts/16-architecture-test/ArchitectureTest/ArchitectureTest.csproj" />
+    <Project Path="part1-valueobject-concepts/16-architecture-test/Framework.Testing/Framework.Testing.csproj" />
+    <Project Path="part1-valueobject-concepts/16-architecture-test/Framework/Framework.csproj" />
+  </Folder>
+  <Folder Name="/part2-validation-patterns/" />
+  <Folder Name="/part2-validation-patterns/01-bind-sequential-validation/">
+    <Project Path="part2-validation-patterns/01-bind-sequential-validation/BindSequentialValidation.Tests.Unit/BindSequentialValidation.Tests.Unit.csproj" />
+    <Project Path="part2-validation-patterns/01-bind-sequential-validation/BindSequentialValidation/BindSequentialValidation.csproj" />
+  </Folder>
+  <Folder Name="/part2-validation-patterns/02-apply-parallel-validation/">
+    <Project Path="part2-validation-patterns/02-apply-parallel-validation/ApplyParallelValidation.Tests.Unit/ApplyParallelValidation.Tests.Unit.csproj" />
+    <Project Path="part2-validation-patterns/02-apply-parallel-validation/ApplyParallelValidation/ApplyParallelValidation.csproj" />
+  </Folder>
+  <Folder Name="/part2-validation-patterns/03-apply-bind-combined-validation/">
+    <Project Path="part2-validation-patterns/03-apply-bind-combined-validation/ApplyBindCombinedValidation.Tests.Unit/ApplyBindCombinedValidation.Tests.Unit.csproj" />
+    <Project Path="part2-validation-patterns/03-apply-bind-combined-validation/ApplyBindCombinedValidation/ApplyBindCombinedValidation.csproj" />
+  </Folder>
+  <Folder Name="/part2-validation-patterns/04-apply-internal-bind-validation/">
+    <Project Path="part2-validation-patterns/04-apply-internal-bind-validation/ApplyInternalBindValidation.Tests.Unit/ApplyInternalBindValidation.Tests.Unit.csproj" />
+    <Project Path="part2-validation-patterns/04-apply-internal-bind-validation/ApplyInternalBindValidation/ApplyInternalBindValidation.csproj" />
+  </Folder>
+  <Folder Name="/part2-validation-patterns/05-bind-internal-apply-validation/">
+    <Project Path="part2-validation-patterns/05-bind-internal-apply-validation/BindInternalApplyValidation.Tests.Unit/BindInternalApplyValidation.Tests.Unit.csproj" />
+    <Project Path="part2-validation-patterns/05-bind-internal-apply-validation/BindInternalApplyValidation/BindInternalApplyValidation.csproj" />
+  </Folder>
+  <Folder Name="/part2-validation-patterns/06-contextual-validation/">
+    <Project Path="part2-validation-patterns/06-contextual-validation/ContextualValidation.Tests.Unit/ContextualValidation.Tests.Unit.csproj" />
+    <Project Path="part2-validation-patterns/06-contextual-validation/ContextualValidation/ContextualValidation.csproj" />
+  </Folder>
+  <Folder Name="/part3-valueobject-patterns/" />
+  <Folder Name="/part3-valueobject-patterns/01-simplevalueobject/">
+    <Project Path="part3-valueobject-patterns/01-simplevalueobject/SimpleValueObject.Tests.Unit/SimpleValueObject.Tests.Unit.csproj" />
+    <Project Path="part3-valueobject-patterns/01-simplevalueobject/SimpleValueObject/SimpleValueObject.csproj" />
+  </Folder>
+  <Folder Name="/part3-valueobject-patterns/02-comparablesimplevalueobject/">
+    <Project Path="part3-valueobject-patterns/02-comparablesimplevalueobject/ComparableSimpleValueObject.Tests.Unit/ComparableSimpleValueObject.Tests.Unit.csproj" />
+    <Project Path="part3-valueobject-patterns/02-comparablesimplevalueobject/ComparableSimpleValueObject/ComparableSimpleValueObject.csproj" />
+  </Folder>
+  <Folder Name="/part3-valueobject-patterns/03-valueobject-primitive/">
+    <Project Path="part3-valueobject-patterns/03-valueobject-primitive/ValueObjectPrimitive.Tests.Unit/ValueObjectPrimitive.Tests.Unit.csproj" />
+    <Project Path="part3-valueobject-patterns/03-valueobject-primitive/ValueObjectPrimitive/ValueObjectPrimitive.csproj" />
+  </Folder>
+  <Folder Name="/part3-valueobject-patterns/04-comparablevalueobject-primitive/">
+    <Project Path="part3-valueobject-patterns/04-comparablevalueobject-primitive/ComparableValueObjectPrimitive.Tests.Unit/ComparableValueObjectPrimitive.Tests.Unit.csproj" />
+    <Project Path="part3-valueobject-patterns/04-comparablevalueobject-primitive/ComparableValueObjectPrimitive/ComparableValueObjectPrimitive.csproj" />
+  </Folder>
+  <Folder Name="/part3-valueobject-patterns/05-valueobject-composite/">
+    <Project Path="part3-valueobject-patterns/05-valueobject-composite/ValueObjectComposite.Tests.Unit/ValueObjectComposite.Tests.Unit.csproj" />
+    <Project Path="part3-valueobject-patterns/05-valueobject-composite/ValueObjectComposite/ValueObjectComposite.csproj" />
+  </Folder>
+  <Folder Name="/part3-valueobject-patterns/06-comparablevalueobject-composite/">
+    <Project Path="part3-valueobject-patterns/06-comparablevalueobject-composite/ComparableValueObjectComposite.Tests.Unit/ComparableValueObjectComposite.Tests.Unit.csproj" />
+    <Project Path="part3-valueobject-patterns/06-comparablevalueobject-composite/ComparableValueObjectComposite/ComparableValueObjectComposite.csproj" />
+  </Folder>
+  <Folder Name="/part3-valueobject-patterns/07-typesafeenum/">
+    <Project Path="part3-valueobject-patterns/07-typesafeenum/TypeSafeEnum.Tests.Unit/TypeSafeEnum.Tests.Unit.csproj" />
+    <Project Path="part3-valueobject-patterns/07-typesafeenum/TypeSafeEnum/TypeSafeEnum.csproj" />
+  </Folder>
+  <Folder Name="/part3-valueobject-patterns/08-architecture-test/">
+    <Project Path="part3-valueobject-patterns/08-architecture-test/ArchitectureTest/ArchitectureTest.csproj" />
+  </Folder>
+  <Folder Name="/part3-valueobject-patterns/09-unionvalueobject/">
+    <Project Path="part3-valueobject-patterns/09-unionvalueobject/UnionValueObject.Tests.Unit/UnionValueObject.Tests.Unit.csproj" />
+    <Project Path="part3-valueobject-patterns/09-unionvalueobject/UnionValueObject/UnionValueObject.csproj" />
+  </Folder>
+  <Folder Name="/part4-practical-guide/" />
+  <Folder Name="/part4-practical-guide/01-functorium-framework/">
+    <Project Path="part4-practical-guide/01-functorium-framework/FunctoriumFramework.Tests.Unit/FunctoriumFramework.Tests.Unit.csproj" />
+    <Project Path="part4-practical-guide/01-functorium-framework/FunctoriumFramework/FunctoriumFramework.csproj" />
+  </Folder>
+  <Folder Name="/part4-practical-guide/02-orm-integration/">
+    <Project Path="part4-practical-guide/02-orm-integration/OrmIntegration.Tests.Unit/OrmIntegration.Tests.Unit.csproj" />
+    <Project Path="part4-practical-guide/02-orm-integration/OrmIntegration/OrmIntegration.csproj" />
+  </Folder>
+  <Folder Name="/part4-practical-guide/03-cqrs-integration/">
+    <Project Path="part4-practical-guide/03-cqrs-integration/CqrsIntegration.Tests.Unit/CqrsIntegration.Tests.Unit.csproj" />
+    <Project Path="part4-practical-guide/03-cqrs-integration/CqrsIntegration/CqrsIntegration.csproj" />
+  </Folder>
+  <Folder Name="/part4-practical-guide/04-testing-strategies/">
+    <Project Path="part4-practical-guide/04-testing-strategies/TestingStrategies.Tests.Unit/TestingStrategies.Tests.Unit.csproj" />
+    <Project Path="part4-practical-guide/04-testing-strategies/TestingStrategies/TestingStrategies.csproj" />
+  </Folder>
+  <Folder Name="/part5-domain-examples/" />
+  <Folder Name="/part5-domain-examples/01-ecommerce-domain/">
+    <Project Path="part5-domain-examples/01-ecommerce-domain/EcommerceDomain.Tests.Unit/EcommerceDomain.Tests.Unit.csproj" />
+    <Project Path="part5-domain-examples/01-ecommerce-domain/EcommerceDomain/EcommerceDomain.csproj" />
+  </Folder>
+  <Folder Name="/part5-domain-examples/02-finance-domain/">
+    <Project Path="part5-domain-examples/02-finance-domain/FinanceDomain.Tests.Unit/FinanceDomain.Tests.Unit.csproj" />
+    <Project Path="part5-domain-examples/02-finance-domain/FinanceDomain/FinanceDomain.csproj" />
+  </Folder>
+  <Folder Name="/part5-domain-examples/03-user-management-domain/">
+    <Project Path="part5-domain-examples/03-user-management-domain/UserManagementDomain.Tests.Unit/UserManagementDomain.Tests.Unit.csproj" />
+    <Project Path="part5-domain-examples/03-user-management-domain/UserManagementDomain/UserManagementDomain.csproj" />
+  </Folder>
+  <Folder Name="/part5-domain-examples/04-scheduling-domain/">
+    <Project Path="part5-domain-examples/04-scheduling-domain/SchedulingDomain.Tests.Unit/SchedulingDomain.Tests.Unit.csproj" />
+    <Project Path="part5-domain-examples/04-scheduling-domain/SchedulingDomain/SchedulingDomain.csproj" />
+  </Folder>
+</Solution>
