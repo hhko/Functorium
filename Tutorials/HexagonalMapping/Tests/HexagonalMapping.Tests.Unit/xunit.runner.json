@@ -1,7 +1,0 @@
-{
-  "$schema": "https://xunit.net/schema/current/xunit.runner.schema.json",
-  "diagnosticMessages": false,
-  "methodDisplay": "method",
-  "methodDisplayOptions": "all",
-  "stopOnFail": false
-}
