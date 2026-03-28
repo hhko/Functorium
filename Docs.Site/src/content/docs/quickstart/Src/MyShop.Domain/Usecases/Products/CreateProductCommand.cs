@@ -12,6 +12,12 @@ public sealed class CreateProductCommand
         public async ValueTask<FinResponse<Response>> Handle(
             Request request, CancellationToken cancellationToken)
         {
+            // 파이프라인 Validator가 검증 완료. Create()는 정규화 목적.
+            // Unwrap 패턴:
+            //   var name = ProductName.Create(request.Name).Unwrap();
+            //   var price = Money.Create(request.Price).Unwrap();
+            //   var product = Product.Create(name, price);
+
             // ApplyT: VO 합성 + 에러 수집 → FinT<IO, R> LINQ from 첫 구문
             FinT<IO, Response> usecase =
                 from vos in (
