@@ -62,7 +62,7 @@ Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다
 
 <Steps>
 
-1. **Naive 코드 — 우리가 흔히 작성하는 코드**
+1. **<span class="text-problem">Naive 코드 — 우리가 흔히 작성하는 코드</span>**
 
    온라인 상점에서 상품을 관리한다고 가정합니다. 가장 직관적인 코드는 이렇습니다:
 
@@ -84,7 +84,7 @@ Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다
    이 버그들은 코드 리뷰에서 발견되지 않고, 단위 테스트를 통과하고, **프로덕션에서 고객이 발견합니다.**
    DDD의 Value Object는 이 모든 문제를 **컴파일 타임에 차단합니다.**
 
-3. **Value Object — 규칙을 타입으로 강제**
+3. **<span class="text-solution">Value Object — 규칙을 타입으로 강제</span>**
 
    ```csharp
    public sealed class ProductName : SimpleValueObject<string>
@@ -106,7 +106,7 @@ Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다
 
    `ProductName.Create("")`은 `Fin.Fail`을 반환합니다. 예외 없이, 에러 코드와 함께.
 
-4. **AggregateRoot — 상태 변경을 이벤트로**
+4. **<span class="text-solution">AggregateRoot — 상태 변경을 이벤트로</span>**
 
    ```csharp
    [GenerateEntityId]  // → ProductId 자동 생성 (Ulid 기반)
@@ -135,7 +135,7 @@ Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다
 
    `new Product()` 불가. 검증된 VO로만 생성. 생성 시 `CreatedEvent` 자동 발행.
 
-5. **Command Usecase — 예외 없는 비즈니스 흐름**
+5. **<span class="text-solution">Command Usecase — 예외 없는 비즈니스 흐름</span>**
 
    ```csharp
    public sealed class CreateProductCommand
