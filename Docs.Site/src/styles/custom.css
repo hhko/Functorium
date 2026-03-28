@@ -46,6 +46,13 @@
     radial-gradient(ellipse at 20% 80%, rgba(81, 43, 212, 0.06) 0%, transparent 40%);
   position: relative;
   padding-bottom: 2rem !important;
+  margin-top: -1px;
+}
+
+/* Hero 위 공백 제거 — Hero가 있는 페이지에서 header 하단 테두리 숨김 */
+[data-has-hero] header {
+  border-bottom: none !important;
+  box-shadow: none !important;
 }
 
 .hero::before {
@@ -719,5 +726,25 @@ h2 {
 
 @media (max-width: 50rem) {
   .stats-strip { gap: 1.5rem; flex-wrap: wrap; }
+}
+
+/* ── 14. Text Color Accents ─────────────────────────────────── */
+
+.text-problem {
+  font-weight: 700;
+  color: #ef4444;
+}
+
+.text-solution {
+  font-weight: 700;
+  color: #7c4dff;
+}
+
+[data-theme='light'] .text-problem {
+  color: #dc2626;
+}
+
+[data-theme='light'] .text-solution {
+  color: #512bd4;
 }
 
