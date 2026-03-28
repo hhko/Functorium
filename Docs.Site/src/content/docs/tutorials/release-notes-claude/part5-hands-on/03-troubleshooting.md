@@ -328,7 +328,7 @@ npx markdownlint-cli@0.45.0 .release-notes/RELEASE-v1.0.0.md
 
 - `.release-notes/scripts/docs/README.md` - 스크립트 문서
 - `.claude/commands/release-note.md` - 명령어 정의
-- GitHub Issues: https://github.com/your-repo/issues
+- GitHub Issues: https://github.com/hhko/Functorium/issues
 
 ## FAQ
 

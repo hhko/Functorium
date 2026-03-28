@@ -179,7 +179,7 @@ Docs.Site/src/content/docs/tutorials/functional-valueobject/
 
 ### GitHub Discussions
 - LanguageExt: https://github.com/louthy/language-ext/discussions
-- Functorium: https://github.com/your-org/functorium/discussions
+- Functorium: https://github.com/hhko/Functorium/discussions
 
 ### Stack Overflow 태그
 - `languageext`
