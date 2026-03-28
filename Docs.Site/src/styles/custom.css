@@ -479,3 +479,245 @@ h2 {
     font-size: 0.9rem;
   }
 }
+
+/* ── 13. Landing Page — Visual Enhancements ──────────────────── */
+
+/* Alternating section backgrounds for visual flow */
+.landing-section {
+  padding: 3rem 0;
+  position: relative;
+}
+
+.landing-section.alt {
+  background: linear-gradient(180deg, rgba(81,43,212,0.03) 0%, transparent 100%);
+  border-top: 1px solid rgba(81,43,212,0.08);
+}
+
+/* Before/After visual contrast */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.compare-before {
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: 1rem;
+  padding: 2rem;
+}
+
+.compare-after {
+  background: rgba(81, 43, 212, 0.05);
+  border: 1px solid rgba(81, 43, 212, 0.15);
+  border-radius: 1rem;
+  padding: 2rem;
+}
+
+.compare-before h4,
+.compare-after h4 {
+  margin-top: 0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.compare-before h4 {
+  color: var(--fn-danger);
+}
+
+.compare-after h4 {
+  background: var(--fn-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.compare-before ul,
+.compare-after ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.compare-before li,
+.compare-after li {
+  padding: 0.4rem 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.compare-before li::before {
+  content: '\2717\00a0';
+  color: var(--fn-danger);
+  font-weight: 700;
+}
+
+.compare-after li::before {
+  content: '\2713\00a0';
+  color: var(--sl-color-accent);
+  font-weight: 700;
+}
+
+@media (max-width: 50rem) {
+  .compare-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* Section headers with subtle accent */
+.section-heading {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+}
+
+.section-heading .accent {
+  background: var(--fn-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Problem cards = subtle red border-left */
+.problem-card {
+  border-left: 3px solid rgba(239, 68, 68, 0.5);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+  background: rgba(239, 68, 68, 0.03);
+  border-radius: 0 0.75rem 0.75rem 0;
+}
+
+/* Solution cards = subtle purple border-left */
+.solution-card {
+  border-left: 3px solid rgba(81, 43, 212, 0.5);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+  background: rgba(81, 43, 212, 0.03);
+  border-radius: 0 0.75rem 0.75rem 0;
+}
+
+/* Feature highlight strip */
+.feature-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-block: 2rem;
+}
+
+@media (max-width: 50rem) {
+  .feature-strip { grid-template-columns: repeat(2, 1fr); }
+}
+
+.feature-strip-item {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  border-radius: 1rem;
+  background: var(--fn-surface);
+  border: 1px solid var(--fn-border);
+  transition: all 0.3s ease;
+}
+
+.feature-strip-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px var(--fn-glow);
+  border-color: var(--sl-color-accent);
+}
+
+.feature-strip-item .feature-number {
+  display: block;
+  font-family: var(--sl-font-mono);
+  font-size: 2rem;
+  font-weight: 800;
+  background: var(--fn-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+.feature-strip-item .feature-title {
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+/* AX workflow visual */
+.ax-flow-visual {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-block: 1.5rem;
+  font-family: var(--sl-font-mono);
+  font-size: 0.75rem;
+}
+
+.ax-flow-step {
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.5rem;
+  background: rgba(81, 43, 212, 0.08);
+  border: 1px solid var(--fn-border);
+  color: var(--sl-color-accent-high);
+  transition: all 0.2s ease;
+}
+
+.ax-flow-step:hover {
+  background: rgba(81, 43, 212, 0.15);
+  border-color: var(--sl-color-accent);
+}
+
+.ax-flow-arrow {
+  display: flex;
+  align-items: center;
+  color: var(--sl-color-gray-4);
+}
+
+[data-theme='light'] .ax-flow-step {
+  color: var(--sl-color-accent);
+}
+
+/* Hero tagline enhancement */
+.hero .hero-html h1 + .tagline {
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+/* Stats strip */
+.stats-strip {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  margin-block: 2rem;
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--fn-border);
+  border-bottom: 1px solid var(--fn-border);
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-family: var(--sl-font-mono);
+  font-size: 1.8rem;
+  font-weight: 800;
+  background: var(--fn-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--sl-color-gray-3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+@media (max-width: 50rem) {
+  .stats-strip { gap: 1.5rem; flex-wrap: wrap; }
+}
+
