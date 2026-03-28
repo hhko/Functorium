@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TwoWayMappingLayered.Adapters.Infrastructure\TwoWayMappingLayered.Adapters.Infrastructure.csproj" />
+    <ProjectReference Include="..\TwoWayMappingLayered.Adapters.Persistence\TwoWayMappingLayered.Adapters.Persistence.csproj" />
+    <ProjectReference Include="..\TwoWayMappingLayered.Adapters.Presentation\TwoWayMappingLayered.Adapters.Presentation.csproj" />
+    <ProjectReference Include="..\TwoWayMappingLayered.Applications\TwoWayMappingLayered.Applications.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="TwoWayMappingLayered.Tests.Integration" />
+  </ItemGroup>
+
+</Project>

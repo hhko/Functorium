@@ -1,0 +1,6 @@
+{
+  "methodDisplay": "method",
+  "diagnosticMessages": true,
+  "internalDiagnosticMessages": true,
+  "methodDisplayOptions": "replaceUnderscoreWithSpace"
+}

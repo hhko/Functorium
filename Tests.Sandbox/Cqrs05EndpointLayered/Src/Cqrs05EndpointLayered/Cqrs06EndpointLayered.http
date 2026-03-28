@@ -1,0 +1,83 @@
+@baseUrl = http://localhost:5000
+
+### 상품 생성
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "Name": "노트북",
+  "Description": "고성능 개발용 노트북",
+  "Price": 1500000,
+  "StockQuantity": 10
+}
+
+### 전체 상품 조회
+GET {{baseUrl}}/api/products
+
+### ID로 상품 조회
+GET {{baseUrl}}/api/products/{{productId}}
+
+### 상품 업데이트
+PUT {{baseUrl}}/api/products/{{productId}}
+Content-Type: application/json
+
+{
+  "Name": "노트북 Pro",
+  "Description": "업그레이드된 고성능 노트북",
+  "Price": 2000000,
+  "StockQuantity": 5
+}
+
+### 에러 테스트 - 성공
+POST {{baseUrl}}/api/test-error
+Content-Type: application/json
+
+{
+  "Scenario": "Success",
+  "TestMessage": "테스트 메시지"
+}
+
+### 에러 테스트 - 단일 Expected 에러
+POST {{baseUrl}}/api/test-error
+Content-Type: application/json
+
+{
+  "Scenario": "SingleExpected",
+  "TestMessage": "비즈니스 규칙 위반 테스트"
+}
+
+### 에러 테스트 - 단일 Exceptional 에러
+POST {{baseUrl}}/api/test-error
+Content-Type: application/json
+
+{
+  "Scenario": "SingleExceptional",
+  "TestMessage": "시스템 에러 테스트"
+}
+
+### 에러 테스트 - 복합 Expected 에러
+POST {{baseUrl}}/api/test-error
+Content-Type: application/json
+
+{
+  "Scenario": "ManyExpected",
+  "TestMessage": "복합 비즈니스 에러 테스트"
+}
+
+### 에러 테스트 - Mixed 에러
+POST {{baseUrl}}/api/test-error
+Content-Type: application/json
+
+{
+  "Scenario": "ManyMixed",
+  "TestMessage": "Mixed 에러 테스트"
+}
+
+### 에러 테스트 - Generic Expected 에러
+POST {{baseUrl}}/api/test-error
+Content-Type: application/json
+
+{
+  "Scenario": "GenericExpected",
+  "TestMessage": "Generic 에러 테스트"
+}

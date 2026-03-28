@@ -1,0 +1,12 @@
+global using LanguageExt;
+global using LanguageExt.Common;
+global using static LanguageExt.Prelude;
+global using Xunit;
+global using Shouldly;
+global using NSubstitute;
+global using Functorium.Applications.Usecases;
+global using Functorium.Adapters.Observabilities.Pipelines;
+global using Cqrs03Functional.Demo;
+global using Cqrs03Functional.Demo.Domain;
+global using Cqrs03Functional.Demo.Domain.ValueObjects;
+global using Cqrs03Functional.Demo.Usecases;

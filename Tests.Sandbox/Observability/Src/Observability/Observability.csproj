@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Logs\**" />
+  </ItemGroup>
+
+  <!-- Serilog Sinks and Enrichers (application-level configuration) -->
+  <ItemGroup>
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="Serilog.Enrichers.Environment" />
+    <PackageReference Include="Serilog.Enrichers.Process" />
+    <PackageReference Include="Serilog.Enrichers.Thread" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Observability.Adapters.Infrastructure\Observability.Adapters.Infrastructure.csproj" />
+    <ProjectReference Include="..\Observability.Adapters.Persistence\Observability.Adapters.Persistence.csproj" />
+    <ProjectReference Include="..\Observability.Adapters.Presentation\Observability.Adapters.Presentation.csproj" />
+    <ProjectReference Include="..\Observability.Applications\Observability.Applications.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Observability.Tests.Integration" />
+  </ItemGroup>
+
+</Project>
+
