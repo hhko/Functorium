@@ -28,8 +28,6 @@ import { Card, CardGrid, LinkCard, Steps, Aside } from '@astrojs/starlight/compo
 
 ---
 
-## 풀고자 하는 문제
-
 Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다.
 하지만 이들을 일관된 DDD 아키텍처로 통합하려면 에러 전파, 파이프라인 순서, 관측성 경계, 타입 제약에 대한 수백 가지 결정이 필요합니다.
 **Functorium은 이 결정을 한 번, 일관되게 내립니다.**
@@ -37,22 +35,19 @@ Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다
 <div class="problem-card">
   <strong>예외가 곧 비즈니스 로직</strong> — 성공과 실패가 try-catch로 분기되어 흐름을 예측하기 어렵고, 도메인 규칙의 합성이 불가능합니다.
 </div>
-<div class="problem-card">
-  <strong>개발 언어 ≠ 운영 언어</strong> — 기능 명세와 운영 요구사항이 서로 다른 체계로 관리되어 해석 차이가 누적됩니다.
-</div>
-<div class="problem-card">
-  <strong>Observability는 항상 사후 보완</strong> — 로그, 메트릭, 트레이싱이 구현 완료 후 부착되어 장애 시 맥락이 유실됩니다.
-</div>
-
----
-
-## 해결 방향
-
 <div class="solution-card">
   <strong>예외 없는 순수 도메인</strong> — Fin&lt;T&gt;, FinT&lt;IO, T&gt;로 결과와 사이드 이펙트를 타입 수준에서 명시하고, LINQ 합성으로 도메인 흐름을 구성합니다.
 </div>
+
+<div class="problem-card">
+  <strong>개발 언어 ≠ 운영 언어</strong> — 기능 명세와 운영 요구사항이 서로 다른 체계로 관리되어 해석 차이가 누적됩니다.
+</div>
 <div class="solution-card">
   <strong>단일 도메인 언어로 통합</strong> — Bounded Context를 명확히 정의하여 도메인 개념이 코드, 문서, 운영 메트릭에 일관되게 반영됩니다.
+</div>
+
+<div class="problem-card">
+  <strong>Observability는 항상 사후 보완</strong> — 로그, 메트릭, 트레이싱이 구현 완료 후 부착되어 장애 시 맥락이 유실됩니다.
 </div>
 <div class="solution-card">
   <strong>설계에 내재된 Observability</strong> — OpenTelemetry 기반 Logging, Metrics, Tracing이 유스케이스 파이프라인에 자동 적용됩니다.
