@@ -11,8 +11,10 @@ description: "Functorium 프레임워크 기반 어댑터 레이어(Repository, 
 ## 후속 스킬
 
 ```
-project-spec → architecture-design → domain-develop → application-develop → **adapter-develop** → test-develop
+project-spec → architecture-design → domain-develop → application-develop → **adapter-develop** → observability-develop → test-develop
 ```
+
+어댑터 구현 완료 후 `observability-develop` 스킬에서 관측성 전략(KPI→메트릭 매핑, 대시보드, 알림, ctx.* 전파)을 설계합니다.
 
 # Adapter Develop Skill
 

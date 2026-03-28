@@ -11,10 +11,10 @@ claude plugins install .claude/plugins/functorium-develop
 
 ## 워크플로우
 
-PRD 작성부터 테스트까지 6단계로 이어지는 개발 워크플로입니다:
+PRD 작성부터 테스트까지 7단계로 이어지는 개발 워크플로입니다:
 
 ```
-project-spec → architecture-design → domain-develop → application-develop → adapter-develop → test-develop
+project-spec → architecture-design → domain-develop → application-develop → adapter-develop → observability-develop → test-develop
 ```
 
 | 단계 | 스킬 | 출력 |
@@ -24,7 +24,8 @@ project-spec → architecture-design → domain-develop → application-develop 
 | 3. 도메인 개발 | `domain-develop` | `domain/00~03` + 소스 코드 |
 | 4. 애플리케이션 개발 | `application-develop` | `application/00~03` + 소스 코드 |
 | 5. 어댑터 개발 | `adapter-develop` | `adapter/00~03` + 소스 코드 |
-| 6. 테스트 작성 | `test-develop` | 테스트 코드 |
+| 6. 관측성 설계 | `observability-develop` | 관측성 전략 문서 |
+| 7. 테스트 작성 | `test-develop` | 테스트 코드 |
 
 각 스킬은 이전 스킬의 출력을 입력으로 사용합니다.
 어느 단계에서든 시작할 수 있으며, 선행 문서가 없으면 사용자에게 직접 질문합니다.
@@ -38,6 +39,7 @@ project-spec → architecture-design → domain-develop → application-develop 
 | `domain-develop` | 도메인 레이어 개발 (VO, Aggregate, Spec) | "도메인 구현", "Aggregate 만들어줘" |
 | `application-develop` | 애플리케이션 레이어 (CQRS, Usecase, Port) | "유스케이스 구현", "Command 만들어줘" |
 | `adapter-develop` | 어댑터 레이어 (Repository, Endpoint, DI) | "Repository 구현", "엔드포인트 만들어줘" |
+| `observability-develop` | 관측성 전략 (KPI 매핑, 대시보드, 알림) | "관측성 설계", "대시보드 설계", "메트릭 분석" |
 | `test-develop` | 테스트 전략 (단위, 통합, 아키텍처 규칙) | "테스트 작성", "통합 테스트" |
 | `domain-review` | DDD 코드 리뷰 | "DDD 리뷰", "아키텍처 리뷰" |
 
@@ -45,9 +47,11 @@ project-spec → architecture-design → domain-develop → application-develop 
 
 | 에이전트 | 전문 영역 |
 |---------|-----------|
+| `product-analyst` | PRD 작성, 요구사항 분석, 사용자 스토리, Aggregate 경계 도출 |
 | `domain-architect` | 유비쿼터스 언어, Aggregate 경계, 타입 전략 |
 | `application-architect` | CQRS 설계, 포트 식별, FinT 합성, CtxEnricher 3-Pillar 설계 |
 | `adapter-engineer` | Repository, Endpoint, DI 등록, CtxEnricherPipeline 통합 |
+| `observability-engineer` | KPI→메트릭 매핑, 대시보드, 알림, ctx.* 전파, 분산 추적 |
 | `test-engineer` | 단위/통합/아키텍처 테스트, ctx 3-Pillar 스냅샷 테스트 |
 
 ## 레이어별 4단계 문서
@@ -77,7 +81,10 @@ AIModel Aggregate를 설계하고 구현해줘.
 # 5. 어댑터 개발
 AIModel Repository를 EF Core로 구현해줘.
 
-# 6. 테스트 작성
+# 6. 관측성 설계
+AIModel 서비스의 관측성 전략을 설계해줘.
+
+# 7. 테스트 작성
 AIModel 도메인 단위 테스트를 작성해줘.
 
 # 코드 리뷰
