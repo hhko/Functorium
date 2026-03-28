@@ -45,14 +45,19 @@
     radial-gradient(ellipse at 80% 50%, rgba(124, 77, 255, 0.08) 0%, transparent 40%),
     radial-gradient(ellipse at 20% 80%, rgba(81, 43, 212, 0.06) 0%, transparent 40%);
   position: relative;
+  padding-top: 4rem !important;
   padding-bottom: 2rem !important;
   margin-top: -1px;
 }
 
-/* Hero 위 공백 제거 — Hero가 있는 페이지에서 header 하단 테두리 숨김 */
+/* Hero 위 공백 제거 */
 [data-has-hero] header {
   border-bottom: none !important;
   box-shadow: none !important;
+}
+
+[data-has-hero] .content-panel {
+  padding-top: 0 !important;
 }
 
 .hero::before {
