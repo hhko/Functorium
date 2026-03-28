@@ -134,11 +134,15 @@ domain/03-implementation-results.md
 application/03-implementation-results.md
   |-- Port 인터페이스       --> adapter-develop의 구현 대상
   |-- Request/Response DTO  --> adapter-develop의 Endpoint 작성
+
+adapter/03-implementation-results.md
+  |-- Observable Port 목록  --> observability-develop의 KPI 매핑 대상
+  |-- CtxEnricher 필드      --> observability-develop의 ctx.* 전파 전략
 ```
 
 ## 유연한 진입점
 
-6단계를 반드시 순서대로 진행할 필요는 없습니다. 각 스킬은 독립적으로 동작하며, 선행 문서가 없으면 사용자에게 직접 질문합니다.
+7단계를 반드시 순서대로 진행할 필요는 없습니다. 각 스킬은 독립적으로 동작하며, 선행 문서가 없으면 사용자에게 직접 질문합니다.
 
 | 상황 | 시작 스킬 | 이유 |
 |------|----------|------|
@@ -151,7 +155,7 @@ application/03-implementation-results.md
 
 ## 실제 프로젝트 예시
 
-AI 모델 거버넌스 플랫폼을 6단계로 개발하는 과정입니다.
+AI 모델 거버넌스 플랫폼을 7단계로 개발하는 과정입니다.
 
 ### 1단계: Project Spec
 
@@ -215,7 +219,19 @@ AIModel Repository를 EF Core로 구현해줘.
 - FastEndpoints 엔드포인트
 - DI 등록 (Provider 전환)
 
-### 6단계: Test Develop
+### 6단계: Observability Develop
+
+```text
+관측성 전략을 설계해줘.
+```
+
+산출물:
+- KPI→메트릭 매핑: 모델 등록 성공률, 배포 P95 지연, 컴플라이언스 평가 처리량
+- ctx.* 전파 전략: risk_tier(MetricsTag), model_id(Tracing), assessment_detail(Logging)
+- L1 대시보드: 6개 건강 지표 스코어카드
+- 알림 규칙: P0(DB 연결 실패), P1(배포 API P95 > 1s), P2(새 에러 코드 출현)
+
+### 7단계: Test Develop
 
 ```text
 AIModel 도메인 단위 테스트를 작성해줘.
@@ -227,6 +243,7 @@ AIModel 도메인 단위 테스트를 작성해줘.
 - Usecase 단위 테스트: Mock 기반 성공/실패
 - 통합 테스트: HTTP 엔드포인트 201/400/404
 - 아키텍처 규칙: 레이어 의존성, sealed class
+- 관측성 검증: ctx.* 3-Pillar 스냅샷 테스트
 
 ## 레이어별 4단계 문서
 

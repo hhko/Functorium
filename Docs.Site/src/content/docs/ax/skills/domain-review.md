@@ -218,11 +218,60 @@ Aggregate를 넘어 레이어 간 의존성을 검토합니다. 도메인 레이
 5. **이벤트 흐름** — 모든 상태 변경에 이벤트가 발행되는가
 6. **Functorium 패턴 준수** — sealed, private 생성자, `Fin<T>` 반환
 
+## ApplyT 패턴 리뷰
+
+Application 레이어에서 ApplyT 패턴의 올바른 사용을 검토합니다.
+
+### 체크리스트
+
+| 항목 | 검토 내용 | 올바른 예 |
+|------|----------|----------|
+| 에러 누적 | 여러 VO 검증 시 Apply로 에러 누적하는가 | `(v1, v2).Apply((a, b) => ...)` |
+| CreateFromValidated | Apply 내부에서 검증 우회 팩토리 사용 | `ProductName.Create(n).ThrowIfFail()` |
+| 단일 필드 | VO 1개일 때 불필요한 Apply 사용하지 않는가 | 단순 `Create` + `if (IsFail)` |
+| ToFin 변환 | `.As().ToFin()` 체인이 올바른가 | `Validation -> Fin` 변환 |
+
+### 흔한 위반
+
+```text
+| 항목 | 상태 | 위반 사항 | 개선 제안 |
+|------|------|----------|----------|
+| ApplyT 에러 누적 | WARN | 3개 VO를 순차 검증 | Apply 패턴으로 병렬 검증 + 에러 누적 |
+| CreateFromValidated | FAIL | Apply 내부에서 Create 재호출 | Create -> ThrowIfFail로 검증 우회 |
+```
+
+## 관측성 리뷰
+
+CtxEnricher와 Observable Port의 올바른 사용을 검토합니다.
+
+### 체크리스트
+
+| 항목 | 검토 내용 |
+|------|----------|
+| CtxPillar 적절성 | 고카디널리티 필드가 MetricsTag에 전파되지 않는가 |
+| CtxRoot 승격 | 핵심 식별자가 ctx.{field} 루트로 승격되었는가 |
+| ObservableSignal | Adapter 내부 로깅에 ObservableSignal을 사용하는가 |
+| Observable Port | 모든 Port에 `[GenerateObservablePort]`가 적용되었는가 |
+| RequestCategory | 올바른 카테고리(`"repository"`, `"query"`, `"external_api"`)를 사용하는가 |
+| error.type 분류 | expected/exceptional/aggregate 분류가 올바른가 |
+
+### 출력 예시
+
+```text
+## 관측성 리뷰 결과
+
+| 항목 | 상태 | 위반 사항 | 개선 제안 |
+|------|------|----------|----------|
+| CtxPillar | FAIL | customer_id가 CtxPillar.All로 설정됨 | CtxPillar.Default로 변경 (고카디널리티) |
+| Observable Port | PASS | 모든 Repository에 [GenerateObservablePort] 적용 | -- |
+| RequestCategory | WARN | ExternalApiAdapter의 RequestCategory가 누락 | "external_api" 설정 |
+```
+
 ## 참고 자료
 
 ### 워크플로
 
-- [워크플로](../workflow/) -- 6단계 전체 흐름
+- [워크플로](../workflow/) -- 7단계 전체 흐름
 - [Test Develop 스킬](./test-develop/) -- 아키텍처 규칙 테스트로 리뷰 항목 자동화
 
 ### 프레임워크 가이드

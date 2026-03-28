@@ -28,6 +28,78 @@ functorium-develop 플러그인은 스킬과 에이전트, 두 가지 도구를 
 | `observability-engineer` | KPI→메트릭 매핑, 대시보드, 알림, ctx.* 전파, 분산 추적 | 관측성 전략 수립 |
 | `test-engineer` | 단위/통합/아키텍처 테스트, ctx 3-Pillar 스냅샷, 관측성 검증 | 테스트 전략 수립 |
 
+## product-analyst -- 요구사항 분석 전문가
+
+비즈니스 요구사항을 DDD 도메인 모델로 변환하고, PRD 작성부터 아키텍처 설계까지 프로젝트 초기 기획을 전담합니다.
+
+**전문 영역:**
+- 요구사항 분석 및 PRD(Product Requirements Document) 작성
+- 유비쿼터스 언어(Ubiquitous Language) 추출
+- 바운디드 컨텍스트(Bounded Context) 식별
+- Aggregate 경계 도출 및 도메인 이벤트 식별
+- 사용자 스토리 작성 (INVEST 원칙)
+- 우선순위 결정 (P0/P1/P2 분류)
+- 수락 기준 작성 (Given/When/Then)
+- Non-Goals 식별 및 범위 관리
+- 프로젝트 구조 설계 (솔루션/프로젝트/폴더)
+
+**핵심 원칙:**
+
+| 원칙 | 설명 |
+|------|------|
+| 비즈니스 가치 중심 | 기술이 아닌 비즈니스 영향으로 우선순위 결정 |
+| Non-Goals 명시 | 범위 크리프(Scope Creep) 방지를 위한 제외 항목 합의 |
+| INVEST 사용자 스토리 | 테스트 불가능한 스토리는 수정 |
+| Given/When/Then 수락 기준 | 정상 + 거부 시나리오 모두 작성 |
+
+### 예시 1 (초급): Non-Goals 식별
+
+```text
+사용자: 전자상거래 플랫폼에서 무엇을 제외해야 할까?
+에이전트: Non-Goals 후보입니다:
+         - 실시간 채팅 지원 -- 별도 SaaS 도구 사용
+         - 추천 엔진 -- Phase 2 이후 검토
+         - 다국어 지원 -- MVP 범위 외
+         "하지 않을 것"을 합의하는 것이 "할 것"만큼 중요합니다.
+```
+
+### 예시 2 (중급): 사용자 스토리 + 수락 기준
+
+```text
+사용자: 상품 등록 기능의 사용자 스토리를 작성해줘.
+에이전트: INVEST 기준으로 작성합니다:
+         "상점 관리자로서, 새 상품을 등록하고 싶다, 고객에게 판매하기 위해."
+
+         수락 기준:
+         Given: 유효한 상품명(100자 이하), 가격(양수), 카테고리가 준비됨
+         When:  관리자가 상품을 등록
+         Then:  상품이 Draft 상태로 생성되고 CreatedEvent가 발행됨
+
+         거부 시나리오:
+         Given: 상품명이 비어있음
+         When:  관리자가 상품 등록 시도
+         Then:  "ProductName is required" 검증 오류 반환
+```
+
+### 예시 3 (고급): Aggregate 경계 + 우선순위 결정
+
+```text
+사용자: AI 거버넌스 플랫폼의 Aggregate와 우선순위를 도출해줘.
+에이전트: 4개 Aggregate를 식별합니다:
+         1. AIModel -- 모델 생명주기 (등록, 분류, 상태 관리)
+         2. ModelDeployment -- 배포 환경 관리 (Draft->Active->Quarantined)
+         3. ComplianceAssessment -- 규제 준수 평가 (EU AI Act)
+         4. ModelIncident -- 장애/이슈 추적
+
+         우선순위:
+         P0: RegisterModel, CreateDeployment, ReportIncident
+         P1: SubmitForReview, ActivateDeployment, QuarantineDeployment
+         P2: 드리프트 감지 자동화, 병렬 컴플라이언스 체크
+
+         교차 규칙: Critical 인시던트 -> Active 배포 자동 격리
+         (Domain Event + EventHandler로 구현)
+```
+
 ## domain-architect -- 도메인 설계 전문가
 
 에릭 에반스의 DDD 원칙을 기반으로 도메인 모델을 설계합니다.
@@ -220,6 +292,73 @@ Repository, Query Adapter, Endpoint 구현을 전문적으로 담당합니다.
          4. 페이지네이션: offset-based (Page/PageSize) 또는 cursor-based
 ```
 
+## observability-engineer -- 관측성 전략 전문가
+
+Functorium 프레임워크의 OpenTelemetry 3-Pillar 관측성을 전문적으로 설계합니다.
+
+**전문 영역:**
+- OpenTelemetry Logging / Metrics / Tracing 3-Pillar 설계
+- CtxEnricher 3-Pillar 전파 전략 (CtxPillar 타겟팅, 카디널리티 관리)
+- Observable Port + Source Generator 관측성 자동화
+- ObservableSignal (Adapter 내부 개발자 로깅)
+- 비즈니스 KPI -> 기술 메트릭 매핑
+- 대시보드 설계 (L1 스코어카드, L2 드릴다운)
+- 알림 패턴 (P0/P1/P2 분류, AlertManager 규칙)
+- 분산 추적 분석 (Span 체인 병목 식별)
+
+**핵심 규칙:**
+
+| 규칙 | 설명 |
+|------|------|
+| Meter Name | `{service.namespace}.{layer}[.{category}]` |
+| Instrument Name | `{layer}.{category}[.{cqrs}].{type}` (점 구분, 소문자, 복수형) |
+| `response.elapsed` | Histogram instrument로 기록 (MetricsTag 금지) |
+| Error 분류 | `expected` (비즈니스), `exceptional` (시스템), `aggregate` (복합) |
+| MetricsTag | Bounded 값만 허용 (bool, 저카디널리티 enum) |
+
+### 예시 1 (초급): ctx.* 전파 전략 질문
+
+```text
+사용자: customer_id를 MetricsTag에 넣어도 될까?
+에이전트: 금지합니다. customer_id는 고카디널리티(수백만)이므로 Unbounded series를 생성합니다.
+         - customer_id -> CtxPillar.Default (Logging + Tracing만)
+         - customer_tier -> CtxPillar.All (MetricsTag 허용, 3~5종)
+         카디널리티 규칙: MetricsTag에는 고유값이 제한된 필드만 사용합니다.
+```
+
+### 예시 2 (중급): 대시보드 설계
+
+```text
+사용자: 전자상거래 API의 L1 대시보드를 설계해줘.
+에이전트: 6개 건강 지표 스코어카드입니다:
+         1. 요청 수: rate(usecase_request_total[5m]) -- 처리량 추세
+         2. 성공률: 1 - (error_total / request_total) -- 99.9% 이상
+         3. P95 지연: histogram_quantile(0.95, duration_bucket) -- < 200ms
+         4. 에러율: rate(error_total[5m]) / rate(request_total[5m]) -- < 0.1%
+         5. Exceptional 에러: rate(error_total{error_type="exceptional"}[5m]) -- 0에 수렴
+         6. DomainEvent 처리량: rate(event_publish_total[5m]) -- 추세 확인
+
+         L2 드릴다운은 request.layer x request.category.name x request.handler.name
+         3차원으로 분해하여 병목을 식별합니다.
+```
+
+### 예시 3 (고급): 분산 추적 진단 + 알림 설계
+
+```text
+사용자: 주문 생성 API가 간헐적으로 느려지는데 어떻게 진단할까?
+에이전트: 5단계 분석 절차입니다:
+         1. 신호 감지 -- L1 대시보드에서 P95 > 200ms 확인
+         2. 추적 쿼리 -- request.handler.name="CreateOrderCommand" AND duration > 200ms
+         3. 스팬 분석 -- 하위 스팬 중 어디서 시간 소비하는지 확인
+            - Repository.Create: 정상 (< 10ms)
+            - CreditCheckService: 지연 (> 500ms) <-- 병목
+         4. 가설 수립 -- 외부 신용 조회 API 지연? 캐시 미스?
+         5. 알림 설계:
+            P0: CreditCheck API 타임아웃 3회 연속 -> 온콜 페이지
+            P1: P95 > 1s 지속 5분 -> Slack 알림
+            P2: 새로운 error.code 출현 -> 일간 대시보드 확인
+```
+
 ## test-engineer -- 테스트 전략 전문가
 
 테스트 피라미드 기반으로 효과적인 테스트 전략을 수립합니다.
@@ -318,7 +457,7 @@ Repository, Query Adapter, Endpoint 구현을 전문적으로 담당합니다.
 
 ## 참고 자료
 
-- [워크플로](./workflow/) -- 6단계 개발 워크플로
+- [워크플로](./workflow/) -- 7단계 개발 워크플로
 - [도메인 개발 스킬](./skills/domain-develop/) -- domain-architect의 전문성이 반영된 스킬
 - [Application 개발 스킬](./skills/application-develop/) -- application-architect의 전문성이 반영된 스킬
 - [Adapter 개발 스킬](./skills/adapter-develop/) -- adapter-engineer의 전문성이 반영된 스킬

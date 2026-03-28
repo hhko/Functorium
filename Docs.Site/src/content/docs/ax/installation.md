@@ -52,18 +52,21 @@ claude --plugin-dir .claude/plugins/functorium-develop
 ```
 .claude/plugins/functorium-develop/
 ├── .claude-plugin/plugin.json      # 매니페스트
-├── skills/                         # 7개 스킬
+├── skills/                         # 8개 스킬
 │   ├── project-spec/               # PRD 작성
 │   ├── architecture-design/        # 아키텍처 설계
 │   ├── domain-develop/             # 도메인 개발
 │   ├── application-develop/        # 애플리케이션 개발
 │   ├── adapter-develop/            # 어댑터 개발
+│   ├── observability-develop/      # 관측성 전략
 │   ├── test-develop/               # 테스트 개발
 │   └── domain-review/              # DDD 코드 리뷰
-├── agents/                         # 4개 전문 에이전트
+├── agents/                         # 6개 전문 에이전트
+│   ├── product-analyst.md
 │   ├── domain-architect.md
 │   ├── application-architect.md
 │   ├── adapter-engineer.md
+│   ├── observability-engineer.md
 │   └── test-engineer.md
 └── README.md
 ```
@@ -89,6 +92,6 @@ skills/domain-develop/
 
 ## 다음 단계
 
-- [워크플로](./workflow/) -- 6단계 개발 워크플로 이해
+- [워크플로](./workflow/) -- 7단계 개발 워크플로 이해
 - [Project Spec 스킬](./skills/project-spec/) -- 첫 번째 단계: PRD 작성
 - [전문 에이전트](./agents/) -- 설계 결정에 전문가 활용

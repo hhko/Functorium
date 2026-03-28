@@ -3,7 +3,7 @@ title: "Project Spec"
 description: "프로젝트 요구사항 명세(PRD) 작성"
 ---
 
-> **project-spec** -> architecture-design -> domain-develop -> application-develop -> adapter-develop -> test-develop
+> **project-spec** -> architecture-design -> domain-develop -> application-develop -> adapter-develop -> observability-develop -> test-develop
 
 ## 선행 조건
 
@@ -287,6 +287,6 @@ Then:  "ModelName is required" 검증 오류가 반환됨
 
 ## 참고 자료
 
-- [워크플로](../workflow/) -- 6단계 전체 흐름
+- [워크플로](../workflow/) -- 7단계 전체 흐름
 - [Architecture Design 스킬](./architecture-design/) -- 다음 단계: 프로젝트 구조 설계
 - [Domain Develop 스킬](./domain-develop/) -- Aggregate 상세 설계와 구현

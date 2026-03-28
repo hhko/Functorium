@@ -3,7 +3,7 @@ title: "Test Develop"
 description: "단위 테스트, 통합 테스트, 아키텍처 규칙 테스트 작성"
 ---
 
-> project-spec -> architecture-design -> domain-develop -> application-develop -> adapter-develop -> **test-develop**
+> project-spec -> architecture-design -> domain-develop -> application-develop -> adapter-develop -> observability-develop -> **test-develop**
 
 ## 선행 조건
 
@@ -377,11 +377,73 @@ public sealed class DomainArchitectureRuleTests : DomainArchitectureTestSuite
 }
 ```
 
+## 스냅샷 테스트 (Verify.Xunit)
+
+Verify.Xunit을 사용한 스냅샷 테스트는 복잡한 객체의 구조 변경을 감지합니다. 테스트 실행 후 `.verified.` 파일과 비교하여 차이가 있으면 실패합니다.
+
+```csharp
+[Fact]
+public async Task CreateProduct_ShouldMatchSnapshot_WhenRequestIsValid()
+{
+    // Arrange
+    var request = new CreateProductCommand.Request("Test Product", 100m);
+
+    // Act
+    var actual = await _sut.Handle(request, CancellationToken.None);
+
+    // Assert
+    await Verify(actual.ThrowIfFail());
+}
+```
+
+스냅샷 승인: `./Build-VerifyAccept.ps1`로 pending 상태의 스냅샷을 일괄 승인합니다.
+
+## 관측성 검증 테스트
+
+`observability-develop` 스킬에서 설계한 ctx.* 전파 전략이 올바르게 동작하는지 검증합니다.
+
+### ctx.* 3-Pillar 스냅샷 테스트
+
+CtxEnricher가 Logging, Tracing, MetricsTag 3-Pillar에 올바른 필드를 전파하는지 검증합니다.
+
+```csharp
+[Fact]
+public async Task Handle_ShouldPropagateCtxFields_WhenCommandSucceeds()
+{
+    // Arrange
+    using var logContext = new LogTestContext();
+    using var activity = new Activity("test").Start();
+    var metricsContext = MetricsTagContext.Current;
+
+    var request = new CreateProductCommand.Request("Test", 100m);
+
+    // Act
+    var actual = await _sut.Handle(request, CancellationToken.None);
+
+    // Assert -- 3-Pillar 모두 검증
+    logContext.Properties.ShouldContainKey("ctx.product_id");
+    activity.Tags.ShouldContain(t => t.Key == "ctx.product_id");
+    metricsContext.Tags.ShouldNotContainKey("ctx.product_id"); // 고카디널리티는 MetricsTag 제외
+}
+```
+
+### Observable Port 관측성 검증
+
+`[GenerateObservablePort]`가 생성한 Observable 래퍼가 올바른 필드를 수집하는지 검증합니다.
+
+| 검증 항목 | 필드 | 기대값 |
+|-----------|------|--------|
+| 레이어 | `request.layer` | `"adapter"` |
+| 카테고리 | `request.category.name` | `"repository"` |
+| 핸들러 | `request.handler.name` | `"ProductRepository"` |
+| 상태 | `response.status` | `"success"` 또는 `"failure"` |
+| 에러 분류 | `error.type` | `"expected"`, `"exceptional"` |
+
 ## 참고 자료
 
 ### 워크플로
 
-- [워크플로](../workflow/) -- 6단계 전체 흐름
+- [워크플로](../workflow/) -- 7단계 전체 흐름
 - [Adapter Develop 스킬](./adapter-develop/) -- 이전 단계: Repository, Endpoint, DI 구현
 - [Domain Review 스킬](./domain-review/) -- 코드 리뷰로 품질 점검
 

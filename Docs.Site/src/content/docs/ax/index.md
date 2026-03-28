@@ -91,7 +91,7 @@ project-spec -> architecture-design -> domain-develop -> application-develop -> 
 
 ### 2. 워크플로 이해
 
-[워크플로](./workflow/) 페이지에서 6단계 흐름과 각 단계의 입출력 관계를 파악합니다.
+[워크플로](./workflow/) 페이지에서 7단계 흐름과 각 단계의 입출력 관계를 파악합니다.
 
 ### 3. 첫 스킬 실행
 

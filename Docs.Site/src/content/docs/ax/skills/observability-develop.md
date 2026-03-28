@@ -108,6 +108,41 @@ Functorium 프레임워크는 관측성 **수집**에 강합니다. `[GenerateOb
 4. **가설 수립** — DB N+1? 캐시 미스? 외부 API 지연?
 5. **실험** — 개선 적용 후 기준선 대비 비교
 
+## 관측성 필드 체계
+
+Functorium Source Generator가 자동 수집하는 필드입니다.
+
+### 요청/응답 필드
+
+| 필드 | 설명 | 예시 |
+|------|------|------|
+| `request.layer` | 아키텍처 레이어 | `"application"`, `"adapter"` |
+| `request.category.name` | 요청 카테고리 | `"usecase"`, `"repository"`, `"event"` |
+| `request.category.type` | CQRS 타입 | `"command"`, `"query"`, `"event"` |
+| `request.handler.name` | Handler 클래스 이름 | `"CreateProductCommand"` |
+| `request.handler.method` | Handler 메서드 이름 | `"Handle"`, `"GetById"` |
+| `response.status` | 응답 상태 | `"success"`, `"failure"` |
+| `response.elapsed` | 처리 시간(초) | Histogram instrument로 기록 |
+
+### 에러 분류 체계
+
+| `error.type` | 분류 | 설명 | 알림 대응 |
+|-------------|------|------|----------|
+| `expected` | 비즈니스 오류 | 도메인 규칙 위반, 검증 실패 | 모니터링만 (정상 흐름) |
+| `exceptional` | 시스템 오류 | DB 연결 실패, 외부 API 타임아웃 | P0/P1 알림 (즉시 대응) |
+| `aggregate` | 복합 오류 | 여러 검증 실패 누적 | 모니터링 (Apply 패턴 결과) |
+
+`error.code`는 도메인 특화 오류 코드입니다. 예: `"ProductName.Required"`, `"Order.InvalidTransition"`.
+
+### Meter/Instrument 네이밍
+
+| 구성 요소 | 패턴 | 예시 |
+|-----------|------|------|
+| Meter Name | `{service.namespace}.{layer}[.{category}]` | `AiGovernance.application.usecase` |
+| Instrument Name | `{layer}.{category}[.{cqrs}].{type}` | `application.usecase.command.duration` |
+
+점 구분, 소문자, 복수형을 사용합니다.
+
 ## 핵심 원칙
 
 - **수집은 시작일 뿐** — instrument → analyze → alert → act 전체 사이클 설계
