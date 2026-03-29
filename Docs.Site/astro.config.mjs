@@ -503,6 +503,15 @@ export default defineConfig({
             ],
           },
           {
+            label: '의사결정 기록',
+            link: '/decisions/',
+            icon: 'list-format',
+            items: [
+              { label: '의사결정 기록', slug: 'decisions' },
+              { autogenerate: { directory: 'decisions' } },
+            ],
+          },
+          {
             label: 'AX',
             link: '/ax/',
             icon: 'star',
