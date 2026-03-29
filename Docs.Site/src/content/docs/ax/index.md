@@ -3,7 +3,12 @@ title: "AX (AI Transformation)"
 description: "PRD 작성부터 테스트까지, DDD 개발 전 과정을 AI가 안내합니다"
 ---
 
-AX는 Functorium 프레임워크 기반 DDD 프로젝트의 전체 개발 워크플로를 AI가 안내하는 Claude Code 플러그인입니다.
+AX는 Functorium 프레임워크 기반 DDD 프로젝트의 전체 개발 워크플로를 AI가 안내하는 Claude Code 플러그인 시스템입니다. 2개의 플러그인으로 구성됩니다.
+
+| 플러그인 | 버전 | 역할 |
+|---------|------|------|
+| **functorium-develop** | v0.4.0 | PRD → 아키텍처 → Domain → Application → Adapter → Observability → Test 개발 워크플로 |
+| **release-note** | v1.0.0 | 릴리스 노트 자동 생성 (데이터 수집 → 분석 → 작성 → 검증) |
 
 ## 왜 필요한가
 
@@ -53,7 +58,7 @@ project-spec -> architecture-design -> domain-develop -> application-develop -> 
 
 ## 핵심 구성 요소
 
-### 8개 스킬
+### functorium-develop — 9개 스킬
 
 스킬은 정해진 워크플로를 따라 문서와 코드를 단계적으로 생성하는 자동화 도구입니다.
 
@@ -68,18 +73,42 @@ project-spec -> architecture-design -> domain-develop -> application-develop -> 
 | [test-develop](./skills/test-develop/) | 테스트 | "테스트 작성해줘", "통합 테스트 추가해줘" |
 | [domain-review](./skills/domain-review/) | 리뷰 | "DDD 리뷰해줘", "아키텍처 리뷰해줘" |
 
-### 6개 전문 에이전트
+### release-note — 릴리스 노트 자동화
 
-에이전트는 특정 레이어의 전문가로, 설계 결정에 대한 심층 대화가 필요할 때 활용합니다. 스킬이 "자동 워크플로"라면, 에이전트는 "전문가 상담"입니다.
+C# 스크립트 기반으로 릴리스 노트를 자동 생성합니다.
 
-| 에이전트 | 전문 영역 |
-|---------|-----------|
-| product-analyst | PRD 작성, 요구사항 분석, 사용자 스토리, Aggregate 경계 도출 |
-| domain-architect | 유비쿼터스 언어, Aggregate 경계, 타입 전략 |
-| application-architect | CQRS 설계, 포트 식별, FinT 합성, CtxEnricher 3-Pillar 설계 |
-| adapter-engineer | Repository, Endpoint, DI 등록, CtxEnricherPipeline 통합 |
-| observability-engineer | KPI→메트릭 매핑, 대시보드, 알림, ctx.* 전파, 분산 추적 |
-| test-engineer | 단위/통합/아키텍처 테스트, ctx 3-Pillar 스냅샷 테스트 |
+| 스킬 | 역할 | 트리거 예시 |
+|------|------|------------|
+| generate | 5-Phase 릴리스 노트 생성 | "릴리스 노트 생성해줘 v1.2.0" |
+
+**5-Phase 워크플로:**
+
+| Phase | 목표 | 주요 도구 |
+|-------|------|----------|
+| 1. 환경 검증 | Git/SDK 확인, Base Branch 결정 | `git rev-parse` |
+| 2. 데이터 수집 | 컴포넌트/API 변경 분석 | `dotnet AnalyzeAllComponents.cs`, `dotnet ExtractApiChanges.cs` |
+| 3. 커밋 분석 | Breaking Changes 감지, 기능 추출 | Git Diff 분석, GitHub Issue/PR 참조 |
+| 4. 릴리스 노트 작성 | TEMPLATE.md 기반 문서 작성 | Uber 파일(`all-api-changes.txt`) 검증 |
+| 5. 검증 | 품질/정확성 검증 | `validate-release-notes.ps1` |
+
+**핵심 원칙:**
+- Uber 파일에 없는 API는 절대 문서화하지 않음
+- 모든 주요 기능에 "Why this matters" 섹션 필수
+- Breaking Changes는 Git Diff 분석 우선
+
+### 7개 전문 에이전트
+
+에이전트는 특정 영역의 전문가로, 설계 결정에 대한 심층 대화가 필요할 때 활용합니다. 스킬이 "자동 워크플로"라면, 에이전트는 "전문가 상담"입니다.
+
+| 에이전트 | 플러그인 | 전문 영역 |
+|---------|---------|-----------|
+| product-analyst | functorium-develop | PRD 작성, 요구사항 분석, 사용자 스토리, Aggregate 경계 도출 |
+| domain-architect | functorium-develop | 유비쿼터스 언어, Aggregate 경계, 타입 전략 |
+| application-architect | functorium-develop | CQRS 설계, 포트 식별, FinT 합성, CtxEnricher 3-Pillar 설계 |
+| adapter-engineer | functorium-develop | Repository, Endpoint, DI 등록, CtxEnricherPipeline 통합 |
+| observability-engineer | functorium-develop | KPI→메트릭 매핑, 대시보드, 알림, ctx.* 전파, 분산 추적 |
+| test-engineer | functorium-develop | 단위/통합/아키텍처 테스트, ctx 3-Pillar 스냅샷 테스트 |
+| release-engineer | release-note | 릴리스 노트 생성, API 변경 감지, Breaking Changes 식별 |
 
 에이전트의 역할과 활용 예시는 [전문 에이전트](./agents/) 페이지에서 상세히 다룹니다.
 
@@ -105,6 +134,12 @@ PRD 작성해줘. AI 모델 거버넌스 플랫폼을 만들고 싶어.
 
 ```text
 도메인 구현해줘. 상품(Product) Aggregate를 설계하고 싶어.
+```
+
+릴리스 노트를 생성하려면:
+
+```text
+릴리스 노트 생성해줘 v1.2.0
 ```
 
 기존 코드가 있다면 리뷰부터:

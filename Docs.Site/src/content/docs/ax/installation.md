@@ -3,7 +3,12 @@ title: "설치 및 설정"
 description: "functorium-develop 플러그인 설치와 구조 안내"
 ---
 
-functorium-develop 플러그인은 프로젝트 로컬 플러그인으로 제공됩니다.
+AX는 2개의 프로젝트 로컬 플러그인으로 제공됩니다.
+
+| 플러그인 | 버전 | 역할 |
+|---------|------|------|
+| **functorium-develop** | v0.4.0 | DDD 개발 워크플로 (8 스킬 + 6 에이전트) |
+| **release-note** | v1.0.0 | 릴리스 노트 자동 생성 (1 스킬 + 1 에이전트) |
 
 ## 설치 방법
 
@@ -19,10 +24,17 @@ functorium-develop 플러그인은 프로젝트 로컬 플러그인으로 제공
         "source": "directory",
         "path": "./.claude/plugins/functorium-develop"
       }
+    },
+    "release-note": {
+      "source": {
+        "source": "directory",
+        "path": "./.claude/plugins/release-note"
+      }
     }
   },
   "enabledPlugins": {
-    "functorium-develop": true
+    "functorium-develop": true,
+    "release-note": true
   }
 }
 ```
@@ -32,7 +44,11 @@ functorium-develop 플러그인은 프로젝트 로컬 플러그인으로 제공
 ### 방법 2: CLI 플래그 (일시적)
 
 ```bash
+# DDD 개발 워크플로만
 claude --plugin-dir .claude/plugins/functorium-develop
+
+# 릴리스 노트 자동화만
+claude --plugin-dir .claude/plugins/release-note
 ```
 
 현재 세션에서만 유효합니다.
@@ -42,16 +58,17 @@ claude --plugin-dir .claude/plugins/functorium-develop
 플러그인이 정상 로드되면 다음과 같이 스킬을 호출할 수 있습니다:
 
 ```text
-도메인 구현해줘
+도메인 구현해줘                     # functorium-develop → domain-develop 스킬
+릴리스 노트 생성해줘 v1.2.0         # release-note → generate 스킬
 ```
-
-`domain-develop` 스킬이 자동으로 트리거됩니다.
 
 ## 플러그인 구조
 
+### functorium-develop
+
 ```
 .claude/plugins/functorium-develop/
-├── .claude-plugin/plugin.json      # 매니페스트
+├── .claude-plugin/plugin.json      # 매니페스트 (v0.4.0)
 ├── skills/                         # 8개 스킬
 │   ├── project-spec/               # PRD 작성
 │   ├── architecture-design/        # 아키텍처 설계
@@ -69,6 +86,32 @@ claude --plugin-dir .claude/plugins/functorium-develop
 │   ├── observability-engineer.md
 │   └── test-engineer.md
 └── README.md
+```
+
+### release-note
+
+```
+.claude/plugins/release-note/
+├── .claude-plugin/plugin.json      # 매니페스트 (v1.0.0)
+├── skills/
+│   └── generate/                   # 5-Phase 릴리스 노트 생성
+│       └── SKILL.md
+└── agents/
+    └── release-engineer.md         # 릴리스 노트 전문가 에이전트
+```
+
+이 플러그인은 `.release-notes/` 디렉터리의 C# 스크립트, 템플릿, 검증 도구를 활용합니다:
+
+```
+.release-notes/
+├── TEMPLATE.md                     # 릴리스 노트 템플릿
+├── validate-release-notes.ps1      # GitHub Release 크기 검증
+├── scripts/
+│   ├── AnalyzeAllComponents.cs     # 컴포넌트 분석
+│   ├── ExtractApiChanges.cs        # API 변경 추출
+│   ├── ApiGenerator.cs             # Public API 생성
+│   └── docs/                       # Phase별 상세 문서
+└── RELEASE-*.md                    # 생성된 릴리스 노트
 ```
 
 ### 스킬 구조
