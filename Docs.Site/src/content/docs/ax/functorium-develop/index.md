@@ -7,31 +7,15 @@ functorium-develop는 Functorium 프레임워크 기반 DDD 프로젝트의 7단
 
 ## 설치
 
-### settings.local.json (권장)
-
-`.claude/settings.local.json`에 다음을 추가합니다:
-
-```json
-{
-  "extraKnownMarketplaces": {
-    "functorium-develop": {
-      "source": {
-        "source": "directory",
-        "path": "./.claude/plugins/functorium-develop"
-      }
-    }
-  },
-  "enabledPlugins": {
-    "functorium-develop": true
-  }
-}
-```
-
-### CLI 플래그 (일시적)
-
 ```bash
-claude --plugin-dir .claude/plugins/functorium-develop
+# 단독 로드
+claude --plugin-dir ./.claude/plugins/functorium-develop
+
+# release-note 플러그인과 동시 로드
+claude --plugin-dir ./.claude/plugins/functorium-develop --plugin-dir ./.claude/plugins/release-note
 ```
+
+> `--plugin-dir`는 세션 단위로 플러그인을 로드합니다. `/skills`에서 `functorium-develop:{skill-name}` 형식으로 표시됩니다.
 
 ## 7단계 워크플로
 
