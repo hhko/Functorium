@@ -52,11 +52,11 @@ public sealed partial class Email : SimpleValueObject<string>
     // 실패한 모든 에러를 한꺼번에 수집합니다.
     public static Validation<Error, string> Validate(string? value) =>
         ValidationRules<Email>
-            .NotNull(value)          // → "DomainErrors.Email.Null"
-            .ThenNotEmpty()          // → "DomainErrors.Email.Empty"
-            .ThenMaxLength(MaxLength) // → "DomainErrors.Email.TooLong"
-            .ThenMatches(EmailRegex(), "Invalid email format")  // → "DomainErrors.Email.InvalidFormat"
-            .ThenNormalize(v => v.Trim().ToLowerInvariant());
+            .NotNull(value)             // → "DomainErrors.Email.Null"
+            .ThenNotEmpty()             // → "DomainErrors.Email.Empty"
+            .ThenNormalize(v => v.Trim().ToLowerInvariant())
+            .ThenMaxLength(MaxLength)   // → "DomainErrors.Email.TooLong"
+            .ThenMatches(EmailRegex(), "Invalid email format");  // → "DomainErrors.Email.InvalidFormat"
 }
 ```
 
