@@ -52,7 +52,7 @@ date: {DATE}
 {기능 설명 - What: 무엇을 하는가?}
 
 ```csharp
-{코드 샘플 - How: 어떻게 사용하는가?}
+{코드 예제 - How: 어떻게 사용하는가?}
 ```
 
 **Why this matters (왜 중요한가):**
@@ -70,7 +70,7 @@ date: {DATE}
 {기능 설명}
 
 ```csharp
-{코드 샘플}
+{코드 예제}
 ```
 
 **Why this matters (왜 중요한가):**
@@ -89,7 +89,7 @@ date: {DATE}
 {기능 설명}
 
 ```csharp
-{코드 샘플}
+{코드 예제}
 ```
 
 **Why this matters (왜 중요한가):**
@@ -154,7 +154,7 @@ dotnet add package {PackageName}.Testing --version {VERSION}
 - [ ] 모든 feat 커밋에 대한 기능 문서화
 - [ ] 모든 fix 커밋에 대한 버그 수정 문서화
 - [ ] 모든 기능에 "Why this matters" 섹션 포함
-- [ ] 모든 코드 샘플이 Uber 파일에서 검증됨
+- [ ] 모든 코드 예제이 Uber 파일에서 검증됨
 - [ ] 커밋 SHA 주석 추가
 
 참조 문서:

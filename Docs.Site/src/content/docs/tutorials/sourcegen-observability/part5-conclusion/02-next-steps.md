@@ -280,7 +280,7 @@ public class CreateUserRequestValidator
 | 소스 생성기 쿡북 | [github.com/dotnet/roslyn/blob/main/docs/features/source-generators.cookbook.md](https://github.com/dotnet/roslyn/blob/main/docs/features/source-generators.cookbook.md) |
 | .NET 블로그 | [devblogs.microsoft.com/dotnet](https://devblogs.microsoft.com/dotnet) |
 
-### GitHub 샘플
+### GitHub 예제
 
 | 프로젝트 | 설명 |
 |----------|------|

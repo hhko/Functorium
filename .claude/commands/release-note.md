@@ -127,13 +127,13 @@ dotnet ExtractApiChanges.cs
 1. **템플릿 복사**: `.release-notes/TEMPLATE.md`를 `RELEASE-$ARGUMENTS.md`로 복사
 2. **placeholder 교체**: `{VERSION}`, `{DATE}` 등을 실제 값으로 교체
 3. **섹션 채우기**: Phase 3 분석 결과를 바탕으로 각 섹션 작성
-4. **API 검증**: 모든 코드 샘플을 Uber 파일에서 검증
+4. **API 검증**: 모든 코드 예제을 Uber 파일에서 검증
 5. **주석 정리**: 템플릿 가이드 주석 삭제
 
 ### 작성 원칙 (필수 준수)
 
 1. **정확성 우선**: Uber 파일에 없는 API는 절대 문서화하지 않음
-2. **코드 샘플 필수**: 모든 주요 기능에 실행 가능한 코드 샘플 포함
+2. **코드 예제 필수**: 모든 주요 기능에 실행 가능한 코드 예제 포함
 3. **추적성**: 커밋 SHA를 주석으로 포함 (`<!-- 관련 커밋: SHA -->`)
 4. **가치 전달 필수**: 모든 주요 기능에 **"Why this matters (왜 중요한가):"** 섹션 포함
 
@@ -141,7 +141,7 @@ dotnet ExtractApiChanges.cs
 
 ### API 검증
 
-코드 샘플 작성 전 반드시 Uber 파일에서 API 존재 여부를 확인합니다:
+코드 예제 작성 전 반드시 Uber 파일에서 API 존재 여부를 확인합니다:
 
 ```bash
 grep -n "MethodName" .analysis-output/api-changes-build-current/all-api-changes.txt
@@ -152,7 +152,7 @@ grep -n "MethodName" .analysis-output/api-changes-build-current/all-api-changes.
 - [ ] 프론트매터 포함됨
 - [ ] 모든 필수 섹션 포함됨
 - [ ] 모든 주요 기능에 "Why this matters" 섹션 포함됨
-- [ ] 모든 코드 샘플이 Uber 파일에서 검증됨
+- [ ] 모든 코드 예제이 Uber 파일에서 검증됨
 - [ ] 중간 결과 저장됨
 
 ### 중간 결과 저장 (필수)
@@ -172,7 +172,7 @@ grep -n "MethodName" .analysis-output/api-changes-build-current/all-api-changes.
 1. **프론트매터 존재**: YAML 프론트매터 포함 여부
 2. **필수 섹션 존재**: 개요, Breaking Changes, 새로운 기능, 설치
 3. **"Why this matters" 섹션 존재**: 모든 주요 기능에 가치 설명 포함
-4. **API 정확성**: 모든 코드 샘플이 Uber 파일에서 검증됨
+4. **API 정확성**: 모든 코드 예제이 Uber 파일에서 검증됨
 5. **Breaking Changes 완전성**: Git Diff 결과와 대조
 
 **검증 명령**:

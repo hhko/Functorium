@@ -76,7 +76,7 @@ cd ..
 - 모든 문서화된 API는 분석 결과에 존재해야 합니다
 - API를 임의로 만들어내지 않습니다
 - 모든 기능은 커밋/PR로 추적 가능해야 합니다
-- 코드 샘플은 `all-api-changes.txt`에서 검증합니다
+- 코드 예제은 `all-api-changes.txt`에서 검증합니다
 
 ### Breaking Changes 감지
 

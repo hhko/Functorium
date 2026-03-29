@@ -46,7 +46,7 @@ dotnet ExtractApiChanges.cs
 
 이 스크립트는 세 가지 핵심 결과물을 생성합니다.
 
-**Uber API 파일** (`all-api-changes.txt`)은 이 워크플로우의 **단일 진실 소스(Single Source of Truth)입니다.** `.analysis-output/api-changes-build-current/` 디렉터리에 생성되며, 현재 빌드의 모든 Public API 정의가 정확한 매개변수 이름과 타입과 함께 담겨 있습니다. Phase 4에서 코드 샘플을 작성할 때, 이 파일에 없는 API는 문서화하지 않습니다. 존재하지 않는 API를 릴리스 노트에 포함하는 것을 방지하는 가장 중요한 장치입니다.
+**Uber API 파일** (`all-api-changes.txt`)은 이 워크플로우의 **단일 진실 소스(Single Source of Truth)입니다.** `.analysis-output/api-changes-build-current/` 디렉터리에 생성되며, 현재 빌드의 모든 Public API 정의가 정확한 매개변수 이름과 타입과 함께 담겨 있습니다. Phase 4에서 코드 예제을 작성할 때, 이 파일에 없는 API는 문서화하지 않습니다. 존재하지 않는 API를 릴리스 노트에 포함하는 것을 방지하는 가장 중요한 장치입니다.
 
 **API 변경 Diff** (`api-changes-diff.txt`)는 `.api` 폴더의 Git diff로, Breaking Changes를 자동 감지하는 데 사용됩니다. 삭제되거나 시그니처가 변경된 API를 객관적으로 식별할 수 있어, 커밋 메시지만으로는 놓칠 수 있는 Breaking Changes를 잡아냅니다.
 

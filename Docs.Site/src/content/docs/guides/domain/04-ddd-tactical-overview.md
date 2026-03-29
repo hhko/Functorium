@@ -803,7 +803,7 @@ public void Create_ShouldSucceed_WhenEmailIsValid()
 
 ## 실전 예제 프로젝트
 
-LayeredArch 샘플 프로젝트에서 실제 구현을 확인할 수 있습니다:
+LayeredArch 예제 프로젝트에서 실제 구현을 확인할 수 있습니다:
 
 | 개념 | 예제 파일 |
 |------|----------|

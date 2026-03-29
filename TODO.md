@@ -120,12 +120,12 @@ Functorium 프레임워크 제약
 
 
 ---
-- [x] 샘플에 하나의 트랜잭션에 복수개 aggregate roots 추가
+- [x] 예제에 하나의 트랜잭션에 복수개 aggregate roots 추가
 - [x] 하나의 트랜잭션에 복수개 aggregate roots cqrs 튜토리얼
 - [x] 하나의 query에 복수개 aggregate roots cqrs 튜토리얼
 - [x] 메일 고유성 개선
 - [x] 도메인 서비스 설계 원칙 개선(`순수 -> Stateless (I/O 허용)`)
-- [x] 아키텍처 테스트 샘플 추가
+- [x] 아키텍처 테스트 예제 추가
 - [x] 아키텍처 테스트 재사용 개선: domain, application
 - [x] application 레이어 도메인 유효성 반영
 - [x] application 레이어 도메인 유효성 entity id
@@ -2042,7 +2042,7 @@ SmartEnum Protocol 선택 기준 문서화
       |-------------------------|----------------------|
       | data-collection.md      | 입력 데이터 위치와 구조 설명     |
       | commit-analysis.md      | 커밋 → 기능 변환 방법        |
-      | api-documentation.md    | API 검증 및 코드 샘플 작성 규칙 |
+      | api-documentation.md    | API 검증 및 코드 예제 작성 규칙 |
       | writing-guidelines.md   | 출력 문서 템플릿과 스타일       |
       | validation-checklist.md | 품질 검증 체크리스트          |
     ```

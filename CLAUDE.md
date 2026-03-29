@@ -9,7 +9,7 @@
 |-------------|---------------|------|
 | `Functorium.slnx` | Src/, Tests/ | 핵심 라이브러리 개발 (기본) |
 | `Docs.Site/.../tutorials/<name>/<PascalName>.slnx` | 튜토리얼별 개별 솔루션 (6개) | 문서 내 실습 코드 빌드 |
-| `Docs.Site/.../samples/<name>/<PascalName>.slnx` | 샘플별 개별 솔루션 (3개) | 문서 내 실습 코드 빌드 |
+| `Docs.Site/.../samples/<name>/<PascalName>.slnx` | 예제별 개별 솔루션 (3개) | 문서 내 실습 코드 빌드 |
 | `Docs.Site/.../quickstart/Quickstart.slnx` | 퀵스타트 솔루션 (1개) | 문서 내 실습 코드 빌드 |
 
 - 빌드: `dotnet build Functorium.slnx`

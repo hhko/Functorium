@@ -929,7 +929,7 @@ SingleHost의 `DomainServiceArchitectureRuleTests`는 `RequireNoInstanceFields()
 | `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Domain/Services/OrderCreditCheckServiceTests.cs` | 순수 패턴 테스트 |
 | `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Application/Orders/CreateOrderWithCreditCheckCommandTests.cs` | Usecase 테스트 |
 
-### designing-with-types 샘플 (Repository 패턴)
+### designing-with-types 예제 (Repository 패턴)
 
 | 파일 | 설명 |
 |------|------|

@@ -413,7 +413,7 @@ public sealed class ContactEmailCheckService : IDomainService
 - `CheckNotExists`는 **순수 함수**입니다 — I/O와 도메인 판단을 분리합니다
 - LINQ `from ... in`으로 `FinT<IO, bool>`과 `Fin<Unit>`을 자연스럽게 합성합니다 (`FinTLinqExtensions.Fin`이 `FinT → Fin` SelectMany를 제공)
 
-> **Functorium 기본 패턴과의 차이:** Functorium의 `IDomainService`는 순수 함수(외부 I/O 없음)를 기본으로 합니다. ecommerce-ddd 샘플의 `OrderCreditCheckService`는 소규모 교차 데이터(주문 ↔ 고객)를 Usecase가 로드하여 순수 Service에 전달합니다. 반면 이메일 고유성 검증은 전체 연락처에 대한 DB 쿼리가 필수이므로, Evans 원칙에 따라 Service가 Repository를 직접 사용합니다.
+> **Functorium 기본 패턴과의 차이:** Functorium의 `IDomainService`는 순수 함수(외부 I/O 없음)를 기본으로 합니다. ecommerce-ddd 예제의 `OrderCreditCheckService`는 소규모 교차 데이터(주문 ↔ 고객)를 Usecase가 로드하여 순수 Service에 전달합니다. 반면 이메일 고유성 검증은 전체 연락처에 대한 DB 쿼리가 필수이므로, Evans 원칙에 따라 Service가 Repository를 직접 사용합니다.
 
 ## Repository Interface
 

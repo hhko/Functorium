@@ -52,7 +52,7 @@ public static class ProductFilterBuilder
 ```
 DynamicFilter/
 ├── Product.cs                          # 상품 레코드
-├── SampleProducts.cs                   # 샘플 데이터
+├── SampleProducts.cs                   # 예제 데이터
 ├── SearchProductsRequest.cs            # 검색 요청 DTO
 ├── ProductFilterBuilder.cs             # 동적 필터 빌더
 ├── Specifications/

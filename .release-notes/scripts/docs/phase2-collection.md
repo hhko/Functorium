@@ -71,7 +71,7 @@ dotnet ExtractApiChanges.cs
 - 모든 API 참조의 **단일 진실 소스**
 - 현재 빌드의 완전한 API 정의
 - 정확한 매개변수 이름과 타입을 포함한 메서드 시그니처
-- **코드 샘플 검증에 중요** - 이 파일에 없으면 문서화하지 않습니다
+- **코드 예제 검증에 중요** - 이 파일에 없으면 문서화하지 않습니다
 
 **API 변경 요약** (`.analysis-output/api-changes-build-current/api-changes-summary.md`)
 

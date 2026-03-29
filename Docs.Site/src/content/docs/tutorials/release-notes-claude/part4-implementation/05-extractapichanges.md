@@ -139,7 +139,7 @@ foreach (var projectFile in projectFiles)
 
 ### Step 4: Uber 파일 생성
 
-모든 어셈블리의 API를 하나의 파일(`all-api-changes.txt`)로 합칩니다. 단일 파일로 합치는 이유는 검증을 단순화하기 위해서입니다. Phase 4에서 릴리스 노트를 작성할 때, 코드 샘플의 API가 정확한지 이 파일 하나만 확인하면 됩니다.
+모든 어셈블리의 API를 하나의 파일(`all-api-changes.txt`)로 합칩니다. 단일 파일로 합치는 이유는 검증을 단순화하기 위해서입니다. Phase 4에서 릴리스 노트를 작성할 때, 코드 예제의 API가 정확한지 이 파일 하나만 확인하면 됩니다.
 
 ```csharp
 AnsiConsole.MarkupLine("[bold]Step 4[/] [dim]Creating Uber API file...[/]");

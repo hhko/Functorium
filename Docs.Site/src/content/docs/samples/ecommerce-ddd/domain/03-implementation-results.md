@@ -585,7 +585,7 @@ public void ValidateCreditLimitWithExistingOrders_ReturnsFail_WhenTotalExceedsLi
 | 재고 불변식 | 11. 재고 부족 | `InsufficientStock` 에러 | `IsFail` |
 | 신용한도 규칙 | 12. 신용한도 초과 | `CreditLimitExceeded` 에러 | `IsFail` |
 
-지금까지 개별 시나리오를 통해 도메인 모델의 동작을 검증했습니다. 이제 이 샘플에서 DDD 전술적 패턴과 함수형 타입이 어떻게 협력하여 비즈니스 규칙을 보장하는지 종합적으로 정리합니다.
+지금까지 개별 시나리오를 통해 도메인 모델의 동작을 검증했습니다. 이제 이 예제에서 DDD 전술적 패턴과 함수형 타입이 어떻게 협력하여 비즈니스 규칙을 보장하는지 종합적으로 정리합니다.
 
 ## DDD 전술적 패턴의 역할
 

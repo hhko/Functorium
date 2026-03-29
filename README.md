@@ -318,16 +318,13 @@ Functorium은 OpenTelemetry 기반의 통합 관측성(Logging, Metrics, Tracing
 | [Automating ObservabilityCode with SourceGenerator](./Docs.Site/src/content/docs/tutorials/sourcegen-observability/index.md) | Source Generator, Observable wrapper | — |
 | [Automating ReleaseNotes with ClaudeCode and .NET 10](./Docs.Site/src/content/docs/tutorials/release-notes-claude/index.md) | AI 자동화, 릴리스 노트 | — |
 
-### 샘플 & Host 예제
+### 예제
 
-| 샘플 | 범위 | Aggregates | 핵심 패턴 |
+| 예제 | 범위 | Aggregates | 핵심 패턴 |
 |------|------|------------|-----------|
 | [Designing with Types](./Docs.Site/src/content/docs/samples/designing-with-types/index.md) | Domain | 1 | VO, Union, Composite, Specification |
 | [E-Commerce DDD](./Docs.Site/src/content/docs/samples/ecommerce-ddd/index.md) | Domain + Application | 5 | CQRS, EventHandler, DomainService, ApplyT |
 | [AI Model Governance](./Docs.Site/src/content/docs/samples/ai-model-governance/index.md) | Domain + Application + Adapter | 4 | EfCore/Dapper/InMemory, FastEndpoints, IO.Retry/Timeout/Fork/Bracket |
-
-- [01-SingleHost](./Tests.Hosts/01-SingleHost) — 단일 호스트 통합 테스트
-- [02-ObservabilityHost](./Tests.Hosts/02-ObservabilityHost) — Observability 통합 테스트
 
 ## 패키지 구성
 

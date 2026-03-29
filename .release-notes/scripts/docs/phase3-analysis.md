@@ -425,7 +425,7 @@ Phase 3: 커밋 분석 및 기능 추출 완료 ✓
    - 낮음: 버그 수정 (중요하지 않으면), 리팩토링, 문서, 테스트, 정리
 
 2. **API 검증:**
-   - `.analysis-output/api-changes-build-current/all-api-changes.txt` (Uber 파일)를 사용하여 모든 API 참조 및 코드 샘플 확인
+   - `.analysis-output/api-changes-build-current/all-api-changes.txt` (Uber 파일)를 사용하여 모든 API 참조 및 코드 예제 확인
 
 3. **Breaking Changes 검증:**
    - `api-changes-diff.txt`의 모든 삭제/변경 API가 문서화되었는지 확인

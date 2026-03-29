@@ -98,7 +98,7 @@ dotnet ExtractApiChanges.cs
     ├── phase3-api-mapping.md        # API와 커밋 매핑
     ├── phase4-draft.md              # 릴리스 노트 초안
     ├── phase4-api-references.md     # 사용된 API 목록
-    ├── phase4-code-samples.md       # 모든 코드 샘플
+    ├── phase4-code-samples.md       # 모든 코드 예제
     ├── phase5-validation-report.md  # 검증 결과 보고서
     └── phase5-api-validation.md     # API 검증 상세
 
@@ -125,7 +125,7 @@ Src/
 > **정확성 우선**: 모든 문서화된 API는 Uber 파일에 존재해야 합니다.
 > - API를 임의로 만들어내지 않습니다
 > - 모든 기능은 커밋/PR로 추적 가능해야 합니다
-> - 코드 샘플은 `all-api-changes.txt`에서 검증합니다
+> - 코드 예제은 `all-api-changes.txt`에서 검증합니다
 
 > **Breaking Changes는 Git Diff로 자동 감지합니다.**
 > - `.api` 폴더의 Git diff 분석 우선 (`api-changes-diff.txt`)

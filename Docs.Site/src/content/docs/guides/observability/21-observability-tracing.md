@@ -985,7 +985,7 @@ service=orderservice tags={"request.handler.name":"CreateOrderCommandHandler"}
 ### Trace 분석 워크플로우
 
 1. **문제 식별**: 메트릭에서 "P99 응답 시간 > 2초" 감지
-2. **샘플 Trace 조회**: 해당 시간대의 느린 Trace 검색
+2. **예제 Trace 조회**: 해당 시간대의 느린 Trace 검색
 3. **병목 구간 식별**: Span별 Duration 비교
 4. **근본 원인 파악**: 가장 오래 걸린 Span 확인
 5. **상세 조사**: 해당 Span의 태그와 로그 확인
@@ -998,7 +998,7 @@ service=orderservice tags={"request.handler.name":"CreateOrderCommandHandler"}
 
 **상황:** "주문 생성" API의 P99 응답 시간이 3초를 초과합니다.
 
-**단계 1: 느린 Trace 샘플 조회**
+**단계 1: 느린 Trace 예제 조회**
 
 Jaeger에서 다음 조건으로 검색:
 ```

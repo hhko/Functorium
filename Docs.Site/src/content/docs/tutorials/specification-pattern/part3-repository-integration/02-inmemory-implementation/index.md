@@ -63,7 +63,7 @@ InMemoryImpl/                            # 메인 프로젝트
 ├── Product.cs                           # 도메인 모델
 ├── IProductRepository.cs                # Repository 인터페이스
 ├── InMemoryProductRepository.cs         # InMemory 구현
-├── SampleProducts.cs                    # 샘플 데이터 (8개 상품)
+├── SampleProducts.cs                    # 예제 데이터 (8개 상품)
 ├── Specifications/
 │   ├── ProductInStockSpec.cs                   # 재고 있는 상품
 │   ├── ProductPriceRangeSpec.cs                # 가격 범위 상품

@@ -373,11 +373,11 @@ export default defineConfig({
             ],
           },
           {
-            label: '샘플',
+            label: '예제',
             link: '/samples/',
             icon: 'rocket',
             items: [
-              { label: 'Functorium 샘플', slug: 'samples' },
+              { label: 'Functorium 예제', slug: 'samples' },
               {
                 label: '타입으로 도메인 설계하기',
                 items: [

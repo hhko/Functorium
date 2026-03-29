@@ -118,7 +118,7 @@ Comparing: origin/release/1.0 -> HEAD
 
 Uber API 파일은 `.analysis-output/api-changes-build-current/all-api-changes.txt`에 생성됩니다. "Uber"라는 이름이 붙은 이유는 모든 어셈블리의 Public API를 **하나의 파일에** 통합했기 때문입니다.
 
-이 파일의 소비자는 **Phase 4와 Phase 5입니다.** Phase 4에서는 릴리스 노트에 포함할 코드 샘플이 실제 API와 일치하는지 확인하고, Phase 5에서는 문서화된 모든 API의 정확성을 최종 검증합니다. 단일 진실 소스(Single Source of Truth) 역할을 합니다.
+이 파일의 소비자는 **Phase 4와 Phase 5입니다.** Phase 4에서는 릴리스 노트에 포함할 코드 예제이 실제 API와 일치하는지 확인하고, Phase 5에서는 문서화된 모든 API의 정확성을 최종 검증합니다. 단일 진실 소스(Single Source of Truth) 역할을 합니다.
 
 ```csharp
 // All API Changes - Uber File

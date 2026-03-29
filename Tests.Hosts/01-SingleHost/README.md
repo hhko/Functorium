@@ -1,7 +1,7 @@
 # SingleHost
 
 Functorium 프레임워크의 **Layered Architecture 레퍼런스 구현**이자 **테스트 차량(test vehicle)**이다.
-단일 ASP.NET Core 프로세스에 모든 레이어를 포함하는 전자상거래 샘플 애플리케이션으로, 프레임워크가 제공하는 아키텍처 패턴(AggregateRoot, ValueObject, Specification, Pipeline, CQRS 등)을 검증한다.
+단일 ASP.NET Core 프로세스에 모든 레이어를 포함하는 전자상거래 예제 애플리케이션으로, 프레임워크가 제공하는 아키텍처 패턴(AggregateRoot, ValueObject, Specification, Pipeline, CQRS 등)을 검증한다.
 
 ## 프로젝트 구조
 

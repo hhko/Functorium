@@ -350,7 +350,7 @@ public sealed class InventoryTransferService : IDomainService
 
 ## 예제 4: 실전 — 연락처 도메인 전체 구현
 
-앞의 세 예제에서 다룬 모든 패턴이 하나의 도메인에 결합됩니다. [타입으로 도메인 설계하기](../samples/designing-with-types/) 샘플의 비즈니스 요구사항을 그대로 프롬프트로 전달하여, 전체 도메인 모델을 자동 생성합니다. 9개 Value Object, 2개 Union, 1개 Child Entity, 1개 Aggregate, 1개 Domain Service, 1개 Specification — 그리고 114개 단위 테스트까지 한 번의 스킬 호출로 만들어냅니다.
+앞의 세 예제에서 다룬 모든 패턴이 하나의 도메인에 결합됩니다. [타입으로 도메인 설계하기](../samples/designing-with-types/) 예제의 비즈니스 요구사항을 그대로 프롬프트로 전달하여, 전체 도메인 모델을 자동 생성합니다. 9개 Value Object, 2개 Union, 1개 Child Entity, 1개 Aggregate, 1개 Domain Service, 1개 Specification — 그리고 114개 단위 테스트까지 한 번의 스킬 호출로 만들어냅니다.
 
 ### 프롬프트
 
@@ -381,7 +381,7 @@ public sealed class InventoryTransferService : IDomainService
 
 ### 기대 결과
 
-이 프롬프트는 [타입으로 도메인 설계하기](../samples/designing-with-types/) 샘플과 동일한 도메인 모델을 생성합니다:
+이 프롬프트는 [타입으로 도메인 설계하기](../samples/designing-with-types/) 예제와 동일한 도메인 모델을 생성합니다:
 
 | 빌딩블록 | 타입 | 설명 |
 |----------|------|------|
@@ -396,7 +396,7 @@ public sealed class InventoryTransferService : IDomainService
 
 ### 왜 이 예제가 중요한가
 
-이 예제는 단순한 CRUD가 아닙니다. "연락 수단 없는 연락처는 존재할 수 없다"는 규칙은 Union 타입으로, "인증은 단방향"이라는 규칙은 상태 전이로, "삭제된 연락처 수정 불가"는 Aggregate 가드 조건으로 각각 타입 시스템에 인코딩됩니다. 잘못된 상태가 컴파일 타임에 차단되는 것을 확인하려면, [타입으로 도메인 설계하기](../samples/designing-with-types/) 샘플의 전체 설계 과정을 참조하십시오.
+이 예제는 단순한 CRUD가 아닙니다. "연락 수단 없는 연락처는 존재할 수 없다"는 규칙은 Union 타입으로, "인증은 단방향"이라는 규칙은 상태 전이로, "삭제된 연락처 수정 불가"는 Aggregate 가드 조건으로 각각 타입 시스템에 인코딩됩니다. 잘못된 상태가 컴파일 타임에 차단되는 것을 확인하려면, [타입으로 도메인 설계하기](../samples/designing-with-types/) 예제의 전체 설계 과정을 참조하십시오.
 
 ## 참고 자료
 
@@ -421,6 +421,6 @@ public sealed class InventoryTransferService : IDomainService
 - [도메인 서비스](../guides/domain/09-domain-services/)
 - [단위 테스트](../guides/testing/15a-unit-testing/)
 
-### 실전 샘플
+### 실전 예제
 
 - [타입으로 도메인 설계하기](../samples/designing-with-types/) -- 연락처 도메인 전체 설계/구현 과정

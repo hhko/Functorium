@@ -1438,7 +1438,7 @@ error.code = "Validation.InvalidEmail"
 | stats count() by hour(@timestamp)
 ```
 
-**단계 3: 관련 요청 샘플 확인**
+**단계 3: 관련 요청 예제 확인**
 ```
 error.code = "Validation.InvalidEmail"
 | head 10

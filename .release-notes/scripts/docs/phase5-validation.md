@@ -16,8 +16,8 @@
 ### API 정확성
 
 - [ ] API 변경 요약이 새 API 및 변경 식별에 사용됨
-- [ ] 모든 코드 샘플이 Uber 파일에서 검증된 API 사용
-- [ ] 모든 API 참조가 정확하고 완전하며 작동하는 코드 샘플 포함
+- [ ] 모든 코드 예제이 Uber 파일에서 검증된 API 사용
+- [ ] 모든 API 참조가 정확하고 완전하며 작동하는 코드 예제 포함
 - [ ] 허구의 기능이 문서화되지 않음
 
 ### 브레이킹 체인지 및 마이그레이션
@@ -37,7 +37,7 @@
 
 릴리스 노트 게시 전:
 
-### 1. 모든 코드 샘플을 Uber 파일과 교차 참조
+### 1. 모든 코드 예제을 Uber 파일과 교차 참조
 
 ```bash
 grep -n "MethodName" .analysis-output/api-changes-build-current/all-api-changes.txt

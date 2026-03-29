@@ -1,25 +1,25 @@
 ---
 title: "AI Model Governance"
-description: "EU AI Act 기반 AI 모델 거버넌스 플랫폼 -- functorium-develop 7단계 워크플로 풀스택 DDD 샘플"
+description: "EU AI Act 기반 AI 모델 거버넌스 플랫폼 -- functorium-develop 7단계 워크플로 풀스택 DDD 예제"
 ---
 
 ## 배경
 
-EU AI Act(2024년 발효, 2026년 전면 시행)는 AI 시스템을 위험 등급별로 분류하고, 고위험 AI에 대해 적합성 평가, 배포 후 모니터링, 인시던트 보고를 의무화합니다. 이 샘플은 EU AI Act의 핵심 요구사항을 단일 바운디드 컨텍스트 내에서 DDD 전술적 패턴과 Functorium 프레임워크로 구현합니다.
+EU AI Act(2024년 발효, 2026년 전면 시행)는 AI 시스템을 위험 등급별로 분류하고, 고위험 AI에 대해 적합성 평가, 배포 후 모니터링, 인시던트 보고를 의무화합니다. 이 예제는 EU AI Act의 핵심 요구사항을 단일 바운디드 컨텍스트 내에서 DDD 전술적 패턴과 Functorium 프레임워크로 구현합니다.
 
-## Functorium DDD 샘플 시리즈
+## Functorium DDD 예제 시리즈
 
-| 샘플 | 레이어 | 도메인 | 핵심 학습 |
+| 예제 | 레이어 | 도메인 | 핵심 학습 |
 |------|--------|--------|----------|
 | [designing-with-types](../designing-with-types/) | Domain | 연락처 관리 | Value Object, Aggregate Root |
 | [ecommerce-ddd](../ecommerce-ddd/) | Domain + Application | 전자상거래 | CQRS, FinT LINQ, Apply 패턴 |
-| **ai-model-governance** (본 샘플) | **Domain + Application + Adapter** | AI 모델 거버넌스 | **IO 고급 기능, 관측성, 풀스택 DDD** |
+| **ai-model-governance** (본 예제) | **Domain + Application + Adapter** | AI 모델 거버넌스 | **IO 고급 기능, 관측성, 풀스택 DDD** |
 
-본 샘플은 세 번째이자 마지막 샘플로, Domain/Application 레이어에서 다룬 패턴 위에 Adapter 레이어의 LanguageExt IO 고급 기능(Retry, Timeout, Fork, Bracket)과 OpenTelemetry 3-Pillar 관측성을 추가합니다.
+본 예제는 세 번째이자 마지막 예제로, Domain/Application 레이어에서 다룬 패턴 위에 Adapter 레이어의 LanguageExt IO 고급 기능(Retry, Timeout, Fork, Bracket)과 OpenTelemetry 3-Pillar 관측성을 추가합니다.
 
 ## functorium-develop 7단계 워크플로
 
-이 샘플은 functorium-develop 플러그인 v0.4.0의 7단계 워크플로를 따릅니다.
+이 예제는 functorium-develop 플러그인 v0.4.0의 7단계 워크플로를 따릅니다.
 
 | 단계 | 스킬 | 문서 | 설명 |
 |------|------|------|------|
