@@ -738,11 +738,17 @@ h2 {
 .text-problem {
   font-weight: 700;
   color: #ef4444;
+  display: block;
+  font-size: 1.15em;
+  margin-bottom: 0.35rem;
 }
 
 .text-solution {
   font-weight: 700;
   color: #7c4dff;
+  display: block;
+  font-size: 1.15em;
+  margin-bottom: 0.35rem;
 }
 
 [data-theme='light'] .text-problem {
