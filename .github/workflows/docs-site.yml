@@ -31,6 +31,9 @@ jobs:
       - name: Install Playwright Chromium
         working-directory: ./Docs.Site
         run: npx playwright install --with-deps chromium
+      - name: Warm up content file cache
+        working-directory: ./Docs.Site
+        run: find src/content/docs -name "*.md" -o -name "*.mdx" | wc -l
       - name: Build
         working-directory: ./Docs.Site
         run: npx astro build
