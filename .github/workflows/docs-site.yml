@@ -23,14 +23,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: ./Docs.Site/package-lock.json
+      - name: Install dependencies
+        working-directory: ./Docs.Site
+        run: npm ci
       - name: Install Playwright Chromium
         working-directory: ./Docs.Site
-        run: |
-          npm ci
-          npx playwright install --with-deps chromium
-      - uses: withastro/action@v5
+        run: npx playwright install --with-deps chromium
+      - name: Build
+        working-directory: ./Docs.Site
+        run: npx astro build
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: ./Docs.Site
+          path: ./Docs.Site/dist
 
   deploy:
     needs: build
