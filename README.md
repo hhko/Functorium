@@ -2,56 +2,58 @@
 
 [![Build](https://github.com/hhko/Functorium/actions/workflows/build.yml/badge.svg)](https://github.com/hhko/Functorium/actions/workflows/build.yml) [![Publish](https://github.com/hhko/Functorium/actions/workflows/publish.yml/badge.svg)](https://github.com/hhko/Functorium/actions/workflows/publish.yml)
 
-> **Functorium**은 **`functor + dominium`** 에 **`fun`** 을 더한 이름으로, 도메인 주도 설계(DDD)와 함수형 아키텍처 원칙을 기반으로 **개발과 운영 사이의 구조적 단절을 해소**하기 위한 통합 .NET 프레임워크입니다.
+**English** | **[한국어](./README.ko.md)**
 
-- 배움은 셀렘이다.
-- 배움은 겸손이다.
-- 배움은 이타심이다.
+> **Functorium** is named from **`functor + dominium`** with a touch of **`fun`**. It is a unified .NET framework built on Domain-Driven Design (DDD) and functional architecture principles, designed to **bridge the structural gap between development and operations**.
 
-**Functorium**은 단순한 설계 패턴 모음이 아니라, 요구사항 정의부터 운영 안정성 확보까지 일관된 철학으로 연결되는 구조적 접근 방식을 담고 있습니다.
+- Learning is excitement.
+- Learning is humility.
+- Learning is altruism.
 
-## 누구를 위한 프레임워크인가
+**Functorium** is not merely a collection of design patterns. It is a structural approach that connects everything from requirements definition to operational stability under a consistent philosophy.
 
-- **엔터프라이즈 DDD를 실천하는 .NET 팀** — 도메인 모델의 불변성과 합성 가능성을 코드 수준에서 보장하고 싶은 팀
-- **개발과 운영 사이의 언어 격차를 해소하고 싶은 팀** — 도메인 개념이 코드, 로그, 메트릭, 추적 정보에 일관되게 반영되어야 하는 팀
-- **함수형 DDD 아키텍처를 체계적으로 도입하려는 아키텍트** — LanguageExt + DDD + OpenTelemetry를 통합된 프레임워크로 사용하고 싶은 설계자
+## Who Is This Framework For
 
-## 설계 동기
+- **.NET teams practicing enterprise DDD** — Teams that want to guarantee domain model immutability and composability at the code level
+- **Teams seeking to bridge the language gap between development and operations** — Teams that need domain concepts consistently reflected across code, logs, metrics, and traces
+- **Architects systematically adopting functional DDD architecture** — Designers who want to use LanguageExt + DDD + OpenTelemetry as a unified framework
 
-### 풀고자 하는 문제
+## Design Motivation
 
-1. **도메인 로직에 예외와 암묵적 사이드 이펙트가 섞여 있다** — 비즈니스 규칙의 성공과 실패가 예외로 처리되어, 흐름을 예측하기 어렵고 합성이 불가능합니다.
-2. **개발 언어와 운영 언어가 분리되어 있다** — 기능 명세와 운영 요구가 서로 다른 체계로 관리되면서, 공통 언어가 정립되지 못하고 해석 차이가 누적됩니다.
-3. **Observability가 사후 보완으로 추가된다** — 로그, 메트릭, 추적 정보가 구현 완료 후 별도로 부착되면서, 장애 발생 시 원인 분석에 필요한 맥락이 누락됩니다.
+### Problems to Solve
 
-이는 단순히 프로세스의 문제가 아니라, **설계 철학과 구조의 문제**입니다.
+1. **Domain logic is mixed with exceptions and implicit side effects** — Business rule success and failure are handled via exceptions, making flow unpredictable and composition impossible.
+2. **Development language and operations language are separated** — Feature specifications and operational requirements are managed in different systems, preventing a common language from being established and accumulating interpretation gaps.
+3. **Observability is added as an afterthought** — Logs, metrics, and traces are attached separately after implementation is complete, causing critical context to be lost during incident analysis.
 
-Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다. 하지만 이들을 일관된 DDD 아키텍처로 통합하려면 에러 전파, 파이프라인 순서, 관측성 경계, 타입 제약에 대한 수백 가지 결정이 필요합니다. Functorium은 이 결정을 한 번, 일관되게 내립니다.
+These are not simply process problems — they are **problems of design philosophy and structure**.
 
-### 문제 해결 방향
+Mediator, LanguageExt, FluentValidation, and OpenTelemetry are each excellent. But integrating them into a coherent DDD architecture requires hundreds of decisions about error propagation, pipeline ordering, observability boundaries, and type constraints. Functorium makes these decisions once, consistently.
 
-1. **함수형 아키텍처로 도메인 로직을 순수하게 유지한다** — `Fin<T>`, `FinT<IO, T>`로 결과와 사이드 이펙트를 타입 수준에서 명시하고, `from ... in ... select` LINQ 합성으로 예외 없이 도메인 흐름을 조립합니다.
-2. **단일 도메인 언어(Ubiquitous Language)로 통합한다** — Bounded Context를 명확히 정의하고, 도메인 개념이 코드·문서·운영 지표에 일관되게 반영되는 구조를 만듭니다.
-3. **Observability를 설계 단계부터 내재화한다** — OpenTelemetry 기반 Logging, Metrics, Tracing이 유스케이스 파이프라인에 자동 적용되어, 도메인 흐름과 관측 정보가 함께 설계됩니다.
+### Solution Direction
 
-## 설계 철학
+1. **Keep domain logic pure through functional architecture** — Express results and side effects at the type level with `Fin<T>` and `FinT<IO, T>`, and compose domain flows without exceptions using `from ... in ... select` LINQ composition.
+2. **Unify with a single Ubiquitous Language** — Clearly define Bounded Contexts and create a structure where domain concepts are consistently reflected in code, documentation, and operational metrics.
+3. **Embed Observability from the design phase** — OpenTelemetry-based Logging, Metrics, and Tracing are automatically applied to the usecase pipeline, so domain flows and observability information are designed together.
 
-### 도메인 중심 설계
+## Design Philosophy
 
-모든 핵심 비즈니스 로직은 도메인 모델 안에 위치하며, 엔티티와 값 객체, 애그리게이트, 도메인 서비스는 명확한 책임을 가집니다. 공통 언어는 단순한 용어 정리가 아니라, 코드와 문서, 운영 지표에까지 반영되어야 하는 일관된 개념 체계입니다.
+### Domain-Centric Design
 
-**Value Object** — 값 기반 동등성과 불변성을 보장합니다:
+All core business logic resides within the domain model, and entities, value objects, aggregates, and domain services have clear responsibilities. The ubiquitous language is not just a glossary — it is a consistent conceptual system that must be reflected across code, documentation, and operational metrics.
+
+**Value Object** — Ensures value-based equality and immutability:
 
 ```csharp
 public abstract class AbstractValueObject : IValueObject, IEquatable<AbstractValueObject>
 {
     protected abstract IEnumerable<object> GetEqualityComponents();
 
-    // 값 기반 동등성, 캐시된 해시코드, ORM 프록시 처리
+    // Value-based equality, cached hash code, ORM proxy handling
 }
 ```
 
-**Entity / AggregateRoot** — Ulid 기반 ID와 도메인 이벤트 관리를 제공합니다:
+**Entity / AggregateRoot** — Provides Ulid-based IDs and domain event management:
 
 ```csharp
 public interface IEntityId<T> : IEquatable<T>, IComparable<T>
@@ -71,17 +73,17 @@ public abstract class AggregateRoot<TId> : Entity<TId>, IDomainEventDrain
 }
 ```
 
-**DomainError** — 구조화된 에러 코드로 복구 가능성을 확보합니다:
+**DomainError** — Ensures recoverability through structured error codes:
 
 ```csharp
-// 에러 코드 자동 생성: "DomainErrors.Email.Empty"
+// Auto-generated error code: "DomainErrors.Email.Empty"
 DomainError.For<Email>(new Empty(), value, "Email cannot be empty");
 
-// 에러 코드 자동 생성: "DomainErrors.Password.TooShort"
+// Auto-generated error code: "DomainErrors.Password.TooShort"
 DomainError.For<Password>(new TooShort(MinLength: 8), value, "Password too short");
 ```
 
-**Domain Event** — Mediator 기반 Pub/Sub과 이벤트 추적을 통합합니다:
+**Domain Event** — Integrates Mediator-based Pub/Sub with event tracking:
 
 ```csharp
 public interface IDomainEvent : INotification
@@ -93,14 +95,14 @@ public interface IDomainEvent : INotification
 }
 ```
 
-### 함수형 아키텍처 전환
+### Functional Architecture
 
-핵심 도메인 로직은 순수 함수로 구성됩니다. 입력이 동일하면 항상 동일한 출력을 반환하는 구조를 유지함으로써, 로직은 예측 가능하고 테스트하기 쉬운 형태가 됩니다. 사이드 이펙트(데이터베이스, 외부 API, 메시징, 파일 I/O)는 도메인 로직 바깥에서 처리됩니다.
+Core domain logic is composed of pure functions. By maintaining a structure where identical inputs always produce identical outputs, the logic becomes predictable and easy to test. Side effects (database, external APIs, messaging, file I/O) are handled outside the domain logic. The `IO` monad provides built-in advanced features such as Timeout, Retry (exponential backoff), Fork (parallel execution), and Bracket (resource lifecycle management), enabling type-safe fault tolerance configuration for external service calls.
 
-**`Fin<T>`, `FinT<IO, T>`** — 예외 대신 명시적 결과 타입으로 오류를 처리합니다. Command 경로의 Repository는 `FinT<IO, T>`를 반환하여 사이드 이펙트를 명시적으로 표현합니다:
+**`Fin<T>`, `FinT<IO, T>`** — Handles errors with explicit result types instead of exceptions. The Command path Repository returns `FinT<IO, T>` to explicitly express side effects:
 
 ```csharp
-// Command: IRepository — Aggregate Root 단위 CRUD, EF Core로 변경 추적과 트랜잭션 관리
+// Command: IRepository — Per-Aggregate Root CRUD, change tracking and transaction management via EF Core
 public interface IRepository<TAggregate, TId> : IObservablePort
     where TAggregate : AggregateRoot<TId>
     where TId : struct, IEntityId<TId>
@@ -110,7 +112,7 @@ public interface IRepository<TAggregate, TId> : IObservablePort
     FinT<IO, TAggregate> Update(TAggregate aggregate);
     FinT<IO, int> Delete(TId id);
 
-    // 벌크 연산
+    // Bulk operations
     FinT<IO, Seq<TAggregate>> CreateRange(IReadOnlyList<TAggregate> aggregates);
     FinT<IO, Seq<TAggregate>> GetByIds(IReadOnlyList<TId> ids);
     FinT<IO, Seq<TAggregate>> UpdateRange(IReadOnlyList<TAggregate> aggregates);
@@ -118,7 +120,7 @@ public interface IRepository<TAggregate, TId> : IObservablePort
 }
 ```
 
-**CQRS** — 쓰기와 읽기를 구조적으로 분리하여 각 경로에 최적화된 데이터 접근 전략을 적용합니다. Command는 `IRepository` + EF Core로 Aggregate 일관성과 트랜잭션을 보장하고, Query는 `IQueryPort` + Dapper로 Aggregate 재구성 없이 DTO를 직접 프로젝션합니다. 두 경로 모두 `FinResponse<T>`로 결과를 통합합니다:
+**CQRS** — Structurally separates write and read paths, applying optimized data access strategies for each. Command uses `IRepository` + EF Core for Aggregate consistency and transactions, while Query uses `IQueryPort` + Dapper for direct DTO projection without Aggregate reconstruction. Both paths unify results through `FinResponse<T>`:
 
 ```csharp
 // Command
@@ -135,7 +137,7 @@ public interface IQueryUsecase<in TQuery, TSuccess>
 ```
 
 ```csharp
-// Query: IQueryPort — Aggregate 재구성 없이 DTO 직접 프로젝션, Dapper로 경량 SQL 매핑
+// Query: IQueryPort — Direct DTO projection without Aggregate reconstruction, lightweight SQL mapping via Dapper
 public interface IQueryPort<TEntity, TDto> : IQueryPort
 {
     FinT<IO, PagedResult<TDto>> Search(
@@ -152,16 +154,16 @@ public interface IQueryPort<TEntity, TDto> : IQueryPort
 
 | | Command (IRepository) | Query (IQueryPort) |
 |------|----------------------|-------------------|
-| **목적** | Aggregate Root 생명주기 관리 | 읽기 전용 DTO 프로젝션 |
-| **구현** | EF Core — 변경 추적, 트랜잭션, 도메인 이벤트 | Dapper — 순수 SQL, 경량 매핑 |
-| **Specification** | `PropertyMap` → EF Core LINQ 변환 | `DapperSpecTranslator` → SQL WHERE 변환 |
-| **페이지네이션** | — | Offset/Limit, Cursor (keyset), Streaming |
+| **Purpose** | Aggregate Root lifecycle management | Read-only DTO projection |
+| **Implementation** | EF Core — change tracking, transactions, domain events | Dapper — pure SQL, lightweight mapping |
+| **Specification** | `PropertyMap` → EF Core LINQ translation | `DapperSpecTranslator` → SQL WHERE translation |
+| **Pagination** | — | Offset/Limit, Cursor (keyset), Streaming |
 
 ### Observability by Design
 
-운영 안정성은 배포 이후에 보완하는 것이 아니라, 설계 단계에서부터 고려됩니다. 구조화된 로그, 핵심 비즈니스 메트릭, 분산 추적 정보가 도메인 흐름과 함께 정의됩니다.
+Operational stability is considered from the design phase, not patched after deployment. From request to response, all Command/Query fields are **consistently recorded across all 3 Pillars** — Logging, Metrics, and Tracing. Developers do not need to write log code manually.
 
-**IObservablePort** — 모든 외부 의존성이 관측 가능한 포트로 추상화됩니다:
+**IObservablePort** — All external dependencies are abstracted as observable ports:
 
 ```csharp
 public interface IObservablePort
@@ -170,40 +172,47 @@ public interface IObservablePort
 }
 ```
 
-**ctx.* 3-Pillar Enrichment** — Source Generator가 Request/Response/DomainEvent의 프로퍼티를 `ctx.{snake_case}` 필드로 자동 변환하여, Logging/Tracing/Metrics에 비즈니스 컨텍스트를 동시 전파합니다. `[CtxTarget(CtxPillar.All)]`로 Metrics 태그를 opt-in할 수 있습니다.
+**ctx.* 3-Pillar Enrichment** — The Source Generator automatically transforms Request/Response/DomainEvent properties into `ctx.{snake_case}` fields, propagating business context simultaneously to Logging, Tracing, and Metrics. Metrics tags can be opted in with `[CtxTarget(CtxPillar.All)]`.
 
-**`[GenerateObservablePort]`** — Source Generator가 Adapter에 대한 Observable wrapper를 자동 생성하여, OpenTelemetry 기반의 Tracing/Logging/Metrics를 투명하게 제공합니다:
+**`[GenerateObservablePort]`** — The Source Generator automatically creates Observable wrappers for Adapters, transparently providing OpenTelemetry-based Tracing, Logging, and Metrics:
 
 ```csharp
-[GenerateObservablePort]  // → {ClassName}Observable 자동 생성 (예: OrderRepositoryObservable)
+[GenerateObservablePort]  // → Observable{ClassName} auto-generated (e.g., ObservableOrderRepository)
 public class OrderRepository : IRepository<Order, OrderId> { ... }
 ```
 
-**Usecase Pipeline** — 모든 유스케이스는 파이프라인을 통해 횡단 관심사를 처리합니다:
+**Automatic Error Classification** — Business rule violations (e.g., "insufficient stock") are classified as `expected`, system failures (`NullReferenceException`) as `exceptional`, and compound validation failures as `aggregate`. The `error.type` field allows separate querying of business errors and system failures in Seq/Grafana.
 
-| Pipeline | 역할 |
-|----------|------|
-| `CtxEnricherPipeline` | 비즈니스 컨텍스트(ctx.*)를 Logging/Tracing/Metrics에 동시 전파 |
-| `UsecaseExceptionPipeline` | 예외 → 구조화된 에러 변환 |
-| `UsecaseValidationPipeline` | FluentValidation 기반 입력 검증 |
-| `UsecaseCachingPipeline` | ICacheable 요청 캐싱. 캐시 히트 시 DB 라운드트립 없이 즉시 반환 |
-| `UsecaseLoggingPipeline` | 구조화된 로그 자동 기록 |
-| `UsecaseMetricsPipeline` | 유스케이스 메트릭 자동 수집 |
-| `UsecaseTracingPipeline` | 분산 추적 컨텍스트 전파 |
-| `UsecaseTransactionPipeline` | 트랜잭션 경계 관리 |
+**Usecase Pipeline** — Command and Query have different Pipeline configurations based on path characteristics:
 
-## 주요 핵심 기능
+> **Command (7 steps):** CtxEnricher → Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler
+>
+> **Query (8 steps):** CtxEnricher → Metrics → Tracing → Logging → Validation → Caching → Exception → Custom → Handler
 
-| 가치 | 제공 기능 |
-|------|----------|
-| **도메인 안전성** | Value Object 계층, Entity/AggregateRoot, Specification Pattern, 구조화된 에러 코드 |
-| **함수형 합성** | `Fin<T>`/`FinT<IO,T>` Discriminated Union, LINQ 합성, Bind/Apply 검증, CQRS 경로별 최적화 |
-| **자동화** | Source Generator (Observable Port, EntityId, CtxEnricher), Usecase Pipeline (8단계), 아키텍처 규칙 테스트 |
-| **관측성** | OpenTelemetry Logging/Metrics/Tracing 자동 적용, 구조화된 로그, 도메인-운영 언어 통합 |
+| Pipeline | Role | Scope |
+|----------|------|-------|
+| `CtxEnricherPipeline` | Propagate business context (ctx.*) to Logging/Tracing/Metrics simultaneously | Common |
+| `UsecaseMetricsPipeline` | Automatic usecase metrics collection | Common |
+| `UsecaseTracingPipeline` | Distributed tracing context propagation | Common |
+| `UsecaseLoggingPipeline` | Automatic structured log recording | Common |
+| `UsecaseValidationPipeline` | FluentValidation-based input validation | Common |
+| `UsecaseCachingPipeline` | ICacheable request caching | Query only |
+| `UsecaseExceptionPipeline` | Exception → structured error conversion | Common |
+| `UsecaseTransactionPipeline` | Transaction boundary + domain event publishing | Command only |
+
+## Key Features
+
+| Value | Features |
+|-------|----------|
+| **Domain Safety** | Value Object hierarchy (6 types + Union), Entity/AggregateRoot, Specification Pattern, structured error codes |
+| **Functional Composition** | `Fin<T>`/`FinT<IO,T>` Discriminated Union, LINQ composition, Bind/Apply validation, CQRS path-optimized |
+| **Advanced IO** | Timeout, Retry (exponential backoff), Fork (parallel execution), Bracket (resource lifecycle management) |
+| **Automation** | 5 Source Generators, Usecase Pipeline (Command 7 steps / Query 8 steps), architecture rule tests |
+| **Observability** | 3-Pillar automatic instrumentation, ctx.* business context propagation, automatic error classification (expected/exceptional/aggregate) |
 
 ## Quick Example
 
-Always-valid Value Object — 예외 없이 타입 안전한 에러 코드로 검증하고, 합성 가능한 함수형 검증 파이프라인을 제공합니다:
+Always-valid Value Object — Validates with type-safe error codes without exceptions, providing a composable functional validation pipeline:
 
 ```csharp
 public sealed partial class Email : SimpleValueObject<string>
@@ -215,13 +224,13 @@ public sealed partial class Email : SimpleValueObject<string>
     public static Fin<Email> Create(string? value) =>
         CreateFromValidation(Validate(value), v => new Email(v));
 
-    // 각 검증 조건이 실패하면 조건에 대응하는 에러 코드가 자동 생성됩니다.
+    // Each validation condition failure auto-generates a corresponding error code:
     //   NotNull    → "DomainErrors.Email.Null"
     //   NotEmpty   → "DomainErrors.Email.Empty"
     //   MaxLength  → "DomainErrors.Email.TooLong"
     //   Matches    → "DomainErrors.Email.InvalidFormat"
-    // 복합 Value Object는 Apply 패턴으로 복수 필드를 병렬 검증하여
-    // 실패한 모든 에러를 한꺼번에 수집합니다.
+    // Composite Value Objects use the Apply pattern to validate multiple fields
+    // in parallel, collecting all errors at once.
     public static Validation<Error, string> Validate(string? value) =>
         ValidationRules<Email>
             .NotNull(value)
@@ -230,165 +239,166 @@ public sealed partial class Email : SimpleValueObject<string>
             .ThenMaxLength(MaxLength)
             .ThenMatches(EmailRegex(), "Invalid email format");
 
-    // ORM/Repository 복원용 — 이미 정규화된 데이터만 받는다
+    // For ORM/Repository restoration — accepts only already-normalized data
     public static Email CreateFromValidated(string value) => new(value);
 
     public static implicit operator string(Email email) => email.Value;
 }
 ```
 
-CQRS Command/Query 유스케이스 구현 예제는 [CQRS Repository 튜토리얼](./Docs.Site/src/content/docs/tutorials/cqrs-repository/index.md)에서 확인할 수 있습니다.
+For CQRS Command/Query usecase implementation examples, see the [CQRS Repository Tutorial](./Docs.Site/src/content/docs/tutorials/cqrs-repository/index.md).
 
-## 시작하기
+## Getting Started
 
 ```bash
-# 핵심 도메인 모델링 — Value Object, Entity, AggregateRoot, Specification, 에러 체계
+# Core domain modeling — Value Object, Entity, AggregateRoot, Specification, error system
 dotnet add package Functorium
 
-# 인프라 어댑터 — OpenTelemetry, Serilog, EF Core, Dapper, Pipeline
+# Infrastructure adapters — OpenTelemetry, Serilog, EF Core, Dapper, Pipeline
 dotnet add package Functorium.Adapters
 
-# 코드 자동 생성 — [GenerateObservablePort], [GenerateEntityId], CtxEnricher
+# Code generation — [GenerateObservablePort], [GenerateEntityId], CtxEnricher
 dotnet add package Functorium.SourceGenerators
 
-# 테스트 유틸리티 — ArchUnitNET, xUnit 확장, 통합 테스트 픽스처
+# Test utilities — ArchUnitNET, xUnit extensions, integration test fixtures
 dotnet add package Functorium.Testing
 ```
 
-**5분 빠른시작:** [Quickstart](./Docs.Site/src/content/docs/quickstart/index.mdx)에서 Value Object → AggregateRoot → Command Usecase를 5분 안에 만들어 보세요.
+**5-Minute Quickstart:** Build a Value Object → AggregateRoot → Command Usecase in 5 minutes at [Quickstart](./Docs.Site/src/content/docs/quickstart/index.mdx).
 
-**첫 번째 튜토리얼:** [Functional ValueObject 튜토리얼](./Docs.Site/src/content/docs/tutorials/functional-valueobject/index.md)에서 Value Object를 깊이 학습하세요.
+**First Tutorial:** Dive deep into Value Objects at the [Functional ValueObject Tutorial](./Docs.Site/src/content/docs/tutorials/functional-valueobject/index.md).
 
-**전체 문서:** [https://hhko.github.io/Functorium](https://hhko.github.io/Functorium)
+**Full Documentation:** [https://hhko.github.io/Functorium](https://hhko.github.io/Functorium)
 
-## 구조 개요
+## Architecture Overview
 
 ![](./Functorium.Architecture.png)
 
-시스템은 세 가지 계층으로 구성됩니다. 도메인은 외부에 의존하지 않으며, 의존성은 항상 안쪽을 향합니다.
+The system is composed of three layers. The domain depends on nothing external, and dependencies always flow inward.
 
-- **Domain Layer** — 순수 비즈니스 로직. Entity, AggregateRoot, Value Object, Specification, DomainError, Domain Event, Repository 포트(IRepository), IObservablePort. 외부 의존성 없이 순수 함수 기반으로 비즈니스 규칙을 표현합니다.
-- **Application Layer** — 유스케이스 조립. CQRS(ICommandRequest, IQueryRequest), FinResponse, FluentValidation 확장, FinT LINQ 합성, Domain Event 발행, IUnitOfWork. 도메인 로직과 인프라를 연결하고 사이드 이펙트의 경계를 관리합니다.
-- **Adapter Layer** — 인프라 구현. OpenTelemetry 구성, Usecase Pipeline (8단계, CtxEnricher 포함), Observable 도메인 이벤트 발행, 구조화된 로거, DapperQueryAdapterBase, AdapterError, Source Generator. 도메인에 의존하지만, 도메인은 인프라에 의존하지 않습니다.
+- **Domain Layer** — Pure business logic. Entity, AggregateRoot, Value Object, Specification, DomainError, Domain Event, Repository port (IRepository), IObservablePort. Expresses business rules through pure functions without external dependencies.
+- **Application Layer** — Usecase orchestration. CQRS (ICommandRequest, IQueryRequest), FinResponse, IQueryPort (read-only DTO projection), FluentValidation extensions, FinT LINQ composition, Domain Event publishing, IUnitOfWork. Connects domain logic with infrastructure and manages side effect boundaries.
+- **Adapter Layer** — Infrastructure implementation. OpenTelemetry configuration, Usecase Pipeline (Command 7 steps / Query 8 steps, including CtxEnricher), Observable domain event publishing, structured loggers, DapperQueryAdapterBase, AdapterError, 5 Source Generators ([GenerateObservablePort], [GenerateEntityId], CtxEnricher, DomainEventCtxEnricher, [UnionType]). Depends on domain, but domain does not depend on infrastructure.
 
 ## Observability
 
-Functorium은 OpenTelemetry 기반의 통합 관측성(Logging, Metrics, Tracing)을 제공합니다.
+Functorium provides unified observability (Logging, Metrics, Tracing) based on OpenTelemetry.
 
 ![](./Functorium.Observability.png)
 
-### 두 가지 관측 경로
+### Three Observation Paths
 
-| 구분 | 외부 입출력 (Usecase Pipeline) | 내부 입출력 (Observable Port) |
-|------|-------------------------------|------------------------------|
-| **적용 대상** | 모든 Command / Query 유스케이스 | Repository, QueryAdapter 등 IObservablePort 구현체 |
-| **적용 방식** | Mediator `IPipelineBehavior` 자동 래핑 | `[GenerateObservablePort]` Source Generator 자동 생성 |
-| **구성 요소** | `CtxEnricherPipeline`, `UsecaseLoggingPipeline`, `UsecaseMetricsPipeline`, `UsecaseTracingPipeline` | 메서드별 Logging / Metrics / Tracing wrapper |
-| **EventId 범위** | Application 1001–1004 | Adapter 2001–2004 |
+| Observation Path | Target | Mechanism | Recorded Content |
+|-----------------|--------|-----------|-----------------|
+| **Usecase Pipeline** | All Command/Query | Mediator `IPipelineBehavior` | request/response fields + ctx.* + error classification |
+| **Observable Port** | Repository, QueryAdapter, ExternalService | `[GenerateObservablePort]` Source Generator | Same request/response field scheme |
+| **DomainEvent** | Publisher + Handler | `ObservableDomainEventPublisher` | Event type/count + partial failure tracking |
 
-상세 사양과 가이드는 문서 사이트에서 확인할 수 있습니다:
-- [Observability Specification](./Docs.Site/src/content/docs/spec/08-observability.md) — Field/Tag 구조, ctx.* 3-Pillar Enrichment, Meter/Instrument 사양
-- [Logging Guide](./Docs.Site/src/content/docs/guides/observability/19-observability-logging.md) — 구조화된 로깅 상세 가이드
-- [Metrics Guide](./Docs.Site/src/content/docs/guides/observability/20-observability-metrics.md) — 메트릭 수집 및 분석 가이드
-- [Tracing Guide](./Docs.Site/src/content/docs/guides/observability/21-observability-tracing.md) — 분산 추적 상세 가이드
+The Application layer (EventId 1001–1004) and Adapter layer (EventId 2001–2004) use **identical `request.*` / `response.*` / `error.*` naming**, enabling end-to-end request flow tracking with a single dashboard query.
 
-## 품질 전략
+For detailed specifications and guides, see the documentation site:
+- [Observability Specification](./Docs.Site/src/content/docs/spec/08-observability.md) — Field/Tag structure, ctx.* 3-Pillar Enrichment, Meter/Instrument specification
+- [Logging Guide](./Docs.Site/src/content/docs/guides/observability/19-observability-logging.md) — Structured logging detailed guide
+- [Metrics Guide](./Docs.Site/src/content/docs/guides/observability/20-observability-metrics.md) — Metrics collection and analysis guide
+- [Tracing Guide](./Docs.Site/src/content/docs/guides/observability/21-observability-tracing.md) — Distributed tracing detailed guide
 
-- 핵심 도메인 로직은 높은 수준의 **단위 테스트 커버리지를** 유지합니다.
-- 사이드 이펙트 영역은 명시적으로 분리되어 **검증 가능한 구조를** 갖습니다.
-- 배포 이전 단계에서 **Observability 검증이** 완료됩니다.
-- 정의된 에러 코드와 복구 절차는 **문서화되고 검증**됩니다.
-- 아키텍처 규칙은 ClassValidator/InterfaceValidator를 통해 **단위 테스트로 자동 검증**됩니다.
+## Quality Strategy
 
-> 품질은 결과가 아니라 구조에서 비롯됩니다.
+- Core domain logic maintains a high level of **unit test coverage**. No mocks needed since there are no external dependencies.
+- Side effect areas are explicitly separated, providing a **verifiable structure**.
+- **Observability verification** is completed before deployment.
+- Defined error codes and recovery procedures are **documented and validated**.
+- Architecture rules are **automatically verified through unit tests** via ClassValidator/InterfaceValidator.
 
-## 문서
+> Quality comes from structure, not from testing alone.
 
-**전체 문서 사이트:** [https://hhko.github.io/Functorium](https://hhko.github.io/Functorium)
+## Documentation
 
-### 튜토리얼
+**Full Documentation Site:** [https://hhko.github.io/Functorium](https://hhko.github.io/Functorium)
 
-| 튜토리얼 | 주제 | 실습 |
-|----------|------|------|
-| [Implementing Functional ValueObject](./Docs.Site/src/content/docs/tutorials/functional-valueobject/index.md) | Value Object, 검증, 불변성 | 29개 |
-| [Implementing Specification Pattern](./Docs.Site/src/content/docs/tutorials/specification-pattern/index.md) | Specification, Expression Tree | 18개 |
-| [Implementing CQRS Repository And Query Patterns](./Docs.Site/src/content/docs/tutorials/cqrs-repository/index.md) | CQRS, Repository, Query 어댑터 | 22개 |
-| [Designing TypeSafe Usecase Pipeline Constraints](./Docs.Site/src/content/docs/tutorials/usecase-pipeline/index.md) | 제네릭 변성, IFinResponse, Pipeline 제약 | 20개 |
-| [Enforcing Architecture Rules with Testing](./Docs.Site/src/content/docs/tutorials/architecture-rules/index.md) | 아키텍처 규칙, ClassValidator | 16개 |
-| [Automating ObservabilityCode with SourceGenerator](./Docs.Site/src/content/docs/tutorials/sourcegen-observability/index.md) | Source Generator, Observable wrapper | — |
-| [Automating ReleaseNotes with ClaudeCode and .NET 10](./Docs.Site/src/content/docs/tutorials/release-notes-claude/index.md) | AI 자동화, 릴리스 노트 | — |
+### Tutorials
 
-### 예제
+| Tutorial | Topic | Exercises |
+|----------|-------|-----------|
+| [Implementing Functional ValueObject](./Docs.Site/src/content/docs/tutorials/functional-valueobject/index.md) | Value Object, Validation, Immutability | 29 |
+| [Implementing Specification Pattern](./Docs.Site/src/content/docs/tutorials/specification-pattern/index.md) | Specification, Expression Tree | 18 |
+| [Implementing CQRS Repository And Query Patterns](./Docs.Site/src/content/docs/tutorials/cqrs-repository/index.md) | CQRS, Repository, Query Adapter | 22 |
+| [Designing TypeSafe Usecase Pipeline Constraints](./Docs.Site/src/content/docs/tutorials/usecase-pipeline/index.md) | Generic Variance, IFinResponse, Pipeline Constraints | 20 |
+| [Enforcing Architecture Rules with Testing](./Docs.Site/src/content/docs/tutorials/architecture-rules/index.md) | Architecture Rules, ClassValidator | 16 |
+| [Automating ObservabilityCode with SourceGenerator](./Docs.Site/src/content/docs/tutorials/sourcegen-observability/index.md) | Source Generator, Observable Wrapper | — |
+| [Automating ReleaseNotes with ClaudeCode and .NET 10](./Docs.Site/src/content/docs/tutorials/release-notes-claude/index.md) | AI Automation, Release Notes | — |
 
-| 예제 | 범위 | Aggregates | 핵심 패턴 |
-|------|------|------------|-----------|
+### Samples
+
+| Sample | Scope | Aggregates | Key Patterns |
+|--------|-------|------------|--------------|
 | [Designing with Types](./Docs.Site/src/content/docs/samples/designing-with-types/index.md) | Domain | 1 | VO, Union, Composite, Specification |
 | [E-Commerce DDD](./Docs.Site/src/content/docs/samples/ecommerce-ddd/index.md) | Domain + Application | 5 | CQRS, EventHandler, DomainService, ApplyT |
 | [AI Model Governance](./Docs.Site/src/content/docs/samples/ai-model-governance/index.md) | Domain + Application + Adapter | 4 | EfCore/Dapper/InMemory, FastEndpoints, IO.Retry/Timeout/Fork/Bracket |
 
-## 패키지 구성
+## Packages
 
-| 패키지 | 설명 |
-|--------|------|
-| `Functorium` | 핵심 도메인 모델링 — Value Object, Entity, AggregateRoot, Specification, 에러 체계 |
-| `Functorium.Adapters` | 인프라 어댑터 — OpenTelemetry, Serilog, EF Core, Dapper, Pipeline |
-| `Functorium.SourceGenerators` | 코드 자동 생성 — `[GenerateObservablePort]`, `[GenerateEntityId]`, `CtxEnricherGenerator` |
-| `Functorium.Testing` | 테스트 유틸리티 — ArchUnitNET, xUnit 확장, 통합 테스트 픽스처 |
+| Package | Description |
+|---------|-------------|
+| `Functorium` | Core domain modeling — Value Object, Entity, AggregateRoot, Specification, error system |
+| `Functorium.Adapters` | Infrastructure adapters — OpenTelemetry, Serilog, EF Core, Dapper, Pipeline |
+| `Functorium.SourceGenerators` | Code generation — `[GenerateObservablePort]`, `[GenerateEntityId]`, `CtxEnricherGenerator` |
+| `Functorium.Testing` | Test utilities — ArchUnitNET, xUnit extensions, integration test fixtures |
 
 ## AX (AI Transformation)
 
-AX는 Functorium 기반 프로젝트의 개발과 운영을 AI가 안내하는 Claude Code 플러그인 시스템입니다. 2개 플러그인이 DDD 개발 워크플로와 릴리스 자동화를 각각 담당합니다.
+AX is a Claude Code plugin system where AI guides the development and operations of Functorium-based projects. Two plugins handle DDD development workflows and release automation respectively.
 
-### 설치
+### Installation
 
 ```bash
-# 두 플러그인 동시 로드
+# Load both plugins simultaneously
 claude --plugin-dir ./.claude/plugins/functorium-develop --plugin-dir ./.claude/plugins/release-note
 ```
 
-### functorium-develop (v0.4.0) — DDD 개발 워크플로
+### functorium-develop (v0.4.0) — DDD Development Workflow
 
-PRD 작성부터 테스트까지, 7단계 워크플로를 8개 스킬 + 6개 전문 에이전트가 안내합니다.
+From PRD writing to testing, a 7-step workflow guided by 8 skills + 6 specialist agents.
 
 ```
 project-spec → architecture-design → domain-develop → application-develop → adapter-develop → observability-develop → test-develop
 ```
 
-| 스킬 | 역할 |
-|------|------|
-| `project-spec` | 프로젝트 요구사항 명세 (PRD, User Stories, 우선순위, 수락 기준) |
-| `architecture-design` | 프로젝트 구조, 네이밍 규칙, 인프라 설계 |
+| Skill | Role |
+|-------|------|
+| `project-spec` | Project requirements specification (PRD, User Stories, priorities, acceptance criteria) |
+| `architecture-design` | Project structure, naming conventions, infrastructure design |
 | `domain-develop` | Domain Layer (VO, Aggregate, Spec, DomainService) |
 | `application-develop` | Application Layer (CQRS, Usecase, Port) |
 | `adapter-develop` | Adapter Layer (Repository, Endpoint, DI) |
-| `observability-develop` | 관측성 전략 (KPI→메트릭 매핑, 대시보드, 알림, ctx.* 전파) |
-| `test-develop` | 단위/통합/아키텍처/관측성 검증 테스트 |
-| `domain-review` | DDD 코드 리뷰 (어느 시점에서든 사용 가능) |
+| `observability-develop` | Observability strategy (KPI→metric mapping, dashboards, alerts, ctx.* propagation) |
+| `test-develop` | Unit/integration/architecture/observability verification tests |
+| `domain-review` | DDD code review (available at any point) |
 
-### release-note (v1.0.0) — 릴리스 노트 자동화
+### release-note (v1.0.0) — Release Note Automation
 
-C# 스크립트 기반 데이터 수집, Conventional Commits 분석, Breaking Changes 감지, 릴리스 노트 작성, 검증까지 5단계 워크플로를 1개 스킬 + 1개 에이전트가 자동화합니다.
+C# script-based data collection, Conventional Commits analysis, Breaking Changes detection, release note writing, and validation — a 5-step workflow automated by 1 skill + 1 agent.
 
 ```
-환경 검증 → 데이터 수집 → 커밋 분석 → 릴리스 노트 작성 → 검증
+Environment Validation → Data Collection → Commit Analysis → Release Note Writing → Validation
 ```
 
-| 원칙 | 설명 |
-|------|------|
-| 정확성 우선 | Uber 파일(`all-api-changes.txt`)에 없는 API는 문서화하지 않음 |
-| 가치 전달 필수 | 모든 주요 기능에 "Why this matters" 섹션 포함 |
-| Breaking Changes 자동 감지 | Git Diff 분석이 커밋 메시지 패턴보다 우선 |
-| 추적성 | 모든 기능을 커밋 SHA로 추적 |
+| Principle | Description |
+|-----------|-------------|
+| Accuracy First | APIs not in the Uber file (`all-api-changes.txt`) are never documented |
+| Value Delivery Required | All major features include a "Why this matters" section |
+| Automatic Breaking Changes Detection | Git Diff analysis takes precedence over commit message patterns |
+| Traceability | All features are tracked by commit SHA |
 
-상세 문서: [AX (AI Transformation)](https://hhko.github.io/Functorium/ax/)
+Detailed documentation: [AX (AI Transformation)](https://hhko.github.io/Functorium/ax/)
 
-## 기술 스택
+## Tech Stack
 
-| 분류 | 주요 라이브러리 |
-|------|----------------|
-| 함수형 | LanguageExt.Core, Ulid, Ardalis.SmartEnum |
-| 검증 | FluentValidation |
-| 중재자 | Mediator (source-generated), Scrutor |
-| 영속성 | EF Core, Dapper |
-| 관측성 | OpenTelemetry, Serilog |
-| 테스트 | xUnit v3, ArchUnitNET, Verify.Xunit, Shouldly |
+| Category | Key Libraries |
+|----------|---------------|
+| Functional | LanguageExt.Core, Ulid, Ardalis.SmartEnum |
+| Validation | FluentValidation |
+| Mediator | Mediator (source-generated), Scrutor |
+| Persistence | EF Core, Dapper |
+| Observability | OpenTelemetry, Serilog |
+| Testing | xUnit v3, ArchUnitNET, Verify.Xunit, Shouldly |
