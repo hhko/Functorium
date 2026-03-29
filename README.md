@@ -337,7 +337,18 @@ Functorium은 OpenTelemetry 기반의 통합 관측성(Logging, Metrics, Tracing
 
 ## AX (AI Transformation)
 
-**functorium-develop** 플러그인(v0.4.0)으로 PRD 작성부터 테스트까지, DDD 개발 전 과정을 AI가 안내합니다:
+AX는 Functorium 기반 프로젝트의 개발과 운영을 AI가 안내하는 Claude Code 플러그인 시스템입니다. 2개 플러그인이 DDD 개발 워크플로와 릴리스 자동화를 각각 담당합니다.
+
+### 설치
+
+```bash
+# 두 플러그인 동시 로드
+claude --plugin-dir ./.claude/plugins/functorium-develop --plugin-dir ./.claude/plugins/release-note
+```
+
+### functorium-develop (v0.4.0) — DDD 개발 워크플로
+
+PRD 작성부터 테스트까지, 7단계 워크플로를 8개 스킬 + 6개 전문 에이전트가 안내합니다.
 
 ```
 project-spec → architecture-design → domain-develop → application-develop → adapter-develop → observability-develop → test-develop
@@ -352,7 +363,22 @@ project-spec → architecture-design → domain-develop → application-develop 
 | `adapter-develop` | Adapter Layer (Repository, Endpoint, DI) |
 | `observability-develop` | 관측성 전략 (KPI→메트릭 매핑, 대시보드, 알림, ctx.* 전파) |
 | `test-develop` | 단위/통합/아키텍처/관측성 검증 테스트 |
-| `domain-review` | DDD 코드 리뷰 |
+| `domain-review` | DDD 코드 리뷰 (어느 시점에서든 사용 가능) |
+
+### release-note (v1.0.0) — 릴리스 노트 자동화
+
+C# 스크립트 기반 데이터 수집, Conventional Commits 분석, Breaking Changes 감지, 릴리스 노트 작성, 검증까지 5단계 워크플로를 1개 스킬 + 1개 에이전트가 자동화합니다.
+
+```
+환경 검증 → 데이터 수집 → 커밋 분석 → 릴리스 노트 작성 → 검증
+```
+
+| 원칙 | 설명 |
+|------|------|
+| 정확성 우선 | Uber 파일(`all-api-changes.txt`)에 없는 API는 문서화하지 않음 |
+| 가치 전달 필수 | 모든 주요 기능에 "Why this matters" 섹션 포함 |
+| Breaking Changes 자동 감지 | Git Diff 분석이 커밋 메시지 패턴보다 우선 |
+| 추적성 | 모든 기능을 커밋 SHA로 추적 |
 
 상세 문서: [AX (AI Transformation)](https://hhko.github.io/Functorium/ax/)
 
