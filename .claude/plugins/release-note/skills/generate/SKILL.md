@@ -1,6 +1,8 @@
 ---
 name: generate
 description: "Functorium 릴리스 노트를 자동으로 생성합니다. 환경 검증 → 데이터 수집 → 커밋 분석 → 릴리스 노트 작성 → 검증까지 5단계 워크플로를 실행합니다. '릴리스 노트 생성', 'release note 만들어줘', '릴리스 노트 작성', '새 버전 릴리스' 등의 요청에 반응합니다."
+user-invocable: true
+argument-hint: "[version]"
 ---
 
 ## 버전 파라미터
