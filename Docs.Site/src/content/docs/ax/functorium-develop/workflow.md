@@ -262,4 +262,4 @@ domain-develop, application-develop, adapter-develop 스킬은 각각 동일한 
 
 - [Project Spec 스킬](./skills/project-spec/) -- 첫 번째 단계부터 시작
 - [전문 에이전트](./agents/) -- 설계 결정에 전문가 활용
-- [설치 가이드](./installation/) -- 플러그인 설치와 설정
+- [플러그인 소개](./) -- 설치와 구조 안내
