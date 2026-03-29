@@ -31,23 +31,6 @@ jobs:
       - name: Install Playwright Chromium
         working-directory: ./Docs.Site
         run: npx playwright install --with-deps chromium
-      - name: Debug content files
-        working-directory: ./Docs.Site
-        run: |
-          echo "=== designing-with-types .md files ==="
-          find src/content/docs/samples/designing-with-types -name "*.md" | sort
-          echo ""
-          echo "=== file permissions ==="
-          ls -la src/content/docs/samples/designing-with-types/domain/
-          echo ""
-          echo "=== frontmatter check ==="
-          head -5 src/content/docs/samples/designing-with-types/domain/01-type-design-decisions.md
-          echo ""
-          echo "=== BOM check ==="
-          xxd src/content/docs/samples/designing-with-types/domain/01-type-design-decisions.md | head -2
-          echo ""
-          echo "=== all .md files count in content/docs ==="
-          find src/content/docs -name "*.md" -o -name "*.mdx" | wc -l
       - name: Build
         working-directory: ./Docs.Site
         run: npx astro build
