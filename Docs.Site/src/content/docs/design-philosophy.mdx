@@ -157,18 +157,21 @@ public interface IQueryUsecase<in TQuery, TSuccess>
 
 ### Pipeline 실행 순서
 
-모든 유스케이스는 다음 순서의 Pipeline을 자동으로 통과합니다.
+모든 유스케이스는 Pipeline을 자동으로 통과합니다. Command와 Query는 경로 특성에 따라 서로 다른 Pipeline 구성을 갖습니다.
 
-> **Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction → Usecase**
+> **Command (7단계):** Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler
+>
+> **Query (8단계):** Metrics → Tracing → Logging → Validation → Caching → Exception → Custom → Handler
 
-Pipeline은 Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction 순서로 실행됩니다. 이 순서에는 이유가 있습니다:
+이 순서에는 이유가 있습니다:
 
 1. **Metrics와 Tracing이** 가장 먼저 실행되어, 후속 Pipeline에서 발생하는 모든 활동을 포함한 전체 실행 시간을 측정합니다.
 2. **Logging은** Validation 전에 위치하여, 검증 실패를 포함한 모든 요청을 기록합니다.
 3. **Validation은** 비즈니스 로직 실행 전에 입력을 검증하여, 불필요한 데이터베이스 라운드트립을 방지합니다.
-4. **Caching은** Exception과 Transaction 전에 위치하여, 캐시 히트 시 트랜잭션 없이 즉시 반환합니다.
-5. **Exception은** Transaction 바로 앞에서 예외를 구조화된 에러로 변환하여, 트랜잭션 롤백을 깔끔하게 처리합니다.
-6. **Transaction이** 가장 안쪽에서 실행되어, 실제 비즈니스 로직만을 트랜잭션 경계로 감쌉니다.
+4. **Caching은** Query 전용입니다. Exception 전에 위치하여, 캐시 히트 시 트랜잭션 없이 즉시 반환합니다.
+5. **Exception은** 예외를 구조화된 에러로 변환하여, 후속 Pipeline의 롤백을 깔끔하게 처리합니다.
+6. **Transaction은** Command 전용입니다. 실제 비즈니스 로직만을 트랜잭션 경계로 감싸고, `SaveChanges`와 도메인 이벤트 발행을 자동 처리합니다.
+7. **Custom은** 프로젝트별 확장 지점입니다. 감사 로그, 권한 검사 등 프로젝트 고유 횡단 관심사를 삽입할 수 있습니다.
 
 ## Observability by Design
 
@@ -189,9 +192,19 @@ public interface IObservablePort
 }
 ```
 
-### `[GenerateObservablePort]` — Source Generator 자동 생성
+`CtxEnricher` Source Generator는 Request/Response 속성을 `ctx.{snake_case}` 필드로 자동 변환하여, Logging과 Tracing에 비즈니스 컨텍스트를 전파합니다. `[CtxTarget]` 어트리뷰트로 Logging, Tracing, Metrics 중 어떤 Pillar에 전파할지 세밀하게 제어할 수 있습니다.
 
-Source Generator가 Adapter에 대한 Observable wrapper를 자동 생성하여, OpenTelemetry 기반의 Tracing/Logging/Metrics를 투명하게 제공합니다. 개발자가 관측 코드를 직접 작성할 필요가 없습니다.
+### 5개 Source Generator — 컴파일 시점 자동 생성
+
+Functorium은 5개의 Source Generator로 반복적인 브릿지 코드를 컴파일 시점에 자동 생성합니다.
+
+| Generator | 트리거 | 생성 결과 |
+|-----------|--------|----------|
+| `[GenerateEntityId]` | Entity 클래스 | `{Entity}Id` 구조체 + ValueConverter + ValueComparer |
+| `[GenerateObservablePort]` | Adapter 구현체 | `Observable{Class}` wrapper (Tracing + Logging + Metrics) |
+| `CtxEnricherGenerator` | ICommandRequest/IQueryRequest 구현 | `{Request}CtxEnricher` (LogContext 자동 enrichment) |
+| `DomainEventCtxEnricherGenerator` | IDomainEventHandler 구현 | `{Event}CtxEnricher` (이벤트 컨텍스트 enrichment) |
+| `[UnionType]` | abstract partial record | `Match<T>`, `Switch`, `Is{Case}`, `As{Case}()` 메서드 |
 
 ```csharp
 [GenerateObservablePort]  // → Observable{ClassName} 자동 생성
@@ -207,15 +220,15 @@ Functorium은 두 가지 경로로 관측성을 자동화합니다.
 | **외부 입출력** | 모든 Command/Query | Mediator `IPipelineBehavior` |
 | **내부 입출력** | Repository, QueryAdapter | `[GenerateObservablePort]` Source Generator |
 
-| Pipeline | 역할 |
-|----------|------|
-| `UsecaseMetricsPipeline` | 유스케이스 메트릭 자동 수집 |
-| `UsecaseTracingPipeline` | 분산 추적 컨텍스트 전파 |
-| `UsecaseLoggingPipeline` | 구조화된 로그 자동 기록 |
-| `UsecaseValidationPipeline` | FluentValidation 기반 입력 검증 |
-| `UsecaseCachingPipeline` | ICacheable 요청 캐싱 |
-| `UsecaseExceptionPipeline` | 예외 → 구조화된 에러 변환 |
-| `UsecaseTransactionPipeline` | 트랜잭션 경계 관리 |
+| Pipeline | 역할 | 적용 |
+|----------|------|------|
+| `UsecaseMetricsPipeline` | 유스케이스 메트릭 자동 수집 | 공통 |
+| `UsecaseTracingPipeline` | 분산 추적 컨텍스트 전파 | 공통 |
+| `UsecaseLoggingPipeline` | 구조화된 로그 자동 기록 | 공통 |
+| `UsecaseValidationPipeline` | FluentValidation 기반 입력 검증 | 공통 |
+| `UsecaseCachingPipeline` | ICacheable 요청 캐싱 | Query 전용 |
+| `UsecaseExceptionPipeline` | 예외 → 구조화된 에러 변환 | 공통 |
+| `UsecaseTransactionPipeline` | 트랜잭션 경계 + 도메인 이벤트 발행 | Command 전용 |
 
 ## 통합 예제
 

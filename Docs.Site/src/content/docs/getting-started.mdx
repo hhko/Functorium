@@ -86,8 +86,9 @@ public sealed partial class Email : SimpleValueObject<string>
 
 ## Observability
 
-Functorium은 OpenTelemetry 기반의 통합 관측성(Logging, Metrics, Tracing)을 제공합니다.
+Functorium은 OpenTelemetry 기반의 3-Pillar 관측성(Logging, Metrics, Tracing)을 제공합니다.
 모든 관측성 필드는 OpenTelemetry 시맨틱 규칙과의 일관성을 위해 `snake_case + dot` 표기법을 사용합니다.
+Command Pipeline(7단계)과 Query Pipeline(8단계)이 모든 유스케이스에 자동으로 계측을 적용하고, `CtxEnricher` Source Generator가 비즈니스 컨텍스트(`ctx.*` 필드)를 Logging과 Tracing에 자동 전파합니다.
 
 ![Functorium Observability](../../assets/Functorium.Observability.png)
 

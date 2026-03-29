@@ -24,11 +24,11 @@ Adapter → Application → Domain 방향으로만 의존합니다. 도메인은
 <FileTree>
 - Domains/
   - Entities/ Entity, AggregateRoot, IEntityId
-  - ValueObjects/ AbstractValueObject, Validations
-  - Errors/ DomainError, DomainErrorType
+  - ValueObjects/ AbstractValueObject, SimpleValueObject, ComparableSimpleValueObject, UnionValueObject, Validations
+  - Errors/ DomainError, DomainErrorType (27 sealed records)
   - Events/ IDomainEvent, DomainEvent
-  - Repositories/ IRepository (포트 정의)
-  - Specifications/ Specification Pattern
+  - Repositories/ IRepository (Command 포트 정의)
+  - Specifications/ Specification, ExpressionSpecification
   - Services/ IDomainService
   - Observabilities/ IObservablePort
 </FileTree>
@@ -39,6 +39,8 @@ Adapter → Application → Domain 방향으로만 의존합니다. 도메인은
 
 **ICommandRequest와** **IQueryRequest는** CQRS 패턴의 진입점입니다. 모든 유스케이스의 결과는 **FinResponse&lt;T&gt;로** 통일되어, 성공과 실패를 명시적으로 표현합니다. **FinT&lt;IO, T&gt; LINQ 확장은** 사이드 이펙트가 포함된 연산을 순수 함수처럼 조합할 수 있게 하여, 복잡한 유스케이스도 선언적으로 작성할 수 있습니다.
 
+**Command 경로는** `IRepository<T, TId>`(Domain 계층 정의)를 통해 Aggregate Root를 영속화하고, **Query 경로는** `IQueryPort`(Application 계층 정의)를 통해 Dapper 기반 DTO 직접 프로젝션을 수행합니다. 포트가 정의되는 계층이 다르므로, 읽기와 쓰기의 관심사가 구조적으로 분리됩니다.
+
 이 계층은 "무엇을 해야 하는가"를 정의하지만, "어떻게 수행하는가"는 관여하지 않습니다. 데이터베이스 접근, 외부 API 호출 같은 구체적인 구현은 모두 Adapter 계층에 위임됩니다.
 
 <FileTree>
@@ -48,7 +50,7 @@ Adapter → Application → Domain 방향으로만 의존합니다. 도메인은
   - Errors/ ApplicationError, EventError
   - Validations/ FluentValidation 확장
   - Linq/ FinT LINQ 확장
-  - Queries/ PagedResult, SortExpression
+  - Queries/ IQueryPort, PagedResult, SortExpression, CursorPagination
   - Persistence/ IUnitOfWork
 </FileTree>
 
@@ -72,7 +74,12 @@ Adapter 계층은 Application 계층이 정의한 포트를 구현하며, 데이
   - Repositories/ DapperQueryAdapterBase
   - Errors/ AdapterError
   - Options/ 옵션 설정
-  - SourceGenerators/ [GenerateObservablePort]
+  - SourceGenerators/
+    - [GenerateObservablePort] Observable wrapper
+    - [GenerateEntityId] Ulid ID + ValueConverter
+    - CtxEnricherGenerator ctx.* 필드 자동 생성
+    - DomainEventCtxEnricherGenerator 이벤트 컨텍스트
+    - [UnionType] Discriminated Union 패턴 매칭
 </FileTree>
 
 ## 의존성 방향이 중요한 이유
