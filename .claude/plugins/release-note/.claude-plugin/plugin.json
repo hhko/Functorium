@@ -1,0 +1,8 @@
+{
+  "name": "release-note",
+  "description": "Functorium 릴리스 노트 자동 생성 플러그인. C# 스크립트 기반 데이터 수집, 커밋 분석, 릴리스 노트 작성, 검증까지 5단계 워크플로를 자동화합니다.",
+  "version": "1.0.0",
+  "author": {
+    "name": "hhko"
+  }
+}
