@@ -753,3 +753,52 @@ h2 {
   color: #512bd4;
 }
 
+/* ── 15. Mobile Layout ──────────────────────────────────────── */
+
+/* Hero 이미지 기본 반응형 */
+.hero img {
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 50rem) {
+  /* Hero 이미지 모바일 크기 + 중앙 정렬 */
+  .hero img {
+    max-width: 200px;
+    margin: 0 auto;
+    display: block;
+  }
+
+  /* Hero 텍스트 중앙 정렬 */
+  .hero {
+    text-align: center;
+  }
+
+  /* Hero 버튼 중앙 정렬 */
+  .hero .action {
+    justify-content: center;
+  }
+
+  /* 수평 스크롤 방지 */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* problem/solution 카드 패딩 축소 */
+  .problem-card,
+  .solution-card {
+    padding: 1rem 1.25rem;
+    font-size: 0.9rem;
+  }
+
+  /* AX 워크플로 축소 */
+  .ax-flow-visual {
+    gap: 0.25rem;
+    font-size: 0.65rem;
+  }
+
+  .ax-flow-step {
+    padding: 0.3rem 0.5rem;
+  }
+}
+
