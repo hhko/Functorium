@@ -6,14 +6,9 @@ date: 2026-03-20
 
 ## 맥락과 문제
 
-에러 타입을 문자열로 관리하면 다음과 같은 문제가 발생합니다.
+API 응답에서 `"NotFound"` 에러가 반환되었다고 가정합니다. 이것이 주문이 존재하지 않아서 발생한 도메인 에러인지, 외부 결제 서비스가 404를 반환한 어댑터 에러인지, 에러 문자열만으로는 구분할 수 없습니다. 모니터링 대시보드에서 `"NotFound"` 발생 건수를 집계해도 도메인 문제와 인프라 문제가 뒤섞여 의미 있는 분석이 불가능합니다.
 
-- **오타**: `"NotFound"` vs `"Notfound"` 같은 오타가 런타임까지 발견되지 않습니다.
-- **중복**: 동일한 에러를 서로 다른 문자열로 표현하여 일관성이 깨집니다.
-- **추적 불가**: 에러가 어느 레이어에서 발생했는지 에러 타입만으로는 판별할 수 없습니다.
-- **계층 구분 불가**: 도메인 에러, 애플리케이션 에러, 어댑터 에러를 구조적으로 구분할 수 없습니다.
-
-비즈니스 규칙 위반(도메인), 인가 실패(애플리케이션), 외부 서비스 장애(어댑터) 등 레이어별 에러 성격이 다르므로, 에러 타입 자체에 레이어 정보와 컨텍스트가 포함되어야 합니다.
+문자열 기반 에러 관리의 문제는 이에 그치지 않습니다. 한 개발자가 `"NotFound"`로 작성하고 다른 개발자가 `"Notfound"`로 작성하면, 동일한 에러가 서로 다른 문자열로 표현되어 일관성이 깨집니다. 이런 오타는 컴파일 타임에 발견되지 않고, 특정 에러를 처리하는 `switch` 분기에서 매칭 실패로 나타나 런타임까지 잠복합니다. 비즈니스 규칙 위반(도메인), 인가 실패(애플리케이션), 외부 서비스 장애(어댑터)는 성격이 다른 에러이므로, 에러 타입 자체에 레이어 정보와 발생 컨텍스트가 구조적으로 포함되어야 합니다.
 
 ## 검토한 옵션
 
@@ -25,22 +20,22 @@ date: 2026-03-20
 
 ## 결정
 
-**선택한 옵션: "레이어별 sealed record 계층 + 에러 코드 자동 생성"**, 각 레이어에 맞는 sealed record 계층(`DomainErrorType` 27종, `ApplicationErrorType`, `AdapterErrorType`)을 정의하고, `IHasErrorCode` 인터페이스를 통해 `{Layer}.{Context}.{Name}` 형식의 에러 코드를 자동 생성하기 때문입니다.
+**선택한 옵션: "레이어별 sealed record 계층 + 에러 코드 자동 생성"**, 에러를 문자열이 아닌 타입 시스템으로 표현하여 오타와 중복을 컴파일 타임에 차단하고, 에러 발생 위치를 코드 자체로 즉시 파악할 수 있도록 하기 위해서입니다.
 
-- **DomainErrorType**: `NotFound`, `InvalidState`, `InvalidTransition`, `DuplicateValue` 등 27종의 도메인 에러를 sealed record로 정의합니다.
+- **DomainErrorType**: `NotFound`, `InvalidState`, `InvalidTransition`, `DuplicateValue` 등 27종의 도메인 에러를 sealed record로 정의합니다. 27종은 실제 비즈니스 시나리오에서 반복 등장하는 도메인 에러 패턴을 정리한 결과입니다.
 - **ApplicationErrorType**: `Unauthorized`, `Forbidden`, `Conflict` 등 애플리케이션 레이어 에러를 정의합니다.
 - **AdapterErrorType**: `ExternalServiceFailure`, `DatabaseError` 등 어댑터 레이어 에러를 정의합니다.
-- **에러 코드 형식**: `Domain.Order.InvalidTransition`, `Application.Auth.Unauthorized` 같은 구조화된 코드가 자동 생성됩니다.
-- **팩토리**: `DomainError.For<T>()` 메서드로 에러 생성 시 타입 정보가 자동 포함됩니다.
+- **에러 코드 형식**: `Domain.Order.InvalidTransition`, `Application.Auth.Unauthorized` 같은 `{Layer}.{Context}.{Name}` 형식의 구조화된 코드가 자동 생성되어, 로그에서 에러 코드만으로 레이어와 발생 Aggregate를 즉시 식별합니다.
+- **팩토리**: `DomainError.For<T>()` 메서드가 제네릭 타입 `T`에서 Context 정보를 자동 추출하여 에러 코드를 생성하므로 수동 문자열 조합이 불필요합니다.
 
 ### 결과
 
-- Good, because 에러 타입이 컴파일 타임에 검증되어 오타와 중복이 방지됩니다.
-- Good, because sealed record이므로 패턴 매칭으로 모든 에러 케이스를 exhaustive하게 처리할 수 있습니다.
-- Good, because 에러 코드에 레이어와 컨텍스트가 포함되어 발생 위치를 즉시 파악할 수 있습니다.
-- Good, because `DomainError.For<T>()` 팩토리가 타입 정보를 자동 주입하여 보일러플레이트를 줄입니다.
-- Bad, because sealed record 계층 정의에 초기 설계 비용이 필요합니다.
-- Bad, because 새로운 에러 타입 추가 시 sealed record 계층을 확장해야 합니다.
+- Good, because `DomainErrorType.NotFound`를 사용하면 `"Notfound"` 같은 오타가 컴파일 오류로 즉시 발견되어 런타임 매칭 실패가 원천 차단됩니다.
+- Good, because sealed record 계층에 대한 `switch` 표현식에서 미처리 에러 타입이 컴파일 경고로 표시되어 모든 에러 케이스의 exhaustive 처리가 보장됩니다.
+- Good, because 로그에 `Domain.Order.InvalidTransition`이 기록되면 "도메인 레이어의 Order Aggregate에서 상태 전이 실패"를 에러 코드만으로 즉시 파악할 수 있습니다.
+- Good, because `DomainError.For<Order>()` 호출 시 제네릭 타입에서 Context(`Order`)를 자동 추출하므로 에러 코드 문자열을 수동으로 조합할 필요가 없습니다.
+- Bad, because 레이어별 sealed record 계층(DomainErrorType 27종 + ApplicationErrorType + AdapterErrorType)의 초기 설계와 분류 작업에 상당한 투자가 필요합니다.
+- Bad, because 새로운 도메인 에러 패턴이 등장하면 sealed record 계층에 새 타입을 추가하고, 기존 `switch` 표현식에 해당 케이스를 처리해야 합니다.
 
 ### 확인
 
@@ -51,25 +46,25 @@ date: 2026-03-20
 
 ### 레이어별 sealed record 계층 + 에러 코드 자동 생성
 
-- Good, because 컴파일 타임 타입 안전성이 보장됩니다.
-- Good, because sealed 계층으로 exhaustive 패턴 매칭이 가능합니다.
-- Good, because 에러 코드가 구조화되어 로깅, 모니터링, 클라이언트 응답에서 활용됩니다.
-- Good, because `IHasErrorCode` 인터페이스로 레이어 간 통일된 에러 처리가 가능합니다.
-- Bad, because sealed record 계층의 초기 설계와 유지보수 비용이 있습니다.
+- Good, because `DomainErrorType.NotFound`처럼 타입으로 에러를 표현하므로 오타, 대소문자 불일치가 컴파일 타임에 차단됩니다.
+- Good, because sealed record에 대한 `switch` 표현식이 미처리 케이스를 컴파일 경고로 알려주어 에러 처리 누락을 방지합니다.
+- Good, because `Domain.Order.InvalidTransition` 형식의 구조화된 에러 코드가 로그 검색, Grafana 대시보드 필터, API 응답에서 일관되게 사용됩니다.
+- Good, because `IHasErrorCode` 인터페이스를 통해 도메인/애플리케이션/어댑터 에러가 동일한 형식(`{Layer}.{Context}.{Name}`)으로 통일되어 레이어를 초월한 에러 처리 파이프라인을 구성할 수 있습니다.
+- Bad, because 27종의 DomainErrorType + ApplicationErrorType + AdapterErrorType 계층을 초기에 설계하고, 새로운 에러 패턴 등장 시 계층을 확장해야 하는 유지보수 비용이 있습니다.
 
 ### enum 기반 에러 타입
 
-- Good, because 구현이 단순하고 친숙합니다.
-- Bad, because enum은 sealed 계층처럼 속성을 가질 수 없어 추가 정보 전달이 어렵습니다.
-- Bad, because 레이어별 enum을 분리해도 타입 시스템 수준의 구분이 약합니다.
-- Bad, because 확장 시 기존 enum에 항목을 추가해야 하여 Open-Closed Principle에 위배됩니다.
+- Good, because `DomainError.NotFound` 같은 enum 멤버로 오타를 방지할 수 있어 문자열보다 안전합니다.
+- Bad, because enum 멤버는 속성을 가질 수 없으므로 `InvalidTransition`에 `FromState`, `ToState` 같은 컨텍스트 정보를 함께 전달할 수 없어 별도 클래스가 추가로 필요합니다.
+- Bad, because `DomainError` enum과 `ApplicationError` enum을 분리해도 메서드 시그니처에서 `int`로 암묵 변환되어 레이어 간 타입 구분이 실질적으로 약합니다.
+- Bad, because 새로운 에러 유형 추가 시 기존 enum에 항목을 추가해야 하므로, enum을 참조하는 모든 `switch`문이 영향을 받아 Open-Closed Principle에 위배됩니다.
 
 ### 문자열 상수
 
-- Good, because 정의가 가장 단순합니다.
-- Bad, because 오타가 컴파일 타임에 발견되지 않습니다.
-- Bad, because 레이어 구분, 컨텍스트 정보 등을 구조적으로 포함할 수 없습니다.
-- Bad, because 리팩토링 시 문자열 검색에 의존해야 합니다.
+- Good, because `const string NotFound = "NotFound";`로 정의가 가장 단순하며 별도 타입 설계가 불필요합니다.
+- Bad, because `ErrorCodes.NotFound`와 `"NotFound"` 리터럴이 혼용되면 상수를 쓰지 않은 곳의 오타가 컴파일 타임에 발견되지 않습니다.
+- Bad, because 문자열에 레이어/컨텍스트 정보를 포함하려면 `"Domain.Order.NotFound"` 같은 명명 규칙에 의존해야 하며, 규칙 위반을 강제할 수 없습니다.
+- Bad, because 에러 코드 문자열을 변경하면 IDE의 "Rename" 리팩토링이 동작하지 않아 전체 코드베이스를 문자열 검색으로 수동 수정해야 합니다.
 
 ### 예외 클래스 계층
 
