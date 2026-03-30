@@ -806,5 +806,12 @@ h2 {
   .ax-flow-step {
     padding: 0.3rem 0.5rem;
   }
+
+  /* 모바일에서 테마 선택기 표시 */
+  header .right-group {
+    display: flex !important;
+    gap: 0.5rem;
+    align-items: center;
+  }
 }
 
