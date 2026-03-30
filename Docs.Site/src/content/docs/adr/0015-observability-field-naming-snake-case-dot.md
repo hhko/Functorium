@@ -44,23 +44,23 @@ date: 2026-03-22
 
 ### 옵션 1: camelCase
 
-- **장점**: C#/JavaScript 개발자에게 친숙하다. JSON 직렬화와 자연스럽게 호환된다.
-- **단점**: OpenTelemetry 시맨틱 규약과 불일치한다. 계층 구조를 표현할 수 없어 `requestCategoryName`처럼 이름이 길어진다. 대시보드 도구에서 자동 그룹화가 불가능하다.
+- **장점**: C#/JavaScript 개발자에게 친숙하다. `System.Text.Json`의 기본 정책(`JsonNamingPolicy.CamelCase`)과 일치하여 직렬화가 간편하다.
+- **단점**: OpenTelemetry 시맨틱 규약(`http.request.method`)과 불일치하여 프레임워크 자체 필드와 사용자 정의 필드의 네이밍이 뒤섞인다. 계층 구조를 표현할 수 없어 `requestCategoryName`처럼 이름이 길어지고, Grafana에서 `request.*` 같은 트리 탐색이 불가능하다.
 
 ### 옵션 2: kebab-case
 
-- **장점**: URL, HTTP 헤더와 일관성이 있다. 가독성이 좋다.
-- **단점**: Serilog 등 주요 .NET 로깅 라이브러리에서 속성명에 하이픈을 지원하지 않는다. C# 식별자로 사용할 수 없어 문자열 리터럴로만 참조해야 한다. OpenTelemetry 규약과 불일치한다.
+- **장점**: URL, HTTP 헤더(`Content-Type`, `Accept-Language`)와 일관성이 있어 가독성이 좋다.
+- **단점**: Serilog의 `LogContext.PushProperty`가 하이픈이 포함된 속성명을 지원하지 않는다. C# 식별자로 사용할 수 없어 모든 필드명을 문자열 리터럴로 관리해야 하며, 오타 위험이 높다. OpenTelemetry 규약과 불일치한다.
 
 ### 옵션 3: snake_case + dot
 
-- **장점**: OpenTelemetry 시맨틱 규약과 완전히 일치한다. dot으로 계층 구조가 명확히 드러나 도구의 자동 그룹화/트리 탐색을 활용할 수 있다. Prometheus, Grafana, Elasticsearch 등 주요 관측성 도구와 호환된다. 3-Pillar 간 일관성이 보장된다.
-- **단점**: C# 코드에서 dot이 포함된 문자열 상수를 관리해야 한다. 일부 도구에서 dot을 네임스페이스 구분자가 아닌 문자 그대로 해석할 수 있다.
+- **장점**: `http.request.method`, `db.system` 등 OpenTelemetry 시맨틱 규약과 완전히 일치하여 프레임워크 필드와 사용자 정의 필드가 동일한 패턴을 따른다. dot 구분 덕분에 Grafana에서 `request.*`, `error.*` 트리 탐색이 가능하고, Elasticsearch에서 자동 필드 그룹화가 동작한다. Trace, Metrics, Logs 3-Pillar 간 동일 필드명 보장으로 상관 분석 쿼리가 즉시 동작한다.
+- **단점**: C# 코드에서 `"error.stack_trace"` 같은 dot 포함 문자열 상수를 관리해야 한다. Elasticsearch의 일부 설정에서 dot을 object 중첩으로 해석하여 의도치 않은 매핑이 생길 수 있다.
 
 ### 옵션 4: underscore only
 
-- **장점**: Prometheus 네이밍 규약과 일치한다. dot 관련 이슈가 없다. C# 상수로 표현하기 쉽다.
-- **단점**: 계층 구조를 표현할 수 없어 `request_category_name`에서 `request`가 네임스페이스인지 단어의 일부인지 구분이 불가능하다. OpenTelemetry 시맨틱 규약의 dot 계층과 불일치한다. 필드명이 길어질수록 가독성이 떨어진다.
+- **장점**: Prometheus 네이밍 규약(`http_request_duration_seconds`)과 일치한다. dot 관련 이슈가 없다. C# `const string`으로 표현하기 쉽다.
+- **단점**: `request_category_name`에서 `request`가 네임스페이스인지 단어의 일부인지 구분할 수 없어 계층 구조가 사라진다. OpenTelemetry 시맨틱 규약의 dot 계층과 불일치하여 프레임워크 필드(`http.request.method`)와 사용자 정의 필드(`request_category_name`)의 네이밍이 혼재된다. 필드명이 길어질수록 `_` 연속으로 가독성이 급격히 떨어진다.
 
 ## 관련 정보
 
