@@ -25,11 +25,11 @@ date: 2026-03-20
 
 ### 결과
 
-- Good, because 도메인 검증, 쿼리 필터, API 응답 필터 등 여러 곳에서 동일 Specification을 재사용하므로 규칙 변경 시 한 곳만 수정하면 됩니다.
-- Good, because `ActiveSpec & GoldOrHigherSpec | !SuspendedSpec` 같은 합성이 비즈니스 의도를 코드에서 읽히는 그대로 표현합니다.
-- Good, because PropertyMap 브릿지가 도메인의 `Grade` 속성과 DB의 `customer_grade` 컬럼 같은 명명 차이를 한 곳에서 선언적으로 해소합니다.
-- Bad, because Expression Tree 내부의 `ParameterReplacer`, `ExpressionVisitor` 조합 로직이 일반 코드보다 디버깅이 어렵고, 잘못된 Expression 합성이 런타임 `InvalidOperationException`으로 나타납니다.
-- Bad, because 도메인 모델과 영속성 모델의 속성이 다른 Specification마다 PropertyMap을 별도 작성해야 합니다.
+- <span class="adr-good">Good</span>, because 도메인 검증, 쿼리 필터, API 응답 필터 등 여러 곳에서 동일 Specification을 재사용하므로 규칙 변경 시 한 곳만 수정하면 됩니다.
+- <span class="adr-good">Good</span>, because `ActiveSpec & GoldOrHigherSpec | !SuspendedSpec` 같은 합성이 비즈니스 의도를 코드에서 읽히는 그대로 표현합니다.
+- <span class="adr-good">Good</span>, because PropertyMap 브릿지가 도메인의 `Grade` 속성과 DB의 `customer_grade` 컬럼 같은 명명 차이를 한 곳에서 선언적으로 해소합니다.
+- <span class="adr-bad">Bad</span>, because Expression Tree 내부의 `ParameterReplacer`, `ExpressionVisitor` 조합 로직이 일반 코드보다 디버깅이 어렵고, 잘못된 Expression 합성이 런타임 `InvalidOperationException`으로 나타납니다.
+- <span class="adr-bad">Bad</span>, because 도메인 모델과 영속성 모델의 속성이 다른 Specification마다 PropertyMap을 별도 작성해야 합니다.
 
 ### 확인
 
@@ -40,32 +40,32 @@ date: 2026-03-20
 
 ### ExpressionSpecification\<T\> + PropertyMap 브릿지
 
-- Good, because 규칙 변경 시 Specification 클래스 한 곳만 수정하면 도메인 검증과 DB 쿼리 양쪽에 즉시 반영됩니다.
-- Good, because Expression Tree를 EF Core가 SQL WHERE 절로 직접 변환하므로 인메모리 필터링 없이 DB 수준에서 필터링됩니다.
-- Good, because `spec1 & spec2 | !spec3` 같은 연산자 오버로딩이 비즈니스 규칙 합성을 자연어에 가깝게 표현합니다.
-- Good, because PropertyMap이 도메인 모델과 영속성 모델 간 속성명/타입 차이를 Specification 외부에서 선언적으로 해소합니다.
-- Bad, because `AndSpecification`, `OrSpecification` 등 Expression 조합 시 `ParameterExpression` 교체 로직이 복잡하여 초기 프레임워크 구현 비용이 높습니다.
-- Bad, because 도메인 속성과 DB 컬럼이 다른 Specification마다 PropertyMap을 추가로 정의해야 하는 보일러플레이트가 발생합니다.
+- <span class="adr-good">Good</span>, because 규칙 변경 시 Specification 클래스 한 곳만 수정하면 도메인 검증과 DB 쿼리 양쪽에 즉시 반영됩니다.
+- <span class="adr-good">Good</span>, because Expression Tree를 EF Core가 SQL WHERE 절로 직접 변환하므로 인메모리 필터링 없이 DB 수준에서 필터링됩니다.
+- <span class="adr-good">Good</span>, because `spec1 & spec2 | !spec3` 같은 연산자 오버로딩이 비즈니스 규칙 합성을 자연어에 가깝게 표현합니다.
+- <span class="adr-good">Good</span>, because PropertyMap이 도메인 모델과 영속성 모델 간 속성명/타입 차이를 Specification 외부에서 선언적으로 해소합니다.
+- <span class="adr-bad">Bad</span>, because `AndSpecification`, `OrSpecification` 등 Expression 조합 시 `ParameterExpression` 교체 로직이 복잡하여 초기 프레임워크 구현 비용이 높습니다.
+- <span class="adr-bad">Bad</span>, because 도메인 속성과 DB 컬럼이 다른 Specification마다 PropertyMap을 추가로 정의해야 하는 보일러플레이트가 발생합니다.
 
 ### 직접 LINQ Where 절 작성
 
-- Good, because 별도 추상화 없이 `.Where(c => c.IsActive && c.Grade >= Grade.Gold)`를 바로 작성할 수 있어 학습 비용이 없습니다.
-- Bad, because 동일한 `IsActive && Grade >= Gold` 조건이 도메인 메서드와 Repository LINQ에 각각 존재하여, 한쪽 수정 누락 시 사일런트 불일치가 발생합니다.
-- Bad, because 규칙이 여러 곳에 분산된 경우 변경 영향 범위를 전체 코드 검색으로만 파악할 수 있습니다.
-- Bad, because 복합 조건을 합성하려면 매번 새로운 Where 절을 수작업으로 조합해야 하며, 재사용 가능한 구조가 없습니다.
+- <span class="adr-good">Good</span>, because 별도 추상화 없이 `.Where(c => c.IsActive && c.Grade >= Grade.Gold)`를 바로 작성할 수 있어 학습 비용이 없습니다.
+- <span class="adr-bad">Bad</span>, because 동일한 `IsActive && Grade >= Gold` 조건이 도메인 메서드와 Repository LINQ에 각각 존재하여, 한쪽 수정 누락 시 사일런트 불일치가 발생합니다.
+- <span class="adr-bad">Bad</span>, because 규칙이 여러 곳에 분산된 경우 변경 영향 범위를 전체 코드 검색으로만 파악할 수 있습니다.
+- <span class="adr-bad">Bad</span>, because 복합 조건을 합성하려면 매번 새로운 Where 절을 수작업으로 조합해야 하며, 재사용 가능한 구조가 없습니다.
 
 ### Dynamic LINQ 라이브러리
 
-- Good, because `"Age > 18 AND IsActive"` 같은 문자열로 동적 쿼리를 런타임에 구성할 수 있어 유연합니다.
-- Bad, because `"Age"` 속성을 `"UserAge"`로 리네이밍하면 컴파일은 성공하지만 런타임에 `ParseException`이 발생하여 타입 안전성이 없습니다.
-- Bad, because 문자열 `"Actve"`(오타) 같은 실수가 특정 분기에서만 런타임 오류로 나타나 발견이 늦어집니다.
-- Bad, because 문자열 쿼리는 도메인 레이어의 비즈니스 규칙과 별개이므로 규칙 중복 문제가 해소되지 않습니다.
+- <span class="adr-good">Good</span>, because `"Age > 18 AND IsActive"` 같은 문자열로 동적 쿼리를 런타임에 구성할 수 있어 유연합니다.
+- <span class="adr-bad">Bad</span>, because `"Age"` 속성을 `"UserAge"`로 리네이밍하면 컴파일은 성공하지만 런타임에 `ParseException`이 발생하여 타입 안전성이 없습니다.
+- <span class="adr-bad">Bad</span>, because 문자열 `"Actve"`(오타) 같은 실수가 특정 분기에서만 런타임 오류로 나타나 발견이 늦어집니다.
+- <span class="adr-bad">Bad</span>, because 문자열 쿼리는 도메인 레이어의 비즈니스 규칙과 별개이므로 규칙 중복 문제가 해소되지 않습니다.
 
 ### 쿼리 객체 패턴 (Query Object)
 
-- Good, because 쿼리 로직을 `ActiveCustomerQuery` 같은 객체로 캡슐화하여 Repository 간 재사용할 수 있습니다.
-- Bad, because 쿼리 객체가 Expression Tree를 직접 생성하지 않으므로, EF Core의 SQL 변환과 통합하려면 별도 변환 계층을 추가로 구현해야 합니다.
-- Bad, because 쿼리 객체는 DB 조회 전용이므로 도메인 레이어의 인메모리 검증에는 사용할 수 없어 규칙 중복 문제가 그대로 남습니다.
+- <span class="adr-good">Good</span>, because 쿼리 로직을 `ActiveCustomerQuery` 같은 객체로 캡슐화하여 Repository 간 재사용할 수 있습니다.
+- <span class="adr-bad">Bad</span>, because 쿼리 객체가 Expression Tree를 직접 생성하지 않으므로, EF Core의 SQL 변환과 통합하려면 별도 변환 계층을 추가로 구현해야 합니다.
+- <span class="adr-bad">Bad</span>, because 쿼리 객체는 DB 조회 전용이므로 도메인 레이어의 인메모리 검증에는 사용할 수 없어 규칙 중복 문제가 그대로 남습니다.
 
 ## 관련 정보
 

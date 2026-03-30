@@ -733,7 +733,27 @@ h2 {
   .stats-strip { gap: 1.5rem; flex-wrap: wrap; }
 }
 
-/* ── 14. Text Color Accents ─────────────────────────────────── */
+/* ── 14. ADR Good/Bad Color ────────────────────────────────── */
+
+.adr-good {
+  font-weight: 600;
+  color: #16a34a;
+}
+
+.adr-bad {
+  font-weight: 600;
+  color: #dc2626;
+}
+
+[data-theme='dark'] .adr-good {
+  color: #4ade80;
+}
+
+[data-theme='dark'] .adr-bad {
+  color: #f87171;
+}
+
+/* ── 15. Text Color Accents ─────────────────────────────────── */
 
 .text-problem {
   font-weight: 700;
