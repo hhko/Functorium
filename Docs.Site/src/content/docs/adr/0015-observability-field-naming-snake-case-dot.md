@@ -1,5 +1,5 @@
 ---
-title: "ADR-0016: 관측성 필드 네이밍 snake_case + dot 규칙"
+title: "ADR-0015: 관측성 필드 네이밍 snake_case + dot 규칙"
 status: "accepted"
 date: 2026-03-22
 ---
@@ -21,18 +21,18 @@ date: 2026-03-22
 
 **옵션 3: snake_case + dot 규칙을 채택한다.**
 
+독자적인 규칙을 발명하지 않고, OpenTelemetry 시맨틱 규약이 이미 사용하는 패턴(`http.request.method`, `db.system`, `rpc.service`)을 그대로 따른다. 업계 표준과 일치하면 도구 호환성을 별도로 검증할 필요가 없다.
+
 모든 관측성 필드에 다음 네이밍 규칙을 적용한다:
 
 - **네임스페이스 구분**: dot(`.`)으로 계층을 표현 (예: `request.category.name`, `response.status`, `error.code`)
 - **단어 구분**: snake_case (예: `error.stack_trace`, `request.content_type`)
 - **count 필드 규칙**: 메트릭 이름에는 `.count` (dot 구분), 속성(attribute)에는 `_count` (underscore 구분)
 
-이 규칙은 OpenTelemetry 시맨틱 규약의 `http.request.method`, `db.system`, `rpc.service` 등과 동일한 패턴을 따른다.
-
 ### 결과
 
-- **긍정적**: 3-Pillar 간 동일 필드명으로 상관 분석이 가능하다. OpenTelemetry 시맨틱 규약과 자연스럽게 호환된다. dot으로 계층 구조가 드러나 Grafana, Kibana 등에서 필드를 트리 구조로 탐색할 수 있다. 팀 전체가 하나의 규칙만 기억하면 된다.
-- **부정적**: 기존에 다른 네이밍 규칙을 사용하던 필드를 마이그레이션해야 한다. dot 구분자를 지원하지 않는 일부 도구에서는 이스케이핑이 필요할 수 있다.
+- **긍정적**: Trace Span에서 발견한 `error.code` 필드명으로 Logs를 검색하면 즉시 결과가 나온다. 필드명 매핑 없이 Grafana의 Trace-to-Logs 전환이 동작한다. dot 계층 덕분에 Grafana와 Kibana에서 `request.*`, `error.*` 같은 트리 구조로 필드를 탐색할 수 있다. 팀 전체가 "OpenTelemetry 규약을 따른다"는 하나의 원칙만 기억하면 된다.
+- **부정적**: 기존에 camelCase나 underscore로 기록하던 필드를 모두 마이그레이션해야 하며, 기존 대시보드 쿼리도 함께 갱신해야 한다. dot 구분자를 네임스페이스로 해석하지 않는 일부 도구에서는 이스케이핑이 필요할 수 있다.
 
 ### 확인
 

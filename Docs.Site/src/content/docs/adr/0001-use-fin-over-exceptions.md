@@ -1,5 +1,5 @@
 ---
-title: "ADR-0002: 예외 대신 Fin 타입으로 실패 표현"
+title: "ADR-0001: 예외 대신 Fin 타입으로 실패 표현"
 status: "accepted"
 date: 2026-03-26
 ---

@@ -1,5 +1,5 @@
 ---
-title: "ADR-0010: 영속성 클래스 접미사 네이밍 패턴"
+title: "ADR-0009: 영속성 클래스 접미사 네이밍 패턴"
 status: "accepted"
 date: 2026-03-27
 ---
@@ -42,18 +42,18 @@ Product Aggregate의 Repository를 수정하려고 IDE에서 `Ctrl+P`(Go to File
 
 ### 옵션 1: 접두사 패턴
 
-- **장점**: 기술별로 그룹화되어 특정 기술의 모든 구현체를 한눈에 볼 수 있다. 기술 교체 시 영향 범위를 파악하기 쉽다.
-- **단점**: IDE에서 도메인 주제로 검색하면 여러 기술 구현이 흩어져 나타난다. 자동완성 시 기술명을 먼저 입력해야 하므로 비즈니스 맥락에서의 탐색이 불편하다. 같은 Aggregate의 Repository, Configuration, QueryAdapter가 분산된다.
+- **장점**: "EfCore"를 입력하면 EfCore 기반 구현체가 모두 나열되어, 기술 교체 시 영향 범위를 한눈에 파악할 수 있다.
+- **단점**: "Product"를 입력하면 `DapperProductQueryAdapter`(D), `EfCoreProductRepository`(E), `InMemoryProductRepository`(I) 등이 알파벳순으로 흩어진다. 같은 Aggregate의 Repository, Configuration, QueryAdapter가 분산되어 도메인 맥락에서의 탐색이 불편하다. 자동완성에서 기술명을 먼저 타이핑해야 하므로 개발자의 사고 흐름("Product의 Repository를 찾겠다")과 어긋난다.
 
 ### 옵션 2: 접미사 패턴
 
-- **장점**: 도메인 주제별로 자연스럽게 그룹화된다. IDE의 알파벳 정렬에서 같은 주제의 파일이 인접한다. 자동완성 시 비즈니스 용어를 먼저 입력하는 자연스러운 흐름과 일치한다. Aggregate 폴더와 결합하면 비즈니스 경계와 기술 구현이 동시에 드러난다.
-- **단점**: 기술별 전체 목록을 보려면 별도 검색이 필요하다. 접미사가 길어질 수 있다(예: `ProductRepositoryEfCore`).
+- **장점**: "Product"를 입력하면 `ProductConfigurationEfCore`, `ProductQueryAdapterDapper`, `ProductRepositoryEfCore`가 연속으로 나열된다. 자동완성에서 비즈니스 용어를 먼저 입력하는 개발자의 자연스러운 사고 흐름과 일치한다. Aggregate 폴더와 결합하면 파일 탐색기에서도 비즈니스 경계와 기술 구현이 동시에 드러난다.
+- **단점**: "EfCore 기술의 전체 구현체"를 보려면 기술명으로 별도 검색해야 한다. 접미사가 길어질 수 있다(예: `ProductRepositoryEfCore`).
 
 ### 옵션 3: 기술별 폴더 분리
 
-- **장점**: 폴더 단위로 기술 의존성이 명확히 분리된다. 기술 교체 시 폴더 단위로 작업할 수 있다.
-- **단점**: 같은 도메인 주제의 Command Repository와 Query Adapter가 다른 폴더에 위치하여 비즈니스 맥락이 단절된다. Aggregate 경계를 넘나들며 파일을 열어야 하므로 인지 부하가 증가한다. CQRS 패턴과 기술 분리가 이중 폴더 계층을 만들어 깊이가 깊어진다.
+- **장점**: `EfCore/`, `Dapper/` 폴더 단위로 기술 의존성이 물리적으로 분리되어 기술 교체 시 폴더 단위로 작업할 수 있다.
+- **단점**: Product의 Command Repository(`EfCore/ProductRepository`)와 Query Adapter(`Dapper/ProductQueryAdapter`)가 서로 다른 폴더에 위치하여, 하나의 Aggregate를 파악하려면 여러 폴더를 넘나들어야 한다. CQRS의 Command/Query 분리와 기술별 폴더 분리가 이중 계층을 만들어 폴더 깊이가 깊어지고 인지 부하가 증가한다.
 
 ## 관련 정보
 

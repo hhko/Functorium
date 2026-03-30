@@ -1,17 +1,14 @@
 ---
-title: "ADR-0022: Value Object의 Class/Record 이중 계층"
+title: "ADR-0021: Value Object의 Class/Record 이중 계층"
 status: "accepted"
 date: 2026-03-20
 ---
 
 ## 맥락과 문제
 
-DDD에서 Value Object는 불변성과 값 등치를 보장해야 합니다. 그러나 전통적인 Value Object(이메일, 금액 등)와 Discriminated Union 형태의 Value Object(주문 상태, 결제 방식 등)는 요구사항이 다릅니다.
+`Email` Value Object를 구현한다고 가정합니다. 핵심은 문자열 값을 감싸면서 형식 검증(`@` 포함, 최대 길이 등)을 보장하고, 두 `Email`이 같은 문자열이면 동일한 객체로 판별하는 값 등치입니다. 반면 `OrderStatus` Value Object는 성격이 전혀 다릅니다. `Pending`, `Confirmed`, `Shipped`, `Delivered` 같은 유한한 상태 집합을 표현하며, 핵심은 `Pending → Confirmed`은 허용하지만 `Shipped → Pending`은 차단하는 상태 전이 규칙과, `switch` 표현식으로 모든 상태를 빠짐없이 처리하는 exhaustive 패턴 매칭입니다.
 
-- **전통적 VO**: 단일 값 또는 복합 값을 감싸며, 등치 비교와 유효성 검증이 핵심입니다.
-- **Discriminated Union VO**: 유한한 상태 집합을 표현하며, 상태 전이와 패턴 매칭이 핵심입니다.
-
-하나의 계층으로 두 가지 요구사항을 모두 만족시키려면 과도한 복잡도가 발생하거나 한쪽의 표현력이 희생됩니다.
+`Email`에 필요한 것은 `Equals`/`GetHashCode` 재정의와 생성자 유효성 검증이고, `OrderStatus`에 필요한 것은 sealed 계층 구조와 C# 패턴 매칭입니다. 하나의 기반 타입으로 두 요구사항을 모두 만족시키려면, `Email`에 불필요한 sealed 계층을 강제하거나 `OrderStatus`에서 패턴 매칭 대신 if-else 분기를 사용해야 하여 한쪽의 표현력이 희생됩니다.
 
 ## 검토한 옵션
 
@@ -22,7 +19,7 @@ DDD에서 Value Object는 불변성과 값 등치를 보장해야 합니다. 그
 
 ## 결정
 
-**선택한 옵션: "Class 계층 + Record 계층 병행"**, 전통적 VO와 Discriminated Union VO의 요구사항이 근본적으로 다르므로, 각각에 최적화된 계층을 제공하기 때문입니다.
+**선택한 옵션: "Class 계층 + Record 계층 병행"**, `Email` 같은 값 래핑 VO와 `OrderStatus` 같은 상태 집합 VO는 요구하는 언어 기능이 근본적으로 다르므로, 각각의 강점을 최대로 활용하는 전용 계층을 제공하기 위해서입니다.
 
 **Class 계층** (전통적 Value Object):
 - `AbstractValueObject` → `ValueObject` → `SimpleValueObject<T>` / `ComparableSimpleValueObject<T>`

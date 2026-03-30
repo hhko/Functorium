@@ -1,5 +1,5 @@
 ---
-title: "ADR-0005: 파이프라인 실행 순서"
+title: "ADR-0004: 파이프라인 실행 순서"
 status: "accepted"
 date: 2026-03-22
 ---

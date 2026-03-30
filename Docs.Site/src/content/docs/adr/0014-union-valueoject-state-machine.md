@@ -1,5 +1,5 @@
 ---
-title: "ADR-0015: Union Value Object 기반 상태 머신"
+title: "ADR-0014: Union Value Object 기반 상태 머신"
 status: "accepted"
 date: 2026-03-20
 ---

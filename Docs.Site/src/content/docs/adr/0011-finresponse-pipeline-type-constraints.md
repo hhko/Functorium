@@ -1,5 +1,5 @@
 ---
-title: "ADR-0012: FinResponse 파이프라인 타입 제약 계층"
+title: "ADR-0011: FinResponse 파이프라인 타입 제약 계층"
 status: "accepted"
 date: 2026-03-18
 ---

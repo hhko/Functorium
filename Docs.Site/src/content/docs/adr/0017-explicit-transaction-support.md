@@ -1,5 +1,5 @@
 ---
-title: "ADR-0018: 명시적 트랜잭션 지원"
+title: "ADR-0017: 명시적 트랜잭션 지원"
 status: "accepted"
 date: 2026-03-22
 ---
