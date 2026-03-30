@@ -6,12 +6,9 @@ date: 2026-03-22
 
 ## 맥락과 문제
 
-DDD에서 Aggregate는 트랜잭션 일관성의 경계입니다. Aggregate 간 직접 객체 참조를 허용하면 다음과 같은 문제가 발생합니다.
+`Order` Aggregate가 `Customer` 객체를 직접 참조(`public Customer Customer { get; }`)한다고 가정합니다. 주문을 조회할 때 EF Core가 `Customer`를 함께 로드하고, `Customer`가 참조하는 `Address`, `LoyaltyProgram`까지 연쇄적으로 로드됩니다. 주문 하나를 읽으려 했을 뿐인데 4개 테이블 조인이 발생합니다.
 
-- **트랜잭션 경계 침범**: 한 Aggregate를 저장할 때 참조된 다른 Aggregate도 함께 변경될 수 있어 트랜잭션 범위가 불명확해집니다.
-- **동시성 충돌**: 서로 다른 Aggregate를 수정하는 트랜잭션이 객체 참조를 통해 간접적으로 충돌합니다.
-- **로딩 비용**: 하나의 Aggregate를 로드할 때 참조된 Aggregate까지 연쇄적으로 로드되어 성능이 저하됩니다.
-- **배포 결합**: Aggregate 간 직접 의존이 마이크로서비스 분리를 어렵게 만듭니다.
+문제는 성능에 그치지 않습니다. 주문을 저장할 때 EF Core의 변경 추적이 `Customer` 객체까지 포함하여, 의도하지 않은 고객 정보 변경이 같은 트랜잭션에 포함될 수 있습니다. 두 사용자가 동시에 같은 고객의 서로 다른 주문을 수정하면, `Customer` 객체 참조를 통해 동시성 충돌이 발생합니다. 또한 `Order`가 `Customer` 타입에 직접 의존하므로, 향후 고객 서비스를 별도 마이크로서비스로 분리할 때 Aggregate 경계를 따라 자를 수 없습니다.
 
 ## 검토한 옵션
 
@@ -22,9 +19,9 @@ DDD에서 Aggregate는 트랜잭션 일관성의 경계입니다. Aggregate 간 
 
 ## 결정
 
-**선택한 옵션: "ID(값 타입) 전용 참조 + 도메인 이벤트"**, Aggregate 간 참조를 ID 값 타입(예: `OrderId`, `ProductId`)으로 제한하고, 교차 Aggregate 일관성은 도메인 이벤트를 통해 최종적 일관성(Eventual Consistency)으로 처리하기 때문입니다.
+**선택한 옵션: "ID(값 타입) 전용 참조 + 도메인 이벤트"**, Aggregate의 트랜잭션 경계를 물리적으로 강제하여 경계 침범을 원천 차단하기 위해서입니다. `Order`는 `Customer` 객체 대신 `CustomerId` 값 타입만 보유하므로 연쇄 로딩, 의도치 않은 변경 추적, 동시성 충돌이 구조적으로 발생할 수 없습니다.
 
-이 방식은 각 Aggregate의 트랜잭션 경계를 명확히 유지하면서, 강타입 ID가 잘못된 ID 할당을 컴파일 타임에 방지합니다.
+교차 Aggregate 간 일관성이 필요한 경우(예: 주문 생성 후 고객 포인트 적립)에는 도메인 이벤트를 통해 최종적 일관성(Eventual Consistency)으로 처리합니다. 강타입 ID(`OrderId`, `CustomerId`)가 `string`이나 `Ulid` 원시 타입과 구분되어 `Order`에 실수로 `ProductId`를 할당하면 컴파일 오류가 발생합니다.
 
 ### 결과
 

@@ -6,9 +6,9 @@ date: 2026-03-22
 
 ## 맥락과 문제
 
-OpenTelemetry 기반 관측성 시스템에서 Trace, Metrics, Logs 3-Pillar 간에 동일한 비즈니스 이벤트를 서로 다른 필드명으로 기록하면 상관 분석(correlation)이 불가능하다. 예를 들어 Trace에서는 `requestCategory`, Metrics에서는 `request-category`, Logs에서는 `request_category`로 기록하면 대시보드에서 이들을 연결할 수 없다.
+장애 대응 중 Trace Span에서 발견한 `requestCategory` 필드값으로 Logs를 검색했더니 결과가 0건이었다. Logs에서는 같은 데이터를 `request_category`로 기록하고 있었기 때문이다. Metrics에서는 또 `request-category`라는 세 번째 이름을 사용하고 있었다. 동일한 비즈니스 이벤트가 3-Pillar마다 서로 다른 필드명으로 기록되어, Grafana에서 Trace-to-Logs 전환이 불가능했고 대시보드의 상관 분석(correlation) 쿼리가 매번 필드명 매핑을 수작업으로 맞춰야 했다.
 
-3-Pillar 전체에서 일관된 필드 네이밍 규칙이 필요하며, OpenTelemetry 시맨틱 규약(Semantic Conventions)과의 호환성도 고려해야 한다.
+3-Pillar 전체에서 하나의 필드명 규칙을 강제하여 상관 분석을 즉시 가능하게 하되, OpenTelemetry 시맨틱 규약(Semantic Conventions)과 자연스럽게 호환되는 네이밍 체계가 필요했다.
 
 ## 검토한 옵션
 
