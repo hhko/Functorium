@@ -119,11 +119,77 @@ export default defineConfig({
             ],
           },
           {
-            label: '프레임워크 가이드',
+            label: '아키텍처 의사결정 기록',
+            link: '/decisions/',
+            icon: 'list-format',
+            items: [
+              { label: '아키텍처 의사결정 기록', slug: 'decisions' },
+              {
+                label: '기초 설계',
+                items: [
+                  { slug: 'decisions/0001-adopt-architecture-decision-records' },
+                  { slug: 'decisions/0002-use-fin-over-exceptions' },
+                  { slug: 'decisions/0003-languageext-as-functional-foundation' },
+                ],
+              },
+              {
+                label: '도메인 레이어',
+                items: [
+                  { slug: 'decisions/0004-cqrs-read-write-separation' },
+                  { slug: 'decisions/0008-ulid-based-entity-id' },
+                  { slug: 'decisions/0015-union-valueoject-state-machine' },
+                  { slug: 'decisions/0017-specification-pattern-expression-tree' },
+                  { slug: 'decisions/0020-aggregate-id-only-cross-references' },
+                  { slug: 'decisions/0021-domain-service-pure-vs-repository' },
+                  { slug: 'decisions/0022-value-object-class-record-duality' },
+                  { slug: 'decisions/0023-error-code-sealed-record-hierarchy' },
+                ],
+              },
+              {
+                label: '애플리케이션 레이어',
+                items: [
+                  { slug: 'decisions/0005-pipeline-execution-order' },
+                  { slug: 'decisions/0012-finresponse-pipeline-type-constraints' },
+                  { slug: 'decisions/0014-validation-normalize-then-maxlength' },
+                  { slug: 'decisions/0018-explicit-transaction-support' },
+                ],
+              },
+              {
+                label: '어댑터 레이어',
+                items: [
+                  { slug: 'decisions/0006-observable-port-source-generator' },
+                  { slug: 'decisions/0010-suffix-naming-for-persistence' },
+                ],
+              },
+              {
+                label: '관측성',
+                items: [
+                  { slug: 'decisions/0007-ctx-enricher-pillar-targeting' },
+                  { slug: 'decisions/0009-error-classification-three-types' },
+                  { slug: 'decisions/0016-observability-field-naming-snake-case-dot' },
+                ],
+              },
+              {
+                label: '도메인 이벤트',
+                items: [
+                  { slug: 'decisions/0013-domain-event-publisher-simplification' },
+                  { slug: 'decisions/0019-domain-event-tracing-correlation' },
+                ],
+              },
+              {
+                label: '아키텍처 테스트',
+                items: [
+                  { slug: 'decisions/0011-architecture-test-suite-framework' },
+                ],
+              },
+            ],
+          },
+          {
+            label: '가이드',
             link: '/guides/',
             icon: 'document',
             items: [
-              { label: '프레임워크 가이드', slug: 'guides' },
+              { label: 'Functorium 가이드', slug: 'guides' },
               { label: '프로젝트 기초', autogenerate: { directory: 'guides/architecture' } },
               {
                 label: '도메인 레이어',
@@ -464,11 +530,11 @@ export default defineConfig({
             ],
           },
           {
-            label: 'API 사양',
+            label: '스펙',
             link: '/spec/',
             icon: 'setting',
             items: [
-              { label: 'API 사양 레퍼런스', slug: 'spec' },
+              { label: 'Functorium 스펙', slug: 'spec' },
               {
                 label: '도메인 핵심',
                 items: [
@@ -498,72 +564,6 @@ export default defineConfig({
                   { slug: 'spec/08-observability' },
                   { slug: 'spec/10-source-generators' },
                   { slug: 'spec/11-testing' },
-                ],
-              },
-            ],
-          },
-          {
-            label: '의사결정 기록',
-            link: '/decisions/',
-            icon: 'list-format',
-            items: [
-              { label: '의사결정 기록', slug: 'decisions' },
-              {
-                label: '기초 설계',
-                items: [
-                  { slug: 'decisions/0001-adopt-architecture-decision-records' },
-                  { slug: 'decisions/0002-use-fin-over-exceptions' },
-                  { slug: 'decisions/0003-languageext-as-functional-foundation' },
-                ],
-              },
-              {
-                label: '도메인 레이어',
-                items: [
-                  { slug: 'decisions/0004-cqrs-read-write-separation' },
-                  { slug: 'decisions/0008-ulid-based-entity-id' },
-                  { slug: 'decisions/0015-union-valueoject-state-machine' },
-                  { slug: 'decisions/0017-specification-pattern-expression-tree' },
-                  { slug: 'decisions/0020-aggregate-id-only-cross-references' },
-                  { slug: 'decisions/0021-domain-service-pure-vs-repository' },
-                  { slug: 'decisions/0022-value-object-class-record-duality' },
-                  { slug: 'decisions/0023-error-code-sealed-record-hierarchy' },
-                ],
-              },
-              {
-                label: '애플리케이션 레이어',
-                items: [
-                  { slug: 'decisions/0005-pipeline-execution-order' },
-                  { slug: 'decisions/0012-finresponse-pipeline-type-constraints' },
-                  { slug: 'decisions/0014-validation-normalize-then-maxlength' },
-                  { slug: 'decisions/0018-explicit-transaction-support' },
-                ],
-              },
-              {
-                label: '어댑터 레이어',
-                items: [
-                  { slug: 'decisions/0006-observable-port-source-generator' },
-                  { slug: 'decisions/0010-suffix-naming-for-persistence' },
-                ],
-              },
-              {
-                label: '관측성',
-                items: [
-                  { slug: 'decisions/0007-ctx-enricher-pillar-targeting' },
-                  { slug: 'decisions/0009-error-classification-three-types' },
-                  { slug: 'decisions/0016-observability-field-naming-snake-case-dot' },
-                ],
-              },
-              {
-                label: '도메인 이벤트',
-                items: [
-                  { slug: 'decisions/0013-domain-event-publisher-simplification' },
-                  { slug: 'decisions/0019-domain-event-tracing-correlation' },
-                ],
-              },
-              {
-                label: '아키텍처 테스트',
-                items: [
-                  { slug: 'decisions/0011-architecture-test-suite-framework' },
                 ],
               },
             ],
