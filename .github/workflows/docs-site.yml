@@ -31,12 +31,11 @@ jobs:
       - name: Install Playwright Chromium
         working-directory: ./Docs.Site
         run: npx playwright install --with-deps chromium
-      - name: Warm up content file cache
-        working-directory: ./Docs.Site
-        run: find src/content/docs -name "*.md" -o -name "*.mdx" | wc -l
       - name: Build
         working-directory: ./Docs.Site
-        run: npx astro build
+        run: |
+          find src/content/docs -name "*.md" -o -name "*.mdx" | wc -l
+          npx astro build || (echo "Retrying build..." && rm -rf dist node_modules/.astro && npx astro build)
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
