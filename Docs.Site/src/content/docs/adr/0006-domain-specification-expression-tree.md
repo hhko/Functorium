@@ -1,5 +1,5 @@
 ---
-title: "ADR-0016: Specification 패턴과 Expression Tree 기반 쿼리 변환"
+title: "ADR-0006: Specification 패턴과 Expression Tree 기반 쿼리 변환"
 status: "accepted"
 date: 2026-03-20
 ---

@@ -1,5 +1,5 @@
 ---
-title: "ADR-0015: 관측성 필드 네이밍 snake_case + dot 규칙"
+title: "ADR-0019: 관측성 필드 네이밍 snake_case + dot 규칙"
 status: "accepted"
 date: 2026-03-22
 ---

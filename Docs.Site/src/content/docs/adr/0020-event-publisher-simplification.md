@@ -1,5 +1,5 @@
 ---
-title: "ADR-0012: 도메인 이벤트 발행기 단순화 (BatchHandler 제거)"
+title: "ADR-0020: 도메인 이벤트 발행기 단순화 (BatchHandler 제거)"
 status: "accepted"
 date: 2026-03-24
 ---

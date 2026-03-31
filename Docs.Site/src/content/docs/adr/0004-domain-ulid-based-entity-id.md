@@ -1,5 +1,5 @@
 ---
-title: "ADR-0007: Ulid 기반 Entity ID"
+title: "ADR-0004: Ulid 기반 Entity ID"
 status: "accepted"
 date: 2026-03-16
 ---

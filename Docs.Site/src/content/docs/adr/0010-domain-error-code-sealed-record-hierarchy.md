@@ -1,5 +1,5 @@
 ---
-title: "ADR-0022: 에러 코드 sealed record 계층 구조"
+title: "ADR-0010: 에러 코드 sealed record 계층 구조"
 status: "accepted"
 date: 2026-03-20
 ---

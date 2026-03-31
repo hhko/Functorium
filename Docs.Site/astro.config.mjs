@@ -124,63 +124,28 @@ export default defineConfig({
             icon: 'list-format',
             items: [
               { label: '아키텍처 의사결정 기록', slug: 'adr' },
-              {
-                label: '기초 설계',
-                items: [
-                  { slug: 'adr/0001-use-fin-over-exceptions' },
-                  { slug: 'adr/0002-languageext-as-functional-foundation' },
-                ],
-              },
-              {
-                label: '도메인 레이어',
-                items: [
-                  { slug: 'adr/0003-cqrs-read-write-separation' },
-                  { slug: 'adr/0007-ulid-based-entity-id' },
-                  { slug: 'adr/0014-union-valueoject-state-machine' },
-                  { slug: 'adr/0016-specification-pattern-expression-tree' },
-                  { slug: 'adr/0019-aggregate-id-only-cross-references' },
-                  { slug: 'adr/0020-domain-service-pure-vs-repository' },
-                  { slug: 'adr/0021-value-object-class-record-duality' },
-                  { slug: 'adr/0022-error-code-sealed-record-hierarchy' },
-                ],
-              },
-              {
-                label: '애플리케이션 레이어',
-                items: [
-                  { slug: 'adr/0004-pipeline-execution-order' },
-                  { slug: 'adr/0011-finresponse-pipeline-type-constraints' },
-                  { slug: 'adr/0013-validation-normalize-then-maxlength' },
-                  { slug: 'adr/0017-explicit-transaction-support' },
-                ],
-              },
-              {
-                label: '어댑터 레이어',
-                items: [
-                  { slug: 'adr/0005-observable-port-source-generator' },
-                  { slug: 'adr/0009-suffix-naming-for-persistence' },
-                ],
-              },
-              {
-                label: '관측성',
-                items: [
-                  { slug: 'adr/0006-ctx-enricher-pillar-targeting' },
-                  { slug: 'adr/0008-error-classification-three-types' },
-                  { slug: 'adr/0015-observability-field-naming-snake-case-dot' },
-                ],
-              },
-              {
-                label: '도메인 이벤트',
-                items: [
-                  { slug: 'adr/0012-domain-event-publisher-simplification' },
-                  { slug: 'adr/0018-domain-event-tracing-correlation' },
-                ],
-              },
-              {
-                label: '아키텍처 테스트',
-                items: [
-                  { slug: 'adr/0010-architecture-test-suite-framework' },
-                ],
-              },
+              { slug: 'adr/0001-foundation-use-fin-over-exceptions' },
+              { slug: 'adr/0002-foundation-languageext' },
+              { slug: 'adr/0003-domain-cqrs-read-write-separation' },
+              { slug: 'adr/0004-domain-ulid-based-entity-id' },
+              { slug: 'adr/0005-domain-union-valueobject-state-machine' },
+              { slug: 'adr/0006-domain-specification-expression-tree' },
+              { slug: 'adr/0007-domain-aggregate-id-only-cross-references' },
+              { slug: 'adr/0008-domain-service-pure-vs-repository' },
+              { slug: 'adr/0009-domain-value-object-class-record-duality' },
+              { slug: 'adr/0010-domain-error-code-sealed-record-hierarchy' },
+              { slug: 'adr/0011-application-pipeline-execution-order' },
+              { slug: 'adr/0012-application-finresponse-pipeline-constraints' },
+              { slug: 'adr/0013-application-validation-normalize-maxlength' },
+              { slug: 'adr/0014-application-explicit-transaction' },
+              { slug: 'adr/0015-adapter-observable-port-source-generator' },
+              { slug: 'adr/0016-adapter-suffix-naming-persistence' },
+              { slug: 'adr/0017-observability-ctx-enricher-pillar-targeting' },
+              { slug: 'adr/0018-observability-error-classification' },
+              { slug: 'adr/0019-observability-field-naming-snake-case-dot' },
+              { slug: 'adr/0020-event-publisher-simplification' },
+              { slug: 'adr/0021-event-tracing-correlation' },
+              { slug: 'adr/0022-testing-architecture-test-suite' },
             ],
           },
           {

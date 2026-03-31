@@ -1,5 +1,5 @@
 ---
-title: "ADR-0008: 오류 분류 3-Type 체계 (Expected/Exceptional/Aggregate)"
+title: "ADR-0018: 오류 분류 3-Type 체계 (Expected/Exceptional/Aggregate)"
 status: "accepted"
 date: 2026-03-22
 ---
