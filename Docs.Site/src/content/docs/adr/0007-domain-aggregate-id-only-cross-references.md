@@ -1,5 +1,5 @@
 ---
-title: "ADR-0007: Aggregate 간 ID 전용 참조"
+title: "ADR-0007: Domain - Aggregate 간 ID 전용 참조"
 status: "accepted"
 date: 2026-03-22
 ---

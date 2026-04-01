@@ -1,5 +1,5 @@
 ---
-title: "ADR-0008: Domain Service 순수 함수 vs Repository 패턴 이중 전략"
+title: "ADR-0008: Domain - Domain Service 순수 함수 vs Repository 패턴 이중 전략"
 status: "accepted"
 date: 2026-03-24
 ---

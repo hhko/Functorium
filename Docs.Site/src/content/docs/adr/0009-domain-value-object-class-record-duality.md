@@ -1,5 +1,5 @@
 ---
-title: "ADR-0009: Value Object의 Class/Record 이중 계층"
+title: "ADR-0009: Domain - Value Object의 Class/Record 이중 계층"
 status: "accepted"
 date: 2026-03-20
 ---

@@ -1,5 +1,5 @@
 ---
-title: "ADR-0002: LanguageExt를 함수형 기반 라이브러리로 채택"
+title: "ADR-0002: Foundation - LanguageExt를 함수형 기반 라이브러리로 채택"
 status: "accepted"
 date: 2026-03-15
 ---

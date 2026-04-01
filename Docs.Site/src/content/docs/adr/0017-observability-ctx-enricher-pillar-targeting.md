@@ -1,5 +1,5 @@
 ---
-title: "ADR-0017: CtxEnricher Pillar 타겟팅 전략"
+title: "ADR-0017: Observability - CtxEnricher Pillar 타겟팅 전략"
 status: "accepted"
 date: 2026-03-24
 ---

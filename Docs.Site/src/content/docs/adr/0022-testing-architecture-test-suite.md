@@ -1,5 +1,5 @@
 ---
-title: "ADR-0022: 아키텍처 테스트 Suite 프레임워크 직접 구현"
+title: "ADR-0022: Testing - 아키텍처 테스트 Suite 프레임워크 직접 구현"
 status: "accepted"
 date: 2026-03-20
 ---

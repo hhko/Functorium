@@ -1,5 +1,5 @@
 ---
-title: "ADR-0003: CQRS 읽기/쓰기 분리"
+title: "ADR-0003: Domain - CQRS 읽기/쓰기 분리"
 status: "accepted"
 date: 2026-03-18
 ---

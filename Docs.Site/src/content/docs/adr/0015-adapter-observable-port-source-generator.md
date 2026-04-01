@@ -1,5 +1,5 @@
 ---
-title: "ADR-0015: Observable Port 소스 제너레이터"
+title: "ADR-0015: Adapter - Observable Port 소스 제너레이터"
 status: "accepted"
 date: 2026-03-20
 ---
