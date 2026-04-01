@@ -1,4 +1,5 @@
 import { defineConfig } from 'astro/config';
+import mdx from '@astrojs/mdx';
 import starlight from '@astrojs/starlight';
 import starlightImageZoom from 'starlight-image-zoom';
 import starlightLinksValidator from 'starlight-links-validator';
@@ -618,5 +619,6 @@ export default defineConfig({
         },
       ],
     }),
+    mdx(),
   ],
 });

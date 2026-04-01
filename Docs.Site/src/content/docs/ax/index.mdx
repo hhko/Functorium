@@ -1,0 +1,75 @@
+---
+title: "AX (AI Transformation)"
+description: "DDD 개발과 릴리스 자동화를 AI가 안내하는 Claude Code 플러그인 시스템"
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+AX는 Functorium 프레임워크 기반 프로젝트의 개발과 운영을 AI가 안내하는 Claude Code 플러그인 시스템입니다.
+
+## 플러그인 구성
+
+<CardGrid>
+  <Card title="functorium-develop v0.4.0" icon="puzzle">
+    PRD → 아키텍처 → Domain → Application → Adapter → Observability → Test까지 7단계 DDD 개발 워크플로.
+
+    **8 스킬 + 6 에이전트**
+
+    [시작하기 →](/Functorium/ax/functorium-develop/)
+  </Card>
+  <Card title="release-note v1.0.0" icon="document">
+    C# 스크립트 기반 릴리스 노트 자동 생성. 환경 검증 → 데이터 수집 → 분석 → 작성 → 검증 5단계 워크플로.
+
+    **1 스킬 + 1 에이전트**
+
+    [시작하기 →](/Functorium/ax/release-note/)
+  </Card>
+</CardGrid>
+
+## 왜 필요한가
+
+DDD 프로젝트를 수작업으로 진행하면 반복되는 문제에 직면합니다. 유비쿼터스 언어가 문서에만 남아 코드와 괴리가 생기고, Aggregate 경계를 결정할 때 기준이 모호해지며, 레이어별로 같은 패턴을 반복 작성하면서 일관성이 깨집니다. 릴리스 시점에는 커밋 이력을 수동으로 분류하고 Breaking Changes를 식별하는 작업이 추가됩니다.
+
+AX는 이 문제를 플러그인별 자동화 워크플로로 해결합니다.
+
+### Before: 수작업
+
+| 문제 | 증상 |
+|------|------|
+| 패턴 누락 | sealed 누락, private 생성자 빠뜨림, 이벤트 발행 누락 |
+| 문서-코드 괴리 | 유비쿼터스 언어 테이블은 있지만 코드에 반영되지 않음 |
+| 레이어 간 불일관 | Domain의 VO 검증과 Application의 Validator가 서로 다른 규칙 적용 |
+| 릴리스 노트 수작업 | 커밋을 하나씩 분류, Breaking Changes 누락, API 정확성 미검증 |
+
+### After: AX 워크플로
+
+| 개선 | 방법 |
+|------|------|
+| 패턴 일관성 | 각 스킬이 Functorium 패턴 카탈로그를 참조하여 코드 생성 |
+| 문서-코드 연결 | 4단계 문서(요구사항 → 타입 설계 → 코드 설계 → 구현)가 코드와 함께 생성 |
+| 레이어 정합 | 이전 단계 문서를 자동으로 읽어 일관된 타입/네이밍 적용 |
+| 릴리스 자동화 | C# 스크립트가 커밋 분석, API 변경 감지, Uber 파일 검증을 자동 수행 |
+
+## 시작하기
+
+### DDD 개발
+
+새 프로젝트라면 PRD부터:
+
+```text
+PRD 작성해줘. AI 모델 거버넌스 플랫폼을 만들고 싶어.
+```
+
+기존 코드가 있다면 리뷰부터:
+
+```text
+현재 도메인 코드를 DDD 관점에서 리뷰해줘.
+```
+
+### 릴리스 노트
+
+```text
+릴리스 노트 생성해줘 v1.2.0
+```
+
+각 플러그인의 상세 워크플로와 설치 방법은 해당 플러그인 페이지를 참고하세요.
