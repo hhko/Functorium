@@ -1164,8 +1164,7 @@ Verify.Xunit 스냅샷 테스트 결과를 일괄 승인합니다.
 ### 요구사항 및 구조
 
 - PowerShell 7.0 이상 (`#Requires -Version 7.0`)
-- 공통 모듈은 `.scripts/` 폴더에 배치
-- 현재 제공 모듈: `Write-Console.ps1` (콘솔 출력 함수), `Remove-DirectorySafely.ps1`
+- 각 스크립트는 자체 완결형으로, 필요한 헬퍼 함수를 `#region Helpers` 블록에 직접 포함
 
 ### 파일 명명 규칙
 
@@ -1174,7 +1173,6 @@ Verify.Xunit 스냅샷 테스트 결과를 일괄 승인합니다.
 | 빌드 스크립트 | `Build-*.ps1` | `Build-Local.ps1` |
 | 배포 스크립트 | `Deploy-*.ps1` | `Deploy-Production.ps1` |
 | 유틸리티 스크립트 | `Invoke-*.ps1` | `Invoke-Migration.ps1` |
-| 공통 모듈 | `.scripts/*.ps1` | `.scripts/Write-Console.ps1` |
 
 ### 필수 설정
 
@@ -1187,9 +1185,6 @@ Verify.Xunit 스냅샷 테스트 결과를 일괄 승인합니다.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-
-$scriptRoot = $PSScriptRoot
-. "$scriptRoot/.scripts/Write-Console.ps1"
 ```
 
 ### 코딩 규칙
@@ -1202,7 +1197,7 @@ $scriptRoot = $PSScriptRoot
 
 **에러 처리:** Entry Point에서 `try-catch`로 감싸고 `exit 0`/`exit 1` 반환
 
-### Write-Console.ps1 함수
+### 콘솔 출력 헬퍼 함수
 
 | 함수 | 용도 | 색상 |
 |------|------|------|
@@ -1233,8 +1228,20 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-$scriptRoot = $PSScriptRoot
-. "$scriptRoot/.scripts/Write-Console.ps1"
+#region Helpers
+function Write-StepProgress {
+  param([int]$Step, [int]$TotalSteps, [string]$Message)
+  Write-Host "[$Step/$TotalSteps] $Message" -ForegroundColor Gray
+}
+function Write-Success { param([string]$Message) Write-Host "  $Message" -ForegroundColor Green }
+function Write-StartMessage { param([string]$Title) Write-Host ""; Write-Host "[START] $Title" -ForegroundColor Blue; Write-Host "" }
+function Write-DoneMessage { param([string]$Title) Write-Host ""; Write-Host "[DONE] $Title" -ForegroundColor Green; Write-Host "" }
+function Write-ErrorMessage {
+  param([System.Management.Automation.ErrorRecord]$ErrorRecord)
+  Write-Host "`n[ERROR] $($ErrorRecord.Exception.Message)" -ForegroundColor Red
+  Write-Host $ErrorRecord.ScriptStackTrace -ForegroundColor DarkGray
+}
+#endregion
 
 $script:TOTAL_STEPS = 3
 
