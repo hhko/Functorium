@@ -292,16 +292,18 @@ public sealed class PlaceOrderCommand
 
 ### Field/Tag 일관성
 
+✅ = 지원, - = 미지원/해당없음
+
 | ctx 필드 | 타입 | Logging | Tracing | Metrics Tag | Metrics Value |
 |----------|------|---------|---------|-------------|---------------|
-| `ctx.region_code` | keyword | O | O | **O** | - |
-| `ctx.place_order_command.request.customer_id` | keyword | O | O | - | - |
-| `ctx.place_order_command.request.is_express` | boolean | O | O | **O** | - |
-| `ctx.place_order_command.request.item_count` | long | O | O | - | **O** |
-| `ctx.place_order_command.request.lines_count` | long | O | O | - | - |
-| `ctx.place_order_command.request.internal_note` | keyword | O | - | - | - |
-| `ctx.place_order_command.response.order_id` | keyword | O | O | - | - |
-| `ctx.place_order_command.response.total_amount` | double | O | O | - | **O** |
+| `ctx.region_code` | keyword | ✅ | ✅ | **✅** | - |
+| `ctx.place_order_command.request.customer_id` | keyword | ✅ | ✅ | - | - |
+| `ctx.place_order_command.request.is_express` | boolean | ✅ | ✅ | **✅** | - |
+| `ctx.place_order_command.request.item_count` | long | ✅ | ✅ | - | **✅** |
+| `ctx.place_order_command.request.lines_count` | long | ✅ | ✅ | - | - |
+| `ctx.place_order_command.request.internal_note` | keyword | ✅ | - | - | - |
+| `ctx.place_order_command.response.order_id` | keyword | ✅ | ✅ | - | - |
+| `ctx.place_order_command.response.total_amount` | double | ✅ | ✅ | - | **✅** |
 
 ### 타입 매핑 (C# → OpenSearch)
 
@@ -496,6 +498,8 @@ OrderLineCount  → ctx.order_line_count
 
 **Application Usecase vs DomainEvent Publisher vs DomainEventHandler 필드 비교:**
 
+✅ = 지원, ✅ (조건) = 조건부 지원, - = 미지원/해당없음
+
 | Field | Application Usecase | DomainEvent Publisher | DomainEventHandler |
 |-------|---------------------|----------------------|-------------------|
 | `request.layer` | `"application"` | `"adapter"` | `"application"` |
@@ -505,9 +509,9 @@ OrderLineCount  → ctx.order_line_count
 | `request.handler.method` | `"Handle"` | `"Publish"` / `"PublishTrackedEvents"` | `"Handle"` |
 | `@request.message` | Command/Query 객체 | 이벤트 객체 | 이벤트 객체 |
 | `@response.message` | 응답 객체 | - | - |
-| `request.event.count` | - | O (Aggregate만) | - |
-| `response.event.success_count` | - | O (Partial Failure만) | - |
-| `response.event.failure_count` | - | O (Partial Failure만) | - |
+| `request.event.count` | - | ✅ (Aggregate만) | - |
+| `response.event.success_count` | - | ✅ (Partial Failure만) | - |
+| `response.event.failure_count` | - | ✅ (Partial Failure만) | - |
 | `response.status` | `"success"` / `"failure"` | `"success"` / `"failure"` | `"success"` / `"failure"` |
 | `response.elapsed` | 경과 시간(초) | 경과 시간(초) | 경과 시간(초) |
 | `error.type` | `"expected"` / `"exceptional"` / `"aggregate"` | `"expected"` / `"exceptional"` | `"expected"` / `"exceptional"` |
@@ -853,11 +857,13 @@ OrderLineCount  → ctx.order_line_count
 
 ### Pillar 범위
 
+✅ = 지원, X = 미지원
+
 | Level | Logging | Tracing (Activity Event) | Metrics |
 |-------|---------|--------------------------|---------|
-| Debug | O | X (고빈도 → 노이즈) | X |
-| Warning | O | O (span 내 열화 원인 추적) | X |
-| Error | O | O (span 내 실패 원인 추적) | X |
+| Debug | ✅ | X (고빈도 → 노이즈) | X |
+| Warning | ✅ | ✅ (span 내 열화 원인 추적) | X |
+| Error | ✅ | ✅ (span 내 실패 원인 추적) | X |
 
 - **Metrics 제외**: Observable 래퍼가 request/response/duration 메트릭을 이미 자동 생성. 커스텀 메트릭은 `IMeterFactory` 직접 사용.
 - **Debug에서 Tracing 제외**: 캐시 미스 등 고빈도 이벤트를 span에 넣으면 trace 노이즈.
