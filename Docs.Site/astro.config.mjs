@@ -190,6 +190,45 @@ export default defineConfig({
             ],
           },
           {
+            label: '스펙',
+            link: '/spec/',
+            icon: 'setting',
+            items: [
+              { label: 'Functorium 스펙', slug: 'spec' },
+              {
+                label: '도메인 핵심',
+                items: [
+                  { slug: 'spec/01-entity-aggregate' },
+                  { slug: 'spec/02-value-object' },
+                  { slug: 'spec/04-error-system' },
+                ],
+              },
+              {
+                label: '애플리케이션 계층',
+                items: [
+                  { slug: 'spec/03-validation' },
+                  { slug: 'spec/05-usecase-cqrs' },
+                  { slug: 'spec/09-domain-events' },
+                ],
+              },
+              {
+                label: '어댑터/인프라',
+                items: [
+                  { slug: 'spec/06-port-adapter' },
+                  { slug: 'spec/07-pipeline' },
+                ],
+              },
+              {
+                label: '횡단 관심사',
+                items: [
+                  { slug: 'spec/08-observability' },
+                  { slug: 'spec/10-source-generators' },
+                  { slug: 'spec/11-testing' },
+                ],
+              },
+            ],
+          },
+          {
             label: '가이드',
             link: '/guides/',
             icon: 'document',
@@ -530,45 +569,6 @@ export default defineConfig({
                       { slug: 'samples/ai-model-governance/observability/03-implementation-results' },
                     ],
                   },
-                ],
-              },
-            ],
-          },
-          {
-            label: '스펙',
-            link: '/spec/',
-            icon: 'setting',
-            items: [
-              { label: 'Functorium 스펙', slug: 'spec' },
-              {
-                label: '도메인 핵심',
-                items: [
-                  { slug: 'spec/01-entity-aggregate' },
-                  { slug: 'spec/02-value-object' },
-                  { slug: 'spec/04-error-system' },
-                ],
-              },
-              {
-                label: '애플리케이션 계층',
-                items: [
-                  { slug: 'spec/03-validation' },
-                  { slug: 'spec/05-usecase-cqrs' },
-                  { slug: 'spec/09-domain-events' },
-                ],
-              },
-              {
-                label: '어댑터/인프라',
-                items: [
-                  { slug: 'spec/06-port-adapter' },
-                  { slug: 'spec/07-pipeline' },
-                ],
-              },
-              {
-                label: '횡단 관심사',
-                items: [
-                  { slug: 'spec/08-observability' },
-                  { slug: 'spec/10-source-generators' },
-                  { slug: 'spec/11-testing' },
                 ],
               },
             ],
