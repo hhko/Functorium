@@ -6,12 +6,23 @@
   .NET 솔루션 빌드, 테스트, 코드 커버리지 및 NuGet 패키지 생성 스크립트
 
 .DESCRIPTION
-  - Release 모드로 솔루션 빌드
-  - 버전 정보 표시
-  - 테스트 실행 및 코드 커버리지 수집 (Microsoft Testing Platform)
-  - 프로젝트별 및 전체 커버리지 출력
-  - HTML 리포트 생성
-  - NuGet 패키지 생성 (.nupkg, .snupkg)
+  Release 모드로 .NET 솔루션을 빌드하고, 테스트, 코드 커버리지 리포트 생성,
+  NuGet 패키지 생성까지 전체 로컬 빌드 파이프라인을 실행합니다.
+
+  처리 과정:
+  1. .NET 도구 복원 (.config/dotnet-tools.json)
+  2. 솔루션 파일 검색 (자동 탐지 또는 -Solution 지정)
+  3. Release 모드 빌드
+  4. 버전 정보 표시
+  5. 테스트 + 코드 커버리지 수집 (Microsoft Testing Platform)
+  6. HTML 커버리지 리포트 생성 (ReportGenerator)
+  7. 커버리지 요약 출력 (프로젝트별 + 전체)
+  8. 느린 테스트 분석
+  9. NuGet 패키지 생성 (.nupkg, .snupkg)
+
+  출력 디렉토리:
+    {SolutionDir}/.coverage/reports/  - HTML 리포트, Cobertura.xml
+    {SolutionDir}/.nupkg/             - NuGet 패키지
 
 .PARAMETER Solution
   솔루션 파일 경로를 지정합니다. 지정하지 않으면 자동으로 검색합니다.
@@ -27,38 +38,29 @@
   느린 테스트로 판단하는 기준 시간(초)입니다.
   기본값: 30
 
-.PARAMETER Help
-  도움말을 표시합니다.
-
 .EXAMPLE
   ./Build-Local.ps1
-  현재 디렉토리에서 솔루션을 자동 검색하여 빌드, 테스트, 패키지 생성
+
+  현재 디렉토리에서 솔루션을 자동 검색하여 빌드, 테스트, 패키지 생성합니다.
 
 .EXAMPLE
-  ./Build-Local.ps1 -Solution ./MyApp.sln
-  지정된 솔루션 파일로 빌드 및 테스트 실행
+  ./Build-Local.ps1 -s ./MyApp.slnx
+
+  지정된 솔루션 파일로 빌드 및 테스트를 실행합니다.
 
 .EXAMPLE
   ./Build-Local.ps1 -SkipPack
-  NuGet 패키지 생성 없이 빌드 및 테스트만 실행
+
+  NuGet 패키지 생성 없이 빌드 및 테스트만 실행합니다.
 
 .EXAMPLE
-  ./Build-Local.ps1 -ProjectPrefix MyApp
-  MyApp.* 프로젝트만 커버리지 필터링
+  ./Build-Local.ps1 -p MyApp -t 60
 
-.EXAMPLE
-  ./Build-Local.ps1 -SlowTestThreshold 60
-  60초 이상 걸리는 테스트만 느린 테스트로 분류
-
-.EXAMPLE
-  ./Build-Local.ps1 -Help
-  도움말 표시
+  MyApp.* 프로젝트만 커버리지 필터링하고, 60초 이상을 느린 테스트로 분류합니다.
 
 .NOTES
-  Version: 2.0.0
-  Requirements: PowerShell 7+, .NET SDK, ReportGenerator
-  Output directories: .coverage/, .nupkg/
-  License: MIT
+  Requirements: PowerShell 7+, .NET SDK
+  Prerequisites: .config/dotnet-tools.json (ReportGenerator 등)
 #>
 
 [CmdletBinding()]
@@ -90,10 +92,118 @@ $ErrorActionPreference = "Stop"
 # Set console encoding to UTF-8 for proper Korean character display
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-# Load common modules
-$scriptRoot = $PSScriptRoot
-. "$scriptRoot/.scripts/Write-Console.ps1"
-. "$scriptRoot/.scripts/Remove-DirectorySafely.ps1"
+#region Helpers
+
+function Write-StepProgress {
+  param([int]$Step, [int]$TotalSteps, [string]$Message)
+  Write-Host "[$Step/$TotalSteps] $Message" -ForegroundColor Gray
+}
+
+function Write-Detail {
+  param([string]$Message)
+  Write-Host "  $Message" -ForegroundColor DarkGray
+}
+
+function Write-Success {
+  param([string]$Message)
+  Write-Host "  $Message" -ForegroundColor Green
+}
+
+function Write-WarningMessage {
+  param([string]$Message)
+  Write-Host "  $Message" -ForegroundColor Yellow
+}
+
+function Write-ErrorMessage {
+  param([System.Management.Automation.ErrorRecord]$ErrorRecord)
+  Write-Host ""
+  Write-Host "[ERROR] An unexpected error occurred:" -ForegroundColor Red
+  Write-Host "   $($ErrorRecord.Exception.Message)" -ForegroundColor Red
+  Write-Host ""
+  Write-Host "Stack trace:" -ForegroundColor DarkGray
+  Write-Host $ErrorRecord.ScriptStackTrace -ForegroundColor DarkGray
+  Write-Host ""
+}
+
+function Remove-DirectorySafely {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+    [string]$Path,
+    [int]$MaxRetries = 3,
+    [int]$RetryDelayMs = 100
+  )
+  process {
+    if (-not (Test-Path $Path -PathType Container)) { return $true }
+    for ($attempt = 1; $attempt -le $MaxRetries; $attempt++) {
+      try {
+        [System.IO.Directory]::Delete($Path, $true)
+        return $true
+      }
+      catch [System.IO.IOException] {
+        if ($attempt -lt $MaxRetries) { Start-Sleep -Milliseconds $RetryDelayMs }
+      }
+      catch [System.UnauthorizedAccessException] {
+        try {
+          Get-ChildItem -Path $Path -Recurse -Force -ErrorAction SilentlyContinue |
+            ForEach-Object {
+              if ($_.Attributes -band [System.IO.FileAttributes]::ReadOnly) {
+                $_.Attributes = $_.Attributes -bxor [System.IO.FileAttributes]::ReadOnly
+              }
+            }
+          [System.IO.Directory]::Delete($Path, $true)
+          return $true
+        }
+        catch {
+          if ($attempt -lt $MaxRetries) { Start-Sleep -Milliseconds $RetryDelayMs }
+        }
+      }
+      catch {
+        if ($attempt -lt $MaxRetries) { Start-Sleep -Milliseconds $RetryDelayMs }
+      }
+    }
+    Write-Warning "Failed to delete directory after $MaxRetries attempts: $Path"
+    return $false
+  }
+}
+
+function Find-DirectoriesByName {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory = $true)]
+    [string[]]$SearchPaths,
+    [Parameter(Mandatory = $true)]
+    [string]$DirectoryName
+  )
+  $results = [System.Collections.Generic.List[string]]::new()
+  foreach ($searchPath in $SearchPaths) {
+    if (-not (Test-Path $searchPath)) { continue }
+    $found = Get-ChildItem -Path $searchPath -Directory -Recurse -Filter $DirectoryName -ErrorAction SilentlyContinue
+    foreach ($dir in $found) { $results.Add($dir.FullName) }
+  }
+  return $results.ToArray()
+}
+
+function Remove-DirectoriesByName {
+  [CmdletBinding(SupportsShouldProcess)]
+  param(
+    [Parameter(Mandatory = $true)]
+    [string[]]$SearchPaths,
+    [Parameter(Mandatory = $true)]
+    [string]$DirectoryName
+  )
+  $targetPaths = @(Find-DirectoriesByName -SearchPaths $SearchPaths -DirectoryName $DirectoryName)
+  if ($targetPaths.Count -eq 0) { return 0 }
+  $deletedCount = 0
+  foreach ($path in $targetPaths) {
+    if ($PSCmdlet.ShouldProcess($path, "Delete directory")) {
+      if (Remove-DirectorySafely -Path $path) { $deletedCount++ }
+    }
+  }
+  return $deletedCount
+}
+
+#endregion
 
 #region Constants
 
@@ -119,89 +229,6 @@ function Set-OutputPaths {
   $script:SolutionDir = Split-Path -Parent $SolutionPath
   $script:CoverageReportDir = Join-Path $script:SolutionDir ".coverage/reports"
   $script:NuGetOutputDir = Join-Path $script:SolutionDir ".nupkg"
-}
-
-<#
-.SYNOPSIS
-  도움말을 표시합니다.
-#>
-function Show-Help {
-  $help = @"
-
-================================================================================
- .NET Solution Build, Test, and Pack Script
-================================================================================
-
-DESCRIPTION
-  Build, test, generate code coverage reports, and create NuGet packages
-  for .NET solutions.
-
-USAGE
-  ./Build-Local.ps1 [options]
-
-OPTIONS
-  -Solution, -s           Path to solution file (.sln or .slnx)
-                          If not specified, auto-detects from current directory
-  -ProjectPrefix, -p      Project prefix for coverage filtering
-                          Default: Functorium
-  -SkipPack               Skip NuGet package generation
-  -SlowTestThreshold, -t  Threshold in seconds to classify slow tests
-                          Default: 30
-  -Help, -h, -?           Show this help message
-
-FEATURES
-  1. Auto-detect solution file (requires exactly 1 .sln or .slnx file)
-  2. Build in Release mode
-  3. Display version information from built assemblies
-  4. Run tests with code coverage collection (Microsoft Testing Platform)
-  5. Generate HTML coverage report (ReportGenerator)
-  6. Display coverage summary in console
-     - Project: Projects matching prefix (e.g., Functorium.*)
-     - Full: All projects (excluding tests)
-  7. Generate NuGet packages (.nupkg and .snupkg)
-
-OUTPUT
-  {SolutionDir}/.coverage/
-  ├── index.html            <- HTML Report
-  └── Cobertura.xml         <- Merged coverage
-
-  {SolutionDir}/.nupkg/
-  ├── *.nupkg               <- NuGet packages
-  └── *.snupkg              <- Symbol packages
-
-  {SolutionDir}/Tests/{TestProject}/bin/{Configuration}/{TFM}/TestResults/
-  └── coverage.cobertura.xml  <- Raw coverage (MTP format)
-
-PREREQUISITES
-  - .NET SDK
-  - Tools defined in .config/dotnet-tools.json (auto-restored)
-
-EXAMPLES
-  # Run build, tests, and pack (auto-detect solution)
-  ./Build-Local.ps1
-
-  # Specify solution file
-  ./Build-Local.ps1 -Solution ./MyApp.sln
-  ./Build-Local.ps1 -s ../Other.sln
-
-  # Skip NuGet package generation
-  ./Build-Local.ps1 -SkipPack
-
-  # Filter coverage by project prefix
-  ./Build-Local.ps1 -ProjectPrefix MyApp
-  ./Build-Local.ps1 -p Functorium
-
-  # Set slow test threshold (default: 30s)
-  ./Build-Local.ps1 -SlowTestThreshold 60
-  ./Build-Local.ps1 -t 10
-
-  # Show help
-  ./Build-Local.ps1 -Help
-  ./Build-Local.ps1 -h
-
-================================================================================
-"@
-  Write-Host $help
 }
 
 <#
@@ -553,14 +580,10 @@ function Show-CoverageReport {
 
 #endregion
 
-#region Show-Help
-
 if ($Help) {
-  Show-Help
+  Get-Help $PSCommandPath -Detailed
   exit 0
 }
-
-#endregion
 
 #region Main Execution
 
@@ -832,7 +855,7 @@ try {
   }
   else {
     Write-StepProgress -Step 10 -TotalSteps $script:TOTAL_STEPS -Message "Skipping NuGet package creation..."
-    Write-Detail "Use -SkipPack to skip packaging"
+    Write-Detail "Skipped (-SkipPack)"
   }
 
   # ============================================================================
@@ -859,13 +882,7 @@ try {
   exit 0
 }
 catch {
-  Write-Host ""
-  Write-Host "[ERROR] An unexpected error occurred:" -ForegroundColor Red
-  Write-Host "    $($_.Exception.Message)" -ForegroundColor Red
-  Write-Host ""
-  Write-Host "Stack trace:" -ForegroundColor DarkGray
-  Write-Host $_.ScriptStackTrace -ForegroundColor DarkGray
-  Write-Host ""
+  Write-ErrorMessage -ErrorRecord $_
   exit 1
 }
 

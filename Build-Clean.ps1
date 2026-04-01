@@ -6,25 +6,21 @@
   .NET 프로젝트의 bin 및 obj 폴더를 삭제합니다.
 
 .DESCRIPTION
-  - 현재 경로의 모든 하위 폴더에서 .csproj 파일을 검색합니다.
-  - 각 .csproj 파일이 있는 경로의 bin 및 obj 폴더를 삭제합니다.
-  - 삭제한 폴더 건수를 출력합니다.
+  현재 경로의 모든 하위 폴더에서 .csproj 파일을 검색하고,
+  각 프로젝트의 bin 및 obj 폴더를 삭제합니다.
 
-.PARAMETER Help
-  도움말을 표시합니다.
+  처리 과정:
+  1. .csproj 파일 재귀 검색
+  2. 각 프로젝트의 bin/obj 폴더 삭제
+  3. 삭제 결과 요약 출력
 
 .EXAMPLE
   ./Build-Clean.ps1
+
   모든 프로젝트의 bin 및 obj 폴더를 삭제합니다.
 
-.EXAMPLE
-  ./Build-Clean.ps1 -Help
-  도움말을 표시합니다.
-
 .NOTES
-  Version: 1.0.0
   Requirements: PowerShell 7+
-  License: MIT
 #>
 
 [CmdletBinding()]
@@ -41,10 +37,96 @@ $ErrorActionPreference = "Stop"
 # Set console encoding to UTF-8 for proper Korean character display
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-# Load common modules
-$scriptRoot = $PSScriptRoot
-. "$scriptRoot/.scripts/Write-Console.ps1"
-. "$scriptRoot/.scripts/Remove-DirectorySafely.ps1"
+#region Helpers
+
+function Write-StepProgress {
+  param([int]$Step, [int]$TotalSteps, [string]$Message)
+  Write-Host "[$Step/$TotalSteps] $Message" -ForegroundColor Gray
+}
+
+function Write-Detail {
+  param([string]$Message)
+  Write-Host "  $Message" -ForegroundColor DarkGray
+}
+
+function Write-Success {
+  param([string]$Message)
+  Write-Host "  $Message" -ForegroundColor Green
+}
+
+function Write-WarningMessage {
+  param([string]$Message)
+  Write-Host "  $Message" -ForegroundColor Yellow
+}
+
+function Write-StartMessage {
+  param([string]$Title)
+  Write-Host ""
+  Write-Host "[START] $Title" -ForegroundColor Blue
+  Write-Host ""
+}
+
+function Write-DoneMessage {
+  param([string]$Title)
+  Write-Host ""
+  Write-Host "[DONE] $Title" -ForegroundColor Green
+  Write-Host ""
+}
+
+function Write-ErrorMessage {
+  param([System.Management.Automation.ErrorRecord]$ErrorRecord)
+  Write-Host ""
+  Write-Host "[ERROR] An unexpected error occurred:" -ForegroundColor Red
+  Write-Host "   $($ErrorRecord.Exception.Message)" -ForegroundColor Red
+  Write-Host ""
+  Write-Host "Stack trace:" -ForegroundColor DarkGray
+  Write-Host $ErrorRecord.ScriptStackTrace -ForegroundColor DarkGray
+  Write-Host ""
+}
+
+function Remove-DirectorySafely {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+    [string]$Path,
+    [int]$MaxRetries = 3,
+    [int]$RetryDelayMs = 100
+  )
+  process {
+    if (-not (Test-Path $Path -PathType Container)) { return $true }
+    for ($attempt = 1; $attempt -le $MaxRetries; $attempt++) {
+      try {
+        [System.IO.Directory]::Delete($Path, $true)
+        return $true
+      }
+      catch [System.IO.IOException] {
+        if ($attempt -lt $MaxRetries) { Start-Sleep -Milliseconds $RetryDelayMs }
+      }
+      catch [System.UnauthorizedAccessException] {
+        try {
+          Get-ChildItem -Path $Path -Recurse -Force -ErrorAction SilentlyContinue |
+            ForEach-Object {
+              if ($_.Attributes -band [System.IO.FileAttributes]::ReadOnly) {
+                $_.Attributes = $_.Attributes -bxor [System.IO.FileAttributes]::ReadOnly
+              }
+            }
+          [System.IO.Directory]::Delete($Path, $true)
+          return $true
+        }
+        catch {
+          if ($attempt -lt $MaxRetries) { Start-Sleep -Milliseconds $RetryDelayMs }
+        }
+      }
+      catch {
+        if ($attempt -lt $MaxRetries) { Start-Sleep -Milliseconds $RetryDelayMs }
+      }
+    }
+    Write-Warning "Failed to delete directory after $MaxRetries attempts: $Path"
+    return $false
+  }
+}
+
+#endregion
 
 #region Constants
 
@@ -52,48 +134,6 @@ $script:TOTAL_STEPS = 3
 $script:CsprojFiles = @()
 $script:DeletedBinCount = 0
 $script:DeletedObjCount = 0
-
-#endregion
-
-#region Helper Functions
-
-<#
-.SYNOPSIS
-  도움말을 표시합니다.
-#>
-function Show-Help {
-  $help = @"
-
-================================================================================
- .NET Project Clean Script
-================================================================================
-
-DESCRIPTION
-  Clean bin and obj folders from all .NET projects in the current directory
-  and its subdirectories.
-
-USAGE
-  ./Build-Clean.ps1 [options]
-
-OPTIONS
-  -Help, -h, -?      Show this help message
-
-FEATURES
-  1. Search for all .csproj files recursively
-  2. Delete bin and obj folders from each project directory
-  3. Display summary of deleted folders
-
-EXAMPLES
-  # Clean all projects
-  ./Build-Clean.ps1
-
-  # Show help
-  ./Build-Clean.ps1 -Help
-
-================================================================================
-"@
-  Write-Host $help
-}
 
 #endregion
 
@@ -210,7 +250,7 @@ function Main {
 #region Entry Point
 
 if ($Help) {
-  Show-Help
+  Get-Help $PSCommandPath -Detailed
   exit 0
 }
 

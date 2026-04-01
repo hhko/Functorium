@@ -6,24 +6,20 @@
   Verify.Xunit 스냅샷 테스트 결과를 승인합니다.
 
 .DESCRIPTION
-  - VerifyTool을 설치 또는 업데이트합니다.
-  - 모든 pending 스냅샷을 자동으로 승인합니다.
+  .NET 도구를 복원하고 모든 pending Verify.Xunit 스냅샷을 자동으로 승인합니다.
 
-.PARAMETER Help
-  도움말을 표시합니다.
+  처리 과정:
+  1. .NET 도구 복원 (.config/dotnet-tools.json)
+  2. 'dotnet verify accept -y'로 모든 pending 스냅샷 승인
 
 .EXAMPLE
   ./Build-VerifyAccept.ps1
+
   모든 pending 스냅샷을 승인합니다.
 
-.EXAMPLE
-  ./Build-VerifyAccept.ps1 -Help
-  도움말을 표시합니다.
-
 .NOTES
-  Version: 1.0.0
   Requirements: PowerShell 7+, .NET SDK
-  License: MIT
+  Prerequisites: .config/dotnet-tools.json (VerifyTool)
 #>
 
 [CmdletBinding()]
@@ -40,57 +36,58 @@ $ErrorActionPreference = "Stop"
 # Set console encoding to UTF-8 for proper Korean character display
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-# Load common modules
-$scriptRoot = $PSScriptRoot
-. "$scriptRoot/.scripts/Write-Console.ps1"
+#region Helpers
+
+function Write-StepProgress {
+  param([int]$Step, [int]$TotalSteps, [string]$Message)
+  Write-Host "[$Step/$TotalSteps] $Message" -ForegroundColor Gray
+}
+
+function Write-Detail {
+  param([string]$Message)
+  Write-Host "  $Message" -ForegroundColor DarkGray
+}
+
+function Write-Success {
+  param([string]$Message)
+  Write-Host "  $Message" -ForegroundColor Green
+}
+
+function Write-WarningMessage {
+  param([string]$Message)
+  Write-Host "  $Message" -ForegroundColor Yellow
+}
+
+function Write-StartMessage {
+  param([string]$Title)
+  Write-Host ""
+  Write-Host "[START] $Title" -ForegroundColor Blue
+  Write-Host ""
+}
+
+function Write-DoneMessage {
+  param([string]$Title)
+  Write-Host ""
+  Write-Host "[DONE] $Title" -ForegroundColor Green
+  Write-Host ""
+}
+
+function Write-ErrorMessage {
+  param([System.Management.Automation.ErrorRecord]$ErrorRecord)
+  Write-Host ""
+  Write-Host "[ERROR] An unexpected error occurred:" -ForegroundColor Red
+  Write-Host "   $($ErrorRecord.Exception.Message)" -ForegroundColor Red
+  Write-Host ""
+  Write-Host "Stack trace:" -ForegroundColor DarkGray
+  Write-Host $ErrorRecord.ScriptStackTrace -ForegroundColor DarkGray
+  Write-Host ""
+}
+
+#endregion
 
 #region Constants
 
 $script:TOTAL_STEPS = 2
-
-#endregion
-
-#region Helper Functions
-
-<#
-.SYNOPSIS
-  도움말을 표시합니다.
-#>
-function Show-Help {
-  $help = @"
-
-================================================================================
- Verify.Xunit Snapshot Accept Script
-================================================================================
-
-DESCRIPTION
-  Accept all pending Verify.Xunit snapshots.
-
-USAGE
-  ./Build-VerifyAccept.ps1 [options]
-
-OPTIONS
-  -Help, -h, -?      Show this help message
-
-FEATURES
-  1. Restore .NET tools from .config/dotnet-tools.json
-  2. Accept all pending snapshots with 'dotnet verify accept -y'
-
-PREREQUISITES
-  - .NET SDK
-  - Tools defined in .config/dotnet-tools.json (auto-restored)
-
-EXAMPLES
-  # Accept all pending snapshots
-  ./Build-VerifyAccept.ps1
-
-  # Show help
-  ./Build-VerifyAccept.ps1 -Help
-
-================================================================================
-"@
-  Write-Host $help
-}
 
 #endregion
 
@@ -159,7 +156,7 @@ function Main {
 #region Entry Point
 
 if ($Help) {
-  Show-Help
+  Get-Help $PSCommandPath -Detailed
   exit 0
 }
 

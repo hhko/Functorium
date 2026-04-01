@@ -3,46 +3,67 @@
 
 <#
 .SYNOPSIS
-    VSCode launch.json, tasks.json에 프로젝트 설정을 자동으로 추가합니다.
+  VSCode launch.json, tasks.json에 프로젝트 설정을 자동으로 추가합니다.
 
 .DESCRIPTION
-    프로젝트 이름을 입력받아 해당 .csproj 파일을 찾고,
-    VSCode의 launch.json, tasks.json에 실행/빌드 설정을 추가합니다.
-    여러 프로젝트를 지정하면 compounds를 생성하여 동시 실행이 가능합니다.
+  프로젝트 이름을 입력받아 해당 .csproj 파일을 찾고,
+  VSCode의 launch.json, tasks.json에 실행/빌드 설정을 추가합니다.
+  여러 프로젝트를 지정하면 compounds를 생성하여 동시 실행이 가능합니다.
+
+  각 프로젝트에 대해 다음 설정이 생성됩니다:
+  - launch.json: configuration (coreclr launch)
+  - tasks.json: build, publish, watch 태스크
+  - 2개 이상 프로젝트 시 compound (동시 실행) 자동 생성
 
 .PARAMETER ProjectName
-    추가할 프로젝트의 이름 (.csproj 파일명에서 확장자 제외)
-    여러 프로젝트를 쉼표로 구분하여 지정할 수 있습니다.
+  추가할 프로젝트의 이름 (.csproj 파일명에서 확장자 제외).
+  여러 프로젝트를 쉼표로 구분하여 지정할 수 있습니다.
 
 .PARAMETER Force
-    이미 존재하는 설정을 제거하고 다시 추가합니다.
+  이미 존재하는 설정을 제거하고 다시 추가합니다.
 
 .EXAMPLE
-    ./Build-SetAsSetupProject.ps1 -ProjectName Observability
-    ./Build-SetAsSetupProject.ps1 Observability
-    ./Build-SetAsSetupProject.ps1 Project1, Project2, Project3
-    ./Build-SetAsSetupProject.ps1 -ProjectName Project1, Project2 -Force
+  ./Build-SetAsSetupProject.ps1 Observability
+
+  단일 프로젝트의 실행/빌드 설정을 추가합니다.
+
+.EXAMPLE
+  ./Build-SetAsSetupProject.ps1 Project1, Project2, Project3
+
+  여러 프로젝트 설정을 추가하고 compound를 생성합니다.
+
+.EXAMPLE
+  ./Build-SetAsSetupProject.ps1 -ProjectName Project1, Project2 -Force
+
+  기존 설정을 제거하고 다시 추가합니다.
 
 .NOTES
-    - -Force 옵션 없이 실행 시 동일한 이름의 설정이 있으면 건너뜁니다.
-    - -Force 옵션 사용 시 기존 설정을 제거하고 다시 추가합니다.
-    - 여러 개의 .csproj 파일이 발견되면 선택할 수 있습니다.
-    - 여러 프로젝트 지정 시 compounds가 생성되어 동시 실행 가능합니다.
-    - keybindings.json은 참고용으로만 제공됩니다 (수동 복사 필요).
+  Requirements: PowerShell 7+
+  Prerequisites: .vscode/launch.json, .vscode/tasks.json
 #>
 
+[CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true, Position = 0)]
-    [string[]]$ProjectName,
+  [Parameter(Mandatory = $true, Position = 0)]
+  [string[]]$ProjectName,
 
-    [Parameter(Mandatory = $false)]
-    [switch]$Force
+  [Parameter(Mandatory = $false)]
+  [switch]$Force,
+
+  [Parameter(Mandatory = $false, HelpMessage = "도움말 표시")]
+  [Alias("h", "?")]
+  [switch]$Help
 )
 
-# 색상 출력 함수
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+#region Helpers
+
 function Write-Success { param($Message) Write-Host $Message -ForegroundColor Green }
-function Write-Error { param($Message) Write-Host $Message -ForegroundColor Red }
-function Write-Warning { param($Message) Write-Host $Message -ForegroundColor Yellow }
+function Write-ErrorText { param($Message) Write-Host $Message -ForegroundColor Red }
+function Write-WarningText { param($Message) Write-Host $Message -ForegroundColor Yellow }
 function Write-Info { param($Message) Write-Host $Message -ForegroundColor Cyan }
 
 # 기존 configuration 제거 함수
@@ -91,7 +112,12 @@ function Remove-ExistingCompound {
     }
 }
 
-# 스크립트가 루트에 위치하므로 $PSScriptRoot가 워크스페이스 루트
+#endregion
+
+#region Main
+
+function Main {
+
 $workspaceRoot = $PSScriptRoot
 
 # VSCode 설정 파일 경로
@@ -105,18 +131,18 @@ Write-Host ""
 Write-Host "프로젝트: $($ProjectName -join ', ')"
 Write-Host "워크스페이스: $workspaceRoot"
 if ($Force) {
-    Write-Warning "Force 모드: 기존 설정을 제거하고 다시 추가합니다."
+    Write-WarningText "Force 모드: 기존 설정을 제거하고 다시 추가합니다."
 }
 Write-Host ""
 
 # JSON 파일 존재 확인
 if (-not (Test-Path $launchJsonPath)) {
-    Write-Error "오류: launch.json 파일을 찾을 수 없습니다: $launchJsonPath"
+    Write-ErrorText "오류: launch.json 파일을 찾을 수 없습니다: $launchJsonPath"
     exit 1
 }
 
 if (-not (Test-Path $tasksJsonPath)) {
-    Write-Error "오류: tasks.json 파일을 찾을 수 없습니다: $tasksJsonPath"
+    Write-ErrorText "오류: tasks.json 파일을 찾을 수 없습니다: $tasksJsonPath"
     exit 1
 }
 
@@ -150,7 +176,7 @@ foreach ($project in $ProjectName) {
     $csprojFiles = Get-ChildItem -Path $workspaceRoot -Recurse -Filter "$project.csproj" -ErrorAction SilentlyContinue
 
     if ($csprojFiles.Count -eq 0) {
-        Write-Error "  오류: '$project.csproj' 파일을 찾을 수 없습니다."
+        Write-ErrorText "  오류: '$project.csproj' 파일을 찾을 수 없습니다."
         $failedProjects += $project
         continue
     }
@@ -158,7 +184,7 @@ foreach ($project in $ProjectName) {
     # 여러 개 발견 시 선택
     $selectedCsproj = $null
     if ($csprojFiles.Count -gt 1) {
-        Write-Warning "동일한 이름의 프로젝트 파일이 여러 개 발견되었습니다:"
+        Write-WarningText "동일한 이름의 프로젝트 파일이 여러 개 발견되었습니다:"
         Write-Host ""
 
         for ($i = 0; $i -lt $csprojFiles.Count; $i++) {
@@ -172,7 +198,7 @@ foreach ($project in $ProjectName) {
         if ($selection -match '^\d+$' -and [int]$selection -ge 1 -and [int]$selection -le $csprojFiles.Count) {
             $selectedCsproj = $csprojFiles[[int]$selection - 1]
         } else {
-            Write-Error "  잘못된 선택입니다. '$project' 건너뜀."
+            Write-ErrorText "  잘못된 선택입니다. '$project' 건너뜀."
             $failedProjects += $project
             continue
         }
@@ -202,7 +228,7 @@ foreach ($project in $ProjectName) {
             $removedProjects += $project
             Write-Success "  기존 설정 제거됨: '$project'"
         } else {
-            Write-Warning "  이미 존재하는 설정: '$project' - 건너뜀 (-Force로 덮어쓰기 가능)"
+            Write-WarningText "  이미 존재하는 설정: '$project' - 건너뜀 (-Force로 덮어쓰기 가능)"
             $skippedProjects += $project
             continue
         }
@@ -297,7 +323,7 @@ if ($addedProjects.Count -ge 2) {
     $existingCompound = $launchJson.compounds | Where-Object { $_.name -eq $compoundName }
 
     if ($existingCompound) {
-        Write-Warning "  이미 존재하는 compound: '$compoundName'"
+        Write-WarningText "  이미 존재하는 compound: '$compoundName'"
     } else {
         # 새 compound 생성
         $newCompound = [PSCustomObject]@{
@@ -337,7 +363,7 @@ Write-Host ""
 if ($removedProjects.Count -gt 0) {
     Write-Host "제거 후 다시 추가된 프로젝트 ($($removedProjects.Count)개):"
     foreach ($p in $removedProjects) {
-        Write-Warning "  - $p (기존 설정 제거됨)"
+        Write-WarningText "  - $p (기존 설정 제거됨)"
     }
     Write-Host ""
 }
@@ -362,7 +388,7 @@ if ($compoundCreated) {
 if ($skippedProjects.Count -gt 0) {
     Write-Host "건너뛴 프로젝트 (이미 존재, $($skippedProjects.Count)개):"
     foreach ($p in $skippedProjects) {
-        Write-Warning "  - $p (-Force 옵션으로 덮어쓰기 가능)"
+        Write-WarningText "  - $p (-Force 옵션으로 덮어쓰기 가능)"
     }
     Write-Host ""
 }
@@ -370,7 +396,7 @@ if ($skippedProjects.Count -gt 0) {
 if ($failedProjects.Count -gt 0) {
     Write-Host "실패한 프로젝트 ($($failedProjects.Count)개):"
     foreach ($p in $failedProjects) {
-        Write-Error "  - $p"
+        Write-ErrorText "  - $p"
     }
     Write-Host ""
 }
@@ -380,7 +406,7 @@ if ($addedProjects.Count -gt 0 -and (Test-Path $keybindingsJsonPath)) {
     Write-Host ""
     Write-Info "=== keybindings.json 안내 ==="
     Write-Host ""
-    Write-Warning "  .vscode/keybindings.json은 VSCode에서 자동 적용되지 않습니다."
+    Write-WarningText "  .vscode/keybindings.json은 VSCode에서 자동 적용되지 않습니다."
     Write-Host "  단축키를 사용하려면 아래 방법 중 하나를 선택하세요:"
     Write-Host ""
     Write-Host "  1. VSCode에서 Ctrl+Shift+P → 'Preferences: Open Keyboard Shortcuts (JSON)'"
@@ -394,3 +420,28 @@ if ($addedProjects.Count -gt 0 -and (Test-Path $keybindingsJsonPath)) {
 if ($addedProjects.Count -gt 0) {
     Write-Info "VSCode를 다시 로드하거나 F5를 눌러 실행하세요."
 }
+
+}
+
+#endregion
+
+#region Entry Point
+
+if ($Help) {
+  Get-Help $PSCommandPath -Detailed
+  exit 0
+}
+
+try {
+  Main
+  exit 0
+}
+catch {
+  Write-Host ""
+  Write-Host "[ERROR] $($_.Exception.Message)" -ForegroundColor Red
+  Write-Host $_.ScriptStackTrace -ForegroundColor DarkGray
+  Write-Host ""
+  exit 1
+}
+
+#endregion

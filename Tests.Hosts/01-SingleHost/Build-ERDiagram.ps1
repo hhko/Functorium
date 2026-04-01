@@ -43,9 +43,39 @@ $ErrorActionPreference = "Stop"
 # Set console encoding to UTF-8 for proper Korean character display
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-# Load common modules
-$repoRoot = (Resolve-Path "$PSScriptRoot/../..").Path
-. "$repoRoot/.scripts/Write-Console.ps1"
+#region Helpers
+
+function Write-Success {
+  param([string]$Message)
+  Write-Host "  $Message" -ForegroundColor Green
+}
+
+function Write-StartMessage {
+  param([string]$Title)
+  Write-Host ""
+  Write-Host "[START] $Title" -ForegroundColor Blue
+  Write-Host ""
+}
+
+function Write-DoneMessage {
+  param([string]$Title)
+  Write-Host ""
+  Write-Host "[DONE] $Title" -ForegroundColor Green
+  Write-Host ""
+}
+
+function Write-ErrorMessage {
+  param([System.Management.Automation.ErrorRecord]$ErrorRecord)
+  Write-Host ""
+  Write-Host "[ERROR] An unexpected error occurred:" -ForegroundColor Red
+  Write-Host "   $($ErrorRecord.Exception.Message)" -ForegroundColor Red
+  Write-Host ""
+  Write-Host "Stack trace:" -ForegroundColor DarkGray
+  Write-Host $ErrorRecord.ScriptStackTrace -ForegroundColor DarkGray
+  Write-Host ""
+}
+
+#endregion
 
 #region Constants
 
