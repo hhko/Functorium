@@ -1,9 +1,8 @@
 {
   "analysis_priorities": [
     "Src/Functorium",
+    "Src/Functorium.Adapters",
     "Src/Functorium.SourceGenerator",
-    "Src/Functorium.Testing",
-    "Docs/guides",
-    "Books"
+    "Src/Functorium.Testing"
   ]
 }
