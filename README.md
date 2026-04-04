@@ -185,7 +185,7 @@ test-engineer           → Unit/integration/architecture rule tests
 | 1 | Natural language requirements | **product-analyst** | Ubiquitous Language glossary, Aggregate boundaries, P0/P1/P2 priorities |
 | 2 | Glossary + invariant list | **domain-architect** | Type mapping (SimpleValueObject, SmartEnum, etc.), Always-valid patterns |
 | 3 | Type definitions + domain model | **application-architect** | CQRS usecases, Port interfaces, FinT LINQ composition |
-| 4 | Port interfaces | **adapter-engineer** | EFCore Repository, Dapper Query, FastEndpoints, DI, Observable Port |
+| 4 | Port interfaces | **adapter-engineer** | EF Core Repository, Dapper Query, FastEndpoints, DI, Observable Port |
 | 5 | Adapter implementation code | **observability-engineer** | KPI→metric mapping, L1/L2 dashboards, alert rules, ctx.* propagation |
 | 6 | Full codebase | **test-engineer** | Unit/integration/architecture rule tests, verification report |
 
@@ -542,7 +542,7 @@ FAILED  ValueObject_ShouldBe_PublicSealedWithPrivateConstructors
 |--------|-------|------------|--------------|
 | [Designing with Types](./Docs.Site/src/content/docs/samples/designing-with-types/index.md) | Domain | 1 | VO, Union, Composite, Specification |
 | [E-Commerce DDD](./Docs.Site/src/content/docs/samples/ecommerce-ddd/index.md) | Domain + Application | 5 | CQRS, EventHandler, DomainService, ApplyT |
-| [AI Model Governance](./Docs.Site/src/content/docs/samples/ai-model-governance/index.md) | Domain + Application + Adapter | 4 | EFCore/Dapper/InMemory, FastEndpoints, IO.Retry/Timeout/Fork/Bracket |
+| [AI Model Governance](./Docs.Site/src/content/docs/samples/ai-model-governance/index.md) | Domain + Application + Adapter | 4 | EF Core/Dapper/InMemory, FastEndpoints, IO.Retry/Timeout/Fork/Bracket |
 
 ### Packages
 

@@ -185,7 +185,7 @@ test-engineer           → 단위/통합/아키텍처 규칙 테스트
 | 1 | 자연어 요구사항 | **product-analyst** | 유비쿼터스 언어 사전, Aggregate 경계, P0/P1/P2 우선순위 |
 | 2 | 용어 사전 + 불변식 목록 | **domain-architect** | 타입 매핑(SimpleValueObject, SmartEnum 등), Always-valid 패턴 |
 | 3 | 타입 정의 + 도메인 모델 | **application-architect** | CQRS 유스케이스, Port 인터페이스, FinT LINQ 합성 |
-| 4 | Port 인터페이스 | **adapter-engineer** | EFCore Repository, Dapper Query, FastEndpoints, DI, Observable Port |
+| 4 | Port 인터페이스 | **adapter-engineer** | EF Core Repository, Dapper Query, FastEndpoints, DI, Observable Port |
 | 5 | Adapter 구현 코드 | **observability-engineer** | KPI→메트릭 매핑, L1/L2 대시보드, 알림 규칙, ctx.* 전파 |
 | 6 | 전체 코드베이스 | **test-engineer** | 단위/통합/아키텍처 규칙 테스트, 검증 리포트 |
 
@@ -542,7 +542,7 @@ FAILED  ValueObject_ShouldBe_PublicSealedWithPrivateConstructors
 |------|------|------------|-----------|
 | [Designing with Types](./Docs.Site/src/content/docs/samples/designing-with-types/index.md) | Domain | 1 | VO, Union, Composite, Specification |
 | [E-Commerce DDD](./Docs.Site/src/content/docs/samples/ecommerce-ddd/index.md) | Domain + Application | 5 | CQRS, EventHandler, DomainService, ApplyT |
-| [AI Model Governance](./Docs.Site/src/content/docs/samples/ai-model-governance/index.md) | Domain + Application + Adapter | 4 | EFCore/Dapper/InMemory, FastEndpoints, IO.Retry/Timeout/Fork/Bracket |
+| [AI Model Governance](./Docs.Site/src/content/docs/samples/ai-model-governance/index.md) | Domain + Application + Adapter | 4 | EF Core/Dapper/InMemory, FastEndpoints, IO.Retry/Timeout/Fork/Bracket |
 
 ### 패키지 구성
 
