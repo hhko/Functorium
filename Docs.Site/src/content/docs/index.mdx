@@ -303,32 +303,3 @@ public sealed partial class Email : SimpleValueObject<string>
     설계 단계부터 운영 안정성이 내재화됩니다.
   </Card>
 </CardGrid>
-
----
-
-## 문서 탐색
-
-### 튜토리얼
-
-| 튜토리얼 | 주제 | 실습 |
-|----------|------|------|
-| [Implementing Functional ValueObject](/Functorium/tutorials/functional-valueobject/) | Value Object, 검증, 불변성 | 29개 |
-| [Implementing Specification Pattern](/Functorium/tutorials/specification-pattern/) | Specification, Expression Tree | 18개 |
-| [Implementing CQRS Repository And Query Patterns](/Functorium/tutorials/cqrs-repository/) | CQRS, Repository, Query 어댑터 | 22개 |
-| [Designing TypeSafe Usecase Pipeline Constraints](/Functorium/tutorials/usecase-pipeline/) | 제네릭 변성, IFinResponse, Pipeline 제약 | 20개 |
-| [Enforcing Architecture Rules with Testing](/Functorium/tutorials/architecture-rules/) | 아키텍처 규칙, ClassValidator | 16개 |
-| [Automating ObservabilityCode with SourceGenerator](/Functorium/tutorials/sourcegen-observability/) | Source Generator, Observable wrapper | — |
-| [Automating ReleaseNotes with ClaudeCode and .NET 10](/Functorium/tutorials/release-notes-claude/) | AI 자동화, 릴리스 노트 | — |
-
-### 예제
-
-| 예제 | 범위 | Aggregates | 핵심 패턴 |
-|------|------|------------|-----------|
-| [Designing with Types](/Functorium/samples/designing-with-types/) | Domain | 1 | VO, Union, Composite, Specification |
-| [E-Commerce DDD](/Functorium/samples/ecommerce-ddd/) | Domain + Application | 5 | CQRS, EventHandler, DomainService, ApplyT |
-| [AI Model Governance](/Functorium/samples/ai-model-governance/) | Domain + Application + Adapter | 4 | EfCore/Dapper/InMemory, FastEndpoints, IO.Retry/Timeout/Fork/Bracket |
-
-<CardGrid>
-  <LinkCard title="전체 가이드" href="/Functorium/guides/architecture/01-project-structure/" description="아키텍처부터 Observability까지 체계적 가이드" />
-  <LinkCard title="AX (AI Transformation)" href="/Functorium/ax/" description="AI 에이전트 워크플로와 릴리스 노트 자동화" />
-</CardGrid>
