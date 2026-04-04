@@ -28,7 +28,7 @@ These are not simply process problems — they are **problems of design philosop
 
 Mediator, LanguageExt, FluentValidation, and OpenTelemetry are each excellent. But integrating them into a coherent DDD architecture requires hundreds of decisions about error propagation, pipeline ordering, observability boundaries, and type constraints. Functorium makes these decisions once, consistently — and **AI agents automatically apply these decisions to your project.**
 
-## See the Change in 30 Seconds — Before/After
+### See the Change in 30 Seconds — Before/After
 
 **Before** — Traditional C# validation. Exceptions are landmines buried in control flow:
 
@@ -38,7 +38,8 @@ public class Email
     public Email(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException("Email cannot be empty");   // Runtime bomb — if the next developer forgets try-catch, the system dies
+            throw new ArgumentException("Email cannot be empty");   // Runtime bomb
+                                                                    // if the next developer forgets try-catch, the system dies
         Value = value;
     }
     public string Value { get; }
@@ -61,7 +62,7 @@ public sealed partial class Email : SimpleValueObject<string>
 
 How does AI automatically compose exception-free, safe code like this? First, let's clarify the boundary between human and AI responsibilities.
 
-## Humans Define Rules, AI Builds Plumbing, Observability Translates Back
+### Humans Define Rules, AI Builds Plumbing, Observability Translates Back
 
 | Role | Responsibility | Concrete Artifacts |
 |------|---------------|-------------------|
