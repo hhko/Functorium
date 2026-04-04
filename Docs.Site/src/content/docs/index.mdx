@@ -1,11 +1,11 @@
 ---
 title: Functorium
-description: 도메인 주도 설계(DDD)와 함수형 아키텍처 원칙 기반의 .NET 아키텍처 프레임워크
+description: AI 에이전트가 도메인 설계를 가이드하고 코드를 생성하는 AI Native .NET 프레임워크
 template: splash
 hero:
   tagline: |
     코드가 비즈니스를 말하고, 운영이 코드를 읽는다.
-    Functional + DDD + Observability 통합 .NET 프레임워크
+    AI가 설계하고, 프레임워크가 보장하는 Functional DDD + Observability .NET Framework
   image:
     html: '<img src="/Functorium/Functorium.png" alt="Functorium logo" style="max-width:100%;height:auto;width:400px;" />'
   actions:
@@ -20,47 +20,148 @@ hero:
 
 import { Card, CardGrid, LinkCard, Steps, Aside } from '@astrojs/starlight/components';
 
-## 누구를 위한 프레임워크인가
-
-- **엔터프라이즈 DDD를 실천하는 .NET 팀** — 도메인 모델의 불변성과 합성 가능성을 코드 수준에서 보장하고 싶은 팀
-- **개발과 운영 사이의 언어 격차를 해소하고 싶은 팀** — 도메인 개념이 코드, 로그, 메트릭, 추적 정보에 일관되게 반영되어야 하는 팀
-- **함수형 DDD 아키텍처를 체계적으로 도입하려는 아키텍트** — LanguageExt + DDD + OpenTelemetry를 통합된 프레임워크로 사용하고 싶은 설계자
-
----
-
-Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다.
-하지만 이들을 일관된 DDD 아키텍처로 통합하려면 에러 전파, 파이프라인 순서, 관측성 경계, 타입 제약에 대한 수백 가지 결정이 필요합니다.
-**Functorium은 이 결정을 한 번, 일관되게 내립니다.**
-
-### 풀고자 하는 문제
+## 풀고자 하는 문제
 
 <div class="problem-card">
   <span class="text-problem">예외가 곧 비즈니스 로직</span>
-  성공과 실패가 try-catch로 분기되어 흐름을 예측하기 어렵고, 도메인 규칙의 합성이 불가능합니다.
+  비즈니스 규칙의 성공과 실패가 예외로 처리되어, 흐름을 예측하기 어렵고 합성이 불가능합니다.
 </div>
 <div class="problem-card">
   <span class="text-problem">개발 언어 ≠ 운영 언어</span>
-  기능 명세와 운영 요구사항이 서로 다른 체계로 관리되어 해석 차이가 누적됩니다.
+  기능 명세와 운영 요구가 서로 다른 체계로 관리되면서, 공통 언어가 정립되지 못하고 해석 차이가 누적됩니다.
 </div>
 <div class="problem-card">
   <span class="text-problem">Observability는 항상 사후 보완</span>
-  로그, 메트릭, 트레이싱이 구현 완료 후 부착되어 장애 시 맥락이 유실됩니다.
+  로그, 메트릭, 추적 정보가 구현 완료 후 별도로 부착되면서, 장애 발생 시 원인 분석에 필요한 맥락이 누락됩니다.
 </div>
 
-### 문제 돌파 방향
+이는 단순히 프로세스의 문제가 아니라, **설계 철학과 구조의 문제입니다.**
 
-<div class="solution-card">
-  <span class="text-solution">예외 없는 순수 도메인</span>
-  Fin&lt;T&gt;, FinT&lt;IO, T&gt;로 결과와 사이드 이펙트를 타입 수준에서 명시하고, LINQ 합성으로 도메인 흐름을 구성합니다.
+Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다.
+하지만 이들을 일관된 DDD 아키텍처로 통합하려면 에러 전파, 파이프라인 순서, 관측성 경계, 타입 제약에 대한 수백 가지 결정이 필요합니다.
+**Functorium은 이 결정을 한 번, 일관되게 내립니다** — 그리고 **AI 에이전트가 이 결정을 프로젝트에 자동으로 적용합니다.**
+
+---
+
+## AI가 문제를 돌파하는 방법
+
+**6개 전문 AI 에이전트가** 요구사항 분석부터 테스트까지 7단계 워크플로를 안내합니다.
+각 단계에서 설계 문서와 컴파일 가능한 C# 코드가 동시에 생성됩니다.
+
+| 문제 | AI 에이전트의 역할 | 프레임워크가 보장하는 것 |
+|------|-------------------|----------------------|
+| 예외와 암묵적 사이드 이펙트 | **domain-architect**가 비즈니스 불변식을 분류하고 타입으로 매핑 | `Fin<T>`, `FinT<IO,T>` 결과 타입, Always-valid Value Object |
+| 개발/운영 언어 분리 | **product-analyst**가 유비쿼터스 언어를 추출하고 코드/문서/메트릭에 일관 반영 | Bounded Context, `ctx.*` 필드 자동 전파 |
+| Observability 사후 보완 | **observability-engineer**가 KPI→메트릭 매핑, 대시보드, 알림을 설계 | 3-Pillar 자동 계측, `[GenerateObservablePort]` |
+
+### 7단계 워크플로
+
+```
+project-spec                    : PRD 작성, 유비쿼터스 언어, Aggregate 경계 도출
+  → architecture-design         : 프로젝트 구조, 레이어 구성, 인프라 결정
+  → domain-develop              : Value Object, Entity, Aggregate, Specification 구현
+  → application-develop         : CQRS 유스케이스, Port 설계 및 구현
+  → adapter-develop             : Repository, Query Adapter, Endpoint, DI 등록
+  → observability-develop       : KPI→메트릭 매핑, 대시보드, 알림, ctx.* 전파
+  → test-develop                : 단위/통합/아키텍처 규칙 테스트 작성
+  → domain-review               : 기존 코드 DDD 리뷰 및 개선 방향 제시
+```
+
+각 단계는 **4단계 문서 패턴**을 따릅니다. 모든 설계 결정에는 추적 가능한 근거가 남습니다:
+
+```
+00-business-requirements        : 비즈니스 규칙 정의
+  →  01-type-design-decisions   : 불변식 → 타입 매핑
+  →  02-code-design             : C# 패턴 설계
+  →  03-implementation-results  : 컴파일 가능한 코드 + 테스트
+```
+
+### 6개 전문 에이전트
+
+| 에이전트 | 전문 영역 |
+|---------|----------|
+| **product-analyst** | PRD 작성, 유비쿼터스 언어 정의, Aggregate 경계 도출 |
+| **domain-architect** | 불변식 분류, Functorium 타입 매핑, Always-valid 패턴 설계 |
+| **application-architect** | CQRS 유스케이스 분해, 포트 식별, FinT LINQ 합성 설계 |
+| **adapter-engineer** | Repository, Query Adapter, Endpoint, DI 등록, Observable Port 구현 |
+| **observability-engineer** | KPI→메트릭 매핑, 대시보드 설계, 알림 패턴, ctx.* 전파 전략 |
+| **test-engineer** | 단위/통합/아키텍처 규칙/Observability 검증 테스트 |
+
+---
+
+## Quick Example — 예외에서 타입 안전으로
+
+<div class="compare-grid">
+  <div class="compare-before">
+    <h4>Before — 전통적인 C# 유효성 검사</h4>
+
+```csharp
+public class Email
+{
+    public Email(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException(
+                "Email cannot be empty");
+        Value = value;
+    }
+    public string Value { get; }
+}
+```
+
+예외는 제어 흐름에 심어진 지뢰입니다.
+다음 개발자가 `try-catch`를 빼먹으면 시스템이 죽습니다.
+
+  </div>
+  <div class="compare-after">
+    <h4>After — Functorium 함수형 검증</h4>
+
+```csharp
+public sealed partial class Email
+    : SimpleValueObject<string>
+{
+    public static Fin<Email> Create(string? value) =>
+        CreateFromValidation(
+            Validate(value),
+            v => new Email(v));
+}
+```
+
+실패 가능성이 반환 타입에 명시됩니다.
+처리하지 않으면 컴파일 자체가 불가능합니다.
+
+  </div>
 </div>
-<div class="solution-card">
-  <span class="text-solution">단일 도메인 언어로 통합</span>
-  Bounded Context를 명확히 정의하여 도메인 개념이 코드, 문서, 운영 메트릭에 일관되게 반영됩니다.
-</div>
-<div class="solution-card">
-  <span class="text-solution">설계에 내재된 Observability</span>
-  OpenTelemetry 기반 Logging, Metrics, Tracing이 유스케이스 파이프라인에 자동 적용됩니다.
-</div>
+
+### 전체 구현 — Always-valid Value Object
+
+```csharp
+public sealed partial class Email : SimpleValueObject<string>
+{
+    public const int MaxLength = 320;
+
+    private Email(string value) : base(value) { }
+
+    public static Fin<Email> Create(string? value) =>
+        CreateFromValidation(Validate(value), v => new Email(v));
+
+    // 각 검증 조건이 실패하면 에러 코드가 자동 생성됩니다.
+    //   NotNull    → "DomainErrors.Email.Null"
+    //   NotEmpty   → "DomainErrors.Email.Empty"
+    //   MaxLength  → "DomainErrors.Email.TooLong"
+    //   Matches    → "DomainErrors.Email.InvalidFormat"
+    public static Validation<Error, string> Validate(string? value) =>
+        ValidationRules<Email>
+            .NotNull(value)
+            .ThenNotEmpty()
+            .ThenNormalize(v => v.Trim().ToLowerInvariant())
+            .ThenMaxLength(MaxLength)
+            .ThenMatches(EmailRegex(), "Invalid email format");
+
+    public static Email CreateFromValidated(string value) => new(value);
+    public static implicit operator string(Email email) => email.Value;
+}
+```
 
 ---
 
@@ -68,145 +169,28 @@ Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다
 
 <Steps>
 
-1. **<span class="text-problem">Naive 코드 — 우리가 흔히 작성하는 코드</span>**
+1. **AI로 시작하기 (권장)**
 
-   온라인 상점에서 상품을 관리한다고 가정합니다. 가장 직관적인 코드는 이렇습니다:
-
-   ```csharp
-   public class Product
-   {
-       public string Name { get; set; } = "";     // 빈 문자열? null?
-       public decimal Price { get; set; }         // 음수? 0?
-   }
+   ```bash
+   claude --plugin-dir ./.claude/plugins/functorium-develop --plugin-dir ./.claude/plugins/release-note
    ```
 
-   이 코드는 컴파일러가 아무 문제도 발견하지 못합니다. 하지만 실행하면:
+   > "이커머스 플랫폼의 PRD를 작성해줘"로 시작하면, AI 에이전트가 7단계 워크플로를 안내합니다.
 
-   - `Name = ""` — 빈 상품명이 DB에 저장됩니다. 카탈로그에 이름 없는 상품이 노출됩니다.
-   - `Price = -500` — 음수 가격이 결제 시스템에 전달됩니다. 고객에게 돈을 지급하게 됩니다.
-   - `new Product()` — 어디서든 검증 없이 생성할 수 있습니다. 서비스 레이어, 테스트, 심지어 컨트롤러에서도.
-   - `Name`과 `Description`이 모두 `string` — 컴파일러가 둘을 구분할 수 없어 실수로 바꿔 넣어도 발견되지 않습니다.
+2. **패키지로 시작하기**
 
-   이 버그들은 코드 리뷰에서 발견되지 않고, 단위 테스트를 통과하고, **프로덕션에서 고객이 발견합니다.**
-   DDD의 Value Object는 이 모든 문제를 **컴파일 타임에 차단합니다.**
-
-3. **<span class="text-solution">Value Object — 규칙을 타입으로 강제</span>**
-
-   ```csharp
-   public sealed class ProductName : SimpleValueObject<string>
-   {
-       public const int MaxLength = 100;
-       private ProductName(string value) : base(value) { }
-
-       public static Fin<ProductName> Create(string? value) =>
-           CreateFromValidation(Validate(value), v => new ProductName(v));
-
-       public static Validation<Error, string> Validate(string? value) =>
-           ValidationRules<ProductName>
-               .NotNull(value)              // 실패 시 에러 코드 "DomainErrors.ProductName.Null"
-               .ThenNotEmpty()              // 실패 시 에러 코드 "DomainErrors.ProductName.Empty"
-               .ThenNormalize(v => v.Trim())
-               .ThenMaxLength(MaxLength);   // 실패 시 에러 코드 "DomainErrors.ProductName.TooLong";
-   }
+   ```bash
+   dotnet add package Functorium                  # 핵심 도메인 모델링
+   dotnet add package Functorium.Adapters          # 인프라 어댑터
+   dotnet add package Functorium.SourceGenerators   # 코드 자동 생성
+   dotnet add package Functorium.Testing            # 테스트 유틸리티
    ```
-
-   `ProductName.Create("")`은 `Fin.Fail`을 반환합니다. 예외 없이, 에러 코드와 함께.
-
-4. **<span class="text-solution">AggregateRoot — 상태 변경을 이벤트로</span>**
-
-   ```csharp
-   [GenerateEntityId]  // → ProductId 자동 생성 (Ulid 기반)
-   public sealed class Product : AggregateRoot<ProductId>
-   {
-       public sealed record CreatedEvent(
-           ProductId ProductId, ProductName Name, Money Price) : DomainEvent;
-
-       public ProductName Name { get; private set; }
-       public Money Price { get; private set; }
-
-       private Product(ProductId id, ProductName name, Money price) : base(id)
-       {
-           Name = name;
-           Price = price;
-       }
-
-       public static Product Create(ProductName name, Money price)
-       {
-           var product = new Product(ProductId.New(), name, price);
-           product.AddDomainEvent(new CreatedEvent(product.Id, name, price));
-           return product;
-       }
-   }
-   ```
-
-   `new Product()` 불가. 검증된 VO로만 생성. 생성 시 `CreatedEvent` 자동 발행.
-
-5. **<span class="text-solution">Command Usecase — 예외 없는 비즈니스 흐름</span>**
-
-   ```csharp
-   public sealed class CreateProductCommand
-   {
-       public sealed record Request(string Name, decimal Price)
-           : ICommandRequest<Response>;
-       public sealed record Response(string ProductId, string Name, decimal Price);
-
-       public sealed class Usecase(IProductRepository repository)
-           : ICommandUsecase<Request, Response>
-       {
-           public async ValueTask<FinResponse<Response>> Handle(
-               Request request, CancellationToken ct)
-           {
-               var name = ProductName.Create(request.Name).Unwrap();
-               var price = Money.Create(request.Price).Unwrap();
-               var product = Product.Create(name, price);
-
-               FinT<IO, Response> usecase =
-                   from created in repository.Create(product)
-                   select new Response(
-                       created.Id.ToString(), created.Name, created.Price);
-
-               return (await usecase.Run().RunAsync()).ToFinResponse();
-           }
-       }
-   }
-   ```
-
-   `from ... in ... select` LINQ 합성으로 예외 없이 비즈니스 흐름을 조립합니다.
 
 </Steps>
 
 <Aside type="tip" title="5분 빠른시작에서 이 코드를 직접 실행해 보세요">
-[Quickstart](/Functorium/quickstart/)에서 프로젝트 생성부터 테스트까지 5분 안에 완료할 수 있습니다.
+[Quickstart](/Functorium/quickstart/)에서 Value Object → AggregateRoot → Command Usecase를 5분 안에 만들어 보세요.
 </Aside>
-
----
-
-## 무엇이 달라지는가
-
-<div class="compare-grid">
-  <div class="compare-before">
-    <h4>Naive 코드</h4>
-    <ul>
-      <li><code>string Name</code> — 아무 값이나 허용</li>
-      <li><code>new Product()</code> — 어디서든 생성</li>
-      <li><code>try-catch</code>로 에러 처리</li>
-      <li>예외 발생 시 스택 트레이스만</li>
-      <li>로그/메트릭 수동 추가</li>
-      <li>이벤트 없이 상태 변경</li>
-    </ul>
-  </div>
-  <div class="compare-after">
-    <h4>Functorium</h4>
-    <ul>
-      <li><code>ProductName</code> — 빈 문자열, 100자 초과 방지</li>
-      <li><code>Product.Create(vo1, vo2)</code> — 검증된 VO로만 생성</li>
-      <li><code>Fin&lt;T&gt;</code>로 성공/실패를 타입으로 명시</li>
-      <li><code>"DomainErrors.ProductName.Empty"</code> 구조화된 에러 코드</li>
-      <li><code>[GenerateObservablePort]</code>로 자동 관측성</li>
-      <li><code>AddDomainEvent(new CreatedEvent(...))</code> 자동 발행</li>
-    </ul>
-  </div>
-</div>
 
 ---
 
@@ -214,19 +198,19 @@ Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다
 
 <CardGrid>
   <Card title="타입 안전한 도메인 모델링" icon="pencil">
-    Value Object, Entity, AggregateRoot, Specification으로 불변식을 코드에 내장합니다.
+    Value Object 계층 (6 타입 + Union), Entity/AggregateRoot, Specification Pattern, 구조화된 에러 코드.
     `Fin<T>`와 `FinT<IO, T>`로 예외 없이 도메인 흐름을 합성합니다.
   </Card>
-  <Card title="자동 코드 생성" icon="setting">
-    Source Generator가 Observable wrapper, EntityId, CtxEnricher를 컴파일 시점에 생성합니다.
+  <Card title="IO 고급 기능" icon="setting">
+    Timeout, Retry(지수 백오프), Fork(병렬 실행), Bracket(리소스 생명주기 관리).
+    외부 서비스 호출의 장애 내성을 타입 안전하게 구성합니다.
+  </Card>
+  <Card title="자동화" icon="approve-check">
+    5개 Source Generator, Usecase Pipeline (Observability + Validation 내장), 아키텍처 규칙 테스트.
     반복 코드를 작성할 필요가 없습니다.
   </Card>
-  <Card title="CQRS 파이프라인" icon="approve-check">
-    Command/Query를 분리하고, 8단계 파이프라인이 유효성 검사, 트랜잭션, Observability를 자동 적용합니다.
-  </Card>
   <Card title="Observability by Design" icon="open-book">
-    OpenTelemetry 기반 Logging, Metrics, Tracing이 설계 단계부터 내재화됩니다.
-    `ctx.*` 3-Pillar Enrichment로 비즈니스 컨텍스트를 자동 전파합니다.
+    3-Pillar 자동 계측, `ctx.*` 비즈니스 컨텍스트 전파, 에러 자동 분류 (expected/exceptional/aggregate).
+    설계 단계부터 운영 안정성이 내재화됩니다.
   </Card>
 </CardGrid>
-
