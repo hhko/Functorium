@@ -4,23 +4,21 @@
 
 **[English](./README.md)** | **한국어**
 
-> **Functorium**은 **`functor + dominium`** 에 **`fun`** 을 더한 이름으로, 도메인 주도 설계(DDD)와 함수형 아키텍처 원칙을 기반으로 **개발과 운영 사이의 구조적 단절을 해소**하기 위한 통합 .NET 프레임워크입니다.
+> **Functorium**은 **`functor + dominium`** 에 **`fun`** 을 더한 이름입니다.
+> **dominium**은 라틴어로 "지배, 소유"를 뜻합니다 — Domain은 단순한 범위가 아니라, **우리가 책임지고 지배하는 문제 공간**입니다.
+>
+> Functorium은 AI 에이전트가 도메인 설계를 직접 가이드하고 코드를 생성하는 **AI Native .NET 프레임워크**입니다.
+> 그 결과물은 함수형 아키텍처 + DDD + Observability가 내재된 프로덕션 코드로 컴파일됩니다.
 
-- 배움은 셀렘이다.
+- 배움은 설렘이다.
 - 배움은 겸손이다.
 - 배움은 이타심이다.
 
-**Functorium**은 단순한 설계 패턴 모음이 아니라, 요구사항 정의부터 운영 안정성 확보까지 일관된 철학으로 연결되는 구조적 접근 방식을 담고 있습니다.
+**6개 전문 AI 에이전트가** 요구사항 분석부터 테스트까지 7단계 워크플로를 안내합니다. 각 단계에서 설계 문서와 컴파일 가능한 C# 코드가 동시에 생성됩니다. 수작업으로 수백 가지 아키텍처 결정을 내릴 필요가 없습니다.
 
-## 누구를 위한 프레임워크인가
+Functorium은 엔터프라이즈 DDD를 실천하는 .NET 팀, 개발과 운영의 언어 격차를 해소하려는 팀, 함수형 DDD 아키텍처를 체계적으로 도입하려는 아키텍트를 위해 설계되었습니다.
 
-- **엔터프라이즈 DDD를 실천하는 .NET 팀** — 도메인 모델의 불변성과 합성 가능성을 코드 수준에서 보장하고 싶은 팀
-- **개발과 운영 사이의 언어 격차를 해소하고 싶은 팀** — 도메인 개념이 코드, 로그, 메트릭, 추적 정보에 일관되게 반영되어야 하는 팀
-- **함수형 DDD 아키텍처를 체계적으로 도입하려는 아키텍트** — LanguageExt + DDD + OpenTelemetry를 통합된 프레임워크로 사용하고 싶은 설계자
-
-## 설계 동기
-
-### 풀고자 하는 문제
+## 풀고자 하는 문제
 
 1. **도메인 로직에 예외와 암묵적 사이드 이펙트가 섞여 있다** — 비즈니스 규칙의 성공과 실패가 예외로 처리되어, 흐름을 예측하기 어렵고 합성이 불가능합니다.
 2. **개발 언어와 운영 언어가 분리되어 있다** — 기능 명세와 운영 요구가 서로 다른 체계로 관리되면서, 공통 언어가 정립되지 못하고 해석 차이가 누적됩니다.
@@ -28,19 +26,69 @@
 
 이는 단순히 프로세스의 문제가 아니라, **설계 철학과 구조의 문제**입니다.
 
-Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다. 하지만 이들을 일관된 DDD 아키텍처로 통합하려면 에러 전파, 파이프라인 순서, 관측성 경계, 타입 제약에 대한 수백 가지 결정이 필요합니다. Functorium은 이 결정을 한 번, 일관되게 내립니다.
+Mediator, LanguageExt, FluentValidation, OpenTelemetry는 각각 훌륭합니다. 하지만 이들을 일관된 DDD 아키텍처로 통합하려면 에러 전파, 파이프라인 순서, 관측성 경계, 타입 제약에 대한 수백 가지 결정이 필요합니다. Functorium은 이 결정을 한 번, 일관되게 내립니다 — 그리고 **AI 에이전트가 이 결정을 프로젝트에 자동으로 적용합니다.**
 
-### 문제 해결 방향
+## AI가 문제를 돌파하는 방법
 
-1. **함수형 아키텍처로 도메인 로직을 순수하게 유지한다** — `Fin<T>`, `FinT<IO, T>`로 결과와 사이드 이펙트를 타입 수준에서 명시하고, `from ... in ... select` LINQ 합성으로 예외 없이 도메인 흐름을 조립합니다.
-2. **단일 도메인 언어(Ubiquitous Language)로 통합한다** — Bounded Context를 명확히 정의하고, 도메인 개념이 코드·문서·운영 지표에 일관되게 반영되는 구조를 만듭니다.
-3. **Observability를 설계 단계부터 내재화한다** — OpenTelemetry 기반 Logging, Metrics, Tracing이 유스케이스 파이프라인에 자동 적용되어, 도메인 흐름과 관측 정보가 함께 설계됩니다.
+### 문제에서 코드까지 — AI가 연결하는 구조
 
-## 설계 철학
+| 문제 | AI 에이전트의 역할 | 프레임워크가 보장하는 것 |
+|------|-------------------|----------------------|
+| 예외와 암묵적 사이드 이펙트 | **domain-architect**가 비즈니스 불변식을 분류하고 타입으로 매핑 | `Fin<T>`, `FinT<IO,T>` 결과 타입, Always-valid Value Object |
+| 개발/운영 언어 분리 | **product-analyst**가 유비쿼터스 언어를 추출하고 코드/문서/메트릭에 일관 반영 | Bounded Context, `ctx.*` 필드 자동 전파 |
+| Observability 사후 보완 | **observability-engineer**가 KPI→메트릭 매핑, 대시보드, 알림을 설계 | 3-Pillar 자동 계측, `[GenerateObservablePort]` |
 
-### 도메인 중심 설계
+### 7단계 워크플로
 
-모든 핵심 비즈니스 로직은 도메인 모델 안에 위치하며, 엔티티와 값 객체, 애그리게이트, 도메인 서비스는 명확한 책임을 가집니다. 공통 언어는 단순한 용어 정리가 아니라, 코드와 문서, 운영 지표에까지 반영되어야 하는 일관된 개념 체계입니다.
+PRD 작성부터 테스트까지, 8개 스킬 + 6개 전문 에이전트가 안내합니다.
+
+```
+project-spec                    : PRD 작성, 유비쿼터스 언어, Aggregate 경계 도출
+  → architecture-design         : 프로젝트 구조, 레이어 구성, 인프라 결정
+  → domain-develop              : Value Object, Entity, Aggregate, Specification 구현
+  → application-develop         : CQRS 유스케이스, Port 설계 및 구현
+  → adapter-develop             : Repository, Query Adapter, Endpoint, DI 등록
+  → observability-develop       : KPI→메트릭 매핑, 대시보드, 알림, ctx.* 전파
+  → test-develop                : 단위/통합/아키텍처 규칙 테스트 작성
+  → domain-review               : 기존 코드 DDD 리뷰 및 개선 방향 제시
+```
+
+각 단계는 **4단계 문서 패턴**을 따릅니다. 모든 설계 결정에는 추적 가능한 근거가 남습니다:
+
+```
+00-business-requirements        : 비즈니스 규칙 정의
+  →  01-type-design-decisions   : 불변식 → 타입 매핑
+  →  02-code-design             : C# 패턴 설계
+  →  03-implementation-results  : 컴파일 가능한 코드 + 테스트
+```
+
+### 6개 전문 에이전트
+
+| 에이전트 | 전문 영역 |
+|---------|----------|
+| **product-analyst** | PRD 작성, 유비쿼터스 언어 정의, Aggregate 경계 도출 |
+| **domain-architect** | 불변식 분류, Functorium 타입 매핑, Always-valid 패턴 설계 |
+| **application-architect** | CQRS 유스케이스 분해, 포트 식별, FinT LINQ 합성 설계 |
+| **adapter-engineer** | Repository, Query Adapter, Endpoint, DI 등록, Observable Port 구현 |
+| **observability-engineer** | KPI→메트릭 매핑, 대시보드 설계, 알림 패턴, ctx.* 전파 전략 |
+| **test-engineer** | 단위/통합/아키텍처 규칙/Observability 검증 테스트 |
+
+### AI가 생성하는 산출물
+
+- Value Objects (Always-valid, 구조화된 에러 코드)
+- AggregateRoot (도메인 이벤트 포함)
+- CQRS Command/Query 유스케이스
+- EF Core Repository + Dapper Query Adapter
+- FastEndpoints API 엔드포인트
+- Observable Port (자동 3-Pillar 계측)
+- 단위 테스트, 통합 테스트, 아키텍처 규칙 테스트
+- 전 단계 설계 문서 (추적 가능한 설계 근거)
+
+## AI가 생성하는 코드: 함수형 아키텍처
+
+### 도메인 모델
+
+`domain-develop` 스킬의 **domain-architect** 에이전트는 비즈니스 불변식을 분류하고, Functorium 타입 시스템으로 매핑합니다. 모든 핵심 비즈니스 로직은 도메인 모델 안에 위치하며, 엔티티와 값 객체, 애그리게이트, 도메인 서비스는 명확한 책임을 가집니다.
 
 **Value Object** — 값 기반 동등성과 불변성을 보장합니다:
 
@@ -95,9 +143,9 @@ public interface IDomainEvent : INotification
 }
 ```
 
-### 함수형 아키텍처 전환
+### CQRS와 함수형 합성
 
-핵심 도메인 로직은 순수 함수로 구성됩니다. 입력이 동일하면 항상 동일한 출력을 반환하는 구조를 유지함으로써, 로직은 예측 가능하고 테스트하기 쉬운 형태가 됩니다. 사이드 이펙트(데이터베이스, 외부 API, 메시징, 파일 I/O)는 도메인 로직 바깥에서 처리됩니다. `IO` 모나드는 Timeout, Retry(지수 백오프), Fork(병렬 실행), Bracket(리소스 생명주기 관리) 등 고급 기능을 기본 제공하여, 외부 서비스 호출의 장애 내성을 타입 안전하게 구성할 수 있습니다.
+`application-develop` 스킬은 도메인 모델을 CQRS 유스케이스로 조립합니다. 핵심 도메인 로직은 순수 함수로 구성됩니다. 입력이 동일하면 항상 동일한 출력을 반환하는 구조를 유지함으로써, 로직은 예측 가능하고 테스트하기 쉬운 형태가 됩니다. 사이드 이펙트(데이터베이스, 외부 API, 메시징, 파일 I/O)는 도메인 로직 바깥에서 처리됩니다. `IO` 모나드는 Timeout, Retry(지수 백오프), Fork(병렬 실행), Bracket(리소스 생명주기 관리) 등 고급 기능을 기본 제공하여, 외부 서비스 호출의 장애 내성을 타입 안전하게 구성할 수 있습니다.
 
 **`Fin<T>`, `FinT<IO, T>`** — 예외 대신 명시적 결과 타입으로 오류를 처리합니다. Command 경로의 Repository는 `FinT<IO, T>`를 반환하여 사이드 이펙트를 명시적으로 표현합니다:
 
@@ -159,9 +207,20 @@ public interface IQueryPort<TEntity, TDto> : IQueryPort
 | **Specification** | `PropertyMap` → EF Core LINQ 변환 | `DapperSpecTranslator` → SQL WHERE 변환 |
 | **페이지네이션** | — | Offset/Limit, Cursor (keyset), Streaming |
 
-### Observability by Design
+### 내재된 Observability
 
-운영 안정성은 배포 이후에 보완하는 것이 아니라, 설계 단계에서부터 고려됩니다. 모든 Command/Query의 요청부터 응답까지 Logging, Metrics, Tracing 3개 Pillar에 **동일한 필드가 일관되게 기록**됩니다. 개발자가 로그 코드를 직접 작성할 필요가 없습니다.
+`observability-develop` 스킬은 운영 안정성을 설계 단계부터 내재화합니다. 모든 Command와 Query는 Observability(Logging, Metrics, Tracing)와 유효성 검사가 내장된 파이프라인을 자동으로 통과합니다. 개발자가 로그 코드를 직접 작성할 필요가 없습니다.
+
+```mermaid
+flowchart TD
+    A["공통: Observability + Validation
+    (Logging · Metrics · Tracing · 검증)"] --> B[Command 경로]
+    A --> C[Query 경로]
+    B --> D["Transaction + Domain Event 발행"]
+    C --> E["Caching + 페이지네이션"]
+```
+
+Command는 트랜잭션 경계 안에서 도메인 이벤트를 발행하고, Query는 캐싱과 페이지네이션을 제공합니다. 파이프라인의 정확한 단계와 순서는 [Observability Specification](./Docs.Site/src/content/docs/spec/08-observability.md)에서 확인할 수 있습니다.
 
 **IObservablePort** — 모든 외부 의존성이 관측 가능한 포트로 추상화됩니다:
 
@@ -183,36 +242,38 @@ public class OrderRepository : IRepository<Order, OrderId> { ... }
 
 **에러 자동 분류** — 비즈니스 규칙 위반(`"재고 부족"`)은 `expected`, 시스템 장애(`NullReferenceException`)는 `exceptional`, 복합 검증 실패는 `aggregate`로 자동 분류됩니다. `error.type` 필드로 Seq/Grafana에서 비즈니스 오류와 시스템 장애를 분리 조회할 수 있습니다.
 
-**Usecase Pipeline** — Command와 Query는 경로 특성에 따라 서로 다른 Pipeline 구성을 갖습니다:
-
-> **Command (7단계):** CtxEnricher → Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler
->
-> **Query (8단계):** CtxEnricher → Metrics → Tracing → Logging → Validation → Caching → Exception → Custom → Handler
-
-| Pipeline | 역할 | 적용 |
-|----------|------|------|
-| `CtxEnricherPipeline` | 비즈니스 컨텍스트(ctx.*)를 Logging/Tracing/Metrics에 동시 전파 | 공통 |
-| `UsecaseMetricsPipeline` | 유스케이스 메트릭 자동 수집 | 공통 |
-| `UsecaseTracingPipeline` | 분산 추적 컨텍스트 전파 | 공통 |
-| `UsecaseLoggingPipeline` | 구조화된 로그 자동 기록 | 공통 |
-| `UsecaseValidationPipeline` | FluentValidation 기반 입력 검증 | 공통 |
-| `UsecaseCachingPipeline` | ICacheable 요청 캐싱 | Query 전용 |
-| `UsecaseExceptionPipeline` | 예외 → 구조화된 에러 변환 | 공통 |
-| `UsecaseTransactionPipeline` | 트랜잭션 경계 + 도메인 이벤트 발행 | Command 전용 |
-
-## 주요 핵심 기능
-
-| 가치 | 제공 기능 |
-|------|----------|
-| **도메인 안전성** | Value Object 계층 (6 타입 + Union), Entity/AggregateRoot, Specification Pattern, 구조화된 에러 코드 |
-| **함수형 합성** | `Fin<T>`/`FinT<IO,T>` Discriminated Union, LINQ 합성, Bind/Apply 검증, CQRS 경로별 최적화 |
-| **IO 고급 기능** | Timeout, Retry(지수 백오프), Fork(병렬 실행), Bracket(리소스 생명주기 관리) |
-| **자동화** | 5개 Source Generator, Usecase Pipeline (Command 7단계 / Query 8단계), 아키텍처 규칙 테스트 |
-| **관측성** | 3-Pillar 자동 계측, ctx.* 비즈니스 컨텍스트 전파, 에러 자동 분류 (expected/exceptional/aggregate) |
-
 ## Quick Example
 
-Always-valid Value Object — 예외 없이 타입 안전한 에러 코드로 검증하고, 합성 가능한 함수형 검증 파이프라인을 제공합니다:
+### Before/After — 예외에서 타입 안전으로
+
+**Before** — 전통적인 C# 유효성 검사. 예외는 제어 흐름에 심어진 지뢰입니다:
+
+```csharp
+public class Email
+{
+    public Email(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException("Email cannot be empty");   // 런타임 폭탄 — 다음 개발자가 try-catch를 빼먹으면 시스템이 죽는다
+        Value = value;
+    }
+    public string Value { get; }
+}
+```
+
+**After** — Functorium의 함수형 검증. 실패 가능성이 반환 타입에 명시되어, 처리하지 않으면 컴파일 자체가 불가능합니다:
+
+```csharp
+public sealed partial class Email : SimpleValueObject<string>
+{
+    public static Fin<Email> Create(string? value) =>               // Fin<T>: 성공 또는 구조화된 에러
+        CreateFromValidation(Validate(value), v => new Email(v));   // 예외 없이 합성 가능한 파이프라인
+}
+```
+
+### 전체 구현 — Always-valid Value Object
+
+예외 없이 타입 안전한 에러 코드로 검증하고, 합성 가능한 함수형 검증 파이프라인을 제공합니다:
 
 ```csharp
 public sealed partial class Email : SimpleValueObject<string>
@@ -248,7 +309,43 @@ public sealed partial class Email : SimpleValueObject<string>
 
 CQRS Command/Query 유스케이스 구현 예제는 [CQRS Repository 튜토리얼](./Docs.Site/src/content/docs/tutorials/cqrs-repository/index.md)에서 확인할 수 있습니다.
 
+## 주요 핵심 기능
+
+| 가치 | 제공 기능 |
+|------|----------|
+| **도메인 안전성** | Value Object 계층 (6 타입 + Union), Entity/AggregateRoot, Specification Pattern, 구조화된 에러 코드 |
+| **함수형 합성** | `Fin<T>`/`FinT<IO,T>` Discriminated Union, LINQ 합성, Bind/Apply 검증, CQRS 경로별 최적화 |
+| **IO 고급 기능** | Timeout, Retry(지수 백오프), Fork(병렬 실행), Bracket(리소스 생명주기 관리) |
+| **자동화** | 5개 Source Generator, Usecase Pipeline (Observability + Validation 내장), 아키텍처 규칙 테스트 |
+| **관측성** | 3-Pillar 자동 계측, ctx.* 비즈니스 컨텍스트 전파, 에러 자동 분류 (expected/exceptional/aggregate) |
+
 ## 시작하기
+
+### 설치
+
+```bash
+# 두 플러그인 동시 로드
+claude --plugin-dir ./.claude/plugins/functorium-develop --plugin-dir ./.claude/plugins/release-note
+```
+
+### release-note (v1.0.0) — 릴리스 노트 자동화
+
+C# 스크립트 기반 데이터 수집, Conventional Commits 분석, Breaking Changes 감지, 릴리스 노트 작성, 검증까지 5단계를 1개 스킬 + 1개 에이전트가 자동화합니다.
+
+| 원칙 | 설명 |
+|------|------|
+| 정확성 우선 | Uber 파일(`all-api-changes.txt`)에 없는 API는 문서화하지 않음 |
+| 가치 전달 필수 | 모든 주요 기능에 "Why this matters" 섹션 포함 |
+| Breaking Changes 자동 감지 | Git Diff 분석이 커밋 메시지 패턴보다 우선 |
+| 추적성 | 모든 기능을 커밋 SHA로 추적 |
+
+상세 문서: [AX (AI Transformation)](https://hhko.github.io/Functorium/ax/)
+
+### AI로 시작하기 (권장)
+
+> "이커머스 플랫폼의 PRD를 작성해줘"로 시작하면, AI 에이전트가 7단계 워크플로를 안내합니다.
+
+### 패키지로 시작하기
 
 ```bash
 # 핵심 도메인 모델링 — Value Object, Entity, AggregateRoot, Specification, 에러 체계
@@ -278,7 +375,7 @@ dotnet add package Functorium.Testing
 
 - **Domain Layer** — 순수 비즈니스 로직. Entity, AggregateRoot, Value Object, Specification, DomainError, Domain Event, Repository 포트(IRepository), IObservablePort. 외부 의존성 없이 순수 함수 기반으로 비즈니스 규칙을 표현합니다.
 - **Application Layer** — 유스케이스 조립. CQRS(ICommandRequest, IQueryRequest), FinResponse, IQueryPort(읽기 전용 DTO 프로젝션), FluentValidation 확장, FinT LINQ 합성, Domain Event 발행, IUnitOfWork. 도메인 로직과 인프라를 연결하고 사이드 이펙트의 경계를 관리합니다.
-- **Adapter Layer** — 인프라 구현. OpenTelemetry 구성, Usecase Pipeline (Command 7단계 / Query 8단계, CtxEnricher 포함), Observable 도메인 이벤트 발행, 구조화된 로거, DapperQueryAdapterBase, AdapterError, 5개 Source Generator([GenerateObservablePort], [GenerateEntityId], CtxEnricher, DomainEventCtxEnricher, [UnionType]). 도메인에 의존하지만, 도메인은 인프라에 의존하지 않습니다.
+- **Adapter Layer** — 인프라 구현. OpenTelemetry 구성, Usecase Pipeline (Observability + Validation 내장, CtxEnricher 포함), Observable 도메인 이벤트 발행, 구조화된 로거, DapperQueryAdapterBase, AdapterError, 5개 Source Generator([GenerateObservablePort], [GenerateEntityId], CtxEnricher, DomainEventCtxEnricher, [UnionType]). 도메인에 의존하지만, 도메인은 인프라에 의존하지 않습니다.
 
 ## Observability
 
@@ -294,7 +391,7 @@ Functorium은 OpenTelemetry 기반의 통합 관측성(Logging, Metrics, Tracing
 | **Observable Port** | Repository, QueryAdapter, ExternalService | `[GenerateObservablePort]` Source Generator | 동일한 request/response 필드 체계 |
 | **DomainEvent** | Publisher + Handler | `ObservableDomainEventPublisher` | 이벤트 타입/수량 + 부분 실패 추적 |
 
-Application 레이어(EventId 1001–1004)와 Adapter 레이어(EventId 2001–2004)가 **동일한 `request.*` / `response.*` / `error.*` 네이밍**을 사용하므로, 하나의 대시보드 쿼리로 전체 요청 흐름을 추적할 수 있습니다.
+Application 레이어(EventId 1001–1004)와 Adapter 레이어(EventId 2001–2004)가 **동일한 `request.*` / `response.*` / `error.*` 네이밍을** 사용하므로, 하나의 대시보드 쿼리로 전체 요청 흐름을 추적할 수 있습니다.
 
 상세 사양과 가이드는 문서 사이트에서 확인할 수 있습니다:
 - [Observability Specification](./Docs.Site/src/content/docs/spec/08-observability.md) — Field/Tag 구조, ctx.* 3-Pillar Enrichment, Meter/Instrument 사양
@@ -336,7 +433,7 @@ Application 레이어(EventId 1001–1004)와 Adapter 레이어(EventId 2001–2
 | [E-Commerce DDD](./Docs.Site/src/content/docs/samples/ecommerce-ddd/index.md) | Domain + Application | 5 | CQRS, EventHandler, DomainService, ApplyT |
 | [AI Model Governance](./Docs.Site/src/content/docs/samples/ai-model-governance/index.md) | Domain + Application + Adapter | 4 | EfCore/Dapper/InMemory, FastEndpoints, IO.Retry/Timeout/Fork/Bracket |
 
-## 패키지 구성
+### 패키지 구성
 
 | 패키지 | 설명 |
 |--------|------|
@@ -344,53 +441,6 @@ Application 레이어(EventId 1001–1004)와 Adapter 레이어(EventId 2001–2
 | `Functorium.Adapters` | 인프라 어댑터 — OpenTelemetry, Serilog, EF Core, Dapper, Pipeline |
 | `Functorium.SourceGenerators` | 코드 자동 생성 — `[GenerateObservablePort]`, `[GenerateEntityId]`, `CtxEnricherGenerator` |
 | `Functorium.Testing` | 테스트 유틸리티 — ArchUnitNET, xUnit 확장, 통합 테스트 픽스처 |
-
-## AX (AI Transformation)
-
-AX는 Functorium 기반 프로젝트의 개발과 운영을 AI가 안내하는 Claude Code 플러그인 시스템입니다. 2개 플러그인이 DDD 개발 워크플로와 릴리스 자동화를 각각 담당합니다.
-
-### 설치
-
-```bash
-# 두 플러그인 동시 로드
-claude --plugin-dir ./.claude/plugins/functorium-develop --plugin-dir ./.claude/plugins/release-note
-```
-
-### functorium-develop (v0.4.0) — DDD 개발 워크플로
-
-PRD 작성부터 테스트까지, 7단계 워크플로를 8개 스킬 + 6개 전문 에이전트가 안내합니다.
-
-```
-project-spec → architecture-design → domain-develop → application-develop → adapter-develop → observability-develop → test-develop
-```
-
-| 스킬 | 역할 |
-|------|------|
-| `project-spec` | 프로젝트 요구사항 명세 (PRD, User Stories, 우선순위, 수락 기준) |
-| `architecture-design` | 프로젝트 구조, 네이밍 규칙, 인프라 설계 |
-| `domain-develop` | Domain Layer (VO, Aggregate, Spec, DomainService) |
-| `application-develop` | Application Layer (CQRS, Usecase, Port) |
-| `adapter-develop` | Adapter Layer (Repository, Endpoint, DI) |
-| `observability-develop` | 관측성 전략 (KPI→메트릭 매핑, 대시보드, 알림, ctx.* 전파) |
-| `test-develop` | 단위/통합/아키텍처/관측성 검증 테스트 |
-| `domain-review` | DDD 코드 리뷰 (어느 시점에서든 사용 가능) |
-
-### release-note (v1.0.0) — 릴리스 노트 자동화
-
-C# 스크립트 기반 데이터 수집, Conventional Commits 분석, Breaking Changes 감지, 릴리스 노트 작성, 검증까지 5단계 워크플로를 1개 스킬 + 1개 에이전트가 자동화합니다.
-
-```
-환경 검증 → 데이터 수집 → 커밋 분석 → 릴리스 노트 작성 → 검증
-```
-
-| 원칙 | 설명 |
-|------|------|
-| 정확성 우선 | Uber 파일(`all-api-changes.txt`)에 없는 API는 문서화하지 않음 |
-| 가치 전달 필수 | 모든 주요 기능에 "Why this matters" 섹션 포함 |
-| Breaking Changes 자동 감지 | Git Diff 분석이 커밋 메시지 패턴보다 우선 |
-| 추적성 | 모든 기능을 커밋 SHA로 추적 |
-
-상세 문서: [AX (AI Transformation)](https://hhko.github.io/Functorium/ax/)
 
 ## 기술 스택
 

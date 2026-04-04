@@ -4,23 +4,21 @@
 
 **English** | **[한국어](./README.ko.md)**
 
-> **Functorium** is named from **`functor + dominium`** with a touch of **`fun`**. It is a unified .NET framework built on Domain-Driven Design (DDD) and functional architecture principles, designed to **bridge the structural gap between development and operations**.
+> **Functorium** is named from **`functor + dominium`** with a touch of **`fun`**.
+> **dominium** is Latin for "dominion, ownership" — Domain is not just a scope, but **the problem space we own and govern**.
+>
+> Functorium is an **AI Native .NET framework** where AI agents directly guide domain design and generate code.
+> The result compiles into production code with functional architecture + DDD + Observability built in.
 
 - Learning is excitement.
 - Learning is humility.
 - Learning is altruism.
 
-**Functorium** is not merely a collection of design patterns. It is a structural approach that connects everything from requirements definition to operational stability under a consistent philosophy.
+**6 specialist AI agents** guide a 7-step workflow from requirements analysis to testing. At each step, design documents and compilable C# code are generated simultaneously. No need to manually make hundreds of architecture decisions.
 
-## Who Is This Framework For
+Functorium is designed for .NET teams practicing enterprise DDD, teams seeking to bridge the language gap between development and operations, and architects systematically adopting functional DDD architecture.
 
-- **.NET teams practicing enterprise DDD** — Teams that want to guarantee domain model immutability and composability at the code level
-- **Teams seeking to bridge the language gap between development and operations** — Teams that need domain concepts consistently reflected across code, logs, metrics, and traces
-- **Architects systematically adopting functional DDD architecture** — Designers who want to use LanguageExt + DDD + OpenTelemetry as a unified framework
-
-## Design Motivation
-
-### Problems to Solve
+## Problems to Solve
 
 1. **Domain logic is mixed with exceptions and implicit side effects** — Business rule success and failure are handled via exceptions, making flow unpredictable and composition impossible.
 2. **Development language and operations language are separated** — Feature specifications and operational requirements are managed in different systems, preventing a common language from being established and accumulating interpretation gaps.
@@ -28,19 +26,69 @@
 
 These are not simply process problems — they are **problems of design philosophy and structure**.
 
-Mediator, LanguageExt, FluentValidation, and OpenTelemetry are each excellent. But integrating them into a coherent DDD architecture requires hundreds of decisions about error propagation, pipeline ordering, observability boundaries, and type constraints. Functorium makes these decisions once, consistently.
+Mediator, LanguageExt, FluentValidation, and OpenTelemetry are each excellent. But integrating them into a coherent DDD architecture requires hundreds of decisions about error propagation, pipeline ordering, observability boundaries, and type constraints. Functorium makes these decisions once, consistently — and **AI agents automatically apply these decisions to your project.**
 
-### Solution Direction
+## How AI Breaks Through the Problems
 
-1. **Keep domain logic pure through functional architecture** — Express results and side effects at the type level with `Fin<T>` and `FinT<IO, T>`, and compose domain flows without exceptions using `from ... in ... select` LINQ composition.
-2. **Unify with a single Ubiquitous Language** — Clearly define Bounded Contexts and create a structure where domain concepts are consistently reflected in code, documentation, and operational metrics.
-3. **Embed Observability from the design phase** — OpenTelemetry-based Logging, Metrics, and Tracing are automatically applied to the usecase pipeline, so domain flows and observability information are designed together.
+### From Problem to Code — Structure Connected by AI
 
-## Design Philosophy
+| Problem | AI Agent's Role | What the Framework Guarantees |
+|---------|----------------|-------------------------------|
+| Exceptions and implicit side effects | **domain-architect** classifies business invariants and maps them to types | `Fin<T>`, `FinT<IO,T>` result types, Always-valid Value Object |
+| Development/operations language separation | **product-analyst** extracts Ubiquitous Language and consistently reflects it across code/docs/metrics | Bounded Context, `ctx.*` field auto-propagation |
+| Observability as afterthought | **observability-engineer** designs KPI→metric mapping, dashboards, and alerts | 3-Pillar auto instrumentation, `[GenerateObservablePort]` |
 
-### Domain-Centric Design
+### 7-Step Workflow
 
-All core business logic resides within the domain model, and entities, value objects, aggregates, and domain services have clear responsibilities. The ubiquitous language is not just a glossary — it is a consistent conceptual system that must be reflected across code, documentation, and operational metrics.
+From PRD writing to testing, 8 skills + 6 specialist agents guide the way.
+
+```
+project-spec                    : PRD writing, Ubiquitous Language, Aggregate boundary extraction
+  → architecture-design         : Project structure, layer composition, infrastructure decisions
+  → domain-develop              : Value Object, Entity, Aggregate, Specification implementation
+  → application-develop         : CQRS usecase, Port design and implementation
+  → adapter-develop             : Repository, Query Adapter, Endpoint, DI registration
+  → observability-develop       : KPI→metric mapping, dashboards, alerts, ctx.* propagation
+  → test-develop                : Unit/integration/architecture rule test writing
+  → domain-review               : DDD review of existing code and improvement guidance
+```
+
+Each step follows a **4-stage document pattern**. Every design decision has traceable rationale:
+
+```
+00-business-requirements        : Business rule definition
+  →  01-type-design-decisions   : Invariant → type mapping
+  →  02-code-design             : C# pattern design
+  →  03-implementation-results  : Compilable code + tests
+```
+
+### 6 Specialist Agents
+
+| Agent | Expertise |
+|-------|-----------|
+| **product-analyst** | PRD writing, Ubiquitous Language definition, Aggregate boundary extraction |
+| **domain-architect** | Invariant classification, Functorium type mapping, Always-valid pattern design |
+| **application-architect** | CQRS usecase decomposition, port identification, FinT LINQ composition design |
+| **adapter-engineer** | Repository, Query Adapter, Endpoint, DI registration, Observable Port implementation |
+| **observability-engineer** | KPI→metric mapping, dashboard design, alert patterns, ctx.* propagation strategy |
+| **test-engineer** | Unit/integration/architecture rule/Observability verification tests |
+
+### AI-Generated Artifacts
+
+- Value Objects (Always-valid, structured error codes)
+- AggregateRoot (with domain events)
+- CQRS Command/Query usecases
+- EF Core Repository + Dapper Query Adapter
+- FastEndpoints API endpoints
+- Observable Port (automatic 3-Pillar instrumentation)
+- Unit tests, integration tests, architecture rule tests
+- Design documents for all stages (traceable design rationale)
+
+## AI-Generated Code: Functional Architecture
+
+### Domain Model
+
+The **domain-architect** agent of the `domain-develop` skill classifies business invariants and maps them to the Functorium type system. All core business logic resides within the domain model, and entities, value objects, aggregates, and domain services have clear responsibilities.
 
 **Value Object** — Ensures value-based equality and immutability:
 
@@ -95,9 +143,9 @@ public interface IDomainEvent : INotification
 }
 ```
 
-### Functional Architecture
+### CQRS and Functional Composition
 
-Core domain logic is composed of pure functions. By maintaining a structure where identical inputs always produce identical outputs, the logic becomes predictable and easy to test. Side effects (database, external APIs, messaging, file I/O) are handled outside the domain logic. The `IO` monad provides built-in advanced features such as Timeout, Retry (exponential backoff), Fork (parallel execution), and Bracket (resource lifecycle management), enabling type-safe fault tolerance configuration for external service calls.
+The `application-develop` skill assembles domain models into CQRS usecases. Core domain logic is composed of pure functions. By maintaining a structure where identical inputs always produce identical outputs, the logic becomes predictable and easy to test. Side effects (database, external APIs, messaging, file I/O) are handled outside the domain logic. The `IO` monad provides built-in advanced features such as Timeout, Retry (exponential backoff), Fork (parallel execution), and Bracket (resource lifecycle management), enabling type-safe fault tolerance configuration for external service calls.
 
 **`Fin<T>`, `FinT<IO, T>`** — Handles errors with explicit result types instead of exceptions. The Command path Repository returns `FinT<IO, T>` to explicitly express side effects:
 
@@ -161,7 +209,18 @@ public interface IQueryPort<TEntity, TDto> : IQueryPort
 
 ### Observability by Design
 
-Operational stability is considered from the design phase, not patched after deployment. From request to response, all Command/Query fields are **consistently recorded across all 3 Pillars** — Logging, Metrics, and Tracing. Developers do not need to write log code manually.
+The `observability-develop` skill embeds operational stability from the design phase. All Commands and Queries automatically pass through a pipeline with built-in Observability (Logging, Metrics, Tracing) and validation. Developers do not need to write log code manually.
+
+```mermaid
+flowchart TD
+    A["Common: Observability + Validation
+    (Logging · Metrics · Tracing · Validation)"] --> B[Command Path]
+    A --> C[Query Path]
+    B --> D["Transaction + Domain Event Publishing"]
+    C --> E["Caching + Pagination"]
+```
+
+Command publishes domain events within transaction boundaries, and Query provides caching and pagination. For the exact pipeline stages and order, see the [Observability Specification](./Docs.Site/src/content/docs/spec/08-observability.md).
 
 **IObservablePort** — All external dependencies are abstracted as observable ports:
 
@@ -183,36 +242,38 @@ public class OrderRepository : IRepository<Order, OrderId> { ... }
 
 **Automatic Error Classification** — Business rule violations (e.g., "insufficient stock") are classified as `expected`, system failures (`NullReferenceException`) as `exceptional`, and compound validation failures as `aggregate`. The `error.type` field allows separate querying of business errors and system failures in Seq/Grafana.
 
-**Usecase Pipeline** — Command and Query have different Pipeline configurations based on path characteristics:
-
-> **Command (7 steps):** CtxEnricher → Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler
->
-> **Query (8 steps):** CtxEnricher → Metrics → Tracing → Logging → Validation → Caching → Exception → Custom → Handler
-
-| Pipeline | Role | Scope |
-|----------|------|-------|
-| `CtxEnricherPipeline` | Propagate business context (ctx.*) to Logging/Tracing/Metrics simultaneously | Common |
-| `UsecaseMetricsPipeline` | Automatic usecase metrics collection | Common |
-| `UsecaseTracingPipeline` | Distributed tracing context propagation | Common |
-| `UsecaseLoggingPipeline` | Automatic structured log recording | Common |
-| `UsecaseValidationPipeline` | FluentValidation-based input validation | Common |
-| `UsecaseCachingPipeline` | ICacheable request caching | Query only |
-| `UsecaseExceptionPipeline` | Exception → structured error conversion | Common |
-| `UsecaseTransactionPipeline` | Transaction boundary + domain event publishing | Command only |
-
-## Key Features
-
-| Value | Features |
-|-------|----------|
-| **Domain Safety** | Value Object hierarchy (6 types + Union), Entity/AggregateRoot, Specification Pattern, structured error codes |
-| **Functional Composition** | `Fin<T>`/`FinT<IO,T>` Discriminated Union, LINQ composition, Bind/Apply validation, CQRS path-optimized |
-| **Advanced IO** | Timeout, Retry (exponential backoff), Fork (parallel execution), Bracket (resource lifecycle management) |
-| **Automation** | 5 Source Generators, Usecase Pipeline (Command 7 steps / Query 8 steps), architecture rule tests |
-| **Observability** | 3-Pillar automatic instrumentation, ctx.* business context propagation, automatic error classification (expected/exceptional/aggregate) |
-
 ## Quick Example
 
-Always-valid Value Object — Validates with type-safe error codes without exceptions, providing a composable functional validation pipeline:
+### Before/After — From Exceptions to Type Safety
+
+**Before** — Traditional C# validation. Exceptions are landmines buried in control flow:
+
+```csharp
+public class Email
+{
+    public Email(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException("Email cannot be empty");   // Runtime bomb — if the next developer forgets try-catch, the system dies
+        Value = value;
+    }
+    public string Value { get; }
+}
+```
+
+**After** — Functorium's functional validation. Failure possibility is explicit in the return type — if you don't handle it, it won't compile:
+
+```csharp
+public sealed partial class Email : SimpleValueObject<string>
+{
+    public static Fin<Email> Create(string? value) =>               // Fin<T>: success or structured error
+        CreateFromValidation(Validate(value), v => new Email(v));   // Composable pipeline without exceptions
+}
+```
+
+### Full Implementation — Always-valid Value Object
+
+Validates with type-safe error codes without exceptions, providing a composable functional validation pipeline:
 
 ```csharp
 public sealed partial class Email : SimpleValueObject<string>
@@ -248,7 +309,43 @@ public sealed partial class Email : SimpleValueObject<string>
 
 For CQRS Command/Query usecase implementation examples, see the [CQRS Repository Tutorial](./Docs.Site/src/content/docs/tutorials/cqrs-repository/index.md).
 
+## Key Features
+
+| Value | Features |
+|-------|----------|
+| **Domain Safety** | Value Object hierarchy (6 types + Union), Entity/AggregateRoot, Specification Pattern, structured error codes |
+| **Functional Composition** | `Fin<T>`/`FinT<IO,T>` Discriminated Union, LINQ composition, Bind/Apply validation, CQRS path-optimized |
+| **Advanced IO** | Timeout, Retry (exponential backoff), Fork (parallel execution), Bracket (resource lifecycle management) |
+| **Automation** | 5 Source Generators, Usecase Pipeline (Observability + Validation built-in), architecture rule tests |
+| **Observability** | 3-Pillar automatic instrumentation, ctx.* business context propagation, automatic error classification (expected/exceptional/aggregate) |
+
 ## Getting Started
+
+### Installation
+
+```bash
+# Load both plugins simultaneously
+claude --plugin-dir ./.claude/plugins/functorium-develop --plugin-dir ./.claude/plugins/release-note
+```
+
+### release-note (v1.0.0) — Release Note Automation
+
+C# script-based data collection, Conventional Commits analysis, Breaking Changes detection, release note writing, and validation — a 5-step workflow automated by 1 skill + 1 agent.
+
+| Principle | Description |
+|-----------|-------------|
+| Accuracy First | APIs not in the Uber file (`all-api-changes.txt`) are never documented |
+| Value Delivery Required | All major features include a "Why this matters" section |
+| Automatic Breaking Changes Detection | Git Diff analysis takes precedence over commit message patterns |
+| Traceability | All features are tracked by commit SHA |
+
+Detailed documentation: [AX (AI Transformation)](https://hhko.github.io/Functorium/ax/)
+
+### Getting Started with AI (Recommended)
+
+> Start with "Write a PRD for an e-commerce platform" and the AI agents will guide you through the 7-step workflow.
+
+### Getting Started with Packages
 
 ```bash
 # Core domain modeling — Value Object, Entity, AggregateRoot, Specification, error system
@@ -278,7 +375,7 @@ The system is composed of three layers. The domain depends on nothing external, 
 
 - **Domain Layer** — Pure business logic. Entity, AggregateRoot, Value Object, Specification, DomainError, Domain Event, Repository port (IRepository), IObservablePort. Expresses business rules through pure functions without external dependencies.
 - **Application Layer** — Usecase orchestration. CQRS (ICommandRequest, IQueryRequest), FinResponse, IQueryPort (read-only DTO projection), FluentValidation extensions, FinT LINQ composition, Domain Event publishing, IUnitOfWork. Connects domain logic with infrastructure and manages side effect boundaries.
-- **Adapter Layer** — Infrastructure implementation. OpenTelemetry configuration, Usecase Pipeline (Command 7 steps / Query 8 steps, including CtxEnricher), Observable domain event publishing, structured loggers, DapperQueryAdapterBase, AdapterError, 5 Source Generators ([GenerateObservablePort], [GenerateEntityId], CtxEnricher, DomainEventCtxEnricher, [UnionType]). Depends on domain, but domain does not depend on infrastructure.
+- **Adapter Layer** — Infrastructure implementation. OpenTelemetry configuration, Usecase Pipeline (Observability + Validation built-in, including CtxEnricher), Observable domain event publishing, structured loggers, DapperQueryAdapterBase, AdapterError, 5 Source Generators ([GenerateObservablePort], [GenerateEntityId], CtxEnricher, DomainEventCtxEnricher, [UnionType]). Depends on domain, but domain does not depend on infrastructure.
 
 ## Observability
 
@@ -304,13 +401,13 @@ For detailed specifications and guides, see the documentation site:
 
 ## Quality Strategy
 
-- Core domain logic maintains a high level of **unit test coverage**. No mocks needed since there are no external dependencies.
+- Core domain logic maintains a high level of **unit test coverage**.
 - Side effect areas are explicitly separated, providing a **verifiable structure**.
 - **Observability verification** is completed before deployment.
 - Defined error codes and recovery procedures are **documented and validated**.
 - Architecture rules are **automatically verified through unit tests** via ClassValidator/InterfaceValidator.
 
-> Quality comes from structure, not from testing alone.
+> Quality comes from structure, not from results alone.
 
 ## Documentation
 
@@ -336,7 +433,7 @@ For detailed specifications and guides, see the documentation site:
 | [E-Commerce DDD](./Docs.Site/src/content/docs/samples/ecommerce-ddd/index.md) | Domain + Application | 5 | CQRS, EventHandler, DomainService, ApplyT |
 | [AI Model Governance](./Docs.Site/src/content/docs/samples/ai-model-governance/index.md) | Domain + Application + Adapter | 4 | EfCore/Dapper/InMemory, FastEndpoints, IO.Retry/Timeout/Fork/Bracket |
 
-## Packages
+### Packages
 
 | Package | Description |
 |---------|-------------|
@@ -344,53 +441,6 @@ For detailed specifications and guides, see the documentation site:
 | `Functorium.Adapters` | Infrastructure adapters — OpenTelemetry, Serilog, EF Core, Dapper, Pipeline |
 | `Functorium.SourceGenerators` | Code generation — `[GenerateObservablePort]`, `[GenerateEntityId]`, `CtxEnricherGenerator` |
 | `Functorium.Testing` | Test utilities — ArchUnitNET, xUnit extensions, integration test fixtures |
-
-## AX (AI Transformation)
-
-AX is a Claude Code plugin system where AI guides the development and operations of Functorium-based projects. Two plugins handle DDD development workflows and release automation respectively.
-
-### Installation
-
-```bash
-# Load both plugins simultaneously
-claude --plugin-dir ./.claude/plugins/functorium-develop --plugin-dir ./.claude/plugins/release-note
-```
-
-### functorium-develop (v0.4.0) — DDD Development Workflow
-
-From PRD writing to testing, a 7-step workflow guided by 8 skills + 6 specialist agents.
-
-```
-project-spec → architecture-design → domain-develop → application-develop → adapter-develop → observability-develop → test-develop
-```
-
-| Skill | Role |
-|-------|------|
-| `project-spec` | Project requirements specification (PRD, User Stories, priorities, acceptance criteria) |
-| `architecture-design` | Project structure, naming conventions, infrastructure design |
-| `domain-develop` | Domain Layer (VO, Aggregate, Spec, DomainService) |
-| `application-develop` | Application Layer (CQRS, Usecase, Port) |
-| `adapter-develop` | Adapter Layer (Repository, Endpoint, DI) |
-| `observability-develop` | Observability strategy (KPI→metric mapping, dashboards, alerts, ctx.* propagation) |
-| `test-develop` | Unit/integration/architecture/observability verification tests |
-| `domain-review` | DDD code review (available at any point) |
-
-### release-note (v1.0.0) — Release Note Automation
-
-C# script-based data collection, Conventional Commits analysis, Breaking Changes detection, release note writing, and validation — a 5-step workflow automated by 1 skill + 1 agent.
-
-```
-Environment Validation → Data Collection → Commit Analysis → Release Note Writing → Validation
-```
-
-| Principle | Description |
-|-----------|-------------|
-| Accuracy First | APIs not in the Uber file (`all-api-changes.txt`) are never documented |
-| Value Delivery Required | All major features include a "Why this matters" section |
-| Automatic Breaking Changes Detection | Git Diff analysis takes precedence over commit message patterns |
-| Traceability | All features are tracked by commit SHA |
-
-Detailed documentation: [AX (AI Transformation)](https://hhko.github.io/Functorium/ax/)
 
 ## Tech Stack
 
