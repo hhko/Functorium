@@ -123,10 +123,7 @@ This is how AI generates exception-free, safe code structures automatically.
 
 > **"Can I debug AI-written monad code at 2 AM?"**
 >
-> You don't need to trace monad chains line by line.
 > The framework's **automatic error classification + structured context logs + dashboards** — built into every Command/Query — translate code state into human language.
->
-> **Humans define rules** → **AI builds plumbing** → **Observability translates to human language** → Humans decide again
 
 ## How AI Breaks Through the Problems
 
