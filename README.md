@@ -28,118 +28,23 @@ These are not simply process problems — they are **problems of design philosop
 
 Mediator, LanguageExt, FluentValidation, and OpenTelemetry are each excellent. But integrating them into a coherent DDD architecture requires hundreds of decisions about error propagation, pipeline ordering, observability boundaries, and type constraints. Functorium makes these decisions once, consistently — and **AI agents automatically apply these decisions to your project.**
 
-### See the Change in 30 Seconds — Before/After
+| Value | Features |
+|-------|----------|
+| **Domain Safety** | Value Object hierarchy (6 types + Union), Entity/AggregateRoot, Specification Pattern, structured error codes |
+| **Functional Composition** | `Fin<T>`/`FinT<IO,T>` Discriminated Union, LINQ composition, Bind/Apply validation, CQRS path-optimized |
+| **Advanced IO** | Timeout, Retry (exponential backoff), Fork (parallel execution), Bracket (resource lifecycle management) |
+| **Automation** | 5 Source Generators, Usecase Pipeline (Observability + Validation built-in), architecture rule tests |
+| **Observability** | 3-Pillar automatic instrumentation, ctx.* business context propagation, automatic error classification (expected/exceptional/aggregate) |
 
-**Before** — Traditional C# validation. Exceptions are landmines buried in control flow:
+### See the Change in 30 Seconds — From Text to Code
 
-```csharp
-public class Email
-{
-    public Email(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException("Email cannot be empty");   // Runtime bomb
-                                                                    // if the next developer forgets try-catch, the system dies
-        Value = value;
-    }
-    public string Value { get; }
-}
-```
+**What you write** — 3 lines of business rules:
 
-**After** — Functorium's functional validation. Failure possibility is explicit in the return type — if you don't handle it, it won't compile:
+> - Email cannot be empty
+> - Email cannot exceed 320 characters
+> - Email must be in a valid format
 
-```csharp
-public sealed partial class Email : SimpleValueObject<string>
-{
-    public static Fin<Email> Create(string? value) =>               // Fin<T>: success or structured error
-        CreateFromValidation(Validate(value), v => new Email(v));   // Composable pipeline without exceptions
-}
-```
-
-> **You only define business requirements in text.**
-> This complex but safe code is generated and guaranteed by AI agents.
-> Don't worry if functional types like `Fin<T>` or `Validation<Error, T>` look unfamiliar — you never have to write them yourself.
-
-How does AI automatically compose exception-free, safe code like this? First, let's clarify the boundary between human and AI responsibilities.
-
-### Humans Define Rules, AI Builds Plumbing, Observability Translates Back
-
-| Role | Responsibility | Concrete Artifacts |
-|------|---------------|-------------------|
-| **Human** | Define business rules + ubiquitous language in text | PRD, invariant list, glossary |
-| **AI Agent** | Build complex control flow, monad plumbing, boilerplate | `Fin<T>` pipelines, CQRS usecases, Source Generator code |
-| **Observability** | Translate AI-generated code into human-readable diagnostics | Structured logs, dashboards, automatic error classification |
-
-> **"Can I debug AI-written monad code at 2 AM?"**
->
-> You don't need to trace monad chains line by line.
-> The framework's **automatic error classification + structured context logs + dashboards** — built into every Command/Query — translate code state into human language.
->
-> **Humans define rules** → **AI builds plumbing** → **Observability translates to human language** → Humans decide again
-
-## How AI Breaks Through the Problems
-
-### From Problem to Code — Structure Connected by AI
-
-| Problem | Breakthrough Direction | AI Agent's Role | What the Framework Guarantees |
-|---------|----------------------|----------------|-------------------------------|
-| Exceptions and implicit side effects | Exception-free pure domain | **domain-architect** classifies business invariants and maps them to types | `Fin<T>`, `FinT<IO,T>` make results and side effects explicit at the type level; LINQ composition structures domain flow |
-| Development/operations language separation | Unified domain language | **product-analyst** extracts Ubiquitous Language and consistently reflects it across code/docs/metrics | Bounded Context clearly defined so domain concepts are consistently reflected in code, docs, and operational metrics. `ctx.*` field auto-propagation |
-| Observability as afterthought | Observability by design | **observability-engineer** designs KPI→metric mapping, dashboards, and alerts | OpenTelemetry-based Logging, Metrics, Tracing automatically applied to usecase pipelines. `[GenerateObservablePort]` |
-
-### 7-Step Workflow
-
-From PRD writing to testing, 8 skills + 6 specialist agents guide the way.
-
-```
-project-spec                    : PRD writing, Ubiquitous Language, Aggregate boundary extraction
-  → architecture-design         : Project structure, layer composition, infrastructure decisions
-  → domain-develop              : Value Object, Entity, Aggregate, Specification implementation
-  → application-develop         : CQRS usecase, Port design and implementation
-  → adapter-develop             : Repository, Query Adapter, Endpoint, DI registration
-  → observability-develop       : KPI→metric mapping, dashboards, alerts, ctx.* propagation
-  → test-develop                : Unit/integration/architecture rule test writing
-  → domain-review               : DDD review of existing code and improvement guidance
-```
-
-Each step follows a **4-stage document pattern**. Every design decision has traceable rationale:
-
-```
-00-business-requirements        : Business rule definition
-  →  01-type-design-decisions   : Invariant → type mapping
-  →  02-code-design             : C# pattern design
-  →  03-implementation-results  : Compilable code + tests
-```
-
-### 6 Specialist Agents
-
-| Agent | Expertise |
-|-------|-----------|
-| **product-analyst** | PRD writing, Ubiquitous Language definition, Aggregate boundary extraction |
-| **domain-architect** | Invariant classification, Functorium type mapping, Always-valid pattern design |
-| **application-architect** | CQRS usecase decomposition, port identification, FinT LINQ composition design |
-| **adapter-engineer** | Repository, Query Adapter, Endpoint, DI registration, Observable Port implementation |
-| **observability-engineer** | KPI→metric mapping, dashboard design, alert patterns, ctx.* propagation strategy |
-| **test-engineer** | Unit/integration/architecture rule/Observability verification tests |
-
-### AI-Generated Artifacts
-
-- Value Objects (Always-valid, structured error codes)
-- AggregateRoot (with domain events)
-- CQRS Command/Query usecases
-- EF Core Repository + Dapper Query Adapter
-- FastEndpoints API endpoints
-- Observable Port (automatic 3-Pillar instrumentation)
-- Unit tests, integration tests, architecture rule tests
-- Design documents for all stages (traceable design rationale)
-
-## AI-Generated Code: Functional Architecture in Detail
-
-A closer look at the full implementation of the Before/After example above and the core framework patterns.
-
-### Full Implementation — Always-valid Value Object
-
-Validates with type-safe error codes without exceptions, providing a composable functional validation pipeline:
+**What AI generates** — A type-safe, composable functional validation pipeline without exceptions:
 
 ```csharp
 public sealed partial class Email : SimpleValueObject<string>
@@ -173,7 +78,134 @@ public sealed partial class Email : SimpleValueObject<string>
 }
 ```
 
-For CQRS Command/Query usecase implementation examples, see the [CQRS Repository Tutorial](./Docs.Site/src/content/docs/tutorials/cqrs-repository/index.md).
+> **Just define business rules in text.** This complex but safe code is generated by AI agents.
+
+<details>
+<summary><strong>Comparison with traditional C# exception handling</strong> — Why Fin&lt;T&gt; instead of exceptions?</summary>
+
+**Before** — Traditional C# validation. Exceptions are landmines buried in control flow:
+
+```csharp
+public class Email
+{
+    public Email(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException("Email cannot be empty");   // Runtime bomb
+                                                                    // if the next developer forgets try-catch, the system dies
+        Value = value;
+    }
+    public string Value { get; }
+}
+```
+
+**After** — Functorium's functional validation. Failure possibility is explicit in the return type — if you don't handle it, it won't compile:
+
+```csharp
+public sealed partial class Email : SimpleValueObject<string>
+{
+    public static Fin<Email> Create(string? value) =>               // Fin<T>: success or structured error
+        CreateFromValidation(Validate(value), v => new Email(v));   // Composable pipeline without exceptions
+}
+```
+
+</details>
+
+This is how AI generates exception-free, safe code structures automatically.
+
+### Humans Define Rules, AI Builds Plumbing, Observability Translates Back
+
+| Role | Responsibility | Concrete Artifacts |
+|------|---------------|-------------------|
+| **Human** | Define business rules + ubiquitous language in text | PRD, invariant list, glossary |
+| **AI Agent** | Build complex control flow, monad plumbing, boilerplate | `Fin<T>` pipelines, CQRS usecases, Source Generator code |
+| **Observability** | Translate AI-generated code into human-readable diagnostics | Structured logs, dashboards, automatic error classification |
+
+> **"Can I debug AI-written monad code at 2 AM?"**
+>
+> You don't need to trace monad chains line by line.
+> The framework's **automatic error classification + structured context logs + dashboards** — built into every Command/Query — translate code state into human language.
+>
+> **Humans define rules** → **AI builds plumbing** → **Observability translates to human language** → Humans decide again
+
+## How AI Breaks Through the Problems
+
+### From Problem to Code — Structure Connected by AI
+
+| Problem | Breakthrough Direction | AI Agent's Role | What the Framework Guarantees |
+|---------|----------------------|----------------|-------------------------------|
+| Exceptions and implicit side effects | Exception-free pure domain | **domain-architect** classifies business invariants and maps them to types | `Fin<T>`, `FinT<IO,T>` make results and side effects explicit at the type level; LINQ composition structures domain flow |
+| Development/operations language separation | Unified domain language | **product-analyst** extracts Ubiquitous Language and consistently reflects it across code/docs/metrics | Bounded Context clearly defined so domain concepts are consistently reflected in code, docs, and operational metrics. `ctx.*` field auto-propagation |
+| Observability as afterthought | Observability by design | **observability-engineer** designs KPI→metric mapping, dashboards, and alerts | OpenTelemetry-based Logging, Metrics, Tracing automatically applied to usecase pipelines. `[GenerateObservablePort]` |
+
+### 7-Step Workflow
+
+From PRD writing to testing, 7 skills + 6 specialist agents guide the way.
+
+```
+project-spec                    : PRD writing, Ubiquitous Language, Aggregate boundary extraction
+  → architecture-design         : Project structure, layer composition, infrastructure decisions
+  → domain-develop              : Value Object, Entity, Aggregate, Specification implementation
+  → application-develop         : CQRS usecase, Port design and implementation
+  → adapter-develop             : Repository, Query Adapter, Endpoint, DI registration
+  → observability-develop       : KPI→metric mapping, dashboards, alerts, ctx.* propagation
+  → test-develop                : Unit/integration/architecture rule test writing
+
+domain-review                   : DDD review of existing code and improvement guidance (standalone skill)
+```
+
+Each step follows a **4-stage document pattern**. Every design decision has traceable rationale:
+
+```
+00-business-requirements        : Business rule definition
+  →  01-type-design-decisions   : Invariant → type mapping
+  →  02-code-design             : C# pattern design
+  →  03-implementation-results  : Compilable code + tests
+```
+
+### 6 Specialist Agents — Relay Timeline
+
+Each agent takes the output of the previous stage, adds its own expertise, and passes the baton to the next:
+
+```
+Human: Business requirements text
+  ↓
+product-analyst         → Ubiquitous Language + Aggregate boundaries
+  ↓
+domain-architect        → Invariant classification + type mapping (VO, Entity, Aggregate)
+  ↓
+application-architect   → CQRS usecases + Port interfaces
+  ↓
+adapter-engineer        → Repository, Endpoint, DI, Observable Port
+  ↓
+observability-engineer  → KPI→metric mapping + dashboards + alerts
+  ↓
+test-engineer           → Unit/integration/architecture rule tests
+```
+
+| Step | Input | Agent | Output |
+|------|-------|-------|--------|
+| 1 | Natural language requirements | **product-analyst** | Ubiquitous Language glossary, Aggregate boundaries, P0/P1/P2 priorities |
+| 2 | Glossary + invariant list | **domain-architect** | Type mapping (SimpleValueObject, SmartEnum, etc.), Always-valid patterns |
+| 3 | Type definitions + domain model | **application-architect** | CQRS usecases, Port interfaces, FinT LINQ composition |
+| 4 | Port interfaces | **adapter-engineer** | EFCore Repository, Dapper Query, FastEndpoints, DI, Observable Port |
+| 5 | Adapter implementation code | **observability-engineer** | KPI→metric mapping, L1/L2 dashboards, alert rules, ctx.* propagation |
+| 6 | Full codebase | **test-engineer** | Unit/integration/architecture rule tests, verification report |
+
+### AI-Generated Artifacts
+
+- Value Objects (Always-valid, structured error codes)
+- AggregateRoot (with domain events)
+- CQRS Command/Query usecases
+- EF Core Repository + Dapper Query Adapter
+- FastEndpoints API endpoints
+- Observable Port (automatic 3-Pillar instrumentation)
+- Unit tests, integration tests, architecture rule tests
+- Design documents for all stages (traceable design rationale)
+
+## AI-Generated Code: Functional Architecture in Detail
+
+Building on the Email implementation above, let's explore additional framework patterns. For CQRS Command/Query usecase implementation examples, see the [CQRS Repository Tutorial](./Docs.Site/src/content/docs/tutorials/cqrs-repository/index.md).
 
 <details>
 <summary><strong>Domain Model in Detail</strong> — Value Object, Entity, AggregateRoot, DomainError, Domain Event</summary>
@@ -340,16 +372,6 @@ public class OrderRepository : IRepository<Order, OrderId> { ... }
 
 </details>
 
-## Key Features
-
-| Value | Features |
-|-------|----------|
-| **Domain Safety** | Value Object hierarchy (6 types + Union), Entity/AggregateRoot, Specification Pattern, structured error codes |
-| **Functional Composition** | `Fin<T>`/`FinT<IO,T>` Discriminated Union, LINQ composition, Bind/Apply validation, CQRS path-optimized |
-| **Advanced IO** | Timeout, Retry (exponential backoff), Fork (parallel execution), Bracket (resource lifecycle management) |
-| **Automation** | 5 Source Generators, Usecase Pipeline (Observability + Validation built-in), architecture rule tests |
-| **Observability** | 3-Pillar automatic instrumentation, ctx.* business context propagation, automatic error classification (expected/exceptional/aggregate) |
-
 ## Getting Started
 
 ### Installation
@@ -358,19 +380,6 @@ public class OrderRepository : IRepository<Order, OrderId> { ... }
 # Load both plugins simultaneously
 claude --plugin-dir ./.claude/plugins/functorium-develop --plugin-dir ./.claude/plugins/release-note
 ```
-
-### release-note (v1.0.0) — Release Note Automation
-
-C# script-based data collection, Conventional Commits analysis, Breaking Changes detection, release note writing, and validation — a 5-step workflow automated by 1 skill + 1 agent.
-
-| Principle | Description |
-|-----------|-------------|
-| Accuracy First | APIs not in the Uber file (`all-api-changes.txt`) are never documented |
-| Value Delivery Required | All major features include a "Why this matters" section |
-| Automatic Breaking Changes Detection | Git Diff analysis takes precedence over commit message patterns |
-| Traceability | All features are tracked by commit SHA |
-
-Detailed documentation: [AX (AI Transformation)](https://hhko.github.io/Functorium/ax/)
 
 ### Getting Started with AI (Recommended)
 
@@ -397,6 +406,19 @@ dotnet add package Functorium.Testing
 **First Tutorial:** Dive deep into Value Objects at the [Functional ValueObject Tutorial](./Docs.Site/src/content/docs/tutorials/functional-valueobject/index.md).
 
 **Full Documentation:** [https://hhko.github.io/Functorium](https://hhko.github.io/Functorium)
+
+### release-note (v1.0.0) — Release Note Automation
+
+C# script-based data collection, Conventional Commits analysis, Breaking Changes detection, release note writing, and validation — a 5-step workflow automated by 1 skill + 1 agent.
+
+| Principle | Description |
+|-----------|-------------|
+| Accuracy First | APIs not in the Uber file (`all-api-changes.txt`) are never documented |
+| Value Delivery Required | All major features include a "Why this matters" section |
+| Automatic Breaking Changes Detection | Git Diff analysis takes precedence over commit message patterns |
+| Traceability | All features are tracked by commit SHA |
+
+Detailed documentation: [AX (AI Transformation)](https://hhko.github.io/Functorium/ax/)
 
 ## Architecture Overview
 
@@ -430,15 +452,76 @@ For detailed specifications and guides, see the documentation site:
 - [Metrics Guide](./Docs.Site/src/content/docs/guides/observability/20-observability-metrics.md) — Metrics collection and analysis guide
 - [Tracing Guide](./Docs.Site/src/content/docs/guides/observability/21-observability-tracing.md) — Distributed tracing detailed guide
 
-## Quality Strategy
+## Quality Strategy — Half of Generation is Verification
 
-- Core domain logic maintains a high level of **unit test coverage**.
-- Side effect areas are explicitly separated, providing a **verifiable structure**.
-- **Observability verification** is completed before deployment.
-- Defined error codes and recovery procedures are **documented and validated**.
-- Architecture rules are **automatically verified through unit tests** via ClassValidator/InterfaceValidator.
+Why AI-generated code can be deployed to production — **a triple verification gate** blocks architecture violations, business rule errors, and observability gaps at build time.
 
-> Quality comes from structure, not from results alone.
+### Gate 1: Architecture Rule Tests — Structural Integrity
+
+If the domain layer depends on infrastructure? The build fails:
+
+```csharp
+[Fact]
+public void DomainLayer_ShouldNotDependOn_ApplicationLayer()
+{
+    Types()
+        .That().ResideInNamespace(DomainNamespace)
+        .Should().NotDependOnAnyTypesThat()
+        .ResideInNamespace(ApplicationNamespace)
+        .Check(Architecture);
+}
+```
+
+Functorium.Testing provides 6 TestSuite base classes — just inherit and **21+ architecture rules** are automatically applied:
+
+| TestSuite | Verification Target |
+|-----------|----------|
+| `DomainArchitectureTestSuite` | sealed class, private constructors, `Fin<T>` return types, etc. |
+| `ApplicationArchitectureTestSuite` | Command/Query Usecase structure |
+| `AdapterArchitectureTestSuite` | virtual methods, Observable Port |
+| `CqrsArchitectureTestSuite` | Command/Query separation |
+| `DtoArchitectureTestSuite` | sealed record |
+| `PortInterfaceArchitectureTestSuite` | Port interface rules |
+
+### Gate 2: Domain Model Unit Tests — Business Rule Verification
+
+The **test-engineer** agent automatically generates boundary condition tests for all Value Objects:
+
+```csharp
+[Theory]
+[InlineData("")]
+[InlineData(null)]
+public void Create_ShouldFail_WhenValueIsEmptyOrNull(string? value)
+{
+    var actual = Email.Create(value);
+    actual.IsFail.ShouldBeTrue();
+}
+
+[Fact]
+public void Create_ShouldFail_WhenValueExceedsMaxLength()
+{
+    var value = new string('a', Email.MaxLength + 1);
+    var actual = Email.Create(value);
+    actual.IsFail.ShouldBeTrue();
+}
+```
+
+### Gate 3: Build Failure Scenarios — Violations are Blocked Immediately
+
+When AI-generated code violates rules, the build pipeline blocks immediately:
+
+```
+FAILED  ValueObject_ShouldBe_PublicSealedWithPrivateConstructors
+  ArchitectureRuleViolation:
+    Class 'Email' violates ValueObject Visibility Rule
+    — Expected: public sealed with all private constructors
+    — Actual: constructor 'Email(string)' is public
+
+  1 architecture rule violation(s) detected.
+```
+
+> **Generation is half the system; ruthless verification is the other half.**
+> Architecture rule tests verify AI-generated code and human-written code equally.
 
 ## Documentation
 
@@ -462,7 +545,7 @@ For detailed specifications and guides, see the documentation site:
 |--------|-------|------------|--------------|
 | [Designing with Types](./Docs.Site/src/content/docs/samples/designing-with-types/index.md) | Domain | 1 | VO, Union, Composite, Specification |
 | [E-Commerce DDD](./Docs.Site/src/content/docs/samples/ecommerce-ddd/index.md) | Domain + Application | 5 | CQRS, EventHandler, DomainService, ApplyT |
-| [AI Model Governance](./Docs.Site/src/content/docs/samples/ai-model-governance/index.md) | Domain + Application + Adapter | 4 | EfCore/Dapper/InMemory, FastEndpoints, IO.Retry/Timeout/Fork/Bracket |
+| [AI Model Governance](./Docs.Site/src/content/docs/samples/ai-model-governance/index.md) | Domain + Application + Adapter | 4 | EFCore/Dapper/InMemory, FastEndpoints, IO.Retry/Timeout/Fork/Bracket |
 
 ### Packages
 
