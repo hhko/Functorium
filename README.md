@@ -28,15 +28,63 @@ These are not simply process problems — they are **problems of design philosop
 
 Mediator, LanguageExt, FluentValidation, and OpenTelemetry are each excellent. But integrating them into a coherent DDD architecture requires hundreds of decisions about error propagation, pipeline ordering, observability boundaries, and type constraints. Functorium makes these decisions once, consistently — and **AI agents automatically apply these decisions to your project.**
 
+## See the Change in 30 Seconds — Before/After
+
+**Before** — Traditional C# validation. Exceptions are landmines buried in control flow:
+
+```csharp
+public class Email
+{
+    public Email(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException("Email cannot be empty");   // Runtime bomb — if the next developer forgets try-catch, the system dies
+        Value = value;
+    }
+    public string Value { get; }
+}
+```
+
+**After** — Functorium's functional validation. Failure possibility is explicit in the return type — if you don't handle it, it won't compile:
+
+```csharp
+public sealed partial class Email : SimpleValueObject<string>
+{
+    public static Fin<Email> Create(string? value) =>               // Fin<T>: success or structured error
+        CreateFromValidation(Validate(value), v => new Email(v));   // Composable pipeline without exceptions
+}
+```
+
+> **You only define business requirements in text.**
+> This complex but safe code is generated and guaranteed by AI agents.
+> Don't worry if functional types like `Fin<T>` or `Validation<Error, T>` look unfamiliar — you never have to write them yourself.
+
+How does AI automatically compose exception-free, safe code like this? First, let's clarify the boundary between human and AI responsibilities.
+
+## Humans Define Rules, AI Builds Plumbing, Observability Translates Back
+
+| Role | Responsibility | Concrete Artifacts |
+|------|---------------|-------------------|
+| **Human** | Define business rules + ubiquitous language in text | PRD, invariant list, glossary |
+| **AI Agent** | Build complex control flow, monad plumbing, boilerplate | `Fin<T>` pipelines, CQRS usecases, Source Generator code |
+| **Observability** | Translate AI-generated code into human-readable diagnostics | Structured logs, dashboards, automatic error classification |
+
+> **"Can I debug AI-written monad code at 2 AM?"**
+>
+> You don't need to trace monad chains line by line.
+> The framework's **automatic error classification + structured context logs + dashboards** — built into every Command/Query — translate code state into human language.
+>
+> **Humans define rules** → **AI builds plumbing** → **Observability translates to human language** → Humans decide again
+
 ## How AI Breaks Through the Problems
 
 ### From Problem to Code — Structure Connected by AI
 
-| Problem | AI Agent's Role | What the Framework Guarantees |
-|---------|----------------|-------------------------------|
-| Exceptions and implicit side effects | **domain-architect** classifies business invariants and maps them to types | `Fin<T>`, `FinT<IO,T>` result types, Always-valid Value Object |
-| Development/operations language separation | **product-analyst** extracts Ubiquitous Language and consistently reflects it across code/docs/metrics | Bounded Context, `ctx.*` field auto-propagation |
-| Observability as afterthought | **observability-engineer** designs KPI→metric mapping, dashboards, and alerts | 3-Pillar auto instrumentation, `[GenerateObservablePort]` |
+| Problem | Breakthrough Direction | AI Agent's Role | What the Framework Guarantees |
+|---------|----------------------|----------------|-------------------------------|
+| Exceptions and implicit side effects | Exception-free pure domain | **domain-architect** classifies business invariants and maps them to types | `Fin<T>`, `FinT<IO,T>` make results and side effects explicit at the type level; LINQ composition structures domain flow |
+| Development/operations language separation | Unified domain language | **product-analyst** extracts Ubiquitous Language and consistently reflects it across code/docs/metrics | Bounded Context clearly defined so domain concepts are consistently reflected in code, docs, and operational metrics. `ctx.*` field auto-propagation |
+| Observability as afterthought | Observability by design | **observability-engineer** designs KPI→metric mapping, dashboards, and alerts | OpenTelemetry-based Logging, Metrics, Tracing automatically applied to usecase pipelines. `[GenerateObservablePort]` |
 
 ### 7-Step Workflow
 
@@ -84,9 +132,50 @@ Each step follows a **4-stage document pattern**. Every design decision has trac
 - Unit tests, integration tests, architecture rule tests
 - Design documents for all stages (traceable design rationale)
 
-## AI-Generated Code: Functional Architecture
+## AI-Generated Code: Functional Architecture in Detail
 
-### Domain Model
+A closer look at the full implementation of the Before/After example above and the core framework patterns.
+
+### Full Implementation — Always-valid Value Object
+
+Validates with type-safe error codes without exceptions, providing a composable functional validation pipeline:
+
+```csharp
+public sealed partial class Email : SimpleValueObject<string>
+{
+    public const int MaxLength = 320;
+
+    private Email(string value) : base(value) { }
+
+    public static Fin<Email> Create(string? value) =>
+        CreateFromValidation(Validate(value), v => new Email(v));
+
+    // Each validation condition failure auto-generates a corresponding error code:
+    //   NotNull    → "DomainErrors.Email.Null"
+    //   NotEmpty   → "DomainErrors.Email.Empty"
+    //   MaxLength  → "DomainErrors.Email.TooLong"
+    //   Matches    → "DomainErrors.Email.InvalidFormat"
+    // Composite Value Objects use the Apply pattern to validate multiple fields
+    // in parallel, collecting all errors at once.
+    public static Validation<Error, string> Validate(string? value) =>
+        ValidationRules<Email>
+            .NotNull(value)
+            .ThenNotEmpty()
+            .ThenNormalize(v => v.Trim().ToLowerInvariant())
+            .ThenMaxLength(MaxLength)
+            .ThenMatches(EmailRegex(), "Invalid email format");
+
+    // For ORM/Repository restoration — accepts only already-normalized data
+    public static Email CreateFromValidated(string value) => new(value);
+
+    public static implicit operator string(Email email) => email.Value;
+}
+```
+
+For CQRS Command/Query usecase implementation examples, see the [CQRS Repository Tutorial](./Docs.Site/src/content/docs/tutorials/cqrs-repository/index.md).
+
+<details>
+<summary><strong>Domain Model in Detail</strong> — Value Object, Entity, AggregateRoot, DomainError, Domain Event</summary>
 
 The **domain-architect** agent of the `domain-develop` skill classifies business invariants and maps them to the Functorium type system. All core business logic resides within the domain model, and entities, value objects, aggregates, and domain services have clear responsibilities.
 
@@ -143,7 +232,10 @@ public interface IDomainEvent : INotification
 }
 ```
 
-### CQRS and Functional Composition
+</details>
+
+<details>
+<summary><strong>CQRS and Functional Composition in Detail</strong> — Repository, Query Port, Command/Query Interfaces</summary>
 
 The `application-develop` skill assembles domain models into CQRS usecases. Core domain logic is composed of pure functions. By maintaining a structure where identical inputs always produce identical outputs, the logic becomes predictable and easy to test. Side effects (database, external APIs, messaging, file I/O) are handled outside the domain logic. The `IO` monad provides built-in advanced features such as Timeout, Retry (exponential backoff), Fork (parallel execution), and Bracket (resource lifecycle management), enabling type-safe fault tolerance configuration for external service calls.
 
@@ -207,7 +299,10 @@ public interface IQueryPort<TEntity, TDto> : IQueryPort
 | **Specification** | `PropertyMap` → EF Core LINQ translation | `DapperSpecTranslator` → SQL WHERE translation |
 | **Pagination** | — | Offset/Limit, Cursor (keyset), Streaming |
 
-### Observability by Design
+</details>
+
+<details>
+<summary><strong>Observability by Design in Detail</strong> — Pipeline, Observable Port, ctx.*, Error Classification</summary>
 
 The `observability-develop` skill embeds operational stability from the design phase. All Commands and Queries automatically pass through a pipeline with built-in Observability (Logging, Metrics, Tracing) and validation. Developers do not need to write log code manually.
 
@@ -242,72 +337,7 @@ public class OrderRepository : IRepository<Order, OrderId> { ... }
 
 **Automatic Error Classification** — Business rule violations (e.g., "insufficient stock") are classified as `expected`, system failures (`NullReferenceException`) as `exceptional`, and compound validation failures as `aggregate`. The `error.type` field allows separate querying of business errors and system failures in Seq/Grafana.
 
-## Quick Example
-
-### Before/After — From Exceptions to Type Safety
-
-**Before** — Traditional C# validation. Exceptions are landmines buried in control flow:
-
-```csharp
-public class Email
-{
-    public Email(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException("Email cannot be empty");   // Runtime bomb — if the next developer forgets try-catch, the system dies
-        Value = value;
-    }
-    public string Value { get; }
-}
-```
-
-**After** — Functorium's functional validation. Failure possibility is explicit in the return type — if you don't handle it, it won't compile:
-
-```csharp
-public sealed partial class Email : SimpleValueObject<string>
-{
-    public static Fin<Email> Create(string? value) =>               // Fin<T>: success or structured error
-        CreateFromValidation(Validate(value), v => new Email(v));   // Composable pipeline without exceptions
-}
-```
-
-### Full Implementation — Always-valid Value Object
-
-Validates with type-safe error codes without exceptions, providing a composable functional validation pipeline:
-
-```csharp
-public sealed partial class Email : SimpleValueObject<string>
-{
-    public const int MaxLength = 320;
-
-    private Email(string value) : base(value) { }
-
-    public static Fin<Email> Create(string? value) =>
-        CreateFromValidation(Validate(value), v => new Email(v));
-
-    // Each validation condition failure auto-generates a corresponding error code:
-    //   NotNull    → "DomainErrors.Email.Null"
-    //   NotEmpty   → "DomainErrors.Email.Empty"
-    //   MaxLength  → "DomainErrors.Email.TooLong"
-    //   Matches    → "DomainErrors.Email.InvalidFormat"
-    // Composite Value Objects use the Apply pattern to validate multiple fields
-    // in parallel, collecting all errors at once.
-    public static Validation<Error, string> Validate(string? value) =>
-        ValidationRules<Email>
-            .NotNull(value)
-            .ThenNotEmpty()
-            .ThenNormalize(v => v.Trim().ToLowerInvariant())
-            .ThenMaxLength(MaxLength)
-            .ThenMatches(EmailRegex(), "Invalid email format");
-
-    // For ORM/Repository restoration — accepts only already-normalized data
-    public static Email CreateFromValidated(string value) => new(value);
-
-    public static implicit operator string(Email email) => email.Value;
-}
-```
-
-For CQRS Command/Query usecase implementation examples, see the [CQRS Repository Tutorial](./Docs.Site/src/content/docs/tutorials/cqrs-repository/index.md).
+</details>
 
 ## Key Features
 
