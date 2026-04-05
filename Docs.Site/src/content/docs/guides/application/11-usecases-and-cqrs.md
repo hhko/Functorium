@@ -986,9 +986,9 @@ services
     .ConfigurePipelines(pipelines => pipelines
         .UseObservability()   // CtxEnricher, Metrics, Tracing, Logging 일괄 활성화
         .UseValidation()
+        .UseCaching()         // Caching은 별도 활성화 필요
         .UseException()
-        .UseTransaction()     // Transaction 명시적 활성화
-        .UseCaching())        // Caching은 별도 활성화 필요
+        .UseTransaction())    // Transaction 명시적 활성화
     .Build();
 ```
 
