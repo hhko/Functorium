@@ -23,55 +23,21 @@ namespace Functorium.Applications.Errors;
 /// </remarks>
 public static class ApplicationError
 {
-    /// <summary>
-    /// ApplicationErrorType record를 사용하여 에러를 생성합니다.
-    /// </summary>
-    /// <typeparam name="TUsecase">유스케이스 타입</typeparam>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="currentValue">현재 값</param>
-    /// <param name="message">오류 메시지</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TUsecase>(
         ApplicationErrorType errorType,
         string currentValue,
         string message) =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{ErrorType.ApplicationErrorsPrefix}.{typeof(TUsecase).Name}.{errorType.ErrorName}",
-            errorCurrentValue: currentValue,
-            errorMessage: message);
+        LayerErrorCore.Create<TUsecase>(ErrorType.ApplicationErrorsPrefix, errorType, currentValue, message);
 
-    /// <summary>
-    /// ApplicationErrorType record를 사용하여 에러를 생성합니다. (제네릭 값 타입)
-    /// </summary>
-    /// <typeparam name="TUsecase">유스케이스 타입</typeparam>
-    /// <typeparam name="TValue">현재 값의 타입</typeparam>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="currentValue">현재 값</param>
-    /// <param name="message">오류 메시지</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TUsecase, TValue>(
         ApplicationErrorType errorType,
         TValue currentValue,
         string message)
         where TValue : notnull =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{ErrorType.ApplicationErrorsPrefix}.{typeof(TUsecase).Name}.{errorType.ErrorName}",
-            errorCurrentValue: currentValue,
-            errorMessage: message);
+        LayerErrorCore.Create<TUsecase, TValue>(ErrorType.ApplicationErrorsPrefix, errorType, currentValue, message);
 
-    /// <summary>
-    /// ApplicationErrorType record를 사용하여 에러를 생성합니다. (두 개의 값 포함)
-    /// </summary>
-    /// <typeparam name="TUsecase">유스케이스 타입</typeparam>
-    /// <typeparam name="T1">첫 번째 값의 타입</typeparam>
-    /// <typeparam name="T2">두 번째 값의 타입</typeparam>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="value1">첫 번째 값</param>
-    /// <param name="value2">두 번째 값</param>
-    /// <param name="message">오류 메시지</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TUsecase, T1, T2>(
         ApplicationErrorType errorType,
@@ -80,25 +46,8 @@ public static class ApplicationError
         string message)
         where T1 : notnull
         where T2 : notnull =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{ErrorType.ApplicationErrorsPrefix}.{typeof(TUsecase).Name}.{errorType.ErrorName}",
-            value1,
-            value2,
-            errorMessage: message);
+        LayerErrorCore.Create<TUsecase, T1, T2>(ErrorType.ApplicationErrorsPrefix, errorType, value1, value2, message);
 
-    /// <summary>
-    /// ApplicationErrorType record를 사용하여 에러를 생성합니다. (세 개의 값 포함)
-    /// </summary>
-    /// <typeparam name="TUsecase">유스케이스 타입</typeparam>
-    /// <typeparam name="T1">첫 번째 값의 타입</typeparam>
-    /// <typeparam name="T2">두 번째 값의 타입</typeparam>
-    /// <typeparam name="T3">세 번째 값의 타입</typeparam>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="value1">첫 번째 값</param>
-    /// <param name="value2">두 번째 값</param>
-    /// <param name="value3">세 번째 값</param>
-    /// <param name="message">오류 메시지</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TUsecase, T1, T2, T3>(
         ApplicationErrorType errorType,
@@ -109,10 +58,5 @@ public static class ApplicationError
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{ErrorType.ApplicationErrorsPrefix}.{typeof(TUsecase).Name}.{errorType.ErrorName}",
-            value1,
-            value2,
-            value3,
-            errorMessage: message);
+        LayerErrorCore.Create<TUsecase, T1, T2, T3>(ErrorType.ApplicationErrorsPrefix, errorType, value1, value2, value3, message);
 }

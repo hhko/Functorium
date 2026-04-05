@@ -1,111 +1,38 @@
-using System.Linq;
 using Functorium.Abstractions.Errors;
 using Functorium.Adapters.Errors;
 using LanguageExt;
 using LanguageExt.Common;
-using Shouldly;
 
 namespace Functorium.Testing.Assertions.Errors;
 
 /// <summary>
 /// 어댑터 에러 검증을 위한 타입 안전 확장 메서드
 /// </summary>
-/// <remarks>
-/// 사용 예시:
-/// <code>
-/// // Error 검증
-/// error.ShouldBeAdapterError&lt;UsecaseValidationPipeline&gt;(new AdapterErrorType.PipelineValidation());
-/// error.ShouldBeAdapterError&lt;HttpClientAdapter, string&gt;(new AdapterErrorType.Timeout(), url);
-///
-/// // Fin 결과 검증
-/// fin.ShouldBeAdapterError&lt;UsecaseExceptionPipeline&gt;(new AdapterErrorType.PipelineException());
-///
-/// // Validation 결과 검증
-/// validation.ShouldHaveAdapterError&lt;UsecaseValidationPipeline&gt;(new AdapterErrorType.PipelineValidation());
-/// </code>
-/// </remarks>
 public static class AdapterErrorAssertions
 {
     #region Error Assertions
 
-    /// <summary>
-    /// Error가 특정 어댑터의 AdapterError인지 검증
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <param name="error">검증할 Error</param>
-    /// <param name="expectedErrorType">기대하는 에러 타입</param>
     public static void ShouldBeAdapterError<TAdapter>(
         this Error error,
-        AdapterErrorType expectedErrorType)
-    {
-        var expectedErrorCode = $"{ErrorType.AdapterErrorsPrefix}.{typeof(TAdapter).Name}.{expectedErrorType.ErrorName}";
+        AdapterErrorType expectedErrorType) =>
+        ErrorAssertionCore.ShouldBeError<TAdapter>(error, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName);
 
-        var actualErrorCode = error.ErrorCode;
-        actualErrorCode.ShouldNotBeNull($"Error should be ErrorCodeExpected, ErrorCodeExpected<T>, or ErrorCodeExceptional, but was {error.GetType().Name}");
-        actualErrorCode.ShouldBe(expectedErrorCode);
-    }
-
-    /// <summary>
-    /// Error가 특정 어댑터의 AdapterError인지 검증 (현재 값 포함)
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <typeparam name="TValue">현재 값의 타입</typeparam>
-    /// <param name="error">검증할 Error</param>
-    /// <param name="expectedErrorType">기대하는 에러 타입</param>
-    /// <param name="expectedCurrentValue">기대하는 현재 값</param>
     public static void ShouldBeAdapterError<TAdapter, TValue>(
         this Error error,
         AdapterErrorType expectedErrorType,
         TValue expectedCurrentValue)
-        where TValue : notnull
-    {
-        var expectedErrorCode = $"{ErrorType.AdapterErrorsPrefix}.{typeof(TAdapter).Name}.{expectedErrorType.ErrorName}";
+        where TValue : notnull =>
+        ErrorAssertionCore.ShouldBeError<TAdapter, TValue>(error, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName, expectedCurrentValue);
 
-        error.ShouldBeOfType<ErrorCodeExpected<TValue>>();
-        var errorCodeExpected = (ErrorCodeExpected<TValue>)error;
-        errorCodeExpected.ErrorCode.ShouldBe(expectedErrorCode);
-        errorCodeExpected.ErrorCurrentValue.ShouldBe(expectedCurrentValue);
-    }
-
-    /// <summary>
-    /// Error가 특정 어댑터의 AdapterError인지 검증 (두 개의 현재 값 포함)
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <typeparam name="T1">첫 번째 값의 타입</typeparam>
-    /// <typeparam name="T2">두 번째 값의 타입</typeparam>
-    /// <param name="error">검증할 Error</param>
-    /// <param name="expectedErrorType">기대하는 에러 타입</param>
-    /// <param name="expectedValue1">기대하는 첫 번째 값</param>
-    /// <param name="expectedValue2">기대하는 두 번째 값</param>
     public static void ShouldBeAdapterError<TAdapter, T1, T2>(
         this Error error,
         AdapterErrorType expectedErrorType,
         T1 expectedValue1,
         T2 expectedValue2)
         where T1 : notnull
-        where T2 : notnull
-    {
-        var expectedErrorCode = $"{ErrorType.AdapterErrorsPrefix}.{typeof(TAdapter).Name}.{expectedErrorType.ErrorName}";
+        where T2 : notnull =>
+        ErrorAssertionCore.ShouldBeError<TAdapter, T1, T2>(error, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName, expectedValue1, expectedValue2);
 
-        error.ShouldBeOfType<ErrorCodeExpected<T1, T2>>();
-        var errorCodeExpected = (ErrorCodeExpected<T1, T2>)error;
-        errorCodeExpected.ErrorCode.ShouldBe(expectedErrorCode);
-        errorCodeExpected.ErrorCurrentValue1.ShouldBe(expectedValue1);
-        errorCodeExpected.ErrorCurrentValue2.ShouldBe(expectedValue2);
-    }
-
-    /// <summary>
-    /// Error가 특정 어댑터의 AdapterError인지 검증 (세 개의 현재 값 포함)
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <typeparam name="T1">첫 번째 값의 타입</typeparam>
-    /// <typeparam name="T2">두 번째 값의 타입</typeparam>
-    /// <typeparam name="T3">세 번째 값의 타입</typeparam>
-    /// <param name="error">검증할 Error</param>
-    /// <param name="expectedErrorType">기대하는 에러 타입</param>
-    /// <param name="expectedValue1">기대하는 첫 번째 값</param>
-    /// <param name="expectedValue2">기대하는 두 번째 값</param>
-    /// <param name="expectedValue3">기대하는 세 번째 값</param>
     public static void ShouldBeAdapterError<TAdapter, T1, T2, T3>(
         this Error error,
         AdapterErrorType expectedErrorType,
@@ -114,271 +41,78 @@ public static class AdapterErrorAssertions
         T3 expectedValue3)
         where T1 : notnull
         where T2 : notnull
-        where T3 : notnull
-    {
-        var expectedErrorCode = $"{ErrorType.AdapterErrorsPrefix}.{typeof(TAdapter).Name}.{expectedErrorType.ErrorName}";
+        where T3 : notnull =>
+        ErrorAssertionCore.ShouldBeError<TAdapter, T1, T2, T3>(error, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName, expectedValue1, expectedValue2, expectedValue3);
 
-        error.ShouldBeOfType<ErrorCodeExpected<T1, T2, T3>>();
-        var errorCodeExpected = (ErrorCodeExpected<T1, T2, T3>)error;
-        errorCodeExpected.ErrorCode.ShouldBe(expectedErrorCode);
-        errorCodeExpected.ErrorCurrentValue1.ShouldBe(expectedValue1);
-        errorCodeExpected.ErrorCurrentValue2.ShouldBe(expectedValue2);
-        errorCodeExpected.ErrorCurrentValue3.ShouldBe(expectedValue3);
-    }
-
-    /// <summary>
-    /// Error가 특정 어댑터의 예외 래핑 AdapterError인지 검증
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <param name="error">검증할 Error</param>
-    /// <param name="expectedErrorType">기대하는 에러 타입</param>
     public static void ShouldBeAdapterExceptionalError<TAdapter>(
         this Error error,
-        AdapterErrorType expectedErrorType)
-    {
-        var expectedErrorCode = $"{ErrorType.AdapterErrorsPrefix}.{typeof(TAdapter).Name}.{expectedErrorType.ErrorName}";
+        AdapterErrorType expectedErrorType) =>
+        ErrorAssertionCore.ShouldBeExceptionalError<TAdapter>(error, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName);
 
-        error.ShouldBeOfType<ErrorCodeExceptional>();
-        var errorCodeExceptional = (ErrorCodeExceptional)error;
-        errorCodeExceptional.ErrorCode.ShouldBe(expectedErrorCode);
-    }
-
-    /// <summary>
-    /// Error가 특정 어댑터의 예외 래핑 AdapterError인지 검증 (예외 타입 포함)
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <typeparam name="TException">기대하는 예외 타입</typeparam>
-    /// <param name="error">검증할 Error</param>
-    /// <param name="expectedErrorType">기대하는 에러 타입</param>
     public static void ShouldBeAdapterExceptionalError<TAdapter, TException>(
         this Error error,
         AdapterErrorType expectedErrorType)
-        where TException : Exception
-    {
-        var expectedErrorCode = $"{ErrorType.AdapterErrorsPrefix}.{typeof(TAdapter).Name}.{expectedErrorType.ErrorName}";
-
-        error.ShouldBeOfType<ErrorCodeExceptional>();
-        var errorCodeExceptional = (ErrorCodeExceptional)error;
-        errorCodeExceptional.ErrorCode.ShouldBe(expectedErrorCode);
-        errorCodeExceptional.ToException().ShouldBeOfType<TException>();
-    }
+        where TException : Exception =>
+        ErrorAssertionCore.ShouldBeExceptionalError<TAdapter, TException>(error, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName);
 
     #endregion
 
     #region Fin<T> Assertions
 
-    /// <summary>
-    /// Fin 실패 결과가 특정 AdapterError인지 검증
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <typeparam name="T">Fin의 성공 값 타입</typeparam>
-    /// <param name="fin">검증할 Fin</param>
-    /// <param name="expectedErrorType">기대하는 에러 타입</param>
     public static void ShouldBeAdapterError<TAdapter, T>(
         this Fin<T> fin,
-        AdapterErrorType expectedErrorType)
-    {
-        fin.IsFail.ShouldBeTrue("Fin should have failed");
-        fin.IfFail(error => error.ShouldBeAdapterError<TAdapter>(expectedErrorType));
-    }
+        AdapterErrorType expectedErrorType) =>
+        ErrorAssertionCore.ShouldBeFinError<TAdapter, T>(fin, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName);
 
-    /// <summary>
-    /// Fin 실패 결과가 특정 AdapterError인지 검증 (현재 값 포함)
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <typeparam name="T">Fin의 성공 값 타입</typeparam>
-    /// <typeparam name="TValue">에러의 현재 값 타입</typeparam>
-    /// <param name="fin">검증할 Fin</param>
-    /// <param name="expectedErrorType">기대하는 에러 타입</param>
-    /// <param name="expectedCurrentValue">기대하는 현재 값</param>
     public static void ShouldBeAdapterError<TAdapter, T, TValue>(
         this Fin<T> fin,
         AdapterErrorType expectedErrorType,
         TValue expectedCurrentValue)
-        where TValue : notnull
-    {
-        fin.IsFail.ShouldBeTrue("Fin should have failed");
-        fin.IfFail(error => error.ShouldBeAdapterError<TAdapter, TValue>(expectedErrorType, expectedCurrentValue));
-    }
+        where TValue : notnull =>
+        ErrorAssertionCore.ShouldBeFinError<TAdapter, T, TValue>(fin, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName, expectedCurrentValue);
 
-    /// <summary>
-    /// Fin 실패 결과가 특정 예외 래핑 AdapterError인지 검증
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <typeparam name="T">Fin의 성공 값 타입</typeparam>
-    /// <param name="fin">검증할 Fin</param>
-    /// <param name="expectedErrorType">기대하는 에러 타입</param>
     public static void ShouldBeAdapterExceptionalError<TAdapter, T>(
         this Fin<T> fin,
-        AdapterErrorType expectedErrorType)
-    {
-        fin.IsFail.ShouldBeTrue("Fin should have failed");
-        fin.IfFail(error => error.ShouldBeAdapterExceptionalError<TAdapter>(expectedErrorType));
-    }
+        AdapterErrorType expectedErrorType) =>
+        ErrorAssertionCore.ShouldBeFinExceptionalError<TAdapter, T>(fin, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName);
 
     #endregion
 
     #region Validation<Error, T> Assertions
 
-    /// <summary>
-    /// Validation 실패 결과가 특정 AdapterError를 포함하는지 검증
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <typeparam name="T">Validation의 성공 값 타입</typeparam>
-    /// <param name="validation">검증할 Validation</param>
-    /// <param name="expectedErrorType">기대하는 에러 타입</param>
     public static void ShouldHaveAdapterError<TAdapter, T>(
         this Validation<Error, T> validation,
-        AdapterErrorType expectedErrorType)
-    {
-        validation.IsFail.ShouldBeTrue("Validation should have failed");
+        AdapterErrorType expectedErrorType) =>
+        ErrorAssertionCore.ShouldHaveError<TAdapter, T>(validation, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName);
 
-        var expectedErrorCode = $"{ErrorType.AdapterErrorsPrefix}.{typeof(TAdapter).Name}.{expectedErrorType.ErrorName}";
-        var errors = validation.Errors;
-
-        var hasMatchingError = errors.Any(e => e.ErrorCode == expectedErrorCode);
-
-        hasMatchingError.ShouldBeTrue(
-            $"Expected error code '{expectedErrorCode}' not found in validation errors. " +
-            $"Actual errors: [{string.Join(", ", errors.Select(e => e.Message))}]");
-    }
-
-    /// <summary>
-    /// Validation 실패 결과가 정확히 해당 AdapterError 하나만 포함하는지 검증
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <typeparam name="T">Validation의 성공 값 타입</typeparam>
-    /// <param name="validation">검증할 Validation</param>
-    /// <param name="expectedErrorType">기대하는 에러 타입</param>
     public static void ShouldHaveOnlyAdapterError<TAdapter, T>(
         this Validation<Error, T> validation,
-        AdapterErrorType expectedErrorType)
-    {
-        validation.IsFail.ShouldBeTrue("Validation should have failed");
+        AdapterErrorType expectedErrorType) =>
+        ErrorAssertionCore.ShouldHaveOnlyError<TAdapter, T>(validation, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName);
 
-        var expectedErrorCode = $"{ErrorType.AdapterErrorsPrefix}.{typeof(TAdapter).Name}.{expectedErrorType.ErrorName}";
-        var errors = validation.Errors;
-
-        errors.Count.ShouldBe(1, $"Expected exactly 1 error but found {errors.Count}");
-
-        var singleError = errors[0];
-        var actualErrorCode = singleError.ErrorCode;
-        actualErrorCode.ShouldNotBeNull($"Error should be ErrorCodeExpected, ErrorCodeExpected<T>, or ErrorCodeExceptional, but was {singleError.GetType().Name}");
-        actualErrorCode.ShouldBe(expectedErrorCode);
-    }
-
-    /// <summary>
-    /// Validation 실패 결과에 여러 AdapterError가 모두 포함되어 있는지 검증
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <typeparam name="T">Validation의 성공 값 타입</typeparam>
-    /// <param name="validation">검증할 Validation</param>
-    /// <param name="expectedErrorTypes">기대하는 에러 타입들</param>
     public static void ShouldHaveAdapterErrors<TAdapter, T>(
         this Validation<Error, T> validation,
-        params AdapterErrorType[] expectedErrorTypes)
-    {
-        validation.IsFail.ShouldBeTrue("Validation should have failed");
+        params AdapterErrorType[] expectedErrorTypes) =>
+        ErrorAssertionCore.ShouldHaveErrors<TAdapter, T>(
+            validation, ErrorType.AdapterErrorsPrefix,
+            expectedErrorTypes.Select(et => et.ErrorName).ToArray());
 
-        var expectedErrorCodes = expectedErrorTypes
-            .Select(et => $"{ErrorType.AdapterErrorsPrefix}.{typeof(TAdapter).Name}.{et.ErrorName}")
-            .ToList();
-
-        var errors = validation.Errors;
-
-        var actualErrorCodes = errors
-            .Select(e => e.ErrorCode)
-            .Where(code => code != null)
-            .ToList();
-
-        foreach (var expectedCode in expectedErrorCodes)
-        {
-            actualErrorCodes.ShouldContain(expectedCode,
-                $"Expected error code '{expectedCode}' not found. " +
-                $"Actual error codes: [{string.Join(", ", actualErrorCodes)}]");
-        }
-    }
-
-    /// <summary>
-    /// Validation 실패 결과가 특정 AdapterError를 포함하는지 검증 (현재 값 포함)
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <typeparam name="T">Validation의 성공 값 타입</typeparam>
-    /// <typeparam name="TValue">에러의 현재 값 타입</typeparam>
-    /// <param name="validation">검증할 Validation</param>
-    /// <param name="expectedErrorType">기대하는 에러 타입</param>
-    /// <param name="expectedCurrentValue">기대하는 현재 값</param>
     public static void ShouldHaveAdapterError<TAdapter, T, TValue>(
         this Validation<Error, T> validation,
         AdapterErrorType expectedErrorType,
         TValue expectedCurrentValue)
-        where TValue : notnull
-    {
-        validation.IsFail.ShouldBeTrue("Validation should have failed");
+        where TValue : notnull =>
+        ErrorAssertionCore.ShouldHaveError<TAdapter, T, TValue>(validation, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName, expectedCurrentValue);
 
-        var expectedErrorCode = $"{ErrorType.AdapterErrorsPrefix}.{typeof(TAdapter).Name}.{expectedErrorType.ErrorName}";
-        var errors = validation.Errors;
-
-        var matchingError = errors
-            .OfType<ErrorCodeExpected<TValue>>()
-            .FirstOrDefault(e => e.ErrorCode == expectedErrorCode);
-
-        matchingError.ShouldNotBeNull(
-            $"Expected error code '{expectedErrorCode}' with value type '{typeof(TValue).Name}' not found. " +
-            $"Actual errors: [{string.Join(", ", errors.Select(e => e.Message))}]");
-
-        matchingError!.ErrorCurrentValue.ShouldBe(expectedCurrentValue);
-    }
-
-    /// <summary>
-    /// Validation 실패 결과가 특정 AdapterError를 포함하는지 검증 (두 개의 현재 값 포함)
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <typeparam name="T">Validation의 성공 값 타입</typeparam>
-    /// <typeparam name="T1">첫 번째 값의 타입</typeparam>
-    /// <typeparam name="T2">두 번째 값의 타입</typeparam>
-    /// <param name="validation">검증할 Validation</param>
-    /// <param name="expectedErrorType">기대하는 에러 타입</param>
-    /// <param name="expectedValue1">기대하는 첫 번째 값</param>
-    /// <param name="expectedValue2">기대하는 두 번째 값</param>
     public static void ShouldHaveAdapterError<TAdapter, T, T1, T2>(
         this Validation<Error, T> validation,
         AdapterErrorType expectedErrorType,
         T1 expectedValue1,
         T2 expectedValue2)
         where T1 : notnull
-        where T2 : notnull
-    {
-        validation.IsFail.ShouldBeTrue("Validation should have failed");
+        where T2 : notnull =>
+        ErrorAssertionCore.ShouldHaveError<TAdapter, T, T1, T2>(validation, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName, expectedValue1, expectedValue2);
 
-        var expectedErrorCode = $"{ErrorType.AdapterErrorsPrefix}.{typeof(TAdapter).Name}.{expectedErrorType.ErrorName}";
-        var errors = validation.Errors;
-
-        var matchingError = errors
-            .OfType<ErrorCodeExpected<T1, T2>>()
-            .FirstOrDefault(e => e.ErrorCode == expectedErrorCode);
-
-        matchingError.ShouldNotBeNull(
-            $"Expected error code '{expectedErrorCode}' with value types '{typeof(T1).Name}, {typeof(T2).Name}' not found. " +
-            $"Actual errors: [{string.Join(", ", errors.Select(e => e.Message))}]");
-
-        matchingError!.ErrorCurrentValue1.ShouldBe(expectedValue1);
-        matchingError!.ErrorCurrentValue2.ShouldBe(expectedValue2);
-    }
-
-    /// <summary>
-    /// Validation 실패 결과가 특정 AdapterError를 포함하는지 검증 (세 개의 현재 값 포함)
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <typeparam name="T">Validation의 성공 값 타입</typeparam>
-    /// <typeparam name="T1">첫 번째 값의 타입</typeparam>
-    /// <typeparam name="T2">두 번째 값의 타입</typeparam>
-    /// <typeparam name="T3">세 번째 값의 타입</typeparam>
-    /// <param name="validation">검증할 Validation</param>
-    /// <param name="expectedErrorType">기대하는 에러 타입</param>
-    /// <param name="expectedValue1">기대하는 첫 번째 값</param>
-    /// <param name="expectedValue2">기대하는 두 번째 값</param>
-    /// <param name="expectedValue3">기대하는 세 번째 값</param>
     public static void ShouldHaveAdapterError<TAdapter, T, T1, T2, T3>(
         this Validation<Error, T> validation,
         AdapterErrorType expectedErrorType,
@@ -387,25 +121,8 @@ public static class AdapterErrorAssertions
         T3 expectedValue3)
         where T1 : notnull
         where T2 : notnull
-        where T3 : notnull
-    {
-        validation.IsFail.ShouldBeTrue("Validation should have failed");
-
-        var expectedErrorCode = $"{ErrorType.AdapterErrorsPrefix}.{typeof(TAdapter).Name}.{expectedErrorType.ErrorName}";
-        var errors = validation.Errors;
-
-        var matchingError = errors
-            .OfType<ErrorCodeExpected<T1, T2, T3>>()
-            .FirstOrDefault(e => e.ErrorCode == expectedErrorCode);
-
-        matchingError.ShouldNotBeNull(
-            $"Expected error code '{expectedErrorCode}' with value types '{typeof(T1).Name}, {typeof(T2).Name}, {typeof(T3).Name}' not found. " +
-            $"Actual errors: [{string.Join(", ", errors.Select(e => e.Message))}]");
-
-        matchingError!.ErrorCurrentValue1.ShouldBe(expectedValue1);
-        matchingError!.ErrorCurrentValue2.ShouldBe(expectedValue2);
-        matchingError!.ErrorCurrentValue3.ShouldBe(expectedValue3);
-    }
+        where T3 : notnull =>
+        ErrorAssertionCore.ShouldHaveError<TAdapter, T, T1, T2, T3>(validation, ErrorType.AdapterErrorsPrefix, expectedErrorType.ErrorName, expectedValue1, expectedValue2, expectedValue3);
 
     #endregion
 }

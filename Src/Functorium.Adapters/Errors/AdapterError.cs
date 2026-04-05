@@ -23,75 +23,29 @@ namespace Functorium.Adapters.Errors;
 /// </remarks>
 public static class AdapterError
 {
-    /// <summary>
-    /// AdapterErrorType record를 사용하여 에러를 생성합니다.
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="currentValue">현재 값</param>
-    /// <param name="message">오류 메시지</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TAdapter>(
         AdapterErrorType errorType,
         string currentValue,
         string message) =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{ErrorType.AdapterErrorsPrefix}.{typeof(TAdapter).Name}.{errorType.ErrorName}",
-            errorCurrentValue: currentValue,
-            errorMessage: message);
+        LayerErrorCore.Create<TAdapter>(ErrorType.AdapterErrorsPrefix, errorType, currentValue, message);
 
-    /// <summary>
-    /// AdapterErrorType record를 사용하여 에러를 생성합니다. (런타임 Type)
-    /// 베이스 클래스에서 GetType()으로 실제 서브클래스 타입을 전달할 때 사용합니다.
-    /// </summary>
-    /// <param name="adapterType">어댑터 런타임 타입</param>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="currentValue">현재 값</param>
-    /// <param name="message">오류 메시지</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For(
         Type adapterType,
         AdapterErrorType errorType,
         string currentValue,
         string message) =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{ErrorType.AdapterErrorsPrefix}.{adapterType.Name}.{errorType.ErrorName}",
-            errorCurrentValue: currentValue,
-            errorMessage: message);
+        LayerErrorCore.Create(ErrorType.AdapterErrorsPrefix, adapterType, errorType, currentValue, message);
 
-    /// <summary>
-    /// AdapterErrorType record를 사용하여 에러를 생성합니다. (제네릭 값 타입)
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <typeparam name="TValue">현재 값의 타입</typeparam>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="currentValue">현재 값</param>
-    /// <param name="message">오류 메시지</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TAdapter, TValue>(
         AdapterErrorType errorType,
         TValue currentValue,
         string message)
         where TValue : notnull =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{ErrorType.AdapterErrorsPrefix}.{typeof(TAdapter).Name}.{errorType.ErrorName}",
-            errorCurrentValue: currentValue,
-            errorMessage: message);
+        LayerErrorCore.Create<TAdapter, TValue>(ErrorType.AdapterErrorsPrefix, errorType, currentValue, message);
 
-    /// <summary>
-    /// AdapterErrorType record를 사용하여 에러를 생성합니다. (두 개의 값 포함)
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <typeparam name="T1">첫 번째 값의 타입</typeparam>
-    /// <typeparam name="T2">두 번째 값의 타입</typeparam>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="value1">첫 번째 값</param>
-    /// <param name="value2">두 번째 값</param>
-    /// <param name="message">오류 메시지</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TAdapter, T1, T2>(
         AdapterErrorType errorType,
@@ -100,25 +54,8 @@ public static class AdapterError
         string message)
         where T1 : notnull
         where T2 : notnull =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{ErrorType.AdapterErrorsPrefix}.{typeof(TAdapter).Name}.{errorType.ErrorName}",
-            value1,
-            value2,
-            errorMessage: message);
+        LayerErrorCore.Create<TAdapter, T1, T2>(ErrorType.AdapterErrorsPrefix, errorType, value1, value2, message);
 
-    /// <summary>
-    /// AdapterErrorType record를 사용하여 에러를 생성합니다. (세 개의 값 포함)
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <typeparam name="T1">첫 번째 값의 타입</typeparam>
-    /// <typeparam name="T2">두 번째 값의 타입</typeparam>
-    /// <typeparam name="T3">세 번째 값의 타입</typeparam>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="value1">첫 번째 값</param>
-    /// <param name="value2">두 번째 값</param>
-    /// <param name="value3">세 번째 값</param>
-    /// <param name="message">오류 메시지</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TAdapter, T1, T2, T3>(
         AdapterErrorType errorType,
@@ -129,25 +66,11 @@ public static class AdapterError
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{ErrorType.AdapterErrorsPrefix}.{typeof(TAdapter).Name}.{errorType.ErrorName}",
-            value1,
-            value2,
-            value3,
-            errorMessage: message);
+        LayerErrorCore.Create<TAdapter, T1, T2, T3>(ErrorType.AdapterErrorsPrefix, errorType, value1, value2, value3, message);
 
-    /// <summary>
-    /// 예외를 AdapterError로 래핑합니다.
-    /// </summary>
-    /// <typeparam name="TAdapter">어댑터 타입</typeparam>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="exception">래핑할 예외</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error FromException<TAdapter>(
         AdapterErrorType errorType,
         Exception exception) =>
-        ErrorCodeFactory.CreateFromException(
-            errorCode: $"{ErrorType.AdapterErrorsPrefix}.{typeof(TAdapter).Name}.{errorType.ErrorName}",
-            exception: exception);
+        LayerErrorCore.FromException<TAdapter>(ErrorType.AdapterErrorsPrefix, errorType, exception);
 }

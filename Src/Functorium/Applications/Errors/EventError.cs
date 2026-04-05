@@ -21,68 +21,28 @@ namespace Functorium.Applications.Errors;
 /// </remarks>
 public static class EventError
 {
-    /// <summary>
-    /// EventErrorType record를 사용하여 에러를 생성합니다.
-    /// </summary>
-    /// <typeparam name="TPublisher">발행자 타입</typeparam>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="currentValue">현재 값</param>
-    /// <param name="message">오류 메시지</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TPublisher>(
         EventErrorType errorType,
         string currentValue,
         string message) =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{ErrorType.ApplicationErrorsPrefix}.{typeof(TPublisher).Name}.{errorType.ErrorName}",
-            errorCurrentValue: currentValue,
-            errorMessage: message);
+        LayerErrorCore.Create<TPublisher>(ErrorType.ApplicationErrorsPrefix, errorType, currentValue, message);
 
-    /// <summary>
-    /// EventErrorType record를 사용하여 에러를 생성합니다. (제네릭 값 타입)
-    /// </summary>
-    /// <typeparam name="TPublisher">발행자 타입</typeparam>
-    /// <typeparam name="TValue">현재 값의 타입</typeparam>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="currentValue">현재 값</param>
-    /// <param name="message">오류 메시지</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TPublisher, TValue>(
         EventErrorType errorType,
         TValue currentValue,
         string message)
         where TValue : notnull =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{ErrorType.ApplicationErrorsPrefix}.{typeof(TPublisher).Name}.{errorType.ErrorName}",
-            errorCurrentValue: currentValue,
-            errorMessage: message);
+        LayerErrorCore.Create<TPublisher, TValue>(ErrorType.ApplicationErrorsPrefix, errorType, currentValue, message);
 
-    /// <summary>
-    /// 예외로부터 Exceptional 에러를 생성합니다.
-    /// </summary>
-    /// <typeparam name="TPublisher">발행자 타입</typeparam>
-    /// <param name="exception">발생한 예외</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error FromException<TPublisher>(Exception exception) =>
-        ErrorCodeFactory.CreateFromException(
-            errorCode: $"{ErrorType.ApplicationErrorsPrefix}.{typeof(TPublisher).Name}.{new EventErrorType.PublishFailed().ErrorName}",
-            exception: exception);
+        LayerErrorCore.FromException<TPublisher>(ErrorType.ApplicationErrorsPrefix, new EventErrorType.PublishFailed(), exception);
 
-    /// <summary>
-    /// 예외로부터 특정 에러 타입의 Exceptional 에러를 생성합니다.
-    /// </summary>
-    /// <typeparam name="TPublisher">발행자 타입</typeparam>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="exception">발생한 예외</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error FromException<TPublisher>(
         EventErrorType errorType,
         Exception exception) =>
-        ErrorCodeFactory.CreateFromException(
-            errorCode: $"{ErrorType.ApplicationErrorsPrefix}.{typeof(TPublisher).Name}.{errorType.ErrorName}",
-            exception: exception);
+        LayerErrorCore.FromException<TPublisher>(ErrorType.ApplicationErrorsPrefix, errorType, exception);
 }

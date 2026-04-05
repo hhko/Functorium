@@ -23,55 +23,21 @@ namespace Functorium.Domains.Errors;
 /// </remarks>
 public static class DomainError
 {
-    /// <summary>
-    /// DomainErrorType record를 사용하여 에러를 생성합니다.
-    /// </summary>
-    /// <typeparam name="TDomain">도메인 타입 (Value Object, Entity, Aggregate 등)</typeparam>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="currentValue">현재 값</param>
-    /// <param name="message">오류 메시지</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TDomain>(
         DomainErrorType errorType,
         string currentValue,
         string message) =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{ErrorType.DomainErrorsPrefix}.{typeof(TDomain).Name}.{errorType.ErrorName}",
-            errorCurrentValue: currentValue,
-            errorMessage: message);
+        LayerErrorCore.Create<TDomain>(ErrorType.DomainErrorsPrefix, errorType, currentValue, message);
 
-    /// <summary>
-    /// DomainErrorType record를 사용하여 에러를 생성합니다. (제네릭 값 타입)
-    /// </summary>
-    /// <typeparam name="TDomain">도메인 타입 (Value Object, Entity, Aggregate 등)</typeparam>
-    /// <typeparam name="TValue">현재 값의 타입</typeparam>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="currentValue">현재 값</param>
-    /// <param name="message">오류 메시지</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TDomain, TValue>(
         DomainErrorType errorType,
         TValue currentValue,
         string message)
         where TValue : notnull =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{ErrorType.DomainErrorsPrefix}.{typeof(TDomain).Name}.{errorType.ErrorName}",
-            errorCurrentValue: currentValue,
-            errorMessage: message);
+        LayerErrorCore.Create<TDomain, TValue>(ErrorType.DomainErrorsPrefix, errorType, currentValue, message);
 
-    /// <summary>
-    /// DomainErrorType record를 사용하여 에러를 생성합니다. (두 개의 값 포함)
-    /// </summary>
-    /// <typeparam name="TDomain">도메인 타입 (Value Object, Entity, Aggregate 등)</typeparam>
-    /// <typeparam name="T1">첫 번째 값의 타입</typeparam>
-    /// <typeparam name="T2">두 번째 값의 타입</typeparam>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="value1">첫 번째 값</param>
-    /// <param name="value2">두 번째 값</param>
-    /// <param name="message">오류 메시지</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TDomain, T1, T2>(
         DomainErrorType errorType,
@@ -80,25 +46,8 @@ public static class DomainError
         string message)
         where T1 : notnull
         where T2 : notnull =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{ErrorType.DomainErrorsPrefix}.{typeof(TDomain).Name}.{errorType.ErrorName}",
-            value1,
-            value2,
-            errorMessage: message);
+        LayerErrorCore.Create<TDomain, T1, T2>(ErrorType.DomainErrorsPrefix, errorType, value1, value2, message);
 
-    /// <summary>
-    /// DomainErrorType record를 사용하여 에러를 생성합니다. (세 개의 값 포함)
-    /// </summary>
-    /// <typeparam name="TDomain">도메인 타입 (Value Object, Entity, Aggregate 등)</typeparam>
-    /// <typeparam name="T1">첫 번째 값의 타입</typeparam>
-    /// <typeparam name="T2">두 번째 값의 타입</typeparam>
-    /// <typeparam name="T3">세 번째 값의 타입</typeparam>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="value1">첫 번째 값</param>
-    /// <param name="value2">두 번째 값</param>
-    /// <param name="value3">세 번째 값</param>
-    /// <param name="message">오류 메시지</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error For<TDomain, T1, T2, T3>(
         DomainErrorType errorType,
@@ -109,48 +58,16 @@ public static class DomainError
         where T1 : notnull
         where T2 : notnull
         where T3 : notnull =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{ErrorType.DomainErrorsPrefix}.{typeof(TDomain).Name}.{errorType.ErrorName}",
-            value1,
-            value2,
-            value3,
-            errorMessage: message);
+        LayerErrorCore.Create<TDomain, T1, T2, T3>(ErrorType.DomainErrorsPrefix, errorType, value1, value2, value3, message);
 
-    /// <summary>
-    /// 문자열 컨텍스트 이름을 사용하여 에러를 생성합니다.
-    /// </summary>
-    /// <param name="contextName">컨텍스트 이름</param>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="currentValue">현재 값</param>
-    /// <param name="message">오류 메시지</param>
-    /// <returns>생성된 Error</returns>
-    /// <remarks>
-    /// Named Context 검증 패턴에서 사용됩니다.
-    /// <code>
-    /// DomainError.ForContext("ProductRegistration", new NotPositive(), value, "Amount must be positive");
-    /// // Error: DomainErrors.ProductRegistration.NotPositive
-    /// </code>
-    /// </remarks>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error ForContext(
         string contextName,
         DomainErrorType errorType,
         string currentValue,
         string message) =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{ErrorType.DomainErrorsPrefix}.{contextName}.{errorType.ErrorName}",
-            errorCurrentValue: currentValue,
-            errorMessage: message);
+        LayerErrorCore.ForContext(ErrorType.DomainErrorsPrefix, contextName, errorType, currentValue, message);
 
-    /// <summary>
-    /// 문자열 컨텍스트 이름을 사용하여 에러를 생성합니다. (제네릭 값 타입)
-    /// </summary>
-    /// <typeparam name="TValue">현재 값의 타입</typeparam>
-    /// <param name="contextName">컨텍스트 이름</param>
-    /// <param name="errorType">에러 타입 record</param>
-    /// <param name="currentValue">현재 값</param>
-    /// <param name="message">오류 메시지</param>
-    /// <returns>생성된 Error</returns>
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Error ForContext<TValue>(
         string contextName,
@@ -158,8 +75,5 @@ public static class DomainError
         TValue currentValue,
         string message)
         where TValue : notnull =>
-        ErrorCodeFactory.Create(
-            errorCode: $"{ErrorType.DomainErrorsPrefix}.{contextName}.{errorType.ErrorName}",
-            errorCurrentValue: currentValue,
-            errorMessage: message);
+        LayerErrorCore.ForContext(ErrorType.DomainErrorsPrefix, contextName, errorType, currentValue, message);
 }
