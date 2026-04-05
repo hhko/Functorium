@@ -250,7 +250,7 @@ Scrutor 자동 검색 등록을 위한 마커 인터페이스입니다.
 public interface ICustomUsecasePipeline { }
 ```
 
-`AddCustomPipelinesFromAssembly(assembly)`를 사용하면 이 인터페이스를 구현한 모든 타입이 자동으로 DI에 등록됩니다.
+`AddCustomPipeline<T>()`를 사용하면 이 인터페이스를 구현한 타입을 명시적으로 DI에 등록합니다.
 
 ### UsecaseMetricCustomPipelineBase\<TRequest\>
 
@@ -326,10 +326,10 @@ public class PipelineConfigurator
 
 | 메서드 | 반환 타입 | 설명 |
 |--------|----------|------|
-| `UseAll()` | `PipelineConfigurator` | 모든 기본 Pipeline 활성화 (Metrics, Tracing, Logging, Validation, Exception, Transaction) |
-| `UseMetrics()` | `PipelineConfigurator` | Metrics Pipeline 활성화 |
-| `UseTracing()` | `PipelineConfigurator` | Tracing Pipeline 활성화 |
-| `UseLogging()` | `PipelineConfigurator` | Logging Pipeline 활성화 |
+| `UseObservability()` | `PipelineConfigurator` | 관측성 4종 일괄 활성화 (CtxEnricher, Metrics, Tracing, Logging) |
+| `UseMetrics()` | `PipelineConfigurator` | Metrics Pipeline 활성화 (CtxEnricher 자동 포함) |
+| `UseTracing()` | `PipelineConfigurator` | Tracing Pipeline 활성화 (CtxEnricher 자동 포함) |
+| `UseLogging()` | `PipelineConfigurator` | Logging Pipeline 활성화 (CtxEnricher 자동 포함) |
 | `UseValidation()` | `PipelineConfigurator` | Validation Pipeline 활성화 |
 | `UseCaching()` | `PipelineConfigurator` | Caching Pipeline 활성화 (`IMemoryCache` DI 등록 필요) |
 | `UseException()` | `PipelineConfigurator` | Exception Pipeline 활성화 |
@@ -340,19 +340,21 @@ public class PipelineConfigurator
 | 메서드 | 반환 타입 | 설명 |
 |--------|----------|------|
 | `WithLifetime(ServiceLifetime lifetime)` | `PipelineConfigurator` | Pipeline 서비스 Lifetime 설정 (기본값: `Scoped`) |
-| `AddCustomPipeline<TPipeline>()` | `PipelineConfigurator` | 커스텀 Pipeline을 타입으로 개별 등록 |
-| `AddCustomPipelinesFromAssembly(Assembly assembly)` | `PipelineConfigurator` | 어셈블리에서 `ICustomUsecasePipeline` 구현체 자동 검색 등록 |
+| `AddCustomPipeline<TPipeline>()` | `PipelineConfigurator` | 커스텀 Pipeline을 타입으로 명시적 등록 (파이프라인 실행 순서의 결정론적 보장) |
 
 ### 사용 예시
 
 ```csharp
-// 기본값: 모든 Pipeline 활성화
+// 관측성 + 유효성검증 + 예외처리 활성화
 services
     .RegisterOpenTelemetry(configuration, Assembly.GetExecutingAssembly())
-    .ConfigurePipelines()  // UseAll() 자동 호출
+    .ConfigurePipelines(pipelines => pipelines
+        .UseObservability()   // CtxEnricher, Metrics, Tracing, Logging 일괄 활성화
+        .UseValidation()
+        .UseException())
     .Build();
 
-// 선택적 활성화
+// 선택적 활성화 + 커스텀 Pipeline 등록
 services
     .RegisterOpenTelemetry(configuration, Assembly.GetExecutingAssembly())
     .ConfigurePipelines(pipelines => pipelines
@@ -363,7 +365,7 @@ services
         .UseException()
         .UseTransaction()
         .UseCaching()
-        .AddCustomPipelinesFromAssembly(Assembly.GetExecutingAssembly())
+        .AddCustomPipeline<PlaceOrderCommandMetricPipeline>()
         .WithLifetime(ServiceLifetime.Scoped))
     .Build();
 ```
@@ -379,7 +381,7 @@ services
 5. Caching
 6. Exception
 7. Transaction
-8. Custom (개별 등록 → 어셈블리 자동 검색 순)
+8. Custom (`AddCustomPipeline<T>()` 호출 순서대로 등록)
 9. Handler
 
 **Transaction Pipeline 자동 감지:** `UseTransaction()`을 호출해도 `IUnitOfWork`, `IDomainEventPublisher`, `IDomainEventCollector`가 DI에 모두 등록되어 있지 않으면 등록을 건너뜁니다.
@@ -413,8 +415,7 @@ public static OpenTelemetryBuilder RegisterOpenTelemetry(
 | `ConfigureLogging(Action<LoggingConfigurator> configure)` | `OpenTelemetryBuilder` | Serilog 확장 설정 |
 | `ConfigureMetrics(Action<MetricsConfigurator> configure)` | `OpenTelemetryBuilder` | OpenTelemetry Metrics 확장 설정 |
 | `ConfigureTracing(Action<TracingConfigurator> configure)` | `OpenTelemetryBuilder` | OpenTelemetry Tracing 확장 설정 |
-| `ConfigurePipelines()` | `OpenTelemetryBuilder` | 모든 기본 Pipeline 활성화 |
-| `ConfigurePipelines(Action<PipelineConfigurator> configure)` | `OpenTelemetryBuilder` | 커스텀 Pipeline 설정 |
+| `ConfigurePipelines(Action<PipelineConfigurator> configure)` | `OpenTelemetryBuilder` | Pipeline 구성 (명시적 opt-in 필수) |
 | `ConfigureStartupLogger(Action<ILogger> configure)` | `OpenTelemetryBuilder` | 시작 시 추가 로깅 설정 |
 | `WithAdapterObservability(bool enable = true)` | `OpenTelemetryBuilder` | Adapter 관측 가능성 활성화/비활성화 (기본값: `true`) |
 | `Build()` | `IServiceCollection` | 모든 설정 적용 후 IServiceCollection 반환 |

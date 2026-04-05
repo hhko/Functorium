@@ -464,7 +464,7 @@ Functorium.Adapters.Observabilities/
 │   │   ├── LoggingConfigurator.cs         // Logging 설정
 │   │   ├── TracingConfigurator.cs         // Tracing 설정
 │   │   └── MetricsConfigurator.cs         // Metrics 설정
-│   ├── PipelineConfigurator.cs          // Pipeline 선택적 등록 (UseAll, UseMetrics 등)
+│   ├── PipelineConfigurator.cs          // Pipeline 선택적 등록 (UseObservability, UseMetrics 등)
 │   └── OpenTelemetryBuilder.cs
 ├── Loggers/
 │   ├── IStartupOptionsLogger.cs           // Logger 인터페이스

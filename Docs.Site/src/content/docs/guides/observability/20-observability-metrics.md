@@ -54,7 +54,7 @@ histogram_quantile(0.95, rate(application_usecase_command_duration_bucket[5m]))
 
 ### 주요 절차
 
-1. `ConfigurePipelines(p => p.UseAll())`로 Metrics Pipeline 활성화
+1. `ConfigurePipelines(p => p.UseObservability())`로 Metrics Pipeline 활성화 (`UseObservability()`는 CtxEnricher, Metrics, Tracing, Logging을 일괄 활성화)
 2. Application Layer는 `UsecaseMetricsPipeline`이 Counter/Histogram 자동 수집
 3. Adapter Layer는 Source Generator가 메트릭 코드 자동 생성
 4. Prometheus/Grafana에서 RED(Rate, Errors, Duration) 대시보드 구성
@@ -688,12 +688,12 @@ public sealed class PlaceOrderMetricsPipeline
 
 #### 등록 방법
 
-`UsecaseMetricCustomPipelineBase<TRequest>`는 `ICustomUsecasePipeline`을 구현하므로, `AddCustomPipelinesFromAssembly()`로 자동 등록됩니다:
+`UsecaseMetricCustomPipelineBase<TRequest>`는 `ICustomUsecasePipeline`을 구현하므로, `AddCustomPipeline<T>()`로 명시적으로 등록합니다. 파이프라인 실행 순서의 결정론적 보장을 위해 어셈블리 스캔 대신 개별 등록 방식을 사용합니다:
 
 ```csharp
 .ConfigurePipelines(p => p
-    .UseMetrics()
-    .AddCustomPipelinesFromAssembly(AssemblyReference.Assembly))
+    .UseObservability()
+    .AddCustomPipeline<PlaceOrderCommandMetricPipeline>())
 ```
 
 > **참조**: [커스텀 확장](../../spec/07-pipeline#커스텀-확장)

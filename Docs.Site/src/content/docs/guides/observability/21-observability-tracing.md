@@ -53,7 +53,7 @@ Functorium은 OpenTelemetry Tracing 표준을 따르는 분산 추적 기능을 
 
 ### 주요 절차
 
-1. `ConfigurePipelines(p => p.UseAll())`로 Tracing Pipeline 활성화
+1. `ConfigurePipelines(p => p.UseObservability())`로 Tracing Pipeline 활성화 (`UseObservability()`는 CtxEnricher, Metrics, Tracing, Logging을 일괄 활성화)
 2. Application Layer는 `UsecaseTracingPipeline`이 Span 자동 생성 (Kind: Internal)
 3. Adapter Layer는 Source Generator가 Span 코드 자동 생성
 4. Jaeger/Tempo에서 Parent-Child 관계로 요청 흐름 시각화 및 병목 식별
@@ -603,12 +603,12 @@ public sealed class PlaceOrderTracingPipeline
 
 #### 등록 방법
 
-`UsecaseTracingCustomPipelineBase<TRequest>`는 `ICustomUsecasePipeline`을 구현하므로, `AddCustomPipelinesFromAssembly()`로 자동 등록됩니다:
+`UsecaseTracingCustomPipelineBase<TRequest>`는 `ICustomUsecasePipeline`을 구현하므로, `AddCustomPipeline<T>()`로 명시적으로 등록합니다. 파이프라인 실행 순서의 결정론적 보장을 위해 어셈블리 스캔 대신 개별 등록 방식을 사용합니다:
 
 ```csharp
 .ConfigurePipelines(p => p
-    .UseTracing()
-    .AddCustomPipelinesFromAssembly(AssemblyReference.Assembly))
+    .UseObservability()
+    .AddCustomPipeline<PlaceOrderCommandTracingPipeline>())
 ```
 
 > **참조**: [커스텀 확장](../../spec/07-pipeline#커스텀-확장)

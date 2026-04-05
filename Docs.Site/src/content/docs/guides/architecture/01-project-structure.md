@@ -731,7 +731,7 @@ app.Run();
 | 2 | Persistence | Configuration 필요, DB Context/Repository 등록 |
 | 3 | Infrastructure | Mediator, Validation, OpenTelemetry, Pipeline 등록 — Pipeline이 앞서 등록된 Adapter를 래핑하므로 마지막 |
 
-- 핵심: Infrastructure가 마지막인 이유는 `ConfigurePipelines().UseAll()`이 이전 단계에서 등록된 모든 Adapter Pipeline을 활성화하기 때문
+- 핵심: Infrastructure가 마지막인 이유는 `ConfigurePipelines(p => p.UseObservability().UseValidation().UseException())`이 이전 단계에서 등록된 모든 Adapter Pipeline을 활성화하기 때문
 
 **미들웨어 순서** (Infrastructure → Persistence → Presentation):
 

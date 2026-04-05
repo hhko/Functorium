@@ -112,7 +112,7 @@ EfCore 구현에서 Query는 InMemory 쿼리를 재사용합니다 (향후 Dappe
 - Mediator + `ObservableDomainEventNotificationPublisher`
 - FluentValidation (2개 어셈블리)
 - OpenTelemetry 3-Pillar
-- Pipeline (UseAll + Custom)
+- Pipeline (UseObservability + UseValidation + UseException + Custom)
 - Domain Services (RiskClassificationService, DeploymentEligibilityService)
 
 ## 테스트 현황

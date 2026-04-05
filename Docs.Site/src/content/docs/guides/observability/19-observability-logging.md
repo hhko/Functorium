@@ -49,7 +49,7 @@ response.elapsed > 1.0
 
 ### 주요 절차
 
-1. `ConfigurePipelines(p => p.UseAll())`로 Logging Pipeline 활성화
+1. `ConfigurePipelines(p => p.UseObservability())`로 Logging Pipeline 활성화 (`UseObservability()`는 CtxEnricher, Metrics, Tracing, Logging을 일괄 활성화)
 2. Application Layer는 `UsecaseLoggingPipeline`이 자동으로 로그 생성 (Event ID 1001-1004)
 3. Adapter Layer는 Source Generator가 `LoggerMessage.Define` 기반 고성능 로그 코드 자동 생성 (Event ID 2001-2004)
 4. 실패 시 `error.type`으로 Expected/Exceptional 자동 분류, 적절한 Log Level 자동 선택
@@ -765,7 +765,7 @@ public sealed record Request(
 
 #### 등록 방법
 
-Ctx Enricher는 `ICustomUsecasePipeline`이 아니므로 `AddCustomPipelinesFromAssembly()`의 Scrutor 스캔 대상이 아닙니다. 별도로 DI에 등록합니다:
+Ctx Enricher는 `ICustomUsecasePipeline`이 아니므로 별도로 DI에 등록합니다. `UseObservability()` 사용 시 CtxEnricher가 자동 활성화됩니다:
 
 ```csharp
 // Source Generator가 생성한 Enricher 등록

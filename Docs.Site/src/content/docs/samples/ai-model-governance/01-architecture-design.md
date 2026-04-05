@@ -192,20 +192,19 @@ OpenTelemetry 3-Pillar 관측성을 `RegisterOpenTelemetry` + `ConfigurePipeline
 services
     .RegisterOpenTelemetry(configuration, AssemblyReference.Assembly)
     .ConfigurePipelines(pipelines => pipelines
-        .UseAll()
-        .AddCustomPipelinesFromAssembly(AssemblyReference.Assembly))
+        .UseObservability()   // CtxEnricher, Metrics, Tracing, Logging 일괄 활성화
+        .UseValidation()
+        .UseException())
     .Build();
 ```
 
-`UseAll()`은 다음 5개 미들웨어를 순서대로 등록합니다:
+`UseObservability()`는 관측성 4종(CtxEnricher, Metrics, Tracing, Logging)을 일괄 활성화합니다. 나머지 파이프라인은 명시적 opt-in으로 등록합니다:
 
 | 순서 | 미들웨어 | 역할 |
 |------|---------|------|
-| 1 | `UseMetrics()` | 요청 수, 응답 수, 처리 시간 메트릭 수집 |
-| 2 | `UseTracing()` | 분산 추적 스팬 생성 |
-| 3 | `UseCtxEnricher()` | 비즈니스 컨텍스트(ctx.*) 전파 |
-| 4 | `UseLogging()` | 구조화 로깅 (Serilog) |
-| 5 | `UseException()` | 예외 -> DomainError/AdapterError 변환 |
+| 1 | `UseObservability()` | CtxEnricher + Metrics + Tracing + Logging 일괄 활성화 |
+| 2 | `UseValidation()` | FluentValidation 기반 요청 검증 |
+| 3 | `UseException()` | 예외 -> DomainError/AdapterError 변환 |
 
 ```json
 {

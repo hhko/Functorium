@@ -978,14 +978,17 @@ FinT<IO, Response> usecase =
 
 ### 파이프라인 등록
 
-`UseAll()`에 Transaction 파이프라인이 포함되어 있습니다:
+명시적 opt-in으로 Transaction 파이프라인을 활성화합니다:
 
 ```csharp
 services
     .RegisterOpenTelemetry(configuration, AssemblyReference.Assembly)
     .ConfigurePipelines(pipelines => pipelines
-        .UseAll()    // Metrics, Tracing, Logging, Validation, Exception, Transaction 포함
-        .UseCaching())  // Caching은 별도 활성화 필요
+        .UseObservability()   // CtxEnricher, Metrics, Tracing, Logging 일괄 활성화
+        .UseValidation()
+        .UseException()
+        .UseTransaction()     // Transaction 명시적 활성화
+        .UseCaching())        // Caching은 별도 활성화 필요
     .Build();
 ```
 
@@ -1109,13 +1112,15 @@ public sealed class Validator : AbstractValidator<Request>
 
 ### Pipeline을 통한 자동 검증
 
-`UsecaseValidationPipeline`은 `ConfigurePipelines`의 `UseAll()` 또는 `UseValidation()`으로 등록됩니다. Handler 실행 전에 자동으로 Validator가 실행됩니다:
+`UsecaseValidationPipeline`은 `ConfigurePipelines`의 `UseValidation()`으로 등록됩니다. Handler 실행 전에 자동으로 Validator가 실행됩니다:
 
 ```csharp
 services
     .AddValidatorsFromAssembly(typeof(Program).Assembly)
     .ConfigurePipelines(pipelines => pipelines
-        .UseAll());   // Metrics, Tracing, Logging, Validation, Exception, Transaction 포함 (Caching은 UseCaching()으로 별도 활성화)
+        .UseObservability()   // CtxEnricher, Metrics, Tracing, Logging 일괄 활성화
+        .UseValidation()      // Validation 명시적 활성화
+        .UseException());
 ```
 
 ### FluentValidation 실패와 에러 타입 매핑
@@ -1292,7 +1297,7 @@ public sealed record Response(
 2. **파이프라인이 SaveChanges 자동 호출**: Handler 성공 시 `IUnitOfWork.SaveChanges()`를 호출하고, 실패 시 커밋하지 않습니다.
 3. **파이프라인이 도메인 이벤트 자동 발행**: Repository가 `IDomainEventCollector.Track()`으로 추적한 Aggregate의 도메인 이벤트를 `SaveChanges()` 성공 후 자동 발행합니다.
 
-활성화: `.ConfigurePipelines(pipelines => pipelines.UseAll())` (`UseAll()`에 Transaction 포함)
+활성화: `.ConfigurePipelines(pipelines => pipelines.UseObservability().UseValidation().UseException().UseTransaction())`
 
 ---
 

@@ -64,7 +64,7 @@ ls {Project}/obj/GeneratedFiles/Functorium.SourceGenerators/.../*.g.cs
 | Registration 클래스 | Adapter 프로젝트별 DI 등록을 모아둔 정적 클래스 |
 | Options 패턴 | `OptionsConfigurator<T>`로 설정 값을 강타입 바인딩 |
 
-> **참고**: `UsecaseCachingPipeline`은 `IMemoryCache`에 의존합니다. `UseAll()` 사용 시 `services.AddMemoryCache()`를 DI에 등록해야 합니다.
+> **참고**: `UsecaseCachingPipeline`은 `IMemoryCache`에 의존합니다. `UseCaching()` 사용 시 `services.AddMemoryCache()`를 DI에 등록해야 합니다.
 
 먼저 Pipeline이 어떻게 생성되는지 확인한 뒤, DI 등록과 Options 패턴까지 순서대로 진행합니다.
 
@@ -326,7 +326,7 @@ services.RegisterScopedObservablePort<
 
 #### Ctx Enricher 등록
 
-Ctx Enricher는 `ICustomUsecasePipeline`이 아니므로 `AddCustomPipelinesFromAssembly()`의 Scrutor 스캔에 포함되지 않습니다. 별도로 DI에 등록합니다.
+Ctx Enricher는 `ICustomUsecasePipeline`이 아니므로 별도로 DI에 등록합니다. `UseObservability()` 사용 시 CtxEnricher가 자동 활성화됩니다.
 
 **Usecase Ctx Enricher** — Source Generator가 자동 생성한 Enricher:
 

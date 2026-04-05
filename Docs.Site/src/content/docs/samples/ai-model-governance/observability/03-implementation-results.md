@@ -84,21 +84,24 @@ Functorium Pipeline의 `UseCtxEnricher()` 미들웨어가 Command/Query Request�
 services
     .RegisterOpenTelemetry(configuration, AssemblyReference.Assembly)
     .ConfigurePipelines(pipelines => pipelines
-        .UseAll()                                    // 5개 미들웨어 일괄 등록
-        .AddCustomPipelinesFromAssembly(              // 커스텀 파이프라인 자동 등록
-            AssemblyReference.Assembly))
+        .UseObservability()                          // CtxEnricher + Metrics + Tracing + Logging 일괄 활성화
+        .UseValidation()
+        .UseException())
     .Build();
 ```
 
-### UseAll() 미들웨어 순서
+### UseObservability() 미들웨어 순서
+
+`UseObservability()`는 관측성 4종을 일괄 활성화합니다. 나머지 파이프라인은 명시적 opt-in으로 등록합니다:
 
 | 순서 | 미들웨어 | 수집 대상 | 출력 |
 |------|---------|----------|------|
-| 1 | `UseMetrics()` | Counter(requests, responses), Histogram(duration) | Prometheus / OTLP |
-| 2 | `UseTracing()` | Activity Span (진입/종료/태그) | Jaeger / OTLP |
-| 3 | `UseCtxEnricher()` | Request/Response/Event 프로퍼티 | LogContext + Activity.SetTag + MetricsTagContext |
-| 4 | `UseLogging()` | 구조화 로그 (Serilog) | Console / OTLP |
-| 5 | `UseException()` | 예외 -> DomainError/AdapterError 변환 | error.type, error.code 태그 |
+| 1 | `UseObservability()` → Metrics | Counter(requests, responses), Histogram(duration) | Prometheus / OTLP |
+| 2 | `UseObservability()` → Tracing | Activity Span (진입/종료/태그) | Jaeger / OTLP |
+| 3 | `UseObservability()` → CtxEnricher | Request/Response/Event 프로퍼티 | LogContext + Activity.SetTag + MetricsTagContext |
+| 4 | `UseObservability()` → Logging | 구조화 로그 (Serilog) | Console / OTLP |
+| 5 | `UseValidation()` | FluentValidation 기반 요청 검증 | Validation Error |
+| 6 | `UseException()` | 예외 -> DomainError/AdapterError 변환 | error.type, error.code 태그 |
 
 ### 이벤트 발행 관측성
 

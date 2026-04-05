@@ -350,8 +350,9 @@ public static IServiceCollection RegisterAdapterInfrastructure(
     services
         .RegisterOpenTelemetry(configuration, AssemblyReference.Assembly)
         .ConfigurePipelines(pipelines => pipelines
-            .UseAll()
-            .AddCustomPipelinesFromAssembly(AssemblyReference.Assembly))
+            .UseObservability()
+            .UseValidation()
+            .UseException())
         .Build();
 
     // Domain Services

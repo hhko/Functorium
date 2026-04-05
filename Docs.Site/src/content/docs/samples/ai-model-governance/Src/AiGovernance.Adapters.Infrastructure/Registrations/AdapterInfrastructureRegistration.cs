@@ -40,6 +40,7 @@ public static class AdapterInfrastructureRegistration
             .ConfigurePipelines(pipelines => pipelines
                 .UseObservability()
                 .UseValidation()
+                .UseCaching()
                 .UseException()
                 .UseTransaction())
             .Build();

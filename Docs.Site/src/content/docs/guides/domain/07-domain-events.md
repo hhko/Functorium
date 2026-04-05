@@ -724,7 +724,7 @@ public async Task Handle_ShouldLogProductCreation()
 ### 이벤트 발행
 
 - [ ] `AddDomainEvent()`가 상태 변경 직후 호출되는가?
-- [ ] `UsecaseTransactionPipeline`이 자동 발행하도록 구성되었는가? (`UseAll()` 또는 `UseTransaction()` 등록 확인)
+- [ ] `UsecaseTransactionPipeline`이 자동 발행하도록 구성되었는가? (`UseTransaction()` 등록 확인)
 
 ### 이벤트 핸들러
 
