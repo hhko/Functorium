@@ -63,12 +63,8 @@ internal sealed class UsecaseTransactionPipeline<TRequest, TResponse>
         if (saveResult.IsFail)
         {
             var error = saveResult.Match(Succ: _ => default!, Fail: e => e);
-            _logger.LogWarning("SaveChanges 실패: {Handler}, 소요시간: {ElapsedSeconds:F4}s, 에러: {Error}",
-                handler, elapsed, error);
             return TResponse.CreateFail(error);   // 트랜잭션 미커밋 → Dispose 시 롤백
         }
-
-        _logger.LogDebug("SaveChanges 성공: {Handler}, 소요시간: {ElapsedSeconds:F4}s", handler, elapsed);
 
         // 모두 성공 → 트랜잭션 커밋
         await transaction.CommitAsync(cancellationToken);
