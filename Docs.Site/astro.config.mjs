@@ -228,6 +228,133 @@ export default defineConfig({
               },
             ],
           },
+                    {
+            label: 'AX',
+            link: '/ax/',
+            icon: 'star',
+            items: [
+              { label: 'AX (AI Transformation)', slug: 'ax' },
+              {
+                label: 'functorium-develop',
+                items: [
+                  { slug: 'ax/functorium-develop' },
+                  { slug: 'ax/functorium-develop/workflow' },
+                  {
+                    label: '스킬',
+                    items: [
+                      { slug: 'ax/functorium-develop/skills/project-spec' },
+                      { slug: 'ax/functorium-develop/skills/architecture-design' },
+                      { slug: 'ax/functorium-develop/skills/domain-develop' },
+                      { slug: 'ax/functorium-develop/skills/application-develop' },
+                      { slug: 'ax/functorium-develop/skills/adapter-develop' },
+                      { slug: 'ax/functorium-develop/skills/observability-develop' },
+                      { slug: 'ax/functorium-develop/skills/test-develop' },
+                      { slug: 'ax/functorium-develop/skills/domain-review' },
+                    ],
+                  },
+                  { slug: 'ax/functorium-develop/agents' },
+                ],
+              },
+              {
+                label: 'release-note',
+                items: [
+                  { slug: 'ax/release-note' },
+                  { slug: 'ax/release-note/agents' },
+                ],
+              },
+            ],
+          },
+          {
+            label: '예제',
+            link: '/samples/',
+            icon: 'rocket',
+            items: [
+              { label: 'Functorium 예제', slug: 'samples' },
+              {
+                label: '타입으로 도메인 설계하기',
+                items: [
+                  { slug: 'samples/designing-with-types' },
+                  {
+                    label: '도메인 레이어',
+                    items: [
+                      { slug: 'samples/designing-with-types/domain/00-business-requirements' },
+                      { slug: 'samples/designing-with-types/domain/01-type-design-decisions' },
+                      { slug: 'samples/designing-with-types/domain/02-code-design' },
+                      { slug: 'samples/designing-with-types/domain/03-implementation-results' },
+                    ],
+                  },
+                ],
+              },
+              {
+                label: '전자상거래 DDD',
+                items: [
+                  { slug: 'samples/ecommerce-ddd' },
+                  {
+                    label: '도메인 레이어',
+                    items: [
+                      { slug: 'samples/ecommerce-ddd/domain/00-business-requirements' },
+                      { slug: 'samples/ecommerce-ddd/domain/01-type-design-decisions' },
+                      { slug: 'samples/ecommerce-ddd/domain/02-code-design' },
+                      { slug: 'samples/ecommerce-ddd/domain/03-implementation-results' },
+                    ],
+                  },
+                  {
+                    label: '애플리케이션 레이어',
+                    items: [
+                      { slug: 'samples/ecommerce-ddd/application/00-business-requirements' },
+                      { slug: 'samples/ecommerce-ddd/application/01-type-design-decisions' },
+                      { slug: 'samples/ecommerce-ddd/application/02-code-design' },
+                      { slug: 'samples/ecommerce-ddd/application/03-implementation-results' },
+                    ],
+                  },
+                ],
+              },
+              {
+                label: 'AI 모델 거버넌스',
+                items: [
+                  { slug: 'samples/ai-model-governance' },
+                  { slug: 'samples/ai-model-governance/00-project-spec' },
+                  { slug: 'samples/ai-model-governance/01-architecture-design' },
+                  {
+                    label: '도메인 레이어',
+                    items: [
+                      { slug: 'samples/ai-model-governance/domain/00-business-requirements' },
+                      { slug: 'samples/ai-model-governance/domain/01-type-design-decisions' },
+                      { slug: 'samples/ai-model-governance/domain/02-code-design' },
+                      { slug: 'samples/ai-model-governance/domain/03-implementation-results' },
+                    ],
+                  },
+                  {
+                    label: '애플리케이션 레이어',
+                    items: [
+                      { slug: 'samples/ai-model-governance/application/00-business-requirements' },
+                      { slug: 'samples/ai-model-governance/application/01-type-design-decisions' },
+                      { slug: 'samples/ai-model-governance/application/02-code-design' },
+                      { slug: 'samples/ai-model-governance/application/03-implementation-results' },
+                    ],
+                  },
+                  {
+                    label: '어댑터 레이어',
+                    items: [
+                      { slug: 'samples/ai-model-governance/adapter/00-business-requirements' },
+                      { slug: 'samples/ai-model-governance/adapter/01-type-design-decisions' },
+                      { slug: 'samples/ai-model-governance/adapter/02-code-design' },
+                      { slug: 'samples/ai-model-governance/adapter/03-implementation-results' },
+                    ],
+                  },
+                  {
+                    label: '관측성',
+                    items: [
+                      { slug: 'samples/ai-model-governance/observability/00-business-requirements' },
+                      { slug: 'samples/ai-model-governance/observability/01-type-design-decisions' },
+                      { slug: 'samples/ai-model-governance/observability/02-code-design' },
+                      { slug: 'samples/ai-model-governance/observability/03-implementation-results' },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
           {
             label: '가이드',
             link: '/guides/',
@@ -478,133 +605,6 @@ export default defineConfig({
                     autogenerate: { directory: 'tutorials/specification-pattern/part5-domain-examples' },
                   },
                   { label: '부록', collapsed: true, autogenerate: { directory: 'tutorials/specification-pattern/appendix' } },
-                ],
-              },
-            ],
-          },
-          {
-            label: '예제',
-            link: '/samples/',
-            icon: 'rocket',
-            items: [
-              { label: 'Functorium 예제', slug: 'samples' },
-              {
-                label: '타입으로 도메인 설계하기',
-                items: [
-                  { slug: 'samples/designing-with-types' },
-                  {
-                    label: '도메인 레이어',
-                    items: [
-                      { slug: 'samples/designing-with-types/domain/00-business-requirements' },
-                      { slug: 'samples/designing-with-types/domain/01-type-design-decisions' },
-                      { slug: 'samples/designing-with-types/domain/02-code-design' },
-                      { slug: 'samples/designing-with-types/domain/03-implementation-results' },
-                    ],
-                  },
-                ],
-              },
-              {
-                label: '전자상거래 DDD',
-                items: [
-                  { slug: 'samples/ecommerce-ddd' },
-                  {
-                    label: '도메인 레이어',
-                    items: [
-                      { slug: 'samples/ecommerce-ddd/domain/00-business-requirements' },
-                      { slug: 'samples/ecommerce-ddd/domain/01-type-design-decisions' },
-                      { slug: 'samples/ecommerce-ddd/domain/02-code-design' },
-                      { slug: 'samples/ecommerce-ddd/domain/03-implementation-results' },
-                    ],
-                  },
-                  {
-                    label: '애플리케이션 레이어',
-                    items: [
-                      { slug: 'samples/ecommerce-ddd/application/00-business-requirements' },
-                      { slug: 'samples/ecommerce-ddd/application/01-type-design-decisions' },
-                      { slug: 'samples/ecommerce-ddd/application/02-code-design' },
-                      { slug: 'samples/ecommerce-ddd/application/03-implementation-results' },
-                    ],
-                  },
-                ],
-              },
-              {
-                label: 'AI 모델 거버넌스',
-                items: [
-                  { slug: 'samples/ai-model-governance' },
-                  { slug: 'samples/ai-model-governance/00-project-spec' },
-                  { slug: 'samples/ai-model-governance/01-architecture-design' },
-                  {
-                    label: '도메인 레이어',
-                    items: [
-                      { slug: 'samples/ai-model-governance/domain/00-business-requirements' },
-                      { slug: 'samples/ai-model-governance/domain/01-type-design-decisions' },
-                      { slug: 'samples/ai-model-governance/domain/02-code-design' },
-                      { slug: 'samples/ai-model-governance/domain/03-implementation-results' },
-                    ],
-                  },
-                  {
-                    label: '애플리케이션 레이어',
-                    items: [
-                      { slug: 'samples/ai-model-governance/application/00-business-requirements' },
-                      { slug: 'samples/ai-model-governance/application/01-type-design-decisions' },
-                      { slug: 'samples/ai-model-governance/application/02-code-design' },
-                      { slug: 'samples/ai-model-governance/application/03-implementation-results' },
-                    ],
-                  },
-                  {
-                    label: '어댑터 레이어',
-                    items: [
-                      { slug: 'samples/ai-model-governance/adapter/00-business-requirements' },
-                      { slug: 'samples/ai-model-governance/adapter/01-type-design-decisions' },
-                      { slug: 'samples/ai-model-governance/adapter/02-code-design' },
-                      { slug: 'samples/ai-model-governance/adapter/03-implementation-results' },
-                    ],
-                  },
-                  {
-                    label: '관측성',
-                    items: [
-                      { slug: 'samples/ai-model-governance/observability/00-business-requirements' },
-                      { slug: 'samples/ai-model-governance/observability/01-type-design-decisions' },
-                      { slug: 'samples/ai-model-governance/observability/02-code-design' },
-                      { slug: 'samples/ai-model-governance/observability/03-implementation-results' },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            label: 'AX',
-            link: '/ax/',
-            icon: 'star',
-            items: [
-              { label: 'AX (AI Transformation)', slug: 'ax' },
-              {
-                label: 'functorium-develop',
-                items: [
-                  { slug: 'ax/functorium-develop' },
-                  { slug: 'ax/functorium-develop/workflow' },
-                  {
-                    label: '스킬',
-                    items: [
-                      { slug: 'ax/functorium-develop/skills/project-spec' },
-                      { slug: 'ax/functorium-develop/skills/architecture-design' },
-                      { slug: 'ax/functorium-develop/skills/domain-develop' },
-                      { slug: 'ax/functorium-develop/skills/application-develop' },
-                      { slug: 'ax/functorium-develop/skills/adapter-develop' },
-                      { slug: 'ax/functorium-develop/skills/observability-develop' },
-                      { slug: 'ax/functorium-develop/skills/test-develop' },
-                      { slug: 'ax/functorium-develop/skills/domain-review' },
-                    ],
-                  },
-                  { slug: 'ax/functorium-develop/agents' },
-                ],
-              },
-              {
-                label: 'release-note',
-                items: [
-                  { slug: 'ax/release-note' },
-                  { slug: 'ax/release-note/agents' },
                 ],
               },
             ],
