@@ -1,4 +1,4 @@
-using Functorium.Applications.Errors;
+using Functorium.Adapters.Errors;
 using Functorium.Applications.Events;
 using Functorium.Domains.Events;
 using LanguageExt;
@@ -39,16 +39,16 @@ public sealed class DomainEventPublisher : IDomainEventPublisher
             catch (OperationCanceledException)
             {
                 return Fin.Fail<LanguageExt.Unit>(
-                    EventError.For<DomainEventPublisher>(
-                        new EventErrorType.PublishCancelled(),
+                    AdapterError.For<DomainEventPublisher>(
+                        new AdapterErrorType.PublishCancelled(),
                         typeof(TEvent).Name,
                         "Event publishing was cancelled"));
             }
             catch (Exception ex)
             {
                 return Fin.Fail<LanguageExt.Unit>(
-                    EventError.FromException<DomainEventPublisher>(
-                        new EventErrorType.PublishFailed(),
+                    AdapterError.FromException<DomainEventPublisher>(
+                        new AdapterErrorType.PublishFailed(),
                         ex));
             }
         });
@@ -101,16 +101,16 @@ public sealed class DomainEventPublisher : IDomainEventPublisher
             }
             catch (OperationCanceledException)
             {
-                var error = EventError.For<DomainEventPublisher>(
-                    new EventErrorType.PublishCancelled(),
+                var error = AdapterError.For<DomainEventPublisher>(
+                    new AdapterErrorType.PublishCancelled(),
                     evt.GetType().Name,
                     $"Event publishing was cancelled");
                 failed.Add((evt, error));
             }
             catch (Exception ex)
             {
-                var error = EventError.FromException<DomainEventPublisher>(
-                    new EventErrorType.PublishFailed(),
+                var error = AdapterError.FromException<DomainEventPublisher>(
+                    new AdapterErrorType.PublishFailed(),
                     ex);
                 failed.Add((evt, error));
             }

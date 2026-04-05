@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 namespace Functorium.Abstractions.Errors;
 
 /// <summary>
-/// 레이어별 Helper 클래스(DomainError, ApplicationError, EventError, AdapterError)의
+/// 레이어별 Helper 클래스(DomainError, ApplicationError, AdapterError)의
 /// 공통 에러 생성 로직을 제공하는 내부 구현 클래스
 /// </summary>
 internal static class LayerErrorCore
