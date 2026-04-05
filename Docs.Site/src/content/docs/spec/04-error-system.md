@@ -2,11 +2,13 @@
 title: "에러 시스템 사양"
 ---
 
-Functorium의 에러 시스템은 레이어별 sealed record 계층(`DomainErrorType`, `ApplicationErrorType`, `AdapterErrorType`)과 팩토리 클래스(`DomainError`, `ApplicationError`, `AdapterError`)로 구성됩니다. 이 사양서는 모든 공개 에러 타입의 시그니처, 속성, 에러 코드 생성 규칙을 정의합니다.
+Functorium의 에러 시스템은 **레이어별 sealed record 계층**(`DomainErrorType`, `ApplicationErrorType`, `AdapterErrorType`)과 **레이어별 팩토리**(`DomainError`, `ApplicationError`, `EventError`, `AdapterError`)로 구성됩니다. 팩토리의 공통 생성 로직은 내부 `LayerErrorCore`에 집중되고, Expected 에러의 공통 override는 `ErrorCodeExpectedBase`에 통합됩니다. 이 사양서는 공개/내부 타입의 시그니처, 속성, 에러 코드 생성 규칙을 정의합니다.
 
 ## 요약
 
 ### 주요 타입
+
+#### 공개 타입
 
 | 타입 | 네임스페이스 | 설명 |
 |------|-------------|------|
@@ -21,6 +23,16 @@ Functorium의 에러 시스템은 레이어별 sealed record 계층(`DomainError
 | `EventError` | `Functorium.Applications.Errors` | 이벤트 에러 생성 팩토리 |
 | `AdapterErrorType` | `Functorium.Adapters.Errors` | 어댑터 에러 타입 sealed record 계층 (20개 타입) |
 | `AdapterError` | `Functorium.Adapters.Errors` | 어댑터 에러 생성 팩토리 |
+
+#### 내부 타입 (internal)
+
+| 타입 | 네임스페이스 | 설명 |
+|------|-------------|------|
+| `ErrorCodeExpectedBase` | `Functorium.Abstractions.Errors` | Expected 에러 4종의 공통 LanguageExt `Error` override 기반 클래스 |
+| `ErrorCodeExpected` (4종) | `Functorium.Abstractions.Errors` | Expected 에러 — 값 저장만 담당하며 나머지는 base에서 상속 |
+| `ErrorCodeExceptional` | `Functorium.Abstractions.Errors` | Exception을 에러 코드와 함께 래핑 |
+| `LayerErrorCore` | `Functorium.Abstractions.Errors` | 4개 레이어 팩토리의 공통 에러 코드 생성 로직 |
+| `ErrorAssertionCore` | `Functorium.Testing.Assertions.Errors` | 3개 레이어 Assertion의 공통 검증 로직 |
 
 ### 에러 코드 형식
 
@@ -81,6 +93,31 @@ public interface IHasErrorCode
 
 ## ErrorCode 타입
 
+### ErrorCodeExpectedBase (internal)
+
+```csharp
+internal abstract record ErrorCodeExpectedBase(
+    string ErrorCode,
+    string ErrorMessage,
+    int ErrorCodeId = -1000,
+    Option<Error> Inner = default) : Error, IHasErrorCode
+```
+
+**`ErrorCodeExpectedBase`는** Expected 에러 4종(`ErrorCodeExpected`, `<T>`, `<T1,T2>`, `<T1,T2,T3>`)의 공통 기반 클래스입니다. LanguageExt `Error`의 13개 override를 한 곳에 정의하여 파생 타입의 중복을 제거합니다.
+
+| 멤버 | 종류 | 설명 |
+|------|------|------|
+| `ErrorCode` | `string` | `"{Prefix}.{Context}.{ErrorName}"` 형식 에러 코드 |
+| `Message` | `override string` | 사람이 읽을 수 있는 에러 메시지 |
+| `Code` | `override int` | 정수 에러 코드 ID (기본값 `-1000`) |
+| `Inner` | `override Option<Error>` | 내부 에러 (기본값 `None`) |
+| `ToString()` | `sealed override` | `Message` 반환. `sealed`로 파생 record의 자동생성 방지 |
+| `ToErrorException()` | `override` | `WrappedErrorExpectedException` 반환 |
+| `IsExpected` | `bool` | 항상 `true` |
+| `IsExceptional` | `bool` | 항상 `false` |
+
+> **`sealed override ToString()`**: C# record는 파생 클래스에서 `ToString()`을 자동 재생성합니다. `sealed`로 이를 차단하여 모든 파생 타입이 일관되게 `Message`를 반환하도록 보장합니다.
+
 ### ErrorCodeExpected (internal)
 
 ```csharp
@@ -89,29 +126,18 @@ internal record ErrorCodeExpected(
     string ErrorCurrentValue,
     string ErrorMessage,
     int ErrorCodeId = -1000,
-    Option<Error> Inner = default) : Error, IHasErrorCode
+    Option<Error> Inner = default)
+    : ErrorCodeExpectedBase(ErrorCode, ErrorMessage, ErrorCodeId, Inner)
 ```
 
-**`ErrorCodeExpected`는** 비즈니스 규칙 위반 등 예상된(Expected) 에러를 표현합니다. `IsExpected = true`, `IsExceptional = false`입니다.
+**`ErrorCodeExpected`는** 비즈니스 규칙 위반 등 예상된(Expected) 에러를 표현합니다. `ErrorCodeExpectedBase`에서 `ErrorCode`, `Message`, `Code`, `Inner`, `ToString()`, `IsExpected`, `IsExceptional` 등 공통 멤버를 상속받고, 파생 타입은 에러 발생 시점의 값(`ErrorCurrentValue`)만 추가로 정의합니다.
 
-| 속성 | 타입 | 설명 |
-|------|------|------|
-| `ErrorCode` | `string` | `"{Prefix}.{Context}.{ErrorName}"` 형식 에러 코드 |
-| `ErrorCurrentValue` | `string` | 에러 발생 시점의 현재 값 |
-| `Message` | `string` | 사람이 읽을 수 있는 에러 메시지 |
-| `Code` | `int` | 정수 에러 코드 ID (기본값 `-1000`) |
-| `Inner` | `Option<Error>` | 내부 에러 (기본값 `None`) |
-| `IsExpected` | `bool` | 항상 `true` |
-| `IsExceptional` | `bool` | 항상 `false` |
-
-제네릭 오버로드 4종이 존재합니다:
-
-| 오버로드 | CurrentValue 타입 |
-|----------|------------------|
-| `ErrorCodeExpected` | `string` |
-| `ErrorCodeExpected<T>` | `T` (1개) |
-| `ErrorCodeExpected<T1, T2>` | `T1`, `T2` (2개) |
-| `ErrorCodeExpected<T1, T2, T3>` | `T1`, `T2`, `T3` (3개) |
+| 오버로드 | 추가 속성 | 설명 |
+|----------|----------|------|
+| `ErrorCodeExpected` | `ErrorCurrentValue: string` | 문자열 값 |
+| `ErrorCodeExpected<T>` | `ErrorCurrentValue: T` | 타입 값 (1개) |
+| `ErrorCodeExpected<T1, T2>` | `ErrorCurrentValue1: T1`, `ErrorCurrentValue2: T2` | 타입 값 (2개) |
+| `ErrorCodeExpected<T1, T2, T3>` | `ErrorCurrentValue1: T1`, `ErrorCurrentValue2: T2`, `ErrorCurrentValue3: T3` | 타입 값 (3개) |
 
 ### ErrorCodeExceptional (internal)
 
@@ -156,7 +182,15 @@ public static class ErrorCodeFactory
 }
 ```
 
-**`ErrorCodeFactory`는** `ErrorCodeExpected`와 `ErrorCodeExceptional` 인스턴스를 생성하는 정적 팩토리입니다. 레이어별 팩토리(`DomainError`, `ApplicationError`, `AdapterError`)가 내부적으로 이 클래스를 호출합니다.
+**`ErrorCodeFactory`는** `ErrorCodeExpected`와 `ErrorCodeExceptional` 인스턴스를 생성하는 정적 팩토리입니다. 레이어별 팩토리는 다음 흐름으로 에러를 생성합니다:
+
+```
+DomainError.For<T>(DomainErrorType, ...)        ← 레이어 타입 안전성 (공개 API)
+  → LayerErrorCore.Create<T>(prefix, ErrorType, ...)  ← 공통 에러 코드 조립 (internal)
+    → ErrorCodeFactory.Create(errorCode, ...)          ← ErrorCodeExpected 인스턴스 생성 (internal)
+```
+
+`LayerErrorCore`가 에러 코드 문자열(`{Prefix}.{Context}.{ErrorName}`)을 조립하고, `ErrorCodeFactory`가 최종 `Error` 인스턴스를 생성합니다. 모든 메서드에 `[AggressiveInlining]`이 적용되어 JIT이 위임 호출을 제거하므로 성능 차이는 없습니다.
 
 | 메서드 | 반환 | 설명 |
 |--------|------|------|
@@ -510,6 +544,64 @@ public abstract record Custom : AdapterErrorType;
 // 사용 예시
 public sealed record RateLimited : AdapterErrorType.Custom;
 ```
+
+---
+
+## 내부 아키텍처
+
+### LayerErrorCore (internal)
+
+```csharp
+namespace Functorium.Abstractions.Errors;
+
+internal static class LayerErrorCore
+{
+    internal static Error Create<TContext>(string prefix, ErrorType errorType, string currentValue, string message);
+    internal static Error Create<TContext, TValue>(string prefix, ErrorType errorType, TValue currentValue, string message)
+        where TValue : notnull;
+    internal static Error Create<TContext, T1, T2>(...) where T1 : notnull where T2 : notnull;
+    internal static Error Create<TContext, T1, T2, T3>(...) where T1 : notnull where T2 : notnull where T3 : notnull;
+    internal static Error Create(string prefix, Type contextType, ErrorType errorType, string currentValue, string message);
+    internal static Error ForContext(string prefix, string contextName, ErrorType errorType, string currentValue, string message);
+    internal static Error ForContext<TValue>(string prefix, string contextName, ErrorType errorType, TValue currentValue, string message)
+        where TValue : notnull;
+    internal static Error FromException<TContext>(string prefix, ErrorType errorType, Exception exception);
+}
+```
+
+**`LayerErrorCore`는** 4개 레이어 팩토리(`DomainError`, `ApplicationError`, `EventError`, `AdapterError`)의 공통 구현입니다. 에러 코드 문자열 `{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}`을 조립하고 `ErrorCodeFactory`에 위임합니다.
+
+**설계 원리**: 공개 팩토리는 레이어별 타입 파라미터(`DomainErrorType`, `ApplicationErrorType` 등)를 유지하여 **컴파일 타임 안전성을** 보장합니다. `LayerErrorCore`는 기반 타입 `ErrorType`으로 수신하여 **구현 중복을 제거합니다.** 모든 메서드에 `[AggressiveInlining]`이 적용되어 JIT이 위임 호출을 인라인 처리합니다.
+
+```csharp
+// 컴파일 타임 안전성 보장 예시
+DomainError.For<Email>(new DomainErrorType.Empty(), ...)       // ✅ 컴파일 OK
+DomainError.For<Email>(new AdapterErrorType.Timeout(), ...)    // ❌ CS1503
+```
+
+### ErrorAssertionCore (internal)
+
+```csharp
+namespace Functorium.Testing.Assertions.Errors;
+
+internal static class ErrorAssertionCore
+{
+    // Error — ErrorCode 검증, 값 검증 (1~3개), Exceptional 검증
+    internal static void ShouldBeError<TContext>(Error error, string prefix, string errorName);
+    internal static void ShouldBeError<TContext, TValue>(Error error, string prefix, string errorName, TValue expectedValue);
+    internal static void ShouldBeExceptionalError<TContext>(Error error, string prefix, string errorName);
+
+    // Fin<T> — 실패 상태 + ErrorCode 검증
+    internal static void ShouldBeFinError<TContext, T>(Fin<T> fin, string prefix, string errorName);
+
+    // Validation<Error, T> — 에러 포함/유일/복수 검증
+    internal static void ShouldHaveError<TContext, T>(Validation<Error, T> validation, string prefix, string errorName);
+    internal static void ShouldHaveOnlyError<TContext, T>(Validation<Error, T> validation, string prefix, string errorName);
+    internal static void ShouldHaveErrors<TContext, T>(Validation<Error, T> validation, string prefix, params string[] errorNames);
+}
+```
+
+**`ErrorAssertionCore`는** 3개 레이어 Assertion(`DomainErrorAssertions`, `ApplicationErrorAssertions`, `AdapterErrorAssertions`)의 공통 검증 로직입니다. 에러 코드 조립(`{prefix}.{typeof(TContext).Name}.{errorName}`)과 `ErrorCodeExpected<T>` 타입 캐스팅, 값 비교를 제공합니다. 레이어별 Assertion은 prefix와 에러 타입만 바인딩하는 thin wrapper입니다.
 
 ---
 

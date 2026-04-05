@@ -509,11 +509,22 @@ R1-R8의 표준 에러 타입으로 표현할 수 없는 도메인 특화 에러
 ```
 Src/Functorium/Abstractions/Errors/
 ├── ErrorCodeExpected.cs              # Expected 에러 타입 (4가지 변형)
+├── ErrorCodeExpectedBase.cs          # Expected 에러 공통 기반 클래스 (13개 override 통합)
 ├── ErrorCodeExceptional.cs           # Exceptional 에러 타입
-├── ErrorCodeFactory.cs               # 팩토리 메서드
-├── ErrorCodeFieldNames.cs            # 필드명 상수
+├── ErrorCodeFactory.cs               # ErrorCodeExpected/Exceptional 인스턴스 생성
+├── ErrorCodeFieldNames.cs            # Serilog 구조화 필드명 상수
 ├── ErrorType.cs                      # 에러 접두사 상수 (DomainErrorsPrefix 등)
-└── IHasErrorCode.cs                  # 에러 코드 접근 인터페이스
+├── IHasErrorCode.cs                  # 에러 코드 접근 인터페이스
+└── LayerErrorCore.cs                 # 레이어별 팩토리 공통 에러 코드 생성 로직
+
+Src/Functorium.Testing/Assertions/Errors/
+├── DomainErrorAssertions.cs          # 도메인 에러 검증 (thin wrapper)
+├── ApplicationErrorAssertions.cs     # 애플리케이션 에러 검증 (thin wrapper)
+├── AdapterErrorAssertions.cs         # 어댑터 에러 검증 (thin wrapper)
+├── ErrorAssertionCore.cs             # 레이어별 Assertion 공통 검증 로직
+├── ErrorAssertionHelpers.cs          # 공유 유틸리티
+├── ErrorCodeAssertions.cs            # 범용 에러 코드 검증
+└── ErrorCodeExceptionalAssertions.cs # Exceptional 에러 검증
 
 Src/Functorium.Adapters/Abstractions/Errors/
 └── DestructuringPolicies/            # Serilog 구조화 정책
@@ -534,29 +545,47 @@ Functorium의 에러 타입은 LanguageExt의 `Error`를 확장하여 다음과 
 
 ```
 Error (LanguageExt.Common)
-├── ErrorCodeExpected               - 도메인/비즈니스 에러 (문자열 값)
-├── ErrorCodeExpected<T>            - 도메인/비즈니스 에러 (타입 값)
-├── ErrorCodeExpected<T1, T2>       - 도메인/비즈니스 에러 (2개 타입 값)
-├── ErrorCodeExpected<T1, T2, T3>   - 도메인/비즈니스 에러 (3개 타입 값)
-├── ErrorCodeExceptional            - 예외 래퍼
-└── ManyErrors                      - 복수 에러 컬렉션
+├── ErrorCodeExpectedBase             - Expected 에러 공통 기반 (13개 override 통합)
+│   ├── ErrorCodeExpected             - 도메인/비즈니스 에러 (문자열 값)
+│   ├── ErrorCodeExpected<T>          - 도메인/비즈니스 에러 (타입 값 1개)
+│   ├── ErrorCodeExpected<T1, T2>     - 도메인/비즈니스 에러 (타입 값 2개)
+│   └── ErrorCodeExpected<T1, T2, T3> - 도메인/비즈니스 에러 (타입 값 3개)
+├── ErrorCodeExceptional              - 예외 래퍼
+└── ManyErrors                        - 복수 에러 컬렉션
 ```
 
-모든 `ErrorCodeExpected` 변형과 `ErrorCodeExceptional`은 **internal record이며** `IHasErrorCode` 인터페이스를 구현합니다. 각 타입의 특성을 정리하면 다음과 같습니다.
+`ErrorCodeExpectedBase`는 `ErrorCode`, `Message`, `Code`, `Inner` 속성과 `sealed override ToString() => Message`, `IsExpected = true`, `IsExceptional = false` 등 공통 멤버를 정의합니다. 파생 4종은 `ErrorCurrentValue` 관련 속성만 추가합니다. `sealed override ToString()`은 C# record가 파생 클래스에서 `ToString()`을 자동 재생성하는 것을 차단하여, 모든 Expected 에러가 일관되게 `Message`를 반환하도록 보장합니다.
+
+모든 `ErrorCodeExpected` 변형과 `ErrorCodeExceptional`은 **internal record이며** `IHasErrorCode` 인터페이스를 구현합니다.
 
 | 타입 | `IsExpected` | `IsExceptional` | 접근 제한자 |
 |------|:---:|:---:|:---:|
+| `ErrorCodeExpectedBase` | `true` | `false` | internal (abstract) |
 | `ErrorCodeExpected` | `true` | `false` | internal |
 | `ErrorCodeExpected<T>` | `true` | `false` | internal |
 | `ErrorCodeExpected<T1, T2>` | `true` | `false` | internal |
 | `ErrorCodeExpected<T1, T2, T3>` | `true` | `false` | internal |
+| `ErrorCodeExceptional` | `false` | `true` | internal |
 
 > **참고**: `DomainError.For<TDomain, T1, T2, T3>()` 3-값 오버로드도 지원됩니다. 상세 시그니처와 사용 예제는 [에러 시스템: Domain/Application 에러](./08b-error-system-domain-app)를 참조하세요.
-| `ErrorCodeExceptional` | `false` | `true` | internal |
+
+### 에러 생성 흐름
+
+레이어별 팩토리(`DomainError`, `ApplicationError`, `EventError`, `AdapterError`)는 2단계 내부 위임으로 에러를 생성합니다.
+
+```
+DomainError.For<Email>(new Empty(), value, msg)     ← 공개 API (DomainErrorType 강제)
+  → LayerErrorCore.Create<Email>(prefix, errorType, value, msg)
+      ← ErrorType(base)로 수신 → 에러 코드 조립: "DomainErrors.Email.Empty"
+    → ErrorCodeFactory.Create(errorCode, value, msg)
+        ← ErrorCodeExpected 인스턴스 생성
+```
+
+`LayerErrorCore`는 4개 팩토리의 공통 구현으로, 에러 코드 문자열 `{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}`을 조립합니다. 공개 팩토리는 레이어별 타입 파라미터(`DomainErrorType`, `ApplicationErrorType` 등)를 유지하여 **컴파일 타임에 잘못된 레이어 에러 사용을 차단합니다.** 모든 메서드에 `[AggressiveInlining]`이 적용되어 JIT이 위임 호출을 인라인 처리하므로, 직접 호출과 성능이 동일합니다.
 
 ### ErrorCodeFactory API
 
-`ErrorCodeFactory`는 `Abstractions/Errors/ErrorCodeFactory.cs`에 위치한 **정적 클래스입니다.**
+`ErrorCodeFactory`는 `Abstractions/Errors/ErrorCodeFactory.cs`에 위치한 **정적 클래스로,** `ErrorCodeExpected`와 `ErrorCodeExceptional` 인스턴스를 직접 생성합니다.
 
 ```csharp
 public static class ErrorCodeFactory
