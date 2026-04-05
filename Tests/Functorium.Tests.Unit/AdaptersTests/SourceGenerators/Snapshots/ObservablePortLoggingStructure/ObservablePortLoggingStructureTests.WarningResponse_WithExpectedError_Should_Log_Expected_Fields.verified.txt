@@ -2,8 +2,8 @@
   Information: ,
   Properties: {
     @error: {
-      ErrorCode: Test.NotFound,
       ErrorCurrentValue: testValue,
+      ErrorCode: Test.NotFound,
       Message: Entity not found,
       Code: -1000
     },

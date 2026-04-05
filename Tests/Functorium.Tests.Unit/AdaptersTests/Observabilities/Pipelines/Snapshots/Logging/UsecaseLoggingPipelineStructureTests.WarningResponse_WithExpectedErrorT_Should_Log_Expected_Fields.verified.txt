@@ -2,8 +2,8 @@
   Information: ,
   Properties: {
     @error: {
-      ErrorCode: Order.NotFound,
       ErrorCurrentValue: Guid_1,
+      ErrorCode: Order.NotFound,
       Message: 주문을 찾을 수 없습니다,
       Code: -1000
     },

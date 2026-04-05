@@ -2,8 +2,8 @@
   Information: ,
   Properties: {
     @error: {
-      ErrorCode: Test.InvalidValue,
       ErrorCurrentValue: 42,
+      ErrorCode: Test.InvalidValue,
       Message: Invalid value provided,
       Code: -1000
     },

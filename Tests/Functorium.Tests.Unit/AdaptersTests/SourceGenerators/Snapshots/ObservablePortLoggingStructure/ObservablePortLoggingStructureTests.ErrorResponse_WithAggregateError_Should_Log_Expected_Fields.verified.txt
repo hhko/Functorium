@@ -4,14 +4,14 @@
     @error: {
       Errors: [
         {
-          ErrorCode: Test.Error1,
           ErrorCurrentValue: value1,
+          ErrorCode: Test.Error1,
           Message: First error,
           Code: -1000
         },
         {
-          ErrorCode: Test.Error2,
           ErrorCurrentValue: value2,
+          ErrorCode: Test.Error2,
           Message: Second error,
           Code: -1000
         }

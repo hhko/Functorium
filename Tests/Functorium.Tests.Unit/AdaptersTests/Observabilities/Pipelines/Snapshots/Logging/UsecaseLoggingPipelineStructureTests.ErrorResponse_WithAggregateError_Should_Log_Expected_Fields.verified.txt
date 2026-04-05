@@ -4,14 +4,14 @@
     @error: {
       Errors: [
         {
-          ErrorCode: Validation.NameRequired,
           ErrorCurrentValue: ,
+          ErrorCode: Validation.NameRequired,
           Message: 이름은 필수입니다,
           Code: -1000
         },
         {
-          ErrorCode: Validation.EmailInvalid,
           ErrorCurrentValue: invalid-email,
+          ErrorCode: Validation.EmailInvalid,
           Message: 유효하지 않은 이메일입니다,
           Code: -1000
         }
