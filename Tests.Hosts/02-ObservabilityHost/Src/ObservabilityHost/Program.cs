@@ -39,8 +39,7 @@ services
         .UseTracing()
         .UseCtxEnricher()
         .UseLogging()
-        .UseException()
-        .AddCustomPipelinesFromAssembly(ObservabilityHost.AssemblyReference.Assembly))
+        .UseException())
     .Build();
 
 // Ctx Enricher (별도 등록 — ICustomUsecasePipeline이 아니므로 Scrutor 스캔 대상 아님)

@@ -43,7 +43,9 @@ services
     .ConfigureTracing(tracing => tracing.Configure(builder => builder.AddConsoleExporter()))
     .ConfigureMetrics(metrics => metrics.Configure(builder => builder.AddConsoleExporter()))
     .ConfigurePipelines(pipelines => pipelines
-        .UseAll()
+        .UseObservability()
+        .UseValidation()
+        .UseException()
         .WithLifetime(ServiceLifetime.Singleton))
     .Build();
 

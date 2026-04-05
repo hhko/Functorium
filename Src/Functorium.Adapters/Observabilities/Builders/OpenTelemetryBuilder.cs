@@ -55,7 +55,6 @@ public partial class OpenTelemetryBuilder
     private bool _enableAdapterObservability = true; // 기본값: 자동 활성화
 
     // Pipeline 설정
-    private bool _usePipelinesWithDefaults = false;
 
     internal OpenTelemetryBuilder(
         IServiceCollection services,
@@ -178,30 +177,8 @@ public partial class OpenTelemetryBuilder
     }
 
     /// <summary>
-    /// 모든 기본 Usecase 파이프라인을 활성화합니다.
-    /// Metrics, Tracing, Logging, Validation, Exception 파이프라인이 Scoped로 등록됩니다.
-    /// </summary>
-    /// <remarks>
-    /// 파이프라인 실행 순서:
-    /// Request → Metrics → Tracing → Logging → Validation → Exception → Handler
-    /// </remarks>
-    /// <example>
-    /// <code>
-    /// services
-    ///     .RegisterOpenTelemetry(configuration, Assembly.GetExecutingAssembly())
-    ///     .ConfigurePipelines()
-    ///     .Build();
-    /// </code>
-    /// </example>
-    public OpenTelemetryBuilder ConfigurePipelines()
-    {
-        _usePipelinesWithDefaults = true;
-        return this;
-    }
-
-    /// <summary>
-    /// Usecase 파이프라인을 커스텀 설정으로 구성합니다.
-    /// 개별 파이프라인 활성화/비활성화, Lifetime 설정, 커스텀 파이프라인 추가가 가능합니다.
+    /// Usecase 파이프라인을 명시적으로 구성합니다.
+    /// 개별 파이프라인 활성화, Lifetime 설정, 커스텀 파이프라인 추가가 가능합니다.
     /// </summary>
     /// <param name="configure">PipelineConfigurator를 사용한 설정 액션</param>
     /// <remarks>
@@ -213,12 +190,9 @@ public partial class OpenTelemetryBuilder
     /// services
     ///     .RegisterOpenTelemetry(configuration, Assembly.GetExecutingAssembly())
     ///     .ConfigurePipelines(pipelines => pipelines
-    ///         .UseMetrics()
-    ///         .UseTracing()
-    ///         .UseLogging()
+    ///         .UseObservability()
     ///         .UseValidation()
-    ///         .UseException()
-    ///         .WithLifetime(ServiceLifetime.Scoped))
+    ///         .UseException())
     ///     .Build();
     /// </code>
     /// </example>
@@ -529,27 +503,14 @@ public partial class OpenTelemetryBuilder
 
     private void RegisterPipelinesInternal()
     {
-        PipelineConfigurator? configurator = null;
+        if (_pipelineConfigurator == null)
+            return;
 
-        if (_usePipelinesWithDefaults)
-        {
-            // 기본값: 모든 파이프라인 활성화
-            configurator = new PipelineConfigurator();
-            configurator.UseAll();
-            configurator.Apply(_services);
-        }
-        else if (_pipelineConfigurator != null)
-        {
-            // 커스텀 설정 적용
-            configurator = new PipelineConfigurator();
-            _pipelineConfigurator(configurator);
-            configurator.Apply(_services);
-        }
+        var configurator = new PipelineConfigurator();
+        _pipelineConfigurator(configurator);
+        configurator.Apply(_services);
 
-        if (configurator != null)
-        {
-            RegisterUsecasePipelineStartupLogger(configurator);
-        }
+        RegisterUsecasePipelineStartupLogger(configurator);
     }
 
     private void RegisterUsecasePipelineStartupLogger(PipelineConfigurator configurator)

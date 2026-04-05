@@ -38,8 +38,10 @@ public static class AdapterInfrastructureRegistration
         services
             .RegisterOpenTelemetry(configuration, AssemblyReference.Assembly)
             .ConfigurePipelines(pipelines => pipelines
-                .UseAll()
-                .AddCustomPipelinesFromAssembly(AssemblyReference.Assembly))
+                .UseObservability()
+                .UseValidation()
+                .UseException()
+                .UseTransaction())
             .Build();
 
         // =================================================================

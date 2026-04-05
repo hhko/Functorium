@@ -37,7 +37,7 @@ public static class AdapterInfrastructureRegistration
             .RegisterOpenTelemetry(configuration, AssemblyReference.Assembly)
             .ConfigureTracing(tracing => tracing.Configure(b => b.AddConsoleExporter()))
             .ConfigureMetrics(metrics => metrics.Configure(b => b.AddConsoleExporter()))
-            .ConfigurePipelines()
+            .ConfigurePipelines(p => p.UseObservability().UseValidation().UseException())
             .Build();
 
         return services;

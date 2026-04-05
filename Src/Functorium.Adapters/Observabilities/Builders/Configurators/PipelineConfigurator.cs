@@ -1,4 +1,3 @@
-using System.Reflection;
 using Functorium.Adapters.Observabilities.Pipelines;
 using Functorium.Applications.Events;
 using Functorium.Applications.Persistence;
@@ -9,11 +8,14 @@ namespace Functorium.Adapters.Observabilities.Builders.Configurators;
 
 /// <summary>
 /// Usecase 파이프라인 설정을 위한 Configurator 클래스
-/// Fluent API를 통해 파이프라인 활성화/비활성화 및 커스터마이징 지원
+/// Fluent API를 통해 파이프라인을 명시적으로 opt-in 활성화
 /// </summary>
 /// <remarks>
-/// 파이프라인 실행 순서 (등록 순서):
+/// 파이프라인 실행 순서 (프레임워크 고정):
 /// Request → CtxEnricher → Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction → Custom → Handler
+///
+/// 사용자는 포함 여부(opt-in)를 선택하고, 실행 순서는 프레임워크가 보장합니다.
+/// CtxEnricher는 Metrics, Tracing, Logging 중 하나라도 활성화되면 자동 포함됩니다.
 /// </remarks>
 public class PipelineConfigurator
 {
@@ -27,7 +29,6 @@ public class PipelineConfigurator
     private bool _useTransaction;
     private ServiceLifetime _lifetime = ServiceLifetime.Scoped;
     private readonly List<Type> _customPipelines = new();
-    private readonly List<Assembly> _customPipelineAssemblies = new();
     private readonly List<string> _registeredPipelineNames = new();
 
     internal PipelineConfigurator()
@@ -35,18 +36,15 @@ public class PipelineConfigurator
     }
 
     /// <summary>
-    /// 모든 기본 파이프라인을 활성화합니다.
-    /// Metrics, Tracing, Logging, Validation, Exception, Transaction 파이프라인이 등록됩니다.
+    /// 관측성(Observability) 파이프라인을 일괄 활성화합니다.
+    /// CtxEnricher + Metrics + Tracing + Logging 파이프라인이 등록됩니다.
     /// </summary>
-    public PipelineConfigurator UseAll()
+    public PipelineConfigurator UseObservability()
     {
         _useCtxEnricher = true;
         _useMetrics = true;
         _useTracing = true;
         _useLogging = true;
-        _useValidation = true;
-        _useException = true;
-        _useTransaction = true;
         return this;
     }
 
@@ -55,6 +53,10 @@ public class PipelineConfigurator
     /// ctx.* 사용자 정의 컨텍스트 필드를 3-Pillar(Logging, Tracing, Metrics)에 동시 전파합니다.
     /// 최선두 Pipeline으로 등록되어 후속 Pipeline이 ctx.* 데이터에 접근 가능합니다.
     /// </summary>
+    /// <remarks>
+    /// Metrics, Tracing, Logging 중 하나라도 활성화되면 CtxEnricher는 자동 포함됩니다.
+    /// 명시적 호출은 관측성 파이프라인 없이 CtxEnricher만 단독 활성화할 때만 필요합니다.
+    /// </remarks>
     public PipelineConfigurator UseCtxEnricher()
     {
         _useCtxEnricher = true;
@@ -129,7 +131,7 @@ public class PipelineConfigurator
     /// </summary>
     /// <remarks>
     /// IUnitOfWork, IDomainEventPublisher, IDomainEventCollector가 DI에 등록되어 있어야 합니다.
-    /// UseAll()에 포함되어 있으므로 별도 호출 없이도 활성화됩니다.
+    /// 의존성이 DI에 누락되면 Apply() 시 자동으로 건너뜁니다.
     /// </remarks>
     public PipelineConfigurator UseTransaction()
     {
@@ -161,25 +163,19 @@ public class PipelineConfigurator
     }
 
     /// <summary>
-    /// 지정된 어셈블리에서 ICustomUsecasePipeline을 구현한 커스텀 파이프라인을 자동 검색하여 등록합니다.
-    /// </summary>
-    /// <param name="assembly">스캔할 어셈블리</param>
-    public PipelineConfigurator AddCustomPipelinesFromAssembly(Assembly assembly)
-    {
-        _customPipelineAssemblies.Add(assembly);
-        return this;
-    }
-
-    /// <summary>
     /// 설정을 IServiceCollection에 적용합니다.
     /// </summary>
     /// <param name="services">IServiceCollection 인스턴스</param>
     internal void Apply(IServiceCollection services)
     {
-        // 파이프라인 등록 순서:
+        // 파이프라인 등록 순서 (프레임워크 고정):
         // Request → CtxEnricher → Metrics → Tracing → Logging → Validation → Caching → Exception → Transaction → Custom → Handler
 
         _registeredPipelineNames.Clear();
+
+        // CtxEnricher 자동 활성화: 관측성 파이프라인이 하나라도 있으면 ctx.* 전파 필요
+        if ((_useMetrics || _useTracing || _useLogging) && !_useCtxEnricher)
+            _useCtxEnricher = true;
 
         if (_useCtxEnricher)
         {
@@ -234,16 +230,6 @@ public class PipelineConfigurator
         {
             RegisterPipeline(services, customPipeline);
             _registeredPipelineNames.Add(ExtractPipelineName(customPipeline));
-        }
-
-        // 어셈블리 자동 검색 등록
-        foreach (Assembly assembly in _customPipelineAssemblies)
-        {
-            services.Scan(scan => scan
-                .FromAssemblies(assembly)
-                .AddClasses(classes => classes.AssignableTo(typeof(ICustomUsecasePipeline)))
-                .AsImplementedInterfaces()
-                .WithLifetime(_lifetime));
         }
 
         _registeredPipelineNames.Add("Handler");

@@ -10,25 +10,28 @@ namespace Functorium.Tests.Unit.AdaptersTests.Observabilities.Configurators;
 
 /// <summary>
 /// PipelineConfigurator 테스트
-/// Fluent API를 통한 파이프라인 설정 테스트
+/// Fluent API를 통한 파이프라인 opt-in 설정 테스트
 /// </summary>
 public sealed class PipelineConfiguratorTests
 {
     [Fact]
-    public void UseAll_RegistersAllPipelines()
+    public void UseObservability_RegistersCtxEnricherMetricsTracingLogging()
     {
         // Arrange
         var services = new ServiceCollection();
-        RegisterTransactionDependencies(services);
         var configurator = CreateConfigurator();
 
         // Act
-        configurator.UseAll();
+        configurator.UseObservability();
         configurator.Apply(services);
 
         // Assert
         var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
-        pipelineBehaviors.Count.ShouldBe(7); // CtxEnricher, Metrics, Tracing, Logging, Validation, Exception, Transaction
+        pipelineBehaviors.Count.ShouldBe(4); // CtxEnricher, Metrics, Tracing, Logging
+        pipelineBehaviors[0].ImplementationType.ShouldBe(typeof(CtxEnricherPipeline<,>));
+        pipelineBehaviors[1].ImplementationType.ShouldBe(typeof(UsecaseMetricsPipeline<,>));
+        pipelineBehaviors[2].ImplementationType.ShouldBe(typeof(UsecaseTracingPipeline<,>));
+        pipelineBehaviors[3].ImplementationType.ShouldBe(typeof(UsecaseLoggingPipeline<,>));
     }
 
     [Fact]
@@ -42,10 +45,11 @@ public sealed class PipelineConfiguratorTests
         configurator.UseMetrics();
         configurator.Apply(services);
 
-        // Assert
+        // Assert — CtxEnricher 자동 포함
         var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
-        pipelineBehaviors.Count.ShouldBe(1);
-        pipelineBehaviors[0].ImplementationType.ShouldBe(typeof(UsecaseMetricsPipeline<,>));
+        pipelineBehaviors.Count.ShouldBe(2); // CtxEnricher + Metrics
+        pipelineBehaviors[0].ImplementationType.ShouldBe(typeof(CtxEnricherPipeline<,>));
+        pipelineBehaviors[1].ImplementationType.ShouldBe(typeof(UsecaseMetricsPipeline<,>));
     }
 
     [Fact]
@@ -59,10 +63,11 @@ public sealed class PipelineConfiguratorTests
         configurator.UseTracing();
         configurator.Apply(services);
 
-        // Assert
+        // Assert — CtxEnricher 자동 포함
         var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
-        pipelineBehaviors.Count.ShouldBe(1);
-        pipelineBehaviors[0].ImplementationType.ShouldBe(typeof(UsecaseTracingPipeline<,>));
+        pipelineBehaviors.Count.ShouldBe(2); // CtxEnricher + Tracing
+        pipelineBehaviors[0].ImplementationType.ShouldBe(typeof(CtxEnricherPipeline<,>));
+        pipelineBehaviors[1].ImplementationType.ShouldBe(typeof(UsecaseTracingPipeline<,>));
     }
 
     [Fact]
@@ -76,10 +81,11 @@ public sealed class PipelineConfiguratorTests
         configurator.UseLogging();
         configurator.Apply(services);
 
-        // Assert
+        // Assert — CtxEnricher 자동 포함
         var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
-        pipelineBehaviors.Count.ShouldBe(1);
-        pipelineBehaviors[0].ImplementationType.ShouldBe(typeof(UsecaseLoggingPipeline<,>));
+        pipelineBehaviors.Count.ShouldBe(2); // CtxEnricher + Logging
+        pipelineBehaviors[0].ImplementationType.ShouldBe(typeof(CtxEnricherPipeline<,>));
+        pipelineBehaviors[1].ImplementationType.ShouldBe(typeof(UsecaseLoggingPipeline<,>));
     }
 
     [Fact]
@@ -93,7 +99,7 @@ public sealed class PipelineConfiguratorTests
         configurator.UseValidation();
         configurator.Apply(services);
 
-        // Assert
+        // Assert — CtxEnricher는 관측성 파이프라인이 아니므로 포함되지 않음
         var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
         pipelineBehaviors.Count.ShouldBe(1);
         pipelineBehaviors[0].ImplementationType.ShouldBe(typeof(UsecaseValidationPipeline<,>));
@@ -125,14 +131,46 @@ public sealed class PipelineConfiguratorTests
 
         // Act
         configurator
-            .UseMetrics()
-            .UseTracing()
-            .UseLogging();
+            .UseObservability()
+            .UseValidation()
+            .UseException();
+        configurator.Apply(services);
+
+        // Assert — CtxEnricher + Metrics + Tracing + Logging + Validation + Exception
+        var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
+        pipelineBehaviors.Count.ShouldBe(6);
+    }
+
+    [Fact]
+    public void CtxEnricher_AutoIncluded_WhenAnyObservabilityPipelineEnabled()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configurator = CreateConfigurator();
+
+        // Act — UseCtxEnricher()를 호출하지 않아도 UseMetrics()가 있으면 자동 포함
+        configurator.UseMetrics();
         configurator.Apply(services);
 
         // Assert
         var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
-        pipelineBehaviors.Count.ShouldBe(3);
+        pipelineBehaviors.ShouldContain(s => s.ImplementationType == typeof(CtxEnricherPipeline<,>));
+    }
+
+    [Fact]
+    public void CtxEnricher_NotIncluded_WhenOnlyNonObservabilityPipelineEnabled()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configurator = CreateConfigurator();
+
+        // Act — 관측성 파이프라인 없이 Validation만 사용
+        configurator.UseValidation().UseException();
+        configurator.Apply(services);
+
+        // Assert — CtxEnricher 미포함
+        var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
+        pipelineBehaviors.ShouldNotContain(s => s.ImplementationType == typeof(CtxEnricherPipeline<,>));
     }
 
     [Fact]
@@ -144,7 +182,7 @@ public sealed class PipelineConfiguratorTests
 
         // Act
         configurator
-            .UseMetrics()
+            .UseValidation()
             .WithLifetime(ServiceLifetime.Singleton);
         configurator.Apply(services);
 
@@ -162,7 +200,7 @@ public sealed class PipelineConfiguratorTests
 
         // Act
         configurator
-            .UseMetrics()
+            .UseValidation()
             .WithLifetime(ServiceLifetime.Scoped);
         configurator.Apply(services);
 
@@ -180,7 +218,7 @@ public sealed class PipelineConfiguratorTests
 
         // Act
         configurator
-            .UseMetrics()
+            .UseValidation()
             .WithLifetime(ServiceLifetime.Transient);
         configurator.Apply(services);
 
@@ -197,7 +235,7 @@ public sealed class PipelineConfiguratorTests
         var configurator = CreateConfigurator();
 
         // Act
-        configurator.UseMetrics();
+        configurator.UseValidation();
         configurator.Apply(services);
 
         // Assert
@@ -223,7 +261,7 @@ public sealed class PipelineConfiguratorTests
     }
 
     [Fact]
-    public void PipelineOrder_MetricsTracingLoggingValidationExceptionTransaction()
+    public void PipelineOrder_ObservabilityValidationExceptionTransaction()
     {
         // Arrange
         var services = new ServiceCollection();
@@ -231,10 +269,14 @@ public sealed class PipelineConfiguratorTests
         var configurator = CreateConfigurator();
 
         // Act
-        configurator.UseAll();
+        configurator
+            .UseObservability()
+            .UseValidation()
+            .UseException()
+            .UseTransaction();
         configurator.Apply(services);
 
-        // Assert - 등록 순서 확인: CtxEnricher → Metrics → Tracing → Logging → Validation → Exception → Transaction
+        // Assert — 프레임워크 고정 순서: CtxEnricher → Metrics → Tracing → Logging → Validation → Exception → Transaction
         var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
         pipelineBehaviors[0].ImplementationType.ShouldBe(typeof(CtxEnricherPipeline<,>));
         pipelineBehaviors[1].ImplementationType.ShouldBe(typeof(UsecaseMetricsPipeline<,>));
@@ -299,40 +341,6 @@ public sealed class PipelineConfiguratorTests
     }
 
     [Fact]
-    public void UseAll_IncludesTransaction_WhenDependenciesExist()
-    {
-        // Arrange
-        var services = new ServiceCollection();
-        RegisterTransactionDependencies(services);
-        var configurator = CreateConfigurator();
-
-        // Act
-        configurator.UseAll();
-        configurator.Apply(services);
-
-        // Assert
-        var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
-        pipelineBehaviors.ShouldContain(s => s.ImplementationType == typeof(UsecaseTransactionPipeline<,>));
-    }
-
-    [Fact]
-    public void UseAll_SkipsTransaction_WhenDependenciesMissing()
-    {
-        // Arrange — Transaction 의존성(IUnitOfWork 등) 미등록
-        var services = new ServiceCollection();
-        var configurator = CreateConfigurator();
-
-        // Act
-        configurator.UseAll();
-        configurator.Apply(services);
-
-        // Assert — Transaction 제외한 6개만 등록
-        var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
-        pipelineBehaviors.Count.ShouldBe(6);
-        pipelineBehaviors.ShouldNotContain(s => s.ImplementationType == typeof(UsecaseTransactionPipeline<,>));
-    }
-
-    [Fact]
     public void UseTransaction_SkipsRegistration_WhenDependenciesMissing()
     {
         // Arrange — Transaction 의존성 미등록
@@ -361,7 +369,7 @@ public sealed class PipelineConfiguratorTests
             .AddCustomPipeline<SecondCustomPipeline<TestMessage, TestResponse>>();
         configurator.Apply(services);
 
-        // Assert
+        // Assert — 등록 순서 = 실행 순서 보장
         var pipelineBehaviors = services.Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)).ToList();
         pipelineBehaviors.Count.ShouldBe(2);
         pipelineBehaviors[0].ImplementationType.ShouldBe(typeof(CustomTestPipeline<TestMessage, TestResponse>));
@@ -369,7 +377,7 @@ public sealed class PipelineConfiguratorTests
     }
 
     [Fact]
-    public void GetRegisteredPipelineNames_ReturnsAllNames_WhenUseAll()
+    public void GetRegisteredPipelineNames_ReturnsAllNames_WhenFullOptIn()
     {
         // Arrange
         var services = new ServiceCollection();
@@ -377,7 +385,11 @@ public sealed class PipelineConfiguratorTests
         var configurator = CreateConfigurator();
 
         // Act
-        configurator.UseAll();
+        configurator
+            .UseObservability()
+            .UseValidation()
+            .UseException()
+            .UseTransaction();
         configurator.Apply(services);
         var actual = GetRegisteredPipelineNames(configurator);
 
@@ -393,7 +405,11 @@ public sealed class PipelineConfiguratorTests
         var configurator = CreateConfigurator();
 
         // Act
-        configurator.UseAll();
+        configurator
+            .UseObservability()
+            .UseValidation()
+            .UseException()
+            .UseTransaction();
         configurator.Apply(services);
         var actual = GetRegisteredPipelineNames(configurator);
 
@@ -467,52 +483,6 @@ public sealed class PipelineConfiguratorTests
         services.AddScoped(_ => Substitute.For<IDomainEventCollector>());
     }
 
-    [Fact]
-    public void AddCustomPipelinesFromAssembly_RegistersCustomPipelines()
-    {
-        // Arrange
-        var services = new ServiceCollection();
-        var configurator = CreateConfigurator();
-
-        // Act
-        configurator.AddCustomPipelinesFromAssembly(typeof(PipelineConfiguratorTests).Assembly);
-        configurator.Apply(services);
-
-        // Assert — 현재 어셈블리에 ICustomUsecasePipeline 구현체가 있으면 등록됨
-        var customServices = services
-            .Where(s => s.ServiceType.IsGenericType
-                && s.ServiceType.GetGenericTypeDefinition() == typeof(IPipelineBehavior<,>)
-                && s.ImplementationType != null
-                && typeof(ICustomUsecasePipeline).IsAssignableFrom(s.ImplementationType))
-            .ToList();
-        customServices.Count.ShouldBe(1); // MarkerCustomPipeline
-    }
-
-    [Fact]
-    public void AddCustomPipelinesFromAssembly_IgnoresBuiltInPipelines()
-    {
-        // Arrange
-        var services = new ServiceCollection();
-        var configurator = CreateConfigurator();
-
-        // Act — Functorium.Adapters 어셈블리 스캔
-        configurator.AddCustomPipelinesFromAssembly(typeof(UsecaseMetricsPipeline<,>).Assembly);
-        configurator.Apply(services);
-
-        // Assert — 내장 파이프라인은 ICustomUsecasePipeline 미구현이므로 IPipelineBehavior로 등록되지 않음
-        var pipelineBehaviors = services
-            .Where(s => s.ServiceType == typeof(IPipelineBehavior<,>)
-                && s.ImplementationType != null
-                && (s.ImplementationType == typeof(UsecaseMetricsPipeline<,>)
-                    || s.ImplementationType == typeof(UsecaseTracingPipeline<,>)
-                    || s.ImplementationType == typeof(UsecaseLoggingPipeline<,>)
-                    || s.ImplementationType == typeof(UsecaseValidationPipeline<,>)
-                    || s.ImplementationType == typeof(UsecaseExceptionPipeline<,>)
-                    || s.ImplementationType == typeof(UsecaseTransactionPipeline<,>)))
-            .ToList();
-        pipelineBehaviors.Count.ShouldBe(0);
-    }
-
     #region Test Fixtures
 
     public sealed record class TestMessage(string Name) : IMessage;
@@ -531,18 +501,6 @@ public sealed class PipelineConfiguratorTests
         where TMessage : IMessage
     {
         public ValueTask<TResponse> Handle(TMessage message, MessageHandlerDelegate<TMessage, TResponse> next, CancellationToken cancellationToken)
-        {
-            return next(message, cancellationToken);
-        }
-    }
-
-    /// <summary>
-    /// ICustomUsecasePipeline 마커를 구현한 테스트용 커스텀 파이프라인.
-    /// AddCustomPipelinesFromAssembly 테스트에서 Scrutor 자동 검색 대상으로 사용됩니다.
-    /// </summary>
-    public sealed class MarkerCustomPipeline : ICustomUsecasePipeline, IPipelineBehavior<TestMessage, TestResponse>
-    {
-        public ValueTask<TestResponse> Handle(TestMessage message, MessageHandlerDelegate<TestMessage, TestResponse> next, CancellationToken cancellationToken)
         {
             return next(message, cancellationToken);
         }

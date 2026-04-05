@@ -46,8 +46,10 @@ public static class AdapterInfrastructureRegistration
             //.ConfigureTracing(tracing => tracing.Configure(b => b.AddConsoleExporter()))
             //.ConfigureMetrics(metrics => metrics.Configure(b => b.AddConsoleExporter()))
             .ConfigurePipelines(pipelines => pipelines
-                .UseAll()
-                .AddCustomPipelinesFromAssembly(AssemblyReference.Assembly))
+                .UseObservability()
+                .UseValidation()
+                .UseException()
+                .UseTransaction())
             .Build();
 
         // Ctx Enricher (별도 등록 — ICustomUsecasePipeline이 아니므로 Scrutor 스캔 대상 아님)
