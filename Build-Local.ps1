@@ -1,89 +1,86 @@
-#!/usr/bin/env pwsh
-#Requires -Version 7.0
+﻿#!/usr/bin/env pwsh
 
 <#
 .SYNOPSIS
-  .NET 솔루션 빌드, 테스트, 코드 커버리지 및 NuGet 패키지 생성 스크립트
+  Builds, tests, generates coverage reports and NuGet packages for .NET solution.
 
 .DESCRIPTION
-  Release 모드로 .NET 솔루션을 빌드하고, 테스트, 코드 커버리지 리포트 생성,
-  NuGet 패키지 생성까지 전체 로컬 빌드 파이프라인을 실행합니다.
+  Runs the full local build pipeline: Release build, test execution,
+  code coverage report generation, and NuGet package creation.
 
-  처리 과정:
-  1. .NET 도구 복원 (.config/dotnet-tools.json)
-  2. 솔루션 파일 검색 (자동 탐지 또는 -Solution 지정)
-  3. Release 모드 빌드
-  4. 버전 정보 표시
-  5. 테스트 + 코드 커버리지 수집 (Microsoft Testing Platform)
-  6. HTML 커버리지 리포트 생성 (ReportGenerator)
-  7. 커버리지 요약 출력 (프로젝트별 + 전체)
-  8. 느린 테스트 분석
-  9. NuGet 패키지 생성 (.nupkg, .snupkg)
+  Steps:
+  1. Restore .NET tools (.config/dotnet-tools.json)
+  2. Find solution file (auto-detect or -Solution)
+  3. Release mode build
+  4. Display version information
+  5. Test + code coverage collection (Microsoft Testing Platform)
+  6. Generate HTML coverage report (ReportGenerator)
+  7. Display coverage summary (per-project + total)
+  8. Analyze slow tests
+  9. Create NuGet packages (.nupkg, .snupkg)
 
-  출력 디렉토리:
-    {SolutionDir}/.coverage/reports/  - HTML 리포트, Cobertura.xml
-    {SolutionDir}/.nupkg/             - NuGet 패키지
+  Output directories:
+    {SolutionDir}/.coverage/reports/  - HTML reports, Cobertura.xml
+    {SolutionDir}/.nupkg/             - NuGet packages
 
 .PARAMETER Solution
-  솔루션 파일 경로를 지정합니다. 지정하지 않으면 자동으로 검색합니다.
+  Path to the solution file. Auto-detected if not specified.
 
 .PARAMETER ProjectPrefix
-  커버리지 필터링용 프로젝트 접두사를 지정합니다.
-  기본값: Functorium
+  Project prefix for coverage filtering.
+  Default: Functorium
 
 .PARAMETER SkipPack
-  NuGet 패키지 생성을 건너뜁니다.
+  Skips NuGet package creation.
 
 .PARAMETER SlowTestThreshold
-  느린 테스트로 판단하는 기준 시간(초)입니다.
-  기본값: 30
+  Threshold in seconds for slow test detection.
+  Default: 30
 
 .EXAMPLE
   ./Build-Local.ps1
 
-  현재 디렉토리에서 솔루션을 자동 검색하여 빌드, 테스트, 패키지 생성합니다.
+  Auto-detects solution and runs build, test, and package creation.
 
 .EXAMPLE
   ./Build-Local.ps1 -s ./MyApp.slnx
 
-  지정된 솔루션 파일로 빌드 및 테스트를 실행합니다.
+  Builds and tests with the specified solution file.
 
 .EXAMPLE
   ./Build-Local.ps1 -SkipPack
 
-  NuGet 패키지 생성 없이 빌드 및 테스트만 실행합니다.
+  Runs build and test without NuGet package creation.
 
 .EXAMPLE
   ./Build-Local.ps1 -p MyApp -t 60
 
-  MyApp.* 프로젝트만 커버리지 필터링하고, 60초 이상을 느린 테스트로 분류합니다.
+  Filters coverage to MyApp.* projects and classifies tests over 60s as slow.
 
 .NOTES
   Requirements: PowerShell 7+, .NET SDK
-  Prerequisites: .config/dotnet-tools.json (ReportGenerator 등)
+  Prerequisites: .config/dotnet-tools.json (ReportGenerator etc.)
 #>
 
 [CmdletBinding()]
 param(
-  [Parameter(Mandatory = $false, Position = 0, HelpMessage = "솔루션 파일 경로 (.sln 또는 .slnx)")]
+  [Parameter(Mandatory = $false, Position = 0, HelpMessage = "Solution file path (.sln or .slnx)")]
   [Alias("s")]
   [string]$Solution = "Functorium.slnx",
 
-  [Parameter(Mandatory = $false, HelpMessage = "커버리지 필터링용 프로젝트 접두사")]
+  [Parameter(Mandatory = $false, HelpMessage = "Project prefix for coverage filtering")]
   [Alias("p")]
   [string]$ProjectPrefix = "Functorium",
 
-  [Parameter(Mandatory = $false, HelpMessage = "NuGet 패키지 생성 건너뛰기")]
+  [Parameter(Mandatory = $false, HelpMessage = "Skip NuGet package creation")]
   [switch]$SkipPack,
 
-  [Parameter(Mandatory = $false, HelpMessage = "느린 테스트 판단 기준 (초)")]
+  [Parameter(Mandatory = $false, HelpMessage = "Slow test threshold in seconds")]
   [Alias("t")]
-  [int]$SlowTestThreshold = 30,
-
-  [Parameter(Mandatory = $false, HelpMessage = "도움말 표시")]
-  [Alias("h", "?")]
-  [switch]$Help
+  [int]$SlowTestThreshold = 30
 )
+
+#Requires -Version 7.0
 
 # Strict mode settings
 Set-StrictMode -Version Latest
@@ -219,10 +216,7 @@ $script:NuGetOutputDir = $null
 
 #region Helper Functions
 
-<#
-.SYNOPSIS
-  솔루션 파일 경로를 기준으로 출력 경로를 설정합니다.
-#>
+# 솔루션 파일 경로를 기준으로 출력 경로를 설정합니다.
 function Set-OutputPaths {
   param([string]$SolutionPath)
 
@@ -231,16 +225,10 @@ function Set-OutputPaths {
   $script:NuGetOutputDir = Join-Path $script:SolutionDir ".nupkg"
 }
 
-<#
-.SYNOPSIS
-  솔루션 파일을 찾습니다.
-.DESCRIPTION
-  지정된 경로가 없으면 현재 작업 디렉토리에서 검색합니다.
-.PARAMETER SolutionPath
-  사용자가 지정한 솔루션 파일 경로 (옵션)
-.OUTPUTS
-  솔루션 파일이 1개면 해당 FileInfo 반환, 아니면 $null
-#>
+# 솔루션 파일을 찾습니다.
+# 지정된 경로가 없으면 현재 작업 디렉토리에서 검색합니다.
+# SolutionPath: 사용자가 지정한 솔루션 파일 경로 (옵션)
+# 솔루션 파일이 1개면 해당 FileInfo 반환, 아니면 $null
 function Find-SolutionFile {
   param(
     [Parameter(Mandatory = $false)]
@@ -287,10 +275,7 @@ function Find-SolutionFile {
   return $slnFiles[0]
 }
 
-<#
-.SYNOPSIS
-  빌드된 어셈블리에서 버전 정보를 읽어 출력합니다.
-#>
+# 빌드된 어셈블리에서 버전 정보를 읽어 출력합니다.
 function Show-VersionInfo {
   param(
     [Parameter(Mandatory = $true)]
@@ -395,12 +380,8 @@ function Show-VersionInfo {
   Write-Detail "Assembly: AssemblyVersion (binary compatibility)"
 }
 
-<#
-.SYNOPSIS
-  Src 및 Tests 폴더에서 커버리지 파일을 수집합니다.
-.DESCRIPTION
-  검색 범위를 Src와 Tests 폴더로 제한하여 메모리 사용량을 줄입니다.
-#>
+# Src 및 Tests 폴더에서 커버리지 파일을 수집합니다.
+# 검색 범위를 Src와 Tests 폴더로 제한하여 메모리 사용량을 줄입니다.
 function Get-CoverageFiles {
   # Search only in Src and Tests folders to avoid heap corruption with large solutions
   $searchPaths = @(
@@ -436,14 +417,10 @@ function Get-CoverageFiles {
   return Join-Path $testsDir "**\TestResults\coverage.cobertura.xml"
 }
 
-<#
-.SYNOPSIS
-  콘솔에 커버리지 결과를 출력합니다.
-.DESCRIPTION
-  병합된 Cobertura XML에서 패키지별 커버리지를 읽어 출력합니다.
-  메모리 효율을 위해 package 노드의 속성만 사용하고,
-  line 노드를 직접 순회하지 않습니다.
-#>
+# 콘솔에 커버리지 결과를 출력합니다.
+# 병합된 Cobertura XML에서 패키지별 커버리지를 읽어 출력합니다.
+# 메모리 효율을 위해 package 노드의 속성만 사용하고,
+# line 노드를 직접 순회하지 않습니다.
 function Show-CoverageReport {
   param(
     [Parameter(Mandatory = $true)]
@@ -580,12 +557,9 @@ function Show-CoverageReport {
 
 #endregion
 
-if ($Help) {
-  Get-Help $PSCommandPath -Detailed
-  exit 0
-}
+#region Main
 
-#region Main Execution
+function Main {
 
 $startTime = Get-Date
 
@@ -593,8 +567,6 @@ Write-Host ""
 Write-Host "[START] .NET Solution Build and Test" -ForegroundColor Blue
 Write-Host "   Started: $($startTime.ToString('yyyy-MM-dd HH:mm:ss'))" -ForegroundColor DarkGray
 Write-Host ""
-
-try {
   # ============================================================================
   # Step 1: Restore .NET tools
   # ============================================================================
@@ -616,7 +588,7 @@ try {
 
   $solutionFile = Find-SolutionFile -SolutionPath $Solution
   if (-not $solutionFile) {
-    exit 1
+    throw "Solution file not found"
   }
 
   $solutionFullPath = $solutionFile.FullName
@@ -689,7 +661,7 @@ try {
   $coverageFiles = Get-CoverageFiles
   if (-not $coverageFiles) {
     Write-WarningMessage "No coverage files found. Cannot generate report."
-    exit 0
+    return
   }
 
   # ============================================================================
@@ -879,6 +851,14 @@ try {
   }
   Write-Host ""
 
+}
+
+#endregion
+
+#region Entry Point
+
+try {
+  Main
   exit 0
 }
 catch {

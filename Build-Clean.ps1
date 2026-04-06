@@ -1,34 +1,31 @@
-#!/usr/bin/env pwsh
-#Requires -Version 7.0
+﻿#!/usr/bin/env pwsh
 
 <#
 .SYNOPSIS
-  .NET 프로젝트의 bin 및 obj 폴더를 삭제합니다.
+  Deletes bin and obj folders from all .NET projects.
 
 .DESCRIPTION
-  현재 경로의 모든 하위 폴더에서 .csproj 파일을 검색하고,
-  각 프로젝트의 bin 및 obj 폴더를 삭제합니다.
+  Recursively searches for .csproj files in all subdirectories
+  and deletes the bin and obj folders for each project.
 
-  처리 과정:
-  1. .csproj 파일 재귀 검색
-  2. 각 프로젝트의 bin/obj 폴더 삭제
-  3. 삭제 결과 요약 출력
+  Steps:
+  1. Recursively search for .csproj files
+  2. Delete bin/obj folders for each project
+  3. Display deletion summary
 
 .EXAMPLE
   ./Build-Clean.ps1
 
-  모든 프로젝트의 bin 및 obj 폴더를 삭제합니다.
+  Deletes all bin and obj folders.
 
 .NOTES
   Requirements: PowerShell 7+
 #>
 
 [CmdletBinding()]
-param(
-  [Parameter(Mandatory = $false, HelpMessage = "도움말 표시")]
-  [Alias("h", "?")]
-  [switch]$Help
-)
+param()
+
+#Requires -Version 7.0
 
 # Strict mode settings
 Set-StrictMode -Version Latest
@@ -139,10 +136,7 @@ $script:DeletedObjCount = 0
 
 #region Step 1: Find-CsprojFiles
 
-<#
-.SYNOPSIS
-  .csproj 파일을 검색합니다.
-#>
+# .csproj 파일을 검색합니다.
 function Find-CsprojFiles {
   Write-StepProgress -Step 1 -TotalSteps $script:TOTAL_STEPS -Message "Searching for .csproj files..."
 
@@ -156,10 +150,7 @@ function Find-CsprojFiles {
 
 #region Step 2: Remove-BuildArtifacts
 
-<#
-.SYNOPSIS
-  bin 및 obj 폴더를 삭제합니다.
-#>
+# bin 및 obj 폴더를 삭제합니다.
 function Remove-BuildArtifacts {
   Write-StepProgress -Step 2 -TotalSteps $script:TOTAL_STEPS -Message "Cleaning bin and obj folders..."
 
@@ -205,10 +196,7 @@ function Remove-BuildArtifacts {
 
 #region Step 3: Show-CleanSummary
 
-<#
-.SYNOPSIS
-  정리 통계를 표시합니다.
-#>
+# 정리 통계를 표시합니다.
 function Show-CleanSummary {
   Write-StepProgress -Step 3 -TotalSteps $script:TOTAL_STEPS -Message "Clean summary"
 
@@ -226,10 +214,6 @@ function Show-CleanSummary {
 
 #region Main
 
-<#
-.SYNOPSIS
-  메인 실행 함수입니다.
-#>
 function Main {
   Write-StartMessage -Title "Build Clean..."
 
@@ -248,11 +232,6 @@ function Main {
 #endregion
 
 #region Entry Point
-
-if ($Help) {
-  Get-Help $PSCommandPath -Detailed
-  exit 0
-}
 
 try {
   Main

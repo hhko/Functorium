@@ -1,21 +1,21 @@
-#!/usr/bin/env pwsh
-#Requires -Version 7.0
+﻿#!/usr/bin/env pwsh
 
 <#
 .SYNOPSIS
-  Verify.Xunit 스냅샷 테스트 결과를 승인합니다.
+  Accepts pending Verify.Xunit snapshot test results.
 
 .DESCRIPTION
-  .NET 도구를 복원하고 모든 pending Verify.Xunit 스냅샷을 자동으로 승인합니다.
+  Restores .NET tools and automatically accepts all pending
+  Verify.Xunit snapshots.
 
-  처리 과정:
-  1. .NET 도구 복원 (.config/dotnet-tools.json)
-  2. 'dotnet verify accept -y'로 모든 pending 스냅샷 승인
+  Steps:
+  1. Restore .NET tools (.config/dotnet-tools.json)
+  2. Accept all pending snapshots via 'dotnet verify accept -y'
 
 .EXAMPLE
   ./Build-VerifyAccept.ps1
 
-  모든 pending 스냅샷을 승인합니다.
+  Accepts all pending snapshots.
 
 .NOTES
   Requirements: PowerShell 7+, .NET SDK
@@ -24,10 +24,9 @@
 
 [CmdletBinding()]
 param(
-  [Parameter(Mandatory = $false, HelpMessage = "도움말 표시")]
-  [Alias("h", "?")]
-  [switch]$Help
 )
+
+#Requires -Version 7.0
 
 # Strict mode settings
 Set-StrictMode -Version Latest
@@ -93,10 +92,7 @@ $script:TOTAL_STEPS = 2
 
 #region Step 1: Restore-DotNetTools
 
-<#
-.SYNOPSIS
-  .NET 로컬 도구를 복원합니다.
-#>
+# .NET 로컬 도구를 복원합니다.
 function Restore-DotNetTools {
   Write-StepProgress -Step 1 -TotalSteps $script:TOTAL_STEPS -Message "Restoring .NET tools..."
 
@@ -114,10 +110,7 @@ function Restore-DotNetTools {
 
 #region Step 2: Invoke-VerifyAccept
 
-<#
-.SYNOPSIS
-  모든 pending 스냅샷을 승인합니다.
-#>
+# 모든 pending 스냅샷을 승인합니다.
 function Invoke-VerifyAccept {
   Write-StepProgress -Step 2 -TotalSteps $script:TOTAL_STEPS -Message "Accepting pending snapshots..."
 
@@ -135,10 +128,7 @@ function Invoke-VerifyAccept {
 
 #region Main
 
-<#
-.SYNOPSIS
-  메인 실행 함수입니다.
-#>
+# 메인 실행 함수입니다.
 function Main {
   Write-StartMessage -Title "Verify Accept..."
 
@@ -154,11 +144,6 @@ function Main {
 #endregion
 
 #region Entry Point
-
-if ($Help) {
-  Get-Help $PSCommandPath -Detailed
-  exit 0
-}
 
 try {
   Main

@@ -1,40 +1,37 @@
-#!/usr/bin/env pwsh
-#Requires -Version 7.0
+﻿#!/usr/bin/env pwsh
 
 <#
 .SYNOPSIS
-  SingleHost EF Core DbContext 기반 Mermaid ER 다이어그램을 생성합니다.
+  Generates Mermaid ER diagram from SingleHost EF Core DbContext.
 
 .DESCRIPTION
-  LayeredArchDbContext의 Entity 구성을 기반으로 Mermaid ER 다이어그램을
-  ER-Diagram.md 파일로 생성합니다.
+  Generates a Mermaid ER diagram as ER-Diagram.md based on the
+  LayeredArchDbContext entity configuration.
 
-  참고: Siren 도구는 Migration 필수(어셈블리 모드) 또는 SQL Server 전용(연결 문자열 모드)
-  제약이 있어, 이 스크립트는 EF Core Configuration을 기반으로 직접 생성합니다.
-
-.PARAMETER Help
-  도움말을 표시합니다.
+  Note: Siren tool requires either Migration (assembly mode) or SQL Server
+  (connection string mode). This script generates directly from EF Core
+  Configuration instead.
 
 .EXAMPLE
   ./Build-ERDiagram.ps1
-  ER-Diagram.md를 생성합니다.
+
+  Generates ER-Diagram.md.
 
 .NOTES
   Version: 1.0.0
   Requirements: PowerShell 7+
   License: MIT
 
-  스키마 변경 시 이 스크립트의 $erDiagram 변수를 업데이트하세요.
-  EF Core Configuration 파일 위치:
+  Update the $erDiagram variable in this script when schema changes.
+  EF Core Configuration location:
     Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/Configurations/
 #>
 
 [CmdletBinding()]
 param(
-  [Parameter(Mandatory = $false, HelpMessage = "도움말 표시")]
-  [Alias("h", "?")]
-  [switch]$Help
 )
+
+#Requires -Version 7.0
 
 # Strict mode settings
 Set-StrictMode -Version Latest
@@ -80,36 +77,6 @@ function Write-ErrorMessage {
 #region Constants
 
 $script:OUTPUT_FILE = "$PSScriptRoot/ER-Diagram.md"
-
-#endregion
-
-#region Helper Functions
-
-function Show-Help {
-  $help = @"
-
-================================================================================
- SingleHost ER Diagram Generator
-================================================================================
-
-DESCRIPTION
-  Generate Mermaid ER diagram from SingleHost EF Core DbContext configuration.
-  Output: ER-Diagram.md
-
-USAGE
-  ./Build-ERDiagram.ps1 [options]
-
-OPTIONS
-  -Help, -h, -?      Show this help message
-
-NOTE
-  Schema changes require updating the diagram template in this script.
-  Reference: Src/LayeredArch.Adapters.Persistence/Repositories/EfCore/Configurations/
-
-================================================================================
-"@
-  Write-Host $help
-}
 
 #endregion
 
@@ -208,11 +175,6 @@ function Main {
 #endregion
 
 #region Entry Point
-
-if ($Help) {
-  Show-Help
-  exit 0
-}
 
 try {
   Main

@@ -1,43 +1,39 @@
-#!/usr/bin/env pwsh
-#Requires -Version 7.0
+﻿#!/usr/bin/env pwsh
 
 <#
 .SYNOPSIS
-  .NET 파일 기반 프로그램(run-file) 캐시를 정리합니다.
+  Cleans .NET run-file program cache.
 
 .DESCRIPTION
-  .NET 10의 파일 기반 프로그램은 컴파일된 아티팩트를 캐시합니다.
-  패키지 참조 문제나 캐시 손상으로 인해 실행이 실패할 경우,
-  이 스크립트로 캐시를 정리하여 문제를 해결할 수 있습니다.
+  .NET 10 run-file programs cache compiled artifacts.
+  Use this script to clean the cache when execution fails
+  due to package reference issues or cache corruption.
 
-  캐시 위치: %TEMP%\dotnet\runfile\
+  Cache location: %TEMP%\dotnet\runfile\
 
-  다음 오류 발생 시 사용합니다:
+  Use when encountering:
   - System.IO.FileNotFoundException: Could not load file or assembly 'System.CommandLine...'
-  - 파일 기반 프로그램 실행 시 패키지 참조 오류
+  - Package reference errors in run-file programs
 
 .PARAMETER Pattern
-  삭제할 캐시 디렉토리 패턴입니다.
-  기본값: SummarizeSlowestTests (SummarizeSlowestTests-* 디렉토리 삭제)
-  "All"을 지정하면 모든 runfile 캐시를 삭제합니다.
-
-.PARAMETER WhatIf
-  실제로 삭제하지 않고 삭제 대상만 표시합니다.
+  Cache directory pattern to delete.
+  Default: SummarizeSlowestTests (deletes SummarizeSlowestTests-* directories)
+  Use "All" to delete all runfile caches.
 
 .EXAMPLE
   ./Build-CleanRunFileCache.ps1
 
-  SummarizeSlowestTests 캐시만 삭제합니다.
+  Deletes only SummarizeSlowestTests cache.
 
 .EXAMPLE
   ./Build-CleanRunFileCache.ps1 -Pattern "All"
 
-  모든 runfile 캐시를 삭제합니다.
+  Deletes all runfile caches.
 
 .EXAMPLE
   ./Build-CleanRunFileCache.ps1 -WhatIf
 
-  삭제 대상만 표시합니다 (실제 삭제 안 함).
+  Shows deletion targets without deleting.
 
 .NOTES
   Requirements: PowerShell 7+
@@ -45,19 +41,28 @@
 
 [CmdletBinding(SupportsShouldProcess)]
 param(
-  [Parameter(Mandatory = $false, Position = 0, HelpMessage = "삭제할 캐시 패턴 (기본: SummarizeSlowestTests, All: 전체)")]
-  [string]$Pattern = "SummarizeSlowestTests",
-
-  [Parameter(Mandatory = $false, HelpMessage = "도움말 표시")]
-  [Alias("h", "?")]
-  [switch]$Help
+  [Parameter(Mandatory = $false, Position = 0, HelpMessage = "Cache pattern to delete")]
+  [string]$Pattern = "SummarizeSlowestTests"
 )
+
+#Requires -Version 7.0
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 #region Helpers
+
+function Write-ErrorMessage {
+  param([System.Management.Automation.ErrorRecord]$ErrorRecord)
+  Write-Host ""
+  Write-Host "[ERROR] An unexpected error occurred:" -ForegroundColor Red
+  Write-Host "   $($ErrorRecord.Exception.Message)" -ForegroundColor Red
+  Write-Host ""
+  Write-Host "Stack trace:" -ForegroundColor DarkGray
+  Write-Host $ErrorRecord.ScriptStackTrace -ForegroundColor DarkGray
+  Write-Host ""
+}
 
 function Remove-DirectorySafely {
   [CmdletBinding()]
@@ -170,20 +175,12 @@ function Main {
 
 #region Entry Point
 
-if ($Help) {
-  Get-Help $PSCommandPath -Detailed
-  exit 0
-}
-
 try {
   Main
   exit 0
 }
 catch {
-  Write-Host ""
-  Write-Host "[ERROR] $($_.Exception.Message)" -ForegroundColor Red
-  Write-Host $_.ScriptStackTrace -ForegroundColor DarkGray
-  Write-Host ""
+  Write-ErrorMessage -ErrorRecord $_
   exit 1
 }
 
