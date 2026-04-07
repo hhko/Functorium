@@ -1,5 +1,5 @@
 using Functorium.Adapters.Abstractions.Registrations;
-using Functorium.Adapters.Observabilities.Events;
+using Functorium.Adapters.Events;
 using AiGovernance.Adapters.Infrastructure.ExternalServices;
 using AiGovernance.Application.Usecases.Deployments.Ports;
 using AiGovernance.Domain.SharedModels.Services;

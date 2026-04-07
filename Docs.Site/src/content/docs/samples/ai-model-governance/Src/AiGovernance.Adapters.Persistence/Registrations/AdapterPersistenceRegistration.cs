@@ -13,7 +13,7 @@ using AiGovernance.Domain.AggregateRoots.Deployments;
 using AiGovernance.Domain.AggregateRoots.Incidents;
 using AiGovernance.Domain.AggregateRoots.Models;
 using Functorium.Abstractions.Registrations;
-using Functorium.Adapters.Options;
+using Functorium.Adapters.Abstractions.Options;
 using Functorium.Applications.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
