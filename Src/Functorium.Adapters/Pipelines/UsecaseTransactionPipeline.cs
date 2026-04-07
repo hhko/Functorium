@@ -1,3 +1,4 @@
+using Functorium.Adapters.Observabilities;
 using Functorium.Applications.Usecases;
 using Functorium.Applications.Events;
 using Functorium.Applications.Persistence;
@@ -6,7 +7,7 @@ using Mediator;
 
 using Microsoft.Extensions.Logging;
 
-namespace Functorium.Adapters.Observabilities.Pipelines;
+namespace Functorium.Adapters.Pipelines;
 
 /// <summary>
 /// Command Usecase에 대해 명시적 트랜잭션 + UoW.SaveChanges + 도메인 이벤트 발행을 자동으로 처리하는 Pipeline.

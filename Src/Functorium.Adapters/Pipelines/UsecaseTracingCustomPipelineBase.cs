@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 using Functorium.Adapters.Observabilities.Naming;
 
-namespace Functorium.Adapters.Observabilities.Pipelines;
+namespace Functorium.Adapters.Pipelines;
 
 /// <summary>
 /// Usecase별 커스텀 Tracing을 생성하기 위한 베이스 클래스.

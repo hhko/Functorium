@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Functorium.Adapters.Observabilities;
-using Functorium.Adapters.Observabilities.Loggers;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Applications.Observabilities;
 using Functorium.Domains.Events;
@@ -9,7 +8,7 @@ using Mediator;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Functorium.Adapters.Observabilities.Events;
+namespace Functorium.Adapters.Events;
 
 /// <summary>
 /// 도메인 이벤트 핸들러에 대한 관찰성(로깅, 추적, 메트릭)을 제공하는 INotificationPublisher 구현체.

@@ -3,7 +3,7 @@ using System.Diagnostics.Metrics;
 
 using Functorium.Abstractions.Errors;
 using Functorium.Adapters.Observabilities;
-using Functorium.Adapters.Observabilities.Events;
+using Functorium.Adapters.Events;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Applications.Events;
 using Functorium.Domains.Events;

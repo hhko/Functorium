@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
 using Functorium.Adapters.Observabilities;
-using Functorium.Adapters.Observabilities.Events;
+using Functorium.Adapters.Events;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Testing.Arrangements.Logging;
 using Functorium.Tests.Unit.DomainsTests.Entities;

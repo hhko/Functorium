@@ -4,7 +4,7 @@ using LanguageExt.Common;
 
 using Microsoft.Extensions.Logging;
 
-namespace Functorium.Adapters.Observabilities.Loggers;
+namespace Functorium.Adapters.Pipelines;
 
 /// <summary>
 /// Usecase Pipeline에서 사용하는 로거 확장 메서드.

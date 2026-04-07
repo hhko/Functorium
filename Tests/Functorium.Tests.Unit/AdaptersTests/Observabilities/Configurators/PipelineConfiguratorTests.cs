@@ -1,5 +1,5 @@
 using Functorium.Adapters.Observabilities.Builders.Configurators;
-using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Adapters.Pipelines;
 using Functorium.Applications.Events;
 using Functorium.Applications.Persistence;
 using Mediator;

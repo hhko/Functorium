@@ -1,4 +1,4 @@
-using Functorium.Adapters.Options;
+using Functorium.Adapters.Abstractions.Options;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

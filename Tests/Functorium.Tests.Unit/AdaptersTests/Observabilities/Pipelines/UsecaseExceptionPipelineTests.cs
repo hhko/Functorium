@@ -1,4 +1,4 @@
-using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Adapters.Pipelines;
 using Mediator;
 using static Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines.TestFixtures;
 

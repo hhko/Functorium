@@ -1,4 +1,4 @@
-using Functorium.Adapters.Observabilities.Loggers;
+using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Applications.Usecases;
 
@@ -8,7 +8,7 @@ using Mediator;
 
 using Microsoft.Extensions.Logging;
 
-namespace Functorium.Adapters.Observabilities.Pipelines;
+namespace Functorium.Adapters.Pipelines;
 
 /// <summary>
 /// Result 패턴을 위한 로깅 Pipeline.

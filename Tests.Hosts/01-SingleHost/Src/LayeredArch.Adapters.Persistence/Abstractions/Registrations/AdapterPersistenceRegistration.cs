@@ -16,7 +16,7 @@ using LayeredArch.Domain.AggregateRoots.Orders;
 using LayeredArch.Domain.AggregateRoots.Products;
 using LayeredArch.Domain.AggregateRoots.Tags;
 using Functorium.Abstractions.Registrations;
-using Functorium.Adapters.Options;
+using Functorium.Adapters.Abstractions.Options;
 using Functorium.Applications.Persistence;
 using LayeredArch.Application.Usecases.Customers.Ports;
 using LayeredArch.Application.Usecases.Inventories.Ports;

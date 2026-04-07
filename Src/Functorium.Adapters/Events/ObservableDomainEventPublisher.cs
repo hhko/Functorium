@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Functorium.Adapters.Observabilities;
-using Functorium.Adapters.Observabilities.Loggers;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Applications.Events;
 using Functorium.Domains.Events;
@@ -10,7 +9,7 @@ using LanguageExt.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Functorium.Adapters.Observabilities.Events;
+namespace Functorium.Adapters.Events;
 
 /// <summary>
 /// 관찰성(로깅, 추적, 메트릭)이 통합된 도메인 이벤트 발행자 데코레이터.

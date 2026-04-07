@@ -1,4 +1,4 @@
-namespace Functorium.Adapters.Observabilities.Pipelines;
+namespace Functorium.Adapters.Pipelines;
 
 /// <summary>
 /// 커스텀 유스케이스 파이프라인을 식별하기 위한 마커 인터페이스.

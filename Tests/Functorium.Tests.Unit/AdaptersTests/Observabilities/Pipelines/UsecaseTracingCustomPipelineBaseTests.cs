@@ -1,7 +1,7 @@
 using System.Diagnostics;
 
 using Functorium.Adapters.Observabilities.Naming;
-using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Adapters.Pipelines;
 
 using static Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines.TestFixtures;
 

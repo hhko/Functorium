@@ -2,7 +2,7 @@ using System.Diagnostics.Metrics;
 
 using Functorium.Adapters.Observabilities.Naming;
 
-namespace Functorium.Adapters.Observabilities.Pipelines;
+namespace Functorium.Adapters.Pipelines;
 
 /// <summary>
 /// Usecase별 개별 Metric을 생성하기 위한 베이스 클래스

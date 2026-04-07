@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
 using Functorium.Abstractions.Errors;
+using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Contexts;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Applications.Usecases;
@@ -11,7 +12,7 @@ using LanguageExt.Common;
 using Mediator;
 using Microsoft.Extensions.Options;
 
-namespace Functorium.Adapters.Observabilities.Pipelines;
+namespace Functorium.Adapters.Pipelines;
 
 /// <summary>
 /// 모든 Usecase에 대해 범용 Metrics를 자동으로 수집하는 Pipeline

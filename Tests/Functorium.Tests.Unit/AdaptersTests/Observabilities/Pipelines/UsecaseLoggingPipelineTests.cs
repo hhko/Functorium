@@ -1,4 +1,4 @@
-using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Adapters.Pipelines;
 using LanguageExt.Common;
 using Mediator;
 using Microsoft.Extensions.Logging;

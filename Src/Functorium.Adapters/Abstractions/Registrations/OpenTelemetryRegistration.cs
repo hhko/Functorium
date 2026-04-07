@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Reflection;
 using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Builders;
-using Functorium.Adapters.Options;
+using Functorium.Adapters.Abstractions.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;

@@ -1,12 +1,13 @@
 using System.Text.RegularExpressions;
 
 using Functorium.Abstractions.Errors;
+using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Applications.Usecases;
 
 using LanguageExt.Common;
 
-namespace Functorium.Adapters.Observabilities.Pipelines;
+namespace Functorium.Adapters.Pipelines;
 
 // ---------------------------------------
 // Logging

@@ -3,7 +3,7 @@ using Functorium.Domains.Events;
 using LanguageExt.Common;
 using Microsoft.Extensions.Logging;
 
-namespace Functorium.Adapters.Observabilities.Loggers;
+namespace Functorium.Adapters.Events;
 
 /// <summary>
 /// 도메인 이벤트 핸들러에서 사용하는 로거 확장 메서드.

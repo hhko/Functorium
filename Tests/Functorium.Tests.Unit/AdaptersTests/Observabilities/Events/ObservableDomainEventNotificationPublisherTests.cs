@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Functorium.Adapters.Observabilities;
-using Functorium.Adapters.Observabilities.Events;
+using Functorium.Adapters.Events;
 using Functorium.Tests.Unit.DomainsTests.Entities;
 using Mediator;
 using Microsoft.Extensions.Logging.Abstractions;

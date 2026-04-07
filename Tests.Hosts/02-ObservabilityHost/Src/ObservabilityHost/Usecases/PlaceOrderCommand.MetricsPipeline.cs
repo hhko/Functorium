@@ -1,7 +1,7 @@
 using System.Diagnostics.Metrics;
 
 using Functorium.Adapters.Observabilities;
-using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Adapters.Pipelines;
 using Functorium.Applications.Usecases;
 
 using Mediator;

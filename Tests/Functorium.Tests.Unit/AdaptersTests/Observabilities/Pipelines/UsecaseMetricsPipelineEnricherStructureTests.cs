@@ -2,7 +2,7 @@ using System.Diagnostics.Metrics;
 
 using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Contexts;
-using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Adapters.Pipelines;
 using Functorium.Abstractions.Observabilities;
 using Functorium.Applications.Usecases;
 

@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 using Functorium.Abstractions.Errors;
 using Functorium.Adapters.Observabilities.Naming;
-using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Adapters.Pipelines;
 using Functorium.Abstractions.Observabilities;
 using Functorium.Applications.Usecases;
 

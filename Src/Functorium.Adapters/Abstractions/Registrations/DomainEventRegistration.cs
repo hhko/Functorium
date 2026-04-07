@@ -3,7 +3,6 @@ using System.Diagnostics.Metrics;
 using System.Reflection;
 using Functorium.Adapters.Events;
 using Functorium.Adapters.Observabilities;
-using Functorium.Adapters.Observabilities.Events;
 using Functorium.Applications.Events;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;

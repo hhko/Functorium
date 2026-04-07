@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Adapters.Pipelines;
 using Functorium.Applications.Usecases;
 
 using Mediator;

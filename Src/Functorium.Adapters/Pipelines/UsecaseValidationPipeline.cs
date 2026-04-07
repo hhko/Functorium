@@ -8,7 +8,7 @@ using LanguageExt.Common;
 
 using Mediator;
 
-namespace Functorium.Adapters.Observabilities.Pipelines;
+namespace Functorium.Adapters.Pipelines;
 
 /// <summary>
 /// Result 패턴을 위한 검증 Pipeline.

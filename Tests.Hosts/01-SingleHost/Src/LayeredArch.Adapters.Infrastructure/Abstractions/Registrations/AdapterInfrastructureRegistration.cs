@@ -1,5 +1,5 @@
 using Functorium.Adapters.Abstractions.Registrations;
-using Functorium.Adapters.Observabilities.Events;
+using Functorium.Adapters.Events;
 using Functorium.Applications.Observabilities;
 using Functorium.Applications.Usecases;
 using LayeredArch.Application.Usecases.Customers.Events;

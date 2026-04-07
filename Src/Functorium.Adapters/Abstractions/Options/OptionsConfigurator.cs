@@ -3,7 +3,7 @@ using Functorium.Adapters.Observabilities.Loggers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace Functorium.Adapters.Options;
+namespace Functorium.Adapters.Abstractions.Options;
 
 public static class OptionsConfigurator
 {

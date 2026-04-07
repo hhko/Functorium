@@ -1,6 +1,7 @@
 using System.Diagnostics;
 
 using Functorium.Abstractions.Errors;
+using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Naming;
 using Functorium.Applications.Usecases;
 
@@ -8,7 +9,7 @@ using LanguageExt.Common;
 
 using Mediator;
 
-namespace Functorium.Adapters.Observabilities.Pipelines;
+namespace Functorium.Adapters.Pipelines;
 
 /// <summary>
 /// Result 패턴을 위한 분산 추적 Pipeline.

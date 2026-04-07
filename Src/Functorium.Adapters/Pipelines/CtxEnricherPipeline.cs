@@ -3,7 +3,7 @@ using Functorium.Applications.Usecases;
 
 using Mediator;
 
-namespace Functorium.Adapters.Observabilities.Pipelines;
+namespace Functorium.Adapters.Pipelines;
 
 /// <summary>
 /// ctx.* 사용자 정의 컨텍스트 필드를 3-Pillar(Logging, Tracing, Metrics)에 전파하는 최선두 Pipeline.

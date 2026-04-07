@@ -1,5 +1,5 @@
 using Functorium.Abstractions.Errors;
-using Functorium.Adapters.Observabilities.Pipelines;
+using Functorium.Adapters.Pipelines;
 using Functorium.Testing.Arrangements.Logging;
 using Mediator;
 using static Functorium.Tests.Unit.AdaptersTests.Observabilities.Pipelines.TestFixtures;

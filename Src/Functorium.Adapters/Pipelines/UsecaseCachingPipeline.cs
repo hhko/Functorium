@@ -4,7 +4,7 @@ using Mediator;
 
 using Microsoft.Extensions.Caching.Memory;
 
-namespace Functorium.Adapters.Observabilities.Pipelines;
+namespace Functorium.Adapters.Pipelines;
 
 /// <summary>
 /// ICacheable을 구현한 Query 요청에 대한 캐싱 Pipeline.
