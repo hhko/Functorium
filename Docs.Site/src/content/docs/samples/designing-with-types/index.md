@@ -1,5 +1,6 @@
 ---
 title: "타입으로 도메인 설계하기"
+slug: samples/designing-with-types
 ---
 
 ## 배경

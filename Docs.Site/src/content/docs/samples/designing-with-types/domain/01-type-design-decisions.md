@@ -1,5 +1,6 @@
 ---
 title: "타입 설계 의사결정"
+slug: samples/designing-with-types/domain/01-type-design-decisions
 ---
 
 ## 개요

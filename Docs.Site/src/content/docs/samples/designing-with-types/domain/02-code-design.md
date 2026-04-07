@@ -1,5 +1,6 @@
 ---
 title: "코드 설계"
+slug: samples/designing-with-types/domain/02-code-design
 ---
 
 ## 설계 의사결정에서 C# 구현으로
