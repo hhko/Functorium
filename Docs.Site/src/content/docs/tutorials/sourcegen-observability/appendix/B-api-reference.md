@@ -152,7 +152,7 @@ ObservablePortGenerator 관련 핵심 타입과 클래스의 빠른 참조입니
 
 소스 생성기 대상 클래스를 식별하는 마커 인터페이스입니다.
 
-**네임스페이스:** `Functorium.Domains.Observabilities`
+**네임스페이스:** `Functorium.Abstractions.Observabilities`
 
 ```csharp
 public interface IObservablePort

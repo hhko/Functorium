@@ -118,7 +118,7 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Functorium.Adapters.Observabilities;
 using Functorium.Adapters.Observabilities.Naming;
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 
 using LanguageExt;
 using Microsoft.Extensions.Logging;
@@ -271,7 +271,7 @@ public Task ObservablePortGenerator_ShouldGenerate_ObservableClass_WithSingleMet
 {
     string input = """
         using Functorium.Adapters.SourceGenerators;
-        using Functorium.Applications.Observabilities;
+        using Functorium.Abstractions.Observabilities;
         using LanguageExt;
 
         namespace TestNamespace;

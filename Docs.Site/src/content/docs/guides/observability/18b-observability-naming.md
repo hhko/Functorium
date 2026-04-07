@@ -445,7 +445,7 @@ Src/Functorium.Adapters/Observabilities/
 ### 네임스페이스 구조
 
 ```
-Functorium.Applications.Observabilities/
+Functorium.Abstractions.Observabilities/
 ├── Context/
 │   ├── IContextPropagator.cs
 │   └── IObservabilityContext.cs
@@ -475,7 +475,7 @@ Functorium.Adapters.Observabilities/
     ├── OpenTelemetrySpan.cs               // Span 구현
     └── OpenTelemetrySpanFactory.cs        // SpanFactory 구현
 
-Functorium.Adapters.Observabilities.Pipelines/
+Functorium.Adapters.Pipelines/
 ├── UsecasePipelineBase.cs                 // Pipeline 공통 베이스 클래스
 ├── ICustomUsecasePipeline.cs              // 커스텀 파이프라인 마커 인터페이스
 ├── CtxEnricherPipeline.cs                 // ctx.* 3-Pillar Enrichment Pipeline (최선두)

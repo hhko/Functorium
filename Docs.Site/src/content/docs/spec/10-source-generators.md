@@ -22,7 +22,7 @@ Functorium 프레임워크가 제공하는 소스 생성기(Source Generator)의
 |-----------|-------------|----------|------|
 | `[ObservablePortIgnore]` | `Functorium.Adapters.SourceGenerators` | 메서드 | Observable 생성에서 해당 메서드 제외 |
 | `[CtxIgnore]` | `Functorium.Applications.Usecases` | 클래스, 프로퍼티, 파라미터 | CtxEnricher 생성에서 제외 |
-| `[CtxRoot]` | `Functorium.Applications.Observabilities` | 인터페이스, 프로퍼티, 파라미터 | ctx 루트 레벨로 승격 |
+| `[CtxRoot]` | `Functorium.Abstractions.Observabilities` | 인터페이스, 프로퍼티, 파라미터 | ctx 루트 레벨로 승격 |
 
 ### 진단 코드
 
@@ -260,7 +260,7 @@ public sealed class CtxIgnoreAttribute : Attribute;
 **승격 어트리뷰트:**
 
 ```csharp
-// Functorium.Applications.Observabilities
+// Functorium.Abstractions.Observabilities
 [AttributeUsage(AttributeTargets.Interface | AttributeTargets.Property | AttributeTargets.Parameter,
     AllowMultiple = false, Inherited = false)]
 public sealed class CtxRootAttribute : Attribute;

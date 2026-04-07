@@ -152,7 +152,7 @@ private static string GenerateObservableClassSource(
       .AppendLine("using System.Diagnostics.Metrics;")
       .AppendLine("using Functorium.Adapters.Observabilities;")
       .AppendLine("using Functorium.Adapters.Observabilities.Naming;")
-      .AppendLine("using Functorium.Domains.Observabilities;")
+      .AppendLine("using Functorium.Abstractions.Observabilities;")
       .AppendLine()
       .AppendLine("using LanguageExt;")
       .AppendLine("using Microsoft.Extensions.Logging;")

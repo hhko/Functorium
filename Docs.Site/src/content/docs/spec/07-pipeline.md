@@ -10,7 +10,7 @@ Functorium의 Usecase Pipeline 시스템은 횡단 관심사(cross-cutting conce
 
 | 타입 | 네임스페이스 | 설명 |
 |------|-------------|------|
-| `UsecasePipelineBase<TRequest>` | `Functorium.Adapters.Observabilities.Pipelines` | 모든 Pipeline의 공통 베이스 클래스 |
+| `UsecasePipelineBase<TRequest>` | `Functorium.Adapters.Pipelines` | 모든 Pipeline의 공통 베이스 클래스 |
 | `UsecaseMetricsPipeline<TRequest, TResponse>` | 동일 | 메트릭 자동 수집 Pipeline |
 | `UsecaseTracingPipeline<TRequest, TResponse>` | 동일 | 분산 추적 Pipeline |
 | `UsecaseLoggingPipeline<TRequest, TResponse>` | 동일 | 구조화 로깅 Pipeline |

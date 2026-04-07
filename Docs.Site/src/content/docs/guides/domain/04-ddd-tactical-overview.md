@@ -156,7 +156,7 @@ block-beta
 | Query | `IQueryRequest<T>`, `IQueryUsecase<T,R>` | `Functorium.Applications.Usecases` |
 | Event Handler | `IDomainEventHandler<T>` | `Functorium.Applications.Events` |
 | Application Error | `ApplicationError`, `ApplicationErrorType` | `Functorium.Applications.Errors` |
-| Port | `IObservablePort` | `Functorium.Domains.Observabilities` |
+| Port | `IObservablePort` | `Functorium.Abstractions.Observabilities` |
 | Repository | `IRepository<TAggregate, TId>` | `Functorium.Domains.Repositories` |
 | Adapter | `[GenerateObservablePort]` | Adapter Layer 프로젝트 |
 | Adapter Error | `AdapterError`, `AdapterErrorType` | `Functorium.Adapters.Errors` |

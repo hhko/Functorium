@@ -18,12 +18,12 @@ Functorium 프레임워크가 제공하는 도메인 이벤트 관련 공개 타
 | `IDomainEventPublisher` | `Functorium.Applications.Events` | 도메인 이벤트 발행자 인터페이스 (`FinT` 반환) |
 | `IDomainEventHandler<TEvent>` | `Functorium.Applications.Events` | 도메인 이벤트 핸들러 인터페이스 (`INotificationHandler` 확장) |
 | `PublishResult` | `Functorium.Applications.Events` | 다중 이벤트 발행 결과 (부분 성공/실패 추적) |
-| `ObservableDomainEventPublisher` | `Functorium.Adapters.Observabilities.Events` | `IDomainEventPublisher` 관찰성 데코레이터 |
-| `ObservableDomainEventNotificationPublisher` | `Functorium.Adapters.Observabilities.Events` | Handler 관점 관찰성을 제공하는 `INotificationPublisher` 구현체 |
-| `IUsecaseCtxEnricher<TRequest, TResponse>` | `Functorium.Applications.Observabilities` | Usecase 로그에 비즈니스 컨텍스트 필드를 추가하는 Enricher |
-| `IDomainEventCtxEnricher<TEvent>` | `Functorium.Applications.Observabilities` | 도메인 이벤트 핸들러 로그에 비즈니스 컨텍스트 필드를 추가하는 Enricher |
-| `CtxEnricherContext` | `Functorium.Applications.Observabilities` | LogContext Push 팩토리를 관리하는 정적 유틸리티 |
-| `CtxRootAttribute` | `Functorium.Applications.Observabilities` | 소스 생성기에서 ctx 루트 레벨로 승격할 필드를 지정 |
+| `ObservableDomainEventPublisher` | `Functorium.Adapters.Events` | `IDomainEventPublisher` 관찰성 데코레이터 |
+| `ObservableDomainEventNotificationPublisher` | `Functorium.Adapters.Events` | Handler 관점 관찰성을 제공하는 `INotificationPublisher` 구현체 |
+| `IUsecaseCtxEnricher<TRequest, TResponse>` | `Functorium.Abstractions.Observabilities` | Usecase 로그에 비즈니스 컨텍스트 필드를 추가하는 Enricher |
+| `IDomainEventCtxEnricher<TEvent>` | `Functorium.Abstractions.Observabilities` | 도메인 이벤트 핸들러 로그에 비즈니스 컨텍스트 필드를 추가하는 Enricher |
+| `CtxEnricherContext` | `Functorium.Abstractions.Observabilities` | LogContext Push 팩토리를 관리하는 정적 유틸리티 |
+| `CtxRootAttribute` | `Functorium.Abstractions.Observabilities` | 소스 생성기에서 ctx 루트 레벨로 승격할 필드를 지정 |
 | `CtxIgnoreAttribute` | `Functorium.Applications.Usecases` | 소스 생성기에서 CtxEnricher 자동 생성 대상에서 제외 |
 
 ---
@@ -282,7 +282,7 @@ public sealed class OnOrderCreated : IDomainEventHandler<Order.CreatedEvent>
 관찰성(로깅, 추적, 메트릭)이 통합된 `IDomainEventPublisher` 데코레이터입니다. Adapter Layer에서 이벤트 발행에 대한 관찰 가능성을 제공합니다.
 
 ```csharp
-namespace Functorium.Adapters.Observabilities.Events;
+namespace Functorium.Adapters.Events;
 
 public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDisposable
 {
@@ -329,7 +329,7 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
 도메인 이벤트 핸들러에 대한 Handler 관점 관찰성(로깅, 추적, 메트릭)을 제공하는 `INotificationPublisher` 구현체입니다.
 
 ```csharp
-namespace Functorium.Adapters.Observabilities.Events;
+namespace Functorium.Adapters.Events;
 
 public sealed class ObservableDomainEventNotificationPublisher : INotificationPublisher, IDisposable
 {
@@ -394,7 +394,7 @@ services.AddMediator(options =>
 Usecase 로그에 비즈니스 컨텍스트 필드를 추가하는 Enricher 인터페이스입니다. 내장 `UsecaseLoggingPipeline`이 Request/Response 로그 출력 시 `LogContext`에 커스텀 속성을 자동으로 Push합니다.
 
 ```csharp
-namespace Functorium.Applications.Observabilities;
+namespace Functorium.Abstractions.Observabilities;
 
 public interface IUsecaseCtxEnricher<in TRequest, in TResponse>
     where TResponse : IFinResponse
@@ -416,7 +416,7 @@ public interface IUsecaseCtxEnricher<in TRequest, in TResponse>
 도메인 이벤트 핸들러 로그에 비즈니스 컨텍스트 필드를 추가하는 Enricher 인터페이스입니다. `ObservableDomainEventNotificationPublisher`가 Handler 처리 시 `LogContext`에 커스텀 속성을 자동으로 Push합니다.
 
 ```csharp
-namespace Functorium.Applications.Observabilities;
+namespace Functorium.Abstractions.Observabilities;
 
 public interface IDomainEventCtxEnricher<in TEvent> : IDomainEventCtxEnricher
     where TEvent : IDomainEvent
@@ -444,7 +444,7 @@ public interface IDomainEventCtxEnricher
 LogContext Push 팩토리를 관리하는 정적 유틸리티 클래스입니다. Serilog 등 로깅 프레임워크의 `LogContext.PushProperty`를 프레임워크와 연결하는 브릿지 역할을 합니다.
 
 ```csharp
-namespace Functorium.Applications.Observabilities;
+namespace Functorium.Abstractions.Observabilities;
 
 public static class CtxEnricherContext
 {
@@ -469,7 +469,7 @@ public static class CtxEnricherContext
 소스 생성기에서 CtxEnricher 생성 시 해당 필드를 `ctx` 루트 레벨(`ctx.{field}`)로 승격할 것을 지시하는 어트리뷰트입니다.
 
 ```csharp
-namespace Functorium.Applications.Observabilities;
+namespace Functorium.Abstractions.Observabilities;
 
 [AttributeUsage(
     AttributeTargets.Interface | AttributeTargets.Property | AttributeTargets.Parameter,

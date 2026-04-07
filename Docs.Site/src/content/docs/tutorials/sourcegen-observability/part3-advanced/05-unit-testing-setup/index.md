@@ -225,7 +225,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -258,7 +258,7 @@ public sealed class ObservablePortGeneratorTests
 string input = """
     // 1. 필요한 using 문
     using Functorium.Adapters.SourceGenerators;
-    using Functorium.Applications.Observabilities;
+    using Functorium.Abstractions.Observabilities;
     using LanguageExt;
 
     // 2. 네임스페이스

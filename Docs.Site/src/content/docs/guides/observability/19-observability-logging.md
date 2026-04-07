@@ -729,7 +729,7 @@ public partial class PlaceOrderCommandRequestCtxEnricher
 
 #### `[CtxRoot]` 어트리뷰트 — Root Context 필드
 
-**위치**: `Functorium.Applications.Observabilities.CtxRootAttribute`
+**위치**: `Functorium.Abstractions.Observabilities.CtxRootAttribute`
 
 `[CtxRoot]`를 인터페이스 또는 속성에 적용하면, 해당 속성이 Usecase prefix 없이 `ctx.{field}`로 승격됩니다.
 
@@ -1020,7 +1020,7 @@ Usecase에 `IUsecaseCtxEnricher`가 있듯이, DomainEvent Handler에는 `IDomai
 
 #### 인터페이스 정의
 
-**위치**: `Functorium.Adapters.Observabilities.Events`
+**위치**: `Functorium.Adapters.Events`
 
 ```csharp
 public interface IDomainEventCtxEnricher<in TEvent> : IDomainEventCtxEnricher
