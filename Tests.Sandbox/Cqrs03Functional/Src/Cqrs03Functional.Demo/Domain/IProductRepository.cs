@@ -1,5 +1,5 @@
 using Cqrs03Functional.Demo.Domain.ValueObjects;
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 
 namespace Cqrs03Functional.Demo.Domain;
 

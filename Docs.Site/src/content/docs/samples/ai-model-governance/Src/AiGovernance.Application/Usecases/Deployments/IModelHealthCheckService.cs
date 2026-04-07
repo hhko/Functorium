@@ -1,4 +1,4 @@
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 using AiGovernance.Domain.AggregateRoots.Deployments;
 
 namespace AiGovernance.Application.Usecases.Deployments.Ports;

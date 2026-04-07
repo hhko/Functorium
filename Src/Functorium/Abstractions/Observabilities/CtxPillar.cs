@@ -1,4 +1,4 @@
-namespace Functorium.Applications.Observabilities;
+namespace Functorium.Abstractions.Observabilities;
 
 /// <summary>
 /// ctx.* 프로퍼티가 전파될 관측 가능성 Pillar.

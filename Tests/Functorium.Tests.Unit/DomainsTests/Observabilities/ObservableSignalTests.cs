@@ -1,5 +1,5 @@
 using Functorium.Adapters.Observabilities;
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 
 using Microsoft.Extensions.Logging;
 

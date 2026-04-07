@@ -188,7 +188,7 @@ public sealed class DomainEventCtxEnricherGeneratorTests
             using System.Threading;
             using System.Threading.Tasks;
             using Functorium.Applications.Events;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
             using Functorium.Domains.Events;
 
@@ -518,7 +518,7 @@ public sealed class DomainEventCtxEnricherGeneratorTests
             using System.Threading;
             using System.Threading.Tasks;
             using Functorium.Applications.Events;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
             using Functorium.Domains.Events;
 
@@ -592,7 +592,7 @@ public sealed class DomainEventCtxEnricherGeneratorTests
             using System.Threading;
             using System.Threading.Tasks;
             using Functorium.Applications.Events;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
             using Functorium.Domains.Events;
 
@@ -634,7 +634,7 @@ public sealed class DomainEventCtxEnricherGeneratorTests
             using System.Threading;
             using System.Threading.Tasks;
             using Functorium.Applications.Events;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
             using Functorium.Domains.Events;
 
@@ -681,7 +681,7 @@ public sealed class DomainEventCtxEnricherGeneratorTests
         using System.Threading;
         using System.Threading.Tasks;
         using Functorium.Applications.Events;
-        using Functorium.Applications.Observabilities;
+        using Functorium.Abstractions.Observabilities;
         using Functorium.Domains.Events;
 
         namespace TestNamespace;
@@ -739,7 +739,7 @@ public sealed class DomainEventCtxEnricherGeneratorTests
         using System.Threading;
         using System.Threading.Tasks;
         using Functorium.Applications.Events;
-        using Functorium.Applications.Observabilities;
+        using Functorium.Abstractions.Observabilities;
         using Functorium.Domains.Events;
 
         namespace TestNamespace;
@@ -853,7 +853,7 @@ public sealed class DomainEventCtxEnricherGeneratorTests
             using System.Threading;
             using System.Threading.Tasks;
             using Functorium.Applications.Events;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
             using Functorium.Domains.Events;
 

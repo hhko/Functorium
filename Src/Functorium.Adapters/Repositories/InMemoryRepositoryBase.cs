@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using Functorium.Adapters.Errors;
 using Functorium.Applications.Events;
 using Functorium.Domains.Entities;
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 using Functorium.Domains.Repositories;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 using static LanguageExt.Prelude;

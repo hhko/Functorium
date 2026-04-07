@@ -1,6 +1,6 @@
 using Functorium.Abstractions.Errors;
 using Functorium.Adapters.Observabilities.Pipelines;
-using Functorium.Applications.Observabilities;
+using Functorium.Abstractions.Observabilities;
 using Functorium.Testing.Arrangements.Logging;
 using Mediator;
 using Serilog.Events;

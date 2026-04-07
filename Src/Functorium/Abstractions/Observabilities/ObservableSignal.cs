@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace Functorium.Domains.Observabilities;
+namespace Functorium.Abstractions.Observabilities;
 
 /// <summary>
 /// Adapter 구현 코드 내에서 운영 목적의 로그를 출력하는 정적 API.

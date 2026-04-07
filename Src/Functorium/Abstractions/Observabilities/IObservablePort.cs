@@ -1,4 +1,4 @@
-namespace Functorium.Domains.Observabilities;
+namespace Functorium.Abstractions.Observabilities;
 
 public interface IObservablePort
 {

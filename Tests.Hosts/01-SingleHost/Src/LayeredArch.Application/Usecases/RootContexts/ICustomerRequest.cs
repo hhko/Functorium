@@ -1,4 +1,4 @@
-using Functorium.Applications.Observabilities;
+using Functorium.Abstractions.Observabilities;
 
 namespace LayeredArch.Application.Usecases.RootContexts;
 

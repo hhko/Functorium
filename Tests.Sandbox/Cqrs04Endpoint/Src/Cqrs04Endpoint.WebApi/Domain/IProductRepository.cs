@@ -1,5 +1,5 @@
 using Cqrs04Endpoint.WebApi.Domain.ValueObjects;
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 
 namespace Cqrs04Endpoint.WebApi.Domain;
 

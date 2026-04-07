@@ -1,5 +1,6 @@
 using FluentValidation;
 using Functorium.Abstractions.Errors;
+using Functorium.Abstractions.Observabilities;
 using Functorium.Applications.Observabilities;
 using Functorium.Applications.Usecases;
 using LanguageExt.Common;

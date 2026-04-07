@@ -1,4 +1,4 @@
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 using LayeredArch.Domain.AggregateRoots.Products;
 
 namespace LayeredArch.Application.Usecases.Orders.Ports;

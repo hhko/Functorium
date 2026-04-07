@@ -96,7 +96,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -131,7 +131,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -170,7 +170,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
 
             namespace TestNamespace;
 
@@ -203,7 +203,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -238,7 +238,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -273,7 +273,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -308,7 +308,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
             using System.Collections.Generic;
 
@@ -344,7 +344,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -380,7 +380,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -417,7 +417,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
             using System.Collections.Generic;
 
@@ -455,7 +455,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -495,7 +495,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -534,7 +534,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
             using System.Collections.Generic;
 
@@ -574,7 +574,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
             using System.Collections.Generic;
 
@@ -612,7 +612,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -649,7 +649,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
             using System.Collections.Generic;
 
@@ -687,7 +687,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -727,7 +727,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -762,7 +762,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -810,7 +810,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
             using Microsoft.Extensions.Logging;
 
@@ -853,7 +853,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -904,7 +904,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -939,7 +939,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -976,7 +976,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
             using System;
 
@@ -1017,7 +1017,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace MyApp;
@@ -1052,7 +1052,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace Company.Domain.Adapters.Infrastructure.Repositories;
@@ -1094,7 +1094,7 @@ public sealed class ObservablePortGeneratorTests
         string input = """
             using System.Diagnostics;
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -1146,7 +1146,7 @@ public sealed class ObservablePortGeneratorTests
         string input = """
             using System.Diagnostics.Metrics;
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -1193,7 +1193,7 @@ public sealed class ObservablePortGeneratorTests
         string input = """
             using System.Diagnostics;
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;
@@ -1238,7 +1238,7 @@ public sealed class ObservablePortGeneratorTests
         // Arrange
         string input = """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;

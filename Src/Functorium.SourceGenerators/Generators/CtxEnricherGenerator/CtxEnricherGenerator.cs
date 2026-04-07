@@ -25,9 +25,9 @@ public sealed class CtxEnricherGenerator()
         Generate,
         AttachDebugger: false)
 {
-    private const string IgnoreAttributeFullName = "Functorium.Applications.Observabilities.CtxIgnoreAttribute";
-    private const string RootAttributeFullName = "Functorium.Applications.Observabilities.CtxRootAttribute";
-    private const string TargetAttributeFullName = "Functorium.Applications.Observabilities.CtxTargetAttribute";
+    private const string IgnoreAttributeFullName = "Functorium.Abstractions.Observabilities.CtxIgnoreAttribute";
+    private const string RootAttributeFullName = "Functorium.Abstractions.Observabilities.CtxRootAttribute";
+    private const string TargetAttributeFullName = "Functorium.Abstractions.Observabilities.CtxTargetAttribute";
 
     private static readonly DiagnosticDescriptor InaccessibleRequestDiagnostic = new(
         id: "FUNCTORIUM003",
@@ -682,11 +682,11 @@ public sealed class CtxEnricherGenerator()
                 string pillarArg = GetPillarArgument(prop);
                 if (prop.IsCollection)
                 {
-                    sb.AppendLine($"        disposables.Add(global::Functorium.Applications.Observabilities.CtxEnricherContext.Push(\"{prop.CtxFieldName}\", {prop.CountExpression}{pillarArg}));");
+                    sb.AppendLine($"        disposables.Add(global::Functorium.Abstractions.Observabilities.CtxEnricherContext.Push(\"{prop.CtxFieldName}\", {prop.CountExpression}{pillarArg}));");
                 }
                 else
                 {
-                    sb.AppendLine($"        disposables.Add(global::Functorium.Applications.Observabilities.CtxEnricherContext.Push(\"{prop.CtxFieldName}\", request.{prop.PropertyName}{pillarArg}));");
+                    sb.AppendLine($"        disposables.Add(global::Functorium.Abstractions.Observabilities.CtxEnricherContext.Push(\"{prop.CtxFieldName}\", request.{prop.PropertyName}{pillarArg}));");
                 }
             }
             sb.AppendLine("        OnEnrichRequest(request, disposables);");
@@ -716,11 +716,11 @@ public sealed class CtxEnricherGenerator()
                 string pillarArg = GetPillarArgument(prop);
                 if (prop.IsCollection)
                 {
-                    sb.AppendLine($"            disposables.Add(global::Functorium.Applications.Observabilities.CtxEnricherContext.Push(\"{prop.CtxFieldName}\", {prop.CountExpression}{pillarArg}));");
+                    sb.AppendLine($"            disposables.Add(global::Functorium.Abstractions.Observabilities.CtxEnricherContext.Push(\"{prop.CtxFieldName}\", {prop.CountExpression}{pillarArg}));");
                 }
                 else
                 {
-                    sb.AppendLine($"            disposables.Add(global::Functorium.Applications.Observabilities.CtxEnricherContext.Push(\"{prop.CtxFieldName}\", r.{prop.PropertyName}{pillarArg}));");
+                    sb.AppendLine($"            disposables.Add(global::Functorium.Abstractions.Observabilities.CtxEnricherContext.Push(\"{prop.CtxFieldName}\", r.{prop.PropertyName}{pillarArg}));");
                 }
             }
             sb.AppendLine("        }");
@@ -746,9 +746,9 @@ public sealed class CtxEnricherGenerator()
         sb.AppendLine($"        global::System.Collections.Generic.List<global::System.IDisposable> disposables,");
         sb.AppendLine($"        string fieldName,");
         sb.AppendLine($"        object? value,");
-        sb.AppendLine($"        global::Functorium.Applications.Observabilities.CtxPillar pillars = global::Functorium.Applications.Observabilities.CtxPillar.Default)");
+        sb.AppendLine($"        global::Functorium.Abstractions.Observabilities.CtxPillar pillars = global::Functorium.Abstractions.Observabilities.CtxPillar.Default)");
         sb.AppendLine("    {");
-        sb.AppendLine($"        disposables.Add(global::Functorium.Applications.Observabilities.CtxEnricherContext.Push(");
+        sb.AppendLine($"        disposables.Add(global::Functorium.Abstractions.Observabilities.CtxEnricherContext.Push(");
         sb.AppendLine($"            \"ctx.{ctxTypePrefix}.request.\" + fieldName, value, pillars));");
         sb.AppendLine("    }");
         sb.AppendLine();
@@ -756,9 +756,9 @@ public sealed class CtxEnricherGenerator()
         sb.AppendLine($"        global::System.Collections.Generic.List<global::System.IDisposable> disposables,");
         sb.AppendLine($"        string fieldName,");
         sb.AppendLine($"        object? value,");
-        sb.AppendLine($"        global::Functorium.Applications.Observabilities.CtxPillar pillars = global::Functorium.Applications.Observabilities.CtxPillar.Default)");
+        sb.AppendLine($"        global::Functorium.Abstractions.Observabilities.CtxPillar pillars = global::Functorium.Abstractions.Observabilities.CtxPillar.Default)");
         sb.AppendLine("    {");
-        sb.AppendLine($"        disposables.Add(global::Functorium.Applications.Observabilities.CtxEnricherContext.Push(");
+        sb.AppendLine($"        disposables.Add(global::Functorium.Abstractions.Observabilities.CtxEnricherContext.Push(");
         sb.AppendLine($"            \"ctx.{ctxTypePrefix}.response.\" + fieldName, value, pillars));");
         sb.AppendLine("    }");
         sb.AppendLine();
@@ -773,9 +773,9 @@ public sealed class CtxEnricherGenerator()
             sb.AppendLine($"        global::System.Collections.Generic.List<global::System.IDisposable> disposables,");
             sb.AppendLine($"        string fieldName,");
             sb.AppendLine($"        object? value,");
-            sb.AppendLine($"        global::Functorium.Applications.Observabilities.CtxPillar pillars = global::Functorium.Applications.Observabilities.CtxPillar.Default)");
+            sb.AppendLine($"        global::Functorium.Abstractions.Observabilities.CtxPillar pillars = global::Functorium.Abstractions.Observabilities.CtxPillar.Default)");
             sb.AppendLine("    {");
-            sb.AppendLine($"        disposables.Add(global::Functorium.Applications.Observabilities.CtxEnricherContext.Push(");
+            sb.AppendLine($"        disposables.Add(global::Functorium.Abstractions.Observabilities.CtxEnricherContext.Push(");
             sb.AppendLine($"            \"ctx.\" + fieldName, value, pillars));");
             sb.AppendLine("    }");
             sb.AppendLine();
@@ -805,6 +805,6 @@ public sealed class CtxEnricherGenerator()
         if (prop.IsDefault)
             return ""; // 기본값 사용 — Push의 default parameter
 
-        return $", (global::Functorium.Applications.Observabilities.CtxPillar){prop.TargetPillars}";
+        return $", (global::Functorium.Abstractions.Observabilities.CtxPillar){prop.TargetPillars}";
     }
 }

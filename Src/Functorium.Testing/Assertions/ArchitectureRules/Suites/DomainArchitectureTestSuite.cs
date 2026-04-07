@@ -3,7 +3,7 @@ using ArchUnitNET.Fluent;
 using ArchUnitNET.xUnitV3;
 using Functorium.Domains.Entities;
 using Functorium.Domains.Events;
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 using Functorium.Domains.Services;
 using Functorium.Domains.Specifications;
 using Functorium.Domains.ValueObjects;

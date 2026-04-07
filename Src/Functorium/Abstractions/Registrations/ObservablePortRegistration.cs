@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Microsoft.Extensions.DependencyInjection;
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 
 namespace Functorium.Abstractions.Registrations;
 

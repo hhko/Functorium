@@ -1,4 +1,4 @@
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 
 namespace ECommerce.Application.Usecases;
 

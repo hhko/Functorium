@@ -1,7 +1,7 @@
 using System.Diagnostics;
 
 using Functorium.Adapters.Observabilities.Naming;
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 
 using Microsoft.Extensions.Logging;
 

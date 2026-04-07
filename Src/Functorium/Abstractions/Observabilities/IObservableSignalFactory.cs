@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace Functorium.Domains.Observabilities;
+namespace Functorium.Abstractions.Observabilities;
 
 /// <summary>
 /// ObservableSignal의 실제 로깅 구현을 제공하는 팩토리 인터페이스.

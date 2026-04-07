@@ -1,5 +1,5 @@
 using Cqrs05EndpointLayered.Domains.Entities;
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 using LanguageExt;
 
 namespace Cqrs05EndpointLayered.Domains.Repositories;

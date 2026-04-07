@@ -1,4 +1,4 @@
-namespace Functorium.Applications.Observabilities;
+namespace Functorium.Abstractions.Observabilities;
 
 /// <summary>
 /// ctx.* 프로퍼티의 관측 가능성 Pillar 타겟을 지정합니다.

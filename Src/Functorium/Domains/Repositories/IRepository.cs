@@ -1,4 +1,4 @@
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 using Functorium.Domains.Entities;
 
 namespace Functorium.Domains.Repositories;

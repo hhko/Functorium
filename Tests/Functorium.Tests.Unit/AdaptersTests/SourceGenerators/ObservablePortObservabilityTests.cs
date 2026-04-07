@@ -351,7 +351,7 @@ public sealed class ObservablePortObservabilityTests
     {
         return """
             using Functorium.Adapters.SourceGenerators;
-            using Functorium.Domains.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using LanguageExt;
 
             namespace TestNamespace;

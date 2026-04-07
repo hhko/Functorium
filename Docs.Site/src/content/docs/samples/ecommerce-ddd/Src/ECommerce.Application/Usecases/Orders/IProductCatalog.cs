@@ -1,4 +1,4 @@
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 using ECommerce.Domain.AggregateRoots.Products;
 
 namespace ECommerce.Application.Usecases.Orders;

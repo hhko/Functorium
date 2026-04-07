@@ -1,6 +1,6 @@
 using Functorium.Adapters.Errors;
 using Functorium.Adapters.SourceGenerators;
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 using AiGovernance.Domain.AggregateRoots.Models;
 using static Functorium.Adapters.Errors.AdapterErrorType;
 

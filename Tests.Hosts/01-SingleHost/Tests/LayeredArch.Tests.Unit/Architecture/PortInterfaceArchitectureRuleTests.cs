@@ -1,5 +1,5 @@
 using ArchUnitNET.Fluent;
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 using Functorium.Testing.Assertions.ArchitectureRules;
 
 namespace LayeredArch.Tests.Unit.Architecture;

@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using Cqrs03Functional.Demo.Domain;
 using Cqrs03Functional.Demo.Domain.ValueObjects;
 using Functorium.Adapters.SourceGenerators;
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
 

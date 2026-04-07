@@ -1,4 +1,4 @@
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 using LanguageExt;
 using LanguageExt.Common;
 using Cqrs06Services.Messages;

@@ -1,4 +1,4 @@
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 using LanguageExt;
 using TwoWayMappingLayered.Domains.Entities;
 using TwoWayMappingLayered.Domains.ValueObjects;

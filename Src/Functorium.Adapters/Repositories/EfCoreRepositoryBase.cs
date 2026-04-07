@@ -3,7 +3,7 @@ using System.Reflection;
 using Functorium.Adapters.Errors;
 using Functorium.Applications.Events;
 using Functorium.Domains.Entities;
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 using Functorium.Domains.Repositories;
 using Functorium.Domains.Specifications;
 using Functorium.Domains.Specifications.Expressions;

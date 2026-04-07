@@ -46,7 +46,7 @@ public sealed class CtxEnricherGeneratorTests
 
     private const string CommonInput = """
         using System.Collections.Generic;
-        using Functorium.Applications.Observabilities;
+        using Functorium.Abstractions.Observabilities;
         using Functorium.Applications.Usecases;
 
         namespace TestNamespace;
@@ -142,7 +142,7 @@ public sealed class CtxEnricherGeneratorTests
         // Arrange
         string input = """
             using System.Collections.Generic;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -182,7 +182,7 @@ public sealed class CtxEnricherGeneratorTests
         // Arrange
         string input = """
             using System.Collections.Generic;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -338,7 +338,7 @@ public sealed class CtxEnricherGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -377,7 +377,7 @@ public sealed class CtxEnricherGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -413,7 +413,7 @@ public sealed class CtxEnricherGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -447,7 +447,7 @@ public sealed class CtxEnricherGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -483,7 +483,7 @@ public sealed class CtxEnricherGeneratorTests
     public void CtxEnricherGenerator_ShouldNotGenerate_WhenClassLevelIgnoreApplied()
     {
         string input = """
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -514,7 +514,7 @@ public sealed class CtxEnricherGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -542,7 +542,7 @@ public sealed class CtxEnricherGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -585,7 +585,7 @@ public sealed class CtxEnricherGeneratorTests
 
     private const string RootInterfaceInput = """
         using System.Collections.Generic;
-        using Functorium.Applications.Observabilities;
+        using Functorium.Abstractions.Observabilities;
         using Functorium.Applications.Usecases;
 
         namespace TestNamespace;
@@ -643,7 +643,7 @@ public sealed class CtxEnricherGeneratorTests
         // Arrange
         string input = """
             using System.Collections.Generic;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -675,7 +675,7 @@ public sealed class CtxEnricherGeneratorTests
 
     private const string InterfaceScopedInput = """
         using System.Collections.Generic;
-        using Functorium.Applications.Observabilities;
+        using Functorium.Abstractions.Observabilities;
         using Functorium.Applications.Usecases;
 
         namespace TestNamespace;
@@ -789,7 +789,7 @@ public sealed class CtxEnricherGeneratorTests
         // Arrange
         string input = """
             using System.Collections.Generic;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -827,8 +827,8 @@ public sealed class CtxEnricherGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Applications.Observabilities;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -861,8 +861,8 @@ public sealed class CtxEnricherGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Applications.Observabilities;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -932,8 +932,8 @@ public sealed class CtxEnricherGeneratorTests
         // Arrange
         string input = """
             using System.Collections.Generic;
-            using Functorium.Applications.Observabilities;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;
@@ -972,8 +972,8 @@ public sealed class CtxEnricherGeneratorTests
     {
         // Arrange
         string input = """
-            using Functorium.Applications.Observabilities;
-            using Functorium.Applications.Observabilities;
+            using Functorium.Abstractions.Observabilities;
+            using Functorium.Abstractions.Observabilities;
             using Functorium.Applications.Usecases;
 
             namespace TestNamespace;

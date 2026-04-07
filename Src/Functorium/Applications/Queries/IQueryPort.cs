@@ -1,4 +1,4 @@
-using Functorium.Domains.Observabilities;
+using Functorium.Abstractions.Observabilities;
 using Functorium.Domains.Specifications;
 
 namespace Functorium.Applications.Queries;

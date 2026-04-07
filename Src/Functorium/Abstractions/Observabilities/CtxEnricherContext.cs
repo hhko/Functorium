@@ -1,4 +1,4 @@
-namespace Functorium.Applications.Observabilities;
+namespace Functorium.Abstractions.Observabilities;
 
 /// <summary>
 /// ctx.* 필드를 지정된 Pillar(Logging, Tracing, Metrics)에 동시 전파하는 정적 컨텍스트.
