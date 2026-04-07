@@ -1,6 +1,5 @@
 ---
 title: "비즈니스 요구사항"
-slug: samples/designing-with-types/domain/00-business-requirements
 ---
 
 ## 배경

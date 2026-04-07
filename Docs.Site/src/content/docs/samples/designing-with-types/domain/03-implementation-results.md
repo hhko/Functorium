@@ -1,6 +1,5 @@
 ---
 title: "구현 결과"
-slug: samples/designing-with-types/domain/03-implementation-results
 ---
 
 ## 비즈니스 시나리오 검증
