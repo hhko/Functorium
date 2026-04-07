@@ -1,8 +1,8 @@
 # Functorium Release v1.0.0-alpha.2
 
-**[English](./RELEASE-v1.0.0-alpha.2.md)** | **한국어**
+**[English](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.2/.release-notes/RELEASE-v1.0.0-alpha.2.md)** | **한국어**
 
-**발표 자료**: [PDF](./RELEASE-v1.0.0-alpha.2-KR.pdf) | [PPTX](./RELEASE-v1.0.0-alpha.2-KR.pptx) | [MP4](./RELEASE-v1.0.0-alpha.2-KR.mp4) | [M4A](./RELEASE-v1.0.0-alpha.2-KR.m4a)
+**발표 자료**: [PDF](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.2/.release-notes/RELEASE-v1.0.0-alpha.2-KR.pdf) | [PPTX](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.2/.release-notes/RELEASE-v1.0.0-alpha.2-KR.pptx) | [MP4](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.2/.release-notes/RELEASE-v1.0.0-alpha.2-KR.mp4) | [M4A](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.2/.release-notes/RELEASE-v1.0.0-alpha.2-KR.m4a)
 
 ## 개요
 

@@ -1,6 +1,6 @@
 # Functorium Release v1.0.0-alpha.1
 
-**English** | **[한국어](./RELEASE-v1.0.0-alpha.1-KR.md)**
+**English** | **[한국어](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.1/.release-notes/RELEASE-v1.0.0-alpha.1-KR.md)**
 
 ## Overview
 
