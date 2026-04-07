@@ -1,5 +1,9 @@
 # Functorium Release v1.0.0-alpha.1
 
+**[English](./RELEASE-v1.0.0-alpha.1.md)** | **한국어**
+
+**발표 자료**: [PDF](./RELEASE-v1.0.0-alpha.1-KR.pdf) | [PPTX](./RELEASE-v1.0.0-alpha.1-KR.pptx) | [MP4](./RELEASE-v1.0.0-alpha.1-KR.mp4) | [MP3](./RELEASE-v1.0.0-alpha.1-KR.mp3)
+
 ## 개요
 
 Functorium v1.0.0-alpha.1은 **도메인 중심 함수형 아키텍처(Domain-Centric Functional Architecture)를** 구현하기 위한 C# 프레임워크의 첫 번째 알파 릴리스입니다.

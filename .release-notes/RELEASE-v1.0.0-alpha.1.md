@@ -1,5 +1,7 @@
 # Functorium Release v1.0.0-alpha.1
 
+**English** | **[한국어](./RELEASE-v1.0.0-alpha.1-KR.md)**
+
 ## Overview
 
 Functorium v1.0.0-alpha.1 is the first alpha release of a C# framework for implementing **Domain-Centric Functional Architecture**.
