@@ -22,7 +22,7 @@
     <Company>Functorium</Company>
     <Copyright>Copyright (c) Functorium Contributors. All rights reserved.</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/hhko/Functorium</PackageProjectUrl>
+    <PackageProjectUrl>https://hhko.github.io/Functorium/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/hhko/Functorium.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
