@@ -1,8 +1,8 @@
 # Functorium Release v1.0.0-alpha.1
 
-**[English](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.1/.release-notes/v1/v1.0.0-alpha.1/RELEASE-v1.0.0-alpha.1.md)** | **한국어**
+**[English](https://github.com/hhko/Functorium/blob/main/.release-notes/v1/v1.0.0-alpha.1/RELEASE-v1.0.0-alpha.1.md)** | **한국어**
 
-**발표 자료**: [PDF](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.1/.release-notes/v1/v1.0.0-alpha.1/RELEASE-v1.0.0-alpha.1-KR.pdf) | [PPTX](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.1/.release-notes/v1/v1.0.0-alpha.1/RELEASE-v1.0.0-alpha.1-KR.pptx) | [MP4](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.1/.release-notes/v1/v1.0.0-alpha.1/RELEASE-v1.0.0-alpha.1-KR.mp4) | [MP3](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.1/.release-notes/v1/v1.0.0-alpha.1/RELEASE-v1.0.0-alpha.1-KR.mp3)
+**발표 자료**: [MP4](https://github.com/hhko/Functorium/blob/main/.release-notes/v1/v1.0.0-alpha.1/RELEASE-v1.0.0-alpha.1-KR.mp4) | [MP3](https://github.com/hhko/Functorium/blob/main/.release-notes/v1/v1.0.0-alpha.1/RELEASE-v1.0.0-alpha.1-KR.mp3)
 
 ## 개요
 
