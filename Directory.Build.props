@@ -27,7 +27,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>Functorium.png</PackageIcon>
-    <PackageTags>functorium;functional;dotnet;csharp</PackageTags>
+    <PackageTags>functorium;ddd;domain-driven-design;functional-programming;cqrs;clean-architecture;opentelemetry;observability;languageext;dotnet</PackageTags>
 
     <!-- Symbol Package for Debugging -->
     <IncludeSymbols>true</IncludeSymbols>
