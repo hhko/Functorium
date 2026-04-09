@@ -1,10 +1,10 @@
 # Functorium Release v1.0.0-alpha.2
 
-**English** | **[한국어](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.2/.release-notes/RELEASE-v1.0.0-alpha.2-KR.md)**
+**English** | **[한국어](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.2/.release-notes/v1/v1.0.0-alpha.2/RELEASE-v1.0.0-alpha.2-KR.md)**
 
 ## Overview
 
-Functorium v1.0.0-alpha.2 is a major release centered on the **DDD domain modeling framework** and the **Functorium.Adapters project separation**. It provides the complete set of DDD building blocks--Entity, AggregateRoot, Specification, Domain Event, and more--enabling full-fledged domain-centric functional architecture. The Observability system has been fundamentally redesigned around ctx.* context propagation.
+Functorium v1.0.0-alpha.2 is a major release centered on the **DDD domain modeling framework** and the **Functorium.Adapters project separation**. It provides the complete set of DDD building blocks--Entity, AggregateRoot, Specification, Domain Event, and more--enabling full-fledged domain-centric functional architecture. The Observability system has been fundamentally redesigned around `ctx.*` context propagation.
 
 **Key Features**:
 
@@ -12,7 +12,7 @@ Functorium v1.0.0-alpha.2 is a major release centered on the **DDD domain modeli
 - **Layer-specific Type-safe Error System**: Sealed record-based error type hierarchy separated into DomainError, ApplicationError, and AdapterError
 - **Functorium.Adapters Project Separation**: Pipeline, Observability, and Repository implementations extracted into an independent package to minimize dependencies
 - **Validation System Extensions**: Contextual/Typed validation, Apply/ApplyT patterns, FluentValidation integration
-- **ctx.* Observability Redesign**: Structured log context propagation based on CtxEnricher + source generators
+- **`ctx.*` Observability Redesign**: Structured log context propagation based on CtxEnricher + source generators
 - **Architecture Test Suites**: Automated rule verification with DomainArchitectureTestSuite and ApplicationArchitectureTestSuite
 
 ## Breaking Changes
@@ -446,7 +446,7 @@ var finT =
 
 ---
 
-#### 10. ctx.* Observability Context Propagation
+#### 10. `ctx.*` Observability Context Propagation
 
 Automatically propagates structured log context through the `CtxEnricher` interface and source generators. Fields are declaratively controlled with `[CtxRoot]`, `[CtxTarget]`, and `[CtxIgnore]` attributes.
 
@@ -752,7 +752,7 @@ var data = logCtx.ExtractFirstLogData();
 **Why this matters:**
 - Verifies through unit tests that the observability pipeline produces the correct structured fields
 - `ExtractLogData()` extracts structured data from log events, enabling field-by-field assertions
-- `LogContext`-based Enrichment is also captured, allowing verification of ctx.* context propagation
+- `LogContext`-based Enrichment is also captured, allowing verification of `ctx.*` context propagation
 
 <!-- Related commit: a5e85cd5 feat(test): Application Layer 로그 필드 검증 테스트 추가 -->
 

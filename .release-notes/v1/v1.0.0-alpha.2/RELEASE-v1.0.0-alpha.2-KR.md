@@ -1,12 +1,12 @@
 # Functorium Release v1.0.0-alpha.2
 
-**[English](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.2/.release-notes/RELEASE-v1.0.0-alpha.2.md)** | **한국어**
+**[English](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.2/.release-notes/v1/v1.0.0-alpha.2/RELEASE-v1.0.0-alpha.2.md)** | **한국어**
 
-**발표 자료**: [PDF](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.2/.release-notes/RELEASE-v1.0.0-alpha.2-KR.pdf) | [PPTX](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.2/.release-notes/RELEASE-v1.0.0-alpha.2-KR.pptx) | [MP4](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.2/.release-notes/RELEASE-v1.0.0-alpha.2-KR.mp4) | [M4A](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.2/.release-notes/RELEASE-v1.0.0-alpha.2-KR.m4a)
+**발표 자료**: [PDF](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.2/.release-notes/v1/v1.0.0-alpha.2/RELEASE-v1.0.0-alpha.2-KR.pdf) | [PPTX](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.2/.release-notes/v1/v1.0.0-alpha.2/RELEASE-v1.0.0-alpha.2-KR.pptx) | [MP4](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.2/.release-notes/v1/v1.0.0-alpha.2/RELEASE-v1.0.0-alpha.2-KR.mp4) | [M4A](https://github.com/hhko/Functorium/blob/v1.0.0-alpha.2/.release-notes/v1/v1.0.0-alpha.2/RELEASE-v1.0.0-alpha.2-KR.m4a)
 
 ## 개요
 
-Functorium v1.0.0-alpha.2는 **DDD 도메인 모델링 프레임워크**와 **Functorium.Adapters 프로젝트 분리**를 핵심으로 하는 대규모 릴리스입니다. 도메인 중심 기능 아키텍처를 본격적으로 구현할 수 있도록 Entity, AggregateRoot, Specification, Domain Event 등 전체 DDD 빌딩 블록을 제공하며, 관측성(Observability) 시스템을 ctx.* 컨텍스트 전파 기반으로 근본적으로 재설계했습니다.
+Functorium v1.0.0-alpha.2는 **DDD 도메인 모델링 프레임워크**와 **Functorium.Adapters 프로젝트 분리**를 핵심으로 하는 대규모 릴리스입니다. 도메인 중심 기능 아키텍처를 본격적으로 구현할 수 있도록 Entity, AggregateRoot, Specification, Domain Event 등 전체 DDD 빌딩 블록을 제공하며, 관측성(Observability) 시스템을 `ctx.*` 컨텍스트 전파 기반으로 근본적으로 재설계했습니다.
 
 **주요 기능**:
 
@@ -14,7 +14,7 @@ Functorium v1.0.0-alpha.2는 **DDD 도메인 모델링 프레임워크**와 **Fu
 - **계층별 타입 안전 에러 시스템**: DomainError, ApplicationError, AdapterError로 분리된 sealed record 기반 에러 타입 계층
 - **Functorium.Adapters 프로젝트 분리**: Pipeline, Observability, Repository 구현체를 독립 패키지로 추출하여 의존성 최소화
 - **검증 시스템 확장**: Contextual/Typed 검증, Apply/ApplyT 패턴, FluentValidation 통합
-- **ctx.* 관측성 재설계**: CtxEnricher + 소스 생성기 기반 구조화된 로그 컨텍스트 전파
+- **`ctx.*` 관측성 재설계**: CtxEnricher + 소스 생성기 기반 구조화된 로그 컨텍스트 전파
 - **아키텍처 테스트 Suite**: DomainArchitectureTestSuite, ApplicationArchitectureTestSuite로 규칙 검증 자동화
 
 ## Breaking Changes
@@ -448,7 +448,7 @@ var finT =
 
 ---
 
-#### 10. ctx.* 관측성 컨텍스트 전파
+#### 10. `ctx.*` 관측성 컨텍스트 전파
 
 `CtxEnricher` 인터페이스와 소스 생성기를 통해 구조화된 로그 컨텍스트를 자동 전파합니다. `[CtxRoot]`, `[CtxTarget]`, `[CtxIgnore]` 어트리뷰트로 필드를 선언적으로 제어합니다.
 
@@ -754,7 +754,7 @@ var data = logCtx.ExtractFirstLogData();
 **Why this matters (왜 중요한가):**
 - 관측성 파이프라인이 올바른 구조화된 필드를 생성하는지 단위 테스트로 검증할 수 있습니다
 - `ExtractLogData()`로 로그 이벤트에서 구조화된 데이터를 추출하여 필드별 Assertion이 가능합니다
-- `LogContext` 기반 Enrichment도 함께 캡처하여 ctx.* 컨텍스트 전파를 검증할 수 있습니다
+- `LogContext` 기반 Enrichment도 함께 캡처하여 `ctx.*` 컨텍스트 전파를 검증할 수 있습니다
 
 <!-- 관련 커밋: a5e85cd5 feat(test): Application Layer 로그 필드 검증 테스트 추가 -->
 

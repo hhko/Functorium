@@ -155,7 +155,8 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/v')
       run: |
         VERSION=${{ steps.version.outputs.version }}
-        RELEASE_NOTE_FILE=".release-notes/RELEASE-${VERSION}.md"
+        MAJOR_VERSION=$(echo "$VERSION" | grep -oP '^v\d+')
+        RELEASE_NOTE_FILE=".release-notes/${MAJOR_VERSION}/${VERSION}/RELEASE-${VERSION}.md"
 
         if [ -f "$RELEASE_NOTE_FILE" ]; then
           echo "exists=true" >> $GITHUB_OUTPUT
@@ -167,27 +168,15 @@ jobs:
           echo "::notice::Release note file not found: $RELEASE_NOTE_FILE"
         fi
 
-    - name: Delete existing release assets
+    - name: Delete existing release
       if: startsWith(github.ref, 'refs/tags/v')
       run: |
         VERSION=${{ steps.version.outputs.version }}
 
         if gh release view "$VERSION" &>/dev/null; then
-          echo "Found existing release: $VERSION"
-
-          ASSETS=$(gh release view "$VERSION" --json assets -q '.assets[].name')
-          if [ -n "$ASSETS" ]; then
-            echo "Deleting existing assets..."
-            echo "$ASSETS" | while read -r asset; do
-              if [ -n "$asset" ]; then
-                echo "  Deleting: $asset"
-                gh release delete-asset "$VERSION" "$asset" --yes
-              fi
-            done
-            echo "✓ All existing assets deleted"
-          else
-            echo "No existing assets to delete"
-          fi
+          echo "Found existing release: $VERSION — deleting..."
+          gh release delete "$VERSION" --yes --cleanup-tag=false
+          echo "✓ Existing release deleted"
         else
           echo "No existing release found for $VERSION"
         fi
