@@ -1,0 +1,11 @@
+{
+  "search.label": "검색",
+  "skipLink.label": "본문으로 건너뛰기",
+  "page.editLink": "이 페이지 수정하기",
+  "page.lastUpdated": "최근 업데이트:",
+  "aside.note": "참고",
+  "aside.tip": "팁",
+  "aside.caution": "주의",
+  "aside.danger": "위험",
+  "i18n.untranslatedContent": "이 페이지는 아직 한국어로 번역되지 않았습니다."
+}
