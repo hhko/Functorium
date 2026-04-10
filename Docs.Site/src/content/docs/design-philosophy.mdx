@@ -1,0 +1,471 @@
+---
+title: Design Philosophy
+description: Domain-centric design, functional architecture, and Observability by Design
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Functorium's design is based on three principles. This page explains why each principle is necessary and how Functorium implements it.
+
+## Domain-Centric Design
+
+**Principle:** All core business logic resides within the domain model, and a Ubiquitous Language is consistently reflected across code, documentation, and operational metrics.
+
+**Why it matters:** When business rules are scattered across Controllers or Services, changing a rule requires modifying multiple locations, and consistency breaks down. When the domain model becomes the Single Source of Truth for rules, changes occur in only one place.
+
+**Functorium implementation:** The domain model is composed of Value Objects (value-based equality + immutability), Entity/AggregateRoot (Ulid ID + events), DomainError (structured error codes), and Domain Events (Mediator Pub/Sub).
+
+### Value Object — Value-Based Equality and Immutability
+
+A Value Object is compared by value, not by reference. Objects with identical components returned by `GetEqualityComponents()` are treated as equal.
+
+```csharp
+public abstract class AbstractValueObject : IValueObject, IEquatable<AbstractValueObject>
+{
+    protected abstract IEnumerable<object> GetEqualityComponents();
+
+    // Value-based equality, cached hash code, ORM proxy handling
+}
+```
+
+Validation rules are defined in a single Value Object location, and `ValidationRules<T>` chaining automatically generates error codes for each condition. The following is a Value Object representing an email address. The `Fin<Email>` returned by `Create` contains an `Email` instance for valid input or an error code for invalid input. No exceptions are thrown, and the possibility of validation logic being scattered is structurally eliminated.
+
+```csharp
+// On validation failure, condition-specific DomainErrors are auto-generated:
+//   "DomainErrors.Email.Null", "DomainErrors.Email.Empty",
+//   "DomainErrors.Email.TooLong", "DomainErrors.Email.InvalidFormat"
+public sealed partial class Email : SimpleValueObject<string>
+{
+    public const int MaxLength = 320;
+
+    private Email(string value) : base(value) { }
+
+    public static Fin<Email> Create(string? value) =>
+        CreateFromValidation(Validate(value), v => new Email(v));
+
+    // Each validation condition that fails generates a corresponding error code.
+    //   NotNull  → "DomainErrors.Email.Null"
+    //   NotEmpty → "DomainErrors.Email.Empty"
+    //   MaxLength→ "DomainErrors.Email.TooLong"
+    //   Matches  → "DomainErrors.Email.InvalidFormat"
+    // Composite Value Objects use the Apply pattern to validate multiple fields
+    // in parallel, collecting all failures at once.
+    public static Validation<Error, string> Validate(string? value) =>
+        ValidationRules<Email>
+            .NotNull(value)             // → "DomainErrors.Email.Null"
+            .ThenNotEmpty()             // → "DomainErrors.Email.Empty"
+            .ThenNormalize(v => v.Trim().ToLowerInvariant())
+            .ThenMaxLength(MaxLength)   // → "DomainErrors.Email.TooLong"
+            .ThenMatches(EmailRegex(), "Invalid email format");  // → "DomainErrors.Email.InvalidFormat"
+}
+```
+
+### Entity / AggregateRoot — Ulid-Based ID and Domain Events
+
+Entities are identified by Ulid-based IDs, and AggregateRoots manage domain events.
+
+```csharp
+public interface IEntityId<T> : IEquatable<T>, IComparable<T>
+    where T : struct, IEntityId<T>
+{
+    Ulid Value { get; }
+    static abstract T New();
+    static abstract T Create(Ulid id);
+    static abstract T Create(string id);
+}
+
+public abstract class AggregateRoot<TId> : Entity<TId>, IDomainEventDrain
+    where TId : struct, IEntityId<TId>
+{
+    protected void AddDomainEvent(IDomainEvent domainEvent);
+    public void ClearDomainEvents();
+}
+```
+
+### DomainError — Structured Error Codes
+
+Error codes are automatically generated from type names. Thanks to this structure, error codes appear with the same name across code, logs, and operational dashboards.
+
+```csharp
+// "DomainErrors.Email.Empty"
+DomainError.For<Email>(new Empty(), value, "Email cannot be empty");
+
+// "DomainErrors.Password.TooShort"
+DomainError.For<Password>(new TooShort(MinLength: 8), value, "Password too short");
+```
+
+### Domain Event — Mediator-Based Pub/Sub
+
+Domain events integrate Mediator-based Pub/Sub with event tracing. `CorrelationId` and `CausationId` enable tracking of event causality.
+
+```csharp
+public interface IDomainEvent : INotification
+{
+    DateTimeOffset OccurredAt { get; }
+    Ulid EventId { get; }
+    string? CorrelationId { get; }
+    string? CausationId { get; }
+}
+```
+
+## Functional Architecture
+
+**Principle:** Core domain logic is composed of pure functions. Given the same input, the output is always the same, and side effects are declared at the type level.
+
+**Why it matters:** Pure functions always return the same output for the same input. This simplifies testing and makes code behavior predictable. Exception-based flow control creates implicit branches that make code paths difficult to trace. Using `Fin<T>` and `FinT<IO, T>`, all failure paths are visible in the type, and domain flows can be composed using LINQ.
+
+**Functorium implementation:** `Fin<T>` replaces exceptions with explicit result types, `FinT<IO, T>` tracks side effects, and CQRS separates Commands from Queries.
+
+### `Fin<T>`, `FinT<IO, T>` — Explicit Result Types
+
+Repositories return `FinT<IO, T>` to express side effects at the type level. `Fin<T>` represents pure success/failure, while `FinT<IO, T>` represents success/failure that includes IO side effects.
+
+```csharp
+public interface IRepository<TAggregate, TId> : IObservablePort
+    where TAggregate : AggregateRoot<TId>
+    where TId : struct, IEntityId<TId>
+{
+    FinT<IO, TAggregate> Create(TAggregate aggregate);
+    FinT<IO, TAggregate> GetById(TId id);
+    FinT<IO, TAggregate> Update(TAggregate aggregate);
+    FinT<IO, Unit> Delete(TId id);
+}
+```
+
+### CQRS — Command/Query Separation
+
+Command (write) and Query (read) paths are separated, and results are unified with `FinResponse<T>`. Commands use `IRepository` (Domain layer, EF Core, returns Aggregate Root), while Queries use `IQueryPort` (Application layer, Dapper, direct DTO projection).
+
+<Tabs>
+  <TabItem label="Command">
+```csharp
+public interface ICommandRequest<TSuccess> : ICommand<FinResponse<TSuccess>> { }
+public interface ICommandUsecase<in TCommand, TSuccess>
+    : ICommandHandler<TCommand, FinResponse<TSuccess>>
+    where TCommand : ICommandRequest<TSuccess> { }
+```
+  </TabItem>
+  <TabItem label="Query">
+```csharp
+public interface IQueryRequest<TSuccess> : IQuery<FinResponse<TSuccess>> { }
+public interface IQueryUsecase<in TQuery, TSuccess>
+    : IQueryHandler<TQuery, FinResponse<TSuccess>>
+    where TQuery : IQueryRequest<TSuccess> { }
+```
+  </TabItem>
+</Tabs>
+
+### Pipeline Execution Order
+
+All use cases automatically pass through a Pipeline. Commands and Queries have different Pipeline configurations based on their path characteristics.
+
+> **Command (7 stages):** Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler
+>
+> **Query (8 stages):** Metrics → Tracing → Logging → Validation → Caching → Exception → Custom → Handler
+
+This ordering is intentional:
+
+1. **Metrics and Tracing** execute first to measure the total execution time, including all activities in subsequent Pipeline stages.
+2. **Logging** is positioned before Validation so that all requests, including validation failures, are recorded.
+3. **Validation** verifies input before business logic execution, preventing unnecessary database round-trips.
+4. **Caching** is Query-only. Positioned before Exception, it returns immediately on cache hits without requiring a transaction.
+5. **Exception** converts exceptions into structured errors, enabling clean rollback handling for subsequent Pipeline stages.
+6. **Transaction** is Command-only. It wraps only the actual business logic within a transaction boundary, and automatically handles `SaveChanges` and domain event publishing.
+7. **Custom** is a per-project extension point. Project-specific cross-cutting concerns such as audit logging and authorization checks can be inserted here.
+
+## Observability by Design
+
+**Principle:** Operational stability is addressed at the design stage, not after deployment.
+
+**Why it matters:** Adding observability after the fact breaks consistency and introduces omissions. To avoid the situation where "this use case has no logs" during an incident, instrumentation must be automatically applied to all use cases. Functorium solves this with three layers of automatic instrumentation.
+
+### 3-Pillar Automatic Instrumentation — Everything Is Recorded Without a Single Line of Code
+
+When any Command/Query passes through the Pipeline, **Logging, Metrics, and Tracing all record the same fields consistently** from request to response. Developers do not need to write any logging code.
+
+| Field/Tag | Logging | Metrics | Tracing | Meaning |
+|-----------|:-------:|:-------:|:-------:|---------|
+| `request.layer` | ✅ | ✅ | ✅ | Architecture layer (`"application"`) |
+| `request.category.type` | ✅ | ✅ | ✅ | CQRS type (`"command"`, `"query"`, `"event"`) |
+| `request.handler.name` | ✅ | ✅ | ✅ | Handler class name |
+| `response.status` | ✅ | ✅ | ✅ | Response status (`"success"`, `"failure"`) |
+| `response.elapsed` | ✅ | — | ✅ | Elapsed time (seconds). Metrics use `duration` Histogram |
+| `error.type` | ✅ | ✅ | ✅ | Error classification (`"expected"`, `"exceptional"`, `"aggregate"`) |
+| `error.code` | ✅ | ✅ | ✅ | Domain-specific error code |
+
+This field schema is applied identically to the Adapter layer. All ports wrapped with `[GenerateObservablePort]` — Repository, QueryAdapter, ExternalService, etc. — are recorded with the same `request.*` / `response.*` / `error.*` structure. Only `request.layer` changes to `"adapter"`; the remaining field names are identical.
+
+**Error classification is also automatic.** Business rule violations ("insufficient stock") are classified as `expected`, system failures (`NullReferenceException`) as `exceptional`, and composite validation failures as `aggregate`. When the operations team filters by `error.type = "expected"` in Seq or Grafana, they see only business errors; filtering by `"exceptional"` shows only system failures.
+
+### DomainEvent Instrumentation — Event Publishing and Handling Are Also Fully Covered
+
+DomainEvent Publishers and Handlers are also automatically instrumented with all 3 Pillars. Publishers record `request.event.count` (batch event count), while Handlers record `request.event.type` (event type name) and `request.event.id` (event unique ID). In cases of Partial Failure, `response.event.success_count` and `response.event.failure_count` are automatically recorded separately, enabling tracking of which events failed.
+
+### ctx.* — Propagating Business Context to All 3 Pillars Simultaneously
+
+Beyond the `request.*` / `response.*` fields automatically recorded by the framework, business-specific attributes (customer ID, order amount, region code, etc.) must also be included in instrumentation. Functorium's `CtxEnricher` Source Generator automatically detects public properties of Request/Response records and converts them to `ctx.{snake_case}` fields.
+
+```csharp
+public sealed record Request(
+    string CustomerId,                           // → ctx.place_order_command.request.customer_id (L+T)
+    [CtxTarget(CtxPillar.All)] bool IsExpress,   // → ctx.place_order_command.request.is_express (L+T+M)
+    [CtxTarget(CtxPillar.Default | CtxPillar.MetricsValue)]
+    int ItemCount                                // → ctx.place_order_command.request.item_count (L+T+Histogram)
+) : ICommandRequest<Response>;
+```
+
+The `[CtxTarget]` attribute provides fine-grained control over which Pillars receive propagation:
+
+| Pillar | Default | Description |
+|--------|:-------:|-------------|
+| **Logging** | ✅ | Outputs structured log fields via Serilog `LogContext.PushProperty` |
+| **Tracing** | ✅ | Outputs Span Attributes via `Activity.Current?.SetTag` |
+| **MetricsTag** | opt-in | Adds as a Counter/Histogram dimension (low cardinality only) |
+| **MetricsValue** | opt-in | Records numeric fields to a Histogram instrument |
+
+`[CtxIgnore]` excludes debug-only fields from all Pillars, and `[CtxRoot]` promotes interface-level common fields (e.g., `RegionCode`) to `ctx.region_code`. The `DomainEventCtxEnricherGenerator` applies the same mechanism to DomainEvent Handlers.
+
+### IObservablePort — Automatic Adapter Port Instrumentation
+
+All external dependencies are abstracted as observable ports by implementing `IObservablePort`.
+
+```csharp
+public interface IObservablePort
+{
+    string RequestCategory { get; }  // "repository", "query", "external", etc.
+}
+```
+
+Declaring the `[GenerateObservablePort]` attribute causes the Source Generator to automatically create an `Observable{ClassName}` wrapper that wraps the original implementation. The wrapper transparently provides Tracing Spans at method entry/exit, execution time Histograms, and structured Logging.
+
+```csharp
+[GenerateObservablePort]  // → ObservableOrderRepository auto-generated
+public class OrderRepository : IRepository<Order, OrderId> { ... }
+```
+
+By registering the Observable wrapper in the DI container, all port calls are automatically instrumented without modifying any business code. Because use cases in the Application layer and ports in the Adapter layer use the **same Field/Tag naming** (`request.*`, `response.*`, `error.*`), the entire request flow can be traced with a single dashboard query.
+
+### 5 Source Generators — Compile-Time Auto-Generation
+
+Functorium uses 5 Source Generators to automatically generate repetitive bridge code at compile time.
+
+| Generator | Trigger | Generated Output |
+|-----------|---------|------------------|
+| `[GenerateEntityId]` | Entity class | `{Entity}Id` struct + ValueConverter + ValueComparer |
+| `[GenerateObservablePort]` | Adapter implementation | `Observable{Class}` wrapper (Tracing + Logging + Metrics) |
+| `CtxEnricherGenerator` | ICommandRequest/IQueryRequest implementation | `{Request}CtxEnricher` (ctx.* 3-Pillar auto enrichment) |
+| `DomainEventCtxEnricherGenerator` | IDomainEventHandler implementation | `{Event}CtxEnricher` (event ctx.* enrichment) |
+| `[UnionType]` | abstract partial record | `Match<T>`, `Switch`, `Is{Case}`, `As{Case}()` methods |
+
+### Instrumentation Path Summary
+
+Functorium automates observability through three paths.
+
+| Instrumentation Path | Target | Mechanism | Recorded Content |
+|---------------------|--------|-----------|------------------|
+| **Usecase Pipeline** | All Commands/Queries | Mediator `IPipelineBehavior` | request/response fields + ctx.* + error classification |
+| **Observable Port** | Repository, QueryAdapter, ExternalService | `[GenerateObservablePort]` Source Generator | Same request/response field schema |
+| **DomainEvent** | Publisher + Handler | `ObservableDomainEventPublisher` | Event type/count + partial failure tracking |
+
+| Pipeline | Role | Scope |
+|----------|------|-------|
+| `CtxEnricherPipeline` | ctx.* business context 3-Pillar propagation | Common (first in order) |
+| `UsecaseMetricsPipeline` | Automatic use case metrics collection | Common |
+| `UsecaseTracingPipeline` | Distributed tracing context propagation | Common |
+| `UsecaseLoggingPipeline` | Automatic structured log recording | Common |
+| `UsecaseValidationPipeline` | FluentValidation-based input validation | Common |
+| `UsecaseCachingPipeline` | ICacheable request caching | Query only |
+| `UsecaseExceptionPipeline` | Exception → structured error conversion | Common |
+| `UsecaseTransactionPipeline` | Transaction boundary + domain event publishing | Command only |
+
+## Integrated Example
+
+The three design philosophies do not exist independently — they combine naturally within a single use case. Here we follow a "Create Customer" scenario to see how domain-centric design protects Value Objects, how functional architecture assembles use cases, and how Observability is automatically applied.
+
+### Domain Layer — Always-Valid Value Object
+
+To create a customer, the email address must first be valid. The `Email` Value Object introduced earlier completes all validations at creation time, so there is no path through which an invalid email can enter the system. When a validation condition fails, error codes like `"DomainErrors.Email.Empty"` or `"DomainErrors.Email.TooLong"` are automatically generated, allowing the cause to be immediately identified in logs.
+
+Composite Value Objects (e.g., customer information) use the Apply pattern to validate multiple fields in parallel. If the name is empty and the email format is invalid, both errors are collected and returned in a single response. Unlike the approach of validating individual fields sequentially and stopping at the first error, users can see and fix all issues at once.
+
+### Application Layer — CQRS Usecase
+
+Once domain objects are prepared, the use case assembles them. In the Command (write) path, `FinT<IO, T>`'s `from ... in ... select` syntax composes side effects. Email duplication check, customer creation, and response transformation are expressed as a single declarative pipeline. When a business rule is violated, `ApplicationError` automatically generates an error code in the format `"ApplicationErrors.CreateCustomerCommand.AlreadyExists"`.
+
+In the Query (read) path, Dapper projects directly to DTOs without reconstructing Aggregates. While read and write paths each use their optimal technology, the result type is unified as `FinResponse<T>`.
+
+```csharp
+// ── Command Path ──────────────────────────────────────────────
+// ICustomerRepository : IRepository<Customer, CustomerId>
+//   → Port defined in the Domain layer. Persists at the Aggregate Root level
+//   → Return type: FinT<IO, Customer> (domain object)
+//   → Implementation: EF Core (change tracking, transactions)
+
+using static Functorium.Applications.Errors.ApplicationErrorType;
+
+public sealed class CreateCustomerCommand
+{
+    public sealed record Request(string Name, string Email, decimal CreditLimit)
+        : ICommandRequest<Response>;
+    public sealed record Response(string CustomerId, string Name, string Email);
+
+    public sealed class Usecase(ICustomerRepository repository)
+        : ICommandUsecase<Request, Response>
+    {
+        public async ValueTask<FinResponse<Response>> Handle(
+            Request request, CancellationToken token)
+        {
+            FinT<IO, Response> usecase =
+                from exists  in repository.Exists(new CustomerEmailSpec(email))
+                from _       in guard(!exists, ApplicationError.For<CreateCustomerCommand>(
+                    new AlreadyExists(),                    // ApplicationErrorType sealed record
+                    request.Email,                          // current value
+                    $"Email already exists: '{request.Email}'"))
+                from customer in repository.Create(newCustomer)
+                select new Response(
+                    customer.Id.ToString(), customer.Name, customer.Email);
+
+            Fin<Response> result = await usecase.Run().RunAsync();
+            return result.ToFinResponse();
+        }
+    }
+}
+
+// ── Query Path ────────────────────────────────────────────────
+// ICustomerDetailQuery : IQueryPort
+//   → Port defined in the Application layer. Projects directly to DTO without Aggregate reconstruction
+//   → Return type: FinT<IO, CustomerDetailDto> (read-only DTO)
+//   → Implementation: Dapper (lightweight SQL mapping)
+
+public sealed class GetCustomerByIdQuery
+{
+    public sealed record Request(string CustomerId) : IQueryRequest<Response>;
+    public sealed record Response(string CustomerId, string Name, string Email);
+
+    public sealed class Usecase(ICustomerDetailQuery query)
+        : IQueryUsecase<Request, Response>
+    {
+        public async ValueTask<FinResponse<Response>> Handle(
+            Request request, CancellationToken token)
+        {
+            FinT<IO, Response> usecase =
+                from dto in query.GetById(CustomerId.Create(request.CustomerId))
+                select new Response(dto.CustomerId, dto.Name, dto.Email);
+
+            Fin<Response> result = await usecase.Run().RunAsync();
+            return result.ToFinResponse();
+        }
+    }
+}
+```
+
+:::tip[Layer-Specific Structured Errors]
+Error codes have an independent hierarchy per layer. Domain validation failures, business rule violations, and infrastructure failures are each distinguished by different prefixes, so when reviewing logs, the origin and nature of an error can be immediately identified.
+
+- **Domain:** `DomainError.For<Email>(new Empty(), ...)` → `"DomainErrors.Email.Empty"`
+- **Application:** `ApplicationError.For<CreateCustomerCommand>(new AlreadyExists(), ...)` → `"ApplicationErrors.CreateCustomerCommand.AlreadyExists"`
+- **Adapter:** `AdapterError.For<OrderRepository>(new NotFound(), ...)` → `"AdapterErrors.OrderRepository.NotFound"`
+
+These errors are output as structured logs. Single validation failures are classified as `expected` type, while composite failures from the Apply pattern are classified as `aggregate` type. In log analysis tools like Seq, you can filter by `error.code` or `error.type`.
+
+```json
+// Single error — Domain validation failure
+{
+  "error.code": "DomainErrors.Email.Empty",
+  "error.type": "expected",
+  "@error": {
+    "ErrorCode": "DomainErrors.Email.Empty",
+    "ErrorCurrentValue": "",
+    "Message": "Email cannot be empty"
+  }
+}
+
+// Composite error — Multiple field failures collected via Apply pattern
+{
+  "error.code": "DomainErrors.Email.Empty",
+  "error.type": "aggregate",
+  "@error": {
+    "Errors": [
+      { "ErrorCode": "DomainErrors.Email.Empty", "ErrorCurrentValue": "", "Message": "Email cannot be empty" },
+      { "ErrorCode": "DomainErrors.Password.TooShort", "ErrorCurrentValue": "ab", "Message": "Password too short" }
+    ]
+  }
+}
+```
+:::
+
+### Adapter Layer — Two Automatic Instrumentation Paths
+
+When the customer creation use case above is executed, structured logs are automatically output even though the developer has not written a single line of instrumentation code. This is the reality of "Observability by Design."
+
+The Usecase Pipeline (`IPipelineBehavior`) instruments the **external I/O** of all Commands/Queries, while the Source Generator (`[GenerateObservablePort]`) instruments the **internal I/O** of Repositories, QueryAdapters, and other ports. The two paths combine so that the entire request flow is automatically traced.
+
+```json
+// ── Request (EventId: 1001 application.request) ──────────────────
+{
+  "Level": "Information",
+  "EventId": { "Id": 1001, "Name": "application.request" },
+  "MessageTemplate": "{request.layer} {request.category}.{request.category.type} {request.handler}.{request.handler.method} requesting with {@request.message}",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category.type": "command",
+  "request.handler": "CreateCustomerCommand",
+  "request.handler.method": "Handle",
+  "@request.message": {
+    "Name": "Alice",
+    "Email": "alice@example.com",
+    "CreditLimit": 1000.00
+  }
+}
+
+// ── Success Response (EventId: 1002 application.response.success) ────
+{
+  "Level": "Information",
+  "EventId": { "Id": 1002, "Name": "application.response.success" },
+  "MessageTemplate": "... responded {response.status} in {response.elapsed:0.0000} s with {@response.message}",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category.type": "command",
+  "request.handler": "CreateCustomerCommand",
+  "request.handler.method": "Handle",
+  "response.status": "success",
+  "response.elapsed": 0.0234,
+  "@response.message": {
+    "CustomerId": "01JN...",
+    "Name": "Alice",
+    "Email": "alice@example.com"
+  }
+}
+
+// ── Failure Response: Expected Error (EventId: 1003 application.response.warning) ──
+{
+  "Level": "Warning",
+  "EventId": { "Id": 1003, "Name": "application.response.warning" },
+  "MessageTemplate": "... responded {response.status} in {response.elapsed:0.0000} s with {error.type}:{error.code} {@error}",
+  "request.layer": "application",
+  "request.category": "usecase",
+  "request.category.type": "command",
+  "request.handler": "CreateCustomerCommand",
+  "request.handler.method": "Handle",
+  "response.status": "failure",
+  "response.elapsed": 0.0012,
+  "error.type": "expected",
+  "error.code": "ApplicationErrors.CreateCustomerCommand.AlreadyExists",
+  "@error": {
+    "ErrorCode": "ApplicationErrors.CreateCustomerCommand.AlreadyExists",
+    "ErrorCurrentValue": "alice@example.com",
+    "Message": "Email already exists: 'alice@example.com'"
+  }
+}
+```
+
+:::tip[Two Paths of Automatic Instrumentation]
+**External (use case) instrumentation** — Mediator `IPipelineBehavior` is automatically applied to all use cases:
+- `UsecaseLoggingPipeline`: Records requests, responses, and errors as structured logs (EventId 1001–1004)
+- `UsecaseMetricsPipeline`: Collects request count, response count, and processing time
+- `UsecaseTracingPipeline`: Creates Activity-based distributed traces
+
+**Internal (Adapter) instrumentation** — `[GenerateObservablePort]` generates Observable wrappers for Repository, QueryAdapter, and other implementation classes at compile time (EventId 2001–2004).
+
+Errors are classified into three types: `expected` (business error → Warning level), `exceptional` (system error → Error level), `aggregate` (composite error → Error level). Log levels are automatically determined based on this classification, so the operations team can monitor only the Error level and never miss a system failure.
+:::

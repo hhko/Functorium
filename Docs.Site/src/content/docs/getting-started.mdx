@@ -1,0 +1,111 @@
+---
+title: Getting Started
+description: Functorium installation, tutorials, and Observability guide
+---
+
+import { Steps, LinkCard, CardGrid } from '@astrojs/starlight/components';
+
+:::tip[5-Minute Quickstart]
+If you want to start writing code right away, try building a Value Object → AggregateRoot → Command Usecase in the [5-Minute Quickstart](/Functorium/quickstart/).
+:::
+
+## Installation
+
+:::tip[.NET 8 or Later]
+Functorium supports .NET 8 and above. Make sure your project's `TargetFramework` is `net8.0` or later.
+:::
+
+<Steps>
+
+1. **Install the Core Library**
+
+   Provides the essential types needed for domain modeling and use case implementation (Value Object, Entity, `Fin<T>`, CQRS interfaces). Required for all projects.
+
+   ```bash
+   dotnet add package Functorium
+   ```
+
+2. **Install Source Generators**
+
+   Provides the `[GenerateObservablePort]`, `[GenerateEntityId]`, and `CtxEnricherGenerator` source generators. Add to your Adapter project.
+
+   ```bash
+   dotnet add package Functorium.SourceGenerators
+   ```
+
+3. **Install Testing Utilities**
+
+   Provides testing utilities including architecture rule validation and structured log testing. Add to your test project.
+
+   ```bash
+   dotnet add package Functorium.Testing
+   ```
+
+</Steps>
+
+## Creating Your First Value Object
+
+The first thing to try after installing Functorium is an Always-valid Value Object. The following is a minimal implementation of a Value Object representing an email address.
+
+```csharp
+public sealed partial class Email : SimpleValueObject<string>
+{
+    public const int MaxLength = 320;
+
+    private Email(string value) : base(value) { }
+
+    public static Fin<Email> Create(string? value) =>
+        CreateFromValidation(Validate(value), v => new Email(v));
+
+    public static Validation<Error, string> Validate(string? value) =>
+        ValidationRules<Email>
+            .NotNull(value)
+            .ThenNotEmpty()
+            .ThenNormalize(v => v.Trim().ToLowerInvariant())
+            .ThenMaxLength(MaxLength);
+}
+```
+
+The `Create` method returns `Fin<Email>`. For valid input, an `Email` instance is returned; for invalid input, a structured error code (such as `DomainErrors.Email.Empty`) is returned. No exceptions are thrown.
+
+For detailed Value Object implementation patterns, see the [Value Objects Guide](/Functorium/guides/domain/05a-value-objects/).
+
+## Tutorials
+
+Learn Functorium's core concepts through step-by-step hands-on exercises.
+
+| Tutorial | Topic | Exercises |
+|----------|-------|-----------|
+| [Functional Value Object Implementation](/Functorium/tutorials/functional-valueobject/) | Value Object, validation, immutability | 29 |
+| [Specification Pattern](/Functorium/tutorials/specification-pattern/) | Specification, Expression Tree | 18 |
+| [CQRS Repository Pattern](/Functorium/tutorials/cqrs-repository/) | CQRS, Repository, Query Adapter | 22 |
+| [Usecase Pipeline Constraints](/Functorium/tutorials/usecase-pipeline/) | Generic variance, IFinResponse, Pipeline constraints | 20 |
+| [Architecture Rule Testing](/Functorium/tutorials/architecture-rules/) | Architecture rules, ClassValidator | 16 |
+| [Source Generator Observability](/Functorium/tutorials/sourcegen-observability/) | Source Generator, Observable wrapper | — |
+| [Release Note Automation](/Functorium/tutorials/release-notes-claude/) | AI automation, release notes | — |
+
+## Observability
+
+Functorium provides OpenTelemetry-based 3-Pillar observability (Logging, Metrics, Tracing).
+All observability fields use `snake_case + dot` notation for consistency with OpenTelemetry semantic conventions.
+The Command Pipeline (7 stages) and Query Pipeline (8 stages) automatically apply instrumentation to all use cases, and the `CtxEnricher` Source Generator automatically propagates business context (`ctx.*` fields) to Logging and Tracing.
+
+![Functorium Observability](../../assets/Functorium.Observability.png)
+
+<CardGrid>
+  <LinkCard title="Observability Specification" href="/Functorium/spec/08-observability/" description="Field/Tag structure, Meter/Instrument specification, message templates" />
+  <LinkCard title="Logging Guide" href="/Functorium/guides/observability/19-observability-logging/" description="Detailed structured logging guide" />
+  <LinkCard title="Metrics Guide" href="/Functorium/guides/observability/20-observability-metrics/" description="Metrics collection and analysis guide" />
+  <LinkCard title="Tracing Guide" href="/Functorium/guides/observability/21-observability-tracing/" description="Detailed distributed tracing guide" />
+</CardGrid>
+
+## Learning Path
+
+Here is a recommended learning path for making the most of Functorium.
+
+<CardGrid>
+  <LinkCard title="Domain Modeling" href="/Functorium/guides/domain/05a-value-objects/" description="Value Object, Entity, and Aggregate design and implementation patterns" />
+  <LinkCard title="Usecase Implementation" href="/Functorium/guides/application/11-usecases-and-cqrs/" description="Writing CQRS-based Command/Query use cases" />
+  <LinkCard title="Adapter Implementation" href="/Functorium/guides/adapter/13-adapters/" description="Implementing Repository, External API, and Query Adapter" />
+  <LinkCard title="AX (AI Transformation)" href="/Functorium/ax/" description="AI guides the entire DDD development process, from PRD to testing" />
+</CardGrid>

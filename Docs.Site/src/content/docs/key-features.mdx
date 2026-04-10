@@ -1,0 +1,131 @@
+---
+title: Key Features
+description: The 3 core feature areas of Functorium
+---
+
+import { LinkCard, CardGrid } from '@astrojs/starlight/components';
+
+## Type-Safe Functional Domain Modeling
+
+If domain objects can be created in an invalid state, business rule violations are only revealed as runtime exceptions.
+Validation logic becomes scattered across call sites, making it difficult to track where validity has been verified.
+Over time, missed validations lead to bugs, and defensive code proliferates throughout the codebase.
+Functorium solves this problem with a **functional factory pattern that enforces validity at creation time.**
+
+:::note[Core Principle]
+All domain objects are guaranteed to be valid at creation time (Always-valid). Objects in an invalid state cannot exist.
+:::
+
+The Value Object hierarchy provides 6 base types plus Union extensions. Class-based types (`AbstractValueObject` → `ValueObject` / `SimpleValueObject<T>` / `ComparableValueObject` / `ComparableSimpleValueObject<T>`) provide value-based equality and Always-valid factories, while the Record-based type (`UnionValueObject<TSelf>`) supports state machines and Discriminated Unions. This hierarchy
+does not expose constructors directly — instances can only be created through factory methods,
+which structurally blocks any path that bypasses validation.
+Entities and AggregateRoots are identified by Ulid-based type-safe IDs (`IEntityId<T>`),
+and AggregateRoots collect and publish domain events.
+
+On top of this hierarchy, the `FinResponse<T>` Discriminated Union explicitly represents the result of every use case.
+The sealed record-based Success/Failure distinction enables flow control without relying on exceptions.
+Callers can recognize from the return type alone that both success and failure paths must be handled,
+and multiple operations can be naturally composed through LINQ.
+
+Side effect boundaries are tracked at the type level by the `FinT<IO, T>` Monad Transformer.
+By using `FinT<IO, T>` as the return type for Repositories, the boundary between pure and impure functions is declared in the signature,
+enabling callers to recognize the presence of side effects at compile time.
+This allows the pure parts of domain logic and the parts that depend on infrastructure to be distinguished by type.
+
+The `IO` monad provides advanced capabilities including Timeout, Retry (exponential backoff), Fork (parallel execution), and Bracket (resource lifecycle management). Fault tolerance for external service calls can be configured in a type-safe manner, enabling stable infrastructure integration without manual try-catch.
+
+Error handling is also structured.
+Error codes in the form of `DomainErrors.Email.Empty` are automatically generated following 8 naming conventions (R1-R8),
+and `DomainError`, `ApplicationError`, and `AdapterError` are clearly separated by layer.
+The Specification Pattern supports `&`/`|`/`!` operator composition and Expression Tree-based SQL translation,
+with a PropertyMap bridge handling the mapping between domain properties and persistence columns.
+In functional validation, sequential validation (Bind) and parallel validation (Apply) can be combined
+to selectively apply strategies that either stop at the first failure or collect all errors at once.
+
+The practical effect of this design is that more errors are caught at compile time.
+Since invalid objects cannot exist, defensive validation code is reduced,
+and domain flows can be declaratively assembled using LINQ composition.
+As a result, both correctness and composability of domain logic are achieved simultaneously.
+
+## Automatic Code Generation (Source Generators)
+
+Repetitive bridge code is required between the Domain layer and the Adapter layer.
+Writing an Observable wrapper for every port implementation and creating EF Core converters for every domain ID type
+is straightforward but error-prone and carries a significant maintenance burden.
+Each time a new port is added, the same pattern of code must be written again,
+and when the original interface changes, the wrapper must be updated accordingly.
+Functorium's 5 Source Generators eliminate this boilerplate by automatically generating bridge code at compile time.
+
+:::tip[Boilerplate Elimination]
+With a single attribute, Observable wrappers and EntityId converters are auto-generated, completing cross-layer connections without repetitive code.
+:::
+
+Declaring the `[GenerateObservablePort]` attribute on an Adapter port implementation
+causes an Observable wrapper to be auto-generated that includes OpenTelemetry-based Tracing, Logging, and Metrics.
+Observability is granted to all port calls without modifying the original implementation,
+maintaining the separation between observability code and business logic.
+The generated wrapper automatically handles tracing at method entry/exit, execution time metrics, and structured logging.
+
+The `[GenerateEntityId]` attribute auto-generates Ulid-based EntityId types along with
+EF Core `ValueConverter`/`ValueComparer`.
+The strongly-typed IDs from the Domain layer can be used directly in the persistence layer without conversion code,
+completing the persistence bridge between Domain and Adapter with just an attribute declaration.
+Type-safe IDs are maintained while eliminating the need to manually implement conversion logic for database storage and retrieval.
+
+`CtxEnricherGenerator` automatically converts Command/Query Request properties into structured fields in the `ctx.{snake_case}` format, propagating business context to Logging and Tracing. `DomainEventCtxEnricherGenerator` applies the same context enrichment to domain event handlers. The `[UnionType]` attribute generates exhaustive `Match<T>` and `Switch` methods for Discriminated Unions, preventing pattern matching omissions at compile time.
+
+As a result, developers do not need to manually write the repetitive code required for cross-layer connections,
+while still ensuring type safety and observability.
+When an interface changes, the Source Generator automatically regenerates the wrapper,
+so inconsistencies from manual synchronization do not occur.
+
+## Architecture Quality Automation
+
+When architecture rules exist only in documentation, the gap between docs and code widens over time.
+When new team members join or deadlines tighten, rules are easily ignored and technical debt accumulates.
+Even when trying to catch architecture violations in code review, it depends on the reviewer's attention and experience.
+Functorium solves this by embedding architecture rules in the type system and automated tests.
+
+:::note[Preserving Design Intent]
+Architecture rules are embedded in code, ensuring design principles are continuously maintained even without reviewers.
+:::
+
+All use cases pass through a cross-cutting concern Pipeline.
+Commands follow Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom,
+and Queries follow Metrics → Tracing → Logging → Validation → Caching → Exception → Custom order of automatic application.
+Caching is Query-only, Transaction is Command-only, and Custom is a per-project extension point.
+Use case developers need only focus on business logic,
+while observability and transaction management are consistently guaranteed by the Pipeline.
+Pipeline constraints are enforced at the type level through the `IFinResponse` interface hierarchy and CRTP factories,
+guaranteeing minimum constraints per Pipeline without reflection.
+
+Read and write paths are separated using the CQRS pattern.
+The Command path uses `ICommandRequest<T>`, `IRepository`, and EF Core
+to handle domain model state changes,
+while the Query path uses `IQueryRequest<T>`, `IQueryPort`, and Dapper
+to query data through a read-optimized path.
+Cursor pagination is supported by default, maintaining consistent performance for large dataset queries.
+
+Finally, architecture rule tests verify design intent at the code level.
+`ClassValidator`, `InterfaceValidator`, and `MethodValidator`
+enforce immutability, visibility, and inheritance rules as unit tests,
+so rule violations are automatically detected in the CI pipeline.
+For example, tests fail if a Value Object is not sealed or if an Entity constructor is exposed as public.
+Design principles are continuously preserved without reviewers having to check every time.
+
+## Quick Reference
+
+| Area | Key Types/Tools | Role |
+|------|----------------|------|
+| Domain Modeling | `SimpleValueObject<T>`, `UnionValueObject<TSelf>`, `Fin<T>` | Type-safe invariant enforcement |
+| IO Advanced Features | `Timeout`, `Retry`, `Fork`, `Bracket` | Fault tolerance + resource management |
+| Error System | `DomainError`, `ApplicationError`, `AdapterError` | Structured error code auto-generation |
+| CQRS | `ICommandRequest<T>`, `IQueryRequest<T>`, `FinResponse<T>` | Read/write path separation |
+| Code Generation | 5 Source Generators | Compile-time bridge code generation |
+| Quality Automation | `ClassValidator`, `InterfaceValidator` | Architecture rule unit tests |
+| Pipeline | Command 7 stages, Query 8 stages | Automatic cross-cutting concern application |
+
+<CardGrid>
+  <LinkCard title="Design Philosophy" href="/Functorium/design-philosophy/" description="Domain-centric design, functional architecture, Observability by Design" />
+  <LinkCard title="Getting Started" href="/Functorium/getting-started/" description="Functorium installation, tutorials, and Observability guide" />
+</CardGrid>

@@ -1,0 +1,108 @@
+---
+title: Architecture Overview
+description: Domain, Application, Adapter 3-layer architecture
+---
+
+import { FileTree } from '@astrojs/starlight/components';
+
+![Functorium Architecture](../../assets/Functorium.Architecture.png)
+
+Functorium is based on a **3-layer architecture of Domain, Application, and Adapter.** This structure isolates business logic from infrastructure technologies, with the goal of maximizing domain model purity and testability. All dependencies flow inward, and the Domain layer has no dependencies on any external technology.
+
+:::note[Dependency Direction]
+Dependencies flow only in the direction of Adapter → Application → Domain. The Domain layer knows nothing about any external layer.
+:::
+
+## Domain Layer — Pure Business Logic
+
+The Domain layer is the core of the system. It expresses business rules using pure functions without external dependencies, and has absolutely no references to infrastructure technologies such as frameworks or databases.
+
+**Value Objects** guarantee an always-valid state. Validation is completed at creation time, so they can be safely used in subsequent code without additional validation. **Entities** use Ulid-based IDs to ensure uniqueness, and **AggregateRoots** collect domain events to clearly define transaction boundaries. The **Specification Pattern** encapsulates business rules into reusable units.
+
+Domain logic composed of pure functions can be unit tested without Mocks and is naturally composed through LINQ. This purity is the foundation for the testability and change flexibility of the entire architecture.
+
+<FileTree>
+- Domains/
+  - Entities/ Entity, AggregateRoot, IEntityId
+  - ValueObjects/ AbstractValueObject, SimpleValueObject, ComparableSimpleValueObject, UnionValueObject, Validations
+  - Errors/ DomainError, DomainErrorType (27 sealed records)
+  - Events/ IDomainEvent, DomainEvent
+  - Repositories/ IRepository (Command port definition)
+  - Specifications/ Specification, ExpressionSpecification
+  - Services/ IDomainService
+  - Observabilities/ IObservablePort
+</FileTree>
+
+## Application Layer — Usecase Assembly
+
+The Application layer assembles domain objects to implement use cases and explicitly manages side effect boundaries. It depends only on the Domain layer, and when infrastructure access is needed, it defines ports (interfaces) that the Adapter layer implements.
+
+**ICommandRequest** and **IQueryRequest** are the entry points for the CQRS pattern. All use case results are unified with **FinResponse&lt;T&gt;**, explicitly expressing success and failure. The **FinT&lt;IO, T&gt; LINQ extensions** enable composing operations that include side effects as if they were pure functions, allowing complex use cases to be written declaratively.
+
+The **Command path** persists Aggregate Roots through `IRepository<T, TId>` (defined in the Domain layer), while the **Query path** performs Dapper-based direct DTO projection through `IQueryPort` (defined in the Application layer). Because ports are defined in different layers, the concerns of reading and writing are structurally separated.
+
+This layer defines "what needs to be done" but does not concern itself with "how it is performed." Concrete implementations such as database access and external API calls are all delegated to the Adapter layer.
+
+<FileTree>
+- Applications/
+  - Cqrs/ ICommandRequest, IQueryRequest, FinResponse
+  - Events/ IDomainEventHandler, IDomainEventPublisher
+  - Errors/ ApplicationError, EventError
+  - Validations/ FluentValidation extensions
+  - Linq/ FinT LINQ extensions
+  - Queries/ IQueryPort, PagedResult, SortExpression, CursorPagination
+  - Persistence/ IUnitOfWork
+</FileTree>
+
+## Adapter Layer — Infrastructure Implementation
+
+The Adapter layer implements the ports defined by the Application layer, handling data store integration, external system integration, and Observability implementation. It depends on the Domain and Application layers, but no dependency exists in the reverse direction.
+
+**Pipeline Behaviors** are automatically applied to all use cases, instrumenting logging, metrics, and tracing. Because observability code does not penetrate use case code, the readability of business logic is preserved. **DapperQueryAdapterBase** provides a lightweight data access foundation for read-only queries, and **Source Generators** automatically generate repetitive code such as observable port implementations at compile time.
+
+Even when infrastructure technologies are replaced, only this layer needs to be modified. The Domain and Application layers are not affected.
+
+<FileTree>
+- Adapters/
+  - Observabilities/
+    - Builders/ OpenTelemetry configuration
+    - Pipelines/ Usecase Pipeline (Logging, Metrics, Tracing, ...)
+    - Events/ Observable domain event publishing
+    - Loggers/ Structured logger extensions
+    - Naming/ Observability naming conventions
+  - Events/ DomainEventCollector, DomainEventPublisher
+  - Repositories/ DapperQueryAdapterBase
+  - Errors/ AdapterError
+  - Options/ Option settings
+  - SourceGenerators/
+    - [GenerateObservablePort] Observable wrapper
+    - [GenerateEntityId] Ulid ID + ValueConverter
+    - CtxEnricherGenerator ctx.* field auto-generation
+    - DomainEventCtxEnricherGenerator Event context
+    - [UnionType] Discriminated Union pattern matching
+</FileTree>
+
+## Why Dependency Direction Matters
+
+The principle that dependencies always point inward in the 3-layer structure provides the following practical benefits.
+
+**Testability** is ensured. The Domain and Application layers can be tested independently without infrastructure. Core business logic can be rapidly verified without databases or external services.
+
+**Technology flexibility** is guaranteed. Even when switching the ORM from EF Core to another technology, or changing the message broker, no code in the Domain and Application layers needs to be modified. Changes are confined to the Adapter layer.
+
+**Parallel development** becomes possible. Since interfaces between layers are clearly defined, teams responsible for each layer can work independently.
+
+## Quality Derived from Structure
+
+Quality is not achieved at the testing stage — it is embedded in the architecture structure itself.
+
+- Core domain logic maintains a high level of **unit test coverage.** With no external dependencies, it can be rapidly verified without Mocks.
+- Side effect regions are explicitly separated with `FinT<IO, T>`, providing a **verifiable structure.**
+- **Observability verification** is completed before deployment. The Pipeline automatically applies instrumentation to all use cases.
+- Architecture rules are **automatically verified through unit tests** via ClassValidator/InterfaceValidator. Design principles are maintained without reviewers.
+
+Through this structural approach, development and operations collaborate on the same domain model foundation, the scope of change impact becomes predictable, and the costs of repetitive incident response and maintenance are structurally reduced.
+
+---
+
+The key features that compose each layer of Functorium are detailed in [Key Features](/Functorium/key-features/), and practical project application is covered in [Getting Started](/Functorium/getting-started/).
