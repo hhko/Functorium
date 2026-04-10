@@ -1,0 +1,345 @@
+---
+title: "5분 빠른시작"
+description: "5분 안에 Value Object, AggregateRoot, Command Usecase를 만들어 봅니다"
+---
+
+import { Steps, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+
+5분 안에 Functorium으로 **상품(Product) 도메인 모델**을 만들어 봅니다.
+Naive 코드에서 무엇이 깨지는지 확인하고, DDD 패턴으로 **코드가 비즈니스 규칙을 말하도록** 만듭니다.
+
+<Aside type="tip" title="이 가이드에서 만드는 것">
+- 검증이 내장된 **Value Object** (ProductName, Money)
+- 도메인 이벤트를 발행하는 **AggregateRoot** (Product)
+- 예외 없이 결과를 반환하는 **Command Usecase** (CreateProductCommand)
+</Aside>
+
+---
+
+## 1. 문제: Naive 코드의 함정
+
+온라인 상점에서 상품을 관리한다고 가정합니다. 가장 단순한 코드는 이렇습니다:
+
+```csharp
+// Naive 코드 — 모든 값이 허용됩니다
+public class Product
+{
+    public string Name { get; set; } = "";
+    public decimal Price { get; set; }
+}
+```
+
+이 코드는 다음을 **모두 허용합니다:**
+
+- `Name = ""` — 빈 상품명이 DB에 저장됩니다
+- `Price = -500m` — 음수 가격이 카탈로그에 노출됩니다
+- `Name`과 `Description`이 모두 `string` — 컴파일러가 구분할 수 없습니다
+- `new Product()` — 어디서든 검증 없이 생성할 수 있습니다
+
+DDD의 Value Object와 AggregateRoot는 이 모든 문제를 **타입 시스템으로 차단합니다.**
+
+---
+
+## 2. 상품 도메인 용어
+
+코드를 작성하기 전에 비즈니스 용어를 정의합니다. 이 용어는 코드에서 클래스명과 메서드명에 **그대로 반영됩니다.**
+
+| 한글 | 영문 (코드) | 정의 | 비즈니스 규칙 |
+|------|------------|------|-------------|
+| 상품명 | `ProductName` | 상품의 이름 | 100자 이하, 빈 문자열 불가 |
+| 가격 | `Money` | 양수 금액 | 0원, 음수 불가 |
+| 상품 | `Product` | 판매 가능한 품목 | 검증된 값으로만 생성 |
+| 상품 생성됨 | `Product.CreatedEvent` | 상품 생성 사실 | 생성 시 자동 발행 |
+
+---
+
+## 3. 프로젝트 설정
+
+<Steps>
+
+1. **프로젝트 생성**
+
+   ```bash
+   dotnet new classlib -n MyShop.Domain
+   ```
+
+2. **NuGet 패키지 설치**
+
+   ```bash
+   cd MyShop.Domain
+   dotnet add package Functorium
+   dotnet add package Functorium.SourceGenerators
+   ```
+
+</Steps>
+
+---
+
+## 4. Value Object — 규칙을 타입으로
+
+Value Object는 Naive 코드의 `string`과 `decimal`을 **비즈니스 규칙이 내장된 타입**으로 교체합니다.
+`Create()` 메서드는 예외 대신 `Fin<T>`(성공 또는 에러)를 반환합니다.
+
+### ProductName — "상품명은 비어있으면 안 된다"
+
+> **비즈니스 규칙:** 상품명은 null/빈 문자열이 불가하고, 100자 이하여야 하며, 앞뒤 공백은 자동 정리됩니다.
+
+```csharp
+using Functorium.Domains.ValueObjects;
+
+public sealed class ProductName : SimpleValueObject<string>
+{
+    public const int MaxLength = 100;
+
+    private ProductName(string value) : base(value) { }
+
+    // 팩토리: 검증 후 생성. 예외 없이 Fin<ProductName> 반환
+    public static Fin<ProductName> Create(string? value) =>
+        CreateFromValidation(Validate(value), v => new ProductName(v));
+
+    // 검증 규칙 체인: Null → Empty → MaxLength → Normalize
+    public static Validation<Error, string> Validate(string? value) =>
+        ValidationRules<ProductName>
+            .NotNull(value)           // 실패 시 "DomainErrors.ProductName.Null"
+            .ThenNotEmpty()           // 실패 시 "DomainErrors.ProductName.Empty"
+            .ThenMaxLength(MaxLength) // 실패 시 "DomainErrors.ProductName.TooLong"
+            .ThenNormalize(v => v.Trim());
+
+    // ORM 복원용 (검증 생략)
+    public static ProductName CreateFromValidated(string value) => new(value);
+    public static implicit operator string(ProductName name) => name.Value;
+}
+```
+
+각 검증 단계가 어떤 비즈니스 규칙을 강제하는지 추적할 수 있습니다:
+
+| 비즈니스 규칙 | 코드 | 위반 시 에러 |
+|---|---|---|
+| null 불가 | `.NotNull(value)` | `DomainErrors.ProductName.Null` |
+| 빈 문자열 불가 | `.ThenNotEmpty()` | `DomainErrors.ProductName.Empty` |
+| 100자 이하 | `.ThenMaxLength(MaxLength)` | `DomainErrors.ProductName.TooLong` |
+| 공백 정리 | `.ThenNormalize(v => v.Trim())` | (항상 성공) |
+
+### Money — "가격은 양수여야 한다"
+
+> **비즈니스 규칙:** 가격은 반드시 양수여야 합니다. 0원 상품, 음수 가격은 존재할 수 없습니다.
+
+```csharp
+using Functorium.Domains.ValueObjects;
+
+public sealed class Money : ComparableSimpleValueObject<decimal>
+{
+    public static readonly Money Zero = new(0m);
+
+    private Money(decimal value) : base(value) { }
+
+    public static Fin<Money> Create(decimal value) =>
+        CreateFromValidation(Validate(value), v => new Money(v));
+
+    public static Validation<Error, decimal> Validate(decimal value) =>
+        ValidationRules<Money>.Positive(value);  // 실패 시 "DomainErrors.Money.NotPositive"
+
+    public static Money CreateFromValidated(decimal value) => new(value);
+    public static implicit operator decimal(Money money) => money.Value;
+}
+```
+
+`Money.Create(-500m)`은 실패합니다. Naive 코드에서는 `-500`이 그대로 DB에 저장되었을 것입니다.
+
+<Aside type="note" title="에러 코드 자동 생성">
+`ValidationRules<ProductName>.NotNull()`이 실패하면 `"DomainErrors.ProductName.Null"` 에러 코드가 자동 생성됩니다.
+타입 이름이 에러 코드에 포함되므로, 별도의 에러 코드 정의가 불필요합니다.
+</Aside>
+
+---
+
+## 5. AggregateRoot — 상태 변경을 이벤트로
+
+> **왜 AggregateRoot인가?** Product는 일관성 경계의 루트입니다. 상품 생성은 반드시 `CreatedEvent`와 함께 발생해야 하며, 외부에서 `new Product()`로 검증을 우회할 수 없어야 합니다.
+
+`[GenerateEntityId]` 어트리뷰트로 Ulid 기반 ID 타입이 자동 생성됩니다.
+
+```csharp
+using Functorium.Domains.Entities;
+using Functorium.Domains.Events;
+using Functorium.SourceGenerators;
+
+[GenerateEntityId]  // → ProductId 구조체 자동 생성 (Ulid 기반)
+public sealed class Product : AggregateRoot<ProductId>
+{
+    #region Domain Events
+
+    // 도메인 이벤트: Aggregate 내부에 중첩 record로 정의
+    public sealed record CreatedEvent(
+        ProductId ProductId, ProductName Name, Money Price) : DomainEvent;
+
+    #endregion
+
+    // Value Object 속성 (private set으로 불변성 보장)
+    public ProductName Name { get; private set; }
+    public Money Price { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+
+    // private 생성자: 외부에서 new 금지
+    private Product(ProductId id, ProductName name, Money price) : base(id)
+    {
+        Name = name;
+        Price = price;
+        CreatedAt = DateTime.UtcNow;
+    }
+
+    // 팩토리 메서드: 검증된 Value Object를 받아 생성 + 이벤트 발행
+    public static Product Create(ProductName name, Money price)
+    {
+        var product = new Product(ProductId.New(), name, price);
+        product.AddDomainEvent(new CreatedEvent(product.Id, name, price));
+        return product;
+    }
+}
+```
+
+Naive 코드와 비교하면 각 패턴이 어떤 문제를 차단하는지 명확합니다:
+
+| 패턴 | 코드 | Naive 코드의 문제 |
+|------|------|-----------------|
+| private 생성자 | `private Product(...)` | `new Product()`로 검증 우회 가능 |
+| 팩토리 메서드 | `Product.Create(name, price)` | 검증된 VO만 받아 잘못된 값 차단 |
+| 도메인 이벤트 | `AddDomainEvent(new CreatedEvent(...))` | 상태 변경 사실이 기록되지 않음 |
+| Ulid ID | `ProductId.New()` | `string`으로 아무 문자열이나 ID가 됨 |
+
+---
+
+## 6. Repository 포트
+
+도메인이 정의하고 인프라가 구현하는 포트입니다. 도메인 코드가 DB 기술에 의존하지 않습니다.
+
+```csharp
+using Functorium.Domains.Repositories;
+
+// IRepository<TAggregate, TId>는 기본 CRUD를 제공
+public interface IProductRepository : IRepository<Product, ProductId>
+{
+    // 도메인 고유 쿼리가 필요하면 여기에 추가
+}
+```
+
+`IRepository<T, TId>`가 제공하는 기본 메서드:
+
+| 메서드 | 반환 타입 | 설명 |
+|--------|----------|------|
+| `Create(aggregate)` | `FinT<IO, T>` | 생성 |
+| `GetById(id)` | `FinT<IO, T>` | 단건 조회 |
+| `Update(aggregate)` | `FinT<IO, T>` | 수정 |
+| `Delete(id)` | `FinT<IO, int>` | 삭제 |
+
+> `FinT<IO, T>`는 **사이드 이펙트가 있는 연산의 결과**를 표현합니다.
+> 성공 시 `T`, 실패 시 `Error`를 반환하며, 예외를 발생시키지 않습니다.
+
+---
+
+## 7. Command Usecase — 흐름을 조율하다
+
+Command Usecase는 **쓰기 연산을 조율하는 Application Layer 로직**입니다.
+`FinT<IO, T>` LINQ 합성으로 Repository 호출을 체이닝합니다.
+
+```csharp
+using Functorium.Applications.Usecases;
+
+public sealed class CreateProductCommand
+{
+    // Request / Response (CQRS)
+    public sealed record Request(string Name, decimal Price)
+        : ICommandRequest<Response>;
+
+    public sealed record Response(string ProductId, string Name, decimal Price);
+
+    // Usecase Handler
+    public sealed class Usecase(IProductRepository productRepository)
+        : ICommandUsecase<Request, Response>
+    {
+        public async ValueTask<FinResponse<Response>> Handle(
+            Request request, CancellationToken cancellationToken)
+        {
+            // 파이프라인 Validator가 검증 완료. Create()는 정규화 목적.
+            var name = ProductName.Create(request.Name).Unwrap();
+            var price = Money.Create(request.Price).Unwrap();
+
+            // 2. Aggregate 생성
+            var product = Product.Create(name, price);
+
+            // 3. Repository 호출 (FinT<IO, T> LINQ 합성)
+            FinT<IO, Response> usecase =
+                from created in productRepository.Create(product)
+                select new Response(
+                    created.Id.ToString(),
+                    created.Name,
+                    created.Price);
+
+            // 4. IO 모나드 실행 → FinResponse 변환
+            Fin<Response> response = await usecase.Run().RunAsync();
+            return response.ToFinResponse();
+        }
+    }
+}
+```
+
+**핵심 흐름 — 각 단계가 어떤 비즈니스 규칙을 강제하는가:**
+1. `ProductName.Create(request.Name)` → **"상품명은 비어있으면 안 된다"** 검증. 실패 시 `DomainErrors.ProductName.Empty`
+2. `Money.Create(request.Price)` → **"가격은 양수여야 한다"** 검증. 실패 시 `DomainErrors.Money.NotPositive`
+3. `Product.Create(name, price)` → 검증된 VO로만 Aggregate 생성 + `CreatedEvent` 발행
+4. `UsecaseTransactionPipeline`이 SaveChanges + 이벤트 발행을 자동 처리
+
+---
+
+## 8. 무엇을 막았는가
+
+처음에 본 Naive 코드의 문제가 어떻게 해결되었는지 되돌아봅니다:
+
+| Naive 코드의 문제 | DDD + Functorium의 해결 | 보장 수준 |
+|---|---|---|
+| `Name = ""` (빈 상품명) | `ProductName.Create("")` → `Fail` | 생성 시점 차단 |
+| `Price = -500m` (음수 가격) | `Money.Create(-500m)` → `Fail` | 생성 시점 차단 |
+| `new Product()` (검증 우회) | `private` 생성자 + 팩토리 메서드 | 컴파일 타임 차단 |
+| 상태 변경 추적 불가 | `AddDomainEvent(CreatedEvent)` | 생성 시 자동 발행 |
+| `string` ID 혼동 | `ProductId` (Ulid 기반 타입) | 컴파일 타임 차단 |
+
+> 코드가 비즈니스 규칙을 말합니다. `ProductName`은 "상품명"이고, `Money`는 "가격"이며,
+> `Product.Create`는 "상품 생성"입니다.
+> Naive 코드의 `string`과 `decimal`은 아무 의미도 전달하지 않았습니다.
+
+---
+
+## 9. 다음 단계
+
+<CardGrid>
+  <LinkCard
+    title="함수형 값 객체 구현 튜토리얼"
+    href="/Functorium/tutorials/functional-valueobject/"
+    description="29개 실습으로 Value Object를 깊이 이해합니다" />
+  <LinkCard
+    title="CQRS Repository 튜토리얼"
+    href="/Functorium/tutorials/cqrs-repository/"
+    description="22개 실습으로 CQRS 패턴을 구현합니다" />
+  <LinkCard
+    title="도메인 이벤트 가이드"
+    href="/Functorium/guides/domain/07-domain-events/"
+    description="이벤트 정의, 발행, 핸들러, 파이프라인 통합" />
+  <LinkCard
+    title="Observability 사양"
+    href="/Functorium/spec/08-observability/"
+    description="구조화된 로그, 메트릭, 분산 추적 자동 적용" />
+</CardGrid>
+
+---
+
+## 전체 코드 빌드 및 테스트
+
+이 가이드의 전체 코드는 리포지토리에 포함되어 있습니다.
+
+```bash
+# 빌드
+dotnet build Docs.Site/src/content/docs/quickstart/quickstart.slnx
+
+# 테스트 (10개)
+dotnet test --solution Docs.Site/src/content/docs/quickstart/quickstart.slnx
+```

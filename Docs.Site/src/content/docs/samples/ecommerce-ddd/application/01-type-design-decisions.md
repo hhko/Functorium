@@ -1,0 +1,446 @@
+---
+title: "애플리케이션 타입 설계 의사결정"
+---
+
+[비즈니스 요구사항](../00-business-requirements/)에서 자연어로 정의한 워크플로우를 Application 아키텍처 관점에서 분석합니다. 첫 번째 단계는 워크플로우에서 Use Case(Command/Query)를 식별하고, 두 번째 단계는 각 Use Case가 필요로 하는 포트를 도출하는 것입니다. 그 뒤에 Apply 패턴(병렬 검증), CQRS 분리, 포트 인터페이스, DTO 전략, 에러 타입의 설계 의사결정을 다룹니다.
+
+## 워크플로우 → Use Case 식별
+
+[비즈니스 요구사항](../00-business-requirements/)의 워크플로우를 분석하면, 크게 두 가지 유형의 요청이 있습니다.
+
+- **상태를 변경하는 요청:** 상품 등록·수정·삭제·복원, 재고 차감, 고객 생성, 주문 생성
+- **데이터를 조회하는 요청:** 상품 조회·검색, 고객 조회, 주문 조회, 재고 검색
+
+이 분리의 근거는 비즈니스 요구사항의 교차 워크플로우 규칙에서 찾을 수 있습니다: "상태를 변경하는 요청과 데이터를 조회하는 요청은 별도의 경로로 처리한다." 읽기 경로는 도메인 객체를 재구성하지 않고 필요한 형태로 직접 가져오므로, 쓰기 경로와 독립적으로 최적화할 수 있습니다.
+
+상태를 변경하는 요청은 Command로, 데이터를 조회하는 요청은 Query로 분류합니다. 각 Use Case는 하나의 워크플로우 단위를 담당합니다.
+
+### Use Case 카탈로그
+
+#### Products
+
+| Use Case | 유형 | 워크플로우 |
+|----------|------|-----------|
+| `CreateProductCommand` | Command | 상품 등록 + 재고 초기화 |
+| `UpdateProductCommand` | Command | 상품 수정 (삭제 가드, 상품명 고유성 검사) |
+| `DeleteProductCommand` | Command | 상품 논리 삭제 |
+| `RestoreProductCommand` | Command | 삭제된 상품 복원 |
+| `DeductStockCommand` | Command | 재고 차감 |
+| `GetProductByIdQuery` | Query | 상품 상세 조회 |
+| `GetAllProductsQuery` | Query | 전체 상품 조회 |
+| `SearchProductsQuery` | Query | 상품 검색 — 이름, 가격 범위, 페이지네이션/정렬 |
+| `SearchProductsWithStockQuery` | Query | 상품+재고 조회 (재고 없는 상품 미포함) |
+| `SearchProductsWithOptionalStockQuery` | Query | 상품+재고 조회 (재고 없는 상품 포함) |
+
+#### Customers
+
+| Use Case | 유형 | 워크플로우 |
+|----------|------|-----------|
+| `CreateCustomerCommand` | Command | 고객 생성 (이메일 고유성 검사) |
+| `GetCustomerByIdQuery` | Query | 고객 상세 조회 |
+| `GetCustomerOrdersQuery` | Query | 고객 주문 내역 + 상품명 조회 |
+| `SearchCustomerOrderSummaryQuery` | Query | 고객별 주문 요약 검색 |
+
+#### Orders
+
+| Use Case | 유형 | 워크플로우 |
+|----------|------|-----------|
+| `CreateOrderCommand` | Command | 주문 생성 — 상품 가격 일괄 조회 |
+| `CreateOrderWithCreditCheckCommand` | Command | 주문 생성 + 신용한도 검증 |
+| `PlaceOrderCommand` | Command | 주문 접수 — 신용 검증 + 주문 생성 + 재고 차감 (다중 Aggregate 쓰기) |
+| `GetOrderByIdQuery` | Query | 주문 상세 조회 |
+| `GetOrderWithProductsQuery` | Query | 주문 + 상품명 조회 |
+
+#### Inventories
+
+| Use Case | 유형 | 워크플로우 |
+|----------|------|-----------|
+| `SearchInventoryQuery` | Query | 재고 검색 — 저재고 필터, 페이지네이션/정렬 |
+
+10개 Command와 10개 Query, 총 20개 Use Case가 도출됩니다. Command는 도메인 모델을 거쳐 상태를 변경하고, Query는 데이터베이스에서 필요한 형태로 직접 가져옵니다.
+
+## Use Case → 포트 식별
+
+각 Use Case가 외부 세계(데이터베이스, 외부 API)와 소통하려면 인터페이스(포트)가 필요합니다. Command/Query 분리에 따라 포트도 세 유형으로 나뉩니다.
+
+- **Write Port (Repository):** Command Use Case가 도메인 객체를 저장하고 조회하는 데 사용합니다. 도메인 레이어에서 정의합니다.
+- **Read Port (Query Port):** Query Use Case가 데이터를 원하는 형태로 가져오는 데 사용합니다. Application 레이어에서 정의합니다.
+- **Special Port:** 교차 워크플로우 전용 포트입니다. 주문 생성 시 여러 상품의 가격을 일괄 조회하는 것처럼, 단일 Use Case 내에서 다른 Aggregate의 데이터가 필요할 때 사용합니다.
+
+Write Port가 도메인 모델의 무결성을 보장하는 반면, Read Port는 조회 성능에 초점을 맞춥니다. 조회 경로는 도메인 객체를 재구성하지 않으므로, 복잡한 JOIN이나 집계 쿼리를 도메인 모델의 제약 없이 최적화할 수 있습니다.
+
+### 포트 카탈로그
+
+#### Write Ports (도메인 레이어 정의)
+
+| 포트 | Aggregate | 용도 |
+|------|-----------|------|
+| `IProductRepository` | Product | 상품 CRUD + 고유성 검사 + 삭제 포함 조회 |
+| `ICustomerRepository` | Customer | 고객 CRUD + 고유성 검사 |
+| `IOrderRepository` | Order | 주문 CRUD |
+| `IInventoryRepository` | Inventory | 재고 CRUD + 상품별 조회 |
+| `ITagRepository` | Tag | 태그 CRUD |
+
+#### Read Ports (Application 레이어 정의)
+
+| 포트 | 용도 |
+|------|------|
+| `IProductQuery` | 상품 검색 + 페이지네이션 |
+| `IProductDetailQuery` | 상품 단건 상세 조회 |
+| `IProductWithStockQuery` | 상품+재고 조회 (재고 있는 상품만) |
+| `IProductWithOptionalStockQuery` | 상품+재고 조회 (모든 상품) |
+| `ICustomerDetailQuery` | 고객 단건 상세 조회 |
+| `ICustomerOrdersQuery` | 고객 주문 내역 + 상품명 조회 |
+| `ICustomerOrderSummaryQuery` | 고객별 주문 요약 집계 |
+| `IOrderDetailQuery` | 주문 단건 상세 조회 |
+| `IOrderWithProductsQuery` | 주문 + 상품명 조회 |
+| `IInventoryQuery` | 재고 검색 + 페이지네이션 |
+
+#### Special Ports (교차 워크플로우 전용)
+
+| 포트 | 용도 |
+|------|------|
+| `IProductCatalog` | 복수 상품의 가격을 일괄 조회 (상품별 개별 조회 방지) |
+| `IExternalPricingService` | 외부 API에서 상품 가격 조회 |
+
+5개 Write Port, 10개 Read Port, 2개 Special Port가 도출됩니다. 각 포트의 상세 인터페이스 설계는 [포트 인터페이스 설계](#포트-인터페이스-설계)에서 다룹니다.
+
+## Apply 패턴
+
+Value Object를 여러 개 생성할 때, 각 검증 결과를 **병렬로 합성하여** 모든 에러를 한 번에 수집하는 패턴입니다.
+
+Use Case가 여러 Value Object를 생성할 때, 순차 검증과 병렬 검증 중 어떤 전략을 선택하느냐가 사용자 경험을 좌우합니다.
+
+### 병렬 검증 합성: tuple of Validate() → Apply() → final type
+
+각 VO의 `Validate()` 메서드는 `Validation<Error, T>`를 반환합니다. 이들을 튜플로 묶은 뒤 `Apply()`를 호출하면, 성공 시 최종 타입을 생성하고 실패 시 **모든 에러를 누적합니다.**
+
+```csharp
+// CreateProductCommand.Usecase — Apply 패턴
+private static Fin<ProductData> CreateProductData(Request request)
+{
+    // 모든 필드: VO Validate() 사용 (Validation<Error, T> 반환)
+    var name = ProductName.Validate(request.Name);
+    var description = ProductDescription.Validate(request.Description);
+    var price = Money.Validate(request.Price);
+    var stockQuantity = Quantity.Validate(request.StockQuantity);
+
+    // 튜플로 병합 — Apply로 병렬 검증
+    return (name, description, price, stockQuantity)
+        .Apply((n, d, p, s) =>
+            new ProductData(
+                Product.Create(
+                    ProductName.Create(n).ThrowIfFail(),
+                    ProductDescription.Create(d).ThrowIfFail(),
+                    Money.Create(p).ThrowIfFail()),
+                Quantity.Create(s).ThrowIfFail()))
+        .As()
+        .ToFin();
+}
+```
+
+### Apply vs Sequential
+
+| 관점 | Apply (병렬 합성) | Sequential (순차 합성) |
+|------|-------------------|----------------------|
+| 에러 수집 | 모든 필드의 에러를 누적 | 첫 번째 실패 시 즉시 중단 |
+| 적용 대상 | VO 검증 (독립적인 필드들) | DB 조회/저장 (의존 관계 있는 연산) |
+| 반환 타입 | `Validation<Error, T>` → `.ToFin()` | `FinT<IO, T>` (from...in 체인) |
+| UX 효과 | "이름도 틀렸고, 가격도 틀렸습니다" | "이름이 틀렸습니다" (가격은 검사 안 함) |
+
+**설계 의사결정:** VO 검증에는 Apply, DB 연산에는 Sequential을 사용합니다. VO 필드들은 서로 독립적이므로 병렬 합성으로 모든 에러를 한 번에 보여주는 것이 사용자 경험에 유리합니다. 반면 DB 연산(중복 검사 → 저장)은 이전 단계 결과에 의존하므로 순차 실행이 필수입니다.
+
+## CQRS 분리
+
+Command(쓰기)와 Query(읽기)를 인터페이스 수준에서 분리합니다.
+
+| 구분 | Request 인터페이스 | Handler 인터페이스 | 포트 유형 |
+|------|-------------------|-------------------|----------|
+| Command | `ICommandRequest<TResponse>` | `ICommandUsecase<TRequest, TResponse>` | Write Port (`IRepository`) |
+| Query | `IQueryRequest<TResponse>` | `IQueryUsecase<TRequest, TResponse>` | Read Port (`IQueryPort`) |
+
+**핵심 차이:**
+- **Command Usecase는** Domain Aggregate를 로딩하고, 도메인 로직을 실행한 뒤, Repository를 통해 저장합니다. Aggregate를 재구성하므로 불변식이 항상 보장됩니다.
+- **Query Usecase는** Read Port를 통해 DB에서 DTO로 직접 프로젝션합니다. Aggregate를 재구성하지 않으므로 읽기 성능이 최적화됩니다.
+
+```csharp
+// Command: ICommandRequest → ICommandUsecase → IRepository
+public sealed record Request(...) : ICommandRequest<Response>;
+public sealed class Usecase(...) : ICommandUsecase<Request, Response> { ... }
+
+// Query: IQueryRequest → IQueryUsecase → IQueryPort
+public sealed record Request(...) : IQueryRequest<Response>;
+public sealed class Usecase(...) : IQueryUsecase<Request, Response> { ... }
+```
+
+## 포트 인터페이스 설계
+
+Application Layer는 두 가지 유형의 포트를 정의합니다.
+
+Application 레이어는 외부 세계와 포트(Port)를 통해 소통합니다. 쓰기 포트(Repository)는 도메인 Aggregate를 영속화하고, 읽기 포트(Query Port)는 DTO를 직접 프로젝션합니다. 이 분리 덕분에 각 포트를 독립적으로 최적화하고 테스트할 수 있습니다.
+
+### Write Ports (Domain Layer 정의, `IRepository<T, TId>` 상속)
+
+| Port | Aggregate | 커스텀 메서드 |
+|------|-----------|-------------|
+| `IProductRepository` | Product | `Exists(Specification)`, `GetByIdIncludingDeleted(ProductId)` |
+| `ICustomerRepository` | Customer | `Exists(Specification)` |
+| `IOrderRepository` | Order | (기본 CRUD만 사용) |
+| `IInventoryRepository` | Inventory | `GetByProductId(ProductId)`, `Exists(Specification)` |
+| `ITagRepository` | Tag | (기본 CRUD만 사용) |
+
+Write Port는 Domain Layer에서 정의됩니다. `IRepository<T, TId>` 기본 인터페이스가 `Create`, `GetById`, `Update`, `Delete`를 제공하고, Aggregate별 커스텀 메서드를 추가합니다.
+
+Write Port가 도메인 모델의 무결성을 보장하는 반면, Read Port는 조회 성능에 초점을 맞춥니다.
+
+### Read Ports (Application Layer 정의)
+
+| Port | 기반 인터페이스 | 반환 DTO | 용도 |
+|------|---------------|---------|------|
+| `IProductQuery` | `IQueryPort<Product, ProductSummaryDto>` | `ProductSummaryDto` | Specification 기반 검색 + 페이지네이션 |
+| `IProductDetailQuery` | `IQueryPort` | `ProductDetailDto` | 단건 조회 (`GetById`) |
+| `IProductWithStockQuery` | `IQueryPort<Product, ProductWithStockDto>` | `ProductWithStockDto` | Product + Inventory JOIN |
+| `IProductWithOptionalStockQuery` | `IQueryPort<Product, ProductWithOptionalStockDto>` | `ProductWithOptionalStockDto` | Product + Inventory LEFT JOIN |
+| `ICustomerDetailQuery` | `IQueryPort` | `CustomerDetailDto` | 단건 조회 (`GetById`) |
+| `ICustomerOrdersQuery` | `IQueryPort` | `CustomerOrdersDto` | Customer → Order → OrderLine → Product 4-table JOIN |
+| `ICustomerOrderSummaryQuery` | `IQueryPort<Customer, CustomerOrderSummaryDto>` | `CustomerOrderSummaryDto` | Customer + Order LEFT JOIN + GROUP BY 집계 |
+| `IOrderDetailQuery` | `IQueryPort` | `OrderDetailDto` | 단건 조회 (`GetById`) |
+| `IOrderWithProductsQuery` | `IQueryPort` | `OrderWithProductsDto` | Order + OrderLine + Product 3-table JOIN |
+| `IInventoryQuery` | `IQueryPort<Inventory, InventorySummaryDto>` | `InventorySummaryDto` | Specification 기반 검색 + 페이지네이션 |
+
+Read Port는 `IQueryPort`(마커) 또는 `IQueryPort<TEntity, TDto>`(Specification 기반 검색)를 상속합니다. `IQueryPort<TEntity, TDto>`는 `Search(Specification, PageRequest, SortExpression)` 메서드를 기본 제공합니다.
+
+### Special Ports (교차 Aggregate 전용)
+
+| Port | 기반 인터페이스 | 반환 타입 | 용도 |
+|------|---------------|---------|------|
+| `IProductCatalog` | `IObservablePort` | `Seq<(ProductId, Money)>` | 배치 가격 조회 (N+1 방지) |
+| `IExternalPricingService` | `IObservablePort` | `Money`, `Map<string, Money>` | 외부 API 가격 조회 |
+
+## DTO 전략
+
+DTO 전략의 핵심 의사결정은 '어디에 정의할 것인가'입니다. 별도 파일이나 공유 프로젝트에 DTO를 두면 탐색이 어렵고 의존성이 복잡해집니다. 대신 Request, Response, Validator, Usecase를 하나의 sealed class에 중첩하면, Use Case의 전체 구조를 한 눈에 파악할 수 있습니다.
+
+### Nested record: Request, Response를 Command/Query 클래스 내부에 정의
+
+모든 Command/Query는 `sealed class`로 선언하고, 그 안에 `Request`, `Response`, `Validator`, `Usecase`를 중첩 타입으로 배치합니다. 하나의 유스케이스에 필요한 모든 타입이 한 파일에 응집됩니다.
+
+```csharp
+public sealed class CreateProductCommand
+{
+    public sealed record Request(...) : ICommandRequest<Response>;
+    public sealed record Response(...);
+    public sealed class Validator : AbstractValidator<Request> { ... }
+    public sealed class Usecase(...) : ICommandUsecase<Request, Response> { ... }
+}
+```
+
+### Query DTO: Read Port가 DTO를 직접 반환
+
+Read Port 인터페이스 파일에 DTO `record`를 함께 정의합니다. Aggregate를 재구성하지 않고 DB에서 DTO로 직접 프로젝션하므로, 도메인 엔티티와 읽기 모델이 분리됩니다.
+
+```csharp
+// IProductQuery.cs — 인터페이스와 DTO를 같은 파일에 정의
+public interface IProductQuery : IQueryPort<Product, ProductSummaryDto> { }
+
+public sealed record ProductSummaryDto(
+    string ProductId,
+    string Name,
+    decimal Price);
+```
+
+### Command vs Query의 DTO 흐름 차이
+
+| 구분 | Command | Query |
+|------|---------|-------|
+| 입력 | `Request` → VO 생성 → Aggregate 생성/변경 | `Request` → Specification 조립 |
+| 출력 | Aggregate → `Response` 매핑 | DB → DTO 직접 프로젝션 |
+| 도메인 모델 경유 | O (불변식 보장) | X (성능 최적화) |
+
+## N+1 방지
+
+주문 생성 시 여러 상품의 가격을 조회해야 합니다. 상품별로 개별 쿼리를 실행하면 N+1 문제가 발생합니다.
+
+### IProductCatalog: 배치 쿼리로 단일 라운드트립
+
+```csharp
+public interface IProductCatalog : IObservablePort
+{
+    /// 복수 상품의 가격을 일괄 조회합니다.
+    /// WHERE IN 쿼리로 N+1 라운드트립을 방지합니다.
+    FinT<IO, Seq<(ProductId Id, Money Price)>> GetPricesForProducts(
+        IReadOnlyList<ProductId> productIds);
+}
+```
+
+**사용 위치:** `CreateOrderCommand`, `CreateOrderWithCreditCheckCommand`, `PlaceOrderCommand` 모두에서 사용합니다.
+
+```csharp
+// CreateOrderCommand.Usecase — 배치 가격 조회 후 딕셔너리로 변환
+var productIds = lineRequests.Select(l => l.ProductId).Distinct().ToList();
+var pricesResult = await _productCatalog.GetPricesForProducts(productIds).Run().RunAsync();
+var priceLookup = pricesResult.ThrowIfFail().ToDictionary(p => p.Id, p => p.Price);
+```
+
+**설계 의사결정:** `IProductCatalog`를 Application Layer의 `Usecases/Orders/Ports/`에 배치했습니다. Domain Layer의 `IProductRepository`와 달리, 이 포트는 교차 Aggregate 조회 전용이며 Order Usecase의 요구사항에 맞춰 설계되었기 때문입니다.
+
+## 에러 타입 전략
+
+### ApplicationErrorType 계층 구조
+
+`ApplicationErrorType`은 `sealed record` 계층으로 타입 안전한 에러를 정의합니다.
+
+| 에러 타입 | 용도 | 사용 예 |
+|----------|------|--------|
+| `NotFound` | 값을 찾을 수 없음 | 상품 ID로 조회 실패 |
+| `AlreadyExists` | 값이 이미 존재 | 이메일/상품명 중복 |
+| `ValidationFailed(PropertyName?)` | 검증 실패 | VO 생성 실패 전파 |
+| `BusinessRuleViolated(RuleName?)` | 비즈니스 규칙 위반 | 신용 한도 초과 |
+| `ConcurrencyConflict` | 동시성 충돌 | 재고 RowVersion 불일치 |
+| `Custom` (abstract) | 커스텀 에러 기본 클래스 | 도메인 특화 에러 파생 |
+
+### ApplicationError.For\<TUsecase\>() 팩토리
+
+에러 코드를 `ApplicationErrors.{UsecaseName}.{ErrorName}` 형식으로 자동 생성합니다.
+
+```csharp
+// 상품명 중복 에러
+ApplicationError.For<CreateProductCommand>(
+    new AlreadyExists(),
+    request.Name,
+    $"Product name already exists: '{request.Name}'")
+// → 에러 코드: "ApplicationErrors.CreateProductCommand.AlreadyExists"
+
+// 상품 미존재 에러
+ApplicationError.For<CreateOrderCommand>(
+    new NotFound(),
+    productId.ToString(),
+    $"Product not found: '{productId}'")
+// → 에러 코드: "ApplicationErrors.CreateOrderCommand.NotFound"
+```
+
+### 도메인 에러 전파
+
+Domain Layer에서 발생한 `DomainErrorType` 에러(예: 신용 한도 초과)는 `FinT<IO, T>` 체인 내에서 자연스럽게 Application Layer로 전파됩니다. `FinT` 모나드가 실패를 자동으로 단락(short-circuit)하므로 별도의 에러 변환 코드가 필요하지 않습니다.
+
+## FinT\<IO, T\> LINQ 모나드 트랜스포머
+
+`FinT<IO, T>`는 `IO` 효과와 `Fin<T>` 결과를 합성하는 모나드 트랜스포머입니다. LINQ `from...in` 구문으로 비동기 연산을 순차 체이닝합니다.
+
+### from...in 패턴으로 연산 합성
+
+```csharp
+// CreateProductCommand.Usecase — 중복 검사 → 저장 → 재고 생성
+FinT<IO, Response> usecase =
+    from exists in _productRepository.Exists(new ProductNameUniqueSpec(productName))
+    from _ in guard(!exists, ApplicationError.For<CreateProductCommand>(
+        new AlreadyExists(), request.Name,
+        $"Product name already exists: '{request.Name}'"))
+    from createdProduct in _productRepository.Create(product)
+    from createdInventory in _inventoryRepository.Create(
+        Inventory.Create(createdProduct.Id, stockQuantity))
+    select new Response(...);
+
+Fin<Response> response = await usecase.Run().RunAsync();
+return response.ToFinResponse();
+```
+
+### guard()를 사용한 조건부 실패
+
+`guard(condition, error)`는 조건이 `false`일 때 체인을 실패로 단락시킵니다. Repository 호출 결과를 기반으로 비즈니스 규칙을 검증할 때 사용합니다.
+
+```csharp
+// 중복 존재 시 실패
+from exists in _customerRepository.Exists(new CustomerEmailSpec(email))
+from _ in guard(!exists, ApplicationError.For<CreateCustomerCommand>(
+    new AlreadyExists(), request.Email,
+    $"Email already exists: '{request.Email}'"))
+```
+
+### Repository + Domain Service 합성
+
+```csharp
+// CreateOrderWithCreditCheckCommand.Usecase — 고객 조회 → 신용 검증 → 저장
+FinT<IO, Response> usecase =
+    from customer in _customerRepository.GetById(customerId)
+    from _ in _creditCheckService.ValidateCreditLimit(customer, newOrder.TotalAmount)
+    from saved in _orderRepository.Create(newOrder)
+    select new Response(...);
+```
+
+Repository 호출(`_customerRepository.GetById`)과 Domain Service 호출(`_creditCheckService.ValidateCreditLimit`)이 동일한 `from...in` 체인에서 자연스럽게 합성됩니다. Domain Service가 `Fin<Unit>`을 반환하므로 검증 실패 시 체인이 자동으로 단락됩니다.
+
+### 다중 Aggregate 쓰기 (Bind/Map)
+
+여러 Aggregate를 하나의 트랜잭션에서 원자적으로 저장해야 할 때, `Bind`와 `Map`으로 FinT 체인을 직접 합성합니다. `PlaceOrderCommand`는 Order 생성과 Inventory 업데이트를 하나의 IO 효과로 묶어 UoW(Unit of Work) 패턴을 구현합니다.
+
+```csharp
+// PlaceOrderCommand.Usecase — 다중 Aggregate 쓰기
+FinT<IO, Response> usecase =
+    _orderRepository.Create(order).Bind(saved =>
+    _inventoryRepository.UpdateRange(deductedInventories).Map(updatedInventories =>
+        new Response(
+            saved.Id.ToString(),
+            ...,
+            updatedInventories.Select(inv => new DeductedStockInfo(
+                inv.ProductId.ToString(),
+                inv.StockQuantity)),
+            saved.CreatedAt)));
+```
+
+`CreateProductCommand`도 Product와 Inventory를 함께 생성하지만, 그것은 단순한 쌍 생성입니다. `PlaceOrderCommand`는 **읽기 → 검증 → 다중 쓰기** 형태의 비즈니스 트랜잭션이라는 점에서 구별됩니다. 사전 검증(재고 차감, 신용 확인)을 명령형으로 수행한 뒤, 최종 쓰기만 FinT 체인에 남겨 UoW 경계를 명확히 합니다.
+
+## Mermaid 플로우차트
+
+### Command 경로
+
+Command 경로는 FluentValidation 구문 검증 → Apply 패턴 도메인 검증 → FinT LINQ 체이닝(guard, Repository) → Response 변환을 거칩니다. 어느 단계에서든 실패하면 에러가 즉시 전파됩니다.
+
+```mermaid
+flowchart LR
+    A[Request] --> B[Validator]
+    B --> C[Usecase]
+    C --> D{Apply 패턴}
+    D -->|VO 검증 성공| E["FinT&lt;IO, T&gt; 체인"]
+    D -->|VO 검증 실패| F[에러 누적 반환]
+    E --> G[Repository]
+    G --> H[Response]
+    E -->|guard 실패| F
+
+    style A fill:#e3f2fd
+    style B fill:#fff3e0
+    style C fill:#e8f5e9
+    style D fill:#fce4ec
+    style E fill:#f3e5f5
+    style G fill:#e0f2f1
+    style H fill:#e3f2fd
+    style F fill:#ffebee
+```
+
+### Query 경로
+
+Query 경로는 Command와 달리 도메인 Aggregate를 거치지 않습니다. Specification을 조립하여 Read Port에 전달하면, DB에서 DTO로 직접 프로젝션됩니다.
+
+```mermaid
+flowchart LR
+    A[Request] --> B[Validator]
+    B --> C[Usecase]
+    C --> D[Specification 조립]
+    D --> E["FinT&lt;IO, T&gt; 체인"]
+    E --> F[QueryPort]
+    F --> G["DB → DTO 프로젝션"]
+    G --> H[Response]
+
+    style A fill:#e3f2fd
+    style B fill:#fff3e0
+    style C fill:#e8f5e9
+    style D fill:#fce4ec
+    style E fill:#f3e5f5
+    style F fill:#e0f2f1
+    style G fill:#e0f2f1
+    style H fill:#e3f2fd
+```
+
+Apply, CQRS, Port, FinT는 독립적인 패턴이 아니라 하나의 파이프라인으로 연결됩니다. Apply가 입력을 검증하고, CQRS가 읽기/쓰기 경로를 분리하고, Port가 외부 의존성을 추상화하고, FinT가 전체 흐름의 성공/실패를 관리합니다. 이 조합 덕분에 Use Case 코드는 '무엇을 하는가'에만 집중하고, '에러 처리를 어떻게 하는가'는 타입 시스템에 위임할 수 있습니다.
+
+이 타입 설계를 C#과 Functorium 빌딩 블록으로 어떻게 구현하는지 코드 설계에서 다룹니다.

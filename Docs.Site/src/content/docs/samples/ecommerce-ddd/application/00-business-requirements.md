@@ -1,0 +1,212 @@
+---
+title: "애플리케이션 비즈니스 요구사항"
+---
+
+## 배경
+
+[도메인 비즈니스 요구사항](../domain/00-business-requirements/)에서 정의한 비즈니스 규칙은 '무엇이 허용되고 무엇이 거부되는가'에 집중합니다. 이제 사용자 요청이 들어왔을 때 **어떤 순서로 처리하고, 어디서 검증하며, 누구에게 위임하는가를** 정의해야 합니다.
+
+Application 레이어는 도메인 로직을 직접 수행하지 않습니다. 사용자의 요청을 받아 입력을 검증하고, 도메인 객체에 작업을 위임하며, 결과를 반환하는 얇은 조율 계층입니다. 클라이언트의 요청이 도메인 객체를 거쳐 저장소에 도달하기까지의 전체 흐름을 오케스트레이션하는 것이 이 레이어의 핵심 역할입니다.
+
+## 워크플로우 전체 구조
+
+Application 레이어의 워크플로우는 두 가지 트리거로 시작됩니다. 외부 요청(Command/Query)에 의한 흐름과 도메인 이벤트에 의한 내부 반응형 흐름입니다.
+
+```mermaid
+flowchart TB
+    subgraph External["외부 요청 (Command / Query)"]
+        direction LR
+        C1["CreateProductCommand"]
+        C2["CreateOrderCommand"]
+        C3["PlaceOrderCommand"]
+        C4["CancelOrderCommand"]
+        C5["DeductStockCommand"]
+        Q1["GetProductByIdQuery"]
+        Q2["GetOrderByIdQuery"]
+    end
+
+    subgraph Domain["도메인 Aggregate"]
+        direction LR
+        Order["Order"]
+        Inventory["Inventory"]
+    end
+
+    subgraph Internal["내부 유스케이스 (이벤트 핸들러)"]
+        direction LR
+        H1["RestoreInventory\nOnOrderCancelled"]
+        H2["DetectLowStock\nOnStockDeducted"]
+    end
+
+    C4 --> Order
+    C5 --> Inventory
+    Order -. "CancelledEvent" .-> H1
+    Inventory -. "StockDeductedEvent" .-> H2
+    H1 --> Inventory
+    H2 --> Inventory
+```
+
+## 워크플로우 규칙
+
+### 1. 상품 관리
+
+상품을 등록하면 재고도 함께 초기 설정됩니다.
+
+- 상품명, 설명, 가격, 초기 재고 수량을 입력하여 상품을 등록한다
+- 모든 입력 값은 동시에 검증하여 오류를 한번에 반환한다
+- 동일한 상품명이 이미 존재하면 등록이 거부된다
+- 상품명, 설명, 가격을 수정할 수 있다
+- 수정 시에도 상품명 고유성을 검사하되, 자기 자신은 제외한다
+- 삭제된 상품은 도메인 규칙에 의해 수정이 거부된다
+- 상품을 논리 삭제할 수 있으며, 삭제자 정보를 기록한다
+- 삭제된 상품을 복원할 수 있다
+- 재고를 차감할 수 있으며, 부족하면 도메인 규칙에 의해 거부된다
+
+### 2. 고객 관리
+
+- 고객명, 이메일, 신용한도를 입력하여 고객을 생성한다
+- 모든 입력 값은 동시에 검증하여 오류를 한번에 반환한다
+- 동일한 이메일이 이미 존재하면 생성이 거부된다
+
+### 3. 주문 처리
+
+- 고객, 주문라인 목록, 배송주소를 입력하여 주문을 생성한다
+- 배송주소와 주문라인별 수량을 검증한다
+- 주문라인에 포함된 상품의 가격을 일괄 조회한다 — 상품별로 개별 조회하지 않는다
+- 조회 결과에 없는 상품은 존재하지 않는 것으로 간주하여 거부한다
+- 주문 생성 시 고객의 신용한도를 검증할 수 있다
+- 신용한도 초과 시 주문이 거부된다
+- 주문 접수 시 재고 차감과 주문 생성을 원자적으로 처리한다 — 하나라도 실패하면 전체가 롤백된다
+- 주문 접수의 순서는: 상품 가격 일괄 조회 → 재고 가용성 검증 및 차감 → 신용한도 검증 → 주문 생성 + 재고 저장
+
+### 4. 도메인 이벤트 반응형 워크플로우
+
+다음 워크플로우는 외부 요청이 아닌 도메인 이벤트에 의해 트리거됩니다. Aggregate 간 최종 일관성(eventual consistency)을 위한 내부 유스케이스입니다.
+
+- 주문이 취소되면, 해당 주문의 각 주문 라인에 대해 차감된 재고가 자동으로 복원된다
+- 재고 복원은 개별 주문 라인 단위로 독립 처리한다 — 하나의 재고 복원 실패가 나머지를 차단하지 않는다
+- Order는 Inventory를 모른다 — 도메인 이벤트가 두 Aggregate를 느슨하게 연결한다
+- 재고가 차감될 때, 남은 재고량이 임계값 이하이면 저재고 감지 이벤트를 발생시킨다
+- 저재고 감지는 추후 외부 알림(이메일, Slack) 연동의 확장 포인트 역할을 한다
+
+#### 주문 취소 → 재고 복원 흐름
+
+```mermaid
+sequenceDiagram
+    actor Client as 클라이언트
+    participant Cmd as CancelOrderCommand
+    participant Order as Order
+    participant Repo as OrderRepository
+    participant Bus as 이벤트 버스
+    participant Handler as RestoreInventory<br/>Handler
+    participant Inv as Inventory
+    participant InvRepo as InventoryRepository
+
+    Client->>Cmd: Request(OrderId)
+    Cmd->>Repo: GetById(orderId)
+    Repo-->>Cmd: Order
+    Cmd->>Order: Cancel()
+    Note over Order: Status → Cancelled<br/>CancelledEvent 발생<br/>(OrderLines 포함)
+    Cmd->>Repo: Update(order)
+    Repo-->>Cmd: 트랜잭션 커밋
+
+    Note over Bus: 커밋 후 이벤트 발행
+
+    Bus->>Handler: CancelledEvent
+    loop 각 OrderLine
+        Handler->>InvRepo: GetByProductId(productId)
+        InvRepo-->>Handler: Inventory
+        Handler->>Inv: AddStock(quantity)
+        Handler->>InvRepo: Update(inventory)
+    end
+```
+
+#### 재고 차감 → 저재고 감지 흐름
+
+```mermaid
+sequenceDiagram
+    participant Cmd as DeductStockCommand
+    participant Inv as Inventory
+    participant Bus as 이벤트 버스
+    participant Handler as DetectLowStock<br/>Handler
+
+    Cmd->>Inv: DeductStock(qty)
+    Note over Inv: StockQuantity -= qty<br/>StockDeductedEvent 발생
+
+    Note over Bus: 커밋 후 이벤트 발행
+
+    Bus->>Handler: StockDeductedEvent
+    Handler->>Inv: CheckLowStock(threshold=10)
+    alt stock < threshold
+        Note over Inv: LowStockDetectedEvent 발생
+    end
+```
+
+### 5. 데이터 조회
+
+조회 요청은 상태를 변경하지 않으며, 데이터베이스에서 필요한 형태로 직접 가져옵니다.
+
+- 상품을 ID로 상세 조회할 수 있다
+- 전체 상품 목록을 조회할 수 있다
+- 상품을 이름, 가격 범위로 검색할 수 있으며 페이지네이션과 정렬을 지원한다
+- 상품과 재고 정보를 함께 조회할 수 있다 (재고가 없는 상품 포함/미포함 선택 가능)
+- 고객을 ID로 상세 조회할 수 있다
+- 고객의 주문 내역을 상품명과 함께 조회할 수 있다
+- 고객별 주문 요약(총 주문 수, 총 지출, 마지막 주문일)을 검색할 수 있다
+- 주문을 ID로 상세 조회할 수 있다
+- 주문 내역을 상품명과 함께 조회할 수 있다
+- 재고를 검색할 수 있으며 저재고 필터를 지원한다
+
+### 6. 입력 검증 규칙
+
+사용자 요청은 두 단계로 검증합니다.
+
+- 형식 검증: 빈 값, 길이 초과, 형식 오류 같은 구문적 문제를 먼저 걸러낸다
+- 형식 검증을 통과하지 못한 요청은 워크플로우에 진입하지 않는다
+- 도메인 검증: 도메인 규칙에 따른 의미적 문제를 검증한다
+- 여러 필드를 동시에 검증하여 모든 오류를 한번에 반환한다 — 첫 번째 오류에서 멈추지 않는다
+
+### 7. 교차 워크플로우 규칙
+
+- 상태를 변경하는 요청과 데이터를 조회하는 요청은 별도의 경로로 처리한다
+- 조회 경로는 도메인 객체를 재구성하지 않고 필요한 형태로 직접 가져온다
+- 모든 워크플로우는 성공 또는 실패를 통일된 형태로 반환한다
+- 외부 의존성(저장소, 조회 전용 포트)은 인터페이스로 추상화한다
+
+## 시나리오
+
+다음 시나리오는 워크플로우가 실제로 동작하는 방식을 검증합니다.
+
+### 정상 시나리오
+
+1. **상품 등록** — 4개 입력 값을 동시에 검증한 뒤, 상품명 고유성을 확인하고 상품과 재고를 함께 생성한다.
+2. **고객 생성** — 3개 입력 값을 동시에 검증한 뒤, 이메일 고유성을 확인하고 고객을 생성한다.
+3. **주문 생성 (신용한도 포함)** — 상품 가격을 일괄 조회하고, 주문라인을 조립한 뒤, 신용한도를 검증하여 주문을 생성한다.
+4. **주문 접수 (다중 Aggregate 쓰기)** — 상품 가격 일괄 조회 → 재고 차감 → 신용한도 검증 → 주문 생성 + 재고 저장을 하나의 트랜잭션으로 처리한다.
+5. **상품 검색** — 이름, 가격 범위 필터와 페이지네이션, 정렬을 조합하여 조회한다.
+6. **고객 주문 내역 조회** — 고객의 모든 주문과 상품명을 한번에 조회한다.
+7. **고객 주문 요약 검색** — 고객별 총 주문 수, 총 지출, 마지막 주문일을 집계하여 조회한다.
+8. **주문 취소 시 재고 복원** — 주문이 취소되면 각 주문 라인의 차감된 재고가 자동으로 복원된다.
+9. **저재고 감지** — 재고 차감 후 남은 수량이 임계값 이하이면 저재고 감지 이벤트가 발생한다.
+
+### 거부 시나리오
+
+10. **다중 검증 실패** — 여러 입력 값이 동시에 잘못되면 모든 오류를 한번에 반환한다. 첫 번째 오류에서 멈추지 않는다.
+11. **중복 거부** — 이미 존재하는 상품명 또는 이메일로 생성을 시도하면 거부된다.
+12. **존재하지 않는 상품** — 주문라인에 포함된 상품이 존재하지 않으면 거부된다.
+13. **도메인 오류 전파** — 신용한도 초과, 재고 부족 등 도메인 규칙 위반이 호출자에게 전달된다.
+14. **재고 부족 거부** — 주문 접수 시 재고가 부족하면 주문이 거부되고, 이미 차감된 재고도 롤백된다.
+15. **형식 검증 거부** — 형식이 잘못된 요청은 워크플로우에 진입하기 전에 거부된다.
+16. **배송 후 주문 취소 거부** — Shipped 또는 Delivered 상태의 주문을 취소하면 거부된다.
+
+## 존재해서는 안 되는 상태
+
+다음은 Application 레이어에서 절대 발생해서는 안 되는 상태입니다.
+
+- 도메인 검증을 거치지 않고 생성된 도메인 객체
+- 상품별 개별 조회로 인한 반복적 데이터베이스 호출 (일괄 조회를 사용하지 않은 교차 워크플로우)
+- 상태 변경 요청에서 조회 전용 결과를 반환하는 경로 혼재
+- 외부 구현체에 대한 직접 의존이 워크플로우에 침투한 상태
+- 형식 검증 없이 워크플로우에 진입한 요청
+- 조회 요청에서 도메인 객체를 재구성하여 반환하는 상태
+
+다음 단계에서는 이 워크플로우 규칙을 분석하여 Use Case와 포트를 식별하고, [타입 설계 의사결정](./01-type-design-decisions/)을 도출합니다.
