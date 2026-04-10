@@ -1,64 +1,64 @@
 ---
-title: "ADR-0011: Application - 파이프라인 실행 순서"
+title: "ADR-0011: Application - Pipeline Execution Order"
 status: "accepted"
 date: 2026-03-22
 ---
 
-## 맥락과 문제
+## Context and Problem
 
-Functorium의 Usecase 파이프라인은 CtxEnricher, Metrics, Tracing, Logging, Validation, Caching, Exception, Transaction 등 7~8개의 횡단 관심사를 미들웨어로 구성합니다. 문제는 이들의 실행 순서가 관측 데이터의 정확성과 시스템 동작을 결정적으로 바꾼다는 점입니다.
+Functorium's use case pipeline comprises 7-8 cross-cutting concerns as middleware: CtxEnricher, Metrics, Tracing, Logging, Validation, Caching, Exception, and Transaction. The problem is that their execution order decisively determines observability data accuracy and system behavior.
 
-구체적인 상황을 봅니다. Logging을 Validation보다 먼저 배치하면, 봇이 보내는 잘못된 요청까지 상세 로그에 남아 초당 수천 건의 노이즈가 쌓이고 로그 저장 비용이 급증합니다. 반대로 Metrics를 Validation 뒤에 배치하면 검증 실패 건수가 메트릭에 잡히지 않아, "왜 성공률이 100%인데 사용자 불만이 많은가?"를 설명할 수 없습니다. 여기에 Command에는 Transaction이 필요하지만 Query에는 불필요하고, Query에는 Caching이 필요하지만 Command에는 위험하다는 차이까지 고려하면, 양쪽 파이프라인의 단계와 순서를 명확히 정의해야 합니다.
+Consider a specific scenario. If Logging is placed before Validation, every malformed request from bots is logged in detail, accumulating thousands of noise entries per second and driving up log storage costs. Conversely, if Metrics is placed after Validation, validation failure counts are not captured in metrics, making it impossible to explain "why is the success rate 100% yet users are complaining?" Furthermore, Commands need Transaction but Queries do not, and Queries need Caching but Caching on Commands is dangerous -- these differences must be considered to clearly define the stages and order for both pipelines.
 
-## 검토한 옵션
+## Considered Options
 
-1. CtxEnricher → Metrics → Tracing → Logging → Validation → [Caching] → Exception → [Transaction] → Custom → Handler
-2. Logging 최선두 배치
-3. Validation 최선두 배치
+1. CtxEnricher -> Metrics -> Tracing -> Logging -> Validation -> [Caching] -> Exception -> [Transaction] -> Custom -> Handler
+2. Logging-first placement
+3. Validation-first placement
 
-## 결정
+## Decision
 
-**선택한 옵션: "CtxEnricher → Metrics → Tracing → Logging → Validation → [Caching] → Exception → [Transaction] → Custom → Handler"**. CtxEnricher가 비즈니스 컨텍스트를 가장 먼저 설정하여 이후 모든 Pillar가 활용하고, Metrics/Tracing이 Validation 앞에서 검증 실패를 포함한 모든 요청을 기록하며, Logging은 컨텍스트가 풍부해진 상태에서 의미 있는 요청을 상세 기록합니다. 관측성의 완전성과 로그 노이즈 억제 사이의 균형을 이 순서로 달성합니다.
+**Chosen option: "CtxEnricher -> Metrics -> Tracing -> Logging -> Validation -> [Caching] -> Exception -> [Transaction] -> Custom -> Handler"**. CtxEnricher sets business context first so all subsequent Pillars can use it; Metrics/Tracing record all requests including validation failures before Validation; and Logging records meaningful requests in detail with enriched context. This order achieves the balance between observability completeness and log noise suppression.
 
-### 결과
+### Consequences
 
-- <span class="adr-good">Good</span>, because Command 7단계(Transaction 포함, Caching 제외), Query 8단계(Caching 포함, Transaction 제외)로 각 파이프라인에 필요한 행위만 정확히 포함됩니다.
-- <span class="adr-good">Good</span>, because Metrics/Tracing이 Validation 앞에 위치하여 검증 실패 건수와 실패 트레이스가 누락 없이 관측됩니다.
-- <span class="adr-good">Good</span>, because `where` 제약 조건으로 Transaction 행위가 Query에, Caching 행위가 Command에 적용되는 것을 컴파일 타임에 차단합니다.
-- <span class="adr-bad">Bad</span>, because 7~8단계 미들웨어가 중첩되어 예외 발생 시 호출 스택이 깊어지고, 어느 단계에서 문제가 발생했는지 추적하는 데 시간이 걸립니다.
-- <span class="adr-bad">Bad</span>, because 하나의 행위 순서를 변경하면(예: Logging을 Validation 뒤로 이동) 로그 수집 범위가 달라지는 등 전체 파이프라인 동작에 연쇄적 영향을 미칩니다.
+- <span class="adr-good">Good</span>, because Command has 7 stages (Transaction included, Caching excluded) and Query has 8 stages (Caching included, Transaction excluded), each pipeline containing exactly the behaviors it needs.
+- <span class="adr-good">Good</span>, because Metrics/Tracing are positioned before Validation, ensuring validation failure counts and failure traces are observed without gaps.
+- <span class="adr-good">Good</span>, because `where` constraints block Transaction behavior from being applied to Queries and Caching behavior from being applied to Commands at compile time.
+- <span class="adr-bad">Bad</span>, because with 7-8 middleware layers nested, call stacks deepen on exception, and identifying which stage caused the problem takes time.
+- <span class="adr-bad">Bad</span>, because changing one behavior's order (e.g., moving Logging after Validation) cascades changes across the entire pipeline's behavior, such as altering the log collection scope.
 
-### 확인
+### Confirmation
 
-- Command 파이프라인: CtxEnricher → Metrics → Tracing → Logging → Validation → Exception → Transaction → Custom → Handler (7단계).
-- Query 파이프라인: CtxEnricher → Metrics → Tracing → Logging → Validation → Caching → Exception → Custom → Handler (8단계).
-- DI 등록 순서가 위 실행 순서와 일치하는지 확인합니다.
+- Command pipeline: CtxEnricher -> Metrics -> Tracing -> Logging -> Validation -> Exception -> Transaction -> Custom -> Handler (7 stages).
+- Query pipeline: CtxEnricher -> Metrics -> Tracing -> Logging -> Validation -> Caching -> Exception -> Custom -> Handler (8 stages).
+- Verify that DI registration order matches the execution order above.
 
-## 옵션별 장단점
+## Pros and Cons of the Options
 
-### CtxEnricher → Metrics → Tracing → Logging → Validation → [Caching] → Exception → [Transaction] → Custom → Handler
+### CtxEnricher -> Metrics -> Tracing -> Logging -> Validation -> [Caching] -> Exception -> [Transaction] -> Custom -> Handler
 
-- <span class="adr-good">Good</span>, because CtxEnricher가 최선두에서 `ctx.order.id`, `ctx.product.category` 등 비즈니스 컨텍스트를 설정하여 이후 Metrics/Tracing/Logging 모두가 풍부한 맥락으로 기록합니다.
-- <span class="adr-good">Good</span>, because Metrics가 Validation 앞에 있어 "분당 검증 실패 N건" 같은 지표를 대시보드에서 확인할 수 있습니다.
-- <span class="adr-good">Good</span>, because Tracing이 Validation 앞에 있어 검증 실패 요청도 분산 추적 그래프에 Span으로 남아 원인 분석이 가능합니다.
-- <span class="adr-good">Good</span>, because Logging은 CtxEnricher 이후에 실행되므로 비즈니스 컨텍스트가 포함된 구조화 로그를 생성하며, 검증 실패 사유까지 기록합니다.
-- <span class="adr-good">Good</span>, because Exception 행위가 Transaction 앞에 위치하여, 트랜잭션 내부 예외를 잡아 `Fin.Fail`로 변환한 뒤 정상 응답으로 반환합니다.
-- <span class="adr-bad">Bad</span>, because 7~8단계 중 새로운 행위를 추가할 때 앞뒤 단계와의 의존 관계를 분석해야 하므로 위치 선정에 신중한 검토가 필요합니다.
+- <span class="adr-good">Good</span>, because CtxEnricher at the front sets business context like `ctx.order.id` and `ctx.product.category`, enabling all subsequent Metrics/Tracing/Logging to record with rich context.
+- <span class="adr-good">Good</span>, because Metrics before Validation enables "N validation failures per minute" metrics on dashboards.
+- <span class="adr-good">Good</span>, because Tracing before Validation means validation failure requests also leave Spans in distributed trace graphs for root cause analysis.
+- <span class="adr-good">Good</span>, because Logging executes after CtxEnricher, producing structured logs with business context that include validation failure reasons.
+- <span class="adr-good">Good</span>, because Exception behavior is positioned before Transaction, catching exceptions inside the transaction, converting them to `Fin.Fail`, and returning normal responses.
+- <span class="adr-bad">Bad</span>, because adding a new behavior among the 7-8 stages requires analyzing dependencies with preceding and succeeding stages, demanding careful positioning review.
 
-### Logging 최선두 배치
+### Logging-First Placement
 
-- <span class="adr-good">Good</span>, because 검증 실패, 캐시 히트, 정상 처리 등 모든 요청이 빠짐없이 상세 로깅되어 장애 시 디버깅 정보가 풍부합니다.
-- <span class="adr-bad">Bad</span>, because 봇이나 잘못된 클라이언트가 보내는 검증 실패 요청까지 상세 로깅되어 로그 볼륨이 폭증하고 저장 비용이 급증합니다.
-- <span class="adr-bad">Bad</span>, because CtxEnricher 이전에 로깅되면 `ctx.order.id` 같은 비즈니스 컨텍스트가 빈 채로 기록되어, 로그만으로는 어떤 주문/상품에 대한 요청인지 알 수 없습니다.
+- <span class="adr-good">Good</span>, because every request -- validation failures, cache hits, normal processing -- is logged in detail without gaps, providing rich debugging information during incidents.
+- <span class="adr-bad">Bad</span>, because validation failure requests from bots and malformed clients are logged in detail, causing log volume to surge and storage costs to spike.
+- <span class="adr-bad">Bad</span>, because logging before CtxEnricher means business context like `ctx.order.id` is empty in logs, making it impossible to determine which order or product the request pertains to from logs alone.
 
-### Validation 최선두 배치
+### Validation-First Placement
 
-- <span class="adr-good">Good</span>, because 유효하지 않은 요청을 첫 번째 단계에서 즉시 차단하여 Tracing/Logging/Transaction 등 후속 단계의 처리 비용을 절감합니다.
-- <span class="adr-bad">Bad</span>, because 검증 실패 건이 Metrics에 카운팅되지 않고 Tracing에 Span이 남지 않아, 운영 대시보드에서 "검증 실패율" 지표 자체를 구성할 수 없습니다.
-- <span class="adr-bad">Bad</span>, because CtxEnricher가 아직 실행되지 않은 상태이므로 비즈니스 컨텍스트 없이 실패 응답이 반환되어, 어떤 도메인 객체에 대한 검증이 실패했는지 추적할 수 없습니다.
+- <span class="adr-good">Good</span>, because invalid requests are blocked at the first stage, saving processing costs in subsequent stages like Tracing/Logging/Transaction.
+- <span class="adr-bad">Bad</span>, because validation failures are not counted in Metrics and no Spans are left in Tracing, making it impossible to construct "validation failure rate" metrics on operational dashboards.
+- <span class="adr-bad">Bad</span>, because CtxEnricher has not yet executed, so failure responses are returned without business context, making it impossible to trace which domain object's validation failed.
 
-## 관련 정보
+## Related Information
 
-- 관련 커밋: `ace89d39` feat(books/pipeline): 타입 안전한 Usecase 파이프라인 제약 설계 Book 추가
-- 관련 커밋: `91b57254` refactor(pipeline): where 제약 조건으로 Command/Query 파이프라인 컴파일 타임 필터링
-- 관련 문서: `Docs.Site/src/content/docs/tutorials/usecase-pipeline/`
+- Related commit: `ace89d39` feat(books/pipeline): Add type-safe Usecase pipeline constraint design Book
+- Related commit: `91b57254` refactor(pipeline): Compile-time Command/Query pipeline filtering via where constraints
+- Related docs: `Docs.Site/src/content/docs/tutorials/usecase-pipeline/`

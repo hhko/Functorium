@@ -1,61 +1,61 @@
 ---
-title: "ADR-0017: Observability - CtxEnricher Pillar 타겟팅 전략"
+title: "ADR-0017: Observability - CtxEnricher Pillar Targeting Strategy"
 status: "accepted"
 date: 2026-03-24
 ---
 
-## 맥락과 문제
+## Context and Problem
 
-Functorium의 CtxEnricher는 비즈니스 컨텍스트(예: `ctx.order.id`, `ctx.product.category`)를 관측성 3-Pillar(Logging, Tracing, Metrics)에 전파합니다. 문제는 Pillar마다 컨텍스트에 대한 감도가 전혀 다르다는 점입니다.
+Functorium's CtxEnricher propagates business context (e.g., `ctx.order.id`, `ctx.product.category`) to the observability 3-Pillar (Logging, Tracing, Metrics). The problem is that each Pillar has entirely different sensitivity to context.
 
-`ctx.order.id`를 Metrics 태그로 전파하면 어떤 일이 벌어지는지 봅니다. 하루 주문이 10만 건이면 10만 개의 고유 시계열이 생성됩니다. Prometheus의 카디널리티 경고가 발동하고, Grafana 대시보드는 쿼리 타임아웃으로 렌더링에 실패하며, 클라우드 모니터링 비용이 시계열 수에 비례하여 급증합니다. 반면 동일한 `ctx.order.id`는 Logging에서 특정 주문의 로그를 필터링하는 데, Tracing에서 분산 호출 그래프를 주문 단위로 추적하는 데 필수적입니다. 모든 컨텍스트를 3-Pillar에 무차별 전파하는 것이 아니라, Pillar별로 어떤 컨텍스트를 전파할지 제어하는 기본 전략과 옵트인 메커니즘이 필요합니다.
+Consider what happens when `ctx.order.id` is propagated as a Metrics tag. If there are 100,000 orders per day, 100,000 unique time series are created. Prometheus cardinality warnings trigger, Grafana dashboards fail to render due to query timeouts, and cloud monitoring costs surge proportionally to the number of time series. Meanwhile, the same `ctx.order.id` is essential in Logging for filtering logs by specific order, and in Tracing for tracking distributed call graphs per order. Rather than indiscriminately propagating all context to all 3-Pillars, a default strategy and opt-in mechanism are needed to control which context is propagated to each Pillar.
 
-## 검토한 옵션
+## Considered Options
 
-1. 기본 Logging+Tracing, Metrics는 [CtxTarget]으로 opt-in
-2. 3-Pillar 전부 기본 전파
-3. Logging만 기본 전파
+1. Default Logging+Tracing, Metrics opt-in via [CtxTarget]
+2. Default propagation to all 3-Pillars
+3. Default propagation to Logging only
 
-## 결정
+## Decision
 
-**선택한 옵션: "기본 Logging+Tracing, Metrics는 [CtxTarget]으로 opt-in"**. 아무런 설정 없이도 모든 비즈니스 컨텍스트가 Logging과 Tracing에 전파되어 개별 요청 추적이 가능합니다. Metrics에는 기본적으로 어떤 컨텍스트도 태그로 전파하지 않아 카디널리티 폭발을 원천 차단합니다. `ctx.product.category`처럼 카디널리티가 낮고 대시보드 필터에 유용한 필드만 `[CtxTarget(Metrics)]`로 명시적으로 포함합니다.
+**Chosen option: "Default Logging+Tracing, Metrics opt-in via [CtxTarget]"**. Without any configuration, all business context propagates to Logging and Tracing, enabling individual request tracing. By default, no context is propagated as Metrics tags, structurally preventing cardinality explosion. Only fields with low cardinality useful for dashboard filtering, like `ctx.product.category`, are explicitly included with `[CtxTarget(Metrics)]`.
 
-### 결과
+### Consequences
 
-- <span class="adr-good">Good</span>, because `ctx.order.id` 같은 고카디널리티 필드가 Metrics 태그에 기본 전파되지 않아, 시계열 수가 비즈니스 트래픽에 비례하여 증가하는 것을 원천 차단합니다.
-- <span class="adr-good">Good</span>, because Logging에서는 `ctx.order.id`로 특정 주문의 로그를 필터링하고, Tracing에서는 동일 값으로 분산 호출 그래프를 추적할 수 있어 개별 요청 진단에 필요한 정보가 빠짐없이 기록됩니다.
-- <span class="adr-good">Good</span>, because `[CtxTarget(Metrics)]` 어트리뷰트로 필드 단위로 Metrics 전파를 제어하여, `ctx.product.category`(카디널리티 ~50)는 대시보드 필터로 활용하면서 `ctx.order.id`(카디널리티 ~무한)는 제외하는 세밀한 정책이 가능합니다.
-- <span class="adr-bad">Bad</span>, because 새로운 컨텍스트 필드를 추가할 때 개발자가 Metrics 포함 여부를 판단하고 `[CtxTarget]`을 명시해야 하므로, 대시보드에 필요한 필터 태그를 설정하지 않아 운영 시 뒤늦게 발견할 수 있습니다.
+- <span class="adr-good">Good</span>, because high-cardinality fields like `ctx.order.id` are not propagated to Metrics tags by default, structurally preventing time series count growth proportional to business traffic.
+- <span class="adr-good">Good</span>, because Logging can filter logs by `ctx.order.id` for a specific order, and Tracing can track distributed call graphs by the same value, recording all information needed for individual request diagnosis without gaps.
+- <span class="adr-good">Good</span>, because the `[CtxTarget(Metrics)]` attribute controls Metrics propagation at the field level, enabling fine-grained policies like using `ctx.product.category` (cardinality ~50) as a dashboard filter while excluding `ctx.order.id` (cardinality ~infinite).
+- <span class="adr-bad">Bad</span>, because when adding new context fields, developers must judge whether to include them in Metrics and explicitly add `[CtxTarget]`, potentially resulting in missing filter tags needed for dashboards discovered belatedly in production.
 
-### 확인
+### Confirmation
 
-- CtxEnricher가 기본적으로 Logging과 Tracing에만 컨텍스트를 전파하는지 단위 테스트로 확인합니다.
-- `[CtxTarget(Metrics)]`가 적용된 필드만 Metrics 태그에 포함되는지 스냅샷 테스트로 검증합니다.
-- 3-Pillar 테스트에서 각 Pillar의 컨텍스트 전파 범위가 기대와 일치하는지 확인합니다.
+- Verify through unit tests that CtxEnricher propagates context to Logging and Tracing only by default.
+- Verify through snapshot tests that only fields with `[CtxTarget(Metrics)]` are included in Metrics tags.
+- Verify in 3-Pillar tests that each Pillar's context propagation scope matches expectations.
 
-## 옵션별 장단점
+## Pros and Cons of the Options
 
-### 기본 Logging+Tracing, Metrics는 [CtxTarget]으로 opt-in
+### Default Logging+Tracing, Metrics Opt-In via [CtxTarget]
 
-- <span class="adr-good">Good</span>, because 기본 설정만으로 Metrics의 카디널리티가 통제되어, Prometheus 카디널리티 경고나 Grafana 쿼리 타임아웃을 예방합니다.
-- <span class="adr-good">Good</span>, because `ctx.product.category` 같은 저카디널리티 필드를 `[CtxTarget(Metrics)]`로 선택적으로 포함하여 대시보드 필터링에 활용할 수 있습니다.
-- <span class="adr-good">Good</span>, because Logging과 Tracing에는 모든 비즈니스 컨텍스트가 기본 전파되어, 개별 주문/상품 단위의 요청 추적에 제약이 없습니다.
-- <span class="adr-bad">Bad</span>, because 개발자가 각 컨텍스트 필드의 카디널리티를 판단하고 `[CtxTarget]` 적용 여부를 결정해야 하므로, 카디널리티 개념에 대한 이해가 전제됩니다.
+- <span class="adr-good">Good</span>, because Metrics cardinality is controlled with default settings alone, preventing Prometheus cardinality warnings and Grafana query timeouts.
+- <span class="adr-good">Good</span>, because low-cardinality fields like `ctx.product.category` can be selectively included via `[CtxTarget(Metrics)]` for dashboard filtering.
+- <span class="adr-good">Good</span>, because all business context propagates to Logging and Tracing by default, placing no constraints on individual order/product request tracing.
+- <span class="adr-bad">Bad</span>, because developers must understand cardinality concepts and decide `[CtxTarget]` applicability for each context field, requiring cardinality awareness as a prerequisite.
 
-### 3-Pillar 전부 기본 전파
+### Default Propagation to All 3-Pillars
 
-- <span class="adr-good">Good</span>, because `[CtxTarget]` 설정이 필요 없어 구현이 단순하고, 어떤 Pillar에서든 모든 비즈니스 컨텍스트를 즉시 활용할 수 있습니다.
-- <span class="adr-bad">Bad</span>, because `ctx.order.id`가 Metrics 태그에 포함되면 하루 주문 10만 건 기준 10만 개의 시계열이 생성되어, Prometheus 저장소 용량과 쿼리 비용이 통제 불능 상태가 됩니다.
-- <span class="adr-bad">Bad</span>, because 시계열 수 증가로 Grafana 대시보드의 쿼리 응답 시간이 수 초에서 타임아웃으로 악화되어, 운영 모니터링 자체가 불가능해질 수 있습니다.
+- <span class="adr-good">Good</span>, because no `[CtxTarget]` configuration is needed, making implementation simple, and all business context is immediately available in any Pillar.
+- <span class="adr-bad">Bad</span>, because including `ctx.order.id` as a Metrics tag creates 100,000 time series per day with 100,000 orders, making Prometheus storage capacity and query costs uncontrollable.
+- <span class="adr-bad">Bad</span>, because increasing time series count degrades Grafana dashboard query response times from seconds to timeouts, potentially making operational monitoring itself impossible.
 
-### Logging만 기본 전파
+### Default Propagation to Logging Only
 
-- <span class="adr-good">Good</span>, because Metrics와 Tracing에 컨텍스트가 전파되지 않으므로 카디널리티 폭발 위험이 구조적으로 제거됩니다.
-- <span class="adr-bad">Bad</span>, because Tracing Span에 `ctx.order.id`가 없으면 Jaeger/Zipkin에서 분산 호출 그래프를 주문 단위로 필터링할 수 없어, 장애 시 특정 주문의 호출 경로를 추적하는 것이 불가능합니다.
-- <span class="adr-bad">Bad</span>, because Tracing에 비즈니스 컨텍스트를 추가하려면 별도의 opt-in 메커니즘을 다시 만들어야 하며, 이는 결국 선택지 1과 동일한 설계로 회귀합니다.
+- <span class="adr-good">Good</span>, because no context propagates to Metrics and Tracing, structurally eliminating cardinality explosion risk.
+- <span class="adr-bad">Bad</span>, because without `ctx.order.id` in Tracing Spans, filtering distributed call graphs by order in Jaeger/Zipkin becomes impossible, making it impossible to trace a specific order's call path during incidents.
+- <span class="adr-bad">Bad</span>, because adding business context to Tracing requires building a separate opt-in mechanism again, ultimately regressing to the same design as option 1.
 
-## 관련 정보
+## Related Information
 
-- 관련 커밋: `3a080788` refactor(observability): LogEnricher를 CtxEnricher로 이름 변경
-- 관련 커밋: `e4aae12a` test(observability): 스냅샷 폴더 범주별 재구성 + ctx Enricher 3-Pillar 테스트 추가
-- 관련 문서: `Docs.Site/src/content/docs/guides/observability/`
+- Related commit: `3a080788` refactor(observability): Rename LogEnricher to CtxEnricher
+- Related commit: `e4aae12a` test(observability): Snapshot folder restructuring by category + ctx Enricher 3-Pillar tests added
+- Related docs: `Docs.Site/src/content/docs/guides/observability/`

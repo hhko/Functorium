@@ -1,65 +1,65 @@
 ---
-title: "ADR-0013: Application - 유효성 검증 순서 Normalize-Then-MaxLength"
+title: "ADR-0013: Application - Validation Order: Normalize-Then-MaxLength"
 status: "accepted"
 date: 2026-03-26
 ---
 
-## 맥락과 문제
+## Context and Problem
 
-사용자가 상품명 입력 필드에 `"  Hello  "`를 입력했다. 실제 의미 있는 데이터는 `"Hello"`(5자)인데, MaxLength(5) 검사가 Trim보다 먼저 실행되어 앞뒤 공백을 포함한 9자로 판단, "5자를 초과했습니다"라는 에러 메시지가 사용자에게 돌아갔다. 사용자 입장에서는 분명 5글자를 입력했는데 거부당한 셈이다. 반대로 정규화 없이 원본을 그대로 DB에 저장하면, `"Hello"`와 `"  Hello  "`가 별개의 값으로 취급되어 Unique 제약 위반 없이 중복 데이터가 쌓이고, 검색 시 정확히 일치하는 결과를 찾을 수 없게 된다.
+A user entered `"  Hello  "` in the product name input field. The meaningful data is `"Hello"` (5 characters), but MaxLength(5) validation executed before Trim, judging it as 9 characters including leading and trailing spaces, and returned an error message "exceeds 5 characters" to the user. From the user's perspective, they clearly entered 5 characters but were rejected. Conversely, storing the original without normalization to the DB causes `"Hello"` and `"  Hello  "` to be treated as different values, accumulating duplicate data without Unique constraint violations, and exact-match searches fail to find results.
 
-유효성 검증과 정규화의 실행 순서가 결과를 좌우하므로, 파이프라인 수준에서 올바른 순서를 강제해야 했다.
+Since the execution order of validation and normalization determines the outcome, the correct order must be enforced at the pipeline level.
 
-## 검토한 옵션
+## Considered Options
 
-- **옵션 1**: MaxLength 검사 후 Normalize (현재 순서)
-- **옵션 2**: Normalize 후 MaxLength 검사
-- **옵션 3**: Normalize 미적용 (원본 그대로 저장)
-- **옵션 4**: 단일 메서드에서 정규화와 검증을 동시 수행
+- **Option 1**: MaxLength check then Normalize (current order)
+- **Option 2**: Normalize then MaxLength check
+- **Option 3**: No normalization (store raw input)
+- **Option 4**: Single method performing both normalization and validation simultaneously
 
-## 결정
+## Decision
 
-**옵션 2: `ThenNormalize(Trim)` 후 `ThenMaxLength` 순서를 고정한다.**
+**Option 2: Fix the order to `ThenNormalize(Trim)` followed by `ThenMaxLength`.**
 
-"먼저 깨끗이 정리하고, 그다음 규칙을 적용한다"가 원칙이다. 유효성 검증 파이프라인에서 다음 순서를 API 수준에서 강제한다:
-1. `ThenNormalize(Trim)` — 입력값을 먼저 정규화(공백 제거 등)
-2. `ThenMaxLength(n)` — 정규화된 실제 데이터에 대해 길이 검증
+The principle is "clean first, then apply rules." The validation pipeline enforces the following order at the API level:
+1. `ThenNormalize(Trim)` -- Normalize the input first (whitespace removal, etc.)
+2. `ThenMaxLength(n)` -- Validate length against the actual normalized data
 
-`CreateFromValidated` 팩토리 메서드는 정규화가 완료된 데이터만 수락한다. 정규화를 거치지 않은 원본 문자열로는 Value Object를 생성할 수 없으므로, 파이프라인 우회가 구조적으로 차단된다.
+The `CreateFromValidated` factory method only accepts data that has completed normalization. Value Objects cannot be created with raw strings that have not gone through normalization, structurally blocking pipeline bypass.
 
-### 결과
+### Consequences
 
-- **긍정적**: `"  Hello  "`를 입력한 사용자가 MaxLength(5) 검사를 정상 통과하고 Trim된 `"Hello"`로 저장된다. DB에 공백이 섞인 데이터가 쌓이지 않아 검색, 비교, Unique 제약이 의도대로 동작한다. 검증 파이프라인의 순서가 API로 고정되어 개발자가 순서를 뒤바꾸는 실수를 할 수 없다.
-- **부정적**: 기존에 MaxLength를 먼저 검사하던 Value Object의 검증 파이프라인을 모두 수정해야 한다. 정규화 단계가 추가되어 파이프라인이 한 단계 길어진다.
+- **Positive**: A user entering `"  Hello  "` passes MaxLength(5) validation normally and is stored as the trimmed `"Hello"`. No whitespace-contaminated data accumulates in the DB, so search, comparison, and Unique constraints all work as intended. The validation pipeline's order is fixed by the API, preventing developers from accidentally reversing the order.
+- **Negative**: All Value Objects with existing MaxLength-first validation pipelines must be updated. The normalization stage adds one more step to the pipeline.
 
-### 확인
+### Confirmation
 
-- `"  Hello  "`(공백 포함)이 MaxLength(5)를 통과하고 Trim된 `"Hello"`로 저장되는지 확인한다.
-- `"  Hello World  "`(공백 제거 후 11자)가 MaxLength(5)에서 올바르게 거부되는지 확인한다.
-- `CreateFromValidated`에 Trim되지 않은 문자열을 전달하면 거부되는지 확인한다.
+- Verify that `"  Hello  "` (with spaces) passes MaxLength(5) and is stored as the trimmed `"Hello"`.
+- Verify that `"  Hello World  "` (11 characters after trimming) is correctly rejected by MaxLength(5).
+- Verify that passing an untrimmed string to `CreateFromValidated` is rejected.
 
-## 옵션별 장단점
+## Pros and Cons of the Options
 
-### 옵션 1: MaxLength 후 Normalize
+### Option 1: MaxLength Then Normalize
 
-- **장점**: 기존 코드 변경이 없다. 원본 입력의 길이를 먼저 검증하므로 공백 100만 자 같은 극단적 입력을 조기에 차단할 수 있다.
-- **단점**: `"  Hello  "`(9자)가 MaxLength(5)에서 거부되어, 실제로는 유효한 5글자 입력인데 사용자에게 "길이 초과" 에러가 반환된다. 정규화하면 통과할 데이터가 검증 단계에서 탈락하는 오판(false rejection)이 발생한다.
+- **Pros**: No existing code changes needed. Validating the raw input length first can block extreme inputs like 1 million spaces early.
+- **Cons**: `"  Hello  "` (9 characters) is rejected by MaxLength(5), causing a false rejection where an actually valid 5-character input returns a "length exceeded" error to the user. Data that would pass after normalization is dropped at the validation stage.
 
-### 옵션 2: Normalize 후 MaxLength
+### Option 2: Normalize Then MaxLength
 
-- **장점**: Trim 후 `"Hello"`(5자)로 정규화된 실제 데이터 기준으로 길이를 검증하므로 오판이 없다. DB에 저장되는 값과 검증 기준이 정확히 일치한다. 사용자가 불필요한 에러 메시지를 보지 않아 UX가 향상된다.
-- **단점**: 극단적으로 긴 입력(예: 공백 100만 자)이 정규화 단계까지 진행될 수 있다. 이는 별도의 원본 길이 상한 검사(예: raw length 10,000자 제한)로 해결 가능하다.
+- **Pros**: After trimming, `"Hello"` (5 characters) is validated against the actual normalized data, eliminating false rejections. The validated value and stored value are exactly aligned. Users do not see unnecessary error messages, improving UX.
+- **Cons**: Extremely long inputs (e.g., 1 million spaces) could proceed through the normalization stage. This can be addressed with a separate raw length upper bound check (e.g., raw length 10,000 character limit).
 
-### 옵션 3: Normalize 미적용
+### Option 3: No Normalization
 
-- **장점**: 정규화 로직이 불필요하여 파이프라인이 가장 단순하다.
-- **단점**: `"Hello"`와 `"  Hello  "`가 DB에 별개의 값으로 저장되어 Unique 제약 없이 중복 데이터가 쌓인다. `WHERE name = 'Hello'` 검색 시 공백이 포함된 데이터가 누락된다. 비교, 정렬, 인덱스 동작이 모두 공백에 의해 왜곡된다.
+- **Pros**: No normalization logic is needed, making the pipeline the simplest.
+- **Cons**: `"Hello"` and `"  Hello  "` are stored as separate values in the DB, accumulating duplicate data without Unique constraint violations. `WHERE name = 'Hello'` searches miss whitespace-padded data. Comparison, sorting, and index behavior are all distorted by whitespace.
 
-### 옵션 4: 단일 메서드에서 정규화와 검증 동시 수행
+### Option 4: Single Method Performing Both Normalization and Validation
 
-- **장점**: 순서 실수가 원천적으로 불가능하다. `ValidateAndNormalize(input, maxLength: 5)` 한 번의 호출로 완료된다.
-- **단점**: Trim만 할지, Trim + ToLower를 할지, 특수문자까지 제거할지 같은 정규화 전략을 유연하게 조합할 수 없다. 검증 규칙과 정규화 로직이 하나의 메서드에 결합되어 단일 책임 원칙에 위배된다. `ThenNormalize().ThenMaxLength().ThenMatches()` 같은 파이프라인 조합이 불가능하다.
+- **Pros**: Order mistakes are inherently impossible. `ValidateAndNormalize(input, maxLength: 5)` completes in one call.
+- **Cons**: Normalization strategies cannot be flexibly combined -- whether to only Trim, Trim + ToLower, or also remove special characters. Validation rules and normalization logic are coupled in a single method, violating the Single Responsibility Principle. Pipeline compositions like `ThenNormalize().ThenMaxLength().ThenMatches()` become impossible.
 
-## 관련 정보
+## Related Information
 
-- 커밋: cab7819a, 991500d5
+- Commits: cab7819a, 991500d5

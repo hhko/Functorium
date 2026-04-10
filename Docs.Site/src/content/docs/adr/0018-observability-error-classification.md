@@ -1,66 +1,66 @@
 ---
-title: "ADR-0018: Observability - 오류 분류 3-Type 체계 (Expected/Exceptional/Aggregate)"
+title: "ADR-0018: Observability - 3-Type Error Classification (Expected/Exceptional/Aggregate)"
 status: "accepted"
 date: 2026-03-22
 ---
 
-## 맥락과 문제
+## Context and Problem
 
-Grafana 알림 채널에 하루 수백 건의 오류 알림이 쏟아지는데, 그중 대부분은 재고 부족이나 유효성 검증 실패처럼 비즈니스 흐름상 당연히 발생하는 오류였다. 문제는 이 비즈니스 오류와 DB 연결 실패 같은 실제 인프라 장애가 동일한 `error` 레벨로 기록되어, 운영팀이 알림을 무시하는 습관이 생기고 정작 즉시 대응해야 할 시스템 장애를 놓치는 상황이 반복되었다는 점이다. 또한 1,000건 벌크 주문 처리에서 300건이 실패했을 때, 개별 오류 300건이 각각 알림을 트리거하는 대신 "300/1,000 실패, 주요 원인: 재고 부족 280건, 가격 불일치 20건"처럼 전체 맥락을 요약하는 복합 오류 표현이 필요했다.
+Hundreds of error alerts poured into the Grafana alerting channel daily, and most were errors that naturally occur in business flows -- insufficient stock, validation failures, and the like. The problem was that these business errors and actual infrastructure failures like DB connection failures were recorded at the same `error` level, leading the operations team to develop a habit of ignoring alerts and repeatedly missing system failures that required immediate response. Additionally, when 300 out of 1,000 bulk order operations failed, instead of 300 individual error alerts each triggering separately, a composite error expression summarizing "300/1,000 failed, primary causes: insufficient stock 280, price mismatch 20" was needed.
 
-OpenTelemetry 3-Pillar(Trace, Metrics, Logs) 전반에서 오류의 심각도와 원인을 일관되게 구분하여, 비즈니스 오류는 추이를 관찰하고 시스템 장애에만 즉시 대응할 수 있는 분류 체계가 필요했다.
+A classification system was needed that consistently distinguishes error severity and cause across OpenTelemetry 3-Pillar (Trace, Metrics, Logs), allowing business errors to be monitored for trends while reserving immediate response for system failures only.
 
-## 검토한 옵션
+## Considered Options
 
-- **옵션 1**: 단일 error.type 문자열
-- **옵션 2**: HTTP 상태 코드 기반 분류
-- **옵션 3**: Expected/Exceptional/Aggregate 3-Type 자동 분류
-- **옵션 4**: 에러 분류 없이 로깅만 수행
+- **Option 1**: Single error.type string
+- **Option 2**: HTTP status code-based classification
+- **Option 3**: Expected/Exceptional/Aggregate 3-Type automatic classification
+- **Option 4**: No error classification, logging only
 
-## 결정
+## Decision
 
-**옵션 3: Expected/Exceptional/Aggregate 3-Type 자동 분류를 채택한다.**
+**Option 3: Adopt Expected/Exceptional/Aggregate 3-Type automatic classification.**
 
-오류를 3가지 유형으로 분류하고, `error.type`과 `error.code` 필드를 통해 OpenTelemetry 전 계층에서 일관되게 전파한다. 핵심은 개발자가 매번 분류를 지정하는 것이 아니라, 파이프라인이 응답 타입을 검사하여 자동으로 분류한다는 점이다. 사람이 분류하면 실수하고, 실수하면 알림 규칙이 무너진다.
+Errors are classified into 3 types and consistently propagated across all OpenTelemetry layers through `error.type` and `error.code` fields. The key is that developers do not manually specify the classification each time -- the pipeline inspects response types and classifies automatically. When humans classify, mistakes happen, and when mistakes happen, alerting rules break.
 
-- **Expected (비즈니스 오류)**: 재고 부족, 유효성 검증 실패 등 도메인 규칙상 예상 가능한 오류. Warning 수준으로 기록하여 알림을 트리거하지 않고, 비즈니스 메트릭 대시보드에서 추이만 관찰한다.
-- **Exceptional (시스템 장애)**: DB 연결 실패, 타임아웃 등 예상하지 못한 인프라 오류. Error 수준으로 즉시 알림을 발생시켜 운영팀이 바로 대응한다.
-- **Aggregate (복합 오류)**: 벌크 연산에서 발생한 다수의 개별 오류를 하나로 묶어 성공/실패 비율과 공통 원인을 요약한다. 개별 오류 300건 대신 요약 1건이 기록된다.
+- **Expected (business error)**: Domain-rule-predictable errors like insufficient stock and validation failures. Recorded at Warning level, not triggering alerts, with trends observed only on business metrics dashboards.
+- **Exceptional (system failure)**: Unexpected infrastructure errors like DB connection failures and timeouts. Recorded at Error level, triggering immediate alerts for the operations team to respond.
+- **Aggregate (composite error)**: Bundles multiple individual errors from bulk operations into one, summarizing success/failure ratios and common causes. One summary record instead of 300 individual errors.
 
-### 결과
+### Consequences
 
-- **긍정적**: Exceptional 오류에만 알림이 발생하므로, 야간에 운영팀이 대응해야 할 알림이 실제 시스템 장애로 한정된다. 대시보드에서 비즈니스 오류 추이(예: "이번 주 재고 부족 오류 40% 증가")와 시스템 장애를 별도 패널로 분리하여 각각의 대응 전략을 수립할 수 있다. 벌크 연산의 부분 실패를 단일 Aggregate 오류로 요약하여 알림 폭주를 방지한다.
-- **부정적**: 새로운 DomainErrorType을 추가할 때 Expected/Exceptional 분류 로직을 함께 갱신해야 한다. "비즈니스 오류이지만 즉시 대응이 필요한 경우"(예: 결제 게이트웨이 거부) 같은 경계 케이스에서 팀 내 분류 기준 합의가 필요하다.
+- **Positive**: Only Exceptional errors trigger alerts, so overnight alerts for the operations team are limited to actual system failures. Dashboards separate business error trends (e.g., "insufficient stock errors up 40% this week") and system failures into separate panels, enabling distinct response strategies for each. Partial failures in bulk operations are summarized into a single Aggregate error, preventing alert floods.
+- **Negative**: When adding new DomainErrorTypes, the Expected/Exceptional classification logic must also be updated. For boundary cases like "business errors requiring immediate response" (e.g., payment gateway rejection), team consensus on classification criteria is needed.
 
-### 확인
+### Confirmation
 
-- `error.type` 필드가 Trace Span, Metric Attribute, Structured Log에 동일하게 기록되는지 확인한다.
-- Expected 오류가 알림을 트리거하지 않고, Exceptional 오류만 알림이 발생하는지 확인한다.
-- Aggregate 오류에 개별 오류 목록과 요약 정보가 포함되는지 확인한다.
+- Verify that the `error.type` field is recorded identically across Trace Spans, Metric Attributes, and Structured Logs.
+- Verify that Expected errors do not trigger alerts and only Exceptional errors do.
+- Verify that Aggregate errors include individual error lists and summary information.
 
-## 옵션별 장단점
+## Pros and Cons of the Options
 
-### 옵션 1: 단일 error.type 문자열
+### Option 1: Single error.type String
 
-- **장점**: 구현이 가장 단순하다. `error.type = "ValidationFailed"` 같은 문자열 하나만 기록하면 된다.
-- **단점**: `"ValidationFailed"`와 `"DatabaseConnectionFailed"`가 동일한 error 레벨로 기록되므로 알림 규칙을 분리할 수 없다. 문자열 기반이라 `"validationFailed"` vs `"ValidationFailed"` 같은 불일치가 쌓이고, 대시보드 필터가 깨진다.
+- **Pros**: Simplest implementation. Only a single string like `error.type = "ValidationFailed"` needs to be recorded.
+- **Cons**: `"ValidationFailed"` and `"DatabaseConnectionFailed"` are recorded at the same error level, making it impossible to separate alerting rules. Being string-based, inconsistencies like `"validationFailed"` vs `"ValidationFailed"` accumulate, breaking dashboard filters.
 
-### 옵션 2: HTTP 상태 코드 기반 분류
+### Option 2: HTTP Status Code-Based Classification
 
-- **장점**: 400/500 구분은 널리 알려진 표준이며 Grafana, Datadog 등 기존 모니터링 도구의 기본 필터와 즉시 호환된다.
-- **단점**: 동일한 400 Bad Request 안에 유효성 검증 실패와 권한 부족이 뒤섞여 비즈니스 원인이 손실된다. gRPC, 메시지 큐 등 비-HTTP 통신에는 적용할 수 없다. `StockInsufficient` 같은 도메인 오류 코드와 HTTP 상태 코드의 1:1 매핑이 불가능하다.
+- **Pros**: The 400/500 distinction is a widely known standard and immediately compatible with default filters in monitoring tools like Grafana and Datadog.
+- **Cons**: Different business causes like validation failures and insufficient permissions are mixed within the same 400 Bad Request, losing business cause information. Not applicable to non-HTTP communication like gRPC and message queues. 1:1 mapping between domain error codes like `StockInsufficient` and HTTP status codes is impossible.
 
-### 옵션 3: Expected/Exceptional/Aggregate 3-Type 자동 분류
+### Option 3: Expected/Exceptional/Aggregate 3-Type Automatic Classification
 
-- **장점**: 재고 부족(Expected)은 Warning으로, DB 장애(Exceptional)는 Error로 자동 분리되어 알림 규칙이 즉시 세분화된다. 파이프라인이 응답 타입을 검사하여 자동 분류하므로 개발자가 분류를 잊거나 잘못 지정할 여지가 없다. 벌크 연산의 복합 오류가 Aggregate로 요약되어 개별 알림 폭주를 방지한다. OpenTelemetry 3-Pillar 전체에서 동일한 `error.type` 값을 사용한다.
-- **단점**: Expected/Exceptional/Aggregate 3가지 개념과 자동 분류 기준을 팀이 학습해야 하는 초기 비용이 있다. "결제 게이트웨이 거부"처럼 비즈니스 오류이면서 즉시 대응이 필요한 경계 케이스에서 분류 판단이 모호할 수 있다.
+- **Pros**: Insufficient stock (Expected) is automatically separated as Warning and DB failures (Exceptional) as Error, enabling immediate alerting rule granularity. The pipeline inspects response types for automatic classification, leaving no room for developers to forget or misclassify. Composite errors from bulk operations are summarized as Aggregate, preventing individual alert floods. The same `error.type` value is used across all OpenTelemetry 3-Pillars.
+- **Cons**: Initial learning cost for the team to understand the Expected/Exceptional/Aggregate concepts and automatic classification criteria. Classification judgment may be ambiguous for boundary cases like "payment gateway rejection" that are business errors yet require immediate response.
 
-### 옵션 4: 에러 분류 없이 로깅만 수행
+### Option 4: No Error Classification, Logging Only
 
-- **장점**: 구현 비용이 제로다. 기존 코드에 손댈 것이 없다.
-- **단점**: 재고 부족과 DB 장애가 동일한 `error` 레벨로 쏟아져 알림 피로가 해소되지 않는다. 대시보드에서 "이번 주 비즈니스 오류 추이"와 "시스템 장애 빈도"를 별도로 볼 수 없어, 오류 패턴 분석과 운영 의사결정이 사실상 불가능하다.
+- **Pros**: Zero implementation cost. No existing code to touch.
+- **Cons**: Insufficient stock and DB failures pour in at the same `error` level, leaving alert fatigue unresolved. "Business error trends this week" and "system failure frequency" cannot be viewed separately on dashboards, making error pattern analysis and operational decision-making practically impossible.
 
-## 관련 정보
+## Related Information
 
-- 커밋: 6ecd6ae6, a5027a78
-- 관련 ADR: [ADR-0016 관측성 필드 네이밍 snake_case + dot](./0016-observability-field-naming-snake-case-dot.md)
+- Commits: 6ecd6ae6, a5027a78
+- Related ADR: [ADR-0016 Observability field naming snake_case + dot](./0016-observability-field-naming-snake-case-dot.md)

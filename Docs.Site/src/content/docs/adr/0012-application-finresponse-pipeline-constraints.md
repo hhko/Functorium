@@ -1,68 +1,68 @@
 ---
-title: "ADR-0012: Application - FinResponse 파이프라인 타입 제약 계층"
+title: "ADR-0012: Application - FinResponse Pipeline Type Constraint Hierarchy"
 status: "accepted"
 date: 2026-03-18
 ---
 
-## 맥락과 문제
+## Context and Problem
 
-유효성 검증 파이프라인에서 검증 실패 시 `FinResponse<T>.Fail(error)`을 생성해야 하는데, 파이프라인의 `TResponse`가 `object`로만 제약되어 있어 `(TResponse)(object)FinResponse<T>.Fail(error)` 같은 이중 캐스팅이 필요했다. 이 캐스팅은 컴파일러가 검증하지 않으므로, 응답 타입이 `FinResponse<T>`가 아닌 파이프라인에 잘못 등록되면 런타임에 `InvalidCastException`이 터졌다. 로깅 파이프라인은 `IsSucc`/`IsFail`만 읽으면 되고, 유효성 검증 파이프라인은 실패 응답을 생성해야 하며, 관측성 파이프라인은 에러 상세 정보에 접근해야 하는데, 이 서로 다른 수준의 접근 요구가 하나의 `object` 캐스팅 안에 뒤섞여 있었다.
+In the validation pipeline, when validation fails, `FinResponse<T>.Fail(error)` must be created, but the pipeline's `TResponse` was only constrained to `object`, requiring double casting like `(TResponse)(object)FinResponse<T>.Fail(error)`. This casting is not verified by the compiler, so when registered on a pipeline whose response type is not `FinResponse<T>`, an `InvalidCastException` would occur at runtime. The logging pipeline only needs to read `IsSucc`/`IsFail`, the validation pipeline must create failure responses, and the observability pipeline must access error details -- yet these different levels of access requirements were all mixed together inside a single `object` cast.
 
-각 파이프라인이 필요한 최소 계약만 타입 시그니처로 선언하여, 컴파일 타임에 잘못된 조합을 차단하고 파이프라인의 의도를 코드에서 바로 읽을 수 있는 제약 체계가 필요했다.
+A constraint system was needed where each pipeline declares only the minimum contract it needs through its type signature, blocking incorrect combinations at compile time and making the pipeline's intent immediately readable from code.
 
-## 검토한 옵션
+## Considered Options
 
-- **옵션 1**: `object` 캐스팅
-- **옵션 2**: 단일 인터페이스로 모든 기능 통합
-- **옵션 3**: IFinResponse 4단계 인터페이스 계층 + `where` 제약
-- **옵션 4**: 리플렉션 기반 동적 디스패치
+- **Option 1**: `object` casting
+- **Option 2**: Single interface unifying all capabilities
+- **Option 3**: IFinResponse 4-level interface hierarchy + `where` constraints
+- **Option 4**: Reflection-based dynamic dispatch
 
-## 결정
+## Decision
 
-**옵션 3: IFinResponse 4단계 인터페이스 계층 + `where` 제약을 채택한다.**
+**Option 3: Adopt the IFinResponse 4-level interface hierarchy + `where` constraints.**
 
-파이프라인마다 필요한 접근 수준이 다르다. 로깅은 성공/실패 여부만 읽으면 되고, 유효성 검증은 실패 응답을 생성해야 하며, 관측성은 에러 상세 정보에 접근해야 한다. 이 차이를 `object` 캐스팅으로 뭉뚱그리는 대신, 4단계 인터페이스로 분리하여 각 파이프라인이 `where TResponse :` 제약으로 최소 계약만 선언하게 한다.
+Each pipeline requires a different level of access. Logging only needs to read success/failure status. Validation must create failure responses. Observability must access error details. Instead of conflating these differences with `object` casting, they are separated into 4 interface levels so each pipeline declares only its minimum contract via `where TResponse :` constraints.
 
-1. **IFinResponse (마커)**: 응답이 FinResponse 계열임을 표시. 가장 느슨한 제약으로, 모든 FinResponse 파이프라인의 기본 진입점.
-2. **IFinResponseCovariant (공변)**: `IsSucc`/`IsFail` 성공 여부 판별. 로깅 파이프라인처럼 읽기 전용 접근만 필요한 곳에 사용.
-3. **IFinResponseFactory (CRTP 팩토리)**: `Fail<T>(error)` 등 새로운 응답 인스턴스 생성. 유효성 검증 파이프라인에서 실패 응답을 직접 만들 때 사용.
-4. **IFinResponseErrorAccessor (에러 접근)**: 실패 시 에러 상세 정보 접근. 에러 분류, 관측성 파이프라인에서 사용.
+1. **IFinResponse (marker)**: Marks the response as being of the FinResponse family. The loosest constraint, serving as the default entry point for all FinResponse pipelines.
+2. **IFinResponseCovariant (covariant)**: `IsSucc`/`IsFail` success/failure determination. Used where read-only access is sufficient, like logging pipelines.
+3. **IFinResponseFactory (CRTP factory)**: Creates new response instances with `Fail<T>(error)`, etc. Used when validation pipelines need to directly create failure responses.
+4. **IFinResponseErrorAccessor (error access)**: Accesses error detail information on failure. Used in error classification and observability pipelines.
 
-파이프라인의 `where TResponse :` 시그니처만 보면 그 파이프라인이 응답의 어떤 측면에 접근하는지 즉시 파악할 수 있다.
+Just by looking at a pipeline's `where TResponse :` signature, one can immediately tell which aspect of the response the pipeline accesses.
 
-### 결과
+### Consequences
 
-- **긍정적**: `object` 캐스팅이 전면 제거되어 런타임 `InvalidCastException`이 원천 차단된다. 로깅 파이프라인에 `IFinResponseCovariant`만 제약한 덕분에, 팩토리나 에러 접근 메서드가 노출되지 않아 의도치 않은 사용이 불가능하다. 새 파이프라인을 추가할 때 4단계 중 어떤 인터페이스를 선택해야 하는지가 명확하여 설계 의사결정이 빨라진다. 85개 테스트가 모든 파이프라인-인터페이스 조합의 정상 동작과 컴파일 제약을 검증한다.
-- **부정적**: 4단계 인터페이스 계층과 CRTP 패턴이 초기 학습 곡선을 높인다. `IFinResponse`로 시작하는 인터페이스가 4개이므로 IDE 자동완성 목록이 길어질 수 있다.
+- **Positive**: `object` casting is completely eliminated, structurally preventing runtime `InvalidCastException`. The logging pipeline constrained to only `IFinResponseCovariant` does not expose factory or error access methods, making unintended usage impossible. When adding new pipelines, which of the 4 interfaces to choose is clear, speeding up design decisions. 85 tests verify correct operation and compile constraints across all pipeline-interface combinations.
+- **Negative**: The 4-level interface hierarchy and CRTP pattern raise the initial learning curve. Four interfaces starting with `IFinResponse` may lengthen IDE autocomplete lists.
 
-### 확인
+### Confirmation
 
-- 85개 단위 테스트가 모든 파이프라인과 인터페이스 조합을 검증한다.
-- 잘못된 `where` 제약을 사용할 경우 컴파일 에러가 발생하는지 확인한다.
-- 새로운 파이프라인을 추가할 때 적절한 인터페이스 단계를 선택하는 가이드를 제공한다.
+- 85 unit tests verify all pipeline-interface combinations.
+- Verify that using incorrect `where` constraints produces compile errors.
+- Provide guidance on selecting the appropriate interface level when adding new pipelines.
 
-## 옵션별 장단점
+## Pros and Cons of the Options
 
-### 옵션 1: object 캐스팅
+### Option 1: object Casting
 
-- **장점**: 인터페이스 설계가 불필요하다. `(FinResponse<T>)(object)response` 한 줄로 동작한다.
-- **단점**: 응답 타입이 `FinResponse<T>`가 아닌 파이프라인에 잘못 등록되면 런타임에 `InvalidCastException`이 터진다. 파이프라인 시그니처만 보고는 어떤 응답 타입을 기대하는지 알 수 없어, 새 파이프라인 작성 시 기존 코드를 뒤져봐야 한다. 리팩토링 시 컴파일러가 잘못된 캐스팅을 감지하지 못한다.
+- **Pros**: No interface design needed. Works with a single line of `(FinResponse<T>)(object)response`.
+- **Cons**: Registering on a pipeline whose response type is not `FinResponse<T>` triggers runtime `InvalidCastException`. Pipeline signatures alone do not reveal which response type is expected, requiring digging through existing code when writing new pipelines. The compiler cannot detect incorrect casts during refactoring.
 
-### 옵션 2: 단일 인터페이스로 모든 기능 통합
+### Option 2: Single Interface Unifying All Capabilities
 
-- **장점**: 인터페이스가 하나이므로 학습 곡선이 낮다. 모든 파이프라인이 동일한 제약을 사용하여 일관적이다.
-- **단점**: 로깅 파이프라인은 `IsSucc`만 읽으면 되는데 `Fail()` 팩토리와 에러 접근 메서드까지 노출된다. 인터페이스 분리 원칙(ISP) 위반이다. 인터페이스에 새 메서드를 추가하면 모든 구현체를 수정해야 하므로 확장 비용이 높다.
+- **Pros**: One interface keeps the learning curve low. All pipelines use the same constraint, ensuring consistency.
+- **Cons**: The logging pipeline only needs `IsSucc` but the `Fail()` factory and error access methods are also exposed. This violates the Interface Segregation Principle (ISP). Adding new methods to the interface requires modifying all implementations, resulting in high extension cost.
 
-### 옵션 3: IFinResponse 4단계 인터페이스 계층
+### Option 3: IFinResponse 4-Level Interface Hierarchy
 
-- **장점**: 로깅 파이프라인은 `IFinResponseCovariant`만, 유효성 검증은 `IFinResponseFactory`를 제약하여 각자 필요한 최소 계약만 선언한다. 공변성 인터페이스 덕분에 읽기 전용 파이프라인에서 제네릭 타입 파라미터를 유연하게 다룰 수 있다. CRTP 팩토리로 `Fail<T>(error)` 호출이 타입 안전하다. 잘못된 `where` 제약은 컴파일 에러로 즉시 잡힌다.
-- **단점**: 4단계 인터페이스 계층과 CRTP 패턴의 설계 의도를 새 팀원에게 설명해야 하는 온보딩 비용이 있다. `IFinResponse`로 시작하는 인터페이스가 4개이므로 IDE 자동완성과 문서화 부담이 늘어난다.
+- **Pros**: The logging pipeline constrains only `IFinResponseCovariant`, validation constrains `IFinResponseFactory`, each declaring only the minimum contract needed. Covariant interfaces allow flexible handling of generic type parameters in read-only pipelines. CRTP factory makes `Fail<T>(error)` calls type-safe. Incorrect `where` constraints are immediately caught as compile errors.
+- **Cons**: Onboarding cost of explaining the 4-level interface hierarchy and CRTP pattern design intent to new team members. Four interfaces starting with `IFinResponse` increase IDE autocomplete and documentation burden.
 
-### 옵션 4: 리플렉션 기반 동적 디스패치
+### Option 4: Reflection-Based Dynamic Dispatch
 
-- **장점**: 인터페이스 설계 없이 런타임에 응답 타입을 동적으로 검사하여 처리할 수 있다. 기존 타입을 수정할 필요가 없다.
-- **단점**: 매 요청마다 리플렉션 호출이 발생하여 Hot path 성능이 저하된다. 컴파일 타임 검증이 전혀 없어 타입 불일치가 프로덕션에서 발견된다. 리플렉션 내부를 거치는 스택 트레이스가 디버깅을 어렵게 만든다.
+- **Pros**: Response types can be dynamically inspected and processed at runtime without interface design. No modification of existing types required.
+- **Cons**: Reflection calls on every request degrade hot path performance. No compile-time verification at all, so type mismatches are discovered only in production. Stack traces passing through reflection internals make debugging difficult.
 
-## 관련 정보
+## Related Information
 
-- 커밋: ace89d39 (85개 테스트), 91b57254, 33821633
+- Commits: ace89d39 (85 tests), 91b57254, 33821633
