@@ -1,137 +1,137 @@
 ---
-title: "값 객체: Union 타입"
+title: "Value Objects: Union Types"
 ---
 
-이 문서는 Discriminated Union 패턴으로 도메인 상태를 안전하게 표현하는 Union 값 객체의 설계와 구현을 다룹니다. 값 객체 핵심 개념은 [05a-value-objects](./05a-value-objects), 열거형·검증 패턴은 [05b-value-objects-validation](./05b-value-objects-validation)을 참고하세요.
+This document covers the design and implementation of Union value objects that safely represent domain states using the Discriminated Union pattern. For core value object concepts, see [05a-value-objects](./05a-value-objects). For enumeration and validation patterns, see [05b-value-objects-validation](./05b-value-objects-validation).
 
-## 들어가며
+## Introduction
 
-"연락처에 이메일도 없고 주소도 없는 상태가 왜 가능한가?"
-"이미 인증된 이메일에 다시 인증 요청이 들어와도 코드가 허용한다."
-"새 연락처 유형을 추가했는데, 기존 분기문 중 하나를 업데이트하지 않아서 런타임 오류가 발생했다."
+"Why is it possible for a contact to have neither an email nor an address?"
+"The code allows a verification request on an already-verified email."
+"A new contact type was added, but one of the existing branches was not updated, causing a runtime error."
 
-이러한 문제들은 열거형이나 nullable 필드로 도메인 상태를 표현할 때 반복적으로 발생합니다. Union 값 객체는 **허용되는 상태 조합만 타입으로 표현하여** 잘못된 상태를 컴파일 타임에 차단합니다.
+These problems repeatedly arise when representing domain states with enumerations or nullable fields. Union value objects **express only the allowed state combinations as types,** blocking invalid states at compile time.
 
-### 이 문서에서 배우는 내용
+### What You Will Learn
 
-이 문서를 통해 다음을 학습합니다:
+This document covers the following topics:
 
-1. **Discriminated Union이 필요한 이유** - enum, SmartEnum과의 차이점
-2. **기반 클래스 선택 기준** - `UnionValueObject`와 `UnionValueObject<TSelf>`의 사용 시나리오
-3. **순수 데이터 Union 구현** - 상태 전이 없이 허용 조합만 표현하는 패턴
-4. **상태 전이 Union 구현** - `TransitionFrom` 헬퍼로 안전한 상태 전이
-5. **`[UnionType]` 소스 생성기** - Match/Switch 자동 생성으로 exhaustiveness 보장
-6. **Aggregate에서 Union 활용** - 가드 + 전이 위임 패턴
+1. **Why Discriminated Unions are needed** - Differences from enum and SmartEnum
+2. **Base class selection criteria** - Usage scenarios for `UnionValueObject` and `UnionValueObject<TSelf>`
+3. **Pure data Union implementation** - Patterns that express only allowed combinations without state transitions
+4. **State transition Union implementation** - Safe state transitions using the `TransitionFrom` helper
+5. **`[UnionType]` source generator** - Ensuring exhaustiveness through auto-generated Match/Switch
+6. **Using Unions in Aggregates** - Guard + transition delegation pattern
 
-### 사전 지식
+### Prerequisites
 
-이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
+A basic understanding of the following concepts is needed to understand this document:
 
-- [값 객체 (Value Object)](./05a-value-objects)의 Create/Validate 분리 패턴
-- C# record 타입과 패턴 매칭
-- LanguageExt의 `Fin<T>` 기본 개념
+- The Create/Validate separation pattern from [Value Objects](./05a-value-objects)
+- C# record types and pattern matching
+- Basic concepts of LanguageExt's `Fin<T>`
 
-> Union 값 객체는 **"잘못된 상태를 표현 불가능하게 만드는"** DDD 설계 원칙의 핵심 구현입니다. 허용되는 상태 조합만 타입으로 정의하면, 런타임 검증 없이 컴파일 타임에 안전성을 확보할 수 있습니다.
+> Union value objects are the core implementation of the DDD design principle of **"making invalid states unrepresentable."** By defining only the allowed state combinations as types, you can ensure safety at compile time without runtime validation.
 
-## 요약
+## Summary
 
-### 주요 명령
+### Key Commands
 
 ```csharp
-// 순수 데이터 Union 정의
+// Pure data Union definition
 [UnionType]
 public abstract partial record ContactInfo : UnionValueObject { ... }
 
-// 상태 전이 Union 정의
+// State transition Union definition
 [UnionType]
 public abstract partial record EmailVerificationState : UnionValueObject<EmailVerificationState> { ... }
 
-// 상태 전이 실행
+// Execute state transition
 Fin<Verified> result = emailState.Verify(verifiedAt);
 
-// Match로 모든 케이스 처리
+// Process all cases with Match
 string display = contactInfo.Match(
     emailOnly: eo => eo.EmailState.ToString(),
     postalOnly: po => po.Address.ToString(),
     emailAndPostal: ep => $"{ep.EmailState}, {ep.Address}");
 ```
 
-### 주요 절차
+### Key Procedures
 
-**1. Union 값 객체 정의:**
-1. 순수 데이터 / 상태 전이 여부에 따라 기반 클래스 선택
-2. `abstract partial record` + `[UnionType]` 선언
-3. `sealed record` 케이스 정의 + `private` 생성자
-4. (상태 전이 시) 전이 메서드에서 `TransitionFrom` 호출
+**1. Define a Union Value Object:**
+1. Choose the base class based on whether pure data or state transitions are needed
+2. Declare as `abstract partial record` + `[UnionType]`
+3. Define cases as `sealed record` + `private` constructor
+4. (For state transitions) Call `TransitionFrom` in transition methods
 
-**2. Aggregate에서 활용:**
-1. Aggregate 메서드에서 가드 조건 검증 (삭제 상태 등)
-2. `Match`로 Union에서 필요한 상태 추출
-3. 상태 전이를 Union 객체에 위임
+**2. Use in Aggregate:**
+1. Validate guard conditions in the Aggregate method (e.g., deletion status)
+2. Extract the required state from the Union using `Match`
+3. Delegate state transitions to the Union object
 
-### 주요 개념
+### Key Concepts
 
-| 개념 | 설명 |
-|------|------|
-| `UnionValueObject` | 순수 데이터 Union의 기반 클래스 |
-| `UnionValueObject<TSelf>` | 상태 전이 지원 Union의 기반 클래스 (CRTP) |
-| `[UnionType]` | Match/Switch/Is/As 메서드를 자동 생성하는 소스 생성기 |
-| `TransitionFrom` | 타입 안전한 상태 전이 헬퍼 |
-| `Match<TResult>` | 모든 케이스를 빠짐없이 처리하도록 강제하는 메서드 |
-
----
-
-## Discriminated Union이 필요한 이유
-
-도메인에서 **고정된 선택지**를 표현할 때 여러 선택지가 있습니다. 각 선택지마다 **서로 다른 데이터 구조**를 가져야 하는지가 핵심 기준입니다.
-
-| 특성 | C# `enum` | `SmartEnum` | `UnionValueObject` |
-|------|-----------|------------|---------------------|
-| 값마다 다른 데이터 | 불가 | 고정 속성만 | 케이스별 고유 필드 |
-| 상태 전이 로직 | 외부에서 처리 | 외부에서 처리 | 내부 `TransitionFrom` |
-| 컴파일 타임 exhaustiveness | `switch` 경고 | 불가 | `Match` 메서드 강제 |
-| 케이스별 행위 | 불가 | 메서드 오버라이드 | 패턴 매칭 |
-| 사용 시나리오 | 단순 플래그 | 값 + 속성 | 구조적 상태 분기 |
-
-**선택 기준:**
-- 모든 값이 **같은 데이터 구조**를 공유 → `enum` 또는 `SmartEnum`
-- 값마다 **서로 다른 데이터**를 가짐 → `UnionValueObject`
+| Concept | Description |
+|---------|-------------|
+| `UnionValueObject` | Base class for pure data Unions |
+| `UnionValueObject<TSelf>` | Base class for state transition Unions (CRTP) |
+| `[UnionType]` | Source generator that auto-generates Match/Switch/Is/As methods |
+| `TransitionFrom` | Type-safe state transition helper |
+| `Match<TResult>` | Method that enforces exhaustive handling of all cases |
 
 ---
 
-## 기반 클래스 선택
+## Why Discriminated Unions Are Needed
 
-`IUnionValueObject` → `UnionValueObject` → `UnionValueObject<TSelf>` 계층에서, 상태 전이 필요 여부로 기반 클래스를 선택합니다.
+When expressing **fixed choices** in the domain, there are several options. The key criterion is whether each choice must have a **different data structure**.
+
+| Property | C# `enum` | `SmartEnum` | `UnionValueObject` |
+|----------|-----------|------------|---------------------|
+| Different data per value | Impossible | Fixed properties only | Unique fields per case |
+| State transition logic | Handled externally | Handled externally | Internal `TransitionFrom` |
+| Compile-time exhaustiveness | `switch` warning | Not possible | Enforced by `Match` method |
+| Per-case behavior | Not possible | Method override | Pattern matching |
+| Usage scenario | Simple flags | Value + properties | Structural state branching |
+
+**Selection Criteria:**
+- All values share the **same data structure** -> `enum` or `SmartEnum`
+- Each value has **different data** -> `UnionValueObject`
+
+---
+
+## Base Class Selection
+
+From the `IUnionValueObject` -> `UnionValueObject` -> `UnionValueObject<TSelf>` hierarchy, select the base class based on whether state transitions are needed.
 
 ```
-IUnionValueObject (마커 인터페이스)
-  └─ UnionValueObject (순수 데이터 Union)
-       └─ UnionValueObject<TSelf> (상태 전이 Union, CRTP)
+IUnionValueObject (marker interface)
+  +-- UnionValueObject (pure data Union)
+       +-- UnionValueObject<TSelf> (state transition Union, CRTP)
 ```
 
-| 조건 | 선택 |
-|------|------|
-| 허용 조합만 표현 (상태 전이 없음) | `UnionValueObject` |
-| 상태 전이 로직 필요 | `UnionValueObject<TSelf>` |
+| Condition | Choice |
+|-----------|--------|
+| Express only allowed combinations (no state transitions) | `UnionValueObject` |
+| State transition logic needed | `UnionValueObject<TSelf>` |
 
-`UnionValueObject<TSelf>`는 CRTP(Curiously Recurring Template Pattern)를 사용하여, `TransitionFrom` 헬퍼가 `DomainError`에 정확한 타입 정보를 포함할 수 있게 합니다.
+`UnionValueObject<TSelf>` uses CRTP (Curiously Recurring Template Pattern) so that the `TransitionFrom` helper can include accurate type information in `DomainError`.
 
 ---
 
-## 순수 데이터 Union 구현
+## Pure Data Union Implementation
 
-상태 전이 없이 **허용되는 조합만 타입으로 표현**하는 패턴입니다.
+A pattern that **expresses only allowed combinations as types** without state transitions.
 
-### 구현 규칙
+### Implementation Rules
 
-1. `abstract partial record` + `[UnionType]` 선언
-2. `UnionValueObject` 상속
-3. 케이스를 `sealed record`로 정의
-4. `private` 생성자로 외부 확장 차단
+1. Declare as `abstract partial record` + `[UnionType]`
+2. Inherit from `UnionValueObject`
+3. Define cases as `sealed record`
+4. Block external extension with a `private` constructor
 
-### 예제: ContactInfo
+### Example: ContactInfo
 
-연락처 정보는 "이메일만", "우편만", "이메일+우편" 중 하나여야 합니다. "연락 수단 없음"은 구조적으로 불가능합니다.
+Contact information must be one of "email only", "postal only", or "email+postal". "No contact method" is structurally impossible.
 
 ```csharp
 [UnionType]
@@ -145,17 +145,17 @@ public abstract partial record ContactInfo : UnionValueObject
 }
 ```
 
-- `private` 생성자로 외부에서 새 케이스를 추가할 수 없습니다
-- 세 케이스 중 하나만 선택 가능하므로 "연락 수단 없음" 상태가 불가능합니다
-- `record`이므로 값 기반 동등성이 자동으로 제공됩니다
+- The `private` constructor prevents adding new cases externally
+- Only one of the three cases can be selected, making "no contact method" impossible
+- Since it is a `record`, value-based equality is automatically provided
 
 ---
 
-## 상태 전이 Union 구현
+## State Transition Union Implementation
 
-상태 간 **유효한 전이만 허용**하는 패턴입니다. `UnionValueObject<TSelf>`를 상속하여 `TransitionFrom` 헬퍼를 사용합니다.
+A pattern that **allows only valid transitions** between states. It inherits from `UnionValueObject<TSelf>` to use the `TransitionFrom` helper.
 
-### TransitionFrom 헬퍼
+### TransitionFrom Helper
 
 ```csharp
 protected Fin<TTarget> TransitionFrom<TSource, TTarget>(
@@ -163,21 +163,21 @@ protected Fin<TTarget> TransitionFrom<TSource, TTarget>(
     string? message = null)
 ```
 
-| 상황 | 결과 |
-|------|------|
-| `this`가 `TSource`인 경우 | 전이 함수 적용 → `Fin.Succ(결과)` |
-| `this`가 `TSource`가 아닌 경우 | `Fin.Fail(DomainError(InvalidTransition))` |
+| Situation | Result |
+|-----------|--------|
+| `this` is `TSource` | Applies the transition function -> `Fin.Succ(result)` |
+| `this` is not `TSource` | `Fin.Fail(DomainError(InvalidTransition))` |
 
-`DomainError`에는 CRTP로 전달된 `TSelf` 타입 정보와 `FromState`/`ToState` 정보가 포함됩니다.
+The `DomainError` includes the `TSelf` type information passed via CRTP and `FromState`/`ToState` information.
 
-**InvalidTransition 에러 타입:**
+**InvalidTransition Error Type:**
 
 ```csharp
-// DomainErrorType.Transition.cs에 정의
+// Defined in DomainErrorType.Transition.cs
 public sealed record InvalidTransition(string? FromState = null, string? ToState = null) : DomainErrorType;
 ```
 
-전이 실패 시 생성되는 에러 JSON 구조 예시:
+Example of the error JSON structure generated on transition failure:
 
 ```json
 {
@@ -187,11 +187,11 @@ public sealed record InvalidTransition(string? FromState = null, string? ToState
 }
 ```
 
-> **참고**: `InvalidTransition` 에러 타입은 [에러 시스템: Domain/Application 에러](./08b-error-system-domain-app)의 Transition 범주를 참조하세요.
+> **Note**: The `InvalidTransition` error type is documented in the Transition category of [Error System: Domain/Application Errors](./08b-error-system-domain-app).
 
-### 예제: EmailVerificationState
+### Example: EmailVerificationState
 
-이메일 인증은 `Unverified → Verified` 단방향 전이만 허용합니다.
+Email verification allows only unidirectional transition from `Unverified -> Verified`.
 
 ```csharp
 [UnionType]
@@ -202,35 +202,35 @@ public abstract partial record EmailVerificationState : UnionValueObject<EmailVe
 
     private EmailVerificationState() { }
 
-    /// Unverified → Verified 전이. Verified 상태에서는 실패를 반환합니다.
+    /// Unverified -> Verified transition. Returns a failure when already in Verified state.
     public Fin<Verified> Verify(DateTime verifiedAt) =>
         TransitionFrom<Unverified, Verified>(
             u => new Verified(u.Email, verifiedAt));
 }
 ```
 
-- `Verify`의 반환 타입은 `Fin<Verified>` — 성공하면 반드시 `Verified` 상태입니다
-- `Verified` 상태에서 `Verify` 호출 시 `InvalidTransition` 에러가 자동 반환됩니다
-- 전이 함수 `u => new Verified(u.Email, verifiedAt)`는 `Unverified`에서 이메일을 유지하면서 인증 시각을 추가합니다
+- The return type of `Verify` is `Fin<Verified>` -- on success, the result is guaranteed to be in `Verified` state
+- Calling `Verify` while already in `Verified` state automatically returns an `InvalidTransition` error
+- The transition function `u => new Verified(u.Email, verifiedAt)` preserves the email from `Unverified` while adding the verification timestamp
 
 ---
 
-## [UnionType] 소스 생성기
+## [UnionType] Source Generator
 
-`[UnionType]` 어트리뷰트를 `abstract partial record`에 적용하면, 소스 생성기가 다음 4종의 멤버를 자동 생성합니다.
+When the `[UnionType]` attribute is applied to an `abstract partial record`, the source generator automatically generates the following 4 types of members.
 
-### 생성 대상
+### Generated Members
 
-| 생성 멤버 | 시그니처 | 용도 |
-|-----------|---------|------|
-| `Match<TResult>` | `Func<Case, TResult>` 파라미터 (케이스 수만큼) | 모든 케이스를 빠짐없이 처리하여 값 반환 |
-| `Switch` | `Action<Case>` 파라미터 (케이스 수만큼) | 모든 케이스를 빠짐없이 처리 (반환 없음) |
-| `Is{Case}` | `bool` 속성 | 특정 케이스인지 확인 |
-| `As{Case}()` | `Case?` 반환 메서드 | 특정 케이스로 안전한 캐스팅 |
+| Generated Member | Signature | Purpose |
+|------------------|-----------|---------|
+| `Match<TResult>` | `Func<Case, TResult>` parameters (one per case) | Exhaustively handles all cases and returns a value |
+| `Switch` | `Action<Case>` parameters (one per case) | Exhaustively handles all cases (no return) |
+| `Is{Case}` | `bool` property | Checks whether it is a specific case |
+| `As{Case}()` | `Case?` returning method | Safe cast to a specific case |
 
-### 생성 예시
+### Generation Example
 
-`ContactInfo`에 대해 다음 코드가 자동 생성됩니다:
+For `ContactInfo`, the following code is automatically generated:
 
 ```csharp
 public abstract partial record ContactInfo
@@ -264,15 +264,15 @@ public abstract partial record ContactInfo
 }
 ```
 
-### 요구사항
+### Requirements
 
-- `abstract partial record` 선언 필수
-- `[UnionType]` 어트리뷰트 적용
-- 케이스는 `sealed record`로 정의하고 Union 타입을 직접 상속
+- Must be declared as `abstract partial record`
+- Must have the `[UnionType]` attribute applied
+- Cases must be defined as `sealed record` and directly inherit the Union type
 
 ### UnreachableCaseException
 
-`Match`/`Switch`의 기본 분기(`_ =>`)에서 사용됩니다. 모든 케이스가 `sealed record`로 닫혀 있으므로 정상적으로는 도달하지 않지만, 컴파일러의 exhaustiveness 경고를 해소하기 위해 포함됩니다.
+Used in the default branch (`_ =>`) of `Match`/`Switch`. Since all cases are closed as `sealed record`, this should never be reached in normal circumstances, but it is included to resolve the compiler's exhaustiveness warning.
 
 ```csharp
 public sealed class UnreachableCaseException(object value)
@@ -281,39 +281,39 @@ public sealed class UnreachableCaseException(object value)
 
 ---
 
-## Aggregate에서 Union 활용
+## Using Unions in Aggregates
 
-### 가드 + 전이 위임 패턴
+### Guard + Transition Delegation Pattern
 
-Aggregate는 전이 자체를 수행하지 않고, **가드 조건 검증 후 Union 객체에 위임**합니다.
+The Aggregate does not perform the transition itself, but **validates guard conditions and delegates to the Union object.**
 
 ```csharp
 // Error type definitions
 public sealed record AlreadyDeleted : DomainErrorType.Custom;
 public sealed record NoEmailToVerify : DomainErrorType.Custom;
 
-// Contact Aggregate의 VerifyEmail 메서드
+// Contact Aggregate's VerifyEmail method
 public Fin<Unit> VerifyEmail(DateTime verifiedAt)
 {
-    // 1. 가드: 삭제 상태 확인
+    // 1. Guard: check deletion status
     if (DeletedAt.IsSome)
         return DomainError.For<Contact>(
             new AlreadyDeleted(), Id.ToString(),
             "Cannot verify email of a deleted contact");
 
-    // 2. Match로 이메일 상태 추출
+    // 2. Extract email state via Match
     var emailState = ContactInfo.Match<EmailVerificationState?>(
         emailOnly: eo => eo.EmailState,
         postalOnly: _ => null,
         emailAndPostal: ep => ep.EmailState);
 
-    // 3. 가드: 이메일 존재 확인
+    // 3. Guard: check email existence
     if (emailState is null)
         return DomainError.For<Contact>(
             new NoEmailToVerify(), Id.ToString(),
             "Contact does not have an email");
 
-    // 4. 상태 전이를 EmailVerificationState에 위임
+    // 4. Delegate state transition to EmailVerificationState
     return emailState.Verify(verifiedAt).Map(verified =>
     {
         ContactInfo = ContactInfo.Match(
@@ -327,23 +327,23 @@ public Fin<Unit> VerifyEmail(DateTime verifiedAt)
 }
 ```
 
-**패턴 요약:**
+**Pattern Summary:**
 
-| 단계 | 역할 | 담당 |
-|------|------|------|
-| 가드 | 선행 조건 검증 | Aggregate |
-| 상태 추출 | `Match`로 현재 상태 가져오기 | Aggregate |
-| 전이 실행 | `TransitionFrom`으로 상태 변경 | Union 객체 |
-| 결과 반영 | 새 상태 저장 + 이벤트 발행 | Aggregate |
+| Step | Role | Owner |
+|------|------|-------|
+| Guard | Precondition validation | Aggregate |
+| State extraction | Get current state via `Match` | Aggregate |
+| Transition execution | Change state via `TransitionFrom` | Union object |
+| Apply result | Save new state + publish event | Aggregate |
 
-### 투영 속성 패턴
+### Projection Property Pattern
 
-Union 내부의 값을 쿼리에서 사용해야 할 때, Aggregate에 투영 속성(projection property)을 정의합니다.
+When Union internal values need to be used in queries, define a projection property on the Aggregate.
 
 ```csharp
 public sealed class Contact : AggregateRoot<ContactId>
 {
-    // ContactInfo 설정 시 EmailValue 자동 동기화
+    // Automatically syncs EmailValue when ContactInfo is set
     private ContactInfo _contactInfo = null!;
     public ContactInfo ContactInfo
     {
@@ -355,7 +355,7 @@ public sealed class Contact : AggregateRoot<ContactId>
         }
     }
 
-    // 이메일 투영 속성 (Specification 지원용)
+    // Email projection property (for Specification support)
     public string? EmailValue { get; private set; }
 
     private static string? ExtractEmail(ContactInfo contactInfo) => contactInfo.Match(
@@ -365,82 +365,82 @@ public sealed class Contact : AggregateRoot<ContactId>
 }
 ```
 
-이 패턴으로 `ExpressionSpecification`에서 `EmailValue` 속성을 직접 쿼리할 수 있습니다.
+This pattern allows the `EmailValue` property to be queried directly in `ExpressionSpecification`.
 
 ---
 
-## ValueObject와 UnionValueObject 비교
+## Comparing ValueObject and UnionValueObject
 
-| 항목 | `sealed class : ValueObject` | `abstract partial record : UnionValueObject` |
+| Item | `sealed class : ValueObject` | `abstract partial record : UnionValueObject` |
 |------|------------------------------|----------------------------------------------|
-| 용도 | 복합 VO (PersonalName, PostalAddress) | Discriminated Union (ContactInfo, EmailVerificationState) |
-| 동등성 | `GetEqualityComponents()` 명시 구현 | 컴파일러 자동 생성 (record) |
-| 불변성 | private 생성자 + `{ get; }` | record positional 파라미터 |
-| VO 계층 | `ValueObject` 계층 참여 | `IUnionValueObject` 계층 참여 |
-| ORM 호환 | 프록시 타입 자동 처리 | 프록시 미지원 |
-| 해시코드 | 캐시된 해시코드 | 컴파일러 생성 (record) |
-| Source Generator | — | `[UnionType]`으로 Match/Switch 자동 생성 |
+| Purpose | Composite VO (PersonalName, PostalAddress) | Discriminated Union (ContactInfo, EmailVerificationState) |
+| Equality | Explicit `GetEqualityComponents()` implementation | Compiler-generated (record) |
+| Immutability | private constructor + `{ get; }` | record positional parameters |
+| VO hierarchy | Participates in `ValueObject` hierarchy | Participates in `IUnionValueObject` hierarchy |
+| ORM compatibility | Automatic proxy type handling | No proxy support |
+| Hash code | Cached hash code | Compiler-generated (record) |
+| Source Generator | -- | Auto-generates Match/Switch via `[UnionType]` |
 
 ---
 
-## 트러블슈팅
+## Troubleshooting
 
-### Match에서 새 케이스 추가 시 컴파일 오류
+### Compile Error When Adding a New Case to Match
 
-**원인:** 정상 동작입니다. `Match<TResult>`는 모든 케이스에 대한 `Func` 파라미터를 요구하므로, 새 케이스 추가 시 기존 `Match` 호출부에서 인자 수 불일치로 컴파일 오류가 발생합니다.
+**Cause:** This is expected behavior. `Match<TResult>` requires a `Func` parameter for every case, so adding a new case causes argument count mismatch compile errors at existing `Match` call sites.
 
-**해결:** 모든 `Match`/`Switch` 호출부에 새 케이스에 대한 핸들러를 추가하세요. 이것이 exhaustiveness 보장의 핵심 이점입니다.
+**Resolution:** Add a handler for the new case at all `Match`/`Switch` call sites. This is the core benefit of exhaustiveness guarantees.
 
-### TransitionFrom에서 InvalidTransition 에러
+### InvalidTransition Error from TransitionFrom
 
-**원인:** 현재 상태가 전이 소스 타입과 일치하지 않습니다. 예를 들어, 이미 `Verified` 상태에서 다시 `Verify`를 호출한 경우입니다.
+**Cause:** The current state does not match the transition source type. For example, calling `Verify` again while already in `Verified` state.
 
-**해결:** Aggregate에서 전이를 호출하기 전에 현재 상태를 확인하거나, `InvalidTransition` 에러를 상위 레이어에서 적절히 처리하세요.
+**Resolution:** Either check the current state before calling the transition in the Aggregate, or handle the `InvalidTransition` error appropriately in upper layers.
 
 ```csharp
-// 에러에 FromState, ToState 정보가 포함됩니다
+// The error includes FromState and ToState information
 // "Invalid transition from Verified to Verified"
 ```
 
-### partial 키워드 누락 시 소스 생성기 미작동
+### Source Generator Not Working When partial Keyword Is Missing
 
-**원인:** `[UnionType]` 소스 생성기는 `partial` 키워드가 있는 record만 인식합니다. `partial`이 없으면 생성기가 코드를 추가할 수 없습니다.
+**Cause:** The `[UnionType]` source generator only recognizes records with the `partial` keyword. Without `partial`, the generator cannot add code.
 
-**해결:** `abstract partial record`로 선언하세요.
+**Resolution:** Declare as `abstract partial record`.
 
 ```csharp
-// 올바른 선언
+// Correct declaration
 [UnionType]
 public abstract partial record ContactInfo : UnionValueObject { ... }
 
-// partial 누락 — Match/Switch가 생성되지 않음
+// Missing partial -- Match/Switch will not be generated
 [UnionType]
 public abstract record ContactInfo : UnionValueObject { ... }
 ```
 
-### record는 class를 상속할 수 없음
+### record Cannot Inherit from class
 
-**원인:** C#에서 record는 다른 class를 상속할 수 없습니다. 이 때문에 `ValueObject`(class)를 상속하는 대신 `IUnionValueObject`(인터페이스) 기반으로 설계되었습니다.
+**Cause:** In C#, a record cannot inherit from another class. This is why the design uses `IUnionValueObject` (interface) instead of `ValueObject` (class).
 
-**해결:** Union 타입은 `UnionValueObject`(abstract record)를 상속하세요. `ValueObject`(class)는 사용할 수 없습니다.
+**Resolution:** Union types should inherit from `UnionValueObject` (abstract record). `ValueObject` (class) cannot be used.
 
 ---
 
 ## FAQ
 
-### Q1. SmartEnum vs UnionValueObject 선택 기준은?
+### Q1. What is the selection criteria between SmartEnum and UnionValueObject?
 
-**모든 값이 같은 데이터 구조를 공유하면** `SmartEnum`, **값마다 서로 다른 데이터를 가지면** `UnionValueObject`를 사용합니다.
+**Use `SmartEnum` when all values share the same data structure,** and **`UnionValueObject` when each value has different data.**
 
 ```csharp
-// SmartEnum: 모든 통화가 동일한 구조 (Name, Value, Symbol, KoreanName)
+// SmartEnum: all currencies have the same structure (Name, Value, Symbol, KoreanName)
 public sealed class Currency : SmartEnum<Currency, string>
 {
-    public static readonly Currency KRW = new("KRW", "KRW", "₩", "한국 원화");
-    public static readonly Currency USD = new("USD", "USD", "$", "미국 달러");
+    public static readonly Currency KRW = new("KRW", "KRW", "₩", "Korean Won");
+    public static readonly Currency USD = new("USD", "USD", "$", "US Dollar");
 }
 
-// UnionValueObject: 케이스별 데이터 구조가 다름
+// UnionValueObject: different data structures per case
 public abstract partial record ContactInfo : UnionValueObject
 {
     public sealed record EmailOnly(EmailVerificationState EmailState) : ContactInfo;
@@ -448,45 +448,45 @@ public abstract partial record ContactInfo : UnionValueObject
 }
 ```
 
-| 상황 | 선택 |
-|------|------|
-| 고정 목록 + 같은 속성 | `SmartEnum` |
-| 케이스별 고유 데이터 | `UnionValueObject` |
-| 상태 전이 로직 필요 | `UnionValueObject<TSelf>` |
+| Scenario | Choice |
+|----------|--------|
+| Fixed list + same properties | `SmartEnum` |
+| Unique data per case | `UnionValueObject` |
+| State transition logic needed | `UnionValueObject<TSelf>` |
 
-### Q2. Union에 Validate/Create 패턴이 있는가?
+### Q2. Do Unions have a Validate/Create pattern?
 
-Union 값 객체는 **Validate/Create 패턴을 사용하지 않습니다.** Union의 각 케이스는 이미 검증된 VO를 파라미터로 받으므로, Union 자체의 검증은 "어떤 케이스인가"를 결정하는 비즈니스 로직에 해당합니다. 이는 Aggregate 또는 Application Layer에서 처리합니다.
+Union value objects **do not use the Validate/Create pattern.** Each Union case receives already-validated VOs as parameters, so the Union's own validation amounts to "which case is it" -- a business logic decision. This is handled in the Aggregate or Application Layer.
 
 ```csharp
-// Union 케이스는 이미 검증된 VO를 받음
+// Union cases receive already-validated VOs
 var contactInfo = new ContactInfo.EmailOnly(
-    new EmailVerificationState.Unverified(email));  // email은 이미 검증된 EmailAddress VO
+    new EmailVerificationState.Unverified(email));  // email is an already-validated EmailAddress VO
 ```
 
-### Q3. Match 대신 C# switch를 사용해도 되는가?
+### Q3. Can C# switch be used instead of Match?
 
-**가능하지만 권장하지 않습니다.** C# `switch`는 기본 분기(`_`)를 요구하지 않으므로, 새 케이스 추가 시 누락을 컴파일 타임에 잡지 못합니다. `Match`는 모든 케이스에 대한 핸들러를 강제합니다.
+**Possible but not recommended.** C# `switch` does not require a default branch (`_`), so adding a new case may not be caught at compile time. `Match` enforces handlers for all cases.
 
 ```csharp
-// Match: 새 케이스 추가 시 컴파일 오류 (안전)
+// Match: compile error when new case is added (safe)
 contactInfo.Match(
     emailOnly: eo => ...,
     postalOnly: po => ...,
     emailAndPostal: ep => ...);
 
-// C# switch: 새 케이스 추가 시 _ 분기로 빠짐 (위험)
+// C# switch: new case falls through to _ branch (risky)
 var result = contactInfo switch
 {
     ContactInfo.EmailOnly eo => ...,
     ContactInfo.PostalOnly po => ...,
-    _ => ...  // 새 케이스가 여기로 빠질 수 있음
+    _ => ...  // New cases may silently fall through here
 };
 ```
 
-### Q4. Union 케이스에 행위 메서드를 정의할 수 있는가?
+### Q4. Can behavior methods be defined on Union cases?
 
-**가능하지만, 상태 전이 메서드는 Union 루트에 정의하는 것을 권장합니다.** `TransitionFrom`은 `UnionValueObject<TSelf>`에 정의되어 있으므로, 루트 record에서 호출해야 합니다. 케이스별 유틸리티 메서드는 개별 케이스에 정의할 수 있습니다.
+**Possible, but state transition methods should be defined on the Union root.** `TransitionFrom` is defined on `UnionValueObject<TSelf>`, so it must be called from the root record. Per-case utility methods can be defined on individual cases.
 
 ```csharp
 public abstract partial record EmailVerificationState : UnionValueObject<EmailVerificationState>
@@ -494,11 +494,11 @@ public abstract partial record EmailVerificationState : UnionValueObject<EmailVe
     public sealed record Unverified(EmailAddress Email) : EmailVerificationState;
     public sealed record Verified(EmailAddress Email, DateTime VerifiedAt) : EmailVerificationState
     {
-        // 케이스별 유틸리티는 가능
+        // Per-case utility is fine
         public bool IsExpired(DateTime now) => (now - VerifiedAt).TotalDays > 365;
     }
 
-    // 상태 전이 메서드는 루트에 정의
+    // State transition methods are defined on the root
     public Fin<Verified> Verify(DateTime verifiedAt) =>
         TransitionFrom<Unverified, Verified>(u => new Verified(u.Email, verifiedAt));
 }
@@ -506,10 +506,10 @@ public abstract partial record EmailVerificationState : UnionValueObject<EmailVe
 
 ---
 
-## 참고 문서
+## References
 
-- [값 객체 (Value Object)](./05a-value-objects) - 값 객체 핵심 개념과 기반 클래스 선택
-- [값 객체: 열거형·검증·실전 패턴](./05b-value-objects-validation) - SmartEnum, Application Layer 검증 병합
-- [에러 시스템: 기초와 네이밍](./08a-error-system) - DomainError, DomainErrorType
-- [에러 시스템: Domain/Application 에러](./08b-error-system-domain-app) - InvalidTransition 에러 타입
-- [단위 테스트 가이드](../testing/15a-unit-testing)
+- [Value Objects](./05a-value-objects) - Core value object concepts and base class selection
+- [Value Objects: Enumerations, Validation, and Practical Patterns](./05b-value-objects-validation) - SmartEnum, Application Layer validation merging
+- [Error System: Basics and Naming](./08a-error-system) - DomainError, DomainErrorType
+- [Error System: Domain/Application Errors](./08b-error-system-domain-app) - InvalidTransition error type
+- [Unit Testing Guide](../testing/15a-unit-testing)

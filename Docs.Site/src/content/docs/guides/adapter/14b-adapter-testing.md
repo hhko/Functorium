@@ -4,7 +4,7 @@ title: "Adapter 연결 -- 단위 테스트"
 
 이 문서는 Adapter의 단위 테스트 작성, End-to-End Walkthrough, 아키텍처 부록을 다루는 가이드입니다. Pipeline 생성과 DI 등록은 [14a-adapter-pipeline-di.md](./14a-adapter-pipeline-di), Port 정의는 [12-ports.md](./12-ports), Adapter 구현은 [13-adapters.md](./13-adapters)을 참조하세요.
 
-## 들어가며
+## Introduction
 
 "Adapter 레이어의 단위 테스트를 어떻게 구성하고, Port 의존성을 어떻게 격리할 것인가?"
 "Pipeline이 아닌 원본 Adapter를 직접 테스트해야 하는 이유는 무엇인가?"
@@ -12,17 +12,17 @@ title: "Adapter 연결 -- 단위 테스트"
 
 Adapter 단위 테스트는 비즈니스 로직의 정확성을 검증하는 마지막 관문입니다. Pipeline(Observable)이 아닌 원본 Adapter 클래스를 직접 테스트하여, 관측성 래핑 없이 순수한 로직을 검증합니다. 이 문서는 유형별 테스트 전략과 End-to-End Walkthrough를 다룹니다.
 
-### 이 문서에서 배우는 내용
+### What You Will Learn
 
-이 문서를 통해 다음을 학습합니다:
+This document covers the following topics:
 
 1. **Adapter 단위 테스트 구조** — 원본 Adapter 직접 테스트, AAA 패턴, IO 실행 패턴
 2. **Mock/Stub 전략** — Repository(직접 인스턴스), External API(MockHttpMessageHandler), Messaging(NSubstitute)
 3. **E2E 워크스루** — Repository, External API, Messaging, Query Adapter의 전체 구현 과정 요약
 
-### 사전 지식
+### Prerequisites
 
-이 문서를 이해하기 위해 다음 개념에 대한 기본적인 이해가 필요합니다:
+A basic understanding of the following concepts is needed to understand this document:
 
 - [Adapter 구현](./13-adapters) — Adapter 유형별 구현 패턴
 - [Pipeline과 DI](./14a-adapter-pipeline-di) — Pipeline 생성과 DI 등록
@@ -30,25 +30,25 @@ Adapter 단위 테스트는 비즈니스 로직의 정확성을 검증하는 마
 
 > **테스트 대상은 Pipeline이 아닌 원본 Adapter입니다.** Pipeline은 관측성만 추가하므로, 비즈니스 로직 검증은 원본 클래스에서 수행합니다.
 
-## 요약
+## Summary
 
-### 주요 명령
+### Key Commands
 
 ```csharp
 // 테스트에서 IO 실행
 var result = await Task.Run(() => adapter.GetById(id).Run().RunAsync());
 ```
 
-### 주요 절차
+### Key Procedures
 
 1. 원본 Adapter 클래스를 직접 인스턴스화하여 테스트 (Pipeline이 아님)
 2. AAA (Arrange-Act-Assert) 패턴으로 테스트 작성
 3. `.Run().RunAsync()` 또는 `Task.Run(() => ioResult.Run())`으로 IO 실행
 4. 성공/실패 케이스 모두 테스트
 
-### 주요 개념
+### Key Concepts
 
-| 개념 | 설명 |
+| Concept | Description |
 |------|------|
 | IO 실행 패턴 | 테스트에서 `adapter.Method().Run().RunAsync()`로 IO 실행 |
 | 테스트 대상 | 원본 Adapter 클래스 (Pipeline 아님) |
@@ -73,7 +73,7 @@ Adapter의 단위 테스트는 **원본 클래스를 직접 테스트**합니다
 | 단언 라이브러리 | Shouldly |
 | Mock 라이브러리 | NSubstitute |
 
-> **참고**: 테스트 규칙 상세는 [15a-unit-testing.md](../testing/15a-unit-testing)를 참조하세요.
+> **Note**: 테스트 규칙 상세는 [15a-unit-testing.md](../testing/15a-unit-testing)를 참조하세요.
 
 **IO 실행 패턴** - `FinT<IO, T>` 반환값을 테스트에서 실행하는 패턴:
 
@@ -144,7 +144,7 @@ public sealed class ProductRepositoryInMemoryTests
 
 External API Adapter는 `HttpClient`를 Mock하여 테스트합니다.
 
-`MockHttpMessageHandler`로 HTTP 응답을 제어하고, 성공/실패 시나리오를 분리하여 테스트하는 패턴을 주목하세요.
+`MockHttpMessageHandler`로 HTTP 응답을 제어하고, 성공/실패 시나리오를 분리하여 테스트하는 패턴.
 
 ```csharp
 // 파일: Tests/{Project}.Tests.Unit/LayerTests/Adapters/ExternalPricingApiServiceTests.cs
@@ -296,7 +296,7 @@ public sealed class RabbitMqInventoryMessagingTests
 }
 ```
 
-> **참조**: `Tutorials/Cqrs06Services/Tests/OrderService.Tests.Unit/LayerTests/Adapters/RabbitMqInventoryMessagingTests.cs`
+> **Reference**: `Tutorials/Cqrs06Services/Tests/OrderService.Tests.Unit/LayerTests/Adapters/RabbitMqInventoryMessagingTests.cs`
 
 ### Query Adapter 테스트
 
@@ -321,9 +321,9 @@ public async Task Search_ReturnsPagedResult_WhenProductsExist()
 }
 ```
 
-> **참조**: `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Application/Products/SearchProductsQueryTests.cs`
+> **Reference**: `Tests.Hosts/01-SingleHost/Tests/LayeredArch.Tests.Unit/Application/Products/SearchProductsQueryTests.cs`
 
-> **참고**: Dapper Query Adapter의 SQL 실행 테스트는 통합 테스트에서 수행합니다. 단위 테스트에서는 InMemory 구현을 사용하여 Query 로직을 검증합니다.
+> **Note**: Dapper Query Adapter의 SQL 실행 테스트는 통합 테스트에서 수행합니다. 단위 테스트에서는 InMemory 구현을 사용하여 Query 로직을 검증합니다.
 
 유형별 테스트 패턴을 익혔다면, 이제 각 Adapter의 전체 구현 과정을 End-to-End로 확인합니다.
 
@@ -472,7 +472,7 @@ public sealed class GetProductByIdQuery
 - [ ] 실패: `AdapterError.For<T>(errorType, context, message)`
 - [ ] 예외: `AdapterError.FromException<T>(errorType, ex)`
 
-#### DI 등록
+#### DI Registration
 
 - [ ] Registration 클래스 생성 (`Adapter{Layer}Registration`)
 - [ ] `RegisterScopedObservablePort<IObservablePort, ObservablePort>()`
@@ -530,13 +530,13 @@ Pipeline이 자동 제공하는 Observability 기능의 요약입니다. 상세 
 
 ---
 
-## 트러블슈팅
+## Troubleshooting
 
 ### 테스트에서 `FinT<IO, T>` 실행 방법을 모르겠음
 
-**원인:** `FinT<IO, T>` 반환값은 IO 모나드를 감싸고 있어 직접 실행이 필요합니다.
+**Cause:** `FinT<IO, T>` 반환값은 IO 모나드를 감싸고 있어 직접 실행이 필요합니다.
 
-**해결:** `.Run().RunAsync()` 패턴을 사용합니다.
+**Resolution:** `.Run().RunAsync()` 패턴을 사용합니다.
 
 ```csharp
 var ioFin = adapter.MethodUnderTest(args);   // FinT<IO, T> 반환
@@ -554,7 +554,7 @@ var result = await Task.Run(() => ioResult.Run());  // Fin<T> 실행
 
 ### Q6. Repository와 Query Adapter를 언제 구분하나요?
 
-**판단 기준**: 조회 결과로 Aggregate를 재구성할 필요가 있는가?
+**Decision Criteria**: 조회 결과로 Aggregate를 재구성할 필요가 있는가?
 
 - **Aggregate 필요** (도메인 불변식 검증, Create/Update/Delete) -> **Repository** (`IRepository<T, TId>`, Domain Layer, EF Core)
 - **DTO 직접 반환** (읽기 전용, 페이지네이션/정렬) -> **Query Adapter** (`IQueryPort<TEntity, TDto>`, Application Layer, Dapper)
@@ -563,7 +563,7 @@ var result = await Task.Run(() => ioResult.Run());  // Fin<T> 실행
 
 ---
 
-## 참고 문서
+## References
 
 | 문서 | 설명 |
 |------|------|

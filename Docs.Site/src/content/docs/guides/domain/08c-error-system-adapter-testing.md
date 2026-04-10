@@ -1,18 +1,18 @@
 ---
-title: "에러 시스템 — Adapter 에러와 테스트"
+title: "Error System — Adapter Errors and Testing"
 ---
 
 이 문서는 Adapter 에러, Custom 에러 정의, 테스트 모범 사례, 레이어별 체크리스트를 다룹니다. 에러 처리의 기본 원칙과 네이밍 규칙은 [08a-error-system.md](./08a-error-system)을 참고하세요. Domain/Application/Event 에러는 [08b-error-system-domain-app.md](./08b-error-system-domain-app)을 참고하세요.
 
-## 들어가며
+## Introduction
 
 [08b-error-system-domain-app.md](./08b-error-system-domain-app)에서 Domain/Application 에러를 다뤘습니다. 이 문서에서는 Adapter 에러, Custom 에러 정의 패턴, 테스트 모범 사례, 레이어별 체크리스트를 다룹니다.
 
 > Adapter 에러는 파이프라인, 외부 서비스, 데이터 처리 과정의 실패를 표현합니다. 예외를 `AdapterError.FromException`으로 래핑하여 에러 추적성을 유지하고, `Functorium.Testing.Assertions.Errors`의 어설션으로 에러 타입과 코드를 정확히 검증합니다.
 
-## 요약
+## Summary
 
-### 주요 명령
+### Key Commands
 
 ```csharp
 // Adapter 에러
@@ -28,14 +28,14 @@ result.ShouldFailWithErrorCode("AdapterErrors.ProductRepository.NotFound");
 error.ShouldBeErrorCodeExceptional<InvalidOperationException>("AdapterErrors.DatabaseAdapter.ConnectionFailed");
 ```
 
-### 주요 절차
+### Key Procedures
 
 1. Adapter 에러: 표준 에러 타입 선택 또는 Custom sealed record 정의
 2. `AdapterError.For` 또는 `AdapterError.FromException`으로 에러 생성
 3. Custom 에러가 필요하면 `AdapterErrorType.Custom`을 상속한 sealed record 정의
 4. 테스트 작성 - 레이어별 어설션 또는 범용 어설션 사용
 
-### 주요 개념
+### Key Concepts
 
 | 레이어 | 팩토리 | 에러 코드 접두사 | 사용 시점 |
 |--------|--------|-----------------|----------|
@@ -80,7 +80,7 @@ return AdapterError.FromException<ExternalApiService>(
 
 #### 공통 에러 타입 - R1, R3, R4, R5, R7
 
-| 에러 타입 | 설명 | 사용 예시 |
+| Error Type | Description | Usage Example |
 |-----------|------|----------|
 | `Empty` | 비어있음 | `new Empty()` |
 | `Null` | null임 | `new Null()` |
@@ -93,14 +93,14 @@ return AdapterError.FromException<ExternalApiService>(
 
 #### Pipeline 관련 - R8
 
-| 에러 타입 | 설명 | 사용 예시 |
+| Error Type | Description | Usage Example |
 |-----------|------|----------|
 | `PipelineValidation` | 파이프라인 검증 실패 | `new PipelineValidation(PropertyName: "Id")` |
 | `PipelineException` | 파이프라인 예외 발생 | `new PipelineException()` |
 
 #### 외부 서비스 관련 - R1, R8
 
-| 에러 타입 | 설명 | 사용 예시 |
+| Error Type | Description | Usage Example |
 |-----------|------|----------|
 | `ExternalServiceUnavailable` | 외부 서비스 사용 불가 | `new ExternalServiceUnavailable(ServiceName: "PaymentGateway")` |
 | `ConnectionFailed` | 연결 실패 | `new ConnectionFailed(Target: "database")` |
@@ -108,7 +108,7 @@ return AdapterError.FromException<ExternalApiService>(
 
 #### 데이터 관련 - R1, R8
 
-| 에러 타입 | 설명 | 사용 예시 |
+| Error Type | Description | Usage Example |
 |-----------|------|----------|
 | `Serialization` | 직렬화 실패 | `new Serialization(Format: "JSON")` |
 | `Deserialization` | 역직렬화 실패 | `new Deserialization(Format: "XML")` |
@@ -116,13 +116,13 @@ return AdapterError.FromException<ExternalApiService>(
 
 #### 커스텀
 
-| 에러 타입 | 설명 | 사용 예시 |
+| Error Type | Description | Usage Example |
 |-----------|------|----------|
 | `Custom` | 어댑터 특화 에러 (abstract) | `sealed record RateLimited : AdapterErrorType.Custom;` → `new RateLimited()` |
 
 ### Repository 구현 예시
 
-`GetById`에서 `AdapterError.For`로 Not Found를 직접 반환하는 암시적 변환 패턴을 주목하세요.
+`GetById`에서 `AdapterError.For`로 Not Found를 직접 반환하는 암시적 변환 패턴.
 
 ```csharp
 [GenerateObservablePort]
@@ -184,7 +184,7 @@ public class InMemoryProductRepository : IProductRepository
 
 ### 외부 API 서비스 구현 예시
 
-HTTP 상태 코드별로 다른 에러 타입을 반환하는 `HandleHttpError` 패턴과, 예외 종류별 `FromException` 사용을 주목하세요.
+HTTP 상태 코드별로 다른 에러 타입을 반환하는 `HandleHttpError` 패턴과, 예외 종류별 `FromException` 사용.
 
 ```csharp
 [GenerateObservablePort]
@@ -653,7 +653,7 @@ using Functorium.Testing.Assertions.Errors;
 
 #### ErrorCodeAssertions — 범용 에러 코드 검증
 
-| 메서드 | 설명 |
+| Method | Description |
 |--------|------|
 | `error.ShouldHaveErrorCode()` | `IHasErrorCode` 구현 여부 검증, 인터페이스 반환 |
 | `error.ShouldHaveErrorCode("code")` | 특정 에러 코드 일치 검증 |
@@ -703,7 +703,7 @@ public void Validate_ShouldContain_MultipleErrorCodes()
 
 #### ErrorCodeExceptionalAssertions — 예외 기반 에러 검증
 
-| 메서드 | 설명 |
+| Method | Description |
 |--------|------|
 | `error.ShouldBeErrorCodeExceptional("code")` | `ErrorCodeExceptional` 타입 + 에러 코드 검증 |
 | `error.ShouldBeErrorCodeExceptional<TException>("code")` | 특정 예외 타입 래핑 검증 |
@@ -733,7 +733,7 @@ public void ShouldWrapException_WhenDatabaseFails()
 
 #### ErrorAssertionHelpers — 확장 속성 (C# 14 Extension Members)
 
-| 확장 속성 | 대상 타입 | 설명 |
+| Extension Property | Target Type | Description |
 |-----------|----------|------|
 | `error.ErrorCode` | `Error` | 에러 코드 추출 (`IHasErrorCode` 미구현 시 `null`) |
 | `error.HasErrorCode` | `Error` | 에러 코드 존재 여부 |
@@ -807,7 +807,7 @@ public void Error_ShouldHave_ErrorCode_Property()
 
 ### 레이어별 사용 시점
 
-| 레이어 | 사용 시점 |
+| Layer | When to Use |
 |--------|----------|
 | **Domain** | Value Object 검증 실패, Entity 불변성 위반, Aggregate 비즈니스 규칙 위반 |
 | **Application** | 유스케이스 실행 중 비즈니스 로직 오류, 권한/인증 오류, 데이터 조회 실패, 동시성 충돌 |
@@ -821,7 +821,7 @@ public void Error_ShouldHave_ErrorCode_Property()
 {LayerPrefix}.{TypeName}.{ErrorName}
 ```
 
-| 레이어 | 접두사 | 예시 |
+| Layer | Prefix | Example |
 |--------|--------|------|
 | Domain | `DomainErrors` | `DomainErrors.Email.Empty` |
 | Application | `ApplicationErrors` | `ApplicationErrors.CreateProductCommand.NotFound` |
@@ -861,15 +861,15 @@ public void Error_ShouldHave_ErrorCode_Property()
 
 ---
 
-## 트러블슈팅
+## Troubleshooting
 
 ### `FromException` 사용 시 에러 코드가 기대와 다름
-**원인:** `FromException`은 `ErrorCodeExceptional` 타입을 생성하므로 `ShouldBeAdapterError` 대신 `ShouldBeAdapterExceptionalError`를 사용해야 합니다.
-**해결:** 예외 래핑 에러는 `ShouldBeAdapterExceptionalError<TAdapter>(errorType)` 또는 `ShouldBeAdapterExceptionalError<TAdapter, TException>(errorType)`으로 검증하세요.
+**Cause:** `FromException`은 `ErrorCodeExceptional` 타입을 생성하므로 `ShouldBeAdapterError` 대신 `ShouldBeAdapterExceptionalError`를 사용해야 합니다.
+**Resolution:** 예외 래핑 에러는 `ShouldBeAdapterExceptionalError<TAdapter>(errorType)` 또는 `ShouldBeAdapterExceptionalError<TAdapter, TException>(errorType)`으로 검증하세요.
 
 ### Custom 에러가 레이어별 어설션에서 인식되지 않음
-**원인:** Custom 에러의 정의 위치가 잘못되었거나, 해당 레이어의 `Custom`을 상속하지 않았을 수 있습니다.
-**해결:** Custom 에러는 반드시 해당 레이어의 `Custom` abstract record를 상속해야 합니다. 예: `public sealed record RateLimited : AdapterErrorType.Custom;`
+**Cause:** Custom 에러의 정의 위치가 잘못되었거나, 해당 레이어의 `Custom`을 상속하지 않았을 수 있습니다.
+**Resolution:** Custom 에러는 반드시 해당 레이어의 `Custom` abstract record를 상속해야 합니다. 예: `public sealed record RateLimited : AdapterErrorType.Custom;`
 
 ---
 
@@ -886,7 +886,7 @@ public void Error_ShouldHave_ErrorCode_Property()
 
 ---
 
-## 참고 문서
+## References
 
 - [08a-error-system.md](./08a-error-system) - 에러 처리 기본 원칙과 네이밍 규칙
 - [08b-error-system-domain-app.md](./08b-error-system-domain-app) - Domain/Application/Event 에러 정의와 테스트

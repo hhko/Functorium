@@ -1,10 +1,10 @@
 ---
-title: "도메인 서비스 (Domain Services)"
+title: "Domain Services"
 ---
 
 여러 Aggregate에 걸친 비즈니스 규칙은 어디에 두어야 할까요? Entity에 넣으면 경계를 넘고, Usecase에 넣으면 도메인 로직이 유출됩니다. 도메인 서비스는 이 문제를 해결합니다.
 
-## 들어가며
+## Introduction
 
 "주문 금액이 고객의 신용 한도를 초과하는지 검증하는 로직은 Order에 넣어야 하나, Customer에 넣어야 하나?"
 "여러 Aggregate를 참조하는 비즈니스 규칙이 Usecase에 있으면 도메인 로직이 유출되는 것 아닌가?"
@@ -13,13 +13,13 @@ title: "도메인 서비스 (Domain Services)"
 
 이러한 질문은 비즈니스 로직이 단일 Aggregate의 경계를 넘어설 때 반복적으로 발생합니다. 도메인 서비스는 여러 Aggregate를 참조하는 도메인 로직을 Domain Layer에 유지하는 빌딩블록입니다.
 
-### 이 문서에서 배우는 내용
+### What You Will Learn
 
 1. **도메인 서비스의 배치 판단 기준** — Entity 메서드, Usecase, Domain Service 중 어디에 로직을 둘지 결정하는 의사결정 트리
 2. **두 가지 구현 패턴** — 순수 패턴(기본)과 Repository 패턴(Evans Ch.9)의 차이와 선택 기준
 3. **Usecase에서의 통합 방법** — 패턴별 생성 방식과 LINQ 체인 사용법
 
-### 사전 지식
+### Prerequisites
 
 - [Aggregate 설계 원칙](./06a-aggregate-design) — Aggregate 경계와 트랜잭션 원칙
 - [에러 시스템: 기초와 네이밍](./08a-error-system) — `Fin<T>` 반환 패턴
@@ -27,7 +27,7 @@ title: "도메인 서비스 (Domain Services)"
 > Evans는 Domain Service에 **Stateless**(호출 간 가변 상태 없음)를 요구하지만, **Pure**(I/O 없음)를 요구하지 않습니다.
 > Functorium은 기본적으로 더 엄격한 순수 함수 패턴을 권장하며, 교차 데이터 규모에 따라 Repository 사용 패턴도 제시합니다.
 
-## 요약
+## Summary
 
 ### 순수 패턴 (기본) — 소규모 교차 데이터
 
@@ -75,7 +75,7 @@ from _ in _emailCheckService.ValidateEmailUnique(email, excludeId)
 | 교차 데이터가 1~수건인가? | YES | NO (대량) |
 | Service가 쿼리 규칙을 소유해야 하는가? | NO | YES (Specification 생성) |
 
-### 주요 절차
+### Key Procedures
 
 1. **배치 판단**: 로직이 여러 Aggregate에 걸치는지, 교차 데이터 규모가 어느 정도인지 확인
 2. **패턴 선택**: 순수 패턴(기본) 또는 Repository 패턴(Evans Ch.9) 결정
@@ -84,9 +84,9 @@ from _ in _emailCheckService.ValidateEmailUnique(email, excludeId)
 5. **에러 정의**: `DomainError.For<{ServiceName}>()` 패턴으로 에러 코드 생성
 6. **Usecase 통합**: 순수 패턴은 `new()` 직접 생성, Repository 패턴은 DI 주입
 
-### 주요 개념
+### Key Concepts
 
-| 개념 | 설명 |
+| Concept | Description |
 |------|------|
 | `IDomainService` | 빈 마커 인터페이스, 아키텍처 테스트 검증용 |
 | 순수 패턴 (기본) | 외부 I/O 없음, 상태 없음, `Fin<T>` 반환, DI 불필요 |
@@ -128,7 +128,7 @@ Domain Service(도메인 로직)와 Application Service(Usecase, I/O 조율)의 
         └── NO → Domain Service
 ```
 
-**요약:**
+**Summary:**
 
 | 조건 | 배치 |
 |------|------|
@@ -147,7 +147,7 @@ Domain Service(도메인 로직)와 Application Service(Usecase, I/O 조율)의 
 | **Domain Service (Repository)** | 여러 Aggregate 참조, 대규모 교차 데이터 | `ContactEmailCheckService.ValidateEmailUnique()` |
 | **Usecase** | 조율, I/O 위임 | Repository 호출, Event 발행 |
 
-도메인 서비스의 필요성을 이해했다면, 이제 그 정확한 정의와 특성을 살펴봅니다.
+Now that we understand the need for domain services, let us examine their precise definition and characteristics.
 
 ---
 
@@ -180,7 +180,7 @@ Functorium은 Evans의 Stateless 원칙을 기반으로, 교차 데이터 규모
 
 ### IDomainService 마커 인터페이스
 
-**위치**: `Functorium.Domains.Services`
+**Location**: `Functorium.Domains.Services`
 
 ```csharp
 public interface IDomainService { }
@@ -212,13 +212,13 @@ Domain Layer
 └── Repository       (IRepository<TAggregate, TId>)
 ```
 
-Domain Service의 정의와 위치를 확인했으니, 이제 실제 구현 방법을 단계별로 살펴봅니다.
+Now that we have confirmed the definition and location of Domain Services, let us look at the implementation step by step.
 
 ---
 
 ## 도메인 서비스 구현 (HOW)
 
-### 폴더 구조
+### Folder Structure
 
 ```
 LayeredArch.Domain/
@@ -230,7 +230,7 @@ LayeredArch.Domain/
 └── Using.cs
 ```
 
-### 네임스페이스
+### Namespace
 
 - 프레임워크 인터페이스: `Functorium.Domains.Services`
 - 구현 클래스: `{프로젝트}.Domain.Services`
@@ -321,7 +321,7 @@ public sealed class OrderCreditCheckService : IDomainService
 }
 ```
 
-**핵심 포인트:**
+**Key Points:**
 
 - `sealed class` — 상속 의도 없음
 - `Fin<Unit>` 반환 — 성공(`unit`) 또는 `DomainError`
@@ -409,7 +409,7 @@ public sealed class ContactEmailCheckService : IDomainService
 }
 ```
 
-**핵심 포인트:**
+**Key Points:**
 
 - `FinT<IO, Unit>` 반환 — Repository I/O를 포함하므로 `Fin<T>`가 아닌 `FinT<IO, T>`
 - Repository는 **인터페이스로만 의존** — Domain Layer에 정의된 인터페이스
@@ -424,7 +424,7 @@ Domain 프로젝트의 `Using.cs`에 추가:
 global using Functorium.Domains.Services;
 ```
 
-Domain Service의 구현을 완료했다면, 이제 Usecase에서 어떻게 호출하고 통합하는지 확인합니다.
+Now that we have completed the Domain Service implementation, let us see how to call and integrate it from a Usecase.
 
 ---
 
@@ -532,7 +532,7 @@ public sealed class Usecase(
 }
 ```
 
-### 흐름 비교
+### Flow Comparison
 
 **순수 패턴:**
 
@@ -558,7 +558,7 @@ Usecase (Application Layer, I/O 조율)
 
 ---
 
-## DI 등록
+## DI Registration
 
 ### 순수 패턴: DI 등록 불필요
 
@@ -604,11 +604,11 @@ public sealed class OrderPricingService : IDomainService
 }
 ```
 
-**주의**: Domain Service 간 호출이 3개 이상으로 빈번해지면, 상위 조율 서비스(orchestrating Domain Service)를 도입하거나 Usecase에서 직접 조율하는 것을 검토하세요.
+**Caution**: Domain Service 간 호출이 3개 이상으로 빈번해지면, 상위 조율 서비스(orchestrating Domain Service)를 도입하거나 Usecase에서 직접 조율하는 것을 검토하세요.
 
 ---
 
-## 테스트 패턴
+## Test Patterns
 
 ### 순수 패턴 단위 테스트
 
@@ -671,7 +671,7 @@ public class OrderCreditCheckServiceTests
 }
 ```
 
-**테스트 특성:**
+**Test Characteristics:**
 
 - Mock 불필요 — 순수 함수이므로 입력/출력만 검증
 - `_sut = new()` — 의존성 없이 직접 생성
@@ -722,7 +722,7 @@ public class ContactEmailCheckServiceTests
 }
 ```
 
-**테스트 특성:**
+**Test Characteristics:**
 
 - Repository 스텁 필요 — `Substitute.For<IContactRepository>()`
 - `async Task` — `FinT<IO, T>`는 비동기 실행
@@ -800,7 +800,7 @@ LayeredArch.Tests.Unit/
 
 ---
 
-## 체크리스트
+## Checklist
 
 ### 공통 (두 패턴 모두)
 
@@ -831,7 +831,7 @@ LayeredArch.Tests.Unit/
 
 ---
 
-## 트러블슈팅
+## Troubleshooting
 
 ### Domain Service에서 Repository를 사용해야 할지 판단이 어렵다
 
@@ -851,21 +851,21 @@ LayeredArch.Tests.Unit/
 
 ### Domain Service 간 상호 호출이 너무 복잡해졌다
 
-**원인:** Domain Service 간 호출 체인이 3개 이상으로 늘어나면 복잡도가 증가합니다.
+**Cause:** Domain Service 간 호출 체인이 3개 이상으로 늘어나면 복잡도가 증가합니다.
 
-**해결:** 상위 조율 Domain Service를 도입하거나, Usecase에서 각 Domain Service를 개별적으로 호출하여 조율하는 방식으로 전환하세요.
+**Resolution:** 상위 조율 Domain Service를 도입하거나, Usecase에서 각 Domain Service를 개별적으로 호출하여 조율하는 방식으로 전환하세요.
 
 ### 아키텍처 테스트에서 Domain Service가 Port를 의존한다고 경고한다
 
-**원인:** Domain Service가 `IObservablePort`를 상속하거나 Port 인터페이스를 생성자 파라미터로 받고 있을 수 있습니다.
+**Cause:** Domain Service가 `IObservablePort`를 상속하거나 Port 인터페이스를 생성자 파라미터로 받고 있을 수 있습니다.
 
-**해결:** Domain Service는 `IDomainService` 마커만 구현해야 합니다. `IObservablePort`는 Adapter 전용이며, Domain Service에서는 `IObservablePort` 의존성을 제거하세요. Repository 패턴의 경우 Repository 인터페이스는 `IObservablePort`가 아닌 Domain Layer에 정의된 인터페이스를 사용합니다.
+**Resolution:** Domain Service는 `IDomainService` 마커만 구현해야 합니다. `IObservablePort`는 Adapter 전용이며, Domain Service에서는 `IObservablePort` 의존성을 제거하세요. Repository 패턴의 경우 Repository 인터페이스는 `IObservablePort`가 아닌 Domain Layer에 정의된 인터페이스를 사용합니다.
 
 ### 아키텍처 테스트가 Repository 패턴의 인스턴스 필드를 차단한다
 
-**원인:** SingleHost의 `DomainServiceArchitectureRuleTests`는 `RequireNoInstanceFields()`로 순수 패턴을 강제합니다.
+**Cause:** SingleHost의 `DomainServiceArchitectureRuleTests`는 `RequireNoInstanceFields()`로 순수 패턴을 강제합니다.
 
-**해결:** 이 아키텍처 테스트는 SingleHost의 참조 구현(순수 패턴)에 적용되는 규칙입니다. Repository 패턴을 사용하는 프로젝트에서는 해당 규칙을 Repository 인터페이스 참조를 허용하도록 조정하거나, 별도 테스트로 분리하세요.
+**Resolution:** 이 아키텍처 테스트는 SingleHost의 참조 구현(순수 패턴)에 적용되는 규칙입니다. Repository 패턴을 사용하는 프로젝트에서는 해당 규칙을 Repository 인터페이스 참조를 허용하도록 조정하거나, 별도 테스트로 분리하세요.
 
 ---
 
@@ -909,7 +909,7 @@ SingleHost의 `DomainServiceArchitectureRuleTests`는 `RequireNoInstanceFields()
 
 ---
 
-## 참고 문서
+## References
 
 - [04-ddd-tactical-overview.md](./04-ddd-tactical-overview) - DDD 전술적 설계 개요, 타입 매핑 테이블
 - [06a-aggregate-design.md](./06a-aggregate-design) - Aggregate 설계 원칙, [06b-entity-aggregate-core.md](./06b-entity-aggregate-core) - Entity/Aggregate 핵심 패턴, [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced) - 고급 패턴
@@ -919,9 +919,9 @@ SingleHost의 `DomainServiceArchitectureRuleTests`는 `RequireNoInstanceFields()
 - [12-ports.md](../adapter/12-ports) - Port/Adapter 패턴 (IPort와의 차이)
 - [15a-unit-testing.md](../testing/15a-unit-testing) - 단위 테스트 규칙 (T1_T2_T3, AAA 패턴)
 
-### 실전 예제 파일
+### Practical Examples 파일
 
-| 파일 | 설명 |
+| File | Description |
 |------|------|
 | `Src/Functorium/Domains/Services/IDomainService.cs` | 마커 인터페이스 |
 | `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/Services/OrderCreditCheckService.cs` | 순수 패턴 구현 |
@@ -931,6 +931,6 @@ SingleHost의 `DomainServiceArchitectureRuleTests`는 `RequireNoInstanceFields()
 
 ### designing-with-types 예제 (Repository 패턴)
 
-| 파일 | 설명 |
+| File | Description |
 |------|------|
 | `Docs.Site/src/content/docs/samples/designing-with-types/Src/DesigningWithTypes/AggregateRoots/Contacts/Services/ContactEmailCheckService.cs` | Repository 패턴 구현 |

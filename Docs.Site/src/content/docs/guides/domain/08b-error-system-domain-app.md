@@ -1,18 +1,18 @@
 ---
-title: "에러 시스템 — Domain/Application 에러"
+title: "Error System — Domain/Application Errors"
 ---
 
 이 문서는 Domain/Application/Event 레이어별 에러 정의와 테스트 패턴을 다룹니다. 에러 처리의 기본 원칙과 네이밍 규칙은 [08a-error-system.md](./08a-error-system)을 참고하세요. Adapter 에러, Custom 에러, 테스트 모범 사례, 레이어별 체크리스트는 [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing)을 참고하세요.
 
-## 들어가며
+## Introduction
 
 [08a-error-system.md](./08a-error-system)에서 에러 시스템의 기초와 네이밍 규칙을 다뤘습니다. 이 문서에서는 Domain과 Application 레이어의 에러 정의, 팩토리 메서드 사용법, 테스트 어설션 패턴을 구체적으로 살펴봅니다.
 
 > 각 레이어의 에러 팩토리(`DomainError.For`, `ApplicationError.For`, `EventError.For`)는 에러 출처를 타입 시스템에 명시하여, 에러 코드만으로 어느 레이어에서 발생한 문제인지 즉시 파악할 수 있게 합니다.
 
-## 요약
+## Summary
 
-### 주요 명령
+### Key Commands
 
 ```csharp
 // Domain 에러
@@ -30,14 +30,14 @@ result.ShouldBeDomainError<Email, Email>(new DomainErrorType.Empty());
 fin.ShouldBeApplicationError<GetProductQuery, Product>(new ApplicationErrorType.NotFound());
 ```
 
-### 주요 절차
+### Key Procedures
 
 1. 에러가 발생하는 레이어 결정 (Domain / Application / Event)
 2. 표준 에러 타입 선택 또는 Custom sealed record 정의
 3. 레이어 팩토리로 에러 생성 (`DomainError.For`, `ApplicationError.For`, `EventError.For`)
 4. 테스트 작성 - `Functorium.Testing.Assertions.Errors` 네임스페이스의 어설션 메서드 사용
 
-### 주요 개념
+### Key Concepts
 
 | 레이어 | 팩토리 | 에러 코드 접두사 | 사용 시점 |
 |--------|--------|-----------------|----------|
@@ -53,7 +53,7 @@ fin.ShouldBeApplicationError<GetProductQuery, Product>(new ApplicationErrorType.
 
 ### 에러 생성 및 반환
 
-Value Object 검증이나 Entity 불변식 위반 시 `DomainError.For<T>()`로 에러를 생성합니다. 아래 예제에서 타입 파라미터 개수에 따른 오버로드 차이를 주목하세요.
+Value Object 검증이나 Entity 불변식 위반 시 `DomainError.For<T>()`로 에러를 생성합니다. 아래 예제에서 타입 파라미터 개수에 따른 오버로드 차이.
 
 ```csharp
 using Functorium.Domains.Errors;
@@ -136,7 +136,7 @@ public sealed class Product : AggregateRoot<ProductId>
 
 다음 표는 `DomainErrorType`의 범주별 분류와 각 에러 타입이 정의된 파일을 정리한 것입니다.
 
-| 범주 | 파일 | 설명 |
+| Category | File | Description |
 |------|------|------|
 | Presence | `DomainErrorType.Presence.cs` | 값 존재 검증 |
 | Length | `DomainErrorType.Length.cs` | 문자열/컬렉션 길이 검증 |
@@ -149,14 +149,14 @@ public sealed class Product : AggregateRoot<ProductId>
 
 #### Presence (값 존재 검증) - R1
 
-| 에러 타입 | 설명 | 사용 예시 |
+| Error Type | Description | Usage Example |
 |-----------|------|----------|
 | `Empty` | 비어있음 (null, empty string, empty collection) | `new Empty()` |
 | `Null` | null임 | `new Null()` |
 
 #### Length (문자열/컬렉션 길이 검증) - R2, R6
 
-| 에러 타입 | 설명 | 사용 예시 |
+| Error Type | Description | Usage Example |
 |-----------|------|----------|
 | `TooShort` | 최소 길이 미만 | `new TooShort(MinLength: 8)` |
 | `TooLong` | 최대 길이 초과 | `new TooLong(MaxLength: 100)` |
@@ -164,7 +164,7 @@ public sealed class Product : AggregateRoot<ProductId>
 
 #### Format (형식 검증) - R3, R5
 
-| 에러 타입 | 설명 | 사용 예시 |
+| Error Type | Description | Usage Example |
 |-----------|------|----------|
 | `InvalidFormat` | 형식 불일치 | `new InvalidFormat(Pattern: @"^\d{3}-\d{4}$")` |
 | `NotUpperCase` | 대문자가 아님 | `new NotUpperCase()` |
@@ -172,7 +172,7 @@ public sealed class Product : AggregateRoot<ProductId>
 
 #### DateTime (날짜 검증) - R1, R2, R3
 
-| 에러 타입 | 설명 | 사용 예시 |
+| Error Type | Description | Usage Example |
 |-----------|------|----------|
 | `DefaultDate` | 날짜가 기본값(DateTime.MinValue)임 | `new DefaultDate()` |
 | `NotInPast` | 날짜가 과거여야 하는데 미래임 | `new NotInPast()` |
@@ -182,7 +182,7 @@ public sealed class Product : AggregateRoot<ProductId>
 
 #### Numeric (숫자 검증) - R1, R2, R3
 
-| 에러 타입 | 설명 | 사용 예시 |
+| Error Type | Description | Usage Example |
 |-----------|------|----------|
 | `Zero` | 0임 | `new Zero()` |
 | `Negative` | 음수임 | `new Negative()` |
@@ -193,14 +193,14 @@ public sealed class Product : AggregateRoot<ProductId>
 
 #### Range (범위 쌍 검증) - R1
 
-| 에러 타입 | 설명 | 사용 예시 |
+| Error Type | Description | Usage Example |
 |-----------|------|----------|
 | `RangeInverted` | 범위가 역전됨 (최소값이 최대값보다 큼) | `new RangeInverted(Min: "10", Max: "1")` |
 | `RangeEmpty` | 범위가 비어있음 (min == max, 엄격한 범위) | `new RangeEmpty(Value: "5")` |
 
 #### Existence (존재 여부 검증) - R1, R3, R4
 
-| 에러 타입 | 설명 | 사용 예시 |
+| Error Type | Description | Usage Example |
 |-----------|------|----------|
 | `NotFound` | 찾을 수 없음 | `new NotFound()` |
 | `AlreadyExists` | 이미 존재함 | `new AlreadyExists()` |
@@ -209,7 +209,7 @@ public sealed class Product : AggregateRoot<ProductId>
 
 #### Custom (커스텀 에러)
 
-| 에러 타입 | 설명 | 사용 예시 |
+| Error Type | Description | Usage Example |
 |-----------|------|----------|
 | `Custom` | 도메인 특화 에러 (abstract) | `sealed record AlreadyShipped : DomainErrorType.Custom;` → `new AlreadyShipped()` |
 
@@ -243,7 +243,7 @@ using Functorium.Testing.Assertions.Errors;
 
 #### Error 검증
 
-`ShouldBeDomainError` 어설션의 타입 파라미터가 에러 소스 타입을 지정하는 방식을 주목하세요.
+`ShouldBeDomainError` 어설션의 타입 파라미터가 에러 소스 타입을 지정하는 방식.
 
 ```csharp
 // 기본 에러 타입 검증
@@ -465,7 +465,7 @@ return ApplicationError.For<TransferCommand, decimal, decimal>(
 
 #### 공통 에러 타입 - R1, R3, R4, R5
 
-| 에러 타입 | 설명 | 사용 예시 |
+| Error Type | Description | Usage Example |
 |-----------|------|----------|
 | `Empty` | 비어있음 | `new Empty()` |
 | `Null` | null임 | `new Null()` |
@@ -476,14 +476,14 @@ return ApplicationError.For<TransferCommand, decimal, decimal>(
 
 #### 권한/인증 - R7
 
-| 에러 타입 | 설명 | 사용 예시 |
+| Error Type | Description | Usage Example |
 |-----------|------|----------|
 | `Unauthorized` | 인증되지 않음 | `new Unauthorized()` |
 | `Forbidden` | 접근 금지 | `new Forbidden()` |
 
 #### 검증/비즈니스 규칙 - R8
 
-| 에러 타입 | 설명 | 사용 예시 |
+| Error Type | Description | Usage Example |
 |-----------|------|----------|
 | `ValidationFailed` | 검증 실패 | `new ValidationFailed(PropertyName: "Quantity")` |
 | `BusinessRuleViolated` | 비즈니스 규칙 위반 | `new BusinessRuleViolated(RuleName: "MaxOrderLimit")` |
@@ -494,7 +494,7 @@ return ApplicationError.For<TransferCommand, decimal, decimal>(
 
 #### 커스텀
 
-| 에러 타입 | 설명 | 사용 예시 |
+| Error Type | Description | Usage Example |
 |-----------|------|----------|
 | `Custom` | 애플리케이션 특화 에러 (abstract) | `sealed record PaymentDeclined : ApplicationErrorType.Custom;` → `new PaymentDeclined()` |
 
@@ -769,7 +769,7 @@ EventError.FromException<DomainEventPublisher>(
 
 ### EventErrorType 전체 목록
 
-| 에러 타입 | 설명 | 사용 예시 |
+| Error Type | Description | Usage Example |
 |-----------|------|----------|
 | `PublishFailed` | 이벤트 발행 실패 | `new PublishFailed()` |
 | `HandlerFailed` | 이벤트 핸들러 실행 실패 | `new HandlerFailed()` |
@@ -792,15 +792,15 @@ ApplicationErrors.{PublisherName}.{ErrorTypeName}
 
 ---
 
-## 트러블슈팅
+## Troubleshooting
 
 ### 테스트에서 `ShouldBeDomainError` 어설션이 실패함
-**원인:** 에러 타입의 파라미터가 일치하지 않는 경우입니다. 예를 들어 `TooShort(MinLength: 8)`로 생성했는데 `new TooShort(MinLength: 3)`로 검증하면 실패합니다.
-**해결:** 에러 타입의 파라미터까지 정확히 일치시켜야 합니다. sealed record 기반이므로 모든 필드가 동등성 비교에 포함됩니다.
+**Cause:** 에러 타입의 파라미터가 일치하지 않는 경우입니다. 예를 들어 `TooShort(MinLength: 8)`로 생성했는데 `new TooShort(MinLength: 3)`로 검증하면 실패합니다.
+**Resolution:** 에러 타입의 파라미터까지 정확히 일치시켜야 합니다. sealed record 기반이므로 모든 필드가 동등성 비교에 포함됩니다.
 
 ### Custom 에러가 `ShouldBeDomainError`에서 인식되지 않음
-**원인:** Custom 에러의 정의 위치가 잘못되었거나, `DomainErrorType.Custom`을 상속하지 않았을 수 있습니다.
-**해결:** Custom 에러는 반드시 해당 레이어의 `Custom` abstract record를 상속해야 합니다. 예: `public sealed record InsufficientStock : DomainErrorType.Custom;`
+**Cause:** Custom 에러의 정의 위치가 잘못되었거나, `DomainErrorType.Custom`을 상속하지 않았을 수 있습니다.
+**Resolution:** Custom 에러는 반드시 해당 레이어의 `Custom` abstract record를 상속해야 합니다. 예: `public sealed record InsufficientStock : DomainErrorType.Custom;`
 
 ---
 
@@ -817,7 +817,7 @@ Domain 에러는 도메인 모델 내부에서 발생하는 불변식 위반(VO 
 
 ---
 
-## 참고 문서
+## References
 
 - [05a-value-objects.md](./05a-value-objects) - 값 객체 구현 패턴, [05b-value-objects-validation.md](./05b-value-objects-validation) - 열거형·검증·FAQ
 - [08a-error-system.md](./08a-error-system) - 에러 처리 기본 원칙과 네이밍 규칙

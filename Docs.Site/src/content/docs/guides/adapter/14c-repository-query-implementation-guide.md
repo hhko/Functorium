@@ -15,7 +15,7 @@ title: "Repository & Query Adapter 구현 가이드"
 | Cursor 페이지네이션 | [§3.5 Cursor 페이지네이션](#35-cursor-페이지네이션) |
 | DI 등록 | [§6. DI Registration 패턴](#6-di-registration-패턴) |
 
-## 들어가며
+## Introduction
 
 새 Aggregate를 추가할 때마다 Repository와 Query Adapter를 처음부터 작성하는 것은 반복적이고 실수가 발생하기 쉽습니다:
 
@@ -25,13 +25,13 @@ title: "Repository & Query Adapter 구현 가이드"
 
 이 문서는 베이스 클래스와 체크리스트 기반의 구현 패턴으로 이러한 반복과 실수를 줄이는 방법을 제시합니다.
 
-### 이 문서에서 배우는 내용
+### What You Will Learn
 
 1. Repository(Write Side) 구현의 전체 체크리스트와 베이스 클래스 패턴
 2. Query Adapter(Read Side) 구현의 Dapper/InMemory 양측 패턴
 3. UnitOfWork와 도메인 이벤트 발행의 통합 구조
 
-### 사전 지식
+### Prerequisites
 
 - [Port 정의 가이드](./12-ports) — Port 인터페이스 설계 원칙
 - [Adapter 구현 가이드](./13-adapters) — Adapter 구현 기본 패턴
@@ -123,7 +123,7 @@ public interface IProductRepository : IRepository<Product, ProductId>
 
 #### 생성자 3인자 패턴
 
-`eventCollector`는 필수이고, `applyIncludes`와 `propertyMap`은 필요할 때만 전달한다는 점을 주목하세요.
+`eventCollector`는 필수이고, `applyIncludes`와 `propertyMap`은 필요할 때만 전달한다는 점.
 
 ```csharp
 protected EfCoreRepositoryBase(
@@ -296,7 +296,7 @@ public class InventoryRepositoryInMemory
 
 #### 단순 매퍼 (TagMapper)
 
-`ToDomain()`에서 `CreateFromValidated`를 사용하여 DB 복원 시 재검증을 방지하는 패턴을 주목하세요.
+`ToDomain()`에서 `CreateFromValidated`를 사용하여 DB 복원 시 재검증을 방지하는 패턴.
 
 ```csharp
 internal static class TagMapper
@@ -475,9 +475,9 @@ Configuration 규칙:
 | **Delete** | 단건 | **X** | **X** | **X** | - | `Where(pred).ExecuteDeleteAsync` |
 | **DeleteRange** | 벌크 | **X** | **X** | **X** | - | `Where(pred).ExecuteDeleteAsync` |
 
-> **참고**: ReadQuery 열의 O는 `ReadQuery()` (AsNoTracking + Include 자동 적용)를 사용한다는 의미입니다.
+> **Note**: ReadQuery 열의 O는 `ReadQuery()` (AsNoTracking + Include 자동 적용)를 사용한다는 의미입니다.
 >
-> **참고**: GetByIds는 요청 ID 수와 결과 수가 다르면 `PartialNotFoundError`를 반환합니다.
+> **Note**: GetByIds는 요청 ID 수와 결과 수가 다르면 `PartialNotFoundError`를 반환합니다.
 
 #### CRUD 4쌍 대칭 요약
 
@@ -593,7 +593,7 @@ protected DapperQueryBase(IDbConnection connection, DapperSpecTranslator<TEntity
 
 **Fluent API:**
 
-| 메서드 | 설명 |
+| Method | Description |
 |--------|------|
 | `WhenAll(handler)` | 모든 Specification에 적용되는 기본 핸들러 (예: Soft Delete 필터) |
 | `When<TSpec>(handler)` | 특정 Specification 타입에 대한 핸들러 |
@@ -601,7 +601,7 @@ protected DapperQueryBase(IDbConnection connection, DapperSpecTranslator<TEntity
 
 **Static 헬퍼:**
 
-| 메서드 | 설명 |
+| Method | Description |
 |--------|------|
 | `Params(params (string, object)[])` | `DynamicParameters` 생성 헬퍼 |
 | `Prefix(string tableAlias)` | 테이블 별칭 접두사 (`"p"` → `"p."`, `""` → `""`) |
@@ -1455,15 +1455,15 @@ services.AddScoped<ProductRepositoryInMemory>();
 
 ### 벌크 DeleteRange 후 Change Tracker 상태가 불일치할 때
 
-**원인:** `ExecuteDeleteAsync`/`ExecuteUpdateAsync`는 Change Tracker를 우회하므로, 이미 추적 중인 엔티티의 상태가 DB와 달라질 수 있습니다.
+**Cause:** `ExecuteDeleteAsync`/`ExecuteUpdateAsync`는 Change Tracker를 우회하므로, 이미 추적 중인 엔티티의 상태가 DB와 달라질 수 있습니다.
 
-**해결:** `ReadQuery()`는 `AsNoTracking()`을 사용하므로 읽기 시에는 문제가 없습니다. 동일 트랜잭션 내에서 벌크 삭제 후 해당 엔티티를 Change Tracker로 조작해야 한다면, `DbContext.ChangeTracker.Clear()`를 호출하세요.
+**Resolution:** `ReadQuery()`는 `AsNoTracking()`을 사용하므로 읽기 시에는 문제가 없습니다. 동일 트랜잭션 내에서 벌크 삭제 후 해당 엔티티를 Change Tracker로 조작해야 한다면, `DbContext.ChangeTracker.Clear()`를 호출하세요.
 
 ### Product 벌크 DeleteRange에서 도메인 이벤트가 발행되지 않을 때
 
-**원인:** 의도된 동작입니다. `ExecuteUpdateAsync`는 도메인 객체를 생성하지 않으므로 이벤트가 발행되지 않습니다.
+**Cause:** 의도된 동작입니다. `ExecuteUpdateAsync`는 도메인 객체를 생성하지 않으므로 이벤트가 발행되지 않습니다.
 
-**해결:** 이벤트가 반드시 필요하다면 단건 `Delete()`를 개별 호출하세요. 성능이 중요하다면 벌크 `DeleteRange()`를 사용하고, 필요한 후처리를 별도로 수행하세요.
+**Resolution:** 이벤트가 반드시 필요하다면 단건 `Delete()`를 개별 호출하세요. 성능이 중요하다면 벌크 `DeleteRange()`를 사용하고, 필요한 후처리를 별도로 수행하세요.
 
 ---
 
