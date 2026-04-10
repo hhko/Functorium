@@ -47,11 +47,14 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'Functorium',
-      defaultLocale: 'ko',
+      defaultLocale: 'root',
       locales: {
         root: {
+          label: 'English',
+          lang: 'en',
+        },
+        ko: {
           label: '한국어',
-          lang: 'ko',
         },
       },
       customCss: ['./src/styles/custom.css'],
