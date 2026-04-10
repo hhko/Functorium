@@ -1,14 +1,14 @@
 ---
-title: "파이프라인 사양"
+title: "Pipeline Specification"
 ---
 
-Functorium의 Usecase Pipeline 시스템은 횡단 관심사(cross-cutting concerns)를 Mediator `IPipelineBehavior<TRequest, TResponse>` 체인으로 분리합니다. 이 문서는 8개 기본 Pipeline 동작, 커스텀 확장 포인트, `PipelineConfigurator` API, OpenTelemetry 설정 타입을 정의합니다.
+Functorium's Usecase Pipeline system separates cross-cutting concerns into a Mediator `IPipelineBehavior<TRequest, TResponse>` chain. This document defines the 8 default Pipeline behaviors, custom extension points, the `PipelineConfigurator` API, and OpenTelemetry configuration types.
 
-## 요약
+## Summary
 
-### 주요 타입
+### Key Types
 
-| 타입 | 네임스페이스 | 설명 |
+| Type | Namespace | Description |
 |------|-------------|------|
 | `UsecasePipelineBase<TRequest>` | `Functorium.Adapters.Pipelines` | 모든 Pipeline의 공통 베이스 클래스 |
 | `UsecaseMetricsPipeline<TRequest, TResponse>` | 동일 | 메트릭 자동 수집 Pipeline |
@@ -31,7 +31,7 @@ Functorium의 Usecase Pipeline 시스템은 횡단 관심사(cross-cutting conce
 
 ---
 
-## Pipeline 실행 순서
+## Pipeline Execution Order
 
 Pipeline은 DI 등록 순서에 따라 바깥(Request 쪽)에서 안쪽(Handler 쪽)으로 실행됩니다. Command와 Query는 적용되는 Pipeline이 다릅니다.
 
@@ -47,7 +47,7 @@ Request → Metrics → Tracing → Logging → Validation → Exception → Tra
 Request → Metrics → Tracing → Logging → Validation → Caching → Exception → Custom → Handler
 ```
 
-| 순서 | Pipeline | Command | Query | 설명 |
+| Order | Pipeline | Command | Query | 설명 |
 |------|----------|---------|-------|------|
 | 1 | Metrics | O | O | 요청/응답 수, 처리 시간 수집 |
 | 2 | Tracing | O | O | Activity Span 생성 및 태그 기록 |
@@ -72,9 +72,9 @@ Request → Metrics → Tracing → Logging → Validation → Caching → Excep
 public abstract partial class UsecasePipelineBase<TRequest>
 ```
 
-### 정적 메서드
+### Static Methods
 
-| 메서드 | 반환 타입 | 설명 |
+| Method | Return Type | Description |
 |--------|----------|------|
 | `GetRequestCategoryType<T>(T request)` | `string` | 요청 인스턴스에서 CQRS 타입 식별 (`command`, `query`, `unknown`) |
 | `GetRequestCategoryType(Type requestType)` | `string` | 요청 Type에서 CQRS 타입 식별 |
@@ -88,7 +88,7 @@ public abstract partial class UsecasePipelineBase<TRequest>
 
 ---
 
-## 개별 Pipeline 동작
+## Individual Pipeline Behaviors
 
 ### UsecaseExceptionPipeline
 
@@ -101,7 +101,7 @@ internal sealed class UsecaseExceptionPipeline<TRequest, TResponse>
     where TResponse : IFinResponseFactory<TResponse>
 ```
 
-| 항목 | 설명 |
+| Item | Description |
 |------|------|
 | 제약 조건 | `TResponse : IFinResponseFactory<TResponse>` |
 | 동작 | `try-catch`로 예외 포착 후 `TResponse.CreateFail(AdapterError.FromException(...))` 반환 |
@@ -118,7 +118,7 @@ internal sealed class UsecaseValidationPipeline<TRequest, TResponse>
     where TResponse : IFinResponseFactory<TResponse>
 ```
 
-| 항목 | 설명 |
+| Item | Description |
 |------|------|
 | DI 의존성 | `IEnumerable<IValidator<TRequest>>` |
 | 동작 | Validator가 없으면 `next()` 통과, 있으면 모든 Validator 실행 |
@@ -136,7 +136,7 @@ internal sealed class UsecaseLoggingPipeline<TRequest, TResponse>
     where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 ```
 
-| 항목 | 설명 |
+| Item | Description |
 |------|------|
 | DI 의존성 | `ILogger<UsecaseLoggingPipeline<TRequest, TResponse>>`, `IUsecaseCtxEnricher<TRequest, TResponse>?` (선택) |
 | 요청 로그 | Information 레벨, `{Layer} {Category} {CategoryType} {Handler} {Method} requesting` |
@@ -155,7 +155,7 @@ internal sealed class UsecaseTracingPipeline<TRequest, TResponse>
     where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 ```
 
-| 항목 | 설명 |
+| Item | Description |
 |------|------|
 | DI 의존성 | `ActivitySource` |
 | Span 이름 | `{layer} {category}.{categoryType} {handler}.{method}` |
@@ -176,7 +176,7 @@ internal sealed class UsecaseMetricsPipeline<TRequest, TResponse>
     where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 ```
 
-| 항목 | 설명 |
+| Item | Description |
 |------|------|
 | DI 의존성 | `IOptions<OpenTelemetryOptions>`, `IMeterFactory` |
 | Meter 이름 | `{ServiceNamespace}.application` |
@@ -198,7 +198,7 @@ internal sealed class UsecaseTransactionPipeline<TRequest, TResponse>
     where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 ```
 
-| 항목 | 설명 |
+| Item | Description |
 |------|------|
 | 제약 조건 | `TRequest : ICommand<TResponse>` (Command 전용) |
 | DI 의존성 | `IUnitOfWork`, `IDomainEventPublisher`, `ILogger` |
@@ -216,7 +216,7 @@ internal sealed class UsecaseCachingPipeline<TRequest, TResponse>
     where TResponse : IFinResponse, IFinResponseFactory<TResponse>
 ```
 
-| 항목 | 설명 |
+| Item | Description |
 |------|------|
 | 제약 조건 | `TRequest : IQuery<TResponse>` (Query 전용) |
 | DI 의존성 | `IMemoryCache` (`services.AddMemoryCache()` 필요) |
@@ -240,7 +240,7 @@ public interface ICacheable
 
 ---
 
-## 커스텀 확장
+## Custom Extensions
 
 ### ICustomUsecasePipeline
 
@@ -261,7 +261,7 @@ public abstract class UsecaseMetricCustomPipelineBase<TRequest>
     : UsecasePipelineBase<TRequest>, ICustomUsecasePipeline
 ```
 
-| 멤버 | 설명 |
+| Member | Description |
 |------|------|
 | `protected readonly Meter _meter` | `{ServiceNamespace}.application` Meter 인스턴스 |
 | `protected const string DurationUnit` | `"s"` |
@@ -296,7 +296,7 @@ public abstract class UsecaseTracingCustomPipelineBase<TRequest>
     : UsecasePipelineBase<TRequest>, ICustomUsecasePipeline
 ```
 
-| 멤버 | 설명 |
+| Member | Description |
 |------|------|
 | `protected readonly ActivitySource _activitySource` | Activity 생성에 사용하는 ActivitySource |
 | `StartCustomActivity(string operationName, ActivityKind kind)` | `{prefix}.{operationName}` 형식의 커스텀 Activity 생성 |
@@ -322,9 +322,9 @@ protected UsecaseTracingCustomPipelineBase(ActivitySource activitySource)
 public class PipelineConfigurator
 ```
 
-### 활성화 메서드
+### Activation Methods
 
-| 메서드 | 반환 타입 | 설명 |
+| Method | Return Type | Description |
 |--------|----------|------|
 | `UseObservability()` | `PipelineConfigurator` | 관측성 4종 일괄 활성화 (CtxEnricher, Metrics, Tracing, Logging) |
 | `UseMetrics()` | `PipelineConfigurator` | Metrics Pipeline 활성화 (CtxEnricher 자동 포함) |
@@ -335,14 +335,14 @@ public class PipelineConfigurator
 | `UseException()` | `PipelineConfigurator` | Exception Pipeline 활성화 |
 | `UseTransaction()` | `PipelineConfigurator` | Transaction Pipeline 활성화 (`IUnitOfWork`, `IDomainEventPublisher`, `IDomainEventCollector` DI 등록 필요) |
 
-### 설정 메서드
+### Configuration Methods
 
-| 메서드 | 반환 타입 | 설명 |
+| Method | Return Type | Description |
 |--------|----------|------|
 | `WithLifetime(ServiceLifetime lifetime)` | `PipelineConfigurator` | Pipeline 서비스 Lifetime 설정 (기본값: `Scoped`) |
 | `AddCustomPipeline<TPipeline>()` | `PipelineConfigurator` | 커스텀 Pipeline을 타입으로 명시적 등록 (파이프라인 실행 순서의 결정론적 보장) |
 
-### 사용 예시
+### Usage Example
 
 ```csharp
 // 관측성 + 유효성검증 + 예외처리 활성화
@@ -370,7 +370,7 @@ services
     .Build();
 ```
 
-### 등록 순서
+### Registration Order
 
 `Apply()` 내부에서 Pipeline은 다음 순서로 `IPipelineBehavior<,>`에 등록됩니다.
 
@@ -398,7 +398,7 @@ OpenTelemetry 설정을 위한 메인 Builder 클래스입니다. Serilog, Metri
 public partial class OpenTelemetryBuilder
 ```
 
-#### 진입점
+#### Entry Point
 
 ```csharp
 // IServiceCollection 확장 메서드
@@ -408,9 +408,9 @@ public static OpenTelemetryBuilder RegisterOpenTelemetry(
     Assembly projectAssembly)
 ```
 
-#### Configure 메서드
+#### Configure Methods
 
-| 메서드 | 반환 타입 | 설명 |
+| Method | Return Type | Description |
 |--------|----------|------|
 | `ConfigureLogging(Action<LoggingConfigurator> configure)` | `OpenTelemetryBuilder` | Serilog 확장 설정 |
 | `ConfigureMetrics(Action<MetricsConfigurator> configure)` | `OpenTelemetryBuilder` | OpenTelemetry Metrics 확장 설정 |
@@ -420,7 +420,7 @@ public static OpenTelemetryBuilder RegisterOpenTelemetry(
 | `WithAdapterObservability(bool enable = true)` | `OpenTelemetryBuilder` | Adapter 관측 가능성 활성화/비활성화 (기본값: `true`) |
 | `Build()` | `IServiceCollection` | 모든 설정 적용 후 IServiceCollection 반환 |
 
-#### Build() 내부 처리 순서
+#### Build() Internal Processing Order
 
 1. `OpenTelemetryOptions` 읽기 (`IOptions<OpenTelemetryOptions>`)
 2. Resource Attributes 생성
@@ -439,7 +439,7 @@ Serilog 확장 설정을 위한 Builder 클래스입니다.
 public class LoggingConfigurator
 ```
 
-| 멤버 | 설명 |
+| Member | Description |
 |------|------|
 | `Options` | `OpenTelemetryOptions` 접근 프로퍼티 |
 | `AddDestructuringPolicy<TPolicy>()` | `IDestructuringPolicy` 구현 타입 등록 |
@@ -455,7 +455,7 @@ OpenTelemetry Metrics 확장 설정을 위한 Builder 클래스입니다.
 public class MetricsConfigurator
 ```
 
-| 멤버 | 설명 |
+| Member | Description |
 |------|------|
 | `Options` | `OpenTelemetryOptions` 접근 프로퍼티 |
 | `AddMeter(string meterName)` | 추가 Meter 등록 (와일드카드 지원: `"MyApp.*"`) |
@@ -470,7 +470,7 @@ OpenTelemetry Tracing 확장 설정을 위한 Builder 클래스입니다.
 public class TracingConfigurator
 ```
 
-| 멤버 | 설명 |
+| Member | Description |
 |------|------|
 | `Options` | `OpenTelemetryOptions` 접근 프로퍼티 |
 | `AddSource(string sourceName)` | 추가 ActivitySource 등록 (와일드카드 지원: `"MyApp.*"`) |
@@ -487,9 +487,9 @@ public class TracingConfigurator
 public sealed class OpenTelemetryOptions : IStartupOptionsLogger, IOpenTelemetryOptions
 ```
 
-### 프로퍼티
+### Properties
 
-| 프로퍼티 | 타입 | 기본값 | 설명 |
+| Property | Type | Default | Description |
 |---------|------|--------|------|
 | `ServiceNamespace` | `string` | `""` | 서비스 네임스페이스(그룹) |
 | `ServiceName` | `string` | `""` | 서비스 이름 |
@@ -506,19 +506,19 @@ public sealed class OpenTelemetryOptions : IStartupOptionsLogger, IOpenTelemetry
 | `SamplingRate` | `double` | `1.0` | Tracing 샘플링 비율 (0.0 ~ 1.0) |
 | `EnablePrometheusExporter` | `bool` | `false` | Prometheus Exporter 활성화 |
 
-### 엔드포인트 해석 규칙
+### Endpoint Resolution Rules
 
 개별 엔드포인트(`TracingEndpoint`, `MetricsEndpoint`, `LoggingEndpoint`)의 해석 규칙은 다음과 같습니다.
 
-| 값 | 동작 |
+| Value | Behavior |
 |----|------|
 | `null` | `CollectorEndpoint` 사용 (기본 동작) |
 | `""` (빈 문자열) | 해당 신호 비활성화 |
 | `"http://..."` | 해당 엔드포인트 사용 |
 
-### Protocol 메서드
+### Protocol Methods
 
-| 메서드 | 반환 타입 | 설명 |
+| Method | Return Type | Description |
 |--------|----------|------|
 | `GetTracingProtocol()` | `OtlpCollectorProtocol` | Tracing Protocol (개별 설정 우선) |
 | `GetMetricsProtocol()` | `OtlpCollectorProtocol` | Metrics Protocol (개별 설정 우선) |
@@ -533,7 +533,7 @@ public sealed class OpenTelemetryOptions : IStartupOptionsLogger, IOpenTelemetry
 public sealed class OtlpCollectorProtocol : SmartEnum<OtlpCollectorProtocol>
 ```
 
-| 상수 | 값 | 설명 |
+| Constant | Value | Description |
 |------|----|------|
 | `Grpc` | 1 | gRPC 프로토콜 (기본값) |
 | `HttpProtobuf` | 2 | HTTP/Protobuf 프로토콜 |
@@ -542,7 +542,7 @@ public sealed class OtlpCollectorProtocol : SmartEnum<OtlpCollectorProtocol>
 
 `FluentValidation` 기반 옵션 검증기입니다.
 
-| 규칙 | 설명 |
+| Rule | Description |
 |------|------|
 | `ServiceNamespace` | 필수 (NotEmpty) |
 | `ServiceName` | 필수 (NotEmpty) |
@@ -550,7 +550,7 @@ public sealed class OtlpCollectorProtocol : SmartEnum<OtlpCollectorProtocol>
 | `SamplingRate` | 0.0 ~ 1.0 범위 |
 | Protocol | SmartEnum 유효값 검증 |
 
-### appsettings.json 예시
+### appsettings.json Example
 
 ```json
 {
@@ -567,7 +567,7 @@ public sealed class OtlpCollectorProtocol : SmartEnum<OtlpCollectorProtocol>
 
 ---
 
-## ObservabilityNaming 상수
+## ObservabilityNaming Constants
 
 관측 가능성 관련 통합 네이밍 규칙을 정의합니다. 메트릭 이름, 태그 키, Span 이름 등의 단일 진실 공급원(Single Source of Truth)입니다.
 
@@ -577,14 +577,14 @@ public static partial class ObservabilityNaming
 
 ### Layers
 
-| 상수 | 값 | 설명 |
+| Constant | Value | Description |
 |------|----|------|
 | `Application` | `"application"` | Application Layer |
 | `Adapter` | `"adapter"` | Adapter Layer |
 
 ### Categories
 
-| 상수 | 값 | 설명 |
+| Constant | Value | Description |
 |------|----|------|
 | `Usecase` | `"usecase"` | Usecase 카테고리 |
 | `Repository` | `"repository"` | Repository 카테고리 |
@@ -593,7 +593,7 @@ public static partial class ObservabilityNaming
 
 ### CategoryTypes
 
-| 상수 | 값 | 설명 |
+| Constant | Value | Description |
 |------|----|------|
 | `Command` | `"command"` | Command 타입 |
 | `Query` | `"query"` | Query 타입 |
@@ -602,14 +602,14 @@ public static partial class ObservabilityNaming
 
 ### Status
 
-| 상수 | 값 | 설명 |
+| Constant | Value | Description |
 |------|----|------|
 | `Success` | `"success"` | 성공 |
 | `Failure` | `"failure"` | 실패 |
 
 ### ErrorTypes
 
-| 상수 | 값 | 설명 |
+| Constant | Value | Description |
 |------|----|------|
 | `Expected` | `"expected"` | 예상된 비즈니스 에러 (`IsExpected = true`) |
 | `Exceptional` | `"exceptional"` | 예외적 시스템 에러 (`IsExceptional = true`) |
@@ -617,7 +617,7 @@ public static partial class ObservabilityNaming
 
 ### Methods
 
-| 상수 | 값 | 설명 |
+| Constant | Value | Description |
 |------|----|------|
 | `Handle` | `"Handle"` | Usecase Handler 메서드 |
 | `Publish` | `"Publish"` | 이벤트 발행 메서드 |
@@ -625,7 +625,7 @@ public static partial class ObservabilityNaming
 
 ### OTelAttributes (OpenTelemetry 표준)
 
-| 상수 | 값 |
+| Constant | Value |
 |------|----|
 | `ErrorType` | `"error.type"` |
 | `ServiceNamespace` | `"service.namespace"` |
@@ -636,7 +636,7 @@ public static partial class ObservabilityNaming
 
 ### CustomAttributes (3-Pillar 공통)
 
-| 상수 | 값 | 용도 |
+| Constant | Value | 용도 |
 |------|----|------|
 | `RequestMessage` | `"request.message"` | 요청 메시지 |
 | `RequestParams` | `"request.params"` | 요청 파라미터 |
@@ -650,9 +650,9 @@ public static partial class ObservabilityNaming
 | `ResponseElapsed` | `"response.elapsed"` | 응답 경과 시간 |
 | `ErrorCode` | `"error.code"` | 에러 코드 |
 
-### Metrics 이름 생성
+### Metrics Name Generation
 
-| 메서드 | 예시 |
+| Method | Example |
 |--------|------|
 | `Metrics.UsecaseRequest("command")` | `"application.usecase.command.requests"` |
 | `Metrics.UsecaseResponse("query")` | `"application.usecase.query.responses"` |
@@ -661,15 +661,15 @@ public static partial class ObservabilityNaming
 | `Metrics.AdapterResponse("repository")` | `"adapter.repository.responses"` |
 | `Metrics.AdapterDuration("repository")` | `"adapter.repository.duration"` |
 
-### Spans 이름 생성
+### Spans Name Generation
 
-| 메서드 | 예시 |
+| Method | Example |
 |--------|------|
 | `Spans.OperationName("adapter", "repository", "OrderRepository", "GetById")` | `"adapter repository OrderRepository.GetById"` |
 
 ### EventIds
 
-| 범위 | ID | 이름 |
+| Scope | ID | Name |
 |------|----|------|
 | Application Request | 1001 | `application.request` |
 | Application Response (Success) | 1002 | `application.response.success` |
@@ -682,7 +682,7 @@ public static partial class ObservabilityNaming
 
 ---
 
-## 관련 문서
+## Related Documents
 
 - **가이드:** [Adapter 연결 -- Pipeline과 DI](../guides/adapter/14a-adapter-pipeline-di) -- Pipeline DI 등록 실습
 - **가이드:** [Adapter 테스트](../guides/adapter/14b-adapter-testing) -- Pipeline 단위 테스트

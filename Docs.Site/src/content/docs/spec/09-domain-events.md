@@ -1,14 +1,14 @@
 ---
-title: "도메인 이벤트 사양"
+title: "Domain Events Specification"
 ---
 
-Functorium 프레임워크가 제공하는 도메인 이벤트 관련 공개 타입의 API 사양입니다. 설계 원칙과 구현 패턴은 [도메인 이벤트 가이드](../guides/domain/07-domain-events)를 참조하십시오.
+This is the API specification for domain event related public types provided by the Functorium framework. For design principles and implementation patterns, see the [Domain Events Guide](../guides/domain/07-domain-events).
 
-## 요약
+## Summary
 
-### 주요 타입
+### Key Types
 
-| 타입 | 네임스페이스 | 설명 |
+| Type | Namespace | Description |
 |------|-------------|------|
 | `IDomainEvent` | `Functorium.Domains.Events` | 도메인 이벤트 기본 인터페이스 (`INotification` 확장) |
 | `DomainEvent` | `Functorium.Domains.Events` | 도메인 이벤트 기반 abstract record (불변성, 값 동등성) |
@@ -28,7 +28,7 @@ Functorium 프레임워크가 제공하는 도메인 이벤트 관련 공개 타
 
 ---
 
-## 이벤트 계약 (IDomainEvent, DomainEvent)
+## Event Contract (IDomainEvent, DomainEvent)
 
 ### IDomainEvent
 
@@ -46,12 +46,12 @@ public interface IDomainEvent : INotification
 }
 ```
 
-| 속성 | 타입 | 설명 |
+| Property | Type | Description |
 |------|------|------|
-| `OccurredAt` | `DateTimeOffset` | 이벤트 발생 시각 |
-| `EventId` | `Ulid` | 이벤트 고유 식별자 (중복 처리 방지 및 추적용) |
-| `CorrelationId` | `string?` | 요청 추적 ID (동일 요청에서 발생한 이벤트 추적) |
-| `CausationId` | `string?` | 원인 이벤트 ID (이 이벤트를 유발한 이전 이벤트의 ID) |
+| `OccurredAt` | `DateTimeOffset` | Event occurrence time |
+| `EventId` | `Ulid` | Unique event identifier (for deduplication and tracking) |
+| `CorrelationId` | `string?` | Request tracking ID (traces events from the same request) |
+| `CausationId` | `string?` | Cause event ID (ID of the preceding event that triggered this event) |
 
 ### DomainEvent
 
@@ -77,7 +77,7 @@ public abstract record DomainEvent(
 }
 ```
 
-| 생성자 | 설명 |
+| Constructor | Description |
 |--------|------|
 | `DomainEvent()` | 현재 시각과 새 `EventId`로 생성 (`CorrelationId`, `CausationId`는 `null`) |
 | `DomainEvent(string? correlationId)` | 지정된 `CorrelationId`로 생성 |
@@ -96,9 +96,9 @@ public interface IHasDomainEvents
 }
 ```
 
-| 속성 | 타입 | 설명 |
+| Property | Type | Description |
 |------|------|------|
-| `DomainEvents` | `IReadOnlyList<IDomainEvent>` | Aggregate에 등록된 도메인 이벤트 목록 (읽기 전용) |
+| `DomainEvents` | `IReadOnlyList<IDomainEvent>` | Aggregate에 등록된 Domain event list (read-only) |
 
 ### IDomainEventDrain (internal)
 
@@ -113,13 +113,13 @@ internal interface IDomainEventDrain : IHasDomainEvents
 }
 ```
 
-| 메서드 | 반환 타입 | 설명 |
+| Method | Return Type | Description |
 |--------|----------|------|
-| `ClearDomainEvents()` | `void` | 모든 도메인 이벤트 제거 |
+| `ClearDomainEvents()` | `void` | Removes all domain events |
 
 > **접근 수준:** `internal`입니다. 애플리케이션 코드에서 직접 호출하지 마십시오. `AggregateRoot<TId>`가 이 인터페이스를 구현하며, 인프라 코드(Publisher)가 발행 후 자동으로 호출합니다.
 
-### 이벤트 정의 예제
+### Event Definition Example
 
 ```csharp
 // Aggregate 내 중첩 record로 정의
@@ -140,7 +140,7 @@ public class Order : AggregateRoot<OrderId>
 
 ---
 
-## 이벤트 수집 (IDomainEventCollector)
+## Event Collection (IDomainEventCollector)
 
 Scoped 범위에서 Aggregate를 추적하여 도메인 이벤트를 수집하는 인터페이스입니다. Repository의 Create/Update에서 `Track()`을 호출하고, `UsecaseTransactionPipeline`에서 `GetTrackedAggregates()`로 이벤트를 수집합니다.
 
@@ -157,7 +157,7 @@ public interface IDomainEventCollector
 }
 ```
 
-| 메서드 | 반환 타입 | 설명 |
+| Method | Return Type | Description |
 |--------|----------|------|
 | `Track(IHasDomainEvents aggregate)` | `void` | Aggregate를 추적 대상으로 등록 (이미 등록된 경우 무시) |
 | `TrackRange(IEnumerable<IHasDomainEvents> aggregates)` | `void` | 여러 Aggregate를 추적 대상으로 일괄 등록 |
@@ -165,7 +165,7 @@ public interface IDomainEventCollector
 | `TrackEvent(IDomainEvent domainEvent)` | `void` | Domain Service가 생성한 벌크 이벤트를 직접 추적합니다 |
 | `GetDirectlyTrackedEvents()` | `IReadOnlyList<IDomainEvent>` | Domain Service가 생성한 벌크 이벤트를 직접 추적합니다 |
 
-### 사용 흐름
+### Usage Flow
 
 1. **Repository에서** Create/Update 시 `IDomainEventCollector.Track(aggregate)` 호출
 2. **UsecaseTransactionPipeline에서** SaveChanges 후 `GetTrackedAggregates()`로 이벤트가 있는 Aggregate 조회
@@ -173,7 +173,7 @@ public interface IDomainEventCollector
 
 ---
 
-## 이벤트 발행 (IDomainEventPublisher)
+## Event Publishing (IDomainEventPublisher)
 
 도메인 이벤트 발행자 인터페이스입니다. Repository/Port와 동일한 `FinT` 반환 패턴을 사용합니다.
 
@@ -192,10 +192,10 @@ public interface IDomainEventPublisher
 }
 ```
 
-| 메서드 | 반환 타입 | 설명 |
+| Method | Return Type | Description |
 |--------|----------|------|
-| `Publish<TEvent>(TEvent, CancellationToken)` | `FinT<IO, Unit>` | 단일 도메인 이벤트를 발행 |
-| `PublishTrackedEvents(CancellationToken)` | `FinT<IO, Seq<PublishResult>>` | `IDomainEventCollector`에서 추적된 모든 Aggregate의 이벤트를 발행하고 클리어 |
+| `Publish<TEvent>(TEvent, CancellationToken)` | `FinT<IO, Unit>` | Publishes a single domain event |
+| `PublishTrackedEvents(CancellationToken)` | `FinT<IO, Seq<PublishResult>>` | Publishes events from all Aggregates tracked by `IDomainEventCollector` and clears them |
 
 **제네릭 제약 조건:** `TEvent`는 `IDomainEvent`를 구현해야 합니다.
 
@@ -222,25 +222,25 @@ public sealed record PublishResult(
 }
 ```
 
-| 속성 | 타입 | 설명 |
+| Property | Type | Description |
 |------|------|------|
-| `SuccessfulEvents` | `Seq<IDomainEvent>` | 성공적으로 발행된 이벤트 목록 |
-| `FailedEvents` | `Seq<(IDomainEvent Event, Error Error)>` | 발행 실패한 이벤트와 에러 목록 |
-| `IsAllSuccessful` | `bool` | 모든 이벤트가 성공적으로 발행되었는지 여부 (`FailedEvents.IsEmpty`) |
-| `HasFailures` | `bool` | 실패한 이벤트가 있는지 여부 |
-| `TotalCount` | `int` | 발행된 총 이벤트 수 |
-| `SuccessCount` | `int` | 성공한 이벤트 수 |
-| `FailureCount` | `int` | 실패한 이벤트 수 |
+| `SuccessfulEvents` | `Seq<IDomainEvent>` | List of successfully published events |
+| `FailedEvents` | `Seq<(IDomainEvent Event, Error Error)>` | List of failed events and their errors |
+| `IsAllSuccessful` | `bool` | Whether all events were successfully published (`FailedEvents.IsEmpty`) |
+| `HasFailures` | `bool` | Whether there are any failed events |
+| `TotalCount` | `int` | Total number of published events |
+| `SuccessCount` | `int` | Number of successful events |
+| `FailureCount` | `int` | Number of failed events |
 
-| 팩토리 메서드 | 반환 타입 | 설명 |
+| Factory Method | Return Type | Description |
 |--------------|----------|------|
-| `Empty` | `PublishResult` | 빈 결과 (이벤트 없음) |
-| `Success(Seq<IDomainEvent>)` | `PublishResult` | 모든 이벤트가 성공한 결과 |
-| `Failure(Seq<(IDomainEvent, Error)>)` | `PublishResult` | 모든 이벤트가 실패한 결과 |
+| `Empty` | `PublishResult` | Empty result (no events) |
+| `Success(Seq<IDomainEvent>)` | `PublishResult` | Result where all events succeeded |
+| `Failure(Seq<(IDomainEvent, Error)>)` | `PublishResult` | Result where all events failed |
 
 ---
 
-## 이벤트 핸들러 (IDomainEventHandler\<TEvent\>)
+## Event Handler (IDomainEventHandler\<TEvent\>)
 
 도메인 이벤트 핸들러 인터페이스입니다. Mediator의 `INotificationHandler<TEvent>`를 확장하여 소스 생성기 호환을 제공합니다.
 
@@ -257,11 +257,11 @@ public interface IDomainEventHandler<in TEvent> : INotificationHandler<TEvent>
 
 **제네릭 제약 조건:** `TEvent`는 `IDomainEvent`를 구현해야 합니다.
 
-| 상속 메서드 | 반환 타입 | 설명 |
+| Inherited Method | Return Type | Description |
 |------------|----------|------|
 | `Handle(TEvent notification, CancellationToken cancellationToken)` | `ValueTask` | 도메인 이벤트를 처리 (`INotificationHandler<TEvent>`에서 상속) |
 
-### 사용 예제
+### Usage Example
 
 ```csharp
 public sealed class OnOrderCreated : IDomainEventHandler<Order.CreatedEvent>
@@ -275,7 +275,7 @@ public sealed class OnOrderCreated : IDomainEventHandler<Order.CreatedEvent>
 
 ---
 
-## Observable 발행자
+## Observable Publishers
 
 ### ObservableDomainEventPublisher
 
@@ -306,18 +306,18 @@ public sealed class ObservableDomainEventPublisher : IDomainEventPublisher, IDis
 }
 ```
 
-| 생성자 매개변수 | 타입 | 설명 |
+| Constructor Parameter | Type | Description |
 |----------------|------|------|
-| `activitySource` | `ActivitySource` | 분산 추적용 ActivitySource (DI 주입) |
-| `inner` | `IDomainEventPublisher` | 데코레이트할 실제 발행자 |
-| `collector` | `IDomainEventCollector` | 추적 이벤트 건수 계산용 수집기 |
-| `logger` | `ILogger<ObservableDomainEventPublisher>` | 로거 |
+| `activitySource` | `ActivitySource` | ActivitySource for distributed tracing (DI injected) |
+| `inner` | `IDomainEventPublisher` | Actual publisher to decorate |
+| `collector` | `IDomainEventCollector` | Collector for calculating tracked event counts |
+| `logger` | `ILogger<ObservableDomainEventPublisher>` | Logger |
 | `meterFactory` | `IMeterFactory` | Meter 팩토리 |
 | `openTelemetryOptions` | `IOptions<OpenTelemetryOptions>` | OpenTelemetry 설정 |
 
 **관찰성 항목:**
 
-| 항목 | 이름 패턴 | 설명 |
+| Item | Name Pattern | Description |
 |------|----------|------|
 | Meter | `{ServiceNamespace}.adapter.event` | Adapter Layer 이벤트 Meter |
 | Counter (Request) | `adapter.event.requests` | 이벤트 발행 요청 수 |
@@ -350,13 +350,13 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
 }
 ```
 
-| 생성자 매개변수 | 타입 | 설명 |
+| Constructor Parameter | Type | Description |
 |----------------|------|------|
-| `activitySource` | `ActivitySource` | 분산 추적용 ActivitySource (DI 주입) |
-| `loggerFactory` | `ILoggerFactory` | 핸들러별 로거 생성용 팩토리 |
+| `activitySource` | `ActivitySource` | ActivitySource for distributed tracing (DI injected) |
+| `loggerFactory` | `ILoggerFactory` | 핸들러별 Logger 생성용 팩토리 |
 | `meterFactory` | `IMeterFactory` | Meter 팩토리 |
 | `openTelemetryOptions` | `IOptions<OpenTelemetryOptions>` | OpenTelemetry 설정 |
-| `serviceProvider` | `IServiceProvider` | `IDomainEventCtxEnricher` 해석용 DI 컨테이너 |
+| `serviceProvider` | `IServiceProvider` | DI container for resolving `IDomainEventCtxEnricher` |
 
 **동작 방식:**
 - `IDomainEvent`인 Notification에만 관찰성을 적용합니다.
@@ -365,7 +365,7 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
 
 **관찰성 항목:**
 
-| 항목 | 이름 패턴 | 설명 |
+| Item | Name Pattern | Description |
 |------|----------|------|
 | Meter | `{ServiceNamespace}.application` | Application Layer Meter |
 | Counter (Request) | `application.usecase.event.requests` | 핸들러 요청 수 |
@@ -374,7 +374,7 @@ public sealed class ObservableDomainEventNotificationPublisher : INotificationPu
 
 > **Mediator 3.0 제약:** Mediator 3.0은 `INotification`에 `IPipelineBehavior`를 지원하지 않으며, 소스 생성기가 `INotificationPublisher` 인터페이스가 아닌 구체 타입을 직접 사용합니다. 따라서 Scrutor의 Decorate 패턴이 동작하지 않으며, `NotificationPublisherType` 설정을 사용해야 합니다.
 
-### DI 등록
+### DI Registration
 
 ```csharp
 services.AddMediator(options =>
@@ -404,7 +404,7 @@ public interface IUsecaseCtxEnricher<in TRequest, in TResponse>
 }
 ```
 
-| 메서드 | 반환 타입 | 설명 |
+| Method | Return Type | Description |
 |--------|----------|------|
 | `EnrichRequestLog(TRequest request)` | `IDisposable?` | Request 로그 출력 전 LogContext에 속성 Push |
 | `EnrichResponseLog(TRequest request, TResponse response)` | `IDisposable?` | Response 로그 출력 전 LogContext에 속성 Push |
@@ -430,7 +430,7 @@ public interface IDomainEventCtxEnricher
 }
 ```
 
-| 인터페이스 | 메서드 | 설명 |
+| 인터페이스 | Method | Description |
 |-----------|--------|------|
 | `IDomainEventCtxEnricher<TEvent>` | `EnrichLog(TEvent domainEvent)` | 타입 안전한 이벤트 로그 Enrichment |
 | `IDomainEventCtxEnricher` (비제네릭) | `EnrichLog(IDomainEvent domainEvent)` | 런타임 타입 해석 후 호출에 사용하는 브릿지 인터페이스 |
@@ -453,7 +453,7 @@ public static class CtxEnricherContext
 }
 ```
 
-| 메서드 | 반환 타입 | 설명 |
+| Method | Return Type | Description |
 |--------|----------|------|
 | `SetPushPropertyFactory(Func<string, object?, IDisposable>)` | `void` | LogContext Push 팩토리 설정 (애플리케이션 시작 시 1회 호출) |
 | `PushProperty(string name, object? value)` | `IDisposable` | 지정된 이름과 값으로 LogContext에 속성 Push |
@@ -462,7 +462,7 @@ public static class CtxEnricherContext
 
 ---
 
-## 소스 생성기 어트리뷰트 (\[CtxRoot\], \[CtxIgnore\])
+## Source Generator Attributes (\[CtxRoot\], \[CtxIgnore\])
 
 ### CtxRootAttribute
 
@@ -478,7 +478,7 @@ namespace Functorium.Abstractions.Observabilities;
 public sealed class CtxRootAttribute : Attribute;
 ```
 
-| 대상 | 동작 |
+| Target | Behavior |
 |------|------|
 | `Interface` | 해당 인터페이스를 구현하는 모든 Request/Response에서 해당 필드가 `ctx.{field}`로 승격 |
 | `Property` | 해당 프로퍼티가 `ctx.{field}`로 승격 |
@@ -498,13 +498,13 @@ namespace Functorium.Applications.Usecases;
 public sealed class CtxIgnoreAttribute : Attribute;
 ```
 
-| 대상 | 동작 |
+| Target | Behavior |
 |------|------|
 | `Class` | 해당 Request record 전체가 CtxEnricher 자동 생성에서 제외 |
 | `Property` | 해당 프로퍼티가 CtxEnricher 자동 생성에서 제외 |
 | `Parameter` | record 생성자 파라미터가 CtxEnricher 자동 생성에서 제외 |
 
-### 어트리뷰트 사용 예제
+### Attribute Usage Example
 
 ```csharp
 // 인터페이스에 [CtxRoot] 적용 — 구현하는 모든 Request에서 승격
@@ -523,7 +523,7 @@ public sealed record CreateOrderCommand(
 
 ---
 
-## 관련 문서
+## Related Documents
 
 - [도메인 이벤트 가이드](../guides/domain/07-domain-events) — 설계 원칙, 구현 패턴, UsecaseTransactionPipeline 통합
 - [엔티티와 애그리거트 사양](./01-entity-aggregate) — `AggregateRoot<TId>`의 `AddDomainEvent()`, `IHasDomainEvents`

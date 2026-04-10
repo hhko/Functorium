@@ -1,35 +1,35 @@
 ---
-title: "엔티티와 애그리거트 사양"
+title: "Entity and Aggregate Specification"
 ---
 
-Functorium 프레임워크가 제공하는 엔티티(Entity)와 애그리거트(Aggregate) 관련 공개 타입의 API 사양입니다. 설계 원칙과 구현 패턴은 [Entity와 Aggregate 구현 가이드](../guides/domain/06b-entity-aggregate-core)를 참조하십시오.
+This is the API specification for Entity and Aggregate related public types provided by the Functorium framework. For design principles and implementation patterns, see the [Entity and Aggregate Implementation Guide](../guides/domain/06b-entity-aggregate-core).
 
-## 요약
+## Summary
 
-### 주요 타입
+### Key Types
 
-| 타입 | 네임스페이스 | 설명 |
+| Type | Namespace | Description |
 |------|-------------|------|
-| `IEntity` | `Functorium.Domains.Entities` | Entity 명명 규칙 상수 정의 |
-| `IEntity<TId>` | `Functorium.Domains.Entities` | Entity 기본 인터페이스 (ID 기반 동등성 계약) |
-| `IEntityId<T>` | `Functorium.Domains.Entities` | Ulid 기반 Entity ID 인터페이스 |
-| `Entity<TId>` | `Functorium.Domains.Entities` | Entity 기반 추상 클래스 (동등성, 프록시 지원) |
-| `AggregateRoot<TId>` | `Functorium.Domains.Entities` | Aggregate Root 기반 추상 클래스 (도메인 이벤트 관리) |
-| `GenerateEntityIdAttribute` | `Functorium.Domains.Entities` | EntityId 소스 생성기 트리거 속성 |
-| `IAuditable` | `Functorium.Domains.Entities` | 생성/수정 시각 추적 믹스인 |
-| `IAuditableWithUser` | `Functorium.Domains.Entities` | 생성/수정 시각 + 사용자 추적 믹스인 |
-| `IConcurrencyAware` | `Functorium.Domains.Entities` | 낙관적 동시성 제어 믹스인 |
-| `ISoftDeletable` | `Functorium.Domains.Entities` | 소프트 삭제 믹스인 |
-| `ISoftDeletableWithUser` | `Functorium.Domains.Entities` | 소프트 삭제 + 삭제자 추적 믹스인 |
-| `IDomainService` | `Functorium.Domains.Services` | 도메인 서비스 마커 인터페이스 |
+| `IEntity` | `Functorium.Domains.Entities` | Entity naming convention constant definitions |
+| `IEntity<TId>` | `Functorium.Domains.Entities` | Entity base interface (ID-based equality contract) |
+| `IEntityId<T>` | `Functorium.Domains.Entities` | Ulid-based Entity ID interface |
+| `Entity<TId>` | `Functorium.Domains.Entities` | Entity base abstract class (equality, proxy support) |
+| `AggregateRoot<TId>` | `Functorium.Domains.Entities` | Aggregate Root base abstract class (domain event management) |
+| `GenerateEntityIdAttribute` | `Functorium.Domains.Entities` | EntityId source generator trigger attribute |
+| `IAuditable` | `Functorium.Domains.Entities` | Created/modified timestamp tracking mixin |
+| `IAuditableWithUser` | `Functorium.Domains.Entities` | Created/modified timestamp + user tracking mixin |
+| `IConcurrencyAware` | `Functorium.Domains.Entities` | Optimistic concurrency control mixin |
+| `ISoftDeletable` | `Functorium.Domains.Entities` | Soft delete mixin |
+| `ISoftDeletableWithUser` | `Functorium.Domains.Entities` | Soft delete + deleter tracking mixin |
+| `IDomainService` | `Functorium.Domains.Services` | Domain service marker interface |
 
 ---
 
 ## IEntity / IEntity\<TId\>
 
-Entity의 계약을 정의하는 인터페이스입니다.
+Interfaces defining the Entity contract.
 
-### IEntity (비제네릭)
+### IEntity (Non-generic)
 
 ```csharp
 public interface IEntity
@@ -39,10 +39,10 @@ public interface IEntity
 }
 ```
 
-| 상수 | 값 | 설명 |
+| Constant | Value | Description |
 |------|----|------|
-| `CreateMethodName` | `"Create"` | 새 Entity 생성 팩토리 메서드 이름 |
-| `CreateFromValidatedMethodName` | `"CreateFromValidated"` | 검증 완료 데이터로 Entity를 복원하는 메서드 이름 (Repository/ORM용) |
+| `CreateMethodName` | `"Create"` | Factory method name for creating a new Entity |
+| `CreateFromValidatedMethodName` | `"CreateFromValidated"` | Method name for restoring an Entity from validated data (for Repository/ORM) |
 
 ### IEntity\<TId\>
 
@@ -54,17 +54,17 @@ public interface IEntity<TId> : IEntity
 }
 ```
 
-| 속성 | 타입 | 설명 |
+| Property | Type | Description |
 |------|------|------|
-| `Id` | `TId` | Entity의 고유 식별자 |
+| `Id` | `TId` | Unique identifier of the Entity |
 
-**제네릭 제약 조건:** `TId`는 `struct`이면서 `IEntityId<TId>`를 구현해야 합니다.
+**Generic constraint:** `TId` must be a `struct` and implement `IEntityId<TId>`.
 
 ---
 
 ## IEntityId\<T\>
 
-Ulid 기반 Entity ID의 인터페이스입니다. 시간 순서 정렬이 가능하며, `IEquatable<T>`, `IComparable<T>`, `IParsable<T>`를 상속합니다.
+Interface for Ulid-based Entity IDs. Supports time-ordered sorting and inherits `IEquatable<T>`, `IComparable<T>`, `IParsable<T>`.
 
 ```csharp
 public interface IEntityId<T> : IEquatable<T>, IComparable<T>, IParsable<T>
@@ -78,18 +78,18 @@ public interface IEntityId<T> : IEquatable<T>, IComparable<T>, IParsable<T>
 }
 ```
 
-| 멤버 | 반환 타입 | 설명 |
+| Member | Return Type | Description |
 |------|----------|------|
-| `Value` | `Ulid` | Ulid 값 |
-| `New()` | `T` | 새로운 EntityId 생성 (정적 추상) |
-| `Create(Ulid id)` | `T` | Ulid로부터 EntityId 생성 (정적 추상) |
-| `Create(string id)` | `T` | 문자열로부터 EntityId 생성 (정적 추상). 유효하지 않은 형식이면 `FormatException` 발생 |
+| `Value` | `Ulid` | The Ulid value |
+| `New()` | `T` | Creates a new EntityId (static abstract) |
+| `Create(Ulid id)` | `T` | Creates an EntityId from a Ulid (static abstract) |
+| `Create(string id)` | `T` | Creates an EntityId from a string (static abstract). Throws `FormatException` for invalid formats |
 
 ---
 
 ## Entity\<TId\>
 
-ID 기반 동등성 비교를 제공하는 Entity의 기반 추상 클래스입니다. ORM 프록시 타입(Castle, NHibernate, EF Core Proxies)도 처리합니다.
+Base abstract class for Entity providing ID-based equality comparison. Also handles ORM proxy types (Castle, NHibernate, EF Core Proxies).
 
 ```csharp
 [Serializable]
@@ -97,32 +97,32 @@ public abstract class Entity<TId> : IEntity<TId>, IEquatable<Entity<TId>>
     where TId : struct, IEntityId<TId>
 ```
 
-### 속성
+### Properties
 
-| 속성 | 타입 | 접근자 | 설명 |
+| Property | Type | Accessor | Description |
 |------|------|--------|------|
-| `Id` | `TId` | `public get; protected init` | Entity의 고유 식별자 |
+| `Id` | `TId` | `public get; protected init` | Unique identifier of the Entity |
 
-### 생성자
+### Constructors
 
-| 시그니처 | 접근 수준 | 설명 |
+| Signature | Access Level | Description |
 |----------|----------|------|
-| `Entity()` | `protected` | 기본 생성자 (ORM/직렬화용) |
-| `Entity(TId id)` | `protected` | ID를 지정하여 Entity 생성 |
+| `Entity()` | `protected` | Default constructor (for ORM/serialization) |
+| `Entity(TId id)` | `protected` | Creates an Entity with a specified ID |
 
-### 메서드
+### Methods
 
-| 메서드 | 반환 타입 | 접근 수준 | 설명 |
+| Method | Return Type | Access Level | Description |
 |--------|----------|----------|------|
-| `Equals(object? obj)` | `bool` | `public` | ID 기반 동등성 비교 (프록시 타입 고려) |
-| `Equals(Entity<TId>? other)` | `bool` | `public` | 타입 안전한 동등성 비교 |
-| `GetHashCode()` | `int` | `public` | ID 기반 해시코드 |
-| `operator ==(Entity<TId>?, Entity<TId>?)` | `bool` | `public static` | 동등성 연산자 |
-| `operator !=(Entity<TId>?, Entity<TId>?)` | `bool` | `public static` | 부등성 연산자 |
-| `CreateFromValidation<TEntity, TValue>(Validation<Error, TValue>, Func<TValue, TEntity>)` | `Fin<TEntity>` | `public static` | LanguageExt Validation을 사용한 팩토리 헬퍼 |
-| `GetUnproxiedType(object obj)` | `Type` | `protected static` | ORM 프록시를 제거하고 실제 타입 반환 |
+| `Equals(object? obj)` | `bool` | `public` | ID-based equality comparison (proxy-type aware) |
+| `Equals(Entity<TId>? other)` | `bool` | `public` | Type-safe equality comparison |
+| `GetHashCode()` | `int` | `public` | ID-based hash code |
+| `operator ==(Entity<TId>?, Entity<TId>?)` | `bool` | `public static` | Equality operator |
+| `operator !=(Entity<TId>?, Entity<TId>?)` | `bool` | `public static` | Inequality operator |
+| `CreateFromValidation<TEntity, TValue>(Validation<Error, TValue>, Func<TValue, TEntity>)` | `Fin<TEntity>` | `public static` | Factory helper using LanguageExt Validation |
+| `GetUnproxiedType(object obj)` | `Type` | `protected static` | Strips ORM proxy and returns the actual type |
 
-### 최소 사용 예제
+### Minimal Usage Example
 
 ```csharp
 [GenerateEntityId]
@@ -151,43 +151,43 @@ public class Product : Entity<ProductId>
 
 ## AggregateRoot\<TId\>
 
-도메인 이벤트 관리 기능을 제공하는 Aggregate Root의 기반 추상 클래스입니다. **Entity\<TId\>를** 상속하고 `IDomainEventDrain`(internal)을 구현합니다.
+Base abstract class for Aggregate Root providing domain event management. Inherits **Entity\<TId\>** and implements `IDomainEventDrain` (internal).
 
 ```csharp
 public abstract class AggregateRoot<TId> : Entity<TId>, IDomainEventDrain
     where TId : struct, IEntityId<TId>
 ```
 
-### 속성
+### Properties
 
-| 속성 | 타입 | 접근자 | 설명 |
+| Property | Type | Accessor | Description |
 |------|------|--------|------|
-| `DomainEvents` | `IReadOnlyList<IDomainEvent>` | `public get` | 도메인 이벤트 목록 (읽기 전용) |
+| `DomainEvents` | `IReadOnlyList<IDomainEvent>` | `public get` | Domain event list (read-only) |
 
-### 생성자
+### Constructors
 
-| 시그니처 | 접근 수준 | 설명 |
+| Signature | Access Level | Description |
 |----------|----------|------|
-| `AggregateRoot()` | `protected` | 기본 생성자 (ORM/직렬화용) |
-| `AggregateRoot(TId id)` | `protected` | ID를 지정하여 Aggregate Root 생성 |
+| `AggregateRoot()` | `protected` | Default constructor (for ORM/serialization) |
+| `AggregateRoot(TId id)` | `protected` | Creates an Aggregate Root with a specified ID |
 
-### 메서드
+### Methods
 
-| 메서드 | 반환 타입 | 접근 수준 | 설명 |
+| Method | Return Type | Access Level | Description |
 |--------|----------|----------|------|
-| `AddDomainEvent(IDomainEvent domainEvent)` | `void` | `protected` | 도메인 이벤트 추가 |
-| `ClearDomainEvents()` | `void` | `public` | 모든 도메인 이벤트 제거 (`IDomainEventDrain` 구현) |
+| `AddDomainEvent(IDomainEvent domainEvent)` | `void` | `protected` | Adds a domain event |
+| `ClearDomainEvents()` | `void` | `public` | Removes all domain events (`IDomainEventDrain` implementation) |
 
-### 인터페이스 분리
+### Interface Separation
 
-**AggregateRoot\<TId\>는** 도메인 이벤트에 대해 두 인터페이스를 분리합니다.
+**AggregateRoot\<TId\>** separates two interfaces for domain events.
 
-| 인터페이스 | 접근 수준 | 역할 |
+| Interface | Access Level | Role |
 |-----------|----------|------|
-| `IHasDomainEvents` | `public` | 이벤트 조회 전용 (`DomainEvents` 속성) |
-| `IDomainEventDrain` | `internal` | 이벤트 정리 (`ClearDomainEvents()`) — 인프라 관심사 |
+| `IHasDomainEvents` | `public` | Event read-only access (`DomainEvents` property) |
+| `IDomainEventDrain` | `internal` | Event cleanup (`ClearDomainEvents()`) -- infrastructure concern |
 
-### 최소 사용 예제
+### Minimal Usage Example
 
 ```csharp
 [GenerateEntityId]
@@ -230,55 +230,55 @@ public class Order : AggregateRoot<OrderId>
 
 ## GenerateEntityIdAttribute
 
-Entity 클래스에 적용하면 소스 생성기가 EntityId 관련 타입을 자동으로 생성합니다.
+When applied to an Entity class, the source generator automatically generates EntityId-related types.
 
 ```csharp
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
 public sealed class GenerateEntityIdAttribute : Attribute;
 ```
 
-### 생성되는 타입
+### Generated Types
 
-`[GenerateEntityId]`를 `Product` 클래스에 적용하면 다음 타입이 생성됩니다.
+Applying `[GenerateEntityId]` to the `Product` class generates the following types.
 
-| 생성 타입 | 종류 | 설명 |
+| Generated Type | Kind | Description |
 |----------|------|------|
-| `ProductId` | `readonly partial record struct` | Ulid 기반 EntityId (`IEntityId<ProductId>` 구현) |
-| `ProductIdComparer` | `sealed class` | EF Core `ValueComparer<ProductId>` (변경 추적용) |
-| `ProductIdConverter` | `sealed class` | EF Core `ValueConverter<ProductId, string>` (DB 저장 시 문자열 변환) |
+| `ProductId` | `readonly partial record struct` | Ulid-based EntityId (implements `IEntityId<ProductId>`) |
+| `ProductIdComparer` | `sealed class` | EF Core `ValueComparer<ProductId>` (for change tracking) |
+| `ProductIdConverter` | `sealed class` | EF Core `ValueConverter<ProductId, string>` (string conversion for DB storage) |
 
-### 생성되는 ProductId 멤버
+### Generated ProductId Members
 
-| 멤버 | 타입/반환 | 설명 |
+| Member | Type/Return | Description |
 |------|----------|------|
-| `Name` | `const string` | 타입 이름 상수 (`"ProductId"`) |
-| `Namespace` | `const string` | 네임스페이스 상수 |
-| `Empty` | `static readonly ProductId` | 빈 값 (`Ulid.Empty` 기반) |
-| `Value` | `Ulid { get; init; }` | Ulid 값 |
-| `New()` | `static ProductId` | 새 ID 생성 |
-| `Create(Ulid id)` | `static ProductId` | Ulid로부터 생성 |
-| `Create(string id)` | `static ProductId` | 문자열로부터 생성 (`FormatException` 가능) |
-| `CompareTo(ProductId other)` | `int` | Ulid 기반 비교 |
-| `<`, `>`, `<=`, `>=` | `bool` | 비교 연산자 |
-| `Parse(string, IFormatProvider?)` | `static ProductId` | `IParsable<T>` 구현 |
-| `TryParse(string?, IFormatProvider?, out ProductId)` | `static bool` | `IParsable<T>` 구현 |
-| `ToString()` | `string` | Ulid 문자열 표현 |
+| `Name` | `const string` | Type name constant (`"ProductId"`) |
+| `Namespace` | `const string` | Namespace constant |
+| `Empty` | `static readonly ProductId` | Empty value (based on `Ulid.Empty`) |
+| `Value` | `Ulid { get; init; }` | The Ulid value |
+| `New()` | `static ProductId` | Creates a new ID |
+| `Create(Ulid id)` | `static ProductId` | Creates from a Ulid |
+| `Create(string id)` | `static ProductId` | Creates from a string (`FormatException` possible) |
+| `CompareTo(ProductId other)` | `int` | Ulid-based comparison |
+| `<`, `>`, `<=`, `>=` | `bool` | Comparison operators |
+| `Parse(string, IFormatProvider?)` | `static ProductId` | `IParsable<T>` implementation |
+| `TryParse(string?, IFormatProvider?, out ProductId)` | `static bool` | `IParsable<T>` implementation |
+| `ToString()` | `string` | Ulid string representation |
 
-생성된 EntityId에는 `[JsonConverter]`와 `[TypeConverter]` 속성이 자동 적용되어 JSON 직렬화와 타입 변환이 지원됩니다.
+Generated EntityIds automatically have `[JsonConverter]` and `[TypeConverter]` attributes applied, supporting JSON serialization and type conversion.
 
-### 사용 예제
+### Usage Example
 
 ```csharp
-// 새 ID 생성
+// Create a new ID
 var productId = ProductId.New();
 
-// 문자열에서 변환
+// Convert from string
 var parsed = ProductId.Create("01ARZ3NDEKTSV4RRFFQ69G5FAV");
 
-// 비교
+// Comparison
 bool isNewer = productId > parsed;
 
-// EF Core 설정
+// EF Core configuration
 builder.Property(x => x.Id)
     .HasConversion(new ProductIdConverter())
     .Metadata.SetValueComparer(new ProductIdComparer());
@@ -286,13 +286,13 @@ builder.Property(x => x.Id)
 
 ---
 
-## 믹스인 인터페이스
+## Mixin Interfaces
 
-Entity 또는 Aggregate Root에 선택적으로 혼합하여 횡단 관심사를 추가하는 인터페이스입니다.
+Interfaces that can be optionally mixed into Entity or Aggregate Root to add cross-cutting concerns.
 
 ### IAuditable
 
-생성/수정 시각을 추적합니다.
+Tracks creation/modification timestamps.
 
 ```csharp
 public interface IAuditable
@@ -302,14 +302,14 @@ public interface IAuditable
 }
 ```
 
-| 속성 | 타입 | 설명 |
+| Property | Type | Description |
 |------|------|------|
-| `CreatedAt` | `DateTime` | 생성 시각 |
-| `UpdatedAt` | `Option<DateTime>` | 최종 수정 시각 (미수정 시 `None`) |
+| `CreatedAt` | `DateTime` | Creation timestamp |
+| `UpdatedAt` | `Option<DateTime>` | Last modification timestamp (`None` if never modified) |
 
 ### IAuditableWithUser
 
-**IAuditable을** 확장하여 사용자 정보를 추가로 추적합니다.
+Extends **IAuditable** to additionally track user information.
 
 ```csharp
 public interface IAuditableWithUser : IAuditable
@@ -319,14 +319,14 @@ public interface IAuditableWithUser : IAuditable
 }
 ```
 
-| 속성 | 타입 | 설명 |
+| Property | Type | Description |
 |------|------|------|
-| `CreatedBy` | `Option<string>` | 생성자 식별자 |
-| `UpdatedBy` | `Option<string>` | 최종 수정자 식별자 |
+| `CreatedBy` | `Option<string>` | Creator identifier |
+| `UpdatedBy` | `Option<string>` | Last modifier identifier |
 
 ### IConcurrencyAware
 
-낙관적 동시성 제어를 위한 행 버전을 관리합니다. EF Core의 `[Timestamp]`/`IsRowVersion()`과 매핑됩니다.
+Manages row version for optimistic concurrency control. Maps to EF Core's `[Timestamp]`/`IsRowVersion()`.
 
 ```csharp
 public interface IConcurrencyAware
@@ -335,13 +335,13 @@ public interface IConcurrencyAware
 }
 ```
 
-| 속성 | 타입 | 설명 |
+| Property | Type | Description |
 |------|------|------|
-| `RowVersion` | `byte[]` | 낙관적 동시성 제어용 행 버전 |
+| `RowVersion` | `byte[]` | Row version for optimistic concurrency control |
 
 ### ISoftDeletable
 
-소프트 삭제를 지원합니다. `IsDeleted`는 `DeletedAt`에서 파생되는 기본 구현(default interface method)을 제공합니다.
+Supports soft delete. `IsDeleted` provides a default implementation (default interface method) derived from `DeletedAt`.
 
 ```csharp
 public interface ISoftDeletable
@@ -351,14 +351,14 @@ public interface ISoftDeletable
 }
 ```
 
-| 속성 | 타입 | 설명 |
+| Property | Type | Description |
 |------|------|------|
-| `DeletedAt` | `Option<DateTime>` | 삭제 시각 (미삭제 시 `None`) |
-| `IsDeleted` | `bool` | 삭제 여부 (`DeletedAt.IsSome`에서 파생, 기본 구현) |
+| `DeletedAt` | `Option<DateTime>` | Deletion timestamp (`None` if not deleted) |
+| `IsDeleted` | `bool` | Whether deleted (derived from `DeletedAt.IsSome`, default implementation) |
 
 ### ISoftDeletableWithUser
 
-**ISoftDeletable을** 확장하여 삭제자 정보를 추가로 추적합니다.
+Extends **ISoftDeletable** to additionally track deleter information.
 
 ```csharp
 public interface ISoftDeletableWithUser : ISoftDeletable
@@ -367,11 +367,11 @@ public interface ISoftDeletableWithUser : ISoftDeletable
 }
 ```
 
-| 속성 | 타입 | 설명 |
+| Property | Type | Description |
 |------|------|------|
-| `DeletedBy` | `Option<string>` | 삭제자 식별자 |
+| `DeletedBy` | `Option<string>` | Deleter identifier |
 
-### 믹스인 적용 예제
+### Mixin Application Example
 
 ```csharp
 [GenerateEntityId]
@@ -390,23 +390,23 @@ public class Product : AggregateRoot<ProductId>, IAuditableWithUser, ISoftDeleta
 
 ## IDomainService
 
-여러 Aggregate에 걸친 도메인 로직을 표현하는 마커 인터페이스입니다.
+A marker interface for expressing domain logic that spans multiple Aggregates.
 
 ```csharp
 public interface IDomainService { }
 ```
 
-### 설계 규칙
+### Design Rules
 
-| 규칙 | 설명 |
+| Rule | Description |
 |------|------|
-| Stateless | 호출 간 가변 상태를 유지하지 않음 (Evans Blue Book Ch.9) |
-| 기본 패턴 | 순수 함수로 구현 (외부 I/O 없음) |
-| Repository 의존 허용 | 대규모 교차 데이터 조회 시 Repository 인터페이스 의존 가능 |
-| Port/Adapter 금지 | `IObservablePort` 의존성 없음 (Port/Adapter는 Usecase에서 사용) |
-| 배치 위치 | Domain Layer |
+| Stateless | Does not maintain mutable state between calls (Evans Blue Book Ch.9) |
+| Default pattern | Implemented as pure functions (no external I/O) |
+| Repository dependency allowed | May depend on Repository interfaces for large-scale cross-data queries |
+| Port/Adapter forbidden | No `IObservablePort` dependency (Port/Adapter is used in Usecases) |
+| Location | Domain Layer |
 
-### 사용 예제
+### Usage Example
 
 ```csharp
 public sealed class PricingService : IDomainService
@@ -425,10 +425,10 @@ public sealed class PricingService : IDomainService
 
 ---
 
-## 관련 문서
+## Related Documents
 
-- [Entity와 Aggregate 구현 — 핵심 패턴](../guides/domain/06b-entity-aggregate-core) — 생성 패턴, 커맨드 메서드, 자식 Entity 관리
-- [Aggregate 설계 원칙](../guides/domain/06a-aggregate-design) — Aggregate 경계와 설계 원칙
-- [Entity와 Aggregate 구현 — 고급 패턴](../guides/domain/06c-entity-aggregate-advanced) — Cross-Aggregate 관계, 믹스인 실전 예제
-- [도메인 이벤트 사양](./09-domain-events) — `IDomainEvent`, `DomainEvent`, Publisher/Collector
-- [소스 생성기 사양](./10-source-generators) — EntityId 생성기 상세 사양
+- [Entity and Aggregate Implementation -- Core Patterns](../guides/domain/06b-entity-aggregate-core) -- Creation patterns, command methods, child Entity management
+- [Aggregate Design Principles](../guides/domain/06a-aggregate-design) -- Aggregate boundaries and design principles
+- [Entity and Aggregate Implementation -- Advanced Patterns](../guides/domain/06c-entity-aggregate-advanced) -- Cross-Aggregate relationships, mixin practical examples
+- [Domain Events Specification](./09-domain-events) -- `IDomainEvent`, `DomainEvent`, Publisher/Collector
+- [Source Generators Specification](./10-source-generators) -- Detailed EntityId generator specification

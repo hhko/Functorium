@@ -1,14 +1,14 @@
 ---
-title: "소스 생성기 사양"
+title: "Source Generators Specification"
 ---
 
-Functorium 프레임워크가 제공하는 소스 생성기(Source Generator)의 API 사양입니다. 모든 생성기는 Roslyn `IIncrementalGenerator` 기반이며, `Functorium.SourceGenerators` 패키지에 포함되어 있습니다. 실전 활용법은 [Source Generator Observability 튜토리얼](../tutorials/sourcegen-observability/)을 참조하십시오.
+This is the API specification for source generators provided by the Functorium framework. All generators are based on Roslyn `IIncrementalGenerator` and included in the `Functorium.SourceGenerators` package. For practical usage, see the [Source Generator Observability Tutorial](../tutorials/sourcegen-observability/).
 
-## 요약
+## Summary
 
-### 주요 타입
+### Key Types
 
-| 생성기 | 트리거 어트리뷰트 | 생성 대상 |
+| Generator | Trigger Attribute | Generation Target |
 |--------|-----------------|----------|
 | `EntityIdGenerator` | `[GenerateEntityId]` | `{Entity}Id` 구조체, Comparer, Converter |
 | `ObservablePortGenerator` | `[GenerateObservablePort]` | `{Class}Observable` 래퍼 클래스 (Tracing, Logging, Metrics) |
@@ -16,17 +16,17 @@ Functorium 프레임워크가 제공하는 소스 생성기(Source Generator)의
 | `DomainEventCtxEnricherGenerator` | _(자동 감지)_ | `IDomainEventCtxEnricher` 구현체 |
 | `UnionTypeGenerator` | `[UnionType]` | `Match`, `Switch`, `Is{Case}`, `As{Case}` 메서드 |
 
-### 보조 어트리뷰트
+### Auxiliary Attributes
 
-| 어트리뷰트 | 네임스페이스 | 적용 대상 | 설명 |
+| Attribute | Namespace | Target | Description |
 |-----------|-------------|----------|------|
 | `[ObservablePortIgnore]` | `Functorium.Adapters.SourceGenerators` | 메서드 | Observable 생성에서 해당 메서드 제외 |
 | `[CtxIgnore]` | `Functorium.Applications.Usecases` | 클래스, 프로퍼티, 파라미터 | CtxEnricher 생성에서 제외 |
 | `[CtxRoot]` | `Functorium.Abstractions.Observabilities` | 인터페이스, 프로퍼티, 파라미터 | ctx 루트 레벨로 승격 |
 
-### 진단 코드
+### Diagnostic Codes
 
-| 코드 | 심각도 | 생성기 | 설명 |
+| Code | Severity | Generator | Description |
 |------|--------|--------|------|
 | `FUNCTORIUM001` | Error | `ObservablePortGenerator` | 생성자 파라미터 타입 중복 |
 | `FUNCTORIUM002` | Warning | `CtxEnricherGenerator`, `DomainEventCtxEnricherGenerator` | ctx 필드 타입 충돌 (OpenSearch 매핑) |
@@ -35,7 +35,7 @@ Functorium 프레임워크가 제공하는 소스 생성기(Source Generator)의
 
 ---
 
-## 공통 인프라
+## Common Infrastructure
 
 ### IncrementalGeneratorBase\<TValue\>
 
@@ -48,7 +48,7 @@ public abstract class IncrementalGeneratorBase<TValue>(
     bool AttachDebugger = false) : IIncrementalGenerator
 ```
 
-| 파라미터 | 설명 |
+| Parameter | Description |
 |---------|------|
 | `registerSourceProvider` | 구문/시맨틱 분석 파이프라인을 등록하고 `IncrementalValuesProvider<TValue>`를 반환 |
 | `generate` | 수집된 메타데이터 배열로부터 소스 파일을 생성 |
@@ -62,7 +62,7 @@ public abstract class IncrementalGeneratorBase<TValue>(
 
 Entity 클래스에 `[GenerateEntityId]`를 적용하면 Ulid 기반 ID 타입, EF Core Comparer, EF Core Converter를 자동 생성합니다.
 
-### 트리거
+### Trigger
 
 ```csharp
 // Functorium.Domains.Entities
@@ -72,17 +72,17 @@ public sealed class GenerateEntityIdAttribute : Attribute;
 
 **대상**: `[GenerateEntityId]`가 적용된 `class` 선언
 
-### 생성 대상
+### Generation Targets
 
 `{EntityName}` 클래스에 대해 다음 세 타입을 단일 `.g.cs` 파일로 생성합니다.
 
-| 생성 타입 | 설명 |
+| Generated Type | Description |
 |----------|------|
 | `{EntityName}Id` | `readonly partial record struct` -- Ulid 기반 Entity ID |
 | `{EntityName}IdComparer` | EF Core `ValueComparer<{EntityName}Id>` |
 | `{EntityName}IdConverter` | EF Core `ValueConverter<{EntityName}Id, string>` |
 
-### 생성 코드 구조
+### Generated Code Structure
 
 #### {EntityName}Id
 
@@ -131,7 +131,7 @@ public sealed class {EntityName}IdComparer : ValueComparer<{EntityName}Id>;
 public sealed class {EntityName}IdConverter : ValueConverter<{EntityName}Id, string>;
 ```
 
-### 진단 코드
+### Diagnostic Codes
 
 EntityIdGenerator는 현재 전용 진단 코드를 발행하지 않습니다.
 
@@ -141,7 +141,7 @@ EntityIdGenerator는 현재 전용 진단 코드를 발행하지 않습니다.
 
 Adapter 클래스에 `[GenerateObservablePort]`를 적용하면 OpenTelemetry 기반 Observability(Tracing, Logging, Metrics)를 제공하는 Observable 래퍼 클래스를 자동 생성합니다.
 
-### 트리거
+### Trigger
 
 ```csharp
 // Functorium.Adapters.SourceGenerators
@@ -159,16 +159,16 @@ public sealed class GenerateObservablePortAttribute : Attribute;
 public sealed class ObservablePortIgnoreAttribute : Attribute;
 ```
 
-### 생성 대상
+### Generation Targets
 
 `{ClassName}`에 대해 다음을 생성합니다.
 
-| 생성 타입 | 설명 |
+| Generated Type | Description |
 |----------|------|
 | `{ClassName}Observable` | 원본 클래스를 상속하는 Observable 래퍼 클래스 |
 | `{ClassName}ObservableLoggers` | `LoggerMessage.Define` 기반 고성능 로깅 확장 메서드 static 클래스 |
 
-### 생성 코드 구조
+### Generated Code Structure
 
 #### {ClassName}Observable
 
@@ -197,7 +197,7 @@ public class {ClassName}Observable : {ClassName}
 
 **각 override 메서드가 제공하는 Observability:**
 
-| 항목 | 내용 |
+| Item | Content |
 |------|------|
 | **Tracing** | `ActivitySource.StartActivity`로 span 생성, 성공/실패 상태 기록 |
 | **Logging** | Request(Debug/Info), Response 성공(Debug/Info), Response 실패(Warning/Error) 4단계 |
@@ -227,9 +227,9 @@ internal static class {ClassName}ObservableLoggers
 }
 ```
 
-### 진단 코드
+### Diagnostic Codes
 
-| 코드 | 심각도 | 메시지 |
+| Code | Severity | Message |
 |------|--------|--------|
 | **FUNCTORIUM001** | Error | `Observable constructor for '{ClassName}' contains multiple parameters of the same type '{TypeName}'.` -- 생성자 파라미터(부모 + Observable 고유)에 동일 타입이 존재하면 DI 해석 충돌이 발생하므로 코드 생성을 중단합니다. |
 
@@ -239,7 +239,7 @@ internal static class {ClassName}ObservableLoggers
 
 `ICommandRequest<TSuccess>` 또는 `IQueryRequest<TSuccess>`를 구현하는 `record`를 자동 감지하여 `IUsecaseCtxEnricher` 구현체를 생성합니다. 별도의 트리거 어트리뷰트 없이 인터페이스 구현만으로 동작합니다.
 
-### 트리거
+### Trigger
 
 **자동 감지 조건:**
 
@@ -266,13 +266,13 @@ public sealed class CtxIgnoreAttribute : Attribute;
 public sealed class CtxRootAttribute : Attribute;
 ```
 
-### 생성 대상
+### Generation Targets
 
-| 생성 타입 | 설명 |
+| Generated Type | Description |
 |----------|------|
 | `{ContainingTypes}{RequestTypeName}CtxEnricher` | `partial class`, `IUsecaseCtxEnricher<TRequest, FinResponse<TSuccess>>` 구현체 |
 
-### 생성 코드 구조
+### Generated Code Structure
 
 ```csharp
 public partial class {ContainingTypes}{RequestTypeName}CtxEnricher
@@ -305,7 +305,7 @@ public partial class {ContainingTypes}{RequestTypeName}CtxEnricher
 
 **ctx 필드 네이밍 규칙:**
 
-| 조건 | ctx 필드 패턴 | 예시 |
+| Condition | ctx Field Pattern | Example |
 |------|-------------|------|
 | 기본 | `ctx.{containing_types}.request.{snake_case_name}` | `ctx.place_order_command.request.customer_id` |
 | `[CtxRoot]` 적용 | `ctx.{snake_case_name}` | `ctx.customer_id` |
@@ -319,9 +319,9 @@ public partial class {ContainingTypes}{RequestTypeName}CtxEnricher
 - 복합 타입(class, record, struct): 제외
 - `[CtxIgnore]` 적용 프로퍼티: 제외
 
-### 진단 코드
+### Diagnostic Codes
 
-| 코드 | 심각도 | 메시지 |
+| Code | Severity | Message |
 |------|--------|--------|
 | **FUNCTORIUM002** | Warning | `ctx field '{FieldName}' has conflicting types: '{Type1}' ({Group1}) in '{Enricher1}' vs '{Type2}' ({Group2}) in '{Enricher2}'.` -- 서로 다른 Enricher에서 같은 ctx 필드명에 다른 OpenSearch 타입 그룹을 할당하면 동적 매핑 충돌이 발생합니다. |
 | **FUNCTORIUM003** | Warning | `'{RequestType}' implements ICommandRequest/IQueryRequest but CtxEnricher cannot be generated because '{TypeName}' is {accessibility}.` -- `private`이나 `protected` 타입에는 Enricher를 생성할 수 없습니다. `[CtxIgnore]`를 적용하여 경고를 억제하십시오. |
@@ -332,7 +332,7 @@ public partial class {ContainingTypes}{RequestTypeName}CtxEnricher
 
 `IDomainEventHandler<TEvent>`를 구현하는 클래스를 자동 감지하여 `TEvent`에 대한 `IDomainEventCtxEnricher` 구현체를 생성합니다. 같은 이벤트 타입에 여러 Handler가 있어도 Enricher는 한 번만 생성됩니다.
 
-### 트리거
+### Trigger
 
 **자동 감지 조건:**
 
@@ -342,13 +342,13 @@ public partial class {ContainingTypes}{RequestTypeName}CtxEnricher
 4. `TEvent`에 `[CtxIgnore]`가 클래스 레벨에 적용되지 않아야 합니다.
 5. `TEvent`가 `public` 또는 `internal` 접근성이어야 합니다 (`private`/`protected`이면 FUNCTORIUM004 경고).
 
-### 생성 대상
+### Generation Targets
 
-| 생성 타입 | 설명 |
+| Generated Type | Description |
 |----------|------|
 | `{ContainingTypes}{EventTypeName}CtxEnricher` | `partial class`, `IDomainEventCtxEnricher<TEvent>` 구현체 |
 
-### 생성 코드 구조
+### Generated Code Structure
 
 ```csharp
 public partial class {ContainingTypes}{EventTypeName}CtxEnricher
@@ -374,15 +374,15 @@ public partial class {ContainingTypes}{EventTypeName}CtxEnricher
 
 **ctx 필드 네이밍 규칙:**
 
-| 조건 | ctx 필드 패턴 | 예시 |
+| Condition | ctx Field Pattern | Example |
 |------|-------------|------|
 | 최상위 이벤트 | `ctx.{snake_case_event}.{snake_case_name}` | `ctx.order_placed_event.order_id` |
 | 중첩 이벤트 | `ctx.{containing}.{snake_case_event}.{snake_case_name}` | `ctx.order.created_event.amount` |
 | `[CtxRoot]` 적용 | `ctx.{snake_case_name}` | `ctx.order_id` |
 
-### 진단 코드
+### Diagnostic Codes
 
-| 코드 | 심각도 | 메시지 |
+| Code | Severity | Message |
 |------|--------|--------|
 | **FUNCTORIUM002** | Warning | ctx 필드 타입 충돌 (CtxEnricherGenerator와 동일 ID 공유) |
 | **FUNCTORIUM004** | Warning | `'{EventType}' implements IDomainEvent but DomainEventCtxEnricher cannot be generated because '{TypeName}' is {accessibility}.` -- `private`이나 `protected` 이벤트 타입에는 Enricher를 생성할 수 없습니다. `[CtxIgnore]`를 적용하여 경고를 억제하십시오. |
@@ -393,7 +393,7 @@ public partial class {ContainingTypes}{EventTypeName}CtxEnricher
 
 `abstract partial record`에 `[UnionType]`을 적용하면 내부 `sealed record` 케이스를 분석하여 `Match`/`Switch` 패턴 매칭 메서드를 자동 생성합니다.
 
-### 트리거
+### Trigger
 
 ```csharp
 // Functorium.Domains.ValueObjects.Unions
@@ -403,18 +403,18 @@ public sealed class UnionTypeAttribute : Attribute;
 
 **대상**: `[UnionType]`이 적용된 `abstract partial record` 선언이며, 직접 상속하는 `sealed record` 케이스가 1개 이상 있어야 합니다.
 
-### 생성 대상
+### Generation Targets
 
 `{TypeName}` record에 대해 `partial` 확장으로 다음 멤버를 생성합니다.
 
-| 생성 멤버 | 시그니처 |
+| Generated Member | Signature |
 |----------|---------|
 | `Match<TResult>` | 모든 케이스에 대한 Func 파라미터를 받아 `TResult` 반환 |
 | `Switch` | 모든 케이스에 대한 Action 파라미터를 받아 실행 |
 | `Is{CaseName}` | `bool` 프로퍼티 -- `this is {CaseName}` |
 | `As{CaseName}()` | `{CaseName}?` 반환 -- `this as {CaseName}` |
 
-### 생성 코드 구조
+### Generated Code Structure
 
 ```csharp
 public abstract partial record {TypeName}
@@ -448,13 +448,13 @@ public sealed class UnreachableCaseException(object value)
     : InvalidOperationException($"Unreachable case: {value.GetType().FullName}");
 ```
 
-### 진단 코드
+### Diagnostic Codes
 
 UnionTypeGenerator는 현재 전용 진단 코드를 발행하지 않습니다. 내부 `sealed record` 케이스가 없으면 코드 생성을 건너뜁니다.
 
 ---
 
-## 관련 문서
+## Related Documents
 
 - [Source Generator Observability 튜토리얼](../tutorials/sourcegen-observability/) -- Roslyn API 기초부터 실전 생성기 구현까지
 - [엔티티와 애그리거트 사양](./01-entity-aggregate) -- `IEntityId<T>`, `GenerateEntityIdAttribute` 정의

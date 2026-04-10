@@ -1,20 +1,20 @@
 ---
-title: "테스트 라이브러리 사양"
+title: "Testing Library Specification"
 ---
 
-Functorium 프레임워크가 제공하는 테스트 유틸리티 라이브러리의 공개 API 사양입니다. 설계 원칙과 사용 패턴은 [Functorium.Testing 라이브러리 가이드](../guides/testing/16-testing-library)를 참조하십시오.
+This is the public API specification for the test utility library provided by the Functorium framework. For design principles and usage patterns, see the [Functorium.Testing Library Guide](../guides/testing/16-testing-library).
 
-## 요약
+## Summary
 
-### 주요 타입
+### Key Types
 
-| 타입 | 네임스페이스 | 설명 |
+| Type | Namespace | Description |
 |------|-------------|------|
 | `FinTFactory` | `Arrangements.Effects` | `FinT<IO, T>` Mock 반환값 생성 헬퍼 |
 | `HostTestFixture<TProgram>` | `Arrangements.Hosting` | 호스트 통합 테스트 Fixture |
 | `QuartzTestFixture<TProgram>` | `Arrangements.ScheduledJobs` | Quartz Job 통합 테스트 Fixture |
 | `LogTestContext` | `Arrangements.Logging` | Serilog 기반 인메모리 로그 캡처 컨텍스트 |
-| `StructuredTestLogger<T>` | `Arrangements.Logging` | 구조화된 로깅 지원 테스트 로거 |
+| `StructuredTestLogger<T>` | `Arrangements.Logging` | 구조화된 로깅 지원 테스트 Logger |
 | `SourceGeneratorTestRunner` | `Actions.SourceGenerators` | `IIncrementalGenerator` 테스트 실행기 |
 | `DomainErrorAssertions` | `Assertions.Errors` | 도메인 에러 검증 확장 메서드 |
 | `ApplicationErrorAssertions` | `Assertions.Errors` | 애플리케이션 에러 검증 확장 메서드 |
@@ -43,14 +43,14 @@ public static class FinTFactory
 }
 ```
 
-| 메서드 | 반환 타입 | 설명 |
+| Method | Return Type | Description |
 |--------|-----------|------|
 | `Succ<T>(T value)` | `FinT<IO, T>` | 성공 값을 감싼 `FinT` 반환 |
 | `Fail<T>(Error error)` | `FinT<IO, T>` | 실패 에러를 감싼 `FinT` 반환 |
 
 ---
 
-## 호스트 테스트 (HostTestFixture\<T\>, QuartzTestFixture\<T\>)
+## Host Testing (HostTestFixture\<T\>, QuartzTestFixture\<T\>)
 
 ### HostTestFixture\<TProgram\>
 
@@ -67,7 +67,7 @@ public class HostTestFixture<TProgram> : IAsyncLifetime where TProgram : class
 }
 ```
 
-| 멤버 | 타입 | 설명 |
+| Member | Type | Description |
 |------|------|------|
 | `EnvironmentName` | `string` (virtual) | 사용할 환경 이름 (기본값: `"Test"`) |
 | `Services` | `IServiceProvider` | DI 컨테이너 접근 |
@@ -97,7 +97,7 @@ public class QuartzTestFixture<TProgram> : IAsyncLifetime where TProgram : class
 }
 ```
 
-| 멤버 | 설명 |
+| Member | Description |
 |------|------|
 | `JobListener` | Job 완료 감지 리스너 (`JobCompletionListener`) |
 | `Scheduler` | Quartz 스케줄러 인스턴스 |
@@ -116,7 +116,7 @@ public sealed record JobExecutionResult(
 
 ---
 
-## 로그 테스트 (LogTestContext, StructuredTestLogger)
+## Log Testing (LogTestContext, StructuredTestLogger)
 
 ### LogTestContext
 
@@ -148,7 +148,7 @@ public sealed class LogTestContext : IDisposable
 
 **생성자:**
 
-| 생성자 | 설명 |
+| Constructor | Description |
 |--------|------|
 | `LogTestContext()` | 기본 최소 레벨(`Debug`)로 초기화 |
 | `LogTestContext(minimumLevel)` | 지정된 최소 로그 레벨로 초기화 |
@@ -156,9 +156,9 @@ public sealed class LogTestContext : IDisposable
 
 **주요 메서드:**
 
-| 메서드 | 반환 타입 | 설명 |
+| Method | Return Type | Description |
 |--------|-----------|------|
-| `CreateLogger<T>()` | `ILogger<T>` | 구조화된 테스트 로거 생성 |
+| `CreateLogger<T>()` | `ILogger<T>` | 구조화된 테스트 Logger 생성 |
 | `GetFirstLog()` / `GetSecondLog()` | `LogEvent` | 첫 번째/두 번째 로그 이벤트 |
 | `GetLogAt(index)` | `LogEvent` | 지정 인덱스의 로그 이벤트 |
 | `GetLogsByLevel(level)` | `IReadOnlyList<LogEvent>` | 지정 레벨의 모든 로그 이벤트 |
@@ -179,7 +179,7 @@ public class StructuredTestLogger<T> : ILogger<T>
 
 ---
 
-## 소스 생성기 테스트 (SourceGeneratorTestRunner)
+## Source Generator Testing (SourceGeneratorTestRunner)
 
 `IIncrementalGenerator`를 테스트 환경에서 실행하고 결과를 반환하는 정적 유틸리티입니다.
 
@@ -197,7 +197,7 @@ public static class SourceGeneratorTestRunner
 }
 ```
 
-| 메서드 | 설명 |
+| Method | Description |
 |--------|------|
 | `Generate` | 생성된 코드 반환. 컴파일러 에러 시 Shouldly로 실패 |
 | `GenerateWithDiagnostics` | 생성된 코드 + 진단 결과 반환. `DiagnosticDescriptor` 테스트용 |
@@ -206,15 +206,15 @@ public static class SourceGeneratorTestRunner
 
 ---
 
-## 에러 어설션 (5종)
+## Error Assertions (5 types)
 
 레이어별 에러 타입에 대한 타입 안전 검증 확장 메서드입니다. 모든 어설션은 `Error`, `Fin<T>`, `Validation<Error, T>`에 대해 동작합니다.
 
-### 레이어별 어설션 (3종)
+### Per-Layer Assertions (3 types)
 
 `DomainErrorAssertions`, `ApplicationErrorAssertions`, `AdapterErrorAssertions`는 동일한 패턴으로 레이어별 에러를 검증합니다. 각 클래스의 `TContext` 타입 매개변수와 에러 코드 접두사만 다릅니다.
 
-| 클래스 | `TContext` 의미 | 에러 코드 형식 |
+| Class | `TContext` Meaning | Error Code Format |
 |--------|----------------|---------------|
 | `DomainErrorAssertions` | `TDomain` (도메인 타입) | `DomainErrors.{Name}.{ErrorName}` |
 | `ApplicationErrorAssertions` | `TUsecase` (유스케이스 타입) | `ApplicationErrors.{Name}.{ErrorName}` |
@@ -328,11 +328,11 @@ public static class ErrorAssertionHelpers
 
 ---
 
-## 아키텍처 규칙 (ClassValidator, MethodValidator, InterfaceValidator)
+## Architecture Rules (ClassValidator, MethodValidator, InterfaceValidator)
 
 ArchUnitNET 기반 Fluent API로, 클래스/메서드/인터페이스 수준의 아키텍처 규칙을 검증합니다.
 
-### 검증 진입점
+### Validation Entry Point
 
 ```csharp
 public static class ArchitectureValidationEntryPoint
@@ -350,7 +350,7 @@ public static class ArchitectureValidationEntryPoint
 
 `TypeValidator<Class, ClassValidator>`를 상속하며, Fluent API로 체이닝합니다.
 
-| 카테고리 | 메서드 |
+| Category | Methods |
 |----------|--------|
 | 가시성 | `RequirePublic()`, `RequireInternal()` |
 | 한정자 | `RequireSealed()`, `RequireNotSealed()`, `RequireStatic()`, `RequireNotStatic()`, `RequireAbstract()`, `RequireNotAbstract()` |
@@ -366,7 +366,7 @@ public static class ArchitectureValidationEntryPoint
 
 `ClassValidator`와 `InterfaceValidator`가 공유하는 CRTP 기반 추상 기반 클래스입니다.
 
-| 카테고리 | 메서드 |
+| Category | Methods |
 |----------|--------|
 | 네이밍 | `RequireNameStartsWith(prefix)`, `RequireNameEndsWith(suffix)`, `RequireNameMatching(regex)` |
 | 인터페이스 | `RequireImplements(type)`, `RequireImplementsGenericInterface(name)` |
@@ -377,7 +377,7 @@ public static class ArchitectureValidationEntryPoint
 
 ### MethodValidator
 
-| 카테고리 | 메서드 |
+| Category | Methods |
 |----------|--------|
 | 가시성/한정자 | `RequireVisibility(v)`, `RequireStatic()`, `RequireNotStatic()`, `RequireVirtual()`, `RequireNotVirtual()`, `RequireExtensionMethod()` |
 | 반환 타입 | `RequireReturnType(type)`, `RequireReturnTypeOfDeclaringClass()`, `RequireReturnTypeOfDeclaringTopLevelClass()`, `RequireReturnTypeContaining(fragment)` |
@@ -399,7 +399,7 @@ public interface IArchRule<in TType> where TType : IType
 
 **`ImmutabilityRule`은** `IArchRule<Class>` 구현체로, 6가지 차원에서 불변성을 검증합니다: Writability, Constructors (all private), PropertySetters (no public), PublicFields (none), MutableCollections (`List<>` 등 금지), StateChangingMethods (팩토리/동등성/getter 제외).
 
-### 보조 타입
+### Auxiliary Types
 
 | 타입 | 설명 |
 |------|------|
@@ -411,7 +411,7 @@ public interface IArchRule<in TType> where TType : IType
 
 ---
 
-## 테스트 스위트 (DomainArchitectureTestSuite, ApplicationArchitectureTestSuite)
+## Test Suites (DomainArchitectureTestSuite, ApplicationArchitectureTestSuite)
 
 ### DomainArchitectureTestSuite
 
@@ -429,7 +429,7 @@ public abstract class DomainArchitectureTestSuite
 
 **포함된 테스트 (21개):**
 
-| 카테고리 | 테스트 | 설명 |
+| Category | Test | Description |
 |----------|--------|------|
 | Entity (7) | `AggregateRoot_ShouldBe_PublicSealedClass` | public sealed 클래스 |
 | | `AggregateRoot_ShouldHave_CreateAndCreateFromValidated` | 정적 팩토리 메서드 필수 |
@@ -465,7 +465,7 @@ public abstract class ApplicationArchitectureTestSuite
 }
 ```
 
-| 테스트 | 설명 |
+| Test | Description |
 |--------|------|
 | `Command_ShouldHave_ValidatorNestedClass` | Validator 있으면 sealed + `AbstractValidator` 구현 |
 | `Command_ShouldHave_UsecaseNestedClass` | Usecase 필수, sealed + `ICommandUsecase` 구현 |
@@ -474,7 +474,7 @@ public abstract class ApplicationArchitectureTestSuite
 
 ---
 
-## 관련 문서
+## Related Documents
 
 - [Functorium.Testing 라이브러리 가이드](../guides/testing/16-testing-library) - 설계 원칙과 사용 패턴
 - [단위 테스트 가이드](../guides/testing/15a-unit-testing) - AAA 패턴, MTP 설정, Verify 스냅샷 테스트

@@ -1,48 +1,48 @@
 ---
-title: "에러 시스템 사양"
+title: "Error System Specification"
 ---
 
-Functorium의 에러 시스템은 **레이어별 sealed record 계층**(`DomainErrorType`, `ApplicationErrorType`, `AdapterErrorType`)과 **레이어별 팩토리**(`DomainError`, `ApplicationError`, `EventError`, `AdapterError`)로 구성됩니다. 팩토리의 공통 생성 로직은 내부 `LayerErrorCore`에 집중되고, Expected 에러의 공통 override는 `ErrorCodeExpectedBase`에 통합됩니다. 이 사양서는 공개/내부 타입의 시그니처, 속성, 에러 코드 생성 규칙을 정의합니다.
+Functorium's error system consists of **per-layer sealed record hierarchies** (`DomainErrorType`, `ApplicationErrorType`, `AdapterErrorType`) and **per-layer factories** (`DomainError`, `ApplicationError`, `EventError`, `AdapterError`). Common creation logic for the factories is centralized in the internal `LayerErrorCore`, and common overrides for Expected errors are consolidated in `ErrorCodeExpectedBase`. This specification defines the signatures, properties, and error code generation rules for public/internal types.
 
-## 요약
+## Summary
 
-### 주요 타입
+### Key Types
 
-#### 공개 타입
+#### Public Types
 
-| 타입 | 네임스페이스 | 설명 |
+| Type | Namespace | Description |
 |------|-------------|------|
-| `ErrorType` | `Functorium.Abstractions.Errors` | 모든 레이어 에러 타입의 추상 기반 record |
-| `IHasErrorCode` | `Functorium.Abstractions.Errors` | 에러 코드 접근 인터페이스 |
-| `ErrorCodeFactory` | `Functorium.Abstractions.Errors` | Expected/Exceptional 에러 생성 팩토리 |
-| `DomainErrorType` | `Functorium.Domains.Errors` | 도메인 에러 타입 sealed record 계층 (10개 카테고리) |
-| `DomainError` | `Functorium.Domains.Errors` | 도메인 에러 생성 팩토리 |
-| `ApplicationErrorType` | `Functorium.Applications.Errors` | 애플리케이션 에러 타입 sealed record 계층 (14개 타입) |
-| `ApplicationError` | `Functorium.Applications.Errors` | 애플리케이션 에러 생성 팩토리 |
-| `EventErrorType` | `Functorium.Applications.Errors` | 이벤트 에러 타입 sealed record 계층 (4개 타입) |
-| `EventError` | `Functorium.Applications.Errors` | 이벤트 에러 생성 팩토리 |
-| `AdapterErrorType` | `Functorium.Adapters.Errors` | 어댑터 에러 타입 sealed record 계층 (20개 타입) |
-| `AdapterError` | `Functorium.Adapters.Errors` | 어댑터 에러 생성 팩토리 |
+| `ErrorType` | `Functorium.Abstractions.Errors` | Abstract base record for all layer error types |
+| `IHasErrorCode` | `Functorium.Abstractions.Errors` | Error code access interface |
+| `ErrorCodeFactory` | `Functorium.Abstractions.Errors` | Expected/Exceptional error creation factory |
+| `DomainErrorType` | `Functorium.Domains.Errors` | Domain error type sealed record hierarchy (10 categories) |
+| `DomainError` | `Functorium.Domains.Errors` | Domain error creation factory |
+| `ApplicationErrorType` | `Functorium.Applications.Errors` | Application error type sealed record hierarchy (14 types) |
+| `ApplicationError` | `Functorium.Applications.Errors` | Application error creation factory |
+| `EventErrorType` | `Functorium.Applications.Errors` | Event error type sealed record hierarchy (4 types) |
+| `EventError` | `Functorium.Applications.Errors` | Event error creation factory |
+| `AdapterErrorType` | `Functorium.Adapters.Errors` | Adapter error type sealed record hierarchy (20 types) |
+| `AdapterError` | `Functorium.Adapters.Errors` | Adapter error creation factory |
 
-#### 내부 타입 (internal)
+#### Internal Types
 
-| 타입 | 네임스페이스 | 설명 |
+| Type | Namespace | Description |
 |------|-------------|------|
-| `ErrorCodeExpectedBase` | `Functorium.Abstractions.Errors` | Expected 에러 4종의 공통 LanguageExt `Error` override 기반 클래스 |
-| `ErrorCodeExpected` (4종) | `Functorium.Abstractions.Errors` | Expected 에러 — 값 저장만 담당하며 나머지는 base에서 상속 |
-| `ErrorCodeExceptional` | `Functorium.Abstractions.Errors` | Exception을 에러 코드와 함께 래핑 |
-| `LayerErrorCore` | `Functorium.Abstractions.Errors` | 4개 레이어 팩토리의 공통 에러 코드 생성 로직 |
-| `ErrorAssertionCore` | `Functorium.Testing.Assertions.Errors` | 3개 레이어 Assertion의 공통 검증 로직 |
+| `ErrorCodeExpectedBase` | `Functorium.Abstractions.Errors` | Base class for common LanguageExt `Error` overrides of 4 Expected error types |
+| `ErrorCodeExpected` (4 types) | `Functorium.Abstractions.Errors` | Expected errors -- responsible only for value storage, inheriting the rest from base |
+| `ErrorCodeExceptional` | `Functorium.Abstractions.Errors` | Wraps Exception with error code |
+| `LayerErrorCore` | `Functorium.Abstractions.Errors` | Common error code creation logic for all 4 layer factories |
+| `ErrorAssertionCore` | `Functorium.Testing.Assertions.Errors` | Common validation logic for 3 layer Assertions |
 
-### 에러 코드 형식
+### Error Code Format
 
-모든 에러 코드는 다음 패턴을 따릅니다:
+All error codes follow this pattern:
 
 ```
 {LayerPrefix}.{ContextName}.{ErrorName}
 ```
 
-| 레이어 | 접두사 | 예시 |
+| Layer | Prefix | Example |
 |--------|--------|------|
 | Domain | `DomainErrors` | `DomainErrors.Email.Empty` |
 | Application | `ApplicationErrors` | `ApplicationErrors.CreateProductCommand.AlreadyExists` |
@@ -50,9 +50,9 @@ Functorium의 에러 시스템은 **레이어별 sealed record 계층**(`DomainE
 
 ---
 
-## 에러 코드 체계
+## Error Code System
 
-### ErrorType (추상 기반)
+### ErrorType (Abstract Base)
 
 ```csharp
 namespace Functorium.Abstractions.Errors;
@@ -67,14 +67,14 @@ public abstract record ErrorType
 }
 ```
 
-**`ErrorType`은** 모든 레이어별 에러 타입(`DomainErrorType`, `ApplicationErrorType`, `AdapterErrorType`)의 공통 기반입니다.
+**`ErrorType`** is the common base for all per-layer error types (`DomainErrorType`, `ApplicationErrorType`, `AdapterErrorType`).
 
-| 멤버 | 종류 | 설명 |
+| Member | Kind | Description |
 |------|------|------|
-| `DomainErrorsPrefix` | `const string` | 도메인 에러 코드 접두사 `"DomainErrors"` |
-| `ApplicationErrorsPrefix` | `const string` | 애플리케이션 에러 코드 접두사 `"ApplicationErrors"` |
-| `AdapterErrorsPrefix` | `const string` | 어댑터 에러 코드 접두사 `"AdapterErrors"` |
-| `ErrorName` | `virtual string` | 에러 코드의 마지막 세그먼트. 기본값은 `GetType().Name` |
+| `DomainErrorsPrefix` | `const string` | Domain error code prefix `"DomainErrors"` |
+| `ApplicationErrorsPrefix` | `const string` | Application error code prefix `"ApplicationErrors"` |
+| `AdapterErrorsPrefix` | `const string` | Adapter error code prefix `"AdapterErrors"` |
+| `ErrorName` | `virtual string` | Last segment of the error code. Defaults to `GetType().Name` |
 
 ### IHasErrorCode
 
@@ -87,11 +87,11 @@ public interface IHasErrorCode
 }
 ```
 
-**`IHasErrorCode`는** 리플렉션 없이 타입 안전하게 에러 코드에 접근하기 위한 인터페이스입니다. `ErrorCodeExpected`와 `ErrorCodeExceptional`이 이 인터페이스를 구현합니다.
+**`IHasErrorCode`** is an interface for type-safe error code access without reflection. `ErrorCodeExpected` and `ErrorCodeExceptional` implement this interface.
 
 ---
 
-## ErrorCode 타입
+## ErrorCode Types
 
 ### ErrorCodeExpectedBase (internal)
 
@@ -103,20 +103,20 @@ internal abstract record ErrorCodeExpectedBase(
     Option<Error> Inner = default) : Error, IHasErrorCode
 ```
 
-**`ErrorCodeExpectedBase`는** Expected 에러 4종(`ErrorCodeExpected`, `<T>`, `<T1,T2>`, `<T1,T2,T3>`)의 공통 기반 클래스입니다. LanguageExt `Error`의 13개 override를 한 곳에 정의하여 파생 타입의 중복을 제거합니다.
+**`ErrorCodeExpectedBase`** is the common base class for the 4 Expected error types (`ErrorCodeExpected`, `<T>`, `<T1,T2>`, `<T1,T2,T3>`). It defines all 13 LanguageExt `Error` overrides in one place, eliminating duplication in derived types.
 
-| 멤버 | 종류 | 설명 |
+| Member | Kind | Description |
 |------|------|------|
-| `ErrorCode` | `string` | `"{Prefix}.{Context}.{ErrorName}"` 형식 에러 코드 |
-| `Message` | `override string` | 사람이 읽을 수 있는 에러 메시지 |
-| `Code` | `override int` | 정수 에러 코드 ID (기본값 `-1000`) |
-| `Inner` | `override Option<Error>` | 내부 에러 (기본값 `None`) |
-| `ToString()` | `sealed override` | `Message` 반환. `sealed`로 파생 record의 자동생성 방지 |
-| `ToErrorException()` | `override` | `WrappedErrorExpectedException` 반환 |
-| `IsExpected` | `bool` | 항상 `true` |
-| `IsExceptional` | `bool` | 항상 `false` |
+| `ErrorCode` | `string` | Error code in `"{Prefix}.{Context}.{ErrorName}"` format |
+| `Message` | `override string` | Human-readable error message |
+| `Code` | `override int` | Integer error code ID (default `-1000`) |
+| `Inner` | `override Option<Error>` | Inner error (default `None`) |
+| `ToString()` | `sealed override` | Returns `Message`. `sealed` prevents auto-generation by derived records |
+| `ToErrorException()` | `override` | Returns `WrappedErrorExpectedException` |
+| `IsExpected` | `bool` | Always `true` |
+| `IsExceptional` | `bool` | Always `false` |
 
-> **`sealed override ToString()`**: C# record는 파생 클래스에서 `ToString()`을 자동 재생성합니다. `sealed`로 이를 차단하여 모든 파생 타입이 일관되게 `Message`를 반환하도록 보장합니다.
+> **`sealed override ToString()`**: C# records auto-regenerate `ToString()` in derived classes. `sealed` blocks this to ensure all derived types consistently return `Message`.
 
 ### ErrorCodeExpected (internal)
 
@@ -130,14 +130,14 @@ internal record ErrorCodeExpected(
     : ErrorCodeExpectedBase(ErrorCode, ErrorMessage, ErrorCodeId, Inner)
 ```
 
-**`ErrorCodeExpected`는** 비즈니스 규칙 위반 등 예상된(Expected) 에러를 표현합니다. `ErrorCodeExpectedBase`에서 `ErrorCode`, `Message`, `Code`, `Inner`, `ToString()`, `IsExpected`, `IsExceptional` 등 공통 멤버를 상속받고, 파생 타입은 에러 발생 시점의 값(`ErrorCurrentValue`)만 추가로 정의합니다.
+**`ErrorCodeExpected`** represents expected errors such as business rule violations. It inherits common members (`ErrorCode`, `Message`, `Code`, `Inner`, `ToString()`, `IsExpected`, `IsExceptional`) from `ErrorCodeExpectedBase`, and derived types only add the value at error time (`ErrorCurrentValue`).
 
-| 오버로드 | 추가 속성 | 설명 |
+| Overload | Additional Properties | Description |
 |----------|----------|------|
-| `ErrorCodeExpected` | `ErrorCurrentValue: string` | 문자열 값 |
-| `ErrorCodeExpected<T>` | `ErrorCurrentValue: T` | 타입 값 (1개) |
-| `ErrorCodeExpected<T1, T2>` | `ErrorCurrentValue1: T1`, `ErrorCurrentValue2: T2` | 타입 값 (2개) |
-| `ErrorCodeExpected<T1, T2, T3>` | `ErrorCurrentValue1: T1`, `ErrorCurrentValue2: T2`, `ErrorCurrentValue3: T3` | 타입 값 (3개) |
+| `ErrorCodeExpected` | `ErrorCurrentValue: string` | String value |
+| `ErrorCodeExpected<T>` | `ErrorCurrentValue: T` | Typed value (1) |
+| `ErrorCodeExpected<T1, T2>` | `ErrorCurrentValue1: T1`, `ErrorCurrentValue2: T2` | Typed values (2) |
+| `ErrorCodeExpected<T1, T2, T3>` | `ErrorCurrentValue1: T1`, `ErrorCurrentValue2: T2`, `ErrorCurrentValue3: T3` | Typed values (3) |
 
 ### ErrorCodeExceptional (internal)
 
@@ -148,16 +148,16 @@ internal record ErrorCodeExceptional : Error, IHasErrorCode
 }
 ```
 
-**`ErrorCodeExceptional`은** 시스템 예외(Exception)를 에러 코드와 함께 래핑합니다. `IsExpected = false`, `IsExceptional = true`입니다.
+**`ErrorCodeExceptional`** wraps a system Exception with an error code. `IsExpected = false`, `IsExceptional = true`.
 
-| 속성 | 타입 | 설명 |
+| Property | Type | Description |
 |------|------|------|
-| `ErrorCode` | `string` | `"{Prefix}.{Context}.{ErrorName}"` 형식 에러 코드 |
-| `Message` | `string` | `exception.Message`에서 추출 |
-| `Code` | `int` | `exception.HResult`에서 추출 |
-| `Inner` | `Option<Error>` | `InnerException`이 있으면 재귀적으로 래핑 |
-| `IsExpected` | `bool` | 항상 `false` |
-| `IsExceptional` | `bool` | 항상 `true` |
+| `ErrorCode` | `string` | Error code in `"{Prefix}.{Context}.{ErrorName}"` format |
+| `Message` | `string` | Extracted from `exception.Message` |
+| `Code` | `int` | Extracted from `exception.HResult` |
+| `Inner` | `Option<Error>` | Recursively wraps `InnerException` if present |
+| `IsExpected` | `bool` | Always `false` |
+| `IsExceptional` | `bool` | Always `true` |
 
 ### ErrorCodeFactory
 
@@ -166,7 +166,7 @@ namespace Functorium.Abstractions.Errors;
 
 public static class ErrorCodeFactory
 {
-    // Expected 에러 생성
+    // Expected error creation
     public static Error Create(string errorCode, string errorCurrentValue, string errorMessage);
     public static Error Create<T>(string errorCode, T errorCurrentValue, string errorMessage) where T : notnull;
     public static Error Create<T1, T2>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, string errorMessage)
@@ -174,33 +174,33 @@ public static class ErrorCodeFactory
     public static Error Create<T1, T2, T3>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, T3 errorCurrentValue3, string errorMessage)
         where T1 : notnull where T2 : notnull where T3 : notnull;
 
-    // Exceptional 에러 생성
+    // Exceptional error creation
     public static Error CreateFromException(string errorCode, Exception exception);
 
-    // 에러 코드 조합
+    // Error code composition
     public static string Format(params string[] parts);
 }
 ```
 
-**`ErrorCodeFactory`는** `ErrorCodeExpected`와 `ErrorCodeExceptional` 인스턴스를 생성하는 정적 팩토리입니다. 레이어별 팩토리는 다음 흐름으로 에러를 생성합니다:
+**`ErrorCodeFactory`** is a static factory that creates `ErrorCodeExpected` and `ErrorCodeExceptional` instances. Per-layer factories create errors through the following flow:
 
 ```
-DomainError.For<T>(DomainErrorType, ...)        ← 레이어 타입 안전성 (공개 API)
-  → LayerErrorCore.Create<T>(prefix, ErrorType, ...)  ← 공통 에러 코드 조립 (internal)
-    → ErrorCodeFactory.Create(errorCode, ...)          ← ErrorCodeExpected 인스턴스 생성 (internal)
+DomainError.For<T>(DomainErrorType, ...)        <- Layer type safety (public API)
+  -> LayerErrorCore.Create<T>(prefix, ErrorType, ...)  <- Common error code assembly (internal)
+    -> ErrorCodeFactory.Create(errorCode, ...)          <- ErrorCodeExpected instance creation (internal)
 ```
 
-`LayerErrorCore`가 에러 코드 문자열(`{Prefix}.{Context}.{ErrorName}`)을 조립하고, `ErrorCodeFactory`가 최종 `Error` 인스턴스를 생성합니다. 모든 메서드에 `[AggressiveInlining]`이 적용되어 JIT이 위임 호출을 제거하므로 성능 차이는 없습니다.
+`LayerErrorCore` assembles the error code string (`{Prefix}.{Context}.{ErrorName}`), and `ErrorCodeFactory` creates the final `Error` instance. `[AggressiveInlining]` is applied to all methods so the JIT eliminates delegation calls, resulting in no performance difference.
 
-| 메서드 | 반환 | 설명 |
+| Method | Return | Description |
 |--------|------|------|
-| `Create(...)` | `Error` | Expected 에러 생성 (4개 오버로드) |
-| `CreateFromException(...)` | `Error` | Exception을 Exceptional 에러로 래핑 |
-| `Format(...)` | `string` | 문자열 배열을 `'.'`으로 결합하여 에러 코드 생성 |
+| `Create(...)` | `Error` | Creates Expected error (4 overloads) |
+| `CreateFromException(...)` | `Error` | Wraps Exception as Exceptional error |
+| `Format(...)` | `string` | Joins string array with `'.'` to generate error code |
 
 ---
 
-## Domain ErrorType 카탈로그
+## Domain ErrorType Catalog
 
 ```csharp
 namespace Functorium.Domains.Errors;
@@ -208,16 +208,16 @@ namespace Functorium.Domains.Errors;
 public abstract partial record DomainErrorType : ErrorType;
 ```
 
-**`DomainErrorType`은** 도메인 레이어 에러의 sealed record 계층 기반입니다. 10개 카테고리로 분류됩니다.
+**`DomainErrorType`** is the sealed record hierarchy base for domain layer errors. Classified into 10 categories.
 
-### 존재(Existence)
+### Existence
 
-| sealed record | 속성 | 설명 |
+| sealed record | Properties | Description |
 |---------------|------|------|
-| `NotFound` | (없음) | 값을 찾을 수 없음 |
-| `AlreadyExists` | (없음) | 값이 이미 존재함 |
-| `Duplicate` | (없음) | 중복된 값 |
-| `Mismatch` | (없음) | 값이 일치하지 않음 (예: 비밀번호 확인) |
+| `NotFound` | (none) | Value not found |
+| `AlreadyExists` | (none) | Value already exists |
+| `Duplicate` | (none) | Duplicate value |
+| `Mismatch` | (none) | Value mismatch (e.g., password confirmation) |
 
 ```csharp
 public sealed record NotFound : DomainErrorType;
@@ -226,25 +226,25 @@ public sealed record Duplicate : DomainErrorType;
 public sealed record Mismatch : DomainErrorType;
 ```
 
-### 존재 여부(Presence)
+### Presence
 
-| sealed record | 속성 | 설명 |
+| sealed record | Properties | Description |
 |---------------|------|------|
-| `Empty` | (없음) | 값이 비어있음 (null, empty string, empty collection 등) |
-| `Null` | (없음) | 값이 null임 |
+| `Empty` | (none) | Value is empty (null, empty string, empty collection, etc.) |
+| `Null` | (none) | Value is null |
 
 ```csharp
 public sealed record Empty : DomainErrorType;
 public sealed record Null : DomainErrorType;
 ```
 
-### 형식(Format)
+### Format
 
-| sealed record | 속성 | 설명 |
+| sealed record | Properties | Description |
 |---------------|------|------|
-| `InvalidFormat` | `string? Pattern` | 값의 형식이 유효하지 않음. `Pattern`은 기대되는 형식 패턴 |
-| `NotUpperCase` | (없음) | 값이 대문자가 아님 |
-| `NotLowerCase` | (없음) | 값이 소문자가 아님 |
+| `InvalidFormat` | `string? Pattern` | Value format is invalid. `Pattern` is the expected format pattern |
+| `NotUpperCase` | (none) | Value is not uppercase |
+| `NotLowerCase` | (none) | Value is not lowercase |
 
 ```csharp
 public sealed record InvalidFormat(string? Pattern = null) : DomainErrorType;
@@ -252,13 +252,13 @@ public sealed record NotUpperCase : DomainErrorType;
 public sealed record NotLowerCase : DomainErrorType;
 ```
 
-### 길이(Length)
+### Length
 
-| sealed record | 속성 | 설명 |
+| sealed record | Properties | Description |
 |---------------|------|------|
-| `TooShort` | `int MinLength` | 값이 최소 길이보다 짧음. 기본값 `0` (미지정) |
-| `TooLong` | `int MaxLength` | 값이 최대 길이를 초과함. 기본값 `int.MaxValue` (미지정) |
-| `WrongLength` | `int Expected` | 값의 길이가 기대와 불일치. 기본값 `0` (미지정) |
+| `TooShort` | `int MinLength` | Value is shorter than minimum length. Default `0` (unspecified) |
+| `TooLong` | `int MaxLength` | Value exceeds maximum length. Default `int.MaxValue` (unspecified) |
+| `WrongLength` | `int Expected` | Value length does not match expected. Default `0` (unspecified) |
 
 ```csharp
 public sealed record TooShort(int MinLength = 0) : DomainErrorType;
@@ -266,16 +266,16 @@ public sealed record TooLong(int MaxLength = int.MaxValue) : DomainErrorType;
 public sealed record WrongLength(int Expected = 0) : DomainErrorType;
 ```
 
-### 숫자(Numeric)
+### Numeric
 
-| sealed record | 속성 | 설명 |
+| sealed record | Properties | Description |
 |---------------|------|------|
-| `Zero` | (없음) | 값이 0임 |
-| `Negative` | (없음) | 값이 음수임 |
-| `NotPositive` | (없음) | 값이 양수가 아님 (0 또는 음수) |
-| `OutOfRange` | `string? Min`, `string? Max` | 값이 허용 범위를 벗어남 |
-| `BelowMinimum` | `string? Minimum` | 값이 최소값보다 작음 |
-| `AboveMaximum` | `string? Maximum` | 값이 최대값을 초과함 |
+| `Zero` | (none) | Value is zero |
+| `Negative` | (none) | Value is negative |
+| `NotPositive` | (none) | Value is not positive (zero or negative) |
+| `OutOfRange` | `string? Min`, `string? Max` | Value is outside allowed range |
+| `BelowMinimum` | `string? Minimum` | Value is below minimum |
+| `AboveMaximum` | `string? Maximum` | Value exceeds maximum |
 
 ```csharp
 public sealed record Zero : DomainErrorType;
@@ -286,15 +286,15 @@ public sealed record BelowMinimum(string? Minimum = null) : DomainErrorType;
 public sealed record AboveMaximum(string? Maximum = null) : DomainErrorType;
 ```
 
-### 날짜/시간(DateTime)
+### DateTime
 
-| sealed record | 속성 | 설명 |
+| sealed record | Properties | Description |
 |---------------|------|------|
-| `DefaultDate` | (없음) | 날짜가 기본값(`DateTime.MinValue`)임 |
-| `NotInPast` | (없음) | 날짜가 과거여야 하는데 미래임 |
-| `NotInFuture` | (없음) | 날짜가 미래여야 하는데 과거임 |
-| `TooLate` | `string? Boundary` | 날짜가 기준 날짜보다 이후임 (이전이어야 함) |
-| `TooEarly` | `string? Boundary` | 날짜가 기준 날짜보다 이전임 (이후여야 함) |
+| `DefaultDate` | (none) | Date is default value (`DateTime.MinValue`) |
+| `NotInPast` | (none) | Date should be in the past but is in the future |
+| `NotInFuture` | (none) | Date should be in the future but is in the past |
+| `TooLate` | `string? Boundary` | Date is after the boundary (should be before) |
+| `TooEarly` | `string? Boundary` | Date is before the boundary (should be after) |
 
 ```csharp
 public sealed record DefaultDate : DomainErrorType;
@@ -304,49 +304,49 @@ public sealed record TooLate(string? Boundary = null) : DomainErrorType;
 public sealed record TooEarly(string? Boundary = null) : DomainErrorType;
 ```
 
-### 범위(Range)
+### Range
 
-| sealed record | 속성 | 설명 |
+| sealed record | Properties | Description |
 |---------------|------|------|
-| `RangeInverted` | `string? Min`, `string? Max` | 범위가 역전됨 (최소값이 최대값보다 큼) |
-| `RangeEmpty` | `string? Value` | 범위가 비어있음 (최소값과 최대값이 같음) |
+| `RangeInverted` | `string? Min`, `string? Max` | Range is inverted (minimum greater than maximum) |
+| `RangeEmpty` | `string? Value` | Range is empty (minimum equals maximum) |
 
 ```csharp
 public sealed record RangeInverted(string? Min = null, string? Max = null) : DomainErrorType;
 public sealed record RangeEmpty(string? Value = null) : DomainErrorType;
 ```
 
-### 상태 전이(Transition)
+### State Transition
 
-| sealed record | 속성 | 설명 |
+| sealed record | Properties | Description |
 |---------------|------|------|
-| `InvalidTransition` | `string? FromState`, `string? ToState` | 무효한 상태 전이 (예: `Paid` -> `Active`) |
+| `InvalidTransition` | `string? FromState`, `string? ToState` | Invalid state transition (e.g., `Paid` -> `Active`) |
 
 ```csharp
 public sealed record InvalidTransition(string? FromState = null, string? ToState = null) : DomainErrorType;
 ```
 
-`FromState`와 `ToState`로 전이 전후 상태를 기록합니다. 에러 메시지와 별개로 구조화된 데이터로 전이 정보를 보존하여, 로깅/모니터링에서 활용할 수 있습니다.
+Records the pre- and post-transition states via `FromState` and `ToState`. Preserves transition information as structured data independent of the error message, enabling use in logging/monitoring.
 
-### 커스텀(Custom)
+### Custom
 
 ```csharp
 public abstract record Custom : DomainErrorType;
 ```
 
-**`Custom`은** 표준 에러 타입으로 표현할 수 없는 도메인 특화 에러의 기반 클래스입니다. 파생 sealed record로 정의하여 사용합니다.
+**`Custom`** is the base class for domain-specific errors that cannot be expressed with standard error types. Define derived sealed records to use.
 
 ```csharp
-// 엔티티 내부에 nested record로 정의
+// Define as a nested record inside an Entity
 public sealed record InsufficientStock : DomainErrorType.Custom;
 
-DomainError.For<Inventory>(new InsufficientStock(), currentStock, "재고가 부족합니다");
-// 에러 코드: DomainErrors.Inventory.InsufficientStock
+DomainError.For<Inventory>(new InsufficientStock(), currentStock, "Insufficient stock");
+// Error code: DomainErrors.Inventory.InsufficientStock
 ```
 
 ---
 
-## Application ErrorType 카탈로그
+## Application ErrorType Catalog
 
 ```csharp
 namespace Functorium.Applications.Errors;
@@ -354,20 +354,20 @@ namespace Functorium.Applications.Errors;
 public abstract record ApplicationErrorType : ErrorType;
 ```
 
-**`ApplicationErrorType`은** 애플리케이션 레이어 에러의 sealed record 계층 기반입니다.
+**`ApplicationErrorType`** is the sealed record hierarchy base for application layer errors.
 
-### 공통
+### Common
 
-| sealed record | 속성 | 설명 |
+| sealed record | Properties | Description |
 |---------------|------|------|
-| `Empty` | (없음) | 값이 비어있음 |
-| `Null` | (없음) | 값이 null임 |
-| `NotFound` | (없음) | 값을 찾을 수 없음 |
-| `AlreadyExists` | (없음) | 값이 이미 존재함 |
-| `Duplicate` | (없음) | 중복된 값 |
-| `InvalidState` | (없음) | 유효하지 않은 상태 |
-| `Unauthorized` | (없음) | 인증되지 않음 |
-| `Forbidden` | (없음) | 접근 금지 |
+| `Empty` | (none) | Value is empty |
+| `Null` | (none) | Value is null |
+| `NotFound` | (none) | Value not found |
+| `AlreadyExists` | (none) | Value already exists |
+| `Duplicate` | (none) | Duplicate value |
+| `InvalidState` | (none) | Invalid state |
+| `Unauthorized` | (none) | Not authenticated |
+| `Forbidden` | (none) | Access forbidden |
 
 ```csharp
 public sealed record Empty : ApplicationErrorType;
@@ -380,25 +380,25 @@ public sealed record Unauthorized : ApplicationErrorType;
 public sealed record Forbidden : ApplicationErrorType;
 ```
 
-### 검증
+### Validation
 
-| sealed record | 속성 | 설명 |
+| sealed record | Properties | Description |
 |---------------|------|------|
-| `ValidationFailed` | `string? PropertyName` | 검증 실패. `PropertyName`은 실패한 속성 이름 |
+| `ValidationFailed` | `string? PropertyName` | Validation failed. `PropertyName` is the failed property name |
 
 ```csharp
 public sealed record ValidationFailed(string? PropertyName = null) : ApplicationErrorType;
 ```
 
-### 비즈니스 규칙
+### Business Rules
 
-| sealed record | 속성 | 설명 |
+| sealed record | Properties | Description |
 |---------------|------|------|
-| `BusinessRuleViolated` | `string? RuleName` | 비즈니스 규칙 위반. `RuleName`은 위반된 규칙 이름 |
-| `ConcurrencyConflict` | (없음) | 동시성 충돌 |
-| `ResourceLocked` | `string? ResourceName` | 리소스 잠금. `ResourceName`은 잠긴 리소스 이름 |
-| `OperationCancelled` | (없음) | 작업 취소됨 |
-| `InsufficientPermission` | `string? Permission` | 권한 부족. `Permission`은 필요한 권한 |
+| `BusinessRuleViolated` | `string? RuleName` | Business rule violated. `RuleName` is the violated rule name |
+| `ConcurrencyConflict` | (none) | Concurrency conflict |
+| `ResourceLocked` | `string? ResourceName` | Resource locked. `ResourceName` is the locked resource name |
+| `OperationCancelled` | (none) | Operation cancelled |
+| `InsufficientPermission` | `string? Permission` | Insufficient permission. `Permission` is the required permission |
 
 ```csharp
 public sealed record BusinessRuleViolated(string? RuleName = null) : ApplicationErrorType;
@@ -408,14 +408,14 @@ public sealed record OperationCancelled : ApplicationErrorType;
 public sealed record InsufficientPermission(string? Permission = null) : ApplicationErrorType;
 ```
 
-### 커스텀
+### Custom
 
 ```csharp
 public abstract record Custom : ApplicationErrorType;
 ```
 
 ```csharp
-// 사용 예시
+// Usage example
 public sealed record CannotProcess : ApplicationErrorType.Custom;
 ```
 
@@ -427,14 +427,14 @@ namespace Functorium.Applications.Errors;
 public abstract record EventErrorType : ErrorType;
 ```
 
-**`EventErrorType`은** 도메인 이벤트 발행/처리 과정의 에러 타입입니다.
+**`EventErrorType`** is the error type for domain event publishing/handling errors.
 
-| sealed record | 속성 | 설명 |
+| sealed record | Properties | Description |
 |---------------|------|------|
-| `PublishFailed` | (없음) | 이벤트 발행 실패 |
-| `HandlerFailed` | (없음) | 이벤트 핸들러 실행 실패 |
-| `InvalidEventType` | (없음) | 이벤트 타입이 유효하지 않음 |
-| `PublishCancelled` | (없음) | 이벤트 발행 취소됨 |
+| `PublishFailed` | (none) | Event publish failed |
+| `HandlerFailed` | (none) | Event handler execution failed |
+| `InvalidEventType` | (none) | Event type is invalid |
+| `PublishCancelled` | (none) | Event publish cancelled |
 
 ```csharp
 public sealed record PublishFailed : EventErrorType;
@@ -443,18 +443,18 @@ public sealed record InvalidEventType : EventErrorType;
 public sealed record PublishCancelled : EventErrorType;
 ```
 
-**커스텀 확장:**
+**Custom extension:**
 
 ```csharp
 public abstract record Custom : EventErrorType;
 
-// 사용 예시
+// Usage example
 public sealed record RetryExhausted : EventErrorType.Custom;
 ```
 
 ---
 
-## Adapter ErrorType 카탈로그
+## Adapter ErrorType Catalog
 
 ```csharp
 namespace Functorium.Adapters.Errors;
@@ -462,23 +462,23 @@ namespace Functorium.Adapters.Errors;
 public abstract record AdapterErrorType : ErrorType;
 ```
 
-**`AdapterErrorType`은** 어댑터 레이어 에러의 sealed record 계층 기반입니다.
+**`AdapterErrorType`** is the sealed record hierarchy base for adapter layer errors.
 
-### 공통
+### Common
 
-| sealed record | 속성 | 설명 |
+| sealed record | Properties | Description |
 |---------------|------|------|
-| `Empty` | (없음) | 값이 비어있음 |
-| `Null` | (없음) | 값이 null임 |
-| `NotFound` | (없음) | 값을 찾을 수 없음 |
-| `PartialNotFound` | (없음) | 요청한 ID 중 일부를 찾을 수 없음 |
-| `AlreadyExists` | (없음) | 값이 이미 존재함 |
-| `Duplicate` | (없음) | 중복된 값 |
-| `InvalidState` | (없음) | 유효하지 않은 상태 |
-| `NotConfigured` | (없음) | 필수 설정이 누락됨 |
-| `NotSupported` | (없음) | 지원되지 않는 연산 |
-| `Unauthorized` | (없음) | 인증되지 않음 |
-| `Forbidden` | (없음) | 접근 금지 |
+| `Empty` | (none) | Value is empty |
+| `Null` | (none) | Value is null |
+| `NotFound` | (none) | Value not found |
+| `PartialNotFound` | (none) | Some of the requested IDs were not found |
+| `AlreadyExists` | (none) | Value already exists |
+| `Duplicate` | (none) | Duplicate value |
+| `InvalidState` | (none) | Invalid state |
+| `NotConfigured` | (none) | Required configuration is missing |
+| `NotSupported` | (none) | Unsupported operation |
+| `Unauthorized` | (none) | Not authenticated |
+| `Forbidden` | (none) | Access forbidden |
 
 ```csharp
 public sealed record Empty : AdapterErrorType;
@@ -496,23 +496,23 @@ public sealed record Forbidden : AdapterErrorType;
 
 ### Pipeline
 
-| sealed record | 속성 | 설명 |
+| sealed record | Properties | Description |
 |---------------|------|------|
-| `PipelineValidation` | `string? PropertyName` | 파이프라인 검증 실패. `PropertyName`은 실패한 속성 이름 |
-| `PipelineException` | (없음) | 파이프라인 예외 발생 |
+| `PipelineValidation` | `string? PropertyName` | Pipeline validation failed. `PropertyName` is the failed property name |
+| `PipelineException` | (none) | Pipeline exception occurred |
 
 ```csharp
 public sealed record PipelineValidation(string? PropertyName = null) : AdapterErrorType;
 public sealed record PipelineException : AdapterErrorType;
 ```
 
-### 외부 서비스
+### External Service
 
-| sealed record | 속성 | 설명 |
+| sealed record | Properties | Description |
 |---------------|------|------|
-| `ExternalServiceUnavailable` | `string? ServiceName` | 외부 서비스 사용 불가. `ServiceName`은 서비스 이름 |
-| `ConnectionFailed` | `string? Target` | 연결 실패. `Target`은 연결 대상 |
-| `Timeout` | `TimeSpan? Duration` | 타임아웃. `Duration`은 타임아웃 시간 |
+| `ExternalServiceUnavailable` | `string? ServiceName` | External service unavailable. `ServiceName` is the service name |
+| `ConnectionFailed` | `string? Target` | Connection failed. `Target` is the connection target |
+| `Timeout` | `TimeSpan? Duration` | Timeout. `Duration` is the timeout duration |
 
 ```csharp
 public sealed record ExternalServiceUnavailable(string? ServiceName = null) : AdapterErrorType;
@@ -520,13 +520,13 @@ public sealed record ConnectionFailed(string? Target = null) : AdapterErrorType;
 public sealed record Timeout(TimeSpan? Duration = null) : AdapterErrorType;
 ```
 
-### 데이터
+### Data
 
-| sealed record | 속성 | 설명 |
+| sealed record | Properties | Description |
 |---------------|------|------|
-| `Serialization` | `string? Format` | 직렬화 실패. `Format`은 직렬화 형식 |
-| `Deserialization` | `string? Format` | 역직렬화 실패. `Format`은 역직렬화 형식 |
-| `DataCorruption` | (없음) | 데이터 손상 |
+| `Serialization` | `string? Format` | Serialization failed. `Format` is the serialization format |
+| `Deserialization` | `string? Format` | Deserialization failed. `Format` is the deserialization format |
+| `DataCorruption` | (none) | Data corruption |
 
 ```csharp
 public sealed record Serialization(string? Format = null) : AdapterErrorType;
@@ -534,20 +534,20 @@ public sealed record Deserialization(string? Format = null) : AdapterErrorType;
 public sealed record DataCorruption : AdapterErrorType;
 ```
 
-### 커스텀
+### Custom
 
 ```csharp
 public abstract record Custom : AdapterErrorType;
 ```
 
 ```csharp
-// 사용 예시
+// Usage example
 public sealed record RateLimited : AdapterErrorType.Custom;
 ```
 
 ---
 
-## 내부 아키텍처
+## Internal Architecture
 
 ### LayerErrorCore (internal)
 
@@ -569,14 +569,14 @@ internal static class LayerErrorCore
 }
 ```
 
-**`LayerErrorCore`는** 4개 레이어 팩토리(`DomainError`, `ApplicationError`, `EventError`, `AdapterError`)의 공통 구현입니다. 에러 코드 문자열 `{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}`을 조립하고 `ErrorCodeFactory`에 위임합니다.
+**`LayerErrorCore`** is the common implementation for the 4 layer factories (`DomainError`, `ApplicationError`, `EventError`, `AdapterError`). It assembles the error code string `{prefix}.{typeof(TContext).Name}.{errorType.ErrorName}` and delegates to `ErrorCodeFactory`.
 
-**설계 원리**: 공개 팩토리는 레이어별 타입 파라미터(`DomainErrorType`, `ApplicationErrorType` 등)를 유지하여 **컴파일 타임 안전성을** 보장합니다. `LayerErrorCore`는 기반 타입 `ErrorType`으로 수신하여 **구현 중복을 제거합니다.** 모든 메서드에 `[AggressiveInlining]`이 적용되어 JIT이 위임 호출을 인라인 처리합니다.
+**Design principle**: Public factories maintain per-layer type parameters (`DomainErrorType`, `ApplicationErrorType`, etc.) to ensure **compile-time safety**. `LayerErrorCore` receives the base type `ErrorType` to **eliminate implementation duplication**. `[AggressiveInlining]` is applied to all methods so the JIT inlines delegation calls.
 
 ```csharp
-// 컴파일 타임 안전성 보장 예시
-DomainError.For<Email>(new DomainErrorType.Empty(), ...)       // ✅ 컴파일 OK
-DomainError.For<Email>(new AdapterErrorType.Timeout(), ...)    // ❌ CS1503
+// Compile-time safety example
+DomainError.For<Email>(new DomainErrorType.Empty(), ...)       // Compiles OK
+DomainError.For<Email>(new AdapterErrorType.Timeout(), ...)    // CS1503
 ```
 
 ### ErrorAssertionCore (internal)
@@ -586,26 +586,26 @@ namespace Functorium.Testing.Assertions.Errors;
 
 internal static class ErrorAssertionCore
 {
-    // Error — ErrorCode 검증, 값 검증 (1~3개), Exceptional 검증
+    // Error -- ErrorCode validation, value validation (1~3), Exceptional validation
     internal static void ShouldBeError<TContext>(Error error, string prefix, string errorName);
     internal static void ShouldBeError<TContext, TValue>(Error error, string prefix, string errorName, TValue expectedValue);
     internal static void ShouldBeExceptionalError<TContext>(Error error, string prefix, string errorName);
 
-    // Fin<T> — 실패 상태 + ErrorCode 검증
+    // Fin<T> -- failure state + ErrorCode validation
     internal static void ShouldBeFinError<TContext, T>(Fin<T> fin, string prefix, string errorName);
 
-    // Validation<Error, T> — 에러 포함/유일/복수 검증
+    // Validation<Error, T> -- error contains/only/multiple validation
     internal static void ShouldHaveError<TContext, T>(Validation<Error, T> validation, string prefix, string errorName);
     internal static void ShouldHaveOnlyError<TContext, T>(Validation<Error, T> validation, string prefix, string errorName);
     internal static void ShouldHaveErrors<TContext, T>(Validation<Error, T> validation, string prefix, params string[] errorNames);
 }
 ```
 
-**`ErrorAssertionCore`는** 3개 레이어 Assertion(`DomainErrorAssertions`, `ApplicationErrorAssertions`, `AdapterErrorAssertions`)의 공통 검증 로직입니다. 에러 코드 조립(`{prefix}.{typeof(TContext).Name}.{errorName}`)과 `ErrorCodeExpected<T>` 타입 캐스팅, 값 비교를 제공합니다. 레이어별 Assertion은 prefix와 에러 타입만 바인딩하는 thin wrapper입니다.
+**`ErrorAssertionCore`** is the common validation logic for the 3 layer Assertions (`DomainErrorAssertions`, `ApplicationErrorAssertions`, `AdapterErrorAssertions`). It provides error code assembly (`{prefix}.{typeof(TContext).Name}.{errorName}`), `ErrorCodeExpected<T>` type casting, and value comparison. Per-layer Assertions are thin wrappers that bind only the prefix and error type.
 
 ---
 
-## 팩토리 API
+## Factory API
 
 ### DomainError
 
@@ -624,35 +624,35 @@ public static class DomainError
 }
 ```
 
-**에러 코드 형식:** `DomainErrors.{typeof(TDomain).Name}.{errorType.ErrorName}`
+**Error code format:** `DomainErrors.{typeof(TDomain).Name}.{errorType.ErrorName}`
 
-| 오버로드 | 값 파라미터 | 설명 |
+| Overload | Value Parameters | Description |
 |----------|-----------|------|
-| `For<TDomain>(...)` | `string currentValue` | 기본 문자열 값 |
-| `For<TDomain, TValue>(...)` | `TValue currentValue` | 제네릭 단일 값 |
-| `For<TDomain, T1, T2>(...)` | `T1 value1, T2 value2` | 제네릭 2개 값 |
-| `For<TDomain, T1, T2, T3>(...)` | `T1 value1, T2 value2, T3 value3` | 제네릭 3개 값 |
+| `For<TDomain>(...)` | `string currentValue` | Default string value |
+| `For<TDomain, TValue>(...)` | `TValue currentValue` | Generic single value |
+| `For<TDomain, T1, T2>(...)` | `T1 value1, T2 value2` | Generic 2 values |
+| `For<TDomain, T1, T2, T3>(...)` | `T1 value1, T2 value2, T3 value3` | Generic 3 values |
 
-**사용 예시:**
+**Usage examples:**
 
 ```csharp
 using static Functorium.Domains.Errors.DomainErrorType;
 
-// 기본 사용
+// Basic usage
 DomainError.For<Email>(new Empty(), "", "이메일은 비어있을 수 없습니다");
-// 에러 코드: DomainErrors.Email.Empty
+// Error code: DomainErrors.Email.Empty
 
-// 속성이 있는 에러 타입
+// Error type with properties
 DomainError.For<Password>(new TooShort(MinLength: 8), value, "비밀번호가 너무 짧습니다");
-// 에러 코드: DomainErrors.Password.TooShort
+// Error code: DomainErrors.Password.TooShort
 
-// 상태 전이 에러
+// State transition error
 DomainError.For<Order>(new InvalidTransition(FromState: "Paid", ToState: "Active"), orderId, "유효하지 않은 상태 전이");
-// 에러 코드: DomainErrors.Order.InvalidTransition
+// Error code: DomainErrors.Order.InvalidTransition
 
-// 커스텀 에러
+// Custom error
 DomainError.For<Currency>(new Unsupported(), value, "지원되지 않는 통화입니다");
-// 에러 코드: DomainErrors.Currency.Unsupported
+// Error code: DomainErrors.Currency.Unsupported
 ```
 
 ### ApplicationError
@@ -672,25 +672,18 @@ public static class ApplicationError
 }
 ```
 
-**에러 코드 형식:** `ApplicationErrors.{typeof(TUsecase).Name}.{errorType.ErrorName}`
+**Error code format:** `ApplicationErrors.{typeof(TUsecase).Name}.{errorType.ErrorName}`
 
-| 오버로드 | 값 파라미터 | 설명 |
-|----------|-----------|------|
-| `For<TUsecase>(...)` | `string currentValue` | 기본 문자열 값 |
-| `For<TUsecase, TValue>(...)` | `TValue currentValue` | 제네릭 단일 값 |
-| `For<TUsecase, T1, T2>(...)` | `T1 value1, T2 value2` | 제네릭 2개 값 |
-| `For<TUsecase, T1, T2, T3>(...)` | `T1 value1, T2 value2, T3 value3` | 제네릭 3개 값 |
-
-**사용 예시:**
+**Usage examples:**
 
 ```csharp
 using static Functorium.Applications.Errors.ApplicationErrorType;
 
 ApplicationError.For<CreateProductCommand>(new AlreadyExists(), productId, "이미 존재합니다");
-// 에러 코드: ApplicationErrors.CreateProductCommand.AlreadyExists
+// Error code: ApplicationErrors.CreateProductCommand.AlreadyExists
 
 ApplicationError.For<UpdateOrderCommand>(new ValidationFailed("Quantity"), value, "수량은 양수여야 합니다");
-// 에러 코드: ApplicationErrors.UpdateOrderCommand.ValidationFailed
+// Error code: ApplicationErrors.UpdateOrderCommand.ValidationFailed
 ```
 
 ### EventError
@@ -708,27 +701,27 @@ public static class EventError
 }
 ```
 
-**에러 코드 형식:** `ApplicationErrors.{typeof(TPublisher).Name}.{errorType.ErrorName}`
+**Error code format:** `ApplicationErrors.{typeof(TPublisher).Name}.{errorType.ErrorName}`
 
-**`EventError`는** `ApplicationErrors` 접두사를 공유하며, 이벤트 발행/처리 실패를 표현합니다.
+**`EventError`** shares the `ApplicationErrors` prefix and represents event publishing/handling failures.
 
-| 메서드 | 설명 |
+| Method | Description |
 |--------|------|
-| `For<TPublisher>(...)` | Expected 에러 생성 |
-| `For<TPublisher, TValue>(...)` | 제네릭 값의 Expected 에러 생성 |
-| `FromException<TPublisher>(exception)` | 예외를 `PublishFailed` 타입의 Exceptional 에러로 래핑 |
-| `FromException<TPublisher>(errorType, exception)` | 예외를 지정한 타입의 Exceptional 에러로 래핑 |
+| `For<TPublisher>(...)` | Creates Expected error |
+| `For<TPublisher, TValue>(...)` | Creates Expected error with generic value |
+| `FromException<TPublisher>(exception)` | Wraps exception as `PublishFailed` type Exceptional error |
+| `FromException<TPublisher>(errorType, exception)` | Wraps exception as specified type Exceptional error |
 
-**사용 예시:**
+**Usage examples:**
 
 ```csharp
 using static Functorium.Applications.Errors.EventErrorType;
 
 EventError.For<DomainEventPublisher>(new PublishFailed(), eventType, "이벤트 발행에 실패했습니다");
-// 에러 코드: ApplicationErrors.DomainEventPublisher.PublishFailed
+// Error code: ApplicationErrors.DomainEventPublisher.PublishFailed
 
 EventError.FromException<DomainEventPublisher>(exception);
-// 에러 코드: ApplicationErrors.DomainEventPublisher.PublishFailed (Exceptional)
+// Error code: ApplicationErrors.DomainEventPublisher.PublishFailed (Exceptional)
 ```
 
 ### AdapterError
@@ -750,46 +743,46 @@ public static class AdapterError
 }
 ```
 
-**에러 코드 형식:** `AdapterErrors.{typeof(TAdapter).Name}.{errorType.ErrorName}`
+**Error code format:** `AdapterErrors.{typeof(TAdapter).Name}.{errorType.ErrorName}`
 
-| 오버로드 | 값 파라미터 | 설명 |
+| Overload | Value Parameters | Description |
 |----------|-----------|------|
-| `For<TAdapter>(...)` | `string currentValue` | 기본 문자열 값 |
-| `For(Type, ...)` | `string currentValue` | 런타임 Type으로 어댑터 지정 (베이스 클래스에서 `GetType()` 사용 시) |
-| `For<TAdapter, TValue>(...)` | `TValue currentValue` | 제네릭 단일 값 |
-| `For<TAdapter, T1, T2>(...)` | `T1 value1, T2 value2` | 제네릭 2개 값 |
-| `For<TAdapter, T1, T2, T3>(...)` | `T1 value1, T2 value2, T3 value3` | 제네릭 3개 값 |
-| `FromException<TAdapter>(...)` | `Exception exception` | Exception을 Exceptional 에러로 래핑 |
+| `For<TAdapter>(...)` | `string currentValue` | Default string value |
+| `For(Type, ...)` | `string currentValue` | Specifies adapter via runtime Type (for `GetType()` in base classes) |
+| `For<TAdapter, TValue>(...)` | `TValue currentValue` | Generic single value |
+| `For<TAdapter, T1, T2>(...)` | `T1 value1, T2 value2` | Generic 2 values |
+| `For<TAdapter, T1, T2, T3>(...)` | `T1 value1, T2 value2, T3 value3` | Generic 3 values |
+| `FromException<TAdapter>(...)` | `Exception exception` | Wraps Exception as Exceptional error |
 
-**사용 예시:**
+**Usage examples:**
 
 ```csharp
 using static Functorium.Adapters.Errors.AdapterErrorType;
 
-// Expected 에러
+// Expected error
 AdapterError.For<ProductRepository>(new NotFound(), id, "제품을 찾을 수 없습니다");
-// 에러 코드: AdapterErrors.ProductRepository.NotFound
+// Error code: AdapterErrors.ProductRepository.NotFound
 
-// Pipeline 에러
+// Pipeline error
 AdapterError.For<UsecaseValidationPipeline>(new PipelineValidation("PropertyName"), value, "검증에 실패했습니다");
-// 에러 코드: AdapterErrors.UsecaseValidationPipeline.PipelineValidation
+// Error code: AdapterErrors.UsecaseValidationPipeline.PipelineValidation
 
-// Exception 래핑
+// Exception wrapping
 AdapterError.FromException<UsecaseExceptionPipeline>(new PipelineException(), exception);
-// 에러 코드: AdapterErrors.UsecaseExceptionPipeline.PipelineException (Exceptional)
+// Error code: AdapterErrors.UsecaseExceptionPipeline.PipelineException (Exceptional)
 
-// 런타임 Type 사용
+// Runtime Type usage
 AdapterError.For(GetType(), new ConnectionFailed("DB"), connectionString, "연결에 실패했습니다");
-// 에러 코드: AdapterErrors.{실제타입이름}.ConnectionFailed
+// Error code: AdapterErrors.{ActualTypeName}.ConnectionFailed
 ```
 
 ---
 
-## 관련 문서
+## Related Documents
 
-| 문서 | 설명 |
+| Document | Description |
 |------|------|
-| [에러 시스템: 기초와 네이밍](../guides/domain/08a-error-system) | 에러 처리 원칙, Fin 패턴, 네이밍 규칙 R1~R8 |
-| [에러 시스템: Domain/Application/Event](../guides/domain/08b-error-system-domain-app) | Domain, Application, Event 에러 상세 가이드 |
-| [에러 시스템: Adapter와 테스트](../guides/domain/08c-error-system-adapter-testing) | Adapter 에러와 테스트 패턴 가이드 |
-| [검증 시스템 사양](./03-validation) | TypedValidation, ContextualValidation 사양 |
+| [Error System: Fundamentals and Naming](../guides/domain/08a-error-system) | Error handling principles, Fin patterns, naming rules R1~R8 |
+| [Error System: Domain/Application/Event](../guides/domain/08b-error-system-domain-app) | Domain, Application, Event error detailed guide |
+| [Error System: Adapter and Testing](../guides/domain/08c-error-system-adapter-testing) | Adapter error and test pattern guide |
+| [Validation System Specification](./03-validation) | TypedValidation, ContextualValidation specification |
