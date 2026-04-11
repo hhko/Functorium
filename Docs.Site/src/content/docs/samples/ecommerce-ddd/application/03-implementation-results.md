@@ -1,14 +1,14 @@
 ---
-title: "애플리케이션 구현 결과"
+title: "Application Implementation Results"
 ---
 
-[비즈니스 요구사항](../00-business-requirements/)에서 정의한 워크플로우 시나리오가, [타입 설계 의사결정](../01-type-design-decisions/)과 [코드 설계](../02-code-design/)의 패턴으로 실제 동작함을 증명합니다. 각 테스트는 NSubstitute로 Port를 Mock하고, `FinTFactory`로 IO 효과를 시뮬레이션합니다. 정상 시나리오는 병렬 검증, 배치 조회, 읽기/쓰기 분리가 올바르게 동작하는지, 거부 시나리오는 검증 실패와 에러 전파가 제대로 이루어지는지 확인합니다.
+We prove that the workflow scenarios defined in the [business requirements](../00-business-requirements/) actually work with the patterns from the [type design decisions](../01-type-design-decisions/) and [code design](../02-code-design/). Each test uses NSubstitute to mock Ports and `FinTFactory` to simulate IO effects. Normal scenarios verify that parallel validation, batch queries, and read/write separation work correctly, while rejection scenarios verify that validation failures and error propagation work properly.
 
-## 정상 시나리오
+## Normal Scenarios
 
-### 시나리오 1: CreateProduct -- Apply 패턴 + 고유성 검사 (→ 요구사항 #1)
+### Scenario 1: CreateProduct -- Apply Pattern + Uniqueness Check (-> Requirement #1)
 
-상품 생성 시 모든 Value Object 검증을 Apply 패턴으로 병렬 수행한 뒤, 이름 고유성 검사와 Inventory 생성까지 하나의 `FinT<IO, T>` 파이프라인으로 처리합니다.
+During product creation, all Value Object validations are performed in parallel using the Apply pattern, then name uniqueness check and Inventory creation are processed in a single `FinT<IO, T>` pipeline.
 
 ```csharp
 [Fact]
@@ -34,18 +34,18 @@ public async Task Handle_ShouldReturnSuccess_WhenRequestIsValid()
 }
 ```
 
-**Apply 패턴의 동작 원리.** Usecase 내부에서는 `Validation<Error, T>` 타입의 병렬 검증이 이루어집니다.
+**How the Apply pattern works.** Inside the Usecase, parallel validation occurs with `Validation<Error, T>` types.
 
 ```csharp
 private static Fin<ProductData> CreateProductData(Request request)
 {
-    // 모든 필드: VO Validate() 사용 (Validation<Error, T> 반환)
+    // All fields: use VO Validate() (returns Validation<Error, T>)
     var name = ProductName.Validate(request.Name);
     var description = ProductDescription.Validate(request.Description);
     var price = Money.Validate(request.Price);
     var stockQuantity = Quantity.Validate(request.StockQuantity);
 
-    // 모두 튜플로 병합 - Apply로 병렬 검증
+    // Bundle all into tuple - parallel validation with Apply
     return (name, description, price, stockQuantity)
         .Apply((n, d, p, s) =>
             new ProductData(
@@ -59,9 +59,9 @@ private static Fin<ProductData> CreateProductData(Request request)
 }
 ```
 
-4개의 `Validate()` 호출이 모두 `Validation<Error, T>`를 반환하므로, 하나라도 실패하면 **모든 에러가 누적**됩니다. `Bind`(순차 실행)가 아닌 `Apply`(병렬 검증)이기 때문에 첫 번째 에러에서 중단되지 않습니다.
+Since all 4 `Validate()` calls return `Validation<Error, T>`, if any one fails, **all errors are accumulated**. Because this is `Apply` (parallel validation) rather than `Bind` (sequential execution), it does not stop at the first error.
 
-검증 통과 후에는 `FinT<IO, T>` LINQ 합성으로 고유성 검사 -> 저장 -> Inventory 생성을 순차 실행합니다.
+After validation passes, uniqueness check -> save -> Inventory creation are sequentially executed via `FinT<IO, T>` LINQ composition.
 
 ```csharp
 FinT<IO, Response> usecase =
@@ -82,11 +82,11 @@ FinT<IO, Response> usecase =
         createdProduct.CreatedAt);
 ```
 
-이 테스트가 증명하는 것은 다음과 같습니다. Repository가 성공을 반환하도록 설정하여 Usecase 로직만 격리 테스트합니다. `IsSucc`가 true이므로 Apply 패턴 검증, 고유성 검사, 저장이 모두 성공했음을 증명합니다. 검증 → 중복 확인 → 저장 → Inventory 생성이라는 4단계 파이프라인이 하나의 FinT 체인으로 안전하게 합성되었습니다.
+What this test proves is as follows. By setting Repositories to return success, only the Usecase logic is isolation-tested. `IsSucc` being true proves that Apply pattern validation, uniqueness check, and save all succeeded. The 4-stage pipeline of validation -> duplicate check -> save -> Inventory creation is safely composed in a single FinT chain.
 
-### 시나리오 2: CreateCustomer -- 이메일 고유성 (→ 요구사항 #2)
+### Scenario 2: CreateCustomer -- Email Uniqueness (-> Requirement #2)
 
-고객 생성 시 `CustomerName`, `Email`, `Money`(CreditLimit)를 Apply 패턴으로 병렬 검증한 뒤, `CustomerEmailSpec`으로 이메일 중복을 검사합니다.
+During customer creation, `CustomerName`, `Email`, and `Money` (CreditLimit) are validated in parallel with the Apply pattern, then email duplication is checked with `CustomerEmailSpec`.
 
 ```csharp
 [Fact]
@@ -110,13 +110,13 @@ public async Task Handle_ShouldReturnSuccess_WhenRequestIsValid()
 }
 ```
 
-Mock 설정 패턴이 CreateProduct와 동일합니다. `Exists(Specification)`은 `false`를 반환하여 중복이 없음을 표현하고, `Create()`는 전달받은 엔티티를 그대로 반환합니다.
+The mock setup pattern is identical to CreateProduct. `Exists(Specification)` returns `false` to express no duplicate, and `Create()` returns the passed entity as-is.
 
-Mock 설정 패턴이 CreateProduct와 동일한 것은 우연이 아닙니다. 모든 Command Usecase가 동일한 `Exists → guard → Create` 파이프라인 구조를 따르기 때문입니다. 이 일관성 덕분에 새로운 고유성 검사가 필요한 Use Case를 추가할 때 기존 패턴을 그대로 적용할 수 있습니다.
+That the mock setup pattern is identical to CreateProduct is no coincidence. All Command Usecases follow the same `Exists -> guard -> Create` pipeline structure. Thanks to this consistency, when a new Use Case requiring uniqueness checks is added, the existing pattern can be applied as-is.
 
-### 시나리오 3: CreateOrderWithCreditCheck -- 배치 조회 + 신용한도 (→ 요구사항 #3)
+### Scenario 3: CreateOrderWithCreditCheck -- Batch Query + Credit Limit (-> Requirement #3)
 
-주문 생성 시 `IProductCatalog.GetPricesForProducts()`로 상품 가격을 **단일 라운드트립**으로 배치 조회하고, `OrderCreditCheckService`로 신용 한도를 검증합니다.
+During order creation, `IProductCatalog.GetPricesForProducts()` batch-queries product prices in a **single round-trip**, and `OrderCreditCheckService` verifies the credit limit.
 
 ```csharp
 [Fact]
@@ -151,9 +151,9 @@ public async Task Handle_ReturnsSuccess_WhenCreditLimitIsSufficient()
 }
 ```
 
-`IProductCatalog` Mock은 `call.Arg<IReadOnlyList<ProductId>>()`로 전달된 상품 ID 목록을 받아 각각에 가격을 매핑하여 반환합니다. 단가 1000원 x 수량 2 = 총액 2000원이며, 고객 신용한도 5000원 이내이므로 성공합니다.
+The `IProductCatalog` mock receives the passed product ID list via `call.Arg<IReadOnlyList<ProductId>>()` and maps a price to each. Unit price 1000 x quantity 2 = total 2000, which is within the customer's credit limit of 5000, so it succeeds.
 
-`CreateSampleCustomer` 헬퍼는 도메인 VO를 직접 조합하여 테스트 엔티티를 생성합니다.
+The `CreateSampleCustomer` helper creates test entities by directly composing domain VOs.
 
 ```csharp
 private static Customer CreateSampleCustomer(decimal creditLimit = 5000m)
@@ -165,11 +165,11 @@ private static Customer CreateSampleCustomer(decimal creditLimit = 5000m)
 }
 ```
 
-이 테스트는 Application 레이어의 가장 복잡한 Use Case를 검증합니다. 배치 가격 조회(`IProductCatalog`), 교차 Aggregate 검증(`OrderCreditCheckService`), 다중 Repository 조율이 하나의 FinT 파이프라인에서 올바르게 작동하는지 확인합니다.
+This test verifies the most complex Use Case of the Application layer. It confirms that batch price query (`IProductCatalog`), cross-Aggregate validation (`OrderCreditCheckService`), and multi-Repository coordination all work correctly in a single FinT pipeline.
 
-### 시나리오 4: PlaceOrder -- 다중 Aggregate 쓰기 (UoW) (→ 요구사항 #4)
+### Scenario 4: PlaceOrder -- Multi-Aggregate Write (UoW) (-> Requirement #4)
 
-`CreateOrderWithCreditCheckCommand`는 신용 검증 후 주문 하나만 저장합니다. 실제 주문 접수에서는 재고 차감도 함께 이루어져야 합니다. `PlaceOrderCommand`는 Order 생성과 Inventory 업데이트를 하나의 FinT 체인으로 묶어 원자적 쓰기를 보장합니다.
+`CreateOrderWithCreditCheckCommand` saves only one order after credit verification. In actual order placement, stock deduction must also occur. `PlaceOrderCommand` bundles Order creation and Inventory update into a single FinT chain to guarantee atomic writes.
 
 ```csharp
 [Fact]
@@ -211,13 +211,13 @@ public async Task Handle_ReturnsSuccess_WhenCreditLimitAndStockSufficient()
 }
 ```
 
-이전 시나리오들과의 핵심 차이는 **Mock 대상이 5개 포트에 걸친다는 점입니다.** `IProductCatalog`(가격 조회), `IInventoryRepository`(재고 조회/차감/저장), `ICustomerRepository`(고객 조회), `IOrderRepository`(주문 저장) — 네 Repository와 하나의 Special Port가 모두 협력해야 성공합니다.
+The key difference from previous scenarios is that **the mock targets span 5 ports.** `IProductCatalog` (price query), `IInventoryRepository` (stock query/deduction/save), `ICustomerRepository` (customer query), `IOrderRepository` (order save) — four Repositories and one Special Port must all cooperate for success.
 
-Assert에서 `TotalAmount`(주문 생성 확인)과 `DeductedStocks[0].RemainingStock`(재고 차감 확인)을 함께 검증합니다. 10개 재고에서 2개를 차감하여 8개가 남았다는 사실이, 두 Aggregate가 하나의 트랜잭션에서 함께 변경되었음을 증명합니다.
+The assert verifies both `TotalAmount` (order creation confirmation) and `DeductedStocks[0].RemainingStock` (stock deduction confirmation). The fact that 2 were deducted from 10 units of stock leaving 8 proves that both Aggregates were changed together in a single transaction.
 
-### 시나리오 5: SearchProducts -- Specification 합성 + 페이지네이션 (→ 요구사항 #5)
+### Scenario 5: SearchProducts -- Specification Composition + Pagination (-> Requirement #5)
 
-Query는 `IProductQuery` Read Adapter를 통해 Aggregate 재구성 없이 DTO로 직접 프로젝션합니다. Specification 합성과 페이지네이션을 조합합니다.
+Queries project directly to DTOs via `IProductQuery` Read Adapter without Aggregate reconstruction. Combines Specification composition with pagination.
 
 ```csharp
 [Fact]
@@ -243,7 +243,7 @@ public async Task Handle_ReturnsSuccess_WhenNoFiltersProvided()
 }
 ```
 
-페이지네이션 메타데이터 검증 테스트는 `PagedResult`의 연산 결과를 확인합니다.
+The pagination metadata verification test confirms the `PagedResult` operation results.
 
 ```csharp
 [Fact]
@@ -275,7 +275,7 @@ public async Task Handle_ReturnsPaginationMetadata_WhenPageProvided()
 }
 ```
 
-Usecase 내부에서는 `Specification<Product>.All`을 기본으로 하여 요청 파라미터에 따라 `ProductNameSpec`, `ProductPriceRangeSpec`을 `&=`로 합성합니다.
+Inside the Usecase, starting from `Specification<Product>.All` as the default, `ProductNameSpec` and `ProductPriceRangeSpec` are composed with `&=` based on request parameters.
 
 ```csharp
 private static Specification<Product> BuildSpecification(Request request)
@@ -295,9 +295,9 @@ private static Specification<Product> BuildSpecification(Request request)
 }
 ```
 
-### 시나리오 6: GetCustomerOrders -- 4-table JOIN 프로젝션 (→ 요구사항 #6)
+### Scenario 6: GetCustomerOrders -- 4-Table JOIN Projection (-> Requirement #6)
 
-`ICustomerOrdersQuery` Read Adapter로 Customer → Order → OrderLine → Product 4-table JOIN을 수행하여, 특정 고객의 모든 주문과 각 주문 라인의 상품명까지 한번에 프로젝션합니다.
+The `ICustomerOrdersQuery` Read Adapter performs a Customer -> Order -> OrderLine -> Product 4-table JOIN to project all orders for a specific customer along with each order line's product name at once.
 
 ```csharp
 [Fact]
@@ -333,7 +333,7 @@ public async Task Handle_ReturnsSuccess_WhenCustomerHasOrders()
 }
 ```
 
-Usecase 내부는 `_readAdapter.GetByCustomerId(customerId)`를 호출하는 단일 FinT LINQ 파이프라인입니다.
+The Usecase internals are a single FinT LINQ pipeline calling `_readAdapter.GetByCustomerId(customerId)`.
 
 ```csharp
 FinT<IO, Response> usecase =
@@ -341,9 +341,9 @@ FinT<IO, Response> usecase =
     select new Response(customerOrders);
 ```
 
-SearchProducts(시나리오 5)가 `Specification` 기반 검색이라면, GetCustomerOrders는 **엔티티 ID 기반 상세 조회**입니다. Read Adapter가 4개 테이블을 JOIN하여 필요한 형태의 DTO로 직접 프로젝션하므로, Aggregate 재구성 없이 효율적으로 데이터를 반환합니다.
+While SearchProducts (Scenario 5) is `Specification`-based search, GetCustomerOrders is **entity ID-based detail query**. The Read Adapter JOINs 4 tables and projects directly to the needed DTO format, returning data efficiently without Aggregate reconstruction.
 
-다중 주문과 다중 주문 라인을 함께 검증하는 테스트입니다.
+A test verifying multiple orders with multiple order lines together.
 
 ```csharp
 [Fact]
@@ -383,11 +383,11 @@ public async Task Handle_ReturnsSuccess_WhenCustomerHasMultipleOrdersWithMultipl
 }
 ```
 
-VIP Customer의 2건 주문 — 첫 번째 주문은 2개 라인(Product A, B), 두 번째 주문은 1개 라인(Product C)으로 구성됩니다. Read Adapter가 계층적 DTO(`CustomerOrdersDto` → `CustomerOrderDto` → `CustomerOrderLineDto`)를 올바르게 조립하여 반환하는지 검증합니다.
+VIP Customer's 2 orders — the first order has 2 lines (Product A, B), the second has 1 line (Product C). It verifies that the Read Adapter correctly assembles the hierarchical DTO (`CustomerOrdersDto` -> `CustomerOrderDto` -> `CustomerOrderLineDto`).
 
-### 시나리오 7: SearchCustomerOrderSummary -- LEFT JOIN 집계 + 페이지네이션 (→ 요구사항 #7)
+### Scenario 7: SearchCustomerOrderSummary -- LEFT JOIN Aggregation + Pagination (-> Requirement #7)
 
-`ICustomerOrderSummaryQuery` Read Adapter로 Customer와 Order를 LEFT JOIN + GROUP BY 집계하여, 고객별 총 주문 수, 총 지출, 마지막 주문일을 조회합니다. 페이지네이션과 정렬을 지원합니다.
+The `ICustomerOrderSummaryQuery` Read Adapter performs a Customer and Order LEFT JOIN + GROUP BY aggregation to query total order count, total spent, and last order date per customer. Supports pagination and sorting.
 
 ```csharp
 [Fact]
@@ -413,7 +413,7 @@ public async Task Handle_ReturnsSuccess_WhenNoFiltersProvided()
 }
 ```
 
-Usecase 내부는 SearchProducts(시나리오 5)와 동일한 Search Query 패턴을 따릅니다. `Specification<Customer>.All`을 기본으로 하여 `PageRequest`와 `SortExpression`을 조합합니다.
+The Usecase internals follow the same Search Query pattern as SearchProducts (Scenario 5). Starting from `Specification<Customer>.All` as the default, it combines `PageRequest` and `SortExpression`.
 
 ```csharp
 var spec = Specification<Customer>.All;
@@ -433,7 +433,7 @@ FinT<IO, Response> usecase =
         result.HasPreviousPage);
 ```
 
-LEFT JOIN의 핵심 동작을 증명하는 테스트입니다. 주문이 없는 고객도 결과에 포함되어야 합니다.
+A test that proves the core LEFT JOIN behavior. Customers without orders must also be included in the results.
 
 ```csharp
 [Fact]
@@ -463,9 +463,9 @@ public async Task Handle_ReturnsCustomerWithNoOrders_WhenCustomerHasZeroOrders()
 }
 ```
 
-`OrderCount == 0`, `TotalSpent == 0`, `LastOrderDate == null` — INNER JOIN이었다면 이 고객은 결과에서 제외됩니다. LEFT JOIN이기 때문에 주문 없는 고객도 포함되며, 집계 값은 0/null로 반환됩니다.
+`OrderCount == 0`, `TotalSpent == 0`, `LastOrderDate == null` — with an INNER JOIN, this customer would be excluded from results. Because it is a LEFT JOIN, customers without orders are included, and aggregate values return as 0/null.
 
-페이지네이션 메타데이터 검증입니다.
+Pagination metadata verification.
 
 ```csharp
 [Fact]
@@ -498,25 +498,25 @@ public async Task Handle_ReturnsPaginationMetadata_WhenPageProvided()
 }
 ```
 
-SearchProducts(시나리오 5)의 페이지네이션 테스트와 동일한 구조입니다. `PagedResult`가 총 50건, 2페이지, 10건/페이지로 설정되어 `TotalPages = 5`, `HasPreviousPage = true`, `HasNextPage = true`가 검증됩니다. Search Query 패턴이 Product와 Customer에서 동일하게 재사용됨을 보여줍니다.
+The structure is identical to the SearchProducts (Scenario 5) pagination test. `PagedResult` is configured with 50 total records, page 2, 10 records/page, verifying `TotalPages = 5`, `HasPreviousPage = true`, `HasNextPage = true`. This shows the Search Query pattern is reused identically for Product and Customer.
 
-## 도메인 이벤트 반응형 시나리오
+## Domain Event Reactive Scenarios
 
-지금까지의 시나리오는 모두 외부 요청(HTTP/API)에 의해 시작됩니다. 다음 시나리오들은 **도메인 이벤트**에 의해 트리거되는 내부 유스케이스입니다. Aggregate 간 최종 일관성(eventual consistency)을 달성하는 핵심 메커니즘입니다.
+All scenarios so far are initiated by external requests (HTTP/API). The following scenarios are internal use cases triggered by **domain events**. They are the core mechanism for achieving eventual consistency between Aggregates.
 
 ```mermaid
 flowchart LR
-    subgraph 외부["외부 요청"]
+    subgraph External["External Requests"]
         CancelCmd["CancelOrderCommand"]
         DeductCmd["DeductStockCommand"]
     end
 
-    subgraph 도메인["도메인 Aggregate"]
+    subgraph Domain["Domain Aggregates"]
         Order["Order"]
         Inventory["Inventory"]
     end
 
-    subgraph 내부["내부 유스케이스 (이벤트 핸들러)"]
+    subgraph Internal["Internal Use Cases (Event Handlers)"]
         H1["RestoreInventory\nOnOrderCancelled"]
         H2["DetectLowStock\nOnStockDeducted"]
     end
@@ -529,13 +529,13 @@ flowchart LR
     H2 --> Inventory
 ```
 
-### 시나리오 8: CancelOrder -- 주문 취소 + 이벤트 트리거 (→ 요구사항 #8)
+### Scenario 8: CancelOrder -- Order Cancellation + Event Trigger (-> Requirement #8)
 
-Pending 또는 Confirmed 상태의 주문을 취소합니다. `CancelOrderCommand`는 `IOrderRepository`만 의존하며, `Order.Cancel()` 도메인 로직에 위임합니다. 취소 시 발생하는 `CancelledEvent`에는 주문 라인 정보가 포함되어 후속 이벤트 핸들러가 재고를 복원할 수 있습니다.
+Cancels an order in Pending or Confirmed status. `CancelOrderCommand` depends only on `IOrderRepository` and delegates to `Order.Cancel()` domain logic. The `CancelledEvent` raised on cancellation includes order line information so subsequent event handlers can restore stock.
 
 ```mermaid
 sequenceDiagram
-    actor Client as 클라이언트
+    actor Client as Client
     participant Cmd as CancelOrderCommand
     participant Repo as OrderRepository
     participant Order as Order
@@ -544,9 +544,9 @@ sequenceDiagram
     Cmd->>Repo: GetById(orderId)
     Repo-->>Cmd: Order (Pending)
     Cmd->>Order: Cancel()
-    Note over Order: Status → Cancelled<br/>CancelledEvent 발생<br/>(OrderLines 포함)
+    Note over Order: Status -> Cancelled<br/>CancelledEvent raised<br/>(includes OrderLines)
     Cmd->>Repo: Update(order)
-    Repo-->>Cmd: 성공
+    Repo-->>Cmd: Success
     Cmd-->>Client: Response(OrderId, CancelledAt)
 ```
 
@@ -572,7 +572,7 @@ public async Task Handle_ReturnsSuccess_WhenOrderIsPending()
 }
 ```
 
-Usecase 내부의 FinT LINQ 합성은 기존 `DeleteProductCommand`와 동일한 `GetById → 도메인 메서드 → Update` 패턴을 따릅니다.
+The FinT LINQ composition inside the Usecase follows the same `GetById -> domain method -> Update` pattern as `DeleteProductCommand`.
 
 ```csharp
 FinT<IO, Response> usecase =
@@ -584,15 +584,15 @@ FinT<IO, Response> usecase =
         updated.UpdatedAt.IfNone(DateTime.UtcNow));
 ```
 
-`Order.Cancel()`이 `Fin<Unit>`을 반환하므로, 상태 전이가 허용되지 않으면(예: Shipped → Cancelled) `InvalidOrderStatusTransition` 도메인 에러가 FinT 체인을 통해 자동 전파됩니다. `Update()` Mock 설정 없이도 테스트가 통과하는 것이 단락(short-circuit) 동작을 증명합니다.
+Since `Order.Cancel()` returns `Fin<Unit>`, if the state transition is not allowed (e.g., Shipped -> Cancelled), the `InvalidOrderStatusTransition` domain error is automatically propagated through the FinT chain. The test passing without setting up `Update()` mock proves the short-circuit behavior.
 
-### 시나리오 9: RestoreInventory -- 주문 취소 시 재고 자동 복원 (→ 요구사항 #8)
+### Scenario 9: RestoreInventory -- Automatic Stock Restoration on Order Cancellation (-> Requirement #8)
 
-`CancelledEvent`가 발행되면 `RestoreInventoryOnOrderCancelledHandler`가 각 주문 라인의 상품별 재고를 복원합니다. 이 핸들러는 **개별 주문 라인 단위로 독립 처리**하여, 하나의 재고 복원 실패가 나머지를 차단하지 않습니다.
+When `CancelledEvent` is published, `RestoreInventoryOnOrderCancelledHandler` restores stock per product for each order line. This handler **processes independently per order line**, so one stock restoration failure does not block the rest.
 
 ```mermaid
 sequenceDiagram
-    participant Bus as 이벤트 버스
+    participant Bus as Event Bus
     participant Handler as RestoreInventory<br/>Handler
     participant InvRepo as InventoryRepository
     participant Inv1 as Inventory A<br/>(stock: 5)
@@ -601,17 +601,17 @@ sequenceDiagram
     Bus->>Handler: CancelledEvent<br/>(Line A: qty 2, Line B: qty 1)
 
     rect rgb(230, 245, 230)
-        Note over Handler,Inv2: 주문 라인별 독립 처리
+        Note over Handler,Inv2: Independent processing per order line
         Handler->>InvRepo: GetByProductId(A)
         InvRepo-->>Handler: Inventory A
         Handler->>Inv1: AddStock(2)
-        Note over Inv1: stock: 5 → 7
+        Note over Inv1: stock: 5 -> 7
         Handler->>InvRepo: Update(Inventory A)
 
         Handler->>InvRepo: GetByProductId(B)
         InvRepo-->>Handler: Inventory B
         Handler->>Inv2: AddStock(1)
-        Note over Inv2: stock: 3 → 4
+        Note over Inv2: stock: 3 -> 4
         Handler->>InvRepo: Update(Inventory B)
     end
 ```
@@ -650,7 +650,7 @@ public async Task Handle_RestoresStock_ForEachOrderLine()
 }
 ```
 
-핸들러 내부에서는 각 주문 라인을 순회하며 `FinT<IO, T>` 파이프라인을 개별 실행합니다.
+Inside the handler, each order line is iterated with an individual `FinT<IO, T>` pipeline execution.
 
 ```csharp
 foreach (var line in notification.OrderLines)
@@ -662,13 +662,13 @@ foreach (var line in notification.OrderLines)
 }
 ```
 
-`foreach` + 개별 `Run().RunAsync()`는 의도적인 설계입니다. 하나의 `FinT` 체인으로 묶으면 첫 번째 실패에서 전체가 중단되지만, 개별 실행하면 **부분 실패를 허용**합니다. 상품 A의 재고를 찾지 못해도 상품 B의 재고는 정상 복원됩니다.
+`foreach` + individual `Run().RunAsync()` is an intentional design. Bundling into a single `FinT` chain would stop everything at the first failure, but individual execution **allows partial failures**. Even if Product A's inventory cannot be found, Product B's inventory is still restored normally.
 
 ```csharp
 [Fact]
 public async Task Handle_ContinuesProcessing_WhenOneInventoryNotFound()
 {
-    // Arrange — productId1의 재고는 존재하지 않음
+    // Arrange — productId1's inventory does not exist
     _inventoryRepository.GetByProductId(productId1)
         .Returns(FinTFactory.Fail<Inventory>(Error.New("Inventory not found")));
     _inventoryRepository.GetByProductId(productId2)
@@ -679,18 +679,18 @@ public async Task Handle_ContinuesProcessing_WhenOneInventoryNotFound()
     // Act
     await _sut.Handle(notification, CancellationToken.None);
 
-    // Assert — productId2의 재고는 정상 복원
+    // Assert — productId2's inventory is restored normally
     ((int)inventory2.StockQuantity).ShouldBe(4); // 3 + 1
 }
 ```
 
-### 시나리오 10: DetectLowStock -- 재고 차감 시 저재고 감지 (→ 요구사항 #9)
+### Scenario 10: DetectLowStock -- Low Stock Detection on Stock Deduction (-> Requirement #9)
 
-`StockDeductedEvent`가 발행되면 `DetectLowStockOnStockDeductedHandler`가 현재 재고를 조회하여 임계값(10) 이하인지 확인합니다. 저재고가 감지되면 `Inventory.CheckLowStock()`이 `LowStockDetectedEvent`를 발생시킵니다.
+When `StockDeductedEvent` is published, `DetectLowStockOnStockDeductedHandler` queries current inventory to check whether it is at or below the threshold (10). If low stock is detected, `Inventory.CheckLowStock()` raises a `LowStockDetectedEvent`.
 
 ```mermaid
 sequenceDiagram
-    participant Bus as 이벤트 버스
+    participant Bus as Event Bus
     participant Handler as DetectLowStock<br/>Handler
     participant InvRepo as InventoryRepository
     participant Inv as Inventory<br/>(stock: 5)
@@ -701,7 +701,7 @@ sequenceDiagram
     Handler->>Inv: CheckLowStock(threshold=10)
 
     alt stock(5) < threshold(10)
-        Note over Inv: LowStockDetectedEvent 발생<br/>(현재 재고: 5, 임계값: 10)
+        Note over Inv: LowStockDetectedEvent raised<br/>(current stock: 5, threshold: 10)
     end
 ```
 
@@ -722,12 +722,12 @@ public async Task Handle_RaisesLowStockDetected_WhenBelowThreshold()
     // Act
     await _sut.Handle(notification, CancellationToken.None);
 
-    // Assert — 재고 5 < 임계값 10 → LowStockDetectedEvent 발생
+    // Assert — stock 5 < threshold 10 -> LowStockDetectedEvent raised
     inventory.DomainEvents.OfType<Inventory.LowStockDetectedEvent>().ShouldHaveSingleItem();
 }
 ```
 
-저재고 감지 로직은 Application 레이어가 아닌 **도메인 Aggregate 내부**에 위치합니다. `AddDomainEvent`가 `protected`이므로, 핸들러는 `Inventory.CheckLowStock(threshold)`을 호출하여 도메인에 위임합니다.
+The low stock detection logic resides inside the **domain Aggregate**, not the Application layer. Since `AddDomainEvent` is `protected`, the handler delegates to the domain by calling `Inventory.CheckLowStock(threshold)`.
 
 ```csharp
 // Inventory.cs
@@ -738,7 +738,7 @@ public void CheckLowStock(Quantity threshold)
 }
 ```
 
-임계값(10) 이상이면 이벤트가 발생하지 않습니다.
+If the threshold (10) or above, no event is raised.
 
 ```csharp
 [Fact]
@@ -757,20 +757,20 @@ public async Task Handle_DoesNotRaise_WhenAboveThreshold()
     // Act
     await _sut.Handle(notification, CancellationToken.None);
 
-    // Assert — 재고 15 >= 임계값 10 → 이벤트 없음
+    // Assert — stock 15 >= threshold 10 -> no event
     inventory.DomainEvents.OfType<Inventory.LowStockDetectedEvent>().ShouldBeEmpty();
 }
 ```
 
-`LowStockDetectedEvent`는 현재 구독자가 없지만, 추후 외부 알림(이메일, Slack) 핸들러를 추가하면 **코드 변경 없이** 확장됩니다. 이것이 도메인 이벤트의 Open/Closed 원칙 적용입니다.
+`LowStockDetectedEvent` currently has no subscribers, but adding an external notification (email, Slack) handler in the future **extends without code changes**. This is the Open/Closed principle applied through domain events.
 
-### 시나리오 4 → 8 → 9 연결: 주문 접수에서 취소까지의 전체 흐름
+### Scenario 4 -> 8 -> 9 Connection: Full Flow from Order Placement to Cancellation
 
-시나리오 4(PlaceOrder), 시나리오 8(CancelOrder), 시나리오 9(RestoreInventory)은 하나의 비즈니스 흐름을 구성합니다.
+Scenarios 4 (PlaceOrder), 8 (CancelOrder), and 9 (RestoreInventory) form a single business flow.
 
 ```mermaid
 flowchart TB
-    subgraph Phase1["1단계: 주문 접수 (시나리오 4)"]
+    subgraph Phase1["Phase 1: Order Placement (Scenario 4)"]
         PlaceOrder["PlaceOrderCommand"]
         DeductStock["Inventory.DeductStock()"]
         CreateOrder["Order.Create()"]
@@ -778,36 +778,36 @@ flowchart TB
         PlaceOrder --> CreateOrder
     end
 
-    subgraph Phase2["2단계: 주문 취소 (시나리오 8)"]
+    subgraph Phase2["Phase 2: Order Cancellation (Scenario 8)"]
         CancelOrder["CancelOrderCommand"]
         Cancel["Order.Cancel()"]
-        CancelledEvent["CancelledEvent\n(OrderLines 포함)"]
+        CancelledEvent["CancelledEvent\n(includes OrderLines)"]
         CancelOrder --> Cancel --> CancelledEvent
     end
 
-    subgraph Phase3["3단계: 재고 복원 (시나리오 9)"]
+    subgraph Phase3["Phase 3: Stock Restoration (Scenario 9)"]
         Handler["RestoreInventory\nHandler"]
         AddStock["Inventory.AddStock()"]
         Handler --> AddStock
     end
 
-    Phase1 -.-> |"이후 고객이 취소 요청"| Phase2
-    CancelledEvent -.-> |"도메인 이벤트"| Phase3
+    Phase1 -.-> |"Customer later requests cancellation"| Phase2
+    CancelledEvent -.-> |"Domain event"| Phase3
 ```
 
-재고 10개인 상품에 수량 2를 주문하면 재고 8이 됩니다(시나리오 4). 이후 주문을 취소하면(시나리오 8) `CancelledEvent`가 발행되고, 재고 복원 핸들러가 수량 2를 복원하여(시나리오 9) 재고가 다시 10이 됩니다. **Order는 Inventory를 직접 참조하지 않으며**, 도메인 이벤트만으로 두 Aggregate가 느슨하게 연결됩니다.
+When 2 units are ordered from a product with 10 units of stock, stock becomes 8 (Scenario 4). When the order is then cancelled (Scenario 8), the `CancelledEvent` is published, and the stock restoration handler restores 2 units (Scenario 9), returning stock to 10. **Order does not directly reference Inventory**, and the two Aggregates are connected only through domain events.
 
-정상 시나리오와 도메인 이벤트 반응형 시나리오에서 각 패턴이 올바르게 작동함을 확인했습니다. 이제 거부 시나리오에서 에러가 어떻게 발생하고 전파되는지 살펴봅니다. Application 레이어의 에러 처리는 try-catch가 아닌 타입 시스템(`Fin<T>`, `FinT<IO, T>`)에 의해 자동으로 이루어집니다.
+Having confirmed that each pattern works correctly in normal scenarios and domain event reactive scenarios, we now examine how errors are generated and propagated in rejection scenarios. Error handling in the Application layer is performed automatically by the type system (`Fin<T>`, `FinT<IO, T>`), not by try-catch.
 
-## 거부 시나리오
+## Rejection Scenarios
 
-### 시나리오 11: 배송 후 취소 거부 (InvalidOrderStatusTransition) (→ 요구사항 #16)
+### Scenario 11: Cancellation Rejected After Shipping (InvalidOrderStatusTransition) (-> Requirement #16)
 
-Shipped 또는 Delivered 상태의 주문을 취소하면 `Order.Cancel()`이 `InvalidOrderStatusTransition` 도메인 에러를 반환합니다. FinT 체인의 단락에 의해 `Update()` 호출이 실행되지 않습니다.
+When cancelling an order in Shipped or Delivered status, `Order.Cancel()` returns an `InvalidOrderStatusTransition` domain error. The FinT chain's short-circuit prevents the `Update()` call from executing.
 
 ```mermaid
 sequenceDiagram
-    actor Client as 클라이언트
+    actor Client as Client
     participant Cmd as CancelOrderCommand
     participant Repo as OrderRepository
     participant Order as Order
@@ -816,9 +816,9 @@ sequenceDiagram
     Cmd->>Repo: GetById(orderId)
     Repo-->>Cmd: Order (Shipped)
     Cmd->>Order: Cancel()
-    Note over Order: Shipped → Cancelled<br/>전이 불가!
+    Note over Order: Shipped -> Cancelled<br/>Transition not allowed!
     Order-->>Cmd: Fail(InvalidOrderStatusTransition)
-    Note over Cmd: Update() 실행되지 않음<br/>(FinT 단락)
+    Note over Cmd: Update() not executed<br/>(FinT short-circuit)
     Cmd-->>Client: Fail
 ```
 
@@ -841,11 +841,11 @@ public async Task Handle_ReturnsFail_WhenOrderIsShipped()
 }
 ```
 
-`_orderRepository.Update()` Mock을 설정하지 않아도 테스트가 통과합니다. `Cancel()`이 `Fail`을 반환하면 FinT LINQ 합성의 모나드 바인딩에 의해 `from updated in _orderRepository.Update(order)` 라인이 실행되지 않기 때문입니다. 이는 시나리오 13(AlreadyExists)에서 `guard` 실패 후 `Create()`가 실행되지 않는 것과 동일한 원리입니다.
+The test passes even without setting up `_orderRepository.Update()` mock. When `Cancel()` returns `Fail`, the FinT LINQ composition's monad binding means the `from updated in _orderRepository.Update(order)` line is not executed. This is the same principle as Scenario 13 (AlreadyExists) where `Create()` is not executed after `guard` failure.
 
-### 시나리오 12: 다중 VO 검증 실패 (에러 누적) (→ 요구사항 #10)
+### Scenario 12: Multiple VO Validation Failure (Error Accumulation) (-> Requirement #10)
 
-Apply 패턴은 개별 VO 검증을 병렬로 수행하므로, 여러 필드가 동시에 실패하면 **모든 에러가 누적**됩니다. 빈 이름과 0원 가격을 동시에 전달하면 두 에러가 한번에 반환됩니다.
+The Apply pattern performs individual VO validations in parallel, so when multiple fields fail simultaneously, **all errors are accumulated**. Passing an empty name and 0 price simultaneously returns both errors at once.
 
 ```csharp
 [Fact]
@@ -875,13 +875,13 @@ public async Task Handle_ShouldReturnFailure_WhenPriceIsZero()
 }
 ```
 
-VO 검증 실패 시 Repository Mock 설정이 필요하지 않습니다. Apply 패턴이 `CreateProductData()` 단계에서 즉시 `Fail`을 반환하므로 IO 효과가 실행되지 않습니다. 이것이 "검증 실패 시 조기 반환"의 핵심입니다.
+Repository mock setup is not needed when VO validation fails. The Apply pattern immediately returns `Fail` at the `CreateProductData()` stage, so IO effects are not executed. This is the core of "early return on validation failure."
 
-이것이 Apply 패턴과 Bind 패턴의 실질적 차이입니다. Bind였다면 빈 이름에서 즉시 중단되어 가격 오류는 보고되지 않았을 것입니다. Apply는 독립적인 검증을 모두 실행하여 사용자가 한 번의 요청으로 모든 문제를 파악할 수 있게 합니다.
+This is the practical difference between Apply and Bind patterns. With Bind, it would have stopped immediately at the empty name and the price error would not have been reported. Apply runs all independent validations so the user can identify all problems in a single request.
 
-### 시나리오 13: AlreadyExists (중복 이름/이메일) (→ 요구사항 #11)
+### Scenario 13: AlreadyExists (Duplicate Name/Email) (-> Requirement #11)
 
-`Specification` 기반 고유성 검사에서 중복이 발견되면 `ApplicationError.For<T>(new AlreadyExists(), ...)`를 반환합니다.
+When a `Specification`-based uniqueness check finds a duplicate, `ApplicationError.For<T>(new AlreadyExists(), ...)` is returned.
 
 ```csharp
 [Fact]
@@ -901,7 +901,7 @@ public async Task Handle_ShouldReturnFailure_WhenDuplicateName()
 }
 ```
 
-Customer의 이메일 중복도 동일한 패턴입니다.
+Customer email duplication follows the same pattern.
 
 ```csharp
 [Fact]
@@ -921,13 +921,13 @@ public async Task Handle_ShouldReturnFailure_WhenDuplicateEmail()
 }
 ```
 
-`Exists()`가 `true`를 반환하면 `guard(!exists, ...)` 에서 실패하여 `AlreadyExists` 에러가 전파됩니다. `Create()` Mock은 설정하지 않아도 됩니다 -- `guard`에서 이미 중단되었기 때문입니다.
+When `Exists()` returns `true`, `guard(!exists, ...)` fails and the `AlreadyExists` error propagates. The `Create()` mock does not need to be set up -- because the chain already stopped at `guard`.
 
-`guard`에서 중단되었으므로 `Create()` Mock을 설정하지 않아도 테스트가 통과합니다. 이는 FinT 체인의 단락(short-circuit) 특성을 증명합니다 — 실패 이후의 모든 IO 연산이 실행되지 않습니다.
+Since the chain stopped at `guard`, the `Create()` mock does not need to be set up and the test still passes. This proves the short-circuit characteristic of the FinT chain -- all IO operations after failure are not executed.
 
-### 시나리오 14: NotFound (존재하지 않는 상품) (→ 요구사항 #12)
+### Scenario 14: NotFound (Non-existent Product) (-> Requirement #12)
 
-**UpdateProduct** -- `GetById()`가 `Fail`을 반환하면 LINQ 합성의 첫 `from`에서 즉시 중단됩니다.
+**UpdateProduct** -- When `GetById()` returns `Fail`, the chain immediately stops at the first `from` in the LINQ composition.
 
 ```csharp
 [Fact]
@@ -948,7 +948,7 @@ public async Task Handle_ShouldReturnFailure_WhenProductNotFound()
 }
 ```
 
-**DeleteProduct** -- `GetByIdIncludingDeleted()`가 `Fail`을 반환하는 경우입니다.
+**DeleteProduct** -- When `GetByIdIncludingDeleted()` returns `Fail`.
 
 ```csharp
 [Fact]
@@ -969,11 +969,11 @@ public async Task Handle_ReturnsFail_WhenProductNotFound()
 }
 ```
 
-`FinTFactory.Fail<T>(Error.New(...))` 패턴으로 Repository가 실패를 반환하면, `FinT<IO, T>` LINQ 합성의 모나드 바인딩에 의해 후속 단계가 실행되지 않고 에러가 그대로 전파됩니다.
+When `FinTFactory.Fail<T>(Error.New(...))` is used to make the Repository return failure, the `FinT<IO, T>` LINQ composition's monad binding propagates the error as-is without executing subsequent steps.
 
-### 시나리오 15: 도메인 에러 전파 (CreditLimitExceeded, InsufficientStock) (→ 요구사항 #13, #14)
+### Scenario 15: Domain Error Propagation (CreditLimitExceeded, InsufficientStock) (-> Requirement #13, #14)
 
-`OrderCreditCheckService`의 `CreditLimitExceeded` 도메인 에러가 Application 레이어까지 전파됩니다.
+The `CreditLimitExceeded` domain error from `OrderCreditCheckService` propagates to the Application layer.
 
 ```csharp
 [Fact]
@@ -1005,9 +1005,9 @@ public async Task Handle_ReturnsFail_WhenCreditLimitExceeded()
 }
 ```
 
-단가 1000원 x 수량 2 = 총액 2000원인데 신용한도가 1000원이므로, Domain Service에서 `CreditLimitExceeded` 에러를 반환합니다. 이 에러는 `FinT<IO, T>` LINQ 합성 내부의 `_creditCheckService.ValidateCreditLimit(customer, newOrder.TotalAmount)`에서 발생하여, `_orderRepository.Create()`가 실행되지 않고 에러가 상위로 전파됩니다.
+Unit price 1000 x quantity 2 = total 2000, but the credit limit is 1000, so the Domain Service returns a `CreditLimitExceeded` error. This error occurs at `_creditCheckService.ValidateCreditLimit(customer, newOrder.TotalAmount)` inside the `FinT<IO, T>` LINQ composition, and `_orderRepository.Create()` is not executed as the error propagates upward.
 
-`PlaceOrderCommand`에서도 동일한 도메인 에러 전파가 이루어집니다. 재고 부족 시 `Inventory.DeductStock()`이 `InsufficientStock` 에러를 반환하고, 신용 한도 초과 시 `OrderCreditCheckService`가 `CreditLimitExceeded` 에러를 반환합니다. 두 경우 모두 FinT LINQ 체인의 모나드 바인딩에 의해 후속 단계가 실행되지 않고 에러가 전파됩니다.
+The same domain error propagation occurs in `PlaceOrderCommand`. When stock is insufficient, `Inventory.DeductStock()` returns an `InsufficientStock` error, and when the credit limit is exceeded, `OrderCreditCheckService` returns a `CreditLimitExceeded` error. In both cases, the FinT LINQ chain's monad binding prevents subsequent steps from executing and propagates the error.
 
 ```csharp
 [Fact]
@@ -1015,10 +1015,10 @@ public async Task Handle_ReturnsFail_WhenInsufficientStock()
 {
     // Arrange
     var productId = ProductId.New();
-    var inventory = CreateInventoryWithStock(productId, 1);  // 재고 1개
+    var inventory = CreateInventoryWithStock(productId, 1);  // Stock: 1
     var request = new PlaceOrderCommand.Request(
         CustomerId.New().ToString(),
-        Seq(new PlaceOrderCommand.OrderLineRequest(productId.ToString(), 2)),  // 2개 주문
+        Seq(new PlaceOrderCommand.OrderLineRequest(productId.ToString(), 2)),  // Ordering 2
         "Seoul, Korea");
 
     _productCatalog.GetPricesForProducts(Arg.Any<IReadOnlyList<ProductId>>())
@@ -1039,15 +1039,15 @@ public async Task Handle_ReturnsFail_WhenInsufficientStock()
 }
 ```
 
-재고가 1개인데 2개를 주문하면 `DeductStock`이 `InsufficientStock` 도메인 에러를 반환합니다. 이 시점에서 Customer 조회, 신용 검증, Order 생성, Inventory 저장이 모두 실행되지 않습니다. `_customerRepository`와 `_orderRepository`를 Mock 설정하지 않아도 테스트가 통과하는 것이, FinT 체인의 단락(short-circuit)이 정확히 동작함을 증명합니다.
+Ordering 2 when only 1 is in stock causes `DeductStock` to return an `InsufficientStock` domain error. At this point, Customer query, credit verification, Order creation, and Inventory save are all not executed. The test passing without setting up `_customerRepository` and `_orderRepository` mocks proves that the FinT chain's short-circuit works precisely.
 
-에러는 발생 지점에서 FinT 체인을 따라 최종 `FinResponse`까지 자동으로 전파됩니다. 중간에 try-catch가 없어도 타입 시스템이 에러 흐름을 보장합니다. 다음 표는 각 에러 유형별 발생 원천과 전파 경로를 정리합니다.
+Errors propagate automatically from the point of occurrence through the FinT chain to the final `FinResponse`. No try-catch is needed in between as the type system guarantees the error flow. The following table summarizes the error origin and propagation path for each error type.
 
-### 시나리오 16: 형식 검증 거부 (FluentValidation) (→ 요구사항 #15)
+### Scenario 16: Format Validation Rejection (FluentValidation) (-> Requirement #15)
 
-FluentValidation Validator가 워크플로우 진입 전에 형식 오류를 거부합니다. Validator 실패 시 Usecase `Handle()`이 실행되지 않으므로, Mock 설정이 필요하지 않습니다.
+FluentValidation Validators reject format errors before workflow entry. When the Validator fails, the Usecase `Handle()` is not executed, so no mock setup is needed.
 
-**쌍 범위 검증** — `SearchProductsQueryValidator`는 MinPrice와 MaxPrice가 반드시 함께 제공되어야 한다는 규칙을 검증합니다.
+**Paired range validation** — `SearchProductsQueryValidator` validates that MinPrice and MaxPrice must be provided together.
 
 ```csharp
 [Fact]
@@ -1067,7 +1067,7 @@ public void Validate_ReturnsValidationError_WhenOnlyMinPriceProvided()
 }
 ```
 
-**허용 목록 검증** — 정렬 필드가 허용된 값(`Name`, `Price` 등)에 포함되지 않으면 거부됩니다.
+**Allowlist validation** — Rejected when the sort field is not in the allowed values (`Name`, `Price`, etc.).
 
 ```csharp
 [Fact]
@@ -1085,7 +1085,7 @@ public void Validate_ReturnsValidationError_WhenInvalidSortByProvided()
 }
 ```
 
-**ID 형식 검증** — `GetCustomerOrdersQueryValidator`는 `CustomerId`가 유효한 EntityId 형식인지 검증합니다.
+**ID format validation** — `GetCustomerOrdersQueryValidator` validates that `CustomerId` is in a valid EntityId format.
 
 ```csharp
 [Fact]
@@ -1103,31 +1103,31 @@ public void Validate_ReturnsValidationError_WhenCustomerIdEmpty()
 }
 ```
 
-다음은 각 Validator가 검증하는 규칙 유형을 테스트 관점에서 정리한 표입니다.
+The following table summarizes the rule types validated by each Validator from a testing perspective.
 
-| Validator | 검증 규칙 | 테스트 방식 |
-|-----------|-----------|-------------|
-| `SearchProductsQueryValidator` | 쌍 범위 (MinPrice ↔ MaxPrice), 허용 목록 (SortBy), 정렬 방향 (SortDirection), 빈 문자열 (Name) | `_sut.Validate(request)` → `IsValid` / `Errors` |
-| `GetCustomerOrdersQueryValidator` | EntityId 형식 (CustomerId) | `_sut.Validate(request)` → `IsValid` / `Errors` |
-| `SearchCustomerOrderSummaryQueryValidator` | 허용 목록 (SortBy), 정렬 방향 (SortDirection) | `_sut.Validate(request)` → `IsValid` / `Errors` |
+| Validator | Validation Rules | Test Method |
+|-----------|-----------------|-------------|
+| `SearchProductsQueryValidator` | Paired range (MinPrice <-> MaxPrice), allowlist (SortBy), sort direction (SortDirection), empty string (Name) | `_sut.Validate(request)` -> `IsValid` / `Errors` |
+| `GetCustomerOrdersQueryValidator` | EntityId format (CustomerId) | `_sut.Validate(request)` -> `IsValid` / `Errors` |
+| `SearchCustomerOrderSummaryQueryValidator` | Allowlist (SortBy), sort direction (SortDirection) | `_sut.Validate(request)` -> `IsValid` / `Errors` |
 
-Validator 테스트는 동기 실행(`_sut.Validate(request)`)으로 `IsValid`와 `Errors`를 검증합니다. Usecase 테스트의 `async Handle()` → `IsSucc`/`IsFail` 패턴과 구별됩니다. Validator가 `IsValid == false`를 반환하면 파이프라인이 Usecase를 호출하지 않으므로, 형식 오류가 도메인 로직에 도달하지 않는다는 것이 구조적으로 보장됩니다.
+Validator tests use synchronous execution (`_sut.Validate(request)`) to verify `IsValid` and `Errors`. This is distinguished from the Usecase test pattern of `async Handle()` -> `IsSucc`/`IsFail`. When the Validator returns `IsValid == false`, the pipeline does not invoke the Usecase, structurally guaranteeing that format errors never reach domain logic.
 
-## 에러 전파 경로
+## Error Propagation Path
 
-| 에러 원천 | 에러 타입 | 전파 경로 | 최종 ApplicationError |
-|-----------|-----------|-----------|----------------------|
-| VO 검증 (`ProductName.Validate` 등) | `Validation<Error, T>` | `Apply()` -> `.ToFin()` -> 조기 반환 | `FinResponse.Fail<T>(error)` |
-| 고유성 검사 (`Exists` + `guard`) | `ApplicationError` (`AlreadyExists`) | `FinT<IO, T>` LINQ 합성 내 `guard` | `ApplicationError.For<T>(new AlreadyExists(), ...)` |
-| 엔티티 조회 (`GetById`) | `Error` (Repository 반환) | `FinT<IO, T>` LINQ 합성 모나드 바인딩 | `FinTFactory.Fail<T>(Error.New(...))` |
-| 도메인 서비스 (`OrderCreditCheckService`) | `DomainError` (`CreditLimitExceeded`) | `FinT<IO, T>` LINQ 합성 -> `Fin.ToFinResponse()` | `DomainError.For<T>(new CreditLimitExceeded(), ...)` |
-| 도메인 메서드 (`Inventory.DeductStock`) | `DomainError` (`InsufficientStock`) | `FinT<IO, T>` LINQ 합성 모나드 바인딩 | `DomainError.For<T>(new InsufficientStock(), ...)` |
-| 도메인 메서드 (`Order.Cancel`) | `DomainError` (`InvalidOrderStatusTransition`) | `FinT<IO, T>` LINQ 합성 모나드 바인딩 | `DomainError.For<T>(new InvalidOrderStatusTransition(), ...)` |
-| 배치 조회 후 존재 검증 | `ApplicationError` (`NotFound`) | 명시적 반환 | `ApplicationError.For<T>(new NotFound(), ...)` |
+| Error Origin | Error Type | Propagation Path | Final ApplicationError |
+|-------------|-----------|-----------------|----------------------|
+| VO validation (`ProductName.Validate`, etc.) | `Validation<Error, T>` | `Apply()` -> `.ToFin()` -> early return | `FinResponse.Fail<T>(error)` |
+| Uniqueness check (`Exists` + `guard`) | `ApplicationError` (`AlreadyExists`) | `guard` inside `FinT<IO, T>` LINQ composition | `ApplicationError.For<T>(new AlreadyExists(), ...)` |
+| Entity query (`GetById`) | `Error` (Repository return) | Monad binding in `FinT<IO, T>` LINQ composition | `FinTFactory.Fail<T>(Error.New(...))` |
+| Domain service (`OrderCreditCheckService`) | `DomainError` (`CreditLimitExceeded`) | `FinT<IO, T>` LINQ composition -> `Fin.ToFinResponse()` | `DomainError.For<T>(new CreditLimitExceeded(), ...)` |
+| Domain method (`Inventory.DeductStock`) | `DomainError` (`InsufficientStock`) | Monad binding in `FinT<IO, T>` LINQ composition | `DomainError.For<T>(new InsufficientStock(), ...)` |
+| Domain method (`Order.Cancel`) | `DomainError` (`InvalidOrderStatusTransition`) | Monad binding in `FinT<IO, T>` LINQ composition | `DomainError.For<T>(new InvalidOrderStatusTransition(), ...)` |
+| Post-batch query existence verification | `ApplicationError` (`NotFound`) | Explicit return | `ApplicationError.For<T>(new NotFound(), ...)` |
 
-## 시나리오 커버리지 매트릭스
+## Scenario Coverage Matrix
 
-### Aggregate Root 관계 다이어그램
+### Aggregate Root Relationship Diagram
 
 ```mermaid
 classDiagram
@@ -1173,255 +1173,255 @@ classDiagram
     Product ..> Tag : TagIds
 ```
 
-### 요약
+### Summary
 
-| # | 요구사항 | 시나리오 | Use Case | Aggregate Root |
-|---|---------|---------|----------|---------------|
-| 1 | 상품 등록 | 1 | `CreateProductCommand` | Product, Inventory |
-| 2 | 고객 생성 | 2 | `CreateCustomerCommand` | Customer |
-| 3 | 주문 생성 (신용한도) | 3 | `CreateOrderWithCreditCheckCommand` | Order, Customer, Product |
-| 4 | 주문 접수 | 4 | `PlaceOrderCommand` | Order, Customer, Product, Inventory |
-| 5 | 상품 검색 | 5 | `SearchProductsQuery` | Product |
-| 6 | 고객 주문 내역 조회 | 6 | `GetCustomerOrdersQuery` | Customer, Order, Product |
-| 7 | 고객 주문 요약 검색 | 7 | `SearchCustomerOrderSummaryQuery` | Customer, Order |
-| 8 | 주문 취소 + 재고 복원 | 8, 9 | `CancelOrderCommand`, `RestoreInventoryHandler` | Order, Inventory |
-| 9 | 저재고 감지 | 10 | `DetectLowStockHandler` | Inventory |
-| 10 | 다중 검증 실패 | 12 | Apply 패턴 (다중 Use Case) | Product, Customer |
-| 11 | 중복 거부 | 13 | `guard` + `AlreadyExists` | Product, Customer |
-| 12 | 존재하지 않는 엔티티 | 14 | `UpdateProductCommand`, `DeleteProductCommand` | Product |
-| 13 | 신용한도 초과 | 15 | `CreateOrderWithCreditCheckCommand` | Order, Customer |
-| 14 | 재고 부족 | 15 | `PlaceOrderCommand` | Order, Inventory, Product |
-| 15 | 형식 검증 거부 | 16 | FluentValidation | — |
-| 16 | 배송 후 취소 거부 | 11 | `CancelOrderCommand` | Order |
+| # | Requirement | Scenario | Use Case | Aggregate Root |
+|---|-----------|---------|----------|---------------|
+| 1 | Product registration | 1 | `CreateProductCommand` | Product, Inventory |
+| 2 | Customer creation | 2 | `CreateCustomerCommand` | Customer |
+| 3 | Order creation (credit limit) | 3 | `CreateOrderWithCreditCheckCommand` | Order, Customer, Product |
+| 4 | Order placement | 4 | `PlaceOrderCommand` | Order, Customer, Product, Inventory |
+| 5 | Product search | 5 | `SearchProductsQuery` | Product |
+| 6 | Customer order history query | 6 | `GetCustomerOrdersQuery` | Customer, Order, Product |
+| 7 | Customer order summary search | 7 | `SearchCustomerOrderSummaryQuery` | Customer, Order |
+| 8 | Order cancellation + stock restoration | 8, 9 | `CancelOrderCommand`, `RestoreInventoryHandler` | Order, Inventory |
+| 9 | Low stock detection | 10 | `DetectLowStockHandler` | Inventory |
+| 10 | Multiple validation failure | 12 | Apply pattern (multiple Use Cases) | Product, Customer |
+| 11 | Duplicate rejection | 13 | `guard` + `AlreadyExists` | Product, Customer |
+| 12 | Non-existent entity | 14 | `UpdateProductCommand`, `DeleteProductCommand` | Product |
+| 13 | Credit limit exceeded | 15 | `CreateOrderWithCreditCheckCommand` | Order, Customer |
+| 14 | Insufficient stock | 15 | `PlaceOrderCommand` | Order, Inventory, Product |
+| 15 | Format validation rejection | 16 | FluentValidation | — |
+| 16 | Cancellation rejected after shipping | 11 | `CancelOrderCommand` | Order |
 
-### #1 상품 등록
+### #1 Product Registration
 
-> 4개 입력 값을 동시에 검증한 뒤, 상품명 고유성을 확인하고 상품과 재고를 함께 생성한다.
+> Validates 4 input values simultaneously, checks product name uniqueness, and creates both product and inventory.
 
-**시나리오 1: `CreateProductCommand`** — Product, Inventory
+**Scenario 1: `CreateProductCommand`** — Product, Inventory
 
-- **유효성 검사:** Apply 패턴으로 ProductName, ProductDescription, Money, Quantity 4개 VO를 병렬 검증합니다. 이후 `ProductNameUniqueSpec`으로 이름 고유성을 검사합니다.
-- **성공:** 상품과 Inventory가 함께 생성됩니다.
-- **실패:** VO 검증 실패 시 에러 누적(→ #10), 이름 중복 시 `AlreadyExists`(→ #11).
-- **검증 방법:** Repository Mock 후 FinT 파이프라인 전체 경로를 검증합니다. Apply 에러 누적과 `guard` 단락을 각각 독립 테스트합니다.
+- **Validation:** Apply pattern validates 4 VOs (ProductName, ProductDescription, Money, Quantity) in parallel. Then checks name uniqueness with `ProductNameUniqueSpec`.
+- **Success:** Product and Inventory are created together.
+- **Failure:** Error accumulation on VO validation failure (-> #10), `AlreadyExists` on name duplicate (-> #11).
+- **Verification method:** Verifies the entire FinT pipeline path after Repository mocking. Apply error accumulation and `guard` short-circuit are independently tested.
 
 **`UpdateProductCommand`** — Product
 
-- **유효성 검사:** Apply 패턴으로 VO를 병렬 검증한 뒤, 자기 자신을 제외한 고유성 검사(`ProductNameUniqueExceptSelfSpec`)를 수행합니다.
-- **성공:** 상품 정보가 업데이트됩니다.
-- **실패:** 상품 미존재(→ #12), 이름 중복(→ #11), VO 검증 실패(→ #10), 삭제된 상품은 도메인 규칙에 의해 수정 거부.
-- **검증 방법:** `GetById` 실패, `guard` 단락, Apply 에러 누적을 각각 독립 테스트합니다.
+- **Validation:** Apply pattern validates VOs in parallel, then performs uniqueness check excluding self (`ProductNameUniqueExceptSelfSpec`).
+- **Success:** Product information is updated.
+- **Failure:** Product not found (-> #12), name duplicate (-> #11), VO validation failure (-> #10), deleted product modification rejected by domain rules.
+- **Verification method:** `GetById` failure, `guard` short-circuit, and Apply error accumulation are independently tested.
 
 **`DeleteProductCommand`** — Product
 
-- **성공:** Soft Delete를 수행합니다. 이미 삭제된 상품도 멱등하게 처리됩니다.
-- **실패:** 상품 미존재(→ #12).
-- **검증 방법:** `GetByIdIncludingDeleted` 실패 시 FinT 즉시 단락을 검증합니다.
+- **Success:** Performs soft delete. Already deleted products are handled idempotently.
+- **Failure:** Product not found (-> #12).
+- **Verification method:** Verifies FinT immediate short-circuit on `GetByIdIncludingDeleted` failure.
 
-### #2 고객 생성
+### #2 Customer Creation
 
-> 3개 입력 값을 동시에 검증한 뒤, 이메일 고유성을 확인하고 고객을 생성한다.
+> Validates 3 input values simultaneously, checks email uniqueness, and creates the customer.
 
-**시나리오 2: `CreateCustomerCommand`** — Customer
+**Scenario 2: `CreateCustomerCommand`** — Customer
 
-- **유효성 검사:** Apply 패턴으로 CustomerName, Email, Money(CreditLimit) 3개 VO를 병렬 검증합니다. 이후 `CustomerEmailSpec`으로 이메일 고유성을 검사합니다.
-- **성공:** 고객이 생성됩니다.
-- **실패:** VO 검증 실패 시 에러 누적(→ #10), 이메일 중복 시 `AlreadyExists`(→ #11).
-- **검증 방법:** #1 CreateProduct와 동일한 구조 — Apply 에러 누적, `guard` 단락, FinT 파이프라인 전체 경로를 검증합니다.
+- **Validation:** Apply pattern validates 3 VOs (CustomerName, Email, Money(CreditLimit)) in parallel. Then checks email duplication with `CustomerEmailSpec`.
+- **Success:** Customer is created.
+- **Failure:** Error accumulation on VO validation failure (-> #10), `AlreadyExists` on email duplicate (-> #11).
+- **Verification method:** Same structure as #1 CreateProduct — verifies Apply error accumulation, `guard` short-circuit, and entire FinT pipeline path.
 
-### #3 주문 생성 (신용한도)
+### #3 Order Creation (Credit Limit)
 
-> 상품 가격을 일괄 조회하고, 주문라인을 조립한 뒤, 신용한도를 검증하여 주문을 생성한다.
+> Batch-queries product prices, assembles order lines, validates credit limit, and creates the order.
 
-**시나리오 3: `CreateOrderWithCreditCheckCommand`** — Order, Customer, Product
+**Scenario 3: `CreateOrderWithCreditCheckCommand`** — Order, Customer, Product
 
-- **유효성 검사:** ShippingAddress, Quantity VO를 검증한 뒤, `IProductCatalog.GetPricesForProducts()`로 상품 가격을 일괄 조회합니다. 조회 결과에 없는 상품은 `NotFound`로 거부합니다.
-- **성공:** 주문라인 조립 → `OrderCreditCheckService` 신용한도 통과 → 주문 생성.
-- **실패:** 신용한도 초과(→ #13), 상품 미존재 시 `NotFound`, VO 검증 실패 시 조기 반환.
-- **검증 방법:** Domain Service 에러 전파와 배치 조회 누락을 각각 독립 테스트합니다.
+- **Validation:** Validates ShippingAddress and Quantity VOs, then batch-queries product prices via `IProductCatalog.GetPricesForProducts()`. Products not in the query results are rejected as `NotFound`.
+- **Success:** Order line assembly -> `OrderCreditCheckService` credit limit pass -> order creation.
+- **Failure:** Credit limit exceeded (-> #13), `NotFound` when product does not exist, early return on VO validation failure.
+- **Verification method:** Domain Service error propagation and batch query misses are independently tested.
 
 **`CreateOrderCommand`** — Order, Product
 
-- **유효성 검사:** ShippingAddress, Quantity VO를 검증한 뒤 상품 가격을 일괄 조회합니다.
-- **성공:** 신용한도 검증 없이 주문라인 조립 → 주문 생성.
-- **실패:** 상품 미존재 시 `NotFound`, VO 검증 실패 시 조기 반환.
-- **검증 방법:** 배치 조회 누락 시 `NotFound` 반환을 검증합니다.
+- **Validation:** Validates ShippingAddress and Quantity VOs then batch-queries product prices.
+- **Success:** Order line assembly -> order creation without credit limit verification.
+- **Failure:** `NotFound` when product does not exist, early return on VO validation failure.
+- **Verification method:** Verifies `NotFound` return on batch query miss.
 
-### #4 주문 접수
+### #4 Order Placement
 
-> 상품 가격 일괄 조회 → 재고 차감 → 신용한도 검증 → 주문 생성 + 재고 저장을 하나의 트랜잭션으로 처리한다.
+> Processes batch product price query -> stock deduction -> credit limit verification -> order creation + stock save as a single transaction.
 
-**시나리오 4: `PlaceOrderCommand`** — Order, Customer, Product, Inventory
+**Scenario 4: `PlaceOrderCommand`** — Order, Customer, Product, Inventory
 
-- **유효성 검사:** 상품 존재 여부(배치 조회), 재고 가용성(`Inventory.DeductStock`), 신용한도(`OrderCreditCheckService`)를 순서대로 검증합니다. `IProductCatalog`, `IInventoryRepository`, `ICustomerRepository`, `IOrderRepository` 5개 Port를 조율하는 다중 Aggregate 원자적 쓰기입니다.
-- **성공:** 재고 차감 + 주문 생성 + 재고 저장이 FinT LINQ 체인(Traverse + Bind/Map)으로 합성되어 UoW 트랜잭션 내에서 원자적으로 처리됩니다.
-- **실패:** 재고 부족(→ #14), 신용한도 초과(→ #13), 상품/고객/재고 미존재 시 `NotFound`. 실패 시 트랜잭션 전체가 롤백됩니다.
-- **검증 방법:** 각 실패 지점에서 후속 연산이 실행되지 않음을 Mock 호출 횟수로 검증합니다.
+- **Validation:** Verifies product existence (batch query), stock availability (`Inventory.DeductStock`), and credit limit (`OrderCreditCheckService`) in order. A multi-Aggregate atomic write coordinating 5 Ports: `IProductCatalog`, `IInventoryRepository`, `ICustomerRepository`, `IOrderRepository`.
+- **Success:** Stock deduction + order creation + stock save are composed via FinT LINQ chain (Traverse + Bind/Map) and atomically processed within a UoW transaction.
+- **Failure:** Insufficient stock (-> #14), credit limit exceeded (-> #13), `NotFound` when product/customer/inventory does not exist. The entire transaction is rolled back on failure.
+- **Verification method:** Verifies via mock call counts that subsequent operations are not executed at each failure point.
 
-### #5 상품 검색
+### #5 Product Search
 
-> 이름, 가격 범위 필터와 페이지네이션, 정렬을 조합하여 조회한다.
+> Combines name, price range filters with pagination and sorting to query.
 
-**시나리오 5: `SearchProductsQuery`** — Product
+**Scenario 5: `SearchProductsQuery`** — Product
 
-- **유효성 검사:** `SearchProductsQueryValidator`로 쌍 범위(MinPrice ↔ MaxPrice), 허용 목록(SortBy), 정렬 방향(SortDirection), 빈 문자열(Name)을 형식 검증합니다(→ #15).
-- **성공:** `Specification<Product>.All`에 `ProductNameSpec`, `ProductPriceRangeSpec`을 `&=` 연산자로 합성합니다. `PageRequest`와 `SortExpression`으로 페이지네이션과 정렬을 지원합니다. `IProductQuery` Read Adapter로 Aggregate 재구성 없이 DTO로 프로젝션합니다.
-- **실패:** Validator 에러 시 Usecase 미실행(→ #15).
-- **검증 방법:** 필터 없음, 이름 필터, 가격 범위, 복합 필터, 페이지네이션 등 조합별로 `PagedResult` 메타데이터를 검증합니다.
+- **Validation:** `SearchProductsQueryValidator` format-validates paired range (MinPrice <-> MaxPrice), allowlist (SortBy), sort direction (SortDirection), and empty string (Name) (-> #15).
+- **Success:** Composes `ProductNameSpec` and `ProductPriceRangeSpec` onto `Specification<Product>.All` with `&=` operator. Supports pagination and sorting with `PageRequest` and `SortExpression`. Projects to DTO via `IProductQuery` Read Adapter without Aggregate reconstruction.
+- **Failure:** Usecase not executed on Validator error (-> #15).
+- **Verification method:** Verifies `PagedResult` metadata across combinations of no filter, name filter, price range, composite filter, pagination, etc.
 
-### #6 고객 주문 내역 조회
+### #6 Customer Order History Query
 
-> 고객의 모든 주문과 상품명을 한번에 조회한다.
+> Queries all orders and product names for a customer at once.
 
-**시나리오 6: `GetCustomerOrdersQuery`** — Customer, Order, Product
+**Scenario 6: `GetCustomerOrdersQuery`** — Customer, Order, Product
 
-- **유효성 검사:** `GetCustomerOrdersQueryValidator`로 CustomerId EntityId 형식을 검증합니다(→ #15).
-- **성공:** `ICustomerOrdersQuery` Read Adapter가 Customer → Order → OrderLine → Product 4-table JOIN을 수행하여 `CustomerOrdersDto` 계층 구조로 프로젝션합니다. Aggregate 재구성 없이 단일 조회로 처리합니다.
-- **실패:** 고객 미존재 시 `NotFound`, Validator 에러 시 Usecase 미실행(→ #15).
-- **검증 방법:** 다중 주문/다중 라인 데이터에서 계층 구조가 올바르게 프로젝션되는지 검증합니다.
+- **Validation:** `GetCustomerOrdersQueryValidator` format-validates CustomerId EntityId format (-> #15).
+- **Success:** `ICustomerOrdersQuery` Read Adapter performs Customer -> Order -> OrderLine -> Product 4-table JOIN and projects to `CustomerOrdersDto` hierarchical structure. Processes in a single query without Aggregate reconstruction.
+- **Failure:** `NotFound` when customer does not exist, Usecase not executed on Validator error (-> #15).
+- **Verification method:** Verifies hierarchical structure is correctly projected from multi-order/multi-line data.
 
-### #7 고객 주문 요약 검색
+### #7 Customer Order Summary Search
 
-> 고객별 총 주문 수, 총 지출, 마지막 주문일을 집계하여 조회한다.
+> Aggregates total order count, total spent, and last order date per customer for querying.
 
-**시나리오 7: `SearchCustomerOrderSummaryQuery`** — Customer, Order
+**Scenario 7: `SearchCustomerOrderSummaryQuery`** — Customer, Order
 
-- **유효성 검사:** `SearchCustomerOrderSummaryQueryValidator`로 허용 목록(SortBy), 정렬 방향(SortDirection)을 형식 검증합니다(→ #15).
-- **성공:** `Specification<Customer>.All` 기반 LEFT JOIN + GROUP BY 집계로 총 주문 수, 총 지출, 마지막 주문일을 조회합니다. 주문이 없는 고객도 포함되며 페이지네이션을 지원합니다.
-- **실패:** Validator 에러 시 Usecase 미실행(→ #15).
-- **검증 방법:** 주문이 있는 고객과 없는 고객이 모두 포함되는지, 집계 값과 페이지네이션이 올바른지 검증합니다.
+- **Validation:** `SearchCustomerOrderSummaryQueryValidator` format-validates allowlist (SortBy) and sort direction (SortDirection) (-> #15).
+- **Success:** LEFT JOIN + GROUP BY aggregation based on `Specification<Customer>.All` queries total order count, total spent, and last order date. Includes customers without orders and supports pagination.
+- **Failure:** Usecase not executed on Validator error (-> #15).
+- **Verification method:** Verifies both customers with and without orders are included, and aggregate values and pagination are correct.
 
-### #8 주문 취소 + 재고 복원
+### #8 Order Cancellation + Stock Restoration
 
-> 주문이 취소되면 각 주문 라인의 차감된 재고가 자동으로 복원된다.
+> When an order is cancelled, deducted stock for each order line is automatically restored.
 
-**시나리오 8: `CancelOrderCommand`** — Order
+**Scenario 8: `CancelOrderCommand`** — Order
 
-- **유효성 검사:** 도메인 상태 머신이 `Order.Cancel()`에서 현재 상태를 검증합니다.
-- **성공:** Pending 또는 Confirmed 상태의 주문이 Cancelled로 전환됩니다. `CancelledEvent`가 OrderLines를 포함하여 발생합니다.
-- **실패:** Shipped/Delivered 상태 취소 시 `InvalidOrderStatusTransition`(→ #16), 주문 미존재 시 Repository `Fail`.
-- **검증 방법:** 상태 전이 성공 시 이벤트 발생과, 상태 전이 거부 시 `Update` 미실행을 각각 검증합니다.
+- **Validation:** Domain state machine validates current state in `Order.Cancel()`.
+- **Success:** Order in Pending or Confirmed status transitions to Cancelled. `CancelledEvent` is raised including OrderLines.
+- **Failure:** `InvalidOrderStatusTransition` on Shipped/Delivered status cancellation (-> #16), Repository `Fail` when order does not exist.
+- **Verification method:** Independently verifies event raised on successful state transition, and `Update` not executed on state transition rejection.
 
-**시나리오 9: `RestoreInventoryOnOrderCancelledHandler`** — Inventory
+**Scenario 9: `RestoreInventoryOnOrderCancelledHandler`** — Inventory
 
-`CancelledEvent`에 의해 트리거되는 도메인 이벤트 핸들러입니다.
+A domain event handler triggered by `CancelledEvent`.
 
-- **성공:** 각 OrderLine의 ProductId로 Inventory를 조회하고 `AddStock(quantity)`로 재고를 복원합니다. 개별 주문 라인 단위로 독립 처리합니다.
-- **실패:** 개별 재고 미존재 시 해당 라인만 실패하고 나머지는 계속 처리합니다(부분 실패 허용).
-- **검증 방법:** 복수 라인 중 일부가 실패해도 나머지 라인의 재고가 복원되는지 검증합니다.
+- **Success:** Queries Inventory by ProductId for each OrderLine and restores stock with `AddStock(quantity)`. Processes independently per order line.
+- **Failure:** When individual inventory does not exist, only that line fails and the rest continue processing (partial failure allowed).
+- **Verification method:** Verifies that stock is restored for remaining lines even when some lines fail among multiple lines.
 
-### #9 저재고 감지
+### #9 Low Stock Detection
 
-> 재고 차감 후 남은 수량이 임계값 이하이면 저재고 감지 이벤트가 발생한다.
+> When remaining quantity after stock deduction is at or below the threshold, a low stock detection event is raised.
 
-**시나리오 10: `DetectLowStockOnStockDeductedHandler`** — Inventory
+**Scenario 10: `DetectLowStockOnStockDeductedHandler`** — Inventory
 
-`StockDeductedEvent`에 의해 트리거되는 도메인 이벤트 핸들러입니다.
+A domain event handler triggered by `StockDeductedEvent`.
 
-- **성공:** 현재 Inventory를 조회하고 `CheckLowStock(threshold: 10)`을 호출합니다. 재고가 임계값 미만이면 `LowStockDetectedEvent`가 발생하고, 이상이면 이벤트 없이 종료됩니다.
-- **검증 방법:** 임계값 미만/이상 두 경우에서 `LowStockDetectedEvent` 발생 여부가 달라지는지 검증합니다.
+- **Success:** Queries current Inventory and calls `CheckLowStock(threshold: 10)`. If stock is below threshold, `LowStockDetectedEvent` is raised; if at or above, terminates without event.
+- **Verification method:** Verifies that `LowStockDetectedEvent` presence differs in below/above threshold cases.
 
-### #10 다중 검증 실패
+### #10 Multiple Validation Failure
 
-> 여러 입력 값이 동시에 잘못되면 모든 오류를 한번에 반환한다. 첫 번째 오류에서 멈추지 않는다.
+> When multiple input values are simultaneously wrong, all errors are returned at once. Does not stop at the first error.
 
-**시나리오 12: Apply 패턴 에러 누적** — Product, Customer
+**Scenario 12: Apply Pattern Error Accumulation** — Product, Customer
 
-`CreateProductCommand`와 `CreateCustomerCommand`에서 Apply 패턴이 다중 VO 검증 실패를 병렬로 감지합니다.
+The Apply pattern detects multiple VO validation failures in parallel in `CreateProductCommand` and `CreateCustomerCommand`.
 
-- **성공 경로 없음**(거부 시나리오).
-- **실패:** 빈 이름 + 0원 가격 등 복수 필드가 동시에 잘못되면 모든 에러를 누적하여 반환합니다. Bind 기반이었다면 첫 번째 에러에서 중단되었을 것입니다.
-- **검증 방법:** 에러 개수가 잘못된 필드 수와 일치하는지 확인합니다. Repository Mock 불필요 — Apply 패턴이 IO 이전 단계에서 실패합니다.
+- **No success path** (rejection scenario).
+- **Failure:** When multiple fields are simultaneously wrong (e.g., empty name + 0 price), all errors are accumulated and returned. With Bind-based approach, it would have stopped at the first error.
+- **Verification method:** Confirms that error count matches the number of wrong fields. No Repository mock needed — Apply pattern fails at the pre-IO stage.
 
-### #11 중복 거부
+### #11 Duplicate Rejection
 
-> 이미 존재하는 상품명 또는 이메일로 생성을 시도하면 거부된다.
+> Attempting to create with an already existing product name or email is rejected.
 
-**시나리오 13: `guard` + `AlreadyExists`** — Product, Customer
+**Scenario 13: `guard` + `AlreadyExists`** — Product, Customer
 
-`CreateProductCommand`(상품명)와 `CreateCustomerCommand`(이메일)에서 고유성 위반 시 생성이 거부됩니다.
+Uniqueness violation rejects creation in `CreateProductCommand` (product name) and `CreateCustomerCommand` (email).
 
-- **성공 경로 없음**(거부 시나리오).
-- **실패:** `Exists()` → `true` → `guard(!exists, ...)` 실패 → `ApplicationError.For<T>(new AlreadyExists(), ...)`. FinT 모나드 바인딩에 의해 `Create()`가 실행되지 않습니다.
-- **검증 방법:** `Exists` Mock → `true` 설정 후 `Create` Mock 미설정 — guard 실패가 후속 IO를 차단함을 증명합니다.
+- **No success path** (rejection scenario).
+- **Failure:** `Exists()` -> `true` -> `guard(!exists, ...)` fails -> `ApplicationError.For<T>(new AlreadyExists(), ...)`. FinT monad binding prevents `Create()` from executing.
+- **Verification method:** Set `Exists` mock -> `true` without setting `Create` mock — proves guard failure blocks subsequent IO.
 
-### #12 존재하지 않는 엔티티
+### #12 Non-existent Entity
 
-> 주문라인에 포함된 상품이 존재하지 않으면 거부된다.
+> If a product included in an order line does not exist, it is rejected.
 
-**시나리오 14: Repository `Fail`** — Product
+**Scenario 14: Repository `Fail`** — Product
 
-`UpdateProductCommand`와 `DeleteProductCommand`에서 존재하지 않는 상품을 대상으로 작업하면 거부됩니다.
+Operations targeting non-existent products are rejected in `UpdateProductCommand` and `DeleteProductCommand`.
 
-- **성공 경로 없음**(거부 시나리오).
-- **실패:** `GetById()` 또는 `GetByIdIncludingDeleted()`가 `Fail`을 반환하면 FinT LINQ 합성의 첫 `from`에서 즉시 단락됩니다. 후속 연산이 실행되지 않습니다.
-- **검증 방법:** `GetById` Mock → `FinTFactory.Fail` 설정 후 후속 Mock 미설정 — 첫 `from` 단락이 나머지 체인을 차단함을 증명합니다.
+- **No success path** (rejection scenario).
+- **Failure:** When `GetById()` or `GetByIdIncludingDeleted()` returns `Fail`, the first `from` in the FinT LINQ composition immediately short-circuits. Subsequent operations are not executed.
+- **Verification method:** Set `GetById` mock -> `FinTFactory.Fail` without setting subsequent mocks — proves first `from` short-circuit blocks the rest of the chain.
 
-### #13 신용한도 초과
+### #13 Credit Limit Exceeded
 
-> 신용한도 초과, 재고 부족 등 도메인 규칙 위반이 호출자에게 전달된다.
+> Domain rule violations like credit limit exceeded or insufficient stock are delivered to the caller.
 
-**시나리오 15: `CreateOrderWithCreditCheckCommand`** — Order, Customer
+**Scenario 15: `CreateOrderWithCreditCheckCommand`** — Order, Customer
 
-주문 총액이 고객의 신용한도를 초과하면 주문 생성이 거부됩니다.
+Order creation is rejected when the order total exceeds the customer's credit limit.
 
-- **성공 경로 없음**(거부 시나리오).
-- **실패:** `OrderCreditCheckService`가 `CreditLimitExceeded` 도메인 에러를 반환합니다. FinT 체인에서 주문 `Create()`가 실행되지 않습니다.
-- **검증 방법:** 총액 > 신용한도 조건에서 Domain Service 에러가 호출자까지 전파되는지 검증합니다.
+- **No success path** (rejection scenario).
+- **Failure:** `OrderCreditCheckService` returns `CreditLimitExceeded` domain error. Order `Create()` is not executed in the FinT chain.
+- **Verification method:** Verifies that Domain Service error propagates to the caller under total > credit limit condition.
 
-### #14 재고 부족
+### #14 Insufficient Stock
 
-> 주문 접수 시 재고가 부족하면 주문이 거부되고, 이미 차감된 재고도 롤백된다.
+> If stock is insufficient during order placement, the order is rejected and already deducted stock is rolled back.
 
-**시나리오 15: `PlaceOrderCommand`** — Order, Inventory, Product
+**Scenario 15: `PlaceOrderCommand`** — Order, Inventory, Product
 
-주문 접수 시 요청 수량이 가용 재고를 초과하면 주문이 거부됩니다.
+Order placement is rejected when the requested quantity exceeds available stock.
 
-- **성공 경로 없음**(거부 시나리오).
-- **실패:** `Inventory.DeductStock()`이 `InsufficientStock` 도메인 에러를 반환합니다. FinT 체인에서 주문 생성과 재고 저장이 실행되지 않습니다.
-- **검증 방법:** 요청 수량 > 가용 재고 조건에서 Domain 에러가 전파되고, 미실행 분기의 Mock이 호출되지 않음을 검증합니다.
+- **No success path** (rejection scenario).
+- **Failure:** `Inventory.DeductStock()` returns `InsufficientStock` domain error. Order creation and stock save are not executed in the FinT chain.
+- **Verification method:** Verifies that Domain error propagates under requested quantity > available stock condition, and mocks for unexecuted branches are not called.
 
-### #15 형식 검증 거부
+### #15 Format Validation Rejection
 
-> 형식이 잘못된 요청은 워크플로우에 진입하기 전에 거부된다.
+> Requests with incorrect format are rejected before entering the workflow.
 
-**시나리오 16: FluentValidation**
+**Scenario 16: FluentValidation**
 
-`SearchProductsQueryValidator`, `GetCustomerOrdersQueryValidator`, `SearchCustomerOrderSummaryQueryValidator`가 형식 오류를 감지합니다.
+`SearchProductsQueryValidator`, `GetCustomerOrdersQueryValidator`, and `SearchCustomerOrderSummaryQueryValidator` detect format errors.
 
-- **성공 경로 없음**(거부 시나리오).
-- **실패:** 쌍 범위 불완전(MinPrice만 존재), 허용 목록 외 정렬 필드, 잘못된 정렬 방향, 빈 EntityId 형식 등을 `Validate()`가 감지합니다. `IsValid == false` 시 파이프라인이 Usecase를 호출하지 않습니다.
-- **검증 방법:** `_sut.Validate(request)` 동기 호출로 `IsValid`와 `Errors`를 확인합니다. Usecase Mock 불필요 — 파이프라인이 Validator 단계에서 차단됩니다.
+- **No success path** (rejection scenario).
+- **Failure:** `Validate()` detects incomplete paired range (only MinPrice present), sort field outside allowlist, invalid sort direction, empty EntityId format, etc. When `IsValid == false`, the pipeline does not invoke the Usecase.
+- **Verification method:** Synchronous call `_sut.Validate(request)` to verify `IsValid` and `Errors`. No Usecase mock needed — the pipeline is blocked at the Validator stage.
 
-### #16 배송 후 취소 거부
+### #16 Cancellation Rejected After Shipping
 
-> Shipped 또는 Delivered 상태의 주문을 취소하면 거부된다.
+> Cancelling an order in Shipped or Delivered status is rejected.
 
-**시나리오 11: `CancelOrderCommand`** — Order
+**Scenario 11: `CancelOrderCommand`** — Order
 
-- **성공 경로 없음**(거부 시나리오).
-- **실패:** `Order.Cancel()`이 `InvalidOrderStatusTransition` 도메인 에러를 반환합니다. FinT 모나드 바인딩에 의해 `Update()`가 실행되지 않습니다.
-- **검증 방법:** Shipped/Delivered 상태 Order에서 `Cancel()` 도메인 에러 발생과 `Update` 미실행을 검증합니다.
+- **No success path** (rejection scenario).
+- **Failure:** `Order.Cancel()` returns `InvalidOrderStatusTransition` domain error. FinT monad binding prevents `Update()` from executing.
+- **Verification method:** Verifies `Cancel()` domain error occurrence and `Update` non-execution on Shipped/Delivered status Order.
 
-지금까지 개별 시나리오를 통해 Application 레이어의 동작을 검증했습니다. 이제 CQRS, Apply 패턴, FinT 모나드, Port/Adapter가 함께 작동하여 어떤 가치를 제공하는지 종합적으로 정리합니다.
+Having verified the behavior of the Application layer through individual scenarios, we now provide a comprehensive summary of the value that CQRS, Apply pattern, FinT monad, and Port/Adapter provide when working together.
 
-## CQRS + Apply 패턴의 가치 요약
+## Value Summary of CQRS + Apply Pattern
 
-**Command/Query 독립 최적화.** Command는 `IProductRepository`(Write Port)를 통해 Aggregate를 재구성하고 도메인 불변식을 검증합니다. Query는 `IProductQuery`(Read Port)를 통해 Aggregate 재구성 없이 DTO로 직접 프로젝션하여 불필요한 객체 생성 비용을 제거합니다.
+**Command/Query independent optimization.** Commands reconstruct Aggregates via `IProductRepository` (Write Port) and verify domain invariants. Queries project directly to DTOs via `IProductQuery` (Read Port) without Aggregate reconstruction, eliminating unnecessary object creation costs.
 
-**병렬 검증으로 사용자 경험 개선.** `Validation<Error, T>` + Apply 패턴은 모든 VO 검증을 병렬 수행하여 에러를 누적합니다. 사용자는 한 번의 요청으로 모든 입력 오류를 확인할 수 있습니다. Bind 기반 순차 검증이었다면 첫 번째 에러에서 중단되어 여러 번 재시도가 필요했을 것입니다.
+**User experience improvement through parallel validation.** `Validation<Error, T>` + Apply pattern performs all VO validations in parallel and accumulates errors. Users can confirm all input errors in a single request. With Bind-based sequential validation, it would have stopped at the first error requiring multiple retries.
 
-**`FinT<IO, T>`로 안전한 에러 전파.** Repository 실패, `guard` 실패, Domain Service 에러 모두 `FinT<IO, T>` 모나드 바인딩에 의해 자동으로 전파됩니다. `try-catch` 없이 LINQ 합성만으로 에러 흐름이 제어되며, 실패 시 후속 IO 효과가 실행되지 않는 것이 타입 시스템에 의해 보장됩니다.
+**Safe error propagation with `FinT<IO, T>`.** Repository failures, `guard` failures, and Domain Service errors are all automatically propagated by `FinT<IO, T>` monad binding. Error flow is controlled by LINQ composition alone without `try-catch`, and the type system guarantees that subsequent IO effects are not executed on failure.
 
-**Port/Adapter로 테스트 용이성.** 모든 외부 의존성이 Port 인터페이스(`IProductRepository`, `IProductCatalog`, `IProductQuery`)로 추상화되어 있으므로, NSubstitute로 Mock을 생성하고 `FinTFactory.Succ/Fail`로 성공/실패를 시뮬레이션할 수 있습니다. Domain Service(`OrderCreditCheckService`)는 순수 로직이므로 Mock 없이 실제 인스턴스를 사용합니다.
+**Test ease with Port/Adapter.** All external dependencies are abstracted through Port interfaces (`IProductRepository`, `IProductCatalog`, `IProductQuery`), so mocks can be created with NSubstitute and success/failure simulated with `FinTFactory.Succ/Fail`. Domain Service (`OrderCreditCheckService`) is pure logic, so actual instances are used without mocks.
 
-**도메인 이벤트로 Aggregate 간 느슨한 결합.** Order와 Inventory는 서로를 직접 참조하지 않습니다. `CancelledEvent`가 두 Aggregate를 연결하며, 이벤트 핸들러(`RestoreInventoryOnOrderCancelledHandler`)가 교차 Aggregate 조율을 담당합니다. 새로운 반응(예: 취소 알림 발송)이 필요하면 핸들러를 추가하면 됩니다 — 기존 코드를 수정하지 않습니다.
+**Loose coupling between Aggregates via domain events.** Order and Inventory do not directly reference each other. `CancelledEvent` connects the two Aggregates, and the event handler (`RestoreInventoryOnOrderCancelledHandler`) handles cross-Aggregate coordination. When a new reaction is needed (e.g., cancellation notification), just add a handler — existing code is not modified.
 
-## 아키텍처 테스트
+## Architecture Tests
 
-Application 레이어의 구조적 규칙을 Functorium의 `ArchitectureRules` 프레임워크로 자동 검증합니다.
+The structural rules of the Application layer are automatically verified using Functorium's `ArchitectureRules` framework.
 
-| 테스트 클래스 | 검증 대상 | 핵심 규칙 |
-|-------------|----------|----------|
-| `UsecaseArchitectureRuleTests` | 10 Commands + 11 Queries + 2 EventHandlers | 중첩 `Usecase` 클래스 (sealed, `ICommandUsecase`/`IQueryUsecase`), 선택적 `Validator` 클래스 (sealed, `AbstractValidator`) |
-| `LayerDependencyArchitectureRuleTests` | Domain ↛ Application | Domain 레이어가 Application 레이어에 의존하지 않음 |
+| Test Class | Verification Target | Key Rules |
+|------------|---------------------|-----------|
+| `UsecaseArchitectureRuleTests` | 10 Commands + 11 Queries + 2 EventHandlers | Nested `Usecase` class (sealed, `ICommandUsecase`/`IQueryUsecase`), optional `Validator` class (sealed, `AbstractValidator`) |
+| `LayerDependencyArchitectureRuleTests` | Domain does not depend on Application | Domain layer has no dependency on Application layer |
