@@ -1,40 +1,40 @@
 ---
-title: "Functorium 예제"
+title: "Functorium Samples"
 ---
 
-## 왜 예제가 필요한가
+## Why Samples Are Needed
 
-가이드는 개별 패턴을 설명하고, 튜토리얼은 점진적으로 개념을 학습시킵니다. 그러나 실제 프로젝트에서는 다른 질문에 직면합니다:
+Guides explain individual patterns, and tutorials teach concepts incrementally. However, in real projects you face a different question:
 
-> "비즈니스 요구사항이 주어졌을 때, 어디서부터 시작하여 어떤 순서로 DDD 도메인 모델을 설계하고 구현하는가?"
+> "Given business requirements, where do you start and in what order do you design and implement a DDD domain model?"
 
-가이드나 튜토리얼만으로는 이 질문에 답하기 어렵습니다. 가이드는 "Value Object를 어떻게 만드는가"를 알려주지만, "이 비즈니스 규칙에 Value Object를 써야 하는가, 아니면 다른 전략이 더 적합한가"까지는 다루지 않습니다. 튜토리얼은 단계별로 개념을 쌓아가지만, 실무에서 여러 패턴을 조합하여 하나의 도메인을 완성하는 과정은 보여주지 않습니다.
+Guides and tutorials alone cannot answer this question. A guide tells you "how to create a Value Object," but it does not cover "should you use a Value Object for this business rule, or is a different strategy more appropriate?" Tutorials build concepts step by step, but they do not show the process of combining multiple patterns to complete an entire domain in practice.
 
-## 예제의 역할
+## The Role of Samples
 
-예제는 비즈니스 요구사항에서 출발하여 완성된 도메인 모델에 이르는 **전체 설계-구현 여정**을 하나의 예제로 관통합니다. 개별 패턴의 "how"가 아니라, 패턴들을 조합하는 "when"과 "why"를 보여줍니다.
+Samples follow a **complete design-to-implementation journey** from business requirements to a finished domain model in a single example. Rather than showing the "how" of individual patterns, they demonstrate the "when" and "why" of combining patterns.
 
-## 방법론 개요
+## Methodology Overview
 
-모든 예제는 공통으로 5단계 흐름을 따릅니다:
+All samples follow a common 5-step flow:
 
-1. **비즈니스 요구사항 정의** — 도메인 전문가의 언어로 규칙과 시나리오를 기술합니다. 구현 기술을 언급하지 않습니다.
-2. **불변식 분류와 타입 설계 의사결정** — 규칙을 불변식으로 분류하고, 각 유형에 맞는 타입 전략을 선택합니다.
-3. **코드 설계** — 설계 의사결정을 C#/Functorium 구현 패턴으로 매핑합니다.
-4. **구현** — 패턴에 따라 도메인 모델 코드를 작성합니다.
-5. **검증** — 단위 테스트로 모든 비즈니스 규칙을 검증합니다.
+1. **Define business requirements** — Describe rules and scenarios in the domain expert's language. No implementation technology is mentioned.
+2. **Classify invariants and make type design decisions** — Classify rules as invariants and select a type strategy for each category.
+3. **Code design** — Map design decisions to C#/Functorium implementation patterns.
+4. **Implementation** — Write domain model code following the patterns.
+5. **Verification** — Verify all business rules with unit tests.
 
-## 기대효과
+## Expected Benefits
 
-- **설계 관점** — 잘못된 상태를 컴파일 타임에 차단합니다. "연락 수단 없는 연락처"나 "인증된 이메일이 미인증으로 되돌아간 상태"가 타입 시스템에 의해 불가능합니다.
-- **구현 관점** — 일관된 패턴으로 도메인을 구축합니다. Value Object, Entity, Aggregate Root, Specification, Domain Service가 각각 명확한 역할과 구조를 가집니다.
-- **테스트 관점** — 불변식 기반으로 체계적으로 검증합니다. 비즈니스 규칙과 테스트 케이스가 1:1로 매핑됩니다.
-- **유지보수 관점** — 요구사항 변경 시 컴파일러가 영향 범위를 안내합니다. 타입 변경이 사용처 전체에 전파되어 누락 없이 수정할 수 있습니다.
+- **Design perspective** — Invalid states are blocked at compile time. "A contact without any contact method" or "a verified email reverting to unverified" are made impossible by the type system.
+- **Implementation perspective** — Build the domain with consistent patterns. Value Object, Entity, Aggregate Root, Specification, and Domain Service each have clear roles and structures.
+- **Testing perspective** — Verify systematically based on invariants. Business rules and test cases map 1:1.
+- **Maintenance perspective** — When requirements change, the compiler guides the impact scope. Type changes propagate across all usage sites, ensuring nothing is missed.
 
-## 예제 목록
+## Sample List
 
-| 예제 | 도메인 | 핵심 패턴 |
-|------|--------|----------|
-| [타입으로 도메인 설계하기](./designing-with-types/) | 연락처 관리 | Value Object, Discriminated Union, 상태 기계, Aggregate Root, Domain Service, Specification |
-| [전자상거래 DDD 레이어드 아키텍처](./ecommerce-ddd/) | 전자상거래 주문 처리 | Domain Layer: Aggregate Root, Entity, Value Object, Specification, Domain Service, Domain Event / Application Layer: CQRS, Apply Pattern, Port/Adapter, FinT LINQ |
-| [AI Model Governance](./ai-model-governance/) | EU AI Act 기반 AI 모델 거버넌스 | Domain + Application + Adapter 풀스택 DDD, IO 고급 기능 (Timeout, Retry, Fork, Bracket), OpenTelemetry 3-Pillar 관측성 |
+| Sample | Domain | Key Patterns |
+|--------|--------|-------------|
+| [Designing with Types](./designing-with-types/) | Contact Management | Value Object, Discriminated Union, State Machine, Aggregate Root, Domain Service, Specification |
+| [E-Commerce DDD Layered Architecture](./ecommerce-ddd/) | E-Commerce Order Processing | Domain Layer: Aggregate Root, Entity, Value Object, Specification, Domain Service, Domain Event / Application Layer: CQRS, Apply Pattern, Port/Adapter, FinT LINQ |
+| [AI Model Governance](./ai-model-governance/) | EU AI Act-based AI Model Governance | Domain + Application + Adapter Full-Stack DDD, Advanced IO Features (Timeout, Retry, Fork, Bracket), OpenTelemetry 3-Pillar Observability |

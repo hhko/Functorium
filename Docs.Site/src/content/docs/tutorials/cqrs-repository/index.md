@@ -1,147 +1,147 @@
 ---
-title: "CQRS 리포지토리 패턴"
+title: "CQRS Repository Pattern"
 ---
 
-**C# Functorium으로 Repository와 Query 어댑터를 구현하는 실전 가이드**
-
----
-
-## 이 튜토리얼에 대하여
-
-주문 목록 API에 새 필터가 추가될 때마다 `GetByCustomer`, `GetRecent`, `SearchByKeyword`... Repository 메서드가 끝없이 늘어나고 있나요? 읽기용 프로퍼티가 도메인 모델에 스며들어 쓰기 로직을 오염시키고, 하나를 고치면 다른 쪽이 깨지는 악순환이 반복됩니다.
-
-이 튜토리얼은 그 문제를 **Command와 Query의 책임 분리(CQRS)로** 해결합니다. 도메인 엔티티 기초에서 시작하여 Repository 패턴, Query 어댑터, Usecase 통합까지, **22개의 실습 프로젝트**를 통해 CQRS 패턴의 모든 측면을 단계별로 학습합니다.
-
-> **"조회 조건이 하나 추가될 때마다 Repository 메서드를 하나 추가하고 있다면, 그것은 설계가 아니라 관성입니다."**
-
-### 대상 독자
-
-| 수준 | 대상 | 권장 학습 범위 |
-|------|------|----------------|
-| **초급** | CRUD와 Entity 기본 경험이 있는 개발자 | Part 0~1 |
-| **중급** | Repository 패턴을 이해하고 심화 학습을 원하는 개발자 | Part 2~3 |
-| **고급** | CQRS 아키텍처 설계와 Usecase 통합에 관심 있는 개발자 | Part 4~5 + 부록 |
-
-### 학습 목표
-
-이 튜토리얼을 완료하면 다음을 할 수 있습니다:
-
-1. CQRS 패턴으로 Command(IRepository)와 Query(IQueryPort)를 분리 설계할 수 있습니다
-2. FinT 모나드 합성과 Specification 기반 동적 검색으로 함수형 CQRS 파이프라인을 구성할 수 있습니다
-3. 트랜잭션 파이프라인과 도메인 이벤트 흐름으로 완성도 높은 CQRS 아키텍처를 구축할 수 있습니다
+**A practical guide to implementing Repository and Query adapters with C# Functorium**
 
 ---
 
-### Part 0: 서론
+## About This Tutorial
 
-CQRS가 왜 필요한지, 어떤 문제를 해결하는지부터 시작합니다. 환경 설정을 마치고 CQRS 아키텍처의 전체 그림을 파악합니다.
+Does every new filter for your order list API mean adding yet another Repository method -- `GetByCustomer`, `GetRecent`, `SearchByKeyword`...? Are read-only properties creeping into your domain model, polluting your write logic, and creating a vicious cycle where fixing one thing breaks another?
 
-- [0.1 왜 CQRS인가](Part0-Introduction/01-why-this-tutorial.md)
-- [0.2 환경 설정](Part0-Introduction/02-prerequisites-and-setup.md)
-- [0.3 CQRS 패턴 개요](Part0-Introduction/03-cqrs-pattern-overview.md)
+This tutorial solves that problem with **Command and Query Responsibility Segregation (CQRS)**. Starting from domain entity fundamentals and progressing through Repository patterns, Query adapters, and use-case integration, you will learn every aspect of the CQRS pattern step by step through **22 hands-on projects**.
 
-### Part 1: 도메인 엔티티 기초
+> **"If you are adding a new Repository method every time a new query condition is needed, that is not design -- it is inertia."**
 
-같은 이름의 상품 두 개는 같은 상품일까요? Entity의 정체성(Identity)부터 시작하여 Aggregate Root, 도메인 이벤트, 엔티티 인터페이스까지 CQRS의 기반이 되는 도메인 모델링을 구축합니다.
+### Target Audience
 
-| 장 | 주제 | 핵심 학습 내용 |
-|:---:|------|----------------|
-| 1 | [Entity와 Identity](Part1-Domain-Entity-Foundations/01-Entity-And-Identity/) | Entity\<TId\>, IEntityId, Ulid 기반 ID |
-| 2 | [Aggregate Root](Part1-Domain-Entity-Foundations/02-Aggregate-Root/) | AggregateRoot\<TId\>, 도메인 불변식 |
-| 3 | [도메인 이벤트](Part1-Domain-Entity-Foundations/03-Domain-Events/) | IDomainEvent, AddDomainEvent(), ClearDomainEvents |
-| 4 | [엔티티 인터페이스](Part1-Domain-Entity-Foundations/04-Entity-Interfaces/) | IAuditable, ISoftDeletable |
+| Level | Audience | Recommended Scope |
+|-------|----------|-------------------|
+| **Beginner** | Developers with basic CRUD and Entity experience | Parts 0--1 |
+| **Intermediate** | Developers who understand the Repository pattern and want deeper learning | Parts 2--3 |
+| **Advanced** | Developers interested in CQRS architecture design and use-case integration | Parts 4--5 + Appendix |
 
-### Part 2: Command 측 -- Repository 패턴
+### Learning Objectives
 
-도메인 모델의 불변식을 보장하면서 영속화하려면 어떤 인터페이스가 필요할까요? Aggregate Root 단위의 쓰기 작업을 위한 IRepository 설계부터 InMemory, EF Core 구현, Unit of Work까지 진행합니다.
+After completing this tutorial, you will be able to:
 
-| 장 | 주제 | 핵심 학습 내용 |
-|:---:|------|----------------|
-| 1 | [Repository 인터페이스](Part2-Command-Repository/01-Repository-Interface/) | IRepository\<TAggregate, TId\>, 8개 CRUD, FinT\<IO, T\> |
+1. Design separated Command (IRepository) and Query (IQueryPort) interfaces using the CQRS pattern
+2. Compose functional CQRS pipelines with FinT monad composition and Specification-based dynamic search
+3. Build a robust CQRS architecture with transaction pipelines and domain event flows
+
+---
+
+### Part 0: Introduction
+
+Start with why CQRS is needed and what problems it solves. Set up your environment and get an overview of the CQRS architecture.
+
+- [0.1 Why CQRS](Part0-Introduction/01-why-this-tutorial.md)
+- [0.2 Environment Setup](Part0-Introduction/02-prerequisites-and-setup.md)
+- [0.3 CQRS Pattern Overview](Part0-Introduction/03-cqrs-pattern-overview.md)
+
+### Part 1: Domain Entity Foundations
+
+Are two products with the same name the same product? Starting from Entity identity, build the domain modeling foundation for CQRS -- covering Aggregate Root, domain events, and entity interfaces.
+
+| Ch | Topic | Key Learning |
+|:---:|-------|-------------|
+| 1 | [Entity and Identity](Part1-Domain-Entity-Foundations/01-Entity-And-Identity/) | Entity\<TId\>, IEntityId, Ulid-based ID |
+| 2 | [Aggregate Root](Part1-Domain-Entity-Foundations/02-Aggregate-Root/) | AggregateRoot\<TId\>, domain invariants |
+| 3 | [Domain Events](Part1-Domain-Entity-Foundations/03-Domain-Events/) | IDomainEvent, AddDomainEvent(), ClearDomainEvents |
+| 4 | [Entity Interfaces](Part1-Domain-Entity-Foundations/04-Entity-Interfaces/) | IAuditable, ISoftDeletable |
+
+### Part 2: Command Side -- Repository Pattern
+
+What interface do you need to persist domain models while guaranteeing their invariants? Progress from IRepository design for Aggregate Root-level write operations through InMemory and EF Core implementations to Unit of Work.
+
+| Ch | Topic | Key Learning |
+|:---:|-------|-------------|
+| 1 | [Repository Interface](Part2-Command-Repository/01-Repository-Interface/) | IRepository\<TAggregate, TId\>, 8 CRUD operations, FinT\<IO, T\> |
 | 2 | [InMemory Repository](Part2-Command-Repository/02-InMemory-Repository/) | InMemoryRepositoryBase, ConcurrentDictionary |
 | 3 | [EF Core Repository](Part2-Command-Repository/03-EfCore-Repository/) | EfCoreRepositoryBase, ToDomain/ToModel |
 | 4 | [Unit of Work](Part2-Command-Repository/04-Unit-Of-Work/) | IUnitOfWork, SaveChanges, IUnitOfWorkTransaction |
 
-### Part 3: Query 측 -- 읽기 전용 패턴
+### Part 3: Query Side -- Read-Only Patterns
 
-조회 조건이 늘어날 때마다 메서드를 추가하는 대신, Specification 하나로 동적 검색을 처리합니다. DTO 프로젝션과 3가지 페이지네이션을 통해 읽기 전용 경로를 최적화합니다.
+Instead of adding a new method every time a query condition changes, handle dynamic searches with a single Specification. Optimize the read-only path through DTO projections and three pagination strategies.
 
-| 장 | 주제 | 핵심 학습 내용 |
-|:---:|------|----------------|
-| 1 | [IQueryPort 인터페이스](Part3-Query-Patterns/01-QueryPort-Interface/) | IQueryPort\<TEntity, TDto\>, Search/SearchByCursor/Stream |
-| 2 | [DTO 분리](Part3-Query-Patterns/02-DTO-Separation/) | Command DTO vs Query DTO, 프로젝션 |
-| 3 | [페이지네이션과 정렬](Part3-Query-Patterns/03-Pagination-And-Sorting/) | PageRequest, CursorPageRequest, SortExpression |
-| 4 | [InMemory Query 어댑터](Part3-Query-Patterns/04-InMemory-Query-Adapter/) | InMemoryQueryBase, GetProjectedItems |
-| 5 | [Dapper Query 어댑터](Part3-Query-Patterns/05-Dapper-Query-Adapter/) | DapperQueryBase, SQL 생성 |
+| Ch | Topic | Key Learning |
+|:---:|-------|-------------|
+| 1 | [IQueryPort Interface](Part3-Query-Patterns/01-QueryPort-Interface/) | IQueryPort\<TEntity, TDto\>, Search/SearchByCursor/Stream |
+| 2 | [DTO Separation](Part3-Query-Patterns/02-DTO-Separation/) | Command DTO vs Query DTO, projections |
+| 3 | [Pagination and Sorting](Part3-Query-Patterns/03-Pagination-And-Sorting/) | PageRequest, CursorPageRequest, SortExpression |
+| 4 | [InMemory Query Adapter](Part3-Query-Patterns/04-InMemory-Query-Adapter/) | InMemoryQueryBase, GetProjectedItems |
+| 5 | [Dapper Query Adapter](Part3-Query-Patterns/05-Dapper-Query-Adapter/) | DapperQueryBase, SQL generation |
 
-### Part 4: CQRS Usecase 통합
+### Part 4: CQRS Use-Case Integration
 
-Repository와 Query 어댑터가 준비되었으니, 이제 이들을 Usecase로 통합합니다. Mediator 패턴으로 Command/Query를 디스패치하고, FinT에서 FinResponse로의 변환, 도메인 이벤트 흐름, 트랜잭션 파이프라인까지 CQRS 아키텍처를 완성합니다.
+With Repository and Query adapters ready, it is time to integrate them into use cases. Dispatch Commands/Queries with the Mediator pattern, convert from FinT to FinResponse, wire up domain event flows and transaction pipelines to complete the CQRS architecture.
 
-| 장 | 주제 | 핵심 학습 내용 |
-|:---:|------|----------------|
-| 1 | [Command Usecase](Part4-CQRS-Usecase-Integration/01-Command-Usecase/) | ICommandRequest, ICommandUsecase, FinResponse |
-| 2 | [Query Usecase](Part4-CQRS-Usecase-Integration/02-Query-Usecase/) | IQueryRequest, IQueryUsecase, IQueryPort 연동 |
-| 3 | [FinT -> FinResponse](Part4-CQRS-Usecase-Integration/03-FinT-To-FinResponse/) | ToFinResponse(), LINQ 모나딕 합성 |
-| 4 | [도메인 이벤트 흐름](Part4-CQRS-Usecase-Integration/04-Domain-Event-Flow/) | IDomainEventCollector, Track, 발행 |
-| 5 | [트랜잭션 파이프라인](Part4-CQRS-Usecase-Integration/05-Transaction-Pipeline/) | 트랜잭션 파이프라인, Command 자동커밋 |
+| Ch | Topic | Key Learning |
+|:---:|-------|-------------|
+| 1 | [Command Use Case](Part4-CQRS-Usecase-Integration/01-Command-Usecase/) | ICommandRequest, ICommandUsecase, FinResponse |
+| 2 | [Query Use Case](Part4-CQRS-Usecase-Integration/02-Query-Usecase/) | IQueryRequest, IQueryUsecase, IQueryPort integration |
+| 3 | [FinT -> FinResponse](Part4-CQRS-Usecase-Integration/03-FinT-To-FinResponse/) | ToFinResponse(), LINQ monadic composition |
+| 4 | [Domain Event Flow](Part4-CQRS-Usecase-Integration/04-Domain-Event-Flow/) | IDomainEventCollector, Track, publish |
+| 5 | [Transaction Pipeline](Part4-CQRS-Usecase-Integration/05-Transaction-Pipeline/) | Transaction pipeline, Command auto-commit |
 
-### Part 5: 도메인별 실전 예제
+### Part 5: Domain-Specific Practical Examples
 
-지금까지 배운 CQRS 패턴을 실제 도메인에 적용합니다. 주문, 고객, 재고, 카탈로그 각 도메인에서 Command/Query 분리가 어떤 이점을 가져오는지 직접 확인합니다.
+Apply the CQRS patterns you have learned to real domains. See firsthand the benefits of Command/Query separation in order, customer, inventory, and catalog domains.
 
-| 장 | 주제 | 핵심 학습 내용 |
-|:---:|------|----------------|
-| 1 | [주문 관리](Part5-Domain-Examples/01-Ecommerce-Order-Management/) | 주문 CQRS 완전 예제 |
-| 2 | [고객 관리](Part5-Domain-Examples/02-Customer-Management/) | 고객 관리 + Specification 검색 |
-| 3 | [재고 관리](Part5-Domain-Examples/03-Inventory-Management/) | 재고 + Soft Delete + Cursor 페이징 |
-| 4 | [카탈로그 검색](Part5-Domain-Examples/04-Catalog-Search/) | 3가지 페이지네이션 비교 |
+| Ch | Topic | Key Learning |
+|:---:|-------|-------------|
+| 1 | [Order Management](Part5-Domain-Examples/01-Ecommerce-Order-Management/) | Complete order CQRS example |
+| 2 | [Customer Management](Part5-Domain-Examples/02-Customer-Management/) | Customer management + Specification search |
+| 3 | [Inventory Management](Part5-Domain-Examples/03-Inventory-Management/) | Inventory + Soft Delete + cursor paging |
+| 4 | [Catalog Search](Part5-Domain-Examples/04-Catalog-Search/) | Comparison of 3 pagination approaches |
 
-### [부록](Appendix/)
+### [Appendix](Appendix/)
 
-- [A. CQRS vs 전통적 CRUD](Appendix/A-cqrs-vs-crud.md)
-- [B. Repository vs Query 어댑터 선택 가이드](Appendix/B-repository-vs-query-adapter-guide.md)
-- [C. FinT / FinResponse 타입 참조](Appendix/C-fint-finresponse-reference.md)
-- [D. CQRS 안티패턴](Appendix/D-anti-patterns.md)
-- [E. 용어집](Appendix/E-glossary.md)
-- [F. 참고 자료](Appendix/F-references.md)
-
----
-
-## 핵심 진화 과정
-
-[Part 1] 도메인 엔티티 기초
-1장: Entity와 Identity  →  2장: Aggregate Root  →  3장: 도메인 이벤트  →  4장: 엔티티 인터페이스
-
-[Part 2] Command 측 -- Repository 패턴
-1장: Repository 인터페이스  →  2장: InMemory Repository  →  3장: EF Core Repository  →  4장: Unit of Work
-
-[Part 3] Query 측 -- 읽기 전용 패턴
-1장: IQueryPort 인터페이스  →  2장: DTO 분리  →  3장: 페이지네이션과 정렬  →  4장: InMemory Query 어댑터  →  5장: Dapper Query 어댑터
-
-[Part 4] CQRS Usecase 통합
-1장: Command Usecase  →  2장: Query Usecase  →  3장: FinT -> FinResponse  →  4장: 도메인 이벤트 흐름  →  5장: 트랜잭션 파이프라인
-
-[Part 5] 도메인별 실전 예제
-1장: 주문 관리  →  2장: 고객 관리  →  3장: 재고 관리  →  4장: 카탈로그 검색
+- [A. CQRS vs Traditional CRUD](Appendix/A-cqrs-vs-crud.md)
+- [B. Repository vs Query Adapter Selection Guide](Appendix/B-repository-vs-query-adapter-guide.md)
+- [C. FinT / FinResponse Type Reference](Appendix/C-fint-finresponse-reference.md)
+- [D. CQRS Anti-Patterns](Appendix/D-anti-patterns.md)
+- [E. Glossary](Appendix/E-glossary.md)
+- [F. References](Appendix/F-references.md)
 
 ---
 
-## Functorium CQRS 타입 계층
+## Core Evolution Process
+
+[Part 1] Domain Entity Foundations
+Ch 1: Entity and Identity  ->  Ch 2: Aggregate Root  ->  Ch 3: Domain Events  ->  Ch 4: Entity Interfaces
+
+[Part 2] Command Side -- Repository Pattern
+Ch 1: Repository Interface  ->  Ch 2: InMemory Repository  ->  Ch 3: EF Core Repository  ->  Ch 4: Unit of Work
+
+[Part 3] Query Side -- Read-Only Patterns
+Ch 1: IQueryPort Interface  ->  Ch 2: DTO Separation  ->  Ch 3: Pagination and Sorting  ->  Ch 4: InMemory Query Adapter  ->  Ch 5: Dapper Query Adapter
+
+[Part 4] CQRS Use-Case Integration
+Ch 1: Command Use Case  ->  Ch 2: Query Use Case  ->  Ch 3: FinT -> FinResponse  ->  Ch 4: Domain Event Flow  ->  Ch 5: Transaction Pipeline
+
+[Part 5] Domain-Specific Practical Examples
+Ch 1: Order Management  ->  Ch 2: Customer Management  ->  Ch 3: Inventory Management  ->  Ch 4: Catalog Search
+
+---
+
+## Functorium CQRS Type Hierarchy
 
 ```
-Command 측 (쓰기)
+Command Side (Write)
 ├── IRepository<TAggregate, TId>
 │   ├── Create / GetById / Update / Delete
 │   ├── CreateRange / GetByIds / UpdateRange / DeleteRange
-│   └── 반환 타입: FinT<IO, T>
-├── InMemoryRepositoryBase (ConcurrentDictionary 기반)
-├── EfCoreRepositoryBase (EF Core 기반)
+│   └── Return type: FinT<IO, T>
+├── InMemoryRepositoryBase (ConcurrentDictionary-based)
+├── EfCoreRepositoryBase (EF Core-based)
 └── IUnitOfWork
     ├── SaveChanges() : FinT<IO, Unit>
     └── BeginTransactionAsync() : IUnitOfWorkTransaction
 
-Query 측 (읽기)
+Query Side (Read)
 ├── IQueryPort<TEntity, TDto>
 │   ├── Search(spec, page, sort) : FinT<IO, PagedResult<TDto>>
 │   ├── SearchByCursor(spec, cursor, sort) : FinT<IO, CursorPagedResult<TDto>>
@@ -149,139 +149,139 @@ Query 측 (읽기)
 ├── InMemoryQueryBase
 └── DapperQueryBase
 
-Usecase 통합
+Use-Case Integration
 ├── ICommandRequest<TSuccess> : ICommand<FinResponse<TSuccess>>
 ├── ICommandUsecase<TCommand, TSuccess> : ICommandHandler
 ├── IQueryRequest<TSuccess> : IQuery<FinResponse<TSuccess>>
 ├── IQueryUsecase<TQuery, TSuccess> : IQueryHandler
 └── ToFinResponse() : Fin<A> -> FinResponse<A>
 
-Specification (검색 조건)
-├── Specification<T> (추상 클래스)
+Specification (Search Conditions)
+├── Specification<T> (abstract class)
 │   ├── IsSatisfiedBy(T) : bool
-│   ├── And() / Or() / Not() 조합
-│   ├── & / | / ! 연산자
-│   └── All (항등원, 동적 필터 빌더 시드)
-└── ExpressionSpecification<T> (EF Core/SQL 지원)
+│   ├── And() / Or() / Not() composition
+│   ├── & / | / ! operators
+│   └── All (identity element, dynamic filter builder seed)
+└── ExpressionSpecification<T> (EF Core/SQL support)
     ├── ToExpression() → Expression<Func<T, bool>>
-    └── sealed IsSatisfiedBy (컴파일 + 캐싱)
+    └── sealed IsSatisfiedBy (compilation + caching)
 ```
 
 ---
 
-## 필수 준비물
+## Prerequisites
 
-- .NET 10.0 SDK 이상
-- VS Code + C# Dev Kit 확장
-- C# 기초 문법 지식
-- Entity와 CRUD 기본 개념
+- .NET 10.0 SDK or later
+- VS Code + C# Dev Kit extension
+- Basic knowledge of C# syntax
+- Basic understanding of Entity and CRUD concepts
 
 ---
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 cqrs-repository/
-├── Part0-Introduction/                     # Part 0: 서론
-├── Part1-Domain-Entity-Foundations/         # Part 1: 도메인 엔티티 기초 (4개)
+├── Part0-Introduction/                     # Part 0: Introduction
+├── Part1-Domain-Entity-Foundations/         # Part 1: Domain Entity Foundations (4)
 │   ├── 01-Entity-And-Identity/
 │   ├── 02-Aggregate-Root/
 │   ├── 03-Domain-Events/
 │   └── 04-Entity-Interfaces/
-├── Part2-Command-Repository/               # Part 2: Command 측 Repository (4개)
+├── Part2-Command-Repository/               # Part 2: Command Side Repository (4)
 │   ├── 01-Repository-Interface/
 │   ├── 02-InMemory-Repository/
 │   ├── 03-EfCore-Repository/
 │   └── 04-Unit-Of-Work/
-├── Part3-Query-Patterns/                   # Part 3: Query 측 읽기 전용 (5개)
+├── Part3-Query-Patterns/                   # Part 3: Query Side Read-Only (5)
 │   ├── 01-QueryPort-Interface/
 │   ├── 02-DTO-Separation/
 │   ├── 03-Pagination-And-Sorting/
 │   ├── 04-InMemory-Query-Adapter/
 │   └── 05-Dapper-Query-Adapter/
-├── Part4-CQRS-Usecase-Integration/         # Part 4: Usecase 통합 (5개)
+├── Part4-CQRS-Usecase-Integration/         # Part 4: Use-Case Integration (5)
 │   ├── 01-Command-Usecase/
 │   ├── 02-Query-Usecase/
 │   ├── 03-FinT-To-FinResponse/
 │   ├── 04-Domain-Event-Flow/
 │   └── 05-Transaction-Pipeline/
-├── Part5-Domain-Examples/                  # Part 5: 도메인별 실전 예제 (4개)
+├── Part5-Domain-Examples/                  # Part 5: Domain-Specific Practical Examples (4)
 │   ├── 01-Ecommerce-Order-Management/
 │   ├── 02-Customer-Management/
 │   ├── 03-Inventory-Management/
 │   └── 04-Catalog-Search/
-├── Appendix/                               # 부록
-└── README.md                               # 이 문서
+├── Appendix/                               # Appendix
+└── README.md                               # This document
 ```
 
 ---
 
-## 테스트
+## Testing
 
-모든 Part의 예제 프로젝트에는 단위 테스트가 포함되어 있습니다. 테스트는 [단위 테스트 가이드](../../guides/testing/15a-unit-testing) 규칙을 따릅니다.
+All example projects in every Part include unit tests. Tests follow the [Unit Testing Guide](../../guides/testing/15a-unit-testing) conventions.
 
-### 테스트 실행 방법
+### Running Tests
 
 ```bash
-# 튜토리얼 전체 테스트
+# Test the entire tutorial
 dotnet test --solution Docs.Site/src/content/docs/tutorials/cqrs-repository/cqrs-repository.slnx
 
-# 개별 프로젝트 테스트
+# Test an individual project
 dotnet test --project Docs.Site/src/content/docs/tutorials/cqrs-repository/Part1-Domain-Entity-Foundations/01-Entity-And-Identity/EntityAndIdentity.Tests.Unit
 ```
 
-### 테스트 프로젝트 구조
+### Test Project Structure
 
-**Part 1: 도메인 엔티티 기초** (4개)
+**Part 1: Domain Entity Foundations** (4)
 
-| 장 | 테스트 프로젝트 | 주요 테스트 내용 |
-|:---:|----------------|-----------------|
-| 1 | `EntityAndIdentity.Tests.Unit` | Entity\<TId\>, IEntityId 동작 검증 |
-| 2 | `AggregateRoot.Tests.Unit` | AggregateRoot 불변식 검증 |
-| 3 | `DomainEvents.Tests.Unit` | 도메인 이벤트 추가/삭제 검증 |
-| 4 | `EntityInterfaces.Tests.Unit` | IAuditable, ISoftDeletable 검증 |
+| Ch | Test Project | Key Test Content |
+|:---:|-------------|-----------------|
+| 1 | `EntityAndIdentity.Tests.Unit` | Entity\<TId\>, IEntityId behavior verification |
+| 2 | `AggregateRoot.Tests.Unit` | AggregateRoot invariant verification |
+| 3 | `DomainEvents.Tests.Unit` | Domain event add/remove verification |
+| 4 | `EntityInterfaces.Tests.Unit` | IAuditable, ISoftDeletable verification |
 
-**Part 2: Command 측 -- Repository 패턴** (4개)
+**Part 2: Command Side -- Repository Pattern** (4)
 
-| 장 | 테스트 프로젝트 | 주요 테스트 내용 |
-|:---:|----------------|-----------------|
-| 1 | `RepositoryInterface.Tests.Unit` | IRepository 8개 CRUD 검증 |
-| 2 | `InMemoryRepository.Tests.Unit` | InMemory 구현체 검증 |
-| 3 | `EfCoreRepository.Tests.Unit` | EF Core 구현체 검증 |
-| 4 | `UnitOfWork.Tests.Unit` | SaveChanges, 트랜잭션 검증 |
+| Ch | Test Project | Key Test Content |
+|:---:|-------------|-----------------|
+| 1 | `RepositoryInterface.Tests.Unit` | IRepository 8 CRUD operation verification |
+| 2 | `InMemoryRepository.Tests.Unit` | InMemory implementation verification |
+| 3 | `EfCoreRepository.Tests.Unit` | EF Core implementation verification |
+| 4 | `UnitOfWork.Tests.Unit` | SaveChanges, transaction verification |
 
-**Part 3: Query 측 -- 읽기 전용 패턴** (5개)
+**Part 3: Query Side -- Read-Only Patterns** (5)
 
-| 장 | 테스트 프로젝트 | 주요 테스트 내용 |
-|:---:|----------------|-----------------|
-| 1 | `QueryPortInterface.Tests.Unit` | IQueryPort Search/Stream 검증 |
-| 2 | `DtoSeparation.Tests.Unit` | Command/Query DTO 분리 검증 |
-| 3 | `PaginationAndSorting.Tests.Unit` | 페이지네이션, 정렬 검증 |
-| 4 | `InMemoryQueryAdapter.Tests.Unit` | InMemory Query 어댑터 검증 |
-| 5 | `DapperQueryAdapter.Tests.Unit` | Dapper SQL 생성 검증 |
+| Ch | Test Project | Key Test Content |
+|:---:|-------------|-----------------|
+| 1 | `QueryPortInterface.Tests.Unit` | IQueryPort Search/Stream verification |
+| 2 | `DtoSeparation.Tests.Unit` | Command/Query DTO separation verification |
+| 3 | `PaginationAndSorting.Tests.Unit` | Pagination, sorting verification |
+| 4 | `InMemoryQueryAdapter.Tests.Unit` | InMemory Query adapter verification |
+| 5 | `DapperQueryAdapter.Tests.Unit` | Dapper SQL generation verification |
 
-**Part 4: CQRS Usecase 통합** (5개)
+**Part 4: CQRS Use-Case Integration** (5)
 
-| 장 | 테스트 프로젝트 | 주요 테스트 내용 |
-|:---:|----------------|-----------------|
-| 1 | `CommandUsecase.Tests.Unit` | Command 핸들러 검증 |
-| 2 | `QueryUsecase.Tests.Unit` | Query 핸들러 검증 |
-| 3 | `FinTToFinResponse.Tests.Unit` | ToFinResponse 변환 검증 |
-| 4 | `DomainEventFlow.Tests.Unit` | 이벤트 수집/발행 검증 |
-| 5 | `TransactionPipeline.Tests.Unit` | 트랜잭션 파이프라인 검증 |
+| Ch | Test Project | Key Test Content |
+|:---:|-------------|-----------------|
+| 1 | `CommandUsecase.Tests.Unit` | Command handler verification |
+| 2 | `QueryUsecase.Tests.Unit` | Query handler verification |
+| 3 | `FinTToFinResponse.Tests.Unit` | ToFinResponse conversion verification |
+| 4 | `DomainEventFlow.Tests.Unit` | Event collection/publish verification |
+| 5 | `TransactionPipeline.Tests.Unit` | Transaction pipeline verification |
 
-**Part 5: 도메인별 실전 예제** (4개)
+**Part 5: Domain-Specific Practical Examples** (4)
 
-| 장 | 테스트 프로젝트 | 주요 테스트 내용 |
-|:---:|----------------|-----------------|
-| 1 | `EcommerceOrderManagement.Tests.Unit` | 주문 CQRS 검증 |
-| 2 | `CustomerManagement.Tests.Unit` | 고객 관리 검증 |
-| 3 | `InventoryManagement.Tests.Unit` | 재고 관리 검증 |
-| 4 | `CatalogSearch.Tests.Unit` | 페이지네이션 비교 검증 |
+| Ch | Test Project | Key Test Content |
+|:---:|-------------|-----------------|
+| 1 | `EcommerceOrderManagement.Tests.Unit` | Order CQRS verification |
+| 2 | `CustomerManagement.Tests.Unit` | Customer management verification |
+| 3 | `InventoryManagement.Tests.Unit` | Inventory management verification |
+| 4 | `CatalogSearch.Tests.Unit` | Pagination comparison verification |
 
-### 테스트 명명 규칙
+### Test Naming Convention
 
-T1_T2_T3 명명 규칙을 따릅니다:
+Follows the T1_T2_T3 naming convention:
 
 ```csharp
 // Method_ExpectedResult_Scenario
@@ -299,23 +299,23 @@ public void Create_ReturnsAggregate_WhenValid()
 
 ---
 
-## 소스 코드
+## Source Code
 
-이 튜토리얼의 모든 예제 코드는 Functorium 프로젝트에서 확인할 수 있습니다:
+All example code for this tutorial can be found in the Functorium project:
 
-- Repository 인터페이스: `Src/Functorium/Domains/Repositories/`
-- Repository 구현체: `Src/Functorium.Adapters/Repositories/`
-- Query 어댑터: `Src/Functorium/Applications/Queries/`
-- Usecase 인터페이스: `Src/Functorium/Applications/Usecases/`
-- 트랜잭션 파이프라인: `Src/Functorium/Adapters/Observabilities/Pipelines/`
-- 튜토리얼 프로젝트: `Docs.Site/src/content/docs/tutorials/cqrs-repository/`
+- Repository interfaces: `Src/Functorium/Domains/Repositories/`
+- Repository implementations: `Src/Functorium.Adapters/Repositories/`
+- Query adapters: `Src/Functorium/Applications/Queries/`
+- Use-case interfaces: `Src/Functorium/Applications/Usecases/`
+- Transaction pipeline: `Src/Functorium/Adapters/Observabilities/Pipelines/`
+- Tutorial projects: `Docs.Site/src/content/docs/tutorials/cqrs-repository/`
 
-### 관련 튜토리얼
+### Related Tutorials
 
-이 튜토리얼은 다음 튜토리얼과 함께 학습하면 더 효과적입니다:
+This tutorial is more effective when studied together with:
 
-- **[Specification 패턴으로 도메인 규칙 구현하기](../specification-pattern/)**: Specification 패턴 기초부터 Repository 통합까지. 이 튜토리얼의 IQueryPort, IRepository에서 Specification을 매개변수로 사용합니다.
+- **[Implementing the Specification Pattern for Domain Rules](../specification-pattern/)**: From Specification pattern fundamentals to Repository integration. The IQueryPort and IRepository in this tutorial use Specifications as parameters.
 
 ---
 
-이 튜토리얼은 Functorium 프로젝트의 실제 CQRS 프레임워크 개발 경험을 바탕으로 작성되었습니다.
+This tutorial was written based on real-world experience developing the CQRS framework in the Functorium project.

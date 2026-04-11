@@ -1,91 +1,91 @@
 ---
-title: "비즈니스 요구사항"
+title: "Business Requirements"
 ---
 
-## 배경
+## Background
 
-고객, 파트너, 공급업체 등 다양한 연락처를 체계적으로 관리해야 합니다. 각 연락처에는 정확한 개인 정보와 최소 하나 이상의 유효한 연락 수단이 필요합니다. 연락처는 생성, 수정, 삭제의 수명 주기를 가지며, 이메일 고유성이 보장되어야 합니다. [개요](../)의 Naive 코드가 허용하는 문제를 해결하려면, 먼저 비즈니스 규칙을 명확히 정의해야 합니다.
+Various contacts such as customers, partners, and suppliers need to be managed systematically. Each contact requires accurate personal information and at least one valid contact method. Contacts have a lifecycle of creation, modification, and deletion, and email uniqueness must be guaranteed. To solve the problems that the naive code in the [overview](../) allows, business rules must first be clearly defined.
 
-## 도메인 용어
+## Domain Terminology
 
-| 한글 | 영문 | 정의 |
-|------|------|------|
-| 연락처 | Contact | 관리 대상 연락 정보 단위 |
-| 개인 이름 | PersonalName | 이름(필수), 성(필수), 중간 이니셜(선택)로 구성 |
-| 이메일 주소 | EmailAddress | 표준 이메일 형식의 주소 |
-| 우편 주소 | PostalAddress | 거리 주소, 도시, 주 코드(2자리 대문자), 우편번호(5자리 숫자)로 구성 |
-| 연락 수단 | ContactInfo | 이메일만, 우편 주소만, 또는 둘 다의 조합 |
-| 이메일 인증 | EmailVerification | 이메일의 미인증/인증 상태와 인증 시점 |
-| 메모 | ContactNote | 연락처에 대한 자유 형식 텍스트 (500자 이하) |
+| Term | English | Definition |
+|------|---------|------------|
+| Contact | Contact | A unit of contact information to be managed |
+| Personal Name | PersonalName | Composed of first name (required), last name (required), and middle initial (optional) |
+| Email Address | EmailAddress | An address in standard email format |
+| Postal Address | PostalAddress | Composed of street address, city, state code (2-letter uppercase), and zip code (5-digit numeric) |
+| Contact Method | ContactInfo | A combination of email only, postal address only, or both |
+| Email Verification | EmailVerification | The unverified/verified status of an email and the verification timestamp |
+| Note | ContactNote | Free-form text about a contact (500 characters max) |
 
-## 비즈니스 규칙
+## Business Rules
 
-### 1. 데이터 유효성
+### 1. Data Validity
 
-- 이름과 성은 50자 이하여야 한다
-- 이메일은 표준 이메일 형식이어야 한다
-- 주 코드는 2자리 대문자 알파벳이어야 한다
-- 우편번호는 5자리 숫자여야 한다
-- 메모 내용은 500자 이하여야 한다
+- First name and last name must be 50 characters or fewer
+- Email must be in standard email format
+- State code must be a 2-letter uppercase alphabetic string
+- Zip code must be a 5-digit numeric string
+- Note content must be 500 characters or fewer
 
-### 2. 연락 수단
+### 2. Contact Methods
 
-- 연락처는 최소 하나의 연락 수단을 가져야 한다
-- 가능한 조합: 이메일만, 우편 주소만, 이메일과 우편 주소 모두
-- 연락 수단이 없는 연락처는 존재할 수 없다
+- A contact must have at least one contact method
+- Possible combinations: email only, postal address only, or both email and postal address
+- A contact without any contact method cannot exist
 
-### 3. 이메일 인증
+### 3. Email Verification
 
-- 새로 등록된 이메일은 미인증 상태다
-- 미인증 이메일은 인증할 수 있으며, 인증 시점이 기록된다
-- 인증은 단방향이다 — 인증된 이메일을 미인증으로 되돌릴 수 없다
-- 이미 인증된 이메일을 다시 인증할 수 없다
+- A newly registered email starts in an unverified state
+- An unverified email can be verified, and the verification timestamp is recorded
+- Verification is one-way — a verified email cannot be reverted to unverified
+- An already-verified email cannot be verified again
 
-### 4. 연락처 수명 관리
+### 4. Contact Lifecycle Management
 
-- 연락처의 이름을 변경할 수 있다
-- 연락처를 논리 삭제할 수 있으며, 삭제자와 삭제 시점이 기록된다
-- 삭제된 연락처를 복원할 수 있다
-- 삭제된 연락처에는 이름 변경, 이메일 인증, 메모 추가/제거가 불가하다
-- 삭제와 복원은 멱등하다 — 이미 삭제된 연락처를 다시 삭제해도 부작용이 없다
+- A contact's name can be changed
+- A contact can be soft-deleted, recording the deleter and deletion timestamp
+- A deleted contact can be restored
+- Name changes, email verification, and note addition/removal are not allowed on deleted contacts
+- Deletion and restoration are idempotent — deleting an already-deleted contact has no side effects
 
-### 5. 메모 관리
+### 5. Note Management
 
-- 연락처에 메모를 추가할 수 있다
-- 연락처에서 메모를 제거할 수 있다
-- 메모 내용은 500자 이하여야 한다
-- 삭제된 연락처에는 메모를 추가하거나 제거할 수 없다
-- 존재하지 않는 메모를 제거해도 부작용이 없다 (멱등)
+- Notes can be added to a contact
+- Notes can be removed from a contact
+- Note content must be 500 characters or fewer
+- Notes cannot be added to or removed from a deleted contact
+- Removing a non-existent note has no side effects (idempotent)
 
-### 6. 이메일 고유성
+### 6. Email Uniqueness
 
-- 동일한 이메일을 가진 연락처가 두 개 이상 존재할 수 없다
-- 연락처 업데이트 시 이메일 고유성 검사에서 자기 자신은 제외한다
+- Two or more contacts with the same email cannot exist
+- When updating a contact, the email uniqueness check excludes the contact itself
 
-## 시나리오
+## Scenarios
 
-### 정상 시나리오
+### Normal Scenarios
 
-1. **이메일만 등록 후 인증** — 이름, 성, 이메일을 입력하여 연락처를 생성한다. 이메일은 미인증 상태로 시작한다. 이후 인증을 수행하면 인증 시점이 기록된다.
-2. **우편 주소만 등록** — 이름, 성, 주소, 도시, 주 코드, 우편번호를 입력하여 연락처를 생성한다.
-3. **이메일과 우편 주소 모두 등록** — 이름, 성, 이메일, 주소, 도시, 주 코드, 우편번호를 입력하여 연락처를 생성한다.
-4. **이름 변경** — 생성된 연락처의 이름을 변경한다. 변경 시점이 기록된다.
-5. **메모 추가/제거** — 연락처에 메모를 추가하고, 이후 해당 메모를 제거한다.
-6. **논리 삭제 후 복원** — 연락처를 삭제한다. 삭제자와 시점이 기록된다. 이후 복원하면 삭제 정보가 초기화된다.
+1. **Register with email only, then verify** — Create a contact with first name, last name, and email. The email starts in an unverified state. After verification, the verification timestamp is recorded.
+2. **Register with postal address only** — Create a contact with first name, last name, street address, city, state code, and zip code.
+3. **Register with both email and postal address** — Create a contact with first name, last name, email, street address, city, state code, and zip code.
+4. **Change name** — Change the name of a created contact. The change timestamp is recorded.
+5. **Add/remove notes** — Add a note to a contact, then remove that note.
+6. **Soft delete and restore** — Delete a contact. The deleter and timestamp are recorded. After restoration, the deletion information is cleared.
 
-### 거부 시나리오
+### Rejection Scenarios
 
-7. **연락 수단 없이 등록** — 이름과 성만 입력하고 이메일도 우편 주소도 없으면 등록이 거부된다.
-8. **인증된 이메일 재인증** — 이미 인증된 이메일에 대해 다시 인증을 시도하면 거부된다.
-9. **삭제된 연락처 수정** — 삭제된 연락처에 이름 변경, 이메일 인증, 메모 추가를 시도하면 거부된다.
-10. **중복 이메일 등록** — 이미 다른 연락처가 사용 중인 이메일로 새 연락처를 생성하면 거부된다.
+7. **Register without any contact method** — If only first and last name are provided with no email or postal address, registration is rejected.
+8. **Re-verify a verified email** — Attempting to verify an already-verified email is rejected.
+9. **Modify a deleted contact** — Attempting name changes, email verification, or note additions on a deleted contact is rejected.
+10. **Register with duplicate email** — Creating a new contact with an email already in use by another contact is rejected.
 
-## 존재해서는 안 되는 상태
+## States That Must Not Exist
 
-- 이메일이 없는데 인증된 상태
-- 연락 수단이 하나도 없는 연락처
-- 인증된 이메일이 다시 미인증으로 돌아간 상태
-- 삭제된 연락처에서 행위가 수행된 상태
-- 동일한 이메일을 가진 두 개 이상의 연락처
+- Verified state without an email
+- A contact with no contact methods at all
+- A verified email that has reverted to unverified
+- Actions performed on a deleted contact
+- Two or more contacts with the same email
 
-다음 단계에서는 이 규칙들을 불변식(invariant)으로 분류하고, 각 유형에 맞는 [타입 전략](./01-type-design-decisions/)을 도출합니다.
+In the next step, these rules are classified as invariants and [type strategies](./01-type-design-decisions/) are derived for each category.

@@ -1,254 +1,254 @@
 ---
-title: "명세 패턴"
+title: "Specification Pattern"
 ---
 
-**C# Functorium으로 조합 가능한 비즈니스 규칙을 구현하는 실전 가이드**
-
----
-
-## 이 튜토리얼에 대하여
-
-Repository 메서드가 끝없이 늘어나고, 비즈니스 규칙이 서비스 코드 곳곳에 흩어져 있다면 — Specification 패턴이 해답일 수 있습니다.
-
-이 튜토리얼은 **Specification 패턴을 활용한 도메인 규칙 구현**을 단계별로 학습할 수 있도록 구성된 종합적인 교육 과정입니다. 기본적인 Specification 클래스에서 시작하여 Expression Tree 기반 Repository 통합까지, **18개의 실습 프로젝트**를 통해 Specification 패턴의 모든 측면을 체계적으로 학습할 수 있습니다.
-
-> **단순한 조건 분기에서 시작하여 조합 가능한 비즈니스 규칙으로 진화하는 과정을 함께 경험해보세요.**
-
-### 대상 독자
-
-| 수준 | 대상 | 권장 학습 범위 |
-|------|------|----------------|
-| **초급** | C# 기본 문법을 알고 Specification 패턴에 입문하려는 개발자 | Part 1 |
-| **중급** | 패턴을 이해하고 실전 적용을 원하는 개발자 | Part 1~3 |
-| **고급** | 아키텍처 설계와 도메인 모델링에 관심 있는 개발자 | Part 4~5 + 부록 |
-
-### 학습 목표
-
-이 튜토리얼을 완료하면 다음을 할 수 있습니다:
-
-1. **Specification 패턴의 개념과 필요성**을 이해하고 설명
-2. **And, Or, Not 조합**으로 복합 비즈니스 규칙 구현
-3. **Expression Tree**를 활용한 ORM 호환 Specification 구현
-4. **Repository와 Specification 통합**으로 유연한 데이터 조회
-5. **테스트 전략**을 적용한 신뢰할 수 있는 도메인 규칙 검증
+**A practical guide to implementing composable business rules with C# Functorium**
 
 ---
 
-### Part 0: 서론
+## About This Tutorial
 
-서론에서는 Specification 패턴의 개념과 환경 설정을 다룹니다.
+If your Repository methods keep growing endlessly and business rules are scattered throughout your service code, the Specification pattern may be the answer.
 
-- [0.1 이 튜토리얼을 읽어야 하는 이유](Part0-Introduction/01-why-this-tutorial.md)
-- [0.2 사전 준비와 환경 설정](Part0-Introduction/02-prerequisites-and-setup.md)
-- [0.3 Specification 패턴 개요](Part0-Introduction/03-specification-pattern-overview.md)
+This tutorial is a comprehensive course designed for step-by-step learning of **domain rule implementation using the Specification pattern**. From a basic Specification class to Expression Tree-based Repository integration, you will systematically learn every aspect of the Specification pattern through **18 hands-on projects**.
 
-### Part 1: Specification 기초
+> **Experience the journey from simple conditional branching to composable business rules.**
 
-기본 Specification부터 연산자 오버로딩과 항등원까지 학습합니다.
+### Target Audience
 
-| 장 | 주제 | 핵심 학습 내용 |
-|:---:|------|----------------|
-| 1 | [첫 번째 Specification](Part1-Specification-Basics/01-First-Specification/) | Specification<T> 상속, IsSatisfiedBy 구현 |
-| 2 | [조합](Part1-Specification-Basics/02-Composition/) | And, Or, Not 메서드 조합 |
-| 3 | [연산자](Part1-Specification-Basics/03-Operators/) | &, |, ! 연산자 오버로딩 |
-| 4 | [All 항등원](Part1-Specification-Basics/04-All-Identity/) | All 항등원, 동적 필터 체이닝 |
+| Level | Audience | Recommended Scope |
+|-------|----------|-------------------|
+| **Beginner** | Developers who know basic C# syntax and want to get started with the Specification pattern | Part 1 |
+| **Intermediate** | Developers who understand the pattern and want practical application | Parts 1--3 |
+| **Advanced** | Developers interested in architecture design and domain modeling | Parts 4--5 + Appendix |
+
+### Learning Objectives
+
+After completing this tutorial, you will be able to:
+
+1. Understand and explain the **concept and necessity of the Specification pattern**
+2. Implement complex business rules using **And, Or, Not composition**
+3. Implement ORM-compatible Specifications using **Expression Trees**
+4. Build flexible data retrieval through **Repository and Specification integration**
+5. Apply **testing strategies** for reliable domain rule verification
+
+---
+
+### Part 0: Introduction
+
+The introduction covers the Specification pattern concept and environment setup.
+
+- [0.1 Why You Should Read This Tutorial](Part0-Introduction/01-why-this-tutorial.md)
+- [0.2 Prerequisites and Environment Setup](Part0-Introduction/02-prerequisites-and-setup.md)
+- [0.3 Specification Pattern Overview](Part0-Introduction/03-specification-pattern-overview.md)
+
+### Part 1: Specification Basics
+
+Learn from basic Specifications through operator overloading to the identity element.
+
+| Ch | Topic | Key Learning |
+|:---:|-------|-------------|
+| 1 | [First Specification](Part1-Specification-Basics/01-First-Specification/) | Inheriting Specification<T>, implementing IsSatisfiedBy |
+| 2 | [Composition](Part1-Specification-Basics/02-Composition/) | And, Or, Not method composition |
+| 3 | [Operators](Part1-Specification-Basics/03-Operators/) | &, |, ! operator overloading |
+| 4 | [All Identity Element](Part1-Specification-Basics/04-All-Identity/) | All identity element, dynamic filter chaining |
 
 ### Part 2: Expression Specification
 
-Expression Tree 기반 Specification으로 ORM 통합을 준비합니다.
+Prepare for ORM integration with Expression Tree-based Specifications.
 
-| 장 | 주제 | 핵심 학습 내용 |
-|:---:|------|----------------|
-| 1 | [Expression 소개](Part2-Expression-Specification/01-Expression-Introduction/) | Expression Tree 개념과 필요성 |
-| 2 | [ExpressionSpecification 클래스](Part2-Expression-Specification/02-ExpressionSpecification-Class/) | sealed IsSatisfiedBy, 델리게이트 캐싱 |
-| 3 | [Value Object 변환 패턴](Part2-Expression-Specification/03-ValueObject-Primitive-Conversion/) | Value Object→primitive 변환 |
-| 4 | [Expression Resolver](Part2-Expression-Specification/04-Expression-Resolver/) | TryResolve, 재귀 합성 |
+| Ch | Topic | Key Learning |
+|:---:|-------|-------------|
+| 1 | [Expression Introduction](Part2-Expression-Specification/01-Expression-Introduction/) | Expression Tree concept and necessity |
+| 2 | [ExpressionSpecification Class](Part2-Expression-Specification/02-ExpressionSpecification-Class/) | sealed IsSatisfiedBy, delegate caching |
+| 3 | [Value Object Conversion Pattern](Part2-Expression-Specification/03-ValueObject-Primitive-Conversion/) | Value Object to primitive conversion |
+| 4 | [Expression Resolver](Part2-Expression-Specification/04-Expression-Resolver/) | TryResolve, recursive composition |
 
-### Part 3: Repository 통합
+### Part 3: Repository Integration
 
-Specification과 Repository를 통합하여 유연한 데이터 조회를 구현합니다.
+Integrate Specifications with Repositories for flexible data retrieval.
 
-| 장 | 주제 | 핵심 학습 내용 |
-|:---:|------|----------------|
-| 1 | [Repository와 Specification](Part3-Repository-Integration/01-Repository-With-Specification/) | Repository 메서드 폭발 방지 |
-| 2 | [InMemory 구현](Part3-Repository-Integration/02-InMemory-Implementation/) | InMemory 어댑터 |
+| Ch | Topic | Key Learning |
+|:---:|-------|-------------|
+| 1 | [Repository with Specification](Part3-Repository-Integration/01-Repository-With-Specification/) | Preventing Repository method explosion |
+| 2 | [InMemory Implementation](Part3-Repository-Integration/02-InMemory-Implementation/) | InMemory adapter |
 | 3 | [PropertyMap](Part3-Repository-Integration/03-PropertyMap/) | PropertyMap, TranslatingVisitor |
-| 4 | [EF Core 구현](Part3-Repository-Integration/04-EfCore-Implementation/) | TryResolve + Translate 조합 |
+| 4 | [EF Core Implementation](Part3-Repository-Integration/04-EfCore-Implementation/) | TryResolve + Translate combination |
 
-### Part 4: 실전 패턴
+### Part 4: Real-World Patterns
 
-실전 프로젝트에서 Specification 패턴을 활용하는 방법을 학습합니다.
+Learn how to use the Specification pattern in production projects.
 
-| 장 | 주제 | 핵심 학습 내용 |
-|:---:|------|----------------|
-| 1 | [Usecase 패턴](Part4-Real-World-Patterns/01-Usecase-Patterns/) | CQRS에서 Spec 활용 |
-| 2 | [동적 필터 빌더](Part4-Real-World-Patterns/02-Dynamic-Filter-Builder/) | All 시드 조건부 체이닝 |
-| 3 | [테스트 전략](Part4-Real-World-Patterns/03-Testing-Strategies/) | Spec/조합/Usecase 테스트 |
-| 4 | [아키텍처 규칙](Part4-Real-World-Patterns/04-Architecture-Rules/) | 네이밍, 폴더 배치, ArchUnitNET |
+| Ch | Topic | Key Learning |
+|:---:|-------|-------------|
+| 1 | [Use-Case Patterns](Part4-Real-World-Patterns/01-Usecase-Patterns/) | Using Specs with CQRS |
+| 2 | [Dynamic Filter Builder](Part4-Real-World-Patterns/02-Dynamic-Filter-Builder/) | All seed conditional chaining |
+| 3 | [Testing Strategies](Part4-Real-World-Patterns/03-Testing-Strategies/) | Spec/composition/use-case testing |
+| 4 | [Architecture Rules](Part4-Real-World-Patterns/04-Architecture-Rules/) | Naming, folder placement, ArchUnitNET |
 
-### Part 5: 도메인별 실전 예제
+### Part 5: Domain-Specific Practical Examples
 
-다양한 도메인에서 Specification 패턴을 적용하는 실전 예제입니다.
+Practical examples applying the Specification pattern across various domains.
 
-- [5.1 이커머스 상품 필터링](Part5-Domain-Examples/01-Ecommerce-Product-Filtering/)
-- [5.2 고객 관리](Part5-Domain-Examples/02-Customer-Management/)
+- [5.1 E-Commerce Product Filtering](Part5-Domain-Examples/01-Ecommerce-Product-Filtering/)
+- [5.2 Customer Management](Part5-Domain-Examples/02-Customer-Management/)
 
-### [부록](Appendix/)
+### [Appendix](Appendix/)
 
-- [A. Specification vs 대안 비교](Appendix/A-specification-vs-alternatives.md)
-- [B. 안티패턴](Appendix/B-anti-patterns.md)
-- [C. 용어집](Appendix/C-glossary.md)
-- [D. 참고 자료](Appendix/D-references.md)
+- [A. Specification vs Alternatives Comparison](Appendix/A-specification-vs-alternatives.md)
+- [B. Anti-Patterns](Appendix/B-anti-patterns.md)
+- [C. Glossary](Appendix/C-glossary.md)
+- [D. References](Appendix/D-references.md)
 
 ---
 
-## 핵심 진화 과정
+## Core Evolution Process
 
 ```
 Part 1
-  1장: 첫 번째 Spec     →  2장: And/Or/Not 조합   →  3장: 연산자 오버로딩  →  4장: All 항등원
+  Ch 1: First Spec          ->  Ch 2: And/Or/Not Composition  ->  Ch 3: Operator Overloading  ->  Ch 4: All Identity Element
      ↓
 Part 2
-  1장: Expression 소개  →  2장: ExpressionSpec     →  3장: VO 변환 패턴     →  4장: Expression Resolver
+  Ch 1: Expression Intro    ->  Ch 2: ExpressionSpec           ->  Ch 3: VO Conversion Pattern  ->  Ch 4: Expression Resolver
      ↓
 Part 3
-  1장: Repository 통합  →  2장: InMemory 구현      →  3장: PropertyMap      →  4장: EF Core 구현
+  Ch 1: Repository Integration ->  Ch 2: InMemory Implementation  ->  Ch 3: PropertyMap          ->  Ch 4: EF Core Implementation
      ↓
 Part 4
-  1장: Usecase 패턴     →  2장: 동적 필터          →  3장: 테스트 전략      →  4장: 아키텍처 규칙
+  Ch 1: Use-Case Patterns      ->  Ch 2: Dynamic Filter           ->  Ch 3: Testing Strategies   ->  Ch 4: Architecture Rules
 ```
 
 ---
 
-## Functorium Specification 타입 계층
+## Functorium Specification Type Hierarchy
 
-이 튜토리얼에서 다루는 Functorium의 핵심 타입 계층은 다음과 같습니다.
+The core type hierarchy covered in this tutorial is as follows.
 
 ```
-Specification<T> (추상 클래스)
+Specification<T> (abstract class)
 ├── IsSatisfiedBy(T) : bool
 ├── And() / Or() / Not()
-├── & / | / ! 연산자
-└── All (항등원)
+├── & / | / ! operators
+└── All (identity element)
 
-IExpressionSpec<T> (인터페이스)
+IExpressionSpec<T> (interface)
 └── ToExpression() : Expression<Func<T, bool>>
 
 ExpressionSpecification<T> : Specification<T>, IExpressionSpec<T>
 ├── abstract ToExpression()
-├── sealed IsSatisfiedBy (컴파일 + 캐싱)
-└── AllSpecification<T> (internal, 항등원: _ => true)
+├── sealed IsSatisfiedBy (compilation + caching)
+└── AllSpecification<T> (internal, identity element: _ => true)
 
-SpecificationExpressionResolver (Expression 합성)
-PropertyMap<TEntity, TModel> (Entity→Model 변환)
+SpecificationExpressionResolver (Expression composition)
+PropertyMap<TEntity, TModel> (Entity→Model conversion)
 ```
 
 ---
 
-## 필수 준비물
+## Prerequisites
 
-- .NET 10.0 SDK 이상
-- VS Code + C# Dev Kit 확장
-- C# 기초 문법 지식
+- .NET 10.0 SDK or later
+- VS Code + C# Dev Kit extension
+- Basic knowledge of C# syntax
 
 ---
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 specification-pattern/
-├── Part0-Introduction/              # Part 0: 서론
-├── Part1-Specification-Basics/      # Part 1: Specification 기초 (4개)
+├── Part0-Introduction/              # Part 0: Introduction
+├── Part1-Specification-Basics/      # Part 1: Specification Basics (4)
 │   ├── 01-First-Specification/
 │   ├── 02-Composition/
 │   ├── 03-Operators/
 │   └── 04-All-Identity/
-├── Part2-Expression-Specification/  # Part 2: Expression Specification (4개)
+├── Part2-Expression-Specification/  # Part 2: Expression Specification (4)
 │   ├── 01-Expression-Introduction/
 │   ├── 02-ExpressionSpecification-Class/
 │   ├── 03-ValueObject-Primitive-Conversion/
 │   └── 04-Expression-Resolver/
-├── Part3-Repository-Integration/    # Part 3: Repository 통합 (4개)
+├── Part3-Repository-Integration/    # Part 3: Repository Integration (4)
 │   ├── 01-Repository-With-Specification/
 │   ├── 02-InMemory-Implementation/
 │   ├── 03-PropertyMap/
 │   └── 04-EfCore-Implementation/
-├── Part4-Real-World-Patterns/       # Part 4: 실전 패턴 (4개)
+├── Part4-Real-World-Patterns/       # Part 4: Real-World Patterns (4)
 │   ├── 01-Usecase-Patterns/
 │   ├── 02-Dynamic-Filter-Builder/
 │   ├── 03-Testing-Strategies/
 │   └── 04-Architecture-Rules/
-├── Part5-Domain-Examples/           # Part 5: 도메인별 실전 예제 (2개)
+├── Part5-Domain-Examples/           # Part 5: Domain-Specific Practical Examples (2)
 │   ├── 01-Ecommerce-Product-Filtering/
 │   └── 02-Customer-Management/
-├── Appendix/                        # 부록
-└── index.md                         # 이 문서
+├── Appendix/                        # Appendix
+└── index.md                         # This document
 ```
 
 ---
 
-## 테스트
+## Testing
 
-모든 Part의 예제 프로젝트에는 단위 테스트가 포함되어 있습니다. 테스트는 [단위 테스트 가이드](../../guides/testing/15a-unit-testing.md)를 따릅니다.
+All example projects in every Part include unit tests. Tests follow the [Unit Testing Guide](../../guides/testing/15a-unit-testing.md).
 
-### 테스트 실행 방법
+### Running Tests
 
 ```bash
-# 튜토리얼 전체 빌드
+# Build the entire tutorial
 dotnet build specification-pattern.slnx
 
-# 튜토리얼 전체 테스트
+# Test the entire tutorial
 dotnet test --solution specification-pattern.slnx
 ```
 
-### 테스트 프로젝트 구조
+### Test Project Structure
 
-**Part 1: Specification 기초** (4개)
+**Part 1: Specification Basics** (4)
 
-| 장 | 테스트 프로젝트 | 주요 테스트 내용 |
-|:---:|----------------|-----------------|
-| 1 | `FirstSpecification.Tests.Unit` | IsSatisfiedBy 동작 검증 |
-| 2 | `Composition.Tests.Unit` | And, Or, Not 조합 검증 |
-| 3 | `Operators.Tests.Unit` | 연산자 오버로딩 검증 |
-| 4 | `AllIdentity.Tests.Unit` | All 항등원, 동적 체이닝 |
+| Ch | Test Project | Key Test Content |
+|:---:|-------------|-----------------|
+| 1 | `FirstSpecification.Tests.Unit` | IsSatisfiedBy behavior verification |
+| 2 | `Composition.Tests.Unit` | And, Or, Not composition verification |
+| 3 | `Operators.Tests.Unit` | Operator overloading verification |
+| 4 | `AllIdentity.Tests.Unit` | All identity element, dynamic chaining |
 
-**Part 2: Expression Specification** (4개)
+**Part 2: Expression Specification** (4)
 
-| 장 | 테스트 프로젝트 | 주요 테스트 내용 |
-|:---:|----------------|-----------------|
-| 1 | `ExpressionIntro.Tests.Unit` | Expression Tree 기본 |
-| 2 | `ExpressionSpec.Tests.Unit` | sealed IsSatisfiedBy, 캐싱 |
-| 3 | `ValueObjectConversion.Tests.Unit` | VO→primitive 변환 |
-| 4 | `ExpressionResolver.Tests.Unit` | TryResolve, 재귀 합성 |
+| Ch | Test Project | Key Test Content |
+|:---:|-------------|-----------------|
+| 1 | `ExpressionIntro.Tests.Unit` | Expression Tree basics |
+| 2 | `ExpressionSpec.Tests.Unit` | sealed IsSatisfiedBy, caching |
+| 3 | `ValueObjectConversion.Tests.Unit` | VO to primitive conversion |
+| 4 | `ExpressionResolver.Tests.Unit` | TryResolve, recursive composition |
 
-**Part 3: Repository 통합** (4개)
+**Part 3: Repository Integration** (4)
 
-| 장 | 테스트 프로젝트 | 주요 테스트 내용 |
-|:---:|----------------|-----------------|
-| 1 | `RepositorySpec.Tests.Unit` | Repository + Spec 통합 |
-| 2 | `InMemoryImpl.Tests.Unit` | InMemory 어댑터 |
+| Ch | Test Project | Key Test Content |
+|:---:|-------------|-----------------|
+| 1 | `RepositorySpec.Tests.Unit` | Repository + Spec integration |
+| 2 | `InMemoryImpl.Tests.Unit` | InMemory adapter |
 | 3 | `PropertyMapDemo.Tests.Unit` | PropertyMap, TranslatingVisitor |
 | 4 | `EfCoreImpl.Tests.Unit` | EF Core TryResolve + Translate |
 
-**Part 4: 실전 패턴** (4개)
+**Part 4: Real-World Patterns** (4)
 
-| 장 | 테스트 프로젝트 | 주요 테스트 내용 |
-|:---:|----------------|-----------------|
-| 1 | `UsecasePatterns.Tests.Unit` | CQRS + Spec 활용 |
-| 2 | `DynamicFilter.Tests.Unit` | 동적 필터 체이닝 |
-| 3 | `TestingStrategies.Tests.Unit` | Spec 테스트 패턴 |
-| 4 | `ArchitectureRules.Tests.Unit` | 아키텍처 규칙 검증 |
+| Ch | Test Project | Key Test Content |
+|:---:|-------------|-----------------|
+| 1 | `UsecasePatterns.Tests.Unit` | CQRS + Spec usage |
+| 2 | `DynamicFilter.Tests.Unit` | Dynamic filter chaining |
+| 3 | `TestingStrategies.Tests.Unit` | Spec testing patterns |
+| 4 | `ArchitectureRules.Tests.Unit` | Architecture rule verification |
 
-**Part 5: 도메인별 실전 예제** (2개)
+**Part 5: Domain-Specific Practical Examples** (2)
 
-| 장 | 테스트 프로젝트 | 주요 테스트 내용 |
-|:---:|----------------|-----------------|
-| 1 | `EcommerceFiltering.Tests.Unit` | 상품 필터링 Spec |
-| 2 | `CustomerManagement.Tests.Unit` | 고객 관리 Spec |
+| Ch | Test Project | Key Test Content |
+|:---:|-------------|-----------------|
+| 1 | `EcommerceFiltering.Tests.Unit` | Product filtering Spec |
+| 2 | `CustomerManagement.Tests.Unit` | Customer management Spec |
 
-### 테스트 명명 규칙
+### Test Naming Convention
 
-T1_T2_T3 명명 규칙을 따릅니다:
+Follows the T1_T2_T3 naming convention:
 
 ```csharp
 // Method_ExpectedResult_Scenario
@@ -267,19 +267,19 @@ public void IsSatisfiedBy_ReturnsTrue_WhenProductIsActive()
 
 ---
 
-## 소스 코드
+## Source Code
 
-이 튜토리얼의 모든 예제 코드는 Functorium 프로젝트에서 확인할 수 있습니다:
+All example code for this tutorial can be found in the Functorium project:
 
-- 프레임워크 타입: `Src/Functorium/Domains/Specifications/`
-- 튜토리얼 프로젝트: `Docs.Site/src/content/docs/tutorials/specification-pattern/`
+- Framework types: `Src/Functorium/Domains/Specifications/`
+- Tutorial projects: `Docs.Site/src/content/docs/tutorials/specification-pattern/`
 
-### 관련 튜토리얼
+### Related Tutorials
 
-이 튜토리얼은 다음 튜토리얼과 함께 학습하면 더 효과적입니다:
+This tutorial is more effective when studied together with:
 
-- **[CQRS 패턴으로 Command와 Query 분리하기](../cqrs-repository/)**: CQRS 패턴의 IQueryPort, IRepository에서 Specification을 매개변수로 사용합니다.
+- **[Separating Commands and Queries with the CQRS Pattern](../cqrs-repository/)**: The IQueryPort and IRepository in the CQRS pattern use Specifications as parameters.
 
 ---
 
-이 튜토리얼은 Functorium 프로젝트의 실제 Specification 프레임워크 개발 경험을 바탕으로 작성되었습니다.
+This tutorial was written based on real-world experience developing the Specification framework in the Functorium project.

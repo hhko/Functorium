@@ -1,14 +1,14 @@
 ---
-title: "타입으로 도메인 설계하기"
+title: "Designing with Types"
 ---
 
-## 배경
+## Background
 
-연락처 관리는 단순해 보이지만, 데이터 유효성, 연락 수단 조합, 이메일 인증 생명주기, 수명 관리 등 실제 비즈니스 규칙이 얽히면 naive한 구현으로는 잘못된 상태를 허용하게 됩니다. 이 예제는 Eric Evans의 DDD 전술적 패턴과 Functorium의 타입 시스템을 결합하여, 비즈니스 규칙을 도메인 모델의 구조 자체에 녹여 넣는 과정을 보여줍니다.
+Contact management seems simple, but when real business rules like data validity, contact method combinations, email verification lifecycle, and lifecycle management are involved, a naive implementation allows invalid states. This sample combines Eric Evans's DDD tactical patterns with Functorium's type system to embed business rules directly into the structure of the domain model.
 
-> 이 예제는 Scott Wlaschin의 [Designing with Types](https://fsharpforfunandprofit.com/series/designing-with-types/) 시리즈를 기반으로 합니다. 원본은 F#으로 작성되었으며, C#과 Functorium 프레임워크로 재구현했습니다.
+> This sample is based on Scott Wlaschin's [Designing with Types](https://fsharpforfunandprofit.com/series/designing-with-types/) series. The original was written in F# and has been reimplemented with C# and the Functorium framework.
 
-## Naive 출발점
+## Naive Starting Point
 
 ```csharp
 public class Contact
@@ -25,92 +25,92 @@ public class Contact
 }
 ```
 
-이 구현은 컴파일되고 실행됩니다. 하지만 다음과 같은 잘못된 상태를 허용합니다:
-- 100자 이름, 숫자가 아닌 우편번호 — 유효성 검증이 없습니다
-- 이메일도 주소도 없는 연락처 — 연락 수단 없는 상태가 가능합니다
-- `IsEmailVerified = true`인데 `EmailAddress = null` — 모순 상태입니다
-- 인증된 이메일을 `false`로 되돌림 — 단방향 전이가 보장되지 않습니다
-- 이름과 이메일이 같은 `string` — 실수로 바꿔 넣어도 컴파일러가 침묵합니다
+This implementation compiles and runs. However, it allows the following invalid states:
+- 100-character names, non-numeric zip codes — no validation exists
+- A contact with neither email nor address — a contact without any contact method is possible
+- `IsEmailVerified = true` while `EmailAddress = null` — a contradictory state
+- Reverting a verified email to `false` — one-way transitions are not guaranteed
+- First name and email are both `string` — swapping them by accident goes unnoticed by the compiler
 
-## 목표
+## Goal
 
-위 문제들을 런타임 검증이 아닌 **타입 시스템**으로 원천 차단합니다:
+Block the problems above not through runtime validation but through the **type system**:
 
-- **잘못된 값은 생성할 수 없다** — 제약된 값 객체가 생성 시점에 검증을 완료합니다
-- **잘못된 상태는 표현할 수 없다** — union type이 허용된 조합만 열거합니다
-- **잘못된 전이는 실행할 수 없다** — 타입 안전 상태 머신이 규칙을 강제합니다
-- **실패는 무시할 수 없다** — `Fin<T>` 반환이 호출자에게 처리를 강제합니다
+- **Invalid values cannot be created** — constrained value objects complete validation at creation time
+- **Invalid states cannot be represented** — union types enumerate only the permitted combinations
+- **Invalid transitions cannot execute** — a type-safe state machine enforces the rules
+- **Failures cannot be ignored** — `Fin<T>` return types force callers to handle errors
 
-DDD 전술적 패턴이 규칙 경계를 정의하고, Functorium의 함수형 타입이 이를 컴파일러 수준에서 강제합니다.
+DDD tactical patterns define the rule boundaries, and Functorium's functional types enforce them at the compiler level.
 
-## 5단계 여정
+## 5-Step Journey
 
-이 예제는 naive한 코드에서 완성된 DDD 도메인 모델까지 5단계를 거칩니다. 각 단계가 이전 단계의 산출물을 입력으로 받아 다음 의사결정을 도출합니다.
+This sample goes through 5 steps from naive code to a complete DDD domain model. Each step takes the output of the previous step as input to derive the next decision.
 
-| 단계 | 핵심 질문 | 입력 | 산출물 | 문서 |
-|------|----------|------|--------|------|
-| 1. 요구사항 | 무엇을 해야 하는가? | 도메인 전문가 | 비즈니스 규칙 + 시나리오 | [비즈니스 요구사항](./domain/00-business-requirements/) |
-| 2. 설계 의사결정 | 어떤 불변식을 어떻게 보장하는가? | 비즈니스 규칙 | 불변식 유형별 타입 전략 | [타입 설계 의사결정](./domain/01-type-design-decisions/) |
-| 3. 코드 설계 | 어떤 C#/Functorium 패턴인가? | 타입 전략 | 구현 패턴 매핑 | [코드 설계](./domain/02-code-design/) |
-| 4. 구현 | 코드로 어떻게 실현하는가? | 패턴 매핑 | 도메인 모델 소스 | [구현 결과](./domain/03-implementation-results/) |
-| 5. 검증 | 규칙이 보장되는가? | 비즈니스 규칙 + 코드 | 단위 테스트 (138개) | `Tests/DesigningWithTypes.Tests.Unit/` |
+| Step | Key Question | Input | Output | Document |
+|------|-------------|-------|--------|----------|
+| 1. Requirements | What needs to be done? | Domain expert | Business rules + scenarios | [Business Requirements](./domain/00-business-requirements/) |
+| 2. Design Decisions | How to guarantee each invariant? | Business rules | Type strategy per invariant category | [Type Design Decisions](./domain/01-type-design-decisions/) |
+| 3. Code Design | Which C#/Functorium patterns? | Type strategy | Implementation pattern mapping | [Code Design](./domain/02-code-design/) |
+| 4. Implementation | How to realize in code? | Pattern mapping | Domain model source | [Implementation Results](./domain/03-implementation-results/) |
+| 5. Verification | Are the rules guaranteed? | Business rules + code | Unit tests (138 tests) | `Tests/DesigningWithTypes.Tests.Unit/` |
 
-## 적용된 DDD 빌딩 블록
+## Applied DDD Building Blocks
 
-| DDD 개념 | Functorium 타입 | 적용 |
-|----------|----------------|------|
+| DDD Concept | Functorium Type | Application |
+|-------------|----------------|-------------|
 | Value Object | `SimpleValueObject<T>`, `ValueObject` | String50, EmailAddress, StateCode, ZipCode, PersonalName, PostalAddress, NoteContent |
-| Discriminated Union | `UnionValueObject` + `[UnionType]` (Match/Switch 자동 생성) | ContactInfo, EmailVerificationState |
+| Discriminated Union | `UnionValueObject` + `[UnionType]` (auto-generated Match/Switch) | ContactInfo, EmailVerificationState |
 | Entity | `Entity<TId>` | ContactNote |
 | Aggregate Root | `AggregateRoot<TId>` | Contact |
-| Domain Event | `DomainEvent` | CreatedEvent, NameUpdatedEvent, EmailVerifiedEvent 등 7종 |
+| Domain Event | `DomainEvent` | CreatedEvent, NameUpdatedEvent, EmailVerifiedEvent, etc. (7 types) |
 | Specification | `ExpressionSpecification<T>` | ContactEmailSpec, ContactEmailUniqueSpec |
 | Domain Service | `IDomainService` | ContactEmailCheckService |
 | Repository | `IRepository<T, TId>` | IContactRepository |
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 samples/designing-with-types/
-├── Directory.Build.props              # 빌드 설정 (net10.0, C# 14)
-├── Directory.Build.targets            # 루트 상속 차단
-├── designing-with-types.slnx          # 솔루션 파일
-├── domain/                            # 도메인 설계 문서
-│   ├── 00-business-requirements.md    # 1단계: 비즈니스 요구사항
-│   ├── 01-type-design-decisions.md    # 2단계: 타입 설계 의사결정
-│   ├── 02-code-design.md              # 3단계: 코드 설계
-│   └── 03-implementation-results.md   # 4단계: 구현 결과
+├── Directory.Build.props              # Build settings (net10.0, C# 14)
+├── Directory.Build.targets            # Block root inheritance
+├── designing-with-types.slnx          # Solution file
+├── domain/                            # Domain design documents
+│   ├── 00-business-requirements.md    # Step 1: Business requirements
+│   ├── 01-type-design-decisions.md    # Step 2: Type design decisions
+│   ├── 02-code-design.md              # Step 3: Code design
+│   └── 03-implementation-results.md   # Step 4: Implementation results
 ├── Src/
-│   └── DesigningWithTypes/            # 4단계: 구현
-│       ├── SharedModels/              # 공유 도메인 요소
+│   └── DesigningWithTypes/            # Step 4: Implementation
+│       ├── SharedModels/              # Shared domain elements
 │       │   └── ValueObjects/
-│       │       └── String50.cs        # 최대 50자 문자열 VO (공유 원시 타입)
+│       │       └── String50.cs        # Max 50 char string VO (shared primitive type)
 │       ├── AggregateRoots/
-│       │   └── Contacts/              # Contact Aggregate 경계
+│       │   └── Contacts/              # Contact Aggregate boundary
 │       │       ├── Contact.cs         # Aggregate Root
-│       │       ├── ContactNote.cs     # 자식 엔티티
-│       │       ├── IContactRepository.cs  # Repository 인터페이스
+│       │       ├── ContactNote.cs     # Child entity
+│       │       ├── IContactRepository.cs  # Repository interface
 │       │       ├── ValueObjects/
-│       │       │   ├── Simples/       # 원시 타입 래퍼
+│       │       │   ├── Simples/       # Primitive type wrappers
 │       │       │   │   ├── EmailAddress.cs
 │       │       │   │   ├── StateCode.cs
 │       │       │   │   ├── ZipCode.cs
 │       │       │   │   └── NoteContent.cs
-│       │       │   ├── Composites/    # 여러 VO 조합
+│       │       │   ├── Composites/    # Multiple VO compositions
 │       │       │   │   ├── PersonalName.cs
 │       │       │   │   └── PostalAddress.cs
 │       │       │   └── Unions/        # Discriminated Union
 │       │       │       ├── ContactInfo.cs
 │       │       │       └── EmailVerificationState.cs
-│       │       ├── Specifications/    # 쿼리 사양
+│       │       ├── Specifications/    # Query specifications
 │       │       │   ├── ContactEmailSpec.cs
 │       │       │   └── ContactEmailUniqueSpec.cs
-│       │       └── Services/          # 도메인 서비스
+│       │       └── Services/          # Domain services
 │       │           └── ContactEmailCheckService.cs
-│       └── Program.cs                 # 데모
+│       └── Program.cs                 # Demo
 └── Tests/
-    └── DesigningWithTypes.Tests.Unit/ # 5단계: 검증 (138개 테스트)
-        ├── Architecture/              # 아키텍처 규칙 검증 (24개 테스트)
+    └── DesigningWithTypes.Tests.Unit/ # Step 5: Verification (138 tests)
+        ├── Architecture/              # Architecture rule verification (24 tests)
         │   ├── ArchitectureTestBase.cs
         │   ├── ValueObjectArchitectureRuleTests.cs
         │   ├── EntityArchitectureRuleTests.cs
@@ -133,15 +133,15 @@ samples/designing-with-types/
                 └── ContactEmailCheckServiceTests.cs
 ```
 
-## 실행 방법
+## How to Run
 
 ```bash
-# 빌드
+# Build
 dotnet build Docs.Site/src/content/docs/samples/designing-with-types/designing-with-types.slnx
 
-# 테스트
+# Test
 dotnet test --solution Docs.Site/src/content/docs/samples/designing-with-types/designing-with-types.slnx
 
-# 데모 실행
+# Run demo
 dotnet run --project Docs.Site/src/content/docs/samples/designing-with-types/Src/DesigningWithTypes/DesigningWithTypes.csproj
 ```

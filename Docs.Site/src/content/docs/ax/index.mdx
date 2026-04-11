@@ -1,75 +1,75 @@
 ---
 title: "AX (AI Transformation)"
-description: "DDD 개발과 릴리스 자동화를 AI가 안내하는 Claude Code 플러그인 시스템"
+description: "A Claude Code plugin system where AI guides DDD development and release automation"
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-AX는 Functorium 프레임워크 기반 프로젝트의 개발과 운영을 AI가 안내하는 Claude Code 플러그인 시스템입니다.
+AX is a Claude Code plugin system where AI guides the development and operations of projects based on the Functorium framework.
 
-## 플러그인 구성
+## Plugin Catalog
 
 <CardGrid>
   <Card title="functorium-develop v0.4.0" icon="puzzle">
-    PRD → 아키텍처 → Domain → Application → Adapter → Observability → Test까지 7단계 DDD 개발 워크플로.
+    A 7-stage DDD development workflow: PRD → Architecture → Domain → Application → Adapter → Observability → Test.
 
-    **8 스킬 + 6 에이전트**
+    **8 Skills + 6 Agents**
 
-    [시작하기 →](/Functorium/ax/functorium-develop/)
+    [Get Started →](/Functorium/ax/functorium-develop/)
   </Card>
   <Card title="release-note v1.0.0" icon="document">
-    C# 스크립트 기반 릴리스 노트 자동 생성. 환경 검증 → 데이터 수집 → 분석 → 작성 → 검증 5단계 워크플로.
+    Automated release note generation based on C# scripts. A 5-stage workflow: Environment Verification → Data Collection → Analysis → Writing → Validation.
 
-    **1 스킬 + 1 에이전트**
+    **1 Skill + 1 Agent**
 
-    [시작하기 →](/Functorium/ax/release-note/)
+    [Get Started →](/Functorium/ax/release-note/)
   </Card>
 </CardGrid>
 
-## 왜 필요한가
+## Why AX Is Needed
 
-DDD 프로젝트를 수작업으로 진행하면 반복되는 문제에 직면합니다. 유비쿼터스 언어가 문서에만 남아 코드와 괴리가 생기고, Aggregate 경계를 결정할 때 기준이 모호해지며, 레이어별로 같은 패턴을 반복 작성하면서 일관성이 깨집니다. 릴리스 시점에는 커밋 이력을 수동으로 분류하고 Breaking Changes를 식별하는 작업이 추가됩니다.
+When DDD projects are carried out manually, recurring problems arise. Ubiquitous language remains only in documents, drifting apart from code. Aggregate boundary decisions lack clear criteria. Repeating the same patterns across layers breaks consistency. At release time, manually classifying commit history and identifying Breaking Changes adds extra burden.
 
-AX는 이 문제를 플러그인별 자동화 워크플로로 해결합니다.
+AX solves these problems through per-plugin automated workflows.
 
-### Before: 수작업
+### Before: Manual Work
 
-| 문제 | 증상 |
-|------|------|
-| 패턴 누락 | sealed 누락, private 생성자 빠뜨림, 이벤트 발행 누락 |
-| 문서-코드 괴리 | 유비쿼터스 언어 테이블은 있지만 코드에 반영되지 않음 |
-| 레이어 간 불일관 | Domain의 VO 검증과 Application의 Validator가 서로 다른 규칙 적용 |
-| 릴리스 노트 수작업 | 커밋을 하나씩 분류, Breaking Changes 누락, API 정확성 미검증 |
+| Problem | Symptom |
+|---------|---------|
+| Pattern omissions | Missing `sealed`, forgotten `private` constructors, missing event publication |
+| Document-code drift | Ubiquitous language tables exist but are not reflected in code |
+| Cross-layer inconsistency | Domain VO validation and Application Validator apply different rules |
+| Manual release notes | Classifying commits one by one, missing Breaking Changes, unverified API accuracy |
 
-### After: AX 워크플로
+### After: AX Workflow
 
-| 개선 | 방법 |
-|------|------|
-| 패턴 일관성 | 각 스킬이 Functorium 패턴 카탈로그를 참조하여 코드 생성 |
-| 문서-코드 연결 | 4단계 문서(요구사항 → 타입 설계 → 코드 설계 → 구현)가 코드와 함께 생성 |
-| 레이어 정합 | 이전 단계 문서를 자동으로 읽어 일관된 타입/네이밍 적용 |
-| 릴리스 자동화 | C# 스크립트가 커밋 분석, API 변경 감지, Uber 파일 검증을 자동 수행 |
+| Improvement | Method |
+|-------------|--------|
+| Pattern consistency | Each skill references the Functorium pattern catalog for code generation |
+| Document-code linkage | 4-stage documentation (Requirements → Type Design → Code Design → Implementation) generated alongside code |
+| Cross-layer alignment | Prior stage documents are automatically read to apply consistent types/naming |
+| Release automation | C# scripts automatically perform commit analysis, API change detection, and Uber file validation |
 
-## 시작하기
+## Getting Started
 
-### DDD 개발
+### DDD Development
 
-새 프로젝트라면 PRD부터:
-
-```text
-PRD 작성해줘. AI 모델 거버넌스 플랫폼을 만들고 싶어.
-```
-
-기존 코드가 있다면 리뷰부터:
+For a new project, start from the PRD:
 
 ```text
-현재 도메인 코드를 DDD 관점에서 리뷰해줘.
+Write a PRD. I want to build an AI model governance platform.
 ```
 
-### 릴리스 노트
+If you already have code, start from a review:
 
 ```text
-릴리스 노트 생성해줘 v1.2.0
+Review the current domain code from a DDD perspective.
 ```
 
-각 플러그인의 상세 워크플로와 설치 방법은 해당 플러그인 페이지를 참고하세요.
+### Release Notes
+
+```text
+Generate a release note for v1.2.0
+```
+
+For detailed workflows and installation instructions for each plugin, refer to the respective plugin pages.
