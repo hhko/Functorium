@@ -1,0 +1,243 @@
+---
+title: "프로젝트 구조 소개"
+---
+
+앞 절에서 자동화 시스템의 아키텍처와 데이터 흐름을 살펴보았습니다. 이제 실제 파일과 폴더가 어떻게 배치되어 있는지 안내합니다. 프로젝트 구조를 미리 파악해두면 이후 Part에서 각 파일을 분석할 때 "이 파일이 전체에서 어디에 위치하고, 다른 파일과 어떻게 연결되는지" 자연스럽게 이해할 수 있습니다.
+
+---
+
+## 전체 폴더 구조
+
+```
+Functorium/
+├── .claude/
+│   └── commands/
+│       ├── release-note.md          # 릴리스 노트 생성 Command
+│       └── commit.md                # 커밋 규칙 Command
+│
+├── .release-notes/
+│   ├── TEMPLATE.md                  # 릴리스 노트 템플릿
+│   ├── RELEASE-v1.0.0.md           # 생성된 릴리스 노트
+│   ├── RELEASE-v1.0.0-alpha.1.md   # 프리릴리스 노트
+│   │
+│   └── scripts/
+│       ├── AnalyzeAllComponents.cs  # 컴포넌트 분석 스크립트
+│       ├── ExtractApiChanges.cs     # API 추출 스크립트
+│       ├── ApiGenerator.cs          # Public API 생성기
+│       ├── AnalyzeFolder.cs         # 폴더 분석 (보조)
+│       │
+│       ├── config/
+│       │   └── component-priority.json  # 분석 대상 설정
+│       │
+│       ├── docs/
+│       │   ├── README.md            # 전체 프로세스 개요
+│       │   ├── phase1-setup.md      # Phase 1 상세 가이드
+│       │   ├── phase2-collection.md # Phase 2 상세 가이드
+│       │   ├── phase3-analysis.md   # Phase 3 상세 가이드
+│       │   ├── phase4-writing.md    # Phase 4 상세 가이드
+│       │   └── phase5-validation.md # Phase 5 상세 가이드
+│       │
+│       └── .analysis-output/        # 분석 결과 (자동 생성)
+│           ├── Functorium.md
+│           ├── Functorium.Testing.md
+│           ├── analysis-summary.md
+│           ├── api-changes-build-current/
+│           │   ├── all-api-changes.txt
+│           │   └── api-changes-diff.txt
+│           └── work/
+│               ├── phase3-*.md
+│               ├── phase4-*.md
+│               └── phase5-*.md
+│
+└── Src/
+    ├── Functorium/                  # 핵심 라이브러리
+    │   ├── .api/
+    │   │   └── Functorium.cs        # Public API 정의
+    │   └── *.cs
+    │
+    └── Functorium.Testing/          # 테스트 라이브러리
+        ├── .api/
+        │   └── Functorium.Testing.cs
+        └── *.cs
+```
+
+크게 세 영역으로 나뉩니다. `.claude/commands/`는 자동화의 진입점, `.release-notes/`는 자동화의 본체, `Src/`는 분석 대상입니다. 각 영역을 차례로 살펴봅시다.
+
+---
+
+## .claude/commands/ -- 자동화의 진입점
+
+이 폴더에는 Claude Code에서 슬래시 명령어로 실행할 수 있는 사용자 정의 Command가 저장됩니다.
+
+**release-note.md가** 핵심입니다. YAML 프론트매터에 제목, 설명, 인자 힌트를 정의하고, 본문에서 5-Phase 워크플로우 전체를 기술합니다. Claude Code는 이 문서를 읽고 각 Phase를 순서대로 실행합니다. 즉, release-note.md가 `.release-notes/scripts/docs/` 아래의 Phase 문서들을 참조하고, Phase 문서들이 `.release-notes/scripts/` 아래의 C# 스크립트 실행을 지시하는 연쇄 구조입니다.
+
+```yaml
+---
+title: RELEASE-NOTES
+description: 릴리스 노트를 자동으로 생성합니다
+argument-hint: "<version> 릴리스 버전 (예: v1.2.0)"
+---
+```
+
+**commit.md는** 커밋 메시지 규칙을 정의합니다. Conventional Commits 형식을 따르며, `feat`, `fix`, `docs`, `refactor`, `test`, `chore` 등의 타입과 Topic 파라미터 활용법을 담고 있습니다. 이 규칙에 따라 작성된 일관된 커밋 히스토리가 있어야 Phase 3의 자동 분류가 정확하게 동작합니다.
+
+---
+
+## .release-notes/ -- 자동화의 본체
+
+릴리스 노트 관련 모든 파일이 모여 있는 폴더입니다. 템플릿, 생성된 릴리스 노트, C# 스크립트, Phase 가이드, 분석 결과까지 모두 이 안에 있습니다.
+
+### TEMPLATE.md와 RELEASE-*.md
+
+`TEMPLATE.md`는 릴리스 노트의 뼈대입니다. `{VERSION}`과 `{DATE}` 두 가지 Placeholder를 포함하며, 개요, Breaking Changes, 새로운 기능, 버그 수정, API 변경사항, 설치 방법의 표준 섹션 구조를 정의합니다.
+
+```markdown
+---
+title: Functorium {VERSION} 새로운 기능
+description: Functorium {VERSION}의 새로운 기능을 알아봅니다.
+date: {DATE}
+---
+
+# Functorium Release {VERSION}
+
+## 개요
+## Breaking Changes
+## 새로운 기능
+## 버그 수정
+## API 변경사항
+## 설치
+```
+
+Phase 4에서 이 템플릿을 복사하고, Placeholder를 실제 값으로 교체하고, 분석 결과로 각 섹션을 채우면 `RELEASE-v1.0.0.md`와 같은 최종 릴리스 노트가 만들어집니다. 정규 릴리스(`RELEASE-v1.0.0.md`), 알파(`RELEASE-v1.0.0-alpha.1.md`), 베타(`RELEASE-v1.0.0-beta.1.md`) 등 버전별로 별도 파일로 관리됩니다.
+
+### scripts/ -- C# 스크립트와 설정
+
+C# 스크립트 파일들은 각각 담당하는 Phase가 있습니다.
+
+| 파일 | 역할 | 사용 Phase |
+|------|------|-----------|
+| AnalyzeAllComponents.cs | 모든 컴포넌트 변경사항 분석 | Phase 2 |
+| ExtractApiChanges.cs | Public API 추출 및 Uber 파일 생성 | Phase 2 |
+| ApiGenerator.cs | DLL에서 Public API 추출 | Phase 2 (보조) |
+| AnalyzeFolder.cs | 단일 폴더 분석 | 독립 실행 |
+
+`config/component-priority.json`은 어떤 컴포넌트를 어떤 순서로 분석할지 정의합니다. 배열 순서가 곧 분석 우선순위이며 Glob 패턴도 지원합니다.
+
+```json
+{
+  "analysis_priorities": [
+    "Src/Functorium",
+    "Src/Functorium.Testing",
+    "Docs",
+    ".release-notes/scripts"
+  ]
+}
+```
+
+`docs/` 폴더에는 5개 Phase 각각의 상세 가이드 문서(`phase1-setup.md`~`phase5-validation.md`)와 전체 프로세스 개요(`README.md`)가 들어 있습니다. Claude Code가 release-note.md를 실행할 때, 해당 Phase의 가이드 문서를 참조하여 구체적인 작업을 수행합니다.
+
+### .analysis-output/ -- 분석 결과 (자동 생성)
+
+스크립트를 실행하면 이 폴더에 결과가 자동으로 생성됩니다. 루트에는 컴포넌트별 분석 결과(`Functorium.md`, `Functorium.Testing.md`)와 전체 요약(`analysis-summary.md`)이 놓입니다. `api-changes-build-current/` 하위에는 전체 Public API를 모은 Uber 파일(`all-api-changes.txt`), API 변경사항 diff(`api-changes-diff.txt`), API 요약, 분석된 프로젝트 목록이 있습니다. `work/` 하위에는 Phase 3~5의 중간 결과물(`phase3-commit-analysis.md`, `phase4-draft.md`, `phase5-validation-report.md` 등)이 저장됩니다.
+
+---
+
+## Src/ 폴더의 .api 서브폴더
+
+각 프로젝트 폴더 안에 `.api` 서브폴더가 있습니다. PublicApiGenerator로 생성된 Public API 정의 파일이 저장되는 곳입니다.
+
+```csharp
+//------------------------------------------------------------------------------
+// <auto-generated>
+//     This code was generated by PublicApiGenerator.
+//     Assembly: Functorium
+//     Generated at: 2025-12-20
+// </auto-generated>
+//------------------------------------------------------------------------------
+
+namespace Functorium.Abstractions.Errors
+{
+    public static class ErrorCodeFactory
+    {
+        public static Error Create(string errorCode, ...) { }
+        public static Error CreateFromException(string errorCode, ...) { }
+    }
+}
+```
+
+이 파일이 Git으로 추적되기 때문에 세 가지 용도로 활용됩니다. 첫째, API 변경 이력을 Git 히스토리로 관리할 수 있습니다. 둘째, 이전 버전과 현재 버전의 `.api` 파일을 Git diff로 비교하여 Breaking Changes를 자동 감지합니다. 셋째, 릴리스 노트 작성 시 기재된 API가 실제로 존재하는지 검증하는 기준 자료가 됩니다.
+
+---
+
+## 파일 간 연관성
+
+지금까지 소개한 파일들이 실제 실행 시 어떤 순서로 연결되는지 정리해보겠습니다. 사용자가 `/release-note v1.2.0` 명령을 입력하면, 다음과 같은 흐름으로 데이터가 흘러갑니다.
+
+```
+사용자 입력
+    │
+    │  /release-note v1.2.0
+    ▼
+┌───────────────────────────┐
+│ .claude/commands/         │
+│ release-note.md           │──── 워크플로우 정의
+└─────────────┬─────────────┘
+              │
+              │  Phase 문서 참조
+              ▼
+┌───────────────────────────┐
+│ .release-notes/scripts/   │
+│ docs/*.md                 │──── 각 Phase 상세 가이드
+└─────────────┬─────────────┘
+              │
+              │  C# 스크립트 실행
+              ▼
+┌───────────────────────────┐
+│ .release-notes/scripts/   │
+│ *.cs                      │──── 데이터 수집/분석
+└─────────────┬─────────────┘
+              │
+              │  분석 결과 저장
+              ▼
+┌───────────────────────────┐
+│ .analysis-output/         │──── 분석 결과
+│ ├── *.md                  │
+│ └── work/*.md             │
+└─────────────┬─────────────┘
+              │
+              │  템플릿 사용
+              ▼
+┌───────────────────────────┐
+│ .release-notes/           │
+│ TEMPLATE.md               │──── 릴리스 노트 템플릿
+└─────────────┬─────────────┘
+              │
+              │  최종 문서 생성
+              ▼
+┌───────────────────────────┐
+│ .release-notes/           │
+│ RELEASE-v1.2.0.md         │──── 최종 릴리스 노트
+└───────────────────────────┘
+```
+
+Command가 Phase 문서를 참조하고, Phase 문서가 C# 스크립트를 실행하고, 스크립트가 분석 결과를 저장하고, 분석 결과와 템플릿을 조합하여 최종 릴리스 노트를 생성하는 일련의 흐름입니다. 각 폴더의 수정 빈도를 보면, Command와 Phase 가이드, 템플릿은 한 번 설정하면 거의 변경하지 않고, C# 스크립트는 필요에 따라 개선하며, 릴리스 노트와 분석 결과는 매 릴리스마다 새로 생성됩니다.
+
+## FAQ
+
+### Q1: `.api` 서브폴더의 파일은 누가 생성하고 관리하나요?
+**A**: `Src/Functorium/.api/Functorium.cs` 같은 파일은 `ApiGenerator.cs` 스크립트가 PublicApiGenerator 라이브러리를 사용해 DLL에서 자동 생성합니다. 이 파일을 Git으로 추적하여 API 변경 이력을 관리하고, Git diff로 Breaking Changes를 자동 감지하는 데 활용합니다.
+
+### Q2: `.analysis-output/` 폴더는 Git에 커밋해야 하나요?
+**A**: 선택사항입니다. 릴리스 노트 파일(`.release-notes/RELEASE-*.md`)은 반드시 커밋하지만, `.analysis-output/`은 재생성 가능한 중간 결과물이므로 프로젝트 정책에 따라 결정합니다. 분석 결과를 히스토리로 남기고 싶다면 함께 커밋할 수 있습니다.
+
+### Q3: Command 파일과 Phase 가이드 문서, C# 스크립트가 모두 다른 폴더에 있는 이유는 무엇인가요?
+**A**: **관심사 분리 원칙을** 따른 것입니다. `.claude/commands/`는 Claude Code의 진입점, `.release-notes/scripts/docs/`는 Phase별 상세 지침, `.release-notes/scripts/*.cs`는 실행 코드입니다. 이렇게 분리하면 Command는 전체 흐름만 정의하고, 상세 지침과 코드는 독립적으로 수정할 수 있습니다.
+
+### Q4: 이 프로젝트 구조를 다른 프로젝트에 복사할 때 어떤 파일이 필수인가요?
+**A**: 최소한 `.claude/commands/release-note.md`, `.release-notes/TEMPLATE.md`, `.release-notes/scripts/` 폴더(C# 스크립트, Phase 가이드, 설정 파일)가 필요합니다. `Src/` 폴더의 `.api` 서브폴더는 첫 API 추출 시 자동으로 생성됩니다.
+
+---
+
+프로젝트 구조를 파악했으니, 다음 Part에서는 개발 환경을 설정하고 필요한 도구를 설치해보겠습니다.
+
+[1.1 .NET 10 설치](../Part1-Setup/01-dotnet10-setup.md)
