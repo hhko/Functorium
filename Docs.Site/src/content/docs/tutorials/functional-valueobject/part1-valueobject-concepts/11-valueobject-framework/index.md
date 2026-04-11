@@ -4,47 +4,47 @@ title: "ValueObject Framework"
 
 ## Overview
 
-value object를 만들 때마다 동등성 비교, 해시코드, operator overloading을 반복 구현해야 한다면? 베이스 클래스 기반 프레임워크를 도입하면 이 보일러플레이트를 제거하고, `IComparable<T>` 지원 유무와 값의 복잡성에 따라 6가지 타입을 효율적으로 구현할 수 있습니다.
+If you have to repeatedly implement equality comparison, hash codes, and operator overloading every time you create a value object, a base class framework eliminates this boilerplate and lets you efficiently implement 6 types based on whether `IComparable<T>` is supported and the complexity of the value.
 
 ## Learning Objectives
 
-Upon completing this chapter, you will be able to.
+Upon completing this chapter, you will be able to:
 
-1. `IComparable<T>` 지원 유무와 값의 복잡성에 따른 **6가지 프레임워크 타입의 선택 기준을** 설명할 수 있습니다
-2. 6가지 베이스 클래스를 활용하여 **프레임워크 기반 value object를** 구현할 수 있습니다
-3. 동등성 비교, 해시코드, operator overloading 등 공통 기능의 **중복 코드를** 프레임워크로 제거할 수 있습니다
+1. Explain the **selection criteria for the 6 framework types** based on `IComparable<T>` support and value complexity
+2. Implement **framework-based value objects** using the 6 base classes
+3. Use the framework to eliminate **duplicate code** for common functionality such as equality comparison, hash codes, and operator overloading
 
 ## Why Is This Needed?
 
-Previous step `ValidatedValueCreation`에서는 3가지 메서드 패턴(Create, CreateFromValidated, Validate)을 통해 value object 생성을 구현했습니다. 그러나 실제 프로젝트에서 다양한 타입의 value object를 구현하면 공통 기능(동등성 비교, 해시코드, operator overloading)을 매번 새로 작성해야 했고, 구현자마다 다른 방식을 사용하여 일관성이 떨어졌으며, 공통 기능에 변경이 필요할 때 모든 value object를 개별 수정해야 했습니다.
+In the previous step `ValidatedValueCreation`, we implemented value object creation through the three-method pattern (Create, CreateFromValidated, Validate). However, when implementing various types of value objects in real projects, common functionality (equality comparison, hash codes, operator overloading) had to be written from scratch each time, consistency suffered because each implementer used different approaches, and when changes to common functionality were needed, every value object had to be modified individually.
 
-**베이스 클래스 기반 프레임워크는** 이 공통 기능을 한 곳에서 관리하여 개발 생산성과 코드 품질을 동시에 향상시킵니다.
+**A base class framework** manages this common functionality in one place, improving both development productivity and code quality simultaneously.
 
 ## Core Concepts
 
-### 단일value object: `SimpleValueObject<T>` / `ComparableSimpleValueObject<T>`
+### Simple Value Objects: `SimpleValueObject<T>` / `ComparableSimpleValueObject<T>`
 
-단일 값을 래핑하는 value object는 비교 필요 여부에 따라 베이스 클래스를 선택합니다. `SimpleValueObject<T>`는 동등성 비교와 해시코드만 제공하고, `ComparableSimpleValueObject<T>`는 `IComparable<T>`와 비교 연산자까지 자동 provides.
+Value objects that wrap a single value choose their base class based on whether comparison is needed. `SimpleValueObject<T>` provides only equality comparison and hash codes, while `ComparableSimpleValueObject<T>` automatically provides `IComparable<T>` and comparison operators as well.
 
-Previous approach과 프레임워크 방식의 코드량 차이가 극명합니다.
+The difference in code volume between the previous approach and the framework approach is stark.
 
 ```csharp
-// 이전 방식 (모든 공통 기능을 직접 구현)
+// Previous approach (implementing all common functionality manually)
 public sealed class Denominator : IEquatable<Denominator>, IComparable<Denominator>
 {
     private readonly int _value;
 
     public Denominator(int value) => _value = value;
 
-    public override bool Equals(object? obj) => /* 복잡한 동등성 비교 로직 */
-    public override int GetHashCode() => /* 해시코드 생성 로직 */
-    public static bool operator ==(Denominator? left, Denominator? right) => /* 연산자 오버로딩 */
-    public int CompareTo(Denominator? other) => /* 비교 로직 */
-    public static bool operator <(Denominator? left, Denominator? right) => /* 비교 연산자 */
-    // ... 수십 줄의 보일러플레이트 코드
+    public override bool Equals(object? obj) => /* complex equality comparison logic */
+    public override int GetHashCode() => /* hash code generation logic */
+    public static bool operator ==(Denominator? left, Denominator? right) => /* operator overloading */
+    public int CompareTo(Denominator? other) => /* comparison logic */
+    public static bool operator <(Denominator? left, Denominator? right) => /* comparison operator */
+    // ... dozens of lines of boilerplate code
 }
 
-// 개선된 방식 (프레임워크 활용)
+// Improved approach (using the framework)
 public sealed class Denominator : ComparableSimpleValueObject<int>
 {
     private Denominator(int value) : base(value) { }
@@ -53,23 +53,23 @@ public sealed class Denominator : ComparableSimpleValueObject<int>
         CreateFromValidation(Validate(value), validValue => new Denominator(validValue));
 
     public static Validation<Error, int> Validate(int value) =>
-        value == 0 ? Error.New("0은 허용되지 않습니다") : value;
+        value == 0 ? Error.New("Zero is not allowed") : value;
 
-    // 모든 비교 기능이 자동으로 제공됨!
-    // - IComparable<Denominator> 구현
-    // - 모든 비교 연산자 오버로딩 (<, <=, >, >=)
-    // - GetComparableEqualityComponents() 자동 구현
+    // All comparison functionality is automatically provided!
+    // - IComparable<Denominator> implementation
+    // - All comparison operator overloading (<, <=, >, >=)
+    // - GetComparableEqualityComponents() automatic implementation
 }
 ```
 
-### 복합value object: `ValueObject` / `ComparableValueObject`
+### Composite Value Objects: `ValueObject` / `ComparableValueObject`
 
-여러 값을 조합하는 복합 객체는 `GetEqualityComponents()` 또는 `GetComparableEqualityComponents()` 메서드를 오버라이드하여 동등성/비교에 사용할 구성 요소를 defines. 프레임워크가 `Equals`, `GetHashCode`, `==`, `!=` 연산자를 자동 구현하며, `ComparableValueObject`는 `IComparable<T>`와 비교 연산자도 추가로 provides.
+Composite objects that combine multiple values define which components are used for equality/comparison by overriding `GetEqualityComponents()` or `GetComparableEqualityComponents()`. The framework automatically implements `Equals`, `GetHashCode`, `==`, `!=` operators, and `ComparableValueObject` additionally provides `IComparable<T>` and comparison operators.
 
-비교가 불필요한 복합value object(Coordinate)와 비교가 필요한 복합value object(DateRange)의 구현 패턴입니다.
+Implementation patterns for a non-comparable composite value object (Coordinate) and a comparable composite value object (DateRange).
 
 ```csharp
-// 비교 불가능한 복합값 객체
+// Non-comparable composite value object
 public sealed class Coordinate : ValueObject
 {
     public int X { get; }
@@ -94,7 +94,7 @@ public sealed class Coordinate : ValueObject
     }
 }
 
-// 비교 가능한 복합값 객체
+// Comparable composite value object
 public sealed class DateRange : ComparableValueObject
 {
     public DateTime StartDate { get; }
@@ -113,7 +113,7 @@ public sealed class DateRange : ComparableValueObject
 
     public static Validation<Error, (DateTime StartDate, DateTime EndDate)> Validate(DateTime startDate, DateTime endDate) =>
         startDate >= endDate
-            ? Error.New("시작일은 종료일보다 이전이어야 합니다")
+            ? Error.New("Start date must be before end date")
             : (StartDate: startDate, EndDate: endDate);
 
     protected override IEnumerable<IComparable> GetComparableEqualityComponents()
@@ -124,139 +124,139 @@ public sealed class DateRange : ComparableValueObject
 }
 ```
 
-### 프레임워크 구조 (Framework Architecture)
+### Framework Architecture
 
-`IComparable<T>` 지원 유무와 값의 복잡성에 따라 계층적으로 추상화되어 있습니다.
+The framework is hierarchically abstracted based on `IComparable<T>` support and value complexity.
 
 ```csharp
-// 계층적 프레임워크 구조
-AbstractValueObject (기본 동등성, 해시코드)
-    ↓
-ValueObject (Validation 조합 헬퍼)
-    ↓                       ↓
+// Hierarchical framework structure
+AbstractValueObject (basic equality, hash code)
+    |
+ValueObject (Validation composition helper)
+    |                       |
 SimpleValueObject<T>    ComparableValueObject
-                            ↓
-                        ComparableSimpleValueObject<T> (완전한 기능)
+                            |
+                        ComparableSimpleValueObject<T> (full functionality)
 ```
 
-Next chapter에서는 기존 C# enum의 한계를 극복하는 타입 안전한 enumeration을 SmartEnum으로 implements.
+In the next chapter, we implement type-safe enumerations using SmartEnum to overcome the limitations of existing C# enums.
 
 ## Practical Guidelines
 
 ### Expected Output
 ```
-=== ValueObject Framework 데모 ===
+=== ValueObject Framework Demo ===
 
-1. 비교 불가능한 primitive 값 객체 - BinaryData (바이너리 데이터)
-   SimpleValueObject<byte[]> 기반으로 간결하게 구현
+1. Non-comparable primitive value object - BinaryData (binary data)
+   Concisely implemented based on SimpleValueObject<byte[]>
 
-   ✅ 성공: BinaryData[5 bytes: 48 65 6C 6C 6F]
-   ❌ 실패: 바이너리 데이터는 비어있을 수 없습니다
-   ❌ 실패: 바이너리 데이터는 비어있을 수 없습니다
-   📊 동등성: BinaryData[3 bytes: 01 02 03] == BinaryData[3 bytes: 01 02 03] = True
-   📊 동등성: BinaryData[3 bytes: 01 02 03] == BinaryData[3 bytes: 04 05 06] = False
-   📊 비교 기능: 제공되지 않음 (의도적으로)
+   Success: BinaryData[5 bytes: 48 65 6C 6C 6F]
+   Failure: Binary data cannot be empty
+   Failure: Binary data cannot be empty
+   Equality: BinaryData[3 bytes: 01 02 03] == BinaryData[3 bytes: 01 02 03] = True
+   Equality: BinaryData[3 bytes: 01 02 03] == BinaryData[3 bytes: 04 05 06] = False
+   Comparison: Not provided (intentionally)
 
-2. 비교 가능한 primitive 값 객체 - Denominator (0이 아닌 정수)
-   ComparableSimpleValueObject<int> 기반으로 간결하게 구현
+2. Comparable primitive value object - Denominator (non-zero integer)
+   Concisely implemented based on ComparableSimpleValueObject<int>
 
-   ✅ 성공: 5 (값: 5)
-   ❌ 실패: 0은 허용되지 않습니다
-   📊 비교: 3 < 5 = True
-   📊 비교: 3 == 5 = False
+   Success: 5 (value: 5)
+   Failure: Zero is not allowed
+   Comparison: 3 < 5 = True
+   Comparison: 3 == 5 = False
 
-3. 비교 불가능한 복합 primitive 값 객체 - Coordinate (X, Y 좌표)
-   ValueObject 기반으로 2개 Validation 조합
+3. Non-comparable composite primitive value object - Coordinate (X, Y coordinates)
+   Based on ValueObject, combining 2 Validations
 
-   ✅ 성공: (100, 200) (X: 100, Y: 200)
-   ❌ 실패: X 좌표는 0-1000 범위여야 합니다
-   ❌ 실패: Y 좌표는 0-1000 범위여야 합니다
-   📊 동등성: (100, 200) == (100, 200) = True
+   Success: (100, 200) (X: 100, Y: 200)
+   Failure: X coordinate must be in the range 0-1000
+   Failure: Y coordinate must be in the range 0-1000
+   Equality: (100, 200) == (100, 200) = True
 
-4. 비교 가능한 복합 primitive 값 객체 - DateRange (날짜 범위)
-   ComparableValueObject 기반으로 2개 DateTime 조합
+4. Comparable composite primitive value object - DateRange (date range)
+   Based on ComparableValueObject, combining 2 DateTime values
 
-   ✅ 성공: 2024-01-01 ~ 2024-12-31 (시작: 2024-01-01, 종료: 2024-12-31)
-   ❌ 실패: 시작일은 종료일보다 이전이어야 합니다
-   ❌ 실패: 시작일은 종료일보다 이전이어야 합니다
-   📊 비교: 2024-01-01 ~ 2024-06-30 < 2024-07-01 ~ 2024-12-31 = True
-   📊 비교: 2024-01-01 ~ 2024-06-30 == 2024-01-01 ~ 2024-06-30 = True
-   📊 비교: 2024-01-01 ~ 2024-06-30 > 2024-07-01 ~ 2024-12-31 = False
+   Success: 2024-01-01 ~ 2024-12-31 (start: 2024-01-01, end: 2024-12-31)
+   Failure: Start date must be before end date
+   Failure: Start date must be before end date
+   Comparison: 2024-01-01 ~ 2024-06-30 < 2024-07-01 ~ 2024-12-31 = True
+   Comparison: 2024-01-01 ~ 2024-06-30 == 2024-01-01 ~ 2024-06-30 = True
+   Comparison: 2024-01-01 ~ 2024-06-30 > 2024-07-01 ~ 2024-12-31 = False
 
-5. 비교 불가능한 복합 값 객체 - Address (Street, City, PostalCode)
-   ValueObject 기반으로 3개 값 객체 조합
+5. Non-comparable composite value object - Address (Street, City, PostalCode)
+   Based on ValueObject, combining 3 value objects
 
-   ✅ 성공: 123 Main St, Seoul 12345
-   ❌ 실패: 거리명은 비어있을 수 없습니다
-   ❌ 실패: 우편번호는 5자리 숫자여야 합니다
+   Success: 123 Main St, Seoul 12345
+   Failure: Street name cannot be empty
+   Failure: Postal code must be 5 digits
 
-   📋 개별 값 객체 생성:
-   - Street: Broadway (값: Broadway)
-   - City: New York (값: New York)
-   - PostalCode: 10001 (값: 10001)
+   Individual value object creation:
+   - Street: Broadway (value: Broadway)
+   - City: New York (value: New York)
+   - PostalCode: 10001 (value: 10001)
    - Address from validated: Broadway, New York 10001
 
-6. 비교 가능한 복합 값 객체 - PriceRange (Price, Currency)
-   ComparableValueObject 기반으로 Price, Currency 값 객체 조합
+6. Comparable composite value object - PriceRange (Price, Currency)
+   Based on ComparableValueObject, combining Price and Currency value objects
 
-   ✅ 성공: KRW10,000 ~ KRW50,000 (최소: ₩10,000, 최대: ₩50,000, 통화: KRW)
-   ❌ 실패: 가격은 0 이상이어야 합니다
-   ❌ 실패: 가격은 0 이상이어야 합니다
-   ❌ 실패: 최소 가격은 최대 가격보다 작거나 같아야 합니다
-   ❌ 실패: 통화 코드는 3자리여야 합니다
+   Success: KRW10,000 ~ KRW50,000 (min: 10,000, max: 50,000, currency: KRW)
+   Failure: Price must be 0 or greater
+   Failure: Price must be 0 or greater
+   Failure: Minimum price must be less than or equal to maximum price
+   Failure: Currency code must be 3 characters
 
-   📊 비교 기능 데모:
+   Comparison demo:
    - KRW10,000 ~ KRW30,000 < KRW20,000 ~ KRW40,000 = True
    - KRW10,000 ~ KRW30,000 == KRW10,000 ~ KRW30,000 = True
    - KRW10,000 ~ KRW30,000 > KRW20,000 ~ KRW40,000 = False
 
-   📋 개별 값 객체 생성:
-   - MinPrice: ₩15,000 (값: 15000)
-   - MaxPrice: ₩35,000 (값: 35000)
-   - Currency: USD (값: USD)
+   Individual value object creation:
+   - MinPrice: 15,000 (value: 15000)
+   - MaxPrice: 35,000 (value: 35000)
+   - Currency: USD (value: USD)
    - PriceRange from validated: USD15,000 ~ USD35,000
 ```
 
 ### Key Implementation Points
-1. **프레임워크 상속**: 적절한 베이스 클래스 선택 (`SimpleValueObject<T>` vs `ValueObject`)
-2. **CreateFromValidation 활용**: 프레임워크의 헬퍼 메서드를 통한 간결한 factory method 구현
-3. **validation logic 분리**: `Validate` 메서드로 검증 책임을 명확히 분리
+1. **Framework inheritance**: Selecting the appropriate base class (`SimpleValueObject<T>` vs `ValueObject`)
+2. **Using CreateFromValidation**: Concise factory method implementation through the framework's helper methods
+3. **Validation logic separation**: Clearly separating validation responsibility into the `Validate` method
 
 ## Project Description
 
 ### Project Structure
 ```
-ValueObjectFramework/                       # 메인 프로젝트
-├── Program.cs                              # 6가지 시나리오 데모
-├── ValueObjects/                           # 값 객체 구현
-│   ├── Comparable/                         # 비교 가능한 값 객체
-│   │   ├── PrimitiveValueObjects/          # 비교 가능한 primitive 값 객체
-│   │   │   └── Denominator.cs              # 0이 아닌 정수
-│   │   ├── CompositePrimitiveValueObjects/ # 비교 가능한 복합 primitive 값 객체
-│   │   │   └── DateRange.cs                # 날짜 범위
-│   │   └── CompositeValueObjects/          # 비교 가능한 복합 값 객체
-│   │       ├── Price.cs                    # 가격
-│   │       ├── Currency.cs                 # 통화
-│   │       └── PriceRange.cs               # 가격 범위 (Price, Currency 조합)
-│   └── ComparableNot/                      # 비교 불가능한 값 객체
-│       ├── PrimitiveValueObjects/          # 비교 불가능한 primitive 값 객체
-│       │   └── BinaryData.cs               # 바이너리 데이터
-│       ├── CompositePrimitiveValueObjects/ # 비교 불가능한 복합 primitive 값 객체
-│       │   └── Coordinate.cs               # X, Y 좌표
-│       └── CompositeValueObjects/          # 비교 불가능한 복합 값 객체
-│           ├── Address.cs                  # 주소 (Street, City, PostalCode)
-│           ├── Street.cs                   # 거리명
-│           ├── City.cs                     # 도시명
-│           └── PostalCode.cs               # 우편번호
-├── ValueObjectFramework.csproj             # 프로젝트 파일
-└── README.md                               # 메인 문서
+ValueObjectFramework/                       # Main project
+├── Program.cs                              # 6 scenario demo
+├── ValueObjects/                           # Value object implementation
+│   ├── Comparable/                         # Comparable value objects
+│   │   ├── PrimitiveValueObjects/          # Comparable primitive value objects
+│   │   │   └── Denominator.cs              # Non-zero integer
+│   │   ├── CompositePrimitiveValueObjects/ # Comparable composite primitive value objects
+│   │   │   └── DateRange.cs                # Date range
+│   │   └── CompositeValueObjects/          # Comparable composite value objects
+│   │       ├── Price.cs                    # Price
+│   │       ├── Currency.cs                 # Currency
+│   │       └── PriceRange.cs               # Price range (Price + Currency combination)
+│   └── ComparableNot/                      # Non-comparable value objects
+│       ├── PrimitiveValueObjects/          # Non-comparable primitive value objects
+│       │   └── BinaryData.cs               # Binary data
+│       ├── CompositePrimitiveValueObjects/ # Non-comparable composite primitive value objects
+│       │   └── Coordinate.cs               # X, Y coordinates
+│       └── CompositeValueObjects/          # Non-comparable composite value objects
+│           ├── Address.cs                  # Address (Street, City, PostalCode)
+│           ├── Street.cs                   # Street name
+│           ├── City.cs                     # City name
+│           └── PostalCode.cs               # Postal code
+├── ValueObjectFramework.csproj             # Project file
+└── README.md                               # Main documentation
 ```
 
 ### Core Code
 
-#### 1. BinaryData -- `SimpleValueObject<T>` 프레임워크
+#### 1. BinaryData -- `SimpleValueObject<T>` Framework
 
-비교가 불필요한 단일value object입니다. `byte[]`는 `IComparable`을 구현하지 않으므로 `SimpleValueObject`를 uses.
+A single value object where comparison is not needed. Since `byte[]` does not implement `IComparable`, `SimpleValueObject` is used.
 
 ```csharp
 public sealed class BinaryData : SimpleValueObject<byte[]>
@@ -270,12 +270,12 @@ public sealed class BinaryData : SimpleValueObject<byte[]>
 
     public static Validation<Error, byte[]> Validate(byte[] value) =>
         value == null || value.Length == 0
-            ? Error.New("바이너리 데이터는 비어있을 수 없습니다")
+            ? Error.New("Binary data cannot be empty")
             : value;
 
     protected override IEnumerable<object> GetEqualityComponents()
     {
-        // byte[] 배열의 내용을 비교하기 위해 문자열로 변환
+        // Convert to string for content comparison of byte[] arrays
         yield return Convert.ToBase64String(Value);
     }
 
@@ -284,9 +284,9 @@ public sealed class BinaryData : SimpleValueObject<byte[]>
 }
 ```
 
-#### 2. Address -- ValueObject 프레임워크
+#### 2. Address -- ValueObject Framework
 
-여러 value object(Street, City, PostalCode)를 조합한 복합 value object입니다.
+A composite value object combining multiple value objects (Street, City, PostalCode).
 
 ```csharp
 public sealed class Address : ValueObject
@@ -330,9 +330,9 @@ public sealed class Address : ValueObject
 }
 ```
 
-#### 3. PriceRange -- ComparableValueObject 프레임워크
+#### 3. PriceRange -- ComparableValueObject Framework
 
-비교 가능한 value object(Price, Currency)를 조합한 복합 value object입니다.
+A composite value object combining comparable value objects (Price, Currency).
 
 ```csharp
 public sealed class PriceRange : ComparableValueObject
@@ -374,7 +374,7 @@ public sealed class PriceRange : ComparableValueObject
 
     private static Validation<Error, (Price MinPrice, Price MaxPrice)> ValidatePriceRange(Price minPrice, Price maxPrice) =>
         minPrice.Value > maxPrice.Value
-            ? Error.New("최소 가격은 최대 가격보다 작거나 같아야 합니다")
+            ? Error.New("Minimum price must be less than or equal to maximum price")
             : (MinPrice: minPrice, MaxPrice: maxPrice);
 
     protected override IEnumerable<IComparable> GetComparableEqualityComponents()
@@ -392,62 +392,62 @@ public sealed class PriceRange : ComparableValueObject
 
 ## Summary at a Glance
 
-### Previous approach vs 프레임워크 방식
+### Previous Approach vs Framework Approach
 
-| Aspect | Previous approach | 프레임워크 방식 |
+| Aspect | Previous Approach | Framework Approach |
 |------|-----------|-----------------|
-| **코드량** | 50-100줄 | 15-25줄 |
-| **보일러플레이트** | 매번 직접 구현 | 프레임워크에서 제공 |
-| **비교 기능** | 수동 구현 필요 | 자동으로 완전 제공 |
-| **일관성** | 구현자마다 다름 | 프레임워크로 표준화 |
-| **유지보수** | 개별 수정 필요 | 프레임워크 수정으로 일괄 적용 |
+| **Code volume** | 50-100 lines | 15-25 lines |
+| **Boilerplate** | Manually implemented each time | Provided by the framework |
+| **Comparison functionality** | Manual implementation required | Fully provided automatically |
+| **Consistency** | Varies by implementer | Standardized through the framework |
+| **Maintainability** | Individual modifications needed | Bulk application through framework modification |
 
-### 타입 선택 가이드
+### Type Selection Guide
 
-`IComparable<T>` 지원 유무와 값의 복잡성에 따라 적절한 베이스 클래스를 선택합니다.
+Select the appropriate base class based on `IComparable<T>` support and value complexity.
 
-| 타입 | 베이스 클래스 | `IComparable<T>` | Example |
+| Type | Base Class | `IComparable<T>` | Example |
 |------|---------------|----------------|------|
-| **단일값, 비교 불필요** | `SimpleValueObject<T>` | 미지원 | `BinaryData` |
-| **단일값, 비교 필요** | `ComparableSimpleValueObject<T>` | 지원 | `Denominator` |
-| **복합값, 비교 불필요** | `ValueObject` | 미지원 | `Coordinate`, `Address` |
-| **복합값, 비교 필요** | `ComparableValueObject` | 지원 | `DateRange`, `PriceRange` |
+| **Single value, no comparison needed** | `SimpleValueObject<T>` | Not supported | `BinaryData` |
+| **Single value, comparison needed** | `ComparableSimpleValueObject<T>` | Supported | `Denominator` |
+| **Composite value, no comparison needed** | `ValueObject` | Not supported | `Coordinate`, `Address` |
+| **Composite value, comparison needed** | `ComparableValueObject` | Supported | `DateRange`, `PriceRange` |
 
 ### Pros and Cons
 
 | Pros | Cons |
 |------|------|
-| **코드 중복 90% 감소** | **프레임워크 학습 필요** |
-| **완전히 일관된 구현 패턴** | **프레임워크 의존성** |
-| **비교 기능 자동화** | **과도한 추상화 위험** |
-| **유지보수성 향상** | **타입 제약 조건** |
+| **90% reduction in code duplication** | **Framework learning required** |
+| **Completely consistent implementation pattern** | **Framework dependency** |
+| **Comparison functionality automation** | **Risk of over-abstraction** |
+| **Improved maintainability** | **Type constraint requirements** |
 
 ## FAQ
 
-### Q1: 프레임워크 타입은 어떻게 선택하나요?
-**A**: 두 가지 기준으로 결정합니다. (1) 정렬/비교가 필요한가? 필요하면 `Comparable` 접두사가 붙은 타입을 선택합니다. (2) 단일 값인가, 복합 값인가? 단일 값이면 `SimpleValueObject<T>` 계열, 복합 값이면 `ValueObject` 계열을 선택합니다.
+### Q1: How do you choose the framework type?
+**A**: It is determined by two criteria. (1) Is sorting/comparison needed? If so, choose a type with the `Comparable` prefix. (2) Is it a single value or a composite value? For single values, choose the `SimpleValueObject<T>` family; for composite values, choose the `ValueObject` family.
 
-### Q2: `ComparableSimpleValueObject<T>`의 타입 제약 조건은?
-**A**: `T`가 `IComparable`을 구현해야 합니다. `int`, `string`, `DateTime` 등 .NET 기본 타입은 모두 충족하므로 대부분 문제없습니다. 비교가 불필요한 타입(`byte[]` 등)은 `SimpleValueObject<T>`를 uses.
+### Q2: What are the type constraints for `ComparableSimpleValueObject<T>`?
+**A**: `T` must implement `IComparable`. .NET basic types such as `int`, `string`, and `DateTime` all satisfy this, so there are no issues in most cases. Types that do not need comparison (such as `byte[]`) should use `SimpleValueObject<T>`.
 
-### Q3: CreateFromValidation 헬퍼는 어떻게 작동하나요?
-**A**: `Validation<Error, TValue>`를 받아 성공 시 팩토리 함수를 적용하여 value object를 생성하고, 실패 시 Error를 그대로 전달하여 `Fin<TValueObject>`를 returns.
+### Q3: How does the CreateFromValidation helper work?
+**A**: It receives a `Validation<Error, TValue>`, applies a factory function on success to create the value object, and passes the Error through as-is on failure, returning `Fin<TValueObject>`.
 
 ```csharp
-// CreateFromValidation 헬퍼의 내부 동작
+// Internal operation of the CreateFromValidation helper
 public static Fin<TValueObject> CreateFromValidation<TValueObject, TValue>(
     Validation<Error, TValue> validation,
     Func<TValue, TValueObject> factory)
     where TValueObject : ValueObject
 {
     return validation
-        .Map(factory)        // 성공 시 factory 함수 적용
-        .ToFin();           // Validation을 Fin으로 변환
+        .Map(factory)        // Apply factory function on success
+        .ToFin();           // Convert Validation to Fin
 }
 ```
 
 ---
 
-프레임워크 타입으로 보일러플레이트를 제거했지만, 비즈니스 도메인에는 고정된 선택지 집합을 표현해야 하는 경우도 있습니다. Next chapter에서는 SmartEnum을 활용한 타입 안전 enumeration을 implements.
+We eliminated boilerplate with framework types, but business domains also have cases where a fixed set of choices needs to be expressed. In the next chapter, we implement type-safe enumerations using SmartEnum.
 
-→ [12장: 타입 안전한 enumeration](../12-Type-Safe-Enums/)
+→ [Chapter 12: Type-Safe Enumerations](../12-Type-Safe-Enums/)

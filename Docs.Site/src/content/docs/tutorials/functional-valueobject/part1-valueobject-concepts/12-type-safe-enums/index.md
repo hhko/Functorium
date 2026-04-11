@@ -4,42 +4,42 @@ title: "Type-Safe Enumerations"
 
 ## Overview
 
-통화 코드마다 고유한 기호($, EUR, ₩)와 포맷팅 규칙이 필요한데, 기존 C# enum으로는 각 값에 속성이나 동작을 정의할 수 없습니다. `Ardalis.SmartEnum`을 사용하면 각 enumeration 값이 독립적인 객체로 동작하여 타입 안전성과 도메인 표현력을 동시에 확보할 수 있습니다.
+Each currency code needs a unique symbol ($, EUR, ₩) and formatting rules, but traditional C# enums cannot define properties or behaviors for each value. Using `Ardalis.SmartEnum`, each enumeration value acts as an independent object, simultaneously securing type safety and domain expressiveness.
 
 ## Learning Objectives
 
-Upon completing this chapter, you will be able to.
+Upon completing this chapter, you will be able to:
 
-1. `Ardalis.SmartEnum`을 활용하여 **타입 안전한 enumeration을** 구현할 수 있습니다
-2. compile time 타입 검증과 풍부한 도메인 로직으로 **타입 안전성과 도메인 표현력을** 향상시킬 수 있습니다
-3. SmartEnum을 활용한 복합 value object 구현으로 **도메인 모델의 일관성과 확장성을** 확보할 수 있습니다
+1. Implement **type-safe enumerations** using `Ardalis.SmartEnum`
+2. Enhance **type safety and domain expressiveness** through compile-time type verification and rich domain logic
+3. Secure **domain model consistency and extensibility** through composite value object implementation using SmartEnum
 
 ## Why Is This Needed?
 
-Previous step `ValueObject-Framework`에서는 기본적인 value object 프레임워크를 도입했습니다. 그러나 복잡한 도메인 개념을 모델링하면서 기존 C# enum의 한계가 드러났습니다. enum은 각 값에 추가 속성이나 동작을 정의할 수 없고, 문자열/정수 변환 시 타입 안전성을 보장하지 못하며, 도메인 로직이 enum 외부로 분산됩니다.
+In the previous step `ValueObject-Framework`, we introduced the basic value object framework. However, the limitations of existing C# enums became apparent when modeling complex domain concepts. Enums cannot define additional properties or behaviors for each value, do not guarantee type safety during string/integer conversion, and domain logic is scattered outside the enum.
 
-**SmartEnum은** 각 enumeration 값을 독립적인 객체로 만들어, 고유한 속성과 메서드를 갖게 합니다. compile time 타입 안전성을 보장하면서도 도메인 지식을 해당 객체 내부에 캡슐화할 수 있습니다.
+**SmartEnum** makes each enumeration value an independent object, allowing them to have unique properties and methods. It guarantees compile-time type safety while also enabling domain knowledge to be encapsulated within the object.
 
 ## Core Concepts
 
-### SmartEnum 기반 타입 안전한 enumeration
+### Type-Safe Enumerations Based on SmartEnum
 
-기존 C# enum은 단순한 상수 집합입니다. SmartEnum은 각 값을 독립적인 클래스 인스턴스로 만들어 추가 속성과 메서드를 정의할 수 있게 합니다.
+Existing C# enums are simple constant sets. SmartEnum makes each value an independent class instance, enabling additional properties and methods to be defined.
 
-기존 enum과 SmartEnum의 구현 차이를 compares.
+Comparing the implementation differences between existing enums and SmartEnum.
 
 ```csharp
-// 기존 방식 (문제가 있는 방식) - 추가 속성 정의 불가
+// Previous approach (problematic) - cannot define additional properties
 public enum Currency
 {
-    USD, EUR, KRW  // 기호나 포맷팅 규칙을 정의할 수 없음
+    USD, EUR, KRW  // Cannot define symbols or formatting rules
 }
 
-// 개선된 방식 (현재 방식) - 각 값이 독립적인 객체
+// Improved approach (current) - each value is an independent object
 public sealed class Currency : SmartEnum<Currency, string>
 {
-    public static readonly Currency USD = new(nameof(USD), "USD", "$", "미국 달러");
-    public static readonly Currency EUR = new(nameof(EUR), "EUR", "€", "유로");
+    public static readonly Currency USD = new(nameof(USD), "USD", "$", "US Dollar");
+    public static readonly Currency EUR = new(nameof(EUR), "EUR", "EUR", "Euro");
 
     public string Symbol { get; }
     public string Description { get; }
@@ -55,52 +55,52 @@ public sealed class Currency : SmartEnum<Currency, string>
 }
 ```
 
-### compile time 타입 안전성
+### Compile-Time Type Safety
 
-SmartEnum은 컴파일 시점에 타입 검증을 수행합니다. 기존 enum은 문자열이나 정수 변환 시 유효하지 않은 값이 runtime에만 발견되지만, SmartEnum은 정적 인스턴스를 통해 유효한 값만 사용하도록 강제합니다.
+SmartEnum performs type verification at compile time. Existing enums only discover invalid values at runtime during string or integer conversion, but SmartEnum forces only valid values to be used through static instances.
 
 ```csharp
-// 기존 방식 (문제가 있는 방식) - 런타임에만 오류 발견
+// Previous approach (problematic) - errors discovered only at runtime
 public enum Currency { USD, EUR, KRW }
-string invalidCurrency = "INVALID"; // 컴파일 시점에 오류를 잡을 수 없음
+string invalidCurrency = "INVALID"; // Cannot catch errors at compile time
 
-// 개선된 방식 (현재 방식) - 컴파일 타임 타입 안전성
+// Improved approach (current) - compile-time type safety
 public sealed class Currency : SmartEnum<Currency, string>
 {
-    public static readonly Currency USD = new(nameof(USD), "USD", "$", "미국 달러");
-    // 유효하지 않은 값은 컴파일 시점에 차단됨
+    public static readonly Currency USD = new(nameof(USD), "USD", "$", "US Dollar");
+    // Invalid values are blocked at compile time
 }
 
-// 타입 안전한 사용
-Currency validCurrency = Currency.USD; // 컴파일 시점에 타입 검증
+// Type-safe usage
+Currency validCurrency = Currency.USD; // Type verification at compile time
 ```
 
-### 도메인 로직의 캡슐화
+### Domain Logic Encapsulation
 
-SmartEnum을 사용하면 각 enumeration 값에 고유한 동작을 캡슐화할 수 있습니다. 도메인 로직이 외부 switch 문에 분산되지 않고 해당 객체 내부에 집중됩니다.
+Using SmartEnum, unique behaviors can be encapsulated in each enumeration value. Domain logic is concentrated within the object rather than being scattered in external switch statements.
 
-기존 switch 기반 분산 로직과 SmartEnum 캡슐화 방식의 차이를 보여줍니다.
+Showing the difference between existing switch-based scattered logic and the SmartEnum encapsulation approach.
 
 ```csharp
-// 기존 방식 (문제가 있는 방식) - 도메인 로직이 분산됨
+// Previous approach (problematic) - domain logic is scattered
 public enum Currency { USD, EUR, KRW }
 public string FormatCurrency(Currency currency, decimal amount)
 {
     return currency switch
     {
         Currency.USD => $"${amount:N2}",
-        Currency.EUR => $"€{amount:N2}",
+        Currency.EUR => $"EUR{amount:N2}",
         Currency.KRW => $"₩{amount:N0}",
         _ => throw new ArgumentException("Unknown currency")
     };
 }
 
-// 개선된 방식 (현재 방식) - 도메인 로직이 캡슐화됨
+// Improved approach (current) - domain logic is encapsulated
 public sealed class Currency : SmartEnum<Currency, string>
 {
-    public static readonly Currency USD = new(nameof(USD), "USD", "$", "미국 달러");
-    public static readonly Currency EUR = new(nameof(EUR), "EUR", "€", "유로");
-    public static readonly Currency KRW = new(nameof(KRW), "KRW", "₩", "한국 원화");
+    public static readonly Currency USD = new(nameof(USD), "USD", "$", "US Dollar");
+    public static readonly Currency EUR = new(nameof(EUR), "EUR", "EUR", "Euro");
+    public static readonly Currency KRW = new(nameof(KRW), "KRW", "₩", "Korean Won");
 
     public string Symbol { get; }
     public string Description { get; }
@@ -113,143 +113,143 @@ public sealed class Currency : SmartEnum<Currency, string>
     }
 
     public string FormatAmount(decimal amount) => $"{Symbol}{amount:N2}";
-    public bool IsMajorCurrency() => Symbol == "$" || Symbol == "€";
-    public decimal ConvertToBaseUnit(decimal amount) => amount; // 환율 변환 로직
+    public bool IsMajorCurrency() => Symbol == "$" || Symbol == "EUR";
+    public decimal ConvertToBaseUnit(decimal amount) => amount; // Exchange rate conversion logic
 }
 ```
 
-새로운 통화를 추가할 때 기존 코드를 수정하지 않고 새 정적 인스턴스만 추가하면 됩니다.
+When adding a new currency, you simply add a new static instance without modifying existing code.
 
-Next chapter에서는 단순한 문자열 error message를 넘어서, 구조화된 error code 시스템을 implements.
+In the next chapter, we implement a structured error code system that goes beyond simple string error messages.
 
 ## Practical Guidelines
 
 ### Expected Output
 ```
-=== ValueObject Framework 데모 ===
+=== ValueObject Framework Demo ===
 
-   SmartEnum 기반 Currency와 PriceRange (가격 범위)
-   SmartEnum을 사용한 타입 안전한 통화 처리와 PriceRange 조합
+   SmartEnum-based Currency and PriceRange (price range)
+   Type-safe currency handling and PriceRange composition using SmartEnum
 
-   📋 지원되는 통화 목록:
-      - AUD (호주 달러) A$ (코드: AUD)
-      - CAD (캐나다 달러) C$ (코드: CAD)
-      - CHF (스위스 프랑) CHF (코드: CHF)
-      - CNY (중국 위안) ¥ (코드: CNY)
-      - EUR (유로) € (코드: EUR)
-      - GBP (영국 파운드) £ (코드: GBP)
-      - JPY (일본 엔) ¥ (코드: JPY)
-      - KRW (한국 원화) ₩ (코드: KRW)
-      - SGD (싱가포르 달러) S$ (코드: SGD)
-      - USD (미국 달러) $ (코드: USD)
+   Supported currency list:
+      - AUD (Australian Dollar) A$ (code: AUD)
+      - CAD (Canadian Dollar) C$ (code: CAD)
+      - CHF (Swiss Franc) CHF (code: CHF)
+      - CNY (Chinese Yuan) ¥ (code: CNY)
+      - EUR (Euro) EUR (code: EUR)
+      - GBP (British Pound) £ (code: GBP)
+      - JPY (Japanese Yen) ¥ (code: JPY)
+      - KRW (Korean Won) ₩ (code: KRW)
+      - SGD (Singapore Dollar) S$ (code: SGD)
+      - USD (US Dollar) $ (code: USD)
 
-   ✅ 성공 (KRW): KRW (한국 원화) ₩ 10,000.00 ~ KRW (한국 원화) ₩ 50,000.00
-   ✅ 성공 (USD): USD (미국 달러) $ 100.00 ~ USD (미국 달러) $ 500.00
-   ✅ 성공 (EUR): EUR (유로) € 80.00 ~ EUR (유로) € 400.00
+   Success (KRW): KRW (Korean Won) ₩ 10,000.00 ~ KRW (Korean Won) ₩ 50,000.00
+   Success (USD): USD (US Dollar) $ 100.00 ~ USD (US Dollar) $ 500.00
+   Success (EUR): EUR (Euro) EUR 80.00 ~ EUR (Euro) EUR 400.00
 
-   🚫 실패 케이스들:
-   ❌ 실패: 금액은 0 이상 999,999.99 이하여야 합니다: -1000
-   ❌ 실패: 금액은 0 이상 999,999.99 이하여야 합니다: -5000
-   ❌ 실패: 최소 가격은 최대 가격보다 작거나 같아야 합니다: KRW (한국 원화) ₩ 50,000.00 > KRW (한국 원화) ₩ 10,000.00
-   ❌ 실패: 통화 코드는 3자리 영문자여야 합니다: INVALID
+   Failure cases:
+   Failure: Amount must be between 0 and 999,999.99: -1000
+   Failure: Amount must be between 0 and 999,999.99: -5000
+   Failure: Minimum price must be less than or equal to maximum price: KRW (Korean Won) ₩ 50,000.00 > KRW (Korean Won) ₩ 10,000.00
+   Failure: Currency code must be 3 alphabetic characters: INVALID
 
-   💰 SmartEnum Currency 직접 사용:
-      KRW: KRW (한국 원화) ₩ - ₩12,345.67
-      USD: USD (미국 달러) $ - $123.45
-      EUR: EUR (유로) € - €89.12
+   SmartEnum Currency direct usage:
+      KRW: KRW (Korean Won) ₩ - ₩12,345.67
+      USD: USD (US Dollar) $ - $123.45
+      EUR: EUR (Euro) EUR - EUR89.12
 
-   🔍 통화 지원 여부 확인:
-      KRW 지원: True
-      USD 지원: True
-      INVALID 지원: False
+   Currency support check:
+      KRW supported: True
+      USD supported: True
+      INVALID supported: False
 
-   📊 비교 기능 데모:
-   - KRW (한국 원화) ₩ 10,000.00 ~ KRW (한국 원화) ₩ 30,000.00 < KRW (한국 원화) ₩ 20,000.00 ~ KRW (한국 원화) ₩ 40,000.00 = True
-   - KRW (한국 원화) ₩ 10,000.00 ~ KRW (한국 원화) ₩ 30,000.00 == KRW (한국 원화) ₩ 10,000.00 ~ KRW (한국 원화) ₩ 30,000.00 = True
-   - KRW (한국 원화) ₩ 10,000.00 ~ KRW (한국 원화) ₩ 30,000.00 > KRW (한국 원화) ₩ 20,000.00 ~ KRW (한국 원화) ₩ 40,000.00 = False
-   - KRW (한국 원화) ₩ 10,000.00 ~ KRW (한국 원화) ₩ 30,000.00 <= KRW (한국 원화) ₩ 10,000.00 ~ KRW (한국 원화) ₩ 30,000.00 = True
-   - KRW (한국 원화) ₩ 10,000.00 ~ KRW (한국 원화) ₩ 30,000.00 >= KRW (한국 원화) ₩ 10,000.00 ~ KRW (한국 원화) ₩ 30,000.00 = True
-   - KRW (한국 원화) ₩ 10,000.00 ~ KRW (한국 원화) ₩ 30,000.00 != KRW (한국 원화) ₩ 20,000.00 ~ KRW (한국 원화) ₩ 40,000.00 = True
+   Comparison demo:
+   - KRW (Korean Won) ₩ 10,000.00 ~ KRW (Korean Won) ₩ 30,000.00 < KRW (Korean Won) ₩ 20,000.00 ~ KRW (Korean Won) ₩ 40,000.00 = True
+   - KRW (Korean Won) ₩ 10,000.00 ~ KRW (Korean Won) ₩ 30,000.00 == KRW (Korean Won) ₩ 10,000.00 ~ KRW (Korean Won) ₩ 30,000.00 = True
+   - KRW (Korean Won) ₩ 10,000.00 ~ KRW (Korean Won) ₩ 30,000.00 > KRW (Korean Won) ₩ 20,000.00 ~ KRW (Korean Won) ₩ 40,000.00 = False
+   - KRW (Korean Won) ₩ 10,000.00 ~ KRW (Korean Won) ₩ 30,000.00 <= KRW (Korean Won) ₩ 10,000.00 ~ KRW (Korean Won) ₩ 30,000.00 = True
+   - KRW (Korean Won) ₩ 10,000.00 ~ KRW (Korean Won) ₩ 30,000.00 >= KRW (Korean Won) ₩ 10,000.00 ~ KRW (Korean Won) ₩ 30,000.00 = True
+   - KRW (Korean Won) ₩ 10,000.00 ~ KRW (Korean Won) ₩ 30,000.00 != KRW (Korean Won) ₩ 20,000.00 ~ KRW (Korean Won) ₩ 40,000.00 = True
 
-   📋 개별 값 객체 생성:
-   - MinPrice: USD (미국 달러) $ 15,000.00 (금액: 15000)
-   - MaxPrice: USD (미국 달러) $ 35,000.00 (금액: 35000)
-   - Currency: USD (미국 달러) $ (값: USD)
-   - PriceRange from validated: USD (미국 달러) $ 15,000.00 ~ USD (미국 달러) $ 35,000.00
+   Individual value object creation:
+   - MinPrice: USD (US Dollar) $ 15,000.00 (amount: 15000)
+   - MaxPrice: USD (US Dollar) $ 35,000.00 (amount: 35000)
+   - Currency: USD (US Dollar) $ (value: USD)
+   - PriceRange from validated: USD (US Dollar) $ 15,000.00 ~ USD (US Dollar) $ 35,000.00
 
-   🔄 Price 비교 기능 데모:
-   📊 같은 통화 (USD) 비교:
-      - USD (미국 달러) $ 100.00 < USD (미국 달러) $ 200.00 = True
-      - USD (미국 달러) $ 100.00 == USD (미국 달러) $ 100.00 = True
-      - USD (미국 달러) $ 100.00 > USD (미국 달러) $ 200.00 = False
+   Price comparison demo:
+   Same currency (USD) comparison:
+      - USD (US Dollar) $ 100.00 < USD (US Dollar) $ 200.00 = True
+      - USD (US Dollar) $ 100.00 == USD (US Dollar) $ 100.00 = True
+      - USD (US Dollar) $ 100.00 > USD (US Dollar) $ 200.00 = False
       - CanCompareWith: True = True
 
-   🌍 다른 통화 비교:
-      - USD vs KRW: USD (미국 달러) $ 100.00 vs KRW (한국 원화) ₩ 100,000.00
+   Different currency comparison:
+      - USD vs KRW: USD (US Dollar) $ 100.00 vs KRW (Korean Won) ₩ 100,000.00
       - CanCompareWith: False = False
-      - 비교 결과: False (통화 우선 비교)
-      - USD vs EUR: USD (미국 달러) $ 100.00 vs EUR (유로) € 80.00
+      - Comparison result: False (currency-first comparison)
+      - USD vs EUR: USD (US Dollar) $ 100.00 vs EUR (Euro) EUR 80.00
       - CanCompareWith: False = False
-      - 비교 결과: False (통화 우선 비교)
+      - Comparison result: False (currency-first comparison)
 
-   🛡️ 안전한 비교 유틸리티:
-      - USD (미국 달러) $ 100.00 < USD (미국 달러) $ 200.00
-      - 서로 다른 통화는 비교할 수 없습니다: USD (미국 달러) $ vs KRW (한국 원화) ₩
-      - 서로 다른 통화는 비교할 수 없습니다: KRW (한국 원화) ₩ vs EUR (유로) €
+   Safe comparison utility:
+      - USD (US Dollar) $ 100.00 < USD (US Dollar) $ 200.00
+      - Different currencies cannot be compared: USD (US Dollar) $ vs KRW (Korean Won) ₩
+      - Different currencies cannot be compared: KRW (Korean Won) ₩ vs EUR (Euro) EUR
 
-   📈 가격 정렬 데모 (통화 우선, 금액 순):
-      1. EUR (유로) € 80.00
-      2. KRW (한국 원화) ₩ 100,000.00
-      3. USD (미국 달러) $ 100.00
-      4. USD (미국 달러) $ 100.00
-      5. USD (미국 달러) $ 200.00
+   Price sorting demo (currency-first, then by amount):
+      1. EUR (Euro) EUR 80.00
+      2. KRW (Korean Won) ₩ 100,000.00
+      3. USD (US Dollar) $ 100.00
+      4. USD (US Dollar) $ 100.00
+      5. USD (US Dollar) $ 200.00
       - CanCompareWith: False = False
-      - 비교 결과: False (통화 우선 비교)
+      - Comparison result: False (currency-first comparison)
 
-   🛡️ 안전한 비교 유틸리티:
-      - USD (미국 달러) $ 100.00 < USD (미국 달러) $ 200.00
-      - 서로 다른 통화는 비교할 수 없습니다: USD (미국 달러) $ vs KRW (한국 원화) ₩
+   Safe comparison utility:
+      - USD (US Dollar) $ 100.00 < USD (US Dollar) $ 200.00
+      - Different currencies cannot be compared: USD (US Dollar) $ vs KRW (Korean Won) ₩
 
-   📈 가격 정렬 데모 (통화 우선, 금액 순):
-      1. EUR (유로) € 80.00
-      2. KRW (한국 원화) ₩ 100,000.00
-      3. USD (미국 달러) $ 100.00
-      4. USD (미국 달러) $ 100.00
-      5. USD (미국 달러) $ 200.00
+   Price sorting demo (currency-first, then by amount):
+      1. EUR (Euro) EUR 80.00
+      2. KRW (Korean Won) ₩ 100,000.00
+      3. USD (US Dollar) $ 100.00
+      4. USD (US Dollar) $ 100.00
+      5. USD (US Dollar) $ 200.00
 ```
 
 ### Key Implementation Points
-1. **SmartEnum Currency 구현**: 각 통화 코드를 독립적인 객체로 정의하고 고유한 기호와 포맷팅 규칙을 구현
-2. **타입 안전성 보장**: compile time에 유효하지 않은 통화 코드 사용을 방지하는 타입 시스템 구축
-3. **도메인 로직 캡슐화**: 각 통화의 고유한 특성과 동작을 해당 객체 내부에 캡슐화하여 응집도 향상
+1. **SmartEnum Currency implementation**: Define each currency code as an independent object and implement unique symbols and formatting rules
+2. **Type safety guarantee**: Build a type system that prevents usage of invalid currency codes at compile time
+3. **Domain logic encapsulation**: Encapsulate each currency's unique characteristics and behaviors within the object to improve cohesion
 
 ## Project Description
 
 ### Project Structure
 ```
-TypeSafeEnums/                    # 메인 프로젝트
-├── Program.cs                    # 메인 실행 파일
-├── TypeSafeEnums.csproj         # 프로젝트 파일
-├── README.md                    # 메인 문서
-└── ValueObjects/                # 값 객체 구현
+TypeSafeEnums/                    # Main project
+├── Program.cs                    # Main entry file
+├── TypeSafeEnums.csproj         # Project file
+├── README.md                    # Main documentation
+└── ValueObjects/                # Value object implementation
     └── Comparable/
         └── CompositeValueObjects/
-            ├── Currency.cs      # SmartEnum 기반 통화
-            ├── MoneyAmount.cs   # 금액 값 객체
-            ├── Price.cs         # 가격 복합 값 객체
-            └── PriceRange.cs    # 가격 범위 복합 값 객체
+            ├── Currency.cs      # SmartEnum-based currency
+            ├── MoneyAmount.cs   # Money amount value object
+            ├── Price.cs         # Price composite value object
+            └── PriceRange.cs    # Price range composite value object
 ```
 
 ### Core Code
 
-#### SmartEnum 기반 Currency 구현
+#### SmartEnum-Based Currency Implementation
 ```csharp
 public sealed class Currency : SmartEnum<Currency, string>
 {
-    public static readonly Currency USD = new(nameof(USD), "USD", "$", "미국 달러");
-    public static readonly Currency EUR = new(nameof(EUR), "EUR", "€", "유로");
-    public static readonly Currency KRW = new(nameof(KRW), "KRW", "₩", "한국 원화");
-    // ... 10개 통화 정의
+    public static readonly Currency USD = new(nameof(USD), "USD", "$", "US Dollar");
+    public static readonly Currency EUR = new(nameof(EUR), "EUR", "EUR", "Euro");
+    public static readonly Currency KRW = new(nameof(KRW), "KRW", "₩", "Korean Won");
+    // ... 10 currencies defined
 
     public string Symbol { get; }
     public string Description { get; }
@@ -280,7 +280,7 @@ public sealed class Currency : SmartEnum<Currency, string>
 }
 ```
 
-#### 개선된 Price 비교 로직
+#### Improved Price Comparison Logic
 ```csharp
 public sealed class Price : ComparableValueObject
 {
@@ -306,8 +306,8 @@ public sealed class Price : ComparableValueObject
 
     protected override IEnumerable<IComparable> GetComparableEqualityComponents()
     {
-        yield return Currency.Value;    // 통화를 먼저 비교
-        yield return (decimal)Amount;   // 금액을 나중에 비교
+        yield return Currency.Value;    // Compare currency first
+        yield return (decimal)Amount;   // Compare amount second
     }
 
     public bool CanCompareWith(Price other) => Currency.Equals(other.Currency);
@@ -316,7 +316,7 @@ public sealed class Price : ComparableValueObject
 }
 ```
 
-#### LINQ Expression 기반 PriceRange 검증
+#### LINQ Expression-Based PriceRange Validation
 ```csharp
 public sealed class PriceRange : ComparableValueObject
 {
@@ -365,40 +365,40 @@ public sealed class PriceRange : ComparableValueObject
 
 ### Comparison Table
 
-기존 C# enum과 SmartEnum 방식의 차이를 요약합니다.
+The following table summarizes the differences between existing C# enums and the SmartEnum approach.
 
-| Aspect | Previous approach | Current approach |
+| Aspect | Previous Approach | Current Approach |
 |------|-----------|-----------|
-| **enumeration 구현** | 기본 C# enum (속성 정의 불가) | SmartEnum (각 값이 독립 객체) |
-| **타입 안전성** | runtime에만 오류 발견 | compile time 타입 검증 |
-| **도메인 표현력** | 단순한 상수만 제공 | 풍부한 속성과 동작 정의 |
-| **확장성** | 새 값 추가 시 기존 코드 수정 필요 | 개방-폐쇄 원칙 준수 |
-| **캡슐화** | 도메인 로직이 외부에 분산 | 도메인 지식이 객체 내부에 집중 |
+| **Enumeration implementation** | Basic C# enum (cannot define properties) | SmartEnum (each value is an independent object) |
+| **Type safety** | Errors discovered only at runtime | Compile-time type verification |
+| **Domain expressiveness** | Only simple constants | Rich properties and behavior definition |
+| **Extensibility** | Existing code modification required when adding new values | Adheres to the open-closed principle |
+| **Encapsulation** | Domain logic scattered externally | Domain knowledge concentrated within the object |
 
 ### Pros and Cons
 
-SmartEnum 도입의 트레이드오프를 정리합니다.
+Trade-offs of introducing SmartEnum.
 
 | Pros | Cons |
 |------|------|
-| compile time 타입 검증 | 새로운 라이브러리 학습 필요 |
-| 각 값의 고유 속성과 동작 정의 | 외부 라이브러리(Ardalis.SmartEnum) 의존 |
-| 개방-폐쇄 원칙으로 확장 용이 | 단순한 enum 대비 구현 복잡도 증가 |
-| 도메인 지식이 객체 내부에 집중 | 객체 생성 오버헤드 (미미한 수준) |
+| Compile-time type verification | New library learning required |
+| Unique properties and behaviors per value | External library dependency (Ardalis.SmartEnum) |
+| Easy extension via open-closed principle | Increased implementation complexity compared to simple enums |
+| Domain knowledge concentrated within the object | Object creation overhead (negligible level) |
 
 ## FAQ
 
-### Q1: SmartEnum과 기존 enum을 어떻게 구분해서 사용하나요?
-**A**: 단순한 상태나 플래그(주문 상태, 사용자 권한 등)는 기존 enum으로 충분합니다. 각 값마다 고유한 속성이나 동작이 필요한 경우(통화별 기호/포맷팅, 주문 타입별 계산 로직 등)에 SmartEnum을 uses.
+### Q1: How do you distinguish when to use SmartEnum vs existing enums?
+**A**: Simple states or flags (order status, user permissions, etc.) are sufficient with existing enums. SmartEnum is used when each value needs unique properties or behaviors (currency-specific symbols/formatting, order-type-specific calculation logic, etc.).
 
-### Q2: SmartEnum의 성능 오버헤드가 있나요?
-**A**: 각 통화 코드마다 하나의 정적 인스턴스만 생성되므로 메모리 오버헤드는 미미합니다. 대부분의 애플리케이션에서 타입 안전성과 도메인 표현력 향상의 이점이 성능 비용보다 훨씬 큽니다.
+### Q2: Is there a performance overhead with SmartEnum?
+**A**: Since only one static instance is created for each currency code, memory overhead is negligible. In most applications, the benefits of improved type safety and domain expressiveness far outweigh the performance cost.
 
-### Q3: SmartEnum 도입 시 주의사항은?
-**A**: 팀의 학습 곡선, 외부 라이브러리 의존성 관리, 기존 enum 대비 구현 복잡도 증가를 고려해야 합니다. 도메인 복잡성이 높아질수록 SmartEnum의 이점이 더 명확해지므로, 단순한 enumeration에는 기존 enum을 유지하는 것이 합리적입니다.
+### Q3: What are the considerations when introducing SmartEnum?
+**A**: You should consider the team's learning curve, external library dependency management, and increased implementation complexity compared to existing enums. As domain complexity increases, the benefits of SmartEnum become more apparent, so it is reasonable to maintain existing enums for simple enumerations.
 
 ---
 
-value object의 검증이 실패할 때 "왜 실패했는지"를 구조화된 error code로 전달하면 디버깅과 모니터링이 크게 개선됩니다. Next chapter에서는 구조화된 error code 시스템을 implements.
+When value object validation fails, communicating "why it failed" through structured error codes greatly improves debugging and monitoring. In the next chapter, we implement a structured error code system.
 
-→ [13장: error code](../13-Error-Code/)
+→ [Chapter 13: Error Codes](../13-Error-Code/)

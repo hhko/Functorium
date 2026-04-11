@@ -4,25 +4,25 @@ title: "Validate Fluent API"
 
 ## Overview
 
-`DomainError.For<T>()`로 에러 생성은 간결해졌지만, 여러 검증 규칙을 적용할 때 삼항 연산자가 중첩되고 타입을 반복 지정해야 하는 불편함이 남아 있지 않았나요? In this chapter, `Validate<T>` Fluent API를 도입하여 검증 코드를 선형적인 체이닝으로 작성하고, 코드량을 약 70% 줄이는 패턴을 다룹니다.
+Error creation became concise with `DomainError.For<T>()`, but when applying multiple validation rules, didn't you find it inconvenient that ternary operators nest and types must be repeatedly specified? In this chapter, we introduce the `Validate<T>` Fluent API to write validation code as linear chaining and cover a pattern that reduces code volume by approximately 70%.
 
 ## Learning Objectives
 
-Upon completing this chapter, you will be able to.
+Upon completing this chapter, you will be able to:
 
-1. `Validate<T>` 단일 진입점에서 타입 파라미터를 한 번만 지정하여 검증을 시작할 수 있습니다
-2. `Then*()` 메서드로 여러 검증 규칙을 선형적으로 연결할 수 있습니다
-3. `ThenNormalize()`로 검증 후 값 변환(정규화)을 체인에 포함시킬 수 있습니다
-4. `ThenMust()`로 커스텀 검증 조건을 Fluent 체인에 추가할 수 있습니다
+1. Start validation from a single entry point `Validate<T>` specifying the type parameter only once
+2. Connect multiple validation rules linearly with `Then*()` methods
+3. Include post-validation value transformation (normalization) in the chain with `ThenNormalize()`
+4. Add custom validation conditions to the Fluent chain with `ThenMust()`
 
 ## Why Is This Needed?
 
-이전 `14-Error-Code-Fluent` 프로젝트에서 `DomainError.For<T>()` 헬퍼로 error handling를 간소화했지만, 여전히 개선의 여지가 있었습니다.
+In the previous `14-Error-Code-Fluent` project, we simplified error handling with the `DomainError.For<T>()` helper, but there was still room for improvement.
 
-여러 검증 규칙을 적용할 때 삼항 연산자가 중첩되어 가독성이 떨어집니다.
+When applying multiple validation rules, nested ternary operators reduce readability.
 
 ```csharp
-// 이전 방식: 중첩된 삼항 연산자
+// Previous approach: Nested ternary operators
 public static Validation<Error, string> Validate(string currencyCode) =>
     string.IsNullOrWhiteSpace(currencyCode)
         ? DomainError.For<Currency>(new DomainErrorType.Empty(), currencyCode ?? "", "...")
@@ -31,112 +31,112 @@ public static Validation<Error, string> Validate(string currencyCode) =>
             : currencyCode.ToUpperInvariant();
 ```
 
-매번 `DomainError.For<Currency>(...)` 형태로 타입을 반복 지정해야 하고, 값 변환(`ToUpperInvariant()`)이 validation logic 사이에 묻혀 의도가 명확하지 않습니다.
+The type must be repeatedly specified as `DomainError.For<Currency>(...)` each time, and value transformation (`ToUpperInvariant()`) is buried between validation logic, making the intent unclear.
 
-**Validate&lt;T&gt; Fluent API는** 선형적인 체이닝으로 가독성을 높이고, 타입을 한 번만 지정하며, 변환은 `ThenNormalize()`로 명시적으로 표현합니다.
+**The Validate&lt;T&gt; Fluent API** improves readability through linear chaining, specifies the type only once, and expresses transformation explicitly with `ThenNormalize()`.
 
 ## Core Concepts
 
-### Validate&lt;T&gt; 정적 클래스
+### The Validate&lt;T&gt; Static Class
 
-`Validate<T>`는 모든 검증의 단일 진입점입니다. 타입 파라미터를 한 번만 지정하면 이후 체인에서 자동으로 전달됩니다.
+`Validate<T>` is the single entry point for all validation. Once the type parameter is specified, it is automatically carried through the subsequent chain.
 
 ```csharp
-// 문자열 검증 메서드
-Validate<Currency>.NotEmpty(value)        // 빈 값 검증
-Validate<Currency>.MinLength(value, 3)    // 최소 길이 검증
-Validate<Currency>.MaxLength(value, 100)  // 최대 길이 검증
-Validate<Currency>.ExactLength(value, 3)  // 정확한 길이 검증
-Validate<Currency>.Matches(value, regex)  // 패턴 검증
+// String validation methods
+Validate<Currency>.NotEmpty(value)        // Empty value check
+Validate<Currency>.MinLength(value, 3)    // Minimum length check
+Validate<Currency>.MaxLength(value, 100)  // Maximum length check
+Validate<Currency>.ExactLength(value, 3)  // Exact length check
+Validate<Currency>.Matches(value, regex)  // Pattern check
 
-// 숫자 검증 메서드
-Validate<MoneyAmount>.NonNegative(value)         // 0 이상 검증
-Validate<MoneyAmount>.Positive(value)            // 양수 검증
-Validate<MoneyAmount>.Between(value, 0, 1000)    // 범위 검증
-Validate<MoneyAmount>.AtMost(value, 999999.99m)  // 최대값 검증
-Validate<MoneyAmount>.AtLeast(value, 0)          // 최소값 검증
+// Numeric validation methods
+Validate<MoneyAmount>.NonNegative(value)         // Non-negative check
+Validate<MoneyAmount>.Positive(value)            // Positive check
+Validate<MoneyAmount>.Between(value, 0, 1000)    // Range check
+Validate<MoneyAmount>.AtMost(value, 999999.99m)  // Maximum value check
+Validate<MoneyAmount>.AtLeast(value, 0)          // Minimum value check
 
-// 커스텀 검증 메서드
+// Custom validation methods
 Validate<Denominator>.Must(value, v => v != 0, new Zero(), "message")  // sealed record Zero : DomainErrorType.Custom;
 ```
 
-### TypedValidation&lt;TValueObject, T&gt; 래퍼
+### The TypedValidation&lt;TValueObject, T&gt; Wrapper
 
-`TypedValidation<TValueObject, T>`는 `Validation<Error, T>`를 감싸는 `readonly struct`입니다. 타입 정보를 체인 전체에 전달하면서도, 암시적 변환 덕분에 기존 코드와 완벽 호환됩니다.
+`TypedValidation<TValueObject, T>` is a `readonly struct` that wraps `Validation<Error, T>`. It carries type information throughout the entire chain, and thanks to implicit conversion, it is fully compatible with existing code.
 
 ```csharp
 public readonly struct TypedValidation<TValueObject, T>
 {
     public Validation<Error, T> Value { get; }
 
-    // Validation<Error, T>로 암시적 변환
+    // Implicit conversion to Validation<Error, T>
     public static implicit operator Validation<Error, T>(TypedValidation<TValueObject, T> typed)
         => typed.Value;
 }
 ```
 
-반환 타입이 `Validation<Error, string>`인 메서드에서 TypedValidation을 그대로 반환할 수 있습니다.
+You can return TypedValidation as-is from methods with a return type of `Validation<Error, string>`.
 
 ```csharp
-// 반환 타입이 Validation<Error, string>이지만 TypedValidation을 반환해도 됨
+// Return type is Validation<Error, string> but returning TypedValidation is fine
 public static Validation<Error, string> Validate(string value) =>
-    Validate<Currency>.NotEmpty(value)  // TypedValidation<Currency, string> 반환
-        .ThenExactLength(3);            // 암시적으로 Validation<Error, string>으로 변환
+    Validate<Currency>.NotEmpty(value)  // Returns TypedValidation<Currency, string>
+        .ThenExactLength(3);            // Implicitly converts to Validation<Error, string>
 ```
 
-### Fluent 체이닝 확장 메서드
+### Fluent Chaining Extension Methods
 
-`TypedValidationExtensions` 클래스는 `TypedValidation`에 선형적인 체이닝 메서드를 provides.
+The `TypedValidationExtensions` class provides linear chaining methods for `TypedValidation`.
 
 ```csharp
-// 문자열 체이닝 메서드
-.ThenNotEmpty()           // 빈 값 검증
-.ThenMinLength(8)         // 최소 길이 검증
-.ThenMaxLength(100)       // 최대 길이 검증
-.ThenExactLength(3)       // 정확한 길이 검증
-.ThenMatches(regex)       // 패턴 검증
-.ThenNormalize(fn)        // 값 변환 (Map 사용)
+// String chaining methods
+.ThenNotEmpty()           // Empty value check
+.ThenMinLength(8)         // Minimum length check
+.ThenMaxLength(100)       // Maximum length check
+.ThenExactLength(3)       // Exact length check
+.ThenMatches(regex)       // Pattern check
+.ThenNormalize(fn)        // Value transformation (uses Map)
 
-// 숫자 체이닝 메서드
-.ThenNonNegative()        // 0 이상 검증
-.ThenPositive()           // 양수 검증
-.ThenBetween(0, 1000)     // 범위 검증
-.ThenAtMost(max)          // 최대값 검증
-.ThenAtLeast(min)         // 최소값 검증
+// Numeric chaining methods
+.ThenNonNegative()        // Non-negative check
+.ThenPositive()           // Positive check
+.ThenBetween(0, 1000)     // Range check
+.ThenAtMost(max)          // Maximum value check
+.ThenAtLeast(min)         // Minimum value check
 
-// 커스텀 체이닝 메서드
-.ThenMust(predicate, errorType, message)  // 커스텀 조건 검증
+// Custom chaining methods
+.ThenMust(predicate, errorType, message)  // Custom condition check
 ```
 
 #### ThenNormalize vs ThenMust
 
-`ThenNormalize`는 값을 **변환**합니다(내부적으로 `Map` 사용, 항상 성공). `ThenMust`는 값을 **검증**합니다(내부적으로 `Bind` 사용, 조건 실패 시 에러 반환).
+`ThenNormalize` **transforms** a value (uses `Map` internally, always succeeds). `ThenMust` **validates** a value (uses `Bind` internally, returns an error on condition failure).
 
 ```csharp
-// ThenNormalize: 값 변환 (항상 성공)
+// ThenNormalize: Value transformation (always succeeds)
 .ThenNormalize(v => v.ToUpperInvariant())
 
-// ThenMust: 조건부 검증 (실패할 수 있음)
+// ThenMust: Conditional validation (can fail)
 .ThenMust(v => SupportedCurrencies.Contains(v),
     new Unsupported(),  // sealed record Unsupported : DomainErrorType.Custom;
     v => $"Currency '{v}' is not supported")
 ```
 
-### 자동 error code 생성
+### Automatic Error Code Generation
 
-`Validate<T>`는 `DomainErrors.{ValueObjectName}.{ErrorTypeName}` 형식의 error code를 자동으로 생성합니다.
+`Validate<T>` automatically generates error codes in the format `DomainErrors.{ValueObjectName}.{ErrorTypeName}`.
 
 ```csharp
-// 검증 코드 → 생성되는 에러 코드
-Validate<Currency>.NotEmpty(value)        → "DomainErrors.Currency.Empty"
-Validate<Currency>.ExactLength(value, 3)  → "DomainErrors.Currency.WrongLength"
-Validate<MoneyAmount>.NonNegative(value)  → "DomainErrors.MoneyAmount.Negative"
-Validate<Coordinate>.Between(x, 0, 1000)  → "DomainErrors.Coordinate.OutOfRange"
+// Validation code -> generated error code
+Validate<Currency>.NotEmpty(value)        -> "DomainErrors.Currency.Empty"
+Validate<Currency>.ExactLength(value, 3)  -> "DomainErrors.Currency.WrongLength"
+Validate<MoneyAmount>.NonNegative(value)  -> "DomainErrors.MoneyAmount.Negative"
+Validate<Coordinate>.Between(x, 0, 1000)  -> "DomainErrors.Coordinate.OutOfRange"
 ```
 
 ## Before/After Comparison
 
-### Before (기존 방식 - DomainError.For 직접 사용)
+### Before (Previous Approach - Direct DomainError.For Usage)
 ```csharp
 public sealed class PostalCode : SimpleValueObject<string>
 {
@@ -165,7 +165,7 @@ public sealed class PostalCode : SimpleValueObject<string>
 }
 ```
 
-### After (Validate&lt;T&gt; Fluent - 훨씬 간결)
+### After (Validate&lt;T&gt; Fluent - Much More Concise)
 ```csharp
 public sealed class PostalCode : SimpleValueObject<string>
 {
@@ -186,154 +186,154 @@ public sealed class PostalCode : SimpleValueObject<string>
 }
 ```
 
-**코드 감소율: ~70%** (검증 메서드 6줄 → 2줄)
+**Code reduction: ~70%** (validation methods 6 lines -> 2 lines)
 
 ## Practical Guidelines
 
 ### Expected Output
 ```
-=== Validate<T> Fluent API를 사용한 간결한 검증 패턴 ===
+=== Concise Validation Patterns Using Validate<T> Fluent API ===
 
-=== Comparable 테스트 ===
+=== Comparable Tests ===
 
---- CompositeValueObjects 하위 폴더 ---
-  === CompositeValueObjects 에러 테스트 ===
+--- CompositeValueObjects Subfolder ---
+  === CompositeValueObjects Error Tests ===
 
-  --- Currency 에러 테스트 ---
-빈 통화 코드: [DomainErrors.Currency.Empty] Currency cannot be empty. Current value: ''
-3자리가 아닌 형식: [DomainErrors.Currency.WrongLength] Currency must be exactly 3 characters. Current length: 2
-지원하지 않는 통화: [DomainErrors.Currency.Unsupported] Currency 'XYZ' is not supported
+  --- Currency Error Tests ---
+Empty currency code: [DomainErrors.Currency.Empty] Currency cannot be empty. Current value: ''
+Non-3-character format: [DomainErrors.Currency.WrongLength] Currency must be exactly 3 characters. Current length: 2
+Unsupported currency: [DomainErrors.Currency.Unsupported] Currency 'XYZ' is not supported
 
-  --- Price 에러 테스트 ---
-음수 가격: [DomainErrors.MoneyAmount.Negative] MoneyAmount cannot be negative. Current value: '-100'
+  --- Price Error Tests ---
+Negative price: [DomainErrors.MoneyAmount.Negative] MoneyAmount cannot be negative. Current value: '-100'
 
-  --- PriceRange 에러 테스트 ---
-최솟값이 최댓값을 초과하는 가격 범위: [DomainErrors.PriceRange.MinExceedsMax] Minimum price cannot exceed maximum price.
+  --- PriceRange Error Tests ---
+Price range where min exceeds max: [DomainErrors.PriceRange.MinExceedsMax] Minimum price cannot exceed maximum price.
 
---- PrimitiveValueObjects 하위 폴더 ---
-  === PrimitiveValueObjects 에러 테스트 ===
+--- PrimitiveValueObjects Subfolder ---
+  === PrimitiveValueObjects Error Tests ===
 
-  --- Denominator 에러 테스트 ---
-0 값: [DomainErrors.Denominator.Zero] Denominator cannot be zero. Current value: '0'
+  --- Denominator Error Tests ---
+Zero value: [DomainErrors.Denominator.Zero] Denominator cannot be zero. Current value: '0'
 
---- CompositePrimitiveValueObjects 하위 폴더 ---
-  === CompositePrimitiveValueObjects 에러 테스트 ===
+--- CompositePrimitiveValueObjects Subfolder ---
+  === CompositePrimitiveValueObjects Error Tests ===
 
-  --- DateRange 에러 테스트 ---
-시작일이 종료일 이후인 날짜 범위: [DomainErrors.DateRange.StartAfterEnd] Start date cannot be after end date.
+  --- DateRange Error Tests ---
+Date range where start is after end: [DomainErrors.DateRange.StartAfterEnd] Start date cannot be after end date.
 
-=== ComparableNot 폴더 테스트 ===
+=== ComparableNot Folder Tests ===
 
---- CompositeValueObjects 하위 폴더 ---
-  === CompositeValueObjects 에러 테스트 ===
+--- CompositeValueObjects Subfolder ---
+  === CompositeValueObjects Error Tests ===
 
-  --- Address 에러 테스트 ---
-빈 거리명: [DomainErrors.Street.Empty] Street cannot be empty. Current value: ''
-빈 도시명: [DomainErrors.City.Empty] City cannot be empty. Current value: ''
-잘못된 우편번호: [DomainErrors.PostalCode.WrongLength] PostalCode must be exactly 5 characters. Current length: 4
+  --- Address Error Tests ---
+Empty street name: [DomainErrors.Street.Empty] Street cannot be empty. Current value: ''
+Empty city name: [DomainErrors.City.Empty] City cannot be empty. Current value: ''
+Invalid postal code: [DomainErrors.PostalCode.WrongLength] PostalCode must be exactly 5 characters. Current length: 4
 
-  --- Street 에러 테스트 ---
-빈 거리명: [DomainErrors.Street.Empty] Street cannot be empty. Current value: ''
+  --- Street Error Tests ---
+Empty street name: [DomainErrors.Street.Empty] Street cannot be empty. Current value: ''
 
-  --- City 에러 테스트 ---
-빈 도시명: [DomainErrors.City.Empty] City cannot be empty. Current value: ''
+  --- City Error Tests ---
+Empty city name: [DomainErrors.City.Empty] City cannot be empty. Current value: ''
 
-  --- PostalCode 에러 테스트 ---
-빈 우편번호: [DomainErrors.PostalCode.Empty] PostalCode cannot be empty. Current value: ''
-5자리 숫자가 아닌 형식: [DomainErrors.PostalCode.WrongLength] PostalCode must be exactly 5 characters. Current length: 4
+  --- PostalCode Error Tests ---
+Empty postal code: [DomainErrors.PostalCode.Empty] PostalCode cannot be empty. Current value: ''
+Non-5-digit format: [DomainErrors.PostalCode.WrongLength] PostalCode must be exactly 5 characters. Current length: 4
 
---- PrimitiveValueObjects 하위 폴더 ---
-  === PrimitiveValueObjects 에러 테스트 ===
+--- PrimitiveValueObjects Subfolder ---
+  === PrimitiveValueObjects Error Tests ===
 
-  --- BinaryData 에러 테스트 ---
-null 바이너리 데이터: [DomainErrors.BinaryData.Empty] BinaryData cannot be empty. Current value: 'null'
-빈 바이너리 데이터: [DomainErrors.BinaryData.Empty] BinaryData cannot be empty. Current value: 'null'
+  --- BinaryData Error Tests ---
+Null binary data: [DomainErrors.BinaryData.Empty] BinaryData cannot be empty. Current value: 'null'
+Empty binary data: [DomainErrors.BinaryData.Empty] BinaryData cannot be empty. Current value: 'null'
 
---- CompositePrimitiveValueObjects 하위 폴더 ---
-  === CompositePrimitiveValueObjects 에러 테스트 ===
+--- CompositePrimitiveValueObjects Subfolder ---
+  === CompositePrimitiveValueObjects Error Tests ===
 
-  --- Coordinate 에러 테스트 ---
-범위를 벗어난 X 좌표: [DomainErrors.Coordinate.OutOfRange] Coordinate must be between 0 and 1000. Current value: '-1'
-범위를 벗어난 Y 좌표: [DomainErrors.Coordinate.OutOfRange] Coordinate must be between 0 and 1000. Current value: '1001'
+  --- Coordinate Error Tests ---
+Out-of-range X coordinate: [DomainErrors.Coordinate.OutOfRange] Coordinate must be between 0 and 1000. Current value: '-1'
+Out-of-range Y coordinate: [DomainErrors.Coordinate.OutOfRange] Coordinate must be between 0 and 1000. Current value: '1001'
 ```
 
 ### Key Implementation Points
 
-모든 검증은 `Validate<ValueObjectType>.메서드()`로 시작하고, `Then*()` 메서드로 추가 규칙을 연결합니다. 값 변환은 `ThenNormalize()`로 명시적으로 표현하고, 표준 메서드로 표현하기 어려운 검증은 `ThenMust()`를 uses. `TypedValidation`에서 `Validation<Error, T>`로의 암시적 변환 덕분에 기존 코드와 호환됩니다.
+All validation starts with `Validate<ValueObjectType>.Method()` and additional rules are connected with `Then*()` methods. Value transformation is expressed explicitly with `ThenNormalize()`, and validations that are difficult to express with standard methods use `ThenMust()`. Thanks to implicit conversion from `TypedValidation` to `Validation<Error, T>`, it is compatible with existing code.
 
 ## Project Description
 
 ### Project Structure
 ```
 15-Validation-Fluent/
-├── README.md                              # 이 문서
-├── ValidationFluent/                      # 메인 프로젝트
-│   ├── Program.cs                         # 메인 실행 파일
-│   ├── ValidationFluent.csproj            # 프로젝트 파일
-│   └── ValueObjects/                      # 값 객체 구현
-│       ├── 01-ComparableNot/              # 비교 불가능한 값 객체
+├── README.md                              # This document
+├── ValidationFluent/                      # Main project
+│   ├── Program.cs                         # Main entry file
+│   ├── ValidationFluent.csproj            # Project file
+│   └── ValueObjects/                      # Value object implementation
+│       ├── 01-ComparableNot/              # Non-comparable value objects
 │       │   ├── 01-PrimitiveValueObjects/
-│       │   │   └── BinaryData.cs          # 바이너리 데이터
+│       │   │   └── BinaryData.cs          # Binary data
 │       │   ├── 02-CompositePrimitiveValueObjects/
-│       │   │   └── Coordinate.cs          # 좌표 (x, y)
+│       │   │   └── Coordinate.cs          # Coordinates (x, y)
 │       │   └── 03-CompositeValueObjects/
-│       │       ├── Street.cs              # 거리명
-│       │       ├── City.cs                # 도시명
-│       │       ├── PostalCode.cs          # 우편번호
-│       │       └── Address.cs             # 주소 (복합)
-│       └── 02-Comparable/                 # 비교 가능한 값 객체
+│       │       ├── Street.cs              # Street name
+│       │       ├── City.cs                # City name
+│       │       ├── PostalCode.cs          # Postal code
+│       │       └── Address.cs             # Address (composite)
+│       └── 02-Comparable/                 # Comparable value objects
 │           ├── 01-PrimitiveValueObjects/
-│           │   └── Denominator.cs         # 분모 (0이 아닌 정수)
+│           │   └── Denominator.cs         # Denominator (non-zero integer)
 │           ├── 02-CompositePrimitiveValueObjects/
-│           │   └── DateRange.cs           # 날짜 범위
+│           │   └── DateRange.cs           # Date range
 │           └── 03-CompositeValueObjects/
-│               ├── Currency.cs            # 통화 (SmartEnum 기반)
-│               ├── MoneyAmount.cs         # 금액
-│               ├── Price.cs               # 가격 (금액 + 통화)
-│               └── PriceRange.cs          # 가격 범위
-└── ValidationFluent.Tests.Unit/           # 단위 테스트
-    ├── Using.cs                           # 전역 using 정의
-    ├── PostalCodeTests.cs                 # PostalCode Fluent 검증 테스트
-    └── CurrencyTests.cs                   # Currency Fluent 검증 테스트
+│               ├── Currency.cs            # Currency (SmartEnum-based)
+│               ├── MoneyAmount.cs         # Money amount
+│               ├── Price.cs               # Price (amount + currency)
+│               └── PriceRange.cs          # Price range
+└── ValidationFluent.Tests.Unit/           # Unit tests
+    ├── Using.cs                           # Global using definitions
+    ├── PostalCodeTests.cs                 # PostalCode Fluent validation tests
+    └── CurrencyTests.cs                   # Currency Fluent validation tests
 ```
 
 ### Core Code
 
-#### Validate&lt;T&gt; 정적 클래스 (Functorium 프레임워크 제공)
+#### Validate&lt;T&gt; Static Class (Provided by Functorium Framework)
 ```csharp
 /// <summary>
-/// 타입 파라미터를 한 번만 지정하는 검증 시작점
+/// Single entry point for validation with type parameter specified only once
 /// </summary>
 public static class Validate<TValueObject>
 {
-    // 문자열 검증
+    // String validation
     public static TypedValidation<TValueObject, string> NotEmpty(string value);
     public static TypedValidation<TValueObject, string> MinLength(string value, int minLength);
     public static TypedValidation<TValueObject, string> MaxLength(string value, int maxLength);
     public static TypedValidation<TValueObject, string> ExactLength(string value, int length);
     public static TypedValidation<TValueObject, string> Matches(string value, Regex pattern, string? message = null);
 
-    // 숫자 검증
+    // Numeric validation
     public static TypedValidation<TValueObject, T> NonNegative<T>(T value) where T : INumber<T>;
     public static TypedValidation<TValueObject, T> Positive<T>(T value) where T : INumber<T>;
     public static TypedValidation<TValueObject, T> Between<T>(T value, T min, T max) where T : INumber<T>;
     public static TypedValidation<TValueObject, T> AtMost<T>(T value, T max) where T : INumber<T>;
     public static TypedValidation<TValueObject, T> AtLeast<T>(T value, T min) where T : INumber<T>;
 
-    // 커스텀 검증
+    // Custom validation
     public static TypedValidation<TValueObject, T> Must<T>(
         T value, Func<T, bool> predicate, DomainErrorType errorType, string message);
 }
 ```
 
-#### TypedValidationExtensions (Functorium 프레임워크 제공)
+#### TypedValidationExtensions (Provided by Functorium Framework)
 ```csharp
 /// <summary>
-/// TypedValidation 체이닝을 위한 확장 메서드
+/// Extension methods for TypedValidation chaining
 /// </summary>
 public static class TypedValidationExtensions
 {
-    // 문자열 체이닝
+    // String chaining
     public static TypedValidation<TVO, string> ThenNotEmpty<TVO>(this TypedValidation<TVO, string> v);
     public static TypedValidation<TVO, string> ThenMinLength<TVO>(this TypedValidation<TVO, string> v, int min);
     public static TypedValidation<TVO, string> ThenMaxLength<TVO>(this TypedValidation<TVO, string> v, int max);
@@ -341,14 +341,14 @@ public static class TypedValidationExtensions
     public static TypedValidation<TVO, string> ThenMatches<TVO>(this TypedValidation<TVO, string> v, Regex pattern);
     public static TypedValidation<TVO, string> ThenNormalize<TVO>(this TypedValidation<TVO, string> v, Func<string, string> fn);
 
-    // 숫자 체이닝
+    // Numeric chaining
     public static TypedValidation<TVO, T> ThenNonNegative<TVO, T>(this TypedValidation<TVO, T> v) where T : INumber<T>;
     public static TypedValidation<TVO, T> ThenPositive<TVO, T>(this TypedValidation<TVO, T> v) where T : INumber<T>;
     public static TypedValidation<TVO, T> ThenBetween<TVO, T>(this TypedValidation<TVO, T> v, T min, T max) where T : INumber<T>;
     public static TypedValidation<TVO, T> ThenAtMost<TVO, T>(this TypedValidation<TVO, T> v, T max) where T : INumber<T>;
     public static TypedValidation<TVO, T> ThenAtLeast<TVO, T>(this TypedValidation<TVO, T> v, T min) where T : INumber<T>;
 
-    // 커스텀 체이닝
+    // Custom chaining
     public static TypedValidation<TVO, T> ThenMust<TVO, T>(this TypedValidation<TVO, T> v,
         Func<T, bool> predicate, DomainErrorType errorType, string message);
     public static TypedValidation<TVO, T> ThenMust<TVO, T>(this TypedValidation<TVO, T> v,
@@ -356,7 +356,7 @@ public static class TypedValidationExtensions
 }
 ```
 
-#### PostalCode - 가장 간결한 예시
+#### PostalCode - Most Concise Example
 ```csharp
 public sealed class PostalCode : SimpleValueObject<string>
 {
@@ -377,18 +377,18 @@ public sealed class PostalCode : SimpleValueObject<string>
 }
 ```
 
-#### Currency - SmartEnum 기반 value object
+#### Currency - SmartEnum-Based Value Object
 ```csharp
 public sealed class Currency
     : SmartEnum<Currency, string>
     , IValueObject
 {
-    // 커스텀 에러 타입 정의
+    // Custom error type definition
     public sealed record Unsupported : DomainErrorType.Custom;
 
-    public static readonly Currency KRW = new(nameof(KRW), "KRW", "한국 원화", "₩");
-    public static readonly Currency USD = new(nameof(USD), "USD", "미국 달러", "$");
-    // ... 기타 통화들 ...
+    public static readonly Currency KRW = new(nameof(KRW), "KRW", "Korean Won", "₩");
+    public static readonly Currency USD = new(nameof(USD), "USD", "US Dollar", "$");
+    // ... other currencies ...
 
     private static readonly HashSet<string> SupportedCodes =
         new(List.Select(c => c.Value), StringComparer.OrdinalIgnoreCase);
@@ -409,7 +409,7 @@ public sealed class Currency
 }
 ```
 
-#### MoneyAmount - 숫자 범위 검증
+#### MoneyAmount - Numeric Range Validation
 ```csharp
 public sealed class MoneyAmount : ComparableSimpleValueObject<decimal>
 {
@@ -427,7 +427,7 @@ public sealed class MoneyAmount : ComparableSimpleValueObject<decimal>
 }
 ```
 
-#### Coordinate - 복합 기본형 value object
+#### Coordinate - Composite Primitive Value Object
 ```csharp
 public sealed class Coordinate : ValueObject
 {
@@ -460,58 +460,58 @@ public sealed class Coordinate : ValueObject
 
 ## Summary at a Glance
 
-이전 DomainError.For 직접 사용 방식과 Validate&lt;T&gt; Fluent 방식의 차이를 compares.
+Comparing the differences between the previous DomainError.For direct usage approach and the Validate&lt;T&gt; Fluent approach.
 
 ### Comparison Table
-| Aspect | Previous approach (DomainError.For 직접 사용) | Current approach (Validate&lt;T&gt; Fluent) |
+| Aspect | Previous Approach (Direct DomainError.For) | Current Approach (Validate&lt;T&gt; Fluent) |
 |------|---------------------------------------|--------------------------------------|
-| **타입 지정** | 매번 `DomainError.For<T>(...)` | 처음 한 번 `Validate<T>.메서드()` |
-| **검증 흐름** | 중첩된 삼항 연산자/Bind 체인 | 선형적인 `Then*()` 체이닝 |
-| **값 변환** | validation logic에 묻혀 있음 | `ThenNormalize()`로 명시적 |
-| **error message** | 매번 수동 작성 | 자동 생성 (커스텀 가능) |
-| **코드량** | 검증 메서드당 5-10줄 | 검증 메서드당 1-3줄 |
+| **Type specification** | Every time with `DomainError.For<T>(...)` | Once with `Validate<T>.Method()` |
+| **Validation flow** | Nested ternary operators/Bind chains | Linear `Then*()` chaining |
+| **Value transformation** | Buried in validation logic | Explicit with `ThenNormalize()` |
+| **Error messages** | Manually written each time | Auto-generated (customizable) |
+| **Code volume** | 5-10 lines per validation method | 1-3 lines per validation method |
 
-### Validate&lt;T&gt; 메서드 선택 가이드
+### Validate&lt;T&gt; Method Selection Guide
 
-검증 조건에 따라 시작 메서드와 체이닝 메서드를 선택합니다.
+Choose starting methods and chaining methods based on the validation condition.
 
-| 검증 조건 | 시작 메서드 | 체이닝 메서드 |
+| Validation Condition | Starting Method | Chaining Method |
 |-----------|-------------|---------------|
-| 빈 값 | `Validate<T>.NotEmpty(value)` | `.ThenNotEmpty()` |
-| 최소 길이 | `Validate<T>.MinLength(value, min)` | `.ThenMinLength(min)` |
-| 최대 길이 | `Validate<T>.MaxLength(value, max)` | `.ThenMaxLength(max)` |
-| 정확한 길이 | `Validate<T>.ExactLength(value, len)` | `.ThenExactLength(len)` |
-| 패턴 매칭 | `Validate<T>.Matches(value, regex)` | `.ThenMatches(regex)` |
-| 0 이상 | `Validate<T>.NonNegative(value)` | `.ThenNonNegative()` |
-| 양수 | `Validate<T>.Positive(value)` | `.ThenPositive()` |
-| 범위 | `Validate<T>.Between(value, min, max)` | `.ThenBetween(min, max)` |
-| 최대값 | `Validate<T>.AtMost(value, max)` | `.ThenAtMost(max)` |
-| 최소값 | `Validate<T>.AtLeast(value, min)` | `.ThenAtLeast(min)` |
-| 커스텀 | `Validate<T>.Must(value, pred, type, msg)` | `.ThenMust(pred, type, msg)` |
+| Empty value | `Validate<T>.NotEmpty(value)` | `.ThenNotEmpty()` |
+| Minimum length | `Validate<T>.MinLength(value, min)` | `.ThenMinLength(min)` |
+| Maximum length | `Validate<T>.MaxLength(value, max)` | `.ThenMaxLength(max)` |
+| Exact length | `Validate<T>.ExactLength(value, len)` | `.ThenExactLength(len)` |
+| Pattern matching | `Validate<T>.Matches(value, regex)` | `.ThenMatches(regex)` |
+| Non-negative | `Validate<T>.NonNegative(value)` | `.ThenNonNegative()` |
+| Positive | `Validate<T>.Positive(value)` | `.ThenPositive()` |
+| Range | `Validate<T>.Between(value, min, max)` | `.ThenBetween(min, max)` |
+| Maximum value | `Validate<T>.AtMost(value, max)` | `.ThenAtMost(max)` |
+| Minimum value | `Validate<T>.AtLeast(value, min)` | `.ThenAtLeast(min)` |
+| Custom | `Validate<T>.Must(value, pred, type, msg)` | `.ThenMust(pred, type, msg)` |
 
 ### Pros and Cons
 | Pros | Cons |
 |------|------|
-| **코드량 70% 감소** | Functorium 프레임워크 의존성 |
-| **선형적이고 읽기 쉬운 흐름** | 새로운 API 학습 필요 |
-| **타입 한 번 지정** | - |
-| **자동 error message 생성** | - |
-| **명시적 값 변환 (ThenNormalize)** | - |
-| **기존 코드 완벽 호환** | - |
+| **70% code reduction** | Functorium framework dependency |
+| **Linear and readable flow** | New API learning required |
+| **Type specified once** | - |
+| **Auto-generated error messages** | - |
+| **Explicit value transformation (ThenNormalize)** | - |
+| **Full backward compatibility** | - |
 
 ## FAQ
 
-### Q1: 언제 Validate&lt;T&gt;를 사용하고 언제 DomainError.For&lt;T&gt;를 사용하나요?
+### Q1: When should I use Validate&lt;T&gt; vs DomainError.For&lt;T&gt;?
 
-대부분의 경우 `Validate<T>` Fluent API를 uses. `DomainError.For<T>()`는 복잡한 비즈니스 로직처럼 표준 체이닝으로 표현하기 어려운 경우에만 uses.
+In most cases, use the `Validate<T>` Fluent API. `DomainError.For<T>()` is used only in cases that are difficult to express with standard chaining, such as complex business logic.
 
 ```csharp
-// Validate<T> 사용 (권장) - 표준 검증 패턴
+// Use Validate<T> (recommended) - standard validation patterns
 public static Validation<Error, string> Validate(string value) =>
     Validate<PostalCode>.NotEmpty(value)
         .ThenExactLength(5);
 
-// DomainError.For<T>() 사용 - 복잡한 비즈니스 로직
+// Use DomainError.For<T>() - complex business logic
 // sealed record MinExceedsMax : DomainErrorType.Custom;
 private static Validation<Error, (Price Min, Price Max)> ValidatePriceRange(Price min, Price max) =>
     (decimal)min.Amount > (decimal)max.Amount
@@ -521,39 +521,39 @@ private static Validation<Error, (Price Min, Price Max)> ValidatePriceRange(Pric
         : (Min: min, Max: max);
 ```
 
-### Q2: ThenNormalize는 언제 사용하나요?
+### Q2: When should ThenNormalize be used?
 
-존재성 검증(NotEmpty) 후, 구조적 검증(ExactLength, Matches 등) 전에 값을 변환(정규화)할 때 uses. 정규화된 값을 기준으로 구조적 검증을 수행하는 순서를 지키세요.
+Use it to transform (normalize) a value after existence validation (NotEmpty) and before structural validation (ExactLength, Matches, etc.). Follow the order of performing structural validation on the normalized value.
 
 ```csharp
-// Good: 존재성 검증 → 정규화 → 구조적 검증
+// Good: Existence validation -> Normalization -> Structural validation
 Validate<Currency>.NotEmpty(value)
-    .ThenNormalize(v => v.ToUpperInvariant())  // 먼저 정규화
-    .ThenExactLength(3);                       // 정규화된 값을 검증
+    .ThenNormalize(v => v.ToUpperInvariant())  // Normalize first
+    .ThenExactLength(3);                       // Validate normalized value
 
-// Bad: 구조적 검증 후 정규화 (검증 시점의 값과 최종 값이 다를 수 있음)
+// Bad: Structural validation then normalization (value at validation time may differ from final value)
 Validate<Currency>.NotEmpty(value)
-    .ThenExactLength(3)                        // 정규화 전 값을 검증
-    .ThenNormalize(v => v.ToUpperInvariant());  // 뒤늦게 변환
+    .ThenExactLength(3)                        // Validates pre-normalization value
+    .ThenNormalize(v => v.ToUpperInvariant());  // Late transformation
 ```
 
-### Q3: 여러 필드를 동시에 검증하려면?
+### Q3: How do you validate multiple fields simultaneously?
 
-개별 필드를 `Validate<T>`로 검증한 뒤, LINQ 쿼리 구문이나 `Apply`로 결합합니다.
+Validate individual fields with `Validate<T>`, then combine them with LINQ query syntax or `Apply`.
 
 ```csharp
-// LINQ 쿼리 구문 (권장)
+// LINQ query syntax (recommended)
 public static Validation<Error, (int X, int Y)> Validate(int x, int y) =>
     from validX in Validate<Coordinate>.Between(x, 0, 1000)
     from validY in Validate<Coordinate>.Between(y, 0, 1000)
     select (X: validX, Y: validY);
 
-// Apply 패턴 (모든 에러 수집)
+// Apply pattern (collects all errors)
 public static Validation<Error, (string Street, string City)> Validate(string street, string city) =>
     (Validate<Address>.NotEmpty(street), Validate<Address>.NotEmpty(city))
         .Apply((s, c) => (Street: s, City: c));
 ```
 
-검증 코드가 Fluent API로 간결해졌지만, 이 value object들이 설계 규칙을 일관되게 따르고 있는지는 어떻게 보장할까요? Next chapter에서는 ArchUnitNET 기반 아키텍처 테스트로 value object의 구조적 규칙을 자동 검증합니다.
+Validation code has become concise with the Fluent API, but how do you guarantee that these value objects consistently follow design rules? In the next chapter, we use ArchUnitNET-based architecture tests to automatically verify the structural rules of value objects.
 
-→ [16장: 아키텍처 테스트](../16-Architecture-Test/)
+→ [Chapter 16: Architecture Tests](../16-Architecture-Test/)

@@ -4,47 +4,47 @@ title: "Structured Error Codes"
 
 ## Overview
 
-`Error.New("Invalid denominator value: 0")`라는 error message만으로 어떤 도메인에서, 어떤 이유로, 어떤 값이 문제를 일으켰는지 파악할 수 있나요? `"DomainErrors.클래스.이유"` 형식의 구조화된 error code와 실패 당시의 값 정보를 함께 관리하면, 디버깅과 모니터링의 효율성이 크게 향상됩니다.
+Can you determine from the error message `Error.New("Invalid denominator value: 0")` alone which domain, what reason, and which value caused the problem? By managing structured error codes in the format `"DomainErrors.ClassName.Reason"` together with the value at the time of failure, debugging and monitoring efficiency are greatly improved.
 
 ## Learning Objectives
 
-Upon completing this chapter, you will be able to.
+Upon completing this chapter, you will be able to:
 
-1. `DomainErrors.클래스.이유` 형식의 **구조화된 error code 시스템을** 설계할 수 있습니다
-2. 실패 당시의 값과 error code를 함께 관리하는 **타입 안전한 error handling 시스템을** 구축할 수 있습니다
-3. 기존 LanguageExt의 `Error` 타입과 완전히 호환되는 **error handling 프레임워크를** 설계할 수 있습니다
+1. Design a **structured error code system** in the format `DomainErrors.ClassName.Reason`
+2. Build a **type-safe error handling system** that manages the failed value alongside the error code
+3. Design an **error handling framework** that is fully compatible with LanguageExt's `Error` type
 
 ## Why Is This Needed?
 
-Previous step `11-ValueObject-Framework`에서는 프레임워크를 통해 value object의 생성과 검증을 체계화했습니다. 그러나 실제 운영 환경에서 에러가 발생했을 때 세 가지 문제가 있었습니다. 기존 `Error.New` 방식은 단순한 문자열 메시지만 제공하여 에러의 출처를 체계적으로 파악하기 어렵고, 실패한 값 정보가 메시지에 하드코딩되어 동적 분석이 불가능하며, value object마다 다른 형식의 error message를 사용하여 일관성이 부족했습니다.
+In the previous step `11-ValueObject-Framework`, we systematized value object creation and validation through the framework. However, when errors occurred in production environments, there were three problems. The existing `Error.New` approach provided only simple string messages, making it difficult to systematically identify the source of errors. Failed value information was hardcoded into messages, making dynamic analysis impossible. And each value object used different error message formats, lacking consistency.
 
-**구조화된 error code 시스템은** 에러 발생 시점의 도메인 정보, 실패 이유, 실패한 값을 체계적으로 분리하여 관리합니다.
+**A structured error code system** systematically separates and manages the domain information, failure reason, and failed value at the time of error occurrence.
 
 ## Core Concepts
 
-### 구조화된 error code 시스템
+### Structured Error Code System
 
-에러를 `"DomainErrors.클래스.이유"` 형식의 계층적 코드로 분류합니다. 도메인 영역, 구체적인 클래스, 실패 이유가 코드에 명시되어 에러의 출처와 성격을 즉시 식별할 수 있습니다.
+Errors are classified using hierarchical codes in the format `"DomainErrors.ClassName.Reason"`. The domain area, specific class, and failure reason are explicitly stated in the code, enabling immediate identification of the source and nature of the error.
 
-기존 방식과 구조화된 방식의 에러 생성을 compares.
+Comparing error creation between the existing approach and the structured approach.
 
 ```csharp
-// 이전 방식 (구조화되지 않은 방식) - 디버깅과 모니터링이 어려움
+// Previous approach (unstructured) - difficult to debug and monitor
 var error = Error.New("Invalid denominator value: 0");
 
-// 개선된 방식 (구조화된 방식) - 체계적인 에러 관리
+// Improved approach (structured) - systematic error management
 var error = ErrorCodeFactory.Create(
     errorCode: $"{nameof(DomainErrors)}.{nameof(Denominator)}.{nameof(Zero)}",
     errorCurrentValue: 0,
     errorMessage: $"Denominator cannot be zero. Current value: '0'");
 ```
 
-### 타입 안전한 error information 관리
+### Type-Safe Error Information Management
 
-`Create<T>`, `Create<T1, T2>` 등 제네릭 오버로딩을 통해 실패한 값의 타입 정보를 보존합니다. compile time에 타입 안전성이 보장되고, runtime에 정확한 값 정보를 활용할 수 있습니다.
+Through generic overloads such as `Create<T>` and `Create<T1, T2>`, type information of the failed value is preserved. Type safety is guaranteed at compile time, and accurate value information can be utilized at runtime.
 
 ```csharp
-// 다양한 타입의 에러 정보를 타입 안전하게 관리
+// Managing various types of error information in a type-safe manner
 var stringError = ErrorCodeFactory.Create(
     errorCode: $"{nameof(DomainErrors)}.{nameof(Name)}.{nameof(TooShort)}",
     errorCurrentValue: "i@name",
@@ -60,14 +60,14 @@ var multiValueError = ErrorCodeFactory.Create(
     errorMessage: $"Coordinate is out of range. Current values: '1500', '2000'");
 ```
 
-### 내부 DomainErrors 클래스 패턴
+### Internal DomainErrors Class Pattern
 
-value object와 관련된 에러 정의를 같은 파일 내에 위치시켜 높은 응집도를 달성합니다. 새 value object를 생성할 때 에러 정의도 함께 작성하므로 개발 생산성이 향상됩니다.
+Error definitions related to a value object are placed in the same file to achieve high cohesion. When creating a new value object, error definitions are written together, improving development productivity.
 
 ```csharp
 public sealed class Denominator : SimpleValueObject<int>
 {
-    // ... 기존 코드 ...
+    // ... existing code ...
 
     internal static class DomainErrors
     {
@@ -80,163 +80,163 @@ public sealed class Denominator : SimpleValueObject<int>
 }
 ```
 
-Next chapter에서는 이 error code 시스템에 Fluent API를 적용하여 더 간결한 에러 정의 방식을 implements.
+In the next chapter, we apply a Fluent API to this error code system to implement a more concise error definition approach.
 
 ## Practical Guidelines
 
 ### Expected Output
 ```
-=== 체계적인 에러 처리 패턴 ===
+=== Systematic Error Handling Patterns ===
 
-=== Comparable 테스트 ===
+=== Comparable Tests ===
 
---- CompositeValueObjects 하위 폴더 ---
-  === CompositeValueObjects 에러 테스트 ===
+--- CompositeValueObjects Subfolder ---
+  === CompositeValueObjects Error Tests ===
 
-  --- Currency 에러 테스트 ---
-빈 통화 코드: ErrorCode: DomainErrors.Currency.Empty, ErrorCurrentValue:
-3자리가 아닌 형식: ErrorCode: DomainErrors.Currency.NotThreeLetters, ErrorCurrentValue: AB
-지원하지 않는 통화: ErrorCode: DomainErrors.Currency.Unsupported, ErrorCurrentValue: XYZ
+  --- Currency Error Tests ---
+Empty currency code: ErrorCode: DomainErrors.Currency.Empty, ErrorCurrentValue:
+Non-3-character format: ErrorCode: DomainErrors.Currency.NotThreeLetters, ErrorCurrentValue: AB
+Unsupported currency: ErrorCode: DomainErrors.Currency.Unsupported, ErrorCurrentValue: XYZ
 
-  --- Price 에러 테스트 ---
-음수 가격: ErrorCode: DomainErrors.MoneyAmount.OutOfRange, ErrorCurrentValue: -100
+  --- Price Error Tests ---
+Negative price: ErrorCode: DomainErrors.MoneyAmount.OutOfRange, ErrorCurrentValue: -100
 
-  --- PriceRange 에러 테스트 ---
-최솟값이 최댓값을 초과하는 가격 범위: ErrorCode: DomainErrors.PriceRange.MinExceedsMax, ErrorCurrentValue: MinPrice: KRW (한국 원화) ₩ 1,000.00, MaxPrice: KRW (한국 원화) ₩ 500.00
+  --- PriceRange Error Tests ---
+Price range where min exceeds max: ErrorCode: DomainErrors.PriceRange.MinExceedsMax, ErrorCurrentValue: MinPrice: KRW (Korean Won) ₩ 1,000.00, MaxPrice: KRW (Korean Won) ₩ 500.00
 
---- PrimitiveValueObjects 하위 폴더 ---
-  === PrimitiveValueObjects 에러 테스트 ===
+--- PrimitiveValueObjects Subfolder ---
+  === PrimitiveValueObjects Error Tests ===
 
-  --- Denominator 에러 테스트 ---
-0 값: ErrorCode: DomainErrors.Denominator.Zero, ErrorCurrentValue: 0
+  --- Denominator Error Tests ---
+Zero value: ErrorCode: DomainErrors.Denominator.Zero, ErrorCurrentValue: 0
 
---- CompositePrimitiveValueObjects 하위 폴더 ---
-  === CompositePrimitiveValueObjects 에러 테스트 ===
+--- CompositePrimitiveValueObjects Subfolder ---
+  === CompositePrimitiveValueObjects Error Tests ===
 
-  --- DateRange 에러 테스트 ---
-시작일이 종료일 이후인 날짜 범위: ErrorCode: DomainErrors.DateRange.StartAfterEnd, ErrorCurrentValue: StartDate: 2024-12-31 오전 12:00:00, EndDate: 2024-01-01 오전 12:00:00
+  --- DateRange Error Tests ---
+Date range where start is after end: ErrorCode: DomainErrors.DateRange.StartAfterEnd, ErrorCurrentValue: StartDate: 2024-12-31 12:00:00 AM, EndDate: 2024-01-01 12:00:00 AM
 
-=== ComparableNot 폴더 테스트 ===
+=== ComparableNot Folder Tests ===
 
---- CompositeValueObjects 하위 폴더 ---
-  === CompositeValueObjects 에러 테스트 ===
+--- CompositeValueObjects Subfolder ---
+  === CompositeValueObjects Error Tests ===
 
-  --- Address 에러 테스트 ---
-빈 거리명: ErrorCode: DomainErrors.Street.Empty, ErrorCurrentValue:
-빈 도시명: ErrorCode: DomainErrors.City.Empty, ErrorCurrentValue:
-잘못된 우편번호: ErrorCode: DomainErrors.PostalCode.NotFiveDigits, ErrorCurrentValue: 1234
+  --- Address Error Tests ---
+Empty street name: ErrorCode: DomainErrors.Street.Empty, ErrorCurrentValue:
+Empty city name: ErrorCode: DomainErrors.City.Empty, ErrorCurrentValue:
+Invalid postal code: ErrorCode: DomainErrors.PostalCode.NotFiveDigits, ErrorCurrentValue: 1234
 
-  --- Street 에러 테스트 ---
-빈 거리명: ErrorCode: DomainErrors.Street.Empty, ErrorCurrentValue:
+  --- Street Error Tests ---
+Empty street name: ErrorCode: DomainErrors.Street.Empty, ErrorCurrentValue:
 
-  --- City 에러 테스트 ---
-빈 도시명: ErrorCode: DomainErrors.City.Empty, ErrorCurrentValue:
+  --- City Error Tests ---
+Empty city name: ErrorCode: DomainErrors.City.Empty, ErrorCurrentValue:
 
-  --- PostalCode 에러 테스트 ---
-빈 우편번호: ErrorCode: DomainErrors.PostalCode.Empty, ErrorCurrentValue:
-5자리 숫자가 아닌 형식: ErrorCode: DomainErrors.PostalCode.NotFiveDigits, ErrorCurrentValue: 1234
+  --- PostalCode Error Tests ---
+Empty postal code: ErrorCode: DomainErrors.PostalCode.Empty, ErrorCurrentValue:
+Non-5-digit format: ErrorCode: DomainErrors.PostalCode.NotFiveDigits, ErrorCurrentValue: 1234
 
---- PrimitiveValueObjects 하위 폴더 ---
-  === PrimitiveValueObjects 에러 테스트 ===
+--- PrimitiveValueObjects Subfolder ---
+  === PrimitiveValueObjects Error Tests ===
 
-  --- BinaryData 에러 테스트 ---
-null 바이너리 데이터: ErrorCode: DomainErrors.BinaryData.Empty, ErrorCurrentValue: null
-빈 바이너리 데이터: ErrorCode: DomainErrors.BinaryData.Empty, ErrorCurrentValue: 0
+  --- BinaryData Error Tests ---
+Null binary data: ErrorCode: DomainErrors.BinaryData.Empty, ErrorCurrentValue: null
+Empty binary data: ErrorCode: DomainErrors.BinaryData.Empty, ErrorCurrentValue: 0
 
---- CompositePrimitiveValueObjects 하위 폴더 ---
-  === CompositePrimitiveValueObjects 에러 테스트 ===
+--- CompositePrimitiveValueObjects Subfolder ---
+  === CompositePrimitiveValueObjects Error Tests ===
 
-  --- Coordinate 에러 테스트 ---
-범위를 벗어난 X 좌표: ErrorCode: DomainErrors.Coordinate.XOutOfRange, ErrorCurrentValue: -1
-범위를 벗어난 Y 좌표: ErrorCode: DomainErrors.Coordinate.YOutOfRange, ErrorCurrentValue: 1001
+  --- Coordinate Error Tests ---
+Out-of-range X coordinate: ErrorCode: DomainErrors.Coordinate.XOutOfRange, ErrorCurrentValue: -1
+Out-of-range Y coordinate: ErrorCode: DomainErrors.Coordinate.YOutOfRange, ErrorCurrentValue: 1001
 ```
 
 ### Key Implementation Points
-1. **ErrorCodeFactory의 제네릭 오버로딩**: `Create<T>`, `Create<T1, T2>` 메서드를 통해 다양한 타입의 error information를 타입 안전하게 관리
-2. **내부 DomainErrors 클래스 패턴**: value object 내부에 `internal static class DomainErrors`를 정의하여 응집도 높은 에러 관리
-3. **구체적인 에러 이유 명명**: `Empty`, `NotThreeLetters`, `NotFiveDigits`, `MinExceedsMax` 등 검증 조건과 정확히 일치하는 명명 규칙
-4. **LanguageExt 호환성**: 기존 `Error` 타입을 상속받아 생태계와 완전한 호환성 보장
+1. **ErrorCodeFactory generic overloads**: Type-safe management of various types of error information through `Create<T>` and `Create<T1, T2>` methods
+2. **Internal DomainErrors class pattern**: Defining `internal static class DomainErrors` inside the value object for highly cohesive error management
+3. **Specific error reason naming**: Naming conventions that exactly match validation conditions, such as `Empty`, `NotThreeLetters`, `NotFiveDigits`, `MinExceedsMax`
+4. **LanguageExt compatibility**: Inheriting from the existing `Error` type to ensure full compatibility with the ecosystem
 
 ## Project Description
 
 ### Project Structure
 ```
-ErrorCode/                                  # 메인 프로젝트
-├── Program.cs                              # 메인 실행 파일 (ValueObjects 폴더 구조와 일치하는 테스트)
-├── ErrorCode.csproj                        # 프로젝트 파일
-├── Framework/                              # 에러 처리 프레임워크
+ErrorCode/                                  # Main project
+├── Program.cs                              # Main entry file (tests matching ValueObjects folder structure)
+├── ErrorCode.csproj                        # Project file
+├── Framework/                              # Error handling framework
 │   ├── Abstractions/
 │   │   └── Errors/
-│   │       ├── ErrorCodeFactory.cs         # 에러 생성 팩토리
-│   │       ├── ErrorCodeExpected.cs        # 구조화된 에러 타입들
-│   │       └── ErrorCodeExceptional.cs     # 예외 기반 에러
+│   │       ├── ErrorCodeFactory.cs         # Error creation factory
+│   │       ├── ErrorCodeExpected.cs        # Structured error types
+│   │       └── ErrorCodeExceptional.cs     # Exception-based errors
 │   └── Layers/
 │       └── Domains/
-│           ├── ValueObject.cs              # 기본 값 객체 클래스
-│           ├── SimpleValueObject.cs        # 단일 값 객체 클래스
-│           └── AbstractValueObject.cs      # 추상 값 객체 클래스
-└── ValueObjects/                           # 값 객체 구현 (폴더 구조별 분류)
-    ├── Comparable/                         # 비교 가능한 값 객체들
+│           ├── ValueObject.cs              # Base value object class
+│           ├── SimpleValueObject.cs        # Simple value object class
+│           └── AbstractValueObject.cs      # Abstract value object class
+└── ValueObjects/                           # Value object implementation (classified by folder structure)
+    ├── Comparable/                         # Comparable value objects
     │   ├── CompositeValueObjects/
-    │   │   ├── Currency.cs                 # 통화 값 객체 (SmartEnum 기반)
-    │   │   ├── MoneyAmount.cs              # 금액 값 객체 (ComparableSimpleValueObject<decimal>)
-    │   │   ├── Price.cs                    # 가격 값 객체 (MoneyAmount + Currency 조합)
-    │   │   └── PriceRange.cs               # 가격 범위 값 객체 (Price 조합)
+    │   │   ├── Currency.cs                 # Currency value object (SmartEnum-based)
+    │   │   ├── MoneyAmount.cs              # Money amount value object (ComparableSimpleValueObject<decimal>)
+    │   │   ├── Price.cs                    # Price value object (MoneyAmount + Currency combination)
+    │   │   └── PriceRange.cs               # Price range value object (Price combination)
     │   ├── PrimitiveValueObjects/
-    │   │   └── Denominator.cs              # 분모 값 객체
+    │   │   └── Denominator.cs              # Denominator value object
     │   └── CompositePrimitiveValueObjects/
-    │       └── DateRange.cs                # 날짜 범위 값 객체
-    └── ComparableNot/                      # 비교 불가능한 값 객체들
+    │       └── DateRange.cs                # Date range value object
+    └── ComparableNot/                      # Non-comparable value objects
         ├── CompositeValueObjects/
-        │   ├── Address.cs                  # 주소 값 객체
-        │   ├── Street.cs                   # 거리명 값 객체
-        │   ├── City.cs                     # 도시명 값 객체
-        │   └── PostalCode.cs               # 우편번호 값 객체
+        │   ├── Address.cs                  # Address value object
+        │   ├── Street.cs                   # Street name value object
+        │   ├── City.cs                     # City name value object
+        │   └── PostalCode.cs               # Postal code value object
         ├── PrimitiveValueObjects/
-        │   └── BinaryData.cs               # 바이너리 데이터 값 객체
+        │   └── BinaryData.cs               # Binary data value object
         └── CompositePrimitiveValueObjects/
-            └── Coordinate.cs               # 좌표 값 객체
+            └── Coordinate.cs               # Coordinate value object
 ```
 
 ### Core Code
 
-#### ErrorCodeFactory -- 에러 생성 팩토리
+#### ErrorCodeFactory -- Error Creation Factory
 ```csharp
 public static class ErrorCodeFactory
 {
-    // 기본 에러 생성
+    // Basic error creation
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error Create(string errorCode, string errorCurrentValue, string errorMessage) =>
         new ErrorCodeExpected(errorCode, errorCurrentValue, errorMessage);
 
-    // 제네릭 단일 값 에러 생성
+    // Generic single-value error creation
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error Create<T>(string errorCode, T errorCurrentValue, string errorMessage) where T : notnull =>
         new ErrorCodeExpected<T>(errorCode, errorCurrentValue, errorMessage);
 
-    // 제네릭 다중 값 에러 생성
+    // Generic multi-value error creation
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error Create<T1, T2>(string errorCode, T1 errorCurrentValue1, T2 errorCurrentValue2, string errorMessage)
         where T1 : notnull where T2 : notnull =>
         new ErrorCodeExpected<T1, T2>(errorCode, errorCurrentValue1, errorCurrentValue2, errorMessage);
 
-    // 예외 기반 에러 생성
+    // Exception-based error creation
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Error CreateFromException(string errorCode, Exception exception) =>
         new ErrorCodeExceptional(errorCode, exception);
 
-    // 에러 코드 포맷팅
+    // Error code formatting
     [Pure, MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string Format(params string[] parts) =>
         string.Join('.', parts);
 }
 ```
 
-#### Denominator -- 내부 DomainErrors 패턴 적용
+#### Denominator -- Internal DomainErrors Pattern Applied
 ```csharp
 public sealed class Denominator : SimpleValueObject<int>, IComparable<Denominator>
 {
-    // ... 기존 구현 ...
+    // ... existing implementation ...
 
     public static Validation<Error, int> Validate(int value)
     {
@@ -246,7 +246,7 @@ public sealed class Denominator : SimpleValueObject<int>, IComparable<Denominato
         return value;
     }
 
-    // 내부 DomainErrors 클래스 - 응집도 높은 에러 정의
+    // Internal DomainErrors class - highly cohesive error definitions
     internal static class DomainErrors
     {
         public static Error Zero(int value) =>
@@ -258,16 +258,16 @@ public sealed class Denominator : SimpleValueObject<int>, IComparable<Denominato
 }
 ```
 
-#### Currency -- SmartEnum 기반 에러 정의
+#### Currency -- SmartEnum-Based Error Definitions
 
-SmartEnum에서도 동일한 내부 DomainErrors 패턴을 적용합니다.
+The same internal DomainErrors pattern is applied in SmartEnum as well.
 
 ```csharp
 public sealed class Currency : SmartEnum<Currency, string>, IValueObject
 {
-    public static readonly Currency KRW = new(nameof(KRW), "KRW", "한국 원화", "₩");
-    public static readonly Currency USD = new(nameof(USD), "USD", "미국 달러", "$");
-    // ... 기타 통화들 ...
+    public static readonly Currency KRW = new(nameof(KRW), "KRW", "Korean Won", "₩");
+    public static readonly Currency USD = new(nameof(USD), "USD", "US Dollar", "$");
+    // ... other currencies ...
 
     public static Validation<Error, string> Validate(string currencyCode) =>
         ValidateNotEmpty(currencyCode)
@@ -284,7 +284,7 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
             ? DomainErrors.NotThreeLetters(currencyCode)
             : currencyCode.ToUpperInvariant();
 
-    // 내부 DomainErrors 클래스 - SmartEnum 특화 에러 정의
+    // Internal DomainErrors class - SmartEnum-specific error definitions
     internal static class DomainErrors
     {
         public static Error Empty(string value) =>
@@ -308,9 +308,9 @@ public sealed class Currency : SmartEnum<Currency, string>, IValueObject
 }
 ```
 
-#### PriceRange -- 다중 값 에러 정의
+#### PriceRange -- Multi-Value Error Definitions
 
-복합 value object에서 다중 값 에러를 정의하는 패턴입니다.
+A pattern for defining multi-value errors in composite value objects.
 
 ```csharp
 public sealed class PriceRange : ComparableValueObject
@@ -337,7 +337,7 @@ public sealed class PriceRange : ComparableValueObject
             ? DomainErrors.MinExceedsMax(minPrice, maxPrice)
             : (MinPrice: minPrice, MaxPrice: maxPrice);
 
-    // 내부 DomainErrors 클래스 - 가격 범위 검증 에러
+    // Internal DomainErrors class - price range validation errors
     internal static class DomainErrors
     {
         public static Error MinExceedsMax(Price minPrice, Price maxPrice) =>
@@ -353,56 +353,56 @@ public sealed class PriceRange : ComparableValueObject
 
 ### Comparison Table
 
-기존 Error.New 방식과 ErrorCodeFactory 방식의 차이를 요약합니다.
+The following table summarizes the differences between the existing Error.New approach and the ErrorCodeFactory approach.
 
-| Aspect | Previous approach (Error.New) | Current approach (ErrorCodeFactory) |
+| Aspect | Previous Approach (Error.New) | Current Approach (ErrorCodeFactory) |
 |------|----------------------|------------------------------|
-| **error code 구조** | 단순한 문자열 메시지 | `DomainErrors.클래스.이유` 형식 |
-| **값 정보 관리** | 메시지에 하드코딩 | 타입 안전한 별도 필드 |
-| **디버깅 지원** | 메시지 파싱 필요 | 구조화된 정보 즉시 제공 |
-| **모니터링 지원** | 일관성 부족 | 표준화된 형식으로 집계 가능 |
-| **타입 안전성** | 없음 | 제네릭으로 보장 |
+| **Error code structure** | Simple string messages | `DomainErrors.ClassName.Reason` format |
+| **Value information management** | Hardcoded in message | Type-safe separate fields |
+| **Debugging support** | Requires message parsing | Structured information immediately available |
+| **Monitoring support** | Lacks consistency | Aggregatable in standardized format |
+| **Type safety** | None | Guaranteed through generics |
 
 ### Pros and Cons
 
-구조화된 error code 시스템의 트레이드오프를 정리합니다.
+Trade-offs of the structured error code system.
 
 | Pros | Cons |
 |------|------|
-| **구조화된 에러 관리** | **초기 설정 복잡성** |
-| **타입 안전한 error information** | **코드 볼륨 증가** |
-| **LanguageExt 완전 호환** | **학습 곡선 존재** |
-| **디버깅 및 모니터링 향상** | **프레임워크 의존성** |
+| **Structured error management** | **Initial setup complexity** |
+| **Type-safe error information** | **Increased code volume** |
+| **Full LanguageExt compatibility** | **Learning curve** |
+| **Improved debugging and monitoring** | **Framework dependency** |
 
-### 에러 이유 명명 규칙
+### Error Reason Naming Conventions
 
-에러 메서드 이름은 검증 조건과 정확히 일치해야 합니다. error code만 봐도 무엇이 잘못되었는지 즉시 파악할 수 있어야 합니다.
+Error method names must exactly match the validation condition. Just by looking at the error code, it should be immediately clear what went wrong.
 
-| 에러 상황 | 메서드 이름 | 적용 클래스 |
+| Error Situation | Method Name | Applied Class |
 |-----------|-------------|-------------|
-| **빈 값** | `Empty` | `Currency`, `PostalCode`, `Street`, `City` |
-| **3자리 영문자 아님** | `NotThreeLetters` | `Currency` |
-| **5자리 숫자 아님** | `NotFiveDigits` | `PostalCode` |
-| **좌표 범위 초과** | `XOutOfRange`, `YOutOfRange` | `Coordinate` |
-| **금액 범위 초과** | `OutOfRange` | `MoneyAmount` |
-| **0 값** | `Zero` | `Denominator` |
-| **지원 안 함** | `Unsupported` | `Currency` |
-| **최솟값 > 최댓값** | `MinExceedsMax` | `PriceRange` |
-| **시작일 >= 종료일** | `StartAfterEnd` | `DateRange` |
+| **Empty value** | `Empty` | `Currency`, `PostalCode`, `Street`, `City` |
+| **Not 3 alphabetic characters** | `NotThreeLetters` | `Currency` |
+| **Not 5 digits** | `NotFiveDigits` | `PostalCode` |
+| **Coordinate out of range** | `XOutOfRange`, `YOutOfRange` | `Coordinate` |
+| **Amount out of range** | `OutOfRange` | `MoneyAmount` |
+| **Zero value** | `Zero` | `Denominator` |
+| **Not supported** | `Unsupported` | `Currency` |
+| **Min > Max** | `MinExceedsMax` | `PriceRange` |
+| **Start >= End** | `StartAfterEnd` | `DateRange` |
 
 ## FAQ
 
-### Q1: 기존 Error.New 방식 대비 어떤 장점이 있나요?
-**A**: 구조화된 error code(`DomainErrors.Denominator.Zero`)를 통해 에러의 출처와 이유를 즉시 파악할 수 있고, 타입 안전한 값 필드로 모니터링 시스템에서 도메인별 집계가 가능합니다. 기존 방식은 메시지 문자열을 파싱해야 했습니다.
+### Q1: What are the advantages over the existing Error.New approach?
+**A**: Through structured error codes (`DomainErrors.Denominator.Zero`), the source and reason of an error can be immediately identified, and with type-safe value fields, domain-specific aggregation is possible in monitoring systems. The previous approach required parsing message strings.
 
-### Q2: 내부 DomainErrors 클래스를 사용하는 이유는?
-**A**: value object와 에러 정의를 같은 파일에 두어 응집도를 높입니다. value object를 수정할 때 관련 에러도 함께 확인할 수 있고, 새 value object 생성 시 에러 정의도 자연스럽게 함께 작성합니다.
+### Q2: Why use an internal DomainErrors class?
+**A**: Placing the value object and error definitions in the same file increases cohesion. When modifying a value object, related errors can be checked together, and when creating a new value object, error definitions are naturally written alongside it.
 
-### Q3: LanguageExt와의 호환성은 어떻게 보장되나요?
-**A**: `ErrorCodeExpected`, `ErrorCodeExpected<T>` 등이 모두 LanguageExt의 `Error` 클래스를 상속받아 구현됩니다. `Match`, `Map`, `Bind` 등의 함수형 연산자와 완전히 호환되므로, 기존 코드를 수정하지 않고도 새 error handling 시스템을 도입할 수 있습니다.
+### Q3: How is compatibility with LanguageExt guaranteed?
+**A**: `ErrorCodeExpected`, `ErrorCodeExpected<T>`, etc. are all implemented by inheriting from LanguageExt's `Error` class. They are fully compatible with functional operators such as `Match`, `Map`, and `Bind`, so the new error handling system can be introduced without modifying existing code.
 
 ---
 
-error code 구조가 갖춰졌지만, 매번 `ErrorCodeFactory.Create`를 직접 호출하면 코드가 장황해집니다. Next chapter에서는 `DomainError` 헬퍼와 `DomainErrorType`을 도입하여 에러 생성을 간결하게 만듭니다.
+The error code structure is in place, but calling `ErrorCodeFactory.Create` directly each time makes the code verbose. In the next chapter, we introduce `DomainError` helpers and `DomainErrorType` to make error creation concise.
 
-→ [14장: error code Fluent](../14-Error-Code-Fluent/)
+→ [Chapter 14: DomainError Helper](../14-Error-Code-Fluent/)

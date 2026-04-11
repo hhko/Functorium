@@ -4,76 +4,76 @@ title: "Architecture Tests"
 
 ## Overview
 
-value object를 여러 개 만들다 보면, Create 메서드가 private이거나 sealed를 빠뜨리는 등 설계 규칙이 슬금슬금 무너지기 시작합니다. C#의 제네릭 제약이나 인터페이스만으로는 이런 규칙을 compile time에 강제할 수 없습니다. In this chapter, ArchUnitNET을 활용하여 value object의 구조적 규칙을 runtime 테스트로 자동 검증하는 방법을 다룹니다.
+As you create multiple value objects, design rules start to gradually break down -- such as a Create method being private or forgetting to add sealed. C#'s generic constraints and interfaces alone cannot enforce these rules at compile time. In this chapter, we cover how to use ArchUnitNET to automatically verify the structural rules of value objects through runtime tests.
 
 ## Learning Objectives
 
-Upon completing this chapter, you will be able to.
+Upon completing this chapter, you will be able to:
 
-1. ArchUnitNET을 활용한 아키텍처 규칙 검증 시스템을 구축할 수 있습니다
-2. compile time에 강제할 수 없는 value object 설계 규칙을 runtime 테스트로 보장할 수 있습니다
-3. IValueObject 구현 클래스들의 일관된 설계 패턴을 자동으로 검증할 수 있습니다
+1. Build an architecture rule verification system using ArchUnitNET
+2. Guarantee value object design rules that cannot be enforced at compile time through runtime tests
+3. Automatically verify consistent design patterns for all classes implementing IValueObject
 
 ## Why Is This Needed?
 
-C#의 제네릭 제약이나 인터페이스만으로는 모든 value object가 동일한 메서드 시그니처를 갖도록 강제할 수 없습니다. 예를 들어, IValueObject 인터페이스에서 Create 메서드를 정의할 수는 있지만 public static이어야 한다는 규칙까지 강제하기는 어렵습니다. 개발자가 실수로 Create 메서드를 private으로 만들거나, sealed를 누락하거나, DomainErrors 클래스 구조를 다르게 작성할 수 있고, 이런 문제는 코드 리뷰로 잡기에는 번거롭고 누락되기 쉽습니다.
+C#'s generic constraints and interfaces alone cannot enforce that all value objects have the same method signatures. For example, while a Create method can be defined in the IValueObject interface, enforcing that it must be public static is difficult. Developers may accidentally make a Create method private, omit sealed, or write the DomainErrors class structure differently, and catching such issues through code review is cumbersome and easily missed.
 
-아키텍처 테스트를 도입하면 compile time에 강제할 수 없는 설계 규칙을 CI 파이프라인에서 자동으로 검증할 수 있습니다.
+By introducing architecture tests, design rules that cannot be enforced at compile time can be automatically verified in the CI pipeline.
 
 ## Core Concepts
 
-### 아키텍처 테스트
+### Architecture Tests
 
-아키텍처 테스트는 코드의 기능적 동작이 아닌 구조적 규칙을 검증합니다. 단위 테스트가 "이 메서드가 올바른 결과를 반환하는가?"를 검증한다면, 아키텍처 테스트는 "모든 value object가 동일한 설계 패턴을 따르는가?"를 검증합니다.
+Architecture tests verify structural rules of code, not functional behavior. While unit tests verify "Does this method return the correct result?", architecture tests verify "Do all value objects follow the same design pattern?"
 
 ```csharp
-// 이전 방식 (수동 검증) - 누락과 실수의 가능성
+// Previous approach (manual verification) - possibility of omission and mistakes
 public class Price : ComparableSimpleValueObject<decimal>
 {
-    // Create 메서드가 private이거나 누락될 수 있음
-    private static Price Create(decimal value) { ... } // 잘못된 구현
+    // Create method could be private or missing
+    private static Price Create(decimal value) { ... } // Incorrect implementation
 }
 
-// 개선된 방식 (자동 검증) - 아키텍처 테스트로 강제
+// Improved approach (automatic verification) - enforced by architecture tests
 public class Price : ComparableSimpleValueObject<decimal>
 {
-    // 아키텍처 테스트가 public static Create 메서드 존재를 검증
-    public static Fin<Price> Create(decimal value) { ... } // 올바른 구현
+    // Architecture test verifies existence of public static Create method
+    public static Fin<Price> Create(decimal value) { ... } // Correct implementation
 }
 ```
 
-### value object 설계 규칙 검증
+### Value Object Design Rule Verification
 
-IValueObject 인터페이스를 구현하는 모든 클래스가 특정한 구조와 메서드를 갖도록 guarantees. 접근 제한자, sealed 여부, 생성자 가시성, 메서드 반환 타입 등 인터페이스로 강제할 수 없는 세밀한 규칙까지 검증합니다.
+Guarantees that all classes implementing the IValueObject interface have specific structures and methods. Verifies fine-grained rules that cannot be enforced by interfaces, such as access modifiers, sealed status, constructor visibility, and method return types.
 
 ```csharp
-// 아키텍처 테스트 규칙 정의
+// Architecture test rule definition
 @class
-    .RequirePublic()                            // public 클래스
-    .RequireSealed()                            // sealed 클래스
-    .RequireAllPrivateConstructors()            // 모든 생성자는 private
+    .RequirePublic()                            // public class
+    .RequireSealed()                            // sealed class
+    .RequireAllPrivateConstructors()            // All constructors are private
     .RequireMethod("Create", method => method
-        .RequireVisibility(Visibility.Public)    // public 메서드
-        .RequireStatic()                         // static 메서드
-        .RequireReturnType(typeof(Fin<>)))       // Fin<T> 반환
+        .RequireVisibility(Visibility.Public)    // public method
+        .RequireStatic()                         // static method
+        .RequireReturnType(typeof(Fin<>)))       // Returns Fin<T>
 ```
 
-### 도메인 에러 규칙 검증
+### Domain Error Rule Verification
 
-DomainErrors 중첩 클래스가 있는 value object에 대해, 해당 클래스가 올바른 구조를 갖추고 있는지 검증합니다. 모든 value object에 DomainErrors가 필수는 아니므로 `RequireNestedClassIfExists`로 선택적으로 검증합니다.
+For value objects that have a DomainErrors nested class, verifies that the class has the correct structure. Since DomainErrors is not required for all value objects, it is verified optionally with `RequireNestedClassIfExists`.
 
 ```csharp
-// DomainErrors 중첩 클래스 규칙 검증
+// DomainErrors nested class rule verification
 @class
     .RequireNestedClassIfExists("DomainErrors", domainErrors =>
     {
         domainErrors
-            .RequireInternal()                          // internal 클래스
-            .RequireSealed()                            // sealed 클래스
+            .RequireInternal()                          // internal class
+            .RequireSealed()                            // sealed class
             .RequireAllMethods(method => method
-                .RequireVisibility(Visibility.Public)   // public 메서드
-                .RequireStatic()                        // static 메서드
-                .RequireReturnType(typeof(Error)));     // Error 반환
+                .RequireVisibility(Visibility.Public)   // public method
+                .RequireStatic()                        // static method
+                .RequireReturnType(typeof(Error)));     // Returns Error
     });
 ```
 
@@ -81,17 +81,17 @@ DomainErrors 중첩 클래스가 있는 value object에 대해, 해당 클래스
 
 ### Key Implementation Points
 
-ArchUnitNET의 아키텍처 로더로 대상 어셈블리를 로드하고, IValueObject 구현 클래스에 대한 설계 규칙을 정의한 뒤, 모든 value object 클래스에 규칙을 자동으로 적용합니다. 새로운 value object를 추가하더라도 기존 테스트가 자동으로 커버합니다.
+Load the target assembly with ArchUnitNET's architecture loader, define design rules for IValueObject implementation classes, and automatically apply rules to all value object classes. Even when adding new value objects, existing tests automatically provide coverage.
 
 ## Project Description
 
 ### Project Structure
 ```
-ArchitectureTest.Tests.Unit/                 # 아키텍처 테스트 프로젝트
-├── ArchitectureTestBase.cs                  # 아키텍처 테스트 기본 클래스
-├── DomainRuleTests.cs                       # 도메인 규칙 테스트
-├── ArchitectureTest.Tests.Unit.csproj       # 프로젝트 파일
-└── README.md                                # 메인 문서
+ArchitectureTest.Tests.Unit/                 # Architecture test project
+├── ArchitectureTestBase.cs                  # Architecture test base class
+├── DomainRuleTests.cs                       # Domain rule tests
+├── ArchitectureTest.Tests.Unit.csproj       # Project file
+└── README.md                                # Main documentation
 ```
 
 ### Core Code
@@ -119,7 +119,7 @@ public abstract class ArchitectureTestBase
 
 #### DomainRuleTests.cs
 
-IValueObject를 구현하는 모든 비추상 클래스에 대해 설계 규칙을 일괄 적용합니다.
+Applies design rules in bulk to all non-abstract classes implementing IValueObject.
 
 ```csharp
 [Fact]
@@ -133,7 +133,7 @@ public void ValueObject_ShouldSatisfy_Rules()
         .AreNotAbstract()
         .ValidateAllClasses(Architecture, @class =>
         {
-            // 값 객체 클래스 규칙
+            // Value object class rules
             @class
                 .RequirePublic()
                 .RequireSealed()
@@ -152,7 +152,7 @@ public void ValueObject_ShouldSatisfy_Rules()
                     .RequireReturnType(typeof(Validation<,>)))
                 .RequireImplements(typeof(IEquatable<>));
 
-            // DomainErrors 중첩 클래스 규칙
+            // DomainErrors nested class rules
             @class
                 .RequireNestedClassIfExists(IValueObject.DomainErrorsNestedClassName, domainErrors =>
                 {
@@ -171,32 +171,32 @@ public void ValueObject_ShouldSatisfy_Rules()
 
 ## Summary at a Glance
 
-수동 코드 리뷰 방식과 아키텍처 테스트 방식의 차이를 compares.
+Comparing the differences between manual code review and the architecture test approach.
 
 ### Comparison Table
-| Aspect | Previous approach | Current approach |
+| Aspect | Previous Approach | Current Approach |
 |------|-----------|-----------|
-| **규칙 검증** | 수동 코드 리뷰 | 자동화된 아키텍처 테스트 |
-| **일관성 보장** | 개발자 의존적 | 시스템 강제적 |
-| **오류 감지** | runtime 또는 수동 발견 | 컴파일 후 즉시 감지 |
-| **유지보수** | 규칙 변경 시 수동 업데이트 | 규칙 변경 시 테스트만 수정 |
+| **Rule verification** | Manual code review | Automated architecture tests |
+| **Consistency guarantee** | Developer-dependent | System-enforced |
+| **Error detection** | Runtime or manual discovery | Detected immediately after compilation |
+| **Maintenance** | Manual updates when rules change | Only tests need modification when rules change |
 
 ### Pros and Cons
 | Pros | Cons |
 |------|------|
-| **자동화된 검증** | 초기 설정 복잡성 |
-| **일관된 설계 보장** | ArchUnitNET 의존성 |
-| **규칙 위반 즉시 감지** | 리플렉션 기반으로 실행 시간 증가 |
-| **새 value object 자동 커버** | - |
+| **Automated verification** | Initial setup complexity |
+| **Consistent design guarantee** | ArchUnitNET dependency |
+| **Immediate rule violation detection** | Increased execution time due to reflection |
+| **New value objects automatically covered** | - |
 
 ## FAQ
 
-### Q1: 아키텍처 테스트가 단위 테스트와 다른 점은 무엇인가요?
+### Q1: How do architecture tests differ from unit tests?
 
-단위 테스트가 "이 메서드가 올바른 결과를 반환하는가?"를 검증한다면, 아키텍처 테스트는 "모든 value object가 동일한 설계 패턴을 따르는가?"를 검증합니다.
+While unit tests verify "Does this method return the correct result?", architecture tests verify "Do all value objects follow the same design pattern?"
 
 ```csharp
-// 단위 테스트: 기능 검증
+// Unit test: Functional verification
 [Fact]
 public void Create_ShouldReturnSuccess_WhenValidValue()
 {
@@ -204,11 +204,11 @@ public void Create_ShouldReturnSuccess_WhenValidValue()
     result.IsSucc.ShouldBeTrue();
 }
 
-// 아키텍처 테스트: 구조 검증
+// Architecture test: Structural verification
 [Fact]
 public void ValueObject_ShouldSatisfy_Rules()
 {
-    // 모든 값 객체가 Create 메서드를 public static으로 구현하는지 검증
+    // Verifies that all value objects implement Create as public static
     ArchRuleDefinition.Classes()
         .That().ImplementInterface(typeof(IValueObject))
         .Should().HaveMethod("Create", method => method
@@ -216,59 +216,59 @@ public void ValueObject_ShouldSatisfy_Rules()
 }
 ```
 
-### Q2: DomainErrors 중첩 클래스가 선택적(IfExists)으로 검증되는 이유는?
+### Q2: Why is the DomainErrors nested class verified optionally (IfExists)?
 
-모든 value object가 DomainErrors를 가져야 하는 것은 아닙니다. 단순한 value object는 복잡한 validation logic이 없어 DomainErrors가 불필요할 수 있습니다. `RequireNestedClassIfExists`는 DomainErrors가 있는 value object에만 올바른 구조를 강제하고, 없는 value object는 검증을 건너뜁니다.
+Not every value object needs to have DomainErrors. Simple value objects may not need complex validation logic and thus do not require DomainErrors. `RequireNestedClassIfExists` enforces the correct structure only on value objects that have DomainErrors, and skips verification for those that do not.
 
 ```csharp
-// 복잡한 검증이 필요한 값 객체
+// Value object requiring complex validation
 public sealed class Price : ComparableSimpleValueObject<decimal>
 {
-    internal static class DomainErrors  // DomainErrors 존재
+    internal static class DomainErrors  // DomainErrors exists
     {
         public static Error Negative(decimal value) => ...;
     }
 }
 
-// 단순한 값 객체
+// Simple value object
 public sealed class Currency : SmartEnum<Currency, string>
 {
-    // DomainErrors 없음 - 검증 건너뜀
+    // No DomainErrors - verification skipped
 }
 
-// 아키텍처 테스트: 선택적 검증
+// Architecture test: Optional verification
 @class.RequireNestedClassIfExists("DomainErrors", domainErrors =>
 {
-    // DomainErrors가 있으면 이 규칙들을 적용
+    // Apply these rules if DomainErrors exists
     domainErrors.RequireInternal().RequireSealed();
 });
 ```
 
-### Q3: 아키텍처 테스트 규칙을 추가하는 방법은?
+### Q3: How do you add architecture test rules?
 
-DomainRuleTests.cs에서 `RequireMethod`나 `RequireImplements` 등의 호출을 추가합니다. 새 규칙 추가 시 기존 value object들이 규칙을 위반하면 테스트가 실패하므로, 점진적으로 코드를 수정한 뒤 규칙을 활성화하는 것이 안전합니다.
+Add calls to `RequireMethod`, `RequireImplements`, etc. in DomainRuleTests.cs. When adding a new rule, if existing value objects violate the rule, the test will fail, so it is safe to gradually modify the code before activating the rule.
 
 ```csharp
-// 새로운 규칙 추가
+// Adding a new rule
 @class
     .RequireMethod("Create", method => method
         .RequireVisibility(Visibility.Public)
         .RequireStatic())
-    .RequireMethod("Validate", method => method  // 새로운 규칙 추가
+    .RequireMethod("Validate", method => method  // New rule added
         .RequireVisibility(Visibility.Public)
         .RequireStatic()
         .RequireReturnType(typeof(Validation<,>)));
 
-// 기존 규칙 수정
+// Modifying existing rules
 @class
     .RequireMethod("Create", method => method
         .RequireVisibility(Visibility.Public)
         .RequireStatic()
-        .RequireReturnType(typeof(Fin<>)));  // 반환 타입 변경
+        .RequireReturnType(typeof(Fin<>)));  // Return type changed
 ```
 
 ---
 
-Part 1에서 value object의 기초부터 아키텍처 테스트까지 다루었습니다. Part 2에서는 여러 value object를 동시에 검증하는 Bind/Apply 패턴을 학습합니다.
+Part 1 covered everything from the basics of value objects through architecture tests. In Part 2, we learn the Bind/Apply patterns for validating multiple value objects simultaneously.
 
-→ [Part 2의 1장: 순차 검증 (Bind)](../../Part2-Validation-Patterns/01-Bind-Sequential-Validation/)
+→ [Part 2, Chapter 1: Sequential Validation (Bind)](../../Part2-Validation-Patterns/01-Bind-Sequential-Validation/)

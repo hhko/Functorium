@@ -3,78 +3,78 @@ title: "Value Comparability"
 ---
 ## Overview
 
-두 `Denominator` 객체가 같은지는 판단할 수 있게 되었습니다. 그런데 어떤 분모가 더 큰지, 분모 목록을 오름차순으로 정렬하려면 어떻게 해야 할까요? In this chapter, `IComparable<T>`를 통해 value object에 순서 비교 기능을 부여하고, `IEqualityComparer<T>`를 통해 대소문자 무시 같은 커스텀 비교 전략을 implements.
+We can now determine whether two `Denominator` objects are equal. But what if you need to know which denominator is larger, or sort a list of denominators in ascending order? In this chapter, we add ordering comparison to value objects through `IComparable<T>` and implement custom comparison strategies such as case-insensitive comparison through `IEqualityComparer<T>`.
 
 ## Learning Objectives
 
-1. `IComparable<T>` 인터페이스를 구현하여 value object에 정렬과 범위 검색 기능을 추가할 수 있습니다
-2. `<`, `>`, `<=`, `>=` 비교 연산자를 `CompareTo` 기반으로 일관되게 오버로딩할 수 있습니다
-3. `IEqualityComparer<T>`를 활용하여 기본 동등성과 다른 커스텀 비교 전략을 별도 클래스로 분리할 수 있습니다
+1. You can implement `IComparable<T>` to add sorting and range search capabilities to value objects
+2. You can consistently overload `<`, `>`, `<=`, `>=` comparison operators based on `CompareTo`
+3. You can use `IEqualityComparer<T>` to separate custom comparison strategies different from the default equality into separate classes
 
 ## Why Is This Needed?
 
-Previous step인 `ValueEquality`에서는 value object의 동등성을 구현하여 두 객체가 같은지 다른지만 판단할 수 있었습니다. 하지만 실제 애플리케이션에서는 순서 비교와 컬렉션 최적화가 함께 필요합니다.
+In the previous step `ValueEquality`, we implemented value object equality so we could only determine whether two objects are equal or not. However, real applications also need ordering comparison and collection optimization.
 
-`IComparable<T>`를 구현하지 않으면 `List<T>.Sort()`나 `Array.BinarySearch()` 같은 정렬/검색 API를 사용할 수 없습니다. 또한 기본 동등성 비교만으로는 대소문자 무시, 특수 규칙 등 다양한 비교 요구사항을 충족할 수 없습니다. `IEqualityComparer<T>`를 도입하면 value object 자체를 수정하지 않고 비교 전략을 외부에서 주입할 수 있습니다.
+Without implementing `IComparable<T>`, you cannot use sorting/searching APIs like `List<T>.Sort()` or `Array.BinarySearch()`. Additionally, default equality comparison alone cannot meet various comparison requirements such as case-insensitive comparison or special rules. By introducing `IEqualityComparer<T>`, you can inject comparison strategies externally without modifying the value object itself.
 
 ## Core Concepts
 
-### `IComparable<T>` 인터페이스
+### The `IComparable<T>` Interface
 
-`IComparable<T>`는 value object에 순서 비교(Ordering Comparison) 기능을 provides. `CompareTo` 메서드는 두 값을 비교하여 -1(작음), 0(같음), 1(큼) 중 하나를 returns.
+`IComparable<T>` provides ordering comparison capability to value objects. The `CompareTo` method compares two values and returns one of -1 (less), 0 (equal), or 1 (greater).
 
-이전에는 두 분모가 같은지만 확인할 수 있었지만, `IComparable<T>`를 구현하면 크기 비교와 컬렉션 정렬이 가능해집니다.
+Previously, we could only check whether two denominators were equal, but by implementing `IComparable<T>`, size comparison and collection sorting become possible.
 
 ```csharp
-// 이전 방식 (순서 비교 불가능)
+// Previous approach (ordering comparison not possible)
 var a = Denominator.Create(5);
 var b = Denominator.Create(10);
-// a < b 같은 비교가 불가능했음
+// Comparisons like a < b were not possible
 
-// 개선된 방식 (IComparable<T> 구현)
+// Improved approach (IComparable<T> implementation)
 public int CompareTo(Denominator? other)
 {
     if (other is null) return 1;
     return _value.CompareTo(other._value);
 }
 
-// 이제 자연스러운 비교가 가능
+// Now natural comparison is possible
 Console.WriteLine($"a < b: {a < b}"); // True
 Console.WriteLine($"a.CompareTo(b): {a.CompareTo(b)}"); // -1
 ```
 
-`List<T>.Sort()`, `Array.BinarySearch()`, `Min()`, `Max()` 등의 메서드들이 자동으로 `CompareTo`를 uses.
+Methods such as `List<T>.Sort()`, `Array.BinarySearch()`, `Min()`, and `Max()` automatically use `CompareTo`.
 
-### 비교 operator overloading
+### Comparison Operator Overloading
 
-`CompareTo` 메서드를 기반으로 `<`, `>`, `<=`, `>=` 연산자를 구현하면 `a < b` 같은 수학적 표현을 자연스럽게 사용할 수 있습니다.
+By implementing `<`, `>`, `<=`, `>=` operators based on the `CompareTo` method, you can naturally use mathematical expressions like `a < b`.
 
 ```csharp
-// CompareTo 기반 연산자 구현
+// CompareTo-based operator implementation
 public static bool operator <(Denominator? left, Denominator? right) =>
     left is null ? right is not null : left.CompareTo(right) < 0;
 
 public static bool operator >(Denominator? left, Denominator? right) =>
     left is not null && left.CompareTo(right) > 0;
 
-// 자연스러운 비교 표현
+// Natural comparison expression
 if (denominator1 < denominator2)
 {
-    Console.WriteLine("첫 번째 분모가 더 작습니다");
+    Console.WriteLine("The first denominator is smaller");
 }
 ```
 
-### `IEqualityComparer<T>` 인터페이스
+### The `IEqualityComparer<T>` Interface
 
-`IEqualityComparer<T>`는 value object의 기본 `Equals` 메서드를 변경하지 않고 커스텀 비교 전략을 provides. 예를 들어 `EmailAddress`에서 대소문자를 무시한 비교가 필요할 때 별도의 비교자 클래스로 분리할 수 있습니다.
+`IEqualityComparer<T>` provides custom comparison strategies without modifying the value object's default `Equals` method. For example, when case-insensitive comparison is needed for `EmailAddress`, it can be separated into a dedicated comparer class.
 
 ```csharp
-// 기본 동등성 비교 (대소문자 구분)
+// Default equality comparison (case-sensitive)
 var email1 = EmailAddress.Create("User@Example.com");
 var email2 = EmailAddress.Create("user@example.com");
-Console.WriteLine($"기본 비교: {email1 == email2}"); // False
+Console.WriteLine($"Default comparison: {email1 == email2}"); // False
 
-// 커스텀 비교자 (대소문자 무시)
+// Custom comparer (case-insensitive)
 public class EmailAddressCaseInsensitiveComparer : IEqualityComparer<EmailAddress>
 {
     public bool Equals(EmailAddress? x, EmailAddress? y)
@@ -88,28 +88,28 @@ public class EmailAddressCaseInsensitiveComparer : IEqualityComparer<EmailAddres
     }
 }
 
-// 컬렉션에서 커스텀 비교자 사용
+// Using the custom comparer in collections
 var emails = new[] { email1, email2 };
 var uniqueEmails = emails.Distinct(new EmailAddressCaseInsensitiveComparer());
 ```
 
-하나의 value object에 대해 여러 비교 전략을 동시에 제공할 수 있어, 다양한 비즈니스 요구사항에 대응할 수 있습니다.
+Multiple comparison strategies can be provided simultaneously for a single value object, enabling response to diverse business requirements.
 
 ## Practical Guidelines
 
 ### Expected Output
 ```
-=== 값 객체의 비교 가능성 ===
+=== Value Object Comparability ===
 
-=== 기본 비교 기능 테스트 ===
+=== Basic Comparison Test ===
 a = 5, b = 10, c = 5
 
-CompareTo 테스트:
+CompareTo test:
 a.CompareTo(b) = -1
 b.CompareTo(a) = 1
 a.CompareTo(c) = 0
 
-연산자 테스트:
+Operator test:
 a < b: True
 a <= b: True
 a > b: False
@@ -117,10 +117,10 @@ a >= b: False
 a == c: True
 a != b: True
 
-=== null 비교 테스트 ===
+=== Null Comparison Test ===
 a = 5, nullValue = null
 
-null과의 비교:
+Comparison with null:
 a.CompareTo(null) = 1
 a > null: True
 a >= null: True
@@ -129,143 +129,143 @@ a <= null: False
 a == null: False
 a != null: True
 
-null과 null 비교:
+Null-to-null comparison:
 null == null: True
 null != null: False
 
-=== 정렬 테스트 ===
-정렬 전:
+=== Sorting Test ===
+Before sorting:
 10 3 7 1 15
-오름차순 정렬 후:
+After ascending sort:
 1 3 7 10 15
-내림차순 정렬 후:
+After descending sort:
 15 10 7 3 1
 
-=== 컬렉션에서의 비교 테스트 ===
-원본 리스트:
+=== Collection Comparison Test ===
+Original list:
 5 2 8 1 3
-최소값: 1
-최대값: 8
-범위: 7
+Minimum value: 1
+Maximum value: 8
+Range: 7
 
-=== 성능 비교 테스트 ===
-10,000개 Denominator 정렬 시간: 1ms
-이진 검색 시간: 0ms
-찾은 인덱스: 4999
+=== Performance Comparison Test ===
+Sort time for 10,000 Denominators: 1ms
+Binary search time: 0ms
+Found index: 4999
 
-=== 경계값 테스트 ===
-최소값: -2147483648
-최대값: 2147483647
-음수값: -100
-양수값: 100
+=== Boundary Value Test ===
+Minimum value: -2147483648
+Maximum value: 2147483647
+Negative value: -100
+Positive value: 100
 
-음수와 양수 비교:
-음수 < 양수: True
-음수 > 양수: False
+Negative vs positive comparison:
+Negative < Positive: True
+Negative > Positive: False
 
-최소값과 최대값 비교:
-최소값 < 최대값: True
-최소값 > 최대값: False
+Minimum vs maximum comparison:
+Minimum < Maximum: True
+Minimum > Maximum: False
 
 
 ==================================================
 
-=== IEqualityComparer<T> 사용 예제 테스트 ===
+=== IEqualityComparer<T> Usage Example Test ===
 
-=== 기본 IEqualityComparer<T> 테스트 ===
+=== Basic IEqualityComparer<T> Test ===
 email1 = user@example.com
 email2 = user@example.com
 email3 = admin@example.com
 
-기본 비교 테스트:
+Default comparison test:
 comparer.Equals(email1, email2) = True
 comparer.Equals(email1, email3) = False
 comparer.Equals(email1, null) = False
 comparer.Equals(null, null) = True
 
-해시 코드 테스트:
+Hash code test:
 email1.GetHashCode() = 650831702
 email2.GetHashCode() = 650831702
 email3.GetHashCode() = -1837482715
-같은 값의 해시 코드가 같은가? True
+Same value has same hash code? True
 
-=== 컬렉션에서 IEqualityComparer<T> 사용 테스트 ===
-원본 이메일 리스트:
+=== IEqualityComparer<T> in Collections Test ===
+Original email list:
 user1@example.com user2@example.com user1@example.com admin@example.com user2@example.com test@example.com
-기본 Distinct 후 (중복 제거):
+After default Distinct (duplicates removed):
 user1@example.com user2@example.com admin@example.com test@example.com
-HashSet 사용 후 (중복 제거):
+After HashSet (duplicates removed):
 user1@example.com user2@example.com admin@example.com test@example.com
-커스텀 EqualityComparer 사용 후:
+After custom EqualityComparer:
 user1@example.com user2@example.com admin@example.com test@example.com
 
-=== 대소문자 무시 비교자 테스트 ===
-원본 이메일 리스트 (대소문자 혼재):
+=== Case-Insensitive Comparer Test ===
+Original email list (mixed case):
 user@example.com user@example.com admin@example.com admin@example.com test@example.com test@example.com
-대소문자 구분 비교자 사용 후:
+After case-sensitive comparer:
 user@example.com admin@example.com test@example.com
-대소문자 무시 비교자 사용 후:
+After case-insensitive comparer:
 user@example.com admin@example.com test@example.com
 
-=== Dictionary에서 IEqualityComparer<T> 사용 테스트 ===
-기본 Dictionary 결과:
+=== IEqualityComparer<T> in Dictionary Test ===
+Default Dictionary result:
   user1@example.com -> User One
   user2@example.com -> User Two
   admin@example.com -> Admin
-커스텀 EqualityComparer 사용 Dictionary 결과:
+Custom EqualityComparer Dictionary result:
   user1@example.com -> User One
   user2@example.com -> User Two
   admin@example.com -> Admin
 
-=== 성능 비교 테스트 ===
-기본 Distinct 성능: 0ms
-커스텀 EqualityComparer 성능: 0ms
-HashSet 성능: 0ms
-결과 개수: 10000 (기본), 10000 (커스텀), 10000 (HashSet)
-대소문자 무시 비교자 사용 후:
+=== Performance Comparison Test ===
+Default Distinct performance: 0ms
+Custom EqualityComparer performance: 0ms
+HashSet performance: 0ms
+Result count: 10000 (default), 10000 (custom), 10000 (HashSet)
+After case-insensitive comparer:
 user@example.com admin@example.com test@example.com
 ```
 
 ### Key Implementation Points
-1. **`IComparable<T>` 구현**: `CompareTo` 메서드에서 null 처리와 값 비교 로직을 명확히 구현
-2. **비교 operator overloading**: `CompareTo` 메서드를 기반으로 `<`, `>`, `<=`, `>=` 연산자를 일관되게 구현
-3. **`IEqualityComparer<T>` 전략 패턴**: 기본 동등성과 다른 비교 전략을 별도 클래스로 분리하여 유연성 확보
+1. **`IComparable<T>` implementation**: Clearly implementing null handling and value comparison logic in the `CompareTo` method
+2. **Comparison operator overloading**: Consistently implementing `<`, `>`, `<=`, `>=` operators based on the `CompareTo` method
+3. **`IEqualityComparer<T>` strategy pattern**: Separating comparison strategies different from the default equality into separate classes for flexibility
 
 ## Project Description
 
 ### Project Structure
 ```
-ValueComparability/                             # 메인 프로젝트
-├── Program.cs                                  # 메인 실행 파일
-├── ValueObjects/                               # 값 객체 구현
-│   ├── Denominator.cs                          # IComparable<T> 구현 예제
-│   └── EmailAddress.cs                         # IEquatable<T>만 구현 예제
-├── Comparers/                                  # 커스텀 비교자 구현
-│   ├── EmailAddressComparer.cs                 # 기본 비교자
-│   └── EmailAddressCaseInsensitiveComparer.cs  # 대소문자 무시 비교자
-├── Tests/                                      # 테스트 코드
-│   ├── ComparabilityTests.cs                   # IComparable<T> 테스트
-│   └── EqualityComparerTests.cs                # IEqualityComparer<T> 테스트
-├── ValueComparability.csproj                   # 프로젝트 파일
-└── README.md                                   # 메인 문서
+ValueComparability/                             # Main project
+├── Program.cs                                  # Main entry file
+├── ValueObjects/                               # Value object implementation
+│   ├── Denominator.cs                          # IComparable<T> implementation example
+│   └── EmailAddress.cs                         # IEquatable<T> only implementation example
+├── Comparers/                                  # Custom comparer implementation
+│   ├── EmailAddressComparer.cs                 # Default comparer
+│   └── EmailAddressCaseInsensitiveComparer.cs  # Case-insensitive comparer
+├── Tests/                                      # Test code
+│   ├── ComparabilityTests.cs                   # IComparable<T> tests
+│   └── EqualityComparerTests.cs                # IEqualityComparer<T> tests
+├── ValueComparability.csproj                   # Project file
+└── README.md                                   # Main documentation
 ```
 
 ### Core Code
 
-#### Denominator - `IComparable<T>` 구현
+#### Denominator - `IComparable<T>` Implementation
 ```csharp
 public sealed class Denominator : IEquatable<Denominator>, IComparable<Denominator>
 {
     private readonly int _value;
 
-    // IComparable<T> 구현 - 순서 비교
+    // IComparable<T> implementation - ordering comparison
     public int CompareTo(Denominator? other)
     {
-        if (other is null) return 1;  // null보다는 모든 값이 큼
+        if (other is null) return 1;  // All values are greater than null
         return _value.CompareTo(other._value);
     }
 
-    // 비교 연산자 오버로딩
+    // Comparison operator overloading
     public static bool operator <(Denominator? left, Denominator? right) =>
         left is null ? right is not null : left.CompareTo(right) < 0;
 
@@ -280,7 +280,7 @@ public sealed class Denominator : IEquatable<Denominator>, IComparable<Denominat
 }
 ```
 
-#### EmailAddressCaseInsensitiveComparer - 커스텀 비교 전략
+#### EmailAddressCaseInsensitiveComparer - Custom Comparison Strategy
 ```csharp
 public class EmailAddressCaseInsensitiveComparer : IEqualityComparer<EmailAddress>
 {
@@ -289,7 +289,7 @@ public class EmailAddressCaseInsensitiveComparer : IEqualityComparer<EmailAddres
         if (x is null && y is null) return true;
         if (x is null || y is null) return false;
 
-        // 명시적 캐스팅을 통한 문자열 비교
+        // String comparison through explicit casting
         string xValue = (string)x;
         string yValue = (string)y;
         return xValue.Equals(yValue, StringComparison.OrdinalIgnoreCase);
@@ -304,9 +304,9 @@ public class EmailAddressCaseInsensitiveComparer : IEqualityComparer<EmailAddres
 }
 ```
 
-#### LINQ 표현식을 활용한 테스트 코드
+#### Test Code Using LINQ Expressions
 ```csharp
-// 여러 값 객체를 안전하게 생성하고 비교
+// Safely create and compare multiple value objects
 var result = from a in Denominator.Create(5)
              from b in Denominator.Create(10)
              from c in Denominator.Create(5)
@@ -319,64 +319,64 @@ result.Match(
         Console.WriteLine($"a < b: {a < b}");   // True
         Console.WriteLine($"a == c: {a == c}"); // True
     },
-    Fail: error => Console.WriteLine($"생성 실패: {error.Message}")
+    Fail: error => Console.WriteLine($"Creation failed: {error.Message}")
 );
 ```
 
 ## Summary at a Glance
 
-The following table 두 비교 인터페이스의 목적과 사용 시나리오를 compares.
+The following table compares the purpose and usage scenarios of the two comparison interfaces.
 
 | Aspect | `IComparable<T>` | `IEqualityComparer<T>` |
 |------|----------------|---------------------|
-| **목적** | 순서 비교 (정렬, 검색) | 커스텀 동등성 비교 |
-| **구현 위치** | value object 내부 | 별도 비교자 클래스 |
-| **주요 메서드** | `CompareTo(T other)` | `Equals(T x, T y)`, `GetHashCode(T obj)` |
-| **반환 타입** | `int` (-1, 0, 1) | `bool` (true, false) |
-| **사용 시나리오** | 정렬, Min/Max, BinarySearch | Distinct, HashSet, Dictionary |
-| **유연성** | 고정된 비교 로직 | 동적 비교 전략 교체 |
+| **Purpose** | Ordering comparison (sorting, searching) | Custom equality comparison |
+| **Implementation location** | Inside the value object | Separate comparer class |
+| **Key methods** | `CompareTo(T other)` | `Equals(T x, T y)`, `GetHashCode(T obj)` |
+| **Return type** | `int` (-1, 0, 1) | `bool` (true, false) |
+| **Usage scenarios** | Sorting, Min/Max, BinarySearch | Distinct, HashSet, Dictionary |
+| **Flexibility** | Fixed comparison logic | Dynamic comparison strategy replacement |
 
-모든 value object에 두 인터페이스가 다 필요한 것은 아닙니다. 도메인에 의미 있는 비교만 implements.
+Not every value object needs both interfaces. Implement only comparisons that are meaningful in the domain.
 
-| value object | `IEquatable<T>` | `IComparable<T>` | `IEqualityComparer<T>` |
+| Value Object | `IEquatable<T>` | `IComparable<T>` | `IEqualityComparer<T>` |
 |---------|---------------|----------------|---------------------|
-| **Denominator** | ✅ (기본 동등성) | ✅ (수치 비교) | -- (불필요) |
-| **EmailAddress** | ✅ (기본 동등성) | -- (의미 없음) | ✅ (대소문자 무시) |
+| **Denominator** | Yes (default equality) | Yes (numeric comparison) | -- (not needed) |
+| **EmailAddress** | Yes (default equality) | -- (not meaningful) | Yes (case-insensitive) |
 
 ## FAQ
 
-### Q1: `IComparable<T>`와 `IEquatable<T>`의 차이점은 무엇인가요?
-**A**: `IEquatable<T>`는 두 객체가 같은지 다른지만 판단하는 동등성 비교(`bool` 반환)를 제공하고, `IComparable<T>`는 크기 관계를 판단하는 순서 비교(`int` 반환, -1/0/1)를 provides.
+### Q1: What is the difference between `IComparable<T>` and `IEquatable<T>`?
+**A**: `IEquatable<T>` provides equality comparison (`bool` return) that only determines whether two objects are equal or not, while `IComparable<T>` provides ordering comparison (`int` return, -1/0/1) that determines the size relationship.
 
 ```csharp
 var a = Denominator.Create(5);
 var b = Denominator.Create(10);
 
-// IEquatable<T> - 동등성 비교
+// IEquatable<T> - equality comparison
 Console.WriteLine($"a == b: {a == b}"); // False
 
-// IComparable<T> - 순서 비교
+// IComparable<T> - ordering comparison
 Console.WriteLine($"a < b: {a < b}"); // True
 Console.WriteLine($"a.CompareTo(b): {a.CompareTo(b)}"); // -1
 ```
 
-### Q2: 왜 EmailAddress는 `IComparable<T>`를 구현하지 않았나요?
-**A**: 이메일 주소에는 의미 있는 순서가 없기 때문입니다. `Denominator`는 수치적 크기가 비즈니스 의미를 가지지만(5 < 10), 이메일 주소의 문자열 순서는 비즈니스 로직에서 의미가 없습니다. 도메인에 실제로 필요한 비교만 구현해야 합니다.
+### Q2: Why doesn't EmailAddress implement `IComparable<T>`?
+**A**: Because there is no meaningful ordering for email addresses. `Denominator` has numeric magnitude that carries business meaning (5 < 10), but the alphabetical order of email address strings has no meaning in business logic. You should only implement comparisons that are actually needed in the domain.
 
 ```csharp
-// Denominator - 순서가 의미 있음
+// Denominator - ordering is meaningful
 var small = Denominator.Create(5);
 var large = Denominator.Create(10);
 Console.WriteLine($"small < large: {small < large}"); // True
 
-// EmailAddress - 순서가 의미 없음
+// EmailAddress - ordering is not meaningful
 var email1 = EmailAddress.Create("admin@company.com");
 var email2 = EmailAddress.Create("user@company.com");
-// email1 < email2 같은 비교는 비즈니스적으로 의미 없음
+// Comparisons like email1 < email2 have no business meaning
 ```
 
-### Q3: `IEqualityComparer<T>`를 사용하는 이유는 무엇인가요?
-**A**: value object의 기본 `Equals` 메서드를 변경하지 않고, 상황에 따라 다른 비교 로직을 적용하기 위해서입니다. 예를 들어 이메일 주소의 기본 비교는 대소문자를 구분하지만, 중복 제거 시에는 대소문자를 무시해야 할 수 있습니다.
+### Q3: Why use `IEqualityComparer<T>`?
+**A**: To apply different comparison logic depending on the situation without modifying the value object's default `Equals` method. For example, the default comparison for email addresses is case-sensitive, but when removing duplicates, you may need to ignore case.
 
 ```csharp
 var emails = new[] {
@@ -385,16 +385,16 @@ var emails = new[] {
     EmailAddress.Create("ADMIN@EXAMPLE.COM")
 };
 
-// 기본 비교 (대소문자 구분)
-var distinct1 = emails.Distinct().ToList(); // 3개 (모두 다름)
+// Default comparison (case-sensitive)
+var distinct1 = emails.Distinct().ToList(); // 3 items (all different)
 
-// 커스텀 비교 (대소문자 무시)
+// Custom comparison (case-insensitive)
 var comparer = new EmailAddressCaseInsensitiveComparer();
-var distinct2 = emails.Distinct(comparer).ToList(); // 2개 (중복 제거)
+var distinct2 = emails.Distinct(comparer).ToList(); // 2 items (duplicates removed)
 ```
 
-동등성과 comparability을 모두 갖춘 value object가 완성되었습니다. Next chapter에서는 value object의 생성(Create)과 검증(Validate) 책임을 분리하여 single responsibility principle을 적용하는 방법을 다룹니다.
+With both equality and comparability in place, the value object is now complete. In the next chapter, we cover how to separate the creation (Create) and validation (Validate) responsibilities of value objects to apply the single responsibility principle.
 
 ---
 
-→ [9장: 생성과 검증 분리](../09-Create-Validate-Separation/)
+→ [Chapter 9: Create/Validate Separation](../09-Create-Validate-Separation/)
