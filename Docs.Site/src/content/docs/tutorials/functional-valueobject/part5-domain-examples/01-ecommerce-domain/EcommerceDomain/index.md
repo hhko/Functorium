@@ -1,0 +1,107 @@
+---
+title: "이커머스 도메인"
+---
+## Overview
+
+이커머스 도메인에서 자주 사용되는 value object를 implements.
+
+---
+
+## Learning Objectives
+
+- `Money` - 복합 비교 가능 value object
+- `ProductCode` - 단순 value object
+- `Quantity` - 비교 가능 단순 value object
+- `OrderStatus` - 타입 안전 enumeration
+- `ShippingAddress` - 복합 value object + Apply 패턴
+
+---
+
+## 실행 방법
+
+```bash
+cd Docs/tutorials/Functional-ValueObject/05-domain-examples/01-Ecommerce-Domain/EcommerceDomain
+dotnet run
+```
+
+---
+
+## 예상 출력
+
+```
+=== 이커머스 도메인 값 객체 ===
+
+1. Money (금액) - ComparableValueObject
+────────────────────────────────────────
+   상품 가격: 10,000 KRW
+   할인 금액: 1,000 KRW
+   최종 가격: 9,000 KRW
+   다른 통화 합산 시도: 예외 발생
+
+2. ProductCode (상품 코드) - SimpleValueObject
+────────────────────────────────────────
+   상품 코드: EL-001234
+   카테고리: EL
+   번호: 001234
+   잘못된 형식: 상품 코드 형식이 올바르지 않습니다. (예: EL-001234)
+
+3. Quantity (수량) - ComparableSimpleValueObject
+────────────────────────────────────────
+   수량 1: 5
+   수량 2: 3
+   합계: 8
+   비교: 5 > 3 = True
+   정렬: [1, 3, 5]
+
+4. OrderStatus (주문 상태) - SmartEnum
+────────────────────────────────────────
+   현재 상태: 대기중
+   취소 가능: True
+   전이 후: 확인됨
+   배송 중: 배송중, 취소 가능: False
+
+5. ShippingAddress (배송 주소) - ValueObject
+────────────────────────────────────────
+   수령인: 홍길동
+   주소: 테헤란로 123, 서울
+   우편번호: 06234
+   국가: KR
+
+   빈 주소 검증 결과:
+      - 수령인 이름은(는) 필수입니다.
+      - 도로명 주소은(는) 필수입니다.
+      - 도시은(는) 필수입니다.
+      - 우편번호는 필수입니다.
+      - 국가는 필수입니다.
+```
+
+---
+
+## 구현된 value object
+
+| value object | 프레임워크 타입 | 주요 특징 |
+|---------|----------------|----------|
+| Money | ComparableValueObject | 통화별 연산, 다른 통화 연산 시 예외 |
+| ProductCode | SimpleValueObject | 정규식 검증, 카테고리 파싱 |
+| Quantity | ComparableSimpleValueObject | 정렬 가능, operator overloading |
+| OrderStatus | SmartEnum | 상태 전이 로직, 행위 포함 |
+| ShippingAddress | ValueObject | Apply 패턴으로 모든 오류 수집 |
+
+## FAQ
+
+### Q1: `Money`에서 다른 통화 간 연산을 예외로 처리하는 이유는 무엇인가요?
+**A**: 1,000 KRW + 100 USD처럼 서로 다른 통화를 합산하는 것은 환율 없이는 의미가 없는 연산입니다. 이는 예상 가능한 domain rule이지만, operator overloading(`+`, `-`)의 반환 타입이 `Fin<Money>`가 될 수 없으므로 예외를 uses.
+
+### Q2: `ShippingAddress`에서 `Apply` 패턴을 사용하는 이유는 무엇인가요?
+**A**: 배송 주소는 수령인, 도로명, 도시, 우편번호, 국가 등 여러 필드를 동시에 검증해야 합니다. `Apply` 패턴을 사용하면 모든 필드의 오류를 한 번에 수집하여 사용자에게 알려줄 수 있습니다. `Bind`를 사용하면 첫 번째 오류에서 중단되어 나머지 오류를 알 수 없습니다.
+
+### Q3: `ProductCode`에서 카테고리 코드를 별도 속성으로 제공하는 이유는 무엇인가요?
+**A**: 상품 코드 `EL-001234`에서 카테고리(`EL`)와 번호(`001234`)는 각각 의미를 가진 도메인 정보입니다. 매번 문자열을 파싱하는 대신 value object가 생성 시점에 파싱하여 속성으로 제공하면, 호출 측에서 안전하고 편리하게 사용할 수 있습니다.
+
+---
+
+## Next Steps
+
+금융 도메인의 value object를 학습합니다.
+
+→ [5.2 금융 도메인](../../02-Finance-Domain/FinanceDomain/)
