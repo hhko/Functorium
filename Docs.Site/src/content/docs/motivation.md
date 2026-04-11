@@ -16,14 +16,14 @@ If you are writing service code like the following, this problem applies to you.
 public OrderResult PlaceOrder(OrderCommand cmd)
 {
     var product = _productRepo.GetById(cmd.ProductId)
-        ?? throw new NotFoundException("상품을 찾을 수 없습니다.");
+        ?? throw new NotFoundException("Product not found.");
 
     if (product.Stock < cmd.Quantity)
-        throw new BusinessException("재고가 부족합니다.");
+        throw new BusinessException("Insufficient stock.");
 
     var order = new Order(cmd.ProductId, cmd.Quantity, product.Price);
     _orderRepo.Save(order);
-    _logger.LogInformation("주문 생성: {OrderId}", order.Id);
+    _logger.LogInformation("Order created: {OrderId}", order.Id);
 
     return new OrderResult(order.Id);
 }
@@ -88,12 +88,12 @@ The typical response pattern that follows looks like this.
 public async Task<OrderResult> PlaceOrder(OrderCommand cmd)
 {
     var sw = Stopwatch.StartNew();
-    _logger.LogInformation("PlaceOrder 시작: {@Command}", cmd);
+    _logger.LogInformation("PlaceOrder started: {@Command}", cmd);
 
     // ... existing business logic ...
 
     sw.Stop();
-    _logger.LogInformation("PlaceOrder 완료: {Elapsed}ms", sw.ElapsedMilliseconds);
+    _logger.LogInformation("PlaceOrder completed: {Elapsed}ms", sw.ElapsedMilliseconds);
     return result;
 }
 ```

@@ -4,83 +4,83 @@ title: "Domain Layer Rules"
 
 ## Overview
 
-Entity, Value Object, Domain Event, Specification, Domain Service — DDD 전술 패턴의 각 요소에는 고유한 설계 규칙이 있습니다. AggregateRoot는 sealed이고 `[GenerateEntityId]`를 가져야 하며, Value Object는 불변이고 `Create`는 `Fin<T>`를, `Validate`는 `Validation<Error, T>`를 반환해야 합니다. Domain Event는 sealed record여야 하고, Specification은 도메인 레이어에만 존재해야 합니다.
+Entity, Value Object, Domain Event, Specification, Domain Service -- each element of DDD tactical patterns has its own design rules. AggregateRoot must be sealed and have `[GenerateEntityId]`, Value Objects must be immutable with `Create` returning `Fin<T>` and `Validate` returning `Validation<Error, T>`. Domain Events must be sealed records, and Specifications must exist only in the domain layer.
 
-이 챕터에서는 Functorium의 `DomainArchitectureTestSuite`가 검증하는 **21개 규칙**을 6개 카테고리로 나누어 직접 implements.
+In this chapter, we implement the **21 rules** verified by Functorium's `DomainArchitectureTestSuite`, organized into 6 categories.
 
-> **"도메인 모델의 구조적 규칙을 테스트로 강제하면, 새로운 Entity를 추가할 때마다 '이것도 sealed인가?', 'factory method가 있는가?'를 묻는 코드 리뷰 코멘트가 사라집니다."**
+> **"When structural rules for domain models are enforced through tests, code review comments asking 'is this also sealed?' and 'does it have a factory method?' disappear every time a new Entity is added."**
 
 ## Learning Objectives
 
-### 핵심 학습 목표
+### Core Learning Goals
 
-1. **AggregateRoot와 Entity의 분리**
-   - AggregateRoot: public sealed, factory method(`Create`/`CreateFromValidated`), `[GenerateEntityId]`, 비공개 생성자
-   - Entity (AggregateRoot 제외): public sealed, factory method, 비공개 생성자
+1. **Separating AggregateRoot and Entity**
+   - AggregateRoot: public sealed, factory methods (`Create`/`CreateFromValidated`), `[GenerateEntityId]`, private constructors
+   - Entity (excluding AggregateRoot): public sealed, factory methods, private constructors
 
-2. **Value Object의 Fin/Validation 반환타입 검증**
-   - `Create` → `Fin<T>` (단일 오류, Railway-Oriented)
-   - `Validate` → `Validation<Error, T>` (다중 오류 누적)
+2. **Value Object Fin/Validation return type verification**
+   - `Create` -> `Fin<T>` (single error, Railway-Oriented)
+   - `Validate` -> `Validation<Error, T>` (multiple error accumulation)
 
-3. **DomainEvent: sealed record + Event 접미사**
-   - `RequireRecord()` — 값 의미론과 immutability 보장
-   - `RequireNameEndsWith("Event")` — 유비쿼터스 언어 일관성
+3. **DomainEvent: sealed record + Event suffix**
+   - `RequireRecord()` -- ensures value semantics and immutability
+   - `RequireNameEndsWith("Event")` -- ubiquitous language consistency
 
-4. **Specification: 도메인 레이어 한정**
-   - `Specification<T>` 상속 검증
-   - 도메인 레이어 외부 유출 방지
+4. **Specification: domain layer only**
+   - `Specification<T>` inheritance verification
+   - Prevents leaking outside the domain layer
 
-5. **IDomainService 마커 인터페이스 기반 검증**
-   - `static class` 대신 `sealed class : IDomainService` 패턴
-   - `RequireNoDependencyOn("IObservablePort")` — 아키텍처 경계 위반 탐지
-   - public 인스턴스 메서드는 `Fin` 반환 강제
+5. **IDomainService marker interface-based verification**
+   - `sealed class : IDomainService` pattern instead of `static class`
+   - `RequireNoDependencyOn("IObservablePort")` -- architecture boundary violation detection
+   - Public instance methods must return `Fin`
 
-### 실습을 통해 확인할 내용
-- **Order (AggregateRoot)**: sealed, `[GenerateEntityId]`, factory method, 비공개 생성자
-- **Money, Address (Value Object)**: sealed, immutable, `Create → Fin<T>`, `Validate → Validation<Error, T>`
-- **OrderCreatedEvent (Domain Event)**: sealed record, "Event" 접미사
-- **ActiveOrderSpecification (Specification)**: sealed, `Specification<T>` 상속, 도메인 레이어 한정
-- **OrderPricingService (Domain Service)**: sealed, IDomainService, stateless, Fin 반환
+### What You Will Verify Through Practice
+- **Order (AggregateRoot)**: sealed, `[GenerateEntityId]`, factory method, private constructors
+- **Money, Address (Value Object)**: sealed, immutable, `Create -> Fin<T>`, `Validate -> Validation<Error, T>`
+- **OrderCreatedEvent (Domain Event)**: sealed record, "Event" suffix
+- **ActiveOrderSpecification (Specification)**: sealed, `Specification<T>` inheritance, domain layer only
+- **OrderPricingService (Domain Service)**: sealed, IDomainService, stateless, Fin return
 
-## 도메인 코드 구조
+## Domain Code Structure
 
-### 기반 타입
+### Base Types
 
 ```
 Domains/
-├── Entity.cs                     # 엔티티 기반 추상 클래스
-├── AggregateRoot.cs              # Aggregate Root 추상 클래스 (Entity<TId> 상속)
-├── IValueObject.cs               # 값 객체 마커 인터페이스
-├── DomainEvent.cs                # 도메인 이벤트 기반 추상 record
-├── Specification.cs              # Specification 기반 추상 클래스
-├── IDomainService.cs             # 도메인 서비스 마커 인터페이스
-└── GenerateEntityIdAttribute.cs  # 소스 생성기 트리거 어트리뷰트
+├── Entity.cs                     # Entity base abstract class
+├── AggregateRoot.cs              # Aggregate Root abstract class (inherits Entity<TId>)
+├── IValueObject.cs               # Value object marker interface
+├── DomainEvent.cs                # Domain event base abstract record
+├── Specification.cs              # Specification base abstract class
+├── IDomainService.cs             # Domain service marker interface
+└── GenerateEntityIdAttribute.cs  # Source generator trigger attribute
 ```
 
-**`AggregateRoot<TId>`는** `Entity<TId>`를 상속하는 추상 클래스입니다. 도메인 이벤트 관리, 불변식 보호 등 Aggregate 전용 책임을 분리합니다.
+**`AggregateRoot<TId>`** is an abstract class that inherits `Entity<TId>`. It separates Aggregate-specific responsibilities such as domain event management and invariant protection.
 
-**`IDomainService`는** 도메인 서비스를 식별하는 마커 인터페이스입니다. `static class` 대신 이 인터페이스를 사용하면 DI 컨테이너 등록, 아키텍처 테스트 필터링, 의존성 제어가 가능합니다.
+**`IDomainService`** is a marker interface that identifies domain services. Using this interface instead of `static class` enables DI container registration, architecture test filtering, and dependency control.
 
-**`Specification<T>`는** business rule을 캡슐화하는 추상 클래스입니다. `IsSatisfiedBy(T)` 메서드로 조건을 표현합니다.
+**`Specification<T>`** is an abstract class that encapsulates business rules. It expresses conditions through the `IsSatisfiedBy(T)` method.
 
-### 구현 타입
+### Implementation Types
 
-| 타입 | 패턴 | 핵심 규칙 |
-|------|------|-----------|
-| `Order` | AggregateRoot | public, sealed, `[GenerateEntityId]`, factory method, 비공개 생성자 |
-| `Money`, `Address` | Value Object | public, sealed, immutable, `Create → Fin<T>`, `Validate → Validation<Error, T>` |
-| `OrderCreatedEvent` | Domain Event | sealed record, "Event" 접미사 |
-| `ActiveOrderSpecification` | Specification | public, sealed, `Specification<T>` 상속 |
-| `OrderPricingService` | Domain Service | public, sealed, IDomainService, stateless, Fin 반환 |
+| Type | Pattern | Core Rules |
+|------|---------|------------|
+| `Order` | AggregateRoot | public, sealed, `[GenerateEntityId]`, factory method, private constructors |
+| `Money`, `Address` | Value Object | public, sealed, immutable, `Create -> Fin<T>`, `Validate -> Validation<Error, T>` |
+| `OrderCreatedEvent` | Domain Event | sealed record, "Event" suffix |
+| `ActiveOrderSpecification` | Specification | public, sealed, `Specification<T>` inheritance |
+| `OrderPricingService` | Domain Service | public, sealed, IDomainService, stateless, Fin return |
 
-## 테스트 코드 설명
+## Test Code Walkthrough
 
-### AggregateRoot vs Entity 분리
+### AggregateRoot vs Entity Separation
 
-`DomainArchitectureTestSuite`는 AggregateRoot와 Entity를 별도 카테고리로 검증합니다. AggregateRoot는 트랜잭션 경계이므로 `[GenerateEntityId]`로 강타입 ID를 보장하고, Entity는 AggregateRoot 내부의 하위 엔티티이므로 ID 생성 규칙이 다릅니다.
+`DomainArchitectureTestSuite` verifies AggregateRoot and Entity as separate categories. AggregateRoot is a transaction boundary requiring a strongly-typed ID via `[GenerateEntityId]`, while Entity is a subordinate entity within an AggregateRoot where independent ID generation may not be needed.
 
 ```csharp
-// AggregateRoot: Entity<> 중 AggregateRoot<>를 상속하는 클래스
+// AggregateRoot: classes inheriting AggregateRoot<> among Entity<>
 ArchRuleDefinition.Classes()
     .That()
     .ResideInNamespace(DomainNamespace)
@@ -93,19 +93,19 @@ ArchRuleDefinition.Classes()
         verbose: true)
     .ThrowIfAnyFailures("AggregateRoot Visibility Rule");
 
-// Entity: Entity<>를 상속하지만 AggregateRoot<>는 제외
+// Entity: inherits Entity<> but excludes AggregateRoot<>
 ArchRuleDefinition.Classes()
     .That()
     .ResideInNamespace(DomainNamespace)
     .And().AreAssignableTo(typeof(Entity<>))
     .And().AreNotAbstract()
-    .And().AreNotAssignableTo(typeof(AggregateRoot<>))  // AggregateRoot 제외
+    .And().AreNotAssignableTo(typeof(AggregateRoot<>))  // Exclude AggregateRoot
     // ...
 ```
 
-### factory method 반환타입 검증
+### Factory Method Return Type Verification
 
-**`RequireReturnTypeOfDeclaringClass()`는** factory method가 자기 타입을 반환하는지 검증합니다. `Order.Create()`가 `Order`를 반환하지 않으면 위반입니다. 이 규칙은 factory method가 잘못된 타입을 반환하는 실수를 방지합니다.
+**`RequireReturnTypeOfDeclaringClass()`** verifies that a factory method returns its own type. If `Order.Create()` does not return `Order`, it is a violation. This rule prevents the mistake of factory methods returning the wrong type.
 
 ```csharp
 .RequireMethod("Create", m => m
@@ -118,38 +118,38 @@ ArchRuleDefinition.Classes()
     .RequireReturnTypeOfDeclaringClass())
 ```
 
-### Value Object Create/Validate 반환타입
+### Value Object Create/Validate Return Types
 
-`Create`는 `Fin<T>`, `Validate`는 `Validation<Error, T>`를 반환해야 합니다. 두 메서드의 역할이 다릅니다:
-- **`Create`** — "하나의 오류가 있으면 즉시 실패" (Railway-Oriented)
-- **`Validate`** — "모든 오류를 누적 수집" (Applicative)
+`Create` must return `Fin<T>`, and `Validate` must return `Validation<Error, T>`. The two methods serve different roles:
+- **`Create`** -- "fail immediately on any single error" (Railway-Oriented)
+- **`Validate`** -- "accumulate and collect all errors" (Applicative)
 
 ```csharp
-// Create → Fin<T>
+// Create -> Fin<T>
 .RequireMethod("Create", m => m
     .RequireStatic()
     .RequireReturnType(typeof(Fin<>)))
 
-// Validate → Validation<Error, T>
+// Validate -> Validation<Error, T>
 .RequireMethod("Validate", m => m
     .RequireStatic()
     .RequireReturnType(typeof(Validation<,>)))
 ```
 
-### DomainEvent sealed record 검증
+### DomainEvent Sealed Record Verification
 
-DomainEvent는 값 의미론이 필요합니다. 같은 주문 ID로 발생한 `OrderCreatedEvent` 두 개는 같은 이벤트입니다. `record`는 이 동등성을 자동으로 보장하고, `sealed`는 이벤트 계약 변경을 방지합니다.
+Domain Events require value semantics. Two `OrderCreatedEvent` instances generated with the same order ID are the same event. `record` automatically ensures this equality, and `sealed` prevents changes to the event contract.
 
 ```csharp
 .ValidateAllClasses(Architecture, @class => @class
     .RequireSealed()
-    .RequireRecord(),      // record 타입 강제
+    .RequireRecord(),      // Enforce record type
     verbose: true)
 ```
 
-### Specification 도메인 레이어 한정
+### Specification Domain Layer Restriction
 
-Specification은 business rule을 캡슐화하므로 도메인 레이어에만 존재해야 합니다. Application이나 Infrastructure 레이어에 Specification이 생기면 business rule이 유출된 것입니다.
+Since Specifications encapsulate business rules, they must exist only in the domain layer. If a Specification appears in the Application or Infrastructure layer, business rules have leaked.
 
 ```csharp
 ArchRuleDefinition.Classes()
@@ -161,17 +161,17 @@ ArchRuleDefinition.Classes()
     .Check(Architecture);
 ```
 
-### IDomainService 아키텍처 경계 검증
+### IDomainService Architecture Boundary Verification
 
-`RequireNoDependencyOn("IObservablePort")`는 도메인 서비스가 관측 관심사에 의존하지 않도록 강제합니다. 로깅, 메트릭, 트레이싱은 Application 레이어의 Usecase Pipeline에서 처리해야 합니다.
+`RequireNoDependencyOn("IObservablePort")` enforces that domain services do not depend on observability concerns. Logging, metrics, and tracing should be handled as cross-cutting concerns in the Application layer's Usecase Pipeline.
 
 ```csharp
-// 아키텍처 경계 위반 탐지
+// Architecture boundary violation detection
 .ValidateAllClasses(Architecture, @class => @class
     .RequireNoDependencyOn("IObservablePort"),
     verbose: true)
 
-// public 인스턴스 메서드는 Fin 반환 강제
+// Public instance methods must return Fin
 .RequireAllMethods(
     m => m.Visibility == Visibility.Public
          && m.IsStatic != true
@@ -181,42 +181,42 @@ ArchRuleDefinition.Classes()
 
 ## Summary at a Glance
 
-### 6개 카테고리 × 21개 규칙
+### 6 Categories x 21 Rules
 
-| 카테고리 | 테스트 | 핵심 규칙 |
-|---------|--------|-----------|
-| **AggregateRoot (4)** | PublicSealed, Create/CreateFromValidated, GenerateEntityId, PrivateCtors | 트랜잭션 경계, 소스 생성기 연동 |
-| **Entity (3)** | PublicSealed, Create/CreateFromValidated, PrivateCtors | AggregateRoot 제외 필터 |
-| **ValueObject (4)** | PublicSealed+PrivateCtors, Immutable, Create→`Fin<>`, Validate→`Validation<,>` | 이중 반환타입 검증 |
-| **DomainEvent (2)** | SealedRecord, NameEndsWith("Event") | record + 명명 규칙 |
-| **Specification (3)** | PublicSealed, InheritsBase, ResideInDomain | 도메인 한정 |
-| **DomainService (5)** | PublicSealed, Stateless, NoDependencyOn, ReturnFin, NotRecord | 마커 인터페이스 기반 |
+| Category | Tests | Core Rules |
+|----------|-------|------------|
+| **AggregateRoot (4)** | PublicSealed, Create/CreateFromValidated, GenerateEntityId, PrivateCtors | Transaction boundary, source generator integration |
+| **Entity (3)** | PublicSealed, Create/CreateFromValidated, PrivateCtors | AggregateRoot exclusion filter |
+| **ValueObject (4)** | PublicSealed+PrivateCtors, Immutable, Create->`Fin<>`, Validate->`Validation<,>` | Dual return type verification |
+| **DomainEvent (2)** | SealedRecord, NameEndsWith("Event") | record + naming rule |
+| **Specification (3)** | PublicSealed, InheritsBase, ResideInDomain | Domain restriction |
+| **DomainService (5)** | PublicSealed, Stateless, NoDependencyOn, ReturnFin, NotRecord | Marker interface based |
 
-### 추상 클래스 제외 패턴
+### Abstract Class Exclusion Patterns
 
-| 상황 | 필터 조합 | 이유 |
-|------|-----------|------|
-| AggregateRoot 검증 | `AreAssignableTo(typeof(AggregateRoot<>))` + `AreNotAbstract()` | `AggregateRoot<>` 자체 제외 |
-| Entity 검증 | `AreAssignableTo(typeof(Entity<>))` + `AreNotAbstract()` + `AreNotAssignableTo(typeof(AggregateRoot<>))` | Entity + AggregateRoot 분리 |
-| Value Object 검증 | `ImplementInterface(typeof(IValueObject))` + `AreNotAbstract()` | 마커 인터페이스 필터링 |
-| DomainService 검증 | `ImplementInterface(typeof(IDomainService))` + `AreNotAbstract()` | 마커 인터페이스 필터링 |
+| Scenario | Filter Combination | Reason |
+|----------|-------------------|--------|
+| AggregateRoot verification | `AreAssignableTo(typeof(AggregateRoot<>))` + `AreNotAbstract()` | Exclude `AggregateRoot<>` itself |
+| Entity verification | `AreAssignableTo(typeof(Entity<>))` + `AreNotAbstract()` + `AreNotAssignableTo(typeof(AggregateRoot<>))` | Separate Entity from AggregateRoot |
+| Value Object verification | `ImplementInterface(typeof(IValueObject))` + `AreNotAbstract()` | Marker interface filtering |
+| DomainService verification | `ImplementInterface(typeof(IDomainService))` + `AreNotAbstract()` | Marker interface filtering |
 
 ## FAQ
 
-### Q1: AggregateRoot와 Entity를 왜 구분하나요?
-**A**: AggregateRoot는 트랜잭션 경계이므로 `[GenerateEntityId]`로 강타입 ID를 반드시 갖춰야 합니다. Entity는 AggregateRoot 내부의 하위 엔티티(예: `OrderItem`)로, 독립적인 ID 생성이 필요 없을 수 있습니다. Suite가 두 카테고리를 분리하여 각각 다른 규칙을 적용합니다.
+### Q1: Why are AggregateRoot and Entity distinguished?
+**A**: AggregateRoot is a transaction boundary and must have a strongly-typed ID via `[GenerateEntityId]`. Entity is a subordinate entity within an AggregateRoot (e.g., `OrderItem`) that may not need independent ID generation. The Suite separates the two categories and applies different rules to each.
 
-### Q2: Domain Service를 `static class` 대신 `IDomainService`를 쓰는 이유는 무엇인가요?
-**A**: `static class`는 DI 컨테이너에 등록할 수 없고, `ImplementInterface` 필터로 선택할 수 없습니다. `IDomainService` 마커 인터페이스를 사용하면: (1) 아키텍처 테스트에서 정확히 도메인 서비스만 필터링, (2) `RequireNoDependencyOn`으로 아키텍처 경계 검증, (3) DI 등록이 필요한 경우 확장 가능합니다.
+### Q2: Why use `IDomainService` instead of `static class` for Domain Services?
+**A**: `static class` cannot be registered in a DI container and cannot be selected with the `ImplementInterface` filter. Using the `IDomainService` marker interface enables: (1) filtering only domain services precisely in architecture tests, (2) verifying architecture boundaries with `RequireNoDependencyOn`, and (3) extension for DI registration when needed.
 
-### Q3: `RequireNoDependencyOn("IObservablePort")`는 어떤 문제를 방지하나요?
-**A**: 도메인 서비스가 로깅/메트릭/트레이싱 인터페이스에 의존하면, 순수한 도메인 로직이 인프라 관심사에 오염됩니다. Observability는 Application 레이어의 Usecase Pipeline에서 Cross-Cutting Concern으로 처리해야 합니다.
+### Q3: What problem does `RequireNoDependencyOn("IObservablePort")` prevent?
+**A**: When a domain service depends on logging/metrics/tracing interfaces, pure domain logic becomes contaminated with infrastructure concerns. Observability should be handled as a Cross-Cutting Concern in the Application layer's Usecase Pipeline.
 
-### Q4: `Create → Fin<T>`와 `Validate → Validation<Error, T>`를 왜 둘 다 요구하나요?
-**A**: `Create`는 단일 오류로 즉시 실패하는 Railway-Oriented 패턴이고, `Validate`는 모든 오류를 누적 수집하는 Applicative 패턴입니다. Command Usecase에서는 `Create`로 빠르게 실패하고, Application 레이어 DTO 검증에서는 `Validate`로 모든 오류를 한 번에 사용자에게 보여줍니다.
+### Q4: Why require both `Create -> Fin<T>` and `Validate -> Validation<Error, T>`?
+**A**: `Create` is a Railway-Oriented pattern that fails immediately on a single error, and `Validate` is an Applicative pattern that accumulates all errors. In a Command Usecase, `Create` fails fast, while in Application layer DTO validation, `Validate` shows all errors to the user at once.
 
 ---
 
-도메인 레이어의 6개 카테고리 21개 규칙을 테스트로 강제하면, 새로운 도메인 객체가 추가될 때마다 자동으로 규칙 준수가 검증됩니다. Next chapter에서는 Command/Query 기반의 애플리케이션 레이어 규칙을 examines.
+By enforcing the 6-category, 21-rule set for the domain layer through tests, rule compliance is automatically verified every time a new domain object is added. The next chapter examines application layer rules based on the Command/Query pattern.
 
-→ [2장: 애플리케이션 레이어 규칙](../02-Application-Layer-Rules/)
+-> [Ch 2: Application Layer Rules](../02-Application-Layer-Rules/)

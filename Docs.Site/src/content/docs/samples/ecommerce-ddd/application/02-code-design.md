@@ -1,38 +1,38 @@
 ---
-title: "애플리케이션 코드 설계"
+title: "Application Code Design"
 ---
 
-[비즈니스 요구사항](../00-business-requirements/)에서 자연어로 정의한 워크플로우를, [타입 설계 의사결정](../01-type-design-decisions/)에서 Use Case와 포트로 분류하고 패턴 전략을 도출했습니다. 이 문서에서는 그 설계를 C# 코드로 구현합니다. Apply 패턴, FinT LINQ 체이닝, FluentValidation 연동, 배치 쿼리 등 각 패턴이 실제 코드에서 어떻게 동작하는지 살펴봅니다.
+The workflows defined in natural language in the [business requirements](../00-business-requirements/) were classified into Use Cases and ports with pattern strategies derived in the [type design decisions](../01-type-design-decisions/). This document implements those designs in C# code. It examines how each pattern — Apply pattern, FinT LINQ chaining, FluentValidation integration, batch queries, and more — works in actual code.
 
-다음 표는 설계 의사결정과 구현 패턴의 1:1 매핑입니다. 이후 섹션에서 각 패턴을 코드로 살펴봅니다.
+The following table shows the 1:1 mapping between design decisions and implementation patterns. Each pattern is examined in code in the subsequent sections.
 
-## 설계 의사결정 → C# 구현 매핑
+## Design Decision to C# Implementation Mapping
 
-| 설계 의사결정 | 구현 패턴 | 적용 예 | 효과 |
+| Design Decision | Implementation Pattern | Example | Effect |
 |---|---|---|---|
-| Command/Query 분리 | `ICommandRequest<Response>` / `IQueryRequest<Response>` | CreateProductCommand, SearchProductsQuery | 읽기/쓰기 책임 분리, 파이프라인별 독립 처리 |
-| 중첩 클래스 응집 | `sealed class` 안에 Request, Response, Validator, Usecase 중첩 | 모든 Command/Query | 한 파일에서 전체 유스케이스 파악, 네임스페이스 오염 방지 |
-| Applicative 검증 | `(VO.Validate(...), ...).Apply(...)` 튜플 합성 | CreateProductCommand, CreateCustomerCommand | 모든 필드 검증 에러를 한 번에 수집 |
-| FinT 모나드 체이닝 | `FinT<IO, T>` LINQ 쿼리 표현식 | 모든 Usecase | 비동기 IO + 실패 가능성을 선언적으로 합성 |
-| guard() 조건부 실패 | `guard(!exists, ApplicationError.For<T>(...))` | 중복 검사, 존재 검증 | 불리언 조건을 FinT 체인에 삽입 |
-| FluentValidation + VO 검증 연동 | `MustSatisfyValidation(VO.Validate)` | CreateProductCommand.Validator | Presentation 계층 검증과 도메인 VO 검증 규칙 단일 소스 |
-| 배치 쿼리 Port | `IProductCatalog.GetPricesForProducts()` | CreateOrderCommand | N+1 라운드트립 방지, 단일 WHERE IN 쿼리 |
-| Domain Service 통합 | Usecase에서 `OrderCreditCheckService` 호출 | CreateOrderWithCreditCheckCommand, PlaceOrderCommand | 교차 Aggregate 규칙을 Application에서 오케스트레이션 |
-| 다중 Aggregate 쓰기 | `Bind`/`Map`으로 FinT 체인 합성, `UpdateRange` 사용 | PlaceOrderCommand | 주문 생성 + 재고 차감을 하나의 UoW로 원자 처리 |
-| 타입화된 에러 | `ApplicationError.For<T>(new AlreadyExists(), ...)` | 모든 Command Usecase | 에러에 출처 타입 + 분류 + 메시지 포함 |
+| Command/Query separation | `ICommandRequest<Response>` / `IQueryRequest<Response>` | CreateProductCommand, SearchProductsQuery | Read/write responsibility separation, independent processing per pipeline |
+| Nested class cohesion | `sealed class` with nested Request, Response, Validator, Usecase | All Commands/Queries | Entire use case visible in one file, namespace pollution prevention |
+| Applicative validation | `(VO.Validate(...), ...).Apply(...)` tuple composition | CreateProductCommand, CreateCustomerCommand | All field validation errors collected at once |
+| FinT monad chaining | `FinT<IO, T>` LINQ query expression | All Usecases | Async IO + failure possibility composed declaratively |
+| guard() conditional failure | `guard(!exists, ApplicationError.For<T>(...))` | Duplicate check, existence verification | Boolean condition inserted into FinT chain |
+| FluentValidation + VO validation integration | `MustSatisfyValidation(VO.Validate)` | CreateProductCommand.Validator | Single source for presentation layer validation and domain VO validation rules |
+| Batch query Port | `IProductCatalog.GetPricesForProducts()` | CreateOrderCommand | N+1 round-trip prevention, single WHERE IN query |
+| Domain Service integration | Usecase calls `OrderCreditCheckService` | CreateOrderWithCreditCheckCommand, PlaceOrderCommand | Cross-Aggregate rules orchestrated in Application |
+| Multi-Aggregate write | FinT chain composed with `Bind`/`Map`, using `UpdateRange` | PlaceOrderCommand | Order creation + stock deduction atomic in one UoW |
+| Typed errors | `ApplicationError.For<T>(new AlreadyExists(), ...)` | All Command Usecases | Error includes source type + classification + message |
 
-## 패턴별 코드
+## Code by Pattern
 
-### 1. Command Usecase 구조
+### 1. Command Usecase Structure
 
-Application 레이어의 모든 Use Case는 동일한 구조 규칙을 따릅니다. 이 일관된 구조 덕분에 새로운 Use Case를 추가할 때 패턴을 고민할 필요 없이 기존 구조를 복제하면 됩니다.
+All Use Cases in the Application layer follow the same structural rules. Thanks to this consistent structure, there is no need to deliberate on patterns when adding new Use Cases — just replicate the existing structure.
 
-모든 Command는 하나의 `sealed class` 안에 4가지 중첩 타입을 정의합니다.
+All Commands define 4 nested types inside a single `sealed class`.
 
 ```csharp
 public sealed class CreateProductCommand
 {
-    // 1. Request - ICommandRequest<Response> 구현
+    // 1. Request - Implements ICommandRequest<Response>
     public sealed record Request(
         string Name,
         string Description,
@@ -60,7 +60,7 @@ public sealed class CreateProductCommand
         }
     }
 
-    // 4. Usecase - ICommandUsecase<Request, Response> 구현
+    // 4. Usecase - Implements ICommandUsecase<Request, Response>
     public sealed class Usecase(
         IProductRepository productRepository,
         IInventoryRepository inventoryRepository)
@@ -69,28 +69,28 @@ public sealed class CreateProductCommand
         public async ValueTask<FinResponse<Response>> Handle(
             Request request, CancellationToken cancellationToken)
         {
-            // ... 구현
+            // ... implementation
         }
     }
 }
 ```
 
-| 중첩 타입 | 역할 | 인터페이스 |
+| Nested Type | Role | Interface |
 |---|---|---|
-| `Request` | 입력 DTO (sealed record) | `ICommandRequest<Response>` |
-| `Response` | 출력 DTO (sealed record) | 없음 |
-| `Validator` | FluentValidation 규칙 | `AbstractValidator<Request>` |
-| `Usecase` | 비즈니스 로직 오케스트레이션 | `ICommandUsecase<Request, Response>` |
+| `Request` | Input DTO (sealed record) | `ICommandRequest<Response>` |
+| `Response` | Output DTO (sealed record) | None |
+| `Validator` | FluentValidation rules | `AbstractValidator<Request>` |
+| `Usecase` | Business logic orchestration | `ICommandUsecase<Request, Response>` |
 
-`CreateProductCommand.Request`처럼 정규화된 이름이 곧 유스케이스 식별자가 됩니다. Mediator가 `Request` 타입으로 `Usecase`를 자동 라우팅합니다.
+The fully qualified name like `CreateProductCommand.Request` serves as the use case identifier. Mediator auto-routes from `Request` type to `Usecase`.
 
-### 2. Query Usecase 구조
+### 2. Query Usecase Structure
 
-Command가 도메인 모델을 거쳐 상태를 변경하는 반면, Query는 Read Port를 통해 DTO로 직접 프로젝션합니다. 구조는 동일하되 데이터 흐름이 다릅니다.
+While Commands change state through the domain model, Queries project directly to DTOs via Read Ports. The structure is the same but the data flow differs.
 
-Query도 동일한 중첩 클래스 패턴을 따르되, `IQueryRequest<Response>`와 `IQueryUsecase<Request, Response>`를 사용합니다.
+Queries follow the same nested class pattern, using `IQueryRequest<Response>` and `IQueryUsecase<Request, Response>`.
 
-**GetProductByIdQuery** -- 단건 조회:
+**GetProductByIdQuery** -- Single item query:
 
 ```csharp
 public sealed class GetProductByIdQuery
@@ -131,7 +131,7 @@ public sealed class GetProductByIdQuery
 }
 ```
 
-**SearchProductsQuery** -- Specification 조합 + 페이지네이션:
+**SearchProductsQuery** -- Specification composition + pagination:
 
 ```csharp
 public sealed class SearchProductsQuery
@@ -184,24 +184,24 @@ public sealed class SearchProductsQuery
 }
 ```
 
-Query Usecase는 Read Adapter(IProductQuery, IProductDetailQuery)를 통해 Aggregate 재구성 없이 DTO로 직접 프로젝션합니다. Repository를 거치지 않으므로 불필요한 엔티티 매핑 오버헤드가 없습니다.
+Query Usecases project directly to DTOs via Read Adapters (IProductQuery, IProductDetailQuery) without Aggregate reconstruction. Since they do not go through Repositories, there is no unnecessary entity mapping overhead.
 
-### 3. Apply 패턴: tuple Validate() + Apply()
+### 3. Apply Pattern: tuple Validate() + Apply()
 
-여러 Value Object를 동시에 검증하고 모든 에러를 한 번에 수집하는 applicative 합성 패턴입니다.
+An applicative composition pattern that validates multiple Value Objects simultaneously and collects all errors at once.
 
-**CreateProductCommand** -- 4개 VO 병렬 검증:
+**CreateProductCommand** -- 4 VO parallel validation:
 
 ```csharp
 private static Fin<ProductData> CreateProductData(Request request)
 {
-    // 모든 필드: VO Validate() 사용 (Validation<Error, T> 반환)
+    // All fields: use VO Validate() (returns Validation<Error, T>)
     var name = ProductName.Validate(request.Name);
     var description = ProductDescription.Validate(request.Description);
     var price = Money.Validate(request.Price);
     var stockQuantity = Quantity.Validate(request.StockQuantity);
 
-    // 모두 튜플로 병합 - Apply로 병렬 검증
+    // Bundle all into tuple - parallel validation with Apply
     return (name, description, price, stockQuantity)
         .Apply((n, d, p, s) =>
             new ProductData(
@@ -215,7 +215,7 @@ private static Fin<ProductData> CreateProductData(Request request)
 }
 ```
 
-**CreateCustomerCommand** -- 3개 VO 병렬 검증:
+**CreateCustomerCommand** -- 3 VO parallel validation:
 
 ```csharp
 private static Fin<Customer> CreateCustomer(Request request)
@@ -235,24 +235,24 @@ private static Fin<Customer> CreateCustomer(Request request)
 }
 ```
 
-Apply 패턴의 핵심은 **단일 검증 실패가 나머지 검증을 중단하지 않는다는 점입니다.** 4개 필드 중 3개가 잘못되면 3개의 에러가 모두 수집됩니다. 이는 `Validation<Error, T>`의 applicative 특성 덕분이며, 모나드(`Fin<T>`)의 순차 실행과 구별됩니다.
+The core of the Apply pattern is that **a single validation failure does not stop the remaining validations.** If 3 out of 4 fields are wrong, all 3 errors are collected. This is thanks to the applicative nature of `Validation<Error, T>`, which is distinguished from the sequential execution of monads (`Fin<T>`).
 
-| 단계 | 타입 | 설명 |
+| Step | Type | Description |
 |---|---|---|
-| `VO.Validate(value)` | `Validation<Error, T>` | 개별 필드 검증 |
-| `(v1, v2, ...).Apply(...)` | `Validation<Error, R>` | 에러 누적 합성 |
-| `.As()` | `Validation<Error, R>` | 타입 정리 |
-| `.ToFin()` | `Fin<R>` | Usecase 체인에 합류 |
+| `VO.Validate(value)` | `Validation<Error, T>` | Individual field validation |
+| `(v1, v2, ...).Apply(...)` | `Validation<Error, R>` | Error-accumulating composition |
+| `.As()` | `Validation<Error, R>` | Type cleanup |
+| `.ToFin()` | `Fin<R>` | Joins the Usecase chain |
 
-Apply 패턴의 핵심은 `Validation<Error, T>`의 applicative 특성입니다. 4개 VO의 `Validate()`가 모두 실행되어 에러가 누적됩니다. 하나라도 실패하면 나머지도 검증하되 모든 에러를 한번에 반환합니다. 이는 `Fin<T>`(모나드)의 순차 실행과 구별되는 핵심 차이점입니다.
+The core of the Apply pattern is the applicative nature of `Validation<Error, T>`. All 4 VOs' `Validate()` are executed and errors accumulate. If any one fails, the rest are still validated and all errors are returned at once. This is the key difference from the sequential execution of `Fin<T>` (monad).
 
-### 4. FinT&lt;IO, T&gt; LINQ 체이닝
+### 4. FinT&lt;IO, T&gt; LINQ Chaining
 
-Apply 패턴으로 입력 검증을 마쳤다면, 이제 검증된 값을 사용하여 DB 연산을 수행합니다. 이 단계에서는 `FinT<IO, T>` 모나드 트랜스포머가 비동기 IO와 실패 가능성을 하나의 체인으로 합성합니다.
+After completing input validation with the Apply pattern, the validated values are used to perform DB operations. In this stage, the `FinT<IO, T>` monad transformer composes async IO and failure possibility into a single chain.
 
-`FinT<IO, T>`는 IO 효과(`IO<A>`)와 실패 가능성(`Fin<T>`)을 결합한 모나드 트랜스포머입니다. LINQ 쿼리 표현식으로 비동기 작업을 선언적으로 합성합니다.
+`FinT<IO, T>` is a monad transformer combining IO effects (`IO<A>`) with failure possibility (`Fin<T>`). LINQ query expressions declaratively compose asynchronous operations.
 
-**CreateProductCommand** -- 중복 검사 → 저장 → Inventory 생성:
+**CreateProductCommand** -- Duplicate check -> Save -> Inventory creation:
 
 ```csharp
 FinT<IO, Response> usecase =
@@ -276,7 +276,7 @@ Fin<Response> response = await usecase.Run().RunAsync();
 return response.ToFinResponse();
 ```
 
-**DeleteProductCommand** -- let 바인딩 + 간결한 체인:
+**DeleteProductCommand** -- let binding + concise chain:
 
 ```csharp
 FinT<IO, Response> usecase =
@@ -286,7 +286,7 @@ FinT<IO, Response> usecase =
     select new Response(updated.Id.ToString());
 ```
 
-**DeductStockCommand** -- 도메인 메서드 결과를 체인에 삽입:
+**DeductStockCommand** -- Inserting domain method results into the chain:
 
 ```csharp
 FinT<IO, Response> usecase =
@@ -298,28 +298,28 @@ FinT<IO, Response> usecase =
         updated.StockQuantity);
 ```
 
-`inventory.DeductStock(quantity)`는 `Fin<Unit>`을 반환하지만, LINQ 체이닝에서 `FinT<IO, Unit>`으로 자동 리프팅됩니다. 재고 부족 시 `Fin.Fail`이 되어 이후 체인이 실행되지 않습니다.
+`inventory.DeductStock(quantity)` returns `Fin<Unit>`, but in LINQ chaining it is auto-lifted to `FinT<IO, Unit>`. On insufficient stock, `Fin.Fail` stops the subsequent chain from executing.
 
-모든 Usecase의 실행 마무리 패턴은 동일합니다:
+The execution completion pattern is the same for all Usecases:
 
 ```csharp
 Fin<Response> response = await usecase.Run().RunAsync();
 return response.ToFinResponse();
 ```
 
-| 메서드 | 역할 |
+| Method | Role |
 |---|---|
-| `.Run()` | `FinT<IO, T>` → `IO<Fin<T>>` (모나드 트랜스포머 해제) |
-| `.RunAsync()` | `IO<Fin<T>>` → `ValueTask<Fin<T>>` (IO 효과 실행) |
-| `.ToFinResponse()` | `Fin<T>` → `FinResponse<T>` (Application 응답 변환) |
+| `.Run()` | `FinT<IO, T>` -> `IO<Fin<T>>` (monad transformer unwrap) |
+| `.RunAsync()` | `IO<Fin<T>>` -> `ValueTask<Fin<T>>` (IO effect execution) |
+| `.ToFinResponse()` | `Fin<T>` -> `FinResponse<T>` (Application response conversion) |
 
-### 5. guard() 조건부 실패
+### 5. guard() Conditional Failure
 
-FinT 체인 내부에서 불리언 조건을 검증해야 할 때 `guard()`를 사용합니다. Repository 호출 결과를 기반으로 비즈니스 규칙을 확인하는 것이 대표적인 사례입니다.
+When a boolean condition needs to be verified inside a FinT chain, `guard()` is used. A typical case is validating business rules based on Repository call results.
 
-`guard(condition, error)`는 불리언 조건을 FinT 체인에 삽입합니다. 조건이 `false`이면 에러를 반환하고 체인을 중단합니다.
+`guard(condition, error)` inserts a boolean condition into the FinT chain. If the condition is `false`, it returns an error and aborts the chain.
 
-**중복 검사 (AlreadyExists):**
+**Duplicate check (AlreadyExists):**
 
 ```csharp
 from exists in _productRepository.Exists(new ProductNameUniqueSpec(productName))
@@ -329,7 +329,7 @@ from _ in guard(!exists, ApplicationError.For<CreateProductCommand>(
     $"Product name already exists: '{request.Name}'"))
 ```
 
-**업데이트 시 자기 자신 제외 중복 검사:**
+**Duplicate check excluding self during update:**
 
 ```csharp
 from exists in _productRepository.Exists(new ProductNameUniqueSpec(name, productId))
@@ -339,7 +339,7 @@ from _ in guard(!exists, ApplicationError.For<UpdateProductCommand>(
     $"Product name already exists: '{request.Name}'"))
 ```
 
-**존재하지 않는 상품 검증 (NotFound):**
+**Non-existent product validation (NotFound):**
 
 ```csharp
 if (!priceLookup.TryGetValue(productId, out var unitPrice))
@@ -349,13 +349,13 @@ if (!priceLookup.TryGetValue(productId, out var unitPrice))
         $"Product not found: '{productId}'"));
 ```
 
-`guard`는 LINQ 체인 내부에서 사용하고, `if` 분기는 체인 바깥에서 조기 반환할 때 사용합니다. 두 경우 모두 `ApplicationError.For<T>()`로 에러를 생성합니다.
+`guard` is used inside LINQ chains, and `if` branching is used for early returns outside the chain. Both cases create errors with `ApplicationError.For<T>()`.
 
 ### 6. FluentValidation + MustSatisfyValidation
 
-Validator는 FluentValidation의 `AbstractValidator<Request>`를 상속하고, `MustSatisfyValidation` 확장 메서드로 도메인 VO의 `Validate` 메서드를 직접 연동합니다.
+Validators inherit from FluentValidation's `AbstractValidator<Request>` and directly integrate domain VO `Validate` methods via the `MustSatisfyValidation` extension method.
 
-**CreateProductCommand.Validator** -- VO 검증 규칙 재사용:
+**CreateProductCommand.Validator** -- VO validation rule reuse:
 
 ```csharp
 public sealed class Validator : AbstractValidator<Request>
@@ -370,7 +370,7 @@ public sealed class Validator : AbstractValidator<Request>
 }
 ```
 
-**UpdateProductCommand.Validator** -- ID 형식 검증 + VO 검증 혼합:
+**UpdateProductCommand.Validator** -- ID format validation + VO validation mixed:
 
 ```csharp
 public sealed class Validator : AbstractValidator<Request>
@@ -389,7 +389,7 @@ public sealed class Validator : AbstractValidator<Request>
 }
 ```
 
-**CreateOrderCommand.Validator** -- 컬렉션 검증 + 자식 규칙:
+**CreateOrderCommand.Validator** -- Collection validation + child rules:
 
 ```csharp
 public sealed class Validator : AbstractValidator<Request>
@@ -418,7 +418,7 @@ public sealed class Validator : AbstractValidator<Request>
 }
 ```
 
-**SearchProductsQuery.Validator** -- Option&lt;T&gt; 선택적 필드 검증:
+**SearchProductsQuery.Validator** -- Option&lt;T&gt; optional field validation:
 
 ```csharp
 public sealed class Validator : AbstractValidator<Request>
@@ -442,56 +442,56 @@ public sealed class Validator : AbstractValidator<Request>
 }
 ```
 
-Validator 검증 전략 요약:
+Validator validation strategy summary:
 
-| 검증 방식 | 사용 시점 | 예 |
+| Validation Method | When to Use | Example |
 |---|---|---|
-| `MustSatisfyValidation(VO.Validate)` | VO 검증 규칙을 그대로 재사용 | ProductName, Money, Quantity |
-| `MustSatisfyValidation` (Option 오버로드) | Option&lt;T&gt; 선택적 필드 (None → 스킵) | SearchProductsQuery의 Name |
-| `MustBePairedRange` | 반드시 함께 제공되는 쌍 범위 필터 | MinPrice/MaxPrice |
-| `Must(id => XxxId.TryParse(...))` | ID 형식 검증 | ProductId, CustomerId |
-| `RuleForEach(...).ChildRules(...)` | 컬렉션 항목별 검증 | OrderLines의 ProductId, Quantity |
-| `MustBeEnumValue<T, TEnum>()` | 문자열 → Enum 변환 검증 | SortDirection |
+| `MustSatisfyValidation(VO.Validate)` | Directly reuse VO validation rules | ProductName, Money, Quantity |
+| `MustSatisfyValidation` (Option overload) | Optional field with Option&lt;T&gt; (skip on None) | SearchProductsQuery Name |
+| `MustBePairedRange` | Paired range filter that must be provided together | MinPrice/MaxPrice |
+| `Must(id => XxxId.TryParse(...))` | ID format validation | ProductId, CustomerId |
+| `RuleForEach(...).ChildRules(...)` | Per-item validation in collections | OrderLines ProductId, Quantity |
+| `MustBeEnumValue<T, TEnum>()` | String -> Enum conversion validation | SortDirection |
 
-FluentValidation과 VO.Validate의 역할 분담이 핵심입니다. FluentValidation은 Presentation 계층에서 구문 검증을 수행하여 잘못된 요청을 조기에 거부합니다. VO.Validate는 Use Case 내부에서 도메인 검증을 수행합니다. `MustSatisfyValidation`이 두 세계를 연결하여, VO의 검증 규칙을 FluentValidation에서 재사용할 수 있게 합니다.
+The role separation between FluentValidation and VO.Validate is key. FluentValidation performs syntactic validation at the Presentation layer to reject malformed requests early. VO.Validate performs domain validation inside the Use Case. `MustSatisfyValidation` bridges the two worlds, allowing VO validation rules to be reused in FluentValidation.
 
-### 7. ApplicationError.For&lt;T&gt;() 에러 생성
+### 7. ApplicationError.For&lt;T&gt;() Error Creation
 
-`ApplicationError.For<T>()`는 에러에 출처 타입을 자동으로 포함합니다. `ApplicationErrorType`의 하위 레코드로 에러 분류를 표현합니다.
+`ApplicationError.For<T>()` automatically includes the source type in the error. Error classification is expressed through `ApplicationErrorType` sub-records.
 
 ```csharp
-// 이미 존재하는 리소스
+// Already existing resource
 ApplicationError.For<CreateProductCommand>(
     new AlreadyExists(),
     request.Name,
     $"Product name already exists: '{request.Name}'")
 
-// 리소스를 찾을 수 없음
+// Resource not found
 ApplicationError.For<CreateOrderCommand>(
     new NotFound(),
     productId.ToString(),
     $"Product not found: '{productId}'")
 
-// 이메일 중복
+// Email duplicate
 ApplicationError.For<CreateCustomerCommand>(
     new AlreadyExists(),
     request.Email,
     $"Email already exists: '{request.Email}'")
 ```
 
-도메인 에러가 Application 계층을 관통하는 경우도 있습니다. `DeductStockCommand`에서 `inventory.DeductStock(quantity)`가 `InsufficientStock` 도메인 에러를 반환하면, FinT 체인이 이를 그대로 전파합니다.
+Domain errors can also pass through the Application layer. In `DeductStockCommand`, when `inventory.DeductStock(quantity)` returns an `InsufficientStock` domain error, the FinT chain propagates it as-is.
 
-| 에러 타입 | 의미 | 사용 위치 |
+| Error Type | Meaning | Usage Location |
 |---|---|---|
-| `AlreadyExists` | 중복 리소스 | CreateProduct, UpdateProduct, CreateCustomer |
-| `NotFound` | 존재하지 않는 리소스 | CreateOrder (상품 미존재) |
-| 도메인 에러 전파 | VO/Aggregate 검증 실패 | DeductStock (InsufficientStock), Order.Create (EmptyOrderLines) |
+| `AlreadyExists` | Duplicate resource | CreateProduct, UpdateProduct, CreateCustomer |
+| `NotFound` | Non-existent resource | CreateOrder (product not found) |
+| Domain error propagation | VO/Aggregate validation failure | DeductStock (InsufficientStock), Order.Create (EmptyOrderLines) |
 
-### 8. IProductCatalog 배치 쿼리 패턴
+### 8. IProductCatalog Batch Query Pattern
 
-교차 Aggregate 검증에서 N+1 문제를 방지하기 위해 배치 조회 전용 Port를 정의합니다.
+A dedicated batch query Port is defined to prevent N+1 problems in cross-Aggregate validation.
 
-**Port 정의:**
+**Port definition:**
 
 ```csharp
 public interface IProductCatalog : IObservablePort
@@ -501,10 +501,10 @@ public interface IProductCatalog : IObservablePort
 }
 ```
 
-**CreateOrderCommand에서 사용:**
+**Usage in CreateOrderCommand:**
 
 ```csharp
-// 2. 라인별 Quantity 검증 + ProductId 수집
+// 2. Per-line Quantity validation + ProductId collection
 var lineRequests = new List<(ProductId ProductId, Quantity Quantity)>();
 foreach (var lineReq in request.OrderLines)
 {
@@ -516,7 +516,7 @@ foreach (var lineReq in request.OrderLines)
     lineRequests.Add((productId, (Quantity)quantityResult));
 }
 
-// 3. 배치 가격 조회 (단일 라운드트립)
+// 3. Batch price query (single round-trip)
 var productIds = lineRequests.Select(l => l.ProductId).Distinct().ToList();
 var pricesResult = await _productCatalog.GetPricesForProducts(productIds).Run().RunAsync();
 if (pricesResult.IsFail)
@@ -524,7 +524,7 @@ if (pricesResult.IsFail)
 
 var priceLookup = pricesResult.ThrowIfFail().ToDictionary(p => p.Id, p => p.Price);
 
-// 4. 존재 검증 + OrderLine 생성
+// 4. Existence verification + OrderLine creation
 foreach (var (productId, quantity) in lineRequests)
 {
     if (!priceLookup.TryGetValue(productId, out var unitPrice))
@@ -538,13 +538,13 @@ foreach (var (productId, quantity) in lineRequests)
 }
 ```
 
-주문에 10개 상품이 포함되어도 `GetPricesForProducts`는 단일 WHERE IN 쿼리로 모든 가격을 조회합니다. 반환된 Dictionary에 없는 `ProductId`는 존재하지 않는 상품이므로 `NotFound` 에러를 반환합니다.
+Even with 10 products in an order, `GetPricesForProducts` queries all prices with a single WHERE IN query. `ProductId`s not found in the returned Dictionary are non-existent products, so a `NotFound` error is returned.
 
-배치 쿼리 패턴의 핵심은 교차 Aggregate 조회에서 발생하는 N+1 문제를 포트 수준에서 해결하는 것입니다. 인터페이스 계약 자체가 `IReadOnlyList<ProductId>`를 받으므로, 구현체가 단일 쿼리로 처리하도록 강제합니다.
+The core of the batch query pattern is solving the N+1 problem at the port level in cross-Aggregate queries. The interface contract itself accepts `IReadOnlyList<ProductId>`, forcing the implementation to process with a single query.
 
-### 9. Domain Service 통합
+### 9. Domain Service Integration
 
-`CreateOrderWithCreditCheckCommand`는 `OrderCreditCheckService` Domain Service를 사용하여 교차 Aggregate 비즈니스 규칙(고객 신용 한도 검증)을 오케스트레이션합니다.
+`CreateOrderWithCreditCheckCommand` uses the `OrderCreditCheckService` Domain Service to orchestrate cross-Aggregate business rules (customer credit limit verification).
 
 ```csharp
 public sealed class Usecase(
@@ -561,9 +561,9 @@ public sealed class Usecase(
     public async ValueTask<FinResponse<Response>> Handle(
         Request request, CancellationToken cancellationToken)
     {
-        // 1~5. Value Object 생성, 배치 가격 조회, OrderLine/Order 생성 (생략)
+        // 1-5. Value Object creation, batch price query, OrderLine/Order creation (omitted)
 
-        // 6. 고객 조회 → 신용 검증 → 저장
+        // 6. Customer query -> Credit verification -> Save
         FinT<IO, Response> usecase =
             from customer in _customerRepository.GetById(customerId)
             from _ in _creditCheckService.ValidateCreditLimit(customer, newOrder.TotalAmount)
@@ -585,20 +585,20 @@ public sealed class Usecase(
 }
 ```
 
-`_creditCheckService.ValidateCreditLimit(customer, newOrder.TotalAmount)`는 `Fin<Unit>`을 반환합니다. 신용 한도 초과 시 `CreditLimitExceeded` 도메인 에러가 FinT 체인을 중단하여 `_orderRepository.Create`가 실행되지 않습니다.
+`_creditCheckService.ValidateCreditLimit(customer, newOrder.TotalAmount)` returns `Fin<Unit>`. When the credit limit is exceeded, the `CreditLimitExceeded` domain error aborts the FinT chain, preventing `_orderRepository.Create` from executing.
 
-Application Layer는 Domain Service를 **직접 인스턴스화**(`new()`)합니다. Domain Service는 상태가 없는 순수 로직이므로 DI 컨테이너가 불필요합니다. 필요한 데이터(Customer, TotalAmount)는 Application Layer가 Repository를 통해 조회한 뒤 최소 인자로 전달합니다.
+The Application Layer **directly instantiates** Domain Service (`new()`). Since Domain Service is stateless pure logic, a DI container is unnecessary. The required data (Customer, TotalAmount) is queried by the Application Layer via Repository and passed as minimal arguments.
 
-### 10. 다중 Aggregate 쓰기 (PlaceOrderCommand)
+### 10. Multi-Aggregate Write (PlaceOrderCommand)
 
-`CreateProductCommand`는 Product와 Inventory를 함께 생성하지만, 그것은 단순한 쌍 생성입니다. `PlaceOrderCommand`는 **읽기 → 검증 → 다중 Aggregate 쓰기**라는 실제 비즈니스 트랜잭션을 구현합니다. 상품 가격 조회, 재고 가용성 검증 및 차감, 고객 신용 검증을 거친 뒤, 주문 생성과 재고 업데이트를 하나의 트랜잭션으로 원자 처리합니다.
+`CreateProductCommand` creates Product and Inventory together, but that is a simple pair creation. `PlaceOrderCommand` implements an actual business transaction of **read -> validate -> multi-Aggregate write**. After batch product price query, stock availability verification and deduction, and customer credit verification, order creation and inventory updates are atomically processed in a single transaction.
 
-**FinT LINQ 체인 — 비즈니스 흐름이 한눈에 보이는 구조:**
+**FinT LINQ chain -- structure where the business flow is visible at a glance:**
 
-VO 파싱 후, 전체 비즈니스 흐름을 하나의 `FinT<IO, T>` LINQ 체인으로 합성합니다. `from` 절의 변수명이 곧 비즈니스 단계입니다.
+After VO parsing, the entire business flow is composed in a single `FinT<IO, T>` LINQ chain. The `from` clause variable names are the business steps.
 
 ```csharp
-// 비즈니스 흐름: 가격 조회 → 주문 조립 → 재고 차감 → 신용 검증
+// Business flow: price query -> order assembly -> stock deduction -> credit verification
 FinT<IO, (Order order, DeductionResult deducted)> validated =
     from prices   in _productCatalog.GetPricesForProducts(productIds)
     from order    in BuildOrder(customerId, lineRequests, prices, shippingAddress)
@@ -608,17 +608,17 @@ FinT<IO, (Order order, DeductionResult deducted)> validated =
     select (order, deducted);
 ```
 
-5개 `from` 절은 서로 다른 타입을 반환하지만, FinT의 SelectMany 오버로드가 자동으로 리프팅합니다.
+The 5 `from` clauses return different types, but FinT's SelectMany overloads auto-lift them.
 
-| from 절 | 반환 타입 | 역할 |
+| from clause | Return Type | Role |
 |---|---|---|
-| `prices` | `FinT<IO, Seq<(ProductId, Money)>>` | Port 호출 (배치 가격 조회) |
-| `order` | `Fin<Order>` → 자동 리프팅 | 순수 함수 (Side-Effect-Free Function) |
-| `deducted` | `FinT<IO, DeductionResult>` | Traverse + 도메인 로직 |
-| `customer` | `FinT<IO, Customer>` | Repository 호출 |
-| `_1` | `Fin<Unit>` → 자동 리프팅 | Domain Service 검증 |
+| `prices` | `FinT<IO, Seq<(ProductId, Money)>>` | Port call (batch price query) |
+| `order` | `Fin<Order>` -> auto-lifted | Pure function (Side-Effect-Free Function) |
+| `deducted` | `FinT<IO, DeductionResult>` | Traverse + domain logic |
+| `customer` | `FinT<IO, Customer>` | Repository call |
+| `_1` | `Fin<Unit>` -> auto-lifted | Domain Service validation |
 
-**BuildOrder — 순수 함수(Side-Effect-Free Function):** 가격 검증, OrderLine 생성, Order 생성을 IO 없이 `Fin<Order>`로 합성합니다. 가격 Dictionary에 없는 상품은 `NotFound` 에러를 반환합니다.
+**BuildOrder -- Pure function (Side-Effect-Free Function):** Composes price verification, OrderLine creation, and Order creation as `Fin<Order>` without IO. Products not found in the price Dictionary return a `NotFound` error.
 
 ```csharp
 private static Fin<Order> BuildOrder(
@@ -645,7 +645,7 @@ private static Fin<Order> BuildOrder(
 }
 ```
 
-**DeductInventories — Traverse로 컬렉션 순차 처리:** LanguageExt의 `Traversable.Traverse`를 사용하여 주문 라인별 재고 차감을 `FinT<IO>` 컨텍스트에서 순차 실행합니다. `DeductionResult` 래퍼 레코드는 `Seq<Inventory>`가 LINQ transparent identifier에서 HKT 타입 추론 충돌을 일으키는 것을 방지합니다.
+**DeductInventories -- Sequential collection processing with Traverse:** Uses LanguageExt's `Traversable.Traverse` to sequentially execute per-order-line stock deduction in the `FinT<IO>` context. The `DeductionResult` wrapper record prevents HKT type inference conflicts when `Seq<Inventory>` appears in LINQ transparent identifiers.
 
 ```csharp
 private sealed record DeductionResult(Seq<Inventory> Inventories);
@@ -669,10 +669,10 @@ private FinT<IO, Inventory> DeductSingleInventory(
 }
 ```
 
-**다중 Aggregate 저장:** 검증을 모두 통과한 뒤, Order 저장과 Inventory 일괄 업데이트를 `Bind`/`Map`으로 합성합니다. Response에 `DeductedStocks`를 포함하여 "주문이 생성되었고, 재고가 이만큼 차감되었다"는 사실을 하나의 응답에서 확인할 수 있습니다.
+**Multi-Aggregate save:** After all validations pass, Order save and Inventory batch update are composed with `Bind`/`Map`. The Response includes `DeductedStocks` so "the order was created and stock was deducted by this amount" can be confirmed in a single response.
 
 ```csharp
-// 다중 Aggregate 저장 (Order + Inventory)
+// Multi-Aggregate save (Order + Inventory)
 FinT<IO, Response> usecase = validated.Bind(ctx =>
     _orderRepository.Create(ctx.order).Bind(saved =>
     _inventoryRepository.UpdateRange(ctx.deducted.Inventories.ToList()).Map(updatedInventories =>
@@ -687,11 +687,11 @@ FinT<IO, Response> usecase = validated.Bind(ctx =>
             saved.CreatedAt))));
 ```
 
-**Bind/Map vs LINQ `from...in`:** `CreateProductCommand`는 LINQ 쿼리 표현식으로 Product와 Inventory 생성을 합성합니다. `PlaceOrderCommand`의 저장 단계는 `Bind`/`Map`을 직접 사용합니다. FinT 체인에 `Seq<T>` 반환 타입(`UpdateRange`)이 포함될 때 C# 컴파일러의 SelectMany 오버로드 해석이 모호해지기 때문입니다. `Bind`/`Map`은 동일한 모나드 합성을 명시적으로 수행하므로, 의미 차이는 없습니다.
+**Bind/Map vs LINQ `from...in`:** `CreateProductCommand` composes Product and Inventory creation with LINQ query expressions. `PlaceOrderCommand`'s save stage uses `Bind`/`Map` directly. This is because when a `Seq<T>` return type (`UpdateRange`) is included in the FinT chain, the C# compiler's SelectMany overload resolution becomes ambiguous. `Bind`/`Map` performs the same monad composition explicitly, so there is no semantic difference.
 
-## CreateOrderWithCreditCheck 흐름
+## CreateOrderWithCreditCheck Flow
 
-다음 시퀀스 다이어그램은 `CreateOrderWithCreditCheckCommand`의 전체 흐름을 보여줍니다. FluentValidation 검증 → Value Object 생성 → 배치 가격 조회 → 고객 조회 → 신용한도 검증 → 주문 저장의 6단계를 거칩니다.
+The following sequence diagram shows the entire flow of `CreateOrderWithCreditCheckCommand`. It goes through 6 stages: FluentValidation validation -> Value Object creation -> batch price query -> customer query -> credit limit verification -> order save.
 
 ```mermaid
 sequenceDiagram
@@ -704,30 +704,30 @@ sequenceDiagram
     participant OrderRepo as IOrderRepository
 
     Client->>Validator: Request
-    Validator->>Validator: FluentValidation 규칙 검증
-    Validator->>Usecase: 검증 통과된 Request
+    Validator->>Validator: FluentValidation rule verification
+    Validator->>Usecase: Validated Request
 
-    Usecase->>Usecase: Value Object 생성<br/>(ShippingAddress, Quantity)
+    Usecase->>Usecase: Value Object creation<br/>(ShippingAddress, Quantity)
     Usecase->>ProductCatalog: GetPricesForProducts(productIds)
     ProductCatalog-->>Usecase: Seq<(ProductId, Money)>
-    Usecase->>Usecase: 존재 검증 + OrderLine 생성
+    Usecase->>Usecase: Existence verification + OrderLine creation
     Usecase->>Usecase: Order.Create(...)
 
-    Note over Usecase: FinT<IO, T> LINQ 체인 시작
+    Note over Usecase: FinT<IO, T> LINQ chain start
 
     Usecase->>CustomerRepo: GetById(customerId)
     CustomerRepo-->>Usecase: Customer
     Usecase->>CreditCheck: ValidateCreditLimit(customer, totalAmount)
-    CreditCheck-->>Usecase: Fin<Unit> (성공 또는 CreditLimitExceeded)
+    CreditCheck-->>Usecase: Fin<Unit> (success or CreditLimitExceeded)
     Usecase->>OrderRepo: Create(order)
     OrderRepo-->>Usecase: Order
 
     Usecase-->>Client: FinResponse<Response>
 ```
 
-## PlaceOrder 흐름
+## PlaceOrder Flow
 
-다음 시퀀스 다이어그램은 `PlaceOrderCommand`의 전체 흐름을 보여줍니다. `CreateOrderWithCreditCheckCommand`와 달리, 재고 검증·차감 단계가 추가되고, 최종 쓰기에서 Order와 Inventory 두 Aggregate를 원자적으로 저장합니다.
+The following sequence diagram shows the entire flow of `PlaceOrderCommand`. Unlike `CreateOrderWithCreditCheckCommand`, stock verification/deduction stages are added, and the final write atomically saves both Order and Inventory Aggregates.
 
 ```mermaid
 sequenceDiagram
@@ -741,16 +741,16 @@ sequenceDiagram
     participant OrderRepo as IOrderRepository
 
     Client->>Validator: Request
-    Validator->>Validator: FluentValidation 규칙 검증
-    Validator->>Usecase: 검증 통과된 Request
+    Validator->>Validator: FluentValidation rule verification
+    Validator->>Usecase: Validated Request
 
-    Usecase->>Usecase: VO 파싱<br/>(ShippingAddress, Quantity)
+    Usecase->>Usecase: VO parsing<br/>(ShippingAddress, Quantity)
 
-    Note over Usecase: FinT<IO, T> LINQ 체인 시작
+    Note over Usecase: FinT<IO, T> LINQ chain start
 
     Usecase->>ProductCatalog: GetPricesForProducts(productIds)
     ProductCatalog-->>Usecase: Seq<(ProductId, Money)>
-    Usecase->>Usecase: BuildOrder (순수 함수)<br/>가격 검증 + OrderLine + Order 생성
+    Usecase->>Usecase: BuildOrder (pure function)<br/>Price verification + OrderLine + Order creation
     loop DeductInventories (Traverse)
         Usecase->>InventoryRepo: GetByProductId(productId)
         InventoryRepo-->>Usecase: Inventory
@@ -761,7 +761,7 @@ sequenceDiagram
     Usecase->>CreditCheck: ValidateCreditLimit(customer, totalAmount)
     CreditCheck-->>Usecase: Fin<Unit>
 
-    Note over Usecase: 다중 Aggregate 저장 (Bind/Map)
+    Note over Usecase: Multi-Aggregate save (Bind/Map)
     Usecase->>OrderRepo: Create(order)
     OrderRepo-->>Usecase: Order
     Usecase->>InventoryRepo: UpdateRange(deductedInventories)
@@ -770,4 +770,4 @@ sequenceDiagram
     Usecase-->>Client: FinResponse<Response>
 ```
 
-[구현 결과](./03-implementation-results/)에서 이 패턴들이 비즈니스 시나리오를 어떻게 보장하는지 확인합니다.
+The [implementation results](./03-implementation-results/) verify how these patterns guarantee business scenarios.

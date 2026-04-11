@@ -1,46 +1,46 @@
 ---
-title: "왜 아키텍처 테스트인가"
+title: "Why Architecture Testing"
 ---
 
-## 컴파일러가 검증하지 못하는 것들
+## What the Compiler Cannot Verify
 
-C# 컴파일러는 타입 안전성, 접근 제한자, 문법 오류를 잡아줍니다. 하지만 팀이 합의한 **설계 규칙은** 컴파일러의 영역 밖에 있습니다.
+The C# compiler catches type safety violations, access modifier errors, and syntax mistakes. However, **design rules agreed upon by the team** fall outside the compiler's scope.
 
-예를 들어, 다음과 같은 규칙을 생각해 보겠습니다:
+For example, consider the following rules:
 
-- "도메인 엔티티는 반드시 `sealed` 클래스여야 한다"
-- "Value Object는 불변이어야 한다"
-- "도메인 레이어는 인프라 레이어에 의존하지 않아야 한다"
-- "모든 Command는 중첩된 Request, Response 클래스를 가져야 한다"
+- "Domain entities must be `sealed` classes"
+- "Value Objects must be immutable"
+- "The domain layer must not depend on the infrastructure layer"
+- "All Commands must have nested Request and Response classes"
 
-이 규칙들은 컴파일이 잘 되는 코드에서도 쉽게 위반될 수 있습니다.
+These rules can easily be violated even in code that compiles without errors.
 
-> **"컴파일러는 코드가 실행되는지를 검증하지만, 코드가 올바르게 설계되었는지는 검증하지 않습니다."**
+> **"The compiler verifies whether code runs, but it does not verify whether code is correctly designed."**
 
-## 수동 검증의 한계
+## Limitations of Manual Verification
 
-대부분의 팀은 이런 규칙을 **코드 리뷰로** 검증합니다. 하지만 수동 검증에는 근본적인 한계가 있습니다.
+Most teams verify these rules through **code reviews**. However, manual verification has fundamental limitations.
 
-금요일 오후, 100개의 파일이 변경된 PR이 올라왔다고 상상해 보세요. 리뷰어는 새로 추가된 `OrderItem` 클래스가 `sealed`인지, `Create` factory method가 있는지, immutability이 지켜지는지를 일일이 확인해야 합니다. 파일 50개쯤 지나면 피로가 쌓이고, 놓치는 항목이 생깁니다.
+Imagine it is Friday afternoon and a PR with 100 changed files has been submitted. The reviewer must check one by one whether the newly added `OrderItem` class is `sealed`, whether it has a `Create` factory method, and whether immutability is maintained. After about 50 files, fatigue sets in and items start getting missed.
 
 | Problem | Description |
-|------|------|
-| **일관성 부족** | 리뷰어마다 기준이 다르고, 피로도에 따라 놓치는 항목이 달라짐 |
-| **확장성 한계** | 코드베이스가 커질수록 모든 규칙을 확인하기 어려움 |
-| **지연된 피드백** | PR 리뷰 단계에서야 발견되어 수정 비용이 높아짐 |
-| **암묵적 지식** | 규칙이 문서화되지 않으면 새 팀원이 위반하기 쉬움 |
+|---------|-------------|
+| **Lack of consistency** | Different reviewers apply different standards, and items missed vary with fatigue levels |
+| **Scalability limits** | As the codebase grows, checking all rules becomes increasingly difficult |
+| **Delayed feedback** | Violations are only discovered at the PR review stage, raising the cost of fixes |
+| **Implicit knowledge** | If rules are not documented, new team members easily violate them |
 
-## 아키텍처 테스트의 가치
+## The Value of Architecture Testing
 
-**아키텍처 테스트는** 설계 규칙을 실행 가능한 코드로 표현합니다. 이를 통해:
+**Architecture tests** express design rules as executable code. This enables:
 
-1. **자동화된 검증:** CI/CD 파이프라인에서 매 커밋마다 규칙 위반을 검출합니다
-2. **즉각적인 피드백:** 개발자가 코드를 작성하는 시점에 위반을 알 수 있습니다
-3. **살아있는 문서:** 테스트 코드 자체가 아키텍처 규칙의 명세가 됩니다
-4. **일관된 기준:** 리뷰어의 컨디션과 무관하게 동일한 기준으로 검증합니다
+1. **Automated verification:** Rule violations are detected on every commit in the CI/CD pipeline
+2. **Immediate feedback:** Developers learn about violations at the time they write code
+3. **Living documentation:** The test code itself serves as the architecture rule specification
+4. **Consistent standards:** Verification applies the same criteria regardless of the reviewer's condition
 
 ```csharp
-// 이것은 규칙 문서가 아닙니다. 실행 가능한 검증입니다.
+// This is not a rule document. It is an executable verification.
 [Fact]
 public void DomainClasses_ShouldBe_PublicAndSealed()
 {
@@ -55,37 +55,37 @@ public void DomainClasses_ShouldBe_PublicAndSealed()
 }
 ```
 
-> **"아키텍처 테스트는 팀의 설계 합의를 자동화된 검증으로 바꿔줍니다. 규칙이 코드로 표현되면, 위반은 컴파일 오류처럼 즉시 드러납니다."**
+> **"Architecture tests turn your team's design agreements into automated verification. When rules are expressed as code, violations surface immediately -- just like compilation errors."**
 
-## 아키텍처 테스트 vs 단위 테스트
+## Architecture Tests vs Unit Tests
 
-| Aspect | 단위 테스트 | 아키텍처 테스트 |
-|------|------------|----------------|
-| **검증 대상** | 비즈니스 로직의 동작 | 코드 구조와 설계 규칙 |
-| **검증 시점** | runtime 동작 | 컴파일된 어셈블리의 구조 |
-| **실패 원인** | 잘못된 로직 | 규칙 위반 (예: sealed 누락) |
-| **유지보수** | 요구사항 변경 시 수정 | 아키텍처 규칙 변경 시 수정 |
+| Aspect | Unit Tests | Architecture Tests |
+|--------|------------|-------------------|
+| **Verification target** | Business logic behavior | Code structure and design rules |
+| **Verification timing** | Runtime behavior | Structure of compiled assemblies |
+| **Failure cause** | Incorrect logic | Rule violations (e.g., missing sealed) |
+| **Maintenance** | Modified when requirements change | Modified when architecture rules change |
 
-두 종류의 테스트는 보완적입니다. 단위 테스트가 "코드가 올바르게 동작하는가"를 검증한다면, 아키텍처 테스트는 "코드가 올바르게 구조화되어 있는가"를 검증합니다.
+The two types of tests are complementary. If unit tests verify "does the code behave correctly?", architecture tests verify "is the code structured correctly?".
 
 ## FAQ
 
-### Q1: 아키텍처 테스트가 단위 테스트를 대체하나요?
-**A**: 아닙니다. 아키텍처 테스트는 **코드의 구조를** 검증하고, 단위 테스트는 **코드의 동작을** 검증합니다. 아키텍처 테스트가 `Employee` 클래스가 `sealed`인지를 확인한다면, 단위 테스트는 `Employee.Create()`가 올바른 결과를 반환하는지를 verifies. 두 종류의 테스트가 함께 있어야 구조와 동작 모두를 신뢰할 수 있습니다.
+### Q1: Do architecture tests replace unit tests?
+**A**: No. Architecture tests verify **the structure of code**, while unit tests verify **the behavior of code**. If an architecture test checks whether the `Employee` class is `sealed`, a unit test verifies whether `Employee.Create()` returns the correct result. Both types of tests are needed to trust both structure and behavior.
 
-### Q2: 소규모 프로젝트에도 아키텍처 테스트가 필요한가요?
-**A**: 팀 규모나 코드베이스 크기보다 **규칙의 중요도**가 기준입니다. 소규모 프로젝트라도 "도메인 엔티티는 반드시 sealed여야 한다"와 같은 핵심 규칙이 있다면, 아키텍처 테스트로 자동화하는 것이 효과적입니다. 프로젝트가 성장하면 그 가치는 더욱 커집니다.
+### Q2: Are architecture tests necessary for small projects?
+**A**: The criterion is **the importance of the rules**, not the team size or codebase size. Even in small projects, if there are core rules like "domain entities must be sealed", automating them with architecture tests is effective. As the project grows, their value increases further.
 
-### Q3: 아키텍처 테스트는 CI/CD에서 어떻게 실행하나요?
-**A**: 아키텍처 테스트는 일반 xUnit 테스트와 동일한 방식으로 실행됩니다. `dotnet test` 명령에 의해 CI/CD 파이프라인에서 자동으로 실행되므로, 별도의 도구나 설정이 필요 없습니다.
+### Q3: How are architecture tests run in CI/CD?
+**A**: Architecture tests run in the same way as regular xUnit tests. They are automatically executed in the CI/CD pipeline by the `dotnet test` command, requiring no additional tools or configuration.
 
-### Q4: 아키텍처 규칙을 위반하면 어떻게 되나요?
-**A**: 규칙을 위반한 클래스와 위반 내용이 테스트 실패 메시지에 상세히 출력됩니다. 개발자는 로컬에서 테스트를 실행하여 PR을 올리기 전에 위반 사항을 바로 확인하고 수정할 수 있습니다.
+### Q4: What happens when an architecture rule is violated?
+**A**: The class that violated the rule and the violation details are output in detail in the test failure message. Developers can run tests locally to identify and fix violations before submitting a PR.
 
 ---
 
 ## Next Steps
 
-설계 규칙을 자동으로 검증하려면 적절한 도구가 필요합니다. Next chapter에서는 .NET 생태계의 아키텍처 테스트 도구인 ArchUnitNET과 Functorium ArchitectureRules 프레임워크를 소개합니다.
+To automatically verify design rules, appropriate tools are needed. The next chapter introduces ArchUnitNET and the Functorium ArchitectureRules framework -- the architecture testing tools for the .NET ecosystem.
 
-→ [0.2 ArchUnitNET 소개](02-archunitnet-and-functorium.md)
+-> [0.2 Introducing ArchUnitNET](02-archunitnet-and-functorium.md)

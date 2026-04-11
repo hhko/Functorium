@@ -1,14 +1,14 @@
 ---
-title: "도메인 구현 결과"
+title: "Domain Implementation Results"
 ---
 
-[비즈니스 요구사항](../00-business-requirements/)에서 정의한 시나리오를, [코드 설계](../02-code-design/)에서 구현한 타입 구조로 실행하여 증명합니다. 정상 시나리오(1~7)는 타입이 올바른 상태를 어떻게 표현하는지, 거부 시나리오(8~12)는 잘못된 상태를 어떻게 차단하는지 확인합니다.
+We prove the scenarios defined in the [business requirements](../00-business-requirements/) by executing them with the type structure implemented in the [code design](../02-code-design/). Normal scenarios (1-7) verify how types represent valid states, and rejection scenarios (8-12) verify how they block invalid states.
 
-## 정상 시나리오 검증
+## Normal Scenario Verification
 
-### 시나리오 1: 고객 생성
+### Scenario 1: Customer Creation
 
-**비즈니스 규칙:** 고객은 이름, 이메일, 신용한도를 가지며, 생성 시 `CreatedEvent`가 발행됩니다.
+**Business Rule:** A customer has a name, email, and credit limit, and a `CreatedEvent` is published upon creation.
 
 ```csharp
 [Fact]
@@ -45,11 +45,11 @@ public void Create_ShouldSetProperties()
 }
 ```
 
-`CustomerName`, `Email`, `Money`는 각각 검증된 Value Object입니다. `Create`는 이미 검증된 VO를 받아 Aggregate를 구성하고, `CreatedEvent`를 발행합니다. ID는 Ulid 기반으로 자동 생성됩니다.
+`CustomerName`, `Email`, and `Money` are each validated Value Objects. `Create` receives already validated VOs to construct the Aggregate and publishes a `CreatedEvent`. The ID is auto-generated based on Ulid.
 
-### 시나리오 2: 상품 생성
+### Scenario 2: Product Creation
 
-**비즈니스 규칙:** 상품은 이름, 설명, 가격을 가지며, 생성 시 `CreatedEvent`가 발행됩니다.
+**Business Rule:** A product has a name, description, and price, and a `CreatedEvent` is published upon creation.
 
 ```csharp
 [Fact]
@@ -82,11 +82,11 @@ public void Create_ShouldSetProperties()
 }
 ```
 
-`Product.Create`는 세 가지 VO(`ProductName`, `ProductDescription`, `Money`)를 받아 Aggregate를 구성합니다. 상품은 `ISoftDeletableWithUser`를 구현하여 논리 삭제를 지원합니다.
+`Product.Create` receives three VOs (`ProductName`, `ProductDescription`, `Money`) to construct the Aggregate. The product implements `ISoftDeletableWithUser` to support soft delete.
 
-### 시나리오 3: 주문 생성
+### Scenario 3: Order Creation
 
-**비즈니스 규칙:** 주문은 최소 1개 이상의 주문 라인을 포함해야 하며, `TotalAmount`는 모든 라인의 합계로 자동 계산됩니다.
+**Business Rule:** An order must contain at least 1 order line, and `TotalAmount` is automatically calculated as the sum of all lines.
 
 ```csharp
 [Fact]
@@ -134,11 +134,11 @@ public void Create_ShouldPublishCreatedEvent()
 }
 ```
 
-`Order.Create`는 `Fin<Order>`를 반환합니다. `TotalAmount`는 개별 `OrderLine.LineTotal`(`Quantity * UnitPrice`)의 합계로 자동 계산되며, 생성 즉시 `Pending` 상태가 됩니다. `CustomerId`는 교차 Aggregate 참조로, Customer Aggregate의 ID를 값으로 보유합니다.
+`Order.Create` returns `Fin<Order>`. `TotalAmount` is auto-calculated as the sum of individual `OrderLine.LineTotal` (`Quantity * UnitPrice`), and the status is immediately set to `Pending` upon creation. `CustomerId` is a cross-Aggregate reference that holds the Customer Aggregate's ID as a value.
 
-### 시나리오 4: 주문 상태 전이 체인
+### Scenario 4: Order Status Transition Chain
 
-**비즈니스 규칙:** 주문 상태는 `Pending -> Confirmed -> Shipped -> Delivered` 순서로 전이되며, 각 전이마다 도메인 이벤트가 발행됩니다.
+**Business Rule:** Order status transitions in the order `Pending -> Confirmed -> Shipped -> Delivered`, with domain events published for each transition.
 
 ```csharp
 [Fact]
@@ -160,7 +160,7 @@ public void Ship_ShouldTransitionFromConfirmed()
 {
     // Arrange
     var sut = CreateSampleOrder();
-    sut.Confirm(); // Pending → Confirmed
+    sut.Confirm(); // Pending -> Confirmed
 
     // Act
     var actual = sut.Ship();
@@ -185,7 +185,7 @@ public void Confirm_ShouldPublishConfirmedEvent()
 }
 ```
 
-`OrderStatus`는 허용된 전이 규칙을 `CanTransitionTo`로 정의합니다. `Confirm()`, `Ship()`, `Deliver()`는 내부에서 `TransitionTo`를 호출하여 현재 상태에서 대상 상태로의 전이 가능 여부를 검증한 뒤, 상태를 변경하고 이벤트를 발행합니다.
+`OrderStatus` defines allowed transition rules via `CanTransitionTo`. `Confirm()`, `Ship()`, `Deliver()` internally call `TransitionTo`, which verifies whether the transition from the current state to the target state is allowed, then changes the state and publishes an event.
 
 ```csharp
 [Theory]
@@ -209,11 +209,11 @@ public void CanTransitionTo_ShouldReturnExpected(string from, string to, bool ex
 }
 ```
 
-상태 전이 규칙은 `OrderStatus` Value Object 내부에 캡슐화되어, Aggregate가 유효하지 않은 상태로 전이하는 것을 구조적으로 방지합니다.
+State transition rules are encapsulated inside the `OrderStatus` Value Object, structurally preventing the Aggregate from transitioning to an invalid state.
 
-### 시나리오 5: 상품 논리 삭제 + 복원
+### Scenario 5: Product Soft Delete + Restore
 
-**비즈니스 규칙:** 상품을 논리 삭제하면 삭제자와 시점이 기록됩니다. 복원하면 삭제 정보가 초기화됩니다. 삭제와 복원 모두 멱등합니다.
+**Business Rule:** When a product is soft deleted, the deleter and timestamp are recorded. When restored, the deletion information is cleared. Both delete and restore are idempotent.
 
 ```csharp
 [Fact]
@@ -239,11 +239,11 @@ public void Delete_ShouldBeIdempotent_WhenAlreadyDeleted()
     sut.ClearDomainEvents();
 
     // Act
-    sut.Delete("other@test.com"); // 두 번째 삭제 시도
+    sut.Delete("other@test.com"); // Second delete attempt
 
     // Assert
-    sut.DomainEvents.ShouldBeEmpty();              // 이벤트 추가 없음
-    sut.DeletedBy.ShouldBe(Some("admin@test.com")); // 최초 삭제자 유지
+    sut.DomainEvents.ShouldBeEmpty();              // No events added
+    sut.DeletedBy.ShouldBe(Some("admin@test.com")); // Original deleter preserved
 }
 
 [Fact]
@@ -269,18 +269,18 @@ public void Restore_ShouldBeIdempotent_WhenNotDeleted()
     sut.ClearDomainEvents();
 
     // Act
-    sut.Restore(); // 삭제되지 않은 상태에서 복원 시도
+    sut.Restore(); // Restore attempt on non-deleted state
 
     // Assert
-    sut.DomainEvents.ShouldBeEmpty(); // 이벤트 추가 없음
+    sut.DomainEvents.ShouldBeEmpty(); // No events added
 }
 ```
 
-`DeletedAt`과 `DeletedBy`는 `Option<T>`로 표현됩니다. 삭제 시 `Some(value)`, 복원 시 `None`으로 전환됩니다. 이미 삭제(복원)된 상태에서 다시 삭제(복원)해도 이벤트가 추가되지 않아, 멱등성이 보장됩니다.
+`DeletedAt` and `DeletedBy` are expressed as `Option<T>`. On deletion they transition to `Some(value)`, on restoration to `None`. Calling delete (restore) again on an already deleted (restored) state does not add events, guaranteeing idempotency.
 
-### 시나리오 6: 재고 차감/추가
+### Scenario 6: Inventory Deduction/Addition
 
-**비즈니스 규칙:** 재고는 차감과 추가가 가능하며, 각 작업마다 도메인 이벤트가 발행됩니다.
+**Business Rule:** Inventory supports deduction and addition, with domain events published for each operation.
 
 ```csharp
 [Fact]
@@ -315,11 +315,11 @@ public void AddStock_ShouldIncreaseQuantity()
 }
 ```
 
-`Inventory`는 `Product`에서 분리된 재고 관리 전용 Aggregate입니다. 고빈도 변경(주문마다 `DeductStock`)에 대한 낙관적 동시성 제어(`IConcurrencyAware`)를 지원합니다. `DeductStock`은 `Fin<Unit>`을 반환하여 재고 부족 시 실패를 명시적으로 표현합니다.
+`Inventory` is a dedicated inventory management Aggregate separated from `Product`. It supports optimistic concurrency control (`IConcurrencyAware`) for high-frequency changes (per-order `DeductStock`). `DeductStock` returns `Fin<Unit>` to explicitly express failure on insufficient stock.
 
-### 시나리오 7: 신용한도 검증 (통과)
+### Scenario 7: Credit Limit Validation (Pass)
 
-**비즈니스 규칙:** 주문 금액이 고객의 신용 한도 이내이면 주문이 허용됩니다. 기존 주문 합산도 고려합니다.
+**Business Rule:** If the order amount is within the customer's credit limit, the order is allowed. The sum of existing orders is also considered.
 
 ```csharp
 [Fact]
@@ -368,15 +368,15 @@ public void ValidateCreditLimitWithExistingOrders_ReturnsSuccess_WhenTotalWithin
 }
 ```
 
-`OrderCreditCheckService`는 `IDomainService`를 구현하는 교차 Aggregate 검증 서비스입니다. `Customer`의 신용한도와 `Order`의 금액을 비교하여, 단일 Aggregate에서는 수행할 수 없는 비즈니스 규칙을 검증합니다. `ValidateCreditLimitWithExistingOrders`는 기존 주문 합계를 포함한 누적 금액을 검증합니다.
+`OrderCreditCheckService` is a cross-Aggregate validation service implementing `IDomainService`. It compares the `Customer`'s credit limit with the `Order`'s amount to validate business rules that cannot be performed within a single Aggregate. `ValidateCreditLimitWithExistingOrders` validates the cumulative amount including existing order totals.
 
-정상 시나리오에서 올바른 상태가 어떻게 표현되는지 확인했습니다. 이제 거부 시나리오에서 잘못된 상태가 어떻게 차단되는지 검증합니다. 도메인 타입 시스템의 진정한 가치는 '허용된 상태를 표현하는 것'보다 '허용되지 않은 상태를 구조적으로 불가능하게 만드는 것'에 있습니다.
+Having verified how valid states are represented in normal scenarios, we now verify how invalid states are blocked in rejection scenarios. The true value of the domain type system lies not in 'representing allowed states' but in 'making disallowed states structurally impossible.'
 
-## 거부 시나리오 검증
+## Rejection Scenario Verification
 
-### 시나리오 8: 빈 주문라인
+### Scenario 8: Empty Order Lines
 
-**비즈니스 규칙:** 주문 라인이 없는 주문은 생성할 수 없습니다.
+**Business Rule:** Orders without order lines cannot be created.
 
 ```csharp
 [Fact]
@@ -393,11 +393,11 @@ public void Create_ShouldFail_WhenOrderLinesEmpty()
 }
 ```
 
-`Order.Create`는 주문 라인 목록이 비어 있으면 `EmptyOrderLines` 에러를 포함한 `Fin.Fail`을 반환합니다. `Fin<Order>` 반환 타입이 호출자에게 실패 처리를 강제하므로, 빈 주문이 생성되는 것을 구조적으로 방지합니다.
+`Order.Create` returns a `Fin.Fail` containing an `EmptyOrderLines` error when the order line list is empty. The `Fin<Order>` return type forces the caller to handle failure, structurally preventing the creation of empty orders.
 
-### 시나리오 9: 잘못된 상태 전이
+### Scenario 9: Invalid Status Transition
 
-**비즈니스 규칙:** 허용되지 않은 상태 전이는 거부됩니다. (예: `Pending -> Shipped`, `Delivered -> Cancelled`)
+**Business Rule:** Disallowed state transitions are rejected. (e.g., `Pending -> Shipped`, `Delivered -> Cancelled`)
 
 ```csharp
 [Fact]
@@ -407,7 +407,7 @@ public void Ship_ShouldFail_WhenPending()
     var sut = CreateSampleOrder(); // Status = Pending
 
     // Act
-    var actual = sut.Ship(); // Pending → Shipped 시도
+    var actual = sut.Ship(); // Attempting Pending -> Shipped
 
     // Assert
     actual.IsFail.ShouldBeTrue();
@@ -418,10 +418,10 @@ public void Deliver_ShouldFail_WhenCancelled()
 {
     // Arrange
     var sut = CreateSampleOrder();
-    sut.Cancel(); // Pending → Cancelled
+    sut.Cancel(); // Pending -> Cancelled
 
     // Act
-    var actual = sut.Deliver(); // Cancelled → Delivered 시도
+    var actual = sut.Deliver(); // Attempting Cancelled -> Delivered
 
     // Assert
     actual.IsFail.ShouldBeTrue();
@@ -434,21 +434,21 @@ public void Cancel_ShouldFail_WhenDelivered()
     var sut = CreateSampleOrder();
     sut.Confirm();
     sut.Ship();
-    sut.Deliver(); // Shipped → Delivered
+    sut.Deliver(); // Shipped -> Delivered
 
     // Act
-    var actual = sut.Cancel(); // Delivered → Cancelled 시도
+    var actual = sut.Cancel(); // Attempting Delivered -> Cancelled
 
     // Assert
     actual.IsFail.ShouldBeTrue();
 }
 ```
 
-`TransitionTo` 내부에서 `OrderStatus.CanTransitionTo`를 호출하여 허용되지 않은 전이를 감지하면, `InvalidOrderStatusTransition` 에러를 반환합니다. 배송(`Ship`)은 반드시 확인(`Confirmed`) 이후에만, 배달 완료(`Deliver`)는 반드시 배송(`Shipped`) 이후에만 가능합니다.
+Inside `TransitionTo`, when `OrderStatus.CanTransitionTo` detects a disallowed transition, it returns an `InvalidOrderStatusTransition` error. Ship is only possible after Confirmed, and Deliver is only possible after Shipped.
 
-### 시나리오 10: 삭제된 상품 수정
+### Scenario 10: Modifying a Deleted Product
 
-**비즈니스 규칙:** 논리 삭제된 상품은 수정할 수 없습니다. 복원 후에는 수정이 가능합니다.
+**Business Rule:** Soft-deleted products cannot be modified. After restoration, modification becomes possible.
 
 ```csharp
 [Fact]
@@ -475,7 +475,7 @@ public void Restore_ShouldAllowUpdate_AfterDeleteAndRestore()
     // Arrange
     var sut = CreateSampleProduct();
     sut.Delete("admin@test.com");
-    sut.Restore(); // 복원
+    sut.Restore(); // Restore
 
     var newName = ProductName.Create("Restored Name").ThrowIfFail();
     var newDescription = ProductDescription.Create("Restored Desc").ThrowIfFail();
@@ -490,32 +490,32 @@ public void Restore_ShouldAllowUpdate_AfterDeleteAndRestore()
 }
 ```
 
-`Update` 메서드는 첫 번째 가드에서 `DeletedAt.IsSome`을 확인합니다. 삭제된 상태에서는 `AlreadyDeleted` 에러를 반환하여 상태 변경을 차단합니다. `Restore()` 이후에는 `DeletedAt`이 `None`으로 초기화되므로, 다시 수정이 가능해집니다.
+The `Update` method checks `DeletedAt.IsSome` in its first guard. In the deleted state, it returns an `AlreadyDeleted` error to block state changes. After `Restore()`, `DeletedAt` is reset to `None`, making modification possible again.
 
-### 시나리오 11: 재고 부족
+### Scenario 11: Insufficient Stock
 
-**비즈니스 규칙:** 현재 재고보다 많은 수량을 차감할 수 없습니다.
+**Business Rule:** More than the current stock cannot be deducted.
 
 ```csharp
 [Fact]
 public void DeductStock_ShouldFail_WhenInsufficientStock()
 {
     // Arrange
-    var sut = CreateSampleInventory(2); // 재고 2개
+    var sut = CreateSampleInventory(2); // Stock: 2
 
     // Act
-    var result = sut.DeductStock(Quantity.Create(5).ThrowIfFail()); // 5개 차감 시도
+    var result = sut.DeductStock(Quantity.Create(5).ThrowIfFail()); // Attempting to deduct 5
 
     // Assert
     result.IsFail.ShouldBeTrue();
 }
 ```
 
-`DeductStock`은 요청 수량(`quantity`)이 현재 재고(`StockQuantity`)를 초과하면 `InsufficientStock` 에러를 반환합니다. `Fin<Unit>` 반환 타입이 호출자에게 재고 부족 상황에 대한 처리를 강제합니다.
+`DeductStock` returns an `InsufficientStock` error when the requested quantity exceeds the current stock (`StockQuantity`). The `Fin<Unit>` return type forces the caller to handle insufficient stock situations.
 
-### 시나리오 12: 신용한도 초과
+### Scenario 12: Credit Limit Exceeded
 
-**비즈니스 규칙:** 주문 금액이 고객의 신용 한도를 초과하면 주문이 거부됩니다. 기존 주문 합산 시에도 동일합니다.
+**Business Rule:** If the order amount exceeds the customer's credit limit, the order is rejected. The same applies when summing existing orders.
 
 ```csharp
 [Fact]
@@ -539,7 +539,7 @@ public void ValidateCreditLimitWithExistingOrders_ReturnsFail_WhenTotalExceedsLi
     var customer = CreateSampleCustomer(creditLimit: 5000m);
     var existingOrders = Seq(
         CreateSampleOrder(unitPrice: 2000m),
-        CreateSampleOrder(unitPrice: 2000m)); // 기존 합계 4000
+        CreateSampleOrder(unitPrice: 2000m)); // Existing total: 4000
     var newOrderAmount = Money.Create(2000m).ThrowIfFail(); // 4000 + 2000 = 6000 > 5000
 
     // Act
@@ -550,79 +550,79 @@ public void ValidateCreditLimitWithExistingOrders_ReturnsFail_WhenTotalExceedsLi
 }
 ```
 
-`OrderCreditCheckService`는 단일 주문(`ValidateCreditLimit`)과 누적 주문(`ValidateCreditLimitWithExistingOrders`) 두 가지 검증을 제공합니다. 두 경우 모두 한도 초과 시 `CreditLimitExceeded` 에러를 반환합니다.
+`OrderCreditCheckService` provides two validations: single order (`ValidateCreditLimit`) and cumulative orders (`ValidateCreditLimitWithExistingOrders`). In both cases, a `CreditLimitExceeded` error is returned when the limit is exceeded.
 
-## 에러 타입 매트릭스
+## Error Type Matrix
 
-도메인 에러는 각 Aggregate 또는 Domain Service 내부에 중첩 레코드로 정의됩니다. 중앙 ErrorCode enum 대신 타입별 sealed record를 사용하는 이유는, 에러의 출처와 분류를 타입 시스템으로 보장하고 `DomainError.For<T>()`가 에러 코드를 자동 생성하기 때문입니다.
+Domain errors are defined as nested records within each Aggregate or Domain Service. The reason for using per-type sealed records instead of a centralized ErrorCode enum is that the type system guarantees error origin and classification, and `DomainError.For<T>()` auto-generates error codes.
 
-각 거부 시나리오는 `sealed record` 에러 타입을 통해 실패 원인을 구조적으로 식별합니다. `DomainError.For<TDomain>()`이 에러 코드를 `DomainErrors.{타입명}.{에러명}` 형식으로 자동 생성하므로, 문자열 비교 없이 에러를 패턴 매칭할 수 있습니다.
+Each rejection scenario structurally identifies failure causes through `sealed record` error types. `DomainError.For<TDomain>()` auto-generates error codes in the format `DomainErrors.{TypeName}.{ErrorName}`, enabling pattern matching without string comparison.
 
-| Aggregate/서비스 | 에러 타입 | 발생 조건 | 반환 타입 |
-|-----------------|----------|----------|----------|
-| `Order` | `EmptyOrderLines` | 주문 라인이 비어 있음 | `Fin<Order>` |
-| `Order` | `InvalidOrderStatusTransition` | 허용되지 않은 상태 전이 | `Fin<Unit>` |
-| `OrderLine` | `InvalidQuantity` | 주문 라인 수량 유효성 실패 | `Fin<OrderLine>` |
-| `OrderStatus` | `InvalidValue` | 유효하지 않은 상태 문자열 | `Fin<OrderStatus>` |
-| `Product` | `AlreadyDeleted` | 삭제된 상품 수정 시도 | `Fin<Product>` |
-| `Inventory` | `InsufficientStock` | 재고 부족 상태에서 차감 | `Fin<Unit>` |
-| `OrderCreditCheckService` | `CreditLimitExceeded` | 주문 금액이 신용한도 초과 | `Fin<Unit>` |
+| Aggregate/Service | Error Type | Trigger Condition | Return Type |
+|-------------------|-----------|-------------------|------------|
+| `Order` | `EmptyOrderLines` | Order lines are empty | `Fin<Order>` |
+| `Order` | `InvalidOrderStatusTransition` | Disallowed state transition | `Fin<Unit>` |
+| `OrderLine` | `InvalidQuantity` | Order line quantity validation failure | `Fin<OrderLine>` |
+| `OrderStatus` | `InvalidValue` | Invalid status string | `Fin<OrderStatus>` |
+| `Product` | `AlreadyDeleted` | Attempting to modify deleted product | `Fin<Product>` |
+| `Inventory` | `InsufficientStock` | Deduction during insufficient stock | `Fin<Unit>` |
+| `OrderCreditCheckService` | `CreditLimitExceeded` | Order amount exceeds credit limit | `Fin<Unit>` |
 
-## 시나리오 커버리지 매트릭스
+## Scenario Coverage Matrix
 
-| 요구사항 | 시나리오 | 결과 | 검증 방법 |
-|---------|---------|------|----------|
-| 고객 생성 및 속성 설정 | 1. 고객 생성 | `CreatedEvent` 발행, 속성 설정 | `ShouldContain`, `ShouldBe` |
-| 상품 생성 | 2. 상품 생성 | `CreatedEvent` 발행 | `ShouldContain` |
-| 주문 금액 자동 계산 | 3. 주문 생성 | `TotalAmount = Sum(LineTotal)` | `ShouldBe(400m)` |
-| 주문 상태 전이 규칙 | 4. 상태 전이 체인 | Pending -> Confirmed -> Shipped -> Delivered | `IsSucc`, `ShouldBe(OrderStatus.*)` |
-| 상품 수명 관리 + 멱등성 | 5. 논리 삭제/복원 | 삭제/복원 + 멱등 보장 | `IsSome`/`IsNone`, `ShouldBeEmpty` |
-| 재고 관리 | 6. 재고 차감/추가 | 수량 변경 + 이벤트 발행 | `ShouldBe(7)`, `ShouldContain` |
-| 교차 Aggregate 검증 | 7. 신용한도 통과 | 한도 이내 주문 허용 | `IsSucc` |
-| 주문 라인 불변식 | 8. 빈 주문라인 | `EmptyOrderLines` 에러 | `IsFail` |
-| 상태 전이 불변식 | 9. 잘못된 전이 | `InvalidOrderStatusTransition` 에러 | `IsFail` |
-| 삭제 상태 행위 차단 | 10. 삭제된 상품 수정 | `AlreadyDeleted` 에러 | `IsFail` |
-| 재고 불변식 | 11. 재고 부족 | `InsufficientStock` 에러 | `IsFail` |
-| 신용한도 규칙 | 12. 신용한도 초과 | `CreditLimitExceeded` 에러 | `IsFail` |
+| Requirement | Scenario | Result | Verification Method |
+|-------------|---------|--------|---------------------|
+| Customer creation and property setting | 1. Customer creation | `CreatedEvent` published, properties set | `ShouldContain`, `ShouldBe` |
+| Product creation | 2. Product creation | `CreatedEvent` published | `ShouldContain` |
+| Automatic order amount calculation | 3. Order creation | `TotalAmount = Sum(LineTotal)` | `ShouldBe(400m)` |
+| Order status transition rules | 4. Status transition chain | Pending -> Confirmed -> Shipped -> Delivered | `IsSucc`, `ShouldBe(OrderStatus.*)` |
+| Product lifecycle management + idempotency | 5. Soft delete/restore | Delete/restore + idempotency guaranteed | `IsSome`/`IsNone`, `ShouldBeEmpty` |
+| Inventory management | 6. Inventory deduction/addition | Quantity change + event publication | `ShouldBe(7)`, `ShouldContain` |
+| Cross-Aggregate validation | 7. Credit limit pass | Order within limit allowed | `IsSucc` |
+| Order line invariants | 8. Empty order lines | `EmptyOrderLines` error | `IsFail` |
+| State transition invariants | 9. Invalid transition | `InvalidOrderStatusTransition` error | `IsFail` |
+| Deleted state behavior blocking | 10. Modifying deleted product | `AlreadyDeleted` error | `IsFail` |
+| Inventory invariants | 11. Insufficient stock | `InsufficientStock` error | `IsFail` |
+| Credit limit rules | 12. Credit limit exceeded | `CreditLimitExceeded` error | `IsFail` |
 
-지금까지 개별 시나리오를 통해 도메인 모델의 동작을 검증했습니다. 이제 이 예제에서 DDD 전술적 패턴과 함수형 타입이 어떻게 협력하여 비즈니스 규칙을 보장하는지 종합적으로 정리합니다.
+Having verified the behavior of the domain model through individual scenarios, we now provide a comprehensive summary of how DDD tactical patterns and functional types collaborate in this example to guarantee business rules.
 
-## DDD 전술적 패턴의 역할
+## Role of DDD Tactical Patterns
 
-Eric Evans의 DDD 빌딩 블록은 "어떤 규칙을 어디서 보장할 것인가"를 결정합니다.
+Eric Evans' DDD building blocks determine "which rules to guarantee where."
 
-| 패턴 | 적용 | 역할 | 보장 효과 |
-|-----|------|------|----------|
-| Value Object | `Money`, `Quantity`, `OrderStatus`, `CustomerName`, `Email`, `ShippingAddress` 등 | 단일 값의 유효성과 불변성 보장 | 잘못된 값의 존재 자체를 차단 |
-| Aggregate Root | `Customer`, `Product`, `Order`, `Inventory`, `Tag` | 불변식 경계와 일관성의 단일 진입점 | 모든 상태 변경이 Aggregate를 통해서만 발생 |
-| Entity | `OrderLine` | Aggregate 내부의 식별 가능한 객체 | 수명 주기가 Aggregate에 종속되어 고아 엔티티 방지 |
-| Domain Event | `CreatedEvent`, `ConfirmedEvent`, `StockDeductedEvent` 등 | 상태 변경의 추적과 전파 | 모든 변경을 명시적으로 기록 |
-| Domain Service | `OrderCreditCheckService` | 교차 Aggregate 비즈니스 규칙 검증 | 단일 Aggregate로 해결할 수 없는 규칙을 별도 서비스로 분리 |
-| 교차 Aggregate 참조 | `Order.CustomerId`, `Inventory.ProductId` | Aggregate 간 ID 기반 느슨한 연결 | Aggregate 경계를 침범하지 않고 참조 유지 |
+| Pattern | Application | Role | Guarantee Effect |
+|---------|------------|------|------------------|
+| Value Object | `Money`, `Quantity`, `OrderStatus`, `CustomerName`, `Email`, `ShippingAddress`, etc. | Guarantees validity and immutability of single values | Blocks the very existence of invalid values |
+| Aggregate Root | `Customer`, `Product`, `Order`, `Inventory`, `Tag` | Invariant boundary and single entry point for consistency | All state changes occur only through the Aggregate |
+| Entity | `OrderLine` | Identifiable object within the Aggregate | Lifecycle dependent on Aggregate, preventing orphan entities |
+| Domain Event | `CreatedEvent`, `ConfirmedEvent`, `StockDeductedEvent`, etc. | Tracking and propagation of state changes | All changes explicitly recorded |
+| Domain Service | `OrderCreditCheckService` | Cross-Aggregate business rule validation | Rules that cannot be resolved by a single Aggregate separated into a dedicated service |
+| Cross-Aggregate Reference | `Order.CustomerId`, `Inventory.ProductId` | Loose ID-based connection between Aggregates | References maintained without violating Aggregate boundaries |
 
-DDD 전술적 패턴이 '어떤 규칙을 어디서 보장할 것인가'를 결정한다면, 함수형 타입 시스템은 '어떻게 컴파일러에게 규칙 검증을 위임할 것인가'를 제공합니다.
+While DDD tactical patterns determine 'which rules to guarantee where,' the functional type system provides 'how to delegate rule verification to the compiler.'
 
-## 함수형 타입 시스템의 역할
+## Role of the Functional Type System
 
-Functorium의 함수형 타입은 "어떻게 컴파일러에게 규칙 검증을 위임할 것인가"를 제공합니다.
+Functorium's functional types provide "how to delegate rule verification to the compiler."
 
-| 타입 | 적용 | 효과 |
-|-----|------|------|
-| `Fin<T>` | `Order.Create`, `DeductStock`, `ValidateCreditLimit` 등 | 예외 대신 반환 타입으로 실패를 표현, 호출자가 실패 처리를 강제받음 |
-| `Option<T>` | `DeletedAt`, `DeletedBy`, `UpdatedAt` | null 대신 타입 안전한 선택적 값 표현, 삭제 상태의 유무를 `IsSome`/`IsNone`으로 명확히 구분 |
-| `DomainErrorType.Custom` | `EmptyOrderLines`, `InsufficientStock`, `CreditLimitExceeded` 등 | 문자열 메시지 대신 `sealed record`로 실패 원인을 구조적으로 식별, 에러 코드 자동 생성 |
-| `DomainError.For<T>()` | 모든 에러 생성 | `DomainErrors.{타입명}.{에러명}` 형식의 에러 코드 자동 생성, 패턴 매칭으로 정확한 분기 처리 |
-| Value Object 팩토리 | `Money.Create`, `Quantity.Create`, `OrderStatus.Create` | 생성 시점에 검증 완료, 이후 도메인 로직에서 유효성 재확인 불필요 |
-| `CreateFromValidated` | 모든 Aggregate의 ORM 복원 | 검증과 이벤트 발행 생략, 이미 영속화된 데이터를 신뢰하여 도메인 생성과 ORM 복원을 분리 |
+| Type | Application | Effect |
+|------|------------|--------|
+| `Fin<T>` | `Order.Create`, `DeductStock`, `ValidateCreditLimit`, etc. | Expresses failure via return type instead of exceptions, forcing callers to handle failures |
+| `Option<T>` | `DeletedAt`, `DeletedBy`, `UpdatedAt` | Type-safe optional value expression instead of null, clearly distinguishing presence/absence of deleted state via `IsSome`/`IsNone` |
+| `DomainErrorType.Custom` | `EmptyOrderLines`, `InsufficientStock`, `CreditLimitExceeded`, etc. | Structurally identifies failure causes via `sealed record` instead of string messages, auto-generates error codes |
+| `DomainError.For<T>()` | All error creation | Auto-generates error codes in `DomainErrors.{TypeName}.{ErrorName}` format, enabling precise branching via pattern matching |
+| Value Object Factory | `Money.Create`, `Quantity.Create`, `OrderStatus.Create` | Validation complete at creation time, no need to re-verify validity in subsequent domain logic |
+| `CreateFromValidated` | ORM restoration for all Aggregates | Skips validation and event publication, trusts already persisted data to separate domain creation from ORM restoration |
 
-## 아키텍처 테스트
+## Architecture Tests
 
-도메인 모델의 구조적 규칙을 Functorium의 `ArchitectureRules` 프레임워크로 자동 검증합니다. 6개 테스트 클래스가 DDD 빌딩 블록의 구조적 일관성을 보장합니다.
+The structural rules of the domain model are automatically verified using Functorium's `ArchitectureRules` framework. 6 test classes guarantee the structural consistency of DDD building blocks.
 
-| 테스트 클래스 | 검증 대상 | 핵심 규칙 |
-|-------------|----------|----------|
-| `ValueObjectArchitectureRuleTests` | Value Object (Money, Quantity, CustomerName, Email 등) | public sealed, 불변성, `Create`/`Validate` 팩토리 |
-| `EntityArchitectureRuleTests` | 5개 AggregateRoot + OrderLine (Entity) | public sealed, `Create`/`CreateFromValidated`, `[GenerateEntityId]`, private 생성자 |
-| `DomainEventArchitectureRuleTests` | 19개 Domain Event | sealed record, `Event` 접미사 |
-| `DomainServiceArchitectureRuleTests` | OrderCreditCheckService | public sealed, stateless, `Fin` 반환, IObservablePort 미의존, record 아님 |
-| `SpecificationArchitectureRuleTests` | 6개 Specification | public sealed, `Specification<>` 상속, 도메인 레이어 거주 |
+| Test Class | Verification Target | Key Rules |
+|------------|---------------------|-----------|
+| `ValueObjectArchitectureRuleTests` | Value Object (Money, Quantity, CustomerName, Email, etc.) | public sealed, immutability, `Create`/`Validate` factory |
+| `EntityArchitectureRuleTests` | 5 AggregateRoots + OrderLine (Entity) | public sealed, `Create`/`CreateFromValidated`, `[GenerateEntityId]`, private constructor |
+| `DomainEventArchitectureRuleTests` | 19 Domain Events | sealed record, `Event` suffix |
+| `DomainServiceArchitectureRuleTests` | OrderCreditCheckService | public sealed, stateless, `Fin` return, no IObservablePort dependency, not a record |
+| `SpecificationArchitectureRuleTests` | 6 Specifications | public sealed, `Specification<>` inheritance, residing in domain layer |

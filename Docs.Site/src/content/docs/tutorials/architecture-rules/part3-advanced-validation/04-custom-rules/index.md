@@ -4,36 +4,36 @@ title: "Custom Rules"
 
 ## Overview
 
-"모든 도메인 클래스에 `Create` factory method가 있어야 한다", "Service 접미사를 가진 클래스는 금지한다" — 이런 팀 고유의 규칙은 프레임워크가 기본으로 제공하지 않습니다. 하지만 직접 만들 수 있다면 어떨까요?
+"All domain classes must have a `Create` factory method", "Classes with a Service suffix are prohibited" -- the framework does not provide these team-specific rules by default. But what if you could create them yourself?
 
-이 챕터에서는 `DelegateArchRule`, `CompositeArchRule`, 그리고 `Apply()` 메서드를 사용하여 **프로젝트에 특화된 커스텀 규칙을 정의하고 합성**하는 방법을 학습합니다. 내장 규칙으로 충분하지 않을 때, 무한한 확장이 가능합니다.
+In this chapter, you will learn how to **define and compose project-specific custom rules** using `DelegateArchRule`, `CompositeArchRule`, and the `Apply()` method. When built-in rules are not enough, infinite extensibility becomes possible.
 
-> **"좋은 아키텍처 테스트 프레임워크는 내장 규칙이 풍부한 것이 아니라, 내장 규칙으로 부족할 때 쉽게 확장할 수 있는 것입니다."**
+> **"A good architecture test framework is not one with rich built-in rules, but one that is easily extensible when built-in rules fall short."**
 
 ## Learning Objectives
 
-### 핵심 학습 목표
+### Core Learning Goals
 
-1. **`DelegateArchRule<T>`로 람다 기반 커스텀 규칙 작성**
-   - 규칙 설명과 검증 함수를 받는 생성자 패턴
-   - `RuleViolation`을 반환하여 위반을 보고하는 방법
+1. **Writing lambda-based custom rules with `DelegateArchRule<T>`**
+   - Constructor pattern that takes a rule description and validation function
+   - How to report violations by returning `RuleViolation`
 
-2. **`CompositeArchRule<T>`로 여러 규칙을 AND 합성**
-   - 개별 규칙을 조합하여 복합 규칙을 만드는 패턴
-   - 모든 규칙의 위반을 수집하는 동작 방식
+2. **AND composition of multiple rules with `CompositeArchRule<T>`**
+   - Pattern for combining individual rules into compound rules
+   - How all violations from all rules are collected
 
-3. **`Apply()`로 커스텀 규칙을 기존 검증 체인에 통합**
-   - 내장 규칙(`RequireSealed()`, `RequireImmutable()`)과 자유롭게 혼합
-   - 하나의 검증 체인에서 내장 + 커스텀 규칙을 함께 적용
+3. **Integrating custom rules into existing verification chains with `Apply()`**
+   - Freely mix with built-in rules (`RequireSealed()`, `RequireImmutable()`)
+   - Apply both built-in and custom rules in a single verification chain
 
-### 실습을 통해 확인할 내용
-- **factory method 규칙**: 모든 도메인 클래스에 static `Create` 메서드가 있는지 검증
-- **Service 접미사 금지 규칙**: 도메인 클래스 이름이 `Service`로 끝나지 않는지 검증
-- **복합 규칙 합성**: 두 커스텀 규칙을 AND로 결합하여 한 번에 적용
+### What You Will Verify Through Practice
+- **Factory method rule**: Verify that all domain classes have a static `Create` method
+- **Service suffix prohibition rule**: Verify that domain class names do not end with `Service`
+- **Composite rule composition**: Combine two custom rules with AND and apply at once
 
-## 도메인 코드
+## Domain Code
 
-### Invoice / Payment - 도메인 클래스
+### Invoice / Payment - Domain Classes
 
 ```csharp
 public sealed class Invoice
@@ -69,11 +69,11 @@ public sealed class Payment
 }
 ```
 
-## 테스트 코드
+## Test Code
 
-### DelegateArchRule - 람다 기반 커스텀 규칙
+### DelegateArchRule - Lambda-Based Custom Rules
 
-`DelegateArchRule<T>`는 람다 함수로 규칙을 defines. 생성자는 규칙 설명과 검증 함수를 받습니다.
+`DelegateArchRule<T>` defines rules with lambda functions. The constructor takes a rule description and validation function.
 
 ```csharp
 private static readonly DelegateArchRule<Class> s_factoryMethodRule = new(
@@ -90,12 +90,12 @@ private static readonly DelegateArchRule<Class> s_factoryMethodRule = new(
     });
 ```
 
-검증 함수는 `(TType target, Architecture architecture)` 매개변수를 받아 `IReadOnlyList<RuleViolation>`을 returns.
-위반이 없으면 빈 리스트를, 위반이 있으면 `RuleViolation` 목록을 returns.
+The validation function takes `(TType target, Architecture architecture)` parameters and returns `IReadOnlyList<RuleViolation>`.
+If there are no violations it returns an empty list; if there are violations it returns a list of `RuleViolation` instances.
 
-### CompositeArchRule - AND 합성
+### CompositeArchRule - AND Composition
 
-`CompositeArchRule<T>`는 여러 `IArchRule<T>`를 AND로 합성합니다. 모든 규칙의 위반을 수집합니다.
+`CompositeArchRule<T>` composes multiple `IArchRule<T>` instances with AND. It collects violations from all rules.
 
 ```csharp
 private static readonly CompositeArchRule<Class> s_domainClassRule = new(
@@ -103,9 +103,9 @@ private static readonly CompositeArchRule<Class> s_domainClassRule = new(
     s_noServiceSuffixRule);
 ```
 
-### Apply - 커스텀 규칙 적용
+### Apply - Applying Custom Rules
 
-`Apply()` 메서드로 커스텀 규칙을 검증 체인에 통합합니다.
+Custom rules are integrated into the verification chain with the `Apply()` method.
 
 ```csharp
 [Fact]
@@ -121,9 +121,9 @@ public void DomainClasses_ShouldSatisfy_CompositeRule()
 }
 ```
 
-### 내장 규칙과 커스텀 규칙 혼합
+### Mixing Built-In and Custom Rules
 
-`RequireSealed()`, `RequireImmutable()` 같은 내장 메서드와 `Apply()`를 자유롭게 체이닝할 수 있습니다.
+Built-in methods like `RequireSealed()` and `RequireImmutable()` can be freely chained with `Apply()`.
 
 ```csharp
 [Fact]
@@ -143,45 +143,45 @@ public void DomainClasses_ShouldSatisfy_CompositeRuleWithBuiltIn()
 
 ## Summary at a Glance
 
-The following table 커스텀 규칙 작성에 사용하는 핵심 타입을 요약합니다.
+The following table summarizes the core types used for custom rule authoring.
 
-### 커스텀 규칙 핵심 타입 요약
+### Custom Rule Core Type Summary
 
-| 타입 | 역할 | 사용 방법 |
-|------|------|-----------|
-| **`IArchRule<T>`** | 커스텀 규칙의 인터페이스 | `Description`과 `Validate()` 정의 |
-| **`DelegateArchRule<T>`** | 람다 함수로 규칙 정의 | `new DelegateArchRule<Class>("설명", (target, arch) => ...)` |
-| **`CompositeArchRule<T>`** | 여러 규칙을 AND 합성 | `new CompositeArchRule<Class>(rule1, rule2)` |
-| **`RuleViolation`** | 위반 정보를 담는 sealed record | `(TargetName, RuleName, Description)` |
-| **`Apply(rule)`** | 커스텀 규칙을 검증 체인에 통합 | `.Apply(s_domainClassRule)` |
+| Type | Role | Usage |
+|------|------|-------|
+| **`IArchRule<T>`** | Interface for custom rules | Defines `Description` and `Validate()` |
+| **`DelegateArchRule<T>`** | Define rules with lambda functions | `new DelegateArchRule<Class>("description", (target, arch) => ...)` |
+| **`CompositeArchRule<T>`** | AND composition of multiple rules | `new CompositeArchRule<Class>(rule1, rule2)` |
+| **`RuleViolation`** | Sealed record containing violation information | `(TargetName, RuleName, Description)` |
+| **`Apply(rule)`** | Integrates custom rules into verification chain | `.Apply(s_domainClassRule)` |
 
-The following table 내장 규칙과 커스텀 규칙의 역할을 compares.
+The following table compares the roles of built-in and custom rules.
 
-### 내장 규칙 vs 커스텀 규칙
+### Built-In Rules vs Custom Rules
 
-| Aspect | 내장 규칙 | 커스텀 규칙 |
-|------|-----------|-------------|
-| **정의 방법** | `RequireXxx()` 메서드 호출 | `DelegateArchRule` 또는 `IArchRule` 구현 |
-| **적용 방법** | 직접 체이닝 | `Apply(rule)` |
-| **합성** | 체이닝으로 자동 AND | `CompositeArchRule`로 명시적 AND |
-| **재사용** | 프레임워크 제공 | 프로젝트 내 공유 가능 |
+| Aspect | Built-In Rules | Custom Rules |
+|--------|---------------|--------------|
+| **Definition method** | `RequireXxx()` method calls | `DelegateArchRule` or `IArchRule` implementation |
+| **Application method** | Direct chaining | `Apply(rule)` |
+| **Composition** | Automatic AND through chaining | Explicit AND with `CompositeArchRule` |
+| **Reusability** | Provided by framework | Shareable within project |
 
 ## FAQ
 
-### Q1: `DelegateArchRule`과 `IArchRule` 직접 구현의 차이는 무엇인가요?
-**A**: `DelegateArchRule`은 간단한 규칙을 람다로 빠르게 정의할 때 적합합니다. 규칙 로직이 복잡하거나, 상태(필드)가 필요하거나, 여러 곳에서 재사용해야 할 때는 `IArchRule<T>` 인터페이스를 직접 구현하는 클래스를 만드는 것이 더 적합합니다.
+### Q1: What is the difference between `DelegateArchRule` and directly implementing `IArchRule`?
+**A**: `DelegateArchRule` is suitable for quickly defining simple rules with lambdas. When rule logic is complex, state (fields) is needed, or the rule must be reused in multiple places, creating a class that directly implements the `IArchRule<T>` interface is more appropriate.
 
-### Q2: `CompositeArchRule`은 OR 합성도 지원하나요?
-**A**: 아닙니다. `CompositeArchRule`은 AND 합성만 지원합니다 — 모든 규칙의 위반을 수집하여 returns. OR 합성이 필요하면 `DelegateArchRule` 안에서 직접 OR 로직을 구현해야 합니다.
+### Q2: Does `CompositeArchRule` also support OR composition?
+**A**: No. `CompositeArchRule` only supports AND composition -- it collects and returns violations from all rules. If OR composition is needed, you must implement the OR logic directly inside a `DelegateArchRule`.
 
-### Q3: 커스텀 규칙에서 `Architecture` 매개변수는 언제 사용하나요?
-**A**: `Architecture` 매개변수는 프로젝트 전체의 타입 정보에 접근할 때 uses. 예를 들어 "이 클래스가 특정 인터페이스를 구현하는 다른 클래스에 의존하는가?"처럼 타입 간 관계를 분석할 때 필요합니다. 단순 멤버 검사에서는 `_`로 무시해도 됩니다.
+### Q3: When is the `Architecture` parameter used in custom rules?
+**A**: The `Architecture` parameter is used when accessing type information across the entire project. For example, it is needed when analyzing relationships between types, such as "does this class depend on another class that implements a specific interface?" For simple member inspection, it can be ignored with `_`.
 
-### Q4: `Apply()`를 여러 번 호출할 수 있나요?
-**A**: 네, `.Apply(rule1).Apply(rule2)`처럼 여러 커스텀 규칙을 순차적으로 적용할 수 있습니다. `CompositeArchRule`로 묶는 것과 동일한 효과이지만, 체이닝 스타일로 더 읽기 쉽게 표현할 수 있습니다.
+### Q4: Can `Apply()` be called multiple times?
+**A**: Yes, you can apply multiple custom rules sequentially like `.Apply(rule1).Apply(rule2)`. This has the same effect as bundling them with `CompositeArchRule`, but can be expressed more readably in chaining style.
 
 ---
 
-커스텀 규칙을 작성할 수 있다는 것은, 프레임워크의 한계가 곧 프로젝트의 한계가 되지 않는다는 뜻입니다. Part 3의 고급 검증 기법을 모두 배웠으니, 다음 Part 4에서는 이 모든 기법을 실전 레이어별 아키텍처 규칙에 적용합니다.
+Being able to write custom rules means the framework's limits do not become the project's limits. Now that you have learned all the advanced verification techniques in Part 3, the next Part 4 applies all these techniques to real-world layer-by-layer architecture rules.
 
-→ [Part 4: 실전 패턴](../../Part4-Real-World-Patterns/)
+-> [Part 4: Real-World Patterns](../../Part4-Real-World-Patterns/)

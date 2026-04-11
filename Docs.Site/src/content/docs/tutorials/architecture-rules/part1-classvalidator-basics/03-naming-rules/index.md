@@ -1,36 +1,36 @@
 ---
-title: "네이밍 규칙"
+title: "Naming Rules"
 ---
 ## Overview
 
-팀에서 서비스 클래스는 `Service` 접미사, 이벤트 클래스는 `Event` 접미사를 붙이기로 합의했습니다. 그런데 어느 날 누군가 `OrderSvc`라는 클래스를 만들었고, 다른 누군가는 `ProductChanged`라는 이벤트를 만들었습니다. 코드 리뷰에서 잡힐 수도 있지만, 잡히지 않으면 점점 일관성이 무너집니다. In this chapter, **네이밍 규칙을** 아키텍처 테스트로 자동화하여 이런 불일치를 원천 차단하는 방법을 배웁니다.
+The team agreed that service classes use the `Service` suffix and event classes use the `Event` suffix. But one day someone created a class called `OrderSvc`, and someone else created an event called `ProductChanged`. It might get caught in code review, but if it does not, consistency gradually breaks down. In this chapter, you will learn how to prevent such inconsistencies at the source by automating **naming rules** with architecture tests.
 
-> **"네이밍 규칙은 코드의 가독성과 탐색성을 결정합니다. 자동화된 검증이 없으면, 규칙은 시간이 지나면서 점차 흐려집니다."**
+> **"Naming rules determine the readability and navigability of code. Without automated verification, rules gradually fade over time."**
 
 ## Learning Objectives
 
-### 핵심 학습 목표
-1. **접미사 규칙**
-   - `RequireNameEndsWith("Service")`: 서비스 클래스 네이밍 강제
-   - `RequireNameEndsWith("Event")`: 이벤트 클래스 네이밍 강제
-   - `RequireNameEndsWith("Dto")`: DTO 클래스 네이밍 강제
-2. **접두사 규칙**
-   - `RequireNameStartsWith("I")`: 인터페이스 네이밍 규칙 강제
-3. **정규식 패턴 규칙**
-   - `RequireNameMatching(".*Repository$")`: 복잡한 네이밍 패턴 검증
-4. **인터페이스 검증**
-   - `ValidateAllInterfaces`로 인터페이스 대상 검증
+### Core Learning Goals
+1. **Suffix rules**
+   - `RequireNameEndsWith("Service")`: Enforce service class naming
+   - `RequireNameEndsWith("Event")`: Enforce event class naming
+   - `RequireNameEndsWith("Dto")`: Enforce DTO class naming
+2. **Prefix rules**
+   - `RequireNameStartsWith("I")`: Enforce interface naming convention
+3. **Regular expression pattern rules**
+   - `RequireNameMatching(".*Repository$")`: Verify complex naming patterns
+4. **Interface verification**
+   - Verify interface targets with `ValidateAllInterfaces`
 
-### 실습을 통해 확인할 내용
-- 네임스페이스별 접미사 규칙 적용 (Service, Event, Dto)
-- `ValidateAllInterfaces`를 사용한 인터페이스 접두사 검증
-- 정규식 패턴을 사용한 복합 네이밍 규칙
+### What You Will Verify Through Practice
+- Apply suffix rules by namespace (Service, Event, Dto)
+- Verify interface prefix with `ValidateAllInterfaces`
+- Compound naming rules using regular expression patterns
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 03-Naming-Rules/
-├── NamingRules/                              # 메인 프로젝트
+├── NamingRules/                              # Main project
 │   ├── Domains/
 │   │   ├── OrderService.cs
 │   │   ├── ProductService.cs
@@ -44,16 +44,16 @@ title: "네이밍 규칙"
 │   │   └── IProductRepository.cs
 │   ├── Program.cs
 │   └── NamingRules.csproj
-├── NamingRules.Tests.Unit/                   # 테스트 프로젝트
+├── NamingRules.Tests.Unit/                   # Test project
 │   ├── ArchitectureTests.cs
 │   ├── NamingRules.Tests.Unit.csproj
 │   └── xunit.runner.json
 └── README.md
 ```
 
-## 테스트 코드 설명
+## Test Code Walkthrough
 
-### 접미사 검증 (RequireNameEndsWith)
+### Suffix Verification (RequireNameEndsWith)
 
 ```csharp
 [Fact]
@@ -71,9 +71,9 @@ public void ServiceClasses_ShouldEndWith_Service()
 }
 ```
 
-`HaveNameEndingWith("Service")`로 대상을 필터링한 후, `RequireNameEndsWith("Service")`로 규칙을 검증합니다. 이 패턴은 "Service 네임스페이스에 있는 모든 클래스는 Service로 끝나야 한다"와 같은 규칙에 활용할 수 있습니다.
+After filtering targets with `HaveNameEndingWith("Service")`, the rule is verified with `RequireNameEndsWith("Service")`. This pattern can be used for rules like "all classes in the Service namespace must end with Service".
 
-### DTO 네이밍 검증
+### DTO Naming Verification
 
 ```csharp
 [Fact]
@@ -89,9 +89,9 @@ public void DtoClasses_ShouldEndWith_Dto()
 }
 ```
 
-`Dtos` 네임스페이스에 있는 **모든 클래스가** `Dto`로 끝나는지 검증합니다. 네임스페이스 기반 필터링과 네이밍 규칙을 결합하면 강력한 규칙을 정의할 수 있습니다.
+This verifies that **all classes** in the `Dtos` namespace end with `Dto`. Combining namespace-based filtering with naming rules allows you to define powerful rules.
 
-### 인터페이스 접두사 검증 (ValidateAllInterfaces)
+### Interface Prefix Verification (ValidateAllInterfaces)
 
 ```csharp
 [Fact]
@@ -107,9 +107,9 @@ public void Interfaces_ShouldStartWith_I()
 }
 ```
 
-인터페이스를 검증할 때는 `ArchRuleDefinition.Interfaces()`와 `ValidateAllInterfaces`를 uses. **InterfaceValidator도** ClassValidator와 동일한 네이밍 검증 메서드를 provides.
+When verifying interfaces, use `ArchRuleDefinition.Interfaces()` and `ValidateAllInterfaces`. **InterfaceValidator** provides the same naming verification methods as ClassValidator.
 
-### 정규식 패턴 검증 (RequireNameMatching)
+### Regular Expression Pattern Verification (RequireNameMatching)
 
 ```csharp
 [Fact]
@@ -125,41 +125,41 @@ public void RepositoryInterfaces_ShouldMatch_RepositoryPattern()
 }
 ```
 
-`RequireNameMatching`은 정규식 패턴을 사용하여 복잡한 네이밍 규칙을 검증합니다. 접두사/접미사 검증으로 표현하기 어려운 규칙에 활용합니다.
+`RequireNameMatching` uses regular expression patterns to verify complex naming rules. Use it for rules that are difficult to express with prefix/suffix verification alone.
 
 ## Summary at a Glance
 
-The following table 네이밍 규칙 검증 메서드를 정리합니다.
+The following table organizes the naming rule verification methods.
 
-### 네이밍 검증 메서드
+### Naming Verification Methods
 
-| 메서드 | 검증 내용 | 사용 시나리오 |
-|--------|----------|--------------|
-| `RequireNameEndsWith(suffix)` | 이름이 지정된 접미사로 끝남 | Service, Event, Dto 등 |
-| `RequireNameStartsWith(prefix)` | 이름이 지정된 접두사로 시작 | I (인터페이스), Abstract 등 |
-| `RequireNameMatching(regex)` | 정규식 패턴과 일치 | 복합 네이밍 규칙 |
-| `ValidateAllInterfaces` | 인터페이스 대상 검증 진입점 | 인터페이스 규칙 적용 |
+| Method | Verifies | Use Scenario |
+|--------|----------|-------------|
+| `RequireNameEndsWith(suffix)` | Name ends with specified suffix | Service, Event, Dto, etc. |
+| `RequireNameStartsWith(prefix)` | Name starts with specified prefix | I (interface), Abstract, etc. |
+| `RequireNameMatching(regex)` | Matches regular expression pattern | Compound naming rules |
+| `ValidateAllInterfaces` | Entry point for interface target verification | Applying interface rules |
 
 ### ClassValidator vs InterfaceValidator
 
-두 Validator는 **공통 기반 클래스인 `TypeValidator`를** 상속합니다. 네이밍 규칙(`RequireNameStartsWith`, `RequireNameEndsWith`, `RequireNameMatching`)과 인터페이스 구현 규칙은 `TypeValidator`에 정의되어 있으므로 두 Validator에서 동일하게 사용할 수 있습니다. 차이점은 진입점입니다:
+Both Validators inherit from the **common base class `TypeValidator`**. Naming rules (`RequireNameStartsWith`, `RequireNameEndsWith`, `RequireNameMatching`) and interface implementation rules are defined in `TypeValidator`, so they can be used identically in both Validators. The difference is the entry point:
 
-- **`ValidateAllClasses`** -- `ClassValidator`를 사용하여 클래스 검증
-- **`ValidateAllInterfaces`** -- `InterfaceValidator`를 사용하여 인터페이스 검증
+- **`ValidateAllClasses`** -- Uses `ClassValidator` to verify classes
+- **`ValidateAllInterfaces`** -- Uses `InterfaceValidator` to verify interfaces
 
 ## FAQ
 
-### Q1: `RequireNameEndsWith`와 `HaveNameEndingWith`의 차이는 무엇인가요?
-**A**: `HaveNameEndingWith`는 ArchUnitNET의 **필터링** 메서드로, 검증 대상을 좁히는 역할입니다. `RequireNameEndsWith`는 Functorium의 **규칙 검증** 메서드로, 선택된 대상이 조건을 만족하는지 verifies. 필터링은 "어떤 클래스를 검사할지", 규칙은 "그 클래스가 어떤 조건을 만족해야 하는지"를 결정합니다.
+### Q1: What is the difference between `RequireNameEndsWith` and `HaveNameEndingWith`?
+**A**: `HaveNameEndingWith` is an ArchUnitNET **filtering** method that narrows verification targets. `RequireNameEndsWith` is a Functorium **rule verification** method that verifies whether selected targets satisfy a condition. Filtering determines "which classes to inspect", while rules determine "what conditions those classes must satisfy".
 
-### Q2: 대소문자를 구분하지 않는 네이밍 검증도 가능한가요?
-**A**: `RequireNameMatching`에서 정규식 옵션으로 대소문자 무시를 지정할 수 있습니다. 예를 들어 `RequireNameMatching("(?i).*service$")`는 `OrderService`, `orderservice` 모두 매칭합니다.
+### Q2: Is case-insensitive naming verification possible?
+**A**: You can specify a case-insensitive option with a regular expression in `RequireNameMatching`. For example, `RequireNameMatching("(?i).*service$")` matches both `OrderService` and `orderservice`.
 
-### Q3: 네이밍 규칙과 가시성 규칙을 하나의 체인으로 결합할 수 있나요?
-**A**: 네, 가능합니다. `@class.RequirePublic().RequireNameEndsWith("Service")`처럼 가시성과 네이밍 규칙을 하나의 Validator 체인에서 결합할 수 있습니다. 관련된 규칙을 하나로 묶으면 규칙의 의도가 더 명확해집니다.
+### Q3: Can naming rules and visibility rules be combined in a single chain?
+**A**: Yes, you can. Combine visibility and naming rules in a single Validator chain like `@class.RequirePublic().RequireNameEndsWith("Service")`. Bundling related rules together makes the intent of the rules clearer.
 
 ---
 
-Next chapter에서는 클래스의 상속 관계와 인터페이스 구현을 아키텍처 테스트로 검증하는 방법을 배웁니다.
+The next chapter covers how to verify class inheritance relationships and interface implementations with architecture tests.
 
-→ [4장: 상속과 인터페이스](../04-Inheritance-And-Interface/)
+-> [Ch 4: Inheritance and Interfaces](../04-Inheritance-And-Interface/)

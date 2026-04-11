@@ -2,9 +2,9 @@
 title: "ArchUnitNET Cheat Sheet"
 ---
 
-ArchUnitNET의 핵심 API를 빠르게 참조할 수 있는 치트시트입니다. 타입 선택, 필터링, 규칙 정의, 레이어 의존성 검증까지 자주 사용하는 패턴을 코드 예제와 함께 정리했습니다. Functorium의 Validator 확장과 함께 사용하는 방법도 포함되어 있으니, 규칙 작성 시 옆에 두고 참고하세요.
+A cheat sheet for quick reference of ArchUnitNET core APIs. Frequently used patterns are organized with code examples, covering type selection, filtering, rule definition, and layer dependency verification. It also includes how to use them together with Functorium's Validator extensions, so keep it handy when writing rules.
 
-## 기본 구조
+## Basic Structure
 
 ```csharp
 using ArchUnitNET.Domain;
@@ -13,7 +13,7 @@ using ArchUnitNET.Loader;
 using static ArchUnitNET.Fluent.ArchRuleDefinition;
 ```
 
-## Architecture 로딩
+## Architecture Loading
 
 ```csharp
 static readonly Architecture Architecture =
@@ -24,88 +24,88 @@ static readonly Architecture Architecture =
         .Build();
 ```
 
-## 타입 선택
+## Type Selection
 
-| 코드 | Description |
-|------|------|
-| `Classes()` | 모든 클래스 선택 |
-| `Interfaces()` | 모든 인터페이스 선택 |
-| `Types()` | 모든 타입 선택 |
+| Code | Description |
+|------|-------------|
+| `Classes()` | Select all classes |
+| `Interfaces()` | Select all interfaces |
+| `Types()` | Select all types |
 
-## 필터 체인 (That)
+## Filter Chain (That)
 
-| 필터 | Description |
-|------|------|
-| `.That().ResideInNamespace(ns)` | 네임스페이스에 위치 |
-| `.That().DoNotResideInNamespace(ns)` | 네임스페이스에 위치하지 않음 |
-| `.That().HaveNameStartingWith(prefix)` | 이름이 접두사로 시작 |
-| `.That().HaveNameEndingWith(suffix)` | 이름이 접미사로 끝남 |
-| `.That().HaveNameContaining(fragment)` | 이름에 문자열 포함 |
-| `.That().ArePublic()` | public 타입 |
-| `.That().AreInternal()` | internal 타입 |
-| `.That().AreSealed()` | sealed 타입 |
-| `.That().AreAbstract()` | abstract 타입 |
-| `.That().AreNotAbstract()` | abstract가 아닌 타입 |
-| `.That().ImplementInterface(typeof(I))` | 인터페이스 구현 |
-| `.That().AreAssignableTo(typeof(T))` | 타입에 할당 가능 |
-| `.That().HaveAnyAttributes(typeof(A))` | 어트리뷰트 보유 |
+| Filter | Description |
+|--------|-------------|
+| `.That().ResideInNamespace(ns)` | Resides in namespace |
+| `.That().DoNotResideInNamespace(ns)` | Does not reside in namespace |
+| `.That().HaveNameStartingWith(prefix)` | Name starts with prefix |
+| `.That().HaveNameEndingWith(suffix)` | Name ends with suffix |
+| `.That().HaveNameContaining(fragment)` | Name contains string |
+| `.That().ArePublic()` | Public types |
+| `.That().AreInternal()` | Internal types |
+| `.That().AreSealed()` | Sealed types |
+| `.That().AreAbstract()` | Abstract types |
+| `.That().AreNotAbstract()` | Non-abstract types |
+| `.That().ImplementInterface(typeof(I))` | Implements interface |
+| `.That().AreAssignableTo(typeof(T))` | Assignable to type |
+| `.That().HaveAnyAttributes(typeof(A))` | Has attribute |
 
-## 필터 결합
+## Filter Combination
 
 ```csharp
-// And: 조건 추가
+// And: Add conditions
 .That()
 .ResideInNamespace(ns)
 .And().ArePublic()
 .And().AreNotAbstract()
 
-// Or: 조건 분기
+// Or: Branch conditions
 .That()
 .HaveNameEndingWith("Service")
 .Or().HaveNameEndingWith("Repository")
 ```
 
-## 규칙 체인 (Should)
+## Rule Chain (Should)
 
-### 가시성/수정자
+### Visibility/Modifiers
 
-| 코드 | Description |
-|------|------|
-| `.Should().BePublic()` | public이어야 함 |
-| `.Should().BeInternal()` | internal이어야 함 |
-| `.Should().BeSealed()` | sealed여야 함 |
-| `.Should().BeAbstract()` | abstract여야 함 |
+| Code | Description |
+|------|-------------|
+| `.Should().BePublic()` | Must be public |
+| `.Should().BeInternal()` | Must be internal |
+| `.Should().BeSealed()` | Must be sealed |
+| `.Should().BeAbstract()` | Must be abstract |
 
-### 네이밍
+### Naming
 
-| 코드 | Description |
-|------|------|
-| `.Should().HaveNameStartingWith(prefix)` | 이름 접두사 |
-| `.Should().HaveNameEndingWith(suffix)` | 이름 접미사 |
-| `.Should().HaveNameContaining(fragment)` | 이름 포함 |
+| Code | Description |
+|------|-------------|
+| `.Should().HaveNameStartingWith(prefix)` | Name prefix |
+| `.Should().HaveNameEndingWith(suffix)` | Name suffix |
+| `.Should().HaveNameContaining(fragment)` | Name contains |
 
-### 의존성
+### Dependencies
 
-| 코드 | Description |
-|------|------|
-| `.Should().NotDependOnAnyTypesThat().ResideInNamespace(ns)` | 네임스페이스 의존 금지 |
-| `.Should().OnlyDependOnTypesThat().ResideInNamespace(ns)` | 허용 네임스페이스만 |
-| `.Should().NotHaveDependencyOtherThan(ns)` | 지정 네임스페이스 외 의존 금지 |
+| Code | Description |
+|------|-------------|
+| `.Should().NotDependOnAnyTypesThat().ResideInNamespace(ns)` | Namespace dependency prohibition |
+| `.Should().OnlyDependOnTypesThat().ResideInNamespace(ns)` | Only allowed namespaces |
+| `.Should().NotHaveDependencyOtherThan(ns)` | No dependencies outside specified namespace |
 
-### 상속/구현
+### Inheritance/Implementation
 
-| 코드 | Description |
-|------|------|
-| `.Should().ImplementInterface(typeof(I))` | 인터페이스 구현 필수 |
-| `.Should().BeAssignableTo(typeof(T))` | 타입 할당 가능 필수 |
+| Code | Description |
+|------|-------------|
+| `.Should().ImplementInterface(typeof(I))` | Interface implementation required |
+| `.Should().BeAssignableTo(typeof(T))` | Type assignability required |
 
-## 규칙 실행
+## Rule Execution
 
 ```csharp
-// ArchUnitNET 기본 방식
+// ArchUnitNET default approach
 rule.Check(Architecture);
 
-// Functorium 확장 방식
+// Functorium extension approach
 ArchRuleDefinition.Classes()
     .That()
     .ResideInNamespace(ns)
@@ -116,12 +116,12 @@ ArchRuleDefinition.Classes()
     .ThrowIfAnyFailures("Rule Name");
 ```
 
-## 레이어 의존성 패턴
+## Layer Dependency Pattern
 
 ```csharp
 using static ArchUnitNET.Fluent.ArchRuleDefinition;
 
-// 도메인 → 애플리케이션 의존 금지
+// Domain -> Application dependency prohibition
 [Fact]
 public void DomainLayer_ShouldNotDependOn_ApplicationLayer()
 {
@@ -131,7 +131,7 @@ public void DomainLayer_ShouldNotDependOn_ApplicationLayer()
         .Check(Architecture);
 }
 
-// 도메인 → 인프라 의존 금지
+// Domain -> Infrastructure dependency prohibition
 [Fact]
 public void DomainLayer_ShouldNotDependOn_InfrastructureLayer()
 {
@@ -142,9 +142,9 @@ public void DomainLayer_ShouldNotDependOn_InfrastructureLayer()
 }
 ```
 
-## 자주 사용하는 조합
+## Frequently Used Combinations
 
-### 도메인 엔티티 필터링
+### Domain Entity Filtering
 
 ```csharp
 ArchRuleDefinition.Classes()
@@ -154,7 +154,7 @@ ArchRuleDefinition.Classes()
     .And().AreNotAbstract()
 ```
 
-### 인터페이스 필터링
+### Interface Filtering
 
 ```csharp
 ArchRuleDefinition.Interfaces()
@@ -163,7 +163,7 @@ ArchRuleDefinition.Interfaces()
     .And().HaveNameStartingWith("I")
 ```
 
-### 네임스페이스 제외
+### Namespace Exclusion
 
 ```csharp
 ArchRuleDefinition.Classes()
@@ -174,6 +174,6 @@ ArchRuleDefinition.Classes()
 
 ---
 
-아키텍처 테스트 도입 시 자주 등장하는 질문과 트러블슈팅 가이드를 정리합니다.
+The following appendix covers frequently asked questions and a troubleshooting guide for architecture test adoption.
 
-→ [부록 C: FAQ](C-faq.md)
+-> [Appendix C: FAQ](C-faq.md)

@@ -4,38 +4,38 @@ title: "Immutability Rules"
 
 ## Overview
 
-코드 리뷰에서 "이 Value Object에 왜 public setter가 있죠?"라는 코멘트를 남겨본 적이 있나요? 도메인 객체에 `public set`이 하나라도 있으면 immutability이 깨지고, 동시성 버그나 예측 불가능한 상태 변경이 발생합니다. 하지만 매번 눈으로 확인하기엔 클래스가 너무 많습니다.
+Have you ever left a code review comment saying "why does this Value Object have a public setter?" If even one domain object has a `public set`, immutability breaks, leading to concurrency bugs and unpredictable state changes. But there are too many classes to check by eye every time.
 
-이 챕터에서는 `RequireImmutable()` 메서드를 사용하여 클래스의 immutability을 **6가지 차원**에서 종합적으로 검증하는 방법을 학습합니다. 한 줄의 테스트 코드로, 도메인 전체의 immutability을 자동으로 보장할 수 있습니다.
+In this chapter, you will learn how to comprehensively verify class immutability across **6 dimensions** using the `RequireImmutable()` method. With a single line of test code, you can automatically ensure immutability across your entire domain.
 
-> **"setter를 막는 것은 시작일 뿐입니다. 생성자, 필드, 컬렉션 타입, 상태 변경 메서드까지 — 진정한 immutability은 6가지 차원 모두를 통과해야 합니다."**
+> **"Blocking setters is just the beginning. Constructors, fields, collection types, state-mutating methods -- true immutability must pass all 6 dimensions."**
 
 ## Learning Objectives
 
-### 핵심 학습 목표
+### Core Learning Goals
 
-1. **`RequireImmutable()`의 6가지 검증 차원 이해**
-   - 기본 Writability, 생성자, 프로퍼티, 필드, 가변 컬렉션, 상태 변경 메서드
-   - 각 차원이 왜 필요한지, 어떤 위반을 잡아내는지
+1. **Understanding the 6 verification dimensions of `RequireImmutable()`**
+   - Basic writability, constructors, properties, fields, mutable collections, state-mutating methods
+   - Why each dimension is needed and what violations it catches
 
-2. **올바른 불변 클래스 설계 패턴 학습**
-   - private 생성자 + factory method 패턴
-   - getter-only 속성과 변환 메서드 패턴
+2. **Learning correct immutable class design patterns**
+   - Private constructor + factory method pattern
+   - Getter-only properties and transformation method patterns
 
-3. **읽기 전용 컬렉션을 활용한 불변 클래스 구현**
-   - `IReadOnlyList<T>` vs `List<T>`의 차이
-   - 가변 컬렉션이 immutability 검증에 위반되는 이유
+3. **Implementing immutable classes with read-only collections**
+   - The difference between `IReadOnlyList<T>` and `List<T>`
+   - Why mutable collections violate immutability verification
 
-### 실습을 통해 확인할 내용
-- **Temperature**: private 생성자, getter-only 속성, factory method를 갖춘 기본 불변 클래스
-- **Palette**: `IReadOnlyList<string>`을 사용한 컬렉션 포함 불변 클래스
-- **전체 도메인 검증**: 네임스페이스 기반으로 모든 도메인 클래스를 한 번에 검증
+### What You Will Verify Through Practice
+- **Temperature**: Basic immutable class with private constructor, getter-only properties, and factory method
+- **Palette**: Immutable class containing collections using `IReadOnlyList<string>`
+- **Entire domain verification**: Verify all domain classes at once based on namespace
 
-## 도메인 코드
+## Domain Code
 
-### Temperature - 기본 불변 클래스
+### Temperature - Basic Immutable Class
 
-private 생성자, getter-only 속성, factory method 패턴을 사용한 불변 클래스입니다.
+An immutable class using private constructor, getter-only properties, and factory method pattern.
 
 ```csharp
 public sealed class Temperature
@@ -59,10 +59,10 @@ public sealed class Temperature
 }
 ```
 
-`ToCelsius()` 메서드는 기존 객체를 변경하지 않고 새로운 `Temperature` 인스턴스를 returns.
-이것이 불변 객체의 핵심 패턴입니다 — 상태를 바꾸는 대신, 새로운 상태를 가진 객체를 만듭니다.
+The `ToCelsius()` method returns a new `Temperature` instance without modifying the existing object.
+This is the core pattern of immutable objects -- instead of changing state, you create an object with new state.
 
-### Palette - 읽기 전용 컬렉션을 사용한 불변 클래스
+### Palette - Immutable Class with Read-Only Collections
 
 ```csharp
 public sealed class Palette
@@ -81,23 +81,23 @@ public sealed class Palette
 }
 ```
 
-`IReadOnlyList<string>`을 사용하여 컬렉션의 immutability을 guarantees.
-`List<string>`을 직접 노출하면 `ImmutabilityRule`의 가변 컬렉션 검증에 위반됩니다.
+Using `IReadOnlyList<string>` guarantees collection immutability.
+Directly exposing `List<string>` would violate `ImmutabilityRule`'s mutable collection verification.
 
-## 테스트 코드
+## Test Code
 
-### RequireImmutable()의 6가지 검증 차원
+### The 6 Verification Dimensions of RequireImmutable()
 
-`RequireImmutable()`은 내부적으로 `ImmutabilityRule`을 적용하며, 다음 6가지 차원에서 클래스의 immutability을 검증합니다:
+`RequireImmutable()` internally applies `ImmutabilityRule` and verifies class immutability across the following 6 dimensions:
 
-1. **기본 Writability 검증** - 멤버가 immutable인지 확인
-2. **생성자 검증** - 모든 생성자가 private인지 확인
-3. **프로퍼티 검증** - public setter가 없는지 확인
-4. **필드 검증** - public 필드가 없는지 확인
-5. **가변 컬렉션 타입 검증** - `List<>`, `Dictionary<>` 등 가변 컬렉션 사용 금지
-6. **상태 변경 메서드 검증** - 허용된 메서드(팩토리, getter, `ToString` 등) 외 금지
+1. **Basic writability verification** - Checks that members are immutable
+2. **Constructor verification** - Checks that all constructors are private
+3. **Property verification** - Checks that no public setters exist
+4. **Field verification** - Checks that no public fields exist
+5. **Mutable collection type verification** - Prohibits use of `List<>`, `Dictionary<>`, etc.
+6. **State-mutating method verification** - Prohibits methods other than allowed ones (factory, getter, `ToString`, etc.)
 
-### 전체 도메인 클래스 immutability 검증
+### Full Domain Class Immutability Verification
 
 ```csharp
 [Fact]
@@ -113,7 +113,7 @@ public void DomainClasses_ShouldBe_Immutable()
 }
 ```
 
-### 개별 클래스 검증 (Sealed + Immutable)
+### Individual Class Verification (Sealed + Immutable)
 
 ```csharp
 [Fact]
@@ -132,51 +132,51 @@ public void Temperature_ShouldBe_SealedAndImmutable()
 }
 ```
 
-`RequireSealed()`과 `RequireImmutable()`을 체이닝하여 sealed이면서 불변인 클래스를 검증합니다.
+Chaining `RequireSealed()` and `RequireImmutable()` verifies a class that is both sealed and immutable.
 
 ## Summary at a Glance
 
-The following table `RequireImmutable()`이 검증하는 6가지 차원을 요약합니다.
+The following table summarizes the 6 dimensions verified by `RequireImmutable()`.
 
-### RequireImmutable() 검증 차원 요약
+### RequireImmutable() Verification Dimension Summary
 
-| 검증 차원 | 검증 내용 | 위반 예시 |
-|-----------|-----------|-----------|
-| **기본 Writability** | 멤버가 immutable인지 확인 | 쓰기 가능한 멤버 존재 |
-| **생성자** | 모든 생성자가 private인지 확인 | `public Temperature(...)` |
-| **프로퍼티** | public setter가 없는지 확인 | `public double Value { get; set; }` |
-| **필드** | public 필드가 없는지 확인 | `public double value;` |
-| **가변 컬렉션** | `List<>`, `Dictionary<>` 등 사용 금지 | `public List<string> Colors { get; }` |
-| **상태 변경 메서드** | 허용된 메서드 외 금지 | 내부 상태를 변경하는 void 메서드 |
+| Verification Dimension | What It Checks | Violation Example |
+|----------------------|----------------|-------------------|
+| **Basic Writability** | Checks members are immutable | Writable member exists |
+| **Constructors** | Checks all constructors are private | `public Temperature(...)` |
+| **Properties** | Checks no public setters exist | `public double Value { get; set; }` |
+| **Fields** | Checks no public fields exist | `public double value;` |
+| **Mutable Collections** | Prohibits `List<>`, `Dictionary<>`, etc. | `public List<string> Colors { get; }` |
+| **State-Mutating Methods** | Prohibits methods outside the allowed list | void methods that modify internal state |
 
-The following table 올바른 불변 클래스 설계 패턴을 정리합니다.
+The following table organizes correct immutable class design patterns.
 
-### 불변 클래스 설계 패턴
+### Immutable Class Design Patterns
 
-| 패턴 | Description | Example |
-|------|------|------|
-| **private 생성자** | 외부에서 직접 인스턴스 생성 방지 | `private Temperature(...)` |
-| **getter-only 속성** | 속성 값 변경 방지 | `public double Value { get; }` |
-| **factory method** | `Create` 정적 메서드로 인스턴스 생성 | `Temperature.Create(36.5, "C")` |
-| **`IReadOnlyList<T>`** | 가변 컬렉션 대신 읽기 전용 사용 | `IReadOnlyList<string> Colors` |
-| **변환 메서드** | 기존 객체 변경 없이 새 인스턴스 반환 | `ToCelsius()` -> 새 Temperature |
+| Pattern | Description | Example |
+|---------|-------------|---------|
+| **Private constructor** | Prevents direct external instantiation | `private Temperature(...)` |
+| **Getter-only properties** | Prevents property value modification | `public double Value { get; }` |
+| **Factory method** | Creates instances via static `Create` method | `Temperature.Create(36.5, "C")` |
+| **`IReadOnlyList<T>`** | Uses read-only instead of mutable collections | `IReadOnlyList<string> Colors` |
+| **Transformation methods** | Returns new instances without modifying existing objects | `ToCelsius()` -> new Temperature |
 
 ## FAQ
 
-### Q1: `RequireImmutable()`과 `RequireNoPublicSetters()`는 어떻게 다른가요?
-**A**: `RequireNoPublicSetters()`는 프로퍼티의 public setter만 검사합니다. `RequireImmutable()`은 그보다 훨씬 포괄적으로, 생성자 접근성, 필드, 가변 컬렉션 타입, 상태 변경 메서드까지 6가지 차원을 모두 검증합니다. 단순히 setter를 막는 것이 아니라 "진정한 immutability"을 guarantees.
+### Q1: How does `RequireImmutable()` differ from `RequireNoPublicSetters()`?
+**A**: `RequireNoPublicSetters()` only checks for public setters on properties. `RequireImmutable()` is much more comprehensive, verifying all 6 dimensions including constructor accessibility, fields, mutable collection types, and state-mutating methods. It guarantees "true immutability" rather than simply blocking setters.
 
-### Q2: record 타입도 `RequireImmutable()` 검증을 통과하나요?
-**A**: `record` 타입은 기본적으로 `init` 전용 프로퍼티를 생성하므로 프로퍼티 차원에서는 통과합니다. 하지만 public 생성자를 가지므로 생성자 검증에서 위반될 수 있습니다. record를 사용할 때는 `RequireRecord()`와 `RequireSealed()`을 조합하는 것이 더 적합합니다.
+### Q2: Do record types pass `RequireImmutable()` verification?
+**A**: `record` types generate `init`-only properties by default, so they pass at the property dimension. However, they have public constructors, so they may violate constructor verification. When using records, combining `RequireRecord()` and `RequireSealed()` is more appropriate.
 
-### Q3: `List<T>`를 private 필드로만 사용하고 외부에 노출하지 않아도 위반인가요?
-**A**: `RequireImmutable()`은 타입 수준에서 가변 컬렉션의 존재 자체를 검사합니다. private 필드라도 `List<T>` 타입이면 위반으로 보고됩니다. 내부 저장소로도 `IReadOnlyList<T>`나 불변 컬렉션을 사용하는 것이 권장됩니다.
+### Q3: Is it a violation to use `List<T>` only as a private field without exposing it externally?
+**A**: `RequireImmutable()` checks for the existence of mutable collections at the type level. Even if it is a private field, having a `List<T>` type is reported as a violation. Using `IReadOnlyList<T>` or immutable collections for internal storage is recommended.
 
-### Q4: `ToCelsius()` 같은 변환 메서드는 왜 허용되나요?
-**A**: `RequireImmutable()`의 상태 변경 메서드 검증은 허용 목록(factory method, getter, `ToString`, `Equals`, `GetHashCode` 등) 기반으로 동작합니다. 반환 타입이 자기 자신(`Temperature`)인 메서드는 새 인스턴스를 반환하는 변환 메서드로 간주되어 허용됩니다.
+### Q4: Why are transformation methods like `ToCelsius()` allowed?
+**A**: `RequireImmutable()`'s state-mutating method verification works on an allow list basis (factory methods, getters, `ToString`, `Equals`, `GetHashCode`, etc.). Methods whose return type is themselves (`Temperature`) are considered transformation methods that return new instances and are allowed.
 
 ---
 
-immutability은 도메인 객체의 가장 기본적인 안전장치입니다. Next chapter에서는 한 단계 더 나아가, Command/Query 패턴에서 중첩 클래스의 존재와 구조를 검증하는 방법을 examines.
+Immutability is the most fundamental safeguard for domain objects. The next chapter goes a step further and examines how to verify the existence and structure of nested classes in Command/Query patterns.
 
-→ [2장: 중첩 클래스 검증](../02-Nested-Class-Validation/)
+-> [Ch 2: Nested Class Verification](../02-Nested-Class-Validation/)

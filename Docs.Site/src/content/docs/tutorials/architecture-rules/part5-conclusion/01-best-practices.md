@@ -4,70 +4,70 @@ title: "Best Practices"
 
 ## Overview
 
-아키텍처 규칙을 만들었다면, 다음 과제는 팀 전체가 이를 지속적으로 운영하는 것입니다. 규칙이 코드와 함께 성장하지 않으면, 시간이 지날수록 "늘 실패하는 테스트"로 전락하여 무시되기 시작합니다. In this chapter, 규칙의 설계, 테스트 구성, 성능, 팀 도입 전략까지 — 아키텍처 테스트를 실무에서 살아있게 유지하는 방법을 정리합니다.
+Once architecture rules are created, the next challenge is for the entire team to operate them continuously. If rules do not grow with the code, they gradually degrade into "always-failing tests" that get ignored over time. In this chapter, we cover how to keep architecture tests alive in practice -- from rule design, test organization, and performance to team adoption strategy.
 
-> **"좋은 아키텍처 규칙은 위반 메시지만 읽어도 무엇이 잘못되었는지 알 수 있습니다."**
+> **"Good architecture rules are ones where the violation message alone tells you what went wrong."**
 
-## Suite 상속부터 시작하세요
+## Start with Suite Inheritance
 
-새 프로젝트에서 아키텍처 테스트를 도입할 때는 `DomainArchitectureTestSuite`와 `ApplicationArchitectureTestSuite`를 상속하는 것부터 시작하세요. 두 개의 프로퍼티만 오버라이드하면 25개의 검증된 규칙이 즉시 적용됩니다. 프로젝트 고유 규칙은 Suite 위에 `[Fact]` 메서드로 추가합니다.
+When introducing architecture tests in a new project, start by inheriting `DomainArchitectureTestSuite` and `ApplicationArchitectureTestSuite`. Overriding just two properties instantly applies 25 verified rules. Project-specific rules are added as `[Fact]` methods on top of the Suite.
 
 ```csharp
-// 1. Suite 상속으로 25개 규칙 즉시 확보
+// 1. Instantly secure 25 rules through Suite inheritance
 public sealed class DomainArchTests : DomainArchitectureTestSuite { ... }
 public sealed class AppArchTests : ApplicationArchitectureTestSuite { ... }
 
-// 2. 프로젝트 고유 규칙 추가
-// 3. ArchUnitNET 네이티브 API로 레이어 의존성 규칙 추가
+// 2. Add project-specific rules
+// 3. Add layer dependency rules with ArchUnitNET native API
 ```
 
-자세한 사용법은 [Part 4-05 아키텍처 테스트 스위트](../Part4-Real-World-Patterns/05-Architecture-Test-Suites/)를 참조하세요.
+For detailed usage, see [Part 4-05 Architecture Test Suites](../Part4-Real-World-Patterns/05-Architecture-Test-Suites/).
 
-## 규칙 설계 원칙
+## Rule Design Principles
 
-### 규칙은 명확한 이름을 가져야 합니다
+### Rules Must Have Clear Names
 
-`ThrowIfAnyFailures`에 전달하는 규칙 이름은 위반 시 무엇이 잘못되었는지 즉시 알 수 있어야 합니다. 모호한 이름은 위반을 수정하는 개발자에게 추가 조사 비용을 전가합니다.
+The rule name passed to `ThrowIfAnyFailures` should make it immediately clear what went wrong when a violation occurs. Ambiguous names shift additional investigation costs to the developer fixing the violation.
 
 ```csharp
-// Good: 규칙의 의도가 명확
+// Good: Rule intent is clear
 .ThrowIfAnyFailures("ValueObject Immutability Rule");
 .ThrowIfAnyFailures("Entity Factory Method Rule");
 
-// Bad: 무엇을 검증하는지 불명확
+// Bad: Unclear what is being verified
 .ThrowIfAnyFailures("Rule1");
 .ThrowIfAnyFailures("Check");
 ```
 
-### 한 테스트에 하나의 관심사
+### One Concern Per Test
 
-관련된 규칙은 하나의 Validator 체인으로 묶되, 서로 다른 관심사는 별도 테스트로 분리합니다. 관심사를 섞으면 하나가 실패했을 때 나머지를 확인할 수 없습니다.
+Bundle related rules into a single Validator chain, but separate different concerns into individual tests. Mixing concerns means when one fails, you cannot check the rest.
 
 ```csharp
-// Good: "가시성" 관심사를 하나의 테스트로
+// Good: "Visibility" concern as one test
 [Fact]
 public void Entity_ShouldBe_PublicSealed()
 {
-    // RequirePublic() + RequireSealed() = 가시성 관심사
+    // RequirePublic() + RequireSealed() = visibility concern
 }
 
-// Good: "팩토리 메서드" 관심사는 별도 테스트로
+// Good: "Factory method" concern as a separate test
 [Fact]
 public void Entity_ShouldHave_CreateFactoryMethod()
 {
-    // RequireMethod("Create", ...) = 팩토리 메서드 관심사
+    // RequireMethod("Create", ...) = factory method concern
 }
 ```
 
-### verbose 모드 활용
+### Use Verbose Mode
 
-`verbose: true`를 사용하면 위반 시 상세한 디버깅 정보를 얻을 수 있습니다. 개발 중에는 항상 활성화하고, 안정화된 후에도 유지하는 것을 권장합니다. verbose 모드의 오버헤드는 무시할 수 있는 수준이며, 위반 원인을 추적하는 시간을 크게 줄여줍니다.
+Using `verbose: true` provides detailed debugging information when violations occur. Always enable it during development, and it is recommended to keep it active even after stabilization. The overhead of verbose mode is negligible, and it significantly reduces the time spent tracking down violation causes.
 
-## 테스트 구성 패턴
+## Test Organization Patterns
 
-### ArchitectureTestBase 패턴
+### ArchitectureTestBase Pattern
 
-모든 아키텍처 테스트에서 공통으로 사용하는 `Architecture` 객체와 네임스페이스 문자열을 기반 클래스로 추출합니다. 이렇게 하면 어셈블리 로딩 코드의 중복을 제거하고, 네임스페이스가 변경될 때 한 곳만 수정하면 됩니다.
+Extract the `Architecture` object and namespace strings commonly used across all architecture tests into a base class. This eliminates duplication of assembly loading code and requires modifying only one place when namespaces change.
 
 ```csharp
 public abstract class ArchitectureTestBase
@@ -84,93 +84,93 @@ public abstract class ArchitectureTestBase
 }
 ```
 
-**핵심 포인트:**
-- `static readonly`로 선언하여 어셈블리 로딩을 한 번만 수행합니다
-- `typeof().Namespace!`로 네임스페이스 문자열을 안전하게 추출합니다
-- 문자열 하드코딩 대신 리플렉션을 사용하면 네임스페이스 변경 시 컴파일 에러로 감지됩니다
+**Key points:**
+- Declare as `static readonly` to perform assembly loading only once
+- Safely extract namespace strings with `typeof().Namespace!`
+- Using reflection instead of hardcoded strings detects namespace changes as compilation errors
 
-### 테스트 파일 분류
+### Test File Organization
 
-레이어별 또는 패턴별로 테스트 파일을 분리합니다. 파일 이름만으로 어떤 규칙이 들어있는지 알 수 있어야 합니다.
+Separate test files by layer or pattern. The file name alone should tell you what rules are contained within.
 
 ```txt
 Architecture/
-├── ArchitectureTestBase.cs          # 공통 설정
-├── EntityArchitectureRuleTests.cs   # Entity 규칙
-├── ValueObjectArchitectureRuleTests.cs  # ValueObject 규칙
-├── UsecaseArchitectureRuleTests.cs  # Usecase 규칙
-├── DtoArchitectureRuleTests.cs      # DTO 규칙
-└── LayerDependencyArchitectureRuleTests.cs  # 레이어 의존성 규칙
+├── ArchitectureTestBase.cs          # Common setup
+├── EntityArchitectureRuleTests.cs   # Entity rules
+├── ValueObjectArchitectureRuleTests.cs  # ValueObject rules
+├── UsecaseArchitectureRuleTests.cs  # Usecase rules
+├── DtoArchitectureRuleTests.cs      # DTO rules
+└── LayerDependencyArchitectureRuleTests.cs  # Layer dependency rules
 ```
 
-### 커스텀 규칙 재사용
+### Custom Rule Reuse
 
-팀 공통 규칙은 `DelegateArchRule`이나 `CompositeArchRule`로 정의하여 여러 테스트에서 재uses. 규칙이 한 곳에 정의되면 변경 시 모든 테스트에 일관되게 반영됩니다.
+Define team-wide common rules with `DelegateArchRule` or `CompositeArchRule` for reuse across multiple tests. When rules are defined in one place, changes are consistently reflected across all tests.
 
 ```csharp
-// 공유 규칙을 static readonly 필드로 정의
+// Define shared rules as static readonly fields
 private static readonly DelegateArchRule<Class> s_domainNamingRule = new(
     "Forbids infrastructure suffixes",
-    (target, _) => { /* 검증 로직 */ });
+    (target, _) => { /* verification logic */ });
 
 private static readonly CompositeArchRule<Class> s_entityCoreRule = new(
     new ImmutabilityRule(),
     s_domainNamingRule);
 ```
 
-## 성능 고려사항
+## Performance Considerations
 
-### ArchLoader 캐싱
+### ArchLoader Caching
 
-`ArchLoader().LoadAssemblies().Build()`는 리플렉션 기반으로 동작하므로 비용이 큽니다. **테스트 클래스 간에 `Architecture` 객체를 공유하세요:**
+`ArchLoader().LoadAssemblies().Build()` operates on a reflection basis and is costly. **Share the `Architecture` object across test classes:**
 
 ```csharp
-// Good: static readonly로 한 번만 로딩
+// Good: Load only once with static readonly
 protected static readonly Architecture Architecture = ...;
 
-// Bad: 매 테스트마다 새로 로딩
+// Bad: Load fresh for every test
 [Fact]
 public void Test()
 {
-    var arch = new ArchLoader().LoadAssemblies(...).Build(); // 느림!
+    var arch = new ArchLoader().LoadAssemblies(...).Build(); // Slow!
 }
 ```
 
-### 필요한 어셈블리만 로딩
+### Load Only Required Assemblies
 
-검증하지 않는 어셈블리는 로딩하지 마세요. 불필요한 어셈블리 로딩은 시작 시간을 증가시킵니다.
+Do not load assemblies you are not verifying. Unnecessary assembly loading increases startup time.
 
-## 팀 도입 전략
+## Team Adoption Strategy
 
-### 점진적 도입
+### Gradual Adoption
 
-한 번에 모든 규칙을 도입하면 팀의 저항을 초래합니다. 이해하기 쉽고 효과가 큰 규칙부터 시작하여, 팀이 가치를 체감한 후 점진적으로 확장하세요.
+Introducing all rules at once invites team resistance. Start with rules that are easy to understand and have a big impact, and expand gradually after the team experiences the value.
 
-1. **레이어 의존성 규칙부터:** 가장 이해하기 쉽고 효과가 큽니다
-2. **가시성/수정자 규칙:** `RequirePublic()`, `RequireSealed()` 등 단순 규칙 추가
-3. **네이밍 규칙:** 팀 컨벤션을 코드로 강제
-4. **메서드 시그니처 규칙:** factory method 패턴 등 심화 규칙
-5. **커스텀 규칙:** 팀 고유의 규칙을 `DelegateArchRule`로 정의
+1. **Start with layer dependency rules:** Easiest to understand and highest impact
+2. **Visibility/modifier rules:** Add simple rules like `RequirePublic()`, `RequireSealed()`
+3. **Naming rules:** Enforce team conventions as code
+4. **Method signature rules:** Advanced rules like factory method patterns
+5. **Custom rules:** Define team-specific rules with `DelegateArchRule`
 
-### 새 규칙 추가 워크플로
+### New Rule Addition Workflow
 
 ```txt
-1. 코드 리뷰에서 반복 지적 사항 발견
-2. 팀 회의에서 규칙으로 합의
-3. 아키텍처 테스트로 구현 → 기존 코드에서 위반 확인
-4. 위반 코드 수정
-5. CI에 통합하여 자동 검증
+1. Discover repeated review comments in code reviews
+2. Reach consensus on the rule in a team meeting
+3. Implement as architecture test -> Identify violations in existing code
+4. Fix violating code
+5. Integrate into CI for automated verification
 ```
 
-### 기존 코드와의 공존
+### Coexistence with Existing Code
 
-기존 코드에 규칙을 소급 적용하기 어려운 경우, ArchUnitNET의 필터링을 활용합니다. 새 코드에만 규칙을 적용하고, 레거시 코드는 별도 계획으로 점진 수정하세요.
+When it is difficult to retroactively apply rules to existing code, use ArchUnitNET filtering. Apply rules only to new code and gradually fix legacy code as a separate plan.
 
 ```csharp
-// 특정 네임스페이스의 클래스만 검증 (레거시 제외)
+// Verify only classes in a specific namespace (excluding legacy)
 ArchRuleDefinition.Classes()
     .That()
-    .ResideInNamespace("MyApp.Domains.V2")  // 새 코드만
+    .ResideInNamespace("MyApp.Domains.V2")  // New code only
     .ValidateAllClasses(Architecture, @class => @class
         .RequireImmutable())
     .ThrowIfAnyFailures("New Domain Immutability Rule");
@@ -178,37 +178,37 @@ ArchRuleDefinition.Classes()
 
 ## Summary at a Glance
 
-| 영역 | 베스트 프랙티스 | 핵심 이유 |
-|------|----------------|----------|
-| **규칙 이름** | 위반 내용을 설명하는 명확한 이름 사용 | 위반 메시지만으로 문제 파악 가능 |
-| **관심사 분리** | 테스트 하나에 관심사 하나 | 실패 원인 격리 용이 |
-| **verbose 모드** | 항상 `verbose: true` 유지 | 디버깅 시간 단축 |
-| **Architecture 캐싱** | `static readonly`로 한 번만 로딩 | 리플렉션 비용 절감 |
-| **어셈블리 범위** | 필요한 어셈블리만 로딩 | 시작 시간 최소화 |
-| **커스텀 규칙 재사용** | `DelegateArchRule`/`CompositeArchRule` 활용 | 규칙 변경 시 일관 반영 |
-| **점진적 도입** | 레이어 의존성 → 가시성 → 네이밍 → 심화 순서 | 팀 수용성 확보 |
-| **레거시 공존** | 네임스페이스 필터로 새 코드만 검증 | 기존 코드 안정성 유지 |
+| Area | Best Practice | Key Reason |
+|------|---------------|------------|
+| **Rule names** | Use clear names that describe the violation | Problem can be identified from violation message alone |
+| **Separation of concerns** | One concern per test | Easy to isolate failure cause |
+| **Verbose mode** | Always keep `verbose: true` | Reduces debugging time |
+| **Architecture caching** | Load only once with `static readonly` | Reduces reflection cost |
+| **Assembly scope** | Load only required assemblies | Minimizes startup time |
+| **Custom rule reuse** | Use `DelegateArchRule`/`CompositeArchRule` | Consistent reflection on rule changes |
+| **Gradual adoption** | Layer dependencies -> visibility -> naming -> advanced | Secures team acceptance |
+| **Legacy coexistence** | Verify only new code with namespace filter | Maintains existing code stability |
 
 ## FAQ
 
-### Q1: 규칙이 너무 많아지면 관리가 어렵지 않나요?
+### Q1: Does it become hard to manage when there are too many rules?
 
-**A:** 규칙 수 자체보다 구조가 중요합니다. `ArchitectureTestBase`로 공통 설정을 추출하고, 패턴별로 테스트 파일을 분리하며, `CompositeArchRule`로 관련 규칙을 묶으면 수십 개의 규칙도 체계적으로 관리할 수 있습니다. 규칙이 50개를 넘는다면 카테고리별 폴더 분리를 고려하세요.
+**A:** Structure matters more than the number of rules. By extracting common setup into `ArchitectureTestBase`, separating test files by pattern, and bundling related rules with `CompositeArchRule`, even dozens of rules can be systematically managed. If rules exceed 50, consider folder separation by category.
 
-### Q2: 새 규칙을 추가할 때 기준은 무엇인가요?
+### Q2: What is the criterion for adding a new rule?
 
-**A:** "코드 리뷰에서 같은 지적이 3번 이상 반복되는가?"가 좋은 기준입니다. 반복되는 지적은 사람이 기억에 의존하고 있다는 신호이며, 아키텍처 테스트로 자동화할 가치가 있습니다. 팀 회의에서 합의된 규칙만 추가하세요.
+**A:** "Has the same comment been repeated 3 or more times in code reviews?" is a good criterion. Repeated comments signal that people are relying on memory, making it worth automating with architecture tests. Only add rules agreed upon in team meetings.
 
-### Q3: 아키텍처 테스트가 실패하면 빌드를 막아야 하나요?
+### Q3: Should architecture test failures block the build?
 
-**A:** 네, CI에서 반드시 막아야 합니다. "경고만 남기고 통과"시키면 위반이 누적되어 규칙의 신뢰성이 사라집니다. 새 규칙 도입 초기에 기존 위반이 많다면, 네임스페이스 필터로 새 코드에만 적용하면서 점진적으로 범위를 넓히세요.
+**A:** Yes, they must be blocked in CI. If you "just leave a warning and pass", violations accumulate and the credibility of the rules disappears. If there are many existing violations when introducing a new rule, apply it only to new code with namespace filters and gradually expand the scope.
 
-### Q4: 팀원이 아키텍처 테스트의 가치를 느끼지 못하면 어떻게 하나요?
+### Q4: What if team members do not feel the value of architecture tests?
 
-**A:** 가장 효과적인 설득은 "실제 사고 방지" 사례입니다. 레이어 의존성 규칙 하나만 도입해도 도메인 레이어에 인프라 의존성이 침투하는 것을 즉시 잡을 수 있습니다. 작은 성공 사례를 만든 후 팀에 공유하세요.
+**A:** The most effective persuasion is a "prevented incident" case. Even introducing just one layer dependency rule can immediately catch infrastructure dependencies infiltrating the domain layer. Create a small success case and share it with the team.
 
 ---
 
-Next chapter에서는 관련 학습 자료와 프레임워크 확장 방법을 안내합니다.
+The next chapter introduces related learning resources and framework extension methods.
 
-→ [2장: Next step](02-next-steps.md)
+-> [Ch 2: Next Steps](02-next-steps.md)

@@ -1,78 +1,78 @@
 ---
-title: "환경 설정"
+title: "Environment Setup"
 ---
-코드를 직접 실행하며 학습하기 위한 환경을 준비합니다. 각 단계는 몇 분이면 충분합니다.
+Prepare the environment for hands-on learning by running code directly. Each step takes just a few minutes.
 
-## 필수 요구사항
+## Required Prerequisites
 
 ### 1. .NET 10.0 SDK
 
-.NET SDK는 모든 프로젝트의 빌드와 실행에 필요합니다.
+The .NET SDK is required for building and running all projects.
 
 ```bash
-# 버전 확인
+# Version check
 dotnet --version
-# 출력 예: 10.0.100
+# Example output: 10.0.100
 
-# 설치 (Windows)
+# Install (Windows)
 winget install Microsoft.DotNet.SDK.10
 
-# 설치 (macOS)
+# Install (macOS)
 brew install --cask dotnet-sdk
 
-# 설치 (Linux - Ubuntu)
+# Install (Linux - Ubuntu)
 sudo apt-get update && sudo apt-get install -y dotnet-sdk-10.0
 ```
 
-### 2. IDE 설정
+### 2. IDE Setup
 
 #### VS Code + C# Dev Kit
 
-- [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit) 확장 설치
+- Install the [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit) extension
 
 ---
 
-## 프로젝트 설정
+## Project Setup
 
-### 소스 코드 클론
+### Clone Source Code
 
 ```bash
-# Functorium 프로젝트 클론
+# Clone the Functorium project
 git clone https://github.com/hhko/Functorium.git
 cd functorium
 ```
 
-### 빌드 확인
+### Verify Build
 
 ```bash
-# 전체 솔루션 빌드
+# Build the entire solution
 dotnet build Functorium.slnx
 
-# 전체 테스트 실행
+# Run all tests
 dotnet test --solution Functorium.slnx
 ```
 
-### 개별 프로젝트 실행
+### Run Individual Projects
 
 ```bash
-# 튜토리얼 전체 빌드
+# Build the entire tutorial
 dotnet build specification-pattern.slnx
 
-# 튜토리얼 전체 테스트
+# Test the entire tutorial
 dotnet test --solution specification-pattern.slnx
 ```
 
 ---
 
-## 기본 using 문
+## Default Using Statements
 
-프로젝트에서 사용할 기본 using 문입니다:
+Default using statements used in projects:
 
 ```csharp
 using Functorium.Domains.Specifications;
 ```
 
-Expression Specification을 사용하는 경우:
+When using Expression Specification:
 
 ```csharp
 using System.Linq.Expressions;
@@ -81,39 +81,39 @@ using Functorium.Domains.Specifications;
 
 ---
 
-## 각 프로젝트 실행 방법
+## How to Run Each Project
 
-### 테스트 실행
+### Running Tests
 
 ```bash
-# 튜토리얼 전체 테스트
+# Test the entire tutorial
 dotnet test --solution specification-pattern.slnx
 
-# 특정 테스트만 실행
+# Run specific tests only
 dotnet test --solution specification-pattern.slnx --filter "IsSatisfiedBy_ReturnsTrue_WhenProductIsActive"
 ```
 
-### 전체 솔루션 테스트
+### Full Solution Test
 
 ```bash
-# 솔루션 루트에서
+# From the solution root
 dotnet test --solution specification-pattern.slnx
 ```
 
 ---
 
-## 프로젝트 구조
+## Project Structure
 
-각 튜토리얼 프로젝트는 다음과 같은 구조를 가집니다:
+Each tutorial project has the following structure:
 
 ```
 01-First-Specification/
-├── FirstSpecification/                    # 메인 프로젝트
-│   ├── FirstSpecification.csproj          # 프로젝트 파일
-│   └── Specifications/                    # Specification 클래스
+├── FirstSpecification/                    # Main project
+│   ├── FirstSpecification.csproj          # Project file
+│   └── Specifications/                    # Specification classes
 │       └── ActiveProductSpec.cs
 │
-└── FirstSpecification.Tests.Unit/         # 테스트 프로젝트
+└── FirstSpecification.Tests.Unit/         # Test project
     ├── FirstSpecification.Tests.Unit.csproj
     ├── xunit.runner.json
     └── ActiveProductSpecTests.cs
@@ -121,41 +121,41 @@ dotnet test --solution specification-pattern.slnx
 
 ---
 
-## 문제 해결
+## Troubleshooting
 
-### .NET SDK가 인식되지 않는 경우
+### .NET SDK Not Recognized
 
 ```bash
-# PATH 환경 변수 확인
+# Check PATH environment variable
 echo $PATH
 
-# Windows의 경우 시스템 환경 변수에 다음 경로 추가
+# For Windows, add the following path to system environment variables
 # C:\Program Files\dotnet
 ```
 
-### IDE에서 IntelliSense가 작동하지 않는 경우
+### IntelliSense Not Working in IDE
 
-1. IDE 재시작
-2. `dotnet restore` 실행
-3. `.vs` 또는 `.vscode` 폴더 삭제 후 재시작
+1. Restart the IDE
+2. Run `dotnet restore`
+3. Delete the `.vs` or `.vscode` folder and restart
 
 ---
 
 ## FAQ
 
-### Q1: .NET 10.0 SDK가 필수인가요?
-**A**: 네. 이 튜토리얼의 모든 프로젝트는 .NET 10.0을 대상으로 빌드됩니다. Functorium 라이브러리의 일부 API가 .NET 10.0 이상을 필요로 하므로, 이전 버전에서는 빌드가 실패할 수 있습니다.
+### Q1: Is .NET 10.0 SDK mandatory?
+**A**: Yes. All projects in this tutorial target .NET 10.0. Some Functorium library APIs require .NET 10.0 or later, so the build may fail on earlier versions.
 
-### Q2: 개별 프로젝트만 빌드/테스트할 수 있나요?
-**A**: 네, 각 장의 프로젝트 폴더에서 `dotnet test`를 실행하면 해당 프로젝트만 독립적으로 테스트할 수 있습니다. 전체 솔루션 빌드는 `dotnet build Functorium.slnx`로 수행합니다.
+### Q2: Can individual projects be built/tested independently?
+**A**: Yes, running `dotnet test` from each chapter's project folder tests that project independently. The full solution build is performed with `dotnet build Functorium.slnx`.
 
-### Q3: IDE는 어떤 것을 사용해야 하나요?
-**A**: VS Code + C# Dev Kit, JetBrains Rider, Visual Studio 2022 중 편한 것을 사용하면 됩니다. C# 개발 환경이 설정되어 있고 .NET 10.0 SDK가 설치되어 있다면 어떤 IDE든 동작합니다.
+### Q3: Which IDE should I use?
+**A**: Use whichever is comfortable among VS Code + C# Dev Kit, JetBrains Rider, or Visual Studio 2022. Any IDE will work as long as the C# development environment is set up and .NET 10.0 SDK is installed.
 
 ---
 
-## 다음 단계
+## Next Steps
 
-환경 설정이 완료되었습니다. 이제 Specification 패턴이 어떤 문제를 해결하는지, 전체 그림을 살펴보겠습니다.
+Environment setup is complete. Now let's look at the big picture of what problems the Specification pattern solves.
 
-→ [0.3 Specification 패턴 개요](03-specification-pattern-overview.md)
+-> [0.3 Specification Pattern Overview](03-specification-pattern-overview.md)

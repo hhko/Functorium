@@ -4,35 +4,35 @@ title: "Nested Class Validation"
 
 ## Overview
 
-Command에 `Request`가 빠져 있다면? Query에 `Response`가 없다면? Mediator 파이프라인이 runtime에 실패하고 나서야 "중첩 클래스를 깜빡했다"는 사실을 알게 됩니다. 이런 구조적 누락은 컴파일러가 잡아주지 않습니다.
+What if a Command is missing its `Request`? What if a Query has no `Response`? You only discover "I forgot the nested class" after the Mediator pipeline fails at runtime. The compiler does not catch such structural omissions.
 
-이 챕터에서는 `RequireNestedClass()`와 `RequireNestedClassIfExists()`를 사용하여 중첩 클래스의 존재와 구조를 **compile time이 아닌 테스트 타임에** 자동으로 검증하는 방법을 학습합니다.
+In this chapter, you will learn how to use `RequireNestedClass()` and `RequireNestedClassIfExists()` to automatically verify the existence and structure of nested classes **at test time rather than compile time**.
 
-> **"구조적 규칙은 코드 리뷰에서 잡기엔 너무 쉽게 빠집니다. 테스트가 '이 Command에 Request가 없습니다'라고 알려주면, 누락은 커밋 전에 발견됩니다."**
+> **"Structural rules are too easily missed in code reviews. When a test tells you 'this Command has no Request', the omission is discovered before commit."**
 
 ## Learning Objectives
 
-### 핵심 학습 목표
+### Core Learning Goals
 
-1. **`RequireNestedClass()`로 필수 중첩 클래스 검증**
-   - 지정된 이름의 중첩 클래스가 반드시 존재해야 하는 규칙
-   - 두 번째 매개변수로 중첩 클래스에 대한 추가 규칙 체이닝
+1. **Verifying required nested classes with `RequireNestedClass()`**
+   - Rule that a nested class with a specified name must exist
+   - Chain additional rules on the nested class via the second parameter
 
-2. **`RequireNestedClassIfExists()`로 선택적 중첩 클래스 검증**
-   - 중첩 클래스가 있을 때만 검증하고, 없으면 통과하는 패턴
-   - Validator처럼 선택적 요소에 적합한 검증 전략
+2. **Verifying optional nested classes with `RequireNestedClassIfExists()`**
+   - Pattern that verifies only when the nested class exists, and passes when absent
+   - Suitable verification strategy for optional elements like Validators
 
-3. **`.AreNotNested()` 필터의 역할**
-   - 최상위 클래스만 대상으로 하여 중첩 클래스 자체가 검증 대상이 되는 것을 방지
+3. **The role of the `.AreNotNested()` filter**
+   - Targets only top-level classes to prevent nested classes themselves from becoming verification targets
 
-### 실습을 통해 확인할 내용
-- **CreateOrder**: Command 패턴 — sealed `Request`와 `Response` 중첩 클래스 포함
-- **GetOrderById**: Query 패턴 — 동일한 중첩 클래스 구조
-- **선택적 Validator**: 존재할 때만 sealed 여부를 검증하는 패턴
+### What You Will Verify Through Practice
+- **CreateOrder**: Command pattern -- includes sealed `Request` and `Response` nested classes
+- **GetOrderById**: Query pattern -- same nested class structure
+- **Optional Validator**: Pattern that verifies sealed status only when present
 
-## 도메인 코드
+## Domain Code
 
-### CreateOrder - Command 패턴
+### CreateOrder - Command Pattern
 
 ```csharp
 public sealed class CreateOrder
@@ -69,7 +69,7 @@ public sealed class CreateOrder
 }
 ```
 
-### GetOrderById - Query 패턴
+### GetOrderById - Query Pattern
 
 ```csharp
 public sealed class GetOrderById
@@ -98,14 +98,14 @@ public sealed class GetOrderById
 }
 ```
 
-두 클래스 모두 `Request`와 `Response` 중첩 클래스를 포함하며, 각각 불변 패턴을 따릅니다.
+Both classes contain `Request` and `Response` nested classes, each following the immutable pattern.
 
-## 테스트 코드
+## Test Code
 
-### 필수 중첩 클래스 검증
+### Required Nested Class Verification
 
-`RequireNestedClass()`는 지정된 이름의 중첩 클래스가 반드시 존재해야 하며, 존재하지 않으면 위반을 보고합니다.
-두 번째 매개변수로 중첩 클래스에 대한 추가 검증을 수행할 수 있습니다.
+`RequireNestedClass()` requires that a nested class with the specified name must exist, and reports a violation if it does not.
+Additional verification on the nested class can be performed through the second parameter.
 
 ```csharp
 [Fact]
@@ -126,10 +126,10 @@ public void CommandClasses_ShouldHave_SealedRequestAndResponse()
 }
 ```
 
-`.AreNotNested()`를 사용하여 최상위 클래스만 대상으로 합니다.
-중첩 클래스 자체가 검증 대상이 되는 것을 방지합니다.
+`.AreNotNested()` is used to target only top-level classes.
+This prevents nested classes themselves from becoming verification targets.
 
-### 중첩 클래스의 immutability 검증
+### Nested Class Immutability Verification
 
 ```csharp
 [Fact]
@@ -152,11 +152,11 @@ public void CommandClasses_ShouldHave_ImmutableNestedClasses()
 }
 ```
 
-중첩 클래스 검증 콜백 안에서 `RequireImmutable()`을 체이닝할 수 있습니다.
+`RequireImmutable()` can be chained inside the nested class verification callback.
 
-### 선택적 중첩 클래스 검증
+### Optional Nested Class Verification
 
-`RequireNestedClassIfExists()`는 중첩 클래스가 있을 때만 검증하고, 없으면 통과합니다.
+`RequireNestedClassIfExists()` verifies only when the nested class exists, and passes when absent.
 
 ```csharp
 [Fact]
@@ -177,42 +177,42 @@ public void CommandClasses_ShouldOptionallyHave_Validator()
 
 ## Summary at a Glance
 
-The following table 중첩 클래스 검증 메서드의 동작 차이를 compares.
+The following table compares the behavior differences of nested class verification methods.
 
-### 중첩 클래스 검증 메서드 비교
+### Nested Class Verification Method Comparison
 
-| 메서드 | 중첩 클래스 없을 때 | 중첩 클래스 있을 때 | 사용 시나리오 |
-|--------|---------------------|---------------------|---------------|
-| **`RequireNestedClass(name, validation)`** | 위반 보고 | 콜백 규칙 검증 | Request, Response 등 필수 요소 |
-| **`RequireNestedClassIfExists(name, validation)`** | 통과 (무시) | 콜백 규칙 검증 | Validator 등 선택적 요소 |
+| Method | When Nested Class Is Absent | When Nested Class Exists | Use Scenario |
+|--------|---------------------------|-------------------------|--------------|
+| **`RequireNestedClass(name, validation)`** | Reports violation | Verifies callback rules | Required elements like Request, Response |
+| **`RequireNestedClassIfExists(name, validation)`** | Passes (ignored) | Verifies callback rules | Optional elements like Validator |
 
-The following table 이 챕터에서 사용한 주요 필터와 검증 규칙을 정리합니다.
+The following table organizes the key filters and verification rules used in this chapter.
 
-### 필터 및 검증 규칙 요약
+### Filter and Verification Rule Summary
 
-| Aspect | 역할 |
-|------|------|
-| `.AreNotNested()` | 최상위 클래스만 필터링 (중첩 클래스 제외) |
-| `RequireSealed()` | 중첩 클래스가 sealed인지 검증 |
-| `RequireImmutable()` | 중첩 클래스의 immutability 검증 |
-| 콜백 체이닝 | 중첩 클래스에 여러 규칙을 순차적으로 적용 |
+| Aspect | Role |
+|--------|------|
+| `.AreNotNested()` | Filters to top-level classes only (excludes nested classes) |
+| `RequireSealed()` | Verifies that nested class is sealed |
+| `RequireImmutable()` | Verifies nested class immutability |
+| Callback chaining | Sequentially applies multiple rules to nested classes |
 
 ## FAQ
 
-### Q1: `RequireNestedClass()`에서 중첩 클래스가 없으면 어떤 메시지가 출력되나요?
-**A**: `RuleViolation`으로 "Class 'CreateOrder' must have nested class 'Request'"와 같은 구체적인 위반 메시지가 보고됩니다. 어떤 클래스에 어떤 중첩 클래스가 누락되었는지 바로 알 수 있습니다.
+### Q1: What message is output when a nested class is missing in `RequireNestedClass()`?
+**A**: A specific violation message is reported as a `RuleViolation`, such as "Class 'CreateOrder' must have nested class 'Request'". You can immediately see which class is missing which nested class.
 
-### Q2: `.AreNotNested()`를 빼면 어떻게 되나요?
-**A**: `Request`, `Response` 같은 중첩 클래스 자체도 검증 대상이 됩니다. 그러면 `Request` 안에서 다시 `Request` 중첩 클래스를 찾으려 하므로 의도하지 않은 위반이 보고됩니다.
+### Q2: What happens if `.AreNotNested()` is removed?
+**A**: Nested classes like `Request` and `Response` themselves also become verification targets. Then it tries to find another `Request` nested class inside `Request`, resulting in unintended violations being reported.
 
-### Q3: 중첩 클래스에 대한 콜백에서 또 다른 `RequireNestedClass()`를 호출할 수 있나요?
-**A**: 네, 중첩 검증은 재귀적으로 사용할 수 있습니다. 예를 들어 `RequireNestedClass("Request", nested => nested.RequireNestedClass("Metadata", ...))`처럼 다단계 중첩 구조도 검증할 수 있습니다.
+### Q3: Can another `RequireNestedClass()` be called within a nested class callback?
+**A**: Yes, nested verification can be used recursively. For example, multi-level nested structures like `RequireNestedClass("Request", nested => nested.RequireNestedClass("Metadata", ...))` can also be verified.
 
-### Q4: `RequireNestedClassIfExists()`는 언제 사용하나요?
-**A**: Validator, Mapper, Profile처럼 모든 Command에 필수는 아니지만, 있을 경우 특정 규칙을 따라야 하는 선택적 중첩 클래스에 적합합니다. "있으면 규칙을 지켜라, 없어도 괜찮다"는 유연한 검증을 provides.
+### Q4: When should `RequireNestedClassIfExists()` be used?
+**A**: It is suitable for optional nested classes like Validator, Mapper, or Profile that are not mandatory for all Commands but must follow specific rules when present. It provides flexible verification with "follow the rules if present, it's fine if absent".
 
 ---
 
-중첩 클래스의 존재와 구조를 자동으로 검증하면, runtime 실패 대신 테스트 실패로 구조적 누락을 조기에 발견할 수 있습니다. Next chapter에서는 인터페이스의 네이밍 규칙과 메서드 시그니처를 검증하는 방법을 examines.
+By automatically verifying the existence and structure of nested classes, structural omissions can be caught early through test failures instead of runtime failures. The next chapter examines how to verify interface naming rules and method signatures.
 
-→ [3장: 인터페이스 검증](../03-Interface-Validation/)
+-> [Ch 3: Interface Verification](../03-Interface-Validation/)
