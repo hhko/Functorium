@@ -3,123 +3,123 @@ title: "release-note"
 description: "Automated release note generation plugin"
 ---
 
-release-note는 Functorium 프로젝트의 릴리스 노트 생성을 자동화하는 Claude Code 플러그인입니다. C# 스크립트 기반 데이터 수집, Conventional Commits 분석, Breaking Changes 감지, 릴리스 노트 작성, 검증까지 5단계 워크플로를 실행합니다.
+release-note is a Claude Code plugin that automates release note generation for the Functorium project. It executes a 5-phase workflow covering C# script-based data collection, Conventional Commits analysis, Breaking Changes detection, release note writing, and validation.
 
-## 설치
+## Installation
 
 ```bash
-# 단독 로드
+# Load standalone
 claude --plugin-dir ./.claude/plugins/release-note
 
-# functorium-develop 플러그인과 동시 로드
+# Load simultaneously with the functorium-develop plugin
 claude --plugin-dir ./.claude/plugins/release-note --plugin-dir ./.claude/plugins/functorium-develop
 ```
 
-> `--plugin-dir`는 세션 단위로 플러그인을 로드합니다. `/skills`에서 `release-note:generate` 형식으로 표시됩니다.
+> `--plugin-dir` loads plugins on a per-session basis. They appear in `/skills` in the format `release-note:generate`.
 
-## 5-Phase 워크플로
+## 5-Phase Workflow
 
 ```
-환경 검증 → 데이터 수집 → 커밋 분석 → 릴리스 노트 작성 → 검증
+Environment Validation → Data Collection → Commit Analysis → Release Note Writing → Validation
 ```
 
-| Phase | 이름 | 목표 | 주요 산출물 |
-|:-----:|------|------|------------|
-| 1 | 환경 검증 | 전제조건 확인, Base Branch 결정 | Git/SDK 상태, Base/Target 결정 |
-| 2 | 데이터 수집 | C# 스크립트로 컴포넌트/API 변경 분석 | `*.md` 분석 파일, `all-api-changes.txt`, `api-changes-diff.txt` |
-| 3 | 커밋 분석 | 수집된 데이터 분석, 기능 추출 | `phase3-commit-analysis.md`, `phase3-feature-groups.md` |
-| 4 | 릴리스 노트 작성 | TEMPLATE.md 기반 릴리스 노트 생성 | `RELEASE-{VERSION}.md` |
-| 5 | 검증 | 품질 및 정확성 검증 | `phase5-validation-report.md`, `phase5-api-validation.md` |
+| Phase | Name | Goal | Key Deliverables |
+|:-----:|------|------|-----------------|
+| 1 | Environment Validation | Verify prerequisites, determine Base Branch | Git/SDK status, Base/Target determination |
+| 2 | Data Collection | Analyze component/API changes with C# scripts | `*.md` analysis files, `all-api-changes.txt`, `api-changes-diff.txt` |
+| 3 | Commit Analysis | Analyze collected data, extract features | `phase3-commit-analysis.md`, `phase3-feature-groups.md` |
+| 4 | Release Note Writing | Generate release notes based on TEMPLATE.md | `RELEASE-{VERSION}.md` |
+| 5 | Validation | Quality and accuracy verification | `phase5-validation-report.md`, `phase5-api-validation.md` |
 
-### 핵심 원칙
+### Core Principles
 
-| 원칙 | 설명 |
-|------|------|
-| 정확성 우선 | Uber 파일(`all-api-changes.txt`)에 없는 API는 절대 문서화하지 않음 |
-| 가치 전달 필수 | 모든 주요 기능에 "Why this matters (왜 중요한가):" 섹션 포함 |
-| Breaking Changes 자동 감지 | Git Diff 분석이 커밋 메시지 패턴보다 우선 |
-| 추적성 | 모든 기능을 커밋 SHA로 추적 |
+| Principle | Description |
+|-----------|-------------|
+| Accuracy first | Never document APIs not found in the Uber file (`all-api-changes.txt`) |
+| Value delivery required | All major features include a "Why this matters:" section |
+| Breaking Changes auto-detection | Git Diff analysis takes priority over commit message patterns |
+| Traceability | All features tracked by commit SHA |
 
-## generate 스킬
+## generate Skill
 
-릴리스 노트를 자동으로 생성하는 유일한 스킬입니다. 버전을 파라미터로 받아 5-Phase 워크플로 전체를 실행합니다.
+The only skill that automatically generates release notes. It takes a version as parameter and executes the entire 5-Phase workflow.
 
-**트리거 예시:**
+**Trigger Examples:**
 
 ```text
 /generate v1.2.0
-릴리스 노트 생성해줘
-release note 만들어줘
-릴리스 노트 작성
-새 버전 릴리스
+Generate the release notes
+Create a release note
+Write release notes
+New version release
 ```
 
-**버전 형식:**
+**Version Formats:**
 
-| 형식 | 예시 | 설명 |
-|------|------|------|
-| 정규 릴리스 | `v1.2.0` | 일반 배포 |
-| 첫 배포 | `v1.0.0` | 초기 커밋부터 분석 |
-| 프리릴리스 | `v1.0.0-beta.1` | 사전 배포 |
+| Format | Example | Description |
+|--------|---------|-------------|
+| Regular release | `v1.2.0` | Standard deployment |
+| First deployment | `v1.0.0` | Analyzes from initial commit |
+| Pre-release | `v1.0.0-beta.1` | Pre-deployment |
 
-## 에이전트
+## Agents
 
-release-note 플러그인은 **release-engineer** 에이전트 1개를 제공합니다. C# 스크립트 실행, 커밋 분석, Breaking Changes 감지, 릴리스 노트 작성 및 검증을 전담합니다.
+The release-note plugin provides 1 **release-engineer** agent. It handles C# script execution, commit analysis, Breaking Changes detection, release note writing, and validation.
 
-상세 내용은 [전문 에이전트](./agents/) 페이지를 참고하십시오.
+See the [Expert Agents](./agents/) page for details.
 
-## 플러그인 구조
+## Plugin Structure
 
 ```
 .claude/plugins/release-note/
 ├── .claude-plugin/
-│   └── plugin.json              # 플러그인 메타데이터 (v1.0.0)
+│   └── plugin.json              # Plugin metadata (v1.0.0)
 ├── skills/
 │   └── generate/
-│       └── SKILL.md             # generate 스킬 정의 (5-Phase 워크플로)
+│       └── SKILL.md             # generate skill definition (5-Phase workflow)
 └── agents/
-    └── release-engineer.md      # release-engineer 에이전트 정의
+    └── release-engineer.md      # release-engineer agent definition
 ```
 
-## .release-notes/ 디렉터리 구조
+## .release-notes/ Directory Structure
 
-릴리스 노트 생성에 필요한 스크립트, 템플릿, 검증 도구가 프로젝트 루트의 `.release-notes/` 디렉터리에 위치합니다.
+Scripts, templates, and validation tools needed for release note generation are located in the `.release-notes/` directory at the project root.
 
 ```
 .release-notes/
-├── TEMPLATE.md                  # 릴리스 노트 복사용 템플릿
-├── RELEASE-{VERSION}.md         # 생성된 릴리스 노트
-├── validate-release-notes.ps1   # GitHub Release 크기 제한(125,000자) 검증
-├── README.md                    # 프로세스 개요
+├── TEMPLATE.md                  # Release note copy template
+├── RELEASE-{VERSION}.md         # Generated release notes
+├── validate-release-notes.ps1   # GitHub Release size limit (125,000 chars) validation
+├── README.md                    # Process overview
 └── scripts/
-    ├── AnalyzeAllComponents.cs  # 컴포넌트 분석 C# 스크립트
-    ├── AnalyzeFolder.cs         # 폴더 분석 C# 스크립트
-    ├── ApiGenerator.cs          # API 변경 생성 C# 스크립트
-    ├── ExtractApiChanges.cs     # API 변경 추출 C# 스크립트
-    ├── Directory.Build.props    # 빌드 설정
-    ├── Directory.Packages.props # 패키지 설정
+    ├── AnalyzeAllComponents.cs  # Component analysis C# script
+    ├── AnalyzeFolder.cs         # Folder analysis C# script
+    ├── ApiGenerator.cs          # API change generation C# script
+    ├── ExtractApiChanges.cs     # API change extraction C# script
+    ├── Directory.Build.props    # Build settings
+    ├── Directory.Packages.props # Package settings
     ├── config/
-    │   └── component-priority.json  # 컴포넌트 우선순위 설정
+    │   └── component-priority.json  # Component priority settings
     └── docs/
-        ├── README.md            # 5-Phase 워크플로 전체 개요
-        ├── phase1-setup.md      # Phase 1 상세
-        ├── phase2-collection.md # Phase 2 상세
-        ├── phase3-analysis.md   # Phase 3 상세
-        ├── phase4-writing.md    # Phase 4 상세
-        └── phase5-validation.md # Phase 5 상세
+        ├── README.md            # 5-Phase workflow full overview
+        ├── phase1-setup.md      # Phase 1 details
+        ├── phase2-collection.md # Phase 2 details
+        ├── phase3-analysis.md   # Phase 3 details
+        ├── phase4-writing.md    # Phase 4 details
+        └── phase5-validation.md # Phase 5 details
 ```
 
-## 트러블슈팅
+## Troubleshooting
 
-| 문제 | 해결 방법 |
-|------|----------|
-| Base Branch 없음 | 첫 배포로 자동 감지, 초기 커밋부터 분석 |
-| .NET SDK 버전 오류 | .NET 10.x 설치 필요 |
-| 파일 잠금 문제 | `taskkill /F /IM dotnet.exe` (Windows) |
-| API 검증 실패 | Uber 파일에서 올바른 API 이름 확인 |
-| runfile 캐시 오류 | `./Build-CleanRunFileCache.ps1` 실행 |
+| Problem | Solution |
+|---------|----------|
+| No Base Branch | Auto-detected as first deployment, analyzes from initial commit |
+| .NET SDK version error | .NET 10.x installation required |
+| File lock issue | `taskkill /F /IM dotnet.exe` (Windows) |
+| API validation failure | Verify correct API name in Uber file |
+| runfile cache error | Run `./Build-CleanRunFileCache.ps1` |
 
-### 전체 초기화 (Windows)
+### Full Reset (Windows)
 
 ```powershell
 Stop-Process -Name "dotnet" -Force -ErrorAction SilentlyContinue
