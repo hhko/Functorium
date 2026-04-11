@@ -1,6 +1,6 @@
 ---
 title: "release-note"
-description: "릴리스 노트 자동 생성 플러그인"
+description: "Automated release note generation plugin"
 ---
 
 release-note는 Functorium 프로젝트의 릴리스 노트 생성을 자동화하는 Claude Code 플러그인입니다. C# 스크립트 기반 데이터 수집, Conventional Commits 분석, Breaking Changes 감지, 릴리스 노트 작성, 검증까지 5단계 워크플로를 실행합니다.

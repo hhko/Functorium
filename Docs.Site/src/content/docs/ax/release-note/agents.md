@@ -1,6 +1,6 @@
 ---
-title: "전문 에이전트"
-description: "release-note 플러그인의 release-engineer 에이전트"
+title: "Expert Agents"
+description: "The release-engineer agent of the release-note plugin"
 ---
 
 ## release-engineer -- 릴리스 노트 생성 전문가

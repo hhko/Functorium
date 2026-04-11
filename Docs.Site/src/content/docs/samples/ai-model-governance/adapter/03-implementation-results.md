@@ -1,6 +1,6 @@
 ---
-title: "어댑터 구현 결과"
-description: "AI 모델 거버넌스 플랫폼의 프로젝트 구조, 엔드포인트 목록, 테스트 현황"
+title: "Adapter Implementation Results"
+description: "Project structure, endpoint list, and test status for the AI Model Governance Platform"
 ---
 
 ## 프로젝트 구조

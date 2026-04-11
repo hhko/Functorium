@@ -1,6 +1,6 @@
 ---
-title: "애플리케이션 비즈니스 요구사항"
-description: "AI 모델 거버넌스 플랫폼의 CQRS 유스케이스 요구사항"
+title: "Application Business Requirements"
+description: "CQRS use case requirements for the AI Model Governance Platform"
 ---
 
 ## 배경

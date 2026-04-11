@@ -1,6 +1,6 @@
 ---
 title: "Test Develop"
-description: "단위 테스트, 통합 테스트, 아키텍처 규칙 테스트 작성"
+description: "Writing unit tests, integration tests, and architecture rule tests"
 ---
 
 > project-spec -> architecture-design -> domain-develop -> application-develop -> adapter-develop -> observability-develop -> **test-develop**

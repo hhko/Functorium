@@ -1,6 +1,6 @@
 ---
-title: "관측성 코드 설계"
-description: "L1 스코어카드, L2 드릴다운, 알림 규칙, ctx.* 전파 코드 패턴"
+title: "Observability Code Design"
+description: "L1 scorecard, L2 drill-down, alert rules, and ctx.* propagation code patterns"
 ---
 
 ## L1 스코어카드: 전체 건강 상태

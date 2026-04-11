@@ -1,6 +1,6 @@
 ---
-title: "어댑터 기술 요구사항"
-description: "AI 모델 거버넌스 플랫폼의 영속성, 외부 서비스, HTTP API, 관측성 기술 요구사항"
+title: "Adapter Technical Requirements"
+description: "Persistence, external service, HTTP API, and observability technical requirements for the AI Model Governance Platform"
 ---
 
 ## 배경

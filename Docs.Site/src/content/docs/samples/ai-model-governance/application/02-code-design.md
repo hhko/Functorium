@@ -1,6 +1,6 @@
 ---
-title: "애플리케이션 코드 설계"
-description: "AI 모델 거버넌스 플랫폼의 핵심 Command 코드와 이벤트 핸들러 패턴"
+title: "Application Code Design"
+description: "Core Command code and event handler patterns for the AI Model Governance Platform"
 ---
 
 [타입 설계 의사결정](../01-type-design-decisions/)에서 식별한 Use Case, 포트, 컴포지션 패턴을 C# 코드로 구현합니다.

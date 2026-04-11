@@ -1,6 +1,6 @@
 ---
 title: "Architecture Design"
-description: "프로젝트 구조와 인프라 설계"
+description: "Project structure and infrastructure design"
 ---
 
 > project-spec -> **architecture-design** -> domain-develop -> application-develop -> adapter-develop -> observability-develop -> test-develop

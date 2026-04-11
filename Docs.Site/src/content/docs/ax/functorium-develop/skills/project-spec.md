@@ -1,6 +1,6 @@
 ---
 title: "Project Spec"
-description: "프로젝트 요구사항 명세(PRD) 작성"
+description: "Writing project requirements specifications (PRD)"
 ---
 
 > **project-spec** -> architecture-design -> domain-develop -> application-develop -> adapter-develop -> observability-develop -> test-develop

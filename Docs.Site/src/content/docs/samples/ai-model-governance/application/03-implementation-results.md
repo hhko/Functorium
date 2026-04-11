@@ -1,6 +1,6 @@
 ---
-title: "애플리케이션 구현 결과"
-description: "AI 모델 거버넌스 플랫폼의 애플리케이션 레이어 구현 결과 요약"
+title: "Application Implementation Results"
+description: "Summary of application layer implementation results for the AI Model Governance Platform"
 ---
 
 ## Use Case 현황

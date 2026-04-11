@@ -1,6 +1,6 @@
 ---
 title: "Observability Develop"
-description: "관측성 전략 설계 (KPI 매핑, 대시보드, 알림, ctx.* 전파)"
+description: "Observability strategy design (KPI mapping, dashboard, alerts, ctx.* propagation)"
 ---
 
 > project-spec -> architecture-design -> domain-develop -> application-develop -> adapter-develop -> **observability-develop** -> test-develop

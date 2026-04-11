@@ -1,6 +1,6 @@
 ---
 title: "Application Develop"
-description: "CQRS 유스케이스 설계와 구현 (Command, Query, EventHandler, Validator)"
+description: "CQRS use case design and implementation (Command, Query, EventHandler, Validator)"
 ---
 
 > project-spec -> architecture-design -> domain-develop -> **application-develop** -> adapter-develop -> observability-develop -> test-develop

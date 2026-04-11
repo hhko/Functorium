@@ -1,6 +1,6 @@
 ---
 title: "Domain Review"
-description: "에릭 에반스 DDD 관점의 코드 리뷰와 개선 제안"
+description: "Code review and improvement suggestions from Eric Evans DDD perspective"
 ---
 
 > 워크플로 어느 시점에서든 실행 가능한 리뷰 스킬입니다.

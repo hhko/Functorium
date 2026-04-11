@@ -1,6 +1,6 @@
 ---
 title: "Domain Develop"
-description: "도메인 모델 설계와 구현 (VO, Aggregate, Event, Spec, Service)"
+description: "Domain model design and implementation (VO, Aggregate, Event, Spec, Service)"
 ---
 
 > project-spec -> architecture-design -> **domain-develop** -> application-develop -> adapter-develop -> observability-develop -> test-develop

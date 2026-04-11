@@ -1,6 +1,6 @@
 ---
 title: "Adapter Develop"
-description: "Repository, Query Adapter, Endpoint, DI 등록 구현"
+description: "Repository, Query Adapter, Endpoint, and DI registration implementation"
 ---
 
 > project-spec -> architecture-design -> domain-develop -> application-develop -> **adapter-develop** -> observability-develop -> test-develop

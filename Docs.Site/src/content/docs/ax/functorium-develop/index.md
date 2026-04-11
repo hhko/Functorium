@@ -1,6 +1,6 @@
 ---
 title: "functorium-develop"
-description: "PRD 작성부터 테스트까지, DDD 개발 전 과정을 AI가 안내하는 Claude Code 플러그인"
+description: "A Claude Code plugin where AI guides the entire DDD development process from PRD to testing"
 ---
 
 functorium-develop는 Functorium 프레임워크 기반 DDD 프로젝트의 7단계 개발 워크플로를 AI가 안내하는 Claude Code 플러그인입니다.

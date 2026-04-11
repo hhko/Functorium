@@ -1,6 +1,6 @@
 ---
-title: "어댑터 코드 설계"
-description: "4가지 IO 고급 패턴 코드 스니펫과 DI 등록 패턴"
+title: "Adapter Code Design"
+description: "Code snippets for 4 advanced IO patterns and DI registration patterns"
 ---
 
 [타입 설계 의사결정](../01-type-design-decisions/)에서 선택한 4가지 IO 패턴을 C# 코드로 구현합니다.

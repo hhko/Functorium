@@ -1,6 +1,6 @@
 ---
-title: "워크플로"
-description: "PRD에서 테스트까지 7단계 개발 워크플로"
+title: "Workflow"
+description: "7-step development workflow from PRD to testing"
 ---
 
 AX는 PRD 작성부터 테스트까지 7단계로 이어지는 개발 워크플로를 제공합니다. 각 단계는 이전 단계의 산출물을 입력으로 받아, 설계 의도가 코드까지 일관되게 전달됩니다.

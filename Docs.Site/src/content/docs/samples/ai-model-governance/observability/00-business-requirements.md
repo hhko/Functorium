@@ -1,6 +1,6 @@
 ---
-title: "관측성 비즈니스 요구사항"
-description: "AI 모델 거버넌스 플랫폼의 관측성이 필요한 이유와 3-Pillar 요구사항"
+title: "Observability Business Requirements"
+description: "Why observability is needed and 3-Pillar requirements for the AI Model Governance Platform"
 ---
 
 ## 왜 관측성이 필요한가

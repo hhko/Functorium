@@ -1,6 +1,6 @@
 ---
-title: "애플리케이션 타입 설계 의사결정"
-description: "AI 모델 거버넌스 플랫폼의 포트 설계, ApplyT 패턴, FinT<IO> 컴포지션"
+title: "Application Type Design Decisions"
+description: "Port design, ApplyT pattern, and FinT<IO> composition for the AI Model Governance Platform"
 ---
 
 ## 개요

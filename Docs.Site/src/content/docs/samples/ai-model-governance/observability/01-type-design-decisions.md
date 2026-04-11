@@ -1,6 +1,6 @@
 ---
-title: "관측성 타입 설계 의사결정"
-description: "KPI-메트릭 매핑, 레이어별 핵심 지표, SLO 기준선, ctx.* 전파 전략"
+title: "Observability Type Design Decisions"
+description: "KPI-metric mapping, key metrics per layer, SLO baselines, and ctx.* propagation strategy"
 ---
 
 ## KPI -> 기술 메트릭 매핑

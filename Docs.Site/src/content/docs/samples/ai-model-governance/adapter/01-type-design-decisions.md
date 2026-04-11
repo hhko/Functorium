@@ -1,6 +1,6 @@
 ---
-title: "어댑터 타입 설계 의사결정"
-description: "LanguageExt IO 고급 기능(Retry, Timeout, Fork, Bracket) 선택 근거"
+title: "Adapter Type Design Decisions"
+description: "Rationale for selecting LanguageExt IO advanced features (Retry, Timeout, Fork, Bracket)"
 ---
 
 ## 개요

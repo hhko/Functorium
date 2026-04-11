@@ -1,6 +1,6 @@
 ---
-title: "관측성 구현 결과"
-description: "Observable Port, CtxEnricher, 관측성 파이프라인, IO 패턴 현황"
+title: "Observability Implementation Results"
+description: "Observable Port, CtxEnricher, observability pipeline, and IO pattern status"
 ---
 
 ## Observable Port 현황

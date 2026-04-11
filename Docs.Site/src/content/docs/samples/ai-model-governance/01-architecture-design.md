@@ -1,22 +1,22 @@
 ---
-title: "아키텍처 설계"
-description: "AI 모델 거버넌스 플랫폼의 프로젝트 구조, 참조 방향, DI 전략, 관측성 파이프라인"
+title: "Architecture Design"
+description: "Project structure, reference direction, DI strategy, and observability pipeline for the AI Model Governance Platform"
 ---
 
-## 1. 프로젝트 구조도
+## 1. Project Structure Diagram
 
 ```
 samples/ai-model-governance/
-├── AiModelGovernance.slnx                          # 솔루션 파일 (8 프로젝트)
-├── Directory.Build.props                           # FunctoriumSrcRoot + 공통 설정
-├── Directory.Build.targets                         # root 상속 차단
-├── domain/                                         # 도메인 레이어 문서 (4개)
-├── application/                                    # 애플리케이션 레이어 문서 (4개)
-├── adapter/                                        # 어댑터 레이어 문서 (4개)
-├── observability/                                  # 관측성 문서 (4개)
+├── AiModelGovernance.slnx                          # Solution file (8 projects)
+├── Directory.Build.props                           # FunctoriumSrcRoot + common settings
+├── Directory.Build.targets                         # Root inheritance blocking
+├── domain/                                         # Domain layer docs (4)
+├── application/                                    # Application layer docs (4)
+├── adapter/                                        # Adapter layer docs (4)
+├── observability/                                  # Observability docs (4)
 ├── Src/
 │   ├── AiGovernance.Domain/                        # Domain Layer
-│   │   ├── SharedModels/Services/                  # Domain Services (2종)
+│   │   ├── SharedModels/Services/                  # Domain Services (2 types)
 │   │   └── AggregateRoots/
 │   │       ├── Models/                             # AIModel + VOs(4) + Specs(2)
 │   │       ├── Deployments/                        # ModelDeployment + VOs(4) + Specs(3)
@@ -29,7 +29,7 @@ samples/ai-model-governance/
 │   │       ├── Assessments/                        # Commands(1), Queries(1), EventHandlers(1)
 │   │       └── Incidents/                          # Commands(1), Queries(2), Ports(1), EventHandlers(1)
 │   ├── AiGovernance.Adapters.Infrastructure/       # Mediator, OpenTelemetry, External Services
-│   │   ├── ExternalServices/                       # IO 고급 기능 (4종)
+│   │   ├── ExternalServices/                       # Advanced IO Features (4 types)
 │   │   └── Registrations/
 │   ├── AiGovernance.Adapters.Persistence/          # InMemory, EfCore Repository/Query
 │   │   ├── Models/                                 # Repository(2) + Query(2)
@@ -38,19 +38,19 @@ samples/ai-model-governance/
 │   │   ├── Incidents/                              # Repository(2) + Query(1)
 │   │   └── Registrations/
 │   ├── AiGovernance.Adapters.Presentation/         # FastEndpoints
-│   │   ├── Endpoints/                              # HTTP API (15종)
+│   │   ├── Endpoints/                              # HTTP API (15 types)
 │   │   └── Registrations/
 │   └── AiGovernance/                               # Host (Program.cs)
 └── Tests/
-    ├── AiGovernance.Tests.Unit/                    # 단위 테스트
-    └── AiGovernance.Tests.Integration/             # 통합 테스트
+    ├── AiGovernance.Tests.Unit/                    # Unit Tests
+    └── AiGovernance.Tests.Integration/             # Integration Tests
 ```
 
 ---
 
-## 2. 솔루션 파일
+## 2. Solution File
 
-`AiModelGovernance.slnx`에 8개 프로젝트가 포함됩니다.
+`AiModelGovernance.slnx` contains 8 projects.
 
 ```xml
 <Solution>
@@ -65,20 +65,20 @@ samples/ai-model-governance/
 </Solution>
 ```
 
-| 프로젝트 | 레이어 | 역할 |
-|---------|--------|------|
+| Project | Layer | Role |
+|---------|-------|------|
 | AiGovernance.Domain | Domain | Aggregate, VO, Specification, Domain Service, Domain Event |
-| AiGovernance.Application | Application | Command/Query Usecase, Port 인터페이스, Event Handler |
+| AiGovernance.Application | Application | Command/Query Usecase, Port Interfaces, Event Handler |
 | AiGovernance.Adapters.Infrastructure | Adapter | Mediator, OpenTelemetry, Pipeline, External Service |
-| AiGovernance.Adapters.Persistence | Adapter | Repository/Query 구현 (InMemory, EfCore) |
+| AiGovernance.Adapters.Persistence | Adapter | Repository/Query Implementation (InMemory, EfCore) |
 | AiGovernance.Adapters.Presentation | Adapter | FastEndpoints HTTP API |
-| AiGovernance | Host | Program.cs, DI 조립, appsettings.json |
-| AiGovernance.Tests.Unit | Test | 단위 테스트 (VO, Aggregate, Domain Service, Architecture) |
-| AiGovernance.Tests.Integration | Test | 통합 테스트 (HTTP Endpoint E2E) |
+| AiGovernance | Host | Program.cs, DI Assembly, appsettings.json |
+| AiGovernance.Tests.Unit | Test | Unit Tests (VO, Aggregate, Domain Service, Architecture) |
+| AiGovernance.Tests.Integration | Test | Integration Tests (HTTP Endpoint E2E) |
 
 ---
 
-## 3. 프로젝트 참조 방향
+## 3. Project Reference Direction
 
 ```
 AiGovernance (Host)
@@ -89,40 +89,40 @@ AiGovernance (Host)
     Domain                  → Functorium + SourceGenerators
 ```
 
-**핵심 원칙:** 의존성은 안쪽으로만 향한다. Domain은 외부에 대해 아무것도 모르고, Application은 포트 인터페이스만 알며, Adapter가 구현한다.
+**Core Principle:** Dependencies flow only inward. Domain knows nothing about the outside, Application knows only port interfaces, and Adapters provide the implementations.
 
 ---
 
-## 4. 네이밍 규칙
+## 4. Naming Conventions
 
-### 3차원 구조
+### 3-Dimensional Structure
 
-| 차원 | 표현 수단 | 예시 |
-|------|-----------|------|
-| Aggregate (무엇) | 1차 폴더 | `Models/`, `Deployments/`, `Assessments/`, `Incidents/` |
-| CQRS Role (읽기/쓰기) | 2차 폴더 | `Repositories/`, `Queries/`, `Commands/`, `EventHandlers/` |
-| Technology (어떻게) | 클래스 접미사 | `EfCore`, `InMemory`, `Dapper` |
+| Dimension | Expression | Example |
+|-----------|-----------|---------|
+| Aggregate (What) | Primary Folder | `Models/`, `Deployments/`, `Assessments/`, `Incidents/` |
+| CQRS Role (Read/Write) | Secondary Folder | `Repositories/`, `Queries/`, `Commands/`, `EventHandlers/` |
+| Technology (How) | Class Suffix | `EfCore`, `InMemory`, `Dapper` |
 
-### 파일명 패턴: `{Subject}{Role}{Variant}`
+### File Name Pattern: `{Subject}{Role}{Variant}`
 
-| 파일 유형 | 패턴 | 예시 |
-|-----------|------|------|
+| File Type | Pattern | Example |
+|-----------|---------|---------|
 | Repository | `{Aggregate}Repository{Variant}.cs` | `AIModelRepositoryInMemory.cs`, `AIModelRepositoryEfCore.cs` |
 | Query | `{Aggregate}Query{Variant}.cs` | `AIModelQueryInMemory.cs`, `DeploymentDetailQueryInMemory.cs` |
-| DB 모델 | `{Aggregate}.Model.cs` | `AIModel.Model.cs`, `Deployment.Model.cs` |
-| EF 설정 | `{Aggregate}.Configuration.cs` | `AIModel.Configuration.cs` |
+| DB Model | `{Aggregate}.Model.cs` | `AIModel.Model.cs`, `Deployment.Model.cs` |
+| EF Config | `{Aggregate}.Configuration.cs` | `AIModel.Configuration.cs` |
 | UnitOfWork | `UnitOfWork{Variant}.cs` | `UnitOfWorkInMemory.cs`, `UnitOfWorkEfCore.cs` |
 
 ---
 
-## 5. DI 등록 전략
+## 5. DI Registration Strategy
 
-3개 Registration 클래스가 각 Adapter의 서비스를 독립적으로 등록합니다.
+Three Registration classes independently register each Adapter's services.
 
-| Registration 클래스 | 등록 항목 |
-|--------------------|----------|
+| Registration Class | Registered Items |
+|--------------------|-----------------|
 | `AdapterPresentationRegistration` | FastEndpoints |
-| `AdapterPersistenceRegistration` | Repository, Query, UnitOfWork (Observable 래퍼) |
+| `AdapterPersistenceRegistration` | Repository, Query, UnitOfWork (Observable wrappers) |
 | `AdapterInfrastructureRegistration` | Mediator, FluentValidation, OpenTelemetry, Pipeline, Domain Service, External Service |
 
 ```csharp
@@ -138,14 +138,14 @@ var app = builder.Build();
 app.UseAdapterPresentation();
 app.Run();
 
-public partial class Program { }  // Integration Test 지원
+public partial class Program { }  // Integration Test support
 ```
 
 ---
 
-## 6. 영속성 Provider 전환
+## 6. Persistence Provider Switching
 
-`appsettings.json`의 `Persistence:Provider` 값으로 InMemory/Sqlite를 전환합니다.
+The `Persistence:Provider` value in `appsettings.json` switches between InMemory and Sqlite.
 
 ```json
 {
@@ -156,7 +156,7 @@ public partial class Program { }  // Integration Test 지원
 }
 ```
 
-`AdapterPersistenceRegistration`에서 Provider 값에 따라 분기합니다:
+`AdapterPersistenceRegistration` branches based on the Provider value:
 
 ```csharp
 switch (options.Provider)
@@ -173,7 +173,7 @@ switch (options.Provider)
 }
 ```
 
-Observable 래퍼를 통해 DI에 등록하므로, Provider를 교체해도 관측성은 자동으로 유지됩니다:
+Since DI registration uses Observable wrappers, observability is automatically maintained even when switching providers:
 
 ```csharp
 // InMemory
@@ -184,27 +184,27 @@ services.RegisterScopedObservablePort<IAIModelRepository, AIModelRepositoryEfCor
 
 ---
 
-## 7. 관측성 파이프라인
+## 7. Observability Pipeline
 
-OpenTelemetry 3-Pillar 관측성을 `RegisterOpenTelemetry` + `ConfigurePipelines`로 설정합니다.
+OpenTelemetry 3-Pillar observability is configured using `RegisterOpenTelemetry` + `ConfigurePipelines`.
 
 ```csharp
 services
     .RegisterOpenTelemetry(configuration, AssemblyReference.Assembly)
     .ConfigurePipelines(pipelines => pipelines
-        .UseObservability()   // CtxEnricher, Metrics, Tracing, Logging 일괄 활성화
+        .UseObservability()   // Batch-enable CtxEnricher, Metrics, Tracing, Logging
         .UseValidation()
         .UseException())
     .Build();
 ```
 
-`UseObservability()`는 관측성 4종(CtxEnricher, Metrics, Tracing, Logging)을 일괄 활성화합니다. 나머지 파이프라인은 명시적 opt-in으로 등록합니다:
+`UseObservability()` batch-enables 4 observability components (CtxEnricher, Metrics, Tracing, Logging). The remaining pipelines are registered via explicit opt-in:
 
-| 순서 | 미들웨어 | 역할 |
-|------|---------|------|
-| 1 | `UseObservability()` | CtxEnricher + Metrics + Tracing + Logging 일괄 활성화 |
-| 2 | `UseValidation()` | FluentValidation 기반 요청 검증 |
-| 3 | `UseException()` | 예외 -> DomainError/AdapterError 변환 |
+| Order | Middleware | Role |
+|-------|-----------|------|
+| 1 | `UseObservability()` | Batch-enable CtxEnricher + Metrics + Tracing + Logging |
+| 2 | `UseValidation()` | FluentValidation-based request validation |
+| 3 | `UseException()` | Exception -> DomainError/AdapterError conversion |
 
 ```json
 {
@@ -221,27 +221,27 @@ services
 
 ---
 
-## 8. IO 고급 기능
+## 8. Advanced IO Features
 
-외부 서비스 통합에서 사용하는 4가지 LanguageExt IO 패턴입니다.
+Four LanguageExt IO patterns used in external service integration.
 
-| 패턴 | 구현 클래스 | 용도 | 핵심 메서드 |
-|------|------------|------|-----------|
-| **Timeout + Catch** | `ModelHealthCheckService` | 헬스 체크 타임아웃 처리 | `IO.Timeout(10s)` -> `.Catch(TimedOut, fallback)` -> `.Catch(Exceptional, error)` |
-| **Retry + Schedule** | `ModelMonitoringService` | 지수 백오프 재시도 | `IO.Retry(exponential(100ms) \| jitter(0.3) \| recurs(3) \| maxDelay(5s))` |
-| **Fork + awaitAll** | `ParallelComplianceCheckService` | 5개 기준 병렬 체크 | `forks.Map(io => io.Fork())` -> `awaitAll(forks)` |
-| **Bracket** | `ModelRegistryService` | 세션 리소스 수명 관리 | `acquire.Bracket(Use: ..., Fin: ...)` |
+| Pattern | Implementation Class | Purpose | Core Method |
+|---------|---------------------|---------|-------------|
+| **Timeout + Catch** | `ModelHealthCheckService` | Health check timeout handling | `IO.Timeout(10s)` -> `.Catch(TimedOut, fallback)` -> `.Catch(Exceptional, error)` |
+| **Retry + Schedule** | `ModelMonitoringService` | Exponential backoff retry | `IO.Retry(exponential(100ms) \| jitter(0.3) \| recurs(3) \| maxDelay(5s))` |
+| **Fork + awaitAll** | `ParallelComplianceCheckService` | Parallel compliance checks on 5 criteria | `forks.Map(io => io.Fork())` -> `awaitAll(forks)` |
+| **Bracket** | `ModelRegistryService` | Resource lifecycle management (session) | `acquire.Bracket(Use: ..., Fin: ...)` |
 
-모든 외부 서비스는 `[GenerateObservablePort]`로 관측성이 자동 추가되고, `IO<A>` -> `FinT<IO, A>` 변환으로 Application Layer의 FinT LINQ 체인에 합성됩니다.
+All external services have observability automatically added via `[GenerateObservablePort]`, and are composed into the Application Layer's FinT LINQ chain through `IO<A>` -> `FinT<IO, A>` conversion.
 
 ---
 
-## 9. 빌드/테스트 명령어
+## 9. Build/Test Commands
 
 ```bash
-# 빌드
+# Build
 dotnet build Docs.Site/src/content/docs/samples/ai-model-governance/AiModelGovernance.slnx
 
-# 테스트 (268개)
+# Test (268 tests)
 dotnet test --solution Docs.Site/src/content/docs/samples/ai-model-governance/AiModelGovernance.slnx
 ```

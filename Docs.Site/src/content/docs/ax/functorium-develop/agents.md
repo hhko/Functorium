@@ -1,6 +1,6 @@
 ---
-title: "전문 에이전트"
-description: "functorium-develop 플러그인의 6개 전문 에이전트"
+title: "Expert Agents"
+description: "6 expert agents of the functorium-develop plugin"
 ---
 
 ## 스킬 vs 에이전트
