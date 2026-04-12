@@ -2,15 +2,15 @@
 title: "Domain Events"
 ---
 
-이 문서는 Functorium 프레임워크에서 도메인 이벤트를 정의, 발행, 구독하는 방법을 설명합니다.
+This document explains how to define, publish, and subscribe to domain events in the Functorium framework.
 
 ## Introduction
 
-"주문이 생성된 후 재고 차감과 이메일 발송은 어디에서 처리하는가?"
-"Aggregate 간 결합 없이 부수 효과를 어떻게 연결하는가?"
-"이벤트 핸들러가 실패하면 이미 커밋된 트랜잭션은 어떻게 되는가?"
+"Where should inventory deduction and email sending be handled after an order is created?"
+"How do you connect side effects without coupling between Aggregates?"
+"What happens to an already committed transaction if an event handler fails?"
 
-도메인 이벤트는 Aggregate 내부의 상태 변경을 외부 관심사와 연결하는 핵심 메커니즘입니다. 이 문서는 이벤트의 정의, 발행, 핸들러 구현부터 트랜잭션 통합까지 전체 흐름을 다룹니다.
+Domain events are the core mechanism for connecting state changes within Aggregates to external concerns. This document covers the complete flow from event definition, publishing, and handler implementation to transaction integration.
 
 ### What You Will Learn
 

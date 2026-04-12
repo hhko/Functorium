@@ -447,7 +447,7 @@ This system implements the **Self-Validation** principle of Value Objects. All V
 
 ### Core Concepts of Validation
 
-Functorium 검증 시스템은 **Railway Oriented Programming** 패턴을 따릅니다. 검증은 두 트랙(성공/실패)을 따라 진행됩니다:
+The Functorium validation system follows the **Railway Oriented Programming** pattern. Validation proceeds along two tracks (success/failure):
 
 ```
 Input ──┬── [Validate 1] ──┬── [Validate 2] ──┬── [Validate 3] ──┬── Success (Valid Value)
@@ -787,21 +787,21 @@ public static Validation<Error, (DateTime Min, DateTime Max)> Validate(DateTime 
 
 Provides Apply overloads for `Validation<Error, T>` or `TypedValidation<TValueObject, T>` tuples. Can be used without `.As()`.
 
-> **Note**: Apply 확장 메서드는 루트 `Validations` 네임스페이스에 있으므로, Apply 패턴 사용 시 해당 네임스페이스를 추가해야 합니다.
+> **Note**: Apply extension methods are in the root `Validations` namespace, so you need to add that namespace when using the Apply pattern.
 
 ```csharp
 // Validation tuple - .As() not needed
 (ValidateAmount(amount), ValidateCurrency(currency))
-    .Apply((a, c) => new Money(a, c));  // Validation<Error, Money> 직접 반환
+    .Apply((a, c) => new Money(a, c));  // Directly returns Validation<Error, Money>
 
 // Tuple including TypedValidation - .As() not needed
 (ValidateCurrency(baseCurrency),
  ValidateCurrency(quoteCurrency),
  ValidationRules<ExchangeRate>.Positive(rate))  // TypedValidation
-    .Apply((b, q, r) => (b, q, r));  // Validation<Error, T> 직접 반환
+    .Apply((b, q, r) => (b, q, r));  // Directly returns Validation<Error, T>
 ```
 
-### Contextual 검증 (Named Context)
+### Contextual Validation (Named Context)
 
 **Location**: `Functorium.Domains.ValueObjects.Validations.Contextual`
 
@@ -845,7 +845,7 @@ Chaining methods for `ContextualValidation<T>` returned by `ValidationContext` m
 | Presence | `ThenNotNull()` |
 | Length | `ThenNotEmpty()`, `ThenMinLength()`, `ThenMaxLength()`, `ThenExactLength()`, `ThenNormalize()` |
 | Numeric | `ThenPositive()`, `ThenNonNegative()`, `ThenNotZero()`, `ThenBetween()`, `ThenAtMost()`, `ThenAtLeast()` |
-| Apply | `Apply()` - ContextualValidation 튜플에 대한 Apply 지원 |
+| Apply | `Apply()` - Apply support for ContextualValidation tuples |
 
 #### Usage Examples
 
@@ -866,7 +866,7 @@ public Validation<Error, decimal> ValidateAmount(decimal amount) =>
         .ThenAtMost(1_000_000m);
 ```
 
-#### IValidationContext를 이용한 검증 (Context Class)
+#### Validation Using IValidationContext (Context Class)
 
 **Location**: `Functorium.Domains.ValueObjects.Validations.IValidationContext`
 
@@ -894,7 +894,7 @@ public Validation<Error, decimal> ValidatePrice(decimal price) =>
 public Validation<Error, string> ValidateOrderId(string orderId) =>
     ValidationRules<OrderValidation>.NotEmpty(orderId)
         .ThenMinLength(10);
-// Error Code: DomainErrors.OrderValidation.Empty 또는 TooShort
+// Error Code: DomainErrors.OrderValidation.Empty or TooShort
 ```
 
 **Advantages:**
@@ -1301,7 +1301,7 @@ This separation allows **the Validate method to be reused elsewhere (such as Flu
 
 > **Note**: Entities follow the same Create/Validate separation pattern. For details, see the [Entity Implementation Guide - Creation Patterns](./06b-entity-aggregate-core#생성-패턴).
 
-### CreateFromValidated: ORM/Repository 복원용 팩토리
+### CreateFromValidated: Factory for ORM/Repository Restoration
 
 `Create` and `Validate` validate **external input** to create Value Objects. In contrast, `CreateFromValidated` directly receives **already validated and normalized data** to restore Value Objects. It performs neither validation nor normalization.
 
@@ -1311,7 +1311,7 @@ This separation allows **the Validate method to be reused elsewhere (such as Flu
 - **ORM/Repository restoration** -- Values read from the DB have already passed validation/normalization at save time, so they do not need to be validated again.
 - **Direct use in handlers after pipeline validation** -- After FluentValidation completes validation with `Validate()`, handlers create VOs with `CreateFromValidated(request.Name)`.
 
-**Create vs CreateFromValidated 비교:**
+**Create vs CreateFromValidated Comparison:**
 
 | Category | `Create(string? value)` | `CreateFromValidated(string value)` |
 |------|------------------------|-------------------------------------|
@@ -1381,7 +1381,7 @@ public static Validation<Error, (decimal Amount, string Currency)> Validate(deci
 ```
 
 > **Note**: When using the Apply pattern, the `Functorium.Domains.ValueObjects.Validations` namespace is required.
-> (`ValidationApplyExtensions`가 해당 네임스페이스에 위치)
+> (`ValidationApplyExtensions` is located in that namespace)
 
 ### Mixed Pattern (Apply + Bind)
 
@@ -1416,7 +1416,7 @@ public static Validation<Error, (string BaseCurrency, string QuoteCurrency, deci
 **Solution:**
 - Typed: `using Functorium.Domains.ValueObjects.Validations.Typed;`
 - Contextual: `using Functorium.Domains.ValueObjects.Validations.Contextual;`
-- Apply 확장: `using Functorium.Domains.ValueObjects.Validations;`
+- Apply extensions: `using Functorium.Domains.ValueObjects.Validations;`
 
 ---
 

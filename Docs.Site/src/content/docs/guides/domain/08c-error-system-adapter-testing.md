@@ -2,13 +2,13 @@
 title: "Error System — Adapter Errors and Testing"
 ---
 
-이 문서는 Adapter 에러, Custom 에러 정의, 테스트 모범 사례, 레이어별 체크리스트를 다룹니다. 에러 처리의 기본 원칙과 네이밍 규칙은 [08a-error-system.md](./08a-error-system)을 참고하세요. Domain/Application/Event 에러는 [08b-error-system-domain-app.md](./08b-error-system-domain-app)을 참고하세요.
+This document covers Adapter errors, custom error definitions, testing best practices, and layer-specific checklists. For basic error handling principles and naming conventions, see [08a-error-system.md](./08a-error-system). For Domain/Application/Event errors, see [08b-error-system-domain-app.md](./08b-error-system-domain-app).
 
 ## Introduction
 
-[08b-error-system-domain-app.md](./08b-error-system-domain-app)에서 Domain/Application 에러를 다뤘습니다. 이 문서에서는 Adapter 에러, Custom 에러 정의 패턴, 테스트 모범 사례, 레이어별 체크리스트를 다룹니다.
+Domain/Application errors were covered in [08b-error-system-domain-app.md](./08b-error-system-domain-app). This document covers Adapter errors, custom error definition patterns, testing best practices, and layer-specific checklists.
 
-> Adapter 에러는 파이프라인, 외부 서비스, 데이터 처리 과정의 실패를 표현합니다. 예외를 `AdapterError.FromException`으로 래핑하여 에러 추적성을 유지하고, `Functorium.Testing.Assertions.Errors`의 어설션으로 에러 타입과 코드를 정확히 검증합니다.
+> Adapter errors express failures in pipelines, external services, and data processing. Exceptions are wrapped with `AdapterError.FromException` to maintain error traceability, and assertions from `Functorium.Testing.Assertions.Errors` precisely verify error types and codes.
 
 ## Summary
 

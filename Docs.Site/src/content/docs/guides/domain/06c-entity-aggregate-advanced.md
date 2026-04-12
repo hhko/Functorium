@@ -2,28 +2,28 @@
 title: "Entity and Aggregate Implementation — Advanced Patterns"
 ---
 
-이 문서는 Entity/Aggregate의 고급 구현 패턴을 다룹니다. 핵심 패턴(클래스 계층, ID 시스템, 생성 패턴, 커맨드 메서드, 도메인 이벤트)은 [06b-entity-aggregate-core.md](./06b-entity-aggregate-core)를 참조하세요.
+This document covers advanced implementation patterns for Entity/Aggregate. For core patterns (class hierarchy, ID system, creation patterns, command methods, domain events), see [06b-entity-aggregate-core.md](./06b-entity-aggregate-core).
 
 ## Introduction
 
-Aggregate의 기본 구조를 잡았다면, 실무에서는 곧바로 다음과 같은 질문이 이어집니다:
+Once you have the basic Aggregate structure in place, the following questions immediately arise in practice:
 
-- 다른 Aggregate를 참조해야 할 때 객체를 직접 들고 있어도 되는가?
-- 생성/수정 시각이나 소프트 삭제 같은 공통 관심사는 어디에 구현하는가?
-- 동시에 같은 데이터를 수정하면 어떻게 보호하는가?
+- When referencing another Aggregate, is it okay to directly hold the object?
+- Where should common concerns like creation/modification timestamps and soft delete be implemented?
+- How do you protect against simultaneous modifications of the same data?
 
 ### What You Will Learn
 
-1. Cross-Aggregate 참조를 EntityId로 제한하고 도메인 이벤트로 통신하는 방법
-2. `IAuditable`, `ISoftDeletable`, `IConcurrencyAware` 부가 인터페이스의 구현 패턴
-3. 부가 인터페이스별 인프라(Mapper, EF Core, Repository) 연동 체크리스트
+1. How to restrict Cross-Aggregate references to EntityId and communicate via domain events
+2. Implementation patterns for `IAuditable`, `ISoftDeletable`, `IConcurrencyAware` supplementary interfaces
+3. Infrastructure (Mapper, EF Core, Repository) integration checklist for each supplementary interface
 
 ### Prerequisites
 
-- [Entity/Aggregate 핵심 패턴](./06b-entity-aggregate-core) — 클래스 계층, ID 시스템, 생성 패턴, 커맨드 메서드, 도메인 이벤트
-- [Aggregate 설계 원칙](./06a-aggregate-design) — 불변식과 경계 설정 개념
+- [Entity/Aggregate Core Patterns](./06b-entity-aggregate-core) — Class hierarchy, ID system, creation patterns, command methods, domain events
+- [Aggregate Design Principles](./06a-aggregate-design) — Invariant and boundary setting concepts
 
-> Aggregate 간 참조는 항상 EntityId만 사용하고, 감사(Audit), 소프트 삭제, 동시성 제어 같은 공통 관심사는 부가 인터페이스로 선언하여 도메인이 명시적으로 필요성을 표현합니다. 인프라 구현은 각 인터페이스의 체크리스트를 따릅니다.
+> Cross-Aggregate references always use EntityId only, and common concerns like audit, soft delete, and concurrency control are declared as supplementary interfaces so the domain explicitly expresses the need. Infrastructure implementation follows the checklist for each interface.
 
 ## Summary
 
@@ -44,11 +44,11 @@ Aggregate의 기본 구조를 잡았다면, 실무에서는 곧바로 다음과 
 
 ---
 
-## Cross-Aggregate 관계
+## Cross-Aggregate Relationships
 
-### ID 참조 패턴
+### ID Reference Pattern
 
-다른 Aggregate를 참조할 때는 **EntityId만 저장합니다.**
+When referencing another Aggregate, **only EntityId is stored.**
 
 In the code below, `ProductId`는 Product Aggregate 자체가 아닌 ID 값만 보유한다는 점.
 
@@ -66,7 +66,7 @@ public sealed class Order : AggregateRoot<OrderId>
 }
 ```
 
-### Domain Port를 통한 외부 Aggregate 조회
+### Querying External Aggregates via Domain Port
 
 다른 Aggregate의 정보가 필요할 때는 **Domain Port(인터페이스)를** 정의하고, Application Layer에서 구현합니다.
 
@@ -86,9 +86,9 @@ Port는 **도메인이 필요한 것을** 표현합니다:
 - 배치 API로 필요한 정보(가격)를 효율적으로 제공 (N+1 문제 방지)
 - 구현은 Application/Adapter Layer에서 담당
 
-### 도메인 이벤트를 통한 Aggregate 간 통신
+### Inter-Aggregate Communication via Domain Events
 
-Aggregate 간 상태 동기화는 도메인 이벤트를 통해 처리합니다.
+State synchronization between Aggregates is handled through domain events.
 
 ```
 Order Aggregate                     Inventory Aggregate
@@ -100,7 +100,7 @@ Order Aggregate                     Inventory Aggregate
       Transaction 1                         Transaction 2
 ```
 
-### 다른 Entity를 참조하는 Entity
+### Entities Referencing Other Entities
 
 Entity가 다른 Entity를 참조할 때는 **EntityId만 참조합니다** (외래 키 패턴).
 
@@ -158,9 +158,9 @@ Now that we understand Cross-Aggregate reference rules, let us look at how to ap
 
 ---
 
-## 부가 인터페이스
+## Supplementary Interfaces
 
-Entity에 추가 기능을 부여하는 인터페이스들입니다.
+These are interfaces that provide additional capabilities to Entities.
 
 ### IAuditable
 
@@ -168,7 +168,7 @@ Entity에 추가 기능을 부여하는 인터페이스들입니다.
 
 **Location**: `Functorium.Domains.Entities.IAuditable`
 
-#### 인터페이스 정의
+#### Interface Definition
 
 ```csharp
 // Tracks time only
@@ -238,7 +238,7 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable, ISoftDeletab
 }
 ```
 
-#### 인프라 전략 — Mapper 변환
+#### Infrastructure Strategy -- Mapper Conversion
 
 | 관점 | 현재 구현 | 대안 (미사용) |
 |------|----------|-------------|
@@ -259,7 +259,7 @@ Product.CreateFromValidated(
     ...);
 ```
 
-#### IAuditableWithUser 참고
+#### IAuditableWithUser Reference
 
 `IAuditableWithUser`는 사용자 추적이 필요한 경우를 위해 제공됩니다. SingleHost에서는 아직 사용되지 않으며, 멀티테넌트 등 사용자 식별이 필요한 시나리오에서 적용합니다.
 
@@ -288,7 +288,7 @@ Product.CreateFromValidated(
 | 4 | **감사 추적** | `ISoftDeletableWithUser`의 `DeletedBy`로 삭제자 추적 |
 | 5 | **인프라 관심사 분리** | EF Core Global Query Filter + Dapper `WHERE DeletedAt IS NULL` 자동 필터링 |
 
-#### 인터페이스 정의
+#### Interface Definition
 
 ```csharp
 // Tracks deletion status — Option<DateTime> is the single source of truth
@@ -307,7 +307,7 @@ public interface ISoftDeletableWithUser : ISoftDeletable
 
 **Design Point:** `bool IsDeleted`는 `DeletedAt`에서 파생되는 default interface member입니다. `Option<DateTime>`이 단일 진실 원천(Single Source of Truth)이므로 상태 불일치가 불가능합니다.
 
-#### 도메인 모델 구현 패턴
+#### Domain Model Implementation Pattern
 
 **Reference**: `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Products/Product.cs`
 
@@ -384,7 +384,7 @@ public sealed class Product : AggregateRoot<ProductId>, ISoftDeletableWithUser
 | 도메인 이벤트 | 상태 변경 시 `DeletedEvent`/`RestoredEvent` 발행 |
 | 초기화 | `Option<T>.None`으로 복원 (null이 아님) |
 
-#### Repository Port 패턴
+#### Repository Port Pattern
 
 **Reference**: `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Products/IProductRepository.cs`
 
@@ -397,15 +397,15 @@ public interface IProductRepository : IRepository<Product, ProductId>
 
 `GetByIdIncludingDeleted()`가 필요한 이유: Delete/Restore 커맨드가 삭제된 엔티티에 접근해야 하므로 Global Query Filter를 우회하는 별도 메서드가 필요합니다.
 
-#### 인프라 필터링 전략
+#### Infrastructure Filtering Strategy
 
-| Adapter | 필터 전략 | 우회 방법 |
+| Adapter | Filter Strategy | Bypass Method |
 |---------|-----------|-----------|
 | EF Core | `HasQueryFilter(p => p.DeletedAt == null)` | `IgnoreQueryFilters()` |
 | Dapper | `WHERE DeletedAt IS NULL` (BuildWhereClause) | 별도 쿼리 작성 |
 | InMemory | `p.DeletedAt.IsNone` 조건 | 조건 제거 |
 
-**Mapper 변환:**
+**Mapper Conversion:**
 - Domain → Model: `Option<DateTime>.ToNullable()` (DB에 `NULL`로 저장)
 - Model → Domain: `Optional(model.DeletedAt)` (`NULL` → `Option.None`)
 
@@ -431,7 +431,7 @@ Soft Delete를 새 Aggregate에 적용할 때 확인할 항목:
 
 **Location**: `Functorium.Domains.Entities.IConcurrencyAware`
 
-#### 인터페이스 정의
+#### Interface Definition
 
 ```csharp
 public interface IConcurrencyAware
@@ -440,27 +440,27 @@ public interface IConcurrencyAware
 }
 ```
 
-#### 왜 필요한가 — Lost Update 시나리오
+#### Why It Is Needed -- Lost Update Scenario
 
 다음 시나리오는 RowVersion 없이 두 트랜잭션이 동시에 재고를 차감할 때 발생하는 Lost Update 문제를 보여줍니다.
 
 Inventory의 `DeductStock` 예시로 동시성 문제를 설명합니다:
 
 ```
-초기 상태: 재고 = 10개
+Initial state: stock = 10 items
 
 1. [트랜잭션 A] 재고를 읽음 → 10개
 2. [트랜잭션 B] 재고를 읽음 → 10개  (A가 아직 저장 전이므로 같은 값)
 3. [트랜잭션 A] DeductStock(7): 7 ≤ 10 ✓ → 재고 = 3 → DB 저장
 4. [트랜잭션 B] DeductStock(7): 7 ≤ 10 ✓ → 재고 = 3 → DB 저장 (A의 결과를 덮어씀!)
 
-최종 결과: 재고 = 3개
+Final result: stock = 3 items
 기대 결과: B는 거부되어야 함 (A 반영 후 실제 재고 = 3, 7개 차감 불가)
 ```
 
 핵심: `DeductStock()`의 `if (quantity > StockQuantity)` 가드는 **읽은 시점의 값으로만** 판단합니다. 트랜잭션 B는 A가 저장하기 전의 값(10)을 읽었기 때문에 검증을 통과하지만, 실제로는 재고가 이미 3개로 줄어든 상태입니다. 이것이 **Lost Update** 문제이며, 도메인 로직만으로는 방지할 수 없습니다.
 
-#### 왜 도메인 레이어에 두는가
+#### Why Place It in the Domain Layer
 
 | Aspect | Description |
 |------|------|
@@ -468,7 +468,7 @@ Inventory의 `DeductStock` 예시로 동시성 문제를 설명합니다:
 | 명시적 선언 | 인프라가 추측하는 것이 아니라, 도메인이 선언 |
 | 인프라 분리 | 인터페이스는 도메인, `IsRowVersion()` 매핑은 인프라. 도메인은 DB를 모름 |
 
-#### 도메인 모델 구현 패턴
+#### Domain Model Implementation Pattern
 
 **Reference**: `Tests.Hosts/01-SingleHost/Src/LayeredArch.Domain/AggregateRoots/Inventories/Inventory.cs`
 

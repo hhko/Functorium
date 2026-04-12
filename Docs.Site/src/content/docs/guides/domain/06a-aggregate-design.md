@@ -2,96 +2,96 @@
 title: "Aggregate Design (WHY + WHAT)"
 ---
 
-이 문서는 일관성 경계를 올바르게 설정하여 동시성 충돌과 데이터 무결성 문제를 방지하는 Aggregate 설계 원칙을 다룹니다. Entity/Aggregate 구현 방법은 [06b-entity-aggregate-core.md](./06b-entity-aggregate-core)를 참조하세요.
+This document covers Aggregate design principles for correctly setting consistency boundaries to prevent concurrency conflicts and data integrity issues. For Entity/Aggregate implementation, see [06b-entity-aggregate-core.md](./06b-entity-aggregate-core).
 
 ## Introduction
 
-"주문 처리마다 `DbUpdateConcurrencyException`이 발생한다."
-"하나의 Entity에 모든 관련 데이터를 넣었더니 트랜잭션이 느려졌다."
-"여러 Aggregate를 한 트랜잭션에서 변경하면 안 되는 건 알겠는데, 그러면 데이터 일관성은 어떻게 보장하나?"
+"A `DbUpdateConcurrencyException` occurs with every order processing."
+"Putting all related data in a single Entity has made transactions slow."
+"I understand that multiple Aggregates should not be changed in a single transaction, but how do we ensure data consistency?"
 
-이러한 문제들은 Aggregate 경계를 잘못 설정했을 때 나타나는 전형적인 증상입니다. Aggregate는 DDD에서 가장 중요한 설계 결정이며, 이 경계가 시스템의 동시성, 성능, 유지보수성을 좌우합니다.
+These problems are typical symptoms that appear when Aggregate boundaries are set incorrectly. Aggregate is the most important design decision in DDD, and this boundary determines the system's concurrency, performance, and maintainability.
 
 ### What You Will Learn
 
 This document covers the following topics:
 
-1. **Aggregate가 일관성 경계인 이유** - invariant protection와 트랜잭션 원칙
-2. **Aggregate 설계 4가지 핵심 규칙** - invariant protection, 작은 Aggregate, ID 참조, 최종 일관성
-3. **Value Object/Entity/Aggregate Root 구분 기준** - 의사결정 흐름도와 판단 기준
-4. **분할/병합 의사결정** - 운영 중 경계 재설정이 필요한 신호와 판단 기준
-5. **안티패턴 식별과 회피** - God Aggregate, 직접 참조, 외부 불변식 검증 등
+1. **Why Aggregates are consistency boundaries** - Invariant protection and transaction principles
+2. **Four core rules of Aggregate design** - Invariant protection, small Aggregates, ID references, eventual consistency
+3. **Criteria for distinguishing Value Object/Entity/Aggregate Root** - Decision flowchart and judgment criteria
+4. **Split/merge decisions** - Signals and criteria for boundary readjustment during operation
+5. **Anti-pattern identification and avoidance** - God Aggregate, direct references, external invariant validation, etc.
 
 ### Prerequisites
 
 A basic understanding of the following concepts is needed to understand this document:
 
-- [DDD 전술적 설계 개요](./04-ddd-tactical-overview)의 빌딩블록 전체 맵
-- [값 객체(Value Object)](./05a-value-objects) 개념과 불변성 원칙
-- 트랜잭션과 동시성 제어의 기본 개념
+- The complete building block map from the [DDD Tactical Design Overview](./04-ddd-tactical-overview)
+- [Value Object](./05a-value-objects) concepts and immutability principles
+- Basic concepts of transactions and concurrency control
 
-> Aggregate 경계 하나의 결정이 시스템의 동시성, 성능, 유지보수성을 좌우합니다. 경계를 작게 유지하고, Aggregate 간에는 ID로만 참조하며, 경계 밖의 변경은 도메인 이벤트로 처리하는 것이 핵심 원칙입니다.
+> A single Aggregate boundary decision determines the system's concurrency, performance, and maintainability. The core principles are: keep boundaries small, reference between Aggregates only by ID, and handle changes outside the boundary through domain events.
 
 ## Summary
 
 ### Key Commands
 
 ```csharp
-// Aggregate Root 정의
+// Aggregate Root definition
 [GenerateEntityId]
 public class Order : AggregateRoot<OrderId> { }
 
-// Invariant protection (Aggregate 내부)
+// Invariant protection (inside Aggregate)
 public Fin<Unit> DeductStock(Quantity quantity) { ... }
 
-// Domain event 발행
+// Domain event publishing
 AddDomainEvent(new CreatedEvent(Id, productId, quantity, totalAmount));
 
-// Cross-Aggregate 참조 (ID만)
+// Cross-Aggregate reference (ID only)
 public ProductId ProductId { get; private set; }
 ```
 
 ### Key Procedures
 
-**1. Aggregate 설계:**
-1. 도메인 개념의 불변식 식별
-2. 불변식을 보호하는 최소 객체 그룹으로 경계 설정
-3. Aggregate Root 지정 (외부 접근의 유일한 진입점)
-4. 다른 Aggregate는 ID로만 참조
+**1. Aggregate Design:**
+1. Identify invariants of domain concepts
+2. Set boundaries as the minimum object group that protects invariants
+3. Designate the Aggregate Root (single entry point for external access)
+4. Reference other Aggregates only by ID
 
-**2. Aggregate 분할/병합 판단:**
-1. 동시성 충돌, 변경 빈도 불균형, 불변식 독립성 → 분할 검토
-2. 항상 함께 변경, 상호 불변식 의존, 결과적 일관성 불가 → 병합 검토
+**2. Aggregate Split/Merge Decisions:**
+1. Concurrency conflicts, change frequency imbalance, invariant independence -> consider splitting
+2. Always changed together, mutual invariant dependency, eventual consistency not possible -> consider merging
 
 ### Key Concepts
 
 | Concept | Description |
 |------|------|
-| 일관성 경계 | Aggregate 내부의 불변식을 단일 트랜잭션으로 보호 |
-| 트랜잭션 원칙 | 하나의 트랜잭션 = 하나의 Aggregate 변경 |
-| ID 참조 | Aggregate 간 객체 직접 참조 금지, EntityId만 저장 |
-| 최종 일관성 | Cross-Aggregate 변경은 도메인 이벤트로 비동기 처리 |
-| 작은 Aggregate | invariant protection에 필요한 최소 데이터만 포함 |
+| Consistency boundary | Protects invariants within the Aggregate in a single transaction |
+| Transaction principle | One transaction = one Aggregate change |
+| ID reference | No direct object references between Aggregates, store only EntityId |
+| Eventual consistency | Cross-Aggregate changes are handled asynchronously via domain events |
+| Small Aggregates | Include only the minimum data needed for invariant protection |
 
 ---
 
-## 왜 Aggregate인가
+## Why Aggregates
 
-### 이 가이드의 목적
+### Purpose of This Guide
 
-DDD 전술적 설계에서 가장 중요한 결정은 **Aggregate 경계를 어디에 둘 것인가입니다.** 이 결정이 잘못되면:
+The most important decision in DDD tactical design is **where to place the Aggregate boundary.** If this decision is wrong:
 
-- 거대한 Aggregate로 인한 동시성 충돌
-- 트랜잭션 범위가 너무 넓어 성능 저하
-- Aggregate 간 강한 결합으로 변경이 어려움
+- Concurrency conflicts due to large Aggregates
+- Performance degradation from overly broad transaction scope
+- Difficulty making changes due to tight coupling between Aggregates
 
-이 가이드는 DDD 설계 원칙을 Functorium 프레임워크 구현에 매핑하여, **설계 결정의 근거를** 제공합니다.
+This guide maps DDD design principles to Functorium framework implementation, providing **the rationale for design decisions.**
 
-예를 들어, 상품 카탈로그와 재고를 하나의 Aggregate에 넣으면 관리자의 상품명 수정과 고객의 주문 처리가 동시에 발생할 때마다 동시성 충돌이 일어납니다. 이를 별도 Aggregate로 분리하면 각각 독립적으로 변경할 수 있어 충돌이 사라집니다. 이처럼 Aggregate 경계 하나의 결정이 운영 환경의 안정성을 좌우합니다.
+For example, if the product catalog and inventory are placed in a single Aggregate, concurrency conflicts occur whenever an admin's product name edit and a customer's order processing happen simultaneously. Separating them into separate Aggregates allows each to be changed independently, eliminating conflicts. This illustrates how a single Aggregate boundary decision determines the stability of the production environment.
 
-### 일관성 경계 (Consistency Boundary)
+### Consistency Boundary
 
-Aggregate는 **하나의 단위로 일관성을 보장하는 객체 그룹입니다.** Aggregate 내부의 모든 불변식(invariant)은 단일 트랜잭션 내에서 보호됩니다.
+An Aggregate is **a group of objects that guarantees consistency as a single unit.** All invariants within the Aggregate are protected within a single transaction.
 
 ```
 ┌─────────────────────────────────┐
@@ -110,14 +110,14 @@ Aggregate는 **하나의 단위로 일관성을 보장하는 객체 그룹입니
 └─────────────────────────────────┘
 ```
 
-### 불변식 (Invariant) 보호
+### Invariant Protection
 
-불변식이란 **항상 참이어야 하는 비즈니스 규칙입니다.** Aggregate는 이 불변식을 외부에 노출하지 않고 내부에서 보호합니다.
+Invariants are **business rules that must always hold true.** Aggregates protect these invariants internally without exposing them externally.
 
-The key point to note in the following code is `DeductStock()` 메서드가 재고 부족 시 예외를 던지지 않고 `Fin<Unit>`으로 실패를 반환한다는 것입니다.
+The key point to note in the following code is that the `DeductStock()` method returns failure as `Fin<Unit>` instead of throwing an exception when stock is insufficient.
 
 ```csharp
-// Inventory Aggregate의 불변식: 재고는 음수가 될 수 없다
+// Inventory Aggregate invariant: stock cannot be negative
 // Error type definition: public sealed record InsufficientStock : DomainErrorType.Custom;
 public Fin<Unit> DeductStock(Quantity quantity)
 {
@@ -134,78 +134,78 @@ public Fin<Unit> DeductStock(Quantity quantity)
 }
 ```
 
-### transaction boundary로서의 Aggregate
+### Aggregate as a Transaction Boundary
 
-**하나의 트랜잭션 = 하나의 Aggregate 변경이** 원칙입니다.
+**One transaction = one Aggregate change** is the principle.
 
 ```
-✅ Transaction 1개에 Aggregate 1개 변경
+One Transaction changes one Aggregate
 ┌─────────────────────────┐
 │ Transaction             │
 │  Inventory.DeductStock  │
 │  Repository.Save        │
 └─────────────────────────┘
 
-❌ Transaction 1개에 Aggregate 여러 개 변경
+One Transaction changes multiple Aggregates
 ┌──────────────────────────────────┐
 │ Transaction                      │
 │  Inventory.DeductStock           │
-│  Order.Create                    │  ← 동시성 충돌 위험
+│  Order.Create                    │  <- concurrency conflict risk
 │  Customer.UpdateCreditLimit      │
 └──────────────────────────────────┘
 ```
 
-### Aggregate의 구성 요소
+### Components of an Aggregate
 
-| 구성 요소 | 역할 | Functorium 매핑 |
+| Component | Role | Functorium Mapping |
 |----------|------|----------------|
-| **Aggregate Root** | 외부 접근의 유일한 진입점 | `AggregateRoot<TId>` |
-| **자식 Entity** | Root가 관리하는 내부 Entity | `Entity<TId>` |
-| **Value Object** | 불변 값 | `SimpleValueObject<T>`, `ValueObject` |
+| **Aggregate Root** | Single entry point for external access | `AggregateRoot<TId>` |
+| **Child Entity** | Internal Entity managed by Root | `Entity<TId>` |
+| **Value Object** | Immutable value | `SimpleValueObject<T>`, `ValueObject` |
 
 ### Entity vs Value Object
 
-| 관점 | Entity | Value Object |
+| Aspect | Entity | Value Object |
 |------|--------|--------------|
-| **식별자** | ID 기반 동등성 | 값 기반 동등성 |
-| **가변성** | 가변 (상태 변경 가능) | 불변 |
-| **생명주기** | 장기 (Repository 추적) | 단기 (일회성) |
-| **도메인 이벤트** | 발행 가능 (AggregateRoot) | 발행 없음 |
-| **예시** | Order, User, Product | Money, Email, Address |
+| **Identifier** | ID-based equality | Value-based equality |
+| **Mutability** | Mutable (state can change) | Immutable |
+| **Lifecycle** | Long-lived (Repository tracked) | Short-lived (ephemeral) |
+| **Domain events** | Can publish (AggregateRoot) | Cannot publish |
+| **Examples** | Order, User, Product | Money, Email, Address |
 
-### 기반 클래스 선택
+### Base Class Selection
 
-| 사용 시나리오 | 기반 클래스 | 특징 |
+| Usage Scenario | Base Class | Characteristics |
 |--------------|------------|------|
-| 일반 Entity | `Entity<TId>` | ID 기반 동등성 |
-| Aggregate Root | `AggregateRoot<TId>` | 도메인 이벤트 관리 |
+| General Entity | `Entity<TId>` | ID-based equality |
+| Aggregate Root | `AggregateRoot<TId>` | Domain event management |
 
-### 왜 Entity를 사용하나요?
+### Why Use Entities?
 
-Entity가 없으면 다음과 같은 문제가 발생합니다:
+Without Entities, the following problems occur:
 
 ```csharp
-// Problem 1: 식별자가 명확하지 않음
+// Problem 1: Identifier is unclear
 public class Order
 {
     public Guid Id { get; set; }  // Guid? int? string?
     public decimal Amount { get; set; }
 }
 
-// Problem 2: 다른 타입의 ID와 혼동 가능
+// Problem 2: Can be confused with IDs of other types
 void ProcessOrder(Guid orderId, Guid customerId);
-ProcessOrder(customerId, orderId);  // 순서 착각 - 컴파일 오류 없음!
+ProcessOrder(customerId, orderId);  // Order mistake - no compile error!
 
-// Problem 3: 동등성 비교가 명확하지 않음
+// Problem 3: Equality comparison is unclear
 var order1 = GetOrder(id);
 var order2 = GetOrder(id);
-order1 == order2;  // false? (참조 비교)
+order1 == order2;  // false? (reference comparison)
 ```
 
-Entity는 이 문제들을 해결합니다:
+Entities solve these problems:
 
 ```csharp
-// Solution: 타입 안전한 ID와 ID 기반 동등성
+// Solution: Type-safe ID and ID-based equality
 [GenerateEntityId]
 public class Order : Entity<OrderId>
 {
@@ -217,22 +217,22 @@ public class Order : Entity<OrderId>
     }
 }
 
-// 컴파일 오류로 실수 방지
+// Prevent mistakes with compile errors
 void ProcessOrder(OrderId orderId, CustomerId customerId);
-ProcessOrder(customerId, orderId);  // 컴파일 오류!
+ProcessOrder(customerId, orderId);  // Compile error!
 
-// ID 기반 동등성
+// ID-based equality
 var order1 = GetOrder(id);
 var order2 = GetOrder(id);
-order1 == order2;  // true (같은 ID)
+order1 == order2;  // true (same ID)
 ```
 
-### 핵심 패턴
+### Core Pattern
 
 ```csharp
 using Functorium.Domains.Entities;
 
-[GenerateEntityId]  // OrderId 자동 생성
+[GenerateEntityId]  // Auto-generates OrderId
 public class Order : AggregateRoot<OrderId>
 {
     public Money Amount { get; private set; }
@@ -258,8 +258,8 @@ public class Order : AggregateRoot<OrderId>
     }
 
     // CreateFromValidated: Direct pass-through of already validated/normalized data
-    // DB에서 읽어온 데이터로 Aggregate를 복원합니다.
-    // 저장 시점에 이미 검증을 통과한 데이터이므로 검증/정규화를 생략합니다.
+    // Restores the Aggregate from data read from the DB.
+    // Validation/normalization is skipped since the data already passed validation at save time.
     public static Order CreateFromValidated(OrderId id, Money amount, CustomerId customerId)
         => new(id, amount, customerId);
 
@@ -273,18 +273,18 @@ public class Order : AggregateRoot<OrderId>
 }
 ```
 
-We have examined the Aggregate concept and its components. In the next section, we will 이 개념을 코드로 구현할 때 따라야 할 4가지 핵심 규칙을 알아봅니다.
+We have examined the Aggregate concept and its components. In the next section, we will learn the four core rules to follow when implementing these concepts in code.
 
 ---
 
-## Aggregate 설계 규칙
+## Aggregate Design Rules
 
-### 규칙 1: Aggregate 경계 안에서 invariant protection
+### Rule 1: Protect Invariants Within Aggregate Boundaries
 
-Aggregate 내부의 모든 불변식은 Aggregate Root를 통해 보호합니다. 외부에서 자식 Entity를 직접 수정할 수 없습니다.
+All invariants within an Aggregate are protected through the Aggregate Root. Child Entities cannot be directly modified from outside.
 
 ```csharp
-// ✅ Aggregate Root(Product)를 통해 Tag를 관리
+// ✅ Manage Tags through Aggregate Root (Product)
 public sealed class Product : AggregateRoot<ProductId>
 {
     private readonly List<Tag> _tags = [];
@@ -292,7 +292,7 @@ public sealed class Product : AggregateRoot<ProductId>
 
     public Product AddTag(Tag tag)
     {
-        // Invariant: 중복 Tag 방지
+        // Invariant: prevent duplicate Tags
         if (_tags.Any(t => t.Id == tag.Id))
             return this;
 
@@ -315,16 +315,16 @@ public sealed class Product : AggregateRoot<ProductId>
 ```
 
 ```csharp
-// ❌ 외부에서 자식 Entity를 직접 수정
-product.Tags.Add(newTag);  // IReadOnlyList이므로 컴파일 오류
+// ❌ Directly modifying child Entity from outside
+product.Tags.Add(newTag);  // Compile error because IReadOnlyList
 ```
 
-### 규칙 2: 작은 Aggregate를 설계하라
+### Rule 2: Design Small Aggregates
 
-Aggregate는 **invariant protection에 필요한 최소한의 데이터만** 포함해야 합니다.
+Aggregates should include **only the minimum data needed for invariant protection.**
 
 ```csharp
-// ✅ 작은 Aggregate: 필요한 것만 포함
+// ✅ Small Aggregate: includes only what is needed
 public sealed class Customer : AggregateRoot<CustomerId>
 {
     public CustomerName Name { get; private set; }
@@ -334,35 +334,35 @@ public sealed class Customer : AggregateRoot<CustomerId>
 ```
 
 ```csharp
-// ❌ 거대한 Aggregate: 관련된 모든 것을 포함
+// ❌ Large Aggregate: includes everything related
 public class Customer : AggregateRoot<CustomerId>
 {
     public CustomerName Name { get; private set; }
     public Email Email { get; private set; }
-    public List<Order> Orders { get; }         // Customer가 보호할 불변식이 없음
-    public List<Address> Addresses { get; }    // 별도 Aggregate로 분리 가능
-    public List<PaymentMethod> Payments { get; } // 별도 Aggregate로 분리 가능
+    public List<Order> Orders { get; }         // No invariant for Customer to protect
+    public List<Address> Addresses { get; }    // Can be separated into its own Aggregate
+    public List<PaymentMethod> Payments { get; } // Can be separated into its own Aggregate
 }
 ```
 
 **Why should it be small?**
 
-| 문제 | 큰 Aggregate | 작은 Aggregate |
+| Problem | Large Aggregate | Small Aggregate |
 |------|-------------|---------------|
-| 동시성 | 충돌 빈번 | 충돌 최소화 |
-| 성능 | 전체 로드 필요 | 필요한 것만 로드 |
-| 메모리 | 사용량 높음 | 사용량 낮음 |
-| 트랜잭션 | 범위 넓음 | 범위 좁음 |
+| Concurrency | Frequent conflicts | Minimal conflicts |
+| Performance | Full load required | Load only what is needed |
+| Memory | High usage | Low usage |
+| Transaction | Wide scope | Narrow scope |
 
-### 규칙 3: 다른 Aggregate는 ID로만 참조하라
+### Rule 3: Reference Other Aggregates Only by ID
 
-Aggregate 간에는 **EntityId만 저장합니다.** 객체 참조를 직접 사용하지 않습니다.
+Between Aggregates, **only EntityId is stored.** Direct object references are not used.
 
 ```csharp
-// ✅ ID로만 참조 (Order → Product)
+// ✅ Reference by ID only (Order → Product)
 public sealed class Order : AggregateRoot<OrderId>
 {
-    // Cross-Aggregate reference (Product의 ID를 값으로 참조)
+    // Cross-Aggregate reference (references Product by ID value)
     public ProductId ProductId { get; private set; }
     public Quantity Quantity { get; private set; }
     public Money UnitPrice { get; private set; }
@@ -371,28 +371,28 @@ public sealed class Order : AggregateRoot<OrderId>
 ```
 
 ```csharp
-// ❌ 객체 직접 참조
+// ❌ Direct object reference
 public class Order : AggregateRoot<OrderId>
 {
-    public Product Product { get; private set; }  // 강한 결합!
+    public Product Product { get; private set; }  // Tight coupling!
 }
 ```
 
 **Why reference only by ID?**
 
-1. **Aggregate 독립성**: 각 Aggregate는 독립적으로 로드/저장됩니다
-2. **느슨한 결합**: Entity 간 직접 참조를 피합니다
-3. **성능**: 필요할 때만 관련 Aggregate를 로드합니다
+1. **Aggregate independence**: Each Aggregate is loaded/saved independently
+2. **Loose coupling**: Avoids direct references between Entities
+3. **Performance**: Loads related Aggregates only when needed
 
-### 규칙 4: 경계 밖에서는 최종 일관성을 사용하라
+### Rule 4: Use Eventual Consistency Outside Boundaries
 
-여러 Aggregate에 걸친 비즈니스 규칙은 **도메인 이벤트를** 통해 최종 일관성(Eventual Consistency)으로 처리합니다.
+Business rules that span multiple Aggregates are handled through **domain events** via eventual consistency.
 
 ```csharp
-// Create order 시 재고 차감은 별도 Aggregate(Product) 변경
-// → 도메인 이벤트로 비동기 처리
+// Stock deduction on order creation requires changing a separate Aggregate (Product)
+// → Handled asynchronously via domain events
 
-// Order Aggregate에서 event publishing
+// Event publishing from Order Aggregate
 public static Order Create(
     ProductId productId,
     Quantity quantity,
@@ -405,81 +405,81 @@ public static Order Create(
     return order;
 }
 
-// Event Handler에서 Inventory Aggregate 업데이트 (별도 트랜잭션)
+// Updating Inventory Aggregate in Event Handler (separate transaction)
 // public class OnOrderCreated : IDomainEventHandler<Order.CreatedEvent>
 // {
 //     public async ValueTask Handle(Order.CreatedEvent @event, CancellationToken ct)
 //     {
-//         // Inventory.DeductStock 호출
+//         // Call Inventory.DeductStock
 //     }
 // }
 ```
 
-> **Note**: 하나의 트랜잭션에서 여러 Aggregate를 동시에 변경할 수 없으므로, Cross-Aggregate 부수 효과는 이벤트 핸들러(최종 일관성)로 처리합니다. 같은 Bounded Context 내에서 관련 Aggregate를 동시에 **생성하는** 경우 등 실용적 예외는 [§4 transaction boundary 실전 가이드라인](#트랜잭션-경계-실전-가이드라인)을 참조하세요.
+> **Note**: Since multiple Aggregates cannot be changed simultaneously in a single transaction, Cross-Aggregate side effects are handled via event handlers (eventual consistency). 같은 Bounded Context 내에서 관련 Aggregate를 동시에 **생성하는** 경우 등 실용적 예외는 [§4 transaction boundary 실전 가이드라인](#트랜잭션-경계-실전-가이드라인)을 참조하세요.
 
 Now that we understand the design rules, let us learn the criteria for classifying domain concepts as Value Object, Entity, or Aggregate Root.
 
 ---
 
-## Aggregate vs Entity vs Value Object 구분
+## Distinguishing Aggregate vs Entity vs Value Object
 
-### 의사결정 흐름도
+### Decision Flowchart
 
 ```
-이 도메인 개념에 고유 식별자가 필요한가?
+Does this domain concept need a unique identifier?
 │
-├── 아니오 → Value Object
+├── No → Value Object
 │            (Money, Email, Address, Quantity...)
 │
-└── 예 → Entity
+└── Yes → Entity
          │
-         이 Entity가 독립적으로 저장/조회되는가?
+         Is this Entity independently stored/queried?
          │
-         ├── 예 → Aggregate Root
+         ├── Yes → Aggregate Root
          │        (Customer, Product, Order...)
          │
-         └── 아니오 → 자식 Entity (Aggregate 내부)
+         └── No → Child Entity (inside Aggregate)
                       (Tag, OrderItem...)
 ```
 
-### 판단 기준 테이블
+### Judgment Criteria Table
 
-다음 표는 세 가지 빌딩블록을 7개 기준으로 비교합니다. 핵심 차이는 고유 식별자의 유무와 독립적 조회 가능 여부입니다.
+The following table compares the three building blocks across seven criteria. The key differences are the presence of a unique identifier and the ability to be independently queried.
 
-| 기준 | Value Object | Entity (자식) | Aggregate Root |
+| Criterion | Value Object | Entity (Child) | Aggregate Root |
 |------|-------------|--------------|---------------|
-| 고유 식별자 | 없음 | 있음 | 있음 |
-| 동등성 | 값 기반 | ID 기반 | ID 기반 |
-| 가변성 | 불변 | 가변 | 가변 |
-| 독립적 조회 | 불가 | 불가 (Root 통해) | 가능 |
-| Repository | 없음 | 없음 | 있음 |
-| 도메인 이벤트 | 발행 불가 | 발행 불가 | 발행 가능 |
-| 생명주기 | 소유 Entity에 종속 | Root에 종속 | 독립적 |
+| Unique identifier | None | Present | Present |
+| Equality | Value-based | ID-based | ID-based |
+| Mutability | Immutable | Mutable | Mutable |
+| Independent query | Not possible | Not possible (via Root) | Possible |
+| Repository | None | None | Present |
+| Domain events | Cannot publish | Cannot publish | Can publish |
+| Lifecycle | Depends on owning Entity | Depends on Root | Independent |
 | Functorium | `SimpleValueObject<T>` | `Entity<TId>` | `AggregateRoot<TId>` |
 
-### 실제 예제 분류
+### Practical Example Classification
 
-| 도메인 개념 | 분류 | 근거 |
+| Domain Concept | Classification | Rationale |
 |------------|------|------|
-| **Customer** | Aggregate Root | 독립적 생명주기, 자체 불변식(Email 유효성, CreditLimit), Repository 존재 |
-| **Product** | Aggregate Root | 독립적 생명주기, 자체 불변식(Tag 중복 방지), 자식 Entity(Tag) 관리 |
-| **Inventory** | Aggregate Root | 독립적 생명주기, 자체 불변식(재고 ≥ 0), IConcurrencyAware 동시성 제어 |
-| **Order** | Aggregate Root | 독립적 생명주기, Cross-Aggregate 참조(ProductId), 자체 불변식(TotalAmount 계산) |
-| **Tag** | 자식 Entity | 자체 ID 보유하지만, Aggregate Root(Product)를 통해서만 접근. 독립 Repository 없음 |
-| **Money** | Value Object | 식별자 없음, 값 기반 동등성, 불변 |
-| **Email** | Value Object | 식별자 없음, 값 기반 동등성, 불변 |
-| **Quantity** | Value Object | 식별자 없음, 값 기반 동등성, 불변 |
-| **ShippingAddress** | Value Object | 식별자 없음, 값 기반 동등성, 불변 |
+| **Customer** | Aggregate Root | Independent lifecycle, own invariants (Email validity, CreditLimit), has Repository |
+| **Product** | Aggregate Root | Independent lifecycle, own invariants (Tag duplication prevention), manages child Entity (Tag) |
+| **Inventory** | Aggregate Root | Independent lifecycle, own invariants (stock >= 0), IConcurrencyAware concurrency control |
+| **Order** | Aggregate Root | Independent lifecycle, Cross-Aggregate reference (ProductId), own invariants (TotalAmount calculation) |
+| **Tag** | Child Entity | Has own ID, but accessed only through Aggregate Root (Product). No independent Repository |
+| **Money** | Value Object | No identifier, value-based equality, immutable |
+| **Email** | Value Object | No identifier, value-based equality, immutable |
+| **Quantity** | Value Object | No identifier, value-based equality, immutable |
+| **ShippingAddress** | Value Object | No identifier, value-based equality, immutable |
 
-We have confirmed the classification criteria and decision flow. In the next section, we will LayeredArch.Domain의 실제 Aggregate를 분석하며 경계 설정의 실전 사례를 살펴봅니다.
+We have confirmed the classification criteria and decision flow. In the next section, we will analyze actual Aggregates in LayeredArch.Domain and examine practical examples of boundary setting.
 
 ---
 
-## Aggregate 경계 설정 실전 예제
+## Practical Examples of Aggregate Boundary Setting
 
-LayeredArch.Domain의 세 가지 Aggregate를 분석합니다.
+We analyze three Aggregates in LayeredArch.Domain.
 
-### Customer Aggregate: Root만 있는 단순 Aggregate
+### Customer Aggregate: Simple Aggregate with Root Only
 
 ```
 ┌─────────────────────────────────┐
@@ -496,12 +496,12 @@ LayeredArch.Domain의 세 가지 Aggregate를 분석합니다.
 ```
 
 **Invariants:**
-- CustomerName, Email, CreditLimit은 각각 Value Object가 자체 검증
+- CustomerName, Email, CreditLimit are each self-validated by their Value Objects
 
 **Boundary Rationale:**
-- Customer는 독립적인 생명주기를 가짐
-- 자식 Entity가 없는 가장 단순한 형태의 Aggregate
-- Order와는 ID 참조로만 연결됨 (Order가 `CustomerId`를 소유하지 않음 — 이 예제에서는 Order가 `ProductId`를 참조)
+- Customer has an independent lifecycle
+- The simplest form of Aggregate with no child Entities
+- Connected to Order only via ID reference (Order does not own `CustomerId` -- in this example, Order references `ProductId`)
 
 ```csharp
 [GenerateEntityId]
@@ -523,19 +523,19 @@ public sealed class Customer : AggregateRoot<CustomerId>, IAuditable
 }
 ```
 
-### Product + Inventory Aggregate: 카탈로그와 재고 분리
+### Product + Inventory Aggregate: Separating Catalog and Stock
 
-재고(고빈도 변경)를 별도 Aggregate로 분리하여 동시성 충돌을 줄인 사례입니다.
+This is a case where stock (high-frequency changes) was separated into its own Aggregate to reduce concurrency conflicts.
 
 ```
 ┌──────────────────────────────────────┐  ┌─────────────────────────────┐
-│  Product Aggregate (카탈로그)          │  │  Inventory Aggregate (재고)  │
+│  Product Aggregate (Catalog)             │  │  Inventory Aggregate (Stock)  │
 │                                      │  │                             │
 │  ┌────────────────────┐              │  │  ┌──────────────────────┐   │
 │  │ Product (Root)     │              │  │  │ Inventory (Root)     │   │
-│  │  - ProductName     │ ← VO         │  │  │  - ProductId         │ ID참조│
+│  │  - ProductName     │ <- VO         │  │  │  - ProductId         │ ID ref│
 │  │  - ProductDesc     │ ← VO         │  │  │  - Quantity          │ ← VO │
-│  │  - Money (Price)   │ ← VO         │  │  │  - RowVersion        │ 동시성│
+│  │  - Money (Price)   │ <- VO         │  │  │  - RowVersion        │ concur│
 │  └────────┬───────────┘              │  │  └──────────────────────┘   │
 │           │ 1:N                      │  │                             │
 │  ┌────────┴───────────┐              │  └─────────────────────────────┘
@@ -546,26 +546,26 @@ public sealed class Customer : AggregateRoot<CustomerId>, IAuditable
 └──────────────────────────────────────┘
 ```
 
-**Product 불변식:**
-- Tag 중복 방지 (`AddTag`에서 ID로 확인)
+**Product Invariants:**
+- Tag duplication prevention (checked by ID in `AddTag`)
 
-**Inventory 불변식:**
-- 재고 수량 ≥ 0 (`DeductStock`에서 보호, `IConcurrencyAware` 낙관적 동시성)
+**Inventory Invariants:**
+- Stock quantity >= 0 (protected in `DeductStock`, `IConcurrencyAware` optimistic concurrency)
 
 **Boundary Rationale:**
-- Product는 Tag의 생명주기를 관리 (Tag는 Product 없이 존재하지 않음)
-- 재고는 주문마다 변경(고빈도)되지만 카탈로그는 저빈도 → 별도 Aggregate
-- Inventory는 `ProductId`로 Product를 ID 참조 (객체 참조 아님)
+- Product manages the lifecycle of Tags (Tags cannot exist without Product)
+- Stock changes with every order (high frequency) but catalog changes are infrequent -> separate Aggregates
+- Inventory references Product by `ProductId` (ID reference, not object reference)
 
 ```csharp
-// Product: 카탈로그 정보 관리
+// Product: Catalog information management
 [GenerateEntityId]
 public sealed class Product : AggregateRoot<ProductId>, IAuditable
 {
     private readonly List<Tag> _tags = [];
     public IReadOnlyList<Tag> Tags => _tags.AsReadOnly();
 
-    // Invariant protection: Tag 중복 방지
+    // Invariant protection: prevent Tag duplication
     public Product AddTag(Tag tag)
     {
         if (_tags.Any(t => t.Id == tag.Id))
@@ -577,7 +577,7 @@ public sealed class Product : AggregateRoot<ProductId>, IAuditable
     }
 }
 
-// Inventory: 재고 관리 (낙관적 동시성 제어)
+// Inventory: Stock management (optimistic concurrency control)
 [GenerateEntityId]
 public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurrencyAware
 {
@@ -591,7 +591,7 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
     public Quantity StockQuantity { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
 
-    // Invariant protection: 재고 ≥ 0
+    // Invariant protection: stock >= 0
     public Fin<Unit> DeductStock(Quantity quantity)
     {
         if (quantity > StockQuantity)
@@ -608,79 +608,79 @@ public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurr
 }
 ```
 
-#### Aggregate 분할/병합 의사결정
+#### Aggregate Split/Merge Decisions
 
-운영 중인 시스템에서 Aggregate 경계가 적절하지 않다는 신호가 나타나면, 분할 또는 병합을 검토합니다.
+When signals appear that Aggregate boundaries are not appropriate in an operating system, consider splitting or merging.
 
-**Split Signals** — 다음 중 하나라도 해당하면 분할을 검토합니다. 가장 흔한 신호는 동시성 충돌의 빈번한 발생입니다.
+**Split Signals** -- Consider splitting if any of the following apply. The most common signal is frequent concurrency conflicts.
 
-| 신호 | Symptom | Example |
+| Signal | Symptom | Example |
 |------|------|------|
-| 동시성 충돌 빈번 | `DbUpdateConcurrencyException` 반복 | 주문마다 Product 전체 락 |
-| 변경 빈도 불균형 | 일부 속성만 고빈도 변경 | 카탈로그(저빈도) vs 재고(고빈도) |
-| 불변식 독립성 | 속성 그룹 간 상호 의존 불변식 없음 | 가격 변경이 재고 규칙에 영향 없음 |
+| Frequent concurrency conflicts | Repeated `DbUpdateConcurrencyException` | Full Product lock on every order |
+| Change frequency imbalance | Only some attributes change frequently | Catalog (low freq) vs Stock (high freq) |
+| Invariant independence | No interdependent invariants between attribute groups | Price changes do not affect stock rules |
 
-**Merge Signals** — 다음 조건이 **모두** 해당하면 병합을 검토:
+**Merge Signals** -- Consider merging if **all** of the following conditions apply:
 
-| 신호 | Symptom | Example |
+| Signal | Symptom | Example |
 |------|------|------|
-| 항상 함께 변경 | 두 Aggregate가 같은 Usecase에서 항상 동시 수정 | A 수정 시 B도 반드시 수정 |
-| 상호 불변식 의존 | A의 불변식이 B의 상태에 의존 | 합계 제약 조건 |
-| 개별 트랜잭션 불가 | 결과적 일관성으로는 비즈니스 요구 충족 불가 | 즉시 일관성 필수 |
+| Always changed together | Two Aggregates always modified simultaneously in same Usecase | When A is modified, B must be too |
+| Mutual invariant dependency | A invariant depends on B state | Aggregate constraint |
+| Separate transactions impossible | Eventual consistency cannot meet business needs | Immediate consistency required |
 
-#### 분할 사례: Product → Product + Inventory
+#### Split Case: Product -> Product + Inventory
 
-**Before** — 단일 Product Aggregate:
+**Before** -- Single Product Aggregate:
 
 ```
 ┌────────────────────────────────────┐
 │  Product Aggregate                 │
 │                                    │
-│  ProductName, Description, Price   │  ← 저빈도 변경 (관리자)
-│  StockQuantity                     │  ← 고빈도 변경 (주문마다)
+│  ProductName, Description, Price   │  <- Low-freq changes (admin)
+│  StockQuantity                     │  <- High-freq changes (every order)
 │  DeductStock(), HasLowStock()      │
 │                                    │
-│  문제: 주문 처리 시 Product 전체에  │
-│  동시성 충돌 발생                    │
+│  Problem: Full Product concurrency  │
+│  conflicts during order processing   │
 └────────────────────────────────────┘
 ```
 
-위의 Product + Inventory 다이어그램이 분할 후의 결과입니다.
+The Product + Inventory diagram above shows the result after splitting.
 
 **Split Rationale:**
-- 카탈로그 정보(Name, Description, Price)와 재고(StockQuantity)는 **불변식 독립** — 가격 변경이 재고 규칙에 영향 없음
-- 재고는 주문마다 변경(고빈도), 카탈로그는 관리자만 변경(저빈도) — **변경 빈도 불균형**
-- 분리 후 Inventory에만 `IConcurrencyAware`(RowVersion) 적용 — 재고 충돌만 감지
+- Catalog info (Name, Description, Price) and stock (StockQuantity) are **invariant-independent** -- price changes do not affect stock rules
+- Stock changes every order (high freq), catalog only by admins (low freq) -- **change frequency imbalance**
+- After separation, `IConcurrencyAware` (RowVersion) applied only to Inventory -- detects only stock conflicts
 
 **Connection Method:**
-- Inventory는 `ProductId`로 Product를 **ID 참조** (객체 참조 아님, [§Cross-Aggregate 관계](./06c-entity-aggregate-advanced#cross-aggregate-관계))
-- Application Layer에서 Product 생성 시 Inventory도 함께 생성 (같은 Usecase)
-- 재고 차감은 Inventory Aggregate에 직접 요청
+- Inventory references Product by `ProductId` via **ID reference** (not object reference, see [Cross-Aggregate Relationships](./06c-entity-aggregate-advanced#cross-aggregate-관계))
+- When creating Product in Application Layer, Inventory is also created (same Usecase)
+- Stock deduction is requested directly to Inventory Aggregate
 
-#### transaction boundary 실전 가이드라인
+#### Transaction Boundary Practical Guidelines
 
-[§1의 원칙](#트랜잭션-경계로서의-aggregate)은 **하나의 트랜잭션 = 하나의 Aggregate 변경입니다.** 실전에서는 다음과 같이 패턴을 분류합니다.
+The principle from [Section 1](#트랜잭션-경계로서의-aggregate) is **one transaction = one Aggregate change.** In practice, patterns are classified as follows.
 
 **Pattern Classification:**
 
-| Pattern | 허용 | Example | 근거 |
+| Pattern | Allowed | Example | Rationale |
 |------|------|------|------|
-| 단일 Aggregate 변경 | ✅ | `DeductStockCommand`: Inventory만 변경 | 원칙 준수 |
-| 읽기 + 단일 Aggregate 변경 | ✅ | `CreateOrderCommand`: Product 읽기 → Order 생성 | 읽기는 트랜잭션 경합 없음 |
-| 동시 생성 (같은 BC) | 예외 허용 | `CreateProductCommand`: Product + Inventory 동시 생성 | 아래 허용 조건 참조 |
-| 동시 변경 (기존 Aggregate) | ❌ | 주문 처리 시 Order 생성 + Inventory 차감 | 동시성 충돌 위험 |
+| Single Aggregate change | ✅ | `DeductStockCommand`: Changes only Inventory | Follows principle |
+| Read + single Aggregate change | ✅ | `CreateOrderCommand`: Read Product -> Create Order | Reads cause no contention |
+| Concurrent creation (same BC) | Exception allowed | `CreateProductCommand`: Create Product + Inventory simultaneously | See conditions below |
+| Concurrent change (existing) | ❌ | Order creation + Inventory deduction during order processing | Concurrency conflict risk |
 
-**Conditions for Allowing Concurrent Creation Exception** — 다음을 **모두** 충족해야 합니다:
+**Conditions for Allowing Concurrent Creation Exception** -- **All** of the following must be met:
 
-1. **같은 Bounded Context 내**: 서로 다른 BC의 Aggregate를 동시 생성하지 않음
-2. **생성(Create) 시점에만**: 기존 Aggregate의 상태 변경이 아닌, 새 Aggregate 생성
-3. **상호 불변식 없음**: 두 Aggregate 간에 서로의 상태에 의존하는 불변식이 없음
+1. **Within the same Bounded Context**: Do not create Aggregates from different BCs simultaneously
+2. **Only at creation time**: New Aggregate creation, not existing Aggregate state change
+3. **No mutual invariants**: No invariants between the two Aggregates that depend on each other's state
 
-The key point to note in the following code is Product와 Inventory를 동시에 생성하되, 기존 Aggregate의 상태 변경과 다른 Aggregate 생성을 동시에 하는 것은 금지된다는 차이입니다.
+The key point to note in the following code is that while Product and Inventory can be created simultaneously, changing the state of an existing Aggregate while simultaneously creating another Aggregate is prohibited.
 
 ```csharp
-// ✅ 동시 생성 허용: Product + Inventory (CreateProductCommand)
-// - 같은 BC 내, 생성 시점, 상호 불변식 없음
+// ✅ Concurrent creation allowed: Product + Inventory (CreateProductCommand)
+// - Same BC, creation time, no mutual invariants
 FinT<IO, Response> usecase =
     from exists in _productRepository.Exists(new ProductNameUniqueSpec(productName))
     from _ in guard(!exists, /* ... */)
@@ -691,61 +691,61 @@ FinT<IO, Response> usecase =
 ```
 
 ```csharp
-// ❌ 동시 변경 금지: Order 생성 + Inventory 차감
-// - Inventory는 기존 Aggregate의 상태 변경 → 별도 트랜잭션으로 처리해야 함
+// ❌ Concurrent change prohibited: Order creation + Inventory deduction
+// - Inventory is an existing Aggregate state change -> must be handled in separate transaction
 FinT<IO, Response> usecase =
     from inventory in _inventoryRepository.GetByProductId(productId)
-    from _1 in inventory.DeductStock(quantity)        // 기존 Aggregate 변경!
+    from _1 in inventory.DeductStock(quantity)        // Existing Aggregate change!
     from updated in _inventoryRepository.Update(inventory)
     from order in _orderRepository.Create(
-        Order.Create(productId, quantity, unitPrice, shippingAddress))  // 동시에 다른 Aggregate 생성
+        Order.Create(productId, quantity, unitPrice, shippingAddress))  // Simultaneously creating another Aggregate
     select new Response(/* ... */);
 ```
 
-#### 동시성 고려사항
+#### Concurrency Considerations
 
-고경합 Aggregate에는 `IConcurrencyAware` 인터페이스를 선택적으로 적용합니다.
+The `IConcurrencyAware` interface is selectively applied to high-contention Aggregates.
 
 ```csharp
-// Aggregate Root에 IConcurrencyAware 구현
+// Implementing IConcurrencyAware on Aggregate Root
 public sealed class Inventory : AggregateRoot<InventoryId>, IAuditable, IConcurrencyAware
 {
     public byte[] RowVersion { get; private set; } = [];
     // ...
 }
-// EF Core Configuration 및 Mapper 매핑은 13-adapters.md 참조
+// See 13-adapters.md for EF Core Configuration and Mapper mapping
 ```
 
 **Application Decision Criteria:**
 
-| 상황 | IConcurrencyAware 적용 | 이유 |
+| Situation | IConcurrencyAware Applied | Reason |
 |------|----------------------|------|
-| 재고 차감 (주문 처리) | **적용** | 다수 사용자가 동시 차감 |
-| 카탈로그 정보 수정 | 불필요 | 관리자만 저빈도 변경 |
-| 주문 상태 변경 | 상황에 따라 | 동시 상태 변경 가능성 평가 |
-| 고객 정보 수정 | 불필요 | 본인만 수정, 충돌 가능성 낮음 |
+| Stock deduction (order processing) | **Applied** | Multiple users deducting simultaneously |
+| Catalog info modification | Not needed | Only admins, low frequency |
+| Order status change | Depends | Evaluate concurrent state change possibility |
+| Customer info modification | Not needed | Only self-modified, low conflict risk |
 
-#### 동시성 충돌 처리 전략
+#### Concurrency Conflict Handling Strategy
 
-`IConcurrencyAware`를 적용한 Aggregate에서 동시성 충돌이 발생하면, 다음 흐름으로 처리됩니다.
+When a concurrency conflict occurs in an Aggregate with `IConcurrencyAware` applied, it is handled with the following flow.
 
 **Error Flow:**
 
 ```
-요청 → Handler → UoW.SaveChanges()
+Request -> Handler -> UoW.SaveChanges()
                         │
-                        ├─ 성공 → 정상 응답
+                        ├─ Success -> Normal response
                         │
                         └─ DbUpdateConcurrencyException
                               → AdapterError("ConcurrencyConflict")
                               → Pipeline
-                              → 에러 응답 (클라이언트에 위임)
+                              -> Error response (delegated to client)
 ```
 
 **Current Strategy: Fail-Fast**
 
 ```csharp
-// EfCoreUnitOfWork: 동시성 예외를 AdapterError로 변환, 재시도 없이 반환
+// EfCoreUnitOfWork: Converts concurrency exception to AdapterError, returns without retry
 // Error type definition: public sealed record ConcurrencyConflict : AdapterErrorType.Custom;
 public virtual FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = default)
 {
@@ -767,18 +767,18 @@ public virtual FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = 
 
 **Strategy Comparison:**
 
-| 전략 | 구현 | 적합한 상황 |
+| Strategy | Implementation | Suitable Situations |
 |------|------|-------------|
-| **Fail-Fast** (현재) | 충돌 시 즉시 에러 반환, 클라이언트가 재시도 판단 | 충돌 빈도 낮음, 클라이언트가 재시도 로직 보유 |
-| **Application 재시도** (미구현) | Handler에서 N회 자동 재시도 후 실패 | 충돌 빈도 높고, 재시도가 항상 안전한 멱등 연산 (예: 조회 후 상태 갱신처럼 부수 효과가 동일한 연산) |
+| **Fail-Fast** (current) | Immediately returns error on conflict, client decides retry | Low conflict frequency, client has retry logic |
+| **Application retry** (not implemented) | Auto-retry N times in Handler then fail | High conflict frequency, retry always safe for idempotent operations (e.g., operations with same side effects like query-then-update) |
 
 **Fail-Fast Selection Rationale:**
 
-- Handler는 **비즈니스 로직에 집중** — 재시도 정책은 인프라 관심사
-- 재시도가 안전한지(멱등성) 여부는 Usecase마다 다름 — 일괄 자동 재시도는 위험
-- 충돌 빈도가 높아지면 Aggregate 분할을 먼저 검토 (근본 원인 해결)
+- Handlers **focus on business logic** -- retry policy is an infrastructure concern
+- Whether retry is safe (idempotency) differs per Usecase -- blanket auto-retry is risky
+- If conflict frequency increases, consider Aggregate splitting first (resolving root cause)
 
-### Order Aggregate: Cross-Aggregate 참조 + 값 계산
+### Order Aggregate: Cross-Aggregate Reference + Value Calculation
 
 ```
 ┌──────────────────────────────────────┐
@@ -786,10 +786,10 @@ public virtual FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = 
 │                                      │
 │  ┌───────────────────┐               │
 │  │ Order (Root)      │               │
-│  │  - ProductId ─────────→ Product Aggregate (ID 참조)
+│  │  - ProductId ─────────→ Product Aggregate (ID ref)
 │  │  - Quantity       │ ← VO          │
 │  │  - Money (Unit)   │ ← VO          │
-│  │  - Money (Total)  │ ← VO (계산값)  │
+│  │  - Money (Total)  │ <- VO (calculated)  │
 │  │  - ShippingAddr   │ ← VO          │
 │  └───────────────────┘               │
 │                                      │
@@ -797,18 +797,18 @@ public virtual FinT<IO, Unit> SaveChanges(CancellationToken cancellationToken = 
 ```
 
 **Invariants:**
-- TotalAmount = UnitPrice × Quantity (생성 시 계산)
+- TotalAmount = UnitPrice x Quantity (calculated at creation)
 
 **Boundary Rationale:**
-- Order는 독립적인 생명주기를 가짐
-- Product Aggregate와는 `ProductId`로만 참조 (객체 참조 없음)
-- 상품 검증(`IProductCatalog`)은 Application Layer에서 Order 생성 전에 수행
+- Order has an independent lifecycle
+- References Product Aggregate only by `ProductId` (no object reference)
+- Product validation (`IProductCatalog`) is performed in Application Layer before Order creation
 
 ```csharp
 [GenerateEntityId]
 public sealed class Order : AggregateRoot<OrderId>, IAuditable
 {
-    // Cross-Aggregate 참조: ID만 저장
+    // Cross-Aggregate reference: store only ID
     public ProductId ProductId { get; private set; }
 
     public Quantity Quantity { get; private set; }
@@ -835,167 +835,167 @@ public sealed class Order : AggregateRoot<OrderId>, IAuditable
 
 ## Anti-Patterns
 
-### 거대한 Aggregate (God Aggregate)
+### God Aggregate
 
-관련된 모든 것을 하나의 Aggregate에 넣는 실수입니다.
+The mistake of putting everything related into a single Aggregate.
 
 ```csharp
-// ❌ 거대한 Aggregate
+// ❌ God Aggregate
 public class Customer : AggregateRoot<CustomerId>
 {
     public CustomerName Name { get; private set; }
-    public List<Order> Orders { get; }           // 별도 Aggregate여야 함
-    public List<Product> WishList { get; }       // 별도 Aggregate여야 함
-    public List<Review> Reviews { get; }         // 별도 Aggregate여야 함
-    public List<PaymentMethod> Payments { get; } // 별도 Aggregate여야 함
+    public List<Order> Orders { get; }           // Should be a separate Aggregate
+    public List<Product> WishList { get; }       // Should be a separate Aggregate
+    public List<Review> Reviews { get; }         // Should be a separate Aggregate
+    public List<PaymentMethod> Payments { get; } // Should be a separate Aggregate
 }
 ```
 
 ```csharp
-// ✅ 작은 Aggregate + ID 참조
+// ✅ Small Aggregate + ID reference
 public sealed class Customer : AggregateRoot<CustomerId>
 {
     public CustomerName Name { get; private set; }
     public Email Email { get; private set; }
     public Money CreditLimit { get; private set; }
-    // Order, WishList 등은 각각 독립 Aggregate
+    // Order, WishList etc. are each independent Aggregates
 }
 ```
 
-**Decision Criteria**: "이 데이터가 Aggregate Root의 불변식을 보호하는 데 꼭 필요한가?"
+**Decision Criteria**: "Is this data absolutely necessary to protect the Aggregate Root's invariants?"
 
-### Aggregate 간 직접 Entity 참조
+### Direct Entity References Between Aggregates
 
 ```csharp
-// ❌ Aggregate 간 직접 Entity 참조
+// ❌ Direct Entity reference between Aggregates
 public class Order : AggregateRoot<OrderId>
 {
-    public Product Product { get; private set; }    // 직접 참조
-    public Customer Customer { get; private set; }  // 직접 참조
+    public Product Product { get; private set; }    // Direct reference
+    public Customer Customer { get; private set; }  // Direct reference
 }
 ```
 
 ```csharp
-// ✅ ID로만 참조
+// ✅ Reference by ID only
 public sealed class Order : AggregateRoot<OrderId>
 {
-    public ProductId ProductId { get; private set; }   // ID 참조
-    // Customer 정보가 필요하면 Domain Port 사용
+    public ProductId ProductId { get; private set; }   // ID reference
+    // Use Domain Port when Customer info is needed
 }
 ```
 
-### Aggregate 외부에서 불변식 검증
+### Invariant Validation Outside Aggregates
 
 ```csharp
-// ❌ Application Layer에서 재고 검증
+// ❌ Stock validation in Application Layer
 public class DeductStockUsecase
 {
     public async Task Handle(DeductStockCommand cmd)
     {
         var inventory = await _inventoryRepo.GetByProductId(cmd.ProductId);
 
-        // 불변식 검증이 Aggregate 밖에 있음!
+        // Invariant validation is outside the Aggregate!
         if (inventory.StockQuantity < cmd.Quantity)
             throw new InsufficientStockException();
 
-        inventory.StockQuantity -= cmd.Quantity;  // 직접 수정!
+        inventory.StockQuantity -= cmd.Quantity;  // Direct modification!
     }
 }
 ```
 
 ```csharp
-// ✅ Aggregate Root 내부에서 invariant protection
+// ✅ Invariant protection inside Aggregate Root
 public class DeductStockUsecase
 {
     public async Task Handle(DeductStockCommand cmd)
     {
         var inventory = await _inventoryRepo.GetByProductId(cmd.ProductId);
 
-        // Aggregate Root의 메서드를 통해 상태 변경
+        // State change through Aggregate Root method
         var result = inventory.DeductStock(cmd.Quantity);
-        // result가 Fail이면 에러 처리
+        // Handle error if result is Fail
     }
 }
 ```
 
-### 모든 것을 Aggregate Root로 만들기
+### Making Everything an Aggregate Root
 
 ```csharp
-// ❌ Tag를 불필요하게 Aggregate Root로 만듦
+// ❌ Unnecessarily making Tag an Aggregate Root
 public class Tag : AggregateRoot<TagId>
 {
     public TagName Name { get; private set; }
-    // Tag는 독립적으로 조회/저장할 필요가 없음
-    // Product를 통해서만 접근하면 충분
+    // Tag does not need independent query/save
+    // Accessing through Product is sufficient
 }
 ```
 
 ```csharp
-// ✅ Tag는 자식 Entity로 충분
+// ✅ Tag is sufficient as a child Entity
 public sealed class Tag : Entity<TagId>
 {
     public TagName Name { get; private set; }
 }
 ```
 
-**Decision Criteria**: "이 Entity에 독립적인 Repository가 필요한가?"
+**Decision Criteria**: "Does this Entity need an independent Repository?"
 
 ---
 
 ## Troubleshooting
 
-### `DbUpdateConcurrencyException`이 빈번하게 발생
+### Frequent `DbUpdateConcurrencyException` Occurrences
 
-**Cause:** 하나의 Aggregate가 너무 많은 데이터를 포함하여, 서로 무관한 변경이 동일 Aggregate를 잠그는 경우입니다.
+**Cause:** A single Aggregate contains too much data, causing unrelated changes to lock the same Aggregate.
 
-**Resolution:** Aggregate 분할을 검토하세요. 변경 빈도가 다른 속성 그룹(예: 카탈로그 정보 vs 재고)을 별도 Aggregate로 분리하면 동시성 충돌을 줄일 수 있습니다. `IConcurrencyAware`는 고경합 Aggregate에만 선택적으로 적용합니다.
+**Resolution:** Consider Aggregate splitting. Separating attribute groups with different change frequencies (e.g., catalog info vs stock) into separate Aggregates can reduce concurrency conflicts. Apply `IConcurrencyAware` selectively only to high-contention Aggregates.
 
-### 여러 Aggregate를 하나의 트랜잭션에서 변경하려 함
+### Attempting to Change Multiple Aggregates in a Single Transaction
 
-**Cause:** "하나의 트랜잭션 = 하나의 Aggregate 변경" 원칙을 위반하고 있습니다. 여러 Aggregate를 동시에 변경하면 동시성 충돌 위험과 트랜잭션 범위 확대 문제가 발생합니다.
+**Cause:** Violating the "one transaction = one Aggregate change" principle. Changing multiple Aggregates simultaneously creates concurrency conflict risk and transaction scope expansion problems.
 
-**Resolution:** Cross-Aggregate 변경은 도메인 이벤트를 통한 최종 일관성으로 처리하세요. 동시 생성은 같은 BC 내에서, 생성 시점에만, 상호 불변식이 없을 때 예외적으로 허용됩니다.
+**Resolution:** Handle Cross-Aggregate changes via eventual consistency through domain events. Concurrent creation is exceptionally allowed only within the same BC, only at creation time, and only when there are no mutual invariants.
 
-### Aggregate Root를 거치지 않고 자식 Entity를 직접 수정
+### Directly Modifying Child Entities Without Going Through the Aggregate Root
 
-**Cause:** Aggregate의 불변식이 외부에서 우회되고 있습니다. 자식 Entity의 컬렉션이 `public` 또는 가변 타입으로 노출된 경우 발생합니다.
+**Cause:** The Aggregate's invariants are being bypassed from outside. This occurs when child Entity collections are exposed as `public` or mutable types.
 
-**Resolution:** 컬렉션은 `IReadOnlyList<T>`로 노출하고, 상태 변경은 반드시 Aggregate Root의 메서드를 통해서만 수행하세요. `_tags.AsReadOnly()` 패턴을 참고하세요.
+**Resolution:** Expose collections as `IReadOnlyList<T>` and ensure state changes are only performed through Aggregate Root methods. Refer to the `_tags.AsReadOnly()` pattern.
 
 ---
 
 ## FAQ
 
-### Q1. Aggregate Root와 일반 Entity의 차이점은?
+### Q1. What is the difference between Aggregate Root and regular Entity?
 
-Aggregate Root는 `AggregateRoot<TId>`를 상속하며 도메인 이벤트를 발행할 수 있고, 독립적인 Repository를 가집니다. 일반 Entity는 `Entity<TId>`를 상속하며 Aggregate Root를 통해서만 접근 가능하고, 독립 Repository가 없습니다.
+Aggregate Root inherits `AggregateRoot<TId>`, can publish domain events, and has an independent Repository. Regular Entity inherits `Entity<TId>`, is accessible only through the Aggregate Root, and has no independent Repository.
 
-| 특성 | Aggregate Root | 일반 Entity |
+| Characteristic | Aggregate Root | Regular Entity |
 |------|---------------|------------|
-| 기반 클래스 | `AggregateRoot<TId>` | `Entity<TId>` |
-| 도메인 이벤트 | 발행 가능 | 불가 |
-| Repository | 있음 | 없음 |
-| 외부 접근 | 직접 가능 | Root를 통해서만 |
+| Base class | `AggregateRoot<TId>` | `Entity<TId>` |
+| Domain events | Can publish | Cannot |
+| Repository | Present | None |
+| External access | Direct | Through Root only |
 
-### Q2. Aggregate 경계를 어떻게 판단하나요?
+### Q2. How do you determine Aggregate boundaries?
 
-핵심 질문: "이 Entity가 독립적으로 저장/조회되는가?" 독립 생명주기가 필요하면 Aggregate Root, 다른 Root에 종속되면 자식 Entity입니다. 추가로 "이 데이터가 Root의 불변식을 보호하는 데 꼭 필요한가?"를 질문하여 포함 여부를 결정합니다.
+Key question: "Is this Entity independently stored/queried?" If an independent lifecycle is needed, it is an Aggregate Root; if it depends on another Root, it is a child Entity. Additionally, ask "Is this data absolutely necessary to protect the Root's invariants?" to determine inclusion.
 
-### Q3. 도메인 이벤트로 최종 일관성을 사용하면 데이터 불일치가 발생하지 않나요?
+### Q3. Does using eventual consistency via domain events cause data inconsistency?
 
-최종 일관성은 즉시 일관성과 달리 일시적 불일치를 허용합니다. 이벤트 핸들러가 처리를 완료하면 일관성이 보장됩니다. 비즈니스 요구사항이 즉시 일관성을 필수로 요구하는 경우에만 Aggregate 병합을 검토하세요.
+Eventual consistency, unlike immediate consistency, allows temporary inconsistency. Consistency is guaranteed once the event handler completes processing. Consider Aggregate merging only when business requirements absolutely require immediate consistency.
 
-### Q4. `IConcurrencyAware`는 모든 Aggregate에 적용해야 하나요?
+### Q4. Should `IConcurrencyAware` be applied to all Aggregates?
 
-아닙니다. 다수 사용자가 동시에 변경하는 고경합 Aggregate(예: 재고 차감)에만 적용합니다. 관리자만 저빈도로 변경하는 Aggregate(예: 카탈로그 정보, 고객 정보)에는 불필요합니다.
+No. Apply it only to high-contention Aggregates where multiple users change simultaneously (e.g., stock deduction). It is unnecessary for Aggregates that only admins change infrequently (e.g., catalog info, customer info).
 
-### Q5. 동시 생성 예외는 어떤 조건에서 허용되나요?
+### Q5. Under what conditions is the concurrent creation exception allowed?
 
-같은 Bounded Context 내에서, 새 Aggregate 생성 시점에만, 두 Aggregate 간 상호 불변식이 없을 때 허용됩니다. 기존 Aggregate의 상태 변경과 다른 Aggregate 생성/변경을 동시에 하는 것은 금지됩니다.
+It is allowed within the same Bounded Context, only at new Aggregate creation time, and only when there are no mutual invariants between the two Aggregates. Simultaneously changing existing Aggregate state and creating/changing another Aggregate is prohibited.
 
 ---
 
 ## References
 
-- [Entity/Aggregate 핵심 패턴 (HOW)](./06b-entity-aggregate-core)
-- [Entity/Aggregate 고급 패턴](./06c-entity-aggregate-advanced)
+- [Entity/Aggregate Core Patterns (HOW)](./06b-entity-aggregate-core)
+- [Entity/Aggregate Advanced Patterns](./06c-entity-aggregate-advanced)
