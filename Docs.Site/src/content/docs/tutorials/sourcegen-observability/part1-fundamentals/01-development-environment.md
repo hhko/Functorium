@@ -1,5 +1,5 @@
 ---
-title: "개발 환경 설정"
+title: "Development Environment Setup"
 ---
 
 ## 개요

@@ -1,5 +1,5 @@
 ---
-title: "프로젝트 구조"
+title: "Project Structure"
 ---
 
 ## 개요

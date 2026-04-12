@@ -266,48 +266,48 @@ public sealed class Address
 
 ## Summary at a Glance
 
-### ORM 매핑 패턴 비교
+### ORM Mapping Pattern Comparison
 
-세 가지 패턴의 저장 방식과 적합한 value object 유형을 compares.
+Compares the storage approaches and suitable value object types for the three patterns.
 
-| 패턴 | 저장 방식 | 적합한 value object | 테이블 구조 |
-|------|----------|---------------|------------|
-| `OwnsOne` | 부모 테이블 컬럼 | Email, Address, Money | 같은 테이블 |
-| `HasConversion` | 단일 컬럼 | ProductCode, UserId | 같은 테이블, 1컬럼 |
-| `OwnsMany` | 별도 테이블 | OrderLineItem | 자식 테이블 |
+| Pattern | Storage Approach | Suitable value objects | Table Structure |
+|---------|-----------------|----------------------|----------------|
+| `OwnsOne` | Parent table columns | Email, Address, Money | Same table |
+| `HasConversion` | Single column | ProductCode, UserId | Same table, 1 column |
+| `OwnsMany` | Separate table | OrderLineItem | Child table |
 
-### 패턴 선택 가이드
+### Pattern Selection Guide
 
-value object의 구조에 따라 적합한 매핑 패턴을 선택합니다.
+Choose the appropriate mapping pattern based on the value object's structure.
 
-| 상황 | 권장 패턴 |
-|------|----------|
-| 단일 속성 value object | `HasConversion` 또는 `OwnsOne` |
-| 다중 속성 value object | `OwnsOne` |
-| value object 컬렉션 | `OwnsMany` |
-| JSON 직렬화 필요 | `HasConversion` + JSON |
+| Situation | Recommended Pattern |
+|-----------|-------------------|
+| Single property value object | `HasConversion` or `OwnsOne` |
+| Multi-property value object | `OwnsOne` |
+| value object collection | `OwnsMany` |
+| JSON serialization needed | `HasConversion` + JSON |
 
-### EF Core 호환성 체크리스트
+### EF Core Compatibility Checklist
 
-value object를 EF Core와 통합할 때 확인해야 할 항목입니다.
+Items to verify when integrating value objects with EF Core.
 
-| 항목 | Description |
-|------|------|
-| 매개변수 없는 private 생성자 | EF Core가 객체를 생성할 수 있도록 |
-| private setter | immutability 유지하면서 EF Core 매핑 허용 |
-| `CreateFromValidated()` 메서드 | Value Converter에서 사용 |
-| 기본값 초기화 | nullable 경고 방지 |
+| Item | Description |
+|------|-------------|
+| Parameterless private constructor | Allows EF Core to create objects |
+| Private setter | Allows EF Core mapping while maintaining immutability |
+| `CreateFromValidated()` method | Used by Value Converter |
+| Default value initialization | Prevents nullable warnings |
 
 ## FAQ
 
-### Q1: OwnsOne과 HasConversion 중 어떤 것을 선택해야 하나요?
-**A**: 단일 속성이면서 로드 시 변환 로직이 필요하면 `HasConversion`이 적합합니다. 다중 속성이면 `OwnsOne`을 uses. `OwnsOne`은 속성별로 컬럼이 생성되어 쿼리에서 개별 속성을 조건으로 사용할 수 있습니다.
+### Q1: How do I choose between OwnsOne and HasConversion?
+**A**: `HasConversion` is suitable for single-property value objects that need conversion logic on load. Use `OwnsOne` for multi-property objects. With `OwnsOne`, a column is created per property, allowing individual properties to be used as query conditions.
 
-### Q2: private 생성자를 사용하면서 EF Core와 호환되게 하려면?
-**A**: EF Core는 Reflection으로 private 생성자를 호출할 수 있습니다. 매개변수 없는 private 생성자를 제공하고, `private set`을 사용하면 EF Core가 값을 설정하면서도 외부 코드에서의 변경은 차단됩니다.
+### Q2: How do I make value objects with private constructors compatible with EF Core?
+**A**: EF Core can invoke private constructors via Reflection. Provide a parameterless private constructor and use `private set` so EF Core can set values while blocking modifications from external code.
 
-### Q3: OwnsMany로 매핑된 컬렉션의 정렬은 어떻게 하나요?
-**A**: `OwnsMany`는 기본적으로 정렬 순서를 보장하지 않습니다. 순서가 중요하면 정렬 컬럼을 명시적으로 추가합니다.
+### Q3: How do I sort collections mapped with OwnsMany?
+**A**: `OwnsMany` does not guarantee sort order by default. If ordering matters, explicitly add a sort column.
 
 ```csharp
 modelBuilder.Entity<Order>()
@@ -320,33 +320,33 @@ modelBuilder.Entity<Order>()
 
 ---
 
-## 테스트
+## Tests
 
-이 프로젝트에는 단위 테스트가 포함되어 있습니다.
+This project includes unit tests.
 
-### 테스트 실행
+### Running Tests
 ```bash
 cd OrmIntegration.Tests.Unit
 dotnet test
 ```
 
-### 테스트 구조
+### Test Structure
 ```
 OrmIntegration.Tests.Unit/
-├── OwnsOnePatternTests.cs       # OwnsOne 매핑 패턴 테스트
-├── ValueConverterPatternTests.cs # Value Converter 패턴 테스트
-└── OwnsManyPatternTests.cs      # OwnsMany 컬렉션 매핑 테스트
+├── OwnsOnePatternTests.cs       # OwnsOne mapping pattern tests
+├── ValueConverterPatternTests.cs # Value Converter pattern tests
+└── OwnsManyPatternTests.cs      # OwnsMany collection mapping tests
 ```
 
-### 주요 테스트 케이스
+### Key Test Cases
 
-| 테스트 클래스 | 테스트 내용 |
-|-------------|-----------|
-| OwnsOnePatternTests | Address, Email 복합 value object 영속화 |
-| ValueConverterPatternTests | ProductCode 단일 값 변환 |
-| OwnsManyPatternTests | OrderLineItem 컬렉션 영속화 |
+| Test Class | Test Content |
+|------------|-------------|
+| OwnsOnePatternTests | Address, Email composite value object persistence |
+| ValueConverterPatternTests | ProductCode single value conversion |
+| OwnsManyPatternTests | OrderLineItem collection persistence |
 
-value object를 데이터베이스에 저장하는 패턴을 익혔으니, Next chapter에서는 CQRS 아키텍처에서 value object를 Command/Query와 통합하는 방법을 다룹니다.
+Now that we have learned patterns for persisting value objects to the database, the next chapter covers how to integrate value objects with Commands/Queries in a CQRS architecture.
 
 ---
 

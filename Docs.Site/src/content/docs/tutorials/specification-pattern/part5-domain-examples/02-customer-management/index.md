@@ -1,27 +1,27 @@
 ---
 title: "Customer Management"
 ---
-## 개요
+## Overview
 
-이커머스 상품 필터링은 Specification 패턴의 대표적인 사용 사례입니다. 하지만 이 패턴은 Product 외의 다른 Aggregate에도 동일하게 적용됩니다. 이 장에서는 고객 관리 도메인에서 Specification을 활용하여, 패턴의 범용성을 확인합니다.
+E-commerce product filtering is a representative use case for the Specification pattern. However, this pattern applies equally to Aggregates other than Product. This chapter uses Specifications in the customer management domain to confirm the pattern's versatility.
 
-> **Expression과 non-Expression Specification을 상황에 맞게 선택하여 사용합니다.**
+> **Choose between Expression and non-Expression Specifications based on the situation.**
 
-## 학습 목표
+## Learning Objectives
 
-1. **다른 집합체에 Specification 적용**: Product가 아닌 Customer 도메인에서의 활용
-2. **Expression vs non-Expression 선택 기준**: 각 방식의 적합한 사용 시나리오 이해
-3. **혼합 조합**: ExpressionSpecification과 Specification을 `&`, `|` 연산자로 조합
-4. **대소문자 무시 검색**: Expression Tree에서의 문자열 비교 전략
+1. **Applying Specifications to other Aggregates**: Usage in the Customer domain rather than Product
+2. **Selection criteria for Expression vs non-Expression**: Understanding the appropriate scenarios for each approach
+3. **Mixed composition**: Combining ExpressionSpecification and Specification with `&`, `|` operators
+4. **Case-insensitive search**: String comparison strategies in Expression Trees
 
-## 핵심 개념
+## Core Concepts
 
 ### Expression vs non-Expression Specification
 
-모든 조건이 Expression Tree로 표현될 필요는 없습니다. 단순한 속성 확인은 `IsSatisfiedBy`만 오버라이드하는 것이 더 간결합니다.
+Not all conditions need to be expressed as Expression Trees. For simple property checks, overriding only `IsSatisfiedBy` is more concise.
 
 ```csharp
-// ExpressionSpecification: EF Core SQL 번역이 필요한 경우
+// ExpressionSpecification: when EF Core SQL translation is needed
 public sealed class CustomerEmailSpec : ExpressionSpecification<Customer>
 {
     public override Expression<Func<Customer, bool>> ToExpression()
@@ -31,16 +31,16 @@ public sealed class CustomerEmailSpec : ExpressionSpecification<Customer>
     }
 }
 
-// non-Expression Specification: 인메모리 검증만 필요한 경우
+// non-Expression Specification: when only in-memory validation is needed
 public sealed class CustomerActiveSpec : Specification<Customer>
 {
     public override bool IsSatisfiedBy(Customer entity) => entity.IsActive;
 }
 ```
 
-### Expression에서 대소문자 무시 검색
+### Case-Insensitive Search in Expressions
 
-Expression Tree 내부에서는 `string.Contains(string, StringComparison)`을 사용할 수 없습니다. 대신 `.ToLower().Contains()` 패턴을 사용합니다.
+Inside Expression Trees, you cannot use `string.Contains(string, StringComparison)`. Instead, use the `.ToLower().Contains()` pattern.
 
 ```csharp
 public override Expression<Func<Customer, bool>> ToExpression()
@@ -50,18 +50,18 @@ public override Expression<Func<Customer, bool>> ToExpression()
 }
 ```
 
-### 혼합 조합
+### Mixed Composition
 
-ExpressionSpecification과 non-Expression Specification은 기반 클래스인 `Specification<T>`의 `&`, `|`, `!` 연산자를 통해 자유롭게 조합할 수 있습니다.
+ExpressionSpecification and non-Expression Specification can be freely composed through the `&`, `|`, `!` operators of their base class `Specification<T>`.
 
 ```csharp
 // CustomerActiveSpec(non-Expression) & CustomerNameContainsSpec(Expression)
-var spec = new CustomerActiveSpec() & new CustomerNameContainsSpec(new CustomerName("수"));
+var spec = new CustomerActiveSpec() & new CustomerNameContainsSpec(new CustomerName("Kim"));
 ```
 
-## 프로젝트 설명
+## Project Description
 
-### 프로젝트 구조
+### Project Structure
 ```
 CustomerManagement/
 ├── Domain/
@@ -81,46 +81,46 @@ CustomerManagement/
 └── Program.cs
 ```
 
-### Specification 목록
+### Specification List
 
-| Specification | 기반 클래스 | 설명 |
-|---------------|-------------|------|
-| `CustomerEmailSpec` | ExpressionSpecification | 이메일 정확 일치 |
-| `CustomerNameContainsSpec` | ExpressionSpecification | 이름 부분 일치 (대소문자 무시) |
-| `CustomerActiveSpec` | Specification | 활성 고객 확인 |
+| Specification | Base Class | Description |
+|---------------|------------|-------------|
+| `CustomerEmailSpec` | ExpressionSpecification | Exact email match |
+| `CustomerNameContainsSpec` | ExpressionSpecification | Partial name match (case-insensitive) |
+| `CustomerActiveSpec` | Specification | Active customer check |
 
-## 한눈에 보는 정리
+## At a Glance
 
-| 구분 | 내용 |
-|------|------|
-| **도메인** | 고객 관리 (Customer) |
+| Aspect | Details |
+|--------|---------|
+| **Domain** | Customer management (Customer) |
 | **Value Objects** | CustomerId, CustomerName, Email |
 | **ExpressionSpecification** | CustomerEmailSpec, CustomerNameContainsSpec |
 | **non-Expression Specification** | CustomerActiveSpec |
-| **핵심 패턴** | Expression/non-Expression 혼합 조합 |
+| **Core pattern** | Mixed Expression/non-Expression composition |
 
-### Expression vs non-Expression 선택 기준
+### Expression vs non-Expression Selection Criteria
 
-| 기준 | ExpressionSpecification | Specification |
-|------|------------------------|---------------|
-| **EF Core SQL 번역** | 지원 | 미지원 |
-| **구현 복잡도** | 높음 (Expression Tree) | 낮음 (직접 로직) |
-| **사용 시나리오** | DB 쿼리 필터링 | 인메모리 검증 |
-| **Value Object 처리** | implicit 변환 필요 | 직접 접근 가능 |
+| Criteria | ExpressionSpecification | Specification |
+|----------|------------------------|---------------|
+| **EF Core SQL translation** | Supported | Not supported |
+| **Implementation complexity** | Higher (Expression Tree) | Lower (direct logic) |
+| **Usage scenario** | DB query filtering | In-memory validation |
+| **Value Object handling** | Implicit conversion required | Direct access possible |
 
 ## FAQ
 
-### Q1: 언제 ExpressionSpecification 대신 일반 Specification을 사용하나요?
-**A**: EF Core 등 ORM을 통한 SQL 번역이 필요하지 않고, 인메모리에서만 검증하는 단순한 조건이라면 일반 Specification이 더 간결합니다. `CustomerActiveSpec`처럼 단순 속성 확인이 대표적인 예입니다.
+### Q1: When should I use a plain Specification instead of ExpressionSpecification?
+**A**: If SQL translation through an ORM like EF Core is not needed and the condition is simple enough to verify only in memory, a plain Specification is more concise. `CustomerActiveSpec`, which is a simple property check, is a typical example.
 
-### Q2: Expression과 non-Expression Specification을 조합할 수 있는 이유는?
-**A**: 두 가지 모두 `Specification<T>` 기반 클래스를 상속하므로, `&`, `|`, `!` 연산자를 통해 자유롭게 조합할 수 있습니다. 조합 결과는 인메모리에서 `IsSatisfiedBy`를 통해 평가됩니다.
+### Q2: Why can Expression and non-Expression Specifications be composed together?
+**A**: Both inherit from the `Specification<T>` base class, so they can be freely composed through the `&`, `|`, `!` operators. The composed result is evaluated in memory via `IsSatisfiedBy`.
 
-### Q3: Expression Tree에서 StringComparison을 사용할 수 없는 이유는?
-**A**: Expression Tree는 SQL 등으로 번역되어야 하므로, .NET 전용 API인 `StringComparison`은 번역할 수 없습니다. 대신 `.ToLower().Contains()` 패턴을 사용하면 SQL의 `LOWER()` 함수로 자연스럽게 번역됩니다.
+### Q3: Why can't StringComparison be used in Expression Trees?
+**A**: Expression Trees must be translatable to SQL and similar formats, so .NET-specific APIs like `StringComparison` cannot be translated. Using the `.ToLower().Contains()` pattern instead naturally translates to SQL's `LOWER()` function.
 
 ---
 
-이것으로 Specification 패턴 튜토리얼의 본문이 모두 끝났습니다. 기초부터 실전까지 — 조건 캡슐화, Expression Tree, Repository 통합, 그리고 다양한 도메인 적용까지 학습했습니다. 부록에서는 대안 패턴과의 비교, 안티패턴, 용어집, 참고 자료를 제공합니다.
+This concludes the main content of the Specification pattern tutorial. From fundamentals to real-world application -- we've covered condition encapsulation, Expression Trees, Repository integration, and application across various domains. The appendix provides comparisons with alternative patterns, anti-patterns, a glossary, and references.
 
-→ [부록 A: Specification vs 대안 비교](../../Appendix/A-specification-vs-alternatives.md)
+→ [Appendix A: Specification vs Alternatives](../../Appendix/A-specification-vs-alternatives.md)

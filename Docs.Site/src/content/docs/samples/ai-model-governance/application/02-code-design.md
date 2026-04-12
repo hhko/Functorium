@@ -3,13 +3,13 @@ title: "Application Code Design"
 description: "Core Command code and event handler patterns for the AI Model Governance Platform"
 ---
 
-[타입 설계 의사결정](../01-type-design-decisions/)에서 식별한 Use Case, 포트, 컴포지션 패턴을 C# 코드로 구현합니다.
+Implements the Use Cases, ports, and composition patterns identified in [Type Design Decisions](../01-type-design-decisions/) in C# code.
 
-## 핵심 Command 패턴
+## Core Command Patterns
 
-### 1. RegisterModelCommand -- VO 합성 + Domain Service + Aggregate 생성
+### 1. RegisterModelCommand -- VO Composition + Domain Service + Aggregate Creation
 
-모델 등록은 가장 대표적인 Command 패턴입니다. VO 합성(ApplyT), Domain Service 호출(위험 분류), Aggregate 생성, 저장이 하나의 FinT LINQ 체인으로 구성됩니다.
+Model registration is the most representative Command pattern. VO composition (ApplyT), Domain Service call (risk classification), Aggregate creation, and saving are composed in a single FinT LINQ chain.
 
 ```csharp
 public sealed class RegisterModelCommand
@@ -58,15 +58,15 @@ public sealed class RegisterModelCommand
 }
 ```
 
-흐름 분석:
-1. `ApplyT`: 3개 VO를 동시 검증, 모든 오류 수집
-2. `from riskTier`: Domain Service가 목적 키워드로 위험 등급 분류
-3. `let model`: Aggregate 생성 (항상 성공, `Fin`이 아닌 `let`)
-4. `from saved`: Repository에 저장 (IO 효과)
+Flow analysis:
+1. `ApplyT`: Validates 3 VOs simultaneously, collects all errors
+2. `from riskTier`: Domain Service classifies risk tier by purpose keywords
+3. `let model`: Aggregate creation (always succeeds, `let` not `Fin`)
+4. `from saved`: Save to Repository (IO effect)
 
-### 2. SubmitDeploymentForReviewCommand -- 교차 Aggregate 검증
+### 2. SubmitDeploymentForReviewCommand -- Cross-Aggregate Validation
 
-배포 검토 제출은 `DeploymentEligibilityService`를 통해 3개 Aggregate를 교차 검증합니다.
+Deployment review submission performs cross-validation of 3 Aggregates through `DeploymentEligibilityService`.
 
 ```csharp
 public sealed class Usecase(
@@ -97,16 +97,16 @@ public sealed class Usecase(
 }
 ```
 
-흐름 분석:
-1. `from deployment`: 배포 조회
-2. `from model`: 배포가 참조하는 모델 조회
-3. `from _1`: 적격성 검증 (금지 등급, 컴플라이언스, 인시던트) -- 실패 시 short-circuit
-4. `from _2`: 배포 상태 전이 (Draft -> PendingReview) -- 실패 시 short-circuit
-5. `from updated`: 저장
+Flow analysis:
+1. `from deployment`: Look up deployment
+2. `from model`: Look up model referenced by deployment
+3. `from _1`: Eligibility verification (prohibited tier, compliance, incidents) -- short-circuits on failure
+4. `from _2`: Deployment state transition (Draft -> PendingReview) -- short-circuits on failure
+5. `from updated`: Save
 
-### 3. ActivateDeploymentCommand -- guard 패턴
+### 3. ActivateDeploymentCommand -- guard Pattern
 
-배포 활성화는 `guard`를 사용하여 평가 통과 여부를 확인합니다.
+Deployment activation uses `guard` to check assessment passage.
 
 ```csharp
 FinT<IO, Response> usecase =
@@ -122,9 +122,9 @@ FinT<IO, Response> usecase =
     select new Response();
 ```
 
-`guard`는 조건이 `false`이면 지정된 오류로 즉시 실패합니다. 도메인 Aggregate에 속하지 않는 교차 검증 규칙을 Application Layer에서 표현하는 패턴입니다.
+`guard` fails immediately with the specified error when the condition is `false`. This is a pattern for expressing cross-validation rules that do not belong to a domain Aggregate in the Application Layer.
 
-### 4. CreateDeploymentCommand -- 모델 존재 확인 + VO 합성
+### 4. CreateDeploymentCommand -- Model Existence Confirmation + VO Composition
 
 ```csharp
 FinT<IO, Response> usecase =
@@ -140,7 +140,7 @@ FinT<IO, Response> usecase =
     select new Response(saved.Id.ToString());
 ```
 
-### 5. ReportIncidentCommand -- VO 합성 + 배포 참조
+### 5. ReportIncidentCommand -- VO Composition + Deployment Reference
 
 ```csharp
 FinT<IO, Response> usecase =
@@ -157,11 +157,11 @@ FinT<IO, Response> usecase =
     select new Response(saved.Id.ToString());
 ```
 
-## 이벤트 핸들러 패턴
+## Event Handler Patterns
 
 ### QuarantineDeploymentOnCriticalIncidentHandler
 
-Critical/High 심각도 인시던트 발생 시 배포를 자동 격리합니다. `IncidentSeverity.RequiresQuarantine` 도메인 속성을 활용합니다.
+Automatically quarantines deployments when Critical/High severity incidents occur. Utilizes the `IncidentSeverity.RequiresQuarantine` domain property.
 
 ```csharp
 public sealed class QuarantineDeploymentOnCriticalIncidentHandler(
@@ -191,14 +191,14 @@ public sealed class QuarantineDeploymentOnCriticalIncidentHandler(
 }
 ```
 
-이벤트 핸들러의 특징:
-- 실패해도 전체 트랜잭션을 롤백하지 않음 (eventual consistency)
-- `RequiresQuarantine` 도메인 속성으로 조건 판별
-- 격리 실패(이미 Decommissioned 등) 시 무시
+Event handler characteristics:
+- Does not roll back the entire transaction on failure (eventual consistency)
+- Determines conditions via `RequiresQuarantine` domain property
+- Ignores quarantine failure (e.g., already Decommissioned)
 
 ### InitiateAssessmentOnRiskUpgradeHandler
 
-위험 등급 상향 시 활성 배포에 대해 컴플라이언스 평가를 자동 생성합니다. Specification 합성(`&` 연산자)을 활용합니다.
+Automatically creates compliance assessments for active deployments on risk tier upgrade. Utilizes Specification composition (`&` operator).
 
 ```csharp
 public sealed class InitiateAssessmentOnRiskUpgradeHandler(
@@ -231,19 +231,19 @@ public sealed class InitiateAssessmentOnRiskUpgradeHandler(
 }
 ```
 
-핵심 포인트:
-- `RequiresComplianceAssessment` 도메인 속성으로 조건 판별
-- `DeploymentByModelSpec & DeploymentActiveSpec`: Specification 합성으로 "해당 모델의 활성 배포"를 조회
-- 각 활성 배포에 대해 독립적으로 평가 생성
+Key points:
+- Determines conditions via `RequiresComplianceAssessment` domain property
+- `DeploymentByModelSpec & DeploymentActiveSpec`: Specification composition queries "active deployments for the given model"
+- Creates assessments independently for each active deployment
 
-## Command vs Event Handler 실행 모델 비교
+## Command vs Event Handler Execution Model Comparison
 
-| 구분 | Command Handler | Event Handler |
+| Aspect | Command Handler | Event Handler |
 |------|----------------|---------------|
-| 트리거 | 외부 요청 | 도메인 이벤트 |
-| 반환 타입 | `FinResponse<Response>` | `void` (ValueTask) |
-| 실패 처리 | 호출자에게 오류 반환 | 로깅 후 무시 (eventual consistency) |
-| 트랜잭션 | 전체 체인이 하나의 트랜잭션 | 독립 트랜잭션 |
-| 검증 | FluentValidation + FinT | 도메인 속성으로 조건 분기 |
+| Trigger | External request | Domain event |
+| Return type | `FinResponse<Response>` | `void` (ValueTask) |
+| Failure handling | Returns error to caller | Logs and ignores (eventual consistency) |
+| Transaction | Entire chain as one transaction | Independent transaction |
+| Validation | FluentValidation + FinT | Conditional branching via domain properties |
 
-[구현 결과](./03-implementation-results/)에서 전체 Use Case 목록과 포트 매핑을 확인합니다.
+See the complete Use Case list and port mappings in [Implementation Results](./03-implementation-results/).

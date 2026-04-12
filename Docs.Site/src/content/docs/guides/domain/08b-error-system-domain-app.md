@@ -2,88 +2,88 @@
 title: "Error System — Domain/Application Errors"
 ---
 
-이 문서는 Domain/Application/Event 레이어별 에러 정의와 테스트 패턴을 다룹니다. 에러 처리의 기본 원칙과 네이밍 규칙은 [08a-error-system.md](./08a-error-system)을 참고하세요. Adapter 에러, Custom 에러, 테스트 모범 사례, 레이어별 체크리스트는 [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing)을 참고하세요.
+This document covers error definitions and test patterns for the Domain/Application/Event layers. For basic principles and naming rules of error handling, refer to [08a-error-system.md](./08a-error-system). For Adapter errors, Custom errors, testing best practices, and per-layer checklists, refer to [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing).
 
 ## Introduction
 
-[08a-error-system.md](./08a-error-system)에서 에러 시스템의 기초와 네이밍 규칙을 다뤘습니다. 이 문서에서는 Domain과 Application 레이어의 에러 정의, 팩토리 메서드 사용법, 테스트 어설션 패턴을 구체적으로 살펴봅니다.
+[08a-error-system.md](./08a-error-system) covered the fundamentals and naming rules of the error system. This document examines Domain and Application layer error definitions, factory method usage, and test assertion patterns in detail.
 
-> 각 레이어의 에러 팩토리(`DomainError.For`, `ApplicationError.For`, `EventError.For`)는 에러 출처를 타입 시스템에 명시하여, 에러 코드만으로 어느 레이어에서 발생한 문제인지 즉시 파악할 수 있게 합니다.
+> Each layer's error factory (`DomainError.For`, `ApplicationError.For`, `EventError.For`) explicitly identifies the error source in the type system, making it immediately clear which layer the problem originated from based on the error code alone.
 
 ## Summary
 
 ### Key Commands
 
 ```csharp
-// Domain 에러
-DomainError.For<Email>(new Empty(), value, "이메일은 비어있을 수 없습니다");
-DomainError.For<Age, int>(new Negative(), value, "나이는 음수일 수 없습니다");
+// Domain error
+DomainError.For<Email>(new Empty(), value, "Email cannot be empty");
+DomainError.For<Age, int>(new Negative(), value, "Age cannot be negative");
 
-// Application 에러
-ApplicationError.For<CreateProductCommand>(new AlreadyExists(), code, "이미 존재합니다");
+// Application error
+ApplicationError.For<CreateProductCommand>(new AlreadyExists(), code, "Already exists");
 
-// Event 에러
+// Event error
 EventError.For<DomainEventPublisher>(new PublishFailed(), eventType, "Failed to publish event");
 
-// 테스트 어설션
+// Test assertions
 result.ShouldBeDomainError<Email, Email>(new DomainErrorType.Empty());
 fin.ShouldBeApplicationError<GetProductQuery, Product>(new ApplicationErrorType.NotFound());
 ```
 
 ### Key Procedures
 
-1. 에러가 발생하는 레이어 결정 (Domain / Application / Event)
-2. 표준 에러 타입 선택 또는 Custom sealed record 정의
-3. 레이어 팩토리로 에러 생성 (`DomainError.For`, `ApplicationError.For`, `EventError.For`)
-4. 테스트 작성 - `Functorium.Testing.Assertions.Errors` 네임스페이스의 어설션 메서드 사용
+1. Determine which layer the error originates from (Domain / Application / Event)
+2. Select a standard error type or define a Custom sealed record
+3. Create the error using the layer factory (`DomainError.For`, `ApplicationError.For`, `EventError.For`)
+4. Write tests using assertion methods from the `Functorium.Testing.Assertions.Errors` namespace
 
 ### Key Concepts
 
-| 레이어 | 팩토리 | 에러 코드 접두사 | 사용 시점 |
+| Layer | Factory | Error Code Prefix | When to Use |
 |--------|--------|-----------------|----------|
-| Domain | `DomainError` | `DomainErrors.` | VO 검증, Entity 불변식, Aggregate 규칙 |
-| Application | `ApplicationError` | `ApplicationErrors.` | Usecase 비즈니스 로직, 권한/인증 |
-| Event | `EventError` | `ApplicationErrors.` | 이벤트 발행/핸들러 실패 |
+| Domain | `DomainError` | `DomainErrors.` | VO validation, Entity invariants, Aggregate rules |
+| Application | `ApplicationError` | `ApplicationErrors.` | Usecase business logic, authorization/authentication |
+| Event | `EventError` | `ApplicationErrors.` | Event publishing/handler failures |
 
-먼저 Domain 에러의 생성과 테스트 패턴을 살펴본 뒤, Application 에러와 Event 에러로 넘어갑니다.
+We first examine Domain error creation and test patterns, then move on to Application errors and Event errors.
 
 ---
 
-## Domain 에러
+## Domain Errors
 
-### 에러 생성 및 반환
+### Error Creation and Return
 
-Value Object 검증이나 Entity 불변식 위반 시 `DomainError.For<T>()`로 에러를 생성합니다. 아래 예제에서 타입 파라미터 개수에 따른 오버로드 차이.
+Use `DomainError.For<T>()` to create errors for Value Object validation or Entity invariant violations. The examples below show the overload differences based on the number of type parameters.
 
 ```csharp
 using Functorium.Domains.Errors;
 using static Functorium.Domains.Errors.DomainErrorType;
 
-// 기본 사용법 - 암시적 변환으로 직접 반환
+// Basic usage - return directly via implicit conversion
 public Fin<Email> Create(string? value)
 {
     if (string.IsNullOrWhiteSpace(value))
         return DomainError.For<Email>(
             new Empty(),
             currentValue: value ?? "",
-            message: "이메일은 비어있을 수 없습니다");
+            message: "Email cannot be empty");
 
     return new Email(value);
 }
 
-// 제네릭 값 타입
+// Generic value type
 public Fin<Age> Create(int value)
 {
     if (value < 0)
         return DomainError.For<Age, int>(
             new Negative(),
             currentValue: value,
-            message: "나이는 음수일 수 없습니다");
+            message: "Age cannot be negative");
 
     return new Age(value);
 }
 
-// 두 개의 값 포함
+// Two values included
 // Error type definition: public sealed record InvalidRange : DomainErrorType.Custom;
 public Fin<DateRange> Create(DateTime start, DateTime end)
 {
@@ -91,12 +91,12 @@ public Fin<DateRange> Create(DateTime start, DateTime end)
         return DomainError.For<DateRange, DateTime, DateTime>(
             new InvalidRange(),
             start, end,
-            message: "시작 날짜는 종료 날짜보다 이전이어야 합니다");
+            message: "Start date must be before end date");
 
     return new DateRange(start, end);
 }
 
-// 세 개의 값 포함
+// Three values included
 // Error type definition: public sealed record InvalidTriangle : DomainErrorType.Custom;
 public Fin<Triangle> Create(double a, double b, double c)
 {
@@ -104,13 +104,13 @@ public Fin<Triangle> Create(double a, double b, double c)
         return DomainError.For<Triangle, double, double, double>(
             new InvalidTriangle(),
             a, b, c,
-            message: "유효한 삼각형을 만들 수 없습니다");
+            message: "Cannot form a valid triangle");
 
     return new Triangle(a, b, c);
 }
 ```
 
-### Entity 메서드에서 에러 반환
+### Returning Errors from Entity Methods
 
 ```csharp
 public sealed class Product : AggregateRoot<ProductId>
@@ -123,7 +123,7 @@ public sealed class Product : AggregateRoot<ProductId>
             return DomainError.For<Product, int>(
                 new InsufficientStock(),
                 currentValue: (int)StockQuantity,
-                message: $"재고 부족. 현재: {(int)StockQuantity}, 요청: {(int)quantity}");
+                message: $"Insufficient stock. Current: {(int)StockQuantity}, Requested: {(int)quantity}");
 
         StockQuantity = Quantity.Create((int)StockQuantity - (int)quantity).ThrowIfFail();
         AddDomainEvent(new StockDeductedEvent(Id, quantity));
@@ -132,88 +132,88 @@ public sealed class Product : AggregateRoot<ProductId>
 }
 ```
 
-### DomainErrorType 범주 구조 및 전체 목록
+### DomainErrorType Category Structure and Complete List
 
-다음 표는 `DomainErrorType`의 범주별 분류와 각 에러 타입이 정의된 파일을 정리한 것입니다.
+The following table categorizes `DomainErrorType` by category and lists the files where each error type is defined.
 
 | Category | File | Description |
 |------|------|------|
-| Presence | `DomainErrorType.Presence.cs` | 값 존재 검증 |
-| Length | `DomainErrorType.Length.cs` | 문자열/컬렉션 길이 검증 |
-| Format | `DomainErrorType.Format.cs` | 형식 및 대소문자 검증 |
-| DateTime | `DomainErrorType.DateTime.cs` | 날짜 검증 |
-| Numeric | `DomainErrorType.Numeric.cs` | 숫자 값/범위 검증 |
-| Range | `DomainErrorType.Range.cs` | min/max 쌍 검증 |
-| Existence | `DomainErrorType.Existence.cs` | 존재 여부 검증 |
-| Custom | `DomainErrorType.Custom.cs` | 커스텀 에러 |
+| Presence | `DomainErrorType.Presence.cs` | Value existence validation |
+| Length | `DomainErrorType.Length.cs` | String/collection length validation |
+| Format | `DomainErrorType.Format.cs` | Format and case validation |
+| DateTime | `DomainErrorType.DateTime.cs` | Date validation |
+| Numeric | `DomainErrorType.Numeric.cs` | Numeric value/range validation |
+| Range | `DomainErrorType.Range.cs` | min/max pair validation |
+| Existence | `DomainErrorType.Existence.cs` | Existence validation |
+| Custom | `DomainErrorType.Custom.cs` | Custom errors |
 
-#### Presence (값 존재 검증) - R1
-
-| Error Type | Description | Usage Example |
-|-----------|------|----------|
-| `Empty` | 비어있음 (null, empty string, empty collection) | `new Empty()` |
-| `Null` | null임 | `new Null()` |
-
-#### Length (문자열/컬렉션 길이 검증) - R2, R6
+#### Presence (Value Existence Validation) - R1
 
 | Error Type | Description | Usage Example |
 |-----------|------|----------|
-| `TooShort` | 최소 길이 미만 | `new TooShort(MinLength: 8)` |
-| `TooLong` | 최대 길이 초과 | `new TooLong(MaxLength: 100)` |
-| `WrongLength` | 정확한 길이 불일치 | `new WrongLength(Expected: 10)` |
+| `Empty` | Is empty (null, empty string, empty collection) | `new Empty()` |
+| `Null` | Is null | `new Null()` |
 
-#### Format (형식 검증) - R3, R5
-
-| Error Type | Description | Usage Example |
-|-----------|------|----------|
-| `InvalidFormat` | 형식 불일치 | `new InvalidFormat(Pattern: @"^\d{3}-\d{4}$")` |
-| `NotUpperCase` | 대문자가 아님 | `new NotUpperCase()` |
-| `NotLowerCase` | 소문자가 아님 | `new NotLowerCase()` |
-
-#### DateTime (날짜 검증) - R1, R2, R3
+#### Length (String/Collection Length Validation) - R2, R6
 
 | Error Type | Description | Usage Example |
 |-----------|------|----------|
-| `DefaultDate` | 날짜가 기본값(DateTime.MinValue)임 | `new DefaultDate()` |
-| `NotInPast` | 날짜가 과거여야 하는데 미래임 | `new NotInPast()` |
-| `NotInFuture` | 날짜가 미래여야 하는데 과거임 | `new NotInFuture()` |
-| `TooLate` | 날짜가 기준보다 늦음 (이전이어야 함) | `new TooLate(Boundary: "2025-12-31")` |
-| `TooEarly` | 날짜가 기준보다 이름 (이후여야 함) | `new TooEarly(Boundary: "2020-01-01")` |
+| `TooShort` | Below minimum length | `new TooShort(MinLength: 8)` |
+| `TooLong` | Exceeds maximum length | `new TooLong(MaxLength: 100)` |
+| `WrongLength` | Exact length mismatch | `new WrongLength(Expected: 10)` |
 
-#### Numeric (숫자 검증) - R1, R2, R3
+#### Format (Format Validation) - R3, R5
 
 | Error Type | Description | Usage Example |
 |-----------|------|----------|
-| `Zero` | 0임 | `new Zero()` |
-| `Negative` | 음수임 | `new Negative()` |
-| `NotPositive` | 양수가 아님 (0 포함) | `new NotPositive()` |
-| `OutOfRange` | 범위 밖 | `new OutOfRange(Min: "1", Max: "100")` |
-| `BelowMinimum` | 최소값 미만 | `new BelowMinimum(Minimum: "0")` |
-| `AboveMaximum` | 최대값 초과 | `new AboveMaximum(Maximum: "1000")` |
+| `InvalidFormat` | Format mismatch | `new InvalidFormat(Pattern: @"^\d{3}-\d{4}$")` |
+| `NotUpperCase` | Not uppercase | `new NotUpperCase()` |
+| `NotLowerCase` | Not lowercase | `new NotLowerCase()` |
 
-#### Range (범위 쌍 검증) - R1
+#### DateTime (Date Validation) - R1, R2, R3
 
 | Error Type | Description | Usage Example |
 |-----------|------|----------|
-| `RangeInverted` | 범위가 역전됨 (최소값이 최대값보다 큼) | `new RangeInverted(Min: "10", Max: "1")` |
-| `RangeEmpty` | 범위가 비어있음 (min == max, 엄격한 범위) | `new RangeEmpty(Value: "5")` |
+| `DefaultDate` | Date is default value (DateTime.MinValue) | `new DefaultDate()` |
+| `NotInPast` | Date should be in past but is in future | `new NotInPast()` |
+| `NotInFuture` | Date should be in future but is in past | `new NotInFuture()` |
+| `TooLate` | Date is later than boundary (should be before) | `new TooLate(Boundary: "2025-12-31")` |
+| `TooEarly` | Date is earlier than boundary (should be after) | `new TooEarly(Boundary: "2020-01-01")` |
 
-#### Existence (존재 여부 검증) - R1, R3, R4
-
-| Error Type | Description | Usage Example |
-|-----------|------|----------|
-| `NotFound` | 찾을 수 없음 | `new NotFound()` |
-| `AlreadyExists` | 이미 존재함 | `new AlreadyExists()` |
-| `Duplicate` | 중복됨 | `new Duplicate()` |
-| `Mismatch` | 값 불일치 | `new Mismatch()` |
-
-#### Custom (커스텀 에러)
+#### Numeric (Numeric Validation) - R1, R2, R3
 
 | Error Type | Description | Usage Example |
 |-----------|------|----------|
-| `Custom` | 도메인 특화 에러 (abstract) | `sealed record AlreadyShipped : DomainErrorType.Custom;` → `new AlreadyShipped()` |
+| `Zero` | Is zero | `new Zero()` |
+| `Negative` | Is negative | `new Negative()` |
+| `NotPositive` | Not positive (includes 0) | `new NotPositive()` |
+| `OutOfRange` | Out of range | `new OutOfRange(Min: "1", Max: "100")` |
+| `BelowMinimum` | Below minimum | `new BelowMinimum(Minimum: "0")` |
+| `AboveMaximum` | Exceeds maximum | `new AboveMaximum(Maximum: "1000")` |
 
-### Value Object 사용 예시
+#### Range (Range Pair Validation) - R1
+
+| Error Type | Description | Usage Example |
+|-----------|------|----------|
+| `RangeInverted` | Range is inverted (min is greater than max) | `new RangeInverted(Min: "10", Max: "1")` |
+| `RangeEmpty` | Range is empty (min == max, strict range) | `new RangeEmpty(Value: "5")` |
+
+#### Existence (Existence Validation) - R1, R3, R4
+
+| Error Type | Description | Usage Example |
+|-----------|------|----------|
+| `NotFound` | Not found | `new NotFound()` |
+| `AlreadyExists` | Already exists | `new AlreadyExists()` |
+| `Duplicate` | Duplicated | `new Duplicate()` |
+| `Mismatch` | Value mismatch | `new Mismatch()` |
+
+#### Custom (Custom Errors)
+
+| Error Type | Description | Usage Example |
+|-----------|------|----------|
+| `Custom` | Domain-specific error (abstract) | `sealed record AlreadyShipped : DomainErrorType.Custom;` -> `new AlreadyShipped()` |
+
+### Value Object Usage Example
 
 ```csharp
 public sealed class Email : SimpleValueObject<string>
@@ -233,17 +233,17 @@ public sealed class Email : SimpleValueObject<string>
 }
 ```
 
-### Domain 에러 테스트
+### Domain Error Testing
 
-테스트 어설션 네임스페이스:
+Test assertion namespace:
 
 ```csharp
 using Functorium.Testing.Assertions.Errors;
 ```
 
-#### Error 검증
+#### Error Validation
 
-`ShouldBeDomainError` 어설션의 타입 파라미터가 에러 소스 타입을 지정하는 방식.
+How `ShouldBeDomainError` assertion's type parameter specifies the error source type.
 
 ```csharp
 // 기본 에러 타입 검증

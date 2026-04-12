@@ -5,17 +5,17 @@ description: "CQRS use case requirements for the AI Model Governance Platform"
 
 ## Background
 
-[도메인 비즈니스 요구사항](../domain/00-business-requirements/)에서 정의한 비즈니스 규칙은 '무엇이 허용되고 무엇이 거부되는가'에 집중합니다. 이제 사용자 요청이 들어왔을 때 **어떤 순서로 처리하고, 어디서 검증하며, 누구에게 위임하는가를** 정의해야 합니다.
+The business rules defined in [domain business requirements](../domain/00-business-requirements/) focus on 'what is allowed and what is rejected.' Now we need to define **in what order to process, where to validate, and to whom to delegate** when a user request comes in.
 
-Application 레이어는 도메인 로직을 직접 수행하지 않습니다. 사용자의 요청을 받아 입력을 검증하고, 도메인 객체에 작업을 위임하며, 결과를 반환하는 얇은 조율 계층입니다.
+The Application layer does not perform domain logic directly. It is a thin orchestration layer that receives user requests, validates inputs, delegates work to domain objects, and returns results.
 
 ## Overall Workflow Structure
 
-Application 레이어의 워크플로우는 두 가지 트리거로 시작됩니다. 외부 요청(Command/Query)에 의한 흐름과 도메인 이벤트에 의한 내부 반응형 흐름입니다.
+Application layer workflows are triggered by two types of initiators: flows from external requests (Command/Query) and internal reactive flows from domain events.
 
 ```mermaid
 flowchart TB
-    subgraph External["외부 요청 (Command / Query)"]
+    subgraph External["External Requests (Command / Query)"]
         direction LR
         C1["RegisterModelCommand"]
         C2["ClassifyModelRiskCommand"]
@@ -31,7 +31,7 @@ flowchart TB
         Q4["SearchDeploymentsQuery"]
     end
 
-    subgraph Domain["도메인 Aggregate"]
+    subgraph Domain["Domain Aggregates"]
         direction LR
         Model["AIModel"]
         Deployment["ModelDeployment"]
@@ -39,7 +39,7 @@ flowchart TB
         Incident["ModelIncident"]
     end
 
-    subgraph Internal["내부 유스케이스 (이벤트 핸들러)"]
+    subgraph Internal["Internal Use Cases (Event Handlers)"]
         direction LR
         H1["QuarantineDeployment\nOnCriticalIncident"]
         H2["InitiateAssessment\nOnRiskUpgrade"]
@@ -55,58 +55,58 @@ flowchart TB
 
 ## Workflow Rules
 
-### 1. AI 모델 관리
+### 1. AI Model Management
 
-- 모델명, 버전, 목적을 입력하여 모델을 등록한다
-- 모든 입력 값은 동시에 검증하여 오류를 한번에 반환한다
-- 목적 키워드 기반으로 위험 등급을 자동 분류한다 (RiskClassificationService)
-- 모델의 위험 등급을 수동으로 재분류할 수 있다
+- Register a model with name, version, and purpose
+- Validate all input values simultaneously and return errors at once
+- Automatically classify risk tier based on purpose keywords (RiskClassificationService)
+- Allow manual reclassification of a model's risk tier
 
-### 2. 배포 관리
+### 2. Deployment Management
 
-- 모델 ID, 엔드포인트 URL, 환경, 드리프트 임계값을 입력하여 배포를 생성한다
-- 모든 입력 값은 동시에 검증하여 오류를 한번에 반환한다
-- 모델 존재를 확인한 뒤 배포를 생성한다
-- 배포를 검토를 위해 제출할 수 있다 -- 적격성 검증(금지 등급, 컴플라이언스, 인시던트)을 먼저 수행한다
-- 컴플라이언스 평가 통과 확인 후 배포를 활성화할 수 있다
-- 배포를 격리할 수 있으며, 격리 사유를 기록한다
+- Create a deployment with model ID, endpoint URL, environment, and drift threshold
+- Validate all input values simultaneously and return errors at once
+- Confirm model existence before creating the deployment
+- Submit a deployment for review -- perform eligibility verification (prohibited tier, compliance, incidents) first
+- Activate a deployment after confirming compliance assessment passage
+- Quarantine a deployment, recording the quarantine reason
 
-### 3. 컴플라이언스 평가
+### 3. Compliance Assessment
 
-- 모델 ID, 배포 ID를 입력하여 평가를 개시한다
-- 모델과 배포의 존재를 확인한 뒤, 위험 등급 기반으로 평가 기준을 자동 생성한다
+- Initiate an assessment with model ID and deployment ID
+- Confirm model and deployment existence, then auto-generate assessment criteria based on risk tier
 
-### 4. 인시던트 관리
+### 4. Incident Management
 
-- 배포 ID, 심각도, 설명을 입력하여 인시던트를 보고한다
-- 모든 입력 값은 동시에 검증하여 오류를 한번에 반환한다
-- 배포 존재를 확인한 뒤 인시던트를 생성한다
+- Report an incident with deployment ID, severity, and description
+- Validate all input values simultaneously and return errors at once
+- Confirm deployment existence before creating the incident
 
-### 5. 도메인 이벤트 반응형 워크플로우
+### 5. Domain Event Reactive Workflows
 
-다음 워크플로우는 외부 요청이 아닌 도메인 이벤트에 의해 트리거됩니다.
+The following workflows are triggered by domain events, not external requests.
 
-- **Critical 인시던트 -> 배포 자동 격리:** Critical 또는 High 심각도 인시던트가 보고되면 해당 배포를 자동으로 격리한다
-- **위험 등급 상향 -> 평가 자동 개시:** 모델의 위험 등급이 High/Unacceptable로 상향되면 활성 배포에 대해 컴플라이언스 평가를 자동 생성한다
+- **Critical incident -> automatic deployment quarantine:** When a Critical or High severity incident is reported, the corresponding deployment is automatically quarantined
+- **Risk tier upgrade -> automatic assessment initiation:** When a model's risk tier is upgraded to High/Unacceptable, a compliance assessment is automatically created for active deployments
 
-#### Critical 인시던트 -> 배포 자동 격리 흐름
+#### Critical Incident -> Automatic Deployment Quarantine Flow
 
 ```mermaid
 sequenceDiagram
-    actor Client as 클라이언트
+    actor Client as Client
     participant Cmd as ReportIncidentCommand
     participant Incident as ModelIncident
     participant Repo as IncidentRepository
-    participant Bus as 이벤트 버스
+    participant Bus as Event Bus
     participant Handler as QuarantineDeployment<br/>Handler
     participant Deployment as ModelDeployment
     participant DRepo as DeploymentRepository
 
     Client->>Cmd: Request(DeploymentId, Critical, desc)
     Cmd->>Repo: Create(incident)
-    Note over Incident: ReportedEvent 발생<br/>(Severity=Critical)
+    Note over Incident: ReportedEvent raised<br/>(Severity=Critical)
 
-    Note over Bus: 커밋 후 이벤트 발행
+    Note over Bus: Events published after commit
 
     Bus->>Handler: ReportedEvent
     Handler->>DRepo: GetById(deploymentId)
@@ -115,111 +115,112 @@ sequenceDiagram
     Handler->>DRepo: Update(deployment)
 ```
 
-#### 위험 등급 상향 -> 평가 자동 개시 흐름
+#### Risk Tier Upgrade -> Automatic Assessment Initiation Flow
 
 ```mermaid
 sequenceDiagram
     participant Cmd as ClassifyModelRiskCommand
     participant Model as AIModel
-    participant Bus as 이벤트 버스
+    participant Bus as Event Bus
     participant Handler as InitiateAssessment<br/>Handler
     participant DRepo as DeploymentRepository
     participant ARepo as AssessmentRepository
 
     Cmd->>Model: ClassifyRisk(High)
-    Note over Model: RiskClassifiedEvent 발생<br/>(NewRiskTier=High)
+    Note over Model: RiskClassifiedEvent raised<br/>(NewRiskTier=High)
 
-    Note over Bus: 커밋 후 이벤트 발행
+    Note over Bus: Events published after commit
 
     Bus->>Handler: RiskClassifiedEvent
     Handler->>DRepo: Find(ByModel & Active)
     DRepo-->>Handler: [Deployment1, Deployment2]
-    loop 각 활성 배포
+    loop Each active deployment
         Handler->>ARepo: Create(assessment)
     end
 ```
 
-### 6. 데이터 조회
+### 6. Data Queries
 
-조회 요청은 상태를 변경하지 않으며, 데이터베이스에서 필요한 형태로 직접 가져옵니다.
+Query requests do not modify state and retrieve data in the required format directly from the database.
 
-- 모델을 ID로 상세 조회할 수 있다 (배포/평가/인시던트 포함)
-- 모델 목록을 검색할 수 있으며 위험 등급 필터를 지원한다
-- 배포를 ID로 상세 조회할 수 있다
-- 배포 목록을 검색할 수 있으며 상태/환경 필터를 지원한다
-- 평가를 ID로 상세 조회할 수 있다 (평가 기준 포함)
-- 인시던트를 ID로 상세 조회할 수 있다
-- 인시던트 목록을 검색할 수 있으며 심각도/상태 필터를 지원한다
+- Look up model details by ID (including deployments/assessments/incidents)
+- Search model list with risk tier filter support
+- Look up deployment details by ID
+- Search deployment list with status/environment filter support
+- Look up assessment details by ID (including assessment criteria)
+- Look up incident details by ID
+- Search incident list with severity/status filter support
 
-### 7. 입력 검증 규칙
+### 7. Input Validation Rules
 
-사용자 요청은 두 단계로 검증합니다.
+User requests are validated in two stages.
 
-- 형식 검증: FluentValidation + `MustSatisfyValidation`으로 VO 검증 규칙 재사용
-- 도메인 검증: 도메인 규칙에 따른 의미적 문제를 검증한다
-- 여러 필드를 동시에 검증하여 모든 오류를 한번에 반환한다
+- Format validation: FluentValidation + `MustSatisfyValidation` to reuse VO validation rules
+- Domain validation: Validates semantic issues according to domain rules
+- Validate multiple fields simultaneously and return all errors at once
 
 ## Scenarios
 
 ### Normal Scenarios
 
-1. **모델 등록** -- 3개 입력 값을 동시에 검증한 뒤, 위험 등급을 자동 분류하고 모델을 생성한다.
-2. **위험 등급 재분류** -- 모델을 조회하고 위험 등급을 재분류한다. High로 상향되면 평가가 자동 개시된다.
-3. **배포 생성** -- 4개 입력 값을 동시에 검증한 뒤, 모델 존재를 확인하고 배포를 생성한다.
-4. **배포 검토 제출** -- 적격성 검증(금지 등급, 컴플라이언스, 인시던트)을 수행한 뒤 검토를 제출한다.
-5. **배포 활성화** -- 평가 통과를 확인한 뒤 배포를 활성화한다.
-6. **인시던트 보고 + 자동 격리** -- 인시던트를 생성하면 Critical/High 심각도 시 배포가 자동 격리된다.
+1. **Model registration** -- Validate 3 input values simultaneously, auto-classify risk tier, and create the model.
+2. **Risk tier reclassification** -- Look up the model and reclassify the risk tier. If upgraded to High, an assessment is auto-initiated.
+3. **Deployment creation** -- Validate 4 input values simultaneously, confirm model existence, and create the deployment.
+4. **Deployment review submission** -- Perform eligibility verification (prohibited tier, compliance, incidents) then submit for review.
+5. **Deployment activation** -- Confirm assessment passage, then activate the deployment.
+6. **Incident report + auto-quarantine** -- Create the incident, and on Critical/High severity, the deployment is auto-quarantined.
 
 ### Rejection Scenarios
 
-7. **다중 검증 실패** -- 여러 입력 값이 동시에 잘못되면 모든 오류를 한번에 반환한다.
-8. **금지 모델 배포** -- Unacceptable 위험 등급의 모델은 배포 검토 제출이 거부된다.
-9. **미통과 컴플라이언스** -- High 위험 등급에 통과된 평가가 없으면 배포가 거부된다.
-10. **미해결 인시던트** -- 미해결 인시던트가 있는 모델은 배포 검토 제출이 거부된다.
-11. **잘못된 상태 전이** -- Draft에서 Active로 직접 전이를 시도하면 거부된다.
+7. **Multiple validation failures** -- When multiple input values are simultaneously invalid, return all errors at once.
+8. **Prohibited model deployment** -- Deployment review submission is rejected for models with Unacceptable risk tier.
+9. **Unmet compliance** -- Deployment is rejected if no passed assessment exists for High risk tier.
+10. **Unresolved incidents** -- Deployment review submission is rejected for models with unresolved incidents.
+11. **Invalid state transition** -- Direct transition from Draft to Active is rejected.
 
 ### Key Acceptance Criteria
 
-#### 모델 등록 (RegisterModelCommand)
+#### Model Registration (RegisterModelCommand)
 
-**정상:**
+**Normal:**
 ```
-Given: 유효한 모델명("GPT-Classifier"), SemVer 버전("1.0.0"), 목적("hiring decision support")
-When:  AI 거버넌스 관리자가 모델을 등록한다
-Then:  모델이 생성되고 위험 등급이 High로 자동 분류되며 ModelId가 반환된다
-```
-
-**거부:**
-```
-Given: 빈 모델명(""), 잘못된 버전("abc")
-When:  AI 거버넌스 관리자가 모델을 등록한다
-Then:  두 오류(ModelName 빈 문자열, ModelVersion SemVer 위반)가 동시에 반환된다
+Given: Valid model name ("GPT-Classifier"), SemVer version ("1.0.0"), purpose ("hiring decision support")
+When:  An AI governance administrator registers a model
+Then:  The model is created, risk tier is auto-classified as High, and ModelId is returned
 ```
 
-#### 배포 검토 제출 (SubmitDeploymentForReviewCommand)
-
-**거부 (금지 등급):**
+**Rejection:**
 ```
-Given: Unacceptable 위험 등급 모델을 참조하는 Draft 배포가 존재한다
-When:  AI 거버넌스 관리자가 검토를 제출한다
-Then:  ProhibitedModel 오류가 반환되고 배포 상태는 Draft를 유지한다
+Given: Empty model name (""), invalid version ("abc")
+When:  An AI governance administrator registers a model
+Then:  Two errors (ModelName empty string, ModelVersion SemVer violation) are returned simultaneously
 ```
 
-#### 인시던트 보고 + 자동 격리 (ReportIncidentCommand + EventHandler)
+#### Deployment Review Submission (SubmitDeploymentForReviewCommand)
 
-**정상:**
+**Rejection (prohibited tier):**
 ```
-Given: Active 상태의 배포가 존재한다
-When:  컴플라이언스 담당자가 Critical 심각도 인시던트를 보고한다
-Then:  인시던트가 Reported 상태로 생성되고, QuarantineDeploymentOnCriticalIncidentHandler가
-       배포를 자동 격리하여 Quarantined 상태로 전이한다
+Given: A Draft deployment referencing a model with Unacceptable risk tier exists
+When:  An AI governance administrator submits for review
+Then:  A ProhibitedModel error is returned and the deployment status remains Draft
+```
+
+#### Incident Report + Auto-Quarantine (ReportIncidentCommand + EventHandler)
+
+**Normal:**
+```
+Given: A deployment in Active state exists
+When:  A compliance officer reports a Critical severity incident
+Then:  The incident is created in Reported state, and QuarantineDeploymentOnCriticalIncidentHandler
+       auto-quarantines the deployment, transitioning it to Quarantined state
 ```
 
 ## States That Must Not Exist
 
-- 도메인 검증을 거치지 않고 생성된 도메인 객체
-- 형식 검증 없이 워크플로우에 진입한 요청
-- 상태 변경 요청에서 조회 전용 결과를 반환하는 경로 혼재
-- 외부 구현체에 대한 직접 의존이 워크플로우에 침투한 상태
+- Domain objects created without going through domain validation
+- Requests entering the workflow without format validation
+- Mixed paths returning query-only results for state-changing requests
+- Direct dependency on external implementations infiltrating the workflow
 
-다음 단계에서는 이 워크플로우 규칙을 분석하여 Use Case와 포트를 식별하고, [타입 설계 의사결정](./01-type-design-decisions/)을 도출합니다.
+
+In the next step, we analyze these workflow rules to identify Use Cases and ports, and derive [Type Design Decisions](./01-type-design-decisions/).

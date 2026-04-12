@@ -2,27 +2,27 @@
 title: "ApiGenerator"
 ---
 
-.NET DLL에서 Public API만 정확하게 추출하려면 어떻게 해야 할까요? 리플렉션으로 타입을 열거할 수도 있지만, 제네릭 제약 조건, 확장 메서드, 네임스페이스 구조까지 C# 형식으로 깔끔하게 출력하려면 상당한 작업이 필요합니다. ApiGenerator.cs는 PublicApiGenerator 라이브러리를 활용하여 이 문제를 해결합니다. ExtractApiChanges.cs가 프로젝트를 빌드하고 결과를 조합하는 오케스트레이터라면, ApiGenerator.cs는 실제로 DLL을 열어 Public API를 추출하는 실무 담당자입니다.
+How do you accurately extract only the Public API from a .NET DLL? You could enumerate types using reflection, but outputting generic constraints, extension methods, and namespace structures cleanly in C# format requires considerable work. ApiGenerator.cs solves this problem using the PublicApiGenerator library. If ExtractApiChanges.cs is the orchestrator that builds projects and assembles results, ApiGenerator.cs is the specialist that actually opens DLLs and extracts Public APIs.
 
-## 파일 위치와 사용법
+## File Location and Usage
 
 ```txt
 .release-notes/scripts/ApiGenerator.cs
 ```
 
 ```bash
-# 파일로 출력
+# Output to file
 dotnet ApiGenerator.cs <dll-path> <output-file>
 
-# 콘솔로 출력 (- 사용)
+# Output to console (using -)
 dotnet ApiGenerator.cs <dll-path> -
 ```
 
-ExtractApiChanges.cs에서 호출할 때는 콘솔 출력 모드(`-`)를 사용하여 결과를 파이프라인으로 받습니다.
+When called from ExtractApiChanges.cs, console output mode (`-`) is used to receive results through the pipeline.
 
-## 패키지 참조
+## Package References
 
-이 스크립트는 다른 스크립트들과 달리 **PublicApiGenerator 패키지를** 사용합니다. Microsoft에서 만든 이 라이브러리가 어셈블리의 Public API를 C# 형식으로 추출하는 핵심 기능을 제공합니다.
+Unlike other scripts, this script uses the **PublicApiGenerator package.** This library, made by Microsoft, provides the core functionality of extracting an assembly's Public API in C# format.
 
 ```csharp
 #!/usr/bin/env dotnet
@@ -38,9 +38,9 @@ using System.Runtime.Loader;
 using PublicApiGenerator;
 ```
 
-## 스크립트 구조
+## Script Structure
 
-CLI는 두 개의 Argument를 받습니다. DLL 경로와 출력 파일 경로입니다.
+The CLI takes two Arguments: the DLL path and the output file path.
 
 ```csharp
 var dllArgument = new Argument<string>("dll", "Path to the DLL file");
@@ -64,16 +64,16 @@ rootCommand.SetAction((parseResult, cancellationToken) =>
 return rootCommand.Parse(args).Invoke();
 ```
 
-## DLL 로드와 종속성 해결
+## DLL Loading and Dependency Resolution
 
-API를 추출하려면 DLL을 메모리에 로드해야 합니다. 그런데 단순히 `Assembly.LoadFrom()`을 사용하면 문제가 생깁니다. 대상 DLL이 참조하는 다른 어셈블리를 찾지 못해 로드에 실패할 수 있기 때문입니다.
+To extract APIs, the DLL must be loaded into memory. However, simply using `Assembly.LoadFrom()` can cause problems. The target DLL may fail to load because it cannot find other assemblies it references.
 
-이 문제를 해결하기 위해 **커스텀 AssemblyLoadContext를** 사용합니다. .NET의 AssemblyLoadContext는 어셈블리 로딩을 격리하고 커스터마이즈할 수 있는 메커니즘입니다. 종속성을 찾을 때 먼저 기본 컨텍스트(런타임에 이미 로드된 어셈블리)에서 찾고, 없으면 DLL과 같은 디렉터리에서 찾습니다. `dotnet publish`가 모든 종속성을 출력 디렉터리에 복사해두므로, 같은 디렉터리 검색으로 대부분의 종속성을 해결할 수 있습니다.
+To solve this problem, a **custom AssemblyLoadContext** is used. .NET's AssemblyLoadContext is a mechanism for isolating and customizing assembly loading. When looking for dependencies, it first searches the default context (assemblies already loaded in the runtime), and if not found, searches the same directory as the DLL. Since `dotnet publish` copies all dependencies to the output directory, searching the same directory resolves most dependencies.
 
 ```csharp
 static void GenerateApi(string dllPath, string outputPath)
 {
-    // DLL 존재 확인
+    // Check DLL existence
     if (!File.Exists(dllPath))
     {
         Console.Error.WriteLine($"Error: DLL not found: {dllPath}");
@@ -82,10 +82,10 @@ static void GenerateApi(string dllPath, string outputPath)
 
     var dllDirectory = Path.GetDirectoryName(dllPath)!;
 
-    // 커스텀 AssemblyLoadContext 생성
+    // Create custom AssemblyLoadContext
     var loadContext = new CustomAssemblyLoadContext(dllDirectory);
 
-    // 어셈블리 로드
+    // Load assembly
     var assembly = loadContext.LoadFromAssemblyPath(dllPath);
 }
 ```
@@ -102,14 +102,14 @@ class CustomAssemblyLoadContext : AssemblyLoadContext
 
     protected override Assembly? Load(AssemblyName assemblyName)
     {
-        // 기본 컨텍스트에서 먼저 찾기
+        // Search default context first
         try
         {
             return Default.LoadFromAssemblyName(assemblyName);
         }
         catch { }
 
-        // 같은 디렉터리에서 찾기
+        // Search same directory
         var dllPath = Path.Combine(_basePath, $"{assemblyName.Name}.dll");
         if (File.Exists(dllPath))
         {
@@ -121,32 +121,32 @@ class CustomAssemblyLoadContext : AssemblyLoadContext
 }
 ```
 
-`isCollectible: true`로 생성하면 사용 후 가비지 컬렉션이 가능합니다. 종속성을 찾지 못하면 예외 대신 `null`을 반환하여, 꼭 필요하지 않은 어셈블리 때문에 전체가 실패하는 것을 방지합니다.
+Creating with `isCollectible: true` allows garbage collection after use. If a dependency is not found, `null` is returned instead of an exception, preventing the entire process from failing due to non-essential assemblies.
 
-## Public API 추출
+## Public API Extraction
 
-어셈블리가 로드되면 PublicApiGenerator로 API를 추출합니다. 옵션을 통해 불필요한 어셈블리 속성과 컴파일러 생성 네임스페이스를 제외합니다.
+Once the assembly is loaded, the API is extracted with PublicApiGenerator. Options are used to exclude unnecessary assembly attributes and compiler-generated namespaces.
 
 ```csharp
-// PublicApiGenerator 옵션
+// PublicApiGenerator options
 var options = new ApiGeneratorOptions
 {
-    IncludeAssemblyAttributes = false,  // 어셈블리 속성 제외
-    DenyNamespacePrefixes = new[]       // 제외할 네임스페이스
+    IncludeAssemblyAttributes = false,  // Exclude assembly attributes
+    DenyNamespacePrefixes = new[]       // Namespaces to exclude
     {
         "System.Runtime.CompilerServices",
         "Microsoft.CodeAnalysis"
     }
 };
 
-// API 생성
+// Generate API
 var publicApi = assembly.GeneratePublicApi(options);
 ```
 
-결과는 콘솔(`-`)이나 파일로 출력됩니다.
+Results are output to console (`-`) or file.
 
 ```csharp
-// 콘솔 출력 (-) 또는 파일 출력
+// Console output (-) or file output
 if (outputPath == "-")
 {
     Console.Write(publicApi);
@@ -158,9 +158,9 @@ else
 }
 ```
 
-## 출력 형식
+## Output Format
 
-생성되는 API 텍스트는 실제 C# 코드와 유사하지만 몇 가지 특징이 있습니다. 메서드 본문은 `{ }`로만 표시되고, 타입 이름은 전체 경로(`LanguageExt.Common.Error`, `System.Exception`)로 출력됩니다. 제네릭 제약 조건과 확장 메서드의 `this` 키워드도 그대로 유지됩니다.
+The generated API text is similar to actual C# code but has some characteristics. Method bodies are shown only as `{ }`, type names are output as full paths (`LanguageExt.Common.Error`, `System.Exception`), and generic constraints and the `this` keyword for extension methods are preserved as-is.
 
 ```csharp
 namespace Functorium.Abstractions.Errors
@@ -185,16 +185,16 @@ namespace Functorium.Abstractions.Registrations
 }
 ```
 
-## PublicApiGenerator 옵션
+## PublicApiGenerator Options
 
-필요에 따라 추출 범위를 조정할 수 있습니다.
+The extraction scope can be adjusted as needed.
 
-| 옵션 | 기본값 | 설명 |
-|------|--------|------|
-| `IncludeAssemblyAttributes` | true | 어셈블리 속성 포함 |
-| `DenyNamespacePrefixes` | (없음) | 제외할 네임스페이스 |
-| `AllowNamespacePrefixes` | (없음) | 포함할 네임스페이스 |
-| `ExcludeAttributes` | (없음) | 제외할 속성 |
+| Option | Default | Description |
+|--------|---------|-------------|
+| `IncludeAssemblyAttributes` | true | Include assembly attributes |
+| `DenyNamespacePrefixes` | (none) | Namespaces to exclude |
+| `AllowNamespacePrefixes` | (none) | Namespaces to include |
+| `ExcludeAttributes` | (none) | Attributes to exclude |
 
 ```csharp
 var options = new ApiGeneratorOptions
@@ -212,20 +212,20 @@ var options = new ApiGeneratorOptions
 };
 ```
 
-## ExtractApiChanges.cs와의 연동
+## Integration with ExtractApiChanges.cs
 
-ExtractApiChanges.cs에서 ApiGenerator.cs를 호출할 때는 콘솔 출력 모드를 사용합니다. 출력된 API 텍스트를 받아 `<auto-generated>` 헤더를 추가한 뒤 파일로 저장합니다.
+When ExtractApiChanges.cs calls ApiGenerator.cs, it uses console output mode. The output API text is received, an `<auto-generated>` header is added, and it is saved to a file.
 
 ```csharp
-// ExtractApiChanges.cs에서
+// In ExtractApiChanges.cs
 var apiResult = await RunProcessAsync(
     "dotnet",
-    $"\"{apiGeneratorPath}\" \"{dllPath}\" -"  // 콘솔로 출력 (-)
+    $"\"{apiGeneratorPath}\" \"{dllPath}\" -"  // Output to console (-)
 );
 
 if (apiResult.ExitCode == 0)
 {
-    // API 텍스트를 파일로 저장
+    // Save API text to file
     var content = new StringBuilder();
     content.AppendLine("// <auto-generated>");
     content.Append(apiResult.Output);
@@ -233,9 +233,9 @@ if (apiResult.ExitCode == 0)
 }
 ```
 
-## 오류 처리
+## Error Handling
 
-DLL 미발견, 종속성 해결 실패, API 생성 실패 세 가지 경우를 처리합니다. 종속성 해결 실패는 `null`을 반환하여 치명적이지 않은 오류로 처리하고, DLL 미발견과 API 생성 실패는 프로세스를 종료합니다.
+Three cases are handled: DLL not found, dependency resolution failure, and API generation failure. Dependency resolution failure returns `null` to treat it as a non-fatal error, while DLL not found and API generation failure terminate the process.
 
 ```csharp
 if (!File.Exists(dllPath))
@@ -258,44 +258,44 @@ catch (Exception ex)
 }
 ```
 
-## 실제 사용 예시
+## Practical Usage Example
 
-명령줄에서 직접 실행하여 API를 확인할 수도 있습니다.
+You can also run it directly from the command line to check APIs.
 
 ```bash
-# Functorium.dll의 API 추출
+# Extract API from Functorium.dll
 dotnet ApiGenerator.cs bin/Release/net10.0/Functorium.dll api-output.cs
 
-# 콘솔로 출력하여 확인
+# Output to console for checking
 dotnet ApiGenerator.cs bin/Release/net10.0/Functorium.dll - | head -50
 ```
 
-일반적으로는 ExtractApiChanges.cs가 자동으로 호출하므로 직접 실행할 필요는 없습니다.
+Normally, ExtractApiChanges.cs calls it automatically, so direct execution is not necessary.
 
 ```bash
-# ExtractApiChanges.cs 실행 시 내부적으로 ApiGenerator.cs 호출
+# ApiGenerator.cs is called internally when running ExtractApiChanges.cs
 dotnet ExtractApiChanges.cs
 
-# 결과 확인
+# Check results
 cat Src/Functorium/.api/Functorium.cs
 ```
 
-지금까지 Phase 2 데이터 수집에 사용되는 세 가지 스크립트를 모두 살펴보았습니다. AnalyzeAllComponents.cs가 Git 변경사항을 수집하고, ExtractApiChanges.cs가 API 추출을 오케스트레이션하며, ApiGenerator.cs가 DLL에서 실제 API를 읽어냅니다. 이 데이터들이 준비되면 다음 단계는 릴리스 노트의 구조를 결정하는 템플릿과 설정 파일입니다.
+We have now examined all three scripts used for Phase 2 data collection. AnalyzeAllComponents.cs collects Git changes, ExtractApiChanges.cs orchestrates API extraction, and ApiGenerator.cs reads actual APIs from DLLs. Once this data is prepared, the next step is the templates and configuration files that determine the structure of the release notes.
 
 ## FAQ
 
-### Q1: `PublicApiGenerator` 대신 리플렉션으로 직접 API를 추출하면 안 되나요?
-**A**: 리플렉션으로 타입과 메서드를 열거하는 것은 가능하지만, 제네릭 제약 조건(`where T : notnull`), 확장 메서드의 `this` 키워드, 네임스페이스별 정렬, 속성(Attribute) 표시 등을 C# 형식으로 깔끔하게 출력하려면 상당한 코드가 필요합니다. **`PublicApiGenerator`는** 이 모든 것을 처리하는 검증된 라이브러리이므로, 직접 구현 대비 유지보수 부담이 크게 줄어듭니다.
+### Q1: Can't you extract APIs directly with reflection instead of `PublicApiGenerator`?
+**A**: While it is possible to enumerate types and methods with reflection, considerable code is needed to cleanly output generic constraints (`where T : notnull`), the `this` keyword of extension methods, per-namespace sorting, and attribute display in C# format. **`PublicApiGenerator`** is a proven library that handles all of this, greatly reducing maintenance burden compared to direct implementation.
 
-### Q2: `CustomAssemblyLoadContext`에서 `isCollectible: true`로 설정하는 이유는 무엇인가요?
-**A**: `isCollectible: true`로 생성하면 사용이 끝난 후 해당 컨텍스트와 로드된 어셈블리를 **가비지 컬렉션으로 메모리에서 해제할 수** 있습니다. 여러 DLL을 순차적으로 분석하는 ExtractApiChanges.cs에서 메모리 누적을 방지하는 데 유용합니다.
+### Q2: Why set `isCollectible: true` in `CustomAssemblyLoadContext`?
+**A**: Creating with `isCollectible: true` allows **garbage collection to release the context and loaded assemblies from memory** after use. This is useful for preventing memory accumulation in ExtractApiChanges.cs, which sequentially analyzes multiple DLLs.
 
-### Q3: 종속성을 찾지 못하면 `null`을 반환하는 것이 안전한가요?
-**A**: PublicApiGenerator가 Public API를 추출할 때 반드시 모든 종속 어셈블리가 필요한 것은 아닙니다. 예를 들어 메서드 본문에서만 사용되는 타입의 어셈블리는 Public API 추출에 영향을 주지 않습니다. `null`을 반환하면 .NET 런타임이 **해당 어셈블리가 실제로 필요해질 때만** 예외를 발생시키므로, 불필요한 오류를 방지합니다.
+### Q3: Is it safe to return `null` when a dependency is not found?
+**A**: PublicApiGenerator does not necessarily need all dependent assemblies when extracting Public APIs. For example, assemblies for types used only in method bodies do not affect Public API extraction. Returning `null` causes the .NET runtime to **throw an exception only when that assembly is actually needed**, preventing unnecessary errors.
 
-### Q4: 출력 형식에서 메서드 본문이 `{ }`로 표시되는 이유는 무엇인가요?
-**A**: PublicApiGenerator는 **API 계약(Contract)만** 추출합니다. 메서드의 구현 세부사항은 Public API의 일부가 아니므로 본문을 비워둡니다. 릴리스 노트에서 중요한 것은 "어떤 메서드가 어떤 시그니처로 존재하는가"이지, 내부 구현이 아니기 때문입니다.
+### Q4: Why are method bodies shown as `{ }` in the output format?
+**A**: PublicApiGenerator extracts only the **API contract.** Implementation details of methods are not part of the Public API, so the body is left empty. What matters for the release notes is "what method exists with what signature", not internal implementation.
 
-## 다음 단계
+## Next Step
 
-- [TEMPLATE.md 구조](07-template-structure.md)
+- [TEMPLATE.md Structure](07-template-structure.md)

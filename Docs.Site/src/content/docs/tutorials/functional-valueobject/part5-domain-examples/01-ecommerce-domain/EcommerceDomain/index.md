@@ -1,23 +1,23 @@
 ---
-title: "이커머스 도메인"
+title: "E-commerce Domain"
 ---
 ## Overview
 
-이커머스 도메인에서 자주 사용되는 value object를 implements.
+Implements value objects commonly used in the e-commerce domain.
 
 ---
 
 ## Learning Objectives
 
-- `Money` - 복합 비교 가능 value object
-- `ProductCode` - 단순 value object
-- `Quantity` - 비교 가능 단순 value object
-- `OrderStatus` - 타입 안전 enumeration
-- `ShippingAddress` - 복합 value object + Apply 패턴
+- `Money` - Composite comparable value object
+- `ProductCode` - Simple value object
+- `Quantity` - Comparable simple value object
+- `OrderStatus` - Type-safe enumeration
+- `ShippingAddress` - Composite value object + Apply pattern
 
 ---
 
-## 실행 방법
+## How to Run
 
 ```bash
 cd Docs/tutorials/Functional-ValueObject/05-domain-examples/01-Ecommerce-Domain/EcommerceDomain
@@ -26,77 +26,77 @@ dotnet run
 
 ---
 
-## 예상 출력
+## Expected Output
 
 ```
-=== 이커머스 도메인 값 객체 ===
+=== E-commerce Domain value objects ===
 
-1. Money (금액) - ComparableValueObject
+1. Money (Amount) - ComparableValueObject
 ────────────────────────────────────────
-   상품 가격: 10,000 KRW
-   할인 금액: 1,000 KRW
-   최종 가격: 9,000 KRW
-   다른 통화 합산 시도: 예외 발생
+   Product price: 10,000 KRW
+   Discount amount: 1,000 KRW
+   Final price: 9,000 KRW
+   Cross-currency addition attempt: Exception raised
 
-2. ProductCode (상품 코드) - SimpleValueObject
+2. ProductCode (Product Code) - SimpleValueObject
 ────────────────────────────────────────
-   상품 코드: EL-001234
-   카테고리: EL
-   번호: 001234
-   잘못된 형식: 상품 코드 형식이 올바르지 않습니다. (예: EL-001234)
+   Product code: EL-001234
+   Category: EL
+   Number: 001234
+   Invalid format: Product code format is invalid. (e.g., EL-001234)
 
-3. Quantity (수량) - ComparableSimpleValueObject
+3. Quantity - ComparableSimpleValueObject
 ────────────────────────────────────────
-   수량 1: 5
-   수량 2: 3
-   합계: 8
-   비교: 5 > 3 = True
-   정렬: [1, 3, 5]
+   Quantity 1: 5
+   Quantity 2: 3
+   Total: 8
+   Comparison: 5 > 3 = True
+   Sorted: [1, 3, 5]
 
-4. OrderStatus (주문 상태) - SmartEnum
+4. OrderStatus - SmartEnum
 ────────────────────────────────────────
-   현재 상태: 대기중
-   취소 가능: True
-   전이 후: 확인됨
-   배송 중: 배송중, 취소 가능: False
+   Current status: Pending
+   Cancellable: True
+   After transition: Confirmed
+   Shipping: Shipped, Cancellable: False
 
-5. ShippingAddress (배송 주소) - ValueObject
+5. ShippingAddress - ValueObject
 ────────────────────────────────────────
-   수령인: 홍길동
-   주소: 테헤란로 123, 서울
-   우편번호: 06234
-   국가: KR
+   Recipient: Hong Gildong
+   Address: Teheran-ro 123, Seoul
+   Postal code: 06234
+   Country: KR
 
-   빈 주소 검증 결과:
-      - 수령인 이름은(는) 필수입니다.
-      - 도로명 주소은(는) 필수입니다.
-      - 도시은(는) 필수입니다.
-      - 우편번호는 필수입니다.
-      - 국가는 필수입니다.
+   Empty address validation results:
+      - Recipient name is required.
+      - Street address is required.
+      - City is required.
+      - Postal code is required.
+      - Country is required.
 ```
 
 ---
 
-## 구현된 value object
+## Implemented value objects
 
-| value object | 프레임워크 타입 | 주요 특징 |
+| value object | Framework Type | Key Features |
 |---------|----------------|----------|
-| Money | ComparableValueObject | 통화별 연산, 다른 통화 연산 시 예외 |
-| ProductCode | SimpleValueObject | 정규식 검증, 카테고리 파싱 |
-| Quantity | ComparableSimpleValueObject | 정렬 가능, operator overloading |
-| OrderStatus | SmartEnum | 상태 전이 로직, 행위 포함 |
-| ShippingAddress | ValueObject | Apply 패턴으로 모든 오류 수집 |
+| Money | ComparableValueObject | Per-currency operations, exception on cross-currency operations |
+| ProductCode | SimpleValueObject | Regex validation, category parsing |
+| Quantity | ComparableSimpleValueObject | Sortable, operator overloading |
+| OrderStatus | SmartEnum | State transition logic, behavior included |
+| ShippingAddress | ValueObject | Collects all errors via Apply pattern |
 
 ## FAQ
 
-### Q1: `Money`에서 다른 통화 간 연산을 예외로 처리하는 이유는 무엇인가요?
-**A**: 1,000 KRW + 100 USD처럼 서로 다른 통화를 합산하는 것은 환율 없이는 의미가 없는 연산입니다. 이는 예상 가능한 domain rule이지만, operator overloading(`+`, `-`)의 반환 타입이 `Fin<Money>`가 될 수 없으므로 예외를 uses.
+### Q1: Why is cross-currency operation handled as an exception in `Money`?
+**A**: Adding different currencies like 1,000 KRW + 100 USD is a meaningless operation without an exchange rate. This is a predictable domain rule, but since the return type of operator overloading (`+`, `-`) cannot be `Fin<Money>`, exceptions are used.
 
-### Q2: `ShippingAddress`에서 `Apply` 패턴을 사용하는 이유는 무엇인가요?
-**A**: 배송 주소는 수령인, 도로명, 도시, 우편번호, 국가 등 여러 필드를 동시에 검증해야 합니다. `Apply` 패턴을 사용하면 모든 필드의 오류를 한 번에 수집하여 사용자에게 알려줄 수 있습니다. `Bind`를 사용하면 첫 번째 오류에서 중단되어 나머지 오류를 알 수 없습니다.
+### Q2: Why does `ShippingAddress` use the `Apply` pattern?
+**A**: Shipping addresses require simultaneous validation of multiple fields: recipient, street, city, postal code, and country. The `Apply` pattern collects all field errors at once to inform the user. Using `Bind` would stop at the first error, leaving remaining errors unknown.
 
-### Q3: `ProductCode`에서 카테고리 코드를 별도 속성으로 제공하는 이유는 무엇인가요?
-**A**: 상품 코드 `EL-001234`에서 카테고리(`EL`)와 번호(`001234`)는 각각 의미를 가진 도메인 정보입니다. 매번 문자열을 파싱하는 대신 value object가 생성 시점에 파싱하여 속성으로 제공하면, 호출 측에서 안전하고 편리하게 사용할 수 있습니다.
+### Q3: Why does `ProductCode` provide the category code as a separate property?
+**A**: In the product code `EL-001234`, the category (`EL`) and number (`001234`) are each meaningful domain information. Instead of parsing the string every time, the value object parses it at creation time and provides it as a property, allowing callers to use it safely and conveniently.
 
 ---
 

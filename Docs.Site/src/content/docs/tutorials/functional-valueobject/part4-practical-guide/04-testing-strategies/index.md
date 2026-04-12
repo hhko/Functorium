@@ -1,33 +1,33 @@
 ---
-title: "value object 테스트 전략"
+title: "value object Testing Strategies"
 ---
 ## Overview
 
-value object의 `Create()` 메서드가 모든 잘못된 입력을 정확히 거부하는지 어떻게 확신할 수 있을까요? 동등성 비교에서 미묘한 해시코드 버그가 숨어 있지는 않을까요?
+How can you be sure that a value object's `Create()` method correctly rejects all invalid inputs? Could there be subtle hash code bugs hiding in equality comparisons?
 
-value object는 도메인 모델의 기초이므로 철저한 테스트가 필수입니다. In this chapter, 생성 검증, 동등성 비교, comparability, 그리고 `Fin<T>` 결과를 테스트하기 위한 헬퍼 메서드를 구현하고 활용하는 전략을 다룹니다.
+Since value objects are the foundation of the domain model, thorough testing is essential. In this chapter, we cover strategies for implementing and utilizing helper methods to test creation validation, equality comparison, comparability, and `Fin<T>` results.
 
 ## Learning Objectives
 
-- 유효한 입력과 유효하지 않은 입력에 대한 value object 생성 테스트를 작성할 수 있습니다.
-- 값 기반 동등성(`Equals`, `GetHashCode`, `==`)을 체계적으로 검증할 수 있습니다.
-- `IComparable<T>` 구현과 정렬 동작을 테스트할 수 있습니다.
-- `ShouldBeSuccess()`, `ShouldBeFail()` 등 `Fin<T>` 테스트 헬퍼를 구현하고 활용할 수 있습니다.
+- Write value object creation tests for both valid and invalid inputs.
+- Systematically verify value-based equality (`Equals`, `GetHashCode`, `==`).
+- Test `IComparable<T>` implementations and sorting behavior.
+- Implement and utilize `Fin<T>` test helpers such as `ShouldBeSuccess()` and `ShouldBeFail()`.
 
 ## Why Is This Needed?
 
-value object는 도메인 불변식을 캡슐화합니다. "이메일은 @ 기호를 포함해야 한다", "나이는 0~150 사이여야 한다" 같은 business rule이 항상 지켜지는지 테스트로 보장해야 합니다.
+Value objects encapsulate domain invariants. Business rules like "email must contain the @ symbol" and "age must be between 0 and 150" must be guaranteed through tests.
 
-테스트는 리팩토링의 안전망이기도 합니다. value object의 구현을 변경하더라도 테스트가 통과하면 기존 동작이 보존됨을 확신할 수 있으며, 특히 동등성과 해시코드는 미묘한 버그가 발생하기 쉬운 영역입니다. 또한 테스트 코드는 value object의 사용법과 제약 조건을 보여주는 살아있는 문서 역할을 합니다. 새로운 팀원이 `Email.Create()`가 어떤 입력을 허용하는지 테스트만 보면 파악할 수 있습니다.
+Tests also serve as a safety net for refactoring. Even if the value object implementation changes, passing tests provide confidence that existing behavior is preserved -- especially since equality and hash codes are areas prone to subtle bugs. Additionally, test code serves as living documentation showing the usage and constraints of value objects. A new team member can understand what inputs `Email.Create()` accepts just by looking at the tests.
 
 ## Core Concepts
 
-### 생성 테스트 패턴
+### Creation Test Patterns
 
-value object 생성의 성공과 실패를 검증합니다. `Fin<T>`의 `IsSucc`와 `IsFail` 속성을 활용합니다.
+Verifies success and failure of value object creation. Uses the `IsSucc` and `IsFail` properties of `Fin<T>`.
 
 ```csharp
-// 유효한 입력 테스트
+// Valid input test
 [Fact]
 public void Create_WithValidEmail_ReturnsSuccess()
 {
@@ -37,7 +37,7 @@ public void Create_WithValidEmail_ReturnsSuccess()
     result.GetSuccessValue().Value.Should().Be("user@example.com");
 }
 
-// 유효하지 않은 입력 테스트
+// Invalid input test
 [Fact]
 public void Create_WithInvalidEmail_ReturnsFailure()
 {
@@ -47,7 +47,7 @@ public void Create_WithInvalidEmail_ReturnsFailure()
     result.GetFailError().Message.Should().Contain("Email.InvalidFormat");
 }
 
-// 경계값 테스트
+// Boundary value test
 [Theory]
 [InlineData("")]
 [InlineData(null)]
@@ -60,11 +60,11 @@ public void Create_WithEmptyOrNull_ReturnsFailure(string? input)
 }
 ```
 
-value object의 `Create()` 메서드에 있는 모든 검증 경로에 대해 성공과 실패 케이스를 작성합니다.
+Write success and failure cases for every validation path in the value object's `Create()` method.
 
-### 동등성 테스트 패턴
+### Equality Test Patterns
 
-value object의 동등성 구현을 철저히 검증합니다. `Equals()`, `GetHashCode()`, `==`, `!=` 모두 테스트해야 합니다.
+Thoroughly verifies the value object's equality implementation. `Equals()`, `GetHashCode()`, `==`, and `!=` must all be tested.
 
 ```csharp
 [Fact]
@@ -99,11 +99,11 @@ public void GetHashCode_SameValue_ReturnsSameHash()
 }
 ```
 
-동등한 객체는 같은 해시코드를 가져야 합니다. 이 규칙이 깨지면 `Dictionary`나 `HashSet`에서 예기치 않은 동작이 발생합니다.
+Equal objects must have the same hash code. If this rule is broken, unexpected behavior occurs in `Dictionary` and `HashSet`.
 
-### comparability 테스트 패턴
+### Comparability Test Patterns
 
-`IComparable<T>`을 구현한 value object의 정렬 동작을 테스트합니다.
+Tests the sorting behavior of value objects that implement `IComparable<T>`.
 
 ```csharp
 [Fact]
@@ -147,11 +147,11 @@ public void Sort_OrdersCorrectly()
 }
 ```
 
-`CompareTo()`의 결과와 비교 연산자들이 일관되게 동작하는지 verifies.
+Verifies that `CompareTo()` results and comparison operators behave consistently.
 
-### Fin\<T\> 테스트 헬퍼
+### Fin\<T\> Test Helpers
 
-`Fin<T>` 결과를 테스트하기 위한 확장 메서드입니다. `result.ShouldBeSuccess()`가 `result.IsSucc.Should().BeTrue()`보다 의도를 명확하게 표현합니다.
+Extension methods for testing `Fin<T>` results. `result.ShouldBeSuccess()` expresses intent more clearly than `result.IsSucc.Should().BeTrue()`.
 
 ```csharp
 public static class FinTestExtensions
@@ -195,39 +195,39 @@ public static class FinTestExtensions
 
 ### Expected Output
 ```
-=== 값 객체 테스트 전략 ===
+=== value object Testing Strategies ===
 
-1. 생성 테스트 패턴
+1. Creation Test Patterns
 ────────────────────────────────────────
-   [유효한 입력 테스트] user@example.com → PASS
-   [유효하지 않은 입력 테스트] invalid-email → PASS
-   [에러 코드 검증] 'Email.InvalidFormat' 포함 → PASS
-   [경계값 테스트] 빈 문자열/null → PASS
+   [Valid input test] user@example.com -> PASS
+   [Invalid input test] invalid-email -> PASS
+   [Error code verification] Contains 'Email.InvalidFormat' -> PASS
+   [Boundary value test] Empty string/null -> PASS
 
-2. 동등성 테스트 패턴
+2. Equality Test Patterns
 ────────────────────────────────────────
-   [같은 값 동등성] email1 == email2 → PASS
-   [다른 값 비동등성] email1 != email3 → PASS
-   [해시코드 일관성] hash(email1) == hash(email2) → PASS
-   [연산자 테스트] == 및 != → PASS
+   [Same value equality] email1 == email2 -> PASS
+   [Different value inequality] email1 != email3 -> PASS
+   [Hash code consistency] hash(email1) == hash(email2) -> PASS
+   [Operator test] == and != -> PASS
 
-3. 비교 가능성 테스트 패턴
+3. Comparability Test Patterns
 ────────────────────────────────────────
-   [CompareTo 테스트] 20 < 25 < 30 → PASS
-   [비교 연산자 테스트] < 연산자 → PASS
-   [정렬 테스트] 정렬 후 순서 → PASS
+   [CompareTo test] 20 < 25 < 30 -> PASS
+   [Comparison operator test] < operator -> PASS
+   [Sort test] Order after sorting -> PASS
 
-4. 테스트 헬퍼 사용
+4. Test Helper Usage
 ────────────────────────────────────────
-   [ShouldBeSuccess 헬퍼] → PASS
-   [ShouldBeFail 헬퍼] → PASS
-   [GetSuccessValue 헬퍼] → PASS
-   [GetFailError 헬퍼] → PASS
+   [ShouldBeSuccess helper] -> PASS
+   [ShouldBeFail helper] -> PASS
+   [GetSuccessValue helper] -> PASS
+   [GetFailError helper] -> PASS
 ```
 
-### 테스트 클래스 구조 예시
+### Test Class Structure Example
 
-중첩 클래스로 관련 테스트를 그룹화하면 가독성이 높아집니다.
+Grouping related tests with nested classes improves readability.
 
 ```csharp
 public class EmailTests
@@ -268,12 +268,12 @@ public class EmailTests
 ```
 04-Testing-Strategies/
 ├── TestingStrategies/
-│   ├── Program.cs                    # 메인 실행 파일 (테스트 데모)
-│   └── TestingStrategies.csproj      # 프로젝트 파일
-└── README.md                         # 프로젝트 문서
+│   ├── Program.cs                    # Main executable (test demo)
+│   └── TestingStrategies.csproj      # Project file
+└── README.md                         # Project documentation
 ```
 
-### 의존성
+### Dependencies
 ```xml
 <ItemGroup>
   <ProjectReference Include="..\..\..\..\..\Src\Functorium\Functorium.csproj" />
@@ -282,7 +282,7 @@ public class EmailTests
 
 ### Core Code
 
-**테스트 대상 value object**
+**value objects Under Test**
 ```csharp
 public sealed class Email : IEquatable<Email>
 {
@@ -310,7 +310,7 @@ public sealed class Email : IEquatable<Email>
 }
 ```
 
-**테스트 헬퍼 확장 메서드**
+**Test Helper Extension Methods**
 ```csharp
 public static class FinTestExtensions
 {
@@ -336,83 +336,83 @@ public static class FinTestExtensions
 
 ## Summary at a Glance
 
-### 테스트 유형별 체크리스트
+### Test Type Checklist
 
-value object 테스트 시 각 유형별로 확인해야 할 항목입니다.
+Items to verify for each test type when testing value objects.
 
-| 테스트 유형 | 검증 항목 |
-|------------|----------|
-| **생성 테스트** | 유효한 입력 -> 성공, 유효하지 않은 입력 -> 실패 |
-| **경계값 테스트** | null, 빈 문자열, 최대/최소 값 |
-| **에러 검증** | error code, error message 내용 |
-| **동등성 테스트** | `Equals()`, `==`, `!=`, `GetHashCode()` |
-| **비교 테스트** | `CompareTo()`, `<`, `>`, `<=`, `>=`, 정렬 |
+| Test Type | Verification Items |
+|-----------|-------------------|
+| **Creation tests** | Valid input -> success, invalid input -> failure |
+| **Boundary value tests** | null, empty string, maximum/minimum values |
+| **Error verification** | error code, error message content |
+| **Equality tests** | `Equals()`, `==`, `!=`, `GetHashCode()` |
+| **Comparison tests** | `CompareTo()`, `<`, `>`, `<=`, `>=`, sorting |
 
-### Fin\<T\> 테스트 헬퍼 요약
+### Fin\<T\> Test Helper Summary
 
-각 헬퍼 메서드의 용도를 정리합니다.
+Summarizes the purpose of each helper method.
 
-| 헬퍼 메서드 | 용도 |
-|------------|------|
-| `ShouldBeSuccess()` | 성공 상태 확인 (실패 시 예외) |
-| `ShouldBeFail()` | 실패 상태 확인 (성공 시 예외) |
-| `GetSuccessValue()` | 성공 값 추출 (실패 시 예외) |
-| `GetFailError()` | error information 추출 (성공 시 예외) |
+| Helper Method | Purpose |
+|--------------|---------|
+| `ShouldBeSuccess()` | Verify success state (throws on failure) |
+| `ShouldBeFail()` | Verify failure state (throws on success) |
+| `GetSuccessValue()` | Extract success value (throws on failure) |
+| `GetFailError()` | Extract error information (throws on success) |
 
-### 동등성 계약 규칙
+### Equality Contract Rules
 
-value object의 동등성 구현이 지켜야 하는 수학적 규칙입니다.
+Mathematical rules that value object equality implementations must follow.
 
-| 규칙 | Description |
-|------|------|
-| 반사성 | `x.Equals(x)` -> true |
-| 대칭성 | `x.Equals(y)` <-> `y.Equals(x)` |
-| 추이성 | `x.Equals(y)` && `y.Equals(z)` -> `x.Equals(z)` |
-| 일관성 | 같은 입력이면 항상 같은 결과 |
-| 해시코드 | `x.Equals(y)` -> `x.GetHashCode() == y.GetHashCode()` |
+| Rule | Description |
+|------|-------------|
+| Reflexivity | `x.Equals(x)` -> true |
+| Symmetry | `x.Equals(y)` <-> `y.Equals(x)` |
+| Transitivity | `x.Equals(y)` && `y.Equals(z)` -> `x.Equals(z)` |
+| Consistency | Same input always yields the same result |
+| Hash code | `x.Equals(y)` -> `x.GetHashCode() == y.GetHashCode()` |
 
 ## FAQ
 
-### Q1: 모든 value object에 대해 어떤 테스트를 작성해야 하나요?
-**A**: 최소한 생성 테스트(유효/무효 입력), 경계값 테스트(null, 빈 값, 최대/최소), 동등성 테스트(같은 값, 다른 값, null), 해시코드 일관성 테스트를 작성합니다. 비교 가능한 value object는 `CompareTo()`, 비교 연산자, 정렬 테스트를 추가합니다.
+### Q1: What tests should be written for every value object?
+**A**: At minimum, write creation tests (valid/invalid input), boundary value tests (null, empty values, max/min), equality tests (same value, different value, null), and hash code consistency tests. For comparable value objects, add `CompareTo()`, comparison operator, and sorting tests.
 
-### Q2: Theory와 Fact 중 언제 무엇을 사용하나요?
-**A**: 단일 시나리오는 `[Fact]`, 같은 validation logic에 다양한 입력을 적용할 때는 `[Theory]`와 `[InlineData]`를 사용하여 코드 중복을 줄입니다.
+### Q2: When should I use Theory vs Fact?
+**A**: Use `[Fact]` for single scenarios, and `[Theory]` with `[InlineData]` to reduce code duplication when applying various inputs to the same validation logic.
 
-### Q3: 해시코드 테스트는 왜 중요한가요?
-**A**: `Dictionary`, `HashSet` 등 해시 기반 컬렉션에서 `Equals()`가 true인데 해시코드가 다르면 키 조회가 실패할 수 있습니다. `x.Equals(y)`가 true이면 `x.GetHashCode() == y.GetHashCode()`이어야 합니다.
+### Q3: Why are hash code tests important?
+**A**: In hash-based collections such as `Dictionary` and `HashSet`, if `Equals()` returns true but hash codes differ, key lookups can fail. If `x.Equals(y)` is true, then `x.GetHashCode() == y.GetHashCode()` must also be true.
 
 ---
 
-## 테스트
+## Tests
 
-이 프로젝트에는 단위 테스트가 포함되어 있습니다.
+This project includes unit tests.
 
-### 테스트 실행
+### Running Tests
 ```bash
 cd TestingStrategies.Tests.Unit
 dotnet test
 ```
 
-### 테스트 구조
+### Test Structure
 ```
 TestingStrategies.Tests.Unit/
-├── CreationPatternTests.cs       # 생성 패턴 테스트
-├── EqualityPatternTests.cs       # 동등성 패턴 테스트
-├── ComparabilityPatternTests.cs  # 비교 가능성 패턴 테스트
-└── FinTestExtensionsTests.cs     # Fin<T> 테스트 확장 검증
+├── CreationPatternTests.cs       # Creation pattern tests
+├── EqualityPatternTests.cs       # Equality pattern tests
+├── ComparabilityPatternTests.cs  # Comparability pattern tests
+└── FinTestExtensionsTests.cs     # Fin<T> test extension verification
 ```
 
-### 주요 테스트 케이스
+### Key Test Cases
 
-| 테스트 클래스 | 테스트 내용 |
-|-------------|-----------|
-| CreationPatternTests | 유효/무효 입력, 정규화, 경계값 |
-| EqualityPatternTests | 동일 값 동등, 다른 값 비동등, 해시코드 |
-| ComparabilityPatternTests | 정렬, 비교 연산자 |
-| FinTestExtensionsTests | ShouldBeSuccess, ShouldBeFail 확장 |
+| Test Class | Test Content |
+|------------|-------------|
+| CreationPatternTests | Valid/invalid input, normalization, boundary values |
+| EqualityPatternTests | Same value equality, different value inequality, hash code |
+| ComparabilityPatternTests | Sorting, comparison operators |
+| FinTestExtensionsTests | ShouldBeSuccess, ShouldBeFail extensions |
 
-Part 4에서 value object의 실전 통합과 테스트 전략을 다루었습니다. Part 5에서는 이커머스, 금융, 사용자 관리, 일정 예약 등 구체적인 도메인에서 value object가 어떻게 활용되는지 verifies.
+Part 4 covered practical integration and testing strategies for value objects. Part 5 examines how value objects are used in specific domains such as e-commerce, finance, user management, and scheduling.
 
 ---
 

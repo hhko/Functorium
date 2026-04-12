@@ -1,30 +1,30 @@
 ---
-title: "CQRS와 value object 통합"
+title: "CQRS and value object Integration"
 ---
 ## Overview
 
-API 엔드포인트에서 사용자 이름, 이메일, 나이를 문자열과 정수로 받아 처리한다면, validation logic은 어디에 위치해야 할까요? Controller에서? Application Layer에서? value object를 CQRS 아키텍처와 통합하면 validation logic이 value object 내부에 캡슐화되어, 유효하지 않은 데이터가 도메인 계층에 도달하는 것 자체를 방지할 수 있습니다.
+If an API endpoint receives a username, email, and age as strings and integers, where should the validation logic reside? In the Controller? In the Application Layer? By integrating value objects with a CQRS architecture, validation logic is encapsulated inside the value objects themselves, preventing invalid data from ever reaching the domain layer.
 
-In this chapter, Mediator 패턴 기반의 Command/Query Handler에서 value object를 활용하여 입력을 검증하고, `Fin<T>`를 API Response로 변환하는 패턴을 다룹니다.
+In this chapter, we cover patterns for validating input using value objects in Mediator pattern-based Command/Query Handlers, and converting `Fin<T>` to API Responses.
 
 ## Learning Objectives
 
-- Command Handler 내에서 입력값을 value object로 변환하여 검증하는 패턴을 구현할 수 있습니다.
-- 조회 결과를 DTO로 변환할 때 value object의 값을 추출하는 방법을 적용할 수 있습니다.
-- `Fin<T>`를 HTTP API Response로 변환하는 확장 메서드를 구현할 수 있습니다.
-- `Bind` 패턴으로 여러 value object를 순차적으로 검증하고 조합할 수 있습니다.
+- Implement patterns for converting input values to value objects for validation within Command Handlers.
+- Apply methods for extracting value object values when converting query results to DTOs.
+- Implement extension methods for converting `Fin<T>` to HTTP API Responses.
+- Sequentially validate and compose multiple value objects using the `Bind` pattern.
 
 ## Why Is This Needed?
 
-CQRS 아키텍처에서 value object를 통합하면 여러 이점을 얻을 수 있습니다.
+Integrating value objects in a CQRS architecture provides several benefits.
 
-Command Handler에서 원시 타입을 value object로 변환하면 validation logic이 value object 내부에 캡슐화되어, Controller나 Application Layer에서 중복 검증이 불필요해집니다. Handler 내부에서는 검증된 `Email`, `Age`, `UserName` 같은 타입으로 작업하므로 유효하지 않은 데이터가 도메인 계층에 도달할 수 없습니다. 또한 `Fin<T>`를 `ApiResponse<T>`로 변환하면 모든 API 엔드포인트에서 일관된 응답 형식을 유지할 수 있습니다.
+When primitive types are converted to value objects in Command Handlers, validation logic is encapsulated within the value objects, eliminating the need for duplicate validation in Controllers or the Application Layer. Inside Handlers, work is done with validated types like `Email`, `Age`, and `UserName`, so invalid data cannot reach the domain layer. Additionally, converting `Fin<T>` to `ApiResponse<T>` maintains a consistent response format across all API endpoints.
 
 ## Core Concepts
 
-### Command에서 value object 검증
+### value object Validation in Commands
 
-Command Handler에서 입력값을 value object로 변환하여 검증합니다. `Bind` 패턴으로 여러 value object를 순차적으로 검증할 수 있습니다.
+The Command Handler converts input values to value objects for validation. The `Bind` pattern allows sequential validation of multiple value objects.
 
 ```csharp
 public sealed record CreateUserCommand(string Name, string Email, int Age)
@@ -36,7 +36,7 @@ public sealed class CreateUserCommandHandler : IRequestHandler<CreateUserCommand
         CreateUserCommand request,
         CancellationToken cancellationToken)
     {
-        // Bind 패턴으로 순차적 검증
+        // Sequential validation via Bind pattern
         var result = UserName.Create(request.Name)
             .Bind(name => Email.Create(request.Email)
                 .Bind(email => Age.Create(request.Age)
@@ -51,11 +51,11 @@ public sealed class CreateUserCommandHandler : IRequestHandler<CreateUserCommand
 }
 ```
 
-`Bind`는 성공 시에만 Next step로 진행합니다. 첫 번째 검증이 실패하면 이후 검증은 수행되지 않고 즉시 에러가 반환됩니다.
+`Bind` only proceeds to the next step on success. If the first validation fails, subsequent validations are not performed and an error is returned immediately.
 
-### Query와 DTO 변환
+### Query and DTO Conversion
 
-Repository에서 value object로 저장된 데이터를 조회하고, DTO로 변환하여 returns.
+Queries data stored as value objects from the Repository and converts it to DTOs for return.
 
 ```csharp
 public sealed record GetUserQuery(Guid UserId) : IRequest<Fin<UserDto>>;
@@ -76,18 +76,18 @@ public Fin<UserDto> FindById(Guid id)
 {
     if (_users.TryGetValue(id, out var user))
     {
-        // 값 객체의 Value를 추출하여 DTO 생성
+        // Extract Value from value objects to create DTO
         return new UserDto(user.Name.Value, user.Email.Value, user.Age.Value);
     }
     return RepositoryErrors.UserNotFound(id);
 }
 ```
 
-도메인에서는 `UserName`, `Email`, `Age` value object를 사용하고, API 응답에는 원시 타입의 DTO를 반환하여 도메인 모델과 API 계약을 분리합니다.
+The domain uses `UserName`, `Email`, and `Age` value objects, while API responses return DTOs with primitive types, separating the domain model from the API contract.
 
-### Fin\<T\> -> ApiResponse 변환
+### Fin\<T\> -> ApiResponse Conversion
 
-`Fin<T>`를 HTTP API에서 사용할 수 있는 `ApiResponse<T>`로 변환하는 확장 메서드입니다.
+An extension method that converts `Fin<T>` to `ApiResponse<T>` for use in HTTP APIs.
 
 ```csharp
 public static class FinExtensions
@@ -121,55 +121,55 @@ public class ApiResponse<T>
 }
 ```
 
-내부적으로는 `Fin<T>`로 성공/실패를 처리하고, API 경계에서 클라이언트가 이해할 수 있는 형식으로 변환합니다.
+Internally, `Fin<T>` handles success/failure, and at the API boundary it is converted to a format clients can understand.
 
-### Mediator 패턴과 value object
+### Mediator Pattern and value objects
 
-Mediator 패턴은 Command/Query와 Handler 사이의 결합도를 낮춥니다. value object와 결합하면 입력 검증이 Handler 내부로 캡슐화됩니다.
+The Mediator pattern reduces coupling between Commands/Queries and Handlers. Combined with value objects, input validation is encapsulated within Handlers.
 
 ```csharp
 // DI 설정
 services.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);
 services.AddSingleton<UserRepository>();
 
-// Command 전송
-var command = new CreateUserCommand("홍길동", "hong@example.com", 25);
+// Send command
+var command = new CreateUserCommand("Hong Gildong", "hong@example.com", 25);
 var result = await mediator.Send(command);
 
-// 결과 처리
+// Process result
 result.Match(
-    Succ: response => Console.WriteLine($"성공: 사용자 ID = {response.UserId}"),
-    Fail: error => Console.WriteLine($"실패: {error.Message}")
+    Succ: response => Console.WriteLine($"Success: User ID = {response.UserId}"),
+    Fail: error => Console.WriteLine($"Failure: {error.Message}")
 );
 ```
 
-Controller는 요청을 Command로 변환하여 전송하고, Handler는 검증과 비즈니스 로직을 담당합니다. 각 계층의 책임이 명확해집니다.
+The Controller converts requests to Commands and sends them, while the Handler is responsible for validation and business logic. The responsibilities of each layer become clear.
 
 ## Practical Guidelines
 
 ### Expected Output
 ```
-=== CQRS와 값 객체 통합 ===
+=== CQRS and value object Integration ===
 
-1. Command에서 값 객체 사용
+1. Using value objects in Commands
 ────────────────────────────────────────
-   성공: 사용자 ID = 550e8400-e29b-41d4-a716-446655440001
-   실패: 사용자 이름이 비어있습니다.
+   Success: User ID = 550e8400-e29b-41d4-a716-446655440001
+   Failure: Username cannot be empty.
 
-2. Query에서 값 객체 사용
+2. Using value objects in Queries
 ────────────────────────────────────────
-   사용자: 기존 사용자, 이메일: existing@example.com, 나이: 30
-   오류: 사용자를 찾을 수 없습니다.
+   User: Existing User, Email: existing@example.com, Age: 30
+   Error: User not found.
 
-3. Fin<T> → Response 변환 (FinExtensions)
+3. Fin<T> -> Response Conversion (FinExtensions)
 ────────────────────────────────────────
-   성공 응답: Status=True, Data=UserDto { Name = 홍길동, Email = hong@example.com, Age = 25 }
-   실패 응답: Status=False, Error=사용자를 찾을 수 없습니다.
+   Success response: Status=True, Data=UserDto { Name = Hong Gildong, Email = hong@example.com, Age = 25 }
+   Failure response: Status=False, Error=User not found.
 ```
 
-### Controller에서의 사용 예시
+### Usage Example in Controllers
 
-실제 Web API 프로젝트에서 Mediator와 `ToApiResponse()`를 조합하는 패턴입니다.
+A pattern combining Mediator with `ToApiResponse()` in an actual Web API project.
 
 ```csharp
 [ApiController]
@@ -214,12 +214,12 @@ public class UsersController : ControllerBase
 ```
 03-CQRS-Integration/
 ├── CqrsIntegration/
-│   ├── Program.cs                # 메인 실행 파일 (값 객체, Command/Query, Handler 포함)
-│   └── CqrsIntegration.csproj    # 프로젝트 파일
-└── README.md                     # 프로젝트 문서
+│   ├── Program.cs                # Main executable (includes value objects, Command/Query, Handler)
+│   └── CqrsIntegration.csproj    # Project file
+└── README.md                     # Project documentation
 ```
 
-### 의존성
+### Dependencies
 ```xml
 <ItemGroup>
   <ProjectReference Include="..\..\..\..\..\Src\Functorium\Functorium.csproj" />
@@ -234,7 +234,7 @@ public class UsersController : ControllerBase
 
 ### Core Code
 
-**value object 정의**
+**value object Definitions**
 ```csharp
 public sealed class Email : IEquatable<Email>
 {
@@ -253,25 +253,25 @@ public sealed class Email : IEquatable<Email>
 
     public static Email CreateFromValidated(string value) => new(value.ToLowerInvariant());
 
-    // IEquatable<Email> 구현...
+    // IEquatable<Email> implementation...
 }
 ```
 
-**Command/Query 정의**
+**Command/Query Definitions**
 ```csharp
-// Command: 사용자 생성
+// Command: Create user
 public sealed record CreateUserCommand(string Name, string Email, int Age)
     : IRequest<Fin<CreateUserResponse>>;
 
 public sealed record CreateUserResponse(Guid UserId);
 
-// Query: 사용자 조회
+// Query: Get user
 public sealed record GetUserQuery(Guid UserId) : IRequest<Fin<UserDto>>;
 
 public sealed record UserDto(string Name, string Email, int Age);
 ```
 
-**Handler 구현**
+**Handler Implementation**
 ```csharp
 public sealed class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Fin<CreateUserResponse>>
 {
@@ -299,51 +299,51 @@ public sealed class CreateUserCommandHandler : IRequestHandler<CreateUserCommand
 
 ## Summary at a Glance
 
-### CQRS와 value object 통합 패턴
+### CQRS and value object Integration Patterns
 
-각 계층이 value object를 어떻게 활용하는지 정리합니다.
+Summarizes how each layer utilizes value objects.
 
-| 계층 | 역할 | value object 활용 |
-|------|------|-------------|
-| Controller | 요청 수신, 응답 반환 | DTO 사용, `ToApiResponse()` 변환 |
-| Command/Query | 요청 데이터 전달 | 원시 타입으로 전달 |
-| Handler | 검증, 비즈니스 로직 | value object로 변환하여 검증 |
-| Repository | 데이터 저장/조회 | value object로 저장, DTO로 반환 |
+| Layer | Role | value object Usage |
+|-------|------|-------------------|
+| Controller | Receive requests, return responses | Uses DTOs, `ToApiResponse()` conversion |
+| Command/Query | Deliver request data | Delivered as primitive types |
+| Handler | Validation, business logic | Converts to value objects for validation |
+| Repository | Data storage/retrieval | Stores as value objects, returns as DTOs |
 
-### Bind vs Apply 패턴 선택
+### Bind vs Apply Pattern Selection
 
-검증 전략에 따라 적합한 패턴을 선택합니다.
+Choose the appropriate pattern based on the validation strategy.
 
-| 패턴 | 특징 | 적합한 상황 |
-|------|------|------------|
-| `Bind` (순차 검증) | 첫 번째 실패 시 중단 | 의존적인 검증, 리소스 절약 |
-| `Apply` (병렬 검증) | 모든 에러 수집 | 폼 검증, 사용자 피드백 |
+| Pattern | Characteristics | Suitable Scenarios |
+|---------|----------------|-------------------|
+| `Bind` (sequential validation) | Stops at first failure | Dependent validations, resource conservation |
+| `Apply` (parallel validation) | Collects all errors | Form validation, user feedback |
 
-### API Response 구조
+### API Response Structure
 
 ```
-성공 시:
+On success:
 {
   "isSuccess": true,
   "data": { ... },
   "errorMessage": null
 }
 
-실패 시:
+On failure:
 {
   "isSuccess": false,
   "data": null,
-  "errorMessage": "사용자 이름이 비어있습니다."
+  "errorMessage": "Username cannot be empty."
 }
 ```
 
 ## FAQ
 
-### Q1: Command에서 원시 타입 대신 value object를 직접 받을 수 없나요?
-**A**: 기술적으로 가능하지만 권장하지 않습니다. Command/Query는 API 경계의 계약이므로 직렬화 가능한 원시 타입을 사용하는 것이 일반적입니다. Handler에서 value object로 변환하는 것이 더 명확하고 테스트하기 쉽습니다.
+### Q1: Can Commands receive value objects directly instead of primitive types?
+**A**: While technically possible, it is not recommended. Commands/Queries are API boundary contracts, so using serializable primitive types is standard practice. Converting to value objects in the Handler is clearer and easier to test.
 
-### Q2: Apply 패턴으로 모든 에러를 한 번에 수집하려면?
-**A**: `Validation<Error, T>`와 `Apply` 패턴을 uses.
+### Q2: How do I collect all errors at once with the Apply pattern?
+**A**: Use `Validation<Error, T>` with the `Apply` pattern.
 
 ```csharp
 public ValueTask<Fin<CreateUserResponse>> Handle(CreateUserCommand request, CancellationToken ct)
@@ -361,40 +361,40 @@ public ValueTask<Fin<CreateUserResponse>> Handle(CreateUserCommand request, Canc
 }
 ```
 
-사용자 피드백이 중요한 폼 검증에서는 모든 필드의 에러를 한 번에 보여줄 수 있는 Apply 패턴이 더 적합합니다.
+For form validation where user feedback is important, the Apply pattern is more suitable as it can show all field errors at once.
 
-### Q3: Repository에서 Fin\<T\>를 반환하는 이유는?
-**A**: "사용자를 찾을 수 없음"은 예외적 상황이 아니라 비즈니스적으로 예상 가능한 결과입니다. `Fin<T>`를 반환하면 호출자가 성공과 실패 모두를 명시적으로 처리해야 하므로 누락 없이 안전한 코드를 작성할 수 있습니다.
+### Q3: Why does the Repository return Fin\<T\>?
+**A**: "User not found" is not an exceptional situation but a business-expected result. Returning `Fin<T>` forces callers to explicitly handle both success and failure, enabling safe code without missing edge cases.
 
 ---
 
-## 테스트
+## Tests
 
-이 프로젝트에는 단위 테스트가 포함되어 있습니다.
+This project includes unit tests.
 
-### 테스트 실행
+### Running Tests
 ```bash
 cd CqrsIntegration.Tests.Unit
 dotnet test
 ```
 
-### 테스트 구조
+### Test Structure
 ```
 CqrsIntegration.Tests.Unit/
-├── CreateUserCommandHandlerTests.cs  # Command 핸들러 테스트
-├── GetUserQueryHandlerTests.cs       # Query 핸들러 테스트
-└── FinExtensionsTests.cs             # Fin→ApiResponse 변환 테스트
+├── CreateUserCommandHandlerTests.cs  # Command handler tests
+├── GetUserQueryHandlerTests.cs       # Query handler tests
+└── FinExtensionsTests.cs             # Fin->ApiResponse conversion tests
 ```
 
-### 주요 테스트 케이스
+### Key Test Cases
 
-| 테스트 클래스 | 테스트 내용 |
-|-------------|-----------|
-| CreateUserCommandHandlerTests | value object 검증, Bind 순차 검증, 성공/실패 시나리오 |
-| GetUserQueryHandlerTests | 존재하는 사용자 조회, 미존재 사용자 처리 |
-| FinExtensionsTests | ToApiResponse 변환, Success/Failure 매핑 |
+| Test Class | Test Content |
+|------------|-------------|
+| CreateUserCommandHandlerTests | value object validation, Bind sequential validation, success/failure scenarios |
+| GetUserQueryHandlerTests | Querying existing users, handling non-existing users |
+| FinExtensionsTests | ToApiResponse conversion, Success/Failure mapping |
 
-CQRS 통합으로 value object가 API 계층에서 도메인 계층까지 자연스럽게 흐르는 구조를 갖추었습니다. Next chapter에서는 이 모든 패턴을 효과적으로 검증하기 위한 테스트 전략을 다룹니다.
+With CQRS integration, we now have a structure where value objects flow naturally from the API layer to the domain layer. The next chapter covers testing strategies for effectively verifying all these patterns.
 
 ---
 

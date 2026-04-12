@@ -1,5 +1,5 @@
 ---
-title: "LoggerMessage.Define 제한"
+title: "LoggerMessage.Define Limits"
 ---
 
 ## 개요
