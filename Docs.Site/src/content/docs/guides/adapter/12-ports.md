@@ -17,19 +17,19 @@ A Port is a contract for the application to communicate with the external world.
 
 Through this document, you will learn:
 
-1. **Port-Adapter 아키텍처의 필요성** — 외부 의존성 격리와 테스트 용이성
-2. **IObservablePort 인터페이스 계층** — 모든 Adapter의 기반이 되는 계층 구조
-3. **유형별 Port 정의 패턴** — Repository, External API, Messaging, Query Adapter
-4. **Port Request/Response 설계** — 인터페이스 내부 sealed record 정의 원칙
-5. **Repository 인터페이스 설계** — IRepository 기본 CRUD와 도메인 전용 메서드
+1. **Necessity of Port-Adapter Architecture** — External dependency isolation and testability
+2. **IObservablePort Interface Hierarchy** — The hierarchical structure underlying all Adapters
+3. **Port Definition Patterns by Type** — Repository, External API, Messaging, Query Adapter
+4. **Port Request/Response Design** — Principles for defining sealed records inside interfaces
+5. **Repository Interface Design** — IRepository basic CRUD and domain-specific methods
 
 ### Prerequisites
 
 A basic understanding of the following concepts is required to understand this document:
 
-- [도메인 모델링 개요](../domain/04-ddd-tactical-overview) — Entity, Aggregate Root 개념
-- [Entity/Aggregate 핵심 패턴](../domain/06b-entity-aggregate-core) — AggregateRoot 기반 클래스
-- [에러 시스템: 기초와 네이밍](../domain/08a-error-system) — `Fin<T>`와 `FinT<IO, T>` 반환 패턴
+- [Domain Modeling Overview](../domain/04-ddd-tactical-overview) — Entity and Aggregate Root concepts
+- [Entity/Aggregate Core Patterns](../domain/06b-entity-aggregate-core) — AggregateRoot base class
+- [Error System: Basics and Naming](../domain/08a-error-system) — `Fin<T>` and `FinT<IO, T>` return patterns
 
 > **Ports declare "what is needed" and Adapters implement "how to provide it."** This separation is the foundation of domain purity, testability, and technology replacement flexibility.
 
@@ -38,43 +38,43 @@ A basic understanding of the following concepts is required to understand this d
 ### Key Commands
 
 ```csharp
-// Port 인터페이스 정의 (IObservablePort 상속)
+// Port interface definition (inherits IObservablePort)
 public interface IProductRepository : IRepository<Product, ProductId>
 {
     FinT<IO, bool> Exists(Specification<Product> spec);
 }
 
-// External API Port 정의
+// External API Port definition
 public interface IExternalPricingService : IObservablePort
 {
     FinT<IO, Money> GetPriceAsync(string productCode, CancellationToken ct);
 }
 
-// Query Adapter Port 정의
+// Query Adapter Port definition
 public interface IProductQuery : IQueryPort<Product, ProductSummaryDto> { }
 ```
 
 ### Key Procedures
 
-1. Port 유형 결정 (Repository / External API / Messaging / Query Adapter)
-2. 위치 결정 (Repository → Domain Layer, 나머지 → Application Layer)
-3. `IObservablePort` 또는 파생 인터페이스 상속
-4. 반환 타입을 `FinT<IO, T>`로 정의
-5. 매개변수에 도메인 값 객체(VO) 사용
-6. Request/Response가 필요하면 인터페이스 내부에 `sealed record`로 정의
+1. Determine Port type (Repository / External API / Messaging / Query Adapter)
+2. Determine location (Repository → Domain Layer, others → Application Layer)
+3. Inherit from `IObservablePort` or a derived interface
+4. Define return type as `FinT<IO, T>`
+5. Use domain Value Objects (VO) for parameters
+6. If Request/Response is needed, define as `sealed record` inside the interface
 
 ### Key Concepts
 
 | Concept | Description |
 |------|------|
-| Port | Application Layer가 외부 시스템과 통신하기 위한 계약(인터페이스) |
-| Adapter | Port 인터페이스의 구현체 |
-| `IObservablePort` | 모든 Adapter가 구현하는 기반 인터페이스 (`RequestCategory` 속성 제공) |
-| `IRepository<T, TId>` | Aggregate Root 단위 Repository 공통 인터페이스 (CRUD 기본 제공) |
-| `IQueryPort<TEntity, TDto>` | 읽기 전용 조회용 제네릭 인터페이스 (DTO 직접 반환) |
-| `FinT<IO, T>` | 함수형 반환 타입 (Asynchronous operation + 에러 처리 합성) |
-| Driving Adapter | 외부에서 애플리케이션을 호출 (Presentation, Mediator가 Port 역할) |
-| Driven Adapter | 애플리케이션이 외부를 호출 (Persistence, Infrastructure) |
+| Port | A contract (interface) for the Application Layer to communicate with external systems |
+| Adapter | An implementation of a Port interface |
+| `IObservablePort` | The base interface that all Adapters implement (provides `RequestCategory` property) |
+| `IRepository<T, TId>` | Common interface for per-Aggregate-Root Repository (provides basic CRUD) |
+| `IQueryPort<TEntity, TDto>` | Generic interface for read-only queries (returns DTOs directly) |
+| `FinT<IO, T>` | Functional return type (asynchronous operation + error handling composition) |
+| Driving Adapter | Calls the application from outside (Presentation, Mediator acts as Port) |
+| Driven Adapter | The application calls the outside (Persistence, Infrastructure) |
 
 ---
 
@@ -82,25 +82,25 @@ public interface IProductQuery : IQueryPort<Product, ProductSummaryDto> { }
 
 ### Role of Anti-Corruption Layer in DDD
 
-도메인 모델은 외부 시스템의 기술적 세부사항으로부터 보호되어야 합니다. Port-Adapter 아키텍처(Hexagonal Architecture)는 도메인과 외부 세계 사이에 명확한 경계를 제공합니다.
+The domain model must be protected from the technical details of external systems. Port-Adapter Architecture (Hexagonal Architecture) provides a clear boundary between the domain and the external world.
 
 ### Protecting Domain Purity: Isolating External Dependencies
 
-Port-Adapter 패턴 도입 전후를 비교하면 차이가 명확합니다.
+Comparing before and after adopting the Port-Adapter pattern makes the difference clear.
 
-| 문제 | Port-Adapter 없이 | Port-Adapter 사용 |
+| Problem | Without Port-Adapter | With Port-Adapter |
 |------|------------------|------------------|
-| 의존성 방향 | Application → Infrastructure | Application → Port(인터페이스) ← Adapter |
-| 테스트 | DB/API 연결 필요 | Mock으로 대체 가능 |
-| 기술 교체 | 전체 수정 필요 | Adapter만 교체 |
-| 관찰성 | 수동 로깅/트레이싱 | Pipeline 자동 생성 |
+| Dependency direction | Application → Infrastructure | Application → Port (interface) ← Adapter |
+| Testing | DB/API connection required | Can be replaced with Mock |
+| Technology replacement | Requires full modification | Replace only the Adapter |
+| Observability | Manual logging/tracing | Pipeline auto-generation |
 
 ### Relationship with Hexagonal Architecture
 
-Functorium의 The Adapter system implements the Port and Adapter concepts of Hexagonal Architecture:
-- **Port** = 도메인/애플리케이션이 필요로 하는 인터페이스 (`IProductRepository`, `IExternalPricingService`)
-- **Adapter** = Port의 구현체 (`InMemoryProductRepository`, `ExternalPricingApiService`)
-- **Pipeline** = 소스 생성기가 자동 생성하는 관찰성 래퍼
+Functorium's Adapter system implements the Port and Adapter concepts of Hexagonal Architecture:
+- **Port** = The interface that the domain/application requires (`IProductRepository`, `IExternalPricingService`)
+- **Adapter** = The implementation of a Port (`InMemoryProductRepository`, `ExternalPricingApiService`)
+- **Pipeline** = An observability wrapper automatically generated by the Source Generator
 
 #### Driving vs Driven Adapter Distinction
 
@@ -108,94 +108,94 @@ In Hexagonal Architecture, Adapters are divided into two types based on call dir
 
 | Category | Driving (Primary) | Driven (Secondary) |
 |------|-------------------|---------------------|
-| **역할** | 외부에서 애플리케이션을 호출 | 애플리케이션이 외부를 호출 |
-| **방향** | Outside → Inside | Inside → Outside |
-| **Port 위치** | 없음 (Mediator가 대신) | Domain 또는 Application Layer |
-| **Functorium 매핑** | `Adapters.Presentation` | `Adapters.Persistence`, `Adapters.Infrastructure` |
+| **Role** | Calls the application from outside | The application calls the outside |
+| **Direction** | Outside → Inside | Inside → Outside |
+| **Port location** | None (Mediator substitutes) | Domain or Application Layer |
+| **Functorium mapping** | `Adapters.Presentation` | `Adapters.Persistence`, `Adapters.Infrastructure` |
 
-#### Presentation Adapter에 Port가 없는 이유
+#### Why the Presentation Adapter Has No Port
 
-Driving Adapter인 Presentation은 별도의 Port 인터페이스 없이 Mediator를 직접 호출합니다. 이 설계 결정의 근거:
+The Presentation, being a Driving Adapter, calls the Mediator directly without a separate Port interface. The rationale behind this design decision:
 
-1. **Mediator가 Port 역할을 대신함** — `IMediator.Send()`가 Presentation과 Application 사이의 계약으로 작동
-2. **Command/Query가 이미 계약** — Request/Response 타입 자체가 명시적 인터페이스 역할 수행
-3. **불필요한 간접 계층 제거** — Driving Adapter에 Port를 도입하면 Mediator와 중복되는 추상화
-4. **Driven Adapter와의 비대칭은 의도적** — Driven Adapter는 구현체 교체가 빈번하므로 Port가 Required, Driving Adapter는 교체 시나리오가 희소
+1. **Mediator substitutes for the Port** — `IMediator.Send()` acts as the contract between Presentation and Application
+2. **Command/Query already serve as contracts** — The Request/Response types themselves serve as explicit interface roles
+3. **Elimination of unnecessary indirection** — Introducing a Port for a Driving Adapter would create an abstraction that duplicates the Mediator
+4. **The asymmetry with Driven Adapters is intentional** — Driven Adapters frequently need implementation replacement so a Port is required, while Driving Adapters rarely have replacement scenarios
 
 ```csharp
-// Driving Adapter: Port 없이 Mediator 직접 호출
+// Driving Adapter: Calls Mediator directly without a Port
 public class CreateProductEndpoint : EndpointBase
 {
     public override void Configure(RouteGroupBuilder group) =>
         group.MapPost("/products", HandleAsync);
 
     private Task<IResult> HandleAsync(
-        IMediator mediator,               // ← Mediator가 Port 역할
+        IMediator mediator,               // ← Mediator acts as the Port
         CreateProductRequest request) =>
         mediator.Send(new CreateProduct.Command(request.Name, request.Price))
                 .ToApiResultAsync();
 }
 
-// Driven Adapter: Port(인터페이스) 구현
+// Driven Adapter: Implements Port (interface)
 public interface IProductRepository : IObservablePort  // ← Port
 {
     FinT<IO, Product> FindById(ProductId id);
 }
 ```
 
-Port-Adapter 아키텍처의 필요성을 이해했으니, Functorium이 제공하는 구체적인 Adapter 시스템의 구조를 살펴보겠습니다.
+Now that we understand the necessity of Port-Adapter architecture, let's examine the specific structure of the Adapter system provided by Functorium.
 
 ---
 
 ## Overview
 
-Adapter는 Clean Architecture에서 **Application Layer와 외부 시스템 간의 경계를** 담당합니다. "데이터베이스 접근", "메시지 큐", "외부 API 호출" 같은 **인프라스트럭처 관심사를** 캡슐화합니다.
+Adapters are responsible for **the boundary between the Application Layer and external systems** in Clean Architecture. They encapsulate **infrastructure concerns** such as "database access", "message queues", and "external API calls".
 
 ### Why Use the Adapter Pattern?
 
-Adapter가 없으면 다음과 같은 문제가 발생합니다. The key point is 비즈니스 로직에 인프라 코드와 관찰성 코드가 뒤섞인다는 것입니다.
+Without Adapters, the following problems arise. The key point is that infrastructure code and observability code become mixed into business logic.
 
 ```csharp
-// Problem 1: Application Layer가 Infrastructure에 직접 의존
+// Problem 1: Application Layer directly depends on Infrastructure
 public class CreateOrderUsecase
 {
-    private readonly DbContext _dbContext;  // EF Core 직접 의존
+    private readonly DbContext _dbContext;  // Direct dependency on EF Core
 
     public async Task Handle(CreateOrderCommand command)
     {
-        _dbContext.Orders.Add(order);  // Infrastructure 코드가 Application에 침투
+        _dbContext.Orders.Add(order);  // Infrastructure code leaks into Application
         await _dbContext.SaveChangesAsync();
     }
 }
 
-// Problem 2: 관찰성(Observability) 코드가 비즈니스 로직에 산재
+// Problem 2: Observability code scattered throughout business logic
 public async Task<Product> GetProductAsync(Guid id)
 {
-    using var activity = ActivitySource.StartActivity("GetProduct");  // 트레이싱
-    _logger.LogInformation("Getting product {Id}", id);  // 로깅
-    var stopwatch = Stopwatch.StartNew();  // 메트릭
+    using var activity = ActivitySource.StartActivity("GetProduct");  // Tracing
+    _logger.LogInformation("Getting product {Id}", id);  // Logging
+    var stopwatch = Stopwatch.StartNew();  // Metrics
 
     var product = await _repository.FindAsync(id);  // Actual logic
 
     stopwatch.Stop();
-    _metrics.RecordDuration(stopwatch.Elapsed);  // 메트릭
+    _metrics.RecordDuration(stopwatch.Elapsed);  // Metrics
     return product;
 }
 
-// Problem 3: 테스트하기 어려움
-// DbContext를 직접 사용하면 단위 테스트에서 Mock 불가
+// Problem 3: Difficult to test
+// Using DbContext directly makes mocking impossible in unit tests
 ```
 
-Adapter 패턴은 이 문제들을 해결합니다:
+The Adapter pattern solves these problems:
 
 ```csharp
-// Solution: Port 인터페이스로 추상화
+// Solution: Abstraction via Port interface
 public interface IProductRepository : IObservablePort
 {
     FinT<IO, Product> GetById(Guid id);
 }
 
-// Application Layer는 인터페이스에만 의존
+// Application Layer depends only on interfaces
 public class GetProductUsecase(IProductRepository repository)
 {
     public async ValueTask<FinResponse<Response>> Handle(Request request)
@@ -206,8 +206,8 @@ public class GetProductUsecase(IProductRepository repository)
     }
 }
 
-// Infrastructure Layer에서 구현 + 자동 관찰성
-[GenerateObservablePort]  // 로깅, 트레이싱, 메트릭 자동 생성
+// Implementation in Infrastructure Layer + automatic observability
+[GenerateObservablePort]  // Auto-generates logging, tracing, metrics
 public class InMemoryProductRepository : IProductRepository
 {
     public string RequestCategory => "Repository";
@@ -223,9 +223,9 @@ public class InMemoryProductRepository : IProductRepository
 }
 ```
 
-#### `[ObservablePortIgnore]` — 메서드 제외
+#### `[ObservablePortIgnore]` — Excluding Methods
 
-`[GenerateObservablePort]`가 적용된 클래스에서 특정 메서드를 Pipeline 래퍼 생성에서 제외하려면 `[ObservablePortIgnore]` 어트리뷰트를 사용합니다.
+To exclude specific methods from Pipeline wrapper generation in a class with `[GenerateObservablePort]` applied, use the `[ObservablePortIgnore]` attribute.
 
 **Location**: `Functorium.Adapters.SourceGenerators.ObservablePortIgnoreAttribute`
 
@@ -235,47 +235,47 @@ public class InMemoryProductRepository : IProductRepository
 {
     public string RequestCategory => "Repository";
 
-    public virtual FinT<IO, Product> GetById(ProductId id) { ... }  // Pipeline 래핑됨
+    public virtual FinT<IO, Product> GetById(ProductId id) { ... }  // Wrapped by Pipeline
 
     [ObservablePortIgnore]
-    public virtual FinT<IO, Unit> InternalCleanup() { ... }  // Pipeline에서 제외
+    public virtual FinT<IO, Unit> InternalCleanup() { ... }  // Excluded from Pipeline
 }
 ```
 
-- Source Generator가 해당 메서드의 `override` 래퍼를 생성하지 않습니다.
-- 로깅, 메트릭, 트레이싱이 기록되지 않는 메서드가 됩니다.
-- 내부 유틸리티 메서드나 Observability가 불필요한 메서드에 사용합니다.
+- The Source Generator will not generate an `override` wrapper for this method.
+- The method will not have logging, metrics, or tracing recorded.
+- Use this for internal utility methods or methods that do not need Observability.
 
 ### Core Characteristics
 
 | Characteristics | Description |
 |------|------|
-| **Port-Adapter 패턴** | Application Layer는 Port(인터페이스)만 알고, Infrastructure Layer가 Adapter를 구현 |
-| **함수형 반환 타입** | `FinT<IO, T>`로 Asynchronous operation과 에러 처리를 함수형으로 합성 |
-| **자동 관찰성** | `[GenerateObservablePort]` 속성으로 로깅, 트레이싱, 메트릭 자동 생성 |
-| **테스트 용이성** | 인터페이스 기반으로 Mock 객체 쉽게 생성 |
+| **Port-Adapter Pattern** | Application Layer knows only the Port (interface), Infrastructure Layer implements the Adapter |
+| **Functional Return Type** | Composes asynchronous operation and error handling functionally with `FinT<IO, T>` |
+| **Automatic Observability** | Auto-generates logging, tracing, metrics via the `[GenerateObservablePort]` attribute |
+| **Testability** | Easily create Mock objects based on interfaces |
 
 ### Adapter Types
 
-Functorium이 지원하는 4가지 Adapter 유형과 각각의 역할을 정리하면 다음과 같습니다.
+The four Adapter types supported by Functorium and their respective roles are summarized below.
 
-| Type | Purpose | RequestCategory | 헥사고날 역할 | Example |
+| Type | Purpose | RequestCategory | Hexagonal Role | Example |
 |------|------|-----------------|---------------|------|
-| **Repository** | 데이터 영속화 | `"Repository"` | Driven | `IProductRepository`, `IOrderRepository` |
-| **Messaging** | 메시지 큐/이벤트 | `"Messaging"` | Driven | `IOrderMessaging`, `IInventoryMessaging` |
-| **External API** | 외부 서비스 호출 | `"ExternalApi"` | Driven | `IPaymentApiService`, `IWeatherApiService` |
-| **Query Adapter** | 읽기 전용 조회 (DTO 직접 반환) | `"QueryAdapter"` | Driven | `IProductQuery`, `IInventoryQuery`, `IProductWithStockQuery` (JOIN) |
+| **Repository** | Data persistence | `"Repository"` | Driven | `IProductRepository`, `IOrderRepository` |
+| **Messaging** | Message queue/events | `"Messaging"` | Driven | `IOrderMessaging`, `IInventoryMessaging` |
+| **External API** | External service calls | `"ExternalApi"` | Driven | `IPaymentApiService`, `IWeatherApiService` |
+| **Query Adapter** | Read-only queries (returns DTOs directly) | `"QueryAdapter"` | Driven | `IProductQuery`, `IInventoryQuery`, `IProductWithStockQuery` (JOIN) |
 
 ### Implementation Lifecycle Overview
 
-Adapter 구현은 5단계 활동으로 구성됩니다.
+Adapter implementation consists of 5 activities.
 
 ```mermaid
 flowchart LR
-  A1["Activity 1<br/>Port 인터페이스 정의"] --> A2["Activity 2<br/>Adapter 구현"]
-  A2 --> A3["Activity 3<br/>Pipeline 생성 확인<br/>(자동)"]
-  A3 --> A4["Activity 4<br/>DI 등록"]
-  A4 --> A5["Activity 5<br/>단위 테스트"]
+  A1["Activity 1<br/>Port Interface Definition"] --> A2["Activity 2<br/>Adapter Implementation"]
+  A2 --> A3["Activity 3<br/>Pipeline Generation Verification<br/>(Automatic)"]
+  A3 --> A4["Activity 4<br/>DI Registration"]
+  A4 --> A5["Activity 5<br/>Unit Testing"]
 
   A1 -.- L1["Domain Layer /<br/>Application Layer"]
   A2 -.- L2["Adapter Layer"]
@@ -286,15 +286,15 @@ flowchart LR
 
 ### Layer/Project Ownership by Step
 
-| Activity | Task | 소속 레이어 | 프로젝트 예시 |
+| Activity | Task | Owning Layer | Project Example |
 |----------|------|-------------|---------------|
-| 1 | Port 인터페이스 정의 | Domain / Application | `LayeredArch.Domain`, `LayeredArch.Application` |
-| 2 | Adapter 구현 | Adapter | `LayeredArch.Adapters.Persistence`, `LayeredArch.Adapters.Infrastructure` |
-| 3 | Pipeline 생성 확인 | (자동 생성) | `obj/GeneratedFiles/` |
-| 4 | DI 등록 | Adapter / Host | `{Project}.Adapters.{Layer}`, `LayeredArch` |
-| 5 | 단위 테스트 | Test | `{Project}.Tests.Unit` |
+| 1 | Port Interface Definition | Domain / Application | `LayeredArch.Domain`, `LayeredArch.Application` |
+| 2 | Adapter Implementation | Adapter | `LayeredArch.Adapters.Persistence`, `LayeredArch.Adapters.Infrastructure` |
+| 3 | Pipeline Generation Verification | (Auto-generated) | `obj/GeneratedFiles/` |
+| 4 | DI Registration | Adapter / Host | `{Project}.Adapters.{Layer}`, `LayeredArch` |
+| 5 | Unit Testing | Test | `{Project}.Tests.Unit` |
 
-Adapter 유형과 라이프사이클을 파악했으니, 모든 Adapter의 기반이 되는 `IObservablePort` 인터페이스와 그 계층 구조를 살펴보겠습니다.
+Now that we understand Adapter types and their lifecycle, let's examine the `IObservablePort` interface and its hierarchy that underlie all Adapters.
 
 ---
 

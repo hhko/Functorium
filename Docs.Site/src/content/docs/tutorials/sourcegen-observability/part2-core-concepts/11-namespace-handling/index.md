@@ -2,69 +2,69 @@
 title: "Namespace Handling"
 ---
 
-## 개요
+## Overview
 
-생성된 코드가 원본 클래스와 같은 네임스페이스에 위치해야 partial class나 상속이 올바르게 작동합니다. 네임스페이스를 빠뜨리면 컴파일 오류가 발생하고, 서로 다른 네임스페이스에 같은 이름의 클래스가 있으면 생성 파일명이 충돌합니다. 이 장에서는 `ContainingNamespace`에서 정보를 추출하고, 글로벌 네임스페이스를 안전하게 처리하며, 파일명 충돌을 방지하는 실전 기법을 다룹니다.
+Generated code must be in the same namespace as the original class for partial class or inheritance to work correctly. If the namespace is omitted, compilation errors occur, and if classes with the same name exist in different namespaces, generated filenames will collide. This chapter covers practical techniques for extracting information from `ContainingNamespace`, safely handling the global namespace, and preventing filename collisions.
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **ContainingNamespace에서 정보 추출**
-   - `IsGlobalNamespace` 확인과 문자열 변환
-2. **글로벌 네임스페이스 처리**
-   - namespace 선언 없이 정의된 타입에 대한 안전한 코드 생성
-3. **파일명에 네임스페이스 접미사 활용**
-   - `LastIndexOf('.')`를 이용한 마지막 세그먼트 추출로 충돌 방지
+### Core Learning Objectives
+1. **Extracting information from ContainingNamespace**
+   - Checking `IsGlobalNamespace` and converting to string
+2. **Handling the global namespace**
+   - Safe code generation for types defined without a namespace declaration
+3. **Using namespace suffixes in filenames**
+   - Collision prevention by extracting the last segment with `LastIndexOf('.')`
 
 ---
 
-## 네임스페이스 추출
+## Namespace Extraction
 
-### 기본 추출
+### Basic Extraction
 
 ```csharp
 INamedTypeSymbol classSymbol = ...;
 
-// ContainingNamespace에서 네임스페이스 얻기
+// Get namespace from ContainingNamespace
 INamespaceSymbol namespaceSymbol = classSymbol.ContainingNamespace;
 
-// 문자열로 변환
+// Convert to string
 string @namespace = namespaceSymbol.ToString();
 // "MyApp.Infrastructure.Repositories"
 ```
 
-### 글로벌 네임스페이스 처리
+### Global Namespace Handling
 
 ```csharp
-// 글로벌 네임스페이스인 경우 특별 처리 필요
+// Special handling needed for global namespace
 string @namespace = classSymbol.ContainingNamespace.IsGlobalNamespace
-    ? string.Empty  // 빈 문자열 반환
+    ? string.Empty  // Return empty string
     : classSymbol.ContainingNamespace.ToString();
 
-// 글로벌 네임스페이스란?
-// namespace 선언 없이 정의된 타입
-// 예:
-// public class GlobalClass { }  // 글로벌 네임스페이스
+// What is the global namespace?
+// Types defined without a namespace declaration
+// Example:
+// public class GlobalClass { }  // global namespace
 
 // namespace MyApp;
-// public class NamespacedClass { }  // MyApp 네임스페이스
+// public class NamespacedClass { }  // MyApp namespace
 ```
 
 ---
 
-## 네임스페이스 선언 생성
+## Namespace Declaration Generation
 
-### File-scoped 네임스페이스 (C# 10+)
+### File-scoped Namespace (C# 10+)
 
 ```csharp
-// 네임스페이스가 있는 경우
+// When a namespace exists
 if (!string.IsNullOrEmpty(@namespace))
 {
     sb.AppendLine($"namespace {@namespace};")
       .AppendLine();
 }
 
-// 생성 결과:
+// Generated result:
 // namespace MyApp.Infrastructure.Repositories;
 //
 // public class UserRepositoryObservable : UserRepository
@@ -72,13 +72,13 @@ if (!string.IsNullOrEmpty(@namespace))
 // }
 ```
 
-### 글로벌 네임스페이스 처리
+### Global Namespace Handling
 
 ```csharp
-// 글로벌 네임스페이스인 경우 namespace 선언 생략
+// When in the global namespace, omit namespace declaration
 if (string.IsNullOrEmpty(@namespace))
 {
-    // namespace 선언 없이 바로 클래스 정의
+    // Define class directly without namespace declaration
     sb.AppendLine($"public class {className}Pipeline : {className}")
       .AppendLine("{");
 }
@@ -93,43 +93,43 @@ else
 
 ---
 
-## 파일명에 네임스페이스 활용
+## Using Namespaces in Filenames
 
-### 파일명 충돌 방지
+### Preventing Filename Collisions
 
 ```csharp
-// 문제: 다른 네임스페이스에 같은 클래스 이름
+// Problem: same class name in different namespaces
 // MyApp.Repositories.UserRepository
 // MyApp.Services.UserRepository
 
-// 같은 파일명으로 충돌 발생
-// UserRepositoryObservable.g.cs  (어느 것?)
+// Collision with the same filename
+// UserRepositoryObservable.g.cs  (which one?)
 ```
 
-### 네임스페이스 접미사 추출
+### Namespace Suffix Extraction
 
 ```csharp
-// ObservablePortGenerator.cs의 실제 코드
+// Actual code from ObservablePortGenerator.cs
 private static void Generate(
     SourceProductionContext context,
     ImmutableArray<ObservableClassInfo> pipelineClasses)
 {
     foreach (var pipelineClass in pipelineClasses)
     {
-        // 네임스페이스의 마지막 부분 추출
+        // Extract the last part of the namespace
         string namespaceSuffix = string.Empty;
         if (!string.IsNullOrEmpty(pipelineClass.Namespace))
         {
             var lastDotIndex = pipelineClass.Namespace.LastIndexOf('.');
             if (lastDotIndex >= 0)
             {
-                // "MyApp.Infrastructure.Repositories" → "Repositories"
+                // "MyApp.Infrastructure.Repositories" -> "Repositories"
                 namespaceSuffix = pipelineClass.Namespace
                     .Substring(lastDotIndex + 1) + ".";
             }
         }
 
-        // 파일명 생성
+        // Generate filename
         string fileName = $"{namespaceSuffix}{pipelineClass.ClassName}Observable.g.cs";
         // "Repositories.UserRepositoryObservable.g.cs"
 
@@ -138,27 +138,27 @@ private static void Generate(
 }
 ```
 
-### 예시
+### Examples
 
 ```
-입력 클래스                              생성되는 파일명
-==========                              ===============
-MyApp.Repositories.UserRepository       Repositories.UserRepositoryObservable.g.cs
-MyApp.Services.UserRepository           Services.UserRepositoryObservable.g.cs
-MyApp.Data.UserRepository               Data.UserRepositoryObservable.g.cs
-GlobalClass (글로벌 네임스페이스)        GlobalClassObservable.g.cs
+Input Class                                Generated Filename
+===========                                ==================
+MyApp.Repositories.UserRepository          Repositories.UserRepositoryObservable.g.cs
+MyApp.Services.UserRepository              Services.UserRepositoryObservable.g.cs
+MyApp.Data.UserRepository                  Data.UserRepositoryObservable.g.cs
+GlobalClass (global namespace)             GlobalClassObservable.g.cs
 ```
 
 ---
 
-## 중첩 네임스페이스 처리
+## Nested Namespace Handling
 
-### 깊은 네임스페이스
+### Deep Namespaces
 
 ```csharp
-// 입력: "A.B.C.D.E"
-// lastDotIndex: 7 ('E' 직전의 '.')
-// 접미사: "E."
+// Input: "A.B.C.D.E"
+// lastDotIndex: 7 (the '.' just before 'E')
+// Suffix: "E."
 
 string @namespace = "A.B.C.D.E";
 var lastDotIndex = @namespace.LastIndexOf('.');
@@ -166,43 +166,43 @@ string suffix = @namespace.Substring(lastDotIndex + 1) + ".";
 // suffix = "E."
 ```
 
-### 단순 네임스페이스
+### Simple Namespaces
 
 ```csharp
-// 입력: "MyApp"
-// lastDotIndex: -1 (점 없음)
-// 접미사: 없음 (빈 문자열)
+// Input: "MyApp"
+// lastDotIndex: -1 (no dot)
+// Suffix: none (empty string)
 
 string @namespace = "MyApp";
 var lastDotIndex = @namespace.LastIndexOf('.');
 if (lastDotIndex >= 0)
 {
-    // 이 블록 실행 안 됨
+    // This block is not executed
 }
 // suffix = ""
 ```
 
 ---
 
-## 타입 참조 시 네임스페이스
+## Type References with Namespaces
 
-### global:: 접두사 사용
+### Using the global:: Prefix
 
 ```csharp
-// 생성되는 코드에서 타입 참조 시
+// When referencing types in generated code
 
-// ❌ 위험: 사용자 코드와 충돌 가능
+// ❌ Risky: can conflict with user code
 sb.AppendLine("using System;");
 sb.AppendLine("ArgumentNullException.ThrowIfNull(value);");
 
-// ✅ 안전: global:: 접두사로 명확히
+// ✅ Safe: explicit with global:: prefix
 sb.AppendLine("global::System.ArgumentNullException.ThrowIfNull(value);");
 ```
 
-### 생성 코드 예시
+### Generated Code Example
 
 ```csharp
-// 안전한 타입 참조
+// Safe type references
 sb.AppendLine("    private readonly global::System.Diagnostics.ActivityContext _parentContext;")
   .AppendLine()
   .AppendLine("    public void Validate()")
@@ -213,27 +213,27 @@ sb.AppendLine("    private readonly global::System.Diagnostics.ActivityContext _
 
 ---
 
-## using 별칭
+## Using Aliases
 
-### 긴 네임스페이스 축약
+### Abbreviating Long Namespaces
 
 ```csharp
-// 생성되는 코드에 using 별칭 추가
+// Add using alias to generated code
 sb.AppendLine("using ObservabilityFields = Functorium.Adapters.Observabilities.ObservabilityFields;");
 
-// 사용
+// Usage
 sb.AppendLine("    var eventId = ObservabilityFields.EventIds.Adapter.AdapterRequest;");
 
-// global:: 대안
+// global:: alternative
 sb.AppendLine("    var eventId = global::Functorium.Adapters.Observabilities.ObservabilityFields.EventIds.Adapter.AdapterRequest;");
-// → 너무 길어서 가독성 저하
+// → Too long, reduces readability
 ```
 
 ---
 
-## 테스트 시나리오
+## Test Scenarios
 
-### 네임스페이스 관련 테스트
+### Namespace-Related Tests
 
 ```csharp
 public class NamespaceTests
@@ -250,8 +250,8 @@ public class NamespaceTests
 
         string? actual = _sut.Generate(input);
         return Verify(actual);
-        // 생성 파일: UserRepositoryObservable.g.cs
-        // 코드 내 namespace: MyApp;
+        // Generated file: UserRepositoryObservable.g.cs
+        // Namespace in code: MyApp;
     }
 
     [Fact]
@@ -266,8 +266,8 @@ public class NamespaceTests
 
         string? actual = _sut.Generate(input);
         return Verify(actual);
-        // 생성 파일: E.UserRepositoryObservable.g.cs
-        // 코드 내 namespace: A.B.C.D.E;
+        // Generated file: E.UserRepositoryObservable.g.cs
+        // Namespace in code: A.B.C.D.E;
     }
 
     [Fact]
@@ -280,47 +280,47 @@ public class NamespaceTests
 
         string? actual = _sut.Generate(input);
         return Verify(actual);
-        // 생성 파일: UserRepositoryObservable.g.cs
-        // 코드 내 namespace: 없음 (글로벌)
+        // Generated file: UserRepositoryObservable.g.cs
+        // Namespace in code: none (global)
     }
 }
 ```
 
 ---
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-네임스페이스 처리의 핵심 전략을 정리합니다.
+Here is a summary of the key strategies for namespace handling.
 
-| 상황 | 처리 방법 |
-|------|-----------|
-| 일반 네임스페이스 | `namespace X.Y.Z;` 선언 |
-| 글로벌 네임스페이스 | namespace 선언 생략 |
-| 파일명 충돌 | 접미사로 마지막 네임스페이스 사용 |
-| 타입 참조 | `global::` 접두사 사용 |
-| 긴 네임스페이스 | using 별칭 활용 |
+| Scenario | Handling Approach |
+|----------|-------------------|
+| Regular namespace | `namespace X.Y.Z;` declaration |
+| Global namespace | Omit namespace declaration |
+| Filename collision | Use last namespace segment as suffix |
+| Type references | Use `global::` prefix |
+| Long namespaces | Use using aliases |
 
-| 메서드 | 용도 |
-|--------|------|
-| `IsGlobalNamespace` | 글로벌 여부 확인 |
-| `ToString()` | 전체 네임스페이스 문자열 |
-| `LastIndexOf('.')` | 마지막 세그먼트 추출 |
+| Method | Purpose |
+|--------|---------|
+| `IsGlobalNamespace` | Check if global |
+| `ToString()` | Full namespace string |
+| `LastIndexOf('.')` | Extract last segment |
 
 ---
 
 ## FAQ
 
-### Q1: 글로벌 네임스페이스에 정의된 클래스는 어떻게 처리하나요?
-**A**: `IsGlobalNamespace` 속성으로 확인한 뒤, `true`이면 `namespace` 선언을 생략하고 바로 클래스를 정의합니다. 파일명에도 네임스페이스 접미사가 없으므로 `{ClassName}Observable.g.cs` 형태가 됩니다.
+### Q1: How are classes defined in the global namespace handled?
+**A**: After checking with the `IsGlobalNamespace` property, if `true`, the `namespace` declaration is omitted and the class is defined directly. Since there is no namespace suffix in the filename, it takes the form `{ClassName}Observable.g.cs`.
 
-### Q2: `LastIndexOf('.')`로 마지막 세그먼트만 추출하면 충돌이 완전히 해결되나요?
-**A**: 마지막 세그먼트까지 동일한 경우(예: `A.Repositories.UserRepository`와 `B.Repositories.UserRepository`)는 여전히 충돌할 수 있습니다. 실무에서는 이런 경우가 드물지만, 더 안전하게 하려면 전체 네임스페이스를 파일명에 포함시키는 방법을 고려할 수 있습니다. ObservablePortGenerator는 마지막 세그먼트 방식이 가독성과 안전성의 적절한 균형점이라 판단하여 이 전략을 채택했습니다.
+### Q2: Does extracting only the last segment with `LastIndexOf('.')` completely resolve collisions?
+**A**: Cases where even the last segment is identical (e.g., `A.Repositories.UserRepository` and `B.Repositories.UserRepository`) can still collide. In practice, this is rare, but for greater safety, including the full namespace in the filename can be considered. ObservablePortGenerator adopted this strategy because the last-segment approach provides an appropriate balance between readability and safety.
 
-### Q3: 생성된 코드에서 `global::` 접두사를 사용하는 이유는 무엇인가요?
-**A**: 사용자 코드에 `System`이라는 이름의 클래스가 존재할 경우, `System.ArgumentNullException`이 사용자의 `System` 클래스를 참조하여 컴파일 오류가 발생합니다. `global::System.ArgumentNullException`으로 작성하면 항상 전역 `System` 네임스페이스를 정확히 참조하므로 이러한 충돌을 원천적으로 방지합니다.
+### Q3: Why is the `global::` prefix used in generated code?
+**A**: If user code contains a class named `System`, `System.ArgumentNullException` would reference the user's `System` class, causing a compilation error. Writing `global::System.ArgumentNullException` always references the global `System` namespace precisely, fundamentally preventing such conflicts.
 
 ---
 
-네임스페이스 처리까지 마쳤으니 이제 코드 생성의 마지막 원칙을 다룰 차례입니다. 동일한 입력에 대해 항상 동일한 출력을 보장하는 결정적 출력은 증분 빌드, 소스 제어, CI/CD 모두에 영향을 미치는 핵심 요소입니다.
+With namespace handling complete, it is now time to cover the final principle of code generation. Deterministic output, which guarantees the same output for the same input, is a key factor affecting incremental builds, source control, and CI/CD.
 
-→ [12. 결정적 출력](../12-Deterministic-Output/)
+-> [12. Deterministic Output](../12-Deterministic-Output/)

@@ -2,80 +2,80 @@
 title: "StringBuilder Pattern"
 ---
 
-## 개요
+## Overview
 
-앞 장까지 심볼 분석과 타입 추출로 코드 생성에 필요한 모든 데이터를 확보했습니다. 이제 그 데이터를 실제 C# 소스 코드 문자열로 조립할 차례입니다. ObservablePortGenerator는 각 클래스에 대해 필드, 생성자, 래퍼 메서드, 로깅 메서드를 모두 생성하므로 출력이 수천 줄에 달할 수 있습니다. 문자열 연결(`+` 연산자)은 매번 새 객체를 생성하여 `O(n^2)` 메모리를 소비하지만, `StringBuilder`는 내부 버퍼를 재사용하여 `O(n)`으로 처리합니다.
+In previous chapters, we secured all the data needed for code generation through symbol analysis and type extraction. Now it is time to assemble that data into actual C# source code strings. ObservablePortGenerator generates fields, constructors, wrapper methods, and logging methods for each class, so the output can reach thousands of lines. String concatenation (the `+` operator) creates a new object each time, consuming `O(n^2)` memory, whereas `StringBuilder` reuses an internal buffer for `O(n)` processing.
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **StringBuilder의** 효율성을 이해하고 기본 API를 활용한다
-   - Append, AppendLine, Clear, ToString의 역할
-2. **메서드 체이닝 패턴으로** 가독성 높은 코드 생성 로직을 작성한다
-3. **Raw String Literals와의** 혼합 사용 패턴을 학습한다
-   - 고정 부분은 리터럴로, 동적 부분은 StringBuilder로
+### Core Learning Objectives
+1. **Understand the efficiency of StringBuilder** and utilize its basic API
+   - The roles of Append, AppendLine, Clear, and ToString
+2. **Write readable code generation logic** using the method chaining pattern
+3. **Learn mixed-use patterns with Raw String Literals**
+   - Fixed parts as literals, dynamic parts with StringBuilder
 
 ---
 
-## 왜 StringBuilder인가?
+## Why StringBuilder?
 
-### 문자열 연결의 비효율성
+### Inefficiency of String Concatenation
 
 ```csharp
-// ❌ 문자열 연결 (비효율적)
+// ❌ String concatenation (inefficient)
 string code = "";
 code = code + "public class " + className + "\n";
 code = code + "{\n";
-code = code + "    // 멤버들\n";
+code = code + "    // members\n";
 code = code + "}\n";
 
-// 문제: 매번 새로운 문자열 객체 생성
-// 메모리: O(n²) - n은 연결 횟수
+// Problem: creates a new string object each time
+// Memory: O(n^2) - where n is the number of concatenations
 ```
 
-### StringBuilder의 효율성
+### Efficiency of StringBuilder
 
 ```csharp
-// ✅ StringBuilder (효율적)
+// ✅ StringBuilder (efficient)
 var sb = new StringBuilder();
 sb.Append("public class ").Append(className).AppendLine();
 sb.AppendLine("{");
-sb.AppendLine("    // 멤버들");
+sb.AppendLine("    // members");
 sb.AppendLine("}");
 string code = sb.ToString();
 
-// 장점: 내부 버퍼 재사용
-// 메모리: O(n) - 선형 증가
+// Advantage: reuses internal buffer
+// Memory: O(n) - linear growth
 ```
 
 ---
 
-## 기본 사용법
+## Basic Usage
 
 ### Append vs AppendLine
 
 ```csharp
 var sb = new StringBuilder();
 
-// Append: 줄바꿈 없이 추가
+// Append: add without line break
 sb.Append("public ");
 sb.Append("class ");
 sb.Append("User");
 // → "public class User"
 
-// AppendLine: 줄바꿈 포함 추가
+// AppendLine: add with line break
 sb.AppendLine("public class User");
 // → "public class User\n"
 
-// AppendLine(): 빈 줄 추가
+// AppendLine(): add an empty line
 sb.AppendLine();
 // → "\n"
 ```
 
-### 메서드 체이닝
+### Method Chaining
 
 ```csharp
-// 메서드 체이닝으로 가독성 향상
+// Improve readability with method chaining
 sb.Append("public class ")
   .Append(className)
   .AppendLine()
@@ -86,32 +86,32 @@ sb.Append("public class ")
 
 ---
 
-## 코드 생성 패턴
+## Code Generation Patterns
 
-### 들여쓰기 관리
+### Indentation Management
 
 ```csharp
-// 수동 들여쓰기 (Functorium 방식)
+// Manual indentation (Functorium approach)
 sb.AppendLine("public class UserObservable")
   .AppendLine("{")
-  .AppendLine("    private readonly ILogger _logger;")  // 4칸 들여쓰기
+  .AppendLine("    private readonly ILogger _logger;")  // 4-space indent
   .AppendLine()
   .AppendLine("    public UserObservable(ILogger logger)")
   .AppendLine("    {")
-  .AppendLine("        _logger = logger;")  // 8칸 들여쓰기
+  .AppendLine("        _logger = logger;")  // 8-space indent
   .AppendLine("    }")
   .AppendLine("}");
 ```
 
-### 들여쓰기 헬퍼 (선택적)
+### Indentation Helper (Optional)
 
 ```csharp
-// 들여쓰기 레벨 관리
+// Indentation level management
 public class IndentedStringBuilder
 {
     private readonly StringBuilder _sb = new();
     private int _indentLevel = 0;
-    private const string IndentString = "    ";  // 4칸
+    private const string IndentString = "    ";  // 4 spaces
 
     public void Indent() => _indentLevel++;
     public void Unindent() => _indentLevel--;
@@ -124,7 +124,7 @@ public class IndentedStringBuilder
     }
 }
 
-// 사용
+// Usage
 var isb = new IndentedStringBuilder();
 isb.AppendLine("public class User");
 isb.AppendLine("{");
@@ -136,12 +136,12 @@ isb.AppendLine("}");
 
 ---
 
-## Functorium 코드 생성 예시
+## Functorium Code Generation Example
 
-### 클래스 생성
+### Class Generation
 
 ```csharp
-// ObservablePortGenerator.cs의 실제 코드
+// Actual code from ObservablePortGenerator.cs
 private static string GenerateObservableClassSource(
     ObservableClassInfo classInfo,
     StringBuilder sb)
@@ -163,16 +163,16 @@ private static string GenerateObservableClassSource(
       .AppendLine($"public class {classInfo.ClassName}Observable : {classInfo.ClassName}")
       .AppendLine("{");
 
-    // 필드 생성
+    // Generate fields
     GenerateFields(sb, classInfo);
 
-    // 생성자 생성
+    // Generate constructor
     GenerateConstructor(sb, classInfo);
 
-    // 헬퍼 메서드들 추가
+    // Add helper methods
     GenerateHelperMethods(sb, classInfo);
 
-    // 메서드들 생성
+    // Generate methods
     foreach (var method in classInfo.Methods)
     {
         GenerateMethod(sb, classInfo, method);
@@ -183,7 +183,7 @@ private static string GenerateObservableClassSource(
       .AppendLine($"internal static class {classInfo.ClassName}ObservableLoggers")
       .AppendLine("{");
 
-    // 로깅 확장 메서드들 생성
+    // Generate logging extension methods
     foreach (var method in classInfo.Methods)
     {
         GenerateLoggingMethods(sb, classInfo, method);
@@ -196,7 +196,7 @@ private static string GenerateObservableClassSource(
 }
 ```
 
-### 필드 생성
+### Field Generation
 
 ```csharp
 private static void GenerateFields(StringBuilder sb, ObservableClassInfo classInfo)
@@ -221,10 +221,10 @@ private static void GenerateFields(StringBuilder sb, ObservableClassInfo classIn
 }
 ```
 
-### 동적 파라미터 생성
+### Dynamic Parameter Generation
 
 ```csharp
-// 메서드 파라미터 목록 생성
+// Generate method parameter list
 private static string GenerateParameterList(List<ParameterInfo> parameters)
 {
     var sb = new StringBuilder();
@@ -235,7 +235,7 @@ private static string GenerateParameterList(List<ParameterInfo> parameters)
 
         if (i > 0) sb.Append(", ");
 
-        // ref/out/in 키워드
+        // ref/out/in keywords
         if (param.RefKind != RefKind.None)
         {
             sb.Append(param.RefKind.ToString().ToLower())
@@ -250,16 +250,16 @@ private static string GenerateParameterList(List<ParameterInfo> parameters)
     return sb.ToString();
 }
 
-// 사용
-// 입력: [("int", "id"), ("string", "name")]
-// 출력: "int id, string name"
+// Usage
+// Input: [("int", "id"), ("string", "name")]
+// Output: "int id, string name"
 ```
 
 ---
 
 ## Raw String Literals (C# 11+)
 
-### 템플릿 기반 생성
+### Template-Based Generation
 
 ```csharp
 // Verbatim String Literal
@@ -274,7 +274,7 @@ public const string Header = @"//-----------------------------------------------
 #nullable enable
 ";
 
-// 보간 Raw String Literals
+// Interpolated Raw String Literals
 private static string GenerateClass(string className, string @namespace)
 {
     return $$"""
@@ -288,15 +288,15 @@ private static string GenerateClass(string className, string @namespace)
 }
 ```
 
-### 혼합 사용
+### Mixed Usage
 
 ```csharp
-// StringBuilder + Raw String Literals 혼합
+// StringBuilder + Raw String Literals mixed usage
 private static string GenerateObservableClass(ObservableClassInfo classInfo)
 {
     var sb = new StringBuilder();
 
-    // 고정 부분: Raw String Literal
+    // Fixed part: Raw String Literal
     sb.Append("""
         // <auto-generated/>
         #nullable enable
@@ -307,13 +307,13 @@ private static string GenerateObservableClass(ObservableClassInfo classInfo)
 
         """);
 
-    // 동적 부분: StringBuilder
+    // Dynamic part: StringBuilder
     sb.AppendLine($"namespace {classInfo.Namespace};");
     sb.AppendLine();
     sb.AppendLine($"public class {classInfo.ClassName}Observable");
     sb.AppendLine("{");
 
-    // 메서드들 생성
+    // Generate methods
     foreach (var method in classInfo.Methods)
     {
         GenerateMethod(sb, method);
@@ -327,74 +327,74 @@ private static string GenerateObservableClass(ObservableClassInfo classInfo)
 
 ---
 
-## 성능 최적화
+## Performance Optimization
 
-### 초기 용량 지정
+### Specifying Initial Capacity
 
 ```csharp
-// 예상 크기를 알면 초기 용량 지정
+// Specify initial capacity when the expected size is known
 var sb = new StringBuilder(capacity: 4096);
 
-// 또는 대략적인 추정
-int estimatedSize = classInfo.Methods.Count * 500;  // 메서드당 ~500자
+// Or rough estimation
+int estimatedSize = classInfo.Methods.Count * 500;  // ~500 chars per method
 var sb = new StringBuilder(estimatedSize);
 ```
 
-### 재사용
+### Reuse
 
 ```csharp
-// ❌ 매번 새로 생성
+// ❌ Creating new each time
 foreach (var classInfo in classes)
 {
-    var sb = new StringBuilder();  // 매번 할당
+    var sb = new StringBuilder();  // allocation each time
     GenerateCode(sb, classInfo);
 }
 
-// ✅ 재사용
+// ✅ Reuse
 var sb = new StringBuilder();
 foreach (var classInfo in classes)
 {
-    sb.Clear();  // 내용만 지우고 버퍼 재사용
+    sb.Clear();  // clear content only, reuse buffer
     GenerateCode(sb, classInfo);
 }
 ```
 
 ---
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-`StringBuilder`는 소스 생성기에서 코드를 조립하는 핵심 도구입니다. 메서드 체이닝으로 가독성을 높이고, 여러 클래스를 생성할 때는 `Clear()`로 버퍼를 재사용하여 메모리 효율을 극대화합니다. Functorium 프로젝트에서는 고정 부분에 Raw String Literals를, 동적 부분에 StringBuilder를 혼합하여 사용합니다.
+`StringBuilder` is the core tool for assembling code in source generators. Method chaining improves readability, and when generating multiple classes, `Clear()` reuses the buffer to maximize memory efficiency. In the Functorium project, Raw String Literals are used for fixed parts and StringBuilder for dynamic parts in a mixed approach.
 
-| 메서드 | 용도 | 줄바꿈 |
-|--------|------|--------|
-| `Append()` | 문자열 추가 | 없음 |
-| `AppendLine()` | 문자열 + 줄바꿈 | 있음 |
-| `AppendLine("")` | 빈 줄 | 있음 |
-| `Clear()` | 내용 초기화 | - |
-| `ToString()` | 결과 문자열 | - |
+| Method | Purpose | Line Break |
+|--------|---------|------------|
+| `Append()` | Add string | None |
+| `AppendLine()` | Add string + line break | Yes |
+| `AppendLine("")` | Empty line | Yes |
+| `Clear()` | Reset content | - |
+| `ToString()` | Result string | - |
 
-| 패턴 | 설명 |
-|------|------|
-| 메서드 체이닝 | `.Append().Append().AppendLine()` |
-| 수동 들여쓰기 | `"    "` 접두사로 직접 관리 |
-| Raw String Literals | 고정 템플릿에 사용 |
-| 초기 용량 | 큰 출력 예상 시 지정 |
+| Pattern | Description |
+|---------|-------------|
+| Method chaining | `.Append().Append().AppendLine()` |
+| Manual indentation | Directly managed with `"    "` prefix |
+| Raw String Literals | Used for fixed templates |
+| Initial capacity | Specified when large output is expected |
 
 ---
 
 ## FAQ
 
-### Q1: `StringBuilder`를 `Clear()`로 재사용하는 것과 매번 새로 생성하는 것의 차이는 무엇인가요?
-**A**: `Clear()`는 내용만 지우고 내부 버퍼를 유지합니다. 여러 클래스에 대해 순차적으로 코드를 생성할 때 버퍼 재할당이 발생하지 않아 GC 압력이 줄어듭니다. Functorium에서 `Collect()`로 모든 클래스를 모아 처리하는 이유 중 하나가 이 `StringBuilder` 재사용입니다.
+### Q1: What is the difference between reusing `StringBuilder` with `Clear()` and creating a new one each time?
+**A**: `Clear()` only erases the content while keeping the internal buffer. When generating code sequentially for multiple classes, no buffer reallocation occurs, which reduces GC pressure. One reason Functorium uses `Collect()` to gather all classes for processing is this `StringBuilder` reuse.
 
-### Q2: Raw String Literals와 `StringBuilder`를 혼합하는 기준은 무엇인가요?
-**A**: `using` 문, 헤더, `#nullable enable` 같은 **고정된** 텍스트는 Raw String Literals로 작성하면 가독성이 높습니다. 클래스명, 메서드명, 타입명 등 **동적으로** 변하는 부분은 `StringBuilder`의 `Append`/`AppendLine`으로 조립합니다. Functorium의 `Header` 상수가 이 혼합 패턴의 대표적 예시입니다.
+### Q2: What is the criterion for mixing Raw String Literals with `StringBuilder`?
+**A**: **Fixed** text such as `using` statements, headers, and `#nullable enable` is more readable when written as Raw String Literals. **Dynamic** parts that change, like class names, method names, and type names, are assembled using `StringBuilder`'s `Append`/`AppendLine`. Functorium's `Header` constant is a representative example of this mixed pattern.
 
-### Q3: `StringBuilder`에 초기 용량을 지정하면 얼마나 효과가 있나요?
-**A**: 기본 용량은 16자로 시작하여 필요할 때마다 2배씩 확장됩니다. 생성 코드가 수천 줄이라면 확장이 여러 번 발생하여 불필요한 메모리 복사가 일어납니다. 메서드 수를 기반으로 대략적인 크기를 추정하여 초기 용량을 지정하면 이 오버헤드를 줄일 수 있습니다.
+### Q3: How effective is specifying an initial capacity for `StringBuilder`?
+**A**: The default capacity starts at 16 characters and doubles whenever needed. If the generated code is thousands of lines, expansion occurs multiple times, causing unnecessary memory copies. By estimating a rough size based on the number of methods and specifying the initial capacity, you can reduce this overhead.
 
 ---
 
-`StringBuilder`로 코드를 한 줄씩 조립하는 방법을 익혔습니다. 그런데 수백 줄의 생성 로직이 하나의 메서드에 뒤섞이면 유지보수가 어려워집니다. 다음 장에서는 헤더, 필드, 생성자, 메서드 등 고정 부분과 동적 부분을 계층적으로 분리하는 템플릿 설계를 살펴봅니다.
+We have learned how to assemble code line by line with `StringBuilder`. However, when hundreds of lines of generation logic are mixed into a single method, maintenance becomes difficult. In the next chapter, we will examine template design that hierarchically separates fixed and dynamic parts such as headers, fields, constructors, and methods.
 
-→ [10. 템플릿 설계](../10-Template-Design/)
+-> [10. Template Design](../10-Template-Design/)

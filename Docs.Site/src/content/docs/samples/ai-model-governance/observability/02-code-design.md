@@ -3,102 +3,102 @@ title: "Observability Code Design"
 description: "L1 scorecard, L2 drill-down, alert rules, and ctx.* propagation code patterns"
 ---
 
-## L1 스코어카드: 전체 건강 상태
+## L1 Scorecard: Overall Health Status
 
-6개 건강 지표로 AI 모델 거버넌스 플랫폼의 전체 상태를 한눈에 파악합니다.
+Grasp the overall status of the AI Model Governance platform at a glance with 6 health indicators.
 
-| 지표 | PromQL | 임계값 (Green / Yellow / Red) |
+| Indicator | PromQL | Threshold (Green / Yellow / Red) |
 |------|--------|-------------------------------|
-| 요청 수 | `sum(rate(application_usecase_command_requests_total[5m]))` | 정상 범위 / +-50% 변동 / +-80% 변동 |
-| 성공률 | `sum(rate(responses{response_status="success"}[5m])) / sum(rate(responses[5m])) * 100` | > 99.9% / > 99% / < 99% |
-| P95 지연 | `histogram_quantile(0.95, sum(rate(duration_bucket[5m])) by (le))` | < 200ms / < 500ms / > 500ms |
-| 에러율 | `sum(rate(responses{response_status="failure"}[5m])) / sum(rate(responses[5m])) * 100` | < 0.1% / < 1% / > 1% |
-| 가용성 | `1 - (sum(rate(responses{error_type="exceptional"}[5m])) / sum(rate(responses[5m])))` | > 99.9% / > 99.5% / < 99.5% |
-| 처리량 | `sum(rate(responses{response_status="success"}[5m]))` | 기준선 대비 안정 / -20% / -50% |
+| Request Count | `sum(rate(application_usecase_command_requests_total[5m]))` | Normal range / +-50% fluctuation / +-80% fluctuation |
+| Success Rate | `sum(rate(responses{response_status="success"}[5m])) / sum(rate(responses[5m])) * 100` | > 99.9% / > 99% / < 99% |
+| P95 Latency | `histogram_quantile(0.95, sum(rate(duration_bucket[5m])) by (le))` | < 200ms / < 500ms / > 500ms |
+| Error Rate | `sum(rate(responses{response_status="failure"}[5m])) / sum(rate(responses[5m])) * 100` | < 0.1% / < 1% / > 1% |
+| Availability | `1 - (sum(rate(responses{error_type="exceptional"}[5m])) / sum(rate(responses[5m])))` | > 99.9% / > 99.5% / < 99.5% |
+| Throughput | `sum(rate(responses{response_status="success"}[5m]))` | Stable relative to baseline / -20% / -50% |
 
-### Grafana 패널 구성
+### Grafana Panel Configuration
 
 ```
-L1 스코어카드 대시보드
-├── Row 1: Stat 패널 x 6 (건강 지표)
-├── Row 2: 시계열 그래프 (요청 수 + 에러율 overlay)
-├── Row 3: 시계열 그래프 (P95/P99 지연)
-└── Row 4: 테이블 (최근 에러 top 10 by error.code)
+L1 Scorecard Dashboard
+├── Row 1: Stat panels x 6 (health indicators)
+├── Row 2: Time series graph (request count + error rate overlay)
+├── Row 3: Time series graph (P95/P99 latency)
+└── Row 4: Table (recent error top 10 by error.code)
 ```
 
 ---
 
-## L2 드릴다운: 핸들러별 상세
+## L2 Drill-Down: Per-Handler Details
 
-L2 대시보드는 `request.layer` x `request.category.name` x `request.handler.name` 차원으로 드릴다운합니다.
+The L2 dashboard drills down by `request.layer` x `request.category.name` x `request.handler.name` dimensions.
 
-### Application Layer 드릴다운
+### Application Layer Drill-Down
 
 ```promql
-# 핸들러별 초당 요청 수
+# Requests per second by handler
 sum(rate(application_usecase_command_requests_total[5m])) by (request_handler_name)
 
-# 핸들러별 P95 지연
+# P95 latency by handler
 histogram_quantile(0.95,
   sum(rate(application_usecase_command_duration_bucket[5m])) by (le, request_handler_name)
 )
 
-# 핸들러별 에러율
+# Error rate by handler
 sum(rate(application_usecase_command_responses_total{response_status="failure"}[5m])) by (request_handler_name)
 / sum(rate(application_usecase_command_responses_total[5m])) by (request_handler_name) * 100
 
-# error.type별 분포
+# Distribution by error.type
 sum(rate(application_usecase_command_responses_total{response_status="failure"}[5m])) by (error_type)
 ```
 
-### Adapter Layer 드릴다운
+### Adapter Layer Drill-Down
 
 ```promql
-# Repository별 P95 지연
+# P95 latency by repository
 histogram_quantile(0.95,
   sum(rate(adapter_repository_duration_bucket[5m])) by (le, request_handler_name)
 )
 
-# External Service별 에러율
+# Error rate by external service
 sum(rate(adapter_external_service_responses_total{response_status="failure"}[5m])) by (request_handler_name)
 / sum(rate(adapter_external_service_responses_total[5m])) by (request_handler_name) * 100
 ```
 
-### DomainEvent 시각화
+### DomainEvent Visualization
 
 ```promql
-# 이벤트 타입별 발행 수
+# Published events by event type
 sum(rate(adapter_event_requests_total[5m])) by (request_handler_name)
 
-# 이벤트 핸들러별 처리 시간
+# Processing time by event handler
 histogram_quantile(0.95,
   sum(rate(application_usecase_event_duration_bucket[5m])) by (le, request_handler_name)
 )
 ```
 
-### Grafana 패널 구성
+### Grafana Panel Configuration
 
 ```
-L2 드릴다운 대시보드
+L2 Drill-Down Dashboard
 ├── Variable: $layer (application/adapter), $category, $handler
-├── Row 1: 선택된 핸들러 요청 수 + 에러율
-├── Row 2: P50/P95/P99 지연 시계열
-├── Row 3: error.type 분포 (expected vs exceptional)
-├── Row 4: error.code top 10 테이블
-└── Row 5: DomainEvent 발행 → Handler 체인
+├── Row 1: Selected handler request count + error rate
+├── Row 2: P50/P95/P99 latency time series
+├── Row 3: error.type distribution (expected vs exceptional)
+├── Row 4: error.code top 10 table
+└── Row 5: DomainEvent publish → Handler chain
 ```
 
 ---
 
-## 알림 규칙
+## Alert Rules
 
-### P0 -- Critical (즉시 대응)
+### P0 -- Critical (Immediate Response)
 
-| 조건 | PromQL | 조치 |
+| Condition | PromQL | Action |
 |------|--------|------|
-| `error.type=exceptional` 급증 | `rate(responses{error_type="exceptional"}[5m]) > 0.01` | 시스템 오류 -> 인프라 점검, 로그 확인 |
-| 전체 에러율 > 10% | `rate(responses{response_status="failure"}[5m]) / rate(responses[5m]) > 0.1` | 즉시 인시던트 선언 |
-| External Service 타임아웃 연쇄 | 여러 외부 서비스에서 동시 `error.type=exceptional` | 의존성 서비스 장애 확인 |
+| `error.type=exceptional` spike | `rate(responses{error_type="exceptional"}[5m]) > 0.01` | System error -> infrastructure check, log review |
+| Overall error rate > 10% | `rate(responses{response_status="failure"}[5m]) / rate(responses[5m]) > 0.1` | Declare incident immediately |
+| External service timeout cascade | Multiple external services with simultaneous `error.type=exceptional` | Check dependency service outage |
 
 ```yaml
 groups:
@@ -114,17 +114,17 @@ groups:
           severity: critical
           team: platform
         annotations:
-          summary: "시스템 오류율이 1%를 초과했습니다"
-          description: "error.type=exceptional 비율: {{ $value | humanizePercentage }}"
+          summary: "System error rate exceeded 1%"
+          description: "error.type=exceptional ratio: {{ $value | humanizePercentage }}"
 ```
 
-### P1 -- Warning (15분 내 대응)
+### P1 -- Warning (Respond Within 15 Minutes)
 
-| 조건 | PromQL | 조치 |
+| Condition | PromQL | Action |
 |------|--------|------|
-| 핵심 Handler P95 > 1s | `histogram_quantile(0.95, duration_bucket{request_handler_name="..."}) > 1` | 느린 쿼리, 외부 API 지연 분석 |
-| 에러율 > 5% | `rate(responses{response_status="failure"}[5m]) / rate(responses[5m]) > 0.05` | error.code별 분류 후 주요 원인 식별 |
-| EventHandler 처리 지연 | `histogram_quantile(0.95, application_usecase_event_duration_bucket) > 5` | 이벤트 핸들러 병목 분석 |
+| Key handler P95 > 1s | `histogram_quantile(0.95, duration_bucket{request_handler_name="..."}) > 1` | Analyze slow queries, external API latency |
+| Error rate > 5% | `rate(responses{response_status="failure"}[5m]) / rate(responses[5m]) > 0.05` | Classify by error.code and identify root causes |
+| EventHandler processing delay | `histogram_quantile(0.95, application_usecase_event_duration_bucket) > 5` | Analyze event handler bottleneck |
 
 ```yaml
       - alert: HandlerLatencyHigh
@@ -137,22 +137,22 @@ groups:
           severity: warning
           team: backend
         annotations:
-          summary: "{{ $labels.request_handler_name }} P95 지연이 1초를 초과했습니다"
+          summary: "{{ $labels.request_handler_name }} P95 latency exceeded 1 second"
 ```
 
-### P2 -- Info (업무 시간 내 확인)
+### P2 -- Info (Review During Business Hours)
 
-| 조건 | PromQL | 조치 |
+| Condition | PromQL | Action |
 |------|--------|------|
-| P95 > 500ms | `histogram_quantile(0.95, duration_bucket) > 0.5` | 성능 추이 확인, 백로그 등록 |
-| 새로운 error.code 등장 | 기존에 없던 error.code 출현 | 새 에러 경로 분석 |
-| 트래픽 패턴 변화 | 요청 수가 기준선 대비 +-50% | 용량 계획 검토 |
+| P95 > 500ms | `histogram_quantile(0.95, duration_bucket) > 0.5` | Check performance trends, register in backlog |
+| New error.code appears | Previously unseen error.code emerges | Analyze new error path |
+| Traffic pattern change | Request count +-50% relative to baseline | Review capacity planning |
 
 ---
 
-## ctx.* 전파 코드 패턴
+## ctx.* Propagation Code Patterns
 
-### Command Request에서 CtxPillar 지정
+### Specifying CtxPillar in Command Requests
 
 ```csharp
 public sealed class CreateDeploymentCommand
@@ -160,42 +160,42 @@ public sealed class CreateDeploymentCommand
     public sealed record Request(
         string ModelId,                                      // Default(L+T): Unbounded ID
         string EndpointUrl,                                  // Default(L+T): URL
-        [CtxTarget(CtxPillar.All)] string Environment,       // All(L+T+MetricsTag): Bounded(2값)
+        [CtxTarget(CtxPillar.All)] string Environment,       // All(L+T+MetricsTag): Bounded (2 values)
         [CtxTarget(CtxPillar.Default | CtxPillar.MetricsValue)]
-        decimal DriftThreshold                               // Default + MetricsValue: 수치
+        decimal DriftThreshold                               // Default + MetricsValue: numeric
     ) : ICommandRequest<Response>;
 }
 ```
 
-### DomainEvent에서 CtxPillar 지정
+### Specifying CtxPillar in DomainEvents
 
 ```csharp
 public sealed record ReportedEvent(
     ModelIncidentId IncidentId,                              // Default(L+T)
-    [CtxTarget(CtxPillar.All)] IncidentSeverity Severity,    // All(L+T+MetricsTag): Bounded(4값)
+    [CtxTarget(CtxPillar.All)] IncidentSeverity Severity,    // All(L+T+MetricsTag): Bounded (4 values)
     ModelDeploymentId DeploymentId                           // Default(L+T)
 ) : DomainEvent;
 ```
 
-### 생성되는 ctx.* 필드 매핑 예시 (CreateDeploymentCommand)
+### Generated ctx.* Field Mapping Example (CreateDeploymentCommand)
 
-| ctx 필드 | Logging | Tracing | MetricsTag | MetricsValue |
+| ctx Field | Logging | Tracing | MetricsTag | MetricsValue |
 |----------|---------|---------|------------|--------------|
 | `ctx.create_deployment_command.request.model_id` | O | O | - | - |
 | `ctx.create_deployment_command.request.endpoint_url` | O | O | - | - |
 | `ctx.create_deployment_command.request.environment` | O | O | **O** | - |
 | `ctx.create_deployment_command.request.drift_threshold` | O | O | - | **O** |
 
-### 세그먼트 분석 PromQL
+### Segment Analysis PromQL
 
 ```promql
-# 배포 환경별(Staging vs Production) 에러율
+# Error rate by deployment environment (Staging vs Production)
 sum(rate(application_usecase_command_responses_total{response_status="failure"}[5m]))
   by (ctx_create_deployment_command_request_environment)
 / sum(rate(application_usecase_command_responses_total[5m]))
   by (ctx_create_deployment_command_request_environment) * 100
 
-# 인시던트 심각도별 자동 격리 지연
+# Auto-isolation latency by incident severity
 histogram_quantile(0.95,
   sum(rate(application_usecase_event_duration_bucket[5m]))
     by (le, ctx_reported_event_severity)
@@ -204,14 +204,14 @@ histogram_quantile(0.95,
 
 ---
 
-## 알림 -> 분석 연결
+## Alert -> Analysis Flow
 
-알림 발생 시 다음 순서로 원인을 분석합니다:
+When an alert is triggered, analyze the root cause in the following order:
 
-1. **L1 스코어카드 확인** -- 전체 건강 상태 파악
-2. **L2 드릴다운** -- `request.handler.name` 기준으로 문제 핸들러 식별
-3. **분산 추적** -- 해당 핸들러의 느린 Trace 검색, Span 체인 분석
-4. **ctx.* 세그먼트** -- 특정 환경(Staging/Production), 심각도에 집중되는지 확인
-5. **로그 상세** -- `error.code`, `@error` 필드로 근본 원인 파악
+1. **Check L1 Scorecard** -- Assess overall health status
+2. **L2 Drill-Down** -- Identify the problematic handler by `request.handler.name`
+3. **Distributed Tracing** -- Search for slow traces of the handler, analyze span chain
+4. **ctx.* Segments** -- Check if concentrated in a specific environment (Staging/Production) or severity
+5. **Detailed Logs** -- Identify root cause via `error.code` and `@error` fields
 
-[구현 결과](./03-implementation-results/)에서 실제 Observable Port 현황과 파이프라인 구성을 확인합니다.
+Check the actual Observable Port status and pipeline configuration in the [Implementation Results](./03-implementation-results/).

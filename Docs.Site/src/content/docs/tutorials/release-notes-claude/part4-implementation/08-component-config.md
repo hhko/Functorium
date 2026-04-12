@@ -2,13 +2,13 @@
 title: "component-priority.json"
 ---
 
-프로젝트에 소스 코드, 테스트, 문서 등 다양한 폴더가 있는데, 어떤 폴더를 분석 대상으로 삼아야 할까요? 모든 폴더를 분석하면 불필요한 노이즈가 섞이고, 핵심 라이브러리의 변경사항이 묻힐 수 있습니다. component-priority.json은 이 질문에 답하는 설정 파일입니다. **분석 대상 컴포넌트와 우선순위를** 정의하여, 릴리스 노트에 어떤 내용이 어떤 순서로 나타날지 결정합니다.
+A project has various folders such as source code, tests, and documentation—which folders should be targeted for analysis? Analyzing all folders introduces unnecessary noise and can bury changes in the core library. component-priority.json is the configuration file that answers this question. It **defines the analysis target components and their priorities,** determining what content appears in the release notes and in what order.
 
-이 파일은 `.release-notes/scripts/config/component-priority.json`에 위치합니다.
+This file is located at `.release-notes/scripts/config/component-priority.json`.
 
-## 파일 구조
+## File Structure
 
-파일 내용은 단순합니다. `analysis_priorities`라는 하나의 배열에 분석할 폴더 경로를 나열합니다.
+The file content is simple. It lists the folder paths to analyze in a single array called `analysis_priorities`.
 
 ```json
 {
@@ -21,15 +21,15 @@ title: "component-priority.json"
 }
 ```
 
-## 속성 설명
+## Property Description
 
 ### analysis_priorities
 
-`analysis_priorities`는 분석할 폴더 경로의 배열입니다. 경로는 Git 저장소 루트를 기준으로 한 상대 경로이며, Windows에서도 슬래시(`/`)를 사용합니다. 대소문자는 실제 폴더명과 일치해야 합니다.
+`analysis_priorities` is an array of folder paths to analyze. Paths are relative to the Git repository root, and forward slashes (`/`) are used even on Windows. The casing must match the actual folder names.
 
-## 예시
+## Examples
 
-가장 기본적인 설정은 핵심 라이브러리만 분석하는 것입니다.
+The most basic configuration analyzes only the core libraries.
 
 ```json
 {
@@ -40,7 +40,7 @@ title: "component-priority.json"
 }
 ```
 
-문서 변경사항도 릴리스 노트에 포함하고 싶다면 Docs 폴더를 추가합니다.
+If you want to include documentation changes in the release notes, add the Docs folder.
 
 ```json
 {
@@ -52,7 +52,7 @@ title: "component-priority.json"
 }
 ```
 
-프로젝트 규모가 크다면 여러 프로젝트를 나열할 수도 있습니다.
+For larger projects, you can list multiple projects.
 
 ```json
 {
@@ -69,51 +69,51 @@ title: "component-priority.json"
 
 ---
 
-## 우선순위 동작
+## Priority Behavior
 
-배열의 순서는 단순한 나열이 아닙니다. **순서가 곧 우선순위입니다.** 배열에서 앞에 위치한 컴포넌트가 먼저 분석되고, 출력 파일에서도 먼저 나타납니다.
+The order of the array is not just a listing. **The order is the priority.** Components listed earlier in the array are analyzed first and appear first in the output files.
 
 ```json
 {
   "analysis_priorities": [
-    "Src/Functorium",        // 1순위 - 먼저 분석 및 출력
-    "Src/Functorium.Testing", // 2순위
-    "Docs"                    // 3순위 - 마지막
+    "Src/Functorium",        // Priority 1 - analyzed and output first
+    "Src/Functorium.Testing", // Priority 2
+    "Docs"                    // Priority 3 - last
   ]
 }
 ```
 
-이 순서는 분석 출력 파일의 나열 순서에 그대로 반영됩니다.
+This order is directly reflected in the listing order of analysis output files.
 
 ```txt
 .analysis-output/
-├── Functorium.md          # 1순위 컴포넌트
-├── Functorium.Testing.md  # 2순위 컴포넌트
-├── Docs.md                # 3순위 컴포넌트
-└── analysis-summary.md    # 요약 (우선순위 순으로 나열)
+├── Functorium.md          # Priority 1 component
+├── Functorium.Testing.md  # Priority 2 component
+├── Docs.md                # Priority 3 component
+└── analysis-summary.md    # Summary (listed in priority order)
 ```
 
-릴리스 노트의 "새로운 기능" 섹션도 같은 순서를 따릅니다. 핵심 라이브러리가 가장 먼저 나오고, 부가적인 내용은 뒤에 배치됩니다.
+The "New Features" section of the release notes also follows the same order. The core library appears first, and supplementary content is placed later.
 
 ```markdown
-## 새로운 기능
+## New Features
 
-### Functorium 라이브러리     (1순위)
+### Functorium Library     (Priority 1)
 ...
 
-### Functorium.Testing 라이브러리  (2순위)
+### Functorium.Testing Library  (Priority 2)
 ...
 
-### Docs                      (3순위)
+### Docs                      (Priority 3)
 ...
 ```
 
-## 폴더 없는 경우 처리
+## Handling Missing Folders
 
-설정 파일이 없거나 비어 있으면 기본값이 적용됩니다.
+If the configuration file is missing or empty, default values are applied.
 
 ```csharp
-// AnalyzeAllComponents.cs의 기본값
+// Default values in AnalyzeAllComponents.cs
 if (components.Count == 0)
 {
     components = new List<string>
@@ -125,27 +125,27 @@ if (components.Count == 0)
 }
 ```
 
-존재하지 않는 폴더가 배열에 포함되어 있어도 문제없습니다. 자동으로 건너뜁니다.
+Even if a non-existent folder is included in the array, it causes no issues. It is automatically skipped.
 
 ---
 
-## 새 프로젝트 추가
+## Adding a New Project
 
-새 프로젝트를 분석 대상에 추가하는 과정은 세 단계입니다.
+Adding a new project to the analysis targets is a three-step process.
 
-먼저 추가할 프로젝트 폴더가 실제로 존재하는지 확인합니다.
+First, verify that the project folder you want to add actually exists.
 
 ```bash
-# 프로젝트 폴더 확인
+# Check project folders
 ls Src/
 
-# 출력 예시:
+# Example output:
 # Functorium/
 # Functorium.Testing/
-# Functorium.Web/       <- 새로 추가할 프로젝트
+# Functorium.Web/       <- New project to add
 ```
 
-확인했으면 설정 파일에 해당 경로를 추가합니다.
+Once verified, add the path to the configuration file.
 
 ```json
 {
@@ -157,7 +157,7 @@ ls Src/
 }
 ```
 
-그리고 분석을 실행하면 새 컴포넌트에 대한 결과 파일이 생성됩니다.
+Then run the analysis, and a result file for the new component will be generated.
 
 ```bash
 cd .release-notes/scripts
@@ -168,13 +168,13 @@ dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target HEAD
 .analysis-output/
 ├── Functorium.md
 ├── Functorium.Testing.md
-├── Functorium.Web.md      <- 새로 생성됨
+├── Functorium.Web.md      <- Newly created
 └── analysis-summary.md
 ```
 
-## 고급 설정 예시
+## Advanced Configuration Examples
 
-다양한 프로젝트 구조에 맞게 설정할 수 있습니다. 모노레포 구조라면 패키지와 앱을 구분하여 나열합니다.
+You can configure for various project structures. For a monorepo structure, list packages and apps separately.
 
 ```json
 {
@@ -189,7 +189,7 @@ dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target HEAD
 }
 ```
 
-마이크로서비스 구조라면 서비스별로 나열합니다.
+For a microservices structure, list by service.
 
 ```json
 {
@@ -204,7 +204,7 @@ dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target HEAD
 }
 ```
 
-특정 컴포넌트만 집중적으로 분석하고 싶다면, 필요한 폴더만 남기면 됩니다. 예를 들어 테스트를 제외하려면 다음과 같이 설정합니다.
+If you want to focus analysis on specific components, simply keep only the necessary folders. For example, to exclude tests:
 
 ```json
 {
@@ -215,11 +215,11 @@ dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target HEAD
 }
 ```
 
-## 출력 파일명 규칙
+## Output File Naming Rules
 
-폴더 경로에서 출력 파일명이 자동으로 생성됩니다. 경로의 마지막 부분이 파일명이 되며, 슬래시는 하이픈으로 변환됩니다.
+Output file names are automatically generated from folder paths. The last part of the path becomes the file name, and slashes are converted to hyphens.
 
-| 폴더 경로 | 출력 파일명 |
+| Folder Path | Output File Name |
 |-----------|------------|
 | `Src/Functorium` | `Functorium.md` |
 | `Src/Functorium.Testing` | `Functorium.Testing.md` |
@@ -228,22 +228,22 @@ dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target HEAD
 
 ---
 
-component-priority.json은 `analysis_priorities`라는 단일 배열로 분석 대상과 순서를 제어합니다. 파일 위치는 `.release-notes/scripts/config/component-priority.json`이고, 배열의 순서가 분석 및 출력 우선순위를 결정합니다. 설정이 없으면 Functorium, Functorium.Testing, Docs가 기본값으로 적용됩니다. 단순한 JSON 파일 하나지만, 릴리스 노트에 어떤 내용이 어떤 순서로 담길지를 결정하는 중요한 역할을 합니다.
+component-priority.json controls analysis targets and their order through a single `analysis_priorities` array. The file is located at `.release-notes/scripts/config/component-priority.json`, and the array order determines the analysis and output priority. If no configuration exists, Functorium, Functorium.Testing, and Docs are applied as defaults. It is just a simple JSON file, but it plays an important role in determining what content appears in the release notes and in what order.
 
 ## FAQ
 
-### Q1: `analysis_priorities` 배열의 순서가 릴리스 노트의 기능 나열 순서에 직접 영향을 주나요?
-**A**: 네. 배열에서 앞에 위치한 컴포넌트가 **분석 출력 파일에서도, 릴리스 노트의 "새로운 기능" 섹션에서도 먼저** 나타납니다. 핵심 라이브러리를 앞에 두면 사용자가 가장 중요한 변경사항을 먼저 확인할 수 있습니다.
+### Q1: Does the order of the `analysis_priorities` array directly affect the feature listing order in the release notes?
+**A**: Yes. Components listed earlier in the array **appear first in both the analysis output files and the "New Features" section of the release notes.** Placing the core library first allows users to see the most important changes first.
 
-### Q2: 존재하지 않는 폴더를 배열에 포함하면 오류가 발생하나요?
-**A**: 아닙니다. `AnalyzeAllComponents.cs`는 존재하지 않는 폴더를 **자동으로 건너뜁니다.** 해당 컴포넌트에 대한 Git diff와 커밋이 비어 있으므로 분석 파일이 생성되지 않을 뿐, 나머지 컴포넌트의 분석은 정상적으로 진행됩니다.
+### Q2: Does including a non-existent folder in the array cause an error?
+**A**: No. `AnalyzeAllComponents.cs` **automatically skips non-existent folders.** Since the Git diff and commits for that component will be empty, no analysis file is generated, but the analysis of the remaining components proceeds normally.
 
-### Q3: 설정 파일의 경로에서 Windows 백슬래시(`\`)를 사용해도 되나요?
-**A**: 아닙니다. 경로는 반드시 **슬래시(`/`)를** 사용해야 합니다. Git 명령어가 경로를 해석할 때 슬래시를 기준으로 하며, Windows에서도 Git은 슬래시 경로를 올바르게 처리합니다. 백슬래시를 사용하면 Git diff나 log 명령에서 해당 경로를 찾지 못할 수 있습니다.
+### Q3: Can Windows backslashes (`\`) be used in configuration file paths?
+**A**: No. Paths must use **forward slashes (`/`).** Git commands interpret paths based on forward slashes, and Git correctly handles forward-slash paths even on Windows. Using backslashes may cause Git diff or log commands to fail to find the specified path.
 
-### Q4: Tests 폴더를 `analysis_priorities`에 포함해야 하나요?
-**A**: 일반적으로는 포함하지 않습니다. 릴리스 노트는 **사용자에게 제공되는 라이브러리의 변경사항을** 전달하는 문서이므로, 테스트 코드의 변경은 대부분 불필요한 노이즈가 됩니다. 다만 테스트 라이브러리(`Functorium.Testing`)처럼 사용자에게 제공되는 테스트 도구는 포함하는 것이 적절합니다.
+### Q4: Should the Tests folder be included in `analysis_priorities`?
+**A**: Generally, it should not be included. Release notes are documents that convey **changes to the libraries provided to users,** so test code changes are mostly unnecessary noise. However, test libraries like `Functorium.Testing` that are provided to users as test tools are appropriate to include.
 
-## 다음 단계
+## Next Step
 
-- [출력 파일 형식](09-output-formats.md)
+- [Output File Formats](09-output-formats.md)

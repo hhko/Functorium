@@ -2,312 +2,312 @@
 title: "Creating Your First Release Note"
 ---
 
-지금까지 릴리스 노트 자동화의 아키텍처, 5-Phase 워크플로우, 그리고 각 스크립트의 역할을 살펴봤습니다. 이제 실제로 명령어를 실행해서 릴리스 노트를 처음부터 끝까지 생성해보겠습니다.
+So far, we have examined the architecture of release note automation, the 5-Phase workflow, and the role of each script. Now let's actually run the commands to generate a release note from start to finish.
 
-하나의 명령어를 입력하면 환경 검증부터 문서 작성까지 전체 파이프라인이 자동으로 흘러갑니다. 각 Phase가 실행될 때 화면에 무엇이 나타나는지, 그 뒤에서 어떤 일이 벌어지는지를 함께 확인하면서 진행하겠습니다.
+Enter a single command, and the entire pipeline flows automatically from environment validation to document writing. Let's follow along, checking what appears on screen at each Phase and what happens behind the scenes.
 
-## 사전 준비
+## Prerequisites
 
-실습을 시작하기 전에 세 가지 환경 요소를 확인해야 합니다. .NET 10 SDK가 설치되어 있어야 스크립트를 실행할 수 있고, Git 저장소 안에 있어야 커밋 히스토리를 분석할 수 있으며, Claude Code가 실행 가능한 상태여야 합니다.
+Before starting the hands-on exercise, you need to verify three environment elements. The .NET 10 SDK must be installed to run the scripts, you must be inside a Git repository to analyze commit history, and Claude Code must be in a runnable state.
 
 ```bash
-# .NET 10 설치 확인
+# Verify .NET 10 installation
 dotnet --version
-# 출력: 10.0.100 이상
+# Output: 10.0.100 or higher
 
-# Git 저장소 확인
+# Verify Git repository
 git status
-# 출력: On branch main
+# Output: On branch main
 
-# Claude Code 실행
+# Run Claude Code
 claude
 ```
 
-스크립트 디렉터리도 확인해봅시다. `.release-notes/scripts/` 폴더에 분석 스크립트들이 있어야 Phase 2에서 데이터를 수집할 수 있습니다.
+Let's also check the scripts directory. The analysis scripts must be in the `.release-notes/scripts/` folder for Phase 2 to collect data.
 
 ```bash
-# 필수 폴더 확인
+# Verify required folders
 ls .release-notes/scripts/
-# 출력: AnalyzeAllComponents.cs, ExtractApiChanges.cs, ...
+# Output: AnalyzeAllComponents.cs, ExtractApiChanges.cs, ...
 
 ls .release-notes/
-# 출력: TEMPLATE.md, scripts/
+# Output: TEMPLATE.md, scripts/
 ```
 
-## Step 1: 명령어 실행
+## Step 1: Execute the Command
 
-준비가 끝났으면 Claude Code 대화형 모드에서 명령어를 실행합니다.
+Once preparation is complete, execute the command in Claude Code interactive mode.
 
 ```bash
 > /release-note v1.0.0
 ```
 
-버전 문자열은 SemVer 형식을 따릅니다. 정규 릴리스뿐 아니라 프리릴리스 태그도 사용할 수 있습니다.
+The version string follows the SemVer format. Pre-release tags can also be used in addition to regular releases.
 
-| 버전 | 설명 |
+| Version | Description |
 |------|------|
-| `v1.0.0` | 정규 릴리스 |
-| `v1.0.0-alpha.1` | 알파 릴리스 |
-| `v1.0.0-beta.2` | 베타 릴리스 |
-| `v1.0.0-rc.1` | 릴리스 후보 |
+| `v1.0.0` | Regular release |
+| `v1.0.0-alpha.1` | Alpha release |
+| `v1.0.0-beta.2` | Beta release |
+| `v1.0.0-rc.1` | Release candidate |
 
-명령어를 실행하는 순간, Claude는 5-Phase 워크플로우를 순서대로 진행하기 시작합니다. 각 Phase에서 어떤 출력이 나타나는지 살펴보겠습니다.
+The moment you execute the command, Claude begins processing the 5-Phase workflow sequentially. Let's look at what output appears at each Phase.
 
-## Step 2: Phase 1 - 환경 검증
+## Step 2: Phase 1 - Environment Validation
 
-가장 먼저 Claude는 Git 저장소가 존재하는지, .NET SDK가 설치되어 있는지, 스크립트 디렉터리가 있는지 확인합니다. 모든 전제조건이 충족되면 비교 범위(Base와 Target)를 결정합니다.
+First, Claude checks whether the Git repository exists, whether the .NET SDK is installed, and whether the scripts directory is present. Once all prerequisites are met, it determines the comparison range (Base and Target).
 
 ```txt
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Phase 1: 환경 검증
+Phase 1: Environment Validation
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-전제조건:
-  Git 저장소
+Prerequisites:
+  Git repository
   .NET SDK 10.x
-  스크립트 디렉터리
+  Scripts directory
 
-비교 범위:
-  Base: abc1234 (초기 커밋)
+Comparison Range:
+  Base: abc1234 (initial commit)
   Target: HEAD
-  버전: v1.0.0
+  Version: v1.0.0
 ```
 
-여기서 주목할 부분은 **비교 범위입니다.** 첫 배포인지, 후속 배포인지에 따라 Base가 달라집니다.
+The key part to note here is the **comparison range.** The Base differs depending on whether this is the first deployment or a subsequent one.
 
-- **첫 배포** (release 브랜치 없음): Base가 초기 커밋으로 설정되어 전체 히스토리를 분석합니다.
-- **후속 배포** (release 브랜치 있음): Base가 `origin/release/1.0`처럼 이전 릴리스 시점으로 설정되어, 그 이후의 변경사항만 분석합니다.
+- **First deployment** (no release branch): Base is set to the initial commit, analyzing the entire history.
+- **Subsequent deployment** (release branch exists): Base is set to the previous release point like `origin/release/1.0`, analyzing only changes since then.
 
-## Step 3: Phase 2 - 데이터 수집
+## Step 3: Phase 2 - Data Collection
 
-환경이 검증되면 C# 스크립트가 실행됩니다. `AnalyzeAllComponents.cs`가 각 컴포넌트의 변경 파일과 커밋을 수집하고, `ExtractApiChanges.cs`가 Public API의 변경사항을 추출합니다.
+Once the environment is validated, the C# scripts are executed. `AnalyzeAllComponents.cs` collects changed files and commits for each component, and `ExtractApiChanges.cs` extracts Public API changes.
 
 ```txt
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Phase 2: 데이터 수집
+Phase 2: Data Collection
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-컴포넌트 분석 중...
+Analyzing components...
   Functorium.md (31 files, 19 commits)
   Functorium.Testing.md (18 files, 13 commits)
 
-API 추출 중...
-  all-api-changes.txt (Uber 파일)
+Extracting APIs...
+  all-api-changes.txt (Uber file)
   api-changes-diff.txt (Git Diff)
 ```
 
-이 Phase가 끝나면 `.analysis-output/` 폴더에 분석 결과가 저장됩니다. 실제 파일이 생성되었는지 확인해볼 수 있습니다.
+When this Phase completes, analysis results are saved in the `.analysis-output/` folder. You can verify that the actual files have been generated.
 
 ```bash
-# 컴포넌트 분석 파일
+# Component analysis files
 ls .release-notes/scripts/.analysis-output/
 # Functorium.md
 # Functorium.Testing.md
 # analysis-summary.md
 
-# API 파일
+# API files
 ls .release-notes/scripts/.analysis-output/api-changes-build-current/
 # all-api-changes.txt
 # api-changes-diff.txt
 ```
 
-## Step 4: Phase 3 - 커밋 분석
+## Step 4: Phase 3 - Commit Analysis
 
-수집된 데이터를 기반으로 Claude가 커밋을 분석하고 분류합니다. Breaking Changes가 있는지, 새로운 기능은 몇 개인지, 버그 수정은 몇 건인지 파악하고, 관련 커밋들을 기능 단위로 그룹화합니다.
+Based on the collected data, Claude analyzes and classifies commits. It determines whether there are Breaking Changes, how many new features there are, how many bug fixes there are, and groups related commits into feature units.
 
 ```txt
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Phase 3: 커밋 분석
+Phase 3: Commit Analysis
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-분석 결과:
-  Breaking Changes: 0개
-  Feature Commits: 6개
-  Bug Fixes: 1개
-  기능 그룹: 8개
+Analysis Results:
+  Breaking Changes: 0
+  Feature Commits: 6
+  Bug Fixes: 1
+  Feature Groups: 8
 
-식별된 주요 기능:
-  1. 함수형 오류 처리
-  2. OpenTelemetry 통합
-  3. 테스트 픽스처
+Identified Key Features:
+  1. Functional error handling
+  2. OpenTelemetry integration
+  3. Test fixtures
   ...
 ```
 
-## Step 5: Phase 4 - 문서 작성
+## Step 5: Phase 4 - Document Writing
 
-분석이 완료되면 릴리스 노트를 작성합니다. TEMPLATE.md를 기반으로 개요, Breaking Changes, 새로운 기능, 버그 수정, API 변경사항, 설치 가이드 순으로 각 섹션을 채워나갑니다.
+Once the analysis is complete, the release notes are written. Based on TEMPLATE.md, each section is filled in order: overview, Breaking Changes, new features, bug fixes, API changes, and installation guide.
 
 ```txt
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Phase 4: 문서 작성
+Phase 4: Document Writing
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-작성 중...
-  개요 섹션
+Writing...
+  Overview section
   Breaking Changes
-  새로운 기능 (8개)
-  버그 수정 (1개)
-  API 변경사항
-  설치 가이드
+  New Features (8)
+  Bug Fixes (1)
+  API Changes
+  Installation Guide
 
-출력 파일:
+Output File:
   .release-notes/RELEASE-v1.0.0.md
 ```
 
-## Step 6: Phase 5 - 검증
+## Step 6: Phase 5 - Validation
 
-마지막으로 생성된 문서의 품질을 검증합니다. 릴리스 노트에 언급된 API가 실제 Uber 파일과 일치하는지, Breaking Changes가 빠지지 않았는지, Markdown 포맷이 올바른지, 모든 주요 기능에 "Why this matters" 섹션이 포함되었는지 확인합니다.
+Finally, the quality of the generated document is validated. It checks whether APIs mentioned in the release notes match the actual Uber file, whether any Breaking Changes are missing, whether the Markdown format is correct, and whether all major features include a "Why this matters" section.
 
 ```txt
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Phase 5: 검증
+Phase 5: Validation
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-검증 항목:
-  API 정확성 - 통과
-  Breaking Changes - 통과
-  Markdown 포맷 - 통과
-  Why this matters 섹션 - 통과
+Validation Items:
+  API Accuracy - Passed
+  Breaking Changes - Passed
+  Markdown Format - Passed
+  Why this matters sections - Passed
 
-상태: 게시 가능
+Status: Ready to publish
 ```
 
-## Step 7: 결과 확인
+## Step 7: Review Results
 
-5개 Phase가 모두 완료되면 최종 요약이 표시됩니다. 분석 대상 컴포넌트별 통계와 함께 생성된 파일의 경로가 나타납니다.
+When all 5 Phases are complete, a final summary is displayed. Per-component statistics and the path of the generated file are shown.
 
 ```txt
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-릴리스 노트 생성 완료
+Release Note Generation Complete
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-버전: v1.0.0
-파일: .release-notes/RELEASE-v1.0.0.md
+Version: v1.0.0
+File: .release-notes/RELEASE-v1.0.0.md
 
-통계 요약
-| 항목 | 값 |
+Statistics Summary
+| Item | Value |
 |------|-----|
 | Functorium | 31 files, 19 commits |
 | Functorium.Testing | 18 files, 13 commits |
-| Breaking Changes | 0개 |
+| Breaking Changes | 0 |
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-첫 번째 릴리스 노트가 생성되었습니다. 이제 결과물을 열어서 내용을 확인해봅시다.
+Your first release note has been generated. Now let's open the deliverable and review its content.
 
 ```bash
-# 릴리스 노트 확인
+# Review the release notes
 cat .release-notes/RELEASE-v1.0.0.md
 
-# 또는 편집기로 열기
+# Or open in an editor
 code .release-notes/RELEASE-v1.0.0.md
 ```
 
-## Step 8: 수동 검토 및 수정
+## Step 8: Manual Review and Revision
 
-자동 생성된 릴리스 노트가 항상 완벽한 것은 아닙니다. 사람의 눈으로 검토하고 필요한 부분을 보완하는 단계가 중요합니다. 다음 항목들을 하나씩 확인해봅시다.
+Auto-generated release notes are not always perfect. Reviewing with human eyes and supplementing where necessary is an important step. Let's check the following items one by one.
 
-- [ ] 프론트매터 (title, description, date) 정확한가?
-- [ ] 개요가 이 버전의 목표를 잘 설명하는가?
-- [ ] Breaking Changes가 정확한가?
-- [ ] 모든 주요 기능이 포함되었는가?
-- [ ] "Why this matters" 섹션이 모든 기능에 있는가?
-- [ ] 코드 예제이 올바른가?
+- [ ] Is the frontmatter (title, description, date) accurate?
+- [ ] Does the overview explain this version's goals well?
+- [ ] Are the Breaking Changes accurate?
+- [ ] Are all major features included?
+- [ ] Does every feature have a "Why this matters" section?
+- [ ] Are the code examples correct?
 
-특히 개요 섹션은 자동 생성된 문장이 다소 평이할 수 있습니다. 프로젝트의 맥락을 아는 사람이 직접 다듬으면 훨씬 나은 결과물이 됩니다.
+The overview section in particular may have somewhat plain auto-generated text. Someone who knows the project context can polish it to produce a much better result.
 
 ````markdown
-## 개요
+## Overview
 
-<!-- 수정 전 -->
-Functorium v1.0.0은 첫 번째 릴리스입니다.
+<!-- Before revision -->
+Functorium v1.0.0 is the first release.
 
-<!-- 수정 후 -->
-Functorium v1.0.0은 .NET 애플리케이션을 위한 함수형 프로그래밍 도구 모음의
-첫 번째 정식 릴리스입니다. 이 버전에서는 오류 처리, 관측성, 테스트 지원에
-중점을 두었습니다.
+<!-- After revision -->
+Functorium v1.0.0 is the first official release of the functional programming
+toolkit for .NET applications. This version focuses on error handling,
+observability, and test support.
 ````
 
-## Step 9: Git 커밋
+## Step 9: Git Commit
 
-검토와 수정이 끝나면 결과물을 Git에 커밋합니다. 릴리스 노트 파일은 반드시 커밋하고, 분석 결과 파일은 필요에 따라 함께 저장할 수 있습니다.
+Once review and revision are complete, commit the deliverables to Git. The release note file must be committed, and analysis result files can optionally be saved alongside.
 
 ```bash
-# 릴리스 노트 커밋
+# Commit the release notes
 git add .release-notes/RELEASE-v1.0.0.md
-git commit -m "docs(release): v1.0.0 릴리스 노트 추가"
+git commit -m "docs(release): Add v1.0.0 release notes"
 
-# 분석 결과도 함께 커밋 (선택적)
+# Also commit analysis results (optional)
 git add .release-notes/scripts/.analysis-output/
-git commit -m "chore(release): v1.0.0 분석 결과 저장"
+git commit -m "chore(release): Save v1.0.0 analysis results"
 ```
 
-## 문제 해결
+## Troubleshooting
 
-실습 중에 문제가 발생할 수 있습니다. 가장 흔한 세 가지 상황과 해결 방법을 정리합니다.
+Problems may occur during the exercise. Here are the three most common situations and their solutions.
 
-### 환경 검증 실패
+### Environment Validation Failure
 
 ```txt
-오류: .NET 10 SDK가 필요합니다
+Error: .NET 10 SDK is required
 ```
 
-**해결:**
+**Solution:**
 ```bash
-# .NET 10 설치
+# Install .NET 10
 # https://dotnet.microsoft.com/download/dotnet/10.0
 ```
 
-### 스크립트 실행 실패
+### Script Execution Failure
 
 ```txt
-스크립트 실행 실패: AnalyzeAllComponents.cs
+Script execution failed: AnalyzeAllComponents.cs
 ```
 
-NuGet 패키지 캐시가 손상되었거나 이전 실행의 출력 파일이 잠겨 있을 때 발생합니다.
+This occurs when the NuGet package cache is corrupted or output files from a previous run are locked.
 
-**해결:**
+**Solution:**
 ```bash
 cd .release-notes/scripts
 
-# NuGet 캐시 정리
+# Clear NuGet cache
 dotnet nuget locals all --clear
 
-# 출력 폴더 삭제 후 재시도
+# Delete output folder and retry
 rm -rf .analysis-output
 ```
 
-### Base Branch 없음
+### Base Branch Not Found
 
 ```txt
 Base branch origin/release/1.0 does not exist
 ```
 
-첫 배포에서는 release 브랜치가 아직 없으므로 이 메시지가 나타날 수 있습니다. 명령어가 자동으로 초기 커밋부터 분석하도록 조정되지만, 수동으로 실행해야 할 경우 다음과 같이 합니다.
+For first deployments, the release branch does not exist yet, so this message may appear. The command automatically adjusts to analyze from the initial commit, but if you need to run it manually:
 
-**해결:**
+**Solution:**
 ```bash
 cd .release-notes/scripts
 FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
 dotnet AnalyzeAllComponents.cs --base $FIRST_COMMIT --target HEAD
 ```
 
-## 실습 완료
+## Exercise Complete
 
 ## FAQ
 
-### Q1: `/release-note` 명령어 실행 중 Phase 하나가 실패하면 어떻게 되나요?
-**A**: 워크플로우는 순차적으로 진행되므로, **실패한 Phase에서 멈추고 오류 메시지를 표시합니다.** 이전 Phase의 출력 파일은 그대로 보존되므로, 문제를 수정한 뒤 명령어를 다시 실행하면 됩니다. Phase 2의 데이터 수집이 이미 완료된 상태라면 `.analysis-output/` 폴더를 삭제하지 않는 한 재수집하지 않습니다.
+### Q1: What happens if one Phase fails during `/release-note` command execution?
+**A**: The workflow proceeds sequentially, so it **stops at the failed Phase and displays an error message.** Output files from previous Phases are preserved, so you can fix the issue and re-run the command. If Phase 2 data collection has already completed, it will not re-collect as long as the `.analysis-output/` folder is not deleted.
 
-### Q2: 첫 배포와 후속 배포에서 `/release-note` 명령어의 사용법이 다른가요?
-**A**: 명령어 자체는 동일합니다(`/release-note v1.0.0`). 차이는 **Base Branch 결정 로직에** 있습니다. `origin/release/1.0` 같은 이전 릴리스 브랜치가 존재하면 해당 시점부터, 없으면 초기 커밋부터 분석합니다. 사용자가 별도로 분기 처리할 필요는 없습니다.
+### Q2: Is the `/release-note` command used differently for first deployments versus subsequent deployments?
+**A**: The command itself is identical (`/release-note v1.0.0`). The difference lies in the **Base Branch determination logic.** If a previous release branch like `origin/release/1.0` exists, analysis starts from that point; if not, it starts from the initial commit. No special handling is needed from the user.
 
-### Q3: 자동 생성된 릴리스 노트에서 수동으로 반드시 확인해야 할 부분은 무엇인가요?
-**A**: 세 가지를 중점적으로 확인하세요. 첫째, **개요 섹션이** 이번 릴리스의 맥락과 목표를 정확히 전달하는지 확인합니다. 둘째, **"Why this matters" 섹션이** 각 기능의 실질적 가치를 잘 설명하는지 검토합니다. 셋째, **코드 예제이** 실제 사용 시나리오에 맞는지 확인합니다. API 정확성은 Phase 5에서 자동 검증되지만, 맥락과 가치 전달은 사람의 판단이 필요합니다.
+### Q3: What parts of the auto-generated release notes must be manually reviewed?
+**A**: Focus on three things. First, verify that the **overview section** accurately conveys the context and goals of this release. Second, review whether the **"Why this matters" sections** effectively explain the practical value of each feature. Third, confirm that **code examples** match actual usage scenarios. API accuracy is automatically verified in Phase 5, but conveying context and value requires human judgment.
 
-### Q4: 분석 결과 파일(`.analysis-output/`)도 함께 커밋하는 것이 좋은가요?
-**A**: 프로젝트 정책에 따라 다릅니다. 커밋하면 **릴리스 노트가 어떤 데이터를 기반으로 작성되었는지 추적할 수** 있어 감사(Audit) 목적에 유용합니다. 반면 매번 재생성 가능한 파일이므로, 저장소 크기를 줄이고 싶다면 `.gitignore`에 추가해도 됩니다.
+### Q4: Is it good to commit the analysis result files (`.analysis-output/`) together?
+**A**: It depends on project policy. Committing them allows you to **trace what data the release notes were based on,** which is useful for audit purposes. On the other hand, since these files can be regenerated at any time, adding them to `.gitignore` to reduce repository size is also fine.
 
-첫 번째 릴리스 노트를 성공적으로 생성하고, 검토하고, 커밋까지 마쳤습니다. 하나의 명령어로 시작된 5-Phase 워크플로우가 환경 검증부터 최종 검증까지 자동으로 진행되는 과정을 직접 확인했습니다. 다음 절에서는 이 시스템의 기반이 되는 .NET 10 File-based App을 직접 작성해봅니다.
+We have successfully generated, reviewed, and committed our first release note. We directly observed the 5-Phase workflow, triggered by a single command, proceeding automatically from environment validation to final verification. In the next section, we will write .NET 10 File-based Apps that underpin this system.
 
-- [나만의 스크립트 작성](02-custom-script.md)
+- [Writing Your Own Script](02-custom-script.md)

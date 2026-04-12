@@ -2,239 +2,239 @@
 title: "Deterministic Output"
 ---
 
-## 개요
+## Overview
 
-Part 2의 마지막 장입니다. 앞에서 배운 심볼 분석, 타입 추출, 코드 생성 기법을 모두 통합할 때, 하나의 원칙이 전체를 관통합니다 — 동일한 입력에 대해 항상 동일한 출력을 만들어야 한다는 것입니다. 4장에서 다룬 증분 캐싱이 올바르게 작동하려면 이 결정적 출력이 보장되어야 합니다. 이 원칙이 깨지면 증분 빌드, 소스 제어, CI/CD 모두가 영향을 받습니다.
+This is the final chapter of Part 2. When integrating all the symbol analysis, type extraction, and code generation techniques learned so far, one principle permeates the whole -- the same input must always produce the same output. For the incremental caching covered in Chapter 4 to work correctly, this deterministic output must be guaranteed. If this principle is broken, incremental builds, source control, and CI/CD are all affected.
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **결정적(Deterministic) 출력의 중요성 이해**
-   - 증분 빌드, 소스 제어, CI/CD에 미치는 영향
-2. **global:: 접두사 사용 이유**
-   - 사용자 코드와의 네임스페이스 충돌 방지
-3. **일관된 출력을 보장하는 기법**
-   - 타임스탬프 제외, 컬렉션 정렬, 일관된 포맷팅
-
----
-
-## 결정적 출력이란?
-
-**결정적(Deterministic) 출력**은 동일한 입력에 대해 **항상 동일한 출력**을 생성하는 것입니다.
-
-```
-결정적 출력
-==========
-입력 A → 출력 X (항상)
-입력 B → 출력 Y (항상)
-
-비결정적 출력
-============
-입력 A → 출력 X (때때로)
-입력 A → 출력 X' (다른 때)
-```
+### Core Learning Objectives
+1. **Understanding the importance of deterministic output**
+   - Impact on incremental builds, source control, and CI/CD
+2. **Reason for using the global:: prefix**
+   - Preventing namespace conflicts with user code
+3. **Techniques for ensuring consistent output**
+   - Excluding timestamps, sorting collections, consistent formatting
 
 ---
 
-## 왜 결정적 출력이 중요한가?
+## What Is Deterministic Output?
 
-### 1. 증분 빌드
-
-```
-결정적 출력
-==========
-빌드 1: UserRepository → UserRepositoryObservable.g.cs (내용 X)
-빌드 2: UserRepository (변경 없음) → 캐시 사용 (빌드 생략)
-
-비결정적 출력
-============
-빌드 1: UserRepository → UserRepositoryObservable.g.cs (내용 X)
-빌드 2: UserRepository (변경 없음) → 내용 X' (다름) → 다시 빌드
-```
-
-### 2. 소스 제어
+**Deterministic output** means **always producing the same output** for the same input.
 
 ```
-결정적 출력
-==========
-git status: 변경 없음 (생성된 파일이 동일)
+Deterministic Output
+====================
+Input A -> Output X (always)
+Input B -> Output Y (always)
 
-비결정적 출력
-============
-git status: 파일 변경됨 (내용은 의미적으로 동일하지만 다름)
-→ 불필요한 커밋 발생
-```
-
-### 3. 빌드 재현성
-
-```
-결정적 출력
-==========
-어느 환경에서든 동일한 결과
-→ CI/CD 신뢰성 향상
-
-비결정적 출력
-============
-환경에 따라 다른 결과
-→ "내 컴퓨터에서는 됐는데..." 문제
+Non-Deterministic Output
+========================
+Input A -> Output X (sometimes)
+Input A -> Output X' (other times)
 ```
 
 ---
 
-## global:: 접두사
+## Why Is Deterministic Output Important?
 
-### 왜 필요한가?
+### 1. Incremental Builds
+
+```
+Deterministic Output
+====================
+Build 1: UserRepository -> UserRepositoryObservable.g.cs (content X)
+Build 2: UserRepository (no changes) -> Cache used (build skipped)
+
+Non-Deterministic Output
+========================
+Build 1: UserRepository -> UserRepositoryObservable.g.cs (content X)
+Build 2: UserRepository (no changes) -> Content X' (different) -> Rebuild
+```
+
+### 2. Source Control
+
+```
+Deterministic Output
+====================
+git status: No changes (generated files are identical)
+
+Non-Deterministic Output
+========================
+git status: Files changed (content is semantically identical but different)
+-> Unnecessary commits occur
+```
+
+### 3. Build Reproducibility
+
+```
+Deterministic Output
+====================
+Same results in any environment
+-> Improved CI/CD reliability
+
+Non-Deterministic Output
+========================
+Different results depending on the environment
+-> "It worked on my machine..." problem
+```
+
+---
+
+## global:: Prefix
+
+### Why Is It Needed?
 
 ```csharp
-// 사용자 코드
+// User code
 namespace MyApp
 {
-    public class System { }  // System 이름의 클래스!
+    public class System { }  // A class named System!
 }
 
-// 생성된 코드 (global:: 없이)
+// Generated code (without global::)
 namespace MyApp
 {
     public class UserPipeline
     {
         System.ArgumentNullException.ThrowIfNull(x);
-        // ❌ 오류: MyApp.System에 ArgumentNullException이 없음!
+        // ❌ Error: MyApp.System has no ArgumentNullException!
     }
 }
 
-// 생성된 코드 (global:: 사용)
+// Generated code (with global::)
 namespace MyApp
 {
     public class UserPipeline
     {
         global::System.ArgumentNullException.ThrowIfNull(x);
-        // ✅ 정확히 System 네임스페이스 참조
+        // ✅ Correctly references the System namespace
     }
 }
 ```
 
-### 항상 global:: 사용
+### Always Use global::
 
 ```csharp
-// ✅ 모든 외부 타입에 global:: 접두사
+// ✅ global:: prefix for all external types
 sb.AppendLine("        global::System.ArgumentNullException.ThrowIfNull(value);");
 sb.AppendLine("        global::System.Diagnostics.Activity.Current = null;");
 sb.AppendLine("        return global::LanguageExt.Unit.Default;");
 ```
 
-### SymbolDisplayFormat 활용
+### Using SymbolDisplayFormat
 
 ```csharp
-// SymbolDisplayFormats.GlobalQualifiedFormat 사용
+// Using SymbolDisplayFormats.GlobalQualifiedFormat
 string typeName = type.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat);
-// → "global::System.Collections.Generic.List<global::MyApp.User>"
+// -> "global::System.Collections.Generic.List<global::MyApp.User>"
 
-// 생성 코드에서 사용
+// Used in generated code
 sb.AppendLine($"        {typeName} result = ...;");
 ```
 
 ---
 
-## 비결정적 요소 제거
+## Eliminating Non-Deterministic Elements
 
-### 1. 타임스탬프
+### 1. Timestamps
 
 ```csharp
-// ❌ 비결정적
+// ❌ Non-deterministic
 sb.AppendLine($"// Generated at {DateTime.Now}");
 
-// ✅ 결정적
+// ✅ Deterministic
 sb.AppendLine("// <auto-generated/>");
 ```
 
-### 2. GUID/랜덤 값
+### 2. GUIDs/Random Values
 
 ```csharp
-// ❌ 비결정적
+// ❌ Non-deterministic
 sb.AppendLine($"// ID: {Guid.NewGuid()}");
 
-// ✅ 결정적
-// GUID 불필요 - 제거
+// ✅ Deterministic
+// GUID unnecessary - remove
 ```
 
-### 3. 환경 변수
+### 3. Environment Variables
 
 ```csharp
-// ❌ 비결정적
+// ❌ Non-deterministic
 string path = Environment.GetEnvironmentVariable("PATH");
 sb.AppendLine($"// Path: {path}");
 
-// ✅ 결정적
-// 환경 변수 사용 금지
+// ✅ Deterministic
+// Do not use environment variables
 ```
 
-### 4. 순서 의존성
+### 4. Order Dependency
 
 ```csharp
-// ❌ 비결정적 (순서가 보장되지 않음)
+// ❌ Non-deterministic (order not guaranteed)
 var methods = classSymbol.GetMembers()
     .OfType<IMethodSymbol>()
     .ToList();
 
-// ✅ 결정적 (순서 정렬)
+// ✅ Deterministic (sorted order)
 var methods = classSymbol.GetMembers()
     .OfType<IMethodSymbol>()
-    .OrderBy(m => m.Name)  // 이름순 정렬
-    .ThenBy(m => m.Parameters.Length)  // 파라미터 수 정렬
+    .OrderBy(m => m.Name)  // Sort by name
+    .ThenBy(m => m.Parameters.Length)  // Sort by parameter count
     .ToList();
 ```
 
 ---
 
-## 일관된 포맷팅
+## Consistent Formatting
 
-### 공백과 줄바꿈
+### Whitespace and Line Breaks
 
 ```csharp
-// ❌ 비일관적
+// ❌ Inconsistent
 sb.Append("public class ");
-sb.Append(className);  // 때로는 AppendLine 사용할 수도
+sb.Append(className);  // might sometimes use AppendLine
 
-// ✅ 일관적
+// ✅ Consistent
 sb.Append("public class ")
   .Append(className)
   .AppendLine()
   .AppendLine("{");
 ```
 
-### 들여쓰기
+### Indentation
 
 ```csharp
-// ❌ 혼합 (탭과 스페이스)
-sb.AppendLine("\tprivate int _id;");     // 탭
-sb.AppendLine("    private string _name;"); // 스페이스
+// ❌ Mixed (tabs and spaces)
+sb.AppendLine("\tprivate int _id;");     // tab
+sb.AppendLine("    private string _name;"); // spaces
 
-// ✅ 일관적 (스페이스만)
+// ✅ Consistent (spaces only)
 sb.AppendLine("    private int _id;");
 sb.AppendLine("    private string _name;");
 ```
 
 ---
 
-## 검증 방법
+## Verification Methods
 
-### 두 번 빌드하여 비교
+### Build Twice and Compare
 
 ```bash
-# 첫 번째 빌드
+# First build
 dotnet build
 cp Generated/MyClass.g.cs /tmp/first.cs
 
-# 두 번째 빌드 (클린 없이)
+# Second build (without clean)
 dotnet build
 cp Generated/MyClass.g.cs /tmp/second.cs
 
-# 비교
+# Compare
 diff /tmp/first.cs /tmp/second.cs
-# 차이가 없어야 함
+# There should be no differences
 ```
 
-### 테스트로 검증
+### Verify with Tests
 
 ```csharp
 [Fact]
@@ -248,16 +248,16 @@ public void Generated_Code_Should_Be_Deterministic()
         }
         """;
 
-    // 두 번 생성
+    // Generate twice
     string? output1 = _sut.Generate(input);
     string? output2 = _sut.Generate(input);
 
-    // 동일해야 함
+    // Must be identical
     output1.ShouldBe(output2);
 }
 ```
 
-### Verify 스냅샷 테스트
+### Verify Snapshot Tests
 
 ```csharp
 [Fact]
@@ -273,57 +273,57 @@ public Task Generated_Code_Should_Match_Snapshot()
 
     string? actual = _sut.Generate(input);
 
-    // 스냅샷과 비교
+    // Compare with snapshot
     return Verify(actual);
 }
 
-// .verified.txt 파일에 결과 저장
-// 이후 변경 시 테스트 실패 → 의도적 변경인지 확인
+// Result saved to .verified.txt file
+// If changed later, test fails -> check if the change was intentional
 ```
 
 ---
 
-## 결정적 출력 체크리스트
+## Deterministic Output Checklist
 
 ```
-□ 모든 외부 타입에 global:: 접두사 사용
-□ SymbolDisplayFormat.FullyQualifiedFormat 또는 커스텀 포맷 사용
-□ 타임스탬프, GUID 등 런타임 값 제외
-□ 환경 변수 사용 안 함
-□ 컬렉션 순서 정렬
-□ 일관된 공백/들여쓰기
-□ 두 번 빌드 시 동일한 결과 검증
+□ Use global:: prefix for all external types
+□ Use SymbolDisplayFormat.FullyQualifiedFormat or custom format
+□ Exclude runtime values such as timestamps and GUIDs
+□ Do not use environment variables
+□ Sort collection order
+□ Consistent whitespace/indentation
+□ Verify identical results when building twice
 ```
 
 ---
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-결정적 출력을 위한 핵심 원칙을 정리합니다.
+Here is a summary of the key principles for deterministic output.
 
-| 요소 | 비결정적 | 결정적 |
-|------|----------|--------|
-| 타입 참조 | `System.Int32` | `global::System.Int32` |
-| 메타데이터 | `DateTime.Now` | 제외 |
-| 컬렉션 | 순서 미정 | `.OrderBy()` |
-| 공백 | 혼합 | 일관된 규칙 |
-| 검증 | 없음 | 스냅샷 테스트 |
+| Element | Non-Deterministic | Deterministic |
+|---------|-------------------|---------------|
+| Type reference | `System.Int32` | `global::System.Int32` |
+| Metadata | `DateTime.Now` | Excluded |
+| Collections | Unordered | `.OrderBy()` |
+| Whitespace | Mixed | Consistent rules |
+| Verification | None | Snapshot tests |
 
 ---
 
 ## FAQ
 
-### Q1: 결정적 출력이 깨지면 어떤 문제가 발생하나요?
-**A**: 세 가지 문제가 연쇄적으로 발생합니다. 첫째, 증분 빌드에서 캐시가 무효화되어 매번 전체 재빌드가 발생합니다. 둘째, 소스 제어에서 의미 없는 diff가 생겨 불필요한 커밋이 발생합니다. 셋째, CI/CD에서 동일한 코드가 다른 결과를 내어 빌드 재현성이 깨집니다.
+### Q1: What problems occur when deterministic output breaks?
+**A**: Three problems occur in cascade. First, cache is invalidated in incremental builds, causing a full rebuild every time. Second, meaningless diffs appear in source control, generating unnecessary commits. Third, the same code produces different results in CI/CD, breaking build reproducibility.
 
-### Q2: `.OrderBy()`로 정렬하면 성능에 영향이 있나요?
-**A**: 소스 생성기는 컴파일 타임에 실행되므로, 정렬 비용은 빌드 시간에 포함됩니다. 대부분의 클래스에서 메서드 수는 수십 개 이하이므로 정렬 비용은 무시할 수 있는 수준입니다. 오히려 정렬하지 않아 비결정적 출력이 발생하면 증분 빌드 캐시가 무효화되어 훨씬 큰 성능 손실을 초래합니다.
+### Q2: Does sorting with `.OrderBy()` affect performance?
+**A**: Source generators run at compile time, so sorting cost is included in build time. Since the number of methods in most classes is a few dozen or fewer, the sorting cost is negligible. In fact, not sorting and causing non-deterministic output invalidates the incremental build cache, resulting in a much greater performance loss.
 
-### Q3: `SymbolDisplayFormat`과 직접 `global::` 접두사를 붙이는 것의 차이는 무엇인가요?
-**A**: `SymbolDisplayFormat.FullyQualifiedFormat`을 사용하면 Roslyn이 타입의 전체 경로를 `global::` 접두사 포함하여 자동으로 생성합니다. 직접 문자열로 `"global::System.Int32"` 같이 하드코딩하면 타입 변경 시 누락될 위험이 있습니다. Functorium은 커스텀 `SymbolDisplayFormats.GlobalQualifiedFormat`을 정의하여 일관성을 보장합니다.
+### Q3: What is the difference between `SymbolDisplayFormat` and manually adding the `global::` prefix?
+**A**: Using `SymbolDisplayFormat.FullyQualifiedFormat` causes Roslyn to automatically generate the full path of a type including the `global::` prefix. Manually hardcoding strings like `"global::System.Int32"` risks omission when types change. Functorium defines a custom `SymbolDisplayFormats.GlobalQualifiedFormat` to ensure consistency.
 
 ---
 
-Part 2에서 소스 생성기의 핵심 개념을 모두 다뤘습니다. 다음 Part에서는 Primary Constructor, 제네릭 타입, 컬렉션 타입처럼 실전에서 마주치는 복잡한 케이스를 처리하는 방법을 학습합니다.
+Part 2 has covered all the core concepts of source generators. In the next Part, we will learn how to handle complex cases encountered in practice, such as Primary Constructors, generic types, and collection types.
 
-→ [Part 3. 고급](../../Part3-Advanced/01-Constructor-Handling/)
+-> [Part 3. Advanced](../../Part3-Advanced/01-Constructor-Handling/)
