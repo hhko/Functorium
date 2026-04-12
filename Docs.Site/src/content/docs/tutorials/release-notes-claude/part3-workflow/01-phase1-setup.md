@@ -1,212 +1,213 @@
 ---
-title: "환경 검증 및 준비"
+title: "Environment Verification and Preparation"
 ---
 
-어떤 것도 실행되기 전에, 시스템은 릴리스 노트를 생성할 수 있는 상태인지부터 확인해야 합니다. Git 저장소가 아닌 디렉터리에서 커밋을 분석할 수 없고, .NET SDK가 없으면 API를 추출할 수 없으며, 스크립트가 없으면 데이터를 수집할 수 없습니다. Phase 1은 이런 전제조건을 빠짐없이 검증하고, 어떤 범위의 커밋을 분석할지 결정하는 단계입니다.
+Before anything is executed, the system must first verify whether it is in a state where release notes can be generated. You cannot analyze commits in a directory that is not a Git repository, you cannot extract APIs without the .NET SDK, and you cannot collect data without scripts. Phase 1 is the step that thoroughly verifies these prerequisites and determines which range of commits to analyze.
 
-## 전제조건 확인
+## Prerequisite Checks
 
-다음 네 가지 조건을 **모두** 확인해야 합니다.
+The following four conditions must **all** be verified.
 
-### 1. Git 저장소 확인
+### 1. Git Repository Check
 
 ```bash
 git status
 ```
 
-현재 디렉터리가 Git 저장소인지, Git이 설치되어 있는지 확인합니다. 릴리스 노트의 모든 데이터는 Git 히스토리에서 나오기 때문에, 이 확인이 가장 먼저 이루어집니다.
+This verifies whether the current directory is a Git repository and whether Git is installed. All data for release notes comes from the Git history, which is why this check happens first.
 
-### 2. 스크립트 디렉터리 확인
+### 2. Script Directory Check
 
 ```bash
 ls .release-notes/scripts
 ```
 
-`.release-notes/scripts` 디렉터리와 `config/component-priority.json` 파일이 존재하는지 확인합니다. Phase 2에서 실행할 C# 스크립트들이 이 디렉터리에 있습니다.
+This verifies that the `.release-notes/scripts` directory and the `config/component-priority.json` file exist. The C# scripts to be executed in Phase 2 are in this directory.
 
-### 3. .NET SDK 확인
+### 3. .NET SDK Check
 
 ```bash
 dotnet --version
 ```
 
-.NET 10.x 이상이 설치되어 있어야 합니다. C# 스크립트 실행과 프로젝트 빌드에 필요합니다.
+.NET 10.x or higher must be installed. It is required for C# script execution and project builds.
 
-### 4. 버전 파라미터 검증
+### 4. Version Parameter Validation
 
 ```bash
 /release-note v1.2.0
 #             ^^^^^^
-#             버전 파라미터
+#             version parameter
 ```
 
-버전이 비어있지 않고, 유효한 형식(예: `v1.2.0`, `v1.0.0-alpha.1`)인지 확인합니다.
+This verifies that the version is not empty and is in a valid format (e.g., `v1.2.0`, `v1.0.0-alpha.1`).
 
-## Base Branch 결정
+## Base Branch Decision
 
-전제조건이 통과되면, 릴리스 간 비교를 위한 Base Branch를 **자동으로** 결정합니다. 이 결정이 중요한 이유는 Base Branch에 따라 분석 대상 커밋의 범위가 완전히 달라지기 때문입니다.
+Once prerequisites pass, the Base Branch for inter-release comparison is **automatically** determined. This decision is important because the range of commits to analyze changes completely depending on the Base Branch.
 
-### 결정 로직
+### Decision Logic
 
 ```txt
-버전 파라미터: v1.2.0
+Version parameter: v1.2.0
        │
        ▼
 ┌─────────────────────────────────────┐
-│ origin/release/1.0 브랜치 존재?    │
+│ Does origin/release/1.0 branch     │
+│ exist?                              │
 └─────────────────────────────────────┘
        │
        ├── Yes ──▶ Base: origin/release/1.0
        │           Target: HEAD
        │
-       └── No ───▶ Base: 초기 커밋 (첫 배포)
+       └── No ───▶ Base: initial commit (first deployment)
                    Target: HEAD
 ```
 
-브랜치 존재 여부는 다음 명령어로 확인합니다.
+Branch existence is checked with the following command.
 
 ```bash
-# release 브랜치 존재 확인
+# Check release branch existence
 git rev-parse --verify origin/release/1.0
 ```
 
-### 시나리오 1: 후속 릴리스
+### Scenario 1: Subsequent Release
 
-`origin/release/1.0` 브랜치가 존재하면, 이전 릴리스 이후의 변경사항만 분석합니다.
+If the `origin/release/1.0` branch exists, only changes since the previous release are analyzed.
 
 ```txt
-비교 범위:
+Comparison range:
   Base: origin/release/1.0
   Target: HEAD
-  버전: v1.2.0
+  Version: v1.2.0
 ```
 
-### 시나리오 2: 첫 번째 릴리스
+### Scenario 2: First Release
 
-브랜치가 없으면 첫 배포로 판단하고, 저장소의 모든 커밋을 분석 대상으로 삼습니다.
+If the branch does not exist, it is treated as the first deployment, and all commits in the repository become analysis targets.
 
 ```bash
-# 초기 커밋 SHA 찾기
+# Find initial commit SHA
 git rev-list --max-parents=0 HEAD
 ```
 
 ```txt
-첫 배포로 감지되었습니다
+Detected as first deployment
 
-비교 범위:
-  Base: abc1234 (초기 커밋)
+Comparison range:
+  Base: abc1234 (initial commit)
   Target: HEAD
-  버전: v1.0.0
+  Version: v1.0.0
 ```
 
-## 환경 검증 실패 처리
+## Environment Verification Failure Handling
 
-환경 검증에 실패하면 명확한 오류 메시지를 출력하고 **즉시 중단합니다.** 각 오류가 발생하는 상황과 해결 방법을 살펴보겠습니다.
+When environment verification fails, a clear error message is output and **the process stops immediately.** Let's look at the situations where each error occurs and how to resolve them.
 
-### 오류 1: Git 저장소 아님
+### Error 1: Not a Git Repository
 
-프로젝트 루트가 아닌 다른 디렉터리에서 명령을 실행했을 때 발생합니다.
+This occurs when the command is executed in a directory other than the project root.
 
 ```txt
-오류: Git 저장소가 아닙니다
+Error: Not a Git repository
 
-현재 디렉터리에서 'git status'를 실행할 수 없습니다.
-Git 저장소 루트 디렉터리에서 명령을 실행하십시오.
+Cannot execute 'git status' in the current directory.
+Please execute the command from the Git repository root directory.
 ```
 
-해결하려면 프로젝트 루트로 이동합니다.
+To resolve, navigate to the project root.
 
 ```bash
 cd /path/to/your/project
 ```
 
-### 오류 2: .NET SDK 없음
+### Error 2: No .NET SDK
 
-.NET 10 SDK가 설치되지 않았거나 PATH에 등록되지 않았을 때 발생합니다. Phase 2의 C# 스크립트와 API 추출 모두 .NET SDK에 의존합니다.
+This occurs when the .NET 10 SDK is not installed or not registered in the PATH. Both Phase 2's C# scripts and API extraction depend on the .NET SDK.
 
 ```txt
-오류: .NET 10 SDK가 필요합니다
+Error: .NET 10 SDK is required
 
-'dotnet --version' 명령을 실행할 수 없습니다.
+Cannot execute the 'dotnet --version' command.
 
-설치 방법:
+Installation instructions:
   https://dotnet.microsoft.com/download/dotnet/10.0
 ```
 
-### 오류 3: 스크립트 디렉터리 없음
+### Error 3: No Script Directory
 
-`.release-notes/scripts` 디렉터리가 없다는 것은 릴리스 노트 자동화가 설정되지 않은 프로젝트이거나, 잘못된 디렉터리에서 실행한 것입니다.
-
-```txt
-오류: 릴리스 노트 스크립트를 찾을 수 없습니다
-
-'.release-notes/scripts' 디렉터리가 존재하지 않습니다.
-프로젝트 루트 디렉터리에서 명령을 실행하십시오.
-```
-
-### 오류 4: 버전 파라미터 없음
-
-명령을 실행할 때 버전을 지정하지 않았을 때 발생합니다.
+The absence of the `.release-notes/scripts` directory means either the release note automation has not been set up for the project or the command was run from the wrong directory.
 
 ```txt
-오류: 버전 파라미터가 필요합니다
+Error: Release note scripts not found
 
-사용법:
-  /release-note v1.2.0        # 정규 릴리스
-  /release-note v1.0.0        # 첫 배포
-  /release-note v1.2.0-beta.1 # 프리릴리스
+The '.release-notes/scripts' directory does not exist.
+Please execute the command from the project root directory.
 ```
 
-## 콘솔 출력 형식
+### Error 4: No Version Parameter
 
-환경 검증이 성공적으로 완료되면, 확인된 전제조건과 결정된 비교 범위가 출력됩니다.
+This occurs when no version was specified when running the command.
 
-### 환경 검증 성공
+```txt
+Error: Version parameter is required
+
+Usage:
+  /release-note v1.2.0        # Regular release
+  /release-note v1.0.0        # First deployment
+  /release-note v1.2.0-beta.1 # Pre-release
+```
+
+## Console Output Format
+
+### Environment Verification Success
+
+When environment verification completes successfully, the verified prerequisites and determined comparison range are displayed.
 
 ```txt
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Phase 1: 환경 검증 완료
+Phase 1: Environment Verification Complete
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-전제조건:
-  Git 저장소
+Prerequisites:
+  Git repository
   .NET SDK 10.x
-  스크립트 디렉터리
+  Script directory
 
-비교 범위:
+Comparison range:
   Base: origin/release/1.0
   Target: HEAD
-  버전: v1.2.0
+  Version: v1.2.0
 ```
 
-### 첫 배포 감지
+### First Deployment Detected
 
 ```txt
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Phase 1: 환경 검증 완료
+Phase 1: Environment Verification Complete
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-전제조건:
-  Git 저장소
+Prerequisites:
+  Git repository
   .NET SDK 10.x
-  스크립트 디렉터리
+  Script directory
 
-첫 배포로 감지되었습니다
+Detected as first deployment
 
-비교 범위:
-  Base: abc1234 (초기 커밋)
+Comparison range:
+  Base: abc1234 (initial commit)
   Target: HEAD
-  버전: v1.0.0
+  Version: v1.0.0
 ```
 
-## 실제 예시
+## Practical Examples
 
-### 예시 1: 후속 릴리스 (v1.2.0)
+### Example 1: Subsequent Release (v1.2.0)
 
 ```bash
 $ /release-note v1.2.0
 
-Phase 1: 환경 검증 중...
+Phase 1: Verifying environment...
   Checking Git repository... OK
   Checking .NET SDK... 10.0.100
   Checking scripts directory... OK
@@ -214,17 +215,17 @@ Phase 1: 환경 검증 중...
   Determining base branch...
     Found: origin/release/1.0
 
-비교 범위 결정:
+Comparison range determined:
   Base: origin/release/1.0
   Target: HEAD
 ```
 
-### 예시 2: 첫 배포 (v1.0.0)
+### Example 2: First Deployment (v1.0.0)
 
 ```bash
 $ /release-note v1.0.0
 
-Phase 1: 환경 검증 중...
+Phase 1: Verifying environment...
   Checking Git repository... OK
   Checking .NET SDK... 10.0.100
   Checking scripts directory... OK
@@ -233,20 +234,20 @@ Phase 1: 환경 검증 중...
     No release branch found
     Using initial commit as base
 
-첫 배포로 감지됨:
+Detected as first deployment:
   Base: 7a8b9c0 (initial commit)
   Target: HEAD
 ```
 
 ## FAQ
 
-### Q1: 첫 배포와 후속 배포에서 Base Branch가 달라지면 분석 범위는 어떻게 달라지나요?
-**A**: 첫 배포에서는 초기 커밋(`git rev-list --max-parents=0 HEAD`)부터 현재(`HEAD`)까지 **전체 히스토리를** 분석합니다. 후속 배포에서는 이전 릴리스 브랜치(`origin/release/1.0`)부터 현재까지 **변경분만** 분석합니다. 첫 배포는 프로젝트의 모든 기능을 문서화하고, 후속 배포는 새로 추가된 변경사항만 다룹니다.
+### Q1: How does the analysis range differ between first and subsequent deployments when the Base Branch changes?
+**A**: For first deployments, the **entire history** is analyzed from the initial commit (`git rev-list --max-parents=0 HEAD`) to the current (`HEAD`). For subsequent deployments, only the **diff** from the previous release branch (`origin/release/1.0`) to the current is analyzed. First deployments document all features of the project, while subsequent deployments cover only newly added changes.
 
-### Q2: 환경 검증에서 실패하면 왜 즉시 중단하나요?
-**A**: **"실패를 빨리 발견하라"는 원칙을** 따른 것입니다. Git 저장소가 아니거나, .NET SDK가 없거나, 스크립트 디렉터리가 없으면 이후 Phase 2~5가 모두 실패합니다. 수분간 스크립트를 실행한 뒤 실패하는 것보다, 10초 안에 문제를 발견하고 해결하는 것이 훨씬 효율적입니다.
+### Q2: Why does the process stop immediately when environment verification fails?
+**A**: This follows the principle of **"fail fast."** If it is not a Git repository, or the .NET SDK is missing, or the script directory does not exist, all subsequent Phases 2-5 will fail. It is much more efficient to discover the problem within 10 seconds and resolve it, rather than running scripts for several minutes and then failing.
 
-### Q3: release 브랜치 이름이 `origin/release/1.0`이 아닌 다른 형식이면 어떻게 하나요?
-**A**: `release-note.md` Command의 Phase 1 가이드(`phase1-setup.md`)에서 Base Branch 결정 로직을 수정하면 됩니다. 또는 스크립트를 수동으로 실행할 때 `--base` 옵션으로 원하는 브랜치를 직접 지정할 수 있습니다: `dotnet AnalyzeAllComponents.cs --base origin/main --target HEAD`.
+### Q3: What if the release branch name is not in the `origin/release/1.0` format?
+**A**: You can modify the Base Branch decision logic in the Phase 1 guide (`phase1-setup.md`) of the `release-note.md` command. Alternatively, when running the script manually, you can directly specify the desired branch with the `--base` option: `dotnet AnalyzeAllComponents.cs --base origin/main --target HEAD`.
 
-환경 검증이 완료되면, 결정된 Base/Target 범위를 가지고 [Phase 2: 데이터 수집](02-phase2-collection.md)으로 진행합니다.
+Once environment verification is complete, proceed to [Phase 2: Data Collection](02-phase2-collection.md) with the determined Base/Target range.

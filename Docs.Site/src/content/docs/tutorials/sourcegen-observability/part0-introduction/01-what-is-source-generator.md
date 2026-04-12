@@ -2,122 +2,122 @@
 title: "What is Source Generator"
 ---
 
-## 개요
+## Overview
 
-소프트웨어가 복잡해질수록 반복적인 코드 작성은 피할 수 없는 현실이 됩니다. 로깅, 직렬화, 유효성 검사처럼 패턴이 동일한 코드를 매번 손으로 작성하면 실수가 생기고 일관성이 무너집니다. C# 컴파일러에 내장된 **소스 생성기(Source Generator)는** 이 문제를 컴파일 타임에 해결합니다. 기존 코드를 분석하고 필요한 코드를 자동으로 만들어 주기 때문에, 개발자는 핵심 로직에만 집중할 수 있습니다.
+As software grows more complex, writing repetitive code becomes an unavoidable reality. When code with identical patterns — like logging, serialization, and validation — is written by hand every time, mistakes occur and consistency breaks down. **Source Generator,** built into the C# compiler, solves this problem at compile time. Because it analyzes existing code and automatically generates the necessary code, developers can focus solely on core logic.
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **소스 생성기의 정의와 동작 원리 이해**
-   - 컴파일 파이프라인에서 소스 생성기가 실행되는 시점 파악
-   - 구문 분석과 의미 분석 이후, IL 생성 이전이라는 위치의 의미 이해
-2. **컴파일 타임 코드 생성의 개념 파악**
-   - 런타임 코드 생성과의 근본적 차이 이해
-   - 추가 전용(Additive Only)과 결정적 출력(Deterministic)의 설계 원칙
-3. **소스 생성기의 기본 구조 학습**
-   - `IIncrementalGenerator` 인터페이스와 파이프라인 구성 방식
-
----
-
-## 소스 생성기 정의
-
-**소스 생성기(Source Generator)는** C# 컴파일러의 확장 기능으로, 컴파일 과정에서 소스 코드를 분석하고 새로운 C# 코드를 자동으로 생성합니다.
-
-```
-컴파일 과정에서의 소스 생성기 위치
-==================================
-
-    소스 코드 (.cs)
-          │
-          ▼
-    ┌─────────────────┐
-    │   구문 분석      │  Syntax Analysis
-    │   (Parsing)     │
-    └────────┬────────┘
-             │
-             ▼
-    ┌─────────────────┐
-    │   의미 분석      │  Semantic Analysis
-    │   (Binding)     │
-    └────────┬────────┘
-             │
-             ▼
-    ┌─────────────────┐
-    │  소스 생성기     │  ← 여기서 실행!
-    │  (Generator)    │
-    └────────┬────────┘
-             │
-             ▼
-    ┌─────────────────┐
-    │   코드 생성      │  IL Code Generation
-    │   (Emit)        │
-    └────────┬────────┘
-             │
-             ▼
-      어셈블리 (.dll)
-```
-
-소스 생성기는 컴파일러가 소스 코드를 분석한 후, IL 코드를 생성하기 전에 실행됩니다. 이 시점에서 기존 코드의 구조를 분석하고, 필요한 코드를 추가로 생성할 수 있습니다. 이 튜토리얼에서 구현할 **ObservablePortGenerator**도 바로 이 시점에 어댑터 클래스를 분석하여 Observability 코드를 자동으로 만들어 냅니다.
-
-이러한 동작 원리를 이해했으니, 이제 소스 생성기가 가진 세 가지 핵심 특징을 살펴보겠습니다.
+### Core Learning Objectives
+1. **Understand the definition and operating principles of source generators**
+   - Identify when source generators execute in the compilation pipeline
+   - Understand the significance of running after syntax and semantic analysis, but before IL generation
+2. **Grasp the concept of compile-time code generation**
+   - Understand the fundamental difference from runtime code generation
+   - The design principles of Additive Only and Deterministic output
+3. **Learn the basic structure of source generators**
+   - The `IIncrementalGenerator` interface and pipeline composition approach
 
 ---
 
-## 핵심 특징
+## Source Generator Definition
 
-소스 생성기의 설계는 세 가지 원칙 위에 서 있습니다. 컴파일 타임에만 실행되고, 기존 코드를 절대 수정하지 않으며, 동일한 입력에 대해 항상 같은 결과를 보장합니다. 이 원칙들이 왜 중요한지 하나씩 살펴보겠습니다.
+**Source Generator** is an extension of the C# compiler that analyzes source code during the compilation process and automatically generates new C# code.
 
-### 1. 컴파일 타임 실행
+```
+Position of Source Generator in the Compilation Process
+=======================================================
 
-소스 생성기는 런타임이 아닌 **컴파일 타임**에 실행됩니다:
+    Source Code (.cs)
+          |
+          v
+    +-------------------+
+    |   Syntax Analysis  |  Syntax Analysis
+    |   (Parsing)        |
+    +---------+----------+
+              |
+              v
+    +-------------------+
+    |  Semantic Analysis |  Semantic Analysis
+    |   (Binding)        |
+    +---------+----------+
+              |
+              v
+    +-------------------+
+    |  Source Generator   |  <- Runs here!
+    |  (Generator)       |
+    +---------+----------+
+              |
+              v
+    +-------------------+
+    |   Code Generation  |  IL Code Generation
+    |   (Emit)           |
+    +---------+----------+
+              |
+              v
+      Assembly (.dll)
+```
+
+Source generators run after the compiler has analyzed the source code, but before IL code generation. At this point, they can analyze the structure of existing code and generate additional code as needed. The **ObservablePortGenerator** we will implement in this tutorial also analyzes adapter classes at this exact point to automatically create Observability code.
+
+Now that we understand this operating principle, let's examine the three key characteristics of source generators.
+
+---
+
+## Key Characteristics
+
+The design of source generators rests on three principles. They execute only at compile time, never modify existing code, and guarantee identical results for identical inputs. Let's explore why each of these principles matters.
+
+### 1. Compile-Time Execution
+
+Source generators execute at **compile time**, not at runtime:
 
 ```csharp
-// 개발자가 작성한 코드
+// Code written by the developer
 [GenerateObservablePort]
 public class UserRepository : IObservablePort
 {
     public FinT<IO, User> GetUserAsync(int id) => ...;
 }
 
-// 컴파일러가 자동 생성한 코드 (소스 생성기에 의해)
+// Code auto-generated by the compiler (by the source generator)
 public partial class UserRepositoryObservable
 {
     public FinT<IO, User> GetUserAsync(int id)
     {
-        // 로깅, 메트릭 등 자동 생성된 코드
+        // Logging, metrics, etc. - auto-generated code
     }
 }
 ```
 
-### 2. 추가 전용 (Additive Only)
+### 2. Additive Only
 
-컴파일 타임에 실행된다면 기존 코드를 마음대로 바꿀 수도 있을까요? 그렇지 않습니다. 소스 생성기는 기존 코드를 **수정하거나 삭제할 수 없습니다**. 오직 새로운 코드만 추가할 수 있습니다:
+Since they execute at compile time, could they modify existing code freely? No. Source generators **cannot modify or delete** existing code. They can only add new code:
 
 ```
-소스 생성기의 제약
-================
+Source Generator Constraints
+============================
 
-  ✓ 새 파일 추가        → 가능
-  ✓ 새 클래스 추가      → 가능
-  ✓ partial 클래스 확장 → 가능
+  O Add new files        -> Possible
+  O Add new classes      -> Possible
+  O Extend partial class -> Possible
 
-  ✗ 기존 코드 수정      → 불가능
-  ✗ 기존 코드 삭제      → 불가능
-  ✗ 기존 파일 덮어쓰기  → 불가능
+  X Modify existing code -> Impossible
+  X Delete existing code -> Impossible
+  X Overwrite files      -> Impossible
 ```
 
-### 3. 결정적 출력 (Deterministic)
+### 3. Deterministic Output
 
-동일한 입력에 대해 항상 동일한 출력을 생성해야 합니다. 이는 증분 빌드와 캐싱을 위해 필수적입니다. ObservablePortGenerator도 이 원칙을 따르기 때문에, 같은 어댑터 클래스에 대해서는 항상 동일한 Observable 래퍼 코드가 생성됩니다.
+The same input must always produce the same output. This is essential for incremental builds and caching. Because ObservablePortGenerator follows this principle, the same adapter class always generates the same Observable wrapper code.
 
-이 세 가지 특징이 소스 생성기의 안전망 역할을 합니다. 이제 실제로 소스 생성기를 어떤 구조로 작성하는지 살펴보겠습니다.
+These three characteristics serve as the safety net for source generators. Now let's look at the actual structure of how source generators are written.
 
 ---
 
-## 소스 생성기의 기본 구조
+## Basic Structure of Source Generators
 
-모든 소스 생성기는 `IIncrementalGenerator` 인터페이스를 구현합니다:
+All source generators implement the `IIncrementalGenerator` interface:
 
 ```csharp
 using Microsoft.CodeAnalysis;
@@ -127,14 +127,14 @@ public class MyGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // 1. 소스 코드에서 관심 있는 부분 선택 (Provider 등록)
+        // 1. Select parts of interest from source code (register Provider)
         var provider = context.SyntaxProvider
             .ForAttributeWithMetadataName(
                 "MyNamespace.MyAttribute",
                 predicate: (node, _) => node is ClassDeclarationSyntax,
                 transform: (ctx, _) => GetClassInfo(ctx));
 
-        // 2. 코드 생성 로직 등록
+        // 2. Register code generation logic
         context.RegisterSourceOutput(provider, (spc, classInfo) =>
         {
             var code = GenerateCode(classInfo);
@@ -144,119 +144,119 @@ public class MyGenerator : IIncrementalGenerator
 }
 ```
 
-### 구성 요소
+### Components
 
-| 구성 요소 | 역할 |
+| Component | Role |
 |-----------|------|
-| `[Generator]` 특성 | 컴파일러에게 이 클래스가 소스 생성기임을 알림 |
-| `IIncrementalGenerator` | 증분 소스 생성기 인터페이스 |
-| `Initialize` 메서드 | 생성기 초기화 및 파이프라인 구성 |
-| `SyntaxProvider` | 소스 코드에서 관심 있는 노드 선택 |
-| `RegisterSourceOutput` | 생성된 코드 출력 |
+| `[Generator]` attribute | Tells the compiler this class is a source generator |
+| `IIncrementalGenerator` | Incremental source generator interface |
+| `Initialize` method | Generator initialization and pipeline configuration |
+| `SyntaxProvider` | Selects nodes of interest from source code |
+| `RegisterSourceOutput` | Outputs generated code |
 
-기본 구조를 이해했으니, 소스 생성기가 기존 코드 생성 기술과 어떻게 다른지 비교해 보겠습니다.
+Now that we understand the basic structure, let's compare how source generators differ from existing code generation technologies.
 
 ---
 
-## 소스 생성기 vs 다른 기술
+## Source Generator vs Other Technologies
 
-### T4 템플릿과의 비교
+### Comparison with T4 Templates
 
-T4 템플릿은 오랫동안 .NET 생태계에서 코드 생성의 표준이었지만, 컴파일러와 분리되어 있다는 근본적인 한계가 있습니다.
+T4 templates have long been the standard for code generation in the .NET ecosystem, but they have a fundamental limitation of being separated from the compiler.
 
 ```
-T4 템플릿
-=========
-- 별도의 .tt 파일 필요
-- 디자인 타임에 실행
-- 생성된 코드를 소스 제어에 포함해야 함
-- 입력 소스의 변경을 자동 감지하지 못함
+T4 Templates
+=============
+- Requires separate .tt files
+- Runs at design time
+- Generated code must be included in source control
+- Cannot auto-detect input source changes
 
-소스 생성기
-==========
-- 컴파일러에 통합
-- 컴파일 타임에 실행
-- 생성된 코드가 소스 제어에 불필요
-- 입력 변경 시 자동으로 재생성
+Source Generator
+================
+- Integrated with the compiler
+- Runs at compile time
+- Generated code not needed in source control
+- Auto-regenerated when input changes
 ```
 
-### Reflection.Emit과의 비교
+### Comparison with Reflection.Emit
 
-Reflection.Emit은 런타임에 IL 코드를 직접 생성하는 강력한 도구이지만, AOT 환경에서는 사용할 수 없고 디버깅도 어렵습니다.
+Reflection.Emit is a powerful tool that directly generates IL code at runtime, but it cannot be used in AOT environments and is difficult to debug.
 
 ```
 Reflection.Emit
-===============
-- 런타임에 IL 코드 직접 생성
-- 디버깅이 어려움
-- AOT 컴파일과 호환성 문제
-- 높은 학습 곡선
+================
+- Generates IL code directly at runtime
+- Difficult to debug
+- Compatibility issues with AOT compilation
+- High learning curve
 
-소스 생성기
-==========
-- 컴파일 타임에 C# 코드 생성
-- 생성된 코드 디버깅 가능
-- AOT 컴파일 완벽 지원
-- C# 문법만 알면 작성 가능
+Source Generator
+================
+- Generates C# code at compile time
+- Generated code can be debugged
+- Full AOT compilation support
+- Only C# syntax knowledge needed
 ```
 
-이처럼 소스 생성기는 기존 기술들의 단점을 해결하면서도, 컴파일러와의 긴밀한 통합이라는 고유한 강점을 제공합니다. 실제로 .NET 생태계에서 이미 널리 활용되고 있습니다.
+As shown, source generators solve the shortcomings of existing technologies while providing the unique advantage of tight integration with the compiler. In fact, they are already widely used in the .NET ecosystem.
 
 ---
 
-## 실제 사용 사례
+## Real-World Use Cases
 
-소스 생성기는 다양한 시나리오에서 활용됩니다:
+Source generators are used in various scenarios:
 
-### 1. JSON 직렬화 (System.Text.Json)
+### 1. JSON Serialization (System.Text.Json)
 
 ```csharp
 [JsonSerializable(typeof(User))]
 public partial class MyJsonContext : JsonSerializerContext
 {
 }
-// → 컴파일 타임에 직렬화 코드 생성
+// -> Serialization code generated at compile time
 ```
 
-### 2. 로깅 (Microsoft.Extensions.Logging)
+### 2. Logging (Microsoft.Extensions.Logging)
 
 ```csharp
 [LoggerMessage(Level = LogLevel.Information, Message = "User {UserId} logged in")]
 public static partial void LogUserLogin(ILogger logger, int userId);
-// → 고성능 로깅 코드 생성
+// -> High-performance logging code generated
 ```
 
-### 3. 의존성 주입
+### 3. Dependency Injection
 
 ```csharp
 [RegisterService]
 public class UserService : IUserService
 {
 }
-// → DI 컨테이너 등록 코드 생성
+// -> DI container registration code generated
 ```
 
 ---
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-소스 생성기는 C# 컴파일러의 확장 기능으로, 구문/의미 분석 이후 IL 생성 이전 시점에 실행됩니다. 기존 코드를 수정할 수 없는 추가 전용 모델을 따르며, 동일 입력에 대해 항상 같은 출력을 보장합니다. `IIncrementalGenerator` 인터페이스를 구현하여 작성하며, 성능, 타입 안전성, 디버깅 용이성, AOT 지원이라는 장점을 제공합니다.
+Source generators are extensions of the C# compiler that execute at the point after syntax/semantic analysis and before IL generation. They follow the additive-only model where existing code cannot be modified, and guarantee the same output for the same input. They are written by implementing the `IIncrementalGenerator` interface and provide advantages in performance, type safety, debuggability, and AOT support.
 
 ---
 
 ## FAQ
 
-### Q1: 소스 생성기와 런타임 코드 생성은 어떤 차이가 있나요?
-**A**: 소스 생성기는 컴파일 타임에 C# 소스 코드를 생성하므로 런타임 오버헤드가 없고, 생성된 코드를 디버거로 직접 확인할 수 있습니다. 반면 런타임 코드 생성(Reflection.Emit, Expression Trees 등)은 애플리케이션 실행 중에 동작하여 성능 비용이 발생하고, AOT 환경에서 제약이 있습니다.
+### Q1: What is the difference between source generators and runtime code generation?
+**A**: Source generators produce C# source code at compile time, so there is no runtime overhead and the generated code can be directly inspected with a debugger. In contrast, runtime code generation (Reflection.Emit, Expression Trees, etc.) operates during application execution, incurs performance costs, and has constraints in AOT environments.
 
-### Q2: "추가 전용(Additive Only)"이라는 제약은 왜 필요한가요?
-**A**: 기존 코드를 수정하거나 삭제할 수 있다면, 여러 소스 생성기가 동시에 동작할 때 서로의 변경이 충돌하여 예측 불가능한 결과를 초래합니다. 추가 전용 모델은 이러한 충돌을 원천적으로 방지하고, 개발자가 작성한 원본 코드의 무결성을 보장합니다.
+### Q2: Why is the "Additive Only" constraint necessary?
+**A**: If existing code could be modified or deleted, changes from multiple simultaneously running source generators could conflict, leading to unpredictable results. The additive-only model fundamentally prevents such conflicts and guarantees the integrity of the original code written by developers.
 
-### Q3: `IIncrementalGenerator`와 이전의 `ISourceGenerator`는 무엇이 다른가요?
-**A**: `ISourceGenerator`는 소스 변경 시마다 전체 생성 로직을 재실행했지만, `IIncrementalGenerator`는 변경된 부분만 다시 처리하는 증분 파이프라인을 제공합니다. 이 덕분에 대규모 프로젝트에서도 빌드 성능이 크게 향상되며, 현재 공식적으로 권장되는 방식입니다.
+### Q3: What is the difference between `IIncrementalGenerator` and the older `ISourceGenerator`?
+**A**: `ISourceGenerator` re-executed the entire generation logic every time source changed, but `IIncrementalGenerator` provides an incremental pipeline that only reprocesses changed parts. This significantly improves build performance in large projects and is the currently officially recommended approach.
 
 ---
 
-소스 생성기가 무엇인지 이해했으니, 이제 왜 다른 기술 대신 소스 생성기를 선택해야 하는지 더 구체적인 근거를 살펴보겠습니다.
+Now that we understand what source generators are, let's look at the more specific reasons for choosing source generators over other technologies.
 
-→ [02. 왜 소스 생성기인가](02-why-source-generator.md)
+→ [02. Why Source Generator](02-why-source-generator.md)

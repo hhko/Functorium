@@ -2,27 +2,27 @@
 title: "Introduction to commit.md"
 ---
 
-릴리스 노트 자동화 시스템은 커밋 메시지를 파싱하여 기능을 분류합니다. `feat(api): 새로운 엔드포인트 추가`는 "새로운 기능" 섹션으로, `fix(auth): 토큰 만료 오류 수정`은 "버그 수정" 섹션으로, `feat!: API 응답 형식 변경`은 "Breaking Changes" 섹션으로 자동 분류됩니다. 이 자동 분류가 동작하려면 커밋 메시지가 일관된 형식을 따라야 합니다. 형식이 제각각이면 파싱이 불가능하고, 릴리스 노트 자동화의 전제가 무너집니다.
+The release note automation system parses commit messages to classify features. `feat(api): Add new endpoint` is automatically classified into the "New Features" section, `fix(auth): Fix token expiration error` into the "Bug Fixes" section, and `feat!: Change API response format` into the "Breaking Changes" section. For this automatic classification to work, commit messages must follow a consistent format. If formats are inconsistent, parsing becomes impossible and the premise of release note automation collapses.
 
-`commit.md` Command는 이 문제를 해결합니다. Conventional Commits 규격에 따라 커밋 메시지를 작성하도록 Claude에게 지시하여, 사람이 실수로 형식을 어기는 것을 방지합니다. 말하자면, `commit.md`는 `release-note.md`가 제대로 동작하기 위한 **토대에** 해당합니다.
+The `commit.md` command solves this problem. It instructs Claude to write commit messages according to the Conventional Commits specification, preventing humans from accidentally violating the format. In other words, `commit.md` is the **foundation** for `release-note.md` to function properly.
 
-파일 위치는 `.claude/commands/commit.md`입니다.
+The file is located at `.claude/commands/commit.md`.
 
-## 프론트매터
+## Frontmatter
 
 ```yaml
 ---
 title: COMMIT
-description: Conventional Commits 규격에 따라 변경사항을 커밋합니다.
-argument-hint: "[topic]을 전달하면 해당 topic 관련 파일만 선별하여 커밋합니다"
+description: Commits changes according to the Conventional Commits specification.
+argument-hint: "[topic] Pass a topic to select and commit only files related to that topic"
 ---
 ```
 
-argument-hint에서 `[topic]`을 대괄호로 감싼 것은 선택적 인자임을 나타냅니다. Topic 없이 `/commit`만 실행할 수도 있고, `/commit 빌드`처럼 특정 Topic을 지정할 수도 있습니다.
+Wrapping `[topic]` in square brackets in the argument-hint indicates it is an optional argument. You can run `/commit` without a topic, or specify a specific topic like `/commit build`.
 
-## Conventional Commits 형식
+## Conventional Commits Format
 
-commit.md는 Conventional Commits 규격을 따릅니다.
+commit.md follows the Conventional Commits specification.
 
 ```txt
 <type>[optional scope]: <description>
@@ -32,88 +32,88 @@ commit.md는 Conventional Commits 규격을 따릅니다.
 [optional footer(s)]
 ```
 
-### 예시
+### Example
 
 ```txt
-feat(calculator): 나눗셈 기능 구현
+feat(calculator): Implement division feature
 
-- Divide 메서드 추가
-- 0으로 나누기 예외 처리 포함
+- Add Divide method
+- Include division by zero exception handling
 
 Closes #42
 ```
 
-## 커밋 타입
+## Commit Types
 
-어떤 커밋 타입이 릴리스 노트의 어느 섹션으로 매핑되는지를 이해하는 것이 중요합니다. `feat`과 `fix`는 사용자에게 직접적인 영향이 있으므로 릴리스 노트에 포함되지만, `docs`, `style`, `test` 같은 타입은 내부 변경이므로 보통 생략됩니다.
+It is important to understand which commit type maps to which section of the release notes. `feat` and `fix` have direct impact on users and are included in the release notes, while types like `docs`, `style`, and `test` are internal changes that are usually omitted.
 
-| 타입 | 설명 | 릴리스 노트 분류 |
-|------|------|-----------------|
-| `feat` | 새로운 기능 추가 | 새로운 기능 |
-| `fix` | 버그 수정 | 버그 수정 |
-| `docs` | 문서 변경 | (보통 생략) |
-| `style` | 코드 포맷팅 | (생략) |
-| `refactor` | 리팩터링 | (보통 생략) |
-| `perf` | 성능 개선 | 개선사항 |
-| `test` | 테스트 추가/수정 | (생략) |
-| `build` | 빌드 시스템 변경 | (보통 생략) |
-| `ci` | CI 설정 변경 | (생략) |
-| `chore` | 기타 변경 | (생략) |
+| Type | Description | Release Note Classification |
+|------|-------------|---------------------------|
+| `feat` | New feature added | New Features |
+| `fix` | Bug fix | Bug Fixes |
+| `docs` | Documentation change | (Usually omitted) |
+| `style` | Code formatting | (Omitted) |
+| `refactor` | Refactoring | (Usually omitted) |
+| `perf` | Performance improvement | Improvements |
+| `test` | Add/modify tests | (Omitted) |
+| `build` | Build system change | (Usually omitted) |
+| `ci` | CI configuration change | (Omitted) |
+| `chore` | Other changes | (Omitted) |
 
-## Topic 파라미터
+## Topic Parameter
 
-commit Command의 핵심 기능 중 하나는 **Topic 필터링입니다.** 하나의 작업 세션에서 여러 종류의 파일을 수정하는 경우가 흔한데, 이때 모든 변경사항을 하나의 커밋에 담으면 커밋 히스토리가 지저분해집니다.
+One of the key features of the commit command is **Topic filtering.** It is common to modify multiple types of files in a single work session, and putting all changes into a single commit makes the commit history messy.
 
-### Topic 미지정
+### Without Topic
 
-Topic 없이 `/commit`을 실행하면, Claude가 모든 변경사항을 분석하여 논리적 단위로 분리한 뒤 여러 커밋을 생성합니다.
+Running `/commit` without a topic causes Claude to analyze all changes, separate them into logical units, and create multiple commits.
 
 ```bash
 /commit
 ```
 
-예를 들어 `UserService.cs`, `UserServiceTests.cs`, `README.md`, `.gitignore`가 변경된 상태라면, Claude는 기능 변경, 테스트, 문서, 설정 파일을 각각 분리하여 `feat(user): 사용자 서비스 추가`, `test(user): 사용자 서비스 테스트 추가`, `docs: README 업데이트`, `chore: .gitignore 업데이트` 같은 개별 커밋을 생성합니다.
+For example, if `UserService.cs`, `UserServiceTests.cs`, `README.md`, and `.gitignore` are all changed, Claude separates feature changes, tests, documentation, and configuration files and creates individual commits like `feat(user): Add user service`, `test(user): Add user service tests`, `docs: Update README`, `chore: Update .gitignore`.
 
-### Topic 지정
+### With Topic
 
-특정 Topic을 지정하면, Claude가 해당 Topic과 관련된 파일만 선별하여 단일 커밋을 생성합니다.
+Specifying a particular topic causes Claude to select only files related to that topic and create a single commit.
 
 ```bash
-/commit 빌드
+/commit build
 ```
 
-변경 파일 중 `Build-Local.ps1`과 `Directory.Build.props`는 빌드 관련이므로 선택되고, `README.md`와 `UserService.cs`는 빌드와 무관하므로 제외됩니다. 결과적으로 빌드 관련 파일만 포함된 `feat(build): 빌드 설정 개선` 커밋이 생성되고, 나머지 파일은 unstaged 상태로 남습니다.
+Among the changed files, `Build-Local.ps1` and `Directory.Build.props` are selected as build-related, while `README.md` and `UserService.cs` are excluded as unrelated to build. As a result, a commit `feat(build): Improve build configuration` containing only build-related files is created, and the remaining files stay in the unstaged state.
 
-Topic 선별은 파일명의 키워드, 파일 내용과의 관련성, 디렉토리 경로의 키워드, 변경 내용의 주제를 종합적으로 판단하여 이루어집니다.
+Topic selection is done by comprehensively evaluating keywords in filenames, relevance to file contents, keywords in directory paths, and the subject of the changes.
 
-## 커밋 메시지 작성 규칙
+## Commit Message Writing Rules
 
-커밋 메시지의 각 부분에는 따라야 할 규칙이 있습니다.
+Each part of the commit message has rules to follow.
 
-**제목(첫 줄)은** 72자 이내로 작성하고, 명령형으로 작성합니다("추가한다"가 아닌 "추가"). 마침표는 사용하지 않으며, 한글로 작성합니다.
+**The title (first line)** should be within 72 characters, written in imperative form ("add" not "added"). No period is used.
 
-**본문(선택)은** 제목과 빈 줄로 구분하고, "무엇을", "왜" 변경했는지를 설명합니다. 72자마다 줄바꿈을 권장합니다.
+**The body (optional)** is separated from the title by a blank line and explains "what" and "why" the change was made. Line breaks every 72 characters are recommended.
 
-**푸터(선택)는** Breaking Change 정보나 관련 이슈 참조(`Closes #123`)에 사용합니다.
+**The footer (optional)** is used for Breaking Change information or related issue references (`Closes #123`).
 
-## 커밋 메시지 예시
+## Commit Message Examples
 
-### 새 기능 추가
+### Adding a New Feature
 
 ```txt
-feat(calculator): 나눗셈 기능 구현
+feat(calculator): Implement division feature
 
-- Divide 메서드 추가
-- 0으로 나누기 예외 처리 포함
+- Add Divide method
+- Include division by zero exception handling
 ```
 
-### 버그 수정
+### Bug Fix
 
 ```txt
-fix(auth): 토큰 만료 시 자동 갱신 실패 수정
+fix(auth): Fix auto-refresh failure on token expiration
 
-만료된 리프레시 토큰으로 갱신 시도 시
-무한 루프에 빠지는 문제 해결
+Fixed infinite loop issue when attempting refresh
+with an expired refresh token
 
 Closes #42
 ```
@@ -121,102 +121,102 @@ Closes #42
 ### Breaking Change
 
 ```txt
-feat!: API 응답 형식 변경
+feat!: Change API response format
 
-BREAKING CHANGE: 응답 JSON 구조가 변경되었습니다.
+BREAKING CHANGE: The response JSON structure has been changed.
 ```
 
-### 리팩터링
+### Refactoring
 
 ```txt
-refactor: 테스트 픽스처에 공통 설정 추출
+refactor: Extract common configuration to test fixture
 
-각 테스트 클래스에서 중복된 초기화 코드를
-BaseTestFixture로 이동
+Moved duplicated initialization code from each test class
+to BaseTestFixture
 ```
 
-## 커밋 조건 및 금지사항
+## Commit Conditions and Prohibitions
 
-코드를 변경한 경우, 커밋 전에 모든 테스트가 통과하고, 모든 컴파일러 경고가 해결되어 있어야 하며, 하나의 논리적 작업 단위여야 합니다.
+When code is changed, all tests must pass before committing, all compiler warnings must be resolved, and it must be a single logical unit of work.
 
-커밋 메시지에 절대 포함하지 않아야 할 것도 있습니다. Claude/AI 생성 관련 메시지(`Co-Authored-By: Claude` 등), 이모지, 그리고 테스트 실패나 경고가 있는 상태에서의 커밋이 해당됩니다.
+There are also things that must never be included in commit messages: Claude/AI generation-related messages (`Co-Authored-By: Claude`, etc.), emojis, and commits while there are test failures or warnings.
 
-## 커밋 절차
+## Commit Procedure
 
-### 기본 절차 (Topic 미지정)
+### Basic Procedure (Without Topic)
 
 ```bash
-# 1. 변경사항 확인
+# 1. Check changes
 git status
 
-# 2. 변경 내용 검토
+# 2. Review change contents
 git diff
 
-# 3. 최근 커밋 스타일 확인
+# 3. Check recent commit style
 git log --oneline -5
 
-# 4. 논리적 단위로 분리하여 스테이징 및 커밋
+# 4. Stage and commit in logical units
 git add <files>
 git commit -m "type(scope): description"
 ```
 
-### Topic 지정 시 절차
+### Procedure With Topic
 
 ```bash
-# 1. 변경사항 확인
+# 1. Check changes
 git status
 git diff
 
-# 2. Topic 관련 파일 선별
-# 예: /commit 빌드
+# 2. Select topic-related files
+# Example: /commit build
 
-# 3. 선별된 파일만 스테이징
+# 3. Stage only selected files
 git add Build-Local.ps1 Directory.Build.props
 
-# 4. 단일 커밋 생성
-git commit -m "feat(build): 빌드 설정 개선"
+# 4. Create single commit
+git commit -m "feat(build): Improve build configuration"
 
-# 5. 검증 (topic 무관 파일은 unstaged 상태)
+# 5. Verify (topic-unrelated files remain unstaged)
 git status
 ```
 
-## 완료 메시지 형식
+## Completion Message Format
 
 ```txt
-커밋 완료
+Commit Complete
 
-커밋 정보:
-  - 타입: feat
-  - 메시지: 나눗셈 기능 구현
-  - 변경 파일: 3개
+Commit Information:
+  - Type: feat
+  - Message: Implement division feature
+  - Changed Files: 3
 ```
 
-## release-note.md와의 관계
+## Relationship with release-note.md
 
 ```txt
 commit.md                            release-note.md
     │                                      │
-    │  Conventional Commits 형식           │
+    │  Conventional Commits format         │
     │  ─────────────────────────▶          │
     │                                      │
-    │  커밋 히스토리                       │
+    │  Commit history                      │
     │  ─────────────────────────▶          │
     │                                      │
     ▼                                      ▼
-일관된 커밋 메시지          ────▶   자동 분류 및 릴리스 노트 생성
+Consistent commit messages     ────▶   Auto-classification and release note generation
 ```
 
-이 다이어그램이 두 Command의 관계를 잘 보여줍니다. `commit.md`가 생성하는 일관된 커밋 메시지는 `release-note.md`의 자동 분류 엔진이 소비하는 데이터입니다. Conventional Commits 형식을 따르는 커밋 히스토리가 쌓여야 비로소 `release-note.md`가 커밋을 "새로운 기능", "버그 수정", "Breaking Changes"로 정확하게 분류할 수 있습니다. 두 Command는 독립적으로 존재하지만, 함께 사용할 때 자동화 시스템의 전체 가치가 실현됩니다.
+This diagram illustrates the relationship between the two commands well. The consistent commit messages generated by `commit.md` are the data consumed by `release-note.md`'s auto-classification engine. Only when a commit history following the Conventional Commits format accumulates can `release-note.md` accurately classify commits into "New Features", "Bug Fixes", and "Breaking Changes". The two commands exist independently, but the full value of the automation system is realized when they are used together.
 
 ## FAQ
 
-### Q1: `/commit`을 Topic 없이 실행하면 모든 변경사항이 하나의 커밋에 담기나요?
-**A**: 아닙니다. Topic 없이 `/commit`을 실행하면 Claude가 모든 변경사항을 분석하여 **논리적 단위로 분리한 뒤 여러 커밋을 생성합니다.** 예를 들어 기능 변경, 테스트, 문서, 설정 파일을 각각 별도의 커밋으로 만듭니다.
+### Q1: Does running `/commit` without a topic put all changes into a single commit?
+**A**: No. Running `/commit` without a topic causes Claude to analyze all changes and **separate them into logical units to create multiple commits.** For example, it creates separate commits for feature changes, tests, documentation, and configuration files.
 
-### Q2: `commit.md`와 `release-note.md`는 왜 함께 사용해야 하나요?
-**A**: `commit.md`가 생성하는 일관된 Conventional Commits 형식의 커밋 메시지가 `release-note.md`의 자동 분류 엔진이 소비하는 데이터입니다. `feat(api):` 같은 형식이 지켜져야 Phase 3에서 커밋을 "새로운 기능", "버그 수정", "Breaking Changes"로 정확하게 분류할 수 있습니다. 두 Command는 **생산자-소비자 관계입니다.**
+### Q2: Why should `commit.md` and `release-note.md` be used together?
+**A**: The consistent Conventional Commits format commit messages generated by `commit.md` are the data consumed by `release-note.md`'s auto-classification engine. Formats like `feat(api):` must be followed for Phase 3 to accurately classify commits into "New Features", "Bug Fixes", and "Breaking Changes". The two commands have a **producer-consumer relationship.**
 
-### Q3: 커밋 메시지에 `Co-Authored-By: Claude` 같은 AI 생성 관련 메시지를 포함하면 안 되는 이유는 무엇인가요?
-**A**: 릴리스 노트 자동화에서 커밋 메시지를 파싱할 때 노이즈가 됩니다. Conventional Commits 형식의 `type(scope): description`만으로 커밋을 분류해야 하는데, 불필요한 메타데이터가 포함되면 파싱 정확도가 떨어지고 커밋 히스토리가 지저분해집니다.
+### Q3: Why should AI-generated messages like `Co-Authored-By: Claude` not be included in commit messages?
+**A**: They become noise when parsing commit messages in release note automation. Commits should be classified solely by the Conventional Commits format of `type(scope): description`, and including unnecessary metadata reduces parsing accuracy and makes the commit history messy.
 
-Part 2에서 살펴본 네 가지 주제(Command 개념, 문법, release-note.md 구조, commit.md 구조)를 바탕으로, 다음 Part에서는 5단계 워크플로우의 실제 동작을 하나씩 살펴보겠습니다.
+Based on the four topics covered in Part 2 (command concept, syntax, release-note.md structure, commit.md structure), the next Part will examine the actual operation of the 5-step workflow one by one.

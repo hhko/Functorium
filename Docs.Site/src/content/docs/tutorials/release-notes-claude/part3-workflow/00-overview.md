@@ -1,98 +1,98 @@
 ---
-title: "워크플로우 전체 개요"
+title: "Workflow Overview"
 ---
 
-`/release-note v1.2.0`을 입력하는 순간, 자동화 워크플로우가 시작됩니다. 이 명령 하나로 환경 검증부터 최종 품질 확인까지, 5개의 Phase가 순차적으로 실행되어 완성된 릴리스 노트를 생성합니다.
+The moment you type `/release-note v1.2.0`, the automation workflow begins. With this single command, 5 Phases execute sequentially from environment verification to final quality check, generating a complete release note.
 
-## 5-Phase 워크플로우
+## 5-Phase Workflow
 
 ```mermaid
 flowchart LR
   subgraph Release["/release-note v1.2.0"]
-    P1["Phase 1<br/>환경 검증"] --> P2["Phase 2<br/>데이터 수집"] --> P3["Phase 3<br/>커밋 분석"] --> P4["Phase 4<br/>문서 작성"] --> P5["Phase 5<br/>검증"]
+    P1["Phase 1<br/>Environment<br/>Verification"] --> P2["Phase 2<br/>Data<br/>Collection"] --> P3["Phase 3<br/>Commit<br/>Analysis"] --> P4["Phase 4<br/>Document<br/>Writing"] --> P5["Phase 5<br/>Validation"]
 
-    P1 -.-> O1["Base/Target<br/>결정"]
+    P1 -.-> O1["Base/Target<br/>Decision"]
     P2 -.-> O2[".analysis-<br/>output/*.md"]
     P3 -.-> O3["phase3-*.md"]
     P4 -.-> O4["RELEASE-*.md"]
-    P5 -.-> O5["검증보고서"]
+    P5 -.-> O5["Validation<br/>Report"]
   end
 ```
 
-각 Phase가 하는 일을 간략히 살펴보겠습니다.
+Let's briefly look at what each Phase does.
 
-| Phase | 목표 | 입력 | 출력 | 담당 |
-|-------|------|------|------|------|
-| **1** | 환경 검증 | 버전 파라미터 | Base/Target 결정 | Claude |
-| **2** | 데이터 수집 | Base/Target | 분석 파일 (.md) | C# 스크립트 |
-| **3** | 커밋 분석 | 분석 파일 | 기능 그룹화 | Claude |
-| **4** | 문서 작성 | 기능 그룹화 | 릴리스 노트 | Claude |
-| **5** | 검증 | 릴리스 노트 | 검증 보고서 | Claude |
+| Phase | Goal | Input | Output | Handler |
+|-------|------|-------|--------|---------|
+| **1** | Environment Verification | Version parameter | Base/Target decision | Claude |
+| **2** | Data Collection | Base/Target | Analysis files (.md) | C# scripts |
+| **3** | Commit Analysis | Analysis files | Feature grouping | Claude |
+| **4** | Document Writing | Feature grouping | Release notes | Claude |
+| **5** | Validation | Release notes | Validation report | Claude |
 
-**Phase 1에서는** Git 저장소, .NET SDK, 스크립트 디렉터리 등 필수 환경을 확인하고, 이전 릴리스 브랜치를 기준으로 비교 범위(Base/Target)를 결정합니다. 약 10초면 끝나는 빠른 단계이지만, 여기서 실패하면 전체 프로세스가 중단됩니다.
+**In Phase 1,** prerequisite environments such as the Git repository, .NET SDK, and script directory are checked, and the comparison range (Base/Target) is determined based on the previous release branch. It is a quick step that finishes in about 10 seconds, but if it fails here, the entire process stops.
 
-**Phase 2에서는** C# 스크립트 두 개가 실행됩니다. `AnalyzeAllComponents.cs`가 컴포넌트별 커밋 히스토리를 수집하고, `ExtractApiChanges.cs`가 프로젝트를 빌드하여 Public API를 추출합니다. 30초에서 2분 정도 소요되며, 이후 모든 분석의 원천 데이터가 이 단계에서 만들어집니다.
+**In Phase 2,** two C# scripts are executed. `AnalyzeAllComponents.cs` collects per-component commit history, and `ExtractApiChanges.cs` builds projects to extract Public APIs. It takes 30 seconds to 2 minutes, and the source data for all subsequent analysis is created at this stage.
 
-**Phase 3에서는** 수집된 원시 데이터를 의미 있는 정보로 변환합니다. 커밋 메시지와 API Diff를 분석하여 Breaking Changes를 식별하고, 관련 커밋들을 기능 단위로 그룹화합니다. 1~3분 소요됩니다.
+**In Phase 3,** the collected raw data is transformed into meaningful information. Breaking Changes are identified by analyzing commit messages and API Diffs, and related commits are grouped by feature. It takes 1-3 minutes.
 
-**Phase 4는** 가장 시간이 많이 걸리는 단계(5~15분)로, 분석 결과를 바탕으로 실제 릴리스 노트 문서를 작성합니다. 템플릿을 기반으로 각 섹션을 채우고, 모든 코드 예제을 Uber 파일로 검증합니다.
+**Phase 4** is the most time-consuming step (5-15 minutes), where the actual release note document is written based on the analysis results. Each section is filled based on the template, and all code examples are verified against the Uber file.
 
-**Phase 5에서는** 완성된 릴리스 노트의 API 정확성, Breaking Changes 완전성, 구조적 품질을 최종 검증합니다. 1~3분이면 완료되며, 검증 보고서가 함께 생성됩니다.
+**In Phase 5,** the API accuracy, Breaking Changes completeness, and structural quality of the completed release notes are finally verified. It completes in 1-3 minutes, and a validation report is generated alongside.
 
-전체 소요 시간은 약 8~25분입니다. 기존 수동 작성 시 2~3시간이 걸리던 것에 비해 **약 85%가 단축됩니다.**
+The total time required is approximately 8-25 minutes. Compared to the 2-3 hours it used to take with manual writing, **approximately 85% is saved.**
 
-## 데이터 흐름 상세
+## Detailed Data Flow
 
-아래 다이어그램은 각 Phase에서 어떤 데이터가 생성되고, 다음 Phase로 어떻게 전달되는지 보여줍니다. 각 Phase는 이전 Phase의 출력에 의존하므로, 중간에 하나라도 실패하면 이후 단계는 진행할 수 없습니다.
+The diagram below shows what data is generated in each Phase and how it is passed to the next Phase. Since each Phase depends on the output of the previous Phase, if even one fails in the middle, subsequent steps cannot proceed.
 
 ```mermaid
 flowchart TB
   Input["/release-note v1.2.0"]
 
-  subgraph Ph1["Phase 1: 환경 검증"]
-    Ph1_Work["입력: 버전 파라미터 (v1.2.0)<br/>검증: Git 저장소, .NET SDK, 스크립트 디렉터리<br/>결정: Base Branch"]
+  subgraph Ph1["Phase 1: Environment Verification"]
+    Ph1_Work["Input: Version parameter (v1.2.0)<br/>Verify: Git repository, .NET SDK, script directory<br/>Decide: Base Branch"]
   end
-  Ph1 -.-> Ph1_Out["Base/Target 범위"]
+  Ph1 -.-> Ph1_Out["Base/Target Range"]
 
-  subgraph Ph2["Phase 2: 데이터 수집"]
-    Ph2_Work["AnalyzeAllComponents.cs → 컴포넌트별 분석<br/>ExtractApiChanges.cs → API 추출 및 Uber 파일"]
+  subgraph Ph2["Phase 2: Data Collection"]
+    Ph2_Work["AnalyzeAllComponents.cs → Per-component analysis<br/>ExtractApiChanges.cs → API extraction and Uber file"]
   end
   Ph2 -.-> Ph2_Out["Functorium.md<br/>Functorium.Testing.md<br/>all-api-changes.txt<br/>api-changes-diff.txt<br/>analysis-summary.md"]
 
-  subgraph Ph3["Phase 3: 커밋 분석 및 기능 추출"]
-    Ph3_Work["Breaking Changes 식별<br/>Feature/Fix 커밋 분류<br/>기능별 그룹화"]
+  subgraph Ph3["Phase 3: Commit Analysis and Feature Extraction"]
+    Ph3_Work["Breaking Changes identification<br/>Feature/Fix commit classification<br/>Per-feature grouping"]
   end
   Ph3 -.-> Ph3_Out["phase3-commit-analysis.md<br/>phase3-feature-groups.md"]
 
-  subgraph Ph4["Phase 4: 릴리스 노트 작성"]
-    Ph4_Work["템플릿 복사 및 Placeholder 교체<br/>각 섹션 채우기<br/>API 검증<br/>Why this matters 작성"]
+  subgraph Ph4["Phase 4: Release Note Writing"]
+    Ph4_Work["Template copy and placeholder replacement<br/>Fill each section<br/>API verification<br/>Why this matters writing"]
   end
   Ph4 -.-> Ph4_Out["RELEASE-v1.2.0.md<br/>phase4-api-references.md"]
 
-  subgraph Ph5["Phase 5: 검증"]
-    Ph5_Work["프론트매터 확인<br/>필수 섹션 확인<br/>API 정확성 검증<br/>Breaking Changes 완전성"]
+  subgraph Ph5["Phase 5: Validation"]
+    Ph5_Work["Frontmatter check<br/>Required sections check<br/>API accuracy verification<br/>Breaking Changes completeness"]
   end
   Ph5 -.-> Ph5_Out["phase5-validation-report.md<br/>phase5-api-validation.md"]
 
-  Input --> Ph1 --> Ph2 --> Ph3 --> Ph4 --> Ph5 --> Done["완료"]
+  Input --> Ph1 --> Ph2 --> Ph3 --> Ph4 --> Ph5 --> Done["Complete"]
 ```
 
-## 파일 생성 흐름
+## File Generation Flow
 
-워크플로우 실행 전후로 디렉터리 구조가 어떻게 변하는지 살펴보겠습니다. 기존 `TEMPLATE.md`와 스크립트는 그대로 유지되고, 새로운 분석 결과물과 최종 릴리스 노트가 추가됩니다.
+Let's look at how the directory structure changes before and after the workflow execution. Existing `TEMPLATE.md` and scripts remain intact, and new analysis results and the final release notes are added.
 
 ```txt
-실행 전                          실행 후
-───────                          ──────
+Before Execution                  After Execution
+───────────────                   ───────────────
 
 .release-notes/                  .release-notes/
 ├── TEMPLATE.md                  ├── TEMPLATE.md
-└── scripts/                     ├── RELEASE-v1.2.0.md ← 새로 생성
+└── scripts/                     ├── RELEASE-v1.2.0.md ← Newly generated
     ├── *.cs                     └── scripts/
     └── docs/                        ├── *.cs
         └── *.md                     ├── docs/
                                      │   └── *.md
-                                     └── .analysis-output/ ← 새로 생성
+                                     └── .analysis-output/ ← Newly generated
                                          ├── Functorium.md
                                          ├── Functorium.Testing.md
                                          ├── analysis-summary.md
@@ -107,31 +107,31 @@ flowchart TB
                                              └── phase5-api-validation.md
 ```
 
-## 오류 발생 시 동작
+## Behavior on Error
 
-Phase 1~3에서 오류가 발생하면 전체 프로세스가 즉시 중단됩니다. Phase 1은 Git 저장소나 .NET SDK가 없을 때, Phase 2는 스크립트 실행이나 빌드가 실패할 때, Phase 3는 분석 파일이 없을 때 중단됩니다.
+When errors occur in Phases 1-3, the entire process stops immediately. Phase 1 stops when the Git repository or .NET SDK is not found, Phase 2 when script execution or build fails, and Phase 3 when analysis files are missing.
 
-Phase 4와 5는 다소 다르게 동작합니다. Phase 4에서 템플릿이 없거나 API 검증이 실패하면 불완전한 릴리스 노트가 생성되고, Phase 5에서 검증 기준에 미달하면 문제점이 검증 보고서에 기록됩니다. 이 경우 문서를 수정한 뒤 검증을 다시 실행할 수 있습니다.
+Phases 4 and 5 behave somewhat differently. In Phase 4, if the template is missing or API verification fails, an incomplete release note is generated, and in Phase 5, if the validation criteria are not met, the issues are recorded in the validation report. In this case, the document can be corrected and validation re-run.
 
-## 핵심 원칙
+## Core Principles
 
-이 워크플로우를 관통하는 세 가지 원칙이 있습니다.
+Three principles run through this workflow.
 
-**정확성 우선으로,** 모든 API는 Uber 파일(`all-api-changes.txt`)에서 검증합니다. Phase 4에서 한 번, Phase 5에서 다시 한 번 교차 검증하여 존재하지 않는 API가 문서에 포함되는 것을 방지합니다.
+**Accuracy first --** all APIs are verified against the Uber file (`all-api-changes.txt`). Cross-verification once in Phase 4 and once again in Phase 5 prevents non-existent APIs from being included in the document.
 
-**추적성을 위해** 모든 결과물에 출처를 명시합니다. 커밋 SHA 주석, 중간 결과 파일 저장, 검증 보고서 생성을 통해 릴리스 노트의 모든 내용이 실제 코드 변경으로 추적 가능합니다.
+**For traceability,** all artifacts cite their sources. Through commit SHA annotations, intermediate result file storage, and validation report generation, all content in the release notes is traceable to actual code changes.
 
-**모듈화를 통해** 각 Phase를 독립적인 문서로 정의합니다. 마스터 문서(`release-note.md`)가 전체 흐름을 관장하고, 각 Phase 상세 문서가 구체적인 실행 방법을 담고 있어 유지보수와 확장이 용이합니다.
+**Through modularization,** each Phase is defined as an independent document. The master document (`release-note.md`) manages the overall flow, and each Phase detail document contains the specific execution methods, making maintenance and extension easy.
 
 ## FAQ
 
-### Q1: 5-Phase 워크플로우의 전체 소요 시간은 얼마나 되나요?
-**A**: 약 8~25분입니다. Phase 1(환경 검증)은 10초, Phase 2(데이터 수집)는 30초~2분, Phase 3(커밋 분석)은 1~3분, Phase 4(문서 작성)는 5~15분, Phase 5(검증)는 1~3분 정도 소요됩니다. 기존 수동 작성 대비 **약 85%가 단축됩니다.**
+### Q1: What is the total time for the 5-Phase workflow?
+**A**: Approximately 8-25 minutes. Phase 1 (Environment Verification) takes about 10 seconds, Phase 2 (Data Collection) 30 seconds to 2 minutes, Phase 3 (Commit Analysis) 1-3 minutes, Phase 4 (Document Writing) 5-15 minutes, and Phase 5 (Validation) 1-3 minutes. Compared to manual writing, **approximately 85% is saved.**
 
-### Q2: Phase 중간에 오류가 발생하면 전체를 처음부터 다시 실행해야 하나요?
-**A**: Phase 1~3에서 오류가 발생하면 프로세스가 즉시 중단되므로, 원인을 해결한 뒤 다시 실행해야 합니다. 단, Phase 2에서 생성된 분석 파일은 `.analysis-output/`에 남아 있으므로 Phase 2만 재실행할 수 있습니다. Phase 4~5는 불완전한 결과가 생성된 후 수정 및 재검증이 가능합니다.
+### Q2: If an error occurs mid-Phase, do you have to re-run everything from the beginning?
+**A**: If an error occurs in Phases 1-3, the process stops immediately, so you need to resolve the cause and run again. However, analysis files generated in Phase 2 remain in `.analysis-output/`, so only Phase 2 can be re-run. Phases 4-5 allow correction and re-validation after an incomplete result is generated.
 
-### Q3: 각 Phase의 입출력이 명시된 이유는 무엇인가요?
-**A**: 각 Phase가 이전 Phase의 출력에 의존하는 **파이프라인 구조이기** 때문입니다. 입출력을 명시하면 Phase 간 데이터 흐름이 명확해지고, 문제 발생 시 어느 Phase의 출력이 잘못되었는지 빠르게 진단할 수 있습니다. 중간 결과 파일이 디버깅 도구 역할을 합니다.
+### Q3: Why are the inputs and outputs of each Phase explicitly specified?
+**A**: Because it is a **pipeline structure where each Phase depends on the output of the previous Phase.** Specifying inputs and outputs makes the data flow between Phases clear, and when problems occur, you can quickly diagnose which Phase's output is incorrect. Intermediate result files serve as debugging tools.
 
-이제 각 Phase의 상세 내용을 하나씩 살펴보겠습니다. [Phase 1: 환경 검증](01-phase1-setup.md)부터 시작합니다.
+Now let's examine each Phase in detail. Starting with [Phase 1: Environment Verification](01-phase1-setup.md).

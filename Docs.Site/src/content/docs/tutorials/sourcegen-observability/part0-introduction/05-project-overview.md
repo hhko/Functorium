@@ -1,20 +1,20 @@
 ---
-title: "프로젝트 개요"
+title: "Project Overview"
 ---
 
-## 개요
+## Overview
 
-앞의 두 장에서 소스 생성기의 개념과 선택 이유를 다루었습니다. 이제 이론을 실제 프로젝트에 연결할 차례입니다. 이 장에서는 튜토리얼 전체에 걸쳐 구현할 **ObservablePortGenerator**의 설계 목표, 해결하려는 문제, 그리고 프로젝트 구조를 소개합니다. 여기서 그리는 전체 그림이 이후 각 장의 학습 맥락이 됩니다.
+The previous two chapters covered the concept and rationale for source generators. Now it's time to connect theory to a real project. This chapter introduces the design goals, the problem being solved, and the project structure of the **ObservablePortGenerator** that we will implement throughout this tutorial. The big picture drawn here becomes the learning context for each subsequent chapter.
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **ObservablePortGenerator의 목적과 기대 효과 이해**
-   - 어댑터 계층의 횡단 관심사 문제와 자동화 필요성 파악
-2. **소스 생성기로 구현한 이유 파악**
-   - 런타임 AOP 대비 컴파일 타임 생성의 구체적 이점
-3. **전체 프로젝트 구조 파악**
-   - 소스 생성기, 핵심 라이브러리, 테스트 프로젝트의 관계
+### Core Learning Objectives
+1. **Understand the purpose and expected benefits of ObservablePortGenerator**
+   - Identify the cross-cutting concern problem in the adapter layer and the need for automation
+2. **Understand the reasons for implementing with a source generator**
+   - Specific advantages of compile-time generation over runtime AOP
+3. **Understand the overall project structure**
+   - The relationship between the source generator, core library, and test projects
 
 ---
 

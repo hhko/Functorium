@@ -2,99 +2,99 @@
 title: "Why Release Notes"
 ---
 
-라이브러리를 업데이트했는데, 릴리스 노트 어디에도 언급되지 않은 Breaking Change 때문에 빌드가 깨진 경험이 있으신가요? 혹은 "이번 버전에서 뭐가 바뀌었지?" 하고 찾아봤는데, 달랑 "버그 수정 및 성능 개선" 한 줄만 적혀 있어 답답했던 적은요?
+Have you ever updated a library only to have your build break due to a Breaking Change that was never mentioned anywhere in the release notes? Or tried to find out "what changed in this version?" only to find a single line reading "bug fixes and performance improvements"?
 
-릴리스 노트는 단순한 변경 기록이 아닙니다. 사용자와 개발자 사이를 잇는 **커뮤니케이션 도구입니다.** 새로운 기능, 개선사항, 버그 수정, Breaking Changes, 설치 방법까지 -- 새 버전으로 전환하기 위해 필요한 모든 정보가 이 한 문서에 담깁니다.
-
----
-
-## 왜 릴리스 노트가 중요한가?
-
-### 사용자의 관점
-
-사용자가 업데이트를 앞두고 가장 먼저 확인하는 것이 릴리스 노트입니다. "이번 업데이트로 무엇이 좋아졌나?", "내 코드를 수정해야 하나?", "새로운 기능을 어떻게 사용하나?", "알려진 문제가 있나?" -- 이 네 가지 질문에 명쾌하게 답할 수 있는 릴리스 노트라면, 사용자는 업데이트 여부를 빠르게 결정하고 필요한 마이그레이션을 계획할 수 있습니다.
-
-### 개발팀의 관점
-
-개발팀에게 릴리스 노트는 **변경 이력의 공식 기록입니다.** 언제, 무엇이, 왜 변경되었는지 추적할 수 있고, 팀원 간 변경사항을 공유하는 채널이 됩니다. 변경사항을 문서화하는 과정에서 누락된 부분을 발견하는 품질 관리 효과도 있으며, 고객 지원 시 참조 문서로도 활용됩니다.
-
-### 프로젝트 신뢰성
-
-잘 작성된 릴리스 노트는 성숙한 프로젝트의 신호입니다. 체계적인 버전 관리, 사용자 중심의 커뮤니케이션, 투명한 개발 프로세스, 장기적인 유지보수 의지 -- 이 모든 것이 릴리스 노트 하나에 드러납니다.
+Release notes are more than a simple change log. They are a **communication tool that bridges the gap between users and developers.** New features, improvements, bug fixes, Breaking Changes, installation instructions -- all the information needed to transition to a new version is captured in this single document.
 
 ---
 
-## 수동 작성의 현실
+## Why Are Release Notes Important?
 
-대부분의 프로젝트에서 릴리스 노트는 여전히 수동으로 작성됩니다. 릴리스 직전에 Git 로그를 열어 커밋을 훑고, 중요한 것을 골라 분류하고, 문서를 작성한 뒤 검토하는 과정을 거칩니다. 전형적인 경우 Git 로그 확인에 15분, 중요 커밋 선별에 30분, 변경사항 분류에 20분, 문서 작성에 1시간, 검토 및 수정에 30분 -- **총 2시간 30분 이상이** 소요됩니다.
+### The User's Perspective
 
-시간 문제만이 아닙니다. 수동 작성에는 구조적인 한계가 있습니다.
+Release notes are the first thing users check before updating. "What improved with this update?", "Do I need to modify my code?", "How do I use the new features?", "Are there known issues?" -- if a release note can clearly answer these four questions, users can quickly decide whether to update and plan any necessary migrations.
 
-**누락과 오류가 빈번합니다.** 커밋을 빠뜨리거나 잘못 분류하기 쉽고, API 변경사항이 누락되거나 Breaking Changes를 감지하지 못하는 일이 흔합니다. 코드 예제에 오타가 섞여 들어가기도 합니다.
+### The Development Team's Perspective
 
-**일관성을 유지하기 어렵습니다.** 같은 프로젝트라도 작성자에 따라 릴리스 노트의 형식과 깊이가 달라집니다. "새로운 기능 추가됨" 한 줄로 끝나는 것과, 코드 예제와 함께 왜 이 기능이 중요한지까지 설명하는 것 사이에는 큰 차이가 있습니다.
+For the development team, release notes serve as **the official record of change history.** They allow tracking of what changed, when, and why, and act as a channel for sharing changes among team members. The process of documenting changes also has a quality assurance effect by revealing overlooked items, and the notes can be used as reference documentation for customer support.
+
+### Project Credibility
+
+Well-written release notes are a sign of a mature project. Systematic version management, user-centric communication, a transparent development process, and a commitment to long-term maintenance -- all of these are reflected in a single set of release notes.
+
+---
+
+## The Reality of Manual Writing
+
+In most projects, release notes are still written manually. Just before a release, you open the Git log, scan through commits, pick out the important ones, classify them, write the document, and review it. In a typical case, this takes about 15 minutes to check the Git log, 30 minutes to select important commits, 20 minutes to classify changes, 1 hour to write the document, and 30 minutes for review and revisions -- **a total of over 2 hours and 30 minutes.**
+
+Time is not the only issue. Manual writing has structural limitations.
+
+**Omissions and errors are frequent.** It is easy to miss commits or misclassify them. API changes may be omitted, Breaking Changes may go undetected, and typos may creep into code examples.
+
+**Maintaining consistency is difficult.** Even within the same project, the format and depth of release notes vary depending on who writes them. There is a big difference between a one-liner "New feature added" and a detailed explanation with code examples that also describes why the feature matters.
 
 ````
-프로젝트 A의 릴리스 노트:
-"- 새로운 기능 추가됨"
+Project A's release notes:
+"- New feature added"
 ````
 ````
-프로젝트 B의 릴리스 노트:
-### 새로운 기능
-#### UserService 클래스 추가
-`UserService`는 사용자 관리를 위한 클래스입니다.
+Project B's release notes:
+### New Features
+#### UserService Class Added
+`UserService` is a class for user management.
 ```csharp
 var service = new UserService();
 ```
-**Why this matters (왜 중요한가):**
-- 사용자 관리 로직 중앙화
-- 테스트 용이성 향상
+**Why this matters:**
+- Centralized user management logic
+- Improved testability
 ````
 
-어떤 릴리스 노트가 더 유용할까요?
+Which release notes are more useful?
 
-**검증도 어렵습니다.** 수동 작성으로는 문서화된 API가 실제로 존재하는지, 코드 예제이 실행 가능한지, 모든 Breaking Changes가 빠짐없이 포함되었는지 확인하기가 사실상 불가능합니다.
-
----
-
-## 자동화가 바꾸는 것
-
-이 문제들을 자동화로 해결하면 어떻게 될까요?
-
-가장 체감되는 변화는 **시간입니다.** `/release-note v1.2.0` 명령 하나를 실행하고 결과를 검토하는 데 약 15분이면 충분합니다. 수동 작성 대비 **85% 단축입니다.**
-
-**정확성도 크게 향상됩니다.** Git 기반으로 모든 커밋을 자동 수집하므로 누락이 없고, 실제 코드에서 API를 추출하여 검증하며, Git diff로 삭제되거나 변경된 API를 자동으로 탐지합니다.
-
-**일관된 품질이 보장됩니다.** 모든 릴리스 노트가 동일한 템플릿 구조를 따릅니다 -- 개요, Breaking Changes, 새로운 기능(각 기능에 "Why this matters" 섹션 필수), 버그 수정, API 변경사항, 설치 방법. 작성자가 누구든, 언제 만들든 같은 품질입니다.
-
-**검증이 자동으로 이루어집니다.** 모든 API가 실제 코드에 존재하는지, 코드 예제이 API 정의와 일치하는지, 필수 섹션이 모두 포함되었는지 시스템이 확인합니다.
+**Verification is also difficult.** With manual writing, it is practically impossible to confirm whether the documented API actually exists, whether the code examples are runnable, or whether all Breaking Changes are comprehensively included.
 
 ---
 
-## 이 튜토리얼에서 다루는 자동화 시스템
+## What Automation Changes
 
-이 튜토리얼에서는 Functorium 프로젝트의 릴리스 노트 자동화 시스템을 분석합니다. 이 시스템은 세 가지 핵심 요소로 구성됩니다.
+What happens when we solve these problems with automation?
 
-첫째, **Claude Code 사용자 정의 Command**(`release-note.md`)가 전체 워크플로우를 정의하고 오케스트레이션합니다. 둘째, **5-Phase 워크플로우가** 환경 검증부터 최종 검증까지의 단계를 체계적으로 관리합니다. 셋째, **.NET 10 file-based app으로** 작성된 **C# 스크립트**(`AnalyzeAllComponents.cs`, `ExtractApiChanges.cs`)가 실제 데이터 수집과 분석을 수행합니다.
+The most noticeable change is **time.** Running a single command `/release-note v1.2.0` and reviewing the result takes about 15 minutes. That is an **85% reduction** compared to manual writing.
 
-Command가 워크플로우를 호출하고, 워크플로우가 C# 스크립트를 실행하는 계층 구조입니다. 각 구성요소의 상세한 아키텍처는 다음 절에서 살펴보겠습니다.
+**Accuracy also improves significantly.** Since all commits are automatically collected from Git, nothing is missed. APIs are extracted from actual code and verified, and deleted or changed APIs are automatically detected via Git diff.
+
+**Consistent quality is guaranteed.** All release notes follow the same template structure -- overview, Breaking Changes, new features (with a mandatory "Why this matters" section for each feature), bug fixes, API changes, and installation instructions. Regardless of who writes them or when, the quality remains the same.
+
+**Verification happens automatically.** The system checks that all APIs actually exist in the code, that code examples match API definitions, and that all required sections are included.
+
+---
+
+## The Automation System Covered in This Tutorial
+
+This tutorial analyzes the release note automation system of the Functorium project. The system consists of three core components.
+
+First, the **Claude Code custom command** (`release-note.md`) defines and orchestrates the entire workflow. Second, the **5-Phase workflow** systematically manages the steps from environment verification to final validation. Third, **C# scripts** (`AnalyzeAllComponents.cs`, `ExtractApiChanges.cs`) written as **.NET 10 file-based apps** perform the actual data collection and analysis.
+
+The command invokes the workflow, and the workflow executes the C# scripts in a layered structure. The detailed architecture of each component will be examined in the next section.
 
 ## FAQ
 
-### Q1: 릴리스 노트와 CHANGELOG의 차이는 무엇인가요?
-**A**: CHANGELOG는 모든 버전의 변경사항을 시간순으로 나열한 기술적 기록인 반면, **릴리스 노트는** 특정 버전의 변경사항을 사용자 관점에서 설명하는 커뮤니케이션 문서입니다. 릴리스 노트에는 "Why this matters" 같은 가치 설명, 코드 예제, 마이그레이션 가이드가 포함되어 사용자가 업데이트 여부를 판단하고 바로 적용할 수 있도록 돕습니다.
+### Q1: What is the difference between release notes and a CHANGELOG?
+**A**: A CHANGELOG is a technical record listing changes for all versions in chronological order, whereas **release notes** are a communication document that explains the changes of a specific version from the user's perspective. Release notes include value descriptions like "Why this matters", code examples, and migration guides to help users decide whether to update and apply changes immediately.
 
-### Q2: 자동화를 도입하면 수동 검토가 완전히 불필요해지나요?
-**A**: 아닙니다. 자동화는 데이터 수집, API 검증, 일관된 형식 보장을 담당하지만, 개요 섹션의 맥락 설명이나 "Why this matters" 섹션의 가치 전달은 사람의 검토가 필요합니다. 자동 생성 후 **약 15분의 수동 검토를** 거치는 것이 권장 워크플로우입니다.
+### Q2: Does adopting automation completely eliminate the need for manual review?
+**A**: No. Automation handles data collection, API verification, and consistent formatting, but the contextual explanation in the overview section and the value communication in the "Why this matters" section still require human review. The recommended workflow is **approximately 15 minutes of manual review** after automatic generation.
 
-### Q3: 이 자동화 시스템은 Functorium 프로젝트 외에도 적용할 수 있나요?
-**A**: 가능합니다. `component-priority.json`에서 분석 대상 폴더를 변경하고, `TEMPLATE.md`를 프로젝트에 맞게 수정하면 됩니다. 핵심 전제조건은 Git 저장소, .NET 10 SDK, Conventional Commits 형식의 커밋 히스토리입니다.
+### Q3: Can this automation system be applied to projects other than Functorium?
+**A**: Yes. You can change the analysis target folders in `component-priority.json` and modify `TEMPLATE.md` to fit your project. The core prerequisites are a Git repository, .NET 10 SDK, and a commit history in Conventional Commits format.
 
-### Q4: 다음 절에서는 무엇을 다루나요?
-**A**: 자동화 시스템의 세 가지 핵심 구성요소(Claude Code Command, 5-Phase 워크플로우, C# 스크립트)가 어떤 아키텍처로 연결되고, 데이터가 어떻게 흘러가는지 전체 구조를 살펴봅니다.
+### Q4: What is covered in the next section?
+**A**: We will look at how the three core components of the automation system (Claude Code command, 5-Phase workflow, C# scripts) are architecturally connected and how data flows through the entire structure.
 
 ---
 
-다음 절에서는 이 자동화 시스템의 전체 아키텍처와 데이터 흐름을 살펴봅니다.
+The next section examines the overall architecture and data flow of this automation system.
 
-[0.2 자동화 시스템 개요](02-automation-overview.md)
+[0.2 Automation System Overview](02-automation-overview.md)

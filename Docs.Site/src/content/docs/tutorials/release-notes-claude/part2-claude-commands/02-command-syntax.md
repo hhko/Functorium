@@ -2,29 +2,29 @@
 title: "Command Syntax"
 ---
 
-Command의 기본 개념은 이해했는데, 파일을 어떤 형식으로 작성해야 할까요? 단순히 Markdown을 쓰면 되는 걸까요, 아니면 특별한 규칙이 있을까요?
+You understand the basic concept of commands, but what format should the file be written in? Is it simply Markdown, or are there special rules?
 
-Command 파일은 YAML 프론트매터와 Markdown 본문으로 구성됩니다. 각 요소가 왜 필요한지를 이해하면 자신만의 Command를 설계할 때 더 나은 판단을 내릴 수 있습니다.
+A command file consists of YAML frontmatter and a Markdown body. Understanding why each element is needed will help you make better decisions when designing your own commands.
 
-## YAML 프론트매터
+## YAML Frontmatter
 
-프론트매터는 Command 파일의 메타데이터를 정의합니다. 파일 최상단에 `---`로 감싸서 작성하며, Claude Code가 이 정보를 읽어 자동완성 목록과 도움말을 표시합니다.
+The frontmatter defines the metadata of the command file. It is written at the top of the file enclosed by `---`, and Claude Code reads this information to display auto-completion lists and help.
 
-### 기본 형식
+### Basic Format
 
 ```yaml
 ---
 title: COMMAND-TITLE
-description: 명령어에 대한 설명
-argument-hint: "<arg> 인자에 대한 설명"
+description: Description of the command
+argument-hint: "<arg> Description of the argument"
 ---
 ```
 
-### 필드 상세
+### Field Details
 
-#### title (필수)
+#### title (Required)
 
-Command의 표시 이름입니다. 대문자와 하이픈 사용이 일반적입니다. 이 값은 Claude Code UI에서 Command를 식별하는 데 사용되므로, 명령어의 목적을 한눈에 알 수 있도록 작성합니다.
+The display name of the command. Uppercase and hyphens are common. This value is used to identify the command in the Claude Code UI, so write it so the purpose of the command is apparent at a glance.
 
 ```yaml
 title: RELEASE-NOTES
@@ -32,197 +32,197 @@ title: CODE-REVIEW
 title: GENERATE-TEST
 ```
 
-#### description (필수)
+#### description (Required)
 
-Command가 수행하는 작업에 대한 간단한 설명입니다. `/` 입력 시 자동완성 목록에 표시되므로, 팀원이 어떤 Command를 선택할지 판단하는 기준이 됩니다.
-
-```yaml
-description: 릴리스 노트를 자동으로 생성합니다
-description: 코드를 분석하고 리뷰 의견을 제시합니다
-```
-
-#### argument-hint (선택)
-
-인자에 대한 힌트 메시지입니다. `<>`로 필수 인자를, `[]`로 선택적 인자를 표현합니다. 이 힌트가 있으면 사용자가 어떤 값을 전달해야 하는지 바로 알 수 있습니다.
+A brief description of what the command does. It is displayed in the auto-completion list when `/` is typed, serving as a criterion for team members to decide which command to select.
 
 ```yaml
-# 단일 인자
-argument-hint: "<version> 릴리스 버전 (예: v1.2.0)"
-
-# 선택적 인자 표현
-argument-hint: "[topic] 선택적 토픽 필터"
-
-# 복수 인자 예시
-argument-hint: "<source> <target> 소스와 타겟 경로"
+description: Automatically generates release notes
+description: Analyzes code and provides review opinions
 ```
 
-## Markdown 본문 구조
+#### argument-hint (Optional)
 
-프론트매터 이후의 본문이 Claude에게 전달되는 실제 프롬프트입니다. 본문의 구조가 곧 Claude의 작업 흐름을 결정하므로, 논리적인 순서로 구성하는 것이 중요합니다.
+A hint message about the arguments. `<>` denotes required arguments and `[]` denotes optional arguments. With this hint, users immediately know what value to pass.
 
-### 권장 구조
+```yaml
+# Single argument
+argument-hint: "<version> Release version (e.g., v1.2.0)"
+
+# Optional argument expression
+argument-hint: "[topic] Optional topic filter"
+
+# Multiple arguments example
+argument-hint: "<source> <target> Source and target paths"
+```
+
+## Markdown Body Structure
+
+The body after the frontmatter is the actual prompt sent to Claude. Since the structure of the body determines Claude's workflow, organizing it in a logical order is important.
+
+### Recommended Structure
 
 ```markdown
 ---
-(프론트매터)
+(Frontmatter)
 ---
 
-# 명령어 제목
+# Command Title
 
-명령어 개요 설명
+Command overview description
 
-## 파라미터
+## Parameters
 
-파라미터 설명 및 검증 규칙
+Parameter description and validation rules
 
-## 워크플로우/단계
+## Workflow/Steps
 
-수행할 작업 단계
+Task steps to perform
 
-## 규칙/가이드라인
+## Rules/Guidelines
 
-따라야 할 규칙
+Rules to follow
 
-## 출력 형식
+## Output Format
 
-결과물 형식 정의
+Result format definition
 ```
 
-개요로 시작하여 파라미터를 검증하고, 워크플로우를 실행하고, 규칙을 따르고, 출력 형식에 맞춰 결과를 생성하는 흐름입니다. Claude는 이 순서대로 작업을 수행하게 됩니다.
+The flow starts with an overview, validates parameters, executes the workflow, follows rules, and generates results according to the output format. Claude will perform tasks in this order.
 
-### 예시: 완전한 Command 파일
+### Example: Complete Command File
 
 ````markdown
 ---
 title: API-DOC
-description: API 문서를 생성합니다
-argument-hint: "<class> 문서화할 클래스명"
+description: Generates API documentation
+argument-hint: "<class> Class name to document"
 ---
 
-# API 문서 생성
+# API Documentation Generation
 
-$ARGUMENTS 클래스에 대한 API 문서를 생성합니다.
+Generates API documentation for the $ARGUMENTS class.
 
-## 파라미터 검증
+## Parameter Validation
 
-**클래스명:** $ARGUMENTS
+**Class name:** $ARGUMENTS
 
-클래스명이 지정되지 않은 경우 오류를 출력하고 중단합니다.
+If the class name is not specified, output an error and stop.
 
-## 워크플로우
+## Workflow
 
-1. **클래스 검색**: 프로젝트에서 해당 클래스 찾기
-2. **분석**: public 멤버 추출
-3. **문서 생성**: Markdown 형식으로 작성
+1. **Class Search**: Find the class in the project
+2. **Analysis**: Extract public members
+3. **Documentation Generation**: Write in Markdown format
 
-## 문서 규칙
+## Documentation Rules
 
-- 모든 public 메서드 문서화
-- 매개변수와 반환값 설명 포함
-- 사용 예제 코드 포함
+- Document all public methods
+- Include parameter and return value descriptions
+- Include usage example code
 
-## 출력 형식
+## Output Format
 
 ```markdown
 # {ClassName}
 
-## 개요
-{클래스 설명}
+## Overview
+{Class description}
 
-## 메서드
+## Methods
 ### {MethodName}
-{메서드 설명}
+{Method description}
 
-**매개변수:**
-- `{param}`: {설명}
+**Parameters:**
+- `{param}`: {Description}
 
-**반환값:** {설명}
+**Return Value:** {Description}
 
-**예제:**
+**Example:**
 ```csharp
-{코드}
+{Code}
 ```
 ```
 ````
 
-## 효과적인 프롬프트 작성 기법
+## Effective Prompt Writing Techniques
 
-Command 본문은 결국 Claude에게 보내는 프롬프트입니다. 프롬프트를 어떻게 작성하느냐에 따라 결과 품질이 크게 달라집니다. 여기서는 실제로 효과가 검증된 다섯 가지 기법을 소개합니다.
+The command body is ultimately a prompt sent to Claude. How you write the prompt significantly affects the quality of the results. Here are five techniques that have been proven effective in practice.
 
-### 1. 명확한 지시어 사용
+### 1. Use Clear Directives
 
-Claude에게 작업 순서를 지시할 때는 "순서대로"라고 명시하고 번호를 매기는 것이 중요합니다. "A, B, C를 해주세요"라고 뭉뚱그려 말하면 Claude가 순서를 임의로 정하거나 일부를 건너뛸 수 있습니다.
-
-```markdown
-# 좋은 예
-다음 단계를 **순서대로** 실행하세요:
-1. 먼저 A를 수행
-2. 그 다음 B를 수행
-3. 마지막으로 C를 수행
-
-# 피해야 할 예
-A, B, C를 해주세요.
-```
-
-### 2. 조건문 활용
-
-실행 시점에 따라 상황이 달라질 수 있으므로, 조건별 동작을 명시하면 Claude가 상황에 맞게 대응할 수 있습니다. 특히 인자 유무에 따른 분기는 거의 모든 Command에 필요합니다.
+When instructing Claude on task order, it is important to explicitly say "in order" and use numbers. If you lump things together as "do A, B, C", Claude may arrange the order arbitrarily or skip some steps.
 
 ```markdown
-## 버전 파라미터 ($ARGUMENTS)
+# Good example
+Execute the following steps **in order**:
+1. First, perform A
+2. Then perform B
+3. Finally perform C
 
-**버전이 지정된 경우:** $ARGUMENTS
-
-버전 파라미터는 필수입니다.
-
-**버전이 지정되지 않은 경우:**
-다음 오류 메시지를 출력하고 중단합니다:
-> 버전을 지정해주세요. 예: /release-note v1.2.0
+# Example to avoid
+Do A, B, C.
 ```
 
-### 3. 체크리스트 형식
+### 2. Use Conditionals
 
-검증 단계에서 체크리스트를 사용하면 Claude가 각 항목을 하나씩 확인하도록 유도할 수 있습니다. 누락 방지에 효과적입니다.
+Since situations may differ depending on the execution time, specifying behavior per condition allows Claude to respond appropriately. Branch logic based on argument presence is needed in almost every command.
 
 ```markdown
-## 검증 체크리스트
+## Version Parameter ($ARGUMENTS)
 
-다음 항목을 모두 확인하세요:
+**When version is specified:** $ARGUMENTS
 
-- [ ] 프론트매터가 포함되어 있는가?
-- [ ] 모든 필수 섹션이 있는가?
-- [ ] 코드 예제이 검증되었는가?
-- [ ] Breaking Changes가 문서화되었는가?
+The version parameter is required.
+
+**When version is not specified:**
+Output the following error message and stop:
+> Please specify a version. Example: /release-note v1.2.0
 ```
 
-### 4. 표 활용
+### 3. Checklist Format
 
-여러 단계의 목표와 출력을 한눈에 보여주려면 표가 효과적입니다. Claude도 표 형식의 정보를 잘 해석합니다.
+Using checklists in verification steps guides Claude to check each item one by one. It is effective for preventing omissions.
 
 ```markdown
-## Phase별 목표
+## Verification Checklist
 
-| Phase | 목표 | 출력 |
-|-------|------|------|
-| 1 | 환경 검증 | Base/Target 결정 |
-| 2 | 데이터 수집 | .analysis-output/*.md |
-| 3 | 커밋 분석 | phase3-*.md |
-| 4 | 문서 작성 | RELEASE-*.md |
-| 5 | 검증 | 검증 보고서 |
+Check all of the following items:
+
+- [ ] Is the frontmatter included?
+- [ ] Are all required sections present?
+- [ ] Have the code examples been verified?
+- [ ] Have Breaking Changes been documented?
 ```
 
-### 5. 코드 블록 지정
+### 4. Using Tables
 
-Claude가 실행해야 할 명령어나 생성해야 할 결과물은 코드 블록으로 감싸면 정확도가 높아집니다. 언어 태그(bash, markdown 등)를 붙이면 Claude가 맥락을 더 잘 파악합니다.
+Tables are effective for showing the goals and outputs of multiple steps at a glance. Claude also interprets tabular information well.
+
+```markdown
+## Per-Phase Goals
+
+| Phase | Goal | Output |
+|-------|------|--------|
+| 1 | Environment Verification | Base/Target Decision |
+| 2 | Data Collection | .analysis-output/*.md |
+| 3 | Commit Analysis | phase3-*.md |
+| 4 | Document Writing | RELEASE-*.md |
+| 5 | Validation | Validation Report |
+```
+
+### 5. Code Block Specification
+
+Wrapping commands Claude needs to execute or results it needs to generate in code blocks improves accuracy. Adding language tags (bash, markdown, etc.) helps Claude better understand the context.
 
 ````markdown
-## 실행할 명령어
+## Commands to Execute
 
 ```bash
 dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target HEAD
 ```
 
-## 출력 예시
+## Output Example
 
 ```markdown
 # Analysis for Src/Functorium
@@ -232,146 +232,146 @@ dotnet AnalyzeAllComponents.cs --base origin/release/1.0 --target HEAD
 ```
 ````
 
-## 문서 참조 방식
+## Document Reference Methods
 
-Command가 복잡해지면 모든 지침을 하나의 파일에 담기 어렵습니다. 이때 다른 문서를 참조하여 상세 정보를 분리할 수 있으며, Claude는 참조된 문서를 필요에 따라 읽고 지침을 따릅니다.
+When a command becomes complex, it is difficult to fit all instructions in a single file. You can reference other documents to separate detailed information, and Claude reads the referenced documents as needed and follows the instructions.
 
-### 상대 경로 참조
-
-```markdown
-## Phase 1: 환경 검증
-
-**상세**: [phase1-setup.md](.release-notes/scripts/docs/phase1-setup.md)
-
-위 문서의 지침을 따라 환경을 검증하세요.
-```
-
-### 참조 테이블
+### Relative Path Reference
 
 ```markdown
-## 참고 문서
+## Phase 1: Environment Verification
 
-| Phase | 문서 | 설명 |
-|-------|------|------|
-| 1 | [phase1-setup.md](...) | 환경 검증 |
-| 2 | [phase2-collection.md](...) | 데이터 수집 |
-| 3 | [phase3-analysis.md](...) | 커밋 분석 |
+**Details**: [phase1-setup.md](.release-notes/scripts/docs/phase1-setup.md)
+
+Follow the instructions in the above document to verify the environment.
 ```
 
-## 출력 형식 정의
+### Reference Table
 
-Command의 결과물 형식을 명확히 정의하면 일관된 출력을 얻을 수 있습니다. 형식을 정의하지 않으면 Claude가 매번 다른 형태로 결과를 생성할 수 있으므로, 특히 파일 출력이 있는 Command에서는 형식 정의가 필수적입니다.
+```markdown
+## Reference Documents
 
-### 파일 출력
+| Phase | Document | Description |
+|-------|----------|-------------|
+| 1 | [phase1-setup.md](...) | Environment Verification |
+| 2 | [phase2-collection.md](...) | Data Collection |
+| 3 | [phase3-analysis.md](...) | Commit Analysis |
+```
+
+## Output Format Definition
+
+Clearly defining the result format of a command ensures consistent output. Without a format definition, Claude may generate results in a different form each time, so format definition is essential especially for commands with file output.
+
+### File Output
 
 ````markdown
-## 출력 파일
+## Output File
 
-**파일명:** `.release-notes/RELEASE-$ARGUMENTS.md`
+**Filename:** `.release-notes/RELEASE-$ARGUMENTS.md`
 
-**형식:**
+**Format:**
 ```markdown
 ---
-title: Functorium $ARGUMENTS 새로운 기능
-date: {오늘 날짜}
+title: Functorium $ARGUMENTS New Features
+date: {today's date}
 ---
 
 # Functorium Release $ARGUMENTS
 
-## 개요
+## Overview
 ...
 ```
 ````
 
-### 콘솔 출력
+### Console Output
 
 ````markdown
-## 완료 메시지
+## Completion Message
 
-작업 완료 시 다음 형식으로 출력하세요:
+Upon completion, output in the following format:
 
 ```txt
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-릴리스 노트 생성 완료
+Release Note Generation Complete
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-버전: $ARGUMENTS
-파일: .release-notes/RELEASE-$ARGUMENTS.md
+Version: $ARGUMENTS
+File: .release-notes/RELEASE-$ARGUMENTS.md
 
-통계:
-| 항목 | 값 |
-|------|-----|
-| 새로운 기능 | N개 |
-| 버그 수정 | N개 |
-| Breaking Changes | N개 |
+Statistics:
+| Item | Value |
+|------|-------|
+| New Features | N |
+| Bug Fixes | N |
+| Breaking Changes | N |
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 ````
 
-## 고급 기법
+## Advanced Techniques
 
-지금까지 살펴본 기본 문법만으로도 대부분의 Command를 작성할 수 있습니다. 하지만 릴리스 노트 자동화처럼 여러 단계로 구성된 복잡한 워크플로우에서는 몇 가지 추가 기법이 필요합니다.
+The basic syntax covered so far is sufficient for writing most commands. However, for complex workflows consisting of multiple steps, like release note automation, a few additional techniques are needed.
 
-### 1. 단계별 중간 결과 저장
+### 1. Saving Intermediate Results Per Step
 
-복잡한 워크플로우에서는 각 단계의 중간 결과를 파일로 저장하면 디버깅이 쉬워지고, 다음 단계의 입력으로 재사용할 수 있습니다.
+In complex workflows, saving intermediate results of each step to files makes debugging easier and allows reuse as input for the next step.
 
 ```markdown
-## 중간 결과 저장 (필수)
+## Save Intermediate Results (Required)
 
-각 Phase 완료 후 중간 결과를 저장하세요:
+After completing each Phase, save intermediate results:
 
 - `.analysis-output/work/phase3-commit-analysis.md`
 - `.analysis-output/work/phase3-feature-groups.md`
 
-이 파일들은 다음 Phase의 입력으로 사용됩니다.
+These files are used as input for the next Phase.
 ```
 
-### 2. 오류 처리
+### 2. Error Handling
 
-예상 가능한 오류 상황을 미리 정의해두면 Claude가 적절하게 대응할 수 있습니다.
+Predefining anticipated error situations allows Claude to respond appropriately.
 
 ```markdown
-## 오류 처리
+## Error Handling
 
-다음 상황에서는 작업을 중단하고 사용자에게 알리세요:
+Stop and notify the user in the following situations:
 
-1. **Base Branch 없음**:
-   > origin/release/1.0 브랜치가 없습니다.
-   > 첫 배포인 경우 초기 커밋부터 분석합니다.
+1. **No Base Branch**:
+   > origin/release/1.0 branch does not exist.
+   > For first deployment, analysis starts from the initial commit.
 
-2. **.NET SDK 없음**:
-   > .NET 10 SDK가 설치되어 있지 않습니다.
-   > 설치 후 다시 시도하세요.
+2. **No .NET SDK**:
+   > .NET 10 SDK is not installed.
+   > Please install it and try again.
 ```
 
-### 3. 성공 기준 명시
+### 3. Specifying Success Criteria
 
-성공 기준을 명확하게 정의하면 Claude가 작업 완료 여부를 스스로 판단할 수 있습니다.
+Clearly defining success criteria allows Claude to judge on its own whether the task is complete.
 
 ```markdown
-## 성공 기준
+## Success Criteria
 
-다음 조건을 모두 만족해야 Phase가 완료된 것입니다:
+The Phase is complete only when all of the following conditions are met:
 
-- [ ] 프론트매터 포함됨
-- [ ] 모든 필수 섹션 포함됨
-- [ ] 모든 주요 기능에 "Why this matters" 섹션 포함됨
-- [ ] Uber 파일에 없는 API 사용: 0개
+- [ ] Frontmatter included
+- [ ] All required sections included
+- [ ] "Why this matters" section included for all major features
+- [ ] APIs not in the Uber file: 0
 ```
 
 ## FAQ
 
-### Q1: 프론트매터의 `argument-hint`에서 `<>`와 `[]`의 차이는 무엇인가요?
-**A**: `<>`는 필수 인자를, `[]`는 선택적 인자를 나타냅니다. 예를 들어 `<version>`은 반드시 전달해야 하는 인자이고, `[topic]`은 생략할 수 있는 인자입니다. 이 표기는 CLI 도구의 관례를 따른 것으로, Claude Code의 자동완성 목록에서 사용자에게 안내됩니다.
+### Q1: What is the difference between `<>` and `[]` in the frontmatter's `argument-hint`?
+**A**: `<>` denotes required arguments and `[]` denotes optional arguments. For example, `<version>` is an argument that must be passed, and `[topic]` is an argument that can be omitted. This notation follows CLI tool conventions and is displayed to users in Claude Code's auto-completion list.
 
-### Q2: Command 본문에서 "순서대로 실행하세요"라고 명시하는 것이 왜 중요한가요?
-**A**: Claude는 약한 지시("A, B, C를 해주세요")를 받으면 순서를 임의로 정하거나 일부를 건너뛸 수 있습니다. **번호를 매기고 "순서대로"라고 명시하면** Claude가 각 단계를 빠짐없이 지정된 순서로 수행합니다. 특히 Phase 간 데이터 의존성이 있는 워크플로우에서 순서 보장은 필수적입니다.
+### Q2: Why is it important to explicitly state "execute in order" in the command body?
+**A**: When Claude receives weak instructions ("do A, B, C"), it may arrange the order arbitrarily or skip some steps. **Numbering and explicitly stating "in order"** ensures Claude performs each step completely in the specified order. Order guarantee is essential especially in workflows with data dependencies between Phases.
 
-### Q3: 출력 형식을 정의하지 않으면 어떤 문제가 생기나요?
-**A**: Claude가 매번 다른 형태로 결과를 생성합니다. 릴리스 노트처럼 파일 출력이 있는 Command에서는 프론트매터 구조, 섹션 순서, 코드 블록 형식이 달라져 일관성이 깨집니다. **콘솔 출력과 파일 출력 모두 형식을 명시적으로 정의하는 것이** 권장됩니다.
+### Q3: What problems occur if the output format is not defined?
+**A**: Claude generates results in a different form each time. In commands with file output like release notes, the frontmatter structure, section order, and code block format may vary, breaking consistency. **It is recommended to explicitly define the format for both console and file output.**
 
-### Q4: 다음 절에서는 무엇을 다루나요?
-**A**: 이 문법을 실제로 적용한 `release-note.md` Command를 분석합니다. 모듈화 패턴, 체크리스트 패턴, 입출력 명시 패턴, 조건부 처리 패턴 등 복잡한 워크플로우를 설계하는 데 사용된 설계 패턴들을 살펴봅니다.
+### Q4: What is covered in the next section?
+**A**: We will analyze the `release-note.md` command that actually applies this syntax. We will examine the design patterns used to design complex workflows, including the modularization pattern, checklist pattern, input/output specification pattern, and conditional processing pattern.
 
-Command 문법의 기본과 고급 기법까지 살펴보았습니다. 다음 절에서는 이 문법을 실제로 적용한 `release-note.md` Command의 내부 구조를 분석해보겠습니다.
+We have covered both basic and advanced command syntax techniques. In the next section, let's analyze the internal structure of the `release-note.md` command that applies this syntax in practice.
