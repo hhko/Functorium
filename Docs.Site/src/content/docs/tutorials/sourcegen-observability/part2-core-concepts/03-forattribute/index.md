@@ -2,42 +2,42 @@
 title: "ForAttributeWithMetadataName"
 ---
 
-## 개요
+## Overview
 
-앞 장에서 Provider 파이프라인의 시작점으로 `SyntaxProvider`를 사용한다고 언급했습니다. 실제로 속성 기반 소스 생성기에서는 거의 항상 `ForAttributeWithMetadataName`이 그 시작점이 됩니다. 이 API는 컴파일러의 내부 속성 인덱스를 직접 활용하기 때문에, 모든 노드를 순회하며 속성을 확인하는 수동 구현보다 10~100배 빠릅니다. ObservablePortGenerator 역시 `[GenerateObservablePort]` 속성을 기반으로 동작하므로 이 API가 파이프라인의 핵심 진입점입니다.
+In the previous chapter, we mentioned that `SyntaxProvider` is used as the starting point of the Provider pipeline. In practice, for attribute-based source generators, `ForAttributeWithMetadataName` almost always serves as that starting point. This API directly leverages the compiler's internal attribute index, making it 10-100x faster than manual implementations that traverse all nodes checking for attributes. ObservablePortGenerator also operates based on the `[GenerateObservablePort]` attribute, making this API the core entry point of the pipeline.
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **ForAttributeWithMetadataName API의** 역할과 성능 이점을 이해한다
-   - 컴파일러 내부 인덱스를 활용한 최적화 원리
-2. **predicate와 transform 콜백의** 활용법을 습득한다
-   - Syntax 수준 필터와 Semantic 수준 변환의 분리
-3. **GeneratorAttributeSyntaxContext의** 구조를 파악한다
-   - TargetSymbol, SemanticModel, Attributes 접근 방법
+### Core Learning Objectives
+1. **Understand the role and performance benefits of the ForAttributeWithMetadataName API**
+   - Optimization principles using the compiler's internal index
+2. **Learn how to use the predicate and transform callbacks**
+   - Separation of Syntax-level filtering and Semantic-level transformation
+3. **Understand the structure of GeneratorAttributeSyntaxContext**
+   - How to access TargetSymbol, SemanticModel, and Attributes
 
 ---
 
-## ForAttributeWithMetadataName이란?
+## What is ForAttributeWithMetadataName?
 
-**속성(Attribute) 기반 소스 생성**의 핵심 API입니다. 특정 속성이 붙은 선언만 효율적으로 필터링합니다.
+It is the core API for **attribute-based source generation**. It efficiently filters only declarations with a specific attribute.
 
 ```csharp
 IncrementalValuesProvider<T> ForAttributeWithMetadataName<T>(
-    string fullyQualifiedMetadataName,  // 속성의 전체 이름
-    Func<SyntaxNode, CancellationToken, bool> predicate,  // Syntax 수준 필터
-    Func<GeneratorAttributeSyntaxContext, CancellationToken, T> transform  // 변환
+    string fullyQualifiedMetadataName,  // Fully qualified name of the attribute
+    Func<SyntaxNode, CancellationToken, bool> predicate,  // Syntax-level filter
+    Func<GeneratorAttributeSyntaxContext, CancellationToken, T> transform  // Transformation
 );
 ```
 
 ---
 
-## 왜 ForAttributeWithMetadataName인가?
+## Why ForAttributeWithMetadataName?
 
-### 직접 구현 vs ForAttributeWithMetadataName
+### Manual Implementation vs ForAttributeWithMetadataName
 
 ```csharp
-// ❌ 직접 구현 (비효율적)
+// Manual implementation (inefficient)
 var classes = context.SyntaxProvider
     .CreateSyntaxProvider(
         predicate: (node, _) => node is ClassDeclarationSyntax,
@@ -45,46 +45,46 @@ var classes = context.SyntaxProvider
         {
             var classDecl = (ClassDeclarationSyntax)ctx.Node;
 
-            // 모든 클래스에 대해 Semantic Model 접근 (느림!)
+            // Accessing Semantic Model for every class (slow!)
             var symbol = ctx.SemanticModel.GetDeclaredSymbol(classDecl);
 
-            // 속성 확인
+            // Checking attributes
             return symbol?.GetAttributes()
                 .Any(a => a.AttributeClass?.Name == "GenerateObservablePortAttribute")
                     == true ? symbol : null;
         })
     .Where(x => x is not null);
 
-// ✅ ForAttributeWithMetadataName (효율적)
+// ForAttributeWithMetadataName (efficient)
 var classes = context.SyntaxProvider
     .ForAttributeWithMetadataName(
-        "MyNamespace.GenerateObservablePortAttribute",  // 컴파일러가 최적화
+        "MyNamespace.GenerateObservablePortAttribute",  // Compiler optimizes
         predicate: (node, _) => node is ClassDeclarationSyntax,
-        transform: (ctx, _) => ctx.TargetSymbol);  // 이미 심볼이 준비됨
+        transform: (ctx, _) => ctx.TargetSymbol);  // Symbol already prepared
 ```
 
-### 성능 차이
+### Performance Difference
 
 ```
-직접 구현
-=========
-1. 모든 클래스 순회
-2. 각 클래스에 Semantic Model 접근
-3. 속성 목록 조회
-4. 속성 이름 비교
+Manual Implementation
+=====================
+1. Traverse all classes
+2. Access Semantic Model for each class
+3. Query attribute list
+4. Compare attribute names
 
 ForAttributeWithMetadataName
 ============================
-1. 컴파일러가 속성 인덱스에서 직접 조회
-2. 해당 속성이 있는 선언만 반환
-3. Semantic Model이 미리 준비됨
+1. Compiler directly queries from attribute index
+2. Returns only declarations with that attribute
+3. Semantic Model is pre-prepared
 
-→ 10-100배 이상 빠름
+-> 10-100x faster or more
 ```
 
 ---
 
-## 메서드 시그니처 분석
+## Method Signature Analysis
 
 ```csharp
 .ForAttributeWithMetadataName(
@@ -96,35 +96,35 @@ ForAttributeWithMetadataName
 
 ### fullyQualifiedMetadataName
 
-속성의 **전체 메타데이터 이름**입니다:
+The **fully qualified metadata name** of the attribute:
 
 ```csharp
-// 속성 정의
+// Attribute definition
 namespace Functorium.Adapters.SourceGenerators;
 
 public class GenerateObservablePortAttribute : System.Attribute { }
 
-// 메타데이터 이름
+// Metadata name
 "Functorium.Adapters.SourceGenerators.GenerateObservablePortAttribute"
 
-// 제네릭 속성의 경우
-"MyNamespace.MyAttribute`1"  // <T>를 가진 속성
+// For generic attributes
+"MyNamespace.MyAttribute`1"  // Attribute with <T>
 ```
 
 ### predicate
 
-**Syntax 수준**에서 빠르게 필터링합니다:
+Quick filtering at the **Syntax level**:
 
 ```csharp
-// 클래스만 선택
+// Select only classes
 predicate: (node, _) => node is ClassDeclarationSyntax
 
-// public 클래스만 선택
+// Select only public classes
 predicate: (node, _) =>
     node is ClassDeclarationSyntax classDecl &&
     classDecl.Modifiers.Any(SyntaxKind.PublicKeyword)
 
-// 특정 이름 패턴만 선택
+// Select only specific name patterns
 predicate: (node, _) =>
     node is ClassDeclarationSyntax classDecl &&
     classDecl.Identifier.Text.EndsWith("Repository")
@@ -132,15 +132,15 @@ predicate: (node, _) =>
 
 ### transform
 
-**Semantic 정보**를 활용하여 필요한 데이터를 추출합니다:
+Extracts needed data using **Semantic information**:
 
 ```csharp
 transform: (ctx, cancellationToken) =>
 {
-    // ctx.TargetNode: 속성이 붙은 Syntax 노드
-    // ctx.TargetSymbol: 해당 심볼 (ISymbol)
+    // ctx.TargetNode: Syntax node with the attribute
+    // ctx.TargetSymbol: The corresponding symbol (ISymbol)
     // ctx.SemanticModel: Semantic Model
-    // ctx.Attributes: 매칭된 속성들
+    // ctx.Attributes: Matched attributes
 
     return ExtractInfo(ctx.TargetSymbol);
 }
@@ -150,30 +150,30 @@ transform: (ctx, cancellationToken) =>
 
 ## GeneratorAttributeSyntaxContext
 
-transform 콜백에서 받는 컨텍스트입니다:
+The context received in the transform callback:
 
 ```csharp
 public readonly struct GeneratorAttributeSyntaxContext
 {
-    // 속성이 붙은 Syntax 노드 (ClassDeclarationSyntax 등)
+    // Syntax node with the attribute (ClassDeclarationSyntax, etc.)
     public SyntaxNode TargetNode { get; }
 
-    // 해당 심볼 (INamedTypeSymbol, IMethodSymbol 등)
+    // The corresponding symbol (INamedTypeSymbol, IMethodSymbol, etc.)
     public ISymbol TargetSymbol { get; }
 
     // Semantic Model
     public SemanticModel SemanticModel { get; }
 
-    // 매칭된 속성들 (같은 속성이 여러 개일 수 있음)
+    // Matched attributes (the same attribute can appear multiple times)
     public ImmutableArray<AttributeData> Attributes { get; }
 }
 ```
 
 ---
 
-## 실제 코드: ObservablePortGenerator
+## Actual Code: ObservablePortGenerator
 
-지금까지 API의 각 구성 요소를 살펴보았습니다. 이제 우리 프로젝트에서 이 요소들이 어떻게 조합되는지 전체 흐름을 확인합니다.
+We have examined each component of the API so far. Now let us see how these components are combined in our project's full flow.
 
 ```csharp
 [Generator(LanguageNames.CSharp)]
@@ -191,32 +191,32 @@ public sealed class ObservablePortGenerator()
     private static IncrementalValuesProvider<ObservableClassInfo> RegisterSourceProvider(
         IncrementalGeneratorInitializationContext context)
     {
-        // 1. 속성 정의 생성
+        // 1. Generate attribute definition
         context.RegisterPostInitializationOutput(ctx =>
             ctx.AddSource(
                 hintName: "GenerateObservablePortAttribute.g.cs",
                 sourceText: SourceText.From(GenerateObservablePortAttribute, Encoding.UTF8)));
 
-        // 2. ForAttributeWithMetadataName으로 필터링
+        // 2. Filter with ForAttributeWithMetadataName
         return context
             .SyntaxProvider
             .ForAttributeWithMetadataName(
                 fullyQualifiedMetadataName: FullyQualifiedAttributeName,
-                predicate: IsClass,                    // 클래스인지 확인
-                transform: MapToObservableClassInfo)     // 클래스 정보 추출
-            .Where(x => x != ObservableClassInfo.None);  // 유효한 것만
+                predicate: IsClass,                    // Check if class
+                transform: MapToObservableClassInfo)     // Extract class info
+            .Where(x => x != ObservableClassInfo.None);  // Valid only
     }
 
-    // predicate 구현
+    // predicate implementation
     private static bool IsClass(SyntaxNode node, CancellationToken cancellationToken)
         => node is ClassDeclarationSyntax;
 
-    // transform 구현
+    // transform implementation
     private static ObservableClassInfo MapToObservableClassInfo(
         GeneratorAttributeSyntaxContext context,
         CancellationToken cancellationToken)
     {
-        // 클래스 심볼 확인
+        // Verify class symbol
         if (context.TargetSymbol is not INamedTypeSymbol classSymbol)
         {
             return ObservableClassInfo.None;
@@ -224,13 +224,13 @@ public sealed class ObservablePortGenerator()
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        // 클래스 정보 추출
+        // Extract class information
         string className = classSymbol.Name;
         string @namespace = classSymbol.ContainingNamespace.IsGlobalNamespace
             ? string.Empty
             : classSymbol.ContainingNamespace.ToString();
 
-        // IObservablePort 인터페이스의 메서드 추출
+        // Extract methods from IObservablePort interfaces
         var methods = classSymbol.AllInterfaces
             .Where(ImplementsIObservablePort)
             .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
@@ -244,13 +244,13 @@ public sealed class ObservablePortGenerator()
                 m.ReturnType.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat)))
             .ToList();
 
-        // 메서드가 없으면 생성 불필요
+        // No generation needed if no methods
         if (methods.Count == 0)
         {
             return ObservableClassInfo.None;
         }
 
-        // 생성자 파라미터 추출
+        // Extract constructor parameters
         var baseConstructorParameters =
             ConstructorParameterExtractor.ExtractParameters(classSymbol);
 
@@ -262,19 +262,19 @@ public sealed class ObservablePortGenerator()
 
 ---
 
-## 속성(Attribute) 정의 생성
+## Attribute Definition Generation
 
-ForAttributeWithMetadataName을 사용하려면 **속성이 정의**되어 있어야 합니다:
+To use ForAttributeWithMetadataName, the **attribute must be defined**:
 
 ```csharp
-// RegisterPostInitializationOutput에서 속성 정의 생성
+// Generate attribute definition in RegisterPostInitializationOutput
 public const string GenerateObservablePortAttribute = """
     // <auto-generated/>
 
     namespace Functorium.Adapters.SourceGenerators;
 
     /// <summary>
-    /// 어댑터 클래스에 파이프라인 래퍼 생성을 지시하는 속성
+    /// Attribute that instructs pipeline wrapper generation for an adapter class
     /// </summary>
     [global::System.AttributeUsage(
         global::System.AttributeTargets.Class,
@@ -286,34 +286,34 @@ public const string GenerateObservablePortAttribute = """
     """;
 ```
 
-### global:: 접두사를 사용하는 이유
+### Why Use the global:: Prefix
 
 ```csharp
-// ❌ 충돌 가능성
+// Potential conflict
 public class GenerateObservablePortAttribute : System.Attribute;
-// 사용자 코드에 System 네임스페이스가 있으면 충돌
+// Conflicts if user code has a System namespace
 
-// ✅ 항상 안전
+// Always safe
 public class GenerateObservablePortAttribute : global::System.Attribute;
-// global::은 항상 전역 네임스페이스에서 시작
+// global:: always starts from the global namespace
 ```
 
 ---
 
-## 취소 토큰 처리
+## Cancellation Token Handling
 
-장시간 실행되는 transform에서는 취소 토큰을 확인해야 합니다:
+In long-running transforms, you must check the cancellation token:
 
 ```csharp
 transform: (ctx, cancellationToken) =>
 {
-    // 무거운 작업 전에 취소 확인
+    // Check for cancellation before heavy work
     cancellationToken.ThrowIfCancellationRequested();
 
     var methods = classSymbol.AllInterfaces
         .SelectMany(i =>
         {
-            // 루프 내에서도 확인
+            // Also check within loops
             cancellationToken.ThrowIfCancellationRequested();
             return i.GetMembers().OfType<IMethodSymbol>();
         })
@@ -325,32 +325,32 @@ transform: (ctx, cancellationToken) =>
 
 ---
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-`ForAttributeWithMetadataName`은 속성 기반 소스 생성기의 핵심 진입점입니다. `predicate`에서 Syntax 수준의 빠른 필터링을, `transform`에서 Semantic 수준의 데이터 추출을 담당하는 두 단계 분리가 성능의 핵심입니다. 속성 이름에는 반드시 네임스페이스와 `Attribute` 접미사를 포함해야 합니다.
+`ForAttributeWithMetadataName` is the core entry point for attribute-based source generators. The key to performance is the two-stage separation: fast Syntax-level filtering in the `predicate` and Semantic-level data extraction in the `transform`. The attribute name must include both the namespace and the `Attribute` suffix.
 
-| 구성 요소 | 역할 | 주의사항 |
-|-----------|------|----------|
-| `fullyQualifiedMetadataName` | 속성 전체 이름 | 네임스페이스 포함, `Attribute` 접미사 포함 |
-| `predicate` | Syntax 수준 필터 | 빠름, Semantic 접근 불가 |
-| `transform` | 데이터 추출 | Semantic 접근 가능, 무거움 |
-| `GeneratorAttributeSyntaxContext` | transform 컨텍스트 | TargetSymbol이 핵심 |
+| Component | Role | Notes |
+|-----------|------|-------|
+| `fullyQualifiedMetadataName` | Full attribute name | Include namespace, include `Attribute` suffix |
+| `predicate` | Syntax-level filter | Fast, no Semantic access |
+| `transform` | Data extraction | Semantic access available, heavyweight |
+| `GeneratorAttributeSyntaxContext` | transform context | TargetSymbol is key |
 
 ---
 
 ## FAQ
 
-### Q1: `fullyQualifiedMetadataName`에 `Attribute` 접미사를 반드시 포함해야 하는 이유는 무엇인가요?
-**A**: C# 문법에서는 `[GenerateObservablePort]`처럼 접미사를 생략할 수 있지만, Roslyn의 메타데이터 이름은 실제 클래스 이름 그대로를 사용합니다. 따라서 `Functorium.Adapters.SourceGenerators.GenerateObservablePortAttribute`처럼 전체 이름과 `Attribute` 접미사를 모두 포함해야 올바르게 매칭됩니다.
+### Q1: Why must the `Attribute` suffix be included in `fullyQualifiedMetadataName`?
+**A**: In C# syntax, the suffix can be omitted as in `[GenerateObservablePort]`, but Roslyn's metadata name uses the actual class name as-is. Therefore, the full name including the `Attribute` suffix like `Functorium.Adapters.SourceGenerators.GenerateObservablePortAttribute` must be specified for correct matching.
 
-### Q2: `predicate`에서 Semantic API를 사용할 수 없는 이유는 무엇인가요?
-**A**: `predicate`는 빠른 1차 필터링을 목적으로 모든 구문 노드에 대해 호출되므로, 비용이 높은 Semantic 분석을 허용하면 성능이 크게 저하됩니다. 대신 `SyntaxNode`의 타입만으로 필터링(`node is ClassDeclarationSyntax`)하고, 상세 분석은 `transform`에서 수행합니다.
+### Q2: Why can't the Semantic API be used in the `predicate`?
+**A**: The `predicate` is called for every syntax node for fast first-pass filtering, so allowing expensive semantic analysis would greatly degrade performance. Instead, filter only by `SyntaxNode` type (`node is ClassDeclarationSyntax`), and perform detailed analysis in the `transform`.
 
-### Q3: `transform`에서 `CancellationToken`을 확인해야 하는 이유는 무엇인가요?
-**A**: IDE에서 사용자가 타이핑할 때마다 컴파일이 반복적으로 트리거될 수 있습니다. 이전 분석이 아직 완료되지 않았을 때 새로운 분석이 시작되면, 이전 작업은 취소됩니다. `ThrowIfCancellationRequested()`를 호출하지 않으면 불필요한 작업이 계속 진행되어 IDE 응답성이 저하됩니다.
+### Q3: Why must the `CancellationToken` be checked in the `transform`?
+**A**: In the IDE, compilation can be triggered repeatedly as the user types. When a new analysis starts while the previous one is not yet complete, the previous work is cancelled. If `ThrowIfCancellationRequested()` is not called, unnecessary work continues to proceed, degrading IDE responsiveness.
 
 ---
 
-`ForAttributeWithMetadataName`으로 데이터를 효율적으로 추출하는 방법을 이해했습니다. 하지만 이 효율성이 제대로 발휘되려면 파이프라인의 각 단계에서 캐싱이 올바르게 작동해야 합니다. 다음 장에서는 증분 캐싱의 원리와, 캐시를 무효화시키는 흔한 실수들을 살펴봅니다.
+We have understood how to efficiently extract data with `ForAttributeWithMetadataName`. However, for this efficiency to be fully realized, caching must work correctly at each stage of the pipeline. In the next chapter, we examine the principles of incremental caching and common mistakes that invalidate the cache.
 
-→ [04. 증분 캐싱](../04-Incremental-Caching/)
+-> [04. Incremental Caching](../04-Incremental-Caching/)

@@ -1,43 +1,43 @@
 ---
-title: "Repository & Query Adapter 구현 가이드"
+title: "Repository & Query Adapter Implementation Guide"
 ---
 
-이 문서는 새 Aggregate에 대한 Repository(Write Side)와 Query Adapter(Read Side)의 구현 절차를 단계별로 안내하는 실전 가이드입니다.
+This document is a practical guide that walks through the step-by-step implementation procedures for Repository (Write Side) and Query Adapter (Read Side) for new Aggregates.
 
-## 빠른 탐색
+## Quick Navigation
 
-| 작업 | 섹션 |
+| Task | Section |
 |------|------|
-| Repository 구현 체크리스트 | [§2. Repository 구현 가이드 (Write Side)](#2-repository-구현-가이드-write-side) |
-| EfCore Repository 베이스 클래스 | [§2.3 EfCoreRepositoryBase 구현 패턴](#23-efcorerepositorybase-구현-패턴) |
-| InMemory Repository 구현 | [§2.4 InMemoryRepositoryBase 구현 패턴](#24-inmemoryrepositorybase-구현-패턴) |
-| Query Adapter (Dapper) 구현 | [§3. Query Adapter 구현 가이드 (Read Side)](#3-query-adapter-구현-가이드-read-side) |
-| Cursor 페이지네이션 | [§3.5 Cursor 페이지네이션](#35-cursor-페이지네이션) |
-| DI 등록 | [§6. DI Registration 패턴](#6-di-registration-패턴) |
+| Repository implementation checklist | [§2. Repository Implementation Guide (Write Side)](#2-repository-implementation-guide-write-side) |
+| EfCore Repository base class | [§2.3 EfCoreRepositoryBase Implementation Pattern](#23-efcorerepositorybase-implementation-pattern) |
+| InMemory Repository implementation | [§2.4 InMemoryRepositoryBase Implementation Pattern](#24-inmemoryrepositorybase-implementation-pattern) |
+| Query Adapter (Dapper) implementation | [§3. Query Adapter Implementation Guide (Read Side)](#3-query-adapter-implementation-guide-read-side) |
+| Cursor pagination | [§3.5 Cursor Pagination](#35-cursor-pagination) |
+| DI registration | [§6. DI Registration Pattern](#6-di-registration-pattern) |
 
 ## Introduction
 
-새 Aggregate를 추가할 때마다 Repository와 Query Adapter를 처음부터 작성하는 것은 반복적이고 실수가 발생하기 쉽습니다:
+Writing Repositories and Query Adapters from scratch every time a new Aggregate is added is repetitive and error-prone:
 
-- EF Core Repository의 생성자 3인자 패턴은 어떻게 구성하는가?
-- Dapper Query Adapter에서 페이지네이션과 정렬은 어떻게 처리하는가?
-- InMemory 구현과 EF Core 구현의 DI 등록은 어떻게 분기하는가?
+- How do you set up the EF Core Repository constructor 3-parameter pattern?
+- How do you handle pagination and sorting in the Dapper Query Adapter?
+- How do you branch DI registration between InMemory and EF Core implementations?
 
-이 문서는 베이스 클래스와 체크리스트 기반의 구현 패턴으로 이러한 반복과 실수를 줄이는 방법을 제시합니다.
+This document presents methods to reduce such repetition and errors through base class and checklist-based implementation patterns.
 
 ### What You Will Learn
 
-1. Repository(Write Side) 구현의 전체 체크리스트와 베이스 클래스 패턴
-2. Query Adapter(Read Side) 구현의 Dapper/InMemory 양측 패턴
-3. UnitOfWork와 도메인 이벤트 발행의 통합 구조
+1. Complete checklist and base class patterns for Repository (Write Side) implementation
+2. Dapper/InMemory patterns for both sides of Query Adapter (Read Side) implementation
+3. Integration structure of UnitOfWork and domain event publishing
 
 ### Prerequisites
 
-- [Port 정의 가이드](./12-ports) — Port 인터페이스 설계 원칙
-- [Adapter 구현 가이드](./13-adapters) — Adapter 구현 기본 패턴
-- [Pipeline과 DI](./14a-adapter-pipeline-di) — Pipeline 생성 및 DI 등록
+- [Port Definition Guide](./12-ports) — Port interface design principles
+- [Adapter Implementation Guide](./13-adapters) — Basic Adapter implementation patterns
+- [Pipeline and DI](./14a-adapter-pipeline-di) — Pipeline generation and DI registration
 
-> **Write는 Aggregate 단위로, Read는 DTO 프로젝션으로.** 이 CQRS 분리 원칙이 Repository와 Query Adapter 구현의 모든 설계 결정을 이끕니다.
+> **Write by Aggregate unit, Read by DTO projection.** This CQRS separation principle drives all design decisions in Repository and Query Adapter implementation.
 
 ---
 

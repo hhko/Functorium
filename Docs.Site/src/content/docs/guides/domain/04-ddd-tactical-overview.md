@@ -121,7 +121,7 @@ block-beta
 
   block:adapter["Adapter Layer"]:3
     columns 3
-    port["Port<br/>(Interface)"] impl["Adapter<br/>(구현체)"] adapterr["Adapter Error"]
+    port["Port<br/>(Interface)"] impl["Adapter<br/>(Implementation)"] adapterr["Adapter Error"]
   end
 ```
 
@@ -158,7 +158,7 @@ The following table shows the complete mapping between DDD building blocks and F
 | Application Error | `ApplicationError`, `ApplicationErrorType` | `Functorium.Applications.Errors` |
 | Port | `IObservablePort` | `Functorium.Abstractions.Observabilities` |
 | Repository | `IRepository<TAggregate, TId>` | `Functorium.Domains.Repositories` |
-| Adapter | `[GenerateObservablePort]` | Adapter Layer project |
+| Adapter | `[GenerateObservablePort]` | Adapter layer project |
 | Adapter Error | `AdapterError`, `AdapterErrorType` | `Functorium.Adapters.Errors` |
 | Validation | `ValidationRules<T>`, `TypedValidation<T,V>` | `Functorium.Domains.ValueObjects.Validations` |
 | Result Type | `Fin<T>`, `Validation<Error, T>`, `FinResponse<T>` | LanguageExt / Functorium |
@@ -281,78 +281,78 @@ Input -> [Validation1] -> [Validation2] -> [Validation3] -> Success
 | `Fin<T>` | Final result | Success or single error |
 | `Validation<Error, T>` | Validation result | Success or multiple errors |
 
-## 타입 계층 구조
+## Type Hierarchy
 
-### IValueObject 계층
+### IValueObject Hierarchy
 
 ```
-IValueObject (인터페이스)
+IValueObject (interface)
 │
-AbstractValueObject (추상 클래스)
-├── GetEqualityComponents() - 동등성 컴포넌트
-├── Equals() / GetHashCode() - 값 기반 동등성
-└── == / != 연산자
+AbstractValueObject (abstract class)
+├── GetEqualityComponents() - equality components
+├── Equals() / GetHashCode() - value-based equality
+└── == / != operators
     │
     └── ValueObject
-        ├── CreateFromValidation<TValueObject, TValue>() 헬퍼
+        ├── CreateFromValidation<TValueObject, TValue>() helper
         │
         ├── SimpleValueObject<T>
         │   ├── protected T Value
-        │   ├── CreateFromValidation<TValueObject>() 헬퍼
+        │   ├── CreateFromValidation<TValueObject>() helper
         │   └── explicit operator T
         │
         └── ComparableValueObject
             ├── GetComparableEqualityComponents()
             ├── IComparable<ComparableValueObject>
-            ├── < / <= / > / >= 연산자
+            ├── < / <= / > / >= operators
             │
             └── ComparableSimpleValueObject<T>
                 ├── protected T Value
-                ├── CreateFromValidation<TValueObject>() 헬퍼
+                ├── CreateFromValidation<TValueObject>() helper
                 └── explicit operator T
 ```
 
-### IEntity 계층
+### IEntity Hierarchy
 
 ```
-IEntity<TId> (인터페이스)
-├── TId Id - Entity 식별자
-├── CreateMethodName 상수
-└── CreateFromValidatedMethodName 상수
+IEntity<TId> (interface)
+├── TId Id - Entity identifier
+├── CreateMethodName constant
+└── CreateFromValidatedMethodName constant
     │
-    └── Entity<TId> (추상 클래스)
-        ├── Id 속성 (protected init)
-        ├── Equals() / GetHashCode() - ID 기반 동등성
-        ├── == / != 연산자
-        ├── CreateFromValidation<TEntity, TValue>() 헬퍼
-        └── GetUnproxiedType() - ORM 프록시 지원
+    └── Entity<TId> (abstract class)
+        ├── Id property (protected init)
+        ├── Equals() / GetHashCode() - ID-based equality
+        ├── == / != operators
+        ├── CreateFromValidation<TEntity, TValue>() helper
+        └── GetUnproxiedType() - ORM proxy support
             │
             └── AggregateRoot<TId> : IDomainEventDrain
-                ├── DomainEvents (읽기 전용, IHasDomainEvents)
+                ├── DomainEvents (read-only, IHasDomainEvents)
                 ├── AddDomainEvent() (protected)
                 └── ClearDomainEvents() (IDomainEventDrain)
 
-IEntityId<T> : IParsable<T> (인터페이스) - Ulid 기반
+IEntityId<T> : IParsable<T> (interface) - Ulid-based
 ├── Ulid Value
 ├── static T New()
 ├── static T Create(Ulid)
 └── static T Create(string)
 
-IDomainEvent : INotification (인터페이스)
+IDomainEvent : INotification (interface)
 ├── DateTimeOffset OccurredAt
 ├── Ulid EventId
 ├── string? CorrelationId
 └── string? CausationId
     │
     └── DomainEvent (abstract record)
-        ├── 기본 생성자: OccurredAt, EventId 자동 설정
-        └── CorrelationId, CausationId 선택적 지정
+        ├── Default constructor: OccurredAt, EventId auto-set
+        └── CorrelationId, CausationId optionally specified
 
-IHasDomainEvents (읽기 전용 이벤트 조회)
-└── IDomainEventDrain (internal, 이벤트 정리)
+IHasDomainEvents (read-only event query)
+└── IDomainEventDrain (internal, event cleanup)
 ```
 
-### Error 계층
+### Error Hierarchy
 
 ```
 Error (LanguageExt)
@@ -361,19 +361,19 @@ Error (LanguageExt)
 │   └── DomainErrorType (Presence, Length, Format, DateTime, Numeric, Range, Existence, Transition, Custom)
 │
 ├── ApplicationError
-│   └── ApplicationErrorType (공통, 권한, 검증, 비즈니스 규칙, 커스텀)
+│   └── ApplicationErrorType (Common, Authorization, Validation, Business Rules, Custom)
 │
 └── AdapterError
-    └── AdapterErrorType (공통, Pipeline, 외부 서비스, 데이터, 커스텀)
+    └── AdapterErrorType (Common, Pipeline, External Service, Data, Custom)
 ```
 
-### Specification 계층
+### Specification Hierarchy
 
 ```
-Specification<T> (추상 클래스)
+Specification<T> (abstract class)
 ├── abstract bool IsSatisfiedBy(T entity)
-├── And() / Or() / Not() 조합 메서드
-├── & / | / ! 연산자 오버로드
+├── And() / Or() / Not() composition methods
+├── & / | / ! operator overloads
 │
 ├── AndSpecification<T> (internal sealed)
 ├── OrSpecification<T>  (internal sealed)
@@ -382,7 +382,7 @@ Specification<T> (추상 클래스)
 └── AllSpecification<T> (internal sealed)
 ```
 
-### 관계도
+### Relationship Diagram
 
 ```
 +-------------------+         +-------------------+
@@ -398,7 +398,7 @@ Specification<T> (추상 클래스)
 +-------------------+         +-------------------+
 ```
 
-설계 철학과 핵심 개념을 이해했으니, 이제 각 빌딩블록이 실제 프로젝트의 어느 레이어에 배치되는지 알아봅니다.
+Now that we understand the design philosophy and core concepts, let's explore which layer each building block is placed in within an actual project.
 
 ## Layer Architecture and Building Block Placement
 
@@ -406,50 +406,50 @@ Specification<T> (추상 클래스)
 
 Handles core business logic of the domain. No external dependencies.
 
-- **배치되는 빌딩블록**: Value Object, Entity, Aggregate Root, Domain Event, Domain Error, Domain Service, Repository Interface
-- **의존성**: 없음 (가장 안쪽 레이어)
+- **Building blocks placed**: Value Object, Entity, Aggregate Root, Domain Event, Domain Error, Domain Service, Repository Interface
+- **Dependencies**: None (innermost layer)
 
 ### Application Layer
 
 Orchestrates use cases. Delegates work to domain objects.
 
-- **배치되는 빌딩블록**: Command/Query (Use Case), Event Handler, Application Error, Port Interface
-- **의존성**: Domain Layer만 의존
+- **Building blocks placed**: Command/Query (Use Case), Event Handler, Application Error, Port Interface
+- **Dependencies**: Depends only on Domain Layer
 
 ### Adapter Layer
 
 Handles communication with external systems.
 
-- **배치되는 빌딩블록**: Adapter 구현체, Pipeline (자동 생성), Adapter Error
-- **의존성**: Domain Layer, Application Layer 의존
+- **Building blocks placed**: Adapter implementations, Pipeline (auto-generated), Adapter Error
+- **Dependencies**: Depends on Domain Layer and Application Layer
 
 ### Dependency Rules
 
 ```
 Adapter Layer → Application Layer → Domain Layer
-(바깥)           (중간)              (안쪽)
+(outer)          (middle)            (inner)
 ```
 
-Inner layers never reference outer layers. Application Layer가 Adapter 기능이 필요할 때는 Port(인터페이스)를 정의하고, Adapter Layer가 이를 구현합니다.
+Inner layers never reference outer layers. When the Application Layer needs Adapter functionality, it defines a Port (interface), and the Adapter Layer implements it.
 
 ## Module and Project Structure Mapping
 
 ### Evans Module Concept
 
-에릭 에반스는 Module을 **도메인 개념의 응집도를** 기준으로 그룹화하는 단위로 정의합니다. Module은 패키지나 네임스페이스가 아니라 **의미론적 경계입니다.**
+Eric Evans defines Module as a grouping unit based on **cohesion of domain concepts.** A Module is not a package or namespace but a **semantic boundary.**
 
 | Principle | Description |
 |------|------|
-| 높은 응집도 | 같은 Module 안의 요소는 하나의 도메인 개념을 표현 |
-| 낮은 결합도 | Module 간 의존은 최소화하고, 필요 시 Port/Interface로 소통 |
-| 커뮤니케이션 | Module 이름이 유비쿼터스 언어를 반영하여 코드 구조만으로 도메인 경계 전달 |
+| High cohesion | Elements within the same Module express a single domain concept |
+| Low coupling | Dependencies between Modules are minimized; communication via Port/Interface when needed |
+| Communication | Module names reflect ubiquitous language, conveying domain boundaries through code structure alone |
 
-### 이중 축: Layer × Module
+### Dual Axes: Layer x Module
 
-Functorium는 **Layer(수평 축)** 와 **Module(수직 축)** 의 이중 축으로 코드를 배치합니다.
+Functorium places code along dual axes of **Layer (horizontal axis)** and **Module (vertical axis).**
 
-- **Layer** — .csproj 단위. 기술적 관심사(Domain, Application, Adapter)를 분리
-- **Module** — 폴더/네임스페이스 단위. 도메인 개념(Products, Orders 등)의 응집도를 유지
+- **Layer** — .csproj unit. Separates technical concerns (Domain, Application, Adapter)
+- **Module** — Folder/namespace unit. Maintains cohesion of domain concepts (Products, Orders, etc.)
 
 ```
               │ Products  │ Inventories │ Orders  │ Customers │ SharedModels │
@@ -472,12 +472,12 @@ Adapter       │ Endpoint  │ Endpoint    │Endpoint │ Endpoint  │       
 
 | Axis | Unit | Separation Criteria | Example |
 |----|------|----------|------|
-| Layer (수평) | .csproj | 기술적 관심사, 의존성 방향 | `LayeredArch.Domain`, `LayeredArch.Application` |
-| Module (수직) | 폴더/네임스페이스 | 도메인 개념 응집도 | `AggregateRoots/Products/`, `Usecases/Products/` |
+| Layer (horizontal) | .csproj | Technical concerns, dependency direction | `LayeredArch.Domain`, `LayeredArch.Application` |
+| Module (vertical) | Folder/namespace | Domain concept cohesion | `AggregateRoots/Products/`, `Usecases/Products/` |
 
 ### SingleHost Module Boundaries
 
-SingleHost 프로젝트의 실제 모듈 구성입니다.
+This is the actual module configuration of the SingleHost project.
 
 | Module | Domain | Application | Adapter |
 |--------|--------|-------------|---------|
@@ -485,15 +485,15 @@ SingleHost 프로젝트의 실제 모듈 구성입니다.
 | **Inventories** | `AggregateRoots/Inventories/` (Aggregate, Ports, Specs) | `Usecases/Inventories/` (Commands, Queries, Dtos, Ports) | Endpoints, Repository, Query |
 | **Orders** | `AggregateRoots/Orders/` (Aggregate, Ports, VOs) | `Usecases/Orders/` (Commands, Queries) | Endpoints, Repository |
 | **Customers** | `AggregateRoots/Customers/` (Aggregate, Ports, Specs, VOs) | `Usecases/Customers/` (Commands, Queries) | Endpoints, Repository |
-| **SharedModels** | `SharedModels/` (공유 VO, Entity, Event) | — | — |
+| **SharedModels** | `SharedModels/` (shared VO, Entity, Event) | — | — |
 
-> **패턴**: 각 Module은 Domain → Application → Adapter 전 Layer를 관통하는 **수직 슬라이스입니다.** 폴더 이름이 곧 Module 이름이고, Module 이름이 곧 유비쿼터스 언어입니다.
+> **Pattern**: Each Module is a **vertical slice** that cuts through all layers from Domain → Application → Adapter. The folder name is the Module name, and the Module name is the ubiquitous language.
 
 ### Domain Layer Folder Structure
 
-호스트 프로젝트의 도메인 계층은 다음과 같은 폴더 구조를 따릅니다.
+The domain layer of the host project follows the following folder structure.
 
-**참조 예시** (01-SingleHost `LayeredArch.Domain/`):
+**Reference example** (01-SingleHost `LayeredArch.Domain/`):
 
 ```
 LayeredArch.Domain/
@@ -541,59 +541,59 @@ LayeredArch.Domain/
 └── AssemblyReference.cs
 ```
 
-**구조 요약**:
-- `AggregateRoots/{Aggregate}/` — 애그리거트 루트, 리포지토리 인터페이스, 하위 `Specifications/`와 `ValueObjects/`
-- `SharedModels/` — 여러 애그리거트가 공유하는 `Entities/`, `Services/`, `ValueObjects/`
-- 루트 — `DOMAIN-GLOSSARY.md`, `Using.cs`, `AssemblyReference.cs`
+**Structure Summary**:
+- `AggregateRoots/{Aggregate}/` — Aggregate root, repository interface, sub-folders `Specifications/` and `ValueObjects/`
+- `SharedModels/` — `Entities/`, `Services/`, `ValueObjects/` shared across multiple Aggregates
+- Root — `DOMAIN-GLOSSARY.md`, `Using.cs`, `AssemblyReference.cs`
 
 ### Module Cohesion Rules
 
-**Module 내부 배치 (기본)**
+**Placement within Module (default)**
 
-- 특정 Aggregate 전용 타입 → 해당 Aggregate 폴더 내부
-- 예: `ProductName` → `AggregateRoots/Products/ValueObjects/`
+- Types specific to a particular Aggregate → Inside that Aggregate's folder
+- Example: `ProductName` → `AggregateRoots/Products/ValueObjects/`
 
-**SharedModels 이동 기준**
+**Criteria for moving to SharedModels**
 
-- 2개 이상 Aggregate에서 공유하는 타입 → `SharedModels/`
-- 예: `Money`, `Quantity` → `SharedModels/ValueObjects/`
+- Types shared by 2 or more Aggregates → `SharedModels/`
+- Example: `Money`, `Quantity` → `SharedModels/ValueObjects/`
 
-**프로젝트 루트 이동 기준**
+**Criteria for moving to project root**
 
-- 교차 Aggregate Port → `Domain/Ports/` (예: `IProductCatalog` — Order에서 Product 검증용)
-- Domain Service → `Domain/Services/` (예: `OrderCreditCheckService` — 교차 Aggregate 순수 로직)
+- Cross-Aggregate Port → `Domain/Ports/` (e.g., `IProductCatalog` — for Product validation from Order)
+- Domain Service → `Domain/Services/` (e.g., `OrderCreditCheckService` — cross-Aggregate pure logic)
 
-> Initially place as Aggregate-specific, and move to SharedModels when sharing becomes necessary. 이 규칙의 상세 판단 기준은 [01-project-structure.md FAQ §3](../architecture/01-project-structure)을 참조하세요.
+> Initially place as Aggregate-specific, and move to SharedModels when sharing becomes necessary. For detailed criteria on this rule, see [01-project-structure.md FAQ §3](../architecture/01-project-structure).
 
 ### Multi-Aggregate Expansion Guide
 
-서비스가 성장할 때 모듈 구조의 3단계 진화 경로입니다.
+This is the 3-stage evolution path of module structure as a service grows.
 
-| Step | 구조 | Description |
+| Step | Structure | Description |
 |------|------|------|
-| 1단계 | **단일 Aggregate** | 하나의 Aggregate가 하나의 Module. SingleHost 초기 Product 구조 |
-| 2단계 | **Multi-Aggregate 동일 서비스** | 여러 Aggregate가 폴더로 분리되지만 동일 서비스(프로세스) 내 배치. SingleHost 현재 구조 |
-| 3단계 | **별도 Bounded Context** | Module이 독립 서비스(.sln)로 분리. Context Map 패턴 필요 |
+| Stage 1 | **Single Aggregate** | One Aggregate is one Module. SingleHost initial Product structure |
+| Stage 2 | **Multi-Aggregate same service** | Multiple Aggregates separated into folders but placed within the same service (process). SingleHost current structure |
+| Stage 3 | **Separate Bounded Context** | Modules separated into independent services (.sln). Context Map patterns required |
 
-**2단계 → 3단계 분리 판단 기준:**
+**Stage 2 → Stage 3 separation criteria:**
 
-| Criteria | 동일 서비스 유지 | 별도 서비스 분리 |
+| Criteria | Keep same service | Separate into different service |
 |------|----------------|----------------|
-| 배포 주기 | 동일 | Module별 독립 배포 필요 |
-| 트랜잭션 경계 | Aggregate 간 같은 DB 공유 가능 | 독립 DB/스키마 필요 |
-| 팀 소유권 | 같은 팀 | 다른 팀이 독립적으로 개발 |
-| 유비쿼터스 언어 | 용어 충돌 없음 | 같은 용어가 다른 의미 |
-| 데이터 저장소 | 동종 (예: 모두 PostgreSQL) | 이종 (예: SQL + NoSQL) |
+| Deployment cycle | Same | Independent deployment per Module needed |
+| Transaction boundary | Aggregates can share the same DB | Independent DB/schema needed |
+| Team ownership | Same team | Different teams develop independently |
+| Ubiquitous language | No term conflicts | Same terms with different meanings |
+| Data storage | Homogeneous (e.g., all PostgreSQL) | Heterogeneous (e.g., SQL + NoSQL) |
 
-> **Note**: 3단계 Bounded Context 분리 패턴(Context Map, ACL 등)은 아래 §8 Bounded Context 경계 정의에서 다룹니다.
+> **Note**: Stage 3 Bounded Context separation patterns (Context Map, ACL, etc.) are covered in §8 Bounded Context Boundary Definition below.
 
 ## Ubiquitous Language and Naming Guide
 
-각 빌딩블록의 상세 네이밍 규칙은 개별 가이드에 기술되어 있습니다. 이 섹션은 **모든 빌딩블록의 네이밍 패턴을 한 곳에서 참조할** 수 있는 중앙 색인 역할을 합니다.
+Detailed naming rules for each building block are documented in individual guides. This section serves as a **central index where all building block naming patterns can be referenced in one place.**
 
 ### Naming Pattern Reference Table
 
-The following table 모든 빌딩블록의 네이밍 규칙을 한 곳에 모은 중앙 색인입니다. 새 타입을 추가할 때 이 표를 참조하여 일관된 이름을 부여하세요.
+The following table is a central index that consolidates naming rules for all building blocks in one place. When adding new types, refer to this table to assign consistent names.
 
 | Building Block | Naming Pattern | Example | Detail Reference |
 |----------|-----------|------|----------|
@@ -616,67 +616,67 @@ The following table 모든 빌딩블록의 네이밍 규칙을 한 곳에 모은
 | Endpoint | `{Verb}{Aggregate}Endpoint` | `CreateProductEndpoint` | [01-project-structure.md](../architecture/01-project-structure) |
 | Persistence Model | `{Aggregate}Model` | `ProductModel` | [13-adapters.md](../adapter/13-adapters) |
 | Mapper | `{Aggregate}Mapper` | `ProductMapper` | [13-adapters.md](../adapter/13-adapters) |
-| Module (폴더) | 복수 명사 (유비쿼터스 언어) | `Products/`, `Orders/` | §6 |
+| Module (folder) | Plural noun (ubiquitous language) | `Products/`, `Orders/` | §6 |
 
 ### Glossary Template
 
-도메인 전문가와 개발자가 공유하는 용어집을 유지하면, 코드 네이밍과 비즈니스 용어의 괴리를 방지할 수 있습니다.
+Maintaining a glossary shared between domain experts and developers prevents discrepancies between code naming and business terminology.
 
 | Domain Term | Definition | Code Type | Notes |
 |------------|------|----------|------|
-| 상품 | 판매 카탈로그의 개별 항목 | `Product` (Aggregate) | |
-| 재고 | 상품의 가용 수량 | `Inventory` (Aggregate) | Product와 1:1 |
-| 주문 | 고객의 구매 요청 | `Order` (Aggregate) | |
-| 금액 | 통화 + 수치 조합 | `Money` (Value Object) | SharedModels |
-| 수량 | 0 이상의 정수 값 | `Quantity` (Value Object) | SharedModels |
+| Product | Individual item in the sales catalog | `Product` (Aggregate) | |
+| Inventory | Available quantity of a product | `Inventory` (Aggregate) | 1:1 with Product |
+| Order | Customer's purchase request | `Order` (Aggregate) | |
+| Amount | Currency + numeric combination | `Money` (Value Object) | SharedModels |
+| Quantity | Integer value of 0 or greater | `Quantity` (Value Object) | SharedModels |
 
-> **활용**: 프로젝트별 용어집을 위 형식으로 작성하여 도메인 전문가와 공유합니다. 용어가 변경되면 코드 타입명도 함께 변경합니다.
+> **Usage**: Create a per-project glossary in the above format and share with domain experts. When terms change, code type names should be updated accordingly.
 
 ### Domain Expert Collaboration
 
-- 용어집은 도메인 전문가와 개발자가 **반복적으로 합의하여** 유지합니다.
-- 코드에서 도메인 용어와 다른 이름을 사용하면 커뮤니케이션 비용이 증가합니다. 용어 충돌 발견 시 즉시 용어집을 갱신하고 코드를 리네이밍합니다.
-- 새 빌딩블록 추가 시 위의 네이밍 패턴 테이블을 참조하여 일관된 이름을 부여합니다.
+- The glossary is maintained through **iterative agreement** between domain experts and developers.
+- Using names in code that differ from domain terms increases communication costs. When term conflicts are discovered, update the glossary immediately and rename the code.
+- When adding new building blocks, refer to the naming pattern table above to assign consistent names.
 
 ## Bounded Context and Context Map
 
-현재 SingleHost 프로젝트는 **단일 Bounded Context 내에서** 여러 Module(Products, Orders 등)을 운영합니다. 이 섹션은 서비스가 성장하여 다중 Bounded Context로 분리될 때 적용할 **Context Map 패턴을** 정의하고, 기존 코드에서 이미 존재하는 선행 패턴을 식별합니다.
+The current SingleHost project operates multiple Modules (Products, Orders, etc.) **within a single Bounded Context.** This section defines **Context Map patterns** to apply when the service grows and is separated into multiple Bounded Contexts, and identifies precedent patterns that already exist in the current code.
 
 ### Context Map Patterns
 
-| Pattern | Description | Functorium 매핑 |
+| Pattern | Description | Functorium Mapping |
 |------|------|----------------|
-| **Shared Kernel** | 두 BC가 공유하는 도메인 모델 부분집합 | `SharedModels/` 폴더 (`Money`, `Quantity`) |
-| **Customer-Supplier** | 상류 BC가 하류 BC에 API 제공 | 미구현 (향후 서비스 간 REST API) |
-| **Anti-Corruption Layer (ACL)** | 외부 모델 오염 방지 변환 계층 | `IProductCatalog` Port + EF Core Mapper |
-| **Open Host Service** | 표준 프로토콜로 공개 API 제공 | REST Endpoints |
-| **Published Language** | BC 간 공유 언어 (이벤트/스키마) | Domain Events (향후 Integration Event) |
-| **Conformist** | 하류가 상류 모델을 그대로 수용 | 미구현 |
-| **Separate Ways** | BC 간 통합 없이 독립 운영 | 미구현 |
+| **Shared Kernel** | Subset of domain model shared by two BCs | `SharedModels/` folder (`Money`, `Quantity`) |
+| **Customer-Supplier** | Upstream BC provides API to downstream BC | Not implemented (future inter-service REST API) |
+| **Anti-Corruption Layer (ACL)** | Translation layer to prevent external model contamination | `IProductCatalog` Port + EF Core Mapper |
+| **Open Host Service** | Public API provided via standard protocol | REST Endpoints |
+| **Published Language** | Shared language between BCs (events/schemas) | Domain Events (future Integration Event) |
+| **Conformist** | Downstream accepts upstream model as-is | Not implemented |
+| **Separate Ways** | Independent operation without BC integration | Not implemented |
 
 ### Recognizing Precedent Patterns in SingleHost
 
-기존 코드에는 이미 Context Map 패턴의 **단일 서비스 내 선행 구현이** 존재합니다. 서비스 분리 시 이 패턴들이 BC 간 통합 지점이 됩니다.
+Existing code already contains **single-service precedent implementations** of Context Map patterns. These patterns become integration points between BCs when services are separated.
 
 **Shared Kernel → `SharedModels/ValueObjects/`**
 
-`Money`, `Quantity` 등 여러 Module이 공유하는 Value Object가 `SharedModels/` 폴더에 배치되어 있습니다. 서비스 분리 시 NuGet 패키지로 추출하거나 각 BC에 복제하는 결정이 필요합니다.
+Value Objects shared by multiple Modules such as `Money` and `Quantity` are placed in the `SharedModels/` folder. When separating services, a decision is needed to either extract them as NuGet packages or duplicate them in each BC.
 
 **ACL (mini) → `IProductCatalog` Port + Adapter**
 
-Order Module이 Product 데이터를 조회할 때 `IProductCatalog` Port를 통해 접근합니다. 현재는 동일 프로세스 내 EF Core 구현이지만, 서비스 분리 시 원격 API 호출 + 응답 변환 계층(ACL)으로 교체됩니다.
+When the Order Module queries Product data, it accesses through the `IProductCatalog` Port. Currently it's an EF Core implementation within the same process, but when services are separated, it will be replaced with a remote API call + response translation layer (ACL).
 
 **Domain Events as Published Language**
 
-현재 Domain Event는 in-process Mediator로 발행됩니다. 서비스 분리 시 메시지 브로커(RabbitMQ, Kafka 등)를 통한 Integration Event로 전환되며, 이때 Domain Event와 Integration Event의 분리가 필요합니다.
+Currently Domain Events are published via an in-process Mediator. When services are separated, they will transition to Integration Events through a message broker (RabbitMQ, Kafka, etc.), at which point separation of Domain Events and Integration Events becomes necessary.
 
 ### Multi-Context Project Structure
 
-다중 Bounded Context로 분리될 때의 개념적 프로젝트 구조입니다.
+This is the conceptual project structure when separating into multiple Bounded Contexts.
 
 ```
 Services/
-├── ProductCatalog/                ← BC 1 (기존 3-Layer 구조 동일)
+├── ProductCatalog/                ← BC 1 (same existing 3-Layer structure)
 │   ├── ProductCatalog.Domain/
 │   ├── ProductCatalog.Application/
 │   └── ProductCatalog.Adapters.*/
@@ -684,22 +684,22 @@ Services/
 │   ├── OrderManagement.Domain/
 │   ├── OrderManagement.Application/
 │   └── OrderManagement.Adapters.*/
-SharedModels/                      ← 공유 NuGet 패키지
-IntegrationEvents/                 ← Published Language (BC 간 공유 이벤트 스키마)
+SharedModels/                      ← Shared NuGet package
+IntegrationEvents/                 ← Published Language (shared event schema between BCs)
 ```
 
-> 각 BC는 §5의 3-Layer 구조(Domain → Application → Adapter)를 그대로 유지합니다. BC 간 통신만 Cross-Aggregate Port 대신 Integration Event 또는 REST API로 교체됩니다.
+> Each BC maintains the same 3-Layer structure (Domain → Application → Adapter) from §5. Only inter-BC communication is replaced with Integration Events or REST APIs instead of Cross-Aggregate Ports.
 
 ### Relationship to Evolution Path
 
-§6의 Multi-Aggregate 확장 가이드에서 **3단계 분리 판단 기준(WHEN)** 을 제시했습니다. 이 섹션의 Context Map 패턴은 분리를 결정한 후 **어떻게(HOW)** 구현할지를 안내합니다.
+The Multi-Aggregate Expansion Guide in §6 presented **Stage 3 separation criteria (WHEN).** The Context Map patterns in this section guide **how (HOW)** to implement once separation is decided.
 
-- **WHEN**: 배포 주기, 트랜잭션 경계, 팀 소유권, 유비쿼터스 언어 충돌, 데이터 저장소 이종성 → §6 판단 기준 테이블
-- **HOW**: Shared Kernel, ACL, Published Language, Open Host Service → 이 섹션의 Context Map 패턴
+- **WHEN**: Deployment cycle, transaction boundary, team ownership, ubiquitous language conflicts, data storage heterogeneity → §6 criteria table
+- **HOW**: Shared Kernel, ACL, Published Language, Open Host Service → Context Map patterns in this section
 
 ## Quick Start Example
 
-### 간단한 Email 값 객체
+### Simple Email Value Object
 
 ```csharp
 using Functorium.Domains.ValueObjects;
@@ -713,38 +713,38 @@ public sealed class Email : SimpleValueObject<string>
         RegexOptions.Compiled);
     private const int MaxLength = 254;
 
-    // private 생성자 - 외부 생성 차단
+    // private constructor - prevents external creation
     private Email(string value) : base(value) { }
 
-    // 팩토리 메서드
+    // Factory method
     public static Fin<Email> Create(string? value) =>
         CreateFromValidation(Validate(value), v => new Email(v));
 
-    // 검증 메서드 (원시 타입 반환)
+    // Validation method (returns primitive type)
     public static Validation<Error, string> Validate(string? value) =>
         ValidationRules<Email>.NotEmpty(value ?? "")
             .ThenNormalize(v => v.ToLowerInvariant())
             .ThenMatches(EmailPattern)
             .ThenMaxLength(MaxLength);
 
-    // 암시적 변환 (선택적)
+    // Implicit conversion (optional)
     public static implicit operator string(Email email) => email.Value;
 }
 ```
 
-### 사용 예시
+### Usage Example
 
 ```csharp
-// 성공
+// Success
 var email = Email.Create("User@Example.COM");
 email.IfSucc(e => Console.WriteLine(e));  // user@example.com
 
-// 실패
+// Failure
 var invalid = Email.Create("invalid-email");
 invalid.IfFail(e => Console.WriteLine(e.Code));  // DomainErrors.Email.InvalidFormat
 ```
 
-### 테스트 예시
+### Test Example
 
 ```csharp
 using Functorium.Testing.Assertions.Errors;
@@ -779,24 +779,24 @@ public void Create_ShouldSucceed_WhenEmailIsValid()
 
 ## Guide Document Index
 
-| Document | Description | 주요 내용 |
+| Document | Description | Key Content |
 |------|------|----------|
-| [05a-value-objects.md](./05a-value-objects) | 값 객체 구현 | 기반 클래스, 검증 시스템, 구현 패턴, 실전 예제 |
-| [05b-value-objects-validation.md](./05b-value-objects-validation) | 값 객체 검증·열거형 | 열거형 구현, Application 검증, FAQ |
-| [06a-aggregate-design.md](./06a-aggregate-design) | Aggregate 설계 | 설계 원칙, 경계 설정, 안티패턴 |
-| [06b-entity-aggregate-core.md](./06b-entity-aggregate-core) | Entity/Aggregate 핵심 패턴 | 클래스 계층, ID 시스템, 생성 패턴, 도메인 이벤트 |
-| [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced) | Entity/Aggregate 고급 패턴 | Cross-Aggregate 관계, 부가 인터페이스, 실전 예제 |
-| [07-domain-events.md](./07-domain-events) | 도메인 이벤트 | 이벤트 정의, 발행, 핸들러 구현 |
-| [08a-error-system.md](./08a-error-system) | 에러 시스템: 기초와 네이밍 | 에러 처리 원칙, Fin 패턴, 네이밍 규칙 |
-| [08b-error-system-domain-app.md](./08b-error-system-domain-app) | 에러 시스템: Domain/Application 에러 | Domain/Application/Event 에러 정의와 테스트 |
-| [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing) | 에러 시스템: Adapter 에러와 테스트 | Adapter 에러, Custom 에러, 테스트 모범 사례, 체크리스트 |
-| [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) | Usecase 구현 | CQRS 패턴, Apply 병합 |
-| [12-ports.md](../adapter/12-ports) | Port 아키텍처 | Port 정의, IObservablePort 계층 |
-| [13-adapters.md](../adapter/13-adapters) | Adapter 구현 | Repository, External API, Messaging, Query |
-| [14a-adapter-pipeline-di.md](../adapter/14a-adapter-pipeline-di) | Adapter 연결 | Pipeline, DI, Options |
-| [14b-adapter-testing.md](../adapter/14b-adapter-testing) | Adapter 테스트 | 단위 테스트, E2E Walkthrough |
-| [09-domain-services.md](./09-domain-services) | 도메인 서비스 | IDomainService, 교차 Aggregate 로직, Usecase 통합 |
-| [10-specifications.md](./10-specifications) | Specification 패턴 | 비즈니스 규칙 캡슐화, And/Or/Not 조합, Repository 통합 |
+| [05a-value-objects.md](./05a-value-objects) | Value Object implementation | Base classes, validation system, implementation patterns, practical examples |
+| [05b-value-objects-validation.md](./05b-value-objects-validation) | Value Object validation and enums | Enum implementation, Application validation, FAQ |
+| [06a-aggregate-design.md](./06a-aggregate-design) | Aggregate design | Design principles, boundary setting, anti-patterns |
+| [06b-entity-aggregate-core.md](./06b-entity-aggregate-core) | Entity/Aggregate core patterns | Class hierarchy, ID system, creation patterns, domain events |
+| [06c-entity-aggregate-advanced.md](./06c-entity-aggregate-advanced) | Entity/Aggregate advanced patterns | Cross-Aggregate relationships, auxiliary interfaces, practical examples |
+| [07-domain-events.md](./07-domain-events) | Domain events | Event definition, publishing, handler implementation |
+| [08a-error-system.md](./08a-error-system) | Error system: basics and naming | Error handling principles, Fin patterns, naming rules |
+| [08b-error-system-domain-app.md](./08b-error-system-domain-app) | Error system: Domain/Application errors | Domain/Application/Event error definition and testing |
+| [08c-error-system-adapter-testing.md](./08c-error-system-adapter-testing) | Error system: Adapter errors and testing | Adapter errors, Custom errors, testing best practices, checklists |
+| [11-usecases-and-cqrs.md](../application/11-usecases-and-cqrs) | Usecase implementation | CQRS pattern, Apply merging |
+| [12-ports.md](../adapter/12-ports) | Port architecture | Port definition, IObservablePort hierarchy |
+| [13-adapters.md](../adapter/13-adapters) | Adapter implementation | Repository, External API, Messaging, Query |
+| [14a-adapter-pipeline-di.md](../adapter/14a-adapter-pipeline-di) | Adapter integration | Pipeline, DI, Options |
+| [14b-adapter-testing.md](../adapter/14b-adapter-testing) | Adapter testing | Unit tests, E2E Walkthrough |
+| [09-domain-services.md](./09-domain-services) | Domain services | IDomainService, cross-Aggregate logic, Usecase integration |
+| [10-specifications.md](./10-specifications) | Specification pattern | Business rule encapsulation, And/Or/Not composition, Repository integration |
 | [15a-unit-testing.md](../testing/15a-unit-testing) | 단위 테스트 | 테스트 규칙, 네이밍, 체크리스트 |
 | [16-testing-library.md](../testing/16-testing-library) | 테스트 라이브러리 | 로그/아키텍처/소스생성기/Job 테스트 |
 

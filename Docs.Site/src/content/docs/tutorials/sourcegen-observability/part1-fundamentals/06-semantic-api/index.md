@@ -2,64 +2,64 @@
 title: "Semantic API"
 ---
 
-## 개요
+## Overview
 
-앞 장에서 Syntax API의 한계를 확인했습니다. `User`라는 파라미터 타입이 클래스인지 인터페이스인지, 어떤 네임스페이스에 속하는지를 구문 분석만으로는 알 수 없었습니다. Semantic API는 바로 이 지점에서 시작합니다.
+In the previous chapter, we identified the limitations of the Syntax API. We could not determine whether a parameter type `User` is a class or interface, or which namespace it belongs to, through syntax analysis alone. The Semantic API starts at precisely this point.
 
-Semantic API는 Syntax Tree에 **타입 정보와 의미론적 분석 결과**를 결합하여, 코드의 "의미"를 프로그래밍적으로 조회할 수 있게 합니다. 우리 프로젝트의 ObservablePortGenerator가 `transform` 단계에서 `ctx.TargetSymbol`을 통해 클래스의 인터페이스 목록, 메서드 시그니처, 반환 타입의 전체 이름을 추출하는 것이 모두 Semantic API 덕분입니다.
+The Semantic API combines **type information and semantic analysis results** with the Syntax Tree, enabling programmatic querying of code "meaning". The fact that our project's ObservablePortGenerator extracts the list of interfaces a class implements, method signatures, and fully qualified return type names through `ctx.TargetSymbol` in the `transform` stage is all thanks to the Semantic API.
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **Semantic Model의 역할 이해**
-   - Syntax Tree에 타입 정보를 더하는 의미 분석 계층
-2. **타입 정보 조회 방법 습득**
-   - `GetSymbolInfo`, `GetTypeInfo`, `GetDeclaredSymbol`의 사용 시점
-3. **Syntax API와 Semantic API의 연계 학습**
-   - `predicate`(Syntax)에서 `transform`(Semantic)으로 이어지는 2단계 분석 패턴
+### Core Learning Objectives
+1. **Understand the role of the Semantic Model**
+   - The semantic analysis layer that adds type information to the Syntax Tree
+2. **Learn type information querying methods**
+   - When to use `GetSymbolInfo`, `GetTypeInfo`, `GetDeclaredSymbol`
+3. **Learn the integration of Syntax API and Semantic API**
+   - The two-stage analysis pattern from `predicate` (Syntax) to `transform` (Semantic)
 
 ---
 
-## Semantic API란?
+## What is the Semantic API?
 
-**Semantic API**는 Syntax Tree에 **타입 정보와 의미론적 분석**을 추가한 것입니다.
+The **Semantic API** adds **type information and semantic analysis** to the Syntax Tree.
 
 ```
 Syntax API vs Semantic API
 ==========================
 
-Syntax API (구문)
+Syntax API (syntax)
 -----------------
-코드: public void Process(User user) { }
+Code: public void Process(User user) { }
 
-알 수 있는 것:
-- 메서드 이름이 "Process"
-- 파라미터 이름이 "user"
-- 파라미터 타입 텍스트가 "User"
+What it can tell:
+- Method name is "Process"
+- Parameter name is "user"
+- Parameter type text is "User"
 
-알 수 없는 것:
-- User가 클래스? 인터페이스? 구조체?
-- User의 전체 네임스페이스?
-- User에 어떤 멤버가 있는지?
+What it cannot tell:
+- Is User a class? Interface? Struct?
+- What is User's full namespace?
+- What members does User have?
 
 
-Semantic API (의미)
+Semantic API (semantics)
 ------------------
-알 수 있는 것:
-- User는 MyApp.Models.User 클래스
-- User는 IEntity 인터페이스 구현
-- User에는 Id, Name 프로퍼티 존재
-- Process 메서드의 반환 타입은 void
+What it can tell:
+- User is the class MyApp.Models.User
+- User implements the IEntity interface
+- User has Id, Name properties
+- Process method's return type is void
 ```
 
 ---
 
-## SemanticModel 얻기
+## Obtaining a SemanticModel
 
-### 일반적인 방법
+### General Approach
 
 ```csharp
-// Compilation에서 SemanticModel 얻기
+// Obtaining SemanticModel from Compilation
 var compilation = CSharpCompilation.Create(
     "MyAssembly",
     [syntaxTree],
@@ -69,7 +69,7 @@ var compilation = CSharpCompilation.Create(
 SemanticModel semanticModel = compilation.GetSemanticModel(syntaxTree);
 ```
 
-### 소스 생성기에서
+### In Source Generators
 
 ```csharp
 context.SyntaxProvider
@@ -78,10 +78,10 @@ context.SyntaxProvider
         predicate: (node, _) => node is ClassDeclarationSyntax,
         transform: (ctx, _) =>
         {
-            // GeneratorAttributeSyntaxContext에서 직접 접근
+            // Direct access from GeneratorAttributeSyntaxContext
             SemanticModel semanticModel = ctx.SemanticModel;
 
-            // 또는 타겟 심볼 직접 사용
+            // Or use the target symbol directly
             ISymbol symbol = ctx.TargetSymbol;
 
             return symbol;
@@ -90,11 +90,11 @@ context.SyntaxProvider
 
 ---
 
-## 심볼 정보 조회
+## Querying Symbol Information
 
 ### GetSymbolInfo
 
-Syntax 노드에서 심볼 정보를 얻습니다:
+Obtains symbol information from a Syntax node:
 
 ```csharp
 string code = """
@@ -107,7 +107,7 @@ string code = """
     {
         public void Process(User user)
         {
-            var id = user.Id;  // 이 부분 분석
+            var id = user.Id;  // Analyze this part
         }
     }
     """;
@@ -116,27 +116,27 @@ var tree = CSharpSyntaxTree.ParseText(code);
 var compilation = CSharpCompilation.Create("Test", [tree], references);
 var semanticModel = compilation.GetSemanticModel(tree);
 
-// user.Id 표현식 찾기
+// Find the user.Id expression
 var memberAccess = tree.GetRoot()
     .DescendantNodes()
     .OfType<MemberAccessExpressionSyntax>()
     .First();
 
-// 심볼 정보 조회
+// Query symbol information
 SymbolInfo symbolInfo = semanticModel.GetSymbolInfo(memberAccess);
 ISymbol? symbol = symbolInfo.Symbol;
 
-Console.WriteLine($"심볼: {symbol?.Name}");           // Id
-Console.WriteLine($"종류: {symbol?.Kind}");          // Property
-Console.WriteLine($"포함 타입: {symbol?.ContainingType}"); // User
+Console.WriteLine($"Symbol: {symbol?.Name}");           // Id
+Console.WriteLine($"Kind: {symbol?.Kind}");             // Property
+Console.WriteLine($"Containing type: {symbol?.ContainingType}"); // User
 ```
 
 ### GetTypeInfo
 
-표현식의 타입 정보를 얻습니다:
+Obtains type information of an expression:
 
 ```csharp
-// var id = user.Id; 에서 id의 타입
+// Type of id in: var id = user.Id;
 var variableDecl = tree.GetRoot()
     .DescendantNodes()
     .OfType<VariableDeclaratorSyntax>()
@@ -145,13 +145,13 @@ var variableDecl = tree.GetRoot()
 var initializer = variableDecl.Initializer!.Value;
 TypeInfo typeInfo = semanticModel.GetTypeInfo(initializer);
 
-Console.WriteLine($"타입: {typeInfo.Type}");          // int
-Console.WriteLine($"변환 타입: {typeInfo.ConvertedType}"); // int
+Console.WriteLine($"Type: {typeInfo.Type}");          // int
+Console.WriteLine($"Converted type: {typeInfo.ConvertedType}"); // int
 ```
 
 ### GetDeclaredSymbol
 
-선언에서 심볼을 얻습니다:
+Obtains a symbol from a declaration:
 
 ```csharp
 var classDecl = tree.GetRoot()
@@ -159,43 +159,43 @@ var classDecl = tree.GetRoot()
     .OfType<ClassDeclarationSyntax>()
     .First();
 
-// 클래스 선언에서 심볼 얻기
+// Obtain symbol from class declaration
 INamedTypeSymbol? classSymbol = semanticModel.GetDeclaredSymbol(classDecl);
 
-Console.WriteLine($"클래스: {classSymbol?.Name}");
-Console.WriteLine($"네임스페이스: {classSymbol?.ContainingNamespace}");
-Console.WriteLine($"인터페이스: {string.Join(", ", classSymbol?.AllInterfaces ?? [])}");
+Console.WriteLine($"Class: {classSymbol?.Name}");
+Console.WriteLine($"Namespace: {classSymbol?.ContainingNamespace}");
+Console.WriteLine($"Interfaces: {string.Join(", ", classSymbol?.AllInterfaces ?? [])}");
 ```
 
 ---
 
-## 소스 생성기에서의 활용
+## Usage in Source Generators
 
-실제 소스 생성기에서는 `SemanticModel`을 직접 생성할 필요 없이, `GeneratorAttributeSyntaxContext`가 이미 준비된 `SemanticModel`과 `TargetSymbol`을 제공합니다. 우리 프로젝트의 `MapToObservableClassInfo` 메서드가 이를 활용하는 대표적인 예입니다.
+In actual source generators, there is no need to create `SemanticModel` directly -- `GeneratorAttributeSyntaxContext` already provides a prepared `SemanticModel` and `TargetSymbol`. Our project's `MapToObservableClassInfo` method is a representative example of utilizing this.
 
-### GeneratorAttributeSyntaxContext 활용
+### Utilizing GeneratorAttributeSyntaxContext
 
 ```csharp
 private static ObservableClassInfo MapToObservableClassInfo(
     GeneratorAttributeSyntaxContext context,
     CancellationToken cancellationToken)
 {
-    // 1. 타겟 심볼 직접 접근 (Semantic API)
+    // 1. Direct access to target symbol (Semantic API)
     if (context.TargetSymbol is not INamedTypeSymbol classSymbol)
     {
         return ObservableClassInfo.None;
     }
 
-    // 2. 클래스 정보 추출
+    // 2. Extract class information
     string className = classSymbol.Name;
     string @namespace = classSymbol.ContainingNamespace.IsGlobalNamespace
         ? string.Empty
         : classSymbol.ContainingNamespace.ToString();
 
-    // 3. 구현한 인터페이스 분석
+    // 3. Analyze implemented interfaces
     var interfaces = classSymbol.AllInterfaces;
 
-    // 4. 인터페이스의 메서드 추출
+    // 4. Extract interface methods
     var methods = interfaces
         .Where(ImplementsIObservablePort)
         .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
@@ -208,85 +208,85 @@ private static ObservableClassInfo MapToObservableClassInfo(
 
 ---
 
-## 타입 비교와 검사
+## Type Comparison and Inspection
 
-### 타입 동일성 확인
+### Verifying Type Identity
 
 ```csharp
-// 두 타입이 같은지 확인
+// Check if two types are the same
 bool areSameType = SymbolEqualityComparer.Default.Equals(type1, type2);
 
-// SymbolEqualityComparer 옵션
-// Default: 기본 비교
-// IncludeNullability: nullable 어노테이션 포함 비교
+// SymbolEqualityComparer options
+// Default: basic comparison
+// IncludeNullability: comparison including nullable annotations
 ```
 
-### 특정 타입인지 확인
+### Checking for a Specific Type
 
 ```csharp
-// IObservablePort 인터페이스를 구현하는지 확인
+// Check if it implements the IObservablePort interface
 bool implementsIObservablePort = classSymbol.AllInterfaces
     .Any(i => i.Name == "IObservablePort");
 
-// 특정 네임스페이스의 타입인지 확인
+// Check if it belongs to a specific namespace
 bool isInMyNamespace = classSymbol.ContainingNamespace
     .ToDisplayString() == "MyApp.Models";
 ```
 
-### 타입 이름 얻기
+### Obtaining Type Names
 
 ```csharp
-// 다양한 포맷으로 타입 이름 얻기
+// Obtaining type name in various formats
 ITypeSymbol type = ...;
 
-// 짧은 이름
+// Short name
 string shortName = type.Name;  // User
 
-// 네임스페이스 포함
+// With namespace
 string fullName = type.ToDisplayString();  // MyApp.Models.User
 
-// global:: 접두사 포함 (결정적 코드 생성에 중요)
+// With global:: prefix (important for deterministic code generation)
 string globalName = type.ToDisplayString(
     SymbolDisplayFormat.FullyQualifiedFormat);  // global::MyApp.Models.User
 ```
 
 ---
 
-## 메서드 심볼 분석
+## Method Symbol Analysis
 
 ```csharp
 IMethodSymbol method = ...;
 
-// 기본 정보
-Console.WriteLine($"이름: {method.Name}");
-Console.WriteLine($"반환 타입: {method.ReturnType}");
-Console.WriteLine($"정적 여부: {method.IsStatic}");
-Console.WriteLine($"비동기 여부: {method.IsAsync}");
+// Basic information
+Console.WriteLine($"Name: {method.Name}");
+Console.WriteLine($"Return type: {method.ReturnType}");
+Console.WriteLine($"Is static: {method.IsStatic}");
+Console.WriteLine($"Is async: {method.IsAsync}");
 
-// 파라미터 분석
+// Parameter analysis
 foreach (var param in method.Parameters)
 {
-    Console.WriteLine($"파라미터: {param.Type} {param.Name}");
+    Console.WriteLine($"Parameter: {param.Type} {param.Name}");
     Console.WriteLine($"  - RefKind: {param.RefKind}");  // None, Ref, Out, In
-    Console.WriteLine($"  - 기본값: {param.HasExplicitDefaultValue}");
+    Console.WriteLine($"  - Has default value: {param.HasExplicitDefaultValue}");
 }
 
-// 제네릭 타입 파라미터
+// Generic type parameters
 if (method.IsGenericMethod)
 {
     foreach (var typeParam in method.TypeParameters)
     {
-        Console.WriteLine($"타입 파라미터: {typeParam.Name}");
+        Console.WriteLine($"Type parameter: {typeParam.Name}");
     }
 }
 ```
 
 ---
 
-## 실제 코드 예시: ObservablePortGenerator
+## Actual Code Example: ObservablePortGenerator
 
 ```csharp
-// ObservablePortGenerator.cs에서 메서드 정보 추출
+// Extracting method information in ObservablePortGenerator.cs
 var methods = classSymbol.AllInterfaces
     .Where(ImplementsIObservablePort)
     .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
@@ -295,68 +295,68 @@ var methods = classSymbol.AllInterfaces
         m.Name,
         m.Parameters.Select(p => new ParameterInfo(
             p.Name,
-            // ★ Semantic API로 정확한 타입 문자열 얻기
+            // Obtaining precise type string via Semantic API
             p.Type.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat),
             p.RefKind)).ToList(),
-        // ★ 반환 타입도 정확히 추출
+        // Precisely extracting return type as well
         m.ReturnType.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat)))
     .ToList();
 ```
 
 ---
 
-## Semantic API 성능 고려사항
+## Semantic API Performance Considerations
 
 ```
-성능 팁
-=======
+Performance Tips
+================
 
-1. SemanticModel은 무거움
-   - 가능하면 캐싱
-   - 불필요하게 여러 번 생성하지 않기
+1. SemanticModel is heavyweight
+   - Cache when possible
+   - Do not create unnecessarily multiple times
 
 2. GetSymbolInfo vs GetDeclaredSymbol
-   - 선언에서 심볼 얻기: GetDeclaredSymbol (빠름)
-   - 참조에서 심볼 얻기: GetSymbolInfo (조금 느림)
+   - Obtaining symbol from declaration: GetDeclaredSymbol (fast)
+   - Obtaining symbol from reference: GetSymbolInfo (slightly slower)
 
-3. ForAttributeWithMetadataName 활용
-   - 직접 Syntax Tree 순회보다 효율적
-   - 증분 빌드에 최적화됨
+3. Utilize ForAttributeWithMetadataName
+   - More efficient than directly traversing Syntax Tree
+   - Optimized for incremental builds
 ```
 
 ---
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-Semantic API는 Syntax API가 제공하지 못하는 타입 정보, 네임스페이스, 인터페이스 구현 관계를 조회하는 핵심 도구입니다. 소스 생성기에서는 `GeneratorAttributeSyntaxContext`를 통해 준비된 `SemanticModel`과 `TargetSymbol`에 접근하므로, 직접 `Compilation`에서 모델을 생성할 필요가 없습니다.
+The Semantic API is the essential tool for querying type information, namespaces, and interface implementation relationships that the Syntax API cannot provide. In source generators, you access the prepared `SemanticModel` and `TargetSymbol` through `GeneratorAttributeSyntaxContext`, so there is no need to generate the model directly from `Compilation`.
 
-| 메서드 | 용도 | 입력 | 출력 |
-|--------|------|------|------|
-| `GetSymbolInfo` | 참조 해석 | 표현식 노드 | SymbolInfo |
-| `GetTypeInfo` | 타입 정보 | 표현식 노드 | TypeInfo |
-| `GetDeclaredSymbol` | 선언 심볼 | 선언 노드 | ISymbol |
+| Method | Purpose | Input | Output |
+|--------|---------|-------|--------|
+| `GetSymbolInfo` | Reference resolution | Expression node | SymbolInfo |
+| `GetTypeInfo` | Type information | Expression node | TypeInfo |
+| `GetDeclaredSymbol` | Declaration symbol | Declaration node | ISymbol |
 
-| 비교 | Syntax API | Semantic API |
-|------|------------|--------------|
-| 정보 | 구조 | 구조 + 타입 |
-| 속도 | 빠름 | 상대적으로 느림 |
-| 용도 | 필터링 (`predicate`) | 상세 분석 (`transform`) |
+| Comparison | Syntax API | Semantic API |
+|------------|------------|--------------|
+| Information | Structure | Structure + Types |
+| Speed | Fast | Relatively slower |
+| Purpose | Filtering (`predicate`) | Detailed analysis (`transform`) |
 
 ---
 
 ## FAQ
 
-### Q1: `GetSymbolInfo`와 `GetDeclaredSymbol`은 어떻게 구분하여 사용하나요?
-**A**: `GetDeclaredSymbol`은 클래스, 메서드, 변수 등의 **선언** 노드에서 심볼을 얻을 때 사용합니다. `GetSymbolInfo`는 타입 참조나 메서드 호출 같은 **사용** 지점에서 해당 심볼을 해석할 때 사용합니다. 소스 생성기에서는 주로 선언을 분석하므로 `GetDeclaredSymbol`을 더 자주 사용합니다.
+### Q1: How do you distinguish between `GetSymbolInfo` and `GetDeclaredSymbol`?
+**A**: `GetDeclaredSymbol` is used to obtain a symbol from **declaration** nodes such as classes, methods, and variables. `GetSymbolInfo` is used to resolve the symbol at **usage** points such as type references or method calls. In source generators, since you mainly analyze declarations, `GetDeclaredSymbol` is used more frequently.
 
-### Q2: 소스 생성기에서 `SemanticModel`을 직접 생성하지 않아도 되는 이유는 무엇인가요?
-**A**: `ForAttributeWithMetadataName`의 `transform` 콜백에 전달되는 `GeneratorAttributeSyntaxContext`에 이미 `SemanticModel`과 `TargetSymbol`이 준비되어 있습니다. Roslyn 파이프라인이 컴파일 과정에서 자동으로 제공하므로, 직접 `Compilation.GetSemanticModel()`을 호출할 필요가 없습니다.
+### Q2: Why don't you need to create `SemanticModel` directly in source generators?
+**A**: The `GeneratorAttributeSyntaxContext` passed to the `transform` callback of `ForAttributeWithMetadataName` already has `SemanticModel` and `TargetSymbol` prepared. Since the Roslyn pipeline automatically provides them during the compilation process, there is no need to call `Compilation.GetSemanticModel()` directly.
 
-### Q3: `ForAttributeWithMetadataName`이 직접 Syntax Tree를 순회하는 것보다 효율적인 이유는 무엇인가요?
-**A**: Roslyn이 내부적으로 속성 메타데이터 인덱스를 활용하여 대상 노드를 빠르게 찾아줍니다. 또한 증분 빌드 시 변경되지 않은 파일은 건너뛰므로, 수동 순회 대비 불필요한 분석을 크게 줄입니다.
+### Q3: Why is `ForAttributeWithMetadataName` more efficient than directly traversing the Syntax Tree?
+**A**: Roslyn internally leverages attribute metadata indexes to quickly find target nodes. Additionally, during incremental builds, unchanged files are skipped, greatly reducing unnecessary analysis compared to manual traversal.
 
 ---
 
-Semantic API를 통해 심볼에 접근하는 방법을 배웠습니다. 다음 장에서는 `INamedTypeSymbol`, `IMethodSymbol`, `IParameterSymbol` 등 심볼 타입의 계층 구조와 각 타입에서 추출할 수 있는 상세 정보를 학습합니다.
+We learned how to access symbols through the Semantic API. In the next chapter, we learn the hierarchy of symbol types such as `INamedTypeSymbol`, `IMethodSymbol`, `IParameterSymbol` and the detailed information that can be extracted from each type.
 
-→ [04. 심볼 타입](../07-Symbol-Types/)
+-> [04. Symbol Types](../07-Symbol-Types/)

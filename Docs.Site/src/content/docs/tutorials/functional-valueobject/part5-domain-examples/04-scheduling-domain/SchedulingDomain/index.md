@@ -92,11 +92,11 @@ public sealed class DateRange : IEquatable<DateRange>
 
 ### TimeSlot
 
- hours 슬롯을 표현하는 value object입니다.
+A value object representing time slots.
 
 **Characteristics:**
-- 시작  hours < 종료  hours 불변식
--  hours 포함 여부 검사
+- Start time < end time invariant
+- Time containment check
 - Slot conflict (Conflicts) detection
 - Duration property provided
 
@@ -118,10 +118,10 @@ public sealed class TimeSlot : IEquatable<TimeSlot>
 A comparable value object representing durations.
 
 **Characteristics:**
-- minutes/ hours/days 단위 생성
+- Creation in minutes/hours/days units
 - Negative duration prevention
-- 최대 기간 제한 (1 years)
-- 연산 지 won (Add, Subtract)
+- Maximum duration limit (1 year)
+- Arithmetic operations (Add, Subtract)
 
 ```csharp
 public sealed class Duration : IComparable<Duration>
@@ -132,7 +132,7 @@ public sealed class Duration : IComparable<Duration>
     {
         if (minutes < 0)
             return DomainErrors.NegativeDuration;
-        if (minutes > 525600) // 1 years
+        if (minutes > 525600) // 1 year
             return DomainErrors.ExceedsMaximum;
         return new Duration(minutes);
     }
@@ -146,10 +146,10 @@ public sealed class Duration : IComparable<Duration>
 A composite value object representing recurrence rules.
 
 **Characteristics:**
-- days간/주간/월간 반복 Pattern
+- Daily/weekly/monthly recurrence patterns
 - Created via factory methods
-- 다음 발생days 계산
-- 요days/날짜 기반 반복
+- Next occurrence date calculation
+- Day-of-week/date-based recurrence
 
 ```csharp
 public sealed class RecurrenceRule : IEquatable<RecurrenceRule>
@@ -169,7 +169,7 @@ public sealed class RecurrenceRule : IEquatable<RecurrenceRule>
 }
 ```
 
-## 핵심 Pattern
+## Core Patterns
 
 ### 1. Range Validation
 
@@ -193,12 +193,12 @@ Verifies whether two ranges overlap.
 public bool Overlaps(DateRange other) =>
     Start <= other.End && End >= other.Start;
 
-//  hours 슬롯 충돌
+// Time slot conflict
 public bool Conflicts(TimeSlot other) =>
     Start < other.End && End > other.Start;
 ```
 
-### 3. 다양한 단위 지 won (Multiple Units)
+### 3. Multiple Unit Support
 
 The same value can be accessed in various units.
 
@@ -208,7 +208,7 @@ public double TotalHours => TotalMinutes / 60.0;
 public double TotalDays => TotalMinutes / (24.0 * 60.0);
 ```
 
-### 4. factory method Pattern (Factory Methods)
+### 4. Factory Method Pattern
 
 Provides clear creation methods for each use case.
 
@@ -242,17 +242,17 @@ public IEnumerable<DateOnly> GetOccurrences(DateOnly from, int count)
 
 ## FAQ
 
-### Q1: `DateRange`와 `TimeSlot`을 별도 value object로 minutes리하는 이유는 무엇인가요?
-**A**: `DateRange`는 날짜 수준의 범위(휴가 기간, 프로젝트 days정)를, `TimeSlot`은 하루 내  hours 범위(회의  hours, 진료  hours)를 표현합니다. Since the concerns differ, managing each invariant and operation independently is appropriate for domain modeling.
+### Q1: Why separate `DateRange` and `TimeSlot` into different value objects?
+**A**: `DateRange` represents date-level ranges (vacation periods, project schedules), while `TimeSlot` represents intra-day time ranges (meeting times, appointment times). Since the concerns differ, managing each invariant and operation independently is appropriate for domain modeling.
 
-### Q2: `Duration`에서 최대 기간을 1 years(525,600minutes)으로 be limited?
-**A**: days정/예약 도메인에서 1 years을 초과하는 기간은 실무적으로 거의 사용되지 않습니다. Setting an upper bound prevents accidentally entering excessive values. This limit can be adjusted according to domain requirements.
+### Q2: Why is the maximum duration in `Duration` limited to 1 year (525,600 minutes)?
+**A**: In the scheduling/reservation domain, durations exceeding 1 year are rarely used in practice. Setting an upper bound prevents accidentally entering excessive values. This limit can be adjusted according to domain requirements.
 
-### Q3: `RecurrenceRule`에서 factory method(`Daily`, `Weekly`, `Monthly`)를 minutes리한 이유는 무엇인가요?
+### Q3: Why are separate factory methods (`Daily`, `Weekly`, `Monthly`) used in `RecurrenceRule`?
 **A**: Handling all recurrence types with a single constructor makes parameter combinations complex and can create invalid combinations. `Weekly(DayOfWeek.Monday, DayOfWeek.Wednesday)` purpose-specific factory methods make the intent clear on the calling side, and each method only performs validation appropriate for that type.
 
 ---
 
-We have explored all value object application cases across various domains in Part 5. 부록에서는 LanguageExt 주요 타입 참조, Framework Type 선택 가이드, 용어집 등을 확인할 수 있습니다.
+We have explored all value object application cases across various domains in Part 5. The appendix covers LanguageExt key type reference, framework type selection guide, and glossary.
 
-→ [부록 A: LanguageExt 주요 타입 참조](../../../Appendix/A-languageext-reference.md)
+→ [Appendix A: LanguageExt Key Type Reference](../../../Appendix/A-languageext-reference.md)

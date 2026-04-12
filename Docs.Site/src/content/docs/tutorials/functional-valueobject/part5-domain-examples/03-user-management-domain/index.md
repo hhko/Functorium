@@ -3,11 +3,11 @@ title: "User Management Domain"
 ---
 ## Overview
 
-"User@Example.COM"과 "user@example.com"을 다른 이메days로 취급하면 같은 사용자가 중복 가입합니다. Handling passwords as `string` exposes plain text in logs and debuggers. If phone numbers "010-1234-5678" and "+82-10-1234-5678" are stored differently, search becomes impossible. 사용자 관리 도메인에서  won시 타입은 보안과 데이터 품질 모두를 위협합니다.
+If "User@Example.COM" and "user@example.com" are treated as different emails, the same user can register multiple times. Handling passwords as `string` exposes plain text in logs and debuggers. If phone numbers "010-1234-5678" and "+82-10-1234-5678" are stored differently, search becomes impossible. In the user management domain, primitive types threaten both security and data quality.
 
 In this chapter, we implement 4 core concepts needed for user authentication and profiles as value objects, guaranteeing normalization/masking/hashing at the type level.
 
-- **Email**: 이메days 형식 검증과 정규화, Masking 기능 제공
+- **Email**: Provides email format validation, normalization, and masking
 - **Password**: Provides password strength validation, hash storage, and verification
 - **PhoneNumber**: Provides phone number normalization, formatting, and masking
 - **Username**: Provides username rule validation and reserved word blocking
@@ -16,8 +16,8 @@ In this chapter, we implement 4 core concepts needed for user authentication and
 
 ### **Core Learning Objectives**
 - You can **implement a security-focused design** that stores only hashes without saving plain text in Password.
-- Email과 PhoneNumber에서 입력값 정규화와 표시용 포맷팅을 **minutes리할 수** 있습니다.
-- Username에서 시스템 예약어를 **차단하는 Pattern을 구현할 수** 있습니다.
+- You can **separate** input normalization and display formatting in Email and PhoneNumber.
+- You can **implement a reserved word blocking pattern** in Username.
 - You can **protect sensitive information** with Masked properties or safe ToString() in all value objects.
 
 ### **What You Will Verify Through Practice**
@@ -28,15 +28,15 @@ In this chapter, we implement 4 core concepts needed for user authentication and
 
 ## Why Is This Needed?
 
-사용자 관리는 보안과 데이터 품질이 특히 중요한 도메인입니다.  won시 타입으로 사용자 데이터를 다루면 여러 문제가 발생합니다.
+User management is a domain where security and data quality are particularly important. Handling user data with primitive types causes several problems.
 
-Handling passwords as `string` can expose plain text in logs and debuggers, but the Password value object hashes at creation and `ToString()` always returns "********". "User@Example.COM"과 "user@example.com"이 다른 이메days로 취급되면 중복 가입이 가능한데, Email value object는 항상 소문자로 정규화하여 이를 방지합니다. 전화번호의 다양한 입력 형식("010-1234-5678", "+82-10-1234-5678" 등)도 PhoneNumber가 내부적으로 정규화된 형식을 유지하여 days관된 검색을 guarantees.
+Handling passwords as `string` can expose plain text in logs and debuggers, but the Password value object hashes at creation and `ToString()` always returns "********". If "User@Example.COM" and "user@example.com" are treated as different emails, duplicate registration becomes possible, but the Email value object always normalizes to lowercase to prevent this. Various phone number input formats ("010-1234-5678", "+82-10-1234-5678", etc.) are also handled by PhoneNumber maintaining a normalized internal format to guarantee consistent search.
 
 ## Core Concepts
 
-### Email (이메days)
+### Email
 
-Email은 이메days 주소를 검증하고 정규화합니다. LocalPart, Domain 파싱과 Masking 기능을 provides.
+Email validates and normalizes email addresses. It provides LocalPart and Domain parsing along with masking functionality.
 
 ```csharp
 public sealed class Email : SimpleValueObject<string>
@@ -82,9 +82,9 @@ public sealed class Email : SimpleValueObject<string>
 }
 ```
 
-항상 소문자로 저장하므로 동등성 비교가 단순해지고, `LocalPart`와 `Domain` 속성으로 구성 요소에 쉽게 접근할 수 있습니다. 정규화와 파싱이 결합된 Pattern입니다.
+Since it is always stored in lowercase, equality comparison becomes simple, and components can be easily accessed via the `LocalPart` and `Domain` properties. This is a pattern where normalization and parsing are combined.
 
-### Password (비밀번호)
+### Password
 
 Password validates password strength and stores hashed values. Plain text is never stored.
 
@@ -126,9 +126,9 @@ public sealed class Password : IEquatable<Password>
 }
 ```
 
-`Create()` 시점에 평문을 Hash하고, value object에는 Hash만 저장합니다. `Verify()`로 검증하고, `ToString()`은 항상 Masking된 값을 반환하여 평문 노출을  won천 차단합니다.
+At the time of `Create()`, the plain text is hashed, and only the hash is stored in the value object. Verification is done via `Verify()`, and `ToString()` always returns a masked value, completely blocking plain text exposure.
 
-### PhoneNumber (전화번호)
+### PhoneNumber
 
 PhoneNumber normalizes phone numbers to international format. It provides per-country formatting and masking functionality.
 
@@ -172,9 +172,9 @@ public sealed class PhoneNumber : ValueObject
 }
 ```
 
-다양한 입력 형식(010-1234-5678, +82-10-1234-5678 등)을 정규화된 국제 형식으로 저장하고, `Formatted`로 표시용 형식을 provides. 입력 형식과 저장 형식의 minutes리 Pattern입니다.
+Various input formats (010-1234-5678, +82-10-1234-5678, etc.) are stored in a normalized international format, and `Formatted` provides a display format. This is a pattern for separating input format from storage format.
 
-### Username (사용자명)
+### Username
 
 Username validates username rules and blocks reserved words.
 
@@ -220,7 +220,7 @@ public sealed class Username : SimpleValueObject<string>
 }
 ```
 
-사용자명 규칙(영문자 시작, 길이 제한)과 예약어 목록이 value object 내부에 정의되어 days관되게 적용됩니다.
+Username rules (must start with a letter, length limits) and the reserved word list are defined within the value object and applied consistently.
 
 ## Practical Guidelines
 
@@ -242,7 +242,7 @@ public sealed class Username : SimpleValueObject<string>
    Display: ********
    Verification (correct): True
    Verification (incorrect): False
-   약한 비밀Number: Password is too weak. Must contain at least 3 of: uppercase, lowercase, digits, special characters.
+   Weak password: Password is too weak. Must contain at least 3 of: uppercase, lowercase, digits, special characters.
 
 3. PhoneNumber (Phone Number)
 ────────────────────────────────────────
@@ -264,9 +264,9 @@ public sealed class Username : SimpleValueObject<string>
 ```
 03-User-Management-Domain/
 ├── UserManagementDomain/
-│   ├── Program.cs                      # 메인 실행 파days (4개 값 객체 구현)
-│   └── UserManagementDomain.csproj     # 프로젝트 파days
-└── README.md                           # 프로젝트 문서
+│   ├── Program.cs                      # Main executable (4 value object implementations)
+│   └── UserManagementDomain.csproj     # Project file
+└── README.md                           # Project documentation
 ```
 
 ### Dependencies
@@ -276,9 +276,9 @@ public sealed class Username : SimpleValueObject<string>
 </ItemGroup>
 ```
 
-### value object별 Framework Type
+### Framework Type per Value Object
 
-각 value object가 상속하는 Framework Type과 주요 Characteristics을 정리한 것입니다.
+Summarizes the framework type each value object inherits and its key characteristics.
 
 | value object | Framework Type | Characteristics |
 |--------|---------------|------|
@@ -291,23 +291,23 @@ public sealed class Username : SimpleValueObject<string>
 
 ### User Management Value Object Summary
 
-각 value object의 속성, Validation Rules, Security Features을 한눈에 비교할 수 있습니다.
+You can compare the properties, validation rules, and security features of each value object at a glance.
 
 | value object | Key Properties | Validation Rules | Security Features |
 |--------|----------|----------|----------|
-| Email | Value | 이메days 형식, 254자 이하 | Masked |
+| Email | Value | Email format, 254 chars or less | Masked |
 | Password | Value (Hash) | 8-128 chars, strength 3/4+ | Hash storage, ToString masking |
 | PhoneNumber | Value, CountryCode | 9-11 digit number | Masked |
 | Username | Value | 3-30 chars, starts with letter, reserved words prohibited | None |
 
-### 보안 Pattern
+### Security Patterns
 
-사용자 관리 도메인에서 활용된 보안 Pattern을 유형별로 minutes류하면 다음과 같습니다.
+The following classifies the security patterns used in the user management domain by type.
 
 | Pattern | value object | Description |
 |------|--------|------|
 | Hash storage | Password | Does not store plain text |
-| Masking | Email, PhoneNumber | 민감 정보 days부만 표시 |
+| Masking | Email, PhoneNumber | Display only partial sensitive information |
 | Reserved word blocking | Username | System-used names prohibited |
 | Safe ToString | Password | Always returns "********" |
 
@@ -315,7 +315,7 @@ public sealed class Username : SimpleValueObject<string>
 
 ### Q1: How to use a stronger hash algorithm in Password?
 
-In production, bcrypt or Argon2 should be used instead of SHA256. bcrypt는 솔트를 자동으로 생성하고, work factor로 계산  hours을 조절할 수 있어 브루트포스 공격에 더 강합니다.
+In production, bcrypt or Argon2 should be used instead of SHA256. bcrypt automatically generates salts and allows adjusting computation time via work factor, making it more resistant to brute-force attacks.
 
 ```csharp
 // BCrypt usage example (BCrypt.Net-Next package)
@@ -351,7 +351,7 @@ public static Fin<Email> Create(string? value, EmailValidationOptions? options =
 }
 ```
 
-### Q3: PhoneNumber에서 여러 국가 형식을 지 won하려면?
+### Q3: How to support multiple country formats in PhoneNumber?
 
 Define separate formatters per country.
 
@@ -378,7 +378,7 @@ private static string FormatUS(string number)
 }
 ```
 
-We have explored the value object implementation for the user management domain. Next chapter에서는 날짜 범위,  hours 슬롯, 반복 규칙 등  hours 관련 로직이 복잡한 days정/예약 도메인의 value object를 implements.
+We have explored the value object implementation for the user management domain. In the next chapter, we implement value objects for the scheduling/reservation domain where time-related logic is complex, including date ranges, time slots, and recurrence rules.
 
 ---
 
@@ -386,18 +386,18 @@ We have explored the value object implementation for the user management domain.
 
 This project includes unit tests.
 
-### Tests 실행
+### Running Tests
 ```bash
 cd UserManagementDomain.Tests.Unit
 dotnet test
 ```
 
-### Tests 구조
+### Test Structure
 ```
 UserManagementDomain.Tests.Unit/
-├── EmailTests.cs      # 이메days 형식 검증 테스트
+├── EmailTests.cs      # Email format validation tests
 ├── PasswordTests.cs   # Password strength validation tests
-├── PhoneNumberTests.cs # 전화번호 형식/Masking 테스트
+├── PhoneNumberTests.cs # Phone number format/masking tests
 └── UsernameTests.cs   # Username rule validation tests
 ```
 
@@ -407,11 +407,11 @@ UserManagementDomain.Tests.Unit/
 |-------------|-----------|
 | EmailTests | Format validation, normalization, domain extraction |
 | PasswordTests | Strength rules, HashedValue, character requirements |
-| PhoneNumberTests | 형식 검증, 국가 코드, Masking |
+| PhoneNumberTests | Format validation, country code, masking |
 | UsernameTests | Length limits, reserved word check, normalization |
 
 ---
 
-We have implemented the user management domain value objects. Next chapter에서는 days정/예약 도메인에서 날짜 범위,  hours 슬롯, 반복 규칙 등  hours 기반 value object를 다룹니다.
+We have implemented the user management domain value objects. In the next chapter, we cover time-based value objects in the scheduling/reservation domain, including date ranges, time slots, and recurrence rules.
 
-→ [4장: days정/예약 도메인](../04-Scheduling-Domain/)
+→ [Chapter 4: Scheduling/Reservation Domain](../04-Scheduling-Domain/)

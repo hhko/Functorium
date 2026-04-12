@@ -2,159 +2,159 @@
 title: "INamedTypeSymbol"
 ---
 
-## 개요
+## Overview
 
-앞 장에서 `ForAttributeWithMetadataName`의 `transform` 콜백에서 `ctx.TargetSymbol`을 통해 심볼에 접근했습니다. 이 심볼이 바로 `INamedTypeSymbol`입니다. ObservablePortGenerator는 이 심볼 하나에서 클래스 이름, 네임스페이스, 구현 인터페이스, 그리고 메서드 목록까지 코드 생성에 필요한 모든 정보를 추출합니다. 이번 장에서는 이 API 각각이 **왜** 필요하고, 우리 프로젝트에서 **어떻게** 사용되는지를 함께 살펴봅니다.
+In the previous chapter, we accessed symbols through `ctx.TargetSymbol` in the `transform` callback of `ForAttributeWithMetadataName`. This symbol is precisely `INamedTypeSymbol`. ObservablePortGenerator extracts all the information needed for code generation from this single symbol -- class name, namespace, implemented interfaces, and method list. In this chapter, we examine **why** each of these APIs is needed and **how** they are used in our project.
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **INamedTypeSymbol의** 기본 정보 추출 API를 이해한다
-   - Name, ContainingNamespace, TypeKind의 역할과 사용법
-2. **AllInterfaces와 GetMembers()를** 활용한 심층 분석을 습득한다
-   - 인터페이스 계층 탐색과 멤버 필터링
-3. **ObservablePortGenerator의** `MapToObservableClassInfo`에서 이 API들이 어떻게 조합되는지 학습한다
+### Core Learning Objectives
+1. **Understand the basic information extraction API of INamedTypeSymbol**
+   - Roles and usage of Name, ContainingNamespace, TypeKind
+2. **Learn in-depth analysis using AllInterfaces and GetMembers()**
+   - Interface hierarchy traversal and member filtering
+3. **Learn how these APIs are combined in ObservablePortGenerator's `MapToObservableClassInfo`**
 
 ---
 
-## INamedTypeSymbol이란?
+## What is INamedTypeSymbol?
 
-**INamedTypeSymbol**은 **이름이 있는 타입**(클래스, 인터페이스, 구조체, 열거형, 델리게이트)을 나타내는 심볼입니다.
+**INamedTypeSymbol** is a symbol representing **named types** (classes, interfaces, structs, enums, delegates).
 
 ```csharp
-// 소스 생성기에서 얻는 방법
+// How to obtain in source generators
 GeneratorAttributeSyntaxContext ctx = ...;
 
 if (ctx.TargetSymbol is INamedTypeSymbol classSymbol)
 {
-    // 클래스/인터페이스/구조체 등의 정보에 접근
+    // Access class/interface/struct information
 }
 ```
 
 ---
 
-## 기본 정보 추출
+## Basic Information Extraction
 
-소스 생성기가 코드를 생성하려면 먼저 대상 클래스의 이름과 네임스페이스를 알아야 합니다. 생성되는 `UserRepositoryObservable` 클래스의 이름과 `namespace` 선언이 모두 여기서 나옵니다.
+To generate code, the source generator first needs to know the target class's name and namespace. Both the generated `UserRepositoryObservable` class name and the `namespace` declaration come from here.
 
-### 이름과 네임스페이스
+### Name and Namespace
 
 ```csharp
 INamedTypeSymbol classSymbol = ...;
 
-// 짧은 이름
+// Short name
 string name = classSymbol.Name;  // "UserRepository"
 
-// 네임스페이스
+// Namespace
 string @namespace = classSymbol.ContainingNamespace.ToString();
 // "MyApp.Infrastructure.Repositories"
 
-// 글로벌 네임스페이스 확인
+// Check for global namespace
 bool isGlobal = classSymbol.ContainingNamespace.IsGlobalNamespace;
 
-// 실제 코드에서 네임스페이스 처리
+// Namespace handling in actual code
 string @namespace = classSymbol.ContainingNamespace.IsGlobalNamespace
     ? string.Empty
     : classSymbol.ContainingNamespace.ToString();
 ```
 
-### 타입 종류 확인
+### Checking Type Kind
 
 ```csharp
-// TypeKind로 타입 종류 확인
+// Check type kind with TypeKind
 switch (classSymbol.TypeKind)
 {
     case TypeKind.Class:
-        Console.WriteLine("클래스입니다");
+        Console.WriteLine("This is a class");
         break;
     case TypeKind.Interface:
-        Console.WriteLine("인터페이스입니다");
+        Console.WriteLine("This is an interface");
         break;
     case TypeKind.Struct:
-        Console.WriteLine("구조체입니다");
+        Console.WriteLine("This is a struct");
         break;
     case TypeKind.Enum:
-        Console.WriteLine("열거형입니다");
+        Console.WriteLine("This is an enum");
         break;
 }
 ```
 
-### 수정자 확인
+### Checking Modifiers
 
 ```csharp
-// 접근성
+// Accessibility
 Accessibility accessibility = classSymbol.DeclaredAccessibility;
-// Public, Internal, Private 등
+// Public, Internal, Private, etc.
 
-// 추상/봉인/정적
+// Abstract/Sealed/Static
 bool isAbstract = classSymbol.IsAbstract;
 bool isSealed = classSymbol.IsSealed;
 bool isStatic = classSymbol.IsStatic;
 
-// 제네릭
+// Generic
 bool isGeneric = classSymbol.IsGenericType;
 ```
 
 ---
 
-## 인터페이스 분석
+## Interface Analysis
 
-ObservablePortGenerator가 래핑할 메서드를 찾으려면, 대상 클래스가 `IObservablePort`를 구현하는지, 그리고 어떤 인터페이스 계층을 통해 구현하는지를 알아야 합니다. 여기서 `AllInterfaces`와 `Interfaces`의 차이가 중요해집니다.
+For ObservablePortGenerator to find methods to wrap, it needs to know whether the target class implements `IObservablePort` and through what interface hierarchy it does so. This is where the difference between `AllInterfaces` and `Interfaces` becomes important.
 
 ### AllInterfaces vs Interfaces
 
 ```csharp
-// Interfaces: 직접 구현한 인터페이스만
+// Interfaces: only directly implemented interfaces
 var directInterfaces = classSymbol.Interfaces;
 
-// AllInterfaces: 직접 + 상속받은 모든 인터페이스
+// AllInterfaces: all interfaces (direct + inherited)
 var allInterfaces = classSymbol.AllInterfaces;
 
-// 예시:
+// Example:
 // public interface IUserRepository : IObservablePort { }
 // public class UserRepository : IUserRepository { }
 
-// classSymbol.Interfaces → [IUserRepository]
-// classSymbol.AllInterfaces → [IUserRepository, IObservablePort]
+// classSymbol.Interfaces -> [IUserRepository]
+// classSymbol.AllInterfaces -> [IUserRepository, IObservablePort]
 ```
 
-### IObservablePort 구현 확인
+### Checking IObservablePort Implementation
 
 ```csharp
-// ObservablePortGenerator.cs에서
+// In ObservablePortGenerator.cs
 private static bool ImplementsIObservablePort(INamedTypeSymbol interfaceSymbol)
 {
-    // IObservablePort 자체인지 확인
+    // Check if it is IObservablePort itself
     if (interfaceSymbol.Name == "IObservablePort")
     {
         return true;
     }
 
-    // IObservablePort를 상속받은 인터페이스인지 확인
+    // Check if it inherits IObservablePort
     return interfaceSymbol.AllInterfaces.Any(i => i.Name == "IObservablePort");
 }
 
-// 사용
+// Usage
 var adapterInterfaces = classSymbol.AllInterfaces
     .Where(ImplementsIObservablePort);
 ```
 
 ---
 
-## 멤버 분석
+## Member Analysis
 
-인터페이스를 찾았다면, 그 안의 메서드를 추출해야 합니다. `GetMembers()`는 타입의 모든 멤버(메서드, 프로퍼티, 필드 등)를 반환하며, `OfType<T>()`으로 원하는 종류만 필터링할 수 있습니다. 아래 "인터페이스에서 메서드 추출" 코드가 우리 프로젝트의 핵심 로직입니다.
+Once the interfaces are found, their methods need to be extracted. `GetMembers()` returns all members of the type (methods, properties, fields, etc.), and `OfType<T>()` can filter to the desired kind. The "Extract methods from interface" code below is the core logic of our project.
 
 ### GetMembers()
 
 ```csharp
-// 모든 멤버 가져오기
+// Get all members
 var allMembers = classSymbol.GetMembers();
 
-// 특정 이름의 멤버
+// Members with a specific name
 var namedMembers = classSymbol.GetMembers("GetUser");
 
-// 타입별 필터링
+// Filtering by type
 var methods = classSymbol.GetMembers()
     .OfType<IMethodSymbol>();
 
@@ -165,14 +165,14 @@ var fields = classSymbol.GetMembers()
     .OfType<IFieldSymbol>();
 ```
 
-### 인터페이스에서 메서드 추출
+### Extracting Methods from Interfaces
 
 ```csharp
-// ObservablePortGenerator.cs의 실제 코드
+// Actual code from ObservablePortGenerator.cs
 var methods = classSymbol.AllInterfaces
     .Where(ImplementsIObservablePort)
     .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
-    .Where(m => m.MethodKind == MethodKind.Ordinary)  // 일반 메서드만
+    .Where(m => m.MethodKind == MethodKind.Ordinary)  // Regular methods only
     .Select(m => new MethodInfo(
         m.Name,
         m.Parameters.Select(p => new ParameterInfo(
@@ -185,21 +185,21 @@ var methods = classSymbol.AllInterfaces
 
 ---
 
-## 생성자 분석
+## Constructor Analysis
 
-생성된 `Observable` 클래스는 원본 클래스를 상속하므로, 부모의 생성자 파라미터를 그대로 전달해야 합니다. `Constructors` 프로퍼티로 생성자 목록에 접근하고, 각 생성자의 파라미터를 분석하여 생성 코드에 반영합니다.
+The generated `Observable` class inherits the original class, so it must pass the parent's constructor parameters as-is. The `Constructors` property provides access to the constructor list, and each constructor's parameters are analyzed and reflected in the generated code.
 
-### Constructors 프로퍼티
+### Constructors Property
 
 ```csharp
-// 모든 생성자
+// All constructors
 var constructors = classSymbol.Constructors;
 
-// public 생성자만
+// Public constructors only
 var publicConstructors = classSymbol.Constructors
     .Where(c => c.DeclaredAccessibility == Accessibility.Public);
 
-// 파라미터가 가장 많은 생성자
+// Constructor with the most parameters
 var primaryConstructor = classSymbol.Constructors
     .OrderByDescending(c => c.Parameters.Length)
     .FirstOrDefault();
@@ -208,15 +208,15 @@ var primaryConstructor = classSymbol.Constructors
 ### Primary Constructor (C# 12+)
 
 ```csharp
-// Primary Constructor 예시
+// Primary Constructor example
 public class UserRepository(ILogger<UserRepository> logger) : IObservablePort
 {
 }
 
-// ConstructorParameterExtractor.cs의 실제 코드
+// Actual code from ConstructorParameterExtractor.cs
 public static List<ParameterInfo> ExtractParameters(INamedTypeSymbol classSymbol)
 {
-    // 1. 클래스 자체의 생성자에서 파라미터 찾기
+    // 1. Find parameters from the class's own constructors
     var constructor = classSymbol.Constructors
         .Where(c => c.DeclaredAccessibility == Accessibility.Public)
         .OrderByDescending(c => c.Parameters.Length)
@@ -232,7 +232,7 @@ public static List<ParameterInfo> ExtractParameters(INamedTypeSymbol classSymbol
             .ToList();
     }
 
-    // 2. 부모 클래스의 생성자에서 찾기 (재귀)
+    // 2. Find from parent class constructors (recursive)
     if (classSymbol.BaseType is not null
         && classSymbol.BaseType.SpecialType != SpecialType.System_Object)
     {
@@ -245,15 +245,15 @@ public static List<ParameterInfo> ExtractParameters(INamedTypeSymbol classSymbol
 
 ---
 
-## 상속 계층 분석
+## Inheritance Hierarchy Analysis
 
 ### BaseType
 
 ```csharp
-// 부모 클래스
+// Parent class
 INamedTypeSymbol? baseType = classSymbol.BaseType;
 
-// 상속 계층 탐색
+// Traverse inheritance hierarchy
 void PrintHierarchy(INamedTypeSymbol type, int indent = 0)
 {
     Console.WriteLine(new string(' ', indent * 2) + type.Name);
@@ -265,31 +265,31 @@ void PrintHierarchy(INamedTypeSymbol type, int indent = 0)
     }
 }
 
-// 예시 출력:
+// Example output:
 // UserRepository
 //   RepositoryBase
-//     object (생략됨)
+//     object (omitted)
 ```
 
 ---
 
-## 제네릭 타입 처리
+## Generic Type Handling
 
 ```csharp
-// 제네릭 타입 확인
+// Check for generic type
 if (classSymbol.IsGenericType)
 {
-    // 타입 파라미터 (T, TValue 등)
+    // Type parameters (T, TValue, etc.)
     var typeParams = classSymbol.TypeParameters;
 
-    // 타입 인수 (int, string 등 - 바인딩된 제네릭)
+    // Type arguments (int, string, etc. - bound generics)
     var typeArgs = classSymbol.TypeArguments;
 
-    // 원본 정의 (unbounded)
+    // Original definition (unbounded)
     var original = classSymbol.OriginalDefinition;
 }
 
-// 예시: List<int>
+// Example: List<int>
 // TypeParameters: [T]
 // TypeArguments: [int]
 // OriginalDefinition: List<T>
@@ -297,16 +297,16 @@ if (classSymbol.IsGenericType)
 
 ---
 
-## 실제 활용: ObservableClassInfo 생성
+## Practical Usage: Creating ObservableClassInfo
 
-지금까지 개별 API를 살펴보았습니다. 이제 이 API들이 `MapToObservableClassInfo` 메서드에서 어떻게 조합되어 하나의 `ObservableClassInfo`를 만들어내는지 전체 흐름을 확인합니다. 이 메서드가 `ForAttributeWithMetadataName`의 `transform` 콜백으로 사용됩니다.
+We have examined individual APIs so far. Now let us see the full flow of how these APIs are combined in the `MapToObservableClassInfo` method to create a single `ObservableClassInfo`. This method is used as the `transform` callback of `ForAttributeWithMetadataName`.
 
 ```csharp
 private static ObservableClassInfo MapToObservableClassInfo(
     GeneratorAttributeSyntaxContext context,
     CancellationToken cancellationToken)
 {
-    // 1. 타입 심볼 확인
+    // 1. Verify type symbol
     if (context.TargetSymbol is not INamedTypeSymbol classSymbol)
     {
         return ObservableClassInfo.None;
@@ -314,13 +314,13 @@ private static ObservableClassInfo MapToObservableClassInfo(
 
     cancellationToken.ThrowIfCancellationRequested();
 
-    // 2. 기본 정보 추출
+    // 2. Extract basic information
     string className = classSymbol.Name;
     string @namespace = classSymbol.ContainingNamespace.IsGlobalNamespace
         ? string.Empty
         : classSymbol.ContainingNamespace.ToString();
 
-    // 3. 인터페이스에서 메서드 추출
+    // 3. Extract methods from interfaces
     var methods = classSymbol.AllInterfaces
         .Where(ImplementsIObservablePort)
         .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
@@ -328,17 +328,17 @@ private static ObservableClassInfo MapToObservableClassInfo(
         .Select(m => MapToMethodInfo(m))
         .ToList();
 
-    // 4. 메서드가 없으면 생성 불필요
+    // 4. No generation needed if no methods
     if (methods.Count == 0)
     {
         return ObservableClassInfo.None;
     }
 
-    // 5. 생성자 파라미터 추출
+    // 5. Extract constructor parameters
     var baseConstructorParameters =
         ConstructorParameterExtractor.ExtractParameters(classSymbol);
 
-    // 6. 결과 반환
+    // 6. Return result
     return new ObservableClassInfo(
         @namespace, className, methods, baseConstructorParameters);
 }
@@ -346,36 +346,36 @@ private static ObservableClassInfo MapToObservableClassInfo(
 
 ---
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-`INamedTypeSymbol`은 소스 생성기에서 타입 정보를 추출하는 핵심 도구입니다. 우리 프로젝트에서는 `Name`과 `ContainingNamespace`로 생성 클래스의 이름과 네임스페이스를 결정하고, `AllInterfaces`로 `IObservablePort` 구현 여부를 확인한 뒤, `GetMembers()`로 래핑할 메서드를 추출하며, `Constructors`로 부모 생성자 파라미터를 전달합니다.
+`INamedTypeSymbol` is the core tool for extracting type information in source generators. In our project, `Name` and `ContainingNamespace` determine the generated class's name and namespace, `AllInterfaces` verifies `IObservablePort` implementation, `GetMembers()` extracts methods to wrap, and `Constructors` passes parent constructor parameters.
 
-| 속성/메서드 | 용도 | 반환 |
-|-------------|------|------|
-| `Name` | 짧은 이름 | string |
-| `ContainingNamespace` | 네임스페이스 | INamespaceSymbol |
-| `TypeKind` | 타입 종류 | TypeKind |
-| `AllInterfaces` | 모든 인터페이스 | ImmutableArray |
-| `Interfaces` | 직접 구현 인터페이스 | ImmutableArray |
-| `GetMembers()` | 모든 멤버 | ImmutableArray |
-| `Constructors` | 생성자들 | ImmutableArray |
-| `BaseType` | 부모 클래스 | INamedTypeSymbol? |
+| Property/Method | Purpose | Return |
+|-----------------|---------|--------|
+| `Name` | Short name | string |
+| `ContainingNamespace` | Namespace | INamespaceSymbol |
+| `TypeKind` | Type kind | TypeKind |
+| `AllInterfaces` | All interfaces | ImmutableArray |
+| `Interfaces` | Directly implemented interfaces | ImmutableArray |
+| `GetMembers()` | All members | ImmutableArray |
+| `Constructors` | Constructors | ImmutableArray |
+| `BaseType` | Parent class | INamedTypeSymbol? |
 
 ---
 
 ## FAQ
 
-### Q1: `AllInterfaces`에서 `IObservablePort`를 직접 이름으로 비교하는 것이 안전한가요?
-**A**: 이름 기반 비교는 동일한 이름의 인터페이스가 다른 네임스페이스에 존재할 경우 잘못된 매칭이 발생할 수 있습니다. 더 안전한 방법은 `SymbolEqualityComparer.Default`로 비교하거나, 전체 메타데이터 이름(`ContainingNamespace` 포함)으로 확인하는 것입니다. Functorium에서는 프로젝트 내 이름 충돌이 없으므로 간결한 이름 비교를 사용합니다.
+### Q1: Is it safe to compare `IObservablePort` directly by name in `AllInterfaces`?
+**A**: Name-based comparison can cause incorrect matching if an interface with the same name exists in a different namespace. A safer approach is to compare with `SymbolEqualityComparer.Default` or verify using the full metadata name (including `ContainingNamespace`). In Functorium, since there are no name conflicts within the project, the concise name comparison is used.
 
-### Q2: `ObservableClassInfo.None` 패턴은 왜 `null` 반환 대신 사용하나요?
-**A**: `transform` 콜백의 반환 타입이 `ObservableClassInfo`(값 타입)이므로 `null`을 반환할 수 없습니다. 빈 객체 패턴으로 유효하지 않은 결과를 표현하고, 이후 `.Where(x => x != ObservableClassInfo.None)` 필터로 제거합니다. 이 패턴은 값 타입에서의 null 처리를 깔끔하게 해결합니다.
+### Q2: Why is the `ObservableClassInfo.None` pattern used instead of returning `null`?
+**A**: Since the `transform` callback's return type is `ObservableClassInfo` (a value type), `null` cannot be returned. The empty object pattern expresses invalid results, which are later removed with the `.Where(x => x != ObservableClassInfo.None)` filter. This pattern cleanly handles null treatment for value types.
 
-### Q3: `ContainingNamespace.IsGlobalNamespace`를 확인하는 이유는 무엇인가요?
-**A**: `namespace` 선언 없이 정의된 타입은 글로벌 네임스페이스에 속합니다. 이 경우 `ContainingNamespace.ToString()`이 `"<global namespace>"`를 반환하는데, 이를 생성 코드의 `namespace` 선언에 그대로 사용하면 컴파일 오류가 발생합니다. 글로벌 네임스페이스일 때는 빈 문자열로 처리하여 `namespace` 선언을 생략합니다.
+### Q3: Why check `ContainingNamespace.IsGlobalNamespace`?
+**A**: Types defined without a `namespace` declaration belong to the global namespace. In this case, `ContainingNamespace.ToString()` returns `"<global namespace>"`, and using this directly in the generated code's `namespace` declaration would cause a compilation error. When in the global namespace, it is treated as an empty string to omit the `namespace` declaration.
 
 ---
 
-`INamedTypeSymbol`로 클래스와 인터페이스 수준의 정보를 추출하는 방법을 이해했습니다. 다음 장에서는 한 단계 더 들어가서, 각 메서드의 시그니처(이름, 파라미터, 반환 타입)를 분석하는 `IMethodSymbol`을 살펴봅니다. 이 정보가 로깅 코드와 파이프라인 래퍼의 생성 근거가 됩니다.
+We have understood how to extract class and interface level information with `INamedTypeSymbol`. In the next chapter, we go one level deeper and examine `IMethodSymbol`, which analyzes each method's signature (name, parameters, return type). This information becomes the basis for generating logging code and pipeline wrappers.
 
-→ [06. IMethodSymbol](../06-IMethodSymbol/)
+-> [06. IMethodSymbol](../06-IMethodSymbol/)

@@ -2,128 +2,128 @@
 title: "Incremental Caching"
 ---
 
-## 개요
+## Overview
 
-개발자가 파일 하나를 수정할 때마다 소스 생성기가 프로젝트 전체를 다시 처리한다면 어떤 일이 벌어질까요? 수백 개의 Repository 클래스가 있는 대규모 프로젝트에서는 키 입력 한 번에 수 초씩 IDE가 멈추게 됩니다. 앞 장에서 배운 `ForAttributeWithMetadataName`이 대상 탐색을 최적화한다면, 이번 장의 증분 캐싱은 **이미 처리된 결과를 재사용하여** 불필요한 재처리를 완전히 건너뛰는 메커니즘입니다. 캐싱이 올바르게 작동하려면 데이터 모델과 출력 모두 결정적(Deterministic)이어야 하며, 이를 깨뜨리는 실수를 이해하는 것이 이번 장의 핵심입니다.
+What would happen if the source generator reprocessed the entire project every time a developer modifies a single file? In large projects with hundreds of Repository classes, the IDE would freeze for several seconds on each keystroke. While `ForAttributeWithMetadataName` from the previous chapter optimizes target discovery, the incremental caching in this chapter is the mechanism that **reuses already-processed results** to completely skip unnecessary reprocessing. For caching to work correctly, both the data model and output must be deterministic, and understanding the mistakes that break this is the key focus of this chapter.
 
-## 학습 목표
+## Learning Objectives
 
-### 핵심 학습 목표
-1. **증분 빌드의** 동작 원리를 이해한다
-   - 입력 변경 감지, 중간 결과 캐싱, 출력 캐싱의 세 단계
-2. **캐싱이 작동하는 조건을** 파악한다
-   - 값 동등성, 불변 컬렉션, 결정적 출력
-3. **캐시를 무효화시키는** 흔한 실수를 식별한다
-   - 타임스탬프, 순서 비결정성, 외부 상태 의존
+### Core Learning Objectives
+1. **Understand the operating principles of incremental builds**
+   - Three stages: input change detection, intermediate result caching, output caching
+2. **Identify the conditions for caching to work**
+   - Value equality, immutable collections, deterministic output
+3. **Identify common mistakes that invalidate the cache**
+   - Timestamps, order non-determinism, external state dependencies
 
 ---
 
-## 증분 빌드란?
+## What is Incremental Build?
 
-**증분 빌드(Incremental Build)는** 변경된 부분만 다시 처리하여 빌드 시간을 단축하는 기법입니다.
+**Incremental Build** is a technique that shortens build time by reprocessing only changed parts.
 
 ```
-전체 빌드 (Full Build)
+Full Build
 =====================
-파일 A 수정됨
-    ↓
-모든 파일 다시 처리: A, B, C, D, E
-    ↓
-빌드 시간: 10초
+File A modified
+    |
+All files reprocessed: A, B, C, D, E
+    |
+Build time: 10 seconds
 
-증분 빌드 (Incremental Build)
+Incremental Build
 ============================
-파일 A 수정됨
-    ↓
-캐시 확인:
-- 파일 A: 변경됨 → 다시 처리
-- 파일 B: 변경 없음 → 캐시 사용
-- 파일 C: 변경 없음 → 캐시 사용
-    ↓
-빌드 시간: 2초
+File A modified
+    |
+Cache check:
+- File A: Changed -> Reprocess
+- File B: No change -> Use cache
+- File C: No change -> Use cache
+    |
+Build time: 2 seconds
 ```
 
 ---
 
-## IIncrementalGenerator의 캐싱
+## IIncrementalGenerator's Caching
 
-IIncrementalGenerator는 **자동으로** 증분 캐싱을 지원합니다:
+IIncrementalGenerator **automatically** supports incremental caching:
 
 ```
-Provider 파이프라인의 캐싱
+Provider Pipeline Caching
 =========================
 
-1. 입력 변경 감지
-   - 소스 파일 해시 비교
-   - 변경된 파일만 파이프라인 재실행
+1. Input change detection
+   - Source file hash comparison
+   - Re-execute pipeline only for changed files
 
-2. 중간 결과 캐싱
-   - Select, Where 등의 결과 캐시
-   - 동일한 입력 → 캐시된 결과 반환
+2. Intermediate result caching
+   - Cache results of Select, Where, etc.
+   - Same input -> Return cached result
 
-3. 출력 캐싱
-   - 생성된 코드가 동일하면 파일 갱신 생략
+3. Output caching
+   - Skip file update if generated code is identical
 ```
 
-### 캐싱 흐름
+### Caching Flow
 
 ```
-첫 번째 빌드
+First Build
 ===========
-UserRepository.cs   → [처리] → UserRepositoryObservable.g.cs
-OrderRepository.cs  → [처리] → OrderRepositoryObservable.g.cs
+UserRepository.cs   -> [Process] -> UserRepositoryObservable.g.cs
+OrderRepository.cs  -> [Process] -> OrderRepositoryObservable.g.cs
 
-두 번째 빌드 (UserRepository.cs만 수정)
-======================================
-UserRepository.cs   → [처리] → UserRepositoryObservable.g.cs (갱신)
-OrderRepository.cs  → [캐시] → (처리 생략)
+Second Build (only UserRepository.cs modified)
+==============================================
+UserRepository.cs   -> [Process] -> UserRepositoryObservable.g.cs (updated)
+OrderRepository.cs  -> [Cache]  -> (processing skipped)
 ```
 
 ---
 
-## 캐싱이 작동하려면
+## For Caching to Work
 
-캐싱이 올바르게 작동하려면 **값 동등성(Value Equality)이** 필요합니다.
+For caching to work correctly, **value equality** is required.
 
-### 1. 레코드(Record) 사용
+### 1. Use Records
 
 ```csharp
-// ✅ readonly record struct: 값 의미론 + 자동 Equals/GetHashCode
+// readonly record struct: value semantics + automatic Equals/GetHashCode
 public readonly record struct ObservableClassInfo(
     string Namespace,
     string ClassName,
     List<MethodInfo> Methods,
     List<ParameterInfo> BaseConstructorParameters);
 
-// 동일한 내용 → 동일한 해시 → 캐시 히트
+// Same content -> Same hash -> Cache hit
 ```
 
-### 2. 불변(Immutable) 컬렉션 사용
+### 2. Use Immutable Collections
 
 ```csharp
-// ✅ ImmutableArray 사용
+// Using ImmutableArray
 public readonly record struct ObservableClassInfo(
     string Namespace,
     string ClassName,
-    ImmutableArray<MethodInfo> Methods);  // 불변
+    ImmutableArray<MethodInfo> Methods);  // Immutable
 
-// ⚠️ List는 참조 비교만 함
+// List only does reference comparison
 public readonly record struct ObservableClassInfo(
     string Namespace,
     string ClassName,
-    List<MethodInfo> Methods);  // 내용이 같아도 다른 인스턴스면 다름
+    List<MethodInfo> Methods);  // Different instances are different even with same content
 ```
 
-### 3. 결정적(Deterministic) 출력
+### 3. Deterministic Output
 
 ```csharp
-// ❌ 비결정적: 매번 다른 결과
+// Non-deterministic: different result every time
 var code = $"""
     // Generated at {DateTime.Now}
     public class {className}Pipeline {{ }}
     """;
 
-// ✅ 결정적: 동일 입력 → 동일 출력
+// Deterministic: same input -> same output
 var code = $"""
     // <auto-generated/>
     public class {className}Pipeline {{ }}
@@ -132,28 +132,28 @@ var code = $"""
 
 ---
 
-## 결정적 코드 생성
+## Deterministic Code Generation
 
-### 타입 이름의 결정성
+### Type Name Determinism
 
-동일한 타입이 다르게 표현되면 캐시가 무효화됩니다:
+Cache is invalidated if the same type is expressed differently:
 
 ```csharp
-// ❌ 비결정적: 동일 타입이 다르게 표현될 수 있음
-string typeName = type.Name;  // "User" vs "User" (별칭에 따라 다름)
+// Non-deterministic: same type may be expressed differently
+string typeName = type.Name;  // "User" vs "User" (varies by alias)
 
 string typeName = type.ToDisplayString();
-// "User" vs "MyApp.User" (컨텍스트에 따라 다름)
+// "User" vs "MyApp.User" (varies by context)
 
-// ✅ 결정적: 항상 동일한 형식
+// Deterministic: always the same format
 string typeName = type.ToDisplayString(
     SymbolDisplayFormat.FullyQualifiedFormat);
-// 항상 "global::MyApp.Models.User"
+// Always "global::MyApp.Models.User"
 ```
 
-### SymbolDisplayFormats 클래스
+### SymbolDisplayFormats Class
 
-Functorium 프로젝트의 결정적 포맷 정의:
+Deterministic format definition from the Functorium project:
 
 ```csharp
 // SymbolDisplayFormats.cs
@@ -162,7 +162,7 @@ namespace Functorium.SourceGenerators.Generators.ObservablePortGenerator;
 public static class SymbolDisplayFormats
 {
     /// <summary>
-    /// 결정적 코드 생성을 위한 전역 한정 포맷
+    /// Global qualified format for deterministic code generation
     /// </summary>
     public static readonly SymbolDisplayFormat GlobalQualifiedFormat = new(
         globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included,
@@ -174,89 +174,89 @@ public static class SymbolDisplayFormats
             SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
 }
 
-// 사용 예
+// Usage example
 string typeName = type.ToDisplayString(SymbolDisplayFormats.GlobalQualifiedFormat);
 // "global::System.Collections.Generic.List<global::MyApp.Models.User>"
 ```
 
 ---
 
-## 캐시 무효화 원인
+## Causes of Cache Invalidation
 
-캐싱이 정상적으로 작동하지 않는 경우 대부분 다음 세 가지 원인 중 하나에 해당합니다. 실수로 빠지기 쉬운 함정이므로 각각의 패턴을 기억해 두는 것이 좋습니다.
+When caching fails to work properly, it usually falls into one of these three causes. These are easy traps to fall into, so it is worth remembering each pattern.
 
-### 1. 비결정적 데이터
+### 1. Non-deterministic Data
 
 ```csharp
-// ❌ 타임스탬프 포함
+// Including timestamp
 return new ClassInfo(
     Name: symbol.Name,
-    GeneratedAt: DateTime.Now);  // 매번 다름!
+    GeneratedAt: DateTime.Now);  // Different every time!
 ```
 
-### 2. 순서 의존성
+### 2. Order Dependency
 
 ```csharp
-// ❌ 순서가 보장되지 않음
+// Order not guaranteed
 var methods = symbol.GetMembers()
     .OfType<IMethodSymbol>()
-    .ToList();  // 순서가 다를 수 있음
+    .ToList();  // Order may vary
 
-// ✅ 순서 정렬
+// Sorted order
 var methods = symbol.GetMembers()
     .OfType<IMethodSymbol>()
-    .OrderBy(m => m.Name)  // 항상 동일한 순서
+    .OrderBy(m => m.Name)  // Always the same order
     .ToList();
 ```
 
-### 3. 외부 상태 의존
+### 3. External State Dependency
 
 ```csharp
-// ❌ 환경 변수 의존
+// Environment variable dependency
 var debugMode = Environment.GetEnvironmentVariable("DEBUG");
 
-// ❌ 파일 시스템 접근
+// File system access
 var config = File.ReadAllText("config.json");
 
-// 소스 생성기에서 외부 리소스 접근은 제한됨
-// AdditionalTexts를 통해서만 파일 접근 가능
+// External resource access is restricted in source generators
+// File access is only possible through AdditionalTexts
 ```
 
 ---
 
-## 캐싱 디버깅
+## Caching Debugging
 
-캐싱이 작동하는지 확인하는 방법:
+How to verify that caching is working:
 
-### 1. 빌드 로그 확인
+### 1. Check Build Logs
 
 ```bash
-# 상세 로그로 빌드
+# Build with detailed logs
 dotnet build -v:diag > build.log
 
-# 소스 생성기 관련 로그 검색
+# Search for source generator related logs
 grep -i "generator" build.log | grep -i "cache"
 ```
 
-### 2. 생성된 파일 타임스탬프
+### 2. Generated File Timestamps
 
 ```
-캐시 작동 시
-===========
-UserRepositoryObservable.g.cs  수정 시간: 10:00:00
-(파일 A 수정)
-UserRepositoryObservable.g.cs  수정 시간: 10:00:05 (갱신됨)
-OrderRepositoryObservable.g.cs 수정 시간: 10:00:00 (변경 없음)
+When cache is working
+=====================
+UserRepositoryObservable.g.cs  Modified: 10:00:00
+(File A modified)
+UserRepositoryObservable.g.cs  Modified: 10:00:05 (updated)
+OrderRepositoryObservable.g.cs Modified: 10:00:00 (unchanged)
 
-캐시 미작동 시
-=============
-모든 파일의 수정 시간이 변경됨 → 비결정적 출력 의심
+When cache is not working
+=========================
+All file modification times changed -> Suspect non-deterministic output
 ```
 
-### 3. 디버깅 코드 삽입
+### 3. Insert Debugging Code
 
 ```csharp
-// 개발 중에만 사용
+// Use only during development
 #if DEBUG
 .Select((info, _) =>
 {
@@ -268,44 +268,44 @@ OrderRepositoryObservable.g.cs 수정 시간: 10:00:00 (변경 없음)
 
 ---
 
-## 성능 최적화 팁
+## Performance Optimization Tips
 
-### 1. predicate에서 최대한 필터링
+### 1. Filter as Much as Possible in predicate
 
 ```csharp
-// ❌ transform에서 필터링 (느림)
+// Filtering in transform (slow)
 .ForAttributeWithMetadataName(
     "MyAttribute",
-    predicate: (_, _) => true,  // 모든 노드 통과
+    predicate: (_, _) => true,  // All nodes pass
     transform: (ctx, _) =>
     {
         if (ctx.TargetNode is not ClassDeclarationSyntax)
-            return null;  // 여기서 필터링
+            return null;  // Filtering here
         ...
     })
 
-// ✅ predicate에서 필터링 (빠름)
+// Filtering in predicate (fast)
 .ForAttributeWithMetadataName(
     "MyAttribute",
-    predicate: (node, _) => node is ClassDeclarationSyntax,  // 빠른 필터
+    predicate: (node, _) => node is ClassDeclarationSyntax,  // Fast filter
     transform: (ctx, _) => ...)
 ```
 
-### 2. transform 결과 단순화
+### 2. Simplify transform Results
 
 ```csharp
-// ❌ transform에서 코드 생성 (캐싱 비효율)
-transform: (ctx, _) => GenerateCode(ctx.TargetSymbol)  // 문자열
+// Generating code in transform (caching inefficient)
+transform: (ctx, _) => GenerateCode(ctx.TargetSymbol)  // string
 
-// ✅ transform에서 데이터만 추출
-transform: (ctx, _) => ExtractInfo(ctx.TargetSymbol)  // 레코드
-// RegisterSourceOutput에서 코드 생성
+// Extracting only data in transform
+transform: (ctx, _) => ExtractInfo(ctx.TargetSymbol)  // record
+// Generate code in RegisterSourceOutput
 ```
 
-### 3. Collect 사용 최소화
+### 3. Minimize Collect Usage
 
 ```csharp
-// ❌ 불필요한 Collect
+// Unnecessary Collect
 var provider = ...; // IncrementalValuesProvider
 context.RegisterSourceOutput(provider.Collect(), (ctx, items) =>
 {
@@ -313,7 +313,7 @@ context.RegisterSourceOutput(provider.Collect(), (ctx, items) =>
         GenerateForItem(ctx, item);
 });
 
-// ✅ 개별 처리 (캐싱 유리)
+// Individual processing (better for caching)
 var provider = ...;
 context.RegisterSourceOutput(provider, (ctx, item) =>
 {
@@ -323,33 +323,33 @@ context.RegisterSourceOutput(provider, (ctx, item) =>
 
 ---
 
-## 한눈에 보는 정리
+## Summary at a Glance
 
-증분 캐싱은 소스 생성기 성능의 핵심입니다. 캐싱이 올바르게 작동하려면 데이터 모델에 값 동등성을 보장하고, 출력에서 비결정적 요소를 제거해야 합니다. 우리 프로젝트에서는 `ObservableClassInfo`를 `readonly record struct`로 정의하고, `SymbolDisplayFormats.GlobalQualifiedFormat`으로 타입 이름을 일관되게 표현하여 이 조건을 충족합니다.
+Incremental caching is the key to source generator performance. For caching to work correctly, value equality must be guaranteed in data models, and non-deterministic elements must be removed from output. In our project, `ObservableClassInfo` is defined as a `readonly record struct`, and type names are consistently represented with `SymbolDisplayFormats.GlobalQualifiedFormat` to satisfy these conditions.
 
-| 항목 | 권장 사항 |
-|------|-----------|
-| 데이터 모델 | 레코드(record) 사용 |
-| 컬렉션 | ImmutableArray 또는 정렬된 List |
-| 타입 이름 | SymbolDisplayFormat.FullyQualifiedFormat |
-| 필터링 | predicate에서 최대한 |
-| 출력 | 결정적(타임스탬프 등 제외) |
+| Item | Recommendation |
+|------|----------------|
+| Data model | Use records |
+| Collections | ImmutableArray or sorted List |
+| Type names | SymbolDisplayFormat.FullyQualifiedFormat |
+| Filtering | As much as possible in predicate |
+| Output | Deterministic (exclude timestamps, etc.) |
 
 ---
 
 ## FAQ
 
-### Q1: 증분 캐싱이 무효화되는 가장 흔한 원인은 무엇인가요?
-**A**: `DateTime.Now`, `Guid.NewGuid()` 같은 비결정적 값을 데이터 모델에 포함하거나, 컬렉션의 정렬 순서를 보장하지 않는 것이 가장 흔한 원인입니다. 매 빌드마다 데이터 모델의 `Equals` 비교가 `false`를 반환하여, 실제 변경이 없어도 코드가 재생성됩니다.
+### Q1: What is the most common cause of incremental cache invalidation?
+**A**: Including non-deterministic values like `DateTime.Now` or `Guid.NewGuid()` in the data model, or not guaranteeing collection sort order, are the most common causes. The data model's `Equals` comparison returns `false` on every build, causing code regeneration even without actual changes.
 
-### Q2: `predicate`에서 최대한 필터링해야 하는 이유는 무엇인가요?
-**A**: `predicate`는 Syntax 수준에서 동작하여 비용이 매우 낮습니다. 반면 `transform`은 Semantic Model 접근이 필요하여 비용이 높습니다. `predicate`에서 후보를 최대한 줄이면 `transform`의 실행 횟수가 감소하고, 결과적으로 전체 파이프라인 성능이 향상됩니다.
+### Q2: Why should you filter as much as possible in the `predicate`?
+**A**: The `predicate` operates at the Syntax level, making it very low-cost. The `transform`, on the other hand, requires Semantic Model access, making it expensive. Reducing candidates as much as possible in the `predicate` decreases the number of `transform` executions, resulting in improved overall pipeline performance.
 
-### Q3: `ObservableClassInfo`에서 `List<MethodInfo>` 대신 `ImmutableArray<MethodInfo>`를 사용하면 더 좋지 않나요?
-**A**: 이론적으로는 `ImmutableArray`가 불변성을 보장하여 더 안전합니다. 다만 Functorium에서는 `readonly record struct`의 값 동등성과 `MethodInfo`의 내용 기반 비교로 캐싱이 올바르게 작동하며, 구현 단순성을 위해 `List`를 사용하고 있습니다.
+### Q3: Wouldn't using `ImmutableArray<MethodInfo>` instead of `List<MethodInfo>` in `ObservableClassInfo` be better?
+**A**: Theoretically, `ImmutableArray` is safer as it guarantees immutability. However, in Functorium, caching works correctly with the value equality of `readonly record struct` and content-based comparison of `MethodInfo`, and `List` is used for implementation simplicity.
 
 ---
 
-증분 캐싱의 원리를 이해했으니, 이제 파이프라인에서 실제로 데이터를 추출하는 핵심 도구인 심볼 API로 넘어갑니다. 다음 장에서는 `INamedTypeSymbol`을 통해 클래스와 인터페이스의 정보를 어떻게 분석하는지 살펴봅니다.
+Now that we understand the principles of incremental caching, we move on to the symbol API, the core tool for actually extracting data in the pipeline. In the next chapter, we examine how to analyze class and interface information through `INamedTypeSymbol`.
 
-→ [05. INamedTypeSymbol](../05-INamedTypeSymbol/)
+-> [05. INamedTypeSymbol](../05-INamedTypeSymbol/)

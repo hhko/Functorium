@@ -5,7 +5,7 @@ title: "E-Commerce Domain"
 
 `decimal price = 10000;` -- is this amount in KRW or USD? What happens if product code `"invalid"` is included in an order? When business concepts are expressed as primitive types in e-commerce systems, currency confusion, format errors, and invalid state transitions go undetected until runtime.
 
-In this chapter, Part 1~4에서 학습한 Pattern과 기법을 실제 이커머스 도메인에 적용하여, 이러한 문제를 타입 시스템으로 방지하는 5가지 value object를 implements.
+In this chapter, we apply the patterns and techniques learned in Part 1~4 to a real e-commerce domain, implementing 5 value objects that prevent these problems through the type system.
 
 - **Money**: Composite value object that manages amount and currency together
 - **ProductCode**: Single value object that validates product code format
@@ -16,7 +16,7 @@ In this chapter, Part 1~4에서 학습한 Pattern과 기법을 실제 이커머�
 ## Learning Objectives
 
 ### **Core Learning Objectives**
-- Money처럼 여러 속성을 가진 value object에서 Add, Subtract 같은 **Domain Operations을 구현할 수** 있습니다.
+- You can **implement Domain Operations** such as Add and Subtract in value objects with multiple properties like Money.
 - You can **validate business formats** using regular expressions like ProductCode.
 - You can **implement a state machine** using SmartEnum in OrderStatus.
 - You can **sequentially validate** multiple fields like ShippingAddress.
@@ -137,7 +137,7 @@ public sealed class ProductCode : SimpleValueObject<string>
 }
 ```
 
-유효한 ProductCode만 존재할 수 있으므로, `Category`와 `Number` 속성은 항상 안전하게 접근할 수 있습니다. 형식 검증과 파싱이 하나의 value object에 결합된 Pattern입니다.
+Since only valid ProductCodes can exist, the `Category` and `Number` properties can always be safely accessed. This is a pattern where format validation and parsing are combined in a single value object.
 
 ### Quantity
 
@@ -268,7 +268,7 @@ public sealed class ShippingAddress : ValueObject
 }
 ```
 
-각 필드를 순서대로 검증하고, 첫 번째 오류에서 즉시 returns. 다중 필드의 순차 검증 Pattern을 보여주는 대표적인 예시입니다.
+Each field is validated in order, returning immediately on the first error. This is a representative example showing the sequential validation pattern for multiple fields.
 
 ## Practical Guidelines
 
@@ -309,7 +309,7 @@ public sealed class ShippingAddress : ValueObject
 ────────────────────────────────────────
    Recipient: Hong Gildong
    Address: 123 Teheran-ro, Seoul
-   우편Number: 06234
+   Postal code: 06234
    Country: KR
 
    Empty address validation result: Recipient name is empty.
@@ -321,7 +321,7 @@ public sealed class ShippingAddress : ValueObject
 ```
 01-Ecommerce-Domain/
 ├── EcommerceDomain/
-│   ├── Program.cs                  # Main executable (5개 값 객체 구현)
+│   ├── Program.cs                  # Main executable (5 value object implementations)
 │   └── EcommerceDomain.csproj      # Project file
 └── README.md                       # Project documentation
 ```
@@ -337,9 +337,9 @@ public sealed class ShippingAddress : ValueObject
 </ItemGroup>
 ```
 
-### value object별 Framework Type
+### Framework Type per Value Object
 
-The following table 각 value object가 어떤 프레임워크 기반 타입을 상속하고 어떤 Characteristics을 갖는지 정리한 것입니다.
+The following table summarizes which framework base type each value object inherits and what characteristics it has.
 
 | value object | Framework Type | Characteristics |
 |--------|---------------|------|
@@ -353,7 +353,7 @@ The following table 각 value object가 어떤 프레임워크 기반 타입을 
 
 ### E-Commerce Value Object Summary
 
-각 value object의 속성, Validation Rules, Domain Operations을 한눈에 비교할 수 있습니다.
+You can compare the properties, validation rules, and domain operations of each value object at a glance.
 
 | value object | Key Properties | Validation Rules | Domain Operations |
 |--------|----------|----------|------------|
@@ -363,14 +363,14 @@ The following table 각 value object가 어떤 프레임워크 기반 타입을 
 | OrderStatus | Value, DisplayName | Valid states only | TransitionTo |
 | ShippingAddress | 5 fields | All fields required | None |
 
-### 검증 Pattern 비교
+### Validation Pattern Comparison
 
-이커머스 도메인에서 사용된 검증 Pattern을 유형별로 minutes류하면 다음과 같습니다.
+The following classifies the validation patterns used in the e-commerce domain by type.
 
 | Pattern | value object | Description |
 |------|--------|------|
 | Single condition validation | Quantity | Range check |
-| Regex validation | ProductCode | 형식 Pattern 매칭 |
+| Regex validation | ProductCode | Format pattern matching |
 | Multi-field sequential validation | ShippingAddress | Validate each field in order |
 | Composite condition validation | Money | Validate amount and currency separately |
 | State transition validation | OrderStatus | Current-target status combination verification |
@@ -435,13 +435,13 @@ We have explored the value object implementation for the e-commerce domain. In t
 
 This project includes unit tests.
 
-### Tests 실행
+### Running Tests
 ```bash
 cd EcommerceDomain.Tests.Unit
 dotnet test
 ```
 
-### Tests 구조
+### Test Structure
 ```
 EcommerceDomain.Tests.Unit/
 ├── MoneyTests.cs           # Composite value object, currency operation tests
@@ -465,4 +465,4 @@ EcommerceDomain.Tests.Unit/
 
 We have implemented the e-commerce domain value objects. In the next chapter, we cover value objects in the finance domain requiring precise calculations such as account numbers, interest rates, and exchange rates.
 
-→ [2장: 금융 도메인](../02-Finance-Domain/)
+→ [Chapter 2: Finance Domain](../02-Finance-Domain/)

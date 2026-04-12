@@ -45,7 +45,7 @@ public sealed class AccountNumber : SimpleValueObject<string>
 
     private AccountNumber(string value) : base(value) { }
 
-    public string FullNumber => Value;  // protected Value에 대한 public 접근자
+    public string FullNumber => Value;  // Public accessor for protected Value
     public string BankCode => Value[..3];            // "110"
     public string Number => Value[4..];              // "1234567890"
     public string Masked => $"{BankCode}-****{Number[^4..]}"; // "110-****7890"
@@ -63,7 +63,7 @@ public sealed class AccountNumber : SimpleValueObject<string>
 }
 ```
 
-`ToString()`은 전체 계좌번호를 반환하지만, `Masked`는 중간 부minutes을 가려서 로그나 화면 표시에 사용할 수 있습니다. 민감 정보의 안전한 표시 Pattern입니다.
+`ToString()` returns the full account number, but `Masked` hides the middle portion for use in logs or screen display. This is a pattern for safe display of sensitive information.
 
 ### InterestRate (Interest Rate)
 
@@ -160,8 +160,8 @@ public sealed class TransactionType : SmartEnum<TransactionType, string>
     public static readonly TransactionType Fee = new("FEE", "Fee", isCredit: false);
 
     public string DisplayName { get; }
-    public bool IsCredit { get; }    // Deposit 계열
-    public bool IsDebit => !IsCredit;  // Withdrawal 계열
+    public bool IsCredit { get; }    // Deposit category
+    public bool IsDebit => !IsCredit;  // Withdrawal category
 }
 ```
 
@@ -180,23 +180,23 @@ decimal UpdateBalance(decimal balance, TransactionType type, decimal amount) =>
 
 1. AccountNumber (Account Number)
 ────────────────────────────────────────
-   계좌Number: 110-1234567890
+   Account number: 110-1234567890
    Bank code: 110
    Masked: 110-****7890
 
-2. InterestRate (Interest율)
+2. InterestRate
 ────────────────────────────────────────
    Annual rate: 5.50%
-   Principal: 1,000,000 won
+   Principal: 1,000,000 KRW
    Period: 3 years
-   단리 Interest: 165,000 won
-   복리 Interest: 174,241 won
+   Simple interest: 165,000 KRW
+   Compound interest: 174,241 KRW
 
 3. ExchangeRate (Exchange Rate)
 ────────────────────────────────────────
    Exchange rate: USD/KRW = 1350.5000
    100 USD = 135,050 KRW
-   역Exchange rate: KRW/USD = 0.0007
+   Inverse rate: KRW/USD = 0.0007
 
 4. TransactionType (Transaction Type)
 ────────────────────────────────────────
@@ -214,7 +214,7 @@ decimal UpdateBalance(decimal balance, TransactionType type, decimal amount) =>
 ```
 02-Finance-Domain/
 ├── FinanceDomain/
-│   ├── Program.cs              # Main executable (4개 값 객체 구현)
+│   ├── Program.cs              # Main executable (4 value object implementations)
 │   └── FinanceDomain.csproj    # Project file
 └── README.md                   # Project documentation
 ```
@@ -230,9 +230,9 @@ decimal UpdateBalance(decimal balance, TransactionType type, decimal amount) =>
 </ItemGroup>
 ```
 
-### value object별 Framework Type
+### Framework Type per Value Object
 
-각 value object가 상속하는 Framework Type과 주요 Characteristics을 정리한 것입니다.
+Summarizes the framework type each value object inherits and its key characteristics.
 
 | value object | Framework Type | Characteristics |
 |--------|---------------|------|
@@ -245,7 +245,7 @@ decimal UpdateBalance(decimal balance, TransactionType type, decimal amount) =>
 
 ### Finance Value Object Summary
 
-각 value object의 속성, Validation Rules, Domain Operations을 한눈에 비교할 수 있습니다.
+You can compare the properties, validation rules, and domain operations of each value object at a glance.
 
 | value object | Key Properties | Validation Rules | Domain Operations |
 |--------|----------|----------|------------|
@@ -254,9 +254,9 @@ decimal UpdateBalance(decimal balance, TransactionType type, decimal amount) =>
 | ExchangeRate | Base, Quote, Rate | 3-character currency, positive rate | Convert, Invert |
 | TransactionType | Value, IsCredit | Defined types only | None |
 
-### 금융 도메인 Pattern
+### Finance Domain Patterns
 
-금융 도메인에서 활용된 설계 Pattern을 유형별로 minutes류하면 다음과 같습니다.
+The following classifies the design patterns used in the finance domain by type.
 
 | Pattern | value object | Description |
 |------|--------|------|
@@ -315,7 +315,7 @@ public class ExchangeRateService
 
 ### Q3: How to support different formats per country in AccountNumber?
 
-국가 코드를 매개변수로 받아 다른 검증 Pattern을 적용합니다.
+Accept the country code as a parameter and apply different validation patterns.
 
 ```csharp
 public static Fin<AccountNumber> Create(string value, string countryCode = "KR")
@@ -340,13 +340,13 @@ We have explored the value object implementation for the finance domain. In the 
 
 This project includes unit tests.
 
-### Tests 실행
+### Running Tests
 ```bash
 cd FinanceDomain.Tests.Unit
 dotnet test
 ```
 
-### Tests 구조
+### Test Structure
 ```
 FinanceDomain.Tests.Unit/
 ├── AccountNumberTests.cs     # Account number format validation tests
@@ -368,4 +368,4 @@ FinanceDomain.Tests.Unit/
 
 We have implemented the finance domain value objects. In the next chapter, we cover value objects in the user management domain where personal information protection is important, including email, password, and phone number.
 
-→ [3장: 사용자 관리 도메인](../03-User-Management-Domain/)
+→ [Chapter 3: User Management Domain](../03-User-Management-Domain/)
